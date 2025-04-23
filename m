@@ -1,108 +1,109 @@
-Received: from mail-il1-f175.google.com (mail-il1-f175.google.com [209.85.166.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50277257AD4
-	for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 19:58:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E1D0190472
+	for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 20:03:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745438307; cv=none; b=CbPnVUk/axDxTIvgWEdo/aoFBlh6u1QzSzU5fJTeLzqY/crh+sbIP1p1KDEcMm9slIEJfVMiOCJqQXEQi0lMiT4deg256vS+rLLsjjxVKHZrAKmyORYAviMm//CGFxXNiIhHazDtn+3VRTh5SiBEzELINKJ6gzedCPO/L6CYzyw=
+	t=1745438596; cv=none; b=uAwR0rgPFoSfNwVgwVr9ra+rUs9icbMkUJ4OzG6Dah95Cv/lYuyZe+nK8LSXFu9v1xeydBnHpKDciz3Jfi9JHG4Wq6aciPlpnPUz+Qsop9J0a9vEnnjtUuddPrCRqlY6/gVAQcAQx9YW7m9AuhEqfe9Damk4mKxAWcrNIhG223s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745438307; c=relaxed/simple;
-	bh=sABJ0zDjI+HdAYjK6q+W6i4zhTPiFN5NjWMMBT+eTh4=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=mF7t6IB+0Q9Qx2PaH96/31yGdSTMuHawkqjjl5x4yALEVGV588Q8zzCsoK5vDkiMRMAbjXRFB+clpFrJfMwT9MjxXs3SZkCkIcGIA1QLnIWUsHSSZ3cYoe7GuxFad+M4cCBGjo4p/Lm/kt2XIeIrqh1mryCulBKvuj4O6gVsbZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=Ts2gYgC7; arc=none smtp.client-ip=209.85.166.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1745438596; c=relaxed/simple;
+	bh=qDXxUr3jeJggpm7HwjeX54HSaRuCsDJ0W0Sdh5y8ifQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eqfY7tKJKCtAALFxDZCuVMFE4FYRAwGKBk051zTDm9tABcJoc0iYbueqagV6ZrGVhrl53XnhmapjFGT4HggZ6qe7Etx6mEAtFNkozm0+c/f+xa4hjS0mzfR4d8IDZR3quIsuulRyfxj+7z9yG5hwEdsoBY4ljZ5ka9Azom3zk2g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LFIkzUHr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="Ts2gYgC7"
-Received: by mail-il1-f175.google.com with SMTP id e9e14a558f8ab-3d6e11cd7e2so1933545ab.3
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 12:58:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1745438304; x=1746043104; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9j5LjmU56b5qAgJCmFZDj31NsIm7pWmTfna1PU4IFm8=;
-        b=Ts2gYgC7nfnC0WsxXQFgF6BZ9YN9hd1ccmdVEi6RTerUyu8PFoWyG7nhKy7a9AsYNp
-         6bf1rHf8xvdODrEoF/3aJiUzgficfHfx9sUGCkOhXlPoFmRk2BFG1Er3fzERcJ2CuaAc
-         hJePFjC9sqTqLcOU8xGH6ZZ6X0EPUXxIpn17FwPdolr/bqu+prehcfn5iEUquq0HW/Ou
-         9pU3hcG1oX85Agg6VoU1+Xh3cAtjmRE0z2aK/+2Zu3Fp3sgbNh7rTSoCCmfpxuLvKwCf
-         f4WcVmbeV8cgiImtCWFvQGn1pmAfKvOujlInYK5+Lf0XDA4AiW5JQ17UqJSFASXYUh2U
-         g/ng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745438304; x=1746043104;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=9j5LjmU56b5qAgJCmFZDj31NsIm7pWmTfna1PU4IFm8=;
-        b=ar7p4w3IHm5DiNEsXhZCEXPxMfkC0MjsUs71SePSXmMnVk5sjdtA1vRAtAoFyH8eMa
-         3YF4K4jbZIwxW4qtVqux2d78S5ta+gXVzqzUQJ7rluh1NbGCm8+qL/UprSgLW0nCCHWa
-         YBMx9nWI6tRpLBwrHgmZ7iQmu0MB8BZfiMqd7jj3fv+WHpEVp+5HOT0O8lCVQeDapvxh
-         cYJCwOWQOUlQWfbfZPoz8dei3nGy9EehaGIvFCJ5vRjzrVbVvDYapsGuPnSsJMvFlGK9
-         W1ydFhtqadkkILvxpegZReHKbrPwLxEzqk5Nv1wizM7UZjJt+l4l9wv44x3x6tnFemBJ
-         p89g==
-X-Forwarded-Encrypted: i=1; AJvYcCWqRBb0mPVVMqTbzZVktW8bvJJT7+dsfOSEc4BNwv4PGQ4xiHLaiKadAic1azlA9WAdlL5SOYYEDGs=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxa+xHqSwxXt1pNLpTNFhw0Jv+zIawloNu+rQyR4htLXdddC1w/
-	snv/dRlgqeQyv5v1WTUgROBAyoP+pm3dN4dIzXioU30dndS1WpYG5byqHzEGMCg=
-X-Gm-Gg: ASbGncsi6uzK8/F4iAwQPut7sC9FWnNZCntsKd4jCt+wwM3BncFpa64cnumXLsfHHF0
-	5F76hODU487pHa5Pw0shXJk6iywv01Ns2VeWt7NaeugC0aL7gSw2cSlEt6h+ca+WN00uOeDlcmK
-	kj46WHiRr7ieG0d5BzKJPzSlMv0o1Rrke3EzK7VdvRmdVWgCHpcVeenpRbAyVX43XnU6ks+4SQ4
-	N051gIXxW79/q1UUVa3JVe+IyP7ZUz2k7mmY188TijzOJWuimbk2hEgDBkEEyxSwcWdEeNPju1k
-	aAsVWg7g5k3xKUn3/s/vDdSthXPELMw=
-X-Google-Smtp-Source: AGHT+IEMJ0bRGRXiRlKdRhkAgWX19pwillKCdqIlVb4cy4gK+d8U2A8s+2kwKh/p2ao3kPhQzF0MkQ==
-X-Received: by 2002:a05:6e02:b21:b0:3d3:d823:5402 with SMTP id e9e14a558f8ab-3d92ea8af22mr11668365ab.7.1745438304290;
-        Wed, 23 Apr 2025 12:58:24 -0700 (PDT)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4f6a39335casm2960256173.84.2025.04.23.12.58.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Apr 2025 12:58:23 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: cem@kernel.org, "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, mcgrof@kernel.org, shinichiro.kawasaki@wdc.com, 
- hch@infradead.org, willy@infradead.org, linux-xfs@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, shinichiro.kawasaki@wdc.com, 
- linux-block@vger.kernel.org, mcgrof@kernel.org
-In-Reply-To: <174543795664.4139148.8846677768151191269.stgit@frogsfrogsfrogs>
-References: <174543795664.4139148.8846677768151191269.stgit@frogsfrogsfrogs>
-Subject: Re: (subset) [PATCHSET V4] block/xfs: bdev page cache bug fixes
- for 6.15
-Message-Id: <174543830334.539678.13336981984894472656.b4-ty@kernel.dk>
-Date: Wed, 23 Apr 2025 13:58:23 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LFIkzUHr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 950A4C4CEE2;
+	Wed, 23 Apr 2025 20:03:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745438594;
+	bh=qDXxUr3jeJggpm7HwjeX54HSaRuCsDJ0W0Sdh5y8ifQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LFIkzUHr7lmCtUJ9+orfhyHVJT7Qnyx50GsP0ybLdhByWpY6McujhvWExWPLQLQOd
+	 7c6/bV9hVltNQ88MUoSLgejUBRruxcQA9Tll6UQn8zrgwaP5Z1hsnmRbo7RtLDtoFK
+	 6hdQwF+f/UnKhgL4suwTzpzRTwy88Wxu0vq2w8AH+p4saFTepixpsDfu8te5yKXAmb
+	 204j5KFx4bdellNXX7w/yu2V/Vmf/Yw4Jnq1aPY9ZT2qeldNnaSq8W8yXIV8jVJAP3
+	 jZyMdYymmVVuZfCAWlGd85JgiXoW+tKUsB3F8InJchVHmp26qOb8FMhXrdfv1ANnSz
+	 LTZ6eMDBNsIEQ==
+Date: Wed, 23 Apr 2025 13:03:14 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Luca Di Maio <luca.dimaio1@gmail.com>
+Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev,
+	smoser@chainguard.dev, hch@infradead.org
+Subject: Re: [PATCH v6 0/4] mkfs: add ability to populate filesystem from
+ directory
+Message-ID: <20250423200314.GG25675@frogsfrogsfrogs>
+References: <20250423160319.810025-1-luca.dimaio1@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3-dev-7b9b9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250423160319.810025-1-luca.dimaio1@gmail.com>
 
-
-On Wed, 23 Apr 2025 12:53:36 -0700, Darrick J. Wong wrote:
-> Here are a handful of bugfixes for 6.15.  The first patch fixes a race
-> between set_blocksize and block device pagecache manipulation; the rest
-> removes XFS' usage of set_blocksize since it's unnecessary.  I think this
-> is ready for merging now.
+On Wed, Apr 23, 2025 at 06:03:15PM +0200, Luca Di Maio wrote:
+> Currently the only way to pre populate an XFS partition is via the
+> prototype file. While it works it has some limitations like:
+>   - not allowed spaces in file names
+>   - not preserving timestamps of original inodes
 > 
-> v1: clean up into something reviewable
-> v2: split block and xfs patches, add reviews
-> v3: rebase to 6.15-rc3, no other dependencies
-> v4: add more tags
+> This series adds a new -P option to mkfs.xfs that allows users to
+> populate a newly created filesystem directly from an existing directory.
+> While similar to the prototype functionality, this doesn't require
+> writing a prototype file.
+> The implementation preserves file and directory attributes (ownership,
+> permissions, timestamps) from the source directory when copying content
+> to the new filesystem.
 > 
-> [...]
+> [v1] -> [v2]
+>   remove changes to protofile spec
+>   ensure backward compatibility
+> [v2] -> [v3]
+>   use inode_set_[acm]time() as suggested
+>   avoid copying atime and ctime
+>   they are often problematic for reproducibility, and
+>   mtime is the important information to preserve anyway
+> [v3] -> [v4]
+>   rewrite functionality to populate directly from an input directory
+>   this is similar to mkfs.ext4 option.
+> [v4] -> [v5]
+>   reorder patch to make it easier to review
+>   reflow to keep code below 80 chars
+>   use _() macro in prints
+>   add SPDX headers to new files
+>   fix comment styling
+>   move from typedef to structs
+>   move direntry handling to own function
+> [v5] -> [v6]
+>   rebase on 6.14
 
-Applied, thanks!
+Urrrk, one revision per day, please.
 
-[1/3] block: fix race between set_blocksize and read paths
-      commit: c0e473a0d226479e8e925d5ba93f751d8df628e9
-[2/3] block: hoist block size validation code to a separate function
-      commit: e03463d247ddac66e71143468373df3d74a3a6bd
+--D
 
-Best regards,
--- 
-Jens Axboe
-
-
-
+> Luca Di Maio (4):
+>   proto: expose more functions from proto
+>   populate: add ability to populate a filesystem from a directory
+>   mkfs: add -P flag to populate a filesystem from a directory
+>   man: document -P flag to populate a filesystem from a directory
+> 
+>  man/man8/mkfs.xfs.8.in |   7 +
+>  mkfs/Makefile          |   2 +-
+>  mkfs/populate.c        | 313 +++++++++++++++++++++++++++++++++++++++++
+>  mkfs/populate.h        |  10 ++
+>  mkfs/proto.c           |  33 ++---
+>  mkfs/proto.h           |  22 +++
+>  mkfs/xfs_mkfs.c        |  23 ++-
+>  7 files changed, 385 insertions(+), 25 deletions(-)
+>  create mode 100644 mkfs/populate.c
+>  create mode 100644 mkfs/populate.h
+> 
+> Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
+> 
+> --
+> 2.49.0
+> 
