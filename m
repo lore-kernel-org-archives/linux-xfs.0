@@ -1,181 +1,110 @@
-Received: from mail-vk1-f170.google.com (mail-vk1-f170.google.com [209.85.221.170])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25C0F17BED0;
-	Wed, 23 Apr 2025 06:40:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ADD9262D0C;
+	Wed, 23 Apr 2025 06:41:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745390428; cv=none; b=VD2s0Uiytd7OKuDbpJ9frfLUVwK9ci/4KCpZgQWg6CqsxfPhx1hg9LQsPwISFoNrDuh+2zG7P9goPtM/oBA+R/AD4c2r0L0zgpVwp0XutH5i1cfh3cS/s/bBU8zcGPaYG14SZXGEKv3xn4bDMqow++px0qp0JLI84hLY2zHmMy0=
+	t=1745390519; cv=none; b=bBsw7/iM+Ae1E0Uo2GSACk8uzTHgY3NlQzpY7UA5Cm3z2OcVZG60maxKOs2l9UCDjhLebrTIK7VyJdMeFdt0mo1BG4hvFJoryYpNZi4doEKSTu12a7KThjF9X9CfjdxVbkPHwcrZU6CREHUHWl3M4UcQp9z//5+jNGwRil0H/X0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745390428; c=relaxed/simple;
-	bh=3HuTyXhJkl/yTOit/a2M9L4/0zusi54xYyhWG2QCJpM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=aA7r0BZnKMwgw7lGMlGxek+vLzy/PyCJmrXrDDaB2tXOuGnxRVWU6lOVmLnhPzQN+QRqliKMur3/mJuFGjJQ6iBrx0UuZDcC9daYotEpoPFtnvoiaZ3YNeY5OZxR43vdX3JoLUG5MBj6bQS4kNYEy5F/4mXBgukbazake0/nEUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+	s=arc-20240116; t=1745390519; c=relaxed/simple;
+	bh=gNnP9UhDoNvjN2vWRsFmLuixRxnsgSvaMRUyEkE8tkc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=OBtBrBMaRuuSryPavcnl+C+cgqKVcDUPw5TKgqHw9QphGPq7/OTJ22/nP7MdSMbL4rjlokBA5aLLGt32AGM7RKLIbnbLu1B5UbuRwJqxJutcZJpQekFtcHC64ecZKZNH/9u8INM1iwdLv+LgxOdxfU57LZmD1CiGjcnb9zw26og=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QGbgoaUF; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vk1-f170.google.com with SMTP id 71dfb90a1353d-5290be1aedcso717034e0c.1;
-        Tue, 22 Apr 2025 23:40:25 -0700 (PDT)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QGbgoaUF"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-224171d6826so85906325ad.3;
+        Tue, 22 Apr 2025 23:41:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1745390517; x=1745995317; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=r/cQteNQi23cybMuFz80bYUiA8SIMrSkJ3aImTZDb9c=;
+        b=QGbgoaUFM0wfA9ECGIK0Nb9UgwawHyacJFp1bvK3E6Bh+BS12dYVG8pTgT18dbSsV1
+         PPmZ8AZSkzrYcYSF+2qzjY1WBzN2IC12OqEu06IpQxpBzsUpExu3M5UYBMgSKhyx6R4J
+         r5Je0WgPlfQdwcX6fpUxyX5p/dZa0JwZrN34cqnGACdhYPnJF9kNd7zv+ifdjr1y5wuB
+         /kN/3k2zmJ0tmAdQjMt06F1nLPp2W6iY133eX/hC+b7gt7HJ1KGDlh+yWy3t5g9jyi9p
+         r8I3HVsi2hmbeSiCYdkp7DDUluwBhlsitEnqZz0EnSQvHUer/1OAeZQEwg+oQ/ZuE+nW
+         K3rQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745390424; x=1745995224;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=1e100.net; s=20230601; t=1745390517; x=1745995317;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=3Ba6tmlAbCMQPw4GSQHNs/ApOFK/gml2sfoYUe2vXaM=;
-        b=ogGSxiwtyoqrLhcdzAptRDitjKguXY/oeR1bA60b7AmUTlgD3Gvzll+AsR4vrgWH2Y
-         EwHqHAEdQVu02QNsoHe19mw3jcLvrU0L3xb1jQumd147Oop90v+Zhv3RE/0j/78MBz7y
-         oVRv3vn0fJ9+pksOvDA25zTL48q6ClAa0nJ4TM5tZwK8b0BVkH8bwCVzz9UtDn9K2Qhd
-         h7Nz64kgfnNS7brrVuFix9eJ9Tp+JtuFpjZZe757u4g1R3QiSSP8tC5elsR60Se9CoSs
-         YLrqG56A4NjJW2kve71XD8bKiCA7KN0T2LDmAtnLdn4G1zcHjlQUPkefFk+ExeNR0sMP
-         Aguw==
-X-Forwarded-Encrypted: i=1; AJvYcCWcf+T7lsM1TE5o06ts6xNs5AYyBnWqISXCpUi0C5IDeDJzSd0LwZ0i1bDBvORwQe7EZFbAK+/oLrQr@vger.kernel.org, AJvYcCXAVDJ7+MeS91hVEpXlODNfSgC5hJiZls4MxhGcdOvv5m1XEWkziy0waOJzasSUzS3f4wFj5ChpUsqty6c=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwOMLFKJq2iAXqrtVdC9pNc3o7pZF6FtkwFg6OoN5W9xSUPGxJq
-	33dRJuGsFJt59LssOPsawZz3ULD1y0C1F1fXD1+tH8Op1ozZIWFYuUy0pG71
-X-Gm-Gg: ASbGncvaCRdwLX5fSoxOcEavcjUybgFwGllzzk3Kis97TTT5oSwYjX0Q0v6Hr1aw4ap
-	0bvIRgUWeJMYtq2CFv17hdL+6/o6YdkmDbb3YM23uY0pwZ9e2v6F6jMyXaHAABGAw0sNPMoT+Jx
-	CSFRaxGw82cV2fwJ29eucp2t60kzwcL3QM6HPdlhkvqAoX2p7FaT4B29lCVFDOXc/xE6sKUXO6A
-	mfWDJb7AGqGP4f8bmXP8q4ueoWxUyz5ZOOaZHqF9L7SHmEskXmCPjdM5OWV+CCHRT9Ms2mfi3zb
-	orWTvN41kTW9oAv/losumBqum7ti3O8ZCZMMqNDdaagQw9VpJuADDs8TH2bxV1srZXzc9Q7mYwk
-	9UzkTwyXg7VDDKgYAQg==
-X-Google-Smtp-Source: AGHT+IGkOQS6KwEV/82Ot42E9pmhSyvr6ClKKExYlDs07kEFlRYt5anAucsORyAln1oIolMiL2MoUw==
-X-Received: by 2002:ac5:c244:0:b0:524:2fe0:3898 with SMTP id 71dfb90a1353d-52a6a18683dmr801496e0c.5.1745390424551;
-        Tue, 22 Apr 2025 23:40:24 -0700 (PDT)
-Received: from mail-vk1-f174.google.com (mail-vk1-f174.google.com. [209.85.221.174])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-8776468cd5fsm2608595241.20.2025.04.22.23.40.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Apr 2025 23:40:24 -0700 (PDT)
-Received: by mail-vk1-f174.google.com with SMTP id 71dfb90a1353d-5240a432462so636686e0c.1;
-        Tue, 22 Apr 2025 23:40:24 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUA2VPCCNRaAejawxUoF/tqX+w538bGcPqOWSm1wChBv2uDwNyuygAWPsgN43UNNZjLWCRlR4eD9jbt9s4=@vger.kernel.org, AJvYcCVVfF5+g2jNkQLn1A5rD1QULIJlwuKZ8jUk9JowWyGitactN1h6N97VEjOsanIUzjgW2tMo3wNwgbYJ@vger.kernel.org
-X-Received: by 2002:a05:6122:d9c:b0:520:4806:a422 with SMTP id
- 71dfb90a1353d-52a6a053f6bmr1128149e0c.3.1745390424170; Tue, 22 Apr 2025
- 23:40:24 -0700 (PDT)
+        bh=r/cQteNQi23cybMuFz80bYUiA8SIMrSkJ3aImTZDb9c=;
+        b=KxUah35Y9+lKNHP9Tl5CmKH6gC6Jw+yQxUGrrm5BjfjAEgohF3cssz+4KtFwMBDxUJ
+         BeFhjUWPX/wG3DhpZDODFc3TWYD3bCcTJ8Th7Pxd9M5lLafgrEzxaXvmWYIxPjw1JzXZ
+         jZ0ODecNKzh/8QAkvRDrG64QKv5joxIJSH5xX58tt+G8gDFJ19ci0h4UPbdP0rFhaxEL
+         Yk8D4VasGtocieV8yGZqkiarqbOjiGQ/0ilE+lPYQIbEuayQmPB97E5nP3fvNmjYjcxM
+         ZmPkZt55CXAVdDQ1UZKNN3Mv30dPJ0oNGHxyfhkxYR+MCz3ORDqwXkJ28103209dAGjG
+         pFJA==
+X-Forwarded-Encrypted: i=1; AJvYcCXAVsUwFcH3mKmLQtmnoDcR8J33cPMGv2iHRvGX+S+th5MIxN332Vq2/IIffWfZC2FcmTBBIgV2L8w=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxi/bdp2WsmXLqvJtMHSl9RfmN2rIEjQNUCjsemhicuLHeXkuNC
+	dvSY8K78xtLxV1mP8oRQ0OENa2yelsXGHazpUfaUAzrTVZMqPgksnzv7rA==
+X-Gm-Gg: ASbGnctN1jpw2VlSkrKjqN3SkWV3M32sIGzg9TdRMg6niIR64NlKbZj9+sjapVIS3Bk
+	j25gOM2H12hU7FjyG/5DeSeY5hTNTwAHqJJjtunvtUrnJvqS7PVwzWlcmjr2xU47RSXnj+BHpm5
+	nMXPkWUJ0ajtNUMP+0m9fP6aU+bOKvY22UNFfhY/ApgCOngS1iMg8MP5ECW/bQaz5x3z5ZInNgI
+	rQITSQuBlNXyxaGmrVcyIYYuCw8g8/HCln7oIaupyNgYOM2Y+CBP5UFMCuos0v3WE+IJh4CIZCo
+	Ao8ypylYNddA8v3VLLt0Hu9cByyQ5SyVKZN6xTb5kz+c
+X-Google-Smtp-Source: AGHT+IG3VdjImyBbQpMT/Up/xIwasOkAPHU7VGZtC80fUJv1cFzjEhNbb0BQUj9CvwGaQF0GIMl3qw==
+X-Received: by 2002:a17:903:2410:b0:220:be86:a421 with SMTP id d9443c01a7336-22c536050f6mr297150895ad.38.1745390516768;
+        Tue, 22 Apr 2025 23:41:56 -0700 (PDT)
+Received: from citest-1.. ([49.205.34.162])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-309df9f051csm897705a91.4.2025.04.22.23.41.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Apr 2025 23:41:56 -0700 (PDT)
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: fstests@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com,
+	djwong@kernel.org,
+	zlang@kernel.org,
+	david@fromorbit.com,
+	nirjhar.roy.lists@gmail.com
+Subject: [PATCH v1 0/2] common: Move exit related functions to common/exit
+Date: Wed, 23 Apr 2025 06:41:33 +0000
+Message-Id: <cover.1745390030.git.nirjhar.roy.lists@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250325091007.24070-1-hans.holmberg@wdc.com> <iB7R4jpT-AaCUfizQ4YDpmyoSwGWmjJCdGfIRdvTE76nG3sPcUxeHgwVOgS5vFYV0DCeR1L5EINLppSGbgC3gg==@protonmail.internalid>
- <476cf4b6-e3e6-4a64-a400-cc1f05ea44cc@roeck-us.net> <mt3tlttnxheypljdkyy6bpjfkb7n5pm2w35wuf7bsma3btwnua@a3zljdrqqaq7>
- <e5ccf0d5-a757-4d1b-84b9-36a5f02e117c@roeck-us.net>
-In-Reply-To: <e5ccf0d5-a757-4d1b-84b9-36a5f02e117c@roeck-us.net>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Wed, 23 Apr 2025 08:40:12 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdVXh+9htop6R=1gn5AmX0YJtqtAB9iFmZm6DweyyG-k3w@mail.gmail.com>
-X-Gm-Features: ATxdqUEM8b8nkIhMlBvzC9FFlRhWR9t_hxBPLVk7olyTZGn4yR9E9kXDjILDzD8
-Message-ID: <CAMuHMdVXh+9htop6R=1gn5AmX0YJtqtAB9iFmZm6DweyyG-k3w@mail.gmail.com>
-Subject: Re: [PATCH] xfs: add tunable threshold parameter for triggering zone GC
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <Hans.Holmberg@wdc.com>, 
-	Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <djwong@kernel.org>, hch <hch@lst.de>, 
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-On Sun, 20 Apr 2025 at 19:43, Guenter Roeck <linux@roeck-us.net> wrote:
-> On 4/20/25 03:53, Carlos Maiolino wrote:
-> > On Sun, Apr 20, 2025 at 02:47:02AM -0700, Guenter Roeck wrote:
-> >> On Tue, Mar 25, 2025 at 09:10:49AM +0000, Hans Holmberg wrote:
-> >>> Presently we start garbage collection late - when we start running
-> >>> out of free zones to backfill max_open_zones. This is a reasonable
-> >>> default as it minimizes write amplification. The longer we wait,
-> >>> the more blocks are invalidated and reclaim cost less in terms
-> >>> of blocks to relocate.
-> >>>
-> >>> Starting this late however introduces a risk of GC being outcompeted
-> >>> by user writes. If GC can't keep up, user writes will be forced to
-> >>> wait for free zones with high tail latencies as a result.
-> >>>
-> >>> This is not a problem under normal circumstances, but if fragmentation
-> >>> is bad and user write pressure is high (multiple full-throttle
-> >>> writers) we will "bottom out" of free zones.
-> >>>
-> >>> To mitigate this, introduce a zonegc_low_space tunable that lets the
-> >>> user specify a percentage of how much of the unused space that GC
-> >>> should keep available for writing. A high value will reclaim more of
-> >>> the space occupied by unused blocks, creating a larger buffer against
-> >>> write bursts.
-> >>>
-> >>> This comes at a cost as write amplification is increased. To
-> >>> illustrate this using a sample workload, setting zonegc_low_space to
-> >>> 60% avoids high (500ms) max latencies while increasing write
-> >>> amplification by 15%.
-> >>>
-> >> ...
-> >>>   bool
-> >>>   xfs_zoned_need_gc(
-> >>>     struct xfs_mount        *mp)
-> >>>   {
-> >>> +   s64                     available, free;
-> >>> +
-> >> ...
-> >>> +
-> >>> +   free = xfs_estimate_freecounter(mp, XC_FREE_RTEXTENTS);
-> >>> +   if (available < mult_frac(free, mp->m_zonegc_low_space, 100))
-> >>> +           return true;
-> >>> +
-> >>
-> >> With some 32-bit builds (parisc, openrisc so far):
-> >>
-> >> Error log:
-> >> ERROR: modpost: "__divdi3" [fs/xfs/xfs.ko] undefined!
-> >> ERROR: modpost: "__umoddi3" [fs/xfs/xfs.ko] undefined!
-> >> ERROR: modpost: "__moddi3" [fs/xfs/xfs.ko] undefined!
-> >> ERROR: modpost: "__udivdi3" [fs/xfs/xfs.ko] undefined!
-> >>
-> >
-> > I opened a discussion about this:
-> >
-> > https://lore.kernel.org/lkml/20250419115157.567249-1-cem@kernel.org/
->
-> A possible local solution is below. Note the variable type change from s64 to u64.
->
-> Guenter
-> ---
->
-> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-> index 8c541ca71872..6dde2a680e75 100644
-> --- a/fs/xfs/xfs_zone_gc.c
-> +++ b/fs/xfs/xfs_zone_gc.c
-> @@ -170,7 +170,7 @@ bool
->   xfs_zoned_need_gc(
->          struct xfs_mount        *mp)
->   {
-> -       s64                     available, free;
-> +       u64                     available, free, rem;
->
->          if (!xfs_group_marked(mp, XG_TYPE_RTG, XFS_RTG_RECLAIMABLE))
->                  return false;
-> @@ -183,7 +183,12 @@ xfs_zoned_need_gc(
->                  return true;
->
->          free = xfs_estimate_freecounter(mp, XC_FREE_RTEXTENTS);
-> -       if (available < mult_frac(free, mp->m_zonegc_low_space, 100))
-> +
-> +       rem = do_div(free, 100);
-> +       free = free * mp->m_zonegc_low_space +
-> +               div_u64(rem * mp->m_zonegc_low_space, 100);
-> +
-> +       if (available < free)
->                  return true;
->
->          return false;
+This patch series moves all the exit related functions to a separate file -
+common/exit. This will remove the dependency to source non-related files to use
+these exit related functions. Thanks to Dave for suggesting this[1]. The second
+patch replaces exit with _exit in check file - I missed replacing them in [2].
 
-There's also mul_u64_u32_div():
+[1] https://lore.kernel.org/all/Z_UJ7XcpmtkPRhTr@dread.disaster.area/
+[2] https://lore.kernel.org/all/48dacdf636be19ae8bff66cc3852d27e28030613.1744181682.git.nirjhar.roy.lists@gmail.com/
 
-    static inline u64 mul_u64_u32_div(u64 a, u32 mul, u32 divisor)
-    ...
+Nirjhar Roy (IBM) (2):
+  common: Move exit related functions to a common/exit
+  check: Replace exit with _exit in check
 
-Unsigned, too.
+ check           | 40 ++++++++++++++++-----------------------
+ common/btrfs    |  2 +-
+ common/ceph     |  2 ++
+ common/config   | 17 +----------------
+ common/dump     |  1 +
+ common/exit     | 50 +++++++++++++++++++++++++++++++++++++++++++++++++
+ common/ext4     |  2 +-
+ common/populate |  2 +-
+ common/preamble |  1 +
+ common/punch    |  6 +-----
+ common/rc       | 29 +---------------------------
+ common/repair   |  1 +
+ common/xfs      |  1 +
+ 13 files changed, 78 insertions(+), 76 deletions(-)
+ create mode 100644 common/exit
 
-Gr{oetje,eeting}s,
+--
+2.34.1
 
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
