@@ -1,71 +1,106 @@
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2573319E7F9
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 16:09:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3254728E61D
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 17:45:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745510991; cv=none; b=dEn10MposE9fORIQr2te4MhkHjosaJi643L58CXafUXDmWuCLCtsmZ1P7d21OsysEqXv5k+9aL+2tytmjhVW/+T6tnKqpLIjAsG5pANBaryyUWCvlTAv9zAWqpvxA+8JxC+JUcTOwVwCtl7EYY4OqgN5n3Lchy/v+IDyM3lkr9c=
+	t=1745516715; cv=none; b=eeaI+SpEMA7IgwCf1r+Wy46Cea3u3Rb2exrkRBBp5ltWmppwrrWgGd8AobxE9+aaubbbliBis2Yz1chX+AM2TUE25h10H6p9GMv9qgXtb0J33raJulanj05cR59+VR5Sel9HL7idmrI/1v2Vn7WkDwxKEtzvVUtDkF+Rkkjgdg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745510991; c=relaxed/simple;
-	bh=oCcQQE2oZKkBqBYqlxTnOkQAtQM1juvKDbMzPFlS3Ko=;
+	s=arc-20240116; t=1745516715; c=relaxed/simple;
+	bh=nuhY4mNQtbqLil9CN9WkICD/oYDC6db0CLuLTFGNXWw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R3GC1/ySjlZkLIhNd4Fa3+twljI1lZumIv9M/7BEdzTz7+KdtB30jAHCJQcBNyyZ90LF2dsPnM+sT11ePTXlny6M78ERoXpsZOXgva4cyOY/lqCHixejV1gcURGZlQ3uqv4+OiacqJKzYKe4gJMc4V2z+NNVkBIKvX7knrRj4Sw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nrHUoEAO; arc=none smtp.client-ip=209.85.208.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=EmT4ZOD/NMz85PhIh94r58yDbyCs+VLVgiCT8ilfyrrXD+Im8cVBkUUDwl7nFYtr43kOMC51ZuNAcFOshsVnuZk16dzu76lP118Uu7zfbTzJRHWk77DA2Gc6LaMeWRrFeZxQKelG3P+Z/ygTqtqKVlBqobZ3uoVHWJbEY4ANeQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=an/xVS7j; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nrHUoEAO"
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-5f62d3ed994so2238662a12.2
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 09:09:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1745510988; x=1746115788; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=TcDr4BbjURz6Wrji0AKrOphR6tIt4RmcHWd1H1qr+Jg=;
-        b=nrHUoEAOxQhAlK/j/82Uw3IWje9uMd2izunZQqg38koGRyPCaEyeqHK5GhB4NJjt7J
-         PaVK0Eoke/vJsRcnlFxF3NhAP6vLNA2oJFrM2t59qAxcxx2LrzNdABFC9kXcYyfi0FkE
-         4yenemd+s83yjTT9BAbxlBI/g+V7HwW2Z+01bxYasLWzGzeKifQrp/GyCJTGhepztYs4
-         HmDzIWxx+PY8wyDlW1M2wi6WCp0quffjHaBsJp1MX6bYGDgpUCiNaCmcLkdAnMZ76Pmj
-         SERmmIZ3stTzrlNArFYJVGLkN71TA5NJV0hM756F7ZH0VE2hbG+Cgcs8XfoJ8V4kNFCI
-         zOog==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="an/xVS7j"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1745516711;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=JSMzO6fx79vdlfqdO8dlMyzHm6+/LG9Oml+3X61fg04=;
+	b=an/xVS7j6EwyHG3LmIL6j2+DtJAsAThNylH1GGZj6KjbGaII7K38BOBooxJjXnXZzAGMGU
+	dPXg1uYZ7HZFAwmRaV9SruWMQlv2mniP2hwHwjTJaUPYtfEOu2QFRoVD4LCjLQw4b6l9br
+	8+uRDxoAuUQIJ79T7ajAWIaaxhl8Xy0=
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
+ [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-524-yHfDOeIgNpC0eXvJXa6a_Q-1; Thu, 24 Apr 2025 13:45:10 -0400
+X-MC-Unique: yHfDOeIgNpC0eXvJXa6a_Q-1
+X-Mimecast-MFC-AGG-ID: yHfDOeIgNpC0eXvJXa6a_Q_1745516709
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-ac6ef2d1b7dso123606166b.0
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 10:45:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745510988; x=1746115788;
+        d=1e100.net; s=20230601; t=1745516709; x=1746121509;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=TcDr4BbjURz6Wrji0AKrOphR6tIt4RmcHWd1H1qr+Jg=;
-        b=wedJcF00HadQ0C5ij2Tr0THih6bSHGE39zRNANzvko0Mk99hwCWHUhoZxj4K5MVhu8
-         EAi+KdQYGeMIajwOgVt7SDciuE5KNArzFKHptKe/Ah30MEP15Yt0kZRVDIyZ95bg/IDu
-         vO6gulZ9ZbkJO7w6iM2WuHOKOsn1av6BDoY7xbhILHlFPzyg5Xg0tL9ZVb2FltSa7j/O
-         YWtWcJ92S925UC4ghKYHwGI5cdGfu3yZ7l5QP1NRasvFyU1vCJWp29O7b5Pe4FzDCr5B
-         aqtYvcrTpE4gTKBtRQUK+rRlwHVHRzRPFV9Pim4YHCytha2eWABBeDsiASGtVwYk80MY
-         vZng==
-X-Gm-Message-State: AOJu0YxcdSkIMoQ/L5dz38N1JLu8ZbjvRTzjG2XkSsHeYW3Mf+fF4TX0
-	zQgpnJSA1WlfYJXkv36jdDXrriLem6qLvhuczzsEiNOMvCyCo5RY
-X-Gm-Gg: ASbGncuV/JfXjSA6wQ8zHD+bYe8CreIkeA7xVaIRdw9Xe+3Vqb6NbGc5j7aX+WZP92j
-	D610G2VMEvv+QhZW6FmvMxnUR6/dJPsq7Xwpma8Aqo6VVV3LwmiSUMFse38eZ1Gk44jZZKwXWWs
-	XFQjCqQalTVRUA3RYoYp+fZPcC7He9CG210zxgBUvbZj4U8N7jyFqLAaF3U3kUKyAvbwTPkkwuQ
-	PzYIGxOXxZVaoqMPHpW0pWSJlCrSHnJA/hYRD11Rt3mdFm4QrwsMld82pSpVJMgK/u7+pPnt0J3
-	af9fPg==
-X-Google-Smtp-Source: AGHT+IEBZR8fkKWOf1c1RUzMOEAGFyDHFhs2lT712xHmhMqzMFAw7rFqJ0rup3ELa7OJ4dYdkNSCOA==
-X-Received: by 2002:a05:6402:210d:b0:5f6:c5e3:faab with SMTP id 4fb4d7f45d1cf-5f6ddb0c5f5mr2732555a12.1.1745510988006;
-        Thu, 24 Apr 2025 09:09:48 -0700 (PDT)
-Received: from framework13 ([151.43.14.62])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5f6ed9dfa8fsm1327782a12.72.2025.04.24.09.09.46
+        bh=JSMzO6fx79vdlfqdO8dlMyzHm6+/LG9Oml+3X61fg04=;
+        b=FLjPIBNc+Km8svVptwOBiFXW2BTLpWQ/RrUPQTf2vs8YCIuEPQxDHSHTdXKGaeXcT7
+         rXBipkQUNH5HmIoLbjhOoRHFS5xoks+zXwB+v3AwwWaAtb2X7sM9PYG2OUQSetCkXtNF
+         ioS/2KY40vcg6+WMDBlSiq8NRz9qtBzd20Y4B/bDhlWizMy6v2I1sDCaMIKM8MEFz4n4
+         fT9reP5BNOPxzg9JdPukU1KqK1u6vh/bbeAhYN/4NHwacFrgQFYH8Oa1Dcokbvz3QMJP
+         /6+HTDx0oQuM3QQDHHGoC+vTbJRiVeW5TZrQz7lnPyAAoXeYu7c5Y5An21Q1XCcM76U9
+         zbAA==
+X-Forwarded-Encrypted: i=1; AJvYcCWaB+OORazbzgwG/culVbG2jU0+zait72sZA7NbkeSHXAKLtwAGc2n54rvRJcA+yCDHKA92F0QGu3Y=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzX6eUoarGVA8vwab/aYt8XxA4paTkuS4bt+Ln7zFkgQ7Fqw6Os
+	Y04nrx5xREtQksylkJuKAqcCdINX70903Qvz5U1nKB/5v3LdW9DW1Vuz7fWpiwsGXP/crT5F/2m
+	dtjIBl57iaXmeKaYAzRz6FTrb7LvQyuK/FBa4eZaKz8kJUUuSFpVDJTSn
+X-Gm-Gg: ASbGncun/i8YvmRJPxmLoN/wXW10V0O3UZqTfAHnP7+z9nliLanavKWgSRuGSjNK+Jz
+	Pc6KtaxyDtwWqiIRS4NQoYsmXQsRvSX7XtKGJJoeuzsMAQi8nCCcI+MMHw8U1i5579puy/mYWE/
+	ItIrRuR1KXrKnTAteqYhpSgtkIUdTWlQH2SxavkvQRUfVvMDzPiZqtEDLZ0WRWL5cEODvOLe0zu
+	zEXFRXDopsoJO5boHwqlzaPmPr+CrLR0kJQrHgXPb75fCv7jxBd342xmcHFxOmojxNxDJzQuZMN
+	eLXcF2HUgjjkCuH7qNvaZlO2zMlojF4=
+X-Received: by 2002:a17:907:9412:b0:acb:3a0d:8a82 with SMTP id a640c23a62f3a-ace6b450a49mr51592366b.32.1745516708714;
+        Thu, 24 Apr 2025 10:45:08 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFTh+3uHoEBQ4GmOFk2Iro9cQNDST88N03Da5siOmOBhQ6S/NryZGUQ9nV3zdizG2WhZyWkCg==
+X-Received: by 2002:a17:907:9412:b0:acb:3a0d:8a82 with SMTP id a640c23a62f3a-ace6b450a49mr51586866b.32.1745516708167;
+        Thu, 24 Apr 2025 10:45:08 -0700 (PDT)
+Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ace5989b173sm140418466b.59.2025.04.24.10.45.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Apr 2025 09:09:47 -0700 (PDT)
-Date: Thu, 24 Apr 2025 18:09:45 +0200
-From: Luca Di Maio <luca.dimaio1@gmail.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev, 
-	smoser@chainguard.dev, hch@infradead.org
-Subject: Re: [PATCH v6 2/4] populate: add ability to populate a filesystem
- from a directory
-Message-ID: <vmiujkqli3d4c7ohgegpxvwacowl2tdaps6m4wyvwh6dcfado7@csca7fs5y7ss>
-References: <20250423160319.810025-1-luca.dimaio1@gmail.com>
- <20250423160319.810025-3-luca.dimaio1@gmail.com>
- <20250423202358.GI25675@frogsfrogsfrogs>
+        Thu, 24 Apr 2025 10:45:07 -0700 (PDT)
+Date: Thu, 24 Apr 2025 19:45:06 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: Christian Brauner <brauner@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, 
+	Richard Henderson <richard.henderson@linaro.org>, Matt Turner <mattst88@gmail.com>, 
+	Russell King <linux@armlinux.org.uk>, Catalin Marinas <catalin.marinas@arm.com>, 
+	Will Deacon <will@kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>, 
+	Michal Simek <monstr@monstr.eu>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Helge Deller <deller@gmx.de>, 
+	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
+	Nicholas Piggin <npiggin@gmail.com>, Christophe Leroy <christophe.leroy@csgroup.eu>, 
+	Naveen N Rao <naveen@kernel.org>, Heiko Carstens <hca@linux.ibm.com>, 
+	Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
+	Christian Borntraeger <borntraeger@linux.ibm.com>, Sven Schnelle <svens@linux.ibm.com>, 
+	Yoshinori Sato <ysato@users.sourceforge.jp>, Rich Felker <dalias@libc.org>, 
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, "David S. Miller" <davem@davemloft.net>, 
+	Andreas Larsson <andreas@gaisler.com>, Andy Lutomirski <luto@kernel.org>, 
+	Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, 
+	Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, =?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@digikod.net>, 
+	=?utf-8?Q?G=C3=BCnther?= Noack <gnoack@google.com>, Arnd Bergmann <arnd@arndb.de>, 
+	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Paul Moore <paul@paul-moore.com>, 
+	James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, 
+	linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org, 
+	linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, 
+	linux-sh@vger.kernel.org, sparclinux@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-security-module@vger.kernel.org, linux-api@vger.kernel.org, linux-arch@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4 3/3] fs: introduce getfsxattrat and setfsxattrat
+ syscalls
+Message-ID: <oprhbm2vcqpveaf6smetfl2zacntntzqlakysys73zx3gnougi@zy7bo43bh5ef>
+References: <20250321-xattrat-syscall-v4-0-3e82e6fb3264@kernel.org>
+ <20250321-xattrat-syscall-v4-3-3e82e6fb3264@kernel.org>
+ <20250422-abbekommen-begierde-bcf48dd74a2e@brauner>
+ <rbzlwvecvrp4xawwp5nywdq6wp5hgjhrtrabpszv74xmfqbj4f@x7v6eqfc5gcd>
+ <20250424-zuspielen-luxus-3d49b600c3bf@brauner>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,149 +109,88 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250423202358.GI25675@frogsfrogsfrogs>
+In-Reply-To: <20250424-zuspielen-luxus-3d49b600c3bf@brauner>
 
-On Wed, Apr 23, 2025 at 01:23:58PM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 23, 2025 at 06:03:17PM +0200, Luca Di Maio wrote:
-> > +static void fail(char *msg, int i)
-> > +{
-> > +   fprintf(stderr, _("%s: %s [%d - %s]\n"), progname, msg, i, strerror(i));
-> > +   exit(1);
-> > +}
-> > +
-> > +static int newregfile(char *fname)
-> > +{
-> > +   int fd;
-> > +   off_t size;
-> > +
-> > +   if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
-> > +           fprintf(stderr, _("%s: cannot open %s: %s\n"), progname, fname,
-> > +                   strerror(errno));
-> > +           exit(1);
-> > +   }
-> > +
-> > +   return fd;
-> > +}
->
-> Why is this copy-pasting code from proto.c?  Put the new functions
-> there, and then you don't need all this externing.
->
+On 2025-04-24 11:06:07, Christian Brauner wrote:
+> On Wed, Apr 23, 2025 at 11:53:25AM +0200, Jan Kara wrote:
+> > On Tue 22-04-25 16:59:02, Christian Brauner wrote:
+> > > On Fri, Mar 21, 2025 at 08:48:42PM +0100, Andrey Albershteyn wrote:
+> > > > From: Andrey Albershteyn <aalbersh@redhat.com>
+> > > > 
+> > > > Introduce getfsxattrat and setfsxattrat syscalls to manipulate inode
+> > > > extended attributes/flags. The syscalls take parent directory fd and
+> > > > path to the child together with struct fsxattr.
+> > > > 
+> > > > This is an alternative to FS_IOC_FSSETXATTR ioctl with a difference
+> > > > that file don't need to be open as we can reference it with a path
+> > > > instead of fd. By having this we can manipulated inode extended
+> > > > attributes not only on regular files but also on special ones. This
+> > > > is not possible with FS_IOC_FSSETXATTR ioctl as with special files
+> > > > we can not call ioctl() directly on the filesystem inode using fd.
+> > > > 
+> > > > This patch adds two new syscalls which allows userspace to get/set
+> > > > extended inode attributes on special files by using parent directory
+> > > > and a path - *at() like syscall.
+> > > > 
+> > > > CC: linux-api@vger.kernel.org
+> > > > CC: linux-fsdevel@vger.kernel.org
+> > > > CC: linux-xfs@vger.kernel.org
+> > > > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> > > > Acked-by: Arnd Bergmann <arnd@arndb.de>
+> > ...
+> > > > +		struct fsxattr __user *, ufsx, size_t, usize,
+> > > > +		unsigned int, at_flags)
+> > > > +{
+> > > > +	struct fileattr fa = {};
+> > > > +	struct path filepath;
+> > > > +	int error;
+> > > > +	unsigned int lookup_flags = 0;
+> > > > +	struct filename *name;
+> > > > +	struct fsxattr fsx = {};
+> > > > +
+> > > > +	BUILD_BUG_ON(sizeof(struct fsxattr) < FSXATTR_SIZE_VER0);
+> > > > +	BUILD_BUG_ON(sizeof(struct fsxattr) != FSXATTR_SIZE_LATEST);
+> > > > +
+> > > > +	if ((at_flags & ~(AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH)) != 0)
+> > > > +		return -EINVAL;
+> > > > +
+> > > > +	if (!(at_flags & AT_SYMLINK_NOFOLLOW))
+> > > > +		lookup_flags |= LOOKUP_FOLLOW;
+> > > > +
+> > > > +	if (at_flags & AT_EMPTY_PATH)
+> > > > +		lookup_flags |= LOOKUP_EMPTY;
+> > > > +
+> > > > +	if (usize > PAGE_SIZE)
+> > > > +		return -E2BIG;
+> > > > +
+> > > > +	if (usize < FSXATTR_SIZE_VER0)
+> > > > +		return -EINVAL;
+> > > > +
+> > > > +	name = getname_maybe_null(filename, at_flags);
+> > > > +	if (!name) {
+> > > 
+> > > This is broken as it doesn't handle AT_FDCWD correctly. You need:
+> > > 
+> > >         name = getname_maybe_null(filename, at_flags);
+> > >         if (IS_ERR(name))
+> > >                 return PTR_ERR(name);
+> > > 
+> > >         if (!name && dfd >= 0) {
+> > > 		CLASS(fd, f)(dfd);
+> > 
+> > Ah, you're indeed right that if dfd == AT_FDCWD and filename == NULL, the
+> > we should operate on cwd but we'd bail with error here. I've missed that
+> > during my review. But as far as I've checked the same bug is there in
+> > path_setxattrat() and path_getxattrat() so we should fix this there as
+> > well?
+> 
+> Yes, please!
+> 
 
-Right, this is because with a separate flag I thought it would have been
-better to keep it in a separate file.
-With the new behaviour you proposed in the previous mail (one -p flag,
-check if file/directory) then I can unify back into proto.c, thus
-removing all the exported functions changes.
+Thanks for the review, Christian. I will fix issues you noticed as
+suggested. I see that Jan already sent fix for path_[s|g]etxattrat()
+so won't do anything here.
 
-> > +
-> > +static void writetimestamps(struct xfs_inode *ip, struct stat statbuf)
-> > +{
-> > +   struct timespec64 ts;
-> > +
-> > +   /*
-> > +    * Copy timestamps from source file to destination inode.
-> > +    *  In order to not be influenced by our own access timestamp,
-> > +    *  we set atime and ctime to mtime of the source file.
-> > +    *  Usually reproducible archives will delete or not register
-> > +    *  atime and ctime, for example:
-> > +    *     https://www.gnu.org/software/tar/manual/html_section/Reproducibility.html
-> > +    */
-> > +   ts.tv_sec = statbuf.st_mtime;
-> > +   ts.tv_nsec = statbuf.st_mtim.tv_nsec;
-> > +   inode_set_atime_to_ts(VFS_I(ip), ts);
-> > +   inode_set_ctime_to_ts(VFS_I(ip), ts);
-> > +   inode_set_mtime_to_ts(VFS_I(ip), ts);
->
-> This seems weird to me that you'd set [ac]time to mtime.  Why not open
-> the source file O_ATIME and copy atime?  And why would copying ctime not
-> result in a reproducible build?
->
-> Not sure what you do about crtime.
->
+-- 
+- Andrey
 
-The problem stems from the extraction of the artifact. Usually
-reproducible archives will remove [ac]time and only keep mtime, but in
-the moment that a file is extracted, any filesystem will assign [ac]time
-to the moment of extraction.
-This will add randomness not to the filesystem itself, because it will
-be reproducible if acting on the same extracted archive, but it will not
-be reproducible if acting on a new extraction of the same archive.
-
-Another approach we can do is what mkfs.ext4's populate functionality is
-doing: while it preserves mtime, [cr,a,c]time is set to whatever time the
-mkfs command is running.
-
-This would make it preserve the important timestamp (mtime) and move the
-"problem" of the reproducible/changing timestamp to the environment,
-while keeping the behaviour of mkfs.xfs sensible
-
-What do you think?
-
-> > +   /*
-> > +    * copy over file content, attributes and
-> > +    * timestamps
-> > +    */
-> > +   if (fd != 0) {
-> > +           writefile(ip, fname, fd);
-> > +           writeattrs(ip, fname, fd);
->
-> Since we're adding features, should this read the fsxattr info from the
-> source file, override it with the set fields in *fsxp, and set that on
-> the file?  If you're going to slurp up a directory, you might as well
-> get all the non-xattr file attributes.
->
-
-Right, I thought creatproto() did that, but now I see that this is done
-only for the root inode, I'll add this for others too, thanks.
-
-> > +           libxfs_parent_finish(mp, ppargs);
-> > +           tp = NULL;
->
-> Shouldn't this copy xattrs and fsxattrs to directories and symlinks too?
->
-
-Right, will add, thanks.
-
-> > +/*
-> > + * walk_dir will recursively list files and directories
-> > + * and populate the mountpoint *mp with them using handle_direntry().
-> > + */
-> > +static void walk_dir(struct xfs_mount *mp, struct xfs_inode *pip,
-> > +                       struct fsxattr *fsxp, char *cur_path)
-> > +{
-> > +   DIR *dir;
-> > +   struct dirent *entry;
-> > +
-> > +   /*
-> > +    * open input directory and iterate over all entries in it.
-> > +    * when another directory is found, we will recursively call
-> > +    * populatefromdir.
-> > +    */
-> > +   if ((dir = opendir(cur_path)) == NULL)
-> > +           fail(_("cannot open input dir"), 1);
-> > +   while ((entry = readdir(dir)) != NULL) {
-> > +           handle_direntry(mp, pip, fsxp, cur_path, entry);
-> > +   }
-> > +   closedir(dir);
-> > +}
->
-> nftw() ?  Which has the nice feature of constraining the number of open
-> dirs at any given time.
->
-> --D
->
-
-The problem with nftw() is that working with callback functions, we will
-need to switch to static variables for state, for example to keep track
-of each ip's pip, while with the recursive approach we can have some
-state and basically walk_dir() behaves similar to parseproto(), making
-changes to the rest of the file minimal.
-This seems to involve a lot more changes than now where we're basically
-just adding a limited number of functions to proto.c.
-
-Thanks again for the review Darrick,
-I'll wait for your feedback on the walk_dir() vs nftw() and the [ac]time
-approach,
-thanks
-
-L.
