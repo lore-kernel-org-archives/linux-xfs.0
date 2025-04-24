@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9331C1B040B
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 21:52:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2AB91B040B
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 21:53:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745531573; cv=none; b=HNkAZKB+yGw4egFTJHxkzIzSBtg5dkZ9Nlr+mJflmKRaJnsfFOxpSEqyKVoCxICMztFwSs25RNs7C240inYx9j3evlCpmrCBB8VF7rMuIfKv2hcIO8OENnC5sKW7eUPzEHyf5AncOD+B+LXDzeNCvKeUYKt9/flZAh43vDHKnN8=
+	t=1745531588; cv=none; b=p41NBYdZujIvoGGYvlPt5PY7589brTYL9UYztW0YOs9YLlkeE+xq1RnYdnosCxJzzuybjj+erHALIu7smiNYoRbtIudUzUcz27qLBq+f5dLH1OPoAhM4gY97eg1zZwiP4c/Y1iHZRQmF6y8VExQVTXXi/ib+7HhzTO/wlczsTx8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745531573; c=relaxed/simple;
-	bh=n5VL95sZiyi8lkh/EhcpxpwDb/d8hdWb/tBwWZax1Jk=;
+	s=arc-20240116; t=1745531588; c=relaxed/simple;
+	bh=J758shL+w1Nszb0B2FI2nV7CtQ8NpaQoCyk3IQysYiQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DyVaSDmpkJbQgRRv8MofEJ+3rMWwNgvC0hcI8nRML+MRsNgESth4aFhyFO+W8SCsezsLyvlDpvqxPadE7ODMuETvz4pPwMNVG0+lDW+Paa0HanWLH0QTuRSh/cKYhl2WJMV5ZblHyycjeZvR23nehTjFeHS4xUsjUrplfWxFLMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZiiNhEn9; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=k+REVyEAZOa851kqCQls/oV+lTvNXMcsDDUxCQYT1CxoVWoxyeT3fHGyrir6HGMHqICtT3/Tb2ciiVyPgUeOCyYN1+bYpluYLiVRNt8M5TH0vDpXmWnucHabq9e4EWSOP0vNVtrc8wr7JuSi7gHuCMSjRQPzFBg/E18spRcKILI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uE48b3gc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZiiNhEn9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0837FC4CEE3;
-	Thu, 24 Apr 2025 21:52:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uE48b3gc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6DF0C4CEE4;
+	Thu, 24 Apr 2025 21:53:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745531573;
-	bh=n5VL95sZiyi8lkh/EhcpxpwDb/d8hdWb/tBwWZax1Jk=;
+	s=k20201202; t=1745531588;
+	bh=J758shL+w1Nszb0B2FI2nV7CtQ8NpaQoCyk3IQysYiQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=ZiiNhEn9xJVdwpn9rddchf4/wZbWpr1yTvrpL5IlEu6RLNzDtMzVuIoKsj7oJqgkY
-	 9HpGKprzfukxcUl58ZQBph69IH8eQ+1wkjBG/HNnls/z+7EnNoBxCN4GY89bDtYFmc
-	 68aQ7ol+kBZjynssnM/AT4UPOiU8GnS+iDbEppQPd0iZP3M/swICHNsbkDPjoZh/V9
-	 JNtY++aoDaf6m1Wv7D1kG9MnQpjP88oini5a1mGgkh08oQQ1COzKpZsRimi2eSSK5F
-	 LMQ4iawCGhyvG3/OWDC/nJvdUfVNsZ+/A6NyPsV1HQ12DvxQtzw5N/+TKpWzjzBhX/
-	 HfKUpT5eQCxAg==
-Date: Thu, 24 Apr 2025 14:52:52 -0700
-Subject: [PATCH 1/5] man: fix missing cachestat manpage
+	b=uE48b3gcBZxdtGjeJLwpUPEHV5NeJTqVwginZ1dF2KyTyM7HfcQvwKeeHV6zI3s3Q
+	 WcjgQbZzmhRURPdkG+4n9XaBtVA6DL5HJ3yvtmCUuh43Yf4MKw6ldwyzv+QBOA/EkZ
+	 zVNYLdBVaECVHe6qnn7C3SBEWNUGo9ckPKNRNneHz5AzFW8A0zWCji87A2eWVwDoQ7
+	 m+b2APXg/nUKiHeKXfyu9BIMQNJnftByqRsGNnwQ6fK5ibrZB+ho6q8i08Sco73+Dq
+	 ZGWiClz1YN6SNy44Re/oGmcYk50NBep4GyrJF/VvNQJcU7JNLKhfHs2ghi2f8z2cdw
+	 IBwMYXt8Dqyuw==
+Date: Thu, 24 Apr 2025 14:53:08 -0700
+Subject: [PATCH 2/5] xfs_io: catch statx fields up to 6.15
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: hch@lst.de, ritesh.list@gmail.com, linux-xfs@vger.kernel.org
-Message-ID: <174553149338.1175632.2723141122621347164.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <174553149356.1175632.17456557520696046949.stgit@frogsfrogsfrogs>
 In-Reply-To: <174553149300.1175632.8668620970430396494.stgit@frogsfrogsfrogs>
 References: <174553149300.1175632.8668620970430396494.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,28 +45,93 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Fix missing cachestat documentation so that xfs/293 doesn't fail.
+Add all the new statx fields and flags that have accumulated for the
+past couple of years so they all print now.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- man/man8/xfs_io.8 |    3 +++
- 1 file changed, 3 insertions(+)
+ io/statx.h            |   25 ++++++++++++++++++++++++-
+ io/stat.c             |    5 +++++
+ m4/package_libcdev.m4 |    2 +-
+ 3 files changed, 30 insertions(+), 2 deletions(-)
 
 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index df508054b01cae..726e25af272242 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1101,6 +1101,9 @@ .SH FILE I/O COMMANDS
- Do not print timing information at all.
- .PD
- .RE
-+.TP
-+.BI "cachestat off len
-+Print page cache statistics for the given file range.
+diff --git a/io/statx.h b/io/statx.h
+index 347f6d08210f83..273644f53cf1c4 100644
+--- a/io/statx.h
++++ b/io/statx.h
+@@ -138,7 +138,10 @@ struct statx {
+ 	__u32	stx_atomic_write_unit_max;	/* Max atomic write unit in bytes */
+ 	/* 0xb0 */
+ 	__u32   stx_atomic_write_segments_max;	/* Max atomic write segment count */
+-	__u32   __spare1[1];
++
++	/* File offset alignment for direct I/O reads */
++	__u32	stx_dio_read_offset_align;
++
+ 	/* 0xb8 */
+ 	__u64	__spare3[9];	/* Spare space for future expansion */
+ 	/* 0x100 */
+@@ -191,8 +194,28 @@ struct statx {
  
- .SH MEMORY MAPPED I/O COMMANDS
- .TP
+ #endif /* STATX_TYPE */
+ 
++#ifndef STATX_MNT_ID
++#define STATX_MNT_ID		0x00001000U	/* Got stx_mnt_id */
++#endif
++
++#ifndef STATX_DIOALIGN
++#define STATX_DIOALIGN		0x00002000U	/* Want/got direct I/O alignment info */
++#endif
++
++#ifndef STATX_MNT_ID_UNIQUE
++#define STATX_MNT_ID_UNIQUE	0x00004000U	/* Want/got extended stx_mount_id */
++#endif
++
++#ifndef STATX_SUBVOL
++#define STATX_SUBVOL		0x00008000U	/* Want/got stx_subvol */
++#endif
++
+ #ifndef STATX_WRITE_ATOMIC
+ #define STATX_WRITE_ATOMIC	0x00010000U	/* Want/got atomic_write_* fields */
+ #endif
+ 
++#ifndef STATX_DIO_READ_ALIGN
++#define STATX_DIO_READ_ALIGN	0x00020000U	/* Want/got dio read alignment info */
++#endif
++
+ #endif /* XFS_IO_STATX_H */
+diff --git a/io/stat.c b/io/stat.c
+index d27f916800c00a..b37b1a12b8b2fd 100644
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -365,9 +365,14 @@ dump_raw_statx(struct statx *stx)
+ 	printf("stat.rdev_minor = %u\n", stx->stx_rdev_minor);
+ 	printf("stat.dev_major = %u\n", stx->stx_dev_major);
+ 	printf("stat.dev_minor = %u\n", stx->stx_dev_minor);
++	printf("stat.mnt_id = 0x%llu\n", (unsigned long long)stx->stx_mnt_id);
++	printf("stat.dio_mem_align = %u\n", stx->stx_dio_mem_align);
++	printf("stat.dio_offset_align = %u\n", stx->stx_dio_offset_align);
++	printf("stat.subvol = 0x%llu\n", (unsigned long long)stx->stx_subvol);
+ 	printf("stat.atomic_write_unit_min = %u\n", stx->stx_atomic_write_unit_min);
+ 	printf("stat.atomic_write_unit_max = %u\n", stx->stx_atomic_write_unit_max);
+ 	printf("stat.atomic_write_segments_max = %u\n", stx->stx_atomic_write_segments_max);
++	printf("stat.dio_read_offset_align = %u\n", stx->stx_dio_read_offset_align);
+ 	return 0;
+ }
+ 
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index af9da8124dbdc8..61353d0aa9d536 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -126,7 +126,7 @@ AC_DEFUN([AC_NEED_INTERNAL_FSCRYPT_POLICY_V2],
+ AC_DEFUN([AC_NEED_INTERNAL_STATX],
+   [ AC_CHECK_TYPE(struct statx,
+       [
+-        AC_CHECK_MEMBER(struct statx.stx_atomic_write_unit_min,
++        AC_CHECK_MEMBER(struct statx.stx_dio_read_offset_align,
+           ,
+           need_internal_statx=yes,
+           [#include <linux/stat.h>]
 
