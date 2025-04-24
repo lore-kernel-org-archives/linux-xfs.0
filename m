@@ -1,451 +1,149 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f78.google.com (mail-io1-f78.google.com [209.85.166.78])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4FC526770B
-	for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 20:23:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82F6FC133
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 02:02:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745439840; cv=none; b=LqnPFzcIAwPQtcIvTyTXt6WFEza25WmvUGuTzR3tuwVLPNhGywTAZl8lD/6aPFrcQO3WskimhmLSnI0FicWh8XUVizN3wnH543FGz9GwdCzWrMpqqz9lTTKNabCZSRjUQcx/mSGHB3H23lsGDp8Eukn0lsyIaS2SPcgth/KWVEk=
+	t=1745460150; cv=none; b=GpItkbzJZYAbidW0YWcQYaWq8ivqk48lW1dTZRQtTpHePQzgeK4gK3FzxgM4kW9ZaRMez6UpqWNcZ8fR2h5mUFilqLWQeX/KIAgLKtXzuDmxgxRJ6PUdZw6F8XJyuyj5x2ueyBxgzzXExYJ9XmE4eIgS7mRK6RfOm9s9YmMhYW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745439840; c=relaxed/simple;
-	bh=GnoR3LE++xU5cIEeJP0tlX+QtNp4cUeM7ESg0PekMy8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qK1XiC14SvBUknIa52StP2xNRztm1+bE6Xz8/jCF1KFKZ34aJ7n0fJNKMGnT3MfiMUGbKcAEO1SxxGeH5MeYXK8dNk6pF83dd/2/fMPMSguTIyYM0znDljDJSI4Wn7ZvsTR2XQ910SUpdGGE80w29BeH6DDSyPJiID5ENPbisnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t6dzsva+; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t6dzsva+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 661F3C4CEE2;
-	Wed, 23 Apr 2025 20:23:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745439839;
-	bh=GnoR3LE++xU5cIEeJP0tlX+QtNp4cUeM7ESg0PekMy8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=t6dzsva+2n6beVS7x14pogqEQ+porK2167Tl/f80kMWBjYtUnmQUhbmQv1DEZw76d
-	 H4sdf1ylq7zvmqUxw1DqLrbc520ZLlmOagTXtyaCcZz87M01g26g203mliqmNmGA1Z
-	 aukTMl+q6TioUCAybPbLNJSZPJkIdIH5u39Jp+qPnprwZO86SNsOdrIwUPDqjsvA5T
-	 BFRwfqMwy++kxyTYap30fL51jJ5bL97VHC9uey9c4SsrAcAP6xcwbFmAjjckmD3Pni
-	 B69hl17DVIkL3KgcHgeYUDsGVZ2+Or6IRfchlSyMuBJYYi+q0pVsrx6afmh63azowA
-	 zVHPAwQr8WQow==
-Date: Wed, 23 Apr 2025 13:23:58 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Luca Di Maio <luca.dimaio1@gmail.com>
-Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev,
-	smoser@chainguard.dev, hch@infradead.org
-Subject: Re: [PATCH v6 2/4] populate: add ability to populate a filesystem
- from a directory
-Message-ID: <20250423202358.GI25675@frogsfrogsfrogs>
-References: <20250423160319.810025-1-luca.dimaio1@gmail.com>
- <20250423160319.810025-3-luca.dimaio1@gmail.com>
+	s=arc-20240116; t=1745460150; c=relaxed/simple;
+	bh=Pv7OPVKtRbE+bbsu3UFh4FRokIglM5CMKW+YYq7hS5c=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=o4ycemgsai0vT1TruGiATSAQ4F3iRu07Bs7Vb8xYGuplwxaOoxU1Hx7D8YVgeI0gTIhUI3PUb40YrPrIfVnhxS3HFbnv9npqOrF7poaX1WPhBIDti9xfs0cNm9h1xd45UCEcwYZFF4HNhnhtaq+C3VobtRCfRkrJkYCJSB28BHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f78.google.com with SMTP id ca18e2360f4ac-85e318dc464so93935739f.1
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Apr 2025 19:02:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745460147; x=1746064947;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=flCF266RDJ50uYrZuYmER1ByNlJ8d8XpWuwoDVSeQb8=;
+        b=usNpOXLpvDujhfRmMnkNGT2Mb8yb0/Hh2dUxQdYbrRAcOhPegFmbKhHktaK3VOTtw9
+         jAxhAHPKbOsjRbo+RAINjPPx3A0w3L2lLf1HCi1yvAMiirZ3tp8GFKQOyXPhNUlXfqeM
+         mSH4dCJYhndq+QfyE9nEh1k0tpqB+UdIB4lv1UIqvgPV8TS04dJBzseB2WOuyWcwiS5k
+         WyAmne8yc8WLl55Y/jQGBnEbuzy1kgjIeRSEg48bE3zanaB4TbuGT1QtGIRABAvnzth8
+         6ZRPJHcjmexPU3OpRgWfTuInDwod2q3MXfHPL/39SWVHKuvPdbaCq3kVojtThHlbfau4
+         sUdA==
+X-Forwarded-Encrypted: i=1; AJvYcCVh2cK5hToBy+30wRJFPPzCUdNDs180WCyKhQ+s0Tlxrio41K8pYtzv/SDCDNg99EUeGnk/jtHCSc0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzkRuaQ+Lgx+qQ3erN+1Qi0zSO8Po+pg3vo7T4WPKKz3cs0nlWM
+	iVOvTHxB5cE1d6KlcRXHfI27dDhOgj16MmhEgDW1a5C4aDvs7rSECMWqE1aaqYmkAM82cQopdrF
+	nHOmqs/rylB0GiHQbp/HdPtVALKUwzaTCHujdahWkVdIErIxAA6GUPZ4=
+X-Google-Smtp-Source: AGHT+IEmuUMojlfHtPqnUcLFpQPaW42scl/IPXixvCJI0vAiAeHoRIeITY/anSfbffMbvUUsI0BovuOvhafvX08eQV1dnMkuRHal
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250423160319.810025-3-luca.dimaio1@gmail.com>
+X-Received: by 2002:a05:6e02:19c5:b0:3d4:6e2f:b487 with SMTP id
+ e9e14a558f8ab-3d93026df5fmr9248225ab.0.1745460146945; Wed, 23 Apr 2025
+ 19:02:26 -0700 (PDT)
+Date: Wed, 23 Apr 2025 19:02:26 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <68099bb2.050a0220.10d98e.0005.GAE@google.com>
+Subject: [syzbot] [xfs?] KMSAN: uninit-value in xfs_dialloc_ag_inobt
+From: syzbot <syzbot+b4a84825ea149bb99bfc@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, Apr 23, 2025 at 06:03:17PM +0200, Luca Di Maio wrote:
-> This patch implements the functionality to populate a newly created XFS
-> filesystem directly from an existing directory structure.
-> 
-> The population process steps are as follows:
->   - create the root inode before populating content
->   - recursively process nested directories
->   - handle regular files, directories, symlinks, char devices, block
->     devices, and fifos
->   - preserve file and directory attributes (ownership, permissions)
->   - preserve timestamps from source files to maintain file history
->   - preserve file extended attributes
-> 
-> This functionality makes it easier to create populated filesystems
-> without having to write protofiles manually.
-> It's particularly useful for reproducible builds.
-> 
-> Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
-> ---
->  mkfs/Makefile   |   2 +-
->  mkfs/populate.c | 313 ++++++++++++++++++++++++++++++++++++++++++++++++
->  mkfs/populate.h |  10 ++
->  3 files changed, 324 insertions(+), 1 deletion(-)
->  create mode 100644 mkfs/populate.c
->  create mode 100644 mkfs/populate.h
-> 
-> diff --git a/mkfs/Makefile b/mkfs/Makefile
-> index 04905bd..1611751 100644
-> --- a/mkfs/Makefile
-> +++ b/mkfs/Makefile
-> @@ -9,7 +9,7 @@ LTCOMMAND = mkfs.xfs
->  XFS_PROTOFILE = xfs_protofile.py
-> 
->  HFILES =
-> -CFILES = proto.c xfs_mkfs.c
-> +CFILES = populate.c proto.c xfs_mkfs.c
->  CFGFILES = \
->  	dax_x86_64.conf \
->  	lts_4.19.conf \
-> diff --git a/mkfs/populate.c b/mkfs/populate.c
-> new file mode 100644
-> index 0000000..f5eacbf
-> --- /dev/null
-> +++ b/mkfs/populate.c
-> @@ -0,0 +1,313 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2025 Chainguard, Inc.
-> + * All Rights Reserved.
-> + * Author: Luca Di Maio <luca.dimaio1@gmail.com>
-> + */
-> +#include <fcntl.h>
-> +#include <limits.h>
-> +#include <linux/fs.h>
-> +#include <stdio.h>
-> +#include <string.h>
-> +#include <dirent.h>
-> +#include <sys/stat.h>
-> +#include "libxfs.h"
-> +#include "proto.h"
-> +
-> +static void walk_dir(struct xfs_mount *mp, struct xfs_inode *pip,
-> +			    struct fsxattr *fsxp, char *cur_path);
-> +
-> +static void fail(char *msg, int i)
-> +{
-> +	fprintf(stderr, _("%s: %s [%d - %s]\n"), progname, msg, i, strerror(i));
-> +	exit(1);
-> +}
-> +
-> +static int newregfile(char *fname)
-> +{
-> +	int fd;
-> +	off_t size;
-> +
-> +	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
-> +		fprintf(stderr, _("%s: cannot open %s: %s\n"), progname, fname,
-> +			strerror(errno));
-> +		exit(1);
-> +	}
-> +
-> +	return fd;
-> +}
+Hello,
 
-Why is this copy-pasting code from proto.c?  Put the new functions
-there, and then you don't need all this externing.
+syzbot found the following issue on:
 
-> +
-> +static void writetimestamps(struct xfs_inode *ip, struct stat statbuf)
-> +{
-> +	struct timespec64 ts;
-> +
-> +	/*
-> +	 * Copy timestamps from source file to destination inode.
-> +	 *  In order to not be influenced by our own access timestamp,
-> +	 *  we set atime and ctime to mtime of the source file.
-> +	 *  Usually reproducible archives will delete or not register
-> +	 *  atime and ctime, for example:
-> +	 *     https://www.gnu.org/software/tar/manual/html_section/Reproducibility.html
-> +	 */
-> +	ts.tv_sec = statbuf.st_mtime;
-> +	ts.tv_nsec = statbuf.st_mtim.tv_nsec;
-> +	inode_set_atime_to_ts(VFS_I(ip), ts);
-> +	inode_set_ctime_to_ts(VFS_I(ip), ts);
-> +	inode_set_mtime_to_ts(VFS_I(ip), ts);
+HEAD commit:    8560697b23dc Merge tag '6.15-rc2-smb3-client-fixes' of git..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=11d3dfe4580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=a27b81e0cf56c60b
+dashboard link: https://syzkaller.appspot.com/bug?extid=b4a84825ea149bb99bfc
+compiler:       Debian clang version 15.0.6, Debian LLD 15.0.6
 
-This seems weird to me that you'd set [ac]time to mtime.  Why not open
-the source file O_ATIME and copy atime?  And why would copying ctime not
-result in a reproducible build?
+Unfortunately, I don't have any reproducer for this issue yet.
 
-Not sure what you do about crtime.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/03806cf4a3af/disk-8560697b.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/6d86507d5b30/vmlinux-8560697b.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/f5f2020007a8/bzImage-8560697b.xz
 
-> +
-> +	return;
-> +}
-> +
-> +static void create_file(struct xfs_mount *mp, struct xfs_inode *pip,
-> +			struct fsxattr *fsxp, int mode, struct cred creds,
-> +			struct xfs_name xname, int flags, struct stat file_stat,
-> +			xfs_dev_t rdev, int fd, char *fname, char *path)
-> +{
-> +	int error;
-> +	struct xfs_parent_args *ppargs = NULL;
-> +	struct xfs_inode *ip;
-> +	struct xfs_trans *tp;
-> +
-> +	tp = getres(mp, 0);
-> +	ppargs = newpptr(mp);
-> +	error = creatproto(&tp, pip, mode, rdev, &creds, fsxp, &ip);
-> +	if (error)
-> +		fail(_("Inode allocation failed"), error);
-> +	libxfs_trans_ijoin(tp, pip, 0);
-> +	newdirent(mp, tp, pip, &xname, ip, ppargs);
-> +
-> +	/*
-> +	 * copy over timestamps
-> +	 */
-> +	writetimestamps(ip, file_stat);
-> +
-> +	libxfs_trans_log_inode(tp, ip, flags);
-> +	error = -libxfs_trans_commit(tp);
-> +	if (error)
-> +		fail(_("Error encountered creating file from prototype file"),
-> +		     error);
-> +
-> +	libxfs_parent_finish(mp, ppargs);
-> +
-> +	/*
-> +	 * copy over file content, attributes and
-> +	 * timestamps
-> +	 */
-> +	if (fd != 0) {
-> +		writefile(ip, fname, fd);
-> +		writeattrs(ip, fname, fd);
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+b4a84825ea149bb99bfc@syzkaller.appspotmail.com
 
-Since we're adding features, should this read the fsxattr info from the
-source file, override it with the set fields in *fsxp, and set that on
-the file?  If you're going to slurp up a directory, you might as well
-get all the non-xattr file attributes.
+=====================================================
+BUG: KMSAN: uninit-value in xfs_dialloc_ag_inobt+0x99b/0x2550 fs/xfs/libxfs/xfs_ialloc.c:1173
+ xfs_dialloc_ag_inobt+0x99b/0x2550 fs/xfs/libxfs/xfs_ialloc.c:1173
+ xfs_dialloc_ag fs/xfs/libxfs/xfs_ialloc.c:1585 [inline]
+ xfs_dialloc_try_ag fs/xfs/libxfs/xfs_ialloc.c:1835 [inline]
+ xfs_dialloc+0x14c4/0x3470 fs/xfs/libxfs/xfs_ialloc.c:1945
+ xfs_create_tmpfile+0x496/0x12c0 fs/xfs/xfs_inode.c:827
+ xfs_generic_create+0x65c/0x1610 fs/xfs/xfs_iops.c:227
+ xfs_vn_tmpfile+0x6b/0x140 fs/xfs/xfs_iops.c:1194
+ vfs_tmpfile+0x5e4/0xe40 fs/namei.c:3896
+ do_tmpfile+0x19d/0x460 fs/namei.c:3961
+ path_openat+0x4837/0x6280 fs/namei.c:3995
+ do_filp_open+0x26b/0x610 fs/namei.c:4031
+ io_openat2+0x5d5/0xa50 io_uring/openclose.c:140
+ io_openat+0x35/0x40 io_uring/openclose.c:177
+ __io_issue_sqe io_uring/io_uring.c:1734 [inline]
+ io_issue_sqe+0x394/0x1de0 io_uring/io_uring.c:1753
+ io_wq_submit_work+0xaf8/0xde0 io_uring/io_uring.c:1868
+ io_worker_handle_work+0xc4d/0x2090 io_uring/io-wq.c:615
+ io_wq_worker+0x403/0x1470 io_uring/io-wq.c:669
+ ret_from_fork+0x6d/0x90 arch/x86/kernel/process.c:153
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
 
-> +		close(fd);
-> +	}
-> +
-> +	libxfs_irele(ip);
-> +}
-> +
-> +static void handle_direntry(struct xfs_mount *mp, struct xfs_inode *pip,
-> +			    struct fsxattr *fsxp, char* cur_path, struct dirent *entry)
-> +{
-> +	char link_target[PATH_MAX];
-> +	char path[PATH_MAX];
-> +	int error;
-> +	int fd = -1;
-> +	int flags;
-> +	int majdev;
-> +	int mindev;
-> +	int mode;
-> +	off_t len;
-> +	struct cred creds;
-> +	struct stat file_stat;
-> +	struct xfs_name xname;
-> +	struct xfs_parent_args *ppargs = NULL;
-> +	struct xfs_inode *ip;
-> +	struct xfs_trans *tp;
-> +
-> +	/*
-> +	 * Skip "." and ".." directories
-> +	 */
-> +	if (strcmp(entry->d_name, ".") == 0 ||
-> +	    strcmp(entry->d_name, "..") == 0) {
-> +		return;
-> +	}
-> +
-> +	/*
-> +	 * Create the full path to the original file or directory
-> +	 */
-> +	snprintf(path, sizeof(path), "%s/%s", cur_path, entry->d_name);
-> +
-> +	if (lstat(path, &file_stat) < 0) {
-> +		printf("%s (error accessing)\n", entry->d_name);
-> +		return;
-> +	}
-> +
-> +	memset(&creds, 0, sizeof(creds));
-> +	creds.cr_uid = file_stat.st_uid;
-> +	creds.cr_gid = file_stat.st_gid;
-> +	xname.name = (unsigned char *)entry->d_name;
-> +	xname.len = strlen(entry->d_name);
-> +	xname.type = 0;
-> +	mode = file_stat.st_mode;
-> +	flags = XFS_ILOG_CORE;
-> +	switch (file_stat.st_mode & S_IFMT) {
-> +	case S_IFDIR:
-> +		tp = getres(mp, 0);
-> +		error = creatproto(&tp, pip, mode, 0, &creds, fsxp, &ip);
-> +		if (error)
-> +			fail(_("Inode allocation failed"), error);
-> +		ppargs = newpptr(mp);
-> +		libxfs_trans_ijoin(tp, pip, 0);
-> +		xname.type = XFS_DIR3_FT_DIR;
-> +		newdirent(mp, tp, pip, &xname, ip, ppargs);
-> +		libxfs_bumplink(tp, pip);
-> +		libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
-> +		newdirectory(mp, tp, ip, pip);
-> +
-> +		/*
-> +		 * copy over timestamps
-> +		 */
-> +		writetimestamps(ip, file_stat);
-> +
-> +		libxfs_trans_log_inode(tp, ip, flags);
-> +		error = -libxfs_trans_commit(tp);
-> +		if (error)
-> +			fail(_("Directory inode allocation failed."), error);
-> +
-> +		libxfs_parent_finish(mp, ppargs);
-> +		tp = NULL;
+Uninit was stored to memory at:
+ xfs_dialloc_ag_inobt+0x1cc1/0x2550 fs/xfs/libxfs/xfs_ialloc.c:1227
+ xfs_dialloc_ag fs/xfs/libxfs/xfs_ialloc.c:1585 [inline]
+ xfs_dialloc_try_ag fs/xfs/libxfs/xfs_ialloc.c:1835 [inline]
+ xfs_dialloc+0x14c4/0x3470 fs/xfs/libxfs/xfs_ialloc.c:1945
+ xfs_create_tmpfile+0x496/0x12c0 fs/xfs/xfs_inode.c:827
+ xfs_generic_create+0x65c/0x1610 fs/xfs/xfs_iops.c:227
+ xfs_vn_tmpfile+0x6b/0x140 fs/xfs/xfs_iops.c:1194
+ vfs_tmpfile+0x5e4/0xe40 fs/namei.c:3896
+ do_tmpfile+0x19d/0x460 fs/namei.c:3961
+ path_openat+0x4837/0x6280 fs/namei.c:3995
+ do_filp_open+0x26b/0x610 fs/namei.c:4031
+ io_openat2+0x5d5/0xa50 io_uring/openclose.c:140
+ io_openat+0x35/0x40 io_uring/openclose.c:177
+ __io_issue_sqe io_uring/io_uring.c:1734 [inline]
+ io_issue_sqe+0x394/0x1de0 io_uring/io_uring.c:1753
+ io_wq_submit_work+0xaf8/0xde0 io_uring/io_uring.c:1868
+ io_worker_handle_work+0xc4d/0x2090 io_uring/io-wq.c:615
+ io_wq_worker+0x403/0x1470 io_uring/io-wq.c:669
+ ret_from_fork+0x6d/0x90 arch/x86/kernel/process.c:153
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
 
-Shouldn't this copy xattrs and fsxattrs to directories and symlinks too?
+Local variable trec created at:
+ xfs_dialloc_ag_inobt+0x139/0x2550 fs/xfs/libxfs/xfs_ialloc.c:1101
+ xfs_dialloc_ag fs/xfs/libxfs/xfs_ialloc.c:1585 [inline]
+ xfs_dialloc_try_ag fs/xfs/libxfs/xfs_ialloc.c:1835 [inline]
+ xfs_dialloc+0x14c4/0x3470 fs/xfs/libxfs/xfs_ialloc.c:1945
 
-> +
-> +		walk_dir(mp, ip, fsxp, path);
-> +
-> +		libxfs_irele(ip);
-> +		break;
-> +	case S_IFREG:
-> +		fd = newregfile(path);
-> +		xname.type = XFS_DIR3_FT_REG_FILE;
-> +		create_file(mp, pip, fsxp, mode, creds, xname, flags, file_stat,
-> +			    0, fd, entry->d_name, path);
-> +		break;
-> +	case S_IFLNK:
-> +		len = readlink(path, link_target, PATH_MAX - 1);
-> +		tp = getres(mp, XFS_B_TO_FSB(mp, len));
-> +		ppargs = newpptr(mp);
-> +		error = creatproto(&tp, pip, mode, 0, &creds, fsxp, &ip);
-> +		if (error)
-> +			fail(_("Inode allocation failed"), error);
-> +		writesymlink(tp, ip, link_target, len);
-> +		libxfs_trans_ijoin(tp, pip, 0);
-> +		xname.type = XFS_DIR3_FT_SYMLINK;
-> +		newdirent(mp, tp, pip, &xname, ip, ppargs);
-> +
-> +		/*
-> +		 * copy over timestamps
-> +		 */
-> +		writetimestamps(ip, file_stat);
-> +
-> +		libxfs_trans_log_inode(tp, ip, flags);
-> +		error = -libxfs_trans_commit(tp);
-> +		if (error)
-> +			fail(_("Error encountered creating file from prototype file"),
-> +			     error);
-> +		libxfs_parent_finish(mp, ppargs);
-> +		libxfs_irele(ip);
-> +		break;
-> +	case S_IFCHR:
-> +		xname.type = XFS_DIR3_FT_CHRDEV;
-> +		majdev = major(file_stat.st_rdev);
-> +		mindev = minor(file_stat.st_rdev);
-> +		create_file(mp, pip, fsxp, mode, creds, xname, flags, file_stat,
-> +			    IRIX_MKDEV(majdev, mindev), 0, entry->d_name, path);
-> +		break;
-> +	case S_IFBLK:
-> +		xname.type = XFS_DIR3_FT_BLKDEV;
-> +		majdev = major(file_stat.st_rdev);
-> +		mindev = minor(file_stat.st_rdev);
-> +		create_file(mp, pip, fsxp, mode, creds, xname, flags, file_stat,
-> +			    IRIX_MKDEV(majdev, mindev), 0, entry->d_name, path);
-> +		break;
-> +	case S_IFIFO:
-> +		flags |= XFS_ILOG_DEV;
-> +		create_file(mp, pip, fsxp, mode, creds, xname, flags, file_stat,
-> +			    0, 0, entry->d_name, path);
-> +		break;
-> +	default:
-> +		break;
-> +	}
-> +}
-> +
-> +/*
-> + * walk_dir will recursively list files and directories
-> + * and populate the mountpoint *mp with them using handle_direntry().
-> + */
-> +static void walk_dir(struct xfs_mount *mp, struct xfs_inode *pip,
-> +			    struct fsxattr *fsxp, char *cur_path)
-> +{
-> +	DIR *dir;
-> +	struct dirent *entry;
-> +
-> +	/*
-> +	 * open input directory and iterate over all entries in it.
-> +	 * when another directory is found, we will recursively call
-> +	 * populatefromdir.
-> +	 */
-> +	if ((dir = opendir(cur_path)) == NULL)
-> +		fail(_("cannot open input dir"), 1);
-> +	while ((entry = readdir(dir)) != NULL) {
-> +		handle_direntry(mp, pip, fsxp, cur_path, entry);
-> +	}
-> +	closedir(dir);
-> +}
+CPU: 1 UID: 0 PID: 7854 Comm: iou-wrk-7829 Not tainted 6.15.0-rc2-syzkaller-00404-g8560697b23dc #0 PREEMPT(undef) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 02/12/2025
+=====================================================
 
-nftw() ?  Which has the nice feature of constraining the number of open
-dirs at any given time.
 
---D
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-> +
-> +void populate_from_dir(struct xfs_mount *mp, struct xfs_inode *pip,
-> +		       struct fsxattr *fsxp, char *cur_path)
-> +{
-> +	int error;
-> +	int mode;
-> +	struct cred creds;
-> +	struct xfs_inode *ip;
-> +	struct xfs_trans *tp;
-> +
-> +	/*
-> +	 * we first ensure we have the root inode
-> +	 */
-> +	memset(&creds, 0, sizeof(creds));
-> +	creds.cr_uid = 0;
-> +	creds.cr_gid = 0;
-> +	mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-> +	tp = getres(mp, 0);
-> +	error = creatproto(&tp, pip, mode | S_IFDIR, 0, &creds, fsxp, &ip);
-> +	if (error)
-> +		fail(_("Inode allocation failed"), error);
-> +	pip = ip;
-> +	mp->m_sb.sb_rootino = ip->i_ino;
-> +	libxfs_log_sb(tp);
-> +	newdirectory(mp, tp, ip, pip);
-> +	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> +	error = -libxfs_trans_commit(tp);
-> +	if (error)
-> +		fail(_("Inode allocation failed"), error);
-> +
-> +	libxfs_parent_finish(mp, NULL);
-> +
-> +	/*
-> +	 * RT initialization.  Do this here to ensure that
-> +	 * the RT inodes get placed after the root inode.
-> +	 */
-> +	error = create_metadir(mp);
-> +	if (error)
-> +		fail(_("Creation of the metadata directory inode failed"),
-> +		     error);
-> +
-> +	rtinit(mp);
-> +
-> +	/*
-> +	 * now that we have a root inode, let's
-> +	 * walk the input dir and populate the partition
-> +	 */
-> +	walk_dir(mp, ip, fsxp, cur_path);
-> +
-> +	/*
-> +	 * we free up our root inode
-> +	 * only when we finished populating the
-> +	 * root filesystem
-> +	 */
-> +	libxfs_irele(ip);
-> +}
-> diff --git a/mkfs/populate.h b/mkfs/populate.h
-> new file mode 100644
-> index 0000000..d65df57
-> --- /dev/null
-> +++ b/mkfs/populate.h
-> @@ -0,0 +1,10 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2025 Chainguard, Inc.
-> + * All Rights Reserved.
-> + * Author: Luca Di Maio <luca.dimaio1@gmail.com>
-> + */
-> +#ifndef MKFS_POPULATE_H_
-> +#define MKFS_POPULATE_H_
-> +void populate_from_dir(xfs_mount_t *mp, xfs_inode_t *pip, struct fsxattr *fsxp, char *name);
-> +#endif /* MKFS_POPULATE_H_ */
-> --
-> 2.49.0
-> 
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
