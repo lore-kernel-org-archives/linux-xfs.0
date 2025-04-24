@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 602CF1B040B
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 21:53:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CD301B040B
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 21:53:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745531604; cv=none; b=S7u8dbgTJyssymwM22WtA3PCvsHuVmm9gAtPeKT4lwOWIn3fnQcB901e2vYkIsKrfTytlKvLiiDcnObqWD+dk4yShZdo8KR/Gg+6SvA0nnqCReuGOEVe0G52zjKKx5x30JBy8AtQQckc/QJY40nU4iwU1FaO4Cb5QBuRcjCRqe0=
+	t=1745531621; cv=none; b=Gc+/+p3Y25O2p4rCe79u509SP6X2IO2V6rmAhPzVMcWVtPzepkoa+rVe6UkvXraDb/+jtoHS9yzrk741RZuxGHCwGasE35u286M78nVjFy3Sxbk9Axh63HcAzF9HU3B0lvwzp12VXeC00vR7N6XGWEzmAM8FFCvUUYSPERnhyNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745531604; c=relaxed/simple;
-	bh=BxrAZnLwrB9QiCaJ26ivd0AOaRRFeeOk98WQTDZXcdA=;
+	s=arc-20240116; t=1745531621; c=relaxed/simple;
+	bh=5syYQJn+51VEJRQX1CDU8tESBBlfTy8OFtBFkUGY4iU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bVZJYGEzhvKdAmzCQ0er1nvceo2wsgbZBJDi9BAr2udWKCuORB19HIVhcMMDOgf5M+ATl4TCcDtc00Pt9sZkwbSCkWKPJGi/UVzI82snXScazNFcLxQn9g0HhBnVZ3sQ982x/xV1HZ0l50+dLMc4xVbXfmm+7J0V9mjQR2V6O9U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=stBQrQ5J; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=N/qoQTOo1WXv5bx4w1mHcUlQYxrtzC6yfq9tSO/f113ihwi9J+EMvnIGOkX2vJW8KC90Vh/aXFP9dvX1VRRa0zOuoM23BjtqRLBtpta4UOwH2iPebs6ActCIR0LOgZKtySAWIpXXul86eCmLsHiN+hzy8g2vl3GFz2PwOFMk0aU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YAKKdvNl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="stBQrQ5J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C532C4CEE4;
-	Thu, 24 Apr 2025 21:53:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YAKKdvNl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8936C4CEE3;
+	Thu, 24 Apr 2025 21:53:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745531604;
-	bh=BxrAZnLwrB9QiCaJ26ivd0AOaRRFeeOk98WQTDZXcdA=;
+	s=k20201202; t=1745531619;
+	bh=5syYQJn+51VEJRQX1CDU8tESBBlfTy8OFtBFkUGY4iU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=stBQrQ5JkTYlmvMYepHsY1iA1mVIxqyY/xJbPR6XBbQOUNge6cZw7fIjlVMU2V5px
-	 FFgW1N3VXRcDTaI40BUxm2uMVL3k450i4Nk3LRVsmb8cQcMPejd0Qay1MoyuaJIjNP
-	 3q/N0jSJkQOPkQoC6ULec4EW8Vcr+Ev3GNejdIP3G8040zcwHdV4oRD1BC7ruMJ+rM
-	 uVg4Q1ZHuE5NQZAMwhZD6v5sMlMeNMRrNSc87cUDy9Jrt7K9k4UlGoDxjoWvg9llo1
-	 aOu7MEHYjtyAxJ+pwPmBQ6YhSK1f3ukDcxENM9GJwH8GM6WYBrjl/eYapZ7Tsm5HIm
-	 3ZT9PEpZPOj7A==
-Date: Thu, 24 Apr 2025 14:53:23 -0700
-Subject: [PATCH 3/5] xfs_io: redefine what statx -m all does
+	b=YAKKdvNlZ+6d53cuiUQ9mv1b0Vt3oZqoF2itjMB3oXxkFRv5cou7OsmZcKk8mbhfk
+	 yI9jTlwDik5wkAMk7vgzTZ4YoCpysb/aqRpRsQhPv01QIRXWjvLADwRUnjdDtGpFzu
+	 EDvNYLDw3YNHWdG/oKbrVwi+DOffSLmvZEO2mj3J0Mnp6VXnStrKL3TtJvQREFEfIc
+	 VHGYQBoXxPH5ReRv8EGmoiZhNYqT91MFN3FfMYu/8xmO626OeYhM0m+anPrx5SC1Vc
+	 w7JNCkJZzlTYIuZzGi+Dc345hRYDAOq2XVlTYKZLblDpahBxK3K2bRRqtFPY8uh0lA
+	 PjecjmwSbQjgQ==
+Date: Thu, 24 Apr 2025 14:53:39 -0700
+Subject: [PATCH 4/5] xfs_io: make statx mask parsing more generally useful
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <174553149374.1175632.14342104810810203344.stgit@frogsfrogsfrogs>
+Message-ID: <174553149393.1175632.5228793003628060330.stgit@frogsfrogsfrogs>
 In-Reply-To: <174553149300.1175632.8668620970430396494.stgit@frogsfrogsfrogs>
 References: <174553149300.1175632.8668620970430396494.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,90 +45,206 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-As of kernel commit 581701b7efd60b ("uapi: deprecate STATX_ALL"),
-STATX_ALL is deprecated and has been withdrawn from the kernel codebase.
-The symbol still exists for userspace to avoid compilation breakage, but
-we're all suppose to stop using it.
+Enhance the statx -m parsing to be more useful:
 
-Therefore, redefine statx -m all to set all the bits except for the
-reserved bit since it's pretty silly that "all" doesn't actually get you
-all the fields.
+Add words for all the new STATX_* field flags added in the previous
+patch.
 
-Update the STATX_ALL definition in io/statx.h so people stop using it.
+Allow "+" and "-" prefixes to add or remove flags from the mask.
+
+Allow multiple arguments to be specified as a comma separated list.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- io/statx.h        |    8 +++++++-
- io/stat.c         |    7 ++++---
- man/man8/xfs_io.8 |    3 ++-
- 3 files changed, 13 insertions(+), 5 deletions(-)
+ io/stat.c         |  120 ++++++++++++++++++++++++++++++++++++++++++++++-------
+ man/man8/xfs_io.8 |   11 +++++
+ 2 files changed, 116 insertions(+), 15 deletions(-)
 
 
-diff --git a/io/statx.h b/io/statx.h
-index 273644f53cf1c4..f7ef1d2784a2a9 100644
---- a/io/statx.h
-+++ b/io/statx.h
-@@ -170,9 +170,15 @@ struct statx {
- #define STATX_BLOCKS		0x00000400U	/* Want/got stx_blocks */
- #define STATX_BASIC_STATS	0x000007ffU	/* The stuff in the normal stat struct */
- #define STATX_BTIME		0x00000800U	/* Want/got stx_btime */
--#define STATX_ALL		0x00000fffU	/* All currently supported flags */
- #define STATX__RESERVED		0x80000000U	/* Reserved for future struct statx expansion */
- 
-+/*
-+ * This is deprecated, and shall remain the same value in the future.  To avoid
-+ * confusion please use the equivalent (STATX_BASIC_STATS | STATX_BTIME)
-+ * instead.
-+ */
-+#define STATX_ALL		0x00000fffU
-+
- /*
-  * Attributes to be found in stx_attributes
-  *
 diff --git a/io/stat.c b/io/stat.c
-index b37b1a12b8b2fd..52e2d33010a99a 100644
+index 52e2d33010a99a..c3a4bb15229ee5 100644
 --- a/io/stat.c
 +++ b/io/stat.c
-@@ -332,7 +332,8 @@ statx_help(void)
- " -v -- More verbose output\n"
- " -r -- Print raw statx structure fields\n"
+@@ -321,10 +321,41 @@ _statx(
+ #endif
+ }
+ 
++struct statx_masks {
++	const char	*name;
++	unsigned int	mask;
++};
++
++static const struct statx_masks statx_masks[] = {
++	{"basic",		STATX_BASIC_STATS},
++	{"all",			~STATX__RESERVED},
++
++	{"type",		STATX_TYPE},
++	{"mode",		STATX_MODE},
++	{"nlink",		STATX_NLINK},
++	{"uid",			STATX_UID},
++	{"gid",			STATX_GID},
++	{"atime",		STATX_ATIME},
++	{"mtime",		STATX_MTIME},
++	{"ctime",		STATX_CTIME},
++	{"ino",			STATX_INO},
++	{"size",		STATX_SIZE},
++	{"blocks",		STATX_BLOCKS},
++	{"btime",		STATX_BTIME},
++	{"mnt_id",		STATX_MNT_ID},
++	{"dioalign",		STATX_DIOALIGN},
++	{"mnt_id_unique",	STATX_MNT_ID_UNIQUE},
++	{"subvol",		STATX_SUBVOL},
++	{"write_atomic",	STATX_WRITE_ATOMIC},
++	{"dio_read_align",	STATX_DIO_READ_ALIGN},
++};
++
+ static void
+ statx_help(void)
+ {
+-        printf(_(
++	unsigned int	i;
++
++	printf(_(
+ "\n"
+ " Display extended file status.\n"
+ "\n"
+@@ -334,9 +365,16 @@ statx_help(void)
  " -m mask -- Specify the field mask for the statx call\n"
--"            (can also be 'basic' or 'all'; default STATX_ALL)\n"
-+"            (can also be 'basic' or 'all'; defaults to\n"
-+"             STATX_BASIC_STATS | STATX_BTIME)\n"
+ "            (can also be 'basic' or 'all'; defaults to\n"
+ "             STATX_BASIC_STATS | STATX_BTIME)\n"
++" -m +mask -- Add this to the field mask for the statx call\n"
++" -m -mask -- Remove this from the field mask for the statx call\n"
  " -D -- Don't sync attributes with the server\n"
  " -F -- Force the attributes to be sync'd with the server\n"
- "\n"));
-@@ -391,7 +392,7 @@ statx_f(
- 	char		*p;
+-"\n"));
++"\n"
++"statx mask values: "));
++
++	for (i = 0; i < ARRAY_SIZE(statx_masks); i++)
++		printf("%s%s", i == 0 ? "" : ", ", statx_masks[i].name);
++	printf("\n");
+ }
+ 
+ /* statx helper */
+@@ -377,6 +415,68 @@ dump_raw_statx(struct statx *stx)
+ 	return 0;
+ }
+ 
++enum statx_mask_op {
++	SET,
++	REMOVE,
++	ADD,
++};
++
++static bool
++parse_statx_masks(
++	char			*optarg,
++	unsigned int		*caller_mask)
++{
++	char			*arg = optarg;
++	char			*word;
++	unsigned int		i;
++
++	while ((word = strtok(arg, ",")) != NULL) {
++		enum statx_mask_op op;
++		unsigned int	mask;
++		char		*p;
++
++		arg = NULL;
++
++		if (*word == '+') {
++			op = ADD;
++			word++;
++		} else if (*word == '-') {
++			op = REMOVE;
++			word++;
++		} else {
++			op = SET;
++		}
++
++		for (i = 0; i < ARRAY_SIZE(statx_masks); i++) {
++			if (!strcmp(statx_masks[i].name, word)) {
++				mask = statx_masks[i].mask;
++				goto process_op;
++			}
++		}
++
++		mask = strtoul(word, &p, 0);
++		if (!p || p == word) {
++			printf( _("non-numeric mask -- %s\n"), word);
++			return false;
++		}
++
++process_op:
++		switch (op) {
++		case ADD:
++			*caller_mask |= mask;
++			continue;
++		case REMOVE:
++			*caller_mask &= ~mask;
++			continue;
++		case SET:
++			*caller_mask = mask;
++			continue;
++		}
++	}
++
++	return true;
++}
++
+ /*
+  * options:
+  * 	- input flags - query type
+@@ -389,7 +489,6 @@ statx_f(
+ 	char		**argv)
+ {
+ 	int		c, verbose = 0, raw = 0;
+-	char		*p;
  	struct statx	stx;
  	int		atflag = 0;
--	unsigned int	mask = STATX_ALL;
-+	unsigned int	mask = STATX_BASIC_STATS | STATX_BTIME;
- 
+ 	unsigned int	mask = STATX_BASIC_STATS | STATX_BTIME;
+@@ -397,18 +496,9 @@ statx_f(
  	while ((c = getopt(argc, argv, "m:rvFD")) != EOF) {
  		switch (c) {
-@@ -399,7 +400,7 @@ statx_f(
- 			if (strcmp(optarg, "basic") == 0)
- 				mask = STATX_BASIC_STATS;
- 			else if (strcmp(optarg, "all") == 0)
--				mask = STATX_ALL;
-+				mask = ~STATX__RESERVED;
- 			else {
- 				mask = strtoul(optarg, &p, 0);
- 				if (!p || p == optarg) {
+ 		case 'm':
+-			if (strcmp(optarg, "basic") == 0)
+-				mask = STATX_BASIC_STATS;
+-			else if (strcmp(optarg, "all") == 0)
+-				mask = ~STATX__RESERVED;
+-			else {
+-				mask = strtoul(optarg, &p, 0);
+-				if (!p || p == optarg) {
+-					printf(
+-				_("non-numeric mask -- %s\n"), optarg);
+-					exitcode = 1;
+-					return 0;
+-				}
++			if (!parse_statx_masks(optarg, &mask)) {
++				exitcode = 1;
++				return 0;
+ 			}
+ 			break;
+ 		case 'r':
 diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 726e25af272242..198215103812c6 100644
+index 198215103812c6..64b3e907553f48 100644
 --- a/man/man8/xfs_io.8
 +++ b/man/man8/xfs_io.8
-@@ -994,7 +994,8 @@ .SH FILE I/O COMMANDS
- Set the field mask for the statx call to STATX_BASIC_STATS.
- .TP
- .B \-m all
--Set the the field mask for the statx call to STATX_ALL (default).
-+Set all bits in the field mask for the statx call except for STATX__RESERVED.
-+The default is to set STATX_BASIC_STATS and STATX_BTIME.
- .TP
+@@ -1000,6 +1000,17 @@ .SH FILE I/O COMMANDS
  .B \-m <mask>
  Specify a numeric field mask for the statx call.
+ .TP
++.BI "\-m +" value
++Add this value to the statx field value.
++Values can be numeric, or they can be words describing the desired fields.
++See the help command output for a list of recognized words.
++.TP
++.BI "\-m -" value
++Remove this value from the statx field value.
++.TP
++.BI "\-m +" value ",-" value
++Add and remove multiple values from the statx field value.
++.TP
+ .B \-F
+ Force the attributes to be synced with the server.
+ .TP
 
