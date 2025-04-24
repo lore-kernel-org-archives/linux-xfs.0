@@ -1,36 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A25BC1B040B
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 21:52:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9331C1B040B
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 21:52:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745531567; cv=none; b=qkWsf9NM12TlkBEwdqrAYF48ohrDivwKkfLgqPv+IJqGGTcbbeWE+zWgFaeUln/vH2q64AvpkSP4XjbsXjI4PDzgCeOw0fC+sBHHTgUWQR0lhGBuADHbB6mbEQWBbCurDPgqrMA1j9li+EuTx+RxLGjfplpJuPYWeacpgL6moBU=
+	t=1745531573; cv=none; b=HNkAZKB+yGw4egFTJHxkzIzSBtg5dkZ9Nlr+mJflmKRaJnsfFOxpSEqyKVoCxICMztFwSs25RNs7C240inYx9j3evlCpmrCBB8VF7rMuIfKv2hcIO8OENnC5sKW7eUPzEHyf5AncOD+B+LXDzeNCvKeUYKt9/flZAh43vDHKnN8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745531567; c=relaxed/simple;
-	bh=aoia2jxoqN0OYflZ+t5TrSsk/2iB5DTiqbVUCIy9gAA=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=uz0nWHBAor+q++1nTfN0xSWpCRbxtJax2yrcdRgizkpumu4wPkqn5Ybd5mmVjiZMWIF7NGz5cyh7pIUWHZnzoKxVD4cszmhgHjK3EzaL8ujjcqooXMay40JviG0Dkuf8In61B4gr0gCXgaiHtnsI1rtz719eIcyj9tr3xqcIkYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xv+yqwmg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745531573; c=relaxed/simple;
+	bh=n5VL95sZiyi8lkh/EhcpxpwDb/d8hdWb/tBwWZax1Jk=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=DyVaSDmpkJbQgRRv8MofEJ+3rMWwNgvC0hcI8nRML+MRsNgESth4aFhyFO+W8SCsezsLyvlDpvqxPadE7ODMuETvz4pPwMNVG0+lDW+Paa0HanWLH0QTuRSh/cKYhl2WJMV5ZblHyycjeZvR23nehTjFeHS4xUsjUrplfWxFLMQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZiiNhEn9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xv+yqwmg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56B30C4CEE3;
-	Thu, 24 Apr 2025 21:52:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZiiNhEn9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0837FC4CEE3;
+	Thu, 24 Apr 2025 21:52:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745531567;
-	bh=aoia2jxoqN0OYflZ+t5TrSsk/2iB5DTiqbVUCIy9gAA=;
-	h=Date:Subject:From:To:Cc:From;
-	b=Xv+yqwmgiWORJtiqVRsDyocSpCI3b6kZyAVHgACx7LbReZk6AY1ec1r599A27F2JH
-	 Z0Q619R6CTm/6JOPWU741sj7/m9jCMc1IRnrj0p/1Q1bAc0QMZnjnv7Xz+Tzm9jmR+
-	 aatOBJJLKCxcwAE3gNfByguAT37SLg05S/Xf59XItYQlX8dxbf+bpUONxd7zJKWy/i
-	 TSij9LEgrDuWEIb/1QZiH4kTRL+7o8TJhTV5q5rFPPVS9Dv5FyYpdFrdLB9jhNz2Gm
-	 vVhn+o9DhvyWz77NK/rANLdpg95XEJ/M+lGTAHsW3GwrVa36+7lfcULQjCz1isB9fd
-	 NAOW4+P/g7XCA==
-Date: Thu, 24 Apr 2025 14:52:46 -0700
-Subject: [PATCHSET] xfsprogs: random bug fixes
+	s=k20201202; t=1745531573;
+	bh=n5VL95sZiyi8lkh/EhcpxpwDb/d8hdWb/tBwWZax1Jk=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=ZiiNhEn9xJVdwpn9rddchf4/wZbWpr1yTvrpL5IlEu6RLNzDtMzVuIoKsj7oJqgkY
+	 9HpGKprzfukxcUl58ZQBph69IH8eQ+1wkjBG/HNnls/z+7EnNoBxCN4GY89bDtYFmc
+	 68aQ7ol+kBZjynssnM/AT4UPOiU8GnS+iDbEppQPd0iZP3M/swICHNsbkDPjoZh/V9
+	 JNtY++aoDaf6m1Wv7D1kG9MnQpjP88oini5a1mGgkh08oQQ1COzKpZsRimi2eSSK5F
+	 LMQ4iawCGhyvG3/OWDC/nJvdUfVNsZ+/A6NyPsV1HQ12DvxQtzw5N/+TKpWzjzBhX/
+	 HfKUpT5eQCxAg==
+Date: Thu, 24 Apr 2025 14:52:52 -0700
+Subject: [PATCH 1/5] man: fix missing cachestat manpage
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, ritesh.list@gmail.com, linux-xfs@vger.kernel.org
-Message-ID: <174553149300.1175632.8668620970430396494.stgit@frogsfrogsfrogs>
+Message-ID: <174553149338.1175632.2723141122621347164.stgit@frogsfrogsfrogs>
+In-Reply-To: <174553149300.1175632.8668620970430396494.stgit@frogsfrogsfrogs>
+References: <174553149300.1175632.8668620970430396494.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,37 +43,30 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here's a pile of assorted bug fixes from around the codebase.
+Fix missing cachestat documentation so that xfs/293 doesn't fail.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
-
-The only unreviewed patches are these:
-  [PATCH 3/5] xfs_io: redefine what statx -m all does
-  [PATCH 4/5] xfs_io: make statx mask parsing more generally useful
-
-(I haven't seen a for-next push, so that's why I'm resending the other
-accumulated fixes.  They haven't changed much.)
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes-6.15
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-Commits in this patchset:
- * man: fix missing cachestat manpage
- * xfs_io: catch statx fields up to 6.15
- * xfs_io: redefine what statx -m all does
- * xfs_io: make statx mask parsing more generally useful
- * mkfs: fix blkid probe API violations causing weird output
----
- io/statx.h            |   33 ++++++++++++
- io/stat.c             |  130 +++++++++++++++++++++++++++++++++++++++++++------
- libxfs/topology.c     |    3 +
- m4/package_libcdev.m4 |    2 -
- man/man8/xfs_io.8     |   17 ++++++
- 5 files changed, 163 insertions(+), 22 deletions(-)
+ man/man8/xfs_io.8 |    3 +++
+ 1 file changed, 3 insertions(+)
+
+
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index df508054b01cae..726e25af272242 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -1101,6 +1101,9 @@ .SH FILE I/O COMMANDS
+ Do not print timing information at all.
+ .PD
+ .RE
++.TP
++.BI "cachestat off len
++Print page cache statistics for the given file range.
+ 
+ .SH MEMORY MAPPED I/O COMMANDS
+ .TP
 
