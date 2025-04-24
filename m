@@ -1,53 +1,71 @@
-Received: from out-172.mta1.migadu.com (out-172.mta1.migadu.com [95.215.58.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CD2622B5B8
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 12:01:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2573319E7F9
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 16:09:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745496101; cv=none; b=WhtmdsQkbqi7/Lf5QOM8EoSmRQLo6aUZrqaFF2nDMNzl2tvdAzG/BdD9hTHfpqk2wN3AczFrwurXVj9dHnMc12IabjVyi8pJcMxFaZBEkBBx22X/Wv89yzBqAINB4U7W0QI/o0dyC9HwvlAnLAfswkt4ewllS8STU1cNHmhel94=
+	t=1745510991; cv=none; b=dEn10MposE9fORIQr2te4MhkHjosaJi643L58CXafUXDmWuCLCtsmZ1P7d21OsysEqXv5k+9aL+2tytmjhVW/+T6tnKqpLIjAsG5pANBaryyUWCvlTAv9zAWqpvxA+8JxC+JUcTOwVwCtl7EYY4OqgN5n3Lchy/v+IDyM3lkr9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745496101; c=relaxed/simple;
-	bh=RDRKZeNKN55umrzQ5oGHsI+0KYc+ooDByqGf/CbRS4M=;
+	s=arc-20240116; t=1745510991; c=relaxed/simple;
+	bh=oCcQQE2oZKkBqBYqlxTnOkQAtQM1juvKDbMzPFlS3Ko=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lc1zBcB2D1DOIdzlnDPHK2wCBPMUXAvQNF/oQedRq+yXTxSUh7QSAYSJXfI0TveHvTh7sPlTfXIMBAevijd4COV66Nc71f8yQCu1opGGT4aATxAFlnUfWyjbo0nWI5ELHjnQvMaKTx9hac93WU8Q45caJEO13jFkoyEJuPzpsA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=u9gRpvYC; arc=none smtp.client-ip=95.215.58.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=R3GC1/ySjlZkLIhNd4Fa3+twljI1lZumIv9M/7BEdzTz7+KdtB30jAHCJQcBNyyZ90LF2dsPnM+sT11ePTXlny6M78ERoXpsZOXgva4cyOY/lqCHixejV1gcURGZlQ3uqv4+OiacqJKzYKe4gJMc4V2z+NNVkBIKvX7knrRj4Sw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nrHUoEAO; arc=none smtp.client-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="u9gRpvYC"
-Date: Thu, 24 Apr 2025 08:01:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1745496087;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=T2MMeEmusMY/E/i/SQKbyFaL7BU6CcGYmFZRFD2drdA=;
-	b=u9gRpvYCA7IkAb0B4poNcSjWcfnEIwKuPsuUltPGgb8dOqhtvOFUuqTpBE1musH7/BVP9b
-	38vbULDjl6NCX/pmhSnebe2rg3ejQKWdffXIWBn1CsORMSUQcA3dgQXk9yIE8/M4BAoo1k
-	1DBuUEL/zkkYq7EeqOTzQe9EbZUJZTQ=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Kent Overstreet <kent.overstreet@linux.dev>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, 
-	"Md. Haris Iqbal" <haris.iqbal@ionos.com>, Jack Wang <jinpu.wang@ionos.com>, Coly Li <colyli@kernel.org>, 
-	Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, Chris Mason <clm@fb.com>, 
-	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, 
-	Andreas Gruenbacher <agruenba@redhat.com>, Carlos Maiolino <cem@kernel.org>, 
-	Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>, 
-	Johannes Thumshirn <jth@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Pavel Machek <pavel@kernel.org>, linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev, 
-	linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: add more bio helper
-Message-ID: <anc2qstnukiwtskc4pd3kqajfswm3dzljxwa3awrxjs7mzppoc@nziz3h4ilqpd>
-References: <20250422142628.1553523-1-hch@lst.de>
- <jetduw7zshrmp4gl7zfpwqjweycwesxiod7xvtnxqwqekgtvdf@idwnvfzvhgik>
- <20250423093621.GA2578@lst.de>
- <sl4oibdxpjygqfpy6llq237zuckz7ym4fmzcfvxn2raofr37a5@hvevbcgm5trn>
- <20250423160733.GA656@lst.de>
- <q53k4x5nshvr2zatrgyhygxouv7ijyepe6cj2pfooemi6gbu4y@lpxxcvozazzu>
- <20250424083740.GA24723@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nrHUoEAO"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-5f62d3ed994so2238662a12.2
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 09:09:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1745510988; x=1746115788; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=TcDr4BbjURz6Wrji0AKrOphR6tIt4RmcHWd1H1qr+Jg=;
+        b=nrHUoEAOxQhAlK/j/82Uw3IWje9uMd2izunZQqg38koGRyPCaEyeqHK5GhB4NJjt7J
+         PaVK0Eoke/vJsRcnlFxF3NhAP6vLNA2oJFrM2t59qAxcxx2LrzNdABFC9kXcYyfi0FkE
+         4yenemd+s83yjTT9BAbxlBI/g+V7HwW2Z+01bxYasLWzGzeKifQrp/GyCJTGhepztYs4
+         HmDzIWxx+PY8wyDlW1M2wi6WCp0quffjHaBsJp1MX6bYGDgpUCiNaCmcLkdAnMZ76Pmj
+         SERmmIZ3stTzrlNArFYJVGLkN71TA5NJV0hM756F7ZH0VE2hbG+Cgcs8XfoJ8V4kNFCI
+         zOog==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745510988; x=1746115788;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TcDr4BbjURz6Wrji0AKrOphR6tIt4RmcHWd1H1qr+Jg=;
+        b=wedJcF00HadQ0C5ij2Tr0THih6bSHGE39zRNANzvko0Mk99hwCWHUhoZxj4K5MVhu8
+         EAi+KdQYGeMIajwOgVt7SDciuE5KNArzFKHptKe/Ah30MEP15Yt0kZRVDIyZ95bg/IDu
+         vO6gulZ9ZbkJO7w6iM2WuHOKOsn1av6BDoY7xbhILHlFPzyg5Xg0tL9ZVb2FltSa7j/O
+         YWtWcJ92S925UC4ghKYHwGI5cdGfu3yZ7l5QP1NRasvFyU1vCJWp29O7b5Pe4FzDCr5B
+         aqtYvcrTpE4gTKBtRQUK+rRlwHVHRzRPFV9Pim4YHCytha2eWABBeDsiASGtVwYk80MY
+         vZng==
+X-Gm-Message-State: AOJu0YxcdSkIMoQ/L5dz38N1JLu8ZbjvRTzjG2XkSsHeYW3Mf+fF4TX0
+	zQgpnJSA1WlfYJXkv36jdDXrriLem6qLvhuczzsEiNOMvCyCo5RY
+X-Gm-Gg: ASbGncuV/JfXjSA6wQ8zHD+bYe8CreIkeA7xVaIRdw9Xe+3Vqb6NbGc5j7aX+WZP92j
+	D610G2VMEvv+QhZW6FmvMxnUR6/dJPsq7Xwpma8Aqo6VVV3LwmiSUMFse38eZ1Gk44jZZKwXWWs
+	XFQjCqQalTVRUA3RYoYp+fZPcC7He9CG210zxgBUvbZj4U8N7jyFqLAaF3U3kUKyAvbwTPkkwuQ
+	PzYIGxOXxZVaoqMPHpW0pWSJlCrSHnJA/hYRD11Rt3mdFm4QrwsMld82pSpVJMgK/u7+pPnt0J3
+	af9fPg==
+X-Google-Smtp-Source: AGHT+IEBZR8fkKWOf1c1RUzMOEAGFyDHFhs2lT712xHmhMqzMFAw7rFqJ0rup3ELa7OJ4dYdkNSCOA==
+X-Received: by 2002:a05:6402:210d:b0:5f6:c5e3:faab with SMTP id 4fb4d7f45d1cf-5f6ddb0c5f5mr2732555a12.1.1745510988006;
+        Thu, 24 Apr 2025 09:09:48 -0700 (PDT)
+Received: from framework13 ([151.43.14.62])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5f6ed9dfa8fsm1327782a12.72.2025.04.24.09.09.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 24 Apr 2025 09:09:47 -0700 (PDT)
+Date: Thu, 24 Apr 2025 18:09:45 +0200
+From: Luca Di Maio <luca.dimaio1@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev, 
+	smoser@chainguard.dev, hch@infradead.org
+Subject: Re: [PATCH v6 2/4] populate: add ability to populate a filesystem
+ from a directory
+Message-ID: <vmiujkqli3d4c7ohgegpxvwacowl2tdaps6m4wyvwh6dcfado7@csca7fs5y7ss>
+References: <20250423160319.810025-1-luca.dimaio1@gmail.com>
+ <20250423160319.810025-3-luca.dimaio1@gmail.com>
+ <20250423202358.GI25675@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -56,73 +74,149 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250424083740.GA24723@lst.de>
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <20250423202358.GI25675@frogsfrogsfrogs>
 
-On Thu, Apr 24, 2025 at 10:37:40AM +0200, Christoph Hellwig wrote:
-> On Wed, Apr 23, 2025 at 02:02:11PM -0400, Kent Overstreet wrote:
-> > Allocating your own bio doesn't allow you to safely exceed the
-> > BIO_MAX_VECS limit - there's places in the io path that need to bounce,
-> > and they all use biosets.
-> 
-> Yes.  Another reason not to do it, which I don't want to anyway.
-> 
-> But we do have a few places that do it like squashs which we need to
-> weed out.  And/or finally kill the bounce bufferingreal, which is long
-> overdue.
-> 
-> > That may be an issue even for non vmalloc bios, unless everything that
-> > bounces has been converted to bounce to a folio of the same order.
-> 
-> Anything that actually hits the bounce buffering is going to
-> cause problems because it hasn't kept up with the evolution of
-> the block layer, and is basically not used for anything relevant.
+On Wed, Apr 23, 2025 at 01:23:58PM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 23, 2025 at 06:03:17PM +0200, Luca Di Maio wrote:
+> > +static void fail(char *msg, int i)
+> > +{
+> > +   fprintf(stderr, _("%s: %s [%d - %s]\n"), progname, msg, i, strerror(i));
+> > +   exit(1);
+> > +}
+> > +
+> > +static int newregfile(char *fname)
+> > +{
+> > +   int fd;
+> > +   off_t size;
+> > +
+> > +   if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
+> > +           fprintf(stderr, _("%s: cannot open %s: %s\n"), progname, fname,
+> > +                   strerror(errno));
+> > +           exit(1);
+> > +   }
+> > +
+> > +   return fd;
+> > +}
+>
+> Why is this copy-pasting code from proto.c?  Put the new functions
+> there, and then you don't need all this externing.
+>
 
-It's not just block/bounce.c that does bouncing, though.
+Right, this is because with a separate flag I thought it would have been
+better to keep it in a separate file.
+With the new behaviour you proposed in the previous mail (one -p flag,
+check if file/directory) then I can unify back into proto.c, thus
+removing all the exported functions changes.
 
-e.g. bcache has to bounce on a cache miss that will be written to the
-cache - we don't want to wait for the write to the backing device to
-complete before returning the read completion, and we can't write to the
-backing device with the original buffer if it was mapped to userspace.
+> > +
+> > +static void writetimestamps(struct xfs_inode *ip, struct stat statbuf)
+> > +{
+> > +   struct timespec64 ts;
+> > +
+> > +   /*
+> > +    * Copy timestamps from source file to destination inode.
+> > +    *  In order to not be influenced by our own access timestamp,
+> > +    *  we set atime and ctime to mtime of the source file.
+> > +    *  Usually reproducible archives will delete or not register
+> > +    *  atime and ctime, for example:
+> > +    *     https://www.gnu.org/software/tar/manual/html_section/Reproducibility.html
+> > +    */
+> > +   ts.tv_sec = statbuf.st_mtime;
+> > +   ts.tv_nsec = statbuf.st_mtim.tv_nsec;
+> > +   inode_set_atime_to_ts(VFS_I(ip), ts);
+> > +   inode_set_ctime_to_ts(VFS_I(ip), ts);
+> > +   inode_set_mtime_to_ts(VFS_I(ip), ts);
+>
+> This seems weird to me that you'd set [ac]time to mtime.  Why not open
+> the source file O_ATIME and copy atime?  And why would copying ctime not
+> result in a reproducible build?
+>
+> Not sure what you do about crtime.
+>
 
-I'm pretty sure I've seen bouncing in dm and maybe md as well, but it's
-been years.
+The problem stems from the extraction of the artifact. Usually
+reproducible archives will remove [ac]time and only keep mtime, but in
+the moment that a file is extracted, any filesystem will assign [ac]time
+to the moment of extraction.
+This will add randomness not to the filesystem itself, because it will
+be reproducible if acting on the same extracted archive, but it will not
+be reproducible if acting on a new extraction of the same archive.
 
-> > > The problem with transparent vmalloc handling is that it's not possible.
-> > > The magic handling for virtually indexed caches can be hidden on the
-> > > submission side, but the completion side also needs to call
-> > > invalidate_kernel_vmap_range for reads.  Requiring the caller to know
-> > > they deal vmalloc is a way to at least keep that on the radar.
-> > 
-> > yeesh, that's a landmine.
-> > 
-> > having a separate bio_add_vmalloc as a hint is still a really bad
-> > "solution", unfortunately. And since this is something we don't have
-> > sanitizers or debug code for, and it only shows up on some archs -
-> > that's nasty.
-> 
-> Well, we can't do it in the block stack because that doesn't have the
-> vmalloc address available.  So the caller has to do it, and having a
-> very visible sign is the best we can do.  Yes, signs aren't the
-> best cure for landmines, but they are better than nothing.
+Another approach we can do is what mkfs.ext4's populate functionality is
+doing: while it preserves mtime, [cr,a,c]time is set to whatever time the
+mkfs command is running.
 
-Given that only a few architectures need it, maybe sticking the vmalloc
-address in struct bio is something we should think about.
+This would make it preserve the important timestamp (mtime) and move the
+"problem" of the reproducible/changing timestamp to the environment,
+while keeping the behaviour of mkfs.xfs sensible
 
-Obviously not worth it if only 2-3 codepaths need it, but if vmalloc
-fallbacks become more common it's something to think about.
+What do you think?
 
-> > > Not for a purely synchronous helper we could handle both, but so far
-> > > I've not seen anything but the xfs log recovery code that needs it,
-> > > and we'd probably get into needing to pass a bio_set to avoid
-> > > deadlock when used deeper in the stack, etc.  I can look into that
-> > > if we have more than a single user, but for now it doesn't seem
-> > > worth it.
-> > 
-> > bcache and bcachefs btree buffers can also be vmalloc backed. Possibly
-> > also the prio_set path in bcache, for reading/writing bucket gens, but
-> > I'd have to check.
-> 
-> But do you do synchronous I/O, i.e. using sumit_bio_wait on them?
+> > +   /*
+> > +    * copy over file content, attributes and
+> > +    * timestamps
+> > +    */
+> > +   if (fd != 0) {
+> > +           writefile(ip, fname, fd);
+> > +           writeattrs(ip, fname, fd);
+>
+> Since we're adding features, should this read the fsxattr info from the
+> source file, override it with the set fields in *fsxp, and set that on
+> the file?  If you're going to slurp up a directory, you might as well
+> get all the non-xattr file attributes.
+>
 
-Most btree node reads are synchronous, but not when we're prefetching.
+Right, I thought creatproto() did that, but now I see that this is done
+only for the root inode, I'll add this for others too, thanks.
+
+> > +           libxfs_parent_finish(mp, ppargs);
+> > +           tp = NULL;
+>
+> Shouldn't this copy xattrs and fsxattrs to directories and symlinks too?
+>
+
+Right, will add, thanks.
+
+> > +/*
+> > + * walk_dir will recursively list files and directories
+> > + * and populate the mountpoint *mp with them using handle_direntry().
+> > + */
+> > +static void walk_dir(struct xfs_mount *mp, struct xfs_inode *pip,
+> > +                       struct fsxattr *fsxp, char *cur_path)
+> > +{
+> > +   DIR *dir;
+> > +   struct dirent *entry;
+> > +
+> > +   /*
+> > +    * open input directory and iterate over all entries in it.
+> > +    * when another directory is found, we will recursively call
+> > +    * populatefromdir.
+> > +    */
+> > +   if ((dir = opendir(cur_path)) == NULL)
+> > +           fail(_("cannot open input dir"), 1);
+> > +   while ((entry = readdir(dir)) != NULL) {
+> > +           handle_direntry(mp, pip, fsxp, cur_path, entry);
+> > +   }
+> > +   closedir(dir);
+> > +}
+>
+> nftw() ?  Which has the nice feature of constraining the number of open
+> dirs at any given time.
+>
+> --D
+>
+
+The problem with nftw() is that working with callback functions, we will
+need to switch to static variables for state, for example to keep track
+of each ip's pip, while with the recursive approach we can have some
+state and basically walk_dir() behaves similar to parseproto(), making
+changes to the rest of the file minimal.
+This seems to involve a lot more changes than now where we're basically
+just adding a limited number of functions to proto.c.
+
+Thanks again for the review Darrick,
+I'll wait for your feedback on the walk_dir() vs nftw() and the [ac]time
+approach,
+thanks
+
+L.
