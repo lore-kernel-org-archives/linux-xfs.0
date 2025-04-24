@@ -1,71 +1,53 @@
-Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-172.mta1.migadu.com (out-172.mta1.migadu.com [95.215.58.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68E0222D790
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 12:01:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CD2622B5B8
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 12:01:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745496073; cv=none; b=UtrXX51hlL/hXp1o4vdztvkBYIuZGkvYTqMshURegW4z660Xfpf+PZoNp9WW9XRQL9US4snwR1Ea/SC3mYlSe9baqLk9S6jUXGlQolRiBgHh3SuDyPYgQ2Fk9+OWUQEeWZcgWaqYAYlyq8QinVIBLZf09KwPloKzbiiFp+knuzE=
+	t=1745496101; cv=none; b=WhtmdsQkbqi7/Lf5QOM8EoSmRQLo6aUZrqaFF2nDMNzl2tvdAzG/BdD9hTHfpqk2wN3AczFrwurXVj9dHnMc12IabjVyi8pJcMxFaZBEkBBx22X/Wv89yzBqAINB4U7W0QI/o0dyC9HwvlAnLAfswkt4ewllS8STU1cNHmhel94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745496073; c=relaxed/simple;
-	bh=zHBNLeWHxH4uRghVIDcJGB1pA5KmRlsOoweWHwi1x2k=;
+	s=arc-20240116; t=1745496101; c=relaxed/simple;
+	bh=RDRKZeNKN55umrzQ5oGHsI+0KYc+ooDByqGf/CbRS4M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gVa5IfTLoGl6fNmKxk4EWbczMBTwqXEkxZmuxA8/3rSBQ1OhGx715u/2bQHMFG5tyfrBMWdu4aMohx2HHfXUzEMIjekHOZl+leeo60CYkJZaNmbm9OCr/oPszfGbQgsNuvxz9szM6XKEd002U+KjYeK5gPGsnP2u4SVzo4SKHkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CrqWPCHs; arc=none smtp.client-ip=209.85.218.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=lc1zBcB2D1DOIdzlnDPHK2wCBPMUXAvQNF/oQedRq+yXTxSUh7QSAYSJXfI0TveHvTh7sPlTfXIMBAevijd4COV66Nc71f8yQCu1opGGT4aATxAFlnUfWyjbo0nWI5ELHjnQvMaKTx9hac93WU8Q45caJEO13jFkoyEJuPzpsA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=u9gRpvYC; arc=none smtp.client-ip=95.215.58.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CrqWPCHs"
-Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-ac6ed4ab410so152805966b.1
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 05:01:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1745496069; x=1746100869; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=bMwfHG9xzA15pccf4ogfuhy5PgXFYvPdPYe3VlnTEBw=;
-        b=CrqWPCHsagQt8AfYF1k2srrs5WCNcKC5ByQs/3JYwj6blZmoAIFrnyMxnNLjqXEyYj
-         PZwRZGybbAvfPbksV38q0etxKL6QnZlgbBdKAbwJ6N7pE2UXm3KtLXADQyIvtkHujvID
-         xTq/ndtYMA+aWF7uwJOgdxM6xKP6dz+AaY3iIQFk3LoqInaH2Knh+JE220CMb96+bQIW
-         R9o9ZejeIVDppxcoU2Cljv3rlHJlgscMwJiUqcu50syPVhIWgUnz1Exi5QpRnx8Igl/B
-         fMB9R+JQUSHIJ3VZ4PKJOOBgFbyx9+3LsQ7jjJQWeQ+Y9Z+nq5WJXZ+iOc/sA4xk5Zxj
-         F/pQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745496069; x=1746100869;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=bMwfHG9xzA15pccf4ogfuhy5PgXFYvPdPYe3VlnTEBw=;
-        b=JkmY0N3dD/sTotJHuPAPYIPa2xO7q97PAp2qxbyWoLQD8uxZu43BLKKnJED1zyHKEO
-         OyHv2zOqNVxfpz88y0xGxRBsGxArIfiDH4Kq9sSNEJIOJyrIer0dFlqpsaxpvdwxw8Ls
-         S4ND+TbqBiD9GcgQRUX2LzMWPtcQxIjbvYGyKUdr40a7WP2Sw4o+Hu7qT4IaU9JXQy+l
-         8aisR4IyKNa9kV8iEM0o7Xt/GqIOdSUXZb053Rwq9mffIyk70FoXQO/lFslk1jpuInVZ
-         6ob8i0htHlokDYhMfTr4/QA17McRIVba3MWYjSr6Zdv++YGRxVLlnET7zZz3u20+6EyG
-         E0+A==
-X-Gm-Message-State: AOJu0Yyi/y17/1NZQ2tzLkhgkv8KnDPjoYihoswXRuBuOYSDRA5yX0Ni
-	ivjQB2fSTuvx87WhDSrGWffqqSPw2CK+vsGztAG9rKlfA38yjMB5
-X-Gm-Gg: ASbGnctyjLg2/2PKFzT8mJegoO9HGq6uyv6X2NjqpdXXytM2ysLU0X8rQyLloGaujxN
-	zeuDzRK8p0f9H1jiBzBpZgW2G/Qtup/LqhEcAw7FE4HhLqpB5BQtDTdhVNaBI4HVnRMwvP/V6I9
-	iH3ZD+gZDHmD3txHBmYkGR22mxxPj0VgbeYRdnNyEj0zoroTQaG/QGNECcVGJUarsjjtFdwFXOy
-	eRud2WHLHA/zYlBbm2YTjPckohfETNCS+ObySclsW5gfsn085HQQ+QpXavT20VWs6e7zlHJo3Gd
-	aK7yp1M=
-X-Google-Smtp-Source: AGHT+IHrb9kno+Rq6a7xJUMKbJdPb+het5vGopZuCHh/aTGBEvPtlZj6D4RvyiwV9Skd1+up6ynjVw==
-X-Received: by 2002:a17:907:a088:b0:acb:63a4:e8e9 with SMTP id a640c23a62f3a-ace570e7c36mr233501366b.5.1745496069121;
-        Thu, 24 Apr 2025 05:01:09 -0700 (PDT)
-Received: from framework13 ([151.57.44.129])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ace59bba677sm97050666b.99.2025.04.24.05.01.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Apr 2025 05:01:08 -0700 (PDT)
-Date: Thu, 24 Apr 2025 14:01:06 +0200
-From: Luca Di Maio <luca.dimaio1@gmail.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev, 
-	smoser@chainguard.dev, hch@infradead.org
-Subject: Re: [PATCH v6 3/4] mkfs: add -P flag to populate a filesystem from a
- directory
-Message-ID: <rb5jppjdx4c5b4qxqmlxinheztreysqts5o6fx575zvceszart@mtpo6ngxms5m>
-References: <20250423160319.810025-1-luca.dimaio1@gmail.com>
- <20250423160319.810025-4-luca.dimaio1@gmail.com>
- <20250423200914.GH25675@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="u9gRpvYC"
+Date: Thu, 24 Apr 2025 08:01:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1745496087;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=T2MMeEmusMY/E/i/SQKbyFaL7BU6CcGYmFZRFD2drdA=;
+	b=u9gRpvYCA7IkAb0B4poNcSjWcfnEIwKuPsuUltPGgb8dOqhtvOFUuqTpBE1musH7/BVP9b
+	38vbULDjl6NCX/pmhSnebe2rg3ejQKWdffXIWBn1CsORMSUQcA3dgQXk9yIE8/M4BAoo1k
+	1DBuUEL/zkkYq7EeqOTzQe9EbZUJZTQ=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Kent Overstreet <kent.overstreet@linux.dev>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, 
+	"Md. Haris Iqbal" <haris.iqbal@ionos.com>, Jack Wang <jinpu.wang@ionos.com>, Coly Li <colyli@kernel.org>, 
+	Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, Chris Mason <clm@fb.com>, 
+	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, 
+	Andreas Gruenbacher <agruenba@redhat.com>, Carlos Maiolino <cem@kernel.org>, 
+	Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>, 
+	Johannes Thumshirn <jth@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Pavel Machek <pavel@kernel.org>, linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev, 
+	linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: add more bio helper
+Message-ID: <anc2qstnukiwtskc4pd3kqajfswm3dzljxwa3awrxjs7mzppoc@nziz3h4ilqpd>
+References: <20250422142628.1553523-1-hch@lst.de>
+ <jetduw7zshrmp4gl7zfpwqjweycwesxiod7xvtnxqwqekgtvdf@idwnvfzvhgik>
+ <20250423093621.GA2578@lst.de>
+ <sl4oibdxpjygqfpy6llq237zuckz7ym4fmzcfvxn2raofr37a5@hvevbcgm5trn>
+ <20250423160733.GA656@lst.de>
+ <q53k4x5nshvr2zatrgyhygxouv7ijyepe6cj2pfooemi6gbu4y@lpxxcvozazzu>
+ <20250424083740.GA24723@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -74,61 +56,73 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250423200914.GH25675@frogsfrogsfrogs>
+In-Reply-To: <20250424083740.GA24723@lst.de>
+X-Migadu-Flow: FLOW_OUT
 
-On Wed, Apr 23, 2025 at 01:09:14PM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 23, 2025 at 06:03:18PM +0200, Luca Di Maio wrote:
-> > -	while ((c = getopt_long(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV",
-> > +	while ((c = getopt_long(argc, argv, "b:c:d:i:l:L:P:m:n:KNp:qr:s:CfV",
-> >  					long_options, &option_index)) != EOF) {
-> >  		switch (c) {
-> >  		case 0:
-> > @@ -5280,6 +5283,9 @@ main(
-> >  				illegal(optarg, "L");
-> >  			cfg.label = optarg;
-> >  			break;
-> > +		case 'P':
-> > +			cli.directory = optarg;
-> > +			break;
->
-> Uh... why not modify setup_proto to check the mode of the opened fd, and
-> call populate_from_dir if it's a directory?  Then you don't need all the
-> extra option parsing code.  It's not as if -p <path> has ever worked on
-> a directory.
->
-> --D
->
+On Thu, Apr 24, 2025 at 10:37:40AM +0200, Christoph Hellwig wrote:
+> On Wed, Apr 23, 2025 at 02:02:11PM -0400, Kent Overstreet wrote:
+> > Allocating your own bio doesn't allow you to safely exceed the
+> > BIO_MAX_VECS limit - there's places in the io path that need to bounce,
+> > and they all use biosets.
+> 
+> Yes.  Another reason not to do it, which I don't want to anyway.
+> 
+> But we do have a few places that do it like squashs which we need to
+> weed out.  And/or finally kill the bounce bufferingreal, which is long
+> overdue.
+> 
+> > That may be an issue even for non vmalloc bios, unless everything that
+> > bounces has been converted to bounce to a folio of the same order.
+> 
+> Anything that actually hits the bounce buffering is going to
+> cause problems because it hasn't kept up with the evolution of
+> the block layer, and is basically not used for anything relevant.
 
-Alright, that makes things easier yes, I'll just make sure to clearly
-explain the difference in the man page and help so it's clearer,
-something like:
+It's not just block/bounce.c that does bouncing, though.
 
-```
--p prototype_options
-Section Name: [proto]
-	These options specify the prototype parameters for populating the
-	filesystem.  The  valid  prototype_options are:
+e.g. bcache has to bounce on a cache miss that will be written to the
+cache - we don't want to wait for the write to the backing device to
+complete before returning the read completion, and we can't write to the
+backing device with the original buffer if it was mapped to userspace.
 
-		[file=]
+I'm pretty sure I've seen bouncing in dm and maybe md as well, but it's
+been years.
 
-		The  file= prefix is not required for this CLI argument for
-		legacy reasons.  If specified as a config file directive,
-		the prefix is required.
+> > > The problem with transparent vmalloc handling is that it's not possible.
+> > > The magic handling for virtually indexed caches can be hidden on the
+> > > submission side, but the completion side also needs to call
+> > > invalidate_kernel_vmap_range for reads.  Requiring the caller to know
+> > > they deal vmalloc is a way to at least keep that on the radar.
+> > 
+> > yeesh, that's a landmine.
+> > 
+> > having a separate bio_add_vmalloc as a hint is still a really bad
+> > "solution", unfortunately. And since this is something we don't have
+> > sanitizers or debug code for, and it only shows up on some archs -
+> > that's nasty.
+> 
+> Well, we can't do it in the block stack because that doesn't have the
+> vmalloc address available.  So the caller has to do it, and having a
+> very visible sign is the best we can do.  Yes, signs aren't the
+> best cure for landmines, but they are better than nothing.
 
-		[file=]directory
+Given that only a few architectures need it, maybe sticking the vmalloc
+address in struct bio is something we should think about.
 
-		If the optional prototype argument is given,
-		and it's a directory, mkfs.xfs will copy the contents
-		of the given directory or tarball into the root
-		directory of the file system.
+Obviously not worth it if only 2-3 codepaths need it, but if vmalloc
+fallbacks become more common it's something to think about.
 
-		[file=]protofile
+> > > Not for a purely synchronous helper we could handle both, but so far
+> > > I've not seen anything but the xfs log recovery code that needs it,
+> > > and we'd probably get into needing to pass a bio_set to avoid
+> > > deadlock when used deeper in the stack, etc.  I can look into that
+> > > if we have more than a single user, but for now it doesn't seem
+> > > worth it.
+> > 
+> > bcache and bcachefs btree buffers can also be vmalloc backed. Possibly
+> > also the prio_set path in bcache, for reading/writing bucket gens, but
+> > I'd have to check.
+> 
+> But do you do synchronous I/O, i.e. using sumit_bio_wait on them?
 
-		If  the  optional prototype argument is given,
-		and it's a file, [ ... continue with existing man ... ]
-```
-
-So it's clear from the docs that the option is there and it's the same
-flag.
-
-L.
+Most btree node reads are synchronous, but not when we're prefetching.
