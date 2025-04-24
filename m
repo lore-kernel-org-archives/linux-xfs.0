@@ -1,116 +1,72 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7514020E700;
-	Thu, 24 Apr 2025 08:37:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C8AA20B803
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 08:59:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745483868; cv=none; b=ipGuBkfbpbuz8wOyMPcw7cWMlJjL9rRdbXLXYTNrylCcbWu9ykVxg39rjUwD+vslyZXN80gn5zn8My71szbhUrkC2tOxKimyC6PSeoSkzSbt/kx5oD8HRH/A4KY0EfxGHGklL24o50zVnJS5AZz6d0Bbp9uMK1Q97XRCokQuxiQ=
+	t=1745485163; cv=none; b=BY46Tod5mVUhKvnQbF2vNnFYICj2gPgROr+PUY5IJ+86mAS54Xfmdc9gEnZzo6yAUb9AIAus3jwZPL7vcLMhTOvlVHbelLjrjLxjlTRjrN2OnlNu7x1Fpkey63VqFnyGlHEzeXhOlgNq5qeCijeecU6pqVhKuFaWh2B5LxTJBoY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745483868; c=relaxed/simple;
-	bh=uV5SOxe11nIMXSY79Utbf7Y4n7mYRE75YQ+Yie0DOkg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bFPO7KLdSfS91tEtJS/aE6svIe+bYnlSDmBLTrJ/Gi00rlzXxci1FvBF/GaVKbiDKTJlfVdwc8KDpSqpIZLB+4ongYWU1tV0BLEde4YX3CqdMnF8mXnoyunIVgWSPXJaBaDLK4zpGMsFpcUjHnR5z9w2iHj7l8T1qD1japlD++g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 778C567373; Thu, 24 Apr 2025 10:37:40 +0200 (CEST)
-Date: Thu, 24 Apr 2025 10:37:40 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Kent Overstreet <kent.overstreet@linux.dev>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	linux-block@vger.kernel.org,
-	"Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-	Jack Wang <jinpu.wang@ionos.com>, Coly Li <colyli@kernel.org>,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>, Chris Mason <clm@fb.com>,
-	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>,
-	Johannes Thumshirn <jth@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Pavel Machek <pavel@kernel.org>, linux-bcache@vger.kernel.org,
-	dm-devel@lists.linux.dev, linux-btrfs@vger.kernel.org,
-	gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: add more bio helper
-Message-ID: <20250424083740.GA24723@lst.de>
-References: <20250422142628.1553523-1-hch@lst.de> <jetduw7zshrmp4gl7zfpwqjweycwesxiod7xvtnxqwqekgtvdf@idwnvfzvhgik> <20250423093621.GA2578@lst.de> <sl4oibdxpjygqfpy6llq237zuckz7ym4fmzcfvxn2raofr37a5@hvevbcgm5trn> <20250423160733.GA656@lst.de> <q53k4x5nshvr2zatrgyhygxouv7ijyepe6cj2pfooemi6gbu4y@lpxxcvozazzu>
+	s=arc-20240116; t=1745485163; c=relaxed/simple;
+	bh=N47ykR6NUWtRq4erTcl+KS/Qyu7ndgzqN703DmZda64=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
+	 Content-Type; b=PQATx/4BPKNK6S0cMJ4rBycZHAiGIz8tt8Ex72bJzIdktoDMSmtPa0/ysWz4yBGCHbBYDSYqP8RyBBSflxoAgqDmMtuYMjrRr8QK8qbQ/sSSSSxcGCUzwwlZvS0s3CEoMt7wv1JZqnN1x7UAbDW0C4F8BqXRTY1WtueRv2z4OeU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3d922570570so10236595ab.3
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 01:59:21 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745485161; x=1746089961;
+        h=cc:to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1Z93bCrJfOW43DXKBTDnM6RhhcZ/O5Fr+k9HY7iqBwg=;
+        b=l4/Ul7aK9KucUFepN2yM2nmsRgeHQ5og8yEeIXHZ/12qdSCX3LZGqsL5qe61mKU5En
+         26UDXsKZa7nk5xIu7pCTBo//Pc32uANpbhXdPiW0BbCgKMYeVgcCK0c88orx5I2QQTQO
+         Q2ft89/Pewj/ABWLnzjcTbW5SKbxIqw03bI4A2K/gR2Jd0/LjbABcuBYT9041ksizSix
+         owfKh4aMu+olRnQeLOpahTxlAfgn4JNoq4gkavnxFv6pLg2i/wdvCOQwPQQOebYH4rVA
+         lCaFm6TK6Xj9sPA/9+S8XJD9uRCDLtXuCHi7WoH3jmxOeiMXLvJGm7+NbJWTURB4PMDa
+         +Xyg==
+X-Forwarded-Encrypted: i=1; AJvYcCX2uLYUumfTx413KbodVraY9kcldBdzf1/bdGykdGPDwg3UAQCK2BH3moNocHWNmUCyjrZztroNfwY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzspfs2FjVyyyE2ZMTFJ2f9AP8rPQbIVj84XaqHQX0R02PHThhm
+	1M/kU+WBsvlwCmcVMklB8d//a4UCsYDXI3QCpQ6HhJA2EBB+OFE899aEPQFJ65dg8qy4NIFMm2a
+	MbKGCsr+iqzUEfRspaKgyFTIdsOwKJxjC+DfzeZjPspcU7WLdYeb6wp0=
+X-Google-Smtp-Source: AGHT+IHqxxBuf6pSikN1iLEFp4B9endVU/Hv0sCKywoL7eyZ2dC3aQ2Ce+cuwI38I1xNL696T0xYiIOk2NWvsKszYNR1+nXruKvw
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <q53k4x5nshvr2zatrgyhygxouv7ijyepe6cj2pfooemi6gbu4y@lpxxcvozazzu>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+X-Received: by 2002:a05:6e02:1a0e:b0:3d5:890b:d9df with SMTP id
+ e9e14a558f8ab-3d93041e57emr16671365ab.15.1745485161215; Thu, 24 Apr 2025
+ 01:59:21 -0700 (PDT)
+Date: Thu, 24 Apr 2025 01:59:21 -0700
+In-Reply-To: <20250424085914.82201-1-contact@arnaud-lcm.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6809fd69.050a0220.317436.0049.GAE@google.com>
+Subject: Re: syztest
+From: syzbot <syzbot+b4a84825ea149bb99bfc@syzkaller.appspotmail.com>
+To: contact@arnaud-lcm.com
+Cc: cem@kernel.org, contact@arnaud-lcm.com, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, Apr 23, 2025 at 02:02:11PM -0400, Kent Overstreet wrote:
-> Allocating your own bio doesn't allow you to safely exceed the
-> BIO_MAX_VECS limit - there's places in the io path that need to bounce,
-> and they all use biosets.
+> #syz test
 
-Yes.  Another reason not to do it, which I don't want to anyway.
+This crash does not have a reproducer. I cannot test it.
 
-But we do have a few places that do it like squashs which we need to
-weed out.  And/or finally kill the bounce bufferingreal, which is long
-overdue.
-
-> That may be an issue even for non vmalloc bios, unless everything that
-> bounces has been converted to bounce to a folio of the same order.
-
-Anything that actually hits the bounce buffering is going to
-cause problems because it hasn't kept up with the evolution of
-the block layer, and is basically not used for anything relevant.
-
-> > The problem with transparent vmalloc handling is that it's not possible.
-> > The magic handling for virtually indexed caches can be hidden on the
-> > submission side, but the completion side also needs to call
-> > invalidate_kernel_vmap_range for reads.  Requiring the caller to know
-> > they deal vmalloc is a way to at least keep that on the radar.
-> 
-> yeesh, that's a landmine.
-> 
-> having a separate bio_add_vmalloc as a hint is still a really bad
-> "solution", unfortunately. And since this is something we don't have
-> sanitizers or debug code for, and it only shows up on some archs -
-> that's nasty.
-
-Well, we can't do it in the block stack because that doesn't have the
-vmalloc address available.  So the caller has to do it, and having a
-very visible sign is the best we can do.  Yes, signs aren't the
-best cure for landmines, but they are better than nothing.
-
-> > Not for a purely synchronous helper we could handle both, but so far
-> > I've not seen anything but the xfs log recovery code that needs it,
-> > and we'd probably get into needing to pass a bio_set to avoid
-> > deadlock when used deeper in the stack, etc.  I can look into that
-> > if we have more than a single user, but for now it doesn't seem
-> > worth it.
-> 
-> bcache and bcachefs btree buffers can also be vmalloc backed. Possibly
-> also the prio_set path in bcache, for reading/writing bucket gens, but
-> I'd have to check.
-
-But do you do synchronous I/O, i.e. using sumit_bio_wait on them?
-
-> 
-> > Having a common helper for vmalloc and the kernel direct mapping
-> > is actually how I started, but then I ran into all the issues with
-> > it and with the extremely simple helpers for the direct mapping
-> > which are used a lot, and the more complicated version for vmalloc
-> > which just has a few users instead.
-> 
-> *nod*
-> 
-> What else did you run into? invalidate_kernel_vmap_range() seems like
-> the only problematic one, given that is_vmalloc_addr() is cheap.
-
-invalidate_kernel_vmap_range is the major issue that can't be
-worked around.  Everything else was mentioned before and can be
-summarized as minor inconveniences.
+>
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -1182,6 +1182,8 @@ xfs_dialloc_ag_inobt(
+>                         if (error)
+>                                 goto error1;
+>                 } else {
+> +                       pag->pagl_leftrec = NULLAGINO;
+> +                       pag->pagl_rightrec = NULLAGINO;
+>                         /* search left with tcur, back up 1 record */
+>                         error = xfs_ialloc_next_rec(tcur, &trec, &doneleft, 1);
+>                         if (error)
+>
