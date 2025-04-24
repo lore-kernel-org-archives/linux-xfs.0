@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CD301B040B
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 21:53:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 980581B040B
+	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 21:53:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745531621; cv=none; b=Gc+/+p3Y25O2p4rCe79u509SP6X2IO2V6rmAhPzVMcWVtPzepkoa+rVe6UkvXraDb/+jtoHS9yzrk741RZuxGHCwGasE35u286M78nVjFy3Sxbk9Axh63HcAzF9HU3B0lvwzp12VXeC00vR7N6XGWEzmAM8FFCvUUYSPERnhyNg=
+	t=1745531635; cv=none; b=PTDThmAJbZM2jhEs8hZf7mBfE8p136RaDXtYPHitCFX+yyDP8yoQud0LAmc+EEF2bGVYuEJ3TgErcDecNcjfAtayJc0NsPUHKhiL+b53XjXX+za+YoPnTU8rjobPKIT83jq0pJWhj68Ft/jtIqUr+tEychCZMUFbv0S8rkAgfIA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745531621; c=relaxed/simple;
-	bh=5syYQJn+51VEJRQX1CDU8tESBBlfTy8OFtBFkUGY4iU=;
+	s=arc-20240116; t=1745531635; c=relaxed/simple;
+	bh=OaaDtOLTZktDaPT/0dHkVFQDKN6ahrGLVoHpEAeUoos=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=N/qoQTOo1WXv5bx4w1mHcUlQYxrtzC6yfq9tSO/f113ihwi9J+EMvnIGOkX2vJW8KC90Vh/aXFP9dvX1VRRa0zOuoM23BjtqRLBtpta4UOwH2iPebs6ActCIR0LOgZKtySAWIpXXul86eCmLsHiN+hzy8g2vl3GFz2PwOFMk0aU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YAKKdvNl; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=QQEIYpDLyCQyJNo3qPXQH1BRm8yUdGAn7AQn9W4B8jhdP49sI2bWhzoRIlUIeNthtFPluWgHmO/Hpici2p1WMgk6lKdYsFe/F0dE+EgoXh2vnaUJOd9QOHTevasrO1ecmXl7t4UqzXc85kf2nHDflSPStb+Qb0HR1BP570Bj4fo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u4QsPQps; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YAKKdvNl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8936C4CEE3;
-	Thu, 24 Apr 2025 21:53:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u4QsPQps"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F944C4CEE3;
+	Thu, 24 Apr 2025 21:53:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745531619;
-	bh=5syYQJn+51VEJRQX1CDU8tESBBlfTy8OFtBFkUGY4iU=;
+	s=k20201202; t=1745531635;
+	bh=OaaDtOLTZktDaPT/0dHkVFQDKN6ahrGLVoHpEAeUoos=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=YAKKdvNlZ+6d53cuiUQ9mv1b0Vt3oZqoF2itjMB3oXxkFRv5cou7OsmZcKk8mbhfk
-	 yI9jTlwDik5wkAMk7vgzTZ4YoCpysb/aqRpRsQhPv01QIRXWjvLADwRUnjdDtGpFzu
-	 EDvNYLDw3YNHWdG/oKbrVwi+DOffSLmvZEO2mj3J0Mnp6VXnStrKL3TtJvQREFEfIc
-	 VHGYQBoXxPH5ReRv8EGmoiZhNYqT91MFN3FfMYu/8xmO626OeYhM0m+anPrx5SC1Vc
-	 w7JNCkJZzlTYIuZzGi+Dc345hRYDAOq2XVlTYKZLblDpahBxK3K2bRRqtFPY8uh0lA
-	 PjecjmwSbQjgQ==
-Date: Thu, 24 Apr 2025 14:53:39 -0700
-Subject: [PATCH 4/5] xfs_io: make statx mask parsing more generally useful
+	b=u4QsPQps3VQA57zvzbRFbRbe4eYCGEpHsm7V937O8d3gUqKBZUpn+R/Ec1YxxKviR
+	 AOFs6Exaorj98mRQUVXjw0njtSPfpRkkNrMEb8oDJCZ9XkE3fq3wJ0TpP7SAWZDhNd
+	 qGAULemrfJ7ienvmDi70IB0nXt7lMHgbWG2qIwIWzvn/Kelr6fBY8XNN8PZOPAZjcJ
+	 PM1wmSCWVZpQvmWXGFLw3f3DoqPV9//dLVRD2QwXsILxrJTR5FSfzpxGRvjJ1C1dHH
+	 XsesQ/cBYnlYkKDSxraRa6fusJBkGyZh6XCA7phnU3XqQO00HX0kpXNonfpBN6xgEW
+	 iqidrteKt2O6A==
+Date: Thu, 24 Apr 2025 14:53:55 -0700
+Subject: [PATCH 5/5] mkfs: fix blkid probe API violations causing weird output
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <174553149393.1175632.5228793003628060330.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <174553149411.1175632.10102293135056174880.stgit@frogsfrogsfrogs>
 In-Reply-To: <174553149300.1175632.8668620970430396494.stgit@frogsfrogsfrogs>
 References: <174553149300.1175632.8668620970430396494.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,206 +45,37 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enhance the statx -m parsing to be more useful:
+The blkid_do_fullprobe function in libblkid 2.38.1 will try to read the
+last 512 bytes off the end of a block device.  If the block device has a
+2k LBA size, that read will fail.  blkid_do_fullprobe passes the -EIO
+back to the caller (mkfs) even though the API documentation says it
+only returns 1, 0, or -1.
 
-Add words for all the new STATX_* field flags added in the previous
-patch.
+Change the "cannot detect existing fs" logic to look for any negative
+number.  Otherwise, you get unhelpful output like this:
 
-Allow "+" and "-" prefixes to add or remove flags from the mask.
-
-Allow multiple arguments to be specified as a comma separated list.
+$ mkfs.xfs -l size=32m -b size=4096 /dev/loop3
+mkfs.xfs: Use the -f option to force overwrite.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- io/stat.c         |  120 ++++++++++++++++++++++++++++++++++++++++++++++-------
- man/man8/xfs_io.8 |   11 +++++
- 2 files changed, 116 insertions(+), 15 deletions(-)
+ libxfs/topology.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/io/stat.c b/io/stat.c
-index 52e2d33010a99a..c3a4bb15229ee5 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -321,10 +321,41 @@ _statx(
- #endif
- }
- 
-+struct statx_masks {
-+	const char	*name;
-+	unsigned int	mask;
-+};
-+
-+static const struct statx_masks statx_masks[] = {
-+	{"basic",		STATX_BASIC_STATS},
-+	{"all",			~STATX__RESERVED},
-+
-+	{"type",		STATX_TYPE},
-+	{"mode",		STATX_MODE},
-+	{"nlink",		STATX_NLINK},
-+	{"uid",			STATX_UID},
-+	{"gid",			STATX_GID},
-+	{"atime",		STATX_ATIME},
-+	{"mtime",		STATX_MTIME},
-+	{"ctime",		STATX_CTIME},
-+	{"ino",			STATX_INO},
-+	{"size",		STATX_SIZE},
-+	{"blocks",		STATX_BLOCKS},
-+	{"btime",		STATX_BTIME},
-+	{"mnt_id",		STATX_MNT_ID},
-+	{"dioalign",		STATX_DIOALIGN},
-+	{"mnt_id_unique",	STATX_MNT_ID_UNIQUE},
-+	{"subvol",		STATX_SUBVOL},
-+	{"write_atomic",	STATX_WRITE_ATOMIC},
-+	{"dio_read_align",	STATX_DIO_READ_ALIGN},
-+};
-+
- static void
- statx_help(void)
- {
--        printf(_(
-+	unsigned int	i;
-+
-+	printf(_(
- "\n"
- " Display extended file status.\n"
- "\n"
-@@ -334,9 +365,16 @@ statx_help(void)
- " -m mask -- Specify the field mask for the statx call\n"
- "            (can also be 'basic' or 'all'; defaults to\n"
- "             STATX_BASIC_STATS | STATX_BTIME)\n"
-+" -m +mask -- Add this to the field mask for the statx call\n"
-+" -m -mask -- Remove this from the field mask for the statx call\n"
- " -D -- Don't sync attributes with the server\n"
- " -F -- Force the attributes to be sync'd with the server\n"
--"\n"));
-+"\n"
-+"statx mask values: "));
-+
-+	for (i = 0; i < ARRAY_SIZE(statx_masks); i++)
-+		printf("%s%s", i == 0 ? "" : ", ", statx_masks[i].name);
-+	printf("\n");
- }
- 
- /* statx helper */
-@@ -377,6 +415,68 @@ dump_raw_statx(struct statx *stx)
- 	return 0;
- }
- 
-+enum statx_mask_op {
-+	SET,
-+	REMOVE,
-+	ADD,
-+};
-+
-+static bool
-+parse_statx_masks(
-+	char			*optarg,
-+	unsigned int		*caller_mask)
-+{
-+	char			*arg = optarg;
-+	char			*word;
-+	unsigned int		i;
-+
-+	while ((word = strtok(arg, ",")) != NULL) {
-+		enum statx_mask_op op;
-+		unsigned int	mask;
-+		char		*p;
-+
-+		arg = NULL;
-+
-+		if (*word == '+') {
-+			op = ADD;
-+			word++;
-+		} else if (*word == '-') {
-+			op = REMOVE;
-+			word++;
-+		} else {
-+			op = SET;
-+		}
-+
-+		for (i = 0; i < ARRAY_SIZE(statx_masks); i++) {
-+			if (!strcmp(statx_masks[i].name, word)) {
-+				mask = statx_masks[i].mask;
-+				goto process_op;
-+			}
-+		}
-+
-+		mask = strtoul(word, &p, 0);
-+		if (!p || p == word) {
-+			printf( _("non-numeric mask -- %s\n"), word);
-+			return false;
-+		}
-+
-+process_op:
-+		switch (op) {
-+		case ADD:
-+			*caller_mask |= mask;
-+			continue;
-+		case REMOVE:
-+			*caller_mask &= ~mask;
-+			continue;
-+		case SET:
-+			*caller_mask = mask;
-+			continue;
-+		}
-+	}
-+
-+	return true;
-+}
-+
- /*
-  * options:
-  * 	- input flags - query type
-@@ -389,7 +489,6 @@ statx_f(
- 	char		**argv)
- {
- 	int		c, verbose = 0, raw = 0;
--	char		*p;
- 	struct statx	stx;
- 	int		atflag = 0;
- 	unsigned int	mask = STATX_BASIC_STATS | STATX_BTIME;
-@@ -397,18 +496,9 @@ statx_f(
- 	while ((c = getopt(argc, argv, "m:rvFD")) != EOF) {
- 		switch (c) {
- 		case 'm':
--			if (strcmp(optarg, "basic") == 0)
--				mask = STATX_BASIC_STATS;
--			else if (strcmp(optarg, "all") == 0)
--				mask = ~STATX__RESERVED;
--			else {
--				mask = strtoul(optarg, &p, 0);
--				if (!p || p == optarg) {
--					printf(
--				_("non-numeric mask -- %s\n"), optarg);
--					exitcode = 1;
--					return 0;
--				}
-+			if (!parse_statx_masks(optarg, &mask)) {
-+				exitcode = 1;
-+				return 0;
- 			}
- 			break;
- 		case 'r':
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 198215103812c6..64b3e907553f48 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1000,6 +1000,17 @@ .SH FILE I/O COMMANDS
- .B \-m <mask>
- Specify a numeric field mask for the statx call.
- .TP
-+.BI "\-m +" value
-+Add this value to the statx field value.
-+Values can be numeric, or they can be words describing the desired fields.
-+See the help command output for a list of recognized words.
-+.TP
-+.BI "\-m -" value
-+Remove this value from the statx field value.
-+.TP
-+.BI "\-m +" value ",-" value
-+Add and remove multiple values from the statx field value.
-+.TP
- .B \-F
- Force the attributes to be synced with the server.
- .TP
+diff --git a/libxfs/topology.c b/libxfs/topology.c
+index 8c6affb4c4e436..96ee74b61b30f5 100644
+--- a/libxfs/topology.c
++++ b/libxfs/topology.c
+@@ -205,7 +205,8 @@ check_overwrite(
+ out:
+ 	if (pr)
+ 		blkid_free_probe(pr);
+-	if (ret == -1)
++	/* libblkid 2.38.1 lies and can return -EIO */
++	if (ret < 0)
+ 		fprintf(stderr,
+ 			_("%s: probe of %s failed, cannot detect "
+ 			  "existing filesystem.\n"), progname, device);
 
