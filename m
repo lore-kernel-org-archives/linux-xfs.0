@@ -1,45 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E20C5259C8B
-	for <linux-xfs@vger.kernel.org>; Fri, 25 Apr 2025 15:00:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28FEB22F01;
+	Fri, 25 Apr 2025 15:03:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745593259; cv=none; b=KLINjWSP435TrOhugKly14KLMz9Ywsz21hxKTAFWBnMHdwRSM/2j3PdK6Mc/sxO5Z3whALEEOwEn+KRetfm6U5Sih7Df64eD6enOWicEE4mIoDbVea6ksHcSiJmK/2I0DQSiN8ubn3lY2XanXaXIQEc/fc8oJA0KbdEA6H87JFc=
+	t=1745593416; cv=none; b=hbpHrtQhXEhsf4Es/9GXy9ykSq5FMlpvRoe+zEqVggcO/7etTNxYNPn3Ozv16ikk7g/MJPr5T7JaA78Wi4VZexFZQRLSeXVwMes9iF8KjsJoxVw6LMCT2Z9L/NN0XVUjHFpNolk0OVObFz7J5Ng+INfApD+TzPqZ/GR+udtCLo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745593259; c=relaxed/simple;
-	bh=iRo3xNVeKi9uzmRJ6hbAEGR72ayfhRoBZD3PLWFh2vg=;
+	s=arc-20240116; t=1745593416; c=relaxed/simple;
+	bh=dsAeXpODhfvgYAgmSXOzBPWfAs2TBbND1cpcJ7Lkhgw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BNAImi9LxtEOODobmp4O/EZ3rrGkwIU7U1+0+dB9o0e1GbI84IRF93Lw1Mv086vqvBSA1iupkYdUJI1PPONo+4J5sXHQ8s87e45LeEFW2e6VP0cV6KOcnyBy8Y6KYyb/SsoWzZjxcY/KCIRRlQYEUpJ0zKBaQxWwe0Kt97vOiSE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jCBFkjrh; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=dOXTYMlTmWj0wYgnT+5PobefWHlFO+LNy5PgdsFOnXvUiz9T8FPSgXrIWJUFDGIGonXOkQl4xmfnCx9zxhvq41sBN6QKDbVViOll43uxsM5vhgLqisCkW50ROc9HXc37kzZMTt19f3Q7gF5poS7/KI1ScG2S/w11JuVwBydCXLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ds+1Ci/F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jCBFkjrh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56FD4C4CEE4;
-	Fri, 25 Apr 2025 15:00:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ds+1Ci/F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85CA3C4CEE4;
+	Fri, 25 Apr 2025 15:03:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745593258;
-	bh=iRo3xNVeKi9uzmRJ6hbAEGR72ayfhRoBZD3PLWFh2vg=;
+	s=k20201202; t=1745593415;
+	bh=dsAeXpODhfvgYAgmSXOzBPWfAs2TBbND1cpcJ7Lkhgw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jCBFkjrhhCxN9V72ChrbEN2sAfSXN9ORyCHWa75D9BXcWNAUTMyabBB8Fm7NtvUei
-	 L83S9k2BIraiW9PXJjNDFfEnRH0dPLl8g5mO/r7oh0oQvHG3ZKcLdROdeOI/COSyg5
-	 1IoYYgQGZmN1po6W1RnhfgbW3r47VPNk6tncQ0JTkCMK65HzYZb8GCf0cK8mF9VeUs
-	 4BgVrTRDGEY+qZEZsoau3kL/4tKfEswc8PC4xlt+Na7L/bRHMBriOiQfvkdWvyGZma
-	 Y1LMPTef9999kGWA/TjLyn1lEF9BTw75dwsBFMgSxLhroe7ytrQWFfchMa76Rei3sq
-	 MlF1td5R4JIqA==
-Date: Fri, 25 Apr 2025 08:00:55 -0700
+	b=Ds+1Ci/FlzUPO17PswcpR39smLrSiDjFGRBIYOARtmDmufzczdkPSu247J2DFBPJ+
+	 6KkpZTENK4Kh+iZw9SW5JURXMpSoznIHoqxH8RcoinzTVWir8AmoJ75qNGoHAEzji5
+	 nGSz47lyGgpxfk2OgNR8Q/7isVshb4MWmYKGK3NEJ/PzlwdV6kz7sJXAucosqi8I6Y
+	 /Eea2S0cdWO6XBvtbrHEUaS74+3POUqETVOD8nH+O+iy7bS0UPWPerqZVIhenB4f8m
+	 D7zWDlItSy0rvjjFy5//0WdVoljtzX/Qf9O0buPXMSYFdsy3p6Zjmu4t4BjYiMXFxb
+	 y7TQeT5yoTBXA==
+Date: Fri, 25 Apr 2025 08:03:31 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Luca Di Maio <luca.dimaio1@gmail.com>, linux-xfs@vger.kernel.org,
-	dimitri.ledkov@chainguard.dev, smoser@chainguard.dev
-Subject: Re: [PATCH v6 2/4] populate: add ability to populate a filesystem
- from a directory
-Message-ID: <20250425150055.GM25675@frogsfrogsfrogs>
-References: <20250423160319.810025-1-luca.dimaio1@gmail.com>
- <20250423160319.810025-3-luca.dimaio1@gmail.com>
- <20250423202358.GI25675@frogsfrogsfrogs>
- <vmiujkqli3d4c7ohgegpxvwacowl2tdaps6m4wyvwh6dcfado7@csca7fs5y7ss>
- <20250424220041.GK25675@frogsfrogsfrogs>
- <aAuJtnJQXOlZ6LLi@infradead.org>
+To: Hans Holmberg <Hans.Holmberg@wdc.com>
+Cc: "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+	"zlang@kernel.org" <zlang@kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	"david@fromorbit.com" <david@fromorbit.com>, hch <hch@lst.de>
+Subject: Re: [PATCH 1/2] xfs: add mount test for read only rt devices
+Message-ID: <20250425150331.GG25667@frogsfrogsfrogs>
+References: <20250425090259.10154-1-hans.holmberg@wdc.com>
+ <20250425090259.10154-2-hans.holmberg@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,44 +46,111 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aAuJtnJQXOlZ6LLi@infradead.org>
+In-Reply-To: <20250425090259.10154-2-hans.holmberg@wdc.com>
 
-On Fri, Apr 25, 2025 at 06:10:14AM -0700, Christoph Hellwig wrote:
-> On Thu, Apr 24, 2025 at 03:00:41PM -0700, Darrick J. Wong wrote:
-> > The thing is, if you were relying on atime/mtime for detection of "file
-> > data changed since last read" then /not/ copying atime into the
-> > filesystem breaks that property in the image.
+On Fri, Apr 25, 2025 at 09:03:22AM +0000, Hans Holmberg wrote:
+> Make sure that we can mount rt devices read-only if them themselves
+> are marked as read-only.
 > 
-> I don't think that matter for images, because no software will keep
-> running over the upgrade of the image.  Also plenty of people run
-> with noatime, and btrfs even defaulted to it for a while (not sure if
-> it still does).
+> Also make sure that rw re-mounts are not allowed if the device is
+> marked as read-only.
 > 
-> At the same time having the same behavior as mkfs.ext4 is a good thing
-> by itself because people obviously have been using it and consistency
-> is always a good thing.
-
-I don't see where mke2fs -d actually copies i_mtime into the filesystem.
-In misc/create_inode.c I see a lot of:
-
-	now = fs->now ? fs->now : time(0);
-	ext2fs_inode_xtime_set(&inode, i_atime, now);
-	ext2fs_inode_xtime_set(&inode, i_ctime, now);
-	ext2fs_inode_xtime_set(&inode, i_mtime, now);
-
-which implies that all three are set to a predetermined timestamp or the
-current timestamp.
-
-Also while I'm scanning create_inode.c, do you want to preserve
-hardlinks?
-
-> > How about copying [acm]time from the source file by default, but then
-> > add a new -p noatime option to skip the atime?
+> Based on generic/050.
 > 
-> I'd probably invert the polarity.  When building an image keeping
-> atime especially and also ctime is usually not very useful.  But that
-> would give folks who need it for some reason a way to do so.
+> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+> ---
+>  tests/xfs/837     | 55 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/837.out | 10 +++++++++
+>  2 files changed, 65 insertions(+)
+>  create mode 100755 tests/xfs/837
+>  create mode 100644 tests/xfs/837.out
+> 
+> diff --git a/tests/xfs/837 b/tests/xfs/837
+> new file mode 100755
+> index 000000000000..b20e9c5f33f2
+> --- /dev/null
+> +++ b/tests/xfs/837
+> @@ -0,0 +1,55 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2009 Christoph Hellwig.
+> +# Copyright (c) 2025 Western Digital Corporation
+> +#
+> +# FS QA Test No. 837
+> +#
+> +# Check out various mount/remount/unmount scenarious on a read-only rtdev
+> +# Based on generic/050
+> +#
+> +. ./common/preamble
+> +_begin_fstest mount auto quick
+> +
+> +_cleanup_setrw()
+> +{
+> +	cd /
+> +	blockdev --setrw $SCRATCH_RTDEV
+> +}
+> +
+> +# Import common functions.
+> +. ./common/filter
+> +
+> +_require_realtime
+> +_require_local_device $SCRATCH_RTDEV
 
-Either's fine with me.
+I suspect this is copy-pasted from generic/050, but I wonder when
+SCRATCH_RTDEV could be a character device, but maybe that's a relic of
+Irix (and Solaris too, IIRC)?
+
+The rest of the test looks fine to me though.
 
 --D
+
+> +_register_cleanup "_cleanup_setrw"
+> +
+> +_scratch_mkfs "-d rtinherit" > /dev/null 2>&1
+> +
+> +#
+> +# Mark the rt device read-only.
+> +#
+> +echo "setting device read-only"
+> +blockdev --setro $SCRATCH_RTDEV
+> +
+> +#
+> +# Mount it and make sure it can't be written to.
+> +#
+> +echo "mounting read-only rt block device:"
+> +_scratch_mount 2>&1 | _filter_ro_mount | _filter_scratch
+> +if [ "${PIPESTATUS[0]}" -eq 0 ]; then
+> +	echo "writing to file on read-only filesystem:"
+> +	dd if=/dev/zero of=$SCRATCH_MNT/foo bs=1M count=1 oflag=direct 2>&1 | _filter_scratch
+> +else
+> +	_fail "failed to mount"
+> +fi
+> +
+> +echo "remounting read-write:"
+> +_scratch_remount rw 2>&1 | _filter_scratch | _filter_ro_mount
+> +
+> +echo "unmounting read-only filesystem"
+> +_scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
+> +
+> +# success, all done
+> +echo "*** done"
+> +status=0
+> diff --git a/tests/xfs/837.out b/tests/xfs/837.out
+> new file mode 100644
+> index 000000000000..0a843a0ba398
+> --- /dev/null
+> +++ b/tests/xfs/837.out
+> @@ -0,0 +1,10 @@
+> +QA output created by 837
+> +setting device read-only
+> +mounting read-only rt block device:
+> +mount: device write-protected, mounting read-only
+> +writing to file on read-only filesystem:
+> +dd: failed to open 'SCRATCH_MNT/foo': Read-only file system
+> +remounting read-write:
+> +mount: cannot remount device read-write, is write-protected
+> +unmounting read-only filesystem
+> +*** done
+> -- 
+> 2.34.1
+> 
