@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28FEB22F01;
-	Fri, 25 Apr 2025 15:03:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E05A26D4DE;
+	Fri, 25 Apr 2025 15:05:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745593416; cv=none; b=hbpHrtQhXEhsf4Es/9GXy9ykSq5FMlpvRoe+zEqVggcO/7etTNxYNPn3Ozv16ikk7g/MJPr5T7JaA78Wi4VZexFZQRLSeXVwMes9iF8KjsJoxVw6LMCT2Z9L/NN0XVUjHFpNolk0OVObFz7J5Ng+INfApD+TzPqZ/GR+udtCLo4=
+	t=1745593506; cv=none; b=fFOrNDwjhTEpfkpKRceaziQ5gQ+eJaTsU25uHPS91dChNwR8K076RwcQhZeWAI3d4fSDcJyGHjOLnCqhUfW7A1IxTqljYKx2mw5pfDVUsMfLliPNPteUnM9UCr/LejD2jxCLsCa9OxkMxNhRIrkUhnyF8E1zOBGx39gE20mMO4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745593416; c=relaxed/simple;
-	bh=dsAeXpODhfvgYAgmSXOzBPWfAs2TBbND1cpcJ7Lkhgw=;
+	s=arc-20240116; t=1745593506; c=relaxed/simple;
+	bh=mJ5BRMzYDg3ycbwAnlzNi5oIBdiqjlgEe47UBsM1zDo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dOXTYMlTmWj0wYgnT+5PobefWHlFO+LNy5PgdsFOnXvUiz9T8FPSgXrIWJUFDGIGonXOkQl4xmfnCx9zxhvq41sBN6QKDbVViOll43uxsM5vhgLqisCkW50ROc9HXc37kzZMTt19f3Q7gF5poS7/KI1ScG2S/w11JuVwBydCXLU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ds+1Ci/F; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=W5DiYzLpJrjsWa+jgDGGMDPDvl5Mrw4/tJZTqk1OdHlyUeOO4vB/wWD7sa2XZcM/zS+DJL1DrZ5eXkxfEmwM3u4+f33tV8CA8to5WKCrEvaDUIngiJpLkNL8IfNacxy3HKwLvUWtu+y2F00/zKM0Yj7ChrScZODP4AwSG66oqLg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q2iLbXQD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ds+1Ci/F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85CA3C4CEE4;
-	Fri, 25 Apr 2025 15:03:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q2iLbXQD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA37BC4CEE9;
+	Fri, 25 Apr 2025 15:05:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745593415;
-	bh=dsAeXpODhfvgYAgmSXOzBPWfAs2TBbND1cpcJ7Lkhgw=;
+	s=k20201202; t=1745593505;
+	bh=mJ5BRMzYDg3ycbwAnlzNi5oIBdiqjlgEe47UBsM1zDo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Ds+1Ci/FlzUPO17PswcpR39smLrSiDjFGRBIYOARtmDmufzczdkPSu247J2DFBPJ+
-	 6KkpZTENK4Kh+iZw9SW5JURXMpSoznIHoqxH8RcoinzTVWir8AmoJ75qNGoHAEzji5
-	 nGSz47lyGgpxfk2OgNR8Q/7isVshb4MWmYKGK3NEJ/PzlwdV6kz7sJXAucosqi8I6Y
-	 /Eea2S0cdWO6XBvtbrHEUaS74+3POUqETVOD8nH+O+iy7bS0UPWPerqZVIhenB4f8m
-	 D7zWDlItSy0rvjjFy5//0WdVoljtzX/Qf9O0buPXMSYFdsy3p6Zjmu4t4BjYiMXFxb
-	 y7TQeT5yoTBXA==
-Date: Fri, 25 Apr 2025 08:03:31 -0700
+	b=Q2iLbXQDn1dTtP5pbs+ramhLF3IwCWxWYL+bmC6aFt9oRbFk2bSYXjS7VkTR3Yg8b
+	 et+gYDAHlSp2bJKlovqMwcDRTmyjM64QddjOPfPU4sJlFhVGhp4O1AiOJNro2PpqZu
+	 ELr2WwdtKggCSUQqDVDMpM3x3xGpNipK809YlnCWFuXpmCByKQZy7FOUh98AngTv1w
+	 6wyUhpVA2dRALFNF/HSJkiDDT3W9csVFfHXYZeewV/pve8wOHU9enKGBmLkjq2cGe2
+	 DluGIB2nZdUNTOgZEerJO68U+aSjSH0Ct/73TPCjM+SeChnM/lnnHEL3oEEuP7y3TL
+	 8PiTlztPXfduA==
+Date: Fri, 25 Apr 2025 08:05:04 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Hans Holmberg <Hans.Holmberg@wdc.com>
 Cc: "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
@@ -34,10 +34,10 @@ Cc: "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
 	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
 	Carlos Maiolino <cem@kernel.org>,
 	"david@fromorbit.com" <david@fromorbit.com>, hch <hch@lst.de>
-Subject: Re: [PATCH 1/2] xfs: add mount test for read only rt devices
-Message-ID: <20250425150331.GG25667@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/2] xfs: add mount test for read only log devices
+Message-ID: <20250425150504.GH25667@frogsfrogsfrogs>
 References: <20250425090259.10154-1-hans.holmberg@wdc.com>
- <20250425090259.10154-2-hans.holmberg@wdc.com>
+ <20250425090259.10154-3-hans.holmberg@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,10 +46,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250425090259.10154-2-hans.holmberg@wdc.com>
+In-Reply-To: <20250425090259.10154-3-hans.holmberg@wdc.com>
 
-On Fri, Apr 25, 2025 at 09:03:22AM +0000, Hans Holmberg wrote:
-> Make sure that we can mount rt devices read-only if them themselves
+On Fri, Apr 25, 2025 at 09:03:23AM +0000, Hans Holmberg wrote:
+> Make sure that we can mount log devices read-only if them themselves
 > are marked as read-only.
 > 
 > Also make sure that rw re-mounts are not allowed if the device is
@@ -59,26 +59,26 @@ On Fri, Apr 25, 2025 at 09:03:22AM +0000, Hans Holmberg wrote:
 > 
 > Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
 > ---
->  tests/xfs/837     | 55 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/837.out | 10 +++++++++
+>  tests/xfs/838     | 55 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/838.out | 10 +++++++++
 >  2 files changed, 65 insertions(+)
->  create mode 100755 tests/xfs/837
->  create mode 100644 tests/xfs/837.out
+>  create mode 100755 tests/xfs/838
+>  create mode 100644 tests/xfs/838.out
 > 
-> diff --git a/tests/xfs/837 b/tests/xfs/837
+> diff --git a/tests/xfs/838 b/tests/xfs/838
 > new file mode 100755
-> index 000000000000..b20e9c5f33f2
+> index 000000000000..93a39a7ec8e9
 > --- /dev/null
-> +++ b/tests/xfs/837
+> +++ b/tests/xfs/838
 > @@ -0,0 +1,55 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0
 > +# Copyright (c) 2009 Christoph Hellwig.
-> +# Copyright (c) 2025 Western Digital Corporation
+> +# Copyright (c) 2025 Western Digital Corporation.
 > +#
-> +# FS QA Test No. 837
+> +# FS QA Test No. 838
 > +#
-> +# Check out various mount/remount/unmount scenarious on a read-only rtdev
+> +# Check out various mount/remount/unmount scenarious on a read-only logdev
 > +# Based on generic/050
 > +#
 > +. ./common/preamble
@@ -87,41 +87,42 @@ On Fri, Apr 25, 2025 at 09:03:22AM +0000, Hans Holmberg wrote:
 > +_cleanup_setrw()
 > +{
 > +	cd /
-> +	blockdev --setrw $SCRATCH_RTDEV
+> +	blockdev --setrw $SCRATCH_LOGDEV
 > +}
 > +
 > +# Import common functions.
 > +. ./common/filter
 > +
-> +_require_realtime
-> +_require_local_device $SCRATCH_RTDEV
-
-I suspect this is copy-pasted from generic/050, but I wonder when
-SCRATCH_RTDEV could be a character device, but maybe that's a relic of
-Irix (and Solaris too, IIRC)?
-
-The rest of the test looks fine to me though.
-
---D
-
+> +_require_logdev
+> +_require_local_device $SCRATCH_LOGDEV
 > +_register_cleanup "_cleanup_setrw"
 > +
-> +_scratch_mkfs "-d rtinherit" > /dev/null 2>&1
+> +_scratch_mkfs >/dev/null 2>&1
 > +
 > +#
-> +# Mark the rt device read-only.
+> +# Mark the log device read-only
 > +#
 > +echo "setting device read-only"
-> +blockdev --setro $SCRATCH_RTDEV
+> +blockdev --setro $SCRATCH_LOGDEV
 > +
 > +#
-> +# Mount it and make sure it can't be written to.
+> +# Mount and make sure it can't be written to.
 > +#
-> +echo "mounting read-only rt block device:"
+> +echo "mounting read-only log block device:"
 > +_scratch_mount 2>&1 | _filter_ro_mount | _filter_scratch
 > +if [ "${PIPESTATUS[0]}" -eq 0 ]; then
 > +	echo "writing to file on read-only filesystem:"
 > +	dd if=/dev/zero of=$SCRATCH_MNT/foo bs=1M count=1 oflag=direct 2>&1 | _filter_scratch
+
+As I mentioned over in the other thread, perhaps this test should check
+that a readonly log device results in a norecovery mount and that
+pending changes don't show up if the mount succeeds?
+
+Also, ext4 supports external log devices, should this be in
+tests/generic?
+
+--D
+
 > +else
 > +	_fail "failed to mount"
 > +fi
@@ -135,15 +136,15 @@ The rest of the test looks fine to me though.
 > +# success, all done
 > +echo "*** done"
 > +status=0
-> diff --git a/tests/xfs/837.out b/tests/xfs/837.out
+> diff --git a/tests/xfs/838.out b/tests/xfs/838.out
 > new file mode 100644
-> index 000000000000..0a843a0ba398
+> index 000000000000..673b48f42a4e
 > --- /dev/null
-> +++ b/tests/xfs/837.out
+> +++ b/tests/xfs/838.out
 > @@ -0,0 +1,10 @@
-> +QA output created by 837
+> +QA output created by 838
 > +setting device read-only
-> +mounting read-only rt block device:
+> +mounting read-only log block device:
 > +mount: device write-protected, mounting read-only
 > +writing to file on read-only filesystem:
 > +dd: failed to open 'SCRATCH_MNT/foo': Read-only file system
