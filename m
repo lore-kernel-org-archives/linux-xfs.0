@@ -1,222 +1,148 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A7031F4C9F
-	for <linux-xfs@vger.kernel.org>; Thu, 24 Apr 2025 22:00:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C1A610957;
+	Fri, 25 Apr 2025 05:52:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745532044; cv=none; b=SflBDKXITxi0nUW1V45Xe5GK0s/Xnn2FvA5z/SxGK3L9Q/NSjdPpank8RlQQThopIXK2lX+DLX9W6vzwr0Fvlva/b8sxnBeuvbSoudMHGiiNUBGezcRmvqeURchq+YFB7FavMwkGeElsHg5IFGfloUDwxzfYDNYa5YE6Qrm/kxY=
+	t=1745560380; cv=none; b=cWU/xNM6AIX70BiQVUut7V+zWMvSVzpY3iN+gwUGPnBIf02BtYMGMWmP98NNFs++H81XeS87xfCvjjehcdZDmacrHLWrp99WptC4p4scXgU8FEJFDtFTwnUIEVStT7nEH/8ez9bz2l8Uc9Q/EjsYgkaGiwf9nVlcz+hgDw1NhGk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745532044; c=relaxed/simple;
-	bh=erpxHYWudnFHjjLDEzw+Of1sypy0u7AddmLxd1IKWD8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lVvMZ9s1zi2XeNSCnlUbgyqK6M0JbyBvYGWuA7Yvbwqed7wzR5UpTa1et7uETzSRe571FX22t9R3BuadJ79W3jZhgotAc9EVy36FeOgpAlBo1kwYsc57qwzb+MeJ3/RNjSOO6Kx5wyPBjIo+1YmzU8j0d4OGdUFqCnhhahxFBLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H9xC3p1/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745560380; c=relaxed/simple;
+	bh=kREjJtQlCCa6Oh3328sWRGNVTzx04U00wSvYU1bmzv8=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=XAdUtbIIHbZG4C/rnOMMaOCqPcgh+vDzur+BvQw0vSqROjwIgtX3rCyYYEg12qCck8qwH0669fSsTOZIZGDr4LWs19zXxD+HLzl0+1+WaS6lm17CcW8cWe9O9oqiDLIoFeZoWjuzbhPtd4Lcj5NzxTq/Jtvib9hvAGPoqjGVz+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kx27qjsP; arc=none smtp.client-ip=209.85.214.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H9xC3p1/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABD4DC4CEE3;
-	Thu, 24 Apr 2025 22:00:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745532041;
-	bh=erpxHYWudnFHjjLDEzw+Of1sypy0u7AddmLxd1IKWD8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=H9xC3p1/HCcahXZhfCg43UCdGycVqT+brcfi5Q2QfKaodP4/Eu1twifS6N4aZYsSE
-	 7F0jv3Wd9hNKdyDa4AR4CY7KgNIBbxKMNBCictZu7Ab/Wo3nSGcKD/dMJulMl6yFW1
-	 QGWLaWIST3C95upKZHLFfpxRqwhAFeXoEht6e7Q6rvVKOQb4JbxUjku1hj4wA21hlg
-	 BsU3Km+imMCRZ69J3oC7WKVPs/GjhfMatpAiGLrEfa+ugv3OFAedQP7GPhEMM7lKmG
-	 dgxD2NYOro++lbyn71dfVfgcEwlkei6LtzL3bjlVydPCGR1UafsdztsxgT6nWZydGG
-	 Yo5shO5UN1Sog==
-Date: Thu, 24 Apr 2025 15:00:41 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Luca Di Maio <luca.dimaio1@gmail.com>
-Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev,
-	smoser@chainguard.dev, hch@infradead.org
-Subject: Re: [PATCH v6 2/4] populate: add ability to populate a filesystem
- from a directory
-Message-ID: <20250424220041.GK25675@frogsfrogsfrogs>
-References: <20250423160319.810025-1-luca.dimaio1@gmail.com>
- <20250423160319.810025-3-luca.dimaio1@gmail.com>
- <20250423202358.GI25675@frogsfrogsfrogs>
- <vmiujkqli3d4c7ohgegpxvwacowl2tdaps6m4wyvwh6dcfado7@csca7fs5y7ss>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kx27qjsP"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2240b4de12bso28880755ad.2;
+        Thu, 24 Apr 2025 22:52:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1745560379; x=1746165179; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=idGJQmah+lTWW6tMJmwiLqsoATMo87mq2QKCqZgsTK8=;
+        b=kx27qjsP36D2jexobVFNswVohK7IS5yMkqDTbpVkMEqW7vq6fHHAMY/liiyx96gib0
+         vF6DgGFOpSqq5FOPFlv843iacnCCiTRpZZ+JHJBAUMxeU40vCoBBmtxJ+QYmQR/68vyg
+         j30mqd1YJOmKFe7Seb0JDh9dqd6+Yq7iMpuqGsqQvHNAjpxaBnxcnHP5Ogkr0/6+N2SA
+         gygTDC6AVg1hkxMo9eeOyvM5lSpiBQvC5QFoZg+Lc4/TRU9hk4pckAQWu3H+goDz7i5Z
+         BdPXrklR2jH6IXtqKspjTYLpPBwQcFfjARaAxbO5LZuCIeWsX2Dv2pnyis+U72D4lqnm
+         UqIQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745560379; x=1746165179;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=idGJQmah+lTWW6tMJmwiLqsoATMo87mq2QKCqZgsTK8=;
+        b=GVbbQdStw60XMmXjoymKqRnRrtUkzNhMHerufR99aaNcqI3Ns6BcjCwSwpiglP9v26
+         RxS0cdRRa2O44nM8ZqNNE5CBpZ5gIu7yH+UoY1qLlPUvZaDeaXXrlFPyerqPx3by0vLI
+         czyoNbn1aFqwRTlfDVByRQS2IblLtWdcxyICUUuwmPluMDdbbvBqwwe44XoVg8yCigjs
+         EbNdbN6OoxLoyfQ+y/iy5iwRJbMSMlDzKvP/u5h2yVKqNSc9ekjkK6wypWSP4mQ2hp8g
+         tLmfISM+DsTa5nnZBL7YEZ5kgowv6M+pT9KooWEuQYvv5vXDg2OsOlmurpaoVSflDWFQ
+         8HLA==
+X-Forwarded-Encrypted: i=1; AJvYcCUyzXUY8I5rACwBb/HzJgB8+FKn2CjMocgcKwVI8iOYuyGfyd0umN6NWAh7+J6Gmg6EqbMb+jkS@vger.kernel.org, AJvYcCVsS6g12ey9PtTNHHEGV1ZMfS7aLXLS9/VY3OQSpRk+NIaD+Jd4iSJLfURu0mAE1N5vOgKcYX9B1QsIPA==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw1DMfm4UNIFs9yarxtyOflsd4k3vEa7Ah+8H5c1e5HJ43Z7zlp
+	Hef+MCIT6cUu8Vq9gG7VXIC5FvagxcZAgIc4hVQOhi2n6RNPBeL476j70w==
+X-Gm-Gg: ASbGncvcDbt0mne3AgGqnqK0suTzWowNWy0l+t3GEOv7vE7O4vzH3yVTde5djZRoISf
+	vaEbPcwUywdOQp25+uTf+Zeygh0EfdfwB3hCN6HV6Aqb7gSVEEb2nweQ6IkevaZfN89+XOXOjlU
+	HZE03VuRZ6Vgn5Y7ZT+vRvP6TJRl9rgd6xZWJXDARh8ceZxz0fc11Vipb908wPAeaD18m2A8mX4
+	VI7XAVyH+Qau1hnDgwMUbZazMhTFt63T6klK0ibFNinFfbFrr838cTjPgLM0A/TwsxKAuq3u+bh
+	+hZxBYGC6IqC+knu1hDTjIdJiEnywj5sRSivUoW61JcOtOoprww=
+X-Google-Smtp-Source: AGHT+IERg3O2/AjrVTi0BaENjTFP7mUD8M5c3065Ifk+AIlh1wTEACUHvfA5pcoKVyGMOoz95zng6A==
+X-Received: by 2002:a17:902:f68a:b0:224:1609:a74a with SMTP id d9443c01a7336-22dbf62d8aemr16653825ad.34.1745560378485;
+        Thu, 24 Apr 2025 22:52:58 -0700 (PDT)
+Received: from [192.168.0.120] ([49.205.34.162])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22db50e7aadsm23913395ad.138.2025.04.24.22.52.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 24 Apr 2025 22:52:58 -0700 (PDT)
+Message-ID: <6d1f2cf1-2097-492e-a36e-43a3fd865c4a@gmail.com>
+Date: Fri, 25 Apr 2025 11:22:52 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <vmiujkqli3d4c7ohgegpxvwacowl2tdaps6m4wyvwh6dcfado7@csca7fs5y7ss>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1] xfs: Fail remount with noattr2 on a v5 xfs with
+ CONFIG_XFS_SUPPORT_V4=y
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+ fstests@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+ djwong@kernel.org, zlang@kernel.org, david@fromorbit.com
+References: <7c4202348f67788db55c7ec445cbe3f2d587daf2.1744394929.git.nirjhar.roy.lists@gmail.com>
+ <Z_yhpwBQz7Xs4WLI@infradead.org>
+ <0d1d7e6f-d2b9-4c38-9c8e-a25671b6380c@gmail.com>
+ <Z_9JmaXJJVJFJ2Yl@infradead.org>
+ <757190c8-f7e4-404b-88cd-772e0b62dea5@gmail.com>
+Content-Language: en-US
+In-Reply-To: <757190c8-f7e4-404b-88cd-772e0b62dea5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Thu, Apr 24, 2025 at 06:09:45PM +0200, Luca Di Maio wrote:
-> On Wed, Apr 23, 2025 at 01:23:58PM -0700, Darrick J. Wong wrote:
-> > On Wed, Apr 23, 2025 at 06:03:17PM +0200, Luca Di Maio wrote:
-> > > +static void fail(char *msg, int i)
-> > > +{
-> > > +   fprintf(stderr, _("%s: %s [%d - %s]\n"), progname, msg, i, strerror(i));
-> > > +   exit(1);
-> > > +}
-> > > +
-> > > +static int newregfile(char *fname)
-> > > +{
-> > > +   int fd;
-> > > +   off_t size;
-> > > +
-> > > +   if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
-> > > +           fprintf(stderr, _("%s: cannot open %s: %s\n"), progname, fname,
-> > > +                   strerror(errno));
-> > > +           exit(1);
-> > > +   }
-> > > +
-> > > +   return fd;
-> > > +}
-> >
-> > Why is this copy-pasting code from proto.c?  Put the new functions
-> > there, and then you don't need all this externing.
-> >
-> 
-> Right, this is because with a separate flag I thought it would have been
-> better to keep it in a separate file.
 
-Common functionality goes together in a C module, regardless of how it
-gets called.
+On 4/16/25 13:05, Nirjhar Roy (IBM) wrote:
+>
+> On 4/16/25 11:39, Christoph Hellwig wrote:
+>> On Tue, Apr 15, 2025 at 12:48:39PM +0530, Nirjhar Roy (IBM) wrote:
+>>> condition(noattr2 on v5) is not caught in xfs_fs_validate_params() 
+>>> because
+>>> the superblock isn't read yet and "struct xfs_mount    *mp" is still 
+>>> not
+>>> aware of whether the underlying filesystem is v5 or v4 (i.e, whether 
+>>> crc=0
+>>> or crc=1). So, even if the underlying filesystem is v5, 
+>>> xfs_has_attr2() will
+>>> return false, because the m_features isn't populated yet.
+>> Yes.
+>>
+>>> However, once
+>>> xfs_readsb() is done, m_features is populated (mp->m_features |=
+>>> xfs_sb_version_to_features(sbp); called at the end of xfs_readsb()). 
+>>> After
+>>> that, when xfs_finish_flags() is called, the invalid mount option (i.e,
+>>> noattr2 with crc=1) is caught, and the mount fails correctly. So, 
+>>> m_features
+>>> is partially populated while xfs_fs_validate_params() is getting 
+>>> executed, I
+>>> am not sure if that is done intentionally.
+>> As you pointed out above it can't be fully populated becaue we don't
+>> have all the information.  And that can't be fixed because some of the
+>> options are needed to even get to reading the superblock.
+>>
+>> So we do need a second pass of verification for everything that depends
+>
+> Yes, we need a second pass and I think that is already being done by 
+> xfs_finish_flags() in xfs_fs_fill_super(). However, in 
+> xfs_fs_reconfigure(), we still need a check to make a transition from 
+> /* attr2 -> noattr2 */ and /* noattr2 -> attr2 */ (only if it is 
+> permitted to) and update mp->m_features accordingly, just like it is 
+> being done for inode32 <-> inode64, right? Also, in your previous 
+> reply[1], you did suggest moving the crc+noattr2 check to 
+> xfs_fs_validate_params() - Are you suggesting to add another optional 
+> (NULLable) parameter "new_mp" to xfs_fs_validate_params() and then 
+> moving the check to xfs_fs_validate_params()?
+>
+> [1] https://lore.kernel.org/all/Z_yhpwBQz7Xs4WLI@infradead.org/
+>
+> --NR
+>
+Hi Christoph,
 
-> With the new behaviour you proposed in the previous mail (one -p flag,
-> check if file/directory) then I can unify back into proto.c, thus
-> removing all the exported functions changes.
+Any further feedback on the above and the overall patch? Can you please 
+suggest the changes you want me to do for the patch?
 
-<nod>
+--NR
 
-> > > +
-> > > +static void writetimestamps(struct xfs_inode *ip, struct stat statbuf)
-> > > +{
-> > > +   struct timespec64 ts;
-> > > +
-> > > +   /*
-> > > +    * Copy timestamps from source file to destination inode.
-> > > +    *  In order to not be influenced by our own access timestamp,
-> > > +    *  we set atime and ctime to mtime of the source file.
-> > > +    *  Usually reproducible archives will delete or not register
-> > > +    *  atime and ctime, for example:
-> > > +    *     https://www.gnu.org/software/tar/manual/html_section/Reproducibility.html
-> > > +    */
-> > > +   ts.tv_sec = statbuf.st_mtime;
-> > > +   ts.tv_nsec = statbuf.st_mtim.tv_nsec;
-> > > +   inode_set_atime_to_ts(VFS_I(ip), ts);
-> > > +   inode_set_ctime_to_ts(VFS_I(ip), ts);
-> > > +   inode_set_mtime_to_ts(VFS_I(ip), ts);
-> >
-> > This seems weird to me that you'd set [ac]time to mtime.  Why not open
-> > the source file O_ATIME and copy atime?  And why would copying ctime not
-> > result in a reproducible build?
-> >
-> > Not sure what you do about crtime.
-> >
-> 
-> The problem stems from the extraction of the artifact. Usually
-> reproducible archives will remove [ac]time and only keep mtime, but in
-> the moment that a file is extracted, any filesystem will assign [ac]time
-> to the moment of extraction.
-> This will add randomness not to the filesystem itself, because it will
-> be reproducible if acting on the same extracted archive, but it will not
-> be reproducible if acting on a new extraction of the same archive.
-> 
-> Another approach we can do is what mkfs.ext4's populate functionality is
-> doing: while it preserves mtime, [cr,a,c]time is set to whatever time the
-> mkfs command is running.
-> 
-> This would make it preserve the important timestamp (mtime) and move the
-> "problem" of the reproducible/changing timestamp to the environment,
-> while keeping the behaviour of mkfs.xfs sensible
-> 
-> What do you think?
+>> on informationtion from the superblock. The fact that m_features
+>> mixes user options and on-disk feature bits is unfortunately not very
+>> helpful for a clear structure here.
+>>
+-- 
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
 
-The thing is, if you were relying on atime/mtime for detection of "file
-data changed since last read" then /not/ copying atime into the
-filesystem breaks that property in the image.
-
-How about copying [acm]time from the source file by default, but then
-add a new -p noatime option to skip the atime?
-
-ctime/crtime should be the current time when mkfs command is running.
-I assume that you have a gettimeofday type wrapper that makes it always
-return the same value?
-
-> > > +   /*
-> > > +    * copy over file content, attributes and
-> > > +    * timestamps
-> > > +    */
-> > > +   if (fd != 0) {
-> > > +           writefile(ip, fname, fd);
-> > > +           writeattrs(ip, fname, fd);
-> >
-> > Since we're adding features, should this read the fsxattr info from the
-> > source file, override it with the set fields in *fsxp, and set that on
-> > the file?  If you're going to slurp up a directory, you might as well
-> > get all the non-xattr file attributes.
-> >
-> 
-> Right, I thought creatproto() did that, but now I see that this is done
-> only for the root inode, I'll add this for others too, thanks.
-
-Right.
-
-> > > +           libxfs_parent_finish(mp, ppargs);
-> > > +           tp = NULL;
-> >
-> > Shouldn't this copy xattrs and fsxattrs to directories and symlinks too?
-> >
-> 
-> Right, will add, thanks.
-
-<nod>
-
-> > > +/*
-> > > + * walk_dir will recursively list files and directories
-> > > + * and populate the mountpoint *mp with them using handle_direntry().
-> > > + */
-> > > +static void walk_dir(struct xfs_mount *mp, struct xfs_inode *pip,
-> > > +                       struct fsxattr *fsxp, char *cur_path)
-> > > +{
-> > > +   DIR *dir;
-> > > +   struct dirent *entry;
-> > > +
-> > > +   /*
-> > > +    * open input directory and iterate over all entries in it.
-> > > +    * when another directory is found, we will recursively call
-> > > +    * populatefromdir.
-> > > +    */
-> > > +   if ((dir = opendir(cur_path)) == NULL)
-> > > +           fail(_("cannot open input dir"), 1);
-> > > +   while ((entry = readdir(dir)) != NULL) {
-> > > +           handle_direntry(mp, pip, fsxp, cur_path, entry);
-> > > +   }
-> > > +   closedir(dir);
-> > > +}
-> >
-> > nftw() ?  Which has the nice feature of constraining the number of open
-> > dirs at any given time.
-> >
-> > --D
-> >
-> 
-> The problem with nftw() is that working with callback functions, we will
-> need to switch to static variables for state, for example to keep track
-> of each ip's pip, while with the recursive approach we can have some
-> state and basically walk_dir() behaves similar to parseproto(), making
-> changes to the rest of the file minimal.
-> This seems to involve a lot more changes than now where we're basically
-> just adding a limited number of functions to proto.c.
-
-Eck, ok.  Never mind then.  I guess we could try to bump RLIMIT_NOFILE
-in that case to avoid EMFILE.
-
---D
-
-> Thanks again for the review Darrick,
-> I'll wait for your feedback on the walk_dir() vs nftw() and the [ac]time
-> approach,
-> thanks
-> 
-> L.
-> 
