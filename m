@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4A46F1DED6F;
-	Sat, 26 Apr 2025 01:29:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4AA1A1898FB;
+	Sat, 26 Apr 2025 01:35:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745630945; cv=none; b=fZGBori0FbHTrfglNSE2wLH1bHMWB5WGNIZ4A3Mh2mgH7uuS33/drsD/VGULiewE24NDH9HSZgXonzg1ZoWrDGxnf/AVouS0Ik26eDIJNnqn0Za7TUYUEa66H5ufVhS1IhJB8VafwR/S+ObP8DvC2Xu83Fm6uIAmPgcNkHy+1/A=
+	t=1745631304; cv=none; b=o4fRS4ACcKbgLOFaaVK3aRFfxrCb/3LHSQx/KWxINO+gFYmse1irFQZUjTJtohYq7wLjvt5sbzdsTXjC4o0mupq3UzyFM5PIsSEzxyO5oUdK81bW6Q2gPTWFZD4qgHuJsofNTQzujOtg7Rn6xlHfx5Jw1WK9xdSpPmFH1XHiIwg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745630945; c=relaxed/simple;
-	bh=RUik0+Zs96tMlrQ8z8iVQ+kw2DfiMiv93ATkuYZD348=;
+	s=arc-20240116; t=1745631304; c=relaxed/simple;
+	bh=X9Q07Iw8Ge5odoZPqL2Sv3x3fr3O4KTILz8tnr1vMBg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Rl6qdyDLM/EQdSTrAomiYeESeS+ix1ycStUKep8ZSlQiir1Y7ug0H3dNwVqCrxQk6Pa8ro7+KdkBBJitbQIEAz50j+1HPMNBU+Jqxhs5ob7YWPh27CdONJEKrbFh9nzXAzn9/zjjSb7kEKQ2RNFhxATScuJj2TroQ0Ps/PR0VTQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=aUtGl8A7; arc=none smtp.client-ip=117.135.210.4
+	 In-Reply-To:Content-Type; b=UtRj+XEUFedK1/LSH6yWwJlkaldTiyAuarXv33VsG3GXxXTNhUOKLR0d1aPOyqKZunTUCSA0v4zSDpLbKjjcXUouaU9WepsiVrAAHvWTyqRTm5kedoe1vfHNlrvMB80nRhXC4daUtkksNrbfvwduMpMBTZ5hFoLQUp2ab/Hpfpc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=gkG81CaL; arc=none smtp.client-ip=220.197.31.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="aUtGl8A7"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="gkG81CaL"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
-	Content-Type; bh=5bdmOhm8OuZBuvuyYjy8I4BJ912cr49M4cgTyStbuKg=;
-	b=aUtGl8A79Js1vOnO/7dQW0GnrYfHFaJCMzTkt2lYg6B84rg1pOcAJSYsWNuF8o
-	pPvJtl26SF/A/L6YDzTSCO7fHaRCLcVPzZHejHZP7n5WhkfY0ADymHeBwkMk8w+a
-	ihS+zIV8tA5jw7XEesPGmin4NjldySnnhVE/wQFa1LqdA=
+	Content-Type; bh=1xHokVF6O080vTQ6fGVAu/ld+ZN9rRooZSQLpIx6Wlo=;
+	b=gkG81CaL0AH40dajj0ygE7QZyu9Tt13IauC15qc39gp0A+BkCKZAx3v3ewG94p
+	1xkinPsjKpfX4vcjnOcCfGdxMrQOm8R3ewbi6rosUjcXvPfyTat18RFUnLqz3gOC
+	qSqL09vqQGPj+LHZO9uQv/T9Sg+XnT1HPwZvVdz2bDSBQ=
 Received: from [192.168.5.16] (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wCXP2bGNgxoWJGTCQ--.42880S2;
-	Sat, 26 Apr 2025 09:28:40 +0800 (CST)
-Message-ID: <c59c3ffd-975a-4b61-abe1-25bd8a005b9d@163.com>
-Date: Sat, 26 Apr 2025 09:28:38 +0800
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wD3l0c5OAxoOH7TCg--.45202S2;
+	Sat, 26 Apr 2025 09:34:49 +0800 (CST)
+Message-ID: <1a389cab-08fe-486b-9fa2-240e6e1a3984@163.com>
+Date: Sat, 26 Apr 2025 09:34:49 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,200 +32,127 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 1/2] xfs: Add i_direct_mode to indicate the IO mode of
- inode
+Subject: Re: [RFC PATCH 2/2] xfs: Enable concurrency when writing within
+ single block
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
  Chi Zhiling <chizhiling@kylinos.cn>
 References: <20250425103841.3164087-1-chizhiling@163.com>
- <20250425103841.3164087-2-chizhiling@163.com>
- <20250425151208.GN25675@frogsfrogsfrogs>
+ <20250425103841.3164087-3-chizhiling@163.com>
+ <20250425151539.GO25675@frogsfrogsfrogs>
 Content-Language: en-US
 From: Chi Zhiling <chizhiling@163.com>
-In-Reply-To: <20250425151208.GN25675@frogsfrogsfrogs>
+In-Reply-To: <20250425151539.GO25675@frogsfrogsfrogs>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wCXP2bGNgxoWJGTCQ--.42880S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW3JFy7Jr4kAr47Kr18tw4rGrg_yoW7CFW5pr
-	ykKayYkFs7try29rn7Xr1Uurs0gay8Wr4j9r40q3W7u345Cr1S9r4Ivr129as8XrsxZr4v
-	vF4FkryDu3W5tFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U20PhUUUUU=
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/1tbiTxk6nWgLoz9W8wABsq
+X-CM-TRANSID:_____wD3l0c5OAxoOH7TCg--.45202S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxuF15KFW3tw4xJw1kJF45GFg_yoW5WFWxpr
+	Zaya1YkrZ2qry7ArnaqF15Xwn3K3Z7Xr47ZryIgF17Z3Z8Arsa93WSvryY9a1UJrs7Zr40
+	9r40kFy8Cw1jyrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U2Ap5UUUUU=
+X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/1tbiKQo7nWgMNEZQQAAAsD
 
-On 2025/4/25 23:12, Darrick J. Wong wrote:
-> On Fri, Apr 25, 2025 at 06:38:40PM +0800, Chi Zhiling wrote:
+On 2025/4/25 23:15, Darrick J. Wong wrote:
+> On Fri, Apr 25, 2025 at 06:38:41PM +0800, Chi Zhiling wrote:
 >> From: Chi Zhiling <chizhiling@kylinos.cn>
 >>
->> Direct IO already uses shared lock. If buffered write also uses
->> shared lock, we need to ensure mutual exclusion between DIO and
->> buffered IO. Therefore, Now introduce a flag `i_direct_mode` to
->> indicate the IO mode currently used by the file. In practical
->> scenarios, DIO and buffered IO are typically not used together,
->> so this flag is usually not modified.
->>
->> Additionally, this flag is protected by the i_rwsem lock,
->> which avoids the need to introduce new lock. When reading this
->> flag, we need to hold a read lock, and when writing, a write lock
->> is required.
->>
->> When a file that uses buffered IO starts using DIO, it needs to
->> acquire a write lock to modify i_direct_mode, which will force DIO
->> to wait for the previous IO to complete before starting. After
->> acquiring the write lock to modify `i_direct_mode`, subsequent
->> buffered IO will need to acquire the write lock again to modify
->> i_direct_mode, which will force those IOs to wait for the current
->> IO to complete.
+>> For unextending writes, we will only update the pagecache and extent.
+>> In this case, if our write occurs within a single block, that is,
+>> within a single folio, we don't need an exclusive lock to ensure the
+>> atomicity of the write, because we already have the folio lock.
 >>
 >> Signed-off-by: Chi Zhiling <chizhiling@kylinos.cn>
 >> ---
->>   fs/xfs/xfs_file.c  | 37 +++++++++++++++++++++++++++++++++----
->>   fs/xfs/xfs_inode.h |  6 ++++++
->>   2 files changed, 39 insertions(+), 4 deletions(-)
+>>   fs/xfs/xfs_file.c | 34 +++++++++++++++++++++++++++++++++-
+>>   1 file changed, 33 insertions(+), 1 deletion(-)
 >>
 >> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
->> index 84f08c976ac4..a6f214f57238 100644
+>> index a6f214f57238..8eaa98464328 100644
 >> --- a/fs/xfs/xfs_file.c
 >> +++ b/fs/xfs/xfs_file.c
->> @@ -206,7 +206,8 @@ xfs_ilock_iocb(
->>   static int
->>   xfs_ilock_iocb_for_write(
->>   	struct kiocb		*iocb,
->> -	unsigned int		*lock_mode)
->> +	unsigned int		*lock_mode,
->> +	bool			is_dio)
-> 
-> Is an explicit flag required here, or can you determine directness from
-> IS_DAX() || (iocb->ki_flags & IOCB_DIRECT) ?
-> 
-> Hmm, I guess not, since a directio falling back to the pagecache for an
-> unaligned out of place write doesn't clear IOCB_DIRECT?
-
-Because DIO can fallback to buffered IO, I think checking 
-(iocb->ki_flags & IOCB_DIRECT) is not accurate.
-
-That's why we need to add an additional argument.
-
-> 
-> How does this new flag intersect with XFS_IREMAPPING?  Are we actually
-> modelling three states here: bufferedio <-> directio <-> remapping?
-
-Yes, and these three states are mutually exclusive.
-
-That's a good suggestion. I think we can include XFS_IREMAPPING in the
-new flag as well.
-
-> 
->>   {
->>   	ssize_t			ret;
->>   	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
->> @@ -226,6 +227,21 @@ xfs_ilock_iocb_for_write(
->>   		return xfs_ilock_iocb(iocb, *lock_mode);
->>   	}
->>   
->> +	/*
->> +	 * If the i_direct_mode need update, take the iolock exclusively to write
->> +	 * it.
->> +	 */
->> +	if (ip->i_direct_mode != is_dio) {
->> +		if (*lock_mode == XFS_IOLOCK_SHARED) {
->> +			xfs_iunlock(ip, *lock_mode);
->> +			*lock_mode = XFS_IOLOCK_EXCL;
->> +			ret = xfs_ilock_iocb(iocb, *lock_mode);
->> +			if (ret)
->> +				return ret;
->> +		}
->> +		ip->i_direct_mode = is_dio;
->> +	}
->> +
->>   	return 0;
+>> @@ -914,6 +914,27 @@ xfs_file_dax_write(
+>>   	return ret;
 >>   }
 >>   
->> @@ -247,6 +263,19 @@ xfs_file_dio_read(
->>   	ret = xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
->>   	if (ret)
->>   		return ret;
->> +
->> +	if (!ip->i_direct_mode) {
->> +		xfs_iunlock(ip, XFS_IOLOCK_SHARED);
->> +		ret = xfs_ilock_iocb(iocb, XFS_IOLOCK_EXCL);
->> +		if (ret)
->> +			return ret;
->> +
->> +		ip->i_direct_mode = 1;
->> +
->> +		/* Update finished, now downgrade to shared lock */
->> +		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
->> +	}
->> +
->>   	ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, NULL, 0, NULL, 0);
->>   	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
->>   
->> @@ -680,7 +709,7 @@ xfs_file_dio_write_aligned(
->>   	unsigned int		iolock = XFS_IOLOCK_SHARED;
->>   	ssize_t			ret;
->>   
->> -	ret = xfs_ilock_iocb_for_write(iocb, &iolock);
->> +	ret = xfs_ilock_iocb_for_write(iocb, &iolock, true);
->>   	if (ret)
->>   		return ret;
->>   	ret = xfs_file_write_checks(iocb, from, &iolock, ac);
->> @@ -767,7 +796,7 @@ xfs_file_dio_write_unaligned(
->>   		flags = IOMAP_DIO_FORCE_WAIT;
->>   	}
->>   
->> -	ret = xfs_ilock_iocb_for_write(iocb, &iolock);
->> +	ret = xfs_ilock_iocb_for_write(iocb, &iolock, true);
->>   	if (ret)
->>   		return ret;
->>   
->> @@ -898,7 +927,7 @@ xfs_file_buffered_write(
->>   
->>   write_retry:
->>   	iolock = XFS_IOLOCK_EXCL;
->> -	ret = xfs_ilock_iocb(iocb, iolock);
->> +	ret = xfs_ilock_iocb_for_write(iocb, &iolock, false);
->>   	if (ret)
->>   		return ret;
->>   
->> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
->> index eae0159983ca..04f6c4174fab 100644
->> --- a/fs/xfs/xfs_inode.h
->> +++ b/fs/xfs/xfs_inode.h
->> @@ -51,6 +51,12 @@ typedef struct xfs_inode {
->>   	uint16_t		i_checked;
->>   	uint16_t		i_sick;
->>   
->> +	/*
->> +	 * Indicates the current IO mode of this inode, (DIO/buffered IO)
->> +	 * protected by i_rwsem lock.
->> +	 */
->> +	uint32_t		i_direct_mode;
+>> +#define offset_in_block(inode, p) ((unsigned long)(p) & (i_blocksize(inode) - 1))
+> 
+> Is it correct to cast an loff_t (s64) to unsigned long (u32 on i386)
+> here?
 
-I think we can add i_remapping to this new flag, and rename it to
-i_current_state, so it can be remapping, DIO, or BIO.
-
-The rule remains the same: it should be protected by i_rwsem, with the
-write lock held to change it.
+I'm not sure if there is an issue here, although there is a type cast,
+it shouldn't affect the final result of offset_in_block.
 
 > 
-> Yeesh, a whole u32 to encode a single bit.  Can you use i_flags instead?
+>> +
+>> +static inline bool xfs_allow_concurrent(
+> 
+> static inline bool
+> xfs_allow_concurrent(
+> 
+> (separate lines style nit)
 
-Sorry, It's a mistake, But I don't think we can use i_flags instead.
+Okay
 
-I tried using i_flags for this, but i_flags is protected by
-i_flags_lock, which means that for every IO operation, it always
-requires an additional acquisition of i_flags_lock to check this flag.
+> 
+>> +	struct kiocb		*iocb,
+>> +	struct iov_iter		*from)
+>> +{
+>> +	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+>> +
+>> +	/* Extending write? */
+>> +	if (iocb->ki_flags & IOCB_APPEND ||
+>> +	    iocb->ki_pos >= i_size_read(inode))
+>> +		return false;
+>> +
+>> +	/* Exceeds a block range? */
+>> +	if (iov_iter_count(from) > i_blocksize(inode) ||
+>> +	    offset_in_block(inode, iocb->ki_pos) + iov_iter_count(from) > i_blocksize(inode))
+>> +		return false;
+>> +
+>> +	return true;
+>> +}
+> 
+> ...and since this helper only has one caller, maybe it should be named
+> xfs_buffered_write_iolock_mode and return the lock mode directly?
+
+Yes, this is better. I will update it in the next patch.
 
 
 Thanks
 
 > 
-> --D
-> 
 >> +
->>   	spinlock_t		i_flags_lock;	/* inode i_flags lock */
->>   	/* Miscellaneous state. */
->>   	unsigned long		i_flags;	/* see defined flags below */
+>>   STATIC ssize_t
+>>   xfs_file_buffered_write(
+>>   	struct kiocb		*iocb,
+>> @@ -925,8 +946,12 @@ xfs_file_buffered_write(
+>>   	bool			cleared_space = false;
+>>   	unsigned int		iolock;
+>>   
+>> +	if (xfs_allow_concurrent(iocb, from))
+>> +		iolock = XFS_IOLOCK_SHARED;
+>> +	else
+>> +		iolock = XFS_IOLOCK_EXCL;
+>> +
+>>   write_retry:
+>> -	iolock = XFS_IOLOCK_EXCL;
+>>   	ret = xfs_ilock_iocb_for_write(iocb, &iolock, false);
+>>   	if (ret)
+>>   		return ret;
+>> @@ -935,6 +960,13 @@ xfs_file_buffered_write(
+>>   	if (ret)
+>>   		goto out;
+>>   
+>> +	if (iolock == XFS_IOLOCK_SHARED &&
+>> +	    iocb->ki_pos + iov_iter_count(from) > i_size_read(inode)) {
+>> +		xfs_iunlock(ip, iolock);
+>> +		iolock = XFS_IOLOCK_EXCL;
+>> +		goto write_retry;
+>> +	}
+>> +
+>>   	trace_xfs_file_buffered_write(iocb, from);
+>>   	ret = iomap_file_buffered_write(iocb, from,
+>>   			&xfs_buffered_write_iomap_ops, NULL);
 >> -- 
 >> 2.43.0
 >>
