@@ -1,179 +1,167 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C607A930;
-	Mon, 28 Apr 2025 02:18:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F00F14A11;
+	Mon, 28 Apr 2025 03:32:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745806736; cv=none; b=RFxgvb1FouTFamVOCPyL0HD53k2LFng6UyGBsE0SLlpBOSxmPw0pNMx5Gn41CTi2a5Fr+DEpqOxfXV/SbNy2R/7liGJm4pdGZ67GBM9nwaIrj4/qYqDzpMvuQvFrHStX7EJ++UzJ2YGt/n52Vk3ekCL5scY+/AELYsS2DfNAnCg=
+	t=1745811181; cv=none; b=ca4CWR0fwazAo/JDw5/ZGlow81shiXUpeqjjeCd/lyh3H1fAZGL5BBoU1vCS7q9z0jfR9vXwBFhEwQ1dPkfqXbZ0e3XdpDZE8gspg0YNb1FSdcbnYhjxQhl1Dl7/PYEDEiWFP5L8fHK8NUmc9JfOxyQ81aDsksi4Ivpcv8aL9h4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745806736; c=relaxed/simple;
-	bh=zE4iPOA34UkR2Qmpjvr4GgW6AG4mrSCsIHDRpj55+AU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=az+ZeVhDxRGFg/i5wNMsXewsnBgLo3zmBJ1injGYfvxYODLy7vryyEdu2RC8BvmjSuu6moN0q8nyDQLbt/c6mBHxAC1Q37DJ7G2FtjFFdI20PaKG5JyPlisPjSPWs3SgzeJhX1VREDLLzT4FHl7YqbICtHHa4npb5NYaycd+L+0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XnxwZW0F; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XnxwZW0F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 790CEC4CEE3;
-	Mon, 28 Apr 2025 02:18:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745806734;
-	bh=zE4iPOA34UkR2Qmpjvr4GgW6AG4mrSCsIHDRpj55+AU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XnxwZW0F+VF0ENfbBKk/GVeNtgVRZ7tDADZCsFjQQoPgP7J8Rd9dV8NozCjR2XOlV
-	 5g8HvHm9ARFikOcbFGk2R2NSaoeIwxWU1A6Q5YJ8sTpPYlTyiT5yuQS6vZ06/c/4B5
-	 97eVbm63KwfLYPfsrJhaS+7FpTPhzqOUnELzy8GiKuHMGMjq5/RdZ3lPVU7quapXck
-	 iK2UXiYxiLhzeg6s2fJ2XpNL5aJWBcgmWN5yPzgZ2fU44egR/B6o/E7r941aX4kZ6z
-	 sHLEoFnvxb+lL0wN7k2vli4V+wBDieLd8GdPYBxXkANhRR+g8+2fZfVNjk3sagxMWD
-	 0VkWRcD/kVHGQ==
-Date: Mon, 28 Apr 2025 10:18:47 +0800
-From: Coly Li <colyli@kernel.org>
-To: Fedor Pchelkin <pchelkin@ispras.ru>
-Cc: linux-kernel@vger.kernel.org, 
-	Kent Overstreet <kent.overstreet@linux.dev>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Carlos Maiolino <cem@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, "Darrick J. Wong" <djwong@kernel.org>, 
-	linux-bcache@vger.kernel.org, linux-bcachefs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, lvc-project@linuxtesting.org
-Subject: Re: [PATCH] sort.h: hoist cmp_int() into generic header file
-Message-ID: <igz7aobnoaknndyms7apqguvybgvrxdfl22cwim5skbrrsjv7a@64wxcaiohjdx>
-References: <20250427201451.900730-1-pchelkin@ispras.ru>
+	s=arc-20240116; t=1745811181; c=relaxed/simple;
+	bh=rZPb+nYyN6fqWnBmjxisPyPRLgUVCz2sdtg+z7gQqTk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YrMNRzSPwh6WMIfgOgD/o4RBGxiibJAuwgdVb7OUg/GsqXpN+Id62Rlhu7nPh9R8bNOjKWBUBTRnBPCF6bz5Z+w/91HZ7wb6ncDHx/OSZ6MqrrpMhheG13MSgjPvbxjPTYPzSCnQvjE5k8gM76nE92L5xfsP718gxyYvpmaaWSY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Zm8CB3ynMz4f3kvw;
+	Mon, 28 Apr 2025 11:32:22 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 344901A1AF2;
+	Mon, 28 Apr 2025 11:32:48 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgBXu1_d9g5ov1YkKw--.49750S3;
+	Mon, 28 Apr 2025 11:32:47 +0800 (CST)
+Message-ID: <6db8d3e6-44ce-4b2b-b496-ec0104aee997@huaweicloud.com>
+Date: Mon, 28 Apr 2025 11:32:45 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20250427201451.900730-1-pchelkin@ispras.ru>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH blktests 1/3] scsi/010: add unmap write zeroes tests
+To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+ "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ hch <hch@lst.de>, "tytso@mit.edu" <tytso@mit.edu>,
+ "djwong@kernel.org" <djwong@kernel.org>,
+ "john.g.garry@oracle.com" <john.g.garry@oracle.com>,
+ "bmarzins@redhat.com" <bmarzins@redhat.com>,
+ "chaitanyak@nvidia.com" <chaitanyak@nvidia.com>,
+ "yi.zhang@huawei.com" <yi.zhang@huawei.com>,
+ "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>,
+ "yukuai3@huawei.com" <yukuai3@huawei.com>,
+ "yangerkun@huawei.com" <yangerkun@huawei.com>
+References: <20250318072835.3508696-1-yi.zhang@huaweicloud.com>
+ <20250318072835.3508696-2-yi.zhang@huaweicloud.com>
+ <krhbty6cnaj3zv4bka4jmpwmm74v7k3cts6csp6yoc7xjexoyu@6yrwd7rr2rip>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <krhbty6cnaj3zv4bka4jmpwmm74v7k3cts6csp6yoc7xjexoyu@6yrwd7rr2rip>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBXu1_d9g5ov1YkKw--.49750S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxXFy8Cw48GryUuFyUZFWrXwb_yoW5Gry5pF
+	WxGa9Ykr1ktr17G3WSvF45Wr13J3yfAr47AFWxCw1UCr98Zryakr1IgrWUWa4fGrZ8Gw1F
+	y3WUXFySkryUt3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
+	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
+	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
+	s2-5UUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Sun, Apr 27, 2025 at 11:14:49PM +0800, Fedor Pchelkin wrote:
-> Deduplicate the same functionality implemented in several places by
-> moving the cmp_int() helper macro into linux/sort.h.
-> 
-> The macro performs a three-way comparison of the arguments mostly useful
-> in different sorting strategies and algorithms.
-> 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+Hello Shinichiro！
 
-Acked-by: Coly Li <colyli@kernel.org>
+I apologize for the significant delay, and I greatly appreciate your
+review and suggestions.
 
-
-Thanks.
-
-> ---
+On 2025/4/3 15:26, Shinichiro Kawasaki wrote:
+> Hello Zhang, thank you for the patches.
 > 
-> https://lore.kernel.org/linux-xfs/20250426150359.GQ25675@frogsfrogsfrogs/T/#u
+> On Mar 18, 2025 / 15:28, Zhang Yi wrote:
+>> From: Zhang Yi <yi.zhang@huawei.com>
+>>
+>> Test block device unmap write zeroes sysfs interface with various SCSI
+>> debug devices. The /sys/block/<disk>/queue/write_zeroes_unmap interface
+>> should return 1 if the SCSI device enable the WRITE SAME command with
+>> unmap functionality, and it should return 0 otherwise.
+>>
+>> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+>> ---
+>>  tests/scsi/010     | 56 ++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/scsi/010.out |  2 ++
+>>  2 files changed, 58 insertions(+)
+>>  create mode 100755 tests/scsi/010
+>>  create mode 100644 tests/scsi/010.out
+>>
+>> diff --git a/tests/scsi/010 b/tests/scsi/010
+>> new file mode 100755
+>> index 0000000..27a672c
+>> --- /dev/null
+>> +++ b/tests/scsi/010
+>> @@ -0,0 +1,56 @@
+>> +#!/bin/bash
+>> +# SPDX-License-Identifier: GPL-3.0+
+>> +# Copyright (C) 2025 Huawei.
+>> +#
+>> +# Test block device unmap write zeroes sysfs interface with various scsi
+>> +# devices.
+>> +
+>> +. tests/scsi/rc
+>> +. common/scsi_debug
+>> +
+>> +DESCRIPTION="test unmap write zeroes sysfs interface with scsi devices"
+>> +QUICK=1
+>> +
+>> +requires() {
+>> +	_have_scsi_debug
+>> +}
+>> +
+>> +device_requries() {
+>> +	_require_test_dev_sysfs queue/write_zeroes_unmap
+>> +}
 > 
->  drivers/md/bcache/btree.c |  3 +--
->  fs/bcachefs/util.h        |  3 +--
->  fs/pipe.c                 |  3 +--
->  fs/xfs/xfs_zone_gc.c      |  2 --
->  include/linux/sort.h      | 10 ++++++++++
->  5 files changed, 13 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
-> index ed40d8600656..2cc2eb24dc8a 100644
-> --- a/drivers/md/bcache/btree.c
-> +++ b/drivers/md/bcache/btree.c
-> @@ -36,6 +36,7 @@
->  #include <linux/sched/clock.h>
->  #include <linux/rculist.h>
->  #include <linux/delay.h>
-> +#include <linux/sort.h>
->  #include <trace/events/bcache.h>
->  
->  /*
-> @@ -559,8 +560,6 @@ static void mca_data_alloc(struct btree *b, struct bkey *k, gfp_t gfp)
->  	}
->  }
->  
-> -#define cmp_int(l, r)		((l > r) - (l < r))
-> -
->  #ifdef CONFIG_PROVE_LOCKING
->  static int btree_lock_cmp_fn(const struct lockdep_map *_a,
->  			     const struct lockdep_map *_b)
-> diff --git a/fs/bcachefs/util.h b/fs/bcachefs/util.h
-> index 3e52c7f8ddd2..7ec1fc8b46f9 100644
-> --- a/fs/bcachefs/util.h
-> +++ b/fs/bcachefs/util.h
-> @@ -16,6 +16,7 @@
->  #include <linux/preempt.h>
->  #include <linux/ratelimit.h>
->  #include <linux/slab.h>
-> +#include <linux/sort.h>
->  #include <linux/vmalloc.h>
->  #include <linux/workqueue.h>
->  
-> @@ -669,8 +670,6 @@ static inline void percpu_memset(void __percpu *p, int c, size_t bytes)
->  
->  u64 *bch2_acc_percpu_u64s(u64 __percpu *, unsigned);
->  
-> -#define cmp_int(l, r)		((l > r) - (l < r))
-> -
->  static inline int u8_cmp(u8 l, u8 r)
->  {
->  	return cmp_int(l, r);
-> diff --git a/fs/pipe.c b/fs/pipe.c
-> index da45edd68c41..45077c37bad1 100644
-> --- a/fs/pipe.c
-> +++ b/fs/pipe.c
-> @@ -26,6 +26,7 @@
->  #include <linux/memcontrol.h>
->  #include <linux/watch_queue.h>
->  #include <linux/sysctl.h>
-> +#include <linux/sort.h>
->  
->  #include <linux/uaccess.h>
->  #include <asm/ioctls.h>
-> @@ -76,8 +77,6 @@ static unsigned long pipe_user_pages_soft = PIPE_DEF_BUFFERS * INR_OPEN_CUR;
->   * -- Manfred Spraul <manfred@colorfullife.com> 2002-05-09
->   */
->  
-> -#define cmp_int(l, r)		((l > r) - (l < r))
-> -
->  #ifdef CONFIG_PROVE_LOCKING
->  static int pipe_lock_cmp_fn(const struct lockdep_map *a,
->  			    const struct lockdep_map *b)
-> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-> index 81c94dd1d596..2f9caa3eb828 100644
-> --- a/fs/xfs/xfs_zone_gc.c
-> +++ b/fs/xfs/xfs_zone_gc.c
-> @@ -290,8 +290,6 @@ xfs_zone_gc_query_cb(
->  	return 0;
->  }
->  
-> -#define cmp_int(l, r)		((l > r) - (l < r))
-> -
->  static int
->  xfs_zone_gc_rmap_rec_cmp(
->  	const void			*a,
-> diff --git a/include/linux/sort.h b/include/linux/sort.h
-> index 8e5603b10941..c01ef804a0eb 100644
-> --- a/include/linux/sort.h
-> +++ b/include/linux/sort.h
-> @@ -4,6 +4,16 @@
->  
->  #include <linux/types.h>
->  
-> +/**
-> + * cmp_int - perform a three-way comparison of the arguments
-> + * @l: the left argument
-> + * @r: the right argument
-> + *
-> + * Return: 1 if the left argument is greater than the right one; 0 if the
-> + * arguments are equal; -1 if the left argument is less than the right one.
-> + */
-> +#define cmp_int(l, r) (((l) > (r)) - ((l) < (r)))
-> +
->  void sort_r(void *base, size_t num, size_t size,
->  	    cmp_r_func_t cmp_func,
->  	    swap_r_func_t swap_func,
-> -- 
-> 2.49.0
+> The device_requries() hook does not work for test cases which implement test().
+> It is rather dirty, but I think we need to delay the check for
+> write_zeroes_unmap sysfs attribute availability until test() gets called.
+> See below for my idea.
 > 
 
--- 
-Coly Li
+Indeed, I completely missed that.
+
+>> +
+>> +test() {
+>> +	echo "Running ${TEST_NAME}"
+>> +
+>> +	# disable WRITE SAME with unmap
+>> +	if ! _configure_scsi_debug lbprz=0; then
+>> +		return 1
+>> +	fi
+> 
+> I suggest to check queue/write_zeroes_unmap here. If it's not available, set
+> SKIP_REASONS and return like this (totally untested):
+> 
+> 	if [[ ! -f /sys/block/${SCSI_DEBUG_DEVICES[0]}/queue/write_zeroes_unmap ]]; then
+> 		_exit_scsi_debug
+> 		SKIP_REASONS+=("kernel does not support unmap write zeroes sysfs interface")
+> 		return 1
+> 	fi
+> 
+
+Yeah, I agree with you. For now, there is no helper available for
+checking the sysfs interface of the SCSI debugging device.
+
+I will add a new helper setup_test_device() in this test as the
+following two patches do, and put this check into that helper.
+
+Thanks,
+Yi.
+
