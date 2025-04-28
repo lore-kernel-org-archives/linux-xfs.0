@@ -1,249 +1,143 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A951262FCA;
-	Mon, 28 Apr 2025 13:55:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C900D268FEB
+	for <linux-xfs@vger.kernel.org>; Mon, 28 Apr 2025 14:42:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745848551; cv=none; b=Chq+npscWYBjww39FWAyHDya6M2J5wnT2dkzkp+yN13YAS3ajZJlotlofI2n1aHCsA+5MnhlVl+ZjX7RsicdjtfjHIFi7EJEZyD+hCOhgTL/AtTiSzmuCejoXNPZUpglbTdCNVJkaoXdeJzKiyeyF31Ddz8buqYTxdjnjv8/sOA=
+	t=1745851375; cv=none; b=NfYJwVmRNt98dLVJZiYfTlIpRfY0QVa6kp2yGFj6bP9S2HU4ky+07sTxMwedkl58lKuNNu4JwitG5qL2LyT4AU4zdPMwIMe4ekwZrjfLBtlnmju8uxv9UQL4GdENnH6y0qZAZ98zInm48zuDM9iSCp66yJ6Pn3wBqRxrVDIudFU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745848551; c=relaxed/simple;
-	bh=2wDSomBKx4zZNDuqvc7GRdEVnF9G4IW/tpgoVrJAAEU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gk57X0rFuCHgzfyF4KaBcw92hmglJ9HnviV7/v1MB14qizaysQ38MY1XHmMINcuSKrfYhefoGEFNeWTKbWxiJy1uEGJ2bB+DCGWUJkA6+ohIXX8mJW2PHTCoyIC4mS41zTLdemq2mI/9ArhEn748Jpl4vmZyeafPfMpSTEqUP6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4ZmQ2V4x3qzKHMXc;
-	Mon, 28 Apr 2025 21:55:46 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A16A11A0EC8;
-	Mon, 28 Apr 2025 21:55:45 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgDXOl_fiA9o2mtPKw--.49456S3;
-	Mon, 28 Apr 2025 21:55:45 +0800 (CST)
-Message-ID: <58f1e9e2-8c4f-42a0-800e-cefe17a7faaa@huaweicloud.com>
-Date: Mon, 28 Apr 2025 21:55:43 +0800
+	s=arc-20240116; t=1745851375; c=relaxed/simple;
+	bh=2xgAAGLeN+eLBlFyWDR5ICKH8STz76Z9bvwsf8R2Swo=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=lnOL3hhChOll/BzQtqWh4wbgiFITNMW7+HPxl8DUe8Man71My3kNnLBZW5+xFKtb51woeoQUcKgogrjOmcpbuQCZhTgpbagEL6AqsrhCbyVdMYqp425DSx0GNTynQYdHVtnZ4wM7eWy2AgVUe+JFUWlNH32rprkbOqdsUGsxDFg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LLPVYsTJ; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LLPVYsTJ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1745851372;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type;
+	bh=M/L7WTx3gAsnvDvTLkhXxUOeAtuqwPYzjGBb3TUodOA=;
+	b=LLPVYsTJP+mrn5+wQ8B9AqZMVWJs71iz90iUh0G/JrnMa+9Hklg5yuN4jSfLdliFtIMJTn
+	hxqSqYtraOAvoK4+W7dbGl9b6zIc8BFzlSCg8C2EeLwyw9yOtBt2OQd6phwnz8Wnfc0FyP
+	vMJ8if8hHmFbnSFzvVp3bhIrQ3p1d6Y=
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
+ [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-594-B2CRlXB7Mh65EChoEtB6lg-1; Mon, 28 Apr 2025 10:42:51 -0400
+X-MC-Unique: B2CRlXB7Mh65EChoEtB6lg-1
+X-Mimecast-MFC-AGG-ID: B2CRlXB7Mh65EChoEtB6lg_1745851370
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-225107fbdc7so47021105ad.0
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Apr 2025 07:42:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745851370; x=1746456170;
+        h=content-disposition:mime-version:message-id:subject:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=M/L7WTx3gAsnvDvTLkhXxUOeAtuqwPYzjGBb3TUodOA=;
+        b=THJFFLN2m+W6odb975J9g70IdgiBRr9QBa4jFNbhtm7F7tJ8wHFTaZqYkgd4lQhDyv
+         8eIf0fn+zowEdKXyb5vZAYu+m29Wqhl+7XhVfv1/PpXqOnVUbuOYOCLAo9Kg5NGlHeVA
+         sIi7zIoLmfov4DkJ0dnrC1pvgNUmC7Q72UTOv0amFZPmrbEwCsDKx1HnZRz9fPZl0uVj
+         eoxlkoHZn1fRYfM6tzJ9J7Bz6R0XIOig4rFaiLTgX7p9o/pdKORBYiWCdv7fRKk3Z1dE
+         H/CDxQuHJ9FRzu8lYUCD7nWvwnbCqFGup7dBGYg+E4nsxBQWWbfs93T9GfTtZaC85cHT
+         uFyQ==
+X-Gm-Message-State: AOJu0YyvQLW3T0AObvsUG5vkbDoslqzFundx4hx2ppq75d7CSXi/Alkb
+	bWfXFuUjyjYubGvK5g2Qu6uaeNqXzlTEVZBcMHfgp4OnMydsfDpqTr6tFb6Ik91fjgam3byb+mG
+	Z2ViA28QJU1ZddjesfsNbBmfXOjPfrjeklkyjMMVVm2MlKy7aIEFPTJOlEiDCHTmBXsD3hHvQON
+	yNQolzeFDlkxdIOflo3VU37l3F3wr1myRTspMAbA==
+X-Gm-Gg: ASbGncs0s4pkVmth1z71UPXpTAMNlb/tBdcV86AwU2CpXAPpLalvadHByvVenseqvkB
+	Q7PouR2O7JscEwbff4KJbEikqMOo/vs6wQuGS7Lcmsbt6aTJVczfTEgkxNsHJwtUV03YCDgPxSY
+	yEKxnsS81A/HK/063hTjrlc2MYaB7tpYOy3EQBE6RVxO1sdQXkPCW3/5v6pDQLigXNKt5AJ2p0I
+	cSCZWLobCtLMF/czlU0QQczpf5QAItyZBs8aqBXNHYvblYDbMWlvMWqsYL0qqZlzyz6i01NfUyo
+	15OKrtdian0z0OSvB9c/JGJi/Rg+6eS+xZv/AWugE3j7na1GIgyq
+X-Received: by 2002:a17:903:120e:b0:22d:b243:2fee with SMTP id d9443c01a7336-22dbf5e7f9fmr165675075ad.13.1745851369768;
+        Mon, 28 Apr 2025 07:42:49 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGK3aVxbN5AfFCcT4bnYr2DA0Jf1EVKelfn0UGlJlf4+VEwflPoz4qWt1SpwlhAPrSgAM/tlA==
+X-Received: by 2002:a17:903:120e:b0:22d:b243:2fee with SMTP id d9443c01a7336-22dbf5e7f9fmr165674705ad.13.1745851369230;
+        Mon, 28 Apr 2025 07:42:49 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22db4dbb1a0sm83666255ad.58.2025.04.28.07.42.47
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Apr 2025 07:42:48 -0700 (PDT)
+Date: Mon, 28 Apr 2025 22:42:45 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: linux-xfs@vger.kernel.org
+Subject: [xfstests xfs/538] XFS: Assertion failed: pathlen == 0, file:
+ fs/xfs/libxfs/xfs_symlink_remote.c, line: 383
+Message-ID: <20250428144245.gxesqz7emzrdxqyh@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH blktests 2/3] dm/003: add unmap write zeroes tests
-To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
- "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- hch <hch@lst.de>, "tytso@mit.edu" <tytso@mit.edu>,
- "djwong@kernel.org" <djwong@kernel.org>,
- "john.g.garry@oracle.com" <john.g.garry@oracle.com>,
- "bmarzins@redhat.com" <bmarzins@redhat.com>,
- "chaitanyak@nvidia.com" <chaitanyak@nvidia.com>,
- "yi.zhang@huawei.com" <yi.zhang@huawei.com>,
- "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>,
- "yukuai3@huawei.com" <yukuai3@huawei.com>,
- "yangerkun@huawei.com" <yangerkun@huawei.com>
-References: <20250318072835.3508696-1-yi.zhang@huaweicloud.com>
- <20250318072835.3508696-3-yi.zhang@huaweicloud.com>
- <t4vmmsupkbffrp3p33okbdjtf6il2ahp5omp2s5fvuxkngipeo@4thxzp4zlcse>
- <7b0319ac-cad4-4285-800c-b1e18ee4d92b@huaweicloud.com>
- <6p2dh577oiqe7lfaexv4fzct4aqhc56lxrz2ecwwctvbuxrjx3@oual7hmxfiqc>
- <a5d847d1-9799-4294-ac8f-e78d73e3733d@huaweicloud.com>
- <pbuxtmwqk5bdmxckwwkjob3lh6mg3et52w3xdvsnjjwmofschm@pkotcbnp4ypt>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <pbuxtmwqk5bdmxckwwkjob3lh6mg3et52w3xdvsnjjwmofschm@pkotcbnp4ypt>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDXOl_fiA9o2mtPKw--.49456S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxJFWrKw1xuF1UAr17ur45KFg_yoWrKF1kpr
-	yfAFyktrWUKF17tr1jvF13Zr1ay3y5Gw17Xw15Jry8A34qvr13KFZ7GF4Uuas7XrW3ZF40
-	vayUXa9I9r15tFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
-	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
-	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
-	s2-5UUUUU==
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 2025/4/28 17:25, Shinichiro Kawasaki wrote:
-> On Apr 28, 2025 / 17:04, Zhang Yi wrote:
->> On 2025/4/28 16:13, Shinichiro Kawasaki wrote:
->>> On Apr 28, 2025 / 12:32, Zhang Yi wrote:
->>>> On 2025/4/3 15:43, Shinichiro Kawasaki wrote:
->>> [...]
->>>>>> +
->>>>>> +setup_test_device() {
->>>>>> +	if ! _configure_scsi_debug "$@"; then
->>>>>> +		return 1
->>>>>> +	fi
->>>>>
->>>>> In same manner as the 1st patch, I suggest to check /queue/write_zeroes_unmap
->>>>> here.
->>>>>
->>>>> 	if [[ ! -f /sys/block/${SCSI_DEBUG_DEVICES[0]}/queue/write_zeroes_unmap ]]; then
->>>>> 		_exit_scsi_debug
->>>>> 		SKIP_REASONS+=("kernel does not support unmap write zeroes sysfs interface")
->>>>> 		return 1
->>>>> 	fi
->>>>>
->>>>> The caller will need to check setup_test_device() return value.
->>>>
->>>> Sure.
->>>>
->>>>>
->>>>>> +
->>>>>> +	local dev="/dev/${SCSI_DEBUG_DEVICES[0]}"
->>>>>> +	local blk_sz="$(blockdev --getsz "$dev")"
->>>>>> +	dmsetup create test --table "0 $blk_sz linear $dev 0"
->>>>>
->>>>> I suggest to call _real_dev() here, and echo back the device name.
->>>>>
->>>>> 	dpath=$(_real_dev /dev/mapper/test)
->>>>> 	echo ${dpath##*/}
->>>>>
->>>>> The bash parameter expansion ${xxx##*/} works in same manner as the basename
->>>>> command. The caller can receive the device name in a local variable. This will
->>>>> avoid a bit of code duplication, and allow to avoid _short_dev().
->>>>>
->>>>
->>>> I'm afraid this approach will not work since we may set the
->>>> SKIP_REASONS parameter. We cannot pass the device name in this
->>>> manner as it will overlook the SKIP_REASONS setting when the caller
->>>> invokes $(setup_test_device xxx), this function runs in a subshell.
->>>
->>> Ah, that's right. SKIP_REASONS modification in subshell won't work.
->>>
->>>>
->>>> If you don't like _short_dev(), I think we can pass dname through a
->>>> global variable, something like below:
->>>>
->>>> setup_test_device() {
->>>> 	...
->>>> 	dpath=$(_real_dev /dev/mapper/test)
->>>> 	dname=${dpath##*/}
->>>> }
->>>>
->>>> if ! setup_test_device lbprz=0; then
->>>> 	return 1
->>>> fi
->>>> umap="$(< "/sys/block/${dname}/queue/write_zeroes_unmap")"
->>>>
->>>> What do you think?
->>>
->>> I think global variable is a bit dirty. So my suggestion is to still echo back
->>> the short device name from the helper, and set the SKIP_REASONS after calling
->>> the helper, as follows:
->>>
->>> diff --git a/tests/dm/003 b/tests/dm/003
->>> index 1013eb5..e00fa99 100755
->>> --- a/tests/dm/003
->>> +++ b/tests/dm/003
->>> @@ -20,13 +20,23 @@ device_requries() {
->>>  }
->>>  
->>>  setup_test_device() {
->>> +	local dev blk_sz dpath
->>> +
->>>  	if ! _configure_scsi_debug "$@"; then
->>>  		return 1
->>
->> Hmm, if we encounter an error here, the test will be skipped instead of
->> returning a failure. This is not the expected outcome.
-> 
-> Ah, rigth. That's not good.
-> How about to return differnt values for the failure case above,
-> 
->>
->> Thanks,
->> Yi.
->>
->>>  	fi
->>>  
->>> -	local dev="/dev/${SCSI_DEBUG_DEVICES[0]}"
->>> -	local blk_sz="$(blockdev --getsz "$dev")"
->>> +        if [[ ! -f /sys/block/${SCSI_DEBUG_DEVICES[0]}/queue/write_zeroes_unmap ]]; then
->>> +		_exit_scsi_debug
->>> +                return 1
-> 
-> and this "should skip" case?
-> 
-> 
-> diff --git a/tests/dm/003 b/tests/dm/003
-> index 1013eb5..5e617fd 100755
-> --- a/tests/dm/003
-> +++ b/tests/dm/003
-> @@ -19,14 +19,26 @@ device_requries() {
->  	_require_test_dev_sysfs queue/write_zeroes_unmap
->  }
->  
-> +readonly TO_SKIP=255
-> +
->  setup_test_device() {
-> +	local dev blk_sz dpath
-> +
->  	if ! _configure_scsi_debug "$@"; then
->  		return 1
->  	fi
->  
-> -	local dev="/dev/${SCSI_DEBUG_DEVICES[0]}"
-> -	local blk_sz="$(blockdev --getsz "$dev")"
-> +        if [[ ! -f /sys/block/${SCSI_DEBUG_DEVICES[0]}/queue/write_zeroes_unmap ]]; then
-> +		_exit_scsi_debug
-> +		return $TO_SKIP
-> +	fi
-> +
-> +	dev="/dev/${SCSI_DEBUG_DEVICES[0]}"
-> +	blk_sz="$(blockdev --getsz "$dev")"
->  	dmsetup create test --table "0 $blk_sz linear $dev 0"
-> +
-> +	dpath=$(_real_dev /dev/mapper/test)
-> +	echo "${dpath##*/}"
->  }
->  
->  cleanup_test_device() {
-> @@ -38,17 +50,25 @@ test() {
->  	echo "Running ${TEST_NAME}"
->  
->  	# disable WRITE SAME with unmap
-> -	setup_test_device lbprz=0
-> -	umap="$(cat "/sys/block/$(_short_dev /dev/mapper/test)/queue/write_zeroes_unmap")"
-> +	local dname
-> +	dname=$(setup_test_device lbprz=0)
-> +	ret=$?
-> +	if ((ret)); then
-> +		if ((ret == TO_SKIP)); then
-> +			SKIP_REASONS+=("kernel does not support unmap write zeroes sysfs interface")
-> +		fi
-> +		return 1
-> +	fi
-> +	umap="$(cat "/sys/block/${dname}/queue/zoned")"
->  	if [[ $umap -ne 0 ]]; then
->  		echo "Test disable WRITE SAME with unmap failed."
->  	fi
->  	cleanup_test_device
->  
+Hi,
 
-Yeah, I believe this will work, and it looks good to me. Thank you for
-the suggestion！
+Recently I hit below kernel assertion[1] many times, by running xfstests xfs/538
+on xfs. I reproduced it on s390x with 1k blocksize xfs, I'll try it on other
+arches if you need.
 
 Thanks,
-Yi.
+Zorro
 
+[1]
+[  459.264036] run fstests xfs/538 at 2025-04-27 11:33:00
+[  459.517809] XFS (loop1): Mounting V5 Filesystem 1598811d-b0ce-47b2-99f9-265f2a1cd4ab
+[  459.519201] XFS (loop1): Ending clean mount
+[  524.631247] xfs_errortag_test: 65989 callbacks suppressed
+[  524.631254] XFS (loop1): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3660, on filesystem "loop1"
+[  524.631259] XFS (loop1): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3660, on filesystem "loop1"
+[  524.631289] XFS (loop1): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3660, on filesystem "loop1"
+[  524.631303] XFS (loop1): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3660, on filesystem "loop1"
+[  524.631309] XFS (loop1): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3660, on filesystem "loop1"
+...
+[  544.675052] XFS (loop1): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3660, on filesystem "loop1"
+[  544.675066] XFS (loop1): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3660, on filesystem "loop1"
+[  544.675107] XFS (loop1): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3660, on filesystem "loop1"
+[  544.675176] XFS (loop1): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3660, on filesystem "loop1"
+[  547.476961] XFS: Assertion failed: pathlen == 0, file: fs/xfs/libxfs/xfs_symlink_remote.c, line: 383
+[  547.477050] ------------[ cut here ]------------
+[  547.477052] WARNING: CPU: 1 PID: 82934 at fs/xfs/xfs_message.c:104 assfail+0x4e/0x70 [xfs]
+[  547.477585] Modules linked in: sunrpc rfkill virtio_net net_failover failover pkey_pckmo vfio_ccw mdev vfio_iommu_type1 vfio iommufd drm fuse drm_panel_orientation_quirks loop i2c_core nfnetlink vsock_loopback vmw_vsock_virtio_transport_common vsock ctcm fsm qeth ccwgroup zfcp scsi_transport_fc qdio dasd_fba_mod dasd_eckd_mod dasd_mod xfs ghash_s390 prng des_s390 sha3_512_s390 virtio_blk sha3_256_s390 dm_mirror dm_region_hash dm_log dm_mod pkey aes_s390
+[  547.477628] CPU: 1 UID: 0 PID: 82934 Comm: fsstress Kdump: loaded Not tainted 6.15.0-rc3+ #1 NONE 
+[  547.477633] Hardware name: IBM 8561 LT1 400 (KVM/Linux)
+[  547.477637] Krnl PSW : 0704c00180000000 0000016b2022a642 (assfail+0x52/0x70 [xfs])
+[  547.477864]            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:3 CC:0 PM:0 RI:0 EA:3
+[  547.477868] Krnl GPRS: 00000000ffffffea 0000016b202f0770 ffffffffffffffea 000000000000000a
+[  547.477872]            000000ebffffffea 0000000000000000 0000016b20465d94 0000000000000001
+[  547.477874]            0000000000000000 00000000f2a19000 0000000000000025 0000000094ff0740
+[  547.477876]            0000000000000001 00000000de4eb838 0000016b2022a630 000000eba0d679e8
+[  547.477887] Krnl Code: 0000016b2022a636: 95001018		cli	24(%r1),0
+                          0000016b2022a63a: a774000a		brc	7,0000016b2022a64e
+                         #0000016b2022a63e: af000000		mc	0,0
+                         >0000016b2022a642: eb6ff0a80004	lmg	%r6,%r15,168(%r15)
+                          0000016b2022a648: 07fe		bcr	15,%r14
+                          0000016b2022a64a: 47000700		bc	0,1792
+                          0000016b2022a64e: af000000		mc	0,0
+                          0000016b2022a652: 0707		bcr	0,%r7
+[  547.477909] Call Trace:
+[  547.477911]  [<0000016b2022a642>] assfail+0x52/0x70 [xfs] 
+[  547.478145] ([<0000016b2022a630>] assfail+0x40/0x70 [xfs])
+[  547.478381]  [<0000016b201f45be>] xfs_symlink_write_target+0x30e/0x320 [xfs] 
+[  547.478589]  [<0000016b20234a52>] xfs_symlink+0x432/0x530 [xfs] 
+[  547.478822]  [<0000016b20222c7e>] xfs_vn_symlink+0x9e/0x1d0 [xfs] 
+[  547.479043]  [<0000016ba04b00f2>] vfs_symlink+0x172/0x210 
+[  547.479050]  [<0000016ba04b4b86>] do_symlinkat+0xe6/0x110 
+[  547.479054]  [<0000016ba04b4d5a>] __s390x_sys_symlink+0x5a/0x70 
+[  547.479057]  [<0000016ba0bef49c>] __do_syscall+0x15c/0x260 
+[  547.479064]  [<0000016ba0bfa7e4>] system_call+0x74/0x98 
+[  547.479068] Last Breaking-Event-Address:
+[  547.479069]  [<0000016b202e29d6>] xfs_printk_level+0x9e/0xa8 [xfs]
+[  547.479299] ---[ end trace 0000000000000000 ]---
+[  549.680432] xfs_errortag_test: 65876 callbacks suppressed
+[  549.680440] XFS (loop1): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3660, on filesystem "loop1"
+[  549.680864] XFS (loop1): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3660, on filesystem "loop1"
+[  549.680950] XFS (loop1): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3660, on filesystem "loop1"
+...
 
