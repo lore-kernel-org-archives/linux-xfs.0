@@ -1,78 +1,77 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AD4627A90E
-	for <linux-xfs@vger.kernel.org>; Mon, 28 Apr 2025 16:29:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F79027A12F
+	for <linux-xfs@vger.kernel.org>; Mon, 28 Apr 2025 16:31:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745857744; cv=none; b=IaqvI+lus+67IpoJD/7aQm/b3zIbhou6URYIgArQaVwlgXO1FgOVCQlmD3XkXGZQKNbYHe3YOMrUBHxoUwqelWFy0pIt/ts2afZWejNByvvBZO39mynzWECR2aHIADhlDWvXoxGj5Y1ADISTWnbZEDgHtAq3lEDG6tk5nWzQ1lc=
+	t=1745857899; cv=none; b=kwN1kmcNosozb1zBBcpSv8PUVPJqDF4sNqd8uHzZD/VuxwTiAuxjdUWd7KDVpq6mz0Tn3VeWUD6nOjYd7E8J3lStA0YI5YOvYRIVIx06cBR16QXYx9daOJ50nHzFL1xZSjdyMuQpSGfpRhXDLm8aUY5tkxR2sDskZrd88QJXiIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745857744; c=relaxed/simple;
-	bh=Z5Ddb8N0lHDI7tN0JzpYSjV5eOkooObl2oMAbc5aI9g=;
+	s=arc-20240116; t=1745857899; c=relaxed/simple;
+	bh=+WFWDmwFMy4aF0Vky922WLy0j+LFvgoW9VmkUblyuUs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EYrhwpxOAfC2a/6IDoTTwdRZwM9QX+xAlnJ3U15lkhB1rokyU8jt2u4qtjx9uKYNXB2567A/9uM/oZX2+Y64Zwf8GaiEz0zI4eEDd34VabFTHgoPi1RabscIbMcBZu55hFvgUaM+RpNU8edjqHf9+TqhJ3EbDgnUGaV7ng9wwvY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=T8+L3ti2; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=H32ppaUt4MwaPy8YUQ/Jm2qnmRWRJ8PfceqJy3kXTE2AWaEOInsHpMdZBUNlbuMCecE7DMfdzLjyfJD0l2u+CV10SSCbYQgCU96mN1XU9uHdK5YyUqBohs0+QINma2bVcXA+ytygd3lLjxDhlFPqDJshAPzCGo9LZBfwGmqZ58k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=S87KHRHQ; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="T8+L3ti2"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="S87KHRHQ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1745857742;
+	s=mimecast20190719; t=1745857896;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=OFWxffRlMnVuYf3wgqTa5LbhdqIbi19b7osKAQDO/54=;
-	b=T8+L3ti2wYKCqJVUOM9b0Bp6iYwdGXq2S9Vs/KS3hXV9QsxTw38+Kvvdc2QnhdWfrf1fTG
-	/SrITm8RoGYr+jyiETysgl8O6WVJgWLFJpWQEYBbF25yajkxcmWQaf3QGqYJ+Yetc29tYw
-	NessEgNkA2s3YzUqdd61VAFW/6WEc9U=
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
- [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=YU8xT7tWHxmpSUJmiha7eF4ZcFi3QWWLTIj9fD6FClg=;
+	b=S87KHRHQ4CVd11Ceuooq5hcWW45G8GJkO7FP2aPHxnnK0m4lgqOCzwk4w373uQO3jYeiQ0
+	iozcftLIvcvGBDjUGwV4VtFK/ojqajmVUsuwot1+JaZC6kOxDI3qUKYR9wIX1wAK+sDFYx
+	pkrCai4BldkHiyGZLIjUlZyVvELjAhg=
+Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
+ [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-34-H9537RZuMKKz4XDvhsjVlA-1; Mon, 28 Apr 2025 12:29:01 -0400
-X-MC-Unique: H9537RZuMKKz4XDvhsjVlA-1
-X-Mimecast-MFC-AGG-ID: H9537RZuMKKz4XDvhsjVlA_1745857740
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-ac297c7a0c2so314243266b.3
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Apr 2025 09:29:01 -0700 (PDT)
+ us-mta-502-I889PuJyN9mlCcJBDxMGnA-1; Mon, 28 Apr 2025 12:31:34 -0400
+X-MC-Unique: I889PuJyN9mlCcJBDxMGnA-1
+X-Mimecast-MFC-AGG-ID: I889PuJyN9mlCcJBDxMGnA_1745857893
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-ac297c7a0c2so314382066b.3
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Apr 2025 09:31:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745857739; x=1746462539;
+        d=1e100.net; s=20230601; t=1745857893; x=1746462693;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=OFWxffRlMnVuYf3wgqTa5LbhdqIbi19b7osKAQDO/54=;
-        b=tB+8U634NgtCmp3ju3rLQvPOuw3yBbAPrFXMJrbk7b64XYbB0hk/1eqFZ5rCBFZndh
-         6l85tF2r4wBjzmPasHGKumOa2QFf1cZAGkD3g+tYPR27WJ06Oiany1j7H4anm9YZYlcc
-         S0sXJTnc8mu+0jGt58LpXlGoradUwTGZ8eAArMPnJxdh1Cr9PbZSJzc/saE622XsUSOB
-         ROXjTHHfo7hxu7cA0hcxFVLY8ab66heyPk0y/AoYVYMSuTO9Nwl/iPvUvmiYLDCtknja
-         Opkw0h8NYsfyOt7k5Gk4vVP+3k1woPRMWK0OHEaNkc+cJXkXDN6tX7ZUFKOvtcz3sAp7
-         tAzw==
-X-Forwarded-Encrypted: i=1; AJvYcCVme/APild3zWTqsgrdJLo9+kVxbseSlHx8rMJLDwidrguXJKB0jPXovpP0LJ66n5j8duiMeOUL4mo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzr8UZfL2jT0COmyB5TBuPSH4v4OI85xVgK1nj47JD3DpoVN+QP
-	Hr5x7LWhcnItW2xF5kzCNGXrmSQh7ro/8igo+JDqCZUJjJKQSkr9/mdLLv57xUD3tr1CKS6xUfZ
-	IXOiMRKntpPokG7ieTBiFx7CLVlbsKiD7UUS6N/AmfsV7iJk8hhZHO/LWVGjCWqoc
-X-Gm-Gg: ASbGncv8Xr7HgI1F2cHVP2UI7D/yXT2V1DRqFKY7T9hKaZRtWBG5j1hm+IUGEjJerXG
-	xSEAkNg0o0a6Xrim+AzB2Z/zpgFTScO94UmijXxHEuIhDI8o2ypldtz45GMKs8ZW0bblpcwxE6q
-	f9T2J/IbjB/MkG5ubQHTbIsdH+s0IlZ8+fFurqm0QtWKUW4dM4kp69w8LYkNeJdv0KNGYzqBt9T
-	WJTPQiCF3utvDfTFW6olOeXfPlrTrJ4w+yz59vvHvnOXiHhmWLH+tg1VGvNIlCRkjqhJ7RJ1Fxb
-	SiP/UpqkWYT/foxEVLKseZAoCyBPkuU=
-X-Received: by 2002:a17:907:2dab:b0:ac6:fec7:34dd with SMTP id a640c23a62f3a-ace713fb7d0mr1174244966b.52.1745857739536;
-        Mon, 28 Apr 2025 09:28:59 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFos8A5rDD2Y51rjgiz4zZqxMer/mBvc7yjso+4lLnysXGGJfwHNhqiujJy6z/+f5KbunMv9A==
-X-Received: by 2002:a17:907:2dab:b0:ac6:fec7:34dd with SMTP id a640c23a62f3a-ace713fb7d0mr1174243366b.52.1745857739211;
-        Mon, 28 Apr 2025 09:28:59 -0700 (PDT)
+        bh=YU8xT7tWHxmpSUJmiha7eF4ZcFi3QWWLTIj9fD6FClg=;
+        b=fACyWGy3ed84oJHE7N7vaqDvfzaqhyPnkI9TkeXzruxNqELy8boTap9hBpoeG0hjlk
+         xoHb0OgrC5CN9YmnexCZCQBF1wE1BNwAonczts9Ivj+SXb/7A0ewpcbFAGPHqmQN/3t7
+         ghPCezx7XRSzGoN5FfDLjHYcfh4F2yO21uctirpQoLg34EWS98HrBQoVUw00oR836QCn
+         tsadZShdiqA+8ePp/MPtf2Ts/TjEODgd5LGrndMIj/mdatnEnhNj+dmhZgaZufOGTY0k
+         MTOOEReFxvKxyhQwdhgsAmUZyMcVtqMGo2jPIaf/ljmiy7RsVe7FoqnNiTL4bLYFh6JU
+         BnNw==
+X-Forwarded-Encrypted: i=1; AJvYcCWd8IKys0PX7tqr76E3jT4lcbjfEra2E+/AmZCA+l9V4287FD91mvuskgtgvqCw5djTIR1MKuDuHS8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxztsKlITntoN+jI5wLwh2G5rdbF5+1iFKrwTyG5e5dcHv3uRcT
+	blhUyGV43tNLJhXbc1NFFs9xCCjVL5hqeOgzO3jH5HWBo/I0IjglQjlCsk12hwIG1udGsc8gmgc
+	INz7/AZ6d6Ruc25sf/ulgqJrHe3URGRB5kyrRFiILg6ET8GwInffmXNs/
+X-Gm-Gg: ASbGncvVMjeN14hWoJet7Pq64BB0SKX0NVwqL6OpZmpuzbGNAe+XUcxYjqda15lToUE
+	NjXbbFZ2x6WfbxIzJpmuJ1Rv3qCyCrTDlMuky8oZZ1RZAGN8apxRXfD2/OYGHsQUaz3Zpv2bLll
+	Qw8Xdn67mmBqtNxBpLoi7w0Zc0T3QoBZ6inGU+wqlKuAYgnKw8oiiCrTiRQISpUsfvvJu8EvYaT
+	vQ75izwzPGKoqq9rTW6t8yvIsg+OOykyUaHx9oWlPXYfoC2NEUcMK6Kr4zGIDSbudOSaiFBEPP8
+	8E+ckOTP5HD6vZGqGQpYvrUw0zqnRxA=
+X-Received: by 2002:a17:907:9715:b0:ac8:1efc:b993 with SMTP id a640c23a62f3a-ace713998afmr1214570566b.44.1745857893331;
+        Mon, 28 Apr 2025 09:31:33 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IF8HCUtCjJfl5k80DQZJwcqSXTdYEhsv63v05HWPaibR8rw0tZJKeJ3oXCxtF62nv9I7QXiCg==
+X-Received: by 2002:a17:907:9715:b0:ac8:1efc:b993 with SMTP id a640c23a62f3a-ace713998afmr1214568466b.44.1745857892992;
+        Mon, 28 Apr 2025 09:31:32 -0700 (PDT)
 Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ace6e41c491sm642919366b.34.2025.04.28.09.28.58
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ace6edb1abdsm659071066b.177.2025.04.28.09.31.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Apr 2025 09:28:58 -0700 (PDT)
-Date: Mon, 28 Apr 2025 18:28:58 +0200
+        Mon, 28 Apr 2025 09:31:32 -0700 (PDT)
+Date: Mon, 28 Apr 2025 18:31:32 +0200
 From: Andrey Albershteyn <aalbersh@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, 
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, 
 	Andrey Albershteyn <aalbersh@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 44/43] xfs_repair: fix libxfs abstraction mess
-Message-ID: <hrbhwqnymqgvp6l36s7r7mdnnmhhm76zoibtxtfo32iishzhza@fbuuly4t2fyn>
+Message-ID: <2gfxawfqea2ruqhlupk62v5y74nhfn73bnhwu6seffhh7pdiol@ylqrdyc2bqkz>
 References: <20250414053629.360672-1-hch@lst.de>
  <20250425154818.GP25675@frogsfrogsfrogs>
- <20250428131745.GB30382@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -81,24 +80,59 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250428131745.GB30382@lst.de>
+In-Reply-To: <20250425154818.GP25675@frogsfrogsfrogs>
 
-On 2025-04-28 15:17:45, Christoph Hellwig wrote:
-> On Fri, Apr 25, 2025 at 08:48:18AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Do some xfs -> libxfs callsite conversions to shut up xfs/437.
+On 2025-04-25 08:48:18, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> I'll add it to the next round.  Which afaik is just this and some minor
-> commit message tweaking.
+> Do some xfs -> libxfs callsite conversions to shut up xfs/437.
 > 
-> Andrey: let me know when it's a good time for another xfsprogs series
-> round, and if you want the FIXUP patches squashed for that or not.
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  libxfs/libxfs_api_defs.h |    1 +
+>  repair/zoned.c           |    6 +++---
+>  2 files changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index dcb5dec0a7abd2..c5fcb5e3229ae4 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -407,6 +407,7 @@
+>  #define xfs_verify_rgbno		libxfs_verify_rgbno
+>  #define xfs_verify_rtbno		libxfs_verify_rtbno
+>  #define xfs_zero_extent			libxfs_zero_extent
+> +#define xfs_zone_validate		libxfs_zone_validate
+>  
+>  /* Please keep this list alphabetized. */
+>  
+> diff --git a/repair/zoned.c b/repair/zoned.c
+> index 456076b9817d76..206b0158f95f84 100644
+> --- a/repair/zoned.c
+> +++ b/repair/zoned.c
+> @@ -30,7 +30,7 @@ report_zones_cb(
+>  	}
+>  
+>  	rgno = xfs_rtb_to_rgno(mp, zsbno);
+> -	rtg = xfs_rtgroup_grab(mp, rgno);
+> +	rtg = libxfs_rtgroup_grab(mp, rgno);
+>  	if (!rtg) {
+>  		do_error(_("realtime group not found for zone %u."), rgno);
+>  		return;
+> @@ -39,8 +39,8 @@ report_zones_cb(
+>  	if (!rtg_rmap(rtg))
+>  		do_warn(_("no rmap inode for zone %u."), rgno);
+>  	else
+> -		xfs_zone_validate(zone, rtg, &write_pointer);
+> -	xfs_rtgroup_rele(rtg);
+> +		libxfs_zone_validate(zone, rtg, &write_pointer);
+> +	libxfs_rtgroup_rele(rtg);
+>  }
+>  
+>  void
 > 
 
-I'm preparing for-next update, do you have any other changes for this
-patchset? I can fixup the commits and fix "inherit" commit message.
-Or if you want you can send it now, I will take v3.
+LGTM
+Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
 
 -- 
 - Andrey
