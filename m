@@ -1,72 +1,288 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BAA11B86EF;
-	Tue, 29 Apr 2025 12:31:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCD1021129D;
+	Tue, 29 Apr 2025 14:07:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745929898; cv=none; b=Lpj6WV0y8oPuQoGGh5EMLqe2L6CrMBLTejyMv7My9XnztpdmAvhpKyjt8hvEWpLgST4w3IdLqNsbvPq7xvOd2Kv5oli3hrkIDoUusWqJxe9BiaYKvp3rzZaRPSRwIdeefK9VuN6h00kqrHCWZktifZvfaK5r8iQ0712bW7f59RY=
+	t=1745935652; cv=none; b=QQeHa+lwkFDFLPjf2glD47RtNX73I95o9hR4RcMfua8c08hwXOS+Xs8MZlpyD/+qrl9Ply0VSNxuJcZD1bStf/yo3vQfQFxxv8TeajwmL5Rzmn1S6pBpz+x4u/UlkqaSpT1qnvHSsFjJptiyriAgHAE4AC8J51LabnZOfF+nPNc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745929898; c=relaxed/simple;
-	bh=NCsbwKXyyfYV4qTDFg8sloKEXBMtv45aPB6AJTXz1aw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OJhuE69bZGVYCSqawvRUhrekcPpDGtLUjiKocIoirImDJpzhvgFJ+XvvsN8LUx0mcFg6+5bQVO/cz4rw7c3ibrD0P23kiqqZGu4/MpqliPrmrhGZ5vZ4Wf1wXLKwJ1JkqTo4hz9KG8+pF1OlQjFnWQ5y4CHKOMKzO709oJ4sodA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 21BD168B05; Tue, 29 Apr 2025 14:31:31 +0200 (CEST)
-Date: Tue, 29 Apr 2025 14:31:30 +0200
-From: hch <hch@lst.de>
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc: hch <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-	Jack Wang <jinpu.wang@ionos.com>, Coly Li <colyli@kernel.org>,
-	Kent Overstreet <kent.overstreet@linux.dev>,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>, Chris Mason <clm@fb.com>,
-	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Naohiro Aota <Naohiro.Aota@wdc.com>,
-	Johannes Thumshirn <jth@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Pavel Machek <pavel@kernel.org>,
-	"linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-	"dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
-	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-	"gfs2@lists.linux.dev" <gfs2@lists.linux.dev>,
-	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH 16/17] zonefs: use bdev_rw_virt in zonefs_read_super
-Message-ID: <20250429123130.GB12807@lst.de>
-References: <20250422142628.1553523-1-hch@lst.de> <20250422142628.1553523-17-hch@lst.de> <1116a2c2-9f33-4a2a-8d59-6b1d0a644949@wdc.com>
+	s=arc-20240116; t=1745935652; c=relaxed/simple;
+	bh=OSFeR2Osvl154bb5RdM3rq+d0/EYI4VooRWh7HAVyGg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HvnhrVgcW1MfVhBKu+8Xpbx6tiLUVUhh/hUvu0zt2zwhjIMIkzB8UH5+76YpVN6RPNwNBiZWIrUaprYBwc90jI8x5iKbEh2qSWUA2n5lHnFScj+J5qaDHiTZuAp9DLIoefUcr7fGJEweKIs6g9i9xA2tzd76IuGErQzwjD2GzVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GpG+VVU3; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GpG+VVU3"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-22c3407a87aso88682415ad.3;
+        Tue, 29 Apr 2025 07:07:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1745935650; x=1746540450; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=QXjQwHkLsHAE8bHmciYnBANbOGisgmLKw+l8KfO7/NU=;
+        b=GpG+VVU3YOBL4ulT2oA3AFpDYhilKOSYNx5sq5iioqg0ND8yVOBCCCMZhbo4Plpzix
+         tN07MxzBrWlBcTtz3x75MLopb+UY8NU0kzoMhbq15lM/q7F5stUb8PZbUWKW3GEUmvUA
+         Xf372ywY++bvpgBm0NAa/nKXDVCohl/SCc8YY4APiJ0lr5iIiQsSb4aTYojr5dOXpfqW
+         kMy3Hy2es9El73aGiBk+ukkDlD4mSONVFlMn4hri/Lt1GlpdELKaiLPHn7vDFFcQ6mP9
+         qhBwAHNmd+QHnw1MNuryvsYIFWibgd+1zP628FiPHKQVvuVfV3qR64zYkZ4TbKTdIy5d
+         RZcA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745935650; x=1746540450;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QXjQwHkLsHAE8bHmciYnBANbOGisgmLKw+l8KfO7/NU=;
+        b=UulrgXxI5GFlclK2xKMbJwWyfR/mLvPTSiC32y0szBco9N6V0nM7kC/TxtF3mWhBhB
+         4nCGaKgILBeb8UZrQO9N0rHcZWXK4gIyr5xKXLjSGJyg9P1jAvatSzLBQF9O3DcRCUyg
+         u/pVbZEzTs58vztQ+Di3HvgAPSWvicikvnYsv/t8nfVYx9+FfZXld3BnO8OSLGgEL4zM
+         jl9LABViV2L9m4WiAZnQIZ9pkVneIyHAx2G/WHzveikXUBnO5oVry3wPja5FTgYYICAx
+         Mvka6EaK/Jl4hzsRiatdNDNdZacLugVWK1gz+FV35ekudw+SX0tjmR728QYL+AVLS+SS
+         8VNA==
+X-Forwarded-Encrypted: i=1; AJvYcCUC9FdokYlVQFp9j+T11uIfJaWJNrf1UJ9AGNtqyKeHa0tNtJ4ofOHlHjQ6onjgd4BNOYqSgghZTNI=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy28eHrhfYZ9q+8X6YrtQejW7xNyyptdctB8NlSiZ7IC2ToDOFh
+	e2dM2KBn+zbClgtQI7BPRMx+kXC0V0wknI0C8Ffx+Lp5AeyZhUtzvjs96w==
+X-Gm-Gg: ASbGncuRTXhIXL/CqPXQZtKc8aBjSFxNfC893nc17Pxj9V+O+Rj5TvdVf4BPVPyBV2l
+	cTeHEEanCZRIdKWWIIY08SKupF6Mm3w7L2AN6NsmOxbJ+/PgaZCaLt8kfvz7XNXSaHqye2aJq04
+	Dx7T1+rfH84NjnsLCIAzeeSzelr/OYNgc0WIrtVKB3pucLAoxZKZDXMVXTx6Xag+LAPA5e6ovfZ
+	DyxtXEqeTApNP8gjnkpUfjPisqdpIAYGUwc9Gn6RTFOlkNCB4PQMnTAK9XBPc9xbY3rWDhXWE++
+	K53zyttuYNFaZT6PaJDu3usS0PjIeJl4nDBSU8JnuxKEPCES5do=
+X-Google-Smtp-Source: AGHT+IFHKi3jHaYyEeFOXoXiMpK7zg8P98SDWPEnpLrZwmuchBBI2jBheokCfLLp1+PgTEmrg5x2GQ==
+X-Received: by 2002:a17:903:40ca:b0:224:24d5:f20a with SMTP id d9443c01a7336-22de60702f0mr59646295ad.48.1745935649606;
+        Tue, 29 Apr 2025 07:07:29 -0700 (PDT)
+Received: from [192.168.0.120] ([49.205.34.162])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22db50e7a9fsm102404005ad.111.2025.04.29.07.07.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 29 Apr 2025 07:07:29 -0700 (PDT)
+Message-ID: <4132df90-a2d6-4d2e-a5e9-5ff893a25025@gmail.com>
+Date: Tue, 29 Apr 2025 19:37:24 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1116a2c2-9f33-4a2a-8d59-6b1d0a644949@wdc.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/2] common: Move exit related functions to a
+ common/exit
+To: fstests@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+ ritesh.list@gmail.com, ojaswin@linux.ibm.com, djwong@kernel.org,
+ zlang@kernel.org, david@fromorbit.com
+References: <cover.1745908976.git.nirjhar.roy.lists@gmail.com>
+ <a2e20e1d74360a76fd2a1ef553cac6094897bff2.1745908976.git.nirjhar.roy.lists@gmail.com>
+Content-Language: en-US
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <a2e20e1d74360a76fd2a1ef553cac6094897bff2.1745908976.git.nirjhar.roy.lists@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Apr 29, 2025 at 11:44:37AM +0000, Johannes Thumshirn wrote:
-> On 22.04.25 16:31, Christoph Hellwig wrote:
-> > +	super = kmalloc(PAGE_SIZE, GFP_KERNEL);
-> > +	if (!super)
-> 
-> [...]
-> 
-> > +	ret = bdev_rw_virt(sb->s_bdev, 0, super, PAGE_SIZE, REQ_OP_READ);
-> 
-> Can we change these two PAGE_SIZE into ZONEFS_SUPER_SIZE which is 
-> semantically more correct?
 
-I'd like to keep this change mechanical, even if I'm in violent agreement
-about using the right constants.
+On 4/29/25 12:22, Nirjhar Roy (IBM) wrote:
+> Introduce a new file common/exit that will contain all the exit
+> related functions. This will remove the dependencies these functions
+> have on other non-related helper files and they can be indepedently
+> sourced. This was suggested by Dave Chinner[1].
+
+Sorry, I didn't notice this earlier. A similar change[c1] was already 
+posted by Dave.
+
+[c1] 
+https://lore.kernel.org/all/20250417031208.1852171-4-david@fromorbit.com/
+
+--NR
+
+>
+> [1] https://lore.kernel.org/linux-xfs/Z_UJ7XcpmtkPRhTr@dread.disaster.area/
+> Suggested-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> ---
+>   common/config   | 17 +----------------
+>   common/exit     | 50 +++++++++++++++++++++++++++++++++++++++++++++++++
+>   common/preamble |  1 +
+>   common/punch    |  5 -----
+>   common/rc       | 28 ---------------------------
+>   5 files changed, 52 insertions(+), 49 deletions(-)
+>   create mode 100644 common/exit
+>
+> diff --git a/common/config b/common/config
+> index eada3971..6a60d144 100644
+> --- a/common/config
+> +++ b/common/config
+> @@ -38,7 +38,7 @@
+>   # - this script shouldn't make any assertions about filesystem
+>   #   validity or mountedness.
+>   #
+> -
+> +. common/exit
+>   . common/test_names
+>   
+>   # all tests should use a common language setting to prevent golden
+> @@ -96,15 +96,6 @@ export LOCAL_CONFIGURE_OPTIONS=${LOCAL_CONFIGURE_OPTIONS:=--enable-readline=yes}
+>   
+>   export RECREATE_TEST_DEV=${RECREATE_TEST_DEV:=false}
+>   
+> -# This functions sets the exit code to status and then exits. Don't use
+> -# exit directly, as it might not set the value of "$status" correctly, which is
+> -# used as an exit code in the trap handler routine set up by the check script.
+> -_exit()
+> -{
+> -	test -n "$1" && status="$1"
+> -	exit "$status"
+> -}
+> -
+>   # Handle mkfs.$fstyp which does (or does not) require -f to overwrite
+>   set_mkfs_prog_path_with_opts()
+>   {
+> @@ -121,12 +112,6 @@ set_mkfs_prog_path_with_opts()
+>   	fi
+>   }
+>   
+> -_fatal()
+> -{
+> -    echo "$*"
+> -    _exit 1
+> -}
+> -
+>   export MKFS_PROG="$(type -P mkfs)"
+>   [ "$MKFS_PROG" = "" ] && _fatal "mkfs not found"
+>   
+> diff --git a/common/exit b/common/exit
+> new file mode 100644
+> index 00000000..ad7e7498
+> --- /dev/null
+> +++ b/common/exit
+> @@ -0,0 +1,50 @@
+> +##/bin/bash
+> +
+> +# This functions sets the exit code to status and then exits. Don't use
+> +# exit directly, as it might not set the value of "$status" correctly, which is
+> +# used as an exit code in the trap handler routine set up by the check script.
+> +_exit()
+> +{
+> +	test -n "$1" && status="$1"
+> +	exit "$status"
+> +}
+> +
+> +_fatal()
+> +{
+> +    echo "$*"
+> +    _exit 1
+> +}
+> +
+> +_die()
+> +{
+> +        echo $@
+> +        _exit 1
+> +}
+> +
+> +die_now()
+> +{
+> +	_exit 1
+> +}
+> +
+> +# just plain bail out
+> +#
+> +_fail()
+> +{
+> +    echo "$*" | tee -a $seqres.full
+> +    echo "(see $seqres.full for details)"
+> +    _exit 1
+> +}
+> +
+> +# bail out, setting up .notrun file. Need to kill the filesystem check files
+> +# here, otherwise they are set incorrectly for the next test.
+> +#
+> +_notrun()
+> +{
+> +    echo "$*" > $seqres.notrun
+> +    echo "$seq not run: $*"
+> +    rm -f ${RESULT_DIR}/require_test*
+> +    rm -f ${RESULT_DIR}/require_scratch*
+> +
+> +    _exit 0
+> +}
+> +
+> diff --git a/common/preamble b/common/preamble
+> index ba029a34..9b6b4b26 100644
+> --- a/common/preamble
+> +++ b/common/preamble
+> @@ -33,6 +33,7 @@ _register_cleanup()
+>   # explicitly as a member of the 'all' group.
+>   _begin_fstest()
+>   {
+> +	. common/exit
+>   	if [ -n "$seq" ]; then
+>   		echo "_begin_fstest can only be called once!"
+>   		_exit 1
+> diff --git a/common/punch b/common/punch
+> index 64d665d8..4e8ebcd7 100644
+> --- a/common/punch
+> +++ b/common/punch
+> @@ -222,11 +222,6 @@ _filter_bmap()
+>   	_coalesce_extents
+>   }
+>   
+> -die_now()
+> -{
+> -	_exit 1
+> -}
+> -
+>   # test the different corner cases for zeroing a range:
+>   #
+>   #	1. into a hole
+> diff --git a/common/rc b/common/rc
+> index 9bed6dad..fac9b6da 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -1798,28 +1798,6 @@ _do()
+>       return $ret
+>   }
+>   
+> -# bail out, setting up .notrun file. Need to kill the filesystem check files
+> -# here, otherwise they are set incorrectly for the next test.
+> -#
+> -_notrun()
+> -{
+> -    echo "$*" > $seqres.notrun
+> -    echo "$seq not run: $*"
+> -    rm -f ${RESULT_DIR}/require_test*
+> -    rm -f ${RESULT_DIR}/require_scratch*
+> -
+> -    _exit 0
+> -}
+> -
+> -# just plain bail out
+> -#
+> -_fail()
+> -{
+> -    echo "$*" | tee -a $seqres.full
+> -    echo "(see $seqres.full for details)"
+> -    _exit 1
+> -}
+> -
+>   #
+>   # Tests whether $FSTYP should be exclude from this test.
+>   #
+> @@ -3835,12 +3813,6 @@ _link_out_file()
+>   	_link_out_file_named $seqfull.out "$features"
+>   }
+>   
+> -_die()
+> -{
+> -        echo $@
+> -        _exit 1
+> -}
+> -
+>   # convert urandom incompressible data to compressible text data
+>   _ddt()
+>   {
+
+-- 
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
 
