@@ -1,191 +1,181 @@
-Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69EA717588;
-	Tue, 29 Apr 2025 14:49:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D04F219307;
+	Tue, 29 Apr 2025 14:52:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745938142; cv=none; b=G1L5Y9fEM94Z3KutWltg0+0OOAARkWgaOwTkXd+HTuJTqQfd9aOmUjoLgHP/QaPL+wrVA92u3GuDqNjbdpbBMWdT2y77SOWpQGRi0hfkUD4y5BqIjkGNhSW2rSmT1tn9YMl1vpU8FXiduBPqkL7MkZRLDWF6zt5G8AiwN6muKns=
+	t=1745938343; cv=none; b=G6Z0QJOH1DiwAnaPuVhX3PzRoX7YmTix4/gEotLpqOAQ8f2Iz/caP19wlTtv98I/mmTS7IFpELZaJYxnakZhoJHBaxsehZfHteFpAP1203nB8DLluRQW6MmIDfy0atb1FInzUA64XheWMMYFR2Ja7JGqnK/R6CWUnQNyg5Kf76k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745938142; c=relaxed/simple;
-	bh=DahOA68JSejicCCqAZP3deFxaASill/6LiuXgIAvY8s=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lZ8EmoyAt550RE8Kc0XyH9hSng0AOybYVfxUFW4hJ0PtGu/KEQfV+eqRXgLZcaqQ5AHQKKxQuXbQ3Nv61zSh8+8E4/6VLZRHX3N5pSbyPLCdFC7/j2PpqJFwNCWiW9HTmuVdVhA+lXRZBHwjBua7hcA4+g6zufoBii76aJ5cDHU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=as1iJh8I; arc=none smtp.client-ip=209.85.215.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1745938343; c=relaxed/simple;
+	bh=2KKHNkYhxe1N7/a2M1dbUCZhDAf2dqm9QoC+G9Jmil0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jfIV4iZpTLBL0qceAd/KFzUMKSHxo9N8f5tWjIMt3yXN/zRBmcO3RUnvZ8Acg7T/sGBR+WHeC01WYB6BGewpN9wyGJvoUSD3rcD+z0U9lN4hlwcn4XGW4jo0M4eEf4m69SEP+9NyJD35/Tq999+V+flmjg4vYk3QWweBSc3lRsc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jXULj9Ni; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="as1iJh8I"
-Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-b0b2ce7cc81so6056603a12.3;
-        Tue, 29 Apr 2025 07:49:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1745938140; x=1746542940; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=cGksrS1FSjnCNFb8CEn1RozjMVVoVrZPt3zE6EtXP5c=;
-        b=as1iJh8IiXUDtHORr2xSEC975Wybjek+FkAVvLjMT8sJcDt0cpfvTMOyhDL93qHPB1
-         wtKcYx2X/DmgKgWm83OO8zlcCOfA8vc55KpAWDI1G24KxW3F+W002VbjLwzcStM5yg12
-         cpFQXtyKJqFlTmBbyeCAG7YsTAhJ2cKQS2maDGcf5lCRSAZM3fN4Bot1mCRJtU4epXP4
-         Z5KEoULqUOODgkA946bpmoFKnqcg2J7Ae77wY+Zm/6TqtzcNbpD1SiRBmEFzdSIPayod
-         JXbu2G+Nk1bzsO99t9wa5rzeY7V0Wow7I/KhlTR1to+bm04vGkOc8FIxfb78+b53+Siz
-         PF2Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745938140; x=1746542940;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=cGksrS1FSjnCNFb8CEn1RozjMVVoVrZPt3zE6EtXP5c=;
-        b=N0kXZMvuqCURn1+PFCF6+OQQMaiIkmViRPbrbF80yAlXTjDO9ZLLm9vpZdp3npOPUT
-         U4aFpr97dJU7hEo0zxvU8MnchOzJ8bSyiHGhrYg/trXuHcTi9HU0OGHsFcI4S/hhtGaN
-         b2ReR1cL1ZEtrxC/QDNfbFvcAIpVKDBL7M+iu309KklssfE6vod3LD0X2sFSokvNSVuU
-         fSlwkdd3OTsMTD9nJR4agUGDA+cGSUz2tchfu5i7ut9PscibLhYhmuht0zGxSqHAN4kT
-         BCCaBEb3wgDvBN+5uaRr/CDSvEX0U/PgZ6qa61PV0y6f7YB0ywSRX9ObHhqAMFkXC+Jl
-         qjkA==
-X-Forwarded-Encrypted: i=1; AJvYcCWPyLFKhw/jyByPNdiNxiSGQVyml+mOZWsspoJq8eW4PLVJirQ93M9HkI1kT3Q1ZtdLIJchkjlM@vger.kernel.org
-X-Gm-Message-State: AOJu0YyI6t2xuWPIJ0iKpLBLsBttUjioqzn/7I7hNhsqD5jSekgb1xJD
-	JgyHzZfhf8xNxs2VqM8ayYNoGIOti5Kn5Pwu0nWUmkf+C/CmlIXAcy5Tmw==
-X-Gm-Gg: ASbGncuIzZbgT+GT2bCwQ0ytGdOmPowo1gI2nyk/LIGZi6nfV9rJaliD0Y2Z12xaZxe
-	S7IfO3YJC2xdLLl24Jl909qlcKf1fGcgLGFf8KLxlv60OHuKibPYPOPSaAxpkhcYTkT5cvTnnXb
-	CwpfS3c4d/C8EjB1/dICBKPVBEqIGT/q6l4rgwQrA4EpsuaR2+wdRINaESpYrOpCuAdfGZ7fpPt
-	5RZBcNhVg0l5FMHHeAy8z6broTlTS1krn4CkVQaHRtibaTNIJ5AfA73RK4PAaNx21Wm9WTxWXYI
-	DalnNhojdGPeBjSQfddjkvuYLlrU2LMdV4eqxKTvKBi+ouGeekKlX6X1nU9DD26Z/PqkXGK60Lo
-	RLyaS71Pdofm61qouuQ==
-X-Google-Smtp-Source: AGHT+IEJFgHvBlbj8KPvnUdC/GABYqQS9QtO2vQF2J9Z2eCiJ99GI2Z1DtkvPqQiMEqKTzN9sYNetA==
-X-Received: by 2002:a05:6a21:329a:b0:1f5:8eec:e516 with SMTP id adf61e73a8af0-2093e121043mr5696147637.32.1745938140118;
-        Tue, 29 Apr 2025 07:49:00 -0700 (PDT)
-Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.205.34.162])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73e25a9fd26sm9954222b3a.151.2025.04.29.07.48.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Apr 2025 07:48:59 -0700 (PDT)
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org,
-	fstests@vger.kernel.org,
-	ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com,
-	djwong@kernel.org,
-	zlang@kernel.org,
-	david@fromorbit.com,
-	hch@infradead.org,
-	nirjhar.roy.lists@gmail.com
-Subject: [PATCH v3 1/1] xfs: Fail remount with noattr2 on a v5 with v4 enabled
-Date: Tue, 29 Apr 2025 20:17:59 +0530
-Message-ID: <a56bb4685df5f8f45308f6a3195390ad73b75709.1745937794.git.nirjhar.roy.lists@gmail.com>
-X-Mailer: git-send-email 2.43.5
-In-Reply-To: <cover.1745937794.git.nirjhar.roy.lists@gmail.com>
-References: <cover.1745937794.git.nirjhar.roy.lists@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jXULj9Ni"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5F45C4CEE3;
+	Tue, 29 Apr 2025 14:52:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745938342;
+	bh=2KKHNkYhxe1N7/a2M1dbUCZhDAf2dqm9QoC+G9Jmil0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=jXULj9NiNdluEGzQ7A+/5AbohWF+3XzABOK/9tFZRLm914XUI1zCR60KnqA2ci+AQ
+	 8tcle+8Gfn97wv9EWys6NpbvUSZ5IM8NJ9auP4kqoGQj32fmGVxIa1sCnn4Y8bubNM
+	 wRu9GhtBcgSvjBgnVK7q5HR+++6zWMalevFsjbzTwskzFJMoF4QOa1Xedc1SxZ4d/u
+	 NDN9XDHjDjKttuKUC0cKk2aSOWf/6uTSfawgYfpVKS+2o5+GzySAcgc2ytu5AXl/cF
+	 rU28TNI6E6lDJzBfTV+il1HU6QXE10IJz8KRp0CwqL2dhGWwdQOoW/i715sHAm4G/X
+	 zLWLOM200BjZg==
+Date: Tue, 29 Apr 2025 07:52:21 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Hans Holmberg <Hans.Holmberg@wdc.com>
+Cc: "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+	"zlang@kernel.org" <zlang@kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	"david@fromorbit.com" <david@fromorbit.com>, hch <hch@lst.de>
+Subject: Re: [PATCH 1/2] xfs: add mount test for read only rt devices
+Message-ID: <20250429145220.GU25675@frogsfrogsfrogs>
+References: <20250425090259.10154-1-hans.holmberg@wdc.com>
+ <20250425090259.10154-2-hans.holmberg@wdc.com>
+ <20250425150331.GG25667@frogsfrogsfrogs>
+ <7079f6ce-e218-426a-9609-65428bbdfc99@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7079f6ce-e218-426a-9609-65428bbdfc99@wdc.com>
 
-Bug: When we compile the kernel with CONFIG_XFS_SUPPORT_V4=y,
-remount with "-o remount,noattr2" on a v5 XFS does not
-fail explicitly.
+On Tue, Apr 29, 2025 at 12:03:20PM +0000, Hans Holmberg wrote:
+> On 25/04/2025 17:04, Darrick J. Wong wrote:
+> > On Fri, Apr 25, 2025 at 09:03:22AM +0000, Hans Holmberg wrote:
+> >> Make sure that we can mount rt devices read-only if them themselves
+> >> are marked as read-only.
+> >>
+> >> Also make sure that rw re-mounts are not allowed if the device is
+> >> marked as read-only.
+> >>
+> >> Based on generic/050.
+> >>
+> >> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+> >> ---
+> >>  tests/xfs/837     | 55 +++++++++++++++++++++++++++++++++++++++++++++++
+> >>  tests/xfs/837.out | 10 +++++++++
+> >>  2 files changed, 65 insertions(+)
+> >>  create mode 100755 tests/xfs/837
+> >>  create mode 100644 tests/xfs/837.out
+> >>
+> >> diff --git a/tests/xfs/837 b/tests/xfs/837
+> >> new file mode 100755
+> >> index 000000000000..b20e9c5f33f2
+> >> --- /dev/null
+> >> +++ b/tests/xfs/837
+> >> @@ -0,0 +1,55 @@
+> >> +#! /bin/bash
+> >> +# SPDX-License-Identifier: GPL-2.0
+> >> +# Copyright (c) 2009 Christoph Hellwig.
+> >> +# Copyright (c) 2025 Western Digital Corporation
+> >> +#
+> >> +# FS QA Test No. 837
+> >> +#
+> >> +# Check out various mount/remount/unmount scenarious on a read-only rtdev
+> >> +# Based on generic/050
+> >> +#
+> >> +. ./common/preamble
+> >> +_begin_fstest mount auto quick
+> >> +
+> >> +_cleanup_setrw()
+> >> +{
+> >> +	cd /
+> >> +	blockdev --setrw $SCRATCH_RTDEV
+> >> +}
+> >> +
+> >> +# Import common functions.
+> >> +. ./common/filter
+> >> +
+> >> +_require_realtime
+> >> +_require_local_device $SCRATCH_RTDEV
+> > 
+> > I suspect this is copy-pasted from generic/050, but I wonder when
+> > SCRATCH_RTDEV could be a character device, but maybe that's a relic of
+> > Irix (and Solaris too, IIRC)?
+> 
+> Yeah, this was carried over from generic/050, and I can just drop it
+> unless there is a good reason for keeping it?
 
-Reproduction:
-mkfs.xfs -f /dev/loop0
-mount /dev/loop0 /mnt/scratch
-mount -o remount,noattr2 /dev/loop0 /mnt/scratch
+I think you still need the _require_local_device call itself.
 
-However, with CONFIG_XFS_SUPPORT_V4=n, the remount
-correctly fails explicitly. This is because the way the
-following 2 functions are defined:
+And come to think of it, weren't there supposed to be pmem filesystems
+which would run entirely off a pmem character device and not have a
+block interface available at all?
 
-static inline bool xfs_has_attr2 (struct xfs_mount *mp)
-{
-	return !IS_ENABLED(CONFIG_XFS_SUPPORT_V4) ||
-		(mp->m_features & XFS_FEAT_ATTR2);
-}
-static inline bool xfs_has_noattr2 (const struct xfs_mount *mp)
-{
-	return mp->m_features & XFS_FEAT_NOATTR2;
-}
+Though for an xfs-specific test we'll blow up pretty fast if
+SCRATCH_RTDEV isn't a bdev so <shrug>.
 
-xfs_has_attr2() returns true when CONFIG_XFS_SUPPORT_V4=n
-and hence, the following if condition in
-xfs_fs_validate_params() succeeds and returns -EINVAL:
+> <pardon replying again Darrick, forgot to reply-all yesterday>
 
-/*
- * We have not read the superblock at this point, so only the attr2
- * mount option can set the attr2 feature by this stage.
- */
+(I seriously didn't even notice.)
 
-if (xfs_has_attr2(mp) && xfs_has_noattr2(mp)) {
-	xfs_warn(mp, "attr2 and noattr2 cannot both be specified.");
-	return -EINVAL;
-}
+--D
 
-With CONFIG_XFS_SUPPORT_V4=y, xfs_has_attr2() always return
-false and hence no error is returned.
-
-Fix: Check if the existing mount has crc enabled(i.e, of
-type v5 and has attr2 enabled) and the
-remount has noattr2, if yes, return -EINVAL.
-
-I have tested xfs/{189,539} in fstests with v4
-and v5 XFS with both CONFIG_XFS_SUPPORT_V4=y/n and
-they both behave as expected.
-
-This patch also fixes remount from noattr2 -> attr2 (on a v4 xfs).
-
-Related discussion in [1]
-
-[1] https://lore.kernel.org/all/Z65o6nWxT00MaUrW@dread.disaster.area/
-
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
----
- fs/xfs/xfs_super.c | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
-
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index b2dd0c0bf509..58a0431ab52d 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -2114,6 +2114,21 @@ xfs_fs_reconfigure(
- 	if (error)
- 		return error;
- 
-+	/* attr2 -> noattr2 */
-+	if (xfs_has_noattr2(new_mp)) {
-+		if (xfs_has_crc(mp)) {
-+			xfs_warn(mp,
-+			"attr2 and noattr2 cannot both be specified.");
-+			return -EINVAL;
-+		}
-+		mp->m_features &= ~XFS_FEAT_ATTR2;
-+		mp->m_features |= XFS_FEAT_NOATTR2;
-+	} else if (xfs_has_attr2(new_mp)) {
-+		/* noattr2 -> attr2 */
-+		mp->m_features &= ~XFS_FEAT_NOATTR2;
-+		mp->m_features |= XFS_FEAT_ATTR2;
-+	}
-+
- 	/* inode32 -> inode64 */
- 	if (xfs_has_small_inums(mp) && !xfs_has_small_inums(new_mp)) {
- 		mp->m_features &= ~XFS_FEAT_SMALL_INUMS;
-@@ -2126,6 +2141,17 @@ xfs_fs_reconfigure(
- 		mp->m_maxagi = xfs_set_inode_alloc(mp, mp->m_sb.sb_agcount);
- 	}
- 
-+	/*
-+	 * Now that mp has been modified according to the remount options,
-+	 * we do a final option validation with xfs_finish_flags()
-+	 * just like it is done during mount. We cannot use
-+	 * xfs_finish_flags()on new_mp as it contains only the user
-+	 * given options.
-+	 */
-+	error = xfs_finish_flags(mp);
-+	if (error)
-+		return error;
-+
- 	/* ro -> rw */
- 	if (xfs_is_readonly(mp) && !(flags & SB_RDONLY)) {
- 		error = xfs_remount_rw(mp);
--- 
-2.43.5
-
+> > 
+> > The rest of the test looks fine to me though.
+> > 
+> > --D
+> > 
+> >> +_register_cleanup "_cleanup_setrw"
+> >> +
+> >> +_scratch_mkfs "-d rtinherit" > /dev/null 2>&1
+> >> +
+> >> +#
+> >> +# Mark the rt device read-only.
+> >> +#
+> >> +echo "setting device read-only"
+> >> +blockdev --setro $SCRATCH_RTDEV
+> >> +
+> >> +#
+> >> +# Mount it and make sure it can't be written to.
+> >> +#
+> >> +echo "mounting read-only rt block device:"
+> >> +_scratch_mount 2>&1 | _filter_ro_mount | _filter_scratch
+> >> +if [ "${PIPESTATUS[0]}" -eq 0 ]; then
+> >> +	echo "writing to file on read-only filesystem:"
+> >> +	dd if=/dev/zero of=$SCRATCH_MNT/foo bs=1M count=1 oflag=direct 2>&1 | _filter_scratch
+> >> +else
+> >> +	_fail "failed to mount"
+> >> +fi
+> >> +
+> >> +echo "remounting read-write:"
+> >> +_scratch_remount rw 2>&1 | _filter_scratch | _filter_ro_mount
+> >> +
+> >> +echo "unmounting read-only filesystem"
+> >> +_scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
+> >> +
+> >> +# success, all done
+> >> +echo "*** done"
+> >> +status=0
+> >> diff --git a/tests/xfs/837.out b/tests/xfs/837.out
+> >> new file mode 100644
+> >> index 000000000000..0a843a0ba398
+> >> --- /dev/null
+> >> +++ b/tests/xfs/837.out
+> >> @@ -0,0 +1,10 @@
+> >> +QA output created by 837
+> >> +setting device read-only
+> >> +mounting read-only rt block device:
+> >> +mount: device write-protected, mounting read-only
+> >> +writing to file on read-only filesystem:
+> >> +dd: failed to open 'SCRATCH_MNT/foo': Read-only file system
+> >> +remounting read-write:
+> >> +mount: cannot remount device read-write, is write-protected
+> >> +unmounting read-only filesystem
+> >> +*** done
+> >> -- 
+> >> 2.34.1
+> >>
+> > 
+> 
