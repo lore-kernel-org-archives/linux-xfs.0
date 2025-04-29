@@ -1,30 +1,50 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80DF82C10B3
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Apr 2025 12:24:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B7A029DB74;
+	Tue, 29 Apr 2025 12:28:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745929471; cv=none; b=rM7f2OzDxkln0yb3RrWiapywPUZuKvYlUU0OUZpLewQSZWDH9XNwoV3vve0ajPC7h2x4K04MtiCpAE5T1vm22aryv6z3lTs/Lc6ndh1vFrsnTyjXBmakQsAuPrOwlosYXQYqj3+8kTNbpFmjX1zTwykeryxdS+/zjMJ1M648vMI=
+	t=1745929701; cv=none; b=sBUbxlxwzyzfaw3glFYLAJBYbd5x0GSAyeYejU4btChn1QfL7TZO2R/j3ncf7I4C2gKdbjKisgj2/8l4ERiczMWKzCBnuzryiLHDSaDnHXtKGcTpfNC2fQjpEn1EaqXVQdg5524x2X6LQGtc5e7NjyIhSBF3lKqwBL57lMioGE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745929471; c=relaxed/simple;
-	bh=5jdlM1YIYOMOcpq/EOdOlValI84ZK+fk9ZPMGqFhQvg=;
+	s=arc-20240116; t=1745929701; c=relaxed/simple;
+	bh=1CAfX43axeyXhHAA2pWyW1DzJI+aoNNB9mI8PIkd6lY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p5j+NhqnT0v0Po3EnUo7g7rIaOKM2usQOaSjAopVJcsRfttPu1apGmDs45fRdbzsgMt6hjBQTmPQSn5XvAb2PLcVL66xPpbhYiyWGdh64RNzzbUbf629sZSXtds+5k+TSG0N9ioFDL9wBQ7BYz0S47jDUQ9wk3DZ0gb9jBQOobs=
+	 Content-Type:Content-Disposition:In-Reply-To; b=B7OiJLg52kne6QthL9zMWcwRIP218WZNwJH1WSEc2gXMLRLyhpn0YxKYPQLKgqmP/jrvMEwsjAu01pjZBpI4U2T4/IvgfmUyXVSRcpmzf4ezVq+MsTKVuh4sVEUL25rVN7JxzDUb8C/uR2Fgn6UlA7PLMIqwUtdM4W2KUP72bzA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 494D968AA6; Tue, 29 Apr 2025 14:24:26 +0200 (CEST)
-Date: Tue, 29 Apr 2025 14:24:25 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
-	Andrey Albershteyn <aalbersh@kernel.org>,
-	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 44/43] xfs_repair: fix libxfs abstraction mess
-Message-ID: <20250429122425.GA12778@lst.de>
-References: <20250414053629.360672-1-hch@lst.de> <20250425154818.GP25675@frogsfrogsfrogs> <20250428131745.GB30382@lst.de> <hrbhwqnymqgvp6l36s7r7mdnnmhhm76zoibtxtfo32iishzhza@fbuuly4t2fyn>
+	id D4A3E68AA6; Tue, 29 Apr 2025 14:28:13 +0200 (CEST)
+Date: Tue, 29 Apr 2025 14:28:13 +0200
+From: hch <hch@lst.de>
+To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc: Hannes Reinecke <hare@suse.de>, hch <hch@lst.de>,
+	Jens Axboe <axboe@kernel.dk>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+	Jack Wang <jinpu.wang@ionos.com>, Coly Li <colyli@kernel.org>,
+	Kent Overstreet <kent.overstreet@linux.dev>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, Chris Mason <clm@fb.com>,
+	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <Naohiro.Aota@wdc.com>,
+	Johannes Thumshirn <jth@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Pavel Machek <pavel@kernel.org>,
+	"linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
+	"dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
+	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+	"gfs2@lists.linux.dev" <gfs2@lists.linux.dev>,
+	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH 04/17] block: remove the q argument from blk_rq_map_kern
+Message-ID: <20250429122813.GA12807@lst.de>
+References: <20250422142628.1553523-1-hch@lst.de> <20250422142628.1553523-5-hch@lst.de> <76ba8f63-b5d3-4e43-beb4-97dae085c5f2@suse.de> <df1fa243-a824-4607-8393-90dedecbe772@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,18 +53,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <hrbhwqnymqgvp6l36s7r7mdnnmhhm76zoibtxtfo32iishzhza@fbuuly4t2fyn>
+In-Reply-To: <df1fa243-a824-4607-8393-90dedecbe772@wdc.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Apr 28, 2025 at 06:28:58PM +0200, Andrey Albershteyn wrote:
-> > Andrey: let me know when it's a good time for another xfsprogs series
-> > round, and if you want the FIXUP patches squashed for that or not.
-> > 
+On Tue, Apr 29, 2025 at 11:24:55AM +0000, Johannes Thumshirn wrote:
+> > Good cleanup. I always wondered why we need to have it.
 > 
-> I'm preparing for-next update, do you have any other changes for this
-> patchset? I can fixup the commits and fix "inherit" commit message.
-> Or if you want you can send it now, I will take v3.
+> Because we used to call 'bio_add_pc_page()' in e.g. bio_map_kern()' 
+> which took a request_queue. But that got changed in 6aeb4f8364806 
+> ("block: remove bio_add_pc_page") to a simple 'bio_add_page()'.
 
-Fixing the inherit message and folding in this patch were the only
-todo items on my list.
-
+Even back then you could have easily derived it from the struct
+request, through.
