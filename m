@@ -1,53 +1,53 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98319270ECB
-	for <linux-xfs@vger.kernel.org>; Wed, 30 Apr 2025 18:58:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6061C2DC791
+	for <linux-xfs@vger.kernel.org>; Wed, 30 Apr 2025 18:58:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746039496; cv=none; b=gsDOwDo+qMxKRljULrdUXjIegZixcaQZdxvfsXPGY7W0Go2S4kbt1067tdBjMTV18mVxQwyzxKTVXcUysiRR62ir1jXMcw3bEc91q/Q9A90C9T672pfZygjHnpKENJ0a+lwSw+tR0qWKl3tPQ2Wr14oJU4Azea4vX4JWWkWQw0U=
+	t=1746039502; cv=none; b=F2Cxfme8FtsoDAMswSb0DtxIUdCvKknYeXY/liz2N2LKmMUnEjVv7xp59tbTWpQDdk+5KtcbU9y6sEXxTtxVW1WRDdvegYBp7h9MAgq+gTcOO6vrmr0+SOVfJ1UCTRmYFaCmGGxGsAutddW0qNx60zRD7nO9OTGLeLaoQLkFKJU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746039496; c=relaxed/simple;
-	bh=bJd292s5/g5hp+C4RBdxp5m7A33nWP2SCU7S7EQHO+8=;
+	s=arc-20240116; t=1746039502; c=relaxed/simple;
+	bh=H16izfbU3rUWjNofuEd4kJGOgWbS35wPWyAHHedhgY8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ra+SV+Zzu2brD8tPr1kpr886Il7MZjfLqKdF2ZtyM0/hbNXfGUL/Kggan3PSDxyQ4XKBFpDVi3K/qIEgjmjmPhdisRLZKH+Ejl6/QtTCuFgIZQ68oVPA4dfgLTuoVwdyZvQwTNAGH9rXM2s4X8t4VN9oL3a5kKTqL9biBud9Om8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=agi4Z13x; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version:Content-Type; b=ZjE6ImlQRp5EjN1Jh8IsVCG+y5ifwbMDnAbWBeJMKmABXRHxhBgXZpU3cKAbaehkorV58k9DiHs4ev+AvLXhX79zFGfV5eTifqquBUxEXyboGFd/EVUcitMjbzkmIdcugkbAlHUeIMkyfeb+4v+2dgxYibHshTNL7VGa/ASgknY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SWQ653lg; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="agi4Z13x"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SWQ653lg"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1746039492;
+	s=mimecast20190719; t=1746039499;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=DrVR8JIWJ5LRarSTIYkzvKB8TaKcv+bkSk0KzdHQSwM=;
-	b=agi4Z13xujOXHtwd5yq3qvppUsTlDOGPrhKFRXJ2c7h/3CErDucKC1xDoQPhWgfRXHGxva
-	v7OEcYFGAWBJh+SBW+waCYZOUhMTjffZWDNFxNogvhZ+qK6L0fZbTjZ7ksWzzEv3hd9rfA
-	aWuw0+hJ0Yz27MrW9dXmx03Hn9yjh9Q=
+	bh=I+KpeER9MCNi82ppVXGhwY3GQAKjwljSMvNmXkRrh6o=;
+	b=SWQ653lglzWnjV5PRwSUwNJeOHMAYtN1WsLl42Fxel4RCD0vwZSXYVIpMLPYM06JP3JoIs
+	5vuu+Z9frVOrX+OfH+OQU3Ip3scFh4EIPKpa1U8Ei3thCvELZ3ntfokruqXGFiCXNeMScw
+	k1KKBSwN49k2/1yrjyjfWHKZEvJpNGM=
 Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-164-Vis7mLnDNo-N1OcZbi9oUQ-1; Wed,
- 30 Apr 2025 14:58:05 -0400
-X-MC-Unique: Vis7mLnDNo-N1OcZbi9oUQ-1
-X-Mimecast-MFC-AGG-ID: Vis7mLnDNo-N1OcZbi9oUQ_1746039484
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-120-HuS3ENiOO6y0bj3T7YusWg-1; Wed,
+ 30 Apr 2025 14:58:03 -0400
+X-MC-Unique: HuS3ENiOO6y0bj3T7YusWg-1
+X-Mimecast-MFC-AGG-ID: HuS3ENiOO6y0bj3T7YusWg_1746039483
 Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BDD7C1801A1A;
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 07A351800368;
 	Wed, 30 Apr 2025 18:58:03 +0000 (UTC)
 Received: from bfoster.redhat.com (unknown [10.22.64.112])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3E6A319560B0;
-	Wed, 30 Apr 2025 18:58:03 +0000 (UTC)
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 7DEE719560A3;
+	Wed, 30 Apr 2025 18:58:02 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 5/6] iomap: push non-large folio check into get folio path
-Date: Wed, 30 Apr 2025 15:01:11 -0400
-Message-ID: <20250430190112.690800-6-bfoster@redhat.com>
+Subject: [PATCH 4/6] iomap: helper to trim pos/bytes to within folio
+Date: Wed, 30 Apr 2025 15:01:10 -0400
+Message-ID: <20250430190112.690800-5-bfoster@redhat.com>
 In-Reply-To: <20250430190112.690800-1-bfoster@redhat.com>
 References: <20250430190112.690800-1-bfoster@redhat.com>
 Precedence: bulk
@@ -60,40 +60,109 @@ Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-The len param to __iomap_get_folio() is primarily a folio allocation
-hint. iomap_write_begin() already trims its local len variable based
-on the provided folio, so move the large folio support check closer
-to folio lookup.
+Several buffered write based iteration callbacks duplicate logic to
+trim the current pos and length to within the current folio. Factor
+this into a helper to make it easier to relocate closer to folio
+lookup.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/iomap/buffered-io.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/iomap/buffered-io.c | 34 +++++++++++++++++++---------------
+ 1 file changed, 19 insertions(+), 15 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 5ed3332e69dd..d3b30ebad9ea 100644
+index 5c08b2916bc7..5ed3332e69dd 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -746,6 +746,9 @@ static struct folio *__iomap_get_folio(struct iomap_iter *iter, size_t len)
- 	const struct iomap_folio_ops *folio_ops = iter->iomap.folio_ops;
- 	loff_t pos = iter->pos;
+@@ -766,6 +766,21 @@ static void __iomap_put_folio(struct iomap_iter *iter, size_t ret,
+ 	}
+ }
  
-+	if (!mapping_large_folio_support(iter->inode->i_mapping))
-+		len = min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
++/* trim pos and bytes to within a given folio */
++static loff_t iomap_trim_folio_range(struct iomap_iter *iter,
++		struct folio *folio, size_t *offset, u64 *bytes)
++{
++	loff_t pos = iter->pos;
++	size_t fsize = folio_size(folio);
 +
- 	if (folio_ops && folio_ops->get_folio)
- 		return folio_ops->get_folio(iter, pos, len);
- 	else
-@@ -806,9 +809,6 @@ static int iomap_write_begin(struct iomap_iter *iter, size_t len,
- 	if (fatal_signal_pending(current))
- 		return -EINTR;
++	WARN_ON_ONCE(pos < folio_pos(folio) || pos >= folio_pos(folio) + fsize);
++
++	*offset = offset_in_folio(folio, pos);
++	if (*bytes > fsize - *offset)
++		*bytes = fsize - *offset;
++	return pos;
++}
++
+ static int iomap_write_begin_inline(const struct iomap_iter *iter,
+ 		struct folio *folio)
+ {
+@@ -920,7 +935,7 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 		struct folio *folio;
+ 		loff_t old_size;
+ 		size_t offset;		/* Offset into folio */
+-		size_t bytes;		/* Bytes to write to folio */
++		u64 bytes;		/* Bytes to write to folio */
+ 		size_t copied;		/* Bytes copied from user */
+ 		u64 written;		/* Bytes have been written */
+ 		loff_t pos;
+@@ -959,11 +974,8 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 		}
+ 		if (iter->iomap.flags & IOMAP_F_STALE)
+ 			break;
+-		pos = iter->pos;
  
--	if (!mapping_large_folio_support(iter->inode->i_mapping))
--		len = min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
--
- 	folio = __iomap_get_folio(iter, len);
- 	if (IS_ERR(folio))
- 		return PTR_ERR(folio);
+-		offset = offset_in_folio(folio, pos);
+-		if (bytes > folio_size(folio) - offset)
+-			bytes = folio_size(folio) - offset;
++		pos = iomap_trim_folio_range(iter, folio, &offset, &bytes);
+ 
+ 		if (mapping_writably_mapped(mapping))
+ 			flush_dcache_folio(folio);
+@@ -1280,7 +1292,6 @@ static int iomap_unshare_iter(struct iomap_iter *iter)
+ 	do {
+ 		struct folio *folio;
+ 		size_t offset;
+-		loff_t pos;
+ 		bool ret;
+ 
+ 		bytes = min_t(u64, SIZE_MAX, bytes);
+@@ -1289,11 +1300,8 @@ static int iomap_unshare_iter(struct iomap_iter *iter)
+ 			return status;
+ 		if (iomap->flags & IOMAP_F_STALE)
+ 			break;
+-		pos = iter->pos;
+ 
+-		offset = offset_in_folio(folio, pos);
+-		if (bytes > folio_size(folio) - offset)
+-			bytes = folio_size(folio) - offset;
++		iomap_trim_folio_range(iter, folio, &offset, &bytes);
+ 
+ 		ret = iomap_write_end(iter, bytes, bytes, folio);
+ 		__iomap_put_folio(iter, bytes, folio);
+@@ -1356,7 +1364,6 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ 	do {
+ 		struct folio *folio;
+ 		size_t offset;
+-		loff_t pos;
+ 		bool ret;
+ 
+ 		bytes = min_t(u64, SIZE_MAX, bytes);
+@@ -1365,14 +1372,11 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ 			return status;
+ 		if (iter->iomap.flags & IOMAP_F_STALE)
+ 			break;
+-		pos = iter->pos;
+ 
+ 		/* warn about zeroing folios beyond eof that won't write back */
+ 		WARN_ON_ONCE(folio_pos(folio) > iter->inode->i_size);
+-		offset = offset_in_folio(folio, pos);
+-		if (bytes > folio_size(folio) - offset)
+-			bytes = folio_size(folio) - offset;
+ 
++		iomap_trim_folio_range(iter, folio, &offset, &bytes);
+ 		folio_zero_range(folio, offset, bytes);
+ 		folio_mark_accessed(folio);
+ 
 -- 
 2.49.0
 
