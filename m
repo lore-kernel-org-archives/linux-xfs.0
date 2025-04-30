@@ -1,280 +1,107 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id AF34E1EEA46;
-	Wed, 30 Apr 2025 09:04:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84740219A76;
+	Wed, 30 Apr 2025 09:24:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746003850; cv=none; b=JYmAlsT3DX4knS3tn7EZ0UnlhQud0wNwD3sT/w/YL/h8XHS6rhvXTZNglP5sz6Z11JcvfL49TMjRNqv7NtjipR5kjWFWpvyEev7ewnPkW5zut89L+UczhbKfVsYBwTo13U/o7DIc2vgEgvlb0Jo/JeOwYwZXYj5yJp47a4+Sw4w=
+	t=1746005042; cv=none; b=OV6HNWD9Q2/FDhunsjbDlXAL++mDsawPN2Svd4OZeQ9QM3dtI5D+9Hl2LNiJOOssbk/FNrwfB3519icBTjnn9ELJ0v7sOu8T5i6fvpirdQAGriMxEQ4lsF/IilhQlR6m/UluyZ7aQpx6u4USwLgDSOlZ4OYUNmtHOCKLb67v24k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746003850; c=relaxed/simple;
-	bh=PKzN8iXlBJBK9SwHSpvuXQqkp9QMK953kT+GMiKVbZM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ef/3cB9hxDSTUyID3c59dQ+wqEo+etB2dlYFhujQLeF83Yo/qLaG0HCpDZOcuKfQjcUiRuUTeC8/rynUPsCgVpIm6LkWRwLYRMYlhtZ8aDKa9uSxFKGvLPgv2wOyyYNlCniJdoeEdlRlVue1iAsyP43pBf7buG8u+4DzyBhidUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=pGIjnToJ; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1746005042; c=relaxed/simple;
+	bh=+MBmnjAAkTJneqn9nzEKfrM8IXb0M6NgDB3rJ9PWOV8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OlizJXA9nW3mtN3nvadcn9IKy8xmpfnlKq/hhmppaiMJpI94RoEgWpGDfTH0V++eQ0iudOOWYdm19ccj0f002S1kvApgYFxLuZZjop9b/Rj3s1jByJSEa3KXahdtOUd/rxHuzjAkdJKGa2CMrWWdMtpQgwGDHTqUqAatSeG41Gw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YNmNmVnK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="pGIjnToJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
-	Content-Type; bh=qZH1Iv4RTrKHulqeYwn77KGwSyTWOgV1PzxST8oMpJQ=;
-	b=pGIjnToJVXX4iLXvxQr9dbQ6zaraRnoH17VJrUbUrFl/uUAq/8Bkj7OXm3yX31
-	6mpNAji97mLnOXeSX+1gySOtG7b2ILgln71SHPXO7USkfMydZGFybdx+H2xrEe0/
-	9RcnH2kXkytzK0PPyC/zg4/KEEyJGAZf7tMiI8rCD1Zss=
-Received: from [10.42.12.6] (unknown [])
-	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wCXA5h35xFon77_Dg--.24817S2;
-	Wed, 30 Apr 2025 17:03:51 +0800 (CST)
-Message-ID: <040637ad-54ac-4695-8e49-b4a3c643b056@163.com>
-Date: Wed, 30 Apr 2025 17:03:51 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YNmNmVnK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F21BC4CEEA;
+	Wed, 30 Apr 2025 09:24:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1746005042;
+	bh=+MBmnjAAkTJneqn9nzEKfrM8IXb0M6NgDB3rJ9PWOV8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=YNmNmVnKDfo5SHn9MUhH4Qc2WD96pka4i3NjgbWqXffQPG1xPZb4MNvmpSosmI16c
+	 Bcw+0cYEHpY2wIn9bQrcFPn22/HtM9QT8cWxEHcQ8kMfAbJ3fbzSr7RO5m/4qjL2kM
+	 4dRYNfduwC9cvAs7Hx6fztOyS3M9gxVM4Ttoud1y2EilmR41jJwePiBLi+ibB2qDBN
+	 +guavzbRQ3QqMvHpVML6xbCx54wwNgkwb60KzOxc5SUPaP0xASYGNIfZ6EmGp4A8r1
+	 pqr4TvAX56xtm9FS2DUpReT8tmzUuy9fpHXhsxdeXWVu9SzYhw+eonO0fvS3UD7vMX
+	 PhQYJWxEpoERw==
+Date: Wed, 30 Apr 2025 11:23:57 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Charalampos Mitrodimas <charmitro@posteo.net>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: Verify DA node btree hash order
+Message-ID: <dyo3cdnqg3zocge2ygspovdlrjjo2dbwefbvq6w5mcbjgs3bdj@diwkyidcrpjg>
+References: <6Fo_nCBU7RijxC1Kg6qD573hCAQBTcddQlb7i0E9C7tbpPIycSQ8Vt3BeW-1DqdayPO9EzyJLyNgxpH6rfts4g==@protonmail.internalid>
+ <20250412-xfs-hash-check-v1-1-fec1fef5d006@posteo.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 0/2] Implement concurrent buffered write with folio
- lock
-To: Dave Chinner <david@fromorbit.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
- Chi Zhiling <chizhiling@kylinos.cn>
-References: <20250425103841.3164087-1-chizhiling@163.com>
- <aBGFfpyGtYQnK411@dread.disaster.area>
-Content-Language: en-US
-From: Chi Zhiling <chizhiling@163.com>
-In-Reply-To: <aBGFfpyGtYQnK411@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wCXA5h35xFon77_Dg--.24817S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW3AFyfWrW8Cry5uryUtF4fZrb_yoW3Cr1DpF
-	Z5K39rtFs7Kr97Jrn293W8Xr1Fv39aq343CrW5Xw4xCa9xXr12gF1vq3yYkFWDArs2y3yq
-	vF40934xGFWqyaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U2Ap5UUUUU=
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/1tbiKRw7nWgMNEZQQQACsW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250412-xfs-hash-check-v1-1-fec1fef5d006@posteo.net>
 
-On 2025/4/30 10:05, Dave Chinner wrote:
-> On Fri, Apr 25, 2025 at 06:38:39PM +0800, Chi Zhiling wrote:
->> From: Chi Zhiling <chizhiling@kylinos.cn>
->>
->> This is a patch attempting to implement concurrent buffered writes.
->> The main idea is to use the folio lock to ensure the atomicity of the
->> write when writing to a single folio, instead of using the i_rwsem.
->>
->> I tried the "folio batch" solution, which is a great idea, but during
->> testing, I encountered an OOM issue because the locked folios couldn't
->> be reclaimed.
->>
->> So for now, I can only allow concurrent writes within a single block.
->> The good news is that since we already support BS > PS, we can use a
->> larger block size to enable higher granularity concurrency.
+On Sat, Apr 12, 2025 at 08:03:57PM +0000, Charalampos Mitrodimas wrote:
+> The xfs_da3_node_verify() function checks the integrity of directory
+> and attribute B-tree node blocks. However, it was missing a check to
+> ensure that the hash values of the btree entries within the node are
+> strictly increasing, as required by the B-tree structure.
 > 
-> I'm not going to say no to this, but I think it's a short term and
-> niche solution to the general problem of enabling shared buffered
-> writes. i.e. I expect that it will not exist for long, whilst
+> Add a loop to iterate through the btree entries and verify that each
+> entry's hash value is greater than the previous one. If an
+> out-of-order hash value is detected, return failure to indicate
+> corruption.
+> 
+> This addresses the "XXX: hash order check?" comment and improves
+> corruption detection for DA node blocks.
+> 
+> Signed-off-by: Charalampos Mitrodimas <charmitro@posteo.net>
+> ---
+>  fs/xfs/libxfs/xfs_da_btree.c | 11 ++++++++++-
+>  1 file changed, 10 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index 17d9e6154f1978ce5a5cb82176eea4d6b9cd768d..6c748911e54619c3ceae9b81f55cf61da6735f01 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -247,7 +247,16 @@ xfs_da3_node_verify(
+>  	    ichdr.count > mp->m_attr_geo->node_ents)
+>  		return __this_address;
+> 
+> -	/* XXX: hash order check? */
+> +	/* Check hash order */
+> +	uint32_t prev_hash = be32_to_cpu(ichdr.btree[0].hashval);
+> +
+> +	for (int i = 1; i < ichdr.count; i++) {
+> +		uint32_t curr_hash = be32_to_cpu(ichdr.btree[i].hashval);
+> +
+> +		if (curr_hash <= prev_hash)
+> +			return __this_address;
+> +		prev_hash = curr_hash;
+> +	}
 
-Hi, Dave,
+Hmmm. Do you have any numbers related to the performance impact of this patch?
 
-Yes, it's a short-term solution, but it's enough for some scenarios.
-I would also like to see better idea.
-
-> experience tells me that adding special cases to the IO path locking
-> has a fairly high risk of unexpected regressions and/or data
-> corruption....
-
-I can't say there is definitely no data corruption, but I haven't seen
-any new errors in xfstests.
-
-We might need to add some assertions in the code to check for the risk
-of data corruption, not specifically for this patch, but for the current
-XFS system in general. This would help developers avoid introducing new
-bugs, similar to the lockdep tool.
+IIRC for very populated directories we can end up having many entries here. It's
+not uncommon to have filesystems with millions of entries in a single directory.
+Now we'll be looping over all those entries here during verification, which could
+scale to many interactions on this loop.
+I'm not sure if I'm right here, but this seems to add a big performance penalty
+for directory writes, so I'm curious about the performance implications of this
+patch.
 
 > 
->> These ideas come from previous discussions:
->> https://lore.kernel.org/all/953b0499-5832-49dc-8580-436cf625db8c@163.com/
+>  	return NULL;
+>  }
 > 
-> In my spare time I've been looking at using the two state lock from
-> bcachefs for this because it looks to provide a general solution to
-> the issue of concurrent buffered writes.
-
-In fact, I have tried the two state lock, and it does work quite well.
-However, I noticed some performance degradation in single-threaded
-scenarios in UnixBench (I'm not sure if it's caused by the memory
-barrier).
-
-Since single-threaded bufferedio is still the primary read-write mode,
-I don't want to introduce too much impact in single-threaded scenarios.
-
-That's why I introduced the i_direct_mode flag, which protected by
-i_rwsem. This approach only adds a boolean operation in fast path.
-
+> ---
+> base-commit: ecd5d67ad602c2c12e8709762717112ef0958767
+> change-id: 20250412-xfs-hash-check-be7397881a2c
 > 
-> The two valid IO exclusion states are:
+> Best regards,
+> --
+> Charalampos Mitrodimas <charmitro@posteo.net>
 > 
-> +enum {
-> +       XFS_IOTYPE_BUFFERED = 0,
-> +       XFS_IOTYPE_DIRECT = 1,
-> +};
-> 
-> Importantly, this gives us three states, not two:
-> 
-> 1. Buffered IO in progress,
-> 2. Direct IO in progress, and
-> 3. No IO in progress. (i.e. not held at all)
-> 
-> When we do operations like truncate or hole punch, we need the state
-> to be #3 - no IO in progress.
-> 
-> Hence we can use this like we currently use i_dio_count for
-> truncate with the correct lock ordering. That is, we order the
-> IOLOCK before the IOTYPE lock:
-> 
-> Buffered IO:
-> 
-> 	IOLOCK_SHARED, IOLOCK_EXCL if IREMAPPING
-> 	  <IREMAPPING excluded>
-> 	  IOTYPE_BUFFERED
-> 	    <block waiting for in progress DIO>
-> 	    <do buffered IO>
-> 	  unlock IOTYPE_BUFFERED
-> 	unlock IOLOCK
-> 
-> IREMAPPING IO:
-> 
-> 	IOLOCK_EXCL
-> 	  set IREMAPPING
-> 	  demote to IOLOCK_SHARED
-> 	  IOTYPE_BUFFERED
-> 	    <block waiting for in progress DIO>
-> 	    <do reflink operation>
-> 	  unlock IOTYPE_BUFFERED
-> 	  clear IREMAPPING
-> 	unlock IOLOCK
-> 
-> Direct IO:
-> 
-> 	IOLOCK_SHARED
-> 	  IOTYPE_DIRECT
-> 	    <block waiting for in progress buffered, IREMAPPING>
-> 	    <do direct IO>
-> 	<submission>
-> 	  unlock IOLOCK_SHARED
-> 	<completion>
-> 	  unlock IOTYPE_DIRECT
-> 
-> Notes on DIO write file extension w.r.t. xfs_file_write_zero_eof():
-> - xfs_file_write_zero_eof() does buffered IO.
-> - needs to switch from XFS_IOTYPE_DIRECT to XFS_IOTYPE_BUFFERED
-> - this locks out all other DIO, as the current switch to
->    IOLOCK_EXCL will do.
-> - DIO write path no longer needs IOLOCK_EXCL to serialise post-EOF
->    block zeroing against other concurrent DIO writes.
-> - future optimisation target so that it doesn't serialise against
->    other DIO (reads or writes) within EOF.
-> 
-> This path looks like:
-> 
-> Direct IO extension:
-> 
-> 	IOLOCK_EXCL
-> 	  IOTYPE_BUFFERED
-> 	    <block waiting for in progress DIO>
-> 	    xfs_file_write_zero_eof();
-> 	  demote to IOLOCK_SHARED
-> 	  IOTYPE_DIRECT
-> 	    <block waiting for buffered, IREMAPPING>
-> 	    <do direct IO>
-> 	<submission>
-> 	  unlock IOLOCK_SHARED
-> 	<completion>
-> 	  unlock IOTYPE_DIRECT
-> 
-> Notes on xfs_file_dio_write_unaligned()
-> - this drains all DIO in flight so it has exclusive access to the
->    given block being written to. This prevents races doing IO (read
->    or write, buffered or direct) to that specific block.
-> - essentially does an exclusive, synchronous DIO write after
->    draining all DIO in flight. Very slow, reliant on inode_dio_wait()
->    existing.
-> - make the slow path after failing the unaligned overwrite a
->    buffered write.
-> - switching modes to buffered drains all the DIO in flight,
->    buffered write data all the necessary sub-block zeroing in memory,
->    next overlapping DIO of fdatasync() will flush it to disk.
-> 
-> This slow path looks like:
-> 
-> 	IOLOCK_EXCL
-> 	  IOTYPE_BUFFERED
-> 	    <excludes all concurrent DIO>
-> 	    set IOCB_DONTCACHE
-> 	    iomap_file_buffered_write()
-> 
-> Truncate and other IO exclusion code such as fallocate() need to do
-> this:
-> 
-> 	IOLOCK_EXCL
-> 	  <wait for IO state to become unlocked>
-> 
-> The IOLOCK_EXCL creates a submission barrier, and the "wait for IO
-> state to become unlocked" ensures that all buffered and direct IO
-> have been drained and there is no IO in flight at all.
-> 
-> Th upside of this is that we get rid of the dependency on
-> inode->i_dio_count and we ensure that we don't potentially need a
-> similar counter for buffered writes in future. e.g. buffered
-> AIO+RWF_DONTCACHE+RWF_DSYNC could be optimised to use FUA and/or IO
-> completion side DSYNC operations like AIO+DIO+RWF_DSYNC currently
-> does and that would currently need in-flight IO tracking for truncate
-> synchronisation. The two-state lock solution avoids that completely.
-
-Okay, sounds great.
-
-> 
-> Some work needs to be done to enable sane IO completion unlocking
-> (i.e. from dio->end_io). My curent notes on this say:
-> 
-> - ->end_io only gets called once when all bios submitted for the dio
->    are complete. hence only one completion, so unlock is balanced
-> - caller has no idea on error if IO was submitted and completed;
->    if dio->end_io unlocks on IO error, the waiting submitter has no
->    clue whether it has to unlock or not.
-> - need a clean submitter unlock model. Alternatives?
->    - dio->end_io only unlock on on IO error when
->      dio->wait_for_completion is not set (i.e. completing an AIO,
->      submitter was given -EIOCBQUEUED). iomap_dio_rw() caller can
->      then do:
-> 
->          if (ret < 0 && ret != -EIOCBQUEUED) {
->                  /* unlock inode */
->          }
->    - if end_io is checking ->wait_for_completion, only ever unlock
->      if it isn't set? i.e. if there is a waiter, we leave it to them
->      to unlock? Simpler rule for ->end_io, cleaner for the submitter
->      to handle:
-> 
->          if (ret != -EIOCBQUEUED) {
->                  /* unlock inode */
->          }
-> - need to move DIO write page cache invalidation and inode_dio_end()
->    into ->end_io for implementations
-> - if no ->end_io provided, do what the current code does.
-> 
-> There are also a few changes need to avoid inode->i_dio_count in
-> iomap:
-> - need a flag to tell iomap_dio_rw() not to account the DIO
-> - inode_dio_end() may need to be moved to ->dio_end, or we could
->    use the "do not account" flag to avoid it.
-> - However, page cache invalidation and dsync work needs to be done
->    before in-flight dio release, so this we likely need to move this
->    stuff to ->end_io before we drop the IOTYPE lock...
-> - probably can be handled with appropriate helpers...
-> 
-> I've implemented some of this already; I'm currently in the process
-> of making truncate exclusion work correctly. Once that works, I'll
-> post the code....
-
-Thank you for sharing your thoughts, I will be waiting for that.
-
-> 
-> -~dave
-
