@@ -1,76 +1,72 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4051A2DC770
-	for <linux-xfs@vger.kernel.org>; Wed, 30 Apr 2025 02:05:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F4F42DC77B
+	for <linux-xfs@vger.kernel.org>; Wed, 30 Apr 2025 02:38:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745978756; cv=none; b=s+dDfISIp5hgr3mm82z7R1T1pSA2GBOC4YE25SeT+BLP143iZNvAlb2P/tIHtfMrBzCKWzBOwcrzH9n4vj6dcPQXBOUNM46GjLE4fnS3Zu7CdEzoABujokiTcEyK0dbhu77UnSWKd+7xyIIGC3PJvpx7H3ienC+kNAZcsqJ7xtc=
+	t=1745980695; cv=none; b=e1RcwpHRxTCagtAdXOhsEam8anJNHleNIfNJTWAuoNNGfODy/nFxTwGZ3Jj2q8+DB8IoXUEGmgx3IOGF/C2BbElFLlM0YtHwaXpjfInd0D+t98WHa/o5GCOZoXiO1RZGYIQ+ujZIuft13bMRFA9B0rhJRZ9KD0rh6i24IyQ3wSk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745978756; c=relaxed/simple;
-	bh=DMct/huGiCfiD65OsYKIezz7VbjrtRClGTQgEFomFow=;
+	s=arc-20240116; t=1745980695; c=relaxed/simple;
+	bh=ZfO8Eg44enoviFYo9oPUz/Jr0pBgzNIp7DNC6DQjYdw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SPFLIhoQB0B6a/X10vJpip5GBJ0Ugsyl/IpbqkulOP7joJuh6ZcNf+1+zr9BxQa62YJE6UESlWDyUlPksWBIUSNoMc+us007LDD5iIk734chuOCP1Gjiwd+SDw7woqLdXfSDl6mbtijHhL5xAOx2mncsU6xBEo9ajIu680dkTZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=h1sh6FTI; arc=none smtp.client-ip=209.85.210.175
+	 Content-Type:Content-Disposition:In-Reply-To; b=Mgrl/Bj+bC0Hx0/7tQ+AKlrcQS7m1GLWNmgkSolrwEaho7Xiat4PDiYKfNe7pg6AX5txpiUCv9Riqk7riKBaWO+26jPVYSudVvzYlkKE1uk1HanF1GYHxtzpR3UXweeanj6YeweTGMFEGobTt1f+KdwhCV8tSwZo7vIq0WBgwcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=vrPnWx0H; arc=none smtp.client-ip=209.85.216.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="h1sh6FTI"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-736c1138ae5so6827598b3a.3
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Apr 2025 19:05:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="vrPnWx0H"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-30155bbbed9so5519241a91.1
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Apr 2025 19:38:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1745978753; x=1746583553; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1745980693; x=1746585493; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ivhh2j5ykafhwFZuVZhYJEHHQx1F6zYILuWeaYLILCg=;
-        b=h1sh6FTIN4CKnv0yfKMQB5rlEhFppKVjrPcqHgxu26Cj2eHfnzEebQ6BL5MaQGqLO9
-         OZrLkC0LYY4PC91mill7QZhI6RPR5k7D5HnBBB0fX4JhLdyftWvk7NcawIahLsjzp/gf
-         9eX6+Zdc0jdL+bts30iLttI5P1PN1BlsxayBkpwmuhFV5M9QZy+QrhMyobvwmNniM1LY
-         Uz3g689Ol9ZHdybdGAdLdAsC4Fz9ELW9ZyX/a26nJO6y7srAOyZnnMIqbAfKMEpaj+vi
-         6ld7w3x5KrtNxET65s+dYnU3WvDZoehk1lNqhpcSo86vpuNfT9ZHN1ND7TD8gn5y4Xc4
-         TcXQ==
+        bh=8MsDugTNdnsbZxlwCVQwe2nNngSFpOenJ/fQTp1DoN8=;
+        b=vrPnWx0HBV2seHBvJySN+nd/r6tgnJIhtNtVEDB5WQGRDV2f4p0NdaYPh/T+c++qSK
+         GCr9higumYpHBk2jjJmjYdKh8JNP/eMzLXR7Awy+E6zxUMV5pssISQMcgB5becLgVk/5
+         arZAnQLstTULJluuNB+Wm1rYRQbJSeH0LoG9LKlu7ppBaAnlAP0NiR0V9X92xXNn0R/W
+         iaE2xKPzfpDhKJZNoS80ADRQHsMqCK+s2WVnos/bbets3VC4vNWNgm2KRQXXNxINpCn9
+         k/h1mxZsDiElvo1kTpjWuFqTnLn+4sOaKthZtn3j2uNHQcxFLx6fz3dn6qAaIwh3pIf6
+         amDQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745978753; x=1746583553;
+        d=1e100.net; s=20230601; t=1745980693; x=1746585493;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Ivhh2j5ykafhwFZuVZhYJEHHQx1F6zYILuWeaYLILCg=;
-        b=FeO1XAkEjSH3S/TFgdNDbP+jy5ZJQpx07dZT2YToRgO0L8FF8BdSPLgp7COYoYLwqH
-         uR56jQM3pvq2SGUuFSN049EdqMi72asO9cR6sz7mAXa/08ycfkbMU/h7IFOMGoCCYYVE
-         zsPloH7jLzO4qzNS6+T9OGxo8+Nt4FxKHYICnUOR800HkiB3HkBIIKJHpaKyuW96HsLa
-         PJh4baryP3D2XuSPeHq2cgN3RGpx1pkOt0mgloyDCdEkQ46S/91AhQjvcxE09D++A86q
-         644yaSwYcFXtdXz1YNo3HlPfn5DROengLFY5APUriBlN3y8u51GaeQQm076fR5PvhW8p
-         mQAg==
-X-Forwarded-Encrypted: i=1; AJvYcCWjPS0J1VXN7kUTRrqvBrsLKxIFCmNzxmbklgsRA9zo1wh0D6M5JD53DOV79ntrhFz/r6tlT+KTHB4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx2DokCip/Me7dQYKYkY2U7/ODeGDXSfr6wGIqpht0VFxV1mBfC
-	5B0O4Pnx47QbgsH47pRBnNUuhYY1y69hm0AV0VpAQpX1yS5MMRUvC8y3Fla8VWuuNOMgF9J4dwh
-	t
-X-Gm-Gg: ASbGncsBsSBu3efT/qnz2oZvCs7RywRR96vN3LbYhI6wjmFz4+32+GeqBG88lGW4SAV
-	3aY0v7P/DwRtNnaHL2u7QEUMCXTKAyJrTh73/tKSuOmIZHSbm8Wf0pEq+W53k07x/V7yRHHH8+t
-	uKi8pXG8g4zJ1TwfnnXCFV1HJNoo9GWWa7tsG8U3CRtPf2IqNs+E3UJXiNvRU6Vge7Ain5aixLt
-	JtETmI+zIT8orBlqGm7utbyPRusSbLKLVCSqdEWV0IOIIpScfQumRbF7yFhbL6Oj8UPb0qg+3rh
-	smIf5DXyy7veEC+qw09/BKgHQdD+acbX1NxxSLHGiF9yebfZlZKi48mm5tNT9uMCeQ79mc17RXt
-	FWk4QaJOXxzmLZQ==
-X-Google-Smtp-Source: AGHT+IGoe/6XelXwleh/f8r4zr27zHcIB0CqVXjZbRwv8XJwPHM5clgwxTPlpMXrxuLPSpKCZryPXw==
-X-Received: by 2002:a05:6a00:2181:b0:736:4cde:5c0e with SMTP id d2e1a72fcca58-7403a77e9e2mr1262709b3a.10.1745978753458;
-        Tue, 29 Apr 2025 19:05:53 -0700 (PDT)
+        bh=8MsDugTNdnsbZxlwCVQwe2nNngSFpOenJ/fQTp1DoN8=;
+        b=FHDFe7XoPiAr1rcSqxgPkOxx+ci6ANuXrkXlW9V+7u9mrnjWUF9YnLvA3YCiqEeAjk
+         WtviTC/AV+CyWyfn/w+E0marlSe8s4HCoWya69Tpfaj4GJkp8H4R0yiu9C0RT6MigOlj
+         E7Zv+BifkfPaEntib6cWeYhxWVmsDpLhLmny6nl2J/9SuYweLAM6M+6sX+hQqUCuIHnq
+         WbkYz3ZPT0QvTmsYYsU8agLX5kmL91l9txS9m5VQVwAviL1E2selAk1X3wHvfS6pFdsG
+         BRkuuAdFjad4w1dWuV2TGT8bWFWZryEkpCmW3YM0sTHvv3QNDFRKsXRWYa6oDWr4LFud
+         jWHA==
+X-Gm-Message-State: AOJu0YyJ2CPVhyOMkMKSLF4hKp8qI5Dl8fw8qf51SN6hQ0ch/C6NzT2c
+	xVto+IOAHAZlNH3WJ7K8DyUvRWtONglpuSNeuMLdT7HMLcEO7plT6Mno5xFVIxs=
+X-Gm-Gg: ASbGnctgo44eG5W053LnZqKZoFul94sGOGtZzosTNagOuzTwzW/YI7hbRK4Y8wWSgaZ
+	TrmsiOHDqPWfjtcRxxE70tDPGuhQkAjjlXgqMpDR2mFC1DmxucNizHZUc7OE8W/O7f00l6MwJ8N
+	Cud9qIZThP793M0kUd9Q+Wg/Q7kSHa97X5ZPbR+CaQonqCeAJP5QxF+s/M+fniH1/ysXj/vvzzG
+	udgaY3ODe5QtWp1cLtYuiMtcHV2tgmhGmqnr7luRJUW3aqFdUuA1sjvUPUsGZtK4X5jLB6UA+Nu
+	L0QMzJ75Iebj8BtLZkLg5xThiINEpYPxTqcraT31oaO1gf4jA4/rv9dH9ozWOjbxwXOu7dboRnL
+	HRWMHoJfWQRbU5g==
+X-Google-Smtp-Source: AGHT+IHsLCOS4eBHDruSuTeeAlSHoZ6Yzawr7sbrxM8MhUiRyHAIr/al2u9eSaq0nzG7culaXCssOQ==
+X-Received: by 2002:a17:90b:1f88:b0:2ff:6ac2:c5a6 with SMTP id 98e67ed59e1d1-30a33367f5dmr1740559a91.31.1745980692719;
+        Tue, 29 Apr 2025 19:38:12 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-740398f9ee5sm445532b3a.3.2025.04.29.19.05.52
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-30a34a11a0asm331827a91.23.2025.04.29.19.38.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Apr 2025 19:05:52 -0700 (PDT)
+        Tue, 29 Apr 2025 19:38:12 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.98.2)
 	(envelope-from <david@fromorbit.com>)
-	id 1u9wpa-0000000F32T-2pBL;
-	Wed, 30 Apr 2025 12:05:50 +1000
-Date: Wed, 30 Apr 2025 12:05:50 +1000
+	id 1u9xKr-0000000F3as-268Z;
+	Wed, 30 Apr 2025 12:38:09 +1000
+Date: Wed, 30 Apr 2025 12:38:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: Chi Zhiling <chizhiling@163.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Chi Zhiling <chizhiling@kylinos.cn>
-Subject: Re: [RFC PATCH 0/2] Implement concurrent buffered write with folio
- lock
-Message-ID: <aBGFfpyGtYQnK411@dread.disaster.area>
-References: <20250425103841.3164087-1-chizhiling@163.com>
+To: Wengang Wang <wen.gang.wang@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: export buffer cache usage via stats
+Message-ID: <aBGNEUfidgqfXpkW@dread.disaster.area>
+References: <20250428181135.33317-1-wen.gang.wang@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,200 +75,74 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250425103841.3164087-1-chizhiling@163.com>
+In-Reply-To: <20250428181135.33317-1-wen.gang.wang@oracle.com>
 
-On Fri, Apr 25, 2025 at 06:38:39PM +0800, Chi Zhiling wrote:
-> From: Chi Zhiling <chizhiling@kylinos.cn>
+On Mon, Apr 28, 2025 at 11:11:35AM -0700, Wengang Wang wrote:
+> This patch introduces new fields to per-mount and global stats,
+> and export them to user space.
 > 
-> This is a patch attempting to implement concurrent buffered writes.
-> The main idea is to use the folio lock to ensure the atomicity of the
-> write when writing to a single folio, instead of using the i_rwsem.
-> 
-> I tried the "folio batch" solution, which is a great idea, but during
-> testing, I encountered an OOM issue because the locked folios couldn't
-> be reclaimed.
-> 
-> So for now, I can only allow concurrent writes within a single block.
-> The good news is that since we already support BS > PS, we can use a
-> larger block size to enable higher granularity concurrency.
+> @page_alloc	-- number of pages allocated from buddy to buffer cache
+> @page_free	-- number of pages freed to buddy from buffer cache
+> @kbb_alloc	-- number of BBs allocated from kmalloc slab to buffer cache
+> @kbb_free	-- number of BBs freed to kmalloc slab from buffer cache
+> @vbb_alloc	-- number of BBs allocated from vmalloc system to buffer cache
+> @vbb_free	-- number of BBs freed to vmalloc system from buffer cache
 
-I'm not going to say no to this, but I think it's a short term and
-niche solution to the general problem of enabling shared buffered
-writes. i.e. I expect that it will not exist for long, whilst
-experience tells me that adding special cases to the IO path locking
-has a fairly high risk of unexpected regressions and/or data
-corruption....
+This forms a permanent user API once created, so exposing internal
+implementation details like this doesn't make me feel good. We've
+changed how we allocate memory for buffers quite a bit recently
+to do things like support large folios and minimise vmap usage,
+then to use vmalloc instead of vmap, etc. e.g. we don't use pages
+at all in the buffer cache anymore..
 
-> These ideas come from previous discussions:
-> https://lore.kernel.org/all/953b0499-5832-49dc-8580-436cf625db8c@163.com/
+I'm actually looking further simplifying the implementation - I
+think the custom folio/vmalloc stuff can be replaced entirely by a
+single call to kvmalloc() now, which means some stuff will come from
+slabs, some from the buddy and some from vmalloc. We won't know
+where it comes from at all, and if this stats interface already
+existed then such a change would render it completely useless.
 
-In my spare time I've been looking at using the two state lock from
-bcachefs for this because it looks to provide a general solution to
-the issue of concurrent buffered writes.
+> By looking at above stats fields, user space can easily know the buffer
+> cache usage.
 
-The two valid IO exclusion states are:
+Not easily - the implementation only aggregates alloc/free values so
+the user has to manually do the (alloc - free) calculation to
+determine how much memory is currenlty in use.  And then we don't
+really know what size buffers are actually using that memory...
 
-+enum {
-+       XFS_IOTYPE_BUFFERED = 0,
-+       XFS_IOTYPE_DIRECT = 1,
-+};
+i.e. buffers for everything other than xattrs are fixed sizes (single
+sector, single block, directory block, inode cluster), so it makes
+make more sense to me to dump a buffer size histogram for memory
+usage. We can infer things like inode cluster memory usage from such
+output, so not only would we get memory usage we also get some
+insight into what is consuming the memory.
 
-Importantly, this gives us three states, not two:
+Hence I think it would be better to track a set of buffer size based
+buckets so we get output something like:
 
-1. Buffered IO in progress,
-2. Direct IO in progress, and
-3. No IO in progress. (i.e. not held at all)
+buffer size	count		Total Bytes
+-----------	-----		-----------
+< 4kB		<n>		<aggregate count of b_length>
+4kB
+<= 8kB
+<= 16kB
+<= 32kB
+<= 64kB
 
-When we do operations like truncate or hole punch, we need the state
-to be #3 - no IO in progress.
+I also think that it might be better to dump this in a separate
+sysfs file rather than add it to the existing stats file.
 
-Hence we can use this like we currently use i_dio_count for
-truncate with the correct lock ordering. That is, we order the
-IOLOCK before the IOTYPE lock:
+With this information on any given system, we can infer what
+allocated from slab based on the buffer sizes and system PAGE_SIZE.
 
-Buffered IO:
+However, my main point is that for the general case of "how much
+memory is in use by the buffer cache", we really don't want to tie
+it to the internal allocation implementation. A histogram output like the
+above is not tied to the internal implementation, whilst giving
+additional insight into what size allocations are generating all the
+memory usage...
 
-	IOLOCK_SHARED, IOLOCK_EXCL if IREMAPPING
-	  <IREMAPPING excluded>
-	  IOTYPE_BUFFERED
-	    <block waiting for in progress DIO>
-	    <do buffered IO>
-	  unlock IOTYPE_BUFFERED
-	unlock IOLOCK
-
-IREMAPPING IO:
-
-	IOLOCK_EXCL
-	  set IREMAPPING
-	  demote to IOLOCK_SHARED
-	  IOTYPE_BUFFERED
-	    <block waiting for in progress DIO>
-	    <do reflink operation>
-	  unlock IOTYPE_BUFFERED
-	  clear IREMAPPING
-	unlock IOLOCK
-
-Direct IO:
-
-	IOLOCK_SHARED
-	  IOTYPE_DIRECT
-	    <block waiting for in progress buffered, IREMAPPING>
-	    <do direct IO>
-	<submission>
-	  unlock IOLOCK_SHARED
-	<completion>
-	  unlock IOTYPE_DIRECT
-
-Notes on DIO write file extension w.r.t. xfs_file_write_zero_eof():
-- xfs_file_write_zero_eof() does buffered IO.
-- needs to switch from XFS_IOTYPE_DIRECT to XFS_IOTYPE_BUFFERED
-- this locks out all other DIO, as the current switch to
-  IOLOCK_EXCL will do.
-- DIO write path no longer needs IOLOCK_EXCL to serialise post-EOF
-  block zeroing against other concurrent DIO writes.
-- future optimisation target so that it doesn't serialise against
-  other DIO (reads or writes) within EOF.
-
-This path looks like:
-
-Direct IO extension:
-
-	IOLOCK_EXCL
-	  IOTYPE_BUFFERED
-	    <block waiting for in progress DIO>
-	    xfs_file_write_zero_eof();
-	  demote to IOLOCK_SHARED
-	  IOTYPE_DIRECT
-	    <block waiting for buffered, IREMAPPING>
-	    <do direct IO>
-	<submission>
-	  unlock IOLOCK_SHARED
-	<completion>
-	  unlock IOTYPE_DIRECT
-
-Notes on xfs_file_dio_write_unaligned()
-- this drains all DIO in flight so it has exclusive access to the
-  given block being written to. This prevents races doing IO (read
-  or write, buffered or direct) to that specific block.
-- essentially does an exclusive, synchronous DIO write after
-  draining all DIO in flight. Very slow, reliant on inode_dio_wait()
-  existing.
-- make the slow path after failing the unaligned overwrite a
-  buffered write.
-- switching modes to buffered drains all the DIO in flight,
-  buffered write data all the necessary sub-block zeroing in memory,
-  next overlapping DIO of fdatasync() will flush it to disk.
-
-This slow path looks like:
-
-	IOLOCK_EXCL
-	  IOTYPE_BUFFERED
-	    <excludes all concurrent DIO>
-	    set IOCB_DONTCACHE
-	    iomap_file_buffered_write()
-
-Truncate and other IO exclusion code such as fallocate() need to do
-this:
-
-	IOLOCK_EXCL
-	  <wait for IO state to become unlocked>
-
-The IOLOCK_EXCL creates a submission barrier, and the "wait for IO
-state to become unlocked" ensures that all buffered and direct IO
-have been drained and there is no IO in flight at all.
-
-Th upside of this is that we get rid of the dependency on
-inode->i_dio_count and we ensure that we don't potentially need a
-similar counter for buffered writes in future. e.g. buffered
-AIO+RWF_DONTCACHE+RWF_DSYNC could be optimised to use FUA and/or IO
-completion side DSYNC operations like AIO+DIO+RWF_DSYNC currently
-does and that would currently need in-flight IO tracking for truncate
-synchronisation. The two-state lock solution avoids that completely.
-
-Some work needs to be done to enable sane IO completion unlocking
-(i.e. from dio->end_io). My curent notes on this say:
-
-- ->end_io only gets called once when all bios submitted for the dio
-  are complete. hence only one completion, so unlock is balanced
-- caller has no idea on error if IO was submitted and completed;
-  if dio->end_io unlocks on IO error, the waiting submitter has no
-  clue whether it has to unlock or not.
-- need a clean submitter unlock model. Alternatives?
-  - dio->end_io only unlock on on IO error when
-    dio->wait_for_completion is not set (i.e. completing an AIO,
-    submitter was given -EIOCBQUEUED). iomap_dio_rw() caller can
-    then do:
-
-        if (ret < 0 && ret != -EIOCBQUEUED) {
-                /* unlock inode */
-        }
-  - if end_io is checking ->wait_for_completion, only ever unlock
-    if it isn't set? i.e. if there is a waiter, we leave it to them
-    to unlock? Simpler rule for ->end_io, cleaner for the submitter
-    to handle:
-
-        if (ret != -EIOCBQUEUED) {
-                /* unlock inode */
-        }
-- need to move DIO write page cache invalidation and inode_dio_end()
-  into ->end_io for implementations
-- if no ->end_io provided, do what the current code does.
-
-There are also a few changes need to avoid inode->i_dio_count in
-iomap:
-- need a flag to tell iomap_dio_rw() not to account the DIO
-- inode_dio_end() may need to be moved to ->dio_end, or we could
-  use the "do not account" flag to avoid it.
-- However, page cache invalidation and dsync work needs to be done
-  before in-flight dio release, so this we likely need to move this
-  stuff to ->end_io before we drop the IOTYPE lock...
-- probably can be handled with appropriate helpers...
-
-I've implemented some of this already; I'm currently in the process
-of making truncate exclusion work correctly. Once that works, I'll
-post the code....
-
--~dave
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
