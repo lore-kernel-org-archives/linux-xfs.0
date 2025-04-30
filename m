@@ -1,107 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84740219A76;
-	Wed, 30 Apr 2025 09:24:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD81A2206B1;
+	Wed, 30 Apr 2025 09:34:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746005042; cv=none; b=OV6HNWD9Q2/FDhunsjbDlXAL++mDsawPN2Svd4OZeQ9QM3dtI5D+9Hl2LNiJOOssbk/FNrwfB3519icBTjnn9ELJ0v7sOu8T5i6fvpirdQAGriMxEQ4lsF/IilhQlR6m/UluyZ7aQpx6u4USwLgDSOlZ4OYUNmtHOCKLb67v24k=
+	t=1746005696; cv=none; b=QZ5oXoIFNdbASccVTCTStoA3WLF0CBlHuc1M46wKmmRirw1CLx8JVLVFwz3/NNsd6dbQMwC+unA75xbB2mE9z+dgaSUKn+w2xBqerj/mDoeIonwgaVGTlC8yvl6RIQzEGngiPjOxjDWepdo5UeW4YfRFErXoiz7xOil/81w3jZk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746005042; c=relaxed/simple;
-	bh=+MBmnjAAkTJneqn9nzEKfrM8IXb0M6NgDB3rJ9PWOV8=;
+	s=arc-20240116; t=1746005696; c=relaxed/simple;
+	bh=MRUoh+uxcDbMkLUhQxahHDNcXlIFBI2LDJEfCoN76ac=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OlizJXA9nW3mtN3nvadcn9IKy8xmpfnlKq/hhmppaiMJpI94RoEgWpGDfTH0V++eQ0iudOOWYdm19ccj0f002S1kvApgYFxLuZZjop9b/Rj3s1jByJSEa3KXahdtOUd/rxHuzjAkdJKGa2CMrWWdMtpQgwGDHTqUqAatSeG41Gw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YNmNmVnK; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=hRelGO0I4b+lYBkMk4PIZGDsxiaT1fGHmQacLf4bk10hsnWMeeyaBiREbJ4dhzMWjBx9vwt1WL1gmqmO7RjIzUTbvNsqzZ18e7NP8nt+uJJcVuKW+XFQOtzyXX6iguE9y9k4UGoaQ7RCo+HmLnrBUVgGrVu+jJv3npj6lJriuvo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c9hxpgy5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YNmNmVnK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F21BC4CEEA;
-	Wed, 30 Apr 2025 09:24:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c9hxpgy5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17A86C4CEE9;
+	Wed, 30 Apr 2025 09:34:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746005042;
-	bh=+MBmnjAAkTJneqn9nzEKfrM8IXb0M6NgDB3rJ9PWOV8=;
+	s=k20201202; t=1746005696;
+	bh=MRUoh+uxcDbMkLUhQxahHDNcXlIFBI2LDJEfCoN76ac=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YNmNmVnKDfo5SHn9MUhH4Qc2WD96pka4i3NjgbWqXffQPG1xPZb4MNvmpSosmI16c
-	 Bcw+0cYEHpY2wIn9bQrcFPn22/HtM9QT8cWxEHcQ8kMfAbJ3fbzSr7RO5m/4qjL2kM
-	 4dRYNfduwC9cvAs7Hx6fztOyS3M9gxVM4Ttoud1y2EilmR41jJwePiBLi+ibB2qDBN
-	 +guavzbRQ3QqMvHpVML6xbCx54wwNgkwb60KzOxc5SUPaP0xASYGNIfZ6EmGp4A8r1
-	 pqr4TvAX56xtm9FS2DUpReT8tmzUuy9fpHXhsxdeXWVu9SzYhw+eonO0fvS3UD7vMX
-	 PhQYJWxEpoERw==
-Date: Wed, 30 Apr 2025 11:23:57 +0200
+	b=c9hxpgy5lfzlZVRFBX9gIIxiqJ5m7LMz6kCuZFyV9iAdhqPOckRq0v3DjWp/4m99p
+	 eWuSkEGddHM1zsmwSvcGO/RSb7yPmgQtdlybWKfIyz1wGHGprN6sq91SlVWuQ+kNRJ
+	 yyDvHBYbuKy/iAvwsLeAM3Vbl6NM6t2HBCS5bA7AMCMfBnMNIahQs74fVCQi56rS97
+	 u+EqRvlhiDhnHCyl2x7Ro6sK88aB1flXNnI71fiZMR2gRddw9jY/Fz/KIT5Ujo+k/h
+	 U1dHehG0UDeQfAFV+dZW6CyYSEjZHaR9C5UGva7IRhQVwlyI8uZXSpy+DRO/luNi2K
+	 qdGb/7/5061SQ==
+Date: Wed, 30 Apr 2025 11:34:50 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: Charalampos Mitrodimas <charmitro@posteo.net>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: Verify DA node btree hash order
-Message-ID: <dyo3cdnqg3zocge2ygspovdlrjjo2dbwefbvq6w5mcbjgs3bdj@diwkyidcrpjg>
-References: <6Fo_nCBU7RijxC1Kg6qD573hCAQBTcddQlb7i0E9C7tbpPIycSQ8Vt3BeW-1DqdayPO9EzyJLyNgxpH6rfts4g==@protonmail.internalid>
- <20250412-xfs-hash-check-v1-1-fec1fef5d006@posteo.net>
+To: Markus Elfring <Markus.Elfring@web.de>
+Cc: linux-xfs@vger.kernel.org, kernel-janitors@vger.kernel.org, 
+	Chandan Babu R <chandanbabu@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
+	LKML <linux-kernel@vger.kernel.org>, Qasim Ijaz <qasdev00@gmail.com>, 
+	Natalie Vock <natalie.vock@gmx.de>
+Subject: Re: [PATCH] xfs: Simplify maximum determination in
+ xrep_calc_ag_resblks()
+Message-ID: <rjazpdvhkyz5xzl3rndpfuwqcnqevhcjp3rs7iy2utd7gwleqc@zjiy73y73lt2>
+References: <oL08RYG1VC2E9huS2ixv9tI5xAJxx88B60-95yE-8PIDHIdkDkYdqKhA9T_qDEoFzv4qGpCn0M0WtI3JV3f5EA==@protonmail.internalid>
+ <2b6b0608-136b-4328-a42f-eb5ca77688a0@web.de>
+ <wv2ygjx2ste2hfusgp7apsp76wufeegrd26kdkzqmergwhwfqd@spof2npy32p5>
+ <4EauTu1pTPZgYcvewRgJKMqpdqHA0CRpDDyv-37l3g8wp4DHcjRyKiSdFSs-Kcbt9kGQyjJvN7cNE2KZ6p9rlQ==@protonmail.internalid>
+ <f35da51a-d45a-4be2-81c3-4da25b65c928@web.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20250412-xfs-hash-check-v1-1-fec1fef5d006@posteo.net>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <f35da51a-d45a-4be2-81c3-4da25b65c928@web.de>
 
-On Sat, Apr 12, 2025 at 08:03:57PM +0000, Charalampos Mitrodimas wrote:
-> The xfs_da3_node_verify() function checks the integrity of directory
-> and attribute B-tree node blocks. However, it was missing a check to
-> ensure that the hash values of the btree entries within the node are
-> strictly increasing, as required by the B-tree structure.
-> 
-> Add a loop to iterate through the btree entries and verify that each
-> entry's hash value is greater than the previous one. If an
-> out-of-order hash value is detected, return failure to indicate
-> corruption.
-> 
-> This addresses the "XXX: hash order check?" comment and improves
-> corruption detection for DA node blocks.
-> 
-> Signed-off-by: Charalampos Mitrodimas <charmitro@posteo.net>
-> ---
->  fs/xfs/libxfs/xfs_da_btree.c | 11 ++++++++++-
->  1 file changed, 10 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index 17d9e6154f1978ce5a5cb82176eea4d6b9cd768d..6c748911e54619c3ceae9b81f55cf61da6735f01 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -247,7 +247,16 @@ xfs_da3_node_verify(
->  	    ichdr.count > mp->m_attr_geo->node_ents)
->  		return __this_address;
-> 
-> -	/* XXX: hash order check? */
-> +	/* Check hash order */
-> +	uint32_t prev_hash = be32_to_cpu(ichdr.btree[0].hashval);
-> +
-> +	for (int i = 1; i < ichdr.count; i++) {
-> +		uint32_t curr_hash = be32_to_cpu(ichdr.btree[i].hashval);
-> +
-> +		if (curr_hash <= prev_hash)
-> +			return __this_address;
-> +		prev_hash = curr_hash;
-> +	}
+On Wed, Apr 30, 2025 at 10:34:59AM +0200, Markus Elfring wrote:
+> …
+> >> +++ b/fs/xfs/scrub/repair.c
+> >> @@ -382,7 +382,7 @@ xrep_calc_ag_resblks(
+> >>  			refcbt_sz);
+> >>  	xfs_perag_put(pag);
+> >>
+> >> -	return max(max(bnobt_sz, inobt_sz), max(rmapbt_sz, refcbt_sz));
+> >> +	return max3(bnobt_sz, inobt_sz, max(rmapbt_sz, refcbt_sz));
+> >
+> > I have nothing against the patch itself, but honestly I don't see how it
+> > improves anything. It boils down to nesting comparison instructions too, and
+> > doesn't make the code more clear IMHO.
+> > So, unless somebody else has a stronger reason to have this change, NAK from my side.
+> Would you be looking for a wrapper call variant like max4()?
 
-Hmmm. Do you have any numbers related to the performance impact of this patch?
+I have no preference really, between a max(max(), max()) and a max4(a, b, c, d),
+the latter is a tad easier to the eyes, if it's worth adding a new max() macro
+for that, it's another thing. Although a quick search on the source code
+returned returned several usages of the max(max3(a,b,c), d) patterns, so I think
+indeed the kernel could benefit of a max4() :)
 
-IIRC for very populated directories we can end up having many entries here. It's
-not uncommon to have filesystems with millions of entries in a single directory.
-Now we'll be looping over all those entries here during verification, which could
-scale to many interactions on this loop.
-I'm not sure if I'm right here, but this seems to add a big performance penalty
-for directory writes, so I'm curious about the performance implications of this
-patch.
 
 > 
->  	return NULL;
->  }
-> 
-> ---
-> base-commit: ecd5d67ad602c2c12e8709762717112ef0958767
-> change-id: 20250412-xfs-hash-check-be7397881a2c
-> 
-> Best regards,
-> --
-> Charalampos Mitrodimas <charmitro@posteo.net>
-> 
+> Regards,
+> Markus
