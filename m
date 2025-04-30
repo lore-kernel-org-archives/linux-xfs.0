@@ -1,151 +1,69 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E7A32D1126;
-	Wed, 30 Apr 2025 21:22:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 942F5188A0E
+	for <linux-xfs@vger.kernel.org>; Wed, 30 Apr 2025 21:31:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746048180; cv=none; b=E8m5/4lOXdQG66R9y5fnc+o0qL1et9hy7warudr5QZxLPiLTQ4MsPAiGfGXs9dsmtCdZO2h4A797FYJGQpLYtR1xitTjXdRhbl+fIwuAwiokOrkVoVHu+JsD2O3M5/TJtOCJKlW1WekU2/npqaarRxudSv8+eOPEluB5GniuZxI=
+	t=1746048664; cv=none; b=Lsp6HuLMoV0K0izawnvTkFKnD9WDXM37afZIs5XGN9I+3cIX3ZyQheyONkAU8rD15jGqbDung8Ce21sYCTgtyGafzqbIYGO9IuXW+lzfMm8y6Plye70PslTGmQueDKfAvhm61ExDBpk8/rF/Y8KDJk/Fw663lPjtBlJ7gtXJs0M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746048180; c=relaxed/simple;
-	bh=LWH2IeIHBETWvdlPK8EFEn8CgwqV7CCSowakSE/YpAI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qlVBD01XJzvvfugSAsDzDvpOahrwKDeANt+/4i8TC5jiZESOeeRVxAFdAZoNhhEYNiuUytPDaYVxPe+J4gJLiYWBf6d/66n+xZ9et47HU13YUKhb1gxADyrC5cMjZsrKoOcg+7IRtnb0rk8vKTtTF0YKciMJ5aVZGE5c8F9ffOI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hlKeK5R6; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1746048664; c=relaxed/simple;
+	bh=68LArkRo0/ycrBJRkNh1rmVZUmm/1Gy1a3CNO8h2/sQ=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=cMDMpq6SYwZ4nr2iOQB3AyLhA1Dp1cD7q6UCkjnrYJmEytiMf7Jjzx9q7DqN562L/ppqynLEoWRqK9HTKU9mPnxSBMQrWlCdW31otZB2kUDdlnS+KgjtAcJCesG5O521HoYSLyA9aiHpZFWTq5lEN4HqduLZMq0j7Q8Rqf3f6/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CpizMVuf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hlKeK5R6"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=xUb6OpV1cKOqoxjJg2NB06rtM4y9TqsotfYyIOWBJdg=; b=hlKeK5R6xaQB9XX4joAbRt/N65
-	9eyPL7ErrBQbr5/fz/5756ctrAAsSHMr2M5iYII8ppGKBLjVOcYcGUWI7WSTITAnt2zaUeFr/Vz86
-	NzKU0l5Nl9fJVNzR3JaSHGxfL0VPOdpQURCLw0t3e/9PX2yLGqSIZstrknTKmaLY4whrcJ2SasH1b
-	uAHvL/NHjPDh6o/PWdLZDF/gLZXGy2t42r+DCwh/KQ8BZpPyeIUtZp6KookUZ+r+/6PfDxymSUX2v
-	+y+542I2F2PiPXU4Yd6qiU96mMLR1cGIsvG/r+PH2/z/sSYipsHZrTtixgHaHxps3WDpWbdcfUvSH
-	lBSsUl5A==;
-Received: from [206.0.71.65] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uAEtN-0000000E2kd-49Pf;
-	Wed, 30 Apr 2025 21:22:58 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org,
-	"Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-	Jack Wang <jinpu.wang@ionos.com>,
-	Coly Li <colyli@kernel.org>,
-	Kent Overstreet <kent.overstreet@linux.dev>,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	Chris Mason <clm@fb.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	David Sterba <dsterba@suse.com>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>,
-	Johannes Thumshirn <jth@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Pavel Machek <pavel@kernel.org>,
-	slava@dubeyko.com,
-	glaubitz@physik.fu-berlin.de,
-	frank.li@vivo.com,
-	linux-bcache@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-btrfs@vger.kernel.org,
-	gfs2@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 19/19] hfsplus: use bdev_rw_virt in hfsplus_submit_bio
-Date: Wed, 30 Apr 2025 16:21:49 -0500
-Message-ID: <20250430212159.2865803-20-hch@lst.de>
-X-Mailer: git-send-email 2.47.2
-In-Reply-To: <20250430212159.2865803-1-hch@lst.de>
-References: <20250430212159.2865803-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CpizMVuf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74188C4CEF6
+	for <linux-xfs@vger.kernel.org>; Wed, 30 Apr 2025 21:31:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1746048664;
+	bh=68LArkRo0/ycrBJRkNh1rmVZUmm/1Gy1a3CNO8h2/sQ=;
+	h=Date:From:To:Subject:From;
+	b=CpizMVuffXT0SvXC8MFhUvxCB2/1homT7vZdYNO5C3D3yzB7guutr6oY/iLBic5U6
+	 5UckDY3C4969N/Qk2dLs4gg6IdprAM9b6bLSBG9P2umosiaSI2WWGNf84RoFsUWmnr
+	 jV05zBxoeL1EjS3fpv3i0VSd7Gh75bH9na59jG9ur3DWzZiRM8FwiBiZSUWpidSptF
+	 OTeH4PasYlPpcGt9t/Ra1Sj9ZntF0j3tcRZt1MOAAaTFdBykoVd0Cc9rIR2oQWYg9W
+	 fjH9gzOjcjcIHjj1peYpUIMRw7qdnxjrORndM2poRn1m7IWAK5rQpmzEb1s0BaSrFu
+	 UrDVh8W7r6oKg==
+Date: Wed, 30 Apr 2025 23:31:00 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to bfecc4091e07
+Message-ID: <i7cvwglvka5p3an55jejwtgx2ziuvo3j2kqvdmqshrfin6t2mb@mpogzrfj6fve>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Replace the code building a bio from a kernel direct map address and
-submitting it synchronously with the bdev_rw_virt helper.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- fs/hfsplus/wrapper.c | 46 +++++++++-----------------------------------
- 1 file changed, 9 insertions(+), 37 deletions(-)
+Hi folks,
 
-diff --git a/fs/hfsplus/wrapper.c b/fs/hfsplus/wrapper.c
-index 74801911bc1c..30cf4fe78b3d 100644
---- a/fs/hfsplus/wrapper.c
-+++ b/fs/hfsplus/wrapper.c
-@@ -48,47 +48,19 @@ struct hfsplus_wd {
- int hfsplus_submit_bio(struct super_block *sb, sector_t sector,
- 		       void *buf, void **data, blk_opf_t opf)
- {
--	const enum req_op op = opf & REQ_OP_MASK;
--	struct bio *bio;
--	int ret = 0;
--	u64 io_size;
--	loff_t start;
--	int offset;
-+	u64 io_size = hfsplus_min_io_size(sb);
-+	loff_t start = (loff_t)sector << HFSPLUS_SECTOR_SHIFT;
-+	int offset = start & (io_size - 1);
-+
-+	if ((opf & REQ_OP_MASK) != REQ_OP_WRITE && data)
-+		*data = (u8 *)buf + offset;
- 
- 	/*
--	 * Align sector to hardware sector size and find offset. We
--	 * assume that io_size is a power of two, which _should_
--	 * be true.
-+	 * Align sector to hardware sector size and find offset. We assume that
-+	 * io_size is a power of two, which _should_ be true.
- 	 */
--	io_size = hfsplus_min_io_size(sb);
--	start = (loff_t)sector << HFSPLUS_SECTOR_SHIFT;
--	offset = start & (io_size - 1);
- 	sector &= ~((io_size >> HFSPLUS_SECTOR_SHIFT) - 1);
--
--	bio = bio_alloc(sb->s_bdev, 1, opf, GFP_NOIO);
--	bio->bi_iter.bi_sector = sector;
--
--	if (op != REQ_OP_WRITE && data)
--		*data = (u8 *)buf + offset;
--
--	while (io_size > 0) {
--		unsigned int page_offset = offset_in_page(buf);
--		unsigned int len = min_t(unsigned int, PAGE_SIZE - page_offset,
--					 io_size);
--
--		ret = bio_add_page(bio, virt_to_page(buf), len, page_offset);
--		if (ret != len) {
--			ret = -EIO;
--			goto out;
--		}
--		io_size -= len;
--		buf = (u8 *)buf + len;
--	}
--
--	ret = submit_bio_wait(bio);
--out:
--	bio_put(bio);
--	return ret < 0 ? ret : 0;
-+	return bdev_rw_virt(sb->s_bdev, sector, buf, io_size, opf);
- }
- 
- static int hfsplus_read_mdb(void *bufptr, struct hfsplus_wd *wd)
--- 
-2.47.2
+The for-next branch of the xfs-linux repository at:
 
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+bfecc4091e07 xfs: allow ro mounts if rtdev or logdev are read-only
+
+1 new commit:
+
+Hans Holmberg (1):
+      [bfecc4091e07] xfs: allow ro mounts if rtdev or logdev are read-only
+
+Code Diffstat:
+
+ fs/xfs/xfs_super.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
