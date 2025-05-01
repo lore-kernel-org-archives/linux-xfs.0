@@ -1,163 +1,127 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAC6C3D561
-	for <linux-xfs@vger.kernel.org>; Wed, 30 Apr 2025 23:45:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8208E322A;
+	Thu,  1 May 2025 03:22:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746056738; cv=none; b=bmqB74R2qGXsBGu7/ZJC7KNVR1YLoxG/siKxTHq1CFP1CZe3cyOJ8D8dhB8AQoWGrteKLM6e0ifP9RK+ZC8Eh/FZ1lLGXniLvqK6ziHSS+Nt3I72iFv477KAQpGhMZgSiaChQaS7tUUMb4AAd4i2aYd2OvSRgDco5SWcHgZuJLI=
+	t=1746069723; cv=none; b=ASvMazF9La3Wh+D0vUx1y9K0h/DRCYM7t15IEcsa5zXfQm3gHgrQmvv/swTg0dd6EnA6xYtcras+/FQEj7UhcG/LzC9dn5aRwezKp0N3k7kLSWXs2T6Q3JrOKS0OECCEArMoNgF1BTgskjEZ//WtnMINyhCwOuVOCEn8ocqPv88=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746056738; c=relaxed/simple;
-	bh=2PvzHkC4Ci2Kf/kq4B2sBBVqGO4W+0BsEkDkSvTJziQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RQNbyXmcAtYeEIFXsRKrzE3l5pYwtNtQJHLhovGJvPoF/dOYeGGuKApjeyrlgz8WlkqFqM42bO6VATzotv1xnBCt/MoInaosZ7/VrJT8jwN48iQTa06j7ZVRuBmB8TIuG67mAhKqEle0YEUCOx/oyZOPdt6KkrKzrEExL4a3I0c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Km1JMbXZ; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1746069723; c=relaxed/simple;
+	bh=T7Ev572rtucr6hSw3luzwhBf+DzTGEiesdJYLuY5CyU=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=KvWh7X09RvgJaPkyF9AwXLPgpx8yu6Uzh1B3L1ju2AovuEtBZd9e6N1tL/6cfhLIOjBDidv0mD+CNh37zQUiUlm/gD5Pse2EdE6zYYdTz00/cUEErv6BHObncLPCCdCVnXQqkkLW+lYP5SwSr+y6PqjFEOt5nBwEePflq4KAga8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gKE3OCh4; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Km1JMbXZ"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-22401f4d35aso4641805ad.2
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Apr 2025 16:45:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gKE3OCh4"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2241053582dso7863485ad.1;
+        Wed, 30 Apr 2025 20:22:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1746056736; x=1746661536; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=VeGFTRBMyDrhdtVEySHIpmiKzPvNuI2CRPUAotMKwQE=;
-        b=Km1JMbXZSK1wYU7E0gtQ7OAddzv+RRrJa3KGYSMC+KRCYDNJEUG5osmTot5Vb8qeL1
-         sAhpXxk2hk2iAVUAsZ9HQsHh7CAimU0k8ayovpbmOMUVd/DU1Vwzi5hJ/z5bV3IHlNKh
-         klaAxCIMYu/m9Nd628zOA834HHZsUhEqwv56bJUV0wAQapKVBMcJ3RKsM2hiaPBnoT8p
-         j2nAf4swl9Uz4UymZJbAM/2S6GAb3nV9K5nTeCZc6OH648P4zenNlt9N15U6S+GhvlEz
-         Cl7KZIXtLKlLWexB7E7F9znDKpLX1JcPHI9NdoQ3Nok6lm3Z5dgTjACmtyvOGtSt1v/s
-         L2Fg==
+        d=gmail.com; s=20230601; t=1746069721; x=1746674521; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ocSRp7rMJn87fZBDOdIYWRxN9Od3igY/hkSgNTU7teE=;
+        b=gKE3OCh4aeCwVHE51g2pSeQgv0gLsYtThgiQpQwpwVUkBmjirGQyJXrwIU8qow+R98
+         TQT1jToEhFpiIMRGN93FfmZ8u+khGCMumk2qONNp7Di5WgVvI3aGSTbDQzgFSFyUJF8f
+         ZskQEH7Wyg5hk2O4H74ecUdUf0NFrZGECrm9uoXj2eNw677Xo23OOeowR1Ib51Lfg4k/
+         ggCPKhMbnfY+0bwFXVIagwnJr5p3lHspjqNntW6QElen84TtixapyR430xXXfCPucB3j
+         uy64CECpxvvnD/sb2EHY9lOglfA0TXP0Hsg/3+lIk9BNY0QJrJTtSEMWPSsGeVMPpJM6
+         6MQQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746056736; x=1746661536;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VeGFTRBMyDrhdtVEySHIpmiKzPvNuI2CRPUAotMKwQE=;
-        b=vV/Y/3AYmnNNQDao7/LLChp59k8aRK0TpYSJspJKCelY8zCTLLDD2awU0ogDjw1ho0
-         T6OYt0q9i1rp/srJ0tHWRKt1cp4E3w9+zw6aFCf/C39Lv/btJLLnUpCUpqnkDwhOnD8J
-         sL+Pl6+ER7LrTLJwscCt34ttavcUlSXncUCs/RRD1wrJ2aGz4dC5ZJmOtxvnU+hJTd/S
-         1pEL9OBoA4pgfbHbShsZLmH+3hSnkToQfpA6OTIcDxUhjKI6tgJpEJ2gRqhRpT3QtkSF
-         9OKq5Wa1Rvf3jbbbEQggbXjveypS2/csPxMcW6tUJw7nDkqwtGLlIkIqmfw4cwV/8uhn
-         Fr7Q==
-X-Forwarded-Encrypted: i=1; AJvYcCURJOGzuBschE17W9hDyH9PBUgU327wxeUwjhG9TPBl+gsk8qEVVm583op/kaXUu4X4B+FhNHZJSvo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywmh3bzrzh5j+/p1v70tytuUJHs0+TTM7Q0pq0Rt0ObCPC029k0
-	NL0hTOA/aaJxK3sUH+Zp/g5ireOvDtHT99trPCDtaM1S7kkWT3dNCtCQ+mR1DCD8SUkMB7s8YQ/
-	Y
-X-Gm-Gg: ASbGncuPzk2hbLu/Qxs0/8CpmpniKXKU3EGEhjZK6gaPFdngR1+Tcy/2Pn68b0RzmDY
-	b2BDZgLyC8qE9hWBsC90YsHKB481F0105viHLnAgH7Fre8mdthdx5lnv0xIvXraO8MuUY3WPFui
-	UwR2JJ0sP58KrKw12RLQr6StbVPPPvp05jNx5oV0gkyJGnxS1eLuftoyTwdODRdJiXuBOYAdnAr
-	gtNYdduacmD2lxpg/3BOjGXSvPWwkbrt0NgXIFhrFZqu+pccbTURXsDt3iQy+iq9Sn8Ey6ldMEq
-	ezad6cOObf11M+65i/emRKuKNUTPv5kmw75hSPSi3q0ZoCy7nxLlIa5NyYGdJEShvrCzAoeYAeK
-	IG15RFaJn5JT9dA==
-X-Google-Smtp-Source: AGHT+IF0RMsJTbPEUkDtqNc9jfYL4nCm0DRUBX52FBTtO+G+C9NY6AqimYN+6Tte/78Ki1GTlNt6QA==
-X-Received: by 2002:a17:903:1aae:b0:223:3ef1:a30a with SMTP id d9443c01a7336-22df35bf1e6mr73135335ad.45.1746056735921;
-        Wed, 30 Apr 2025 16:45:35 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22db50e7a9fsm128162615ad.111.2025.04.30.16.45.35
+        d=1e100.net; s=20230601; t=1746069721; x=1746674521;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ocSRp7rMJn87fZBDOdIYWRxN9Od3igY/hkSgNTU7teE=;
+        b=RnyyXFRVMAHoYUCpnu6dZ+ORf8FkESseyDz0r8JwvV9wiCFW0SqesnAf36TI/0SL8w
+         kUS2nG4mFKHmrgSrSBxxP1ufN69CYO7Wpy6wDfwKv6PpWvfT/ysszZdgnLE5KgzomvGN
+         mNOYdlb13HXVL4TEpUKDwDeWIyiu/oE/NXr3ziXRDleNAJd8Xw4OZYCkrF5Zww9hxeSk
+         uy3HhdKpP5XjfPXG1KUKgDZrSdhEQ5PV4Duo+xCUjkbOJRpONTf72ZSlwGQsRF6bmlbW
+         nE9R4TgcY9RjZReKud22zixpeq+Ia8lghhq3JKoMQA8ki3EiW2tO/eeQjAj8/OKIxN5Q
+         gKfA==
+X-Forwarded-Encrypted: i=1; AJvYcCUSAUipHwvHzs0Pfk/vg0FJYIKVFJsFGm1DwiApMP04Z3G/T+Nezr4HuFBXnaXJkyC6/svLTzOAyghi@vger.kernel.org, AJvYcCWwTX9YeAlvo0rE9nmJlcIW4XZJKtC2noujsEjTbx6Xp4tBFW1U2vRGq8byw1tTf9cgjtR8RGF7@vger.kernel.org
+X-Gm-Message-State: AOJu0YyqjIFm8FD7JFY2QWmWORe3Q7Z5FuzTqieoV3NCDm4XztE02UTU
+	+uno3PHrVNrvvQlF/rtu7GwU54FGIVwwguyeSrRdicnF9rgwMXbC
+X-Gm-Gg: ASbGncu3CliB8LL8B5a3IqvKEbzUENdvF8L3avhbcjqiLsqqiAhOQLbAQn05UaNYZyI
+	93E0Ej4EFBKPaunOldUl6QrmnNunArWijr29BmSBeg0oDd5KJvO2gD8Uq5iEceL1mJPTzUsT6CP
+	gR+P12D3We1PJ8Geq1r4P5F0/UxiORnHjmhocluGcufO/etaJHQdksJIGOUCpB9bmzOoEygW/4z
+	8Ah9iPnfvdzM3zT1JsYCqzDLN2EaJmX2bfEU1o+lZZynd1d1Gf1Ry3hK4ToRAcwsC9sHWObbA9l
+	7ydWoK9CpHMpfM35j6blmRA3klx9cnHFjw==
+X-Google-Smtp-Source: AGHT+IEsIuyl+WkNTydTxAH3J8rD7/t7QB8oofnJ1HdA4Udej1/zv6ZPSKwHuZaXWIIHl0bdeRT5MA==
+X-Received: by 2002:a17:902:ccd1:b0:223:f639:69df with SMTP id d9443c01a7336-22df5835e57mr81861995ad.41.1746069720597;
+        Wed, 30 Apr 2025 20:22:00 -0700 (PDT)
+Received: from dw-tp ([49.205.218.89])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22db50e752asm130111705ad.158.2025.04.30.20.21.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Apr 2025 16:45:35 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1uAH7M-0000000FQ6c-469A;
-	Thu, 01 May 2025 09:45:32 +1000
-Date: Thu, 1 May 2025 09:45:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Chi Zhiling <chizhiling@163.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Chi Zhiling <chizhiling@kylinos.cn>
-Subject: Re: [RFC PATCH 0/2] Implement concurrent buffered write with folio
- lock
-Message-ID: <aBK2HAnoRacuO0CO@dread.disaster.area>
-References: <20250425103841.3164087-1-chizhiling@163.com>
- <aBGFfpyGtYQnK411@dread.disaster.area>
- <040637ad-54ac-4695-8e49-b4a3c643b056@163.com>
+        Wed, 30 Apr 2025 20:21:59 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>, fstests@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org, david@fromorbit.com, hch@infradead.org, nirjhar.roy.lists@gmail.com
+Subject: Re: [PATCH v3 1/2] common: Move exit related functions to a common/exit
+In-Reply-To: <7363438118ab8730208ba9f35e81449b2549f331.1746015588.git.nirjhar.roy.lists@gmail.com>
+Date: Thu, 01 May 2025 08:47:46 +0530
+Message-ID: <87cyctqasl.fsf@gmail.com>
+References: <cover.1746015588.git.nirjhar.roy.lists@gmail.com> <7363438118ab8730208ba9f35e81449b2549f331.1746015588.git.nirjhar.roy.lists@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <040637ad-54ac-4695-8e49-b4a3c643b056@163.com>
 
-On Wed, Apr 30, 2025 at 05:03:51PM +0800, Chi Zhiling wrote:
-> On 2025/4/30 10:05, Dave Chinner wrote:
-> > On Fri, Apr 25, 2025 at 06:38:39PM +0800, Chi Zhiling wrote:
-> > > From: Chi Zhiling <chizhiling@kylinos.cn>
-> > > 
-> > > This is a patch attempting to implement concurrent buffered writes.
-> > > The main idea is to use the folio lock to ensure the atomicity of the
-> > > write when writing to a single folio, instead of using the i_rwsem.
-> > > 
-> > > I tried the "folio batch" solution, which is a great idea, but during
-> > > testing, I encountered an OOM issue because the locked folios couldn't
-> > > be reclaimed.
-> > > 
-> > > So for now, I can only allow concurrent writes within a single block.
-> > > The good news is that since we already support BS > PS, we can use a
-> > > larger block size to enable higher granularity concurrency.
-> > 
-> > I'm not going to say no to this, but I think it's a short term and
-> > niche solution to the general problem of enabling shared buffered
-> > writes. i.e. I expect that it will not exist for long, whilst
-> 
-> Hi, Dave,
-> 
-> Yes, it's a short-term solution, but it's enough for some scenarios.
-> I would also like to see better idea.
-> 
-> > experience tells me that adding special cases to the IO path locking
-> > has a fairly high risk of unexpected regressions and/or data
-> > corruption....
-> 
-> I can't say there is definitely no data corruption, but I haven't seen
-> any new errors in xfstests.
+"Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
 
-Yeah, that's why they are "unexpected regressions" - testing looks
-fine, but once it gets out into complex production workloads....
+> Introduce a new file common/exit that will contain all the exit
+> related functions. This will remove the dependencies these functions
+> have on other non-related helper files and they can be indepedently
+> sourced. This was suggested by Dave Chinner[1].
+> While moving the exit related functions, remove _die() and die_now()
+> and replace die_now with _fatal(). It is of no use to keep the
+> unnecessary wrappers.
+>
+> [1] https://lore.kernel.org/linux-xfs/Z_UJ7XcpmtkPRhTr@dread.disaster.area/
+> Suggested-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> ---
+>  check           |  2 ++
+>  common/config   | 17 -----------------
+>  common/exit     | 39 +++++++++++++++++++++++++++++++++++++++
+>  common/preamble |  3 +++
+>  common/punch    | 39 +++++++++++++++++----------------------
+>  common/rc       | 28 ----------------------------
+>  6 files changed, 61 insertions(+), 67 deletions(-)
+>  create mode 100644 common/exit
+>
+> diff --git a/check b/check
+> index 9451c350..bd84f213 100755
+> --- a/check
+> +++ b/check
+> @@ -46,6 +46,8 @@ export DIFF_LENGTH=${DIFF_LENGTH:=10}
+>  
+>  # by default don't output timestamps
+>  timestamp=${TIMESTAMP:=false}
+> +. common/exit
+> +. common/test_names
 
-> We might need to add some assertions in the code to check for the risk
-> of data corruption, not specifically for this patch, but for the current
-> XFS system in general. This would help developers avoid introducing new
-> bugs, similar to the lockdep tool.
+So this gets sourced at the beginning of check script here.
 
-I'm not sure what you invisage here or what problems you think we
-might be able to catch - can you describe what you are thinking
-about here?
+>  
+>  rm -f $tmp.list $tmp.tmp $tmp.grep $here/$iam.out $tmp.report.* $tmp.arglist
+>  
+<...>
+> diff --git a/common/preamble b/common/preamble
+> index ba029a34..51d03396 100644
+> --- a/common/preamble
+> +++ b/common/preamble
+> @@ -33,6 +33,9 @@ _register_cleanup()
+>  # explicitly as a member of the 'all' group.
+>  _begin_fstest()
+>  {
+> +	. common/exit
+> +	. common/test_names
+> +
 
-> > > These ideas come from previous discussions:
-> > > https://lore.kernel.org/all/953b0499-5832-49dc-8580-436cf625db8c@163.com/
-> > 
-> > In my spare time I've been looking at using the two state lock from
-> > bcachefs for this because it looks to provide a general solution to
-> > the issue of concurrent buffered writes.
-> 
-> In fact, I have tried the two state lock, and it does work quite well.
-> However, I noticed some performance degradation in single-threaded
-> scenarios in UnixBench (I'm not sure if it's caused by the memory
-> barrier).
+Why do we need to source these files here again? 
+Isn't check script already sourcing both of this in the beginning
+itself?
 
-Please share the patch - I'd like to see how you implemented it and
-how you solved the various lock ordering and wider IO serialisation
-issues. It may be that I've overlooked something and your
-implementation makes me aware of it. OTOH, I might see something in
-your patch that could be improved that mitigates the regression.
-
-> Since single-threaded bufferedio is still the primary read-write mode,
-> I don't want to introduce too much impact in single-threaded scenarios.
-
-I mostly don't care that much about small single threaded
-performance regressions anywhere in XFS if there is some upside for
-scalability or performance. We've always traded off single threaded
-performance for better concurrency and/or scalability in XFS (right
-from the initial design choices way back in the early 1990s), so I
-don't see why we'd treat a significant improvement in buffered IO
-concurrency any differently.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-ritesh
