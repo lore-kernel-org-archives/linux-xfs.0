@@ -1,34 +1,34 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 698BA1C9DE5;
-	Thu,  1 May 2025 13:43:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66ED11C860B;
+	Thu,  1 May 2025 13:43:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746106988; cv=none; b=ECJOugWoqJ0XSMkUr4180k1E8NP9pC4GmKvwRpm9+P5/cwCwA347fBu/B0qx0eJWGKPLbucEoVfAGdYDwXLbdwFsGtIDVgX7jt1HggzFdXey9IaYES68ax+wTCf9fU266JqrfDnKQwHtsDUNtvmDUGHfUsujHMcZxPN+H1KeYX4=
+	t=1746106990; cv=none; b=rpsKuBPLpNkTLKOFwI9m3QwVR0dazYnVoDZtKPU1XQObxsQz+3zXLYOZYkXGcBObV/vX/ao9Ep6bWSR1lfTHTWI+STRCCityHwUn6ok5VDRxrBsphRkA67+kz+PVbQd+tnPlJSMywT1kl7oXwxSd7zvLrxLIpjDVL5Bdnz1BCnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746106988; c=relaxed/simple;
-	bh=y40CmGnANYUo49ue1R8vOGfHtNwlQMOfUDBjI8TlhFI=;
+	s=arc-20240116; t=1746106990; c=relaxed/simple;
+	bh=qDaI/hU7kVsV36c2Z8oTel4ZzyzfCZQL1/Lk8cYlUnM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jq7/D749FovL4vz5l3AU6me/4iiHQJogNG+aUyKX8z21XJqWSTJtdJjTSiBy0B9yLiU7EHO8+KiWgnHYUo/U0sJcDStof36dHuw7NCm2mqx9cSYY2nmCq+zpQq795HbslEDkQ4XtURV3iNAUPRznD5u/wGwBKrDRkIKRwYbP8Ds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=QPejiRqh; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=BMssHSUOJPw/optuegl55jnXZbRSrBJzFnZfO+f4AD16MV/dXRGTsXFXsI1iI4frEgHzQz3sS9R+zur35bnjqVHqsc0H+MHH6UEm7eHLhiraPhecLOiF0208jEd2JdWkqI4/c5at9XwKxuqmoKz9bVV8tbInY5mTZvhCfwgObWA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Txs8inWr; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QPejiRqh"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Txs8inWr"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=zPAUYML1Be51JyrIwZlC6pzS+ljU75enTaI8783B0tc=; b=QPejiRqhtiuNgdf3x1YzB7P13b
-	mTkpyKJTxHYFku/AxEi8op+81s1G7yBf+w0YCOnQkuIcAfYCco9Gv+dZvtM6ieFImXJeIlGfRTQIq
-	tmoeqTNBQd6GFr0iXDaWvdTYEeIxHOJ8H8dSQwNSglFQTEOJMRmgxoEwYeV/XVx5/s7+NQsLdYeWK
-	UZZjJJSL93UtPgkogQu7h97BZ/Lfstz1SrA6Qi33kObx9l6XjercLtuQ3Qb4ykXJN3szPIToIN0CY
-	rVGLrPUMQKfnjt5AEQJhJcYEKRtQ+K9ClP6RknxlYYSkeo7fgqgUef4xquHSDFqWeB3unOuZ2Tc1E
-	1Du9rOSA==;
+	bh=UVZ5n3yrVQt/gMC2VUjMh/WPQyiFwd2GHNU9U1LHOhY=; b=Txs8inWrJILDbEKEjDMW6llnLX
+	bSQ9QN01CU32NUe/Zu17xC7zASjETRGFQjBuRw7yu7nBTH5n7W7QsW3cs0bcV9Frgoi+AWm0kinjO
+	xh5UL4tetIQDrl/wQQKNX5Z1WM0wBC94ZC0I+jVA13u4kZmMxDtUVJkqxhtjrs0ghek0RMMJ0h/uD
+	xwww/SkjoQjr79+rzVRO6xf3S236jCY5h39zzQY3zZ03Nx/GdMMAx7W7ySPNJlm4vjMDI6fsXk/Gl
+	WcOnUmeLziVsCMKb+c7+Z8CFTJE65F1ULVxQiTHOk9x+z97DDh7zEAz7z4KmoSAR16LHRcUj1BCHA
+	iXTAiwpA==;
 Received: from [104.254.106.146] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uAUBu-0000000FrQB-3wMb;
+	id 1uAUBv-0000000FrQL-37rL;
 	Thu, 01 May 2025 13:43:07 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Zorro Lang <zlang@kernel.org>
@@ -36,9 +36,9 @@ Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 05/15] add a new rw_hint helper
-Date: Thu,  1 May 2025 08:42:42 -0500
-Message-ID: <20250501134302.2881773-6-hch@lst.de>
+Subject: [PATCH 06/15] xfs: add a test for write lifetime hints
+Date: Thu,  1 May 2025 08:42:43 -0500
+Message-ID: <20250501134302.2881773-7-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
 In-Reply-To: <20250501134302.2881773-1-hch@lst.de>
 References: <20250501134302.2881773-1-hch@lst.de>
@@ -51,96 +51,137 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a tool to set the life time hint via fcntl.
+Test that the zone allocator actually places by temperature bucket.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- .gitignore    |  1 +
- src/Makefile  |  3 ++-
- src/rw_hint.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 51 insertions(+), 1 deletion(-)
- create mode 100644 src/rw_hint.c
+ tests/xfs/4205     | 105 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/4205.out |   4 ++
+ 2 files changed, 109 insertions(+)
+ create mode 100755 tests/xfs/4205
+ create mode 100644 tests/xfs/4205.out
 
-diff --git a/.gitignore b/.gitignore
-index 4fd817243dca..f22cff8fb6c4 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -203,6 +203,7 @@ tags
- /src/aio-dio-regress/aio-last-ref-held-by-io
- /src/aio-dio-regress/aiocp
- /src/aio-dio-regress/aiodio_sparse2
-+/src/rw_hint
- /src/vfs/vfstest
- /src/vfs/mount-idmapped
- /src/log-writes/replay-log
-diff --git a/src/Makefile b/src/Makefile
-index 6ac72b366257..2cc1fb40d9f1 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -35,7 +35,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	attr_replace_test swapon mkswap t_attr_corruption t_open_tmpfiles \
- 	fscrypt-crypt-util bulkstat_null_ocount splice-test chprojid_fail \
- 	detached_mounts_propagation ext4_resize t_readdir_3 splice2pipe \
--	uuid_ioctl t_snapshot_deleted_subvolume fiemap-fault min_dio_alignment
-+	uuid_ioctl t_snapshot_deleted_subvolume fiemap-fault min_dio_alignment \
-+	rw_hint
- 
- EXTRA_EXECS = dmerror fill2attr fill2fs fill2fs_check scaleread.sh \
- 	      btrfs_crc32c_forged_name.py popdir.pl popattr.py \
-diff --git a/src/rw_hint.c b/src/rw_hint.c
-new file mode 100644
-index 000000000000..d4290e4ae369
+diff --git a/tests/xfs/4205 b/tests/xfs/4205
+new file mode 100755
+index 000000000000..be508806ec0a
 --- /dev/null
-+++ b/src/rw_hint.c
-@@ -0,0 +1,48 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2024 Christoph Hellwig
-+ */
-+#include <stdint.h>
-+#include <stdio.h>
-+#include <string.h>
-+#include <fcntl.h>
++++ b/tests/xfs/4205
+@@ -0,0 +1,105 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2024 Christoph Hellwig.
++#
++# FS QA Test No. 4205
++#
++# Test data placement by write hints.
++#
++. ./common/preamble
++_begin_fstest auto rw zone
 +
-+int main(int argc, char **argv)
++_cleanup()
 +{
-+	uint64_t hint = -1;
-+	int fd;
-+
-+	if (argc < 3) {
-+		fprintf(stderr,
-+"usage: %s file not_set|none|short|medium|long|extreme\n",
-+			argv[0]);
-+		return 1;
-+	}
-+
-+	if (!strcmp(argv[2], "not_set"))
-+		hint = RWH_WRITE_LIFE_NOT_SET;
-+	else if (!strcmp(argv[2], "none"))
-+		hint = RWH_WRITE_LIFE_NONE;
-+	else if (!strcmp(argv[2], "short"))
-+		hint = RWH_WRITE_LIFE_SHORT;
-+	else if (!strcmp(argv[2], "medium"))
-+		hint = RWH_WRITE_LIFE_MEDIUM;
-+	else if (!strcmp(argv[2], "long"))
-+		hint = RWH_WRITE_LIFE_LONG;
-+	else if (!strcmp(argv[2], "extreme"))
-+		hint = RWH_WRITE_LIFE_EXTREME;
-+
-+	if (hint == -1) {
-+		fprintf(stderr, "invalid hint %s\n", argv[2]);
-+		return 1;
-+	}
-+
-+	fd = open(argv[1], O_WRONLY);
-+	if (fd < 0) {
-+		perror("open");
-+		return 1;
-+	}
-+	if (fcntl(fd, F_SET_RW_HINT, &hint))
-+		perror("fcntl");
-+	return 0;
++	cd /
++	_scratch_unmount >/dev/null 2>&1
 +}
++
++# Import common functions.
++. ./common/filter
++
++_require_scratch
++
++_filter_rgno()
++{
++	# the rg number is in column 4 of xfs_bmap output
++	perl -ne '
++		$rg = (split /\s+/)[4] ;
++		if ($rg =~ /\d+/) {print "$rg "} ;
++	'
++}
++
++_test_placement()
++{
++	xfs_io_opts=$1
++
++	_scratch_mkfs_xfs >>$seqres.full 2>&1
++	_scratch_mount
++	_require_xfs_scratch_zoned 3
++
++	# Create a bunch of files for the three major temperature buckets
++	for i in `seq 1 100`; do
++		for hint in "short" "medium" "long"; do
++			file=$SCRATCH_MNT/$hint.$i
++
++			touch $file
++			$here/src/rw_hint $file $hint
++			$XFS_IO_PROG ${xfs_io_opts} \
++				-c 'pwrite 0 1m' \
++				$file >>$seqres.full
++		done
++	done
++
++	sync
++
++	# Check that all short lifetime files are placed together
++	short_rg=`xfs_bmap -v $SCRATCH_MNT/short.1 | _filter_rgno`
++	for i in `seq 2 100`; do
++		file=$SCRATCH_MNT/short.$i
++		rg=`xfs_bmap -v $file | _filter_rgno`
++		if [ "${rg}" != "${short_rg}" ]; then
++			echo "short RG mismatch for file $i: $short_rg/$rg"
++		fi
++	done
++
++	# Check that all medium lifetime files are placed together,
++	# but not in the short RG
++	medium_rg=`xfs_bmap -v $SCRATCH_MNT/medium.1 | _filter_rgno`
++	if [ "${medium}" == "${short_rg}" ]; then
++		echo "medium rg == short_rg"
++	fi
++	for i in `seq 2 100`; do
++		file=$SCRATCH_MNT/medium.$i
++		rg=`xfs_bmap -v $file | _filter_rgno`
++		if [ "${rg}" != "${medium_rg}" ]; then
++			echo "medium RG mismatch for file $i: $medium_rg/$rg"
++		fi
++	done
++
++	# Check that none of the long lifetime files are colocated with
++	# short and medium ones
++	for i in `seq 1 100`; do
++		file=$SCRATCH_MNT/long.$i
++		rg=`xfs_bmap -v $file | _filter_rgno`
++		if [ "${rg}" == "${short_rg}" ]; then
++			echo "long file $i placed into short RG "
++		fi
++		if [ "${rg}" == "${medium_rg}" ]; then
++			echo "long file $i placed into medium RG"
++		fi
++	done
++
++	_scratch_unmount
++}
++
++echo "Testing buffered I/O:"
++_test_placement ""
++
++echo "Testing synchronous buffered I/O:"
++_test_placement "-s"
++
++echo "Testing direct I/O:"
++_test_placement "-d"
++
++status=0
++exit
+diff --git a/tests/xfs/4205.out b/tests/xfs/4205.out
+new file mode 100644
+index 000000000000..3331e361a36d
+--- /dev/null
++++ b/tests/xfs/4205.out
+@@ -0,0 +1,4 @@
++QA output created by 4205
++Testing buffered I/O:
++Testing synchronous buffered I/O:
++Testing direct I/O:
 -- 
 2.47.2
 
