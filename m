@@ -1,268 +1,160 @@
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDD01210185
-	for <linux-xfs@vger.kernel.org>; Thu,  1 May 2025 08:16:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F7C9213255
+	for <linux-xfs@vger.kernel.org>; Thu,  1 May 2025 09:11:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746087381; cv=none; b=Ri6D1kHkqXUH0uCDnWDdZqrk7uid8oZP1a628Nr0ASqDlOGw91YQjd5D32l2JZFsatyOl+iNMig7c1/N1ZllIzprdvXt6RwHyd99/6yq6D1k5W7PpI3Nf33wDPQpnAY1Cxdm96fQcBHGN3oZTUcgTJUK61vpFV4jOgTLxa+SEtA=
+	t=1746090665; cv=none; b=VKuCx+2ZiAQnLi1jGXBS49EiQHYgcbwhTKjkFNzghCUw11QPgPieE7PROZPk64e5R6P7I7QCC2BtyoSTdnWyRY1Tlrn5xORKwASxbO3R98o/I3m3w1I1x2CSskUWPwBGcNEx5c7NUK6MG2BG6edhU2D1Ww5YLRTuRsU6AvQHDlc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746087381; c=relaxed/simple;
-	bh=9zjZeFU4Cy4d9+mKCrbB+7luaz0dmKDDERyUnp2ZZWw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Xgoze9KS6OjIjdQ3WgMLNxpW8ZAW1yLvcS+d/QRycq9Jrltyobq1Fjk4J6uSk8SAKRhKi0OARCFQf3fUapyAsYiwarO9Csvd0d0qsqJ0Udi8coJRTOB7nHuKDbJ2N85qsGNn5E8xyj6VMRMSQvSt2labMFywjoTMSBF6/iY9iDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=j++PH42D; arc=none smtp.client-ip=209.85.208.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1746090665; c=relaxed/simple;
+	bh=QEmXOiaRmXnU0Pvpj2r5Tc5dFQl/2TPO2eRzIxZTpSY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=loXEotHMAzA3eDEYgBTpFhWviwQvRjT6OpEUn5W72xpGctAZ+h7lD4csWlqamlSbf/tXwXgQfFxFtAjRi1BlCLWxNA2oBFc/IKo2gBzYWLD2LEP8/RWfXTfPWbPb5u7dUTMtYQ8DxopYDo3EZuNpMvhdjmOfpe4Y8T5m1VGprBI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UGfiMCbr; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j++PH42D"
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-5f4d28d9fd8so932413a12.3
-        for <linux-xfs@vger.kernel.org>; Thu, 01 May 2025 01:16:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1746087377; x=1746692177; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rB4wbft2bqo44HSiPyP/q9tqOViLrMJbRO1B3RlLf8A=;
-        b=j++PH42DK+46JC/iU6ah9DGoIYNBVJKJP9Ak/52z91Pzx5pEvFj7SgL6BIL/DgXoh2
-         wwIDho+6QfdEUoxwjLfwZRxIArp69IYIZ0vueDjsAjkUhaA/YpG49RgwJPiCGGMKqxCS
-         AZ0lOtSLjElGGZxtRZkjO57O+TJtk+rlvQeA6BECUW7tQvD3GUtan+PSJsmIPFFYxDWV
-         Y9gkAU3iZ9ncCPlIyaf6jJwoLwjqJErFI4CyaPlczftDZQZEJ2ieXvTmfpmsH7V1PKaN
-         J9ovgSyOT+q7qpmKJQXecV3nJVK4sBmSCE/YHfpFGVpPaIgVp+NfV2H8D4h2SNkAn+8Z
-         Qo7Q==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UGfiMCbr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1746090662;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=QxhIn1Sw5963uslvOW25nDRRIDUs0PbP3KlVBu7IStA=;
+	b=UGfiMCbrscUxrsZ84gCm94Hpb35IQcjOF6doNElFdEfPzOiPD/qJRwRwsuJ7tkQCIfDat5
+	HXlg391WoFdPUePnbELHiiYhiRxaaE9wZcvYCZeyGRBfpfN6ADNMBT4XZN17FVMgiFmQip
+	eWdjaoSU9B8NavJPN1QRxNFyqCfldbU=
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com
+ [209.85.210.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-496-toJo4Z6wO4eV6e4bo--DWg-1; Thu, 01 May 2025 05:11:01 -0400
+X-MC-Unique: toJo4Z6wO4eV6e4bo--DWg-1
+X-Mimecast-MFC-AGG-ID: toJo4Z6wO4eV6e4bo--DWg_1746090660
+Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-736cb72efd5so752133b3a.3
+        for <linux-xfs@vger.kernel.org>; Thu, 01 May 2025 02:11:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746087377; x=1746692177;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=rB4wbft2bqo44HSiPyP/q9tqOViLrMJbRO1B3RlLf8A=;
-        b=iAgAdpLhBxDTpzwR/QuB9wy+Y0uSxchFawhK+0GNOXBzP6Al+BD3P/T7uEm33dvKE3
-         df0roYlIUXgB6RQRHN97x3KXN8Y2HFP75zQKXRJG0NoVZ/bV7GkCt2A/QRDa1CJJLLDq
-         K3wdE6ksl0QcW6mRyy+nJZfBXjywdnMuwCuQjNRRhbYtoEm2qVQ6A5NXAyk97/YML9pa
-         ga7OI+p25O2TA6Iu1WYidp4YW7fEn3lWTWw9FRhXSSIQWnVEtW2f61DdbJjnZUzXXh+5
-         9OaHIgfhKfM0ZwyRCkiu2nRkNYKQojcW2o0FDpkXqArgsOaYz22k/xIwzkXrnnJVZ9G4
-         3B1A==
-X-Gm-Message-State: AOJu0YzYlM7rpzkRMKXkBfU573IuSuoDhlELCNvJHvBLsJy5nskm5kC8
-	WidoqZbexkuA3t0FAhhu7oXhEsGxWc6dBU4XocCU+dsSpa2HvUi6eIgB0A==
-X-Gm-Gg: ASbGnctPskM0Z7OWxJcrMbyWtOM2FgihVloNtUCR/uitIP5hD3zYYJrhilC/79oRd5K
-	IDjClj4Ms8ZydzF4DNLGkWnoaX3XOosGC91BPyV6hWMOsY/StKjEc33Rqc1d9nPxv9FMDukbfC4
-	WA9vIACcheAdbzupS+e2SfdiQoG32kYqXLa0zeHErXdR8TYwRs+XhYkTnlzMwi9pMhYmIs/9/cC
-	2NLrAw2PNvfORXIxIyXL9J5C9S/WjJw4xD3mJ/ZxMur/tIl8y9kJEwdePdi5h/LzwKH6x+aVX0i
-	Ti3v+/j8glWArk72ylpX
-X-Google-Smtp-Source: AGHT+IFcYLfZNMbCZVn3TuXS1lfypiDz0LcnH7wp7FH4g0fvXTcqGwRRR10tXkciFremT7x2TSd9ug==
-X-Received: by 2002:a05:6402:4301:b0:5f7:2af1:51d0 with SMTP id 4fb4d7f45d1cf-5f8af09a8c4mr4474934a12.26.1746087376863;
-        Thu, 01 May 2025 01:16:16 -0700 (PDT)
-Received: from localhost.localdomain ([78.210.34.211])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5f92fc86545sm109708a12.10.2025.05.01.01.16.14
+        d=1e100.net; s=20230601; t=1746090660; x=1746695460;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QxhIn1Sw5963uslvOW25nDRRIDUs0PbP3KlVBu7IStA=;
+        b=TpMxrkCnUJ9rHi5yP+bzw4cX8eAL6GkYZHDsWrBmqZJAlOnvwIV6kBP2yIUc4qy7pf
+         qwChCootAB0YNwipTDitW0Knj8xzwyPghNC02Dzq7qrowDqU454bVD4PV8DiuN5G8dY3
+         gZDtbspQ1ZHgaslxkODGUdNkETTSf4PIQkRECKMWnXDOFeS/fSCXSUdTWoAdnQ8JkPeM
+         Roe0sRxjW+1+WMuKhaK/iAon0yTInuataDs+eLRqvERBDmO1Jpq6vaBbM6Jedgp8+XjC
+         dlp2by6qt+hYAq10HbPr4boMSSzIHTpqxdDSQxFJJE58OaTRXEWo/hDru9iZGiPTdez4
+         Mniw==
+X-Forwarded-Encrypted: i=1; AJvYcCVxYxMV8FASllh3PK0WmXHzD3jeMPK1GM/9YqqgSi++j9kyr7X76IE1UFoXRVRjwf2HzM0Og181H+o=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzsYZgeVE61Ao36lgCbgGzCPNKo8JT0H6idEAiMG88aKlMTUI9g
+	kkmpEpowY/A1P6BEMwGxHSxG3P2GFS8Za5LWHdmQPaiNj1dao49GofALG/5a3/UZkwepBUgczrn
+	QsbC3jxCiVM6haajF0PtVIcjuBR/kvQJbJhfmkqP34TEXKemqwdTAmeZ+Hg==
+X-Gm-Gg: ASbGncsg50YrBFnkb9g1kfAFYGBqwLS02P486ApBJ8Q0BR5uY7kG2VxZlSgNXlBOptq
+	G3MFg90QZc/tadU4eeIF7OPHzI1/YlqIC5ZREEKu1njJkV16ZYdVwsq+UI+nyrmqPAdePAlbXj/
+	4kBrYgEbkVqpuTKgO7s5OZdkUkMIIrEvyzRqDYrm4qXsmka27D+ZIP0Drx/PvQBK/K8+yQwq0CD
+	skygMRMEpH4HI8iYs/QCIpQ59kyW7A4jVA1oZbTO8pQY+1hTw7uLvSeiN7T/Q76jjaPlGdEPYqu
+	0/s9JB5iC1eM6xQNuLpi8fF+NPXXQzwVFshfjSQzgy/U9/J6GqMf
+X-Received: by 2002:a05:6a00:399f:b0:736:b9f5:47c6 with SMTP id d2e1a72fcca58-74049254c95mr2293520b3a.16.1746090659927;
+        Thu, 01 May 2025 02:10:59 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFb5/7x8ZBKSA+i2VN4Rh2/jV2SOh0H2mngKBWWKI7BKImnX6gIaLln1uDeV0hnSozdCGsAzw==
+X-Received: by 2002:a05:6a00:399f:b0:736:b9f5:47c6 with SMTP id d2e1a72fcca58-74049254c95mr2293497b3a.16.1746090659522;
+        Thu, 01 May 2025 02:10:59 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7404fa42fb0sm353535b3a.166.2025.05.01.02.10.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 May 2025 01:16:16 -0700 (PDT)
-From: Luca Di Maio <luca.dimaio1@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: Luca Di Maio <luca.dimaio1@gmail.com>,
-	dimitri.ledkov@chainguard.dev,
-	smoser@chainguard.dev,
-	djwong@kernel.org,
-	hch@infradead.org
-Subject: [PATCH v8 2/2] mkfs: modify -p flag to populate a filesystem from a directory
-Date: Thu,  1 May 2025 10:15:52 +0200
-Message-ID: <20250501081552.1328703-3-luca.dimaio1@gmail.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250501081552.1328703-1-luca.dimaio1@gmail.com>
-References: <20250501081552.1328703-1-luca.dimaio1@gmail.com>
+        Thu, 01 May 2025 02:10:59 -0700 (PDT)
+Date: Thu, 1 May 2025 17:10:53 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>,
+	fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, djwong@kernel.org,
+	zlang@kernel.org, david@fromorbit.com, hch@infradead.org
+Subject: Re: [PATCH v3 1/2] common: Move exit related functions to a
+ common/exit
+Message-ID: <20250501091053.ghovsgjb52yvb7rj@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <cover.1746015588.git.nirjhar.roy.lists@gmail.com>
+ <7363438118ab8730208ba9f35e81449b2549f331.1746015588.git.nirjhar.roy.lists@gmail.com>
+ <87cyctqasl.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87cyctqasl.fsf@gmail.com>
 
-right now the `-p` flag only supports a file input.
-this patch will add support to input a directory.
-on directory input, the populate functionality to copy files into
-the root filesystem.
+On Thu, May 01, 2025 at 08:47:46AM +0530, Ritesh Harjani wrote:
+> "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
+> 
+> > Introduce a new file common/exit that will contain all the exit
+> > related functions. This will remove the dependencies these functions
+> > have on other non-related helper files and they can be indepedently
+> > sourced. This was suggested by Dave Chinner[1].
+> > While moving the exit related functions, remove _die() and die_now()
+> > and replace die_now with _fatal(). It is of no use to keep the
+> > unnecessary wrappers.
+> >
+> > [1] https://lore.kernel.org/linux-xfs/Z_UJ7XcpmtkPRhTr@dread.disaster.area/
+> > Suggested-by: Dave Chinner <david@fromorbit.com>
+> > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> > ---
+> >  check           |  2 ++
+> >  common/config   | 17 -----------------
+> >  common/exit     | 39 +++++++++++++++++++++++++++++++++++++++
+> >  common/preamble |  3 +++
+> >  common/punch    | 39 +++++++++++++++++----------------------
+> >  common/rc       | 28 ----------------------------
+> >  6 files changed, 61 insertions(+), 67 deletions(-)
+> >  create mode 100644 common/exit
+> >
+> > diff --git a/check b/check
+> > index 9451c350..bd84f213 100755
+> > --- a/check
+> > +++ b/check
+> > @@ -46,6 +46,8 @@ export DIFF_LENGTH=${DIFF_LENGTH:=10}
+> >  
+> >  # by default don't output timestamps
+> >  timestamp=${TIMESTAMP:=false}
+> > +. common/exit
+> > +. common/test_names
+> 
+> So this gets sourced at the beginning of check script here.
+> 
+> >  
+> >  rm -f $tmp.list $tmp.tmp $tmp.grep $here/$iam.out $tmp.report.* $tmp.arglist
+> >  
+> <...>
+> > diff --git a/common/preamble b/common/preamble
+> > index ba029a34..51d03396 100644
+> > --- a/common/preamble
+> > +++ b/common/preamble
+> > @@ -33,6 +33,9 @@ _register_cleanup()
+> >  # explicitly as a member of the 'all' group.
+> >  _begin_fstest()
+> >  {
+> > +	. common/exit
+> > +	. common/test_names
+> > +
+> 
+> Why do we need to source these files here again? 
+> Isn't check script already sourcing both of this in the beginning
+> itself?
 
-add `atime` flag to popts, that will let the user choose if copy the
-atime timestamps from source directory.
+The _begin_fstest is called at the beginning of each test case (e.g. generic/001).
+And "check" run each test cases likes:
 
-add documentation for new functionalities in man pages.
+  cmd="generic/001"
+  ./$cmd
 
-Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
----
- man/man8/mkfs.xfs.8.in | 41 +++++++++++++++++++++++++++++------------
- mkfs/xfs_mkfs.c        | 23 +++++++++++++++++++----
- 2 files changed, 48 insertions(+), 16 deletions(-)
+So the imported things (by "check") can't help sub-case running
 
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index 37e3a88e..bb38c148 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -28,7 +28,7 @@ mkfs.xfs \- construct an XFS filesystem
- .I naming_options
- ] [
- .B \-p
--.I protofile_options
-+.I prototype_options
- ] [
- .B \-q
- ] [
-@@ -977,30 +977,39 @@ option set.
- .PP
- .PD 0
- .TP
--.BI \-p " protofile_options"
-+.BI \-p " prototype_options"
- .TP
- .BI "Section Name: " [proto]
- .PD
--These options specify the protofile parameters for populating the filesystem.
-+These options specify the prototype parameters for populating the filesystem.
- The valid
--.I protofile_options
-+.I prototype_options
- are:
- .RS 1.2i
- .TP
--.BI [file=] protofile
-+.BI [file=]
- The
- .B file=
- prefix is not required for this CLI argument for legacy reasons.
- If specified as a config file directive, the prefix is required.
--
-+.TP
-+.BI [file=] directory
- If the optional
- .PD
--.I protofile
--argument is given,
-+.I prototype
-+argument is given, and it's a directory,
- .B mkfs.xfs
--uses
--.I protofile
--as a prototype file and takes its directions from that file.
-+will populate the root file system with the contents of the given directory.
-+Content, timestamps (atime, mtime), attributes and extended attributes are preserved
-+for all file types.
-+.TP
-+.BI [file=] protofile
-+If the optional
-+.PD
-+.I prototype
-+argument is given, and points to a regular file,
-+.B mkfs.xfs
-+uses it as a prototype file and takes its directions from that file.
- The blocks and inodes specifiers in the
- .I protofile
- are provided for backwards compatibility, but are otherwise unused.
-@@ -1136,8 +1145,16 @@ always terminated with the dollar (
- .B $
- ) token.
- .TP
-+.BI atime= value
-+If set to 1, when we're populating the root filesystem from a directory (
-+.B file=directory
-+option)
-+access times are going to be preserved and are copied from the source files.
-+Set to 0 to set access times to the current time instead.
-+By default, this is set to 0.
-+.TP
- .BI slashes_are_spaces= value
--If set to 1, slashes ("/") in the first token of each line of the protofile
-+If set to 1, slashes ("/") in the first token of each line of the prototype file
- are converted to spaces.
- This enables the creation of a filesystem containing filenames with spaces.
- By default, this is set to 0.
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 3f4455d4..e4d82d48 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -121,6 +121,7 @@ enum {
+Thanks,
+Zorro
 
- enum {
- 	P_FILE = 0,
-+	P_ATIME,
- 	P_SLASHES,
- 	P_MAX_OPTS,
- };
-@@ -709,6 +710,7 @@ static struct opt_params popts = {
- 	.ini_section = "proto",
- 	.subopts = {
- 		[P_FILE] = "file",
-+		[P_ATIME] = "atime",
- 		[P_SLASHES] = "slashes_are_spaces",
- 		[P_MAX_OPTS] = NULL,
- 	},
-@@ -717,6 +719,12 @@ static struct opt_params popts = {
- 		  .conflicts = { { NULL, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
-+		{ .index = P_ATIME,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .minval = 0,
-+		  .maxval = 1,
-+		  .defaultval = 1,
-+		},
- 		{ .index = P_SLASHES,
- 		  .conflicts = { { NULL, LAST_CONFLICT } },
- 		  .minval = 0,
-@@ -1045,6 +1053,7 @@ struct cli_params {
- 	int	lsunit;
- 	int	is_supported;
- 	int	proto_slashes_are_spaces;
-+	int	proto_atime;
- 	int	data_concurrency;
- 	int	log_concurrency;
- 	int	rtvol_concurrency;
-@@ -1170,6 +1179,7 @@ usage( void )
- /* naming */		[-n size=num,version=2|ci,ftype=0|1,parent=0|1]]\n\
- /* no-op info only */	[-N]\n\
- /* prototype file */	[-p fname]\n\
-+/* populate from directory */	[-p dirname,atime=0|1]\n\
- /* quiet */		[-q]\n\
- /* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx,rgcount=n,rgsize=n,\n\
- 			    concurrency=num]\n\
-@@ -2067,6 +2077,9 @@ proto_opts_parser(
- 	case P_SLASHES:
- 		cli->proto_slashes_are_spaces = getnum(value, opts, subopt);
- 		break;
-+	case P_ATIME:
-+		cli->proto_atime = getnum(value, opts, subopt);
-+		break;
- 	case P_FILE:
- 		fallthrough;
- 	default:
-@@ -5162,7 +5175,7 @@ main(
- 	int			discard = 1;
- 	int			force_overwrite = 0;
- 	int			quiet = 0;
--	char			*protostring = NULL;
-+	struct	xfs_proto_source	protosource;
- 	int			worst_freelist = 0;
+> 
+> -ritesh
+> 
 
- 	struct libxfs_init	xi = {
-@@ -5311,8 +5324,6 @@ main(
- 	 */
- 	cfgfile_parse(&cli);
-
--	protostring = setup_proto(cli.protofile);
--
- 	/*
- 	 * Extract as much of the valid config as we can from the CLI input
- 	 * before opening the libxfs devices.
-@@ -5480,7 +5491,11 @@ main(
- 	/*
- 	 * Allocate the root inode and anything else in the proto file.
- 	 */
--	parse_proto(mp, &cli.fsx, &protostring, cli.proto_slashes_are_spaces);
-+	protosource = setup_proto(cli.protofile);
-+	parse_proto(mp, &cli.fsx,
-+			&protosource,
-+			cli.proto_slashes_are_spaces,
-+			cli.proto_atime);
-
- 	/*
- 	 * Protect ourselves against possible stupidity
---
-2.49.0
