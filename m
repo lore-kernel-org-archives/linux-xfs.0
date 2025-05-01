@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5124257443
-	for <linux-xfs@vger.kernel.org>; Thu,  1 May 2025 22:18:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6763F1EE7C6;
+	Thu,  1 May 2025 22:22:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746137911; cv=none; b=h9Svl4RCd9RNrtcJMOnFrKFjPBYNORKCh1FYAaiqucWyeITit5dDSf7+FXzCXnH1HRvtMVkynoTXdFNyrU0xuK6Drlpfzui/yAgJ9QerhjH0WyqdDHEXacT+BdVIjMcmkXHcaIQ2VRP6BttU3/JRMQsXyQ8TbMoGrOlU/tdARVA=
+	t=1746138150; cv=none; b=l6BBmvy/nFXONCE630JyyYyLU/WNu1R0DbbstHTJdLAEU27UG7SmirdLkSzq5qGkqUAYm8bHq/PItD7JnZs/Ahy+D2eAQSBIdXHLPP0k47ML2IjFybxElj8Dhfj2v1pgKe79fr6QUesoJTthrDrGcy0Q11iojypC5lJSNPHZ1AQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746137911; c=relaxed/simple;
-	bh=cP0pvN5+ZnKTZv0UANgfUxOMkBlulN9T69m8Xdv+HM8=;
+	s=arc-20240116; t=1746138150; c=relaxed/simple;
+	bh=0+pK1nI4/9X0YU+kOqbOWe9fGZInjE/ePF9L1Wfzpik=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HqW2zpWKo5N+gEOPUdrVjfs3ZfMaCaHBrmDaF0ErtGwkwl6iCNS5XSHJiO+2eJuFKoFdlEKdNvuCNuB8XSjD6hOth80k3XZPo/gIj4fptQK8QcahhIthydgMrV0ltzKr8KHeF25o1PO4ZOGc0TtbsVsGWAo/LHWQku08v85y888=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X3B3fcHG; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ERs3OUEACJVyhyp3wH4WOcJgcDDLuvbPJL1KuHYiM/1do/KOhFSe77M1hrZ0B+BXaiPc45wnUJP/SxnNkONNqFb/69YX/9y3WiwhNKshFmJFM4jjL4hI3bYlntxV7JPZ23SEhVQusHlJ64uuw9Xe3AKl+QP531tw9Tni+oYy8PQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JdgokZLk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X3B3fcHG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 691DFC4CEE3;
-	Thu,  1 May 2025 22:18:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JdgokZLk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C08EC4CEE3;
+	Thu,  1 May 2025 22:22:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746137910;
-	bh=cP0pvN5+ZnKTZv0UANgfUxOMkBlulN9T69m8Xdv+HM8=;
+	s=k20201202; t=1746138150;
+	bh=0+pK1nI4/9X0YU+kOqbOWe9fGZInjE/ePF9L1Wfzpik=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=X3B3fcHGwW5VZUbrqMiH0qpGfWH3S0Obdr0qZvM1xbdIHQxE1g/lX/4Zvq2hc5KO6
-	 rSm0I4t7TNA1/Ztfb8R4vOJDuO/kU6RzAz6wC9jY57rdoXF0aYI3gnC95JVZrinr7s
-	 5p/5Z/OMy8cBUraFALKW32fFYkcHjz2J2r0LdKRvAQlycifTf1bHpdlJMsTTB1mnkL
-	 uKghtuMHw0pRnZL0iGBwa71h7GNZdmxw5quR9YuAiOn8fj7PBPU4svk+xvBfoTGYKP
-	 xFXnwu99IbE8CtwEpySB/cBgq9Eb0KUPRZo0bae9x/ZQUCVxfd+rUxt74ayfwL+JeO
-	 JZ0H+gXgwTz8g==
-Date: Thu, 1 May 2025 15:18:29 -0700
+	b=JdgokZLk4gw52kxeYAQ3EWJ5GQYuG2lFJwg4DSZJHn0usHtcmIFSWCK8GQ9GxWneA
+	 4T4JfObck2TPT20GlHFpf0+xeehXrU1CXw4WIqZJiEAXwFIG8wugnAslEKaVQ0vy7B
+	 oNccJpJlb52UQgL8Br7hpNagy+rJWeEzwd/SG8LyXvywySz5iwfu83fzRHe7VLF/Va
+	 YmVLRgOUWS3gM0f2NbBNyw6g7N02wwb9ZI8FPymdMdrXu4lm8uyxdVu4cAQczHyyHo
+	 ycNhOB9nWympLNbqObcU/UprIa176YudiTwMfEuKXrh9pbbNVy1m+PMVwW5AJqViVZ
+	 WcXKwC1G3W5Yw==
+Date: Thu, 1 May 2025 15:22:29 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Luca Di Maio <luca.dimaio1@gmail.com>
-Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev,
-	smoser@chainguard.dev, hch@infradead.org
-Subject: Re: [PATCH v8 2/2] mkfs: modify -p flag to populate a filesystem
- from a directory
-Message-ID: <20250501221829.GK25675@frogsfrogsfrogs>
-References: <20250501081552.1328703-1-luca.dimaio1@gmail.com>
- <20250501081552.1328703-3-luca.dimaio1@gmail.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/6] iomap: rework iomap_write_begin() to return folio
+ offset and length
+Message-ID: <20250501222229.GL25675@frogsfrogsfrogs>
+References: <20250430190112.690800-1-bfoster@redhat.com>
+ <20250430190112.690800-7-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,204 +43,126 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250501081552.1328703-3-luca.dimaio1@gmail.com>
+In-Reply-To: <20250430190112.690800-7-bfoster@redhat.com>
 
-On Thu, May 01, 2025 at 10:15:52AM +0200, Luca Di Maio wrote:
-> right now the `-p` flag only supports a file input.
-> this patch will add support to input a directory.
-> on directory input, the populate functionality to copy files into
-> the root filesystem.
+On Wed, Apr 30, 2025 at 03:01:12PM -0400, Brian Foster wrote:
+> iomap_write_begin() returns a folio based on current pos and
+> remaining length in the iter, and each caller then trims the
+> pos/length to the given folio. Clean this up a bit and let
+> iomap_write_begin() return the trimmed range along with the folio.
 > 
-> add `atime` flag to popts, that will let the user choose if copy the
-> atime timestamps from source directory.
-> 
-> add documentation for new functionalities in man pages.
-> 
-> Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->  man/man8/mkfs.xfs.8.in | 41 +++++++++++++++++++++++++++++------------
->  mkfs/xfs_mkfs.c        | 23 +++++++++++++++++++----
->  2 files changed, 48 insertions(+), 16 deletions(-)
+>  fs/iomap/buffered-io.c | 26 +++++++++++++++-----------
+>  1 file changed, 15 insertions(+), 11 deletions(-)
 > 
-> diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-> index 37e3a88e..bb38c148 100644
-> --- a/man/man8/mkfs.xfs.8.in
-> +++ b/man/man8/mkfs.xfs.8.in
-> @@ -28,7 +28,7 @@ mkfs.xfs \- construct an XFS filesystem
->  .I naming_options
->  ] [
->  .B \-p
-> -.I protofile_options
-> +.I prototype_options
->  ] [
->  .B \-q
->  ] [
-> @@ -977,30 +977,39 @@ option set.
->  .PP
->  .PD 0
->  .TP
-> -.BI \-p " protofile_options"
-> +.BI \-p " prototype_options"
->  .TP
->  .BI "Section Name: " [proto]
->  .PD
-> -These options specify the protofile parameters for populating the filesystem.
-> +These options specify the prototype parameters for populating the filesystem.
->  The valid
-> -.I protofile_options
-> +.I prototype_options
->  are:
->  .RS 1.2i
->  .TP
-> -.BI [file=] protofile
-> +.BI [file=]
->  The
->  .B file=
->  prefix is not required for this CLI argument for legacy reasons.
->  If specified as a config file directive, the prefix is required.
-> -
-> +.TP
-> +.BI [file=] directory
->  If the optional
->  .PD
-> -.I protofile
-> -argument is given,
-> +.I prototype
-> +argument is given, and it's a directory,
->  .B mkfs.xfs
-> -uses
-> -.I protofile
-> -as a prototype file and takes its directions from that file.
-> +will populate the root file system with the contents of the given directory.
-> +Content, timestamps (atime, mtime), attributes and extended attributes are preserved
-> +for all file types.
-> +.TP
-> +.BI [file=] protofile
-> +If the optional
-> +.PD
-> +.I prototype
-> +argument is given, and points to a regular file,
-> +.B mkfs.xfs
-> +uses it as a prototype file and takes its directions from that file.
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index d3b30ebad9ea..2fde268c39fc 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -793,15 +793,22 @@ static int iomap_write_begin_inline(const struct iomap_iter *iter,
+>  	return iomap_read_inline_data(iter, folio);
+>  }
+>  
+> -static int iomap_write_begin(struct iomap_iter *iter, size_t len,
+> -		struct folio **foliop)
+> +/*
+> + * Grab and prepare a folio for write based on iter state. Returns the folio,
+> + * offset, and length. Callers can optionally pass a max length *plen,
+> + * otherwise init to zero.
+> + */
+> +static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
+> +		size_t *poffset, u64 *plen)
 
-This ought to be in the previous patch.
-
->  The blocks and inodes specifiers in the
->  .I protofile
->  are provided for backwards compatibility, but are otherwise unused.
-> @@ -1136,8 +1145,16 @@ always terminated with the dollar (
->  .B $
->  ) token.
->  .TP
-> +.BI atime= value
-> +If set to 1, when we're populating the root filesystem from a directory (
-> +.B file=directory
-> +option)
-> +access times are going to be preserved and are copied from the source files.
-> +Set to 0 to set access times to the current time instead.
-> +By default, this is set to 0.
-> +.TP
->  .BI slashes_are_spaces= value
-> -If set to 1, slashes ("/") in the first token of each line of the protofile
-> +If set to 1, slashes ("/") in the first token of each line of the prototype file
->  are converted to spaces.
->  This enables the creation of a filesystem containing filenames with spaces.
->  By default, this is set to 0.
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 3f4455d4..e4d82d48 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -121,6 +121,7 @@ enum {
-> 
->  enum {
->  	P_FILE = 0,
-> +	P_ATIME,
->  	P_SLASHES,
->  	P_MAX_OPTS,
->  };
-> @@ -709,6 +710,7 @@ static struct opt_params popts = {
->  	.ini_section = "proto",
->  	.subopts = {
->  		[P_FILE] = "file",
-> +		[P_ATIME] = "atime",
->  		[P_SLASHES] = "slashes_are_spaces",
->  		[P_MAX_OPTS] = NULL,
->  	},
-> @@ -717,6 +719,12 @@ static struct opt_params popts = {
->  		  .conflicts = { { NULL, LAST_CONFLICT } },
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
-> +		{ .index = P_ATIME,
-> +		  .conflicts = { { NULL, LAST_CONFLICT } },
-> +		  .minval = 0,
-> +		  .maxval = 1,
-> +		  .defaultval = 1,
-> +		},
->  		{ .index = P_SLASHES,
->  		  .conflicts = { { NULL, LAST_CONFLICT } },
->  		  .minval = 0,
-> @@ -1045,6 +1053,7 @@ struct cli_params {
->  	int	lsunit;
->  	int	is_supported;
->  	int	proto_slashes_are_spaces;
-> +	int	proto_atime;
->  	int	data_concurrency;
->  	int	log_concurrency;
->  	int	rtvol_concurrency;
-> @@ -1170,6 +1179,7 @@ usage( void )
->  /* naming */		[-n size=num,version=2|ci,ftype=0|1,parent=0|1]]\n\
->  /* no-op info only */	[-N]\n\
->  /* prototype file */	[-p fname]\n\
-> +/* populate from directory */	[-p dirname,atime=0|1]\n\
->  /* quiet */		[-q]\n\
->  /* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx,rgcount=n,rgsize=n,\n\
->  			    concurrency=num]\n\
-> @@ -2067,6 +2077,9 @@ proto_opts_parser(
->  	case P_SLASHES:
->  		cli->proto_slashes_are_spaces = getnum(value, opts, subopt);
->  		break;
-> +	case P_ATIME:
-> +		cli->proto_atime = getnum(value, opts, subopt);
-> +		break;
->  	case P_FILE:
->  		fallthrough;
->  	default:
-> @@ -5162,7 +5175,7 @@ main(
->  	int			discard = 1;
->  	int			force_overwrite = 0;
->  	int			quiet = 0;
-> -	char			*protostring = NULL;
-> +	struct	xfs_proto_source	protosource;
->  	int			worst_freelist = 0;
-> 
->  	struct libxfs_init	xi = {
-> @@ -5311,8 +5324,6 @@ main(
->  	 */
->  	cfgfile_parse(&cli);
-> 
-> -	protostring = setup_proto(cli.protofile);
-> -
->  	/*
->  	 * Extract as much of the valid config as we can from the CLI input
->  	 * before opening the libxfs devices.
-> @@ -5480,7 +5491,11 @@ main(
->  	/*
->  	 * Allocate the root inode and anything else in the proto file.
->  	 */
-> -	parse_proto(mp, &cli.fsx, &protostring, cli.proto_slashes_are_spaces);
-> +	protosource = setup_proto(cli.protofile);
-
-Not sure why this is being moved in this patch?
+Hmm, is this offset and length supposed to be bytes within the folio?
+I find it a little odd that plen would be a u64 then, unless we're
+preparing for folios that huge?  Or is that just to avoid integer
+truncation issues?
 
 --D
 
-> +	parse_proto(mp, &cli.fsx,
-> +			&protosource,
-> +			cli.proto_slashes_are_spaces,
-> +			cli.proto_atime);
-> 
->  	/*
->  	 * Protect ourselves against possible stupidity
-> --
+>  {
+>  	const struct iomap_folio_ops *folio_ops = iter->iomap.folio_ops;
+>  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+>  	loff_t pos = iter->pos;
+> +	u64 len = min_t(u64, SIZE_MAX, iomap_length(iter));
+>  	struct folio *folio;
+>  	int status = 0;
+>  
+> +	len = *plen > 0 ? min_t(u64, len, *plen) : len;
+>  	BUG_ON(pos + len > iter->iomap.offset + iter->iomap.length);
+>  	if (srcmap != &iter->iomap)
+>  		BUG_ON(pos + len > srcmap->offset + srcmap->length);
+> @@ -833,8 +840,7 @@ static int iomap_write_begin(struct iomap_iter *iter, size_t len,
+>  		}
+>  	}
+>  
+> -	if (pos + len > folio_pos(folio) + folio_size(folio))
+> -		len = folio_pos(folio) + folio_size(folio) - pos;
+> +	pos = iomap_trim_folio_range(iter, folio, poffset, &len);
+>  
+>  	if (srcmap->type == IOMAP_INLINE)
+>  		status = iomap_write_begin_inline(iter, folio);
+> @@ -847,6 +853,7 @@ static int iomap_write_begin(struct iomap_iter *iter, size_t len,
+>  		goto out_unlock;
+>  
+>  	*foliop = folio;
+> +	*plen = len;
+>  	return 0;
+>  
+>  out_unlock:
+> @@ -967,7 +974,7 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+>  			break;
+>  		}
+>  
+> -		status = iomap_write_begin(iter, bytes, &folio);
+> +		status = iomap_write_begin(iter, &folio, &offset, &bytes);
+>  		if (unlikely(status)) {
+>  			iomap_write_failed(iter->inode, iter->pos, bytes);
+>  			break;
+> @@ -975,7 +982,7 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+>  		if (iter->iomap.flags & IOMAP_F_STALE)
+>  			break;
+>  
+> -		pos = iomap_trim_folio_range(iter, folio, &offset, &bytes);
+> +		pos = iter->pos;
+>  
+>  		if (mapping_writably_mapped(mapping))
+>  			flush_dcache_folio(folio);
+> @@ -1295,14 +1302,12 @@ static int iomap_unshare_iter(struct iomap_iter *iter)
+>  		bool ret;
+>  
+>  		bytes = min_t(u64, SIZE_MAX, bytes);
+> -		status = iomap_write_begin(iter, bytes, &folio);
+> +		status = iomap_write_begin(iter, &folio, &offset, &bytes);
+>  		if (unlikely(status))
+>  			return status;
+>  		if (iomap->flags & IOMAP_F_STALE)
+>  			break;
+>  
+> -		iomap_trim_folio_range(iter, folio, &offset, &bytes);
+> -
+>  		ret = iomap_write_end(iter, bytes, bytes, folio);
+>  		__iomap_put_folio(iter, bytes, folio);
+>  		if (WARN_ON_ONCE(!ret))
+> @@ -1367,7 +1372,7 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+>  		bool ret;
+>  
+>  		bytes = min_t(u64, SIZE_MAX, bytes);
+> -		status = iomap_write_begin(iter, bytes, &folio);
+> +		status = iomap_write_begin(iter, &folio, &offset, &bytes);
+>  		if (status)
+>  			return status;
+>  		if (iter->iomap.flags & IOMAP_F_STALE)
+> @@ -1376,7 +1381,6 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+>  		/* warn about zeroing folios beyond eof that won't write back */
+>  		WARN_ON_ONCE(folio_pos(folio) > iter->inode->i_size);
+>  
+> -		iomap_trim_folio_range(iter, folio, &offset, &bytes);
+>  		folio_zero_range(folio, offset, bytes);
+>  		folio_mark_accessed(folio);
+>  
+> -- 
 > 2.49.0
+> 
 > 
