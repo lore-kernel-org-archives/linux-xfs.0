@@ -1,68 +1,82 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14BA2204840;
-	Fri,  2 May 2025 08:47:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 935B922AE7A;
+	Fri,  2 May 2025 08:52:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746175641; cv=none; b=lSN2bJxH6mCG6DHmjxSDgWgOept/Qs7QN3Fyyy/eTvWE2ADlDrD0pukoELhPCeueQ+sQKmrDSQ6cDis0FD5YzT2/pxvvLL4cAlnsMaY8oGnE66S37j7jpQUZwgRPP5F9qn0pOhEWIXcfGEDLpdnRpBFlkVkYoqYjhjT0x2sqr/E=
+	t=1746175953; cv=none; b=GWjR54RynvVs+2EBPMPDsZ+YyW9cOPIRPjEwwdFlHwGsWjig3/ylxvhhwfT1di2ADa2AdrEKsrjPTsGE0F53jwMnsR5wjZgPckAEQR0TO+yHJD4QgcC3Z1BFDWqrPwTmHlkYM0fh+ZHk3U1YAZJMR/UHZS1AGQSuNU7wBe4kusk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746175641; c=relaxed/simple;
-	bh=rz47L1B7+iOlzIBY2QDLXPTa3bmtFpg9h20eFKWI2Bs=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=KqQGbFC5oXfmU/3OeC4OQuNhEnjXqpajZqa0ql7NaZqOEErf2yTrO6sBKvJkoXECP00Ii703on9UfWtJgmjsyp+i7iUkJ2QpQf5wCbmdV3kDphrbgz/JbPiCGyeVK2s1WTVmluzu1jaaqBOJSvJdynK+k2VGerhyiDBNZHBEHeM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SAqSoNsw; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SAqSoNsw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D90FC4CEE4;
-	Fri,  2 May 2025 08:47:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746175640;
-	bh=rz47L1B7+iOlzIBY2QDLXPTa3bmtFpg9h20eFKWI2Bs=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=SAqSoNswnvxyqHyDjh4fcY08JbD5JtTq7UDKzbiQjE0WGwJCKymbjFUHs5CcxaxVL
-	 4OY52zZvLdhSk+3L20Cb+MVztpko4+rAVkDgkbeVROrwAqMh6p+mJxJwQYgebpZRQr
-	 TGXGHA+xIxFN5oGrsAnXbrEU9DO88hdYb+9cVT46t6qYX0MenB+ugZswg7t4ObThXc
-	 PSutxLwYKiMM3z0GAXzbLZ/0F7uVGiVKdNbb6HFKX3pzNI8yIIKCO297OmJQ7DU5xJ
-	 ioESQcFgBGXHG2socKFXU0WK/9m7y5TFiINGl7eedUQDGVbDyOZr1W8T2FXQVDj70e
-	 nyKIN9n7T9IPw==
-From: Carlos Maiolino <cem@kernel.org>
-To: Hans Holmberg <Hans.Holmberg@wdc.com>
-Cc: Dave Chinner <david@fromorbit.com>, 
- "Darrick J . Wong" <djwong@kernel.org>, hch <hch@lst.de>, 
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20250430083438.9426-1-hans.holmberg@wdc.com>
-References: <20250430083438.9426-1-hans.holmberg@wdc.com>
-Subject: Re: [PATCH v2] xfs: allow ro mounts if rtdev or logdev are
- read-only
-Message-Id: <174617563872.286454.3698448387151176934.b4-ty@kernel.org>
-Date: Fri, 02 May 2025 10:47:18 +0200
+	s=arc-20240116; t=1746175953; c=relaxed/simple;
+	bh=h1UF7RGtB1Pbog0NUMV8tDJBLwjc+mTRVhKiphrplxs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=e70hCsKxCT/6qv9KvZ15dH6lsCIGzp09j5JKu96ArG1RDP58QI6nMVJR+Bzju0fTgQN8odtKJii0mm/M1J1QK/luiW1OjQd+axPH2JgIGumTCDm5sa243STLkp0snapsIInlakQqYFqSYvkD/uNbJ660Fr3oso73S5grtrf59Po=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-39c1ee0fd43so1792597f8f.0;
+        Fri, 02 May 2025 01:52:31 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746175950; x=1746780750;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=h1UF7RGtB1Pbog0NUMV8tDJBLwjc+mTRVhKiphrplxs=;
+        b=V92Mfe/ryL1SIDnzyfS71eHWeqWlNUNg7HT8EtpHwKg2R68k0ykt9gxON+SE5aEaxd
+         qLUJvEig5JCGFzaoMFy/rEScC9oyTbx06VNgYWLNbabceh/tTEoa2I5a6U0LYLkLP3tN
+         hB10QjgRr4RDhCNs00pX2x9BzLw6sOZ6dF5T0LNpr8z4bbfnYmotU630YiOBuJjib2U2
+         K2EwLYhpYGy2NwDV9s2Emlch1s2ZSCude1LQn4Zux3rJGkrKF6rMhH43XuoZOqPVxclO
+         /jZZ+OkYHjOft4QZEVg7/Q5TxCY0DoM2PArrr9NKxfMPyLYBc8aEEMDfNFXxWg53L8WI
+         ApSQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUt7x8WO93z73ttIKJKxPdGOQcYf55S9/VqW0bQ76nY3zwCN080viEJNyragneSEMfu5/Bp4otD4x/+VMc=@vger.kernel.org, AJvYcCV7R+bPPrduhay/4fQeZSKzs6uUREI57vNmk37HouFMc6wFXs+BAZCKuumhxWK8tx+P+pqYhnXziuE=@vger.kernel.org, AJvYcCVCYlUM5lFJvUzwRR5efRk0pv8zSpveaszdOIcQLuG+dCWMngE5dKzcqMFub41aFgoqXvjojm+5D5fgVds=@vger.kernel.org, AJvYcCWthcTkh+9PCw8XNmbqXBvi1OTlbjUxCmc9V0ntnS8pVFNAdOTmJj4EfAGUGuZfo8GuyfTobJ+wdYaM0yk=@vger.kernel.org, AJvYcCX2yk0Bmlv/sn8ihRMNB1PmbsR8cg2iMiUAQ7m/HNF/z1bq9ld6CgWFMdJ5FbNVQUWH3BW9re8wgceHvngidg==@vger.kernel.org, AJvYcCXYvRq81fE67CRWOYgqXxNaBOHgfOh7TwNoNJW3qhJsZdGYYYtIchkOdGGJbhCFpCorLBI4y83vMsWr@vger.kernel.org
+X-Gm-Message-State: AOJu0YyplMvmbXZfEKntnktZzgEaRrWk317G/SzpJcHRyM0Frz877zD2
+	wEQTTJXURJAEAYkqTBlpVaHJKpp44kI6+tpFZXjht/2WFXz3WBd2
+X-Gm-Gg: ASbGncssTJi36BZcne2KD/oXPKLQXYxGkr6pDvULYxsM6cnTX+rfi262tayFqYIXRQ1
+	pjhyabt9hwCbP+f5eTXvfDDfQ94j8xwCxd836+Eh8hKXs/EpHeE+P2DkE1c12r7H+eEPH9iTyOV
+	y5AxSACmJBl/gZ5s4EV+KZR4KfzS3PvQgy1oxL5U44oGo698wjKRTnCX+ZWATQ/71H1BG43ROLA
+	KRRsjlAWECLcjtRfno5jvBj58GC9PKC9wCnYwdKQeH8mRMd7v1Ck3Rh2T+z3xeSxyz5x3zsC41V
+	4eyo46lOdEjeZ9+TNhNksG2+Fjqsh1w0Vj3SymHyGiekfj0xRu9Ekom3pA==
+X-Google-Smtp-Source: AGHT+IE9669DK67oKwLOAlAwcYfBBqCESjIKom6hvx2QNNfYlaOOfYtClSN42SPBuE8wsJXFDXbvEQ==
+X-Received: by 2002:a05:6000:2209:b0:3a0:82f2:3094 with SMTP id ffacd0b85a97d-3a099af1a8dmr947113f8f.50.1746175949770;
+        Fri, 02 May 2025 01:52:29 -0700 (PDT)
+Received: from fedora (p54ad9a78.dip0.t-ipconnect.de. [84.173.154.120])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3a099b172b3sm1535001f8f.90.2025.05.02.01.52.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 02 May 2025 01:52:29 -0700 (PDT)
+Date: Fri, 2 May 2025 10:52:26 +0200
+From: Johannes Thumshirn <jth@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+	"Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+	Jack Wang <jinpu.wang@ionos.com>, Coly Li <colyli@kernel.org>,
+	Kent Overstreet <kent.overstreet@linux.dev>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, Chris Mason <clm@fb.com>,
+	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Pavel Machek <pavel@kernel.org>, slava@dubeyko.com,
+	glaubitz@physik.fu-berlin.de, frank.li@vivo.com,
+	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH 07/19] block: simplify bio_map_kern
+Message-ID: <aBSHykx-sNMJEenF@fedora>
+References: <20250430212159.2865803-1-hch@lst.de>
+ <20250430212159.2865803-8-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250430212159.2865803-8-hch@lst.de>
 
-On Wed, 30 Apr 2025 08:35:34 +0000, Hans Holmberg wrote:
-> Allow read-only mounts on rtdevs and logdevs that are marked as
-> read-only and make sure those mounts can't be remounted read-write.
-> 
-> Use the sb_open_mode helper to make sure that we don't try to open
-> devices with write access enabled for read-only mounts.
-> 
-> 
-> [...]
-
-Applied to for-next, thanks!
-
-[1/1] xfs: allow ro mounts if rtdev or logdev are read-only
-      commit: bfecc4091e07a47696ac922783216d9e9ea46c97
-
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
-
+Looks good,
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
