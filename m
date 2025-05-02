@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADC8C17A2FC;
-	Fri,  2 May 2025 20:06:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28F7B1EBFFF;
+	Fri,  2 May 2025 20:12:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746216407; cv=none; b=LSbqWlRlW3LYNuVmkWV8V4TkkYlWdViUdyfyvtUR+41qy2Qp8/Q5I7xpgALeBny5CN00WGgcwNjyXFbg/hXI80w3nB2224XQEHP10R3SxGGQe40FVkA0Nt1RRFk/pFfndPfCbOXCIoiC4uK8ist+5RvKlNb8pZdd42q+FNgnzhk=
+	t=1746216721; cv=none; b=qEOpiBJe2RNuSPhiYQLvRAUC8j1jvQ5A0ka/PKtjbk4slK/p8UyzwMjyYCCtwL6psCgGN4FxY2V2j6ExlNxmDmf0RdYof4OH/5xuhRsk+SHyEGFv+me9pq0oxD7MnqH48UI5x+DM92Q1fk0oTxQYTwC4RFrNkjf1oA0dfAPWLnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746216407; c=relaxed/simple;
-	bh=iN9LEkH8+3F5pqYUVOoF9p3A+vrENyVhTwTygVgN2Ts=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HFimdf0oA34iikypoPOoyJKxWe/4VFl5q5piyqpBuYDkX/zjOBVHznUQ2/yD3AeBgrc/t21uCcq1pV8dbE/ZGbWEh+isu0jIKglc1wtEcvf1JZOASjjGdwOyVBb87F9ozyZyYdX+Jbdr1zpFvF/VPsg2OSf+My+Lxpvwd+NMLZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dbPliZfi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1746216721; c=relaxed/simple;
+	bh=u5Z8wpvFxHNyn281JUcC5aJjExa9fXKR0LlwurFoJOo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=sqSAPZncN33naM7TGdeMmoBzhTot+MOmeIvMt/9fapZGHF2ZbGMrBTNAoGPtSYf04tTRoq6oUqDqitz1dCXroFhyzq07L4NJn7NLsgzQXTUlI/8Kayvj+WSJzAJ3gkq4BVfWMVRyoAdEAbDME4uwBGgpcO0ZZ7aekhvN0yIPg6w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z1zXSQCA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dbPliZfi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76CA4C4CEE4;
-	Fri,  2 May 2025 20:06:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z1zXSQCA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DE2AC4CEE4;
+	Fri,  2 May 2025 20:12:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746216407;
-	bh=iN9LEkH8+3F5pqYUVOoF9p3A+vrENyVhTwTygVgN2Ts=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dbPliZfiYvyM/mYLB9zIsiBj8rm3G3Mtps7tGpmG4TwBbRsNEJuTTimjYdKJWm+kx
-	 skIHRIvAkCWDSSdfl1ebWDjAlWYKflXxg26W6fbrzMB2Qy9yHK+hKRwRBzREDcmAHc
-	 Lghlwp0Cqgog3b0LvyBNwXkcrkGp7KUVWgty4MtEHOQ12d1064cD+AUY3Hy9BX5F4p
-	 R+rzPiShvLwNeBxhRmQrbfYRv9LzHtwz4KSVMlcJKfQReJ+SgDg7inSivtkkUk4HIB
-	 8mTqoxt3xpwRtVodAcJdnoN5MSSnhZW78Ug7yXmPt7ozIiO8rVb0PRf0u7W0LQyYZg
-	 L8pLtWxxW5SfQ==
-Date: Fri, 2 May 2025 13:06:46 -0700
+	s=k20201202; t=1746216720;
+	bh=u5Z8wpvFxHNyn281JUcC5aJjExa9fXKR0LlwurFoJOo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Z1zXSQCA6uvZog8m73AsLZiKFKCo/9ZgdhCii6J5RUCUt2HIxFvCq6DiA7/W+8foD
+	 DH7NXB5sgdG046YyxnOxDDEx5qpRWQAzFICFm2YO98Lf61l71s2iO8PUn4rLUsLtA4
+	 AtUyHDZXcXd/r/tyF6h4eQ+9Gb2GgzmEfAHNemv7AwMjdxp/GwZkAZAjnld40MOFML
+	 sR0E8bGJJU1dQDkmJEPbcMtjtefojiU7YTTWmatlY6maRZFm0gywcMaAfHYNUtPlHI
+	 yHhLrX1U4i16+k8L9DNEeChBsXdNYdNly2tUxZEnpmzhKlh9RyqWPsFTIINt3yq/EH
+	 TEMV3sj9OGU6A==
+Date: Fri, 2 May 2025 13:12:00 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Hans Holmberg <Hans.Holmberg@wdc.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	Dave Chinner <david@fromorbit.com>, hch <hch@lst.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH 1/2] xfs: free the item in xfs_mru_cache_insert on
- failure
-Message-ID: <20250502200646.GT25675@frogsfrogsfrogs>
-References: <20250430084117.9850-1-hans.holmberg@wdc.com>
- <20250430084117.9850-2-hans.holmberg@wdc.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: brauner@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk, jack@suse.cz,
+	cem@kernel.org, linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
+	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, catherine.hoang@oracle.com,
+	linux-api@vger.kernel.org
+Subject: [PATCH v10.1 1.1/15] xfs: only call xfs_setsize_buftarg once per
+ buffer target
+Message-ID: <20250502201200.GU25675@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,108 +47,130 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250430084117.9850-2-hans.holmberg@wdc.com>
+In-Reply-To: <20250501165733.1025207-2-john.g.garry@oracle.com>
 
-On Wed, Apr 30, 2025 at 08:41:21AM +0000, Hans Holmberg wrote:
-> From: Christoph Hellwig <hch@lst.de>
-> 
-> Call the provided free_func when xfs_mru_cache_insert as that's what
-> the callers need to do anyway.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
-> ---
->  fs/xfs/xfs_filestream.c | 15 ++++-----------
->  fs/xfs/xfs_mru_cache.c  | 15 ++++++++++++---
->  2 files changed, 16 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-> index a961aa420c48..044918fbae06 100644
-> --- a/fs/xfs/xfs_filestream.c
-> +++ b/fs/xfs/xfs_filestream.c
-> @@ -304,11 +304,9 @@ xfs_filestream_create_association(
->  	 * for us, so all we need to do here is take another active reference to
->  	 * the perag for the cached association.
->  	 *
-> -	 * If we fail to store the association, we need to drop the fstrms
-> -	 * counter as well as drop the perag reference we take here for the
-> -	 * item. We do not need to return an error for this failure - as long as
-> -	 * we return a referenced AG, the allocation can still go ahead just
-> -	 * fine.
-> +	 * If we fail to store the association, we do not need to return an
-> +	 * error for this failure - as long as we return a referenced AG, the
-> +	 * allocation can still go ahead just fine.
->  	 */
->  	item = kmalloc(sizeof(*item), GFP_KERNEL | __GFP_RETRY_MAYFAIL);
->  	if (!item)
-> @@ -316,14 +314,9 @@ xfs_filestream_create_association(
->  
->  	atomic_inc(&pag_group(args->pag)->xg_active_ref);
->  	item->pag = args->pag;
-> -	error = xfs_mru_cache_insert(mp->m_filestream, pino, &item->mru);
-> -	if (error)
-> -		goto out_free_item;
-> +	xfs_mru_cache_insert(mp->m_filestream, pino, &item->mru);
+From: Darrick J. Wong <djwong@kernel.org>
 
-Hmm, don't you still need to check for -ENOMEM returns?  Or if truly
-none of the callers care anymore, then can we get rid of the return
-value for xfs_mru_cache_insert?
+It's silly to call xfs_setsize_buftarg from xfs_alloc_buftarg with the
+block device LBA size because we don't need to ask the block layer to
+validate a geometry number that it provided us.  Instead, set the
+preliminary bt_meta_sector* fields to the LBA size in preparation for
+reading the primary super.
 
---D
+However, we still want to flush and invalidate the pagecache for all
+three block devices before we start reading metadata from those devices.
+Move the sync_blockdev calls into a separate helper function, and call
+it immediately after xfs_open_devices creates the buftargs.
 
->  	return 0;
->  
-> -out_free_item:
-> -	xfs_perag_rele(item->pag);
-> -	kfree(item);
->  out_put_fstrms:
->  	atomic_dec(&args->pag->pagf_fstrms);
->  	return 0;
-> diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
-> index d0f5b403bdbe..08443ceec329 100644
-> --- a/fs/xfs/xfs_mru_cache.c
-> +++ b/fs/xfs/xfs_mru_cache.c
-> @@ -414,6 +414,8 @@ xfs_mru_cache_destroy(
->   * To insert an element, call xfs_mru_cache_insert() with the data store, the
->   * element's key and the client data pointer.  This function returns 0 on
->   * success or ENOMEM if memory for the data element couldn't be allocated.
-> + *
-> + * The passed in elem is freed through the per-cache free_func on failure.
->   */
->  int
->  xfs_mru_cache_insert(
-> @@ -421,14 +423,15 @@ xfs_mru_cache_insert(
->  	unsigned long		key,
->  	struct xfs_mru_cache_elem *elem)
->  {
-> -	int			error;
-> +	int			error = -EINVAL;
->  
->  	ASSERT(mru && mru->lists);
->  	if (!mru || !mru->lists)
-> -		return -EINVAL;
-> +		goto out_free;
->  
-> +	error = -ENOMEM;
->  	if (radix_tree_preload(GFP_KERNEL))
-> -		return -ENOMEM;
-> +		goto out_free;
->  
->  	INIT_LIST_HEAD(&elem->list_node);
->  	elem->key = key;
-> @@ -440,6 +443,12 @@ xfs_mru_cache_insert(
->  		_xfs_mru_cache_list_insert(mru, elem);
->  	spin_unlock(&mru->lock);
->  
-> +	if (error)
-> +		goto out_free;
-> +	return 0;
-> +
-> +out_free:
-> +	mru->free_func(mru->data, elem);
->  	return error;
->  }
->  
-> -- 
-> 2.34.1
-> 
+This will enable a subsequent patch to validate hw atomic write geometry
+against the filesystem geometry.
+
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+v10.1: call sync_blockdev on open for all the devices and move this to
+immediately after the vfs change
+---
+ fs/xfs/xfs_buf.h   |    5 +++++
+ fs/xfs/xfs_buf.c   |   14 +++++---------
+ fs/xfs/xfs_super.c |   33 +++++++++++++++++++++++++++++++++
+ 3 files changed, 43 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index d0b065a9a9f0d2..132210705602b4 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -383,6 +383,11 @@ int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
+ bool xfs_verify_magic(struct xfs_buf *bp, __be32 dmagic);
+ bool xfs_verify_magic16(struct xfs_buf *bp, __be16 dmagic);
+ 
++static inline int xfs_buftarg_sync(struct xfs_buftarg *btp)
++{
++	return sync_blockdev(btp->bt_bdev);
++}
++
+ /* for xfs_buf_mem.c only: */
+ int xfs_init_buftarg(struct xfs_buftarg *btp, size_t logical_sectorsize,
+ 		const char *descr);
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 5ae77ffdc947b1..292891d6ff69ac 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1733,11 +1733,7 @@ xfs_setsize_buftarg(
+ 		return -EINVAL;
+ 	}
+ 
+-	/*
+-	 * Flush the block device pagecache so our bios see anything dirtied
+-	 * before mount.
+-	 */
+-	return sync_blockdev(btp->bt_bdev);
++	return 0;
+ }
+ 
+ int
+@@ -1810,10 +1806,10 @@ xfs_alloc_buftarg(
+ 	 * When allocating the buftargs we have not yet read the super block and
+ 	 * thus don't know the file system sector size yet.
+ 	 */
+-	if (xfs_setsize_buftarg(btp, bdev_logical_block_size(btp->bt_bdev)))
+-		goto error_free;
+-	if (xfs_init_buftarg(btp, bdev_logical_block_size(btp->bt_bdev),
+-			mp->m_super->s_id))
++	btp->bt_meta_sectorsize = bdev_logical_block_size(btp->bt_bdev);
++	btp->bt_meta_sectormask = btp->bt_meta_sectorsize - 1;
++
++	if (xfs_init_buftarg(btp, btp->bt_meta_sectorsize, mp->m_super->s_id))
+ 		goto error_free;
+ 
+ 	return btp;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index b2dd0c0bf50979..83de3ac39ae53b 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -519,6 +519,35 @@ xfs_open_devices(
+ 	return error;
+ }
+ 
++/*
++ * Flush and invalidate all devices' pagecaches before reading any metadata
++ * because XFS doesn't use the bdev pagecache.
++ */
++STATIC int
++xfs_preflush_devices(
++	struct xfs_mount	*mp)
++{
++	int			error;
++
++	error = xfs_buftarg_sync(mp->m_ddev_targp);
++	if (error)
++		return error;
++
++	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
++		error = xfs_buftarg_sync(mp->m_ddev_targp);
++		if (error)
++			return error;
++	}
++
++	if (mp->m_rtdev_targp) {
++		error = xfs_buftarg_sync(mp->m_rtdev_targp);
++		if (error)
++			return error;
++	}
++
++	return 0;
++}
++
+ /*
+  * Setup xfs_mount buffer target pointers based on superblock
+  */
+@@ -1671,6 +1700,10 @@ xfs_fs_fill_super(
+ 	if (error)
+ 		return error;
+ 
++	error = xfs_preflush_devices(mp);
++	if (error)
++		goto out_shutdown_devices;
++
+ 	if (xfs_debugfs) {
+ 		mp->m_debugfs = xfs_debugfs_mkdir(mp->m_super->s_id,
+ 						  xfs_debugfs);
