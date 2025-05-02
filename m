@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E27E819049A;
-	Fri,  2 May 2025 20:04:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADC8C17A2FC;
+	Fri,  2 May 2025 20:06:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746216257; cv=none; b=ewdYGskpMFPgxyt5wgAVB1W5YPXRVNOMaAqVkDEve70fdNczdKhRMUcIbJRjlZ/V2bnGUaJ6Yl1poV70lWb26ldVxherJcuxgzb19Seo/nNN8/xSs1ADPcP02SuOTt1WA4dO1Q3NLc90veOyIBr52EpqyfLcJLykMpsid/v7KMk=
+	t=1746216407; cv=none; b=LSbqWlRlW3LYNuVmkWV8V4TkkYlWdViUdyfyvtUR+41qy2Qp8/Q5I7xpgALeBny5CN00WGgcwNjyXFbg/hXI80w3nB2224XQEHP10R3SxGGQe40FVkA0Nt1RRFk/pFfndPfCbOXCIoiC4uK8ist+5RvKlNb8pZdd42q+FNgnzhk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746216257; c=relaxed/simple;
-	bh=zHAzDksuhtyOMnpLkmQcgNJPZrdaq51FS+IDIZ5Noi0=;
+	s=arc-20240116; t=1746216407; c=relaxed/simple;
+	bh=iN9LEkH8+3F5pqYUVOoF9p3A+vrENyVhTwTygVgN2Ts=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=prTeLsidZvxUKFSIn1HOXPAmpsDgG/zYRuaEUoh+yyZENDcbpVtpeXkvTeQBEPTDrSXPeQODUR3MB8heYbrJSI8U/XyAiyM9dGLYUf/mh1a4r7VjNwOIj87pWRFcvDxXLZaeer0kowNwJc95d1DxoEz23VQY+jRU8KdP5Aeywbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NwkN4k6X; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=HFimdf0oA34iikypoPOoyJKxWe/4VFl5q5piyqpBuYDkX/zjOBVHznUQ2/yD3AeBgrc/t21uCcq1pV8dbE/ZGbWEh+isu0jIKglc1wtEcvf1JZOASjjGdwOyVBb87F9ozyZyYdX+Jbdr1zpFvF/VPsg2OSf+My+Lxpvwd+NMLZM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dbPliZfi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NwkN4k6X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5017BC4CEE4;
-	Fri,  2 May 2025 20:04:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dbPliZfi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76CA4C4CEE4;
+	Fri,  2 May 2025 20:06:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746216256;
-	bh=zHAzDksuhtyOMnpLkmQcgNJPZrdaq51FS+IDIZ5Noi0=;
+	s=k20201202; t=1746216407;
+	bh=iN9LEkH8+3F5pqYUVOoF9p3A+vrENyVhTwTygVgN2Ts=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NwkN4k6Xx20U+Py3Z8BVrngKl0DeW+mpRV310vi2BtiMvuKBOl7P7xjbR8hQHLRwC
-	 fEbQyUTMIH5S/1wpmWrsdVpNA1t4wMBfIT+1xaninTZ7j7hU7m/darJaidsaEvpY03
-	 xYFtsG122Aw6l+6o8qgwEvcTd4NUaA03rJzfTaQD6ABgURrFsGVvHkCacj9DiUTgg5
-	 zF0FMOXqcnlfOjdE8S4RKQ5gNsOl+X5B2BE1TUegbQ7XlZXfmnVuu+je9oEC5GyxY5
-	 F6/nrsiYovIH0tesn+lHstBz+fKY8Q7kwnMpdXruOGTsniZb3N8YP0e9gQ4hH82w23
-	 kB0aK8uYah/2Q==
-Date: Fri, 2 May 2025 13:04:15 -0700
+	b=dbPliZfiYvyM/mYLB9zIsiBj8rm3G3Mtps7tGpmG4TwBbRsNEJuTTimjYdKJWm+kx
+	 skIHRIvAkCWDSSdfl1ebWDjAlWYKflXxg26W6fbrzMB2Qy9yHK+hKRwRBzREDcmAHc
+	 Lghlwp0Cqgog3b0LvyBNwXkcrkGp7KUVWgty4MtEHOQ12d1064cD+AUY3Hy9BX5F4p
+	 R+rzPiShvLwNeBxhRmQrbfYRv9LzHtwz4KSVMlcJKfQReJ+SgDg7inSivtkkUk4HIB
+	 8mTqoxt3xpwRtVodAcJdnoN5MSSnhZW78Ug7yXmPt7ozIiO8rVb0PRf0u7W0LQyYZg
+	 L8pLtWxxW5SfQ==
+Date: Fri, 2 May 2025 13:06:46 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Hans Holmberg <Hans.Holmberg@wdc.com>
 Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
 	Carlos Maiolino <cem@kernel.org>,
 	Dave Chinner <david@fromorbit.com>, hch <hch@lst.de>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH 2/2] xfs: add inode to zone caching for data placement
-Message-ID: <20250502200415.GS25675@frogsfrogsfrogs>
+Subject: Re: [RFC PATCH 1/2] xfs: free the item in xfs_mru_cache_insert on
+ failure
+Message-ID: <20250502200646.GT25675@frogsfrogsfrogs>
 References: <20250430084117.9850-1-hans.holmberg@wdc.com>
- <20250430084117.9850-3-hans.holmberg@wdc.com>
+ <20250430084117.9850-2-hans.holmberg@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,197 +46,108 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250430084117.9850-3-hans.holmberg@wdc.com>
+In-Reply-To: <20250430084117.9850-2-hans.holmberg@wdc.com>
 
 On Wed, Apr 30, 2025 at 08:41:21AM +0000, Hans Holmberg wrote:
-> Placing data from the same file in the same zone is a great heuristic
-> for reducing write amplification and we do this already - but only
-> for sequential writes.
+> From: Christoph Hellwig <hch@lst.de>
 > 
-> To support placing data in the same way for random writes, reuse the
-> xfs mru cache to map inodes to open zones on first write. If a mapping
-> is present, use the open zone for data placement for this file until
-> the zone is full.
+> Call the provided free_func when xfs_mru_cache_insert as that's what
+> the callers need to do anyway.
 > 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+> ---
+>  fs/xfs/xfs_filestream.c | 15 ++++-----------
+>  fs/xfs/xfs_mru_cache.c  | 15 ++++++++++++---
+>  2 files changed, 16 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+> index a961aa420c48..044918fbae06 100644
+> --- a/fs/xfs/xfs_filestream.c
+> +++ b/fs/xfs/xfs_filestream.c
+> @@ -304,11 +304,9 @@ xfs_filestream_create_association(
+>  	 * for us, so all we need to do here is take another active reference to
+>  	 * the perag for the cached association.
+>  	 *
+> -	 * If we fail to store the association, we need to drop the fstrms
+> -	 * counter as well as drop the perag reference we take here for the
+> -	 * item. We do not need to return an error for this failure - as long as
+> -	 * we return a referenced AG, the allocation can still go ahead just
+> -	 * fine.
+> +	 * If we fail to store the association, we do not need to return an
+> +	 * error for this failure - as long as we return a referenced AG, the
+> +	 * allocation can still go ahead just fine.
+>  	 */
+>  	item = kmalloc(sizeof(*item), GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+>  	if (!item)
+> @@ -316,14 +314,9 @@ xfs_filestream_create_association(
+>  
+>  	atomic_inc(&pag_group(args->pag)->xg_active_ref);
+>  	item->pag = args->pag;
+> -	error = xfs_mru_cache_insert(mp->m_filestream, pino, &item->mru);
+> -	if (error)
+> -		goto out_free_item;
+> +	xfs_mru_cache_insert(mp->m_filestream, pino, &item->mru);
 
-It seems like a decent idea to try to land random writes to the same
-file in the same zone.  This helps us reduce seeking out of the zone on
-subsequent reads, right?
-
-If so, then I've understood the purpose, and:
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Hmm, don't you still need to check for -ENOMEM returns?  Or if truly
+none of the callers care anymore, then can we get rid of the return
+value for xfs_mru_cache_insert?
 
 --D
 
-> ---
->  fs/xfs/xfs_mount.h      |   1 +
->  fs/xfs/xfs_zone_alloc.c | 109 ++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 110 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index e5192c12e7ac..f90c0a16766f 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -230,6 +230,7 @@ typedef struct xfs_mount {
->  	bool			m_update_sb;	/* sb needs update in mount */
->  	unsigned int		m_max_open_zones;
->  	unsigned int		m_zonegc_low_space;
-> +	struct xfs_mru_cache	*m_zone_cache;  /* Inode to open zone cache */
->  
->  	/*
->  	 * Bitsets of per-fs metadata that have been checked and/or are sick.
-> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-> index d509e49b2aaa..80add26c0111 100644
-> --- a/fs/xfs/xfs_zone_alloc.c
-> +++ b/fs/xfs/xfs_zone_alloc.c
-> @@ -24,6 +24,7 @@
->  #include "xfs_zone_priv.h"
->  #include "xfs_zones.h"
->  #include "xfs_trace.h"
-> +#include "xfs_mru_cache.h"
->  
->  void
->  xfs_open_zone_put(
-> @@ -796,6 +797,100 @@ xfs_submit_zoned_bio(
->  	submit_bio(&ioend->io_bio);
->  }
->  
-> +/*
-> + * Cache the last zone written to for an inode so that it is considered first
-> + * for subsequent writes.
-> + */
-> +struct xfs_zone_cache_item {
-> +	struct xfs_mru_cache_elem	mru;
-> +	struct xfs_open_zone		*oz;
-> +};
-> +
-> +static inline struct xfs_zone_cache_item *
-> +xfs_zone_cache_item(struct xfs_mru_cache_elem *mru)
-> +{
-> +	return container_of(mru, struct xfs_zone_cache_item, mru);
-> +}
-> +
-> +static void
-> +xfs_zone_cache_free_func(
-> +	void				*data,
-> +	struct xfs_mru_cache_elem	*mru)
-> +{
-> +	struct xfs_zone_cache_item	*item = xfs_zone_cache_item(mru);
-> +
-> +	xfs_open_zone_put(item->oz);
-> +	kfree(item);
-> +}
-> +
-> +/*
-> + * Check if we have a cached last open zone available for the inode and
-> + * if yes return a reference to it.
-> + */
-> +static struct xfs_open_zone *
-> +xfs_cached_zone(
-> +	struct xfs_mount		*mp,
-> +	struct xfs_inode		*ip)
-> +{
-> +	struct xfs_mru_cache_elem	*mru;
-> +	struct xfs_open_zone		*oz;
-> +
-> +	mru = xfs_mru_cache_lookup(mp->m_zone_cache, ip->i_ino);
-> +	if (!mru)
-> +		return NULL;
-> +	oz = xfs_zone_cache_item(mru)->oz;
-> +	if (oz) {
-> +		/*
-> +		 * GC only steals open zones at mount time, so no GC zones
-> +		 * should end up in the cache.
-> +		 */
-> +		ASSERT(!oz->oz_is_gc);
-> +		ASSERT(atomic_read(&oz->oz_ref) > 0);
-> +		atomic_inc(&oz->oz_ref);
-> +	}
-> +	xfs_mru_cache_done(mp->m_zone_cache);
-> +	return oz;
-> +}
-> +
-> +/*
-> + * Update the last used zone cache for a given inode.
-> + *
-> + * The caller must have a reference on the open zone.
-> + */
-> +static void
-> +xfs_zone_cache_create_association(
-> +	struct xfs_inode		*ip,
-> +	struct xfs_open_zone		*oz)
-> +{
-> +	struct xfs_mount		*mp = ip->i_mount;
-> +	struct xfs_zone_cache_item	*item = NULL;
-> +	struct xfs_mru_cache_elem	*mru;
-> +
-> +	ASSERT(atomic_read(&oz->oz_ref) > 0);
-> +	atomic_inc(&oz->oz_ref);
-> +
-> +	mru = xfs_mru_cache_lookup(mp->m_zone_cache, ip->i_ino);
-> +	if (mru) {
-> +		/*
-> +		 * If we have an association already, update it to point to the
-> +		 * new zone.
-> +		 */
-> +		item = xfs_zone_cache_item(mru);
-> +		xfs_open_zone_put(item->oz);
-> +		item->oz = oz;
-> +		xfs_mru_cache_done(mp->m_zone_cache);
-> +		return;
-> +	}
-> +
-> +	item = kmalloc(sizeof(*item), GFP_KERNEL);
-> +	if (!item) {
-> +		xfs_open_zone_put(oz);
-> +		return;
-> +	}
-> +	item->oz = oz;
-> +	xfs_mru_cache_insert(mp->m_zone_cache, ip->i_ino, &item->mru);
-> +}
-> +
->  void
->  xfs_zone_alloc_and_submit(
->  	struct iomap_ioend	*ioend,
-> @@ -819,11 +914,16 @@ xfs_zone_alloc_and_submit(
->  	 */
->  	if (!*oz && ioend->io_offset)
->  		*oz = xfs_last_used_zone(ioend);
-> +	if (!*oz)
-> +		*oz = xfs_cached_zone(mp, ip);
-> +
->  	if (!*oz) {
->  select_zone:
->  		*oz = xfs_select_zone(mp, write_hint, pack_tight);
->  		if (!*oz)
->  			goto out_error;
-> +
-> +		xfs_zone_cache_create_association(ip, *oz);
->  	}
->  
->  	alloc_len = xfs_zone_alloc_blocks(*oz, XFS_B_TO_FSB(mp, ioend->io_size),
-> @@ -1211,6 +1311,14 @@ xfs_mount_zones(
->  	error = xfs_zone_gc_mount(mp);
->  	if (error)
->  		goto out_free_zone_info;
-> +
-> +	/*
-> +	 * Set up a mru cache to track inode to open zone for data placement
-> +	 * purposes. The magic values for group count and life time is the
-> +	 * same as the defaults for file streams, which seems sane enough.
-> +	 */
-> +	xfs_mru_cache_create(&mp->m_zone_cache, mp,
-> +			5000, 10, xfs_zone_cache_free_func);
 >  	return 0;
 >  
->  out_free_zone_info:
-> @@ -1224,4 +1332,5 @@ xfs_unmount_zones(
+> -out_free_item:
+> -	xfs_perag_rele(item->pag);
+> -	kfree(item);
+>  out_put_fstrms:
+>  	atomic_dec(&args->pag->pagf_fstrms);
+>  	return 0;
+> diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
+> index d0f5b403bdbe..08443ceec329 100644
+> --- a/fs/xfs/xfs_mru_cache.c
+> +++ b/fs/xfs/xfs_mru_cache.c
+> @@ -414,6 +414,8 @@ xfs_mru_cache_destroy(
+>   * To insert an element, call xfs_mru_cache_insert() with the data store, the
+>   * element's key and the client data pointer.  This function returns 0 on
+>   * success or ENOMEM if memory for the data element couldn't be allocated.
+> + *
+> + * The passed in elem is freed through the per-cache free_func on failure.
+>   */
+>  int
+>  xfs_mru_cache_insert(
+> @@ -421,14 +423,15 @@ xfs_mru_cache_insert(
+>  	unsigned long		key,
+>  	struct xfs_mru_cache_elem *elem)
 >  {
->  	xfs_zone_gc_unmount(mp);
->  	xfs_free_zone_info(mp->m_zone_info);
-> +	xfs_mru_cache_destroy(mp->m_zone_cache);
+> -	int			error;
+> +	int			error = -EINVAL;
+>  
+>  	ASSERT(mru && mru->lists);
+>  	if (!mru || !mru->lists)
+> -		return -EINVAL;
+> +		goto out_free;
+>  
+> +	error = -ENOMEM;
+>  	if (radix_tree_preload(GFP_KERNEL))
+> -		return -ENOMEM;
+> +		goto out_free;
+>  
+>  	INIT_LIST_HEAD(&elem->list_node);
+>  	elem->key = key;
+> @@ -440,6 +443,12 @@ xfs_mru_cache_insert(
+>  		_xfs_mru_cache_list_insert(mru, elem);
+>  	spin_unlock(&mru->lock);
+>  
+> +	if (error)
+> +		goto out_free;
+> +	return 0;
+> +
+> +out_free:
+> +	mru->free_func(mru->data, elem);
+>  	return error;
 >  }
+>  
 > -- 
 > 2.34.1
 > 
