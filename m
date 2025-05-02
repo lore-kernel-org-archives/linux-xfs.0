@@ -1,48 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17AE125EFBB;
-	Fri,  2 May 2025 16:44:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABADE1A3174;
+	Fri,  2 May 2025 19:39:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746204266; cv=none; b=DK8JEbo0NRkNGBiOZTL4i+4/dXoWfUXPPfeLHVQ+A3HbVUeole1Wt0/p9WMSwgG54SOskpI4suwO5yNuKeh7aaTf6YrDa/0ON3MtTXKrZDvzyrrQ90p4FHmnuQX+stpz/yjUlIULeqEKD/96B+8uLrUWymY/dcYeZvxUwcaYDAk=
+	t=1746214783; cv=none; b=jjy7hpabIhef26uNehKhcCRHeLl4Y7DlmwKrDZZ2iiTHdbhdaad0+L0MIfjkcnBUgGbd1YXomX/nuTvFwYdWSq2TXeDiN0gTSCWh9rpwp8rw2AZhWm+nJM4QtP4rzn81FNa+JaEfVVJ6AqEFOdkfbuNnJ5VkeUfDsVg6XxqQ+Fg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746204266; c=relaxed/simple;
-	bh=lusvwOhXbDnfRhmLRU1E/sjRB2/jznK6wsy2qGyuVgw=;
+	s=arc-20240116; t=1746214783; c=relaxed/simple;
+	bh=k5ESsesPC5OR+0zT4B5/ZWz83ketQ0H1TXs4uooMZp0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=K1KZwxVw0GtJqhQslL8O0/l20QARyUsHIzX03hzHmvH5obGPgED1kuLJHYR6kZyifzXCvHXMcYsifPx/PB30W4o+AKjUfoOsmB8cP3OWjGs3nnJvMm6sssrcEVGBJ6uM+f7kRr6lh9tpQCbQHFAQo6hzlLMJEBoywCzB75D2Kho=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QGY8Ts1r; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=V+bvZXsc2vN5LhUIcK99j96bRSRLRMpwhinVtXEiZtxUlCVkuMijnzwvpuNhToiZTPpsa8Wc34BC5h2H5gN4i3dRVtap39/EwQhzrF15dMsdWFwtke682wj4SEYPVOODCi12xEDUHR8j6MoSeZsaUP4U8At3nDid7RF3WPtwofE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A4uZ5IuG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QGY8Ts1r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57930C4CEE9;
-	Fri,  2 May 2025 16:44:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A4uZ5IuG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AAD0C4CEE4;
+	Fri,  2 May 2025 19:39:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746204265;
-	bh=lusvwOhXbDnfRhmLRU1E/sjRB2/jznK6wsy2qGyuVgw=;
+	s=k20201202; t=1746214783;
+	bh=k5ESsesPC5OR+0zT4B5/ZWz83ketQ0H1TXs4uooMZp0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QGY8Ts1r9bETAdAko31lN2Ol1l9jh3v9jTEzkvwlTco+H8xV9YyxCOilxNcmyzuB3
-	 iVpJav6QJIIupPEgG0nDyMywJtpgu1Fg9B3vSHRhQd5iEKFLfRn7pP+8AfN8YlQxIj
-	 LHjqm73dIcJ6wIgC9bAyFWTk0tKGyUqu8tbk9MPd0DIqKJp/92+JYyVKobh/wLihP6
-	 OVr/rVGfVJwdw1I/rjokOoBeWL6J58rE159TrR8Uspk/CIERFFTKlvitokQ1B8XLaN
-	 Edv2BE4xe1Rtri996q48oLn+mf1T1ZILNj17R42C3/pGKX8A70OKl7nOHztqbcwoiB
-	 HCoDBGr3pxLiw==
-Date: Fri, 2 May 2025 09:44:24 -0700
+	b=A4uZ5IuGHOfHXSImjmXrn8i2zJAXx9Yv1KTG4MS2fbFXXn3ZIJWUkbW/bngiuP6+q
+	 uMzCpJvuyC3HkeoJNx3MFQMzfZTwQyo+sAE0GvC2o3rrB9pDG6ANp4bnmZN2mmC8JV
+	 +TQRvSox212XUAjD2sxoYvXlOdWQ+NPdiTNMmpK9pL74FzsmF2bJbrTplBckUhw0xv
+	 LlZuqAHQmVW92+guMa1lo6gIwBNaNN08wC+xkHSjpS0utOHe0R0NFA67W3hQDB4Mkk
+	 bWcHx875FWkwgxqsRsNEQJZ5MCBJWjYrAnIBgRNxVhJLg6kD5lPNATCEu9EhSL1BE0
+	 yYbHbgFhwN+MA==
+Date: Fri, 2 May 2025 12:39:42 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: John Garry <john.g.garry@oracle.com>, brauner@kernel.org,
-	viro@zeniv.linux.org.uk, jack@suse.cz, cem@kernel.org,
-	linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
-	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, catherine.hoang@oracle.com,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH 16/15] xfs: only call xfs_setsize_buftarg once per buffer
- target
-Message-ID: <20250502164424.GO25675@frogsfrogsfrogs>
-References: <20250501165733.1025207-1-john.g.garry@oracle.com>
- <20250501195208.GF25675@frogsfrogsfrogs>
- <20250502065726.GA8309@lst.de>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Catherine Hoang <catherine.hoang@oracle.com>, linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: Re: [PATCH v5] generic: add a test for atomic writes
+Message-ID: <20250502193942.GP25675@frogsfrogsfrogs>
+References: <20250410042317.82487-1-catherine.hoang@oracle.com>
+ <aBRwTFxik14x-hyX@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,32 +43,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250502065726.GA8309@lst.de>
+In-Reply-To: <aBRwTFxik14x-hyX@infradead.org>
 
-On Fri, May 02, 2025 at 08:57:26AM +0200, Christoph Hellwig wrote:
-> On Thu, May 01, 2025 at 12:52:08PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > It's silly to call xfs_setsize_buftarg from xfs_alloc_buftarg with the
-> > block device LBA size because we don't need to ask the block layer to
-> > validate a geometry number that it provided us.  Instead, set the
-> > preliminary bt_meta_sector* fields to the LBA size in preparation for
-> > reading the primary super.
-> > 
-> > It's ok to lose the sync_blockdev call at buftarg creation time for the
-> > external log and rt devices because we don't read from them until after
-> > calling xfs_setup_devices.  We do need an explicit sync for the data
-> > device because we read the primary super before calling
-> > xfs_setup_devices.
+On Fri, May 02, 2025 at 12:12:12AM -0700, Christoph Hellwig wrote:
+> This fails in my zoned device tests with;
 > 
-> Should we just it for all of them in open_devices now that the sync
-> is decoupled from setting the block size?
+> mkfs.xfs: error - cannot set blocksize 512 on block device /dev/nvme3n1: Invalid argument
+> 
+> that error turns to be because the scratch rtdev /dev/nvme3n1 has a 4k
+> LBA size, while the main scratch device has a 512 byte sector size,
+> which is a configuration common for but not exclusive to zoned device,
+> and which means that we can't use a 512 byte block size for the file
+> system.
+> 
+> I'm not really sure how to best add the case of a larger LBA size on
+> the rt device to this test, though.
 
-Yeah.
+Me neither.  We can't write 512b blocks to the rt device obviously, but
+I think the whole point of the separate "sector" size is that's the
+maximum size that the fs knows it can write to the device without
+tearing.
 
-> Otherwise this looks good, but I guess this should go before the atomic
-> writes series in the end?
-
-Yep.
+Maybe there's a way out of this: the only metadata on the realtime
+volume is the rt superblock, whose size is a full fsblock.  Perhaps we
+could set/validate the block size of the rt dev with the fsblock size
+instead?
 
 --D
