@@ -1,269 +1,142 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id ED1792609EC;
-	Thu,  1 May 2025 23:58:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9538219D07B;
+	Fri,  2 May 2025 04:28:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746143918; cv=none; b=nUVb9EVigPg7mKDrYn23zKfsaoOosIsHKTOQGZm9UQoHGBXpfBuAFquDUZFHryrF7DlWk6glvnSe8VyzSGcx4pXCPO+zo3RXjr3bQBExn4za0wVLKAqmzit61pd4F7g+ZPyxd2ekJMxb1pD9aaXwmvDy51+0CsopQmnvVA9OkwI=
+	t=1746160138; cv=none; b=q45XBNfkS77VkRqG4S/glxE4mHR6+z65qsVli2XkJupRa1GNTlgGqGUCnyt0Hm6niV/yxeNzua6f6ol2dYE4IAtegDC9t+St45xxCQNc2Bu5ws/VpmeWnXr1WUWEe7eC3vmaQCsVKBfZk0BBIUFWbK7ykeiY+T3IxSSW9QPMyz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746143918; c=relaxed/simple;
-	bh=HAHwLaAzx4ZbdiMXM1+psW/QTXDMEoyo+ipEXG8FSq8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=opkdl1kXNknU9lVaeSTWNG7XDyFeWrbGvzNKG1i3zl21SErscRMDPFbKP9rOOBlbq9o+fa+T9JyfvuKwbj1Z/qKZybwdccz91O/HTJg0CASTtP3Cn4P2veNO4ocmln5W9zQUSjUmY9ZtEtkIJT4wqkUB/Gw/HOVHqaBOvK2owkg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=pV3Wcwux; arc=none smtp.client-ip=220.197.31.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1746160138; c=relaxed/simple;
+	bh=7orG9dZFrQELGGvUoY4zYyrw3ztyTbLK7Y75RPsrlwU=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=jg1SBcI+a9jEXFFmOJj75r+9sQ4z9gRxgf0TEGGIiU+6DuRdmLDP/rAswABzd3fr8u2wIghsKfcJRrQgBk04OuL6u/G4mM+/BGtKvFS/pDRtLuUAN3ZkACx07QM8aBu9Ux7B5kAAqYb0+ICNswKbp9/oAf7zGNIJa3J8PG1uwpo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XPA0qyp2; arc=none smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="pV3Wcwux"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
-	Content-Type; bh=gllwsGzDq3jA2ddJFMfVgZDKSyUZMTwmjn+v8MWPgFs=;
-	b=pV3WcwuxAwQjvXI0yJprGBllAHQ2IhNer84LSLhnlwjDqhQeP2g45GWMA5AObS
-	do+MDTgFNvlonjcUUAlYomq1tjcsW5F3Ys/h/n4K6KZi8bg+eLvKrM6YeCzUaVp+
-	3hIryzlltAVw+8lk+7/hcQfTiSM6PKzN0qer+13DZgiRY=
-Received: from [192.168.0.109] (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wCH3iOHChRothmhDw--.5760S2;
-	Fri, 02 May 2025 07:58:01 +0800 (CST)
-Message-ID: <395042eb-3986-45c1-88c1-482b750303c7@163.com>
-Date: Fri, 2 May 2025 07:57:59 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XPA0qyp2"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-301918a4e3bso1855639a91.3;
+        Thu, 01 May 2025 21:28:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1746160136; x=1746764936; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=nICllbPrXc2EBQBnG+6btLl3oHenOUIrwyECtKpec80=;
+        b=XPA0qyp2IPlpufwaozE67sQnH4EdBM7H+aZ99h+5Tohj/nQAqhlpnSXbhsEnWIeXE8
+         42U1EMIGejEaLMclM+Esf37Hhodj75vunsY7e2g86VVeHoeTbFphsiueniPEgnfkceRO
+         flKOjndlaCMscP5vnbaRW2KwaGuUvQslh2INv1agkFr+yqN/XVef994pa5CrqNDF3eFU
+         UI45Nt/Pnjyd2pkr3mS7neVTunXjXdA8ya9spXoN8+WsZ2b52kXTCR2je94zlVVR8WsO
+         8bF2PYi0fUWsb+mHpfYvOGRhFSNixe9F/rFpZhHKSKM5WyieryG9QL3ntqfi9KJ+8NAU
+         B1rw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746160136; x=1746764936;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=nICllbPrXc2EBQBnG+6btLl3oHenOUIrwyECtKpec80=;
+        b=V4G8Ru0Xq2EYTlSDlHxeCbB6iq+ReWtlteGJL/RWQIgfNnlHuRdJVJCgnKa5uXrx3E
+         65/XsZo05SarEWt21W34YE8765cyO751dz7A33j+8wmXFeJ7R3SxOyq3A3t11gU7JaPl
+         +af1AWEW8X2SzuSLH7V9IwLHkVT1I4rZ3QK8Ez7vVSrhkDUHoAPLZdNSU4IhV477exuK
+         nde55edWadvfNbsahv/8PQjbDmHAjdpanTlXkjjKzDs4ZDpMzo6O5fqBDjY6VloofVG7
+         julARC3wzvrr7AACQBfe4hAKRjBBeDjkmxrn8/tfH1hmJOrEk2Qun8QCSu3ODIRYr6Zj
+         NG/w==
+X-Forwarded-Encrypted: i=1; AJvYcCXCyMuT/jHJBHftF7tMGbtSlTJkCu0NBGAO8mbWrcxWjNLPPq9kLEIsH5oDbkG5y2KdSdQkjutr@vger.kernel.org, AJvYcCXYswwSBsEJ066hvBJtklCyTMLw12+PUL3txXU8rk4yp/a00ljdIw0P0psL2qiSR1BJyiLyQ2vacFV/fg==@vger.kernel.org, AJvYcCXq/6pvNnf0sNqvEV5bYJBV1Va6SX52TMX/tbg4VQ2wEjlE2WVdnapXBv0GTJHNSTy564vxkzqe9MCy@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz2cCnylK3PxBcB2Eu+ZsgAD8gltCw8PgMaD8qXtsMc2Ux72TQh
+	pMXQs1u8WXE8VW+4bwCCuyk+7rwUNgwXuK5eBXhvXJCc9iLNt4ad
+X-Gm-Gg: ASbGncuIqCHFdBLCoDyhqPdEaoD0vT8xSehoXVZSQINI318BMa1iKHPg8nMWB24sCv8
+	1VvRJHx2nrF/o03V2t/Zh0zfzBmWS90JM+wX//c+fGdrKKaVYqZr+UApQD8Zsh2CGl73eZ0ppG/
+	fSAXqBHxdwuLwb2bfbjyo6e6/bM3H+zIAa4/YZCjJq+/Lly+D1AyTGpi2Uu6IjoRQ218qbWke/X
+	j+wK74UpwF+fWV1yy6Z0mWxRy5cQ/J8jAj3MXkBtzz94SBcVZVu6BGyB/3T25I3r5jN79Fonzvp
+	rpCKu+2quy4l17Wj45Vwje+UXK7AwTg2Cg==
+X-Google-Smtp-Source: AGHT+IFUStdApO5eqkJRR6pViDWXnfmB0N0ZvuUrQOZ10WmoGS0rkEd0wBLoMly0tSlHHl6uG2Cg7Q==
+X-Received: by 2002:a17:90b:51d1:b0:2fe:6942:3710 with SMTP id 98e67ed59e1d1-30a4e578b72mr2309724a91.3.1746160135699;
+        Thu, 01 May 2025 21:28:55 -0700 (PDT)
+Received: from dw-tp ([171.76.84.163])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22e10938cd8sm4791775ad.225.2025.05.01.21.28.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 01 May 2025 21:28:55 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>, fstests@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org, david@fromorbit.com, hch@infradead.org
+Subject: Re: [PATCH v3 1/2] common: Move exit related functions to a common/exit
+In-Reply-To: <20250501091053.ghovsgjb52yvb7rj@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+Date: Fri, 02 May 2025 09:53:42 +0530
+Message-ID: <878qnfr67l.fsf@gmail.com>
+References: <cover.1746015588.git.nirjhar.roy.lists@gmail.com> <7363438118ab8730208ba9f35e81449b2549f331.1746015588.git.nirjhar.roy.lists@gmail.com> <87cyctqasl.fsf@gmail.com> <20250501091053.ghovsgjb52yvb7rj@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 0/2] Implement concurrent buffered write with folio
- lock
-To: Dave Chinner <david@fromorbit.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
- Chi Zhiling <chizhiling@kylinos.cn>
-References: <20250425103841.3164087-1-chizhiling@163.com>
- <aBGFfpyGtYQnK411@dread.disaster.area>
- <040637ad-54ac-4695-8e49-b4a3c643b056@163.com>
- <aBK2HAnoRacuO0CO@dread.disaster.area>
-Content-Language: en-US
-From: Chi Zhiling <chizhiling@163.com>
-In-Reply-To: <aBK2HAnoRacuO0CO@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wCH3iOHChRothmhDw--.5760S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW3AF1xur1fXF4fJr1Duw1rWFg_yoW3Jw1kpF
-	ZYkasrGr4kXr18ur4kt3Wjvr15Kw4IgrW7Cr15Wwn7Zwn8Xr12qr1IvFyF9FWjvrsav3yq
-	vF4jk348Z345AaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U20PhUUUUU=
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/xtbBgB1AnWgT+uzbEgAAsk
 
-On 2025/5/1 07:45, Dave Chinner wrote:
-> On Wed, Apr 30, 2025 at 05:03:51PM +0800, Chi Zhiling wrote:
->> On 2025/4/30 10:05, Dave Chinner wrote:
->>> On Fri, Apr 25, 2025 at 06:38:39PM +0800, Chi Zhiling wrote:
->>>> From: Chi Zhiling <chizhiling@kylinos.cn>
->>>>
->>>> This is a patch attempting to implement concurrent buffered writes.
->>>> The main idea is to use the folio lock to ensure the atomicity of the
->>>> write when writing to a single folio, instead of using the i_rwsem.
->>>>
->>>> I tried the "folio batch" solution, which is a great idea, but during
->>>> testing, I encountered an OOM issue because the locked folios couldn't
->>>> be reclaimed.
->>>>
->>>> So for now, I can only allow concurrent writes within a single block.
->>>> The good news is that since we already support BS > PS, we can use a
->>>> larger block size to enable higher granularity concurrency.
->>>
->>> I'm not going to say no to this, but I think it's a short term and
->>> niche solution to the general problem of enabling shared buffered
->>> writes. i.e. I expect that it will not exist for long, whilst
->>
->> Hi, Dave,
->>
->> Yes, it's a short-term solution, but it's enough for some scenarios.
->> I would also like to see better idea.
->>
->>> experience tells me that adding special cases to the IO path locking
->>> has a fairly high risk of unexpected regressions and/or data
->>> corruption....
->>
->> I can't say there is definitely no data corruption, but I haven't seen
->> any new errors in xfstests.
-> 
-> Yeah, that's why they are "unexpected regressions" - testing looks
-> fine, but once it gets out into complex production workloads....
-> 
->> We might need to add some assertions in the code to check for the risk
->> of data corruption, not specifically for this patch, but for the current
->> XFS system in general. This would help developers avoid introducing new
->> bugs, similar to the lockdep tool.
-> 
-> I'm not sure what you invisage here or what problems you think we
-> might be able to catch - can you describe what you are thinking
-> about here?
+Zorro Lang <zlang@redhat.com> writes:
 
-I'm just say it casually.
+> On Thu, May 01, 2025 at 08:47:46AM +0530, Ritesh Harjani wrote:
+>> "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
+>> 
+>> > Introduce a new file common/exit that will contain all the exit
+>> > related functions. This will remove the dependencies these functions
+>> > have on other non-related helper files and they can be indepedently
+>> > sourced. This was suggested by Dave Chinner[1].
+>> > While moving the exit related functions, remove _die() and die_now()
+>> > and replace die_now with _fatal(). It is of no use to keep the
+>> > unnecessary wrappers.
+>> >
+>> > [1] https://lore.kernel.org/linux-xfs/Z_UJ7XcpmtkPRhTr@dread.disaster.area/
+>> > Suggested-by: Dave Chinner <david@fromorbit.com>
+>> > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+>> > ---
+>> >  check           |  2 ++
+>> >  common/config   | 17 -----------------
+>> >  common/exit     | 39 +++++++++++++++++++++++++++++++++++++++
+>> >  common/preamble |  3 +++
+>> >  common/punch    | 39 +++++++++++++++++----------------------
+>> >  common/rc       | 28 ----------------------------
+>> >  6 files changed, 61 insertions(+), 67 deletions(-)
+>> >  create mode 100644 common/exit
+>> >
+>> > diff --git a/check b/check
+>> > index 9451c350..bd84f213 100755
+>> > --- a/check
+>> > +++ b/check
+>> > @@ -46,6 +46,8 @@ export DIFF_LENGTH=${DIFF_LENGTH:=10}
+>> >  
+>> >  # by default don't output timestamps
+>> >  timestamp=${TIMESTAMP:=false}
+>> > +. common/exit
+>> > +. common/test_names
+>> 
+>> So this gets sourced at the beginning of check script here.
+>> 
+>> >  
+>> >  rm -f $tmp.list $tmp.tmp $tmp.grep $here/$iam.out $tmp.report.* $tmp.arglist
+>> >  
+>> <...>
+>> > diff --git a/common/preamble b/common/preamble
+>> > index ba029a34..51d03396 100644
+>> > --- a/common/preamble
+>> > +++ b/common/preamble
+>> > @@ -33,6 +33,9 @@ _register_cleanup()
+>> >  # explicitly as a member of the 'all' group.
+>> >  _begin_fstest()
+>> >  {
+>> > +	. common/exit
+>> > +	. common/test_names
+>> > +
+>> 
+>> Why do we need to source these files here again? 
+>> Isn't check script already sourcing both of this in the beginning
+>> itself?
+>
+> The _begin_fstest is called at the beginning of each test case (e.g. generic/001).
+> And "check" run each test cases likes:
+>
+>   cmd="generic/001"
+>   ./$cmd
+>
+> So the imported things (by "check") can't help sub-case running
 
-I mean, is there a way to check for data corruption risks, rather than
-waiting for it to happen and then reporting an error? Just like how
-lockdep detects deadlock risks in advance.
+aah right. Each testcase is inoked by "exec ./$seq" and it won't have
+the function definitions sourced from the previous shell process. So we
+will need to source the necessary files again within the test execution.
 
-I guess not.
-
-> 
->>>> These ideas come from previous discussions:
->>>> https://lore.kernel.org/all/953b0499-5832-49dc-8580-436cf625db8c@163.com/
->>>
->>> In my spare time I've been looking at using the two state lock from
->>> bcachefs for this because it looks to provide a general solution to
->>> the issue of concurrent buffered writes.
->>
->> In fact, I have tried the two state lock, and it does work quite well.
->> However, I noticed some performance degradation in single-threaded
->> scenarios in UnixBench (I'm not sure if it's caused by the memory
->> barrier).
-> 
-> Please share the patch - I'd like to see how you implemented it and
-> how you solved the various lock ordering and wider IO serialisation
-> issues. It may be that I've overlooked something and your
-> implementation makes me aware of it. OTOH, I might see something in
-> your patch that could be improved that mitigates the regression.
-
-I think I haven't solved these problems.
-
-The lock order I envisioned is IOLOCK -> TWO_STATE_LOCK -> MMAP_LOCK ->
-ILOCK, which means that when releasing IOLOCK, TWO_STATE_LOCK should
-also be released first, including when upgrading IOLOCK_SHARED to
-IOLOCK_EXCL. However, I didn't do this.
-
-I missed this part, and although I didn't encounter any issues in the
-xfstests, this could indeed lead to a deadlock.
-
-
-Besides this, is there anything else I have missed?
-
-
-
-The patch is as follows, though it's not helpful
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 3e7448c2a969..573e31bfef3f 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -36,6 +36,17 @@
-
-  static const struct vm_operations_struct xfs_file_vm_ops;
-
-+#define TWO_STATE_LOCK(ip, state)		\
-+	xfs_two_state_lock(&ip->i_write_lock, state)
-+
-+#define TWO_STATE_UNLOCK(ip, state)		\
-+	xfs_two_state_unlock(&ip->i_write_lock, state)
-+
-+#define buffered_lock(inode)	TWO_STATE_LOCK(inode, 0)
-+#define buffered_unlock(inode)	TWO_STATE_UNLOCK(inode, 0)
-+#define direct_lock(inode)	TWO_STATE_LOCK(inode, 1)
-+#define direct_unlock(inode)	TWO_STATE_UNLOCK(inode, 1)
-+
-  /*
-   * Decide if the given file range is aligned to the size of the 
-fundamental
-   * allocation unit for the file.
-@@ -263,7 +274,10 @@ xfs_file_dio_read(
-  	ret = xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
-  	if (ret)
-  		return ret;
-+	direct_lock(ip);
-  	ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, NULL, 0, NULL, 0);
-+	direct_unlock(ip);
-+
-  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
-
-  	return ret;
-@@ -598,9 +612,13 @@ xfs_file_dio_write_aligned(
-  		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
-  		iolock = XFS_IOLOCK_SHARED;
-  	}
-+
-+	direct_lock(ip);
-  	trace_xfs_file_direct_write(iocb, from);
-  	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
-  			   &xfs_dio_write_ops, 0, NULL, 0);
-+	direct_unlock(ip);
-+
-  out_unlock:
-  	if (iolock)
-  		xfs_iunlock(ip, iolock);
-@@ -676,9 +694,11 @@ xfs_file_dio_write_unaligned(
-  	if (flags & IOMAP_DIO_FORCE_WAIT)
-  		inode_dio_wait(VFS_I(ip));
-
-+	direct_lock(ip);
-  	trace_xfs_file_direct_write(iocb, from);
-  	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
-  			   &xfs_dio_write_ops, flags, NULL, 0);
-+	direct_unlock(ip);
-
-  	/*
-  	 * Retry unaligned I/O with exclusive blocking semantics if the DIO
-@@ -776,9 +796,11 @@ xfs_file_buffered_write(
-  	if (ret)
-  		goto out;
-
-+	buffered_lock(ip);
-  	trace_xfs_file_buffered_write(iocb, from);
-  	ret = iomap_file_buffered_write(iocb, from,
-  			&xfs_buffered_write_iomap_ops);
-+	buffered_unlock(ip);
-
-  	/*
-  	 * If we hit a space limit, try to free up some lingering preallocated
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 52210a54fe7e..a8bc8d9737c4 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -114,6 +114,7 @@ xfs_inode_alloc(
-  	spin_lock_init(&ip->i_ioend_lock);
-  	ip->i_next_unlinked = NULLAGINO;
-  	ip->i_prev_unlinked = 0;
-+	two_state_lock_init(&ip->i_write_lock);
-
-  	return ip;
-  }
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index b91aaa23ea1e..9a8c75feda16 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -8,6 +8,7 @@
-
-  #include "xfs_inode_buf.h"
-  #include "xfs_inode_fork.h"
-+#include "xfs_lock.h"
-
-  /*
-   * Kernel only inode definitions
-@@ -92,6 +93,8 @@ typedef struct xfs_inode {
-  	spinlock_t		i_ioend_lock;
-  	struct work_struct	i_ioend_work;
-  	struct list_head	i_ioend_list;
-+
-+	two_state_lock_t	i_write_lock;
-  } xfs_inode_t;
-
-  static inline bool xfs_inode_on_unlinked_list(const struct xfs_inode *ip)
-
-
-
-Thanks
-
-> 
->> Since single-threaded bufferedio is still the primary read-write mode,
->> I don't want to introduce too much impact in single-threaded scenarios.
-> 
-> I mostly don't care that much about small single threaded
-> performance regressions anywhere in XFS if there is some upside for
-> scalability or performance. We've always traded off single threaded
-> performance for better concurrency and/or scalability in XFS (right
-> from the initial design choices way back in the early 1990s), so I
-> don't see why we'd treat a significant improvement in buffered IO
-> concurrency any differently.
-> 
-> -Dave.
-
+-ritesh
