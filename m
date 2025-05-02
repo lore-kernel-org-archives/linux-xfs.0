@@ -1,41 +1,73 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEEA5221FB8;
-	Fri,  2 May 2025 07:12:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAEFF19FA92;
+	Fri,  2 May 2025 08:11:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746169934; cv=none; b=DjrrHIWTaA5aQLBG+0sM/bDX/D74NZa10zmzPQtqiEWpNHdyAf3NLHYVbuWHJlFX5nKPrL4fqs+23BLTfdF7gUn/ph3oMUC81S+ig6lXnhf3NRi+rsNykvUY4+3en5hVFiIhNQjbIwonsr57ASICuYL4KZ7KDNItBgDkMd+aMEE=
+	t=1746173485; cv=none; b=OkT5AxPPKOdH4ym4YukaPE7EBxAoo1LupozW01SZDYDbUH4LdOZmyX2JawXSAECWAUTvg5Uv3+XWspAGgZbPeqThzk9Q3FBfC7i/udChXXLeF3u2y59Xlj7M4t8jsqzyd2mEGMVi8D3XYsQ3rYhuWpIGdOJAdMGQV3wxacwhEsA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746169934; c=relaxed/simple;
-	bh=POHhh+igl2+Qj8pja1hK6kR9Va3Wc6dkHIRjW38L3ag=;
+	s=arc-20240116; t=1746173485; c=relaxed/simple;
+	bh=/l9WRHoddJfJFKPKt/vNBHpMtm1OJBFgkOV9dcTiSDo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hfu99fo8O1v7Vr4eHDFRZnGJlfcl9E6WMXBPRon0cfFXtTABoOF+WZ/YWToe37e3G0Yk7ZYfmSQuSEv2c1PxcXeOFB5Xksero0FzhXYIibjrB8Xj8YA6XmClk6XrUK1nsEX3T6IvH8Eyx2GfXLiiP67+yc6rnx5Qe2ZWoh3JPeQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=N7mkR6Tj; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="N7mkR6Tj"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=POHhh+igl2+Qj8pja1hK6kR9Va3Wc6dkHIRjW38L3ag=; b=N7mkR6TjmIazz2Hwc98FXX1qy7
-	rVnkTvhHB/5ZpToOA0R3RLm5v9jK5PAc03o4jj0FfISf4CtHOEyDmYTD8LwRcdIYbT0t5RQzw5Ean
-	k38Y30BnNQ7QNeeF+4W2JWIkLE3F7IleQz+uil4EPCwAcgJEXHQZl/1ezgQ+LJI7tx8QNQzz/Y31X
-	65rlQq8r9rhBmEroDbRu17aNMai0OeSXHGscdU+om1fMRiKoaTLRFfxIhGtMzM990Q/fv6SgQng1P
-	CKHFsMBnIuq1G4JpAdte6j4R3RDwwOJITMllC+uoAwm2l/qz3hExykCWqzTrauhO9CCjZtrlMBuxH
-	dwLpNmxA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uAkZA-000000014O7-1ySS;
-	Fri, 02 May 2025 07:12:12 +0000
-Date: Fri, 2 May 2025 00:12:12 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Catherine Hoang <catherine.hoang@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v5] generic: add a test for atomic writes
-Message-ID: <aBRwTFxik14x-hyX@infradead.org>
-References: <20250410042317.82487-1-catherine.hoang@oracle.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=LiniIj/znMtAD+X+o0SKwP8ic7RXJaS1uq7kWEaTEvqL+WNz4oYs8PsGJ+g5wQ2l8IJiujjRRGyNzyJTaf8FLmjPxt1n6mOI+wNBJkgxltX8NNBHQH/2Fd8tLSg285z4DTHu8s66UvZW+a1EbGC0H6HnhSBfQX70MdLjv1CK4BU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-43ce70f9afbso13616735e9.0;
+        Fri, 02 May 2025 01:11:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746173482; x=1746778282;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/l9WRHoddJfJFKPKt/vNBHpMtm1OJBFgkOV9dcTiSDo=;
+        b=pcQZBnDz6PDlsFkwUVfID2HPnMKhcneNC//sWHPJlOVtb0pw3pGBX1F2WjINJjJDKq
+         g5en82s7pAUu6d7yEJ1wyDMJlsJLAzS6LFLz5NQsSXFRY911iHsy3XIsve4OrONz/bgk
+         NKZpGBD4Encz2iX/smED3Q/iSvclY4JqpcLqPi+/a0h/rSfUqXVVhTjCWisHUyM+3b1Z
+         zzY3TIpA3XwtCecJO7zZXwozs31Q7hwywUjZcMkiweOHR2LTunBwn0Dism9quEeGwgdh
+         4yis0iBvQJB0JMdkNcWpPIjgB3tDKERqBFJL2YnkY1et7y5l9bI+6sk5ITo9U2MAU+0Z
+         OEoA==
+X-Forwarded-Encrypted: i=1; AJvYcCUVo6RKyWB3rOSN3Aj58ct1ifp9WV0Xr8rUms5RA52WHNQVPvKzucB89NAO/61tTvNu5hBsVZjDOybT@vger.kernel.org, AJvYcCVxxLIB8fyY7GwzkyNHqgnwYUcpe4QQX8pVxuxoTMCzCfRKxUDmyEfhormFJQz62P5SsTHdwMbu0DzA6Bo=@vger.kernel.org, AJvYcCXPwcOeWiuathjXbrn53N7Sb4o9ydPWMbnvzADuzzRU0D3vUFAr0PNpVUQBr2aDqAzdm2gN0O7T9b0t/e8=@vger.kernel.org, AJvYcCXV1EB7+pT8UHUN063M3VbedC+1pFMLMfP9dRHt6tSuggZsZynHD4g6AeJdJQk7n2+xtaR6SXgdIvJs6PA=@vger.kernel.org, AJvYcCXV6iPVmEcTUsyA8lH/zZHOHE7M5bNkRXYpr3Uo4lyHvIs/ui41aNxJfw0fdgW2pXfBV0AT1hDtGnaUDBBl3A==@vger.kernel.org, AJvYcCXfWfQhKq6aLQ9noMLvhoYJn2wFNAkiXlWaYWnibsaXB1s0HW/qRjTMzBgEHUJWX/mUfDpGYtHWnG4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwtrtGsguGwe3nd14l12FwTvbpbUuvgXvgk5Rfd72K/5G+HfY5b
+	Sgx9nZonXsA5PVGdbzPW7onnX7MZt7CgOFFuj0T1dNy3KYwnVwOQ
+X-Gm-Gg: ASbGncsWt40bmBRbcbytn+FxxHY4SMhTsu3pcgPWft9qA3LCpTBkm5K11zdOB+QzzNG
+	1LCgLh+ved/2oUawZPKZjAYl+CssO2v9vwuPUDnOHNE70WPCpCTOqwN/xxip4uvFjnIpxBlLkQS
+	R4uUx3SGMYhSyYDGboHnJF3SWPXkSCxFfSogW8Xyue4/l0UWIXCC0sbuR7jn2YNwYxaxw5GvTEC
+	yryQoik/Z519ZtIs/KktQfoGJFfwn2T9Jn1O/UhuUq4VSSUFLBjJigeT92pArchKuW/aIiT+B8V
+	kjvqHZcZ1TAyOB8i6IIL1mVoBcfMSGb3t5Gsyh5EOwlPQ3PR641CTuH0vw==
+X-Google-Smtp-Source: AGHT+IF5PXSof6LicA+MgHiU22N+nB2PIEsPoZ92lRPcS/dOgUxz6GrNK7mU/Mus+h0qVk26GnapfQ==
+X-Received: by 2002:a05:600c:1d99:b0:441:b19c:96fc with SMTP id 5b1f17b1804b1-441bbeb0e07mr13471465e9.11.1746173481946;
+        Fri, 02 May 2025 01:11:21 -0700 (PDT)
+Received: from fedora (p54ad9a78.dip0.t-ipconnect.de. [84.173.154.120])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-441b89cc441sm36983865e9.3.2025.05.02.01.11.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 02 May 2025 01:11:21 -0700 (PDT)
+Date: Fri, 2 May 2025 10:11:18 +0200
+From: Johannes Thumshirn <jth@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+	"Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+	Jack Wang <jinpu.wang@ionos.com>, Coly Li <colyli@kernel.org>,
+	Kent Overstreet <kent.overstreet@linux.dev>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, Chris Mason <clm@fb.com>,
+	Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Pavel Machek <pavel@kernel.org>, slava@dubeyko.com,
+	glaubitz@physik.fu-berlin.de, frank.li@vivo.com,
+	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH 03/19] block: add a bio_add_max_vecs helper
+Message-ID: <aBR-JiTsQj3Hv4DA@fedora>
+References: <20250430212159.2865803-1-hch@lst.de>
+ <20250430212159.2865803-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,19 +76,7 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250410042317.82487-1-catherine.hoang@oracle.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250430212159.2865803-4-hch@lst.de>
 
-This fails in my zoned device tests with;
-
-mkfs.xfs: error - cannot set blocksize 512 on block device /dev/nvme3n1: Invalid argument
-
-that error turns to be because the scratch rtdev /dev/nvme3n1 has a 4k
-LBA size, while the main scratch device has a 512 byte sector size,
-which is a configuration common for but not exclusive to zoned device,
-and which means that we can't use a 512 byte block size for the file
-system.
-
-I'm not really sure how to best add the case of a larger LBA size on
-the rt device to this test, though.
-
+Looks good to me,
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
