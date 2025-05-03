@@ -1,211 +1,150 @@
-Received: from mail.karlsbakk.net (mail.karlsbakk.net [46.30.189.78])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 04C6E44C77
-	for <linux-xfs@vger.kernel.org>; Sat,  3 May 2025 02:07:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.30.189.78
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45411128816;
+	Sat,  3 May 2025 03:08:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746238060; cv=none; b=m1WVI8UrrC1151AdA7L8YvPkpH/uPVsl+3iv7MW6xCAxgx6d/PLAEjKWPhJ3YGtWgt9QAqLeRYkpcssTFmv8AR7ooklJVGjJVgThTt2AL5uY8atLs+BDMosuHZX7e3WSsF/ZrtBVRFcqzdyAsThgwpitMi0owtpil4KIGoXNtoU=
+	t=1746241728; cv=none; b=SmJPoHEoe40tuQT+0469kHWzrMmmuK1XRtDglLESEksAfwL06ItHapXLGOec/C3fhsitCPon2GJfr37g4/pyvrVCBaAdHZcHDJF6Q9CKCvB96KqYY7gj2EcGLXjyrt4PxH1D0DpVUHRnYpdRblz4ilyHO0cZ2KEcfJo8hsaF9SM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746238060; c=relaxed/simple;
-	bh=oib7NO0Fszk7LLF+T8WGvHNOESLrVmW+9irhnfMCf9M=;
-	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:To; b=tIp47qKzmzSqxtOgP2VrfSms7xa8w2dbQDY7rJAVB/jHMT6O0uuViYzoPxucXcS5tPwWhiUDNwfmiL5klpjA9qHH5mL+bX3JzN4BRzeU41s4vcxXsxhtQPNxF9qZYcm5WwE+JAV3jrs4f7SVlkj5KepZtKqf+H4D3Pjn4z461RQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=karlsbakk.net; spf=pass smtp.mailfrom=karlsbakk.net; arc=none smtp.client-ip=46.30.189.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=karlsbakk.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=karlsbakk.net
-Received: from mail.karlsbakk.net (localhost [IPv6:::1])
-	by mail.karlsbakk.net (Postfix) with ESMTP id 42C8E1A4
-	for <linux-xfs@vger.kernel.org>; Sat,  3 May 2025 04:01:59 +0200 (CEST)
-Received: from smtpclient.apple ([2001:4643:1e5c:0:5835:a27f:2652:872b])
-	by mail.karlsbakk.net with ESMTPSA
-	id iRx9DRd5FWiD5isAVNCnFw
-	(envelope-from <roy@karlsbakk.net>)
-	for <linux-xfs@vger.kernel.org>; Sat, 03 May 2025 04:01:59 +0200
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Content-Type: text/plain;
-	charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+	s=arc-20240116; t=1746241728; c=relaxed/simple;
+	bh=rQnStuc5a2kIok/ioAReZgBqDdgrldUKNzAKN5ccTBE=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=T34WofmtlA7DItYLP6IumgUAtVsGPc8E+S9+/QJxiDBO6ch8C1mLGltWIjF2MioEkqMlg4ZsiDQIw0jF63ZxFR1yDf/Vowe8JYhbtgoR1AhgZ9ptLCf8KhheuE1alkYdygXbnPs1b3CDLHbFAte4Ww7ENiZf5cWxmmdBeZ4BNjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YQa6sj+X; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YQa6sj+X"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-22c33e4fdb8so28700065ad.2;
+        Fri, 02 May 2025 20:08:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1746241725; x=1746846525; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ohBr7B7TzXFUzsbzk39OFrbATOwKxfYyQBsGv+i7gVM=;
+        b=YQa6sj+XRcKi4NHOyW4KBFHe66+CxStLIwb6+2Uh31ZSWJOh+Rg05+jtQKpFZ0HlYc
+         jghuNNDVyxUS5e3jPpnY9sOvEU4oJ/Lz8gIuDZ7Z1oUCairpExfEVxQBAmkOnLRuOANb
+         sO/ISH/deWP8ktskzTNdClV2tJZJDKvGVG/yL9uinLtuqEIA1EzSDdhWcfUDQuv8Aye3
+         sOuOjAOKzfvlrhYAbxARa6LQ/M/GIkw406ZKdr5gXnk9JVvwPjpn+mTIPRkU90RbgiA0
+         D1MiIrkZw90yLHIpIkMY689PHF5ZRuLf4yRY50evEB63zG/5nWUWyweMG6NA7UAZt/pw
+         QmHg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746241725; x=1746846525;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ohBr7B7TzXFUzsbzk39OFrbATOwKxfYyQBsGv+i7gVM=;
+        b=aJnVUaYDhGVmh09Tzh/1MPUW/lx6QHyou2iY8b2mJhpXL2fi2AOVNYW38OHPsl69lF
+         V7hubQk/dF8IZ+6roO03uJTJoC6uhfnGopE0lKH5mbLYz8DLftLmDplE2IKAGo6fx7Mm
+         wJ6MgQltczPMJeo+xeTaF5kejrHGTcEzCm7YgupOTxDHLAnaB/jIAjsKaUX5FyfcF5NT
+         pMgttvsmY5nOKMhgPL8Bn6qbrNyYkeh+mvGEctOj8gjyaiaykZmXZgWTgn1KyFHX35c6
+         pcns3eiW/E3jvR49YcdxvJFCT63YbcyaVp3WXqGVaEZLM2LtemMfH3B7q9iO5NDtVVD1
+         EPvA==
+X-Forwarded-Encrypted: i=1; AJvYcCUWIrY2mAR1GqhVGfHh+X5/r+AUV/m74YU87B7LJ2Xkr/nmGiLY3OT17W5H+og4sgMEe+bhKzXaZJBUHA==@vger.kernel.org, AJvYcCX/hadbDQgBzkwf6GshcVehShylC65kuWioxl9zKvESMaG5XZKGG3EAya4i4sOm+Oo1HzuOrxeByEjH@vger.kernel.org, AJvYcCXnbZqOz+aIMxRJ8jEn0YCyJSWJQbaNLm28WCW8d5V0E6j4UyG7QRi7Lq4WtYpOvPgA7ibizJ7M@vger.kernel.org
+X-Gm-Message-State: AOJu0YzqgsdQqzkYuGIyk+IeyeFI9dCarTyZJELSO8dctfVOV2oNZX8W
+	mrPDaE1gZfaGuuJTgXToQLvdmh6QHzG4Lo4lhpOjxT4aZ54DizDR
+X-Gm-Gg: ASbGncs9QrmGDjMSbf+t8G7nFcE2B2d2KCyxsFfGjHbQh6LIxxUIDkmH4Me3ZNE4faD
+	ZkTmTfBAozI2iDdpJsvqIN1nAKIPxpoP3PJ4uz3BdaYH/JNkGS3yUC9LrmCE5FnGhspP/YQ3TJ8
+	nmaJXoy6MRsphrXHxshvWx/ecJSBt64U/zELhnxBF5L+NtgIlquD+6YK5z6nwwe9WBfdgk1hrk2
+	tHSG51Uy7WN2j4/R54IJjdLQb3d4424iYUQPBLy9fL2N8pNp7jL1dXLcwnDtk+E1mX4xp7yFvxD
+	FtaQSV4Potzdd5S1EDmSxD5O/8bD11am+w==
+X-Google-Smtp-Source: AGHT+IETZac4TjMuuDsYed/kfbcVh7a9/Yd02ihtD6/WHApYi/EYBepcT2rtTOrQh4SOeT0vzr5p6A==
+X-Received: by 2002:a17:903:f90:b0:224:11fc:40c0 with SMTP id d9443c01a7336-22e1030c7b4mr76242925ad.11.1746241725340;
+        Fri, 02 May 2025 20:08:45 -0700 (PDT)
+Received: from dw-tp ([171.76.84.163])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22e15228cf4sm15222785ad.176.2025.05.02.20.08.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 02 May 2025 20:08:44 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>, fstests@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org, david@fromorbit.com, hch@infradead.org
+Subject: Re: [PATCH v3 1/2] common: Move exit related functions to a common/exit
+In-Reply-To: <878qnfr67l.fsf@gmail.com>
+Date: Sat, 03 May 2025 08:36:00 +0530
+Message-ID: <8734dmqtpj.fsf@gmail.com>
+References: <cover.1746015588.git.nirjhar.roy.lists@gmail.com> <7363438118ab8730208ba9f35e81449b2549f331.1746015588.git.nirjhar.roy.lists@gmail.com> <87cyctqasl.fsf@gmail.com> <20250501091053.ghovsgjb52yvb7rj@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com> <878qnfr67l.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.500.181.1.5\))
-Subject: XFS complains about data corruption after xfs_repair
-Message-Id: <9EA56046-FECD-42C5-AEF6-721A8699A45B@karlsbakk.net>
-Date: Sat, 3 May 2025 04:01:48 +0200
-To: linux-xfs@vger.kernel.org
-X-Mailer: Apple Mail (2.3826.500.181.1.5)
 
-Hi all
+Ritesh Harjani (IBM) <ritesh.list@gmail.com> writes:
 
-I have an XFS filesystem on an LVM LV which resides on a RAID-10 (md) =
-with four Seagate Exos 16TB drives. This has worked well for a long =
-time, but just now, it started complaining. The initial logs were =
-showing a lot of errors and I couldn't access the filesystem, so I gave =
-it a reboot, tha tis, I had to force one. Anyway - it booted up again =
-and looked normal, but still complained. I rebooted to single and found =
-the (non-root) filesystem already mounted and unable to unmount it, I =
-commented it out from fstab and rebooted once more to single. This =
-allowed me to run xfs_repair, although I had to use -L. Regardless, it =
-finished and I re-enabled the filesystem in fstab and rebooted once =
-more. Starting up now, it seems to work, somehow, but ext4 still throws =
-some errors as shown below, that is, "XFS (dm-0): corrupt dinode =
-43609984, (btree extents)." It seems to be the same dinode each time.
+> Zorro Lang <zlang@redhat.com> writes:
+>
+>> On Thu, May 01, 2025 at 08:47:46AM +0530, Ritesh Harjani wrote:
+>>> "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com> writes:
+>>> 
+>>> > Introduce a new file common/exit that will contain all the exit
+>>> > related functions. This will remove the dependencies these functions
+>>> > have on other non-related helper files and they can be indepedently
+>>> > sourced. This was suggested by Dave Chinner[1].
+>>> > While moving the exit related functions, remove _die() and die_now()
+>>> > and replace die_now with _fatal(). It is of no use to keep the
+>>> > unnecessary wrappers.
+>>> >
+>>> > [1] https://lore.kernel.org/linux-xfs/Z_UJ7XcpmtkPRhTr@dread.disaster.area/
+>>> > Suggested-by: Dave Chinner <david@fromorbit.com>
+>>> > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+>>> > ---
+>>> >  check           |  2 ++
+>>> >  common/config   | 17 -----------------
+>>> >  common/exit     | 39 +++++++++++++++++++++++++++++++++++++++
+>>> >  common/preamble |  3 +++
+>>> >  common/punch    | 39 +++++++++++++++++----------------------
+>>> >  common/rc       | 28 ----------------------------
+>>> >  6 files changed, 61 insertions(+), 67 deletions(-)
+>>> >  create mode 100644 common/exit
+>>> >
+>>> > diff --git a/check b/check
+>>> > index 9451c350..bd84f213 100755
+>>> > --- a/check
+>>> > +++ b/check
+>>> > @@ -46,6 +46,8 @@ export DIFF_LENGTH=${DIFF_LENGTH:=10}
+>>> >  
+>>> >  # by default don't output timestamps
+>>> >  timestamp=${TIMESTAMP:=false}
+>>> > +. common/exit
+>>> > +. common/test_names
+>>> 
+>>> So this gets sourced at the beginning of check script here.
+>>> 
+>>> >  
+>>> >  rm -f $tmp.list $tmp.tmp $tmp.grep $here/$iam.out $tmp.report.* $tmp.arglist
+>>> >  
+>>> <...>
+>>> > diff --git a/common/preamble b/common/preamble
+>>> > index ba029a34..51d03396 100644
+>>> > --- a/common/preamble
+>>> > +++ b/common/preamble
+>>> > @@ -33,6 +33,9 @@ _register_cleanup()
+>>> >  # explicitly as a member of the 'all' group.
+>>> >  _begin_fstest()
+>>> >  {
+>>> > +	. common/exit
+>>> > +	. common/test_names
+>>> > +
+>>> 
+>>> Why do we need to source these files here again? 
+>>> Isn't check script already sourcing both of this in the beginning
+>>> itself?
+>>
+>> The _begin_fstest is called at the beginning of each test case (e.g. generic/001).
+>> And "check" run each test cases likes:
+>>
+>>   cmd="generic/001"
+>>   ./$cmd
+>>
+>> So the imported things (by "check") can't help sub-case running
+>
+> aah right. Each testcase is inoked by "exec ./$seq" and it won't have
 
-Isn't an xfs_repair supposed to fix this?
+Ok. To be accurate, it is... 
 
-I'm running Debian Bookworm 12.10, kernel 6.1.0-34-amd64 and xfsprogs =
-6.1.0 - everything just clean debian.
+bash -c "<...>; exec ./$seq"
 
-Best regards
+& not just 
 
-roy
---
+exec ./$seq
 
-Output from dmesg -T
-
-[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): corrupt dinode 43609984, =
-(btree extents).
-[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): Metadata corruption detected =
-at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
-xfs_iread_bmbt_block
-[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): Unmount and run xfs_repair
-[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): First 72 bytes of corrupted =
-metadata buffer:
-[l=C3=B8. mai 3 03:28:14 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 =
-00 01 10 26 57 2a BMA3.........&W*
-[l=C3=B8. mai 3 03:28:14 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 =
-00 06 61 32 b9 58 ............a2.X
-[l=C3=B8. mai 3 03:28:14 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c =
-52 99 b8 45 4b 5b ...'......R..EK[
-[l=C3=B8. mai 3 03:28:14 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 =
-00 00 02 99 6f 80 .>c..^ _......o.
-[l=C3=B8. mai 3 03:28:14 2025] 00000040: 7f fb a7 f6 00 00 00 00 =
-........
-[l=C3=B8. mai 3 03:28:14 2025] kauditd_printk_skb: 1 callbacks =
-suppressed
-[l=C3=B8. mai 3 03:28:14 2025] audit: type=3D1400 =
-audit(1746235694.948:72): apparmor=3D"STATUS" operation=3D"profile_load" =
-profile=3D"unconfined" =
-name=3D"libvirt-cd31a98d-8534-4b9a-97ef-41bd469d231c" pid=3D3544 =
-comm=3D"apparmor_parser"
-[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): corrupt dinode 43609984, =
-(btree extents).
-[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): Metadata corruption detected =
-at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
-xfs_iread_bmbt_block
-[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): Unmount and run xfs_repair
-[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): First 72 bytes of corrupted =
-metadata buffer:
-[l=C3=B8. mai 3 03:28:14 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 =
-00 01 10 26 57 2a BMA3.........&W*
-[l=C3=B8. mai 3 03:28:14 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 =
-00 06 61 32 b9 58 ............a2.X
-[l=C3=B8. mai 3 03:28:14 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c =
-52 99 b8 45 4b 5b ...'......R..EK[
-[l=C3=B8. mai 3 03:28:14 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 =
-00 00 02 99 6f 80 .>c..^ _......o.
-[l=C3=B8. mai 3 03:28:14 2025] 00000040: 7f fb a7 f6 00 00 00 00 =
-........
-[l=C3=B8. mai 3 03:28:14 2025] audit: type=3D1400 =
-audit(1746235695.192:73): apparmor=3D"STATUS" =
-operation=3D"profile_replace" profile=3D"unconfined" =
-name=3D"libvirt-cd31a98d-8534-4b9a-97ef-41bd469d231c" pid=3D3547 =
-comm=3D"apparmor_parser"
-[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): corrupt dinode 43609984, =
-(btree extents).
-[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): Metadata corruption detected =
-at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
-xfs_iread_bmbt_block
-[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): Unmount and run xfs_repair
-[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): First 72 bytes of corrupted =
-metadata buffer:
-[l=C3=B8. mai 3 03:28:14 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 =
-00 01 10 26 57 2a BMA3.........&W*
-[l=C3=B8. mai 3 03:28:14 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 =
-00 06 61 32 b9 58 ............a2.X
-[l=C3=B8. mai 3 03:28:14 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c =
-52 99 b8 45 4b 5b ...'......R..EK[
-[l=C3=B8. mai 3 03:28:14 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 =
-00 00 02 99 6f 80 .>c..^ _......o.
-[l=C3=B8. mai 3 03:28:14 2025] 00000040: 7f fb a7 f6 00 00 00 00 =
-........
-[l=C3=B8. mai 3 03:28:15 2025] audit: type=3D1400 =
-audit(1746235695.464:74): apparmor=3D"STATUS" =
-operation=3D"profile_replace" profile=3D"unconfined" =
-name=3D"libvirt-cd31a98d-8534-4b9a-97ef-41bd469d231c" pid=3D3558 =
-comm=3D"apparmor_parser"
-[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): corrupt dinode 43609984, =
-(btree extents).
-[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): Metadata corruption detected =
-at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
-xfs_iread_bmbt_block
-[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): Unmount and run xfs_repair
-[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): First 72 bytes of corrupted =
-metadata buffer:
-[l=C3=B8. mai 3 03:28:15 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 =
-00 01 10 26 57 2a BMA3.........&W*
-[l=C3=B8. mai 3 03:28:15 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 =
-00 06 61 32 b9 58 ............a2.X
-[l=C3=B8. mai 3 03:28:15 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c =
-52 99 b8 45 4b 5b ...'......R..EK[
-[l=C3=B8. mai 3 03:28:15 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 =
-00 00 02 99 6f 80 .>c..^ _......o.
-[l=C3=B8. mai 3 03:28:15 2025] 00000040: 7f fb a7 f6 00 00 00 00 =
-........
-[l=C3=B8. mai 3 03:28:15 2025] audit: type=3D1400 =
-audit(1746235695.760:75): apparmor=3D"STATUS" =
-operation=3D"profile_replace" profile=3D"unconfined" =
-name=3D"libvirt-cd31a98d-8534-4b9a-97ef-41bd469d231c" pid=3D3566 =
-comm=3D"apparmor_parser"
-[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): corrupt dinode 43609984, =
-(btree extents).
-[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): Metadata corruption detected =
-at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
-xfs_iread_bmbt_block
-[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): Unmount and run xfs_repair
-[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): First 72 bytes of corrupted =
-metadata buffer:
-[l=C3=B8. mai 3 03:28:15 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 =
-00 01 10 26 57 2a BMA3.........&W*
-[l=C3=B8. mai 3 03:28:15 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 =
-00 06 61 32 b9 58 ............a2.X
-[l=C3=B8. mai 3 03:28:15 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c =
-52 99 b8 45 4b 5b ...'......R..EK[
-[l=C3=B8. mai 3 03:28:15 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 =
-00 00 02 99 6f 80 .>c..^ _......o.
-[l=C3=B8. mai 3 03:28:15 2025] 00000040: 7f fb a7 f6 00 00 00 00 =
-........
-[l=C3=B8. mai 3 03:28:15 2025] audit: type=3D1400 =
-audit(1746235696.140:76): apparmor=3D"STATUS" =
-operation=3D"profile_replace" info=3D"same as current profile, skipping" =
-profile=3D"unconfined" =
-name=3D"libvirt-cd31a98d-8534-4b9a-97ef-41bd469d231c" pid=3D3575 =
-comm=3D"apparmor_parser"
-[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): corrupt dinode 43609984, =
-(btree extents).
-[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): Metadata corruption detected =
-at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
-xfs_iread_bmbt_block
-[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): Unmount and run xfs_repair
-[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): First 72 bytes of corrupted =
-metadata buffer:
-[l=C3=B8. mai 3 03:28:15 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 =
-00 01 10 26 57 2a BMA3.........&W*
-[l=C3=B8. mai 3 03:28:15 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 =
-00 06 61 32 b9 58 ............a2.X
-[l=C3=B8. mai 3 03:28:15 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c =
-52 99 b8 45 4b 5b ...'......R..EK[
-[l=C3=B8. mai 3 03:28:15 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 =
-00 00 02 99 6f 80 .>c..^ _......o.
-[l=C3=B8. mai 3 03:28:15 2025] 00000040: 7f fb a7 f6 00 00 00 00 =
-........
---
-Roy Sigurd Karlsbakk
-roy@karlsbakk.net
-+47 9801 3356
---
-I all pedagogikk er det essensielt at pensum presenteres intelligibelt. =
-Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5 =
-eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste =
-tilfeller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
-
+-ritesh
