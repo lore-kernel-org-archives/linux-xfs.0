@@ -1,235 +1,211 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E58B81EBFFF;
-	Fri,  2 May 2025 20:13:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from mail.karlsbakk.net (mail.karlsbakk.net [46.30.189.78])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 04C6E44C77
+	for <linux-xfs@vger.kernel.org>; Sat,  3 May 2025 02:07:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.30.189.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746216802; cv=none; b=A3LNT2VER0yxE6v9y9MPAqoZKlj9K2hDPKB5HYj5pycyZEli2Yq9QhcBpQqBVyYLVTZTwtEZdD/7hcYjpW4nVh+e7K9yIVq15+wVVwthU7IQb9f8WqqyhSIL6f+YcKffXgtKJnqrZKWEHB/LVbHKUAHZkZveZ+8hW0ZDX4ps3Qs=
+	t=1746238060; cv=none; b=m1WVI8UrrC1151AdA7L8YvPkpH/uPVsl+3iv7MW6xCAxgx6d/PLAEjKWPhJ3YGtWgt9QAqLeRYkpcssTFmv8AR7ooklJVGjJVgThTt2AL5uY8atLs+BDMosuHZX7e3WSsF/ZrtBVRFcqzdyAsThgwpitMi0owtpil4KIGoXNtoU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746216802; c=relaxed/simple;
-	bh=ud5kPFd0X0qVPSg4fD5da0mFAuqP+3DF97NZsjzX95U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EiZO8+Nk5CVgNOT7cDxNw92XZiQDQ7Cr0ljxXRmGzQ+41BcvQXA5E26eMPxL4//FdHtWlpGeYJiEeBhl/XhV0tKesdk946lDJWf0m8HwPOyW4GrKhY1NgmGOs52Mb5UsqomFfjIm5nEKpmocEbaCa2ec73ufa1uGBTs2PcoysuQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NAEcku5N; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NAEcku5N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5360BC4CEE4;
-	Fri,  2 May 2025 20:13:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746216801;
-	bh=ud5kPFd0X0qVPSg4fD5da0mFAuqP+3DF97NZsjzX95U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NAEcku5Nxv9GRrH+L3Iv16BNKPw2uuy+IMAMt90iPCt+ePynUTiSzPsznqzxwQD/9
-	 C17Lj0STrmFVoPn7ELJh55vaiGisuowphWqqPYV4yq7kmQIy/pkL/yvdYvTMAi/hV0
-	 dgD/jTpX77cq13Br+NwbHwqvWk3/4S5SzA+28kp0zHzmcp5yUC19esm7Ym07ZOgBHS
-	 xk/fufQrNpRoG3j5hH4MuoVrzW8GaHK2yMUTKCcV8kBk0VTpm7Cs+yb7EwXWSWRgv7
-	 kR8TacvlojjWGanqW01wpH6leNdoQsaImm1eJlQetuMQqjq8hDVLhZ9AJjdcr5BS3n
-	 +N3I3zez2Wg6Q==
-Date: Fri, 2 May 2025 13:13:20 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: brauner@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk, jack@suse.cz,
-	cem@kernel.org, linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
-	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, catherine.hoang@oracle.com,
-	linux-api@vger.kernel.org
-Subject: [PATCH v10.1 05/15] xfs: ignore HW which cannot atomic write a
- single block
-Message-ID: <20250502201320.GV25675@frogsfrogsfrogs>
-References: <20250501165733.1025207-1-john.g.garry@oracle.com>
- <20250501165733.1025207-6-john.g.garry@oracle.com>
+	s=arc-20240116; t=1746238060; c=relaxed/simple;
+	bh=oib7NO0Fszk7LLF+T8WGvHNOESLrVmW+9irhnfMCf9M=;
+	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:To; b=tIp47qKzmzSqxtOgP2VrfSms7xa8w2dbQDY7rJAVB/jHMT6O0uuViYzoPxucXcS5tPwWhiUDNwfmiL5klpjA9qHH5mL+bX3JzN4BRzeU41s4vcxXsxhtQPNxF9qZYcm5WwE+JAV3jrs4f7SVlkj5KepZtKqf+H4D3Pjn4z461RQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=karlsbakk.net; spf=pass smtp.mailfrom=karlsbakk.net; arc=none smtp.client-ip=46.30.189.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=karlsbakk.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=karlsbakk.net
+Received: from mail.karlsbakk.net (localhost [IPv6:::1])
+	by mail.karlsbakk.net (Postfix) with ESMTP id 42C8E1A4
+	for <linux-xfs@vger.kernel.org>; Sat,  3 May 2025 04:01:59 +0200 (CEST)
+Received: from smtpclient.apple ([2001:4643:1e5c:0:5835:a27f:2652:872b])
+	by mail.karlsbakk.net with ESMTPSA
+	id iRx9DRd5FWiD5isAVNCnFw
+	(envelope-from <roy@karlsbakk.net>)
+	for <linux-xfs@vger.kernel.org>; Sat, 03 May 2025 04:01:59 +0200
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Content-Type: text/plain;
+	charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250501165733.1025207-6-john.g.garry@oracle.com>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.500.181.1.5\))
+Subject: XFS complains about data corruption after xfs_repair
+Message-Id: <9EA56046-FECD-42C5-AEF6-721A8699A45B@karlsbakk.net>
+Date: Sat, 3 May 2025 04:01:48 +0200
+To: linux-xfs@vger.kernel.org
+X-Mailer: Apple Mail (2.3826.500.181.1.5)
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all
 
-Currently only HW which can write at least 1x block is supported.
+I have an XFS filesystem on an LVM LV which resides on a RAID-10 (md) =
+with four Seagate Exos 16TB drives. This has worked well for a long =
+time, but just now, it started complaining. The initial logs were =
+showing a lot of errors and I couldn't access the filesystem, so I gave =
+it a reboot, tha tis, I had to force one. Anyway - it booted up again =
+and looked normal, but still complained. I rebooted to single and found =
+the (non-root) filesystem already mounted and unable to unmount it, I =
+commented it out from fstab and rebooted once more to single. This =
+allowed me to run xfs_repair, although I had to use -L. Regardless, it =
+finished and I re-enabled the filesystem in fstab and rebooted once =
+more. Starting up now, it seems to work, somehow, but ext4 still throws =
+some errors as shown below, that is, "XFS (dm-0): corrupt dinode =
+43609984, (btree extents)." It seems to be the same dinode each time.
 
-For supporting atomic writes > 1x block, a CoW-based method will also be
-used and this will not be resticted to using HW which can write >= 1x
-block.
+Isn't an xfs_repair supposed to fix this?
 
-However for deciding if HW-based atomic writes can be used, we need to
-start adding checks for write length < HW min, which complicates the
-code.  Indeed, a statx field similar to unit_max_opt should also be
-added for this minimum, which is undesirable.
+I'm running Debian Bookworm 12.10, kernel 6.1.0-34-amd64 and xfsprogs =
+6.1.0 - everything just clean debian.
 
-HW which can only write > 1x blocks would be uncommon and quite weird,
-so let's just not support it.
+Best regards
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: John Garry <john.g.garry@oracle.com>
----
-v10.1: rename xfs_getsize_buftarg and rebase on previous changes to
-xfs_getsize_buftarg
----
- fs/xfs/xfs_buf.h   |    4 ++--
- fs/xfs/xfs_inode.h |   14 ++------------
- fs/xfs/xfs_buf.c   |   44 ++++++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_super.c |    6 +++---
- 4 files changed, 43 insertions(+), 25 deletions(-)
+roy
+--
 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 132210705602b4..7759fe35d93ea7 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -112,7 +112,7 @@ struct xfs_buftarg {
- 	struct percpu_counter	bt_readahead_count;
- 	struct ratelimit_state	bt_ioerror_rl;
- 
--	/* Atomic write unit values */
-+	/* Atomic write unit values, bytes */
- 	unsigned int		bt_bdev_awu_min;
- 	unsigned int		bt_bdev_awu_max;
- 
-@@ -374,7 +374,7 @@ struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *mp,
- extern void xfs_free_buftarg(struct xfs_buftarg *);
- extern void xfs_buftarg_wait(struct xfs_buftarg *);
- extern void xfs_buftarg_drain(struct xfs_buftarg *);
--extern int xfs_setsize_buftarg(struct xfs_buftarg *, unsigned int);
-+extern int xfs_configure_buftarg(struct xfs_buftarg *, unsigned int);
- 
- #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
- #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index bdbbff0d8d9920..d7e2b902ef5c97 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -356,19 +356,9 @@ static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
- 	(XFS_IS_REALTIME_INODE(ip) ? \
- 		(ip)->i_mount->m_rtdev_targp : (ip)->i_mount->m_ddev_targp)
- 
--static inline bool
--xfs_inode_can_hw_atomic_write(
--	struct xfs_inode	*ip)
-+static inline bool xfs_inode_can_hw_atomic_write(const struct xfs_inode *ip)
- {
--	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
--
--	if (mp->m_sb.sb_blocksize < target->bt_bdev_awu_min)
--		return false;
--	if (mp->m_sb.sb_blocksize > target->bt_bdev_awu_max)
--		return false;
--
--	return true;
-+	return xfs_inode_buftarg(ip)->bt_bdev_awu_max > 0;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 292891d6ff69ac..770dc4ca79e4c4 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1714,13 +1714,45 @@ xfs_free_buftarg(
- 	kfree(btp);
- }
- 
-+/*
-+ * Configure this buffer target for hardware-assisted atomic writes if the
-+ * underlying block device supports is congruent with the filesystem geometry.
-+ */
-+static inline void
-+xfs_configure_buftarg_atomic_writes(
-+	struct xfs_buftarg	*btp)
-+{
-+	struct xfs_mount	*mp = btp->bt_mount;
-+	unsigned int		min_bytes, max_bytes;
-+
-+	min_bytes = bdev_atomic_write_unit_min_bytes(btp->bt_bdev);
-+	max_bytes = bdev_atomic_write_unit_max_bytes(btp->bt_bdev);
-+
-+	/*
-+	 * Ignore atomic write geometry that is nonsense or doesn't even cover
-+	 * a single fsblock.
-+	 */
-+	if (min_bytes > max_bytes ||
-+	    min_bytes > mp->m_sb.sb_blocksize ||
-+	    max_bytes < mp->m_sb.sb_blocksize) {
-+		min_bytes = 0;
-+		max_bytes = 0;
-+	}
-+
-+	btp->bt_bdev_awu_min = min_bytes;
-+	btp->bt_bdev_awu_max = max_bytes;
-+}
-+
-+/* Configure a buffer target that abstracts a block device. */
- int
--xfs_setsize_buftarg(
-+xfs_configure_buftarg(
- 	struct xfs_buftarg	*btp,
- 	unsigned int		sectorsize)
- {
- 	int			error;
- 
-+	ASSERT(btp->bt_bdev != NULL);
-+
- 	/* Set up metadata sector size info */
- 	btp->bt_meta_sectorsize = sectorsize;
- 	btp->bt_meta_sectormask = sectorsize - 1;
-@@ -1733,6 +1765,9 @@ xfs_setsize_buftarg(
- 		return -EINVAL;
- 	}
- 
-+	if (bdev_can_atomic_write(btp->bt_bdev))
-+		xfs_configure_buftarg_atomic_writes(btp);
-+
- 	return 0;
- }
- 
-@@ -1795,13 +1830,6 @@ xfs_alloc_buftarg(
- 	btp->bt_daxdev = fs_dax_get_by_bdev(btp->bt_bdev, &btp->bt_dax_part_off,
- 					    mp, ops);
- 
--	if (bdev_can_atomic_write(btp->bt_bdev)) {
--		btp->bt_bdev_awu_min = bdev_atomic_write_unit_min_bytes(
--						btp->bt_bdev);
--		btp->bt_bdev_awu_max = bdev_atomic_write_unit_max_bytes(
--						btp->bt_bdev);
--	}
--
- 	/*
- 	 * When allocating the buftargs we have not yet read the super block and
- 	 * thus don't know the file system sector size yet.
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 83de3ac39ae53b..ed23e6ffe644b6 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -557,7 +557,7 @@ xfs_setup_devices(
- {
- 	int			error;
- 
--	error = xfs_setsize_buftarg(mp->m_ddev_targp, mp->m_sb.sb_sectsize);
-+	error = xfs_configure_buftarg(mp->m_ddev_targp, mp->m_sb.sb_sectsize);
- 	if (error)
- 		return error;
- 
-@@ -566,7 +566,7 @@ xfs_setup_devices(
- 
- 		if (xfs_has_sector(mp))
- 			log_sector_size = mp->m_sb.sb_logsectsize;
--		error = xfs_setsize_buftarg(mp->m_logdev_targp,
-+		error = xfs_configure_buftarg(mp->m_logdev_targp,
- 					    log_sector_size);
- 		if (error)
- 			return error;
-@@ -580,7 +580,7 @@ xfs_setup_devices(
- 		}
- 		mp->m_rtdev_targp = mp->m_ddev_targp;
- 	} else if (mp->m_rtname) {
--		error = xfs_setsize_buftarg(mp->m_rtdev_targp,
-+		error = xfs_configure_buftarg(mp->m_rtdev_targp,
- 					    mp->m_sb.sb_sectsize);
- 		if (error)
- 			return error;
+Output from dmesg -T
+
+[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): corrupt dinode 43609984, =
+(btree extents).
+[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): Metadata corruption detected =
+at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
+xfs_iread_bmbt_block
+[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): Unmount and run xfs_repair
+[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): First 72 bytes of corrupted =
+metadata buffer:
+[l=C3=B8. mai 3 03:28:14 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 =
+00 01 10 26 57 2a BMA3.........&W*
+[l=C3=B8. mai 3 03:28:14 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 =
+00 06 61 32 b9 58 ............a2.X
+[l=C3=B8. mai 3 03:28:14 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c =
+52 99 b8 45 4b 5b ...'......R..EK[
+[l=C3=B8. mai 3 03:28:14 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 =
+00 00 02 99 6f 80 .>c..^ _......o.
+[l=C3=B8. mai 3 03:28:14 2025] 00000040: 7f fb a7 f6 00 00 00 00 =
+........
+[l=C3=B8. mai 3 03:28:14 2025] kauditd_printk_skb: 1 callbacks =
+suppressed
+[l=C3=B8. mai 3 03:28:14 2025] audit: type=3D1400 =
+audit(1746235694.948:72): apparmor=3D"STATUS" operation=3D"profile_load" =
+profile=3D"unconfined" =
+name=3D"libvirt-cd31a98d-8534-4b9a-97ef-41bd469d231c" pid=3D3544 =
+comm=3D"apparmor_parser"
+[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): corrupt dinode 43609984, =
+(btree extents).
+[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): Metadata corruption detected =
+at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
+xfs_iread_bmbt_block
+[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): Unmount and run xfs_repair
+[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): First 72 bytes of corrupted =
+metadata buffer:
+[l=C3=B8. mai 3 03:28:14 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 =
+00 01 10 26 57 2a BMA3.........&W*
+[l=C3=B8. mai 3 03:28:14 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 =
+00 06 61 32 b9 58 ............a2.X
+[l=C3=B8. mai 3 03:28:14 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c =
+52 99 b8 45 4b 5b ...'......R..EK[
+[l=C3=B8. mai 3 03:28:14 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 =
+00 00 02 99 6f 80 .>c..^ _......o.
+[l=C3=B8. mai 3 03:28:14 2025] 00000040: 7f fb a7 f6 00 00 00 00 =
+........
+[l=C3=B8. mai 3 03:28:14 2025] audit: type=3D1400 =
+audit(1746235695.192:73): apparmor=3D"STATUS" =
+operation=3D"profile_replace" profile=3D"unconfined" =
+name=3D"libvirt-cd31a98d-8534-4b9a-97ef-41bd469d231c" pid=3D3547 =
+comm=3D"apparmor_parser"
+[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): corrupt dinode 43609984, =
+(btree extents).
+[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): Metadata corruption detected =
+at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
+xfs_iread_bmbt_block
+[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): Unmount and run xfs_repair
+[l=C3=B8. mai 3 03:28:14 2025] XFS (dm-0): First 72 bytes of corrupted =
+metadata buffer:
+[l=C3=B8. mai 3 03:28:14 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 =
+00 01 10 26 57 2a BMA3.........&W*
+[l=C3=B8. mai 3 03:28:14 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 =
+00 06 61 32 b9 58 ............a2.X
+[l=C3=B8. mai 3 03:28:14 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c =
+52 99 b8 45 4b 5b ...'......R..EK[
+[l=C3=B8. mai 3 03:28:14 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 =
+00 00 02 99 6f 80 .>c..^ _......o.
+[l=C3=B8. mai 3 03:28:14 2025] 00000040: 7f fb a7 f6 00 00 00 00 =
+........
+[l=C3=B8. mai 3 03:28:15 2025] audit: type=3D1400 =
+audit(1746235695.464:74): apparmor=3D"STATUS" =
+operation=3D"profile_replace" profile=3D"unconfined" =
+name=3D"libvirt-cd31a98d-8534-4b9a-97ef-41bd469d231c" pid=3D3558 =
+comm=3D"apparmor_parser"
+[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): corrupt dinode 43609984, =
+(btree extents).
+[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): Metadata corruption detected =
+at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
+xfs_iread_bmbt_block
+[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): Unmount and run xfs_repair
+[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): First 72 bytes of corrupted =
+metadata buffer:
+[l=C3=B8. mai 3 03:28:15 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 =
+00 01 10 26 57 2a BMA3.........&W*
+[l=C3=B8. mai 3 03:28:15 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 =
+00 06 61 32 b9 58 ............a2.X
+[l=C3=B8. mai 3 03:28:15 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c =
+52 99 b8 45 4b 5b ...'......R..EK[
+[l=C3=B8. mai 3 03:28:15 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 =
+00 00 02 99 6f 80 .>c..^ _......o.
+[l=C3=B8. mai 3 03:28:15 2025] 00000040: 7f fb a7 f6 00 00 00 00 =
+........
+[l=C3=B8. mai 3 03:28:15 2025] audit: type=3D1400 =
+audit(1746235695.760:75): apparmor=3D"STATUS" =
+operation=3D"profile_replace" profile=3D"unconfined" =
+name=3D"libvirt-cd31a98d-8534-4b9a-97ef-41bd469d231c" pid=3D3566 =
+comm=3D"apparmor_parser"
+[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): corrupt dinode 43609984, =
+(btree extents).
+[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): Metadata corruption detected =
+at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
+xfs_iread_bmbt_block
+[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): Unmount and run xfs_repair
+[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): First 72 bytes of corrupted =
+metadata buffer:
+[l=C3=B8. mai 3 03:28:15 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 =
+00 01 10 26 57 2a BMA3.........&W*
+[l=C3=B8. mai 3 03:28:15 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 =
+00 06 61 32 b9 58 ............a2.X
+[l=C3=B8. mai 3 03:28:15 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c =
+52 99 b8 45 4b 5b ...'......R..EK[
+[l=C3=B8. mai 3 03:28:15 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 =
+00 00 02 99 6f 80 .>c..^ _......o.
+[l=C3=B8. mai 3 03:28:15 2025] 00000040: 7f fb a7 f6 00 00 00 00 =
+........
+[l=C3=B8. mai 3 03:28:15 2025] audit: type=3D1400 =
+audit(1746235696.140:76): apparmor=3D"STATUS" =
+operation=3D"profile_replace" info=3D"same as current profile, skipping" =
+profile=3D"unconfined" =
+name=3D"libvirt-cd31a98d-8534-4b9a-97ef-41bd469d231c" pid=3D3575 =
+comm=3D"apparmor_parser"
+[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): corrupt dinode 43609984, =
+(btree extents).
+[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): Metadata corruption detected =
+at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
+xfs_iread_bmbt_block
+[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): Unmount and run xfs_repair
+[l=C3=B8. mai 3 03:28:15 2025] XFS (dm-0): First 72 bytes of corrupted =
+metadata buffer:
+[l=C3=B8. mai 3 03:28:15 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 =
+00 01 10 26 57 2a BMA3.........&W*
+[l=C3=B8. mai 3 03:28:15 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 =
+00 06 61 32 b9 58 ............a2.X
+[l=C3=B8. mai 3 03:28:15 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c =
+52 99 b8 45 4b 5b ...'......R..EK[
+[l=C3=B8. mai 3 03:28:15 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 =
+00 00 02 99 6f 80 .>c..^ _......o.
+[l=C3=B8. mai 3 03:28:15 2025] 00000040: 7f fb a7 f6 00 00 00 00 =
+........
+--
+Roy Sigurd Karlsbakk
+roy@karlsbakk.net
++47 9801 3356
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt. =
+Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5 =
+eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste =
+tilfeller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.
+
