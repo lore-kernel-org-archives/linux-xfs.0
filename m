@@ -1,135 +1,119 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D5774315F
-	for <linux-xfs@vger.kernel.org>; Sat,  3 May 2025 22:16:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AFECEBE
+	for <linux-xfs@vger.kernel.org>; Sat,  3 May 2025 22:34:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746310584; cv=none; b=n7dFe4ixWul37lJqwg3dSEv8oDXzTFBnkabm1HxJ8TinIFSMuEFthC4+eiQRYdecAJY1TvULvinAcSxN4KM6ScZ/8wP/O0IVHnqpXIM6EoT+uUul4YxTZfn8CE3eSbndTiWQMM089xllRcrX7DcWPUCklq4pXkbVRE5kav4z/lg=
+	t=1746311699; cv=none; b=bNqOW7dtfHmgM3e24t6rTNJayMurWjoeopgHWs5XMd1/S4ohhhw11QH7mNuJ490C3X6/ZHuVzVCgr4nv3ZurHGNz0rQZogMHmfvvtF8zrL5Yi2qC3fwUV0o6P/lYisnvCIjpcMijPxlgqJ2CI/DPLGsF/+fgsAhWKyV4FEp9i2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746310584; c=relaxed/simple;
-	bh=Da7kcjAkTRHqVA06s8ztDuc8EzeV9QMe/dWPbIss+mE=;
+	s=arc-20240116; t=1746311699; c=relaxed/simple;
+	bh=QcJBsx3zQrrz72fl4hbINHVus9JXDKOWM/LuRtGU1hw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WGn8zlD4WzihZy3rUvGp4/N95OP73h28MURvymrkxMyG1FsYPob7QZ8LWKYOhMxkZilH6voXTZRQ3p8v9CaI4up4Kz9epyBps9HxWTPaCHZaemeuZ7jwYk9cwV5X1+og4QvGSlOFk/HE0P7ZcaVD/X9ultEdSOPOYV17eG8mYEQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=VwE32Tvk; arc=none smtp.client-ip=209.85.210.178
+	 Content-Type:Content-Disposition:In-Reply-To; b=g4UZuE+7yD2fNU+J2AW8oE1bRDe0NSLmUocvuhCNve8mhVj/SJ5JgIodxCYzHEGXvsYuGz79Tu3nrM5LJnE/jroMeI8Ip6T3a3rbZzPWGCvjfCm84oVOSFkFfwPJbCgirgZQ+C1CraJpzzp6mxOdvm0oljC3T+3Bm3ZrYJusz/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=MBcoff2f; arc=none smtp.client-ip=209.85.214.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="VwE32Tvk"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-736b98acaadso3137262b3a.1
-        for <linux-xfs@vger.kernel.org>; Sat, 03 May 2025 15:16:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="MBcoff2f"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-22c336fcdaaso38465305ad.3
+        for <linux-xfs@vger.kernel.org>; Sat, 03 May 2025 15:34:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1746310582; x=1746915382; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=F3/BOZ1oqrbclwCS/0w9JT7451hLp7XldrjPCpknUI0=;
-        b=VwE32TvkNU619qaoeQKh9nKoWLvznfFV41/iTXWLeLcOmJtQTlTi3uMoruRFdiYkgv
-         h9KWrjbFZ6cDLoG51IIvSjy0TKlsg2KDCW2tDGlvZwDIz2rMlOw/RA+GZGPQYmzmKthT
-         aCm2cf959mSevQHdiJhkK5xH2Md6ZkflN0ePx8ehZKDd4uY5hcEojc7nPWBgU8VYAKdG
-         dm5/OequgucFjoAYb6du+7WaLCARtmxxo3OMWmflliPG0G4RItMhsEkwFr1fHfocb2pH
-         3ZhekoMQQq12EpXwtfzNyop6vHW9vipty82yJepwJ+eKa17ypZqs0YoS1mMSnKFnilmF
-         VvSA==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1746311696; x=1746916496; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=uExTDiVgDAuuKf4/T4UqKfNg0MetNjVfsz9hfpKpcYA=;
+        b=MBcoff2fyBdJDDqSo7ROFa/CaQ75UH1sxbxyCm+bWLQ0O2px4WdHGCV0Heouov5pKZ
+         OLozAxvKTITKFaDjjLm2GIkkXuuVGPY+Rl4X9V9HAePEy9M+191HWdg/yIHy2sHSCIBd
+         mf6LKYV5DWyZ4yjjKeMBU3kMmk4cgLJgrDpMn1b/ohPEac2fhEkyouEZpIF30SiqUBNe
+         JHeNzz9jCMAbBGX3obxtowHGufNgBe406RSXesmCGEWUIX2hbCuTlt5/xEoPF4PHTAiG
+         NpQTs31LVTl71Wt9OkhcufivaWpQK6KwHmZwgp3tloM9Mu3mCV/2VBunzEhYKEu2lePi
+         D9XA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746310582; x=1746915382;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=F3/BOZ1oqrbclwCS/0w9JT7451hLp7XldrjPCpknUI0=;
-        b=jzZ8x1yrMhvaXuAi+OJBJw0B3t9Sn7+pPGJLmJeH5TcwRX9pvS2TGLcyFuogeVrNs7
-         LTmyCowPzlvw2KaStQrIi+l2asqLnR0Lez8UM9b/NE5gUffEUsqBnpppJky+UZF2kUNh
-         6SCdk2YQPMAJWGYPTZMHssY7bZwyHl/QTIXJRzjjLXgb7BSa5UD6ClJ2fygdlQzfoIr/
-         /qa3MkLk/4C3gSfBdxPZL+bbuokAKpK1Tl8BOmZCacUJFf+P/HPX12U7maUCmLlbdxoS
-         E5O0ZjTd6O4qCO9/oIXO4RP/9LyEAqwMexQ/591gWWNE9ND3bUMCk+ZtQGff4qT5tbB6
-         0xsw==
-X-Forwarded-Encrypted: i=1; AJvYcCXJwxaunteb/hpcAr5VbqciJJav5pjKUPHaExKGTRGr5MMeceYMAyuWu5yjvYBnVPFzxCIYI8usUeM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxjkdE4zAOCaPsy4KMp5ubyvSL+fMY3UvOgT+Qfa/S7c/FpZniJ
-	pxJykqHKEzw28RPIgawfproI1ryKoLzi4v+Tn/d995drDqbD4QVRDCxiYQKDL1axnC05bfE2kqk
-	H
-X-Gm-Gg: ASbGnctPa4yYoXs/BoFaMdmZB2vry/ap4D0ukvCsjuwexPkgA8y0oQ0QoY2nSNfjEAP
-	IVftTnrA0uCxmR5Uee1gUh7DmLazzb7lwDjB9V3cYOr1bnlUctQIuXJwhtnOTnVJ5SC7XXiCAP8
-	AcaAiZHa4R/7jmvcSnjJGZs6tcmZx1GkIDRWpzhZ3S7DVkYiIgBbxTVa//EKzH3JdIqYF9ZZixK
-	0GYj1Htj2/X3j83g1GUY73m0mEGNabJpCwlBGyh3zXAXQyUG4CVXXQkHNh1GmJM+tAF2+JB4cCd
-	rmP+CGWVpW4Iti+6TpI1BkmyGi+nRL5vBNamtFQorEsGVui7y82JO7Peush+f/rbj8TX3PBWe9f
-	ReTmWz9+7orQvuOgT5okIUpAN
-X-Google-Smtp-Source: AGHT+IGmuZRFjkJBnVjd0PafVKe4ogAwiZZ61mf+m/Kp5oR9p7LQ3yubCIm58SmnIqpQGdkDdBVuKw==
-X-Received: by 2002:a05:6a21:100f:b0:1f5:75a9:5257 with SMTP id adf61e73a8af0-20e068196e5mr6049852637.13.1746310582249;
-        Sat, 03 May 2025 15:16:22 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1746311697; x=1746916497;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=uExTDiVgDAuuKf4/T4UqKfNg0MetNjVfsz9hfpKpcYA=;
+        b=Pw09iZB13M3G0d6OYisQAfCToje57ZN6qH8/11OVyKXRd00Padvva8gUPVAAZxnVuf
+         VVbegokWukbFmtxDdNmomTl03ffmwfJFyphZwMgxUGEnNOhCuYwiJgo4on4aLz5UyOIj
+         vOa1kcb17tBzRtq4FTSrA8U3ZruIo3sjsPOlKS9yqveiBnGzBsWTDyla01Q5aA5bCJn1
+         IgM98l7vIsM4bGEEwyavyXG6QoIQYnaXFA6tvNmm1rJPq14vIvaqPm5CKEzHKioTJswS
+         cZk28AiqQlG/GTyaLEda1D/6I4OhAJTM/0uH3+UnUqcbdhJODlV832oZPZeuECT+pSoZ
+         6CxA==
+X-Gm-Message-State: AOJu0Yx9Q9alpZAydni9M353htZW/4c13JtoWoHdhaSPTQ4J1N3sr8sJ
+	CsnMIJnagTif7adMbmOlVUMHghK386Y9iTLrvYw4HYl7/bhZqJKHcc5d0iHgvmxi4EmiCqxkEFH
+	v
+X-Gm-Gg: ASbGncs6cHEsB+lWcqa8qvwxwqfzzd7WdtHABnsKGBg/iynU/ELSSq2MAbTNwd8Ia8L
+	Yj+9S+zrvaBB0z68w4MMgpepkREwgkjeRlH1gzChBxQqy5iW+GEbGZQiwP7F7Sg5uBtr5OEpV4N
+	SoLKpjcCgGDEZJTbY8mnFgvWRtCkf1EXoHvQR4jn1IZmlN3bNcweyrvNEPdrvr4nTKcp8XsT/K8
+	CrB4CQExDf9viHaRh+uWufmILf2k6tUrh+VAw7xT02GRp3ICOJl3os90IDAmgGU51D9u0nAKEjE
+	TCOnJMsNTGdULwcjwx9Lwu/7bNAfDC2klpctRVMZuOD1SpeQJP8qcEmxh2xgZ9avr+6Hbu8vHYl
+	Ixr5SKxcPWBm2QQ==
+X-Google-Smtp-Source: AGHT+IFHY4pKipKTJBdqTgH0HFsloC+jZl+55hvOsyM23Zh8Kt21EVMX9btoaJiILh+H+E093FfJBA==
+X-Received: by 2002:a17:903:1ac3:b0:227:e6b2:d989 with SMTP id d9443c01a7336-22e1ea8297bmr36086185ad.44.1746311696622;
+        Sat, 03 May 2025 15:34:56 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7405909ca4csm3839134b3a.161.2025.05.03.15.16.21
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22e1522a71esm28639575ad.186.2025.05.03.15.34.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 03 May 2025 15:16:21 -0700 (PDT)
+        Sat, 03 May 2025 15:34:56 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.98.2)
 	(envelope-from <david@fromorbit.com>)
-	id 1uBL9e-0000000GcsB-3gNd;
-	Sun, 04 May 2025 08:16:18 +1000
-Date: Sun, 4 May 2025 08:16:18 +1000
+	id 1uBLRc-0000000GdHH-3pxx;
+	Sun, 04 May 2025 08:34:52 +1000
+Date: Sun, 4 May 2025 08:34:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: Anton Gavriliuk <antosha20xx@gmail.com>
-Cc: linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org
-Subject: Re: Sequential read from NVMe/XFS twice slower on Fedora 42 than on
- Rocky 9.5
-Message-ID: <aBaVsli2AKbIa4We@dread.disaster.area>
-References: <CAAiJnjoo0--yp47UKZhbu8sNSZN6DZ-QzmZBMmtr1oC=fOOgAQ@mail.gmail.com>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: XFS complains about data corruption after xfs_repair
+Message-ID: <aBaaDGrMdE6p0BiW@dread.disaster.area>
+References: <9EA56046-FECD-42C5-AEF6-721A8699A45B@karlsbakk.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <CAAiJnjoo0--yp47UKZhbu8sNSZN6DZ-QzmZBMmtr1oC=fOOgAQ@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9EA56046-FECD-42C5-AEF6-721A8699A45B@karlsbakk.net>
 
-On Sun, May 04, 2025 at 12:04:16AM +0300, Anton Gavriliuk wrote:
-> There are 12 Kioxia CM-7 NVMe SSDs configured in mdadm/raid0 and
-> mounted to /mnt.
+On Sat, May 03, 2025 at 04:01:48AM +0200, Roy Sigurd Karlsbakk wrote:
+> Hi all
 > 
-> Exactly the same fio command running under Fedora 42
-> (6.14.5-300.fc42.x86_64) and then under Rocky 9.5
-> (5.14.0-503.40.1.el9_5.x86_64) shows twice the performance difference.
+> I have an XFS filesystem on an LVM LV which resides on a RAID-10 (md) with four Seagate Exos 16TB drives. This has worked well for a long time, but just now, it started complaining. The initial logs were showing a lot of errors and I couldn't access the filesystem, so I gave it a reboot, tha tis, I had to force one. Anyway - it booted up again and looked normal, but still complained. I rebooted to single and found the (non-root) filesystem already mounted and unable to unmount it, I commented it out from fstab and rebooted once more to single. This allowed me to run xfs_repair, although I had to use -L. Regardless, it finished and I re-enabled the filesystem in fstab and rebooted once more. Starting up now, it seems to work, somehow, but ext4 still throws some errors as shown below, that is, "XFS (dm-0): corrupt dinode 43609984, (btree extents)." It seems to be the same dinode each time.
 > 
-> /mnt/testfile size 1TB
-> server's total dram 192GB
+> Isn't an xfs_repair supposed to fix this?
 > 
-> Fedora 42
-> 
-> [root@localhost ~]# fio --name=test --rw=read --bs=256k
-> --filename=/mnt/testfile --direct=1 --numjobs=1 --iodepth=64 --exitall
-> --group_reporting --ioengine=libaio --runtime=30 --time_based
-> test: (g=0): rw=read, bs=(R) 256KiB-256KiB, (W) 256KiB-256KiB, (T)
-> 256KiB-256KiB, ioengine=libaio, iodepth=64
-> fio-3.39-44-g19d9
-> Starting 1 process
-> Jobs: 1 (f=1): [R(1)][100.0%][r=49.6GiB/s][r=203k IOPS][eta 00m:00s]
-> test: (groupid=0, jobs=1): err= 0: pid=2465: Sat May  3 17:51:24 2025
->   read: IOPS=203k, BW=49.6GiB/s (53.2GB/s)(1487GiB/30001msec)
->     slat (usec): min=3, max=1053, avg= 4.60, stdev= 1.76
->     clat (usec): min=104, max=4776, avg=310.53, stdev=29.49
->      lat (usec): min=110, max=4850, avg=315.13, stdev=29.82
+> I'm running Debian Bookworm 12.10, kernel 6.1.0-34-amd64 and xfsprogs 6.1.0 - everything just clean debian.
 
-> Rocky 9.5
-> 
-> [root@localhost ~]# fio --name=test --rw=read --bs=256k
-> --filename=/mnt/testfile --direct=1 --numjobs=1 --iodepth=64 --exitall
-> --group_reporting --ioengine=libaio --runtime=30 --time_based
-> test: (g=0): rw=read, bs=(R) 256KiB-256KiB, (W) 256KiB-256KiB, (T)
-> 256KiB-256KiB, ioengine=libaio, iodepth=64
-> fio-3.39-44-g19d9
-> Starting 1 process
-> Jobs: 1 (f=1): [R(1)][100.0%][r=96.0GiB/s][r=393k IOPS][eta 00m:00s]
-> test: (groupid=0, jobs=1): err= 0: pid=15467: Sun May  4 00:00:39 2025
->   read: IOPS=390k, BW=95.3GiB/s (102GB/s)(2860GiB/30001msec)
->     slat (nsec): min=1111, max=183816, avg=2117.94, stdev=1412.34
->     clat (usec): min=81, max=1086, avg=161.60, stdev=19.67
->      lat (usec): min=82, max=1240, avg=163.72, stdev=19.73
-> 
+Can you pull a newer xfsprogs from debian/testing or /unstable or
+build the latest versionf rom source and see if the problem
+persists?
 
-Completely latency has doubled on the fc42 kernel. For a read, there
-isn't much in terms of filesystem work to be done on direct IO
-completion, so I'm not sure this is a filesystem issue...
+> [lø. mai 3 03:28:14 2025] XFS (dm-0): corrupt dinode 43609984, (btree extents).
+> [lø. mai 3 03:28:14 2025] XFS (dm-0): Metadata corruption detected at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 xfs_iread_bmbt_block
+> [lø. mai 3 03:28:14 2025] XFS (dm-0): Unmount and run xfs_repair
+> [lø. mai 3 03:28:14 2025] XFS (dm-0): First 72 bytes of corrupted metadata buffer:
+> [lø. mai 3 03:28:14 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 00 01 10 26 57 2a BMA3.........&W*
+> [lø. mai 3 03:28:14 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 00 06 61 32 b9 58 ............a2.X
+> [lø. mai 3 03:28:14 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c 52 99 b8 45 4b 5b ...'......R..EK[
+> [lø. mai 3 03:28:14 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 00 00 02 99 6f 80 .>c..^ _......o.
+> [lø. mai 3 03:28:14 2025] 00000040: 7f fb a7 f6 00 00 00 00 ........
 
-What's the comparitive performance of an identical read profile
-directly on the raw MD raid0 device?
+It is complaining that it is trying to load more extents than the
+inode thinks it has allocated in ip->if_nextents.
+
+That means either the btree has too many extents in it, or the inode
+extent count is wrong. I can't tell which it might be from the
+dump output, so it would be useful to know if xfs-repair is actually
+detecting this issue, too.
+
+Can you post the output from xfs_repair? Could you also pull a newer
+xfs_reapir from debian/testing or build 6.14 from source and see if
+the problem is detected and/or fixed?
 
 -Dave.
 -- 
