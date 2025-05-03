@@ -1,159 +1,137 @@
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D370481B1
-	for <linux-xfs@vger.kernel.org>; Sat,  3 May 2025 21:12:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D5774315F
+	for <linux-xfs@vger.kernel.org>; Sat,  3 May 2025 22:16:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746306777; cv=none; b=fX42bQOsQGzp+4Rls8Y8LeWyvVvlLLOgn0xAyO/yhdX6t9CQ5or7MYXdnL6tsFx3DY+BJG8YlM+jSYHhKfalrOVVCfZe51lNBsYRerQ0cOezd89vRU/YgsPTPjw4Krp/Np7FjYTlkCY+dblC27S2XEZO8nCC+2X6cG848RRvc2Q=
+	t=1746310584; cv=none; b=n7dFe4ixWul37lJqwg3dSEv8oDXzTFBnkabm1HxJ8TinIFSMuEFthC4+eiQRYdecAJY1TvULvinAcSxN4KM6ScZ/8wP/O0IVHnqpXIM6EoT+uUul4YxTZfn8CE3eSbndTiWQMM089xllRcrX7DcWPUCklq4pXkbVRE5kav4z/lg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746306777; c=relaxed/simple;
-	bh=Zw4evVVInB0pAGaTLoHFIf47wVT0Trr7IcXUl/4JjVY=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=GAmPv/GKb6lsRW76yTV4M9ZJ6qrsDd38YgJ36Nysc6sRKymcQEoUrekE/MmZqDQYciT8LnAmXyALOn/0GGQV75dX3DgBhu+2u4NGJ+0Ax30RZz+Did46OmRNa5Hg61q8y4VaQkgO16zJ9KNljBs0RlsKqWZuAljijtGYxuomTwQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=mQF9jPo9; arc=none smtp.client-ip=185.67.36.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
+	s=arc-20240116; t=1746310584; c=relaxed/simple;
+	bh=Da7kcjAkTRHqVA06s8ztDuc8EzeV9QMe/dWPbIss+mE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WGn8zlD4WzihZy3rUvGp4/N95OP73h28MURvymrkxMyG1FsYPob7QZ8LWKYOhMxkZilH6voXTZRQ3p8v9CaI4up4Kz9epyBps9HxWTPaCHZaemeuZ7jwYk9cwV5X1+og4QvGSlOFk/HE0P7ZcaVD/X9ultEdSOPOYV17eG8mYEQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=VwE32Tvk; arc=none smtp.client-ip=209.85.210.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="mQF9jPo9"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id 7D7EE240027
-	for <linux-xfs@vger.kernel.org>; Sat,  3 May 2025 23:12:47 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
-	t=1746306767; bh=Zw4evVVInB0pAGaTLoHFIf47wVT0Trr7IcXUl/4JjVY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
-	 From;
-	b=mQF9jPo9KOtEXjW6dzgTri5bvCOYxI/aA+M71zqBJQVvj+4YBsLHZxFdtMdTNO/M+
-	 UmWki9KA6Eq1h5350r/4Cg2AmWacQbzWHfMjWc1LdYLypiTOwY8Pfq6VNp5ooSx5y/
-	 QCVoU/axepDAt1wbmZa3LJVJ9Ou9UwBXVm1j+MPAXW1qUmHNfvJMzZpVmuISq159aP
-	 S09figPYO2MrQ1LMYF3HrWvdxR9JEbiYdHthVeE1acH2pZsPV/xDZfMCDt/3Ya4kKJ
-	 ZuNjb1HIXzKLGjLHbw7mAyngJnziGvwL1XKLbMwYyn9B4TNGjR73U35DAH+CYCLHVW
-	 VOIgZgaeRm2Qw==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4ZqgVQ3jcSz9rxL;
-	Sat,  3 May 2025 23:12:46 +0200 (CEST)
-From: Charalampos Mitrodimas <charmitro@posteo.net>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>,  linux-xfs@vger.kernel.org,
-  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: Verify DA node btree hash order
-In-Reply-To: <20250501141249.GA25675@frogsfrogsfrogs>
-References: <6Fo_nCBU7RijxC1Kg6qD573hCAQBTcddQlb7i0E9C7tbpPIycSQ8Vt3BeW-1DqdayPO9EzyJLyNgxpH6rfts4g==@protonmail.internalid>
-	<20250412-xfs-hash-check-v1-1-fec1fef5d006@posteo.net>
-	<dyo3cdnqg3zocge2ygspovdlrjjo2dbwefbvq6w5mcbjgs3bdj@diwkyidcrpjg>
-	<20250501141249.GA25675@frogsfrogsfrogs>
-Date: Sat, 03 May 2025 21:12:31 +0000
-Message-ID: <875xihwg8w.fsf@posteo.net>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="VwE32Tvk"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-736b98acaadso3137262b3a.1
+        for <linux-xfs@vger.kernel.org>; Sat, 03 May 2025 15:16:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1746310582; x=1746915382; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=F3/BOZ1oqrbclwCS/0w9JT7451hLp7XldrjPCpknUI0=;
+        b=VwE32TvkNU619qaoeQKh9nKoWLvznfFV41/iTXWLeLcOmJtQTlTi3uMoruRFdiYkgv
+         h9KWrjbFZ6cDLoG51IIvSjy0TKlsg2KDCW2tDGlvZwDIz2rMlOw/RA+GZGPQYmzmKthT
+         aCm2cf959mSevQHdiJhkK5xH2Md6ZkflN0ePx8ehZKDd4uY5hcEojc7nPWBgU8VYAKdG
+         dm5/OequgucFjoAYb6du+7WaLCARtmxxo3OMWmflliPG0G4RItMhsEkwFr1fHfocb2pH
+         3ZhekoMQQq12EpXwtfzNyop6vHW9vipty82yJepwJ+eKa17ypZqs0YoS1mMSnKFnilmF
+         VvSA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746310582; x=1746915382;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=F3/BOZ1oqrbclwCS/0w9JT7451hLp7XldrjPCpknUI0=;
+        b=jzZ8x1yrMhvaXuAi+OJBJw0B3t9Sn7+pPGJLmJeH5TcwRX9pvS2TGLcyFuogeVrNs7
+         LTmyCowPzlvw2KaStQrIi+l2asqLnR0Lez8UM9b/NE5gUffEUsqBnpppJky+UZF2kUNh
+         6SCdk2YQPMAJWGYPTZMHssY7bZwyHl/QTIXJRzjjLXgb7BSa5UD6ClJ2fygdlQzfoIr/
+         /qa3MkLk/4C3gSfBdxPZL+bbuokAKpK1Tl8BOmZCacUJFf+P/HPX12U7maUCmLlbdxoS
+         E5O0ZjTd6O4qCO9/oIXO4RP/9LyEAqwMexQ/591gWWNE9ND3bUMCk+ZtQGff4qT5tbB6
+         0xsw==
+X-Forwarded-Encrypted: i=1; AJvYcCXJwxaunteb/hpcAr5VbqciJJav5pjKUPHaExKGTRGr5MMeceYMAyuWu5yjvYBnVPFzxCIYI8usUeM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxjkdE4zAOCaPsy4KMp5ubyvSL+fMY3UvOgT+Qfa/S7c/FpZniJ
+	pxJykqHKEzw28RPIgawfproI1ryKoLzi4v+Tn/d995drDqbD4QVRDCxiYQKDL1axnC05bfE2kqk
+	H
+X-Gm-Gg: ASbGnctPa4yYoXs/BoFaMdmZB2vry/ap4D0ukvCsjuwexPkgA8y0oQ0QoY2nSNfjEAP
+	IVftTnrA0uCxmR5Uee1gUh7DmLazzb7lwDjB9V3cYOr1bnlUctQIuXJwhtnOTnVJ5SC7XXiCAP8
+	AcaAiZHa4R/7jmvcSnjJGZs6tcmZx1GkIDRWpzhZ3S7DVkYiIgBbxTVa//EKzH3JdIqYF9ZZixK
+	0GYj1Htj2/X3j83g1GUY73m0mEGNabJpCwlBGyh3zXAXQyUG4CVXXQkHNh1GmJM+tAF2+JB4cCd
+	rmP+CGWVpW4Iti+6TpI1BkmyGi+nRL5vBNamtFQorEsGVui7y82JO7Peush+f/rbj8TX3PBWe9f
+	ReTmWz9+7orQvuOgT5okIUpAN
+X-Google-Smtp-Source: AGHT+IGmuZRFjkJBnVjd0PafVKe4ogAwiZZ61mf+m/Kp5oR9p7LQ3yubCIm58SmnIqpQGdkDdBVuKw==
+X-Received: by 2002:a05:6a21:100f:b0:1f5:75a9:5257 with SMTP id adf61e73a8af0-20e068196e5mr6049852637.13.1746310582249;
+        Sat, 03 May 2025 15:16:22 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7405909ca4csm3839134b3a.161.2025.05.03.15.16.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 03 May 2025 15:16:21 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1uBL9e-0000000GcsB-3gNd;
+	Sun, 04 May 2025 08:16:18 +1000
+Date: Sun, 4 May 2025 08:16:18 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Anton Gavriliuk <antosha20xx@gmail.com>
+Cc: linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org
+Subject: Re: Sequential read from NVMe/XFS twice slower on Fedora 42 than on
+ Rocky 9.5
+Message-ID: <aBaVsli2AKbIa4We@dread.disaster.area>
+References: <CAAiJnjoo0--yp47UKZhbu8sNSZN6DZ-QzmZBMmtr1oC=fOOgAQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAAiJnjoo0--yp47UKZhbu8sNSZN6DZ-QzmZBMmtr1oC=fOOgAQ@mail.gmail.com>
 
-"Darrick J. Wong" <djwong@kernel.org> writes:
+On Sun, May 04, 2025 at 12:04:16AM +0300, Anton Gavriliuk wrote:
+> There are 12 Kioxia CM-7 NVMe SSDs configured in mdadm/raid0 and
+> mounted to /mnt.
+> 
+> Exactly the same fio command running under Fedora 42
+> (6.14.5-300.fc42.x86_64) and then under Rocky 9.5
+> (5.14.0-503.40.1.el9_5.x86_64) shows twice the performance difference.
+> 
+> /mnt/testfile size 1TB
+> server's total dram 192GB
+> 
+> Fedora 42
+> 
+> [root@localhost ~]# fio --name=test --rw=read --bs=256k
+> --filename=/mnt/testfile --direct=1 --numjobs=1 --iodepth=64 --exitall
+> --group_reporting --ioengine=libaio --runtime=30 --time_based
+> test: (g=0): rw=read, bs=(R) 256KiB-256KiB, (W) 256KiB-256KiB, (T)
+> 256KiB-256KiB, ioengine=libaio, iodepth=64
+> fio-3.39-44-g19d9
+> Starting 1 process
+> Jobs: 1 (f=1): [R(1)][100.0%][r=49.6GiB/s][r=203k IOPS][eta 00m:00s]
+> test: (groupid=0, jobs=1): err= 0: pid=2465: Sat May  3 17:51:24 2025
+>   read: IOPS=203k, BW=49.6GiB/s (53.2GB/s)(1487GiB/30001msec)
+>     slat (usec): min=3, max=1053, avg= 4.60, stdev= 1.76
+>     clat (usec): min=104, max=4776, avg=310.53, stdev=29.49
+>      lat (usec): min=110, max=4850, avg=315.13, stdev=29.82
 
-> On Wed, Apr 30, 2025 at 11:23:57AM +0200, Carlos Maiolino wrote:
->> On Sat, Apr 12, 2025 at 08:03:57PM +0000, Charalampos Mitrodimas wrote:
->> > The xfs_da3_node_verify() function checks the integrity of directory
->> > and attribute B-tree node blocks. However, it was missing a check to
->> > ensure that the hash values of the btree entries within the node are
->> > strictly increasing, as required by the B-tree structure.
->> > 
->> > Add a loop to iterate through the btree entries and verify that each
->> > entry's hash value is greater than the previous one. If an
->> > out-of-order hash value is detected, return failure to indicate
->> > corruption.
->> > 
->> > This addresses the "XXX: hash order check?" comment and improves
->> > corruption detection for DA node blocks.
->> > 
->> > Signed-off-by: Charalampos Mitrodimas <charmitro@posteo.net>
->> > ---
->> >  fs/xfs/libxfs/xfs_da_btree.c | 11 ++++++++++-
->> >  1 file changed, 10 insertions(+), 1 deletion(-)
->> > 
->> > diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
->> > index 17d9e6154f1978ce5a5cb82176eea4d6b9cd768d..6c748911e54619c3ceae9b81f55cf61da6735f01 100644
->> > --- a/fs/xfs/libxfs/xfs_da_btree.c
->> > +++ b/fs/xfs/libxfs/xfs_da_btree.c
->> > @@ -247,7 +247,16 @@ xfs_da3_node_verify(
->> >  	    ichdr.count > mp->m_attr_geo->node_ents)
->> >  		return __this_address;
->> > 
->> > -	/* XXX: hash order check? */
->> > +	/* Check hash order */
->> > +	uint32_t prev_hash = be32_to_cpu(ichdr.btree[0].hashval);
->> > +
->> > +	for (int i = 1; i < ichdr.count; i++) {
->> > +		uint32_t curr_hash = be32_to_cpu(ichdr.btree[i].hashval);
->> > +
->> > +		if (curr_hash <= prev_hash)
->> > +			return __this_address;
->> > +		prev_hash = curr_hash;
->> > +	}
->> 
->> Hmmm. Do you have any numbers related to the performance impact of this patch?
->> 
->> IIRC for very populated directories we can end up having many entries here. It's
->> not uncommon to have filesystems with millions of entries in a single directory.
->> Now we'll be looping over all those entries here during verification, which could
->> scale to many interactions on this loop.
->> I'm not sure if I'm right here, but this seems to add a big performance penalty
->> for directory writes, so I'm curious about the performance implications of this
->> patch.
->
-> It's only a single dabtree block, which will likely be warm in cache
-> due to the crc32c validation.
+> Rocky 9.5
+> 
+> [root@localhost ~]# fio --name=test --rw=read --bs=256k
+> --filename=/mnt/testfile --direct=1 --numjobs=1 --iodepth=64 --exitall
+> --group_reporting --ioengine=libaio --runtime=30 --time_based
+> test: (g=0): rw=read, bs=(R) 256KiB-256KiB, (W) 256KiB-256KiB, (T)
+> 256KiB-256KiB, ioengine=libaio, iodepth=64
+> fio-3.39-44-g19d9
+> Starting 1 process
+> Jobs: 1 (f=1): [R(1)][100.0%][r=96.0GiB/s][r=393k IOPS][eta 00m:00s]
+> test: (groupid=0, jobs=1): err= 0: pid=15467: Sun May  4 00:00:39 2025
+>   read: IOPS=390k, BW=95.3GiB/s (102GB/s)(2860GiB/30001msec)
+>     slat (nsec): min=1111, max=183816, avg=2117.94, stdev=1412.34
+>     clat (usec): min=81, max=1086, avg=161.60, stdev=19.67
+>      lat (usec): min=82, max=1240, avg=163.72, stdev=19.73
+> 
 
-I ran a 60-second fio test that creates directories. Performance was not
-significantly changed:
+Completely latency has doubled on the fc42 kernel. For a read, there
+isn't much in terms of filesystem work to be done on direct IO
+completion, so I'm not sure this is a filesystem issue...
 
-Before: read: IOPS=4809k, BW=18.3GiB/s (19.7GB/s)(1101GiB/60001msec)
-After: read: IOPS=5121k, BW=19.5GiB/s (20.0GB/s)(1172GiB/60000msec)
+What's the comparitive performance of an identical read profile
+directly on the raw MD raid0 device?
 
-But I'd welcome input on more targeted benchmarks if these aren't
-representative.
-
->
-> But if memory serves, one can create a large enough dir (or xattr)
-> structure such that a dabtree node gets written out with a bunch of
-> entries with the same hashval.  That was the subject of the correction
-> made in commit b7b81f336ac02f ("xfs_repair: fix incorrect dabtree
-> hashval comparison") so I've been wondering if this passes the xfs/599
-> test?  Or am I just being dumb?
-
-I've tested the patch with xfs/599 as you suggested, and found the
-issue. The test fails with:
-
-  if (curr_hash <= prev_hash)
-      return __this_address;
-
-But passes with:
-
-  if (curr_hash < prev_hash)
-      return __this_address;
-
-XFS supports entries with identical hash values. This aligns with commit
-b7b81f336ac02f ("xfs_repair: fix incorrect dabtree hashval comparison").
-
-I'll send a v2 that checks for non-decreasing hash values (allowing
-equality), rather than strictly increasing ones.
-
->
-> --D
->
->> > 
->> >  	return NULL;
->> >  }
->> > 
->> > ---
->> > base-commit: ecd5d67ad602c2c12e8709762717112ef0958767
->> > change-id: 20250412-xfs-hash-check-be7397881a2c
->> > 
->> > Best regards,
->> > --
->> > Charalampos Mitrodimas <charmitro@posteo.net>
->> > 
->> 
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
