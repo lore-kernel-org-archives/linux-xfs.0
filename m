@@ -1,70 +1,70 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07314199931;
-	Sun,  4 May 2025 09:00:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41F921DB951;
+	Sun,  4 May 2025 09:00:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746349230; cv=fail; b=ixpCAZZRZ/lB3RHSLUzLNhZwcg/1fXdavuXgAyTuo0RI/i/DcVT8bry81BL8OSxGO5fNHe4rBdOWCcFDEiJ3Wi3w8VFeuBh0VpRwdceQCNjD31v07R4jZiNmtnTfDp5WFWBNown2OXdfaZ3ddGaUbAmhBx38Ed97koATjyyHNOQ=
+	t=1746349234; cv=fail; b=TilRatVCv3t5vChNAnNy93JaBG96In86J7NLTiHdtUIRSfhwnyIKiVzQ4SZdXp7Zip4SRAlEf0sDdjjTrBkJ3elb3Dl12xieAPoWP5gvU9Ia7TMctg6R5dLHbnjUWZd50OE33W7nK0XDQoMbBwzTdY8ROKdrGaQMI4zJdn6UrEE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746349230; c=relaxed/simple;
-	bh=9VFmvw8VF1chdP8OjAH5HxqGEv1269P9oeW+EWcQoRk=;
+	s=arc-20240116; t=1746349234; c=relaxed/simple;
+	bh=grD7ifJZSCzAsDbA6LAY+ymaIi6biQ4JtrUjxHisUfM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=GwDtCWDzEQNwBByBhgO0QjOFVYPpdMHA6ZVE7vJjF4weJnAmhkFey8Z8839yznZo0R7z29kCOAYG2JX2NN0Lup0o25EACcI5WFsASPKdGiU9JQSnPtBXsmkkUPB46vedcc3WhPUZ3blyj83R9wdpZrjcaeq4tq01GOWtDMvTMwM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=qHUy6/FX; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Ll3JYRg7; arc=fail smtp.client-ip=205.220.165.32
+	 Content-Type:MIME-Version; b=EX0j/AQsqIn7uW3alw43uDbqgSRtFU/nfFXm6HJhXDa8y7bHklx6A2/0y+tvKX7qa48o6pErDmhpr8ztbQY2Ar00Fqba3dGfCo0ZKnJlMJH6evLoGvYNtj+vyGfmG9XthcoUltSzpFX2yuj6sPSR85G595cJlwrHGEaR2RurmUA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=YUriLf0N; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=HoK24fpD; arc=fail smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qHUy6/FX";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Ll3JYRg7"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5448M51Z029823;
-	Sun, 4 May 2025 09:00:15 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YUriLf0N";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="HoK24fpD"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5447MmsQ013216;
+	Sun, 4 May 2025 09:00:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=j9xxB5gxSLG2TwhErVZly1cUqbdL0R17BVPJ3uUQ5Ys=; b=
-	qHUy6/FXyN8W6GUs3FmUCzNFfTxbO3+Q53ARM65Qng3U9jEXdY/3LEeA/P7ouQpb
-	n3l776Ro6TIho6c3Kd4q7rllvOlXzcs978JKlC0JqBwA++CPtuExMfF9H+nI3tMj
-	n6jvwIlp8iTuNgC7sbSU4nA4kxCuTD7a/pMfmkxCFI6uO9Od1YvZwpb0f0k5LzUx
-	FYisZv8zb3fjjqxCc/Di6O1qex550H63OjFrbtnwv/3/9Eb4pDq4rYneVW+8wa2I
-	q0HpKsHeoiQCOqrJnCBbrwQgMANOgtLulId6qSxvoo9kS3GjJny/n44nad+psh2/
-	x1Px7V3Wi9p8aVOMv4qHbA==
+	corp-2025-04-25; bh=JB+yRRLFDy8/oY8gCkDWw1Rql7iafCnpEv1JJwhIj0Q=; b=
+	YUriLf0NG9dmuxSGXj/QYmo4tpkkYQy7Zr3Z0AIVdH11bY41Y8HOvciy9GmVq5CH
+	MUszgcltZ6yS34e23fR1DmQbUMYy/wTjPgv6dQo90s0UfBex1OyVua+Xy5Bkm1kE
+	nmfNZwHjuZ2FlN731KmBPAtM3So8VF7xcWUTIbo9vex1bnGkk2WT0T7aYawsUoGt
+	R7kELOQ1K7XyYpXIGhDl97Z7zesqNMablckxIYKRz6evXAyj+WcJaLefWdEMEeX8
+	unlwCJEcKPbgDpYePlJCPyHyW8aQtinnpAb4oiPejRtbFSkK0riVt5QelLi+hYMm
+	ZNkG7NyN/wPxja8gn0gK5Q==
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 46e4nqr10v-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 46e3smg2sn-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 04 May 2025 09:00:14 +0000 (GMT)
+	Sun, 04 May 2025 09:00:21 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5444Nu7E035905;
-	Sun, 4 May 2025 09:00:13 GMT
-Received: from ch5pr02cu005.outbound.protection.outlook.com (mail-northcentralusazlp17012055.outbound.protection.outlook.com [40.93.20.55])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 46d9k7ghqy-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5448iX5M036027;
+	Sun, 4 May 2025 09:00:20 GMT
+Received: from ch5pr02cu005.outbound.protection.outlook.com (mail-northcentralusazlp17012053.outbound.protection.outlook.com [40.93.20.53])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 46d9k7ghya-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 04 May 2025 09:00:13 +0000
+	Sun, 04 May 2025 09:00:20 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ib3Bbn3V7PeGuPGb1PGn7q+krttQOLzYY4cnRoBPFBPZR2Ex2A9r6uc2Eyndwn8Sri4pKHEWDU3Uxt1qEnhTymjzJIJafipLNjiuxILFMZtPkhhrLd8AzTD1afzh10XPUf5k3vRyCc3I5zH5vldxEyYNAYIkcRtQXTcscj+54buWQA62018ddoJZwPbaIbyVCKP+TPfPEC1vV0VTjl8WwZva5Q/8kV2BXrjKbIiVUVsWvXXSZ9p3CpeCpKotoq7+unV4EO5Md6U4sm3XUQcCvC9NUnRyRP/h5/CEwa6khBOw52FkQgw1wLrFFiVkKUnoN1AYQjChX0CDBVe4Ttl1PQ==
+ b=C7lgwOgFRU2dk4d/nQs5f0Qa1W71UeiyZ3J6SUF5nN1fR5Uu1qPdH1ui85oH5auTjpVX46+FRKhfMEqLrh47tVHOKLy5MntvwXwuiR78DAOxT7A4DBdZVvaEs+xvPVgSY5U9E0otJzp63L7aOam+WjGt6Pt9Z29spgVacg45pwGX9vp0UWwds6HFxVJn6EE5Iw6jSRmkWKPOQWULxMrcdvWNo7LQ2YSZcq3nis1yFoV5toRuSZL7IHI7DqavM4i/1CRa2BP1FOXJMA3/K1z1Y+LpnZFcIRp6DrFYlo0Fqfdwc06pQDpvOhOQB//h6WvlAUd6+JVWDpizAkqbTfZ/sw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=j9xxB5gxSLG2TwhErVZly1cUqbdL0R17BVPJ3uUQ5Ys=;
- b=C8t82WQCZpe2QtGzxzw6ukipZZtyO9B5UyR4AWsYarao9uIjVfc3voHVSiMsIuZ5z9+PF2pN/T73VC3ELp81PocBQepfEc6hlGQ300rsqmd7nkbdv//d56Otioup7GhK+xEb+UP/Hrw0sJT0OIQE7KH64aHfwPxBH2iXEDuTLwbEFbnjz8EdI7ig0gTAcg8whP1eF2xVbzumadEbF67K9/xeDkq/eW7iARkJitoaTxqHMp/w0m9cPYNRaeYF1Ft1be6xoR7Fa44gYp8Z4wABnFEOFi9MF2/HT2zi9SrcmSTaNmcbwk/U0YkIBLpvoELLEk5dmjniEuILQpKKpZ/11g==
+ bh=JB+yRRLFDy8/oY8gCkDWw1Rql7iafCnpEv1JJwhIj0Q=;
+ b=dpmHRg3GZ2mRhhqc7qDTYMlCnhZef40eaYAHiQwRdDq0LUkvXTlrIxFekwgFIfYhpp8t8i7LPbZsSv/ZJnQKKKi2xENOKIDAYRObU9JmH9qGSqTbOhPoRjTY/72hIdEMa1Mh4qb7MLmWqAut/vkpIj6fVmBcsv0qiGyZulNIF76sqVEOEuG9GmS/aK5VUwROqUzRgewk0DiwhCv37icPKFLjRPQIj/jZn28Sq7kq5aEajJNSREgTdZpEb6q1hSB+v29nSwdRcACRKrdeo3UDXkNA3DptmIb6Jj4N+uUvVW+N+jJ/5RrCSeyMGBF1V/d/blOsYi+SAP97K498NV0iag==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=j9xxB5gxSLG2TwhErVZly1cUqbdL0R17BVPJ3uUQ5Ys=;
- b=Ll3JYRg729Q9Le7sKZzMvI4z3VNNnOqqkuy4JXyg7MhBJ7iGJLAo/ANXPjcGJTFJ00koC5Eypf4lFffvoC3ho54utSK3t+GDMGD7X19eoBcV/mpjFtqn7jTa/Y8eZbYqtmp7xpYb2MvKO6HmvLnzl7XB34MHFY4JDrgkFOBPdqU=
+ bh=JB+yRRLFDy8/oY8gCkDWw1Rql7iafCnpEv1JJwhIj0Q=;
+ b=HoK24fpD/jEeIi2U5HQ7lC4TT3AbXZJ2iPLK8p2ULR/wjTZtofYNgM+woRmLMLql8EQsWusM2CLxX08WhQYD7AuNj/chrTJ30sr8tcZ8ojUp9HwhDfasP9THgvywETeX/9DLcST4/4uHPO7ltxNi8AyVPTiHaAriORk90emxVcY=
 Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by DS7PR10MB7178.namprd10.prod.outlook.com (2603:10b6:8:e1::16) with
+ by PH8PR10MB6648.namprd10.prod.outlook.com (2603:10b6:510:220::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8699.23; Sun, 4 May
- 2025 09:00:11 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8678.31; Sun, 4 May
+ 2025 09:00:17 +0000
 Received: from DM6PR10MB4313.namprd10.prod.outlook.com
  ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
  ([fe80::4f45:f4ab:121:e088%7]) with mapi id 15.20.8699.022; Sun, 4 May 2025
- 09:00:09 +0000
+ 09:00:17 +0000
 From: John Garry <john.g.garry@oracle.com>
 To: brauner@kernel.org, djwong@kernel.org, hch@lst.de, viro@zeniv.linux.org.uk,
         jack@suse.cz, cem@kernel.org
@@ -74,16 +74,16 @@ Cc: linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
         martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
         linux-block@vger.kernel.org, catherine.hoang@oracle.com,
         linux-api@vger.kernel.org, John Garry <john.g.garry@oracle.com>
-Subject: [PATCH v11 11/16] xfs: add large atomic writes checks in xfs_direct_write_iomap_begin()
-Date: Sun,  4 May 2025 08:59:18 +0000
-Message-Id: <20250504085923.1895402-12-john.g.garry@oracle.com>
+Subject: [PATCH v11 16/16] xfs: allow sysadmins to specify a maximum atomic write limit at mount time
+Date: Sun,  4 May 2025 08:59:23 +0000
+Message-Id: <20250504085923.1895402-17-john.g.garry@oracle.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20250504085923.1895402-1-john.g.garry@oracle.com>
 References: <20250504085923.1895402-1-john.g.garry@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MN2PR15CA0030.namprd15.prod.outlook.com
- (2603:10b6:208:1b4::43) To DM6PR10MB4313.namprd10.prod.outlook.com
+X-ClientProxiedBy: MN2PR08CA0015.namprd08.prod.outlook.com
+ (2603:10b6:208:239::20) To DM6PR10MB4313.namprd10.prod.outlook.com
  (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -92,83 +92,83 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DS7PR10MB7178:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0ec48e69-afb5-4fc4-68ba-08dd8aea12b9
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|PH8PR10MB6648:EE_
+X-MS-Office365-Filtering-Correlation-Id: 20fdf0c8-9622-4997-e834-08dd8aea16f7
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|1800799024|376014|366016;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014|7416014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?bVvdq85UK5pX4+sBOo1v7yDNLY7WeHxTRZ7/TOyuJMAgteZuuwocKm/tahyp?=
- =?us-ascii?Q?y53klhYyYiqakQSEeQYcqXktbZXMsaXtAE9GBTLLJB8F9olNT9w9yGTt8Y0f?=
- =?us-ascii?Q?MnhpsO7q72s4NucrLrC6vAUMyBELFwqb0hZIlnWUAMuxvuBGLcPl/kTXUGFL?=
- =?us-ascii?Q?DVKsRlH7MyOHCInp7isEPcnKVwHnj88h4LK0d94ADQmQSMceQxDZuymohYmv?=
- =?us-ascii?Q?9fdZ55IlSxF8rfbFUi2k/XbTplqjHs3wBxSasHONnfI0XGT35hB11rZghpGf?=
- =?us-ascii?Q?IOOW1EZd2/aYeAyCDWOzzKbsZtnChfbr5J440GcpaSb0MwgBhjUhpIiEe+GQ?=
- =?us-ascii?Q?s93oIFjEnHXegt+Vp8BjtRgRPF2xTkF+Ch7NUXVzG1AJfORSuS3dTCCpxM5q?=
- =?us-ascii?Q?vEPzj6m++JBXmRW8T7AAc/loC9sjREYPI0LPRPVDr5/meAcroSkmzD4NVDdo?=
- =?us-ascii?Q?TpHiyG5PSLwBEQ7f05Ir1ZjLlMXNS4uOHFL9mQeYLNWgItjkBaa6XAgTsCWE?=
- =?us-ascii?Q?oXkxDkLVMtHzA9/lTRzKjH1n7TZOkiskE+xFhf+gA6MLi7eQq7JQcip1QKK3?=
- =?us-ascii?Q?ReMsiySdLUZmPLqiSjd8U83zSorgTvEh3yTHcQVd7Gg9/suTMQt7K5z9Lza/?=
- =?us-ascii?Q?jIJec/NrVRANkFXkZzk5fvlB0NB0tKGQWJzhgc4+nvIJ5Xynx4JHDof3f0GM?=
- =?us-ascii?Q?TL2KhcD2g3j7oZx7/SX62B/P+wAmqa9E/iv61rL/cKUIDnpjO/t8rEHWn1zF?=
- =?us-ascii?Q?e6pvD45q07MURN31EntE212M2L4I1QJW1K0WgDjUGm++GezuQQPxcAeu+2Xv?=
- =?us-ascii?Q?GW4hcd82lMZXuTkthkqpzMWapH/gvzl6u0Rc0vqyeRscyeF6M/YUW+0Objdi?=
- =?us-ascii?Q?SDHS8a5u6qUUReXsPlq6uECY+rL8s+1/SgOt6UXT5UA9Q3Lo0BonwhhV3xTe?=
- =?us-ascii?Q?fnvL122Z4M4SgbyUt0RGBaAAykOoX4QPDB8cH25gLjTI6SzbaYuF7yhEWw/X?=
- =?us-ascii?Q?S4EgnmK41deO+obgLUER1FxVqT8UZFhj7kZRRnSV5a2xIKWrzbbHit8lIXdO?=
- =?us-ascii?Q?uB0Z3XZ9BFeyveu+UKzS1JG034P6hTnI9uc6a7AhGx5SzRUOxeiA9Nch4XGT?=
- =?us-ascii?Q?FGOEF2CLU5TTaiOUJdPs0kEnLdUeSlbH4jCCNtIOfEClHWQ8DpDpF6XpLO9J?=
- =?us-ascii?Q?KnbbUtO2IMSoMd6G/krbDFOyThP8hYfsN19zuhGXjs+fIb81dUkTRQeD63xQ?=
- =?us-ascii?Q?6FE1YrtXcLkX2r/0cvNzrOuRJvrTp/TKk+70PWREtjxrXPEQ28cF5RqspCFR?=
- =?us-ascii?Q?Wdr4gRP8hnZpjNWZ8U9VvyRVc2Ybuy2jt3dUXewko7KLdt8fT3JytIkRzlXL?=
- =?us-ascii?Q?0kDLaLSSLXUy9wZGJUW01kDJPHFz86KvWcK4nJEw0DnzAlhWKZTGxIBF1i79?=
- =?us-ascii?Q?KrCRpawLPcs=3D?=
+	=?us-ascii?Q?ke9tehcHYdcvL6O/aPPfqIW0bnhVVYpVEcR0oH3+rMCYDv/uWjqL0Mwb4wBf?=
+ =?us-ascii?Q?lxEcZ1pqec1sopTz0fOVBbesxw/UFGnmrVZPhJI9EnNLa/uqkCqjCTposrAv?=
+ =?us-ascii?Q?ya8BQdZjI7ALtEZobsTBDSkbOE+glX6zZ10J4L+pB71ii4SD6rJCO/NfMjPI?=
+ =?us-ascii?Q?3db+kkL1rzhH9b5U7LFY+gELdvVfo0zMl9hxMYnGZVaBSskb4QzhkMMtrJgH?=
+ =?us-ascii?Q?Z+zQFrqd2yFyObPDdBmy6sO0tiukXO0WW5yCNdSU9PnTvB9Snql1rY+8OMZZ?=
+ =?us-ascii?Q?JyT97iFkC4GFpAjn+3sxEb8n2A7kocSvSFkO817HwseVEtGLFGyTR6PPj+P5?=
+ =?us-ascii?Q?t0F85Zvc/20pomhqwkN4mBfGhTSywzVsljZTqrABjrI0fbtx81UYHjpZOIKC?=
+ =?us-ascii?Q?cLIjQoDrgYx4oHRgwjgWdLC/EGRUOj663aFQyRVmVxVN+1Q6srABcMAiBLs8?=
+ =?us-ascii?Q?yNyvgrOi8LdbeM+Ce467+UlfA0MXSX723BF/1cWm2Qasdj7rXHhmaRS2CSCM?=
+ =?us-ascii?Q?kQUJMJio8sbO4Cic4YWMl+qNGHOt8pnjTSPqHptYpDG9rojJI/u0XshSWxqG?=
+ =?us-ascii?Q?HoSsGYpOXTLdd2OgxEz+AymtR0UHu5/rm4koMnmcgryzvba2pZh8HrvaLean?=
+ =?us-ascii?Q?9ATfxp3OiobIF4j2s1Z0nuglaSFLiGgHfnRovKlKT+uTYVDNvzFd0Jj/Ft1s?=
+ =?us-ascii?Q?HpMeStMPi6C4KsqCJiW6jroiJhRiuWj8aK0cKRDr2ydMA4/99X9KKb/03Fna?=
+ =?us-ascii?Q?fzgNHrYxtZYVTzuzzmtMmCMfLXn49GTDNiIsh1K3p83hsP79XRLDGPwVOQEB?=
+ =?us-ascii?Q?SHIOf/SPxIiuDGh/QwAfnBqIu5vmy3aTjN8b6AZgz+0qF8u/zzzch9NDT+Zd?=
+ =?us-ascii?Q?UVtErb8S1GlnhXUmSXsYgfFOePEE16MC02D6YS8AFqZJftT8n1C3aPhODgPp?=
+ =?us-ascii?Q?4TtTKSPgjis8Oe9ULSPqPubd5uTgwpYDXOWOkYxZ/nd6jk8jJX8rkTbjrGxt?=
+ =?us-ascii?Q?KdXY7PVwDEkk7j8FTZHbH5XXj/qYw0qNoNeXZ3N/pJXb2TUEiXSou2wHI1OI?=
+ =?us-ascii?Q?42UntBNW9K2CIpxFzKeJHRdqhw8lzqw2/RDfqkM3Sl61cyKWQucdblVxqugk?=
+ =?us-ascii?Q?8e+xSTDo/K7e8i1ewP03urWUumBcddOqr49Ee6pRk3dFMB0VSkU7bw0zSdrR?=
+ =?us-ascii?Q?yrXL7MMaS96PbhifRbO6eTaxa56f9QHkI6wUfxOxLiceukBJgM6wD9t/5THA?=
+ =?us-ascii?Q?IeHwBfTMI1p2hBRMcfos31HMiTLP1s0zA/VKntuzZ+OdYF5Rzd9kU1NZt5ZJ?=
+ =?us-ascii?Q?VDnI22MPtTNFYm8FJO2SMLc/thqatEk0VWK2SRXdU0q8PzlQLH7LFPtgIj2W?=
+ =?us-ascii?Q?7VLvwq8uF6l5auS48s8RDxvE5yjarKS1+hEiSY0NGDV3/sLw4aRCWl0fESZs?=
+ =?us-ascii?Q?fQ4H68I/vro=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?02yqzo2tJD6JVRrKx9yVSU01i3gBKHnqCz8rB3m1qSkyJUtjW4SiKVUmBKUq?=
- =?us-ascii?Q?R/3CJYmyMN0Jn/HLz+UY4J7Q45m6H3GNh5UH5Jrhgn+WfivkHYax7u0gMmnx?=
- =?us-ascii?Q?bzt9/Kwv5yBFK4ZNbpPAUt+/fSJU/ue4rtFpLtAPQP69EC/Tntr76yzU31fi?=
- =?us-ascii?Q?zRCASaiEnPbTcZT0V1YVhvRYDZsh7wnUnFzwaZVgh5ICogHHQdMVHEEfPkvr?=
- =?us-ascii?Q?qRjCy4uuhQVeRhEDqUqnjTuP7o6f/1LDnLgDQL6jtDOSpATgQS55IwiQ8lA4?=
- =?us-ascii?Q?7t8meDyjxD+cpDLnPV4eBbJJTB4bOy/OOZs3elIqKZe4Cw+8On38Pz3O84Pj?=
- =?us-ascii?Q?bzuxX3+6z+JUI/DMESRet2UWAiX/7HOObg36Fl3m2LYOf0+WhMh/zToSsDlt?=
- =?us-ascii?Q?UuHj8Vt/g6IN8EvVtoEQjcF7MDr4cS6AsTNawI0yG/TPupSjAPq2TeNHnfDc?=
- =?us-ascii?Q?IiE0HA87VnX6z8YKlb+nuypJKJA4B4q94hnfi+ol9ofVbBbJgQtjzdAKcXnC?=
- =?us-ascii?Q?Tuw2wAAE2YTB16hoKMO86YdRyzbUo0c99y4TmET04kCqniNYaSOjBhA8Uqca?=
- =?us-ascii?Q?ZxqbVdn1sJE0CUWRp1hHOeDJxbqtnaABRx3pAlgX33b9JyEUu9DS+HG/OSN5?=
- =?us-ascii?Q?uaRH0DDLtUPSh2GWM9B+440+US04kvlYFp+oW4GsfYYYmFuOQhsK/b0Tc58M?=
- =?us-ascii?Q?iGoyGDk09YgbxqgHa4H/a7Zu/vcv0NtwXAdHwxboPurbgr9ejBEoilm6p7PP?=
- =?us-ascii?Q?fHxYOx27RwMIqqIxceQYAE0k2+vk77a58CPIq8k8qUji9OZoR+3dF/5CsBYS?=
- =?us-ascii?Q?88atv9ycDXojJmejuw8jDHJKxTd8RApZQNmsOshp+bWg3+4R/OB8sZnDYDW0?=
- =?us-ascii?Q?m3unK48mht3CimEygdqViYzOD0oD7sHfnS8xARRRYi44g0/22fSRpoNhZhU8?=
- =?us-ascii?Q?KEVP47xNLoy9RMVdmc4DCaEqfNA2819DClSsI2YwRXocN6hA+jxEu6gjyxYp?=
- =?us-ascii?Q?CKZCTDfvZbampJLPH9roY0zg8g4EFNB06TwXy9vHatVScqlHMF9TDaLVn8+M?=
- =?us-ascii?Q?Ka1EAGEz2g3N+HMqWq/O6XRnpGPKULuOpqnMlx269TnLi9flRKMxz1rbAiWE?=
- =?us-ascii?Q?F24iuVStX7xYhh4PpjryTDJhawyztvJNyCPytPTu2bU+jBohSx0+ABkT5jvQ?=
- =?us-ascii?Q?KUme4zHHekhsDGLdS2e92wodaNraTuQMSSl9b6dG+tW310yTonmZ/a76AR3U?=
- =?us-ascii?Q?lnmcX60o6Z5DkuO7gC+GEEThlzqLBJWrxXuzoBsgohyAR7AE3pDyGd0kJhp7?=
- =?us-ascii?Q?3iu1KXsTsuB9Z7C84n1+aM3hMvjMnifl63xSwrr1VMbT8SyDwtTmjIiGKQmP?=
- =?us-ascii?Q?V8F/k2NwCYtDvQdUf4pYc5W6HrV0ibPxQXSIuQ2OywByq/XtQkPsxjgI0H1u?=
- =?us-ascii?Q?trxPUw+bEI7umKp1wim3GTTktcy2hgRedEHlJM3bQZaJFeSBk2fEubdY5KyT?=
- =?us-ascii?Q?gc7299lS07AnMhbzmhB9Pa0K7mH0XyU/g36dhQjmntqbzgXJstyiGFB4BkSN?=
- =?us-ascii?Q?xOcgI7eKN/dr4XK57wGOo9/WZnEP0bVU7pbSqFkls+OCuNLgYoWASIze3Jj8?=
- =?us-ascii?Q?YQ=3D=3D?=
+	=?us-ascii?Q?d9rPZqd9BsWWYO38fZBOwzHx/TBRMCcLOaRKgyRSC8M4QuMRGuY3mmFBuHER?=
+ =?us-ascii?Q?X7U0UpRrqA2Lq3WHjVC2Hbxhq2usJKvamyqAsfS8BhmJ2JMDUGrolrIY8PeL?=
+ =?us-ascii?Q?zxgM6u65Byx5AKus8XtCy0JWLXDyYifKmBRgcQYm7PfWct+CaR4c54ACpFvG?=
+ =?us-ascii?Q?eNpLF5P4NaDlS60grl1C3/JvQtPJFatI0Nuu7fAUCSOEywcBWhff1A/77+q0?=
+ =?us-ascii?Q?UzwlXTV7gJ2FdbiGNkHO7XdwLSzBxSyB9FrS+1plLT8Kj72H8DFKgMxskKVo?=
+ =?us-ascii?Q?SEQ9XNGAIc4yE5ELtg5Co1wGGdqjA3cY/MHWPz0QEsqQmLbEtQIRWvK9ayYG?=
+ =?us-ascii?Q?cUPAKGC9AF34mcEo5KZwT04DyvJmJGDOuJgIXrVVfOBowiJQu+nFhDsVfAwQ?=
+ =?us-ascii?Q?5cv0ldxytFZ5yJg9I480RRhNQfGuzRygjASHboEL+gemagu1NwPYYB7x6Sx5?=
+ =?us-ascii?Q?n+f+W3lNeav7jHbEW1aDaNKLhbAHczQU7oAuFK1dW7qEjlUDJJWwuWDy68Qb?=
+ =?us-ascii?Q?o58h5Em6dSNSk6x9cbnmY0rG5yOkIBxtqauSZDcDdTYWrMy+/dpxWT9vciM9?=
+ =?us-ascii?Q?b784oPBSus7YKdu6X70FQeXtxTaBq7c6a3LTK7UbP1Z2Yq768umeOUp9AEVX?=
+ =?us-ascii?Q?Ku+wO8ZNlW2OvAqaXm3Hu8g+nkdquFHgqh1OWdaqbYooXdF+e9AAxiYyB0J+?=
+ =?us-ascii?Q?1IYsdoatnnLCn7aTKPil1siRMZdOfrR4HSUgvNFxkLSwnW+k1+9OfR57hHS8?=
+ =?us-ascii?Q?qM/WQdOmtbWTodlbJU50Ag7GFAB4VuQu7xfogXpztEbgtfUodGBXYtA4oMgC?=
+ =?us-ascii?Q?6KkRCZ9arVqSCUQ0TKy7puuO0CHXe86KoZpJ7fW1DbR1C4iC1qSGlD5M9DdT?=
+ =?us-ascii?Q?q/RrFr3dYd51v6sH02scMFrw6c0BFtNn8uTeyW3be3qLzma9Aq+fN86AuAgU?=
+ =?us-ascii?Q?NdLvMjrPCDHpR1Osnh1AzguywuQu5iF4kEEvgDNIOVyE87NYrkHElZvKEMvX?=
+ =?us-ascii?Q?T66vyWhPFt61Y0vSAdmOLTb/ops1Z/5O9VMiHJViR8FJWj567JzPOkDuDV1J?=
+ =?us-ascii?Q?imIajPS0wpimcB8G/JbDtN1upiP703q1q1741DzP2XPvXc2u5w//FApBkjtX?=
+ =?us-ascii?Q?llVXsVfDZG2ZZ1azCZsrOSJLNa8NQTd8Ho/SeXyvI8HhZaeqMn0Rv9TBwWLo?=
+ =?us-ascii?Q?zwVb+WbBPCoSjjaGD9PW3589VH8Wv5He0v+VTZrAr9jgRL9mfxTHvBBkgtQC?=
+ =?us-ascii?Q?y18mYQpUFnoSbYi3jeK8xDuSrhNzdhP7Py8cNhOsfJoFfZBlRwfYgexG1NNM?=
+ =?us-ascii?Q?o3MeZDy0rLKTMefTvDC5st7vFmi91KWt4yNAVpKtH6ubRP/z044utMN/DJtJ?=
+ =?us-ascii?Q?ID6etJWcc4I9MPzFWpuksvmWR97t8Dcp9JoNQo+rOJqs6gdsKOPv3oFdjfF8?=
+ =?us-ascii?Q?0ptPY5K40QOyCYf1qDzSih0YhQdZfV97ezqHw9dc6h0W3JPFOk1GDTF2Erbr?=
+ =?us-ascii?Q?CZU3AmieaXaLVsdvNcsxEvovgFpIZ2xdxJHeD2tqVLm9RK9K8/vvnmMEmiAJ?=
+ =?us-ascii?Q?uHsm0UE6UvRRRFbymX3aV7Ke7n6/se0z1Pnxje/Oz1+wx68VqA+HF04d9GdO?=
+ =?us-ascii?Q?kw=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	h6x3aw245yH46KhHt9KsX+KpGUqDfeeWXwRoxciTJKy0WnBs3dyNr+hgTYDniZjdgQWoPANciXK++D9A0AfmRYztonpjlW4nhQ33FVn0YQWYc1/4eBA7oOwCu8S7betCq7xdkobRCkiQApcK+SWWrZAyE6VG5dod8UaxntuG5Xe5eV+fpAyAWwy5dBbcDYa9n50ithgDvYoXj/I8bA5l/xbjgUpdUSshSMwgrehupwNpezocnU1KJlXfYwsDRk4OL/7BuM1DLF4iy0AbOoGfCeRpNy6R+YUM1AYpyQZ4wcVNAhusLZTN0KF3zCdsfD6ucxUZFioViM1j3yk7nQPZmFQ922F/XP/aoI8CZdV0eYUpmavq/xgPz9UtsPygW4Z1JR50QT0yOZ5DzW9vHJJMbT5EOwW2/P2Lk4ZHmGahP3/lfjjUw2X0hUFNJpBkSrfA0/K5lyXVZoBeUBSoo6h7drjKR9pyErgUodatRcTPv7EslfUUfoAtehgozjYTiU7Ewu1lHWAHt6jDSFA7kVtmhLocHbBUHkdlJORlFtA7YMGZWdhUv5owfJ27LVjJC93aoPeJ4vBWrjh/lg66zAT+FQiK+EF8RgkA9KK6uDDg65M=
+	kihQRJLTvmxGjS/pdzYMJdds2JOOTgONAiF8HqdzmoTqT9LKWKeOZGOf25zosztSYEgXYUOADV1mqs0s7cUWIziUFdb5Xr1dx0v84kHj/zzDoRX2LwkSEhiX9AfcP8qweneRQSI/eHJR1lRxjbEgrgam/vHjCnxtrVpippy4wO6+owIBRCyNqry/h4S7F6cY3tEO3Yejb14gpVJs990PgsxfGU2X6GQk5XJFZ6wyOcrJiPmZ22vaTicFGUiNNRMS4MlZ4jVpwLWy3mbIN3uzTBpDjhKT2tTGi7Vto+u1ElEdZ2XPCFrhRT3Up7gP2P11/2FONp2vTb9QFGqqOHKms+CtTTo1s5pwj2jNmbb4D9PN6O9YdG9WuBeTF6CJiZAnEVkySHB5SW7322+54QmJYntGXHA8ftAKilwDN65N72CxE5B0sJGDHFm+GxbN6b7RaD2+DvcyIysPUByaEVNp9CLaHJSOzBRA/7dEf+R+ykTKVJnRWYJ/nlxEnlPB1nI1HjrQ8e/ziC7hSI6RW/T33JGjv8l9c+RzTgK3e8Irw1bGgCruUBUfB4PwT2SlwlWXxQsAIYp8nwTfzl6qm6tb+QeUIGeH1cwVJwpdi6unuIU=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0ec48e69-afb5-4fc4-68ba-08dd8aea12b9
+X-MS-Exchange-CrossTenant-Network-Message-Id: 20fdf0c8-9622-4997-e834-08dd8aea16f7
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 May 2025 09:00:09.8571
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 May 2025 09:00:16.9919
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Sk++8BdQtLrQtQ5hYWYQO9mb3UPYpbi+1JYfFXppgsbdMbbk9Ra41GhB2k7kM6tRnEl6ixI2XZPE3Npp0l/b2g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB7178
+X-MS-Exchange-CrossTenant-UserPrincipalName: iimnE/9M86qg1zXHAS9htBhsvUXk2VlFl88SONidPRYoOc2nwK7NBCdrUmvGrOsBC4VZ5+bQRMQT/7BPVo4WQw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR10MB6648
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
  definitions=2025-05-04_03,2025-04-30_01,2025-02-21_01
@@ -176,139 +176,424 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulks
  suspectscore=0 adultscore=0 phishscore=0 mlxscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2504070000
  definitions=main-2505040081
-X-Proofpoint-GUID: BJ0FETulqHbdlsbZtl2uUWIVW3dtPNC6
-X-Proofpoint-ORIG-GUID: BJ0FETulqHbdlsbZtl2uUWIVW3dtPNC6
-X-Authority-Analysis: v=2.4 cv=PouTbxM3 c=1 sm=1 tr=0 ts=68172c9e cx=c_pps a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19 a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10
- a=dt9VzEwgFbYA:10 a=GoEa3M9JfhUA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8 a=7Xr6i1Xs6TsDAXCDpIQA:9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA0MDA4MCBTYWx0ZWRfX5ERaMfIla8ur zY4+zIJmL4d9wdBrdU5i8HOwc4pGgBji2+wZaOG8XZUi1HX/OEue31QOivi5xROChTC7TebQyTI HgRFXsn2D+suyxAYYbKx+PGVtSc/BlGokddGTSpUJ66hRBhwki2+x9WR3A14NV7LkNmeBHp9dR/
- 7xMTLhFo8XJRncBRJsNP8asnqyUNZDJ4DRaa466MIw2IxR9sjVPoBov5Q0/PDtz2NPuK6ig+6wZ 5S8dfjETj8YJqzsD571my5eyDeNQ8+rmfifZ46oDxHCU1iDpDZJql2Wxk2dAAxi+Ka6tnE4vh2N ndPgN+0ztev+zs61IEYwMOw8/p+uj2rK//A+HQFVnDhMr0ylSwFQ4XnD4KHnRxI4zVbNR4K/W8y
- Yygz5kGmumm3VNBsiPYeEzffcSEaZ67Yo7IE2iUrORDOQeRL6w83Uss0T+pWcx4VYfIJsxV1
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA0MDA4MSBTYWx0ZWRfX2G6ry7DAxait jgeAkUSGCuthm/WuxbTMv9y9UmrdhFfgqHSlEyVDjMay50rJk7g486eb3qdyjOoi2lmTTswsiB4 SyaxeNHMxzwFI27bSgnx84hpllIGokp16giqF/Daom6oIDiFDN++GH9I3RXYqXnFz7sJyTYuP0Q
+ XAUSzLl7AUHqbyIftqG6FF+2Jz06ivzaG4gsEYbOBknHEtfkNcMq1ecVo9MtyQz1OkOqSRd4w8B uQqgQr+zdO3mAtJdUY94w8+Pg3me8Or9VyEraD1DviR1oTDudhLsVpHcG1CnWMZoG86HmubnXVB y0Ls2hahjSRVYJUlG7GQai/s4S0N6Bn7bdKUD7QI9g0rD9S2wb3DYDKYq/iWkapZS+SqtXlyeP7
+ /JGRsv7CTgJsBW4SoBb7wAhnOWkU3NV8+Kb3+cbnklG4ypmaeOuEQCejZnbw+IggyNp8utJn
+X-Proofpoint-ORIG-GUID: ZgNLJoo9tdu3MbxjnLZ0bemPesfymgKC
+X-Proofpoint-GUID: ZgNLJoo9tdu3MbxjnLZ0bemPesfymgKC
+X-Authority-Analysis: v=2.4 cv=bNgWIO+Z c=1 sm=1 tr=0 ts=68172ca5 cx=c_pps a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19 a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10
+ a=dt9VzEwgFbYA:10 a=GoEa3M9JfhUA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8 a=vofBRnjZkZwxpctGmH8A:9
 
-For when large atomic writes (> 1x FS block) are supported, there will be
-various occasions when HW offload may not be possible.
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-Such instances include:
-- unaligned extent mapping wrt write length
-- extent mappings which do not cover the full write, e.g. the write spans
-  sparse or mixed-mapping extents
-- the write length is greater than HW offload can support
-- no hardware support at all
+Introduce a mount option to allow sysadmins to specify the maximum size
+of an atomic write.  If the filesystem can work with the supplied value,
+that becomes the new guaranteed maximum.
 
-In those cases, we need to fallback to the CoW-based atomic write mode. For
-this, report special code -ENOPROTOOPT to inform the caller that HW
-offload-based method is not possible.
+The value mustn't be too big for the existing filesystem geometry (max
+write size, max AG/rtgroup size).  We dynamically recompute the
+tr_atomic_write transaction reservation based on the given block size,
+check that the current log size isn't less than the new minimum log size
+constraints, and set a new maximum.
 
-In addition to the occasions mentioned, if the write covers an unallocated
-range, we again judge that we need to rely on the CoW-based method when we
-would need to allocate anything more than 1x block. This is because if we
-allocate less blocks that is required for the write, then again HW
-offload-based method would not be possible. So we are taking a pessimistic
-approach to writes covering unallocated space.
+The actual software atomic write max is still computed based off of
+tr_atomic_ioend the same way it has for the past few commits.  Note also
+that xfs_calc_atomic_write_log_geometry is non-static because mkfs will
+need that.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: various cleanups]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: John Garry <john.g.garry@oracle.com>
 ---
- fs/xfs/xfs_iomap.c | 62 ++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 60 insertions(+), 2 deletions(-)
+ Documentation/admin-guide/xfs.rst | 11 +++++
+ fs/xfs/libxfs/xfs_trans_resv.c    | 69 ++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_trans_resv.h    |  4 ++
+ fs/xfs/xfs_mount.c                | 80 ++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_mount.h                |  6 +++
+ fs/xfs/xfs_super.c                | 58 +++++++++++++++++++++-
+ fs/xfs/xfs_trace.h                | 33 +++++++++++++
+ 7 files changed, 259 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 166fba2ff1ef..ff05e6b1b0bb 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -798,6 +798,38 @@ imap_spans_range(
- 	return true;
- }
+diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+index 5becb441c3cb..a18328a5fb93 100644
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -151,6 +151,17 @@ When mounting an XFS filesystem, the following options are accepted.
+ 	optional, and the log section can be separate from the data
+ 	section or contained within it.
  
-+static bool
-+xfs_bmap_hw_atomic_write_possible(
-+	struct xfs_inode	*ip,
-+	struct xfs_bmbt_irec	*imap,
-+	xfs_fileoff_t		offset_fsb,
-+	xfs_fileoff_t		end_fsb)
++  max_atomic_write=value
++	Set the maximum size of an atomic write.  The size may be
++	specified in bytes, in kilobytes with a "k" suffix, in megabytes
++	with a "m" suffix, or in gigabytes with a "g" suffix.  The size
++	cannot be larger than the maximum write size, larger than the
++	size of any allocation group, or larger than the size of a
++	remapping operation that the log can complete atomically.
++
++	The default value is to set the maximum I/O completion size
++	to allow each CPU to handle one at a time.
++
+   max_open_zones=value
+ 	Specify the max number of zones to keep open for writing on a
+ 	zoned rt device. Many open zones aids file data separation
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index e73c09fbd24c..86a111d0f2fc 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -1488,3 +1488,72 @@ xfs_calc_max_atomic_write_fsblocks(
+ 
+ 	return ret;
+ }
++
++/*
++ * Compute the log blocks and transaction reservation needed to complete an
++ * atomic write of a given number of blocks.  Worst case, each block requires
++ * separate handling.  A return value of 0 means something went wrong.
++ */
++xfs_extlen_t
++xfs_calc_atomic_write_log_geometry(
++	struct xfs_mount	*mp,
++	xfs_extlen_t		blockcount,
++	unsigned int		*new_logres)
 +{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fsize_t		len = XFS_FSB_TO_B(mp, end_fsb - offset_fsb);
++	struct xfs_trans_res	*curr_res = &M_RES(mp)->tr_atomic_ioend;
++	uint			old_logres = curr_res->tr_logres;
++	unsigned int		per_intent, step_size;
++	unsigned int		logres;
++	xfs_extlen_t		min_logblocks;
 +
-+	/*
-+	 * atomic writes are required to be naturally aligned for disk blocks,
-+	 * which ensures that we adhere to block layer rules that we won't
-+	 * straddle any boundary or violate write alignment requirement.
-+	 */
-+	if (!IS_ALIGNED(imap->br_startblock, imap->br_blockcount))
-+		return false;
++	ASSERT(blockcount > 0);
 +
-+	/*
-+	 * Spanning multiple extents would mean that multiple BIOs would be
-+	 * issued, and so would lose atomicity required for REQ_ATOMIC-based
-+	 * atomics.
-+	 */
-+	if (!imap_spans_range(imap, offset_fsb, end_fsb))
-+		return false;
++	xfs_calc_default_atomic_ioend_reservation(mp, M_RES(mp));
 +
-+	/*
-+	 * The ->iomap_begin caller should ensure this, but check anyway.
-+	 */
-+	return len <= xfs_inode_buftarg(ip)->bt_bdev_awu_max;
++	per_intent = xfs_calc_atomic_write_ioend_geometry(mp, &step_size);
++
++	/* Check for overflows */
++	if (check_mul_overflow(blockcount, per_intent, &logres) ||
++	    check_add_overflow(logres, step_size, &logres))
++		return 0;
++
++	curr_res->tr_logres = logres;
++	min_logblocks = xfs_log_calc_minimum_size(mp);
++	curr_res->tr_logres = old_logres;
++
++	trace_xfs_calc_max_atomic_write_log_geometry(mp, per_intent, step_size,
++			blockcount, min_logblocks, logres);
++
++	*new_logres = logres;
++	return min_logblocks;
 +}
 +
- static int
- xfs_direct_write_iomap_begin(
- 	struct inode		*inode,
-@@ -812,9 +844,11 @@ xfs_direct_write_iomap_begin(
- 	struct xfs_bmbt_irec	imap, cmap;
- 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, length);
-+	xfs_fileoff_t		orig_end_fsb = end_fsb;
- 	int			nimaps = 1, error = 0;
- 	bool			shared = false;
- 	u16			iomap_flags = 0;
-+	bool			needs_alloc;
- 	unsigned int		lockmode;
- 	u64			seq;
- 
-@@ -875,13 +909,37 @@ xfs_direct_write_iomap_begin(
- 				(flags & IOMAP_DIRECT) || IS_DAX(inode));
- 		if (error)
- 			goto out_unlock;
--		if (shared)
-+		if (shared) {
-+			if ((flags & IOMAP_ATOMIC) &&
-+			    !xfs_bmap_hw_atomic_write_possible(ip, &cmap,
-+					offset_fsb, end_fsb)) {
-+				error = -ENOPROTOOPT;
-+				goto out_unlock;
-+			}
- 			goto out_found_cow;
-+		}
- 		end_fsb = imap.br_startoff + imap.br_blockcount;
- 		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
- 	}
- 
--	if (imap_needs_alloc(inode, flags, &imap, nimaps))
-+	needs_alloc = imap_needs_alloc(inode, flags, &imap, nimaps);
++/*
++ * Compute the transaction reservation needed to complete an out of place
++ * atomic write of a given number of blocks.
++ */
++int
++xfs_calc_atomic_write_reservation(
++	struct xfs_mount	*mp,
++	xfs_extlen_t		blockcount)
++{
++	unsigned int		new_logres;
++	xfs_extlen_t		min_logblocks;
 +
-+	if (flags & IOMAP_ATOMIC) {
-+		error = -ENOPROTOOPT;
-+		/*
-+		 * If we allocate less than what is required for the write
-+		 * then we may end up with multiple extents, which means that
-+		 * REQ_ATOMIC-based cannot be used, so avoid this possibility.
-+		 */
-+		if (needs_alloc && orig_end_fsb - offset_fsb > 1)
-+			goto out_unlock;
-+
-+		if (!xfs_bmap_hw_atomic_write_possible(ip, &imap, offset_fsb,
-+				orig_end_fsb))
-+			goto out_unlock;
++	/*
++	 * If the caller doesn't ask for a specific atomic write size, then
++	 * use the defaults.
++	 */
++	if (blockcount == 0) {
++		xfs_calc_default_atomic_ioend_reservation(mp, M_RES(mp));
++		return 0;
 +	}
 +
-+	if (needs_alloc)
- 		goto allocate_blocks;
++	min_logblocks = xfs_calc_atomic_write_log_geometry(mp, blockcount,
++			&new_logres);
++	if (!min_logblocks || min_logblocks > mp->m_sb.sb_logblocks)
++		return -EINVAL;
++
++	M_RES(mp)->tr_atomic_ioend.tr_logres = new_logres;
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+index a6d303b83688..336279e0fc61 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.h
++++ b/fs/xfs/libxfs/xfs_trans_resv.h
+@@ -122,5 +122,9 @@ unsigned int xfs_calc_write_reservation_minlogsize(struct xfs_mount *mp);
+ unsigned int xfs_calc_qm_dqalloc_reservation_minlogsize(struct xfs_mount *mp);
  
+ xfs_extlen_t xfs_calc_max_atomic_write_fsblocks(struct xfs_mount *mp);
++xfs_extlen_t xfs_calc_atomic_write_log_geometry(struct xfs_mount *mp,
++		xfs_extlen_t blockcount, unsigned int *new_logres);
++int xfs_calc_atomic_write_reservation(struct xfs_mount *mp,
++		xfs_extlen_t blockcount);
+ 
+ #endif	/* __XFS_TRANS_RESV_H__ */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 9c40914afabd..f639af557b4e 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -740,6 +740,82 @@ xfs_calc_atomic_write_unit_max(
+ 			max_agsize, max_rgsize);
+ }
+ 
++/*
++ * Try to set the atomic write maximum to a new value that we got from
++ * userspace via mount option.
++ */
++int
++xfs_set_max_atomic_write_opt(
++	struct xfs_mount	*mp,
++	unsigned long long	new_max_bytes)
++{
++	const xfs_filblks_t	new_max_fsbs = XFS_B_TO_FSBT(mp, new_max_bytes);
++	const xfs_extlen_t	max_write = xfs_calc_atomic_write_max(mp);
++	const xfs_extlen_t	max_group =
++		max(mp->m_groups[XG_TYPE_AG].blocks,
++		    mp->m_groups[XG_TYPE_RTG].blocks);
++	const xfs_extlen_t	max_group_write =
++		max(xfs_calc_perag_awu_max(mp), xfs_calc_rtgroup_awu_max(mp));
++	int			error;
++
++	if (new_max_bytes == 0)
++		goto set_limit;
++
++	ASSERT(max_write <= U32_MAX);
++
++	/* generic_atomic_write_valid enforces power of two length */
++	if (!is_power_of_2(new_max_bytes)) {
++		xfs_warn(mp,
++ "max atomic write size of %llu bytes is not a power of 2",
++				new_max_bytes);
++		return -EINVAL;
++	}
++
++	if (new_max_bytes & mp->m_blockmask) {
++		xfs_warn(mp,
++ "max atomic write size of %llu bytes not aligned with fsblock",
++				new_max_bytes);
++		return -EINVAL;
++	}
++
++	if (new_max_fsbs > max_write) {
++		xfs_warn(mp,
++ "max atomic write size of %lluk cannot be larger than max write size %lluk",
++				new_max_bytes >> 10,
++				XFS_FSB_TO_B(mp, max_write) >> 10);
++		return -EINVAL;
++	}
++
++	if (new_max_fsbs > max_group) {
++		xfs_warn(mp,
++ "max atomic write size of %lluk cannot be larger than allocation group size %lluk",
++				new_max_bytes >> 10,
++				XFS_FSB_TO_B(mp, max_group) >> 10);
++		return -EINVAL;
++	}
++
++	if (new_max_fsbs > max_group_write) {
++		xfs_warn(mp,
++ "max atomic write size of %lluk cannot be larger than max allocation group write size %lluk",
++				new_max_bytes >> 10,
++				XFS_FSB_TO_B(mp, max_group_write) >> 10);
++		return -EINVAL;
++	}
++
++set_limit:
++	error = xfs_calc_atomic_write_reservation(mp, new_max_fsbs);
++	if (error) {
++		xfs_warn(mp,
++ "cannot support completing atomic writes of %lluk",
++				new_max_bytes >> 10);
++		return error;
++	}
++
++	xfs_calc_atomic_write_unit_max(mp);
++	mp->m_awu_max_bytes = new_max_bytes;
++	return 0;
++}
++
+ /* Compute maximum possible height for realtime btree types for this fs. */
+ static inline void
+ xfs_rtbtree_compute_maxlevels(
+@@ -1161,7 +1237,9 @@ xfs_mountfs(
+ 	 * derived from transaction reservations, so we must do this after the
+ 	 * log is fully initialized.
+ 	 */
+-	xfs_calc_atomic_write_unit_max(mp);
++	error = xfs_set_max_atomic_write_opt(mp, mp->m_awu_max_bytes);
++	if (error)
++		goto out_agresv;
+ 
+ 	return 0;
+ 
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index e2abf31438e0..5b5df70570c0 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -237,6 +237,9 @@ typedef struct xfs_mount {
+ 	unsigned int		m_max_open_zones;
+ 	unsigned int		m_zonegc_low_space;
+ 
++	/* max_atomic_write mount option value */
++	unsigned long long	m_awu_max_bytes;
++
  	/*
+ 	 * Bitsets of per-fs metadata that have been checked and/or are sick.
+ 	 * Callers must hold m_sb_lock to access these two fields.
+@@ -804,4 +807,7 @@ static inline void xfs_mod_sb_delalloc(struct xfs_mount *mp, int64_t delta)
+ 	percpu_counter_add(&mp->m_delalloc_blks, delta);
+ }
+ 
++int xfs_set_max_atomic_write_opt(struct xfs_mount *mp,
++		unsigned long long new_max_bytes);
++
+ #endif	/* __XFS_MOUNT_H__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 04e361664710..c2c8d8aa487c 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -111,7 +111,7 @@ enum {
+ 	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
+ 	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
+ 	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum, Opt_max_open_zones,
+-	Opt_lifetime, Opt_nolifetime,
++	Opt_lifetime, Opt_nolifetime, Opt_max_atomic_write,
+ };
+ 
+ static const struct fs_parameter_spec xfs_fs_parameters[] = {
+@@ -159,6 +159,7 @@ static const struct fs_parameter_spec xfs_fs_parameters[] = {
+ 	fsparam_u32("max_open_zones",	Opt_max_open_zones),
+ 	fsparam_flag("lifetime",	Opt_lifetime),
+ 	fsparam_flag("nolifetime",	Opt_nolifetime),
++	fsparam_string("max_atomic_write",	Opt_max_atomic_write),
+ 	{}
+ };
+ 
+@@ -241,6 +242,9 @@ xfs_fs_show_options(
+ 
+ 	if (mp->m_max_open_zones)
+ 		seq_printf(m, ",max_open_zones=%u", mp->m_max_open_zones);
++	if (mp->m_awu_max_bytes)
++		seq_printf(m, ",max_atomic_write=%lluk",
++				mp->m_awu_max_bytes >> 10);
+ 
+ 	return 0;
+ }
+@@ -1364,6 +1368,42 @@ suffix_kstrtoint(
+ 	return ret;
+ }
+ 
++static int
++suffix_kstrtoull(
++	const char		*s,
++	unsigned int		base,
++	unsigned long long	*res)
++{
++	int			last, shift_left_factor = 0;
++	unsigned long long	_res;
++	char			*value;
++	int			ret = 0;
++
++	value = kstrdup(s, GFP_KERNEL);
++	if (!value)
++		return -ENOMEM;
++
++	last = strlen(value) - 1;
++	if (value[last] == 'K' || value[last] == 'k') {
++		shift_left_factor = 10;
++		value[last] = '\0';
++	}
++	if (value[last] == 'M' || value[last] == 'm') {
++		shift_left_factor = 20;
++		value[last] = '\0';
++	}
++	if (value[last] == 'G' || value[last] == 'g') {
++		shift_left_factor = 30;
++		value[last] = '\0';
++	}
++
++	if (kstrtoull(value, base, &_res))
++		ret = -EINVAL;
++	kfree(value);
++	*res = _res << shift_left_factor;
++	return ret;
++}
++
+ static inline void
+ xfs_fs_warn_deprecated(
+ 	struct fs_context	*fc,
+@@ -1548,6 +1588,14 @@ xfs_fs_parse_param(
+ 	case Opt_nolifetime:
+ 		parsing_mp->m_features |= XFS_FEAT_NOLIFETIME;
+ 		return 0;
++	case Opt_max_atomic_write:
++		if (suffix_kstrtoull(param->string, 10,
++				     &parsing_mp->m_awu_max_bytes)) {
++			xfs_warn(parsing_mp,
++ "max atomic write size must be positive integer");
++			return -EINVAL;
++		}
++		return 0;
+ 	default:
+ 		xfs_warn(parsing_mp, "unknown mount option [%s].", param->key);
+ 		return -EINVAL;
+@@ -2162,6 +2210,14 @@ xfs_fs_reconfigure(
+ 	if (error)
+ 		return error;
+ 
++	/* Validate new max_atomic_write option before making other changes */
++	if (mp->m_awu_max_bytes != new_mp->m_awu_max_bytes) {
++		error = xfs_set_max_atomic_write_opt(mp,
++				new_mp->m_awu_max_bytes);
++		if (error)
++			return error;
++	}
++
+ 	/* inode32 -> inode64 */
+ 	if (xfs_has_small_inums(mp) && !xfs_has_small_inums(new_mp)) {
+ 		mp->m_features &= ~XFS_FEAT_SMALL_INUMS;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index d5ae00f8e04c..01d284a1c759 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -230,6 +230,39 @@ TRACE_EVENT(xfs_calc_max_atomic_write_fsblocks,
+ 		  __entry->blockcount)
+ );
+ 
++TRACE_EVENT(xfs_calc_max_atomic_write_log_geometry,
++	TP_PROTO(struct xfs_mount *mp, unsigned int per_intent,
++		 unsigned int step_size, unsigned int blockcount,
++		 unsigned int min_logblocks, unsigned int logres),
++	TP_ARGS(mp, per_intent, step_size, blockcount, min_logblocks, logres),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(unsigned int, per_intent)
++		__field(unsigned int, step_size)
++		__field(unsigned int, blockcount)
++		__field(unsigned int, min_logblocks)
++		__field(unsigned int, cur_logblocks)
++		__field(unsigned int, logres)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->per_intent = per_intent;
++		__entry->step_size = step_size;
++		__entry->blockcount = blockcount;
++		__entry->min_logblocks = min_logblocks;
++		__entry->cur_logblocks = mp->m_sb.sb_logblocks;
++		__entry->logres = logres;
++	),
++	TP_printk("dev %d:%d per_intent %u step_size %u blockcount %u min_logblocks %u logblocks %u logres %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->per_intent,
++		  __entry->step_size,
++		  __entry->blockcount,
++		  __entry->min_logblocks,
++		  __entry->cur_logblocks,
++		  __entry->logres)
++);
++
+ TRACE_EVENT(xlog_intent_recovery_failed,
+ 	TP_PROTO(struct xfs_mount *mp, const struct xfs_defer_op_type *ops,
+ 		 int error),
 -- 
 2.31.1
 
