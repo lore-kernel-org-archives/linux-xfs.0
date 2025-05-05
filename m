@@ -1,42 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CE2225CC45;
-	Mon,  5 May 2025 14:57:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72B1418FDD5;
+	Mon,  5 May 2025 15:07:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746457040; cv=none; b=Zp6toI5v3PGwUbsjYO1k9bNcXzMK0ORPuf19M1CF9k9mtRjl5q6qvi8kB6uXSafgASMO5VEUrjvu3CoszjTWfaZk9apErgmpvNRJ1FcWafZygSWJIz+8RgOWm3Jt0/mKD24lAnJ2tcMlLUX4hyQZ4Q1EEy+cXe4tWYIGWMDJAI8=
+	t=1746457640; cv=none; b=FfCu8+Pbj/6mAGbsyvTnGiysEDYou4L38zeuQQw+nMDWeVsAT0JyM22tj+qnTYkYNaYQHE7z0VcuamwAg067gPiOdOLRt/8jSvdYDXsnF0Ap+MXe7Qqhv9FCHpu2V8gyyS2DuJzBZCfJtMdTuoIcSmmZrObLrL3NxS5mf6J7Org=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746457040; c=relaxed/simple;
-	bh=YXBLGFfCSiNERP2l1252Bbo0ChipWii3oYahuv6UgPE=;
+	s=arc-20240116; t=1746457640; c=relaxed/simple;
+	bh=y9FCfOiO6QLi981nCwCrqUJyWBizGqlQGrZqWfBXvRQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rCkzAq9GW4baaSABq5sW7uTi/N7Yxv44UCY8UVLSo7atTlsiSjKNTdYHYeAhDKIlGMyXVHc21tyRdAHuyrqgHOLHCu5gaIQ1ktbAie1hgEGU1SeSFvtWejVlRhlwytz1d6BMpEQL+e5uVh0JvpEeOhtOKzw17vU5/uyqbIJBrLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JtFi3GOY; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=OXBxHh0K9tzQL6uYb3XYMgq08YCSy7absVAkYOGsuFhGqw7+LYptmxK+1KI1RzuAGoQixLh9dNZ03qQlVy/yfzkJnNwjG+TA2LYWnfcwb4qai0alJNKgjxzPxksWzM1shpAzkn3VF14KRfk7X4w3uQOP9Ee5h8AHEBU4gA6HDVY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fhbgUloE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JtFi3GOY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A901EC4CEF5;
-	Mon,  5 May 2025 14:57:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fhbgUloE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D485CC4CEE4;
+	Mon,  5 May 2025 15:07:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746457039;
-	bh=YXBLGFfCSiNERP2l1252Bbo0ChipWii3oYahuv6UgPE=;
+	s=k20201202; t=1746457639;
+	bh=y9FCfOiO6QLi981nCwCrqUJyWBizGqlQGrZqWfBXvRQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JtFi3GOYrH9nID2fxqmQJ+ntSD0GsUSivANnY/Zb6ZyHy+PYAQdMO3iSo/ltbEfzb
-	 qGWCVLZK/6y2TAfZmJYHuBd3/ZusBqvMXPJIqOrJVjUQwkPhaoORldgdhuXap7B4bV
-	 3ORdDdVcC2dKLfcouK+oH2uQhUD9/T3vrZOZBsiu2+wDUkT0HtRxfC/vSeGGyYekD+
-	 YStS4KlSDbxpa2BANmOQFghQj2M5jyaRBbCv+LEF35Wz0M3+GLrYzQfzRY/giA4r2M
-	 nwRfDZ9qEJPk5qSc6ojndkZb8eJMEnwemQemXw5iw1UkHd3M277b9Q/T4emOKvjXiN
-	 +rbd8qxR5hMbA==
-Date: Mon, 5 May 2025 07:57:19 -0700
+	b=fhbgUloE6MXGWnpPfjATb5fUD2rZ7xEquT8n+c9UsVxQWKFJRv0pEWonGvv6q1yLS
+	 b2UHF350eNcQ956uUCmVk2NQF0twhZNtI6VSwzuBIIwF3dCdJW8hv/3VID/DmOAppO
+	 j+vMLk67nobNXHr2TX5tthbNX90hgST4sr/Tvs/TkZYc9cojU/7nNpvKowBUWhH0HM
+	 3Vbr/8TWprqvutwbJn7xUO+xuALAX2HMlvCRD2DqC4ILQe5XUwARUi1N9VSPPToSKq
+	 EhMu9UrexY+w9ZvoiL16VGiloDRtWEZsqBNszcJgFWZjvcv0nRY9Jd8oc3Qt1ROt7v
+	 r3H5T47m/UH6g==
+Date: Mon, 5 May 2025 08:07:19 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Catherine Hoang <catherine.hoang@oracle.com>, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: Re: [PATCH v5] generic: add a test for atomic writes
-Message-ID: <20250505145719.GY25675@frogsfrogsfrogs>
-References: <20250410042317.82487-1-catherine.hoang@oracle.com>
- <aBRwTFxik14x-hyX@infradead.org>
- <20250502193942.GP25675@frogsfrogsfrogs>
- <aBhOg_jB4DWSz1A4@infradead.org>
+To: hch <hch@lst.de>
+Cc: Hans Holmberg <Hans.Holmberg@wdc.com>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Dave Chinner <david@fromorbit.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH 1/2] xfs: free the item in xfs_mru_cache_insert on
+ failure
+Message-ID: <20250505150719.GZ25675@frogsfrogsfrogs>
+References: <20250430084117.9850-1-hans.holmberg@wdc.com>
+ <20250430084117.9850-2-hans.holmberg@wdc.com>
+ <20250502200646.GT25675@frogsfrogsfrogs>
+ <20250505054549.GA21045@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,30 +49,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aBhOg_jB4DWSz1A4@infradead.org>
+In-Reply-To: <20250505054549.GA21045@lst.de>
 
-On Sun, May 04, 2025 at 10:37:07PM -0700, Christoph Hellwig wrote:
-> On Fri, May 02, 2025 at 12:39:42PM -0700, Darrick J. Wong wrote:
-> > Me neither.  We can't write 512b blocks to the rt device obviously, but
-> > I think the whole point of the separate "sector" size is that's the
-> > maximum size that the fs knows it can write to the device without
-> > tearing.
+On Mon, May 05, 2025 at 07:45:49AM +0200, hch wrote:
+> On Fri, May 02, 2025 at 01:06:46PM -0700, Darrick J. Wong wrote:
+> > >  	atomic_inc(&pag_group(args->pag)->xg_active_ref);
+> > >  	item->pag = args->pag;
+> > > -	error = xfs_mru_cache_insert(mp->m_filestream, pino, &item->mru);
+> > > -	if (error)
+> > > -		goto out_free_item;
+> > > +	xfs_mru_cache_insert(mp->m_filestream, pino, &item->mru);
+> > 
+> > Hmm, don't you still need to check for -ENOMEM returns?  Or if truly
+> > none of the callers care anymore, then can we get rid of the return
+> > value for xfs_mru_cache_insert?
 > 
-> The sector size is really the minimum addressable unit.
-> 
-> > Maybe there's a way out of this: the only metadata on the realtime
-> > volume is the rt superblock, whose size is a full fsblock.  Perhaps we
-> > could set/validate the block size of the rt dev with the fsblock size
-> > instead?
-> 
-> We still allow subsector dio to the rt device, so this would be a bit
-> of a sketchy change.
+> Both for file streams and the zone association in the next patch the
+> mru cache is just a hint, so we ignore all errors (see the return 0
+> in the error handling boilerplate in the existing code).  But hardcoding
+> that assumption into the core mru cache helpers seems a bit weird.
 
-I don't understand the 'subsector' in this sentence -- we allow
-sub-fsblock dio, but not sub-LBA dio, right?
+Ok then.  The comment change in this patch is a reasonable explanation
+for why the return value is/has always been ignored, so
 
-So the only thing we need to validate for the rt device is that
-fsblock >= lbasize to avoid confusing the pagecache when it does IO, as
-well as user programs that aren't expecting such things.
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
