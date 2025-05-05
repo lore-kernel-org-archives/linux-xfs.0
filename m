@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 027751917D0
-	for <linux-xfs@vger.kernel.org>; Mon,  5 May 2025 15:07:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B39818FDD8;
+	Mon,  5 May 2025 15:08:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746457669; cv=none; b=XOIYvB6JxkRmLN7xaJ60wf6WbdHnkPEK547Voepn+b8Gdx33gB8tOk1wJCigdTTHr3tk62WihH3StvYJTVzuXXgSgFgDn16gQNnlJWRPpcgAlZJ2i8oOGle7Icub58A5JDKC3c5KNAWtH3tiHSO2fR/DYigjerWm39pUnNJ7DLs=
+	t=1746457698; cv=none; b=KkLGYCZLzi5k1Pa4BjDQYxiIgjwvY6TCOBQQE7siGYoz4NDnILd0cUnt0eGYsXard0I6wfgMIkhWh72dQwLoJp7HR7sOCK+SF22fZmxpAY/Kfl8245AuRFprHhl6E3/YnCdkrnaZH4dnBZf9b6qpeRGjDUkM+WQ8YBxAJGFhHbQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746457669; c=relaxed/simple;
-	bh=4MA16sBWkSXUuIAbaeYdMlVLRGU8iFmjxeiYZ5xUVh8=;
+	s=arc-20240116; t=1746457698; c=relaxed/simple;
+	bh=sMAjsFFxQiYb8/vKhmxLpMOJwCESCAcjkhBpDE+Ra90=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NKXCR6L5FBc4tlMEnyxLZd0F8R5mU4o4b0TI/6VkmLFmFqt32y2SufFC31kNEeg76xL/nDDAU+adyERIPa1sePSg09kSxEj2nQKbjaCAq0+Sy/1p6xtmUloykBL0KT2FM5FHZZTxQ2C5Zr3CbSvS0kp2NhKF1CTCNrH78LtwGa4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ag531Ihh; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=FAn5SHfAsfqQ5ZhzPM3Y0cMNsferFJMsbok5BGEoDjPsXCUsuCu9LiFaj9bNNwz3AXhh+I0Th3bMofTOivgv8MhYRfKWZk0WXC9RyIMn8L4oT7icWofIffiZIj4hp2ftF9SkZi21MgqXwm/5rHsCov/AOxNkBWooXFBgiqKTMwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GUnWET9Q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ag531Ihh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72EE5C4CEE4;
-	Mon,  5 May 2025 15:07:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GUnWET9Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF492C4CEE4;
+	Mon,  5 May 2025 15:08:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746457668;
-	bh=4MA16sBWkSXUuIAbaeYdMlVLRGU8iFmjxeiYZ5xUVh8=;
+	s=k20201202; t=1746457694;
+	bh=sMAjsFFxQiYb8/vKhmxLpMOJwCESCAcjkhBpDE+Ra90=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ag531IhhrRoDKnrljV71iUG+juROsUDBzwODYBqX50XOogwtjTt8VGXdZAgyQ+Slp
-	 I6ERNq6cKgQk+c1C3qgA88vtsdvcLdR3QfNQLcFxBUUvfDhqMIv+ntbGYKgkuQMh0H
-	 PuAl/56y0fte7rwmu2Y91wFyV2D5pPMlEDsQgPE+xCj9ydn5pTap2jpKFOQ1rl5bSV
-	 s5FoizG7pHVmBE4uU0JcB7m+0Lhty7h/vD5oA/G+bAshgjjHLGYwdMQJZ0ywBWIhZe
-	 iA3P1yAmLTL1jRRvYXls9EjFJlKGgCn9GUjuGlIULnRZVejRtDWCCfpaJ8jaM0Rz/1
-	 ZMt/ZOhdsxXMQ==
-Date: Mon, 5 May 2025 08:07:46 -0700
+	b=GUnWET9QNVXQJimDYtyYcOsr1son9n6cImEiX1SRLWTg0oUUDvu2fpjqsrxM8CYYi
+	 27C8qb1mC+eHvW0rN9Sm/C7/XDKIszxFsczEIFatoHHAZK2a+YtZyDA5fkd6RKiFAT
+	 KFbSWqZqr0TbjLwoz9VSsWYK29+BAhJrbM2CY83jM5HC6x1dXR/YHmx5Wvu157V36O
+	 iQr0jN9k6StzeAfB+FtCJAFf9WE3vZnQb9XIYzijxF/ayt8YRrZ+aD/tmTkT2jCF6m
+	 BmZRKnCx+iIlp9etkRB6rHi9ts+7qCxFaz0vCX0PN212/ufTat3XmpbMsrEOpTN1w0
+	 IpG0AxQfAmWkw==
+Date: Mon, 5 May 2025 08:08:14 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: don't assume perags are initialised when trimming
- AGs
-Message-ID: <20250505150746.GA25675@frogsfrogsfrogs>
-References: <20250430232724.475092-1-david@fromorbit.com>
- <20250501043735.GZ25675@frogsfrogsfrogs>
- <Y69L1xfJ_g03wVEpWQ02-B3mbMmWNs1JE4gN1e9JKNdjFsob6HDOsxLPyEAr_-XwGA76PG90Fzb97tZxev1j4w==@protonmail.internalid>
- <aBMh3PJLrHqHGY4B@dread.disaster.area>
- <kj2yofyfvlpgigjnu4vbfzoz647ocz66snpa2hbu4fx6z36nz4@3bug7wcicpib>
+To: Hans Holmberg <Hans.Holmberg@wdc.com>
+Cc: Zorro Lang <zlang@kernel.org>,
+	"fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	hch <hch@lst.de>
+Subject: Re: [PATCH v2 15/15] xfs: test that we can handle spurious zone wp
+ advancements
+Message-ID: <20250505150814.GB25675@frogsfrogsfrogs>
+References: <20250501134302.2881773-16-hch@lst.de>
+ <20250505095054.16030-1-hans.holmberg@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,67 +46,115 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <kj2yofyfvlpgigjnu4vbfzoz647ocz66snpa2hbu4fx6z36nz4@3bug7wcicpib>
+In-Reply-To: <20250505095054.16030-1-hans.holmberg@wdc.com>
 
-On Mon, May 05, 2025 at 09:42:27AM +0200, Carlos Maiolino wrote:
-> On Thu, May 01, 2025 at 05:25:16PM +1000, Dave Chinner wrote:
-> > On Wed, Apr 30, 2025 at 09:37:35PM -0700, Darrick J. Wong wrote:
-> > > On Thu, May 01, 2025 at 09:27:24AM +1000, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > >
-> > > > When running fstrim immediately after mounting a V4 filesystem,
-> > > > the fstrim fails to trim all the free space in the filesystem. It
-> > > > only trims the first extent in the by-size free space tree in each
-> > > > AG and then returns. If a second fstrim is then run, it runs
-> > > > correctly and the entire free space in the filesystem is iterated
-> > > > and discarded correctly.
-> > > >
-> > > > The problem lies in the setup of the trim cursor - it assumes that
-> > > > pag->pagf_longest is valid without either reading the AGF first or
-> > > > checking if xfs_perag_initialised_agf(pag) is true or not.
-> > > >
-> > > > As a result, when a filesystem is mounted without reading the AGF
-> > > > (e.g. a clean mount on a v4 filesystem) and the first operation is a
-> > > > fstrim call, pag->pagf_longest is zero and so the free extent search
-> > > > starts at the wrong end of the by-size btree and exits after
-> > > > discarding the first record in the tree.
-> > > >
-> > > > Fix this by deferring the initialisation of tcur->count to after
-> > > > we have locked the AGF and guaranteed that the perag is properly
-> > > > initialised. We trigger this on tcur->count == 0 after locking the
-> > > > AGF, as this will only occur on the first call to
-> > > > xfs_trim_gather_extents() for each AG. If we need to iterate,
-> > > > tcur->count will be set to the length of the record we need to
-> > > > restart at, so we can use this to ensure we only sample a valid
-> > > > pag->pagf_longest value for the iteration.
-> > > >
-> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > >
-> > > Makes sense to me.  Please add the following trailers on merge:
-> > >
-> > > Cc: <stable@vger.kernel.org> # v6.10
-> > > Fixes: b0ffe661fab4b9 ("xfs: fix performance problems when fstrimming a subset of a fragmented AG")
-> > 
-> > Those tags are incorrect. The regression was introduced by commit
-> > 89cfa899608f ("xfs: reduce AGF hold times during fstrim operations")
-> > a few releases before that change....
+On Mon, May 05, 2025 at 09:51:48AM +0000, Hans Holmberg wrote:
+> From: Hans Holmberg <Hans.Holmberg@wdc.com>
 > 
-> This sounds right, introduced in v6.6.
+> Test that we can gracefully handle spurious zone write pointer
+> advancements while unmounted.
 > 
-> Darrick, I'll add a stable #v6.6 tag then.
+> Any space covered by the wp unexpectedly moving forward should just
+> be treated as unused space, so check that we can still mount the file
+> system and that the zone will be reset when all used blocks have been
+> freed.
+> 
+> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Ok thanks.
+Looks good now,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> > 
-> > > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> > 
-> > Thanks.
-> > 
-> > -Dave.
-> > --
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
+> ---
+> 
+> Canges since v1:
+>  Added _require_realtime and fixed a white space error based
+>  on Darrick's review comments.
+> 
+>  tests/xfs/4214     | 62 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/4214.out |  2 ++
+>  2 files changed, 64 insertions(+)
+>  create mode 100755 tests/xfs/4214
+>  create mode 100644 tests/xfs/4214.out
+> 
+> diff --git a/tests/xfs/4214 b/tests/xfs/4214
+> new file mode 100755
+> index 000000000000..0637bbc7250e
+> --- /dev/null
+> +++ b/tests/xfs/4214
+> @@ -0,0 +1,62 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2025 Western Digital Corporation.  All Rights Reserved.
+> +#
+> +# FS QA Test 4214
+> +#
+> +# Test that we can gracefully handle spurious zone write pointer
+> +# advancements while unmounted.
+> +#
+> +
+> +. ./common/preamble
+> +_begin_fstest auto quick zone
+> +
+> +# Import common functions.
+> +. ./common/filter
+> +. ./common/zoned
+> +
+> +_require_scratch
+> +_require_realtime
+> +_require_zoned_device $SCRATCH_RTDEV
+> +_require_command "$BLKZONE_PROG" blkzone
+> +
+> +_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+> +_scratch_mount
+> +blksz=$(_get_file_block_size $SCRATCH_MNT)
+> +
+> +test_file=$SCRATCH_MNT/test.dat
+> +dd if=/dev/zero of=$test_file bs=1M count=16 >> $seqres.full 2>&1 \
+> +	oflag=direct || _fail "file creation failed"
+> +
+> +_scratch_unmount
+> +
+> +#
+> +# Figure out which zone was opened to store the test file and where
+> +# the write pointer is in that zone
+> +#
+> +open_zone=$($BLKZONE_PROG report $SCRATCH_RTDEV | \
+> +	$AWK_PROG '/oi/ { print $2 }' | sed 's/,//')
+> +open_zone_wp=$($BLKZONE_PROG report $SCRATCH_RTDEV | \
+> +	grep "start: $open_zone" | $AWK_PROG '{ print $8 }')
+> +wp=$(( $open_zone + $open_zone_wp ))
+> +
+> +# Advance the write pointer manually by one block
+> +dd if=/dev/zero of=$SCRATCH_RTDEV bs=$blksz count=1 seek=$(($wp * 512 / $blksz))\
+> +	oflag=direct >> $seqres.full 2>&1 || _fail "wp advancement failed"
+> +
+> +_scratch_mount
+> +_scratch_unmount
+> +
+> +# Finish the open zone
+> +$BLKZONE_PROG finish -c 1 -o $open_zone $SCRATCH_RTDEV
+> +
+> +_scratch_mount
+> +rm $test_file
+> +_scratch_unmount
+> +
+> +# The previously open zone, now finished and unused, should have been reset
+> +nr_open=$($BLKZONE_PROG report $SCRATCH_RTDEV | grep -wc "oi")
+> +echo "Number of open zones: $nr_open"
+> +
+> +status=0
+> +exit
+> diff --git a/tests/xfs/4214.out b/tests/xfs/4214.out
+> new file mode 100644
+> index 000000000000..a746546bc8f6
+> --- /dev/null
+> +++ b/tests/xfs/4214.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 4214
+> +Number of open zones: 0
+> -- 
+> 2.34.1
 > 
