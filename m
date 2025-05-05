@@ -1,131 +1,160 @@
-Received: from relayout01-q01.e.movistar.es (relayout01-q01.e.movistar.es [86.109.101.141])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C394187332
-	for <linux-xfs@vger.kernel.org>; Mon,  5 May 2025 20:48:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=86.109.101.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D52F29117A
+	for <linux-xfs@vger.kernel.org>; Mon,  5 May 2025 22:17:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746478090; cv=none; b=qRYxfjSOjiimkbu0LZbCFkL2sps5Ai2gCKlu6nptW8jb9tYhmT/b8nuqurHk5RAZqsN7firlzNC9RuW/PnSZRV2JIK++ikcOWnaNUiGSdczZ4UlmaDsHpOqUP/+w/7wqAJqNKvarHkL1kPyI79zgobWe626X7nnL0+XnFi+iWFA=
+	t=1746483441; cv=none; b=DLOMTdF7hO3Nyr2jRS1mk0I3UCBqS3Nh2+vpQi4U+qxf6IiNu3fzaRYTyxoLtozhCqMXfpM35jBBITeh3jOQPEaqMGJStbLiKWujx6ENSB7X/tb/WesKo0IODwKJ6eWg/dFwxTnAaU3akm1WJRDZ4qmrb0dA+aGldKZAcPrJNv8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746478090; c=relaxed/simple;
-	bh=N+WH+7ktThBKBm+qMy825XW2bUCp7qb4d6skH65BIR8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=QImB2wR3HHhO8kvnlQ4zyK2FUr4s3Kjad5vrVNwf43dIpw3cw7DTKFp2JGi4QFtvfVTD99dABPeUy3zxPXS3ug2dEzjMSfDZPiNxUDHzZ8mvzYLU5FqQFX5WIsqeFP2pi7BgSIpnxBvgk1ux8goAYAJOeIfMLD20d8oUAJiBJz4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=telefonica.net; spf=pass smtp.mailfrom=telefonica.net; arc=none smtp.client-ip=86.109.101.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=telefonica.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=telefonica.net
-Received: from relayout01-redir.e.movistar.es (relayout01-redir.e.movistar.es [86.109.101.201])
-	by relayout01-out.e.movistar.es (Postfix) with ESMTP id 4Zrtgd39vGzjYt3
-	for <linux-xfs@vger.kernel.org>; Mon,  5 May 2025 22:39:57 +0200 (CEST)
-Received: from Telcontar.valinor (36.red-79-150-114.dynamicip.rima-tde.net [79.150.114.36])
-	(using TLSv1.2 with cipher ADH-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	(Authenticated sender: robin.listas2@telefonica.net)
-	by relayout01.e.movistar.es (Postfix) with ESMTPSA id 4Zrtgd1FpwzfZ93
-	for <linux-xfs@vger.kernel.org>; Mon,  5 May 2025 22:39:56 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id 95B6B3212A0
-	for <linux-xfs@vger.kernel.org>; Mon, 05 May 2025 22:39:56 +0200 (CEST)
-X-Virus-Scanned: amavis at valinor
-Received: from Telcontar.valinor ([127.0.0.1])
- by localhost (telcontar.valinor [127.0.0.1]) (amavis, port 10024) with LMTP
- id dLIc3UJQI9jo for <linux-xfs@vger.kernel.org>;
- Mon,  5 May 2025 22:39:56 +0200 (CEST)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id 18C26321207
-	for <linux-xfs@vger.kernel.org>; Mon, 05 May 2025 22:39:56 +0200 (CEST)
-Message-ID: <2b2b20be-6b9c-4378-a3f2-471785cab9e4@telefonica.net>
-Date: Mon, 5 May 2025 22:39:55 +0200
+	s=arc-20240116; t=1746483441; c=relaxed/simple;
+	bh=e+x5rAREwkTIbErn1FtZKoq2Pz1fycajN7srH/QekG0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Lnoud/pipaO5ZyqFZNNTot3WRCjVZPxCMxgaTz3FGNOZPsbiPuoOsowHOWAWHQMxJfovnFVhcZBso5Bs4dx8kt0qJMTM3Dn3JMWPw9+ABDvKWK8qyNnt/FlrawHnuYpAfZWQwM9na5m0nVCjDuamQfnAeFOI2qPGey70ljPPJgM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=qV3SXqIG; arc=none smtp.client-ip=209.85.216.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="qV3SXqIG"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-30572effb26so4715676a91.0
+        for <linux-xfs@vger.kernel.org>; Mon, 05 May 2025 15:17:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1746483439; x=1747088239; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=MERLGTHs/RrtUtLm0v7jU2OTI0wGhvJkJK+5yu5RY+8=;
+        b=qV3SXqIG8LOTyNh8LMsmf6TL1js4N26rFfID3fboiAPaafDbrKKC7wU9AJmA8muXm9
+         6JIap6KwzRdUT2qL5WCrY5KYBfo8+VRMsg/R8vYBN6W/323+dvqa8YT7wwWtgTbYIUIr
+         dKIvv9VbMvZczuE+mvCr4o22HPbEZV7OXr8aUJvwS7dcnp/cjXe8MS8GsXptml/9+hB5
+         6Rr0jJvhirFAF5d0+B6CsOCCOBsnJYXIqfUWN+8ace1TdyRaf9jzZrwH0QDGsXUP1dDy
+         ISDTVS5x5srVWybXqqKMFdPvGI2ZIclJjTm/MkwGIfvoD+GrLp0AQ19Eh+nXWE2fFkXL
+         6zGA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746483439; x=1747088239;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=MERLGTHs/RrtUtLm0v7jU2OTI0wGhvJkJK+5yu5RY+8=;
+        b=nrbl2A3gwlQH3A9xAoTpZihma7GQtfYsnHY201+QiEhEigmFi3+a+uTqX+s/E8OJNi
+         L/yKtFPGdE6Saom9x8FROzG7XFIqOBh8ZOFWQWATWG0VZUiuXo/4XWKrWRLR5uIGKS81
+         hyzRm6C5TaRaaygKO/cYO1EDZ8+LS+f66N1vpM5Ua4PbDNNCttGsEEuqt6gyFBSMJACW
+         +qg4Y3eAZBRBRsbKux/07v+ofjOFO/Zhkj68yL4wT6m0pbtQ80AROUPYXPtlStYLkhKU
+         ptQWYw+JooF39+hNHGAhtHIZXZYjGcGR56tUNr5n+V4JJEL50zBiR1xiF8Bo6q0qNNyh
+         6EFw==
+X-Forwarded-Encrypted: i=1; AJvYcCXoXsQP52F23CGNfOAafZGg9iretK45+iUlJYbG5nQ59TsZoK3rVdtuZbu4u4hEDo7vw5uPimArEnY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyJ0RwSU08kJoF7SRPLAtxG6O4rnPQtw0G79T4DKaDOJt7Wm+dr
+	rf9ciAJoa1pZU94U9y6GT6hh8b2xIRl1QBez3mm+JA/kUpxQ0U/bNFseasa6NqdFJUWF0XCkVBn
+	K
+X-Gm-Gg: ASbGnct+XXipRWo3p+cnqZPIhM2rKOSzZEVvwm+tDfV0PIvk3grYLF2npxRoIBZKEha
+	R/Vk/58COEVfQ98Tb7UzJA6r+XoboJdmZvpyTINhodgGzVChttEn8cvTkt4/QlxDFo0PVB1Q8zd
+	BX+mvJmyAzHc0cFWMPSHCRtTmEe6nPC2ox1dQTSwJuOlmiO+W2oT6jtscAK8AZf4niMjnPpi0Nj
+	G/BV/hkbqr0BbA6pamequGFhGaeH5UFDD7MRmFbk+NqZZPaCMibGMc+jV8Lp7acpmc6gdIrg3ER
+	Dv8AxuJYKCajd6rQ0NjPMFQhIU4gzxMg0UrgWSwD8r3vF/bjy71h0MC7mK4Gm7HomzYE1ILJ28r
+	vFZffNINrKIdkqPJOwwY7FFbb
+X-Google-Smtp-Source: AGHT+IHrvwwqSoSlfObVoPWp8AjVunSDrM2JhYnGT2PWGcNQNPXU+yqDU5LcnUBQQVLLeR5E/xxEgw==
+X-Received: by 2002:a17:90b:5824:b0:309:eb44:2a58 with SMTP id 98e67ed59e1d1-30a4e623cb7mr18675373a91.22.1746483439392;
+        Mon, 05 May 2025 15:17:19 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-30a47625aeasm9535767a91.36.2025.05.05.15.17.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 May 2025 15:17:18 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1uC47g-0000000HSCB-0wDj;
+	Tue, 06 May 2025 08:17:16 +1000
+Date: Tue, 6 May 2025 08:17:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Charalampos Mitrodimas <charmitro@posteo.net>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: Verify DA node btree hash order
+Message-ID: <aBk47Oqsy63jSBJY@dread.disaster.area>
+References: <20250505-xfs-hash-check-v2-1-226d44b59e95@posteo.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Question: Is it possible to recover deleted files from a healthy
- XFS filesystem?
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
-References: <18512e-6818b200-1ab-59e10800@49678430>
-From: "Carlos E. R." <robin.listas@telefonica.net>
-Content-Language: es-ES, en-CA
-Autocrypt: addr=robin.listas@telefonica.net; keydata=
- xsDiBEBfUmURBADiQy6hqnDUs980vU7Pi0qm/JnurLnZUDDEf8k7H10UnKi8E3ySztQuWsPK
- 12ccfWCHMKboluffBQA3jf0h1Rl6VZ9brU+rNuqy1eE8bkILhLkoZrsNGXWtzOvRHVSF7dhb
- GBuuFeqdGiRJPSvezQAi3S8dgXugSLZvbyHV97rATwCgmYzZ9mLrTV9RPMJy07K9SY2ZFFkD
- /1rvNuU1teq5hm4naypOFrfO2X4foo9+UjuqZpcPnxD4LEfyrjpx5QVNi3zEDGIAbN7exo4X
- s3VDWnrYZ8lqno4LfTlbuFcgLbAllhW7tYFg4sNW1dWr29VQjghZ8le+Fucx2VJOwv6ILWOr
- O7Qgj61HUvWlR+doKxQBOxFk50IiBACuUBaWimjjbJKvGjMRimJWdGHHxwo+oMA2ZLnsS7wJ
- cSIthF8FC8c1pyJwWcLiYcViy3kypJPloTiQqaZqhVx0ouCYFHBOYLaacCddJ7r6KHZyrjjo
- SegO1vIJn2Y9TolJfuHMNb276A+JPb3gHqm1bfcNHmduKa0gK2NyEkKGWc0wQ2FybG9zIEUu
- IFIuIChjZXIpIDxyb2Jpbi5saXN0YXNAdGVsZWZvbmljYS5uZXQ+wngEExEIADgCGwMGCwkI
- BwMCAxUCAwMWAgECHgECF4ACGQEWIQQZEb51mJKK1KpcU/W1MxgcbY1H1QUCXbLTkAAKCRC1
- MxgcbY1H1eLvAJ4hPAOO6Ru93N7h0tm/ojhT/FxGsQCeNWfR4rMNiONSpySLJp4YvQVWxZnO
- wE0EQF9SZhAEAJYs7Y2YcxT1Uz55O3z3VwgV9e6F0YFejeu1DHphuCHq2B5qDRHOKKPvG2WB
- 21bIz4aPZxIrkzvg/cg6I8qn8Aumd5aZgSr/XUTTPJc9YLlM5e7X+QF+tG9HuxPAH9xe2EcR
- KrWP54Q4X//iHSxasIIpZXA17s1HLgRdsDpy6VYLAAMFA/9zgwJ/XhhTWpohCXLv1mA2xJk+
- r9CJUsUj0sbdqytLU52I+yRVLUY3g4MFp504alRwxr+LBptEgsf53eXuU0gG9nXxpFk3zlut
- 6r0EKZvQAhiCZmJQvZbl3FeHaBA9qoi8XvK9G4a5jljMLkqonsaWlrbDNnzgh2hYARUxn6P+
- 5MJdBBgRCAAdFiEEGRG+dZiSitSqXFP1tTMYHG2NR9UFAl2y05AACgkQtTMYHG2NR9VDmQCe
- IPJ9kY9XUWtaBW9X9F1AfURttC8AnRNz3RmjBY99/W4UZzspOaeMZM6d
-In-Reply-To: <18512e-6818b200-1ab-59e10800@49678430>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------BqKvtSvOdoiLSLTegMrd3nfy"
-X-TnetOut-Country: IP: 79.150.114.36 | Country: ES
-X-TnetOut-Information: AntiSPAM and AntiVIRUS on relayout01
-X-TnetOut-MsgID: 4Zrtgd1FpwzfZ93.AAFA1
-X-TnetOut-SpamCheck: no es spam (whitelisted), clean
-X-TnetOut-From: robin.listas@telefonica.net
-X-TnetOut-Watermark: 1747082397.2948@m2vzApzPeG3fSjjG/y7hCg
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250505-xfs-hash-check-v2-1-226d44b59e95@posteo.net>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------BqKvtSvOdoiLSLTegMrd3nfy
-Content-Type: multipart/mixed; boundary="------------ltrX50LCq0VcZu6SIjOLeem0";
- protected-headers="v1"
-From: "Carlos E. R." <robin.listas@telefonica.net>
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
-Message-ID: <2b2b20be-6b9c-4378-a3f2-471785cab9e4@telefonica.net>
-Subject: Re: Question: Is it possible to recover deleted files from a healthy
- XFS filesystem?
-References: <18512e-6818b200-1ab-59e10800@49678430>
-In-Reply-To: <18512e-6818b200-1ab-59e10800@49678430>
+On Mon, May 05, 2025 at 08:06:39AM +0000, Charalampos Mitrodimas wrote:
+> The xfs_da3_node_verify() function checks the integrity of directory
+> and attribute B-tree node blocks. However, it was missing a check to
+> ensure that the hash values of the btree entries within the node are
+> non-decreasing hash values (allowing equality).
+> 
+> Add a loop to iterate through the btree entries and verify that each
+> entry's hash value is greater than the previous one. If an
+> out-of-order hash value is detected, return failure to indicate
+> corruption.
 
---------------ltrX50LCq0VcZu6SIjOLeem0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+Ok, the code is fine, but....
 
-T24gMjAyNS0wNS0wNSAxNDo0MiwgQmMuIE1hcnRpbiDFoGFmcsOhbmVrIHdyb3RlOg0KPiBI
-ZWxsbyBldmVyeW9uZSwNCj4gDQo+IEkgaGF2ZSBhIHF1ZXN0aW9uIHJlZ2FyZGluZyBYRlMg
-YW5kIGZpbGUgcmVjb3ZlcnkuDQo+IA0KPiBJcyB0aGVyZSBhbnkgbWV0aG9kIOKAlCBvZmZp
-Y2lhbCBvciB1bm9mZmljaWFsIOKAlCB0byByZWNvdmVyIGRlbGV0ZWQgZmlsZXMgZnJvbSBh
-IGhlYWx0aHksIHVuY29ycnVwdGVkIFhGUyBmaWxlc3lzdGVtPyBJIHVuZGVyc3RhbmQgdGhh
-dCBYRlMgZG9lcyBub3Qgc3VwcG9ydCB1bmRlbGV0aW9uLCBidXQgSSdtIHdvbmRlcmluZyBp
-ZiBhbnkgcmVtbmFudHMgb2YgbWV0YWRhdGEgbWlnaHQgc3RpbGwgYWxsb3cgcGFydGlhbCBv
-ciBmdWxsIHJlY292ZXJ5LCBwZXJoYXBzIHVuZGVyIHNwZWNpZmljIGNvbmRpdGlvbnMuDQo+
-IA0KPiBJZiBhbnlvbmUgaGFzIGluc2lnaHRzLCB0b29scywgb3Igc3VnZ2VzdGlvbnMsIEni
-gJlkIGJlIHZlcnkgZ3JhdGVmdWwuDQo+IA0KPiBUaGFuayB5b3UgZm9yIHlvdXIgdGltZS4N
-Cg0KVGhlcmUgYXJlIHRvb2xzIHRoYXQgc2VhcmNoIHRoZSBkaXNrIGJsb2NrcyB0cnlpbmcg
-dG8gZmluZCBibG9ja3MgdGhhdCANCmJlbG9uZ2VkIHRvIGEgZmlsZSB0aGF0IHdhcyBkZWxl
-dGVkLiBUaGUgZmlyc3Qgc3RlcCB3b3VsZCBiZSB0byBzZXQgdGhhdCANCmZpbGVzeXN0ZW0g
-dG8gcmVhZCBvbmx5LCBhbmQgaG9wZWZ1bGx5LCBjcmVhdGUgYW4gaW1hZ2UuDQoNCkkgaGF2
-ZSBuZXZlciB0cmllZCBvbiBhbiBYRlMgZmlsZXN5c3RlbSwgc28gSSBjYW4ndCByZWNvbW1l
-bmQgYW55IHRvb2wuIA0KVG9vbHMgbmVlZCB0byBrbm93IHRoZSB0eXBlIG9mIGZpbGUgeW91
-IHdhbnQgdG8gZmluZC4NCg0KLS0gDQpDaGVlcnMgLyBTYWx1ZG9zLA0KDQoJCUNhcmxvcyBF
-LiBSLg0KCQkoZnJvbSAxNS42IHg4Nl82NCBhdCBUZWxjb250YXIpDQo=
+> This addresses the "XXX: hash order check?" comment and improves
+> corruption detection for DA node blocks.
 
---------------ltrX50LCq0VcZu6SIjOLeem0--
+.... it doesn't address that comment.
 
---------------BqKvtSvOdoiLSLTegMrd3nfy
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+That comment was posed as a question for good reasons.
 
------BEGIN PGP SIGNATURE-----
+Ask yourself this question and then do the math: what is the
+overhead of doing this hash order check on a 64kB directory node
+block? How many times does this loop iterate, and how much extra CPU
+does that burn when you are processing tens of thousands of these
+blocks every second?
 
-wmMEABEIACMWIQQZEb51mJKK1KpcU/W1MxgcbY1H1QUCaBkiHAUDAAAAAAAKCRC1MxgcbY1H1VAL
-AKCCjbkIW/7cArxT/GRnCBb3+W86kQCghFWBj5emEp48o1vN80bxpasfUXc=
-=pwKW
------END PGP SIGNATURE-----
+IOWs, that comment is posed as a question because the hash order
+check is trivial to implement but we've assumed that it is -too
+expensive to actually implement-. It has never been clear that the
+additional runtime expense is worth the potential gain in corruption
+detection coverage.
 
---------------BqKvtSvOdoiLSLTegMrd3nfy--
+In terms of performance and scalability, we have to consider what
+impact this has on directory lookup performance when
+there are millions of entries in a directory. What about when
+there are billions of directory entries in the filesystem? What
+impact does this have on directory modification and writeback speed
+(verifiers are also run prior to writeback, not just on read)?
+What impact does it have on overall directory scalability? etc.
+
+Now consider the other side of the coin: what is the risk of
+undetected corruptions slipping through because we don't verify the
+hash order? Do we have any other protections against OOO hash
+entries in place? What is the severity of the failure scenarios
+associated with an out-of-order hash entry - can it oops the
+machine, cause a security issue, etc? Have we ever seen an out of
+order hash entry in the wild?
+
+Hence we also need to quantify the risk we are assuming by not
+checking the hash order exhaustively and how it changes by adding
+such checking. What holes in the order checking still exist even
+with the new checks added (e.g. do we check hash orders across
+sibling blocks?).
+
+Are there any other protections on node blocks that already inform
+us of potential ordering issues without needing expensive,
+exhaustive tests?  If not, are there new, lower cost checks we can
+add that will give us the same detection capabilty without the
+IO-time verification overhead? (e.g. in the hash entry binary search
+lookup path.)
+
+i.e. What is the risk profile associated with the status quo of the
+past 30 years (i.e. no hash order verification at IO time) and how
+much does that improve by adding some form of hash order
+verification?
+
+Hence as a first step before we add such hash order checking, we
+need performance and scalability regression testing (especially on
+directories containing millions of entries) to determine the runtime
+hit we will take from adding the check. Once the additional runtime
+overhead has been measured, quantified and analysed, then we can
+balance that against the risk profile improvement and make an
+informed decision on this verification...
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
