@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEB192E62C;
-	Mon,  5 May 2025 07:10:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20A8C176AC8
+	for <linux-xfs@vger.kernel.org>; Mon,  5 May 2025 07:42:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746429044; cv=none; b=ah1ZV9crsUTi57vRncicoItKmtof9u60DgCYKiu19ubUw4xUXQCwnXD0r2oe8CIsl44RgN0boy/GRbfBTorwBGVhu1dNxDm1/LlT3zaABOZWjayPcEXy7io/Ee5GRGoRDSYO5bDeZQP743Y6wT20lf+Fv4pdRglYyq8BvtiJR5o=
+	t=1746430952; cv=none; b=Hiel2ruD3+fFuXjdwv8fusuSKPFnVjcxgRBKnb86y8J1tPZ0WI2eVk5/iuehaiN/6ceVGNvaOQk75+kGpQ8atfyw0/nGq0h9JqbNTaEUppkiYt/N6Jkii9QfjJPP651GVNvkiOa/OR59kLCEpDd11LERCFAENxKblvqH13dT2i4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746429044; c=relaxed/simple;
-	bh=xBd+W3ZoyuxN5L3bU9S3LAlbhway874q22Inxj9LXn8=;
+	s=arc-20240116; t=1746430952; c=relaxed/simple;
+	bh=p9pXspJPogTf4pzG18NtN8KCLYcueBCXKP5/qCIiJWo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NuI9bUv069y0z6rE7geeN5Al6/u32WzgICyELPEpfNamxYQ0RMDxuaJ4icuNNOQ2mG4g17TXaCiTtoaegBvZ+HOZXuTQcRZOfD0wePkDls9A5/13worApBAT0aEqhCRQ4Ft1m34OklaSRdmTA0G05Ms1IHFyXqcIjYvOa6XBuRU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TgtrVWA2; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=TfizkNpMeeUa7wyF026CpYviXTlYCsftNP86bHYEjC0kymRBk0TBkSDiemusdXOS3acmNoNYlz7rEItez8cWGRgnVh0VSWojEr8A6ufCNzEn3WV+Zkgo+9Ag5pIh1FfuvWrYy0BPwkob7DnYXxXssrYLonET+k+33m3t2xGmRA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aJp4Woq9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TgtrVWA2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE61BC4CEE4;
-	Mon,  5 May 2025 07:10:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aJp4Woq9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD0EFC4CEE4;
+	Mon,  5 May 2025 07:42:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746429043;
-	bh=xBd+W3ZoyuxN5L3bU9S3LAlbhway874q22Inxj9LXn8=;
+	s=k20201202; t=1746430952;
+	bh=p9pXspJPogTf4pzG18NtN8KCLYcueBCXKP5/qCIiJWo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TgtrVWA2Ac/YcSXOLl1HDzO2Cb+zrUUkOZKCkD5w69+NPjMcrPfo/wwOFTLPG4/Iv
-	 8odhs+/z0+i0+tcFkwc0TmYdUzTaxX3Dbu7JgugjXyryREHgUjqrFo82DgGAOP/8p3
-	 Zy3vWvP4ddQ1L2ZxqFU7MTnfPw0XOu9k8LYZZLUUO02Yc5aeHUJtmH6/6HyIk261i9
-	 sOuYg1Ew0RQkOwk2+JNHQ6XuzI56x0Koi+hQsNFXgVdYQKWGdytpsAolhQ/vxPWsVI
-	 deyIddsjQZZVWaQ4hgGQCW3XkFnfo1iD6KwMCS4HkfES/7TG6a2MV+eYuicyudcLDC
-	 zXrcnsTRjLWSQ==
-Date: Mon, 5 May 2025 09:10:38 +0200
+	b=aJp4Woq9NSVG9bdSFXMT7ifjY8ZtD1rKz8+P5uTUVNTw3YuMyrllCRa0airJs8Yk1
+	 IPRi7Y9yRlDqx+SdvD31hc0L8ivyCYvyMPlh3O9OtNwT8L5QPNQ3K3vYFIeEaWashk
+	 o0a9W/E8BqMRDtDzT4RrO23dZS81t1ejZU+Js0KxY9xDO+6Mhh6lhdrJfdnvFsnj5D
+	 3qGXSXg9N0oJtex9qt8ZgRL3d5bm7XEJh34I+KcXXURUbIlrjl/2x3eIJQsA5Anc29
+	 rPXdTMvLRSNphQCeIltjrxAFFvOZ7pmnjUP9vp0GvuaFHC6zj9VuzEZfGXzBc3CuqS
+	 9F8txqKxnmDcw==
+Date: Mon, 5 May 2025 09:42:27 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Charalampos Mitrodimas <charmitro@posteo.net>, 
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: Verify DA node btree hash order
-Message-ID: <wk2tqzdfersvwespapxgjwujb5nc2nvmvntdsj7uunxhcvxznb@sjli3e3i6rhp>
-References: <6Fo_nCBU7RijxC1Kg6qD573hCAQBTcddQlb7i0E9C7tbpPIycSQ8Vt3BeW-1DqdayPO9EzyJLyNgxpH6rfts4g==@protonmail.internalid>
- <20250412-xfs-hash-check-v1-1-fec1fef5d006@posteo.net>
- <dyo3cdnqg3zocge2ygspovdlrjjo2dbwefbvq6w5mcbjgs3bdj@diwkyidcrpjg>
- <lbaob9s1_tUxYvjGHQenkwdnv3WRsD4qjMur4VE5ELE_Ph4Q388PDEmb8bOGuSRnRpbC0mAW-du5eG2UpwmpGg==@protonmail.internalid>
- <20250501141249.GA25675@frogsfrogsfrogs>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: don't assume perags are initialised when trimming
+ AGs
+Message-ID: <kj2yofyfvlpgigjnu4vbfzoz647ocz66snpa2hbu4fx6z36nz4@3bug7wcicpib>
+References: <20250430232724.475092-1-david@fromorbit.com>
+ <20250501043735.GZ25675@frogsfrogsfrogs>
+ <Y69L1xfJ_g03wVEpWQ02-B3mbMmWNs1JE4gN1e9JKNdjFsob6HDOsxLPyEAr_-XwGA76PG90Fzb97tZxev1j4w==@protonmail.internalid>
+ <aBMh3PJLrHqHGY4B@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,85 +45,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250501141249.GA25675@frogsfrogsfrogs>
+In-Reply-To: <aBMh3PJLrHqHGY4B@dread.disaster.area>
 
-On Thu, May 01, 2025 at 07:12:49AM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 30, 2025 at 11:23:57AM +0200, Carlos Maiolino wrote:
-> > On Sat, Apr 12, 2025 at 08:03:57PM +0000, Charalampos Mitrodimas wrote:
-> > > The xfs_da3_node_verify() function checks the integrity of directory
-> > > and attribute B-tree node blocks. However, it was missing a check to
-> > > ensure that the hash values of the btree entries within the node are
-> > > strictly increasing, as required by the B-tree structure.
+On Thu, May 01, 2025 at 05:25:16PM +1000, Dave Chinner wrote:
+> On Wed, Apr 30, 2025 at 09:37:35PM -0700, Darrick J. Wong wrote:
+> > On Thu, May 01, 2025 at 09:27:24AM +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
 > > >
-> > > Add a loop to iterate through the btree entries and verify that each
-> > > entry's hash value is greater than the previous one. If an
-> > > out-of-order hash value is detected, return failure to indicate
-> > > corruption.
+> > > When running fstrim immediately after mounting a V4 filesystem,
+> > > the fstrim fails to trim all the free space in the filesystem. It
+> > > only trims the first extent in the by-size free space tree in each
+> > > AG and then returns. If a second fstrim is then run, it runs
+> > > correctly and the entire free space in the filesystem is iterated
+> > > and discarded correctly.
 > > >
-> > > This addresses the "XXX: hash order check?" comment and improves
-> > > corruption detection for DA node blocks.
+> > > The problem lies in the setup of the trim cursor - it assumes that
+> > > pag->pagf_longest is valid without either reading the AGF first or
+> > > checking if xfs_perag_initialised_agf(pag) is true or not.
 > > >
-> > > Signed-off-by: Charalampos Mitrodimas <charmitro@posteo.net>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_da_btree.c | 11 ++++++++++-
-> > >  1 file changed, 10 insertions(+), 1 deletion(-)
+> > > As a result, when a filesystem is mounted without reading the AGF
+> > > (e.g. a clean mount on a v4 filesystem) and the first operation is a
+> > > fstrim call, pag->pagf_longest is zero and so the free extent search
+> > > starts at the wrong end of the by-size btree and exits after
+> > > discarding the first record in the tree.
 > > >
-> > > diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> > > index 17d9e6154f1978ce5a5cb82176eea4d6b9cd768d..6c748911e54619c3ceae9b81f55cf61da6735f01 100644
-> > > --- a/fs/xfs/libxfs/xfs_da_btree.c
-> > > +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> > > @@ -247,7 +247,16 @@ xfs_da3_node_verify(
-> > >  	    ichdr.count > mp->m_attr_geo->node_ents)
-> > >  		return __this_address;
+> > > Fix this by deferring the initialisation of tcur->count to after
+> > > we have locked the AGF and guaranteed that the perag is properly
+> > > initialised. We trigger this on tcur->count == 0 after locking the
+> > > AGF, as this will only occur on the first call to
+> > > xfs_trim_gather_extents() for each AG. If we need to iterate,
+> > > tcur->count will be set to the length of the record we need to
+> > > restart at, so we can use this to ensure we only sample a valid
+> > > pag->pagf_longest value for the iteration.
 > > >
-> > > -	/* XXX: hash order check? */
-> > > +	/* Check hash order */
-> > > +	uint32_t prev_hash = be32_to_cpu(ichdr.btree[0].hashval);
-> > > +
-> > > +	for (int i = 1; i < ichdr.count; i++) {
-> > > +		uint32_t curr_hash = be32_to_cpu(ichdr.btree[i].hashval);
-> > > +
-> > > +		if (curr_hash <= prev_hash)
-> > > +			return __this_address;
-> > > +		prev_hash = curr_hash;
-> > > +	}
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > >
-> > Hmmm. Do you have any numbers related to the performance impact of this patch?
+> > Makes sense to me.  Please add the following trailers on merge:
 > >
-> > IIRC for very populated directories we can end up having many entries here. It's
-> > not uncommon to have filesystems with millions of entries in a single directory.
-> > Now we'll be looping over all those entries here during verification, which could
-> > scale to many interactions on this loop.
-> > I'm not sure if I'm right here, but this seems to add a big performance penalty
-> > for directory writes, so I'm curious about the performance implications of this
-> > patch.
+> > Cc: <stable@vger.kernel.org> # v6.10
+> > Fixes: b0ffe661fab4b9 ("xfs: fix performance problems when fstrimming a subset of a fragmented AG")
 > 
-> It's only a single dabtree block, which will likely be warm in cache
-> due to the crc32c validation.
+> Those tags are incorrect. The regression was introduced by commit
+> 89cfa899608f ("xfs: reduce AGF hold times during fstrim operations")
+> a few releases before that change....
 
-I assumed this could be called to verify a leaf block, a look at the code
-seems that's not the case, so, this is perhaps harmless related to performance.
+This sounds right, introduced in v6.6.
+
+Darrick, I'll add a stable #v6.6 tag then.
 
 > 
-> But if memory serves, one can create a large enough dir (or xattr)
-> structure such that a dabtree node gets written out with a bunch of
-> entries with the same hashval.  That was the subject of the correction
-> made in commit b7b81f336ac02f ("xfs_repair: fix incorrect dabtree
-> hashval comparison") so I've been wondering if this passes the xfs/599
-> test?  Or am I just being dumb?
+> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 > 
-> --D
+> Thanks.
 > 
-> > >
-> > >  	return NULL;
-> > >  }
-> > >
-> > > ---
-> > > base-commit: ecd5d67ad602c2c12e8709762717112ef0958767
-> > > change-id: 20250412-xfs-hash-check-be7397881a2c
-> > >
-> > > Best regards,
-> > > --
-> > > Charalampos Mitrodimas <charmitro@posteo.net>
-> > >
-> >
+> -Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+> 
