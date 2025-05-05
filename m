@@ -1,45 +1,36 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04C91140E30;
-	Mon,  5 May 2025 05:37:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9854610A1F;
+	Mon,  5 May 2025 05:40:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746423430; cv=none; b=PM7A0c8JhYV+jVaW/IgUaPQZWEhwZBO/4lV20bFV5pprqTuubrKMWFAhDNreyM6c4HxQELDdxT+L3Scax2rPgdPJH3RcS795cdtE/6NF+P5B5cW9AC9YBdNtbwqq9gF/bUiwwhN47b0d68UYgThD62gcM68N44bDOqC18RGOtM8=
+	t=1746423644; cv=none; b=jpfIVreyDyo5ER3drSxqsR0KzRDP9ZC8qU++/ekwZqgdYIW+oR675NDpZVX/vr9g/4oU9+vKPLzt/u2w9ItHIWsXG7iOj65qKbR7eBxlpydUcfBslJ/Q8cLHZFH9jgFnF1ZDC5SMuCddMBRK3B9JDgwUd8YeAmvtw7d0AmM7+c0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746423430; c=relaxed/simple;
-	bh=kBBO8xM1m0xiDY+ATVZzvUxw52r+3Af7/qxmy7Ue1t8=;
+	s=arc-20240116; t=1746423644; c=relaxed/simple;
+	bh=Ku17acRJb1QW1OdpnNN2OSk6KwYCHMoozzjfVO8vbhA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QcZjJ02pTFq5dA2J5LU3m2NJRWUPHqVJ9W7PuOy8RsxoLWdiNunzIPloHuaxz+pz4Xpeh1fHVY5lJ+KPqsX6IHx0dT0gJRNYTdkKW9LCflNYjw2rlKii7Ds92ssxnQ1h2AcaqC+H4ucaMqLQejk//24IRj1Y4Le6bc2VUMiDjvA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=m3COmVJ6; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="m3COmVJ6"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=NWzlsEkfRx1oiyZRAMyy2S2MG1ERVHQEuyv1wUN0Hc8=; b=m3COmVJ61p3aCZMSSXv8FL//le
-	x1A2Nn3so4zzwxTC/WKqhJQs2wyHTvA2IWT4fewjjl08Oqaw4JSR0m/YTD2omiPoOn3LMVB29dPyT
-	fDwmk+UtY//WyzCX+CrbJo/xj/luNVV9es5HVdVNXUe097oz9phbQ4TRpmBx8kl57cwSXQOuhIYVa
-	puRRGyt8iODPeTA0ZqO/4vUIhGojdecRcl34JXzUqHgF0fNQl7viaLLBbSBaxW24mOGIFp0pwpJzy
-	B3DlwxWeYRva9z5lwdz3LW6h9qxiKycvrQ7sx2o4gthcaBFZNTUJYjYOBbilBq+wR4NUMrjqBB9V/
-	JQuxWGpw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uBoVn-00000006S5z-0Xhp;
-	Mon, 05 May 2025 05:37:07 +0000
-Date: Sun, 4 May 2025 22:37:07 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Catherine Hoang <catherine.hoang@oracle.com>,
-	linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v5] generic: add a test for atomic writes
-Message-ID: <aBhOg_jB4DWSz1A4@infradead.org>
-References: <20250410042317.82487-1-catherine.hoang@oracle.com>
- <aBRwTFxik14x-hyX@infradead.org>
- <20250502193942.GP25675@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=sBz7YYg7/fr6bxDdUZ8hP3riNaya79KxamUOODQrTQrNdr+e4qwbC+1t0FCJN2woZVYS1e+qgVWXS+HXoEdxQmwlhfriioYwwjfm+MtekQEtRFBlMhNJKU+Og7BRR2nHbpc4wGZ5fPsJK+nag5aCkrIphvWJsT0uo5aDlfvCnmw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id CF3B268BEB; Mon,  5 May 2025 07:40:31 +0200 (CEST)
+Date: Mon, 5 May 2025 07:40:31 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: brauner@kernel.org, djwong@kernel.org, hch@lst.de,
+	viro@zeniv.linux.org.uk, jack@suse.cz, cem@kernel.org,
+	linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
+	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, catherine.hoang@oracle.com,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH v11 02/16] xfs: only call xfs_setsize_buftarg once per
+ buffer target
+Message-ID: <20250505054031.GA20925@lst.de>
+References: <20250504085923.1895402-1-john.g.garry@oracle.com> <20250504085923.1895402-3-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,22 +39,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250502193942.GP25675@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250504085923.1895402-3-john.g.garry@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, May 02, 2025 at 12:39:42PM -0700, Darrick J. Wong wrote:
-> Me neither.  We can't write 512b blocks to the rt device obviously, but
-> I think the whole point of the separate "sector" size is that's the
-> maximum size that the fs knows it can write to the device without
-> tearing.
+On Sun, May 04, 2025 at 08:59:09AM +0000, John Garry wrote:
+> +static inline int xfs_buftarg_sync(struct xfs_buftarg *btp)
+> +{
+> +	return sync_blockdev(btp->bt_bdev);
+> +}
 
-The sector size is really the minimum addressable unit.
+What is the point in having this wrapper?
 
-> Maybe there's a way out of this: the only metadata on the realtime
-> volume is the rt superblock, whose size is a full fsblock.  Perhaps we
-> could set/validate the block size of the rt dev with the fsblock size
-> instead?
+> +/*
+> + * Flush and invalidate all devices' pagecaches before reading any metadata
+> + * because XFS doesn't use the bdev pagecache.
+> + */
+> +STATIC int
+> +xfs_preflush_devices(
+> +	struct xfs_mount	*mp)
+> +{
+> +	int			error;
+> +
+> +	error = xfs_buftarg_sync(mp->m_ddev_targp);
+> +	if (error)
+> +		return error;
+> +
+> +	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
+> +		error = xfs_buftarg_sync(mp->m_ddev_targp);
+> +		if (error)
+> +			return error;
+> +	}
 
-We still allow subsector dio to the rt device, so this would be a bit
-of a sketchy change.
+Why does this duplicate all the logic instead of being folded into
+xfs_open_devices?
 
