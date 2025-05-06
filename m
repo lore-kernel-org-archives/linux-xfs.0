@@ -1,108 +1,64 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B9B72356D2;
-	Tue,  6 May 2025 01:23:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 575552BD03F;
+	Tue,  6 May 2025 04:22:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746494634; cv=none; b=ESPbiTjvecSuWU4sDq5lMIrbFWCQdIqRjOkzAnwumtLy4kvTMtjYyU6kCY4ygl76snERbdOBevOEocDAtBN3P8oNWsX1Nd8PyqBvMImUfIOPWp7Jyz/c9Ldui5MbMJZNtnDrLh3R5IECgeyN+xb2P2LiBtKv76VwxwUs41Qm7Pg=
+	t=1746505371; cv=none; b=HSt/selic8ZyCwwwPoMDYiw0f9S4sYRFzv7qKjrHBg7ab+/W0cvR/bhlqWyXt0aXDfUOx1h9qInOFrwAAM22ex+LQ6tXZDXpzbD9M7fA5KF3ChJXzy+bNFZlGwe28xC0ymefoCzTjbCliioRuzylFyMHNyk+AZRcT782++Ns3Sg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746494634; c=relaxed/simple;
-	bh=ZMOTkC6P71qPe4BzgMQMENfuFisNKiG1ouPs/kk/x/I=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kGJagZX9E4wreGgrLa8ovsmE8qx1gbwRcPhJBZq+qROWohoo7FImxQmWmSOISLFR0QLG4ijeOdZirvYTF2fX+coa8MLzd5o5aF99PUwyOovwN8PMEcKbDITqx/1xc5DDFxNF9kyDDFxxnnXmlYEufHwW1GPwnuQNaVQhcYQtuNk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4Zs0zB5f9FzYQtwH;
-	Tue,  6 May 2025 09:23:50 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 2BD441A07BB;
-	Tue,  6 May 2025 09:23:50 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgD3Wl+lZBlouX4_Lg--.26089S4;
-	Tue, 06 May 2025 09:23:49 +0800 (CST)
-From: Zizhi Wo <wozizhi@huaweicloud.com>
-To: chandan.babu@oracle.com,
-	djwong@kernel.org,
-	dchinner@redhat.com,
-	osandov@fb.com,
-	john.g.garry@oracle.com
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	wozizhi@huawei.com,
-	yangerkun@huawei.com,
-	leo.lilong@huawei.com
-Subject: [PATCH] xfs: Remove deprecated xfs_bufd sysctl parameters
-Date: Tue,  6 May 2025 09:15:40 +0800
-Message-Id: <20250506011540.285147-1-wozizhi@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1746505371; c=relaxed/simple;
+	bh=dUnyonXps9Hj2gJJF9TI4PC9uOAgo51Hbpb/TfEXCBs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ls2v2gBnoRlb+pFExutUJVrzvdLnQ/JbAPyuK71ASj/7Oo3GmDMeFxc8Og7uSAU1U8VXYOw9ySgoKICR+ULi/z/UB65NgDxRX7QdnoqjfFibc/62ePneRTsWJRn10C9k5cToSwVXRzNlec/L8zvP0PzOP0nTcPTynINOQqTqdv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id BB4C667373; Tue,  6 May 2025 06:22:42 +0200 (CEST)
+Date: Tue, 6 May 2025 06:22:42 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
+	cem@kernel.org, linux-fsdevel@vger.kernel.org, dchinner@redhat.com,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ojaswin@linux.ibm.com, ritesh.list@gmail.com,
+	martin.petersen@oracle.com, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, catherine.hoang@oracle.com,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH v11 02/16] xfs: only call xfs_setsize_buftarg once per
+ buffer target
+Message-ID: <20250506042242.GA26378@lst.de>
+References: <20250504085923.1895402-1-john.g.garry@oracle.com> <20250504085923.1895402-3-john.g.garry@oracle.com> <20250505054031.GA20925@lst.de> <8ea91e81-9b96-458e-bd4e-64eada31e184@oracle.com> <20250505104901.GA10128@lst.de> <bb8efa28-19e6-42f5-9a26-cdc0bc48926e@oracle.com> <20250505142234.GG1035866@frogsfrogsfrogs> <40def355-38db-4424-b9f0-b82bba62462b@oracle.com> <200d855d-550d-4207-9118-6a0c10d14f8a@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgD3Wl+lZBlouX4_Lg--.26089S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ww45KFWUKF1UWryxWry7trb_yoW8AF1Dpr
-	s7Gw12kr1DGry8ZFn3JF4UKa1FvryIkF409rs7ArsrXwn7Ar9rWF10krWfAayYvwsIvr4f
-	Wr1DGry8XwsxJFDanT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv2b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0E
-	n4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I
-	0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWU
-	tVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcV
-	CY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAF
-	wI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa
-	7IU10PfPUUUUU==
-X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
+In-Reply-To: <200d855d-550d-4207-9118-6a0c10d14f8a@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-From: Zizhi Wo <wozizhi@huawei.com>
+On Mon, May 05, 2025 at 04:27:56PM +0100, John Garry wrote:
+> On 05/05/2025 15:48, John Garry wrote:
+>>>> @Darrick, please comment on whether happy with changes discussed.
+>>> I put the sync_blockdev calls in a separate function so that the
+>>> EIO/ENOSPC/whatever errors that come from the block device sync don't
+>>> get morphed into ENOMEM by xfs_alloc_buftarg before being passed up.  I
+>>> suppose we could make that function return an ERR_PTR, but I was trying
+>>> to avoid making even more changes at the last minute, again.
+>>
+>> It seems simpler to just have the individual sync_blockdev() calls from 
+>> xfs_alloc_buftarg(), rather than adding ERR_PTR() et al handling in both 
+>> xfs_alloc_buftarg() and xfs_open_devices().
+>
+> Which of the following is better:
 
-Commit 64af7a6ea5a4 ("xfs: remove deprecated sysctls") removed the
-deprecated xfsbufd-related sysctl interface, but forgot to delete the
-corresponding parameters: "xfs_buf_timer" and "xfs_buf_age".
-
-This patch removes those parameters and makes no other changes.
-
-Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
----
- fs/xfs/xfs_globals.c | 2 --
- fs/xfs/xfs_sysctl.h  | 2 --
- 2 files changed, 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
-index f18fec0adf66..f6f628c01feb 100644
---- a/fs/xfs/xfs_globals.c
-+++ b/fs/xfs/xfs_globals.c
-@@ -23,8 +23,6 @@ xfs_param_t xfs_params = {
- 	.inherit_sync	= {	0,		1,		1	},
- 	.inherit_nodump	= {	0,		1,		1	},
- 	.inherit_noatim = {	0,		1,		1	},
--	.xfs_buf_timer	= {	100/2,		1*100,		30*100	},
--	.xfs_buf_age	= {	1*100,		15*100,		7200*100},
- 	.inherit_nosym	= {	0,		0,		1	},
- 	.rotorstep	= {	1,		1,		255	},
- 	.inherit_nodfrg	= {	0,		1,		1	},
-diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
-index 276696a07040..51646f066c4f 100644
---- a/fs/xfs/xfs_sysctl.h
-+++ b/fs/xfs/xfs_sysctl.h
-@@ -29,8 +29,6 @@ typedef struct xfs_param {
- 	xfs_sysctl_val_t inherit_sync;	/* Inherit the "sync" inode flag. */
- 	xfs_sysctl_val_t inherit_nodump;/* Inherit the "nodump" inode flag. */
- 	xfs_sysctl_val_t inherit_noatim;/* Inherit the "noatime" inode flag. */
--	xfs_sysctl_val_t xfs_buf_timer;	/* Interval between xfsbufd wakeups. */
--	xfs_sysctl_val_t xfs_buf_age;	/* Metadata buffer age before flush. */
- 	xfs_sysctl_val_t inherit_nosym;	/* Inherit the "nosymlinks" flag. */
- 	xfs_sysctl_val_t rotorstep;	/* inode32 AG rotoring control knob */
- 	xfs_sysctl_val_t inherit_nodfrg;/* Inherit the "nodefrag" inode flag. */
--- 
-2.39.2
+To me version 2 looks much better.  I had initial reservations as
+ERR_PTR doesn't play well with userspace, but none of this code is
+in libxfs, so that should be fine.
 
