@@ -1,79 +1,79 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DAB94B1E4B
-	for <linux-xfs@vger.kernel.org>; Tue,  6 May 2025 20:00:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 441114B1E58
+	for <linux-xfs@vger.kernel.org>; Tue,  6 May 2025 20:01:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746561628; cv=none; b=YxAwstbuJiDc6KO9p3SKqWQwyqhmx++LEyTRKDUwarVZgAbo2Q9UAVtLecGDbij+OTMds22YtYJyw5/RUBdbXnWnFoYhHhmO3Vje/W3RvrvDvhHcEl8IZGmxEUHJ6CkvSkojdMadL9sRLVICsqFKnezcZ+RdGDlrOEz0l1mceoY=
+	t=1746561674; cv=none; b=tbcvrPJqgsyztdDh1hmo9trESiKj3MCwpEeCmMpn8Jc6ZqkPqIz85ncowkfGacvyXfMUNRqbgBIg6BTuW7+pXKjOwOR+ueVigHtLatPWRM5akIfsGwE5T/7PAfxv9lTpLdXHsuzddG8P/XX33GkNypFNPpp6TznjEPhoXNpgWsI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746561628; c=relaxed/simple;
-	bh=2uHDelOTpuwUHnZyb+wEuLKcdCHh024glNfQMm6Wmcw=;
+	s=arc-20240116; t=1746561674; c=relaxed/simple;
+	bh=e9Nx29McDIOaH1b3XML0MNUycb7rPwVRyUHkArzgfhE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iP0zCnEpff32WuHEH+IjXFcMgQOhsidKkrUmW7fgBSKbwY25WNciEi14MAz/HWaHGqoyRMfm8P6x20oUS+U51Vq/1jgv9Pf8VwBXXb5SaHEhBWT3Rp/M3V1BW7pZIv0zlS3pNo2ZlDBcgapaNPnuqp8WfudTGNoCNwuYE7L4aPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=c5aeEuCB; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=Q42gioeBpuWBWslhw19nz8E6dH8tu+Uu7fvSK1+6D7j6GkcvZJbH+xH9lWoN47e+29lGwIC2g/RThSILCuQuEhQ29jUZBwZq9WN2kHz2W7sbABrx7+mbqh+PXn2lSgjU/RpcO7oQlkB1jD5QlsXku2+95yGT8kIN0Z1LtNTGL6I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=avXsIvV8; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="c5aeEuCB"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="avXsIvV8"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1746561625;
+	s=mimecast20190719; t=1746561670;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=JRKNb+znFoP9oDTbjuujsO0CNvdczG6HBT8uBWpcL1c=;
-	b=c5aeEuCBsnFac0VHgfmzaYdE4T5YgV+flzpGe8r7tyfHnJp0xtVraAVKUy0G2ZEoa+wlS6
-	+uK0sIcF7POKWmDOUgOv71kfvOZT/URwwKgabocbvMRHC6SzV0LblRX/EP6gJwr1H/5lV7
-	l9fdaOC1ckXnItegQmavFmy3Ma2eb/g=
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
- [209.85.210.200]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=XyjqCp34h880u9gSBdSkyO+ZNrvrvM19O7+yIgz8NBA=;
+	b=avXsIvV8rcIQM9X18d40Biy+U4U2//bJjR7+V1+2/IfYn+efsUJ8oe3ZfBDkO7k7ybRvid
+	+wMAvh1wCNGT3VOjFsPgrpmi3Vrc1G4/1fYIYGRLawAF6+BibqBqyM7lhCbdGUKpkbcPq4
+	DDylF020gop2mC8iTpoRj7tqRyTE7HM=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-256-xtiKPlY_P4GKi-ihRVGekw-1; Tue, 06 May 2025 16:00:20 -0400
-X-MC-Unique: xtiKPlY_P4GKi-ihRVGekw-1
-X-Mimecast-MFC-AGG-ID: xtiKPlY_P4GKi-ihRVGekw_1746561619
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-7401179b06fso4724083b3a.1
-        for <linux-xfs@vger.kernel.org>; Tue, 06 May 2025 13:00:19 -0700 (PDT)
+ us-mta-412-IfNk1ws7MbW2h14xGxakyw-1; Tue, 06 May 2025 16:01:08 -0400
+X-MC-Unique: IfNk1ws7MbW2h14xGxakyw-1
+X-Mimecast-MFC-AGG-ID: IfNk1ws7MbW2h14xGxakyw_1746561666
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-7401179b06fso4724916b3a.1
+        for <linux-xfs@vger.kernel.org>; Tue, 06 May 2025 13:01:07 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746561618; x=1747166418;
+        d=1e100.net; s=20230601; t=1746561666; x=1747166466;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=JRKNb+znFoP9oDTbjuujsO0CNvdczG6HBT8uBWpcL1c=;
-        b=SmjrEFOL/vTsDK+IpNXxNP//nYMOqLFxYEmpXJT0Ob3Xytzvp5LswYyoqCAlY7gnbm
-         JEfMbMs4d9E26XUeIkp8dBWiU7raQ02NnsMBdnJyEF6Jpcw7vdAat6veClYIUVQbNRgQ
-         m7VpDCCHQtkLmpIy/ZDFF8mk31CVbx0JbSM9iMp0RaNpM2OPK3jeqTpy0FLEazu6jZ9s
-         NkJHtkiyNUnpnIBu+yCZ8nzSWo9BrHWSgsaxqYxG2MsBsOsLPVC2g2e4byqPPIw38HIf
-         neaiZQAFS8uLd4r6AjQfHGIVV1WPDTTYB/uf0tERSgjxUOZhXFXdlxeAVZnk1HP7rXjJ
-         bKCg==
-X-Forwarded-Encrypted: i=1; AJvYcCWd9aCvwSDMBgyE494FUd7rxvAOejwjBEF8IJSJjs5p3/mi7VAqp3ye6U0uMMjxo7pTV3d7MTzW4OM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx0WQTmu4MUBpgbm0UX3uI53ze0g/Iw+N/L+PO+zwLeGd8kskVz
-	/QQQ9wqGHyVop02fIA1RHgjgdma8cuAb9DxhOJzdzPPV25PJ55hebQlTB503gWOzaiBHzhywyVp
-	YhD1oEzs+MH49FwyTEe4FW+XrX/Ia7XZpuQGQwZw52PQhD1GMnTOFhMYZ+g==
-X-Gm-Gg: ASbGncu8WOHng5Jau0OmVf+x93SrD2i0ZP4xMFcI9nLkjoymO/1FBKzdoZOHPEXBR4N
-	LEoaRI1pTUDdzNnjzq5RzEBO4bi6m38scL7ixt5s8F4IKMsxOHmCFg5juIsh52Hqco+jWrzpWFz
-	58CZ26YJOS7g8OcpnEjYCOofi8RZ1FDwAElsYoKAFlinAGvsNyjGok1k2o6U9V2PHn530F+fzCP
-	jAhb9hHaXO+LG5rVkNCQYUMOkVwrQqGehQGJzotnqYlXr9nJpn7JlPvt3KT41MFlYHcFJHNvaEt
-	JMOekkP9I3kOf/2x9hvIPbrv/9kBV1OhEFy4BoWE2vP+ademjM0y
-X-Received: by 2002:a05:6a21:920a:b0:1f5:6abb:7cbb with SMTP id adf61e73a8af0-2148be0fa4fmr704929637.23.1746561618627;
-        Tue, 06 May 2025 13:00:18 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGK+Ho05Fa3ap5WeM3Co4cLbk4TZQOt1Dz3Lg6V9Vq9wqwbC5JnVP2ZrMDUWGMxVEWIOgCwWg==
-X-Received: by 2002:a05:6a21:920a:b0:1f5:6abb:7cbb with SMTP id adf61e73a8af0-2148be0fa4fmr704897637.23.1746561618315;
-        Tue, 06 May 2025 13:00:18 -0700 (PDT)
+        bh=XyjqCp34h880u9gSBdSkyO+ZNrvrvM19O7+yIgz8NBA=;
+        b=PIgx+EeKO3x3smWKrbvvOzazx8UKR7p82wOJMXf879F/ukJycEty+YZyvIZ4n/NfTZ
+         mn36RU8Tiyxzn8D3K9mVAaiP4WRhBE3C/COqeM0lpUFzv+LL331LhErp0W6eLRj8ILBt
+         MyMOZS2zHsaL8ZDsZPaSrdite/u56cG2iAMgjBBeyC6wh5RGajB+WwO/lfvmSOB/VPMQ
+         fVUbmYGQh7SmgdOmWxpDtVScEk7sYmp+RIz7nTwqThU8+4bMvJuOxbpy6N+qEFmg2oP/
+         rfOsce5ezVU+lBS0KY1AXNuVR8v6DEMI81xWx5phfvVFDusCocqd/SGrfBb2YiRBgH/c
+         7vRQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV0SKYgBJ+GCqC2wRlBZ1OwiywX+CGLo3aRt7AkrPo4zI1Cp3IjwbZ2j0nvPLkqssFYJhWzF4CwA0g=@vger.kernel.org
+X-Gm-Message-State: AOJu0YweicWX+Qc5sUnUptRGAsRrheI3A72mmiJvddtQSHkbaZuYi1Fx
+	WP1enCSUADtNlEH/7RFfrjRMPiyUYIxbdlRn37wXgXpTTvwiD9QzY7gfUZhQTFZH3okCLhidz7+
+	J8jH67pMNIFataYp1DN2ABjMyj+1FYOfhdU6Hf1knlsEDEJe6tLc83iwctg==
+X-Gm-Gg: ASbGnctjOq1mMdljmgZEjJcTgX2ZvOfhJ3f707fETv/2vKXbMYfBZI4kLSTZAvNnjCo
+	0fpDp8EaICgAiWeeEt0LIpwv9yZhfNvQmPodMRQSA+/KcFr0Xzmd5wNky+RcLtDPJP7eI1sKo6D
+	X1O8fwoZjSJredb88aeUgzDbZZQqrFYk941stx2MHg9zGVfPGYhmpcuU8LnhUa7RTzvlwZK8brD
+	KCJiZe9IoRii8DPdAY1IehCuQqXNXQXmExucqLN0gyOAoS2wSpIypQ79BgElOjpFDNx+TtY6lxH
+	DErd2YuoZqQygCGGd6TAQKjqKngQu8n7oFwVgPnmdpQJofk32k7a
+X-Received: by 2002:a05:6a00:3003:b0:73e:2d76:9eb1 with SMTP id d2e1a72fcca58-7409cf01a8cmr538081b3a.10.1746561666223;
+        Tue, 06 May 2025 13:01:06 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHK4bbsFQaHaG5GxZVx6Mk732R6xm4F5U9eFxuF7SWICRrPkslBKbVbTgCVSTkzNJ4uBtTWCA==
+X-Received: by 2002:a05:6a00:3003:b0:73e:2d76:9eb1 with SMTP id d2e1a72fcca58-7409cf01a8cmr538035b3a.10.1746561665830;
+        Tue, 06 May 2025 13:01:05 -0700 (PDT)
 Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74058ded103sm9356625b3a.77.2025.05.06.13.00.15
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74059020dedsm9704252b3a.91.2025.05.06.13.01.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 May 2025 13:00:17 -0700 (PDT)
-Date: Wed, 7 May 2025 04:00:13 +0800
+        Tue, 06 May 2025 13:01:05 -0700 (PDT)
+Date: Wed, 7 May 2025 04:01:01 +0800
 From: Zorro Lang <zlang@redhat.com>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Zorro Lang <zlang@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>, fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/15] xfs: test zoned GC file defragmentation for
- sequential writers
-Message-ID: <20250506200013.jmktymxccn4ezcea@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+Subject: Re: [PATCH 12/15] xfs: test zoned GC file defragmentation for random
+ writers
+Message-ID: <20250506200101.6u4ww65kpu34eqlg@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 References: <20250501134302.2881773-1-hch@lst.de>
- <20250501134302.2881773-12-hch@lst.de>
+ <20250501134302.2881773-13-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -82,9 +82,9 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250501134302.2881773-12-hch@lst.de>
+In-Reply-To: <20250501134302.2881773-13-hch@lst.de>
 
-On Thu, May 01, 2025 at 08:42:48AM -0500, Christoph Hellwig wrote:
+On Thu, May 01, 2025 at 08:42:49AM -0500, Christoph Hellwig wrote:
 > Test that zoned GC defragments sequential writers forced into the same
 > zone.
 > 
@@ -93,25 +93,25 @@ On Thu, May 01, 2025 at 08:42:48AM -0500, Christoph Hellwig wrote:
 
 Same review points with patch 10/15
 
->  tests/xfs/4210     | 124 +++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/4210.out |   5 ++
->  2 files changed, 129 insertions(+)
->  create mode 100755 tests/xfs/4210
->  create mode 100644 tests/xfs/4210.out
+>  tests/xfs/4211     | 129 +++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/4211.out |   5 ++
+>  2 files changed, 134 insertions(+)
+>  create mode 100755 tests/xfs/4211
+>  create mode 100644 tests/xfs/4211.out
 > 
-> diff --git a/tests/xfs/4210 b/tests/xfs/4210
+> diff --git a/tests/xfs/4211 b/tests/xfs/4211
 > new file mode 100755
-> index 000000000000..2984339fd86e
+> index 000000000000..9679da72a4eb
 > --- /dev/null
-> +++ b/tests/xfs/4210
-> @@ -0,0 +1,124 @@
+> +++ b/tests/xfs/4211
+> @@ -0,0 +1,129 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0
 > +# Copyright (c) 2024 Christoph Hellwig.
 > +#
-> +# FS QA Test No. 4210
+> +# FS QA Test No. 4211
 > +#
-> +# Test that GC defragments sequentially written files.
+> +# Test that GC defragments randomly written files.
 > +#
 > +. ./common/preamble
 > +_begin_fstest auto rw zone
@@ -146,7 +146,7 @@ Same review points with patch 10/15
 > +iodepth_batch=8
 > +directory=$SCRATCH_MNT
 > +ioengine=libaio
-> +rw=write
+> +rw=randwrite
 > +direct=1
 > +size=30m
 > +
@@ -209,8 +209,13 @@ Same review points with patch 10/15
 > +rm $SCRATCH_MNT/file5
 > +rm $SCRATCH_MNT/file7
 > +
-> +# fill up all remaining user capacity a few times to force GC
-> +for i in `seq 1 10`; do
+> +#
+> +# Fill up all remaining user capacity a few times to force GC.
+> +#
+> +# This needs to be a very large number of larger zones sizes that have a lot
+> +# of OP for the small file system size
+> +#
+> +for i in `seq 1 200`; do
 > +	dd if=/dev/zero of=$SCRATCH_MNT/fill bs=4k >> $seqres.full 2>&1
 > +	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/fill >> $seqres.full 2>&1
 > +done
@@ -229,18 +234,19 @@ Same review points with patch 10/15
 > +
 > +status=0
 > +exit
-> diff --git a/tests/xfs/4210.out b/tests/xfs/4210.out
+> diff --git a/tests/xfs/4211.out b/tests/xfs/4211.out
 > new file mode 100644
-> index 000000000000..488dd9db790b
+> index 000000000000..348e59950a47
 > --- /dev/null
-> +++ b/tests/xfs/4210.out
+> +++ b/tests/xfs/4211.out
 > @@ -0,0 +1,5 @@
-> +QA output created by 4210
+> +QA output created by 4211
 > +file 2 extents is in range
 > +file 4 extents is in range
 > +file 6 extents is in range
 > +file 8 extents is in range
 > -- 
 > 2.47.2
+> 
 > 
 
