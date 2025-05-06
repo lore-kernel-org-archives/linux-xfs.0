@@ -1,54 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9341427FD67;
-	Tue,  6 May 2025 15:55:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8532927FD6F;
+	Tue,  6 May 2025 16:08:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746546918; cv=none; b=RCmQWK8JeMm0JUN34d0YhXl/2DQ4tMmjzyWBUPt7xCf/23mjl7Q64v5iPbIZg/WAbO2fGr8HnAIMllfcMBZTUbC3MtVEYhtW7D4vQ3C4lA0BP3QQ/vjnNWqhVzI+fLxrEp4XSu2Q1OiA+TjQjRHh8AwUeG7lsa0FALzrm5uuCsY=
+	t=1746547692; cv=none; b=BOKJqEtRHVgJ49iVY8Efje9/gLCRQmGZ6oKbKu7aB+3nTlrpWgIfttdkNUFwKH2qR2vBiwszfaxvvDe8IcJc40v5dLQu0GXSgxgJNlN3jv2Yi8U6TKTYv72xidE2HgT0zczdMD6bh3zWXiHWAGuUDGhBRqCyIPXho3qWOMebbS4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746546918; c=relaxed/simple;
-	bh=KokwTcsPEjcIZ/f64cPMglQ909nlpDnMzhPyZGYvzxw=;
+	s=arc-20240116; t=1746547692; c=relaxed/simple;
+	bh=Mh7dLpqJK4CFjNzesvWJoUTNq1lFiN3QQ70XOGszy+c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=exbdEODe0RwZrlhJEf6UbFgU8jULxbkEmqeF0o0R+Bbuh3e6un8eXXZTDU1Pv2KR0ZJAaxso8hwMvyLNjpVqdu2NQjNo1AeG89u4d5NhWsQsYToSjpFENdHKv0+SCELEgg/5ZaO6p0V8KmDl7kayMm2DqynBsvNsXyFu+OViZzc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YA/lDEym; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ePkSjfOfCDzc85NQ8tAfeGR9iELSlKS4Dl1klSkzAlz5vR5g5rPSrsgSMLucBP8h26Y81ufJXA3GWFmqaNmBcnBhhIotGoUdPJ4/i3UrojxP8LsX2njK6OZjd2JbtP+lQj3uHN1BmIIQrqLIQrJehrGmbik1tPJl5DydqQZeUwU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UOnp7SeL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YA/lDEym"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED659C4CEE4;
-	Tue,  6 May 2025 15:55:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UOnp7SeL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB3C8C4CEE4;
+	Tue,  6 May 2025 16:08:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746546916;
-	bh=KokwTcsPEjcIZ/f64cPMglQ909nlpDnMzhPyZGYvzxw=;
+	s=k20201202; t=1746547692;
+	bh=Mh7dLpqJK4CFjNzesvWJoUTNq1lFiN3QQ70XOGszy+c=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YA/lDEym02kXPHJYYAshEh37VVEPXYr6h6uUOT3HR5v3gjEgKBOj1grHVWAuVgdtJ
-	 8reM6KCZV5esAd60c4cIkLJo1L6p4kV6Roxnos9n5MjPW7xW/XLfQYonwyhmXvLFoM
-	 9EI3HKKa7GNlohfqkWY+hAhP3v46T18EJBGhmMXzu49uqvTibHpMsanT7iWqsoHoqh
-	 ecDC9NIr1t/MsHrIYhKdR/msNFEoAQHS1f8sa9oQR7tXwFKusOM38K7A7cjMzKOwEs
-	 nQCLhZaGH+jh7whmh0N7cGYW2y2NP4M7dC3JhGvHmT9xJhTbyH5ljZTmmslu47n5Ia
-	 hP7QgfInSFQWQ==
-Date: Tue, 6 May 2025 08:55:15 -0700
+	b=UOnp7SeLNSLSPwte4ptEik/pOxVtlUottoXn3f5Dv5bAMzLisH5yXg0NVCGzG6WRi
+	 Iqnec2X0z0jtMdQAD7RARzpjQqANTh4lM4WB8hjQD58aH21F+J2SIqX2cF9D/MP6uY
+	 gU3Rq58YvftFdDwvv16agRlgJlnfoeNZ6Sc54KNP+V6ljUX4/ROqO+oyZj+fcQQMZK
+	 dO2QgvC5VoNhWF0gKOLj5dePPYaRw4X7WCO6WYT/vdUrd5IGZ5udxZLXOoLkxS4Ohy
+	 rIfijpZxWwEp5jK21aMx+JGsP0M/Dhe+xvBRMJSKRoD60/+Dd8kD9zg3wWxV6e61Fl
+	 ANyiT9Lf4+lSg==
+Date: Tue, 6 May 2025 09:08:11 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Zhang Yi <yi.zhang@huaweicloud.com>, dhowells@redhat.com,
-	brauner@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
-	dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, tytso@mit.edu,
-	john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com,
-	shinichiro.kawasaki@wdc.com, yi.zhang@huawei.com,
-	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
-Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
-Message-ID: <20250506155515.GL1035866@frogsfrogsfrogs>
-References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com>
- <20250421021509.2366003-8-yi.zhang@huaweicloud.com>
- <20250505132208.GA22182@lst.de>
- <20250505142945.GJ1035866@frogsfrogsfrogs>
- <20250506050239.GA27687@lst.de>
- <20250506053654.GA25700@frogsfrogsfrogs>
- <20250506054722.GA28781@lst.de>
- <c3105509-9d63-4fa2-afaf-5b508ddeeaca@huaweicloud.com>
- <20250506121012.GA21705@lst.de>
+To: Zizhi Wo <wozizhi@huaweicloud.com>
+Cc: chandan.babu@oracle.com, dchinner@redhat.com, osandov@fb.com,
+	john.g.garry@oracle.com, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, wozizhi@huawei.com,
+	yangerkun@huawei.com, leo.lilong@huawei.com
+Subject: Re: [PATCH] xfs: Remove deprecated xfs_bufd sysctl parameters
+Message-ID: <20250506160811.GE25675@frogsfrogsfrogs>
+References: <20250506011540.285147-1-wozizhi@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -57,22 +44,56 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250506121012.GA21705@lst.de>
+In-Reply-To: <20250506011540.285147-1-wozizhi@huaweicloud.com>
 
-On Tue, May 06, 2025 at 02:10:12PM +0200, Christoph Hellwig wrote:
-> On Tue, May 06, 2025 at 07:25:06PM +0800, Zhang Yi wrote:
-> > +       if (request_mask & STATX_WRITE_ZEROES_UNMAP &&
-> > +           bdev_write_zeroes_unmap(bdev))
-> > +               stat->result_mask |= STATX_WRITE_ZEROES_UNMAP;
+On Tue, May 06, 2025 at 09:15:40AM +0800, Zizhi Wo wrote:
+> From: Zizhi Wo <wozizhi@huawei.com>
 > 
-> That would be my expectation.  But then again this area seems to
-> confuse me a lot, so maybe we'll get Christian or Dave to chim in.
+> Commit 64af7a6ea5a4 ("xfs: remove deprecated sysctls") removed the
+> deprecated xfsbufd-related sysctl interface, but forgot to delete the
+> corresponding parameters: "xfs_buf_timer" and "xfs_buf_age".
+> 
+> This patch removes those parameters and makes no other changes.
+> 
+> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
 
-Um... does STATX_WRITE_ZEROES_UNMAP protect a field somewhere?
-It might be nice to expose the request alignment granularity/max
-size/etc.  Or does this flag exist solely to support discovering that
-FALLOC_FL_WRITE_ZEROES is supported?  In which case, why not discover
-its existence by calling fallocate(fd, WRITE_ZEROES, 0, 0) like the
-other modes?
+Heh, yep, those aren't in use anywhere.
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
+
+> ---
+>  fs/xfs/xfs_globals.c | 2 --
+>  fs/xfs/xfs_sysctl.h  | 2 --
+>  2 files changed, 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+> index f18fec0adf66..f6f628c01feb 100644
+> --- a/fs/xfs/xfs_globals.c
+> +++ b/fs/xfs/xfs_globals.c
+> @@ -23,8 +23,6 @@ xfs_param_t xfs_params = {
+>  	.inherit_sync	= {	0,		1,		1	},
+>  	.inherit_nodump	= {	0,		1,		1	},
+>  	.inherit_noatim = {	0,		1,		1	},
+> -	.xfs_buf_timer	= {	100/2,		1*100,		30*100	},
+> -	.xfs_buf_age	= {	1*100,		15*100,		7200*100},
+>  	.inherit_nosym	= {	0,		0,		1	},
+>  	.rotorstep	= {	1,		1,		255	},
+>  	.inherit_nodfrg	= {	0,		1,		1	},
+> diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
+> index 276696a07040..51646f066c4f 100644
+> --- a/fs/xfs/xfs_sysctl.h
+> +++ b/fs/xfs/xfs_sysctl.h
+> @@ -29,8 +29,6 @@ typedef struct xfs_param {
+>  	xfs_sysctl_val_t inherit_sync;	/* Inherit the "sync" inode flag. */
+>  	xfs_sysctl_val_t inherit_nodump;/* Inherit the "nodump" inode flag. */
+>  	xfs_sysctl_val_t inherit_noatim;/* Inherit the "noatime" inode flag. */
+> -	xfs_sysctl_val_t xfs_buf_timer;	/* Interval between xfsbufd wakeups. */
+> -	xfs_sysctl_val_t xfs_buf_age;	/* Metadata buffer age before flush. */
+>  	xfs_sysctl_val_t inherit_nosym;	/* Inherit the "nosymlinks" flag. */
+>  	xfs_sysctl_val_t rotorstep;	/* inode32 AG rotoring control knob */
+>  	xfs_sysctl_val_t inherit_nodfrg;/* Inherit the "nodefrag" inode flag. */
+> -- 
+> 2.39.2
+> 
+> 
