@@ -1,197 +1,152 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BD1C2820C7
-	for <linux-xfs@vger.kernel.org>; Tue,  6 May 2025 13:38:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A555280029
+	for <linux-xfs@vger.kernel.org>; Tue,  6 May 2025 15:03:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746538701; cv=none; b=m1K0k7iVnzx3prsrcmofnNq/H+uA3PBHC3gKBYGsHTbEpKvQScWCyUw6ujGAq17s7OvzJsjlVfJdLbBA/y1QQvSoLRM8KvfUkkK60hmxIgJ8JD/kvvtjP9vWzIaWYUkvUTCeUdq4XPu9WPLOvmvkxrW00Ad4UbWnddUC9ltykpw=
+	t=1746543808; cv=none; b=uxvykHtzlkM0bnh/wfsRo3aNN9enc6CyyztCEOtecdboxH5E12Nsh2pvvg4s+c/UlCSemcSWnDCLpjZIyMv1lDWGuaOr9FYdWhVqNVavFjv+usddNinO7Ns6rXXBJC6yBwQRUPhLh5PGuhPNe99L5TpGTrZLNvCW/qgifFotlRA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746538701; c=relaxed/simple;
-	bh=/Nu5F2hfoVS6a9qODoLnx4ho2+1/HoEm9iGuqlaMr0U=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kGTQrwnSScFXnaeS8FsiNrE8efwwNdLs2kt4QO+7f2DLvGZZGzQ/93HIzBXlCHFWzJt8ymXPpvTxNdVeSR/MaNI9IE7iE6EUj1JEYtoiNttyA98QX/grIfjXYpKqz1e/hvqeSDwbHep1BcHCxpCathtoNHE95oJpP9+9zqccbC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KkBXQg6Q; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1746543808; c=relaxed/simple;
+	bh=8d9y7ErAjrQOqXuTSOAhEkVIMlXmxaC6B2austCbO/w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mHH1NX1hCXSjSbEUbCUGNnYznd6HnAtgyyNXheDgYshAe0LNobBzhdZzAL+oUc+Xb4B2xkxItAYsyS6ntRYq+eGkh2n8t6t6fjZyfFzmwis0Uu1921TJCSxp2QLQjYpjddOY+HO5o715k7gA0ovUmN5Hwhu2PQo5DvqcalagUE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=duDKAhIR; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KkBXQg6Q"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="duDKAhIR"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1746538698;
+	s=mimecast20190719; t=1746543806;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=S8DFgx2TlyhvPpBgtdzaEeWI42qGd1HZ1wMg88y3UEo=;
-	b=KkBXQg6QWp8MTtR0Ja0paRs7qW+jBZVYGeV72z/W2lN1w3deJQnnHGyHmev4XBfv1b87N9
-	OgIHrzhQ8Bkq8aobyM7iS1i7+PLofUgLKQjROV6Vj3rxgEGptpfRxaEXfsvQtgktO/IYMh
-	eP7kByGuwnIvRAg/6rXwNc2WO6oSgU4=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-207-T5WByxOrPk65RDhao0_ogg-1; Tue,
- 06 May 2025 09:38:15 -0400
-X-MC-Unique: T5WByxOrPk65RDhao0_ogg-1
-X-Mimecast-MFC-AGG-ID: T5WByxOrPk65RDhao0_ogg_1746538694
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3E31B18009A0;
-	Tue,  6 May 2025 13:38:14 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.64.112])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 2BBD419560A3;
-	Tue,  6 May 2025 13:38:13 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	djwong@kernel.org,
-	hch@infradead.org
-Subject: [PATCH v2 6/6] iomap: rework iomap_write_begin() to return folio offset and length
-Date: Tue,  6 May 2025 09:41:18 -0400
-Message-ID: <20250506134118.911396-7-bfoster@redhat.com>
-In-Reply-To: <20250506134118.911396-1-bfoster@redhat.com>
-References: <20250506134118.911396-1-bfoster@redhat.com>
+	bh=aXH29pQMVy4AFRYT+iKQo6DbbvX/wUT7EjvyqhEcdds=;
+	b=duDKAhIRpEbrCqbwshT58QmIWfA7MmzKIuxWbeLIamyxXBVGabLYGQWPjS7lZeNKl0Lgfu
+	/P1ToDpq82rcvjnmTVbpLzXytRfbWh0aXdPLQHivLAiL0FtxsTy4QvBm2kfwBXLiyTHlfQ
+	qeEAJutO4vZduDUsBtz0mGeff3FmzXA=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-684-3fJAWwTsNdic1G3-_NNA2A-1; Tue, 06 May 2025 11:03:25 -0400
+X-MC-Unique: 3fJAWwTsNdic1G3-_NNA2A-1
+X-Mimecast-MFC-AGG-ID: 3fJAWwTsNdic1G3-_NNA2A_1746543804
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-22c31b55ac6so79386605ad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 06 May 2025 08:03:24 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746543803; x=1747148603;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=aXH29pQMVy4AFRYT+iKQo6DbbvX/wUT7EjvyqhEcdds=;
+        b=YYTo5DFRp5AWmodwPlwZJf8wSRZNcD8ErGL3CncYOk1J0s7SUTQfXQzyMC77f/tvUu
+         OWx6gdIDTvgUx2PIcJSUmgBr59MpJbTRfIyhARmNc/KRlZnZ+dMTQXZ/eCYf3i4+gpOd
+         c5AMJPmaOYnqtyvjTO+dEibCI3XGFFsxUnMGYzl7qzYDS/QitOz+ULhOAeCGo9sLq9QL
+         VVk07gB2vYwCHN6VA3e+gR7UH54N/vZVRfPlnDO+B/e1e85RF3Tq1aDN/K+SEWMXp0Xn
+         AuNYODIW+mfpCrySu6XCS5rgOmrDfGZqQHbP9VJcc51cXZDwo36sGb7PH9A8G7QVrwcl
+         js3g==
+X-Forwarded-Encrypted: i=1; AJvYcCWl6NjhvWTfeNJpIQEapyyF2wHLQRR5nq1Zs4C/gmktw19j/qBLPQri826ll8l5APPJzTXCEJD62qw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzEYSnxvLnYKGyHjhjouwPmbGsNbqCfXXH4XcUFWy8ECyx+qMhe
+	h9vvURkWu4wVNFAjqKpTBAOH3FCuiQzzkcCrG1Tz9aUFcWVIpjbCFXToGQKq60sZK+rWY8IEa+H
+	4kuIdAqsenwbHAhnBcWPTElM9p2MbSvZ0T+qZctvXJBxLJlLAjETjnZ0Boa3mdeCCFA==
+X-Gm-Gg: ASbGncvS8Foci90fMkbIiXHbmtIxzQtsSYtj07GEbSrHPLJ0pA+RP9Xzuuko+Eq4F09
+	wYhRsTDhwaAHERMbH4Q7PvdnsvYP1rIobfJjrN7b/BSKbpFZ/ibhpg3lh7+UfoLTYehXrZlY5cM
+	yBXQYhfQzBcB2ce0WJUm9/c+SAQhqODcWP+ozcPcSKEA7uSJTAlivJnveQgxxSQ/57tranHaUB1
+	Hfyc0KvlhznJsGQkUnHQqiuYgzH9kkmO7mZCZn3IQ1UR+4P5EiV1BUYMrDTQmLAKQP2Ff2Kx6gW
+	aPHGxI2ID1ZL7POrD91I2MK6AdYe8jQr712Dct9tHcKWH3Fa4Dq7
+X-Received: by 2002:a17:902:ef12:b0:220:ff3f:6cba with SMTP id d9443c01a7336-22e3637c4aamr51936105ad.38.1746543803501;
+        Tue, 06 May 2025 08:03:23 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEzJ30l1YniISkWfcZGEXxVAdWUIYEHNTBNN13j9xo6yVGOoS2bHKkxOo79oeFDE+EwgmX1fA==
+X-Received: by 2002:a17:902:ef12:b0:220:ff3f:6cba with SMTP id d9443c01a7336-22e3637c4aamr51935745ad.38.1746543803172;
+        Tue, 06 May 2025 08:03:23 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22e3b99dce9sm15152655ad.6.2025.05.06.08.03.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 May 2025 08:03:22 -0700 (PDT)
+Date: Tue, 6 May 2025 23:03:17 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org,
+	david@fromorbit.com, hch@infradead.org
+Subject: Re: [PATCH v3 0/2] common: Move exit related functions to common/exit
+Message-ID: <20250506150317.dtaqcp6ocwfb2vwg@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <cover.1746015588.git.nirjhar.roy.lists@gmail.com>
+ <aefede43-9ac6-43bb-a22a-47dc0f4c8cd9@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aefede43-9ac6-43bb-a22a-47dc0f4c8cd9@gmail.com>
 
-iomap_write_begin() returns a folio based on current pos and
-remaining length in the iter, and each caller then trims the
-pos/length to the given folio. Clean this up a bit and let
-iomap_write_begin() return the trimmed range along with the folio.
+On Tue, May 06, 2025 at 02:19:07PM +0530, Nirjhar Roy (IBM) wrote:
+> 
+> On 4/30/25 18:15, Nirjhar Roy (IBM) wrote:
+> > This patch series moves all the exit related functions to a separate file -
+> > common/exit. This will remove the dependency to source non-related files to use
+> > these exit related functions. Thanks to Dave for suggesting this[1]. The second
+> > patch replaces exit with _exit in check file - I missed replacing them in [2].
+> > 
+> > [v2] -> v3
+> >   Addressed Dave's feedbacks.
+> >   In patch [1/2]
+> >    - Removed _die() and die_now() from common/exit
+> >    - Replaced die_now() with _fatal in common/punch
+> >    - Removed sourcing of common/exit and common/test_names from common/config
+> >      and moved them to the beginning of check.
+> >    - Added sourcing of common/test_names in _begin_fstest() since common/config
+> >      is no more sourcing common/test_names.
+> >    - Added a blank line in _begin_fstest() after sourcing common/{exit,test_names}
+> >   In patch [2/2]
+> >    - Replaced "_exit 1" with _fatal and "echo <error message>; _exit 1" with
+> >     _fatal <error message>.
+> >    - Reverted to "exit \$status" in the trap handler registration in check - just
+> >      to make it more obvious to the reader that we are capturing $status as the
+> >      final exit value.
+> 
+> Hi Dave and Zorro,
+> 
+> Any further feedback in this version?
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap/buffered-io.c | 33 +++++++++++++++++++--------------
- 1 file changed, 19 insertions(+), 14 deletions(-)
+This version is good to me, if there's not more review points from others, I'll merge it.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 92d7b659db33..233abf598f65 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -679,11 +679,12 @@ static int iomap_read_folio_sync(loff_t block_start, struct folio *folio,
- 	return submit_bio_wait(&bio);
- }
- 
--static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
--		size_t len, struct folio *folio)
-+static int __iomap_write_begin(const struct iomap_iter *iter, size_t len,
-+		struct folio *folio)
- {
- 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
- 	struct iomap_folio_state *ifs;
-+	loff_t pos = iter->pos;
- 	loff_t block_size = i_blocksize(iter->inode);
- 	loff_t block_start = round_down(pos, block_size);
- 	loff_t block_end = round_up(pos + len, block_size);
-@@ -794,15 +795,22 @@ static int iomap_write_begin_inline(const struct iomap_iter *iter,
- 	return iomap_read_inline_data(iter, folio);
- }
- 
--static int iomap_write_begin(struct iomap_iter *iter, size_t len,
--		struct folio **foliop)
-+/*
-+ * Grab and prepare a folio for write based on iter state. Returns the folio,
-+ * offset, and length. Callers can optionally pass a max length *plen,
-+ * otherwise init to zero.
-+ */
-+static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
-+		size_t *poffset, u64 *plen)
- {
- 	const struct iomap_folio_ops *folio_ops = iter->iomap.folio_ops;
- 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
- 	loff_t pos = iter->pos;
-+	u64 len = min_t(u64, SIZE_MAX, iomap_length(iter));
- 	struct folio *folio;
- 	int status = 0;
- 
-+	len = min_not_zero(len, *plen);
- 	BUG_ON(pos + len > iter->iomap.offset + iter->iomap.length);
- 	if (srcmap != &iter->iomap)
- 		BUG_ON(pos + len > srcmap->offset + srcmap->length);
-@@ -834,20 +842,20 @@ static int iomap_write_begin(struct iomap_iter *iter, size_t len,
- 		}
- 	}
- 
--	if (pos + len > folio_pos(folio) + folio_size(folio))
--		len = folio_pos(folio) + folio_size(folio) - pos;
-+	pos = iomap_trim_folio_range(iter, folio, poffset, &len);
- 
- 	if (srcmap->type == IOMAP_INLINE)
- 		status = iomap_write_begin_inline(iter, folio);
- 	else if (srcmap->flags & IOMAP_F_BUFFER_HEAD)
- 		status = __block_write_begin_int(folio, pos, len, NULL, srcmap);
- 	else
--		status = __iomap_write_begin(iter, pos, len, folio);
-+		status = __iomap_write_begin(iter, len, folio);
- 
- 	if (unlikely(status))
- 		goto out_unlock;
- 
- 	*foliop = folio;
-+	*plen = len;
- 	return 0;
- 
- out_unlock:
-@@ -968,7 +976,7 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
- 			break;
- 		}
- 
--		status = iomap_write_begin(iter, bytes, &folio);
-+		status = iomap_write_begin(iter, &folio, &offset, &bytes);
- 		if (unlikely(status)) {
- 			iomap_write_failed(iter->inode, iter->pos, bytes);
- 			break;
-@@ -976,7 +984,7 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
- 		if (iter->iomap.flags & IOMAP_F_STALE)
- 			break;
- 
--		pos = iomap_trim_folio_range(iter, folio, &offset, &bytes);
-+		pos = iter->pos;
- 
- 		if (mapping_writably_mapped(mapping))
- 			flush_dcache_folio(folio);
-@@ -1296,14 +1304,12 @@ static int iomap_unshare_iter(struct iomap_iter *iter)
- 		bool ret;
- 
- 		bytes = min_t(u64, SIZE_MAX, bytes);
--		status = iomap_write_begin(iter, bytes, &folio);
-+		status = iomap_write_begin(iter, &folio, &offset, &bytes);
- 		if (unlikely(status))
- 			return status;
- 		if (iomap->flags & IOMAP_F_STALE)
- 			break;
- 
--		iomap_trim_folio_range(iter, folio, &offset, &bytes);
--
- 		ret = iomap_write_end(iter, bytes, bytes, folio);
- 		__iomap_put_folio(iter, bytes, folio);
- 		if (WARN_ON_ONCE(!ret))
-@@ -1368,7 +1374,7 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		bool ret;
- 
- 		bytes = min_t(u64, SIZE_MAX, bytes);
--		status = iomap_write_begin(iter, bytes, &folio);
-+		status = iomap_write_begin(iter, &folio, &offset, &bytes);
- 		if (status)
- 			return status;
- 		if (iter->iomap.flags & IOMAP_F_STALE)
-@@ -1377,7 +1383,6 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		/* warn about zeroing folios beyond eof that won't write back */
- 		WARN_ON_ONCE(folio_pos(folio) > iter->inode->i_size);
- 
--		iomap_trim_folio_range(iter, folio, &offset, &bytes);
- 		folio_zero_range(folio, offset, bytes);
- 		folio_mark_accessed(folio);
- 
--- 
-2.49.0
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+> 
+> --NR
+> 
+> > 
+> > [v1] https://lore.kernel.org/all/cover.1745390030.git.nirjhar.roy.lists@gmail.com/
+> > [v2] https://lore.kernel.org/all/cover.1745908976.git.nirjhar.roy.lists@gmail.com/
+> > [1] https://lore.kernel.org/all/Z_UJ7XcpmtkPRhTr@dread.disaster.area/
+> > [2] https://lore.kernel.org/all/48dacdf636be19ae8bff66cc3852d27e28030613.1744181682.git.nirjhar.roy.lists@gmail.com/
+> > 
+> > 
+> > Nirjhar Roy (IBM) (2):
+> >    common: Move exit related functions to a common/exit
+> >    check: Replace exit with _fatal and _exit in check
+> > 
+> >   check           | 54 ++++++++++++++++++-------------------------------
+> >   common/config   | 17 ----------------
+> >   common/exit     | 39 +++++++++++++++++++++++++++++++++++
+> >   common/preamble |  3 +++
+> >   common/punch    | 39 ++++++++++++++++-------------------
+> >   common/rc       | 28 -------------------------
+> >   6 files changed, 79 insertions(+), 101 deletions(-)
+> >   create mode 100644 common/exit
+> > 
+> > --
+> > 2.34.1
+> > 
+> -- 
+> Nirjhar Roy
+> Linux Kernel Developer
+> IBM, Bangalore
+> 
+> 
 
