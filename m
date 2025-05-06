@@ -1,59 +1,149 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8D9B27F738;
-	Tue,  6 May 2025 12:11:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FD17280310
+	for <linux-xfs@vger.kernel.org>; Tue,  6 May 2025 13:38:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746533468; cv=none; b=oPMRsmqq3Qh0NwB/6LUfCO1nXCilFLLlKHbGVX/zQq4+RGKnsoWBc/IWbM/VfMoLDFLULZ4bzXoEtEAE/U0JO0FFDXygG8BAFPgpY9Sl9iOVDAmoiODd3lboEVGhDmW+okcT0G+rqMHvpgrU2bRYeSqkHVHmfBZ4s/o1Tebp6BQ=
+	t=1746538694; cv=none; b=YhVollY552mNT/vrbXnOnvfQLfL5pO+Ho0So/yIwL9N0xNjmOlCj6om/FIrZYVikAGB1p63SS/43qArXpLDUR1PTcaGx1AXkWxZ1BqV29fvshCB0Y9A9WRoEu/jpPE2wM9feNhZtq3OQckbun9umBSZ/vACif4moR+A9nJBd834=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746533468; c=relaxed/simple;
-	bh=Z42DKWzQrGFUA4xxtScwUk/kQFCHLo2DdyxI1glwSG4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q6P1G0E7UpYH5r4bdhsx939M7ilJnZPsLwMp4HO2eMfttzuT3lMVUO5/6LfG/j+Ye5qEzIlfeSKGaDD+qQCHLJxX/tUqGMSgPm61QHAwuj9i0Ir3kQTrUXbTg6IgCoY48I9ND1BL1LXw8jMt8gMwvkJ1Qofyb3x8K9Gh9cRpNkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 27FBC68AA6; Tue,  6 May 2025 14:11:03 +0200 (CEST)
-Date: Tue, 6 May 2025 14:11:02 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tytso@mit.edu, john.g.garry@oracle.com, bmarzins@redhat.com,
-	chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
-	brauner@kernel.org, yi.zhang@huawei.com, chengzhihao1@huawei.com,
-	yukuai3@huawei.com, yangerkun@huawei.com
-Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
-Message-ID: <20250506121102.GA21905@lst.de>
-References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com> <20250421021509.2366003-8-yi.zhang@huaweicloud.com> <20250505132208.GA22182@lst.de> <20250505142945.GJ1035866@frogsfrogsfrogs> <c7d8d0c3-7efa-4ee6-b518-f8b09ec87b73@huaweicloud.com> <20250506043907.GA27061@lst.de> <64c8b62a-83ba-45be-a83e-62b6ad8d6f22@huaweicloud.com>
+	s=arc-20240116; t=1746538694; c=relaxed/simple;
+	bh=Azv5KNQ3Bl6EmOeutLdiTL04S+yci6t7OHNRJeF6yeQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=u9exXHlfUZie9eETznUl4pzJN9CjyFhoxkaCu/X0QVXdq45w0MVPmCq1UdQ+oO9mgA3Fe1d/EAvKAluqh4Vfop0UlLwAdcdL5b2bTuYQp56tZSuDKRmEpJwSXM6QLZtoC83gMeSE7Tk59gf1rQ+bYdQu2Dam7tJtw9UWfeNcZAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DccPxELl; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DccPxELl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1746538691;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1eM4gSQdmoTPzaaIRpCd/5stLrYRgRLL3lyKbxFoju0=;
+	b=DccPxELlGMV1l4jwJDKVNdi473lvFNtWbjHvaur/2ucfGZWqVAcKrahYeufPP+HUdqlpOQ
+	HTeasgGGg/3aNSkC55+ngb6c2BI+PLbBV8rDsSttuOFAqvI5CjheJo5KWs/Jk1Q5qTjNdV
+	gu5ylc1/6XPCH0t96Kl4gmPK7fLnhFc=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-20-c52Z-WJXN3-WZFFAEEa_Mw-1; Tue,
+ 06 May 2025 09:38:09 -0400
+X-MC-Unique: c52Z-WJXN3-WZFFAEEa_Mw-1
+X-Mimecast-MFC-AGG-ID: c52Z-WJXN3-WZFFAEEa_Mw_1746538688
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D8D161955DE8;
+	Tue,  6 May 2025 13:38:07 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.64.112])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C41B619560A3;
+	Tue,  6 May 2025 13:38:06 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	djwong@kernel.org,
+	hch@infradead.org
+Subject: [PATCH v2 1/6] iomap: resample iter->pos after iomap_write_begin() calls
+Date: Tue,  6 May 2025 09:41:13 -0400
+Message-ID: <20250506134118.911396-2-bfoster@redhat.com>
+In-Reply-To: <20250506134118.911396-1-bfoster@redhat.com>
+References: <20250506134118.911396-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <64c8b62a-83ba-45be-a83e-62b6ad8d6f22@huaweicloud.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On Tue, May 06, 2025 at 07:16:56PM +0800, Zhang Yi wrote:
-> Sorry, but I don't understand your suggestion. The
-> STATX_ATTR_WRITE_ZEROES_UNMAP attribute only indicate whether the bdev
-> and the block device that under the specified file support unmap write
-> zeroes commoand. It does not reflect whether the bdev and the
-> filesystems support FALLOC_FL_WRITE_ZEROES. The implementation of
-> FALLOC_FL_WRITE_ZEROES doesn't fully rely on the unmap write zeroes
-> commoand now, users simply refer to this attribute flag to determine
-> whether to use FALLOC_FL_WRITE_ZEROES when preallocating a file.
-> So, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES doesn't
-> have strong relations, why do you suggested to put this into the ext4
-> and bdev patches that adding FALLOC_FL_WRITE_ZEROES?
+In preparation for removing the pos parameter, push the local pos
+assignment down after calls to iomap_write_begin().
 
-So what is the point of STATX_ATTR_WRITE_ZEROES_UNMAP?
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap/buffered-io.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 5b08bd417b28..a41c8ffc4996 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -920,11 +920,11 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 		size_t bytes;		/* Bytes to write to folio */
+ 		size_t copied;		/* Bytes copied from user */
+ 		u64 written;		/* Bytes have been written */
+-		loff_t pos = iter->pos;
++		loff_t pos;
+ 
+ 		bytes = iov_iter_count(i);
+ retry:
+-		offset = pos & (chunk - 1);
++		offset = iter->pos & (chunk - 1);
+ 		bytes = min(chunk - offset, bytes);
+ 		status = balance_dirty_pages_ratelimited_flags(mapping,
+ 							       bdp_flags);
+@@ -949,13 +949,14 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 			break;
+ 		}
+ 
+-		status = iomap_write_begin(iter, pos, bytes, &folio);
++		status = iomap_write_begin(iter, iter->pos, bytes, &folio);
+ 		if (unlikely(status)) {
+-			iomap_write_failed(iter->inode, pos, bytes);
++			iomap_write_failed(iter->inode, iter->pos, bytes);
+ 			break;
+ 		}
+ 		if (iter->iomap.flags & IOMAP_F_STALE)
+ 			break;
++		pos = iter->pos;
+ 
+ 		offset = offset_in_folio(folio, pos);
+ 		if (bytes > folio_size(folio) - offset)
+@@ -1276,15 +1277,16 @@ static int iomap_unshare_iter(struct iomap_iter *iter)
+ 	do {
+ 		struct folio *folio;
+ 		size_t offset;
+-		loff_t pos = iter->pos;
++		loff_t pos;
+ 		bool ret;
+ 
+ 		bytes = min_t(u64, SIZE_MAX, bytes);
+-		status = iomap_write_begin(iter, pos, bytes, &folio);
++		status = iomap_write_begin(iter, iter->pos, bytes, &folio);
+ 		if (unlikely(status))
+ 			return status;
+ 		if (iomap->flags & IOMAP_F_STALE)
+ 			break;
++		pos = iter->pos;
+ 
+ 		offset = offset_in_folio(folio, pos);
+ 		if (bytes > folio_size(folio) - offset)
+@@ -1351,15 +1353,16 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ 	do {
+ 		struct folio *folio;
+ 		size_t offset;
+-		loff_t pos = iter->pos;
++		loff_t pos;
+ 		bool ret;
+ 
+ 		bytes = min_t(u64, SIZE_MAX, bytes);
+-		status = iomap_write_begin(iter, pos, bytes, &folio);
++		status = iomap_write_begin(iter, iter->pos, bytes, &folio);
+ 		if (status)
+ 			return status;
+ 		if (iter->iomap.flags & IOMAP_F_STALE)
+ 			break;
++		pos = iter->pos;
+ 
+ 		/* warn about zeroing folios beyond eof that won't write back */
+ 		WARN_ON_ONCE(folio_pos(folio) > iter->inode->i_size);
+-- 
+2.49.0
 
