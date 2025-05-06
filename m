@@ -1,43 +1,36 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C96E42D8DB0
-	for <linux-xfs@vger.kernel.org>; Tue,  6 May 2025 04:34:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AEE521FF25;
+	Tue,  6 May 2025 04:39:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746506056; cv=none; b=b2r8TVw9eJtcvMq+88RzU35qJg02F+3fDozerORr4nA4RE1juUD1+itfi73sQMSUpHLDrtr3YuaJrtSoeBBI8zBSJlooLEZtS4rJnMcWuilYe4okLRFEDb02WPr5n0zP+JCeK2DbqlR2710zJvJ1o0xGeWGNJPp6pwzpzZturlM=
+	t=1746506356; cv=none; b=kdOUlxJLiKfkbTbQJ1HKs5h/9yhXefeltj5r3nk7VZitoQYDOnMOJQvXzHmek3aLM1qW/XC/UXPAniqd2DE/LxFV696hliyfaa4W2Qa5a8syBC+KqKFLvz98osrXQxhTTkE5h8AnX9y9V+zHv92nv3ImtFGnh17Gs8FTubmDslI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746506056; c=relaxed/simple;
-	bh=laGw8HC23s0mol2h13zY6Dkgx9nnapo85VueWwI/Xrk=;
+	s=arc-20240116; t=1746506356; c=relaxed/simple;
+	bh=S2fduj5qv77iXlgOkNIVFju8b0oD/77jdBh6aDiLXyc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OWpDO/NJ4h/zc4AaMrvpKIPQmtUaJjD5dY9EjIiJlmmjx+0EsKXguFdIJMys1O7RZIXgNtk1zJWxowdfT+GncmOPGDICPE+G10xQ5QKrtCi/bLKOWjOwHxOVJxuGXlqVJsB01MIwstwLkTKw6UHFZTvl5klvgpNiIZXGJygT3bU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=lUA0nuUG; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lUA0nuUG"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Rh4o2V51OGibAa56/OcqR+gS3BmGRoOtgGuFAD2hKh8=; b=lUA0nuUGbA34h/TqOsCXmuNmD6
-	xg6KUwKDmFBujEgYfnJslgo1fgYVjiTRT5XG6VDyqmXgLc9yulLJTjFaScXTWLY0QPiB4Zfzei6r5
-	G2sgraKKwFfvUG34+a6Vz2rs/2UdxacC7cwVRFpnROQ6RLzihCKGzET3vQmNy5uq80RcOvltEOo8I
-	NyNm/Cw7HHsF0p4wj7Fg0J5A5MLwwUzx4eqZJKuPPfyaK+fRRsz94g1fPfkFDmWRczhrh1khLvHtx
-	atwK5W9xGUdoPhmk14JeRnNdZ/lv0lggBtxW+U5vG/Qy76bWLE9gXiBxjeluUuVJN+swhE9M3nW5Q
-	s6f/9CsA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uCA0U-0000000AExP-1mbY;
-	Tue, 06 May 2025 04:34:14 +0000
-Date: Mon, 5 May 2025 21:34:14 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: =?utf-8?B?QmMuIE1hcnRpbiDFoGFmcsOhbmVr?= <safranek@ntc.zcu.cz>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: Question: Is it possible to recover deleted files from a healthy
- XFS filesystem?
-Message-ID: <aBmRRqCbqKX0bMln@infradead.org>
-References: <18512e-6818b200-1ab-59e10800@49678430>
- <aBmQaN5EAmwfVYaP@infradead.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z1X+PI3USOKNmzwng7NLEA3kYvAqj6KyubqsHHEuaruaUsrdrH/JgDwCb1RsbQVEdwEXryyTlz4vOKNlPoa3ZGmircfjL5XMdBxLMJttuNaSk5pEiXS18kSfdQZ9ywfGMK0spju7SYB4wfsM5vH56y09+cfB2PRhaEhlfTrX6lg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id A9A3367373; Tue,  6 May 2025 06:39:07 +0200 (CEST)
+Date: Tue, 6 May 2025 06:39:07 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	tytso@mit.edu, john.g.garry@oracle.com, bmarzins@redhat.com,
+	chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+	brauner@kernel.org, yi.zhang@huawei.com, chengzhihao1@huawei.com,
+	yukuai3@huawei.com, yangerkun@huawei.com
+Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
+Message-ID: <20250506043907.GA27061@lst.de>
+References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com> <20250421021509.2366003-8-yi.zhang@huaweicloud.com> <20250505132208.GA22182@lst.de> <20250505142945.GJ1035866@frogsfrogsfrogs> <c7d8d0c3-7efa-4ee6-b518-f8b09ec87b73@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,18 +39,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aBmQaN5EAmwfVYaP@infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <c7d8d0c3-7efa-4ee6-b518-f8b09ec87b73@huaweicloud.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, May 05, 2025 at 09:30:32PM -0700, Christoph Hellwig wrote:
-> A long time ago there was a simple xfs_irecover tool to scan blocks
-> for inode signatures.  We never managed to port it to use libxfs and
-> the code repository for it seems to have disappeared.
-> 
-> But in general, yes you can scan for inode clusters that have not been
-> reused, but it is very low-level and dangerous if you don't know what
-> you are doing.
+On Tue, May 06, 2025 at 12:28:54PM +0800, Zhang Yi wrote:
+> OK, since this statx reporting flag is not strongly tied to
+> FALLOC_FL_WRITE_ZEROES in vfs_fallocate(), I'll split this patch into
+> three separate patches.
 
-If you are looking for specific file types, PhotoRec
-(https://www.cgsecurity.org/wiki/PhotoRec) might also be an option.
+I don't think that is the right thing to do do.  Keep the flag addition
+here, and then report it in the ext4 and bdev patches adding
+FALLOC_FL_WRITE_ZEROES as the reporting should be consistent with
+the added support.
 
