@@ -1,219 +1,99 @@
-Received: from mail-yb1-f173.google.com (mail-yb1-f173.google.com [209.85.219.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C422427990C;
-	Tue,  6 May 2025 11:03:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65AB38F66;
+	Tue,  6 May 2025 11:17:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746529432; cv=none; b=YZQ4yNkf0q0ez/wjUg8Qjina6bYxr+Zp1/5up/37WyCWuNZEduBue6C0aT4j5W1uE+X9jwng6kOuhv0d9Ijb8Qc7rV0kU+OMW52OVQjih1mzr/1/F50xc/z7bKXOFZVkeWMG1+0SZ4BgSwEeCUOig3ery/AlzfO97mlOn+ynMvQ=
+	t=1746530225; cv=none; b=RpJOvHfQk/T1Bk5FU2eqkSUUSRac4pSfovZ2PSZPlWAbLD2xLXwLgtPw3lLQYkrwvqX9hF887q9dg8nmPY0+lck79tXDvG0dlqo+lkJchYKMgOR2srh/Deacy0iERtwF4dhedRIgcOvO4q5rKl+fiA2XgSc5VNCWgz58SGAvZgU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746529432; c=relaxed/simple;
-	bh=UN2zra4dfwaKGZx8R/zfvn64KIyswWSXwarj6aJhnt0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=i1CUyt2vzEj6CYyRqcoLunXCb0AgR0/2Cn39kdG2e6OIHGS6iEP8IblFNIQpK0mxwX71pyqaMmLRWPXLFWCfYrrakeBwZd5v/HxzFTF74a6HocZOFfzXE2Ng2I2il9WZ+9agyL69HVTzlS6dzXpsa3lkZl8K3OJyK7qnvEo03k0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IjXHIT2e; arc=none smtp.client-ip=209.85.219.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IjXHIT2e"
-Received: by mail-yb1-f173.google.com with SMTP id 3f1490d57ef6-e6582542952so4265812276.3;
-        Tue, 06 May 2025 04:03:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1746529430; x=1747134230; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=w5cIxifLxpzCeD2CSk8rVMToQM4uWduk0d+Z1uu1DHY=;
-        b=IjXHIT2efX7kmbJLYfFL7dtjr6i9epTimeIQNMqyWhZ2DbsKH8RzDMKtAIdSq8vAOT
-         cm7Chs+H3fiPFoE8FSth5Y+cwg5zRiHGWf4H2E4CxJNu7tl7CQoKsumZbD1paQtZkFls
-         Nh/kIfAQnA9/QSQgn/ZMjjbwlU+NZy0ZsQByK44p+ihKAP4hIhZd8I8R8FfCjCyIaVQy
-         Fma9i2AQEdlrQ03644UNKJm5KIm8qS0lWTJoS0l3Oh53erjPo+EMBZ7ywWmD2O4Y/PND
-         VwuqpfcgTvLzlIfKS1KM0FDbDMJACSopFKBukRDUnxFMnJKcmmP2ydM3/XFI5Nzs2241
-         18Ng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746529430; x=1747134230;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=w5cIxifLxpzCeD2CSk8rVMToQM4uWduk0d+Z1uu1DHY=;
-        b=Yj3beQXpbnkJeprKn3ZFMhvNMLq9HrxJ+9/642A9KakJcvFy7WCpcoiNvpFDQg2hyy
-         MDc8kdRk2JRJz7coZ6tYUmwCrErz0IsyPn5kHAITkA5fDr3J5xf9buMQqnHQg1mmVejY
-         FDxXFrVPg/oEEtqddwfTno6dbxqbwGCDA2Up1ZfSsd3Jt5TAP+yodpquSo7whDiPK6gy
-         GJ28/LBROVX0WKgccssPZ/AsWuM50jsosSU0hx02JOLKbCFdu9YVWpVUm4zfrGjfPLCr
-         nmshDchjAvkRexzj1K+dWh1LBIfXKyDnSBcVYzM2jdC1uqQ0105VWSSYt/kA79ytUR5w
-         TIaw==
-X-Forwarded-Encrypted: i=1; AJvYcCUbICIWfaAjqSARCkFBgeKxZoAMoIwhqbylUJUEBfBKx2xTskKNtpGLgtVGLnYYwk3Q0DRSCE+iT+eR@vger.kernel.org, AJvYcCWhPqFYYTLJc5hSIu65BaSb0YyxXOP+BiVduVDW2rV7ux64YQz43xbsaSrm2OtzU2pI8ZrQ6GPpVFnhoQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzBIFPdI0cPZN6JC1g8vajkYtmveNTJHCxgc3xDjHpUkQzvqWtX
-	m86a6x6zQxFi7pizseOou4pFewsbq38sRQg6gZNeudbxIVkEL2oDNX2cf8xdGUU4Ie4I1zjeArp
-	EU2mXDnXQ9nrK3r5rDq1zwhwY7S8=
-X-Gm-Gg: ASbGncujAs6y7gjsDJDa4HOfe7bWnGw3juYwnKG90RAk4HMORQrXr9hPNqJDl5ATr74
-	qLAFPkNim83SDoMG77tC1C93fnbinSgvOjT4z3WHsBkUKkYFp0v300mOU66K/39GAse8VxwfwJp
-	M43EHzrLwHn8QZMkROQO2vGhs=
-X-Google-Smtp-Source: AGHT+IFhiv0YQSilHmty/QdAAAo648u/1DptovoPkVdAkzNPeDxQrGICMPfCoCCTzU5HCJjUYoNmiKgRrfx3Dshb/2A=
-X-Received: by 2002:a05:6902:1691:b0:e6d:f160:bbdf with SMTP id
- 3f1490d57ef6-e75c09a0b84mr3520072276.36.1746529429729; Tue, 06 May 2025
- 04:03:49 -0700 (PDT)
+	s=arc-20240116; t=1746530225; c=relaxed/simple;
+	bh=Z7jOwuEBTaEvhsLGSpRE/ZPVJ70iFQdIT9GmLOYv7TU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=l+SVea76V2dRL+7pwEbbxyuHY2+oUIIYHoB3drCikJrIjWCSe+2rfNOeyTqqpSQQW5BmHi4J3TIc2roXptO9lKtITaHFCH+ZP0HeogRj/Ew1e2ZiI1QG4R87fohGt7Q3yTWHygd5ZgZvz7wSjr09F7Tk5Tx+AAN4LNKCXEtM//A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4ZsG7449SCz4f3lCf;
+	Tue,  6 May 2025 19:16:32 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 83A261A1BAF;
+	Tue,  6 May 2025 19:16:58 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgDXOl+o7xlohYhoLg--.37289S3;
+	Tue, 06 May 2025 19:16:58 +0800 (CST)
+Message-ID: <64c8b62a-83ba-45be-a83e-62b6ad8d6f22@huaweicloud.com>
+Date: Tue, 6 May 2025 19:16:56 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAAiJnjoo0--yp47UKZhbu8sNSZN6DZ-QzmZBMmtr1oC=fOOgAQ@mail.gmail.com>
- <aBaVsli2AKbIa4We@dread.disaster.area> <CAAiJnjor+=Zn62n09f-aJw2amX2wxQOb-2TB3rea9wDCU7ONoA@mail.gmail.com>
- <aBfhDQ6lAPmn81j0@dread.disaster.area> <7c33f38a52ccff8b94f20c0714b60b61b061ad58.camel@redhat.com>
- <a1f322ab801e7f7037951578d289c5d18c6adc4d.camel@redhat.com> <aBlCDTm-grqM4WtY@dread.disaster.area>
-In-Reply-To: <aBlCDTm-grqM4WtY@dread.disaster.area>
-From: Anton Gavriliuk <antosha20xx@gmail.com>
-Date: Tue, 6 May 2025 14:03:37 +0300
-X-Gm-Features: ATxdqUGRPpTDRcpadhlooEN_bho35-eXg5BG8APuEFdkYs60OQyxKdR4W39zMvw
-Message-ID: <CAAiJnjo87CEeFrkHbXtQM-=+K9M8uEpythLthWTwM_-i4HMA_Q@mail.gmail.com>
-Subject: Re: Sequential read from NVMe/XFS twice slower on Fedora 42 than on
- Rocky 9.5
-To: Dave Chinner <david@fromorbit.com>
-Cc: Laurence Oberman <loberman@redhat.com>, linux-nvme@lists.infradead.org, 
-	linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
+To: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, tytso@mit.edu,
+ john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com,
+ shinichiro.kawasaki@wdc.com, brauner@kernel.org, yi.zhang@huawei.com,
+ chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
+References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com>
+ <20250421021509.2366003-8-yi.zhang@huaweicloud.com>
+ <20250505132208.GA22182@lst.de> <20250505142945.GJ1035866@frogsfrogsfrogs>
+ <c7d8d0c3-7efa-4ee6-b518-f8b09ec87b73@huaweicloud.com>
+ <20250506043907.GA27061@lst.de>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20250506043907.GA27061@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgDXOl+o7xlohYhoLg--.37289S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Xr1rZFyDCrWUGw4rKFy3Jwb_yoW8JrWDpa
+	yUKFyqyw4DKr15Xwn7uw4vgrn5Zrs5JFn8Gw4rKr18Zws8X3WxKF9Yg3WDGF9xWr1fAa4U
+	ArsxK34DXayfC3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvYb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
+	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
+	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x07
+	jIksgUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-> So is this MD chunk size related? i.e. what is the chunk size
-> the MD device? Is it smaller than the IO size (256kB) or larger?
-> Does the regression go away if the chunk size matches the IO size,
-> or if the IO size vs chunk size relationship is reversed?
+On 2025/5/6 12:39, Christoph Hellwig wrote:
+> On Tue, May 06, 2025 at 12:28:54PM +0800, Zhang Yi wrote:
+>> OK, since this statx reporting flag is not strongly tied to
+>> FALLOC_FL_WRITE_ZEROES in vfs_fallocate(), I'll split this patch into
+>> three separate patches.
+> 
+> I don't think that is the right thing to do do.  Keep the flag addition
+> here, and then report it in the ext4 and bdev patches adding
+> FALLOC_FL_WRITE_ZEROES as the reporting should be consistent with
+> the added support.
+> 
 
-According to the output below, the chunk size is 512K,
+Sorry, but I don't understand your suggestion. The
+STATX_ATTR_WRITE_ZEROES_UNMAP attribute only indicate whether the bdev
+and the block device that under the specified file support unmap write
+zeroes commoand. It does not reflect whether the bdev and the
+filesystems support FALLOC_FL_WRITE_ZEROES. The implementation of
+FALLOC_FL_WRITE_ZEROES doesn't fully rely on the unmap write zeroes
+commoand now, users simply refer to this attribute flag to determine
+whether to use FALLOC_FL_WRITE_ZEROES when preallocating a file.
+So, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES doesn't
+have strong relations, why do you suggested to put this into the ext4
+and bdev patches that adding FALLOC_FL_WRITE_ZEROES?
 
-[root@localhost anton]# mdadm -D /dev/md127
-/dev/md127:
-           Version : 1.2
-     Creation Time : Thu Apr 17 14:58:23 2025
-        Raid Level : raid0
-        Array Size : 37505814528 (34.93 TiB 38.41 TB)
-      Raid Devices : 12
-     Total Devices : 12
-       Persistence : Superblock is persistent
+Thanks,
+Yi.
 
-       Update Time : Thu Apr 17 14:58:23 2025
-             State : clean
-    Active Devices : 12
-   Working Devices : 12
-    Failed Devices : 0
-     Spare Devices : 0
-
-            Layout : original
-        Chunk Size : 512K
-
-Consistency Policy : none
-
-              Name : localhost.localdomain:127  (local to host
-localhost.localdomain)
-              UUID : 2fadc96b:f37753af:f3b528a0:067c320d
-            Events : 0
-
-    Number   Major   Minor   RaidDevice State
-       0     259       15        0      active sync   /dev/nvme7n1
-       1     259       27        1      active sync   /dev/nvme0n1
-       2     259       10        2      active sync   /dev/nvme1n1
-       3     259       28        3      active sync   /dev/nvme2n1
-       4     259       13        4      active sync   /dev/nvme8n1
-       5     259       22        5      active sync   /dev/nvme5n1
-       6     259       26        6      active sync   /dev/nvme3n1
-       7     259       16        7      active sync   /dev/nvme4n1
-       8     259       24        8      active sync   /dev/nvme9n1
-       9     259       14        9      active sync   /dev/nvme10n1
-      10     259       25       10      active sync   /dev/nvme11n1
-      11     259       12       11      active sync   /dev/nvme12n1
-[root@localhost anton]# uname -r
-6.14.5-300.fc42.x86_64
-[root@localhost anton]# cat /proc/mdstat
-Personalities : [raid0]
-md127 : active raid0 nvme4n1[7] nvme1n1[2] nvme12n1[11] nvme7n1[0]
-nvme9n1[8] nvme11n1[10] nvme2n1[3] nvme8n1[4] nvme0n1[1] nvme5n1[5]
-nvme3n1[6] nvme10n1[9]
-      37505814528 blocks super 1.2 512k chunks
-
-unused devices: <none>
-[root@localhost anton]#
-
-When I/O size is less 512K
-
-[root@localhost ~]# fio --name=3Dtest --rw=3Dread --bs=3D256k
---filename=3D/dev/md127 --direct=3D1 --numjobs=3D1 --iodepth=3D64 --exitall
---group_reporting --ioengine=3Dlibaio --runtime=3D30 --time_based
-test: (g=3D0): rw=3Dread, bs=3D(R) 256KiB-256KiB, (W) 256KiB-256KiB, (T)
-256KiB-256KiB, ioengine=3Dlibaio, iodepth=3D64
-fio-3.39-44-g19d9
-Starting 1 process
-Jobs: 1 (f=3D1): [R(1)][100.0%][r=3D48.1GiB/s][r=3D197k IOPS][eta 00m:00s]
-test: (groupid=3D0, jobs=3D1): err=3D 0: pid=3D14340: Tue May  6 13:59:23 2=
-025
-  read: IOPS=3D197k, BW=3D48.0GiB/s (51.6GB/s)(1441GiB/30001msec)
-    slat (usec): min=3D3, max=3D1041, avg=3D 4.74, stdev=3D 1.48
-    clat (usec): min=3D76, max=3D2042, avg=3D320.30, stdev=3D26.82
-     lat (usec): min=3D79, max=3D2160, avg=3D325.04, stdev=3D27.08
-
-When I/O size is greater 512K
-
-[root@localhost ~]# fio --name=3Dtest --rw=3Dread --bs=3D1024k
---filename=3D/dev/md127 --direct=3D1 --numjobs=3D1 --iodepth=3D64 --exitall
---group_reporting --ioengine=3Dlibaio --runtime=3D30 --time_based
-test: (g=3D0): rw=3Dread, bs=3D(R) 1024KiB-1024KiB, (W) 1024KiB-1024KiB, (T=
-)
-1024KiB-1024KiB, ioengine=3Dlibaio, iodepth=3D64
-fio-3.39-44-g19d9
-Starting 1 process
-Jobs: 1 (f=3D1): [R(1)][100.0%][r=3D63.7GiB/s][r=3D65.2k IOPS][eta 00m:00s]
-test: (groupid=3D0, jobs=3D1): err=3D 0: pid=3D14395: Tue May  6 14:00:28 2=
-025
-  read: IOPS=3D64.6k, BW=3D63.0GiB/s (67.7GB/s)(1891GiB/30001msec)
-    slat (usec): min=3D9, max=3D1045, avg=3D15.12, stdev=3D 3.84
-    clat (usec): min=3D81, max=3D18494, avg=3D975.87, stdev=3D112.11
-     lat (usec): min=3D96, max=3D18758, avg=3D990.99, stdev=3D113.49
-
-But still much worse than with 256k on Rocky 9.5
-
-Anton
-
-=D0=B2=D1=82, 6 =D0=BC=D0=B0=D1=8F 2025=E2=80=AF=D0=B3. =D0=B2 01:56, Dave =
-Chinner <david@fromorbit.com>:
->
-> On Mon, May 05, 2025 at 09:21:19AM -0400, Laurence Oberman wrote:
-> > On Mon, 2025-05-05 at 08:29 -0400, Laurence Oberman wrote:
-> > > On Mon, 2025-05-05 at 07:50 +1000, Dave Chinner wrote:
-> > > > So the MD block device shows the same read performance as the
-> > > > filesystem on top of it. That means this is a regression at the MD
-> > > > device layer or in the block/driver layers below it. i.e. it is not
-> > > > an XFS of filesystem issue at all.
-> > > >
-> > > > -Dave.
-> > >
-> > > I have a lab setup, let me see if I can also reproduce and then trace
-> > > this to see where it is spending the time
-> > >
-> >
-> >
-> > Not seeing 1/2 the bandwidth but also significantly slower on Fedora42
-> > kernel.
-> > I will trace it
-> >
-> > 9.5 kernel - 5.14.0-503.40.1.el9_5.x86_64
-> >
-> > Run status group 0 (all jobs):
-> >    READ: bw=3D14.7GiB/s (15.8GB/s), 14.7GiB/s-14.7GiB/s (15.8GB/s-
-> > 15.8GB/s), io=3D441GiB (473GB), run=3D30003-30003msec
-> >
-> > Fedora42 kernel - 6.14.5-300.fc42.x86_64
-> >
-> > Run status group 0 (all jobs):
-> >    READ: bw=3D10.4GiB/s (11.2GB/s), 10.4GiB/s-10.4GiB/s (11.2GB/s-
-> > 11.2GB/s), io=3D313GiB (336GB), run=3D30001-30001msec
->
-> So is this MD chunk size related? i.e. what is the chunk size
-> the MD device? Is it smaller than the IO size (256kB) or larger?
-> Does the regression go away if the chunk size matches the IO size,
-> or if the IO size vs chunk size relationship is reversed?
->
-> -Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
