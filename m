@@ -1,1145 +1,171 @@
-Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F42E28C5A0
-	for <linux-xfs@vger.kernel.org>; Wed,  7 May 2025 16:49:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA3D828BAAF;
+	Wed,  7 May 2025 17:01:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746636575; cv=none; b=JYSJQEL9c/DMtZtSqvaTtgyAxUEFioJKoyTC2qhWtc0k3GNcsqCCN9i0Aj2whHBEpJFlMbzU1w6q77dXmmVVTiEuZfAXQiOqxM3KnW1T60WDW4gSnSufUpiHuvLVF32i9XjnhqvZgFLBS9B2FSArtetFtLZkvV1AnC3ISQukSQM=
+	t=1746637266; cv=none; b=rc+3A0KcVDVtUYX97//+H+iVZnSxgQe0o3ytO3xYy+C41JLWmCqaj5qNDt8KBsEjA29tAF2g+1JPotYCJ3rk2caAFkK/lADEvZInstyhFn8XvTDfZMNsM1C9SKLEv59lIjJY1HDrm08FCADi6lya3mseCUHIMVXWc6bjgZ+jBxE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746636575; c=relaxed/simple;
-	bh=fXvMMwxA3jxaxodUM/KvYyKegTXG0Nf98i+jvi2xRGo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IV6CPPk5CvhPUovw02G6dvAo+x6nYRD/WiZr+4Ywtvekml+Kr7DcR7O15BUyVh6ZWEnGiFCBdUFI5aOnzdkHMClSP9ma6TnTjDttJadpK2LMYZG+gKtmbo90tRvLWQ63lppLGM8kCX6fquPAcXfAaevshE0kAu6K5wvTdUHfTKo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JPmVK0Jc; arc=none smtp.client-ip=209.85.208.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1746637266; c=relaxed/simple;
+	bh=u6AZ6kU59/7hxI5Dn9KpiI190gICF70koF26H8PzqhY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=U2Gf60VLUEIRdxc7gZrB2CrVbW4tZTFrlV0TNFwHsdFpiLxCZnFeK7SeFfl82nk1w/lTLtQMSPyma6GmB9IlcEFXItWHkMLd1srtO5i4fujZmEerNMkv+1PUTsngba4MlF8F2bFTdSE1aMgReyxcqMhRoRD/1/amRqQkEUUxbT4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PQOBkUqz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JPmVK0Jc"
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-5fbf0324faaso38780a12.1
-        for <linux-xfs@vger.kernel.org>; Wed, 07 May 2025 09:49:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1746636571; x=1747241371; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=sR0A6x/M+AcfsiLkQ/ILtKJi2TOtH/ALGG/qosQVrwI=;
-        b=JPmVK0JcxysdGDOq+16bUZHnOEiYPwJWtMDrchP1NLWZNTx1Vw8ryqpcxeGbGyd7c9
-         xHkC8g+cza+8Qts0HxNdlXs9W6pc4R4K+o3JPI8sJKNF7VraCC1C9MkBSp4+so3Ww15d
-         VxGPWzdR2F24ZHDv3dtA8GBfiTC5xfY6lmWcohveWKuax+P8VtOqUQG8zDQg2M7upDfk
-         brMRl0uF46+RIvkt667UkOCnuJpN1Vo0e+l7ZJMWYMTfkZM++eBvQWC3FW0igZm2Hs0W
-         qcRAWUVVHf0nZn8vTEsWK3n9Xy4olRlJ8HiFNa7XWU8WcgEQDH3INS0BY7qAZKScbpRF
-         WhGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746636571; x=1747241371;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=sR0A6x/M+AcfsiLkQ/ILtKJi2TOtH/ALGG/qosQVrwI=;
-        b=GwPIvTAgMzgA06L7LFUpH+2oAuqSTy82/3J+Z9vzP7eqd8H5IdbrFj0PKyOo+tcv74
-         zgpaAdn7R1gVjvaXsUk5uJwWpK8+un8I/0Nhye1ZelyPeKUxksQir7x/Fg4g6cZHBAvT
-         7VaJ/MWORkgRVW7UByJWCEAUTsFbX8aFBF+OrAWwp3i7NoGb8wVA+GEy1Wql8l7rSnaA
-         eBSxSacMSDzP5zlwKKmUS5gxDpj0Ta5g56kQDdJiFAlQ41CCLf7OLDKeZ+lXUcVZ0vao
-         fUY948Az1oYcfk7/384AqLTyhq44Tvvv5LOUKjuIHWTnqagsKv52U6Vmwl+vTW7nJKiy
-         slew==
-X-Gm-Message-State: AOJu0Yz+fr0/ejiI3hc2zSuEQAyr4LKb4mAjtbrFruBhC337ahZYxnzf
-	xXKPivfyqHmNCZrMTz59Qi09k0Q3uZT5hfKUqN9z2V20y9v1VMzCTrNHKul8
-X-Gm-Gg: ASbGncsqGWZBDABbEYg/aXDdtO7xqEFxiJlAqO0oknyGk0VPE9CQ/1TnI8otSmEffbi
-	BzVMrz0rg7ifGorjxMl05AMz7sIp3tq5SoAF9mcEd55k5y47tx+oMR79gumUJqsjuA8fVSdYcBb
-	hBnE8MfTQPHAZT0xK52lYOTdz8IsB7gDI02GfWnFH+WUeDtezIzdtFT+GyuYSWt8u/2XYfHCN7J
-	kFGvyOnKomJZ4qcyTzx4fLvKA91IPm7yV70u0765NB3ntRIDWA9vct91UTgT57lEcglbmnDxVsM
-	zaqJPvKBKKX69qr6Nb5Rfq5Nj9Rogc6hsgY=
-X-Google-Smtp-Source: AGHT+IEmIM2W1DigIIE9KUnYxkcV8d96Wa5wLb6A2gyjEt0vwKSCsfmmMxj1ka6XKhE1X8yXseqQXg==
-X-Received: by 2002:a05:6402:1d53:b0:5f3:fad4:fa75 with SMTP id 4fb4d7f45d1cf-5fc35e2ab1amr221638a12.32.1746636570439;
-        Wed, 07 May 2025 09:49:30 -0700 (PDT)
-Received: from framework13.. ([2a01:e11:3:1ff0:a297:5d4:e836:bbde])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5fa777c8c56sm9733021a12.31.2025.05.07.09.49.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 May 2025 09:49:30 -0700 (PDT)
-From: Luca Di Maio <luca.dimaio1@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: Luca Di Maio <luca.dimaio1@gmail.com>
-Subject: [PATCH v9 1/1] proto: add ability to populate a filesystem from a directory
-Date: Wed,  7 May 2025 18:48:52 +0200
-Message-ID: <20250507164852.379200-2-luca.dimaio1@gmail.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250507164852.379200-1-luca.dimaio1@gmail.com>
-References: <20250507164852.379200-1-luca.dimaio1@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PQOBkUqz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BED2C4CEE9;
+	Wed,  7 May 2025 17:01:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1746637266;
+	bh=u6AZ6kU59/7hxI5Dn9KpiI190gICF70koF26H8PzqhY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=PQOBkUqznN8zfjPAjmnC0yTCzjwFdJC+KxmUWPMdmRREaU77XEoDN2J8rmPseg+X1
+	 VfEQG7WIYOeVm2goFu67hGZjtn+J2CIMInjx8KJMwsMCbYsz/C6u5/6O9Kx+w1ZJGO
+	 vM4m/gIE3sWf+hqHOKMoAKXTOsIMerKBSxxhB3g5LchQ+M+NH/85jeZxaVYoCmiJ0i
+	 gB46eHbk1gUe2tIsXJlv9mp/ISRVbZRWmHAWaVJ/2KoPkwH9ohF5xjzSRWW47hJlDt
+	 6ng2aeiSRosof8+LUd37nTezh6bSb/MTzQdVzcpvqgGvtqlBJbwcZtRSQMXAn/dqVH
+	 6RvS8akyjBYxw==
+Date: Wed, 7 May 2025 10:01:05 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Hans Holmberg <Hans.Holmberg@wdc.com>
+Cc: Zorro Lang <zlang@kernel.org>,
+	"fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	hch <hch@lst.de>
+Subject: Re: [PATCH v3] xfs: test that we can handle spurious zone wp
+ advancements
+Message-ID: <20250507170105.GF25675@frogsfrogsfrogs>
+References: <20250507102913.13759-1-hans.holmberg@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250507102913.13759-1-hans.holmberg@wdc.com>
 
-This patch implements the functionality to populate a newly created XFS
-filesystem directly from an existing directory structure.
+On Wed, May 07, 2025 at 10:30:14AM +0000, Hans Holmberg wrote:
+> From: Hans Holmberg <Hans.Holmberg@wdc.com>
+> 
+> Test that we can gracefully handle spurious zone write pointer
+> advancements while unmounted.
+> 
+> Any space covered by the wp unexpectedly moving forward should just
+> be treated as unused space, so check that we can still mount the file
+> system and that the zone will be reset when all used blocks have been
+> freed.
+> 
+> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-It resuses existing protofile logic, it branches if input is a
-directory.
+Looks good now,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-The population process steps are as follows:
-  - create the root inode before populating content
-  - recursively process nested directories
-  - handle regular files, directories, symlinks, char devices, block
-    devices, sockets, fifos
-  - preserve attributes (ownership, permissions)
-  - preserve mtime timestamps from source files to maintain file history
-    - use current time for atime/ctime/crtime
-    - possible to specify atime=1 to preserve atime timestamps from
-      source files
-  - preserve extended attributes and fsxattrs for all file types
-  - preserve hardlinks
+--D
 
-At the moment, the implementation for the hardlink tracking is very
-simple, as it involves a linear search.
-from my local testing using larger source directories
-(1.3mln inodes, ~400k hardlinks) the difference was actually
-just a few seconds (given that most of the time is doing i/o).
-We might want to revisit that in the future if this becomes a
-bottleneck.
-
-This functionality makes it easier to create populated filesystems
-without having to mount them, it's particularly useful for
-reproducible builds.
-
-Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
----
- man/man8/mkfs.xfs.8.in |  41 ++-
- mkfs/proto.c           | 757 ++++++++++++++++++++++++++++++++++++++++-
- mkfs/proto.h           |  18 +-
- mkfs/xfs_mkfs.c        |  23 +-
- 4 files changed, 813 insertions(+), 26 deletions(-)
-
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index 37e3a88e..bb38c148 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -28,7 +28,7 @@ mkfs.xfs \- construct an XFS filesystem
- .I naming_options
- ] [
- .B \-p
--.I protofile_options
-+.I prototype_options
- ] [
- .B \-q
- ] [
-@@ -977,30 +977,39 @@ option set.
- .PP
- .PD 0
- .TP
--.BI \-p " protofile_options"
-+.BI \-p " prototype_options"
- .TP
- .BI "Section Name: " [proto]
- .PD
--These options specify the protofile parameters for populating the filesystem.
-+These options specify the prototype parameters for populating the filesystem.
- The valid
--.I protofile_options
-+.I prototype_options
- are:
- .RS 1.2i
- .TP
--.BI [file=] protofile
-+.BI [file=]
- The
- .B file=
- prefix is not required for this CLI argument for legacy reasons.
- If specified as a config file directive, the prefix is required.
--
-+.TP
-+.BI [file=] directory
- If the optional
- .PD
--.I protofile
--argument is given,
-+.I prototype
-+argument is given, and it's a directory,
- .B mkfs.xfs
--uses
--.I protofile
--as a prototype file and takes its directions from that file.
-+will populate the root file system with the contents of the given directory.
-+Content, timestamps (atime, mtime), attributes and extended attributes are preserved
-+for all file types.
-+.TP
-+.BI [file=] protofile
-+If the optional
-+.PD
-+.I prototype
-+argument is given, and points to a regular file,
-+.B mkfs.xfs
-+uses it as a prototype file and takes its directions from that file.
- The blocks and inodes specifiers in the
- .I protofile
- are provided for backwards compatibility, but are otherwise unused.
-@@ -1136,8 +1145,16 @@ always terminated with the dollar (
- .B $
- ) token.
- .TP
-+.BI atime= value
-+If set to 1, when we're populating the root filesystem from a directory (
-+.B file=directory
-+option)
-+access times are going to be preserved and are copied from the source files.
-+Set to 0 to set access times to the current time instead.
-+By default, this is set to 0.
-+.TP
- .BI slashes_are_spaces= value
--If set to 1, slashes ("/") in the first token of each line of the protofile
-+If set to 1, slashes ("/") in the first token of each line of the prototype file
- are converted to spaces.
- This enables the creation of a filesystem containing filenames with spaces.
- By default, this is set to 0.
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 7f56a3d8..ffd580a2 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -5,6 +5,9 @@
-  */
- 
- #include "libxfs.h"
-+#include <dirent.h>
-+#include <fcntl.h>
-+#include <sys/resource.h>
- #include <sys/stat.h>
- #include <sys/xattr.h>
- #include <linux/xattr.h>
-@@ -21,6 +24,11 @@ static void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
- static int newregfile(char **pp, char **fname);
- static void rtinit(xfs_mount_t *mp);
- static off_t filesize(int fd);
-+static void populate_from_dir(struct xfs_mount *mp,
-+				struct fsxattr *fsxp, char *source_dir);
-+static void walk_dir(struct xfs_mount *mp, struct xfs_inode *pip,
-+				struct fsxattr *fsxp, char *path_buf);
-+static int preserve_atime;
- static int slashes_are_spaces;
- 
- /*
-@@ -54,7 +62,7 @@ getnum(
- 	return i;
- }
- 
--char *
-+struct proto_source
- setup_proto(
- 	char	*fname)
- {
-@@ -63,8 +71,36 @@ setup_proto(
- 	int		fd;
- 	long		size;
- 
--	if (!fname)
--		return dflt;
-+	struct proto_source	result = {0};
-+	struct stat	statbuf;
-+
-+	/*
-+	 * for no input, use default root inode
-+	 * this is actually a protofile, which
-+	 * is valid.
-+	 */
-+	if (!fname) {
-+		result.type = PROTO_SRC_PROTOFILE;
-+		result.data = dflt;
-+		return result;
-+	}
-+
-+	if (stat(fname, &statbuf) < 0) {
-+		fail(_("invalid or unreadable source path"), ENOENT);
-+	}
-+
-+	/*
-+	 * handle directory inputs
-+	 */
-+	if (S_ISDIR(statbuf.st_mode)) {
-+		result.type = PROTO_SRC_DIR;
-+		result.data = fname;
-+		return result;
-+	}
-+
-+	/*
-+	 * else this is a protofile, let's handle traditionally
-+	 */
- 	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
- 		fprintf(stderr, _("%s: failed to open %s: %s\n"),
- 			progname, fname, strerror(errno));
-@@ -90,7 +126,10 @@ setup_proto(
- 	(void)getnum(getstr(&buf), 0, 0, false);	/* block count */
- 	(void)getnum(getstr(&buf), 0, 0, false);	/* inode count */
- 	close(fd);
--	return buf;
-+
-+	result.type = PROTO_SRC_PROTOFILE;
-+	result.data = buf;
-+	return result;
- 
- out_fail:
- 	if (fd >= 0)
-@@ -379,11 +418,19 @@ writeattr(
- 	int			error;
- 
- 	ret = fgetxattr(fd, attrname, valuebuf, valuelen);
-+	/*
-+	 * in case of filedescriptors with O_PATH, fgetxattr() will
-+	 * fail with EBADF. let's try to fallback to lgetxattr() using input
-+	 * path.
-+	 */
-+	if (ret < 0 && errno == EBADF)
-+		ret = lgetxattr(fname, attrname, valuebuf, valuelen);
- 	if (ret < 0) {
- 		if (errno == EOPNOTSUPP)
- 			return;
- 		fail(_("error collecting xattr value"), errno);
- 	}
-+
- 	if (ret == 0)
- 		return;
- 
-@@ -425,6 +472,13 @@ writeattrs(
- 		fail(_("error allocating xattr name buffer"), errno);
- 
- 	ret = flistxattr(fd, namebuf, XATTR_LIST_MAX);
-+	/*
-+	 * in case of filedescriptors with O_PATH, flistxattr() will
-+	 * fail with EBADF. let's try to fallback to llistxattr() using input
-+	 * path.
-+	 */
-+	if (ret < 0 && errno == EBADF)
-+		ret = llistxattr(fname, namebuf, XATTR_LIST_MAX);
- 	if (ret < 0) {
- 		if (errno == EOPNOTSUPP)
- 			goto out_namebuf;
-@@ -933,11 +987,27 @@ void
- parse_proto(
- 	xfs_mount_t	*mp,
- 	struct fsxattr	*fsx,
--	char		**pp,
--	int		proto_slashes_are_spaces)
-+	struct proto_source	*protosource,
-+	int		proto_slashes_are_spaces,
-+	int		proto_preserve_atime)
- {
- 	slashes_are_spaces = proto_slashes_are_spaces;
--	parseproto(mp, NULL, fsx, pp, NULL);
-+	preserve_atime = proto_preserve_atime;
-+
-+	/*
-+	 * in case of a file input, we will use the prototype file logic
-+	 * else we will fallback to populate from dir.
-+	 */
-+	switch(protosource->type) {
-+	case PROTO_SRC_PROTOFILE:
-+		parseproto(mp, NULL, fsx, &protosource->data, NULL);
-+		break;
-+	case PROTO_SRC_DIR:
-+		populate_from_dir(mp, fsx, protosource->data);
-+		break;
-+	case PROTO_SRC_NONE:
-+		fail(_("invalid or unreadable source path"), ENOENT);
-+	}
- }
- 
- /* Create a sb-rooted metadata file. */
-@@ -1171,3 +1241,676 @@ filesize(
- 		return -1;
- 	return stb.st_size;
- }
-+
-+/* Try to allow as many memfds as possible. */
-+static void
-+bump_max_fds(void)
-+{
-+	struct rlimit	rlim = {};
-+	int ret;
-+
-+	ret = getrlimit(RLIMIT_NOFILE, &rlim);
-+	if (ret)
-+		return;
-+
-+	rlim.rlim_cur = rlim.rlim_max;
-+	ret = setrlimit(RLIMIT_NOFILE, &rlim);
-+	if (ret < 0)
-+		fprintf(stderr, _("%s: could not bump fd limit: [ %d - %s]\n"),
-+				progname, errno, strerror(errno));
-+}
-+
-+static void
-+writefsxattrs(
-+	struct xfs_inode	*ip,
-+	struct fsxattr		*fsxp)
-+{
-+	ip->i_projid = fsxp->fsx_projid;
-+	ip->i_extsize = fsxp->fsx_extsize;
-+	ip->i_diflags = xfs_flags2diflags(ip, fsxp->fsx_xflags);
-+	if (xfs_has_v3inodes(ip->i_mount)) {
-+		ip->i_diflags2 = xfs_flags2diflags2(ip, fsxp->fsx_xflags);
-+		ip->i_cowextsize = fsxp->fsx_cowextsize;
-+	}
-+}
-+
-+static void
-+writetimestamps(
-+	struct xfs_inode	*ip,
-+	struct stat	statbuf)
-+{
-+	struct timespec64	ts;
-+
-+	/*
-+	 * Copy timestamps from source file to destination inode.
-+	 * Usually reproducible archives will delete or not register
-+	 * atime and ctime, for example:
-+	 *    https://www.gnu.org/software/tar/manual/html_section/Reproducibility.html
-+	 * hence we will only copy mtime, and let ctime/crtime be set to
-+	 * current time.
-+	 * atime will be copied over if atime is true.
-+	 */
-+	ts.tv_sec = statbuf.st_mtim.tv_sec;
-+	ts.tv_nsec = statbuf.st_mtim.tv_nsec;
-+	inode_set_mtime_to_ts(VFS_I(ip), ts);
-+
-+	/*
-+	 * in case of atime option, we will copy the atime
-+	 * timestamp from source.
-+	 */
-+	if (preserve_atime) {
-+		ts.tv_sec = statbuf.st_atim.tv_sec;
-+		ts.tv_nsec = statbuf.st_atim.tv_nsec;
-+		inode_set_atime_to_ts(VFS_I(ip), ts);
-+	}
-+}
-+
-+struct hardlink {
-+	xfs_ino_t	src_ino;
-+	xfs_ino_t	dst_ino;
-+};
-+
-+struct hardlinks {
-+	size_t		count;
-+	size_t		size;
-+	struct hardlink	*entries;
-+};
-+
-+/* Growth strategy for hardlink tracking array */
-+#define HARDLINK_DEFAULT_GROWTH_FACTOR	2		/* Double size for small arrays */
-+#define HARDLINK_LARGE_GROWTH_FACTOR	0.25	/* Grow by 25% for large arrays */
-+#define HARDLINK_THRESHOLD				1024	/* Threshold to switch growth strategies */
-+#define HARDLINK_TRACKER_INITIAL_SIZE	4096	/* Initial allocation size */
-+
-+/*
-+ * keep track of source inodes that are from hardlinks
-+ * so we can retrieve them when needed to setup in
-+ * destination.
-+ */
-+static struct hardlinks *hardlink_tracker = { 0 };
-+
-+static void
-+init_hardlink_tracker(void)
-+{
-+	hardlink_tracker = calloc(1, sizeof(struct hardlinks));
-+	if (!hardlink_tracker)
-+		fail(_("error allocating hardlinks tracking array"), errno);
-+
-+	hardlink_tracker->size = HARDLINK_TRACKER_INITIAL_SIZE;
-+	hardlink_tracker->entries = calloc(
-+			hardlink_tracker->size,
-+			sizeof(struct hardlink));
-+	if (!hardlink_tracker->entries)
-+		fail(_("error allocating hardlinks tracking array"), errno);
-+}
-+
-+static void
-+cleanup_hardlink_tracker(void)
-+{
-+	free(hardlink_tracker->entries);
-+	free(hardlink_tracker);
-+	hardlink_tracker = NULL;
-+}
-+
-+static xfs_ino_t
-+get_hardlink_dst_inode(
-+	xfs_ino_t i_ino)
-+{
-+	for (size_t i = 0; i < hardlink_tracker->count; i++) {
-+		if (hardlink_tracker->entries[i].src_ino == i_ino) {
-+			return hardlink_tracker->entries[i].dst_ino;
-+		}
-+	}
-+	return 0;
-+}
-+
-+static void
-+track_hardlink_inode(
-+	xfs_ino_t src_ino,
-+	xfs_ino_t dst_ino)
-+{
-+	if (hardlink_tracker->count >= hardlink_tracker->size) {
-+		/*
-+		 * double for smaller capacity.
-+		 * instead grow by 25% steps for larger capacities.
-+		 */
-+		const size_t old_size = hardlink_tracker->size;
-+		size_t new_size = old_size * HARDLINK_DEFAULT_GROWTH_FACTOR;
-+		if (old_size > HARDLINK_THRESHOLD)
-+			new_size = old_size + (old_size * HARDLINK_LARGE_GROWTH_FACTOR);
-+
-+		struct hardlink *resized_array = reallocarray(
-+			hardlink_tracker->entries,
-+			new_size,
-+			sizeof(struct hardlink));
-+		if (!resized_array)
-+			fail(_("error enlarging hardlinks tracking array"), errno);
-+
-+		memset(&resized_array[old_size], 0,
-+				(new_size - old_size) * sizeof(struct hardlink));
-+
-+		hardlink_tracker->entries = resized_array;
-+		hardlink_tracker->size = new_size;
-+	}
-+
-+	hardlink_tracker->entries[hardlink_tracker->count].src_ino = src_ino;
-+	hardlink_tracker->entries[hardlink_tracker->count].dst_ino = dst_ino;
-+	hardlink_tracker->count++;
-+}
-+
-+/*
-+ * this function will first check in our tracker if
-+ * the input hardlink has already been stored, if not
-+ * report false so create_file() can continue handling
-+ * the inode as a regular file type, and later save
-+ * the source inode in our buffer for future consumption.
-+ */
-+static bool
-+handle_hardlink(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*pip,
-+	struct xfs_name	xname,
-+	struct stat	file_stat)
-+{
-+	int error;
-+	struct xfs_inode	*ip;
-+	struct xfs_trans	*tp;
-+	struct xfs_parent_args *ppargs = NULL;
-+	tp = getres(mp, 0);
-+	ppargs = newpptr(mp);
-+
-+	xfs_ino_t dst_ino = get_hardlink_dst_inode(file_stat.st_ino);
-+	/*
-+	 * we didn't find the hardlink inode, this means
-+	 * it's the first time we see it, report error
-+	 * so create_file() can continue handling the inode
-+	 * as a regular file type, and later save
-+	 * the source inode in our buffer for future consumption.
-+	 */
-+	if (dst_ino == 0)
-+		return false;
-+
-+	error = libxfs_iget(mp, NULL, dst_ino, 0, &ip);
-+	if (error) {
-+		fprintf(stderr, _("failed to iget inode %lu\n"), dst_ino);
-+		exit(1);
-+	}
-+
-+	/*
-+	* In case the inode was already in our tracker
-+	* we need to setup the hardlink and skip file
-+	* copy.
-+	*/
-+	libxfs_trans_ijoin(tp, pip, 0);
-+	libxfs_trans_ijoin(tp, ip, 0);
-+	newdirent(mp, tp, pip, &xname, ip, ppargs);
-+
-+	/*
-+	 * Increment the link count
-+	 */
-+	libxfs_bumplink(tp, ip);
-+
-+	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		fail(_("Error encountered creating file from prototype file"), error);
-+
-+	libxfs_parent_finish(mp, ppargs);
-+	libxfs_irele(ip);
-+
-+	return true;
-+}
-+
-+static void
-+create_file(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*pip,
-+	struct fsxattr	*fsxp,
-+	int mode,
-+	struct cred	creds,
-+	struct xfs_name	xname,
-+	int flags,
-+	struct stat	file_stat,
-+	xfs_dev_t rdev,
-+	int fd,
-+	char *fname)
-+{
-+
-+	int error;
-+	struct xfs_inode	*ip;
-+	struct xfs_trans	*tp;
-+	struct xfs_parent_args *ppargs = NULL;
-+
-+	/*
-+	* if handle_hardlink() returns true it means the hardlink has
-+	* been correctly found and set, so we don't need to
-+	* do anything else.
-+	*/
-+	if (file_stat.st_nlink > 1 && handle_hardlink(mp, pip, xname, file_stat)) {
-+		close(fd);
-+		return;
-+	}
-+	/*
-+	 * if instead we have an error it means the hardlink
-+	 * was not registered, so we proceed to treat it like
-+	 * a regular file, and save it to our tracker later.
-+	 */
-+	tp = getres(mp, 0);
-+	ppargs = newpptr(mp);
-+
-+	error = creatproto(&tp, pip, mode, rdev, &creds, fsxp, &ip);
-+	if (error)
-+		fail(_("Inode allocation failed"), error);
-+
-+	libxfs_trans_ijoin(tp, pip, 0);
-+	newdirent(mp, tp, pip, &xname, ip, ppargs);
-+
-+	/*
-+	 * copy over timestamps
-+	 */
-+	writetimestamps(ip, file_stat);
-+
-+	libxfs_trans_log_inode(tp, ip, flags);
-+
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		fail(_("Error encountered creating file from prototype file"), error);
-+
-+	libxfs_parent_finish(mp, ppargs);
-+
-+	/*
-+	 * copy over file content, attributes,
-+	 * extended attributes and timestamps
-+	 *
-+	 * hardlinks will be skipped as fd will
-+	 * be closed before this.
-+	 */
-+	if (fd >= 0) {
-+		writefile(ip, fname, fd);
-+		writeattrs(ip, fname, fd);
-+		close(fd);
-+	}
-+	/*
-+	 * we do fsxattr also for file types where we don't have
-+	 * an fd, for example FIFOs
-+	 */
-+	writefsxattrs(ip, fsxp);
-+
-+	/*
-+	 * if we're here it means this is the first time we're
-+	 * encountering an hardlink, so we need to store it
-+	 */
-+	if (file_stat.st_nlink > 1)
-+		track_hardlink_inode(file_stat.st_ino, ip->i_ino);
-+
-+	libxfs_irele(ip);
-+}
-+
-+static void
-+handle_direntry(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*pip,
-+	struct fsxattr	*fsxp,
-+	char *path_buf,
-+	struct dirent	*entry)
-+{
-+	char link_target[PATH_MAX];
-+	int error;
-+	int fd = -1;
-+	int flags;
-+	int majdev;
-+	int mindev;
-+	int mode;
-+	struct stat	file_stat;
-+	struct xfs_name	xname;
-+	struct xfs_inode	*ip;
-+	struct xfs_trans	*tp;
-+	struct xfs_parent_args *ppargs = NULL;
-+
-+	/*
-+	 * save original path length so we can
-+	 * restore the original value at the end
-+	 * of the function
-+	 */
-+	size_t path_save_len = strlen(path_buf);
-+	size_t path_len = path_save_len;
-+	size_t entry_len = strlen(entry->d_name);
-+
-+	/*
-+	 * ensure the constructed path is within PATH_MAX limits
-+	 */
-+	size_t remaining = PATH_MAX - path_len;
-+	size_t written = snprintf(path_buf + path_len, remaining, "/%s",
-+			entry->d_name);
-+	if (written >= remaining) {
-+		fail(_("path name too long"), ENAMETOOLONG);
-+	}
-+
-+	if (lstat(path_buf, &file_stat) < 0) {
-+		fprintf(stderr, _("%s: cannot stat '%s': %s (errno=%d)\n"),
-+				progname, path_buf, strerror(errno), errno);
-+		exit(1);
-+	}
-+
-+	/*
-+	 * avoid opening FIFOs as they're blocking
-+	 */
-+	int open_flags = O_NOFOLLOW | O_RDONLY | O_NOATIME;
-+	/*
-+	* symlinks and sockets will need to be opened with O_PATH to work,
-+	* so we handle this special case.
-+	*/
-+	if (S_ISSOCK(file_stat.st_mode)
-+			|| S_ISLNK(file_stat.st_mode)
-+			|| S_ISFIFO(file_stat.st_mode))
-+		open_flags = O_NOFOLLOW | O_PATH;
-+	if ((fd = open(path_buf, open_flags)) < 0) {
-+		fprintf(stderr, _("%s: cannot open %s: %s\n"), progname, path_buf,
-+			strerror(errno));
-+		exit(1);
-+	}
-+
-+	struct cred creds = {
-+		.cr_uid = file_stat.st_uid,
-+		.cr_gid = file_stat.st_gid,
-+	};
-+
-+	xname.name = (unsigned char *)entry->d_name;
-+	xname.len = entry_len;
-+	xname.type = 0;
-+	mode = file_stat.st_mode;
-+	flags = XFS_ILOG_CORE;
-+
-+	switch (file_stat.st_mode & S_IFMT) {
-+	case S_IFDIR:
-+		tp = getres(mp, 0);
-+		ppargs = newpptr(mp);
-+
-+		error = creatproto(&tp, pip, mode, 0, &creds, fsxp, &ip);
-+		if (error)
-+			fail(_("Inode allocation failed"), error);
-+
-+		libxfs_trans_ijoin(tp, pip, 0);
-+
-+		xname.type = XFS_DIR3_FT_DIR;
-+		newdirent(mp, tp, pip, &xname, ip, ppargs);
-+
-+		libxfs_bumplink(tp, pip);
-+		libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
-+		newdirectory(mp, tp, ip, pip);
-+
-+		/*
-+		 * copy over timestamps
-+		 */
-+		writetimestamps(ip, file_stat);
-+
-+		libxfs_trans_log_inode(tp, ip, flags);
-+
-+		error = -libxfs_trans_commit(tp);
-+		if (error)
-+			fail(_("Directory inode allocation failed."), error);
-+
-+		libxfs_parent_finish(mp, ppargs);
-+		tp = NULL;
-+
-+		/*
-+		 * copy over attributes
-+		 */
-+		writeattrs(ip, entry->d_name, fd);
-+		writefsxattrs(ip, fsxp);
-+		close(fd);
-+
-+		walk_dir(mp, ip, fsxp, path_buf);
-+
-+		libxfs_irele(ip);
-+		break;
-+	case S_IFLNK:
-+		/*
-+		* if handle_hardlink() returns true it means the hardlink has
-+		* been correctly found and set, so we don't need to
-+		* do anything else.
-+		*/
-+		if (file_stat.st_nlink > 1 &&
-+				handle_hardlink(mp, pip, xname, file_stat)) {
-+			close(fd);
-+			break;
-+		}
-+		/*
-+		* if instead we have false it means the hardlink
-+		* was not registered, so we proceed to treat it like
-+		* a regular symlink, and save it to our tracker later.
-+		*/
-+		ssize_t len = readlink(path_buf, link_target, PATH_MAX - 1);
-+		if (len < 0)
-+			fail(_("could not resolve symlink"), errno);
-+		if (len >= PATH_MAX -1)
-+			fail(_("symlink target too long"), ENAMETOOLONG);
-+		link_target[len] = '\0';
-+
-+		tp = getres(mp, XFS_B_TO_FSB(mp, len));
-+		ppargs = newpptr(mp);
-+
-+		error = creatproto(&tp, pip, mode, 0, &creds, fsxp, &ip);
-+		if (error)
-+			fail(_("Inode allocation failed"), error);
-+
-+		writesymlink(tp, ip, link_target, len);
-+		libxfs_trans_ijoin(tp, pip, 0);
-+
-+		xname.type = XFS_DIR3_FT_SYMLINK;
-+		newdirent(mp, tp, pip, &xname, ip, ppargs);
-+
-+		/*
-+		 * copy over timestamps
-+		 */
-+		writetimestamps(ip, file_stat);
-+
-+		libxfs_trans_log_inode(tp, ip, flags);
-+
-+		error = -libxfs_trans_commit(tp);
-+		if (error)
-+			fail(_("Error encountered creating file from prototype file"),
-+			     error);
-+
-+		libxfs_parent_finish(mp, ppargs);
-+
-+		/*
-+		 * copy over attributes
-+		 *
-+		 * being a symlink we opened the filedescriptor with O_PATH
-+		 * this will make flistxattr() and fgetxattr() fail wil EBADF,
-+		 * so we  will need to fallback to llistxattr() and lgetxattr(),
-+		 * this will need the full path to the original file, not just the
-+		 * entry name.
-+		 */
-+		writeattrs(ip, path_buf, fd);
-+		writefsxattrs(ip, fsxp);
-+		close(fd);
-+
-+		/*
-+		 * if we're here it means this is the first time we're
-+		 * encountering an hardlink, so we need to store it
-+		 */
-+		if (file_stat.st_nlink > 1)
-+			track_hardlink_inode(file_stat.st_ino, ip->i_ino);
-+
-+		libxfs_irele(ip);
-+		break;
-+	case S_IFREG:
-+		xname.type = XFS_DIR3_FT_REG_FILE;
-+		create_file(mp, pip, fsxp, mode, creds, xname, flags, file_stat,
-+			    0, fd, entry->d_name);
-+		break;
-+	case S_IFCHR:
-+		xname.type = XFS_DIR3_FT_CHRDEV;
-+		majdev = major(file_stat.st_rdev);
-+		mindev = minor(file_stat.st_rdev);
-+		create_file(mp, pip, fsxp, mode, creds, xname, flags, file_stat,
-+			    IRIX_MKDEV(majdev, mindev), fd, entry->d_name);
-+		break;
-+	case S_IFBLK:
-+		xname.type = XFS_DIR3_FT_BLKDEV;
-+		majdev = major(file_stat.st_rdev);
-+		mindev = minor(file_stat.st_rdev);
-+		create_file(mp, pip, fsxp, mode, creds, xname, flags, file_stat,
-+			    IRIX_MKDEV(majdev, mindev), fd, entry->d_name);
-+		break;
-+	case S_IFIFO:
-+		flags |= XFS_ILOG_DEV;
-+		/*
-+		 * being a fifo we opened the filedescriptor with O_PATH
-+		 * this will make flistxattr() and fgetxattr() fail wil EBADF,
-+		 * so we  will need to fallback to llistxattr() and lgetxattr(),
-+		 * this will need the full path to the original file, not just the
-+		 * entry name.
-+		 */
-+		create_file(mp, pip, fsxp, mode, creds, xname, flags, file_stat,
-+			    0, fd, path_buf);
-+		break;
-+	case S_IFSOCK:
-+		flags |= XFS_ILOG_DEV;
-+		/*
-+		 * being a socket we opened the filedescriptor with O_PATH
-+		 * this will make flistxattr() and fgetxattr() fail wil EBADF,
-+		 * so we  will need to fallback to llistxattr() and lgetxattr(),
-+		 * this will need the full path to the original file, not just the
-+		 * entry name.
-+		 */
-+		create_file(mp, pip, fsxp, mode, creds, xname, flags, file_stat,
-+			    0, fd, path_buf);
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	/*
-+	 * restore path buffer to original length before returning
-+	 * */
-+	path_buf[path_save_len] = '\0';
-+}
-+
-+/*
-+ * walk_dir will recursively list files and directories
-+ * and populate the mountpoint *mp with them using handle_direntry().
-+ */
-+static void
-+walk_dir(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*pip,
-+	struct fsxattr	*fsxp,
-+	char *path_buf)
-+{
-+	DIR *dir;
-+	struct dirent	*entry;
-+
-+	/*
-+	 * open input directory and iterate over all entries in it.
-+	 * when another directory is found, we will recursively call
-+	 * walk_dir.
-+	 */
-+	if ((dir = opendir(path_buf)) == NULL) {
-+		fprintf(stderr, _("%s: cannot open input dir: %s [%d - %s]\n"),
-+				progname, path_buf, errno, strerror(errno));
-+		exit(1);
-+	}
-+	while ((entry = readdir(dir)) != NULL) {
-+		if (strcmp(entry->d_name, ".") == 0 ||
-+				strcmp(entry->d_name, "..") == 0) {
-+			continue;
-+		}
-+
-+		handle_direntry(mp, pip, fsxp, path_buf, entry);
-+	}
-+	closedir(dir);
-+}
-+
-+static void
-+populate_from_dir(
-+	struct xfs_mount	*mp,
-+	struct fsxattr	*fsxp,
-+	char	*cur_path)
-+{
-+	int error;
-+	int mode;
-+	struct xfs_inode	*ip;
-+	struct xfs_trans	*tp;
-+
-+	char			path_buf[PATH_MAX];
-+
-+	/*
-+	 * initialize path_buf cur_path, strip trailing slashes
-+	 * they're automatically added when walking the dir
-+	 */
-+	if (strlen(cur_path) > 1 && cur_path[strlen(cur_path)-1] == '/')
-+		cur_path[strlen(cur_path)-1] = '\0';
-+	if (snprintf(path_buf, PATH_MAX, "%s", cur_path) >= PATH_MAX)
-+		fail(_("path name too long"), ENAMETOOLONG);
-+
-+	/*
-+	 * we first ensure we have the root inode
-+	 */
-+	struct cred creds = {
-+		.cr_uid = 0,
-+		.cr_gid = 0,
-+
-+	};
-+	mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-+
-+	tp = getres(mp, 0);
-+
-+	error = creatproto(&tp, NULL, mode | S_IFDIR, 0, &creds, fsxp, &ip);
-+	if (error)
-+		fail(_("Inode allocation failed"), error);
-+
-+	mp->m_sb.sb_rootino = ip->i_ino;
-+	libxfs_log_sb(tp);
-+	newdirectory(mp, tp, ip, ip);
-+	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		fail(_("Inode allocation failed"), error);
-+
-+	libxfs_parent_finish(mp, NULL);
-+
-+	/*
-+	 * RT initialization.  Do this here to ensure that
-+	 * the RT inodes get placed after the root inode.
-+	 */
-+	error = create_metadir(mp);
-+	if (error)
-+		fail(_("Creation of the metadata directory inode failed"), error);
-+
-+	rtinit(mp);
-+
-+	/*
-+	 * by nature of walk_dir() we could be opening
-+	 * a great number of fds for deeply nested directory
-+	 * trees.
-+	 * try to bump max fds limit.
-+	 */
-+	bump_max_fds();
-+
-+	/*
-+	 * initialize the hardlinks tracker
-+	 */
-+	init_hardlink_tracker();
-+	/*
-+	 * now that we have a root inode, let's
-+	 * walk the input dir and populate the partition
-+	 */
-+	walk_dir(mp, ip, fsxp, path_buf);
-+
-+	/*
-+	 * cleanup hardlinks tracker
-+	 */
-+	cleanup_hardlink_tracker();
-+
-+	/*
-+	 * we free up our root inode
-+	 * only when we finished populating the
-+	 * root filesystem
-+	 */
-+	libxfs_irele(ip);
-+}
-diff --git a/mkfs/proto.h b/mkfs/proto.h
-index be1ceb45..476f7851 100644
---- a/mkfs/proto.h
-+++ b/mkfs/proto.h
-@@ -6,9 +6,21 @@
- #ifndef MKFS_PROTO_H_
- #define MKFS_PROTO_H_
- 
--char *setup_proto(char *fname);
--void parse_proto(struct xfs_mount *mp, struct fsxattr *fsx, char **pp,
--		int proto_slashes_are_spaces);
-+enum proto_source_type {
-+	PROTO_SRC_NONE = 0,
-+	PROTO_SRC_PROTOFILE,
-+	PROTO_SRC_DIR
-+};
-+struct proto_source {
-+	enum	proto_source_type type;
-+	char	*data;
-+};
-+
-+struct proto_source setup_proto(char *fname);
-+void parse_proto(struct xfs_mount *mp, struct fsxattr *fsx,
-+		 struct proto_source *protosource,
-+		 int proto_slashes_are_spaces,
-+		 int proto_preserve_atime);
- void res_failed(int err);
- 
- #endif /* MKFS_PROTO_H_ */
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 3f4455d4..a32c077e 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -121,6 +121,7 @@ enum {
- 
- enum {
- 	P_FILE = 0,
-+	P_ATIME,
- 	P_SLASHES,
- 	P_MAX_OPTS,
- };
-@@ -709,6 +710,7 @@ static struct opt_params popts = {
- 	.ini_section = "proto",
- 	.subopts = {
- 		[P_FILE] = "file",
-+		[P_ATIME] = "atime",
- 		[P_SLASHES] = "slashes_are_spaces",
- 		[P_MAX_OPTS] = NULL,
- 	},
-@@ -717,6 +719,12 @@ static struct opt_params popts = {
- 		  .conflicts = { { NULL, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
-+		{ .index = P_ATIME,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .minval = 0,
-+		  .maxval = 1,
-+		  .defaultval = 1,
-+		},
- 		{ .index = P_SLASHES,
- 		  .conflicts = { { NULL, LAST_CONFLICT } },
- 		  .minval = 0,
-@@ -1045,6 +1053,7 @@ struct cli_params {
- 	int	lsunit;
- 	int	is_supported;
- 	int	proto_slashes_are_spaces;
-+	int	proto_atime;
- 	int	data_concurrency;
- 	int	log_concurrency;
- 	int	rtvol_concurrency;
-@@ -1170,6 +1179,7 @@ usage( void )
- /* naming */		[-n size=num,version=2|ci,ftype=0|1,parent=0|1]]\n\
- /* no-op info only */	[-N]\n\
- /* prototype file */	[-p fname]\n\
-+/* populate from directory */	[-p dirname,atime=0|1]\n\
- /* quiet */		[-q]\n\
- /* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx,rgcount=n,rgsize=n,\n\
- 			    concurrency=num]\n\
-@@ -2067,6 +2077,9 @@ proto_opts_parser(
- 	case P_SLASHES:
- 		cli->proto_slashes_are_spaces = getnum(value, opts, subopt);
- 		break;
-+	case P_ATIME:
-+		cli->proto_atime = getnum(value, opts, subopt);
-+		break;
- 	case P_FILE:
- 		fallthrough;
- 	default:
-@@ -5162,7 +5175,7 @@ main(
- 	int			discard = 1;
- 	int			force_overwrite = 0;
- 	int			quiet = 0;
--	char			*protostring = NULL;
-+	struct proto_source	protosource;
- 	int			worst_freelist = 0;
- 
- 	struct libxfs_init	xi = {
-@@ -5311,8 +5324,6 @@ main(
- 	 */
- 	cfgfile_parse(&cli);
- 
--	protostring = setup_proto(cli.protofile);
--
- 	/*
- 	 * Extract as much of the valid config as we can from the CLI input
- 	 * before opening the libxfs devices.
-@@ -5480,7 +5491,11 @@ main(
- 	/*
- 	 * Allocate the root inode and anything else in the proto file.
- 	 */
--	parse_proto(mp, &cli.fsx, &protostring, cli.proto_slashes_are_spaces);
-+	protosource = setup_proto(cli.protofile);
-+	parse_proto(mp, &cli.fsx,
-+			&protosource,
-+			cli.proto_slashes_are_spaces,
-+			cli.proto_atime);
- 
- 	/*
- 	 * Protect ourselves against possible stupidity
--- 
-2.49.0
-
+> ---
+> Changes since v1:
+>  Added _require_realtime and fixed a white space error based
+>  on Darrick's review comments.
+> 
+> Changes since v2:
+>  Make sure we don't fail when the rt section is internal
+>  Dropped inclusion of common filters and fixed dd parameter ordering
+> 
+>  tests/xfs/4214     | 71 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/4214.out |  2 ++
+>  2 files changed, 73 insertions(+)
+>  create mode 100755 tests/xfs/4214
+>  create mode 100644 tests/xfs/4214.out
+> 
+> diff --git a/tests/xfs/4214 b/tests/xfs/4214
+> new file mode 100755
+> index 000000000000..f5262a40b229
+> --- /dev/null
+> +++ b/tests/xfs/4214
+> @@ -0,0 +1,71 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2025 Western Digital Corporation.  All Rights Reserved.
+> +#
+> +# FS QA Test 4214
+> +#
+> +# Test that we can gracefully handle spurious zone write pointer
+> +# advancements while unmounted.
+> +#
+> +
+> +. ./common/preamble
+> +_begin_fstest auto quick zone
+> +
+> +# Import common functions.
+> +. ./common/zoned
+> +
+> +_require_scratch
+> +_require_realtime
+> +
+> +#
+> +# Figure out if the rt section is internal or not
+> +#
+> +if [ -z "$SCRATCH_RTDEV" ]; then
+> +	zdev=$SCRATCH_DEV
+> +else
+> +	zdev=$SCRATCH_RTDEV
+> +fi
+> +
+> +_require_zoned_device $zdev
+> +_require_command "$BLKZONE_PROG" blkzone
+> +
+> +_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+> +_scratch_mount
+> +blksz=$(_get_file_block_size $SCRATCH_MNT)
+> +
+> +test_file=$SCRATCH_MNT/test.dat
+> +dd if=/dev/zero of=$test_file bs=1M count=16 oflag=direct >> $seqres.full 2>&1 \
+> +	|| _fail "file creation failed"
+> +
+> +_scratch_unmount
+> +
+> +#
+> +# Figure out which zone was opened to store the test file and where
+> +# the write pointer is in that zone
+> +#
+> +open_zone=$($BLKZONE_PROG report $zdev | \
+> +	$AWK_PROG '/oi/ { print $2 }' | sed 's/,//')
+> +open_zone_wp=$($BLKZONE_PROG report $zdev | \
+> +	grep "start: $open_zone" | $AWK_PROG '{ print $8 }')
+> +wp=$(( $open_zone + $open_zone_wp ))
+> +
+> +# Advance the write pointer manually by one block
+> +dd if=/dev/zero of=$zdev bs=$blksz count=1 seek=$(($wp * 512 / $blksz)) \
+> +	oflag=direct >> $seqres.full 2>&1 || _fail "wp advancement failed"
+> +
+> +_scratch_mount
+> +_scratch_unmount
+> +
+> +# Finish the open zone
+> +$BLKZONE_PROG finish -c 1 -o $open_zone $zdev
+> +
+> +_scratch_mount
+> +rm $test_file
+> +_scratch_unmount
+> +
+> +# The previously open zone, now finished and unused, should have been reset
+> +nr_open=$($BLKZONE_PROG report $zdev | grep -wc "oi")
+> +echo "Number of open zones: $nr_open"
+> +
+> +status=0
+> +exit
+> diff --git a/tests/xfs/4214.out b/tests/xfs/4214.out
+> new file mode 100644
+> index 000000000000..a746546bc8f6
+> --- /dev/null
+> +++ b/tests/xfs/4214.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 4214
+> +Number of open zones: 0
+> -- 
+> 2.34.1
+> 
