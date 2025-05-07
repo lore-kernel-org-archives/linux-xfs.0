@@ -1,44 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0622A1DE4F1;
-	Wed,  7 May 2025 05:13:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73AC91DE4F1;
+	Wed,  7 May 2025 05:13:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746594799; cv=none; b=sdWtVXJbKgw42vuxFXK/KmGszxPYFBkipryWm8YWpDvgj1CQhic242l6Jzka3SavqDsnpJ+8jW8VYFEre43dRdxRInTJI+eLHO856te3+bY3zq+/SHcSaNMKsWxsOnQpqraxA90AB4Ze31+X3usZjVZB3b401hgqz5Ac2REhjDo=
+	t=1746594801; cv=none; b=TnDw3YHgXCz27wgerrns+4+YFM+ukUODkvYSFHdqy3i5RdKzZSaPrdClx/CPYJpTNsV85LmyMTY9tMCR51xUxqQWTLLPeSWpYDxZWs/TyaVmQL7XQVwd9A3n9pUSeAFe7emLzc1IrIYxFMMg1E8ZwBHw5oxbhpTIv4Rga6XcFVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746594799; c=relaxed/simple;
-	bh=hus/Q5UtfmEn1HlwUj5tczsUh0ws5oKjb/+3a9Mi9U8=;
+	s=arc-20240116; t=1746594801; c=relaxed/simple;
+	bh=gfl/47be/ErCgpomadc5HUPifKUxaY6nO1J/aoGGb8E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=t1vovtE7OOBPGvsDUSo0I4OW2+quBRHSZqzxt67MPenL09NUhhHJKc2xLYWsme941DOxv411fEQC0VtdyHnkJvtuuan0YR52RK5kGhBVgp2aDDsJcE4E7sMO4BZ/ny1vYtNHWrmWpBRnJF8cqw6ig/enpMRZ/XyWgX8er7wSPRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=35xTPqDW; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=b7rRW4LMPaIgln3FbC9K5/OBucJ/zXCmH5guzL/NqEIMzNbb0aldETdkiZlxJxavRs+YNFdbsc/u3vcnL1zKQeGuGezJyVpUPz1UTIptgtLOGmtT6LwHjEQEKsRibr14UIb2dVwSOrd+ECLBU7PvL/AE3fEFtYz2tP4AcKDgDww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=byq6mXgY; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="35xTPqDW"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="byq6mXgY"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=nRqpHZaUedMD3at1EUF8IytJKo4ka16Fs+L2azwXaqY=; b=35xTPqDWwMGGpRildrlQNqvGha
-	7EMhrbQvrRJqZJzhdiIuZHcePB+09WE1R1OXqw7QKcJfm5TzDGhI3Sec6JStBJ38w/UiTsfudXWNm
-	6EqO1b6/XdngUfzofwZuYMNIsycpcx8Zrt7kRmAXvLoduiV+hSnYwpDqYId0l1I6skFnN/d+xXMUu
-	MVrrOv/fSMRnb0mUZSUCUpkN5MirGxF3PkIHG0sz/AfBMcRT4ef+eMNooUz92n3zV4SPR9hRlcwWt
-	hOn+uDDI0IhRVjd+ID+26cnrW8FZi1Y6SkPCuMduqpN1E2nzfvXN9w7L2poYcsl2jRvbObuRExlM7
-	i1Im3IsA==;
+	bh=f+UTbSIejU0t8XDxAf73UkmrQ1JLza47CbeYOps/Mnc=; b=byq6mXgYl03oeOc1NxUruWPaRg
+	fiKvGdTRY5nzInsFoI/PpbFkGvdq1QN9g7iybYmY8p2PDqqAYPK2xfbxubS+lQY95Ek+IwGlWG6pN
+	G1SoE4EUqTOish8fMrjlwUlFnyWnSRve2okBkT3YDdMlNY22AcAJ6OREGohoDTVbP/aq9pqav2LNz
+	0gVfu6KTW/YnAcmYD7qrNjZFg43eAfTpV5SKk4jLFRly+WyNTKVWG71BiiPk+pzMyTY0odpLnzCPS
+	f63py/Q1PoGl+iLEUC51VPPToaiWR5opqD8hiybdcFMqMlqqolS5+xN2WHfHIVI4PSsrAL1q3c+xJ
+	Ph8xYDLw==;
 Received: from 2a02-8389-2341-5b80-3ba7-83fe-7065-4f0b.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:3ba7:83fe:7065:4f0b] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uCX5n-0000000EEw2-3ItC;
-	Wed, 07 May 2025 05:13:16 +0000
+	id 1uCX5r-0000000EEy1-2QDG;
+	Wed, 07 May 2025 05:13:20 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Zorro Lang <zlang@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 08/15] xfs: add a test for writeback after close
-Date: Wed,  7 May 2025 07:12:28 +0200
-Message-ID: <20250507051249.3898395-9-hch@lst.de>
+Subject: [PATCH 09/15] xfs: test zone stream separation for two direct writers
+Date: Wed,  7 May 2025 07:12:29 +0200
+Message-ID: <20250507051249.3898395-10-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
 In-Reply-To: <20250507051249.3898395-1-hch@lst.de>
 References: <20250507051249.3898395-1-hch@lst.de>
@@ -51,72 +51,98 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Test that files written back after closing are packed tightly instead of
-using up open zone resources.
+Check that two parallel direct sequential writers are separated into
+different zones.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/xfs/4206     | 41 +++++++++++++++++++++++++++++++++++++++++
- tests/xfs/4206.out |  1 +
- 2 files changed, 42 insertions(+)
- create mode 100755 tests/xfs/4206
- create mode 100644 tests/xfs/4206.out
+ tests/xfs/4207     | 65 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/4207.out |  3 +++
+ 2 files changed, 68 insertions(+)
+ create mode 100755 tests/xfs/4207
+ create mode 100644 tests/xfs/4207.out
 
-diff --git a/tests/xfs/4206 b/tests/xfs/4206
+diff --git a/tests/xfs/4207 b/tests/xfs/4207
 new file mode 100755
-index 000000000000..f87c2868ebb4
+index 000000000000..e55d04f795ce
 --- /dev/null
-+++ b/tests/xfs/4206
-@@ -0,0 +1,41 @@
++++ b/tests/xfs/4207
+@@ -0,0 +1,65 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2024 Christoph Hellwig.
 +#
-+# FS QA Test No. 4206
++# FS QA Test No. 4207
 +#
-+# Test that data is packed tighly for writeback after the files were
-+# closed.
++# Test that multiple direct I/O write streams are directed to separate zones.
 +#
 +. ./common/preamble
-+_begin_fstest auto quick rw zone
++_begin_fstest quick auto rw zone
 +
 +. ./common/xfs
 +
 +_require_scratch
++_require_odirect
++_require_aio
 +
 +_scratch_mkfs_xfs >>$seqres.full 2>&1
 +_scratch_mount
-+_require_xfs_scratch_zoned
++_require_xfs_scratch_zoned 3
 +
-+# Create a bunch of small files
-+for i in `seq 1 100`; do
-+	file=$SCRATCH_MNT/$i
++fio_config=$tmp.fio
++fio_out=$tmp.fio.out
++fio_err=$tmp.fio.err
 +
-+	$XFS_IO_PROG -f -c 'pwrite 0 8k' $file >>$seqres.full
-+done
++cat >$fio_config <<EOF
++[global]
++bs=64k
++iodepth=16
++iodepth_batch=8
++size=1m
++directory=$SCRATCH_MNT
++ioengine=libaio
++rw=write
++direct=1
 +
-+sync
++[file1]
++filename=file1
++size=128m
 +
-+# Check that all small files are placed together
-+short_rg=`xfs_bmap -v $SCRATCH_MNT/1 | _filter_rgno`
-+for i in `seq 2 100`; do
-+	file=$SCRATCH_MNT/$i
-+	rg=`xfs_bmap -v $file | _filter_rgno`
-+	if [ "${rg}" != "${short_rg}" ]; then
-+		echo "RG mismatch for file $i: $short_rg/$rg"
-+	fi
-+done
++[file2]
++filename=file2
++size=128m
++EOF
++
++_require_fio $fio_config
++
++$FIO_PROG $fio_config --output=$fio_out
++cat $fio_out >> $seqres.full
++
++# Check the files only have a single extent each and are in separate zones
++extents1=$(_count_extents $SCRATCH_MNT/file1)
++extents2=$(_count_extents $SCRATCH_MNT/file2)
++
++echo "number of file 1 extents: $extents1"
++echo "number of file 2 extents: $extents2"
++
++rg1=`xfs_bmap -v $SCRATCH_MNT/file1 | _filter_rgno`
++rg2=`xfs_bmap -v $SCRATCH_MNT/file2 | _filter_rgno`
++if [ "${rg1}" == "${rg2}" ]; then
++	echo "same RG used for both files"
++fi
 +
 +status=0
 +exit
-diff --git a/tests/xfs/4206.out b/tests/xfs/4206.out
+diff --git a/tests/xfs/4207.out b/tests/xfs/4207.out
 new file mode 100644
-index 000000000000..4835b5053ae5
+index 000000000000..5d33658de474
 --- /dev/null
-+++ b/tests/xfs/4206.out
-@@ -0,0 +1 @@
-+QA output created by 4206
++++ b/tests/xfs/4207.out
+@@ -0,0 +1,3 @@
++QA output created by 4207
++number of file 1 extents: 1
++number of file 2 extents: 1
 -- 
 2.47.2
 
