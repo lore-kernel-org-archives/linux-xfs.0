@@ -1,40 +1,59 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98E5F27AC41;
-	Thu,  8 May 2025 15:12:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36FA7278148
+	for <linux-xfs@vger.kernel.org>; Thu,  8 May 2025 15:16:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746717144; cv=none; b=D0ZzdhoeXHCfXC7wuXh9BrLi7GNuoWJdCM8LvedoqweTT3ySEQvJVwB8d6QyGw1d6b7/TDDX5sMxPq8uTEyEpdHNvfADnLTYEHiOPG+UEsQoSxdtpRSOzHFpM5Qpnm5VynyFdX5pbV4OnTYbfrptz4squvfl5rJfnlguSUvdV9E=
+	t=1746717398; cv=none; b=c/INzyz3+dkORaSDLSflDnKtClNOMxpmQRnLAhZeWCDB8HfKZG/kqtPdSzt6X7SeYzoL9cYpaHm016iA2ImZaUQbYwxHzWtAxnC54orlMxiUZjRTrSZ9ZjIeR+YR0EJj+qYJ/I+odjoRJacWqTKHGodpjtuPJyOTQ5ZuGeM/PD8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746717144; c=relaxed/simple;
-	bh=FllKGQAxhHWtuNc5mc2Ei6wdpIA+0MEAIItk+A8ICtI=;
+	s=arc-20240116; t=1746717398; c=relaxed/simple;
+	bh=COTYU3QmgvXi1znOxNjAtYaadlcYtzHCPWn3YxNuv5s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tcpDs0DpB5W/2htpeaFhRxKxp0gcp+KHeVWtwTN1mYFfg089jmD8MHyolpzXZwrK/TfLI7vky0LPNwHBSDPgPijExe2Zv4uwhuDak9Ij9c2U4TsNB3j7BpmYZZZZiN3xk1iSuIRpE6A/YQ/pzeuSgT86bbMlMeBL54LP+EmE8uk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XbRbsS3c; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=onR/1iBLhlfVqYJLQ1ssGG7vUa1bSK+LfKwTGOBWNRmFxRCfiLXVjJzPdQbyTB1qSn7Sr0XVcNctHORXrg6Wy+0UOONxvMEJFmgTemsnkFgvxGKlnPPFhZLovlayHbJuDZueh9XBxO03f10tUO631gUx59P4XzBt+cWd0X+4fTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=enTQdp9Y; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XbRbsS3c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08855C4CEE7;
-	Thu,  8 May 2025 15:12:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746717144;
-	bh=FllKGQAxhHWtuNc5mc2Ei6wdpIA+0MEAIItk+A8ICtI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XbRbsS3cyaTZzAQ/dx9q5EPz8BotakWgnkLYR1rqF2xiV4UH1NAWhzNQH2C1mWlSX
-	 dKQHQMdytL5px1XQ51FAvIo8f+s1HIVIrY3VvyDnhPs+vsp7YYTMAkvs3eqEOFQx7P
-	 dFhvo2f2umAdL/HDV1sRTe7FvyRVqcCQtcattGUFTZyxgEcXk5GBjBd7I2jBSBi+8q
-	 ormZWpgTSWHzKpBCT1Lrlczwzj9sYLsE6I/2eYkZhSS6P6vhD4KONL+I4I8hE86N8x
-	 Z1XrYddgUIx8H2B667f+4Z2dRTBCnBupSvML1bBQ3HBUjTwgoDcJMc0K+19hpJ4BXA
-	 mg+7rgKnHno8w==
-Date: Thu, 8 May 2025 08:12:23 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Zorro Lang <zlang@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/16] common: generalize _filter_agno
-Message-ID: <20250508151223.GP25667@frogsfrogsfrogs>
-References: <20250508053454.13687-1-hch@lst.de>
- <20250508053454.13687-2-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="enTQdp9Y"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1746717395;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WGChOB8826JoKyjg+zbu6gvpQ5DUzoyXn7dEg3ADRfw=;
+	b=enTQdp9YyLogTSiIcnDDc2UeJFb2TC3qrrDhJQzrmb6wbJpeLqzVA342pclbUWRMCMKw1W
+	+3DP1iCTZYpWc6+xwdkAvk3VyR4LAIjHuI0rb/4tqP4p1l7SbuC/vKc4wUcmqM4uyXCIs2
+	STxpKgaZGXFx+CwHYwlJ86xdxeSa8rw=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-256--F4kNdpkNHCJWlx2eV_bHw-1; Thu,
+ 08 May 2025 11:16:31 -0400
+X-MC-Unique: -F4kNdpkNHCJWlx2eV_bHw-1
+X-Mimecast-MFC-AGG-ID: -F4kNdpkNHCJWlx2eV_bHw_1746717389
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 32D091800871;
+	Thu,  8 May 2025 15:16:29 +0000 (UTC)
+Received: from bfoster (unknown [10.22.64.112])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C82CC180049D;
+	Thu,  8 May 2025 15:16:26 +0000 (UTC)
+Date: Thu, 8 May 2025 11:19:37 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>,
+	Christian Brauner <brauner@kernel.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, gfs2@lists.linux.dev
+Subject: Re: [RFC] gfs2: Do not call iomap_zero_range beyond eof
+Message-ID: <aBzLib4tHj351di2@bfoster>
+References: <20250508133427.3799322-1-agruenba@redhat.com>
+ <aBzABse9b6vF_LTv@bfoster>
+ <20250508150446.GB2701446@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,68 +62,100 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250508053454.13687-2-hch@lst.de>
+In-Reply-To: <20250508150446.GB2701446@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On Thu, May 08, 2025 at 07:34:30AM +0200, Christoph Hellwig wrote:
-> Rename and move to common/xfs so that it can be reused for rgnos in new
-> zoned tests.
+On Thu, May 08, 2025 at 08:04:46AM -0700, Darrick J. Wong wrote:
+> On Thu, May 08, 2025 at 10:30:30AM -0400, Brian Foster wrote:
+> > On Thu, May 08, 2025 at 03:34:27PM +0200, Andreas Gruenbacher wrote:
+> > > Since commit eb65540aa9fc ("iomap: warn on zero range of a post-eof
+> > > folio"), iomap_zero_range() warns when asked to zero a folio beyond eof.
+> > > The warning triggers on the following code path:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Which warning?  This one?
+> 
+> 	/* warn about zeroing folios beyond eof that won't write back */
+> 	WARN_ON_ONCE(folio_pos(folio) > iter->inode->i_size);
+> 
+> If so, then why are there folios that start entirely beyond EOF?
+> 
 
-Looks good,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Yeah.. this gfs2 instance is simply a case of their punch hole mechanism
+does unconditional partial folio zeroing via iomap zero range, so if a
+punch hole occurs on some unaligned range of post-eof blocks, it will
+basically create and perform zeroing of post-eof folios. IIUC the caveat
+here is that these blocks are all zeroed on alloc (unwritten extents are
+apparently not a thing in gfs2), so the punch time zeroing and warning
+are spurious. Andreas can correct me if I have any of that wrong.
 
---D
+> > > 
+> > >   gfs2_fallocate(FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE)
+> > >     __gfs2_punch_hole()
+> > >       gfs2_block_zero_range()
+> > >         iomap_zero_range()
+> > > 
+> > > So far, gfs2 is just zeroing out partial pages at the beginning and end
+> > > of the range, whether beyond eof or not.  The data beyond eof is already
+> > > expected to be all zeroes, though.  Truncate the range passed to
+> > > iomap_zero_range().
+> > > 
+> > > As an alternative approach, we could also implicitly truncate the range
+> > > inside iomap_zero_range() instead of issuing a warning.  Any thoughts?
+> > > 
+> > 
+> > Thanks Andreas. The more I think about this the more it seems like
+> > lifting this logic into iomap is a reasonable compromise between just
+> > dropping the warning and forcing individual filesystems to work around
+> > it. The original intent of the warning was to have something to catch
+> > subtle bad behavior since zero range did update i_size for so long.
+> > 
+> > OTOH I think it's reasonable to argue that we shouldn't need to warn in
+> > situations where we could just enforce correct behavior. Also, I believe
+> > we introduced something similar to avoid post-eof weirdness wrt unshare
+> > range [1], so precedent exists.
+> > 
+> > I'm interested if others have opinions on the iomap side.. (though as I
+> > write this it looks like hch sits on the side of not tweaking iomap).
+> 
+> IIRC XFS calls iomap_zero_range during file extending operations to zero
+> the tail of a folio that spans EOF, so you'd have to allow for that too.
+> 
 
-> ---
->  common/filestreams | 11 +----------
->  common/xfs         | 10 ++++++++++
->  2 files changed, 11 insertions(+), 10 deletions(-)
+Yeah, good point. Perhaps we'd want to bail on a folio that starts
+beyond EOF with this approach, similar to the warning logic.
+
+Brian
+
+> --D
 > 
-> diff --git a/common/filestreams b/common/filestreams
-> index bb8459405b3e..ace8f3b74de6 100644
-> --- a/common/filestreams
-> +++ b/common/filestreams
-> @@ -42,19 +42,10 @@ _do_stream()
->  	done
->  }
->  
-> -_filter_agno()
-> -{
-> -        # the ag number is in column 4 of xfs_bmap output
-> -        perl -ne '
-> -                $ag = (split /\s+/)[4] ;
-> -		if ($ag =~ /\d+/) {print "$ag "} ;
-> -        '
-> -}
-> -
->  _get_stream_ags()
->  {
->          local directory_name=$1
-> -        local stream_ags=`xfs_bmap -vp ${directory_name}/* | _filter_agno`
-> +        local stream_ags=`xfs_bmap -vp ${directory_name}/* | _filter_bmap_gno`
->          echo $stream_ags
->  }
->  
-> diff --git a/common/xfs b/common/xfs
-> index 39650bac6c23..061ca586c84f 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -2274,3 +2274,13 @@ _scratch_find_rt_metadir_entry() {
->  
->  	return 1
->  }
-> +
-> +# extract the AG/RTG number from xfs_bmap output
-> +_filter_bmap_gno()
-> +{
-> +	# The AG/RG number is in column 4 of xfs_bmap output
-> +        perl -ne '
-> +                $ag = (split /\s+/)[4] ;
-> +		if ($ag =~ /\d+/) {print "$ag "} ;
-> +        '
-> +}
-> -- 
-> 2.47.2
+> > Brian
+> > 
+> > [1] a311a08a4237 ("iomap: constrain the file range passed to iomap_file_unshare")
+> > 
+> > > Thanks,
+> > > Andreas
+> > > 
+> > > --
+> > > 
+> > > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> > > 
+> > > diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+> > > index b81984def58e..d9a4309cd414 100644
+> > > --- a/fs/gfs2/bmap.c
+> > > +++ b/fs/gfs2/bmap.c
+> > > @@ -1301,6 +1301,10 @@ static int gfs2_block_zero_range(struct inode *inode, loff_t from,
+> > >  				 unsigned int length)
+> > >  {
+> > >  	BUG_ON(current->journal_info);
+> > > +	if (from > inode->i_size)
+> > > +		return 0;
+> > > +	if (from + length > inode->i_size)
+> > > +		length = inode->i_size - from;
+> > >  	return iomap_zero_range(inode, from, length, NULL, &gfs2_iomap_ops,
+> > >  			NULL);
+> > >  }
+> > > 
+> > 
+> > 
 > 
-> 
+
