@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B04678F37
-	for <linux-xfs@vger.kernel.org>; Thu,  8 May 2025 04:17:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 067E778F37;
+	Thu,  8 May 2025 04:19:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746677872; cv=none; b=Z8/1llgUoSX2gChQtWA6dUb4qV+pYiVGFbydj2bQMnEKzsL6wIm1ogL8vXvogpP8o8AH+Xh5RiBsgJf5LxM14JlAgqre+H9fikWQo6P4PoDBVQ52C/MofxXtSe5sG/I6mFdrNzTULIJ3ciYhC6A3h8fqcVCisyD3PaC6nTBUvBY=
+	t=1746677964; cv=none; b=Wmfw76WX0s3s0pq/lJK31urQCb434sUhadM7a1eSN5NwpWsR4kx39kvDHy8pLy9iRVGwZ8sOWF7SwwBG6vjkRLJHOZ7xvZ8OwK5SdX87aiNnY/EQt53zVizB2k4kMogLissgGe7oYfAFtpOcpqn5PUSfQE3KS5sFsav3jnIVF4I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746677872; c=relaxed/simple;
-	bh=SwudvzbXDpQAbKSvq2MNfJNb2SsOppA7fW8agJvMKz4=;
+	s=arc-20240116; t=1746677964; c=relaxed/simple;
+	bh=SHYmoMiH/tDcEeEr3FDheswgZZ4C/dn+2QghPF1XOPg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fdCV1H6nNQqSh6Wq6I989SVAEySOPdLvmdyNh6zqAI2NOlT2lXuD8Dyac94XCFCxwvc0tif3D3/ztadWPxQ+QqsPtp5gTZjnw4nTf+r98Iri/Bbq12BupwlPR6H/7VxyWnNn/ZRSq+2WhF4EujokaztP1MG+quHBSGELJvqGawU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=s5ja2k2y; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=jQfcw9u7edIG5er2oFpxU/zbg7BNPkszfqCxOtnU9aukh48XpdQiIvPmj7mSveBLZnJtgTpGkjMQoZKu0Xxd27iG4J0ysIyoLQM9sBwkVdAQEwKpNrlrar0Oezmti3RPuPqKhh0xOThOVUzEJCGsZMLv/GIjrPGavh1t4V3WZAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=FrD2QJR2; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="s5ja2k2y"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FrD2QJR2"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=u+upG9ormZw0wvxGuxC8ChqAXuTyAReRJx2+rBcr4zQ=; b=s5ja2k2yW7ALO71eIYlGPX9Pp2
-	1XwW+qcUC7QFHyon/wgUvfnMl7k3eNMjyr1lRjBxqg2k0h5LH0ReIgrNUAbJCATjz+5hwIXgk08/j
-	ofvzxB08Q8VLANM234GW5j5+skAuj6xE3ni618FRCqnFoEE8difwkUMsnY+hX4rfcNv0gY/0cA1Nv
-	isco1D3x+asdAmRILMr2tLJAMLnZsGfDshWhAglGsvDSYYExnY+JXtC1DmLP6MxMvKjzj77G1Bewn
-	CQ4k7N9lRfJaeUIvm853nBhA+xpjqyQYZ6l62p08so4jnL+lTO5i4f1LdzsOGRRAaEttY1GGyjusP
-	dN/SACgg==;
+	bh=rWMqtnGLrbtnDgEZgXncbKFThDZXKtwzGSyoV0fIRJY=; b=FrD2QJR2yvaHD8Nco3d8Hepl51
+	3He2tXjrKlo7J105vZErpjmIZAh4mP4yrfypW5EM6IUGpx8KkOtDiXhtYa13CCY+HvOwMESjg4183
+	TFVijH4v1uPveAMgrq84Wxkj+dNEHTq2LgG6/owmxP0v8104IeLopkLksLsqxdFOPri6ly949PFXi
+	vG7LVk2i43lr3C2sgmoCf5M6hVD7eM8d1w6puEbKJ4ywaf68z7LeOacaA8kISOTTZ8BOs+bavkJb6
+	atDOdaBbkkB6nMoxAzZv48z9EDa6KywYi2SP3qKHJXgDDMHRy/oApO+vlMcT+qXFVZ29lAuiA/0nV
+	woPzfEog==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uCshj-0000000HH59-0ZBr;
-	Thu, 08 May 2025 04:17:51 +0000
-Date: Wed, 7 May 2025 21:17:51 -0700
+	id 1uCsjC-0000000HHCN-2fhl;
+	Thu, 08 May 2025 04:19:22 +0000
+Date: Wed, 7 May 2025 21:19:22 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] XFS: Fix comment on xfs_trans_ail_update_bulk()
-Message-ID: <aBwwb7zCngkhpfum@infradead.org>
-References: <20250507095239.477105-1-cem@kernel.org>
- <20250507095239.477105-3-cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] fsstress: fix attr_set naming
+Message-ID: <aBwwykf7xaGXHnVD@infradead.org>
+References: <174665480800.2706436.6161696852401894870.stgit@frogsfrogsfrogs>
+ <174665480825.2706436.15433477670941336936.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,17 +45,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250507095239.477105-3-cem@kernel.org>
+In-Reply-To: <174665480825.2706436.15433477670941336936.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Lot of spurious capitalization in the subject.
+On Wed, May 07, 2025 at 02:54:07PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Back in 2020 I converted attr_set to lsetxattr, but neglected to notice
+> that the attr name now has to have the prefix "user." which attr_set
+> used to append for us.  Unfortunately nobody runs fsstress in verbose
+> mode so I didn't notice until now, and even then only because fuse2fs
+> stupidly accepts any name, even if that corrupts the filesystem.
 
-> + * Items that are already in the AIL are first deleted from their current location
+Looks good
 
-Overly long line.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-> -			/* check if we really need to move the item */
-> +			* check if we really need to move the item */
-
-I think this got messed up when sending, as it won't even compile.
+I wonde if this creates a fallout somewhere else now that we actually
+do xattr ops that don't fail..
 
