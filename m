@@ -1,40 +1,50 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C83EB1990A7;
-	Thu,  8 May 2025 18:43:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE17D28C2BF
+	for <linux-xfs@vger.kernel.org>; Thu,  8 May 2025 20:25:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746729804; cv=none; b=Y2KabdzZDjJdXTPnsx5bedd4fq+ZeAs0LzfsbBPWXhf77HNQ93OGnV2O+TG5gHvr4FWbLRBrFNc+bw0yFuOGX1iG3dnnE7i50ebpWI16QlcCZJ7+WnFy9q9xIN7dJX2GvIMwbpWZKAvVl7LKGsSgq8ehX5qzZvtBKfhKhkR60ek=
+	t=1746735941; cv=none; b=lfgDvh6lhTeBHGz7eFu5gNtUKvf0zecxTMWHED3ZOzyiqxKz1wlttmtUUIE4cYJT0poqLvJ/htqdrDWenNScmWUxHt7S+V9XLMDyDmJotVIzQLSCUstZEDl83kTOSelkZMXNdHcjjYa6VBXLq7RwKrDE5AwJ7O45xKovbAi6r2Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746729804; c=relaxed/simple;
-	bh=XAcbLfu1HyyCISc1dBx9Am/IUGvLqXE4bJphLt1JqAM=;
+	s=arc-20240116; t=1746735941; c=relaxed/simple;
+	bh=GkFms8Q6aKyCL3Gr2QweKHG4yGXfIq2w7/Eg1rsvABA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YV5sv/ga6694rkPksVOOVhwI5ANCmLB70VZNV/8GooBukGKg7GwH8Ik++9tMS/zWkkWSVNapjCQZuXGdjHp8Ibi1PTExHmRHn3OI52wLt1K9bsu8eZteZpYpYoUCOBlcsGUXuWGwIpgmIKsWeZe2qZGzfESKDQkhdeYIMXJqg3c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aLCnoPLF; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aLCnoPLF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E034C4CEE7;
-	Thu,  8 May 2025 18:43:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746729804;
-	bh=XAcbLfu1HyyCISc1dBx9Am/IUGvLqXE4bJphLt1JqAM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aLCnoPLFnDV7ux6pj9DjR+Cd8mZYo9ZNEG7DjTPZSydjuSA+Lu90n4wffxLl5tK4u
-	 ZJ26tYsc/Q1k1c8fdcCsdcJZBMjgC39ykdOhirGW97eKI2uJfFUdUSJLFa/SiVo1rx
-	 yaSm8wGf9DrnsScOscmjTeVhbQlTF0HU+iLFqgYgYsvQjXeGEmsH6MNYU+4CqogFtm
-	 O5OA6YqetqieTOwsqwo758HTtn5sfNrpIsZ2CxMHoFtV1qx3MmxbRJP37MN3a0num9
-	 Kizas/apHeecLYBiS+D70jYQnW8A61DuB7XBSFBcucPgNMRXbeskRCXhksWuZ1WNAn
-	 8OczmthvAdIlw==
-Date: Fri, 9 May 2025 02:43:19 +0800
-From: Zorro Lang <zlang@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Hans Holmberg <hans.holmberg@wdc.com>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: new tests for zoned xfs v3
-Message-ID: <20250508184319.z66ln74lven4cqgh@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20250508053454.13687-1-hch@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=HmliNIgfq80IthJ5gO9NIoUd4J7DBvcVC8dIfbLVHimd/TC7nJIikfEIw7nUGCzqMo7z/Q44PDYE67p3dwYGOQp2Nr/0Q8H7v4GV6F+7hI3o/XrFtXZISEOg65xPJoD0KEYwRf8GQPNe+UfyH0yglzm9FcB8WXokEQn9yIWfVVs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; arc=none smtp.client-ip=18.9.28.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
+Received: from trampoline.thunk.org (pool-173-48-82-148.bstnma.fios.verizon.net [173.48.82.148])
+	(authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 548KOOaX022511
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 8 May 2025 16:24:25 -0400
+Received: by trampoline.thunk.org (Postfix, from userid 15806)
+	id 371DE2E00E1; Thu, 08 May 2025 16:24:24 -0400 (EDT)
+Date: Thu, 8 May 2025 16:24:24 -0400
+From: "Theodore Ts'o" <tytso@mit.edu>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com,
+        shinichiro.kawasaki@wdc.com, brauner@kernel.org, yi.zhang@huawei.com,
+        chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
+Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
+Message-ID: <20250508202424.GA30222@mit.edu>
+References: <20250421021509.2366003-8-yi.zhang@huaweicloud.com>
+ <20250505132208.GA22182@lst.de>
+ <20250505142945.GJ1035866@frogsfrogsfrogs>
+ <c7d8d0c3-7efa-4ee6-b518-f8b09ec87b73@huaweicloud.com>
+ <20250506043907.GA27061@lst.de>
+ <64c8b62a-83ba-45be-a83e-62b6ad8d6f22@huaweicloud.com>
+ <20250506121102.GA21905@lst.de>
+ <a39a6612-89ac-4255-b737-37c7d16b3185@huaweicloud.com>
+ <20250508050147.GA26916@lst.de>
+ <68172a9e-cf68-4962-8229-68e283e894e1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,27 +53,135 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250508053454.13687-1-hch@lst.de>
+In-Reply-To: <68172a9e-cf68-4962-8229-68e283e894e1@huaweicloud.com>
 
-On Thu, May 08, 2025 at 07:34:29AM +0200, Christoph Hellwig wrote:
-> Hi all,
+On Thu, May 08, 2025 at 08:17:14PM +0800, Zhang Yi wrote:
+> On 2025/5/8 13:01, Christoph Hellwig wrote:
+> >>
+> >> My idea is not to strictly limiting the use of FALLOC_FL_WRITE_ZEROES to
+> >> only bdev or files where bdev_unmap_write_zeroes() returns true. In
+> >> other words, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES
+> >> are not consistent, they are two independent features. Even if some
+> >> devices STATX_ATTR_WRITE_ZEROES_UNMAP are not set, users should still be
+> >> allowed to call fallcoate(FALLOC_FL_WRITE_ZEROES). This is because some
+> >> devices and drivers currently cannot reliably ascertain whether they
+> >> support the unmap write zero command; however, certain devices, such as
+> >> specific cloud storage devices, do support it. Users of these devices
+> >> may also wish to use FALLOC_FL_WRITE_ZEROES to expedite the zeroing
+> >> process.
+> > 
+> > What are those "cloud storage devices" where you set it reliably,
+> > i.e.g what drivers?
 > 
-> this series adds the various new tests for zoned xfs, including testing
-> data placement.
+> I don't have these 'cloud storage devices' now, but Ted had mentioned
+> those cloud-emulated block devices such as Google's Persistent Desk or
+> Amazon's Elastic Block Device in. I'm not sure if they can accurately
+> report the BLK_FEAT_WRITE_ZEROES_UNMAP feature, maybe Ted can give more
+> details.
 > 
-> Changes since v2:
->  - generalize the rgroup number filtering helper
->  - add back the wp advance test
+> https://lore.kernel.org/linux-fsdevel/20250106161732.GG1284777@mit.edu/
 
-Thanks, this version is good to me now.
+There's nothing really exotic about what I was referring to in terms
+of "cloud storage devices".  Perhaps a better way of describing them
+is to consider devices such as dm-thin, or a Ceph Block Device, which
+is being exposed as a SCSI or NVME device.
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+The distinction I was trying to make is performance-related.  Suppose
+you call WRITE_ZEROS on a 14TB region.  After the WRITES_ZEROS
+complete, a read anywhere on that 14TB region will return zeros.
+That's easy.  But the question is when you call WRITE_ZEROS, will the
+storage device (a) go away for a day or more before it completes (which
+would be the case if it is a traditional spinning rust platter), or
+(b) will it be basically instaneous, because all dm-thin or a Ceph Block
+Device needs to do is to delete one or more entries in its mapping
+table.
 
-> 
-> Changes since v1:
->  - drop unneeded _cleanup routines
->  - drop _-prefixes for internal functions
->  - remove pointless sourcing of filters
->  - drop the last new test for now as it doesn't handle internal
->    RT device, it will be resent separately
-> 
+The problem is two-fold.  First, there's no way for the kernel to know
+whether a storage device will behave as (a) or (b), because SCSI and
+other storage specifications say that performance is out of scope.
+They only talk about the functional results (afterwards, if yout try
+to read from the region, you will get zeros), and are utterly silent
+about how long it migt take.  The second problem is that if you are an
+application program, there is no way you will be willing to call
+fallocate(WRITE_ZEROS, 14TB) if you don't know whether the disk will
+go away for a day or whether it will be instaneous.
+
+But because there is no way for the kernel to know whether WRITE_ZEROS
+will be fast or not, how would you expect the kernel to expose
+STATX_ATTR_WRITE_ZEROES_UNMAP?  Cristoph's formulation "breaking the
+abstraction" perfectly encapsulate the SCSI specification's position
+on the matter, and I agree it's a valid position.  It's just not
+terribly useful for the application programmer.
+
+Things which some programs/users might want to know or rely upon, but which is normally quite impossible are: 
+
+* Will the write zero / discard operation take a "reasonable" amount
+  of time?  (Yes, not necessarilly well defined, but we know it when
+  we see it, and hours or days is generally not reasonable.)
+
+* Is the operation reliable --- i.e., is the device allowed to
+  randomly decide that it won't actually zero the requested blocks (as
+  is the case of discard) whenever it feels like it.
+
+* Is the operation guaranteed to make the data irretreviable even in
+  face of an attacker with low-level access to the device.  (And this
+  is also not necessarily well defined; does the attacker have access
+  to a scanning electronic microscope, or can do a liquid nitrogen
+  destructive access of the flash device?)
+
+The UFS (Universal Flash Storage) spec comes the closest to providing
+commands that distinguish between these various cases, but for most
+storage specifications, like SCSI, it is absolutely requires peaking
+behind the abstraction barrier defined by the specification, and so
+ultimately, the kernel can't know.
+
+About the best you can do is to require manual configuration; perhaps a
+config file at the database or userspace cluster file system level
+because the system adminsitrator knows --- maybe because the hyperscale
+cloud provider has leaned on the storage vendor to tell them under
+NDA, storage specs be damned or they won't spend $$$ millions with
+that storage vendor ---  or because the database administrator discovers
+that using fallocate(WRITE_ZEROS) causes performance to tank, so they
+manually disable the use of WRITE_ZEROS.
+
+Could this be done in the kernel?  Sure.  We could have a file, say,
+/sys/block/sdXX/queue/write_zeros where the write_zeros file is
+writeable, and so the administrator can force-disable WRITES_ZERO by
+writing 0 into the file.  And could this be queried via a STATX
+attribute?  I suppose, although to be honest, I'm used to doing this
+by looking at the sysfs files.  For example, just recently I coded up
+the following:
+
+static int is_rotational (const char *device_name EXT2FS_ATTR((unused)))
+{
+	int		rotational = -1;
+#ifdef __linux__
+	char		path[1024];
+	struct stat	st;
+	FILE		*f;
+
+	if ((stat(device_name, &st) < 0) || !S_ISBLK(st.st_mode))
+		return -1;
+
+	snprintf(path, sizeof(path), "/sys/dev/block/%d:%d/queue/rotational",
+		major(st.st_rdev), minor(st.st_rdev));
+	f = fopen(path, "r");
+	if (!f) {
+		snprintf(path, sizeof(path),
+			"/sys/dev/block/%d:%d/../queue/rotational",
+			major(st.st_rdev), minor(st.st_rdev));
+		f = fopen(path, "r");
+	}
+	if (f) {
+		if (fscanf(f, "%d", &rotational) != 1)
+			rotational = -1;
+		fclose(f);
+	}
+#endif
+	return rotational;
+}
+
+Easy-peasy!   Who needs statx?   :-)
+
+
+						- Ted
