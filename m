@@ -1,42 +1,36 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CC1F146D6A
-	for <linux-xfs@vger.kernel.org>; Thu,  8 May 2025 04:20:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E041623498F;
+	Thu,  8 May 2025 05:01:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746678014; cv=none; b=jsiKBJdciAxY57hzbrfblJwpTwjgVbHQ1DusctRrlY1I9Slp+BFZIQ9R0ORxu7HRp9zbsQrCtp6xMfe8zEu8uR4IT1SasJW3dhjc+sKEM7YWYzULRYTaWBljUc4/+jY3xyi5mEN9FRPnEVKhwVWsH9x8k1Q4RA0axj5X0PFQLxM=
+	t=1746680516; cv=none; b=s5bCJSvaf8dr9oPPhvA+WuHfEHDJ5WoWefJAErZl/6ldl64Vu35D5VgECEJPy/mq1Wf6pW8uk3lPpC7Xo9boiYYRMe14z6vS7c4AQn9AW0Nuq04t2+Q/4rh6UJqBLUv3wdit0gKB7nWj9bFQ/rtJC1rn+kDa7NTXCOj8S3lbtMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746678014; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1746680516; c=relaxed/simple;
+	bh=AwhhZ2wBTFfk+q7m2bEqg8jP8mcot7mr9qk1rjjHN4s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cbB2ri4R98HerX8FBfqrsf0bSqXkfQO9OA2dwf/JLj0nIbkgy/2kFa0RyPw1Kj+JgV9R9IMi4xTVDKPaoBaqLSJvlqxSUAddxJJwbxnAtsq9crnD7XbLZjRXEewB/fjGeIdJZHzJcmSgleh0JXVGGq/y5R2iqytW9k37kTugcAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3jRtwxZl; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3jRtwxZl"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=3jRtwxZl160OeH6akmqXbFXjXo
-	61O9blmCOtbMESWO1ZBhLcxleUKnYAB6wB3Tf0vy16thTOBCKlwAAIOq5aeKLaylri97+uzrxqJbU
-	yXtTAouCNB2WfVRu4gQkJJG1Nz4iid3dwJz3yZApXRhcyBHOQo5Ejg7uSBnW7RFQqWH3K8EBUcoJ2
-	Ijv+q7YfT+aOCj1GBzCh+2KhW6TI2zqfKzsy/onJN7AjyaZXbCdxyihi/+JvXjKljDa7+RPP0pLmE
-	cVdPNHi+75w6vImmXoOxj+F5TfLWG7PAoDDwl3yq+G1/3hNz2vJoRnHFe2EXBeff84oU7PDqG/Hrg
-	A4Eg/T+g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uCsk1-0000000HHGT-0F60;
-	Thu, 08 May 2025 04:20:13 +0000
-Date: Wed, 7 May 2025 21:20:13 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] man: adjust description of the statx manpage
-Message-ID: <aBww_ZotC4J1pPW9@infradead.org>
-References: <174665514924.2713379.3228083459035002170.stgit@frogsfrogsfrogs>
- <174665514991.2713379.10219378506495036051.stgit@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=YUsJOTlO75FlF4utm5B09QRhU067zUvCUsJuxGHeBAx7xO6k8tbR2QRopwRT/VPaVJLJAwjwwD+eHvEPGJdG+EfrZ/JPJ9amV20oihCmIFSOcqADwwTmPcQ4yiMBeVRihWflV9vWbl5LS3wtADw8tzrA536OO8RfKLi/9Q4Acyw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 7F69868B05; Thu,  8 May 2025 07:01:47 +0200 (CEST)
+Date: Thu, 8 May 2025 07:01:47 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
+	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	tytso@mit.edu, john.g.garry@oracle.com, bmarzins@redhat.com,
+	chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+	brauner@kernel.org, yi.zhang@huawei.com, chengzhihao1@huawei.com,
+	yukuai3@huawei.com, yangerkun@huawei.com
+Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
+Message-ID: <20250508050147.GA26916@lst.de>
+References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com> <20250421021509.2366003-8-yi.zhang@huaweicloud.com> <20250505132208.GA22182@lst.de> <20250505142945.GJ1035866@frogsfrogsfrogs> <c7d8d0c3-7efa-4ee6-b518-f8b09ec87b73@huaweicloud.com> <20250506043907.GA27061@lst.de> <64c8b62a-83ba-45be-a83e-62b6ad8d6f22@huaweicloud.com> <20250506121102.GA21905@lst.de> <a39a6612-89ac-4255-b737-37c7d16b3185@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,10 +39,71 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <174665514991.2713379.10219378506495036051.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <a39a6612-89ac-4255-b737-37c7d16b3185@huaweicloud.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Looks good:
+On Wed, May 07, 2025 at 03:33:23PM +0800, Zhang Yi wrote:
+> On 2025/5/6 20:11, Christoph Hellwig wrote:
+> > On Tue, May 06, 2025 at 07:16:56PM +0800, Zhang Yi wrote:
+> >> Sorry, but I don't understand your suggestion. The
+> >> STATX_ATTR_WRITE_ZEROES_UNMAP attribute only indicate whether the bdev
+> >> and the block device that under the specified file support unmap write
+> >> zeroes commoand. It does not reflect whether the bdev and the
+> >> filesystems support FALLOC_FL_WRITE_ZEROES. The implementation of
+> >> FALLOC_FL_WRITE_ZEROES doesn't fully rely on the unmap write zeroes
+> >> commoand now, users simply refer to this attribute flag to determine
+> >> whether to use FALLOC_FL_WRITE_ZEROES when preallocating a file.
+> >> So, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES doesn't
+> >> have strong relations, why do you suggested to put this into the ext4
+> >> and bdev patches that adding FALLOC_FL_WRITE_ZEROES?
+> > 
+> > So what is the point of STATX_ATTR_WRITE_ZEROES_UNMAP?
+> 
+> My idea is not to strictly limiting the use of FALLOC_FL_WRITE_ZEROES to
+> only bdev or files where bdev_unmap_write_zeroes() returns true. In
+> other words, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES
+> are not consistent, they are two independent features. Even if some
+> devices STATX_ATTR_WRITE_ZEROES_UNMAP are not set, users should still be
+> allowed to call fallcoate(FALLOC_FL_WRITE_ZEROES). This is because some
+> devices and drivers currently cannot reliably ascertain whether they
+> support the unmap write zero command; however, certain devices, such as
+> specific cloud storage devices, do support it. Users of these devices
+> may also wish to use FALLOC_FL_WRITE_ZEROES to expedite the zeroing
+> process.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+What are those "cloud storage devices" where you set it reliably,
+i.e.g what drivers?
+
+> Therefore, I think that the current point of
+> STATX_ATTR_WRITE_ZEROES_UNMAP (possibly STATX_WRITE_ZEROES_UNMAP) should
+> be to just indicate whether a bdev or file supports the unmap write zero
+> command (i.e., whether bdev_unmap_write_zeroes() returns true). If we
+> use standard SCSI and NVMe storage devices, and the
+> STATX_ATTR_WRITE_ZEROES_UNMAP attribute is set, users can be assured
+> that FALLOC_FL_WRITE_ZEROES is fast and can choose to use
+> fallocate(FALLOC_FL_WRITE_ZEROES) immediately.
+
+That's breaking the abstracton again.  An attribute must say something
+about the specific file, not about some underlying semi-related feature.
+
+> Would you prefer to make STATX_ATTR_WRITE_ZEROES_UNMAP and
+> FALLOC_FL_WRITE_ZEROES consistent, which means
+> fallcoate(FALLOC_FL_WRITE_ZEROES) will return -EOPNOTSUPP if the block
+> device doesn't set STATX_ATTR_WRITE_ZEROES_UNMAP ?
+
+Not sure where the block device comes from here, both of these operate
+on a file.
+
+> If so, I'd suggested we need to:
+> 1) Remove STATX_ATTR_WRITE_ZEROES_UNMAP since users can check the
+>    existence by calling fallocate(FALLOC_FL_WRITE_ZEROES) directly, this
+>    statx flag seems useless.
+
+Yes, that was my inital thought.
+
+> 2) Make the BLK_FEAT_WRITE_ZEROES_UNMAP sysfs interface to RW, allowing
+>    users to adjust the block device's support state according to the
+>    real situation.
+
+No, it's a feature and not a flag.
 
