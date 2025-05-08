@@ -1,44 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC70D8472;
-	Thu,  8 May 2025 05:35:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8326B8472;
+	Thu,  8 May 2025 05:35:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746682540; cv=none; b=jyzdNTqF9UiuWVIVUWDPTl9LoPZu1RY2pL4pz1eiLdZgPXPulwVlhMcuWgTxu4shecN0OZcGuT59IGPCZ5TT6yh8gFJRXgsO/0P8AICE3YDS5RGB+ID+FA2lesRE+aJIEN0BwdOqcfdkDYrgDy8Wcu4/ajSkxODlHsUZTnF31Ko=
+	t=1746682543; cv=none; b=e4/bfxGbuZ5y6LzQ6QGVc77Sqpd99wLkypn8F+GDH7dst71mlLy8WPeo91yAufa9pM81tYuNi/A2cgv+aiwgaRLzulD8kTPUbA7o7XPuQ8sF9VQ6xca1N4K8q/4R+5IQq1hgLGjy3aEMcfdnZWg7FY7G7AE7q41vrzXsVAmsHhM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746682540; c=relaxed/simple;
-	bh=8ZPRBhi201bbQd2tQHwSQBbypWZq37P7hLvhJClatRs=;
+	s=arc-20240116; t=1746682543; c=relaxed/simple;
+	bh=63UC66cHUxY302sBFQRGITh9q52LjN84Ur45p5yQD0o=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FazHDnHqy9Ax/MHH9D5ipkZ6trBd8ZnTjYY30t4PAr+ky7t+h/7l4z7Bl4CeR0NoJO/OGEnVueKFQka4mhGCHwtxFHWO012Z2Fa/7F2bn21bKPtwKydQbK65jrcKC2RKDG0u2VogRkYKxtnthEA8G87ChJfSHoKbn5j9ViWHBAk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=N7IN3BTm; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=BiegAwu8rng62t5zR5ey6OF3hE7CtriAtHsEBeDwoPs2vkQOoxYdoAX5y4T1Seh9Rgl2TwpHG1GZXntqjWX5iR7sHhSqG2kg6kPMZp5btktNdBqZzwZvaIx7hzI1KewVd94yunatEjDfV4ecXmhLB5GoQF03vPgipRoAkbsE1mk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pJsQ6VDr; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="N7IN3BTm"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pJsQ6VDr"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=t084nobxxp7mmp81G2G5vHNUkRJ9LmrJCusMYoT2O2Y=; b=N7IN3BTmSdPGUtjnPoSqmNRTJr
-	7cOJCxntNkn+biHmqPJR5Y5EflD+wWT4ToQYEoJcx0SOL0Gy8PjCDQsRo3F3f3tjKY7k56viDeWCG
-	MILrX/osb8aDbxkiHvGDPEMY543o1eKduXc5dGK7JptqkIThqNQvE634BZITRl6ILQ6YiM2Ahwg/z
-	hK9meM1txUkDA10FLG3xy5z+l+ZJ9Ra6a6y7ZVW4y4EyBei9ET0JY58WGw5Qn8DhOGpcJ7Akh9g25
-	Ain0Re5BoJD9ULnEcbxHns8K176BsWXGCEkZBK3ezbKnj3ByNA/S2B/VP1qlJ7fNAT0RwJG3ZB/BY
-	AUew9Enw==;
+	bh=PDs25tgaPtLkj5DKp3OR+AtBvxLt6k+bO1VlrFLqsA4=; b=pJsQ6VDrkhB991C7jGsC2RQ6M8
+	uWKVz05TDGqIGTaCkE1brlIPeApqlH/RpCQxsQXpxCditDgufw78qdQ+ELYHKLihRSNUhnwA1DRe2
+	FFiM73f6fMpylZrssaQizMMbRkhdITlm5tvytnF1A1vXXH+BteLgxDEXarFm7ShRMQtStdDaI2qxx
+	+QytJYz3/Io9Q9NDm3L/NVEjex3CwAfwS0aTWeM6bP+rHH7jCFDDMVLsp/osW5paWVxxLRK4X38sV
+	OOKlO3/hbiTL12CBflWsERbbjIUFhfUhsoeMeecjHf/3cj+wVLm9sQb+KBEl++W3w9ckGLf7nShFH
+	231ozKFA==;
 Received: from 2a02-8389-2341-5b80-2368-be33-a304-131f.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:2368:be33:a304:131f] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uCtuz-0000000HNm4-41X2;
-	Thu, 08 May 2025 05:35:38 +0000
+	id 1uCtv3-0000000HNmc-2j5M;
+	Thu, 08 May 2025 05:35:42 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Zorro Lang <zlang@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 12/16] xfs: test zoned GC file defragmentation for sequential writers
-Date: Thu,  8 May 2025 07:34:41 +0200
-Message-ID: <20250508053454.13687-13-hch@lst.de>
+Subject: [PATCH 13/16] xfs: test zoned GC file defragmentation for random writers
+Date: Thu,  8 May 2025 07:34:42 +0200
+Message-ID: <20250508053454.13687-14-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
 In-Reply-To: <20250508053454.13687-1-hch@lst.de>
 References: <20250508053454.13687-1-hch@lst.de>
@@ -57,25 +57,25 @@ zone.
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/xfs/4210     | 119 +++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/4210.out |   5 ++
- 2 files changed, 124 insertions(+)
- create mode 100755 tests/xfs/4210
- create mode 100644 tests/xfs/4210.out
+ tests/xfs/4211     | 124 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/4211.out |   5 ++
+ 2 files changed, 129 insertions(+)
+ create mode 100755 tests/xfs/4211
+ create mode 100644 tests/xfs/4211.out
 
-diff --git a/tests/xfs/4210 b/tests/xfs/4210
+diff --git a/tests/xfs/4211 b/tests/xfs/4211
 new file mode 100755
-index 000000000000..3311f5365c9f
+index 000000000000..2b88e3bc3730
 --- /dev/null
-+++ b/tests/xfs/4210
-@@ -0,0 +1,119 @@
++++ b/tests/xfs/4211
+@@ -0,0 +1,124 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2024 Christoph Hellwig.
 +#
-+# FS QA Test No. 4210
++# FS QA Test No. 4211
 +#
-+# Test that GC defragments sequentially written files.
++# Test that GC defragments randomly written files.
 +#
 +. ./common/preamble
 +_begin_fstest auto rw zone
@@ -105,7 +105,7 @@ index 000000000000..3311f5365c9f
 +iodepth_batch=8
 +directory=$SCRATCH_MNT
 +ioengine=libaio
-+rw=write
++rw=randwrite
 +direct=1
 +size=30m
 +
@@ -168,8 +168,13 @@ index 000000000000..3311f5365c9f
 +rm $SCRATCH_MNT/file5
 +rm $SCRATCH_MNT/file7
 +
-+# fill up all remaining user capacity a few times to force GC
-+for i in `seq 1 10`; do
++#
++# Fill up all remaining user capacity a few times to force GC.
++#
++# This needs to be a very large number of larger zones sizes that have a lot
++# of OP for the small file system size
++#
++for i in `seq 1 200`; do
 +	dd if=/dev/zero of=$SCRATCH_MNT/fill bs=4k >> $seqres.full 2>&1
 +	$XFS_IO_PROG -c "fsync" $SCRATCH_MNT/fill >> $seqres.full 2>&1
 +done
@@ -188,13 +193,13 @@ index 000000000000..3311f5365c9f
 +
 +status=0
 +exit
-diff --git a/tests/xfs/4210.out b/tests/xfs/4210.out
+diff --git a/tests/xfs/4211.out b/tests/xfs/4211.out
 new file mode 100644
-index 000000000000..488dd9db790b
+index 000000000000..348e59950a47
 --- /dev/null
-+++ b/tests/xfs/4210.out
++++ b/tests/xfs/4211.out
 @@ -0,0 +1,5 @@
-+QA output created by 4210
++QA output created by 4211
 +file 2 extents is in range
 +file 4 extents is in range
 +file 6 extents is in range
