@@ -1,44 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 536758472;
-	Thu,  8 May 2025 05:35:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DACE68472;
+	Thu,  8 May 2025 05:35:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746682506; cv=none; b=aGDD/JEa2YufuXTo5/hX3eODpTfwJhbmVYcHRctTNnjjlg5pdFuPtGLWPkp9NlTY22EdIFjbDrvHoKcgrbpyTDAYyxYdcPFnueCC6vkrvRSt7pHJwHWF4mRWcuCEqzhhyTx1wUoOLUWbYyHuBoiQDy7rzygwz3DbL+2n84iZN/o=
+	t=1746682509; cv=none; b=PBZzGrUzD+NARTG+03PE5HGHUFHIxjX8lo55c9FcopAt4pliVRaLRIuOzp5xJDVB3n5851UPOunFPQTPbRQt5h/W8T8KPmxwfzwTAKzyXmXlnxXpQE0MyYRxdCsC70Bq0WEp9zZoU/+ICV8g0mVYScOXF0Ju27nZwMt3kGFC1ls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746682506; c=relaxed/simple;
-	bh=fo3nU/jP/KpNaZxsPTvs3eB8sLv1pSldGzfhcSw+UX8=;
+	s=arc-20240116; t=1746682509; c=relaxed/simple;
+	bh=99PmOYdiSTcfIncBSjwOpTtDlPntmLV0bF4C+DJ3cYA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ATeFTRaAdcxdodompN5NiwNGBTy8y9v8Ar5HNAm0hGDrO2xYwGLeGhoI7e6xkQjEglp0fdBcJzt6py++b0yUTBlKtSozTE24O5h4Kqk3jV553M8QKRn18woxK0H+SePciJ1vdqmjpb+V2FUheZD6g2pzVp1a1tUgD8tmQk7vDf0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0UVCrRqv; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=pPVRX8hhn32ZsW3CDzE9l0Fda3YtSzLQcJ7EpU5h1UjiuBWOvOchAy0qbk5uBDJzJqjiWR+OIYWBEIwSiJOKsiAlY/izTrawGl4SB677ZfBzOg6e2cTy1w/r6TmspT3p3CVNoreb0EwhpKpIk8Zvh6REyZom7gLB6N5+IjbjKms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=cVk4Vnfe; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0UVCrRqv"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cVk4Vnfe"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=mk700NqpWuMpf5M5Lr58M7i9jBqPSyJMYQek33Xu7S0=; b=0UVCrRqvZLg9MD4rzLKQVr3n18
-	Kk9plRhVv+oErnWx0Q9E06rHEBFPrDlaoM0xiM91JTo67QuzqbL79T8ecl9bApOLI/E//ZeT6Zomo
-	bnsU1NaxxYbgVnQE+Q7ZqB0yMRrK57r0vqM8cj7zcigfjG+BeLb3B/mWkzuc2yb/aFUem0aO0Psvn
-	5IZKBiOZXLvleHyEV6GX2kHtpy0YGO5MM0Pku4cM1kgALsRNWvOvahY8jrsoj+ecbjEPpWIsgvgAc
-	Kpo8Xai6jFW15BqcmcjVUxScQOwEzVDUR78/85GcXcHQs24hoIZw3DkkbyXuVbzoLYlhutZIyv2oN
-	WDlhm4eQ==;
+	bh=HrepzscOdERHt7eiXYrHhA+ECdTKjIWPGE6bx44lsnc=; b=cVk4Vnfel8u29o6xYcieFstH3t
+	7L1RIYx/gZ/DqQA7LzTRD1hCjtpDHgKDFZuQGbrybx/5IX5SENlfgCFrb/qI+/5H+o+6k+5TvREJg
+	fgc47Ed5jtGWz/V6YymLwde0v8ZKYdRwlo1Kg39BfrJCCD2u8Zm4gL4r+wSFg7MSrWjj5ff8pQVj5
+	qASjBdKwSXbM9DFqryIIe9ZGww083T7jPxxjvYHskrtPw//4m2/gFFK76sP/C30OBDnBA9fk5naGR
+	GztgACIBW9vNy7sdXI1iJb/N+pMhU2G66G58FzTF41LD75F+Jyd4a6TYZq4JSqhoufD+1VeF6xM0X
+	+nRWXACg==;
 Received: from 2a02-8389-2341-5b80-2368-be33-a304-131f.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:2368:be33:a304:131f] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uCtuS-0000000HNcx-196F;
-	Thu, 08 May 2025 05:35:04 +0000
+	id 1uCtuV-0000000HNeB-16jL;
+	Thu, 08 May 2025 05:35:07 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Zorro Lang <zlang@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	Hans Holmberg <hans.holmberg@wdc.com>,
 	fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 02/16] add a new rw_hint helper
-Date: Thu,  8 May 2025 07:34:31 +0200
-Message-ID: <20250508053454.13687-3-hch@lst.de>
+Subject: [PATCH 03/16] xfs: add a test for zoned block accounting after remount
+Date: Thu,  8 May 2025 07:34:32 +0200
+Message-ID: <20250508053454.13687-4-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
 In-Reply-To: <20250508053454.13687-1-hch@lst.de>
 References: <20250508053454.13687-1-hch@lst.de>
@@ -51,97 +51,76 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a tool to set the life time hint via fcntl.
+Test for a problem with an earlier version of the zoned XFS mount code
+where freeded blocks in an open zone weren't properly accounted for.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- .gitignore    |  1 +
- src/Makefile  |  3 ++-
- src/rw_hint.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 51 insertions(+), 1 deletion(-)
- create mode 100644 src/rw_hint.c
+ tests/xfs/4201     | 40 ++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/4201.out |  6 ++++++
+ 2 files changed, 46 insertions(+)
+ create mode 100755 tests/xfs/4201
+ create mode 100644 tests/xfs/4201.out
 
-diff --git a/.gitignore b/.gitignore
-index 4fd817243dca..f22cff8fb6c4 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -203,6 +203,7 @@ tags
- /src/aio-dio-regress/aio-last-ref-held-by-io
- /src/aio-dio-regress/aiocp
- /src/aio-dio-regress/aiodio_sparse2
-+/src/rw_hint
- /src/vfs/vfstest
- /src/vfs/mount-idmapped
- /src/log-writes/replay-log
-diff --git a/src/Makefile b/src/Makefile
-index 6ac72b366257..2cc1fb40d9f1 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -35,7 +35,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	attr_replace_test swapon mkswap t_attr_corruption t_open_tmpfiles \
- 	fscrypt-crypt-util bulkstat_null_ocount splice-test chprojid_fail \
- 	detached_mounts_propagation ext4_resize t_readdir_3 splice2pipe \
--	uuid_ioctl t_snapshot_deleted_subvolume fiemap-fault min_dio_alignment
-+	uuid_ioctl t_snapshot_deleted_subvolume fiemap-fault min_dio_alignment \
-+	rw_hint
- 
- EXTRA_EXECS = dmerror fill2attr fill2fs fill2fs_check scaleread.sh \
- 	      btrfs_crc32c_forged_name.py popdir.pl popattr.py \
-diff --git a/src/rw_hint.c b/src/rw_hint.c
-new file mode 100644
-index 000000000000..d4290e4ae369
+diff --git a/tests/xfs/4201 b/tests/xfs/4201
+new file mode 100755
+index 000000000000..5fc27c4d3593
 --- /dev/null
-+++ b/src/rw_hint.c
-@@ -0,0 +1,48 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2024 Christoph Hellwig
-+ */
-+#include <stdint.h>
-+#include <stdio.h>
-+#include <string.h>
-+#include <fcntl.h>
++++ b/tests/xfs/4201
+@@ -0,0 +1,40 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2024 Christoph Hellwig.
++#
++# FS QA Test No. 4201
++#
++# Regression test for mount time accounting of an open zone with freed blocks.
++#
 +
-+int main(int argc, char **argv)
-+{
-+	uint64_t hint = -1;
-+	int fd;
++. ./common/preamble
++_begin_fstest auto quick zone
 +
-+	if (argc < 3) {
-+		fprintf(stderr,
-+"usage: %s file not_set|none|short|medium|long|extreme\n",
-+			argv[0]);
-+		return 1;
-+	}
++_require_scratch
++_require_odirect
 +
-+	if (!strcmp(argv[2], "not_set"))
-+		hint = RWH_WRITE_LIFE_NOT_SET;
-+	else if (!strcmp(argv[2], "none"))
-+		hint = RWH_WRITE_LIFE_NONE;
-+	else if (!strcmp(argv[2], "short"))
-+		hint = RWH_WRITE_LIFE_SHORT;
-+	else if (!strcmp(argv[2], "medium"))
-+		hint = RWH_WRITE_LIFE_MEDIUM;
-+	else if (!strcmp(argv[2], "long"))
-+		hint = RWH_WRITE_LIFE_LONG;
-+	else if (!strcmp(argv[2], "extreme"))
-+		hint = RWH_WRITE_LIFE_EXTREME;
++#
++# Create a 256MB file system.  This is picked as the lowest common zone size
++# to ensure both files are placed into the same zone.
++#
++_scratch_mkfs_sized $((256 * 1024 * 1024)) >> $seqres.full 2>&1
++_scratch_mount
 +
-+	if (hint == -1) {
-+		fprintf(stderr, "invalid hint %s\n", argv[2]);
-+		return 1;
-+	}
++dd if=/dev/zero of=$SCRATCH_MNT/test1 oflag=direct conv=fsync bs=1M count=32
++dd if=/dev/zero of=$SCRATCH_MNT/test2 oflag=direct conv=fsync bs=1M count=32
++rm $SCRATCH_MNT/test1
 +
-+	fd = open(argv[1], O_WRONLY);
-+	if (fd < 0) {
-+		perror("open");
-+		return 1;
-+	}
-+	if (fcntl(fd, F_SET_RW_HINT, &hint))
-+		perror("fcntl");
-+	return 0;
-+}
++# let delayed inode deactivate do its work
++sleep 1
++df -h $SCRATCH_MNT > $tmp.df.old
++
++_scratch_cycle_mount
++
++echo "Check that df output matches after remount"
++df -h $SCRATCH_MNT > $tmp.df.new
++diff -u $tmp.df.old $tmp.df.new
++
++_scratch_unmount
++
++status=0
++exit
+diff --git a/tests/xfs/4201.out b/tests/xfs/4201.out
+new file mode 100644
+index 000000000000..4cff86d90b0f
+--- /dev/null
++++ b/tests/xfs/4201.out
+@@ -0,0 +1,6 @@
++QA output created by 4201
++32+0 records in
++32+0 records out
++32+0 records in
++32+0 records out
++Check that df output matches after remount
 -- 
 2.47.2
 
