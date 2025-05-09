@@ -1,44 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DDBD38FA3;
-	Fri,  9 May 2025 10:36:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0062C7E1
+	for <linux-xfs@vger.kernel.org>; Fri,  9 May 2025 11:43:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746786968; cv=none; b=c8nqb+D184/SN4PngV5MzFOx08KxIA1peb1u76MlvqghGL0ClOy8XwNKsvc9JFENhZdiCG5bSIf5aNaEunu2ZXDuWIQkB56Wob4NO9MconnyFfAk/B7h2scqO/BJ9Go6QofNGeF2rMgvSU3yUwAbJSSPe1IQrZMZ81j65zJcGbs=
+	t=1746791001; cv=none; b=j3G+vy/DpYvA0A3Xs7YY/l6nCrzLMrBKa5KcsWdPFkK6VI6lN7m2h8AMV+yqGLXSDMDTtJXtlSJEYlKkWWTwnMbULP/jKbvU8ROCpJhxfwQZ7pGW5NudPaux3aN2w9omYhD60qLoankjBusfOJmSaTd8Ni0ZkvDHin3SjUB9vF4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746786968; c=relaxed/simple;
-	bh=h25QaFlqIvdV1bFDozcN4LLuoR0lMJEzDQJPGHFD2XE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ajweyz+8QecrHRbrGudeZKFLw2F6h+yzWgVzHLrCvuqomjmOvcL5dPwcOH+Lgdf2imthH4ul+VNYBPw8y7kOjM3OmBcexjlaAuSLU3KH60ZAR9tdaPHJva/d/kjZ7Qa178xB2ZBZzrOUrtI+rOK63gOimJLtQ3bdAJgAMe/pDug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HAusieUo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1746791001; c=relaxed/simple;
+	bh=zzORZuEM5zFYqjd6nnmqGwFuyPC0dgY3nXb89mWPtAM=;
+	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=POFv2GVJE5VLlnYSCc9DXvNHNiXmK5VcmRHIzQSor9oRIkOC5fcN10u386Pt+hoG9qrK5tl7us+/ajRA9W2Gf6pWGT3BOmOHiBhlWBfVNy2jS9XeA+c2VOvqMnMxc7EVS8PrmEaD023rfC5aGKYNjMp6Q7M8tnYW9aCtpMo59jg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J2iKrUd4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HAusieUo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60077C4CEE4;
-	Fri,  9 May 2025 10:36:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J2iKrUd4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DC36C4CEE4;
+	Fri,  9 May 2025 11:43:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746786968;
-	bh=h25QaFlqIvdV1bFDozcN4LLuoR0lMJEzDQJPGHFD2XE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=HAusieUorm2Xj2kGRX86kusgMSo8DlZsu4pc8a30fW8O/zvgwCc+9BWBfJPs0UVhH
-	 kI08vuYypenLPaCsqK6vX8V+RbfNGwGflULCUPJedFcGIdlQPDhPxLHCq+lieAIEN0
-	 euOSYq929MDK5RjPDI/o3t3w0lDOD4fzG64RTInOU14LUvfGeb3FAZ6x92iXp0jLWg
-	 QKC1Nbtg5RpThW0I8VNarQdJBVN5XXeiRUBucwmM6nFgGtgqJSN96jd2Spw9HYr5Oo
-	 TznaMl4tnGBtmk3zQKeEBqoW5hHTSIGzYt6pXo+ROJJFgzlGza3Xi/Ssd9STy+7gXg
-	 VYkrIVafYjP0g==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org,
-	Brian Foster <bfoster@redhat.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	djwong@kernel.org,
-	hch@infradead.org
-Subject: Re: [PATCH v2 0/6] iomap: misc buffered write path cleanups and prep
-Date: Fri,  9 May 2025 12:36:02 +0200
-Message-ID: <20250509-goldkette-unachtsam-13b1dd364f53@brauner>
-X-Mailer: git-send-email 2.47.2
-In-Reply-To: <20250506134118.911396-1-bfoster@redhat.com>
-References: <20250506134118.911396-1-bfoster@redhat.com>
+	s=k20201202; t=1746791000;
+	bh=zzORZuEM5zFYqjd6nnmqGwFuyPC0dgY3nXb89mWPtAM=;
+	h=From:To:In-Reply-To:References:Subject:Date:From;
+	b=J2iKrUd4bTZe1p+557+g8BQ8nHCE3/8cnT3WmPOpibOmW8ANv++8v3kp/D05kf8Fq
+	 ZcsfMJn7xjsRsT7SIuEFZfZ006bOiTCXOCIO9k5hh87xBGjNJkrF10zrDtkqAYQi3R
+	 ku0syN7lSh1yIzdNhOTb8/O9w8x9RcPdIat0elGIeH7ew4wGYUYEqO/dSM3yEcoUAM
+	 C+/dNXDD0kiezv+d7BwHDN+lPJ7kFNtsJHOe6vssB9uYwqUM4VPsAdrxg9f+TxC76b
+	 czjrB8IVa2CrS3K31NEaFBvV0pzu+l3ZL4l9DNFyRiEGO5jtZPoVhjAsksRt0VRQdH
+	 ZyKG+/sDZffFA==
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+In-Reply-To: <20250430232724.475092-1-david@fromorbit.com>
+References: <20250430232724.475092-1-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: don't assume perags are initialised when trimming
+ AGs
+Message-Id: <174679099987.556944.7308027774684699629.b4-ty@kernel.org>
+Date: Fri, 09 May 2025 13:43:19 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,44 +41,25 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1839; i=brauner@kernel.org; h=from:subject:message-id; bh=h25QaFlqIvdV1bFDozcN4LLuoR0lMJEzDQJPGHFD2XE=; b=kA0DAAoWkcYbwGV43KIByyZiAGgd2pOhrson6EdmBmgEGI6pH3JIr4jHKeSLKtgb7b+7L3c9d Yh1BAAWCgAdFiEEQIc0Vx6nDHizMmkokcYbwGV43KIFAmgd2pMACgkQkcYbwGV43KJSSAD/baAk Q8mtGpBY/txkonilYjiAGJBgC9m3/w3XwHm0WmwBAI5feTCTQRRXrn0AKT2IW5NqK6EmmzJ2uK8 svUcRcG8I
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-On Tue, 06 May 2025 09:41:12 -0400, Brian Foster wrote:
-> Here's a bit more fallout and prep. work associated with the folio batch
-> prototype posted a while back [1]. Work on that is still pending so it
-> isn't included here, but based on the iter advance cleanups most of
-> these seemed worthwhile as standalone cleanups. Mainly this just cleans
-> up some of the helpers and pushes some pos/len trimming further down in
-> the write begin path.
+On Thu, 01 May 2025 09:27:24 +1000, Dave Chinner wrote:
+> When running fstrim immediately after mounting a V4 filesystem,
+> the fstrim fails to trim all the free space in the filesystem. It
+> only trims the first extent in the by-size free space tree in each
+> AG and then returns. If a second fstrim is then run, it runs
+> correctly and the entire free space in the filesystem is iterated
+> and discarded correctly.
 > 
 > [...]
 
-Applied to the vfs-6.16.iomap branch of the vfs/vfs.git tree.
-Patches in the vfs-6.16.iomap branch should appear in linux-next soon.
+Applied to for-next, thanks!
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+[1/1] xfs: don't assume perags are initialised when trimming AGs
+      commit: 23be716b1c4f3f3a6c00ee38d51a57ef7db9ef7d
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-6.16.iomap
-
-[1/6] iomap: resample iter->pos after iomap_write_begin() calls
-      https://git.kernel.org/vfs/vfs/c/e356c5d5b10e
-[2/6] iomap: drop unnecessary pos param from iomap_write_[begin|end]
-      https://git.kernel.org/vfs/vfs/c/99fe6e61fd3c
-[3/6] iomap: drop pos param from __iomap_[get|put]_folio()
-      https://git.kernel.org/vfs/vfs/c/3ceb65b17676
-[4/6] iomap: helper to trim pos/bytes to within folio
-      https://git.kernel.org/vfs/vfs/c/c4f9a1ba747d
-[5/6] iomap: push non-large folio check into get folio path
-      https://git.kernel.org/vfs/vfs/c/c0f8658a9dbc
-[6/6] iomap: rework iomap_write_begin() to return folio offset and length
-      https://git.kernel.org/vfs/vfs/c/66c0d8551428
