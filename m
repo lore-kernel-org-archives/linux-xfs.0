@@ -1,113 +1,219 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA4F2275851
-	for <linux-xfs@vger.kernel.org>; Mon, 12 May 2025 11:43:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7F4C19E97C;
+	Mon, 12 May 2025 12:02:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747050194; cv=none; b=XfIQS+y3iocstImcq5SJJjuEW7Ou45wG/Lx8wyXkMORSCYGnPuC3I7HcWwG0INBjBTAPoXh4SRM3757uqkB1im/hTaR+2eZBPksAHyzjhsQy3tHTtihdcLVnWNACB2SaRQ3gY0L/GkA+en1k4nayvesNmdrzzdFc2zuXJ56DwZU=
+	t=1747051349; cv=none; b=jW2xSrfppsUfnrQVmO0Q5/LQekWtDzowwQeZGIggmwBs0sdIuIxA1L7cU1lhLvMWYxfCbBElZh6iXssYOlfjd3q1FqSpBLDLGDxTE1RQcbif7TefwctrUgf8k5WnTyKCxujxk+st8wazvM2j7f2s21JBQKSFkslpO0aRgNLm2sU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747050194; c=relaxed/simple;
-	bh=jVMRzvT9+eYbMrAQLirGYxWcGdmL9S4Tzs+nVdn6jRI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=paCCWlQIJKGHJnXe2VXFr9zEHpiWoO70EXpdPLexmWT+g+zfcG2a5WnMCi5JvXfRdSMGH3Tm3hVzdVin9OdwPS2CRHndPXfzaO6EgsGZ6q8vvNE6fSbGxeY7SHQVpXpPyBAghZboBwavEvGpmp+VypKLRPvhHtYhrTRv7mU3mh4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sSEx64QI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747051349; c=relaxed/simple;
+	bh=43zbKpDLFw/DqCwaWDislDy+LtxUe9FRg4bNeZvDE/Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HcTPY5sXCFb1UVOSvXee4dNhXcT04tURIGz862cD+x3q9r2bzAWnOLi1RRARsQhqpWSk28IKBfUpuQLszYZlpSNQ6jU5/Cr3svR6oCT1+TWvtTid8n010UJBoSy/M5uT1/l42CtUmrEHvE8g12kd8grU/Sj8kQp+LaXgZBfIIeE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gZSiAk8P; arc=none smtp.client-ip=209.85.160.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sSEx64QI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1452C4CEED;
-	Mon, 12 May 2025 11:43:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747050194;
-	bh=jVMRzvT9+eYbMrAQLirGYxWcGdmL9S4Tzs+nVdn6jRI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=sSEx64QIyfE5RqaP7DGt6Rj+VTAHHWpbEctlJ1rPRj6sStOh2xWspTEHGvAvrtMpd
-	 vk/T4kx/IBSQQ4jMvkoTITIxhoLvc+kJanfsp/M1C3op/NQ8VGIK6AsqC84OXYn6ml
-	 /Kd6AiZyHMka2itMbdVRgW/DQbsGKHAXuqbUMBwaiLaF12WPCWZKBS8jbzb8tTRlKN
-	 LEA6/iJ39UA6A0vlbbaQira6tUDkkf1r9wgIDNGVPWAUkN5MwGHoEQFOUsbOy96OuV
-	 iw3HCMExFkQBBmO3SZYXSxdawCSk4Wfed9KFR1iOy3ceZH7zgjWEho0ojsEm3mhiFV
-	 OzdkRdGn68liQ==
-From: cem@kernel.org
-To: linux-xfs@vger.kernel.org
-Cc: hch@lst.de,
-	djwong@kernel.org,
-	david@fromorbit.com
-Subject: [PATCH V2 2/2] xfs: Fix comment on xfs_trans_ail_update_bulk()
-Date: Mon, 12 May 2025 13:42:56 +0200
-Message-ID: <20250512114304.658473-3-cem@kernel.org>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250512114304.658473-1-cem@kernel.org>
-References: <20250512114304.658473-1-cem@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gZSiAk8P"
+Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-477296dce8dso49572261cf.3;
+        Mon, 12 May 2025 05:02:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1747051346; x=1747656146; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=lu00x3P4/7hmsriXwMYGYk47s3btJeQpSRTbeqZCmsY=;
+        b=gZSiAk8PqzEHVqRZQuqGp7bmLBem09zL5x9PZPNl3yXEmh4Cx3qu6HjzIKL6GXl4hu
+         YgaN1KJVORPA56f3LLWK8ujGJcj7H8a7JBEjmiXT1VNl7Nkldwu/XjNBBJ/pDp/LOD02
+         gi6CjEUuMbDohuD2excHxyLVtRRzSVd9r9hd7Lw9QgvcJzcyU29D28MYHeR8hcL/ZrYb
+         ZVfeVuJGgBFoCin1VKycrUC1HBM9aZCUiX/IJ0jtkdY2YtyNMsNyPpfV5fuQH5kVfARy
+         WZA7HlTeE2Asve8/VT4Njbi1RtKL9HL0RAt+U6RuHsfGKVUL12uJ+sbiDOt5HWUidat6
+         KB7g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1747051346; x=1747656146;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=lu00x3P4/7hmsriXwMYGYk47s3btJeQpSRTbeqZCmsY=;
+        b=xTVm/2gUVbgwZ7+2TGqDX0Bwl9z7Mac9hxi5AXfaICVcVxdwLK+v/FCHgyKwl4OYkd
+         r2vm2kHt1mR839/iON9LGX635GleAeZl0hhmYmxMWkRROKt7KkugxNyeDARFgrT1Y/ba
+         oD4F4+LIQXMaoeoHqc32z4OHdm+movvpdoFY++3jK0WLMnNplMbuQynCW+O+hKfKTQoP
+         WuGA5Xl2kAqhDq16+w9foFlkAJPdIkj0vmGr6EWlx8qAROW8amhprO4tykLtItgoPZnf
+         9mgN1g1BX0Vic3qB456TM+I07ik9kNd5EuFjh6or5zEn/M9JRqOyXoLGNV2QMFyxKEN+
+         Uh2w==
+X-Forwarded-Encrypted: i=1; AJvYcCUtca+idz2Od8Ctwvcv2Fp/7UkATWkp2r8LCfoyo42H5cJU3DZ+xVx22BRR6vvKrKIOPhqyOYAaceWkbg==@vger.kernel.org, AJvYcCW1Y7yLdA6yU5fjflY0WVd/9QnmSBeZ4kvkVUr3WrbiW5/XbVi4mlT3fhiyDcwaX51XHYh3O5sO@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx5dzyPXxaYnTi3nlmgoufveVzxH0MPRxP8iZkoAMHnH9GPeGFy
+	aAfOwuC63X7otmCjaqZnycwYIvBOeubr5rAq83hc48o0PXLLnTkSbeLKAA==
+X-Gm-Gg: ASbGnctIH9w4rEtv1Shb1PY61lITt0hIx+zLCZBxcIIo2EqY5/X1uSyAL3I1GE85OQh
+	2dV2QzYOs1nY35ejaPedheRa3/WnpqJUyTGLOPuzjOEkh8eXHwwZxEUb1YKRRHtiPWksArvA3RC
+	0671eDcdKharh1BpJIkJEKMhOTlJoPrAjNS3ZUKVwXEr9gvJxBw/YBJC7r1rY3U+mYOtuWUUJ1M
+	bD4RAnK0Cd04eaAQINgie3DxatGQQ4Li/YUWGWkARiiJjeBaKfonkWQUNgJX/oO7bWKD8Y5SI9E
+	tZNAI6JChCURzoKij126krarzn25r4rfN+jiwKkjTzT9+xZiq8FYAmTOPb/XcA==
+X-Google-Smtp-Source: AGHT+IEEvRA1xCBXvqSjZTNo64T8mXDVrJh2N0X8WBDVQeSOMRiomZY0g9UlEQO6XyHVNe6LSX9phA==
+X-Received: by 2002:a05:6a20:6f07:b0:203:addb:5a29 with SMTP id adf61e73a8af0-215abc78929mr21413566637.40.1747051335751;
+        Mon, 12 May 2025 05:02:15 -0700 (PDT)
+Received: from [192.168.0.120] ([49.205.34.162])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b236de8839asm5328176a12.40.2025.05.12.05.02.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 12 May 2025 05:02:15 -0700 (PDT)
+Message-ID: <06e740ad-8990-45ca-bdd8-fa5d446e4bd4@gmail.com>
+Date: Mon, 12 May 2025 17:32:10 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 1/1] xfs: Fail remount with noattr2 on a v5 with v4
+ enabled
+Content-Language: en-US
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+ fstests@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+ djwong@kernel.org, zlang@kernel.org, david@fromorbit.com, hch@infradead.org
+References: <cover.1747043272.git.nirjhar.roy.lists@gmail.com>
+ <uvQIPMIpyNU1GgrBWDuyTQvD6gJNGgIBfFc0qRZt-ehl_bRnVMTBNcfYRxRqjgkUSJVXaltU7eN1HGLqi4Vp1w==@protonmail.internalid>
+ <e03b24e6194c96deb6f74cd8b5e5d61490d539f6.1747043272.git.nirjhar.roy.lists@gmail.com>
+ <xwx4pyblttfkrxfq3wlorwz743oathzvjdigehgke4gsu6vona@xfftyhxmzr22>
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <xwx4pyblttfkrxfq3wlorwz743oathzvjdigehgke4gsu6vona@xfftyhxmzr22>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Carlos Maiolino <cem@kernel.org>
 
-This function doesn't take the AIL lock, but should be called
-with AIL lock held. Also (hopefuly) simplify the comment.
+On 5/12/25 16:40, Carlos Maiolino wrote:
+> On Mon, May 12, 2025 at 03:27:14PM +0530, Nirjhar Roy (IBM) wrote:
+>> Bug: When we compile the kernel with CONFIG_XFS_SUPPORT_V4=y,
+>> remount with "-o remount,noattr2" on a v5 XFS does not
+>> fail explicitly.
+>>
+>> Reproduction:
+>> mkfs.xfs -f /dev/loop0
+>> mount /dev/loop0 /mnt/scratch
+>> mount -o remount,noattr2 /dev/loop0 /mnt/scratch
+>>
+>> However, with CONFIG_XFS_SUPPORT_V4=n, the remount
+>> correctly fails explicitly. This is because the way the
+>> following 2 functions are defined:
+>>
+>> static inline bool xfs_has_attr2 (struct xfs_mount *mp)
+>> {
+>> 	return !IS_ENABLED(CONFIG_XFS_SUPPORT_V4) ||
+>> 		(mp->m_features & XFS_FEAT_ATTR2);
+>> }
+>> static inline bool xfs_has_noattr2 (const struct xfs_mount *mp)
+>> {
+>> 	return mp->m_features & XFS_FEAT_NOATTR2;
+>> }
+>>
+>> xfs_has_attr2() returns true when CONFIG_XFS_SUPPORT_V4=n
+>> and hence, the following if condition in
+>> xfs_fs_validate_params() succeeds and returns -EINVAL:
+>>
+>> /*
+>>   * We have not read the superblock at this point, so only the attr2
+>>   * mount option can set the attr2 feature by this stage.
+>>   */
+>>
+>> if (xfs_has_attr2(mp) && xfs_has_noattr2(mp)) {
+>> 	xfs_warn(mp, "attr2 and noattr2 cannot both be specified.");
+>> 	return -EINVAL;
+>> }
+>>
+>> With CONFIG_XFS_SUPPORT_V4=y, xfs_has_attr2() always return
+>> false and hence no error is returned.
+>>
+>> Fix: Check if the existing mount has crc enabled(i.e, of
+>> type v5 and has attr2 enabled) and the
+>> remount has noattr2, if yes, return -EINVAL.
+>>
+>> I have tested xfs/{189,539} in fstests with v4
+>> and v5 XFS with both CONFIG_XFS_SUPPORT_V4=y/n and
+>> they both behave as expected.
+>>
+>> This patch also fixes remount from noattr2 -> attr2 (on a v4 xfs).
+>>
+>> Related discussion in [1]
+>>
+>> [1] https://lore.kernel.org/all/Z65o6nWxT00MaUrW@dread.disaster.area/
+>>
+>> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> ---
+>>   fs/xfs/xfs_super.c | 26 ++++++++++++++++++++++++++
+>>   1 file changed, 26 insertions(+)
+>>
+>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>> index b2dd0c0bf509..606a95ac816f 100644
+>> --- a/fs/xfs/xfs_super.c
+>> +++ b/fs/xfs/xfs_super.c
+>> @@ -2114,6 +2114,21 @@ xfs_fs_reconfigure(
+>>   	if (error)
+>>   		return error;
+>>
+>> +	/* attr2 -> noattr2 */
+>> +	if (xfs_has_noattr2(new_mp)) {
+>> +		if (xfs_has_crc(mp)) {
+>> +			xfs_warn(mp,
+>> +			"attr2 is always enabled for a V5 filesystem - can't be changed.");
+>> +			return -EINVAL;
+> This looks good to me now:
+>
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+>
+> I still wish hch's opinion here though before merging it. Giving his was the
+> first RwB, I want to make sure he still keeps his RwB with the above change.
+Sure.
+>
+>
+> FWIW, for a next patch, there is no need to copy ext4 list for a code change
+> that is totally unrelated to ext4. This just generates unnecessary extra
+> traffic.
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
-Changelog:
-	V2: - Fix a busted comment
-	    - Wrap lines over 80+ columns
-	    - Update subject
+Okay. I will keep this in mind.
 
- fs/xfs/xfs_trans_ail.c | 32 +++++++++++++++++---------------
- 1 file changed, 17 insertions(+), 15 deletions(-)
+--NR
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 7d327a3e5a73..67c328d23e4a 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -777,26 +777,28 @@ xfs_ail_update_finish(
- }
- 
- /*
-- * xfs_trans_ail_update - bulk AIL insertion operation.
-+ * xfs_trans_ail_update_bulk - bulk AIL insertion operation.
-  *
-- * @xfs_trans_ail_update takes an array of log items that all need to be
-+ * @xfs_trans_ail_update_bulk takes an array of log items that all need to be
-  * positioned at the same LSN in the AIL. If an item is not in the AIL, it will
-- * be added.  Otherwise, it will be repositioned  by removing it and re-adding
-- * it to the AIL. If we move the first item in the AIL, update the log tail to
-- * match the new minimum LSN in the AIL.
-+ * be added. Otherwise, it will be repositioned by removing it and re-adding
-+ * it to the AIL.
-  *
-- * This function takes the AIL lock once to execute the update operations on
-- * all the items in the array, and as such should not be called with the AIL
-- * lock held. As a result, once we have the AIL lock, we need to check each log
-- * item LSN to confirm it needs to be moved forward in the AIL.
-+ * If we move the first item in the AIL, update the log tail to match the new
-+ * minimum LSN in the AIL.
-  *
-- * To optimise the insert operation, we delete all the items from the AIL in
-- * the first pass, moving them into a temporary list, then splice the temporary
-- * list into the correct position in the AIL. This avoids needing to do an
-- * insert operation on every item.
-+ * This function should be called with the AIL lock held.
-  *
-- * This function must be called with the AIL lock held.  The lock is dropped
-- * before returning.
-+ * To optimise the insert operation, we add all items to a temporary list, then
-+ * splice this list into the correct position in the AIL.
-+ *
-+ * Items that are already in the AIL are first deleted from their current
-+ * location before being added to the temporary list.
-+ *
-+ * This avoids needing to do an insert operation on every item.
-+ *
-+ * The AIL lock is dropped by xfs_ail_update_finish() before returning to
-+ * the caller.
-  */
- void
- xfs_trans_ail_update_bulk(
+>
+>
+>> +		}
+>> +		mp->m_features &= ~XFS_FEAT_ATTR2;
+>> +		mp->m_features |= XFS_FEAT_NOATTR2;
+>> +	} else if (xfs_has_attr2(new_mp)) {
+>> +		/* noattr2 -> attr2 */
+>> +		mp->m_features &= ~XFS_FEAT_NOATTR2;
+>> +		mp->m_features |= XFS_FEAT_ATTR2;
+>> +	}
+>> +
+>>   	/* inode32 -> inode64 */
+>>   	if (xfs_has_small_inums(mp) && !xfs_has_small_inums(new_mp)) {
+>>   		mp->m_features &= ~XFS_FEAT_SMALL_INUMS;
+>> @@ -2126,6 +2141,17 @@ xfs_fs_reconfigure(
+>>   		mp->m_maxagi = xfs_set_inode_alloc(mp, mp->m_sb.sb_agcount);
+>>   	}
+>>
+>> +	/*
+>> +	 * Now that mp has been modified according to the remount options,
+>> +	 * we do a final option validation with xfs_finish_flags()
+>> +	 * just like it is done during mount. We cannot use
+>> +	 * xfs_finish_flags()on new_mp as it contains only the user
+>> +	 * given options.
+>> +	 */
+>> +	error = xfs_finish_flags(mp);
+>> +	if (error)
+>> +		return error;
+>> +
+>>   	/* ro -> rw */
+>>   	if (xfs_is_readonly(mp) && !(flags & SB_RDONLY)) {
+>>   		error = xfs_remount_rw(mp);
+>> --
+>> 2.43.5
+>>
+>>
 -- 
-2.49.0
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
 
