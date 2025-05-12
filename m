@@ -1,114 +1,107 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DB3A248F58;
-	Mon, 12 May 2025 16:29:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96B4C24503C;
+	Mon, 12 May 2025 16:31:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747067363; cv=none; b=b3u9JEoUeol7qsvERlB/uZH4X6MT0CFIBP35f2Up6RtSZ6Rq6ysIxnYRhf+D5Z8gtnmoy5p5EbRAoGi4nUAAMczbzlIB8t0ns1y76TWW41cN8Bzz2bzvDbBhbQbMC8ecufWtYCJhzmV88b83mq1LdLARe4MwdvybWtclimTLDCI=
+	t=1747067502; cv=none; b=u7D+FFJ7olSp0HDa4de0i/XgWUMGLwiVkineGrZAVeu1wN8Jcf0UwMLQtkNvEEAyBYGJUMQh0ittolBF0TuhbUdovZ44NXyVJ2zx2tcQ7s/n0XCtNPEFg+HAC5Gvy5aRkhEo2hj495V4vAQZMe0gvJruOuJG82hn2jJ/YGxlInM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747067363; c=relaxed/simple;
-	bh=30dNwph3avKCb3wF/O1+5qWyksfKgbLn5JTNcAC1Yk4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=c1WPj6AbYZsHpb4/tyDywASRa6ennAqJy08uxDuBLtZEo9pO9SDnZAwskjFQb4LWx8meX67FHBCZ/QwH9/GBmuvYXbyh8BI3zc6Xqk0Nni+RvrSJsydIKka2vY4CO/r5UaR+nqUX3f/cKTq3f3bALgFw21Mb7c/4zds0HGpgzKU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NoGp6yF2; arc=none smtp.client-ip=209.85.214.174
+	s=arc-20240116; t=1747067502; c=relaxed/simple;
+	bh=kclPQ9TevUZcIJQULh5LS5uSXu/weSVP9B4nelw2XuU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=diuwjfgoKHBZiVNmPIlZK7c5JvoyZe63WUb40ADn8F/gwW65zJhqRM2MXPwB5T3sHVr0XPYzcBpknR82eBshhSoI1L8RZsaWE/X2jQGXuYLsgOkGJXsJt14u/ZXfbVnrrpVgDfSCyLSGWKEBeOT7hr3K03tjsWl7Cq/R3meekoM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dEqcEFH0; arc=none smtp.client-ip=209.85.216.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NoGp6yF2"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-22e331215dbso43988255ad.1;
-        Mon, 12 May 2025 09:29:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dEqcEFH0"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-30a99e2bdd4so4059894a91.0;
+        Mon, 12 May 2025 09:31:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747067361; x=1747672161; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=OTk0Cg5Yj1LxOw27evlR3HPrso5j/gTY3+8AFWOHw4c=;
-        b=NoGp6yF22UNeMvt+z0U+rlcOLzR4syFPE9HMtVtnTDXowyB53EVkWGH/RGRDBV7Hw5
-         CBx/JSDLIPKeIBKvSEqOE1fxHB8XCgvymalcri/0u/FTxNtJ8NTHCBE6pGYS0xid+J0Y
-         snnUUMTO9+UO08Z3vwGK29m4SkDr3a5Q+MxbADOjAgzIN2D+7l2hll61dnBJfgJAtzR6
-         zzI4ZnZynkwtCh4yDEJvpleb6IjHTJBlHHAaOZKl8iAFmqyIcT4yR9F8676RBgaFVpbG
-         LRgVcRi1F7dHQ8G482h2Y+zj61ipt8pavRq+Tpo2bCOveI/kTacKLuuzWD2IKJkKABaB
-         EN2w==
+        d=gmail.com; s=20230601; t=1747067499; x=1747672299; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=qGIV1s6ym30zN/skuQRmS2Erua5b6Xi4cI/Q2r/KVo8=;
+        b=dEqcEFH0jh6oznN0sZYYp+SBbI/5fkzgEjW1qgd5DJ7mX2dHvrTxyaf5BuOXFH9IAP
+         vpTQUfsIGkHwLDyJ5f9VSSbJf1iHHrsYU8b+KfNSX4eBH1cw0gj1QKXhVT/N6F2zj1/d
+         86edjPHmkczfXilursLrZEldK4+9HT22Y6bFu8OMmfJu74xdHwqbiJKB31kgP9wullFb
+         wQQQQctS83LJmKBWX95iBNtFb055sF+GD8TQAxsVEQfgo3cBsJtbvSI/oevhLcUjeg1d
+         GgHz8etBpU4RHIZAkU6hyb3493bAD2SjfjgfN/6lRq+zHYWnSHCs/6OlwPWshNWXK+oD
+         aqNA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747067361; x=1747672161;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=OTk0Cg5Yj1LxOw27evlR3HPrso5j/gTY3+8AFWOHw4c=;
-        b=ix3SbWKuepx8jyCBQR8EUtdNwvTVRqu4eFRFyQz6h+Nz3URHdquTz/AbM2CBa8B5IC
-         moKG1hU/cHWCqU4nuw/YM/sgMW9LQRBpC3Sf471UoWiNad3UkUrfO5fdIw/ZuQn6+p0i
-         qgdFl5VeeoYhTHrsrUF14efyJiahvlcY6bo/Jekqv1T5+c/Pu/sfNWYLigd1SC3jPKi2
-         uGgswLRwsxqnHzgNMt4r6g2UkyhACn9qgaZl5TRyq9IjhuDdX+CyaZjy4Ja62QAUesOc
-         hSY2uymvOjPDrp1R4eO2iRnUBWMaZeWNlDwtT13UeQifHMWHxBgFDTD/HISVdVi2fN1g
-         NP/Q==
-X-Forwarded-Encrypted: i=1; AJvYcCV2l3RtxLnAngDafqU+M4Jy7zUuI3p8X7UEI/mKLR6C0nqJ94Y90HWjjXvTsSLoAGGBnAdH1D0KzHNfCw==@vger.kernel.org, AJvYcCWUcH3cf6oQKCKpEiYkqwFk1+vjpB7q/szTIwVAHORI5snYr7ptzWEOwGMTckYCR+uFbcazpXrF@vger.kernel.org
-X-Gm-Message-State: AOJu0YxN0uhsECGWKEWS7d+LfB0eEbdmp6OR33Hkq1AgDZ81hKhpIhFH
-	mtF2PzBZCDomC10mvsnKDV1blsNezjKJx822p3lneO+6WG1HA/QQWml5/Q==
-X-Gm-Gg: ASbGncs1cTs+/y1nocmTN6czNlxwv2frnNA5cVhahxSgmo0spGBi8GVW1AEHy2n2Z9m
-	zAyKbT1pCupaKyFsWTKP3H0Puv04KCRTnDTmvYQE5Hc8HVZP40yIFZjgS3mX32NMBkKnzcGC7Tl
-	Z438ZApOP7pG3vl4+9yng0bVyd9JfVPCOD6s5kT6w/p0qjYVxiPDQh3GGCG6rE3Ln9jrNRwiGQZ
-	4iH1d86E2cIGucaWTXKkQDxbnqEscoGdr8vv0CcpezOJXhpwyNKS3Dgzvcut6NvzdNJZhGtZKWH
-	RKhlj+8zshHYl7qNiAi5nJFQ1AthNACkNE4ZUN8vXGUlWrnOJe9otKgelzZQLA==
-X-Google-Smtp-Source: AGHT+IHspdCssr49wGdVj4WP1uEA0bIWUJnfi9xoADIkbA7XElXqtqapnZ7hN3gc6wUwaSi/U29MEA==
-X-Received: by 2002:a17:902:cecd:b0:215:6c5f:d142 with SMTP id d9443c01a7336-2317cb30b1dmr990385ad.20.1747067361200;
-        Mon, 12 May 2025 09:29:21 -0700 (PDT)
-Received: from [192.168.0.120] ([49.205.34.162])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22fc828a463sm65129085ad.167.2025.05.12.09.29.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 12 May 2025 09:29:20 -0700 (PDT)
-Message-ID: <796c228b-a072-498d-819a-c09b2708ac0a@gmail.com>
-Date: Mon, 12 May 2025 21:59:15 +0530
+        d=1e100.net; s=20230601; t=1747067499; x=1747672299;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=qGIV1s6ym30zN/skuQRmS2Erua5b6Xi4cI/Q2r/KVo8=;
+        b=l4HWXLRglo6xuPA232o+Xf4dwF7duf2rsOMdvMeP4wR1env7+/74tR/K1MPQTbxJTY
+         Gc0rf3KGy43thWlhSeMBLRnJTJ5HLSVzla6e2tKylmZkHSAjLCm4Ky8Jop5XwDObGMai
+         /Z/VMXVoFPfwEH68khRxoG+BkQ5CrCe5qaBe6ZZjUWPh26Gchnu5d+ZUOss3rpsgQE+C
+         Y+u18cmZbkEYRroFSVEcdp9D2TD60XMH66TLmv+MpX64KUv4bO43tp+PXvecDp9vzo5e
+         WXiP5Vd6rrgpuw/AZxzHdCUBdXvJ+NKDPm7GbLxCiJkk9a4JKeaFnf4DS881rsVIsNX+
+         gnqw==
+X-Gm-Message-State: AOJu0Yx4B4LcQEDo05x2sL7CJoRbO3HlQb9RAcJyp8TU+NVban3Y50iK
+	DvQMTYGolr/sZzfb3pTqTmtEDFXDTsDaldG82I650y9WZlV6RxxTPJ7lBg==
+X-Gm-Gg: ASbGncuX87tOgxSTnw3FwdcCbFoV7AXFTunaLFNc9ardkpmUtvNTa+sWYCsvkCBUdJN
+	AKNMBd6303xoYfYPoK90S2E5sJU5LLZYsbTY5SbmvZJDL+S71cStwCe86qqBDLgWfWniu37uWAk
+	MBS6mbjWJiFXqi1zcxZEyynMxteFlwQ+z2lBcnyVSvsUynNa4bsSM9l2q7/+PW8DWTFZfqxQiTz
+	8sMRZOecqMytO+fx3hQNc6R2/yyJaT80x8QI6fNqjBx3PAfoicI65WEASxoCM60ckwucCq9HxcS
+	0kAwqPQU1J9abOe9CMMTnKy9/PmvKwrJ+FLTE+EZpk0Hu5Rqmtuk2ZzFO0p2/hn3FE2I03SNzaV
+	/DXIVfJVtN71tf0XlwVaIoEBI98z8KBf1ZzIWX6eQAnJk
+X-Google-Smtp-Source: AGHT+IE8ghhlp3OdoooiHeP/Eb87BdGjJJ9fU7jaNQK2mAetyh6UXkhg5zgVqK18hwHhtgeLXS9aiQ==
+X-Received: by 2002:a17:90b:1a89:b0:305:2d27:7cb0 with SMTP id 98e67ed59e1d1-30c3d3eb4d8mr18593006a91.21.1747067499010;
+        Mon, 12 May 2025 09:31:39 -0700 (PDT)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com.com ([49.205.34.162])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-30c39deb39fsm6820150a91.22.2025.05.12.09.31.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 May 2025 09:31:38 -0700 (PDT)
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org,
+	ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com,
+	djwong@kernel.org,
+	zlang@kernel.org,
+	david@fromorbit.com,
+	nirjhar.roy.lists@gmail.com,
+	cem@kernel.org,
+	hch@infradead.org
+Subject: [PATCH v6 0/1] xfs: Fail remount with noattr2 on a v5 xfs with v4 enabled kernel.
+Date: Mon, 12 May 2025 22:00:31 +0530
+Message-ID: <cover.1747067101.git.nirjhar.roy.lists@gmail.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/1] xfs: Fail remount with noattr2 on a v5 with v4
- enabled
-Content-Language: en-US
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
- fstests@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
- djwong@kernel.org, zlang@kernel.org, david@fromorbit.com, cem@kernel.org
-References: <cover.1747043272.git.nirjhar.roy.lists@gmail.com>
- <e03b24e6194c96deb6f74cd8b5e5d61490d539f6.1747043272.git.nirjhar.roy.lists@gmail.com>
- <aCIVbuot62pZu9xk@infradead.org>
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <aCIVbuot62pZu9xk@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+This patch fixes an issue where remount with noattr2 doesn't fail explicitly
+on v5 xfs with CONFIG_XFS_SUPPORT_V4=y. Details are there in the commit message
+of the patch.
 
-On 5/12/25 21:06, Christoph Hellwig wrote:
-> This still looks good.
-Thanks.
->
-> One nit:
->
->> +	/*
->> +	 * Now that mp has been modified according to the remount options,
->> +	 * we do a final option validation with xfs_finish_flags()
->> +	 * just like it is done during mount. We cannot use
->> +	 * xfs_finish_flags()on new_mp as it contains only the user
->> +	 * given options.
-> This could use slightly better formatting:
->
-> 	/*
-> 	 * Now that mp has been modified according to the remount options, we
-> 	 * do a final option validation with xfs_finish_flags() just like it is
-> 	 * done during mount. We cannot use xfs_finish_flags() on new_mp as it
-> 	 * contains only the user given options.
-> 	 */
+Related discussion in [1].
 
-Okay, I will make the change in the next revision.
+[v5] --> v6
+ - Added RB from Carlos in the commit message.
+ - Some formatting fixes in the comments (suggested by Christoph)
 
---NR
+[v1] https://lore.kernel.org/all/7c4202348f67788db55c7ec445cbe3f2d587daf2.1744394929.git.nirjhar.roy.lists@gmail.com/
+[v2] https://lore.kernel.org/all/cover.1745916682.git.nirjhar.roy.lists@gmail.com/
+[v3] https://lore.kernel.org/all/cover.1745937794.git.nirjhar.roy.lists@gmail.com/
+[v4] https://lore.kernel.org/all/cover.1746600966.git.nirjhar.roy.lists@gmail.com/
+[v5] https://lore.kernel.org/all/cover.1747043272.git.nirjhar.roy.lists@gmail.com/
+[1] https://lore.kernel.org/all/Z65o6nWxT00MaUrW@dread.disaster.area/
+[2] https://lore.kernel.org/all/aBRt2SNUxb6WuMO-@infradead.org/
 
--- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
+Nirjhar Roy (IBM) (1):
+  xfs: Fail remount with noattr2 on a v5 with v4 enabled
+
+ fs/xfs/xfs_super.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+--
+2.43.5
 
