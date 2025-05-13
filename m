@@ -1,115 +1,80 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 704BA1EB1A8;
-	Tue, 13 May 2025 08:13:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7867E1F2C58;
+	Tue, 13 May 2025 08:24:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747124022; cv=none; b=muTT1Uwa4lDM2aMmxv91ydGbzj/S2Z/ZxXOHzUarR9y8jxegBRwxw6yr2vINSBSVPXFF3nyygwbFUWfPSJZAOte8QOfp/MoB/0GJ/zOLcgmCTY6EIQ0934zM9WXNBdDk1oU1LfEgGMjyaYHMH1Kq7REKOh4BtUZ1cH62nvKEpVQ=
+	t=1747124684; cv=none; b=aYWiQvgKhDLmVjxNTlkuE9/wqsMXaj5vNtpjeinRFtYpFlcHS8B/+2gWlcBkQMnLQxIqGw80nEKtswFgJx0FXzN8fjrW7qY07n+0R8mhFcpQ5DZtgzrl3QzA1zNl4G9SnEeDfZbcfbcNppxkHqf62vpgxDrHZJkYOAD49kRQJQY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747124022; c=relaxed/simple;
-	bh=yVhtb993UjXv3KDtO3A46vZCw/cZ772iRXSh6K5qovc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=q77rgEY8R19LBZf6zTAHEdjtQIzbP4DvCUXoZry8qeIr3cMbApqiLRDCRBiGc0HL399Nc1bnhh7Z7s+deAbIrvhEeL1GtPy4r0tn++bZknVWtXxgW/t24YflSc45GbxWbGJkEJQuq/dscHdRRfHOdO3H6tJsS5u2mdEIEOPK3KI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FuYzV8Gq; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1747124684; c=relaxed/simple;
+	bh=YHA/wvWEDB8CgIoUnHtp7szR/abPgZrTVkvyNlmczCA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Sh+Z3cYqoCRgLQqbc2OcKXCCcLpwyo14xuXElZp6vfkb/AKkPEYPDUcut/FLogVpu4sZP7M7OWRVviCmwsyHetVNMQ960UF4xIA6ltEPonZQ0GuKi//2jNpiC8RkC1szEYCrfDhUwPDjTibi2cQhZ/t21VVuSpqA7nodZG7/9jE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pOsLeKXo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FuYzV8Gq"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-22fa47f295aso34964645ad.0;
-        Tue, 13 May 2025 01:13:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747124020; x=1747728820; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tGhtA+b9yCGjl1qMYlaLImTH7fClB+hY0dTCbKcCN4U=;
-        b=FuYzV8GqazQZqtIcG+wtZGwap7XqGKC95fYW99IblLdceg7Zuxo2eN+kh5ZROAyWKR
-         PNPSQUclZaGT+If5br+bWpo8a+/To194QVlkHU4/yUCyE2XUQXG60v4U5C5dTfpzvoy6
-         bC+VGqxhimi8Bq+5V+Js6N57NlDp/QV2/jch4bz+Ag2tGibaEvKle0nMVoj11SKnYvGl
-         Vv5VydfWDjHXPT/XU7sKz/5k7V+ActxE6DINRyEZLD7PICuhjr6qM/M02L1TnaVyLiqC
-         cMGDfFfF/ys1WigzT8NPtIYHbywNOyxsfOjoJ1sWGJSFna/WnVxU4o3GAy0GV7D1OSVD
-         1VHw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747124020; x=1747728820;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=tGhtA+b9yCGjl1qMYlaLImTH7fClB+hY0dTCbKcCN4U=;
-        b=V1Ha8PfL08kDmu/2606gy7Kq2RHGx9dcMvY+JLZCzvXY5+X5pR8DuDDR1oB5z2yixe
-         f1kq5lKlVFnDFONOgFjpfGrS4qOaj5yF90LXJl288kDVu/fINnIoik6nauV3z1Bz2xKi
-         ejJGMw7A0cyfadjOVYK24zoHGAHH2+9cVeG3K5/nfjiT+h+UUZtO5PJrMMDkefVph7JF
-         hyqT+xf6kLh2qUduO4fN56+F1D/bvTKxwIrBSdeRmlhrgPTHAVafOE7igH2PAU/eVraA
-         5wB0Xi8EeOq9FUn2l6SNEqNqHwXtJjDmFp17B3LOoUZMfNDsOuIMcAHriY/6fEvs4JL+
-         rgrA==
-X-Forwarded-Encrypted: i=1; AJvYcCWEcO4fCxsY4PLPAHrjlPruoTcw2Kz3qdVyjVz1zQHssTwNJSQ54HaEtucwq/qCKZK8gRwlMQp48OY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxH3kH4CfSRtidt+GszIdTlE+K4Sog/OStUw8UD2/78gj6GLyLf
-	CfSTNNeExRRrT7Qheqo0oZNgUMG1EmYnrV/a0mJ5VFGWhH0Yi3KokmzD2Q==
-X-Gm-Gg: ASbGncv+QYS9Qdd1f+mkfCjwza6kvzZvAevvS3JERx/DaJbw95ze2640Nj3IBukHSMK
-	PE8DZHgF/hdPpndvfdPCpoogeYoCszZUPSEtxmI2a/5zfkzEtygfCISHxS/DdwsCNs+Dvg1Os1E
-	2PZeacLRbuGS0oNqr6tga0vKhdpExRacGIvnp2KOCW5TQH2Oe6uBs+BxaG1080UHr9jgiZmzimH
-	X2KFXplq6xH0Gz9Fh+P7tPX5W85eRaES12jBoy3K3kUkBCGgSMd4QAFAebISREDSCjha784CGYL
-	WABMWSQBKMG0Me9caJuO6s91HG8kBpe9Xl/ZOrbabNMqnMay07WH9e0ugZQ/lyDnJA==
-X-Google-Smtp-Source: AGHT+IHiaMF0KToAbtG9M6C1knaVtY2O9CZtUjcWhzTog+OC0jkqtdZPfZ2TYyQC8I1HriMYG0iw7w==
-X-Received: by 2002:a17:902:d581:b0:223:3b76:4e22 with SMTP id d9443c01a7336-22fc8b0b618mr207261875ad.6.1747124019778;
-        Tue, 13 May 2025 01:13:39 -0700 (PDT)
-Received: from citest-1.. ([49.205.34.162])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22fc75450b6sm75896585ad.49.2025.05.13.01.13.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 May 2025 01:13:39 -0700 (PDT)
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com,
-	djwong@kernel.org,
-	zlang@kernel.org,
-	david@fromorbit.com,
-	nirjhar.roy.lists@gmail.com
-Subject: [PATCH v1 3/3] new: Run make after adding a new test file
-Date: Tue, 13 May 2025 08:10:12 +0000
-Message-Id: <cf589731ad93deb067f6dadf0d80604884fb330a.1747123422.git.nirjhar.roy.lists@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <cover.1747123422.git.nirjhar.roy.lists@gmail.com>
-References: <cover.1747123422.git.nirjhar.roy.lists@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pOsLeKXo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEC30C4CEE4;
+	Tue, 13 May 2025 08:24:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747124682;
+	bh=YHA/wvWEDB8CgIoUnHtp7szR/abPgZrTVkvyNlmczCA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=pOsLeKXoaJjDR7Uej2TlJeM6ZmoE7XJ1eY2NW6EWvVbEdYKdNoHifU2oYl1NCpNcj
+	 05cGqKrPBX7tyjVBdRbn+SzIcuKHPlRsbgqJK46eiiMZYYcMLDd0yoBzk0zcctZoT5
+	 88rkSUu8KWAF+m3PM71lYiXI9gs2yzOsFIA4FLyZ0jTr5Y8FLRYvi4dISD8QFo1ATr
+	 S8P/VCDjGSYzbJcqt8ZzQMjAuYW7D/ZCcdarVIO5Bue5AhTUxLrTClQ71Dn2txfTwz
+	 OstRPVaqa7P4ms/78eMW1q+EnE6838KH/802tcNklQ2fgt7QYGzRyfY/YjRkQZm0NM
+	 uPsFhWO1hBI/A==
+Date: Tue, 13 May 2025 10:24:27 +0200
+From: Christian Brauner <brauner@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: Richard Henderson <richard.henderson@linaro.org>, 
+	Matt Turner <mattst88@gmail.com>, Russell King <linux@armlinux.org.uk>, 
+	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, 
+	Geert Uytterhoeven <geert@linux-m68k.org>, Michal Simek <monstr@monstr.eu>, 
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	Helge Deller <deller@gmx.de>, Madhavan Srinivasan <maddy@linux.ibm.com>, 
+	Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+	Christophe Leroy <christophe.leroy@csgroup.eu>, Naveen N Rao <naveen@kernel.org>, 
+	Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
+	Alexander Gordeev <agordeev@linux.ibm.com>, Christian Borntraeger <borntraeger@linux.ibm.com>, 
+	Sven Schnelle <svens@linux.ibm.com>, Yoshinori Sato <ysato@users.sourceforge.jp>, 
+	Rich Felker <dalias@libc.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
+	"David S. Miller" <davem@davemloft.net>, Andreas Larsson <andreas@gaisler.com>, 
+	Andy Lutomirski <luto@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, 
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, 
+	Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
+	=?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@digikod.net>, =?utf-8?Q?G=C3=BCnther?= Noack <gnoack@google.com>, 
+	Arnd Bergmann <arnd@arndb.de>, Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, 
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>, 
+	"Serge E. Hallyn" <serge@hallyn.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
+	Ondrej Mosnacek <omosnace@redhat.com>, Tyler Hicks <code@tyhicks.com>, 
+	Miklos Szeredi <miklos@szeredi.hu>, Amir Goldstein <amir73il@gmail.com>, linux-alpha@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, linux-sh@vger.kernel.org, 
+	sparclinux@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-security-module@vger.kernel.org, linux-api@vger.kernel.org, linux-arch@vger.kernel.org, 
+	selinux@vger.kernel.org, ecryptfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH v5 0/7] fs: introduce file_getattr and file_setattr
+ syscalls
+Message-ID: <20250513-wunden-tierzucht-0cd8fb32bb0e@brauner>
+References: <20250512-xattrat-syscall-v5-0-a88b20e37aae@kernel.org>
+ <vxjuophuvmvqloczajfyjd5jvvcbvcty2fpvfmcaz5xuh5vyqv@fxiymeww26mf>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <vxjuophuvmvqloczajfyjd5jvvcbvcty2fpvfmcaz5xuh5vyqv@fxiymeww26mf>
 
-Once a new test file is created, it needs to explicitly
-added to the group.list file in tests/<FSTYPE> directory
-in order for it to get run. Automate
-that by running make by as a part of creation of the new
-test file in the "new" script.
+> Ignore please, somehow b4 crashed with timeout on gmail
 
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
----
- new | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/new b/new
-index e55830ce..647763c1 100755
---- a/new
-+++ b/new
-@@ -191,5 +191,13 @@ QA output created by $id
- Silence is golden
- End-of-File
- 
-+echo "Adding test $tdir/$id to the test list..."
-+make >> /dev/null 2>&1 || true
-+
-+if ! grep -q $id $tdir/group.list; then
-+	echo "$tdir/$id created but not added to the $tdir/group.list."
-+	echo "Possible reason is make failure. Please ensure a clean build"
-+fi
-+
- echo " done."
- exit 0
--- 
-2.34.1
-
+Ok, no worries. I wondered why I didn't get all messages of that series.
