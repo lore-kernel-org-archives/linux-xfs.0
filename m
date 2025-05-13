@@ -1,174 +1,116 @@
-Received: from fout-a6-smtp.messagingengine.com (fout-a6-smtp.messagingengine.com [103.168.172.149])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E84AE21D3FB;
-	Tue, 13 May 2025 09:53:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.149
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D77323ED56
+	for <linux-xfs@vger.kernel.org>; Tue, 13 May 2025 10:01:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747130029; cv=none; b=k8oFOqXsyIj9wOb7h6Gkfudh8MH+bC5zXa1UmDt3r3FftKVw725SvFoEiG/flFykF8RIw2eY9y859NPb0WZZ43DHBVE1zgemfTfeBQPfF+2z+UuMH9LzUeM71HXUBhy4mHVq1hBTvP0YGsrRLIZMI8rU4/MVrzPp0isZMTAI08I=
+	t=1747130513; cv=none; b=shKUBZC7NEn0RDuaTKo1MtGRfyFWNbwU+FxYPBWdARxw0hVZiOV9zVVct3zeyW1eXBhRILNGLSUqnVjTX7fwdP3AR+j9liA88cy1SsPm0ZzIi2+SkKU3elOJggD6WzndJJEYxv8HWZ8GsjnAmrmLxWDnv8EgVEmlQXl7L0ZH1Ms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747130029; c=relaxed/simple;
-	bh=0hdsBjSp459tutLJ6ljFU38BGGSJAYEDerkzM9gXgMY=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=AnQvackthfmXo2NuQcBKSDja7SlU3olVZ6HOfdedNivFKj47sAF7i+UC0aptYj/VbH4i14K+HUvU5P0+ezEJuAIqg8dbIvt6VGcjRoQo8dzeU8Nyas+ybTFimua6AUWcT1Oa8WeTfM2hMokz0YtTLMkCdHADl2U8OhuVikHU83c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=C3c8Raon; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=vsLFxk/O; arc=none smtp.client-ip=103.168.172.149
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
+	s=arc-20240116; t=1747130513; c=relaxed/simple;
+	bh=JZoIcT62doqLXb2PbIrJyTn2JAyvj6n6Jgy9Ox38qo4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=m94lCYi223W1s8wzUhwn8pkqjxKyHua9zXX5oElVDEwXdWzSXKPdAr1A+ST6SspzTU0Lg5NyjHUqTYGyhKJfNZV5ea4vMsnTEll1BHcUImmP8Aex+f78RKIz8Xk0OssO5bsYT66Qsxn3CuZEhGAeHOJYF7uQcuwWwwJIPjd0DrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=B3IZnnF3; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="C3c8Raon";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="vsLFxk/O"
-Received: from phl-compute-05.internal (phl-compute-05.phl.internal [10.202.2.45])
-	by mailfout.phl.internal (Postfix) with ESMTP id 9B48B138023E;
-	Tue, 13 May 2025 05:53:44 -0400 (EDT)
-Received: from phl-imap-12 ([10.202.2.86])
-  by phl-compute-05.internal (MEProxy); Tue, 13 May 2025 05:53:44 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1747130024;
-	 x=1747216424; bh=2stkMgjnTvYjnZGlIOEgk4TUXFdwLQsjjGMrGxJEng4=; b=
-	C3c8Raon10jNbSWEDJYORU4gm8U567TulRzRqYXvVTZbjR0aq+aByBE2v3CJN1FQ
-	KGfe3mZpGMvm3sTTdA/bD4xqfr9/qt+FvJkO3rqB79Pg31A2o/9QmuHNpYiP6YRx
-	5Oqhmp7U5spBkf8ZI7vbBVSijXCPkocSiEYxOZC/Onni9aY5io5LzGgT4Pq9viV0
-	FxR/+TYDSmfB7orizqIWsWleYCSTadigZVUPKWWu8SAUOAVMNjnmKn0AtzGJWmfW
-	n6nzNwgrlX6EoM4p1CSnCJ3VeumN0iyyMXY2jOP60W0IV6bI3CT9OzvBzAkFsxl7
-	4cHaLnU9wP0qw8PBRP4/xg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1747130024; x=
-	1747216424; bh=2stkMgjnTvYjnZGlIOEgk4TUXFdwLQsjjGMrGxJEng4=; b=v
-	sLFxk/OONbe9qUFpU+vGJs0rbHoUFetAr/fxOXK42jpmXJb5nTIJ7LEBIUPf4M6G
-	eTcNYjLTfujnNkmPPXXpyky+qMRxwL3zEmGUVPEH+t0k7GujubIRtLl9rINOsfnn
-	X9/Eb5yNN0qQjRVMa37hSc7AaOUvH4JCwUlDvsafU5OLxU9eTZImOa8ptmwo/l2T
-	bs233RN+PmjcxkgMgNR7itS59Aeg1pud04SM0rQP9DoVg/4xL7xZnREOVygJrpgd
-	OrsLj5e/vgBNPgMcoc68G2ELnrcX8nncMoC0tQ94aIH7VLf5TW0EdedJwnB5PPnu
-	dwaxyu40sGpRl3lCZi9tw==
-X-ME-Sender: <xms:pxYjaLwrXpLW4klVSCheAqTm4C9UgyAlohVgQXdRm433wH8zPhDjBA>
-    <xme:pxYjaDSjqY5BDk9WwQ-tsi8xw0LA5Yl0VTNcBFLnEBSVW1kIb3TJOTrQtdapEL-kV
-    LNoh_S6Uafh70HHh0A>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdeftdefkeduucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
-    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpih
-    gvnhhtshculddquddttddmnecujfgurhepofggfffhvfevkfgjfhfutgfgsehtjeertder
-    tddtnecuhfhrohhmpedftehrnhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnug
-    gsrdguvgeqnecuggftrfgrthhtvghrnhephfdthfdvtdefhedukeetgefggffhjeeggeet
-    fefggfevudegudevledvkefhvdeinecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrg
-    hmpehmrghilhhfrhhomheprghrnhgusegrrhhnuggsrdguvgdpnhgspghrtghpthhtohep
-    udekpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopegvtghrhihpthhfshesvhhgvg
-    hrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdgrlhhphhgrsehvghgv
-    rhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqrghpihesvhhgvghrrd
-    hkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdgrrhgthhesvhhgvghrrdhk
-    vghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhfshguvghvvghlsehvghgvrh
-    drkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgv
-    rhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqmhhiphhssehvghgvrh
-    drkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphgrrhhishgtsehvghgv
-    rhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqshefledtsehvghgvrh
-    drkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:pxYjaFWNK6qckU9EAkTTPdmuJ2Lc16lm1lQT8t8gINUyJNodOnPGtg>
-    <xmx:qBYjaFj3xNq2z69AdTzdxc9uPqiUSHC7_M62mldtwCjqQlCRnhM-Rg>
-    <xmx:qBYjaNAkeq0jmyphK4SpsmNDd9k5fP5xmTQPYh_D3Yac2-YckRFBnw>
-    <xmx:qBYjaOIou2p5qtZVJS3F0ZNvV9JGB-543tS1-c1g0WeW8aICtRJVyQ>
-    <xmx:qBYjaEnPm2YINp4LCyG4AbGwBe-DC4jdTt3KydIVybuQOabro6nth3RD>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id D7A291C20068; Tue, 13 May 2025 05:53:43 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="B3IZnnF3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1747130510;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UHSwIuerDy4NgDTq3AFLKrqvptjunXpRrgK6X3yUMYQ=;
+	b=B3IZnnF3dJ/mVldDNTWWzZnbhkF8DMtxdGAMSfL5wmY3yC5u1GiaLtonL35Xcfr7PeUMQB
+	3KU1koH2floU6Ak3iLV1BX7+EBiy6mWNrVYYJODSmch3PJnoxrzitOU8tTBY4pdNN0+3Hq
+	NmxoPeNJVzARBq7PK6PbgkFEbx0HYbA=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-628-JL_ITaTnNVuwb7jh3McAfQ-1; Tue, 13 May 2025 06:01:49 -0400
+X-MC-Unique: JL_ITaTnNVuwb7jh3McAfQ-1
+X-Mimecast-MFC-AGG-ID: JL_ITaTnNVuwb7jh3McAfQ_1747130508
+Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-3a0ba24d233so1772437f8f.2
+        for <linux-xfs@vger.kernel.org>; Tue, 13 May 2025 03:01:49 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1747130508; x=1747735308;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UHSwIuerDy4NgDTq3AFLKrqvptjunXpRrgK6X3yUMYQ=;
+        b=DZKJ2qWZKblG9HJyFSP9r16aakqE40eTTUEmF8mJr7Uay3aSykT5ZDtiW2Uu8lQwcO
+         75Yx2kjgq9p9rs8lckqEBvDOSiKjzIyKrEM90lFQld5/BoqFxflLEaggm860jgsUxPoW
+         QX7ej2QU1oMU8BgjfPA8MxtF+NQvdoMFqhsWksSggEzecg5bte84qUkwXpAR0cy1Od1S
+         omBA30Isdy4gtNXR9YZyjJXU3gnquHhbTthlmFOoSOxThJHscMLdSpMrD7O6R4rJ32IM
+         4bR0lLVMuy4NDZHyAjG8YzQLuIUhsd5Y/np3bYnlpmC91ukaOERJECi5JibQIh2NmSg2
+         bX7A==
+X-Forwarded-Encrypted: i=1; AJvYcCVViNH3ABDBfQxQcZYBkIvMKP4Bs7NMx4NDt26/5iw7URtXnF3TRVcJXs9NObUcdrKs7lJdldiNccA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5FR3Lykf68YG+o2oGcbHrJ+HSH8VwOb6vlMzK3jIOXDnRCCdq
+	pNaw36SMFfsv14v9gkZ5UlAHG7AxWaUbOsRellt5WxYFJ1ftuTCnlrZuvH3Zk0ecmL+9ZTzMjaC
+	R6B2yblvQgGHTwD170o0TGHX/JeR6RG7YPcLcFakXCk1uOTKRT+/chSrn
+X-Gm-Gg: ASbGncvV2ny16ImvkmHmeD/dyHeJtqeZfj1yvqMrbLbucy2+plElFPpXt/qYeVwRRa+
+	vX4KqmR+YQ4IS72pvkOiyjP34dUnZoO+i8BEhbVhuJralpmYcoiLkmYDIKfmPUCpmHJL4gS1kqZ
+	QVOvc/Yijuma3X3U5ONHEoMDaEIx++0oPCIj09TQBI2JJ/0+UXNAlzJ6hqx+Xu0rtx0v2FlMcp+
+	AR8S+7b5/Jx6QScwuCmRVb78T3FcAEXOARUgPsxMhZTNqShnrEN6ILCv9jo68qdNsT/WSi810AM
+	iuJbr7wISAlve6svs31UTWNFvsylFclxtB4O+CQA
+X-Received: by 2002:a5d:64ac:0:b0:3a1:1229:8fe0 with SMTP id ffacd0b85a97d-3a1f6482c15mr14817389f8f.38.1747130508466;
+        Tue, 13 May 2025 03:01:48 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEtsi8k8PnRn4KaCaQ/lnyf+vnxy0UB8M8G4ko57Ut+4WsfGeYt+eu1+MOCG8cFP6S8OFjLeA==
+X-Received: by 2002:a5d:64ac:0:b0:3a1:1229:8fe0 with SMTP id ffacd0b85a97d-3a1f6482c15mr14817349f8f.38.1747130508090;
+        Tue, 13 May 2025 03:01:48 -0700 (PDT)
+Received: from thinky (109-92-26-237.static.isp.telekom.rs. [109.92.26.237])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3a1f57de0ddsm15325727f8f.7.2025.05.13.03.01.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 May 2025 03:01:47 -0700 (PDT)
+Date: Tue, 13 May 2025 12:01:45 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, aalbersh@kernel.org, 
+	hans.holmberg@wdc.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs_mdrestore: don't allow restoring onto zoned block
+ devices
+Message-ID: <77z2ob5xvqytchugnpfeq6rl3uhoa4wu5zsmof6ugoyu4kfs3x@4owfual4zzsu>
+References: <20250512131737.629337-1-hch@lst.de>
+ <20250512151240.GE2701446@frogsfrogsfrogs>
+ <20250512152525.GA9425@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: Tdb8541d917685bac
-Date: Tue, 13 May 2025 11:53:23 +0200
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Andrey Albershteyn" <aalbersh@redhat.com>,
- "Richard Henderson" <richard.henderson@linaro.org>,
- "Matt Turner" <mattst88@gmail.com>,
- "Russell King" <linux@armlinux.org.uk>,
- "Catalin Marinas" <catalin.marinas@arm.com>,
- "Will Deacon" <will@kernel.org>,
- "Geert Uytterhoeven" <geert@linux-m68k.org>,
- "Michal Simek" <monstr@monstr.eu>,
- "Thomas Bogendoerfer" <tsbogend@alpha.franken.de>,
- "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Helge Deller" <deller@gmx.de>,
- "Madhavan Srinivasan" <maddy@linux.ibm.com>,
- "Michael Ellerman" <mpe@ellerman.id.au>,
- "Nicholas Piggin" <npiggin@gmail.com>,
- "Christophe Leroy" <christophe.leroy@csgroup.eu>,
- "Naveen N Rao" <naveen@kernel.org>, "Heiko Carstens" <hca@linux.ibm.com>,
- "Vasily Gorbik" <gor@linux.ibm.com>,
- "Alexander Gordeev" <agordeev@linux.ibm.com>,
- "Christian Borntraeger" <borntraeger@linux.ibm.com>,
- "Sven Schnelle" <svens@linux.ibm.com>,
- "Yoshinori Sato" <ysato@users.sourceforge.jp>,
- "Rich Felker" <dalias@libc.org>,
- "John Paul Adrian Glaubitz" <glaubitz@physik.fu-berlin.de>,
- "David S . Miller" <davem@davemloft.net>,
- "Andreas Larsson" <andreas@gaisler.com>,
- "Andy Lutomirski" <luto@kernel.org>,
- "Thomas Gleixner" <tglx@linutronix.de>, "Ingo Molnar" <mingo@redhat.com>,
- "Borislav Petkov" <bp@alien8.de>,
- "Dave Hansen" <dave.hansen@linux.intel.com>, x86@kernel.org,
- "H. Peter Anvin" <hpa@zytor.com>, "Chris Zankel" <chris@zankel.net>,
- "Max Filippov" <jcmvbkbc@gmail.com>,
- "Alexander Viro" <viro@zeniv.linux.org.uk>,
- "Christian Brauner" <brauner@kernel.org>, "Jan Kara" <jack@suse.cz>,
- =?UTF-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@digikod.net>,
- =?UTF-8?Q?G=C3=BCnther_Noack?= <gnoack@google.com>,
- =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>,
- "Paul Moore" <paul@paul-moore.com>, "James Morris" <jmorris@namei.org>,
- "Serge E. Hallyn" <serge@hallyn.com>,
- "Stephen Smalley" <stephen.smalley.work@gmail.com>,
- "Ondrej Mosnacek" <omosnace@redhat.com>,
- "Tyler Hicks" <code@tyhicks.com>, "Miklos Szeredi" <miklos@szeredi.hu>,
- "Amir Goldstein" <amir73il@gmail.com>
-Cc: linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-m68k@lists.linux-m68k.org,
- linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
- linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org,
- linux-api@vger.kernel.org, Linux-Arch <linux-arch@vger.kernel.org>,
- selinux@vger.kernel.org, ecryptfs@vger.kernel.org,
- linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org,
- "Andrey Albershteyn" <aalbersh@kernel.org>
-Message-Id: <399fdabb-74d3-4dd6-9eee-7884a986dab1@app.fastmail.com>
-In-Reply-To: <20250513-xattrat-syscall-v5-0-22bb9c6c767f@kernel.org>
-References: <20250513-xattrat-syscall-v5-0-22bb9c6c767f@kernel.org>
-Subject: Re: [PATCH v5 0/7] fs: introduce file_getattr and file_setattr syscalls
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250512152525.GA9425@lst.de>
 
-On Tue, May 13, 2025, at 11:17, Andrey Albershteyn wrote:
+On 2025-05-12 17:25:25, Christoph Hellwig wrote:
+> On Mon, May 12, 2025 at 08:12:40AM -0700, Darrick J. Wong wrote:
+> > I wonder if there ought to be guards around blkzoned.h, but OTOH that
+> > seems to have been introduced in 4.9 around 8 years ago so maybe it's
+> > fine?
+> 
+> I think we're fine.  If not we'll also need to do this for mkfs and
+> repair anyway.
+> 
+> > /me is willing to go along with that if the maintainer is.  Meanwhile
 
->
-> 	long syscall(SYS_file_getattr, int dirfd, const char *pathname,
-> 		struct fsxattr *fsx, size_t size, unsigned int at_flags);
-> 	long syscall(SYS_file_setattr, int dirfd, const char *pathname,
-> 		struct fsxattr *fsx, size_t size, unsigned int at_flags);
+Fine by me, looks reasonable
 
-I don't think we can have both the "struct fsxattr" from the uapi
-headers, and a variable size as an additional argument. I would
-still prefer not having the extensible structure at all and just
-use fsxattr, but if you want to make it extensible in this way,
-it should use a different structure (name). Otherwise adding
-fields after fsx_pad[] would break the ioctl interface.
+> > the code changes make sense so as long as there isn't some "set the
+> > write pointer to an arbitrary LBA" command that I missed,
+> 
+> There isn't.  It would have been really useful for testing, though..
+> 
+> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> > 
+> > since we wouldn't be mdrestoring user file data to the zoned section,
+> > right?
+> 
+> Well, mdrestore can't even restore user data :)
+> 
+> 
 
-I also find the bit confusing where the argument contains both
-"ignored but assumed zero" flags, and "required to be zero"
-flags depending on whether it's in the fsx_pad[] field or
-after it. This would be fine if it was better documented.
+-- 
+- Andrey
 
-
-> 		fsx.fsx_xflags |= FS_XFLAG_NODUMP;
-> 		error = syscall(468, dfd, "./foo", &fsx, 0);
-
-The example still uses the calling conventions from a previous
-version.
-
-       Arnd
