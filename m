@@ -1,85 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9291821171F
-	for <linux-xfs@vger.kernel.org>; Tue, 13 May 2025 17:35:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E471A1F4E48
+	for <linux-xfs@vger.kernel.org>; Tue, 13 May 2025 17:35:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747157745; cv=none; b=K0WwTunXkNPYYbYSSEF+fTGO1pKbc7eX/ZHVoFUIcXxGFMCaTLpkG88B+ceRVaf6njL2LldreBK0MwNVgazvS2yy04NrxA5V+XFvKcJy/BADKL72WbsDAoFSekuC9jpSN/SyRvmm8MQT6xWo5KA16oUkxbPCpkOrHdkFv34GGm4=
+	t=1747157757; cv=none; b=OIv0LJJYSQJ++XkPqrkk1ObkGboHUOgAFf22Nhuzz3bHOTUGJFc27WRIJP5fw3KOiSoeF8Gqh9LLtGLtn9E4SQSywjPXAUw7wzG7EOvfuO0xxM5nNnYCZmbXnWcor/Nu4DGiYKE6ADk/BrcEvhgBJjqmw24/E1HI/EmDv7Q3VCA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747157745; c=relaxed/simple;
-	bh=FnfZzEDiKknzZtCDcItNEfL2dV3G6Ah3dDUh21VaUqA=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=enhmphAFfYAgaLIIDALD0xwfVfSbJhaakV/6neIfv/18P7y6hVQUPrTeb+EZLOBWz23pLzp8wz4K9ZmFHhPXFFck3Vuus5ErZMgQZqpSZncbuR43+y2pDUTOaTfEI3Y3jZ4gOhf8hvtJuX2Pel5nPYp+co2pnSLIYKc6vXVMfsE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SKgc6/Ux; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747157757; c=relaxed/simple;
+	bh=ahMoagECh87EqEuCXgIPCK9nOhCHrI8fIMdzc1CIQW0=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=mJY6h/ZITGuTVyXLLIknOkmY/PH1Yxtxzb3mH8S+rpssa7LCgW0BnLFOyaKrKT79Xa501/pRxLr/KWFhGwJZFj9ywNL77x7G+UO0BfYOQwWXOpEh9K1w4Qi5JDzW+fYylt/P8I5BG9wpAn01DIYtbFhwSboixgnAvuAHZ3xt40g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FxBuNoeD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SKgc6/Ux"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6002CC4CEE4
-	for <linux-xfs@vger.kernel.org>; Tue, 13 May 2025 17:35:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FxBuNoeD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18182C4CEE4;
+	Tue, 13 May 2025 17:35:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747157744;
-	bh=FnfZzEDiKknzZtCDcItNEfL2dV3G6Ah3dDUh21VaUqA=;
-	h=Date:From:To:Subject:From;
-	b=SKgc6/Ux/uzzBBRnbs6C5D6KZ+hMg62Y8n5gjFwDfQCkYAAphdt4C4/fGC8sC/yjK
-	 x2HdZOXKOmVNQ+k8pelNj37nZoEUtERVQiPq/uyA/XvQKKYhbPDqn5nFZW4WBPnVxk
-	 X4G8haeLcWDAu29M29NvqaTA1cerESJsBWRO6zqfCe6quzUTM3XmS3qC1ZLQdaIwkk
-	 k0Du0hoQbCCx8efvi/luPiTUh9BiiVsZ2QAgIoBquoYEfO4WGE6mSRkyTLOZcm44xu
-	 QrbgPCXvjh5bVG6duoPsvR+v3+EFe94uxra4nIlh3rkbGp2JS2hPw5g3DD0xe3JUGt
-	 eAB323yd2tmuQ==
-Date: Tue, 13 May 2025 19:35:40 +0200
+	s=k20201202; t=1747157756;
+	bh=ahMoagECh87EqEuCXgIPCK9nOhCHrI8fIMdzc1CIQW0=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=FxBuNoeDr+3ykIsfqt9NAM8M2qfHk3UaqR56VQ2g/TsTByjc1pLGc9w/fpOzMc19M
+	 HmH8M3qKSJ7KnLzJhZLybOHMbuIRGqBMn/7FJ6jJwtjwVK2GnK/SsICEUi4sXST2by
+	 sT72XlONaeWEGkmqnvXArcjdnWUR6/0FHQJgqQoE+7K8sxi2rCt3VA9ne9+8g0cNWW
+	 VgqlOXlQ2Wijl180yaLd6bRgxkuPBWjOXjZjLe8liPTzMWfX6gLOvqbO7bxvrpmS5c
+	 TZw4bFzUasW5SRoaeAcSEcUGYKmrSMoYqkPVUEXnd0FJwmv53aJomzri+RUeEIddEg
+	 +xSm65UC5E4OQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to a0922bf89760
-Message-ID: <sjuhygycuriowxzm6pxl57xx2rps3nqn2zbxm6frw2kke3ovd5@ra47vueh5urk>
+To: Christoph Hellwig <hch@lst.de>
+Cc: djwong@kernel.org, hans.holmberg@wdc.com, linux-xfs@vger.kernel.org, 
+ Hans Holmberg <Hans.Holmberg@wdc.com>
+In-Reply-To: <20250512144306.647922-1-hch@lst.de>
+References: <20250512144306.647922-1-hch@lst.de>
+Subject: Re: [PATCH] xfs: fix zoned GC data corruption due to wrong
+ bv_offset
+Message-Id: <174715775473.709611.3303766064265385831.b4-ty@kernel.org>
+Date: Tue, 13 May 2025 19:35:54 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
+On Mon, 12 May 2025 16:43:05 +0200, Christoph Hellwig wrote:
+> xfs_zone_gc_write_chunk writes out the data buffer read in earlier using
+> the same bio, and currenly looks at bv_offset for the offset into the
+> scratch folio for that.  But commit 26064d3e2b4d ("block: fix adding
+> folio to bio") changed how bv_page and bv_offset are calculated for
+> adding larger folios, breaking this fragile logic.
+> 
+> Switch to extracting the full physical address from the old bio_vec,
+> and calculate the offset into the folio from that instead.
+> 
+> [...]
 
-Hi folks,
+Applied to for-next, thanks!
 
-The for-next branch of the xfs-linux repository at:
+[1/1] xfs: fix zoned GC data corruption due to wrong bv_offset
+      commit: 91ffea7cf2f0b53686bba24c3bd86fa5cedd48d6
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-a0922bf89760 Merge branch 'xfs-6.15-fixes' into for-next
-
-6 new commits:
-
-Carlos Maiolino (1):
-      [a0922bf89760] Merge branch 'xfs-6.15-fixes' into for-next
-
-Christoph Hellwig (1):
-      [91ffea7cf2f0] xfs: fix zoned GC data corruption due to wrong bv_offset
-
-Darrick J. Wong (1):
-      [f0886a57ee89] xfs: stop using set_blocksize
-
-Dave Chinner (1):
-      [23871ab38662] xfs: don't assume perags are initialised when trimming AGs
-
-Hans Holmberg (1):
-      [654a7640418c] xfs: allow ro mounts if rtdev or logdev are read-only
-
-Wengang Wang (1):
-      [3cfcd35c5133] xfs: free up mp->m_free[0].count in error case
-
-Code Diffstat:
-
- fs/xfs/xfs_buf.c     | 6 +++++-
- fs/xfs/xfs_zone_gc.c | 5 +++--
- 2 files changed, 8 insertions(+), 3 deletions(-)
