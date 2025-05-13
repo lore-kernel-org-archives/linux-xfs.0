@@ -1,75 +1,75 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5676522338
-	for <linux-xfs@vger.kernel.org>; Tue, 13 May 2025 21:37:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48BC51F4E57
+	for <linux-xfs@vger.kernel.org>; Tue, 13 May 2025 21:56:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747172240; cv=none; b=hqpo3D6dIyLkthLFhdfkl4IBP4zlHMYkLRG6KN7JzbKEjGYZjNsbIk8B20+eW4tg/rPtfOO/7jtusT1MKxPalE2ZYhoeQYu6fSV4/oUVedJKlqDvXuz5of3OsDiKvQvDIYy2LvS+x5mSjTfm3Fv6AvB3aEGEjsLuId4Ymn79REo=
+	t=1747173421; cv=none; b=UN9QZ2tQnKCZ+swK9m7Pst6nAcsOKzkwnvF84jfo29iDU5GERJSC3eWLy2LpGJQ4RFBDsTmjJBF1k6691vdEjinFTcuoA0NmkJ7dT2VRR4NGZvDbZaoCFTHQvUAZ0vJnIz1katcuGV2yqj/bfkVaGj93JOrBaFrVAY9RoUyZ+0c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747172240; c=relaxed/simple;
-	bh=kkwLr4+ZKxSyCIrCuA3Ysh2CP1sTrzFvfBv2TuA38Vo=;
+	s=arc-20240116; t=1747173421; c=relaxed/simple;
+	bh=/zF1mYp+Qjw1mKBvyibCDQdFS3FVN2otdPIZy4zUN00=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gxgs8Ny5Npd8vmUhxK90aNmdEteeHULbOJQOZK0sX+XeMWVB6herAPHJsBeF/a99eAetz5nljIgLe5J1oDj5ZvVQI0HnRYRnlU+d81iAkvQ4Jyp6wzU6NE/B21LnOWcIp2ADHtNN/N1p59jNAXAhWMhWMi1+NGcMmcSvwYJVEz8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=p5TMdMGW; arc=none smtp.client-ip=209.85.215.169
+	 Content-Type:Content-Disposition:In-Reply-To; b=abWNdSDw+vhmwvZnXvzP0ZgByr1zDBjMfWxpSe2da5YBC9HavZCgTD45GMWOqnfv8pMTsObgzJaJqbnuiqvQ2m/3lnOeNUY8/Sr4YsHga5Qx34G9XhZ1hzVAo5/rHYEezOj1FbZMDxCDY56g2DEij3HScLH7ls3/DsgRDk6traY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=j1zEgH1+; arc=none smtp.client-ip=209.85.214.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="p5TMdMGW"
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-af6a315b491so5356100a12.1
-        for <linux-xfs@vger.kernel.org>; Tue, 13 May 2025 14:37:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="j1zEgH1+"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-23035b3edf1so23944465ad.3
+        for <linux-xfs@vger.kernel.org>; Tue, 13 May 2025 14:56:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1747172237; x=1747777037; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1747173419; x=1747778219; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gfL4aldD/k9cL/F/+Tw+nRa4rFKcv18oFkCPZuBJxtc=;
-        b=p5TMdMGW4mIsBPlCraLKRFPEAktrisA4utrx6Fk7bXWPJz5U5uyUGZOv2VafsoH9p1
-         lO1/dnO7wONw+/Qsez5iCtomdSLTnwoATN+M7GJosE5f7c8IZ50HJVZCWSb+J4K9xDTm
-         RR+dijQs3Flt5kqyscTK/PBpO9w2I4Z7H+kHDAGlWuN1lgq31putB8zvTFyuNy76CSDs
-         s0AbkB7kDPTP2FmPUObxdnc5JgOnFS3doPDLLElYP4nB3fVBIiusss3Mu2h8f7umTHtA
-         G4DubHVNL+GDM/aCjdOxEg0YCQU33bbsoERk61E5bGLE5p3ZzjvUnYfhHXQFL4lIBTmW
-         8HJw==
+        bh=eZA5fGkDhuFz3dZTFRzP7MkkEHNqz8Evy7iH7RQVbCQ=;
+        b=j1zEgH1+cXBmd8et8OxPHFA8BjOk7oqsRIjmzZPl5fBPTZti24PhyajqhsHhgq/Bxn
+         Dhy/flxcfVkekHCXShDNWoKOwlQ9n+zMPbyIax1tT0/1BqQpdLo09Bg3dwon8u/+EjG7
+         yLsEbV5oP+b7JnIJjwWaQ/tuwy7gsqypa2lyBg2eLeBk80gViwuJ1Oi2UZVJQ4woGP/6
+         1yLahk1/2m/oVIRyiNmflEGkls3c3Ak1Rk5bVCKqQn4Zx5+NElIM2mvWX20UDa9P1aGW
+         xlktSjrK1zx0kOrYhMd35DoPxV2LOZCqDmF7WVnoON+1iSgQyxA00IzmO3nDZ9aBujc3
+         d2Bg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747172237; x=1747777037;
+        d=1e100.net; s=20230601; t=1747173419; x=1747778219;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=gfL4aldD/k9cL/F/+Tw+nRa4rFKcv18oFkCPZuBJxtc=;
-        b=lJW0hwS5Vr4NG6BR/o2wlI/zBgaA4DfDFjuLqzdrQiiPfI63LwvdBa3HKheuNWsyeW
-         uUZUrBszc8QPOcUXXaJrHzayeBjbZ2DxBbWxeoRXA7TPHTzA/6LS03j4p2b/bz5tW+fy
-         GQmwwLIyGoOzatZR4v5icnx0bUNLTQF4DThVorMj3E0FojTlVThG4zgutPmyAdmZw1CP
-         iEginUEOQ/JzM8lYASJ0aEu8iJRGPJ2qbe1ZhLqAv76IMl68ZfNlu6pI6IJN2zBU7xVz
-         YMC1HLWuNKPI0bAsjgYjbaezDA22Ii1Y+RdSWNkn6y8maGtbBAqJyByXTRRyiBKr7sYq
-         ru+Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXK5TYxZAm115ee+FNC3SwAdKb4AjNshnBHz98gJ0xRrS5fgbO/QJn7mXICCohFTlwbVg72e0dJPAk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YycDrUR6RmpXM7s9OUab5A0augCodrP0H9eVALTxnSQ+so7e2aC
-	0d62s1T4SCc4QGrtALV++rmLrUKEAQZo6ZBSIOHW0bEZQXC+fEUTM2PEi4dAdQ0=
-X-Gm-Gg: ASbGnct/4FYXBj/qQRWMhfZ5WPIpfMK4dnZbuOVuqRGFUMSd6c57PXaDRRhr+bidVE6
-	dYx/L3UtNUHrdyhk77vKX9WDrGcM8Ugf0xwmiVH/DXMrNjjn8g8TKhg25DBtvETexF+MJ1Tkl3C
-	ouHqHuQWcOuVPbo5DehOa1O1Fi9ziiXX9/AufDs2nlbvcTnNTwa3k0sRlomd786D2vciqeoemGi
-	rNhRMbIR0NWWLpig1eyzL3HjoUHAJiOLDuarFZ6xqUygXcaFveZh6eu/1H/sxMEflA8kUOyjfX0
-	aFgwQo9rycPtetl6d5W8dm/zAuuYqk42peIxTg7ZreorKBQHqe0H7jJDK3q7oHqCCOZZ2fnigV4
-	Yl1cGWkvRLfW5J/welYi/GQQQ
-X-Google-Smtp-Source: AGHT+IFWIJ3Wb7cCrtW1fvZR1IrOX3xnWBLrjcvh6wJX5v7n6dlGHBw1OrJ6xR/g1GILcGayZ10Oqw==
-X-Received: by 2002:a17:903:8c3:b0:22e:5882:1812 with SMTP id d9443c01a7336-2319819ec3emr13383095ad.32.1747172237554;
-        Tue, 13 May 2025 14:37:17 -0700 (PDT)
+        bh=eZA5fGkDhuFz3dZTFRzP7MkkEHNqz8Evy7iH7RQVbCQ=;
+        b=vEG2tKZSJGiC355kLan9y17Plvauh4ahjWMbjEo57NvRlSMv9AJGRv7QQqOxyNslfo
+         meFfMU8VqARWMV5gSBEBS6DrENp+vuZMlGUcTCI9qw9F8MPKSp7RfZFx/Mn5fRYghhzh
+         bejY+u5MtWkU69i6//r/00sfd4stDvSiHDFmKhIdMqnC4WWFevvOzDmuvIjRQ8cJk1l8
+         Wzhps3e7Ge2gWRip1NCUlPONVRtPimoVtjX+N/H6EUu6NiwZfUIipAwgCIqNd9Bsvhyh
+         GO9Y5Wr1e631VaH87BCH1p4Ehn724vrvessqNuzz1/Sqawsi66QJV1vyAxNJh5ASxuQK
+         J3gQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV9AuBTx7KyLDEtDaw0RVuJXsD7EYBTQ8OMM7Pb5uk0vNOSBfjazwMidwFJxcNHNy9+a1tc+8/elWY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YywqjvYwO0HKRjcJHzLRcmWS/XKW5/IHPq6o5fsA3DMqRM3voJJ
+	p0bBOk0XmbJZwif7gMyjhkP9dHZFOL0FkUfRZ/ZUJKjwoOf+VgrTPDeKLOp5P7k=
+X-Gm-Gg: ASbGncvnkoXYdvlX2rqwFIIpw+lWAEvJ7o4M59ACc2oGrTtpxbbbVljtnLJT9SwBN9d
+	r+HPBK9N+0A/IFVMhTwNZXiRV//8NGu7EhT6n6WUPLsOcUhBVVeYRwlcl9Kg3WVrSxkwwVhaFhJ
+	tSVi48I7DuDa5j97mP2bDgQQPRsxOenAO+pYl59I8RLa9SC5PMjWCBCx7QJzNSce0PJcvod0XHu
+	CSJMS9yMEU0lpXL3VEbR3TzuMPi5ABVlnK9q/T10TUVg5LWy0+2Dsp+8caaJSg/fjAtn2X+UP8w
+	aUTF88cgmpvRlcWlMHzj+ZW3Xgmp+yEffEPtLyy1Wga4v5wL8pOi0cC8ynWROwIi5RwLntl2hm8
+	fxz5XMpQDe6eWFDtTdI9y6BG1
+X-Google-Smtp-Source: AGHT+IFwcTKvJORimT5ASOuSIGOHxsEuSSyFah+YehraNrSSTWMKnHLpvk3NB/MeLAAPLB1ACpSogQ==
+X-Received: by 2002:a17:902:da83:b0:22e:7e00:4288 with SMTP id d9443c01a7336-231983f66b0mr14677925ad.53.1747173419381;
+        Tue, 13 May 2025 14:56:59 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22fc82c3063sm85694995ad.244.2025.05.13.14.37.16
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22fc8271a7dsm86946075ad.153.2025.05.13.14.56.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 May 2025 14:37:17 -0700 (PDT)
+        Tue, 13 May 2025 14:56:58 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.98.2)
 	(envelope-from <david@fromorbit.com>)
-	id 1uExJK-000000039bc-1NkR;
-	Wed, 14 May 2025 07:37:14 +1000
-Date: Wed, 14 May 2025 07:37:14 +1000
+	id 1uExcO-000000039yV-1X40;
+	Wed, 14 May 2025 07:56:56 +1000
+Date: Wed, 14 May 2025 07:56:56 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org,
-	cen zhang <zzzccc427@gmail.com>
-Subject: Re: [PATCH] xfs: mark the i_delayed_blks access in xfs_file_release
- as racy
-Message-ID: <aCO7injOF7DFJGY9@dread.disaster.area>
-References: <20250513052614.753577-1-hch@lst.de>
+To: cen zhang <zzzccc427@gmail.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	baijiaju1990@gmail.com, zhenghaoran154@gmail.com
+Subject: Re: Subject: [BUG] Five data races in in XFS Filesystem,one
+ potentially harmful
+Message-ID: <aCPAKC7OeCIGtVMM@dread.disaster.area>
+References: <CAFRLqsVtQ0CY-6gGCafMBJ1ORyrZtRiPUzsfwA2uNjOdfLHPLw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,42 +78,91 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250513052614.753577-1-hch@lst.de>
+In-Reply-To: <CAFRLqsVtQ0CY-6gGCafMBJ1ORyrZtRiPUzsfwA2uNjOdfLHPLw@mail.gmail.com>
 
-On Tue, May 13, 2025 at 07:26:14AM +0200, Christoph Hellwig wrote:
-> We don't bother with the ILOCK as this is best-effort and thus a racy
-> access is ok.  Add a data_race() annotation to make that clear to
-> memory model verifiers.
+On Tue, May 13, 2025 at 08:25:49PM +0800, cen zhang wrote:
+> Hello maintainers,
+> 
+> I would like to report five data race bugs we discovered in the XFS
+> filesystem on Linux kernel v6.14-rc4. These issues were identified
+> using our in-kernel data race detector.
+> 
+> Among the five races, we believe that four may be benign and could be
+> annotated using `data_race()` to suppress false positives from
+> analysis tools. However, one races involve shared global state or
+> critical memory, and their effects are unclear.
+> We would appreciate your evaluation on whether those should be fixed
+> or annotated.
+> 
+> Below is a summary of the findings:
+> 
+> ---
+> 
+> Benign Races
+> ============
+> 
+> 1. Race in `xfs_bmapi_reserve_delalloc()` and  `xfs_vn_getattr()`
+> ----------------------------------------------------------------
+> 
+> A data race on `ip->i_delayed_blks`.
 
-IMO, that's the thin edge of a wedge. There are dozens of places in
-XFS where we check variable values without holding the lock needed
-to serialise the read against modification.
+Not a bug. xfs_vn_getattr() runs unlocked as per the Linux VFS
+design. -Everything- that is accessed in xfs_vn_getattr() is a data
+race.
 
-For example, i_delayed_blks updates are protected by the ILOCK, so
-there's a data race if we read it without the ILOCK held.  We do
-this in:
+> 2. Race on `xfs_trans_ail_update_bulk` in `xfs_inode_item_format`
+> -------------------------------------.
+> 
+> We observed unsynchronized access to `lip->li_lsn`, which may exhibit
+> store/load tearing. However, we did not observe any symptoms
+> indicating harmful behavior.
 
-	xfs_file_release() - the one this patch addresses
-	xfs_getbmap() - unlocked access for data fork
-	xfs_can_free_eofblocks() - checked twice without locking
-	xfs_inodegc_set_reclaimable() - unlocked, but debug
-	xfs_inode_has_filedata() - unlocked via xfs_inactive()
-	xfs_vn_getattr() - unlocked
-	xfs_qm_dqusage_adjust() - unlocked ASSERT
+Not a bug. The lsn in the log_dinode is garbage and not used
+during recovery - it's mainly there as potential debug information.
 
-And that's just this one variable in the inode - there are lots of
-others we check without bothering to lock the inode.
+> 3. Race on `pag->pagf_freeblks`
+> -------------------------------
+> 
+> Although concurrent, this race is unlikely to affect correctness.
 
-e.g. pretty much everythign that xfs_vn_getattr() reads is a data
-race because "unlocked racy access" is the way stat is designed to
-work on Linux.
+It's an optimisitic check done knowing that we don't hold locks and
+it can race. The code is explicitly designed this way. Every other
+pagf variable used in these algorithms is also racy.
 
-Hence my question - are we now going to make it policy that every
-possible racy access must be marked with data_race() because there
-is some new bot that someone is running that will complain if we
-don't?  Are you committing to playing whack-a-mole with the memory
-model verifiers to silence all the false positives from these
-known-to-be-safe access patterns?
+> 4. Race on `pag->pagf_longest`
+> ------------------------------
+> 
+> Similar to the previous race, this field appears to be safely used
+> under current access patterns.
+
+Like this one.
+
+> Possibly Harmful Race
+> ======================
+> 
+> 1. Race on `bp->b_addr` between `xfs_buf_map_pages()` and `xfs_buf_offset()`
+> ----------------------------------------------------------------------------
+> 
+> Concurrent access to bp->b_addr happens during buffer preparation and
+> usage. Since this is pointer manipulation of page mappings, store/load
+> tearing or unexpected reuse might lead to memory corruption or invalid
+> log item formats. We are not confident in classifying this race as
+> benign or harmful and would appreciate your guidance on whether it
+> should be fixed or annotated.
+
+Impossible. It should be obvious that an object undergoing
+instantiation can't have a locked, referenced access from some other
+object in some other code....
+
+As I said in my reply to Christoph's patch - there are going to be
+-hundreds- of these sorts false positives in XFS. Unless there is a
+commitment to annotate every single false positive and address the
+"data race by design" methods within the VFS architecture, there's
+little point in playing an ongoing game of whack-a-mole with these.
+
+Have the policy discussion and obtain a commit to fixing the many,
+many false positives that this verification bot will report before
+dumping many, many false positive reports on the list.
 
 -Dave.
 -- 
