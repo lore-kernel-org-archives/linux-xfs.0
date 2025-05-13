@@ -1,99 +1,130 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57E001FC3
-	for <linux-xfs@vger.kernel.org>; Mon, 12 May 2025 23:07:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4F3322EE5;
+	Tue, 13 May 2025 05:19:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747091237; cv=none; b=Ubr2rcU0fnHzGqg7fvR1RGrrD7S4MejRRNTdLwWSyb31CAA5W2z29hjGd/G7JGojNTssEWA0S5pvRVWBZGkUCJLjkvUDnptlLgHI0k8I0gqt4ET+q+aYzsj7V8wQRt6SBHeC8r36+42vLyjLw8Wg8OG9LsSk0P1usGJ4kdVKzfk=
+	t=1747113581; cv=none; b=a6+d9CHWb9JLBkxXAL/gwUulw6kXgDqk1SXKVx6U49MfkBqJqLxdpaSoRpzV82BXNWIaTg4rv+wL+COXHZBDqRsw5yGmyOUo1A4wwj3vJ7/YZpQ7TPz9DfgpMpitRDD5+znWKowj86BlhevUJx71Gk23BiauCWjBJYB/3MJe240=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747091237; c=relaxed/simple;
-	bh=qRcNiq83JweqQcYK8kq4aGr2ZJoc2Y2/sCh/irswA1I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GrPvBHNKpvwLnZvevNd0hTO+kS9zdeGD+ur3LJCa/xNWmtWrqCSJYhMhTukEjIf1LoJo5R/WhbMow/HsBsn0+7iFSR7mOV1eqnAIgLsBBpT/3S5A6M+y/jrUWWfzIMi7ApTeAoAtjo8pRRFvJNJPpzFh8LcDjB29541s2/8EoBo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=CcirjXB8; arc=none smtp.client-ip=209.85.210.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1747113581; c=relaxed/simple;
+	bh=lfsESqOgoRwfBiHv60b9CNrEZOrAqxPrD0gPOpU19+U=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Z234IGW6SPiPAGge4Dq0jkqhmzVWblXoVqNPGCp06GkPc6Skm6sYeHegS7PBtUPulzHuuJRv5RlGhJukajkhCrKDdsoF1ORtzz1cE81eZQ7Fk/p05aiarQ3YoAeAiUmQJw++CGS2683IMjMHDjkFZqFYBHsCamD9G4IdGREBJH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Yn4/2bYe; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="CcirjXB8"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-742596d8b95so2521723b3a.1
-        for <linux-xfs@vger.kernel.org>; Mon, 12 May 2025 16:07:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1747091232; x=1747696032; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=WK7Yd8P7FpRuxY5aAd5983KfadgpMOEiZza+JUavOPU=;
-        b=CcirjXB8TK0i1LSeIt2Ods1cGPlLkGkWaoRmkiTPpvY1sUCvIgejlI32HAq/nW0AZm
-         fHu1qEsGJ0HI6aFql/5IeKTopobza8AWi1gBChM8rqh/tUEEtOUp4hFMR1PyeOVJkGhN
-         pDZ5EJRLdvFpbyc5UzKokLpAEt1OUc9OFkP1MsBy947oHphk2dAQS+8xmoqvAwVe93hn
-         dDIJnrzT0mkbROMr1dPPtQxrR/qeidnKWnwiKcm5oyQhtBfzw97gn7wZD7l1blBiwAmr
-         9vkjen3D98cbGm5fS8wSgrnj5oZG6bxyLxVT/9oeJYGtJhM1VOaKcfq1MDwXWL0I48Ez
-         ODZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747091232; x=1747696032;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WK7Yd8P7FpRuxY5aAd5983KfadgpMOEiZza+JUavOPU=;
-        b=vMvqSAW+MLJUwqZyQCJQNnNJmqoPeyjNT6wu68TgH5vfoamIw6A8RJvzp5F7DIESAt
-         KUKGbbZJ2yPvjduq+pMMWhG16Pr89+7OLqSRuU8sLscTx1YJEFibozEoueorZFL7sGcF
-         cZeFl2YpeznQ0ctAHJlQZbq0iaEpuAAfuvCGuSByeEcQcmZRklyL9O1dOcPZnc0B+i6I
-         L6N1miWLCQnw4kJNtsWlAfSkC54jSZgi2Bp/V781rieGgzDAfa5M6UjrIoNHTE61a15N
-         gdZPEZgYAIq1emHUaszO5OIzatv46sPI5Bmt0IG/vWXYaZSn/e9tjJNThmikHjkio6n0
-         iinQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXiSde7J299nhwV0czrLP9QmsXbwaScjdfbm/oMsyCu8o4PO6ciMmbnvWg1iWPmVYeFYi0XKBoB1ag=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwxNTqYKz00b4H6kO+SR9kzvG32LHvpBeufpLGX4vSAy01+HDLt
-	+c0VdV9RBZ7q+/dF2pfFQrAMzNsoVtH4jfTkMtj8+jwsVb5gMhkAew+9r7ZzTUw=
-X-Gm-Gg: ASbGncuAW1QJscgbezxqVVr9K2DqFpe1EdtvjJGvDpXLG0fLp4c6QhvZsTx5y+GnLAu
-	HV5MmW58+PSv3iGU8RWu/dQK3sRvNsy4e/p2MLZUhgpTcA1c+6zHG6BfkSamX6PsHTzH54g8Vq/
-	NuX8RmBaxwEI/0UGnqclY7Dzni89l48WmRYnzWkfjLtmcYGSchAeQh/h/CEB22/APp8fvYgN+c7
-	P3RhlS/7LUQ+Wk6I5F6YU2geWOmtAwip6MVY/O5tuz8ARjSRC/CnifTPNxSAZ+NXnoUbfRkAJ6K
-	rE0EM8braf4+B1hmqqHE2b9IeqIIbB83wjU1xKf9QwSBb87ofiS/Tsh3+PZXUai529OjCMofJmN
-	T2TRvLdLm6dAcuw==
-X-Google-Smtp-Source: AGHT+IEwoMBYExdTvspniPjmOtpyEWuDpafJkhtbN1Qs9YtB2zpqDP1aOIc7Sy6N+jI+KDLx+moeuQ==
-X-Received: by 2002:a05:6a00:17a7:b0:736:5b85:a911 with SMTP id d2e1a72fcca58-7423bc128f2mr25276221b3a.8.1747091232587;
-        Mon, 12 May 2025 16:07:12 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-60-96.pa.nsw.optusnet.com.au. [49.181.60.96])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-742377050c6sm6467660b3a.21.2025.05.12.16.07.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 May 2025 16:07:11 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1uEcEn-00000002lRN-1YFL;
-	Tue, 13 May 2025 09:07:09 +1000
-Date: Tue, 13 May 2025 09:07:09 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: remove some EXPERIMENTAL warnings
-Message-ID: <aCJ_HTLLV7zoAYQ-@dread.disaster.area>
-References: <20250510155301.GC2701446@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Yn4/2bYe"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=03K7m5a1W13fmTRWGaI0aim1lcedCpAINqDepMP0y3Y=; b=Yn4/2bYevrExt7x5XZ/qCZDZF0
+	O15YaYQMx8fkGLspHEp7mOM262yLmG8bps8nI7RcIqlNvO/o/1cF0gtVVLdAGpG3QKh7GEE3rBDvH
+	xrDbn0d3EuMlUVbX52I9pegPi/nvupTbFz/uus9dXKOVVED/nmVURdZCNmPIKcmMp+FPVpC4MlP7A
+	sGGk+LNYLxj1apv88I5AHj0rRCHw74y80+b3Q+u71Y4EdGIPUDvItGdvOOgq4KZ+A4YaAyq8DPPrv
+	r3MQKVwm/nbAzIn48iQ1bSbAiXF40BI28PS3UNChxUONGhEj/6RyRgZfl0D6vxgiGE3VwqjvXYPJw
+	pt0RM1ng==;
+Received: from 2a02-8389-2341-5b80-3c00-8f88-6e38-56f1.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:3c00:8f88:6e38:56f1] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uEi3F-0000000BNPY-1mBN;
+	Tue, 13 May 2025 05:19:37 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: zlang@kernel.org
+Cc: djwong@kernel.org,
+	hans.holmberg@wdc.com,
+	linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: [PATCH] xfs: skip test that want to mdrestore to block devices on zoned devices
+Date: Tue, 13 May 2025 07:19:33 +0200
+Message-ID: <20250513051933.752414-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250510155301.GC2701446@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Sat, May 10, 2025 at 08:53:01AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Online fsck was finished a year ago, in Linux 6.10.  The exchange-range
-> syscall and parent pointers were merged in the same cycle.  None of
-> these have encountered any serious errors in the year that they've been
-> in the kernel (or the many many years they've been under development) so
-> let's drop the shouty warnings.
-> 
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+mdrestore doesn't work on zoned device, so skip tests using to
+pre-populate a file system image.
 
-Seems reasonable to me. I haven't encountered any problems with them
-over the past few months, so no objections here.
+This was previously papered over by requiring fallocate, which got
+removed in commit eff1baf42a79 ("common/populate: drop fallocate mode 0
+requirement").
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ common/populate |  2 +-
+ common/xfs      | 14 ++++++++++++++
+ tests/xfs/284   |  1 +
+ tests/xfs/598   |  1 +
+ 4 files changed, 17 insertions(+), 1 deletion(-)
 
+diff --git a/common/populate b/common/populate
+index 50dc75d35259..1c0dd03e4ac7 100644
+--- a/common/populate
++++ b/common/populate
+@@ -19,7 +19,7 @@ _require_populate_commands() {
+ 	"xfs")
+ 		_require_command "$XFS_DB_PROG" "xfs_db"
+ 		_require_command "$WIPEFS_PROG" "wipefs"
+-		_require_command "$XFS_MDRESTORE_PROG" "xfs_mdrestore"
++		_require_scratch_xfs_mdrestore
+ 		;;
+ 	ext*)
+ 		_require_command "$DUMPE2FS_PROG" "dumpe2fs"
+diff --git a/common/xfs b/common/xfs
+index 96c15f3c7bb0..4ac29a95812b 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -772,6 +772,20 @@ _scratch_xfs_mdrestore()
+ 	_xfs_mdrestore "$metadump" "$SCRATCH_DEV" "$logdev" "$rtdev" "$@"
+ }
+ 
++# Check if mdrestore to the scratch device is supported
++_require_scratch_xfs_mdrestore() {
++	_require_command "$XFS_MDRESTORE_PROG" "xfs_mdrestore"
++
++	# mdrestore can't restore to zoned devices
++        _require_non_zoned_device $SCRATCH_DEV
++	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ]; then
++		_require_non_zoned_device $SCRATCH_LOGDEV
++	fi
++	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ]; then
++		_require_non_zoned_device $SCRATCH_RTDEV
++	fi
++}
++
+ # Do not use xfs_repair (offline fsck) to rebuild the filesystem
+ _xfs_skip_offline_rebuild() {
+ 	touch "$RESULT_DIR/.skip_rebuild"
+diff --git a/tests/xfs/284 b/tests/xfs/284
+index 91c17690cabe..79bf80842234 100755
+--- a/tests/xfs/284
++++ b/tests/xfs/284
+@@ -27,6 +27,7 @@ _require_xfs_copy
+ _require_test
+ _require_scratch
+ _require_no_large_scratch_dev
++_require_scratch_xfs_mdrestore
+ 
+ function filter_mounted()
+ {
+diff --git a/tests/xfs/598 b/tests/xfs/598
+index 20a80fcb6b91..82a9a79208ab 100755
+--- a/tests/xfs/598
++++ b/tests/xfs/598
+@@ -28,6 +28,7 @@ _require_test
+ _require_scratch
+ _require_xfs_mkfs_ciname
+ _require_xfs_ciname
++_require_scratch_xfs_mdrestore
+ 
+ _scratch_mkfs -n version=ci > $seqres.full
+ _scratch_mount
 -- 
-Dave Chinner
-david@fromorbit.com
+2.47.2
+
