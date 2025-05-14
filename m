@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7C81F4ED;
-	Wed, 14 May 2025 16:01:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADDD619E806;
+	Wed, 14 May 2025 16:04:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747238504; cv=none; b=Z7tWkB+/bhFyJotcs0AaOLyZidjwQLi+aieJZ2zZxnM3MySytBH2+po5vcCkOHsrMUe2yVQECwETLx97F7LACORYyGHWUtWsOa8wJ/HImxGgsrPcQzONEm/4ye7RJT8HeZX6X4Z5ypLAO3NVw1utTBZg5imAhP4FFtEZjeoShAs=
+	t=1747238656; cv=none; b=ENtXfx74roJwpS3ZDL5nSgxOnEmIZtAw+RmeaPCyjFhvlXki+tGH53jhiuiNzooBIUjmYuScOcw4EwbHmHnBDHd7jelzJ04GX4nva+G0t1sHvUDeDZFjFOGSkPsxLzdePoYIOX9lTRcKWL82VZ8UgkIwUvw8eYg7PIB0civoOmU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747238504; c=relaxed/simple;
-	bh=i5Oy+0Cf6/6WJIdi+1OpMQ6l12Rf56sqFwB8APP6HQE=;
+	s=arc-20240116; t=1747238656; c=relaxed/simple;
+	bh=UoILDnodfwOQfF4Slytdr6msXd/TxOnELBTp+mEsNYE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hN/IYK8DSEn3KV+id70FuLvA7msBT+lfCbUBVIfTm8OhFNYePu7liPd1kTdbljLRQGKJnTDi47mOR36hkDlTOudMH41kcrsr7QtzNgSXOLSD8fxhfcuZNAEerJc7C2agEMJB4V6GtQnbss147OAO05f8ov74n+isgQHFcKLafTA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oWLqdzN9; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=IRcTkVExnTGEzr7bQTt+GP+EifM7cnIKaa8AO10EKLItFFRRYW6HWNI7T2yvnzuSxnZrqyxfwS39NBo+KKB0ukHoy8aPd28Vc926UeFGk7MyeR2HaZQB7GmEEW+zRCDUgUR8tZPgpCiJ/z2F0SU6XZhOX5ITQ7tlQ+eMhypDLhQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gdaCLCcs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oWLqdzN9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B0EFC4CEE3;
-	Wed, 14 May 2025 16:01:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gdaCLCcs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1646CC4CEE3;
+	Wed, 14 May 2025 16:04:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747238504;
-	bh=i5Oy+0Cf6/6WJIdi+1OpMQ6l12Rf56sqFwB8APP6HQE=;
+	s=k20201202; t=1747238654;
+	bh=UoILDnodfwOQfF4Slytdr6msXd/TxOnELBTp+mEsNYE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oWLqdzN9Qu7TrMbGnkgG2yt4Cq1DGt8JxoRcwtYDNofAxio9G8YJllnnyHjscFykm
-	 INMYxJC9uUFv/mNXvN2HQDAWm2qKB0qMnzH6gwB5D1AxOK7mrqNlIUkiSqvFtmyoYn
-	 s4oRdR3O6yHba352adaysoohdtsSZiynNrBBdxD96JT+xNTLCZ9C4LCX67Mj0J/7/F
-	 fDhHV6k+wD4MFnhUK1gKLVF6oJg7GUKWYNUDtlK4pX/bdeFzeoeRj8DI3P6eSxxCMM
-	 qYwENSDD4Ut+fpJr79ZzIbIsVkx8EKAIk5oW8+s7maI6HxqxUKBImC6sJkc0Oh19SP
-	 Y98hF5P5ymanA==
-Date: Wed, 14 May 2025 09:01:43 -0700
+	b=gdaCLCcs11Cu1hg+8W9I5k07vrZa8caQxBD5XI9vJn2ey58p3Zk6bFob8ZpEDpVZ8
+	 DqK9HPNuGQDy7oAF3aq8worLfxkrBFCiXvURJxfvB3w/L/Pl7sDV1L6kl0vPDQ213J
+	 Il0LlumxlZET2D/EM4l10/XYU8HF696FHyIGpDcnQVnMv6zTTBzSHIMbSliB5fL3fI
+	 KTlQ6iPserXdf56v7DdejD5ZeCWKl2atBtK775dPtZ9Nt5CuXRZ01dKzoRW3i8DAAX
+	 zYYyrYjOgYbuN0Iut4oPqxvZzwlHw2WlX4l65hEns1SlOgiltgEiuVYCUqVVUPvaGu
+	 dmKbwUvklAWzw==
+Date: Wed, 14 May 2025 09:04:13 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Catherine Hoang <catherine.hoang@oracle.com>, linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Subject: Re: [PATCH 6/6] generic: various atomic write tests with scsi_debug
-Message-ID: <20250514160143.GW25667@frogsfrogsfrogs>
-References: <20250514002915.13794-1-catherine.hoang@oracle.com>
- <20250514002915.13794-7-catherine.hoang@oracle.com>
- <4120689f-27cd-4114-9052-adba0a7e91d4@oracle.com>
+To: Hans Holmberg <Hans.Holmberg@wdc.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Dave Chinner <david@fromorbit.com>, hch <hch@lst.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] xfs: free the item in xfs_mru_cache_insert on failure
+Message-ID: <20250514160413.GL2701446@frogsfrogsfrogs>
+References: <20250514104937.15380-1-hans.holmberg@wdc.com>
+ <20250514104937.15380-2-hans.holmberg@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,215 +45,107 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4120689f-27cd-4114-9052-adba0a7e91d4@oracle.com>
+In-Reply-To: <20250514104937.15380-2-hans.holmberg@wdc.com>
 
-On Wed, May 14, 2025 at 02:41:40PM +0100, John Garry wrote:
+On Wed, May 14, 2025 at 10:50:37AM +0000, Hans Holmberg wrote:
+> From: Christoph Hellwig <hch@lst.de>
 > 
-> > +++ b/tests/generic/1222
-> > @@ -0,0 +1,86 @@
-
-<snip>
-
-> > +# try all of the advertised sizes
-> > +echo "all should work"
-> > +for ((i = min_awu; i <= max_awu; i *= 2)); do
-> > +	$XFS_IO_PROG -f -c "falloc 0 $((max_awu * 2))" -c fsync $testfile
-> > +	_test_atomic_file_writes $i $testfile
-> > +	_simple_atomic_write $i $i $testfile -d
-> > +done
-> > +
-> > +# does not support buffered io
-> > +echo "one EOPNOTSUPP for buffered atomic"
-> > +_simple_atomic_write 0 $min_awu $testfile
-> > +
-> > +# does not support unaligned directio
-> > +echo "one EINVAL for unaligned directio"
-> > +_simple_atomic_write $sector_size $min_awu $testfile -d
+> Call the provided free_func when xfs_mru_cache_insert as that's what
+> the callers need to do anyway.
 > 
-> I figure that $sector_size is default at 512, which would never be equal to
-> fsblocksize (so the test looks ok)
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
 
-For now, yes -- the only filesystems supporting atomic writes (ext4 and
-XFS v5) don't support 512b fsblocks.
-
-<snip>
-
-> > diff --git a/tests/generic/1223 b/tests/generic/1223
-> > new file mode 100755
-> > index 00000000..8a77386e
-> > --- /dev/null
-> > +++ b/tests/generic/1223
-> > @@ -0,0 +1,66 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2025 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 1223
-> > +#
-> > +# Validate multi-fsblock atomic write support with or without hw support
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest auto quick rw atomicwrites
-> > +
-> > +. ./common/atomicwrites
-> > +
-> > +_require_scratch
-> > +_require_atomic_write_test_commands
-> > +
-> > +echo "scratch device atomic write properties" >> $seqres.full
-> > +$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $SCRATCH_DEV >> $seqres.full
-> > +
-> > +_scratch_mkfs >> $seqres.full
-> > +_scratch_mount
-> > +test "$FSTYP" = "xfs" && _xfs_force_bdev data $SCRATCH_MNT
-> > +
-> > +testfile=$SCRATCH_MNT/testfile
-> > +touch $testfile
-> > +
-> > +echo "filesystem atomic write properties" >> $seqres.full
-> > +$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $testfile >> $seqres.full
-> > +
-> > +sector_size=$(blockdev --getss $SCRATCH_DEV)
-> > +min_awu=$(_get_atomic_write_unit_min $testfile)
-> > +max_awu=$(_get_atomic_write_unit_max $testfile)
-> > +
-> > +$XFS_IO_PROG -f -c "falloc 0 $((max_awu * 2))" -c fsync $testfile
-> > +
-> 
-> It seems many sub-tests are same as 1222
-> 
-> It is difficult to factor them out?
-
-Yes.  g/1222 will _notrun itself if the scsi_debug module isn't present
-or the fake device cannot be created.  Apparently many of the people who
-run fstests also have test infrastructure that cannot handle modules, so
-they don't run anything involving scsi_debug.
-
-That's why g/1223 only requires that the scratch fs advertises some sort
-of atomic write capability, it doesn't care how it provides that.
-
-<snip>
-
-> > diff --git a/tests/generic/1224 b/tests/generic/1224
-> > new file mode 100644
-> > index 00000000..fb178be4
-> > --- /dev/null
-> > +++ b/tests/generic/1224
-
-<snip>
-
-> > +# atomic write max size
-> > +dd if=/dev/zero of=$file1 bs=1M count=10 conv=fsync >>$seqres.full 2>&1
-> > +aw_max=$(_get_atomic_write_unit_max $file1)
-> > +cp $file1 $file1.chk
-> > +$XFS_IO_PROG -dc "pwrite -D -V1 0 $aw_max" $file1 >>$seqres.full 2>&1
-> > +$XFS_IO_PROG -c "pwrite 0 $aw_max" $file1.chk >>$seqres.full 2>&1
-> > +cmp -s $file1 $file1.chk || echo "file1 doesnt match file1.chk"
-> > +#md5sum $file1 | _filter_scratch
-> > +
-> > +# atomic write max size on fragmented fs
-> > +avail=`_get_available_space $SCRATCH_MNT`
-> > +filesizemb=$((avail / 1024 / 1024 - 1))
-> > +fragmentedfile=$SCRATCH_MNT/fragmentedfile
-> > +$XFS_IO_PROG -fc "falloc 0 ${filesizemb}m" $fragmentedfile
-> > +$here/src/punch-alternating $fragmentedfile
-> > +touch $file3
-> > +$XFS_IO_PROG -dc "pwrite -A -D -V1 0 65536" $file3 >>$seqres.full 2>&1
-> > +md5sum $file3 | _filter_scratch
-> 
-> nice :)
-> 
-> But we also test RWF_NOWAIT at some stage?
-> 
-> RWF_NOWAIT should fail always for filesystem-based atomic write
-
-It's hard to test NOWAIT because the selected io path might not actually
-encounter contention, and there are various things that NOWAIT will wait
-on anyway (like memory allocation and metadata reads).
-
-<snip>
-
-> > diff --git a/tests/generic/1225 b/tests/generic/1225
-> > new file mode 100644
-> > index 00000000..600ada56
-> > --- /dev/null
-> > +++ b/tests/generic/1225
-> 
-> I think that we should now omit this test. We don't guarantee serialization
-> of atomic writes, so no point in testing it.
-> 
-> I should have confirmed this earlier, sorry
-
-Ok.
-
-<snip>
-
-> > diff --git a/tests/xfs/1216 b/tests/xfs/1216
-> > new file mode 100755
-> > index 00000000..d9a10ed9
-> > --- /dev/null
-> > +++ b/tests/xfs/1216
-> > @@ -0,0 +1,68 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2025 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 1216
-> > +#
-> > +# Validate multi-fsblock realtime file atomic write support with or without hw
-> > +# support
-> 
-> nice to see rtvol being tested.
-
-Thanks. :)
-
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest auto quick rw atomicwrites
-> > +
-> > +. ./common/atomicwrites
-> > +
-> > +_require_realtime
-> > +_require_scratch
-> > +_require_atomic_write_test_commands
-> > +
-> > +echo "scratch device atomic write properties" >> $seqres.full
-> > +$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $SCRATCH_RTDEV >> $seqres.full
-> > +
-> > +_scratch_mkfs >> $seqres.full
-> > +_scratch_mount
-> > +test "$FSTYP" = "xfs" && _xfs_force_bdev realtime $SCRATCH_MNT
-
-Don't need this FSTYP test here, FSTYP is always xfs.
-
-<snip>
-
-> > diff --git a/tests/xfs/1217 b/tests/xfs/1217
-> > new file mode 100755
-> > index 00000000..012a1f46
-> > --- /dev/null
-> > +++ b/tests/xfs/1217
-> > @@ -0,0 +1,70 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2025 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 1217
-> > +#
-> > +# Check that software atomic writes can complete an operation after a crash.
-> > +#
-> 
-> Could we prove that we get a torn write for a regular non-atomic write also?
-
-Perhaps?  But I don't see the point -- non-atomic write completions
-could be done atomically.
+Looks ok,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> > +. ./common/preamble
-> > +_begin_fstest auto quick rw atomicwrites
-> > +
+> ---
+>  fs/xfs/xfs_filestream.c | 15 ++++-----------
+>  fs/xfs/xfs_mru_cache.c  | 15 ++++++++++++---
+>  2 files changed, 16 insertions(+), 14 deletions(-)
 > 
-> Thanks,
-> John
+> diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+> index a961aa420c48..044918fbae06 100644
+> --- a/fs/xfs/xfs_filestream.c
+> +++ b/fs/xfs/xfs_filestream.c
+> @@ -304,11 +304,9 @@ xfs_filestream_create_association(
+>  	 * for us, so all we need to do here is take another active reference to
+>  	 * the perag for the cached association.
+>  	 *
+> -	 * If we fail to store the association, we need to drop the fstrms
+> -	 * counter as well as drop the perag reference we take here for the
+> -	 * item. We do not need to return an error for this failure - as long as
+> -	 * we return a referenced AG, the allocation can still go ahead just
+> -	 * fine.
+> +	 * If we fail to store the association, we do not need to return an
+> +	 * error for this failure - as long as we return a referenced AG, the
+> +	 * allocation can still go ahead just fine.
+>  	 */
+>  	item = kmalloc(sizeof(*item), GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+>  	if (!item)
+> @@ -316,14 +314,9 @@ xfs_filestream_create_association(
+>  
+>  	atomic_inc(&pag_group(args->pag)->xg_active_ref);
+>  	item->pag = args->pag;
+> -	error = xfs_mru_cache_insert(mp->m_filestream, pino, &item->mru);
+> -	if (error)
+> -		goto out_free_item;
+> +	xfs_mru_cache_insert(mp->m_filestream, pino, &item->mru);
+>  	return 0;
+>  
+> -out_free_item:
+> -	xfs_perag_rele(item->pag);
+> -	kfree(item);
+>  out_put_fstrms:
+>  	atomic_dec(&args->pag->pagf_fstrms);
+>  	return 0;
+> diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
+> index d0f5b403bdbe..08443ceec329 100644
+> --- a/fs/xfs/xfs_mru_cache.c
+> +++ b/fs/xfs/xfs_mru_cache.c
+> @@ -414,6 +414,8 @@ xfs_mru_cache_destroy(
+>   * To insert an element, call xfs_mru_cache_insert() with the data store, the
+>   * element's key and the client data pointer.  This function returns 0 on
+>   * success or ENOMEM if memory for the data element couldn't be allocated.
+> + *
+> + * The passed in elem is freed through the per-cache free_func on failure.
+>   */
+>  int
+>  xfs_mru_cache_insert(
+> @@ -421,14 +423,15 @@ xfs_mru_cache_insert(
+>  	unsigned long		key,
+>  	struct xfs_mru_cache_elem *elem)
+>  {
+> -	int			error;
+> +	int			error = -EINVAL;
+>  
+>  	ASSERT(mru && mru->lists);
+>  	if (!mru || !mru->lists)
+> -		return -EINVAL;
+> +		goto out_free;
+>  
+> +	error = -ENOMEM;
+>  	if (radix_tree_preload(GFP_KERNEL))
+> -		return -ENOMEM;
+> +		goto out_free;
+>  
+>  	INIT_LIST_HEAD(&elem->list_node);
+>  	elem->key = key;
+> @@ -440,6 +443,12 @@ xfs_mru_cache_insert(
+>  		_xfs_mru_cache_list_insert(mru, elem);
+>  	spin_unlock(&mru->lock);
+>  
+> +	if (error)
+> +		goto out_free;
+> +	return 0;
+> +
+> +out_free:
+> +	mru->free_func(mru->data, elem);
+>  	return error;
+>  }
+>  
+> -- 
+> 2.34.1
 > 
