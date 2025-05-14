@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E95D327A465;
-	Wed, 14 May 2025 13:51:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59A8D27A462;
+	Wed, 14 May 2025 13:52:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747230720; cv=none; b=BgXVx9iuLL4ibvziws4DD/Li4bxMKCcuGYyxRO3LCJyvAwCYiknRVvK89IOBqFxgGdckaXZ7OivkQecAA6Uom7rFThXMsvLWh4aKaz9BqATs5cepocCAbEaSMvpvfpbj15LP/Ph6mwBNnZfgvm+/K7sGHJmJRyZmuOPNl7fUU8c=
+	t=1747230761; cv=none; b=Zx924kMxeJ7uy8nRLhEn03szXYo2hGv3t2d6LKnRqo4d0N+GwP1GvTdOgmuZlSwI7DOMPPEu4HPgiEkpOHVU7KuQOdj08RcvsXwXHkgsDElmd4UBVuzuSXxLIHhxgtHP1uDRDwybVmYngADitgeVaZ5n0r0NnaDleQvgpmfySaA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747230720; c=relaxed/simple;
-	bh=rs/y2qCidzn+BQiOCdfK57l84V553VHXEK31pa13fvk=;
+	s=arc-20240116; t=1747230761; c=relaxed/simple;
+	bh=i9CPPFntHSyJK7JzZxKlTQWXBgPLTpN73TXH/zhoQcs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eNHbq3i+rrgvZ9l0McZB40Z4FV+WjuaiRlaKeXIZ0i8YEdSor6bhuJjV3BrseRy2EIcaght8/I35ldgDjTGnhjjyOD4aqZ/H2A3VjvX/X67FI3ha4YVXLK94J6zEAs6UsHoNuSwl3diBS2T6XQX4kqeGYoqYe4qgvWE3PN2u5tI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uso0hJVy; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=aNTGkVlNUjobAyAH+EFTGZNH7AveeWmFnK8sB+M3GJE90bYHlYOSpAbSSLbrSgmHBqlwRZH1fMU0PoYDT2RVD4liLeOG+YLEMH0fwCYOT0YjZee7UtJXvcItbB0ATwEvL59IAkK7R6KmOu6Lmwd8JqLnfJ0VlyXCPfAesciKlno=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qOjFALn2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uso0hJVy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F3AFC4CEE3;
-	Wed, 14 May 2025 13:51:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qOjFALn2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C66CC4CEE9;
+	Wed, 14 May 2025 13:52:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747230719;
-	bh=rs/y2qCidzn+BQiOCdfK57l84V553VHXEK31pa13fvk=;
+	s=k20201202; t=1747230759;
+	bh=i9CPPFntHSyJK7JzZxKlTQWXBgPLTpN73TXH/zhoQcs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uso0hJVyosXz3IX++YjTfZ7B1daXkj6DRKu30H3m/Vq19L3vG94KJosg36Su6Huyv
-	 7nYPzWVafd4EAaGhE7x1f4hpX0Kyd3C9XGU5zbHAyez37Aqi6p16e7PjfPxLzDN7OF
-	 j0F6SEUGETSEY/1Q/Z/aSLSimQtG8/C8GDEgTYEkeqSvdpghwlUwTa/sHVRbAsBNK+
-	 tlaz/jI8q5R609eMX4Fvw3CaA2jkM/amOAcc4VOzdCOIIN2tP8cu7N7qeq8BrOOjdb
-	 Mc3TfN5k5yfKK6BGyRDIeR1bPipuQMMCuTB+QRrq8gbmx0mUcnVmMBgCuAGA3R9QMl
-	 ShK6vyTxxPCWw==
-Date: Wed, 14 May 2025 15:51:54 +0200
+	b=qOjFALn2uCJ2VF7yjPyA8IBwrRSWJuOpAX8k23c9XpgVPAYV5AsHUozc8bCt70/+9
+	 JJyDedSfJf5JJ4gVsbaYoPB2YYOwbxr1TJ7LcK5XR3sowZBrJrFOT7mLDiziaYiEny
+	 Hj2X+HgRDJRlSlmqE8pw8MUYj7/80dTEDr8oNA4LLr19hcZ0S+Ysxl3886Nb9y5Zp+
+	 yYbQjhjoN4hAhdM9+DXxenHO62NKDkWWrui15VtKP0Nwud8WyNhQwnZvIpQDNpSg4f
+	 U4SGul5SiDgKVnAfGwi80TJ0dRVD5/UuDIU65VQ7wZ02pjkllmrubTwPXynoHzKnQe
+	 YIqWK3Fv4ToTw==
+Date: Wed, 14 May 2025 15:52:35 +0200
 From: Carlos Maiolino <cem@kernel.org>
 To: hch <hch@lst.de>
 Cc: Hans Holmberg <Hans.Holmberg@wdc.com>, 
 	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, 
 	"Darrick J . Wong" <djwong@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Subject: Re: [PATCH 0/2] Add mru cache for inode to zone allocation mapping
-Message-ID: <sa3yttklz3onf627vxqcjysgyoa455r3z7mgmbzmn3pgs7eawb@43tke54bauuz>
+Message-ID: <5obdar2zqtbfr3cfpnsnyos6p276dw7rubx3ucuo42u352m6fv@o3wtcdo2ffv6>
 References: <20250514104937.15380-1-hans.holmberg@wdc.com>
  <crz1SUPoyTcs_C4T6KXOlfQz6_QBJf7FI8uzRE_ItAzp5Z89le5VY4LXGEG4TkFkSxntO97kOVPJ8a-8ctZdlg==@protonmail.internalid>
  <20250514130014.GA20738@lst.de>
@@ -68,6 +68,5 @@ On Wed, May 14, 2025 at 03:00:14PM +0200, hch wrote:
 > These should probably go into the commit message for patch 2 so they
 > are recorded.  Carlos, is that something you can do when applying?
 > 
-Absolutely. Could you RwB patch 1? I just got your RwB on patch 2.
 
-I'll add this to the tree today, I need to do another rebase anyway.
+Nvm, I just noticed you as the author. I'll review it
