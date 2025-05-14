@@ -1,149 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22295191F98;
-	Wed, 14 May 2025 13:59:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E113D1C6FF9;
+	Wed, 14 May 2025 15:19:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747231194; cv=none; b=n47/74yuqS94pNstuu2dyEjk5hSKPl216hCNfe3wFtKVw2NthnQcvEaV6a9prX7O32XW9TTGk5g/LBaVcjastNXhwPd7JKoGj0e84sDTaiRQGMEsE+AEJrAUAGw0tGS1d0+8TIIV1UI+OtPRXTr/acRHNiFSVJfhltIXy8I0EsE=
+	t=1747235965; cv=none; b=Qx3BFUgIVgkaZ5If0QV3XsoS/saEl4R+eqvJLuTJwtDA4FkRMssREWgwUz3INlDeqjW2mSIJtFW/YQF+W2NGFKCsEh5uEOKU5ZA6Ocl1jtAbVotth0W9enRy5xkgWHc5t3fB2P9Jo+yrm0umwXMjr/KjWEBRsmiOwUF1ZGFs2ZA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747231194; c=relaxed/simple;
-	bh=Vp0cWt1QN9P8A+6/RDjk5kaawoFIZGE0tA1Ec+A9zK0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=INC5uK8lEicwrPhgwDUpNp0xtfZsTM12P7b12UvmiPCjqL9lDXhsdCERwO8LaqmgvHLgiT0yswa74am+xLYuNhyzY9baZD+1JKT5T0ZSKM9TJRmgGrHdsBQAmKx56CZEVJGAWu8J7pEhwblVc4zfA+Ah58S5Yl2omU+S0DNgg64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lW9JP3Qs; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747235965; c=relaxed/simple;
+	bh=fbDxkuzpwYjrGZLFi5VIbeGvuh+o5LtR/w6gApnTSJQ=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type; b=PBbTx9Xys+AZ94m1F3tzBRKbIbtL7Ym3EcA5WHTc9GgRWCe4onHEXII/pIuvuwwezilFekuO5M6WdtIhTV9hfS72jrHG6RK4LYu4jZqLqJoliaxK7lpDewsYJXXdrVsIdKMCVm6AR1KMywBBFzdUUJa9gVcpQHaXEtsb9Rj7JOQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=djZFgxiA; arc=none smtp.client-ip=198.137.202.136
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lW9JP3Qs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E06FC4CEE3;
-	Wed, 14 May 2025 13:59:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747231193;
-	bh=Vp0cWt1QN9P8A+6/RDjk5kaawoFIZGE0tA1Ec+A9zK0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lW9JP3QscXtn5vrRZSJ9lc2lrqpCQLKHKp/dVbGH1p3ZDoeBCK6DaOZEPpZmRshCz
-	 ogrCvwu4IQDsMOIb1NGdbRMh0qtRQMqTnT9jWDI0fKK+icsCWLGs3mRZWHbBdy/Vu+
-	 WIroWOysEfJ47GxW1xztuq0PQM1s+LJ2RnmMajFCzwG4FffXIEnWTAjx5OPIoOHaxo
-	 x3flP6wOKaENmTjACcTH3MtZtc6hrybQN3e9BZkyKC+Dwr8vadrmeMAKkBaw109Hag
-	 3N+WCYKoKSAww6TH/0j/Bulqod1clSedfoSH4VFP+81Gj6pEazC9LnGEzj5Zkgy3VL
-	 CyLX8Wm2YDX2g==
-Date: Wed, 14 May 2025 15:59:48 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Hans Holmberg <Hans.Holmberg@wdc.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, 
-	Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <djwong@kernel.org>, hch <hch@lst.de>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2] xfs: free the item in xfs_mru_cache_insert on failure
-Message-ID: <rc3lc5eexwkmrdskw2hq63jhtccwtajus2vpd4dewysmxi3bwh@3opnt2majubs>
-References: <20250514104937.15380-1-hans.holmberg@wdc.com>
- <9LMrAvjyedm7xNxjrgohdvh5SMMXvERDG8oPUAaNiuSfQf8-fOFdkj49_0hwtfvbEquKrs6OvA6elgVWnzgAjQ==@protonmail.internalid>
- <20250514104937.15380-2-hans.holmberg@wdc.com>
+	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="djZFgxiA"
+Received: from [127.0.0.1] ([76.133.66.138])
+	(authenticated bits=0)
+	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 54EFAEbT3012887
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
+	Wed, 14 May 2025 08:10:15 -0700
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 54EFAEbT3012887
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
+	s=2025042001; t=1747235422;
+	bh=yapZ2s67BLNwus6ibHABzXGBCoZzVlVupFJe/q2qy/U=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
+	b=djZFgxiAUJE7iFHA0Wd/yFppU4TGqi4fxmoBT1mvTgxRmRiu+8QH1zl3CND+QbbP4
+	 97UVxN+J8QD8iz78UlxzP16emoOIxJpWaoO9qxu1Ec5we80T+FOOb4RfHy40YAODf4
+	 27XX25rvc06YcNMTsxppaOiXgVXhowu2DQa6R8gC1Tcuq8Oq9GVQp3swa9CciK5Vg/
+	 jv/tWyK4JR8CJyAVAYMpVNTUaE0Ax5AVAQfxExqancQ8ZpUjlh9FBEWFvjm5PCVbut
+	 6qwwqWO9GyDweGO8bFsU0TsmuX3ejxdQaqkTWk3Ymh6Yue7onjRsMrCGmrkfplN9Ef
+	 P/Ifsp+Ororjw==
+Date: Wed, 14 May 2025 08:10:12 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
+To: Arnd Bergmann <arnd@arndb.de>, Andrey Albershteyn <aalbersh@redhat.com>,
+        Richard Henderson <richard.henderson@linaro.org>,
+        Matt Turner <mattst88@gmail.com>, Russell King <linux@armlinux.org.uk>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Michal Simek <monstr@monstr.eu>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        Madhavan Srinivasan <maddy@linux.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Naveen N Rao <naveen@kernel.org>, Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        Yoshinori Sato <ysato@users.osdn.me>, Rich Felker <dalias@libc.org>,
+        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+        "David S . Miller" <davem@davemloft.net>,
+        Andreas Larsson <andreas@gaisler.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>,
+        Borislav Petkov <bp@alien8.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+        Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+        =?ISO-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@digikod.net>,
+        =?ISO-8859-1?Q?G=FCnther_Noack?= <gnoack@google.com>,
+        =?ISO-8859-1?Q?Pali_Roh=E1r?= <pali@kernel.org>,
+        Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Ondrej Mosnacek <omosnace@redhat.com>, Tyler Hicks <code@tyhicks.com>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Amir Goldstein <amir73il@gmail.com>
+CC: linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-m68k@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+        linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org,
+        linux-api@vger.kernel.org, Linux-Arch <linux-arch@vger.kernel.org>,
+        selinux@vger.kernel.org, ecryptfs@vger.kernel.org,
+        linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Andrey Albershteyn <aalbersh@kernel.org>
+Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_v5_0/7=5D_fs=3A_introduce_fi?=
+ =?US-ASCII?Q?le=5Fgetattr_and_file=5Fsetattr_syscalls?=
+User-Agent: K-9 Mail for Android
+In-Reply-To: <399fdabb-74d3-4dd6-9eee-7884a986dab1@app.fastmail.com>
+References: <20250513-xattrat-syscall-v5-0-22bb9c6c767f@kernel.org> <399fdabb-74d3-4dd6-9eee-7884a986dab1@app.fastmail.com>
+Message-ID: <B17E8366-DB80-45E6-90D6-294824C40FD9@zytor.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250514104937.15380-2-hans.holmberg@wdc.com>
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, May 14, 2025 at 10:50:37AM +0000, Hans Holmberg wrote:
-> From: Christoph Hellwig <hch@lst.de>
-> 
-> Call the provided free_func when xfs_mru_cache_insert as that's what
-> the callers need to do anyway.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
-> ---
->  fs/xfs/xfs_filestream.c | 15 ++++-----------
->  fs/xfs/xfs_mru_cache.c  | 15 ++++++++++++---
->  2 files changed, 16 insertions(+), 14 deletions(-)
-> 
+On May 13, 2025 2:53:23 AM PDT, Arnd Bergmann <arnd@arndb=2Ede> wrote:
+>On Tue, May 13, 2025, at 11:17, Andrey Albershteyn wrote:
+>
+>>
+>> 	long syscall(SYS_file_getattr, int dirfd, const char *pathname,
+>> 		struct fsxattr *fsx, size_t size, unsigned int at_flags);
+>> 	long syscall(SYS_file_setattr, int dirfd, const char *pathname,
+>> 		struct fsxattr *fsx, size_t size, unsigned int at_flags);
+>
+>I don't think we can have both the "struct fsxattr" from the uapi
+>headers, and a variable size as an additional argument=2E I would
+>still prefer not having the extensible structure at all and just
+>use fsxattr, but if you want to make it extensible in this way,
+>it should use a different structure (name)=2E Otherwise adding
+>fields after fsx_pad[] would break the ioctl interface=2E
+>
+>I also find the bit confusing where the argument contains both
+>"ignored but assumed zero" flags, and "required to be zero"
+>flags depending on whether it's in the fsx_pad[] field or
+>after it=2E This would be fine if it was better documented=2E
+>
+>
+>> 		fsx=2Efsx_xflags |=3D FS_XFLAG_NODUMP;
+>> 		error =3D syscall(468, dfd, "=2E/foo", &fsx, 0);
+>
+>The example still uses the calling conventions from a previous
+>version=2E
+>
+>       Arnd
 
-Looks fine.
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-> diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-> index a961aa420c48..044918fbae06 100644
-> --- a/fs/xfs/xfs_filestream.c
-> +++ b/fs/xfs/xfs_filestream.c
-> @@ -304,11 +304,9 @@ xfs_filestream_create_association(
->  	 * for us, so all we need to do here is take another active reference to
->  	 * the perag for the cached association.
->  	 *
-> -	 * If we fail to store the association, we need to drop the fstrms
-> -	 * counter as well as drop the perag reference we take here for the
-> -	 * item. We do not need to return an error for this failure - as long as
-> -	 * we return a referenced AG, the allocation can still go ahead just
-> -	 * fine.
-> +	 * If we fail to store the association, we do not need to return an
-> +	 * error for this failure - as long as we return a referenced AG, the
-> +	 * allocation can still go ahead just fine.
->  	 */
->  	item = kmalloc(sizeof(*item), GFP_KERNEL | __GFP_RETRY_MAYFAIL);
->  	if (!item)
-> @@ -316,14 +314,9 @@ xfs_filestream_create_association(
-> 
->  	atomic_inc(&pag_group(args->pag)->xg_active_ref);
->  	item->pag = args->pag;
-> -	error = xfs_mru_cache_insert(mp->m_filestream, pino, &item->mru);
-> -	if (error)
-> -		goto out_free_item;
-> +	xfs_mru_cache_insert(mp->m_filestream, pino, &item->mru);
->  	return 0;
-> 
-> -out_free_item:
-> -	xfs_perag_rele(item->pag);
-> -	kfree(item);
->  out_put_fstrms:
->  	atomic_dec(&args->pag->pagf_fstrms);
->  	return 0;
-> diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
-> index d0f5b403bdbe..08443ceec329 100644
-> --- a/fs/xfs/xfs_mru_cache.c
-> +++ b/fs/xfs/xfs_mru_cache.c
-> @@ -414,6 +414,8 @@ xfs_mru_cache_destroy(
->   * To insert an element, call xfs_mru_cache_insert() with the data store, the
->   * element's key and the client data pointer.  This function returns 0 on
->   * success or ENOMEM if memory for the data element couldn't be allocated.
-> + *
-> + * The passed in elem is freed through the per-cache free_func on failure.
->   */
->  int
->  xfs_mru_cache_insert(
-> @@ -421,14 +423,15 @@ xfs_mru_cache_insert(
->  	unsigned long		key,
->  	struct xfs_mru_cache_elem *elem)
->  {
-> -	int			error;
-> +	int			error = -EINVAL;
-> 
->  	ASSERT(mru && mru->lists);
->  	if (!mru || !mru->lists)
-> -		return -EINVAL;
-> +		goto out_free;
-> 
-> +	error = -ENOMEM;
->  	if (radix_tree_preload(GFP_KERNEL))
-> -		return -ENOMEM;
-> +		goto out_free;
-> 
->  	INIT_LIST_HEAD(&elem->list_node);
->  	elem->key = key;
-> @@ -440,6 +443,12 @@ xfs_mru_cache_insert(
->  		_xfs_mru_cache_list_insert(mru, elem);
->  	spin_unlock(&mru->lock);
-> 
-> +	if (error)
-> +		goto out_free;
-> +	return 0;
-> +
-> +out_free:
-> +	mru->free_func(mru->data, elem);
->  	return error;
->  }
-> 
-> --
-> 2.34.1
+Well, ioctls carry the structure size in the ioctl number, so changing the=
+ structure size would change the ioctl number with it=2E
