@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EF97191F6C;
-	Wed, 14 May 2025 15:38:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3539218787A;
+	Wed, 14 May 2025 15:40:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747237092; cv=none; b=qxJLL9ACVryXhqGlTdzEfr/DeLrd3S2aoAnLnluQSOv8ydqPk0yqsRP6V1NV1VAscknqUVl4V8LFrsS/h8TyqRGQUiFpTRLVes989s+gY0IrxJdvi5o79TusHv/X3Y6KaacXsTonno1gs67SQkJvt/UZH+G81zaEIpVdYEFJgyk=
+	t=1747237240; cv=none; b=Nx1U4jpq7WS5Zt0G+/SUsIw+4Dug0rOp1jbNvc59YWDISeoQYLOCc/t8oeIza9E//oXP7SQ4N1GRlWSi7KhjeRtoffJjLwirc/IQUqrKEjoa78Hgq1xx3bQaqV7qEC0QRW5UYuA9GxPPqi4MLuLbf8Loco6YVW+Eja6SX8ZOKCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747237092; c=relaxed/simple;
-	bh=CMu89UfbyDh7nh7jLcqlXu0X7KEHbwAvQ3aM1+GNlNg=;
+	s=arc-20240116; t=1747237240; c=relaxed/simple;
+	bh=SBmYWFaWQ2385KrvjNJQTouDKV9XJOjvjwxmBdpRRKk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VhdG8a8N6alGn+2dasy4ddI6B5YkX9O7Of6oKccZXOH2lXzKlSBNCqivAsOd7t+o1XKEz9irFAd78smaOi7fxhbe0oijkt0ZxGmfUIrBFwH3Aqcz31GqLLgWJctG7K4qhL1PC53Je8GfBK827SFZxGdQLD4lZI7bPXnBHE/HLJg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FEgJVlZi; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GDlkCRBSf3dWLvDApHrVgwBtG4XtsGBmz7Z4pwTVfmgxfdziahoNvqNOJ/Yxibt7dLRMXMhgBtVlzARoNpHFAYEMnfwCJQca0MiCEyAR55w43MwPW2fguzwnNawgU7GEUhs1ExZZun8seUl9pjFlA++RryaIpCyredxyT+26G4Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nOOMOfTM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FEgJVlZi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9528C4CEE3;
-	Wed, 14 May 2025 15:38:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nOOMOfTM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A77B1C4CEE3;
+	Wed, 14 May 2025 15:40:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747237091;
-	bh=CMu89UfbyDh7nh7jLcqlXu0X7KEHbwAvQ3aM1+GNlNg=;
+	s=k20201202; t=1747237239;
+	bh=SBmYWFaWQ2385KrvjNJQTouDKV9XJOjvjwxmBdpRRKk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FEgJVlZiYJNF4t6yykbmFO5Lf+BEpfIZ4FKoUAM9blY8pONAWElKkELm6QEkaqots
-	 Qi5Ne2SfCRbQ67Dyw9yVmSCLOmVYTRoCgzHjtptUDfhrWBHcLttZm0h1q8rLhrpcGH
-	 TWFulAvVuWTEyhHX+xiMVBkL1KcUtx5OvqI3ilx30p6nmGcWaS/a7C0X6IbLwOjrpK
-	 3GGqhgExboO+GW0H3xB411++D20PWS5BBPac32xJ9kJXEg7pj1u6R5S8ycwgYPJJuF
-	 eyRgaP4Njnym+m3xhvX53RpvNEyrAH4J5wlVLlJSRraSORbcyFN2+GM36OkkS0TdsC
-	 6Cm4H5NXzOA3w==
-Date: Wed, 14 May 2025 08:38:11 -0700
+	b=nOOMOfTMvfQ5+fyrNXOp1aGLZnf30g7co9WiVTV0KRFbhDlJXEtZZrLba/PcU8eSW
+	 zNyCGj0GpNcMnhJ7b/S/rMzCKlTjCoLi33RgSxPMHzW5CFE2VqZInmd0ti5jJC/rzt
+	 I73KS1LZpbrhYK+0AncViAkx004OKNTsYzClLmW1DBF1t5QltTMKUBLXpcVi5bzcKP
+	 wTF+DPSOS2hMgS1mYw3fu79fnYOk8exH8oDs93IUD8Ch/HZ5Ig++h7PqR6VdQO+w39
+	 Y83IVQk50qv+r5rvi+irmAklAyzvFgK8dnlgpMCoFsFe1aO+y6piRWk9+0yGunQCRO
+	 50soVWtH4ZDZQ==
+Date: Wed, 14 May 2025 08:40:39 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: John Garry <john.g.garry@oracle.com>
 Cc: Catherine Hoang <catherine.hoang@oracle.com>, linux-xfs@vger.kernel.org,
 	fstests@vger.kernel.org
-Subject: Re: [PATCH 1/6] generic/765: fix a few issues
-Message-ID: <20250514153811.GU25667@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/6] common/atomicwrites: adjust a few more things
+Message-ID: <20250514154039.GV25667@frogsfrogsfrogs>
 References: <20250514002915.13794-1-catherine.hoang@oracle.com>
- <20250514002915.13794-2-catherine.hoang@oracle.com>
- <52fc32f8-c518-434f-ae29-2e72238e7296@oracle.com>
+ <20250514002915.13794-5-catherine.hoang@oracle.com>
+ <73af7165-630b-469d-965e-a50c381298cb@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,88 +44,85 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <52fc32f8-c518-434f-ae29-2e72238e7296@oracle.com>
+In-Reply-To: <73af7165-630b-469d-965e-a50c381298cb@oracle.com>
 
-On Wed, May 14, 2025 at 01:47:20PM +0100, John Garry wrote:
+On Wed, May 14, 2025 at 02:11:00PM +0100, John Garry wrote:
 > On 14/05/2025 01:29, Catherine Hoang wrote:
-> > From: "Darrick J. Wong" <djwong@kernel.org>
+> > From: "Darrick J. Wong"<djwong@kernel.org>
 > > 
-> > Fix a few bugs in the single block atomic writes test, such as requiring
-> > directio, using page size for the ext4 max bsize, and making sure we check
-> > the max atomic write size.
+> > Always export STATX_WRITE_ATOMIC so anyone can use it, make the "cp
+> > reflink" logic work for any filesystem, not just xfs, and create a
+> > separate helper to check that the necessary xfs_io support is present.
 > > 
-> > Cc: ritesh.list@gmail.com
-> > Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > ---
-> >   common/rc         | 2 +-
-> >   tests/generic/765 | 4 ++--
-> >   2 files changed, 3 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index 657772e7..bc8dabc5 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -2989,7 +2989,7 @@ _require_xfs_io_command()
-> >   		fi
-> >   		if [ "$param" == "-A" ]; then
-> >   			opts+=" -d"
-> > -			pwrite_opts+="-D -V 1 -b 4k"
-> > +			pwrite_opts+="-d -V 1 -b 4k"
+> > Signed-off-by: "Darrick J. Wong"<djwong@kernel.org>
+> > Signed-off-by: Catherine Hoang<catherine.hoang@oracle.com>
 > 
-> according to the documentation for -b, 4096 is the default (so I don't think
-> that we need to set it explicitly). But is that flag even relevant to
-> pwritev2?
+> Just a small comment query below.
+> 
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
+> 
+> > ---
+> >   common/atomicwrites | 18 +++++++++++-------
+> >   tests/generic/765   |  2 +-
+> >   2 files changed, 12 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/common/atomicwrites b/common/atomicwrites
+> > index fd3a9b71..9ec1ca68 100644
+> > --- a/common/atomicwrites
+> > +++ b/common/atomicwrites
+> > @@ -4,6 +4,8 @@
+> >   #
+> >   # Routines for testing atomic writes.
+> > +export STATX_WRITE_ATOMIC=0x10000
+> > +
+> >   _get_atomic_write_unit_min()
+> >   {
+> >   	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | \
+> > @@ -26,8 +28,6 @@ _require_scratch_write_atomic()
+> >   {
+> >   	_require_scratch
+> > -	export STATX_WRITE_ATOMIC=0x10000
+> > -
+> >   	awu_min_bdev=$(_get_atomic_write_unit_min $SCRATCH_DEV)
+> >   	awu_max_bdev=$(_get_atomic_write_unit_max $SCRATCH_DEV)
+> > @@ -51,6 +51,14 @@ _require_scratch_write_atomic()
+> >   	fi
+> >   }
+> > +# Check for xfs_io commands required to run _test_atomic_file_writes
+> > +_require_atomic_write_test_commands()
+> > +{
+> > +	_require_xfs_io_command "falloc"
+> > +	_require_xfs_io_command "fpunch"
+> > +	_require_xfs_io_command pwrite -A
+> > +}
+> > +
+> >   _test_atomic_file_writes()
+> >   {
+> >       local bsize="$1"
+> > @@ -64,11 +72,7 @@ _test_atomic_file_writes()
+> >       test $bytes_written -eq $bsize || echo "atomic write len=$bsize failed"
+> >       # Check that we can perform an atomic single-block cow write
+> > -    if [ "$FSTYP" == "xfs" ]; then
+> > -        testfile_cp=$SCRATCH_MNT/testfile_copy
+> > -        if _xfs_has_feature $SCRATCH_MNT reflink; then
+> > -            cp --reflink $testfile $testfile_cp
+> > -        fi
+> > +    if cp --reflink=always $testfile $testfile_cp 2>> $seqres.full; then
+> 
+> I suppose that previously for xfs where the cp --reflink failed, we would
+> pointlessly try the write - am I correct?
 
-The documentation is wrong -- on XFS the default is the fs blocksize.
-Everywhere else is 4k.
+Correct.
 
-> And setting -d in pwrite_opts means DIO for the input file, right? I am not
-> sure if that is required.
+> If so, now seems much better.
 
-It's not required, I mistook where that "-d" goes -- -d as an argument
-to xfs_io is necessary, but -d as an argument to the pwrite subcommand
-is not.  It's also benign since we don't pass -i.
+That and any filesystem that supports reflink and atomic writes will now
+test this. :)
 
-Curiously the version of this patch in my tree doesn't have the extra
--d... I wonder if I made that change and forgot to send it out.
+Thanks for review!
 
 --D
 
-> >   		fi
-> >   		testio=`$XFS_IO_PROG -f $opts -c \
-> >   		        "pwrite $pwrite_opts $param 0 4k" $testfile 2>&1`
-> > diff --git a/tests/generic/765 b/tests/generic/765
-> > index 9bab3b8a..8695a306 100755
-> > --- a/tests/generic/765
-> > +++ b/tests/generic/765
-> > @@ -28,7 +28,7 @@ get_supported_bsize()
-> >           ;;
-> >       "ext4")
-> >           min_bsize=1024
-> > -        max_bsize=4096
-> > +        max_bsize=$(_get_page_size)
+> >           bytes_written=$($XFS_IO_PROG -dc "pwrite -A -D -V1 -b $bsize 0 $bsize" $testfile_cp | \
 > 
-> looks ok
-> 
-> >           ;;
-> >       *)
-> >           _notrun "$FSTYP does not support atomic writes"
-> > @@ -73,7 +73,7 @@ test_atomic_writes()
-> >       # Check that atomic min/max = FS block size
-> >       test $file_min_write -eq $bsize || \
-> >           echo "atomic write min $file_min_write, should be fs block size $bsize"
-> > -    test $file_min_write -eq $bsize || \
-> > +    test $file_max_write -eq $bsize || \
-> 
-> looks ok
-> 
-> >           echo "atomic write max $file_max_write, should be fs block size $bsize"
-> >       test $file_max_segments -eq 1 || \
-> >           echo "atomic write max segments $file_max_segments, should be 1"
-> 
-> 
-> Thanks,
-> John
 > 
