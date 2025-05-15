@@ -1,109 +1,88 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1603D10E5;
-	Thu, 15 May 2025 11:01:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 880DB192D6B;
+	Thu, 15 May 2025 14:54:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747306913; cv=none; b=PUGsBb0UWhNGImkWU+zvLxaXnA/2jEt79LUk9M8ale7ttiDXMAJo+BvoL2wkFOsm0/Vjq/KqdS2HrPGmY0cHl04i01SAaEhb/o+ilji7vIprCcSDRbY3LqpQ4fkqRx78jd7z8oqrz3c96adHJDALNNarR2XNDCdraUAYJhCS/j8=
+	t=1747320883; cv=none; b=U7oBwnnOxKyfP5EyecxTkEce95iGokNENiw3N/zBaVvsVmJu8J029bmjcJ8SFNjpCku2OD0ZanXqgHf+zKMTvkBZBSuPoOArwwSYX72N5ACwKQ/5Qsai10wsNwgcIS0spYH/Nd1cYUhCob3aaqip7MuTUJPJ1EVnlsGa0MQPvM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747306913; c=relaxed/simple;
-	bh=oF1I/e+0ZW/JAyWLqkT0Ey5HVUISop7fmzQEedssQwI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=IdBqBt5MHL3GJCRjpG4X+DIGPmWdvjG8TMXUZGxFYMhWrzTL4YyEPX0mZjUWLrzZRL/BUMdF25q058wi8WDQeVhl+Fp3yrh2/7DGztLd9hj2tMYx/Uy4zl7668QFl1D+VABZGB3vPX7AG5Zb8nRlvD3KpUkWCADrr1QNEatuE/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LcCY+wrr; arc=none smtp.client-ip=209.85.210.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1747320883; c=relaxed/simple;
+	bh=cYtAejpzISYl29Fbg64b/fMp392EFfCBtSuZccz4IRo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=K5cbDTeKwtgmYYBG2SFX7QDARwyE6gZwCMX39kYH13yKMBZ/sClI+JAZeRPwsRZP4frawm2kBHMoHOyaTyKUgRWVP94OIdaq/2iTnltklgWcJqS158lnj7DBQJB05gv2fJhXoQEHqHLzn6eXkefGW3BESvroqAk3K+EZ//J7QlI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GiXFO8hC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LcCY+wrr"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-7399838db7fso767485b3a.0;
-        Thu, 15 May 2025 04:01:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747306911; x=1747911711; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UHJtB1q9Untov6MKY8w4xfneHkWOk4rUpt3L0nmtuKw=;
-        b=LcCY+wrrJ6I154SUkavFV9VXtBU1shQ/UheS/aMUpRP94BEz7/cIQNeBG3RuKILHlN
-         WjVY7bZ1L+7igVlMRtiwjhEujJC6FsssoZJC3HfsciChrGAY940yCQl6tREAKR3c/gWb
-         5XTXBxoFUvgTllZKgifVzdyThpHdKxmEG0b0KsZ3mYN31WK53+wLIu4oSNDTc9Wnni7h
-         XchWSCY6lQJxlChqPC848TDrj3OSY1h9dWE00m8qY+1ss+S6g27KUqYNosYiqpGIm3mV
-         7cZZxZWlVIGUsy3JYbBkN75tv6vTFRRNkM/xo26OlZMBLnKRsRttVz8JCFv0FkFGVfwd
-         Dofw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747306911; x=1747911711;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=UHJtB1q9Untov6MKY8w4xfneHkWOk4rUpt3L0nmtuKw=;
-        b=YpabdcCWeVdpk3ecjdgejEUL+Bl439GDz/9vtHbdH7dcomuieL/zUzrGmJDRfEQGKE
-         SXRfoM1D0U2xWj/mhh4ThInpHkmYo/+Cdp9ngds/2alm3n+JkLCj5mg5p33Hnh3kk08b
-         zkrrToD2X5hmP0A3G9pDlUYPTok1yaMA8mqy6hkL2tuvkcW2lJHLyBWiXgdoxZdRMVt1
-         uR9/nH6sxWdYJqzvNV7+thLjY53hoqz/9ZdpXekzL5EbuIa73zrplAtdRZrfG04K4Oaf
-         AfIJVBuCiIL8/2apOvQY6rSbfQ+SlN6ZyFuqh8TErN/oZ6j5SI1Dj4FWPOwouwZUiZsl
-         SY/Q==
-X-Forwarded-Encrypted: i=1; AJvYcCWHwc6fJcJwArdMm5IT7m+q6MEAM+jaZAJ1IQWHWPg7Wt18h1a+FgRjgNCL9j9mWb+Lk45PJf0j6Iw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxB47jMYxx4UDjcylCx7UkF5z7IoJ2THJ15ARHjM9YjgPfLgQnT
-	BDOEl7vygTyG3ToOTwaz0Rmk6TqRaAAospIXZ2Sy0nh7STn8Z8Uot0jE2g==
-X-Gm-Gg: ASbGncs9QW7IyzdA80A5qPJZgHoVYmI81vBMBYtJbQCA25YDVfvrP8QvoXsnB8L15He
-	TxsenaYsIpEMziSNIdsNKirb4NPxzS8GPjslsQdDpMj89lnfwgTIQ8MK21HxoUXu97UvQsN/R0n
-	cXtsdeAPjWhyxXdtoVifCnILXEcuNZ8AMAI5gXmkwvzuufHF5Vjx5t8X4t4QWvuBMIlRD8YZ03r
-	WiVwWXKqk557/5u4yoMkmXcWUebXkDFVhSrfYzwQwuMhy7HJ1Qh2Akx+5yEp7lW76shJgGYw0X1
-	Fd+rVcrpkCrT8HmiRi/HixB24GY7TLYOULihCTz/+lLsAghvU813lrs=
-X-Google-Smtp-Source: AGHT+IH+rzgDbrs0Ry3xGdFeeeapP8e8/+QlX+9iC9TNT5/AvEZESgvnjY+MPAUSCwRyN3uApOVq5w==
-X-Received: by 2002:a05:6a00:4b44:b0:73b:ac3d:9d6b with SMTP id d2e1a72fcca58-742961d4254mr4606678b3a.4.1747306910780;
-        Thu, 15 May 2025 04:01:50 -0700 (PDT)
-Received: from citest-1.. ([49.205.34.162])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7423772752csm10733673b3a.45.2025.05.15.04.01.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 May 2025 04:01:50 -0700 (PDT)
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com,
-	djwong@kernel.org,
-	zlang@kernel.org,
-	david@fromorbit.com,
-	nirjhar.roy.lists@gmail.com
-Subject: [PATCH v2 2/2] new: Replace "status=0; exit 0" with _exit 0
-Date: Thu, 15 May 2025 11:00:17 +0000
-Message-Id: <463f1f99c7b9ced218f62ea9fc048c2e645227c5.1747306604.git.nirjhar.roy.lists@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <cover.1747306604.git.nirjhar.roy.lists@gmail.com>
-References: <cover.1747306604.git.nirjhar.roy.lists@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GiXFO8hC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC130C4CEE7;
+	Thu, 15 May 2025 14:54:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747320881;
+	bh=cYtAejpzISYl29Fbg64b/fMp392EFfCBtSuZccz4IRo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=GiXFO8hCUaq0F8iwza1tgc4wm/dJ2CyFUp/2j/J75BqgYBbj7nSYAkNRM+ILWohi5
+	 LiknEqQFWIBHJTkBG8RQ9UpFveUp6oivkafILbdpG+nBS4DGKjpgdTyE94dAzg3QU8
+	 5g/KWp/I15AI11/K4W4ly+9R9btQVczsXuPbTJnVBk598c9c7eABJeCU4ep+rXw73m
+	 lMFJnxzzqh+LBkA6tWdI5WAj3DDT+P8nviwmnYikHLo5eBLAnSuesxw9YJDYKRdrgR
+	 EetTgIV69vqXtHAiIfzhjtZZfrzWVZzrD8rfHyJvHpNP/EQ881hMh+VZp1Pxus3r4C
+	 Hwmm06cdDEI3Q==
+Date: Thu, 15 May 2025 07:54:41 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Catherine Hoang <catherine.hoang@oracle.com>, linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: Re: [PATCH 1/6] generic/765: fix a few issues
+Message-ID: <20250515145441.GY25667@frogsfrogsfrogs>
+References: <20250514002915.13794-1-catherine.hoang@oracle.com>
+ <20250514002915.13794-2-catherine.hoang@oracle.com>
+ <52fc32f8-c518-434f-ae29-2e72238e7296@oracle.com>
+ <20250514153811.GU25667@frogsfrogsfrogs>
+ <4ad2be95-5af8-4041-99d5-1c9dcaa9df7c@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4ad2be95-5af8-4041-99d5-1c9dcaa9df7c@oracle.com>
 
-We should now start using _exit 0 for every new test
-that we add.
+On Thu, May 15, 2025 at 09:16:12AM +0100, John Garry wrote:
+> On 14/05/2025 16:38, Darrick J. Wong wrote:
+> > > > --- a/common/rc
+> > > > +++ b/common/rc
+> > > > @@ -2989,7 +2989,7 @@ _require_xfs_io_command()
+> > > >    		fi
+> > > >    		if [ "$param" == "-A" ]; then
+> > > >    			opts+=" -d"
+> > > > -			pwrite_opts+="-D -V 1 -b 4k"
+> > > > +			pwrite_opts+="-d -V 1 -b 4k"
+> > > according to the documentation for -b, 4096 is the default (so I don't think
+> > > that we need to set it explicitly). But is that flag even relevant to
+> > > pwritev2?
+> > The documentation is wrong -- on XFS the default is the fs blocksize.
+> > Everywhere else is 4k.
+> 
+> Right, I see that in init_cvtnum()
+> 
+> However, from checking write_buffer(), we seem to split writes on this
+> blocksize - that does not seem proper in this instance.
+> 
+> Should we really be doing something like:
+> 
+> xfs_io -d -C "pwrite -b $SIZE -V 1 -A -D 0 $SIZE" file
 
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-Reviewed-by: Zorro Lang <zlang@redhat.com>
----
- new | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+In _require_xfs_io_command?  That only writes the first 4k of a file, so
+matching buffer size is ok.
 
-diff --git a/new b/new
-index 636648e2..dff69265 100755
---- a/new
-+++ b/new
-@@ -176,8 +176,7 @@ exit
- #echo "If failure, check \$seqres.full (this) and \$seqres.full.ok (reference)"
- 
- # success, all done
--status=0
--exit
-+_exit 0
- End-of-File
- 
- sleep 2		# latency to read messages to this point
--- 
-2.34.1
+Are you asking if _require_xfs_io_command should seek out the filesystem
+block size, and use that for the buffer and write size arguments instead
+of hardcoding 4k?  For atomic writes, maybe it should be doing this,
+since the fs blocksize could be 64k.
 
+--D
+
+> Thanks,
+> John
+> 
