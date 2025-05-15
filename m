@@ -1,151 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEC784B1E6A;
-	Thu, 15 May 2025 01:47:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E1874B1E64
+	for <linux-xfs@vger.kernel.org>; Thu, 15 May 2025 02:56:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747273638; cv=none; b=l9k610vnpiIYqj9dFNjNH83yOnLix2+mrDrtMMbNSjXBUcNEsbL6EGmVjwdKXXG0Txn0Rp0tOHCgg2i1zWF3CnS+ektrKKjqVtjwA4XzScV0/ppCxE0pFXL+6epiFBhxp/c2gxdc7l+oI43T/z+Eo0gP5/4RMaCWa+c8Ptm1lCQ=
+	t=1747277795; cv=none; b=ZhWu1TJoSOJQ/4AnqWTiYYFerIMPYpjHBLjEbShrcNccWy7PCwUIDAEoPTik1vcsjPKdbur8N2iyYSJ8mKsexJ9otXgh5xnmrjAmA98KRjoZDJaZg98DmTdslpPgTmQMbgDFFY+dQXn4h7qlyJq39LDkHJFfo+Mqhu7z25U3sLo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747273638; c=relaxed/simple;
-	bh=lybrXG7ggUT2+z/C/r3+kn9kbzJ+pLxpM1YRuM3E3tk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WbFiqbtTaVKE4EPDhLSvcfIP2HGWQ4BwRYics4FgH0DY97W98iiiD7F1y0f8SSe4vrNm+X1oCrPVjbPj5aIfdsbT56xloJsIh1jL5FHH1AtON/qm+ZlvTweVpvVdr+c3Bf65DsGL2SJvdkMJ3dDHyKpZ8+55xjthAVLUrg3X10Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KHvTfFOl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747277795; c=relaxed/simple;
+	bh=8wNEv+HhqeRcE4nl0aWh70pk6+83Q2bb5RF+6eBa+kM=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=Wnz1fOEXpMlZEs+aHkMBt4d94+LJafnSDnXxnuFe5yikzDQeQZln6Sbg8/UU+/xt1iqXczPUJpTFhr1p0W61b/xbH51ZwHM26c0a7Otwco6oMbnL4ky5xsPk6DLmw2pVokneg+lL0ZHWlag6uu4daPgWZvOAk01huK5rKIWP0sQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=jjY2ZBAs; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KHvTfFOl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2EC1C4CEE3;
-	Thu, 15 May 2025 01:47:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747273637;
-	bh=lybrXG7ggUT2+z/C/r3+kn9kbzJ+pLxpM1YRuM3E3tk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KHvTfFOlbgLsQK2Bh1QcUuw61MIWQNfDryGo4rvA3Rpf4dmi7r7w5J5uoA9QYjW1c
-	 Gw8TnxQuWbSSP+xrRpKGR/q2Y6HxBF/a8XLbPqZKwdCA8ota48AE5Er682RvGQ09BJ
-	 u2x6cIFvvR1hIwW9SOwp9NwdVEMBfVXfYdWxgwtTv0DFPlki/KjbK+lUIKZSu6nmcE
-	 4/6dnCj4HGAQlJVY2YEwmIpprrI5AP6XCizOxeVzPY3tM1/YovLmAqdXQ1sweGORGb
-	 sE7J8vBklVaG8zyeyGq6MAFHqGuIp+fep2eNfKOdlla9p/I2whGmAUrSypsjXjAb2S
-	 Z9cfjmuErlYNg==
-Date: Wed, 14 May 2025 18:47:17 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Catherine Hoang <catherine.hoang@oracle.com>
-Cc: John Garry <john.g.garry@oracle.com>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"fstests@vger.kernel.org" <fstests@vger.kernel.org>
-Subject: Re: [PATCH 1/6] generic/765: fix a few issues
-Message-ID: <20250515014717.GL25700@frogsfrogsfrogs>
-References: <20250514002915.13794-1-catherine.hoang@oracle.com>
- <20250514002915.13794-2-catherine.hoang@oracle.com>
- <52fc32f8-c518-434f-ae29-2e72238e7296@oracle.com>
- <20250514153811.GU25667@frogsfrogsfrogs>
- <D599CC99-C8C3-4BF9-908B-B115ACA565A4@oracle.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="jjY2ZBAs"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-739b3fe7ce8so432043b3a.0
+        for <linux-xfs@vger.kernel.org>; Wed, 14 May 2025 19:56:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1747277793; x=1747882593; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=8wNEv+HhqeRcE4nl0aWh70pk6+83Q2bb5RF+6eBa+kM=;
+        b=jjY2ZBAsjEqJKuCs5AKC4SzGALfqydFTInkqDKk1XPRum0VKxG8Fg5w2WjFkDAawv4
+         4eNxmQfgthibrGG8FWzzxR4ioZHk9qspRvmt1FvHC+y8d5oZCB8Y/c6BrAJWM7W2g4qm
+         DZBWvyKoZ/MbMHfIvC5dcOq5O+kjGSfoRvg/sQ4If+BNc8jv+43Pk8+AOVIKtyqxjlUX
+         AH+ez3yo6plOBb4QgjGNCkvoIpgt3AwgQ5Jb5Dho52O9TvLAD0vrI8xR/j1R7Z8qLHHf
+         FhXNsXIdXyo6RlcXIbLNiZM00/zCASph82P6FtapL4rahDw9lc3HQtynOI5JlQqYJUjA
+         ZgZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1747277793; x=1747882593;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=8wNEv+HhqeRcE4nl0aWh70pk6+83Q2bb5RF+6eBa+kM=;
+        b=li9XBosxSSkTVD2osY7CxP8lwllZj3KOwdc6+vazgCYPqH8X25iLZbgdBO0bT/ZTyG
+         UTmrNcQs84xxJPVvJnsquzInsm+aSzRWT5HTowtJfqCJuS6oSbFB2JSwPz3kDhBLOgUR
+         R6d2fQf1CLNC8CQidK1CSfwwWPpMvs8VuS6EzvBzSFCJcR8JrXIfc9cFYF+2tERWf5rM
+         rouAUOl240AbGI/b9shMN8yOyjDBXtTsprhG9H4RjrY/2SfhdrONjp0OLti21uPOH/h4
+         69Ufk8Yal/lfkSmDEf9X9ws2xEYQPWl9+u9OV6EHv7QVlIPd/VoNbuobA1HGX8bM/oPJ
+         0ukw==
+X-Gm-Message-State: AOJu0Yze9yRvjKhdzlS2aL7BhHDgbNrr29xM4r+j7JanOqWKhXbd9cKZ
+	8hN+KoLccU7HW+QmWiPmD/rmQbJ/ZGn5yOJCYt1O1u+KsGpAsMtNDNxGaT76mnUCWRWCPct2VXi
+	j
+X-Gm-Gg: ASbGnctdC5AxhbkBnsFWBNYTlQ3a5IOxGYQJuQB1ouph0hqwQKlUOM3rEtqStgGNWV5
+	hFGMKryFWqF4fRpk5Ce6IQ3RDvfka2/DS8HINxnGjmOcTkfYjU8flgjZl+KOA6WP3Tr934f+qR1
+	4+k5yx5+tvGXmO6aLmbC62zE0jE8DgThlK6C+e/w+AOn1K5bojZYfacA87THUjZALMQND1ldpB4
+	t3VFM8V/aogomjWXE8Je/TdzUHvo6tBSkm6HfDlVj6bPPXTsKAmLruG4n++KQd5FVk7zg7TglM9
+	dc3LQXtmUOc3LlXVekhHJg+Fh2FYy3N4j4wXs05tDHay/FIlHa7ZncLETIchWqL+vErgvKjJEAV
+	gShhm8+V6zBizUydlGN3MRxuGUg==
+X-Google-Smtp-Source: AGHT+IEA6h5Q+kiCAztC8JPJo39gUN5kQ8M8dleE1ju4Lla9DgPJqdOAtpTnRZMjFq4kvYYM/kZbPQ==
+X-Received: by 2002:a05:6a21:a247:b0:1f5:8754:324d with SMTP id adf61e73a8af0-215ff085904mr8388807637.9.1747277793147;
+        Wed, 14 May 2025 19:56:33 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-184-88.pa.nsw.optusnet.com.au. [49.180.184.88])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74237a3d1cfsm10006871b3a.127.2025.05.14.19.56.32
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 May 2025 19:56:32 -0700 (PDT)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+	by dread.disaster.area with esmtp (Exim 4.98.2)
+	(envelope-from <dave@fromorbit.com>)
+	id 1uFOlq-00000003f4h-002q
+	for linux-xfs@vger.kernel.org;
+	Thu, 15 May 2025 12:56:30 +1000
+Received: from dave by devoid.disaster.area with local (Exim 4.98)
+	(envelope-from <dave@devoid.disaster.area>)
+	id 1uFOlp-0000000ENhq-3sK0
+	for linux-xfs@vger.kernel.org;
+	Thu, 15 May 2025 12:56:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
+Subject: [PATCH 0/2] xfs: unmount hang fixes
+Date: Thu, 15 May 2025 12:42:08 +1000
+Message-ID: <20250515025628.3425734-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <D599CC99-C8C3-4BF9-908B-B115ACA565A4@oracle.com>
 
-On Wed, May 14, 2025 at 11:42:40PM +0000, Catherine Hoang wrote:
-> > On May 14, 2025, at 8:38 AM, Darrick J. Wong <djwong@kernel.org> wrote:
-> > 
-> > On Wed, May 14, 2025 at 01:47:20PM +0100, John Garry wrote:
-> >> On 14/05/2025 01:29, Catherine Hoang wrote:
-> >>> From: "Darrick J. Wong" <djwong@kernel.org>
-> >>> 
-> >>> Fix a few bugs in the single block atomic writes test, such as requiring
-> >>> directio, using page size for the ext4 max bsize, and making sure we check
-> >>> the max atomic write size.
-> >>> 
-> >>> Cc: ritesh.list@gmail.com
-> >>> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> >>> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> >>> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> >>> ---
-> >>>  common/rc         | 2 +-
-> >>>  tests/generic/765 | 4 ++--
-> >>>  2 files changed, 3 insertions(+), 3 deletions(-)
-> >>> 
-> >>> diff --git a/common/rc b/common/rc
-> >>> index 657772e7..bc8dabc5 100644
-> >>> --- a/common/rc
-> >>> +++ b/common/rc
-> >>> @@ -2989,7 +2989,7 @@ _require_xfs_io_command()
-> >>>   fi
-> >>>   if [ "$param" == "-A" ]; then
-> >>>   opts+=" -d"
-> >>> - pwrite_opts+="-D -V 1 -b 4k"
-> >>> + pwrite_opts+="-d -V 1 -b 4k"
-> >> 
-> >> according to the documentation for -b, 4096 is the default (so I don't think
-> >> that we need to set it explicitly). But is that flag even relevant to
-> >> pwritev2?
-> > 
-> > The documentation is wrong -- on XFS the default is the fs blocksize.
-> > Everywhere else is 4k.
-> > 
-> >> And setting -d in pwrite_opts means DIO for the input file, right? I am not
-> >> sure if that is required.
-> > 
-> > It's not required, I mistook where that "-d" goes -- -d as an argument
-> > to xfs_io is necessary, but -d as an argument to the pwrite subcommand
-> > is not.  It's also benign since we don't pass -i.
-> > 
-> > Curiously the version of this patch in my tree doesn't have the extra
-> > -d... I wonder if I made that change and forgot to send it out.
-> 
-> Hmm, it might have been from an old patch on my branch
-> that I forgot to update when I sent this out. Just to clarify,
-> this should just be 
-> 
-> pwrite_opts+="-V 1 -b 4k”
-> 
-> right?
+Hi folks,
 
-Yep.
+These are a couple of shutdown related unmount hang fixes that
+check-parallel has been tripping over semi-regularly. The first
+fix is relatively straight forward, but the second is marked as RFC
+because I've only just got to the bottom of that one and it's quite
+a bit more complex to solve.
 
---D
+The second fix will probably have to be split into 3 smaller patches
+(tracing needed to find the issue, code rearrangement to make the
+fix cleaner, and the fix) but before I do that I wanted to get some
+more eyes on it and feedback whilst I do more testing to confirm
+that it works as intended and hasn't introduced any regressions.
 
-> > --D
-> > 
-> >>>   fi
-> >>>   testio=`$XFS_IO_PROG -f $opts -c \
-> >>>           "pwrite $pwrite_opts $param 0 4k" $testfile 2>&1`
-> >>> diff --git a/tests/generic/765 b/tests/generic/765
-> >>> index 9bab3b8a..8695a306 100755
-> >>> --- a/tests/generic/765
-> >>> +++ b/tests/generic/765
-> >>> @@ -28,7 +28,7 @@ get_supported_bsize()
-> >>>          ;;
-> >>>      "ext4")
-> >>>          min_bsize=1024
-> >>> -        max_bsize=4096
-> >>> +        max_bsize=$(_get_page_size)
-> >> 
-> >> looks ok
-> >> 
-> >>>          ;;
-> >>>      *)
-> >>>          _notrun "$FSTYP does not support atomic writes"
-> >>> @@ -73,7 +73,7 @@ test_atomic_writes()
-> >>>      # Check that atomic min/max = FS block size
-> >>>      test $file_min_write -eq $bsize || \
-> >>>          echo "atomic write min $file_min_write, should be fs block size $bsize"
-> >>> -    test $file_min_write -eq $bsize || \
-> >>> +    test $file_max_write -eq $bsize || \
-> >> 
-> >> looks ok
-> >> 
-> >>>          echo "atomic write max $file_max_write, should be fs block size $bsize"
-> >>>      test $file_max_segments -eq 1 || \
-> >>>          echo "atomic write max segments $file_max_segments, should be 1"
-> >> 
-> >> 
-> >> Thanks,
-> >> John
-> 
-> 
+The fundamental problem that the second patch addresses is that
+stale inode buffers need the last reference to the BLI to complete
+the stale inodes attached to the buffer when it is released. There's
+a corner case where this last reference can be the transaction
+commit context, and that doesn't perform the necessary cleanup.
+
+I've kept all the triage notes, analysis and thinking I did to come
+up with the fix in the commit message for the second patch -
+hopefully that will help people understand what is actually going on
+a lot faster than I did....
+
+-Dave.
+
