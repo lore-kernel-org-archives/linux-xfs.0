@@ -1,91 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC57DEEB3
-	for <linux-xfs@vger.kernel.org>; Fri, 16 May 2025 13:16:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 342A427FD50
+	for <linux-xfs@vger.kernel.org>; Fri, 16 May 2025 18:56:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747401404; cv=none; b=b1X5+0Ol5IAeOw7plEQ+wSK2f9BGBBDvNOKzFCU7yGgqptr6Nc5uYg0VjuegOMZsV1zWQxiHp8BA38DpfYPro2NH/Y3msLJidlBc0k2CI1UAPYYe/RyeHi2QIhpIEwjOe1fEFlHKx5x34ruyv0GSoWy+h5J5KdSMQ8vPcEZkr1Y=
+	t=1747421799; cv=none; b=YxoibhXJW4HYpehdbsSr2dK3RRXo8mJ0OVo4sIsYx4VqHf1tuI/SZc5Mlx/wIEkwSHy0tv1ByXm+ZSifGceQc+7xkHMPkSKOIG3shMMkzYyKngHq7hzsIQYpZsGfNBfyF+1mlv0Z7FFF/RY15k5hQ2FySPpjvKHUbPVn8mUTRCg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747401404; c=relaxed/simple;
-	bh=ifQ8vLpfl2oUHsjfhR9la3zU0yvJRbGRm3mLq6MkRLc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=PmGeodYJWNiPKSRMwj1THJUpOYukP4BxhddeoNqWZVbUSrXFjg6OlijmV7OZoc2VPxAqnIueXoF8L1RQELs6SaI/Bozgr2Bg3ctNHB/JiLpQFY85HfAJHApFpPF0TMjehyoWD9pqX/CB5Efo2VNwKsxPcsnMj7b++4uiDdJzYbw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oOue3Ujt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747421799; c=relaxed/simple;
+	bh=6aAIwmYBpydP7CmclcTy37ctowklw9EaLowDMAFkPcs=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=I5v4yo14ig8u7LrZKSxq/74alUvWWJXY3Y0zNPvzk3vr8PtjLYBaoVK/e7s2JyDN86k8i61/cHT+jeVH2x5ND/jFMZkhqHWrARiLeTzcqOBWpNPzZQsHxLYpGvU3gs0b3MQHabUXRKnNplbJMc/iX1gA/a5EwoWXiyb0n9o+7KE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bbndH0gT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oOue3Ujt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87FE3C4CEE4;
-	Fri, 16 May 2025 13:16:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bbndH0gT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D208C4CEE4;
+	Fri, 16 May 2025 18:56:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747401403;
-	bh=ifQ8vLpfl2oUHsjfhR9la3zU0yvJRbGRm3mLq6MkRLc=;
-	h=Date:From:To:Cc:Subject:From;
-	b=oOue3Ujtre31xaMpSq9ZPSPlBrtFMZdFyresVZO/hZYQx1Qm7V2MU3zPvRrj9YcMJ
-	 +21OUj5la8eFobU//tY+6JQeCWxsoI8CYSeQGMW+ZCGEaXPFujtBUzlg4xH9WNVKos
-	 gPvFXMRH85QTtd6zVPE9PBdAu/OrIIbzhhIzEQticsK73wef9Q8uyWs14yM96rhVOW
-	 jiae4+L1KZoVQJDpAK3st7LJC7sVr71aL1AcAKldZt0Aq3jtiCgUKXWFym0OdfBkf6
-	 vTistj2vtUJFq7UJ3/IlBYNMNLulYocc0urTnChpEjo2iHgkFPRkhwvyktL8eY/bz9
-	 3bJfe/57I61jw==
-Date: Fri, 16 May 2025 15:16:39 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [GIT PULL] XFS fixes for v6.15-rc7
-Message-ID: <fo6f25yd3ywgunzhimk6s3c4vmh2bbwic7ihbq6agcafhyhcpx@5akhizn44tqy>
+	s=k20201202; t=1747421798;
+	bh=6aAIwmYBpydP7CmclcTy37ctowklw9EaLowDMAFkPcs=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=bbndH0gTXuZG6QfymOdmryfMLHmUg/8MSBxtH3QjcS2EufLrXEmaumclLsnRg9dHB
+	 On55huvnzGgcXX0G095zoboLZy6/3QTcmHitm6sGQDeTRzINZFWsPvwOv0INls3XaD
+	 +WNsRJ9PpU9s7NsiaMH1lRh2UvJBQD7laIiv3kZJODOn6kZCXiDVpNocjKwWNgxYSK
+	 RSRz5yZMqmhBWpcyD0rLYbPVRTe5Fd3T+nhWzsIaTYgc+Fg03Kgrgg/W84zRg8z2h6
+	 HLCXrkXzu/GfSbtPREXXXodY0cOZYHmUJnuuAd4zpoob1unVeTYjeO2FcYeMFuQLxE
+	 aXhxnRdZ7yuUA==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id ADCF73806659;
+	Fri, 16 May 2025 18:57:16 +0000 (UTC)
+Subject: Re: [GIT PULL] XFS fixes for v6.15-rc7
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <fo6f25yd3ywgunzhimk6s3c4vmh2bbwic7ihbq6agcafhyhcpx@5akhizn44tqy>
+References: <fo6f25yd3ywgunzhimk6s3c4vmh2bbwic7ihbq6agcafhyhcpx@5akhizn44tqy>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <fo6f25yd3ywgunzhimk6s3c4vmh2bbwic7ihbq6agcafhyhcpx@5akhizn44tqy>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-6.15-rc7
+X-PR-Tracked-Commit-Id: 08c73a4b2e3cd2ff9db0ecb3c5c0dd7e23edc770
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 1524cb283074743def4469256ae0f555edf06be3
+Message-Id: <174742183515.4031545.6387146706836111431.pr-tracker-bot@kernel.org>
+Date: Fri, 16 May 2025 18:57:15 +0000
+To: Carlos Maiolino <cem@kernel.org>
+Cc: torvalds@linux-foundation.org, linux-xfs@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 
-Hello Linus,
+The pull request you sent on Fri, 16 May 2025 15:16:39 +0200:
 
-Could you please pull patches included in the tag below?
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-6.15-rc7
 
-An attempt merge against your current TOT has been successful.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/1524cb283074743def4469256ae0f555edf06be3
 
-It's worth mentioning this includes a bug fix for a possible data corruption
-vector on the zoned allocator garbage collector.
+Thank you!
 
-Thanks,
-Carlos
-
-The following changes since commit f0447f80aec83f1699d599c94618bb5c323963e6:
-
-  xfs: remove duplicate Zoned Filesystems sections in admin-guide (2025-04-22 16:05:24 +0200)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-6.15-rc7
-
-for you to fetch changes up to 08c73a4b2e3cd2ff9db0ecb3c5c0dd7e23edc770:
-
-  xfs: Fix comment on xfs_trans_ail_update_bulk() (2025-05-14 15:37:50 +0200)
-
-----------------------------------------------------------------
-xfs fixes for 6.15-rc7
-
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
-
-----------------------------------------------------------------
-Carlos Maiolino (2):
-      xfs: Fix a comment on xfs_ail_delete
-      xfs: Fix comment on xfs_trans_ail_update_bulk()
-
-Christoph Hellwig (1):
-      xfs: fix zoned GC data corruption due to wrong bv_offset
-
-Nirjhar Roy (IBM) (1):
-      xfs: Fail remount with noattr2 on a v5 with v4 enabled
-
-Wengang Wang (1):
-      xfs: free up mp->m_free[0].count in error case
-
- fs/xfs/xfs_super.c     | 28 +++++++++++++++++++++++++++-
- fs/xfs/xfs_trans_ail.c | 34 ++++++++++++++++++----------------
- fs/xfs/xfs_zone_gc.c   |  5 +++--
- 3 files changed, 48 insertions(+), 19 deletions(-)
-
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
