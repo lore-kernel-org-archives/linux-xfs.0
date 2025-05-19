@@ -1,110 +1,137 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61E3E224889;
-	Mon, 19 May 2025 06:17:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3608B244698;
+	Mon, 19 May 2025 06:35:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747635472; cv=none; b=p/upf0hytY1kvmEymp/It4dWt4uoavp8oeZwASSHfptotyZEOPMbjbS4TbHMVZ4Jt4F+yrbanIMSa7d0/lEwd6RfrisjwtT4Y4EC3OzybVIykL6OMNLh36TDxhn4kCrSPFXs+vtmdX88L4d+kJ3uisGRvys2NxdhMspVrxRcAK8=
+	t=1747636543; cv=none; b=mO7NllM7PTuL1reSvzJbNsUPvkzfDjIBJcJTbbZxD2f/KPP65CKGppDeu6KKlp1NqAqQurRscrcJRcz6Sn9W0YT9Mmd9i+39oL3EtzP6n8p2ADIBCRRwRakLcpVO63+pKUhP2H1sMas1waPIT303/tsQ0Gnyod6+62HzjAGtqOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747635472; c=relaxed/simple;
-	bh=+8AVc4xBsScUHkSpZGN34MNv4fFhsUznRQJ7OkNQkoQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=WVaXv373IElMCqGcvF+V73eWBhvJgMeZFJ6AVQ4VrwMBbSv2Pk/v+K+5LxqFI5HDZvfESRXVermvSTd5XdKfbUhcdP9w2iwJyWSXBvjDYyrcqFxO7w2Fht2O1UftkuMapxE60SW6DgmV2V0wQUKPU7zYLdoCLTTS0FW1HitA4ww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ze/QGsmK; arc=none smtp.client-ip=209.85.214.172
+	s=arc-20240116; t=1747636543; c=relaxed/simple;
+	bh=yET65vWYLjgl35mfkLmqYcsb1shTxtfsLM1CGUf/VMI=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:Mime-Version; b=IltK+tCF9Ey129T1l7vJl8A9WkiOvp4WpcPbQ9JyCg0/bd3QBR4lxKd9yV/YqgG3pJyilyhzE17LuCDQ0u0Ca6H63Tlun7laTiTaBlCX0bo7+Gc4qlhrym2Oi3LKzQjjtm8tKuXW7Y5txtG3aITKqKlDHiljUAncfzTsp53e8sY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QP16tsBe; arc=none smtp.client-ip=209.85.216.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ze/QGsmK"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2322f8afe02so5047475ad.2;
-        Sun, 18 May 2025 23:17:51 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QP16tsBe"
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-30f0d85a092so339915a91.0;
+        Sun, 18 May 2025 23:35:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747635470; x=1748240270; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tdV4gbTUexVZokxTBi5R5goXt94Qpff5aqsyKfGYy0k=;
-        b=Ze/QGsmKMii5xnUycbuds156uM3c78azrk8/i2WmdR9RD4cO+qpfihkVpdTJR8VIsg
-         hyjrNq6w1NvJO2m3XtEJU9qSkJ8roN0jVg6e+s93fjjhBJfocnW9Ura19Kc7yD+e+ipf
-         kKd++r5zUPmfbDrgibLlfHguxKNoR98/cRRmJL7Dv+e6GRsL0M1ItSCNSADJJzM0ceXF
-         7TSNNhNgiYjtJDatmcfOthxVHTHRvMk4VYMcS8yVRDqaUgFwL5Ug4xDG9swaNwJp4SlV
-         zxDbicDiKwds2ULAFLQbLp6NK9nxvEHaChYmn47PS+e1t8YBoBxmfRLdOwoYeEc0Bmw2
-         gsYg==
+        d=gmail.com; s=20230601; t=1747636540; x=1748241340; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=xU9eyjmSrtrXc60xASy21fm8WnzISRHLSXd5aK11pDA=;
+        b=QP16tsBeS7p0dBUO3hzX9FWYy5nxyXZrdWd/2CED6lFeY448l5ZcIdqYVbTZE6JsM0
+         W+xH1xoQ/iDk8y3w4Jo8H+5Ac9oKIFZs3Lb8wWMVullp7HPUFknfSeh46h/zhnhMtdbV
+         lRCrc/5mGMoT/KLUVvUiHEGn5HC/4bTNIvrvvDIME4oaOggN6Kk6cXOmQwNnDzw86iD3
+         FvN62DbT3bhkwRTUxVR/zaBlcLzCOdtI8echPSs3PCXFz/lAuOaE/3IcCX1CqVe8vMqR
+         0Sa2TGxroQJ6+XeeCjDOkfGm/uFbdJCXk28UHLshP76Lui+JrQ48ctIGd5cHt3PjifQM
+         7Dpw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747635470; x=1748240270;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=tdV4gbTUexVZokxTBi5R5goXt94Qpff5aqsyKfGYy0k=;
-        b=WsgxMqnLjZ+z+JGJXQ1EIwGh16LWxawFyYUab9nmNehpxvorwd1Y5CejI5YPJYQuQX
-         D466wdVxXKkb4+PJFtzkZXxVAPwb7Z3HDw/WyifVa2j9LMYcJRkeTyygvFgcqyKPRfyd
-         3h5piRua2ztxMFi+UzFxWrNw4cDzKQCrqLj5RVOB34BBYpazT5lFkUdeEUV0tcSNf4MY
-         qQ/I0EerOrpfmUeQxF7yM0aeoJf98vNXhulhWZ4Ccc57ds47aq4qPXuMfvks9Kmvt8//
-         3/Ur+JgA/Tkia9w2IL050HM6pnmeaOGNYWCIIrMw2OAupLpDaAkLCpBAdJxoxNFKl04n
-         SRBQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV76ArP0O+NhUoU6+CpEb6ztGDtA70ZuWQjEfG3uPqYOHYCwsvIPbpk5+IJZF4E8oQJ/+VShkmRZ7g=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxXfV20bmtqnzLeMVlZ57M5poHjiYlfSMrc5u3/4zuD6vGTOycL
-	4uUC0J4vDoXA53hLJvZJB2i+dqxIqoCwQQtxZQxsVb2j6UnR1661qpYW8kMdeA==
-X-Gm-Gg: ASbGncuQ332LLg6uK3b+UzvHahrv/3hVPkUHd2m9sjOxKs0dMN3PActxfhMcdxdRW4P
-	NceWqRvVeYtmVjKBwh+4tjSz+AXpp2Ue6Ju1Qg28U/2tVJEjdM6NaPBphTtlvJP3ckgnkpAU4ml
-	TP+OfIW0X7z2TXmo278vUrZAQSkRpWrZTQz6HMdqS6oB3sm2iqe7lFQGP0vR4abgSrT6uOVeoi6
-	FFx03cnV7zW8JAIOLSv9/6sZWPGRtifavP2NHgPg8X+R6iiuoTEUeM8Z06MzML2N6Y3QCPEGg81
-	LWf1ZaUBlI2vwc/TY9ktVn/c+/SeUqpE1GOp8957Q7lRqUgoyOn61j4=
-X-Google-Smtp-Source: AGHT+IFazCX0uazRleXaKjvUHQPuHjW0i0WMUTTfgmCfhF+oosNfGje7o4lsj7TnTEvFDIKHVWWLCQ==
-X-Received: by 2002:a17:902:f790:b0:223:325c:89f6 with SMTP id d9443c01a7336-231d43d9ba7mr212322935ad.10.1747635470173;
-        Sun, 18 May 2025 23:17:50 -0700 (PDT)
-Received: from citest-1.. ([49.205.34.162])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2325251da10sm6939385ad.42.2025.05.18.23.17.47
+        d=1e100.net; s=20230601; t=1747636540; x=1748241340;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=xU9eyjmSrtrXc60xASy21fm8WnzISRHLSXd5aK11pDA=;
+        b=xRpCGIbYzy7fQtyUrDwY9TrFDGC/EV94PIWOhyUcvlSsnFUk2vrVNVFY2WnDuPzSU2
+         Mlxowz0Au6pA2Vs5ZBN7UyLl7D9oywZYrrcbBik5vXwvPvMjy+Y1bmW7ZpLbJ1+3+8+E
+         0n+DOhHbT++9dncPc167U1gm8DIbtq/q8GgiRBgb0j7eH9lGZRUL5yDg06eJRtffejWr
+         2EqJLCcq9hNG/zoGQKyQ1m0hmzcFpu46fByNuUFkowdnkL4rXxIVtZt9irHHOgXmyS89
+         BWWKnz24lAuElZNjrDMccreKFS/WvPIfAinCMMaJDRJuNMsaCNjKJsLxgoeKzOrIiA6V
+         mCZw==
+X-Forwarded-Encrypted: i=1; AJvYcCUQUOozZADA4/Um/hh9EooOY3YEGT4SGf+DTAo+WYCQmvqh0Oui8mduwvEYYr5QofJJijW16mFbKNaWt1A=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyC+Vfm9oztHUU1lMz2zg2voMzeT638XikVa5P8DMmXkZ2lyUJy
+	y8d2os8WldaCx4bFRX6xyJqufEHh0djZ74Tp5urEQ0WuBMiLG9cAXGt+EujnAw==
+X-Gm-Gg: ASbGncsCxyM8ulepJvqbtth8M6Bt3eyQAQuO/HK9fZcW+XOLVzBdBYxWhdYxUTwofgT
+	qynHrcjOSyR95waebf3zRBC14IUdHVc3Al0bcbu9UUpVrnjGhCQNCkbK9PAZTK6a4wC6e7vF2/2
+	Up35zy7sJzcggrlTp1vJeDGuLbatByS5AwRP9pF2YcL2s4IGSEPwtxD/SQtX0EKUp7e7Blob+lE
+	tHwDMEAq6WLQE0thQlo858bQZggJOxWdYFiZa6H4N7a2pVLfi0x+h8xMP0fZRfMhByPc3MtnNRI
+	R20ayay8HsHL+l54aTnRFfPcjMHJh97NHsdpPO29+G8Iq5PBZU7bk6+0USDOyB/xuv4yHXA1/Cj
+	/Y0hu8Z+DrZ6lQOIni2EhFHDmAtAa
+X-Google-Smtp-Source: AGHT+IFNtD1hva5l0grwa9LWSJv9C+Hi6a2v55OWP0J68Z2HyLxK4kIuRZ5Q0ZP8lw8u7lq2WwSS6A==
+X-Received: by 2002:a17:90b:3c8f:b0:30c:540b:9ba with SMTP id 98e67ed59e1d1-30e7d51fa7cmr18472827a91.10.1747636540271;
+        Sun, 18 May 2025 23:35:40 -0700 (PDT)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.205.34.162])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-30e7d489f95sm5852871a91.18.2025.05.18.23.35.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 May 2025 23:17:49 -0700 (PDT)
+        Sun, 18 May 2025 23:35:39 -0700 (PDT)
+Message-ID: <a4d6cf65dd8537a5b047ccd4f39fd0e43c6f94be.camel@gmail.com>
+Subject: Re: [PATCH] xfs: Remove unnecessary checks in functions related to
+ xfs_fsmap
 From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com,
-	djwong@kernel.org,
-	zlang@kernel.org,
-	david@fromorbit.com,
-	nirjhar.roy.lists@gmail.com
-Subject: [PATCH v3 2/2] new: Replace "status=0; exit 0" with _exit 0
-Date: Mon, 19 May 2025 06:16:42 +0000
-Message-Id: <921be57a1a6ada795f5df3af042c10904cd4823b.1747635261.git.nirjhar.roy.lists@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <cover.1747635261.git.nirjhar.roy.lists@gmail.com>
-References: <cover.1747635261.git.nirjhar.roy.lists@gmail.com>
+To: Zizhi Wo <wozizhi@huawei.com>, cem@kernel.org, djwong@kernel.org, 
+	dchinner@redhat.com, osandov@fb.com, john.g.garry@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	yangerkun@huawei.com, leo.lilong@huawei.com
+Date: Mon, 19 May 2025 12:05:35 +0530
+In-Reply-To: <20250517074341.3841468-1-wozizhi@huawei.com>
+References: <20250517074341.3841468-1-wozizhi@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-We should now start using _exit 0 for every new test
-that we add.
+On Sat, 2025-05-17 at 15:43 +0800, Zizhi Wo wrote:
+> From: Zizhi Wo <wozizhi@huaweicloud.com>
+> 
+> In __xfs_getfsmap_datadev(), if "pag_agno(pag) == end_ag", we don't need
+> to check the result of query_fn(), because there won't be another iteration
+Yes, this makes sense to me. Once pag_agno(pag) == end_ag, that will be the last iteration. "error"
+is used later after coming out of the while loop. This looks good to me. 
+Feel free to add
 
-Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-Reviewed-by: Zorro Lang <zlang@redhat.com>
----
- new | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Reviewed-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
 
-diff --git a/new b/new
-index 636648e2..dff69265 100755
---- a/new
-+++ b/new
-@@ -176,8 +176,7 @@ exit
- #echo "If failure, check \$seqres.full (this) and \$seqres.full.ok (reference)"
- 
- # success, all done
--status=0
--exit
-+_exit 0
- End-of-File
- 
- sleep 2		# latency to read messages to this point
--- 
-2.34.1
+> of the loop anyway. Also, both before and after the change, info->group
+> will eventually be set to NULL and the reference count of xfs_group will
+> also be decremented before exiting the iteration.
+> 
+> The same logic applies to other similar functions as well, so related
+> cleanup operations are performed together.
+> 
+> Signed-off-by: Zizhi Wo <wozizhi@huaweicloud.com>
+> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+> ---
+>  fs/xfs/xfs_fsmap.c | 6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> index 414b27a86458..792282aa8a29 100644
+> --- a/fs/xfs/xfs_fsmap.c
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -579,8 +579,6 @@ __xfs_getfsmap_datadev(
+>  		if (pag_agno(pag) == end_ag) {
+>  			info->last = true;
+>  			error = query_fn(tp, info, &bt_cur, priv);
+> -			if (error)
+> -				break;
+>  		}
+>  		info->group = NULL;
+>  	}
+> @@ -813,8 +811,6 @@ xfs_getfsmap_rtdev_rtbitmap(
+>  			info->last = true;
+>  			error = xfs_getfsmap_rtdev_rtbitmap_helper(rtg, tp,
+>  					&ahigh, info);
+> -			if (error)
+> -				break;
+>  		}
+>  
+>  		xfs_rtgroup_unlock(rtg, XFS_RTGLOCK_BITMAP_SHARED);
+> @@ -1018,8 +1014,6 @@ xfs_getfsmap_rtdev_rmapbt(
+>  			info->last = true;
+>  			error = xfs_getfsmap_rtdev_rmapbt_helper(bt_cur,
+>  					&info->high, info);
+> -			if (error)
+> -				break;
+>  		}
+>  		info->group = NULL;
+>  	}
 
