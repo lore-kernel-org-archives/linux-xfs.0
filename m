@@ -1,128 +1,141 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 558542566EB;
-	Tue, 20 May 2025 02:15:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5B9327464E
+	for <linux-xfs@vger.kernel.org>; Tue, 20 May 2025 10:38:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747707346; cv=none; b=gw159GcIvhKHdm10W424eEKBTGVqQdR/9O4WagPKTZkZajKtmNAaXeO/Ja5MYDvseen2Q0eTfC/pdKW1TZ53yzhaybtNVwis6KFl9qyp3a56T5st6YBOBC9dYN6ntG/koXXjzEfXtUD+bDhCicrdswLtOqSHPoGkYz+v+G+QYkg=
+	t=1747737491; cv=none; b=f97siYde5t0/jYgzS1+yuTHoSK0nXiL4l5clZWj64H/xEi8zU0yK+pd9oJ6OggvsdbmBUgoVwsR90Sqlr0s3WQ56bT7BLPqyeJ5cN4sMyh/4gRlA9tD7ai8w/R8zkA4kXR3h4eGUqI1csiGDLt9OUHrzq83MIkopceSlRqQizK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747707346; c=relaxed/simple;
-	bh=cM5ZM+/oRG3JtGyx5defvVY6eGcmT5Tdd8q06CbUL0M=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=FIY9gfnO6sWoTwGRKq3lv/aLRzTZ9DqUDxjWAewbx4zw7/LWSf4YUS7faO0+t8183ADaeYdqHg3FvIab2Nheb+uBku+OV1NlY7E1ICu/w8sjUpqV/+TYgIvIx/mrwyoFY+B/nhTpr4VPqmO+ShapqvHs9vXjbWZoJSbfpYGHd0E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LxsOpLVW; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1747737491; c=relaxed/simple;
+	bh=mRU0VykrlxKIBkrDBdya8U7Kow21ZCRP9bV6krzADpY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EfIVoR3Sr6e99Wcp6cY3rqiA5SHigmoDh9DFiejoHtBKlbYbeTq43rT+kIIjFnCb2BFPa72ojjQWfU7tU8Rctn3IzZNPLXr5rlN6QtEeomtYtLgdn2EAZK2KUdJgSk2J6Jz8zIqZU1nxUf3R07q1MVwJUEyLxJAyvnz/VIA1FOA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rTk9SgLc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LxsOpLVW"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-231fc83a33aso25955885ad.0;
-        Mon, 19 May 2025 19:15:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747707343; x=1748312143; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=w5qQBNBheDBZ1ExMUftu/6hIs7FmNyJZi6tl2AyRFk8=;
-        b=LxsOpLVWFm7bJJ2/UYspplIA1lKTZ7lRNJ5Y11aeBSTxzodiXGB9kqfMqWKfHvSJu+
-         h/Gz75SGMtBsFTTA2u967PTJuGJSqI1haMZg3f4ebjiRzFADxOIna3NqbEEgRM6Uu5x8
-         FAmbNLB6YJBsoEaMm2yf9FsTJdrKLnviZnzQRCh7hGlFM3/AGCYsrkNd6YXaHljvS4o7
-         2qErgT3fw+I1lMxWfLqh/+P8rEf1+CxzGCwgpDiovGi2mW5RCK+1eLoHlfqk2PvIXdFK
-         TkJOigTuwerzYUq3EbfwGLPMhJW6QzgrCj2/VkKFPNPUXBuuRyVR+zyOPqWTBdKVAAip
-         qCAA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747707343; x=1748312143;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=w5qQBNBheDBZ1ExMUftu/6hIs7FmNyJZi6tl2AyRFk8=;
-        b=cxENYF1kyEdaf0MRrc8lgCGZG+cDb9WtPCTmUIph4ngCAfW788grZtEn51CWmYHePi
-         ywSDDBPL8NF6F1X/nrJb4hBIPmgSBGxtFFgyt/Te3WOIfmhEcCzo+I0eLS6G173u0MAO
-         zYA0BT8B5/hqBUkFlYl1IH0EJ00WU1PV/XHDp6FLJqxX5L6i8/1pkvFBGPD3KVwvng02
-         9f7iws9XmtlOyJySRYx62xmjAcWMHgyerUehiK19Yak2lPzFAW1GBchzsH+CnwFau9jr
-         NSq7N2ZynugPXE5c7pYvQI0GyeJ0AObYKFZ9h4KGHIH+u9UDYzBhN30Kf/kYHD1I0adF
-         3PmA==
-X-Forwarded-Encrypted: i=1; AJvYcCVBUVHTDUr6+Ks9p+IwAsfbGh3u3VxrYCqdE5fmEBlTF9Kcl6y3iGj0FGaavt5THrUsa4jasHOX@vger.kernel.org, AJvYcCW6HrLiEqtyb/t9n5n23WTdklyHxAO1JJoXaElgOJWJc7DMRoHXpzr6wWz/B494CG87EaQcgiQllNXW@vger.kernel.org
-X-Gm-Message-State: AOJu0YyhPyblqdfDpgbrUxRP9jqDjjdZBgL0ZkEQn75Kr5GhLizH5p7Q
-	Jb1BgpdwxWowkIWghdm3ms5hEemmNtkY8+i/Z1VDs5Ze1LrmZ49c/U5y
-X-Gm-Gg: ASbGncttFnFc6a50lG5X3tIlMZJgWMWoEueVF7L9cd2k2I9H2GX5vpQD2Wvxmi/uIiQ
-	J7HKPrRsp6dr/w4ouhSQMuXe7lANDemsJWyK7HDzUWG6/rkD3PDsZyhVHucGetdXIBpZD2bNZ2y
-	vimIA96CVIwS8vw1YqN3eM3zQ94lyvUFWP4fdo3KNKA3m2wUjPQoJintvoZmtaGjGvoZOjtLkds
-	H+pUzj16OHKn6ilsAksG465XFap9MoV6Az6sWg+o2GVsgtLM3IhA300Jj78pPMc76fG1nygvHwk
-	VRCpWFWH2yQTpNNe6w+i3l8aF+fzGmZYlDH3k3pJHQY=
-X-Google-Smtp-Source: AGHT+IFKAYES+5QkxkJMbZn3oV3iH1FoR9dDGRomaInjaiMoppAtgeEZ6ysKh44P8ipjbkutKKtpag==
-X-Received: by 2002:a17:903:46cd:b0:223:54e5:bf4b with SMTP id d9443c01a7336-231de36c29emr208781115ad.25.1747707343389;
-        Mon, 19 May 2025 19:15:43 -0700 (PDT)
-Received: from dw-tp ([171.76.82.96])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-231d4ebabfesm66504615ad.174.2025.05.19.19.15.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 May 2025 19:15:42 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: Catherine Hoang <catherine.hoang@oracle.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Cc: djwong@kernel.org, john.g.garry@oracle.com
-Subject: Re: [PATCH v2 5/6] common/atomicwrites: fix _require_scratch_write_atomic
-In-Reply-To: <20250520013400.36830-6-catherine.hoang@oracle.com>
-Date: Tue, 20 May 2025 07:44:44 +0530
-Message-ID: <874ixgvxij.fsf@gmail.com>
-References: <20250520013400.36830-1-catherine.hoang@oracle.com> <20250520013400.36830-6-catherine.hoang@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rTk9SgLc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D101C4CEEB;
+	Tue, 20 May 2025 10:38:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747737489;
+	bh=mRU0VykrlxKIBkrDBdya8U7Kow21ZCRP9bV6krzADpY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=rTk9SgLc8gLP0mOOIZ79xPMmWL5FFgBhZ6XgI0bn9FVxHEF69cYJd4Z/uACLzfbcQ
+	 xICZ73FtM0nehh1rm4wIwZhomuhW1XNpY2lcK0w8tcXrcA+gIpGpplDhbIrGZqSGmJ
+	 WEl8e7qngn0zeiHMRwft9OuoSY46/7Kfp3uuMYWmWvSsp5ne/oLLd0qEfRexOqj3fc
+	 uZiajQvYMdInkXxXG5Yf10wANjo5T+A4gsSwD0oLRUt+vAfhMC50xVGEnl3uFgKt0D
+	 h23EzGMyLDHugXL7yWuHsQpqmujgVUGS9gwAWcIXqtkIQoaM1Xrr7mBi5v2RMRMYO+
+	 tNpdHHrdEsdwA==
+Date: Tue, 20 May 2025 12:38:04 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Zizhi Wo <wozizhi@huawei.com>, dchinner@redhat.com, osandov@fb.com, 
+	john.g.garry@oracle.com, linux-xfs@vger.kernel.org, yangerkun@huawei.com, 
+	leo.lilong@huawei.com
+Subject: Re: [PATCH] xfs: Remove unnecessary checks in functions related to
+ xfs_fsmap
+Message-ID: <kzgijlgzweykmeni664npughps5jkgf34l7ndyj3zzwgq2wrbi@zbwrkf6xcmzh>
+References: <20250517074341.3841468-1-wozizhi@huawei.com>
+ <9_MWuMXnaWk3qXgpyYhQa-60ELGmTr8hBsB3E4comBf1_9Mx-ZtDqy3cQKCTkNa9aVG4zLeTHVvnaepX2jweEA==@protonmail.internalid>
+ <20250519150854.GB9705@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250519150854.GB9705@frogsfrogsfrogs>
 
-Catherine Hoang <catherine.hoang@oracle.com> writes:
+On Mon, May 19, 2025 at 08:08:54AM -0700, Darrick J. Wong wrote:
+> On Sat, May 17, 2025 at 03:43:41PM +0800, Zizhi Wo wrote:
+> > From: Zizhi Wo <wozizhi@huaweicloud.com>
+> >
+> > In __xfs_getfsmap_datadev(), if "pag_agno(pag) == end_ag", we don't need
+> > to check the result of query_fn(), because there won't be another iteration
+> > of the loop anyway. Also, both before and after the change, info->group
+> > will eventually be set to NULL and the reference count of xfs_group will
+> > also be decremented before exiting the iteration.
+> >
+> > The same logic applies to other similar functions as well, so related
+> > cleanup operations are performed together.
+> >
+> > Signed-off-by: Zizhi Wo <wozizhi@huaweicloud.com>
+> > Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+> > ---
+> >  fs/xfs/xfs_fsmap.c | 6 ------
+> >  1 file changed, 6 deletions(-)
+> >
+> > diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> > index 414b27a86458..792282aa8a29 100644
+> > --- a/fs/xfs/xfs_fsmap.c
+> > +++ b/fs/xfs/xfs_fsmap.c
+> > @@ -579,8 +579,6 @@ __xfs_getfsmap_datadev(
+> >  		if (pag_agno(pag) == end_ag) {
+> >  			info->last = true;
+> >  			error = query_fn(tp, info, &bt_cur, priv);
+> > -			if (error)
+> > -				break;
+> 
+> Removing these statements make the error path harder to follow.  Before,
+> it was explicit that an error breaks out of the loop body.  Now you have
+> to look upwards to the while loop conditional and reason about what
+> xfs_perag_next_range does when pag-> agno == end_ag to determine that
+> the loop terminates.
+> 
+> This also leaves a tripping point for anyone who wants to add another
+> statement into this here if body because now they have to recognize that
+> they need to re-add the "if (error) break;" statements that you're now
+> taking out.
+> 
+> You also don't claim any reduction in generated machine code size or
+> execution speed, which means all the programmers end up having to
+> perform extra reasoning when reading this code for ... what?  Zero gain?
+> 
+> Please stop sending overly narrowly focused "optimizations" that make
+> life harder for all of us.
 
-> From: "Darrick J. Wong" <djwong@kernel.org>
->
-> Fix this function to call _notrun whenever something fails.  If we can't
-> figure out the atomic write geometry, then we haven't satisfied the
-> preconditions for the test.
->
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> Reviewed-by: John Garry <john.g.garry@oracle.com>
-> ---
->  common/atomicwrites | 16 +++++++++-------
->  1 file changed, 9 insertions(+), 7 deletions(-)
+I do agree with Darrick. What's the point of this patch other than making code
+harder to understand? This gets rid of less than 10 machine instructions at the
+final module, and such cod is not even a hot path. making these extra instructions
+virtually negligible IMO (looking at x86 architecture). The checks are unneeded
+logically, but make the code easier to read, which is also important.
+Did you actually see any improvement on anything by applying this patch? Or was
+it crafted merely as a result of code inspection? Where are the results that make
+this change worth the extra complexity while reading it?
 
-This make sense. Thanks for fixing it. 
-Please feel free to add: 
+Cheers,
+Carlos
 
-Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-
->
-> diff --git a/common/atomicwrites b/common/atomicwrites
-> index 9ec1ca68..391bb6f6 100644
-> --- a/common/atomicwrites
-> +++ b/common/atomicwrites
-> @@ -28,21 +28,23 @@ _require_scratch_write_atomic()
->  {
->  	_require_scratch
->  
-> -	awu_min_bdev=$(_get_atomic_write_unit_min $SCRATCH_DEV)
-> -	awu_max_bdev=$(_get_atomic_write_unit_max $SCRATCH_DEV)
-> +	local awu_min_bdev=$(_get_atomic_write_unit_min $SCRATCH_DEV)
-> +	local awu_max_bdev=$(_get_atomic_write_unit_max $SCRATCH_DEV)
->  
->  	if [ $awu_min_bdev -eq 0 ] && [ $awu_max_bdev -eq 0 ]; then
->  		_notrun "write atomic not supported by this block device"
->  	fi
->  
-> -	_scratch_mkfs > /dev/null 2>&1
-> -	_scratch_mount
-> +	_scratch_mkfs > /dev/null 2>&1 || \
-> +		_notrun "cannot format scratch device for atomic write checks"
-> +	_try_scratch_mount || \
-> +		_notrun "cannot mount scratch device for atomic write checks"
->  
-> -	testfile=$SCRATCH_MNT/testfile
-> +	local testfile=$SCRATCH_MNT/testfile
->  	touch $testfile
->  
-> -	awu_min_fs=$(_get_atomic_write_unit_min $testfile)
-> -	awu_max_fs=$(_get_atomic_write_unit_max $testfile)
-> +	local awu_min_fs=$(_get_atomic_write_unit_min $testfile)
-> +	local awu_max_fs=$(_get_atomic_write_unit_max $testfile)
->  
->  	_scratch_unmount
->  
-> -- 
-> 2.34.1
+> 
+> NAK.
+> 
+> --D
+> 
+> >  		}
+> >  		info->group = NULL;
+> >  	}
+> > @@ -813,8 +811,6 @@ xfs_getfsmap_rtdev_rtbitmap(
+> >  			info->last = true;
+> >  			error = xfs_getfsmap_rtdev_rtbitmap_helper(rtg, tp,
+> >  					&ahigh, info);
+> > -			if (error)
+> > -				break;
+> >  		}
+> >
+> >  		xfs_rtgroup_unlock(rtg, XFS_RTGLOCK_BITMAP_SHARED);
+> > @@ -1018,8 +1014,6 @@ xfs_getfsmap_rtdev_rmapbt(
+> >  			info->last = true;
+> >  			error = xfs_getfsmap_rtdev_rmapbt_helper(bt_cur,
+> >  					&info->high, info);
+> > -			if (error)
+> > -				break;
+> >  		}
+> >  		info->group = NULL;
+> >  	}
+> > --
+> > 2.39.2
+> >
+> >
+> 
