@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D371239581;
-	Wed, 21 May 2025 22:42:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE77F1A317A;
+	Wed, 21 May 2025 22:42:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747867359; cv=none; b=YQFDIYQVZmpmJan/Jv/BrLFu32HnHpLd++yu+E9zL0rR2OzSdIoRg1zPxDFY/8ABIllQ4ukACn43swgcMWETRxQqTr/rF47MlJG38h1OzaBffmgFqGbFzhhzZC3rfdI2xPt267IZen65huts8b4yZrwpRxj6tbpSg45WDru6qWY=
+	t=1747867375; cv=none; b=RapnRN9H/WiXkZ9KidhAU1wWZhl9BEP+xaeWvLpDmkv/Di9w3SUtwoMSEoMHP9uYSPA4jdfFJf9ENXJKxvgRnDIR3v37kCRDz2LvBWm6Y5lD7KjpupDGjOkWxfdCsfzyLhZeehrwJ2YF2jFGTTPGK63ywL3DepNjfOIu/cLfnPU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747867359; c=relaxed/simple;
-	bh=UcyUTSaH05Maz8zhD1rkr/dIOFGAgdbXLlyNOb+OBGQ=;
+	s=arc-20240116; t=1747867375; c=relaxed/simple;
+	bh=HcPponYH94jEwm0Ptm/amqoYVg9GJe8kWxdsay/eVyQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MP9WllOZUXcG5pr9NQGSGWk+YjQrUzN6vax6rlRM4A9GQi3HPMIskIAwKbc3Yf67jnQ5NKK+MxF/PVFqrcpuEHI7ssQSEnbmoHlTibSpuV8fyUEjhnLlACdjqQwRNwVHKxPLsuZ5g2gNEE5LzqThsZZK15QqghsAjfoUGhZpss8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NhsGy0kT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=V349KiybBpN0ZQeLj/sulSplPpgCj5QtPIGMuydqRU0qTBJQ1Vf65EnAGitG6Q9sCEMNzqeRQcM0o7L2g2RBJqF9QQuFX/rAT0ROgs5ZP/N9sFHoh4O0kAZRYd9pXj8MMUFaQyF3eqXS652HS40QATYp8/tVcSaRBlSNVur5Lu8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d2IzCKGq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NhsGy0kT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A2FAC4CEE4;
-	Wed, 21 May 2025 22:42:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d2IzCKGq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12288C4CEE4;
+	Wed, 21 May 2025 22:42:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747867359;
-	bh=UcyUTSaH05Maz8zhD1rkr/dIOFGAgdbXLlyNOb+OBGQ=;
+	s=k20201202; t=1747867375;
+	bh=HcPponYH94jEwm0Ptm/amqoYVg9GJe8kWxdsay/eVyQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=NhsGy0kTkUvK4ukemjSTj6ZmrueDql2ZUMyiej6wMpqMxZO0Q3BdtcwU6IzMZpz14
-	 tTQWwcQu7g3AHNKZQJli2VJicf5mi9RASzcU0eDJlcfWHK6U2xXuBh+31cr564ACfk
-	 74PxDUmAiCKL8uGq+iBjWrRSPVBmrW96Mt/fKnHLo6GJJleJQMLgn+G7iLbzWgIN+n
-	 Zk4nGrrpYkURzcTniKfRgDgSb1M0yd8IYEmHETHQHlIKJdeq3yaU8K4KbBWnuF8D8k
-	 /pOTRkuKKr8KR6/h+cSa0eryW2UxS2zCdDRX8eZh563v3R2hb9rUVR8bxfGAthBH8e
-	 j+nfMGaXQwN/g==
-Date: Wed, 21 May 2025 15:42:38 -0700
-Subject: [PATCH 3/4] check: unbreak iam
+	b=d2IzCKGqUKQ9poio9YDWJf9nZrPa0AGsY1sl6q4z5C3a/nvBOUmEWDsgbtXmRS9yq
+	 NAaK2YrPV8o+OE9kCi+i+QKJ6ZqJddOElM9/DDTx10e2kvL03y8RSQMdFeTQoWnf/f
+	 7b91hd8bh4WmylC//WdILv3wmvxqDX3InwfXRC6qJ2WuUhdghCB+XMxEh87PMzpY5d
+	 2zVJufKaL6l5pX46CKxo7xWKOAdDoGimfskCsmj0b/o9A88gZQ5lqa0OahnZBbfXnS
+	 R7zzCS8bE0+csnCMvXvIQWrtGb7PKULYSfastJlLLi2VNtAmwOt4uNcQPwb984F71O
+	 yX1c68qbxqaTA==
+Date: Wed, 21 May 2025 15:42:54 -0700
+Subject: [PATCH 4/4] check: check and fix the test filesystem after failed
+ tests
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
  linux-xfs@vger.kernel.org
-Message-ID: <174786719750.1398933.11433643731439553632.stgit@frogsfrogsfrogs>
+Message-ID: <174786719769.1398933.12370766699740321314.stgit@frogsfrogsfrogs>
 In-Reply-To: <174786719678.1398933.16005683028409620583.stgit@frogsfrogsfrogs>
 References: <174786719678.1398933.16005683028409620583.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,49 +47,43 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-I don't know why this change was made:
+Currently, ./check calls _check_filesystems after a test passes to make
+sure that the test and scratch filesystems are ok, and repairs the test
+filesystem if it's not ok.
 
-iam=check
+However, we don't do this for failed tests.  If a test fails /and/
+corrupts the test filesystem, every subsequent passing test will be
+marked as a failure because of latent corruptions on the test
+filesystem.
 
-to
+This is a little silly, so let's call _check_filesystems on the test
+filesystem after a test fail so that the badness doesn't spread.
 
-iam=check.$$
-
-The only users of this variable are:
-
-check:36:iam=check
-check:52:rm -f $tmp.list $tmp.tmp $tmp.grep $here/$iam.out $tmp.report.* $tmp.arglist
-common/btrfs:216:               if [ "$iam" != "check" ]; then
-common/overlay:407:             if [ "$iam" != "check" ]; then
-common/rc:3565: if [ "$iam" != "check" ]; then
-common/xfs:1021:                if [ "$iam" != "check" ]; then
-new:9:iam=new
-
-None of them were ported to notice the pid.  Consequently,
-_check_generic_filesystem (aka _check_test_fs on an ext4 filesystem)
-failing will cause ./check to exit the entire test suite when the test
-filesystem is corrupt.  That's not what we wanted, particularly since
-Leah added a patch to repair the test filesystem between tests.
-
-Cc: <fstests@vger.kernel.org> # v2024.12.08
-Fixes: fa0e9712283f0b ("fstests: check-parallel")
+Cc: <fstests@vger.kernel.org> # v2023.05.01
+Fixes: 4a444bc19a836f ("check: _check_filesystems for errors even if test failed")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- check |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ check |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 
 diff --git a/check b/check
-index ede54f6987bcc3..826641268f8b52 100755
+index 826641268f8b52..818ce44da28f65 100755
 --- a/check
 +++ b/check
-@@ -33,7 +33,7 @@ exclude_tests=()
- _err_msg=""
- 
- # start the initialisation work now
--iam=check.$$
-+iam=check
- 
- # mkfs.xfs uses the presence of both of these variables to enable formerly
- # supported tiny filesystem configurations that fstests use for fuzz testing
+@@ -986,8 +986,13 @@ function run_section()
+ 			_dump_err_cont "[failed, exit status $sts]"
+ 			_test_unmount 2> /dev/null
+ 			_scratch_unmount 2> /dev/null
+-			rm -f ${RESULT_DIR}/require_test*
+ 			rm -f ${RESULT_DIR}/require_scratch*
++
++			# Make sure the test filesystem is ready to go since
++			# we don't call _check_filesystems for failed tests
++			(_adjust_oom_score 250; _check_filesystems) || tc_status="fail"
++
++			rm -f ${RESULT_DIR}/require_test*
+ 			# Even though we failed, there may be something interesting in
+ 			# dmesg which can help debugging.
+ 			_check_dmesg
 
