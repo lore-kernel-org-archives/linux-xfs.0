@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 382B51A317A;
-	Wed, 21 May 2025 22:42:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D371239581;
+	Wed, 21 May 2025 22:42:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747867344; cv=none; b=eG3it72GDOKKVBOEQ/pFlLdN/Bm+xkItQaHTbnokln4lfMCbFei+v7F9fIvEnAH1b/9uU8qrbDjaL5VmLSbw2IkT6EYrSIoZAuUh76/Y9HA2PoU28CWZJ+Ze0AeZcb/i1b8k4Ed0RtFBhPK2SCFG+tEet0ZRYekQra5+LE+NBPU=
+	t=1747867359; cv=none; b=YQFDIYQVZmpmJan/Jv/BrLFu32HnHpLd++yu+E9zL0rR2OzSdIoRg1zPxDFY/8ABIllQ4ukACn43swgcMWETRxQqTr/rF47MlJG38h1OzaBffmgFqGbFzhhzZC3rfdI2xPt267IZen65huts8b4yZrwpRxj6tbpSg45WDru6qWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747867344; c=relaxed/simple;
-	bh=xlhv+9bPoV78cO1mXtelHKkZwgwzKv23FBeU7uchEi4=;
+	s=arc-20240116; t=1747867359; c=relaxed/simple;
+	bh=UcyUTSaH05Maz8zhD1rkr/dIOFGAgdbXLlyNOb+OBGQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Aah5oAaD2arLNB/d1CUfwu7upygtIvtDj09qKvLZw+ig2U7Wa2Ka+LWhGtxvpcnLnRRooHXltS5bYnHaPhMXMDiSLKX9ECg/rz6zbddSkORHIkQUj6moneJCQa7LIowiWrZaUGoaB7Tk/VxhpqpFthePnkq/GdMuHtcNktX6h+g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z8QLfLav; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MP9WllOZUXcG5pr9NQGSGWk+YjQrUzN6vax6rlRM4A9GQi3HPMIskIAwKbc3Yf67jnQ5NKK+MxF/PVFqrcpuEHI7ssQSEnbmoHlTibSpuV8fyUEjhnLlACdjqQwRNwVHKxPLsuZ5g2gNEE5LzqThsZZK15QqghsAjfoUGhZpss8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NhsGy0kT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z8QLfLav"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD7B7C4CEE4;
-	Wed, 21 May 2025 22:42:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NhsGy0kT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A2FAC4CEE4;
+	Wed, 21 May 2025 22:42:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747867343;
-	bh=xlhv+9bPoV78cO1mXtelHKkZwgwzKv23FBeU7uchEi4=;
+	s=k20201202; t=1747867359;
+	bh=UcyUTSaH05Maz8zhD1rkr/dIOFGAgdbXLlyNOb+OBGQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Z8QLfLavYE4TeKsXa/5E04XBGqdHC9zoQVH5Wleupr+fS9TokMIksyWdq2m/imqzA
-	 Fect5dnUjf0kvtbsBTa9DYFTFQLhMCHgzK+j72LgVqAoORm3bGeMa/4j52zZeSvL8J
-	 HjMRVv2GVXjEtbWBA+ofE+ZIovLMVgjbL9WtOl977l55Hh/O/tkW+sbLYwcW4qNBCs
-	 K8hW9QQGvnxvVV3xadPfJEyE3erdWIcJnDlEs/NeR8znBTgKe9R+gwbPnQsYXyqJqA
-	 iaDDlg87rLgXd39PmcAgrGkP47wbRANkPwaQi5e+D1S2WkdSUf0O+74s+1EMByX3uZ
-	 zSPRn+aW6yUTA==
-Date: Wed, 21 May 2025 15:42:23 -0700
-Subject: [PATCH 2/4] generic/251: skip this test if fstrim geometry detection
- fails
+	b=NhsGy0kTkUvK4ukemjSTj6ZmrueDql2ZUMyiej6wMpqMxZO0Q3BdtcwU6IzMZpz14
+	 tTQWwcQu7g3AHNKZQJli2VJicf5mi9RASzcU0eDJlcfWHK6U2xXuBh+31cr564ACfk
+	 74PxDUmAiCKL8uGq+iBjWrRSPVBmrW96Mt/fKnHLo6GJJleJQMLgn+G7iLbzWgIN+n
+	 Zk4nGrrpYkURzcTniKfRgDgSb1M0yd8IYEmHETHQHlIKJdeq3yaU8K4KbBWnuF8D8k
+	 /pOTRkuKKr8KR6/h+cSa0eryW2UxS2zCdDRX8eZh563v3R2hb9rUVR8bxfGAthBH8e
+	 j+nfMGaXQwN/g==
+Date: Wed, 21 May 2025 15:42:38 -0700
+Subject: [PATCH 3/4] check: unbreak iam
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
 Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
  linux-xfs@vger.kernel.org
-Message-ID: <174786719732.1398933.6661596329740320998.stgit@frogsfrogsfrogs>
+Message-ID: <174786719750.1398933.11433643731439553632.stgit@frogsfrogsfrogs>
 In-Reply-To: <174786719678.1398933.16005683028409620583.stgit@frogsfrogsfrogs>
 References: <174786719678.1398933.16005683028409620583.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -47,46 +46,49 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-There's no reason to wait until fstrim_loop to detect the length
-constraints on the FITRIM call since failing to detect any constraints
-just leads to _notrun.  Run that stuff from the top level scope so that
-we don't start up a bunch of exercisers for no good reason.
+I don't know why this change was made:
 
-Cc: <fstests@vger.kernel.org> # v2023.10.29
-Fixes: 95b0db739400c2 ("generic/251: check min and max length and minlen for FSTRIM")
+iam=check
+
+to
+
+iam=check.$$
+
+The only users of this variable are:
+
+check:36:iam=check
+check:52:rm -f $tmp.list $tmp.tmp $tmp.grep $here/$iam.out $tmp.report.* $tmp.arglist
+common/btrfs:216:               if [ "$iam" != "check" ]; then
+common/overlay:407:             if [ "$iam" != "check" ]; then
+common/rc:3565: if [ "$iam" != "check" ]; then
+common/xfs:1021:                if [ "$iam" != "check" ]; then
+new:9:iam=new
+
+None of them were ported to notice the pid.  Consequently,
+_check_generic_filesystem (aka _check_test_fs on an ext4 filesystem)
+failing will cause ./check to exit the entire test suite when the test
+filesystem is corrupt.  That's not what we wanted, particularly since
+Leah added a patch to repair the test filesystem between tests.
+
+Cc: <fstests@vger.kernel.org> # v2024.12.08
+Fixes: fa0e9712283f0b ("fstests: check-parallel")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/generic/251 |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ check |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/tests/generic/251 b/tests/generic/251
-index 644adf07cc42d5..1fb26f4caa3732 100755
---- a/tests/generic/251
-+++ b/tests/generic/251
-@@ -103,11 +103,6 @@ fstrim_loop()
- 	# always remove the $tmp.fstrim_loop file on exit
- 	trap "_destroy_fstrim; exit \$status" 2 15 EXIT
+diff --git a/check b/check
+index ede54f6987bcc3..826641268f8b52 100755
+--- a/check
++++ b/check
+@@ -33,7 +33,7 @@ exclude_tests=()
+ _err_msg=""
  
--	set_minlen_constraints
--	set_length_constraints
--	echo "MINLEN max=$FSTRIM_MAX_MINLEN min=$FSTRIM_MIN_MINLEN" >> $seqres.full
--	echo "LENGTH max=$FSTRIM_MAX_LEN min=$FSTRIM_MIN_LEN" >> $seqres.full
--
- 	fsize=$(_discard_max_offset_kb "$SCRATCH_MNT" "$SCRATCH_DEV")
+ # start the initialisation work now
+-iam=check.$$
++iam=check
  
- 	while true ; do
-@@ -177,6 +172,12 @@ function run_process() {
- 
- nproc=$((4 * LOAD_FACTOR))
- 
-+# Discover the fstrim constraints before we do anything else
-+set_minlen_constraints
-+set_length_constraints
-+echo "MINLEN max=$FSTRIM_MAX_MINLEN min=$FSTRIM_MIN_MINLEN" >> $seqres.full
-+echo "LENGTH max=$FSTRIM_MAX_LEN min=$FSTRIM_MIN_LEN" >> $seqres.full
-+
- # Use fsstress to create a directory tree with some variability
- content=$SCRATCH_MNT/orig
- mkdir -p $content
+ # mkfs.xfs uses the presence of both of these variables to enable formerly
+ # supported tiny filesystem configurations that fstests use for fuzz testing
 
