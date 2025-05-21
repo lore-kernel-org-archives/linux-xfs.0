@@ -1,36 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB304239E85;
-	Wed, 21 May 2025 22:40:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48E5D1754B;
+	Wed, 21 May 2025 22:40:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747867254; cv=none; b=MC6537UOOfngk2fctjBzEbG3c7/gSbJcV9QLZyLjjyYjYadEG0jGxD/uc2RJmpHogD8axyCevSzMGdg3DZPpEY0+m/7PSyxhJtqJM5KocsEWjOKc5YbM+NHjnC2eVJUbok2BpnDhUPD3mjknRV594wW2Vz/OiA9PLfNftH8kbt8=
+	t=1747867260; cv=none; b=gYPVM04+0IazxuPLsjEl+Q4cGli+Nl0kTt0hewIlYGufV5OMFiVxU2o7KuRfbb/dQkjNoTPCtuXAAgzQVy6rA+c/UEtSqtyAj1p5CyuqwOeS1oA3nSiRRIbuO3xaPcbvDNCgjGxM8BxHrhuC43NPwjH8cikb2TCf9NNw6lmpug0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747867254; c=relaxed/simple;
-	bh=86tXlADGD5RBxV5ZsxyHFoirFkv39IUO7ivO6EnBZMk=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=dc9AR1EsnQCMyrZxnQ45+wRsKsOWWTYhT6rmViMgqtHHKi0B2d53gMdO34J2sHwtI8qEqXIMqsC/5fLAWFdgimrpys/Cs26sJfYpOOVzkl+nK0nxkutSdENcgddtwj74LmLWXDmjlIbMEiJ4tA6TJWOIEXexHREiJb2sIGnKplg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ab3XzyDD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747867260; c=relaxed/simple;
+	bh=XR0P1B8yBVgx8yZieSRe58DRxnqLDxKrV4mE4bGspqA=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=l2NKJ4QpFvF1qE1bRm3cY90UI9bQrnXP4Acnq0wS9NC5tuIehwzvzSIRHRk6xu1jU20Ckgb7Q928GETpb53RRnVbYNO/9kWUWw4zhtO4UTFfFMlTuBqcOngMZEA4VX98bnOvu8Lfgq9C1AACoG9ll73wKzbVR2NNX+dA29DcvHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=guoYyZz0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ab3XzyDD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1494BC4CEE4;
-	Wed, 21 May 2025 22:40:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="guoYyZz0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF75BC4CEE4;
+	Wed, 21 May 2025 22:40:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747867254;
-	bh=86tXlADGD5RBxV5ZsxyHFoirFkv39IUO7ivO6EnBZMk=;
+	s=k20201202; t=1747867259;
+	bh=XR0P1B8yBVgx8yZieSRe58DRxnqLDxKrV4mE4bGspqA=;
 	h=Date:Subject:From:To:Cc:From;
-	b=Ab3XzyDDmpsz+OMQLFE2EH2kgfTJEPFrqRbZqtQ+Vnzx7wsWNHNwScyGjLoVl14ph
-	 JO05iJ70GdNhjr64YWNyf9guN3PR8vNbFebG5WTuOSJYR2wSU9jLwi5IUn8Xxtxwu5
-	 hHWLKXDx8Im8Z04Pm6wUTGElCi4adcE4S+ATBf0Ixhbmis8XKZMLLBMlj40P0vTJCM
-	 /VeC9zlJbIpJJ+OC4EtPn6CxKxQ8kxt7IPk1fJsVUSRAcwFYs2QllZXrdnWGtZetIa
-	 bL4ehAlYnNUM3tyNbYY4hXynvjsY8AgGLiVTf/k7pL3t6Q/cVMHfVvCMS7llOkUC6S
-	 WyffVrKxaaWLw==
-Date: Wed, 21 May 2025 15:40:53 -0700
-Subject: [PATCHSET 1/2] fstests: check new 6.15 behaviors
+	b=guoYyZz0IeptXLqFfjUwdNSVh+P8/6bWwaSsGqq36arbIbwI32dssA5vPDmSchcud
+	 eflzyYbhkt6FqCn8WnTRzFKszjadGypKJY4TPOwEwfalGD+iF/3GAgvNA2nPwouCji
+	 mJmn/A0ZLSaAENZNNTDoQw09OQKw6YY/vU2WyqC8exnIWeyMSsMNnPL0JgN7Ag8t4M
+	 CKRGL/2jQHkFzAaCAgQbEBLdOslYgEfj/DYmhD8XcnWtD/Tq4AoxHUYiN3H17CMXro
+	 jknWAxVqPURtjWjqMYAov5mPsJ3Dt/YzhA83Y+T1bdgCD/dNxRLRXpMhcx5gcZhYs+
+	 7LmOdKHkIfT9w==
+Date: Wed, 21 May 2025 15:40:59 -0700
+Subject: [PATCHSET 2/2] fstests: more random fixes for v2025.05.11
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <174786719374.1398726.14706438540221180099.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Message-ID: <174786719678.1398933.16005683028409620583.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,7 +43,7 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Adjust fstests to check for new behaviors introduced in 6.15.
+Here's the usual odd fixes for fstests.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -52,22 +53,22 @@ Comments and questions are, as always, welcome.
 
 --D
 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
+
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=linux-6.15-sync
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
 ---
 Commits in this patchset:
- * xfs/273: fix test for internal zoned filesystems
- * xfs/259: drop the 512-byte fsblock logic from this test
- * xfs/259: try to force loop device block size
- * xfs/432: fix metadump loop device blocksize problems
+ * generic/251: fix infinite looping if fstrim_loop configuration fails
+ * generic/251: skip this test if fstrim geometry detection fails
+ * check: unbreak iam
+ * check: check and fix the test filesystem after failed tests
 ---
- common/metadump   |   12 ++++++++++--
- common/rc         |   29 +++++++++++++++++++++++++++++
- tests/generic/563 |    1 +
- tests/xfs/078     |    2 ++
- tests/xfs/259     |   25 +++++++++----------------
- tests/xfs/259.out |    7 -------
- tests/xfs/273     |    5 +++++
- tests/xfs/613     |    1 +
- 8 files changed, 57 insertions(+), 25 deletions(-)
+ check             |    9 +++++++--
+ tests/generic/251 |   29 +++++++++++++++++------------
+ 2 files changed, 24 insertions(+), 14 deletions(-)
 
