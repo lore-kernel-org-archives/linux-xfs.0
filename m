@@ -1,39 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 888191754B;
-	Wed, 21 May 2025 22:41:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3905F1754B;
+	Wed, 21 May 2025 22:42:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747867312; cv=none; b=kpf6dVvUKGtKj4IZ/YHZP/jQX0ZqcUMEEl+aId6RY2CeMm0UkO6mP3Z0tOBRk5t2MeXskE5IrJICASwugGBH7tZHaGwLLcXrl39zjRz5uzwGNB72WeolshyMVz3rmBu1tsdO12KK7fcqtN+mkjqxE+CSesdf5YSOJjH43xMKeKE=
+	t=1747867328; cv=none; b=llIcbfbGfQFtAfN+O5wGqFa2nrITgFhbsynO65FtlQR50U8rhcQdrbnTgmeP3+gqb6L5JsUM4yjedLbX4jhLsaQ/aCo8NRzJTMFEZKrS1xMVBhS3+Y9/llifKHikcrQrbKY38wTewXH1PgEB5JrDi3IHI8HTEzvRM/tP5IEIIv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747867312; c=relaxed/simple;
-	bh=dPaxILFmhNsClQCIOcFPUU+fZ4kInwwpCOj9FSijCJ0=;
+	s=arc-20240116; t=1747867328; c=relaxed/simple;
+	bh=hVlFGQUAl/Jc0gHP1Ac+iNB6aEzQjHrUSCsugk8JrOA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bIP5qocwigRPC40MnMdcFNLujkAi2w3s76+XeW+sgJN/tEHuVPAZn1m9wrbNUmMQHyj9TSs0zLejhOkbpPidwO+Xtk8bRFG7mT5Nqfn8e9GOhZnnPYWhM32gueVI+sz2rrIxPpypm5VQrP3tzLrUHrHqJYypAVMiJavkMapKoPQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iImzUZtT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jf7qlulK1zDfPdjOd8qrz1f2wl3HFOpieE7atFferxW6QlgWV4v7SmQBmhfp1tzoRc0MHawBFbL9L+9nzz3DOfNK3ghEJd6gcYKiHRKCPiGNCrVoYc12Gxj0VB5CE5GFDzl+lX8xdTuf6O/6/IWJ+qajCY6E14P3xl3rXi+VfSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MT4mGgbR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iImzUZtT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E489C4CEE4;
-	Wed, 21 May 2025 22:41:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MT4mGgbR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 103B2C4CEE4;
+	Wed, 21 May 2025 22:42:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747867312;
-	bh=dPaxILFmhNsClQCIOcFPUU+fZ4kInwwpCOj9FSijCJ0=;
+	s=k20201202; t=1747867328;
+	bh=hVlFGQUAl/Jc0gHP1Ac+iNB6aEzQjHrUSCsugk8JrOA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=iImzUZtTOZF5iXkftxLcLMc+ZPAmDEL+59LjuoCunHNFFtrh9A1/THDxCYb1aK+ry
-	 kOEM5lBSbyuP12UJnNNmMR1z/yWjhARhnzKiLSzACe61k2trshJFQc5A4YKRc4sbMB
-	 WMjYE9nroGpX/4RnCBIlTR9tLDjLrcjpJ/2ZGYv2vtDfTEXZmBz7N40OWU8xVKVPd5
-	 lt/NM3DzsLbHmv1QNDRpMOq7NLy9AGFIZ2k0fT4MlqEJQpLeNSAuB34gx4mIcRpaKg
-	 vsQqXuewUXwELg9K8L00jADW0c61y69bGqDmVgjQh1/Ka+5YBgRHfssQlriZfVMZoG
-	 n34uysnXm1/kQ==
-Date: Wed, 21 May 2025 15:41:51 -0700
-Subject: [PATCH 4/4] xfs/432: fix metadump loop device blocksize problems
+	b=MT4mGgbRoVJqq2L23WpPLB8xUG4cbff2pjHUqngavLxgGlObBAD3eGol+YBFrf7uZ
+	 0yLf0yux4R0W6i1QEZjvXYoGVdV0KkT91zZjycn4wJFil+3aJMRrfAMigjEzrFgAc2
+	 SQubYVEBe0cIqcNSFg6FafygEdprEza1F4VRjrcVdWF+zM36oZQ9E/TRFN35CihjyA
+	 MTehhNe5wBEsWWXSqzKnS7kr4R1Lbab/BlJ+R05GrWLYKGjysYHrlMk4bQjCYTJj5e
+	 b1Jr2HA3FgFbr1TOIMtof/s0LZTKjVg3XAGXX0EcZaT4azDumfCG6cXGbvzwv7hqK9
+	 mM1TBbYypmAKA==
+Date: Wed, 21 May 2025 15:42:07 -0700
+Subject: [PATCH 1/4] generic/251: fix infinite looping if fstrim_loop
+ configuration fails
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <174786719464.1398726.8513251082673880762.stgit@frogsfrogsfrogs>
-In-Reply-To: <174786719374.1398726.14706438540221180099.stgit@frogsfrogsfrogs>
-References: <174786719374.1398726.14706438540221180099.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Message-ID: <174786719713.1398933.8706464867612580485.stgit@frogsfrogsfrogs>
+In-Reply-To: <174786719678.1398933.16005683028409620583.stgit@frogsfrogsfrogs>
+References: <174786719678.1398933.16005683028409620583.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,74 +47,119 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure the lba size of the loop devices created for the metadump
-tests actually match that of the real SCRATCH_ devices or else the tests
-will fail.
+In generic/251, the topmost scope of the test creates a run file
+($tmp.fstrim_loop), starts fstrim_loop as a background shell, and then
+waits for the file to disappear.  Unfortunately, the set_*_constraints
+helpers called by fstrim_loop can abort the subshell by invoking
+_notrun, in which case the loop never deletes the runfile and the upper
+scope waits forever.
 
+Fix this by amending _destroy_fstrim to delete the runfile always, and
+move the trap call to the top of the function with a note about why it
+must always be called.
+
+Oh but wait, there's a second runfile related bug in run_process -- if
+the fstrim loop exits while run_process is looping, it'll keep looping
+even though there isn't anything else going on.  Break out of the loopin
+this case.
+
+Oh but wait, there's a /third/ runfile bug -- if the fstrim_loop exits
+before the run_process children, it will delete the runfile.  Then the
+top level scope, in trying to empty out the runfile to get the
+fstrim_loop to exit, recreates the runfile and waits forever for nobody
+to delete the run file.
+
+I hate process management in bash.
+
+Cc: <fstests@vger.kernel.org> # v2024.12.01
+Fixes: 2d6e7681acff1e ("generic/251: use sentinel files to kill the fstrim loop")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/metadump |   12 ++++++++++--
- common/rc       |    7 +++++++
- 2 files changed, 17 insertions(+), 2 deletions(-)
+ tests/generic/251 |   20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
 
-diff --git a/common/metadump b/common/metadump
-index 61ba3cbb91647c..4ae03c605563fc 100644
---- a/common/metadump
-+++ b/common/metadump
-@@ -76,6 +76,7 @@ _xfs_verify_metadump_v1()
+diff --git a/tests/generic/251 b/tests/generic/251
+index ec486c277c6828..644adf07cc42d5 100755
+--- a/tests/generic/251
++++ b/tests/generic/251
+@@ -40,8 +40,9 @@ _destroy()
  
- 	# Create loopdev for data device so we can mount the fs
- 	METADUMP_DATA_LOOP_DEV=$(_create_loop_device $data_img)
-+	_force_loop_device_blocksize $METADUMP_DATA_LOOP_DEV $SCRATCH_DEV
- 
- 	# Mount fs, run an extra test, fsck, and unmount
- 	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV _scratch_mount
-@@ -123,12 +124,19 @@ _xfs_verify_metadump_v2()
- 
- 	# Create loopdev for data device so we can mount the fs
- 	METADUMP_DATA_LOOP_DEV=$(_create_loop_device $data_img)
-+	_force_loop_device_blocksize $METADUMP_DATA_LOOP_DEV $SCRATCH_DEV
- 
- 	# Create loopdev for log device if we recovered anything
--	test -s "$log_img" && METADUMP_LOG_LOOP_DEV=$(_create_loop_device $log_img)
-+	if [ -s "$log_img" ]; then
-+		METADUMP_LOG_LOOP_DEV=$(_create_loop_device $log_img)
-+		_force_loop_device_blocksize $METADUMP_LOG_LOOP_DEV $SCRATCH_LOGDEV
-+	fi
- 
- 	# Create loopdev for rt device if we recovered anything
--	test -s "$rt_img" && METADUMP_RT_LOOP_DEV=$(_create_loop_device $rt_img)
-+	if [ -s "$rt_img" ]; then
-+		METADUMP_RT_LOOP_DEV=$(_create_loop_device $rt_img)
-+		_force_loop_device_blocksize $METADUMP_RT_LOOP_DEV $SCRATCH_RTDEV
-+	fi
- 
- 	# Mount fs, run an extra test, fsck, and unmount
- 	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV SCRATCH_RTDEV=$METADUMP_RT_LOOP_DEV _scratch_mount
-diff --git a/common/rc b/common/rc
-index 4e3917a298e072..9e27f7a4afba44 100644
---- a/common/rc
-+++ b/common/rc
-@@ -4527,6 +4527,8 @@ _create_loop_device()
+ _destroy_fstrim()
+ {
+-	kill $fpid 2> /dev/null
+-	wait $fpid 2> /dev/null
++	test -n "$fpid" && kill $fpid 2> /dev/null
++	test -n "$fpid" && wait $fpid 2> /dev/null
++	rm -f $tmp.fstrim_loop
  }
  
- # Configure the loop device however needed to support the given block size.
-+# The first argument is the loop device; the second is either an integer block
-+# size, or a different block device whose blocksize we want to match.
- _force_loop_device_blocksize()
- {
- 	local loopdev="$1"
-@@ -4539,6 +4541,11 @@ _force_loop_device_blocksize()
- 		return 1
- 	fi
+ _fail()
+@@ -61,14 +62,14 @@ set_minlen_constraints()
+ 	done
+ 	test $mmlen -gt 0 || \
+ 		_notrun "could not determine maximum FSTRIM minlen param"
+-	FSTRIM_MAX_MINLEN=$mmlen
++	export FSTRIM_MAX_MINLEN=$mmlen
  
-+	# second argument is really a bdev; copy its lba size
-+	if [ -b "$blksize" ]; then
-+		blksize="$(blockdev --getss "${blksize}")"
-+	fi
+ 	for ((mmlen = 1; mmlen < FSTRIM_MAX_MINLEN; mmlen *= 2)); do
+ 		$FSTRIM_PROG -l $(($mmlen*2))k -m ${mmlen}k $SCRATCH_MNT &> /dev/null && break
+ 	done
+ 	test $mmlen -le $FSTRIM_MAX_MINLEN || \
+ 		_notrun "could not determine minimum FSTRIM minlen param"
+-	FSTRIM_MIN_MINLEN=$mmlen
++	export FSTRIM_MIN_MINLEN=$mmlen
+ }
+ 
+ # Set FSTRIM_{MIN,MAX}_LEN to the lower and upper bounds of the -l(ength)
+@@ -82,14 +83,14 @@ set_length_constraints()
+ 	done
+ 	test $mmlen -gt 0 || \
+ 		_notrun "could not determine maximum FSTRIM length param"
+-	FSTRIM_MAX_LEN=$mmlen
++	export FSTRIM_MAX_LEN=$mmlen
+ 
+ 	for ((mmlen = 1; mmlen < FSTRIM_MAX_LEN; mmlen *= 2)); do
+ 		$FSTRIM_PROG -l ${mmlen}k $SCRATCH_MNT &> /dev/null && break
+ 	done
+ 	test $mmlen -le $FSTRIM_MAX_LEN || \
+ 		_notrun "could not determine minimum FSTRIM length param"
+-	FSTRIM_MIN_LEN=$mmlen
++	export FSTRIM_MIN_LEN=$mmlen
+ }
+ 
+ ##
+@@ -99,12 +100,14 @@ set_length_constraints()
+ ##
+ fstrim_loop()
+ {
++	# always remove the $tmp.fstrim_loop file on exit
++	trap "_destroy_fstrim; exit \$status" 2 15 EXIT
 +
- 	curr_blksize="$(losetup --list --output LOG-SEC --noheadings --raw "$loopdev")"
- 	if [ "$curr_blksize" -gt "$blksize" ]; then
- 		losetup --direct-io=off "$loopdev"
+ 	set_minlen_constraints
+ 	set_length_constraints
+ 	echo "MINLEN max=$FSTRIM_MAX_MINLEN min=$FSTRIM_MIN_MINLEN" >> $seqres.full
+ 	echo "LENGTH max=$FSTRIM_MAX_LEN min=$FSTRIM_MIN_LEN" >> $seqres.full
+ 
+-	trap "_destroy_fstrim; exit \$status" 2 15
+ 	fsize=$(_discard_max_offset_kb "$SCRATCH_MNT" "$SCRATCH_DEV")
+ 
+ 	while true ; do
+@@ -168,6 +171,7 @@ function run_process() {
+ 		cp -axT $content/ $SCRATCH_MNT/$p/
+ 
+ 		check_sums
++		test -e $tmp.fstrim_loop || break
+ 	done
+ }
+ 
+@@ -197,7 +201,7 @@ done
+ echo "done."
+ 
+ wait $pids
+-truncate -s 0 $tmp.fstrim_loop
++test -e "$tmp.fstrim_loop" && truncate -s 0 $tmp.fstrim_loop
+ while test -e $tmp.fstrim_loop; do
+ 	sleep 1
+ done
 
