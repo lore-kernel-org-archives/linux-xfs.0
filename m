@@ -1,129 +1,156 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31B081754B;
-	Thu, 22 May 2025 17:11:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A52C2522BB
+	for <linux-xfs@vger.kernel.org>; Thu, 22 May 2025 21:10:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747933918; cv=none; b=X55WKXRbkEdoOrfZg1SDpNW4/b0/pbLHgSqH/0qG69s21q6EEB5O1ATO4zflJkOFZ/X3aIhmnl4mMreW+7CDvRwEi/np44KeQijYYlZ7AcTnwE/YSsOGvbCD0wLvD/AWn4MCZBE3ZURKkrOEoJXwYVLEtn7LFI2MOJIbt1zc6VU=
+	t=1747948226; cv=none; b=VrdIFcZSA7WHfr9vqPIegM8KYGZPXeWuKz4f/ggzn20Ns8M04OOSmj+Ffq56X5+2SDU+z1br+lTsyg9IkfqZlyx8K3+EOMj9EtZLNi8hXMuBPWcEPoBHAG1ZEqR319JxuHeImoMuPJFWWH1djuyDTtrA7svCwTV5ZibO3pWQKnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747933918; c=relaxed/simple;
-	bh=jGYIfNVGbFzKODRChUtAuUMDzI3h+YZn1w7YkGo2W14=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OEWMxhijRPFWQHHR/cyKPaxo3sQw6pPkknJ+drUGSxQ18y5MAVbOTR/r0swCVCpKKQHW0ZYqnzMFSUi8rhlQteSTWMi+r/0t/+Mw97uBE3DIVoa8hxthiscE6MVBleLkEWOdim3BtYWVnTXSP8GMo/y7JWnhRm7ef9czF6nbAlQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MgA+57qz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747948226; c=relaxed/simple;
+	bh=logTJecJVCAFfSzXENHorMUG84tYSub9GJZhWoehM1c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Mz/x4mowLHG83bnX7kluWodqbTXriG0KQubZCoDQnP9lNdi8vDJzZWa7RbgJQDbxMvmKoSWRnlzdXwFVFVltU/m6OtVUUqIq/xZfPfpyoX29DETdoBjTHsuZssGmtN79Oy1LsKUdfxT4Iea3q6oVO2lcR4uoOnrKwGKou7hA5a8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NwDwceYL; arc=none smtp.client-ip=209.85.160.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MgA+57qz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FC78C4CEE4;
-	Thu, 22 May 2025 17:11:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747933917;
-	bh=jGYIfNVGbFzKODRChUtAuUMDzI3h+YZn1w7YkGo2W14=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=MgA+57qz5NxaIMgCStA55rr0GxsGIcCNy/6s2uJJ64FvOxp3Ob6SOd58/DuDZnzcA
-	 gLwsxTJSlsy/0tE19LFxtmmGfXXL0sls3KV4ZOQWopzpRdfECe9Eax50AotWJdlhiE
-	 MGy6k4cYZBm3DsgZgv4FTo2HXhN1Y7yYjo7ftulgcb5X+N9i1PoqNP0SK99UJHRgqM
-	 7cgA0cq09YxfWZ1NhvXVjaWVqFaXBsEF8vZd1RwMl8+ur3U9VBRI7mCPmIxbn52HnP
-	 B6VrF+ZmnjNjVhCikdmYd49vkETxgcy9ZJfQfc8diAB2chpodU7OSEeYXO7VLHqujg
-	 eisXyTjv7I1Ww==
-Date: Thu, 22 May 2025 10:11:56 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, miklos@szeredi.hu,
-	joannelkoong@gmail.com, linux-xfs@vger.kernel.org,
-	bernd@bsbernd.com, John@groves.net
-Subject: Re: [PATCH 04/11] fuse: add a notification to add new iomap devices
-Message-ID: <20250522171156.GI9730@frogsfrogsfrogs>
-References: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs>
- <174787195651.1483178.3420885441625089259.stgit@frogsfrogsfrogs>
- <CAOQ4uxiZTTEOs4HYD0vGi3XtihyDiQbDFXBCuGKoJyFPQv_+Lw@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NwDwceYL"
+Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-47692b9d059so116498411cf.3
+        for <linux-xfs@vger.kernel.org>; Thu, 22 May 2025 14:10:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1747948224; x=1748553024; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=wZe9MrUN1m74VpkJU7a652+/JG5Hy0nXiX+xRa7+OFs=;
+        b=NwDwceYLGg55fFJMlTewsUMPqmh/EqlhD/2Wxdus+SsvugnXHswk8eY5H2IuVsu3H6
+         QaSExOI41Z7R8kpODrgx8EG6OC7hJb+EsWZBn2Yk88/ef4pJgYQnB564BmXHebzCTij9
+         LBDECNJIzQv5AtgtSurcrKiSrIqQ/xdKdUD4VWdZitRIbgSm+eTZ5svMOUW59rjE12ME
+         58EfgBOWm2fYo3tLERzYppYQXbhi6NEmh5kDuyarulTVxOR9nx6+l4/ZG4yfqPpRxt+U
+         tcI023STW6HhHR0r6J6G7znlAedxbEJKHv9luxedJ25caslfvbmbhyOimqiRDYfOkMUR
+         iU2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1747948224; x=1748553024;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=wZe9MrUN1m74VpkJU7a652+/JG5Hy0nXiX+xRa7+OFs=;
+        b=ipXnx9jMs9If3kkESM49VA7lKzj5AqencZ63jnScL2xak5GWDyaghkBVqo4KhnMKE/
+         4LGrgSKYgML7bu+qJ3sTtWToAZuVYI4tiBByTckUm89ZMDTNj1RsYzgRoCW7gZkRXVut
+         DkAg4VvsKF3YIhOa/S23Qa57ZHKcWOj9m6b1x0IuGNt806/YBAZZ66RMV6mB45eSghR4
+         3bndams6whvbv4BHPusP02sOptvPM/PW5iw0kdAMIeD5EhU1sKh5ivZrs77y8HEAME/y
+         DMLXDDr3YlxcrquSTvTp/PZl2bP4ZwwTehjwafrADFbOM6oFlL9Os0/OjNVQL6bSDnhs
+         /y9A==
+X-Gm-Message-State: AOJu0YwKfqSgOpvaMbokS1ZKW8ln4pFuAMWpSv8afJeDDvAfOie3MF+i
+	wcUnfUieF4C9APLlu1cGNmvlRQFWE4hVHTA9Zie/BsAyQQRWAXZUKOWE2Ii3hFY1
+X-Gm-Gg: ASbGncuRQr85q00AIKIabDEGaGj0q68zkONchX/2kPhkf7QgkMAGCgJ8UDyL/pE/m0B
+	D4nObXkTiFbhnjn2Mtu2X98b58zIc1Gs+gLfe4Sf26ohgf/vtoTKIAzbb+l8v1EZ+I1TUE4Ty6u
+	lIordOXAz4qJSLfQzIAkC3Z2KWYVnk4j7DGJtRnzANyS+vQ4XGpCYpD31dnq2D62uTLKhv8q3Uj
+	rS3LU4vxhnGE5egKX/e7pX5L6o3wgiyoG9rR7Fd+KZ2Nmyl0VM+m0X5fPI9YDY1S2ea7CoOsUFd
+	GTBbBirbVKcofwbIb5E=
+X-Google-Smtp-Source: AGHT+IE2J1uPldH/5yujRWN/opXHJvPXwdvcsZJSB7bXyVguNQSQ1Ub8YmkXyGJotDXaxrSo89mfAQ==
+X-Received: by 2002:a05:622a:1f8b:b0:472:6aa:d6be with SMTP id d75a77b69052e-494b079b8b3mr374042161cf.17.1747948223939;
+        Thu, 22 May 2025 14:10:23 -0700 (PDT)
+Received: from framework13.. ([12.44.18.162])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6f8b096585dsm103839906d6.83.2025.05.22.14.10.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 May 2025 14:10:23 -0700 (PDT)
+From: Luca Di Maio <luca.dimaio1@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: Luca Di Maio <luca.dimaio1@gmail.com>,
+	dimitri.ledkov@chainguard.dev,
+	smoser@chainguard.dev,
+	djwong@kernel.org,
+	hch@infradead.org
+Subject: [PATCH v10 0/1] mkfs: add ability to populate filesystem from directory
+Date: Thu, 22 May 2025 17:10:02 -0400
+Message-ID: <20250522211003.85919-1-luca.dimaio1@gmail.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxiZTTEOs4HYD0vGi3XtihyDiQbDFXBCuGKoJyFPQv_+Lw@mail.gmail.com>
 
-On Thu, May 22, 2025 at 06:46:14PM +0200, Amir Goldstein wrote:
-> On Thu, May 22, 2025 at 2:03 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > From: Darrick J. Wong <djwong@kernel.org>
-> >
-> > Add a new notification so that fuse servers can add extra block devices
-> > to use with iomap.
-> >
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Currently the only way to pre populate an XFS partition is via the
+prototype file. While it works it has some limitations like:
+  - not allowed spaces in file names
+  - not preserving timestamps of original inodes
 
-<snip>
+This series adds a new -P option to mkfs.xfs that allows users to
+populate a newly created filesystem directly from an existing directory.
+While similar to the prototype functionality, this doesn't require
+writing a prototype file.
+The implementation preserves file and directory attributes (ownership,
+permissions, timestamps) from the source directory when copying content
+to the new filesystem.
 
-> > +int fuse_iomap_add_device(struct fuse_conn *fc,
-> > +                         const struct fuse_iomap_add_device_out *outarg)
-> > +{
-> > +       struct file *file;
-> > +       int ret;
-> > +
-> > +       if (!fc->iomap)
-> > +               return -EINVAL;
-> > +
-> > +       if (outarg->reserved)
-> > +               return -EINVAL;
-> > +
-> > +       CLASS(fd, somefd)(outarg->fd);
-> > +       if (fd_empty(somefd))
-> > +               return -EBADF;
-> > +       file = fd_file(somefd);
-> > +
-> > +       if (!S_ISBLK(file_inode(file)->i_mode))
-> > +               return -ENODEV;
-> > +
-> > +       down_read(&fc->killsb);
-> > +       ret = __fuse_iomap_add_device(fc, file);
-> > +       up_read(&fc->killsb);
-> > +       if (ret < 0)
-> > +               return ret;
-> > +
-> > +       return put_user(ret, outarg->map_dev);
-> > +}
-> 
-> This very much reminds of FUSE_DEV_IOC_BACKING_OPEN
-> that gives kernel an fd to remember for later file operations.
-> 
-> FUSE_DEV_IOC_BACKING_OPEN was implemented as an ioctl
-> because of security concerns of passing an fd to the kernel via write().
-> 
-> Speaking of security concerns, we need to consider if this requires some
-> privileges to allow setting up direct access to blockdev.
+[v1] -> [v2]
+  remove changes to protofile spec
+  ensure backward compatibility
+[v2] -> [v3]
+  use inode_set_[acm]time() as suggested
+  avoid copying atime and ctime
+  they are often problematic for reproducibility, and
+  mtime is the important information to preserve anyway
+[v3] -> [v4]
+  rewrite functionality to populate directly from an input directory
+  this is similar to mkfs.ext4 option.
+[v4] -> [v5]
+  reorder patch to make it easier to review
+  reflow to keep code below 80 chars
+  use _() macro in prints
+add SPDX headers to new files
+  fix comment styling
+  move from typedef to structs
+  move direntry handling to own function
+[v5] -> [v6]
+  rebase on 6.14
+[v6] -> [v7]
+  move functionality to common -p flag
+  add noatime flag to skip atime copy and set to current time
+  set ctime/crtime to current time
+  preserve hardlinks
+  preserve extended attributes for all file/dir types
+  add fsxattr to copied files/dirs
+[v7] -> [v8]
+  changed directory source validation to use stat() instead of open()
+  changed hardlink tracker to store inode numbers instead of inode pointers
+  fixed path buffer handling for directory traversal
+  handle blocking FIFOs filetypes
+  handle hardlinks of symlinks
+  improve setup_proto and parse proto using structured xfs_proto_source type
+  renamed noatime to preserve_atime with inverted logic
+  specify EBADF fgetxattr() and flistxattr() fallback for O_PATH fds
+  switch to calloc() to initialize hardlinks_tracker
+  switch to reallocarray() for hardlinks_tracker resize
+[v8] -> [v9]
+  squash commits in one
+  clarify the linear search implications in the commit log
+  fixed indentation and styling
+  fail early for invalid inputs
+  pass dir fd along to reduce amount of open()
+  switch from ino_t to xfs_ino_t
+  add support for socket files
+  copy fsxattr also for cases where we don't have an fd
+[v9] -> [v10]
+  fix indentation, alignment and style
+  improve comments
+  avoid unneeded casts from ino_t to xfs_ino_t for source inodes
+  avoid global hardlink_tracker as pointer
+  avoid mixing code and declarations
+  symlink target string now respects XFS_SYMLINK_MAXLEN
+  set root directory ownership/mode/attrs/fsxattrs from source dir
 
-Yeah, I was assuming that if the fuse server can open the bdev, then
-that's enough.  But I suppose I at least need to check that it's opened
-in write mode too.
+Luca Di Maio (1):
+  proto: add ability to populate a filesystem from a directory
 
-> But also, apart from the fact that those are block device fds,
-> what does iomap_conn.files[] differ from fc->backing_files_map?
+ man/man8/mkfs.xfs.8.in |  41 ++-
+ mkfs/proto.c           | 765 ++++++++++++++++++++++++++++++++++++++++-
+ mkfs/proto.h           |  18 +-
+ mkfs/xfs_mkfs.c        |  23 +-
+ 4 files changed, 821 insertions(+), 26 deletions(-)
 
-Oh, so that's what that does!  Yes, I'd rather pile on to that than
-introduce more ABI. :)
-
-> Miklos had envisioned this (backing blockdev) use case as one of the
-> private cases of fuse passthrough.
-> 
-> Instead of identity mapping to backing file created at open time
-> it's extent mapping to backing blockdev created at data access time.
-> 
-> I am not saying that you need to reuse anything from fuse passthrough
-> code, because the use cases probably do not overlap, but hopefully,
-> you can avoid falling into the same pits that we have already managed to avoid.
-
-<nod> The one downside is that fsiomap requires the file to point at
-either a block device or (in theory) a dax device, so we'd have to check
-that on every access.  But aside from that I think I could reuse this
-piece.  Thanks for bringing that to my attention! :)
-
---D
-
-> Thanks,
-> Amir.
+--
+2.49.0
