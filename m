@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48883A50;
-	Thu, 22 May 2025 00:01:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF3E2EC5;
+	Thu, 22 May 2025 00:02:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747872083; cv=none; b=royFH7AWyObN3ccFZkWHg6m9JL/2gQ/W3J9j8TRMFMGN6r8Zdz5aBOtLITtMEYE4R1zjq17L5PR6advnS8NE3MT3eb8SZsVhg//uZoipVKfTDuTdpRLjdjHDhTxhmTzFqW+uNevO6vVr4LGiwK5j4sINryBQ0auX5Iu9wR+YOl4=
+	t=1747872162; cv=none; b=A3nczQixkoYWMbrxVU6zjOyAUKIR9a/Iz/bUpRJhd/LiDZ6KXrKOVWadv+35jmA7d5wHlaAi3V9VKsL0DKPWvBDFsO88A8l2QZqUeN7cAV3T6UNE4sLEuwCSXN/+/33yUp5aMI0DrNY8ZEkV/iwZJrfSVdOT299AkIMByNEe290=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747872083; c=relaxed/simple;
-	bh=BC1RwMbo3i81GtugrWB3Rg6/+U8RMVvGtiGqNYTu7jE=;
+	s=arc-20240116; t=1747872162; c=relaxed/simple;
+	bh=cBq0PnEtICflZNparBoaPCSIEDEZbzk++xX6slF199U=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ov9mFkqw7WXGB375tLh7u3x+MMPs8KaNxia75WtqoseOOwy7Vy41KgWjBoddk3OtI4X7v6/AncUW5CbavFGrlfH+kvL2tSM2KLE8dUo7gFQEMoybYbFCwlc+d7j6VRc4JK7G4M3tF/fAQrX6X52YA8sz4RlghlUynycWZwF3JDU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xtr5zPE5; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=I/FozTBhTOqVlf/x8Oq/6y+L2ruAn1rD5GLTIwxsXYn9mPXHSb3X0R7VZGJZ+ku0FPJxRl3oJea+RVl3vpiZrTy4Or3y2oJWSd/KfBx7T0Y9p+2QYek4DXg86M3lNx18xUKxUVKGuien2EVTRG7zHPDOZLClxM0ew5f1/w4wHHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gc2tYIDj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xtr5zPE5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCECBC4CEE4;
-	Thu, 22 May 2025 00:01:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gc2tYIDj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 344C5C4CEE4;
+	Thu, 22 May 2025 00:02:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747872082;
-	bh=BC1RwMbo3i81GtugrWB3Rg6/+U8RMVvGtiGqNYTu7jE=;
+	s=k20201202; t=1747872161;
+	bh=cBq0PnEtICflZNparBoaPCSIEDEZbzk++xX6slF199U=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Xtr5zPE5otjKrwvCG79wYzjEdtpcybZnY7aIhjSjCPHd0nNMe28hfGjPSHdX65jm9
-	 Yme9yGL3na9VZTekwX/JxZY1rPzSWe1P+0FZVqYz/UkwejpMlSIKJYnrq2iFSpPdXU
-	 JoWHWSiYFIXSdoxs1X6Y+kyzyNYUPrU1efM6TFDBGRWfIyA4oRqa0/eM3TiNhzaYBJ
-	 7AaE7Y6V2niy0YnCARlVEDtQiJDmGBPFgfR7yzK6bQzx+Dxj/ZKYNDecDjtFpceeBC
-	 OCm+FPaQmPJ3lJdmy+tqIYg9OKwrGTiLlqBVdu3TbmtYAM349wqnA9wipDUFPcAq+2
-	 aMJrGovteY0aA==
-Date: Wed, 21 May 2025 17:01:22 -0700
-Subject: [PATCHSET RFC[RAP]] fuse: allow servers to use iomap for better file
- IO performance
+	b=gc2tYIDjjwKKRVKsrW/8fUelqQ9mZqBJjWRbNP0fD2XvLPYlv5/4h4jYu3ZsAiMev
+	 vglUpn7RaeSgcBiqvFL6kvJYUI5rMr0y3Bc/dbxpEVRFwy0+aePVtRYrgSfVeKNSMi
+	 6gmEKeBxkGJeMOkiFFqhJiACb6+zYcs0hV3EgfsHR7HNL/br3oVDueSqzE4LMCIdR8
+	 ykrTIkrEJd3t7IwbfIqdv17PLp7bix2z3HFTJzo4De2uJQ24M2W+aglXPLb/eYk18W
+	 ALIVm5AZ3FpVjTiBI7l5u6+LQE1rhaICj5urS437BVUevopu/uK4q5hAjL2t9HiNDz
+	 84RH0uwN9+1WQ==
+Date: Wed, 21 May 2025 17:02:40 -0700
+Subject: [PATCH 01/11] fuse: fix livelock in synchronous file put from fuseblk
+ workers
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: linux-fsdevel@vger.kernel.org, miklos@szeredi.hu, joannelkoong@gmail.com,
  linux-xfs@vger.kernel.org, bernd@bsbernd.com, John@groves.net
-Message-ID: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs>
-In-Reply-To: <20250521235837.GB9688@frogsfrogsfrogs>
-References: <20250521235837.GB9688@frogsfrogsfrogs>
+Message-ID: <174787195588.1483178.6811285839793085547.stgit@frogsfrogsfrogs>
+In-Reply-To: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs>
+References: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,50 +45,90 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-This series connects fuse (the userspace filesystem layer) to fs-iomap to get
-fuse servers out of the business of handling file I/O themselves.  By keeping
-the IO path mostly within the kernel, we can dramatically improve the speed of
-disk-based filesystems.  This enables us to move all the filesystem metadata
-parsing code out of the kernel and into userspace, which means that we can
-containerize them for security without losing a lot of performance.
+I observed a hang when running generic/323 against a fuseblk server.
+This test opens a file, initiates a lot of AIO writes to that file
+descriptor, and closes the file descriptor before the writes complete.
+Unsurprisingly, the AIO exerciser threads are mostly stuck waiting for
+responses from the fuseblk server:
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
+# cat /proc/372265/task/372313/stack
+[<0>] request_wait_answer+0x1fe/0x2a0 [fuse]
+[<0>] __fuse_simple_request+0xd3/0x2b0 [fuse]
+[<0>] fuse_do_getattr+0xfc/0x1f0 [fuse]
+[<0>] fuse_file_read_iter+0xbe/0x1c0 [fuse]
+[<0>] aio_read+0x130/0x1e0
+[<0>] io_submit_one+0x542/0x860
+[<0>] __x64_sys_io_submit+0x98/0x1a0
+[<0>] do_syscall_64+0x37/0xf0
+[<0>] entry_SYSCALL_64_after_hwframe+0x4b/0x53
 
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
+But the /weird/ part is that the fuseblk server threads are waiting for
+responses from itself:
 
---D
+# cat /proc/372210/task/372232/stack
+[<0>] request_wait_answer+0x1fe/0x2a0 [fuse]
+[<0>] __fuse_simple_request+0xd3/0x2b0 [fuse]
+[<0>] fuse_file_put+0x9a/0xd0 [fuse]
+[<0>] fuse_release+0x36/0x50 [fuse]
+[<0>] __fput+0xec/0x2b0
+[<0>] task_work_run+0x55/0x90
+[<0>] syscall_exit_to_user_mode+0xe9/0x100
+[<0>] do_syscall_64+0x43/0xf0
+[<0>] entry_SYSCALL_64_after_hwframe+0x4b/0x53
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=fuse-iomap
+The fuseblk server is fuse2fs so there's nothing all that exciting in
+the server itself.  So why is the fuse server calling fuse_file_put?
+The commit message for the fstest sheds some light on that:
+
+"By closing the file descriptor before calling io_destroy, you pretty
+much guarantee that the last put on the ioctx will be done in interrupt
+context (during I/O completion).
+
+Aha.  AIO fgets a new struct file from the fd when it queues the ioctx.
+The completion of the FUSE_WRITE command from userspace causes the fuse
+server to call the AIO completion function.  The completion puts the
+struct file, queuing a delayed fput to the fuse server task.  When the
+fuse server task returns to userspace, it has to run the delayed fput,
+which in the case of a fuseblk server, it does synchronously.
+
+Sending the FUSE_RELEASE command sychronously from fuse server threads
+is a bad idea because a client program can initiate enough simultaneous
+AIOs such that all the fuse server threads end up in delayed_fput, and
+now there aren't any threads left to handle the queued fuse commands.
+
+Fix this by only using synchronous fputs for fuseblk servers if the
+process doesn't have PF_LOCAL_THROTTLE.  Hopefully the fuseblk server
+had the good sense to call PR_SET_IO_FLUSHER to mark itself as a
+filesystem server.
+
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
-Commits in this patchset:
- * fuse: fix livelock in synchronous file put from fuseblk workers
- * iomap: exit early when iomap_iter is called with zero length
- * fuse: implement the basic iomap mechanisms
- * fuse: add a notification to add new iomap devices
- * fuse: send FUSE_DESTROY to userspace when tearing down an iomap connection
- * fuse: implement basic iomap reporting such as FIEMAP and SEEK_{DATA,HOLE}
- * fuse: implement direct IO with iomap
- * fuse: implement buffered IO with iomap
- * fuse: implement large folios for iomap pagecache files
- * fuse: use an unrestricted backing device with iomap pagecache io
- * fuse: advertise support for iomap
----
- fs/fuse/fuse_i.h          |  135 ++++
- fs/fuse/fuse_trace.h      |  845 ++++++++++++++++++++++++++
- include/uapi/linux/fuse.h |  138 ++++
- fs/fuse/Kconfig           |   23 +
- fs/fuse/Makefile          |    1 
- fs/fuse/dev.c             |   26 +
- fs/fuse/dir.c             |   14 
- fs/fuse/file.c            |   85 ++-
- fs/fuse/file_iomap.c      | 1445 +++++++++++++++++++++++++++++++++++++++++++++
- fs/fuse/inode.c           |   23 +
- fs/iomap/iter.c           |    5 
- 11 files changed, 2730 insertions(+), 10 deletions(-)
- create mode 100644 fs/fuse/file_iomap.c
+ fs/fuse/file.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+
+diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+index 754378dd9f7159..ada1ed9e653e42 100644
+--- a/fs/fuse/file.c
++++ b/fs/fuse/file.c
+@@ -355,8 +355,16 @@ void fuse_file_release(struct inode *inode, struct fuse_file *ff,
+ 	 * Make the release synchronous if this is a fuseblk mount,
+ 	 * synchronous RELEASE is allowed (and desirable) in this case
+ 	 * because the server can be trusted not to screw up.
++	 *
++	 * If we're a LOCAL_THROTTLE thread, use the asynchronous put
++	 * because the current thread might be a fuse server.  This can
++	 * happen if a process starts some aio and closes the fd before
++	 * the aio completes.  Since aio takes its own ref to the file,
++	 * the IO completion has to drop the ref, which is how the fuse
++	 * server can end up closing its own clients' files.
+ 	 */
+-	fuse_file_put(ff, ff->fm->fc->destroy);
++	fuse_file_put(ff, ff->fm->fc->destroy &&
++			  (current->flags & PF_LOCAL_THROTTLE) == 0);
+ }
+ 
+ void fuse_release_common(struct file *file, bool isdir)
 
