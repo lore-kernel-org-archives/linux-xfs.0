@@ -1,79 +1,75 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 863AA3FB0E
-	for <linux-xfs@vger.kernel.org>; Thu, 22 May 2025 00:51:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34F5722301
+	for <linux-xfs@vger.kernel.org>; Thu, 22 May 2025 01:08:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747875072; cv=none; b=L5rlNWSJ1Fl/F9YI4wTuh0N5lnIbGLSO98y9UQx8489k0vafv81uQJux3Q6iCU5LJCDUztoEcSpFiAJFUwCUdKGblB+K++w/bucYu9gvZOwxPslh0N08DsfxiyhDfGGMH9dE7S5XuQtryEspeZbaZRIdSgN6VR3hG9pdG/S6H60=
+	t=1747876100; cv=none; b=T+7+OPabELdlibXrb0z9e85Ggj9UCD3uZbh2kLjO8/eTrFhchD+IRaIBhhOp9bibxTnuEMeR8nyiB8ZSxGmTr7rvAbgc89hOJDCm6RraO+NvESSbfRiFENMJbNyrNUPttB+rqi4XGZhKfL5WDPHq0f3tvpEXClZ4Ly3hZzOaySI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747875072; c=relaxed/simple;
-	bh=Rj6K4ROrMnzGhkR+BEROkzwz0ATU+50+nOs4dIgSHIU=;
+	s=arc-20240116; t=1747876100; c=relaxed/simple;
+	bh=1vgijheRdSTCw7AR14LJxoQWjpRlW0Q7nRJgicefYkY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dV8THLLqLiSyuPnsIQM63jSBZilXRRVG4dkjnc/QQtNIFZXvlN1fGTw2FEGfPZc+/U2qmJoLEb86UlmUxtPjuZhzS7/ScsHiiC/5CKu6LUEXT/m7+4LVgaXmLcRadKDGXXVkjWhFweof+MAxwxTV3PY7FQCmK383kbqEOXRIJcM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=X9R2BNBP; arc=none smtp.client-ip=209.85.216.44
+	 Content-Type:Content-Disposition:In-Reply-To; b=s2OcDvyc2NV5TLd7JAUCp04DZKnZaOol8FezvbjBwPsooowmsPVeN2bTmiPjOfFyW2YrFdagNafxVoSxVC8BlPRFUGrpW9On5KgECfPpUMps9gUHqKDRwHVpZqPeLU2va4LWKla+je2yk3XKFPNOj4CsZZ7GsDbX5aLiHZmZWlo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=E2DeFWAG; arc=none smtp.client-ip=209.85.210.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="X9R2BNBP"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-3108d4a8c6dso1112366a91.1
-        for <linux-xfs@vger.kernel.org>; Wed, 21 May 2025 17:51:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="E2DeFWAG"
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-742c035f2afso3116826b3a.2
+        for <linux-xfs@vger.kernel.org>; Wed, 21 May 2025 18:08:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1747875069; x=1748479869; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1747876097; x=1748480897; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=W9s0Ocr/rcF17F3DaJ0nz5ajfwkc6fT/gYdoWUk+45Q=;
-        b=X9R2BNBPPXMoENAmPna2fvi7CwxquWjYwfQ6Qxv7SZ/mLMDmMj2PXb5UShXGOkXzjd
-         0SyjIJw/tiD1qdTqYW3N51r7kh9eo82vMcJcqgByjF5RLPE3W1iu3EQGti5eLME7hl1d
-         cfIfNbE56MtekEdz0RBpZqrP4N39Zw2cF8FGmIvV2k0+e9H8GlDrSOIG6gYAM+H8wYCG
-         oXliTn6pGWsaDupoph0CveQH8eVF52RKc+gw2CAXm59K/eVIpCtVVbBzfK1G6UvjHiKl
-         daYanrpnQgV680IqpCPmNhgDeqHusYKwnJwY/zGTq3ojf5EySOfCGFWR4v65bCpNWjCc
-         ngsw==
+        bh=80bOzbdxL7OUqgWiAoK5JiHqoOqJ2Cv6sGjVMSznoe4=;
+        b=E2DeFWAGO/DCqActqTxbkOhIes6cWsIxR9eY1Rc2ExzDjGGF1U3mQoBQ7vHMYMRhSs
+         aowG+1i/zmDie10JkORPJSIV5UVsQxs6vuuFwg8SC2Y0ypVZGqX2qdqap+3zaawPoe2K
+         8aNfR6xOV5lHCjfy7EaH/8+2oHbB27VeQEmaIXaOCRB0LCsq29RT1KCbCVvW3ZNUTtFP
+         Yj+tEdezhW7Ijm6H2HOGzcWBmkmiMUu2npszR6uURqfKzzlLNdZ5Jq3JJdIyJEQwaIij
+         XpG5rLmxKL5t83tULZ2xZuKntZYkuFJI4BTjTOzmjRYKRlmvlaK3/aq2A4KObgpziu7w
+         ww+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747875069; x=1748479869;
+        d=1e100.net; s=20230601; t=1747876097; x=1748480897;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=W9s0Ocr/rcF17F3DaJ0nz5ajfwkc6fT/gYdoWUk+45Q=;
-        b=CLR+/UMr7C46sitX8cLBh0NGLUeM5tGG5rpLnmP4imMDotxofBceI3i/FH7GusQSv3
-         F64lxWZm2ec83BZ9wad/+kC3G+8o3gsJdDquqhVefH0dK3Vy0NBdbSxiZb1XvPtVLy5p
-         ZmqZB7E8G+myt28Wms5BmrH2Bruf8OyE/aAxQMMvQLI6eh1YgPOSVxR3dzbH5qJXWDQT
-         9mvRuDIKE1gOCQ7S7WJFKpnvHQJnIreKoMmLfjDsYrx41Qw+4z4rzBeT9BUXtxjxk8vn
-         x2vSUDTSpZBZTrF+hXJylED0x17zLYKY1pz+Yyd2UJzEhW+H1+jPELIcI61GMEVqRiMF
-         GO+g==
-X-Forwarded-Encrypted: i=1; AJvYcCUJ48mTVrZuazNcmqfWi2jsH9dY3aGGKgIlhnySPtOWAVE8Nmkac+5XGW2o0/GTalhWevfPmsxbkfg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx6k0RGuTV7taGhBwJXvq/oXVFWOGuGyN1x8ew8+E4CU+KMqXH/
-	odExs/5bAv4NvoLs3K9F4BRN49/1ewhnSrLdi3Bs+rMlXJEfCmnRT+Gm7l73AwV/fJI=
-X-Gm-Gg: ASbGncuBIh8CSo/THckVEdJS7sqaIoAN8cXQdBRwhJDUGX0d9gI8K7/Zu/32PtdH5hq
-	0iYMCNrTodwjjKk4P2+djaBeiy/8+zWT9VHHZr+lfOhXd1n235PsI3t40hy2wjPeBzrGcFsqwd7
-	Hks1ZbU5NLkJydGbzAdVKF4AXMJ9kd3ste+Bk9upKROmu2oMDzPT2Owz9wGJWGW3PpkPnaSY5Q8
-	pgVs6jTYlIL9k1JUmzG2whej+aNwc6HoAcvpoHhaKNSxbt5VFHoyf9SVkuv+yhXrsjYSxXUfdHp
-	rv9TYOoekwl7kDO+VK232AiKHa/BU761KPfOio93iMggZCCGLxpqp6fjzQFXXj5C6EL4tm7wFgH
-	pzB4EYSX4A4ohr8cGhOmgavkK4KY=
-X-Google-Smtp-Source: AGHT+IGP/CEXCaGuQkCNk+FfpfP4/PxKrZ35x7SLbTy5h2U+tyAempmwH+hmFi9rXwNEsKJVKpY7Pw==
-X-Received: by 2002:a17:90a:d2ce:b0:30e:3737:7c87 with SMTP id 98e67ed59e1d1-30e7dc4ecb4mr32283593a91.5.1747875068659;
-        Wed, 21 May 2025 17:51:08 -0700 (PDT)
+        bh=80bOzbdxL7OUqgWiAoK5JiHqoOqJ2Cv6sGjVMSznoe4=;
+        b=ofwR75UGU/XG3uqjXwwsiMoS6AF65BSRWICIqZFkixUFA1WimdBjutEs1BK0HYRMtV
+         6A4OZ3DQgb9/hWJ/w1FhAITm/8oJeFzKmHP4gsvN2gcOkbGJC8oFuJdBYSKVb4UsYtSv
+         0k+VwM7gJEVJqAVW4gN/GB53ma66pUtDy20DLfp3rY7B3gvvA8LSTurHg55h3Y7sCuf6
+         g2iF9d+apfpHWdwkhz3RjOaCdI22EovHkbvooCJFsIFcicw+1nsO5o+ql+Eg0bjGPF5/
+         XqupvltUSgz/pBKJntj3Tq2ubDCi7SvZbU2glrPu8S64QjjrZh3uLgfl7IWuoGvZYlPa
+         6lGA==
+X-Forwarded-Encrypted: i=1; AJvYcCU3upkSQ5dykAejjEL04tMGn+tmLMNUKLPfbPB9eoUUNCPGWcqQLVgBv8Lj//Uel967JlRjL3QvamE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyaIkN4rdwe3IkY2c56xYevzNNwq8WaDiBbwOd6M/EwLGfjPMtF
+	kfQ6lGK5stzdMa/nHooj1LkU+LEhrI7lRIUCB1mWqWkPyBxhGiPDZLDRgbTM7VamtzW9lLbialp
+	8T9ik
+X-Gm-Gg: ASbGncvkoYgoLxuko1dwFyjyxi5SOs29Lr2uXVyCiAIfRb3EARBx05Xi+vzEyfNY5yo
+	x0KSxV34eSp2bCVyPml1JAbIZXB0oCZqLD9EKyWhg1YsA6lJA7nxbesgchIlTZ5AWbpE6qSeEiT
+	fJRDHCWv/v1vqyC0Ea+wsLuZGdMMHcViujMC0Rnrx2iXuyxx2UDvAdg+8EwJRGJyn6MoRbzNsJS
+	Ii5zXsy+hAWVnU5rUbrdqRYrhvcOoouuKll3s4skMlQWyxe/plQFI6mb0wGiORhsXtfh/qQ5Xrz
+	V7P7HTMdMkLJ88kwg1pa6l3pErWCF2STuWmRDu3fd8p1m5vce8FNUaQUPsdpouHu/8Mcgx3nNAT
+	OqX9067n6kAJHd0jg9Q7rrNrYrmU=
+X-Google-Smtp-Source: AGHT+IGiizUFmBSTpeZJ5dmyXz9YFFa3qF02AbLOspABeMvam78MGL4sGdP0t+teyDu/19rZx2WDqA==
+X-Received: by 2002:a05:6a21:20b:b0:218:17c4:247c with SMTP id adf61e73a8af0-21817c4f2a9mr22073258637.40.1747876097268;
+        Wed, 21 May 2025 18:08:17 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-184-88.pa.nsw.optusnet.com.au. [49.180.184.88])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-30f365f7a32sm4265696a91.49.2025.05.21.17.51.08
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-30f365b2d80sm4318016a91.4.2025.05.21.18.08.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 May 2025 17:51:08 -0700 (PDT)
+        Wed, 21 May 2025 18:08:16 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.98.2)
 	(envelope-from <david@fromorbit.com>)
-	id 1uHu9H-00000006WPt-2p6p;
-	Thu, 22 May 2025 10:51:03 +1000
-Date: Thu, 22 May 2025 10:51:03 +1000
+	id 1uHuPu-00000006Woq-1EHe;
+	Thu, 22 May 2025 11:08:14 +1000
+Date: Thu, 22 May 2025 11:08:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org
-Subject: Re: [PATCH v2 1/2] new: Add a new parameter (name/emailid) in the
- "new" script
-Message-ID: <aC509xXxgZJKKZVE@dread.disaster.area>
-References: <cover.1747306604.git.nirjhar.roy.lists@gmail.com>
- <2df3e3af8eb607025707e120c1b824879e254a01.1747306604.git.nirjhar.roy.lists@gmail.com>
- <aC0Q2HIesHMXqVLG@dread.disaster.area>
- <12e307e0-2a28-4a42-a8b3-d2186c871be7@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs/432: fix metadump loop device blocksize problems
+Message-ID: <aC54_ucTlwh189MG@dread.disaster.area>
+References: <174786719374.1398726.14706438540221180099.stgit@frogsfrogsfrogs>
+ <174786719464.1398726.8513251082673880762.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -82,72 +78,89 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <12e307e0-2a28-4a42-a8b3-d2186c871be7@gmail.com>
+In-Reply-To: <174786719464.1398726.8513251082673880762.stgit@frogsfrogsfrogs>
 
-On Wed, May 21, 2025 at 10:52:22AM +0530, Nirjhar Roy (IBM) wrote:
+On Wed, May 21, 2025 at 03:41:51PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> On 5/21/25 05:01, Dave Chinner wrote:
-> > On Thu, May 15, 2025 at 11:00:16AM +0000, Nirjhar Roy (IBM) wrote:
-> > > This patch another optional interactive prompt to enter the
-> > > author name and email id for each new test file that is
-> > > created using the "new" file.
-> > > 
-> > > The sample output looks like something like the following:
-> > > 
-> > > ./new selftest
-> > > Next test id is 007
-> > > Append a name to the ID? Test name will be 007-$name. y,[n]:
-> > > Creating test file '007'
-> > > Add to group(s) [auto] (separate by space, ? for list): selftest quick
-> > > Enter <author_name> <email-id>: Nirjhar Roy <nirjhar.roy.lists@gmail.com>
-> > > Creating skeletal script for you to edit ...
-> > >   done.
-> > > 
-> > > ...
-> > > ...
-> > > 
-> > > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> > > ---
-> > >   new | 5 ++++-
-> > >   1 file changed, 4 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/new b/new
-> > > index 6b50ffed..636648e2 100755
-> > > --- a/new
-> > > +++ b/new
-> > > @@ -136,6 +136,9 @@ else
-> > >   	check_groups "${new_groups[@]}" || exit 1
-> > >   fi
-> > > +read -p "Enter <author_name>: " -r
-> > > +author_name="${REPLY:=YOUR NAME HERE}"
-> > > +
-> > >   echo -n "Creating skeletal script for you to edit ..."
-> > >   year=`date +%Y`
-> > > @@ -143,7 +146,7 @@ year=`date +%Y`
-> > >   cat <<End-of-File >$tdir/$id
-> > >   #! /bin/bash
-> > >   # SPDX-License-Identifier: GPL-2.0
-> > > -# Copyright (c) $year YOUR NAME HERE.  All Rights Reserved.
-> > > +# Copyright (c) $year $author_name.  All Rights Reserved.
-> > In many cases, this is incorrect.
-> > 
-> > For people who are corporate employees, copyright for the code they
-> > write is typically owned by their employer, not the employee who
-> > wrote the code. i.e. this field generally contains something like
-> > "Red Hat, Inc", "Oracle, Inc", "IBM Corporation", etc in these
-> > cases, not the employee's name.
+> Make sure the lba size of the loop devices created for the metadump
+> tests actually match that of the real SCRATCH_ devices or else the tests
+> will fail.
 > 
-> Yes. The existing placeholder is already "YOUR NAME HERE" (which I have kept
-> unchanged). The author can always use the company's name from read -p prompt
-> or simply chose to fill it up later, right? Or are you saying that the
-> existing placeholder "YOUR NAME HERE" is incorrect?
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  common/metadump |   12 ++++++++++--
+>  common/rc       |    7 +++++++
+>  2 files changed, 17 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/common/metadump b/common/metadump
+> index 61ba3cbb91647c..4ae03c605563fc 100644
+> --- a/common/metadump
+> +++ b/common/metadump
+> @@ -76,6 +76,7 @@ _xfs_verify_metadump_v1()
+>  
+>  	# Create loopdev for data device so we can mount the fs
+>  	METADUMP_DATA_LOOP_DEV=$(_create_loop_device $data_img)
+> +	_force_loop_device_blocksize $METADUMP_DATA_LOOP_DEV $SCRATCH_DEV
 
-I'm noting that your prompt - <author_name> - is incorrect
-for this "YOUR NAME HERE" field. That field is supposed to contain
-the -copyright owner-, not the author of the patch. Sometimes they
-are the same, but in many cases they are not.
+That doesn't look right. You're passing the scratch device as a
+block size parameter. 
+
+>  
+>  	# Mount fs, run an extra test, fsck, and unmount
+>  	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV _scratch_mount
+> @@ -123,12 +124,19 @@ _xfs_verify_metadump_v2()
+>  
+>  	# Create loopdev for data device so we can mount the fs
+>  	METADUMP_DATA_LOOP_DEV=$(_create_loop_device $data_img)
+> +	_force_loop_device_blocksize $METADUMP_DATA_LOOP_DEV $SCRATCH_DEV
+>  
+>  	# Create loopdev for log device if we recovered anything
+> -	test -s "$log_img" && METADUMP_LOG_LOOP_DEV=$(_create_loop_device $log_img)
+> +	if [ -s "$log_img" ]; then
+> +		METADUMP_LOG_LOOP_DEV=$(_create_loop_device $log_img)
+> +		_force_loop_device_blocksize $METADUMP_LOG_LOOP_DEV $SCRATCH_LOGDEV
+> +	fi
+>  
+>  	# Create loopdev for rt device if we recovered anything
+> -	test -s "$rt_img" && METADUMP_RT_LOOP_DEV=$(_create_loop_device $rt_img)
+> +	if [ -s "$rt_img" ]; then
+> +		METADUMP_RT_LOOP_DEV=$(_create_loop_device $rt_img)
+> +		_force_loop_device_blocksize $METADUMP_RT_LOOP_DEV $SCRATCH_RTDEV
+> +	fi
+>  
+>  	# Mount fs, run an extra test, fsck, and unmount
+>  	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV SCRATCH_RTDEV=$METADUMP_RT_LOOP_DEV _scratch_mount
+> diff --git a/common/rc b/common/rc
+> index 4e3917a298e072..9e27f7a4afba44 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -4527,6 +4527,8 @@ _create_loop_device()
+>  }
+>  
+>  # Configure the loop device however needed to support the given block size.
+> +# The first argument is the loop device; the second is either an integer block
+> +# size, or a different block device whose blocksize we want to match.
+>  _force_loop_device_blocksize()
+>  {
+>  	local loopdev="$1"
+> @@ -4539,6 +4541,11 @@ _force_loop_device_blocksize()
+>  		return 1
+>  	fi
+>  
+> +	# second argument is really a bdev; copy its lba size
+> +	if [ -b "$blksize" ]; then
+> +		blksize="$(blockdev --getss "${blksize}")"
+> +	fi
+
+Oh, you're overloading the second parameter with different types -
+that's pretty nasty.  It would be much cleaner to write a wrapper
+function that extracts the block size from the device before calling
+_force_loop_device_blocksize()....
 
 -Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
