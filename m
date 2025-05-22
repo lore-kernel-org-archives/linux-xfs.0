@@ -1,410 +1,474 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EE4328FAA5
-	for <linux-xfs@vger.kernel.org>; Thu, 22 May 2025 15:07:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4CF05258;
+	Thu, 22 May 2025 16:46:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747926482; cv=none; b=hoefhOz5DgXmxb0SrZ3KH3S6ASUgf7Fb2gcIPysgdTKL4iYOXGKM9Qg2pYeOzZx3L3jWOsbmXaRvw+xD351N9AhUuZtQzSr1xixhiS0jo3H6hNncCaQ7E3FTJJ3Tj44Q/j0lJmtWgurtr8CduBBGi+HLXXSzmMfrR/TIWalesUg=
+	t=1747932389; cv=none; b=dFeLbHVlGe4evQOXbDnxCfuOB2DMfYglKo90pb27GgvvGpIORiooO6S/v0irJoX5SYgEfxjWMXjzvmgZcK/vUmBIh6heMfWaY5N6GZZFX831Qm0deIYJ4Uvw8fIbC3Q9v1iUKs4poXJfqk5h48+77lCNrFIbTHxkkK4qlYDGoVI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747926482; c=relaxed/simple;
-	bh=EeuSDgqVKj63XH/BsGOarDmziKxpR2gx3k140iln9W4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=EL74TtXCDy5yQU/kaYCSk5hsz9i1nyUE7BPLx5x+6vtZMg8+Y8gHlMiQ1eTDkpYpHUE//UGf3Tv9QTuTMFI7W3UGHPbVo6n/4/v7JfFNz5Vt6fciVQSV14f8Jm0d+e3ur+SUjWx8kkFzpxQS/RhI5M3bK3LXNQHxQ3na4m0w2C8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GAtNb+kj; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1747932389; c=relaxed/simple;
+	bh=9WIM53xHFbn91XSM3kBMHqKBUEaV0jkI1IUinPPau1M=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=QhkuDe8F1gWaaLvqkyGHT7Aa1c2vV6c3NQH8ObubmZIT5XtMl9POiIEdHIDRociYMzqC+7v8P+3WpQySGU0zH2O4VtGOVQ9A/iC4X7zQ5inoNcGz6R/Q0+db1yJ4qUUEMeZ+zjkbAmEtzlYrjv4dFToU4jMDDv7P0ZRieNzR9+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iH0T8RoI; arc=none smtp.client-ip=209.85.208.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GAtNb+kj"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1747926478;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=EeuSDgqVKj63XH/BsGOarDmziKxpR2gx3k140iln9W4=;
-	b=GAtNb+kjXpoKlM3U8trmVEvhwOcYnk+wURRW8prw4RFRSIUzvootdlkijFO8sXrszEj1HG
-	Gow0LmG588SbWpYLECR2/tQ92OLZY2C1Htm8R7gDCgRT3tU01Y8y7hdyczDfvtGH6WEBVz
-	tJ5NKE61B3ZWmhTrtspz3f19HtfK9MQ=
-Received: from mail-yw1-f198.google.com (mail-yw1-f198.google.com
- [209.85.128.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-349-BjpvP08LPd-TS4bNtN3rdg-1; Thu, 22 May 2025 11:07:57 -0400
-X-MC-Unique: BjpvP08LPd-TS4bNtN3rdg-1
-X-Mimecast-MFC-AGG-ID: BjpvP08LPd-TS4bNtN3rdg_1747926477
-Received: by mail-yw1-f198.google.com with SMTP id 00721157ae682-70a5434825cso113051077b3.3
-        for <linux-xfs@vger.kernel.org>; Thu, 22 May 2025 08:07:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iH0T8RoI"
+Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-6020ff8d51dso5656771a12.2;
+        Thu, 22 May 2025 09:46:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1747932386; x=1748537186; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6NOv+tletS6BN7F7MJZbRiZdAO9GghyVHeaSCjiq+js=;
+        b=iH0T8RoIhyH/0kraOn4+HUBWRFwdm7f9dGj0ykKW/qe0SZq1f61qRY0UEt3MPOsvF3
+         j8G9ZMP0zIREp7pSDWSgxTlGCTVblm6AZX3ueQUvlnfGHaawmHANlbwwBlxXDVJAseEw
+         nSxJHuWkiev494h5K2q9i8Y0T+wjdoRex3mVLuFWZ0QFY+q8F9HAS97egP1GwxQP1PWn
+         4PccyHPPP/u5qe2B+OZkqyIbjDcVBcBIjM55v3NsvNBNzcUAeVNHqqi626lJ3Tlnfp1B
+         g7RCv2KWsPvJbfAQo+cvOVZeN2sVZT1konfaD9CyVvSQvEP4p8yKiidU3TI5EaEbt43B
+         /TCQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747926476; x=1748531276;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=EeuSDgqVKj63XH/BsGOarDmziKxpR2gx3k140iln9W4=;
-        b=E1paJJQtDTAUamlBQQnM0yiiPlM5yjZGs5d+RSsEJPuEz4Pg6+1H2BSRinn2h9h0wZ
-         aBHGlHfOcwHvltLMq61iIuzqbK3GimDOzQNKkvtzbnYRse9OGriIva6zTK+5vxGUOhrA
-         0vZ50bkZP7O3cmo0aPtaCEgIj3jyIccJSgEdzqeUt2S0+KeVq8IqWIE5avesCrfUNgQm
-         c72t+Y5nMBZfR6FPaSPzsGcwKAnMDXiu3tUcUAhJk/h5xAN0EZxmEXC/GajB/U5YcBzz
-         rWHCmjT4dwtaCi8UUclbF2hj0s9FX7KuJU1t3uMAN6E0nO3KLoXoq3MciSt8GLOVnfsm
-         vY2A==
-X-Forwarded-Encrypted: i=1; AJvYcCV3DSBFzvAU1d5m+W9vzrRFuQOykXH/OHi0tS9EybT70tdggU5eQVrp1t+Fl8HUzA5xQ4/zLp9XXpc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyst+OoiJdiYp71ZfNS3KwWk8hgUpcXAmls3M3rMqyga9zyCEMi
-	VWQNNEOApKgD5QKkyMqf9iPRR2VzNtYJFcOgXcvwMmqGn2fma1ZcGkdGdw6OT+RLVsjLzstiB4h
-	iP8ZaLrOYdysqPU7kUUvbPd71/u2E/oDAwbP05NP7WC5NPkK0WAA/ReVA5Bjgue73/emShA==
-X-Gm-Gg: ASbGncsKEWcjf/G4D6n3M0hfCelZKfV3aimQoGLEOvbH++CWKQK65zNOb97XgQup7SY
-	dofypL/X5mseewCnVDS3SrlCfmVUX8CuqjMkymr7ETc6lhladQzLQ/nL3NkIV2lHZoqnL018Ewg
-	EbN8aIlvXUYIsATxDdDtp+VlafIKkuhCTwzFlYIYw63YM86fZErOwvyrAX6OIf6XgZ1HTuAetbD
-	IhIJp2893lDXL1NXqQJwoBJHkQkIaoQMZIBbswdZb5nQI81tFVs7Acvh7PVbt0s/QDbadTs3pRT
-	Fi/FjlW8uYtnZp+6SM18uqbhmHtp6jVPFUYepmaNfrEEKP54fBK3fqpr6SLeUw==
-X-Received: by 2002:a05:690c:4c13:b0:70c:a57c:94a3 with SMTP id 00721157ae682-70ca7a070b3mr360606417b3.19.1747926476143;
-        Thu, 22 May 2025 08:07:56 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFEwejxGi9nhRL8K2qREaXlEOIvA5oHyKuV51mEoHSEqpfOw/2WGHKr40KQ8uc0OMSjq9xOjA==
-X-Received: by 2002:a05:690c:4c13:b0:70c:a57c:94a3 with SMTP id 00721157ae682-70ca7a070b3mr360605927b3.19.1747926475650;
-        Thu, 22 May 2025 08:07:55 -0700 (PDT)
-Received: from ?IPv6:2600:6c64:4e7f:603b:fc4d:8b7c:e90c:601a? ([2600:6c64:4e7f:603b:fc4d:8b7c:e90c:601a])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-70ca82f8d40sm30812717b3.18.2025.05.22.08.07.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 May 2025 08:07:54 -0700 (PDT)
-Message-ID: <f08554fccd3d5e2c2ec4849b0a8158d63414e356.camel@redhat.com>
-Subject: Re: Sequential read from NVMe/XFS twice slower on Fedora 42 than on
- Rocky 9.5
-From: Laurence Oberman <loberman@redhat.com>
-To: Dave Chinner <david@fromorbit.com>, Anton Gavriliuk
- <antosha20xx@gmail.com>
-Cc: linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org, 
-	linux-block@vger.kernel.org
-Date: Thu, 22 May 2025 11:07:53 -0400
-In-Reply-To: <f01719b1901f9d796837669086d7c1cd14c9922c.camel@redhat.com>
-References: 
-	<CAAiJnjoo0--yp47UKZhbu8sNSZN6DZ-QzmZBMmtr1oC=fOOgAQ@mail.gmail.com>
-	 <aBaVsli2AKbIa4We@dread.disaster.area>
-	 <CAAiJnjor+=Zn62n09f-aJw2amX2wxQOb-2TB3rea9wDCU7ONoA@mail.gmail.com>
-	 <aBfhDQ6lAPmn81j0@dread.disaster.area>
-	 <7c33f38a52ccff8b94f20c0714b60b61b061ad58.camel@redhat.com>
-	 <a1f322ab801e7f7037951578d289c5d18c6adc4d.camel@redhat.com>
-	 <f01719b1901f9d796837669086d7c1cd14c9922c.camel@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
+        d=1e100.net; s=20230601; t=1747932386; x=1748537186;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=6NOv+tletS6BN7F7MJZbRiZdAO9GghyVHeaSCjiq+js=;
+        b=aRqg8j3RLkAnbqqf5LILyBxokgsoAGT2BENPjWxfG/MbSo8WpYluHEaT1Wi2nSinUF
+         WkERuLCANqsFENFJaFnQeMWNRFnAuvuOUEVo8nQfHcHbc7Y+vN3SzcBFO8GiiUQAuYZ0
+         dKQroOIZkXH2LQKm3mt3FxeMXn6DD6tnrH/QKnK5Ri54T/WWc2f3OhpFBo9/o5fK0inF
+         Fypbm9A9It1j6VklvSInRSik4gZNSEZNxy+Joekb9w5pQEm7YlGUl8upyPjQj6/Q/j0D
+         OtFD04Jt7YMXB18JQGUmu80T+U+pSkw8aoGR3A9ml5Jq9pFA841c8pB5EDpYjL/iuqpY
+         iyzA==
+X-Forwarded-Encrypted: i=1; AJvYcCXBD49kus6pjVtxYv2JFYEzQIKMNOSgh2WDLtlxkDAsBEf3Xa68ZNYkTXh7Dp9GlaI9Wxd6iIu3qWA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwKBCRcvIRGrRGuzfYenha4F1R3OjE9YO0+Srw9GHDf1kliu0Sk
+	PKFLY7LvkLcSGkrlHAjl/fFUxi8ds/64Rt4BuKtzwiKuYa64Ax2wnr5KDKkLsBP7+ZYafJ8my+3
+	+GKzSCqQLVR+oItaIZIcstdybDFiquJk=
+X-Gm-Gg: ASbGncs+SDm+9Ph5jCy03Su3ZBreeUac0EZNEcAmGfcD6G2MOFrWt4WEDutbP7ukWVx
+	57jdFWlbxbDcLvAgVU2+aLWZ27yhqt5VWwuK42YFZfbvvZam+dfl/dryluJXxajGcAQq3XZ3gve
+	Uwro7yVPJ85E6ETCZGVZCmBlA6iOlA41Ji
+X-Google-Smtp-Source: AGHT+IFWvuczrOs6ObFssX+WN/GPap41eWtet6TiJ1FgV5HKMnl6Q9qPjWONdzCxOYiJcM7qz/ASPDPEiikjgJxv314=
+X-Received: by 2002:a17:907:3f85:b0:ad1:766a:9441 with SMTP id
+ a640c23a62f3a-ad52d49b428mr2241559866b.23.1747932385795; Thu, 22 May 2025
+ 09:46:25 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs> <174787195651.1483178.3420885441625089259.stgit@frogsfrogsfrogs>
+In-Reply-To: <174787195651.1483178.3420885441625089259.stgit@frogsfrogsfrogs>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 22 May 2025 18:46:14 +0200
+X-Gm-Features: AX0GCFukZUENVCQWI5L-HHHcQyykTnj_SjM9vzgEYA6-nNYJGTA4JaWjngNgK8M
+Message-ID: <CAOQ4uxiZTTEOs4HYD0vGi3XtihyDiQbDFXBCuGKoJyFPQv_+Lw@mail.gmail.com>
+Subject: Re: [PATCH 04/11] fuse: add a notification to add new iomap devices
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, miklos@szeredi.hu, joannelkoong@gmail.com, 
+	linux-xfs@vger.kernel.org, bernd@bsbernd.com, John@groves.net
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2025-05-05 at 13:39 -0400, Laurence Oberman wrote:
-> On Mon, 2025-05-05 at 09:21 -0400, Laurence Oberman wrote:
-> > On Mon, 2025-05-05 at 08:29 -0400, Laurence Oberman wrote:
-> > > On Mon, 2025-05-05 at 07:50 +1000, Dave Chinner wrote:
-> > > > [cc linux-block]
-> > > >=20
-> > > > [original bug report:
-> > > > https://lore.kernel.org/linux-xfs/CAAiJnjoo0--yp47UKZhbu8sNSZN6DZ-Q=
-zmZBMmtr1oC=3DfOOgAQ@mail.gmail.com/
-> > > > =C2=A0]
-> > > >=20
-> > > > On Sun, May 04, 2025 at 10:22:58AM +0300, Anton Gavriliuk
-> > > > wrote:
-> > > > > > What's the comparitive performance of an identical read
-> > > > > > profile
-> > > > > > directly on the raw MD raid0 device?
-> > > > >=20
-> > > > > Rocky 9.5 (5.14.0-503.40.1.el9_5.x86_64)
-> > > > >=20
-> > > > > [root@localhost ~]# df -mh /mnt
-> > > > > Filesystem=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 Size=C2=A0 Used Avail Us=
-e% Mounted on
-> > > > > /dev/md127=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 35T=C2=A0 1.3T=C2=
-=A0=C2=A0 34T=C2=A0=C2=A0 4% /mnt
-> > > > >=20
-> > > > > [root@localhost ~]# fio --name=3Dtest --rw=3Dread --bs=3D256k
-> > > > > --filename=3D/dev/md127 --direct=3D1 --numjobs=3D1 --iodepth=3D64=
- --
-> > > > > exitall
-> > > > > --group_reporting --ioengine=3Dlibaio --runtime=3D30 --time_based
-> > > > > test: (g=3D0): rw=3Dread, bs=3D(R) 256KiB-256KiB, (W) 256KiB-
-> > > > > 256KiB,
-> > > > > (T)
-> > > > > 256KiB-256KiB, ioengine=3Dlibaio, iodepth=3D64
-> > > > > fio-3.39-44-g19d9
-> > > > > Starting 1 process
-> > > > > Jobs: 1 (f=3D1): [R(1)][100.0%][r=3D81.4GiB/s][r=3D334k IOPS][eta
-> > > > > 00m:00s]
-> > > > > test: (groupid=3D0, jobs=3D1): err=3D 0: pid=3D43189: Sun May=C2=
-=A0 4
-> > > > > 08:22:12
-> > > > > 2025
-> > > > > =C2=A0 read: IOPS=3D363k, BW=3D88.5GiB/s (95.1GB/s)(2656GiB/30001=
-msec)
-> > > > > =C2=A0=C2=A0=C2=A0 slat (nsec): min=3D971, max=3D312380, avg=3D18=
-17.92,
-> > > > > stdev=3D1367.75
-> > > > > =C2=A0=C2=A0=C2=A0 clat (usec): min=3D78, max=3D1351, avg=3D174.4=
-6, stdev=3D28.86
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0 lat (usec): min=3D80, max=3D1352, avg=3D=
-176.27, stdev=3D28.81
-> > > > >=20
-> > > > > Fedora 42 (6.14.5-300.fc42.x86_64)
-> > > > >=20
-> > > > > [root@localhost anton]# df -mh /mnt
-> > > > > Filesystem=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 Size=C2=A0 Used Avail Us=
-e% Mounted on
-> > > > > /dev/md127=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 35T=C2=A0 1.3T=C2=
-=A0=C2=A0 34T=C2=A0=C2=A0 4% /mnt
-> > > > >=20
-> > > > > [root@localhost ~]# fio --name=3Dtest --rw=3Dread --bs=3D256k
-> > > > > --filename=3D/dev/md127 --direct=3D1 --numjobs=3D1 --iodepth=3D64=
- --
-> > > > > exitall
-> > > > > --group_reporting --ioengine=3Dlibaio --runtime=3D30 --time_based
-> > > > > test: (g=3D0): rw=3Dread, bs=3D(R) 256KiB-256KiB, (W) 256KiB-
-> > > > > 256KiB,
-> > > > > (T)
-> > > > > 256KiB-256KiB, ioengine=3Dlibaio, iodepth=3D64
-> > > > > fio-3.39-44-g19d9
-> > > > > Starting 1 process
-> > > > > Jobs: 1 (f=3D1): [R(1)][100.0%][r=3D41.0GiB/s][r=3D168k IOPS][eta
-> > > > > 00m:00s]
-> > > > > test: (groupid=3D0, jobs=3D1): err=3D 0: pid=3D5685: Sun May=C2=
-=A0 4
-> > > > > 10:14:00
-> > > > > 2025
-> > > > > =C2=A0 read: IOPS=3D168k, BW=3D41.0GiB/s (44.1GB/s)(1231GiB/30001=
-msec)
-> > > > > =C2=A0=C2=A0=C2=A0 slat (usec): min=3D3, max=3D273, avg=3D 5.63, =
-stdev=3D 1.48
-> > > > > =C2=A0=C2=A0=C2=A0 clat (usec): min=3D67, max=3D2800, avg=3D374.9=
-9, stdev=3D29.90
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0 lat (usec): min=3D72, max=3D2914, avg=3D=
-380.62, stdev=3D30.22
-> > > >=20
-> > > > So the MD block device shows the same read performance as the
-> > > > filesystem on top of it. That means this is a regression at the
-> > > > MD
-> > > > device layer or in the block/driver layers below it. i.e. it is
-> > > > not
-> > > > an XFS of filesystem issue at all.
-> > > >=20
-> > > > -Dave.
-> > >=20
-> > > I have a lab setup, let me see if I can also reproduce and then
-> > > trace
-> > > this to see where it is spending the time
-> > >=20
-> >=20
-> >=20
-> > Not seeing 1/2 the bandwidth but also significantly slower on
-> > Fedora42
-> > kernel.
-> > I will trace it
-> >=20
-> > 9.5 kernel - 5.14.0-503.40.1.el9_5.x86_64
-> >=20
-> > Run status group 0 (all jobs):
-> > =C2=A0=C2=A0 READ: bw=3D14.7GiB/s (15.8GB/s), 14.7GiB/s-14.7GiB/s (15.8=
-GB/s-
-> > 15.8GB/s), io=3D441GiB (473GB), run=3D30003-30003msec
-> >=20
-> > Fedora42 kernel - 6.14.5-300.fc42.x86_64
-> >=20
-> > Run status group 0 (all jobs):
-> > =C2=A0=C2=A0 READ: bw=3D10.4GiB/s (11.2GB/s), 10.4GiB/s-10.4GiB/s (11.2=
-GB/s-
-> > 11.2GB/s), io=3D313GiB (336GB), run=3D30001-30001msec
-> >=20
-> >=20
-> >=20
-> >=20
->=20
-> Fedora42 kernel issue
->=20
-> While my difference is not as severe we do see a consistently lower
-> performance on the Fedora
-> kernel. (6.14.5-300.fc42.x86_64)
->=20
-> When I remove the software raid and run against a single NVME we
-> converge to be much closer.
-> Also latest upstream does not show this regression either.
->=20
-> Not sure yet what is in our Fedora kernel causing this.=20
-> We will work it via the Bugzilla
->=20
-> Regards
-> Laurence
->=20
-> TLDR
->=20
->=20
-> Fedora Kernel
-> -------------
-> root@penguin9 blktracefedora]# uname -a
-> Linux penguin9.2 6.14.5-300.fc42.x86_64 #1 SMP PREEMPT_DYNAMIC Fri
-> May
-> 2 14:16:46 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
->=20
-> 5 runs of the fio against /dev/md1
->=20
-> [root@penguin9 ~]# for i in 1 2 3 4 5
-> > do
-> > ./run_fio.sh | grep -A1 "Run status group"
-> > done
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D11.3GiB/s (12.2GB/s), 11.3GiB/s-11.3GiB/s (12.2GB=
-/s-
-> 12.2GB/s), io=3D679GiB (729GB), run=3D60001-60001msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D11.2GiB/s (12.0GB/s), 11.2GiB/s-11.2GiB/s (12.0GB=
-/s-
-> 12.0GB/s), io=3D669GiB (718GB), run=3D60001-60001msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D11.4GiB/s (12.2GB/s), 11.4GiB/s-11.4GiB/s (12.2GB=
-/s-
-> 12.2GB/s), io=3D682GiB (733GB), run=3D60001-60001msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D11.1GiB/s (11.9GB/s), 11.1GiB/s-11.1GiB/s (11.9GB=
-/s-
-> 11.9GB/s), io=3D664GiB (713GB), run=3D60001-60001msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D11.3GiB/s (12.1GB/s), 11.3GiB/s-11.3GiB/s (12.1GB=
-/s-
-> 12.1GB/s), io=3D678GiB (728GB), run=3D60001-60001msec
->=20
-> RHEL9.5
-> ------------
-> Linux penguin9.2 5.14.0-503.40.1.el9_5.x86_64 #1 SMP PREEMPT_DYNAMIC
-> Thu Apr 24 08:27:29 EDT 2025 x86_64 x86_64 x86_64 GNU/Linux
->=20
-> [root@penguin9 ~]# for i in 1 2 3 4 5; do ./run_fio.sh | grep -A1
-> "Run
-> status group"; done
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D14.9GiB/s (16.0GB/s), 14.9GiB/s-14.9GiB/s (16.0GB=
-/s-
-> 16.0GB/s), io=3D894GiB (960GB), run=3D60003-60003msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D14.6GiB/s (15.6GB/s), 14.6GiB/s-14.6GiB/s (15.6GB=
-/s-
-> 15.6GB/s), io=3D873GiB (938GB), run=3D60003-60003msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D14.9GiB/s (16.0GB/s), 14.9GiB/s-14.9GiB/s (16.0GB=
-/s-
-> 16.0GB/s), io=3D892GiB (958GB), run=3D60003-60003msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D14.5GiB/s (15.6GB/s), 14.5GiB/s-14.5GiB/s (15.6GB=
-/s-
-> 15.6GB/s), io=3D872GiB (936GB), run=3D60003-60003msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D14.7GiB/s (15.8GB/s), 14.7GiB/s-14.7GiB/s (15.8GB=
-/s-
-> 15.8GB/s), io=3D884GiB (950GB), run=3D60003-60003msec
->=20
->=20
-> Remove software raid from the layers and test just on a single nvme
-> ---------------------------------------------------------------------
-> -
->=20
-> fio --name=3Dtest --rw=3Dread --bs=3D256k --filename=3D/dev/nvme23n1 --
-> direct=3D1
-> --numjobs=3D1 --iodepth=3D64 --exitall --group_reporting --
-> ioengine=3Dlibaio
-> --runtime=3D60 --time_based
->=20
-> Linux penguin9.2 5.14.0-503.40.1.el9_5.x86_64 #1 SMP PREEMPT_DYNAMIC
-> Thu Apr 24 08:27:29 EDT 2025 x86_64 x86_64 x86_64 GNU/Linux
->=20
-> [root@penguin9 ~]# ./run_nvme_fio.sh
->=20
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D3207MiB/s (3363MB/s), 3207MiB/s-3207MiB/s (3363MB=
-/s-
-> 3363MB/s), io=3D188GiB (202GB), run=3D60005-60005msec
->=20
->=20
-> Back to fedora kernel
->=20
-> [root@penguin9 ~]# uname -a
-> Linux penguin9.2 6.14.5-300.fc42.x86_64 #1 SMP PREEMPT_DYNAMIC Fri
-> May
-> 2 14:16:46 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
->=20
-> Within the margin of error
->=20
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D3061MiB/s (3210MB/s), 3061MiB/s-3061MiB/s (3210MB=
-/s-
-> 3210MB/s), io=3D179GiB (193GB), run=3D60006-60006msec
->=20
->=20
-> Try recent upstream kernel
-> ---------------------------
-> [root@penguin9 ~]# uname -a
-> Linux penguin9.2 6.13.0-rc7+ #2 SMP PREEMPT_DYNAMIC Mon May=C2=A0 5
-> 10:59:12
-> EDT 2025 x86_64 x86_64 x86_64 GNU/Linux
->=20
-> [root@penguin9 ~]# for i in 1 2 3 4 5; do ./run_fio.sh | grep -A1
-> "Run
-> status group"; done
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D14.6GiB/s (15.7GB/s), 14.6GiB/s-14.6GiB/s (15.7GB=
-/s-
-> 15.7GB/s), io=3D876GiB (941GB), run=3D60003-60003msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D14.8GiB/s (15.9GB/s), 14.8GiB/s-14.8GiB/s (15.9GB=
-/s-
-> 15.9GB/s), io=3D891GiB (957GB), run=3D60003-60003msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D14.8GiB/s (15.9GB/s), 14.8GiB/s-14.8GiB/s (15.9GB=
-/s-
-> 15.9GB/s), io=3D890GiB (956GB), run=3D60003-60003msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D14.5GiB/s (15.6GB/s), 14.5GiB/s-14.5GiB/s (15.6GB=
-/s-
-> 15.6GB/s), io=3D871GiB (935GB), run=3D60003-60003msec
->=20
->=20
-> Update to latest upstream
-> -------------------------
->=20
-> [root@penguin9 ~]# uname -a
-> Linux penguin9.2 6.15.0-rc5 #1 SMP PREEMPT_DYNAMIC Mon May=C2=A0 5
-> 12:18:22
-> EDT 2025 x86_64 x86_64 x86_64 GNU/Linux
->=20
-> Single nvme device is once again fine
->=20
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D3061MiB/s (3210MB/s), 3061MiB/s-3061MiB/s (3210MB=
-/s-
-> 3210MB/s), io=3D179GiB (193GB), run=3D60006-60006msec
->=20
->=20
-> [root@penguin9 ~]# for i in 1 2 3 4 5; do ./run_fio.sh | grep -A1
-> "Run
-> status group"; done
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D14.7GiB/s (15.7GB/s), 14.7GiB/s-14.7GiB/s (15.7GB=
-/s-
-> 15.7GB/s), io=3D880GiB (945GB), run=3D60003-60003msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D18.1GiB/s (19.4GB/s), 18.1GiB/s-18.1GiB/s (19.4GB=
-/s-
-> 19.4GB/s), io=3D1087GiB (1167GB), run=3D60003-60003msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D18.0GiB/s (19.4GB/s), 18.0GiB/s-18.0GiB/s (19.4GB=
-/s-
-> 19.4GB/s), io=3D1082GiB (1162GB), run=3D60003-60003msec
-> Run status group 0 (all jobs):
-> =C2=A0=C2=A0 READ: bw=3D18.2GiB/s (19.5GB/s), 18.2GiB/s-18.2GiB/s (19.5GB=
-/s-
-> 19.5GB/s), io=3D1090GiB (1170GB), run=3D60005-60005msec
->=20
->=20
+On Thu, May 22, 2025 at 2:03=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> Add a new notification so that fuse servers can add extra block devices
+> to use with iomap.
+>
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  fs/fuse/fuse_i.h          |   19 +++++++
+>  fs/fuse/fuse_trace.h      |   36 ++++++++++++++
+>  include/uapi/linux/fuse.h |    8 +++
+>  fs/fuse/dev.c             |   23 +++++++++
+>  fs/fuse/file_iomap.c      |  119 +++++++++++++++++++++++++++++++++++++++=
++++++-
+>  fs/fuse/inode.c           |    9 +++
+>  6 files changed, 211 insertions(+), 3 deletions(-)
+>
+>
+> diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
+> index aa51f25856697d..4eb75ed90db300 100644
+> --- a/fs/fuse/fuse_i.h
+> +++ b/fs/fuse/fuse_i.h
+> @@ -619,6 +619,12 @@ struct fuse_sync_bucket {
+>         struct rcu_head rcu;
+>  };
+>
+> +struct fuse_iomap {
+> +       /* array of file objects that reference block devices for iomap *=
+/
+> +       struct file **files;
+> +       unsigned int nr_files;
+> +};
+> +
+>  /**
+>   * A Fuse connection.
+>   *
+> @@ -970,6 +976,10 @@ struct fuse_conn {
+>         struct fuse_ring *ring;
+>  #endif
+>
+> +#ifdef CONFIG_FUSE_IOMAP
+> +       struct fuse_iomap iomap_conn;
+> +#endif
+> +
+>         /** Only used if the connection opts into request timeouts */
+>         struct {
+>                 /* Worker for checking if any requests have timed out */
+> @@ -1610,9 +1620,18 @@ static inline bool fuse_has_iomap(const struct ino=
+de *inode)
+>  {
+>         return get_fuse_conn_c(inode)->iomap;
+>  }
+> +
+> +void fuse_iomap_init_reply(struct fuse_mount *fm);
+> +void fuse_iomap_conn_put(struct fuse_conn *fc);
+> +
+> +int fuse_iomap_add_device(struct fuse_conn *fc,
+> +                         const struct fuse_iomap_add_device_out *outarg)=
+;
+>  #else
+>  # define fuse_iomap_enabled(...)               (false)
+>  # define fuse_has_iomap(...)                   (false)
+> +# define fuse_iomap_init_reply(...)            ((void)0)
+> +# define fuse_iomap_conn_put(...)              ((void)0)
+> +# define fuse_iomap_add_device(...)            (-ENOSYS)
+>  #endif
+>
+>  #endif /* _FS_FUSE_I_H */
+> diff --git a/fs/fuse/fuse_trace.h b/fs/fuse/fuse_trace.h
+> index f9a316c9788e06..e1a2e491d2581a 100644
+> --- a/fs/fuse/fuse_trace.h
+> +++ b/fs/fuse/fuse_trace.h
+> @@ -380,6 +380,42 @@ TRACE_EVENT(fuse_iomap_end_error,
+>                   __entry->pos, __entry->count, __entry->written,
+>                   __entry->error)
+>  );
+> +
+> +TRACE_EVENT(fuse_iomap_dev_class,
+> +       TP_PROTO(const struct fuse_conn *fc, unsigned int idx,
+> +                const struct file *file),
+> +
+> +       TP_ARGS(fc, idx, file),
+> +
+> +       TP_STRUCT__entry(
+> +               __field(dev_t,          connection)
+> +               __field(unsigned int,   idx)
+> +               __field(dev_t,          bdev)
+> +       ),
+> +
+> +       TP_fast_assign(
+> +               struct inode *inode =3D file_inode(file);
+> +
+> +               __entry->connection     =3D       fc->dev;
+> +               __entry->idx            =3D       idx;
+> +               if (S_ISBLK(inode->i_mode)) {
+> +                       __entry->bdev   =3D       inode->i_rdev;
+> +               } else
+> +                       __entry->bdev   =3D       0;
+> +       ),
+> +
+> +       TP_printk("connection %u idx %u dev %u:%u",
+> +                 __entry->connection,
+> +                 __entry->idx,
+> +                 MAJOR(__entry->bdev), MINOR(__entry->bdev))
+> +);
+> +#define DEFINE_FUSE_IOMAP_DEV_EVENT(name)              \
+> +DEFINE_EVENT(fuse_iomap_dev_class, name,               \
+> +       TP_PROTO(const struct fuse_conn *fc, unsigned int idx, \
+> +                const struct file *file), \
+> +       TP_ARGS(fc, idx, file))
+> +DEFINE_FUSE_IOMAP_DEV_EVENT(fuse_iomap_add_dev);
+> +DEFINE_FUSE_IOMAP_DEV_EVENT(fuse_iomap_remove_dev);
+>  #endif /* CONFIG_FUSE_IOMAP */
+>
+>  #endif /* _TRACE_FUSE_H */
+> diff --git a/include/uapi/linux/fuse.h b/include/uapi/linux/fuse.h
+> index ce6c9960f2418f..ea8992e980a015 100644
+> --- a/include/uapi/linux/fuse.h
+> +++ b/include/uapi/linux/fuse.h
+> @@ -236,6 +236,7 @@
+>   *  7.44
+>   *  - add FUSE_IOMAP and iomap_{begin,end,ioend} handlers for FIEMAP and
+>   *    SEEK_{DATA,HOLE} support
+> + *  - add FUSE_NOTIFY_ADD_IOMAP_DEVICE for multi-device filesystems
+>   */
+>
+>  #ifndef _LINUX_FUSE_H
+> @@ -681,6 +682,7 @@ enum fuse_notify_code {
+>         FUSE_NOTIFY_RETRIEVE =3D 5,
+>         FUSE_NOTIFY_DELETE =3D 6,
+>         FUSE_NOTIFY_RESEND =3D 7,
+> +       FUSE_NOTIFY_ADD_IOMAP_DEVICE =3D 8,
+>         FUSE_NOTIFY_CODE_MAX,
+>  };
+>
+> @@ -1371,4 +1373,10 @@ struct fuse_iomap_end_in {
+>         uint32_t map_dev;       /* device cookie * */
+>  };
+>
+> +struct fuse_iomap_add_device_out {
+> +       int32_t fd;             /* fd of the open device to add */
+> +       uint32_t reserved;      /* must be zero */
+> +       uint32_t *map_dev;      /* location to receive device cookie */
+> +};
+> +
+>  #endif /* _LINUX_FUSE_H */
+> diff --git a/fs/fuse/dev.c b/fs/fuse/dev.c
+> index 6dcbaa218b7a16..9d7064ec170cf6 100644
+> --- a/fs/fuse/dev.c
+> +++ b/fs/fuse/dev.c
+> @@ -1824,6 +1824,26 @@ static int fuse_notify_store(struct fuse_conn *fc,=
+ unsigned int size,
+>         return err;
+>  }
+>
+> +static int fuse_notify_add_iomap_device(struct fuse_conn *fc, unsigned i=
+nt size,
+> +                                       struct fuse_copy_state *cs)
+> +{
+> +       struct fuse_iomap_add_device_out outarg;
+> +       int err =3D -EINVAL;
+> +
+> +       if (size !=3D sizeof(outarg))
+> +               goto err;
+> +
+> +       err =3D fuse_copy_one(cs, &outarg, sizeof(outarg));
+> +       if (err)
+> +               goto err;
+> +       fuse_copy_finish(cs);
+> +
+> +       return fuse_iomap_add_device(fc, &outarg);
+> +err:
+> +       fuse_copy_finish(cs);
+> +       return err;
+> +}
+> +
+>  struct fuse_retrieve_args {
+>         struct fuse_args_pages ap;
+>         struct fuse_notify_retrieve_in inarg;
+> @@ -2049,6 +2069,9 @@ static int fuse_notify(struct fuse_conn *fc, enum f=
+use_notify_code code,
+>         case FUSE_NOTIFY_RESEND:
+>                 return fuse_notify_resend(fc);
+>
+> +       case FUSE_NOTIFY_ADD_IOMAP_DEVICE:
+> +               return fuse_notify_add_iomap_device(fc, size, cs);
+> +
+>         default:
+>                 fuse_copy_finish(cs);
+>                 return -EINVAL;
+> diff --git a/fs/fuse/file_iomap.c b/fs/fuse/file_iomap.c
+> index dfa0c309803113..faefd29a273bf3 100644
+> --- a/fs/fuse/file_iomap.c
+> +++ b/fs/fuse/file_iomap.c
+> @@ -142,6 +142,26 @@ static inline int fuse_iomap_validate(const struct f=
+use_iomap_begin_out *outarg,
+>         return 0;
+>  }
+>
+> +static inline struct block_device *fuse_iomap_bdev(struct fuse_mount *fm=
+,
+> +                                                  unsigned int idx)
+> +{
+> +       struct fuse_conn *fc =3D fm->fc;
+> +       struct file *file =3D NULL;
+> +
+> +       spin_lock(&fc->lock);
+> +       if (idx < fc->iomap_conn.nr_files)
+> +               file =3D fc->iomap_conn.files[idx];
+> +       spin_unlock(&fc->lock);
+> +
+> +       if (!file)
+> +               return NULL;
+> +
+> +       if (!S_ISBLK(file_inode(file)->i_mode))
+> +               return NULL;
+> +
+> +       return I_BDEV(file->f_mapping->host);
+> +}
+> +
+>  static int fuse_iomap_begin(struct inode *inode, loff_t pos, loff_t coun=
+t,
+>                             unsigned opflags, struct iomap *iomap,
+>                             struct iomap *srcmap)
+> @@ -155,6 +175,7 @@ static int fuse_iomap_begin(struct inode *inode, loff=
+_t pos, loff_t count,
+>         };
+>         struct fuse_iomap_begin_out outarg =3D { };
+>         struct fuse_mount *fm =3D get_fuse_mount(inode);
+> +       struct block_device *read_bdev;
+>         FUSE_ARGS(args);
+>         int err;
+>
+> @@ -181,8 +202,18 @@ static int fuse_iomap_begin(struct inode *inode, lof=
+f_t pos, loff_t count,
+>         if (err)
+>                 return err;
+>
+> +       read_bdev =3D fuse_iomap_bdev(fm, outarg.read_dev);
+> +       if (!read_bdev)
+> +               return -ENODEV;
+> +
+>         if ((opflags & IOMAP_WRITE) &&
+>             outarg.write_type !=3D FUSE_IOMAP_TYPE_PURE_OVERWRITE) {
+> +               struct block_device *write_bdev =3D
+> +                       fuse_iomap_bdev(fm, outarg.write_dev);
+> +
+> +               if (!write_bdev)
+> +                       return -ENODEV;
+> +
+>                 /*
+>                  * For an out of place write, we must supply the write ma=
+pping
+>                  * via @iomap, and the read mapping via @srcmap.
+> @@ -192,14 +223,14 @@ static int fuse_iomap_begin(struct inode *inode, lo=
+ff_t pos, loff_t count,
+>                 iomap->length =3D outarg.length;
+>                 iomap->type =3D outarg.write_type;
+>                 iomap->flags =3D outarg.write_flags;
+> -               iomap->bdev =3D inode->i_sb->s_bdev;
+> +               iomap->bdev =3D write_bdev;
+>
+>                 srcmap->addr =3D outarg.read_addr;
+>                 srcmap->offset =3D outarg.offset;
+>                 srcmap->length =3D outarg.length;
+>                 srcmap->type =3D outarg.read_type;
+>                 srcmap->flags =3D outarg.read_flags;
+> -               srcmap->bdev =3D inode->i_sb->s_bdev;
+> +               srcmap->bdev =3D read_bdev;
+>         } else {
+>                 /*
+>                  * For everything else (reads, reporting, and pure overwr=
+ites),
+> @@ -211,7 +242,7 @@ static int fuse_iomap_begin(struct inode *inode, loff=
+_t pos, loff_t count,
+>                 iomap->length =3D outarg.length;
+>                 iomap->type =3D outarg.read_type;
+>                 iomap->flags =3D outarg.read_flags;
+> -               iomap->bdev =3D inode->i_sb->s_bdev;
+> +               iomap->bdev =3D read_bdev;
+>         }
+>
+>         return 0;
+> @@ -278,3 +309,85 @@ const struct iomap_ops fuse_iomap_ops =3D {
+>         .iomap_begin            =3D fuse_iomap_begin,
+>         .iomap_end              =3D fuse_iomap_end,
+>  };
+> +
+> +void fuse_iomap_conn_put(struct fuse_conn *fc)
+> +{
+> +       unsigned int i;
+> +
+> +       for (i =3D 0; i < fc->iomap_conn.nr_files; i++) {
+> +               struct file *file =3D fc->iomap_conn.files[i];
+> +
+> +               trace_fuse_iomap_remove_dev(fc, i, file);
+> +
+> +               fc->iomap_conn.files[i] =3D NULL;
+> +               fput(file);
+> +       }
+> +
+> +       kfree(fc->iomap_conn.files);
+> +       fc->iomap_conn.nr_files =3D 0;
+> +}
+> +
+> +/* Add a bdev to the fuse connection, returns the index or a negative er=
+rno */
+> +static int __fuse_iomap_add_device(struct fuse_conn *fc, struct file *fi=
+le)
+> +{
+> +       struct file **new_files;
+> +       int ret;
+> +
+> +       if (fc->iomap_conn.nr_files >=3D PAGE_SIZE / sizeof(unsigned int)=
+)
+> +               return -EMFILE;
+> +
+> +       new_files =3D krealloc_array(fc->iomap_conn.files,
+> +                                  fc->iomap_conn.nr_files + 1,
+> +                                  sizeof(struct file *),
+> +                                  GFP_KERNEL | __GFP_ZERO);
+> +       if (!new_files)
+> +               return -ENOMEM;
+> +
+> +       spin_lock(&fc->lock);
+> +       fc->iomap_conn.files =3D new_files;
+> +       fc->iomap_conn.files[fc->iomap_conn.nr_files] =3D get_file(file);
+> +       ret =3D fc->iomap_conn.nr_files++;
+> +       spin_unlock(&fc->lock);
+> +
+> +       trace_fuse_iomap_add_dev(fc, ret, file);
+> +
+> +       return ret;
+> +}
+> +
+> +void fuse_iomap_init_reply(struct fuse_mount *fm)
+> +{
+> +       struct fuse_conn *fc =3D fm->fc;
+> +       struct super_block *sb =3D fm->sb;
+> +
+> +       if (sb->s_bdev)
+> +               __fuse_iomap_add_device(fc, sb->s_bdev_file);
+> +}
+> +
+> +int fuse_iomap_add_device(struct fuse_conn *fc,
+> +                         const struct fuse_iomap_add_device_out *outarg)
+> +{
+> +       struct file *file;
+> +       int ret;
+> +
+> +       if (!fc->iomap)
+> +               return -EINVAL;
+> +
+> +       if (outarg->reserved)
+> +               return -EINVAL;
+> +
+> +       CLASS(fd, somefd)(outarg->fd);
+> +       if (fd_empty(somefd))
+> +               return -EBADF;
+> +       file =3D fd_file(somefd);
+> +
+> +       if (!S_ISBLK(file_inode(file)->i_mode))
+> +               return -ENODEV;
+> +
+> +       down_read(&fc->killsb);
+> +       ret =3D __fuse_iomap_add_device(fc, file);
+> +       up_read(&fc->killsb);
+> +       if (ret < 0)
+> +               return ret;
+> +
+> +       return put_user(ret, outarg->map_dev);
+> +}
 
-This fell of my radar, I aologize and I was on PTO last week.
-Here is the Fedora kernel to install as mentioned
-https://people.redhat.com/loberman/customer/.fedora/
+This very much reminds of FUSE_DEV_IOC_BACKING_OPEN
+that gives kernel an fd to remember for later file operations.
 
-tar hxvf fedora_kernel.tar.xz
-rpm -ivh --force --nodeps *.rpm
+FUSE_DEV_IOC_BACKING_OPEN was implemented as an ioctl
+because of security concerns of passing an fd to the kernel via write().
 
+Speaking of security concerns, we need to consider if this requires some
+privileges to allow setting up direct access to blockdev.
+
+But also, apart from the fact that those are block device fds,
+what does iomap_conn.files[] differ from fc->backing_files_map?
+
+Miklos had envisioned this (backing blockdev) use case as one of the
+private cases of fuse passthrough.
+
+Instead of identity mapping to backing file created at open time
+it's extent mapping to backing blockdev created at data access time.
+
+I am not saying that you need to reuse anything from fuse passthrough
+code, because the use cases probably do not overlap, but hopefully,
+you can avoid falling into the same pits that we have already managed to av=
+oid.
+
+Thanks,
+Amir.
