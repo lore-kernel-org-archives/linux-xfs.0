@@ -1,76 +1,79 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D96C62248B9
-	for <linux-xfs@vger.kernel.org>; Fri, 23 May 2025 13:37:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3395293739
+	for <linux-xfs@vger.kernel.org>; Fri, 23 May 2025 13:39:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748007426; cv=none; b=rpsMRVA8gTgo/L68YMmqRL1PCxX2NiyD9Gan31r+bQKP2+oxd1nbdbT++h84gaBPd5KwE5Ne+7qdkN5d9x5ktrRQFBmiUoU/2YPgyWbr24AcQiMVNO2+ggLqSw66fxLyxkR3mo3nxB/V2R5hYjonsBfMNBEmDT2tCoG9ODSxahU=
+	t=1748007550; cv=none; b=plR7dhi70YC/7byeD6aKRJ1qeFaWwnbyVcUm6kWRUZNfzk9uOYXVag0Fm/bV0yC8BEY/OMmXZXKje9nCi26KkknrwP5heN4j8PpqJ8LG4x2xCaLi8kFn/txiVkv+Z9tFd8QFWelqtXKjY/4AVWI6raJWWFQNz6Hs4XRzTrtRY2E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748007426; c=relaxed/simple;
-	bh=RxurU9VH7u1wBYd690W47S66H7qxmMPgFfVb6Z/7Vyk=;
+	s=arc-20240116; t=1748007550; c=relaxed/simple;
+	bh=2xkHme3A0nWoLMx4LEL+OvveWuxp0IwsBbSgedvQHTw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U5EA7GB/TMOLZ3/ylVj57Y9OOaw2F6eExikjbkYPcrAj4PsHErgZb4xHE1FWaVWln+rua8DefGNPiwE9e/o5b+QnQRsUSHrNqLGSKILiMwYN3awvre8/YDeyRnJNOAjt34RF+Ynu3PJzQZnQGTZjEGFdzSRU7MQ3hHjmmKz8f1o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AFR0OFwt; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=oYlXGHWrCMpBz+8wYUlydw+xW5yeaLGP+SuCrerFXMBkJBSO/x4JJHPwyFNM54vEMFYwZMZdr1WZjVwJ5D2/ZTiqLUnFsEbRYnslict2eOjIghAvAHj+HycCckIsJ8bsi4a/qzFvl8K/YoCWknmEqDvuBrAeyI3DZT6OwvHDEAQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GdG9Dfwf; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AFR0OFwt"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GdG9Dfwf"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1748007423;
+	s=mimecast20190719; t=1748007547;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=b4RHY5iqN2MaD+kEV0mHsFyeaBl8Tu8APPEOii/iCBs=;
-	b=AFR0OFwtVw8XqBo/FoXZHAH983LvAZHIzyhrTUm6j6nIsxEHh4VUUKFikU40ZwaAcT1Dsk
-	4jv8i6F5AJ4nsR1Fdyy7GopQd4D+Cl3t2UxZYx4M1C5l47ZHEb5istTWy9ATtZmOoJ2+PX
-	7Vx4GSsAkuWRThTuqykrO6wX8xhg/YU=
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
- [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=ami5ei6zk9Z6uelHCLcQ3d+SSnj9YctEaT4/KMBIwiM=;
+	b=GdG9DfwfGz71wP9+rIMAC8IahUf8PuqcyRzZjjPi+AJAMUqVA94FXagLoSidmznO9s8mjO
+	BxZBmHnO4hKHLHPShS1YUKtg0iPVj4GGdXlu6afWAvXtT4hyNnTJVvO3k0BWhzTiUDwctW
+	4lvXXnIQIFUWl161+3E33F4mkQQB+jI=
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
+ [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-21-ykfxCK_8MyqEoG1s4JgMXg-1; Fri, 23 May 2025 09:37:01 -0400
-X-MC-Unique: ykfxCK_8MyqEoG1s4JgMXg-1
-X-Mimecast-MFC-AGG-ID: ykfxCK_8MyqEoG1s4JgMXg_1748007420
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-b26e0fee53eso5491816a12.1
-        for <linux-xfs@vger.kernel.org>; Fri, 23 May 2025 06:37:01 -0700 (PDT)
+ us-mta-537-reJhyzoWP-29wxSnw_CpVQ-1; Fri, 23 May 2025 09:39:06 -0400
+X-MC-Unique: reJhyzoWP-29wxSnw_CpVQ-1
+X-Mimecast-MFC-AGG-ID: reJhyzoWP-29wxSnw_CpVQ_1748007545
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-23209d8ba1bso61250985ad.3
+        for <linux-xfs@vger.kernel.org>; Fri, 23 May 2025 06:39:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748007420; x=1748612220;
+        d=1e100.net; s=20230601; t=1748007545; x=1748612345;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=b4RHY5iqN2MaD+kEV0mHsFyeaBl8Tu8APPEOii/iCBs=;
-        b=kVLCTIlE9ww314U8dMzdTQac/nAY5CI9RIce5///zxogQz+BeaDnpfUlSDA8BHEaLM
-         GkhUDzIooXpLyL5EjC00R4A0+c1iGOlm1ntiEype+ZdecPTT00s/UwXmSVB+WerepP/B
-         GsMTH0p+VHCjRs2uDoFxsJavF+TTMoT8gCjq/TFq6HycqNvFItFctkPfxDq/6VfeJbFR
-         iiGE8ndll9CdITPTkHGl/h4JyUfzVlR21007+Sq0AxfP+xuulbdHYBdLhJ3lE67WLrDa
-         uWcJFhJJUVbKMwnTABsQKCmmbibHoFGcnEBmF/ARG8hD3+vJckrVCAE7uxl7Qd1x7gYz
-         +OFg==
-X-Forwarded-Encrypted: i=1; AJvYcCWTKnMjaPf1TzjfagmDo7Ys6tDzqT1xcHmRdLA05wQR9HNFEuIW5/AT+ClCsCSuTi9zDmb9KzKfnx4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzuXqTTwYFAwNCs3zP5ziSXkH3bNrlMZolQA0i1WEdzesoMIjz1
-	E71UInJSr2a0ZPAj0mMphs97q1eCsQwGJ8S+sS1dFBAHMPVmP4BZxWPUuDT1Wgx88D+dyWwoksX
-	w/JBGsHsDPwsHsLgv3wTQXjjZZMOfwQLDtHGnzxAwfSbsw709P0GFRRgkYf8jeg==
-X-Gm-Gg: ASbGncurtu/Ex1dzur0iFLrv0a8v7gp7O5zCUbiuetLBxGr0Fe0/5lFPtxwUk9p6PRV
-	aa+bxkML4CnQ30XBHRsVw8ZY30NZMZl5uKNJdc/9O0p3GdF+8ic2SR6eS+4g/NyoYVpzWPlrk8q
-	aF8riTjpUKOuqk/tKTlmLvU+Oq2FNBMhrv3NYAdXzM4MuRAqYykHTrRAybldxWDGDDbutYdGJCv
-	EBtb3TNm8XxngnMWUUTvOsQn4vTPloWmmoc36Ur8H7RIMh4upUh4aVV5mnU/6QiUW1c2NopI5B2
-	kTZ3OuLZNoICJW8KA3QfGY4vw9Ke0swTffRgYNWJPyUdXA7EoER2
-X-Received: by 2002:a05:6a21:318c:b0:1f5:9208:3ad6 with SMTP id adf61e73a8af0-2170ce8c04emr41721091637.41.1748007420522;
-        Fri, 23 May 2025 06:37:00 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IExolJZr41ZZehMDnfw2H6lN5AfEYxS12dLBplbRK0rq7eGBE+HwDv1wLGKguY4sO01uouzqA==
-X-Received: by 2002:a05:6a21:318c:b0:1f5:9208:3ad6 with SMTP id adf61e73a8af0-2170ce8c04emr41721054637.41.1748007420163;
-        Fri, 23 May 2025 06:37:00 -0700 (PDT)
+        bh=ami5ei6zk9Z6uelHCLcQ3d+SSnj9YctEaT4/KMBIwiM=;
+        b=Icy2mAyS3rRdp7GYVuSsTqPTCixhELxVBEL8u1XmlBTnvFXOVST6/iY0Bt6sDCz3Fn
+         /MkN64+Oqyz3q/33SP6tnfkvTENYB5d1M5Lh2zkDk9nGqODcBp2SiN3c9NuDGno2sUna
+         MmXL127KZs8GDAzgsIl2gb2DW7p1R9LubK0Lwt+CVSProI32Fr1NRNVeCT6G3c0xmxPV
+         rG3DzsqITMgc7UjkENiGWX1EUl+/4lS7LiAcnqU+MtsA/5s7+bNIUhJRPeCcYPF8kv0p
+         ahLwFKRMREicQagEtWrqYG7brLqorEEO9EKr7fzvuYkgyPX7Jw/MZBcZPPN/knFy+6QA
+         yoHA==
+X-Forwarded-Encrypted: i=1; AJvYcCWRFG2Nd7nuAuymOip79QFr9zu3pXJjy8Z96KAv5lw7dgrifT67vPetW/OjpizGwrb0cus6p0pVaOM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx2NOb0ez8l0jAG5GTgHNJzO2bl+Hf6FYAWWLQuYUbG6r3xdH07
+	UMoXPz+2O5Rr54WtOrGhb6RsHE6eEunp63eInd0By1mjT73+bobnIK2PAcCdlWKeIys7EH+bMR6
+	6DSdcJP2mXM34UTKy+a/hDiVOPV46ebmaqyIrJTVgfwd/ytxuKbFVsg+Ajgp8fA==
+X-Gm-Gg: ASbGnctqHT3/SfQL15myK+Q/AFVbhPsHxoGx6VKL8ijSUP/tcRf/CA0YPcMbpYt3UjL
+	IETu+vscL7RfNOAZ/5VBkAJofr+Ts4pL9vFUjkh6y8qpHBgJsvoiFTWGExyqnwJ5p4FYL9NPcI6
+	HEXS0KhcUJe05earjO0MKtSMoa1msBItNuA/FYqI6L6+OsTGX0X79Zoy/1zAHmZjsvjzj6Ik/Xc
+	sN9RotAps6j05EQXMsaaD2+kE1a5PmcL3soX0HVXukLIrWV3UvEEWLyd6J5rwuBFm1BrPeAdfFX
+	JXEe3XhHGMZqqpHc1eZ4PAbySlFzZ0lKsLEnsgaXxBz+mAUIzfcH
+X-Received: by 2002:a17:903:1a43:b0:22e:60b9:ac99 with SMTP id d9443c01a7336-233f25f3fa0mr49336255ad.34.1748007545509;
+        Fri, 23 May 2025 06:39:05 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IF9p8GiL2Y+Y2SBaC9lXKxV6Bfq87MczC/P5jUv9AAoCBOaGpg78htOLqvDkWlteD7lNrKcug==
+X-Received: by 2002:a17:903:1a43:b0:22e:60b9:ac99 with SMTP id d9443c01a7336-233f25f3fa0mr49335875ad.34.1748007545134;
+        Fri, 23 May 2025 06:39:05 -0700 (PDT)
 Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-742a9709534sm12691975b3a.41.2025.05.23.06.36.58
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-231d4ac91acsm123692195ad.46.2025.05.23.06.39.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 May 2025 06:36:59 -0700 (PDT)
-Date: Fri, 23 May 2025 21:36:55 +0800
+        Fri, 23 May 2025 06:39:04 -0700 (PDT)
+Date: Fri, 23 May 2025 21:39:00 +0800
 From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] check: unbreak iam
-Message-ID: <20250523133655.bkt7ajt7qwcw6mgf@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] check: check and fix the test filesystem after
+ failed tests
+Message-ID: <20250523133900.lzgt4mthuglf7hsu@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 References: <174786719678.1398933.16005683028409620583.stgit@frogsfrogsfrogs>
- <174786719750.1398933.11433643731439553632.stgit@frogsfrogsfrogs>
+ <174786719769.1398933.12370766699740321314.stgit@frogsfrogsfrogs>
+ <aDAEIE-UPT6P4xsE@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,62 +82,62 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <174786719750.1398933.11433643731439553632.stgit@frogsfrogsfrogs>
+In-Reply-To: <aDAEIE-UPT6P4xsE@infradead.org>
 
-On Wed, May 21, 2025 at 03:42:38PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, May 22, 2025 at 10:14:08PM -0700, Christoph Hellwig wrote:
+> On Wed, May 21, 2025 at 03:42:54PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Currently, ./check calls _check_filesystems after a test passes to make
+> > sure that the test and scratch filesystems are ok, and repairs the test
+> > filesystem if it's not ok.
+> > 
+> > However, we don't do this for failed tests.  If a test fails /and/
+> > corrupts the test filesystem, every subsequent passing test will be
+> > marked as a failure because of latent corruptions on the test
+> > filesystem.
+> > 
+> > This is a little silly, so let's call _check_filesystems on the test
+> > filesystem after a test fail so that the badness doesn't spread.
+> > 
+> > Cc: <fstests@vger.kernel.org> # v2023.05.01
+> > Fixes: 4a444bc19a836f ("check: _check_filesystems for errors even if test failed")
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  check |    7 ++++++-
+> >  1 file changed, 6 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/check b/check
+> > index 826641268f8b52..818ce44da28f65 100755
+> > --- a/check
+> > +++ b/check
+> > @@ -986,8 +986,13 @@ function run_section()
+> >  			_dump_err_cont "[failed, exit status $sts]"
+> >  			_test_unmount 2> /dev/null
+> >  			_scratch_unmount 2> /dev/null
+> > -			rm -f ${RESULT_DIR}/require_test*
+> >  			rm -f ${RESULT_DIR}/require_scratch*
+> > +
+> > +			# Make sure the test filesystem is ready to go since
+> > +			# we don't call _check_filesystems for failed tests
+> > +			(_adjust_oom_score 250; _check_filesystems) || tc_status="fail"
 > 
-> I don't know why this change was made:
-> 
-> iam=check
-> 
-> to
-> 
-> iam=check.$$
-> 
-> The only users of this variable are:
-> 
-> check:36:iam=check
-> check:52:rm -f $tmp.list $tmp.tmp $tmp.grep $here/$iam.out $tmp.report.* $tmp.arglist
-> common/btrfs:216:               if [ "$iam" != "check" ]; then
-> common/overlay:407:             if [ "$iam" != "check" ]; then
-> common/rc:3565: if [ "$iam" != "check" ]; then
-> common/xfs:1021:                if [ "$iam" != "check" ]; then
-> new:9:iam=new
-> 
-> None of them were ported to notice the pid.  Consequently,
-> _check_generic_filesystem (aka _check_test_fs on an ext4 filesystem)
-> failing will cause ./check to exit the entire test suite when the test
-> filesystem is corrupt.  That's not what we wanted, particularly since
-> Leah added a patch to repair the test filesystem between tests.
-> 
-> Cc: <fstests@vger.kernel.org> # v2024.12.08
-> Fixes: fa0e9712283f0b ("fstests: check-parallel")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
+> Maybe break the line after the || to improve readability?
 
-I should revert this line too, when I removed privatens and run_setsid from check.
-Thanks for this fixing.
+If you mean this:
+	(_adjust_oom_score 250; _check_filesystems) || \
+		tc_status="fail"
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+I'll help that when I merge it.
 
->  check |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks,
+Zorro
+
 > 
+> Otherwise looks good:
 > 
-> diff --git a/check b/check
-> index ede54f6987bcc3..826641268f8b52 100755
-> --- a/check
-> +++ b/check
-> @@ -33,7 +33,7 @@ exclude_tests=()
->  _err_msg=""
->  
->  # start the initialisation work now
-> -iam=check.$$
-> +iam=check
->  
->  # mkfs.xfs uses the presence of both of these variables to enable formerly
->  # supported tiny filesystem configurations that fstests use for fuzz testing
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
 > 
 
