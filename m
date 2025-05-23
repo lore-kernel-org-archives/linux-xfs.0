@@ -1,37 +1,46 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from outbound.pv.icloud.com (p-west1-cluster5-host1-snip4-10.eps.apple.com [57.103.66.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA0BA18E050
-	for <linux-xfs@vger.kernel.org>; Fri, 23 May 2025 06:35:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1AF61ABEAC
+	for <linux-xfs@vger.kernel.org>; Fri, 23 May 2025 09:15:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.66.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747982160; cv=none; b=CbgxZXbknaugD8QiE2zDdknLQ7Erh76MZonbQnTWjG7YmDWUjuBIXiFv6JIP1/nZPYLDX8tHYnHfaWDYZub4fJjxwybJGlkQumkjCOlb9io3yRABHcbOMOCUmMkjm56sdhwenPfeJEgDM++ImiYbUGPJ+5M1g3uEDw0LBDnXUm4=
+	t=1747991726; cv=none; b=DLQjUhW2PIdh+8pn3Jcg+f9XRkJn67oK9134Q/ER0zkhg7mDhs5XSx8H1L18L+V06qIpC/PZcPNTziE3c+XqEGrWVFKw117x6st99NOfYcsdGPQaLDzA+Uofn/ml8Qj60KuUlFpAEffZOHeub8jinsz67HEAduQOhuMQYlPn1OU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747982160; c=relaxed/simple;
-	bh=nUtz8CgdJ19ll3Xz6XKU83w2/5F22A0FePmO3t9ak+c=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JNl+7Q6oZVsfsrQuIbsfXAc+0TEZJ7A8WJILxQfEvBWx1XsaTgH5c/V5tSd/9CXS3YSzQarrqwTn/d9Jw+cy1vT6MKLEUDLHeq2oyGz+1dzh6SU+p09NxYV/5EoBHCYJhqirJQnBF9iyOBy7iTvs1x8tKgbCjGxkXLWbcOdnLLc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.105])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4b3b3y6ZT6ztRwl;
-	Fri, 23 May 2025 14:34:38 +0800 (CST)
-Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
-	by mail.maildlp.com (Postfix) with ESMTPS id 2D5E21402CA;
-	Fri, 23 May 2025 14:35:54 +0800 (CST)
-Received: from huawei.com (10.175.101.6) by dggpemf500017.china.huawei.com
- (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Fri, 23 May
- 2025 14:35:53 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <djwong@kernel.org>, <cem@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
-	<lonuxli.64@gmail.com>
-Subject: [PATCH] xfs: fix incorrect tail lsn tracking when AIL is empty
-Date: Fri, 23 May 2025 14:30:46 +0800
-Message-ID: <20250523063046.564170-1-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1747991726; c=relaxed/simple;
+	bh=RnYD+Ni15zMNK1TCEl1muSbfKEbGPsYAXEH5yp9H8kU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ItiSop3p8ngmHhYn19BuE3+GDMcKTsvVDz6Ylinj8+i/dalrPQDzu7IHlYT/Q7d1SOhUhnZM8SbAwyFd2ffeiQne369HFy6UmmRQmk9OCf96/shSe6QVwxW/qvpNCEPoRd9WD9Zbd2sIRbueoYxaN0dVDbA/tBHY/neDo1XHFPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ai-sast.com; spf=pass smtp.mailfrom=ai-sast.com; dkim=pass (2048-bit key) header.d=ai-sast.com header.i=@ai-sast.com header.b=23wcnIM2; arc=none smtp.client-ip=57.103.66.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ai-sast.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ai-sast.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ai-sast.com header.i=@ai-sast.com header.b="23wcnIM2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ai-sast.com; s=sig1;
+	bh=YyKS243VV7SsoTdftLin95+GlAHrUt5ZaL5mE+UwCYI=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:x-icloud-hme;
+	b=23wcnIM2CdyIu0okcrwv2i7gqi/u9yY6NWAsNBMyVi53j5Z/EZwYVuN6S8MQ795gJ
+	 f48FPfqKNHvO+C8M2Mp08nUvQyqcjcVQFDo+697Hk4slfG5KQ9FPPQ73MM7aRjJ/v2
+	 a3HU7khqxTurXRIFqsG+ebZgSOppVsGG/ThzEUBDP0ybWBKwZndkAauf5ZoaOe7ZF7
+	 ma/Oycp4Eh1q7ipVKO4qaLkX3gMl8w9KN5VZzUX8DhfFzuChaN+ZOla7EvprcYLHZo
+	 lmZqPio8vk2HFbCAPpQW9O2iE7s6LAX1XF63MfkDx8Kinip8A17wp2I5buwiSvoolI
+	 Kcb+VKMLbnSCA==
+Received: from outbound.pv.icloud.com (localhost [127.0.0.1])
+	by outbound.pv.icloud.com (Postfix) with ESMTPS id 4694718028F3;
+	Fri, 23 May 2025 09:15:21 +0000 (UTC)
+Received: from localhost.localdomain (pv-asmtp-me-k8s.p00.prod.me.com [17.56.9.36])
+	by outbound.pv.icloud.com (Postfix) with ESMTPSA id 7432318029CA;
+	Fri, 23 May 2025 09:15:00 +0000 (UTC)
+From: Ye Chey <yechey@ai-sast.com>
+To: brauner@kernel.org,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Ye Chey <yechey@ai-sast.com>
+Subject: [PATCH] iomap: fix potential NULL pointer dereference in iomap_alloc_ioend
+Date: Fri, 23 May 2025 17:14:17 +0800
+Message-ID: <20250523091417.2825-1-yechey@ai-sast.com>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,130 +48,39 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
- dggpemf500017.china.huawei.com (7.185.36.126)
+X-Proofpoint-ORIG-GUID: N5XNWfC75tO48dMvU92rl6sLZ-EDykol
+X-Proofpoint-GUID: N5XNWfC75tO48dMvU92rl6sLZ-EDykol
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-23_02,2025-05-22_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
+ phishscore=0 mlxscore=0 spamscore=0 malwarescore=0 bulkscore=0 clxscore=1030
+ mlxlogscore=857 suspectscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.22.0-2503310001 definitions=main-2505230081
 
-When the AIL is empty, we track ail_head_lsn as the tail LSN, where
-ail_head_lsn records the commit LSN of Checkpoint N, the last checkpoint
-inserted into the AIL. There are two possible scenarios when the AIL is
-empty:
+Under memory pressure, bio_alloc_bioset() may fail and return NULL. Add
+a check to prevent NULL pointer dereference in iomap_alloc_ioend().
+This could happen when the system is under memory pressure and the
+allocation of the bio structure fails.
 
-1. Items from Checkpoint N were previously inserted into the AIL, have
-   been written back, and subsequently removed from the AIL.
-2. Items from Checkpoint N have not yet been inserted into the AIL, but
-   the preparation for insertion is complete, and ail_head_lsn has already
-   been updated to Checkpoint N's commit LSN.
-
-For scenario 1, the items in Checkpoint N have already been written to the
-metadata area. Even in the event of a crash, Checkpoint N does not require
-recovery, so forwarding the tail LSN to Checkpoint N's commit LSN is
-reasonable.
-
-For scenario 2, the items in Checkpoint N have not been written to the
-metadata area. If new logs (ie., Checkpoint N+1) are flushed to disk with
-the tail LSN recorded as Checkpoint N's commit LSN, a crash would make it
-impossible to recover Checkpoint N.
-
-Checkpoint N    start N       commit N
-                   +-------------+------------+--------------+
-Checkpoint N+1                           start N+1      commit N+1
-
-Scenario 2 is possible. I encountered this issue in the Linux 6.6, where
-l_last_sync_lsn was used to track the tail LSN when the AIL is empty.
-Although the code has been refactored and I have not reproduced this issue
-in the latest mainline kernel, I believe the problem still exists.
-
-In the function xlog_cil_ail_insert(), which inserts items from the ctx
-into the AIL, the update of ail_head_lsn and the actual insertion of items
-into the AIL are not atomic. This process is not protected by `ail_lock`
-or `log->l_icloglock`, leaving a window that could result in the iclog
-being filled with an incorrect tail LSN.
-
-When the AIL is empty, the tail LSN should be set to Checkpoint N's start
-LSN before the items from Checkpoint N are inserted into the AIL. This
-ensures that Checkpoint N can be recovered in case of a crash. After the
-items from Checkpoint N are inserted into the AIL, the tail LSN tracked
-for an empty AIL can then be updated to Checkpoint N's commit LSN. This
-cannot be achieved with ail_head_lsn alone, so a new variable,
-ail_tail_lsn, is introduced specifically to track the tail LSN when the
-AIL is empty.
-
-Fixes: 14e15f1bcd73 ("xfs: push the grant head when the log head moves forward") # further than this
-Signed-off-by: Long Li <leo.lilong@huawei.com>
+Signed-off-by: Ye Chey <yechey@ai-sast.com>
 ---
- fs/xfs/xfs_log_cil.c     | 2 ++
- fs/xfs/xfs_log_recover.c | 3 +++
- fs/xfs/xfs_trans_ail.c   | 2 +-
- fs/xfs/xfs_trans_priv.h  | 1 +
- 4 files changed, 7 insertions(+), 1 deletion(-)
+ fs/iomap/buffered-io.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index f66d2d430e4f..ecc31329669a 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -775,6 +775,7 @@ xlog_cil_ail_insert(
- 	xfs_trans_ail_cursor_last(ailp, &cur, ctx->start_lsn);
- 	old_head = ailp->ail_head_lsn;
- 	ailp->ail_head_lsn = ctx->commit_lsn;
-+	ailp->ail_tail_lsn = ctx->start_lsn;
- 	/* xfs_ail_update_finish() drops the ail_lock */
- 	xfs_ail_update_finish(ailp, NULLCOMMITLSN);
- 
-@@ -857,6 +858,7 @@ xlog_cil_ail_insert(
- 
- 	spin_lock(&ailp->ail_lock);
- 	xfs_trans_ail_cursor_done(&cur);
-+	ailp->ail_tail_lsn = ctx->commit_lsn;
- 	spin_unlock(&ailp->ail_lock);
- }
- 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 2f76531842f8..ef04fd8ded67 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1179,6 +1179,8 @@ xlog_check_unmount_rec(
- 					log->l_curr_cycle, after_umount_blk);
- 			log->l_ailp->ail_head_lsn =
- 					atomic64_read(&log->l_tail_lsn);
-+			log->l_ailp->ail_tail_lsn =
-+					atomic64_read(&log->l_tail_lsn);
- 			*tail_blk = after_umount_blk;
- 
- 			*clean = true;
-@@ -1212,6 +1214,7 @@ xlog_set_state(
- 	if (bump_cycle)
- 		log->l_curr_cycle++;
- 	atomic64_set(&log->l_tail_lsn, be64_to_cpu(rhead->h_tail_lsn));
-+	log->l_ailp->ail_tail_lsn = be64_to_cpu(rhead->h_lsn);
- 	log->l_ailp->ail_head_lsn = be64_to_cpu(rhead->h_lsn);
- }
- 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 67c328d23e4a..bdd45aaa5bc1 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -740,7 +740,7 @@ __xfs_ail_assign_tail_lsn(
- 
- 	tail_lsn = __xfs_ail_min_lsn(ailp);
- 	if (!tail_lsn)
--		tail_lsn = ailp->ail_head_lsn;
-+		tail_lsn = ailp->ail_tail_lsn;
- 
- 	WRITE_ONCE(log->l_tail_space,
- 			xlog_lsn_sub(log, ailp->ail_head_lsn, tail_lsn));
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index f945f0450b16..4ed9ada298ec 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -56,6 +56,7 @@ struct xfs_ail {
- 	spinlock_t		ail_lock;
- 	xfs_lsn_t		ail_last_pushed_lsn;
- 	xfs_lsn_t		ail_head_lsn;
-+	xfs_lsn_t		ail_tail_lsn;
- 	int			ail_log_flush;
- 	unsigned long		ail_opstate;
- 	struct list_head	ail_buf_list;
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 5b08bd417..d243b191e 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1618,6 +1618,8 @@ static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writepage_ctx *wpc,
+ 	bio = bio_alloc_bioset(wpc->iomap.bdev, BIO_MAX_VECS,
+ 			       REQ_OP_WRITE | wbc_to_write_flags(wbc),
+ 			       GFP_NOFS, &iomap_ioend_bioset);
++	if (!bio)
++		return NULL;
+ 	bio->bi_iter.bi_sector = iomap_sector(&wpc->iomap, pos);
+ 	bio->bi_end_io = iomap_writepage_end_bio;
+ 	bio->bi_write_hint = inode->i_write_hint;
 -- 
-2.39.2
+2.44.0
 
