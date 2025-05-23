@@ -1,139 +1,156 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2501296157
-	for <linux-xfs@vger.kernel.org>; Fri, 23 May 2025 15:11:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AC1D29ACCA;
+	Fri, 23 May 2025 19:06:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748013080; cv=none; b=LWhWLmLbiyMgrmLPsSC3HInz1lEti9VxTtnF29cQG0N6tQaFKM4vr2qRbl3UNS6xzGMOMmCPDuJNp4n5OTXd/wJKETTiHurGGT+szPEh0fa9gxKWZUS0j3WC4s0Bsip4pUVJMxozO+sEtVEJ24sPg+EObAdhdqQY4KqRfEQHSi4=
+	t=1748027214; cv=none; b=tuMj1GT5WB8Wm4rZf/bPU4DBCf/ZbKUo+MwSlmuSG+srpwbJC97zHQZdAmLPzsJISd1QF+CZC8sZqKvJFuxk4z39Cj7IGMcuQNJ2VAscNwpsjY/GOYK+UmknGzGXkFzYb262nfAXDpJK++GMosBUBXEEsFTPFMbqslMJB42Qeog=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748013080; c=relaxed/simple;
-	bh=+tReRAgv0vI30RDuIgS++Ebwbd8kzKFBgqf3nLvaLf8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pXSxgLMGMgiyIQVeTHNH77OqFPFr7sGaXuLbhBBfuJQvr/Q/Ag+fzUAdsJcaFi1ETLycBiPIwplszeD20GbXob0B4K3VepRVegUj1oHz3hTaXmCZAS0axvn40rsiL7PmZ9HW3gRC7Ocm6VTAN0qsfNVOP9yMsMORQrEbmJG2jg8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ma2L2Irn; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1748027214; c=relaxed/simple;
+	bh=/yhcV0nM7nJvqalwL9izUpj2r5Qyemir5wsgi5jyR0s=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=keF4hQP4TdC3Poi313bIM6wRX3SDXN9wHPIjKdGtm2/6T+s2e8jZOtaVctDCscRdBs1O7hCfiKgkVJFKRq1bbkwan23S9KwLddDNM91QfFiofDo07VV8hKthRp34cpjmHmTxQMBvqvXVTCjK2AGVWVc4EkcNnh2ESGE1sK24PvA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VU2NO5Ju; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ma2L2Irn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1748013078;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=voaSsyYj2YOmvOIrQ6J0fboFnlH7C77mXI0eP3uhd0k=;
-	b=Ma2L2Irn5TfdIW7kB+LanM6o6cxuu1dMVhY7sDz2ciJ3tPpDEOS281bnoB85jrSu/tN912
-	Ng1bWCgs2fu9MykCWqtdJQPy+sV5ZLUZWKdhDYeO8g0JtLh7XkNyOevqWQ5w955Y9Dekr5
-	NlsN2CUJFpeN2mkVGYe8OJ9tOaAt5VM=
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
- [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-558-5v6dcunXO4mxNC9kwuQKmg-1; Fri, 23 May 2025 11:11:15 -0400
-X-MC-Unique: 5v6dcunXO4mxNC9kwuQKmg-1
-X-Mimecast-MFC-AGG-ID: 5v6dcunXO4mxNC9kwuQKmg_1748013075
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-742d077bdfaso65527b3a.2
-        for <linux-xfs@vger.kernel.org>; Fri, 23 May 2025 08:11:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VU2NO5Ju"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-231f5a7baa2so1707855ad.0;
+        Fri, 23 May 2025 12:06:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1748027212; x=1748632012; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=QYis7B+fGnFFXHnsZl0mRWKYsE56tg/s7gqRDiDazlw=;
+        b=VU2NO5Ju7cOu0wgS5eXw8p+lV+t6cJiNVINyJqHUUQHip+ntkJoQW0m3fX/nklUKyv
+         U19+s65mRIDdR6GaCyJXsmZAv34VY2fiqhJipSFZbFC2UHyYm20Em7FMJO9ftWu48q4m
+         J1faYnZxl7sdczJv8COYJV+Lupk8RLpbvonYWYLYL563LlxIzV7E72Ggk6SLSPCcZeyA
+         mCGl6kloit2RmKtCzZJpUJktNqKnbRoX/73xf42ugjS1k8+pcpZEVBvpSme4Divy/Vh+
+         b2EKf5O8hMzPyIu4jMFo6JLm5iI4JF2C4P6F5lJGkK9nlfGvCudMoQcdOcGhqa9Q1QG9
+         1NFg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748013074; x=1748617874;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=voaSsyYj2YOmvOIrQ6J0fboFnlH7C77mXI0eP3uhd0k=;
-        b=DpfiDsvijaBIVEMupHi8he4kLiShn3bZ0BHCi4t/FaCnIqd5yDLYZSf5sN6z3ZHsis
-         vprpWV3C5Sp4l7YtdhQVQg8CYha3sYsZshqCKy321dpPbxj0zWWMJ1VG1pkD+piwMz8y
-         U063NBugleHQzfsWX5cXNZPsHJ9eXSVL66pkAaHakLS8iHQxiHsxsidyc8h7rLgNMXiH
-         JofKSmoFx/ZF6U3o5CZZd/25MMoE0xw11l5cCazRMS0ENlMOVu+taAbVQ2mzIb9CJ0DH
-         h5XN69jb/V1BwcTPCfl2VMnp4bFDKJsB6q3J/vBzQhSjS4mJuCOOQbD/4i2QAf5FG5ps
-         NeQw==
-X-Forwarded-Encrypted: i=1; AJvYcCVbR9ByioQRPAA54hPM1XFF5p/KJ1bz4P5pkKyVLZcAxJUYKsKulVf9GbF3Yu3LHuMpB/IlFdpJKzA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyRhWDtXN6zqyQUaVHxGLAJCL7aeljOE8guABQgeqLvOoB2CNqo
-	hVRDmhaozn0r7QcdTw7yMAINiU11UYFRRlsm52o0wlRNHrch0LFy7e87atmOzc/r5QH0jcHDvey
-	bLgRY5xxfxDhpdSZor/aftG8jeKnDKuRIeni8jHZxpHk+FMMcPRcI08rBE9YJlw==
-X-Gm-Gg: ASbGncsGQOhQZv6Xos51V8bKEpZQlrZ2OxJ9Bhpxsd6XYF6SOwENIR26zVpzISoLLQH
-	+rGfI/k7dGYuzHwa5U5sFymksWw5rsz88RyZG5OZWD5VZhJLEiifQxxaM/qIMrcBiZziMNnvO3y
-	h/O4NkHFSpxSKKicah6mhsFnXbMn02+UJam1d1pVByxVE1reW+vk5hwClUEJBxPfgWqEWvxdAZS
-	o6D090cOwEAbbq/VmBLGpc07uweCU/j9vxsu9U/2Xjrb7jc5jWFHFLUhn1Xr4yjEgqNzeg01eoa
-	ckh7DsKby1Me6C5eC+hDdPgJspHfwKgGfWbqm+1kfUmutGEJHybY
-X-Received: by 2002:a05:6a00:1705:b0:742:da7c:3f30 with SMTP id d2e1a72fcca58-745ed8f5cffmr5029423b3a.19.1748013074606;
-        Fri, 23 May 2025 08:11:14 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEbaSPNwoZLNrAuqi+CqpvcPBlF151WSA0skLZzhPzzTFD58zs05MmaKUwsU1qXxvi/84EA2Q==
-X-Received: by 2002:a05:6a00:1705:b0:742:da7c:3f30 with SMTP id d2e1a72fcca58-745ed8f5cffmr5029380b3a.19.1748013074227;
-        Fri, 23 May 2025 08:11:14 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-742a970e1a3sm12784504b3a.71.2025.05.23.08.11.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 May 2025 08:11:13 -0700 (PDT)
-Date: Fri, 23 May 2025 23:11:08 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
-	ojaswin@linux.ibm.com, djwong@kernel.org, zlang@kernel.org,
-	david@fromorbit.com
-Subject: Re: [PATCH v4 1/2] new: Add a new parameter (copyright-owner) in the
- "new" script
-Message-ID: <20250523151108.axky3xfznd5yackb@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <cover.1747892223.git.nirjhar.roy.lists@gmail.com>
- <72c4879ec3f037db0478bdf0c64c1fbc6585cea7.1747892223.git.nirjhar.roy.lists@gmail.com>
+        d=1e100.net; s=20230601; t=1748027212; x=1748632012;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QYis7B+fGnFFXHnsZl0mRWKYsE56tg/s7gqRDiDazlw=;
+        b=geFQGI4pIaAm7b8Gy628vxQs7P/xN2v5qmCHRAZmGeAavKEqqMlWgWauzD8vvSJzKp
+         /yuhq+WB2bFrMj77hBz89zETi34jcjk0kTgjArwa5NbRqxVPPkGMhdVobj714iV2AuG1
+         Is0F5KAkqYRpI+zVswB3Md9RYKYuFagwrAOLnIDqQg/lJ4UnqU7xtbH/UBGe+AX8tKyB
+         aYWGgqy1M++wydD44msT7H7H0AHVRy0+afLSkrjJOewzDufdSyfJ3d3uvumPeG09ldPB
+         KhS6jqwCg4wtNmYvHe1fUuNvFIUPlfsFGRsavMsX4RdiTVKVtBmKtkJRYUX742Ctz55B
+         NNpw==
+X-Forwarded-Encrypted: i=1; AJvYcCV6w8bNkKLA/5/p/LABi8w+kEwCLUOlYr9fCkuTL0DRfkS/9L7qVtLJF9pol/Tc9ggacFu4JHMpeCe0@vger.kernel.org, AJvYcCWsOyT6d8NFuBK+yc+op8vIUUsbj+hLWdnSK6EvH9kre8qb8VDePa9sl2S3LaU/XcvqVXJ1X8FwYpbM@vger.kernel.org
+X-Gm-Message-State: AOJu0YwCFBkTdkmu458qVCGGZgjZF1Z6we7+skbTnjRPP1jfgI2cVSJv
+	HDaP8Y0o16XOq3JSjy+MNLMAEULpROYd4/jCzETzbmwjxj0YeAl//CgkMOIQjQ==
+X-Gm-Gg: ASbGncsJCt6n8jy8IfpDj3ezI/hXSZfo8uhUOD0fJovB9yCAWbivyaJmr3ef6MxeAN8
+	NnUGze5iO/5pBtegVkw86qbjOeJ4FoFM3fP7F6q/yLTn7KHdpkuvTv7mZVEE6yRwnMCY+YZ1FiR
+	STYYCV2fJ8UOt4wGpBLT3dgK5dftBsnyKxiO5IbfmEFS6ZHqdE2d6m3UoP67D4BveTffZoiACBx
+	y9qMO79ASsR9ocSchYh3REWLPXNmi2CjTE6ib+Lv00jW1cC70qqaY8GqB3QfDXX5xAR/QvLHNMd
+	lrbCE38diErm4CgeYlQgtibZW3bipugVIapdhT86SzBoAyrlV0kgM9lhatopLg==
+X-Google-Smtp-Source: AGHT+IEA9XAcO3GZPDy9CIIZkuRnHcffjQYxs/+5mDozGrY0rB54TyYeMzLeL9CsMRJmaMYF5yO8zg==
+X-Received: by 2002:a17:903:138a:b0:225:abd2:5e4b with SMTP id d9443c01a7336-23414f5b7bdmr7554635ad.16.1748027212402;
+        Fri, 23 May 2025 12:06:52 -0700 (PDT)
+Received: from [192.168.0.120] ([49.205.34.162])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-231d4ed5426sm127418655ad.237.2025.05.23.12.06.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 23 May 2025 12:06:52 -0700 (PDT)
+Message-ID: <c95fc356-d7e5-4a0a-9e0f-8581893da189@gmail.com>
+Date: Sat, 24 May 2025 00:36:46 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <72c4879ec3f037db0478bdf0c64c1fbc6585cea7.1747892223.git.nirjhar.roy.lists@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/2] new: Add a new parameter (name) in the "new"
+ script
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+ djwong@kernel.org, zlang@kernel.org, david@fromorbit.com
+References: <cover.1747635261.git.nirjhar.roy.lists@gmail.com>
+ <2b59f6ae707e45e9d0d5b0fe30d6c44a8cde0fec.1747635261.git.nirjhar.roy.lists@gmail.com>
+ <20250523140343.nabmzlbss346faue@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20250523141221.dnndb3b24w27ocmu@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+Content-Language: en-US
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <20250523141221.dnndb3b24w27ocmu@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, May 22, 2025 at 05:41:34AM +0000, Nirjhar Roy (IBM) wrote:
-> This patch another optional interactive prompt to enter the
-> copyright-owner for each new test file that is created using
-> the "new" file.
-> 
-> The sample output looks like something like the following:
-> 
-> ./new selftest
-> Next test id is 007
-> Append a name to the ID? Test name will be 007-$name. y,[n]:
-> Creating test file '007'
-> Add to group(s) [auto] (separate by space, ? for list): selftest quick
-> Enter <copyright owner>: IBM Corporation
-> Creating skeletal script for you to edit ...
->  done.
-> 
-> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> ---
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+On 5/23/25 19:42, Zorro Lang wrote:
+> On Fri, May 23, 2025 at 10:03:43PM +0800, Zorro Lang wrote:
+>> On Mon, May 19, 2025 at 06:16:41AM +0000, Nirjhar Roy (IBM) wrote:
+>>> This patch another optional interactive prompt to enter the
+>>> author name for each new test file that is created using
+>>> the "new" file.
+>>>
+>>> The sample output looks like something like the following:
+>>>
+>>> ./new selftest
+>>> Next test id is 007
+>>> Append a name to the ID? Test name will be 007-$name. y,[n]:
+>>> Creating test file '007'
+>>> Add to group(s) [auto] (separate by space, ? for list): selftest quick
+>>> Enter <author_name>: Nirjhar Roy <nirjhar.roy.lists@gmail.com>
+>>> Creating skeletal script for you to edit ...
+>>>   done.
+>>>
+>>> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+>>> ---
+>>>   new | 5 ++++-
+>>>   1 file changed, 4 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/new b/new
+>>> index 6b50ffed..636648e2 100755
+>>> --- a/new
+>>> +++ b/new
+>>> @@ -136,6 +136,9 @@ else
+>>>   	check_groups "${new_groups[@]}" || exit 1
+>>>   fi
+>>>   
+>>> +read -p "Enter <author_name>: " -r
+>>> +author_name="${REPLY:=YOUR NAME HERE}"
+>>> +
+>>>   echo -n "Creating skeletal script for you to edit ..."
+>>>   
+>>>   year=`date +%Y`
+>>> @@ -143,7 +146,7 @@ year=`date +%Y`
+>>>   cat <<End-of-File >$tdir/$id
+>>>   #! /bin/bash
+>>>   # SPDX-License-Identifier: GPL-2.0
+>>> -# Copyright (c) $year YOUR NAME HERE.  All Rights Reserved.
+>>> +# Copyright (c) $year $author_name.  All Rights Reserved.
+>> Dave thought we shouldn't use "author_name" at here:
+>> https://lore.kernel.org/fstests/aC509xXxgZJKKZVE@dread.disaster.area/
+>>
+>> If you don't mind, I'll merge PATCH 2/2 this week. If you still hope to
+>> have the 1/2, please consider the review point from Dave.
+> Oh, sorry, you've sent a V4... Please ignore this one, I'm going to review
+> your V4.
 
->  new | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/new b/new
-> index 6b50ffed..a7ad7135 100755
-> --- a/new
-> +++ b/new
-> @@ -136,6 +136,9 @@ else
->  	check_groups "${new_groups[@]}" || exit 1
->  fi
->  
-> +read -p "Enter <copyright owner>: " -r
-> +copyright_owner="${REPLY:=YOUR NAME HERE}"
-> +
->  echo -n "Creating skeletal script for you to edit ..."
->  
->  year=`date +%Y`
-> @@ -143,7 +146,7 @@ year=`date +%Y`
->  cat <<End-of-File >$tdir/$id
->  #! /bin/bash
->  # SPDX-License-Identifier: GPL-2.0
-> -# Copyright (c) $year YOUR NAME HERE.  All Rights Reserved.
-> +# Copyright (c) $year $copyright_owner.  All Rights Reserved.
->  #
->  # FS QA Test $id
->  #
-> -- 
-> 2.34.1
-> 
-> 
+Yes, I have sent the v4 after addressing the review comments.
+
+--NR
+
+>
+>> Thanks,
+>> Zorro
+>>
+>>>   #
+>>>   # FS QA Test $id
+>>>   #
+>>> -- 
+>>> 2.34.1
+>>>
+>>>
+-- 
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
 
