@@ -1,142 +1,168 @@
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FBD02DCC0E
-	for <linux-xfs@vger.kernel.org>; Fri, 23 May 2025 05:43:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA0BA18E050
+	for <linux-xfs@vger.kernel.org>; Fri, 23 May 2025 06:35:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747979026; cv=none; b=O25kSRSWbZkDxFOYFqdeModdiQjIcEBWnjGEoNAgApmVPqGBk7etFbggOs/up63TYEX0FwB0PZ6uq3B0MPfCNqJ8SPT+ESd5Y17c6LEvBrx7LabHpbtY6rQg7h+KSjrTy728zc4BD70TFHAojpGjYxYcfF+bCSRMw+jcTWFuSo4=
+	t=1747982160; cv=none; b=CbgxZXbknaugD8QiE2zDdknLQ7Erh76MZonbQnTWjG7YmDWUjuBIXiFv6JIP1/nZPYLDX8tHYnHfaWDYZub4fJjxwybJGlkQumkjCOlb9io3yRABHcbOMOCUmMkjm56sdhwenPfeJEgDM++ImiYbUGPJ+5M1g3uEDw0LBDnXUm4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747979026; c=relaxed/simple;
-	bh=kzTunbBSyxeMkMtZNtOuBaccehVz3kTna0dMg0X/jUo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PLSY0GFWmld5ht3H2Oqpy6M31A3bqzfJSsB1bKDBl2dVqh2XoGmvRHAOdf03FCsKqG2HoxCbEtDj7iiJIagZa1NCDugII53rTLJdjhWfeF1nmN/N2+ir3TfXMScraCF/1cMt8auUhUTLzOnQxpz308xeKSHA3Q5D/uMfB7mlN+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=iRjWGkjz; arc=none smtp.client-ip=209.85.216.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="iRjWGkjz"
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-3081f72c271so7103116a91.0
-        for <linux-xfs@vger.kernel.org>; Thu, 22 May 2025 22:43:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1747979023; x=1748583823; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=OCWpA/elf9cp/t9/ZJga/sACzr7NREB2M01hN9VaQTU=;
-        b=iRjWGkjz8zCJ43+5ivpNgGTABOeQ6aoxRI+pMoBdndrhbwcP2zBHNfHQaVdl6420AF
-         orfe6w7wv2wRl2FllFtMZdr3BYdqBG5t/YzDeWaDzDB5w3JPfjTLJ85jF3Eor2qnw/eM
-         7UsGz6ecfpEqGVd4pbo5kiQQhW5l/42km779roNBb7uRgzvx+3GCppaldVeG4cY7QDS2
-         g6oj84qE5vwCfq0lFz6j8MVg6LsEMRDd+LgodMH2kWhyi0LHbR/Bbdc4bqb/oWXkEb48
-         6ZEevj9KtIk+V2RRU9j0+JNmxxp1XZmM87667SvJoi8qRHNjldkIeC2ylGIeDX2dv5Vp
-         RmEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747979023; x=1748583823;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OCWpA/elf9cp/t9/ZJga/sACzr7NREB2M01hN9VaQTU=;
-        b=A2Nnj+NWPPLM+IaPd5d6whYXhy/ePN6Axe5lWxb3lj3i05Wle98L4GAOYYSWX/hmch
-         2KrJr79C/lGTb82FhhIJmsEXnrBUC6NLzuGTNCsrpmjtkEkBOTo2sZ/WFHOr7HJCYW0a
-         QpG9Zzx2tXrniob8IyOdiXvWAGqft6NTAzXe15Bu6yyPn0FNYSii3y2gf01QkbBG/iyN
-         fMvHu43DapMt6SUOOEP++ztkguM4IHSTz/cygpgWYytDqi0nbHGbXivXQmJ14YhxRTUc
-         DniL2zvz1S0fcBC4S/1Dm9ITo//wx54uDCp86mTwpCxq6hlYsJfOa4RBPA1k/Z+N1cJs
-         cbPw==
-X-Gm-Message-State: AOJu0YyD3yiqJin7mH2jIDBkZaj4EPJdntfi/a7mjyqJ25IA0LMRwJ0p
-	2BsZlKStb23GMUOxtRaW52N+1YNVt4rpOWa4d2ErkegXqntSVSv1vRh775d3Gtdlh3RdBnpH952
-	3wbT7
-X-Gm-Gg: ASbGncsH0T4/cffgy+BYsJ1+Ag10cfnCMPb5T4XgFjubNV2+CdNjnZOy5U2HYri2dFE
-	eknS1soQj/qwbIO4l+5r1EYUtOAZSvmR06neL2JeNRYV2yVSZFaWzF/1hd80ZyjhVGOd4LkdH0a
-	G757FbuA2RLb2vmKTrA+rRYIAahYLg1K+QmLWRBUVHp3pzkmbBaX1QGVl5Acg+9BznlFpZW6t2F
-	OmT1Q5/v01ZI+V25PjuMtxf4w+SkhUv0o5QE8QT1DhkYAZeJMTNZtTG8kOAOY74K6M77MYk3Lld
-	pA8Lwvgb9pTmHbY7UOW+Ik8yR9z48lMZYeXQhKsGiRoWUpx1jGM0qGcqcHiwRxrRb5L5jP3hS0/
-	v3DmoiYMgZVlbAhdD8gcZ8OHeF3U=
-X-Google-Smtp-Source: AGHT+IGodDXy6rVxnZjPICeS3flXZkLBXBiMseu5I+TJcpcbL03vqrmnokPMt140vV44dpSt5FJ/jg==
-X-Received: by 2002:a17:90b:2c85:b0:30a:2196:e654 with SMTP id 98e67ed59e1d1-30e8312bb11mr41566968a91.15.1747979023398;
-        Thu, 22 May 2025 22:43:43 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-184-88.pa.nsw.optusnet.com.au. [49.180.184.88])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-30f365f7a43sm6456380a91.47.2025.05.22.22.43.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 May 2025 22:43:42 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1uILC0-000000071NH-0XGs;
-	Fri, 23 May 2025 15:43:40 +1000
-Date: Fri, 23 May 2025 15:43:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] [RFC] xfs: fix unmount hang with unflushable inodes
- stuck in the AIL
-Message-ID: <aDALDNZGgHzxb25X@dread.disaster.area>
-References: <20250515025628.3425734-1-david@fromorbit.com>
- <20250515025628.3425734-3-david@fromorbit.com>
- <aDACgQ8j42TFeRA-@infradead.org>
+	s=arc-20240116; t=1747982160; c=relaxed/simple;
+	bh=nUtz8CgdJ19ll3Xz6XKU83w2/5F22A0FePmO3t9ak+c=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JNl+7Q6oZVsfsrQuIbsfXAc+0TEZJ7A8WJILxQfEvBWx1XsaTgH5c/V5tSd/9CXS3YSzQarrqwTn/d9Jw+cy1vT6MKLEUDLHeq2oyGz+1dzh6SU+p09NxYV/5EoBHCYJhqirJQnBF9iyOBy7iTvs1x8tKgbCjGxkXLWbcOdnLLc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.105])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4b3b3y6ZT6ztRwl;
+	Fri, 23 May 2025 14:34:38 +0800 (CST)
+Received: from dggpemf500017.china.huawei.com (unknown [7.185.36.126])
+	by mail.maildlp.com (Postfix) with ESMTPS id 2D5E21402CA;
+	Fri, 23 May 2025 14:35:54 +0800 (CST)
+Received: from huawei.com (10.175.101.6) by dggpemf500017.china.huawei.com
+ (7.185.36.126) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Fri, 23 May
+ 2025 14:35:53 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: <djwong@kernel.org>, <cem@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
+	<houtao1@huawei.com>, <leo.lilong@huawei.com>, <yangerkun@huawei.com>,
+	<lonuxli.64@gmail.com>
+Subject: [PATCH] xfs: fix incorrect tail lsn tracking when AIL is empty
+Date: Fri, 23 May 2025 14:30:46 +0800
+Message-ID: <20250523063046.564170-1-leo.lilong@huawei.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aDACgQ8j42TFeRA-@infradead.org>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ dggpemf500017.china.huawei.com (7.185.36.126)
 
-On Thu, May 22, 2025 at 10:07:13PM -0700, Christoph Hellwig wrote:
-> First a note:  I gave up on my previous rushed attempt to review this
-> because the patch was just too big for my limited mental capacity.
-> 
-> Today I instead split out the relatively trivial prep parts to focus
-> on the changes.  I've pushed my split to:
-> 
->     git://git.infradead.org/users/hch/xfsprogs.git shutdown-deadlock-split
+When the AIL is empty, we track ail_head_lsn as the tail LSN, where
+ail_head_lsn records the commit LSN of Checkpoint N, the last checkpoint
+inserted into the AIL. There are two possible scenarios when the AIL is
+empty:
 
-I'll look at it next week - after a week of solid rain here (lots of
-severe flooding in the local area) I've got a lot of work to do over
-the next couple of days to do. And I've still got a dozen trees on
-the ground from the last severe rain event that happened 3 weeks ago
-to finish making safe...
+1. Items from Checkpoint N were previously inserted into the AIL, have
+   been written back, and subsequently removed from the AIL.
+2. Items from Checkpoint N have not yet been inserted into the AIL, but
+   the preparation for insertion is complete, and ail_head_lsn has already
+   been updated to Checkpoint N's commit LSN.
 
-> it would be great to pick that up or do something similar for the next
-> round.  After your patch I've also added two cosmetic patches.
+For scenario 1, the items in Checkpoint N have already been written to the
+metadata area. Even in the event of a crash, Checkpoint N does not require
+recovery, so forwarding the tail LSN to Checkpoint N's commit LSN is
+reasonable.
 
-I did mention that I needed to split it :)
+For scenario 2, the items in Checkpoint N have not been written to the
+metadata area. If new logs (ie., Checkpoint N+1) are flushed to disk with
+the tail LSN recorded as Checkpoint N's commit LSN, a crash would make it
+impossible to recover Checkpoint N.
 
-> With that the change does look good to me, and the bli reference
-> count scheme looks almost sane to me.  Although it makes me wonder
-> if we should just keep a BLI reference for any BLI in the AIL to
-> further simplify it eventually?
+Checkpoint N    start N       commit N
+                   +-------------+------------+--------------+
+Checkpoint N+1                           start N+1      commit N+1
 
-I've looked at that in the past - the first time I tried to fix this years
-ago I ran away to retain my sanity. There are some nasty gotchas...
+Scenario 2 is possible. I encountered this issue in the Linux 6.6, where
+l_last_sync_lsn was used to track the tail LSN when the AIL is empty.
+Although the code has been refactored and I have not reproduced this issue
+in the latest mainline kernel, I believe the problem still exists.
 
-They start with several pieces of code that assumed that a BLI with no
-references but is dirty must be in the AIL and so is safe to access
-and modify.
+In the function xlog_cil_ail_insert(), which inserts items from the ctx
+into the AIL, the update of ail_head_lsn and the actual insertion of items
+into the AIL are not atomic. This process is not protected by `ail_lock`
+or `log->l_icloglock`, leaving a window that could result in the iclog
+being filled with an incorrect tail LSN.
 
-Similarly, the buffer unpin code (and now the transaction release
-code) assume that the AIL doesn't hold a reference so the last
-reference on stale BLIs will trigger at journal commit complete/trans commit
-completion time, allowing the BLI to be removed from the AIL, torn
-down, and the buffer cleaned up left in a state where it can be
-reused safely from the next lookup.
+When the AIL is empty, the tail LSN should be set to Checkpoint N's start
+LSN before the items from Checkpoint N are inserted into the AIL. This
+ensures that Checkpoint N can be recovered in case of a crash. After the
+items from Checkpoint N are inserted into the AIL, the tail LSN tracked
+for an empty AIL can then be updated to Checkpoint N's commit LSN. This
+cannot be achieved with ail_head_lsn alone, so a new variable,
+ail_tail_lsn, is introduced specifically to track the tail LSN when the
+AIL is empty.
 
-However, if the BLI has an AIL reference, neither of these things will
-trigger cleanup if the buffer is already in the AIL. At this point,
-we end up with stale buffers over freed space
-in the AIL that only AIL pushing can remove. It does no such thing
-right now.
+Fixes: 14e15f1bcd73 ("xfs: push the grant head when the log head moves forward") # further than this
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+---
+ fs/xfs/xfs_log_cil.c     | 2 ++
+ fs/xfs/xfs_log_recover.c | 3 +++
+ fs/xfs/xfs_trans_ail.c   | 2 +-
+ fs/xfs/xfs_trans_priv.h  | 1 +
+ 4 files changed, 7 insertions(+), 1 deletion(-)
 
-If we then have reallocation of the freed metadata block extent and
-lookup of the buffer, the stale flag will then be cleared on it. At
-this point, we have a stale BLI and a non-stale buffer, and stuff
-just gets worse from there. We even risk writing buffer contents
-from the AIL whilst it is free in the journal but only allocated in
-memory....
-
-IOWs, it is not that simple, nor is it risk free to give the BLI
-in the AIL an active reference....
-
--Dave.
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index f66d2d430e4f..ecc31329669a 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -775,6 +775,7 @@ xlog_cil_ail_insert(
+ 	xfs_trans_ail_cursor_last(ailp, &cur, ctx->start_lsn);
+ 	old_head = ailp->ail_head_lsn;
+ 	ailp->ail_head_lsn = ctx->commit_lsn;
++	ailp->ail_tail_lsn = ctx->start_lsn;
+ 	/* xfs_ail_update_finish() drops the ail_lock */
+ 	xfs_ail_update_finish(ailp, NULLCOMMITLSN);
+ 
+@@ -857,6 +858,7 @@ xlog_cil_ail_insert(
+ 
+ 	spin_lock(&ailp->ail_lock);
+ 	xfs_trans_ail_cursor_done(&cur);
++	ailp->ail_tail_lsn = ctx->commit_lsn;
+ 	spin_unlock(&ailp->ail_lock);
+ }
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 2f76531842f8..ef04fd8ded67 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1179,6 +1179,8 @@ xlog_check_unmount_rec(
+ 					log->l_curr_cycle, after_umount_blk);
+ 			log->l_ailp->ail_head_lsn =
+ 					atomic64_read(&log->l_tail_lsn);
++			log->l_ailp->ail_tail_lsn =
++					atomic64_read(&log->l_tail_lsn);
+ 			*tail_blk = after_umount_blk;
+ 
+ 			*clean = true;
+@@ -1212,6 +1214,7 @@ xlog_set_state(
+ 	if (bump_cycle)
+ 		log->l_curr_cycle++;
+ 	atomic64_set(&log->l_tail_lsn, be64_to_cpu(rhead->h_tail_lsn));
++	log->l_ailp->ail_tail_lsn = be64_to_cpu(rhead->h_lsn);
+ 	log->l_ailp->ail_head_lsn = be64_to_cpu(rhead->h_lsn);
+ }
+ 
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 67c328d23e4a..bdd45aaa5bc1 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -740,7 +740,7 @@ __xfs_ail_assign_tail_lsn(
+ 
+ 	tail_lsn = __xfs_ail_min_lsn(ailp);
+ 	if (!tail_lsn)
+-		tail_lsn = ailp->ail_head_lsn;
++		tail_lsn = ailp->ail_tail_lsn;
+ 
+ 	WRITE_ONCE(log->l_tail_space,
+ 			xlog_lsn_sub(log, ailp->ail_head_lsn, tail_lsn));
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index f945f0450b16..4ed9ada298ec 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -56,6 +56,7 @@ struct xfs_ail {
+ 	spinlock_t		ail_lock;
+ 	xfs_lsn_t		ail_last_pushed_lsn;
+ 	xfs_lsn_t		ail_head_lsn;
++	xfs_lsn_t		ail_tail_lsn;
+ 	int			ail_log_flush;
+ 	unsigned long		ail_opstate;
+ 	struct list_head	ail_buf_list;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.39.2
+
