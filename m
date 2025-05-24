@@ -1,156 +1,107 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AC1D29ACCA;
-	Fri, 23 May 2025 19:06:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+Received: from mail.karlsbakk.net (mail.karlsbakk.net [46.30.189.78])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id D737D1C32
+	for <linux-xfs@vger.kernel.org>; Sat, 24 May 2025 01:18:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.30.189.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748027214; cv=none; b=tuMj1GT5WB8Wm4rZf/bPU4DBCf/ZbKUo+MwSlmuSG+srpwbJC97zHQZdAmLPzsJISd1QF+CZC8sZqKvJFuxk4z39Cj7IGMcuQNJ2VAscNwpsjY/GOYK+UmknGzGXkFzYb262nfAXDpJK++GMosBUBXEEsFTPFMbqslMJB42Qeog=
+	t=1748049521; cv=none; b=h3JuuRKHQpGryp+ryUHXcg86OQjYilCzcIJbql1vcS5QqvSoQH9JRmHhFSyyvOJyElL15azjgcJzY/FuWNsGK2QkzjH+lIwwG9hOpDMyN66u2xnj1xeYOkBB3h49EKx1CO5FQsodkS0mflS7v7r6sv3cSBD4eGa1qLCEaSPptMo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748027214; c=relaxed/simple;
-	bh=/yhcV0nM7nJvqalwL9izUpj2r5Qyemir5wsgi5jyR0s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=keF4hQP4TdC3Poi313bIM6wRX3SDXN9wHPIjKdGtm2/6T+s2e8jZOtaVctDCscRdBs1O7hCfiKgkVJFKRq1bbkwan23S9KwLddDNM91QfFiofDo07VV8hKthRp34cpjmHmTxQMBvqvXVTCjK2AGVWVc4EkcNnh2ESGE1sK24PvA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VU2NO5Ju; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VU2NO5Ju"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-231f5a7baa2so1707855ad.0;
-        Fri, 23 May 2025 12:06:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1748027212; x=1748632012; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=QYis7B+fGnFFXHnsZl0mRWKYsE56tg/s7gqRDiDazlw=;
-        b=VU2NO5Ju7cOu0wgS5eXw8p+lV+t6cJiNVINyJqHUUQHip+ntkJoQW0m3fX/nklUKyv
-         U19+s65mRIDdR6GaCyJXsmZAv34VY2fiqhJipSFZbFC2UHyYm20Em7FMJO9ftWu48q4m
-         J1faYnZxl7sdczJv8COYJV+Lupk8RLpbvonYWYLYL563LlxIzV7E72Ggk6SLSPCcZeyA
-         mCGl6kloit2RmKtCzZJpUJktNqKnbRoX/73xf42ugjS1k8+pcpZEVBvpSme4Divy/Vh+
-         b2EKf5O8hMzPyIu4jMFo6JLm5iI4JF2C4P6F5lJGkK9nlfGvCudMoQcdOcGhqa9Q1QG9
-         1NFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748027212; x=1748632012;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=QYis7B+fGnFFXHnsZl0mRWKYsE56tg/s7gqRDiDazlw=;
-        b=geFQGI4pIaAm7b8Gy628vxQs7P/xN2v5qmCHRAZmGeAavKEqqMlWgWauzD8vvSJzKp
-         /yuhq+WB2bFrMj77hBz89zETi34jcjk0kTgjArwa5NbRqxVPPkGMhdVobj714iV2AuG1
-         Is0F5KAkqYRpI+zVswB3Md9RYKYuFagwrAOLnIDqQg/lJ4UnqU7xtbH/UBGe+AX8tKyB
-         aYWGgqy1M++wydD44msT7H7H0AHVRy0+afLSkrjJOewzDufdSyfJ3d3uvumPeG09ldPB
-         KhS6jqwCg4wtNmYvHe1fUuNvFIUPlfsFGRsavMsX4RdiTVKVtBmKtkJRYUX742Ctz55B
-         NNpw==
-X-Forwarded-Encrypted: i=1; AJvYcCV6w8bNkKLA/5/p/LABi8w+kEwCLUOlYr9fCkuTL0DRfkS/9L7qVtLJF9pol/Tc9ggacFu4JHMpeCe0@vger.kernel.org, AJvYcCWsOyT6d8NFuBK+yc+op8vIUUsbj+hLWdnSK6EvH9kre8qb8VDePa9sl2S3LaU/XcvqVXJ1X8FwYpbM@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCFBkTdkmu458qVCGGZgjZF1Z6we7+skbTnjRPP1jfgI2cVSJv
-	HDaP8Y0o16XOq3JSjy+MNLMAEULpROYd4/jCzETzbmwjxj0YeAl//CgkMOIQjQ==
-X-Gm-Gg: ASbGncsJCt6n8jy8IfpDj3ezI/hXSZfo8uhUOD0fJovB9yCAWbivyaJmr3ef6MxeAN8
-	NnUGze5iO/5pBtegVkw86qbjOeJ4FoFM3fP7F6q/yLTn7KHdpkuvTv7mZVEE6yRwnMCY+YZ1FiR
-	STYYCV2fJ8UOt4wGpBLT3dgK5dftBsnyKxiO5IbfmEFS6ZHqdE2d6m3UoP67D4BveTffZoiACBx
-	y9qMO79ASsR9ocSchYh3REWLPXNmi2CjTE6ib+Lv00jW1cC70qqaY8GqB3QfDXX5xAR/QvLHNMd
-	lrbCE38diErm4CgeYlQgtibZW3bipugVIapdhT86SzBoAyrlV0kgM9lhatopLg==
-X-Google-Smtp-Source: AGHT+IEA9XAcO3GZPDy9CIIZkuRnHcffjQYxs/+5mDozGrY0rB54TyYeMzLeL9CsMRJmaMYF5yO8zg==
-X-Received: by 2002:a17:903:138a:b0:225:abd2:5e4b with SMTP id d9443c01a7336-23414f5b7bdmr7554635ad.16.1748027212402;
-        Fri, 23 May 2025 12:06:52 -0700 (PDT)
-Received: from [192.168.0.120] ([49.205.34.162])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-231d4ed5426sm127418655ad.237.2025.05.23.12.06.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 23 May 2025 12:06:52 -0700 (PDT)
-Message-ID: <c95fc356-d7e5-4a0a-9e0f-8581893da189@gmail.com>
-Date: Sat, 24 May 2025 00:36:46 +0530
+	s=arc-20240116; t=1748049521; c=relaxed/simple;
+	bh=RUtmx9xW9ngfsMp+fH0q3S5Ge23UqwCUF3PvmvglPAE=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=EZGEd+YcuysUKrOIv60KHvnfOKWDQRhOWnZWjqWL2jNJBLZrAn09CbXTIR5ilhdRX+3bktwHMTuGqzhiQhgnR4R8Jh4cwv5TvedU5QFMLvoso9Q08eX4AZ+6qzHAiyGmd9wiUpY6xTDdKx4GspHQMPTusZju6OdpNhgcl08qEzs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=karlsbakk.net; spf=pass smtp.mailfrom=karlsbakk.net; arc=none smtp.client-ip=46.30.189.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=karlsbakk.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=karlsbakk.net
+Received: from mail.karlsbakk.net (localhost [IPv6:::1])
+	by mail.karlsbakk.net (Postfix) with ESMTP id 666281FC;
+	Sat, 24 May 2025 03:18:37 +0200 (CEST)
+Received: from smtpclient.apple ([2001:4643:1e5c:0:10b7:47a4:5970:45da])
+	by mail.karlsbakk.net with ESMTPSA
+	id 3AnJFW0eMWgbPzwAVNCnFw
+	(envelope-from <roy@karlsbakk.net>); Sat, 24 May 2025 03:18:37 +0200
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/2] new: Add a new parameter (name) in the "new"
- script
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
- djwong@kernel.org, zlang@kernel.org, david@fromorbit.com
-References: <cover.1747635261.git.nirjhar.roy.lists@gmail.com>
- <2b59f6ae707e45e9d0d5b0fe30d6c44a8cde0fec.1747635261.git.nirjhar.roy.lists@gmail.com>
- <20250523140343.nabmzlbss346faue@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20250523141221.dnndb3b24w27ocmu@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-Content-Language: en-US
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <20250523141221.dnndb3b24w27ocmu@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.500.181.1.5\))
+Subject: Re: XFS complains about data corruption after xfs_repair
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+In-Reply-To: <aBaaDGrMdE6p0BiW@dread.disaster.area>
+Date: Sat, 24 May 2025 03:18:26 +0200
+Cc: linux-xfs@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <BFF21A51-ECA7-454B-8379-F456849D16AC@karlsbakk.net>
+References: <9EA56046-FECD-42C5-AEF6-721A8699A45B@karlsbakk.net>
+ <aBaaDGrMdE6p0BiW@dread.disaster.area>
+To: Dave Chinner <david@fromorbit.com>
+X-Mailer: Apple Mail (2.3826.500.181.1.5)
 
+> On 4 May 2025, at 00:34, Dave Chinner <david@fromorbit.com> wrote:
+>=20
+> On Sat, May 03, 2025 at 04:01:48AM +0200, Roy Sigurd Karlsbakk wrote:
+>> Hi all
+>>=20
+>> I have an XFS filesystem on an LVM LV which resides on a RAID-10 (md) =
+with four Seagate Exos 16TB drives. This has worked well for a long =
+time, but just now, it started complaining. The initial logs were =
+showing a lot of errors and I couldn't access the filesystem, so I gave =
+it a reboot, tha tis, I had to force one. Anyway - it booted up again =
+and looked normal, but still complained. I rebooted to single and found =
+the (non-root) filesystem already mounted and unable to unmount it, I =
+commented it out from fstab and rebooted once more to single. This =
+allowed me to run xfs_repair, although I had to use -L. Regardless, it =
+finished and I re-enabled the filesystem in fstab and rebooted once =
+more. Starting up now, it seems to work, somehow, but ext4 still throws =
+some errors as shown below, that is, "XFS (dm-0): corrupt dinode =
+43609984, (btree extents)." It seems to be the same dinode each time.
+>>=20
+>> Isn't an xfs_repair supposed to fix this?
+>>=20
+>> I'm running Debian Bookworm 12.10, kernel 6.1.0-34-amd64 and xfsprogs =
+6.1.0 - everything just clean debian.
+>=20
+> Can you pull a newer xfsprogs from debian/testing or /unstable or
+> build the latest versionf rom source and see if the problem
+> persists?
 
-On 5/23/25 19:42, Zorro Lang wrote:
-> On Fri, May 23, 2025 at 10:03:43PM +0800, Zorro Lang wrote:
->> On Mon, May 19, 2025 at 06:16:41AM +0000, Nirjhar Roy (IBM) wrote:
->>> This patch another optional interactive prompt to enter the
->>> author name for each new test file that is created using
->>> the "new" file.
->>>
->>> The sample output looks like something like the following:
->>>
->>> ./new selftest
->>> Next test id is 007
->>> Append a name to the ID? Test name will be 007-$name. y,[n]:
->>> Creating test file '007'
->>> Add to group(s) [auto] (separate by space, ? for list): selftest quick
->>> Enter <author_name>: Nirjhar Roy <nirjhar.roy.lists@gmail.com>
->>> Creating skeletal script for you to edit ...
->>>   done.
->>>
->>> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
->>> ---
->>>   new | 5 ++++-
->>>   1 file changed, 4 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/new b/new
->>> index 6b50ffed..636648e2 100755
->>> --- a/new
->>> +++ b/new
->>> @@ -136,6 +136,9 @@ else
->>>   	check_groups "${new_groups[@]}" || exit 1
->>>   fi
->>>   
->>> +read -p "Enter <author_name>: " -r
->>> +author_name="${REPLY:=YOUR NAME HERE}"
->>> +
->>>   echo -n "Creating skeletal script for you to edit ..."
->>>   
->>>   year=`date +%Y`
->>> @@ -143,7 +146,7 @@ year=`date +%Y`
->>>   cat <<End-of-File >$tdir/$id
->>>   #! /bin/bash
->>>   # SPDX-License-Identifier: GPL-2.0
->>> -# Copyright (c) $year YOUR NAME HERE.  All Rights Reserved.
->>> +# Copyright (c) $year $author_name.  All Rights Reserved.
->> Dave thought we shouldn't use "author_name" at here:
->> https://lore.kernel.org/fstests/aC509xXxgZJKKZVE@dread.disaster.area/
->>
->> If you don't mind, I'll merge PATCH 2/2 this week. If you still hope to
->> have the 1/2, please consider the review point from Dave.
-> Oh, sorry, you've sent a V4... Please ignore this one, I'm going to review
-> your V4.
+I just tried with xfsprogs-6.14 and also upgraded the kernel from =
+6.1.0-35 to 6.12.22+bpo. The new xfsprogs haven't been installed =
+properly, just lying in its own directory to be run from there. I downed =
+the system again and ran a new repair. After the initial repair, I ran =
+it another time, and another, just to check. After rebooting back, it =
+still throws thesame error at me about "[l=C3=B8. mai 3 03:28:14 2025] =
+XFS (dm-0): Metadata corruption detected at =
+xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 =
+xfs_iread_bmbt_block"
 
-Yes, I have sent the v4 after addressing the review comments.
+> It is complaining that it is trying to load more extents than the
+> inode thinks it has allocated in ip->if_nextents.
+>=20
+> That means either the btree has too many extents in it, or the inode
+> extent count is wrong. I can't tell which it might be from the
+> dump output, so it would be useful to know if xfs-repair is actually
+> detecting this issue, too.
+>=20
+> Can you post the output from xfs_repair? Could you also pull a newer
+> xfs_reapir from debian/testing or build 6.14 from source and see if
+> the problem is detected and/or fixed?
 
---NR
+I couldn't find much relevnt output, really. I can obviously run it =
+again, but it takes some time and if you have some magick options to try =
+with it, please let me know first.
 
->
->> Thanks,
->> Zorro
->>
->>>   #
->>>   # FS QA Test $id
->>>   #
->>> -- 
->>> 2.34.1
->>>
->>>
--- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
+thanks
 
+roy
+--
+Roy Sigurd Karlsbakk
+roy@karlsbakk.net
++47 9801 3356
+--
+I all pedagogikk er det essensielt at pensum presenteres intelligibelt. =
+Det er et element=C3=A6rt imperativ for alle pedagoger =C3=A5 unng=C3=A5 =
+eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste =
+tilfeller eksisterer adekvate og relevante synonymer p=C3=A5 norsk.=
