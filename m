@@ -1,80 +1,90 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8E32A55;
-	Thu, 29 May 2025 10:28:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9490D21CC49
+	for <linux-xfs@vger.kernel.org>; Thu, 29 May 2025 11:08:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748514487; cv=none; b=s6OHAoRnym84UHVyUDcHpXndN2oPa+iIzDgIx36vznGeXXPQ3C2bgjBCBKJsMXQw48cSyq4TXYKUpLI+DJ6CX6jKyn2hpheDUUTJYrs9jlj+ZMBfKpjpfdljlhgF1x7sGcsPWvACLOemZMyUXxDmSucU/FPfc8T6FSTnxo6pl2g=
+	t=1748516923; cv=none; b=Ml35x6dumt1DYUhIUzv4gZVWVoA7l/TNiBvPmuJwVT1oUWvS+kINQbwj+vvHKbmT1xgiDW66aGZvbCSeNckEreJwnAUxJ2L1ZM0XMXFuQc2K0BA15/NuDIuFvCN80pNfEqbQ+Rq08Z4hP8oRhkpqXvLmMcJGgho0mP3+AzDVHEs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748514487; c=relaxed/simple;
-	bh=a13uHYLcSVY+Hd898nP8GF1NRi16EX51gglkpLkL028=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=m8km3q3msYIdIxlQV2rcQ+Xxefdg33S9c29u/PefMWv+QjySjZYXZAUqGGnpzCMfmF7F97yo+kMM6bizOl9jnloCgdXFF7B1CrmnMq3J6mEhBc02WupP6g8tCUJamZ5PJbF1q6fClSPOlvO7vXV4te2pO8U347n+FYSt4gIXXUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jSi2q9Nu; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1748516923; c=relaxed/simple;
+	bh=iZXzYIN24F+pfwiPreeyCICuGYF0+gjllr5OGeYyNo4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=muUqdBmGLwl2fzylGuVs1u39tm23TwY+qG149niXKO16ePDEnd/K03XlMh/1qN+EmaAFABF1JLS8CpcAwI+mDXp4NMHqAJ4rnDuuWDXypO018S1s5jVV3NNIJCp+/z8J6KWNpnEG4iTcfOyWd3Io0xpIp1C51ekrREt0XF1ktu0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=SCSJn2XA; arc=none smtp.client-ip=209.85.160.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=szeredi.hu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jSi2q9Nu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CF60C4CEE7;
-	Thu, 29 May 2025 10:28:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748514487;
-	bh=a13uHYLcSVY+Hd898nP8GF1NRi16EX51gglkpLkL028=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=jSi2q9NuE40SHt3Ifu4u3buqAQhVgbguuU3c+Olj6ROrIoyuBZDNiePK9MkheH0DG
-	 PB9sUsrs2ib+Cxu3jl4uzwBirVnytneWD0egW/L7pEjoj5dlH+miQ0Uqfhj/ilCPyz
-	 1N1WZpEHR+1+kX+yBIZnGVyxV+43Z3G6ZeOSwABTNQOmbB/p0PCbpr5vtc6WtCR4TH
-	 nfALRasKEtJ5XFz36YkbporMMkbSs3oBst0zpVx8g6dq7yhF0J/jSeXQ4/AED5Rzbu
-	 P/8sTLOhrEPR/4NqDbpYDfdPPa4mshyTXB+DFlFNlSdH6kb37bBOACn4FbOtSUNNb6
-	 +OYJm+6FnKhDg==
-From: Christian Brauner <brauner@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>,
-	Dave Chinner <david@fromorbit.com>,
-	Jens Axboe <axboe@kernel.dk>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2] iomap: don't lose folio dropbehind state for overwrites
-Date: Thu, 29 May 2025 12:28:00 +0200
-Message-ID: <20250529-ausholen-zersetzen-e4bd9675fc54@brauner>
-X-Mailer: git-send-email 2.47.2
-In-Reply-To: <5153f6e8-274d-4546-bf55-30a5018e0d03@kernel.dk>
-References: <5153f6e8-274d-4546-bf55-30a5018e0d03@kernel.dk>
+	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="SCSJn2XA"
+Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-47664364628so9814481cf.1
+        for <linux-xfs@vger.kernel.org>; Thu, 29 May 2025 04:08:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=szeredi.hu; s=google; t=1748516916; x=1749121716; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=bSIOhXayNlFILbJyHd0DZBYxSCjybVEo0ScA6s5GuO4=;
+        b=SCSJn2XA4FHAGn+eIW2a5t1NpuvwXbFNyKzfsExHoawZTjgOKmKMmxHnmrCuc9aLw0
+         MQR77GwTuvusSSMvUhkoTJ27aweC5JZ6fCijJjR6wc20gWOduzVM5SeQC0j6dn0/AgRt
+         0G12efR0QT0m1f6UDcCSRgtXNCl73TlREEQ9M=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748516916; x=1749121716;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=bSIOhXayNlFILbJyHd0DZBYxSCjybVEo0ScA6s5GuO4=;
+        b=SekPmoRxdAg/AldJ4H5GcA/fds2mmI2sYEoMxrZQMPdyBgZIjrXS2KqX3rKbIini1J
+         1JO92sQCscsiSCoSHTuWbf/ztstPtLH3qmMoOfsUxAHPbJblwWYSNQo+mFmxBhnrIhXf
+         ASB4jol3mQwtPdj3I9iNVexAAUdvQDagC4vlJZmoIBwJjRMDQjAFU86KJLMUA+fyQyyd
+         r6twJvcjLuWv+odDMzevcqDiscDL89NwmZxG92+wIhXB8E/55SirULNfLqmLxyWih1bO
+         xJ0TAFzqrNslWfhuojCFvtz5Is32f/c2baxuvOKsyqUnvThOReD94pboYdl45ZSY4diz
+         Q2Bw==
+X-Forwarded-Encrypted: i=1; AJvYcCWpHSDbt8VTIVP353dHbBbCDY4sOfsC6fvyUDAK+qpuNyFCIS43As/FY4w7dz4b6LthR9piyOzWcB8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzgSYxYf15tJjSEykM08j6K7zYn3o9pnwvPlJCxfRAaRLWz0oco
+	4zt2UR4/Ssszf7eWg1xbYl+uhNSy3xsqDhhH6SKU5D5weiMwFhHfHYPiwrlAjf/SgYjPxFa/EF5
+	ed2f6DLmJYUzQh69jNhYSQh7glgrxPAyzRMNTIf4XQgEU1H51zw4gPXA=
+X-Gm-Gg: ASbGncvV8ti/QFb+S34foiZ2CaTZgtAbsseihJ3Ibpvcoskb4CJfvCiboIiY/PhpAgX
+	vnXVBpzRRSzL6Yx8w7R0TxJZ7+14gHqItmwJzKZ+1XjIddew+KqmJMedLPi4RXfmD+UCRkm6tk3
+	ViRmlkOfdw5AYLgtksJOaSPjsuzvqJdcT3j9c=
+X-Google-Smtp-Source: AGHT+IHlzCsjSSqHlzTxy7r2hlBRho9lgiOx79Cr6d7xOtkTOusmDdlVRNa6VE5LeFYKFaq2SM0bs2rU/vrX+UKzdM8=
+X-Received: by 2002:a05:622a:5792:b0:47c:fefb:a5a with SMTP id
+ d75a77b69052e-4a432271477mr58424581cf.11.1748516916312; Thu, 29 May 2025
+ 04:08:36 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1347; i=brauner@kernel.org; h=from:subject:message-id; bh=a13uHYLcSVY+Hd898nP8GF1NRi16EX51gglkpLkL028=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWRYmG1KWLdkiWltvcT+hMn7ZJ7LbTuTs10m9oem8v5pf 46H7fx1qqOUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAiBnWMDDcmSN9YLrJ/aYfA Mr6WCEUHU0fm0t6egLniS6XunPXdsp2RYU2k/4P1684sODIv7fjf06Jz6jNXVd9/qCpUc/T3f/V +DiYA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+References: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs> <174787195588.1483178.6811285839793085547.stgit@frogsfrogsfrogs>
+In-Reply-To: <174787195588.1483178.6811285839793085547.stgit@frogsfrogsfrogs>
+From: Miklos Szeredi <miklos@szeredi.hu>
+Date: Thu, 29 May 2025 13:08:25 +0200
+X-Gm-Features: AX0GCFuAuuVaLVkR3Pb8Pqa6RMkre6YqoMSXl4YIwBe52nOpviwbCOiM6rWjirA
+Message-ID: <CAJfpegsn2eBjy27rncxYBQ1heoiA1tme8oExF-d_C9DoFq34ow@mail.gmail.com>
+Subject: Re: [PATCH 01/11] fuse: fix livelock in synchronous file put from
+ fuseblk workers
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, joannelkoong@gmail.com, 
+	linux-xfs@vger.kernel.org, bernd@bsbernd.com, John@groves.net
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, 27 May 2025 17:01:31 -0600, Jens Axboe wrote:
-> DONTCACHE I/O must have the completion punted to a workqueue, just like
-> what is done for unwritten extents, as the completion needs task context
-> to perform the invalidation of the folio(s). However, if writeback is
-> started off filemap_fdatawrite_range() off generic_sync() and it's an
-> overwrite, then the DONTCACHE marking gets lost as iomap_add_to_ioend()
-> don't look at the folio being added and no further state is passed down
-> to help it know that this is a dropbehind/DONTCACHE write.
-> 
-> [...]
+On Thu, 22 May 2025 at 02:02, Darrick J. Wong <djwong@kernel.org> wrote:
 
-Applied to the vfs.fixes branch of the vfs/vfs.git tree.
-Patches in the vfs.fixes branch should appear in linux-next soon.
+> Fix this by only using synchronous fputs for fuseblk servers if the
+> process doesn't have PF_LOCAL_THROTTLE.  Hopefully the fuseblk server
+> had the good sense to call PR_SET_IO_FLUSHER to mark itself as a
+> filesystem server.
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+The bug is valid.
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+I just wonder if we really need to check against the task flag instead
+of always sending release async, which would simplify things.
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
+The sync release originates from commit 5a18ec176c93 ("fuse: fix hang
+of single threaded fuseblk filesystem"), but then commit baebccbe997d
+("fuse: hold inode instead of path after release") made that obsolete.
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.fixes
+Anybody sees a reason why sync release for fuseblk is a good idea?
 
-[1/1] iomap: don't lose folio dropbehind state for overwrites
-      https://git.kernel.org/vfs/vfs/c/34ecde3c5606
+Thanks,
+Miklos
