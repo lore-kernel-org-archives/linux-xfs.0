@@ -1,90 +1,109 @@
-Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9490D21CC49
-	for <linux-xfs@vger.kernel.org>; Thu, 29 May 2025 11:08:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3699A1EB2F;
+	Thu, 29 May 2025 11:46:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748516923; cv=none; b=Ml35x6dumt1DYUhIUzv4gZVWVoA7l/TNiBvPmuJwVT1oUWvS+kINQbwj+vvHKbmT1xgiDW66aGZvbCSeNckEreJwnAUxJ2L1ZM0XMXFuQc2K0BA15/NuDIuFvCN80pNfEqbQ+Rq08Z4hP8oRhkpqXvLmMcJGgho0mP3+AzDVHEs=
+	t=1748519188; cv=none; b=uMoQvmNN8T8sfxqk0ywBYTm58OgGpff8E9iTKuyNqysh60fxWsZnCy8VnAH3meXKijXBfMkVKxT/5qLLyMQRQCABqdU+BpW7ttEWimzzpXfuU6A8VIEwh+wtUE4GnKe8cC5QepMTsLlSRrs+u2BOwWg+BH/uDGfSmjJSezWg0Io=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748516923; c=relaxed/simple;
-	bh=iZXzYIN24F+pfwiPreeyCICuGYF0+gjllr5OGeYyNo4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=muUqdBmGLwl2fzylGuVs1u39tm23TwY+qG149niXKO16ePDEnd/K03XlMh/1qN+EmaAFABF1JLS8CpcAwI+mDXp4NMHqAJ4rnDuuWDXypO018S1s5jVV3NNIJCp+/z8J6KWNpnEG4iTcfOyWd3Io0xpIp1C51ekrREt0XF1ktu0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=SCSJn2XA; arc=none smtp.client-ip=209.85.160.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=szeredi.hu
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="SCSJn2XA"
-Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-47664364628so9814481cf.1
-        for <linux-xfs@vger.kernel.org>; Thu, 29 May 2025 04:08:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google; t=1748516916; x=1749121716; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=bSIOhXayNlFILbJyHd0DZBYxSCjybVEo0ScA6s5GuO4=;
-        b=SCSJn2XA4FHAGn+eIW2a5t1NpuvwXbFNyKzfsExHoawZTjgOKmKMmxHnmrCuc9aLw0
-         MQR77GwTuvusSSMvUhkoTJ27aweC5JZ6fCijJjR6wc20gWOduzVM5SeQC0j6dn0/AgRt
-         0G12efR0QT0m1f6UDcCSRgtXNCl73TlREEQ9M=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748516916; x=1749121716;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=bSIOhXayNlFILbJyHd0DZBYxSCjybVEo0ScA6s5GuO4=;
-        b=SekPmoRxdAg/AldJ4H5GcA/fds2mmI2sYEoMxrZQMPdyBgZIjrXS2KqX3rKbIini1J
-         1JO92sQCscsiSCoSHTuWbf/ztstPtLH3qmMoOfsUxAHPbJblwWYSNQo+mFmxBhnrIhXf
-         ASB4jol3mQwtPdj3I9iNVexAAUdvQDagC4vlJZmoIBwJjRMDQjAFU86KJLMUA+fyQyyd
-         r6twJvcjLuWv+odDMzevcqDiscDL89NwmZxG92+wIhXB8E/55SirULNfLqmLxyWih1bO
-         xJ0TAFzqrNslWfhuojCFvtz5Is32f/c2baxuvOKsyqUnvThOReD94pboYdl45ZSY4diz
-         Q2Bw==
-X-Forwarded-Encrypted: i=1; AJvYcCWpHSDbt8VTIVP353dHbBbCDY4sOfsC6fvyUDAK+qpuNyFCIS43As/FY4w7dz4b6LthR9piyOzWcB8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzgSYxYf15tJjSEykM08j6K7zYn3o9pnwvPlJCxfRAaRLWz0oco
-	4zt2UR4/Ssszf7eWg1xbYl+uhNSy3xsqDhhH6SKU5D5weiMwFhHfHYPiwrlAjf/SgYjPxFa/EF5
-	ed2f6DLmJYUzQh69jNhYSQh7glgrxPAyzRMNTIf4XQgEU1H51zw4gPXA=
-X-Gm-Gg: ASbGncvV8ti/QFb+S34foiZ2CaTZgtAbsseihJ3Ibpvcoskb4CJfvCiboIiY/PhpAgX
-	vnXVBpzRRSzL6Yx8w7R0TxJZ7+14gHqItmwJzKZ+1XjIddew+KqmJMedLPi4RXfmD+UCRkm6tk3
-	ViRmlkOfdw5AYLgtksJOaSPjsuzvqJdcT3j9c=
-X-Google-Smtp-Source: AGHT+IHlzCsjSSqHlzTxy7r2hlBRho9lgiOx79Cr6d7xOtkTOusmDdlVRNa6VE5LeFYKFaq2SM0bs2rU/vrX+UKzdM8=
-X-Received: by 2002:a05:622a:5792:b0:47c:fefb:a5a with SMTP id
- d75a77b69052e-4a432271477mr58424581cf.11.1748516916312; Thu, 29 May 2025
- 04:08:36 -0700 (PDT)
+	s=arc-20240116; t=1748519188; c=relaxed/simple;
+	bh=SZRGWqDxWBg+a127g6TEEksjhuuQkczq2tvgRIb2DI4=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=RXYXR9lef3Di5WGiIdP4vDufHTXHRcl0zvFZbd7ncsdgkCWdGwTxw5/Btgr1IUPq5NlvQPOVMIiWa9bYSgqsfoxA6k4UBAm0RYH0Q/VaXB0kzilaK4prjvUb3v/+r8OSsomFw6fCTNZcg6Z9srfC5bXOSAPx+E8vWVymQ6E7L94=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.186.231])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4b7PgR28wGz6L4tL;
+	Thu, 29 May 2025 19:45:07 +0800 (CST)
+Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
+	by mail.maildlp.com (Postfix) with ESMTPS id AF2D9140519;
+	Thu, 29 May 2025 19:46:22 +0800 (CST)
+Received: from localhost (10.203.177.66) by frapeml500008.china.huawei.com
+ (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Thu, 29 May
+ 2025 13:46:21 +0200
+Date: Thu, 29 May 2025 12:46:20 +0100
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+To: Alistair Popple <apopple@nvidia.com>
+CC: <linux-mm@kvack.org>, <gerald.schaefer@linux.ibm.com>,
+	<dan.j.williams@intel.com>, <jgg@ziepe.ca>, <willy@infradead.org>,
+	<david@redhat.com>, <linux-kernel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+	<linux-fsdevel@vger.kernel.org>, <linux-ext4@vger.kernel.org>,
+	<linux-xfs@vger.kernel.org>, <jhubbard@nvidia.com>, <hch@lst.de>,
+	<zhang.lyra@gmail.com>, <debug@rivosinc.com>, <bjorn@kernel.org>,
+	<balbirs@nvidia.com>, <lorenzo.stoakes@oracle.com>,
+	<linux-arm-kernel@lists.infradead.org>, <loongarch@lists.linux.dev>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-riscv@lists.infradead.org>,
+	<linux-cxl@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+	<John@Groves.net>
+Subject: Re: [PATCH 01/12] mm: Remove PFN_MAP, PFN_SG_CHAIN and PFN_SG_LAST
+Message-ID: <20250529124620.00006ac7@huawei.com>
+In-Reply-To: <cb45fa705b2eefa1228e262778e784e9b3646827.1748500293.git-series.apopple@nvidia.com>
+References: <cover.541c2702181b7461b84f1a6967a3f0e823023fcc.1748500293.git-series.apopple@nvidia.com>
+	<cb45fa705b2eefa1228e262778e784e9b3646827.1748500293.git-series.apopple@nvidia.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs> <174787195588.1483178.6811285839793085547.stgit@frogsfrogsfrogs>
-In-Reply-To: <174787195588.1483178.6811285839793085547.stgit@frogsfrogsfrogs>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Thu, 29 May 2025 13:08:25 +0200
-X-Gm-Features: AX0GCFuAuuVaLVkR3Pb8Pqa6RMkre6YqoMSXl4YIwBe52nOpviwbCOiM6rWjirA
-Message-ID: <CAJfpegsn2eBjy27rncxYBQ1heoiA1tme8oExF-d_C9DoFq34ow@mail.gmail.com>
-Subject: Re: [PATCH 01/11] fuse: fix livelock in synchronous file put from
- fuseblk workers
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, joannelkoong@gmail.com, 
-	linux-xfs@vger.kernel.org, bernd@bsbernd.com, John@groves.net
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml100004.china.huawei.com (7.191.162.219) To
+ frapeml500008.china.huawei.com (7.182.85.71)
 
-On Thu, 22 May 2025 at 02:02, Darrick J. Wong <djwong@kernel.org> wrote:
+On Thu, 29 May 2025 16:32:02 +1000
+Alistair Popple <apopple@nvidia.com> wrote:
 
-> Fix this by only using synchronous fputs for fuseblk servers if the
-> process doesn't have PF_LOCAL_THROTTLE.  Hopefully the fuseblk server
-> had the good sense to call PR_SET_IO_FLUSHER to mark itself as a
-> filesystem server.
+> The PFN_MAP flag is no longer used for anything, so remove it. The
+> PFN_SG_CHAIN and PFN_SG_LAST flags never appear to have been used so
+> also remove them.
 
-The bug is valid.
+Superficial thing but you seem to be be removing PFN_SPECIAL as well and
+this description and patche description don't mention that.
 
-I just wonder if we really need to check against the task flag instead
-of always sending release async, which would simplify things.
+> 
+> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-The sync release originates from commit 5a18ec176c93 ("fuse: fix hang
-of single threaded fuseblk filesystem"), but then commit baebccbe997d
-("fuse: hold inode instead of path after release") made that obsolete.
+On superficial comment inline.
 
-Anybody sees a reason why sync release for fuseblk is a good idea?
+> ---
+>  include/linux/pfn_t.h             | 31 +++----------------------------
+>  mm/memory.c                       |  2 --
+>  tools/testing/nvdimm/test/iomap.c |  4 ----
+>  3 files changed, 3 insertions(+), 34 deletions(-)
+> 
+> diff --git a/include/linux/pfn_t.h b/include/linux/pfn_t.h
+> index 2d91482..46afa12 100644
+> --- a/include/linux/pfn_t.h
+> +++ b/include/linux/pfn_t.h
+> @@ -5,26 +5,13 @@
 
-Thanks,
-Miklos
+
+
+> diff --git a/tools/testing/nvdimm/test/iomap.c b/tools/testing/nvdimm/test/iomap.c
+> index e431372..ddceb04 100644
+> --- a/tools/testing/nvdimm/test/iomap.c
+> +++ b/tools/testing/nvdimm/test/iomap.c
+> @@ -137,10 +137,6 @@ EXPORT_SYMBOL_GPL(__wrap_devm_memremap_pages);
+>  
+>  pfn_t __wrap_phys_to_pfn_t(phys_addr_t addr, unsigned long flags)
+>  {
+> -	struct nfit_test_resource *nfit_res = get_nfit_res(addr);
+> -
+> -	if (nfit_res)
+> -		flags &= ~PFN_MAP;
+>          return phys_to_pfn_t(addr, flags);
+
+Maybe not the time to point it out, but what is going on with indent here?
+Looks like some spaces snuck in for that last line.
+
+
+
+>  }
+>  EXPORT_SYMBOL(__wrap_phys_to_pfn_t);
+
