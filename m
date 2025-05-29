@@ -1,58 +1,58 @@
-Received: from mail-qk1-f174.google.com (mail-qk1-f174.google.com [209.85.222.174])
+Received: from mail-qv1-f52.google.com (mail-qv1-f52.google.com [209.85.219.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D160916EB7C;
-	Thu, 29 May 2025 05:55:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 499F8156CA;
+	Thu, 29 May 2025 06:05:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748498147; cv=none; b=qUuPB8GO5Kc6WPm4sX9FMbm73ojCLOWOEo331i+w3rDcp+sHr6ql6QeOgNRCi7Alp5a+ISQLz7XLzX8CL4gjdDDt0jD54WSdf35GK21yW0cz/Q4eiQUwhdnNg3xJyZ46r+PDyqx6Vf2KjuFQFIxXphpTAQHR5l07tuBfKNWeUz4=
+	t=1748498728; cv=none; b=AV0UhDDkVsXzQx9YPbbs7HI3ljkno0FDzhrUzJHdLLqDeDVzAW/2AYDBVznwzQKSA7gkPcQhW81TheR762ibfz7ZZTGdEwd8uEXBNTYJ9W2LILtNgETqqGWe1WNwK8QNHyLGT4fv2CjMSXSC5KA67ZPanyGhvaHgOTd9R5NLziU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748498147; c=relaxed/simple;
-	bh=YWlvmPX7PHfsrzXiE/B8HHZfXYpguDiw0mElGmGNUa0=;
+	s=arc-20240116; t=1748498728; c=relaxed/simple;
+	bh=+K6x7KQc4CJrNoyePfZ4Pg9lH2cvNL6WJZsoIRkefEQ=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KlVzULwx4Qq91TARcrE1WaTX16n3EgCJ38c5Eu9WmCV2LmWf1LhAncDxJuvBQ8mqHlbDx/kBxNA8jAPZB5cU6eLz9h1FMSQOOllGNJp8Bcb66NlftWAfmTuyVq7JUoh047h4niTJaKgZk2QgDzA/xTvN6u4guOIRlIsqkkA7VRk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=P9n1hi8R; arc=none smtp.client-ip=209.85.222.174
+	 To:Cc:Content-Type; b=XVZ7LnGBgVv2NCuas6JEBpkp2Ce+GktnxjxKvtSZ0X+VfP9ukq8JBk0X+fgg6sb059TsFisdyH7pnm1DshUK6xq2iYUjALY0d2R2V0Km/xcnXeWHfymauHiJ/CkQQfbH9DR5gBdBgoEm7nnkr5HGdUro6OPoJPB2BPVzESppcHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FrQjX5Ax; arc=none smtp.client-ip=209.85.219.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P9n1hi8R"
-Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-7c559b3eb0bso35441285a.1;
-        Wed, 28 May 2025 22:55:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FrQjX5Ax"
+Received: by mail-qv1-f52.google.com with SMTP id 6a1803df08f44-6faacf5d5adso6778536d6.1;
+        Wed, 28 May 2025 23:05:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1748498145; x=1749102945; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1748498726; x=1749103526; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=YWlvmPX7PHfsrzXiE/B8HHZfXYpguDiw0mElGmGNUa0=;
-        b=P9n1hi8R2DyzWaGej2kjaC7RSfk93mVo4LVUwDFfB8ZK8BCkO8WP2vZ6enj4BeVfG6
-         ANvPlp/+vy+bxgNYZYbbIDsxMH0vdSgufYk492kaat6wbsdR/cX/qf1zUKzzdiWkvbZC
-         mHJRPPdRUiOcJK2oId6sh2IWb/qxoMZJJoro5C7j7GM1sL+W6ChwH4N3+VU2XsbWfm4b
-         8Ddj2E+9OIbYoo3l6mtE50KqJnsk3FU6qwzgZFLxu9vs6VYhBeR8N4fmKTmkzopMSSXS
-         jt6li53sy9kbMah0wLIamxW5M8VsblgjoLUIzCCauh0NMcMQCgQ73huus9Hx8+EFqyBs
-         LPSQ==
+        bh=DsnlFjDSAerLByUBZIaZMjb7C0c0RFSEQQmuGUUljbg=;
+        b=FrQjX5AxOyPb3cirrb69tdqCoTCvhav9Wm7odZtGS0QM7YRdWrqR0MmzynYrFwZKV3
+         M6mp/qNUzb6HfM1f5QJu1bLMGjo/sHroi/uCbB4k/aerYcSp67PgvCcV+vrj64Ib7mHB
+         Fr8nzk4e9T9EfToE105nXKshdT5eHHnsJlngQAOFWeVf6T1kvnv2leZsjm4kr+RV602d
+         n1DuoLYUamtC71b4KELOuqtM+I+8eIFVux/mv89g+s0jVGkVmPbmaJQ5R6krndlleWT9
+         Y3MCqKF8L1j70cyRXCPZrd7bmjwTTGJY77xGkZJXivY9Gd+sB1Yv3kUCiB59+2F3sqeQ
+         uNhQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748498145; x=1749102945;
+        d=1e100.net; s=20230601; t=1748498726; x=1749103526;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=YWlvmPX7PHfsrzXiE/B8HHZfXYpguDiw0mElGmGNUa0=;
-        b=K010Px08jIxgql5tr6nqUclNAPuLK1h7gZUn+DSOl2uiiQgFtPdcUqMhOnsCKRqhYj
-         mk+B78JDNkW22qPUbAadnpBNhK5fsfJmSOs9KbHezaL2NtZM7uBQL76+D20P2FE7SICD
-         0y8oVOoBQgpdB864fYC4kccAbrjh9FYXaqX98PaCnBplbAdra2kPF0BWI+dFxe5WdSek
-         oBsnyhxJCV5zgafWyTF1WoherB4/9wqa8xh3ORkO3GCBRfAeB1rCorZMd5f2UpqO2s2T
-         pZ5O72mioor6SEA+ga0s216fIXWHtimgek/T4iTZQht5uxFnwuGbFtdkX68v4JsvB0jP
-         qo6A==
-X-Forwarded-Encrypted: i=1; AJvYcCVIwTArcayGSg1lhz3PR1ZTq1MNEFCe18hCJk1Le9l1sI7zt7fUq7g63Q/eyZChjYyVOBYKHFar8WY1H2Dw@vger.kernel.org, AJvYcCXfmquTyIXXtkjoU23M7Px9YlGh4KqlTmgc1mWMFSMukNHKIssVsKxAYhlszN3jD1Rw277vrNCOoBFY@vger.kernel.org
-X-Gm-Message-State: AOJu0YzG/hmZjSHvRW0qEewI4LHWMSqlhYRVQkDaFXsnyHvscGABTlpm
-	Yqgymiw93M7dkwxVXRzBt9z1Y68Lord0eMj9OT6G0eh9fF72MnhIOF8z9+vcDGmoltLUHZsxf/9
-	3o5qDnjBrPz2OOIBF4LhFD0ZSenl1r50=
-X-Gm-Gg: ASbGncvchNl1aImatSYiF7rYYrXjnSEc6ndTKjY9ivUuUasW02fUjYk4g4ONwkhUF1J
-	+d8tnYVIoyzlWfVf5QZJdIDs/H1iUGhyMiy8yMzjit9v3At01d8cb5qQ3u2O/LBJ4cexEbMaPEK
-	o/Inf0EPY7ThMbToGlziHZapxMF8bCHSaIgA==
-X-Google-Smtp-Source: AGHT+IFV1TJ2zbp6OOG/bfbfwfzMLVL0wZ4xes6xgwUT3MlMCmih8S9lBhEGaR6ORDyxYarH+svpOwqfQJLRpVBcvIQ=
-X-Received: by 2002:a05:6214:1805:b0:6fa:c0f8:4dff with SMTP id
- 6a1803df08f44-6fac0f84fb3mr59004276d6.37.1748498144564; Wed, 28 May 2025
- 22:55:44 -0700 (PDT)
+        bh=DsnlFjDSAerLByUBZIaZMjb7C0c0RFSEQQmuGUUljbg=;
+        b=DL5JJMIPyXbLbszRcyDTC8oUyylfovdkAla/B4M6z1AKwjHi+cVNP32JqiLgTBDsPu
+         yInX7XgHyklSL42jjTkMizsGP9/4WjFRb/M2swrLVBTfeJkOzVa3p3HnQAv4Kzfr9863
+         yknBsvxcq/5KF7zInRX9otJWRVKn5uLkhfo36FfdF9QTWshzaHrWPOIPQSwOYKCwhPWs
+         HJTB22fVQLP6XOXmx+GOBhsqxyabNEzYPZzSwWynHdebs1IAeDL72Ng9jnBbCCzroLK4
+         EBcxAxlKRHhum9nwDHqtoxWfI5oyrFedvfINwlU1Z5OBJlOhV6SuFPVlYleSW6oObeGo
+         MLXg==
+X-Forwarded-Encrypted: i=1; AJvYcCWYHD4kMOcgmlOakxgEnc1LqNgfXgRBO7MHMqzGQQlmgII7Bf/8iHbN3jj+AgwVJTFD9+mxHKaHTlqS@vger.kernel.org, AJvYcCXInQrrRJI6yaDye4DlNP8IhiAgS7Q5yj0yxqtX8+xsNC2gEMxhfEL9CmsEub9U68nSCLDrUzYdZpbbaz9v@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyry7DnviQ1xlmISo7qlNrCcrm2tFQhlj4KglLKV0PgBj00QYqh
+	zkwvoGyYiytmFUo7HTouz46LPOSapD4bxfcMJ1U0qtRUNKPRalHArs3xtNTClM/sElrEMFO4Moq
+	voyJBS++aWlC8+pUkuZvzjkxNSiRYIIBZmFpkbftJ8A==
+X-Gm-Gg: ASbGnctD5taFFbGjd42yr2EasrxGt/NlkdUuZyQ9dDxTczExYekI4mFLGUU1egCBtNn
+	guLTYbeKwtVFFUbIREMyUaLmUTY6CgFdvBgWTGPXiJC8gxpjawoo1dnbqeeMItx6S57V0I3Qcgt
+	Ur4f3j/sLZx4HIWkxuNctFf8vHtq0y892ngA==
+X-Google-Smtp-Source: AGHT+IEuvhXh0q0XunBL7hdWtxMSjK6T8vZYlT8D5ycyUymcCIchHuQNFLVpJ83JaAgNw+3Zt6XsLkx3SFQ7qhbrnOE=
+X-Received: by 2002:a05:6214:16f:b0:6fa:c492:2db7 with SMTP id
+ 6a1803df08f44-6fac83fca77mr13682876d6.13.1748498726027; Wed, 28 May 2025
+ 23:05:26 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -60,22 +60,22 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
- <20250529042550.GB8328@frogsfrogsfrogs>
-In-Reply-To: <20250529042550.GB8328@frogsfrogsfrogs>
+ <aDfkTiTNH1UPKvC7@dread.disaster.area>
+In-Reply-To: <aDfkTiTNH1UPKvC7@dread.disaster.area>
 From: Yafang Shao <laoar.shao@gmail.com>
-Date: Thu, 29 May 2025 13:55:08 +0800
-X-Gm-Features: AX0GCFvDkzSDxpXyKqzMqNqosxRnboXDIbXUX7NdS90M1pthmxVHEr4_d299puo
-Message-ID: <CALOAHbBEPYFfHipioNcq2AyHWrj4PCQGH1wKLLsTAifNnd9LbQ@mail.gmail.com>
+Date: Thu, 29 May 2025 14:04:50 +0800
+X-Gm-Features: AX0GCFumJN9FCQqwq2gOC8i0dvtOfc4c7C5sjsOBzj4u1ndUMpYQvDn6iLFGhU4
+Message-ID: <CALOAHbBNMM-pZD+8+7SQ7EyWZCbYSFHpvBzjewDYh_ZWEmz46w@mail.gmail.com>
 Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
  data corruption
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christian Brauner <brauner@kernel.org>, cem@kernel.org, linux-xfs@vger.kernel.org, 
-	Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christian Brauner <brauner@kernel.org>, djwong@kernel.org, cem@kernel.org, 
+	linux-xfs@vger.kernel.org, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, May 29, 2025 at 12:25=E2=80=AFPM Darrick J. Wong <djwong@kernel.org=
-> wrote:
+On Thu, May 29, 2025 at 12:36=E2=80=AFPM Dave Chinner <david@fromorbit.com>=
+ wrote:
 >
 > On Thu, May 29, 2025 at 10:50:01AM +0800, Yafang Shao wrote:
 > > Hello,
@@ -98,7 +98,51 @@ On Thu, May 29, 2025 at 12:25=E2=80=AFPM Darrick J. Wong <djwong@kernel.org=
 > > known writeback error issue. While using fsync() after buffered
 > > write() could mitigate the problem, this approach is impractical for
 > > our services.
-> >
+>
+> Really, that's terrible application design.  If you aren't checking
+> that data has been written successfully, then you get to keep all
+> the broken and/or missing data bits to yourself.
+
+It=E2=80=99s difficult to justify this.
+
+>
+> However, with that said, some history.
+>
+> XFS used to keep pages that had IO errors on writeback dirty so they
+> would be retried at a later time and couldn't be reclaimed from
+> memory until they were written. This was historical behaviour from
+> Irix and designed to handle SAN environments where multipath
+> fail-over could take several minutes.
+>
+> In these situations writeback could fail for several attempts before
+> the storage timed out and came back online. Then the next write
+> retry would succeed, and everything would be good. Linux never gave
+> us a specific IO error for this case, so we just had to retry on EIO
+> and hope that the storage came back eventually.
+>
+> This is different to traditional Linux writeback behaviour, which is
+> what is implemented now via iomap. There are good reasons for this
+> model:
+>
+> - a filesystem with a dirty page that can't be written and cleaned
+>   cannot be unmounted.
+>
+> - having large chunks of memory that cannot be cleaned and
+>   reclaimed has adverse impact on system performance
+>
+> - the system can potentially hang if the page cache is dirtied
+>   beyond write throttling thresholds and then the device is yanked.
+>   Now none of the dirty memory can be cleaned, and all new writes
+>   are throttled....
+
+I previously considered whether we could avoid clearing PG_writeback
+for these pages. To handle unwritten pagecache pages more safely, we
+could maintain their PG_writeback status and introduce a new
+PG_write_error flag. This would explicitly mark pages that failed disk
+writes, allowing the reclaim mechanism to skip them and avoid
+potential deadlocks.
+
+>
 > > Instead, we propose introducing configurable options to notify users
 > > of writeback errors immediately and prevent further operations on
 > > affected files or disks. Possible solutions include:
@@ -106,32 +150,44 @@ On Thu, May 29, 2025 at 12:25=E2=80=AFPM Darrick J. Wong <djwong@kernel.org=
 > > - Option A: Immediately shut down the filesystem upon writeback errors.
 > > - Option B: Mark the affected file as inaccessible if a writeback error=
  occurs.
-> >
-> > These options could be controlled via mount options or sysfs
-> > configurations. Both solutions would be preferable to silently
-> > returning corrupted data, as they ensure users are aware of disk
-> > issues and can take corrective action.
-> >
-> > Any suggestions ?
 >
-> Option C: report all those write errors (direct and buffered) to a
-> daemon and let it figure out what it wants to do:
+> Go look at /sys/fs/xfs/<dev>/error/metadata/... and configurable
+> error handling behaviour implemented through this interface.
 >
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/=
-?h=3Dhealth-monitoring_2025-05-21
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/l=
-og/?h=3Dhealth-monitoring-rust_2025-05-21
->
-> Yes this is a long term option since it involves adding upcalls from the
-> pagecache/vfs into the filesystem and out through even more XFS code,
-> which has to go through its usual rigorous reviews.
->
-> But if there's interest then I could move up the timeline on submitting
-> those since I wasn't going to do much with any of that until 2026.
+> Essential, XFS metadata behaves as "retry writes forever and hang on
+> unmount until write succeeds" by default. i.e. similar to the old
+> data IO error behaviour. The "hang on unmount" behaviour can be
+> turned off by /sys/fs/xfs/<dev>/error/fail_at_unmount, and we can
+> configured different failure handling policies for different types
+> of IO error. e.g. fail-fast on -ENODEV (e.g. device was unplugged
+> and is never coming back so shut the filesystem down),
+> retry-for-while on -ENOSPC (e.g. dm-thinp pool has run out of space,
+> so give some time for the pool to be expanded before shutting down)
+> and retry-once on -EIO (to avoid random spurious hardware failures
+> from shutting down the fs) and everything else uses the configured
+> default behaviour....
 
-This would be very helpful. While it might take some time, it's better
-to address it now than never. Please proceed with this when you have
-availability.
+Thank you for your clear guidance and detailed explanation.
+
+>
+> There's also good reason the sysfs error heirarchy is structured the
+> way it is - it leaves open the option for expanding the error
+> handling policies to different IO types (i.e. data and metadata). It
+> even allows different policies for different types of data devices
+> (e.g. RT vs data device policies).
+>
+> So, got look at how the error configuration code in XFS is handled,
+> consider extending that to /sys/fs/xfs/<dev>/error/data/.... to
+> allow different error handling policies for different types of
+> data writeback IO errors.
+
+That aligns perfectly with our expectations.
+
+>
+> Then you'll need to implement those policies through the XFS and
+> iomap IO paths...
+
+I will analyze how to implement this effectively.
 
 --=20
 Regards
