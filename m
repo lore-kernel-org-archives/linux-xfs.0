@@ -1,158 +1,246 @@
-Received: from fhigh-a2-smtp.messagingengine.com (fhigh-a2-smtp.messagingengine.com [103.168.172.153])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EDE71DB924
-	for <linux-xfs@vger.kernel.org>; Thu, 29 May 2025 18:55:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.153
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A74115E97;
+	Thu, 29 May 2025 22:15:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748544940; cv=none; b=px/i1N39A0etDIowb8zJWNAVcgW99TawRA7YPbg0kriyJesCHKnda/RZFHpz+DBPyz2oF16YHzujjLQAgcVmlhjFQGT4SuqESP4TxMXznWmXpFrSYSEou7zqfE/ARjtYjKh3gHODVZHNZsxhEVdSf4iV2cHUUJC5/LwFp5t7Ybc=
+	t=1748556928; cv=none; b=Q/2mfu1EHsBZmc+CA34Jnj+7aFGIiNR6ITojz6jlA0jlpwIRsjY8YclSe6qRUl9NBgX3V2wt89mQ24DwoWm41PwR20r2e477iMxWx0z0voQmxs/lobGbSjrnDMDRGXfJCksDP8gLouDpx5VvwKaPHi3Iq09MIvZDh5AGRt+TRgk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748544940; c=relaxed/simple;
-	bh=nDaG6wX3Fa1juFstEkxHjtWan42R5z9neNtshsXqCrc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qOhkLF8Cw13wnW5HB6Vt37v5P+xX6oRCZDS3jRmr9eTpqWdmgRKPxTq/1SGhyUrnxDwbievCpnB4xK2Yi8Px3re0eUKoIjdT3ZBefx+50O5Yy1Pxm3G4MonL+azJsUp5CT6kM0Tvrq9fjsph9tuE+HvA9dYybyJg6h6zoS3bIbc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=gjV16BCk; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=KwyuBiQ2; arc=none smtp.client-ip=103.168.172.153
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+	s=arc-20240116; t=1748556928; c=relaxed/simple;
+	bh=dIulJ4txXtjAQ6LgiYZMkbwzSzmRk7QUXbfpzkD7P4M=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=jZZqF8JlmhbpWwNNzhXrrtmHzBDGzYIM3gli6Rpx/XG9RZl1heEFsE9tqbMcsJK9LlRbfchsKLs7lJ4P4yRu/haFstaZxu7RdiUl6/EBbsle/yi14GvZzEcpak0P1DoSfFanf60ONYUNaRnnjtJBh5vlgGQEQx0GZrC8wSGkXlw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AI2otdb+; arc=none smtp.client-ip=209.85.160.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="gjV16BCk";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="KwyuBiQ2"
-Received: from phl-compute-03.internal (phl-compute-03.phl.internal [10.202.2.43])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 26B1D1140141;
-	Thu, 29 May 2025 14:55:37 -0400 (EDT)
-Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-03.internal (MEProxy); Thu, 29 May 2025 14:55:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1748544937;
-	 x=1748631337; bh=b6J1waQKcPr7V2Fyn93DyVgOV/l9tWsU9tqGaxyVdBw=; b=
-	gjV16BCkYklk7krC24uck2IajeUaavfYgYS5Gt7cI/on5Ewd2DWBX+Ut5oa1cKIK
-	PgaBOf+83Sy413xixDEGftnTeSYUuMDQCsTl8YAWJwBec9hZJi1EozeXASswQTm1
-	FJXgJSdG5vB47sOPklf2xodUW1XW8bXvNTxGvEiaScuLD4hU41ZTbNJ+neQLfQul
-	yYj0oPO5/iEg7DB7vLAUMjT/QL5siIlt9sipFUR+9S5wGvhk+IVE9iSdF+weUwjw
-	XPGLbQzqNiL14mL2vcAk8gorhMdHaYysKlHi5N3izz0gWuDtx3xVZBJzm8Q0AWnn
-	hYYmCcLX/b+T3N3rpGwMDQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1748544937; x=
-	1748631337; bh=b6J1waQKcPr7V2Fyn93DyVgOV/l9tWsU9tqGaxyVdBw=; b=K
-	wyuBiQ2kYxx7psKDzYKJNGoDr4fxB37Z2ojd/1nCdZkNSA8Eo8AhsrN062bDcbHn
-	n8rmop0n1wLEJzanPObCrftxeDkUNyjDW7SFGhJM1vZCgV3tv1rlZauKbpb94BkS
-	sjC9xc/6oB/pt9K3JD/SRAFWc7VbKBnlx/GPimfoMeLu7vWU25iFYnFHarEMqRZp
-	dT8+b63Q+YccLfjjKQlr+NBQaz346APDIScKmcnErqF/xgUAE8OFWHPugC6Rl9zd
-	IztAMg3h75oIG39za5CJfe9cdGn9Ijmn9eLBn0wTOtEB7GrwGY4xFgBNkgbC7BoE
-	lvAU0UuHewrHAg5NTVpRw==
-X-ME-Sender: <xms:qK04aFAnCdJVf99Xgc9BoyXz834t01hZdBvrh_8z24W-ZCIyZIN8FA>
-    <xme:qK04aDi57YzYxU1KyWI5jQlLPt18QceTgyh5v8fRylrptC0SQxnKL-fVr8zyg7_Pf
-    LeNG-XNiF_uc1JXzqI>
-X-ME-Received: <xmr:qK04aAmFoNyr-HPT0w20_zqxJ8bOSvrWG0KgowLxoxh_lPIBhYggkuJpWq6YQFU>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtddtgddvieeludculddtuddrgeefvddrtd
-    dtmdcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpggft
-    fghnshhusghstghrihgsvgdpuffrtefokffrpgfnqfghnecuuegrihhlohhuthemuceftd
-    dtnecunecujfgurhepkfffgggfuffvvehfhfgjtgfgsehtkeertddtvdejnecuhfhrohhm
-    pefgrhhitgcuufgrnhguvggvnhcuoehsrghnuggvvghnsehsrghnuggvvghnrdhnvghtqe
-    enucggtffrrghtthgvrhhnpefgueevteekledtfeegleehudetleettdevheduheeifeeu
-    vdekveduudejudetgfenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrih
-    hlfhhrohhmpehsrghnuggvvghnsehsrghnuggvvghnrdhnvghtpdhnsggprhgtphhtthho
-    peefpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehrohihsehkrghrlhhssggrkh
-    hkrdhnvghtpdhrtghpthhtohepuggrvhhiugesfhhrohhmohhrsghithdrtghomhdprhgt
-    phhtthhopehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:qK04aPwmDt9xpTLWNNDmufMFiqsvKhTdiTd6SkIWj-izTzWI4ancPQ>
-    <xmx:qK04aKTFoGQvJ8IkVFDOBy_MlOKzwp5mlCw0N_1hX4szb8vufvoV1g>
-    <xmx:qK04aCYbHDYVHPnQoUlBsaOuG--xCeuLEeRGopO2j0O0F80Wtyzysg>
-    <xmx:qK04aLREAbiNfya0ybXc0_lLgKmb-nZnywt2qxKAC2cQOZreznkPeA>
-    <xmx:qa04aOD1z4gxLaA1d_HIgr6ndCn3xa1iQsK0eDWN47i-qXMvAnCY_2Fw>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 29 May 2025 14:55:36 -0400 (EDT)
-Message-ID: <9a075d69-14ec-4585-9678-c62d30136c48@sandeen.net>
-Date: Thu, 29 May 2025 13:55:35 -0500
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AI2otdb+"
+Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-48d71b77cc0so16501551cf.1;
+        Thu, 29 May 2025 15:15:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1748556925; x=1749161725; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tWiC5pBeYgApx7Kk+W3LliDKol1zpXNRHfgQZdX2NKo=;
+        b=AI2otdb+Txa21R7/ynGK1F0C3Hx3qGvvvK5Hxi3U7ZaO7QVu93zqF1Y+8Y5PP8SY3M
+         LkK2MFCTQUth0/xCsRdo7zJicV8sx/U1ZJc7ECDPHmBki86TdbW+pYV/oY7wVkJb5Niu
+         HAXhXvieWf1tdwVhXwvBYin5hc6l8eFjnJ79STtNQvDJHTzqCkgcKjrpSoWBPfXWWxZW
+         oZ0sAv0JfAHY3Zk6Es+Q34zWS73w4d+8vibEYIPNHMPzVa3URIfP6zXu9pPWzRAG06xD
+         y19DHHSVMTuL77JwHKO/3wDo4Kczo2sl6rUqVefHgNwWj+vTuCFcZQ7LqSrjhYeSKBL/
+         hVrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748556925; x=1749161725;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=tWiC5pBeYgApx7Kk+W3LliDKol1zpXNRHfgQZdX2NKo=;
+        b=bqc8zTgCO5uIA1VjhxZ6vVeA3SVItNpECoRbbL/l6Px+NaDIGF3weoKfntLWmFIL5Z
+         1rTO/wjIeL0QVt6A4Wbutv+N0iXLTOxN5XCpYMb5EmQz9i0SlAzoLXVmiIiPQhZ6iRyd
+         4oN2DG60+2kfJph4HBG9Sz28vClvEueNNRIWVyFolQAwa0kXKqTXIhZTzrtklz1TQU+0
+         El+0OQFgW40yte8Z/qbyv9LkXiCwGS/5sOmEUEX3LCNEbm4n7NPe0yZjt3xXDWYVfZsc
+         s5bHm7/vYaohIh2ECm8Qe0Swb6giS6x7LGDcp9bCd39oo+UffzM7qMWnoiWbRJcYkzP1
+         tbOQ==
+X-Forwarded-Encrypted: i=1; AJvYcCW/nCGRHLWqO57qCmHMAu5qs1SKzIKCuBNJYO6W5t/npsq9jUina5V0cOiYav2ug2PdzbeuwZrGtPI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzCc8nmS9jA5T8ZMcYW/5TjBflZLUiV8N+kCYTYCJ6Use79Dz53
+	tp+1BA0ITLYkXW5Mqs2XU5vZqsVQhgKgYeRaXIRUO6NLCBfLXnUyEkttJg/Irmhi2hGqINToh8s
+	DhO9T0lJhDTcyTwvr2JnWpCDcmnTVw5g=
+X-Gm-Gg: ASbGncudns0WBszRzMKqw/h7S16VPmXRCbCGSvksJsh04uomg4LR8ioB1HtRRGFEejx
+	0FEQZMCtAyd756J1+7ZsBNYQIY7EJxpEpDOWo5TxEh3hDDd372zcwt1XvqZne1Gz77J7JFVoaQ/
+	28/mqZmFYh0GJoLGR6hd64ET8NP/kLW/2n/flZfGY2CnTRHLIIUlGOe1rizI4=
+X-Google-Smtp-Source: AGHT+IEEGfkN1L91/XRzJnWrskxNRgmCYPLJ0g/y292xwfbtxt2lPRjc0pUX5eIgdrz7T9SuRrApbNVMA15zWowHDHs=
+X-Received: by 2002:a05:622a:4d09:b0:4a4:22a1:dab8 with SMTP id
+ d75a77b69052e-4a44001f7fdmr24032511cf.11.1748556925049; Thu, 29 May 2025
+ 15:15:25 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: XFS complains about data corruption after xfs_repair
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>,
- Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-References: <9EA56046-FECD-42C5-AEF6-721A8699A45B@karlsbakk.net>
- <aBaaDGrMdE6p0BiW@dread.disaster.area>
- <BFF21A51-ECA7-454B-8379-F456849D16AC@karlsbakk.net>
- <92DD8C35-E3F2-43D9-BF4B-19C442A13DA6@karlsbakk.net>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <92DD8C35-E3F2-43D9-BF4B-19C442A13DA6@karlsbakk.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs> <174787195629.1483178.7917092102987513364.stgit@frogsfrogsfrogs>
+In-Reply-To: <174787195629.1483178.7917092102987513364.stgit@frogsfrogsfrogs>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Thu, 29 May 2025 15:15:13 -0700
+X-Gm-Features: AX0GCFvHuJXWwmCSxxFAofe4-kh74qIPd2rzDm2lWuaDtQW3rBB11W5TkD6amKQ
+Message-ID: <CAJnrk1ZEtXoMKXMjse-0RtSLjaK1zfadr3zR2tP4gh1WauOUWA@mail.gmail.com>
+Subject: Re: [PATCH 03/11] fuse: implement the basic iomap mechanisms
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, miklos@szeredi.hu, 
+	linux-xfs@vger.kernel.org, bernd@bsbernd.com, John@groves.net
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 5/25/25 5:39 AM, Roy Sigurd Karlsbakk wrote:
->> On 24 May 2025, at 03:18, Roy Sigurd Karlsbakk <roy@karlsbakk.net> wrote:
->>
->>> On 4 May 2025, at 00:34, Dave Chinner <david@fromorbit.com> wrote:
->>>
->>> On Sat, May 03, 2025 at 04:01:48AM +0200, Roy Sigurd Karlsbakk wrote:
->>>> Hi all
->>>>
->>>> I have an XFS filesystem on an LVM LV which resides on a RAID-10 (md) with four Seagate Exos 16TB drives. This has worked well for a long time, but just now, it started complaining. The initial logs were showing a lot of errors and I couldn't access the filesystem, so I gave it a reboot, tha tis, I had to force one. Anyway - it booted up again and looked normal, but still complained. I rebooted to single and found the (non-root) filesystem already mounted and unable to unmount it, I commented it out from fstab and rebooted once more to single. This allowed me to run xfs_repair, although I had to use -L. Regardless, it finished and I re-enabled the filesystem in fstab and rebooted once more. Starting up now, it seems to work, somehow, but ext4 still throws some errors as shown below, that is, "XFS (dm-0): corrupt dinode 43609984, (btree extents)." It seems to be the same dinode each time.
->>>>
->>>> Isn't an xfs_repair supposed to fix this?
->>>>
->>>> I'm running Debian Bookworm 12.10, kernel 6.1.0-34-amd64 and xfsprogs 6.1.0 - everything just clean debian.
->>>
->>> Can you pull a newer xfsprogs from debian/testing or /unstable or
->>> build the latest versionf rom source and see if the problem
->>> persists?
->>
->> I just tried with xfsprogs-6.14 and also upgraded the kernel from 6.1.0-35 to 6.12.22+bpo. The new xfsprogs haven't been installed properly, just lying in its own directory to be run from there. I downed the system again and ran a new repair. After the initial repair, I ran it another time, and another, just to check. After rebooting back, it still throws thesame error at me about "[lø. mai 3 03:28:14 2025] XFS (dm-0): Metadata corruption detected at xfs_iread_bmbt_block+0x271/0x2d0 [xfs], inode 0x2996f80 xfs_iread_bmbt_block"
->>
->>> It is complaining that it is trying to load more extents than the
->>> inode thinks it has allocated in ip->if_nextents.
->>>
->>> That means either the btree has too many extents in it, or the inode
->>> extent count is wrong. I can't tell which it might be from the
->>> dump output, so it would be useful to know if xfs-repair is actually
->>> detecting this issue, too.
->>>
->>> Can you post the output from xfs_repair? Could you also pull a newer
->>> xfs_reapir from debian/testing or build 6.14 from source and see if
->>> the problem is detected and/or fixed?
->>
->> I couldn't find much relevnt output, really. I can obviously run it again, but it takes some time and if you have some magick options to try with it, please let me know first.
+On Wed, May 21, 2025 at 5:03=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> Implement functions to enable upcalling of iomap_begin and iomap_end to
+> userspace fuse servers.
+>
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  fs/fuse/fuse_i.h          |   38 ++++++
+>  fs/fuse/fuse_trace.h      |  258 +++++++++++++++++++++++++++++++++++++++=
+++
+>  include/uapi/linux/fuse.h |   87 ++++++++++++++
+>  fs/fuse/Kconfig           |   23 ++++
+>  fs/fuse/Makefile          |    1
+>  fs/fuse/file_iomap.c      |  280 +++++++++++++++++++++++++++++++++++++++=
+++++++
+>  fs/fuse/inode.c           |    5 +
+>  7 files changed, 691 insertions(+), 1 deletion(-)
+>  create mode 100644 fs/fuse/file_iomap.c
+>
+>
+> diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
+> index d56d4fd956db99..aa51f25856697d 100644
+> --- a/fs/fuse/fuse_i.h
+> +++ b/fs/fuse/fuse_i.h
+> @@ -895,6 +895,9 @@ struct fuse_conn {
+>         /* Is link not implemented by fs? */
+>         unsigned int no_link:1;
+>
+> +       /* Use fs/iomap for FIEMAP and SEEK_{DATA,HOLE} file operations *=
+/
+> +       unsigned int iomap:1;
+> +
+>         /* Use io_uring for communication */
+>         unsigned int io_uring;
+>
+> @@ -1017,6 +1020,11 @@ static inline struct fuse_mount *get_fuse_mount_su=
+per(struct super_block *sb)
+>         return sb->s_fs_info;
+>  }
+>
+> +static inline const struct fuse_mount *get_fuse_mount_super_c(const stru=
+ct super_block *sb)
+> +{
+> +       return sb->s_fs_info;
+> +}
+> +
 
-Generally best to just pass along the full output and let the requester
-decide what is relevant ;) (you may be right, but often reporters filter
-too much.)
+Instead of adding this new helper (and the ones below), what about
+modifying the existing (non-const) versions of these helpers to take
+in const * input args,  eg
 
-> 
-> So, basically, I now get this error message in dmesg/kernel log every five (5) seconds:
-> 
-> [sø. mai 25 12:12:40 2025] XFS (dm-0): corrupt dinode 43609984, (btree extents).
-> [sø. mai 25 12:12:40 2025] XFS (dm-0): Metadata corruption detected at xfs_iread_bmbt_block+0x2ad/0x320 [xfs], inode 0x2996f80 xfs_iread_bmbt_block
-> [sø. mai 25 12:12:40 2025] XFS (dm-0): Unmount and run xfs_repair
-> [sø. mai 25 12:12:40 2025] XFS (dm-0): First 72 bytes of corrupted metadata buffer:
-> [sø. mai 25 12:12:40 2025] 00000000: 42 4d 41 33 00 00 00 f8 00 00 00 01 10 26 57 2a  BMA3.........&W*
-> [sø. mai 25 12:12:40 2025] 00000010: ff ff ff ff ff ff ff ff 00 00 00 06 61 32 b9 58  ............a2.X
-> [sø. mai 25 12:12:40 2025] 00000020: 00 00 01 27 00 13 83 80 a4 0c 52 99 b8 45 4b 5b  ...'......R..EK[
-> [sø. mai 25 12:12:40 2025] 00000030: b6 3e 63 d8 b0 5e 20 5f 00 00 00 00 02 99 6f 80  .>c..^ _......o.
-> [sø. mai 25 12:12:40 2025] 00000040: 7f fb a7 f6 00 00 00 00                          ........
+-static inline struct fuse_mount *get_fuse_mount_super(struct super_block *=
+sb)
++static inline struct fuse_mount *get_fuse_mount_super(const struct
+super_block *sb)
+ {
+        return sb->s_fs_info;
+ }
+
+Then, doing something like "const struct fuse_mount *mt =3D
+get_fuse_mount(inode);" would enforce the same guarantees as "const
+struct fuse_mount *mt =3D get_fuse_mount_c(inode);" and we wouldn't need
+2 sets of helpers that pretty much do the same thing.
+
+>  static inline struct fuse_conn *get_fuse_conn_super(struct super_block *=
+sb)
+>  {
+>         return get_fuse_mount_super(sb)->fc;
+> @@ -1027,16 +1035,31 @@ static inline struct fuse_mount *get_fuse_mount(s=
+truct inode *inode)
+>         return get_fuse_mount_super(inode->i_sb);
+>  }
+>
+> +static inline const struct fuse_mount *get_fuse_mount_c(const struct ino=
+de *inode)
+> +{
+> +       return get_fuse_mount_super_c(inode->i_sb);
+> +}
+> +
+>  static inline struct fuse_conn *get_fuse_conn(struct inode *inode)
+>  {
+>         return get_fuse_mount_super(inode->i_sb)->fc;
+>  }
+>
+> +static inline const struct fuse_conn *get_fuse_conn_c(const struct inode=
+ *inode)
+> +{
+> +       return get_fuse_mount_super_c(inode->i_sb)->fc;
+> +}
+> +
+>  static inline struct fuse_inode *get_fuse_inode(struct inode *inode)
+>  {
+>         return container_of(inode, struct fuse_inode, inode);
+>  }
+>
+> +static inline const struct fuse_inode *get_fuse_inode_c(const struct ino=
+de *inode)
+> +{
+> +       return container_of(inode, struct fuse_inode, inode);
+> +}
+> +
+>  static inline u64 get_node_id(struct inode *inode)
+>  {
+>         return get_fuse_inode(inode)->nodeid;
+> @@ -1577,4 +1600,19 @@ extern void fuse_sysctl_unregister(void);
+>  #define fuse_sysctl_unregister()       do { } while (0)
+>  #endif /* CONFIG_SYSCTL */
+>
+> +#if IS_ENABLED(CONFIG_FUSE_IOMAP)
+> +# include <linux/fiemap.h>
+> +# include <linux/iomap.h>
+> +
+> +bool fuse_iomap_enabled(void);
+> +
+> +static inline bool fuse_has_iomap(const struct inode *inode)
+> +{
+> +       return get_fuse_conn_c(inode)->iomap;
+> +}
+> +#else
+> +# define fuse_iomap_enabled(...)               (false)
+> +# define fuse_has_iomap(...)                   (false)
+> +#endif
+> +
+>  #endif /* _FS_FUSE_I_H */
+> diff --git a/fs/fuse/Kconfig b/fs/fuse/Kconfig
+> index ca215a3cba3e31..fc7c5bf1cef52d 100644
+> --- a/fs/fuse/Kconfig
+> +++ b/fs/fuse/Kconfig
+> @@ -64,6 +64,29 @@ config FUSE_PASSTHROUGH
+>
+>           If you want to allow passthrough operations, answer Y.
+>
+> +config FUSE_IOMAP
+> +       bool "FUSE file IO over iomap"
+> +       default y
+> +       depends on FUSE_FS
+> +       select FS_IOMAP
+> +       help
+> +         For supported fuseblk servers, this allows the file IO path to =
+run
+> +         through the kernel.
+
+I have config FUSE_FS select FS_IOMAP in my patchset (not yet
+submitted) that changes fuse buffered writes / writeback handling to
+use iomap. Could we just have config FUSE_FS automatically opt into
+FS_IOMAP here or do you see a reason that this needs to be a separate
+config?
 
 
-You might consider sending a compressed xfs_metadump image off-list to me and/or Dave.
-
-xfs_metadump obfuscates filenames by default and contains no data blocks, but sometimes
-strings slip through so I generally suggest not posting to the list.
-
-But with the metadump perhaps someone has time to do more investigation, assuming it
-reproduces with the metadump image.
-
--Eric
- 
-> roy
-> --
+Thanks,
+Joanne
+> +
+> +config FUSE_IOMAP_BY_DEFAULT
+> +       bool "FUSE file I/O over iomap by default"
+> +       default n
+> +       depends on FUSE_IOMAP
+> +       help
+> +         Enable sending FUSE file I/O over iomap by default.
+> +
+> +config FUSE_IOMAP_DEBUG
+> +       bool "Debug FUSE file IO over iomap"
+> +       default n
+> +       depends on FUSE_IOMAP
+> +       help
+> +         Enable debugging assertions for the fuse iomap code paths.
+> +
+>  config FUSE_IO_URING
+>         bool "FUSE communication over io-uring"
+>         default y
