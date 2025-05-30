@@ -1,73 +1,73 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7615221D9C
-	for <linux-xfs@vger.kernel.org>; Fri, 30 May 2025 09:37:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A159221700
+	for <linux-xfs@vger.kernel.org>; Fri, 30 May 2025 09:42:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748597850; cv=none; b=m5VYdTf569hH17kgaN+Df9H66iuz2CFDewdr77aIFUg3NagrBx85rjftDpKZhE/FDlSz9n9w0yqLwRgSPUoJfVmhrnUUmUQlaVK8l6IZhux2jDn7hC8gtc4kmVy1UHeqJXiEZfo94Nlp45kPQfAyIyxweAuv85MvafLcTI0QYz0=
+	t=1748598177; cv=none; b=eHqt/SD9nkLBR24y5lISBLecL5u4S1/17LVqjkaRtjw8CRADJd5PFUP+iIRIWQizFTUMAZ+u4GmqVurNbZS1Vy60BL3kLdu8HRnuc/glozJ1emxBTm2m5p9W/IUSVac3LbbhFU+/z0SJ/jOjYB5u3sGDiIQ3ONCrqNqDeYCNyrM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748597850; c=relaxed/simple;
-	bh=Vo15I+t4ldDz+udo0/J6K2wEPwd7uOm20jAwOh5675U=;
+	s=arc-20240116; t=1748598177; c=relaxed/simple;
+	bh=elpyLymxaqb7oa4Th6MKUlLdZPCM+CCtwiijx05Vekk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FIXjLdBZ2VdfnnkxRFjo6SQ/Xl0HSwMmGrY0uAO2prcakFren3JGCBywCt0WceS4OBMLc0/xZnyL5ROlFMqqyhDD6MOY3zz/zUYv0HYAd5LZTihzfZUikA1li0dSRH3+aTfwJ70FhtcA4gpGUUVFd20FxCXSi/DnUMObQYbKXfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=F3eRGqSf; arc=none smtp.client-ip=170.10.129.124
+	 In-Reply-To:Content-Type; b=BdjOMb7qzUglfTm1ifOsYiOG5D0cZULNYlTBlMg31l6tBuSwt17++bYhiBSXRwI19wPFrobcgyO+tjUuBahCFWN53xowKbn22x4cOlfzXw21u6S0RTYEf3tKZBAdFDC3OFqjRiktF4tthGTHvB1qyxBjxZfj0iQPvtQbfrgvlik=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Wk24DIbZ; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F3eRGqSf"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Wk24DIbZ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1748597847;
+	s=mimecast20190719; t=1748598175;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=yhyTHW9/iNSmJ3o1/+Kc2KlH+vX1ja7mHJ+mDxpkv9E=;
-	b=F3eRGqSf/naq58IBMHrYtrb93TuXz2tHgKs5FOHBLNuv8r89hCK1Km5ApOAl0yWYRGmMKz
-	JVQClIFiiHtw1veKrCx/07QzVPbyblJiLbS3KEbubfRtG1nRnjkOe7keuNTfgwZqYpycNU
-	RXsk0x37kJcCr856Vm21+g1AtfR9I3o=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=zWtS7BX4jv3Md6oma03aZLTPAuckL46QoolFrxWb6FY=;
+	b=Wk24DIbZVlV47aWW2EZJdRerdLBN+qlqN8yElEaCDRRNygo3kRaPYY+sCC17jB2i+v5UAB
+	qycxPNmHtzG2C8U0xVE7NbFFb5VxsWxH67j2hmoSG1XWBtrCcFqNvogkMrpVz2GxMlM/w3
+	wyxjkZRQq7UvCr9TbpjTRUxhGD/2F74=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-581-JBKn09wOMg2Hcoa7KqAAqg-1; Fri, 30 May 2025 05:37:25 -0400
-X-MC-Unique: JBKn09wOMg2Hcoa7KqAAqg-1
-X-Mimecast-MFC-AGG-ID: JBKn09wOMg2Hcoa7KqAAqg_1748597844
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-441c96c1977so12781185e9.0
-        for <linux-xfs@vger.kernel.org>; Fri, 30 May 2025 02:37:25 -0700 (PDT)
+ us-mta-297-xWwyAok0NReeamA6k6KT1w-1; Fri, 30 May 2025 05:42:53 -0400
+X-MC-Unique: xWwyAok0NReeamA6k6KT1w-1
+X-Mimecast-MFC-AGG-ID: xWwyAok0NReeamA6k6KT1w_1748598172
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-450d9f96f61so3142525e9.1
+        for <linux-xfs@vger.kernel.org>; Fri, 30 May 2025 02:42:53 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748597844; x=1749202644;
+        d=1e100.net; s=20230601; t=1748598172; x=1749202972;
         h=content-transfer-encoding:in-reply-to:organization:autocrypt
          :content-language:from:references:cc:to:subject:user-agent
          :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=yhyTHW9/iNSmJ3o1/+Kc2KlH+vX1ja7mHJ+mDxpkv9E=;
-        b=qnz/rdOdcAF0bwOW9y5/Vb/sODFAk8hW/7/WVoLZeh29hAUjpodFE+VWk6SDeyp2Za
-         x6Ff90/Aq5tp4JCiL4boVegfnpeMHbha4l6JErMf1eBYPxq8Ns1dibs4O1YvEGGPD4VU
-         1YW5n2zfbRgNRG0PLamFILa45tWftDDqDKZU9r4rN/n3KQhmMI5mcS7DnrM2/i6nrNet
-         S1L7Jjklk4J3Mhpm/dyweABjFY1sOxWqeG6rylLdIsAQZDP+E+shJGKJhOw0/IrDbb55
-         d122yx0nW0vIZIQGOLiosgyOtDauNw40c/Xwd3lNzF7jWcYjZQtquoU++lNH7/H8+/a0
-         7l0A==
-X-Forwarded-Encrypted: i=1; AJvYcCUqCqHgGtCDfQ22XAH5N0kgu0+tQ1+o3SlK82PWNf9WaQ0jhyc1ZbAhDUKoa/xrG258i1zJJy2iiIE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YylCXLhCiiQFYwE69FM3HqprfsND9cZT9TfLfl+9Wpwp0Uz62W+
-	SLm2HPXiyCfHyZGJ/mEEvsvI0wRmw4S1zA/oxpXF2nZBPl3ZBmfx41mvYzte1EdDNLCEy8QXKl7
-	ZrGMh3MKXQfHg8VDX1ACkSYJ/JcYzZ2nmWGjRhy+tKfHW3T7ewOGKd6kvOPt1ZA==
-X-Gm-Gg: ASbGncux99VjYUB/Hh8Xb8rP2W0Z1Hr65nO2Fl2is1Ie0I3+N6kLD7yEPTthvCQl59C
-	3wgTH+j6hozbg3x/8zvoMfziR20teTQ+wKGhMzmHeCZ10RXlj2CixpkJxUORi6qG4Cslrzj0jQH
-	mWMvNQdm3ACkLZlORpwOcKytqJNItv2A8idQsvr0S35nkF3bQ3hW3/YQ+fgcqdn4QVuZn6rrVft
-	zC7ddWtX+VtV4CZ+EXgKZ/loy6VmaDFo12KeNRkDpBdxFOiztcRTaOTdl/U85yfHDb5OQfMuVyB
-	ZxOpqGh51etmXrtURn4u21ChuNZkdVa93U/LL5Fr+spJ8koFv9kxjifg9xzk04uUR0q3fgIse3S
-	4wZ4PGNh3DAos85NgPGadsVAJoo0sXrl1xPBR02k=
-X-Received: by 2002:a05:600c:6207:b0:43c:ea36:9840 with SMTP id 5b1f17b1804b1-450d885e38amr12675485e9.22.1748597844512;
-        Fri, 30 May 2025 02:37:24 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGccFKRFTCgkkT3ae/QFUuhHOQzucrbv9tCboH5VNdb/K0MlBO6YnvTUAz5zFzNoWT7UAvZNw==
-X-Received: by 2002:a05:600c:6207:b0:43c:ea36:9840 with SMTP id 5b1f17b1804b1-450d885e38amr12675135e9.22.1748597844047;
-        Fri, 30 May 2025 02:37:24 -0700 (PDT)
+        bh=zWtS7BX4jv3Md6oma03aZLTPAuckL46QoolFrxWb6FY=;
+        b=DxTmkaII4NmMRx+r54zkBxumoLd80l4PDDbfzq+RH1EgkBZOW7vdki783kgiUCqHgG
+         6yrGrsUVLKy/xXVwAZH/u1EhtqAMErlJMgbkaHioQrUoe8if7jO24YnEWvEDfX7gptEn
+         0E5ZP9lNw1R0MmDxPHa6b/w8MDSxxmcE6CfoLj35DSmAM4KZQV5Ua6WXSGEQVLMdYIQw
+         TEbYLy7Xf6Mwblwuz57y/eMTh73T4dsGk6At8eW4/WBpKRbIqp3NbNUlMWk6O9kayTH0
+         AOPUARiIkmG16afUx+QS+lUS08wwpvUQesUzvqBP4hRP67ssdsRVQczKAbJJsUk6ZqBJ
+         T0Rg==
+X-Forwarded-Encrypted: i=1; AJvYcCXHS/SkbwOfyG9P7rLAQEr+rVUe2qIGJEk0LCja7P8xd6oVh+O0lx0w2SbLzGBhnQ4cn4OwOM2hFis=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywsek2+ueC/vzkA4trUyWfk8h4wrtiv5LCTERKOhlGTHwmx6d/D
+	vi+MDa20ZPvq58dlpb+fQJgDUTedkH2BxGihT+/sN1+Db+c1pO9y6A4ujlD3VHDoZd10HxeRFKy
+	D0f6gLoplJUqDl+E/4cuXm8BaJqbhACPdWevZZZAz55uaRx50+AfVuGUZvGy7Ng==
+X-Gm-Gg: ASbGncumY8bZTFBm9ojRZSUCLCYPlyNq5Yjqm3uXI9pZ32G0bA3bcrnw6WH9zvthtB0
+	y4viUwYXcTBohr02T4R0CCRNivuGf+mahwMLvuwUZnVd7MK8CijEEwUcEokaTZxheaDzMivJdx9
+	JaCBc0I+G8FmC8aHi2sCXn+cQQ2YAi/vEaUCi6mfIlIzEZcJ8Q3TwkbFJLqiVQ4FH+fJg6yH7bV
+	nICKj5E7E+3gMivbQxLv6swvGyXKTV9Mm+0BjfGYLcDFuuu5eENYgm3fsJ+V5SO4sv2Ud15lqh+
+	GJV4tHdtfQhWq4bYRTUhZegWLJdXBgifrqdGPtHtbHihZ3IjcKjEKRcTfHPLq+4Trz5KhcdA7Ck
+	geCNCN9CX8+g7cxn6iNIb6fuowg0so4qTEjvu3eM=
+X-Received: by 2002:a05:6000:1ac6:b0:39f:175b:a68d with SMTP id ffacd0b85a97d-3a4f7a3e745mr1997126f8f.11.1748598172254;
+        Fri, 30 May 2025 02:42:52 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEE2cC4rOgIu1Bk0E4HwZEgbfvuVj5Yx/rDkAqlZuc3fKNMuN3WR3Ck+7U4WmY934x7i63eYg==
+X-Received: by 2002:a05:6000:1ac6:b0:39f:175b:a68d with SMTP id ffacd0b85a97d-3a4f7a3e745mr1997108f8f.11.1748598171812;
+        Fri, 30 May 2025 02:42:51 -0700 (PDT)
 Received: from ?IPV6:2003:d8:2f03:5b00:f549:a879:b2d3:73ee? (p200300d82f035b00f549a879b2d373ee.dip0.t-ipconnect.de. [2003:d8:2f03:5b00:f549:a879:b2d3:73ee])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-450d800671csm12953125e9.30.2025.05.30.02.37.21
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-450d7fc24d7sm13138915e9.36.2025.05.30.02.42.50
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 May 2025 02:37:22 -0700 (PDT)
-Message-ID: <371b8fdd-129d-4fe3-bbc7-f0a1bc433b30@redhat.com>
-Date: Fri, 30 May 2025 11:37:21 +0200
+        Fri, 30 May 2025 02:42:51 -0700 (PDT)
+Message-ID: <473e974b-39a1-4ee1-b321-58f6a74c0155@redhat.com>
+Date: Fri, 30 May 2025 11:42:49 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -75,7 +75,7 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 02/12] mm: Convert pXd_devmap checks to vma_is_dax
+Subject: Re: [PATCH 03/12] mm/pagewalk: Skip dax pages in pagewalk
 To: Alistair Popple <apopple@nvidia.com>, linux-mm@kvack.org
 Cc: gerald.schaefer@linux.ibm.com, dan.j.williams@intel.com, jgg@ziepe.ca,
  willy@infradead.org, linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
@@ -87,7 +87,7 @@ Cc: gerald.schaefer@linux.ibm.com, dan.j.williams@intel.com, jgg@ziepe.ca,
  linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
  linux-cxl@vger.kernel.org, dri-devel@lists.freedesktop.org, John@Groves.net
 References: <cover.541c2702181b7461b84f1a6967a3f0e823023fcc.1748500293.git-series.apopple@nvidia.com>
- <224f0265027a9578534586fa1f6ed80270aa24d5.1748500293.git-series.apopple@nvidia.com>
+ <1799c6772825e1401e7ccad81a10646118201953.1748500293.git-series.apopple@nvidia.com>
 From: David Hildenbrand <david@redhat.com>
 Content-Language: en-US
 Autocrypt: addr=david@redhat.com; keydata=
@@ -135,74 +135,52 @@ Autocrypt: addr=david@redhat.com; keydata=
  jPrnvUsUUsjRoRNJjKKA/REq+sAnhkNPPZ/NNMjaZ5b8Tovi8C0tmxiCHaQYqj7G2rgnT0kt
  WNyWQQ==
 Organization: Red Hat
-In-Reply-To: <224f0265027a9578534586fa1f6ed80270aa24d5.1748500293.git-series.apopple@nvidia.com>
+In-Reply-To: <1799c6772825e1401e7ccad81a10646118201953.1748500293.git-series.apopple@nvidia.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 29.05.25 08:32, Alistair Popple wrote:
-> Currently dax is the only user of pmd and pud mapped ZONE_DEVICE
-> pages. Therefore page walkers that want to exclude DAX pages can check
-> pmd_devmap or pud_devmap. However soon dax will no longer set PFN_DEV,
-> meaning dax pages are mapped as normal pages.
-> 
-> Ensure page walkers that currently use pXd_devmap to skip DAX pages
-> continue to do so by adding explicit checks of the VMA instead.
+> Previously dax pages were skipped by the pagewalk code as pud_special() or
+> vm_normal_page{_pmd}() would be false for DAX pages. Now that dax pages are
+> refcounted normally that is no longer the case, so add explicit checks to
+> skip them.
+
+Is this really what we want, though? If these are now just "normal" 
+pages, they shall be handled as being normal.
+
+I would assume that we want to check that in the callers instead.
+
+E.g., in get_mergeable_page() we already have a folio_is_zone_device() 
+check.
+
 > 
 > Signed-off-by: Alistair Popple <apopple@nvidia.com>
 > ---
->   fs/userfaultfd.c | 2 +-
->   mm/hmm.c         | 2 +-
->   mm/userfaultfd.c | 2 +-
->   3 files changed, 3 insertions(+), 3 deletions(-)
+>   include/linux/memremap.h | 11 +++++++++++
+>   mm/pagewalk.c            | 12 ++++++++++--
+>   2 files changed, 21 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/userfaultfd.c b/fs/userfaultfd.c
-> index 22f4bf9..de671d3 100644
-> --- a/fs/userfaultfd.c
-> +++ b/fs/userfaultfd.c
-> @@ -304,7 +304,7 @@ static inline bool userfaultfd_must_wait(struct userfaultfd_ctx *ctx,
->   		goto out;
+> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+> index 4aa1519..54e8b57 100644
+> --- a/include/linux/memremap.h
+> +++ b/include/linux/memremap.h
+> @@ -198,6 +198,17 @@ static inline bool folio_is_fsdax(const struct folio *folio)
+>   	return is_fsdax_page(&folio->page);
+>   }
 >   
->   	ret = false;
-> -	if (!pmd_present(_pmd) || pmd_devmap(_pmd))
-> +	if (!pmd_present(_pmd) || vma_is_dax(vmf->vma))
->   		goto out;
->   
->   	if (pmd_trans_huge(_pmd)) {
-> diff --git a/mm/hmm.c b/mm/hmm.c
-> index 082f7b7..db12c0a 100644
-> --- a/mm/hmm.c
-> +++ b/mm/hmm.c
-> @@ -429,7 +429,7 @@ static int hmm_vma_walk_pud(pud_t *pudp, unsigned long start, unsigned long end,
->   		return hmm_vma_walk_hole(start, end, -1, walk);
->   	}
->   
-> -	if (pud_leaf(pud) && pud_devmap(pud)) {
-> +	if (pud_leaf(pud) && vma_is_dax(walk->vma)) {
->   		unsigned long i, npages, pfn;
->   		unsigned int required_fault;
->   		unsigned long *hmm_pfns;
-> diff --git a/mm/userfaultfd.c b/mm/userfaultfd.c
-> index e0db855..133f750 100644
-> --- a/mm/userfaultfd.c
-> +++ b/mm/userfaultfd.c
-> @@ -1791,7 +1791,7 @@ ssize_t move_pages(struct userfaultfd_ctx *ctx, unsigned long dst_start,
->   
->   		ptl = pmd_trans_huge_lock(src_pmd, src_vma);
->   		if (ptl) {
-> -			if (pmd_devmap(*src_pmd)) {
-> +			if (vma_is_dax(src_vma)) {
->   				spin_unlock(ptl);
->   				err = -ENOENT;
->   				break;
+> +static inline bool is_devdax_page(const struct page *page)
+> +{
+> +	return is_zone_device_page(page) &&
+> +		page_pgmap(page)->type == MEMORY_DEVICE_GENERIC;
+> +}
+> +
+> +static inline bool folio_is_devdax(const struct folio *folio)
+> +{
+> +	return is_devdax_page(&folio->page);
+> +}
 
-I assume we could also just refuse dax folios, right?
+Hm, nobody uses folio_is_devdax() in this patch :)
 
-If we decide to check VMAs, we should probably check earlier.
-
-But I wonder, what about anonymous non-dax pages in COW mappings? Is it 
-possible? Not supported?
-
-If supported, checking the actual folio would be the right thing to do.
 
 -- 
 Cheers,
