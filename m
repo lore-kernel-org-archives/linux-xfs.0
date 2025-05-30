@@ -1,113 +1,159 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A35D4186A;
-	Fri, 30 May 2025 05:17:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7B5622ACFB
+	for <linux-xfs@vger.kernel.org>; Fri, 30 May 2025 09:33:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748582224; cv=none; b=IbzrwODnlERI2XgTy6hPtxXf+XPHPrsGmm1/K2AgtfHxIGYTopC7FGxcnvmPVjgc3DTY5rftreiq74eQes9jNCd4CX5s/6ns6zXMRU1hC93Lvz9Br5dVMNlQaLsFFfpCD0xrhaZZEzQSO57UuNUGtLwn9F1UxiiETMg1k5tZjUY=
+	t=1748597634; cv=none; b=J3lFOFoa7b8MiPuYJP7DCN/t6UyywT0v4F2MZ79ovJppy/NoInLky4J/DKwsRfsCYQL747ZUyMoaCT9fAmd/F8H8ousOXhFyV3O8932A45ew9oNH/d/UCUxkxjrfUS8vPTMFU9t+w6WIYk38MK/gbSUtNtxvTIu5Ed6gxwjDKIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748582224; c=relaxed/simple;
-	bh=6cDxG0+9QuMc3af6H2TLpTYEcXZDVD6F5xlnD/yaVbA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DsvyXfyX0RH/9TLk2N2a7WVKoXmAvVvO8EV6FRjbcOfYG5B1E+QdLGy+TyZMoAqDJMyms1SP+vM6wSlsjWx9aZbAaFOlUy1bd17S+qEghyJe1NYszXv4ss6RkxLysRiLcXTtvu/XGlEQ86hlqTslJ1vV533msA014oZpU5g4M/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ei0fgaou; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1748597634; c=relaxed/simple;
+	bh=DB+1yl7APIInm8MCrBxZ4Qwh/WXcXEhVDIyFl5OmcI4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oni6FwyTQy30YbYhUP/fr8VthbxxY8z4R1nRgyWOlTID6T7lgOBv5ekheNQzZF6TiQyZyIGdy3X06Fw0+DYyzhtSk7R03PV5IP9EHMJVfBPS/H0805SQOsqop2NiUpQYamoVDYNlge85eDh4hdF1gQARkrTF85LbNNPAWW2q3hA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=D+pAZ8Wu; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ei0fgaou"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB32AC4CEE9;
-	Fri, 30 May 2025 05:17:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748582224;
-	bh=6cDxG0+9QuMc3af6H2TLpTYEcXZDVD6F5xlnD/yaVbA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ei0fgaouIwi5/L9brRgojB3ZmFvnPnoGtN4NM/oXzFIaU2oO5czkYrbaAz1K5PPJq
-	 6qIQDvcQHALdLVhJVnlt3jSYuxc1o3MFViFnGUUTnNt+ZuCmzLJ0IZ7Ut/hqhcQk0T
-	 6ovngUr7lDHEbrWq7/Yq691hdoSiLXT65xfoqmH6N25VNM3p/yJvmpSxfcx5yylLhd
-	 ajf7YkkkJNOuJYWd98uyk7wMVbp3Ec9uM3RFM12QmHY1VRuI3GwIrbzxlhVhL6qspA
-	 1AxoofvTr4zOytcN56rKkkjd8VGa2qnxleHqb1Vy6yockiMWQsdneLUJXBSWjYomf9
-	 nWssgxZQON77g==
-Date: Fri, 30 May 2025 07:17:00 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Yafang Shao <laoar.shao@gmail.com>, cem@kernel.org, 
-	linux-xfs@vger.kernel.org, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
- data corruption
-Message-ID: <20250530-ahnen-relaxen-917e3bba8e2d@brauner>
-References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
- <20250529042550.GB8328@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="D+pAZ8Wu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1748597630;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=3HsXX6R0HPP/biqLepMPHpr/VTNhNhquA8c3ePXroJI=;
+	b=D+pAZ8WuD9J24oomtH2M3ZVs3+xWmPjRXiblHrzlpCKBeOwF2MqrydB4nO5ecYBGGi7hA3
+	6uN3D98SD1AA3RATM83/XsTqi53eQQxdCKpvHZ5potyZwj2EkxTN8iKYOrdWm5v2hYDGJj
+	62hgVe/yS04jgXbO2hf8fBGtMpJ4VYo=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-582-ao0Y2pX7N-2AFeiZif094Q-1; Fri, 30 May 2025 05:33:49 -0400
+X-MC-Unique: ao0Y2pX7N-2AFeiZif094Q-1
+X-Mimecast-MFC-AGG-ID: ao0Y2pX7N-2AFeiZif094Q_1748597628
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-450d886b9d5so1476615e9.3
+        for <linux-xfs@vger.kernel.org>; Fri, 30 May 2025 02:33:49 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748597628; x=1749202428;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:from:references:cc:to:subject:user-agent
+         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=3HsXX6R0HPP/biqLepMPHpr/VTNhNhquA8c3ePXroJI=;
+        b=GZ7ZqhBAfJwJabvSSstZsF0WgO+GiaXuEwGJsOYG1jr8QuL1z/hzMhRJvzksg8SApp
+         YfBVIyzBdOabNRkTetlMnPYuDeUO0dLFKNkSk1eSIn5DquInh/3qpc3gS3a8L9BxodD1
+         W4RrgDli04KxY3v6ODrxhlrghoH60+/4oYiN6/Ppr+s3p57fxe+HdNDm3vBVVqpq1+wd
+         Y9rlIrgJrnd2g0vsIXOnyrjhWCLKHTJEC3xV7emi1PlZCDkpIx72Whb6O2Nx1EITvalX
+         zNjLWpMcuh6PkUXrmZTyLKZ4OgwC2/rha5NESccpPzaV+WwrnpPNNGoSpAWZACz/oCzp
+         iLYA==
+X-Forwarded-Encrypted: i=1; AJvYcCWELyYl7WdYPAlqyAm+XBc1njAHPzFcKLPJclxSV8UGd4XOBnTwrcPebc6M8wac5r08JE3icNRSJiQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywo+2uiRMg2AqztoE4oMNLfIt2oEytPHhXwlTDikoqFphq7i/Fz
+	Ge31kgTrOHRJgzWWfAx4NhRQb9GDA85/p2/EmnD5q18LgiIpe2sWhgB83OuCLo5iPu2NIerLJmf
+	GsAs0w4FF6kuS8bHRE7w69P3w4dCrEI3GZi7r9ahEtxsrzMdhvPmTqDKwx+Gjiw==
+X-Gm-Gg: ASbGnct8r7GxikyWckNxoP0TOzV/R/TSVLjDwYZ1ISMOctARMnKsTvohCMtVW8bmGix
+	7yAcj4TkiVuT5MfXuNE92NPlMEabanri1/xlbwb3FRPhFi+1kFVz7S0smBvwk/ctGL565vX8+kO
+	L+N9YhgvBtcxcYXPlVIe6Jzc0GqaDHIrsImDzHwP0mCGYE92ZMyOvYx0K0gt8QPwKMIZnT9QOPr
+	EzZ1eLlsTP0TiVJn7A22Rt56SSnr8+glfqdgCCLdREvkjDOeh/KFlZ7HJEw+7/8844OS8rzllx9
+	cZTQIGUdMbAyZ/mH6H+p+wcsEqC8OjbW/H0HdbMUmbFNhtMUgFS7hCV/dA2c4RKcjkAl8nSXFoH
+	/TdOp3lGIXgdujQ0EL4WmhOh2wuijNdliR/0jQu0=
+X-Received: by 2002:a05:6000:188b:b0:3a4:e393:11e2 with SMTP id ffacd0b85a97d-3a4f7a366bbmr2070892f8f.34.1748597628405;
+        Fri, 30 May 2025 02:33:48 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFPLwoEcfpG65ruS1QubjzGQLrQH9J6REe/EFj1LtU5rHML/KjwauHHFCNN+LVLagp2fysdSQ==
+X-Received: by 2002:a05:6000:188b:b0:3a4:e393:11e2 with SMTP id ffacd0b85a97d-3a4f7a366bbmr2070847f8f.34.1748597627996;
+        Fri, 30 May 2025 02:33:47 -0700 (PDT)
+Received: from ?IPV6:2003:d8:2f03:5b00:f549:a879:b2d3:73ee? (p200300d82f035b00f549a879b2d373ee.dip0.t-ipconnect.de. [2003:d8:2f03:5b00:f549:a879:b2d3:73ee])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3a4f00972d9sm4415633f8f.64.2025.05.30.02.33.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 30 May 2025 02:33:47 -0700 (PDT)
+Message-ID: <bbb19f59-54bc-4399-a387-1df9713fc621@redhat.com>
+Date: Fri, 30 May 2025 11:33:45 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20250529042550.GB8328@frogsfrogsfrogs>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/12] mm: Remove PFN_MAP, PFN_SG_CHAIN and PFN_SG_LAST
+To: Alistair Popple <apopple@nvidia.com>, linux-mm@kvack.org
+Cc: gerald.schaefer@linux.ibm.com, dan.j.williams@intel.com, jgg@ziepe.ca,
+ willy@infradead.org, linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
+ linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
+ zhang.lyra@gmail.com, debug@rivosinc.com, bjorn@kernel.org,
+ balbirs@nvidia.com, lorenzo.stoakes@oracle.com,
+ linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev,
+ linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
+ linux-cxl@vger.kernel.org, dri-devel@lists.freedesktop.org, John@Groves.net
+References: <cover.541c2702181b7461b84f1a6967a3f0e823023fcc.1748500293.git-series.apopple@nvidia.com>
+ <cb45fa705b2eefa1228e262778e784e9b3646827.1748500293.git-series.apopple@nvidia.com>
+From: David Hildenbrand <david@redhat.com>
+Content-Language: en-US
+Autocrypt: addr=david@redhat.com; keydata=
+ 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
+ WNyWQQ==
+Organization: Red Hat
+In-Reply-To: <cb45fa705b2eefa1228e262778e784e9b3646827.1748500293.git-series.apopple@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, May 28, 2025 at 09:25:50PM -0700, Darrick J. Wong wrote:
-> On Thu, May 29, 2025 at 10:50:01AM +0800, Yafang Shao wrote:
-> > Hello,
-> > 
-> > Recently, we encountered data loss when using XFS on an HDD with bad
-> > blocks. After investigation, we determined that the issue was related
-> > to writeback errors. The details are as follows:
-> > 
-> > 1. Process-A writes data to a file using buffered I/O and completes
-> > without errors.
-> > 2. However, during the writeback of the dirtied pagecache pages, an
-> > I/O error occurs, causing the data to fail to reach the disk.
-> > 3. Later, the pagecache pages may be reclaimed due to memory pressure,
-> > since they are already clean pages.
-> > 4. When Process-B reads the same file, it retrieves zeroed data from
-> > the bad blocks, as the original data was never successfully written
-> > (IOMAP_UNWRITTEN).
-> > 
-> > We reviewed the related discussion [0] and confirmed that this is a
-> > known writeback error issue. While using fsync() after buffered
-> > write() could mitigate the problem, this approach is impractical for
-> > our services.
-> > 
-> > Instead, we propose introducing configurable options to notify users
-> > of writeback errors immediately and prevent further operations on
-> > affected files or disks. Possible solutions include:
-> > 
-> > - Option A: Immediately shut down the filesystem upon writeback errors.
-> > - Option B: Mark the affected file as inaccessible if a writeback error occurs.
-> > 
-> > These options could be controlled via mount options or sysfs
-> > configurations. Both solutions would be preferable to silently
-> > returning corrupted data, as they ensure users are aware of disk
-> > issues and can take corrective action.
-> > 
-> > Any suggestions ?
+On 29.05.25 08:32, Alistair Popple wrote:
+> The PFN_MAP flag is no longer used for anything, so remove it. The
+> PFN_SG_CHAIN and PFN_SG_LAST flags never appear to have been used so
+> also remove them.
 > 
-> Option C: report all those write errors (direct and buffered) to a
-> daemon and let it figure out what it wants to do:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=health-monitoring_2025-05-21
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-monitoring-rust_2025-05-21
-> 
-> Yes this is a long term option since it involves adding upcalls from the
+> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-I hope you don't mean actual usermodehelper upcalls here because we
-should not add any new ones. If you just mean a way to call up from a
-lower layer than that's obviously fine.
+With SPECIAL mentioned as well
 
-Fwiw, have you considered building this on top of a fanotify extension
-instead of inventing your own mechanism for this?
+Acked-by: David Hildenbrand <david@redhat.com>
 
-> pagecache/vfs into the filesystem and out through even more XFS code,
-> which has to go through its usual rigorous reviews.
-> 
-> But if there's interest then I could move up the timeline on submitting
-> those since I wasn't going to do much with any of that until 2026.
-> 
-> --D
-> 
-> > [0] https://lwn.net/Articles/724307/
-> > 
-> > -- 
-> > Regards
-> > Yafang
+-- 
+Cheers,
+
+David / dhildenb
+
