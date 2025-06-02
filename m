@@ -1,45 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2158B65C;
-	Mon,  2 Jun 2025 05:07:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E292C2C3255;
+	Mon,  2 Jun 2025 05:31:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748840821; cv=none; b=KFqxg3+ydIxUXjysvh6jYqb5ynXbPkv3q2k6qjVDzV5NazSPuLdbBW1bkvWkVHiULxG4BAVNt4oWO+InBRNaUa7Tmqz7V01o5da+VozYs74WjNV+3cqewmRO/9hQHuXUaG3cCDMfY+tkZoHTm6yDSQs4Pe4YFcTzWphj9ae0RqQ=
+	t=1748842273; cv=none; b=fFl3vO2qaKr3Y7oetCtVJaYGNiZ1cvE8O2uDzU31YcRqrEtiSOQgB/ZolCAGrZgb5IuXrglR4w4xlvXi+qglYKzHNKmovDyteQk4zQ6hHt/Ov8rZmwrLGa72ttSlt9p3A2HswhZ1QGVlYukOKW9JPZkTgY//H91+8aB0sMEsGDk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748840821; c=relaxed/simple;
-	bh=KBKvwrDtYOGJ3Sk5yGhweAEu1h06hJFpfgpPkIk4B3s=;
+	s=arc-20240116; t=1748842273; c=relaxed/simple;
+	bh=r78Zk96UcLR+Ms0OlaIp/nN1u0mubhUhbbUCJdU0Nsw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S+VT8YHOQ+0PGMcnfwv8ZvKH5OIjAMMaFgl/F0mNy/UJZ0Avs/DzIUmRkR8QDKCvU5xt86qBuOoUB8IIKnkgdsVeCMrcCLAfdbH7+sspEcwr6I0IGv5fRoqMNN8oRGTmOMDfLBN5U+h5QNdzEsnQxDKi+bb0G4EVYjbGiXwmhs8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ijXA5isb; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=XwZI5jpTPWxqzQJnBWp4NMBM/DRuKsV+NDMNAhOP5u1klQrhR1Gcq1oFHfJQYreo3PABVxy94dZPRHyOpRUyqQKpVqJy2d41uhGfAdWtnX3tKdbDO0PILJHF2Yqkrb+xXhJKAbSevFBXd1YQ0cbeib9NqntqnPxDWNcZ3P3lCsQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=BtxYfW6O; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ijXA5isb"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BtxYfW6O"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=NryE9w5TNLfeM9L423ZI0Ib2QmGLwnVsc7lYeYfK/a0=; b=ijXA5isbaSV32frPGbUYV6bFoW
-	Jgw8OAs/CGM9sZ6jTZ9WnV8EEoj50QIJyrW2RLGsGmcH7vdJC2jgckvR/ApdiCliut4vOj7KVFn0O
-	Vr+PgdL/JUEkphrDeAhCOKjGKErQd4MBUoZxPZq8OcK/c7sDvqh1SunI1BnsRTC7bYhH6ag4BZIyr
-	5KELzdzI/7Z0TRsihqgJDD995ElXAaazpVb75QZpvv92GWjzyoPgQ0VXCA+OIgrdgS4Cm0f89LoGE
-	uWWlqemjLPrVW+WN/Xu+FE46+ojzVw/sXCn9VycImvhFwWDiz9/hWR13ivBF7iLXKmYBo2xO71AKP
-	D+4HpW3w==;
+	bh=3B/N9yD+Mx9YSN9gtyxtZ0sxVuRC0yDOdXVS7TaPJlM=; b=BtxYfW6OY6I3YR+JmMC1tWvQFK
+	AdgB1DXvj9XbgsbxTh+n/ZjhpLeL4/pAHsyTE34yBkUA38ZAonIXAY8WNVTh2+iAB9udaDH5KDWKe
+	Uo2cLEIp+0tDizT2A5izSRjVpCQGf7hC6qNTPgbvxaEi8qHy4S/puQBLyTa1V1C7SMrgmlu8vLofy
+	mr9/BdgFw5FDG8A3wT6oUeYfVOSS6aVadCgjIuA2wJ6rRphUNjExwPcKgYyMHygqmqV6L5YFsXZzE
+	WSMtWtkCPO8/TgvmBNPZilKCnQjqHi7E0aSCyUPvdxmfRkf6ewvrG0mTjtyq/OXu5fE4WJok1BvJz
+	nIdK/CSg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uLxO0-00000006jDe-19rD;
-	Mon, 02 Jun 2025 05:07:00 +0000
-Date: Sun, 1 Jun 2025 22:07:00 -0700
+	id 1uLxlN-00000006kY0-1Z7s;
+	Mon, 02 Jun 2025 05:31:09 +0000
+Date: Sun, 1 Jun 2025 22:31:09 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, zlang@redhat.com,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs/259: try to force loop device block size
-Message-ID: <aD0xdHHKmfLmAOXb@infradead.org>
-References: <174786719374.1398726.14706438540221180099.stgit@frogsfrogsfrogs>
- <174786719445.1398726.2165923649877733743.stgit@frogsfrogsfrogs>
- <aDAFRGWYESUaILZ6@infradead.org>
- <20250528222226.GB8303@frogsfrogsfrogs>
+To: Yafang Shao <laoar.shao@gmail.com>
+Cc: Christian Brauner <brauner@kernel.org>, djwong@kernel.org,
+	cem@kernel.org, linux-xfs@vger.kernel.org,
+	Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
+ data corruption
+Message-ID: <aD03HeZWLJihqikU@infradead.org>
+References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,28 +47,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250528222226.GB8303@frogsfrogsfrogs>
+In-Reply-To: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, May 28, 2025 at 03:22:26PM -0700, Darrick J. Wong wrote:
-> Welll... the only reason I patched the loop driver to turn ovn directio
-> by default is because writeback throttling for loop devices keeps
-> getting turned on and off randomly.  At this point I have NFI if
-> throttling is actually the desired behavior or not.  It makes fstests
-> crawl really slowly.
+On Thu, May 29, 2025 at 10:50:01AM +0800, Yafang Shao wrote:
+> Instead, we propose introducing configurable options to notify users
+> of writeback errors immediately and prevent further operations on
+> affected files or disks. Possible solutions include:
 > 
-> On one hand it seems bogus that a loopbacked filesystem with enough
-> dirty pages to trip the thresholds then gets throttled doing writeback
-> to the pagecache of the loop file, but OTOH it /is/ more dirty
-> pagecache.  Ultimately I think non-directio loop devices are stupid
-> especially when there are filesystems on top of them, but I bet there's
-> some user that would break if we suddenly started requiring directio
-> alignments.
+> - Option A: Immediately shut down the filesystem upon writeback errors.
+> - Option B: Mark the affected file as inaccessible if a writeback error occurs.
 > 
-> Maybe RWF_DONTCACHE will solve this whenever it stabilizes.
+> These options could be controlled via mount options or sysfs
+> configurations. Both solutions would be preferable to silently
+> returning corrupted data, as they ensure users are aware of disk
+> issues and can take corrective action.
 
-Well, I'm all for using direct I/O loop devices by default.  But having
-non-standard kernel hacks for that is pretty silly.  Can we just make
-xfstests use direct I/O by default so that everyone uses the same
-configuration?
+I think option A is the only sane one as there is no way to
+actually get this data to disk.  Do you have a use case for option B?
 
