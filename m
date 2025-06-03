@@ -1,44 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37FFC1DB366;
-	Tue,  3 Jun 2025 14:35:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F18011DB366;
+	Tue,  3 Jun 2025 14:36:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748961324; cv=none; b=m+vquiKtwv+o8ve4L5mb6W/vdhSMlUuutrEyTDZonW/q1DGib4LQQYv9cSkCxMXSWOZq3Krp+UzXhN1maA0uxN5IDnJqopEK5GWtyV2ZAvYh2F+VvvmAWgUPUssgkfrEkOBX1Ai9oxIHVh/pL2WBLehFCpcEiGZeTfpXt4c4Ezg=
+	t=1748961395; cv=none; b=qxK6bo3KZKtdY5ACnKM6dlxA9OLE0n480ftqXFdM8uIAbM0ulSQp23el+pARMDKrGp15nAfnFcWkHiQJ5/cwSFbtc1kQITvjM/3+A0nKRGrhatNi0i2IiaPW/NtbUTnTqmssmoo6WQc4EC9bCPnVT42T47QtUIEIlZ9JnE0Xlec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748961324; c=relaxed/simple;
-	bh=WvbV4MLj2hDHIwTfK5G9Z90cBJ9vXGQeg4nqcgvJL/k=;
+	s=arc-20240116; t=1748961395; c=relaxed/simple;
+	bh=GQIzcpu0ccYCJ80lAGD95mI52Q+fpOYZP8Hn0QuNdvM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Li9I9xlXYWCQ9OQjJhZGxRMkXUBrTHboulNMvi5vpgFxDa7z85O0XsFbTzBfNkGVuklCa4xa2Ri0NstB/cez3wLR+kv/Yai0UJLlGjduMW7q87tQjB1fiNAxJno0sslxVvCpcx4ztIW4j4Fm4mP0Vce+h4fyRvk5vRVhBYYJ1EE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mR8/ZzYv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=uhrohYqCQ7gpZTjpl5RVX/f/q/Zym3nPBZq7r6ravdUtsDSR7a25jRQRUEywcAC1SvngDZYRRVZ2V3+B2eMNRkeihpoOoCxM8d0kHoakhUSaA2CeMHR/FbMmsUsgdS3rs4OUyOzYsYou00+/PoUU7JwcV2mRPfV4JAAO6VdrMws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XC2aUy7F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mR8/ZzYv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1FA1C4CEED;
-	Tue,  3 Jun 2025 14:35:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XC2aUy7F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD1C0C4CEED;
+	Tue,  3 Jun 2025 14:36:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748961323;
-	bh=WvbV4MLj2hDHIwTfK5G9Z90cBJ9vXGQeg4nqcgvJL/k=;
+	s=k20201202; t=1748961394;
+	bh=GQIzcpu0ccYCJ80lAGD95mI52Q+fpOYZP8Hn0QuNdvM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mR8/ZzYvRyec0atV+PrZd+TNHAHQ3rwW7Hq3OpV72rZLqCqqT5ydwbiNcEenBShn5
-	 SVVg9eZX7LZIounPtL39Sk3sCILZ2qLTBpdSwmGP4gPMuonaXOAy32A5kRKmxSIJrK
-	 10dX2wCrYTdKEBAz22g0VFGVOPfBV9VfCgNxELdeazJGlxNIxXthzEqFsQZPA6raoh
-	 m34SPRxiJasUrn4ooF+ynljOhNFlnXCzu+ofVjYj8zX0XJnwbFS5Hx734u+OgXQQsQ
-	 +uX6jSpWiwysxhTkknnjs1hd1jGNpUwWe/xB/BZbnjvnUaK8VxUChREzh8/iJzflYJ
-	 uUMBhEka9IR6g==
-Date: Tue, 3 Jun 2025 07:35:23 -0700
+	b=XC2aUy7FXNKBwzCDC2fKF+HEMMa/fjeiPg53BmX4TdgUBTy+VppgngS3JG4RjkzwS
+	 dMXurwfwQd/n1eCXAITvxPuvnGpWfQ4D3G2fJBGVdBBCUc++n5YFX4If3P3cPOiugb
+	 cd0v8fL1360XgrpiKdBO2+WjxHJsQaTCd0l6DmTVZ9hA6xFgLwd6dXE000Z3Kgi7EE
+	 DqitOSsIX6mX+ybm6zEPI0w7IS0HWg4ILbWvVcX8fzowj8SevYoUmUWTcpeNSPgAU3
+	 3uEr1Db/Lhy+VD1LMONJqa0dI7/q+WKveH8DjtmvPLAnUlzat7aUPrc1Bm9OfCmkR7
+	 eRg2+HoJXO4Ug==
+Date: Tue, 3 Jun 2025 07:36:34 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Yafang Shao <laoar.shao@gmail.com>,
-	Christian Brauner <brauner@kernel.org>, cem@kernel.org,
-	linux-xfs@vger.kernel.org,
-	Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
- data corruption
-Message-ID: <20250603143523.GF8303@frogsfrogsfrogs>
-References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
- <20250529042550.GB8328@frogsfrogsfrogs>
- <aD03ca6bpbbvUb5X@infradead.org>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs/259: try to force loop device block size
+Message-ID: <20250603143634.GG8303@frogsfrogsfrogs>
+References: <174786719374.1398726.14706438540221180099.stgit@frogsfrogsfrogs>
+ <174786719445.1398726.2165923649877733743.stgit@frogsfrogsfrogs>
+ <aDAFRGWYESUaILZ6@infradead.org>
+ <20250528222226.GB8303@frogsfrogsfrogs>
+ <aD0xdHHKmfLmAOXb@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,24 +45,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aD03ca6bpbbvUb5X@infradead.org>
+In-Reply-To: <aD0xdHHKmfLmAOXb@infradead.org>
 
-On Sun, Jun 01, 2025 at 10:32:33PM -0700, Christoph Hellwig wrote:
-> On Wed, May 28, 2025 at 09:25:50PM -0700, Darrick J. Wong wrote:
-> > Option C: report all those write errors (direct and buffered) to a
-> > daemon and let it figure out what it wants to do:
+On Sun, Jun 01, 2025 at 10:07:00PM -0700, Christoph Hellwig wrote:
+> On Wed, May 28, 2025 at 03:22:26PM -0700, Darrick J. Wong wrote:
+> > Welll... the only reason I patched the loop driver to turn ovn directio
+> > by default is because writeback throttling for loop devices keeps
+> > getting turned on and off randomly.  At this point I have NFI if
+> > throttling is actually the desired behavior or not.  It makes fstests
+> > crawl really slowly.
+> > 
+> > On one hand it seems bogus that a loopbacked filesystem with enough
+> > dirty pages to trip the thresholds then gets throttled doing writeback
+> > to the pagecache of the loop file, but OTOH it /is/ more dirty
+> > pagecache.  Ultimately I think non-directio loop devices are stupid
+> > especially when there are filesystems on top of them, but I bet there's
+> > some user that would break if we suddenly started requiring directio
+> > alignments.
+> > 
+> > Maybe RWF_DONTCACHE will solve this whenever it stabilizes.
 > 
-> What value does the daemon add to the decision chain?
+> Well, I'm all for using direct I/O loop devices by default.  But having
+> non-standard kernel hacks for that is pretty silly.  Can we just make
+> xfstests use direct I/O by default so that everyone uses the same
+> configuration?
 
-The decision chain itself is unchanged -- the events are added to a
-queue (if kmalloc doesn't fail) for later distribution to userspace...
-
-> Some form of out of band error reporting is good and extremely useful,
-> but having it in the critical error handling path is not.
-
-...and the error handling path moves on without waiting to see what
-happens to the queued events.  Once the daemon picks up the event it
-can decide what to do with it, but that's totally asynchronous from the
-IO path.
+I guess we could just modify _create_loop_device to set directio from
+creation and fall back to pagecache io if need be, instead of the weird
+"create it then try to change the mode" dance that we do now.  Does that
+sound better?
 
 --D
