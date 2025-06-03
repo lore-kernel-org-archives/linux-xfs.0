@@ -1,104 +1,63 @@
-Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 712D5145B3F;
-	Tue,  3 Jun 2025 03:04:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE8282C3261;
+	Tue,  3 Jun 2025 03:13:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748919860; cv=none; b=RjELgkEw38vZ7QGFCzjcO9gVohSdXJZfXfB2JCMk/FsGxS/h6zqjoAenRZ7VNUH4Bp/AMip+rJ3Lm8fcFh8KK/CbSZ7Pk8nOhm29y/s7SO9Fpgdg7ZZwlmsjM7E918EhovL1rf2VNRnqTXHS+IO1aTVEF1qAwi8rpRvBQU09rYo=
+	t=1748920434; cv=none; b=qE3InRCdDd8zU7r45L89WJqTcz3fPjBXtNi1Y7EVIHfLU+lLp0EdYN4dYehHeZVriqo3y5qYwqJE/uqb7kWwtUgrCXq2cQ/HEVMMlqXSsFFnYKvPC4O528N5JleDaYieiDqy+x92pe0dhsEdkwMVtwzb8HgDob2DXczphYwOUbk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748919860; c=relaxed/simple;
-	bh=rJC9ZpcSornVLCggFCzM082UaM5dPxxCspqU7a+anWw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=lIq1ifMefEQ52cDTQnLvSXcz/JpR9d1H0daTUsFMvDCElL2jVOGo2OxetpK8OyZY4g+jHymLGDkWqPXsUpsZBMFomMqtKrvP2tFueny0lvNmeSIiLBumJZgnL/ne9zEp+ClR8EEbeTonyMtJ2fR7hvtiIxN0d1XHB1GwoPcIyPA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VQALsrLF; arc=none smtp.client-ip=209.85.219.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1748920434; c=relaxed/simple;
+	bh=HJ5XX5EuAJe6CyKHwGCoNaHBSAneuvBEC6f3F7MnUVI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BL0RRKWFvM/e3a/0o3KMFYnT1UPTp+5e5gkn10LNljuB2BbABoJPKUvJDSHfn9LcGYr8HpXOfdum6Pm+jNx2QHLPc2iOWik+GsR83h9nJDJF++RwkmF5VLF9gLwYqSK8OSzP4M+F00TKsr7FRThzYWkontLLyPm9df5g0ExC+io=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WMygVBoX; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VQALsrLF"
-Received: by mail-qv1-f42.google.com with SMTP id 6a1803df08f44-6fad3400ea3so34067706d6.0;
-        Mon, 02 Jun 2025 20:04:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1748919856; x=1749524656; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QpRZNQFZym4S4gg1B2+EBb2IMaw0D9ntMnCImoepOMk=;
-        b=VQALsrLFiwE5AMU09kW7g+i14tIozcM3N2a+U3KT2ySwwkBVDBRI8+kiITNDeyZQP4
-         EVyti0YhEudh9H9q2QkNjUUldGgX6/l/Lk0eMSJ7Wj+3bUsJ8ATBCLo2yTBUEip641h4
-         yA5T+hE15PPduJJSQ082I9neU3643s3wlEsrVblWoZGmjJeNiAfXPe9hPYRZxasDK2Ho
-         sMRcTdUoCm4/cr9OlZbcPPhXiOgFExE3TyQFSuQ+YLOBaefn38LT0OsrS0w3NQIsOdji
-         HbZPUlcnEDTNFr9Kd/bP1p7cbaDAJ2WRhOm1LCu5nGBr2auYeZ3U+44NlAZyEper00+2
-         GqeA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748919856; x=1749524656;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=QpRZNQFZym4S4gg1B2+EBb2IMaw0D9ntMnCImoepOMk=;
-        b=hThugQ0vc21YlVlqbrdsDctAySN0Yv+rk42JaJfVM8u39ZsHFKoeHIJTk0M75EXw8X
-         7pgQVF0+LWvcbHGoaqwATzodpYKSPFDKOwHfBNjbnnrS7LHShe4NSt5a/sUUxfLCPTX2
-         hqZajzc6XX7nuOjceb33/2AMhodOdK+1GvFdj9TMH8gn82DqnWm7Jg7H6D04Vxey4QEl
-         050GfMuVf6wQnzKbupw6f/8MksJmnkkZa+xVmCat/GXhBWk7Cpx/itW3pjeXJAHMutkT
-         GhJZa6ij6102fUdygupFfslV3b9pNW1ecMcqfwo9csvmuoJ5RrSclNW/HxObHbLse83G
-         G4EQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVgT6uTR8PpKdnkuUJFXFDwXuYlNpPGGtBHwjGWhjqPIXsIy8rd0DgW/qbvmw4LFAwkDZWS4SoJJHQ0h7gq@vger.kernel.org, AJvYcCWCQuAYWf1snyatlg/5VhcG2ocFErgToHfeSOssA1HHw4rAvwsEfD9Q7mHgbXaErmzIgu5Vp1tgRUvh@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxhc5uDPjmS8wNsPBt3T7OyTAWel6rrDqLE+q978OFmu8H6pXef
-	qRO3lyEhm0dcOHv+ekvMreYjABy/VhSQzdXYFoAanA9u4EiOtHEmWnDdlAC7U0Zw0IiG5wBDqjh
-	BAPKROgR90W6n5lGIk1c7xH8imPD0fq0=
-X-Gm-Gg: ASbGnctaY+UmV0HBqvV/EcGUvdiGkdkHFvZFaev7s/U+lY1CnkvcvVtOu3bt/UbWJss
-	9KlhGgU1bRZ3k1vKe4GlXNFMywdl8hx+0EKV90eMY/udmi+QdQB5cujvi8m0yQjinNUDsqE5MNf
-	FVN3kDCL789UBJOLrWth7/7HXXQSSS+QheHA==
-X-Google-Smtp-Source: AGHT+IFT4VMT6vYGWvT9b5VIsvF4CJIld8vst9G+vmcGcbiqRlTXxMgZoiyswyfgCuWyJykx7WoP4ZvWmlrLSJ9t+h8=
-X-Received: by 2002:a05:6214:3003:b0:6fa:c99a:cdba with SMTP id
- 6a1803df08f44-6facebb25fdmr252539566d6.14.1748919856185; Mon, 02 Jun 2025
- 20:04:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WMygVBoX"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
+	Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=rqlxqVcLZnSmkTnq26ieMyCkIRygZObCR9CdREzwSCg=; b=WMygVBoXpxf2nK69GArd7UzujY
+	PMUYQP5MWjvH9DQXAxNj0BfQPF6gXVPJAPxgG4TK+JGY95kyEamD/3BiB/+ijlEAP8dr+tkUTdJnG
+	6uOr3ynpb7pqZ2hqBzGIBpusC/NmuLtxw6fntoqttT2jrzqDz4Ym9D+fdZmX7+tYnmXERCPWdmkUj
+	vUCjPKlTIdUoWc1PuYQNcmpLezYSMXIgSrYDqTAtml9q0yXrIwoep5d0LmafWT/TQphijz2mGEryc
+	9jS4eEM8oiiUHQNvCDtrd3QdQV8H8V4P/NtnFAPTMBitF3KmQ23Sh9mBRicdiMfKULEh+60JzFkr8
+	tvkEMxtA==;
+Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uMI62-00000001aY5-20j9;
+	Tue, 03 Jun 2025 03:13:50 +0000
+Date: Tue, 3 Jun 2025 04:13:50 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Yafang Shao <laoar.shao@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Christian Brauner <brauner@kernel.org>, djwong@kernel.org,
+	cem@kernel.org, linux-xfs@vger.kernel.org,
+	Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
+ data corruption
+Message-ID: <aD5obj2G58bRMFlB@casper.infradead.org>
+References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
+ <aD03HeZWLJihqikU@infradead.org>
+ <CALOAHbDxgvY7Aozf8H9H2OBedcU1efYBQiEvxMg6pj1+arPETQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
- <aD03HeZWLJihqikU@infradead.org>
-In-Reply-To: <aD03HeZWLJihqikU@infradead.org>
-From: Yafang Shao <laoar.shao@gmail.com>
-Date: Tue, 3 Jun 2025 11:03:40 +0800
-X-Gm-Features: AX0GCFvRdse-7lwB_QEw2zKg5POM6p_a4OtRY81QPPDNLfInGJtXqbxfsLf36So
-Message-ID: <CALOAHbDxgvY7Aozf8H9H2OBedcU1efYBQiEvxMg6pj1+arPETQ@mail.gmail.com>
-Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
- data corruption
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Christian Brauner <brauner@kernel.org>, djwong@kernel.org, cem@kernel.org, 
-	linux-xfs@vger.kernel.org, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CALOAHbDxgvY7Aozf8H9H2OBedcU1efYBQiEvxMg6pj1+arPETQ@mail.gmail.com>
 
-On Mon, Jun 2, 2025 at 1:31=E2=80=AFPM Christoph Hellwig <hch@infradead.org=
-> wrote:
->
-> On Thu, May 29, 2025 at 10:50:01AM +0800, Yafang Shao wrote:
-> > Instead, we propose introducing configurable options to notify users
-> > of writeback errors immediately and prevent further operations on
-> > affected files or disks. Possible solutions include:
-> >
-> > - Option A: Immediately shut down the filesystem upon writeback errors.
-> > - Option B: Mark the affected file as inaccessible if a writeback error=
- occurs.
-> >
-> > These options could be controlled via mount options or sysfs
-> > configurations. Both solutions would be preferable to silently
-> > returning corrupted data, as they ensure users are aware of disk
-> > issues and can take corrective action.
->
-> I think option A is the only sane one as there is no way to
-> actually get this data to disk.  Do you have a use case for option B?
+On Tue, Jun 03, 2025 at 11:03:40AM +0800, Yafang Shao wrote:
+> We want to preserve disk functionality despite a few bad sectors. The
+> option A  fails by declaring the entire disk unusable upon
+> encountering bad blocks—an overly restrictive policy that wastes
+> healthy storage capacity.
 
-We want to preserve disk functionality despite a few bad sectors. The
-option A  fails by declaring the entire disk unusable upon
-encountering bad blocks=E2=80=94an overly restrictive policy that wastes
-healthy storage capacity.
-
---=20
-Regards
-Yafang
+What kind of awful 1980s quality storage are you using that doesn't
+remap bad sectors on write?
