@@ -1,67 +1,67 @@
-Received: from mail-qk1-f176.google.com (mail-qk1-f176.google.com [209.85.222.176])
+Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3684E238C26
-	for <linux-xfs@vger.kernel.org>; Tue,  3 Jun 2025 13:48:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE0C423956E
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Jun 2025 13:49:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748958529; cv=none; b=YTTJT9dMmXvlwlhI/8aSGJIUgq1BxihB7l59t0ycdrqJMwkgnzBa/iG7TS2KWir4lSIrhwqAXzleKniEgYVXUT+go5lxcdqA2qzndPC6AGm0bmoirRrR7FDFYZgA+M7aIF8tWOeCvZ2++VJIRCz+yq0Nhb+wBGfRVF8j2ACSLJQ=
+	t=1748958551; cv=none; b=gKrndk3AWR8tR73B/WZiIFB4RqIsOMwMtI9I5kkIY1cqV5awi6XShqFwRdc8zDziYYKB0cxr65Uashr08/FWLu0LUpwlRJ9cHkUau4D/17xTTowP2v4ixCs9XcWnmOQXJ16kIpaBB4n20B82nd3wBEBak1JeiWZiDlShRQ0zuqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748958529; c=relaxed/simple;
-	bh=RcXEhllfDG955BJXEN1tqIgpRJ2MsHzTBep7rZd+naY=;
+	s=arc-20240116; t=1748958551; c=relaxed/simple;
+	bh=z6KLOqm9i0ROrUFmuMKuPSFgLeSRnBoRY1z3awpPe7Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZRhPH33J508BPxxwFfeHFgndvbtjeLhNFCkyqgIHWjDwy+3i+BBkn9WqOnNiIv5pxO7jXNyEQd2a/rWT5840Q1QmsG61phSjHMejiGBGMNOKOvKy3m8D+0OrRwG8v3QOpTW6H86tWmkeNaLxx1b7yicUub797/9RgznGoOBVkcQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=KoP8asrO; arc=none smtp.client-ip=209.85.222.176
+	 Content-Type:Content-Disposition:In-Reply-To; b=MIaauHN4urDpkaTJfXrAx429OMXHTMBh9kl4P+E9L3+K3W0QU9mFLabgI8JeINY8OweS1ada9k/qXf9kbMSvSc/B2NxeqxhA9voq2T4Dal9J5RVTeZW+bFudEQx8OUZiUOFrAiwYoRetlL2r6Cmu3PTrV9JESuA2+DT2UYz8rTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=jJVQcqeC; arc=none smtp.client-ip=209.85.160.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="KoP8asrO"
-Received: by mail-qk1-f176.google.com with SMTP id af79cd13be357-7d20f799fe9so129065785a.2
-        for <linux-xfs@vger.kernel.org>; Tue, 03 Jun 2025 06:48:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="jJVQcqeC"
+Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-4a43afb04a7so29699921cf.0
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Jun 2025 06:49:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1748958525; x=1749563325; darn=vger.kernel.org;
+        d=ziepe.ca; s=google; t=1748958546; x=1749563346; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZSTZfPDDH1MLe7AQH4Yed2Uaqt/hLn+gokhyp0JhueY=;
-        b=KoP8asrOMIEJethoS/itlxDSGu3+zKoaKa8sDFbGOOwqgCYGuYTFZfYS8Mnkx+tl2G
-         LjxtWypcZcjUxtywmuy3LTV23DzErA2mqesc1QMxuKAF1XQppJ55Q57IUPuLTyiUn0Sk
-         YS/uss7FvucPNO97r9KoOsxXLFtUQJm+qNUu/DkymsWRGtNsFPMKPn5wT9vBJuunJkBi
-         /ukr6MpVltCAllXmAe7Dx+EhPp2hMVvhbhJNotnIQu7A2DxkaHLbi1S2kV3TyJK+7eoh
-         hFWkqGTwpByFV0dpwd0TOBMUr6BTdcw6HqglUcBifaQWg5i7gw3KGyxZEuz/Utn1gmBa
-         rs/w==
+        bh=ooaH+MVJLI6au3+Z1ecUWfQ+S7G2Wg3KD+ti8ca06oA=;
+        b=jJVQcqeCAc0iTCARHARG2NmR+PX11EDVnFDiahfPqaQTUdXWScZbdTlKmMfZhzmJn1
+         rDC7kWLDXsIbilCjju0o/WGrcB+N8UcZ4IKxdQlNREzXmxbaXT1X5l8HfKJdYk9pSkfi
+         dxbsGMqa62vDKd3pRQANnxKTtc+tv74/hLJqCamxg8F6SrZez31ZVtLH52rBR+blcXJo
+         gRwepcr+jYILzItfj77n3cmsg/NqDOZp2EFfpLVFSOX+NgEBtytbNnrPnt/CMYpcao13
+         gxCLzNK/ENITed7fzdzsMwHnkVTZ8FOaVKOyFvstoi+OKo6wD9a7wQ/IW+Cj5LmnWpel
+         HNHw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748958525; x=1749563325;
+        d=1e100.net; s=20230601; t=1748958546; x=1749563346;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ZSTZfPDDH1MLe7AQH4Yed2Uaqt/hLn+gokhyp0JhueY=;
-        b=My9h24nyXOXiv9DiF/Kwqz361q74lNaa2nV2yBlZja/PviE2Wdi9RPAWtmoi3uhxQ8
-         Xpqz1LgRA7LPjjS8R95+rG4q50FNsna9bqWVgZS0FD+/kpPszzt47fQT2QoBWDJkjqTC
-         Ke27c5yxcJ2SYNh+qMqauYxaOAbB1jbNhyVZ/azh1z7tsKfdH/EtmQNGgiBm2UP/2uw+
-         QItLGPeazbvGcH/vgRXfmsUEZqGArOiotWL3FaUDdCh0ora8f4+tUSjsZ8BWfIH6x0E+
-         nN5OJki6VkqLf8Cy2U+kLrsxhy1FGlzmWJJOX8ktbIX3f6xEMyjX6EwLYAzQlOPIoPcV
-         Vn/w==
-X-Forwarded-Encrypted: i=1; AJvYcCXCmP1dQ4v4jmdw17YZvTR1DMW9J/CEauIB1x21tUjEcrSVGstf//wzepyK+ujCgwTyOx5xgMo5Ul8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyj8ZQrF6eGN2iyP6eoWyy2ws3C2iO8T73S9NnnV4EX1VLfVT4c
-	72thFWSryq45A6cnLlaK3m6MHl/NATQpk6GqJUaoXmTLIc1dabABSP3pvVGUiCsm2U8=
-X-Gm-Gg: ASbGncuUias/jxLfU9Sy1eNLWpoQaN+TbpMwPFdA4q0PUVy9GsArUp/6lK4dmTNwEPg
-	6qtcfREj/Pk+QjGmy/zGWskimuGhccon7h6Bk57KX1FYRtPJu13ATevxqjbyqPTLpo6jsCGDTdc
-	wWbYIPZBflxfuGfVc4ZXr9kElHvWKCvvrF/rdSOnqrdoI4ygHfitwWEC/QCPmY2TYSHPoN7ReBD
-	mjlk8Q47Dr6T8SrmKnErK0utGb6GO1DRNtO3XeNGd8HUe82dqSvajids2N/bmy4L63pNg7piZcr
-	68pX1LZd7NEy+KUbttj+CB87RhpNTBuaCJlBHIQ3rA3R/6eeJfuAUMUUPwpAx1cUPkUV2OP+10+
-	kpQeQLX40TqJeaCw+eSammJzHjD0=
-X-Google-Smtp-Source: AGHT+IH3Vn4y24ccOnNjvyrMKRdXMvoXmINXxWtKUHHRDjsnlypx2qCEJce143rhCfMATkU1PKi1PQ==
-X-Received: by 2002:a05:6214:27cb:b0:6fa:acc1:f077 with SMTP id 6a1803df08f44-6facebef794mr265266426d6.35.1748958525108;
-        Tue, 03 Jun 2025 06:48:45 -0700 (PDT)
+        bh=ooaH+MVJLI6au3+Z1ecUWfQ+S7G2Wg3KD+ti8ca06oA=;
+        b=M5NoX2b0rFdHEsKIaFWbSmuCnLdshRLKc4vc5sZ8XRRllk/2jgagH+BVB4HdgLXtzY
+         EHudEAJrnb03sejWv/MTi39LC8PFF/bF/zPcwuTWlSvIJ30TSqQBnYQsD4H7bwB4qqhI
+         wQnhyspL63m+OAIUuTFtL/JoG9z8DpvL5j5BVOSMathUg+nPRTzCA8h7BPmVY2wfR2G6
+         CdynLJrs/uJqdnI+gSC+FRVb4gxuxx1lNjEKTOD7L3xM5mHVi4A0c/V8nQr4bwuCqAsy
+         2O7O+K9CtfFmvR3IhVA1xqsGYccHLjjgR23LM4+pGicY9wai50LtIG3IkfGFQ0fPh1yd
+         C51w==
+X-Forwarded-Encrypted: i=1; AJvYcCW+5trqWKLX3pov2vnPXfSPWWVmEhYHDnriMLfdSbnC5cipQKjVyneqaNwvuRwfhQnwCi+qDAuXIw0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxLM5JUMrSe8XQ0rmOYfOxCOTxHjXCZ+A0wuiiryRtXbRJx5CdF
+	l9+wP2P8t8Swnxf2JInYYEz2dmIbVNEWZ0OviVedLt1fFqGG2y1ILZKo2O0veOi72k8=
+X-Gm-Gg: ASbGncutWNFo4PRyDkKC6HoJ/ZgYFz2BGYz70Df2K3UbFEeJ3t6ryx7Xl2yhwFnibmn
+	Vw5nTZRDxGSOjARnq85VyhDEzrAPtZKjpfd0aaBC/Aeq12oBAJXSOolJcxZziJFx2xW0/oGJQ3s
+	x94KIr0XEt4vjkzlbuDGWYfnTzEm2jbYWpR3ueOzgpo6WQaDCdXOPrmd1l2MLtLotl0pigcsfQl
+	LTYzCoLvwlzNoRN0Ju6V2+LNHEdN6hLFOMHKWE3Y8EgvYCvJ6veiJK7D0zWHKe9RdnUb5WpTsNR
+	4nNka+jhA65p0H0IaZBJqyiI5u8RYqVpgEG1nurndwyuQL2h1xlIO/X+yRj7CPGRLpo6c2C9PIC
+	l67z1fwTUSXKWtF7K2yvFuyI1ipk=
+X-Google-Smtp-Source: AGHT+IGIU1g+493Q79vIGhbP57BxcXzG4cORozjsE0WNUaw+m77zFEPhKIIEfe6WhON7WEL1UbHK4w==
+X-Received: by 2002:a05:622a:5a98:b0:494:b914:d140 with SMTP id d75a77b69052e-4a4aed8a697mr209908281cf.43.1748958546430;
+        Tue, 03 Jun 2025 06:49:06 -0700 (PDT)
 Received: from ziepe.ca (hlfxns017vw-142-167-56-70.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.167.56.70])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-7d09a10e844sm842209085a.49.2025.06.03.06.48.44
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-4a435772a19sm74189111cf.1.2025.06.03.06.49.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Jun 2025 06:48:44 -0700 (PDT)
+        Tue, 03 Jun 2025 06:49:05 -0700 (PDT)
 Received: from jgg by wakko with local (Exim 4.97)
 	(envelope-from <jgg@ziepe.ca>)
-	id 1uMS0S-00000001hBt-0o7d;
-	Tue, 03 Jun 2025 10:48:44 -0300
-Date: Tue, 3 Jun 2025 10:48:44 -0300
+	id 1uMS0n-00000001hCF-1wNL;
+	Tue, 03 Jun 2025 10:49:05 -0300
+Date: Tue, 3 Jun 2025 10:49:05 -0300
 From: Jason Gunthorpe <jgg@ziepe.ca>
 To: Alistair Popple <apopple@nvidia.com>
 Cc: linux-mm@kvack.org, gerald.schaefer@linux.ibm.com,
@@ -75,10 +75,11 @@ Cc: linux-mm@kvack.org, gerald.schaefer@linux.ibm.com,
 	linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
 	linux-cxl@vger.kernel.org, dri-devel@lists.freedesktop.org,
 	John@groves.net
-Subject: Re: [PATCH 08/12] mm/khugepaged: Remove redundant pmd_devmap() check
-Message-ID: <20250603134844.GI386142@ziepe.ca>
+Subject: Re: [PATCH 09/12] powerpc: Remove checks for devmap pages and
+ PMDs/PUDs
+Message-ID: <20250603134905.GJ386142@ziepe.ca>
 References: <cover.541c2702181b7461b84f1a6967a3f0e823023fcc.1748500293.git-series.apopple@nvidia.com>
- <2093b864560884a2a525d951a7cc20007da6b9b6.1748500293.git-series.apopple@nvidia.com>
+ <b837a9191e296e0b9f4e431979bab1f6616beab6.1748500293.git-series.apopple@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -87,17 +88,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2093b864560884a2a525d951a7cc20007da6b9b6.1748500293.git-series.apopple@nvidia.com>
+In-Reply-To: <b837a9191e296e0b9f4e431979bab1f6616beab6.1748500293.git-series.apopple@nvidia.com>
 
-On Thu, May 29, 2025 at 04:32:09PM +1000, Alistair Popple wrote:
-> The only users of pmd_devmap were device dax and fs dax. The check for
-> pmd_devmap() in check_pmd_state() is therefore redundant as callers
-> explicitly check for is_zone_device_page(), so this check can be dropped.
+On Thu, May 29, 2025 at 04:32:10PM +1000, Alistair Popple wrote:
+> PFN_DEV no longer exists. This means no devmap PMDs or PUDs will be
+> created, so checking for them is redundant. Instead mappings of pages that
+> would have previously returned true for pXd_devmap() will return true for
+> pXd_trans_huge()
 > 
 > Signed-off-by: Alistair Popple <apopple@nvidia.com>
 > ---
->  mm/khugepaged.c | 2 --
->  1 file changed, 2 deletions(-)
+>  arch/powerpc/mm/book3s64/hash_hugepage.c |  2 +-
+>  arch/powerpc/mm/book3s64/hash_pgtable.c  |  3 +--
+>  arch/powerpc/mm/book3s64/hugetlbpage.c   |  2 +-
+>  arch/powerpc/mm/book3s64/pgtable.c       | 10 ++++------
+>  arch/powerpc/mm/book3s64/radix_pgtable.c |  5 ++---
+>  arch/powerpc/mm/pgtable.c                |  2 +-
+>  6 files changed, 10 insertions(+), 14 deletions(-)
 
 Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 
