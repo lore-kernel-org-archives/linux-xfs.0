@@ -1,196 +1,107 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21BFF49659;
-	Tue,  3 Jun 2025 08:51:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04C77230D1E
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Jun 2025 13:34:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748940667; cv=none; b=jfySVjsI/lzoDmD6k2IS+VZWzfw0vWcg+1BQWMnkIAfXMnQ5iDi7KDGJw1CRetgsN42mL3+EYbXlxsjaVUW2g4nXqOPSgl87OcA0IcNj/iAZ/zrLoXkZtvkeAjhf99BtBWicZ8riCPcXUIAg6Ce4HZlD3sVLjjeKIyUSpDiKrJ4=
+	t=1748957674; cv=none; b=H30KpZsJYvhTBINM49PctwfIK/Bwwf9p74Kxr8VVp0SMHKorIAluV3eCV9xqRf2HSXmVuFCm3RqSZLtkD3v/b0O+B71PU/l4LK9raO793K9P/hLYfZMoM9vSKuKeIZ5MSru8Nmb00a7LNRLA13jrBRZF+12Rt0t6n3PokNjCsYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748940667; c=relaxed/simple;
-	bh=Lgsa5MJFhl8K4fETFUbeTctJhVv+6uLgpq39ZSdpBPU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Lzpoi/Ht4Hf89bXUen4sIpJLEMWM7Egy+0BzdYAn8quexiLFp57qaTyIfx5oFK90GByZqAGN70QtFOwTlHQXHx2N+Xi0Z7OT1frenyOb/ZQie1yMB3ydBjrB72zvT+pf4YpOAMxIBmj5AUXpwSfyOo5CKIOSRNPBK+LzwHiABC8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DaasIIU+; arc=none smtp.client-ip=209.85.216.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1748957674; c=relaxed/simple;
+	bh=Lw5cSrf9yXELvBT6bTYGu3OBlBOa4jK7fmgeC+bgcao=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=asKfC+OjsyaJD16seTCJNmBndlf4/i2NtIR+6y3ttlqeamJIYq+DvIO4e6SX8B97Ay7RGlNS8IGAheqUyq0bThzAwZn5v3n2NvOqBVY4N+uwm8eyc+dzUaNdtdyNyvt+eGMubdr0jayw1uPy/XVqrtgcbFx1dUX5VbfGSouKXgE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=lrAku4ce; arc=none smtp.client-ip=209.85.219.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DaasIIU+"
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-3109f106867so6743967a91.1;
-        Tue, 03 Jun 2025 01:51:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="lrAku4ce"
+Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-6f0c30a1cb6so36679526d6.2
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Jun 2025 06:34:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1748940665; x=1749545465; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=H/jzSrNNGwegJxjn5PzW04cTG3AcB9ieJwNwESrXMSE=;
-        b=DaasIIU+rXBvjGXZuGhne3D3ljLo4ywExIs2r2+GzL0VNDkmsmRfBUv90/ZLfFMFMp
-         FM4xdXOdX//w1brQJVSdWUedEUyYrafWCEMK3hCV2jfjjY5mvS6tQ9QldDVTcQ7/hORD
-         4PXSAmzMfs2ykjAtiRy8yE7H/KfXod05kI85ekEcgJ2ouZFiTVzQ5tZR58ZYOedPam0i
-         uWPrEf0OGozv91BQgw5x7SouAB8o3BKqvHbSHVv0Nh6fEWodegk9BhoNyZn6JDZqga5l
-         qaKwZuzbiFDUNe7KgXbQqltcobe/25fN88lC8THccONwij03nyeMWw00LlasALwhGr1x
-         lo1g==
+        d=ziepe.ca; s=google; t=1748957672; x=1749562472; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=o9eD6fBv50JvJ7Gx4KUjwD3EkSFG+lO7duRzw9dtFZs=;
+        b=lrAku4ceWFfd92z3vNIRNznkctKgFgmmyMQzW81z4NHUxFQj/l3xSfa7PCLr00O6ew
+         UM6mT2kD6Ct/OECKUDQZG53FXfqFij9nZhl/zpvcIBTGZn0q3FfWJ3rmLOcj/MsP7Gsy
+         SVIVWQB/Z0dVQA9/oora/QY9tOLyr7TtDGd6V19zHnLrc/gLS2DpuqdvOgmR3z0NjizF
+         6j42V4uqsJf+D3RxJVZDuduTu2Id0UiwGsV0mqt2UAsFiOvCgjL9MRxPLV8RIvcsMdYA
+         frhFnACPi8wIvshwXOGxlFJ9wjx1nmtTgJh0ufocXr2a1Sf83OiQD3w05nQQJ5mc9Zww
+         TEHg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748940665; x=1749545465;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=H/jzSrNNGwegJxjn5PzW04cTG3AcB9ieJwNwESrXMSE=;
-        b=pG+AiU33fh/HfYsn11p/GHmFNB7+nYIOSbicScZnv1dcrX6nJAzdbhJcsQhUXFqAnk
-         q31Aq9GlLAFHoBwzqD45ikwQlepSoDphzg2k7ZI+YXdl2hQwScRY4D7hYGW3HpAmS1Ri
-         Jzf/aViuS6IOwLkfKc8xtMG0CBMbdTnrEbES2Q6muzA9B4JaJFeEOav+MQnJU3xLiImm
-         IbL9LwIW1h+z5rzfr7AGwnNQl2mq8OVq000q0BdwGl4UBCcKWhjsgZCxtNu4WaLIRxwe
-         e11EOyNcqEBUJzUiC32JnNmZ7EzvT6jGJbaGBSlMSHL2JnE1QgkgPrzH5oOnmri+VX4u
-         rcXQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWPfLK7BnKqilfz/yuycaaN85hT/g+yNmErzBPWEEzRfDkzARmxDkRsPXxw3idHqN0BXl4iDlG12NEQQJ4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz8fWDdYETGqeUIdS3Rkakz1iF3wWPRG+ckODos1niuBod4GkD7
-	KfnMXcW5GMJx78LTyowHzpR+bgn4PKPaOmLuvlBD5kLzh6y3lpUoHNPA
-X-Gm-Gg: ASbGncuQvOjmjpMntHdPkDb3ES534W9bPt0sByWf3x/EGQtEgBdPeSJzZIPkn75tD9b
-	eAVQxL8JAsiATX+xt6KmGSO3AO7Psz3gTF+pWvay+JGlvUCF7njlxGZc6ADzeD+BcTKhqF9wSWN
-	3Tx/sFQhafYAURiauWC1Pdb6+rvkmnZqoBfZdXg/+K7PBhC2Y8MjYyXspdRvu+xPqe6/etZ+zj9
-	AS+lQ3D6hwzEgSQbtNE1x8tMaA2Kg8Hu6dKnUCsSryhgtOtaVA2uu96vjTt6kzFgdlNfAh7ENWX
-	6EU1iQaahQlEVCKfLOqSjNjITW2dJM5ylbCziNorwnfs9WVuFbbJmx6EFqNaMv0i78q4vzgZvca
-	gJP1/OGPl
-X-Google-Smtp-Source: AGHT+IElla0nEGMKETLbUX+7W3iyU+Fakjen00uH8Qq58oXST6ashLmAvUW8ZcSrTXtiFgagP5KfJQ==
-X-Received: by 2002:a17:90b:55c5:b0:311:9c9a:58da with SMTP id 98e67ed59e1d1-312413f54eemr24659151a91.8.1748940665215;
-        Tue, 03 Jun 2025 01:51:05 -0700 (PDT)
-Received: from localhost.localdomain ([117.88.121.64])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-235caa81bc2sm7331655ad.205.2025.06.03.01.51.01
+        d=1e100.net; s=20230601; t=1748957672; x=1749562472;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=o9eD6fBv50JvJ7Gx4KUjwD3EkSFG+lO7duRzw9dtFZs=;
+        b=ZOXKQo3jCyhvkEyh4DAQW9Vio6vlhOhMeaCxSUjVcp/zWoh8pI4abksCTNR+NDybmD
+         zsrEZj1OtGFvM9wPwQlsWwNO7ucHGtBL21gAj/bNxmdUbWv+Ack6ZE99e7wTBdMe5LzD
+         tVDZsLXoAJ7utu0/pV3eigP51ha2vLdV/Ss01T6AqgqyV1Zz6PmIjh8P7Xj5rDGiperK
+         ayEsk47QmzjZVvo/2HBJolbaPhPgtFbJGSC58LEn+lifZwY5v5xUe7ZlPvwkV3SACo3D
+         Cxib+EiscdsSIgZV1CHi0jFcZK24xaz9C2fLnBuVAV+7/EVaSnKKWMjlRQGhmrjIQkG3
+         28jg==
+X-Forwarded-Encrypted: i=1; AJvYcCUir1QePD6EJzsJ4ucudkCfE1tdOWMj8zvtuylT3j61vqDO9IZGWo23rl25rprXJ+eVAJLdIeA3Fag=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx2fEWhpdxoAV6S30TBz92bBfFJncRVkoaN9VxLJUnwhkpo2pbV
+	KQz70Rc35c4CPqGrxPttLR8LrQJU7bJzXoSx9+htLLiTE8t5zIGWHIWUePWghlsTzNE=
+X-Gm-Gg: ASbGnctjD7+7cKT2U4sycOXYbD5GdNWsnH/A8+edoKaclkBVUVyastWmKWLpvOCNqL3
+	H02fhXcIhXp2OaSX6ch44sNB6l9pxDFHhbR7L+3+Zs1rCE39X41R+SmVZ2WJYG/akwq4+OfWfl3
+	UT4dPfopFBa70GI814zvDrlNBqipK1rqNUHBh1tyAXbqqa/NUXS6uYBh9DyJveF64HIj//Td0uh
+	dSMN43vLAZPPLQOWr7cKgF4oVXLaEIuKXNi9w1OxvfyC8zPmx5E772ivhQtanWZStMBAur9LIQN
+	Fuw+F6n0NWjubtTosrPLbkh3YDqLXkSrJuBIMT+ZW2mHEsAktSEHW4PZSPcLqlVm7UkEbUoh42U
+	F7vunCbgnYYEeXhIdzo3gnZHWPmM=
+X-Google-Smtp-Source: AGHT+IH3/hKllTZ0eEK/dcuWTgO5QsHZ5LZ3JNRLIXTEioRhdRSPfL4GWfnU3eDieGqXq6aFnuzp+A==
+X-Received: by 2002:a05:6214:5096:b0:6ed:1651:e8c1 with SMTP id 6a1803df08f44-6fad90aa622mr189063246d6.13.1748957671754;
+        Tue, 03 Jun 2025 06:34:31 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-142-167-56-70.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.167.56.70])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6fac6e00b78sm80064216d6.75.2025.06.03.06.34.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Jun 2025 01:51:04 -0700 (PDT)
-From: luminosity1999@gmail.com
-X-Google-Original-From: txpeng@tencent.com
-To: chandan.babu@oracle.com
-Cc: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Tianxiang Peng <txpeng@tencent.com>,
-	Qing Zhang <diasyzhang@tencent.com>,
-	Hao Peng <flyingpeng@tencent.com>,
-	Jinliang Zheng <alexjlzheng@tencent.com>,
-	Hui Li <caelli@tencent.com>
-Subject: [PATCH 5.4] xfs: Reset cnt_cur to NULL after deletion to prevent UAF
-Date: Tue,  3 Jun 2025 16:50:56 +0800
-Message-ID: <20250603085056.191073-1-txpeng@tencent.com>
-X-Mailer: git-send-email 2.43.5
+        Tue, 03 Jun 2025 06:34:31 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1uMRmg-00000001h3q-2scY;
+	Tue, 03 Jun 2025 10:34:30 -0300
+Date: Tue, 3 Jun 2025 10:34:30 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Alistair Popple <apopple@nvidia.com>
+Cc: linux-mm@kvack.org, gerald.schaefer@linux.ibm.com,
+	dan.j.williams@intel.com, willy@infradead.org, david@redhat.com,
+	linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de,
+	zhang.lyra@gmail.com, debug@rivosinc.com, bjorn@kernel.org,
+	balbirs@nvidia.com, lorenzo.stoakes@oracle.com,
+	linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev,
+	linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
+	linux-cxl@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	John@groves.net
+Subject: Re: [PATCH 01/12] mm: Remove PFN_MAP, PFN_SG_CHAIN and PFN_SG_LAST
+Message-ID: <20250603133430.GB386142@ziepe.ca>
+References: <cover.541c2702181b7461b84f1a6967a3f0e823023fcc.1748500293.git-series.apopple@nvidia.com>
+ <cb45fa705b2eefa1228e262778e784e9b3646827.1748500293.git-series.apopple@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cb45fa705b2eefa1228e262778e784e9b3646827.1748500293.git-series.apopple@nvidia.com>
 
-From: Tianxiang Peng <txpeng@tencent.com>
+On Thu, May 29, 2025 at 04:32:02PM +1000, Alistair Popple wrote:
+> The PFN_MAP flag is no longer used for anything, so remove it. The
+> PFN_SG_CHAIN and PFN_SG_LAST flags never appear to have been used so
+> also remove them.
+> 
+> Signed-off-by: Alistair Popple <apopple@nvidia.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  include/linux/pfn_t.h             | 31 +++----------------------------
+>  mm/memory.c                       |  2 --
+>  tools/testing/nvdimm/test/iomap.c |  4 ----
+>  3 files changed, 3 insertions(+), 34 deletions(-)
 
-Our test environment detected a use-after-free bug in XFS:
+Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 
-[ 1396.210852] Allocated by task 26155:
-[ 1396.212769]  save_stack+0x21/0x90
-[ 1396.214670]  __kasan_kmalloc.constprop.8+0xc1/0xd0
-[ 1396.216738]  kasan_slab_alloc+0x11/0x20
-[ 1396.218694]  kmem_cache_alloc+0xfb/0x280
-[ 1396.220750]  kmem_zone_alloc+0xb9/0x240 [xfs]
-[ 1396.222859]  xfs_allocbt_init_cursor+0x60/0x270 [xfs]
-[ 1396.225058]  xfs_alloc_ag_vextent_near+0x2bc/0x1aa0 [xfs]
-[ 1396.227312]  xfs_alloc_ag_vextent+0x3a0/0x5a0 [xfs]
-[ 1396.229503]  xfs_alloc_vextent+0xc11/0xd80 [xfs]
-[ 1396.231665]  xfs_bmap_btalloc+0x632/0xf20 [xfs]
-[ 1396.233804]  xfs_bmap_alloc+0x78/0x90 [xfs]
-[ 1396.235883]  xfs_bmapi_allocate+0x243/0x760 [xfs]
-[ 1396.238032]  xfs_bmapi_convert_delalloc+0x3cf/0x850 [xfs]
-[ 1396.240267]  xfs_map_blocks+0x352/0x820 [xfs]
-[ 1396.242379]  xfs_do_writepage+0x2c2/0x8d0 [xfs]
-[ 1396.244417]  write_cache_pages+0x341/0x760
-[ 1396.246490]  xfs_vm_writepages+0xc8/0x120 [xfs]
-[ 1396.248755]  do_writepages+0x8f/0x160
-[ 1396.250710]  __filemap_fdatawrite_range+0x1a4/0x200
-[ 1396.252823]  filemap_flush+0x1c/0x20
-[ 1396.254847]  xfs_release+0x1b3/0x1f0 [xfs]
-[ 1396.256920]  xfs_file_release+0x15/0x20 [xfs]
-[ 1396.258936]  __fput+0x155/0x390
-[ 1396.260781]  ____fput+0xe/0x10
-[ 1396.262620]  task_work_run+0xbf/0xe0
-[ 1396.264492]  exit_to_usermode_loop+0x11d/0x120
-[ 1396.266496]  do_syscall_64+0x1c3/0x1f0
-[ 1396.268391]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-
-[ 1396.272067] Freed by task 26155:
-[ 1396.273909]  save_stack+0x21/0x90
-[ 1396.275758]  __kasan_slab_free+0x131/0x180
-[ 1396.277722]  kasan_slab_free+0xe/0x10
-[ 1396.279627]  kmem_cache_free+0x8c/0x2c0
-[ 1396.281625]  xfs_btree_del_cursor+0xb2/0x100 [xfs]
-[ 1396.283739]  xfs_alloc_ag_vextent_near+0x90b/0x1aa0 [xfs]
-[ 1396.285932]  xfs_alloc_ag_vextent+0x3a0/0x5a0 [xfs]
-[ 1396.288049]  xfs_alloc_vextent+0xc11/0xd80 [xfs]
-[ 1396.290065]  xfs_bmap_btalloc+0x632/0xf20 [xfs]
-[ 1396.292008]  xfs_bmap_alloc+0x78/0x90 [xfs]
-[ 1396.293871]  xfs_bmapi_allocate+0x243/0x760 [xfs]
-[ 1396.295801]  xfs_bmapi_convert_delalloc+0x3cf/0x850 [xfs]
-[ 1396.297811]  xfs_map_blocks+0x352/0x820 [xfs]
-[ 1396.299706]  xfs_do_writepage+0x2c2/0x8d0 [xfs]
-[ 1396.301522]  write_cache_pages+0x341/0x760
-[ 1396.303379]  xfs_vm_writepages+0xc8/0x120 [xfs]
-[ 1396.305204]  do_writepages+0x8f/0x160
-[ 1396.306902]  __filemap_fdatawrite_range+0x1a4/0x200
-[ 1396.308756]  filemap_flush+0x1c/0x20
-[ 1396.310545]  xfs_release+0x1b3/0x1f0 [xfs]
-[ 1396.312386]  xfs_file_release+0x15/0x20 [xfs]
-[ 1396.314180]  __fput+0x155/0x390
-[ 1396.315825]  ____fput+0xe/0x10
-[ 1396.317442]  task_work_run+0xbf/0xe0
-[ 1396.319126]  exit_to_usermode_loop+0x11d/0x120
-[ 1396.320928]  do_syscall_64+0x1c3/0x1f0
-[ 1396.322648]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-
-[ 1396.325958] The buggy address belongs to the object at ffff8898039945a0
-                which belongs to the cache xfs_btree_cur of size 224
-[ 1396.330097] The buggy address is located 181 bytes inside of
-                224-byte region [ffff8898039945a0, ffff889803994680)
-
-This issue stems from an incomplete backport of upstream commit
-8ebbf262d468 ("xfs: don't block in busy flushing when freeing
-extents") to the 5.4 LTS kernel. The backport introduced error
-handling that may goto error0 when xfs_extent_busy_flush() fails:
-
--		xfs_extent_busy_flush(args->mp, args->pag, busy_gen,
--				alloc_flags);
-+		error = xfs_extent_busy_flush(args->tp, args->pag,
-+				busy_gen, alloc_flags);
-+		if (error)
-+			goto error0;
-
-However, in the 5.4 codebase, the existing cursor deletion logic
-failed to reset cnt_cur to NULL after deletion. While the original
-code's goto restart path reinitialized the cursor, the new goto
-error0 path attempts to delete an already-freed cursor (now
-dangling pointer), causing a use-after-free. Reset cnt_cur to NULL
-after deletion to prevent double-free. This aligns with the cursor
-management pattern used at other deletion sites in the same
-function.
-
-This pitfall was eliminated in 5.15+ LTS kernels via XFS code
-refactoring, making the fix unnecessary for newer versions.
-
-Signed-off-by: Tianxiang Peng <txpeng@tencent.com>
-Reviewed-by: Qing Zhang <diasyzhang@tencent.com>
-Reviewed-by: Hao Peng <flyingpeng@tencent.com>
-Reviewed-by: Jinliang Zheng <alexjlzheng@tencent.com>
-Reviewed-by: Hui Li <caelli@tencent.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 1193fd6e4..ff0c05901 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1417,6 +1417,7 @@ xfs_alloc_ag_vextent_near(
- 	 */
- 	if (bno_cur_lt == NULL && bno_cur_gt == NULL) {
- 		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-+		cnt_cur = NULL;
- 
- 		if (busy) {
- 			trace_xfs_alloc_near_busy(args);
--- 
-2.43.5
-
+Jason
