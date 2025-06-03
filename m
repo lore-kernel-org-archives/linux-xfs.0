@@ -1,176 +1,227 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0AC6A47;
-	Tue,  3 Jun 2025 00:03:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83D7210E5;
+	Tue,  3 Jun 2025 00:13:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748909009; cv=none; b=XMztTFzDNPpJvHZa2nNO9aow3AI4PbhTMQhkJacQBJGQTNOKwEbIa+8DedkumI9bUpBLxlUztKF9pic0QSsS3m3DIhYi1p7+FiKCYSnhdqjuPSbfbXSGiAMrLNoAc5e+2SOeph0PsxJ407IRGGuJI/WfKCnAVUA2kKDwKh2Gvy4=
+	t=1748909622; cv=none; b=Pg/FU4klcOkYD4XaRKSXnth7eKDCCXOJB+BQ54ZQMzTx05BX4wtoHy3GSCswqzm9Y+UycTcu/pMPrnVVzhxqpGBQFbIDClqvvB6E0IMiHHn/MPff6RQdJl/HLupQg/EnZkJilaJEPbLMBnJ4rZs/hd6MiQ/7qHqVR18K4csc0SE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748909009; c=relaxed/simple;
-	bh=VRM6BUWSdMvjhkIARNCYC0p7AHZB2YMQXbaEiQ6X5n0=;
+	s=arc-20240116; t=1748909622; c=relaxed/simple;
+	bh=sn+OqphyVnji4y6hz1/LMQWPIIpxbEwzosH1g2ZkrkA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y4cLB2F92TkzWmciiBifKIsOCkp+hVlM+LWjj0VX9wtXPVR3LB0YDqweb72EFIeImZDChbOx3GePB0Pgg6SbxFFY9U8JAjXDC/LoA831MqhH0RPqm2+3dlacs2U6FdqLfN3FQNnkoz9qAVvvOe6+hf1fgsqWy0TW5Smd0kLBLjc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=liCdt94/; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rlX00cOiDiYj9uQ7YylqObv7Fmpz6QUL/qaRsKo7v27Zy2RyJyP+JQZDB9OU9ACH7cFuP7Y9y0JfpRqrXz7WNyRQ3bbds98ujPopp4RgMIC64qznCGHmksBDnQZL41h30lzw9Lb0vLJKnkQ2AQPf0Y0Ipl8ITFXzIEPSCuQdPsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gnsrcUQh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="liCdt94/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 239C7C4CEEB;
-	Tue,  3 Jun 2025 00:03:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gnsrcUQh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D98A0C4CEEB;
+	Tue,  3 Jun 2025 00:13:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748909008;
-	bh=VRM6BUWSdMvjhkIARNCYC0p7AHZB2YMQXbaEiQ6X5n0=;
+	s=k20201202; t=1748909621;
+	bh=sn+OqphyVnji4y6hz1/LMQWPIIpxbEwzosH1g2ZkrkA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=liCdt94/Guiejddl+k3YNm2bUNFNvj3HApUapkfrHD7HwvAHu6xHVnnB5gqfR8nAl
-	 L/6XkWu9+GzUy1GPHejPlcdyO/bClWAZ0cz2bONf+Ea3s/6/RW1vKDALiKisTxNO4H
-	 1PZqyS4BMeUKsN319c2Bt+3UHIAlQmmY2f9YlBBdBZ+Ks0imG2kvhKtwPTwv6iLB0i
-	 i4AWz7JQtsXB/zaKHNA5P10KeuJAwsMkVRXzYvMc7PXGxTAoug1a2SuVMNLyq29bOy
-	 guRhkz+e2md8r/PayuZwIK2IW4sqmKDADEGZCSNayZTb4hcmQ9UtfynEUb/JrEl9g7
-	 fuqijCEzCJHVA==
-Date: Mon, 2 Jun 2025 17:03:27 -0700
+	b=gnsrcUQhGAhCEqKbzwpp5O1n2AsGhpL8HmUArAWwbkxqeLsXizThNCjLxoOpMaQrf
+	 NJz15+AbFtq/C5UVtzeC0W+ILrg5GrG/zQtlZKfRi8nsKsD9dPdsFP+C7lXGADeKvM
+	 xgjKKueH+8yhcnHKC2/mvzMzhlf46DQ4bP/7fU/g4WH0kCcV0KDLbbfNsEV4RizLmj
+	 BFexqy6VAzqewUa+GcufPptw7sea58K26z9MsLC36bShdm91DULtPKvFw0zVerQhpt
+	 lLKvREfSrJ0FEv9wiqvWnkgx6if+ScTWJ/fMYiZV20JI9TItP7deeatIUh/wxUaB/7
+	 8tIiu5IpHYRww==
+Date: Mon, 2 Jun 2025 17:13:41 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	Yafang Shao <laoar.shao@gmail.com>, cem@kernel.org,
-	linux-xfs@vger.kernel.org,
-	Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
- data corruption
-Message-ID: <20250603000327.GM8328@frogsfrogsfrogs>
-References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
- <20250529042550.GB8328@frogsfrogsfrogs>
- <20250530-ahnen-relaxen-917e3bba8e2d@brauner>
- <20250530153847.GC8328@frogsfrogsfrogs>
- <aDuKgfi-CCykPuhD@dread.disaster.area>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, miklos@szeredi.hu,
+	linux-xfs@vger.kernel.org, bernd@bsbernd.com, John@groves.net
+Subject: Re: [PATCH 03/11] fuse: implement the basic iomap mechanisms
+Message-ID: <20250603001341.GN8328@frogsfrogsfrogs>
+References: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs>
+ <174787195629.1483178.7917092102987513364.stgit@frogsfrogsfrogs>
+ <CAJnrk1ZEtXoMKXMjse-0RtSLjaK1zfadr3zR2tP4gh1WauOUWA@mail.gmail.com>
+ <CAJnrk1YDxn0ZMk0BrTnNStkXErjY_LSGYHgdsRjiiZ2dTpftAA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <aDuKgfi-CCykPuhD@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJnrk1YDxn0ZMk0BrTnNStkXErjY_LSGYHgdsRjiiZ2dTpftAA@mail.gmail.com>
 
-On Sun, Jun 01, 2025 at 09:02:25AM +1000, Dave Chinner wrote:
-> On Fri, May 30, 2025 at 08:38:47AM -0700, Darrick J. Wong wrote:
-> > On Fri, May 30, 2025 at 07:17:00AM +0200, Christian Brauner wrote:
-> > > On Wed, May 28, 2025 at 09:25:50PM -0700, Darrick J. Wong wrote:
-> > > > On Thu, May 29, 2025 at 10:50:01AM +0800, Yafang Shao wrote:
-> > > > > Hello,
-> > > > > 
-> > > > > Recently, we encountered data loss when using XFS on an HDD with bad
-> > > > > blocks. After investigation, we determined that the issue was related
-> > > > > to writeback errors. The details are as follows:
-> > > > > 
-> > > > > 1. Process-A writes data to a file using buffered I/O and completes
-> > > > > without errors.
-> > > > > 2. However, during the writeback of the dirtied pagecache pages, an
-> > > > > I/O error occurs, causing the data to fail to reach the disk.
-> > > > > 3. Later, the pagecache pages may be reclaimed due to memory pressure,
-> > > > > since they are already clean pages.
-> > > > > 4. When Process-B reads the same file, it retrieves zeroed data from
-> > > > > the bad blocks, as the original data was never successfully written
-> > > > > (IOMAP_UNWRITTEN).
-> > > > > 
-> > > > > We reviewed the related discussion [0] and confirmed that this is a
-> > > > > known writeback error issue. While using fsync() after buffered
-> > > > > write() could mitigate the problem, this approach is impractical for
-> > > > > our services.
-> > > > > 
-> > > > > Instead, we propose introducing configurable options to notify users
-> > > > > of writeback errors immediately and prevent further operations on
-> > > > > affected files or disks. Possible solutions include:
-> > > > > 
-> > > > > - Option A: Immediately shut down the filesystem upon writeback errors.
-> > > > > - Option B: Mark the affected file as inaccessible if a writeback error occurs.
-> > > > > 
-> > > > > These options could be controlled via mount options or sysfs
-> > > > > configurations. Both solutions would be preferable to silently
-> > > > > returning corrupted data, as they ensure users are aware of disk
-> > > > > issues and can take corrective action.
-> > > > > 
-> > > > > Any suggestions ?
-> > > > 
-> > > > Option C: report all those write errors (direct and buffered) to a
-> > > > daemon and let it figure out what it wants to do:
-> > > > 
-> > > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=health-monitoring_2025-05-21
-> > > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-monitoring-rust_2025-05-21
-> > > > 
-> > > > Yes this is a long term option since it involves adding upcalls from the
-> > > 
-> > > I hope you don't mean actual usermodehelper upcalls here because we
-> > > should not add any new ones. If you just mean a way to call up from a
-> > > lower layer than that's obviously fine.
-> > 
-> > Correct.  The VFS upcalls to XFS on some event, then XFS queues the
-> > event data (or drops it) and waits for userspace to read the queued
-> > events.  We're not directly invoking a helper program from deep in the
-> > guts, that's too wild even for me. ;)
-> > 
-> > > Fwiw, have you considered building this on top of a fanotify extension
-> > > instead of inventing your own mechanism for this?
-> > 
-> > I have, at various stages of this experiment.
-> > 
-> > Originally, I was only going to export xfs-specific metadata events
-> > (e.g. this AG's inode btree index is bad) so that the userspace program
-> > (xfs_healer) could initiate a repair against the broken pieces.
-> > 
-> > At the time I thought it would be fun to experiment with an anonfd file
-> > that emitted jsonp objects so that I could avoid the usual C struct ABI
-> > mess because json is easily parsed into key-value mapping objects in a
-> > lot of languages (that aren't C).  It later turned out that formatting
-> > the json is rather more costly than I thought even with seq_bufs, so I
-> > added an alternate format that emits boring C structures.
-> > 
-> > Having gone back to C structs, it would be possibly (and possibly quite
-> > nice) to migrate to fanotify so that I don't have to maintain a bunch of
-> > queuing code.  But that can have its own drawbacks, as Ted and I
-> > discovered when we discussed his patches that pushed ext4 error events
-> > through fanotify:
-> > 
-> > For filesystem metadata events, the fine details of representing that
-> > metadata in a generic interface gets really messy because each
-> > filesystem has a different design.
+On Thu, May 29, 2025 at 04:15:57PM -0700, Joanne Koong wrote:
+> On Thu, May 29, 2025 at 3:15 PM Joanne Koong <joannelkoong@gmail.com> wrote:
+> >
+> > On Wed, May 21, 2025 at 5:03 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> > >
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > >
+> > > Implement functions to enable upcalling of iomap_begin and iomap_end to
+> > > userspace fuse servers.
+> > >
+> > > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > > ---
+> > >  fs/fuse/fuse_i.h          |   38 ++++++
+> > >  fs/fuse/fuse_trace.h      |  258 +++++++++++++++++++++++++++++++++++++++++
+> > >  include/uapi/linux/fuse.h |   87 ++++++++++++++
+> > >  fs/fuse/Kconfig           |   23 ++++
+> > >  fs/fuse/Makefile          |    1
+> > >  fs/fuse/file_iomap.c      |  280 +++++++++++++++++++++++++++++++++++++++++++++
+> > >  fs/fuse/inode.c           |    5 +
+> > >  7 files changed, 691 insertions(+), 1 deletion(-)
+> > >  create mode 100644 fs/fuse/file_iomap.c
+> > >
+> > >
+> > > diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
+> > > index d56d4fd956db99..aa51f25856697d 100644
+> > > --- a/fs/fuse/fuse_i.h
+> > > +++ b/fs/fuse/fuse_i.h
+> > > @@ -895,6 +895,9 @@ struct fuse_conn {
+> > >         /* Is link not implemented by fs? */
+> > >         unsigned int no_link:1;
+> > >
+> > > +       /* Use fs/iomap for FIEMAP and SEEK_{DATA,HOLE} file operations */
+> > > +       unsigned int iomap:1;
+> > > +
+> > >         /* Use io_uring for communication */
+> > >         unsigned int io_uring;
+> > >
+> > > @@ -1017,6 +1020,11 @@ static inline struct fuse_mount *get_fuse_mount_super(struct super_block *sb)
+> > >         return sb->s_fs_info;
+> > >  }
+> > >
+> > > +static inline const struct fuse_mount *get_fuse_mount_super_c(const struct super_block *sb)
+> > > +{
+> > > +       return sb->s_fs_info;
+> > > +}
+> > > +
+> >
+> > Instead of adding this new helper (and the ones below), what about
+> > modifying the existing (non-const) versions of these helpers to take
+> > in const * input args,  eg
+> >
+> > -static inline struct fuse_mount *get_fuse_mount_super(struct super_block *sb)
+> > +static inline struct fuse_mount *get_fuse_mount_super(const struct
+> > super_block *sb)
+> >  {
+> >         return sb->s_fs_info;
+> >  }
+> >
+> > Then, doing something like "const struct fuse_mount *mt =
+> > get_fuse_mount(inode);" would enforce the same guarantees as "const
+> > struct fuse_mount *mt = get_fuse_mount_c(inode);" and we wouldn't need
+> > 2 sets of helpers that pretty much do the same thing.
+> >
+> > >  static inline struct fuse_conn *get_fuse_conn_super(struct super_block *sb)
+> > >  {
+> > >         return get_fuse_mount_super(sb)->fc;
+> > > @@ -1027,16 +1035,31 @@ static inline struct fuse_mount *get_fuse_mount(struct inode *inode)
+> > >         return get_fuse_mount_super(inode->i_sb);
+> > >  }
+> > >
+> > > +static inline const struct fuse_mount *get_fuse_mount_c(const struct inode *inode)
+> > > +{
+> > > +       return get_fuse_mount_super_c(inode->i_sb);
+> > > +}
+> > > +
+> > >  static inline struct fuse_conn *get_fuse_conn(struct inode *inode)
+> > >  {
+> > >         return get_fuse_mount_super(inode->i_sb)->fc;
+> > >  }
+> > >
+> > > +static inline const struct fuse_conn *get_fuse_conn_c(const struct inode *inode)
+> > > +{
+> > > +       return get_fuse_mount_super_c(inode->i_sb)->fc;
+> > > +}
+> > > +
+> > >  static inline struct fuse_inode *get_fuse_inode(struct inode *inode)
+> > >  {
+> > >         return container_of(inode, struct fuse_inode, inode);
+> > >  }
+> > >
+> > > +static inline const struct fuse_inode *get_fuse_inode_c(const struct inode *inode)
+> > > +{
+> > > +       return container_of(inode, struct fuse_inode, inode);
+> > > +}
+> > > +
+> > >  static inline u64 get_node_id(struct inode *inode)
+> > >  {
+> > >         return get_fuse_inode(inode)->nodeid;
+> > > @@ -1577,4 +1600,19 @@ extern void fuse_sysctl_unregister(void);
+> > >  #define fuse_sysctl_unregister()       do { } while (0)
+> > >  #endif /* CONFIG_SYSCTL */
+> > >
+> > > +#if IS_ENABLED(CONFIG_FUSE_IOMAP)
+> > > +# include <linux/fiemap.h>
+> > > +# include <linux/iomap.h>
+> > > +
+> > > +bool fuse_iomap_enabled(void);
+> > > +
+> > > +static inline bool fuse_has_iomap(const struct inode *inode)
+> > > +{
+> > > +       return get_fuse_conn_c(inode)->iomap;
+> > > +}
+> > > +#else
+> > > +# define fuse_iomap_enabled(...)               (false)
+> > > +# define fuse_has_iomap(...)                   (false)
+> > > +#endif
+> > > +
+> > >  #endif /* _FS_FUSE_I_H */
+> > > diff --git a/fs/fuse/Kconfig b/fs/fuse/Kconfig
+> > > index ca215a3cba3e31..fc7c5bf1cef52d 100644
+> > > --- a/fs/fuse/Kconfig
+> > > +++ b/fs/fuse/Kconfig
+> > > @@ -64,6 +64,29 @@ config FUSE_PASSTHROUGH
+> > >
+> > >           If you want to allow passthrough operations, answer Y.
+> > >
+> > > +config FUSE_IOMAP
+> > > +       bool "FUSE file IO over iomap"
+> > > +       default y
+> > > +       depends on FUSE_FS
+> > > +       select FS_IOMAP
+> > > +       help
+> > > +         For supported fuseblk servers, this allows the file IO path to run
+> > > +         through the kernel.
+> >
+> > I have config FUSE_FS select FS_IOMAP in my patchset (not yet
+> > submitted) that changes fuse buffered writes / writeback handling to
+> > use iomap. Could we just have config FUSE_FS automatically opt into
+> > FS_IOMAP here or do you see a reason that this needs to be a separate
+> > config?
 > 
-> Perhaps that is the wrong approach. The event just needs to tell
-> userspace that there is a metadata error, and the fs specific agent
-> that receives the event can then pull the failure information from
-> the filesystem through a fs specific ioctl interface.
-> 
-> i.e. the fanotify event could simply be a unique error, and that
-> gets passed back into the ioctl to retreive the fs specific details
-> of the failure. We might not even need fanotify for this - I suspect
-> that we could use udev events to punch error ID notifications out to
-> userspace to trigger a fs specific helper to go find out what went
-> wrong.
+> Thinking about it some more, the iomap stuff you're adding also
+> requires a "depends on BLOCK", so this will need to be a separate
+> config anyways regardless of whether the FUSE_FS will always "select
+> FS_IOMAP"
 
-I'm not sure if you're addressing me or brauner, but I think it would be
-even simpler to retain the current design where events are queued to our
-special xfs anonfd and read out by userspace.  Using fanotify as a "door
-bell" to go look at another fd is ... basically poll() but far more
-complicated than it ought to be.  Pounding udev with events can result
-in userspace burning a lot of energy walking the entire rule chain.
-
-> Keeping unprocessed failures in an internal fs queue isn't a big
-> deal; it's not a lot of memory, and it can be discarded on unmount.
-> At that point we know that userspace did not care about the
-> failure and is not going to be able to query about the failure in
-> future, so we can just throw it away.
-> 
-> This also allows filesystems to develop such functionality in
-> parallel, allowing us to find commonality and potential areas for
-> abstraction as the functionality is developed, rahter than trying to
-> come up with some generic interface that needs to support all
-> possible things we can think of right now....
-
-Agreed.  I don't think Ted or Jan were enthusiastic about trying to make
-a generic fs metadata event descriptor either.
+I'll add that, thanks.  I forgot that FS_IOMAP no longer selects BLOCK
+all the time. :)
 
 --D
 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> 
+> Thanks,
+> Joanne
+> 
+> >
+> >
+> > Thanks,
+> > Joanne
+> > > +
+> > > +config FUSE_IOMAP_BY_DEFAULT
+> > > +       bool "FUSE file I/O over iomap by default"
+> > > +       default n
+> > > +       depends on FUSE_IOMAP
+> > > +       help
+> > > +         Enable sending FUSE file I/O over iomap by default.
+> > > +
+> > > +config FUSE_IOMAP_DEBUG
+> > > +       bool "Debug FUSE file IO over iomap"
+> > > +       default n
+> > > +       depends on FUSE_IOMAP
+> > > +       help
+> > > +         Enable debugging assertions for the fuse iomap code paths.
+> > > +
+> > >  config FUSE_IO_URING
+> > >         bool "FUSE communication over io-uring"
+> > >         default y
