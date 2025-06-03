@@ -1,173 +1,176 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C51CF201113
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Jun 2025 07:56:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EB2842A87;
+	Thu,  5 Jun 2025 08:32:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749110178; cv=none; b=PBLDcioX4P857Ee7X9RRHR4vUbhcMx/Awpz5QI/sNY14gp5sQ2FXpUYd0KnTHoW0x7hrJ+MvU4R5ihYw+OCPzX9D88Ii+NP6nRN3KZe1s39CVVk9c9o0Ieo3LEeiyusg7IO6yMA22/7dV4zP+egjiSChGpoBDR67pPHroUx+m7M=
+	t=1749112361; cv=none; b=L55Omv1aaifuOzLO1NmcGXJE2qsLiq07M4c048MlcRWGfE0XVNORpKCgwP+SndA+XRBUsAnib2qWjPmcdjtbA/nZa8PiHZgTEyFK8ahzj1HNLUI0qz7pGxUaovJQPbcSX5rHgh35vFesMPOdXG3p9rr0YJ2QBDR4oT78t+4byPI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749110178; c=relaxed/simple;
-	bh=og26PESCnv6jbfg+miEuWA4dnMgV8AtNpSvFwTsaQpM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TfQTjkaSRBwpp46Zd2v98R9vO6LIljz8+HLP9WdSoyU4YBR/ltADoiEBLrdoKMzeR5EDFKcHBG0FNr6URhwhe5+ZULZpZoPdG0Ap5fwJBfj3GvL8uRUtM+4+sAo+YwEqw4T6nNR44CqpQJttdORp3wQmghDFfYfqmMQ1Wipq7cI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=F4+hAXdn; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1749112361; c=relaxed/simple;
+	bh=Q23qwzl5YFISjyMbslK4Dd0m7IvouEeCMqpBRBUae+g=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:Message-ID:
+	 MIME-Version:Content-Type; b=kvip6Gnf+UwDQq7v4RB7xFL7U+ilk/WP/lzlb1LHZPDBqEV0rWAW6T2XLgztEpgA2Fxp3gIY7Z0p9dxTIzEvALYZ44TnTXZpZBRF8SBHzmEM9NvNp+21n/qu/0oru6Ac4dboTNZyzjj8LzGTPPLKROS9P9X9ZIbD/7ybc0QAGw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DtgONLlQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F4+hAXdn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1749110175;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=wRyOEDXETxIkKIFfjZs2P8W26KRROUKYMIqAGAlgFBI=;
-	b=F4+hAXdnyxEt13rDx4dCi/MRwySV+cWNq6H/8AenkaeKl9lcJkRGS8IKytnyYCtszrs9MK
-	uInF+Zd7Tf1OP/ABbsQrNcq/u1mYjiLU7uJB5gSFPL437qzjwJ3gXu84VrLUlnFA3YKB9V
-	U45DCWvNwJkC9yl269gGUbU5ZMUHbUM=
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
- [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-688-TmVSa_mlML-l30sQ4hsYPg-1; Thu, 05 Jun 2025 03:56:14 -0400
-X-MC-Unique: TmVSa_mlML-l30sQ4hsYPg-1
-X-Mimecast-MFC-AGG-ID: TmVSa_mlML-l30sQ4hsYPg_1749110173
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-ab68fbe53a4so48766466b.2
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Jun 2025 00:56:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749110173; x=1749714973;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:from:references:cc:to:subject:user-agent
-         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=wRyOEDXETxIkKIFfjZs2P8W26KRROUKYMIqAGAlgFBI=;
-        b=W8pN5daf7fwuUiiZ1+RkP5DlJGiDRsFiqyJuDXIXRfkygeJ97UbtZBfTEgkmEHLY1h
-         Tv59+ajh/3z0wo4S3QTfrVGaGtekP1ORJEkS8KSX4Xu3E0KiKiiWwaKR6om/28UjE8qc
-         lDHRaONC20idvQ4U4Mu/gOvzZDdzCvGbxxeafWePo/WqW+rUuo/bQSt5DLTzeA5JMZJr
-         1rWVszuG1YVG6Q2qrtgb66CqbwMXdTmaxRMUME0J0WN+1HVZ8gZDH2VZgwMOH8mH37i8
-         aQFS7vMz14R8w2YaXI0e6IB+3XqWq3UQthCv863rZA+pKb1lOBI0W8jtsiPii6dCYDyA
-         nXAg==
-X-Forwarded-Encrypted: i=1; AJvYcCV4dJlZ0frC1D5AbDkIowv+zJA12K6w38g1+JngC0p12gTdzvN68KhFfDeCrv/jJZ1uyu4bbN3eGbk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzysgBqxEAdg99jCb4to3rJMzLZol1/3pjlenTKU7i/JUS8YyGQ
-	k9DkVqvrNrk7VkJSjoc/9BwvaI09uCe/ArFHYhqtMo60CTECtWDEylJGaVPryS/TgqHcqPB+p/y
-	efMnjha4KvblY6csXiTEjhSGy9HWVOA8fQ4XMYvYCMo5+xU+TbiwXDLewnF26VQ==
-X-Gm-Gg: ASbGncujyyEhQKL9+G7TrUKTcCcfx//YobnaOY+nsQvpI/EqpMQ6kLc66LvPWLVIXN4
-	jyLAj7IL6CbXbcQj8QpQoqs4dt6Nl1t0D9aHKTlW8gK3mqx2Jo8/AnnpXYDJhqoliLMmvYv6C13
-	rJWWY2p8TqKm0YNwL8DHUwOWIg7preiIVtaLbdKzl7zi+JF4saWKxXJxagT+Svd8KFk4cJcDlUo
-	xjScrpu1sAryr4Cr36lCeIpq4q0Y0yWhPDyo1iZ9iA/lk6+MLbz6/biTRCb1D5sPXLZo29WWk0K
-	HAsSJH2Sx7qndGn0o9bJ0ne5gEySxZE2+kSXXrriegLvKYppmptMqzl19wcnauo5irgAyW43gXU
-	9osIiBAdc1YZmt8wcxfy2UvMmRBuHrtr345aE
-X-Received: by 2002:a05:600c:3106:b0:441:b3eb:570a with SMTP id 5b1f17b1804b1-451f0a6a94bmr54009455e9.2.1749109770017;
-        Thu, 05 Jun 2025 00:49:30 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHZsjcg/PLPpLyQGdb23N26umjiH63blsW4LCsG+AuyVl004iXQAfjzXr57lLLdanZJ4s608g==
-X-Received: by 2002:a05:600c:3106:b0:441:b3eb:570a with SMTP id 5b1f17b1804b1-451f0a6a94bmr54009085e9.2.1749109769586;
-        Thu, 05 Jun 2025 00:49:29 -0700 (PDT)
-Received: from ?IPV6:2003:d8:2f27:ec00:4f4d:d38:ba97:9aa2? (p200300d82f27ec004f4d0d38ba979aa2.dip0.t-ipconnect.de. [2003:d8:2f27:ec00:4f4d:d38:ba97:9aa2])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-451fb22a7f2sm9315935e9.37.2025.06.05.00.49.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Jun 2025 00:49:29 -0700 (PDT)
-Message-ID: <b064c820-1735-47db-96e3-6f2b00300c67@redhat.com>
-Date: Thu, 5 Jun 2025 09:49:27 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DtgONLlQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50E7DC4CEE7;
+	Thu,  5 Jun 2025 08:32:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1749112360;
+	bh=Q23qwzl5YFISjyMbslK4Dd0m7IvouEeCMqpBRBUae+g=;
+	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+	b=DtgONLlQ5B/nkwOY3t4WTVF260riJq1kKNVaKOBY/T711Td4e3i7oRn+kHHKLpM/R
+	 sEXNZv3sRP5kIbvYsFq0pvnTWuhQXzH9hap8gDLhJz0F7AD0IQcXM+Z7lcDPQcGBJ9
+	 jyVgp60SB/UamKKCWIogFsNY5INN5wm52CKgeDoMgssH6kkv835AkP5TpkwDBmXuxr
+	 DzSOVyvjPXlNkH8euw7fNGjNekbDHgtJ5+m1dhNOdUzMVa0qDhQ91szrNftojSOTA4
+	 QrxzEDfU+fwgHV95xxOw6n6y16m2tczn2PVSIgIsNaDvQ36NOoU2mmC/yXJ4gbZO2v
+	 +AZWmYtLqLlow==
+References: <20250603085056.191073-1-txpeng@tencent.com>
+User-agent: mu4e 1.10.8; emacs 29.2
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: luminosity1999@gmail.com
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Tianxiang Peng
+ <txpeng@tencent.com>, Qing Zhang <diasyzhang@tencent.com>, Hao Peng
+ <flyingpeng@tencent.com>, Jinliang Zheng <alexjlzheng@tencent.com>, Hui Li
+ <caelli@tencent.com>
+Subject: Re: [PATCH 5.4] xfs: Reset cnt_cur to NULL after deletion to
+ prevent UAF
+Date: Tue, 03 Jun 2025 18:58:52 +0530
+In-reply-to: <20250603085056.191073-1-txpeng@tencent.com>
+Message-ID: <87plfi37xc.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 03/12] mm/pagewalk: Skip dax pages in pagewalk
-To: Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>
-Cc: Alistair Popple <apopple@nvidia.com>, linux-mm@kvack.org,
- gerald.schaefer@linux.ibm.com, jgg@ziepe.ca, willy@infradead.org,
- linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
- linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, jhubbard@nvidia.com, zhang.lyra@gmail.com,
- debug@rivosinc.com, bjorn@kernel.org, balbirs@nvidia.com,
- lorenzo.stoakes@oracle.com, linux-arm-kernel@lists.infradead.org,
- loongarch@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
- linux-riscv@lists.infradead.org, linux-cxl@vger.kernel.org,
- dri-devel@lists.freedesktop.org, John@groves.net
-References: <cover.541c2702181b7461b84f1a6967a3f0e823023fcc.1748500293.git-series.apopple@nvidia.com>
- <1799c6772825e1401e7ccad81a10646118201953.1748500293.git-series.apopple@nvidia.com>
- <6840f9ed3785a_249110084@dwillia2-xfh.jf.intel.com.notmuch>
- <20250605074637.GA7727@lst.de>
-From: David Hildenbrand <david@redhat.com>
-Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- WNyWQQ==
-Organization: Red Hat
-In-Reply-To: <20250605074637.GA7727@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
-On 05.06.25 09:46, Christoph Hellwig wrote:
-> On Wed, Jun 04, 2025 at 06:59:09PM -0700, Dan Williams wrote:
->> +/* return normal pages backed by the page allocator */
->> +static inline struct page *vm_normal_gfp_pmd(struct vm_area_struct *vma,
->> +					     unsigned long addr, pmd_t pmd)
->> +{
->> +	struct page *page = vm_normal_page_pmd(vma, addr, pmd);
->> +
->> +	if (!is_devdax_page(page) && !is_fsdax_page(page))
->> +		return page;
->> +	return NULL;
-> 
-> If you go for this make it more straight forward by having the
-> normal path in the main flow:
-> 
-> 	if (is_devdax_page(page) || is_fsdax_page(page))
-> 		return NULL;
-> 	return page;
+On Tue, Jun 03, 2025 at 04:50:56 PM +0800, luminosity1999@gmail.com wrote:
+> From: Tianxiang Peng <txpeng@tencent.com>
+>
+> Our test environment detected a use-after-free bug in XFS:
+>
+> [ 1396.210852] Allocated by task 26155:
+> [ 1396.212769]  save_stack+0x21/0x90
+> [ 1396.214670]  __kasan_kmalloc.constprop.8+0xc1/0xd0
+> [ 1396.216738]  kasan_slab_alloc+0x11/0x20
+> [ 1396.218694]  kmem_cache_alloc+0xfb/0x280
+> [ 1396.220750]  kmem_zone_alloc+0xb9/0x240 [xfs]
+> [ 1396.222859]  xfs_allocbt_init_cursor+0x60/0x270 [xfs]
+> [ 1396.225058]  xfs_alloc_ag_vextent_near+0x2bc/0x1aa0 [xfs]
+> [ 1396.227312]  xfs_alloc_ag_vextent+0x3a0/0x5a0 [xfs]
+> [ 1396.229503]  xfs_alloc_vextent+0xc11/0xd80 [xfs]
+> [ 1396.231665]  xfs_bmap_btalloc+0x632/0xf20 [xfs]
+> [ 1396.233804]  xfs_bmap_alloc+0x78/0x90 [xfs]
+> [ 1396.235883]  xfs_bmapi_allocate+0x243/0x760 [xfs]
+> [ 1396.238032]  xfs_bmapi_convert_delalloc+0x3cf/0x850 [xfs]
+> [ 1396.240267]  xfs_map_blocks+0x352/0x820 [xfs]
+> [ 1396.242379]  xfs_do_writepage+0x2c2/0x8d0 [xfs]
+> [ 1396.244417]  write_cache_pages+0x341/0x760
+> [ 1396.246490]  xfs_vm_writepages+0xc8/0x120 [xfs]
+> [ 1396.248755]  do_writepages+0x8f/0x160
+> [ 1396.250710]  __filemap_fdatawrite_range+0x1a4/0x200
+> [ 1396.252823]  filemap_flush+0x1c/0x20
+> [ 1396.254847]  xfs_release+0x1b3/0x1f0 [xfs]
+> [ 1396.256920]  xfs_file_release+0x15/0x20 [xfs]
+> [ 1396.258936]  __fput+0x155/0x390
+> [ 1396.260781]  ____fput+0xe/0x10
+> [ 1396.262620]  task_work_run+0xbf/0xe0
+> [ 1396.264492]  exit_to_usermode_loop+0x11d/0x120
+> [ 1396.266496]  do_syscall_64+0x1c3/0x1f0
+> [ 1396.268391]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+>
+> [ 1396.272067] Freed by task 26155:
+> [ 1396.273909]  save_stack+0x21/0x90
+> [ 1396.275758]  __kasan_slab_free+0x131/0x180
+> [ 1396.277722]  kasan_slab_free+0xe/0x10
+> [ 1396.279627]  kmem_cache_free+0x8c/0x2c0
+> [ 1396.281625]  xfs_btree_del_cursor+0xb2/0x100 [xfs]
+> [ 1396.283739]  xfs_alloc_ag_vextent_near+0x90b/0x1aa0 [xfs]
+> [ 1396.285932]  xfs_alloc_ag_vextent+0x3a0/0x5a0 [xfs]
+> [ 1396.288049]  xfs_alloc_vextent+0xc11/0xd80 [xfs]
+> [ 1396.290065]  xfs_bmap_btalloc+0x632/0xf20 [xfs]
+> [ 1396.292008]  xfs_bmap_alloc+0x78/0x90 [xfs]
+> [ 1396.293871]  xfs_bmapi_allocate+0x243/0x760 [xfs]
+> [ 1396.295801]  xfs_bmapi_convert_delalloc+0x3cf/0x850 [xfs]
+> [ 1396.297811]  xfs_map_blocks+0x352/0x820 [xfs]
+> [ 1396.299706]  xfs_do_writepage+0x2c2/0x8d0 [xfs]
+> [ 1396.301522]  write_cache_pages+0x341/0x760
+> [ 1396.303379]  xfs_vm_writepages+0xc8/0x120 [xfs]
+> [ 1396.305204]  do_writepages+0x8f/0x160
+> [ 1396.306902]  __filemap_fdatawrite_range+0x1a4/0x200
+> [ 1396.308756]  filemap_flush+0x1c/0x20
+> [ 1396.310545]  xfs_release+0x1b3/0x1f0 [xfs]
+> [ 1396.312386]  xfs_file_release+0x15/0x20 [xfs]
+> [ 1396.314180]  __fput+0x155/0x390
+> [ 1396.315825]  ____fput+0xe/0x10
+> [ 1396.317442]  task_work_run+0xbf/0xe0
+> [ 1396.319126]  exit_to_usermode_loop+0x11d/0x120
+> [ 1396.320928]  do_syscall_64+0x1c3/0x1f0
+> [ 1396.322648]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+>
+> [ 1396.325958] The buggy address belongs to the object at ffff8898039945a0
+>                 which belongs to the cache xfs_btree_cur of size 224
+> [ 1396.330097] The buggy address is located 181 bytes inside of
+>                 224-byte region [ffff8898039945a0, ffff889803994680)
+>
+> This issue stems from an incomplete backport of upstream commit
+> 8ebbf262d468 ("xfs: don't block in busy flushing when freeing
+> extents") to the 5.4 LTS kernel. The backport introduced error
+> handling that may goto error0 when xfs_extent_busy_flush() fails:
 
-+1
+Hi,
 
-But I'd defer introducing that for now if avoidable. I find the naming 
-rather ... suboptimal :)
+I don't see the commit "xfs: don't block in busy flushing when freeing
+extents" on v5.4.294 tag. Can you please provide me the ID of commit which
+backports that patch?
+
+Also, Please post backported XFS patches for stable kernels to the mailing
+list at xfs-stable@lists.linux.dev
+
+>
+> -		xfs_extent_busy_flush(args->mp, args->pag, busy_gen,
+> -				alloc_flags);
+> +		error = xfs_extent_busy_flush(args->tp, args->pag,
+> +				busy_gen, alloc_flags);
+> +		if (error)
+> +			goto error0;
+>
+> However, in the 5.4 codebase, the existing cursor deletion logic
+> failed to reset cnt_cur to NULL after deletion. While the original
+> code's goto restart path reinitialized the cursor, the new goto
+> error0 path attempts to delete an already-freed cursor (now
+> dangling pointer), causing a use-after-free. Reset cnt_cur to NULL
+> after deletion to prevent double-free. This aligns with the cursor
+> management pattern used at other deletion sites in the same
+> function.
+>
+> This pitfall was eliminated in 5.15+ LTS kernels via XFS code
+> refactoring, making the fix unnecessary for newer versions.
+>
+> Signed-off-by: Tianxiang Peng <txpeng@tencent.com>
+> Reviewed-by: Qing Zhang <diasyzhang@tencent.com>
+> Reviewed-by: Hao Peng <flyingpeng@tencent.com>
+> Reviewed-by: Jinliang Zheng <alexjlzheng@tencent.com>
+> Reviewed-by: Hui Li <caelli@tencent.com>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 1193fd6e4..ff0c05901 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -1417,6 +1417,7 @@ xfs_alloc_ag_vextent_near(
+>  	 */
+>  	if (bno_cur_lt == NULL && bno_cur_gt == NULL) {
+>  		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+> +		cnt_cur = NULL;
+>  
+>  		if (busy) {
+>  			trace_xfs_alloc_near_busy(args);
 
 -- 
-Cheers,
-
-David / dhildenb
-
+Chandan
