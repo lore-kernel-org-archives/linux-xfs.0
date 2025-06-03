@@ -1,110 +1,234 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18C40231A55;
-	Tue,  3 Jun 2025 14:57:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 777271C3306
+	for <linux-xfs@vger.kernel.org>; Tue,  3 Jun 2025 22:05:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748962643; cv=none; b=ai0N/YoIl3FoP1h5ZNFMsnAjoBCQKxkoGXgRocP4OrZIoALGA1GB9BFXrevrZnBPNlZm1yKRMOEgKUD6RhO+/8A2L1GYslmZ6j9aMD8bCN+f2bQj5txgBxRBwVd/EKaI+bpjiRl9MwLKaJIHjEJ4yAaBm063Vb6PhgnHr3cLlSk=
+	t=1748988309; cv=none; b=jzGN1P0o8ncJVxedIlk/j+0Oij3wYV64M0CFZvaFcfjlUzRPPxn7zRAO6/DdUiOgOpBVTVpwmYt9/uSE+O9kvLIc1jPHL7WdEyPjP6+GxjWmBDpNV0PiRfEaPSBm405aYHeCZSBRJkVkIhbs2MFyH46eY5cBgtdtY03cVooiCCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748962643; c=relaxed/simple;
-	bh=yhNKPc+4nAWEagNDi/x/10xSjseHIU5i0x8Ubt4/nqQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=aryz0jCeMqS5aFSLTSauYZKG0ScMeXUeqGOVDpw/kiIIoVpxA1ojI+ct3WvI9cv7uRTAkJ/gAr+4fYzBE0TjfKv2LtLtQHFX7oS8cOPD5ieE7SPpF6MbKtCZFC+D2QkTk/rFvd1Z3duxteVUDqGe1NIVAHXrXuYu0f33dnm6RGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=lqFlWBr7; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1748988309; c=relaxed/simple;
+	bh=4Q6wpdubX03roYzxWuBd4mlmXNKXJQgIgTSoc1SwQqE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AvT41X7rdydYU9pKv2WHcNfBKZCW9gIZVFompcphtaIgXfbYrNGKWUHAJk+SV35S9Q2RFaKRjOhW1eJ1BI84ojl9qznS6r5FrEGhypGvVqHMvAnSep7eVFiDTXCLQLmmDM75tnDOupca5l3XkTn0DnpGabZ6aOBv4aAAiKn9uI4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ani9RRjD; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="lqFlWBr7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1748962639;
-	bh=yhNKPc+4nAWEagNDi/x/10xSjseHIU5i0x8Ubt4/nqQ=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=lqFlWBr7IJlhJ1Spf3Mj2WjUCxtPUnlNsFoBVKPzOBVpXLose6Wgtfwx5j/GpG+8Y
-	 uoJgNqBFGup+v+3gbKuwgsYtZBMLSv7+65TaA9FBiyGo1YU9rw/FHL/ju1RHVN19Bp
-	 f01J/h6LVQuZfki+1pVNe8C32VoGtjZ6xnvlvZNc=
-Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 3845F1C0096;
-	Tue, 03 Jun 2025 10:57:19 -0400 (EDT)
-Message-ID: <abe44d8f2bebe805dd0975be198994c89a100644.camel@HansenPartnership.com>
-Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent
- silent data corruption
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Christoph Hellwig <hch@infradead.org>, Damien Le Moal
- <dlemoal@kernel.org>
-Cc: Yafang Shao <laoar.shao@gmail.com>, Matthew Wilcox
- <willy@infradead.org>,  Christian Brauner <brauner@kernel.org>,
- djwong@kernel.org, cem@kernel.org,  linux-xfs@vger.kernel.org,
- Linux-Fsdevel <linux-fsdevel@vger.kernel.org>,  Damien Le Moal
- <Damien.LeMoal@wdc.com>, Sathya Prakash <sathya.prakash@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Suganath Prabu Subramani
- <suganath-prabu.subramani@broadcom.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, 
- linux-scsi@vger.kernel.org
-Date: Tue, 03 Jun 2025 10:57:18 -0400
-In-Reply-To: <aD8Jmmd4Aiy1HElV@infradead.org>
-References: <aD03HeZWLJihqikU@infradead.org>
-	 <CALOAHbDxgvY7Aozf8H9H2OBedcU1efYBQiEvxMg6pj1+arPETQ@mail.gmail.com>
-	 <aD5obj2G58bRMFlB@casper.infradead.org>
-	 <CALOAHbCWra+DskmcWUWJOenTg9EJQfS23Hi-rB1GLYmcRUKf4A@mail.gmail.com>
-	 <aD5ratf3NF_DUnL-@casper.infradead.org>
-	 <CALOAHbB_p=rxT2-7bWudKLUgbD7AvNoBsge90VDgQFpakfTbCQ@mail.gmail.com>
-	 <aD58p4OpY0QhKl3i@infradead.org>
-	 <e2b4db3d-a282-4c96-b333-8d4698e5a705@kernel.org>
-	 <CALOAHbA_ttJmOejYJ+rrRdzKav_BPtwxuKwCSAf2dwLZJ1UyZQ@mail.gmail.com>
-	 <26d6d164-5acd-4f85-a7ac-d01f44fb5a87@kernel.org>
-	 <aD8Jmmd4Aiy1HElV@infradead.org>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ani9RRjD"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-231e8553248so59252845ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Jun 2025 15:05:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1748988306; x=1749593106; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Lju0Ryqqd15qALOnq6lO5mGiDU1YmqZiwkz30QskHzc=;
+        b=ani9RRjDaxhGeak8nlfuJA3wxU75NFrtPlZo9WiYTSiONxBHzrIKeu6gfLLkWgfpf/
+         XyRqG3ig+6UR3OhQ1I63KevmdwZPrKjq7zQD2eu1D69fVBwOfAiG+1SMZmf2VHkCtwnB
+         Dy0UNxXQA1GFHRmEfjlbdlpDa+gSSpEwgyYYXx8umV2XEBqfuuCF7i8v2oYB+txWZAvP
+         hDnerlEfDtW3KSmoadE9SUUwHf7SKALtu+n0x4yuXUNXNck8KSN2VhpckWY1/wiErd7e
+         FGxL8wP85DxqJRJyMZotIquBS4KDo3x7KfkccDThQWdCQdilXtuOIxyOTfkm85vyDtuJ
+         mIPQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748988306; x=1749593106;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Lju0Ryqqd15qALOnq6lO5mGiDU1YmqZiwkz30QskHzc=;
+        b=lfn0ZDb2I7osq/MJR1+gyeuwpM2u5mSYv6Je+cblMVyPUHsknekkgIFc6cGiK02BPH
+         y7wwESJo6cOtghIOBAHhRTGpu2b63oCk4Z/7MqzE32WDNYHcbewENwArzLiDleYwkYF7
+         t6VPX47kj2Fzm4XePHBB9+2h8KiLcxLs0VvD9SMuFDXoZ/kALzy4nyJjvFqKqOc/S2hx
+         TP+QWfVWF1f2pSdtnLRmJ8p+9GGIInQT/l8kXym6UJw9hLcHdjO1YlrgFe6iJoDHOqMp
+         WDM32FQeMZ3y5OgCfSsa/HH91SrG6l3tuzkZzGJfsqavGcVj0nFyUPa3FzzzIz2n8ogt
+         Pbbw==
+X-Forwarded-Encrypted: i=1; AJvYcCW8tPrVZA25uju2qIV/c8m4U6utx7ryHtBoha0LSPlEBCeFInf/ERUEcrWvv67kGqyB42lGRX1kMjI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyGzhzvFMwSb1P/tM07iXu9DNIim+qGkMS0HBir4aiBCTXGWpZ4
+	6aEC0YM+lEuNOisDYIyNk/Wpgtopa9zc26VykluQjP2E6FsPU8ntLzWeN4KbdNfOhNU=
+X-Gm-Gg: ASbGncuOJi8zPOOtFXZ+cdGsYGa1zQKCbEYY9ULDi+kSpMFeH5VOg7raAvg4nuoGHM+
+	feICZ8Yg2/QpRqv5JjdgiDV/+FqhZJCXD5hsyRDCNIcsv/KUFyL+Tn2LALeEqzW556zqzgzNcsE
+	jQv+uPB/lyQiG+IJTD4npz08S8QSwOZfKkij5yFSh1EIrVWsgkOMUn4agwaCqM76fkm6aQFswpQ
+	MEH7mq6ZaoXXfqnIUpCa4d7O6CNntT51esyecKnHhpBESKqmfJTcS53QTU4ZHDlxir/bmrq1Cl1
+	j8MSfRY6pXWgwzP3JX5QQ9UfoWSkk9SwDWyGVnBiDdVzaJO4HMdeIBmvEDp2Mw64HjK/EDau3eO
+	RbsPe9Ibo40jpW7GizhcNMmNNtMk=
+X-Google-Smtp-Source: AGHT+IFB7MFjtIScvIBdqXB2ckXxOy1R5cdJuSvkVoKok2QP9CnHqhUz+oglAxd/DdbXqyKh7BRlLw==
+X-Received: by 2002:a17:903:18f:b0:234:986c:66e0 with SMTP id d9443c01a7336-235e112bd6cmr4869035ad.4.1748988306543;
+        Tue, 03 Jun 2025 15:05:06 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-184-88.pa.nsw.optusnet.com.au. [49.180.184.88])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23506d14c79sm92206565ad.230.2025.06.03.15.05.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Jun 2025 15:05:05 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1uMZkl-0000000Bsxy-26gn;
+	Wed, 04 Jun 2025 08:05:03 +1000
+Date: Wed, 4 Jun 2025 08:05:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Yafang Shao <laoar.shao@gmail.com>,
+	Christian Brauner <brauner@kernel.org>, djwong@kernel.org,
+	cem@kernel.org, linux-xfs@vger.kernel.org,
+	Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
+ data corruption
+Message-ID: <aD9xj8cwfY9ZmQ2B@dread.disaster.area>
+References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
+ <aDfkTiTNH1UPKvC7@dread.disaster.area>
+ <aD04v9dczhgGxS3K@infradead.org>
+ <aD4xboH2mM1ONhB-@dread.disaster.area>
+ <aD5-_OOsKyX0rDDO@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aD5-_OOsKyX0rDDO@infradead.org>
 
-On Tue, 2025-06-03 at 07:41 -0700, Christoph Hellwig wrote:
-> [taking this private to discuss the mpt drivers]
->=20
-> > Hmmm... DID_SOFT_ERROR... Normally, this is an immediate retry as
-> > this normally is used to indicate that a command is a collateral
-> > abort due to an NCQ error, and per ATA spec, that command should be
-> > retried. However, the *BAD* thing about Broadcom HBAs using this is
-> > that it increments the command retry counter, so if a command ends
-> > up being retried more than 5 times due to other commands failing,
-> > the command runs out of retries and is failed like this. The
-> > command retry counter should *not* be incremented for NCQ
-> > collateral aborts. I tried to fix this, but it is impossible as we
-> > actually do not know if this is a collateral abort or something
-> > else. The HBA events used to handle completion do not allow
-> > differentiation. Waiting on Broadcom to do something about this
-> > (the mpi3mr HBA driver has the same nasty issue).
->=20
-> Maybe we should just change the mpt3 sas/mr drivers to use
-> DID_SOFT_ERROR less?=C2=A0 In fact there's not really a whole lot of
-> DID_SOFT_ERROR users otherwise, and there's probably better status
-> codes whatever they are doing can be translated to that do not
-> increment the retry counter.
+On Mon, Jun 02, 2025 at 09:50:04PM -0700, Christoph Hellwig wrote:
+> On Tue, Jun 03, 2025 at 09:19:10AM +1000, Dave Chinner wrote:
+> > > In other words, write errors in Linux are in general expected to be
+> > > persistent, modulo explicit failfast requests like REQ_NOWAIT.
+> > 
+> > Say what? the blk_errors array defines multiple block layer errors
+> > that are transient in nature - stuff like ENOSPC, ETIMEDOUT, EILSEQ,
+> > ENOLINK, EBUSY - all indicate a transient, retryable error occurred
+> > somewhere in the block/storage layers.
+> 
+> Let's use the block layer codes reported all the way up to the file
+> systems and their descriptions instead of the errnos they are
+> mapped to for compatibility.  The above would be in order:
+> 
+> [BLK_STS_NOSPC]         = { -ENOSPC,    "critical space allocation" },
+> [BLK_STS_TIMEOUT]       = { -ETIMEDOUT, "timeout" },
+> [BLK_STS_PROTECTION]    = { -EILSEQ,    "protection" },
+> [BLK_STS_TRANSPORT]     = { -ENOLINK,   "recoverable transport" },
+> [BLK_STS_DEV_RESOURCE]  = { -EBUSY,     "device resource" },
+> 
+> > What is permanent about dm-thinp returning ENOSPC to a write
+> > request? Once the pool has been GC'd to free up space or expanded,
+> > the ENOSPC error goes away.
+> 
+> Everything.  ENOSPC means there is no space.  There might be space in
+> the non-determinant future, but if the layer just needs to GC it must
+> not report the error.
 
-The status code that does that (retry without incrementing the counter)
-is DID_IMM_RETRY.  The driver has to be a bit careful about using this
-because we can get into infinite retry loops.
+GC of thin pools requires the filesystem to be mounted so fstrim can
+be run to tell the thinp device where all the free LBA regions it
+can reclaim are located. If we shut down the filesystem instantly
+when the pool goes ENOSPC on a metadata write, then *we can't run
+fstrim* to free up unused space and hence allow that metadata write
+to succeed in the future.
 
-Regards,
+It should be obvious at this point that a filesystem shutdown on an
+ENOSPC error from the block device on anything other than journal IO
+is exactly the wrong thing to be doing.
 
-James
+> > What is permanent about an IO failing with EILSEQ because a t10
+> > checksum failed due to a random bit error detected between the HBA
+> > and the storage device? Retry the IO, and it goes through just fine
+> > without any failures.
+> 
+> Normally it means your checksum was wrong.  If you have bit errors
+> in the cable they will show up again, maybe not on the next I/O
+> but soon.
 
+But it's unlikely to be hit by another cosmic ray anytime soon, and
+so bit errors caused by completely random environmental events
+should -absolutely- be retried as the subsequent write retry will
+succeed.
+
+If there is a dodgy cable causing the problems, the error will
+re-occur on random IOs and we'll emit write errors to the log that
+monitoring software will pick up. If we are repeatedly isssuing write
+errors due to EILSEQ errors, then that's a sign the hardware needs
+replacing.
+
+There is no risk to filesystem integrity if write retries
+succeed, and that gives the admin time to schedule downtime to
+replace the dodgy hardware. That's much better behaviour than
+unexpected production system failure in the middle of the night...
+
+It is because we have robust and resilient error handling in the
+filesystem that the system is able to operate correctly in these
+marginal situations. Operating in marginal conditions or as hardware
+is beginning to fail is a necessary to keep production systems
+running until corrective action can be taken by the administrators.
+
+> > These transient error types typically only need a write retry after
+> > some time period to resolve, and that's what XFS does by default.
+> > What makes these sorts of errors persistent in the linux block layer
+> > and hence requiring an immediate filesystem shutdown and complete
+> > denial of service to the storage?
+> > 
+> > I ask this seriously, because you are effectively saying the linux
+> > storage stack now doesn't behave the same as the model we've been
+> > using for decades. What has changed, and when did it change?
+> 
+> Hey, you can retry.  You're unlikely to improve the situation though
+> but instead just keep deferring the inevitable shutdown.
+
+Absolutely. That's the whole point - random failures won't repeat,
+and hence when they do occur we avoid a shutdown by retrying them on
+failure. This is -exactly- how robust error handling should work.
+
+However, for IO errors that persist or where other IO errors start
+to creep in, all the default behaviour is trying to do is hold the
+system up in a working state until downtime can be scheduled and the
+broken hardware is replaced. If integrity ends up being compromised
+by a subsequent IO failure, then we will shut the filesystem down at
+that point.
+
+This is about resilience in the face of errors. Not every error is
+fatal, nor does every error re-occur. There are classes of errors
+known to be transient (ENOSPC), others that are permanent (ENODEV),
+and others that we just don't know (EIO). If we value resiliency
+and robustness, then the filesystem should be able to withstand
+transient and "maybe-transient" IO failures without compromising
+integrity.
+
+Failing to recognise that transient and "maybe-transient" errors can
+generally be handled cleanly and successfully with future write
+retries leads to brittle, fragile systems that fall over at the
+first sign of anything going wrong. Filesystems that are targetted
+at high value production systems and/or running mission critical
+applications needs to have resilient and robust error handling.
+
+> > > Which also leaves me a bit puzzled what the XFS metadata retries are
+> > > actually trying to solve, especially without even having a corresponding
+> > > data I/O version.
+> > 
+> > It's always been for preventing immediate filesystem shutdown when
+> > spurious transient IO errors occur below XFS. Data IO errors don't
+> > cause filesystem shutdowns - errors get propagated to the
+> > application - so there isn't a full system DOS potential for
+> > incorrect classification of data IO errors...
+> 
+> Except as we see in this thread for a fairly common use case (buffered
+> I/O without fsync) they don't.  And I agree with you that this is not
+> how you write applications that care about data integrity - but the
+> entire reset of the system and just about every common utility is
+> written that way.
+
+Yes, I know that. But there are still valid reasons for retrying
+failed async data writeback IO when it triggers a spurious or
+retriable IO error....
+
+> And even applications that fsync won't see you fancy error code.  The
+> only thing stored in the address_space for fsync to catch is EIO and
+> ENOSPC.
+
+The filesystem knows exactly what the IO error reported by the block
+layer is before we run folio completions, so we control exactly what
+we want to report as IO compeltion status.
+
+Hence the bogosities of error propagation to userspace via the
+mapping is completely irrelevant to this discussion/feature because
+it would be implemented below the layer that squashes the eventual
+IO errno into the address space...
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
