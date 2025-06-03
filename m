@@ -1,127 +1,80 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CBD82F2D;
-	Tue,  3 Jun 2025 04:50:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 102D744C77;
+	Tue,  3 Jun 2025 05:17:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748926206; cv=none; b=aXRnUoPQPnr82JTM9OqsQKwbdj3o/TDJzP7vK8kkcBUCUHHV+2Qtz9zzS0B+rBwR1JnaPyJR7MCOiN7QLmUs1QIkpPIYe3pUYPyD97NEOYHMSjEGZYgrBzVIyeSx4XSCejS14HRO+Fd4+TeU9kmnivfVhPLSleejNAyL+npA+rQ=
+	t=1748927852; cv=none; b=QDlpOk1gkeGKhhYOeCn8sGsvLVt9ADWJQEFnhQG1TkFj8P5nrm+59gulqtsC6a+fCAyl7yt/ttdcECY/KnXVo5JrInKYsqZFbUZNeGrSfuvosiJ2U3R+9YkcWHLa9c7TN5eOJ4G7abhSL/zsj6pOXe4ZRrDfvCzdzXSz3V/x71Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748926206; c=relaxed/simple;
-	bh=3aQP4cVOXn4BZRakpLih4t7hE3enQFEXZnnf1lO+fek=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XXg3JzxjXUtr/S2eZmxBmq6AestiJjhieL5eY664/qPq9DdCWYXhpbu/20C1oIFj84Fov8uJOKmiV42AgoHqvMq/riOBo9p8U4UyiHIJ8b2uqLtx+Q1dk9yk2vyVLWhminCLHNHLhVxCyLP1WPo0cVaNNP5KbEHdiypFVNDr5aw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CR2ZpW4J; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1748927852; c=relaxed/simple;
+	bh=MLe0KyADv96wFzx4eXyUYSSu1c6CrcIQIbqW6W/530c=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=C+qZhYmRaeDdXs4xkSjNJEMGWTWd9wT6BzbeL+spMhJWz3eaCEzNIuEGzM7XL28ynj8yZzi9ORI6msQpKQO0S23df7Pgmol+7ZUayGLdk0dUnfLrJKjN91yBdGxZbhulLDihiESHVoV33SDGx8yIVKyv+HumnYX/8Yz4lCyX6MM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UjrxMipn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CR2ZpW4J"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=eARmH9Rn306+PBP02fqjqI67S938hpTq6nRX+WXqcD4=; b=CR2ZpW4JA0X6L3PCAryW7hZ8ZU
-	rWCHceDqHyr+q9KnIFftL3mrRP1nged2fbqewgkK65H64l03DglOHIDqYtdrB3hEblIavRoUu1wn6
-	5mXcdzaAVITfSdNvd0OwMOeyOyiA9T3ieA8nwMoCaveDQa6Az/jAXnlTp085P0EA9xmmTwjqP5PaD
-	7wKs6aoYmfK273/dG87ADJI9C45Y4jHhwzjjJmVUitdrqS8c9UxwOhYWLlJXYK11gHuLcOwRbXAQX
-	t+muMp4aaPB5BnC9maNWM6eyqWWOezqGNIPyoYLKUEkUgpYqwpgtg3kcQd2KJx71RlHJ5bY3WY5RI
-	tBQwR98g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uMJbA-00000009ias-0W2a;
-	Tue, 03 Jun 2025 04:50:04 +0000
-Date: Mon, 2 Jun 2025 21:50:04 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Yafang Shao <laoar.shao@gmail.com>,
-	Christian Brauner <brauner@kernel.org>, djwong@kernel.org,
-	cem@kernel.org, linux-xfs@vger.kernel.org,
-	Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
- data corruption
-Message-ID: <aD5-_OOsKyX0rDDO@infradead.org>
-References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
- <aDfkTiTNH1UPKvC7@dread.disaster.area>
- <aD04v9dczhgGxS3K@infradead.org>
- <aD4xboH2mM1ONhB-@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UjrxMipn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32DA0C4CEED;
+	Tue,  3 Jun 2025 05:17:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1748927851;
+	bh=MLe0KyADv96wFzx4eXyUYSSu1c6CrcIQIbqW6W/530c=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=UjrxMipn1iVdrRExtBaVyIWTvrHxa+twCzDb3Yf962uWkj3mlRt26fWEnpLvG/CeN
+	 VbXExsLimMLWmFz7zpA4Y+IHgQs2E4AGAWDrLbtyFqQIzb8rWDbEkFEs2rr+evSVnT
+	 j08hcUYmHQXq0Yipar4BGIE3IjsjYg/CCJy79sqpNFNtc8J9MwXJa+35eQE3FkcaPq
+	 +0yRfQjEwocR50koOpo14pFk9sueyubX97tWckSEr8sOxxdzL46zSSZguu3dLu0C9v
+	 6GfY69Gzfts0+xKkvMhZ2UVONxqh0ZUNzDKpnJYryLGdaMaN9xZs+obB0ns+cB5X/b
+	 NWtYZe6lq8mUg==
+Message-ID: <e2b4db3d-a282-4c96-b333-8d4698e5a705@kernel.org>
+Date: Tue, 3 Jun 2025 14:17:28 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aD4xboH2mM1ONhB-@dread.disaster.area>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
+ data corruption
+To: Christoph Hellwig <hch@infradead.org>, Yafang Shao <laoar.shao@gmail.com>
+Cc: Matthew Wilcox <willy@infradead.org>,
+ Christian Brauner <brauner@kernel.org>, djwong@kernel.org, cem@kernel.org,
+ linux-xfs@vger.kernel.org, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>,
+ Damien Le Moal <Damien.LeMoal@wdc.com>
+References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
+ <aD03HeZWLJihqikU@infradead.org>
+ <CALOAHbDxgvY7Aozf8H9H2OBedcU1efYBQiEvxMg6pj1+arPETQ@mail.gmail.com>
+ <aD5obj2G58bRMFlB@casper.infradead.org>
+ <CALOAHbCWra+DskmcWUWJOenTg9EJQfS23Hi-rB1GLYmcRUKf4A@mail.gmail.com>
+ <aD5ratf3NF_DUnL-@casper.infradead.org>
+ <CALOAHbB_p=rxT2-7bWudKLUgbD7AvNoBsge90VDgQFpakfTbCQ@mail.gmail.com>
+ <aD58p4OpY0QhKl3i@infradead.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <aD58p4OpY0QhKl3i@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jun 03, 2025 at 09:19:10AM +1000, Dave Chinner wrote:
-> > In other words, write errors in Linux are in general expected to be
-> > persistent, modulo explicit failfast requests like REQ_NOWAIT.
+On 2025/06/03 13:40, Christoph Hellwig wrote:
+> On Tue, Jun 03, 2025 at 11:50:58AM +0800, Yafang Shao wrote:
+>>
+>> The drive in question is a Western Digital HGST Ultrastar
+>> HUH721212ALE600 12TB HDD.
+>> The price information is unavailable to me;-)
 > 
-> Say what? the blk_errors array defines multiple block layer errors
-> that are transient in nature - stuff like ENOSPC, ETIMEDOUT, EILSEQ,
-> ENOLINK, EBUSY - all indicate a transient, retryable error occurred
-> somewhere in the block/storage layers.
+> Unless you are doing something funky like setting a crazy CDL policy
+> it should not randomly fail writes.  Can you post the dmesg including
+> the sense data that the SCSI code should print in this case?
 
-Let's use the block layer codes reported all the way up to the file
-systems and their descriptions instead of the errnos they are
-mapped to for compatibility.  The above would be in order:
+This drive does not support CDL, so it is not that for sure.
 
-[BLK_STS_NOSPC]         = { -ENOSPC,    "critical space allocation" },
-[BLK_STS_TIMEOUT]       = { -ETIMEDOUT, "timeout" },
-[BLK_STS_PROTECTION]    = { -EILSEQ,    "protection" },
-[BLK_STS_TRANSPORT]     = { -ENOLINK,   "recoverable transport" },
-[BLK_STS_DEV_RESOURCE]  = { -EBUSY,     "device resource" },
+Please also describe the drive connection: AHCI SATA port ? SAS HBA ?
+Enclosure/SAS expander ?
 
-> What is permanent about dm-thinp returning ENOSPC to a write
-> request? Once the pool has been GC'd to free up space or expanded,
-> the ENOSPC error goes away.
 
-Everything.  ENOSPC means there is no space.  There might be space in
-the non-determinant future, but if the layer just needs to GC it must
-not report the error.
 
-u
-
-> What is permanent about an IO failing with EILSEQ because a t10
-> checksum failed due to a random bit error detected between the HBA
-> and the storage device? Retry the IO, and it goes through just fine
-> without any failures.
-
-Normally it means your checksum was wrong.  If you have bit errors
-in the cable they will show up again, maybe not on the next I/O
-but soon.
-
-> These transient error types typically only need a write retry after
-> some time period to resolve, and that's what XFS does by default.
-> What makes these sorts of errors persistent in the linux block layer
-> and hence requiring an immediate filesystem shutdown and complete
-> denial of service to the storage?
-> 
-> I ask this seriously, because you are effectively saying the linux
-> storage stack now doesn't behave the same as the model we've been
-> using for decades. What has changed, and when did it change?
-
-Hey, you can retry.  You're unlikely to improve the situation though
-but instead just keep deferring the inevitable shutdown.
-
-> > Which also leaves me a bit puzzled what the XFS metadata retries are
-> > actually trying to solve, especially without even having a corresponding
-> > data I/O version.
-> 
-> It's always been for preventing immediate filesystem shutdown when
-> spurious transient IO errors occur below XFS. Data IO errors don't
-> cause filesystem shutdowns - errors get propagated to the
-> application - so there isn't a full system DOS potential for
-> incorrect classification of data IO errors...
-
-Except as we see in this thread for a fairly common use case (buffered
-I/O without fsync) they don't.  And I agree with you that this is not
-how you write applications that care about data integrity - but the
-entire reset of the system and just about every common utility is
-written that way.
-
-And even applications that fsync won't see you fancy error code.  The
-only thing stored in the address_space for fsync to catch is EIO and
-ENOSPC.
+-- 
+Damien Le Moal
+Western Digital Research
