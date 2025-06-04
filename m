@@ -1,158 +1,106 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D778D70838;
-	Wed,  4 Jun 2025 06:33:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48AB013AD05;
+	Wed,  4 Jun 2025 07:31:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749018787; cv=none; b=bgHUS0H0337dzodAfbq3HyW4a1BxzgfO5XJajgt9Yt8t2ZWJSuUq/BDMIiNq5GXOBMzAid/l7UaPgG87YPaGD5rFQv5kRlOEWt5Op29SnplVPTz9+Xsxv0BITzINn9Qkfz8Rq5t7m99Lxl/ydY2jOC/fQoFz9V1cmDyZNCgSmxg=
+	t=1749022283; cv=none; b=rn//0a+SWzyxfXo30u+EwKZ72dzG6ChVQtmMRfR9kvTicBrrMln7kedpJ/2cbdD76zexFJgeKTyZxDqX9K71lBGvJYz0LbdJMLpY5vuUw+Nb7cK6LCXFJXpgPHBmvMkFQDSCzrUsUJGbaRavAgupX3FUcCJ1lvaPR+AD9vrw1aU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749018787; c=relaxed/simple;
-	bh=TWkbaF+UZP8xXHeAtNtgjG41yHdBhuDPXGIN5tMi4Dw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OzK3l5UTWh5cWgwxB6iNjZjDCzcuVJ198gtbYMPHLuXBlhQJt3twiMi3s/Nys8MDbKEOdjmYw692Lm4zn1AHOf5EcZXetZmQLMH0rvijSvycdrn0+t0FdTDMwp4nzVt89fahDevj1qV5FoQK2tLDZTlQr6QsDmDEpTE2tCCbd2o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gey8bPVk; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1749022283; c=relaxed/simple;
+	bh=CoUYZg4cbHXIK3YnOrrX6RWNoH7Arv+dVw/7EPD8JQ0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Q5tGeD9I9xVDoQFn5r+LKLJgfaIgKlnACwWcjMMNThyl3Cxld4sH8TxkSK0TimynMtF7vWxcP5qqlwGh5xZXwXRfvR3FAff2VJMAj61tgD+qZL/OwoQiwHXPuOAQNXuYg9y2vhBTzpzrkvrUNusRH6DhBFKFMtOEQGIoQMi9Maw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vGb8k9Wq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gey8bPVk"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=naaTaUQW6+RoDaKAgp6lS22xeYxfdxsoFtZFGw1lY9Q=; b=gey8bPVkk7ZaRXYOWTcO3PL/wY
-	f73+B3Azk8XxJDn0xOYigGXY0T0sxkkwK9dkfvl8Bnn6YD/49QCy9miDn6EMYYxYM8DjlDAGSixFq
-	32eaeDG3pswVv71m/c1BCjWJaEc/41kxFunXUdcKoreLwY+3untYWzdm8r+54vRLpDxB6emo/0zP4
-	1QFq4hwZoAvVhmSy5YjAKk2m7ZE7dk/Z6DGqbdoOn0vAh+GtM2wzpCvgzGRV/zybKpDclC2dkxrrg
-	FEg+6I6Z0s934MOIsmTPwcBnl9+qsfzh6X6Vc3qW01501kWI6ICz7Iv7fCDDaGlVOi6uCu0eUvzL4
-	KUjSHOlw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uMhgP-0000000CgKi-0mot;
-	Wed, 04 Jun 2025 06:33:05 +0000
-Date: Tue, 3 Jun 2025 23:33:05 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Yafang Shao <laoar.shao@gmail.com>,
-	Christian Brauner <brauner@kernel.org>, djwong@kernel.org,
-	cem@kernel.org, linux-xfs@vger.kernel.org,
-	Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
- data corruption
-Message-ID: <aD_oobAbOs7m8PFN@infradead.org>
-References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
- <aDfkTiTNH1UPKvC7@dread.disaster.area>
- <aD04v9dczhgGxS3K@infradead.org>
- <aD4xboH2mM1ONhB-@dread.disaster.area>
- <aD5-_OOsKyX0rDDO@infradead.org>
- <aD9xj8cwfY9ZmQ2B@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vGb8k9Wq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E234EC4CEE7;
+	Wed,  4 Jun 2025 07:31:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1749022281;
+	bh=CoUYZg4cbHXIK3YnOrrX6RWNoH7Arv+dVw/7EPD8JQ0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=vGb8k9Wq4mWOWYluRmLs+xHWkD9PVOjantV9mwXywJoURpAWY0Y2jRWlWj9+Yj6pt
+	 jN0N3CT2fTdBaU4zloJd56/5RV1UX9uPiG6SyOojZCyXYUjaXoUYgvM0m2CPlfCJFI
+	 0AWAk7f0Nt8XSoSLJ3USI9sykqV4eSKZB7hyXs5keplrgQmNuRxiq3chcW6WS6+m4J
+	 EeUnEGGZpP/7uKAs05J7TAuEQHkYWI3G2semklq0gv0I04/t3Sw3RwXG36b8Rilj+Q
+	 7nXZEpZbLIaRA40ba5JKBOFRJq2nOT2Auew+obXpw9ftwW9VFCuGv6JGTSMvKFJTiN
+	 HlZzKVCfKtkEQ==
+Message-ID: <ee8952a0-d0ee-47db-8012-abb2722ae7ef@kernel.org>
+Date: Wed, 4 Jun 2025 16:29:43 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aD9xj8cwfY9ZmQ2B@dread.disaster.area>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
+ data corruption
+To: James Bottomley <James.Bottomley@HansenPartnership.com>,
+ Christoph Hellwig <hch@infradead.org>
+Cc: Yafang Shao <laoar.shao@gmail.com>, Matthew Wilcox <willy@infradead.org>,
+ Christian Brauner <brauner@kernel.org>, djwong@kernel.org, cem@kernel.org,
+ linux-xfs@vger.kernel.org, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>,
+ Damien Le Moal <Damien.LeMoal@wdc.com>,
+ Sathya Prakash <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+References: <aD03HeZWLJihqikU@infradead.org>
+ <CALOAHbDxgvY7Aozf8H9H2OBedcU1efYBQiEvxMg6pj1+arPETQ@mail.gmail.com>
+ <aD5obj2G58bRMFlB@casper.infradead.org>
+ <CALOAHbCWra+DskmcWUWJOenTg9EJQfS23Hi-rB1GLYmcRUKf4A@mail.gmail.com>
+ <aD5ratf3NF_DUnL-@casper.infradead.org>
+ <CALOAHbB_p=rxT2-7bWudKLUgbD7AvNoBsge90VDgQFpakfTbCQ@mail.gmail.com>
+ <aD58p4OpY0QhKl3i@infradead.org>
+ <e2b4db3d-a282-4c96-b333-8d4698e5a705@kernel.org>
+ <CALOAHbA_ttJmOejYJ+rrRdzKav_BPtwxuKwCSAf2dwLZJ1UyZQ@mail.gmail.com>
+ <26d6d164-5acd-4f85-a7ac-d01f44fb5a87@kernel.org>
+ <aD8Jmmd4Aiy1HElV@infradead.org>
+ <abe44d8f2bebe805dd0975be198994c89a100644.camel@HansenPartnership.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <abe44d8f2bebe805dd0975be198994c89a100644.camel@HansenPartnership.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jun 04, 2025 at 08:05:03AM +1000, Dave Chinner wrote:
-> > 
-> > Everything.  ENOSPC means there is no space.  There might be space in
-> > the non-determinant future, but if the layer just needs to GC it must
-> > not report the error.
+On 6/3/25 11:57 PM, James Bottomley wrote:
+> On Tue, 2025-06-03 at 07:41 -0700, Christoph Hellwig wrote:
+>> [taking this private to discuss the mpt drivers]
+>>
+>>> Hmmm... DID_SOFT_ERROR... Normally, this is an immediate retry as
+>>> this normally is used to indicate that a command is a collateral
+>>> abort due to an NCQ error, and per ATA spec, that command should be
+>>> retried. However, the *BAD* thing about Broadcom HBAs using this is
+>>> that it increments the command retry counter, so if a command ends
+>>> up being retried more than 5 times due to other commands failing,
+>>> the command runs out of retries and is failed like this. The
+>>> command retry counter should *not* be incremented for NCQ
+>>> collateral aborts. I tried to fix this, but it is impossible as we
+>>> actually do not know if this is a collateral abort or something
+>>> else. The HBA events used to handle completion do not allow
+>>> differentiation. Waiting on Broadcom to do something about this
+>>> (the mpi3mr HBA driver has the same nasty issue).
+>>
+>> Maybe we should just change the mpt3 sas/mr drivers to use
+>> DID_SOFT_ERROR less?  In fact there's not really a whole lot of
+>> DID_SOFT_ERROR users otherwise, and there's probably better status
+>> codes whatever they are doing can be translated to that do not
+>> increment the retry counter.
 > 
-> GC of thin pools requires the filesystem to be mounted so fstrim can
-> be run to tell the thinp device where all the free LBA regions it
-> can reclaim are located. If we shut down the filesystem instantly
-> when the pool goes ENOSPC on a metadata write, then *we can't run
-> fstrim* to free up unused space and hence allow that metadata write
-> to succeed in the future.
-> 
-> It should be obvious at this point that a filesystem shutdown on an
-> ENOSPC error from the block device on anything other than journal IO
-> is exactly the wrong thing to be doing.
+> The status code that does that (retry without incrementing the counter)
+> is DID_IMM_RETRY.  The driver has to be a bit careful about using this
+> because we can get into infinite retry loops.
 
-How high are the chances that you hit exactly the rate metadata
-writeback I/O and not journal or data I/O for this odd condition
-that requires user interaction?  Where is this weird model where a
-storage device returns an out of space error and manual user interaction
-using manual and not online trim is going to fix even documented?
+James,
 
-> > Normally it means your checksum was wrong.  If you have bit errors
-> > in the cable they will show up again, maybe not on the next I/O
-> > but soon.
-> 
-> But it's unlikely to be hit by another cosmic ray anytime soon, and
-> so bit errors caused by completely random environmental events
-> should -absolutely- be retried as the subsequent write retry will
-> succeed.
->
-> If there is a dodgy cable causing the problems, the error will
-> re-occur on random IOs and we'll emit write errors to the log that
-> monitoring software will pick up. If we are repeatedly isssuing write
-> errors due to EILSEQ errors, then that's a sign the hardware needs
-> replacing.
+Thank you for the information. Will have a try again at changing the driver to
+use this.
 
-Umm, all the storage protocols do have pretty good checksums.  A cosmic
-ray isn't going to fail them it is something more fundamental like
-broken hardware or connections.  In other words you are going to see
-this again and again pretty frequently.
 
-> There is no risk to filesystem integrity if write retries
-> succeed, and that gives the admin time to schedule downtime to
-> replace the dodgy hardware. That's much better behaviour than
-> unexpected production system failure in the middle of the night...
-> 
-> It is because we have robust and resilient error handling in the
-> filesystem that the system is able to operate correctly in these
-> marginal situations. Operating in marginal conditions or as hardware
-> is beginning to fail is a necessary to keep production systems
-> running until corrective action can be taken by the administrators.
-
-I'd really like to see a format writeup of your theory of robust error
-handling where that robustness is centered around the fairly rare
-case of metadata writeback and applications dealing with I/O errors,
-while journal write errors and read error lead to shutdown.  Maybe
-I'm missing something important, but the theory does not sound valid,
-and we don't have any testing framework that actually verifies it.
-
-> Failing to recognise that transient and "maybe-transient" errors can
-> generally be handled cleanly and successfully with future write
-> retries leads to brittle, fragile systems that fall over at the
-> first sign of anything going wrong. Filesystems that are targetted
-> at high value production systems and/or running mission critical
-> applications needs to have resilient and robust error handling.
-
-What known transient errors do you think XFS (or any other file system)
-actually handles properly?  Where is the contract that these errors
-actually are transient.
-
-> > And even applications that fsync won't see you fancy error code.  The
-> > only thing stored in the address_space for fsync to catch is EIO and
-> > ENOSPC.
-> 
-> The filesystem knows exactly what the IO error reported by the block
-> layer is before we run folio completions, so we control exactly what
-> we want to report as IO compeltion status.
-
-Sure, you could invent a scheme to propagate the exaxct error.  For
-direct I/O we even return the exact error to userspace.  But that
-means we actually have a definition of what each error means, and how
-it could be handled.  None of that exists right now.  We could do
-all this, but that assumes you actually have:
-
- a) a clear definition of a problem
- b) a good way to fix that problem
- c) good testing infrastructure to actually test it, because without
-    that all good intentions will probably cause more problems than
-    they solve
-
-> Hence the bogosities of error propagation to userspace via the
-> mapping is completely irrelevant to this discussion/feature because
-> it would be implemented below the layer that squashes the eventual
-> IO errno into the address space...
-
-How would implement and test all this?  And for what use case?
-
+-- 
+Damien Le Moal
+Western Digital Research
