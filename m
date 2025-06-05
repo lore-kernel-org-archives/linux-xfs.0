@@ -1,202 +1,256 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f208.google.com (mail-il1-f208.google.com [209.85.166.208])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F16F1922FB
-	for <linux-xfs@vger.kernel.org>; Thu,  5 Jun 2025 17:30:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46D3A27A112
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Jun 2025 17:55:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.208
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749144645; cv=none; b=IlShXCtH3jITQS+BilLYwr1rO5fRfn+qk3r7OHb6JLk86NpN/Hsbswgy9r0mJtVj47coSeUCmEmM8YpZJKAxag+BV7hMDpRpeUrYII7BETwu4g3sCwUzhk2DF8ggpoDVU0vufZs/yt8xuSghoEZbN1wKBxq54PJyWXAT5DEI1eg=
+	t=1749146131; cv=none; b=hcjL2hVMRXjm8uz5patyPc3p78et/1RXuJPzhLNYcT85HYaDGHQItgzDqv8DI4J7EHEraWBTOahd6X8X4R06sruWEFdITEFNY9fQyh8ANECFFHxqpbgUdAnvvPvfD74aXuHHuGy+mpMlmUgtNnOZoL8yO9vtAk2DKX3tJ+9gptA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749144645; c=relaxed/simple;
-	bh=wwNjceRLNn82XbbDj9Vk+tR8yUTme8CFQm9F2eUDIJg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=meJo2+WG/JfN4zxEHIMMO6bTojFfU1jtc21jWrnIjkZ89uEz6wg/uU5PbPPxd42GMC5sqsx+meKZY8OuvY8W6jzLyve1cDA6Gg9VwGjPoOFhth/AI93U279fC2GwuLJcI9NDym2OyIyVTcN16sCn7dKDJ6nICNGx9xa0Dh/8+RM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CKCzNV1D; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CKCzNV1D"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1749144641;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=TdA4MqEs+iXthUcjZmFuz3drXHjXLr7u45s4ZOP6ueQ=;
-	b=CKCzNV1DzvJeYFXHhsgjPG5OJx65cVfHXNmWzACJDOAP7xDduVcFbpnY0UnE5NW/GOm0wh
-	Gi6LB8qk6Z0EPrW2KtKGjp/rEyPbEZfBoy7An0cnKkOaXHel0iHskBiojgixY7Ganm6gQE
-	ttFIsm/SIqc1O/GT8bOCXjaXovK1SUo=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-519-3tqSx6eMOhS7yDV-rnjWdg-1; Thu,
- 05 Jun 2025 13:30:36 -0400
-X-MC-Unique: 3tqSx6eMOhS7yDV-rnjWdg-1
-X-Mimecast-MFC-AGG-ID: 3tqSx6eMOhS7yDV-rnjWdg_1749144635
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5316B1956089;
-	Thu,  5 Jun 2025 17:30:35 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.88.123])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 96A7B30002C0;
-	Thu,  5 Jun 2025 17:30:34 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [PATCH RFC 7/7] xfs: error tag to force zeroing on debug kernels
-Date: Thu,  5 Jun 2025 13:33:57 -0400
-Message-ID: <20250605173357.579720-8-bfoster@redhat.com>
-In-Reply-To: <20250605173357.579720-1-bfoster@redhat.com>
-References: <20250605173357.579720-1-bfoster@redhat.com>
+	s=arc-20240116; t=1749146131; c=relaxed/simple;
+	bh=wdDha2tCb/d4mPaMwyCoEIobXZ4/2AN4XR3pnZ+g6is=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=f2H4TeNJ4CKxd2ie9PqWSadU8WIInDr71QLDQdN1glitlCeQFfDr5TcQLml8quKb3Bvbd2fwAe0ozMYvworRvCWk1Vg1w4ECz8yq3qPIudB9UmoPXHplRY5B9kwCwKVizOD7IywJeR2KrG/3Nq2rLadnKosy8FjB4SIj/NrP+fQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.208
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f208.google.com with SMTP id e9e14a558f8ab-3ddb4a92e80so17634705ab.3
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Jun 2025 10:55:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749146128; x=1749750928;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=LqH8M9rtmVG9L5l4qcJ/6jdyJmDhCB1Emg0U2+eybck=;
+        b=VYlvnnyrUN/KcwnQZHQBeKOlT/e8e3nYeHjzk8UQpDaA9YJW3jJN7w0CuxeSA47Bee
+         LPP9WSTyR1ccM8R5MgwobVyjud57UOz/dfK9H/4EnIXc8PzJy/F6XHS2KlOOaPRJoyTF
+         G9Uu8KvxSSkUWSeUSfeGXAtECAHMjhR6SRzFivfIT4vX2a9ha/+7+CCWAlI6rVQJBsFl
+         v6rXjbz2dbewlG9AHpxoeuBWlXal3ONuj9i22JEhufkVIv+/iNCR45fpVtuUsV5D2hJ3
+         EQeus5atYrwSgbAy3iz4DhEoFLLahqN2JwaUzUPYEevy7rMy3yFE49k92DPWEIfhtd9t
+         OJCg==
+X-Forwarded-Encrypted: i=1; AJvYcCX8e8UmLGvUwpS/5LupVSBQNL9SYGPyvXD/eKZnFqHTZz1yY2MoZBqKJwnu9rJAKsxwOWJI0kMlUBU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxR4yh2kEzTktw4wL6MIcERNbmWLseGwrt8uDz8cgFpmDuEgL4m
+	0wBN/57iDargQhTnW9cC8+4cZ3eC8jZT/d2BfMzBjEhRiH6IvC4VoCEmVRwIa0TEy0rVz9Sm0rc
+	uP8WS49K3RZbRBAaYxrF5Jp5Oyj7PtrO8bH85A7opmZIjr7crt9IAnDSgzFM=
+X-Google-Smtp-Source: AGHT+IGUIFaN0Ed7oEimCPfzUTydN/3lDXwGywsbsE3iYRCX0x2c3hLg6yedQiLsHAolVfsPoaHLZBxs9Ueh7Jhx8jHsSkEaVEx+
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+X-Received: by 2002:a05:6e02:1fc4:b0:3dd:babf:9b00 with SMTP id
+ e9e14a558f8ab-3ddce3ea2efmr5725905ab.1.1749146128339; Thu, 05 Jun 2025
+ 10:55:28 -0700 (PDT)
+Date: Thu, 05 Jun 2025 10:55:28 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6841da10.a00a0220.68b4a.0018.GAE@google.com>
+Subject: [syzbot] [xfs?] INFO: task hung in vfs_setxattr (7)
+From: syzbot <syzbot+3d0a18cd22695979a7c6@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-iomap_zero_range() has to cover various corner cases that are
-difficult to test on production kernels because it is used in fairly
-limited use cases. For example, it is currently only used by XFS and
-mostly only in partial block zeroing cases.
+Hello,
 
-While it's possible to test most of these functional cases, we can
-provide more robust test coverage by co-opting fallocate zero range
-to invoke zeroing of the entire range instead of the more efficient
-block punch/allocate sequence. Add an errortag to occasionally
-invoke forced zeroing.
+syzbot found the following issue on:
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+HEAD commit:    3a83b350b5be Add linux-next specific files for 20250530
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=1798600c580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=28859360c84ac63d
+dashboard link: https://syzkaller.appspot.com/bug?extid=3d0a18cd22695979a7c6
+compiler:       Debian clang version 20.1.6 (++20250514063057+1e4d39e07757-1~exp1~20250514183223.118), Debian LLD 20.1.6
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=138db00c580000
+
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/e18e458d13c9/disk-3a83b350.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/a1c40854811c/vmlinux-3a83b350.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/571f670b130a/bzImage-3a83b350.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/b3f387ffeadc/mount_0.gz
+  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=131e4c82580000)
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+3d0a18cd22695979a7c6@syzkaller.appspotmail.com
+
+INFO: task syz.4.173:7853 blocked for more than 143 seconds.
+      Not tainted 6.15.0-next-20250530-syzkaller #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz.4.173       state:D stack:25352 pid:7853  tgid:7809  ppid:5949   task_flags:0x400140 flags:0x00004004
+Call Trace:
+ <TASK>
+ context_switch kernel/sched/core.c:5396 [inline]
+ __schedule+0x16f5/0x4d00 kernel/sched/core.c:6785
+ __schedule_loop kernel/sched/core.c:6863 [inline]
+ schedule+0x165/0x360 kernel/sched/core.c:6878
+ schedule_preempt_disabled+0x13/0x30 kernel/sched/core.c:6935
+ rwsem_down_write_slowpath+0xbec/0x1030 kernel/locking/rwsem.c:1176
+ __down_write_common kernel/locking/rwsem.c:1304 [inline]
+ __down_write kernel/locking/rwsem.c:1313 [inline]
+ down_write+0x1ab/0x1f0 kernel/locking/rwsem.c:1578
+ inode_lock include/linux/fs.h:867 [inline]
+ vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+ do_setxattr fs/xattr.c:636 [inline]
+ filename_setxattr+0x274/0x600 fs/xattr.c:665
+ path_setxattrat+0x364/0x3a0 fs/xattr.c:713
+ __do_sys_lsetxattr fs/xattr.c:754 [inline]
+ __se_sys_lsetxattr fs/xattr.c:750 [inline]
+ __x64_sys_lsetxattr+0xbf/0xe0 fs/xattr.c:750
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0xfa/0x3b0 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f6a4f78e969
+RSP: 002b:00007f6a50646038 EFLAGS: 00000246 ORIG_RAX: 00000000000000bd
+RAX: ffffffffffffffda RBX: 00007f6a4f9b6080 RCX: 00007f6a4f78e969
+RDX: 0000200000000340 RSI: 0000200000000180 RDI: 0000200000000040
+RBP: 00007f6a4f810ab1 R08: 0000000000000000 R09: 0000000000000000
+R10: 00000000000000d4 R11: 0000000000000246 R12: 0000000000000000
+R13: 0000000000000001 R14: 00007f6a4f9b6080 R15: 00007ffe0d3fb538
+ </TASK>
+
+Showing all locks held in the system:
+1 lock held by khungtaskd/31:
+ #0: ffffffff8e13f140 (rcu_read_lock){....}-{1:3}, at: rcu_lock_acquire include/linux/rcupdate.h:331 [inline]
+ #0: ffffffff8e13f140 (rcu_read_lock){....}-{1:3}, at: rcu_read_lock include/linux/rcupdate.h:841 [inline]
+ #0: ffffffff8e13f140 (rcu_read_lock){....}-{1:3}, at: debug_show_all_locks+0x2e/0x180 kernel/locking/lockdep.c:6770
+2 locks held by getty/5591:
+ #0: ffff888030ba30a0 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x25/0x70 drivers/tty/tty_ldisc.c:243
+ #1: ffffc9000332b2f0 (&ldata->atomic_read_lock){+.+.}-{4:4}, at: n_tty_read+0x43e/0x1400 drivers/tty/n_tty.c:2222
+1 lock held by udevd/5913:
+ #0: ffff888148cf9320 (&sb->s_type->i_mutex_key#8){++++}-{4:4}, at: inode_lock_shared include/linux/fs.h:882 [inline]
+ #0: ffff888148cf9320 (&sb->s_type->i_mutex_key#8){++++}-{4:4}, at: blkdev_read_iter+0x2f8/0x440 block/fops.c:832
+1 lock held by syz-executor/5936:
+ #0: ffff8880285d40e0 (&type->s_umount_key#53){+.+.}-{4:4}, at: __super_lock fs/super.c:57 [inline]
+ #0: ffff8880285d40e0 (&type->s_umount_key#53){+.+.}-{4:4}, at: __super_lock_excl fs/super.c:72 [inline]
+ #0: ffff8880285d40e0 (&type->s_umount_key#53){+.+.}-{4:4}, at: deactivate_super+0xa9/0xe0 fs/super.c:506
+2 locks held by syz-executor/5944:
+ #0: ffff88807e1020e0 (&type->s_umount_key#53){+.+.}-{4:4}, at: __super_lock fs/super.c:57 [inline]
+ #0: ffff88807e1020e0 (&type->s_umount_key#53){+.+.}-{4:4}, at: __super_lock_excl fs/super.c:72 [inline]
+ #0: ffff88807e1020e0 (&type->s_umount_key#53){+.+.}-{4:4}, at: deactivate_super+0xa9/0xe0 fs/super.c:506
+ #1: ffff8880b863b918 (&rq->__lock){-.-.}-{2:2}, at: raw_spin_rq_lock_nested+0x2a/0x140 kernel/sched/core.c:606
+4 locks held by syz.4.173/7810:
+ #0: ffff88807b30e428 (sb_writers#13){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:557
+ #1: ffff888059424130 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:867 [inline]
+ #1: ffff888059424130 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+ #2: ffff88807b30e618 (sb_internal#2){.+.+}-{0:0}, at: xfs_trans_alloc_inode+0x13c/0x4a0 fs/xfs/xfs_trans.c:1096
+ #3: ffff888059423f18 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_trans_alloc_inode+0x161/0x4a0 fs/xfs/xfs_trans.c:1102
+2 locks held by syz.4.173/7853:
+ #0: ffff88807b30e428 (sb_writers#13){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:557
+ #1: ffff888059424130 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:867 [inline]
+ #1: ffff888059424130 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+2 locks held by syz.3.482/11259:
+ #0: ffff888025568428 (sb_writers#13){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:557
+ #1: ffff8880596db970 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:867 [inline]
+ #1: ffff8880596db970 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+2 locks held by syz.3.482/11289:
+ #0: ffff888025568428 (sb_writers#13){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:557
+ #1: ffff8880596db970 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:867 [inline]
+ #1: ffff8880596db970 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+2 locks held by syz.5.481/11278:
+4 locks held by syz.1.483/11280:
+
+=============================================
+
+NMI backtrace for cpu 0
+CPU: 0 UID: 0 PID: 31 Comm: khungtaskd Not tainted 6.15.0-next-20250530-syzkaller #0 PREEMPT(full) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 05/07/2025
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x189/0x250 lib/dump_stack.c:120
+ nmi_cpu_backtrace+0x39e/0x3d0 lib/nmi_backtrace.c:113
+ nmi_trigger_cpumask_backtrace+0x17a/0x300 lib/nmi_backtrace.c:62
+ trigger_all_cpu_backtrace include/linux/nmi.h:158 [inline]
+ check_hung_uninterruptible_tasks kernel/hung_task.c:307 [inline]
+ watchdog+0xfee/0x1030 kernel/hung_task.c:470
+ kthread+0x70e/0x8a0 kernel/kthread.c:464
+ ret_from_fork+0x3fc/0x770 arch/x86/kernel/process.c:148
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+Sending NMI from CPU 0 to CPUs 1:
+NMI backtrace for cpu 1
+CPU: 1 UID: 0 PID: 5837 Comm: syz-executor Not tainted 6.15.0-next-20250530-syzkaller #0 PREEMPT(full) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 05/07/2025
+RIP: 0010:unwind_next_frame+0x374/0x2390 arch/x86/kernel/unwind_orc.c:505
+Code: ea 48 01 d2 48 01 f2 48 bd 00 00 00 00 00 fc ff df 0f 84 37 01 00 00 4c 8d 62 04 4c 8d 6a 05 4c 89 e0 48 c1 e8 03 0f b6 04 28 <84> c0 0f 85 6d 19 00 00 4c 89 e8 48 c1 e8 03 0f b6 04 28 84 c0 0f
+RSP: 0018:ffffc900043770f8 EFLAGS: 00000a03
+RAX: 0000000000000000 RBX: ffffffff8fb4db94 RCX: ffffffff8fb4db98
+RDX: ffffffff90303ae8 RSI: ffffffff90303ab8 RDI: ffffffff8be29c20
+RBP: dffffc0000000000 R08: 0000000000000009 R09: ffffffff81729de5
+R10: ffffc90004377228 R11: fffff5200086ee51 R12: ffffffff90303aec
+R13: ffffffff90303aed R14: ffffc90004377228 R15: ffffffff8fb4db94
+FS:  000055557497c500(0000) GS:ffff888125d53000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fff520a6f80 CR3: 0000000077dae000 CR4: 00000000003526f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ __unwind_start+0x5b9/0x760 arch/x86/kernel/unwind_orc.c:758
+ unwind_start arch/x86/include/asm/unwind.h:64 [inline]
+ arch_stack_walk+0xe4/0x150 arch/x86/kernel/stacktrace.c:24
+ stack_trace_save+0x9c/0xe0 kernel/stacktrace.c:122
+ save_stack+0xf5/0x1f0 mm/page_owner.c:156
+ __reset_page_owner+0x71/0x1f0 mm/page_owner.c:308
+ reset_page_owner include/linux/page_owner.h:25 [inline]
+ free_pages_prepare mm/page_alloc.c:1248 [inline]
+ __free_frozen_pages+0xc71/0xe70 mm/page_alloc.c:2706
+ discard_slab mm/slub.c:2717 [inline]
+ __put_partials+0x161/0x1c0 mm/slub.c:3186
+ put_cpu_partial+0x17c/0x250 mm/slub.c:3261
+ __slab_free+0x2f7/0x400 mm/slub.c:4513
+ qlink_free mm/kasan/quarantine.c:163 [inline]
+ qlist_free_all+0x97/0x140 mm/kasan/quarantine.c:179
+ kasan_quarantine_reduce+0x148/0x160 mm/kasan/quarantine.c:286
+ __kasan_slab_alloc+0x22/0x80 mm/kasan/common.c:329
+ kasan_slab_alloc include/linux/kasan.h:250 [inline]
+ slab_post_alloc_hook mm/slub.c:4148 [inline]
+ slab_alloc_node mm/slub.c:4197 [inline]
+ kmem_cache_alloc_node_noprof+0x1bb/0x3c0 mm/slub.c:4249
+ __alloc_skb+0x112/0x2d0 net/core/skbuff.c:660
+ alloc_skb_fclone include/linux/skbuff.h:1386 [inline]
+ tcp_stream_alloc_skb+0x3d/0x340 net/ipv4/tcp.c:894
+ tcp_sendmsg_locked+0x1fa8/0x56f0 net/ipv4/tcp.c:1200
+ tcp_sendmsg+0x2f/0x50 net/ipv4/tcp.c:1396
+ sock_sendmsg_nosec net/socket.c:712 [inline]
+ __sock_sendmsg+0x19c/0x270 net/socket.c:727
+ sock_write_iter+0x258/0x330 net/socket.c:1131
+ new_sync_write fs/read_write.c:593 [inline]
+ vfs_write+0x54b/0xa90 fs/read_write.c:686
+ ksys_write+0x145/0x250 fs/read_write.c:738
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0xfa/0x3b0 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f18c638d3e0
+Code: 40 00 48 c7 c2 a8 ff ff ff f7 d8 64 89 02 48 c7 c0 ff ff ff ff eb b7 0f 1f 00 80 3d 61 71 1f 00 00 74 17 b8 01 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 58 c3 0f 1f 80 00 00 00 00 48 83 ec 28 48 89
+RSP: 002b:00007ffdfa6c3d28 EFLAGS: 00000202 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 0000000077fbf140 RCX: 00007f18c638d3e0
+RDX: 00000000000000b8 RSI: 00007f18c1a3ff48 RDI: 0000000000000003
+RBP: 0000000000000000 R08: 0000000000000007 R09: 000000000003fde8
+R10: 56c24c0166ec81ab R11: 0000000000000202 R12: 00000000000000b8
+R13: 0000555574993b40 R14: 00007ffdfa6c41f0 R15: 00007f18c1a3ff48
+ </TASK>
+
+
 ---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-Hi all,
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
-My original test approach involved a hack that redirected fallocate zero
-range to iomap. The easiest way to incorporate something like that in
-XFS would probably be via a randomized debug branch in the same path
-(i.e. similar to what is done in the block/inode allocation paths), but
-I find it a little annoying that there's currently no great way to run a
-full fstests run with certain error tags enabled.
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
 
-So for that I was playing around with some fstests hacks to hook into
-the device mount paths and enable certain errortags immediately on each
-mount. Obviously this implicitly depends on XFS_DEBUG plus the specific
-errortag support, but otherwise I'd probably propose something simple
-like to enable or disable the whole thing with an XFS_ERRORS_ON=1 type
-setting or some such.
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
 
-So that's the context for this patch. I'm curious if there are any
-thoughts..? Another simple option might be to enable certain errortags
-by default on XFS_DEBUG, or with XFS_DEBUG plus some new kernel config
-option (i.e. XFS_DEBUG_ERRORTAGS). That would be less code in fstests
-and perhaps facilitate external testing, but we'd still need to track
-which tags get enabled by default in that mode. OTOH, if you consider
-the couple or so open coded get_random_u32_below(2) branches we do have,
-these are in theory just errortags that happen to be on by default on
-XFS_DEBUG kernels (without the log noise). Thoughts?
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
 
-Brian
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
 
- fs/xfs/libxfs/xfs_errortag.h |  4 +++-
- fs/xfs/xfs_error.c           |  3 +++
- fs/xfs/xfs_file.c            | 21 +++++++++++++++------
- 3 files changed, 21 insertions(+), 7 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index a53c5d40e084..33ca3fc2ca88 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -65,7 +65,8 @@
- #define XFS_ERRTAG_WRITE_DELAY_MS			43
- #define XFS_ERRTAG_EXCHMAPS_FINISH_ONE			44
- #define XFS_ERRTAG_METAFILE_RESV_CRITICAL		45
--#define XFS_ERRTAG_MAX					46
-+#define XFS_ERRTAG_FORCE_ZERO_RANGE			46
-+#define XFS_ERRTAG_MAX					47
- 
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -115,5 +116,6 @@
- #define XFS_RANDOM_WRITE_DELAY_MS			3000
- #define XFS_RANDOM_EXCHMAPS_FINISH_ONE			1
- #define XFS_RANDOM_METAFILE_RESV_CRITICAL		4
-+#define XFS_RANDOM_FORCE_ZERO_RANGE			4
- 
- #endif /* __XFS_ERRORTAG_H_ */
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index dbd87e137694..00c0c391c329 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -64,6 +64,7 @@ static unsigned int xfs_errortag_random_default[] = {
- 	XFS_RANDOM_WRITE_DELAY_MS,
- 	XFS_RANDOM_EXCHMAPS_FINISH_ONE,
- 	XFS_RANDOM_METAFILE_RESV_CRITICAL,
-+	XFS_RANDOM_FORCE_ZERO_RANGE,
- };
- 
- struct xfs_errortag_attr {
-@@ -183,6 +184,7 @@ XFS_ERRORTAG_ATTR_RW(wb_delay_ms,	XFS_ERRTAG_WB_DELAY_MS);
- XFS_ERRORTAG_ATTR_RW(write_delay_ms,	XFS_ERRTAG_WRITE_DELAY_MS);
- XFS_ERRORTAG_ATTR_RW(exchmaps_finish_one, XFS_ERRTAG_EXCHMAPS_FINISH_ONE);
- XFS_ERRORTAG_ATTR_RW(metafile_resv_crit, XFS_ERRTAG_METAFILE_RESV_CRITICAL);
-+XFS_ERRORTAG_ATTR_RW(force_zero_range, XFS_ERRTAG_FORCE_ZERO_RANGE);
- 
- static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(noerror),
-@@ -230,6 +232,7 @@ static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(write_delay_ms),
- 	XFS_ERRORTAG_ATTR_LIST(exchmaps_finish_one),
- 	XFS_ERRORTAG_ATTR_LIST(metafile_resv_crit),
-+	XFS_ERRORTAG_ATTR_LIST(force_zero_range),
- 	NULL,
- };
- ATTRIBUTE_GROUPS(xfs_errortag);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 48254a72071b..88ce754ef226 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -27,6 +27,8 @@
- #include "xfs_file.h"
- #include "xfs_aops.h"
- #include "xfs_zone_alloc.h"
-+#include "xfs_error.h"
-+#include "xfs_errortag.h"
- 
- #include <linux/dax.h>
- #include <linux/falloc.h>
-@@ -1269,13 +1271,20 @@ xfs_falloc_zero_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
--	if (error)
--		return error;
-+	/* randomly force zeroing to exercise zero range */
-+	if (XFS_TEST_ERROR(false, XFS_I(inode)->i_mount,
-+			   XFS_ERRTAG_FORCE_ZERO_RANGE)) {
-+		error = xfs_zero_range(XFS_I(inode), offset, len, ac, NULL);
-+	} else {
-+		error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
-+		if (error)
-+			return error;
- 
--	len = round_up(offset + len, blksize) - round_down(offset, blksize);
--	offset = round_down(offset, blksize);
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+		len = round_up(offset + len, blksize) -
-+			round_down(offset, blksize);
-+		offset = round_down(offset, blksize);
-+		error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	}
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
--- 
-2.49.0
-
+If you want to undo deduplication, reply with:
+#syz undup
