@@ -1,203 +1,357 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17860770E2;
-	Thu,  5 Jun 2025 02:06:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.18
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749089204; cv=fail; b=RdhXuYz8K65iJVf1pobV+/8Cry5ZXC2/mgzHumgqLdGMu6GKAD/PM6oIprDVnHlbWpQO9xKlG3V4zjJW4/S9g9kHTNxNwaOAVYm1jJfn9LVtUsNzZkEj0ohzhFLT+ZdhN5AvAZBW68TSnGonVlWeoQqjjzj4civ+fPnIkjnPUs8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749089204; c=relaxed/simple;
-	bh=kgbGVz3netzGevZSeRAVbBSOKeKebteG7hNne9YYH/U=;
-	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=hixsjEXw0zzwrcxCsHUJ+gIvePgLU0FTgx9Hs8daGJz3PVSBsuGamQjZlz1cfX7j6zkBqCuPptx0Q9fA+YK6S2PvL2rKHdCTq/tHPtPyW0NI7XJ9lrrdPq4+ImnA24qFw9th/YptKsbBY4Mm20sRU4y4kCtp6sQiEmOO8+Ovz3E=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OX7LnGfs; arc=fail smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 501981C84BD
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Jun 2025 02:18:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1749089911; cv=none; b=LboXfYz1GH4g5l/d7Ma1bqcf+0LkJYzzlRzpKgUjvwT0R3tyRbPyutBH0YeGzsLE/0aHjwsWy/qWlxEXPra+NZZU1Ysx1vlBLtOPSTnapefklfKkiSKPPmYAsfXb4MxOBjjuNihSrSOIlSZ6idgNiNOxEG5U4UfAsZ1Eha5/9Hc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1749089911; c=relaxed/simple;
+	bh=oKLrq3LkMGcUPUQ8HC2KeoIJNZflHohKWLTvfPKkYOc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=L+7wZl88XOPaGVymHEXkMBLe3gxFwn/KVw75QtIqM4iKYypKS7MfyKBbHAhUTMLvQ506x4kBgu+twZBqSq1O988loU6apAjy9q+Izl1xSNmAknbTxJhhvkuwyr7RZmKi3dOrI4TH2xb/qWU+UePC6PaNtqvsc6W1jAIgfNdSAug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xRjqf4K5; arc=none smtp.client-ip=209.85.216.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OX7LnGfs"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1749089203; x=1780625203;
-  h=date:from:to:cc:subject:message-id:references:
-   in-reply-to:mime-version;
-  bh=kgbGVz3netzGevZSeRAVbBSOKeKebteG7hNne9YYH/U=;
-  b=OX7LnGfsAuf+rJGp+ojuy2bPIinzPKxxqAicgN6HXWx6BgMUEGQDKzig
-   H5dyNz+fNM0w1pF0q2ryVy+Y4Rie6gNpRl8dBO3/uEuQOUdK/KVWOEn01
-   q9+qVbAb76YNSKiYeKcYOFd2S5Vw/9z5fytWnEZY00ZbZTNqGcge6M4C5
-   r81tqbK0cdQ6kHLgsz1q8gHim2Gk44Rr13KmzZin7IcP/VCot/79EfDh1
-   gS6NzX3H4ViYKEnOy8BJHxVk7ciYUT8RMf/SKuAcVG5n8AKvYApUaP/Eg
-   IzG7VTiKOW3ETA5bS1HdC5176YLynEWhcpfTq87pzV2MywVcj0SthUn0L
-   Q==;
-X-CSE-ConnectionGUID: H8EDMp7+TualNAiI1wAuQA==
-X-CSE-MsgGUID: E9VGz0PUROqlVIRh+D8KGg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11454"; a="51338890"
-X-IronPort-AV: E=Sophos;i="6.16,210,1744095600"; 
-   d="scan'208";a="51338890"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2025 19:06:42 -0700
-X-CSE-ConnectionGUID: sk4nLyRgRK+7rVV8O9Adtw==
-X-CSE-MsgGUID: To389ub4SqqKsSsoSSSUCw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,210,1744095600"; 
-   d="scan'208";a="150514276"
-Received: from orsmsx903.amr.corp.intel.com ([10.22.229.25])
-  by fmviesa004.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2025 19:04:45 -0700
-Received: from ORSMSX902.amr.corp.intel.com (10.22.229.24) by
- ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Wed, 4 Jun 2025 19:04:45 -0700
-Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
- ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25 via Frontend Transport; Wed, 4 Jun 2025 19:04:45 -0700
-Received: from NAM04-MW2-obe.outbound.protection.outlook.com (40.107.101.84)
- by edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Wed, 4 Jun 2025 19:04:45 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Ylslldg/yGrqhZAi+fSgV6wCCQoUt02gItOWcDl5iC9sK00OfBtL6uur9OTJDWlWVYGuRtZx2iV1j9HHvNnTkVsmmsHTpXot+QPMXWKCOVmXnApNUp+JkCkWcckUS3bdQB/SZqpd3lEZlBFrv0TFIt/qewyoPNk+dvfsWkQ8ItNsBt6z5+Rt5LU/BkINqcTB8DtbUoy5FV/seJ1jzzGfJp1kI64HmClWkMJlUEsAdcjbQTaLdsz4jEtsgVZDN93AbuGrj7OkFzuwfPPjiF6+vf+AA+VLrRFVeBqG6yAGT3jZCIB69dkcX3nmZjci1ywiOXvGWXuI4Eqha6guTt4nfQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=PsicUNFLW/RcNisC36S0SjgywQrdm4jwgrmcGMQuFoc=;
- b=kukIG1ysD4HfXHVy9qPbhbup3bYB+KtDwlqXU+opy7l1M8EU8FPRpmM6cdLnGLKqB1EMGX1gqHRVMnO6hrDf8OW9oc8EQ5e9BvL38sC1xHaDq+aa455+AHlCl3RLqkW35aXAvujO/ILpoy2uvkADiSPMfTD+5aly1b8Yn/o8x6CNN1aUAhoJWcuVD2qVZk/7ndwOWdoUaRzGJomJxXgGulYOvNYLb4pTcZJKq1AeF4rqlWl+2HYo1XoP4xSImwLMVpHNm+LHhE2RFJEwL3I2Yzn1uNxXWxMdusxiWe9UnnqcuSHmpbS32qHdkDWBhS1u338HnQYAm19qGPKBBsGpzQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
- by MW3PR11MB4604.namprd11.prod.outlook.com (2603:10b6:303:2f::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8813.21; Thu, 5 Jun
- 2025 02:04:43 +0000
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::6b05:74cf:a304:ecd8]) by PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::6b05:74cf:a304:ecd8%5]) with mapi id 15.20.8769.031; Thu, 5 Jun 2025
- 02:04:43 +0000
-Date: Wed, 4 Jun 2025 19:04:40 -0700
-From: Dan Williams <dan.j.williams@intel.com>
-To: Alistair Popple <apopple@nvidia.com>, <linux-mm@kvack.org>
-CC: Alistair Popple <apopple@nvidia.com>, <gerald.schaefer@linux.ibm.com>,
-	<dan.j.williams@intel.com>, <jgg@ziepe.ca>, <willy@infradead.org>,
-	<david@redhat.com>, <linux-kernel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
-	<linux-fsdevel@vger.kernel.org>, <linux-ext4@vger.kernel.org>,
-	<linux-xfs@vger.kernel.org>, <jhubbard@nvidia.com>, <hch@lst.de>,
-	<zhang.lyra@gmail.com>, <debug@rivosinc.com>, <bjorn@kernel.org>,
-	<balbirs@nvidia.com>, <lorenzo.stoakes@oracle.com>,
-	<linux-arm-kernel@lists.infradead.org>, <loongarch@lists.linux.dev>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-riscv@lists.infradead.org>,
-	<linux-cxl@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-	<John@groves.net>
-Subject: Re: [PATCH 06/12] mm/gup: Remove pXX_devmap usage from
- get_user_pages()
-Message-ID: <6840fb3848258_24911003e@dwillia2-xfh.jf.intel.com.notmuch>
-References: <cover.541c2702181b7461b84f1a6967a3f0e823023fcc.1748500293.git-series.apopple@nvidia.com>
- <c4d81161c6d04a7ae3f63cc087bdc87fb25fd8ea.1748500293.git-series.apopple@nvidia.com>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <c4d81161c6d04a7ae3f63cc087bdc87fb25fd8ea.1748500293.git-series.apopple@nvidia.com>
-X-ClientProxiedBy: SJ0PR05CA0144.namprd05.prod.outlook.com
- (2603:10b6:a03:33d::29) To PH8PR11MB8107.namprd11.prod.outlook.com
- (2603:10b6:510:256::6)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xRjqf4K5"
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-30e8feb1886so574974a91.0
+        for <linux-xfs@vger.kernel.org>; Wed, 04 Jun 2025 19:18:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1749089908; x=1749694708; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=GIlo+91JgceZh066zSfkz/j92F4Jjfj0Sae05ZH3rsE=;
+        b=xRjqf4K5R2bvFrmkj7lp++z3ctVwZvyLEEkTCB1zv+111solXY5zp8ADLUaT0FWDAo
+         XacsrhX+udEUcYnHfrZe9O5CXEF761TJAutXtv7zejtjGQ6uiMU6IyHAFOYSR/dcgHJz
+         eywXJ2GXmz//VlhusIYleTSP8NOBdjVcGBk7HMQVCUIEBgvKTNxJb15Fq5DmakDdYvaE
+         tk/dsz1FxczXsi2x+nWq4+Fuu/QgRg9ZmRQTz+YVakh8QCOXuJTT2P6jlsCeL1ftly1u
+         gz29VnMGRzldt5QnAKTV8WBRMSZJhiMzGq806wAFZf5OpVONppbLEjEv3IykIczQsuJ5
+         pKSQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749089908; x=1749694708;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GIlo+91JgceZh066zSfkz/j92F4Jjfj0Sae05ZH3rsE=;
+        b=hpNv5tS+SYT+JmbUqO09fiDfqxYuZQiKnyhstPd6Ny9kRr0Kfh+UODEArAFIZXQvxs
+         XiSOmifptyd8SLqax85qdIKiYePSieXmxRwRvg+9ZZJd9A7f9+3ewbynI6hOjfMLPdI8
+         zat4r+NjqaY7LMucLo0q6KCMm6O0087wejuQPKAWeWWQqmJIvgdjoktYETcfuk+edtw6
+         BclgXgmuCXqEVcP7iC0OhjRQOSIrPHiQz/2QFKdSv0sKc4mhLZ6hW5+ebQ4LrNgc5zw4
+         lR5tx4wjlTYjUHknAr8GtBlqss8Y/mqiel09qtTDair8qqFUMzIjPH1vj1skj37hEn1R
+         tyjw==
+X-Forwarded-Encrypted: i=1; AJvYcCWK8QOluupR+dymC1DUy1UUvVMRv+jnV8UfhlI2neCNR8B9wiL5AQuUC1rym5w1Gtn2BwGw8/1QoNc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwO1dpGfgoekA1/9GI0feXiPp4w51vyvikPB+8BqyBFj5T+n0sK
+	V+B+m8DKjJBQVNsw3y7I1ZBYVWqkDh4uHnQI1fXGtSFCIKt0xC5O+ybMRa48MRkk0wo=
+X-Gm-Gg: ASbGncvOCmwhj5Rq/sLs1h67IU3XywXuglNIqFYt2SPacEONLc8T/pH21RUJg3AQZXf
+	pm+1xwsvSfsluzRzincyPdyzDJUbGwVMHOVOGY9s6zmYNEKJSNXkwoQUU4JbWm8Ta2PPwgxmR43
+	R8gjM6Ib6Qx2kgpD75fwAPCyugi5AAMuxjlIDVa3eXtX+cHjs/wkqnn+yAPvH3sgT9wufz1bkR3
+	mzkK7fE85EHwvBUb16dCBX0CwWBEz9lhgmCfJqMlQtU+JAU9b0xY3SJlYig4VHEkduUCs/yXwUZ
+	w7rZKXd7YFRa1To/yjgfpN5OoxeKKF/P/US8tjoD73ar0EL5MRoRay6ZsSL+xFWgy1xoq8nrkat
+	urMkFAul4jInLRSrFm2zrASM2Hujhe9g/S4yQBg==
+X-Google-Smtp-Source: AGHT+IH6bHhYTyPwUJqdduYKJe/Xp4OLknT5tmMTMfHrH618snfAXJgfJeQ23BBEFxD4c+6G1Fl4xA==
+X-Received: by 2002:a17:90b:28c7:b0:311:e8cc:4248 with SMTP id 98e67ed59e1d1-3130cdfd3fcmr8349271a91.33.1749089908192;
+        Wed, 04 Jun 2025 19:18:28 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-184-88.pa.nsw.optusnet.com.au. [49.180.184.88])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-313319d4576sm117035a91.28.2025.06.04.19.18.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Jun 2025 19:18:27 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1uN0BU-0000000CNbj-0W27;
+	Thu, 05 Jun 2025 12:18:24 +1000
+Date: Thu, 5 Jun 2025 12:18:24 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Yafang Shao <laoar.shao@gmail.com>,
+	Christian Brauner <brauner@kernel.org>, djwong@kernel.org,
+	cem@kernel.org, linux-xfs@vger.kernel.org,
+	Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
+ data corruption
+Message-ID: <aED-cKvPKMsDlS0T@dread.disaster.area>
+References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
+ <aDfkTiTNH1UPKvC7@dread.disaster.area>
+ <aD04v9dczhgGxS3K@infradead.org>
+ <aD4xboH2mM1ONhB-@dread.disaster.area>
+ <aD5-_OOsKyX0rDDO@infradead.org>
+ <aD9xj8cwfY9ZmQ2B@dread.disaster.area>
+ <aD_oobAbOs7m8PFN@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|MW3PR11MB4604:EE_
-X-MS-Office365-Filtering-Correlation-Id: 921a7f0f-c876-4adb-4f09-08dda3d55680
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|7416014|366016|7053199007;
-X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?t1GZXcNzS5LsgFpg7s1ba65o/1yNhgv7/JnUpk15RSYssgno3Bc1QtiWtu55?=
- =?us-ascii?Q?dCHVM8bPrN+Panh7TCFTbX50+l8DI18Kw2FbBvvMWNYqjr9X2l2sadusHfAj?=
- =?us-ascii?Q?i6mMQJ35UVVHQtXOIXVNlyiY1AmvVu87cbi1CZOVvg0MkPHWsaHJDUcgE7RK?=
- =?us-ascii?Q?Es6w/3sl+mIsuIrXzEYMub5Ig2ElK/KSY7qbSgGCrXYcb8Kxeo2K772FVyV9?=
- =?us-ascii?Q?pXDuqdTCGz+6I9xubD518nz+dgRb4oheJbzGoMChLb0eferw50oH+kTZ90Tc?=
- =?us-ascii?Q?RIdnZotVtzvQM+5mIA6WkK3mCRkIypnOBLucdTe0Aj5eARLYW1mvWj3KZGLJ?=
- =?us-ascii?Q?YNl7V3yzFy28GzRCl9lR4EvrgcI/J9Mes6ZfriNR01n17bWTqDZYNiJRT5JU?=
- =?us-ascii?Q?A55PRipsT0RD4ZYEEl8DHy1ds04xUwJzbJEL6szDfOx8Bo2E16SGyXh0qNFV?=
- =?us-ascii?Q?cuNL1OZvVp7+FEu+JmKIPhk6TvI7lyTsuQqOB1on3EdT0Xpy4LHbS4xz2tP0?=
- =?us-ascii?Q?vQJi4fd6J0PgDx2Zgzv2bfqpSdGvHuuYFrVzre7CP8mtk1x+rEuTSph+SMjL?=
- =?us-ascii?Q?zjFXtG9lro+pWE63d2udcfeMOcw/DPXgTMFDQy/5+wQVWSKDjLPE6pS8W2rg?=
- =?us-ascii?Q?ee3dgsZvEVTcJkNUNTucd1iHKUA8RltsJXpM3nTny2FJFHpZv/GlFvATERm6?=
- =?us-ascii?Q?qfAW767wGHXcUrcuL23TN5Wz+VmDmGh5Ai+IszVC5oITSxSkcyMkAkwZmj06?=
- =?us-ascii?Q?2lzULn3URPTG3sM5lp15QyAz1SK4fabVBkVZY3sZc+95c0qaapEg3N/dOrzg?=
- =?us-ascii?Q?IlIWIapbhGb3595OV5/dHSiWSKTpduvLUrrjKDvAytxK6r7MeDhkQ0MitqGA?=
- =?us-ascii?Q?MPKEzULNDDFnSQ2SeCVcdrvpravkC1Su4BvJ8txPptvpppestnaxCAQwLUdZ?=
- =?us-ascii?Q?YaHsLir45gKSt8jZklV3PXlOBofTaz1jU+5lo6qXinGwsdeoTk7bz/SU7RSO?=
- =?us-ascii?Q?wcwW3cVdFxd7WZD9Q9KB++wXcjI7o5skynVA28CQ+oUHGrQ9fgsnhLBeEiEe?=
- =?us-ascii?Q?Azj6H7sfqQiCnd0ux7CqaA2ZPT1ql7Zc3BtDGL0SiMVb3x8DNR4hF2p3KFoV?=
- =?us-ascii?Q?Hnx0KC7/noJ9Ei9xb5cieKrDegCPr7BZ/VKtCrP3wsKjItEZPBFssrPfazmm?=
- =?us-ascii?Q?acsUu4+yJMzwxTZEt941UqxjwAbQYVw6svxJ47hpZd5tndDDVh0+B33Gx5Rw?=
- =?us-ascii?Q?hEWo4dp13Zh9DsTS99FnYNjwa1uNaMLRassq9QvvhSyDqsYqP3mn98PafUYy?=
- =?us-ascii?Q?usP1jZshoI7kgeQQQebLkslC2L+XkqTj9MuDg6FNYsDYiWJX6YTLcLfxrn89?=
- =?us-ascii?Q?NN/R6jRswz3Lfocp06iE8yerLfg50KhzPHXz7fR2fiCTDjJaJJOeJ98DR/n/?=
- =?us-ascii?Q?qRmo+cqNnR4=3D?=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(7416014)(366016)(7053199007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?4jxf3zRkomqA76/rdkdGGp0qPtvg71vrSeCbmuqixAYAjgMdjliMDsMElfHi?=
- =?us-ascii?Q?M0K1WvMeSG/r8j3QJ1GM3LrqBtOXHuej/MxkMUaHi5HPPa2wx7ktCCPr079c?=
- =?us-ascii?Q?jIaSI4YUJ8WNBGzhuCon5Ewb6y98DGeVYuwLoFF9qpT+nKziadnrkO6dt5Pe?=
- =?us-ascii?Q?o/B/qlVvdgtK3CjCZ5M+mFq6T4vxYqQvHAf5wYHGA8wOtGOI3ff8S2dbDIo6?=
- =?us-ascii?Q?cXW45UasHPYohctg4UK1MbIxCLQh0inY5isdV+luaWGpeRH6VqkfHFK/TsV3?=
- =?us-ascii?Q?ATTpeWxngbXVQAG/RRXRuHMr/ZJVtsbNm5l+Go6FqqEV3P6cKNwqm0JvJo/K?=
- =?us-ascii?Q?VigQBYNEktUlNCzNci3LyjWXAp5tyChd5nnfY8hiIqaCnMh2T2lf/zLuO0Ds?=
- =?us-ascii?Q?MVkZS1CAltrE85hBiPpkXwO25VQMuOykk+4jTG12Dz8bpkA9IuVPpPubVikL?=
- =?us-ascii?Q?lu/7kgs+qtXi0ob5mwCs45fsmKWVsAjHR3HZd2mfUlarlukq4OPO3SIgUhQo?=
- =?us-ascii?Q?ShuiOdnU3mhKdxOnyHYZyNKp9mhWW1O2OvKhtSzjlRG9w2tYGz0ColjGc+47?=
- =?us-ascii?Q?D+2M4WQdeB4ZirwdeSDVw5MDF5Q2dLX7unTGcE9JVJEBtMr/OpLp64Aq6WU9?=
- =?us-ascii?Q?gjJBOsBVy/R8hThE0PiW2WzzkUQdJGlf7WT6T/cZD81lCpPi5nrKRxt2okEy?=
- =?us-ascii?Q?Svti6pgm+KNcNl4FAQ+VsOawWGwE1fAOzemvZRjCQCqqaHWoJdEJcD9aiLtp?=
- =?us-ascii?Q?6Lz3pitNFeYkGD5jgxLaFFjLIQEISW52lEjDprCC3v8D3IuwRg+2y4AQgyD5?=
- =?us-ascii?Q?xXuZa85dMNn8H3rJEI7Nla7GQjShhfyNSOPIHLpia+d+tP/CWbpcAiVuok1o?=
- =?us-ascii?Q?VkoormPscxdMAk3agJXMeIAZPhRBn/pqOKsbGTClj4AIswtyAQzV9dT6Hlo3?=
- =?us-ascii?Q?yVOT9F+EqJyRRhtStwPYGIHZQtZjAp9+ySU7LMHnQaDxqhhYZGHfPiZm/syv?=
- =?us-ascii?Q?3wnSnZ5HF6LyD5CL7SJ2Y3TdgKVM3kHE9eZ4O8UwtTjLmpQK89cfOcEhD2FL?=
- =?us-ascii?Q?9ZWCuyc+1CS67TISk0eBnC+xG3vWrn+YLiRMHvJQffyGrdxFOxv7LzYXgJLB?=
- =?us-ascii?Q?XxqLagCk0+59wR2MP/u8IeB2qaXs/IkCPpVlKqvs0VBOcIsxz2KLPweA9yoi?=
- =?us-ascii?Q?eiMrrQigzrEjqggFB3ypHAHPPfUDOEFsadx4osduNuKhN9gXIVIc4tUOuwP8?=
- =?us-ascii?Q?AeBEBqcxF2lKVJVKXTnvrWt7w7Fx3iTUnfxlme3n+Mx3P4gpbSfEuC7INFNp?=
- =?us-ascii?Q?GkxQM45BMD9y12UFLIhLYknbtMZBOg2pv2QpcUELbWLln8/jC1viJvMMFfx4?=
- =?us-ascii?Q?sDpQELmsrnm8UiAqERc0e3/wambObzFTXutlllUxKJq6Fp4tbxQKXkTQLCsr?=
- =?us-ascii?Q?pNgxq6T2azm2Cgavq+MeLxT7b5AJK5MAn+zRuv6HSM04tSVJcl3KWg4e26uh?=
- =?us-ascii?Q?74WRYDM4tgp6nRlllgpv8trqrijPKQ7lub0Q0HmN54DBWZtWjrCce9duRb90?=
- =?us-ascii?Q?ec4p9bpJimx9G8c3OJK2n7ehV8aCwk6PmmJEGfkezoB6iO5QGBaejnfhK2dc?=
- =?us-ascii?Q?cA=3D=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 921a7f0f-c876-4adb-4f09-08dda3d55680
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2025 02:04:43.2548
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: xUwyUHhdwz67dZq4IqgPwLSoumjovyehS6e7OgI7rAiDcqung/39kalRr2eyrui3Oi0hmybt6zQiylMjXpUP3R/WTgf77Drt2B2gJjwtnJQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR11MB4604
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aD_oobAbOs7m8PFN@infradead.org>
 
-Alistair Popple wrote:
-> GUP uses pXX_devmap() calls to see if it needs to a get a reference on
-> the associated pgmap data structure to ensure the pages won't go
-> away. However it's a driver responsibility to ensure that if pages are
-> mapped (ie. discoverable by GUP) that they are not offlined or removed
-> from the memmap so there is no need to hold a reference on the pgmap
-> data structure to ensure this.
+On Tue, Jun 03, 2025 at 11:33:05PM -0700, Christoph Hellwig wrote:
+> On Wed, Jun 04, 2025 at 08:05:03AM +1000, Dave Chinner wrote:
+> > > 
+> > > Everything.  ENOSPC means there is no space.  There might be space in
+> > > the non-determinant future, but if the layer just needs to GC it must
+> > > not report the error.
+> > 
+> > GC of thin pools requires the filesystem to be mounted so fstrim can
+> > be run to tell the thinp device where all the free LBA regions it
+> > can reclaim are located. If we shut down the filesystem instantly
+> > when the pool goes ENOSPC on a metadata write, then *we can't run
+> > fstrim* to free up unused space and hence allow that metadata write
+> > to succeed in the future.
+> > 
+> > It should be obvious at this point that a filesystem shutdown on an
+> > ENOSPC error from the block device on anything other than journal IO
+> > is exactly the wrong thing to be doing.
 > 
-> Furthermore mappings with PFN_DEV are no longer created, hence this
-> effectively dead code anyway so can be removed.
+> How high are the chances that you hit exactly the rate metadata
+> writeback I/O and not journal or data I/O for this odd condition
+> that requires user interaction?
+
+100%.
+
+We'll hit it with both data IO and metadata IO at the same time,
+but in the vast majority of cases we won't hit ENOSPC on journal IO.
+
+Why? Because mkfs.xfs zeros the entire log via either
+FALLOC_FL_ZERO_RANGE or writing physical zeros. Hence a thin device
+always has a fully allocated log before the filesystem is first
+mounted and so ENOSPC to journal IO should never happen unless a
+device level snapshot is taken.
+
+i.e. the only time the journal is not fully allocated in the block device
+is immediately after a block device snapshot is taken. The log needs
+to be written entirely once before it is fully allocated again, and
+this is the only point in time we will see ENOSPC on a thinp device
+for journal IO.
+
+Because the log IO is sequential, and the log is circular, there is
+no write or allocation amplification here and once the log has been
+written once further writes are simply overwriting allocated LBA
+space. Hence after a short period of time of activity after a
+snapshot, ENOSPC from journal IO is no longer a possibility. This
+case is the exception rather than common behaviour.
+
+Metadata writeback is a different story altogether.
+
+When we allocate and write back metadata for the first time (either
+after mkfs, fstrim or a device snapshot) or overwrite existing
+metadata after a snapshot, the metadata writeback IO will
+always require device side space allocation.
+
+Unlike the neat sequential journal IO, metadata writeback is
+effectively random small write IO. This triggers worse case
+allocation amplification on thinp devices, as well as worst case
+write amplification in the case of COW after a snapshot. metadata
+writeback - especially overwrite after snapshot + modification - is
+the worst possible write pattern for thinp devices.
+
+It is not unusual to see dm-thin devices with a 64kB block size have
+allocation and write amplification factors of 15-16 on 4kB block
+size filesystems after a snapshot as every single random metadata
+overwrite will now trigger a 64kB COW in the dm-thin device to break
+blocks shared between snapshots.
+
+So, yes, metadata writeback is extremely prone to triggering ENOSPC
+from thin devices, whilst journal IO almost never triggers it.
+
+> Where is this weird model where a
+> storage device returns an out of space error and manual user interaction
+> using manual and not online trim is going to fix even documented?
+
+I explicitly said that the filesystem needs to remain online when
+the thin pool goes ENOSPC so that fstrim (the online filesystem trim
+utility) can be run to inform the thin pool exactly where all the
+free LBA address space is so it can efficiently free up pool space.
+
+This is a standard procedure that people automate through things
+like udev scripts that capture the dm-thin pool low/no space
+events.
+
+You seem to be trying to create a strawman here....
+
+> > > Normally it means your checksum was wrong.  If you have bit errors
+> > > in the cable they will show up again, maybe not on the next I/O
+> > > but soon.
+> > 
+> > But it's unlikely to be hit by another cosmic ray anytime soon, and
+> > so bit errors caused by completely random environmental events
+> > should -absolutely- be retried as the subsequent write retry will
+> > succeed.
+> >
+> > If there is a dodgy cable causing the problems, the error will
+> > re-occur on random IOs and we'll emit write errors to the log that
+> > monitoring software will pick up. If we are repeatedly isssuing write
+> > errors due to EILSEQ errors, then that's a sign the hardware needs
+> > replacing.
 > 
-> Signed-off-by: Alistair Popple <apopple@nvidia.com>
-> ---
->  include/linux/huge_mm.h |   3 +-
->  mm/gup.c                | 162 +----------------------------------------
->  mm/huge_memory.c        |  40 +----------
->  3 files changed, 5 insertions(+), 200 deletions(-)
+> Umm, all the storage protocols do have pretty good checksums.
 
-Hooray! Goodbye dev_pagemap mess in gup.c.
+The strength of the checksum is irrelevant. It's what we do when
+it detects a bit error that is being discussed.
 
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+> A cosmic
+> ray isn't going to fail them it is something more fundamental like
+> broken hardware or connections. In other words you are going to see
+> this again and again pretty frequently.
+
+I've seen plenty of one-off, unexplainable, unreproducable IO
+errors because of random bit errors over the past 20+ years.
+
+But what causes them is irrelevant - the fact is that they do occur,
+and we cannot know if it transient or persistent from a single IO
+context. Hence the only decision that can be made from IO completion
+context is "retry or fail this IO". We default to "retry" for
+metadata writeback because that automatically handles transient
+errors correctly.
+
+IOWs, if it is actually broken hardware, then the fact we may retry
+individual failed IOs in a non-critical path is irrelevant. If the
+errors persistent and/or are widespread, then we will get an error
+in a critical path and shut down at that point. 
+
+This means the architecture is naturally resilient against transient
+write errors, regardless of their cause.  We want XFS to resilient;
+we do not want it to be brittle or fragile in environments that are
+slightly less than perfect, unless that is the way the admin wants
+it to behave. We just the admin the option to choose how their
+filesystems respond to such errors, but we default to the most
+resilient settings for everyone else.
+
+> > There is no risk to filesystem integrity if write retries
+> > succeed, and that gives the admin time to schedule downtime to
+> > replace the dodgy hardware. That's much better behaviour than
+> > unexpected production system failure in the middle of the night...
+> > 
+> > It is because we have robust and resilient error handling in the
+> > filesystem that the system is able to operate correctly in these
+> > marginal situations. Operating in marginal conditions or as hardware
+> > is beginning to fail is a necessary to keep production systems
+> > running until corrective action can be taken by the administrators.
+> 
+> I'd really like to see a format writeup of your theory of robust error
+> handling where that robustness is centered around the fairly rare
+> case of metadata writeback and applications dealing with I/O errors,
+> while journal write errors and read error lead to shutdown.
+
+.... and there's the strawman argument, and a demand for formal
+proofs as the only way to defend against your argument.
+
+> Maybe
+> I'm missing something important, but the theory does not sound valid,
+> and we don't have any testing framework that actually verifies it.
+
+I think you are being intentionally obtuse, Christoph. I wrote this
+for XFS back in *2008*:
+
+https://web.archive.org/web/20140907100223/http://xfs.org/index.php/Reliable_Detection_and_Repair_of_Metadata_Corruption
+
+The "exception handling" section is probably appropriate here,
+but whilst the contents are not directly about this particular
+discussion, the point is that we've always considered there to be
+types of IO errors that are transient in nature. I will quote part
+of that section:
+
+"Furthermore, the storage subsystem plays a part in deciding how to
+handle errors. The reason is that in many storage configurations I/O
+errors can be transient. For example, in a SAN a broken fibre can
+cause a failover to a redundant path, however the inflight I/O on
+the failed path is usually timed out and an error returned. We don't want
+to shut down the filesystem on such an error - we want to wait for
+failover to a redundant path and then retry the I/O. If the failover
+succeeds, then the I/O will succeed. Hence any robust method of
+exception handling needs to consider that I/O exceptions may be
+transient. "
+
+The point I am making that is that the entire architecture of the
+current V5 on-disk format, the verification architecture and the
+scrub/online repair infrastructure was very much based on the
+storage device model that *IO errors may be transient*.
+
+> 
+> > Failing to recognise that transient and "maybe-transient" errors can
+> > generally be handled cleanly and successfully with future write
+> > retries leads to brittle, fragile systems that fall over at the
+> > first sign of anything going wrong. Filesystems that are targetted
+> > at high value production systems and/or running mission critical
+> > applications needs to have resilient and robust error handling.
+> 
+> What known transient errors do you think XFS (or any other file system)
+> actually handles properly?  Where is the contract that these errors
+> actually are transient.
+
+Nope, I'm not going to play the "I demand that you prove the
+behaviour that has existed in XFS for over 30 years is correct",
+Christoph.
+
+If you want to change the underlying IO error handling model that
+XFS has been based on since it was first designed back in the 1990s,
+then it's on you to prove to every filesystem developer that IO
+errors reported from the block layer can *never be transient*.
+
+Indeed, please provide us with the "contract" that says block
+devices and storage devices are not allowed to expose transient IO
+errors to higher layers.
+
+Then you need show that ENOSPC from a dm-thin device is *forever*,
+and never goes away, and justify that behaviour as being in the best
+interests of users despite the ease of pool expansion to make ENOSPC
+go away.....
+
+It is on you to prove that the existing model is wrong and needs
+fixing, not for us to prove to you that the existing model is
+correct.
+
+> > > And even applications that fsync won't see you fancy error code.  The
+> > > only thing stored in the address_space for fsync to catch is EIO and
+> > > ENOSPC.
+> > 
+> > The filesystem knows exactly what the IO error reported by the block
+> > layer is before we run folio completions, so we control exactly what
+> > we want to report as IO compeltion status.
+> 
+> Sure, you could invent a scheme to propagate the exaxct error.  For
+> direct I/O we even return the exact error to userspace.  But that
+> means we actually have a definition of what each error means, and how
+> it could be handled.  None of that exists right now.  We could do
+> all this, but that assumes you actually have:
+> 
+>  a) a clear definition of a problem
+>  b) a good way to fix that problem
+>  c) good testing infrastructure to actually test it, because without
+>     that all good intentions will probably cause more problems than
+>     they solve
+> 
+> > Hence the bogosities of error propagation to userspace via the
+> > mapping is completely irrelevant to this discussion/feature because
+> > it would be implemented below the layer that squashes the eventual
+> > IO errno into the address space...
+> 
+> How would implement and test all this?  And for what use case?
+
+I don't care, it's not my problem to solve, and I don't care if
+nothing comes of it.
+
+A fellow developer asked for advice, I simply suggested following an
+existing model we already have infrastructure for. Now you are
+demanding that I prove the existing decades old model is valid, and
+then tell you how to solve the OG's problem and make it all work.
+
+None of this is my problem, regardless of how much you try to make
+it so.
+
+Really, though, I don't know why you think that transient errors
+don't exist anymore, nor why you are demanding that I prove that
+they do when it is abundantly clear that ENOSPC from dm-thin can
+definitely be a transient error.
+
+Perhaps you can provide some background on why you are asserting
+that there is no such thing as a transient IO error so we can all
+start from a common understanding?
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
