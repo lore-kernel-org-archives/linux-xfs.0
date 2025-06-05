@@ -1,211 +1,239 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 289EC1E1DF0;
-	Thu,  5 Jun 2025 15:30:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749137413; cv=fail; b=cRiRg+vRSiLmqewXZIlN7C3FsOOP0ufCvxrRAXH1W0I0c8HkARaW1Y3/15UQJlo7cBz1P9KOoWbU4hhGjxCju5O0983E3AkU3K0UAOnkNQ8JcIrmqPqeKPpMC5houLFx/Nz4ILPenADUMHSoP8yuXVXvb1f1NCXWwWp814kEQzc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749137413; c=relaxed/simple;
-	bh=QNfLC+lLVmOylmqJw2Ulm8Z/x1A+s5cXqc70wdxhccM=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=hyMe/vIyqwAd3uloN3kv1EM3bHZiT0VFNTyCwRXO4eO0mTxGdWZmwsYGgu6QVeI6cB8n2z7hYGV4pNlYsa0PqglvJx9gi3kFmvK98jFg7Wr4tLHv6EAjETkDENtQoLfNGcNZ3yWQq7uWgs3oBPig3vnT/4t0bYMXTl+yyKbgkx0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=HZ4DsY24; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=pbq29S26; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EDEA139D1B
+	for <linux-xfs@vger.kernel.org>; Thu,  5 Jun 2025 15:49:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1749138599; cv=none; b=t6WQiy501GDPktAhkbs0HknTBRk8fLm3r2YkVOTN1TXMwCZ0jcXL1nKbYXYbBhdBxHcapG0QEkCsThXXnOatYuVFwQ0VdLCOtaBsYiAFIC0gSn+66wZ6T35z1bVKg/ZGTJe2ENvxJr22fTWdwld8OH1ZV02hL0aSLAnVj6RYRig=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1749138599; c=relaxed/simple;
+	bh=heSSRUrGNdzJGpdtwqJh+8ILQxdmzCEFK9AAGM4XcHE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BNigemf2X07slemr6oNx0l/lpd7oEb+fu4M67aIqtiK+5wLWyAIac1Jq3p/qj83d/4LfiZJbKenCw67INnMX096ob7k7tr68qzsP+p1w/jwTx5r6Znd+wc7g1SV/N9wIxbpJ5n1TlDKee0DlZaX3Lf+5xbP/wT5ywx49iHKBzZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=R9xlYO69; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HZ4DsY24";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="pbq29S26"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 555Atmk1029869;
-	Thu, 5 Jun 2025 15:29:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=BOvHeu8lIreUw5xw8hVwZgbkkvm76T6/rYp47N16opw=; b=
-	HZ4DsY24SxFWLnegAJH/ChpOl0YQM0JzfWU6W8h3i9wihSbxqP0Nk2vxEodp4zBu
-	Yj+/8ENQPl9TKAbZdf8u2RQy0JM7ya9l94nXThuDF+9KZ8clG3bYFuV4sTGJX1M/
-	GZZpNvQ31cJyqDVU+11UHXzABJW93O5BqMcgMvI3YJpm5sJWJfcTH05GDdV6CABJ
-	5Cano+d5BTeDznO5AH2GGl6UWdd3w2r1fKk6TnwViJZYiriUjYaQ/zmAXkVnpv9b
-	XR2QbMAWGyN5KTF8AM5rvcRQa/0x1ujVhp/mAaAvh0GtVDveBYSVrvejXV+2biK2
-	4afGOPFpKD3nRVKPPrC0Tw==
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 471g8cxcju-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 05 Jun 2025 15:29:20 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 555EUgvM034484;
-	Thu, 5 Jun 2025 15:29:18 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11on2055.outbound.protection.outlook.com [40.107.223.55])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 46yr7c7dg4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 05 Jun 2025 15:29:18 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=piPd5xUd2wzE8z8YUmr3XbU6di9K8H0r/AeXWd6mOVOCqG64qASNMDEL0ZMPPLyptSN5SiKb+cx35EdByyraGL4su/eb3XSVRPAPcVxw6QkbxKhJ38R+0iCHqYv5jAr7HidPy0vmbWti/7JE98lIjqzqvMeJZT+a5Dhp7c/umaohnbP7o2mrBmS6a1/5BZfI2erWL3guPe+fmaFPlyWSxCs422qcMs/FpWpG6gjjG34mXAe03goZp4bxGxlABcTuT+IrBZHjAbOHeammsXELGeGsGDuxSO1Kh4fKFgn1IX2jii2DpI91WVScsst9Rvyz9q6jc2dsXWk9JAvC18+7Zg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BOvHeu8lIreUw5xw8hVwZgbkkvm76T6/rYp47N16opw=;
- b=IwMy6wVG3pO8xjHQbV+ll16+ktpjbXrRitOsI6xHIkd4Hw3430Xhuu7Q09tnaZLpKpvmhlA4m/nwH+VP9CtsQlI1j+A5aV8FmMN5KVcGGofkURiZbnnigr4PUJWGAduZAmtEMXNyWd6Qm4DNOV8LxDcui1mJaN/9p1apNeP2ETu/AqWI1WmzKxKzglxdCSWlwtj8r72UVpprQcMlBXHzavZ+rmkBZrP6tgcbGgO5jyZ6IfoDuLIY+l/g7RKFuUleb+rAOrU1p47usdttoAyqgvzj9XoJeKmQkreKZ7Wbc6z8q0pR1QSE9z8EuphAqfAzYsUtFRdpMuG0mEmXfABEEw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BOvHeu8lIreUw5xw8hVwZgbkkvm76T6/rYp47N16opw=;
- b=pbq29S26WkVE0/vDqlCl84qK41L7OO8E7OXLD1KZQRgyTXSrVcN9ysFNqpHeDjMEJKxM1CrtO95lJQhSbsVIw2jxyiSLyuK1YpbBdxyg5z8RlDMwlRMI7XkyOdjnSX36AdUHueNc0WN2jKjyKsZMsjzsPX6hKNOqud6t3jVG4VI=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by SA6PR10MB8158.namprd10.prod.outlook.com (2603:10b6:806:442::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8813.21; Thu, 5 Jun
- 2025 15:29:16 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.8746.041; Thu, 5 Jun 2025
- 15:29:16 +0000
-Message-ID: <f89a79f5-af93-43d0-95cc-8b718a7c6743@oracle.com>
-Date: Thu, 5 Jun 2025 16:29:08 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/3] xfs: more multi-block atomic writes tests
-To: Catherine Hoang <catherine.hoang@oracle.com>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Cc: djwong@kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com
-References: <20250605040122.63131-1-catherine.hoang@oracle.com>
- <20250605040122.63131-4-catherine.hoang@oracle.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20250605040122.63131-4-catherine.hoang@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SI2PR02CA0037.apcprd02.prod.outlook.com
- (2603:1096:4:196::8) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="R9xlYO69"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1749138595;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ndj3VacoJ2B/jwA4i8T2Fiz1ZeHtUMliJW7cXQ7eK58=;
+	b=R9xlYO69csO73GfH+YxKda/rZbq627RcFw3oGhkchAiRej+u2fiFfrTKkyN4R6knDpE1kG
+	SbefNrk7O3hJufKuncyt+Bj9BcJeNQWmlGPVrVgqH4A4C1TXjE4MkPCe1C/cZmBPRbwWkK
+	EplgrBR7QQVHHyDg3uVU9JfzB5y+Leo=
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
+ [209.85.210.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-128-Iz-DaxhpM56Hz1lxC0Klow-1; Thu, 05 Jun 2025 11:49:53 -0400
+X-MC-Unique: Iz-DaxhpM56Hz1lxC0Klow-1
+X-Mimecast-MFC-AGG-ID: Iz-DaxhpM56Hz1lxC0Klow_1749138593
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-74620e98ec8so1104672b3a.1
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Jun 2025 08:49:53 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749138593; x=1749743393;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ndj3VacoJ2B/jwA4i8T2Fiz1ZeHtUMliJW7cXQ7eK58=;
+        b=iXB58L6HgIlUhSYxZmBf53zMmXaa8PFo9O2ZwUht++LhhFe3ehFB16HJxrRpf+vl2V
+         v1U/yQ+0FH/Rf3ZkwlTIbbTVQ0RD1fe6wFaaoeJ3HDXvXT54cvSwdHMU6CW4q9Z3OMkQ
+         LjOKgLRld/Oe3bFENblJOElTQObgqdl9uOJYNf5FYxowtrD5fl+1UGQVzEFXBd4d1rnT
+         KF2na413bUM1beVx9TyPyj7lDSPTLHZaf5h4hV5xJevFTt0Qyrs0VhDxW9hmTHri//iE
+         4hX1vxiasG7l+LaWKcyAU9IODBA9JwXf6SaPlOHWW3jxvVHTUS23W5jfqhaw9vqgYYGp
+         VtBQ==
+X-Forwarded-Encrypted: i=1; AJvYcCW350guIdvHZUtjgOVQheCYD9keyoUMI0uPvE+90xT+D5DLg1aKYoS49F2FZ9I0eYREnJ39XR8Sk1s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyLKhHuK8ffddJL5A+j8uX9qh7JlF0RUwpqE6iyp6FabetVal98
+	uZ3WhFY8N2dCA2672y5c+ZgO1Q8Uuj1X9j/2gjISMeqJNEGdJUtSYLg9Qu7crTd4I99CVn4N9lI
+	l9hUJx6x7jhene3ZjMuIuGxd2+7qNqjmLA/gtNMfzLiDMgGK1zifg0NcR/Qk7OQ==
+X-Gm-Gg: ASbGncvMj5xPDDBGrIMqYrGWT9F2K8PX7kzEaCvr2n5ENJH/imX+j/Fet95Exvw1YYt
+	eA0YGogsrl1v1fea3KJX+ssoy+4SAYBoXLSd0wqrKcrfrm5AtpdKgipuLccrcQCnV2G/M/aBSUj
+	BkYvrlPdUHadYAoRzMvSjobOqbSmk18lHHDv/PrdFzMFzCBeLnuN0ds4yNz2MfQ7/GfnSPYZ1b3
+	vVLOOuXBy3Wo4qDcx4pdd+ebfCL+iNr4UFbmMjyKy+46LLI/feahicQhZNCK8i9ly7oRgn9rTXM
+	YZ9zUi8fiRE8GbQ5F8Toza/c3AQkx3Z1oWpl2Bdf+LLDaPO60JGX
+X-Received: by 2002:a05:6a00:3c8a:b0:736:4e14:8ec5 with SMTP id d2e1a72fcca58-74818502de9mr5002740b3a.11.1749138592789;
+        Thu, 05 Jun 2025 08:49:52 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEJcVAGqdPPtYN0ODYrRbE0HfIi/9s44Lf0z02on9jhAQwnOabBzpbIKR3waQJ1MgjgUstRYw==
+X-Received: by 2002:a05:6a00:3c8a:b0:736:4e14:8ec5 with SMTP id d2e1a72fcca58-74818502de9mr5002711b3a.11.1749138592406;
+        Thu, 05 Jun 2025 08:49:52 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-747affafac9sm12995560b3a.112.2025.06.05.08.49.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Jun 2025 08:49:51 -0700 (PDT)
+Date: Thu, 5 Jun 2025 23:49:47 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Li Chen <me@linux.beauty>
+Cc: fstests@vger.kernel.org, Li Chen <chenl311@chinatelecom.cn>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] generic/738: warn & lazy-umount if thaw hangs on buggy
+ XFS
+Message-ID: <20250605154947.bddkusxeryj2emzb@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20250601070059.341669-1-me@linux.beauty>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|SA6PR10MB8158:EE_
-X-MS-Office365-Filtering-Correlation-Id: c4116168-0d31-44d4-c6e2-08dda445bb52
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?UDZOeCt1Q0FWc0E1b3cxNjJjSGhNQlVyeWxScVlvaC9QaktxVVNzQW1zdit6?=
- =?utf-8?B?VHlaUjc5YkllWXRERjhCaGZ6STRrN1c5aUZJZ1BZMUp1QVNDMVdtVHprRlhE?=
- =?utf-8?B?QUNYTGlwTENFUStDb2U3V2JIdlhxeVRhNG0zTUtGdEFJZFl5K0pYaDBEello?=
- =?utf-8?B?aUV6UzVRaytQaFpEWHlRV1czSGxob0gwbTRxTkswZWpnT1BFQ2o3Qitld3Mw?=
- =?utf-8?B?Yjg2OHRRZUZvSFV2Q2hCVFRPQkR3Qk1PY3RvczZIeWlLRkR1UnhVdk5Nd0Iy?=
- =?utf-8?B?Mk1tSEgrMDZNc2dhYzZ4ZkRnNDJqY2tRZzBPL1cxQ0lhVWNZeENPbVBsMVV3?=
- =?utf-8?B?bzU1VjBuWmpEYVk2NDVuQ2NMYTVsQ29mb0lMdWVkdFh5N2pnelRyanFwRUZW?=
- =?utf-8?B?UEhWNFpzN3kxUWN3QVRRSWltam5scHkrWU1SYnN1cVJ4NDJDR002bVdzZ2J5?=
- =?utf-8?B?TEkxQ0RadGJJOHJ4ODVqeFRjbTZ0VWgxMjk0NHVWRFp5OGI0aUJXVUVpbGIw?=
- =?utf-8?B?TUhUVTFiYzZZRjFZbyt3TW9DWTd6eWRqRVFLYyt2TXpWRGhTSDhaWm5ENWov?=
- =?utf-8?B?NGl6ZWtYaHZCNnMrdk0rUGhnWFlFNXVRNDhBaXpFOUhuK3lRNEhoK0F3Y0FE?=
- =?utf-8?B?R1RTTHpUaU5BV01nSEdHU2VFN3hhV2Nzc0IzaUVIbnQrTUQ1OU5abXdwRFBM?=
- =?utf-8?B?U3dYYVN5MEROVFFvMHk4Y0VpcTlRdWRpQmg3V0MybHp0WTlFcElHWEsxTG1N?=
- =?utf-8?B?dlpSa0JSV2lZL0VkL1RyZFU5aG84QlRxS2ZadVU2RFpMeHBrNmZueG1hQWR4?=
- =?utf-8?B?ZFV6NUY3cVNha1hwKzV3T0Z1YnRRWDNXY3JJVXJCcEYxSmVMa1hiZ1NzaWk3?=
- =?utf-8?B?M0ZjV1c5U3VyNTV0SmU3VG9wUGxMNW5ScHQxdnpaNDZKMExMZ0JobENhTDJS?=
- =?utf-8?B?NkRzcXY0WFJSY21salJKK25BaUNoN2U2R1lsWHEwMnVDbVFtdWNBQ3FTbzkv?=
- =?utf-8?B?dTA1Y2V3OTROZ3lUYXowRXQwVXhjeDJLOUxaZGh6NzlGTmhlekJDU2ZkeStU?=
- =?utf-8?B?VXg1TG5qbWhtanFPMVlvalpLRUo2dkVEOFhwZ2k4SVZVYXRFcHBUdGdhbnVY?=
- =?utf-8?B?T251b1VMZ3hmVTFxQTBKNU1sanQvOG94cjNlWVZxYmVDMEIrWStxZzhxSVlM?=
- =?utf-8?B?MThwQmhRNnJOUkhwMkVML1JqYml5ZmhxMDZCU3ZnRTN2eXV0cVRDRmNKaVU4?=
- =?utf-8?B?bVBUb2Y4UkJXTDJJeXQ1RlVYQ0treVc5Y3ZkUkpHdU1wNDYrSHYxZ1B2MXZF?=
- =?utf-8?B?YnpQTGowVHhicEFqWW9OMmR1ZkdrU1k0dWRCRlhwZ1VFWGhDNGdXNnc5K1V6?=
- =?utf-8?B?aEFRdG5NNHViL1JSYTdkVERPOGFSSjVPNHlNVy85U2FQRk9SY3YvQmg5TGZ0?=
- =?utf-8?B?ZHhJTFA2VTlTRUMvTW4xNUxaWkZvZlNZMGJPWjlBQ2hRTUlBTklNZk9XM3lt?=
- =?utf-8?B?cDZVVy93Zm1iT016RWluV2M3QTBIbGlYM2xsTHFFMGlvUHNLTXozWVdjaHkv?=
- =?utf-8?B?ZTIyRFBrWEhBNSs1U2t0NVRyUElwSExWUnNYZjV5eWpRUmo4QjZQNld0cDMr?=
- =?utf-8?B?RXI5OXFMQmtEUXRnS3hlVU1LcFpoYlVxNEZQS1VySWlFYmN0YWhFb2VoNWNI?=
- =?utf-8?B?VllIMjVSNFBINWxKUUd3TWdoWlQ2ckxTVkhzSGV2R091RXF2KzlLQ0VSUTlx?=
- =?utf-8?B?bHRBMTEzZ3ZNWCtIQWZ3aEo4UkJYMll1bFFKU2F2N3I5aEdSSkduTkcwYzFN?=
- =?utf-8?B?bkNLd05lZXhQRlRSQTI4Q3J3N1BBYU13KytvUklzNkM0NlNSUWZlZU1TbTZ1?=
- =?utf-8?B?U0swZjdTZFFtdk1XOG1kMkR4ZmxzZEpVVGhLRnh1Y3Uyb2sxRjI5VzNQZWdG?=
- =?utf-8?Q?DMuQHIGpvVg=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dGpuT0NwOEQ2LzhKZ1ZaZzF3SWl4RlQwVG9BMjQ5RDd6c1RuRVdMMGVGcjhC?=
- =?utf-8?B?YnZjU1EyVDd2WGdSK0o3SmIyU0gwOTJydTA1c1J2YWhzVURkUTJBWEZYeUtL?=
- =?utf-8?B?ZUVPWk91dDJYRnFVWktSZVB3RjQrenVyK3FkME1jVzNCODJPKzFjZTcrcUdX?=
- =?utf-8?B?dm53bGt6VnovQnVrOUNOQVh2NWJzTGU4YlVQMXhQb2RMMlBOenBWUDRyMnN4?=
- =?utf-8?B?S1BYdTJld3FsMDhzWDh0dlRSSHBNTGhqWmRodHZsVHpLNDE2aTRuTkhQbHVP?=
- =?utf-8?B?NDduRG1YaWJjQnBWSWNoZ1VxQTN6ZkxWTWc4dm0rWTdBenBRRXcvY09qVzlx?=
- =?utf-8?B?YWo1M3Y5UTJObGJYMWlOVDdCWFpGMTl4V3ZuRlcvU3hsNWxYQlkxL0FWN09L?=
- =?utf-8?B?NWZTSHUrejB6NHUyUzN6MEhac0ZaWW1aenVKZ1lCdUNSeVJBU1JnY3JZRzZU?=
- =?utf-8?B?WVV4TEtROHRUTmtJM0ZDd0ErdUIyK05rZFQ5NUtmWGRiZDk3ODkxYmFEcE80?=
- =?utf-8?B?Ti9CbVFVbjY1VXVEYk1CWEh4OXdDeWxlaVhWdEZwM1JDZmhYaFdKYXZsaVk1?=
- =?utf-8?B?dWZYeERjYTltR1E1OXRzZ05qNWdoSmVOa2I0Tm5rRGh5dWIwbnB4VWtFQjRx?=
- =?utf-8?B?SUhFSnQxMnlkOERzT3A3QWZlakJxdmpJTUh3aFArazFOcjF6dmFROXNURSs3?=
- =?utf-8?B?c1kzTmxTVjVBVFVBK3NNTjlsdUV2QUZ6SXczbXR0aXl1ZWxXNVY5TWNjL3JH?=
- =?utf-8?B?WWZNM1BwZnJpcGp6eGg3YWpWeUdRekFNbTRpSVY4KzJTY29UdGxXL0wxcUxN?=
- =?utf-8?B?Q0ZycnRFUFFreE0vU21WekZUeUlHOEhPdzE5OWQveVdjMVJJYldjWnQyT2Jx?=
- =?utf-8?B?NXVOcElLZk4wSUxvY1UyUGtPWVlHR0NJVTNtYS96WDJFRG9TVGdZM1hEZjA3?=
- =?utf-8?B?RGFsckt2cVBDSUhtdlFYQWN3bnhScHB4WWJPazUxcVJjQlV0VlN6YUNkQVh0?=
- =?utf-8?B?UHZNczlPb25sazA2Y2t0NTNQTmhKK1ROak5xbGZuVCtQT1FVQ1pHL1M1YnlW?=
- =?utf-8?B?QnUzNW0ybm13OFhYSWZ5elY0SmtydktVUGthbDNsSmpBenluUjJGeHhZZVJw?=
- =?utf-8?B?SEJaV1BSZHp1U1hLeGt1Ny9lQm1QaE1sdnU2N3NqbFAwVWdyaUdmN2sxQTBi?=
- =?utf-8?B?YlpWQ2NKRDkybEtoZkh4dVpXZG5QeGsvU0JsS2Q5RlVGbTBuUDRhN0VYdktn?=
- =?utf-8?B?WHdmUW5SQUVoSjNSR08wZCtxd1M5dFpBTmtHZ01KemFIUGFIcDYwSjN0L2RE?=
- =?utf-8?B?NkNERFRZcWlxVlcrWDgvV2E5eXVFTVJPOGZGODFOcmtKTVFjRjFSSHdUalpz?=
- =?utf-8?B?WE42VForUVpYOU93NXVocDR6bjlJUVJBWUloN0xtWmYrVmQ3M1U5MGFyVmVi?=
- =?utf-8?B?ZDkxVGNENkZkV2ZudkZFZEpBQnl4bTJHN05oNEJQSWxJQlBEOEk4UjRrUngv?=
- =?utf-8?B?NjVyOXArTHpuZ2ZGaWZPSHJVWmkxeGFCeVcwMG55TW8yZmo0ejRhL1ZrZXRH?=
- =?utf-8?B?bHB2di90ekF0eFJSeUJ2MGgyK283SVBoWFlnRmVtMWc3UDMwOEFETnZZTU1k?=
- =?utf-8?B?T25MSDNVSW5JU2VuZlhiRzR6NXhwS1JTT2NzR3pnVkM4UVAyL2Q4aVFyUWt4?=
- =?utf-8?B?bXZLUFRnSEZsNnFCcmZSMWtDczhNS0F1eDBGQzBsQkJBMzQyVFIrbk9LK01r?=
- =?utf-8?B?R2FFYWUxdEtkTDVtRFhkNzY5RVdaMS9RelhnajBmVXlJOUJkVUdac1M0SGcr?=
- =?utf-8?B?YWtNUVIwbVhKNWVpQXVMcmx2V2J5Y21jemhIdWZjcjlNMFUvbjBwNU9wMk9u?=
- =?utf-8?B?YWFDcjRVaW01aE5wOS8zOWhZM1dFQUpWL09hY3FtRUtwQzc2S3hzNERiUXFY?=
- =?utf-8?B?YU5hWEl3NVpCMU1TdGNRMjZFVklhT0I4OG9KSEEwdm1zMXBFOEJNelhrT1JO?=
- =?utf-8?B?RUtEbFZ2U2NKcTNGV2xGWExnNnVWanhEYzZqenMwTEtPamR2aFVsVEhHdmY3?=
- =?utf-8?B?MTVDazdPY0lDdUxIcVhDRWR6dzhSZjBySFM2S2xGK3liaGZncnpxYjRIZCsz?=
- =?utf-8?Q?f3qdKi3bQlZfqJOQvhw7vagPh?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	zQQrQxegrhDcBelP3ADADkJDAVfRTvdDpNgn041tOqgj2vr+ZvgRHsEtDkpsC3DTpa7Gg7tk27dyibjcyeBEVns9fxHNLKeq2EZNavFkzOwQ1HQV4ikYBo6eYenVZ+O8R3ck3fHiYYbyhcVXqvUYhcHnJt+uvh9hOCyqAa+CCKlbqDKaGjBEryYXN/E9DxSGmIvmeMuCg58+Q0qisUjtt1BlkW6FbQ6+Z/cEa3X69/bv7b+nypG+IHAozmH4LMJkxYRx908qecQph6Sk0KGjGy//smWWirCNmLRjOkU3HmPyFq3Zfit3wnKGTW4S+C65hgu4oPs4EoA6gwcstNWtqHsvHpfGn3HrvHF6nHdYPYEI0ovx3PQVDpj6w7cHE8lsnlIE3xDenLPT1cUtExpyD+Y3aP+PEMq/SRm8p4cBmI3XwydvY/nQEs3GO/NoboAfdSVgkRFk+3pvpciYZS46LbSoKKunvXaIEWb5dV94z6F4BkAShRWRpM7NZBQJt1Nyud0ydinWzBhf3e+VeXpjfNmBVcdSOHqMcPnDPrLRC9pReUfbrvtClb0JuN4LtSRnVfJUYIJWxq3oWTXUlJx0crAymDs6Do1PKEdA6m7IDAo=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c4116168-0d31-44d4-c6e2-08dda445bb52
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2025 15:29:16.2642
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: jKqR6Ihe8GiqbI3a52SojqeEu1gpJtiHMatSHzgPIE5Gvdbq4X6SO+kaFQ9v+hVK1+Vcti8g3GOnW7dmFI6i/g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA6PR10MB8158
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-06-05_03,2025-06-05_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 bulkscore=0
- mlxscore=0 phishscore=0 suspectscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
- definitions=main-2506050134
-X-Proofpoint-GUID: 9Qkfghflnp1Q53rY8N20Q7GBDw5wbQUk
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjA1MDEzNCBTYWx0ZWRfXyucunz9RMSO2 HpTEE9Vv59QFGDW3LKdilKKawwMK/kZ6W/mleGjTjoeaYhVQALJt7q+I5DwL2jJ4m5J/SvR7MF+ jaPUBJMWtoZycTR8LiXWgBielOhPZDbHWWhARKaeTe0u9NVQ3+8TjbLrzEBmlvDko8DWsNzA9NH
- zXfO4fgXCHFCRRcSnPM8eBPxU10bjbBrEh9N8ys0nqQYYs14UAMY8J9aJc1gASxzF0gkGNR+1pL gr2hHf1aqXEtzGiWHeMHbTTWe2vmwRot3vAmHpMvLI5bkrInKIs8QFPoc1z47ac+CrqBWZyJlPd qCEDnHv4H8W/D+2GAZY91nSe+AN5KIlyI1xozcdkH96q8fR8Ltx6RD9OAedZf+A3ivZVkJ2FOVV
- aYvbDKQa6jUMkCdp5KRliLDacZiACldpBQ9WxmKPVQXlZTytItftIeK0N+7BbQ+4A53zl83C
-X-Authority-Analysis: v=2.4 cv=KaTSsRYD c=1 sm=1 tr=0 ts=6841b7d0 b=1 cx=c_pps a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
- a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=GoEa3M9JfhUA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8 a=Zlakrscs09Ip9O4ntlEA:9 a=QEXdDO2ut3YA:10 cc=ntf awl=host:13207
-X-Proofpoint-ORIG-GUID: 9Qkfghflnp1Q53rY8N20Q7GBDw5wbQUk
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250601070059.341669-1-me@linux.beauty>
 
-On 05/06/2025 05:01, Catherine Hoang wrote:
-> Add xfs specific tests for realtime volumes and error recovery.
-
-Again, more details would be nice.
-
+On Sun, Jun 01, 2025 at 03:00:59PM +0800, Li Chen wrote:
+> From: Li Chen <chenl311@chinatelecom.cn>
 > 
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> If `xfs_freeze -u` goes D-state (because of freeze-reclaim deadlock)
+> the test never finishes and the harness stalls.
+> Run thaw in background, wait 10 s, and when it’s still alive:
+> 
+>   * emit a warning plus the fixing commit
+>       ab23a7768739  “xfs: per-cpu deferred inode inactivation queues”
+>   * `umount -l` the scratch FS so the rest of xfstests can proceed
+>   * skip any `wait` that would block on the hung tasks.
+> 
+> Fixed kernels behave as before; broken ones no longer wedge the run.
+> 
+> The hung task call trace would be as below:
+> [   20.535519]       Not tainted 5.14.0-rc4+ #27
+> [   20.537855] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [   20.539420] task:738             state:D stack:14544 pid: 7124 ppid:   753 flags:0x00004002
+> [   20.540892] Call Trace:
+> [   20.541424]  __schedule+0x22d/0x6c0
+> [   20.542128]  schedule+0x3f/0xa0
+> [   20.542751]  percpu_rwsem_wait+0x100/0x130
+> [   20.543516]  ? percpu_free_rwsem+0x30/0x30
+> [   20.544259]  __percpu_down_read+0x44/0x50
+> [   20.545002]  xfs_trans_alloc+0x19a/0x1f0
+> [   20.545747]  xfs_free_eofblocks+0x47/0x100
+> [   20.546519]  xfs_inode_mark_reclaimable+0x115/0x160
+> [   20.547398]  destroy_inode+0x36/0x70
+> [   20.548077]  prune_icache_sb+0x79/0xb0
+> [   20.548789]  super_cache_scan+0x159/0x1e0
+> [   20.549536]  shrink_slab.constprop.0+0x1b1/0x370
+> [   20.550363]  drop_slab_node+0x1d/0x40
+> [   20.551041]  drop_slab+0x30/0x70
+> [   20.551600]  drop_caches_sysctl_handler+0x6b/0x80
+> [   20.552311]  proc_sys_call_handler+0x12b/0x250
+> [   20.552931]  new_sync_write+0x117/0x1b0
+> [   20.553462]  vfs_write+0x1bd/0x250
+> [   20.553914]  ksys_write+0x5a/0xd0
+> [   20.554381]  do_syscall_64+0x3b/0x90
+> [   20.554854]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> [   20.555481] RIP: 0033:0x7f90928d3300
+> [   20.555946] RSP: 002b:00007ffc2b50b998 EFLAGS: 00000202 ORIG_RAX: 0000000000000001
+> [   20.556853] RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f90928d3300
+> [   20.557686] RDX: 0000000000000002 RSI: 000055a5d6c47750 RDI: 0000000000000001
+> [   20.558524] RBP: 000055a5d6c47750 R08: 0000000000000007 R09: 0000000000000073
+> [   20.559335] R10: 0000000000000000 R11: 0000000000000202 R12: 0000000000000002
+> [   20.560154] R13: 00007f90929ae760 R14: 0000000000000002 R15: 00007f90929a99e0
+> 
+> localhost login: [   30.773559] INFO: task 738:7124 blocked for more than 20 seconds.
+> [   30.775236]       Not tainted 5.14.0-rc4+ #27
+> [   30.777449] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [   30.779729] task:738             state:D stack:14544 pid: 7124 ppid:   753 flags:0x00004002
+> [   30.781267] Call Trace:
+> [   30.781850]  __schedule+0x22d/0x6c0
+> [   30.782618]  schedule+0x3f/0xa0
+> [   30.783297]  percpu_rwsem_wait+0x100/0x130
+> [   30.784110]  ? percpu_free_rwsem+0x30/0x30
+> [   30.785085]  __percpu_down_read+0x44/0x50
+> [   30.786071]  xfs_trans_alloc+0x19a/0x1f0
+> [   30.786877]  xfs_free_eofblocks+0x47/0x100
+> [   30.787727]  xfs_inode_mark_reclaimable+0x115/0x160
+> [   30.788708]  destroy_inode+0x36/0x70
+> [   30.789395]  prune_icache_sb+0x79/0xb0
+> [   30.790056]  super_cache_scan+0x159/0x1e0
+> [   30.790712]  shrink_slab.constprop.0+0x1b1/0x370
+> [   30.791381]  drop_slab_node+0x1d/0x40
+> [   30.791924]  drop_slab+0x30/0x70
+> [   30.792469]  drop_caches_sysctl_handler+0x6b/0x80
+> [   30.793328]  proc_sys_call_handler+0x12b/0x250
+> [   30.793948]  new_sync_write+0x117/0x1b0
+> [   30.794471]  vfs_write+0x1bd/0x250
+> [   30.794941]  ksys_write+0x5a/0xd0
+> [   30.795414]  do_syscall_64+0x3b/0x90
+> [   30.795928]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> [   30.796595] RIP: 0033:0x7f90928d3300
+> [   30.797090] RSP: 002b:00007ffc2b50b998 EFLAGS: 00000202 ORIG_RAX: 0000000000000001
+> [   30.798033] RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f90928d3300
+> [   30.798852] RDX: 0000000000000002 RSI: 000055a5d6c47750 RDI: 0000000000000001
+> [   30.799703] RBP: 000055a5d6c47750 R08: 0000000000000007 R09: 0000000000000073
+> [   30.800833] R10: 0000000000000000 R11: 0000000000000202 R12: 0000000000000002
+> [   30.801764] R13: 00007f90929ae760 R14: 0000000000000002 R15: 00007f90929a99e0
+> [   30.802628] INFO: task xfs_io:7130 blocked for more than 10 seconds.
+> [   30.803421]       Not tainted 5.14.0-rc4+ #27
+> [   30.803985] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [   30.804979] task:xfs_io          state:D stack:13712 pid: 7130 ppid:  7127 flags:0x00000002
+> [   30.806013] Call Trace:
+> [   30.806399]  __schedule+0x22d/0x6c0
+> [   30.806867]  schedule+0x3f/0xa0
+> [   30.807334]  rwsem_down_write_slowpath+0x1d8/0x510
+> [   30.808018]  thaw_super+0xd/0x20
+> [   30.808748]  __x64_sys_ioctl+0x5d/0xb0
+> [   30.809292]  do_syscall_64+0x3b/0x90
+> [   30.809797]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> [   30.810454] RIP: 0033:0x7ff1b48c5d1b
+> [   30.810943] RSP: 002b:00007fff0bf88ac0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+> [   30.811874] RAX: ffffffffffffffda RBX: 000055b93ae5fc40 RCX: 00007ff1b48c5d1b
+> [   30.812743] RDX: 00007fff0bf88b2c RSI: ffffffffc0045878 RDI: 0000000000000003
+> [   30.813583] RBP: 000055b93ae60fe0 R08: 0000000000000000 R09: 0000000000000000
+> [   30.814497] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000001
+> [   30.815413] R13: 000055b93a3a94e9 R14: 0000000000000000 R15: 000055b93ae61150
 > ---
+>  tests/generic/738 | 20 ++++++++++++++++++--
+>  1 file changed, 18 insertions(+), 2 deletions(-)
+> 
+> diff --git a/tests/generic/738 b/tests/generic/738
+> index 6f1ea7f8..9a90eefa 100755
+> --- a/tests/generic/738
+> +++ b/tests/generic/738
+> @@ -11,8 +11,24 @@ _begin_fstest auto quick freeze
+>  
+>  _cleanup()
+>  {
+> -	xfs_freeze -u $SCRATCH_MNT 2>/dev/null
+> -	wait
+> +    # Thaw may dead-lock on unfixed XFS kernels.  Run it in background,
+> +    # wait a tiny bit, then decide whether it is stuck.
+> +    xfs_freeze -u $SCRATCH_MNT 2>/dev/null &
+> +    _thaw_pid=$!
+> +
+> +    sleep 8
+> +
+> +    if [ -e "/proc/$_thaw_pid" ]; then
+> +            # still running → stuck in D-state
+> +            if [ "$FSTYP" = "xfs" ]; then
+> +                    echo "generic/738: known XFS freeze-reclaim deadlock; " \
+> +                         "fixed by kernel commit ab23a7768739 " \
+> +                         '"xfs: per-cpu deferred inode inactivation queues"' \
 
-Reviewed-by: John Garry <john.g.garry@oracle.com>
+If want to mark a known fix, you can add below line to this case:
+
+_fixed_by_kernel_commit ab23a7768739 \
+	"xfs: per-cpu deferred inode inactivation queues"
+
+But for this patch, I don't think we should do this for a bug. If it blocks your
+testing on someone downstream system, you can skip this test. CC xfs list if you
+need more review points for this xfs bug.
+
+Thanks,
+Zorro
+
+> +                         | tee -a "$seqres.full"
+> +            fi
+> +            umount -l "$SCRATCH_MNT" 2>/dev/null
+> +    fi
+> +
+>  	cd /
+>  	rm -r -f $tmp.*
+>  }
+> -- 
+> 2.49.0
+> 
+> 
+
