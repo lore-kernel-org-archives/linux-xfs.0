@@ -1,98 +1,401 @@
-Received: from mail-qk1-f178.google.com (mail-qk1-f178.google.com [209.85.222.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6722D288CBA
-	for <linux-xfs@vger.kernel.org>; Fri,  6 Jun 2025 13:55:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 940F21991CD
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Jun 2025 15:17:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749218117; cv=none; b=IOZtqd02oS+KzNbxo0PrFTBuucQ3Inj62O7xXV9ErWbklldzE1dKVr4BSDUIJosjxJIhf9imnGa+7Hjd0dZ3TI6iIGLc/lRCLVcD3vlUQUX89wnECNNqnQ6+DC+M2xAJvIXXO7NjxYNaZuVexRDt0zxcH1fmtQ5M12zNGC/dLms=
+	t=1749223038; cv=none; b=ea2OXD3lZHFgC+z5JWp7vGzL5Q9ler12LBeA1+WzW4I3klxQl5o6I0zLWjqeCTH/Uy43lsOB8bfaV9K9nk/aZK13cXYG9emXy06a7NWLSDWb4/Kr/mU8l0Y670qQUn7TzcpQaILatHFNSZZS5NBrur4uSG1lHInJaILf2MFO5C0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749218117; c=relaxed/simple;
-	bh=BiBKkugoiM16l4QTDZj/vftTkuVh94Dm/j4qISoefgk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GqY0FJOMPwvL6PA4W16pENNtF1DA+7Apb8d2P33S54y+F5f+i4ix9NYJHhXt4oasTR577o9FpLVCpvz8bdhvUHyi5zb0yUIv653RhDy44n3UwDtCanIYXIk3LKdybvzJYv6pt2vnyVoI0jOXZ2vbcXA6ZiEEk9mmTbFUuR3wc2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=dbsd8LJU; arc=none smtp.client-ip=209.85.222.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=szeredi.hu
+	s=arc-20240116; t=1749223038; c=relaxed/simple;
+	bh=AHE+MNnBPiTGjFxN9IS1w+K/UalHRlh3dNglVA3dIVc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QYUAA5rs80PPwaOMpLJWi/Y1AH3gV8lbIGSDJdPQKSB8XSgrwO/hGLmx15DBgQbKqf/pRiQBBsfy+aDk7KJi4hydsyzrMTvd9j1ezivzrUVjcdQAVI29G3qjsT4UzbYdsXWvBv5H5y5v335l9ZU+/Y+6nxzIpPdVPTvGualO5n8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Kz+mDWXx; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="dbsd8LJU"
-Received: by mail-qk1-f178.google.com with SMTP id af79cd13be357-7d20f79a00dso282091285a.0
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Jun 2025 06:55:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google; t=1749218114; x=1749822914; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=E7/mZixpkg0lei16mzPlvTFGBUK0AxMB+9TgdpByP7g=;
-        b=dbsd8LJURMowwmzicbKk5vnrTCyYpJpiLiOoDz7sBfbdgd/zpu6B3eLQBzs7kc+Lju
-         NT2AMqbudG6osFLzY+jsFRrfxwORAVw6RW7BPlWT6EKs5Ch74tAgh+u3xBgXQV8kZpQR
-         FUw0c93Q3C451+dSAF95dZJrUDVN8Z4IoVFgU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749218114; x=1749822914;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=E7/mZixpkg0lei16mzPlvTFGBUK0AxMB+9TgdpByP7g=;
-        b=QSCSQPKohMveU2GonbT9iuzv2OfKTsNGxY6n1dAm89K3uHvSaTLdHCLf76frcpgjdI
-         cbultWsStMuuchZac5CpI3LlzLSWdwFH4QP9Jkhr0SRudpF/sdTwMUmSrFdR+EA0MqBv
-         oa6iedAIMIWjME2F6NPU3+T9XGde0wGrE105l98A5n/+UuDkuWklZQmIKEsiM4VBaMrb
-         oTTy22/48aFQpy3rMa9PYFDx2unZnzT62uzgCLX6vUomCoc6ninJAYQMfJNPwxxY857m
-         iLyOyCAE8vrhbFCgMTHHqQijXnPd8coWIyvy0s+bVluKFlQAGmrMnqSo6DLYJ32aC5Zs
-         iA4w==
-X-Forwarded-Encrypted: i=1; AJvYcCXjlJoJf+/ELu3zlPvhy2BtNaEAhfWfAYy3vj4NZA4IGJT7QUIVsWi+svKe+T57qlyaZJIAJJz/040=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzuo1FJxtOdhZEiHsrViCgikupXxQZemmHzjSG2L0MB/GHxKAQ/
-	82IKmPddZVLvSmmNvMwI+NxnpIC36Vxc1MSo4Hbu1TIFWfiSIr5RXYe5wwgJ4509rB4qR8dv4Sh
-	oE5NZ2jeuVFa8ObkR4n20Yjk0260Ubaz2rEcEDgMePC3QBL5mkRff
-X-Gm-Gg: ASbGncuM3eL89HB9PIIlvC3vyQG2v0uMdBW0i/JH5SnjBcZuiwWMY5Fa4NVKeyVzYrv
-	ooJVi08euYFEeOOnrTqysElZ570WHfibySC56qhtsKCYAQRE3gWBlUPrZEq/5ldWmo0CkpSQDrb
-	NjapULrPjTdfzgBmVzqrauWUOxVZ7lhcQ=
-X-Google-Smtp-Source: AGHT+IHQlrI/OtlIWS2a2vIz47wRFPm1D8aQZ4bBhcElMWjypsbw77Uu87VP2HAYTCSIjvehXsNall5j9ttNQcsenUM=
-X-Received: by 2002:a05:622a:4c10:b0:476:91f1:9e5 with SMTP id
- d75a77b69052e-4a5b9dbb8f0mr63968261cf.50.1749218101624; Fri, 06 Jun 2025
- 06:55:01 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Kz+mDWXx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1749223035;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=az2fEbzxu+56PZz3AhL/yuEie9H6jOqBZATyMBcbgAo=;
+	b=Kz+mDWXxqCT9XAPlyD85q/FXYDxVrYC4x83e+TTSn3qcXhbF1G959ux1jGT0eIdCf4vzqa
+	Up5CDM1RHzN0w+EVQYV2Ma58yaDtBTAOgjL0janIm1yEkPhxTYYe3xABiWbc1xLH7RkskL
+	aClFQwwaON9wrOmZnblNpNthI01mgyo=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-441-koKcH3jqNvaM-WXSV6uHWw-1; Fri,
+ 06 Jun 2025 11:17:09 -0400
+X-MC-Unique: koKcH3jqNvaM-WXSV6uHWw-1
+X-Mimecast-MFC-AGG-ID: koKcH3jqNvaM-WXSV6uHWw_1749223028
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8C74418002BA;
+	Fri,  6 Jun 2025 15:17:08 +0000 (UTC)
+Received: from bfoster (unknown [10.22.88.123])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 583941956094;
+	Fri,  6 Jun 2025 15:17:07 +0000 (UTC)
+Date: Fri, 6 Jun 2025 11:20:35 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: kernel test robot <lkp@intel.com>
+Cc: linux-fsdevel@vger.kernel.org, oe-kbuild-all@lists.linux.dev,
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH 5/7] xfs: fill dirty folios on zero range of unwritten
+ mappings
+Message-ID: <aEMHQ_BJGDPEWk5J@bfoster>
+References: <20250605173357.579720-6-bfoster@redhat.com>
+ <202506060903.vM8I4O0S-lkp@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs>
- <174787195588.1483178.6811285839793085547.stgit@frogsfrogsfrogs>
- <CAJfpegsn2eBjy27rncxYBQ1heoiA1tme8oExF-d_C9DoFq34ow@mail.gmail.com> <20250531010844.GF8328@frogsfrogsfrogs>
-In-Reply-To: <20250531010844.GF8328@frogsfrogsfrogs>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Fri, 6 Jun 2025 15:54:50 +0200
-X-Gm-Features: AX0GCFt8wqjlMocidJZkmGlImqJ8eqE9iJOCP1TCcDw9PeehwnM-2y0bS2wSaQc
-Message-ID: <CAJfpegvwXqL_N0POa95KgPJT5mMXS2xxCojbGWABhFCZy8An+g@mail.gmail.com>
-Subject: Re: [PATCH 01/11] fuse: fix livelock in synchronous file put from
- fuseblk workers
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, joannelkoong@gmail.com, 
-	linux-xfs@vger.kernel.org, bernd@bsbernd.com, John@groves.net
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <202506060903.vM8I4O0S-lkp@intel.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Sat, 31 May 2025 at 03:08, Darrick J. Wong <djwong@kernel.org> wrote:
+On Fri, Jun 06, 2025 at 10:02:34AM +0800, kernel test robot wrote:
+> Hi Brian,
+> 
+> kernel test robot noticed the following build errors:
+> 
+> [auto build test ERROR on brauner-vfs/vfs.all]
+> [also build test ERROR on akpm-mm/mm-everything linus/master next-20250605]
+> [cannot apply to xfs-linux/for-next v6.15]
+> [If your patch is applied to the wrong git tree, kindly drop us a note.
+> And when submitting patch, we suggest to use '--base' as documented in
+> https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> 
+> url:    https://github.com/intel-lab-lkp/linux/commits/Brian-Foster/iomap-move-pos-len-BUG_ON-to-after-folio-lookup/20250606-013227
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git vfs.all
+> patch link:    https://lore.kernel.org/r/20250605173357.579720-6-bfoster%40redhat.com
+> patch subject: [PATCH 5/7] xfs: fill dirty folios on zero range of unwritten mappings
+> config: i386-buildonly-randconfig-003-20250606 (https://download.01.org/0day-ci/archive/20250606/202506060903.vM8I4O0S-lkp@intel.com/config)
+> compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
+> reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250606/202506060903.vM8I4O0S-lkp@intel.com/reproduce)
+> 
 
-> The best reason that I can think of is that normally the process that
-> owns the fd (and hence is releasing it) should be made to wait for
-> the release, because normally we want processes that generate file
-> activity to pay those costs.
+The series is currently based on latest master. For some reason when
+applied to vfs.all, the iter variable hunk of this patch applies to the
+wrong function.
 
-That argument seems to apply to all fuse variants.  But fuse does get
-away with async release and I don't see why fuseblk would be different
-in this respect.
+I'm not 100% sure what the conflict is, but if I had to guess after a
+quick look at both branches, master looks like it has XFS atomic writes
+bits pulled in that touch this area.
 
-Trying to hack around the problems of sync release with a task flag
-that servers might or might not have set does not feel a very robust
-solution.
+Anyways I don't know if the robots expect a different base here given
+the combination of vfs (iomap), xfs, and mm, but if nothing else I'll
+see if this resolves by the time a v2 comes around...
 
-> Also: is it a bug that the kernel only sends FUSE_DESTROY on umount for
-> fuseblk filesystems?  I'd have thought that you'd want to make umount
-> block until the fuse server is totally done.  OTOH I guess I could see
-> an argument for not waiting for potentially hung servers, etc.
+Brian
 
-It's a potential DoS.  With allow_root we could arguably enable
-FUSE_DESTROY, since the mounter is explicitly acknowledging this DoS
-possibilty.
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Closes: https://lore.kernel.org/oe-kbuild-all/202506060903.vM8I4O0S-lkp@intel.com/
+> 
+> All error/warnings (new ones prefixed by >>):
+> 
+>    fs/xfs/xfs_iomap.c: In function 'xfs_buffered_write_iomap_begin':
+> >> fs/xfs/xfs_iomap.c:1602:55: error: 'iter' undeclared (first use in this function)
+>     1602 |                         end = iomap_fill_dirty_folios(iter, offset, len);
+>          |                                                       ^~~~
+>    fs/xfs/xfs_iomap.c:1602:55: note: each undeclared identifier is reported only once for each function it appears in
+>    fs/xfs/xfs_iomap.c: In function 'xfs_seek_iomap_begin':
+> >> fs/xfs/xfs_iomap.c:1893:34: warning: unused variable 'iter' [-Wunused-variable]
+>     1893 |         struct iomap_iter       *iter = container_of(iomap, struct iomap_iter,
+>          |                                  ^~~~
+> 
+> 
+> vim +/iter +1602 fs/xfs/xfs_iomap.c
+> 
+>   1498	
+>   1499	static int
+>   1500	xfs_buffered_write_iomap_begin(
+>   1501		struct inode		*inode,
+>   1502		loff_t			offset,
+>   1503		loff_t			count,
+>   1504		unsigned		flags,
+>   1505		struct iomap		*iomap,
+>   1506		struct iomap		*srcmap)
+>   1507	{
+>   1508		struct xfs_inode	*ip = XFS_I(inode);
+>   1509		struct xfs_mount	*mp = ip->i_mount;
+>   1510		xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+>   1511		xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, count);
+>   1512		struct xfs_bmbt_irec	imap, cmap;
+>   1513		struct xfs_iext_cursor	icur, ccur;
+>   1514		xfs_fsblock_t		prealloc_blocks = 0;
+>   1515		bool			eof = false, cow_eof = false, shared = false;
+>   1516		int			allocfork = XFS_DATA_FORK;
+>   1517		int			error = 0;
+>   1518		unsigned int		lockmode = XFS_ILOCK_EXCL;
+>   1519		unsigned int		iomap_flags = 0;
+>   1520		u64			seq;
+>   1521	
+>   1522		if (xfs_is_shutdown(mp))
+>   1523			return -EIO;
+>   1524	
+>   1525		if (xfs_is_zoned_inode(ip))
+>   1526			return xfs_zoned_buffered_write_iomap_begin(inode, offset,
+>   1527					count, flags, iomap, srcmap);
+>   1528	
+>   1529		/* we can't use delayed allocations when using extent size hints */
+>   1530		if (xfs_get_extsz_hint(ip))
+>   1531			return xfs_direct_write_iomap_begin(inode, offset, count,
+>   1532					flags, iomap, srcmap);
+>   1533	
+>   1534		error = xfs_qm_dqattach(ip);
+>   1535		if (error)
+>   1536			return error;
+>   1537	
+>   1538		error = xfs_ilock_for_iomap(ip, flags, &lockmode);
+>   1539		if (error)
+>   1540			return error;
+>   1541	
+>   1542		if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
+>   1543		    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
+>   1544			xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
+>   1545			error = -EFSCORRUPTED;
+>   1546			goto out_unlock;
+>   1547		}
+>   1548	
+>   1549		XFS_STATS_INC(mp, xs_blk_mapw);
+>   1550	
+>   1551		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+>   1552		if (error)
+>   1553			goto out_unlock;
+>   1554	
+>   1555		/*
+>   1556		 * Search the data fork first to look up our source mapping.  We
+>   1557		 * always need the data fork map, as we have to return it to the
+>   1558		 * iomap code so that the higher level write code can read data in to
+>   1559		 * perform read-modify-write cycles for unaligned writes.
+>   1560		 */
+>   1561		eof = !xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap);
+>   1562		if (eof)
+>   1563			imap.br_startoff = end_fsb; /* fake hole until the end */
+>   1564	
+>   1565		/* We never need to allocate blocks for zeroing or unsharing a hole. */
+>   1566		if ((flags & (IOMAP_UNSHARE | IOMAP_ZERO)) &&
+>   1567		    imap.br_startoff > offset_fsb) {
+>   1568			xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
+>   1569			goto out_unlock;
+>   1570		}
+>   1571	
+>   1572		/*
+>   1573		 * For zeroing, trim extents that extend beyond the EOF block. If a
+>   1574		 * delalloc extent starts beyond the EOF block, convert it to an
+>   1575		 * unwritten extent.
+>   1576		 */
+>   1577		if (flags & IOMAP_ZERO) {
+>   1578			xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+>   1579			u64 end;
+>   1580	
+>   1581			if (isnullstartblock(imap.br_startblock) &&
+>   1582			    offset_fsb >= eof_fsb)
+>   1583				goto convert_delay;
+>   1584			if (offset_fsb < eof_fsb && end_fsb > eof_fsb)
+>   1585				end_fsb = eof_fsb;
+>   1586	
+>   1587			/*
+>   1588			 * Look up dirty folios for unwritten mappings within EOF.
+>   1589			 * Providing this bypasses the flush iomap uses to trigger
+>   1590			 * extent conversion when unwritten mappings have dirty
+>   1591			 * pagecache in need of zeroing.
+>   1592			 *
+>   1593			 * Trim the mapping to the end pos of the lookup, which in turn
+>   1594			 * was trimmed to the end of the batch if it became full before
+>   1595			 * the end of the mapping.
+>   1596			 */
+>   1597			if (imap.br_state == XFS_EXT_UNWRITTEN &&
+>   1598			    offset_fsb < eof_fsb) {
+>   1599				loff_t len = min(count,
+>   1600						 XFS_FSB_TO_B(mp, imap.br_blockcount));
+>   1601	
+> > 1602				end = iomap_fill_dirty_folios(iter, offset, len);
+>   1603				end_fsb = min_t(xfs_fileoff_t, end_fsb,
+>   1604						XFS_B_TO_FSB(mp, end));
+>   1605			}
+>   1606	
+>   1607			xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+>   1608		}
+>   1609	
+>   1610		/*
+>   1611		 * Search the COW fork extent list even if we did not find a data fork
+>   1612		 * extent.  This serves two purposes: first this implements the
+>   1613		 * speculative preallocation using cowextsize, so that we also unshare
+>   1614		 * block adjacent to shared blocks instead of just the shared blocks
+>   1615		 * themselves.  Second the lookup in the extent list is generally faster
+>   1616		 * than going out to the shared extent tree.
+>   1617		 */
+>   1618		if (xfs_is_cow_inode(ip)) {
+>   1619			if (!ip->i_cowfp) {
+>   1620				ASSERT(!xfs_is_reflink_inode(ip));
+>   1621				xfs_ifork_init_cow(ip);
+>   1622			}
+>   1623			cow_eof = !xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb,
+>   1624					&ccur, &cmap);
+>   1625			if (!cow_eof && cmap.br_startoff <= offset_fsb) {
+>   1626				trace_xfs_reflink_cow_found(ip, &cmap);
+>   1627				goto found_cow;
+>   1628			}
+>   1629		}
+>   1630	
+>   1631		if (imap.br_startoff <= offset_fsb) {
+>   1632			/*
+>   1633			 * For reflink files we may need a delalloc reservation when
+>   1634			 * overwriting shared extents.   This includes zeroing of
+>   1635			 * existing extents that contain data.
+>   1636			 */
+>   1637			if (!xfs_is_cow_inode(ip) ||
+>   1638			    ((flags & IOMAP_ZERO) && imap.br_state != XFS_EXT_NORM)) {
+>   1639				trace_xfs_iomap_found(ip, offset, count, XFS_DATA_FORK,
+>   1640						&imap);
+>   1641				goto found_imap;
+>   1642			}
+>   1643	
+>   1644			xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+>   1645	
+>   1646			/* Trim the mapping to the nearest shared extent boundary. */
+>   1647			error = xfs_bmap_trim_cow(ip, &imap, &shared);
+>   1648			if (error)
+>   1649				goto out_unlock;
+>   1650	
+>   1651			/* Not shared?  Just report the (potentially capped) extent. */
+>   1652			if (!shared) {
+>   1653				trace_xfs_iomap_found(ip, offset, count, XFS_DATA_FORK,
+>   1654						&imap);
+>   1655				goto found_imap;
+>   1656			}
+>   1657	
+>   1658			/*
+>   1659			 * Fork all the shared blocks from our write offset until the
+>   1660			 * end of the extent.
+>   1661			 */
+>   1662			allocfork = XFS_COW_FORK;
+>   1663			end_fsb = imap.br_startoff + imap.br_blockcount;
+>   1664		} else {
+>   1665			/*
+>   1666			 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
+>   1667			 * pages to keep the chunks of work done where somewhat
+>   1668			 * symmetric with the work writeback does.  This is a completely
+>   1669			 * arbitrary number pulled out of thin air.
+>   1670			 *
+>   1671			 * Note that the values needs to be less than 32-bits wide until
+>   1672			 * the lower level functions are updated.
+>   1673			 */
+>   1674			count = min_t(loff_t, count, 1024 * PAGE_SIZE);
+>   1675			end_fsb = xfs_iomap_end_fsb(mp, offset, count);
+>   1676	
+>   1677			if (xfs_is_always_cow_inode(ip))
+>   1678				allocfork = XFS_COW_FORK;
+>   1679		}
+>   1680	
+>   1681		if (eof && offset + count > XFS_ISIZE(ip)) {
+>   1682			/*
+>   1683			 * Determine the initial size of the preallocation.
+>   1684			 * We clean up any extra preallocation when the file is closed.
+>   1685			 */
+>   1686			if (xfs_has_allocsize(mp))
+>   1687				prealloc_blocks = mp->m_allocsize_blocks;
+>   1688			else if (allocfork == XFS_DATA_FORK)
+>   1689				prealloc_blocks = xfs_iomap_prealloc_size(ip, allocfork,
+>   1690							offset, count, &icur);
+>   1691			else
+>   1692				prealloc_blocks = xfs_iomap_prealloc_size(ip, allocfork,
+>   1693							offset, count, &ccur);
+>   1694			if (prealloc_blocks) {
+>   1695				xfs_extlen_t	align;
+>   1696				xfs_off_t	end_offset;
+>   1697				xfs_fileoff_t	p_end_fsb;
+>   1698	
+>   1699				end_offset = XFS_ALLOC_ALIGN(mp, offset + count - 1);
+>   1700				p_end_fsb = XFS_B_TO_FSBT(mp, end_offset) +
+>   1701						prealloc_blocks;
+>   1702	
+>   1703				align = xfs_eof_alignment(ip);
+>   1704				if (align)
+>   1705					p_end_fsb = roundup_64(p_end_fsb, align);
+>   1706	
+>   1707				p_end_fsb = min(p_end_fsb,
+>   1708					XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes));
+>   1709				ASSERT(p_end_fsb > offset_fsb);
+>   1710				prealloc_blocks = p_end_fsb - end_fsb;
+>   1711			}
+>   1712		}
+>   1713	
+>   1714		/*
+>   1715		 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
+>   1716		 * them out if the write happens to fail.
+>   1717		 */
+>   1718		iomap_flags |= IOMAP_F_NEW;
+>   1719		if (allocfork == XFS_COW_FORK) {
+>   1720			error = xfs_bmapi_reserve_delalloc(ip, allocfork, offset_fsb,
+>   1721					end_fsb - offset_fsb, prealloc_blocks, &cmap,
+>   1722					&ccur, cow_eof);
+>   1723			if (error)
+>   1724				goto out_unlock;
+>   1725	
+>   1726			trace_xfs_iomap_alloc(ip, offset, count, allocfork, &cmap);
+>   1727			goto found_cow;
+>   1728		}
+>   1729	
+>   1730		error = xfs_bmapi_reserve_delalloc(ip, allocfork, offset_fsb,
+>   1731				end_fsb - offset_fsb, prealloc_blocks, &imap, &icur,
+>   1732				eof);
+>   1733		if (error)
+>   1734			goto out_unlock;
+>   1735	
+>   1736		trace_xfs_iomap_alloc(ip, offset, count, allocfork, &imap);
+>   1737	found_imap:
+>   1738		seq = xfs_iomap_inode_sequence(ip, iomap_flags);
+>   1739		xfs_iunlock(ip, lockmode);
+>   1740		return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, iomap_flags, seq);
+>   1741	
+>   1742	convert_delay:
+>   1743		xfs_iunlock(ip, lockmode);
+>   1744		truncate_pagecache(inode, offset);
+>   1745		error = xfs_bmapi_convert_delalloc(ip, XFS_DATA_FORK, offset,
+>   1746						   iomap, NULL);
+>   1747		if (error)
+>   1748			return error;
+>   1749	
+>   1750		trace_xfs_iomap_alloc(ip, offset, count, XFS_DATA_FORK, &imap);
+>   1751		return 0;
+>   1752	
+>   1753	found_cow:
+>   1754		if (imap.br_startoff <= offset_fsb) {
+>   1755			error = xfs_bmbt_to_iomap(ip, srcmap, &imap, flags, 0,
+>   1756					xfs_iomap_inode_sequence(ip, 0));
+>   1757			if (error)
+>   1758				goto out_unlock;
+>   1759		} else {
+>   1760			xfs_trim_extent(&cmap, offset_fsb,
+>   1761					imap.br_startoff - offset_fsb);
+>   1762		}
+>   1763	
+>   1764		iomap_flags |= IOMAP_F_SHARED;
+>   1765		seq = xfs_iomap_inode_sequence(ip, iomap_flags);
+>   1766		xfs_iunlock(ip, lockmode);
+>   1767		return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, iomap_flags, seq);
+>   1768	
+>   1769	out_unlock:
+>   1770		xfs_iunlock(ip, lockmode);
+>   1771		return error;
+>   1772	}
+>   1773	
+> 
+> -- 
+> 0-DAY CI Kernel Test Service
+> https://github.com/intel/lkp-tests/wiki
+> 
 
-Thanks,
-Miklos
