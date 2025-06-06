@@ -1,191 +1,98 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f178.google.com (mail-qk1-f178.google.com [209.85.222.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D93D2868A2;
-	Fri,  6 Jun 2025 10:43:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6722D288CBA
+	for <linux-xfs@vger.kernel.org>; Fri,  6 Jun 2025 13:55:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749206605; cv=none; b=S6AkuX2bVFYqmj/0riu5hyJkM3CFb8XQrIQOxLONXSlzV1J/F3vZVE1RyOGB6Gx95fJM3sGUXriNPaerrLAqM/nnmSLYXnTr9co8xi5kbBQxTpZRLiLx0IjGlUjeymfbHkdhJSXp4oimv0tDZXS4TDcf2UGEDs5U8hcp1QLulJ0=
+	t=1749218117; cv=none; b=IOZtqd02oS+KzNbxo0PrFTBuucQ3Inj62O7xXV9ErWbklldzE1dKVr4BSDUIJosjxJIhf9imnGa+7Hjd0dZ3TI6iIGLc/lRCLVcD3vlUQUX89wnECNNqnQ6+DC+M2xAJvIXXO7NjxYNaZuVexRDt0zxcH1fmtQ5M12zNGC/dLms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749206605; c=relaxed/simple;
-	bh=d3M2yJtpoAEDHmcTRFJLeuPtxCzJh5eZlvKgfhER6sk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rFJhCuI24j/VasHr91wl8jHN8xRWYiuzU46tq3haA0p35c+6hbcl3NFH3ufUOcWH2/9N/KXA7RF1wgwKB935IKA4Ep3as+DGOr537mS9i2ElOYgn/CJ2+KcqCJOfBMkw4XF7TcjCCMBpVFd3w8r056zIsZNH15OTtb8mwbipozs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b2lQfPKA; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749218117; c=relaxed/simple;
+	bh=BiBKkugoiM16l4QTDZj/vftTkuVh94Dm/j4qISoefgk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=GqY0FJOMPwvL6PA4W16pENNtF1DA+7Apb8d2P33S54y+F5f+i4ix9NYJHhXt4oasTR577o9FpLVCpvz8bdhvUHyi5zb0yUIv653RhDy44n3UwDtCanIYXIk3LKdybvzJYv6pt2vnyVoI0jOXZ2vbcXA6ZiEEk9mmTbFUuR3wc2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=dbsd8LJU; arc=none smtp.client-ip=209.85.222.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=szeredi.hu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b2lQfPKA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09A69C4CEEB;
-	Fri,  6 Jun 2025 10:43:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749206604;
-	bh=d3M2yJtpoAEDHmcTRFJLeuPtxCzJh5eZlvKgfhER6sk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=b2lQfPKA0L7XaPuZ61cSrM3FByq6PeZHd0eNDlO0k0LiGQwsAHvIlQ8khpbVLdWYO
-	 wkg0ytrwKzteT5w21yhTAlJWr/Q7iHH3/rcW6ZAosmY5E/EePXCIgFtDgnD78JbVw9
-	 yqsc4+bvNANvOv7GMPyulkzEmfLnVXNlMDQYbE1r/cg9uD7PKDeuNRp8E5pnI/6ckL
-	 KYQZ5yyKRqmnqPtvNx01r9V/CLJfNexHdV3lIvpJWFG6Uypn8NrBLtGPO5ZiKfOqkg
-	 3+N8TLCTTonS7Lo7PguzLvfzeoYHYGP8dYzzYp6Jl6Z1dPsZdEUijNm2+jng8JlPLK
-	 ElWJQ06/heL1g==
-Date: Fri, 6 Jun 2025 12:43:20 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, Yafang Shao <laoar.shao@gmail.com>, 
-	cem@kernel.org, linux-xfs@vger.kernel.org, 
-	Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
- data corruption
-Message-ID: <20250606-zickig-wirft-6c61ba630e2c@brauner>
-References: <CALOAHbDm7-byF8DCg1JH5rb4Yi8FBtrsicojrPvYq8AND=e6hQ@mail.gmail.com>
- <20250529042550.GB8328@frogsfrogsfrogs>
- <20250530-ahnen-relaxen-917e3bba8e2d@brauner>
- <20250530153847.GC8328@frogsfrogsfrogs>
- <aDuKgfi-CCykPuhD@dread.disaster.area>
- <20250603000327.GM8328@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="dbsd8LJU"
+Received: by mail-qk1-f178.google.com with SMTP id af79cd13be357-7d20f79a00dso282091285a.0
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Jun 2025 06:55:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=szeredi.hu; s=google; t=1749218114; x=1749822914; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=E7/mZixpkg0lei16mzPlvTFGBUK0AxMB+9TgdpByP7g=;
+        b=dbsd8LJURMowwmzicbKk5vnrTCyYpJpiLiOoDz7sBfbdgd/zpu6B3eLQBzs7kc+Lju
+         NT2AMqbudG6osFLzY+jsFRrfxwORAVw6RW7BPlWT6EKs5Ch74tAgh+u3xBgXQV8kZpQR
+         FUw0c93Q3C451+dSAF95dZJrUDVN8Z4IoVFgU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749218114; x=1749822914;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=E7/mZixpkg0lei16mzPlvTFGBUK0AxMB+9TgdpByP7g=;
+        b=QSCSQPKohMveU2GonbT9iuzv2OfKTsNGxY6n1dAm89K3uHvSaTLdHCLf76frcpgjdI
+         cbultWsStMuuchZac5CpI3LlzLSWdwFH4QP9Jkhr0SRudpF/sdTwMUmSrFdR+EA0MqBv
+         oa6iedAIMIWjME2F6NPU3+T9XGde0wGrE105l98A5n/+UuDkuWklZQmIKEsiM4VBaMrb
+         oTTy22/48aFQpy3rMa9PYFDx2unZnzT62uzgCLX6vUomCoc6ninJAYQMfJNPwxxY857m
+         iLyOyCAE8vrhbFCgMTHHqQijXnPd8coWIyvy0s+bVluKFlQAGmrMnqSo6DLYJ32aC5Zs
+         iA4w==
+X-Forwarded-Encrypted: i=1; AJvYcCXjlJoJf+/ELu3zlPvhy2BtNaEAhfWfAYy3vj4NZA4IGJT7QUIVsWi+svKe+T57qlyaZJIAJJz/040=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzuo1FJxtOdhZEiHsrViCgikupXxQZemmHzjSG2L0MB/GHxKAQ/
+	82IKmPddZVLvSmmNvMwI+NxnpIC36Vxc1MSo4Hbu1TIFWfiSIr5RXYe5wwgJ4509rB4qR8dv4Sh
+	oE5NZ2jeuVFa8ObkR4n20Yjk0260Ubaz2rEcEDgMePC3QBL5mkRff
+X-Gm-Gg: ASbGncuM3eL89HB9PIIlvC3vyQG2v0uMdBW0i/JH5SnjBcZuiwWMY5Fa4NVKeyVzYrv
+	ooJVi08euYFEeOOnrTqysElZ570WHfibySC56qhtsKCYAQRE3gWBlUPrZEq/5ldWmo0CkpSQDrb
+	NjapULrPjTdfzgBmVzqrauWUOxVZ7lhcQ=
+X-Google-Smtp-Source: AGHT+IHQlrI/OtlIWS2a2vIz47wRFPm1D8aQZ4bBhcElMWjypsbw77Uu87VP2HAYTCSIjvehXsNall5j9ttNQcsenUM=
+X-Received: by 2002:a05:622a:4c10:b0:476:91f1:9e5 with SMTP id
+ d75a77b69052e-4a5b9dbb8f0mr63968261cf.50.1749218101624; Fri, 06 Jun 2025
+ 06:55:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20250603000327.GM8328@frogsfrogsfrogs>
+References: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs>
+ <174787195588.1483178.6811285839793085547.stgit@frogsfrogsfrogs>
+ <CAJfpegsn2eBjy27rncxYBQ1heoiA1tme8oExF-d_C9DoFq34ow@mail.gmail.com> <20250531010844.GF8328@frogsfrogsfrogs>
+In-Reply-To: <20250531010844.GF8328@frogsfrogsfrogs>
+From: Miklos Szeredi <miklos@szeredi.hu>
+Date: Fri, 6 Jun 2025 15:54:50 +0200
+X-Gm-Features: AX0GCFt8wqjlMocidJZkmGlImqJ8eqE9iJOCP1TCcDw9PeehwnM-2y0bS2wSaQc
+Message-ID: <CAJfpegvwXqL_N0POa95KgPJT5mMXS2xxCojbGWABhFCZy8An+g@mail.gmail.com>
+Subject: Re: [PATCH 01/11] fuse: fix livelock in synchronous file put from
+ fuseblk workers
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, joannelkoong@gmail.com, 
+	linux-xfs@vger.kernel.org, bernd@bsbernd.com, John@groves.net
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Jun 02, 2025 at 05:03:27PM -0700, Darrick J. Wong wrote:
-> On Sun, Jun 01, 2025 at 09:02:25AM +1000, Dave Chinner wrote:
-> > On Fri, May 30, 2025 at 08:38:47AM -0700, Darrick J. Wong wrote:
-> > > On Fri, May 30, 2025 at 07:17:00AM +0200, Christian Brauner wrote:
-> > > > On Wed, May 28, 2025 at 09:25:50PM -0700, Darrick J. Wong wrote:
-> > > > > On Thu, May 29, 2025 at 10:50:01AM +0800, Yafang Shao wrote:
-> > > > > > Hello,
-> > > > > > 
-> > > > > > Recently, we encountered data loss when using XFS on an HDD with bad
-> > > > > > blocks. After investigation, we determined that the issue was related
-> > > > > > to writeback errors. The details are as follows:
-> > > > > > 
-> > > > > > 1. Process-A writes data to a file using buffered I/O and completes
-> > > > > > without errors.
-> > > > > > 2. However, during the writeback of the dirtied pagecache pages, an
-> > > > > > I/O error occurs, causing the data to fail to reach the disk.
-> > > > > > 3. Later, the pagecache pages may be reclaimed due to memory pressure,
-> > > > > > since they are already clean pages.
-> > > > > > 4. When Process-B reads the same file, it retrieves zeroed data from
-> > > > > > the bad blocks, as the original data was never successfully written
-> > > > > > (IOMAP_UNWRITTEN).
-> > > > > > 
-> > > > > > We reviewed the related discussion [0] and confirmed that this is a
-> > > > > > known writeback error issue. While using fsync() after buffered
-> > > > > > write() could mitigate the problem, this approach is impractical for
-> > > > > > our services.
-> > > > > > 
-> > > > > > Instead, we propose introducing configurable options to notify users
-> > > > > > of writeback errors immediately and prevent further operations on
-> > > > > > affected files or disks. Possible solutions include:
-> > > > > > 
-> > > > > > - Option A: Immediately shut down the filesystem upon writeback errors.
-> > > > > > - Option B: Mark the affected file as inaccessible if a writeback error occurs.
-> > > > > > 
-> > > > > > These options could be controlled via mount options or sysfs
-> > > > > > configurations. Both solutions would be preferable to silently
-> > > > > > returning corrupted data, as they ensure users are aware of disk
-> > > > > > issues and can take corrective action.
-> > > > > > 
-> > > > > > Any suggestions ?
-> > > > > 
-> > > > > Option C: report all those write errors (direct and buffered) to a
-> > > > > daemon and let it figure out what it wants to do:
-> > > > > 
-> > > > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=health-monitoring_2025-05-21
-> > > > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-monitoring-rust_2025-05-21
-> > > > > 
-> > > > > Yes this is a long term option since it involves adding upcalls from the
-> > > > 
-> > > > I hope you don't mean actual usermodehelper upcalls here because we
-> > > > should not add any new ones. If you just mean a way to call up from a
-> > > > lower layer than that's obviously fine.
-> > > 
-> > > Correct.  The VFS upcalls to XFS on some event, then XFS queues the
-> > > event data (or drops it) and waits for userspace to read the queued
-> > > events.  We're not directly invoking a helper program from deep in the
-> > > guts, that's too wild even for me. ;)
-> > > 
-> > > > Fwiw, have you considered building this on top of a fanotify extension
-> > > > instead of inventing your own mechanism for this?
-> > > 
-> > > I have, at various stages of this experiment.
-> > > 
-> > > Originally, I was only going to export xfs-specific metadata events
-> > > (e.g. this AG's inode btree index is bad) so that the userspace program
-> > > (xfs_healer) could initiate a repair against the broken pieces.
-> > > 
-> > > At the time I thought it would be fun to experiment with an anonfd file
-> > > that emitted jsonp objects so that I could avoid the usual C struct ABI
-> > > mess because json is easily parsed into key-value mapping objects in a
-> > > lot of languages (that aren't C).  It later turned out that formatting
-> > > the json is rather more costly than I thought even with seq_bufs, so I
-> > > added an alternate format that emits boring C structures.
-> > > 
-> > > Having gone back to C structs, it would be possibly (and possibly quite
-> > > nice) to migrate to fanotify so that I don't have to maintain a bunch of
-> > > queuing code.  But that can have its own drawbacks, as Ted and I
-> > > discovered when we discussed his patches that pushed ext4 error events
-> > > through fanotify:
-> > > 
-> > > For filesystem metadata events, the fine details of representing that
-> > > metadata in a generic interface gets really messy because each
-> > > filesystem has a different design.
-> > 
-> > Perhaps that is the wrong approach. The event just needs to tell
-> > userspace that there is a metadata error, and the fs specific agent
-> > that receives the event can then pull the failure information from
-> > the filesystem through a fs specific ioctl interface.
-> > 
-> > i.e. the fanotify event could simply be a unique error, and that
-> > gets passed back into the ioctl to retreive the fs specific details
-> > of the failure. We might not even need fanotify for this - I suspect
-> > that we could use udev events to punch error ID notifications out to
-> > userspace to trigger a fs specific helper to go find out what went
-> > wrong.
-> 
-> I'm not sure if you're addressing me or brauner, but I think it would be
-> even simpler to retain the current design where events are queued to our
-> special xfs anonfd and read out by userspace.  Using fanotify as a "door
-> bell" to go look at another fd is ... basically poll() but far more
-> complicated than it ought to be.  Pounding udev with events can result
-> in userspace burning a lot of energy walking the entire rule chain.
+On Sat, 31 May 2025 at 03:08, Darrick J. Wong <djwong@kernel.org> wrote:
 
-I don't think we need to rush any of this. My main concern is that if we
-come up with something then I want it to be able to be used by other
-filesystems as this seems something that is generally very useful. By
-using fanotify we implicitly enable this which is why I'm asking.
+> The best reason that I can think of is that normally the process that
+> owns the fd (and hence is releasing it) should be made to wait for
+> the release, because normally we want processes that generate file
+> activity to pay those costs.
 
-I don't want the outcome to be that there's a filesystem with a very
-elaborate and detailed scheme that cannot be used by another one and
-then we end up with slightly different implementations of the same
-underlying concept. And so it will be impossible for userspace to
-consume correctly even if abstracted in multiple libraries.
+That argument seems to apply to all fuse variants.  But fuse does get
+away with async release and I don't see why fuseblk would be different
+in this respect.
 
-I think udev is the wrong medium for this and I'm pretty sure that the
-udev maintainers agree with me on this.
+Trying to hack around the problems of sync release with a task flag
+that servers might or might not have set does not feel a very robust
+solution.
 
-I think this specific type of API would really benefit from gathering
-feedback from userspace. There's All Systems Go in Berlin in September
-and that might not be the worst time to present what you did and give a
-little demo. I'm not sure how fond you are of traveling though rn:
-https://all-systems-go.io/
+> Also: is it a bug that the kernel only sends FUSE_DESTROY on umount for
+> fuseblk filesystems?  I'd have thought that you'd want to make umount
+> block until the fuse server is totally done.  OTOH I guess I could see
+> an argument for not waiting for potentially hung servers, etc.
 
-> 
-> > Keeping unprocessed failures in an internal fs queue isn't a big
-> > deal; it's not a lot of memory, and it can be discarded on unmount.
-> > At that point we know that userspace did not care about the
-> > failure and is not going to be able to query about the failure in
-> > future, so we can just throw it away.
-> > 
-> > This also allows filesystems to develop such functionality in
-> > parallel, allowing us to find commonality and potential areas for
-> > abstraction as the functionality is developed, rahter than trying to
-> > come up with some generic interface that needs to support all
-> > possible things we can think of right now....
-> 
-> Agreed.  I don't think Ted or Jan were enthusiastic about trying to make
-> a generic fs metadata event descriptor either.
+It's a potential DoS.  With allow_root we could arguably enable
+FUSE_DESTROY, since the mounter is explicitly acknowledging this DoS
+possibilty.
+
+Thanks,
+Miklos
