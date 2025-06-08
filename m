@@ -1,23 +1,24 @@
 Received: from neil.brown.name (neil.brown.name [103.29.64.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 014042AE6D;
-	Sun,  8 Jun 2025 23:10:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2242620ADEE;
+	Sun,  8 Jun 2025 23:10:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.29.64.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749424212; cv=none; b=KMl2p8ka/CniLNHbaygEdQw76t5PC9+wiL1ZjyBMHb9UJd3E18sRK3VCZWhD6DVK7zxQMYGmeTY+RoWQZU/9GradBQ36Tg3UpkpaKMGocFt10h9PEuNgthylWErbSl0xBLgcYXvBbBSjyVjFxaEA8kJzKXJcTQNuDjRuZhWypFQ=
+	t=1749424212; cv=none; b=Byh7ZMa2TzJIB+vI2DJxj0ymp/caVFHHNSNEhLsHbgegaKzxr9qccuSlP789jeN8pkxIojLbuEnfNF9xqFMrcypwaL4yC2hRS77S+SjYaL48fVKSBB7qZyJkN543YYUoLpmqYpzL4zE0xZayr4B5rsdYS2ycl/dKMqlUjD2VEvg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1749424212; c=relaxed/simple;
-	bh=Afuue44CwgF//wFbdoNXEChynbl6KEZWKopL/hySyt8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AUJjZ9/nJDEJ44n8oD6sL2naHAZtI+oowQZyNLZrxPnlmdiuCx81uF5i3UfV9+Zuj2dIp3bJ/m45hEfWuQcXboaJNwkT3hDMA88Wg4s/Iv5N8qj2MMGYsbc1esGBLgUbu89LDoFjhm8XePVoWHi4zvqbaCT8j6jGOsYV5Qfi9QY=
+	bh=nYuk6jE4ZVNIYydUqLS4Mqn8tWDzVCXZkSneP/JlYX0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=IIYGuXJP7jszk6/pes4zNAwom2MgUqZzxW+u344e2vABXWchVixO0mF/gyoRJ2+1VflXXbwERH6+aqdRlkEjhFLU6BZxa4+l8VpvNGZ45GkbFDiDg2P0mFG0yDZYiL3TvN8rgdvUgh0F3O53dbj3UDfN/knGKMRQjtc/Q+49Xs8=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name; spf=pass smtp.mailfrom=neil.brown.name; arc=none smtp.client-ip=103.29.64.221
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=neil.brown.name
 Received: from 196.186.233.220.static.exetel.com.au ([220.233.186.196] helo=home.neil.brown.name)
 	by neil.brown.name with esmtp (Exim 4.95)
 	(envelope-from <mr@neil.brown.name>)
-	id 1uOP9O-005veo-5K;
-	Sun, 08 Jun 2025 23:10:02 +0000
+	id 1uOP9Q-005veu-3M;
+	Sun, 08 Jun 2025 23:10:04 +0000
 From: NeilBrown <neil@brown.name>
 To: Alexander Viro <viro@zeniv.linux.org.uk>,
 	Christian Brauner <brauner@kernel.org>,
@@ -39,10 +40,12 @@ Cc: linux-fsdevel@vger.kernel.org,
 	linux-unionfs@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/5] Minor cleanup preparation for some dir-locking API changes
-Date: Mon,  9 Jun 2025 09:09:32 +1000
-Message-ID: <20250608230952.20539-1-neil@brown.name>
+Subject: [PATCH 3/5] coda: use iterate_dir() in coda_readdir()
+Date: Mon,  9 Jun 2025 09:09:35 +1000
+Message-ID: <20250608230952.20539-4-neil@brown.name>
 X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20250608230952.20539-1-neil@brown.name>
+References: <20250608230952.20539-1-neil@brown.name>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,56 +54,44 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The following 5 patches provide further cleanup that serves as
-preparation for some dir-locking API changes that I want to make.  The
-most interesting is the last which makes another change to vfs_mkdir().
-As well as returning the dentry or consuming it on failure (a recent
-change) it now also unlocks on failure.  This will be needed when we
-transition to locking just the dentry, not the whole directory.
+The code in coda_readdir() is nearly identical to iterate_dir().
+Differences are:
+ - iterate_dir() is killable
+ - iterate_dir() adds permission checking and accessing notifications
 
-This leaves some rather clumsy code in overlayfs.  Overlayfs sometimes
-takes a rename lock (two directories) and then possibly does a
-vfs_mkdir() in one of those directories.  When that fails we now need to
-unlock only the other directory.
+I believe these are not harmful for coda so it is best to use
+iterate_dir() directly.  This will allow locking changes without
+touching the code in coda.
 
-I hope to go through overlayfs to narrow the directory locking so each
-lock only covers a single operation (possibly including a lookup first).
-That should remove the clumsiness and will also be needed for the
-proposed API change.
+Signed-off-by: NeilBrown <neil@brown.name>
+---
+ fs/coda/dir.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-As well as the cleanups here I have a few for smb/server.  I will send
-those separately as they deserve careful review by the smb team and I
-don't want them to be buried in this patch set.
+diff --git a/fs/coda/dir.c b/fs/coda/dir.c
+index ab69d8f0cec2..ca9990017265 100644
+--- a/fs/coda/dir.c
++++ b/fs/coda/dir.c
+@@ -429,17 +429,9 @@ static int coda_readdir(struct file *coda_file, struct dir_context *ctx)
+ 	cfi = coda_ftoc(coda_file);
+ 	host_file = cfi->cfi_container;
+ 
+-	if (host_file->f_op->iterate_shared) {
+-		struct inode *host_inode = file_inode(host_file);
+-		ret = -ENOENT;
+-		if (!IS_DEADDIR(host_inode)) {
+-			inode_lock_shared(host_inode);
+-			ret = host_file->f_op->iterate_shared(host_file, ctx);
+-			file_accessed(host_file);
+-			inode_unlock_shared(host_inode);
+-		}
++	ret = iterate_dir(host_file, ctx);
++	if (ret != -ENOTDIR)
+ 		return ret;
+-	}
+ 	/* Venus: we must read Venus dirents from a file */
+ 	return coda_venus_readdir(coda_file, ctx);
+ }
+-- 
+2.49.0
 
-After these, and the mentioned overlayfs changes, I have a series which
-adds a collection of APIs with names like "lookup_and_lock()" which
-combine the locking and the lookup, and then a set which changes all
-code which currently locks a directory for name-based operations to
-instead use the new look_and_lock() interfaces.  This will mean that the
-changes to directory locking can be done in one central place.
-
-After that there are a few more cleanups to stop filesystems from usng
-d_drop() in the middle of name operations (at the end is OK, but not in
-the middle) and then the core patches for this work which introduce an
-alternate way to provide all the locking that the VFS needs for name
-operations without taking i_rw_sem.  Filesystems can then opt into using
-only this locking and to not depend on i_rw_sem.  This allows create and
-remove of different names is the same directory to continue concurrently
-with each other and with renames.  Renames are also concurrent though
-cross-directory renames block some other cross-directory renames in the
-same part of the tree.
-
-Note that i_rw_sem will still be used for the target of rmdir, and will
-still be held as a shared lock by readdir() so that we never try reading
-in a directory being removed.  It might still be used (shared) for
-lookups for the same reason, though I haven't completely settled my
-design there yet.
-
-Thanks,
-NeilBrown
-
- [PATCH 1/5] VFS: merge lookup_one_qstr_excl_raw() back into
- [PATCH 2/5] VFS: Minor fixes for porting.rst
- [PATCH 3/5] coda: use iterate_dir() in coda_readdir()
- [PATCH 4/5] exportfs: use lookup_one_unlocked()
- [PATCH 5/5] Change vfs_mkdir() to unlock on failure.
