@@ -1,24 +1,24 @@
 Received: from neil.brown.name (neil.brown.name [103.29.64.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31A0820F069;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 223CC204F73;
 	Sun,  8 Jun 2025 23:10:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.29.64.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749424214; cv=none; b=N2Q99zu8wmdyI3I2k5vwEK2F4pugIYSIdBRFRxG1y0ocaDQAme4c3I8/kJfqF2el2N7kaV1yjHMHPA6BjFRw7y+BPIMdDA1JKrh9H8XDgrtIar6mHmfltXTsVehlmZ9ctAT4p6Pc1EfSnpHeDVSM+Oqo9WjhgpqoMML3w3F/tFI=
+	t=1749424214; cv=none; b=Tod7PjKnpofcZOdlJg+wKjLvkW4CeDsMKtBQhHkl7oGYnFKf5xhSsxVfQl5lIVo9pVOCgf+YniwSNAyVPnRjB/zS9J6KkMyisKGa0SnirhBZrLcR6bbZKQGjZ3cKuh7/BSuPBO7xvbHd938CFGCa4Au3eEY0Dh2XszGJ6+oLtX8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1749424214; c=relaxed/simple;
-	bh=9v7z629pikTfN/M1vRkHPo8KBPBCqPA5CvPZSsA0DSE=;
+	bh=ObvnvO3+t12hpNayz3l7yHkc7YCHVilu1hZ99j0WSs0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=izpnGpWT91hp8Ct1DdOOO/Ek6U0RHLFhWmuCEEY+9aNpKOaGqx7wssmhPYKjW6r2SetX0Mk2ap3/nPdzOxyClwhWkt5vexu9thlelDoceYf/a2tGvngk71t5iP6Ge5V3LxWXhg2y6t9rR2gQjccfzcUQCUH63ZlTs7AT9O8ixS4=
+	 MIME-Version; b=ZYrQw/IiqY145xppo+Fjjva7t61RrvlrUZ1hwx2c+TQJReY8+DYo1+MCRwsTZa+oC330HxltOW8YCDCArHimDwj4lzKZyt7UcjdTzg1dqkUzQYeqRuSeKpxwbJgNd1tMNfBu+aOL6d/CHUE+32XCVHYD8Zg8pP7iDCxOIiHnraQ=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name; spf=pass smtp.mailfrom=neil.brown.name; arc=none smtp.client-ip=103.29.64.221
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=neil.brown.name
 Received: from 196.186.233.220.static.exetel.com.au ([220.233.186.196] helo=home.neil.brown.name)
 	by neil.brown.name with esmtp (Exim 4.95)
 	(envelope-from <mr@neil.brown.name>)
-	id 1uOP9O-005veq-Qq;
-	Sun, 08 Jun 2025 23:10:02 +0000
+	id 1uOP9Q-005vf1-O1;
+	Sun, 08 Jun 2025 23:10:04 +0000
 From: NeilBrown <neil@brown.name>
 To: Alexander Viro <viro@zeniv.linux.org.uk>,
 	Christian Brauner <brauner@kernel.org>,
@@ -40,9 +40,9 @@ Cc: linux-fsdevel@vger.kernel.org,
 	linux-unionfs@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/5] VFS: merge lookup_one_qstr_excl_raw() back into lookup_one_qstr_excl()
-Date: Mon,  9 Jun 2025 09:09:33 +1000
-Message-ID: <20250608230952.20539-2-neil@brown.name>
+Subject: [PATCH 4/5] exportfs: use lookup_one_unlocked()
+Date: Mon,  9 Jun 2025 09:09:36 +1000
+Message-ID: <20250608230952.20539-5-neil@brown.name>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250608230952.20539-1-neil@brown.name>
 References: <20250608230952.20539-1-neil@brown.name>
@@ -54,84 +54,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The effect of lookup_one_qstr_excl_raw() can be achieved by passing
-LOOKUP_CREATE() to lookup_one_qstr_excl() - we don't need a separate
-function.
+rather than locking the directory and using lookup_one(), just use
+lookup_one_unlocked().  This keeps locking code centralised.
 
 Signed-off-by: NeilBrown <neil@brown.name>
 ---
- fs/namei.c | 37 ++++++++++++++-----------------------
- 1 file changed, 14 insertions(+), 23 deletions(-)
+ fs/exportfs/expfs.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/fs/namei.c b/fs/namei.c
-index 4bb889fc980b..dc42bfac5c57 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -1665,9 +1665,17 @@ static struct dentry *lookup_dcache(const struct qstr *name,
- 	return dentry;
- }
+diff --git a/fs/exportfs/expfs.c b/fs/exportfs/expfs.c
+index cdefea17986a..d3e55de4a2a2 100644
+--- a/fs/exportfs/expfs.c
++++ b/fs/exportfs/expfs.c
+@@ -549,15 +549,13 @@ exportfs_decode_fh_raw(struct vfsmount *mnt, struct fid *fid, int fh_len,
+ 			goto err_result;
+ 		}
  
--static struct dentry *lookup_one_qstr_excl_raw(const struct qstr *name,
--					       struct dentry *base,
--					       unsigned int flags)
-+/*
-+ * Parent directory has inode locked exclusive.  This is one
-+ * and only case when ->lookup() gets called on non in-lookup
-+ * dentries - as the matter of fact, this only gets called
-+ * when directory is guaranteed to have no in-lookup children
-+ * at all.
-+ * Will return -ENOENT if name isn't found and LOOKUP_CREATE wasn't passed.
-+ * Will return -EEXIST if name is found and LOOKUP_EXCL was passed.
-+ */
-+struct dentry *lookup_one_qstr_excl(const struct qstr *name,
-+				    struct dentry *base, unsigned int flags)
- {
- 	struct dentry *dentry;
- 	struct dentry *old;
-@@ -1675,7 +1683,7 @@ static struct dentry *lookup_one_qstr_excl_raw(const struct qstr *name,
- 
- 	dentry = lookup_dcache(name, base, flags);
- 	if (dentry)
--		return dentry;
-+		goto found;
- 
- 	/* Don't create child dentry for a dead directory. */
- 	dir = base->d_inode;
-@@ -1691,24 +1699,7 @@ static struct dentry *lookup_one_qstr_excl_raw(const struct qstr *name,
- 		dput(dentry);
- 		dentry = old;
- 	}
--	return dentry;
--}
--
--/*
-- * Parent directory has inode locked exclusive.  This is one
-- * and only case when ->lookup() gets called on non in-lookup
-- * dentries - as the matter of fact, this only gets called
-- * when directory is guaranteed to have no in-lookup children
-- * at all.
-- * Will return -ENOENT if name isn't found and LOOKUP_CREATE wasn't passed.
-- * Will return -EEXIST if name is found and LOOKUP_EXCL was passed.
-- */
--struct dentry *lookup_one_qstr_excl(const struct qstr *name,
--				    struct dentry *base, unsigned int flags)
--{
--	struct dentry *dentry;
--
--	dentry = lookup_one_qstr_excl_raw(name, base, flags);
-+found:
- 	if (IS_ERR(dentry))
- 		return dentry;
- 	if (d_is_negative(dentry) && !(flags & LOOKUP_CREATE)) {
-@@ -2790,7 +2781,7 @@ struct dentry *kern_path_locked_negative(const char *name, struct path *path)
- 	if (unlikely(type != LAST_NORM))
- 		return ERR_PTR(-EINVAL);
- 	inode_lock_nested(parent_path.dentry->d_inode, I_MUTEX_PARENT);
--	d = lookup_one_qstr_excl_raw(&last, parent_path.dentry, 0);
-+	d = lookup_one_qstr_excl(&last, parent_path.dentry, LOOKUP_CREATE);
- 	if (IS_ERR(d)) {
- 		inode_unlock(parent_path.dentry->d_inode);
- 		return d;
+-		inode_lock(target_dir->d_inode);
+-		nresult = lookup_one(mnt_idmap(mnt), &QSTR(nbuf), target_dir);
++		nresult = lookup_one_unlocked(mnt_idmap(mnt), &QSTR(nbuf), target_dir);
+ 		if (!IS_ERR(nresult)) {
+ 			if (unlikely(nresult->d_inode != result->d_inode)) {
+ 				dput(nresult);
+ 				nresult = ERR_PTR(-ESTALE);
+ 			}
+ 		}
+-		inode_unlock(target_dir->d_inode);
+ 		/*
+ 		 * At this point we are done with the parent, but it's pinned
+ 		 * by the child dentry anyway.
 -- 
 2.49.0
 
