@@ -1,88 +1,188 @@
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 386F77FD;
-	Mon,  9 Jun 2025 12:39:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2C9125742C
+	for <linux-xfs@vger.kernel.org>; Mon,  9 Jun 2025 13:00:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749472750; cv=none; b=B29yHXlZED+ZfLsGiNJgT1x/1wGNuY2BXDgbRl7B09WH72tc/KlwNfH7ZOWsw1gVgD04u6fN0jx91CSTSgUilVFyu5p6eCNNTQrvyhCS985kkSaDGJFx4DWAeyq1D498J7tflb/dQrxiNh/K9uy+ZBTgwVMaRmpje6ip34qBF7A=
+	t=1749474035; cv=none; b=s33yu6bSy2xTVQelpNSLB1s0Vjri780b+YegAUy2P7QYN0SnSMSXFZe/YIk2GUnlVbjiaQSRMh5J8lXKFthd8xX7I1Xg1bEniAOORe633B8uTazr0hilqx2W1n7eGZeyzev0gRziqIVPkqCAkry5Yxr9d33svtE7swoF6yy4XC0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749472750; c=relaxed/simple;
-	bh=fqrOw0E/bCqrWaCiG1SA0VX//BhvXNIedkaN/GLwOWA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fwFTyvYviKHpL5MhYXARmvLheW+yb9upXYo6olO9PbYKQkhX6sxHftxJL3O1p3KotbX0mi7tx/zxHTwIF+yHaJDswABUor8iSnftHgTpwe7Ql+u+8Y0uoxBdVA3SHcUdwO4hYVh7B1ibcSgQKCCX3J+fgVmSnrYZxJGQDvCm82k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IWHP0QWy; arc=none smtp.client-ip=209.85.218.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1749474035; c=relaxed/simple;
+	bh=3xhl2LNu/wRAF+quPDBiV6VhMbSKSQbC+rt012wC4vo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MpCErNsmdJ48tWsRMDJnSjM9otrNxVlHRRMtv308BUdJh1oFIrt62IPg5XmT8uVkyqRLvWUEpdJ15umrPeVQZMrcWOm26nywsXoaxPkQ1VZzrBfA7yIOLJZ0g4RfnJRDpl9Lep7TrdPG0winb+PcDx+ViPLT6XlTUWUThGzEVUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=ACshVvNF; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=ENhJaAes; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=ACshVvNF; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=ENhJaAes; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IWHP0QWy"
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-ad51ba0af48so994634866b.0;
-        Mon, 09 Jun 2025 05:39:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1749472747; x=1750077547; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=fqrOw0E/bCqrWaCiG1SA0VX//BhvXNIedkaN/GLwOWA=;
-        b=IWHP0QWyT1gwPmCksg2r5CZ9fcijsI4I6u+7mfyxYiIsXNSdUkHujwYKD5WphNrtWX
-         IWAiZ0H0EZipsmgk3Q79zzPapAYueOh2y3IqW3Ud0N5pE+8r1wbwTg/adTGxI5YihEle
-         FI4i1OEDvVyRBeq4ryz7GbHIgKGeLKDBzkhBelUjaA8i7Aw18oXtkRRmoTjtitkMFIFd
-         pddDEy4P+k4PFwTYjwx40LodLgUAVtROW9gr8wuwzsxmRo6d+B8UlgNzVx7dLmX5U8n8
-         7yiisLDK6CxDHjlqpIeRUXAG7jl7VA8YUaw6IeRiPUWHYNrKKpPesj1IzTRovatIPGki
-         ijDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749472747; x=1750077547;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=fqrOw0E/bCqrWaCiG1SA0VX//BhvXNIedkaN/GLwOWA=;
-        b=CxkNjKE28hx3AGR6wFETfIyP8LPpFUGyEGNA8lUUiAJoAxz+N0KJl8GAQbTREeBpsj
-         WiVoTpr4K0TkPA+cERQ0mRBdndK5MRJTqN/3M6bt5DQ6FVclKnz7arWwTL8X9t4penk6
-         Jk/iMrPHKNOkhT/xfZriN9LLA379UbcclxyzioI5MhIpCqqi3A32Gx1C0/2+xO2Qh2v9
-         O3SmUEzOgUdk+OPFWedoi4gvLgs0ZDkTyQpGOIdm8xGIoP6pdf12L62jU/xhI1e7Jk1s
-         E55oYC0Jj7M2wS1P1ZJkCyZFAps54RfoFvMUgHizpnEWHlGCKMfkll+mckXKKUp/weR+
-         IGCg==
-X-Forwarded-Encrypted: i=1; AJvYcCUOGVf8XHHLj4VKOh58kBln5rqm4CvFIavnQkAfwEBLhXhV4HMympVUnkANXr5d1ENrzn0Wpfel5VC/rZlj@vger.kernel.org, AJvYcCV1tWcYlEZlHTFBYowa70BbUv3Z+1P7KYZWpKFg14vi0Hbh0wLLL4dcgnfnaEwtROLtpz6v7x5RmzCY@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz4fs9/4hMXRjSg4Mgw43DfuYqEPLXTexQRxqavP9zYDw5XRTjh
-	WB2jpeCKcRzmrNsx66uS6gEp/7M51Swscv+bab1/1q15o+oyrZLnzCNJuIzk8GJHV3ZxzkqTN4T
-	wrCDtNTOiauMKb1sYbvY5r+u8KpeHqA==
-X-Gm-Gg: ASbGnctuTjL3vsQKN6YyCHA9KTn6eO4Qr8WR38s96sV5gMp8rgi1WRHILek6ORcaumL
-	RqI/el4CvFQOWpdGk/93B3BHxGGACdWA2znSPGFJyEDIPxAqbOn/OQv6pkAHiBLbsH1Eqos1eaL
-	s4ZELdprHIU46Hax1FQ9ZwQRD/MMcC0WDnLxN4fbkziRnso2Zggob+b5IXORbxsh0kwv5iPKHXk
-	g==
-X-Google-Smtp-Source: AGHT+IEJYvarobZcAdaW5IT1NR/x/GLAH4MEaEffy7c3klgYm/UeXzQeiX2kIQHx/00F90lNkIKJr5m7q2tXUGjcy68=
-X-Received: by 2002:a17:907:7eaa:b0:ad2:e08:e9e2 with SMTP id
- a640c23a62f3a-ade1aaac5b0mr1043640166b.27.1749472747311; Mon, 09 Jun 2025
- 05:39:07 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="ACshVvNF";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="ENhJaAes";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="ACshVvNF";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="ENhJaAes"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id BB95B2117D;
+	Mon,  9 Jun 2025 13:00:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1749474031; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3pP6nhn7jj2JVMUX408uMm7p8lqzIg3XBb7vL5PGrM4=;
+	b=ACshVvNFzhGot4hSZC0pUBKX5bxt3ChAyMUPqAFM1Bd4IFfZz7P3Kc9ElYTuUavil0SMD8
+	vKe72D4KU8q0z0oUZTy4H7NANXo0EE6ridw7pVEUUgnfTKNuuzDt90EAwUUWJFE551BlnB
+	BG4sgjTrb9IJ5TeA7OVMSxRPzb4gEts=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1749474031;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3pP6nhn7jj2JVMUX408uMm7p8lqzIg3XBb7vL5PGrM4=;
+	b=ENhJaAesi/jyHTO5LdDX5uZ0VQZWkh4bZe57XzkuKVfj0C/ppnWMyVfaNECyd0PX6rH56V
+	E8aqA/u23Idu3TCA==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=ACshVvNF;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=ENhJaAes
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1749474031; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3pP6nhn7jj2JVMUX408uMm7p8lqzIg3XBb7vL5PGrM4=;
+	b=ACshVvNFzhGot4hSZC0pUBKX5bxt3ChAyMUPqAFM1Bd4IFfZz7P3Kc9ElYTuUavil0SMD8
+	vKe72D4KU8q0z0oUZTy4H7NANXo0EE6ridw7pVEUUgnfTKNuuzDt90EAwUUWJFE551BlnB
+	BG4sgjTrb9IJ5TeA7OVMSxRPzb4gEts=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1749474031;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3pP6nhn7jj2JVMUX408uMm7p8lqzIg3XBb7vL5PGrM4=;
+	b=ENhJaAesi/jyHTO5LdDX5uZ0VQZWkh4bZe57XzkuKVfj0C/ppnWMyVfaNECyd0PX6rH56V
+	E8aqA/u23Idu3TCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id AA505137FE;
+	Mon,  9 Jun 2025 13:00:31 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id JCWJKe/aRmisVgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Mon, 09 Jun 2025 13:00:31 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 39E20A094C; Mon,  9 Jun 2025 15:00:31 +0200 (CEST)
+Date: Mon, 9 Jun 2025 15:00:31 +0200
+From: Jan Kara <jack@suse.cz>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: NeilBrown <neil@brown.name>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Chuck Lever <chuck.lever@oracle.com>, 
+	Amir Goldstein <amir73il@gmail.com>, Jan Harkes <jaharkes@cs.cmu.edu>, 
+	David Howells <dhowells@redhat.com>, Tyler Hicks <code@tyhicks.com>, 
+	Miklos Szeredi <miklos@szeredi.hu>, Carlos Maiolino <cem@kernel.org>, linux-fsdevel@vger.kernel.org, 
+	coda@cs.cmu.edu, codalist@coda.cs.cmu.edu, linux-nfs@vger.kernel.org, 
+	netfs@lists.linux.dev, ecryptfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/5] coda: use iterate_dir() in coda_readdir()
+Message-ID: <6zirxkpkdrtpcoewopaaotmw4jpjvjmqq4tijudvrpeo4227pi@hyljuie6ngem>
+References: <20250608230952.20539-1-neil@brown.name>
+ <20250608230952.20539-4-neil@brown.name>
+ <8f2bf3aed5d7bd005adcdeaa51c02c7aa9ca14ba.camel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250606233803.1421259-1-joannelkoong@gmail.com> <aEZly7K9Uok5KBtq@infradead.org>
-In-Reply-To: <aEZly7K9Uok5KBtq@infradead.org>
-From: Anuj gupta <anuj1072538@gmail.com>
-Date: Mon, 9 Jun 2025 18:08:30 +0530
-X-Gm-Features: AX0GCFsaD1avfJtWh4Yp8VkfRfuEKOzoktyawjS59zkwCY7IT6s7SVqtZsBThWY
-Message-ID: <CACzX3AsfbJjNUaXEX6-497x+uzHptrxM=wTUnDwy_tH6jAEMTQ@mail.gmail.com>
-Subject: Re: [PATCH v1 0/8] fuse: use iomap for buffered writes + writeback
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Joanne Koong <joannelkoong@gmail.com>, miklos@szeredi.hu, djwong@kernel.org, 
-	brauner@kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	bernd.schubert@fastmail.fm, kernel-team@meta.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8f2bf3aed5d7bd005adcdeaa51c02c7aa9ca14ba.camel@kernel.org>
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[21];
+	MIME_TRACE(0.00)[0:+];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	MISSING_XM_UA(0.00)[];
+	FREEMAIL_CC(0.00)[brown.name,zeniv.linux.org.uk,kernel.org,suse.cz,oracle.com,gmail.com,cs.cmu.edu,redhat.com,tyhicks.com,szeredi.hu,vger.kernel.org,coda.cs.cmu.edu,lists.linux.dev];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.com:email,suse.cz:dkim]
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: BB95B2117D
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Score: -4.01
 
-On Mon, Jun 9, 2025 at 10:10=E2=80=AFAM Christoph Hellwig <hch@infradead.or=
-g> wrote:
->
-> Can you also point to a branch or at least tell the baseline?
-> The patches won't apply against Linus' 6.16-rc tree.
->
-Yes I had a hard time too, figuring that out. FWIW, it applies fine on
-top of this branch [1]. It would be a great, if base commit can shared
-in the next iterations.
+On Mon 09-06-25 08:17:15, Jeff Layton wrote:
+> On Mon, 2025-06-09 at 09:09 +1000, NeilBrown wrote:
+> > The code in coda_readdir() is nearly identical to iterate_dir().
+> > Differences are:
+> >  - iterate_dir() is killable
+> >  - iterate_dir() adds permission checking and accessing notifications
+> > 
+> > I believe these are not harmful for coda so it is best to use
+> > iterate_dir() directly.  This will allow locking changes without
+> > touching the code in coda.
+> > 
+> > Signed-off-by: NeilBrown <neil@brown.name>
+> > ---
+> >  fs/coda/dir.c | 12 ++----------
+> >  1 file changed, 2 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/fs/coda/dir.c b/fs/coda/dir.c
+> > index ab69d8f0cec2..ca9990017265 100644
+> > --- a/fs/coda/dir.c
+> > +++ b/fs/coda/dir.c
+> > @@ -429,17 +429,9 @@ static int coda_readdir(struct file *coda_file, struct dir_context *ctx)
+> >  	cfi = coda_ftoc(coda_file);
+> >  	host_file = cfi->cfi_container;
+> >  
+> > -	if (host_file->f_op->iterate_shared) {
+> > -		struct inode *host_inode = file_inode(host_file);
+> > -		ret = -ENOENT;
+> > -		if (!IS_DEADDIR(host_inode)) {
+> > -			inode_lock_shared(host_inode);
+> > -			ret = host_file->f_op->iterate_shared(host_file, ctx);
+> > -			file_accessed(host_file);
+> > -			inode_unlock_shared(host_inode);
+> > -		}
+> > +	ret = iterate_dir(host_file, ctx);
+> > +	if (ret != -ENOTDIR)
+> >  		return ret;
+> > -	}
+> >  	/* Venus: we must read Venus dirents from a file */
+> >  	return coda_venus_readdir(coda_file, ctx);
+> >  }
+> 
+> 
+> Is it already time for my annual ask of "Who the heck is using coda
+> these days?" Anyway, this patch looks fine to me.
+> 
+> Reviewed-by: Jeff Layton <jlayton@kernel.org>
 
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/mszeredi/fuse.git/log/?=
-h=3Dfor-next
+Send a patch proposing deprecating it and we might learn that :) Searching
+the web seems to suggest it is indeed pretty close to dead.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
