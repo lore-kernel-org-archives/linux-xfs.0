@@ -1,40 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF92B1C6FE1;
-	Mon,  9 Jun 2025 16:16:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA46620C480;
+	Mon,  9 Jun 2025 16:18:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749485810; cv=none; b=cvwIIwUTbOhYJ7ylbqCkf3TcuTtLXDlEv6nx2PbDJwUzjjqCipw0Ahz9nqvM7O2LeFrPG7aZ9j3UphdVeyvpH+HGdoMZk77NpJTAPPYIFk3mE2x8/LlrFgbktVtC+suTgxFFmB1FJTliGmYcgSvf+ZMdO6K49RzD+A7jFABT3xE=
+	t=1749485921; cv=none; b=W9Tq8ASGuKpS7InMItJwav2390XPZoxOLI8QwgF4Ci4c+ECJkyeZP68Na/ZNs1yb/LEOyZ50gzZj7V2QNJ4tuCmq+ZEqGVg1iJfBVn6WiFBsPIKe2R1RtR0MONeRXh4/098IUXKvL5AaaDtXmaLAYTrPAL5ZGIhT7XF/VnykHXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749485810; c=relaxed/simple;
-	bh=a5yNf70th7PfRA6xSLN9zz87BrnzItNsGibksd2xWXI=;
+	s=arc-20240116; t=1749485921; c=relaxed/simple;
+	bh=I08VS2sCuxaPZ61wFIVmhy2F970WAmigVwS39xU192Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Zti7RQIY+7n0tKXnyZsf86RSO/ntwD1WdUn52HY2jy/Uq5CM6IVMyWR2wQbDH5gAO4NVXv02lOMnx5R3KXvc1be5FNjzkerihopxajil3heWImfTZTnR+n3UFI2cnjFtFQRD0tp2BCHz+nmeIqkRBXTtmk8QbFvi3+2tGA3YWIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aze4D2TO; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ccBUF2FPcADjQYJl+wSyT1oc3LygnIBmAOewU3j/wW0I1uQw1oWMXyx2OVMEYnFdadCNH1zoM/TTRFGyQKLgrrpH+Oj7Vsvwg9Kh8G3aWH0fuTAlmRo5yZsj6b0RsvIwE6ZAWYxLxmY6E2S0YVIJRcNCa1yny3y0VuOkIjGA2z0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PyFTXEtS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aze4D2TO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DF23C4CEEB;
-	Mon,  9 Jun 2025 16:16:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PyFTXEtS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33357C4CEEB;
+	Mon,  9 Jun 2025 16:18:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749485810;
-	bh=a5yNf70th7PfRA6xSLN9zz87BrnzItNsGibksd2xWXI=;
+	s=k20201202; t=1749485921;
+	bh=I08VS2sCuxaPZ61wFIVmhy2F970WAmigVwS39xU192Q=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aze4D2TOOl1hFddI/gLa5cdCvzXcKO/8m4ISRTbckDQjO8MJhUMdV0RoHk/FqZLn3
-	 3NDBPL9MKmwhFp0nfw0yXf/nSS0vof/VCO9swjxquxbWzKkNlqfVuIPbhgkd5x4B8g
-	 oPYuE8p8nErm/LC6Co9nEVRXs7pExrC+DBv8F898q7CJA52FutgPdTvCv4ZAtoooZ5
-	 LTyd8uir2CkLuL6hi1d2Ul0fHfkQSsuzh8tMFV8SnxqwcGdZwuo4BJPjfa2qEV93MJ
-	 sFBuWrxUHo3aWgWKOxN6qY4hKWgDD8cv4wjytlPMxnXTltLBSmdE6Bpxd3GPFh+K9z
-	 VWCIMDDJxWz3A==
-Date: Mon, 9 Jun 2025 09:16:49 -0700
+	b=PyFTXEtSYPSUhf3jFHAR58zVA/Gxi1UHvTbX68zisFVNIHFwyCOcNIAilfeKoLV4c
+	 HwYKLDoVD0ov2Vvt+EsFYQ/jnOh8+JC2E58dJ7H1AWnpJ6OI7ubkJ/BybmIJ55NTdG
+	 2cKE/wY9joo1+Bt+7Q8QaWah4gBpIrWSmB8EEx5V/yvPaTuIDlccIFhZGt+cIn29Vw
+	 ORAPmdfiG9tfWsaR3+bPRXXQzFr30fyjfGGBpAriU0J69ijWqqSF9pQUp8GFClVgc3
+	 icok9QP3M9Y5B6qoloJ0IydX1n07iaw11A9YHggjWK6du9DIMNASKdDXxxZ469ELmG
+	 B5rpVOC0aDgWA==
+Date: Mon, 9 Jun 2025 09:18:40 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: [PATCH 1/7] iomap: move pos+len BUG_ON() to after folio lookup
-Message-ID: <20250609161649.GF6156@frogsfrogsfrogs>
-References: <20250605173357.579720-1-bfoster@redhat.com>
- <20250605173357.579720-2-bfoster@redhat.com>
+To: Hans Holmberg <Hans.Holmberg@wdc.com>
+Cc: Zorro Lang <zlang@kernel.org>, hch <hch@lst.de>,
+	"tytso@mit.edu" <tytso@mit.edu>,
+	"fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+Subject: Re: [PATCH 1/2] xfs: add mount test for read only rt devices
+Message-ID: <20250609161840.GG6156@frogsfrogsfrogs>
+References: <20250609110307.17455-1-hans.holmberg@wdc.com>
+ <20250609110307.17455-2-hans.holmberg@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,63 +46,118 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250605173357.579720-2-bfoster@redhat.com>
+In-Reply-To: <20250609110307.17455-2-hans.holmberg@wdc.com>
 
-On Thu, Jun 05, 2025 at 01:33:51PM -0400, Brian Foster wrote:
-> The bug checks at the top of iomap_write_begin() assume the pos/len
-> reflect exactly the next range to process. This may no longer be the
-> case once the get folio path is able to process a folio batch from
-> the filesystem. Move the check a bit further down after the folio
-> lookup and range trim to verify everything lines up with the current
-> iomap.
+On Mon, Jun 09, 2025 at 11:03:53AM +0000, Hans Holmberg wrote:
+> Make sure that we can mount rt devices read-only if them themselves
+> are marked as read-only.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/iomap/buffered-io.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+> Also make sure that rw re-mounts are not allowed if the device is
+> marked as read-only.
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 3729391a18f3..16499655e7b0 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -805,15 +805,12 @@ static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
->  {
->  	const struct iomap_folio_ops *folio_ops = iter->iomap.folio_ops;
->  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-> -	loff_t pos = iter->pos;
-> +	loff_t pos;
->  	u64 len = min_t(u64, SIZE_MAX, iomap_length(iter));
->  	struct folio *folio;
->  	int status = 0;
->  
->  	len = min_not_zero(len, *plen);
-> -	BUG_ON(pos + len > iter->iomap.offset + iter->iomap.length);
-> -	if (srcmap != &iter->iomap)
-> -		BUG_ON(pos + len > srcmap->offset + srcmap->length);
+> Based on generic/050.
+> 
+> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
 
-Hmm.  Do we even /need/ these checks?
-
-len is already basically just min(SIZE_MAX, iter->len,
-iomap->offset + iomap->length, srcmap->offset + srcmap->length)
-
-So by definition they should never trigger, right?
+Looks fine to me,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
->  
->  	if (fatal_signal_pending(current))
->  		return -EINTR;
-> @@ -843,6 +840,9 @@ static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
->  	}
->  
->  	pos = iomap_trim_folio_range(iter, folio, poffset, &len);
-> +	BUG_ON(pos + len > iter->iomap.offset + iter->iomap.length);
-> +	if (srcmap != &iter->iomap)
-> +		BUG_ON(pos + len > srcmap->offset + srcmap->length);
->  
->  	if (srcmap->type == IOMAP_INLINE)
->  		status = iomap_write_begin_inline(iter, folio);
-> -- 
-> 2.49.0
+> ---
+>  tests/xfs/837     | 65 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/837.out | 10 ++++++++
+>  2 files changed, 75 insertions(+)
+>  create mode 100755 tests/xfs/837
+>  create mode 100644 tests/xfs/837.out
 > 
+> diff --git a/tests/xfs/837 b/tests/xfs/837
+> new file mode 100755
+> index 000000000000..61e51d3a7d0e
+> --- /dev/null
+> +++ b/tests/xfs/837
+> @@ -0,0 +1,65 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2009 Christoph Hellwig.
+> +# Copyright (c) 2025 Western Digital Corporation
+> +#
+> +# FS QA Test No. 837
+> +#
+> +# Check out various mount/remount/unmount scenarious on a read-only rtdev
+> +# Based on generic/050
+> +#
+> +. ./common/preamble
+> +_begin_fstest mount auto quick
+> +
+> +_cleanup_setrw()
+> +{
+> +	cd /
+> +	blockdev --setrw $SCRATCH_RTDEV
+> +}
+> +
+> +# Import common functions.
+> +. ./common/filter
+> +
+> +_fixed_by_kernel_commit bfecc4091e07 \
+> +	"xfs: allow ro mounts if rtdev or logdev are read-only"
+> +
+> +_require_realtime
+> +_require_scratch
+> +
+> +if [ -z "$SCRATCH_RTDEV" ]; then
+> +	_notrun "requires external scratch rt device"
+> +else
+> +	_require_local_device $SCRATCH_RTDEV
+> +fi
+> +
+> +_register_cleanup "_cleanup_setrw"
+> +
+> +_scratch_mkfs "-d rtinherit" > /dev/null 2>&1
+> +
+> +#
+> +# Mark the rt device read-only.
+> +#
+> +echo "setting device read-only"
+> +blockdev --setro $SCRATCH_RTDEV
+> +
+> +#
+> +# Mount it and make sure it can't be written to.
+> +#
+> +echo "mounting read-only rt block device:"
+> +_scratch_mount 2>&1 | _filter_ro_mount | _filter_scratch
+> +if [ "${PIPESTATUS[0]}" -eq 0 ]; then
+> +	echo "writing to file on read-only filesystem:"
+> +	dd if=/dev/zero of=$SCRATCH_MNT/foo bs=1M count=1 oflag=direct 2>&1 | _filter_scratch
+> +else
+> +	_fail "failed to mount"
+> +fi
+> +
+> +echo "remounting read-write:"
+> +_scratch_remount rw 2>&1 | _filter_scratch | _filter_ro_mount
+> +
+> +echo "unmounting read-only filesystem"
+> +_scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
+> +
+> +# success, all done
+> +echo "*** done"
+> +status=0
+> diff --git a/tests/xfs/837.out b/tests/xfs/837.out
+> new file mode 100644
+> index 000000000000..0a843a0ba398
+> --- /dev/null
+> +++ b/tests/xfs/837.out
+> @@ -0,0 +1,10 @@
+> +QA output created by 837
+> +setting device read-only
+> +mounting read-only rt block device:
+> +mount: device write-protected, mounting read-only
+> +writing to file on read-only filesystem:
+> +dd: failed to open 'SCRATCH_MNT/foo': Read-only file system
+> +remounting read-write:
+> +mount: cannot remount device read-write, is write-protected
+> +unmounting read-only filesystem
+> +*** done
+> -- 
+> 2.34.1
 > 
