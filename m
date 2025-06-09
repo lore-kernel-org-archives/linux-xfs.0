@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E597E1624CE;
-	Mon,  9 Jun 2025 16:57:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 981968633F;
+	Mon,  9 Jun 2025 17:14:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749488263; cv=none; b=fpx+xEh7US8yWBRMRL8Fy64dCgPZgAXf1WUkcqDjqvggnw72ZBR0dMzoxi03IAS3gQl578/t78YXMq09iQMdYxp3uZIlwr7wtu2jB5Veysef31AB5tae1CaZWmcfErM7+e8odt0nRtyiRdV7OnSN33S+GkeHZc9+o+ZIWBiucEA=
+	t=1749489285; cv=none; b=SjrmcQdutTNkwYT2Z7pJ4Ou3j3ExVEDcFHF9hKaIEjOLx1ywuts++fjKXonSYjVCCrCRtx1BwCvk9mMI4o32PVlx8qCNpVrnm6C467c7IWz8/TdDkpK+8TnZOVwYWfygk75Bjg3ZROuNW7ooL3Id0po3UlS9zdFTnsgrLaziJI0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749488263; c=relaxed/simple;
-	bh=klUfMHQOWf4dOvsh98V+g3nj3kSkg/EV9cqMKDNvUQs=;
+	s=arc-20240116; t=1749489285; c=relaxed/simple;
+	bh=ncxhRXYy2cXLfo0Pcrv9QpJlmCAgF3C8xXX8iU0kCz8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HOzqhmAlIuZz4mhkx9VQNYfTsFxY7c4LeqhjvxpeQJRMzJuy0Zt3pg2wmachd6Mfov/r09ZlB/rF0iyKnN57jiSLi8oAiUgQE7Gqn2fWE7VGHEohrkNztOD1V+czpB+wHHvDkX9H+I2BMaj3aE34bAOmAAsG4YOlD1Phaz0wnKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F16ZfaTb; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GNnBQZ3Nox1Luoke0dZcGEXRjb0g2XiVqvnfBd9/6LFhsZLT7nkJMTeSskdLF0cz6DnXamvrU1AvWMd07i58Kf5hgcy6loRxfTIN7VbsSWS3scHkksYce+HwfQKfZXSnZIvmkvTrFPN6ntaWSu8MII8KGYG9a6GPfShjhZNC9/o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BgWlWSYc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F16ZfaTb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E902C4CEEB;
-	Mon,  9 Jun 2025 16:57:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BgWlWSYc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 179F7C4CEEB;
+	Mon,  9 Jun 2025 17:14:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749488262;
-	bh=klUfMHQOWf4dOvsh98V+g3nj3kSkg/EV9cqMKDNvUQs=;
+	s=k20201202; t=1749489285;
+	bh=ncxhRXYy2cXLfo0Pcrv9QpJlmCAgF3C8xXX8iU0kCz8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=F16ZfaTbWYPQ/jWjAtQ93fFJ+umkPlfNcbN6euZZbCKfjT/BluSGUh2IJjLCADI6I
-	 INaB2iYYVBZsKUsX8NAwahntNy/8MtAUyWVED3r1iqSMH5K7tvbh6bn5PmObIB5rke
-	 cU2JGbZUrLd7iBqCO8pxc3bsc4C8PptALAgRuoalopn/Twi33O7MO44iBQtV5w6uwY
-	 PcWl0qqcinfn/Nq8iXGrwMs8ok2pjzuSRWZlQLLDAe3994koxRiH7k5Mv1Zk9ck5dr
-	 yfJGZa0zcOYGmoCljqKccbpqikxmHUIkw7YVNwyLHGe/bCl8dFicer9agO8SRQc9EA
-	 2hGxfjIFGW0xw==
-Date: Mon, 9 Jun 2025 09:57:41 -0700
+	b=BgWlWSYcc9RL3502YwU/6gNmtqSOtOiQpevsLOvnKVlqauliAoMT99hcE6Lz56WZx
+	 SBF1DBj1UHjd4nKlHJhYPGNgFmGttGqplcchj/3rjQX2ywFu8gLJIuUp1FbkWdpsJx
+	 /kNy43SgPv3Qt4rvyhzy2GrQ4gKtIm4ewK9hEPepizIYbku/oR8C0/XL1aQH6AHGXy
+	 +Hmu4VV3Xat+Ko42ap0i/A23Hu8s7UbutKXUuu9DqLBC9YipJhHV+AEnut/trS9caO
+	 2P3SylKAXc2rCO9MFPezGh72An/oT598h74q75fdVt1jJL4N03WEPUCflhkUD1vXf7
+	 alAH3KWl1e0wg==
+Date: Mon, 9 Jun 2025 10:14:44 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Joanne Koong <joannelkoong@gmail.com>, miklos@szeredi.hu,
 	brauner@kernel.org, linux-fsdevel@vger.kernel.org,
 	linux-xfs@vger.kernel.org, bernd.schubert@fastmail.fm,
 	kernel-team@meta.com
-Subject: Re: [PATCH v1 4/8] iomap: add writepages support for IOMAP_IN_MEM
- iomaps
-Message-ID: <20250609165741.GK6156@frogsfrogsfrogs>
+Subject: Re: [PATCH v1 5/8] iomap: add iomap_writeback_dirty_folio()
+Message-ID: <20250609171444.GL6156@frogsfrogsfrogs>
 References: <20250606233803.1421259-1-joannelkoong@gmail.com>
- <20250606233803.1421259-5-joannelkoong@gmail.com>
- <aEZx5FKK13v36wRv@infradead.org>
+ <20250606233803.1421259-6-joannelkoong@gmail.com>
+ <aEZoau3AuwoeqQgu@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,121 +46,56 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aEZx5FKK13v36wRv@infradead.org>
+In-Reply-To: <aEZoau3AuwoeqQgu@infradead.org>
 
-On Sun, Jun 08, 2025 at 10:32:20PM -0700, Christoph Hellwig wrote:
-> On Fri, Jun 06, 2025 at 04:37:59PM -0700, Joanne Koong wrote:
-> > This allows IOMAP_IN_MEM iomaps to use iomap_writepages() for handling
-> > writeback. This lets IOMAP_IN_MEM iomaps use some of the internal
-> > features in iomaps such as granular dirty tracking for large folios.
-> > 
-> > This introduces a new iomap_writeback_ops callback, writeback_folio(),
-> > callers may pass in which hands off folio writeback logic to the caller
-> > for writing back dirty pages instead of relying on mapping blocks.
-> > 
-> > This exposes two apis, iomap_start_folio_write() and
-> > iomap_finish_folio_write(), which callers may find useful in their
-> > writeback_folio() callback implementation.
+On Sun, Jun 08, 2025 at 09:51:54PM -0700, Christoph Hellwig wrote:
+> On Fri, Jun 06, 2025 at 04:38:00PM -0700, Joanne Koong wrote:
+> > Add iomap_writeback_dirty_folio() for writing back a dirty folio.
+> > One use case of this is for folio laundering.
 > 
-> It might also be worth stating what you don't use.  One big thing
-> that springs to mind is ioends.  Which are really useful if you
-> need more than one request to handle a folio, something that is
-> pretty common in network file systems.  I guess you don't need
-> that for fuse?
+> Where "folio laundering" means calling ->launder_folio, right?
 
-My initial thought was "I wonder if Joanne would be better off with a
-totally separate iomap_writepage_map_blocks implementation" since I
-*think* fuse just needs a callback from iomap to initiate FUSE_WRITE
-calls on the dirty range(s) of a folio, and then fuse can call
-mapping_set_error and iomap_finish_folio_write when those FUSE_WRITE
-calls complete.  There are no bios, so I don't see much point in using
-the ioend machinery.
+What does fuse use folio laundering for, anyway?  It looks to me like
+the primary users are invalidate_inode_pages*.  Either the caller cares
+about flushing dirty data and has called filemap_write_and_wait_range;
+or it doesn't and wants to tear down the pagecache ahead of some other
+operation that's going to change the file contents and doesn't care.
+
+I suppose it could be useful as a last-chance operation on a dirty folio
+that was dirtied after a filemap_write_and_wait_range but before
+invalidate_inode_pages*?  Though for xfs we just return EBUSY and let
+the caller try again (or not).  Is there a subtlety to fuse here that I
+don't know about?
+
+(Both of those questions are directed at hch or joanne or anyone else
+who knows ;))
 
 --D
 
-> > +	if (wpc->iomap.type == IOMAP_IN_MEM) {
-> > +		if (wpc->ops->submit_ioend)
-> > +			error = wpc->ops->submit_ioend(wpc, error);
-> > +		return error;
-> > +	}
-> 
-> Given that the patch that moved things around already wrapped the
-> error propagation to the bio into a helpr, how does this differ
-> from the main path in the function now?
-> 
-> > +	/*
-> > +	 * If error is non-zero, it means that we have a situation where some part of
-> > +	 * the submission process has failed after we've marked pages for writeback.
-> > +	 * We cannot cancel ioend directly in that case, so call the bio end I/O handler
-> > +	 * with the error status here to run the normal I/O completion handler to clear
-> > +	 * the writeback bit and let the file system process the errors.
-> > +	 */
-> 
-> Please add the comment in a separate preparation patch.
-> 
-> > +		if (wpc->ops->writeback_folio) {
-> > +			WARN_ON_ONCE(wpc->ops->map_blocks);
-> > +			error = wpc->ops->writeback_folio(wpc, folio, inode,
-> > +							  offset_in_folio(folio, pos),
-> > +							  rlen);
-> > +		} else {
-> > +			WARN_ON_ONCE(wpc->iomap.type == IOMAP_IN_MEM);
-> > +			error = iomap_writepage_map_blocks(wpc, wbc, folio,
-> > +							   inode, pos, end_pos,
-> > +							   rlen, &count);
-> > +		}
-> 
-> So instead of having two entirely different methods, can we
-> refactor the block based code to also use
-> ->writeback_folio?
-> 
-> Basically move all of the code inside the do { } while loop after
-> the call into ->map_blocks into a helper, and then let the caller
-> loop and also directly discard the folio if needed.  I can give that
-> a spin if you want.
-> 
-> Note that writeback_folio is misnamed, as it doesn't write back an
-> entire folio, but just a dirty range.
-> 
-> >  	} else {
-> > -		if (!count)
-> > +		/*
-> > +		 * If wpc->ops->writeback_folio is set, then it is responsible
-> > +		 * for ending the writeback itself.
-> > +		 */
-> > +		if (!count && !wpc->ops->writeback_folio)
+> > @@ -1675,7 +1677,8 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+> >  	 * already at this point.  In that case we need to clear the writeback
+> >  	 * bit ourselves right after unlocking the page.
+> >  	 */
+> > -	folio_unlock(folio);
+> > +	if (unlock_folio)
+> > +		folio_unlock(folio);
+> >  	if (ifs) {
+> >  		if (atomic_dec_and_test(&ifs->write_bytes_pending))
 > >  			folio_end_writeback(folio);
 > 
-> This fails to explain why writeback_folio does the unlocking itself.
-> I also don't see how that would work in case of multiple dirty ranges.
+> When writing this code I was under the impression that
+> folio_end_writeback needs to be called after unlocking the page.
 > 
-> >  	}
-> >  	mapping_set_error(inode->i_mapping, error);
-> > @@ -1693,3 +1713,25 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
-> >  	return iomap_submit_ioend(wpc, error);
-> >  }
-> >  EXPORT_SYMBOL_GPL(iomap_writepages);
-> > +
-> > +void iomap_start_folio_write(struct inode *inode, struct folio *folio, size_t len)
-> > +{
-> > +	struct iomap_folio_state *ifs = folio->private;
-> > +
-> > +	WARN_ON_ONCE(i_blocks_per_folio(inode, folio) > 1 && !ifs);
-> > +	if (ifs)
-> > +		atomic_add(len, &ifs->write_bytes_pending);
-> > +}
-> > +EXPORT_SYMBOL_GPL(iomap_start_folio_write);
-> > +
-> > +void iomap_finish_folio_write(struct inode *inode, struct folio *folio, size_t len)
-> > +{
-> > +	struct iomap_folio_state *ifs = folio->private;
-> > +
-> > +	WARN_ON_ONCE(i_blocks_per_folio(inode, folio) > 1 && !ifs);
-> > +	WARN_ON_ONCE(ifs && atomic_read(&ifs->write_bytes_pending) <= 0);
-> > +
-> > +	if (!ifs || atomic_sub_and_test(len, &ifs->write_bytes_pending))
-> > +		folio_end_writeback(folio);
+> If that is not actually the case we can just move the unlocking into the
+> caller and make things a lot cleaner than the conditional locking
+> argument.
 > 
-> Please also use these helpers in the block based code.
+> > +int iomap_writeback_dirty_folio(struct folio *folio, struct writeback_control *wbc,
+> > +				struct iomap_writepage_ctx *wpc,
+> > +				const struct iomap_writeback_ops *ops)
+> 
+> Please stick to the usual iomap coding style:  80 character lines,
+> two-tab indent for multiline function declarations.  (Also in a few
+> other places).
 > 
 > 
