@@ -1,239 +1,221 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 599AE254AEC;
-	Mon,  9 Jun 2025 11:05:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749467107; cv=fail; b=FG2xQ0moqkY7ibkotaw3R96EoTcFGthEhTXtN9Ftk9LFM9v6fjWC/MExhvfIKz3/tNXOAwFViaBby3MBjYZEtVoKIzu2hAB168ld0T2M8aZiJg/OrDkfUE/5Z0WIqeWcnyMc1Vp2md71gxL/ErXl3bcViSiUaS6uUp2WtktYUEI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749467107; c=relaxed/simple;
-	bh=TMJ281V535F1tUkIhNX6GHrngp72C/rIqmmPtKhapgI=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Hfbr8RA05mxiMxJ1gFjCkkfFun1pj2M3hAlHzvL84HFw75S7BIp2yFm9qNX+9p7RszMcth3L701kIBXeMPFIpvcrOyhZsjWC+2Gkh846lai9CcbPi29Qda8Io6k89J8czFPVmoK8jr3tG7IQVEq7zrX1kx/09vPzunhxYjZJ1C8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=Grv0gC0o; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=HkhIoJAp; arc=fail smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA5AF2550B3;
+	Mon,  9 Jun 2025 12:13:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1749471195; cv=none; b=F9Wng6gHPviIEHYZ4UJoQYcTiigXbQdtpyaE1aQY0YidkCeDNn0Y9cET3eMgUgaS+3xoosQ+1GOflmqSH7bSOstO/iG3yTetou0yZanNa5ooFaMhdQhHIruC74ARPnARNFUgONYNBTsZ9EjvKL1VQ1Wn/1REMMX1WqRuYe8mcns=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1749471195; c=relaxed/simple;
+	bh=AyX05glyqV/dgIcnwQlqCx9urPfpuJ1+TEu5urURXBQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=E1sHeFXNSwzFF6JTSBkuVuuzdh5Ni8V5D4Ke8/uvjvSJmKq8sIxlRJV//yUCSZTzNfo2u0ryPwGFGbz9jJIVUQnvMxdUVLPKIFXt/0heP9xP7KPZIyGgvTaKCH/HZCdvt3SJTBt+ST7eLvMbQZXhKXRTqWzIVmV21RYuq5ZWmfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bWgw2b4B; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Grv0gC0o";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="HkhIoJAp"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1749467105; x=1781003105;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=TMJ281V535F1tUkIhNX6GHrngp72C/rIqmmPtKhapgI=;
-  b=Grv0gC0oOlO0IgGnz8xaJVFB4+04QJoqWRBAkDGojyQvqc8TaPz76haf
-   vr4NdJSNmU374zGfQgvGNd5JAq+cbHy+9P4UG5rfojGGN/t76YaI9RH9b
-   va/xfcnF68v7ZY/kTFRoQrjDMDb1d+fn4b0wUlOSD43UIwxuj5UVDEqBd
-   gYObn1Dbl/kqqDZXcb9eyPqmwnPw34q1eLrv6o/zvZL1hm7gzCfZJj5RY
-   ecCqLx0RrLc+9FSVNKNhI8dSXsKd2upAX2eomSRmVi2nd7Og8mHvvkCwU
-   LSHVk9jYFftrkYLnx/P+xyzVtPB8UP4WmFmNUB/0djAAE8+Pa5mANeh6v
-   Q==;
-X-CSE-ConnectionGUID: P60Wk7QzRk6pYxR2ryAG6g==
-X-CSE-MsgGUID: iFh3MHTCTj2Xv2eYefLyvQ==
-X-IronPort-AV: E=Sophos;i="6.16,222,1744041600"; 
-   d="scan'208";a="89171350"
-Received: from mail-dm6nam11on2086.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([40.107.223.86])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Jun 2025 19:03:57 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=e8Rjzqn30ZfhBta6vJFmrc+Hmju1FY9OPajet/b9npgT2/6S3ksLfJoyaJmJ9uiUskC0yujLdP3N3+VPIF51maB36YBBkc1dBNjcogVMLbSLT5yrYtB8uK1oJFn1s4wknlAa+m7Y0ZXcFpUNsM7vGc9F5gE+i5PPVZxpESiDRB1B+/5LivdF9ynTfWEFac5OdU8wPjynP5TorFxgUSRi2EaeLjGVow02ZQ+DcYj997G0wmq3Pm4IeEgOIc80wkQIIKPnSy1vNA8vu2O0KLxo6Hj+HylEWN7Nu+aeqeTydiRJJ5VsiK4L4cta/fkc+Kk7fcSFH0+6FB/TVRvDFLeH2A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=uMCyVMSY7hTk9rJDoITM9v9HR52AoYC9NvhrY8L77tE=;
- b=gFxgzpsolGDT6XhMVAGegsrMvQ6xJrzYBywcn4yurZQ7zQR16Jpi+MwyaCrp3jrzUbCHItT1s5Cv48t/ofG6He60fJPlGNkGgZFU8GlgfjvN3RWoFLwCi/+lXi4dVoGpjxqH/m9AjdKydn6VsDG5EYb+ByKHgDytOtWchgboUFx1VtMXWsdmEDRdT+Jh9TLnVI9o9YWW+58mVMx0EiThxEuupJxAuoSRSGxUe+xXmUtjbjWCU3LdhFNu6zWxdNSOweUuoyPxW3i5T3TK9NlJTdUBfRB6FTjwvTnrcsrrAiD9+HeCqK0crlRZADGiE6VOHoBdmlQW9iKIOcJ3K+WHKA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uMCyVMSY7hTk9rJDoITM9v9HR52AoYC9NvhrY8L77tE=;
- b=HkhIoJAphg/HKdVOGTaLo2QWCQM6rd0ADM5x1ZMOACJwzn1FuFPc0P+XW8JNvZt2XsQ1nE9+XkphC4UpJnYuB19i+OFQgjb/hz37yMMHVYXI/cEwFmD9RlauHhh9yv4DLIvRHdSgzIWCi18JU5qrpo1DGNw7qW4WdU+7nPMylgA=
-Received: from PH7PR04MB8755.namprd04.prod.outlook.com (2603:10b6:510:236::8)
- by CH2PR04MB6661.namprd04.prod.outlook.com (2603:10b6:610:9d::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8792.35; Mon, 9 Jun
- 2025 11:03:54 +0000
-Received: from PH7PR04MB8755.namprd04.prod.outlook.com
- ([fe80::4372:e8cb:5341:9a9b]) by PH7PR04MB8755.namprd04.prod.outlook.com
- ([fe80::4372:e8cb:5341:9a9b%3]) with mapi id 15.20.8792.034; Mon, 9 Jun 2025
- 11:03:54 +0000
-From: Hans Holmberg <Hans.Holmberg@wdc.com>
-To: Zorro Lang <zlang@kernel.org>
-CC: hch <hch@lst.de>, "tytso@mit.edu" <tytso@mit.edu>, "djwong@kernel.org"
-	<djwong@kernel.org>, "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Hans Holmberg
-	<Hans.Holmberg@wdc.com>
-Subject: [PATCH 2/2] ext4/002: make generic to support xfs
-Thread-Topic: [PATCH 2/2] ext4/002: make generic to support xfs
-Thread-Index: AQHb2S4wUjfODxsgnkaW7bndClwJ1Q==
-Date: Mon, 9 Jun 2025 11:03:54 +0000
-Message-ID: <20250609110307.17455-3-hans.holmberg@wdc.com>
-References: <20250609110307.17455-1-hans.holmberg@wdc.com>
-In-Reply-To: <20250609110307.17455-1-hans.holmberg@wdc.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-mailer: git-send-email 2.49.0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PH7PR04MB8755:EE_|CH2PR04MB6661:EE_
-x-ms-office365-filtering-correlation-id: 1b07ca42-d0dc-4ea5-075a-08dda74552e3
-x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|376014|1800799024|366016|38070700018;
-x-microsoft-antispam-message-info:
- =?iso-8859-1?Q?7uWkXpYfrrbJlpoQyM2vXRxF4tBCHZQJibSggTj/XaiSVTs4X6skiHZUSM?=
- =?iso-8859-1?Q?fYcjNggR0SFur+WtLwVtff0/ey9ButJbcah/gbdtPVyMEyz0vdxkfdM7yl?=
- =?iso-8859-1?Q?hEBuKAZ4mnF6oQ/5Y2IVuAg5hiVR0bt0cgloGE4zu+LPKGk2oC77c3AQpC?=
- =?iso-8859-1?Q?GNQJQXQi2GIxQqAmUHlpeHECvetIFlIMaRDyMkhbLzxtAcLKTcSeHc2R2p?=
- =?iso-8859-1?Q?L5iZZFl+DaMVJ3o2k0rOaItjOhgLMmXXSdCvVh2EuapiFVkhaiIxEWnKyo?=
- =?iso-8859-1?Q?nZBVMyzO+p3qahfRfdfLad8Hc7Z8ydrLjtz/DyzFTu8x4Q5EmiYWkjRoxe?=
- =?iso-8859-1?Q?lV7DFgs6xvGavyo6AnLgticJmI3XgIPZoF2rMT8scT+Vgzj/u1NFGnAiJh?=
- =?iso-8859-1?Q?mNF0GcXOesDNTo1a1tQzRE6Z/lmdM9KDNBXvhLodzEmCUQZWcyHG9E0Y0v?=
- =?iso-8859-1?Q?mAUCKUo4FL9CP/kh+WkZfoaqx7uoHdZ7oZ/opfKzVT3ev1e0gHUnMeJ3eB?=
- =?iso-8859-1?Q?vvyScE+twe6ABp4vao3i3BbK2RQ3+hKmYVUtZCI5ZsjTc6RUKNYD9lw7Cf?=
- =?iso-8859-1?Q?fEggCawEX/K1KmpJcD6LGW/2TsRxgP/iYwCvCtHoN4j2Y7ZAVrL3oxzD5d?=
- =?iso-8859-1?Q?kU9xKtuxhoKe1JphhDozEZbSdmU6tohssJJjAa3ygdC2AxO9osbq/st6Rh?=
- =?iso-8859-1?Q?JyxNY8xZfhR9MdW2DUlCU5KA9RnuaFdaebcKjzZK51P1ePEUhR3vdpZRxE?=
- =?iso-8859-1?Q?b6ylhZ/14bddZXXvskv1K8JfD9HfLUtskv7qHDD2bAQxbPusCOKhDsTdTT?=
- =?iso-8859-1?Q?VJsxD1EJ+pOYVj4GE9A6Tj/b6BmRAkN+yuKsPyh4co/5NUVRXdqOZF4XdX?=
- =?iso-8859-1?Q?FofS06BnxN4tSlHJp3Q8Hnpan2DQZjYMsSTiKOlctFygmk9Hw7uFRz3fxt?=
- =?iso-8859-1?Q?T6bWFwu1U1jmv6GmzVRBLigaV6v9fU8IiJEjhaN0jrPrALeuqsnXilBY6I?=
- =?iso-8859-1?Q?cRcprViN8bDV6gyIH7mB/FwcQ8Fom9nTzxerJggp1QGN7G31w00kNk5GP/?=
- =?iso-8859-1?Q?FKDiwod9liFlqqZ/0Q+t9Co63w5bZNECsPNqizzgbPoyumDphSyQVf0avP?=
- =?iso-8859-1?Q?hAtXPK4s+MPa+91U6FTHgi1xTTk+4R8C6XgZJUSHjLaucjBRQYH/L88fLD?=
- =?iso-8859-1?Q?Xb8g8OaO0+p5feIpWL8wbVXv04Lgow5FA4ydyapsJy8djjo1/+nvOITNGb?=
- =?iso-8859-1?Q?UqHkfTcwn4jOkR+VVK6fjpayGzoCCMuk4hUKvdWnLB1BK8GPNeqfhsL7uj?=
- =?iso-8859-1?Q?eEpsRFZRsY/6nSiRTNd3ExcWJyAxNFC+rxClgmAKepJVKcYRUHBx7TRw0f?=
- =?iso-8859-1?Q?Y7eP5Sx1J1aAglzse8tGPFLfX7NB1+VVX8sm23o692H28icsSYD/PidObq?=
- =?iso-8859-1?Q?Gy7KIAxPU563uJtDct3IuQPE9zIMlfoSjqY3dFlbTPhdgwEV4eAosROjl1?=
- =?iso-8859-1?Q?JnTQ6ZRxeu9EVQ0Qn5hDLrhlh/+IUqv35YI/lxSpRUp18KN4xMk4HEJiW9?=
- =?iso-8859-1?Q?nJVRMGM=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR04MB8755.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?KKVGJ50SsCrcCxq/tjua4oEB3Neb5FROyDIhlet9We5HC6wEgSlSOsIFK3?=
- =?iso-8859-1?Q?Yp7tmJ6xF/sER22F10lNxJSX3mdnPXY0DMEyTvbp8CbviY/CRhmGqs5D9h?=
- =?iso-8859-1?Q?BGPNKiHKsS2EJywPlLYWNcYyOnZg1CQp20ktM8EbGc2dKQi421eW5mSqv3?=
- =?iso-8859-1?Q?V0B5glZdns6CrDQYKgs1dbbiKyil+0RjytXBRN6r26Qz2H1wZmnobPzVsF?=
- =?iso-8859-1?Q?QWvy5/1c/6O3TQJPsWK7bj0QmsZgJV9JIoUU1bekTVDv8wMadoVvBGb2XF?=
- =?iso-8859-1?Q?RtrwNwAcMPPClzGruelKo0GZdaXPZP5lRyxXDOTSchyBEKQ7kHR5I40IH6?=
- =?iso-8859-1?Q?XHUOFFKizTxiZVHw7PNHYehV4Oy4uzQkJObiQmugDh6myHvKfaGrZktHPy?=
- =?iso-8859-1?Q?5g5+WcGTWJbHG+/Bfc7E1WC+Q8SPwcFPx78SUvwJg1QuXFj/DS3EFWwPdo?=
- =?iso-8859-1?Q?2s+Ekm3MB8rnxRfyoqiupbUjm1jRwzOMXmcCo+47sm25ksI8F7NfcZoWli?=
- =?iso-8859-1?Q?tgshC4q9+ArC5gewtPyOX6A3ynR0DHCinSGyPLk4h55+vQhTSSe+ZqD3KW?=
- =?iso-8859-1?Q?eE6HKcht14f1Doo4Dd///lWvHTfYKwYfeCCv2q6lZgLucDBpTeKNYShXRx?=
- =?iso-8859-1?Q?SKFEo7Duz+EAD/HtQZwO/FFa6GXZjSKbybHViFTsNm0XJJFPGXK3lNy57T?=
- =?iso-8859-1?Q?DylOZOH0EWL87uCS1AJV9oXBO2y3VswvZ6vVMilKyAYOteuDrgiqDhm9PJ?=
- =?iso-8859-1?Q?gfpCylSjoaqUsiF+MEVMI9iZOxfT/rOdfjNxjuN2MhSYlfrWTqbuSwH+Hp?=
- =?iso-8859-1?Q?Q4Dg3pRblPzQP6Ebw95Y+DNQkKwXfqkFIRBQrP4WQDGymQrdAOAitSf0pu?=
- =?iso-8859-1?Q?IOCCiuatYj+IOVEzRbtp9xK+/DnIBQt4SoGjqWIfGhyuxrntFyxBJWAYeN?=
- =?iso-8859-1?Q?OZ3yOxBHNhmgQZlQJiWtO5YiNNzzIq13BkkYl3DDVW01IG7sB0xZgOjeZ1?=
- =?iso-8859-1?Q?6XoEIQ+atx56Wv7tRUNTyKUz6XAjxX2yVvBe9JFZvi+v6gSIXUcCdQg4Cw?=
- =?iso-8859-1?Q?vO2rhlCzoETtv1Ti2MiwVzfsoY8WRCzLCa1uOxeRTsT2Bpb0RmgvkYKctg?=
- =?iso-8859-1?Q?SO4QqYCI5SLz0MmoFDXykxoXmRrYYNK4Nv/mo4GZqUfbeHPaEU1PHeWu8s?=
- =?iso-8859-1?Q?QQYqCcsvl7dUXfvA8CR2Sss58ZcXQQV8bzr4eEg4lYVVePmRD5cE8iroHS?=
- =?iso-8859-1?Q?wpixpERToJ0PgTT91f+Vmn8OLzxgYTyHkO9550Wxxly2xeTREbC1BhLhJ4?=
- =?iso-8859-1?Q?Hkoc4R3k92LYERmMdXnock+t+fvd676Dw/QBi+AajcpUR99eWUyWkkZVg9?=
- =?iso-8859-1?Q?ARKENgNaaenkunLNYNzkkdlajxjzAmG2JjZfxS/2UNw2lStax2PP/g2xte?=
- =?iso-8859-1?Q?zAJnq1FBZVHVLx9DGcCiQg9vbWmcdxzbl60WV12myCYbzxPxByn+TZfe3y?=
- =?iso-8859-1?Q?i9Bf8kbeaoZO+TbRR1Dy9dMRMS0ReIMh5GnK5/Zzo5BhBpC/kh7ttrom5e?=
- =?iso-8859-1?Q?3I5YtmUNI9oSixkfcNMXFKMT9dqyX5BDIrBiPopk+UeD9WXwdu1D8sM2uF?=
- =?iso-8859-1?Q?cHx7EFylcxGMO/vPJUn/ruR1eU2p6/NF3kSU9FkalgLbOrOD9NEj/HdA?=
- =?iso-8859-1?Q?=3D=3D?=
-Content-Type: text/plain; charset="iso-8859-1"
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bWgw2b4B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED873C4CEED;
+	Mon,  9 Jun 2025 12:13:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1749471194;
+	bh=AyX05glyqV/dgIcnwQlqCx9urPfpuJ1+TEu5urURXBQ=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+	b=bWgw2b4BjVk442hXU8QOGSj6iaFA/kAnV6b+3A1ffZVahgnh8bAF+YoHr8yg5VqDj
+	 Xv1JvrOASRkHOMcrHHMXYvuG7+MdppMlsiJimBuXYZqhXv/sBaxc4lWw+riXPZQ8O0
+	 cgF6DSBsLPwZQk1OILj9uCA3qZWlERgrjPXgSl6OQ9IhtVRMBQh7QWbixCBdt8mJ6S
+	 IXWkZZpzB4nRUju/Zf7GMxvJQAMP7kW65+T8yM12BQZEcGI6DcnJ69AlLP//xBGE3a
+	 Vf58Tb3+i/0tNJH/ZKEUWDkDNoy/MnEPcu2dQR4vfNnhqnNflTRZ3LlP/jVqViYmWI
+	 I0j3xkkOgoCpw==
+Message-ID: <ac0855c4fa222bf68452d8154ea52dcdbb99f39f.camel@kernel.org>
+Subject: Re: [PATCH 1/5] VFS: merge lookup_one_qstr_excl_raw() back into
+ lookup_one_qstr_excl()
+From: Jeff Layton <jlayton@kernel.org>
+To: NeilBrown <neil@brown.name>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+ Christian Brauner
+	 <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Chuck Lever
+	 <chuck.lever@oracle.com>, Amir Goldstein <amir73il@gmail.com>, Jan Harkes
+	 <jaharkes@cs.cmu.edu>, David Howells <dhowells@redhat.com>, Tyler Hicks
+	 <code@tyhicks.com>, Miklos Szeredi <miklos@szeredi.hu>, Carlos Maiolino
+	 <cem@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, coda@cs.cmu.edu,
+ codalist@coda.cs.cmu.edu, 	linux-nfs@vger.kernel.org,
+ netfs@lists.linux.dev, ecryptfs@vger.kernel.org, 
+	linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Date: Mon, 09 Jun 2025 08:13:11 -0400
+In-Reply-To: <20250608230952.20539-2-neil@brown.name>
+References: <20250608230952.20539-1-neil@brown.name>
+	 <20250608230952.20539-2-neil@brown.name>
+Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
+ keydata=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
+ QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 (3.56.2-1.fc42) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	otX7c3EVhrIYLp4FbQMw0eNlnW7k9vqBPetWU+koiQCPeGctVdcuydknbPNI8wQzJj+w6c/19ZFwU3Z+kCFnUYGYqL3Jd1KVSoVTdw/e+JZTkrSBnOk945S1PKAH20LeBNc3zoYerOALDb4a9ZODjS1lg/xuf7amosM8WE7m8ShDzIh1BT3Dfsba8DbS164UT1O4rWaWLljPXNf2trcJCN5ipDDfb3fxgcZLtQjv/pw5PJ94kKXbGiSuro/i78nbwnadXUCoa8ZY1M47pfBqpb2EdKgQFBioHGeya63rwbK1y78/7AmkfmUqNqC7ifWLIR2JYm2TqBafhhvnMUtRmnAt1lGdF2eRR/by4dQ7c9Aw2k+0Xj2XoUshWXeXqCX7KFrJ3MX2MSrC9M/k1uzGkgLnjlEUguY/sOpL9hkGE30bNjMvTftK/DW4AHxj2J6OvttYyxAIif+MV72X1cB9K5vxjnuB0IxZ2/+csFnoieN7hq42NrIxUb+us8zPYAjT5/onFpeHCr+VEa+q3RnwTPBiEF4GTOQMVl9N/fVfwO4L1+GgrmRvLQ6KjjBnbUu5yAxeFx0FujLRTKD/PcU5vn0aMZjl0LoCsFWDTVzxtE+/9ekF9l3mdRsHyZ3fZF5r
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH7PR04MB8755.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1b07ca42-d0dc-4ea5-075a-08dda74552e3
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jun 2025 11:03:54.0657
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: k+b6kQXZZtuRXoRcU7pI9NkMNE2d/Se/bSz715uJJAmGwfo5x/zbyWXZclrIjM3qz6yCg07TErzEOk7cckgSUg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR04MB6661
 
-xfs supports separate log devices and as this test now passes, share
-it by turning it into a generic test.
+On Mon, 2025-06-09 at 09:09 +1000, NeilBrown wrote:
+> The effect of lookup_one_qstr_excl_raw() can be achieved by passing
+> LOOKUP_CREATE() to lookup_one_qstr_excl() - we don't need a separate
+> function.
+>=20
+> Signed-off-by: NeilBrown <neil@brown.name>
+> ---
+>  fs/namei.c | 37 ++++++++++++++-----------------------
+>  1 file changed, 14 insertions(+), 23 deletions(-)
+>=20
+> diff --git a/fs/namei.c b/fs/namei.c
+> index 4bb889fc980b..dc42bfac5c57 100644
+> --- a/fs/namei.c
+> +++ b/fs/namei.c
+> @@ -1665,9 +1665,17 @@ static struct dentry *lookup_dcache(const struct q=
+str *name,
+>  	return dentry;
+>  }
+> =20
+> -static struct dentry *lookup_one_qstr_excl_raw(const struct qstr *name,
+> -					       struct dentry *base,
+> -					       unsigned int flags)
+> +/*
+> + * Parent directory has inode locked exclusive.  This is one
+> + * and only case when ->lookup() gets called on non in-lookup
+> + * dentries - as the matter of fact, this only gets called
+> + * when directory is guaranteed to have no in-lookup children
+> + * at all.
+> + * Will return -ENOENT if name isn't found and LOOKUP_CREATE wasn't pass=
+ed.
+> + * Will return -EEXIST if name is found and LOOKUP_EXCL was passed.
+> + */
+> +struct dentry *lookup_one_qstr_excl(const struct qstr *name,
+> +				    struct dentry *base, unsigned int flags)
+>  {
+>  	struct dentry *dentry;
+>  	struct dentry *old;
+> @@ -1675,7 +1683,7 @@ static struct dentry *lookup_one_qstr_excl_raw(cons=
+t struct qstr *name,
+> =20
+>  	dentry =3D lookup_dcache(name, base, flags);
+>  	if (dentry)
+> -		return dentry;
+> +		goto found;
+> =20
+>  	/* Don't create child dentry for a dead directory. */
+>  	dir =3D base->d_inode;
+> @@ -1691,24 +1699,7 @@ static struct dentry *lookup_one_qstr_excl_raw(con=
+st struct qstr *name,
+>  		dput(dentry);
+>  		dentry =3D old;
+>  	}
+> -	return dentry;
+> -}
+> -
+> -/*
+> - * Parent directory has inode locked exclusive.  This is one
+> - * and only case when ->lookup() gets called on non in-lookup
+> - * dentries - as the matter of fact, this only gets called
+> - * when directory is guaranteed to have no in-lookup children
+> - * at all.
+> - * Will return -ENOENT if name isn't found and LOOKUP_CREATE wasn't pass=
+ed.
+> - * Will return -EEXIST if name is found and LOOKUP_EXCL was passed.
+> - */
+> -struct dentry *lookup_one_qstr_excl(const struct qstr *name,
+> -				    struct dentry *base, unsigned int flags)
+> -{
+> -	struct dentry *dentry;
+> -
+> -	dentry =3D lookup_one_qstr_excl_raw(name, base, flags);
+> +found:
+>  	if (IS_ERR(dentry))
+>  		return dentry;
+>  	if (d_is_negative(dentry) && !(flags & LOOKUP_CREATE)) {
+> @@ -2790,7 +2781,7 @@ struct dentry *kern_path_locked_negative(const char=
+ *name, struct path *path)
+>  	if (unlikely(type !=3D LAST_NORM))
+>  		return ERR_PTR(-EINVAL);
+>  	inode_lock_nested(parent_path.dentry->d_inode, I_MUTEX_PARENT);
+> -	d =3D lookup_one_qstr_excl_raw(&last, parent_path.dentry, 0);
+> +	d =3D lookup_one_qstr_excl(&last, parent_path.dentry, LOOKUP_CREATE);
+>  	if (IS_ERR(d)) {
+>  		inode_unlock(parent_path.dentry->d_inode);
+>  		return d;
 
-This should not result in a new failure for other file systems as only
-ext2/ext3/ext4 and xfs supports mkfs with SCRATCH_LOGDEVs.
+Nice little cleanup.
 
-Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
----
- tests/{ext4/002 =3D> generic/766}         | 11 ++++++++++-
- tests/{ext4/002.out =3D> generic/766.out} |  2 +-
- 2 files changed, 11 insertions(+), 2 deletions(-)
- rename tests/{ext4/002 =3D> generic/766} (91%)
- rename tests/{ext4/002.out =3D> generic/766.out} (98%)
-
-diff --git a/tests/ext4/002 b/tests/generic/766
-similarity index 91%
-rename from tests/ext4/002
-rename to tests/generic/766
-index 6c1e1d926973..3b6911f0bdb9 100755
---- a/tests/ext4/002
-+++ b/tests/generic/766
-@@ -3,10 +3,11 @@
- # Copyright (c) 2009 Christoph Hellwig.
- # Copyright (c) 2020 Lukas Czerner.
- #
--# FS QA Test No. 002
-+# FS QA Test No. 766
- #
- # Copied from tests generic/050 and adjusted to support testing
- # read-only external journal device on ext4.
-+# Moved to generic from ext4/002 to support xfs as well
- #
- # Check out various mount/remount/unmount scenarious on a read-only
- # logdev blockdev.
-@@ -31,6 +32,14 @@ _cleanup()
-=20
- _exclude_fs ext2
-=20
-+[ $FSTYP =3D=3D "ext4" ] && \
-+        _fixed_by_kernel_commit 273108fa5015 \
-+        "ext4: handle read only external journal device"
-+
-+[ $FSTYP =3D=3D "xfs" ] && \
-+        _fixed_by_kernel_commit bfecc4091e07 \
-+        "xfs: allow ro mounts if rtdev or logdev are read-only"
-+
- _require_scratch_nocheck
- _require_scratch_shutdown
- _require_logdev
-diff --git a/tests/ext4/002.out b/tests/generic/766.out
-similarity index 98%
-rename from tests/ext4/002.out
-rename to tests/generic/766.out
-index 579bc7e0cd78..975751751749 100644
---- a/tests/ext4/002.out
-+++ b/tests/generic/766.out
-@@ -1,4 +1,4 @@
--QA output created by 002
-+QA output created by 766
- setting log device read-only
- mounting with read-only log device:
- mount: device write-protected, mounting read-only
---=20
-2.34.1
+Reviewed-by: Jeff Layton <jlayton@kernel.org>
