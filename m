@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2561B213E77;
-	Mon,  9 Jun 2025 16:12:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF92B1C6FE1;
+	Mon,  9 Jun 2025 16:16:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749485541; cv=none; b=uELNwhvxtKLaVsoFYhPKXQWmeuG4oLROORVecORn5VVlXkF7b1pKFjNKQTgaQktVyTFjGX3Aevf5185OrpKFMiiFJLAC0CUYWF3NQQH6z2NkWB/q4uFH7Dx3MWu9coVxatwShJ6BMwcnADJMVygAwBoH3j0X54fbBCa6Vg8++ns=
+	t=1749485810; cv=none; b=cvwIIwUTbOhYJ7ylbqCkf3TcuTtLXDlEv6nx2PbDJwUzjjqCipw0Ahz9nqvM7O2LeFrPG7aZ9j3UphdVeyvpH+HGdoMZk77NpJTAPPYIFk3mE2x8/LlrFgbktVtC+suTgxFFmB1FJTliGmYcgSvf+ZMdO6K49RzD+A7jFABT3xE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749485541; c=relaxed/simple;
-	bh=TnxPRrt3FuETnxO3K1XsXNg8xwyrps9vUrbwT0pBR58=;
+	s=arc-20240116; t=1749485810; c=relaxed/simple;
+	bh=a5yNf70th7PfRA6xSLN9zz87BrnzItNsGibksd2xWXI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=usJh7IrB/sp4FOtwiT4zQHHhb8/URjNJQdhV6Go7HuuZRygno8qhOmjdGvbPVUbrw0BFX0DhpCS3hF3A7nur/UWBHZkHFAfBGOoQ5jXmOaKBK1di9vxqQzHY5oMRkAwpxdL+E5NDNCdF62HDbqvarW6B/miUqEYfn8NIaI6tSHA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xx6gy/0w; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Zti7RQIY+7n0tKXnyZsf86RSO/ntwD1WdUn52HY2jy/Uq5CM6IVMyWR2wQbDH5gAO4NVXv02lOMnx5R3KXvc1be5FNjzkerihopxajil3heWImfTZTnR+n3UFI2cnjFtFQRD0tp2BCHz+nmeIqkRBXTtmk8QbFvi3+2tGA3YWIw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aze4D2TO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xx6gy/0w"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94ACDC4CEEB;
-	Mon,  9 Jun 2025 16:12:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aze4D2TO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DF23C4CEEB;
+	Mon,  9 Jun 2025 16:16:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749485540;
-	bh=TnxPRrt3FuETnxO3K1XsXNg8xwyrps9vUrbwT0pBR58=;
+	s=k20201202; t=1749485810;
+	bh=a5yNf70th7PfRA6xSLN9zz87BrnzItNsGibksd2xWXI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Xx6gy/0w0Cox/y0AwwMFXT+Q4DBELLGAjGsCLZEVrqM2JMSqQG2Fgsd5qEWlAATqz
-	 CR55SLHsbrNNCvCI668SvNjRlvvWB9c144BStsaP0v+dqUzbV+EAE6iBsOdADtR7dW
-	 MfDqiR58aeXrs8PJcqnpxxmMcs1FQrbKQB6jJjaLHKWMf7EM50AJgHCl7D2RoWtXim
-	 FA6tm8qs3nlPneczfKl0c1ne/YfrE/MZ2oy9UFKFIGk6z8Xt2O3alEFIJUpmDB+pra
-	 9faR5ddifjqxmMKoIfioKA+SFfqVLsu4aDkzuei9DP19l8saUp1R1IY/1DAYcnOdms
-	 vLBmLzs8ELrnA==
-Date: Mon, 9 Jun 2025 09:12:19 -0700
+	b=aze4D2TOOl1hFddI/gLa5cdCvzXcKO/8m4ISRTbckDQjO8MJhUMdV0RoHk/FqZLn3
+	 3NDBPL9MKmwhFp0nfw0yXf/nSS0vof/VCO9swjxquxbWzKkNlqfVuIPbhgkd5x4B8g
+	 oPYuE8p8nErm/LC6Co9nEVRXs7pExrC+DBv8F898q7CJA52FutgPdTvCv4ZAtoooZ5
+	 LTyd8uir2CkLuL6hi1d2Ul0fHfkQSsuzh8tMFV8SnxqwcGdZwuo4BJPjfa2qEV93MJ
+	 sFBuWrxUHo3aWgWKOxN6qY4hKWgDD8cv4wjytlPMxnXTltLBSmdE6Bpxd3GPFh+K9z
+	 VWCIMDDJxWz3A==
+Date: Mon, 9 Jun 2025 09:16:49 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: Re: [PATCH 5/7] xfs: fill dirty folios on zero range of unwritten
- mappings
-Message-ID: <20250609161219.GE6156@frogsfrogsfrogs>
+Subject: Re: [PATCH 1/7] iomap: move pos+len BUG_ON() to after folio lookup
+Message-ID: <20250609161649.GF6156@frogsfrogsfrogs>
 References: <20250605173357.579720-1-bfoster@redhat.com>
- <20250605173357.579720-6-bfoster@redhat.com>
+ <20250605173357.579720-2-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,87 +43,62 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250605173357.579720-6-bfoster@redhat.com>
+In-Reply-To: <20250605173357.579720-2-bfoster@redhat.com>
 
-On Thu, Jun 05, 2025 at 01:33:55PM -0400, Brian Foster wrote:
-> Use the iomap folio batch mechanism to select folios to zero on zero
-> range of unwritten mappings. Trim the resulting mapping if the batch
-> is filled (unlikely for current use cases) to distinguish between a
-> range to skip and one that requires another iteration due to a full
-> batch.
+On Thu, Jun 05, 2025 at 01:33:51PM -0400, Brian Foster wrote:
+> The bug checks at the top of iomap_write_begin() assume the pos/len
+> reflect exactly the next range to process. This may no longer be the
+> case once the get folio path is able to process a folio batch from
+> the filesystem. Move the check a bit further down after the folio
+> lookup and range trim to verify everything lines up with the current
+> iomap.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->  fs/xfs/xfs_iomap.c | 23 +++++++++++++++++++++++
->  1 file changed, 23 insertions(+)
+>  fs/iomap/buffered-io.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index b5cf5bc6308d..63054f7ead0e 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1691,6 +1691,8 @@ xfs_buffered_write_iomap_begin(
->  	struct iomap		*iomap,
->  	struct iomap		*srcmap)
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 3729391a18f3..16499655e7b0 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -805,15 +805,12 @@ static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
 >  {
-> +	struct iomap_iter	*iter = container_of(iomap, struct iomap_iter,
-> +						     iomap);
-
-/me has been wondering more and more if we should just pass the iter
-directly to iomap_begin rather than make them play these container_of
-tricks... OTOH I think the whole point of this:
-
-	ret = ops->iomap_begin(iter->inode, iter->pos, iter->len, iter->flags,
-			       &iter->iomap, &iter->srcmap);
-
-is to "avoid" allowing the iomap users to mess with the internals of the
-iomap iter...
-
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	struct xfs_mount	*mp = ip->i_mount;
->  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> @@ -1762,6 +1764,7 @@ xfs_buffered_write_iomap_begin(
->  	 */
->  	if (flags & IOMAP_ZERO) {
->  		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
-> +		u64 end;
+>  	const struct iomap_folio_ops *folio_ops = iter->iomap.folio_ops;
+>  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+> -	loff_t pos = iter->pos;
+> +	loff_t pos;
+>  	u64 len = min_t(u64, SIZE_MAX, iomap_length(iter));
+>  	struct folio *folio;
+>  	int status = 0;
 >  
->  		if (isnullstartblock(imap.br_startblock) &&
->  		    offset_fsb >= eof_fsb)
-> @@ -1769,6 +1772,26 @@ xfs_buffered_write_iomap_begin(
->  		if (offset_fsb < eof_fsb && end_fsb > eof_fsb)
->  			end_fsb = eof_fsb;
->  
-> +		/*
-> +		 * Look up dirty folios for unwritten mappings within EOF.
-> +		 * Providing this bypasses the flush iomap uses to trigger
-> +		 * extent conversion when unwritten mappings have dirty
-> +		 * pagecache in need of zeroing.
-> +		 *
-> +		 * Trim the mapping to the end pos of the lookup, which in turn
-> +		 * was trimmed to the end of the batch if it became full before
-> +		 * the end of the mapping.
-> +		 */
-> +		if (imap.br_state == XFS_EXT_UNWRITTEN &&
-> +		    offset_fsb < eof_fsb) {
-> +			loff_t len = min(count,
-> +					 XFS_FSB_TO_B(mp, imap.br_blockcount));
-> +
-> +			end = iomap_fill_dirty_folios(iter, offset, len);
+>  	len = min_not_zero(len, *plen);
+> -	BUG_ON(pos + len > iter->iomap.offset + iter->iomap.length);
+> -	if (srcmap != &iter->iomap)
+> -		BUG_ON(pos + len > srcmap->offset + srcmap->length);
 
-...though I wonder, does this need to happen in
-xfs_buffered_write_iomap_begin?  Is it required to hold the ILOCK while
-we go look for folios in the mapping?  Or could this become a part of
-iomap_write_begin?
+Hmm.  Do we even /need/ these checks?
+
+len is already basically just min(SIZE_MAX, iter->len,
+iomap->offset + iomap->length, srcmap->offset + srcmap->length)
+
+So by definition they should never trigger, right?
 
 --D
 
-> +			end_fsb = min_t(xfs_fileoff_t, end_fsb,
-> +					XFS_B_TO_FSB(mp, end));
-> +		}
-> +
->  		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+>  
+>  	if (fatal_signal_pending(current))
+>  		return -EINTR;
+> @@ -843,6 +840,9 @@ static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
 >  	}
 >  
+>  	pos = iomap_trim_folio_range(iter, folio, poffset, &len);
+> +	BUG_ON(pos + len > iter->iomap.offset + iter->iomap.length);
+> +	if (srcmap != &iter->iomap)
+> +		BUG_ON(pos + len > srcmap->offset + srcmap->length);
+>  
+>  	if (srcmap->type == IOMAP_INLINE)
+>  		status = iomap_write_begin_inline(iter, folio);
 > -- 
 > 2.49.0
 > 
