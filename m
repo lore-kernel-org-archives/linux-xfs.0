@@ -1,84 +1,62 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from neil.brown.name (neil.brown.name [103.29.64.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3572715E97;
-	Mon,  9 Jun 2025 04:56:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E0A12F4A;
+	Mon,  9 Jun 2025 05:24:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.29.64.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749444980; cv=none; b=Rok1dzNgUvmDkzQQ9rMJhgRdztZcazUdeisbYhki5qQ0SrQe4mjwSZufg1TQ0Yhupg5cVH38UZg2DqHzu0wuZ0tY/ZlTEOxHfS9rNdiD141qt92nFzZqz4cgjS5XZWSmcBQc9sF1oqpy+Vb6WCJw0Kpm58irUZv2sve7o88fqFo=
+	t=1749446672; cv=none; b=ne/53SEv8YMPkLP43n8ZIzw7cov18e6JeV+v/rimRF98j5ZHVRNNq/Il24g7t9QgTAeyQhcfBXclaKrsNiyNchjQ4UzKruZtsxzMSosdwi6zLZ5+S6b1RqaebhHePyt/7GcCHMuXWy8rB/ZoatA2clsyiwMtH7vr68219XBM2zw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749444980; c=relaxed/simple;
-	bh=Z5HIgjlOS94+nPpkxTPAYvhjP0Hqj9eocta0Qd+kdz0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iavX2mZFBnOM2sgHfcGw77Y+1U8Z28UdZveOvuo3aU/eWnG5OD2+Fm0PuO2txWRq+mfZDcLl1dxnmxuaicoHDdooD9HoI12nlnE+fQMNSwCHvhU0M9qrAtcV0n82GZu3IkuoG3nA8A4ZHML8b+zHuXtwaDRfEGK5UXDz2Ac47ac=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=s570O2fb; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="s570O2fb"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=yhG6fHCXxn+MKljVIWwC1KUatCxWtWPpFNYqFAJDLYo=; b=s570O2fbtSEb3+waQduQknjbN5
-	GQGCOCljej/ky8L6V9tz+svEIHtOUKgiNt+ax8ngI3D37iASjIgDxwuMIddEhsHPPzgqsOzyyydpk
-	iJ9MCGNr7adNR9E8v5r9+K2GedUB++W36FwVJro13Wey1r5r05ByDOXTL9UYaWC2iHgkAuVOdH/dC
-	KgWTW2MM1zRFlk4eBqmLHpIIHbzuxSr4DLJt/6gJZCQbHuwF6Gk2S8380Ptryn96H8LH74Pp8UVWl
-	UIvMi0SsiilJRqF6ncuZNfF89+jjh/c3/1L1kPhewiTIwO9TvERXeweiJ9KJIT8tdBVbJUUd8h9Eb
-	CpzwLCrA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uOUYT-00000003RXa-36oC;
-	Mon, 09 Jun 2025 04:56:17 +0000
-Date: Sun, 8 Jun 2025 21:56:17 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: miklos@szeredi.hu, djwong@kernel.org, brauner@kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	bernd.schubert@fastmail.fm, kernel-team@meta.com
-Subject: Re: [PATCH v1 3/8] iomap: add buffered write support for
- IOMAP_IN_MEM iomaps
-Message-ID: <aEZpcWGYssJ2OpqL@infradead.org>
-References: <20250606233803.1421259-1-joannelkoong@gmail.com>
- <20250606233803.1421259-4-joannelkoong@gmail.com>
+	s=arc-20240116; t=1749446672; c=relaxed/simple;
+	bh=L7/KnI6450/qLxPF/MzLzFgMhQYd+Uz0sDOC3iC3MCo=;
+	h=Content-Type:MIME-Version:From:To:Cc:Subject:In-reply-to:
+	 References:Date:Message-id; b=rgqLCZyA4WiyqHP6oCPiuoKiNbMo2QrErvMUR9VABI0s0MBoJOqj9iPu+TywCF9YJqlPqmPNKF51aWX/lkUsYVHiqdvQkkVtGlr+lKYjixr1Ja2wfftOkZE300+AaPs8X1ui88QndTIi3fTZhXk3fXZPHq/HMrVNiKojsxoCTc4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name; spf=pass smtp.mailfrom=neil.brown.name; arc=none smtp.client-ip=103.29.64.221
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=neil.brown.name
+Received: from 196.186.233.220.static.exetel.com.au ([220.233.186.196] helo=home.neil.brown.name)
+	by neil.brown.name with esmtp (Exim 4.95)
+	(envelope-from <mr@neil.brown.name>)
+	id 1uOUzf-006B3U-Dq;
+	Mon, 09 Jun 2025 05:24:23 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250606233803.1421259-4-joannelkoong@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+From: "NeilBrown" <neil@brown.name>
+To: "Al Viro" <viro@zeniv.linux.org.uk>
+Cc: "Christian Brauner" <brauner@kernel.org>, "Jan Kara" <jack@suse.cz>,
+ "Chuck Lever" <chuck.lever@oracle.com>, "Jeff Layton" <jlayton@kernel.org>,
+ "Amir Goldstein" <amir73il@gmail.com>, "Jan Harkes" <jaharkes@cs.cmu.edu>,
+ "David Howells" <dhowells@redhat.com>, "Tyler Hicks" <code@tyhicks.com>,
+ "Miklos Szeredi" <miklos@szeredi.hu>, "Carlos Maiolino" <cem@kernel.org>,
+ linux-fsdevel@vger.kernel.org, coda@cs.cmu.edu, codalist@coda.cs.cmu.edu,
+ linux-nfs@vger.kernel.org, netfs@lists.linux.dev, ecryptfs@vger.kernel.org,
+ linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 5/5] Change vfs_mkdir() to unlock on failure.
+In-reply-to: <20250609005009.GB299672@ZenIV>
+References: <>, <20250609005009.GB299672@ZenIV>
+Date: Mon, 09 Jun 2025 15:22:00 +1000
+Message-id: <174944652013.608730.3439111222517126345@noble.neil.brown.name>
 
-> -static int iomap_read_folio_sync(loff_t block_start, struct folio *folio,
-> -		size_t poff, size_t plen, const struct iomap *iomap)
-> +static int iomap_read_folio_sync(const struct iomap_iter *iter, loff_t block_start,
-> +				 struct folio *folio, size_t poff, size_t plen)
->  {
-> -	return iomap_bio_read_folio_sync(block_start, folio, poff, plen, iomap);
-> +	const struct iomap_folio_ops *folio_ops = iter->iomap.folio_ops;
-> +	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-> +
-> +	if (folio_ops && folio_ops->read_folio_sync)
-> +		return folio_ops->read_folio_sync(block_start, folio,
-> +						  poff, plen, srcmap,
-> +						  iter->private);
-> +
-> +	/* IOMAP_IN_MEM iomaps must always handle ->read_folio_sync() */
-> +	WARN_ON_ONCE(iter->iomap.type == IOMAP_IN_MEM);
-> +
-> +	return iomap_bio_read_folio_sync(block_start, folio, poff, plen, srcmap);
+On Mon, 09 Jun 2025, Al Viro wrote:
+> On Mon, Jun 09, 2025 at 09:09:37AM +1000, NeilBrown wrote:
+> > Proposed changes to directory-op locking will lock the dentry rather
+> > than the whole directory.  So the dentry will need to be unlocked.
+> 
+> Please, repost your current proposal _before_ that one goes anywhere.
+> 
 
-I just ran into this for another project and I hated my plumbing for
-this.  I hate yours very slightly less but I still don't like it.
+I've posted my proposal for the new API.  This makes the value of the
+vfs_mkdir() change clear (I hope).
 
-This is really more of a VM level concept, so I  wonder if we should
-instead:
+Would you also like me to post the patches which introduce the new
+locking scheme?
 
- - add a new read_folio_sync method to the address space operations that
-   reads a folio without unlocking it.
- - figure out if just reading the head/tail really is as much of an
-   optimization, and if it it pass arguments to it to just read the
-   head/tail, and if not skip it.
-
+Thanks,
+NeilBrown
