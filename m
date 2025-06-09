@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 981968633F;
-	Mon,  9 Jun 2025 17:14:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F101182BD;
+	Mon,  9 Jun 2025 18:13:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749489285; cv=none; b=SjrmcQdutTNkwYT2Z7pJ4Ou3j3ExVEDcFHF9hKaIEjOLx1ywuts++fjKXonSYjVCCrCRtx1BwCvk9mMI4o32PVlx8qCNpVrnm6C467c7IWz8/TdDkpK+8TnZOVwYWfygk75Bjg3ZROuNW7ooL3Id0po3UlS9zdFTnsgrLaziJI0=
+	t=1749492807; cv=none; b=d1tmMGFrwZVoWgHNmsM4AWgLfNFYY4Uo9a/27mPI8rtVfQB5dqAU2hkRdwgWMcjG4+01x1MeLTcJPtaiDMdtoe3YXhZpsODkAzviVf+pVo4YwfpBM947Xu+Ualu5R1+EgtHoSH61sibGgwDLn6GebJBZsU/Q/HpHnE7rJbd1wMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749489285; c=relaxed/simple;
-	bh=ncxhRXYy2cXLfo0Pcrv9QpJlmCAgF3C8xXX8iU0kCz8=;
+	s=arc-20240116; t=1749492807; c=relaxed/simple;
+	bh=aobCVpHT46ndsXFydgOluHlrPIMNa+5QUrmVNuOfLVs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GNnBQZ3Nox1Luoke0dZcGEXRjb0g2XiVqvnfBd9/6LFhsZLT7nkJMTeSskdLF0cz6DnXamvrU1AvWMd07i58Kf5hgcy6loRxfTIN7VbsSWS3scHkksYce+HwfQKfZXSnZIvmkvTrFPN6ntaWSu8MII8KGYG9a6GPfShjhZNC9/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BgWlWSYc; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=poJ010/+FhCpPBBDMldZuKbFEQ6U9kC7oVrHdPfkKQD91qVDtmsNZtPrMyjYPLopbLFoI2nfNvwlOsBtv675gs51GehAFJCoUSOFY6Sh/OWbFVpEGq0WlSKyPs34lyUxkJ4HrXXMpZTwBj41L9mczTUiwCECD0+DLrVnVcef7UU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YHoGvhZw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BgWlWSYc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 179F7C4CEEB;
-	Mon,  9 Jun 2025 17:14:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YHoGvhZw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3C55C4CEEB;
+	Mon,  9 Jun 2025 18:13:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749489285;
-	bh=ncxhRXYy2cXLfo0Pcrv9QpJlmCAgF3C8xXX8iU0kCz8=;
+	s=k20201202; t=1749492807;
+	bh=aobCVpHT46ndsXFydgOluHlrPIMNa+5QUrmVNuOfLVs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BgWlWSYcc9RL3502YwU/6gNmtqSOtOiQpevsLOvnKVlqauliAoMT99hcE6Lz56WZx
-	 SBF1DBj1UHjd4nKlHJhYPGNgFmGttGqplcchj/3rjQX2ywFu8gLJIuUp1FbkWdpsJx
-	 /kNy43SgPv3Qt4rvyhzy2GrQ4gKtIm4ewK9hEPepizIYbku/oR8C0/XL1aQH6AHGXy
-	 +Hmu4VV3Xat+Ko42ap0i/A23Hu8s7UbutKXUuu9DqLBC9YipJhHV+AEnut/trS9caO
-	 2P3SylKAXc2rCO9MFPezGh72An/oT598h74q75fdVt1jJL4N03WEPUCflhkUD1vXf7
-	 alAH3KWl1e0wg==
-Date: Mon, 9 Jun 2025 10:14:44 -0700
+	b=YHoGvhZwB1IaxUGWDFHIso17lMET/2DQHFIzoJVffn9EVWVLDvDXJnra+9AFUNdxz
+	 eKxDulST3YSF1TaXarCGRg9+fEk4OJo3ONi1PRilTh2w0vGlMbJ1RzX2y7RotsjuLV
+	 rgSJoN/6qmgQqQunrved/L4D7VFDFVSKO1Krz60Pe3pR22FDJnj27/z6tUtboDDyIB
+	 fa3753KOa1awStvXeHWOaALRBV0RI4WfrS2HfSyGhp7kEnpEiBVYEtWVbmYE2JDgGT
+	 NDwh87Gj9y/mUMEBY/tMr/huYRcXgCBJh6xKsA2WQ6GhSyn1iEwdoSrfCSZB9uV772
+	 SHYqmimPZDVmw==
+Date: Mon, 9 Jun 2025 11:13:26 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Joanne Koong <joannelkoong@gmail.com>, miklos@szeredi.hu,
-	brauner@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, bernd.schubert@fastmail.fm,
-	kernel-team@meta.com
-Subject: Re: [PATCH v1 5/8] iomap: add iomap_writeback_dirty_folio()
-Message-ID: <20250609171444.GL6156@frogsfrogsfrogs>
-References: <20250606233803.1421259-1-joannelkoong@gmail.com>
- <20250606233803.1421259-6-joannelkoong@gmail.com>
- <aEZoau3AuwoeqQgu@infradead.org>
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: linux-fsdevel@vger.kernel.org, joannelkoong@gmail.com,
+	linux-xfs@vger.kernel.org, bernd@bsbernd.com, John@groves.net
+Subject: Re: [PATCH 01/11] fuse: fix livelock in synchronous file put from
+ fuseblk workers
+Message-ID: <20250609181326.GC6179@frogsfrogsfrogs>
+References: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs>
+ <174787195588.1483178.6811285839793085547.stgit@frogsfrogsfrogs>
+ <CAJfpegsn2eBjy27rncxYBQ1heoiA1tme8oExF-d_C9DoFq34ow@mail.gmail.com>
+ <20250531010844.GF8328@frogsfrogsfrogs>
+ <CAJfpegvwXqL_N0POa95KgPJT5mMXS2xxCojbGWABhFCZy8An+g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,56 +47,49 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aEZoau3AuwoeqQgu@infradead.org>
+In-Reply-To: <CAJfpegvwXqL_N0POa95KgPJT5mMXS2xxCojbGWABhFCZy8An+g@mail.gmail.com>
 
-On Sun, Jun 08, 2025 at 09:51:54PM -0700, Christoph Hellwig wrote:
-> On Fri, Jun 06, 2025 at 04:38:00PM -0700, Joanne Koong wrote:
-> > Add iomap_writeback_dirty_folio() for writing back a dirty folio.
-> > One use case of this is for folio laundering.
+On Fri, Jun 06, 2025 at 03:54:50PM +0200, Miklos Szeredi wrote:
+> On Sat, 31 May 2025 at 03:08, Darrick J. Wong <djwong@kernel.org> wrote:
 > 
-> Where "folio laundering" means calling ->launder_folio, right?
+> > The best reason that I can think of is that normally the process that
+> > owns the fd (and hence is releasing it) should be made to wait for
+> > the release, because normally we want processes that generate file
+> > activity to pay those costs.
+> 
+> That argument seems to apply to all fuse variants.  But fuse does get
+> away with async release and I don't see why fuseblk would be different
+> in this respect.
+> 
+> Trying to hack around the problems of sync release with a task flag
+> that servers might or might not have set does not feel a very robust
+> solution.
+> 
+> > Also: is it a bug that the kernel only sends FUSE_DESTROY on umount for
+> > fuseblk filesystems?  I'd have thought that you'd want to make umount
+> > block until the fuse server is totally done.  OTOH I guess I could see
+> > an argument for not waiting for potentially hung servers, etc.
+> 
+> It's a potential DoS.  With allow_root we could arguably enable
+> FUSE_DESTROY, since the mounter is explicitly acknowledging this DoS
+> possibilty.
 
-What does fuse use folio laundering for, anyway?  It looks to me like
-the primary users are invalidate_inode_pages*.  Either the caller cares
-about flushing dirty data and has called filemap_write_and_wait_range;
-or it doesn't and wants to tear down the pagecache ahead of some other
-operation that's going to change the file contents and doesn't care.
+<nod> Looking deeper at fuse2fs's op_destroy function, I think most of
+the slow functionality (writing group descriptors and the primary super
+and fsyncing the device) ought to be done via FUSE_SYNCFS, not
+FUSE_DESTROY.  If I made that change, I think op_destroy becomes very
+fast -- all it does is close the fs and log a message.  The VFS unmount
+code calls sync_filesystem (which initiates a FUSE_SYNCFS) which sounds
+like it would work for fuse2fs.
 
-I suppose it could be useful as a last-chance operation on a dirty folio
-that was dirtied after a filemap_write_and_wait_range but before
-invalidate_inode_pages*?  Though for xfs we just return EBUSY and let
-the caller try again (or not).  Is there a subtlety to fuse here that I
-don't know about?
+Unhappily, libfuse3 doesn't seem to implement it:
 
-(Both of those questions are directed at hch or joanne or anyone else
-who knows ;))
+$ git grep FUSE_SYNCFS
+doc/libfuse-operations.txt:394:50. FUSE_SYNCFS (50)
+include/fuse_kernel.h:186: *  - add FUSE_SYNCFS
+include/fuse_kernel.h:670:      FUSE_SYNCFS             = 50,
 
 --D
 
-> > @@ -1675,7 +1677,8 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
-> >  	 * already at this point.  In that case we need to clear the writeback
-> >  	 * bit ourselves right after unlocking the page.
-> >  	 */
-> > -	folio_unlock(folio);
-> > +	if (unlock_folio)
-> > +		folio_unlock(folio);
-> >  	if (ifs) {
-> >  		if (atomic_dec_and_test(&ifs->write_bytes_pending))
-> >  			folio_end_writeback(folio);
-> 
-> When writing this code I was under the impression that
-> folio_end_writeback needs to be called after unlocking the page.
-> 
-> If that is not actually the case we can just move the unlocking into the
-> caller and make things a lot cleaner than the conditional locking
-> argument.
-> 
-> > +int iomap_writeback_dirty_folio(struct folio *folio, struct writeback_control *wbc,
-> > +				struct iomap_writepage_ctx *wpc,
-> > +				const struct iomap_writeback_ops *ops)
-> 
-> Please stick to the usual iomap coding style:  80 character lines,
-> two-tab indent for multiline function declarations.  (Also in a few
-> other places).
-> 
-> 
+> Thanks,
+> Miklos
