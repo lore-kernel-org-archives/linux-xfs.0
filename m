@@ -1,66 +1,113 @@
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96DF8323E;
-	Mon,  9 Jun 2025 00:50:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A31203D544;
+	Mon,  9 Jun 2025 04:24:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749430223; cv=none; b=Uo5EFyE7rA2DnnpLxKTsWf5rBjV0CS4GxuW9ZW0kX13wtE3rFYyzvj6D3CUn6Mw2fdhsq3gaRtS/xFRVVRfYnolic6KiwHNWPp6IvwM1bwKa/VqU/91huomVucD7ePfr9Ptohf//4iZzwR01Q5DdyEQtYKEE4+BFbTEbhDr5tuc=
+	t=1749443090; cv=none; b=P6HTNG4MNvbcOgl0FvfpTM54hPH1yp4Sejt2PFhW9v8PYLATCrJvEadxWJJo5hb7evlRWh8tJ0vCG8ZKkpjCZ0L79V69Ia4h9QhILp8teS7tvPIlxxNbSwCUd2ub0Pu70Un43Z0pJcTeMmiZStMN8a4Qi6G+SJIRyJPwCLQUlfA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749430223; c=relaxed/simple;
-	bh=+AHHggyZBEcEEMErS+Gtpy0ufYcQF85fKYdZ5jK/L98=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oUoWvwThVBMgOGQTYttuARs4E06tA5RrtpAW1uvBKX18EXk15Pe5xI9NlozZgicqeMklPGIOoukE0oeKaOkPpqJslgsprpRxprjiOHAQ5+m8iVHbViokOTGi/RqvVVrtzefLKr+UtA6jzAOvFMDBfG4gQHL9P0aOZ60DWg4YADI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=BCerGfG/; arc=none smtp.client-ip=62.89.141.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
+	s=arc-20240116; t=1749443090; c=relaxed/simple;
+	bh=l2L6GHlrWoPBibQkBWsIpHpOXT/8limu298tzfvvLwU=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=cyVczVObk9eNE1oBoZx1ZQNRCBdSVo5vWNB+LUERgDWLEnrydKsE/cEwNzqEtjI2z+pZDcfQZjNUBxL0lRpxfqIftLWhxBHx8sUgy+gNT4RYRK4os79Ux6C/HeMb0UqH0U745HytFYAgIEi8fb2QNk/Get+He19ry/p7BKn0XKA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BX4ie98m; arc=none smtp.client-ip=209.85.210.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="BCerGfG/"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=m12yZClFLfVZgzwkAkP0PbBmZAZomHK6sN59s6Zq+Js=; b=BCerGfG/TETnXb1pBHyDSw9J43
-	SItMVXL6Jo0eKq8/+GQwg3y2lqipzDlWqEPixlpzJrikZColJbRdihZzUVcE76D3TmPLlEtQUm7/c
-	Uw6DbRmWpS5XZ11SVeqsfApdK7phZ2l+sQGQxNp+/PlvBUU9xCsgnOKWEUxOl7lMFJnxCWxQk+HCn
-	W9gu1aYq7SL2007L8+Q8jgr/AoHC1UUuFGICFh8XXV2XlcF1+h5UU94Y2SwNIJBLRh4cU843UAxfg
-	r1J+ofXM3c+yFQPypGOXWFXs4jLSAZ9rhuqdsb6HrfdWP9lRpePpWFO8X4RC+vdghzZQc1G+xTKJO
-	xMEz9IkA==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uOQiH-00000006Gi5-1kLQ;
-	Mon, 09 Jun 2025 00:50:09 +0000
-Date: Mon, 9 Jun 2025 01:50:09 +0100
-From: Al Viro <viro@zeniv.linux.org.uk>
-To: NeilBrown <neil@brown.name>
-Cc: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Jeff Layton <jlayton@kernel.org>,
-	Amir Goldstein <amir73il@gmail.com>,
-	Jan Harkes <jaharkes@cs.cmu.edu>,
-	David Howells <dhowells@redhat.com>, Tyler Hicks <code@tyhicks.com>,
-	Miklos Szeredi <miklos@szeredi.hu>,
-	Carlos Maiolino <cem@kernel.org>, linux-fsdevel@vger.kernel.org,
-	coda@cs.cmu.edu, codalist@coda.cs.cmu.edu,
-	linux-nfs@vger.kernel.org, netfs@lists.linux.dev,
-	ecryptfs@vger.kernel.org, linux-unionfs@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/5] Change vfs_mkdir() to unlock on failure.
-Message-ID: <20250609005009.GB299672@ZenIV>
-References: <20250608230952.20539-1-neil@brown.name>
- <20250608230952.20539-6-neil@brown.name>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BX4ie98m"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-74264d1832eso4454569b3a.0;
+        Sun, 08 Jun 2025 21:24:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1749443088; x=1750047888; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=h5hw1X/Bp3Ok5p6bqNmTa1I9H//Ca5M5727JN2HKSqw=;
+        b=BX4ie98mw4CYyJaQ7XxnA6hjvze5yUNbg3v0xuetFCOtlek1zeZ+36IJDcFcq/Dr4E
+         42PksFGR/h2M0wXmmkwcfGxiy11hW8OoeedvuX/HtWmo4KExJlUD98p07l6h/Es74Di9
+         pHNL0iWwCe1umBhvw9/8OuxeHbtFwO+RlMLYH6XicRw3O5M1bCxWkzI5stqRoV8V97YH
+         ajfhPS9sKXUEJx3J3FeDpxn54vGMdW2ZuIide1fk91zeqpqX/SsU9DkcdiR+T0pWiUPy
+         8RWQNiuHcrv20AEx9prAxqFZ5Sjg9rgK8n/K176ssgq4aeZ2+lu4zmveN+tx3OTl1WAm
+         JTpQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749443088; x=1750047888;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=h5hw1X/Bp3Ok5p6bqNmTa1I9H//Ca5M5727JN2HKSqw=;
+        b=L8AF6aOAFmt93dq5X5GxVbfaAH1loKYx+nrhFk5R+7e4ciCFF7NN9UpdyG+cuJQugg
+         4h6kRu5VUtkHMGEP9zfteUjfnnIH95fYMSdtSWg6TeJalsn5yLmf/w990aXOdtudRGZ4
+         YOqTQcoBr7iJJRg/FiMMHFN5ff46Ya3bmVEA3Zg77bBv13uJMJkuq0fs41bTkoIe3eM7
+         AEHclTK4ul3uo121E59KIH0K0OT474bFzXU+HDzmB6l2warFmyroA5iS7vSvT+RQpzWk
+         K734hog6bVnRp/yTpob/+YbF7IOfVq8q6O+XyW20iHVWVknd8mBwhd+gvT5oOIYO4qGH
+         Blmg==
+X-Forwarded-Encrypted: i=1; AJvYcCUDf4EuehVqAvNrLomheyqyv0zC7eHXrREorDxRhjRyqly1dHyC0GlOVU0/Da6r+ZvkGawAjhZw@vger.kernel.org, AJvYcCUwNg0w+1FvgSvZrQULPgYap9wbQKxtNVKpeyZOD8ktaeiX5OlHDVyO/0lYteKCzqjSH5vsv2P5GNOU@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw1d69pRe9V8UcPw6FLzZZ7d84PEgBOKQlo24NOMvP3rlbMmIjU
+	jc8C5+txJ0LdH5AJlABR6Q55+DqTIY04YJ+aBocg946TkKOKDieiuQR8
+X-Gm-Gg: ASbGnct0WNEmFXASrS61czbINP7dPKcEInylWiell8lhPDntZnIbA51jWF+1kJQ1NK5
+	F1/L8P/mbQBNKk0/Nn1Wh57QZH0LKu+aOjOTEkANrAdzQG7C3TyxgXCL8IBKv2z3UhO2HmsAUXW
+	iVHjUDRaMY/wr9hgQssD88HpUXClxEHDl0EuX9QhW5XLRqmBfYenaRuRI0WQr9ETZ2HE2zwDpwL
+	r2cD+Un3kFpBfBryYda86BLz+MTWP60MbMg0AuM9Lrhc2xzsSa7r0hWw5s78fDw9baVcRdOD9E1
+	35ZEdBXKjkUHV8ZSpNQLXWktfA0vbgwRtv1tdOwMM7gpmVIOOShG1A==
+X-Google-Smtp-Source: AGHT+IHIpX9hMqg8kwh8CODPzrjTeZKsfj3+sVvLgdoxG45tf4H6Bpxgl/LHPmoMafUNmeUXZGdahw==
+X-Received: by 2002:a05:6a00:18a1:b0:742:b3a6:db16 with SMTP id d2e1a72fcca58-74827f3315amr16614371b3a.20.1749443087900;
+        Sun, 08 Jun 2025 21:24:47 -0700 (PDT)
+Received: from dw-tp ([171.76.83.10])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7482b083a9bsm4814137b3a.77.2025.06.08.21.24.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 08 Jun 2025 21:24:47 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Catherine Hoang <catherine.hoang@oracle.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Cc: djwong@kernel.org, john.g.garry@oracle.com, ojaswin@linux.ibm.com
+Subject: Re: [PATCH v3 1/3] common/atomicwrites: add helper for multi block atomic writes
+In-Reply-To: <20250605040122.63131-2-catherine.hoang@oracle.com>
+Date: Mon, 09 Jun 2025 09:53:25 +0530
+Message-ID: <87ecvt4k76.fsf@gmail.com>
+References: <20250605040122.63131-1-catherine.hoang@oracle.com> <20250605040122.63131-2-catherine.hoang@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250608230952.20539-6-neil@brown.name>
-Sender: Al Viro <viro@ftp.linux.org.uk>
 
-On Mon, Jun 09, 2025 at 09:09:37AM +1000, NeilBrown wrote:
-> Proposed changes to directory-op locking will lock the dentry rather
-> than the whole directory.  So the dentry will need to be unlocked.
+Catherine Hoang <catherine.hoang@oracle.com> writes:
 
-Please, repost your current proposal _before_ that one goes anywhere.
+> Add a helper to check that we can perform multi block atomic writes.
+>
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> ---
+>  common/atomicwrites | 21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
+>
+> diff --git a/common/atomicwrites b/common/atomicwrites
+> index 391bb6f6..88f49a1a 100644
+> --- a/common/atomicwrites
+> +++ b/common/atomicwrites
+> @@ -24,6 +24,27 @@ _get_atomic_write_segments_max()
+>          grep -w atomic_write_segments_max | grep -o '[0-9]\+'
+>  }
+>  
+> +_require_scratch_write_atomic_multi_fsblock()
+> +{
+> +    _require_scratch
+> +
+> +    _scratch_mkfs > /dev/null 2>&1 || \
+> +        _notrun "cannot format scratch device for atomic write checks"
+> +    _try_scratch_mount || \
+> +        _notrun "cannot mount scratch device for atomic write checks"
+> +
+> +    local testfile=$SCRATCH_MNT/testfile
+> +    touch $testfile
+> +
+> +    local bsize=$(_get_file_block_size $SCRATCH_MNT)
+> +    local awu_max_fs=$(_get_atomic_write_unit_max $testfile)
+> +
+> +    _scratch_unmount
+> +
+> +    test $awu_max_fs -ge $((bsize * 2)) || \
+> +        _notrun "multi-block atomic writes not supported by this filesystem"
+> +}
+> +
+
+Looks good. Please feel free to add:
+Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+
+-ritesh
