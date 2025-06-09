@@ -1,58 +1,58 @@
 Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8103119ABB6;
-	Mon,  9 Jun 2025 22:03:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AAF51EF091;
+	Mon,  9 Jun 2025 22:45:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749506599; cv=none; b=p18NlCWBUBwU4RGIQT0ouySzhIjMFZvhFfxfjZr2dvUYRvXCU+Z1wYUGArNeZAa7f5LEXYRbqU6hyapbz5yccG+FPcGU9J/cWNtZeXGlma2qbVzqzLtWMYH0CDGC53DrUe9TH/qw+QDRJVjIsuPCa7aSJ3wrgImTsgPfhq4Y7AM=
+	t=1749509122; cv=none; b=Nvg4yJJ03i4JYAAD35jc2uTUvVQRmc57ISnLPMuCbI+wCVrxWGrwTGBVpBOt/1o0BIv5TkYhnmeXkJzVseE/or9X7HrnrqlsApzgNf0dfsoAXuA/8Y1EgQ/50wdSnzU0z8ayh1y7WsIrpCtjyZWyLVxWpku3OLo/0WAuRqbMKVI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749506599; c=relaxed/simple;
-	bh=kTcWcsUXPZ3DSMWXmiteAytPm7rFqw/8OGkYl0vK46w=;
+	s=arc-20240116; t=1749509122; c=relaxed/simple;
+	bh=fYgAiSm9+mbNLYV1rcD4MkKT4CGCFht3BYnOHMgY1vI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=JEjEeAMriObqBEwu58ZJ0Bl42Bzv04xFFZ/5Cs2LBgEcKkVYHiKW1VXaWWdyUHMHyYM4vmZU0agSFUKbfPe0ckwG8pPquLz9broeinxyeKIgJGsTt4sx6IVVBxNu+hCOKZalCqjXTSSTebtJPkC/W96AfKTGU7UpjO27FhHA8aA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XDBq84N7; arc=none smtp.client-ip=209.85.160.174
+	 To:Cc:Content-Type; b=Hjb60MSgRfZWQhW6b0aOsE+qjgnXXcjPC/oPxYLk6att8JPaJy7r56yBPuL+qTN+iFNhQ604yxz8kYm2qNJ3Pb4/EeC3ixcoEIeyce9RST10USGCaBYpEj/YZuhwkdmn5G7S5PIfjpT7ADReE9asMBq1eTe/8Xe8Bs0Ji347rBs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PfBTiy4q; arc=none smtp.client-ip=209.85.160.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XDBq84N7"
-Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-4a6f6d52af7so21839261cf.1;
-        Mon, 09 Jun 2025 15:03:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PfBTiy4q"
+Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-4a43d2d5569so63067371cf.0;
+        Mon, 09 Jun 2025 15:45:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1749506596; x=1750111396; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1749509116; x=1750113916; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ImDU677/IDBFdNubvQNS2UqChpmFPmPumpZBCbbmVWI=;
-        b=XDBq84N7SbMR6yRn2taWGw6lqmrGx2n+1TafEb/JZy6lmH/clmtz2SaVEun5BYjvtW
-         ZgAEqO7wBhWt/tv5Gd6t0SZuXUOpTsWCQC1oiK8OWDvXB3rYwObpD8XZHHIK5kdG1bKY
-         S+YpZQSoT5K8r5ZAYiXNjwPXa4N5KBH+PrVThGfSczp3cwKw6Jc7yBpr4h+TJX2Fh6yJ
-         zit+jsqaVlozPknhFI5TAb2h1krACwk/kZTVF/PKGPbKsumkp0He5duIVyQaSOlFkyQl
-         onMm5EbyMBl5JW6kE5LpwJ3JgQkCcKkJ+fpfQ68+QkjEyzNeLdJ9PhGCrl3LtUZG7Bfj
-         EgPQ==
+        bh=dFFj3N73ZzyeSS7oO8kYozgzqeDAPSsxF2b526LrF/w=;
+        b=PfBTiy4q3zugX3H/CoNcvYdHT54kqd2rguwx9blxlRsW2zxTVs/Js+ed9Uhm/vFixP
+         DVb5O7kBSP3owOCGSXSuBn/qDGXXwjegmhGW/y6l851V0c+zDJma4ai8iY+1q3hHbzoS
+         Tvmcuc/ciqH/5aMYUzq1PJPTarsN1BqVy+gubzYhDlqE9XsvVFHWZZ/K5wdFyRTbHfDo
+         2hmYaQDTipW3I+FjkTdnSDpVXUYc1yq/1tUsePIP0VpfeGSJ2r/Y3PxYK4+lan0zelGl
+         Qm4KGmmfTmqCLKYOzux7gvrl4TpStq/3+mB83J/nnY0ghBEXiogZ26y5woQoFMZ3Y7SK
+         2lIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749506596; x=1750111396;
+        d=1e100.net; s=20230601; t=1749509116; x=1750113916;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ImDU677/IDBFdNubvQNS2UqChpmFPmPumpZBCbbmVWI=;
-        b=KlNW0kCKJ9Kc2Aa7kiO00M5XrOtUln3iXbLkAb/Y8cWWdPua5yiVzmkVEn67jEsjpq
-         J7s7BssO7dNATQ2HZTxTfXBWLz3SgU8T/sUALu2URlTtBJljGaOh4fHJB55Owls3wojK
-         szeOg2fht16QCa2zLtntv8PRb4hrTpZuYpwpW1LOYS8i5AcaPw9fMpgWkLd7hqegh2Hk
-         NAvKZr9KGjZ9m/jSX97s0WoPVC4aRVIo1dxfzeQD+gNUt2zeJ2Tf55bJAxSKb/5XPcRO
-         M5XwJa0ajetntSHFms3JnfEMsaNOeLJ3o1zPCN2Vme0yB2ByvdDyPMv9Quhg7KGvr7N0
-         dxWA==
-X-Forwarded-Encrypted: i=1; AJvYcCW7MHW93mUjS8Yl33Akek2frlUo0HNJvU8ChAzbb9VKgiWdDwT/WUUBRnOuDEie4zfJEiX0lYtKEjL0FaQT@vger.kernel.org, AJvYcCXK2xAq20B6W/bjAsZlBgwnMnRN0nAStB2WEeNwWdrOfaMghAYi0S3/6UyUlN/kZwyfFobjmrXukR/5@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy2Xlm81PNOext/X4rFiMUqjFldSnzBSMQVbH7joqpJjav3rlzi
-	dfpRCiM7+xtl2NDIU8H6OpCJ3Qu/rCUySCPaFYA2gQR/VblM/WTbZyK3HcE8ycdo9G3M1h4xGU+
-	FwxfR6N5CWS27Z2IEq37ph97bj7ZRsmo=
-X-Gm-Gg: ASbGncs+JKMG+pjQ1ApGFu7CpZX01T7OA2pNJ5Zi+h5jma4Z2u+80mECm4+6R/7rOHf
-	+IO+zRrjfI0NRIlt1OO2RRJpE8avWKfaH26aruyI2llsc5EMaWuXhHn4alNuUDK8GLti7kq+26+
-	RQ+PZK9X1TBSxxQca4URvhp/8B41Rc3n5D6vP9BGzYLUE=
-X-Google-Smtp-Source: AGHT+IFO5wiKwK/MpvYjPwsbbBMu0KrqzWyqadX+VRYVfSsVpBJL+gSTdInx+srgNfgyC9snSXYM1FOMAH9Fw/hVoaU=
-X-Received: by 2002:a05:622a:5c1a:b0:4a4:327f:1d0d with SMTP id
- d75a77b69052e-4a5b9d4edfamr244584011cf.30.1749506596125; Mon, 09 Jun 2025
- 15:03:16 -0700 (PDT)
+        bh=dFFj3N73ZzyeSS7oO8kYozgzqeDAPSsxF2b526LrF/w=;
+        b=EcvdRRxJwWeQLp/SMW8bdAUNehy2R5j9oFMZ4JfiKq6BqI6OFrA1Rq7NzZmOdJRSUE
+         emPd89slvRse4MjO459vIQ0iLUAzsSDUnsqaXrsG5aQ5GaZjgtHBjIv0aPaxy/X4jhuP
+         lZpvitRUGSBaMJTAvSorIQbriTfdilFvgi2kE1js1qtOVPrdT4SIfA8iU7tOovUQWAnu
+         oxU3w3HK9dVu8RhQNqUUqHVR6o42T9913EuAZvYM2G5s6EWr02PBil1C3AwjsHzZBC7e
+         U5Lg8TQymz8WQTw/bC4FmC1v85kN9aprGit1qNuP/BOtxCgYzWn648Tvl8GdPdUrTWsp
+         sfig==
+X-Forwarded-Encrypted: i=1; AJvYcCVDEYBTMCH1zPTILmQUPUMzUwSfmawDLkbxE9UfYwqy340KZMlOv1R9RgT69N6/9okykMpHA64+jtoV0CPZ@vger.kernel.org, AJvYcCWYgD02JOwYrqBK/KLd6ndwtWraoNzymqimtXP6E68OUnY4kLY4C25vZhxFldi62sNYlsHLqGjiC+DN@vger.kernel.org
+X-Gm-Message-State: AOJu0YxLd0Q2L/M1ZvAYFVmcKWReQWqZTKHbFPb98HVxWzQ/YlhIkmf9
+	eZ4GQCig96IyBIT0B32n/idTJ9veKZEklyvHtIdruWykAksY1l2MIEmmThcxkUDYgFIAnXF9f9a
+	neEyjaU4PLZrbKqyZQdyBlKY+K65rkwU=
+X-Gm-Gg: ASbGncuKbCghBJPgurYzz6/YnIo1E4EXBqKPiRIlbj3oTsDCiKbPjc4iMgEGa/lACPY
+	VkO8308yOPsBOxOJ9yXp5s/1V+9haPov6+k4Gwn84ixFkiNv1NqGeNi9KhW6fDP4tEDWqarfqL0
+	JVFkMgJkknc7WV6yEV4mDbKvfgSu6FSZ28KgQyDf8JOXo=
+X-Google-Smtp-Source: AGHT+IEefy2DjrcrpIx6xmoglQJdOEA6hBHSxaRtr3H55pBw3C1ISIdkEqrxjhIbVJPqkiJr8/k85FqfWpIVcTZEBvM=
+X-Received: by 2002:a05:622a:229c:b0:476:875e:516d with SMTP id
+ d75a77b69052e-4a5b9d92ac2mr210707191cf.36.1749509116219; Mon, 09 Jun 2025
+ 15:45:16 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -60,53 +60,23 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20250606233803.1421259-1-joannelkoong@gmail.com>
- <20250606233803.1421259-4-joannelkoong@gmail.com> <20250609163840.GJ6156@frogsfrogsfrogs>
-In-Reply-To: <20250609163840.GJ6156@frogsfrogsfrogs>
+ <20250606233803.1421259-4-joannelkoong@gmail.com> <aEZpcWGYssJ2OpqL@infradead.org>
+In-Reply-To: <aEZpcWGYssJ2OpqL@infradead.org>
 From: Joanne Koong <joannelkoong@gmail.com>
-Date: Mon, 9 Jun 2025 15:03:05 -0700
-X-Gm-Features: AX0GCFuLHQWkyInOdd3IqZsh67f8pVAbuqgIB29NxrW5V6iJQ_6jH1MO0Ub4xx8
-Message-ID: <CAJnrk1ZVBNWjKmxc_pAXdJ1NEiCQm0Mpdy8eSjzkY1c05k+WxQ@mail.gmail.com>
+Date: Mon, 9 Jun 2025 15:45:05 -0700
+X-Gm-Features: AX0GCFsr-eKdOAmV_AYFU8UfPuN1fdAn7eT9UY4YqoDzlhxle0am81l7VjcLdXI
+Message-ID: <CAJnrk1asVKKakBOmXghU22fWiZu4D+PDKVM6z5fMbbFNCzP5dQ@mail.gmail.com>
 Subject: Re: [PATCH v1 3/8] iomap: add buffered write support for IOMAP_IN_MEM iomaps
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: miklos@szeredi.hu, brauner@kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, bernd.schubert@fastmail.fm, kernel-team@meta.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: miklos@szeredi.hu, djwong@kernel.org, brauner@kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	bernd.schubert@fastmail.fm, kernel-team@meta.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jun 9, 2025 at 9:38=E2=80=AFAM Darrick J. Wong <djwong@kernel.org> =
-wrote:
+On Sun, Jun 8, 2025 at 9:56=E2=80=AFPM Christoph Hellwig <hch@infradead.org=
+> wrote:
 >
-> On Fri, Jun 06, 2025 at 04:37:58PM -0700, Joanne Koong wrote:
-> > Add buffered write support for IOMAP_IN_MEM iomaps. This lets
-> > IOMAP_IN_MEM iomaps use some of the internal features in iomaps
-> > such as granular dirty tracking for large folios.
-> >
-> > Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> > ---
-> >  fs/iomap/buffered-io.c | 24 +++++++++++++++++-------
-> >  include/linux/iomap.h  | 10 ++++++++++
-> >  2 files changed, 27 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index 1caeb4921035..fd2ea1306d88 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -300,7 +300,7 @@ static inline bool iomap_block_needs_zeroing(const =
-struct iomap_iter *iter,
-> >  {
-> >       const struct iomap *srcmap =3D iomap_iter_srcmap(iter);
-> >
-> > -     return srcmap->type !=3D IOMAP_MAPPED ||
-> > +     return (srcmap->type !=3D IOMAP_MAPPED && srcmap->type !=3D IOMAP=
-_IN_MEM) ||
-> >               (srcmap->flags & IOMAP_F_NEW) ||
-> >               pos >=3D i_size_read(iter->inode);
-> >  }
-> > @@ -583,16 +583,26 @@ iomap_write_failed(struct inode *inode, loff_t po=
-s, unsigned len)
-> >                                        pos + len - 1);
-> >  }
-> >
 > > -static int iomap_read_folio_sync(loff_t block_start, struct folio *fol=
 io,
 > > -             size_t poff, size_t plen, const struct iomap *iomap)
@@ -125,86 +95,30 @@ iomap);
 > > +             return folio_ops->read_folio_sync(block_start, folio,
 > > +                                               poff, plen, srcmap,
 > > +                                               iter->private);
->
-> Hmm, patch 6 hooks this up to fuse_do_readfolio, which means that iomap
-> provides the folios and manages their uptodate/dirty state.  You still
-> want fuse to handle the folio contents (aka poke the fuse server via
-> FUSE_READ/FUSE_WRITE), but this avoids the memcpy that IOMAP_INLINE
-> performs.
->
-> So I think you're effectively addding another IO path to buffered-io.c,
-> which explains why you moved the bio code to a separate file.  I wonder
-
-The bio code needed to be moved to its own separate file because it
-depends on CONFIG_BLOCK whereas fuse should still compile/run even if
-CONFIG_BLOCK is not set.
-
-Btw, I think you will need this too for your fuse server iomap patchset.
-
-> if you could hook up this new IO path by checking for a non-NULL
-> ->read_folio_sync function and calling it regardless of iomap::type?
-
-I think this is already doing that? It will call ->read_folio_sync()
-if the callback was provided, regardless of what the iomap type is.
-
->
-> --D
->
 > > +
 > > +     /* IOMAP_IN_MEM iomaps must always handle ->read_folio_sync() */
 > > +     WARN_ON_ONCE(iter->iomap.type =3D=3D IOMAP_IN_MEM);
 > > +
 > > +     return iomap_bio_read_folio_sync(block_start, folio, poff, plen, =
 srcmap);
-> >  }
-> >
-> >  static int __iomap_write_begin(const struct iomap_iter *iter, loff_t p=
-os,
-> >               size_t len, struct folio *folio)
-> >  {
-> > -     const struct iomap *srcmap =3D iomap_iter_srcmap(iter);
-> >       struct iomap_folio_state *ifs;
-> >       loff_t block_size =3D i_blocksize(iter->inode);
-> >       loff_t block_start =3D round_down(pos, block_size);
-> > @@ -640,8 +650,8 @@ static int __iomap_write_begin(const struct iomap_i=
-ter *iter, loff_t pos,
-> >                       if (iter->flags & IOMAP_NOWAIT)
-> >                               return -EAGAIN;
-> >
-> > -                     status =3D iomap_read_folio_sync(block_start, fol=
-io,
-> > -                                     poff, plen, srcmap);
-> > +                     status =3D iomap_read_folio_sync(iter, block_star=
-t, folio,
-> > +                                                    poff, plen);
-> >                       if (status)
-> >                               return status;
-> >               }
-> > diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> > index dbbf217eb03f..e748aeebe1a5 100644
-> > --- a/include/linux/iomap.h
-> > +++ b/include/linux/iomap.h
-> > @@ -175,6 +175,16 @@ struct iomap_folio_ops {
-> >        * locked by the iomap code.
-> >        */
-> >       bool (*iomap_valid)(struct inode *inode, const struct iomap *ioma=
-p);
-> > +
-> > +     /*
-> > +      * Required for IOMAP_IN_MEM iomaps. Otherwise optional if the ca=
-ller
-> > +      * wishes to handle reading in a folio.
-> > +      *
-> > +      * The read must be done synchronously.
-> > +      */
-> > +     int (*read_folio_sync)(loff_t block_start, struct folio *folio,
-> > +                            size_t off, size_t len, const struct iomap=
- *iomap,
-> > +                            void *private);
-> >  };
-> >
-> >  /*
-> > --
-> > 2.47.1
-> >
-> >
+>
+> I just ran into this for another project and I hated my plumbing for
+> this.  I hate yours very slightly less but I still don't like it.
+>
+> This is really more of a VM level concept, so I  wonder if we should
+> instead:
+>
+>  - add a new read_folio_sync method to the address space operations that
+>    reads a folio without unlocking it.
+
+imo I hate this more. AFAIU, basically fuse will be the only one
+actually needing/using this?
+Though it's a more intensive change, what about just expanding the
+existing address space operations ->read_folio() callback to take in
+an offset, length, and a boolean for whether the folio should be
+unlocked after the read?
+
+>  - figure out if just reading the head/tail really is as much of an
+>    optimization, and if it it pass arguments to it to just read the
+>    head/tail, and if not skip it.
+>
