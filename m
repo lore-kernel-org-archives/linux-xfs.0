@@ -1,58 +1,58 @@
-Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
+Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AAF51EF091;
-	Mon,  9 Jun 2025 22:45:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B760620E6E2;
+	Mon,  9 Jun 2025 23:15:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749509122; cv=none; b=Nvg4yJJ03i4JYAAD35jc2uTUvVQRmc57ISnLPMuCbI+wCVrxWGrwTGBVpBOt/1o0BIv5TkYhnmeXkJzVseE/or9X7HrnrqlsApzgNf0dfsoAXuA/8Y1EgQ/50wdSnzU0z8ayh1y7WsIrpCtjyZWyLVxWpku3OLo/0WAuRqbMKVI=
+	t=1749510941; cv=none; b=ItqoC54tDkYiYBrW1MQFLXGNyz5iN5wZoU2RVeEmDnrVbTHNr1tRT+oXxnejIYYlLphELcERqoOB3Ss1K+ne6FgdKtsesCS8ObpJccGIYtIPcFczK35reydN+pcan7UgC6Y74Qm+d5Y4pNhT80PpDeZC03YJrUNYXoXjuNHI/0M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749509122; c=relaxed/simple;
-	bh=fYgAiSm9+mbNLYV1rcD4MkKT4CGCFht3BYnOHMgY1vI=;
+	s=arc-20240116; t=1749510941; c=relaxed/simple;
+	bh=PXWRWbQfNfa4/a7YKwd3qVVjpm1sTYjTLpXnKiubNMU=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Hjb60MSgRfZWQhW6b0aOsE+qjgnXXcjPC/oPxYLk6att8JPaJy7r56yBPuL+qTN+iFNhQ604yxz8kYm2qNJ3Pb4/EeC3ixcoEIeyce9RST10USGCaBYpEj/YZuhwkdmn5G7S5PIfjpT7ADReE9asMBq1eTe/8Xe8Bs0Ji347rBs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PfBTiy4q; arc=none smtp.client-ip=209.85.160.174
+	 To:Cc:Content-Type; b=aoFd67PZNTBRBIvw2LHSNvFcP1kAwxJEoHeU52lQX3w5mO3LAIJMkbmpvWy2CMXJfSY8iSA5DTL8KY/0Pg4SNfALF24r1sSJorv/ysP7rlUhHmbyXJNglCtWFAQpHaXtBZG2QBExRDnHSUOlJFIh6C/eR94UlUO82GHAHabjlHI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ImAxvwx9; arc=none smtp.client-ip=209.85.160.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PfBTiy4q"
-Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-4a43d2d5569so63067371cf.0;
-        Mon, 09 Jun 2025 15:45:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ImAxvwx9"
+Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-4a43972dcd7so63597321cf.3;
+        Mon, 09 Jun 2025 16:15:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1749509116; x=1750113916; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1749510938; x=1750115738; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=dFFj3N73ZzyeSS7oO8kYozgzqeDAPSsxF2b526LrF/w=;
-        b=PfBTiy4q3zugX3H/CoNcvYdHT54kqd2rguwx9blxlRsW2zxTVs/Js+ed9Uhm/vFixP
-         DVb5O7kBSP3owOCGSXSuBn/qDGXXwjegmhGW/y6l851V0c+zDJma4ai8iY+1q3hHbzoS
-         Tvmcuc/ciqH/5aMYUzq1PJPTarsN1BqVy+gubzYhDlqE9XsvVFHWZZ/K5wdFyRTbHfDo
-         2hmYaQDTipW3I+FjkTdnSDpVXUYc1yq/1tUsePIP0VpfeGSJ2r/Y3PxYK4+lan0zelGl
-         Qm4KGmmfTmqCLKYOzux7gvrl4TpStq/3+mB83J/nnY0ghBEXiogZ26y5woQoFMZ3Y7SK
-         2lIg==
+        bh=t649DObLtRdZzX63ptZdq6lquSxzZHNBUYbcq8ILXMQ=;
+        b=ImAxvwx9E3bYc3COFhEffAZcRmJCrNFGShpMyHcfmveqnQrnIUtNoiJEhz2Kp0Q5+k
+         J82RNTMM0wSHEQ7PGrj6JWYtmNO8Ac3lb2vTpMG+CchEOLqBm2AZdUHrx4lVddDOJu4m
+         vzuiVAaFnMGUWqwmo1GAQZ29ccIAAIj4oEeRimEXPqyE+wE3z8XIk7e1k8lA+j/YSds3
+         +ymZ0H947c6vOI0fMgzXgu09ggpSp1yQ3Nkfa4XDHAU7HBYymhTi2iCBC9Cp5Xn6U8sx
+         adqkja7btt+TbL7n/tIg5wi+C3HWN70h8P3rIkyiH8I/reP3X03u5lgPZI3v3/KzcWTr
+         KXUg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749509116; x=1750113916;
+        d=1e100.net; s=20230601; t=1749510938; x=1750115738;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=dFFj3N73ZzyeSS7oO8kYozgzqeDAPSsxF2b526LrF/w=;
-        b=EcvdRRxJwWeQLp/SMW8bdAUNehy2R5j9oFMZ4JfiKq6BqI6OFrA1Rq7NzZmOdJRSUE
-         emPd89slvRse4MjO459vIQ0iLUAzsSDUnsqaXrsG5aQ5GaZjgtHBjIv0aPaxy/X4jhuP
-         lZpvitRUGSBaMJTAvSorIQbriTfdilFvgi2kE1js1qtOVPrdT4SIfA8iU7tOovUQWAnu
-         oxU3w3HK9dVu8RhQNqUUqHVR6o42T9913EuAZvYM2G5s6EWr02PBil1C3AwjsHzZBC7e
-         U5Lg8TQymz8WQTw/bC4FmC1v85kN9aprGit1qNuP/BOtxCgYzWn648Tvl8GdPdUrTWsp
-         sfig==
-X-Forwarded-Encrypted: i=1; AJvYcCVDEYBTMCH1zPTILmQUPUMzUwSfmawDLkbxE9UfYwqy340KZMlOv1R9RgT69N6/9okykMpHA64+jtoV0CPZ@vger.kernel.org, AJvYcCWYgD02JOwYrqBK/KLd6ndwtWraoNzymqimtXP6E68OUnY4kLY4C25vZhxFldi62sNYlsHLqGjiC+DN@vger.kernel.org
-X-Gm-Message-State: AOJu0YxLd0Q2L/M1ZvAYFVmcKWReQWqZTKHbFPb98HVxWzQ/YlhIkmf9
-	eZ4GQCig96IyBIT0B32n/idTJ9veKZEklyvHtIdruWykAksY1l2MIEmmThcxkUDYgFIAnXF9f9a
-	neEyjaU4PLZrbKqyZQdyBlKY+K65rkwU=
-X-Gm-Gg: ASbGncuKbCghBJPgurYzz6/YnIo1E4EXBqKPiRIlbj3oTsDCiKbPjc4iMgEGa/lACPY
-	VkO8308yOPsBOxOJ9yXp5s/1V+9haPov6+k4Gwn84ixFkiNv1NqGeNi9KhW6fDP4tEDWqarfqL0
-	JVFkMgJkknc7WV6yEV4mDbKvfgSu6FSZ28KgQyDf8JOXo=
-X-Google-Smtp-Source: AGHT+IEefy2DjrcrpIx6xmoglQJdOEA6hBHSxaRtr3H55pBw3C1ISIdkEqrxjhIbVJPqkiJr8/k85FqfWpIVcTZEBvM=
-X-Received: by 2002:a05:622a:229c:b0:476:875e:516d with SMTP id
- d75a77b69052e-4a5b9d92ac2mr210707191cf.36.1749509116219; Mon, 09 Jun 2025
- 15:45:16 -0700 (PDT)
+        bh=t649DObLtRdZzX63ptZdq6lquSxzZHNBUYbcq8ILXMQ=;
+        b=OAwu5NIj94/1sRYcsgyaVEewSB3747a1r+zAWDhaZD0E/6OSs8a6vYTv82z9tb7VSl
+         emaZnh6pCOSRoX+33ZtN40yr0QXubNk0GO0NRhYMMk7CgwNBsyV9EyNr+O2ixtLMuowI
+         EoyWvXEp7bH0LGxbzR+QoFAIZcJmRgrsX61P05Kjfb4vxym0/Bp3S4C+RB+uBKa0PKgA
+         9LHynb1eMXIdq6yx5vdfSMpkv0QnWNahX5sxLxFeiw6kq1LEpOhxOWMEi0xyIo76qtNm
+         tZLL7ZR57NuxK9eKpMqfc182nfKyxSWUmsHoOTABeqPVVx30Pa4ngWGfmCFDW/oJlwZx
+         YptQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUe0koivjo6COtQ9Iz3TETtdPxeSUjCGAQXwis6aOLwYtcnRIPP/QZgTMZAP3doeHGbF2T7hiIadMIr6hfk@vger.kernel.org, AJvYcCXkwpfKrCJHbtqM7jUujZem70B5TdXREfI04DuF9ZilsssfsLNGJC4cIngyJix9KfygJY43MNFz5hiH@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx82zxtDxgZLrUmNjX2T6WC+vW4A5dLFL88TwaECaoQDcZOJoKt
+	mcAP72U8XmCi25ZGnYSE2QvAcoVtBGAIseG3AaWMOGSz+1/pGKK7gbx7M9IYeEaNdJp71s3lfWI
+	za06qsgjJZvp/uoVw3MgGFTQgPInvnMY=
+X-Gm-Gg: ASbGncuZitBuktbDf/3T4DlWO+NGV6g6FzeIIWksKBhmUQp7h+/8DuX0+B/Qa+LcsSu
+	caQyrmOPvqLlooqnHwTk2ndGem1CXgPIFtK0kJaa+ves68F80CYIGli6N+uB9tWF+FKrSTzm+Mu
+	vK5C1RqyNk5bJmeyEyg41HeOKTtGtbVKqqh7cQcwzxaYtMv9bpQBifgw==
+X-Google-Smtp-Source: AGHT+IHhXThkcANd7gCCQnIgvuOyrZSwuv5O9GNInZFwVo1w3jPutzbzrn+95UWk2++sDvmqtXJR3Ih7VX7uyK2Cse0=
+X-Received: by 2002:a05:622a:5a95:b0:476:949b:8c5e with SMTP id
+ d75a77b69052e-4a5b9e4df64mr276072811cf.27.1749510938514; Mon, 09 Jun 2025
+ 16:15:38 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -60,13 +60,13 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20250606233803.1421259-1-joannelkoong@gmail.com>
- <20250606233803.1421259-4-joannelkoong@gmail.com> <aEZpcWGYssJ2OpqL@infradead.org>
-In-Reply-To: <aEZpcWGYssJ2OpqL@infradead.org>
+ <20250606233803.1421259-5-joannelkoong@gmail.com> <aEZx5FKK13v36wRv@infradead.org>
+In-Reply-To: <aEZx5FKK13v36wRv@infradead.org>
 From: Joanne Koong <joannelkoong@gmail.com>
-Date: Mon, 9 Jun 2025 15:45:05 -0700
-X-Gm-Features: AX0GCFsr-eKdOAmV_AYFU8UfPuN1fdAn7eT9UY4YqoDzlhxle0am81l7VjcLdXI
-Message-ID: <CAJnrk1asVKKakBOmXghU22fWiZu4D+PDKVM6z5fMbbFNCzP5dQ@mail.gmail.com>
-Subject: Re: [PATCH v1 3/8] iomap: add buffered write support for IOMAP_IN_MEM iomaps
+Date: Mon, 9 Jun 2025 16:15:27 -0700
+X-Gm-Features: AX0GCFsn665UwNgeg9b7whOFgN7cwbYyDPPF26Se9fo_dpmhtO8_lJBaKCr8yqU
+Message-ID: <CAJnrk1ZuuE9HKa0OWRjrt6qaPvP5R4DTPBA90PV8M3ke+zqNnw@mail.gmail.com>
+Subject: Re: [PATCH v1 4/8] iomap: add writepages support for IOMAP_IN_MEM iomaps
 To: Christoph Hellwig <hch@infradead.org>
 Cc: miklos@szeredi.hu, djwong@kernel.org, brauner@kernel.org, 
 	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
@@ -74,51 +74,163 @@ Cc: miklos@szeredi.hu, djwong@kernel.org, brauner@kernel.org,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, Jun 8, 2025 at 9:56=E2=80=AFPM Christoph Hellwig <hch@infradead.org=
-> wrote:
+On Sun, Jun 8, 2025 at 10:32=E2=80=AFPM Christoph Hellwig <hch@infradead.or=
+g> wrote:
 >
-> > -static int iomap_read_folio_sync(loff_t block_start, struct folio *fol=
-io,
-> > -             size_t poff, size_t plen, const struct iomap *iomap)
-> > +static int iomap_read_folio_sync(const struct iomap_iter *iter, loff_t=
- block_start,
-> > +                              struct folio *folio, size_t poff, size_t=
- plen)
-> >  {
-> > -     return iomap_bio_read_folio_sync(block_start, folio, poff, plen, =
-iomap);
-> > +     const struct iomap_folio_ops *folio_ops =3D iter->iomap.folio_ops=
+> On Fri, Jun 06, 2025 at 04:37:59PM -0700, Joanne Koong wrote:
+> > This allows IOMAP_IN_MEM iomaps to use iomap_writepages() for handling
+> > writeback. This lets IOMAP_IN_MEM iomaps use some of the internal
+> > features in iomaps such as granular dirty tracking for large folios.
+> >
+> > This introduces a new iomap_writeback_ops callback, writeback_folio(),
+> > callers may pass in which hands off folio writeback logic to the caller
+> > for writing back dirty pages instead of relying on mapping blocks.
+> >
+> > This exposes two apis, iomap_start_folio_write() and
+> > iomap_finish_folio_write(), which callers may find useful in their
+> > writeback_folio() callback implementation.
+>
+> It might also be worth stating what you don't use.  One big thing
+> that springs to mind is ioends.  Which are really useful if you
+> need more than one request to handle a folio, something that is
+> pretty common in network file systems.  I guess you don't need
+> that for fuse?
+
+ioends are used in fuse for cleaning up state. fuse implements a
+->submit_ioend() callback in fuse_iomap_submit_ioend() (in patch 7/8).
+
+For fuse, there can be multiple requests handling a folio. I'm using
+the ifs->write_bytes_pending to keep track of how many requests for
+the folio there are, so that we know when to end writeback after the
+last request on that folio has completed.
+
+>
+> > +     if (wpc->iomap.type =3D=3D IOMAP_IN_MEM) {
+> > +             if (wpc->ops->submit_ioend)
+> > +                     error =3D wpc->ops->submit_ioend(wpc, error);
+> > +             return error;
+> > +     }
+>
+> Given that the patch that moved things around already wrapped the
+> error propagation to the bio into a helpr, how does this differ
+> from the main path in the function now?
+>
+
+If we don't add this special casing for IOMAP_IN_MEM here, then in
+this function it'll hit the "if (!wpc->ioend)" case right in the
+beginning and return error without calling the ->submit_ioend()
+callback. For non IOMAP_IN_MEM types, ->submit_ioend() should only get
+called if wpc->ioend is set.
+
+> > +     /*
+> > +      * If error is non-zero, it means that we have a situation where =
+some part of
+> > +      * the submission process has failed after we've marked pages for=
+ writeback.
+> > +      * We cannot cancel ioend directly in that case, so call the bio =
+end I/O handler
+> > +      * with the error status here to run the normal I/O completion ha=
+ndler to clear
+> > +      * the writeback bit and let the file system process the errors.
+> > +      */
+>
+> Please add the comment in a separate preparation patch.
+
+This isn't a new comment, it's just moved from the function
+description to here. I'll put this comment move into the patch that
+moves all the bio stuff.
+>
+> > +             if (wpc->ops->writeback_folio) {
+> > +                     WARN_ON_ONCE(wpc->ops->map_blocks);
+> > +                     error =3D wpc->ops->writeback_folio(wpc, folio, i=
+node,
+> > +                                                       offset_in_folio=
+(folio, pos),
+> > +                                                       rlen);
+> > +             } else {
+> > +                     WARN_ON_ONCE(wpc->iomap.type =3D=3D IOMAP_IN_MEM)=
 ;
-> > +     const struct iomap *srcmap =3D iomap_iter_srcmap(iter);
-> > +
-> > +     if (folio_ops && folio_ops->read_folio_sync)
-> > +             return folio_ops->read_folio_sync(block_start, folio,
-> > +                                               poff, plen, srcmap,
-> > +                                               iter->private);
-> > +
-> > +     /* IOMAP_IN_MEM iomaps must always handle ->read_folio_sync() */
-> > +     WARN_ON_ONCE(iter->iomap.type =3D=3D IOMAP_IN_MEM);
-> > +
-> > +     return iomap_bio_read_folio_sync(block_start, folio, poff, plen, =
-srcmap);
+> > +                     error =3D iomap_writepage_map_blocks(wpc, wbc, fo=
+lio,
+> > +                                                        inode, pos, en=
+d_pos,
+> > +                                                        rlen, &count);
+> > +             }
 >
-> I just ran into this for another project and I hated my plumbing for
-> this.  I hate yours very slightly less but I still don't like it.
+> So instead of having two entirely different methods, can we
+> refactor the block based code to also use
+> ->writeback_folio?
 >
-> This is really more of a VM level concept, so I  wonder if we should
-> instead:
+> Basically move all of the code inside the do { } while loop after
+> the call into ->map_blocks into a helper, and then let the caller
+> loop and also directly discard the folio if needed.  I can give that
+> a spin if you want.
 >
->  - add a new read_folio_sync method to the address space operations that
->    reads a folio without unlocking it.
 
-imo I hate this more. AFAIU, basically fuse will be the only one
-actually needing/using this?
-Though it's a more intensive change, what about just expanding the
-existing address space operations ->read_folio() callback to take in
-an offset, length, and a boolean for whether the folio should be
-unlocked after the read?
+Sounds great, I like this idea a lot. I'll make this change for v2.
 
->  - figure out if just reading the head/tail really is as much of an
->    optimization, and if it it pass arguments to it to just read the
->    head/tail, and if not skip it.
+> Note that writeback_folio is misnamed, as it doesn't write back an
+> entire folio, but just a dirty range.
+
+I'll rename this to writeback_folio_dirty_range().
+
+>
+> >       } else {
+> > -             if (!count)
+> > +             /*
+> > +              * If wpc->ops->writeback_folio is set, then it is respon=
+sible
+> > +              * for ending the writeback itself.
+> > +              */
+> > +             if (!count && !wpc->ops->writeback_folio)
+> >                       folio_end_writeback(folio);
+>
+> This fails to explain why writeback_folio does the unlocking itself.
+
+writeback_folio needs to do the unlocking itself because the writeback
+may be done asynchronously (as in the case for fuse). I'll add that as
+a comment in v2.
+
+> I also don't see how that would work in case of multiple dirty ranges.
+
+For multiple dirty ranges in the same folio, the caller uses
+ifs->writes_bytes_pending (through the
+iomap_{start/finish}_folio_write() apis) to track when writeback is
+finally finished on the folio and folio_end_write() may be called.
+
+>
+> >       }
+> >       mapping_set_error(inode->i_mapping, error);
+> > @@ -1693,3 +1713,25 @@ iomap_writepages(struct address_space *mapping, =
+struct writeback_control *wbc,
+> >       return iomap_submit_ioend(wpc, error);
+> >  }
+> >  EXPORT_SYMBOL_GPL(iomap_writepages);
+> > +
+> > +void iomap_start_folio_write(struct inode *inode, struct folio *folio,=
+ size_t len)
+> > +{
+> > +     struct iomap_folio_state *ifs =3D folio->private;
+> > +
+> > +     WARN_ON_ONCE(i_blocks_per_folio(inode, folio) > 1 && !ifs);
+> > +     if (ifs)
+> > +             atomic_add(len, &ifs->write_bytes_pending);
+> > +}
+> > +EXPORT_SYMBOL_GPL(iomap_start_folio_write);
+> > +
+> > +void iomap_finish_folio_write(struct inode *inode, struct folio *folio=
+, size_t len)
+> > +{
+> > +     struct iomap_folio_state *ifs =3D folio->private;
+> > +
+> > +     WARN_ON_ONCE(i_blocks_per_folio(inode, folio) > 1 && !ifs);
+> > +     WARN_ON_ONCE(ifs && atomic_read(&ifs->write_bytes_pending) <=3D 0=
+);
+> > +
+> > +     if (!ifs || atomic_sub_and_test(len, &ifs->write_bytes_pending))
+> > +             folio_end_writeback(folio);
+>
+> Please also use these helpers in the block based code.
+
+Will do. Thanks for your reviews on this.
 >
