@@ -1,104 +1,159 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB7A71AA782;
-	Mon,  9 Jun 2025 20:29:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C26B1E3DF2;
+	Mon,  9 Jun 2025 21:29:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749500977; cv=none; b=ik0NOOozbTRgAt7CljwdeddtO+k8wbVaSw2KtVyGfdfj3LxgP1xMyqW941gsaBgc4sPua3zlAPtIYgM9v0AywehoXIGl8kl9K0e0fekBZJL12qP3wSqW6geOYyZS26edou21I/Kgob/8W1U12LIwa8FfhISL3v1f++QmMt7AUoA=
+	t=1749504547; cv=none; b=DCNquI67ORYtHBbD8YBE5hvUgxnLTvuWbLshwgwzYL1PEviaSm5Vn+8GLVIpX0KNA1mdi4wFoe7nJ4AGYAOdYR1owhdL2Bm/fuFLCvfiyIoG8pZlc4TX2MEi/hxHelmFmIBMHS9sK5z/4yWXf2V/18vMbtFRgdCWNQuiTd0hYOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749500977; c=relaxed/simple;
-	bh=KC900HYZGvbagK26NWtuXMtx5ERM58Y3FC5+HvTwVVs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oHW9d5n+nK0Zfsog0EkFAuMxoW9AYXGx3DMj23oaOF0h1C85I3jJ7XwBBRvy89pTY1hmrDpOzeJe2Ya/QeFEKT9XIKDWIgEEpeJ1fJtRBEogXxkXeDzNNjqbpIK6/pqqU7LYZoRGx2bIG6EExNKFCJfB8EainPpQNHL5Hs0fG7U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ogzi/2Ms; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749504547; c=relaxed/simple;
+	bh=2WAmKO7sJacuDhKuzYDa1Xe60onG3lRKvwzt5EKkAqs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=nNS8uTTrId7K6e+Ughe7BdUca2cy+iXMinIb3gce6kPeSgqg1kdllheTWXNAsLgmI53Hicq3SmsQwmdCZBYD3a5f4ZhzAh/sg/rrPMQuyHxVAmgUdCHvw4EqH9tQaQ9DJxYXqBErzOWPp5qL/F/FP9nBgLCGhT3EQzZHy2bdyG4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lPal4bM6; arc=none smtp.client-ip=209.85.160.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ogzi/2Ms"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33F47C4CEEB;
-	Mon,  9 Jun 2025 20:29:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749500977;
-	bh=KC900HYZGvbagK26NWtuXMtx5ERM58Y3FC5+HvTwVVs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Ogzi/2MsceljrLA7F4PoHffPSxSFajTlvgJkpS6QRj0GlZIZClg/7y4s21sFuWhSt
-	 P0SdEeLIWhc5JW3X1Jkq8TyS1a6QmQZdk7anyI0OBZQ/ElDdYB8OJ1Aovp6H78yz7h
-	 6F/3Ewior4UcomlvRNMXuDUCLBrbVg3Og7KIaX5FZGLNymZI9gBe0kibE4ifBhnuwv
-	 s16h63imDJalIOYt10PzXBfKJTg+e33mtf3X7D8kTwtlBhGcayj6qoJRrnC3ZaUw8e
-	 2LPwLTlILaLrzSScayNzHMtDUM5T2XRLO1OAO+lFN0MH7baqW8aKTo2uSUb4JylZmD
-	 QCcpY54zLIt9w==
-Date: Mon, 9 Jun 2025 13:29:36 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Miklos Szeredi <miklos@szeredi.hu>
-Cc: linux-fsdevel@vger.kernel.org, joannelkoong@gmail.com,
-	linux-xfs@vger.kernel.org, bernd@bsbernd.com, John@groves.net
-Subject: Re: [PATCH 01/11] fuse: fix livelock in synchronous file put from
- fuseblk workers
-Message-ID: <20250609202936.GA6138@frogsfrogsfrogs>
-References: <174787195502.1483178.17485675069927796174.stgit@frogsfrogsfrogs>
- <174787195588.1483178.6811285839793085547.stgit@frogsfrogsfrogs>
- <CAJfpegsn2eBjy27rncxYBQ1heoiA1tme8oExF-d_C9DoFq34ow@mail.gmail.com>
- <20250531010844.GF8328@frogsfrogsfrogs>
- <CAJfpegvwXqL_N0POa95KgPJT5mMXS2xxCojbGWABhFCZy8An+g@mail.gmail.com>
- <20250609181326.GC6179@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lPal4bM6"
+Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-4a43e277198so39536351cf.1;
+        Mon, 09 Jun 2025 14:29:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1749504544; x=1750109344; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LWLy5jrQgm0xqO3H9E8/noeXy3cl3+xaM4UqtA1//Aw=;
+        b=lPal4bM6ff1Bw82msuAReRTkKXqW1DwWE0Lk2VMvPy/dCyk+cx4uslJme0dk6ktNsd
+         hfSK1xjCS+YR26/Wm9OcHoTQpzs16XpO+gd54j4kWvnMrfAF72kgBs9Dlj/fEVPem0/A
+         IxpGERgmyTNUMmFdWYLWuO1zqeOSl4jNRNVdUfNmmCkLKCQVxE+nfFtvJmQB8kojWAgL
+         3ZmYpd30W/QNQpk4PLYk+RYCNYqxa7mTp9zf+Lb394wGRVfYM+94FaIzL88RRQjqo+W5
+         /JaJCTVqX+TC7Gpki8Lgl1qolyEcYvdiozJqKGaXGfM4KowC3rHjsuhyb6MJP+vrbMRw
+         eFzw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749504544; x=1750109344;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=LWLy5jrQgm0xqO3H9E8/noeXy3cl3+xaM4UqtA1//Aw=;
+        b=YBX9msHCzKqbQdqBRWlFvH1h2fGzysdzTRKI9R8dKMgyjN35wI2rgGqbyEVr45hc6d
+         H8ufydu6+CjgETxCJ2M2aZ1OWhZj0PxfjHMGgOQR/jBg2TVkY3ah84zcDYlDZWfguv/s
+         xKXJlI2gP+xqqVfnJ4anWKMtXo9dcFyBHcmX2t2ihE+Et+RVvTqDTPgO3muRdAvGUJIP
+         Bh4muURxa3Yni7M0hI4eQcIHiVansecgOL8iLWMufVfZZW2+73or4nOZpGeR6xfDiW4W
+         JNQdU6B+NHBzzAy1iE8ne5ZMn2GWWm5VvS2VkT0gMoDKk0e8xOBhQ78Y3/t4H554d/Z6
+         g7YQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU3jTgbyIViSG5hapMf3C9qmhsfS/WmNZ3kxe0Jwjf1V8SJxW214JM9cEKKsOSybFTdEqPFmv9ZHF69NslS@vger.kernel.org, AJvYcCWkajwqCzKrCYGll20k7DLWab8MmosNbtHzNbb0twfa+8myxmJJcPZPaO+FiP6zIQH3WEmMe3CpmNw1@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx5SA8IaJ5/DO3ZJiYXXL8gEHf5Oq1h/7hlmAefSy3RhpM54wdh
+	ENcprwuGDvFcc6RYX3iG/FAUajFnlksiMIylGAtydWtqOWBDHo8xFawxn/68zasNL2G7xYb2DoS
+	rzHZw5k4Q9OeLheLqDZXBTID5+sozJEQ=
+X-Gm-Gg: ASbGncuUQkfCfpBcTxmRa4v3BmWSTxrz2fSFmy9SEf4JN0MJdSZhmfxFzDCkBUoR8zV
+	qWISbaQiLe/Df6BpzrUVwLb7ta68LbwFN1kxEUXauXSHoajgDDwD4Gpfr6b3RVaBZSMDyektCX6
+	JAp4/Nh1uJ4d6y45WaWdq/d9mp6XLyzec5qT5SStWb+eTC6IcH9ZqWRg==
+X-Google-Smtp-Source: AGHT+IE92buhdHobNQeD3HoFHnGW1oGy0nqDBaMZBgPGW/d5Jquv9qL+QNPlH1sEgoEfLrGf+9RRlPtMgvw0NoT1UgU=
+X-Received: by 2002:a05:622a:4d96:b0:4a4:3963:1e05 with SMTP id
+ d75a77b69052e-4a5b9a2ac64mr283457531cf.14.1749504544153; Mon, 09 Jun 2025
+ 14:29:04 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250609181326.GC6179@frogsfrogsfrogs>
+References: <20250606233803.1421259-1-joannelkoong@gmail.com>
+ <20250606233803.1421259-3-joannelkoong@gmail.com> <20250609162432.GI6156@frogsfrogsfrogs>
+In-Reply-To: <20250609162432.GI6156@frogsfrogsfrogs>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Mon, 9 Jun 2025 14:28:52 -0700
+X-Gm-Features: AX0GCFtwkCRxRVUzNG0jnd56ixNJUcBkxS114AHm1TQc_gB6cu6zY8hFUeDPWJQ
+Message-ID: <CAJnrk1aUJzN-c-jd0WzH8rb1R5rYdcnq=_RWMNobbQEk9_C7Wg@mail.gmail.com>
+Subject: Re: [PATCH v1 2/8] iomap: add IOMAP_IN_MEM iomap type
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: miklos@szeredi.hu, brauner@kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, bernd.schubert@fastmail.fm, kernel-team@meta.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jun 09, 2025 at 11:13:26AM -0700, Darrick J. Wong wrote:
-> On Fri, Jun 06, 2025 at 03:54:50PM +0200, Miklos Szeredi wrote:
-> > On Sat, 31 May 2025 at 03:08, Darrick J. Wong <djwong@kernel.org> wrote:
-> > 
-> > > The best reason that I can think of is that normally the process that
-> > > owns the fd (and hence is releasing it) should be made to wait for
-> > > the release, because normally we want processes that generate file
-> > > activity to pay those costs.
-> > 
-> > That argument seems to apply to all fuse variants.  But fuse does get
-> > away with async release and I don't see why fuseblk would be different
-> > in this respect.
-> > 
-> > Trying to hack around the problems of sync release with a task flag
-> > that servers might or might not have set does not feel a very robust
-> > solution.
-> > 
-> > > Also: is it a bug that the kernel only sends FUSE_DESTROY on umount for
-> > > fuseblk filesystems?  I'd have thought that you'd want to make umount
-> > > block until the fuse server is totally done.  OTOH I guess I could see
-> > > an argument for not waiting for potentially hung servers, etc.
-> > 
-> > It's a potential DoS.  With allow_root we could arguably enable
-> > FUSE_DESTROY, since the mounter is explicitly acknowledging this DoS
-> > possibilty.
-> 
-> <nod> Looking deeper at fuse2fs's op_destroy function, I think most of
-> the slow functionality (writing group descriptors and the primary super
-> and fsyncing the device) ought to be done via FUSE_SYNCFS, not
-> FUSE_DESTROY.  If I made that change, I think op_destroy becomes very
-> fast -- all it does is close the fs and log a message.  The VFS unmount
-> code calls sync_filesystem (which initiates a FUSE_SYNCFS) which sounds
-> like it would work for fuse2fs.
-> 
-> Unhappily, libfuse3 doesn't seem to implement it:
-> 
-> $ git grep FUSE_SYNCFS
-> doc/libfuse-operations.txt:394:50. FUSE_SYNCFS (50)
-> include/fuse_kernel.h:186: *  - add FUSE_SYNCFS
-> include/fuse_kernel.h:670:      FUSE_SYNCFS             = 50,
+On Mon, Jun 9, 2025 at 9:24=E2=80=AFAM Darrick J. Wong <djwong@kernel.org> =
+wrote:
+>
+> On Fri, Jun 06, 2025 at 04:37:57PM -0700, Joanne Koong wrote:
+> > Add a new iomap type, IOMAP_IN_MEM, that represents data that resides i=
+n
+> > memory and does not map to or depend on the block layer and is not
+> > embedded inline in an inode. This will be used for example by filesyste=
+ms
+> > such as FUSE where the data is in memory or needs to be fetched from a
+> > server and is not coupled with the block layer. This lets these
+> > filesystems use some of the internal features in iomaps such as
+> > granular dirty tracking for large folios.
+>
+> How does this differ from using IOMAP_INLINE and setting
+> iomap::inline_data =3D kmap_local_folio(...)?  Is the situation here that
+> FUSE already /has/ a folio from the mapping, so all you really need
+> iomap to do is manage the folio's uptodate/dirty state?
+>
 
-...and it won't really work anyway since fuse_sync_fs doesn't upcall to
-the fuse server if sb->s_root == NULL; and we can't do anything at that
-point anyway because deactivate_locked_super -> fuse_kill_sb_anon has
-already called fuse_conn_destroy to tear down the connection.
+I had looked into whether IOMAP_INLINE could be used but there are a few is=
+sues:
 
---D
+a) no granular uptodate reading of the folio if the folio needs to be
+read into the page cache
+If fuse uses IOMAP_INLINE then it'll need to read in all the bytes of
+whatever needs to be written into the folio because the IOMAP_INLINE
+points to one contiguous memory region, not different chunks. For
+example if there's a 2 MB file and position 0 to 1 MB of the file is
+represented by a 1 MB folio, and a client issues a write from position
+1 to 1048575, we'll need to read in the entire folio instead of just
+the first and last chunks.
 
-> 
-> > Thanks,
-> > Miklos
-> 
+b) an extra memcpy is incurred if the folio needs to be read in (extra
+read comes from reading inline data into folio) and an extra memcpy is
+incurred after the write (extra write comes from writing from folio ->
+inline data)
+IOMAP_INLINE copies the inline data into the folio
+(iomap_write_begin_inline() -> iomap_read_inline_data() ->
+folio_fill_tail()) but for fuse, the folio would already have had to
+been fetched from the server in fuse's ->iomap_begin callback (and
+similarly, the  folio tail zeroing and dcache flush will be
+unnecessary work here too). When the write is finished, there's an
+extra memcpy incurred from iomap_write_end_inline() copying data from
+the folio back to inline data (for fuse, inline data is already the
+folio).
+
+I guess we could add some flag that the filesystem can set in
+->iomap_begin() to indicate that it's an IOMAP_INLINE type where the
+mem is the folio being written, but that still doesn't help with the
+issue in a).
+
+c) IOMAP_INLINE isn't supported for writepages. From what I see, this
+was added in commit 3e19e6f3e (" iomap: warn on inline maps in
+iomap_writepage_map"). Maybe it's as simple as now allowing inline
+maps to be used in writepages but it also seems to suggest that inline
+maps is meant for something different than what fuse is trying to do
+with it.
+
+> --D
+>
+> > Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
+> > ---
+> >  include/linux/iomap.h | 1 +
+> >  1 file changed, 1 insertion(+)
+> >
+> > diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> > index 68416b135151..dbbf217eb03f 100644
+> > --- a/include/linux/iomap.h
+> > +++ b/include/linux/iomap.h
+> > @@ -30,6 +30,7 @@ struct vm_fault;
+> >  #define IOMAP_MAPPED 2       /* blocks allocated at @addr */
+> >  #define IOMAP_UNWRITTEN      3       /* blocks allocated at @addr in u=
+nwritten state */
+> >  #define IOMAP_INLINE 4       /* data inline in the inode */
+> > +#define IOMAP_IN_MEM 5       /* data in memory, does not map to blocks=
+ */
+> >
+> >  /*
+> >   * Flags reported by the file system from iomap_begin:
+> > --
+> > 2.47.1
+> >
+> >
