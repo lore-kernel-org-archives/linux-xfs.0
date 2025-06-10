@@ -1,45 +1,29 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3C4223AB98;
-	Tue, 10 Jun 2025 13:30:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDD3317736
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Jun 2025 13:32:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749562231; cv=none; b=Wq/81jPWN+XAfb7qDHXHzgx+65o3Noo8fgQKNF4xbjad0xER64sEoQZiOeJjZgaCKCg7mcmOm14u9kBVwzefQm8NrgQvV/w0RhoIoj1DlF1+PebJ1bBRSnHq2WeSqzfUVxyFsic6mGHgHdq7/VjJJue7+jF4CdA6ccIJRrUXRzc=
+	t=1749562363; cv=none; b=nCb+7dlwMv08zqOBCNT4mVB2zhfr5qXNsFhkpscmksAlOLBZnhb1sZVGWhbHpG4aINBmpfQMu5goYg0wWT57ehG/D9J2AigAwD/T1RCdYKRCYqse84TwsIC6gcv3NJWrtcQTIC2KHpnnKUSEzu+OOVaUVKGNaKiHY1X4+jK4nEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749562231; c=relaxed/simple;
-	bh=j72cNm8s8BmJR2yvP9N6+eHhMx4qyILJpk302T4ObgY=;
+	s=arc-20240116; t=1749562363; c=relaxed/simple;
+	bh=23/+KcG14gqBYTo0i2hw0GQrzT6UAyf3PtueKhv8hRQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AeLxsvIV/Qjz71E9uSka6TcipQWrd0wLMf7TY6iUz3l4VdLk7StU1zHSoaUT8GiVwvnb+vdRikqLpTtPI4ZF8I1oT70sKKniUZNfR/h9uVxXAUfN2xutjGB0Fzz+qRsyZldNBzBbzOh97G4SPwPqLMBEWEdlXBcu1KO/l/nixVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rerNKwhY; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rerNKwhY"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=GcbjZKDHfWzF4Hztsbds8tFXOAXOwUhPwJriLCPNAsA=; b=rerNKwhY6cYVBgVq/mcdEaviHF
-	T9VsFX+uRspOI7OnRjqZgfBd7m4bKGvsbou3oaDt+D/0AaycXXsIkRa9KXeXjunGpQqyrMQtI5ZYS
-	116OQpYPMbfiBB4CMqR9FWiP+pdMPQQi7VR8e7jb6VwYwV1TkSBXrCG0+1EHom6o0kw6zI9z8bPbW
-	47vTBzs6vNbvM+Vju65uUPUMEEOK75kYSxXox+V8nXWy5bB7ki/GGUkIom76kW46SEUQFZ0RkhpbS
-	gPiHlQGjnLygStCc1PKNEeiKQDjob7VrrAVOwuaO2OzfnStz3IEUqE2n+4gM1a0qpSPzWaGF2/xGC
-	ZLFrdfOg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uOz3d-00000006ySA-1UMn;
-	Tue, 10 Jun 2025 13:30:29 +0000
-Date: Tue, 10 Jun 2025 06:30:29 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH RFC 7/7] xfs: error tag to force zeroing on debug kernels
-Message-ID: <aEgzdZKtL2Sp5RRa@infradead.org>
-References: <20250605173357.579720-1-bfoster@redhat.com>
- <20250605173357.579720-8-bfoster@redhat.com>
- <aEe1oR3qRXz-QB67@infradead.org>
- <aEgkhYne8EenhJfI@bfoster>
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZlsQKdRof7iNhQKXhHKBAKOzVFPrFE4UBdUF9NE2N8hOEpOzwUZ+lH3LO+WxvtFJINz2rAp88/7LjHHaN4tXYX2fRLr3MRyyJz2OCvmaLT/pUBL26zhDMFsF2fyRTZumoLbvTwHqnKJwk7flvqvD98dNmWjZfcSmYL4M4vyx8yU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 1FB2968CFE; Tue, 10 Jun 2025 15:32:36 +0200 (CEST)
+Date: Tue, 10 Jun 2025 15:32:35 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 02/17] xfs: cleanup the ordered item logic in
+ xlog_cil_insert_format_items
+Message-ID: <20250610133235.GA28445@lst.de>
+References: <20250610051644.2052814-1-hch@lst.de> <cqWn7I8cwwfGuWnf1e0-3it6wZgwjbXDsuuqz5qtz1MSy4hWQDWfQNT8SefFV7CfDrh1OSxj8qotWfFp9SYFtQ==@protonmail.internalid> <20250610051644.2052814-3-hch@lst.de> <txjhmsaiqnyjl46nhz75ukobgnmxwy6ka3wlsb6xvdz5v6bj3t@hpkwwjwk5f5k>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,32 +32,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aEgkhYne8EenhJfI@bfoster>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <txjhmsaiqnyjl46nhz75ukobgnmxwy6ka3wlsb6xvdz5v6bj3t@hpkwwjwk5f5k>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Jun 10, 2025 at 08:26:45AM -0400, Brian Foster wrote:
-> Well that is kind of the question.. ;) My preference was to either add
-> something to fstests to enable select errortags by default on every
-> mount (or do the same in-kernel via XFS_DEBUG[_ERRTAGS] or some such)
-> over just creating a one-off test that runs fsx or whatever with this
-> error tag turned on. [1].
+On Tue, Jun 10, 2025 at 09:56:04AM +0200, Carlos Maiolino wrote:
+> > -		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED)
+> > -			ordered = true;
+> > +		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED) {
+> > +			if (!lv) {
+> > +				lv = shadow;
+> > +				lv->lv_item = lip;
+> > +			}
+> > +			ASSERT(shadow->lv_size == lv->lv_size);
 > 
-> That said, I wouldn't be opposed to just doing both if folks prefer
-> that. It just bugs me to add yet another test that only runs a specific
-> fsx test when we get much more coverage by running the full suite of
-> tests. IOW, whenever somebody is testing a kernel that would actually
-> run a custom test (XFS_DEBUG plus specific errortag support), we could
-> in theory be running the whole suite with the same errortag turned on
-> (albeit perhaps at a lesser frequency than a custom test would use). So
-> from that perspective I'm not sure it makes a whole lot of sense to do
-> both.
-> 
-> So any thoughts from anyone on a custom test vs. enabling errortag
-> defaults (via fstests or kernel) vs. some combination of both?
+> 			This assert is kind of confusing me. if we have an
+> 			ORDERED vector here, couldn't we still have a shadow
+> 			size smaller than the current vector?
 
-I definitively like a targeted test to exercise it.  If you want
-additional knows to turn on error tags that's probably fine if it
-works out.  I'm worried about adding more flags to xfstests because
-it makes it really hard to figure out what runs are need for good
-test coverage.
+The size of ordered items never changes, it's always the same constant
+overhead.
 
