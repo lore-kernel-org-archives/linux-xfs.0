@@ -1,164 +1,286 @@
-Received: from mout.web.de (mout.web.de [212.227.15.14])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A289C2DCBF5;
-	Tue, 10 Jun 2025 13:00:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 955CB246BD5;
+	Tue, 10 Jun 2025 13:27:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749560441; cv=none; b=l25JI3uAbG5pguwaovLY/KYLHB1rLPGZOLQoR5AkSRxpybsMsV85dja7k5c5IVhx6bCbEEaUfB4/s+dRqMMa+wdXCIhiALRAnr4uIYrYwhvfhud7aXWU0NJYtPHLxJB0VedXn/3uWnIbyD+dGPZOdRgaE8cJMNKwqlGv3Q9VeA4=
+	t=1749562047; cv=none; b=RcEA5qgtjul/jf8r5G0BdHAFID9N/jtbU7k+fxS+HHrE2UVAHDZi39odpgeGBFNNJ+EbCctg7O0nCulPxmLkZ5U6e2bwpff5Zp9zjpZAkryKa3KnPc1Av0lUQQPoKWyjqG0RyyEql/lPvNvEoFZJTxc1934WicBpWPO3bxmDXc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749560441; c=relaxed/simple;
-	bh=abYFe82pY9HAkSfp52BKK6TLTuB3UmZkzkMqJ80SsQU=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=nYhHipqiYZWZz5Puffu+5kzxf1ZKGZWRS7sZuc4UpOdPdiUmxQvZGgEg4cCO1nnigbrxugLDNv2kpIg1j4SnpDr/0AN9b+Rjt18lRaUva0dwCbiikkMZ84bYZM/LrYFm5fi9K8SfXjGGyTKSHZObW2XPCzzsW5UbK3Qd8nLQFbg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=cUc/6d6z; arc=none smtp.client-ip=212.227.15.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1749562047; c=relaxed/simple;
+	bh=mAEBjhf5sz3eJQRThKsw3lOatfwC6YVMGNNZ8VmfJNE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GoWntzTha86xGpqSMziwlZd6MTDLB9CfNfVe+H4I9KQN2UHk+kNiR9J60ZbpLgZKzvYXR5RWo2eTgGCQJ6YxxoLSreD5OJuu79ywc1j43DP36UKSU8nKVi9C2tgc/K5GaLX1yqEfi9hf+Eza/Msu/30J4vZlBQct+JhQQgSPG9E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ongsMv7a; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="cUc/6d6z"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1749560429; x=1750165229; i=markus.elfring@web.de;
-	bh=3ru8lF5jq4NEcL5YlhuLBKOrkMTglWNt7qSouMfx1O4=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:From:
-	 Subject:Content-Type:Content-Transfer-Encoding:cc:
-	 content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=cUc/6d6zxX+sITgA8Rw4Fe3qMSSfM+UbMlWqlMsSVD+YudxexaYtAcSSwg6GnwMb
-	 j2nckC5GtORZjDxBY10YxhLqmfORZcDXUIME79auMBZekN+HFHHs+RD6GV7gi8X7g
-	 Rjwr1ULRlBYbg3NFUTUqHEcDxya8+hKXtMnS7vHZDBuzg8K48WwfUAhHeoIkTv7jX
-	 mm9nUC5AujqAZhk3hsAKFZ79SlFMCHg9sYEScGa1S1Ir0VCBF5Z+xDdEdwgUdA5sW
-	 QKw+jCuO1iWkPBAfMV4XvkWfAQUbvwcy505X18pnegwgTL2O6xdw+7wjFObPUxdsK
-	 XGeJ0OiEsEHSZvyMKg==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.29] ([94.31.69.183]) by smtp.web.de (mrweb006
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1MMpCS-1u8XdJ0rA4-00RMxF; Tue, 10
- Jun 2025 15:00:29 +0200
-Message-ID: <b182b740-e68d-4466-a10d-bcb8afb2453a@web.de>
-Date: Tue, 10 Jun 2025 15:00:27 +0200
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ongsMv7a"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=1yslyToAhHyMWGQmEgeNjb2WvC56oR8gmYoziPmeSxQ=; b=ongsMv7abLR5mOkJbLnfWpI96J
+	beBShPZ3SpDZQrh37tEKx5JQ6kqWyi+4iZ3GvTOs+7avgD34/4HvCBUWHBTRELSqMLNVoVfR7h6NV
+	44OuAyQn0lds54UYtDiUWWqPW0Lbvge2DO2VCQ+mCc1DVLhtqjV5236CHYphpycQKjy/CSyR5M7gO
+	wN/CT0900Oc85BWmLb8rYx7PMtcL7dHBg+WOGoubF/Z0d8mqEdeJH85fGHYiKWIZRZmVSBx4vWTiP
+	36u0ByDSeQmecZTb00SY37y+JZCqEMTWVeNVVZgzsowHgQ063su6CLTAg6eE55m/vwS2rTs1jrasM
+	WowxZawg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uOz0d-00000006xpg-3Dot;
+	Tue, 10 Jun 2025 13:27:23 +0000
+Date: Tue, 10 Jun 2025 06:27:23 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, miklos@szeredi.hu,
+	djwong@kernel.org, brauner@kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	bernd.schubert@fastmail.fm, kernel-team@meta.com
+Subject: Re: [PATCH v1 2/8] iomap: add IOMAP_IN_MEM iomap type
+Message-ID: <aEgyu86jWSz0Gpia@infradead.org>
+References: <20250606233803.1421259-1-joannelkoong@gmail.com>
+ <20250606233803.1421259-3-joannelkoong@gmail.com>
+ <aEZm-tocHd4ITwvr@infradead.org>
+ <CAJnrk1Z-ubwmkpnC79OEWAdgumAS7PDtmGaecr8Fopwt0nW-aw@mail.gmail.com>
+ <aEeo7TbyczIILjml@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>
-Content-Language: en-GB, de-DE
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org,
- Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>
-From: Markus Elfring <Markus.Elfring@web.de>
-Subject: [PATCH] xfs: Improve error handling in xfs_mru_cache_create()
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:UJz2tF5PxhoKS9eiiR3sqRK5NaAEvx0TVp2RtKUpDQD7UrN2h3Q
- gV1y9GQinCPLstW2tqBY8vi1/JgfEN46C7pAgGhuSJ+mvcikvdmQ6HdBjaxKzCidLXzueFd
- 2tYoSGeyZr4AV1uFwHDxckfKsfcvT7B+S71DZ9sjWpYkRXmG5bS0N6+YkHIbOnIP5xaXoa5
- J/CKTinVlObSf4aE9qfoA==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:U1xje0ld8v8=;/Nx2tw+MUOcXiLOKS+QqzDNN/DV
- 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
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aEeo7TbyczIILjml@infradead.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 10 Jun 2025 14:50:07 +0200
+So I looked into something else, what if we just use ->read_folio
+despite it not seeming ideal initially?  After going through with
+it I think it's actually less bad than I thought.  This passes
+-g auto on xfs with 4k blocks, and has three regression with 1k
+blocks, 2 look are the seek hole testers upset that we can't
+easily create detectable sub-block holes now, and one because
+generic/563 thinks the cgroup accounting is off, probably because
+we read more data now or something like that.
 
-Simplify error handling in this function implementation.
+---
+From c5d3cf651c815d3327199c74eac43149fc958098 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Tue, 10 Jun 2025 09:39:57 +0200
+Subject: iomap: use ->read_folio instead of iomap_read_folio_sync
 
-* Delete unnecessary pointer checks and variable assignments.
+iomap_file_buffered_write has it's own private read path for reading
+in folios that are only partially overwritten, which not only adds
+extra code, but also extra problem when e.g. we want reads to go
+through a file system method to support checksums or RAID, or even
+support non-block based file systems.
 
-* Omit a redundant function call.
+Switch to using ->read_folio instead, which has a few up- and downsides.
 
+->read_folio always reads the entire folios and not just the start and
+the tail that is not being overwritten.  Historically this was seen as a
+downside as it reads more data than needed.  But with modern file systems
+and modern storage devices this is probably a benefit.  If the folio is
+stored contiguously on disk, the single read will be more efficient than
+two small reads on almost all current hardware. If the folio is backed by
+two blocks, at least we pipeline the two reads instead of doing two
+synchronous ones.  And if the file system fragmented the folio so badly
+that we'll now need to do more than two reads we're still at least
+pipelining it, although that should basically never happen with modern
+file systems.
 
-This issue was detected by using the Coccinelle software.
+->read_folio unlocks the folio on completion.  This adds extract atomics
+to the write fast path, but the actual signaling by doing a lock_page
+after ->read_folio is not any slower than the completion wakeup.  We
+just have to recheck the mapping in this case do lock out truncates
+and other mapping manipulations.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-=2D--
- fs/xfs/xfs_mru_cache.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+->read_folio starts another, nested, iomap iteration, with an extra
+lookup of the extent at the current file position.  For in-place update
+file systems this is extra work, although if they use a good data
+structure like the xfs iext btree there is very little overhead in
+another lookup.  For file system that write out of place this actually
+implements the desired semantics as they don't care about the existing
+data for the write iteration at all, although untangling this and
+removing the srcmap member in the iomap_iter will require additional
+work to turn the block zeroing and unshare helpers upside down.
 
-diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
-index 08443ceec329..2ed679a52e41 100644
-=2D-- a/fs/xfs/xfs_mru_cache.c
-+++ b/fs/xfs/xfs_mru_cache.c
-@@ -320,7 +320,7 @@ xfs_mru_cache_create(
- 	xfs_mru_cache_free_func_t free_func)
- {
- 	struct xfs_mru_cache	*mru =3D NULL;
--	int			err =3D 0, grp;
-+	int			grp;
- 	unsigned int		grp_time;
-=20
- 	if (mrup)
-@@ -341,8 +341,8 @@ xfs_mru_cache_create(
- 	mru->lists =3D kzalloc(mru->grp_count * sizeof(*mru->lists),
- 				GFP_KERNEL | __GFP_NOFAIL);
- 	if (!mru->lists) {
--		err =3D -ENOMEM;
--		goto exit;
-+		kfree(mru);
-+		return -ENOMEM;
- 	}
-=20
- 	for (grp =3D 0; grp < mru->grp_count; grp++)
-@@ -361,14 +361,7 @@ xfs_mru_cache_create(
- 	mru->free_func =3D free_func;
- 	mru->data =3D data;
- 	*mrup =3D mru;
--
--exit:
--	if (err && mru && mru->lists)
--		kfree(mru->lists);
--	if (err && mru)
--		kfree(mru);
--
--	return err;
-+	return 0;
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap/buffered-io.c | 116 ++++++++++++++++-------------------------
+ 1 file changed, 45 insertions(+), 71 deletions(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 3729391a18f3..52b4040208dd 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -667,30 +667,34 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+ 					 pos + len - 1);
  }
-=20
- /*
-=2D-=20
-2.49.0
+ 
+-static int iomap_read_folio_sync(loff_t block_start, struct folio *folio,
+-		size_t poff, size_t plen, const struct iomap *iomap)
++/*
++ * Now that we have a locked folio, check that the iomap we have cached is not
++ * stale before we do anything.
++ *
++ * The extent mapping can change due to concurrent IO in flight, e.g. the
++ * IOMAP_UNWRITTEN state can change and memory reclaim could have reclaimed a
++ * previously partially written page at this index after IO completion before
++ * this write reaches this file offset, and hence we could do the wrong thing
++ * here (zero a page range incorrectly or fail to zero) and corrupt data.
++ */
++static bool iomap_validate(struct iomap_iter *iter)
+ {
+-	struct bio_vec bvec;
+-	struct bio bio;
++	const struct iomap_folio_ops *folio_ops = iter->iomap.folio_ops;
+ 
+-	bio_init(&bio, iomap->bdev, &bvec, 1, REQ_OP_READ);
+-	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
+-	bio_add_folio_nofail(&bio, folio, plen, poff);
+-	return submit_bio_wait(&bio);
++	if (folio_ops && folio_ops->iomap_valid &&
++	    !folio_ops->iomap_valid(iter->inode, &iter->iomap)) {
++		iter->iomap.flags |= IOMAP_F_STALE;
++		return false;
++	}
++
++	return true;
+ }
+ 
+-static int __iomap_write_begin(const struct iomap_iter *iter, size_t len,
++static int __iomap_write_begin(struct iomap_iter *iter, size_t len,
+ 		struct folio *folio)
+ {
+-	const struct iomap *srcmap = iomap_iter_srcmap(iter);
++	struct inode *inode = iter->inode;
+ 	struct iomap_folio_state *ifs;
+-	loff_t pos = iter->pos;
+-	loff_t block_size = i_blocksize(iter->inode);
+-	loff_t block_start = round_down(pos, block_size);
+-	loff_t block_end = round_up(pos + len, block_size);
+-	unsigned int nr_blocks = i_blocks_per_folio(iter->inode, folio);
+-	size_t from = offset_in_folio(folio, pos), to = from + len;
+-	size_t poff, plen;
+ 
+ 	/*
+ 	 * If the write or zeroing completely overlaps the current folio, then
+@@ -699,45 +703,29 @@ static int __iomap_write_begin(const struct iomap_iter *iter, size_t len,
+ 	 * For the unshare case, we must read in the ondisk contents because we
+ 	 * are not changing pagecache contents.
+ 	 */
+-	if (!(iter->flags & IOMAP_UNSHARE) && pos <= folio_pos(folio) &&
+-	    pos + len >= folio_pos(folio) + folio_size(folio))
++	if (!(iter->flags & IOMAP_UNSHARE) &&
++	    iter->pos <= folio_pos(folio) &&
++	    iter->pos + len >= folio_pos(folio) + folio_size(folio))
+ 		return 0;
+ 
+-	ifs = ifs_alloc(iter->inode, folio, iter->flags);
+-	if ((iter->flags & IOMAP_NOWAIT) && !ifs && nr_blocks > 1)
++	ifs = ifs_alloc(inode, folio, iter->flags);
++	if ((iter->flags & IOMAP_NOWAIT) && !ifs &&
++	    i_blocks_per_folio(inode, folio) > 1)
+ 		return -EAGAIN;
+ 
+-	if (folio_test_uptodate(folio))
+-		return 0;
+-
+-	do {
+-		iomap_adjust_read_range(iter->inode, folio, &block_start,
+-				block_end - block_start, &poff, &plen);
+-		if (plen == 0)
+-			break;
++	if (!folio_test_uptodate(folio)) {
++		inode->i_mapping->a_ops->read_folio(NULL, folio);
+ 
+-		if (!(iter->flags & IOMAP_UNSHARE) &&
+-		    (from <= poff || from >= poff + plen) &&
+-		    (to <= poff || to >= poff + plen))
+-			continue;
+-
+-		if (iomap_block_needs_zeroing(iter, block_start)) {
+-			if (WARN_ON_ONCE(iter->flags & IOMAP_UNSHARE))
+-				return -EIO;
+-			folio_zero_segments(folio, poff, from, to, poff + plen);
+-		} else {
+-			int status;
+-
+-			if (iter->flags & IOMAP_NOWAIT)
+-				return -EAGAIN;
+-
+-			status = iomap_read_folio_sync(block_start, folio,
+-					poff, plen, srcmap);
+-			if (status)
+-				return status;
+-		}
+-		iomap_set_range_uptodate(folio, poff, plen);
+-	} while ((block_start += plen) < block_end);
++		/*
++		 * ->read_folio unlocks the folio.  Relock and revalidate the
++		 * folio.
++		 */
++		folio_lock(folio);
++		if (unlikely(folio->mapping != inode->i_mapping))
++			return 1;
++		if (unlikely(!iomap_validate(iter)))
++			return 1;
++	}
+ 
+ 	return 0;
+ }
+@@ -803,7 +791,6 @@ static int iomap_write_begin_inline(const struct iomap_iter *iter,
+ static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
+ 		size_t *poffset, u64 *plen)
+ {
+-	const struct iomap_folio_ops *folio_ops = iter->iomap.folio_ops;
+ 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+ 	loff_t pos = iter->pos;
+ 	u64 len = min_t(u64, SIZE_MAX, iomap_length(iter));
+@@ -818,28 +805,14 @@ static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
+ 	if (fatal_signal_pending(current))
+ 		return -EINTR;
+ 
++lookup_again:
+ 	folio = __iomap_get_folio(iter, len);
+ 	if (IS_ERR(folio))
+ 		return PTR_ERR(folio);
+ 
+-	/*
+-	 * Now we have a locked folio, before we do anything with it we need to
+-	 * check that the iomap we have cached is not stale. The inode extent
+-	 * mapping can change due to concurrent IO in flight (e.g.
+-	 * IOMAP_UNWRITTEN state can change and memory reclaim could have
+-	 * reclaimed a previously partially written page at this index after IO
+-	 * completion before this write reaches this file offset) and hence we
+-	 * could do the wrong thing here (zero a page range incorrectly or fail
+-	 * to zero) and corrupt data.
+-	 */
+-	if (folio_ops && folio_ops->iomap_valid) {
+-		bool iomap_valid = folio_ops->iomap_valid(iter->inode,
+-							 &iter->iomap);
+-		if (!iomap_valid) {
+-			iter->iomap.flags |= IOMAP_F_STALE;
+-			status = 0;
+-			goto out_unlock;
+-		}
++	if (unlikely(!iomap_validate(iter))) {
++		status = 0;
++		goto out_unlock;
+ 	}
+ 
+ 	pos = iomap_trim_folio_range(iter, folio, poffset, &len);
+@@ -860,7 +833,8 @@ static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
+ 
+ out_unlock:
+ 	__iomap_put_folio(iter, 0, folio);
+-
++	if (status == 1)
++		goto lookup_again;
+ 	return status;
+ }
+ 
+-- 
+2.47.2
 
