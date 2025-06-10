@@ -1,72 +1,80 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEDEC11712;
-	Tue, 10 Jun 2025 04:04:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96149184F;
+	Tue, 10 Jun 2025 04:06:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749528252; cv=none; b=bASVnEQUtXl/hfv4P9B9H9pmd4VfX3lT5vyKT042b2oR8kxK5Y4T7C3p/KBZiPFtfNLu1epb7jivHXR4R9CKgTnetaHahM97gIjOT5qruCZl11cvpgtobE+RukGbHKPCN3QOo11AiBAwCUvthQ8DSdM3qOEA4mlzNYu1GmEVGzo=
+	t=1749528397; cv=none; b=j24+gkC+3HdFvWdtGvd4MlqMuPLn+Qz3svv/UVEzfT4Wqo68KAxnsQG81g4p04P+QtxgkHuLRofGKFr+aOXgEYXlRYMk/MjazVTi3j29LJyA3O2+07/ZjPAtfLwo5V481d4tTWdg5sdylZPhR6GzQaAQTCed3lFK+AD9nkdSSBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749528252; c=relaxed/simple;
-	bh=BmGJS6I+NChOcdJFw7W+Bo5Kv0YTfLtr6VVrpHJQZh4=;
+	s=arc-20240116; t=1749528397; c=relaxed/simple;
+	bh=2HkZzSetATOCLv+YkYjMvyo0RbCgQOYAJEeIIIUcW40=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uzhwT/lg/uX97WvKinp5XQGsxoSObIFdic8awipAUMhgZ0eaN0cbu8WAGf2n8mBcKbCyYEPvVIa6C5780LITnJi4uh00U6bDarOMGiRpAl+YTyWT7E3/9Tsl5HNybBreAJIXbImTzyIRN49pF+ok8/U9xtO54afRI6J3B5YKwls=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Ij0pXANl; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZSIO6PqndsM2L02OILEwJ/odocIepzOX5tIZtugSQ9EH66GnKggRpW3ZsX12FZqYbeS1SWDD5e4S+CZ7T+QN/Pmz4wbXZTWRc9vdWai9fOOi5TktoOZV49QNoOjwqJVQu7v7MW+VAPJEA5Qs37vnKMt9YrLuS4mEL5hEsYaS8m0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=QKoU657F; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ij0pXANl"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QKoU657F"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=4JY/GXvKvuSF+Gv+dyI6WEbQbn/XNxNx/VjsNZPP8rY=; b=Ij0pXANlfvLd1MbZZNmNWCijzy
-	6uvsJ/TOgAkEwFIYLnVQ8jqUQX0VUAc/HpI9ZmCSz7jgO69M1cPmcKYy0Tppu/hHfqrlveimlkpvl
-	dBaWB6xFleaK6AP6/CvuyfFGGOq+P3ret2+bAqvP0iEoULNiW8+Vkh3DwOkLSDkP5LccnEWaDtcMf
-	H6v6KKe2jF6Fh6vDeq50LKoZVz/AnmvtpB4WMFRUalDm/ynPtjimZByeQClmPZ20PONCNceADn4k4
-	GeZ8MNYORbMevS/Q47US6tGSMZKqvOxjuvpMptBuiCY8/e/AvtTcC372MnwewZAcMb5UhXSWDAMSu
-	enpsCL7g==;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=AUMRLjrvng95lJXQW/V2UY+YKANow7HWOWLgZomMeVk=; b=QKoU657FBpay/TJo7rSQ7IGJ5O
+	9vl/nmBFFZV6jFry29o/GakZx7hr2FtDTSKBF1Ojy0+YBGFrJIEynXwsThCXYPY6WvBE6+6Iahook
+	aKSbm0tDsrXGAA7awpDzklL3jyJEPIeI/BgLkgrcViFz+YaatMfNbXKV/nqM5nTnotA9+oPRoS5eV
+	0t8eL3EnQbz/IoaTfE63wPPiSqnwhSd0mBLGEyztR4XUi4x2ccPZbGg5azpkVA03nw64sFMplg/R4
+	W4r7/PpXwUn4rnDXPF6HstQ5mS/qM7+i3tK9P1Dw0ZCres08BSjl4uw1qxxX6J10Touy+hbnUmhQE
+	/Nval7vw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uOqDa-00000005isc-1zmj;
-	Tue, 10 Jun 2025 04:04:10 +0000
-Date: Mon, 9 Jun 2025 21:04:10 -0700
+	id 1uOqFv-00000005j1V-2JWk;
+	Tue, 10 Jun 2025 04:06:35 +0000
+Date: Mon, 9 Jun 2025 21:06:35 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Anuj gupta <anuj1072538@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Joanne Koong <joannelkoong@gmail.com>, miklos@szeredi.hu,
+To: Dave Chinner <david@fromorbit.com>
+Cc: Joanne Koong <joannelkoong@gmail.com>, miklos@szeredi.hu,
 	djwong@kernel.org, brauner@kernel.org,
 	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
 	bernd.schubert@fastmail.fm, kernel-team@meta.com
 Subject: Re: [PATCH v1 0/8] fuse: use iomap for buffered writes + writeback
-Message-ID: <aEeuuvdJWGEuFKX3@infradead.org>
+Message-ID: <aEevS9OHxZ0YAR74@infradead.org>
 References: <20250606233803.1421259-1-joannelkoong@gmail.com>
- <aEZly7K9Uok5KBtq@infradead.org>
- <CACzX3AsfbJjNUaXEX6-497x+uzHptrxM=wTUnDwy_tH6jAEMTQ@mail.gmail.com>
+ <aEeAqxUfFxepmQle@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CACzX3AsfbJjNUaXEX6-497x+uzHptrxM=wTUnDwy_tH6jAEMTQ@mail.gmail.com>
+In-Reply-To: <aEeAqxUfFxepmQle@dread.disaster.area>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jun 09, 2025 at 06:08:30PM +0530, Anuj gupta wrote:
-> On Mon, Jun 9, 2025 at 10:10 AM Christoph Hellwig <hch@infradead.org> wrote:
-> >
-> > Can you also point to a branch or at least tell the baseline?
-> > The patches won't apply against Linus' 6.16-rc tree.
-> >
-> Yes I had a hard time too, figuring that out. FWIW, it applies fine on
-> top of this branch [1]. It would be a great, if base commit can shared
-> in the next iterations.
+On Tue, Jun 10, 2025 at 10:47:39AM +1000, Dave Chinner wrote:
+> AFAICT, this is just adding a synchronous "read folio" and "write
+> folio" hooks into iomapi that bypass the existing "map and pack"
+> bio-based infrastructure. i.e. there is no actual "iomapping" being
+> done, it's adding special case IO hooks into the IO back end
+> iomap bio interfaces.
 > 
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/mszeredi/fuse.git/log/?h=for-next
+> Is that a fair summary of what this is doing?
+> 
+> If so, given that FUSE is actually a request/response protocol,
+> why wasn't netfs chosen as the back end infrastructure to support
+> large folios in the FUSE pagecache?
+> 
+> It's specifically designed for request/response IO interfaces that
+> are not block IO based, and it has infrastructure such as local file
+> caching built into it for optimising performance on high latency/low
+> bandwidth network based filesystems.
 
-Looks like this is still behind on mainline as even applying to
-linux-next doesn't work.  Hope the merge window has settled a bit more
-before the next version.
+Has it?  Or was that part of netfs simply written because Dave
+didn't listen when I explained him that the iterate over file range
+part of iomap is perfectly fine for network file systems?  I'd still
+like to see that part of networking file systems moved over to iomap,
+and I think it will have to happen if netfs wants to add nfs support.
+Because with nfs we can suddently end up in the block I/O path for
+a nominal network file system in the block layout, and that could
+reuse all the existing iomap code..
 
