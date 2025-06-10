@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52A1A27E7F4
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Jun 2025 07:20:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741C322DF9F
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Jun 2025 07:56:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749540012; cv=none; b=ntE5o+sn+K8HDI6yf8xDrVWK0knl1fqjvQfuvhF3WDEq3yoeJdaBqP0ubDCiS1bU+MLmvrorXgUGlzSJTxUmOR5Yz6e5/cN6Zb+Lg0KYxBY+RopmlG/I8cbdMRcqxT552w4DTB3R13cN62niA+zcUieWzPXFSX+26TiAttdC1zI=
+	t=1749542169; cv=none; b=GZmADkpAbZcHJKkpP/K5+A4wC8usYv6IbIYdKtTFih8oC+otsGqn0yZqYxz7MsAHjjXFxIpOzyCM549nEb6Tb+A8EbLAB6tCHuNRoCt0yYVsrwrrCX0KkJscEB5CmIAhgOF2dG/oBg2MDy+nU/pq0ZDm/wRKXX9eU7L3xb7y26k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749540012; c=relaxed/simple;
-	bh=XV3vSdHrhZ4+3EWaIoY9KzHEFVXalWvwbY77MOSZ/U4=;
+	s=arc-20240116; t=1749542169; c=relaxed/simple;
+	bh=7JRL9rWIhpuHP9fzy1RamrtXqCKC/5DgZ4HTvqg18pw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EAR/+vAghmf00cw5FBSZOOZ2wJOb+mS+Er6J8dZf0xJMuKzjbIrX/plM27QID/7DjSiXPQlOUu69sppdiBvX1hKjXoJ0wuGAW8uTrn/MMRY6b5tzbPiX/iI5pZ5AXOCdfqSDqn+TM9I1wFEuDvcMwPYNXQkTjKICe0sxHt/g22E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c/cZxlbm; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=p3VBKtwoiS1PvWQDy18DIDzhGXTt3bLjg2vaTAwnsRl1hPW+atsvZcu2XVATQ2qVW853UkeHE811inWMmmhCMLQInJgZYjD12b5twMABRIoubVtybvDu3dDoGYgUEICXnq0z11XhlsOTnidPSeWBTd/sH7yXDkhq8TTbbFPlvj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iKgB9iAw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c/cZxlbm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00E6EC4CEEF;
-	Tue, 10 Jun 2025 07:20:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iKgB9iAw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAD82C4CEEF;
+	Tue, 10 Jun 2025 07:56:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749540010;
-	bh=XV3vSdHrhZ4+3EWaIoY9KzHEFVXalWvwbY77MOSZ/U4=;
+	s=k20201202; t=1749542169;
+	bh=7JRL9rWIhpuHP9fzy1RamrtXqCKC/5DgZ4HTvqg18pw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=c/cZxlbmRq/McuROLgOaj8oEr9rVHXD7znAACiA8Rg5kSQ/Wry7NHUeGWlkg06EM8
-	 7XU4fUmDKnnkC3Sefo/uqq3aST4sNRa1xTqr1KTGF60Vj3td/7ZvncW05pC4kSUyPG
-	 msgD4tFgqQBOISlq0PPBuP9lbhal96s/CoErSJa6cHwY+BJKeBgyJkPqHsCzFb5l77
-	 FRT7yXZv6IKW30UVeeUtVWw6Ez4KsCNcCbch2pBLZL0JmTP9AvTjvUF03zJxE2aRKf
-	 T+0u6DmdkJXJjL6oKGKyHMVKseFLGIVhkVphrVZOybQFzSU0QPRONbQiCPBuh2xJOt
-	 iHFK0Cg31CvIQ==
-Date: Tue, 10 Jun 2025 09:20:07 +0200
+	b=iKgB9iAwWvwYyMADsZz89gfn3AH32eozfsj8hB8n+YBqCxJYCUvJ+4kn+HisHj1FV
+	 61XiuzqRhwGz0nBR9ETixIgwLyxnHuF2ttNfE+wmYI3tOqQjZunw3FS3ZIjFPn8yny
+	 9JreKOElu/Na3y01yepRnk3yOHkkzWsNvftDW0ZApY6WBs2MA0xjkiMusH0QBYgTUu
+	 QdpX1JmAh096qeimZpTtwDuGe4hbyhSitm1Owxll2Lv8v4N6NJLiIcGma/fjjHmwpT
+	 SsJ+mOG9iRH+do6HdLQ6jreaymxOhi+SWS7t/KGMAHU2grvJ6mq1DBtexKtwxmWFdq
+	 GRM2XciGBsNWA==
+Date: Tue, 10 Jun 2025 09:56:04 +0200
 From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/17] xfs: don't pass the old lv to xfs_cil_prepare_item
-Message-ID: <6j6fpxfzty3hwq3kxj7ib4uqdnunk2hnokptf5durft7mpqbjc@ec75y6trwvd6>
+Subject: Re: [PATCH 02/17] xfs: cleanup the ordered item logic in
+ xlog_cil_insert_format_items
+Message-ID: <txjhmsaiqnyjl46nhz75ukobgnmxwy6ka3wlsb6xvdz5v6bj3t@hpkwwjwk5f5k>
 References: <20250610051644.2052814-1-hch@lst.de>
- <6MfYDBpwBNiJoKgC6LwyzIPvcmH_RiHLAEFCq7xdhqiMoAYVb1aPtSIYYqblBQnLEEPHpnDWPwMUUV1hl5ThAA==@protonmail.internalid>
- <20250610051644.2052814-2-hch@lst.de>
+ <cqWn7I8cwwfGuWnf1e0-3it6wZgwjbXDsuuqz5qtz1MSy4hWQDWfQNT8SefFV7CfDrh1OSxj8qotWfFp9SYFtQ==@protonmail.internalid>
+ <20250610051644.2052814-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,87 +44,89 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250610051644.2052814-2-hch@lst.de>
+In-Reply-To: <20250610051644.2052814-3-hch@lst.de>
 
-On Tue, Jun 10, 2025 at 07:14:58AM +0200, Christoph Hellwig wrote:
-> By the time xfs_cil_prepare_item is called, the old lv is still pointed
-> to by the log item.  Take it from there instead of spreading the old lv
-> logic over xlog_cil_insert_format_items and xfs_cil_prepare_item.
-
-Looks Ok.
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
+On Tue, Jun 10, 2025 at 07:14:59AM +0200, Christoph Hellwig wrote:
+> Split out handling of ordered items into a single branch in
+> xlog_cil_insert_format_items so that the rest of the code becomes more
+> clear.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_log_cil.c | 16 +++++++---------
->  1 file changed, 7 insertions(+), 9 deletions(-)
+>  fs/xfs/xfs_log_cil.c | 31 +++++++++++++------------------
+>  1 file changed, 13 insertions(+), 18 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index f66d2d430e4f..c3db01b2ea47 100644
+> index c3db01b2ea47..81b6780e0afc 100644
 > --- a/fs/xfs/xfs_log_cil.c
 > +++ b/fs/xfs/xfs_log_cil.c
-> @@ -370,8 +370,8 @@ xlog_cil_alloc_shadow_bufs(
->  STATIC void
->  xfs_cil_prepare_item(
->  	struct xlog		*log,
-> +	struct xfs_log_item	*lip,
->  	struct xfs_log_vec	*lv,
-> -	struct xfs_log_vec	*old_lv,
->  	int			*diff_len)
->  {
->  	/* Account for the new LV being passed in */
-> @@ -381,19 +381,19 @@ xfs_cil_prepare_item(
->  	/*
->  	 * If there is no old LV, this is the first time we've seen the item in
->  	 * this CIL context and so we need to pin it. If we are replacing the
-> -	 * old_lv, then remove the space it accounts for and make it the shadow
-> +	 * old lv, then remove the space it accounts for and make it the shadow
->  	 * buffer for later freeing. In both cases we are now switching to the
->  	 * shadow buffer, so update the pointer to it appropriately.
->  	 */
-> -	if (!old_lv) {
-> +	if (!lip->li_lv) {
->  		if (lv->lv_item->li_ops->iop_pin)
->  			lv->lv_item->li_ops->iop_pin(lv->lv_item);
->  		lv->lv_item->li_lv_shadow = NULL;
-> -	} else if (old_lv != lv) {
-> +	} else if (lip->li_lv != lv) {
->  		ASSERT(lv->lv_buf_len != XFS_LOG_VEC_ORDERED);
-> 
-> -		*diff_len -= old_lv->lv_bytes;
-> -		lv->lv_item->li_lv_shadow = old_lv;
-> +		*diff_len -= lip->li_lv->lv_bytes;
-> +		lv->lv_item->li_lv_shadow = lip->li_lv;
+> @@ -452,9 +452,8 @@ xlog_cil_insert_format_items(
 >  	}
 > 
->  	/* attach new log vector to log item */
-> @@ -453,7 +453,6 @@ xlog_cil_insert_format_items(
-> 
 >  	list_for_each_entry(lip, &tp->t_items, li_trans) {
->  		struct xfs_log_vec *lv;
-> -		struct xfs_log_vec *old_lv = NULL;
->  		struct xfs_log_vec *shadow;
->  		bool	ordered = false;
+> -		struct xfs_log_vec *lv;
+> -		struct xfs_log_vec *shadow;
+> -		bool	ordered = false;
+> +		struct xfs_log_vec *lv = lip->li_lv;
+> +		struct xfs_log_vec *shadow = lip->li_lv_shadow;
 > 
-> @@ -474,7 +473,6 @@ xlog_cil_insert_format_items(
+>  		/* Skip items which aren't dirty in this transaction. */
+>  		if (!test_bit(XFS_LI_DIRTY, &lip->li_flags))
+> @@ -464,21 +463,23 @@ xlog_cil_insert_format_items(
+>  		 * The formatting size information is already attached to
+>  		 * the shadow lv on the log item.
+>  		 */
+> -		shadow = lip->li_lv_shadow;
+> -		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED)
+> -			ordered = true;
+> +		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED) {
+> +			if (!lv) {
+> +				lv = shadow;
+> +				lv->lv_item = lip;
+> +			}
+> +			ASSERT(shadow->lv_size == lv->lv_size);
+
+			This assert is kind of confusing me. if we have an
+			ORDERED vector here, couldn't we still have a shadow
+			size smaller than the current vector?
+
+> +			xfs_cil_prepare_item(log, lip, lv, diff_len);
+> +			continue;
+> +		}
+> 
+>  		/* Skip items that do not have any vectors for writing */
+> -		if (!shadow->lv_niovecs && !ordered)
+> +		if (!shadow->lv_niovecs)
 >  			continue;
 > 
 >  		/* compare to existing item size */
-> -		old_lv = lip->li_lv;
->  		if (lip->li_lv && shadow->lv_size <= lip->li_lv->lv_size) {
+> -		if (lip->li_lv && shadow->lv_size <= lip->li_lv->lv_size) {
+> +		if (lv && shadow->lv_size <= lv->lv_size) {
 >  			/* same or smaller, optimise common overwrite case */
->  			lv = lip->li_lv;
-> @@ -510,7 +508,7 @@ xlog_cil_insert_format_items(
+> -			lv = lip->li_lv;
+> -
+> -			if (ordered)
+> -				goto insert;
+> 
+>  			/*
+>  			 * set the item up as though it is a new insertion so
+> @@ -498,16 +499,10 @@ xlog_cil_insert_format_items(
+>  			/* switch to shadow buffer! */
+>  			lv = shadow;
+>  			lv->lv_item = lip;
+> -			if (ordered) {
+> -				/* track as an ordered logvec */
+> -				ASSERT(lip->li_lv == NULL);
+> -				goto insert;
+> -			}
+>  		}
+> 
 >  		ASSERT(IS_ALIGNED((unsigned long)lv->lv_buf, sizeof(uint64_t)));
 >  		lip->li_ops->iop_format(lip, lv);
->  insert:
-> -		xfs_cil_prepare_item(log, lv, old_lv, diff_len);
-> +		xfs_cil_prepare_item(log, lip, lv, diff_len);
+> -insert:
+>  		xfs_cil_prepare_item(log, lip, lv, diff_len);
 >  	}
 >  }
-> 
 > --
 > 2.47.2
 > 
