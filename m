@@ -1,258 +1,88 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from esa6.hc1455-7.c3s2.iphmx.com (esa6.hc1455-7.c3s2.iphmx.com [68.232.139.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA0D51A8401
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Jun 2025 09:07:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6246321CA16;
+	Tue, 10 Jun 2025 09:13:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.139.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749546427; cv=none; b=O67k2OOIOJpjNaYH6ElFzJZ+rkV33n7MGHqiGrhcAve+8I3EjBj2cE+n0GJJsAAl5FcckTfAhUghpxnL9tZJr/NDO4X5GjismjArwa+8t0xO+isdxg5YRgWCSuMIhEfPIHUKVA5ib9NlD8Uec4K6F5tRixGzJ18dVpTs83C0H+4=
+	t=1749546808; cv=none; b=u59ldR4mv2IC7ENyp+ha1kJZlleb4OoB6s5oOjumkoMyRoqVIa/ioB1Kn1POLQG9wE0elFZO1stmvjA58GyNHUvW+iSXpA4QyO6T3daMfE6UDOUDvDaghTGBjrJL6a8tdMnLJx7e04sLnMuM6f0PcRpqX2wNoLlZSU2DZtjJ9jc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749546427; c=relaxed/simple;
-	bh=G1xDF5rnWOkCETyraOuXdMqnNLzJbK74JFR5C3xWvEM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XvQQuoZV5Dg60Oi1J1ssjNouNjtqcO5+YnU529ZH6nMT6Mb4y4P0fMpdzRIEGzn2q+wUPbZLcfiX9lBqWzf7pEc0NwlFXRe9sKtuPKBEq0O0ROoO5RVqS0S+ju79oovCtU3E0SXkIjkexi+05nGgJZQXA7ovu4BTwvSeKS9VG/E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ChDPC2tZ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749546808; c=relaxed/simple;
+	bh=O/w01L8ahjJUSGQKPEFEg9HqO2IubeOSfBA8MZtkXak=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tbZWGExhttEz7WfmAI/MelmRwL3cPiAsgB7sTid4IPbRtN+Ow496lESjdZTI7FpcUOO6tzfwEevj8YPolMys2D8aMtLAF/X0NcZhVe6OdubqoXX9z7gSbB1+mw4M6P+TZDeYfEdhwBfzd7Y9D0fH8SW8JtT5XU4fkjx/3FIQA9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=pmufySNy; arc=none smtp.client-ip=68.232.139.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ChDPC2tZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA0D8C4CEEF;
-	Tue, 10 Jun 2025 09:07:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749546426;
-	bh=G1xDF5rnWOkCETyraOuXdMqnNLzJbK74JFR5C3xWvEM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ChDPC2tZI+asUi1dHGWsVL4whgwMDi1Xd5HTtfsfKyd4JAPjRlcyP8nhlOXEj4DpY
-	 ZvFnwcNV4FwDuYxZnrE3FBx72vkZTv5bN0tcmWrgIefo5tr3fcKPmFtlTStP0zfmQj
-	 vrdaKTQv2xxV83Ds9mFAujgmZ5PIyNHLH6ZKo/0o+RDQxsZfKZgwTL7mJq7dH3eUDY
-	 sr0hYCdrmtjDwgvwlxsHvOky+UDfwcu5cQQTbNEalWi3f9h9giuJI47wAgrZyMizRs
-	 W/Pzflcakd64up662/MomERSHZF/wmq4lTy2jBow5pXXvvUW3CgI4lCO12UnIfYQ6N
-	 /oUjaOAyCfvtA==
-Date: Tue, 10 Jun 2025 11:07:02 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 03/17] xfs: use better names for size members in
- xfs_log_vec
-Message-ID: <u7ihvsg5zffnfdmuzz6564opaimanplhmuqhye44wthpg54ja2@mh4pdrtmlnvj>
-References: <20250610051644.2052814-1-hch@lst.de>
- <YdBSqUAcJdfR2oWzZzLXSrapSKX-q1CurAlDrrBUbmd7bXlAO8LqNlCEJQaEZQ2o77r2ajptSKtHDdSn9N1AAQ==@protonmail.internalid>
- <20250610051644.2052814-4-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="pmufySNy"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj2;
+  t=1749546806; x=1781082806;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=O/w01L8ahjJUSGQKPEFEg9HqO2IubeOSfBA8MZtkXak=;
+  b=pmufySNyPiaWIxY4nEN/FvW0Csvgx5JhWcFkduNyiC7a8KUaG+KEifJs
+   SF5NJpy5V9sHNO+mMAZ0igUspHNPKSLuGbjcXQz67/AgcO+ISDVnuiwmJ
+   uOg2tPqrZVFmm4zqPT4FoyV+iELwYeQwKOqzPBLxNIVO2RW0rqawd0Fqi
+   hyHBFWUyueDBGgoOgK/HcQzqkC89ZBs1G5234JPjA4ClLWHW1Kdjbq9p6
+   OewlwuoWMc6ts0IkFpr3rlCdB8u+twQKzEFKnh+gGpNoKbcVLvZ/+zs1N
+   TKhiJLu1FsOoDd8iTafSKBHm9J43/6uGcVr4v1PjOW3csvF9D6kEXdSWu
+   g==;
+X-CSE-ConnectionGUID: 5dMsL8O9RDmsOUfCKLTkNg==
+X-CSE-MsgGUID: HN90nAiFQMKkyoqH5u/6sg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11459"; a="205325609"
+X-IronPort-AV: E=Sophos;i="6.16,224,1744038000"; 
+   d="scan'208";a="205325609"
+Received: from unknown (HELO oym-r4.gw.nic.fujitsu.com) ([210.162.30.92])
+  by esa6.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2025 18:12:15 +0900
+Received: from oym-m1.gw.nic.fujitsu.com (oym-nat-oym-m1.gw.nic.fujitsu.com [192.168.87.58])
+	by oym-r4.gw.nic.fujitsu.com (Postfix) with ESMTP id E0D95D8033;
+	Tue, 10 Jun 2025 18:12:12 +0900 (JST)
+Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
+	by oym-m1.gw.nic.fujitsu.com (Postfix) with ESMTP id 832893A4EE;
+	Tue, 10 Jun 2025 18:12:12 +0900 (JST)
+Received: from fedora.g08.fujitsu.local (unknown [10.167.136.80])
+	by edo.cn.fujitsu.com (Postfix) with ESMTP id 2D10C1A000B;
+	Tue, 10 Jun 2025 17:12:10 +0800 (CST)
+From: Ma Xinjian <maxj.fnst@fujitsu.com>
+To: zlang@kernel.org
+Cc: fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	Xinjian Ma <maxj.fnst@fujitsu.com>
+Subject: [PATCH] xfs/603: add _require_scrub
+Date: Tue, 10 Jun 2025 17:11:34 +0800
+Message-ID: <20250610091134.152557-1-maxj.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250610051644.2052814-4-hch@lst.de>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jun 10, 2025 at 07:15:00AM +0200, Christoph Hellwig wrote:
-> The lv_size member counts the size of the entire allocation, rename it
-> to lv_alloc_size to make that clear.
-> 
-> The lv_buf_size member tracks how much of lv_buf has been used up
-> to format the log item, rename it to lv_buf_used to make that more
+From: Xinjian Ma <maxj.fnst@fujitsu.com>
 
-Just a nit. lv_buf_len.  Otherwise looks good to me.
+This test uses xfs_scrub which is an EXPERIMENTAL and unstable feature.
+Add _require_scrub to check if the system supports it.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Xinjian Ma <maxj.fnst@fujitsu.com>
+---
+ tests/xfs/603 | 1 +
+ 1 file changed, 1 insertion(+)
 
-> clear.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_log.c     | 10 +++++-----
->  fs/xfs/xfs_log.h     |  9 +++++----
->  fs/xfs/xfs_log_cil.c | 30 +++++++++++++++---------------
->  3 files changed, 25 insertions(+), 24 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 793468b4d30d..3179923a68d4 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -109,14 +109,14 @@ xlog_prepare_iovec(
->  		vec = &lv->lv_iovecp[0];
->  	}
-> 
-> -	len = lv->lv_buf_len + sizeof(struct xlog_op_header);
-> +	len = lv->lv_buf_used + sizeof(struct xlog_op_header);
->  	if (!IS_ALIGNED(len, sizeof(uint64_t))) {
-> -		lv->lv_buf_len = round_up(len, sizeof(uint64_t)) -
-> +		lv->lv_buf_used = round_up(len, sizeof(uint64_t)) -
->  					sizeof(struct xlog_op_header);
->  	}
-> 
->  	vec->i_type = type;
-> -	vec->i_addr = lv->lv_buf + lv->lv_buf_len;
-> +	vec->i_addr = lv->lv_buf + lv->lv_buf_used;
-> 
->  	oph = vec->i_addr;
->  	oph->oh_clientid = XFS_TRANSACTION;
-> @@ -1931,9 +1931,9 @@ xlog_print_trans(
->  		if (!lv)
->  			continue;
->  		xfs_warn(mp, "  niovecs	= %d", lv->lv_niovecs);
-> -		xfs_warn(mp, "  size	= %d", lv->lv_size);
-> +		xfs_warn(mp, "  alloc_size = %d", lv->lv_alloc_size);
->  		xfs_warn(mp, "  bytes	= %d", lv->lv_bytes);
-> -		xfs_warn(mp, "  buf len	= %d", lv->lv_buf_len);
-> +		xfs_warn(mp, "  buf used= %d", lv->lv_buf_used);
-> 
->  		/* dump each iovec for the log item */
->  		vec = lv->lv_iovecp;
-> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-> index 13455854365f..f239fce4f260 100644
-> --- a/fs/xfs/xfs_log.h
-> +++ b/fs/xfs/xfs_log.h
-> @@ -16,8 +16,8 @@ struct xfs_log_vec {
->  	struct xfs_log_item	*lv_item;	/* owner */
->  	char			*lv_buf;	/* formatted buffer */
->  	int			lv_bytes;	/* accounted space in buffer */
-> -	int			lv_buf_len;	/* aligned size of buffer */
-> -	int			lv_size;	/* size of allocated lv */
-> +	int			lv_buf_used;	/* buffer space used so far */
-> +	int			lv_alloc_size;	/* size of allocated lv */
->  };
-> 
->  #define XFS_LOG_VEC_ORDERED	(-1)
-> @@ -64,12 +64,13 @@ xlog_finish_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec *vec,
->  	oph->oh_len = cpu_to_be32(len);
-> 
->  	len += sizeof(struct xlog_op_header);
-> -	lv->lv_buf_len += len;
-> +	lv->lv_buf_used += len;
->  	lv->lv_bytes += len;
->  	vec->i_len = len;
-> 
->  	/* Catch buffer overruns */
-> -	ASSERT((void *)lv->lv_buf + lv->lv_bytes <= (void *)lv + lv->lv_size);
-> +	ASSERT((void *)lv->lv_buf + lv->lv_bytes <=
-> +		(void *)lv + lv->lv_alloc_size);
->  }
-> 
->  /*
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 81b6780e0afc..985f27a5b4ba 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -275,7 +275,7 @@ xlog_cil_alloc_shadow_bufs(
->  		struct xfs_log_vec *lv;
->  		int	niovecs = 0;
->  		int	nbytes = 0;
-> -		int	buf_size;
-> +		int	alloc_size;
->  		bool	ordered = false;
-> 
->  		/* Skip items which aren't dirty in this transaction. */
-> @@ -316,14 +316,14 @@ xlog_cil_alloc_shadow_bufs(
->  		 * that space to ensure we can align it appropriately and not
->  		 * overrun the buffer.
->  		 */
-> -		buf_size = nbytes + xlog_cil_iovec_space(niovecs);
-> +		alloc_size = nbytes + xlog_cil_iovec_space(niovecs);
-> 
->  		/*
->  		 * if we have no shadow buffer, or it is too small, we need to
->  		 * reallocate it.
->  		 */
->  		if (!lip->li_lv_shadow ||
-> -		    buf_size > lip->li_lv_shadow->lv_size) {
-> +		    alloc_size > lip->li_lv_shadow->lv_alloc_size) {
->  			/*
->  			 * We free and allocate here as a realloc would copy
->  			 * unnecessary data. We don't use kvzalloc() for the
-> @@ -332,15 +332,15 @@ xlog_cil_alloc_shadow_bufs(
->  			 * storage.
->  			 */
->  			kvfree(lip->li_lv_shadow);
-> -			lv = xlog_kvmalloc(buf_size);
-> +			lv = xlog_kvmalloc(alloc_size);
-> 
->  			memset(lv, 0, xlog_cil_iovec_space(niovecs));
-> 
->  			INIT_LIST_HEAD(&lv->lv_list);
->  			lv->lv_item = lip;
-> -			lv->lv_size = buf_size;
-> +			lv->lv_alloc_size = alloc_size;
->  			if (ordered)
-> -				lv->lv_buf_len = XFS_LOG_VEC_ORDERED;
-> +				lv->lv_buf_used = XFS_LOG_VEC_ORDERED;
->  			else
->  				lv->lv_iovecp = (struct xfs_log_iovec *)&lv[1];
->  			lip->li_lv_shadow = lv;
-> @@ -348,9 +348,9 @@ xlog_cil_alloc_shadow_bufs(
->  			/* same or smaller, optimise common overwrite case */
->  			lv = lip->li_lv_shadow;
->  			if (ordered)
-> -				lv->lv_buf_len = XFS_LOG_VEC_ORDERED;
-> +				lv->lv_buf_used = XFS_LOG_VEC_ORDERED;
->  			else
-> -				lv->lv_buf_len = 0;
-> +				lv->lv_buf_used = 0;
->  			lv->lv_bytes = 0;
->  		}
-> 
-> @@ -375,7 +375,7 @@ xfs_cil_prepare_item(
->  	int			*diff_len)
->  {
->  	/* Account for the new LV being passed in */
-> -	if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED)
-> +	if (lv->lv_buf_used != XFS_LOG_VEC_ORDERED)
->  		*diff_len += lv->lv_bytes;
-> 
->  	/*
-> @@ -390,7 +390,7 @@ xfs_cil_prepare_item(
->  			lv->lv_item->li_ops->iop_pin(lv->lv_item);
->  		lv->lv_item->li_lv_shadow = NULL;
->  	} else if (lip->li_lv != lv) {
-> -		ASSERT(lv->lv_buf_len != XFS_LOG_VEC_ORDERED);
-> +		ASSERT(lv->lv_buf_used != XFS_LOG_VEC_ORDERED);
-> 
->  		*diff_len -= lip->li_lv->lv_bytes;
->  		lv->lv_item->li_lv_shadow = lip->li_lv;
-> @@ -463,12 +463,12 @@ xlog_cil_insert_format_items(
->  		 * The formatting size information is already attached to
->  		 * the shadow lv on the log item.
->  		 */
-> -		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED) {
-> +		if (shadow->lv_buf_used == XFS_LOG_VEC_ORDERED) {
->  			if (!lv) {
->  				lv = shadow;
->  				lv->lv_item = lip;
->  			}
-> -			ASSERT(shadow->lv_size == lv->lv_size);
-> +			ASSERT(shadow->lv_alloc_size == lv->lv_alloc_size);
->  			xfs_cil_prepare_item(log, lip, lv, diff_len);
->  			continue;
->  		}
-> @@ -478,7 +478,7 @@ xlog_cil_insert_format_items(
->  			continue;
-> 
->  		/* compare to existing item size */
-> -		if (lv && shadow->lv_size <= lv->lv_size) {
-> +		if (lv && shadow->lv_alloc_size <= lv->lv_alloc_size) {
->  			/* same or smaller, optimise common overwrite case */
-> 
->  			/*
-> @@ -491,7 +491,7 @@ xlog_cil_insert_format_items(
->  			lv->lv_niovecs = shadow->lv_niovecs;
-> 
->  			/* reset the lv buffer information for new formatting */
-> -			lv->lv_buf_len = 0;
-> +			lv->lv_buf_used = 0;
->  			lv->lv_bytes = 0;
->  			lv->lv_buf = (char *)lv +
->  					xlog_cil_iovec_space(lv->lv_niovecs);
-> @@ -1236,7 +1236,7 @@ xlog_cil_build_lv_chain(
->  		lv->lv_order_id = item->li_order_id;
-> 
->  		/* we don't write ordered log vectors */
-> -		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED)
-> +		if (lv->lv_buf_used != XFS_LOG_VEC_ORDERED)
->  			*num_bytes += lv->lv_bytes;
->  		*num_iovecs += lv->lv_niovecs;
->  		list_add_tail(&lv->lv_list, &ctx->lv_chain);
-> --
-> 2.47.2
-> 
-> 
+diff --git a/tests/xfs/603 b/tests/xfs/603
+index 04122b55..d6058a3e 100755
+--- a/tests/xfs/603
++++ b/tests/xfs/603
+@@ -20,6 +20,7 @@ _require_xfs_db_command iunlink
+ # until after the directory repair code was merged
+ _require_xfs_io_command repair -R directory
+ _require_scratch_nocheck	# repair doesn't like single-AG fs
++_require_scrub
+ 
+ # From the AGI definition
+ XFS_AGI_UNLINKED_BUCKETS=64
+-- 
+2.49.0
+
