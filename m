@@ -1,29 +1,29 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDD3317736
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Jun 2025 13:32:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22ED823ABAD
+	for <linux-xfs@vger.kernel.org>; Tue, 10 Jun 2025 13:33:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749562363; cv=none; b=nCb+7dlwMv08zqOBCNT4mVB2zhfr5qXNsFhkpscmksAlOLBZnhb1sZVGWhbHpG4aINBmpfQMu5goYg0wWT57ehG/D9J2AigAwD/T1RCdYKRCYqse84TwsIC6gcv3NJWrtcQTIC2KHpnnKUSEzu+OOVaUVKGNaKiHY1X4+jK4nEU=
+	t=1749562428; cv=none; b=Be6/QE0OCDuHPfOHLZvzUd3UzzNkHqSurSXZraIQhaEd5fMQScvBv58BPBgHxUic/3kPXSt5wpLkOk9lrEdndnoMkTFbkzLjT0WmmHwxh9nmQmQTPDqGlq30PZchMZmSbAOK9SNHctU9uuM00wYKsnTz8/KODE2q0u6UJrb1YNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749562363; c=relaxed/simple;
-	bh=23/+KcG14gqBYTo0i2hw0GQrzT6UAyf3PtueKhv8hRQ=;
+	s=arc-20240116; t=1749562428; c=relaxed/simple;
+	bh=+XIxlcCqK44j7Im/z6f+6EEkqnoTt+HrqgX3JHXnxoA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZlsQKdRof7iNhQKXhHKBAKOzVFPrFE4UBdUF9NE2N8hOEpOzwUZ+lH3LO+WxvtFJINz2rAp88/7LjHHaN4tXYX2fRLr3MRyyJz2OCvmaLT/pUBL26zhDMFsF2fyRTZumoLbvTwHqnKJwk7flvqvD98dNmWjZfcSmYL4M4vyx8yU=
+	 Content-Type:Content-Disposition:In-Reply-To; b=BltPEY1/dwYRRcB8OQvErqOlx20abhP3YdFKHMaYgz9XCdEg2oSjaLn3mRauz7/kpKUjejlUH8JpU/UxpmEMspkLaxuOt3uScn7X67QbT8jAAPCeOigPg/64oSTqfxaNPy0j1SuPCEogcrlf/+Sk4zSI2ZcOCJCggqC+YTA0rOc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 1FB2968CFE; Tue, 10 Jun 2025 15:32:36 +0200 (CEST)
-Date: Tue, 10 Jun 2025 15:32:35 +0200
+	id 836FE68CFE; Tue, 10 Jun 2025 15:33:42 +0200 (CEST)
+Date: Tue, 10 Jun 2025 15:33:42 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/17] xfs: cleanup the ordered item logic in
- xlog_cil_insert_format_items
-Message-ID: <20250610133235.GA28445@lst.de>
-References: <20250610051644.2052814-1-hch@lst.de> <cqWn7I8cwwfGuWnf1e0-3it6wZgwjbXDsuuqz5qtz1MSy4hWQDWfQNT8SefFV7CfDrh1OSxj8qotWfFp9SYFtQ==@protonmail.internalid> <20250610051644.2052814-3-hch@lst.de> <txjhmsaiqnyjl46nhz75ukobgnmxwy6ka3wlsb6xvdz5v6bj3t@hpkwwjwk5f5k>
+Subject: Re: [PATCH 04/17] xfs: don't use a xfs_log_iovec for attr_item
+ names and values
+Message-ID: <20250610133342.GB28445@lst.de>
+References: <20250610051644.2052814-1-hch@lst.de> <87zh7iMN3YQbqk4Sqd5jZSbgu2shMtWSZ6TxTx26lY6GhKClJ7tOdXNIBsmmu1VMu9bslTEhSPdgplacw1n0bw==@protonmail.internalid> <20250610051644.2052814-5-hch@lst.de> <yxm7xmw4oyfk3udwnyvutvsbsbtmctmxxywiyb5xjfowuawqxa@gfxtmvfzpebv>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,23 +32,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <txjhmsaiqnyjl46nhz75ukobgnmxwy6ka3wlsb6xvdz5v6bj3t@hpkwwjwk5f5k>
+In-Reply-To: <yxm7xmw4oyfk3udwnyvutvsbsbtmctmxxywiyb5xjfowuawqxa@gfxtmvfzpebv>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Jun 10, 2025 at 09:56:04AM +0200, Carlos Maiolino wrote:
-> > -		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED)
-> > -			ordered = true;
-> > +		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED) {
-> > +			if (!lv) {
-> > +				lv = shadow;
-> > +				lv->lv_item = lip;
-> > +			}
-> > +			ASSERT(shadow->lv_size == lv->lv_size);
+On Tue, Jun 10, 2025 at 11:17:40AM +0200, Carlos Maiolino wrote:
+> On Tue, Jun 10, 2025 at 07:15:01AM +0200, Christoph Hellwig wrote:
+> > These buffers are not directly logged, just use a kvec and remove the
+> > xlog_copy_from_iovec helper only used here.
 > 
-> 			This assert is kind of confusing me. if we have an
-> 			ORDERED vector here, couldn't we still have a shadow
-> 			size smaller than the current vector?
+> This looks correct, I'm not much sure if using a kvec here is ok, so I'll rely
+> on other reviewers regarding this. So take my review more related to code
+> correctness.
 
-The size of ordered items never changes, it's always the same constant
-overhead.
+The kvec is just the non-__user pointer of the iovec and can be used
+everywhere.  For userspace we'll need to add a trivial stub definition.
 
