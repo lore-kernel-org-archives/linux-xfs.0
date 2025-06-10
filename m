@@ -1,239 +1,355 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BB8725FA05
-	for <linux-xfs@vger.kernel.org>; Tue, 10 Jun 2025 19:09:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FC7B264A86;
+	Tue, 10 Jun 2025 20:13:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749582545; cv=none; b=u8DL69CqmMUCgQkytlEQ6E1x2KUSswwH5DHR3/VTKCUn7mP7GbPqXijSEjWHbz1zMsac2xvSPJR8UZZOmEOLS01YCPPexeQ3qyz65w/Um+18eqIJFcldtrjSUmBmm5Be3qrYgxywBFTGFoRlKK4BO0RmdnVMGlNHDRv8wbhdFe0=
+	t=1749586403; cv=none; b=iLkJN+DU2cyOaFOCO0+IP/+h712SQ2FKIM7UQWbtHf3UlWWyV5Lxtml0RA/c2ljqF0pgOpCLuzqe6B/mwh/C+pMZhsBORHQGf/q/QRZJufhQON7HGwYwcbi39RAPChUdMoQPAcH/t/etBKd0DsDpQXnJbH8qlajT07W2xgiPtJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749582545; c=relaxed/simple;
-	bh=P2c9QZ2QMTGEXsAYlVLRWVJAcrcG9fdTERiO9UVJyEQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jODEProkZBzieitJy/b3GwtyV7T/+RYW6UmmrkKwAEl1o0AUB8VxNNHfcE8HBFqsmFnjmsfXBRi2nbcFC8pEaBIupTpvkM/8ek64CrdmQ0sR2xI16ikrU2M54B7NnWCVlll7r2EfWqJAHH40f8yN3OMZqpBR3hij4JGWxWo3U9U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=D/d7I17H; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1749586403; c=relaxed/simple;
+	bh=ug4o0OQD3U8aYTZtojZkULRawLsX9EcF3pSxkfdpWJ0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=XTRFGtDZkYJv3YWZdrrOvrJ2hPSUUcM++WWC7iWRiUhXPIDyRwfOe7mgQ5u7Wpa6reWdSHNbqTibn9DL5Rf877giAYkNVHWyNtIYaxh28YKr4cwFP/BDzSDBb09B0Pu1wYNrhPjbuB34tO5RN+cMODlqw0qKLe+iQu1eF5WXTaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SdT7eYp5; arc=none smtp.client-ip=209.85.160.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="D/d7I17H"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1749582542;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=EDLdDx52Tt0xGB18gauxVIElFFaGCMshYvQZPbVpNqI=;
-	b=D/d7I17HPXkkntsvBMw4KhWoFesp8neVZ/7fRKBGwVacqcAfM9F4AOg9aj7YMeu7kD7rIp
-	7FdncO3LnIaoI3oWWIrSQ33oZY5NhJa1oPwTU2mo8Y6qXOy/OZmCijw5seb8ZKgT9TDuOq
-	7X3hWQAyvB3tD6euGPt4a6Z8jwQyZIM=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-487-Uvd6UUwyNea9QZ_I4i4zfg-1; Tue,
- 10 Jun 2025 15:09:00 -0400
-X-MC-Unique: Uvd6UUwyNea9QZ_I4i4zfg-1
-X-Mimecast-MFC-AGG-ID: Uvd6UUwyNea9QZ_I4i4zfg_1749582539
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 90FE3195608A;
-	Tue, 10 Jun 2025 19:08:58 +0000 (UTC)
-Received: from bfoster (unknown [10.22.80.100])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8D94519560AF;
-	Tue, 10 Jun 2025 19:08:56 +0000 (UTC)
-Date: Tue, 10 Jun 2025 15:12:31 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: [PATCH RFC 7/7] xfs: error tag to force zeroing on debug kernels
-Message-ID: <aEiDn1WDcv8wQmLS@bfoster>
-References: <20250605173357.579720-1-bfoster@redhat.com>
- <20250605173357.579720-8-bfoster@redhat.com>
- <aEe1oR3qRXz-QB67@infradead.org>
- <aEgkhYne8EenhJfI@bfoster>
- <aEgzdZKtL2Sp5RRa@infradead.org>
- <aEg_LH2BelAnY7It@bfoster>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SdT7eYp5"
+Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-4a58f79d6e9so64423831cf.2;
+        Tue, 10 Jun 2025 13:13:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1749586400; x=1750191200; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=rv1K8V0qXemtRgHGyIxXsEyWV3R8o02H0eJFKiYINSo=;
+        b=SdT7eYp5glsUulbH05NuMdA9IDOpqkIBB+zfINbioqwq3JkN2ZBG1UjuibFNOXDZIq
+         wvUpdUp1VKQ6uIuW3fX3fBLu2jmMN1SxviFV4AWuDf3sRd/GnLiSB16fys9h6EHrJ4Mc
+         egUAQRdLlHJxV8t2PUZb4c6jSzeLWUaojDB09hZa+nvjPICCqocG6kwSccMc3X70D0sp
+         mLUdgjqECpU7LBw+Z/0ET0oYmX1sZ+rogENHxNmY4VKGbs5/x39b45e0AzZ1riw87EeI
+         P6wnkouceyI4nD/7VstpIe9rHynkTIfoy9QzKbJ6zWk2TLNkOnO/iNt4Ls4lwuFIUiFx
+         9Usg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749586400; x=1750191200;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=rv1K8V0qXemtRgHGyIxXsEyWV3R8o02H0eJFKiYINSo=;
+        b=Os//RbUX0Pxt/M8aknaRClDbQ/iYV8+VGoBPBlTTLWkrhWyecrO1ke09IAE3e42ATr
+         VkAaBS6h/J5z2mLsqEeQX6Lw7jvbWYrD+yDm8L53rHwNp0Bon2x8W6B3u2sHyjchjgcm
+         8YGGY7ISQUPCGZ0oZAOWVJYW9ZqMYXNWY+KghsDZNmNfdbWQ7R1otgxNtbnA4Lx0h2ob
+         UoZ8z2INd0BeJCpu8gYd+ccR0h/yyNWfLnBFVu4OSfJ/Km/0en86XP6V7frNYJD/Ci6+
+         TSW108knDa6TSimL2CBjemh1KFBDX7w3u9CnAcZTn9SRP8Kph0bjwVJ5gN7sdhQTq5d4
+         6uPg==
+X-Forwarded-Encrypted: i=1; AJvYcCU6KOLzXqGBVa29QSiA72+jvec20sUHITR+4isE1eH0mBV1+tlWb8VC1Cd0SwBUM/N3nFJYt+K+omxM@vger.kernel.org, AJvYcCUgpYkHP4WUk+25x9OBEXjnxCZ7+gzjlTD2DW5GtoYug7kickuBZ96n3GCstytXjS10LtoweZfZZ6vi1prB@vger.kernel.org
+X-Gm-Message-State: AOJu0YyjKriPtpEjM0AtDxnJ5nN/gYm4cXgBuVJg/rAaCIKV/SWcsWs9
+	JsxnMpdGenbbnU3AZaPJVFoadYLCKw9m8CRDXil2i2A3Xd285q2q+GLgOoB2nFhB9ZELM9skF+j
+	L1Jhd8u1+pfXhCTI1hqzth2ra3KlbXGA=
+X-Gm-Gg: ASbGncsEi5FV/ZIavXdovSEr3p/dlU42CCdKQ5jaqdxB0f+n2KCuc7o/aHbbfsJpJyi
+	Vt+B+wL0RjoaY147wkb/5vQqJ3WuvTNLHREYs1mUJkclfdZdBZewtZjKD3/b2DQeBg+ShHrw3FR
+	rXv7aHliegZjwdQVRUob3bhRP/UXicLwPIlVlssDLewCg=
+X-Google-Smtp-Source: AGHT+IEzvgszwqvoTEsN0eiIdRCJWuEdonPydD25CbluGxxroYxfnuqdZHI8ZkMdvUJ1fOY9b2Ye/spxDj0moFpa/bM=
+X-Received: by 2002:a05:622a:4cc6:b0:4a4:30cf:c213 with SMTP id
+ d75a77b69052e-4a713c65d3bmr10984481cf.48.1749586400340; Tue, 10 Jun 2025
+ 13:13:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aEg_LH2BelAnY7It@bfoster>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+References: <20250606233803.1421259-1-joannelkoong@gmail.com>
+ <20250606233803.1421259-3-joannelkoong@gmail.com> <aEZm-tocHd4ITwvr@infradead.org>
+ <CAJnrk1Z-ubwmkpnC79OEWAdgumAS7PDtmGaecr8Fopwt0nW-aw@mail.gmail.com>
+ <aEeo7TbyczIILjml@infradead.org> <aEgyu86jWSz0Gpia@infradead.org>
+In-Reply-To: <aEgyu86jWSz0Gpia@infradead.org>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Tue, 10 Jun 2025 13:13:09 -0700
+X-Gm-Features: AX0GCFvWdPTKIpdfMQoECUZje2TuIYo3X8nX0skN8nFeh8vzio8DJt9NBJBgcT0
+Message-ID: <CAJnrk1b6eB71BmE_aOS77O-=77L_r5pim6GZYg45tUQnWChHUg@mail.gmail.com>
+Subject: Re: [PATCH v1 2/8] iomap: add IOMAP_IN_MEM iomap type
+To: Christoph Hellwig <hch@infradead.org>
+Cc: miklos@szeredi.hu, djwong@kernel.org, brauner@kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	bernd.schubert@fastmail.fm, kernel-team@meta.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jun 10, 2025 at 10:20:28AM -0400, Brian Foster wrote:
-> On Tue, Jun 10, 2025 at 06:30:29AM -0700, Christoph Hellwig wrote:
-> > On Tue, Jun 10, 2025 at 08:26:45AM -0400, Brian Foster wrote:
-> > > Well that is kind of the question.. ;) My preference was to either add
-> > > something to fstests to enable select errortags by default on every
-> > > mount (or do the same in-kernel via XFS_DEBUG[_ERRTAGS] or some such)
-> > > over just creating a one-off test that runs fsx or whatever with this
-> > > error tag turned on. [1].
-> > > 
-> > > That said, I wouldn't be opposed to just doing both if folks prefer
-> > > that. It just bugs me to add yet another test that only runs a specific
-> > > fsx test when we get much more coverage by running the full suite of
-> > > tests. IOW, whenever somebody is testing a kernel that would actually
-> > > run a custom test (XFS_DEBUG plus specific errortag support), we could
-> > > in theory be running the whole suite with the same errortag turned on
-> > > (albeit perhaps at a lesser frequency than a custom test would use). So
-> > > from that perspective I'm not sure it makes a whole lot of sense to do
-> > > both.
-> > > 
-> > > So any thoughts from anyone on a custom test vs. enabling errortag
-> > > defaults (via fstests or kernel) vs. some combination of both?
-> > 
-> > I definitively like a targeted test to exercise it.  If you want
-> > additional knows to turn on error tags that's probably fine if it
-> > works out.  I'm worried about adding more flags to xfstests because
-> > it makes it really hard to figure out what runs are need for good
-> > test coverage.
-> > 
-> > 
-> 
-> Yeah, an fstests variable would add yet another configuration to test,
-> which maybe defeats the point. But we could still turn on certain tags
-> by default in the kernel. For example, see the couple of open coded
-> get_random_u32_below() callsites in XFS where we already effectively do
-> this for XFS_DEBUG, they just aren't implemented as proper errortags.
-> 
-> I think the main thing that would need to change is to not xfs_warn() on
-> those knobs when they are enabled by default. I think there are a few
-> different ways that could possibly be done, ideally so we go back to
-> default/warn behavior when userspace makes an explicit errortag change,
-> but I'd have to play around with it a little bit. Hm?
-> 
-> Anyways, given the fstests config matrix concern I'm inclined to at
-> least give something like that a try first and then fall back to a
-> custom test if that fails or is objectionable for some other reason..
-> 
-> Brian
-> 
-> 
+On Tue, Jun 10, 2025 at 6:27=E2=80=AFAM Christoph Hellwig <hch@infradead.or=
+g> wrote:
+>
+> So I looked into something else, what if we just use ->read_folio
+> despite it not seeming ideal initially?  After going through with
+> it I think it's actually less bad than I thought.  This passes
+> -g auto on xfs with 4k blocks, and has three regression with 1k
+> blocks, 2 look are the seek hole testers upset that we can't
+> easily create detectable sub-block holes now, and one because
+> generic/563 thinks the cgroup accounting is off, probably because
+> we read more data now or something like that.
+>
+> ---
+> From c5d3cf651c815d3327199c74eac43149fc958098 Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Tue, 10 Jun 2025 09:39:57 +0200
+> Subject: iomap: use ->read_folio instead of iomap_read_folio_sync
+>
+> iomap_file_buffered_write has it's own private read path for reading
+> in folios that are only partially overwritten, which not only adds
+> extra code, but also extra problem when e.g. we want reads to go
+> through a file system method to support checksums or RAID, or even
+> support non-block based file systems.
+>
+> Switch to using ->read_folio instead, which has a few up- and downsides.
+>
+> ->read_folio always reads the entire folios and not just the start and
+> the tail that is not being overwritten.  Historically this was seen as a
+> downside as it reads more data than needed.  But with modern file systems
+> and modern storage devices this is probably a benefit.  If the folio is
+> stored contiguously on disk, the single read will be more efficient than
+> two small reads on almost all current hardware. If the folio is backed by
+> two blocks, at least we pipeline the two reads instead of doing two
+> synchronous ones.  And if the file system fragmented the folio so badly
+> that we'll now need to do more than two reads we're still at least
+> pipelining it, although that should basically never happen with modern
+> file systems.
 
-Here's a prototype for 1. an errtag quiet mode and 2. on-by-default
-tags. The alternative to a per-mount flag would be to hack a new struct
-into m_errortag that holds the current randfactor as well as a per-tag
-quiet flag, though I'm not sure how much people care about that. I
-didn't really plan on exposing this to userspace or anything for per-tag
-support, but this does mean all tags would start to warn once userspace
-changes any tag. I suppose that could become noisy if some day we end up
-with a bunch more default enabled tags. *shrug* I could go either way.
+If the filesystem wants granular folio reads, it can also just do that
+itself by calling an iomap helper (eg what iomap_adjust_read_range()
+is doing right now) in its ->read_folio() implementation, correct?
 
-Otherwise I think this would allow conversion of the two open coded
-get_random_u32_below() cases and the new force zero tag into
-on-by-default errortags. Any thoughts?
+For fuse at least, we definitely want granular reads, since reads may
+be extremely expensive (eg it may be a network fetch) and there's
+non-trivial mempcy overhead incurred with fuse needing to memcpy read
+buffer data from userspace back to the kernel.
 
---- 8< ---
+>
+> ->read_folio unlocks the folio on completion.  This adds extract atomics
+> to the write fast path, but the actual signaling by doing a lock_page
+> after ->read_folio is not any slower than the completion wakeup.  We
+> just have to recheck the mapping in this case do lock out truncates
+> and other mapping manipulations.
+>
+> ->read_folio starts another, nested, iomap iteration, with an extra
+> lookup of the extent at the current file position.  For in-place update
+> file systems this is extra work, although if they use a good data
+> structure like the xfs iext btree there is very little overhead in
+> another lookup.  For file system that write out of place this actually
+> implements the desired semantics as they don't care about the existing
+> data for the write iteration at all, although untangling this and
+> removing the srcmap member in the iomap_iter will require additional
+> work to turn the block zeroing and unshare helpers upside down.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap/buffered-io.c | 116 ++++++++++++++++-------------------------
+>  1 file changed, 45 insertions(+), 71 deletions(-)
+>
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 3729391a18f3..52b4040208dd 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -667,30 +667,34 @@ iomap_write_failed(struct inode *inode, loff_t pos,=
+ unsigned len)
+>                                          pos + len - 1);
+>  }
+>
+> -static int iomap_read_folio_sync(loff_t block_start, struct folio *folio=
+,
+> -               size_t poff, size_t plen, const struct iomap *iomap)
+> +/*
+> + * Now that we have a locked folio, check that the iomap we have cached =
+is not
+> + * stale before we do anything.
+> + *
+> + * The extent mapping can change due to concurrent IO in flight, e.g. th=
+e
+> + * IOMAP_UNWRITTEN state can change and memory reclaim could have reclai=
+med a
+> + * previously partially written page at this index after IO completion b=
+efore
+> + * this write reaches this file offset, and hence we could do the wrong =
+thing
+> + * here (zero a page range incorrectly or fail to zero) and corrupt data=
+.
+> + */
+> +static bool iomap_validate(struct iomap_iter *iter)
+>  {
+> -       struct bio_vec bvec;
+> -       struct bio bio;
+> +       const struct iomap_folio_ops *folio_ops =3D iter->iomap.folio_ops=
+;
+>
+> -       bio_init(&bio, iomap->bdev, &bvec, 1, REQ_OP_READ);
+> -       bio.bi_iter.bi_sector =3D iomap_sector(iomap, block_start);
+> -       bio_add_folio_nofail(&bio, folio, plen, poff);
+> -       return submit_bio_wait(&bio);
+> +       if (folio_ops && folio_ops->iomap_valid &&
+> +           !folio_ops->iomap_valid(iter->inode, &iter->iomap)) {
+> +               iter->iomap.flags |=3D IOMAP_F_STALE;
+> +               return false;
+> +       }
+> +
+> +       return true;
+>  }
+>
+> -static int __iomap_write_begin(const struct iomap_iter *iter, size_t len=
+,
+> +static int __iomap_write_begin(struct iomap_iter *iter, size_t len,
+>                 struct folio *folio)
+>  {
+> -       const struct iomap *srcmap =3D iomap_iter_srcmap(iter);
+> +       struct inode *inode =3D iter->inode;
+>         struct iomap_folio_state *ifs;
+> -       loff_t pos =3D iter->pos;
+> -       loff_t block_size =3D i_blocksize(iter->inode);
+> -       loff_t block_start =3D round_down(pos, block_size);
+> -       loff_t block_end =3D round_up(pos + len, block_size);
+> -       unsigned int nr_blocks =3D i_blocks_per_folio(iter->inode, folio)=
+;
+> -       size_t from =3D offset_in_folio(folio, pos), to =3D from + len;
+> -       size_t poff, plen;
+>
+>         /*
+>          * If the write or zeroing completely overlaps the current folio,=
+ then
+> @@ -699,45 +703,29 @@ static int __iomap_write_begin(const struct iomap_i=
+ter *iter, size_t len,
+>          * For the unshare case, we must read in the ondisk contents beca=
+use we
+>          * are not changing pagecache contents.
+>          */
+> -       if (!(iter->flags & IOMAP_UNSHARE) && pos <=3D folio_pos(folio) &=
+&
+> -           pos + len >=3D folio_pos(folio) + folio_size(folio))
+> +       if (!(iter->flags & IOMAP_UNSHARE) &&
+> +           iter->pos <=3D folio_pos(folio) &&
+> +           iter->pos + len >=3D folio_pos(folio) + folio_size(folio))
+>                 return 0;
+>
+> -       ifs =3D ifs_alloc(iter->inode, folio, iter->flags);
+> -       if ((iter->flags & IOMAP_NOWAIT) && !ifs && nr_blocks > 1)
+> +       ifs =3D ifs_alloc(inode, folio, iter->flags);
+> +       if ((iter->flags & IOMAP_NOWAIT) && !ifs &&
+> +           i_blocks_per_folio(inode, folio) > 1)
+>                 return -EAGAIN;
+>
+> -       if (folio_test_uptodate(folio))
+> -               return 0;
+> -
+> -       do {
+> -               iomap_adjust_read_range(iter->inode, folio, &block_start,
+> -                               block_end - block_start, &poff, &plen);
+> -               if (plen =3D=3D 0)
+> -                       break;
+> +       if (!folio_test_uptodate(folio)) {
+> +               inode->i_mapping->a_ops->read_folio(NULL, folio);
+>
+> -               if (!(iter->flags & IOMAP_UNSHARE) &&
+> -                   (from <=3D poff || from >=3D poff + plen) &&
+> -                   (to <=3D poff || to >=3D poff + plen))
+> -                       continue;
+> -
+> -               if (iomap_block_needs_zeroing(iter, block_start)) {
+> -                       if (WARN_ON_ONCE(iter->flags & IOMAP_UNSHARE))
+> -                               return -EIO;
+> -                       folio_zero_segments(folio, poff, from, to, poff +=
+ plen);
+> -               } else {
+> -                       int status;
+> -
+> -                       if (iter->flags & IOMAP_NOWAIT)
+> -                               return -EAGAIN;
+> -
+> -                       status =3D iomap_read_folio_sync(block_start, fol=
+io,
+> -                                       poff, plen, srcmap);
+> -                       if (status)
+> -                               return status;
+> -               }
+> -               iomap_set_range_uptodate(folio, poff, plen);
+> -       } while ((block_start +=3D plen) < block_end);
+> +               /*
+> +                * ->read_folio unlocks the folio.  Relock and revalidate=
+ the
+> +                * folio.
+> +                */
+> +               folio_lock(folio);
+> +               if (unlikely(folio->mapping !=3D inode->i_mapping))
+> +                       return 1;
+> +               if (unlikely(!iomap_validate(iter)))
+> +                       return 1;
 
- diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index dbd87e137694..54b38143a7a6 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -69,6 +69,7 @@ static unsigned int xfs_errortag_random_default[] = {
- struct xfs_errortag_attr {
- 	struct attribute	attr;
- 	unsigned int		tag;
-+	bool			enable_default;
- };
- 
- static inline struct xfs_errortag_attr *
-@@ -129,12 +130,15 @@ static const struct sysfs_ops xfs_errortag_sysfs_ops = {
- 	.store = xfs_errortag_attr_store,
- };
- 
--#define XFS_ERRORTAG_ATTR_RW(_name, _tag) \
-+#define __XFS_ERRORTAG_ATTR_RW(_name, _tag, enable) \
- static struct xfs_errortag_attr xfs_errortag_attr_##_name = {		\
- 	.attr = {.name = __stringify(_name),				\
- 		 .mode = VERIFY_OCTAL_PERMISSIONS(S_IWUSR | S_IRUGO) },	\
- 	.tag	= (_tag),						\
-+	.enable_default = enable,					\
- }
-+#define XFS_ERRORTAG_ATTR_RW(_name, _tag) \
-+	__XFS_ERRORTAG_ATTR_RW(_name, _tag, false)
- 
- #define XFS_ERRORTAG_ATTR_LIST(_name) &xfs_errortag_attr_##_name.attr
- 
-@@ -240,6 +244,25 @@ static const struct kobj_type xfs_errortag_ktype = {
- 	.default_groups = xfs_errortag_groups,
- };
- 
-+static void
-+xfs_errortag_init_enable_defaults(
-+	struct xfs_mount	*mp)
-+{
-+	int i;
-+
-+	for (i = 0; xfs_errortag_attrs[i]; i++) {
-+		struct xfs_errortag_attr *xfs_attr =
-+				to_attr(xfs_errortag_attrs[i]);
-+
-+		if (!xfs_attr->enable_default)
-+			continue;
-+
-+		xfs_set_quiet_errtag(mp);
-+		mp->m_errortag[xfs_attr->tag] =
-+			xfs_errortag_random_default[xfs_attr->tag];
-+	}
-+}
-+
- int
- xfs_errortag_init(
- 	struct xfs_mount	*mp)
-@@ -251,6 +274,8 @@ xfs_errortag_init(
- 	if (!mp->m_errortag)
- 		return -ENOMEM;
- 
-+	xfs_errortag_init_enable_defaults(mp);
-+
- 	ret = xfs_sysfs_init(&mp->m_errortag_kobj, &xfs_errortag_ktype,
- 				&mp->m_kobj, "errortag");
- 	if (ret)
-@@ -320,9 +345,11 @@ xfs_errortag_test(
- 	if (!randfactor || get_random_u32_below(randfactor))
- 		return false;
- 
--	xfs_warn_ratelimited(mp,
-+	if (!xfs_is_quiet_errtag(mp)) {
-+		xfs_warn_ratelimited(mp,
- "Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
- 			expression, file, line, mp->m_super->s_id);
-+	}
- 	return true;
- }
- 
-@@ -346,6 +373,7 @@ xfs_errortag_set(
- 	if (!xfs_errortag_valid(error_tag))
- 		return -EINVAL;
- 
-+	xfs_clear_quiet_errtag(mp);
- 	mp->m_errortag[error_tag] = tag_value;
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index d85084f9f317..44b02728056f 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -558,6 +558,8 @@ __XFS_HAS_FEAT(nouuid, NOUUID)
-  */
- #define XFS_OPSTATE_BLOCKGC_ENABLED	6
- 
-+/* Debug kernel skips warning on errtag event triggers */
-+#define XFS_OPSTATE_QUIET_ERRTAG	7
- /* Kernel has logged a warning about shrink being used on this fs. */
- #define XFS_OPSTATE_WARNED_SHRINK	9
- /* Kernel has logged a warning about logged xattr updates being used. */
-@@ -600,6 +602,7 @@ __XFS_IS_OPSTATE(inode32, INODE32)
- __XFS_IS_OPSTATE(readonly, READONLY)
- __XFS_IS_OPSTATE(inodegc_enabled, INODEGC_ENABLED)
- __XFS_IS_OPSTATE(blockgc_enabled, BLOCKGC_ENABLED)
-+__XFS_IS_OPSTATE(quiet_errtag, QUIET_ERRTAG)
- #ifdef CONFIG_XFS_QUOTA
- __XFS_IS_OPSTATE(quotacheck_running, QUOTACHECK_RUNNING)
- __XFS_IS_OPSTATE(resuming_quotaon, RESUMING_QUOTAON)
+Does this now basically mean that every caller that uses iomap for
+writes will have to implement ->iomap_valid and up the sequence
+counter anytime there's a write or truncate, in case the folio changes
+during the lock drop? Or were we already supposed to be doing this?
 
+> +       }
+>
+>         return 0;
+>  }
+> @@ -803,7 +791,6 @@ static int iomap_write_begin_inline(const struct ioma=
+p_iter *iter,
+>  static int iomap_write_begin(struct iomap_iter *iter, struct folio **fol=
+iop,
+>                 size_t *poffset, u64 *plen)
+>  {
+> -       const struct iomap_folio_ops *folio_ops =3D iter->iomap.folio_ops=
+;
+>         const struct iomap *srcmap =3D iomap_iter_srcmap(iter);
+>         loff_t pos =3D iter->pos;
+>         u64 len =3D min_t(u64, SIZE_MAX, iomap_length(iter));
+> @@ -818,28 +805,14 @@ static int iomap_write_begin(struct iomap_iter *ite=
+r, struct folio **foliop,
+>         if (fatal_signal_pending(current))
+>                 return -EINTR;
+>
+> +lookup_again:
+>         folio =3D __iomap_get_folio(iter, len);
+>         if (IS_ERR(folio))
+>                 return PTR_ERR(folio);
+>
+> -       /*
+> -        * Now we have a locked folio, before we do anything with it we n=
+eed to
+> -        * check that the iomap we have cached is not stale. The inode ex=
+tent
+> -        * mapping can change due to concurrent IO in flight (e.g.
+> -        * IOMAP_UNWRITTEN state can change and memory reclaim could have
+> -        * reclaimed a previously partially written page at this index af=
+ter IO
+> -        * completion before this write reaches this file offset) and hen=
+ce we
+> -        * could do the wrong thing here (zero a page range incorrectly o=
+r fail
+> -        * to zero) and corrupt data.
+> -        */
+> -       if (folio_ops && folio_ops->iomap_valid) {
+> -               bool iomap_valid =3D folio_ops->iomap_valid(iter->inode,
+> -                                                        &iter->iomap);
+> -               if (!iomap_valid) {
+> -                       iter->iomap.flags |=3D IOMAP_F_STALE;
+> -                       status =3D 0;
+> -                       goto out_unlock;
+> -               }
+> +       if (unlikely(!iomap_validate(iter))) {
+> +               status =3D 0;
+> +               goto out_unlock;
+>         }
+>
+>         pos =3D iomap_trim_folio_range(iter, folio, poffset, &len);
+> @@ -860,7 +833,8 @@ static int iomap_write_begin(struct iomap_iter *iter,=
+ struct folio **foliop,
+>
+>  out_unlock:
+>         __iomap_put_folio(iter, 0, folio);
+> -
+> +       if (status =3D=3D 1)
+> +               goto lookup_again;
+>         return status;
+>  }
+>
+> --
+> 2.47.2
+>
