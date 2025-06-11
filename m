@@ -1,42 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D26E28D836;
-	Wed, 11 Jun 2025 14:18:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4259418BC2F;
+	Wed, 11 Jun 2025 15:05:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749651494; cv=none; b=W3PTdaT6KvoMX2GGyiTZzDHltNApsUNsG1aXdUDCb14iEVcJoRkrSS6V2pZodd3Du3ImOS+SQs4EOLrC2TorYs/+TD9hTPYE0kToyWNl5uZnY2/6CyaQitwuFw0rR8/ajb71xqvZr4EyH29/5ku/NSB4TL7UlbjhKzUFdDN5DvE=
+	t=1749654356; cv=none; b=gs2p97F8xakutiMBlAhVpbhOEq0ICMVZ4Xd9sDMtS01a2sWk/COeeYYx4rqiFik8WB3FVb/zvDgqgvFtEx1s/ZGU9CyW32NLSPipu/rdOcCmYJ5qhodTZXJ8AFqhmwbz02QXQ8KWTmJmglmwdBBKE8Lr1SlUfmaCUas/9cTQHNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749651494; c=relaxed/simple;
-	bh=wY6dJHTDNov2eqWKUcwLqvIqYDbcn8PsLlSxvS2FhfQ=;
+	s=arc-20240116; t=1749654356; c=relaxed/simple;
+	bh=nXn//9wEDz612qpwUp8e5GEyUKA50kkwM4h/bE6ZsuQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p5taloyQ9jl4pK9fSAJAnYKwU8O0lkOR88MV4Nn4yYJbTt++cSG9Zot22BSHYCLswrrnjt4Gm/UpDSIYmlJX7oQ1ns58RLhFvADux5g4rOqnmaRkGj31T4c77efvloDuIokr0wIXllyykIKti+UrC1IoeYNdv2vgA9/5ca16tqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JH4S6Ola; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=su5z1yS8jd8azCp46KNpSr3hGUrUxHodUkSa+nWZc3tLl4dQVwIHtbkS0idMXbDby+r8eqovkXu0UhwBY3u26oWorq0EgJWCy2yxS/3YLRcycAhBIkhbUozQjxDFHetKSj8wLxN6+SmApe8OT+k09HiqetS+eJ9HtWj2LJ6Pxn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q09gTN7J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JH4S6Ola"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5E5FC4CEE3;
-	Wed, 11 Jun 2025 14:18:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q09gTN7J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF97EC4CEE3;
+	Wed, 11 Jun 2025 15:05:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749651493;
-	bh=wY6dJHTDNov2eqWKUcwLqvIqYDbcn8PsLlSxvS2FhfQ=;
+	s=k20201202; t=1749654355;
+	bh=nXn//9wEDz612qpwUp8e5GEyUKA50kkwM4h/bE6ZsuQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JH4S6OlaSh8JqI6zu5zUSkGa5EinX0oXb22CnsQYvTGdasbiEuPlVzQMtFEe6CRxT
-	 XZXCxKIIbOaAgV4xKdb69Dkg5MvL+s7ddHOcF98YhFSX6uyHUYc/eHQsEfhitbLH3I
-	 FpB248ftKWiPiUadq1u5g1vLQanlfttE97fCWHHLwlSPjzw9/9OBpBfwPek/CufV/o
-	 iwjaS9UZrmjG/i59kZXJ53aTAGHv5FIPUxPa3HlKKHFjq3Znr64hjuDhfNCedxmADF
-	 mWw/GAZ3+VQcRsDQ+tEZLh2CnyLFmQIHuntmtdyVmeR6PsocAy5E95bhq+swQefvjs
-	 uZnXAEE+fHWpg==
-Date: Wed, 11 Jun 2025 07:18:11 -0700
+	b=Q09gTN7JEA9p4RLFDHZ4C0xd3qOt0xR+cuu6CEvOs3oeO1rgndK/SFluuYHxpBwiL
+	 pcrJUktzodkyPGdCmioD3Pn+DGNwZw7t8x7x2D0qcxhP98WSlrEXXDrl7ncRliIhTv
+	 i4B1LttaTfBZZFx7yGC/ufWAgQofppsA7SN8MiAQIPngifAuoyFFbczwovXdJeehdI
+	 4OJt2ThjrKPM/ptQuox2H9n/ZSCCZ39v0wavG5UYR+eo8fL5G9z0B1cJtSFNF0XXL9
+	 lNIgvxMVexROrysgq8wf/C4BYLcPSK2fCrvofoN4KX+z/6+s8eFIPH4pHF4mqI6jr0
+	 gYUgZDM+G7c/Q==
+Date: Wed, 11 Jun 2025 08:05:55 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Ma Xinjian <maxj.fnst@fujitsu.com>, zlang@kernel.org,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs/603: add _require_scrub
-Message-ID: <20250611141811.GE6143@frogsfrogsfrogs>
-References: <20250610091134.152557-1-maxj.fnst@fujitsu.com>
- <TFkjtpdcmBChUeSsNRmVqz65HKT2J13UyIyaxbRu8CFBo8VPvXETVgIR6QZLuGK5BLpZOgS_1KQaE27kWB5PMQ==@protonmail.internalid>
- <20250610144600.GD6143@frogsfrogsfrogs>
- <a3lsfm4pyryspt257eprspy6zapgkai5xubtcpxpw3edygurrn@7wfi73j2sbqt>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de,
+	tytso@mit.edu, john.g.garry@oracle.com, bmarzins@redhat.com,
+	chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+	brauner@kernel.org, martin.petersen@oracle.com, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH 07/10] fs: introduce FALLOC_FL_WRITE_ZEROES to fallocate
+Message-ID: <20250611150555.GB6134@frogsfrogsfrogs>
+References: <20250604020850.1304633-1-yi.zhang@huaweicloud.com>
+ <20250604020850.1304633-8-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,49 +50,133 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a3lsfm4pyryspt257eprspy6zapgkai5xubtcpxpw3edygurrn@7wfi73j2sbqt>
+In-Reply-To: <20250604020850.1304633-8-yi.zhang@huaweicloud.com>
 
-On Wed, Jun 11, 2025 at 02:50:11PM +0200, Carlos Maiolino wrote:
-> On Tue, Jun 10, 2025 at 07:46:00AM -0700, Darrick J. Wong wrote:
-> > On Tue, Jun 10, 2025 at 05:11:34PM +0800, Ma Xinjian wrote:
-> > > From: Xinjian Ma <maxj.fnst@fujitsu.com>
-> > >
-> > > This test uses xfs_scrub which is an EXPERIMENTAL and unstable feature.
-> > > Add _require_scrub to check if the system supports it.
-> > >
-> > > Signed-off-by: Xinjian Ma <maxj.fnst@fujitsu.com>
-> > 
-> > Oops, thanks for the correction.
-> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+[cc linux-api about a fallocate uapi change]
+
+On Wed, Jun 04, 2025 at 10:08:47AM +0800, Zhang Yi wrote:
+> From: Zhang Yi <yi.zhang@huawei.com>
 > 
-> Experimental has meen removed from scrub in 6.16, is this still needed?
+> With the development of flash-based storage devices, we can quickly
+> write zeros to SSDs using the WRITE_ZERO command if the devices do not
+> actually write physical zeroes to the media. Therefore, we can use this
+> command to quickly preallocate a real all-zero file with written
+> extents. This approach should be beneficial for subsequent pure
+> overwriting within this file, as it can save on block allocation and,
+> consequently, significant metadata changes, which should greatly improve
+> overwrite performance on certain filesystems.
+> 
+> Therefore, introduce a new operation FALLOC_FL_WRITE_ZEROES to
+> fallocate. This flag is used to convert a specified range of a file to
+> zeros by issuing a zeroing operation. Blocks should be allocated for the
+> regions that span holes in the file, and the entire range is converted
+> to written extents. If the underlying device supports the actual offload
+> write zeroes command, the process of zeroing out operation can be
+> accelerated. If it does not, we currently don't prevent the file system
+> from writing actual zeros to the device. This provides users with a new
+> method to quickly generate a zeroed file, users no longer need to write
+> zero data to create a file with written extents.
+> 
+> Users can determine whether a disk supports the unmap write zeroes
+> operation through querying this sysfs interface:
+> 
+>     /sys/block/<disk>/queue/write_zeroes_unmap
+> 
+> Finally, this flag cannot be specified in conjunction with the
+> FALLOC_FL_KEEP_SIZE since allocating written extents beyond file EOF is
+> not permitted. In addition, filesystems that always require out-of-place
+> writes should not support this flag since they still need to allocated
+> new blocks during subsequent overwrites.
+> 
+> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/open.c                   |  1 +
+>  include/linux/falloc.h      |  3 ++-
+>  include/uapi/linux/falloc.h | 18 ++++++++++++++++++
+>  3 files changed, 21 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/open.c b/fs/open.c
+> index 7828234a7caa..b777e11e5522 100644
+> --- a/fs/open.c
+> +++ b/fs/open.c
+> @@ -281,6 +281,7 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+>  		break;
+>  	case FALLOC_FL_COLLAPSE_RANGE:
+>  	case FALLOC_FL_INSERT_RANGE:
+> +	case FALLOC_FL_WRITE_ZEROES:
+>  		if (mode & FALLOC_FL_KEEP_SIZE)
+>  			return -EOPNOTSUPP;
+>  		break;
+> diff --git a/include/linux/falloc.h b/include/linux/falloc.h
+> index 3f49f3df6af5..7c38c6b76b60 100644
+> --- a/include/linux/falloc.h
+> +++ b/include/linux/falloc.h
+> @@ -36,7 +36,8 @@ struct space_resv {
+>  				 FALLOC_FL_COLLAPSE_RANGE |	\
+>  				 FALLOC_FL_ZERO_RANGE |		\
+>  				 FALLOC_FL_INSERT_RANGE |	\
+> -				 FALLOC_FL_UNSHARE_RANGE)
+> +				 FALLOC_FL_UNSHARE_RANGE |	\
+> +				 FALLOC_FL_WRITE_ZEROES)
+>  
+>  /* on ia32 l_start is on a 32-bit boundary */
+>  #if defined(CONFIG_X86_64)
+> diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
+> index 5810371ed72b..265aae7ff8c1 100644
+> --- a/include/uapi/linux/falloc.h
+> +++ b/include/uapi/linux/falloc.h
+> @@ -78,4 +78,22 @@
+>   */
+>  #define FALLOC_FL_UNSHARE_RANGE		0x40
+>  
+> +/*
+> + * FALLOC_FL_WRITE_ZEROES is used to convert a specified range of a file to
+> + * zeros by issuing a zeroing operation. Blocks should be allocated for the
+> + * regions that span holes in the file, and the entire range is converted to
+> + * written extents.
 
-Yes, _require_scrub checks that the userspace driver program exists.
+I think you could simplify this a bit by talking only about the end
+state after a successful call:
+
+"FALLOC_FL_WRITE_ZEROES zeroes a specified file range in such a way that
+subsequent writes to that range do not require further changes to file
+mapping metadata."
+
+Note that we don't say how the filesystem gets to this goal.  Presumably
+the first implementations will send a zeroing operation to the block
+device during allocation and the fs will create written mappings, but
+there are other ways to get there -- a filesystem could maintain a pool
+of pre-zeroed space and hand those out; or it could zero space on
+freeing and mounting such that all new mappings can be created as
+written even without the block device zeroing operation.
+
+Or you could be running on some carefully engineered system where you
+know the storage will always be zeroed at allocation time due to some
+other aspect of the system design, e.g. a single-use throwaway cloud vm
+where you allocate to the end of the disk and reboot the node.
+
+> + *                  This flag is beneficial for subsequent pure overwriting
+> + * within this range, as it can save on block allocation and, consequently,
+> + * significant metadata changes. Therefore, filesystems that always require
+> + * out-of-place writes should not support this flag.
+> + *
+> + * Different filesystems may implement different limitations on the
+> + * granularity of the zeroing operation. Most will preferably be accelerated
+> + * by submitting write zeroes command if the backing storage supports, which
+> + * may not physically write zeros to the media.
+> + *
+> + * This flag cannot be specified in conjunction with the FALLOC_FL_KEEP_SIZE.
+> + */
+> +#define FALLOC_FL_WRITE_ZEROES		0x80
+
+The rest of the writeup seems fine to me.
 
 --D
 
-> > 
-> > --D
-> > 
-> > > ---
-> > >  tests/xfs/603 | 1 +
-> > >  1 file changed, 1 insertion(+)
-> > >
-> > > diff --git a/tests/xfs/603 b/tests/xfs/603
-> > > index 04122b55..d6058a3e 100755
-> > > --- a/tests/xfs/603
-> > > +++ b/tests/xfs/603
-> > > @@ -20,6 +20,7 @@ _require_xfs_db_command iunlink
-> > >  # until after the directory repair code was merged
-> > >  _require_xfs_io_command repair -R directory
-> > >  _require_scratch_nocheck	# repair doesn't like single-AG fs
-> > > +_require_scrub
-> > >
-> > >  # From the AGI definition
-> > >  XFS_AGI_UNLINKED_BUCKETS=64
-> > > --
-> > > 2.49.0
-> > >
-> > >
-> > 
+> +
+>  #endif /* _UAPI_FALLOC_H_ */
+> -- 
+> 2.46.1
+> 
 > 
