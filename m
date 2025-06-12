@@ -1,34 +1,35 @@
 Received: from relay.hostedemail.com (smtprelay0011.hostedemail.com [216.40.44.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09BAA1DE4EC;
-	Thu, 12 Jun 2025 18:00:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4C881DED49;
+	Thu, 12 Jun 2025 18:46:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749751255; cv=none; b=ea2XmogbRg15HIog0o3xw2k2+k9X2Dj33CmLtuyoJlCobRnajxhN1atiPk2xaf8KQlp6QrZ0IZrtEbMpZkzgqxSx6SRjDGBsRHJJeimFbWVjDqkDlI2DrjCFXogqSBgxHx+L6JgkOnPxlyfjKwEVohgosY0rq6tryM/E3Bq/8HY=
+	t=1749753975; cv=none; b=lPQFn+kupjfZfJq81+wbu9AJZMhxza0OyOax4S4mkHIjhflNduqzvx2UYLPDPsgr+G1jS451uJj3atUdxw0hwoAPx5mapQVKS7/Q5GU8/8zM+dKNBntOq3BMhtdScUkF3Beo31w1yQspVWSxFSXOgibWZ8uCgpl0/IAFYvp8AuI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749751255; c=relaxed/simple;
-	bh=XZ67z4AvZTTlJfXqDGeb2LDeAoDVG3sdPTCXuPVaTTk=;
+	s=arc-20240116; t=1749753975; c=relaxed/simple;
+	bh=/H9i4+0JZXYBeLsLAGfFJ2L0/J3aSZVDyLNzZIJUV1Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SrsLnPm0geJooR5WqI3v+aZ8Mm8GR+I/YTeZSBbuzEim+kFuAN2KD9cAeLXJacxamkKcTMRqSLWB8zn8B/xYKiNlr7YqS/rVdonJiaq6b6SgFzhoIeAJ3somvNeBn86Y6M9spOtIVxgnnyUb1wPV2X5pOciyYk6VoLXHdYSXMAo=
+	 MIME-Version:Content-Type; b=BGB9sQFr4jHcQyz97lSHy5gzTsuvhzKUbBQvw1qhL+cdlxgUFL8/Hk4wFkmlERsxLvy2Fg2QtnW7MsQNx1cosPN6ddm5/ceDnthdQzFSDNeVt2B0l4LTU8frUp6RqRthqa5EuZP3LtbApl4kVnRB5wDo7lhtf2BR6XpBd7nNtmM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
-Received: from omf17.hostedemail.com (a10.router.float.18 [10.200.18.1])
-	by unirelay04.hostedemail.com (Postfix) with ESMTP id 1FD681A1DBF;
-	Thu, 12 Jun 2025 18:00:30 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf17.hostedemail.com (Postfix) with ESMTPA id 45DD919;
-	Thu, 12 Jun 2025 18:00:28 +0000 (UTC)
-Date: Thu, 12 Jun 2025 14:00:27 -0400
+Received: from omf10.hostedemail.com (a10.router.float.18 [10.200.18.1])
+	by unirelay04.hostedemail.com (Postfix) with ESMTP id 5BB3F1A178F;
+	Thu, 12 Jun 2025 18:46:11 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf10.hostedemail.com (Postfix) with ESMTPA id A1B812F;
+	Thu, 12 Jun 2025 18:46:09 +0000 (UTC)
+Date: Thu, 12 Jun 2025 14:46:08 -0400
 From: Steven Rostedt <rostedt@goodmis.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Carlos Maiolino <cem@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
- linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] xfs: actually use the xfs_growfs_check_rtgeom
- tracepoint
-Message-ID: <20250612140027.6655d6ed@batman.local.home>
-In-Reply-To: <20250612175111.GP6156@frogsfrogsfrogs>
-References: <20250612175111.GP6156@frogsfrogsfrogs>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Carlos
+ Maiolino <cem@kernel.org>, Christoph Hellwig <hch@lst.de>
+Subject: Re: Unused event xfs_growfs_check_rtgeom
+Message-ID: <20250612144608.525860bc@batman.local.home>
+In-Reply-To: <20250612174737.GM6179@frogsfrogsfrogs>
+References: <20250612131021.114e6ec8@batman.local.home>
+	<20250612131651.546936be@batman.local.home>
+	<20250612174737.GM6179@frogsfrogsfrogs>
 X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -38,50 +39,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Rspamd-Queue-Id: 45DD919
-X-Stat-Signature: xg3u6bd3s1ucrari1wbneao8ww6d3jwa
-X-Rspamd-Server: rspamout07
+X-Rspamd-Queue-Id: A1B812F
+X-Stat-Signature: duorc8ay8zkp4zsqmk3wa4cnp3nuyqy6
+X-Rspamd-Server: rspamout06
 X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
-X-Session-ID: U2FsdGVkX1+VqFJ+19J63HXVgTJeciwPHq0DiHeAbk8=
-X-HE-Tag: 1749751228-2520
-X-HE-Meta: U2FsdGVkX19UW+4qC9Jss3E9WLJBwDY8btlovxTkB40PpK4TMVtqxWJMJDLO8XIfkzs/uaYivh0H9G9uUYqscz7GdCIjKaLIXpJjOht/+Cmpu92c2haJRlx5583BaThCNV/ucHoDOeOSv38d9fkw6baMmIRxw5g0RtzMJ7RXrQfikOWCr0zU8snHxeHPqO9LyydVCkoNct71DkH/akZW2LGxHQCz3iGTFK9xE3yfHPJeHha/ux6Rnc3bMpg1bR/WxDRx9BcqYZD5VGftzQjkqJOAXQO8AB8bRtCknN9dr2q/3yl9PoLJlI/mzObVk4EuF5q+DPIk69v5ISU1Y3dOqbQpmFogHwOXo0IbhPafQj3wkquCk37qhFvQs7pJPv6YxjCW2nfb2MiMs710dgWMZQ==
+X-Session-ID: U2FsdGVkX1+FrPMhahetRh/AQCGHFoz0rx1Z+zXcy5I=
+X-HE-Tag: 1749753969-439561
+X-HE-Meta: U2FsdGVkX18QtXp1s0JHtR2VaRPyjGJviGIaUeclJ2my7tP7AQ3AoNR85Np4dinTv0o+C3F/4qsmb2fr4ZcUQjzadoh1UU+ROf2k/n25xotdNjQjfkzxaSMatc3Cgb0/KSCwwbIKc4eTC7yy+WlLqy1L8FT2fRK+SzbY2tMJnZXKfCjmJ2Wp/tr/6cion6uejKsX+QAqTAtIO9HYqTIS8CmUaVVZJeIClPTIpOCR1113RWs/S5l1Yb4gsDfqYz68mJ6ICyMmYm8ZfQwF7oCVJL2lEAGV3j946rwDYBMc//d3352Pyc3XRiz8VBREAn0VdbTdsq/OHXgAt7ww3eon9lP1Wd9wkY96
 
-On Thu, 12 Jun 2025 10:51:12 -0700
+On Thu, 12 Jun 2025 10:47:37 -0700
 "Darrick J. Wong" <djwong@kernel.org> wrote:
 
-> From: Darrick J. Wong <djwong@kernel.org>
+> On Thu, Jun 12, 2025 at 01:16:51PM -0400, Steven Rostedt wrote:
+> > I also found events: xfs_metadir_link and xfs_metadir_start_link are
+> > defined in fs/xfs/libxfs/xfs_metadir.c in a #ifndef __KERNEL__ section.
+> > 
+> > Are these events ever used? Why are they called in !__KERNEL__ code?  
 > 
-> We created a new tracepoint but forgot to put it in.  Fix that.
-> 
-> Cc: rostedt@goodmis.org
-> Cc: <stable@vger.kernel.org> # v6.14
-> Fixes: 59a57acbce282d ("xfs: check that the rtrmapbt maxlevels doesn't increase when growing fs")
+> libxfs is shared with userspace, and xfs_repair uses them to relink old
+> quota files.
+>
 
-May want to also add:
+Does this userspace use these trace events? If so, I think the events
+need to have an:
 
-Reported-by: Steven Rostedt <rostedt@goodmis.org>
-Closes: https://lore.kernel.org/all/20250612131021.114e6ec8@batman.local.home/
+ #ifndef __KERENL__
 
-Thanks,
+around them too.
 
 -- Steve
-
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_rtalloc.c |    2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index 6484c596eceaf2..736eb0924573d3 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -1259,6 +1259,8 @@ xfs_growfs_check_rtgeom(
->  
->  	kfree(nmp);
->  
-> +	trace_xfs_growfs_check_rtgeom(mp, min_logfsbs);
-> +
->  	if (min_logfsbs > mp->m_sb.sb_logblocks)
->  		return -EINVAL;
->  
-
