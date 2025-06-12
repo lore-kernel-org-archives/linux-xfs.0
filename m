@@ -1,30 +1,33 @@
-Received: from relay.hostedemail.com (smtprelay0012.hostedemail.com [216.40.44.12])
+Received: from relay.hostedemail.com (smtprelay0013.hostedemail.com [216.40.44.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD035299A83;
-	Thu, 12 Jun 2025 17:10:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7FEC2F431F;
+	Thu, 12 Jun 2025 17:17:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749748256; cv=none; b=ExpOP21HiMJlVjw5oAWGVDCtq9KNco9/fcd1gNKIiUnpRN0GHpLdEpH+2HqWICKzM1IIYCC89RzR+jehQcSjk8DhIL+Z2TwS4HLdJWGVRw6vLmoo67uktvpUFOpRk6GdNJ+WCGGiyCWMgoNODXMOzdlU19xsladQBjRJKJPCgPg=
+	t=1749748624; cv=none; b=kd9P2JK9NhnuGYc42Zh+WlaFUr2hG/HlvVRV+ZVnRUui8tA1ncIWbD+0nqlN4TbrFA3wXtIrY+wi38GQvInWZAWkDJqzENm/6e/JLprpcKPmmB0wdKCXFwyZx5C8bdmr3uGt4GGV4owPuW4XECbQEJE+DvLN0HXrOyqZaX/YlL0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749748256; c=relaxed/simple;
-	bh=QmUgJY91IsgedZOIxe947RbcBLJnjsxKwg/n+broCvk=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=XHgtJaCIUCYpasF2T8vc1iwwMexurfxorvhmcPEoBBa3dpIxvW92o4CIfDKxhH23u7bpD+nye67FZKWfQNQkcihj9nFMUpbOM/2cUhi76c0ZLJNOUVl8+4tCZHPsgo8r5taRjvNe8bP/Ha4zQEaGaFjbAkCvTPpnj2JYZQe4On8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.12
+	s=arc-20240116; t=1749748624; c=relaxed/simple;
+	bh=aXX9z5zq7It2AaK2+lgLG+/IFmxaO6FzbUvxxZUpfVI=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=c1yOVm2/QSfSFASQraLdlLYIPI2fxq8x/NkCDNb/NWuTTnYFlJ4D2YQcV7FPEPsXCqyOZvbGw1vltiTfFjdRZ6/jFsZxhSQuJkq6AAA4Tem7i8HpCjsB2CpSOaddxZfwh6S+ojGoEWTIG4wtJsVwkoIYqpWO9WRjicgs3pa2ENQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
-Received: from omf07.hostedemail.com (a10.router.float.18 [10.200.18.1])
-	by unirelay02.hostedemail.com (Postfix) with ESMTP id 499C0121B49;
-	Thu, 12 Jun 2025 17:10:24 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf07.hostedemail.com (Postfix) with ESMTPA id A130D2002D;
-	Thu, 12 Jun 2025 17:10:22 +0000 (UTC)
-Date: Thu, 12 Jun 2025 13:10:21 -0400
+Received: from omf16.hostedemail.com (a10.router.float.18 [10.200.18.1])
+	by unirelay04.hostedemail.com (Postfix) with ESMTP id B8D0E1A0353;
+	Thu, 12 Jun 2025 17:16:54 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf16.hostedemail.com (Postfix) with ESMTPA id 00CD620013;
+	Thu, 12 Jun 2025 17:16:52 +0000 (UTC)
+Date: Thu, 12 Jun 2025 13:16:51 -0400
 From: Steven Rostedt <rostedt@goodmis.org>
 To: LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
 Cc: Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
  Christoph Hellwig <hch@lst.de>
-Subject: Unused event xfs_growfs_check_rtgeom
-Message-ID: <20250612131021.114e6ec8@batman.local.home>
+Subject: Re: Unused event xfs_growfs_check_rtgeom
+Message-ID: <20250612131651.546936be@batman.local.home>
+In-Reply-To: <20250612131021.114e6ec8@batman.local.home>
+References: <20250612131021.114e6ec8@batman.local.home>
 X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -34,24 +37,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Rspamd-Queue-Id: A130D2002D
-X-Stat-Signature: urdo41qkgkibkgfqmtzin6a3n6niceb4
-X-Rspamd-Server: rspamout06
+X-Rspamd-Queue-Id: 00CD620013
+X-Stat-Signature: ikpqjsnkzyjna5ngkpzfoxyo8bugctsm
+X-Rspamd-Server: rspamout05
 X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
-X-Session-ID: U2FsdGVkX199sc+tXBmqI8BO6c6k37AAlisKGGKWNvY=
-X-HE-Tag: 1749748222-455376
-X-HE-Meta: U2FsdGVkX1/BilQKQ8cDjxBpENW65zCgbHuc4+c3modMdomoYuptpUrVUrU694vrTvYQ3vpFNoKfclnzjpG65k8RmOvjcAqbM8DtyKSvxFnX9zijLAv+8naBujxSJlAdqso7PdNONgCshKOej9z8KEQkbGgReZce09DAu4rYTSFMV6xto0SzubXasssKBXvr1fADkscuqmzNSUYzGV0R+5HesR8QyfCT+b42m85VzLX6nR5sYcixJLMN4lYnQLHH4jVqlAkuMHLu1X6M5t8FCBvAuLk2PQnSrAd5aIdBtmRWqXsBMQagCEA6+dAaf3Ya
+X-Session-ID: U2FsdGVkX19a/ZhBEIQTLTGiYB/Nq3jpXPXJNOOzIQg=
+X-HE-Tag: 1749748612-536787
+X-HE-Meta: U2FsdGVkX1//zoY7OIXnG2a0daaJJlWSk7G4oIUVAPZOjqTh2FWBWctjUEKL93ui3OLf9fvaauz1bbuolxyHUotIcWdaWE5MNtliiM6gx/iGGRRlPDWF7F9AjX9xKkSSmxa0/Bn7FV3x5TQ7rf2coAn8nzEXtqdZZQGTbe8qXD3G1su3/GJ25L7o7dJd5lVtQnvEjY6loobotlvP7i+2/vxI6uviO/mSKt9XB28YxYxeViDO86AFAgfgbqeO+P2FItLXYk6aU4H7kC7DqNDKvbiIF5GIQQVGZo/QRyse3KbrFNeQx64qLi0oX9uSCfYJ
 
-I have code that will cause a warning if a trace event or tracepoint is
-created but not used. Trace events can take up to 5K of memory in text
-and meta data per event. There's a lot of events in the XFS file system
-that are not used, but one in particular was added by commit
-59a57acbce282 ("xfs: check that the rtrmapbt maxlevels doesn't increase
-when growing fs"). That event is xfs_growfs_check_rtgeom, but it was
-never called.
+I also found events: xfs_metadir_link and xfs_metadir_start_link are
+defined in fs/xfs/libxfs/xfs_metadir.c in a #ifndef __KERNEL__ section.
 
-It looks like it was just an oversight. I'm holding off from deleting
-it as it may still be valid but just never been added. It was added
-relatively recently.
+Are these events ever used? Why are they called in !__KERNEL__ code?
 
 -- Steve
