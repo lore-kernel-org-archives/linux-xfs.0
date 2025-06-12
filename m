@@ -1,44 +1,54 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D15EE19F137;
-	Thu, 12 Jun 2025 04:06:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C3E410E5;
+	Thu, 12 Jun 2025 04:42:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749701200; cv=none; b=EgL7lqD3VkuMgzpL8AX8swG5V7a15ROp2ukssulfhRBH6rbWYtNp98HLlad4YqDJ+IANO/zled3pPKTZ5Q1uD9/uj46mO1P8xhBRObI6vqprkwhgDiFEO28LryUuUgGqCyUqx1A/pUMlOcXRm1SixH22bwLgVRkVjXORxtbAtyk=
+	t=1749703329; cv=none; b=ZZFHHSoRin57gQ3OVLF65K0RpL26s3ZreoHSXCUT6I5GseLWBaxXzuXNc9EoNZaH6Q8BKmEyHgJqDfVLeFqhpFdHfYW0XxuTmLaFZevksIBD3SYO/sc5Y0Ryux8UDyOUimd80wX1xdux7uMxpoo0vWNKYohWJ6s0ZsVMIuMn6zU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749701200; c=relaxed/simple;
-	bh=Q4ZfThogLrjrzXMAxDJlRiD7rOypQqZu6v0KUZrg3KY=;
+	s=arc-20240116; t=1749703329; c=relaxed/simple;
+	bh=tVpj/wkk6Oc+SQXgGXAr82FNsfge/FipnIuQpvI7K2U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CsCDlq/i4fOe7ul+e9FSLXoeSEmPWC4G7tgDkBe9Cmr0gqqOo+A5NnIshqFMveOVvEanfDh0rHqy7Jm1VCv0JSCSlpacixkS2C5oRDtLT+LXbpqkORTBFpYxDSgKcmk/VNATiNGVy909KVDIE9GbF9rSDv4HXUEPYbUTc1lq+g4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J/fbMnh6; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=XfrfewYPjb9Lu3x4YHO80MNcSF+GyA6JgAGMMYLiH5CwXoi4GKdzP49VKmPB2/pyS78L3C7vhHmT8ZFjfEQDLW5VCl3cxUMenNrGmMdakSiAXc4aIEvBdtB5AatEEFDWonakEWFwpG+RZyjjDAYmIT572ElSa9+Xo7bkNzJYupE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1IUoNwuk; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J/fbMnh6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A1A7C4CEEA;
-	Thu, 12 Jun 2025 04:06:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749701200;
-	bh=Q4ZfThogLrjrzXMAxDJlRiD7rOypQqZu6v0KUZrg3KY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=J/fbMnh6A/cjTgo7lUITahboGp1sZvt+yqQ9+dzfJ1x2SVGCkshiUIUJhObb9W2HC
-	 iIwbKpuYLlrFtKoLBTyc0SYLoMmmafoJO3CtnT3oLaa5WBmnoJjz8ljuNPlsJ8tH22
-	 Xb9gAO3UPl938q8TSlHmgV7h/STg+DViIZ0EDeCmE/obMMnxC7wej3kZZ29N8kJU5K
-	 JhhkuOoxr2VLkHuTyb3gdjniPi5JGAW893QI0S7+tHTg0dz4W9udr69W3Hv+/B4J0m
-	 HknQd6s7PeCg1lrlpK8ruUVjVFVdzOJe2xYiZdIOSrUIxJLfMtCQe3tVxsIMILghNV
-	 hNH/9z2L7VF/Q==
-Date: Wed, 11 Jun 2025 21:06:39 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Brian Foster <bfoster@redhat.com>, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 3/7] iomap: optional zero range dirty folio processing
-Message-ID: <20250612040639.GO6156@frogsfrogsfrogs>
-References: <20250605173357.579720-1-bfoster@redhat.com>
- <20250605173357.579720-4-bfoster@redhat.com>
- <20250609160420.GC6156@frogsfrogsfrogs>
- <aEgjMtAONSHz6yJT@bfoster>
- <20250610145552.GM6156@frogsfrogsfrogs>
- <aEj-HgO5BcVwb6Qc@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1IUoNwuk"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=sw52tFicz6QSeSNyZO+/IaSkFjn4ty5PJv8gCZfMXkc=; b=1IUoNwuk4iD1kkoZvgAdnksRvf
+	wCfqokNvkfLmGv0INcs91jEikrAPq4A7LPQSPejPYe8FW0PxRo9GFjlS521HXCM/wtHb3kuX8XNVB
+	5ovaC1aVApg6g45ud86qgH8tRqkuW6zDlexios7hrJHkKn1RA7O0cKN2Xz6tUB3jqpwLj6elhQeNZ
+	tyCzT9AbDmHIU910k3ELkIeH87W3tUbHnIj/Qpf1f3jxS/JuldLBDCYDgMdFX2Z84+Wh8v8T+5b6Q
+	ZtvCj/XS4WTT6mBCKDM4uApRjX4MDFO8VQCduYp3PQi+eiF/gv/LD+WVFLuCnrL6mushdD5L8VlEM
+	ArVchiJA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uPZlO-0000000C9VY-2cgt;
+	Thu, 12 Jun 2025 04:42:06 +0000
+Date: Wed, 11 Jun 2025 21:42:06 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Christoph Hellwig <hch@infradead.org>, miklos@szeredi.hu,
+	brauner@kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, bernd.schubert@fastmail.fm,
+	kernel-team@meta.com
+Subject: Re: [PATCH v1 2/8] iomap: add IOMAP_IN_MEM iomap type
+Message-ID: <aEpans4ltog7lU2Z@infradead.org>
+References: <aEZm-tocHd4ITwvr@infradead.org>
+ <CAJnrk1Z-ubwmkpnC79OEWAdgumAS7PDtmGaecr8Fopwt0nW-aw@mail.gmail.com>
+ <aEeo7TbyczIILjml@infradead.org>
+ <aEgyu86jWSz0Gpia@infradead.org>
+ <CAJnrk1b6eB71BmE_aOS77O-=77L_r5pim6GZYg45tUQnWChHUg@mail.gmail.com>
+ <aEkARG3yyWSYcOu6@infradead.org>
+ <CAJnrk1b8edbe8svuZXLtvWBnsNhY14hBCXhoqNXdHM6=df6YAg@mail.gmail.com>
+ <CAJnrk1au_grkFx=GT-DmbqFE4FmXhyG1qOr0moXXpg8BuBdp1A@mail.gmail.com>
+ <20250611185039.GI6179@frogsfrogsfrogs>
+ <CAJnrk1YcMvDZ6=xyyJcZ_LcAPu_vrU-mRND4+dpTLb++RUy9bw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,24 +57,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aEj-HgO5BcVwb6Qc@infradead.org>
+In-Reply-To: <CAJnrk1YcMvDZ6=xyyJcZ_LcAPu_vrU-mRND4+dpTLb++RUy9bw@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Jun 10, 2025 at 08:55:10PM -0700, Christoph Hellwig wrote:
-> On Tue, Jun 10, 2025 at 07:55:52AM -0700, Darrick J. Wong wrote:
-> > Hrmm.  On closer examination, at least for xfs we've taken i_rwsem and
-> > the invalidate_lock so I think it should be the case that you don't need
-> > to revalidate.  I think the same locks are held for iomap_unshare_range
-> > (mentioned elsewhere in this thread) though it doesn't apply to regular
-> > pagecache writes.
+On Wed, Jun 11, 2025 at 04:08:42PM -0700, Joanne Koong wrote:
+> Awesome, thanks for verifying
 > 
-> We should document these assumptions, preferable using (lockdep)
-> asserts.
+> I'll submit v2 rebased on top of the linux tree (if fuse is still
+> behind mainline) after Christoph sends out his patch
 
-Agreed.  I think most of iomap/buffered-io.c wants the caller to hold
-i_rwsem in shared mode for reads; i_rwsem in exclusive mode for writes;
-and the invalidate lock for page faults.
-
-The big exception iirc is iomap_zero_range where you need to hold
-i_rwsem and the mapping invalidate lock, right?
-
---D
+Where my patch is trying to come up with a good idea for the
+read-modify-write in write_begin?  Still thinking hard about this,
+so maybe just resend with your current approach for now.
