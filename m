@@ -1,161 +1,144 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+Received: from mail-io1-f78.google.com (mail-io1-f78.google.com [209.85.166.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A76528DEFF;
-	Fri, 13 Jun 2025 21:51:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE07E1DF258
+	for <linux-xfs@vger.kernel.org>; Fri, 13 Jun 2025 23:30:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749851475; cv=none; b=vAwjzXlex4bSzS6wbrXCoq9EUSz8fayPGnRi0StO6O97w49dS5CM2w+65EU7do6tKvLuFblW9gsOj0DdLZX9XhBaTqBSlbEnm7pN4sliIccD5+iO3A1Na+RvWELXIp8+GmP9hr8S0HJ/E8RmCQyjoMQPY1xYFuKOhmo5sLYS0QM=
+	t=1749857436; cv=none; b=auALGbBa5d+QPD+emnuy3cTDsrkzbSHWCw+bNHiCmZ+TeRqJXxRQeMqNC7xRtEjdYMVvD55xRIiDCak257kLX2x3YD9oDW9EJy+g9C0kA3T6qjRdbXJTCN7YR5sw0rmJgeziVmW84KFB9fx06rTcjc04vhtxHvvrfdw0Vc/80X4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749851475; c=relaxed/simple;
-	bh=CRpO5HWslGVe1mVubUd1qpcyu1VdwwXfQc1q5ExiwOU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LGOJwPVi8601cFhq4JJaUzyro7IlwYN8aavbG6F50eaznj7+ismYqKtQ9GsvVvQNuvd6pc+VHzXGOVOYyO3Pb7Pt9HOW99tc+3rAuHvlGqYKuwxUMXIDnbovqbKSyQWRCjJGLqRSN3+T/QA2htOd6X9snCEzW1hzxhXqs46drjo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Eil3Z9Z+; arc=none smtp.client-ip=209.85.210.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Eil3Z9Z+"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-747abb3cd0bso2790605b3a.1;
-        Fri, 13 Jun 2025 14:51:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1749851473; x=1750456273; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=XQIpYOYUuDzPbBZ+4abJiyIL6wXC8+VZSXLNy/WG+KQ=;
-        b=Eil3Z9Z+YLixr8nIWOFkJjHDR3QdlO2SUFy7e0cjGEb/GGFhEHKMgLABE8TgQ5Qqei
-         53fIcdXwaHO40vcWIcmV9gH1M6ygWOc3huKQKfEusLnx0YX+ObJDn6qm5nzlA1r+2qBP
-         iV87HfV+wsWmK9O1yeZdw1TpcNWa3FIXkvmnOVn1A7q+mssVziGUfSxfNAmw984MBeBc
-         lm9koWCQfvPsCLYKQA+FyqdwugAfQvNdEydkcG6INB7pEJtTfdCqHcNcViT43nXFYEph
-         NSjtv5DxnPCv8OCppxyFyW13J8uOEwQFUREoJeLm0ptt7qvUm3VtoTbEeqnDR2++8WQS
-         ZpSA==
+	s=arc-20240116; t=1749857436; c=relaxed/simple;
+	bh=0abnlyb7tMAEy1Y0XS37gQsAYKpdOw5VGv59YK1IzDs=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=X5awtPkz2LdMNH46nm95VPl+A/YlwlDPPOoeqnq6kuYDQDSswwuqIQeTSF2tQ3ex/t9c2uzWJ05hzmirHThTe4wO0ReBPuSCalsTOIc0+KekKyMUfXMfnuvWpO7QLjnFYbk2ELtR3nbU+8RZRzjAOE4GHL72O7+EdsaTcanFm7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f78.google.com with SMTP id ca18e2360f4ac-86f4e2434b6so311456239f.2
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Jun 2025 16:30:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749851473; x=1750456273;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=XQIpYOYUuDzPbBZ+4abJiyIL6wXC8+VZSXLNy/WG+KQ=;
-        b=C2UCSSTGRUnN7/zIm98ZQ6y0aQWYpV01eKgq4GnvDsu3G0H1ZUpT9dlbruM++AJBpB
-         t6O8p14wu7ydzu8TzqWit9IJrujv+QHIm+sOkfZUZ9Gr866/vRFFQVwATPsHKTwT+AC6
-         hlnoJPn3K1NKi0UNaUHPSpWypU4mf5NxNZx2taSsvhT89t0+0aG2Dl0jMGkArulah4Qi
-         n5JbxzWlM04Gg/2x7tIuwG/LiMdNLbVeT0M6n6VEkZWKO6tjX8Wky5cS9HLxjZqWjGg5
-         jWOnwdOx8IVumg4Un7Q9kL4eL9OLgYX1f7Jt8rGAo4xjmWZSmlndacKnvhkqovWKR+pU
-         YcAQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWrymaf32c24CfYNrLRw71Z8N/m3vMReQUc54QtD3GBgAkKKx3iSrmXWm9keY4zTAZAtfR+Vgs5/4M=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzdfnFwUB8/tUw4Cm93M6/zQxIZ9/4wUmHuiObI8cFjtyBu/P/S
-	v6D9Ti2WkAb2ZfftacjOOM7TUQtaSG1giiAuZi6CIOYcwwBhUVGIlkeCxZdRNg==
-X-Gm-Gg: ASbGnctFC822Vx3RREcu5uOpbgD8rGlnZjTAaJpqzEKYIHlHwumZxbhDkE+jrH4UXxE
-	h13OO3X7m/Kz99ToXN/RM2lYVy2AV0M7HtdK77/T3JdhNHILLYToHqCIag5CGsNPFFuwu8vl9fZ
-	vPRD0sKpRPGMoQw6PY0Jd0W4wn2Izb8eCYJ9lxbQjqUUueDjA5cK1l0vdGgVWatPvbewbmzCYZT
-	ujFnbpZpPKObBf5bCejYq/4WQmPF6OaSNx1R/Wb5QsjxbNZhD99BWwluu6eBfEMF1C5OVBtU4MT
-	Gpw7sDlEvGYQqwNWOSsn2mQbcbIlQUw6LJaXJyj+vqBBCst4akc+VAXxFEksSuU9Offg
-X-Google-Smtp-Source: AGHT+IE5FH6MPB03JlRyw/GyIjG6lTnLz5wtSqcWLHke4xPvkTW5Gd0PE6oPh33aSt3dxYfBJSoo0Q==
-X-Received: by 2002:a05:6a00:10c9:b0:73d:fdd9:a55 with SMTP id d2e1a72fcca58-7489c46d13amr1524220b3a.8.1749851473332;
-        Fri, 13 Jun 2025 14:51:13 -0700 (PDT)
-Received: from localhost ([2a03:2880:ff:73::])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-748900b2af2sm2138754b3a.119.2025.06.13.14.51.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Jun 2025 14:51:13 -0700 (PDT)
-From: Joanne Koong <joannelkoong@gmail.com>
-To: linux-fsdevel@vger.kernel.org
-Cc: hch@infradead.org,
-	djwong@kernel.org,
-	anuj1072538@gmail.com,
-	miklos@szeredi.hu,
-	brauner@kernel.org,
-	linux-xfs@vger.kernel.org,
-	kernel-team@meta.com
-Subject: [PATCH v2 16/16] fuse: use iomap for folio laundering
-Date: Fri, 13 Jun 2025 14:46:41 -0700
-Message-ID: <20250613214642.2903225-17-joannelkoong@gmail.com>
-X-Mailer: git-send-email 2.47.1
-In-Reply-To: <20250613214642.2903225-1-joannelkoong@gmail.com>
-References: <20250613214642.2903225-1-joannelkoong@gmail.com>
+        d=1e100.net; s=20230601; t=1749857434; x=1750462234;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=vF7xs1A3Q2dAycwY5p/OJbr9P/yojYK9Yt6rhyL/AFs=;
+        b=tJ0x6m66pt08cfKOGjELZjSqU6vT1p9SHgFkvoAvxnCrFgnktk3rYT6AtwMboq3Wk+
+         3MjYTXncHWnrGFxlONcmVDEONvxfpJr6GcJ/XvlR/WbCTSG14yb7vLyqcJh8tql8896k
+         IhZ3na75uUzzqfzz0t1oRH7XrWTwbo+dx7J5cT2HfLiIu+dpZ+lywD7KXlGbIa1oKV4N
+         ngKvwwXJ0AL4ho7F/d/wsBr9PoVFK1MTJmQDv99MzkHga9C6VpByyAWr9ct2IpQ7gMyP
+         V+EOTEE/IveL660XXUcn2Mnp7Y9GIoX2OmhYKwwgWMhnSgQqlZt0dJcORAplXcTeu4pn
+         W9Rg==
+X-Forwarded-Encrypted: i=1; AJvYcCUd8XRV6qAvGkNuI4rudyJ7mgqbieDrjCOkX8vk/17n4qxFxZ84uGeFZrDQWg+fA0O0eDvDzTFMTwY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxf4HgWURrWvH8cD6ohkMPoYCVoy7xIqBcCEaUlmNVfta/QGbr0
+	eB7HKOGORwj7KtNtQzBiUYZ0r5I7n47W/DxF0iy5X7RcaKWm2XPxQx3uszQV5PX9FmKSJmp4Rro
+	tWHCH3CVMCYcSgyaoNMk68aNDS9EkZoB61/+RaBGIBkzZrdTMqnEwXVq+jlk=
+X-Google-Smtp-Source: AGHT+IGRAA9OJyHdZx3olCjGPopW4j7o8RyPYuTFqvQIi0A6jUryimHBx8pugZDlISqy0X3182xYzFab7qTndPBx+vXNFNIaT6dB
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Received: by 2002:a05:6e02:168b:b0:3dc:7cc1:b731 with SMTP id
+ e9e14a558f8ab-3de07c21db4mr17551605ab.0.1749857433818; Fri, 13 Jun 2025
+ 16:30:33 -0700 (PDT)
+Date: Fri, 13 Jun 2025 16:30:33 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <684cb499.a00a0220.c6bd7.0010.GAE@google.com>
+Subject: [syzbot] [iomap?] [erofs?] WARNING in iomap_iter (5)
+From: syzbot <syzbot+d8f000c609f05f52d9b5@syzkaller.appspotmail.com>
+To: brauner@kernel.org, chao@kernel.org, djwong@kernel.org, 
+	linux-erofs@lists.ozlabs.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com, xiang@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Use iomap for folio laundering, which will do granular dirty
-writeback when laundering a large folio.
+Hello,
 
-Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
+syzbot found the following issue on:
+
+HEAD commit:    27605c8c0f69 Merge tag 'net-6.16-rc2' of git://git.kernel...
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=171079d4580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=3a936e3316f9e2dc
+dashboard link: https://syzkaller.appspot.com/bug?extid=d8f000c609f05f52d9b5
+compiler:       Debian clang version 20.1.6 (++20250514063057+1e4d39e07757-1~exp1~20250514183223.118), Debian LLD 20.1.6
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1725310c580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=115e0e82580000
+
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-27605c8c.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/c55edb669703/vmlinux-27605c8c.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/e12830584492/bzImage-27605c8c.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/36391cabb242/mount_2.gz
+  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=165e0e82580000)
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+d8f000c609f05f52d9b5@syzkaller.appspotmail.com
+
+erofs (device loop0): EXPERIMENTAL EROFS subpage compressed block support in use. Use at your own risk!
+erofs (device loop0): mounted with root inode @ nid 36.
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 5317 at fs/iomap/iter.c:33 iomap_iter_done fs/iomap/iter.c:33 [inline]
+WARNING: CPU: 0 PID: 5317 at fs/iomap/iter.c:33 iomap_iter+0x87c/0xdf0 fs/iomap/iter.c:113
+Modules linked in:
+CPU: 0 UID: 0 PID: 5317 Comm: syz-executor245 Not tainted 6.16.0-rc1-syzkaller-00101-g27605c8c0f69 #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
+RIP: 0010:iomap_iter_done fs/iomap/iter.c:33 [inline]
+RIP: 0010:iomap_iter+0x87c/0xdf0 fs/iomap/iter.c:113
+Code: cc cc cc e8 a6 eb 6b ff 90 0f 0b 90 e9 31 f8 ff ff e8 98 eb 6b ff 90 0f 0b 90 bd fb ff ff ff e9 ad fb ff ff e8 85 eb 6b ff 90 <0f> 0b 90 e9 22 fd ff ff e8 77 eb 6b ff 90 0f 0b 90 e9 53 fd ff ff
+RSP: 0018:ffffc9000d08f808 EFLAGS: 00010293
+RAX: ffffffff8254736b RBX: ffffc9000d08f920 RCX: ffff88803a692440
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000074
+RBP: 1ffff92001a11f2a R08: ffffea00010c5277 R09: 1ffffd4000218a4e
+R10: dffffc0000000000 R11: fffff94000218a4f R12: 0000000000000074
+R13: 0000000000000000 R14: ffffc9000d08f950 R15: 1ffff92001a11f25
+FS:  0000555562dab380(0000) GS:ffff88808d252000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007ffeb97cc968 CR3: 0000000043323000 CR4: 0000000000352ef0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ iomap_fiemap+0x117/0x530 fs/iomap/fiemap.c:79
+ ioctl_fiemap fs/ioctl.c:220 [inline]
+ do_vfs_ioctl+0x16d3/0x1990 fs/ioctl.c:841
+ __do_sys_ioctl fs/ioctl.c:905 [inline]
+ __se_sys_ioctl+0x82/0x170 fs/ioctl.c:893
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0xfa/0x3b0 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7fbc6028fe59
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 f1 17 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ffccc462b68 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007fbc6028fe59
+RDX: 0000200000000580 RSI: 00000000c020660b RDI: 0000000000000005
+RBP: 00007fbc603045f0 R08: 0000555562dac4c0 R09: 0000555562dac4c0
+R10: 00000000000001ca R11: 0000000000000246 R12: 00007ffccc462b90
+R13: 00007ffccc462db8 R14: 431bde82d7b634db R15: 00007fbc602d903b
+ </TASK>
+
+
 ---
- fs/fuse/file.c | 49 +++++++++----------------------------------------
- 1 file changed, 9 insertions(+), 40 deletions(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index db6804f6cc1d..800f478ad683 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -2060,45 +2060,6 @@ static struct fuse_writepage_args *fuse_writepage_args_setup(struct folio *folio
- 	return wpa;
- }
- 
--static int fuse_writepage_locked(struct folio *folio)
--{
--	struct address_space *mapping = folio->mapping;
--	struct inode *inode = mapping->host;
--	struct fuse_inode *fi = get_fuse_inode(inode);
--	struct fuse_writepage_args *wpa;
--	struct fuse_args_pages *ap;
--	struct fuse_file *ff;
--	int error = -EIO;
--
--	ff = fuse_write_file_get(fi);
--	if (!ff)
--		goto err;
--
--	wpa = fuse_writepage_args_setup(folio, ff);
--	error = -ENOMEM;
--	if (!wpa)
--		goto err_writepage_args;
--
--	ap = &wpa->ia.ap;
--	ap->num_folios = 1;
--
--	folio_start_writeback(folio);
--	fuse_writepage_args_page_fill(wpa, folio, 0);
--
--	spin_lock(&fi->lock);
--	list_add_tail(&wpa->queue_entry, &fi->queued_writes);
--	fuse_flush_writepages(inode);
--	spin_unlock(&fi->lock);
--
--	return 0;
--
--err_writepage_args:
--	fuse_file_put(ff, false);
--err:
--	mapping_set_error(folio->mapping, error);
--	return error;
--}
--
- struct fuse_fill_wb_data {
- 	struct fuse_writepage_args *wpa;
- 	struct fuse_file *ff;
-@@ -2275,8 +2236,16 @@ static int fuse_writepages(struct address_space *mapping,
- static int fuse_launder_folio(struct folio *folio)
- {
- 	int err = 0;
-+	struct fuse_fill_wb_data data = {
-+		.inode = folio->mapping->host,
-+	};
-+	struct iomap_writepage_ctx wpc = {
-+		.iomap.type = IOMAP_MAPPED,
-+		.private = &data,
-+	};
-+
- 	if (folio_clear_dirty_for_io(folio)) {
--		err = fuse_writepage_locked(folio);
-+		err = iomap_writeback_dirty_folio(folio, NULL, &wpc, &fuse_writeback_ops);
- 		if (!err)
- 			folio_wait_writeback(folio);
- 	}
--- 
-2.47.1
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
