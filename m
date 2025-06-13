@@ -1,84 +1,168 @@
-Received: from relay.hostedemail.com (smtprelay0013.hostedemail.com [216.40.44.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C2871EEA47;
-	Fri, 13 Jun 2025 15:38:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B93D81FA15E;
+	Fri, 13 Jun 2025 21:50:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749829118; cv=none; b=W7d2IDVTsziDTXBstuxsEQqnamoTYSpKKUGisn6S9+rk4xmb11JOe+1LI77bN38aVrb/Xs2UfQiWaiKP7g4V/SdmidnWv20TlzDmpmVgYHoB1BDswG0SJFmEuUXRUfYb3pQl4f9qioAvXWUCfB4/flfpM/NvMGAr+abtFnqjJw0=
+	t=1749851436; cv=none; b=pifuxosLiYcEc5JIooKIAyZwg67QhqAYXbdcONJlHfzAWNwxyOx/KA0ho3CqfTHOi9c7w8buzhfk8x2noz4ufFSTFcz/2vnUnThrWsSrp4mTp+vRRDhUtXl52OW6t6SCy7N58DNgD11huYupQ4YsF2nNZ/5nBmwGLUPP/pS5kf4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749829118; c=relaxed/simple;
-	bh=6AwxwhBCG0Df0FWNauAA4idiya3H5Vas5N8OdGukm6I=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MwCE6ZC1loqehDKgIJB9ybUtBTpcw+B0U3Ljulr5VsZEVil1Rde33P6EMDFnA+DRX1Px0UWxeLEJEDRabJixKF/VMcELhGUT4C6hUT8i1Pv0KJmXbihxl2FdSd8COjdMtpKHhhoLxlt15y7V4IjYN026xQDLCfDT+8+FNrNXFbA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
-Received: from omf03.hostedemail.com (a10.router.float.18 [10.200.18.1])
-	by unirelay01.hostedemail.com (Postfix) with ESMTP id C1E911D6D27;
-	Fri, 13 Jun 2025 15:38:34 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf03.hostedemail.com (Postfix) with ESMTPA id A94AA6000B;
-	Fri, 13 Jun 2025 15:38:32 +0000 (UTC)
-Date: Fri, 13 Jun 2025 11:38:31 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
- linux-xfs@vger.kernel.org
-Cc: Masami Hiramatsu <mhiramat@kernel.org>, Mathieu Desnoyers
- <mathieu.desnoyers@efficios.com>, Andrew Morton
- <akpm@linux-foundation.org>, Carlos  Maiolino <cem@kernel.org>, Christoph
- Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH 01/14] xfs: tracing; Remove unused event
- xfs_reflink_cow_found
-Message-ID: <20250613113831.543bdd22@batman.local.home>
-In-Reply-To: <20250612212634.746367055@goodmis.org>
-References: <20250612212405.877692069@goodmis.org>
-	<20250612212634.746367055@goodmis.org>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	s=arc-20240116; t=1749851436; c=relaxed/simple;
+	bh=NdzhgVeiaINDFPXpjhnhawuq1y3xXntYJDgV1MQh0jg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EPnkrF4aOJzbENToadYUTTzQ6ox8ROXLPmqMUk3mbFR17mzOIMsi/DSDNbuI3/0bQo+CfWfNRIeSohQK4FNC7917apLlfBotOuI3U1/TATn5mJ463NKr9HJjfTOO9GPR2/6ypME87VgWoibYrkIuKj/BSnMaK8NZOjAfflcDhs8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=W8cEVu7L; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W8cEVu7L"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2352e3db62cso24466755ad.2;
+        Fri, 13 Jun 2025 14:50:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1749851434; x=1750456234; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=O7FznX3wvJF0yVoembBCFQNi+2De21rRhXV7yM0+RQ4=;
+        b=W8cEVu7LHn0nfH0hjgRlTh2IlScvYbs+vyt1MUtviMHsCwhWNlh1sPB6PUo4ffs4Ze
+         VLA9UjJ1BJ/4wIs7VlWdYN6yHVeKb8DJEj4hLazVEU2mUm1+s6lJcth1xnpD95mAcKQU
+         qMFvNlizllXSDrJJxIHNxhHdCLJ4pFs3EqTjI1VaAeW8jdhCsfncFQkrR6apl3i6JdRy
+         49rwSUthIhJ23TqJpitztYl/KepxHhHzxdTFNJiLLrNhpBOjlrqhQ6Gkcx5Mg/WA0AyQ
+         ewQ//P6sbRjxHhH8FlG3ct+bxPhxSksmHgj3t6OrvFx5JPIhq63Pvv1XFT2sYjGs3nB4
+         F2Qw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749851434; x=1750456234;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=O7FznX3wvJF0yVoembBCFQNi+2De21rRhXV7yM0+RQ4=;
+        b=WLmjkfkk/cdentoy++/YAn/Ig9K3cOIrbNioVHUZFpnQZXpsrsdtBVsW4J7wnyVj3R
+         5T9sferi5bTHjLneoFGziC0SmjGB617MjSmGAmaGrvAAGRDa5ZwBogZVBow9GnMbeWfs
+         0XJIxzrajKaoybeBC36JKpgk8ewH+lvMAPz9PElziMONG0RJgKGPf8GRFm7ygf5hFGqg
+         GvDFegYdgQEDknWsoebn30c+t2c3g3Aq4SaQIwlcozFBJyZtx9sTrGpPr+WiTkvPZJyT
+         9EavoehUHlZVMsmY3F+KgPUp/kEFc6zHkR1cvEJE0s3ncG/BuT9E2awUc0xpITsajMIa
+         P8sw==
+X-Forwarded-Encrypted: i=1; AJvYcCX1Wo1h0TVHVKSfqAcQJ18tY+i037YCk9aPSQrKYYuePOO7XvSyvf5AXmumLNViBgRYIm5lBOwku3Q=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyJ8255SXVztTuPxuoFUWzLb2G+8cTrTQz60sQkfeWOTU7m/RA5
+	lCDjKf/7xRiz8wfJbBwHy2sLpfg0e4hkxhBdsGiyfK/NIL83r3keTZ1MPQugDQ==
+X-Gm-Gg: ASbGncuhGuUGcnf/VIhssNuM6xogAOQTLwo/P2Mi/XfIxH2xgoO4LRhcuOS6+RSgg+C
+	x1ZhRU5y3EhbXqz8nnRfzf1KF9syxJnNFOCgyezxGpz4TMNLWmo2OdaTtmu7tHAjDfhC5kq4fja
+	VuKR1HtMyTuP4RAmQT0V0fvVwiDQES0LGKJLjt3HEJA9c779K88b/pNBxtz9b3OrXw6Whrkw4/s
+	pzxPF1DoHFoZ/KkDKl6UsvGfHYRB6hATLq78N384zo4QortcAVkHkTZLt9OEAjCOn1T2LXH1BPu
+	B15N2NTUPMxMej3UF0KGgF8fJayyzimApC0Y6FcIyk3HS4AwJ7+8HDdD
+X-Google-Smtp-Source: AGHT+IF1vT1ljdrfC4fFS/VFf1aedmLB7zrjZnuwlGX9HrhWr/i6ImrDFYKM2vNmvDEncpVQWY2C/A==
+X-Received: by 2002:a17:903:2ac3:b0:234:f19a:eead with SMTP id d9443c01a7336-2366b13ae96mr16242905ad.43.1749851433686;
+        Fri, 13 Jun 2025 14:50:33 -0700 (PDT)
+Received: from localhost ([2a03:2880:ff:9::])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2365de783f3sm19369635ad.130.2025.06.13.14.50.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 13 Jun 2025 14:50:33 -0700 (PDT)
+From: Joanne Koong <joannelkoong@gmail.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: hch@infradead.org,
+	djwong@kernel.org,
+	anuj1072538@gmail.com,
+	miklos@szeredi.hu,
+	brauner@kernel.org,
+	linux-xfs@vger.kernel.org,
+	kernel-team@meta.com
+Subject: [PATCH v2 00/16] fuse: use iomap for buffered writes + writeback
+Date: Fri, 13 Jun 2025 14:46:25 -0700
+Message-ID: <20250613214642.2903225-1-joannelkoong@gmail.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Rspamd-Queue-Id: A94AA6000B
-X-Stat-Signature: qswdbtfoaxob59gfeu4nbx3jwja9sb5r
-X-Rspamd-Server: rspamout07
-X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
-X-Session-ID: U2FsdGVkX18kA1SAKVNriBHxWFxLzgcgkUwxsUbHo8E=
-X-HE-Tag: 1749829112-723801
-X-HE-Meta: U2FsdGVkX1/HfT2egRL7wxjDXIWW81tfX3vchuhujOFBty9nFqmzWkkFQ7UrX6helIh/QIzIBOuD9+1R/VLi5ujIp5SrgOC3UR8MYrXrsTVefaV/eGK9QarOF21LqWfz2wtu2zUNGPlvB2rODIRxUoh+uENwP3zyUmJWds+x+V6HeFImzlojCFh78mCLhQ0dbecLgeSaRZb4HGxgLfNeLtfnqzZwPVpYTe02wqXv2b/3Jkyo6eVq3Hgs49wWG0EQZd5lfffIBceataOA9fM3c79PY7icpTN1UqU8wHqPvJkRDV+lSBr/79Rw++brqTxIsbdHNrg1wwqhiHyfV8rNds8etOTKhpTp5zywgJhkyAHaZY+dyGg1i3BXVzV6FODx
+Content-Transfer-Encoding: 8bit
 
-On Thu, 12 Jun 2025 17:24:06 -0400
-Steven Rostedt <rostedt@goodmis.org> wrote:
+This series adds fuse iomap support for buffered writes and dirty folio
+writeback. This is needed so that granular uptodate and dirty tracking can
+be used in fuse when large folios are enabled. This has two big advantages.
+Now for writes, instead of the entire folio needing to be read into the page
+cache, only the relevant portions need to be. Now for writeback, only the
+dirty portions need to be written back instead of the entire folio.
 
-> From: Steven Rostedt <rostedt@goodmis.org>
-> 
-> Each trace event can take up to around 5K of text and meta data regardless
-> if they are used or not. With the restructuring of the XFS COW handling,
-> the tracepoint trace_xfs_reflink_cow_found() was removed but the trace
-> event was still being created. Remove the creation of that trace event.
-> 
-> Fixes: db46e604adf8 ("xfs: merge COW handling into xfs_file_iomap_begin_delay")
-> Signed-off-by: Steven Rostedt (Google) <rostedt@goodmis.org>
-> ---
->  fs/xfs/xfs_trace.h | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 01d284a1c759..ae0ed0dd0a01 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -4242,7 +4242,6 @@ DEFINE_INODE_ERROR_EVENT(xfs_reflink_unshare_error);
->  
->  /* copy on write */
->  DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_around_shared);
-> -DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_found);
->  DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_enospc);
->  DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
->  
+This patchset does 3 things, in order of sequence:
+a) Decouple iomap/buffered-io.c code from the CONFIG_BLOCK dependency, as some
+environments that run fuse may not have CONFIG_BLOCK set
+b) Add support to iomap buffered io for generic write and writeback that is
+not dependent on bios
+c) Add fuse integration with iomap
 
-Hmm, it looks like this one is still used. I'll drop this patch.
+Patches 3 and 5 are obviated by the refactoring done later on in patches 10
+and 11 but I left this patchset in this order in the hopes of making it
+more logically easier to follow.
 
--- Steve
+This series was run through fstests with large folios enabled and through
+some quick sanity checks on passthrough_hp with a) writing 1 GB in 1 MB chunks
+and then going back and dirtying a few bytes in each chunk and b) writing 50
+MB in 1 MB chunks and going through dirtying the entire chunk for several runs.
+a) showed about a 40% speedup increase with iomap support added and b) showed
+roughly the same performance.
+
+This patchset does not enable large folios yet. That will be sent out in a
+separate future patchset.
+
+This series is on top of commit 27605c8c0 ("Merge tag 'net-6.16-rc2'...") in
+the linux tree.
+
+
+Thanks,
+Joanne
+
+
+Changeset
+-------
+v1 -> v2:
+* Drop IOMAP_IN_MEM type and just use IOMAP_MAPPED for fuse
+* Separate out new helper functions added to iomap into separate commits
+* Update iomap documentation
+* Clean up iomap_writeback_dirty_folio() locking logic w/ christoph's
+  recommendation 
+* Refactor ->map_blocks() to generic ->writeback_folio()
+* Refactor ->submit_ioend() to generic ->writeback_complete()
+* Add patch for changing 'count' to 'async_writeback'
+* Rebase commits onto linux branch instead of fuse branch
+v1: https://lore.kernel.org/linux-fsdevel/20250606233803.1421259-1-joannelkoong@gmail.com/
+
+
+Joanne Koong (16):
+  iomap: move buffered io CONFIG_BLOCK dependent logic into separate
+    file
+  iomap: iomap_read_folio_sync() -> iomap_bio_read_folio_sync()
+  iomap: iomap_add_to_ioend() -> iomap_bio_add_to_ioend()
+  iomap: add wrapper function iomap_bio_readpage()
+  iomap: add wrapper function iomap_bio_ioend_error()
+  iomap: add wrapper function iomap_submit_bio()
+  iomap: decouple buffered-io.o from CONFIG_BLOCK
+  iomap: add read_folio_sync() handler for buffered writes
+  iomap: change 'count' to 'async_writeback'
+  iomap: replace ->map_blocks() with generic ->writeback_folio() for
+    writeback
+  iomap: replace ->submit_ioend() with generic ->writeback_complete()
+    for writeback
+  iomap: support more customized writeback handling
+  iomap: add iomap_writeback_dirty_folio()
+  fuse: use iomap for buffered writes
+  fuse: use iomap for writeback
+  fuse: use iomap for folio laundering
+
+ .../filesystems/iomap/operations.rst          |  65 ++-
+ block/fops.c                                  |   7 +-
+ fs/fuse/Kconfig                               |   1 +
+ fs/fuse/file.c                                | 308 +++++-------
+ fs/gfs2/bmap.c                                |   7 +-
+ fs/iomap/Makefile                             |   5 +-
+ fs/iomap/buffered-io-bio.c                    | 365 ++++++++++++++
+ fs/iomap/buffered-io.c                        | 471 +++---------------
+ fs/iomap/internal.h                           |  40 ++
+ fs/xfs/xfs_aops.c                             |  28 +-
+ fs/zonefs/file.c                              |   7 +-
+ include/linux/iomap.h                         |  88 +++-
+ 12 files changed, 775 insertions(+), 617 deletions(-)
+ create mode 100644 fs/iomap/buffered-io-bio.c
+
+-- 
+2.47.1
+
