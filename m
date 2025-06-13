@@ -1,46 +1,55 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 575BB1E9B0B;
-	Fri, 13 Jun 2025 05:59:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0663715573F;
+	Fri, 13 Jun 2025 14:54:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749794389; cv=none; b=f6TkPBLQC5GF5dt0VtngGf/KzetPacfpex9LLoRcGqpV52qyN0UkKZYclkm05MQNUINJp75Cw/FyqAxaadgJByAECtHwz4Fie8CEElxDWwMSaCx+ob9d8JQb3r3hNcpyjn8g23M2YTan2cFk8qsw/Q5jmDhK7O+MMEfEst3Z4ps=
+	t=1749826475; cv=none; b=h05kQregjzWd5WbxzKA2uwySHhQgMDRwiHVuX7xf06/dcn+OWwQqqmdqjnF4d3qtQC5+Aev3QzG2gN8v0Ltiibm19dd7uWeUkXcpoiYpvXXlgqj7cdlXnGAGVkisJnBcatmS6eyBfF64kLWklGPtm94fCyTzLwmwm/JFsGnx4Ng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749794389; c=relaxed/simple;
-	bh=erbT9uSMKTaeOK0cpylilOcElrflIs+o4M2IFkywQB0=;
+	s=arc-20240116; t=1749826475; c=relaxed/simple;
+	bh=+637aPsLSU1UEPvOQGQyJUY4IglUTgPupGHZwaGPQ9w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uD5nthVr0Pc0g8y3+dtCf216lPlSgyg/elwbw05MVf11aJm8gq9jIhu3RNwmKvaa4rLs/hHN9k0vrWnYDiUzySXckrTxngUICSdszoVkn3Jd0NR6/6gpW24Jnli7I6biscZb3dsNWk3adjJAh8iiKfWWZokqAeLFevKha8BsdKI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jhx5hv8u; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=WCE9DC352qGtv/GEfl4Ll+Bkw+WHDem1kDw7IUqJ7JARZXwQX6y0oZqprlqh1K1pqItBHBC4UMpWjkGd2Ec4kywIJa1ZNFmRYk6ABYp3XMaAEVgcWpMZZQYTaZ8XUSRyFMICgDlxYVq1LJ29DhWEUT7NWDT6iMzGNbsQwcj5xs8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p0Pct+Gi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jhx5hv8u"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=fSxDPCdGlntjmeOpPX8gpHNIC/qPZhk7KI7rcRVTWXc=; b=jhx5hv8uTYMwE30aE19EvXHJXu
-	HC9XhM+YDEoFJ596QCRgRHZ1j/jrHxdA9YtfSjLXDoLS+LQh6p7Z8GyQtco07h1nSxGXFhHBeWgfR
-	YqjaA6tTvLTuuloxrx+19MAKTVueZkiAns+Js34bb9AGPtFe0VJq7UgHIwtit17Hno8bs1qnf5FUN
-	4XPRBu6kHnU1bX10YkUDsPKIG4Qudk9kgLgD90yHkgzui4BIu4AoGiqOb4ZDfi5SkqTf4UfDYqfot
-	dhVB+8yCvFZfQleki0nEP4MrM3OAOkyV9HH9OXm1sQRqsgClo+Pu3zZ9MTcs6CI+PvgJHRFmKrN6f
-	dCoayLVQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uPxS7-0000000FRmO-1B8v;
-	Fri, 13 Jun 2025 05:59:47 +0000
-Date: Thu, 12 Jun 2025 22:59:47 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@lst.de>
-Subject: Re: Unused event xfs_growfs_check_rtgeom
-Message-ID: <aEu-U-va9q0QRuX0@infradead.org>
-References: <20250612131021.114e6ec8@batman.local.home>
- <20250612131651.546936be@batman.local.home>
- <20250612174737.GM6179@frogsfrogsfrogs>
- <20250612144608.525860bc@batman.local.home>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p0Pct+Gi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A72CC4CEE3;
+	Fri, 13 Jun 2025 14:54:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1749826474;
+	bh=+637aPsLSU1UEPvOQGQyJUY4IglUTgPupGHZwaGPQ9w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=p0Pct+Gi1hoDM0LZBCspzjOIqDTyyl/V2GwGBXdSGFwBLlkILUhpHpVlgfCrMUpLJ
+	 ft/YOmBjSQkitEQeADRDy2IJMuk2s5qeBmYAfOLlPe0KfidAf0uWqoe3GG3Quh0jbo
+	 vp59Zhbn5w3KL5AqV7PvQSSpyi9eG2fk5e6Zy6Qs1qFJrouqOACDQ4QVEPy68nKiWv
+	 m3H7my7AX4igycSxvPU6isS/XSrmG3VhiMT6KxJXgvyR2tEjCKY7d1g5iorVm6fZVk
+	 0LaMA8e65dqZijj1V1l+R6N9sVXHtRmMSZOPejxKl/4h0RJMRbDrFlJsHL7+g8myjt
+	 N3zheeKbLKx8w==
+Date: Fri, 13 Jun 2025 07:54:33 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zhang Yi <yi.zhang@huaweicloud.com>, linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tytso@mit.edu,
+	john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com,
+	shinichiro.kawasaki@wdc.com, brauner@kernel.org,
+	martin.petersen@oracle.com, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH 01/10] block: introduce BLK_FEAT_WRITE_ZEROES_UNMAP to
+ queue limits features
+Message-ID: <20250613145433.GF6134@frogsfrogsfrogs>
+References: <20250604020850.1304633-1-yi.zhang@huaweicloud.com>
+ <20250604020850.1304633-2-yi.zhang@huaweicloud.com>
+ <20250611060900.GA4613@lst.de>
+ <343f7f06-9bf6-442f-8e77-0a774203ec3f@huaweicloud.com>
+ <20250612044744.GA12828@lst.de>
+ <41c21e20-5439-4157-ad73-6f133df42d28@huaweicloud.com>
+ <20250612150347.GK6138@frogsfrogsfrogs>
+ <3569a77f-1f38-4764-b1e3-d0075775c7bb@huaweicloud.com>
+ <20250613055630.GA9119@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,25 +58,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250612144608.525860bc@batman.local.home>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250613055630.GA9119@lst.de>
 
-On Thu, Jun 12, 2025 at 02:46:08PM -0400, Steven Rostedt wrote:
-> On Thu, 12 Jun 2025 10:47:37 -0700
-> "Darrick J. Wong" <djwong@kernel.org> wrote:
+On Fri, Jun 13, 2025 at 07:56:30AM +0200, Christoph Hellwig wrote:
+> On Fri, Jun 13, 2025 at 11:15:41AM +0800, Zhang Yi wrote:
+> > Yeah, this solution looks good to me. However, we currently have only
+> > two selections (none and unmap). What if we keep it as is and simply
+> > hide this interface if BLK_FEAT_WRITE_ZEROES_UNMAP is not set, making
+> > it visible only when the device supports this feature? Something like
+> > below:
 > 
-> > On Thu, Jun 12, 2025 at 01:16:51PM -0400, Steven Rostedt wrote:
-> > > I also found events: xfs_metadir_link and xfs_metadir_start_link are
-> > > defined in fs/xfs/libxfs/xfs_metadir.c in a #ifndef __KERNEL__ section.
-> > > 
-> > > Are these events ever used? Why are they called in !__KERNEL__ code?  
-> > 
-> > libxfs is shared with userspace, and xfs_repair uses them to relink old
-> > quota files.
-> >
-> 
-> Does this userspace use these trace events? If so, I think the events
-> need to have an:
+> I really hate having all kinds of different interfaces for configurations.
 
-They have stubs for them.
+I really hate the open-coded string parsing nonsense that is sysfs. ;)
 
+> Maybe we should redo this similar to the other hardware/software interfaces
+> and have a hw_ limit that is exposed by the driver and re-only in
+> sysfs, and then the user configurable one without _hw.  Setting it to
+> zero disables the feature.
+
+Yeah, that fits the /sys/block/foo/queue model better.
+
+--D
