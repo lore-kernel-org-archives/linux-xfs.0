@@ -1,131 +1,78 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C5BE2E11B4;
-	Sat, 14 Jun 2025 04:48:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A204817A316
+	for <linux-xfs@vger.kernel.org>; Sat, 14 Jun 2025 09:46:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749876514; cv=none; b=C0RUzzQzaoYvxlLTBHaEHmtq3kpnipjYu5D7GO99LLpYP0IMl3Kq7CUV/908TohLvUP2+gRTdmZR3+StVExqLT87MuAXPIaJHsUq+HTtsSuKG8F0glHMZenQeLVSwYEMtiTXwnc5fUaIoi4lMY13HWeZh5krz7NQDt9XKHb4q48=
+	t=1749894365; cv=none; b=c7OOjASB5ZbL+ZcCBXHh3fC7WSt8rr8B+YuwtKvhYu56BDAQbIsaRF0BT0/gT+TRIZ7Q9/+nI6YZES0dS94jFU8WCDKfZMxguHFW9CMFBar6CBvzrJ21bKlEXINFSRr4OFiCY6KLm3TCWuHlvUWHaR4YClbE/O/4r1EXcJ8vsDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749876514; c=relaxed/simple;
-	bh=lygWowa6guLMhQzlm7uWnDHP6s+JxGl/+Zxvm0cojAU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Xb0CwOOum4CbZMen1P0TwwNbbS7PT1LItKYBP1CKmNqAgRbRuXs8t5Y9dIyQcINwhYS4lpBX5RE3JyWeeZvkQWCnSJO0RpLvmWVRucXFIc8HBkQdd+lNXIpMn6Lm6xL9I5ubJNnguP4isz+VksLiNOw11vMskbnuqBzD1U2mxaU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bK3gL25lkzKHN2h;
-	Sat, 14 Jun 2025 12:48:30 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 9C4381A17DF;
-	Sat, 14 Jun 2025 12:48:28 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgBXvGAa_0xoKqTaPQ--.42646S3;
-	Sat, 14 Jun 2025 12:48:28 +0800 (CST)
-Message-ID: <3d749264-6fdd-458f-a3a8-35d2320193b3@huaweicloud.com>
-Date: Sat, 14 Jun 2025 12:48:26 +0800
+	s=arc-20240116; t=1749894365; c=relaxed/simple;
+	bh=tb9mgmjJ0ev38mvO7oF2OEZBYaMFTRwRSfPnfq0Gfn4=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=n/UID4+FrwsQvdpTlRXvEgfkw4nsQdq5TsT28QnxiSVZTkMe77spQjiawEdTNTBnp0ZzrrIX40ksRq7a848jBgo3qRV/RmUJbgarGxCC9DCeBVoSZ+HXT+pkIB9/E8xNsfwXSU0vS17BdwBPNY/7dGsw8QGi96INaPMmVCsxWG4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-3ddccc79b55so20437775ab.0
+        for <linux-xfs@vger.kernel.org>; Sat, 14 Jun 2025 02:46:03 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749894362; x=1750499162;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=OOullEj6fbTIFAODytKrgDERNVpRSjN594Q2Nd4pVdg=;
+        b=eLPQgSOaj1nYZsUIz9NM6DLZoT6v7rOO3yF8MnNGo1MFLYwlK0b2fj+2tdisMYwgoc
+         9NBAxnKDrVfO/vfURpKS7ja/sq2sz1cgmIDPqpcOTAqB8fsAUil+HLvx8f1UyBqxqvLA
+         CY998qkUuacwurVTkWNi3euo3Ac2jgtyLXehFFg1ZXvF4GbtLpaUAOrUIMwrh4f71gnI
+         rFbB9ld2kWNmSWc+HsFvEJqXjbeN6z4oE04gMNOa3c7AnBThLic8Nyl3jCi6ZDumqFXa
+         6vyuN1a9b6pE3Fon+SU/y/ZOimV1X6l3L1TTbznPC6TWNItTr1Z1asTLRC+DfE847X7m
+         4CmA==
+X-Forwarded-Encrypted: i=1; AJvYcCUChMkivXm7n/00tCd3+vkMJzQECzj/ZEAYxRVdcWQ04KkY1kFTqXb93ZHg4OpX1LnFSQAJMncueSE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyFcN88d7oFOlufxQn90JFxqXhHB6NCztJWqMLIkOzS6sb+eq66
+	SduJpY0g7d819vOuPC3tmaOv2LWfxcm0NycqlVsPP3wNAaveiNG96DoXvfQj/UHhzQqDEo6+sVY
+	VqEu72zijaxAJNjfDzH14dG5sMxtKDI7hLHcg6mzymNcElEfeCi36ba+L/mg=
+X-Google-Smtp-Source: AGHT+IEVUfA3mPXS3hA0DJoSSRV+Ghh9W3bYlbB4sUQ+RiorkpWaQkzcHee8EanONeMMSXpA5+N9R0E0c+PhDvzwN0h/7WUL0Klg
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/10] block: introduce BLK_FEAT_WRITE_ZEROES_UNMAP to
- queue limits features
-To: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, tytso@mit.edu,
- john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com,
- shinichiro.kawasaki@wdc.com, brauner@kernel.org, martin.petersen@oracle.com,
- yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
- yangerkun@huawei.com
-References: <20250604020850.1304633-1-yi.zhang@huaweicloud.com>
- <20250604020850.1304633-2-yi.zhang@huaweicloud.com>
- <20250611060900.GA4613@lst.de>
- <343f7f06-9bf6-442f-8e77-0a774203ec3f@huaweicloud.com>
- <20250612044744.GA12828@lst.de>
- <41c21e20-5439-4157-ad73-6f133df42d28@huaweicloud.com>
- <20250612150347.GK6138@frogsfrogsfrogs>
- <3569a77f-1f38-4764-b1e3-d0075775c7bb@huaweicloud.com>
- <20250613055630.GA9119@lst.de> <20250613145433.GF6134@frogsfrogsfrogs>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <20250613145433.GF6134@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:gCh0CgBXvGAa_0xoKqTaPQ--.42646S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr15uw47uryUJF4kCryxGrg_yoW8tF47pF
-	yjgFyxKrWDtF1UA3s5Aa10gF1Fq3y3Ga4xCrn7Wryku3s8WrnrWFs2g343XFyxC3s3Wa1j
-	vayxC3sI9ayvvaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvjb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AF
-	wI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUIa
-	0PDUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+X-Received: by 2002:a05:6e02:170b:b0:3dd:bfbc:2e84 with SMTP id
+ e9e14a558f8ab-3de07cd17c6mr26890655ab.19.1749894362680; Sat, 14 Jun 2025
+ 02:46:02 -0700 (PDT)
+Date: Sat, 14 Jun 2025 02:46:02 -0700
+In-Reply-To: <684cb499.a00a0220.c6bd7.0010.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <684d44da.050a0220.be214.02b2.GAE@google.com>
+Subject: Re: [syzbot] [iomap?] [erofs?] WARNING in iomap_iter (5)
+From: syzbot <syzbot+d8f000c609f05f52d9b5@syzkaller.appspotmail.com>
+To: brauner@kernel.org, chao@kernel.org, djwong@kernel.org, eadavis@qq.com, 
+	hsiangkao@linux.alibaba.com, linux-erofs@lists.ozlabs.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com, xiang@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 2025/6/13 22:54, Darrick J. Wong wrote:
-> On Fri, Jun 13, 2025 at 07:56:30AM +0200, Christoph Hellwig wrote:
->> On Fri, Jun 13, 2025 at 11:15:41AM +0800, Zhang Yi wrote:
->>> Yeah, this solution looks good to me. However, we currently have only
->>> two selections (none and unmap). What if we keep it as is and simply
->>> hide this interface if BLK_FEAT_WRITE_ZEROES_UNMAP is not set, making
->>> it visible only when the device supports this feature? Something like
->>> below:
->>
->> I really hate having all kinds of different interfaces for configurations.
-> 
-> I really hate the open-coded string parsing nonsense that is sysfs. ;)
-> 
->> Maybe we should redo this similar to the other hardware/software interfaces
->> and have a hw_ limit that is exposed by the driver and re-only in
->> sysfs, and then the user configurable one without _hw.  Setting it to
->> zero disables the feature.
-> 
-> Yeah, that fits the /sys/block/foo/queue model better.
-> 
+syzbot has bisected this issue to:
 
-OK, well. Please let me confirm, are you both suggesting adding
-max_hw_write_zeores_unmap_sectors and max_write_zeroes_unmap_sectors to
-the queue_limits instead of adding BLK_FEAT_WRITE_ZEROES_UNMAP to the
-queue_limits->features. Something like the following.
+commit 1d191b4ca51d73699cb127386b95ac152af2b930
+Author: Gao Xiang <hsiangkao@linux.alibaba.com>
+Date:   Mon Mar 10 09:54:58 2025 +0000
 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 378d3a1a22fc..14394850863c 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -376,7 +376,9 @@ struct queue_limits {
-        unsigned int            max_hw_discard_sectors;
-        unsigned int            max_user_discard_sectors;
-        unsigned int            max_secure_erase_sectors;
--       unsigned int            max_write_zeroes_sectors;
-+       unsigned int            max_hw_write_zeroes_sectors;
-+       unsigned int            max_hw_write_zeores_unmap_sectors;
-+       unsigned int            max_write_zeroes_unmap_sectors;
-        unsigned int            max_hw_zone_append_sectors;
-        unsigned int            max_zone_append_sectors;
-        unsigned int            discard_granularity;
+    erofs: implement encoded extent metadata
 
-Besides, we should also rename max_write_zeroes_sectors to
-max_hw_write_zeroes_sectors since it is a hardware limitation reported
-by the driver.  If the device supports unmap write zeroes,
-max_hw_write_zeores_unmap_sectors should be equal to
-max_hw_write_zeroes_sectors, otherwise it should be 0.
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=1352dd70580000
+start commit:   02adc1490e6d Merge tag 'spi-fix-v6.16-rc1' of git://git.ke..
+git tree:       upstream
+final oops:     https://syzkaller.appspot.com/x/report.txt?x=10d2dd70580000
+console output: https://syzkaller.appspot.com/x/log.txt?x=1752dd70580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=162faeb2d1eaefb4
+dashboard link: https://syzkaller.appspot.com/bug?extid=d8f000c609f05f52d9b5
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=115f9e0c580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1688b10c580000
 
-Right?
+Reported-by: syzbot+d8f000c609f05f52d9b5@syzkaller.appspotmail.com
+Fixes: 1d191b4ca51d ("erofs: implement encoded extent metadata")
 
-Best regards,
-Yi.
-
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
