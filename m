@@ -1,55 +1,57 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B0CE518E025;
-	Mon, 16 Jun 2025 07:48:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D98A51F4CA9
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Jun 2025 07:53:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750060101; cv=none; b=AS9NAZq9TlGYjvPZSMsX2jST+rN2KTFjXjhGf5kUFyQLPCz1x5aIwHzKmotXhnDohyfbFA4IUWj1pWsPPDvvGaEs2V5OycgcbGWRsTEp9tC9rhenWnl04lJXgg8g9VCUFZ1/KBfttEeN9gqAkTMCnPk6JsT8i54Ai9tYkiG321A=
+	t=1750060424; cv=none; b=t+56MI5eWGkpMVbQ8EpWTtTtHMes9FMids2y+OSqPZ4pIaXmJPTUMV4QFT7OpEZX5171HxC52Mu6m4ICOjLcPVjAvKcW/M8euruNdSPIuW652dq34YmOXTQbK25GL4iOnVI4zLTiWjEu3V4GbLPNhMjIfitdHC/cWCtUHfdVj6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750060101; c=relaxed/simple;
-	bh=+iIPmuYIR6F5LD+a0iF6PdJq5ltgbL412UY54MPIgwU=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=WCHTV0YOhCLN6m3fgCdS5C4yycleIz5DsmVNmL9oMmvR/8bpoW2BLWBjNptNrhQoUjU8KSLLVhunFk1QY8wqXya4azZnKdSz0/LUEyw3rFC2xCVlC4a6vF+EDSCjGlutZEDvxdXG/Av8z0RbPqFPWCeux0GwR8iz2QG5GhVXOjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=bMTh2iGj; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1750060424; c=relaxed/simple;
+	bh=dew0sXhXhtXPNyoQaNhVczozovQjKzIvN4zdkRo9hqE=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=oL48WrfeLF0hecav41NvKk5QCs8iMANfBm2IlpkMOt1W7QoJAanAxcZlfC91tY4mvR6t/9H3j0itewpdCeqbhcKuf/etOS5kS+SCxi9EzyK9a95ihOGO8kinu/0G9rpNaObXUnu/LmBvGFtZuY/kIfEp+05pslWMfGF7mhrB6SU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oCcd3PoM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="bMTh2iGj"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:To:
-	Content-Type; bh=+iIPmuYIR6F5LD+a0iF6PdJq5ltgbL412UY54MPIgwU=;
-	b=bMTh2iGjANzqA0fkenXxijxFfsuq5hBLU1dpaT+kTeuFL1+ulIVofkiZUY3EnO
-	Y007zeOvFFxQ12wHOTN3I0/TazA3bjwADonDaQbZ3FwyLeU22khDK25PhTgm+I/y
-	0wg1wc21PXlETkky1e01YoGqrfubed6W+NVfVsyTiMVL4=
-Received: from [10.42.12.6] (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDXLrMxzE9okqQRIw--.24480S2;
-	Mon, 16 Jun 2025 15:48:01 +0800 (CST)
-Message-ID: <41095783-1f43-488b-880b-c0c1245d4640@163.com>
-Date: Mon, 16 Jun 2025 15:48:01 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oCcd3PoM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0B2EC4CEEA
+	for <linux-xfs@vger.kernel.org>; Mon, 16 Jun 2025 07:53:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750060424;
+	bh=dew0sXhXhtXPNyoQaNhVczozovQjKzIvN4zdkRo9hqE=;
+	h=Date:From:To:Subject:From;
+	b=oCcd3PoMV7zjAW32hEkTHRi4SWbJC3f7P9W+P2ULwx2wCwEfFKjvzrOAYCqXcR/B+
+	 AvS4WMTXFIUB7UeM0GcepdJPTbcdjpOivXpBP6cfFBNNPVJRqOhcUm/AaN18wtiMCg
+	 1Huwnm7hC2Cy8J6TUx8PH6vHsAzwLkV7jW0N2UIP1KPlqs0Uujksm6PvnZnpp62pLj
+	 32QooBK1aGrBb2bFq0k0DTxX53PH0sc0Nh261sU+H/bef1Kv9dfQS1dAJtmdIsoRE0
+	 nj+UzM9al9xfSjNM7gAir56+SODeCy4kBaTfTxkzt7n0Nh5uaEGd93VibPsJi4u6G+
+	 cY971evn6Lw2A==
+Date: Mon, 16 Jun 2025 09:53:40 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to e04c78d86a96
+Message-ID: <p4nfmahgxypnejn2rmge52ujiyavo7pboolljqell33kdlyux3@2s6lntpsbwih>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] iomap: Reduce some calculations in
- iomap_adjust_read_range()
-From: Chi Zhiling <chizhiling@163.com>
-To: brauner@kernel.org, djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, Chi Zhiling <chizhiling@kylinos.cn>
-References: <20250616054722.142310-1-chizhiling@163.com>
-Content-Language: en-US
-In-Reply-To: <20250616054722.142310-1-chizhiling@163.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wDXLrMxzE9okqQRIw--.24480S2
-X-Coremail-Antispam: 1Uf129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvj4RNL05UUUUU
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/xtbBgA9unWhPxTW0uwAAsk
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 2025/6/16 13:47, Chi Zhiling wrote:
-> From: Chi Zhiling <chizhiling@kylinos.cn>
 
-I just noticed this patch has an issue, please ignore it.
+Hi folks,
 
+The for-next branch of the xfs-linux repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+This just resets for-next to Linux 6.16-rc2, so I can start pulling patches for
+this cycle. There are no xfs patches being added here.
+
+New Head:
+
+e04c78d86a96 Linux 6.16-rc2
