@@ -1,77 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA63D1E3DC8;
-	Mon, 16 Jun 2025 14:20:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87E2B2BF017;
+	Mon, 16 Jun 2025 14:27:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750083618; cv=none; b=sfdFCKK/+lJMoDyLczjOlIwdd++izthZ68Qz2hI35xwPbAQiUPLBOwGwYxBPABHCy4aFFFxLHpA/jOL2qdrMR2Ln6MRov50SyYxdpTdjCRfxjQ1UNgZIFdaPhrC+bBylPA/btmnDP3EGl65icqw8Mm/evZ7fWSMhtJyiuUtP+sA=
+	t=1750084034; cv=none; b=QlTEYjWFshZrhgyt721Elx/2ph+WlmteXr4KNEZcFRrnJxxOojV0FfLoh1nyoFg7j/v4pDSwq5Ixsmxu1kylM9MCdShD+I0Ndw/SWy/30Q3YqU4jo3D+mqdvNA5oRazeLl/amei47LAlQBtg73NnaLAQTlirZF9LpAsr/iSuqk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750083618; c=relaxed/simple;
-	bh=5VWXqZdx5bHEsn2TTU4QzarqvjeYWZnzjhf4oRIXkeQ=;
+	s=arc-20240116; t=1750084034; c=relaxed/simple;
+	bh=27LBzjkFKC0MWbPlUQj6Tt4KZ0Jk3l3sGSDRRlvA7Qg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Mj9ZhT7/UjsnWBULkNMWuXVuzHQxMm32iGnkitSFIl2fAS0aPANNn+zWDyvjqebadmLlWJ9rICEk7AwXo8SC09bglruaivTZVwbdomBXW7guaTVdSLFsyP03qvydTxBTdbMBOxn/cq7RkvO6uRe2ZJzKb/ZackynDTg7zNUXRD4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=AIHfdJNS; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rhqpd05+UhJQEADLxrAhSAapzJgcZXVebK45QjJlK94hmpzaxc/fRZnN1M+UsdySERbhtToGCRSGHuq2yXg8dOWjHKsYdGubF7GDLKyqY2pQM1jqKSFKYHebLQBfn+XXsfp8Lu8fSZCWo8O6STI+N98YHF3lZQKLUc8b5uMMA4s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NTVakR5S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="AIHfdJNS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0EECC4CEED;
-	Mon, 16 Jun 2025 14:20:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1750083618;
-	bh=5VWXqZdx5bHEsn2TTU4QzarqvjeYWZnzjhf4oRIXkeQ=;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NTVakR5S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F3D8C4CEEA;
+	Mon, 16 Jun 2025 14:27:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750084034;
+	bh=27LBzjkFKC0MWbPlUQj6Tt4KZ0Jk3l3sGSDRRlvA7Qg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AIHfdJNSkuYgsaxM0qaDazavZaSg2vUfWTZyhyQompAF2X/to5We+7QwEbMhke9kV
-	 ZmszBXMrKVRBtS/fZseGYRcHmgT6Ms/YSiP+TV6BavSEsZdVHaHkD9bB1stxFMC/Nz
-	 k7inkPZmeH6kEpRUpKe3Li9FZW2kMBmhRqq0UD5E=
-Date: Mon, 16 Jun 2025 16:20:16 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Pranav Tyagi <pranav.tyagi03@gmail.com>
-Cc: cem@kernel.org, skhan@linuxfoundation.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linux.dev
-Subject: Re: [PATCH] fs/xfs: use scnprintf() in show functions
-Message-ID: <2025061610-basics-attendee-cd02@gregkh>
-References: <20250616110313.372314-1-pranav.tyagi03@gmail.com>
+	b=NTVakR5SXYu6c0BR4in/xtNji5OdDLRcOb+1S6kRPnlTkxHPWFuXHEYB2XKVOnV5V
+	 XKW8fuD7PUAxa0hc9pOLobc3bi0uPxw+HNln+mqm/IAkPNktMrm+/b1hQwe4msPHOt
+	 /RBrG+An7Q7/xCH/oFBha8sLE7asffKwinvo7s0gsMMJkwqWOFFVu1jWoUz0qVEXqh
+	 8nYbEvxVezT7bLn6rjAKCURMMss27siUxZLadBGHlsr1LHHNUVo8hPE4huYEBXn5E5
+	 fAacJRg0Mlzep6Qt2V5d4o+LEnwopKyEIQ5mGnZXFdLg6Twux+PSTbq1SyQ5q+r4bW
+	 c85QZmNSdOsqg==
+Date: Mon, 16 Jun 2025 16:27:07 +0200
+From: Christian Brauner <brauner@kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Zhang Yi <yi.zhang@huaweicloud.com>, linux-fsdevel@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-block@vger.kernel.org, dm-devel@lists.linux.dev, 
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, hch@lst.de, tytso@mit.edu, djwong@kernel.org, 
+	john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com, 
+	shinichiro.kawasaki@wdc.com, yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com, 
+	yangerkun@huawei.com
+Subject: Re: [PATCH 00/10] fallocate: introduce FALLOC_FL_WRITE_ZEROES flag
+Message-ID: <20250616-wasser-replizieren-c47bcfaa418a@brauner>
+References: <20250604020850.1304633-1-yi.zhang@huaweicloud.com>
+ <yq17c1k74jd.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20250616110313.372314-1-pranav.tyagi03@gmail.com>
+In-Reply-To: <yq17c1k74jd.fsf@ca-mkp.ca.oracle.com>
 
-On Mon, Jun 16, 2025 at 04:33:13PM +0530, Pranav Tyagi wrote:
-> Replace all snprintf() instances with scnprintf(). snprintf() returns
-> the number of bytes that would have been written had there been enough
-> space. For sysfs attributes, snprintf() should not be used for the
-> show() method. Instead use scnprintf() which returns the number of bytes
-> actually written.
-
-No, please use sysfs_emit() if you really want to change this.
-
+On Mon, Jun 09, 2025 at 09:47:13PM -0400, Martin K. Petersen wrote:
 > 
-> Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
-> ---
->  fs/xfs/xfs_sysfs.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+> Zhang,
 > 
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index 7a5c5ef2db92..f7206e3edea2 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -257,7 +257,7 @@ larp_show(
->  	struct kobject	*kobject,
->  	char		*buf)
->  {
-> -	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.larp);
+> > Changes since RFC v4:
+> >  - Rebase codes on 6.16-rc1.
+> >  - Add a new queue_limit flag, and change the write_zeroes_unmap sysfs
+> >    interface to RW mode. User can disable the unmap write zeroes
+> >    operation by writing '0' to it when the operation is slow.
+> >  - Modify the documentation of write_zeroes_unmap sysfs interface as
+> >    Martin suggested.
+> >  - Remove the statx interface.
+> >  - Make the bdev and ext4 don't allow to submit FALLOC_FL_WRITE_ZEROES
+> >    if the block device does not enable the unmap write zeroes operation,
+> >    it should return -EOPNOTSUPP.
+> 
+> This looks OK to me as long as the fs folks agree on the fallocate()
+> semantics.
 
-There is nothing wrong with the original code here, you could use
-sprintf() and it too is ok.  So this type of change is not needed.  But
-again, if you really want to, use sysfs_emit() instead.
-
-Same for all the other show() callback changes you just made.
-
-thanks,
-
-greg k-h
+That looks overall fine. Should I queue this up in the vfs tree?
