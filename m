@@ -1,36 +1,44 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E59D52E427E
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Jun 2025 12:32:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 805DC2DBF4E;
+	Mon, 16 Jun 2025 12:49:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750077178; cv=none; b=g54y5EqvbAy1zt1iwroD/2Ex2lvWH4rGQsNZoEYmlhZphjzv+P+B9xnYHXbahC155bnM2j6rYDNcuG+aHCXbagmFmpdVM/Rxq/0yRRnqc0j7jb4kX8yRDbYalw7pcC2ux/6niEbXMs4Pib/00LdZzVWuZg6LW7lVeCRJRrjaP4A=
+	t=1750078199; cv=none; b=gp8uOjEvJkgPhWq2RX6kpsy4XScH19cXWRF/YX5eTFckYu5l66HyvdxsPXHt2TEeHPu1ZOjQcp5jOIKHP7QnT0BoE+SUj0Ydg3KUsbrE+d3jJHtFconvelnReAPmGQPfUv1koJ4XPl415DySzYqhzWdENj8HWJBvVzZ73zjaEGQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750077178; c=relaxed/simple;
-	bh=ezo9hjuKK6nDjMDfIEXPGxZ/b3zZojGM4BfltqBrkRk=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=eFsE+aMWyR2rNeZ9m88oT+N9sFCNRysrnaxkmUQx0+tBtem4mbANdcAvxpa38YRIZDGlEd9mjqnvC0F1x/UsCAncObuPlv8lcS827icdKThDDeeH9+cgy5SsS0J6s79foEUino/zKh6eLN2naBvBCHeW62keNdWsQanl5mMvVi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pKPGXkWo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750078199; c=relaxed/simple;
+	bh=e1VVMuy9bECdHPJLedYi+UfLKcsKZt3zb8CEzQHU4RA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Rrb548hnzviuJTFzxCWhkYkc/X/q9GHbSDyI/BsM3BIpy8CW2VpX+my35Ck25bYM1HePYL0YOpwrYNPUi7uhQ0S6YxrF1eHvuPCOa/U+FP/8dRPnS3ePoZFg35/S8CH+Q+cJGP72WdQls1UGaAWv8JcOYAdAQSIq3ePjPbEBJa4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qMT6a21J; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pKPGXkWo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3815FC4CEEA
-	for <linux-xfs@vger.kernel.org>; Mon, 16 Jun 2025 12:32:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750077177;
-	bh=ezo9hjuKK6nDjMDfIEXPGxZ/b3zZojGM4BfltqBrkRk=;
-	h=Date:From:To:Subject:From;
-	b=pKPGXkWoNpl7GE4mm1osnY6e6TabnqEk4K7QO1i3kr3pjflI27za1H/4UogT4/o1f
-	 h5QTNP63Dj0ay85IXaWArWSS/ANYLllLplXqgqbbsgkmhhBQKGYFk9hWm96qrFQrcA
-	 aCE1o5l05CbatiNrjUUYWw9eQQtCRnNr7NQNL2yJWr99C5BPGoW1ZfWlytWibjQCxv
-	 fGdQnb0loCcItjSt7BnkJs3apyu+Bh4d2ifkQsSKPQ1mQMnbTh0UFJDvc/vW9ki5CP
-	 TzdjPQMaWNrxy8dgbOfxduq/j1tiaLDx7gBTaTKKVglVF5ORz0U1jr9Gr1Q/RWAj6v
-	 u6aKUW4/wZaBQ==
-Date: Mon, 16 Jun 2025 14:32:54 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to db44d088a5ab
-Message-ID: <7orvevapbwzotmlktyf4fc7dehfmu6wyi565kctjyw6vdy3shy@bfmahmtlp7tn>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qMT6a21J"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=8fFS460Gsw35FDyZ9BeX+wJHJ20lDIAMCxMqlgBvK8Y=; b=qMT6a21JMZt5ut+8qULNEn/BgG
+	s00qE6rKSrPyXnioZSlZ7sd/3eRpBv+6CjqIudqbrnziyO2Dvdh4UOZyIFOSaIfx4XxUnZuiPYu3x
+	+VM/lq8Fo3PHbx5kymlCnnNGcb8CLgKU0+mbIfL4gaU6grLdYNqXs8MwjiATyT8OOdTqpugRw0SOJ
+	Hpu1tVNX39iAeLWKas8K9tT8Rjrp1fqtYuGk46ML18o6YSG5Fdbr2b2xC3LeeZMAhs3oXCFrjR/WS
+	HNX8HdNg0/S67Y/9yo8I4WLgdleWrAnfybIv9q3/ihObUzhJq+AHgCXjro8F0Lz7BhrghWnVRd+qH
+	wt3EYRcw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uR9Hh-00000004QUA-3iN4;
+	Mon, 16 Jun 2025 12:49:57 +0000
+Date: Mon, 16 Jun 2025 05:49:57 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, hch@infradead.org, djwong@kernel.org,
+	anuj1072538@gmail.com, miklos@szeredi.hu, brauner@kernel.org,
+	linux-xfs@vger.kernel.org, kernel-team@meta.com
+Subject: Re: [PATCH v2 04/16] iomap: add wrapper function iomap_bio_readpage()
+Message-ID: <aFAS9SMi1GkqFVg2@infradead.org>
+References: <20250613214642.2903225-1-joannelkoong@gmail.com>
+ <20250613214642.2903225-5-joannelkoong@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,43 +47,15 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20250613214642.2903225-5-joannelkoong@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
+On Fri, Jun 13, 2025 at 02:46:29PM -0700, Joanne Koong wrote:
+> Add a wrapper function, iomap_bio_readpage(), around the bio readpage
+> logic so that callers that do not have CONFIG_BLOCK set may also use
+> iomap for buffered io.
 
-Hi folks,
+As far as I can tell nothing in this series actually uses the non-block
+read path, and I also don't really understand how the current split
+would facilitate that.  Can you explain a bit more where this is going?
 
-The for-next branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-db44d088a5ab xfs: actually use the xfs_growfs_check_rtgeom tracepoint
-
-6 new commits:
-
-Christoph Hellwig (4):
-      [b0f77d301eb2] xfs: check for shutdown before going to sleep in xfs_select_zone
-      [a593c89ac5a4] xfs: remove NULL pointer checks in xfs_mru_cache_insert
-      [df3b7e2b56d2] xfs: use xfs_readonly_buftarg in xfs_remount_rw
-      [0989dfa61f43] xfs: move xfs_submit_zoned_bio a bit
-
-Darrick J. Wong (1):
-      [db44d088a5ab] xfs: actually use the xfs_growfs_check_rtgeom tracepoint
-
-Markus Elfring (1):
-      [19fa6e493a93] xfs: Improve error handling in xfs_mru_cache_create()
-
-Code Diffstat:
-
- fs/xfs/xfs_mru_cache.c  | 19 ++++---------------
- fs/xfs/xfs_rtalloc.c    |  2 ++
- fs/xfs/xfs_super.c      |  5 ++---
- fs/xfs/xfs_zone_alloc.c | 42 +++++++++++++++++++++---------------------
- 4 files changed, 29 insertions(+), 39 deletions(-)
