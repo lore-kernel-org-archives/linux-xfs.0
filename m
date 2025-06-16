@@ -1,238 +1,122 @@
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACFB227F008;
-	Mon, 16 Jun 2025 10:09:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 479C91E7C23;
+	Mon, 16 Jun 2025 11:03:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750068575; cv=none; b=cwOxusMkdleV/OMiUSebfDhv9+AwDClaqklsQA6/+IJj5HcGxqxniKiqqEvPj3AqrU3aXxFp3Ba6A6qrqm0wzOp6mUDf8XelUydWM4uS51jMiMmGulVvdJ9eyUZDUd5c1iFDJmFv6HL/JIo1Yp4r1XEEuyCnLanDiyTTT7kMyHc=
+	t=1750071817; cv=none; b=uKDmJ0Yn2BHP74fByqfZbplJ792k1N/87OoqgaVbdPQiqJwxU66CUQ5vxWdWn9GtX247cKWjWmmlLxglE/MJdtfQ0Tl+XNLrhKVdtQvcFGSJmN/HqyU6pvbILSqzxyfctqL/ITxqltvQ/iheE6AyO5Kslt2rX6Iv04wYJ2sQWIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750068575; c=relaxed/simple;
-	bh=GUY8/63BQv85kRQHfmjIq1+ft2+ClaRKl8r4IWk1ocQ=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=k0vHMZKirWobe9XT75RmHEFil7gkzb/YI1XjcGL381BhxVIUF7YiPS+ZUy2LZfOavtxJQwRhsr2vCNTPRNzfhgOHz+P2NIClVpaL1UGlNIrkONRl5+jGR7fe4rAPrK43eVDpHuFkxF7MeOG+CJ93T7tSBrgyRAtjIT++aaDAFhk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=RPoWjhAm; arc=none smtp.client-ip=212.122.41.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
+	s=arc-20240116; t=1750071817; c=relaxed/simple;
+	bh=m4Q97Vl9Pu9GM4C2YDP6SbvlhmPxpHgL709nuEfJrfs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=l1CddpwSHZq5wl3NOHrE6293YbimJxd5S/9DjudqPYWcPgTEHAyWlcpTmip+BdtYiscpNPUy55jz4f5FmJl13v0DakUC3jWPZX6EmZusDGDryJxVFTN8j3BlS2FgYUv+sw8Ax/gD/wX26Ci+f+kXAl9U4t9SdoWWVzLgCvJRMgg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TaxpYpnZ; arc=none smtp.client-ip=209.85.210.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="RPoWjhAm"
-Content-Type: text/plain;
-	charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-	s=mail; t=1750068571;
-	bh=itB1oOGdFQkL5Y75629jq0JbuLdjXKutsArus/swJBA=;
-	h=Subject:From:In-Reply-To:Date:Cc:References:To;
-	b=RPoWjhAmO/c8bHNIyHNNg7x1zgLkEkwVrzUu1Av4PXh8ywypox9KUUjPRFs6cs9Wn
-	 0JEMZWN8h3hzqyGuFDGO6p7X8oAVddz+9xGTS+1VdW3XmLyPZ6dTHulV4i8CGZpRZp
-	 HgILLVS1+OG0rb4egCGhx/H5x/arourOL15ENYmQ=
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TaxpYpnZ"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-747fc7506d4so3596443b3a.0;
+        Mon, 16 Jun 2025 04:03:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1750071814; x=1750676614; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=5o0Hn0fW6RFNxHio5FVElS24SR1RndyfYKHO5SLow+0=;
+        b=TaxpYpnZJSdqEcuhuytay+prnjnZofVV9ThY0ihVZFTONGo6Yvd+wXrdcXJvjbki4J
+         pHUo3n46yj5UmlnXoayj9K5G3qukQa/1YT/YN50daeJdkpRMnQ8LANqGGWhZLqt+vhAc
+         AVwLRTmCyVtJRZSf8RBXLCP/P1Y4oB5E+fVDjA6HOKvOcUjgcIt7dQL5CHSnv+moT3BL
+         jlxOnc3k3y7bNU+1dTBovwx2n+LR8lWxHdjJ2G1unRVbJuuA01VzdcrLveBLv4L0rEif
+         H8acT7huRAihH9+PcR+QxvFA4/QbEnIiMdaLXsZBKljBUbrJiO1zrp1RSzvm+eN6YHhP
+         l6ng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750071814; x=1750676614;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=5o0Hn0fW6RFNxHio5FVElS24SR1RndyfYKHO5SLow+0=;
+        b=JuSE7qmwj5C/YtoanKF8VPj+Sat9k2oVArf/T1ZGCDsb3VLrgE9AIyum9F+UJ55vDm
+         CnUZtITeZ+x+f5h7nzjbzfRogei5BdJC2RfotwF9mxjIiLUdynM73Y9P1DJnxDrlcV/r
+         h8HvggxizPD7tASWyG4sT2+Xm7LPfcMt/Mwe1SwFNVOB8aQSKhGRmdh0jZFP+h7DnJ0A
+         dVPvjiQa7FggonYKDa0PdyEYmgYbLaF9mcIVSFAG7fsNFZFGlW/MAYQF1hv28tuxxDjN
+         tomG+1/1l1QmMFDriBavdnAXwIx/ji1fqJ+BoFqUCtORTUG9EBHVupimgSuSTUkR7HOc
+         wwJg==
+X-Forwarded-Encrypted: i=1; AJvYcCXeolRpCBy9P6y09AZK6+v4y5HD7o9n2lHNxZwWauHnV7BSMVhwjlGoqG+oICv3E06G3bmZloM2augXgWs=@vger.kernel.org, AJvYcCXr20zpBRU3Qc/z/G/9pLcjte0Kl2t+PK9KYQ8CxBntA3zxhxPhOeW17xm5OzH29Bl3J3UuavLAoG6/@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyrij/UrVuTw7WZb3UYbgk+0b5qhC1t9FPKrZp/akTLKjBL0S36
+	e1DMcVlhsEMAT+D2uSlirvsxtEk3iQfN2zvevND4W37Bkib0BUx5ANRurzE5fPOB
+X-Gm-Gg: ASbGncueFUKU9ezYujO0nl261BEzpuv86xM4BCx9qT6UVJQATFrpIYq8VZHeUoFdHTe
+	gYL2gUbRk8EYmZwibmO0HswQ6cxUru++jQKNuj8uh3dSkaxBPdWATA8TQZnEvSuYSt5j36pyY5n
+	e/WsXqi8L2Kc6EliVBxz3cPEdlWx2SgWzl2Hyl59boxYnk6H/E0HHKwqCxXYFQbR5RqJkJT8sCr
+	/SjFi7YbyJXNiPEM/FzTU35dYmI0DeEjPm3oywWz57ZJDICTrTRzM6fQxrH0HyecEnLlc2/Cbc1
+	QBznv7aUmu7KdWvOpLIO9CHglDQtAi+JwmTu4XDMcQo+Phmh4NkWB81/If8MVwTO2kaIj8FJXcR
+	zVvPdvHk=
+X-Google-Smtp-Source: AGHT+IF4SzbHZUhbFwosMC0lnmCIR5cjaOPgH5kNe6x7SOYohIs8eQs5+7xY8DfNyKJWCnS44WQWxw==
+X-Received: by 2002:a05:6a00:2381:b0:742:a0c8:b5cd with SMTP id d2e1a72fcca58-7489d039b81mr12234599b3a.19.1750071814445;
+        Mon, 16 Jun 2025 04:03:34 -0700 (PDT)
+Received: from manjaro.domain.name ([2401:4900:1c68:884c:5800:7324:c411:408d])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74890083c7csm6508293b3a.84.2025.06.16.04.03.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Jun 2025 04:03:33 -0700 (PDT)
+From: Pranav Tyagi <pranav.tyagi03@gmail.com>
+To: cem@kernel.org
+Cc: skhan@linuxfoundation.org,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kernel-mentees@lists.linux.dev,
+	Pranav Tyagi <pranav.tyagi03@gmail.com>
+Subject: [PATCH] fs/xfs: use scnprintf() in show functions
+Date: Mon, 16 Jun 2025 16:33:13 +0530
+Message-ID: <20250616110313.372314-1-pranav.tyagi03@gmail.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.600.51.1.1\))
-Subject: Re: temporary hung tasks on XFS since updating to 6.6.92
-From: Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <g7wcgkxdlbshztwihayxma7xkxe23nic7zcreb3eyg3yeld5cu@yk7l2e4ibajk>
-Date: Mon, 16 Jun 2025 12:09:21 +0200
-Cc: stable@vger.kernel.org,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- regressions@lists.linux.dev
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <01751810-C689-4270-8797-FC0D632B6AB6@flyingcircus.io>
-References: <M1JxD6k5Sdxnq-pztTdv_FZwURA8AaT9qWNFUYGCmhiTRQFESfH7xqdOqQjz-oKQiin8pQckoNhfNyCHu-cxEQ==@protonmail.internalid>
- <14E1A49D-23BF-4929-A679-E6D5C8977D40@flyingcircus.io>
- <umhydsim2pkxhtux5hizyahwd6hy36yct5znt6u6ewo4fojvgy@zn4gkroozwes>
- <Z9Ih4yZoepxhmmH5Jrd1bCz35l6iPh5g2J61q2NR7loEdQb_aRquKdD1xLaE_5SPMlkBM8zLdVfdPvvKuNBrGQ==@protonmail.internalid>
- <3E218629-EA2C-4FD1-B2DB-AA6E40D422EE@flyingcircus.io>
- <g7wcgkxdlbshztwihayxma7xkxe23nic7zcreb3eyg3yeld5cu@yk7l2e4ibajk>
-To: Carlos Maiolino <cem@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
+Replace all snprintf() instances with scnprintf(). snprintf() returns
+the number of bytes that would have been written had there been enough
+space. For sysfs attributes, snprintf() should not be used for the
+show() method. Instead use scnprintf() which returns the number of bytes
+actually written.
 
-> On 16. Jun 2025, at 11:47, Carlos Maiolino <cem@kernel.org> wrote:
->=20
-> On Mon, Jun 16, 2025 at 10:59:34AM +0200, Christian Theune wrote:
->>=20
->>=20
->>> On 16. Jun 2025, at 10:50, Carlos Maiolino <cem@kernel.org> wrote:
->>>=20
->>> On Thu, Jun 12, 2025 at 03:37:10PM +0200, Christian Theune wrote:
->>>> Hi,
->>>>=20
->>>> in the last week, after updating to 6.6.92, we=E2=80=99ve =
-encountered a number of VMs reporting temporarily hung tasks blocking =
-the whole system for a few minutes. They unblock by themselves and have =
-similar tracebacks.
->>>>=20
->>>> The IO PSIs show 100% pressure for that time, but the underlying =
-devices are still processing read and write IO (well within their =
-capacity). I=E2=80=99ve eliminated the underlying storage (Ceph) as the =
-source of problems as I couldn=E2=80=99t find any latency outliers or =
-significant queuing during that time.
->>>>=20
->>>> I=E2=80=99ve seen somewhat similar reports on 6.6.88 and 6.6.77, =
-but those might have been different outliers.
->>>>=20
->>>> I=E2=80=99m attaching 3 logs - my intuition and the data so far =
-leads me to consider this might be a kernel bug. I haven=E2=80=99t found =
-a way to reproduce this, yet.
->>>=20
->>> =46rom a first glance, these machines are struggling because IO =
-contention as you
->>> mentioned, more often than not they seem to be stalling waiting for =
-log space to
->>> be freed, so any operation in the FS gets throttled while the =
-journal isn't
->>> written back. If you have a small enough journal it will need to =
-issue IO often
->>> enough to cause IO contention. So, I'd point it to a slow storage or =
-small
->>> enough log area (or both).
->>=20
->> Yeah, my current analysis didn=E2=80=99t show any storage performance =
-issues. I=E2=80=99ll revisit this once more to make sure I=E2=80=99m not =
-missing anything. We=E2=80=99ve previously had issues in this area that =
-turned out to be kernel bugs. We didn=E2=80=99t change anything =
-regarding journal sizes and only a recent kernel upgrade seemed to be =
-relevant.
->=20
-> You mentioned you saw PSI showing a huge pressure ration, during the =
-time, which
-> might be generated by the journal writeback and giving it's a SYNC =
-write, IOs
-> will stall if your storage can't write it fast enough. IIRC, most of =
-the threads
-> from the logs you shared were waiting for log space to be able to =
-continue,
-> which causes the log to flush things to disk and of course increase IO =
-usage.
-> If your storage can't handle these IO bursts, then you'll get the =
-stalls you're
-> seeing.
-> I am not discarding a possibility you are hitting a bug here, but it =
-so far
-> seems your storage is not being able to service IOs fast enough to =
-avoid such IO
-> stalls, or something else throttling IOs, XFS seems just the victim.
+Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
+---
+ fs/xfs/xfs_sysfs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Yeah, it=E2=80=99s annoying, I know. To paraphrase "any sufficiently =
-advanced bug is indistinguishable from slow storage=E2=80=9D. ;)=09
-
-As promised, I=E2=80=99ll dive deeper into the storage performance =
-analysis, all telemetry so far was completely innocuous, but it=E2=80=99s =
-a complex layering of SSDs =E2=86=92 Ceph =E2=86=92 Qemu =E2=80=A6 =
-Usually if we have performance issues then the metrics reflect this =
-quite obviously and will affect many machines at the same time. As this =
-has always just affected one single VM at a time but spread over time my =
-gut feeling is a bit more on the side of =E2=80=9Cit might be maybe a =
-bug=E2=80=9D. As those things tend to be hard/nasty to diagnose I wanted =
-to raise the flag early on to see whether other=E2=80=99s might be =
-having an =E2=80=9Caha=E2=80=9D moment if they=E2=80=99re experiencing =
-something similar.
-
-I=E2=80=99ll get back to you in 2-3 days with results from the storage =
-analysis.
-
-> Can you share the xfs_info of one of these filesystems? I'm curious =
-about the FS
-> geometry.
-
-Sure:
-
-# xfs_info /
-meta-data=3D/dev/disk/by-label/root isize=3D512    agcount=3D21, =
-agsize=3D655040 blks
-         =3D                       sectsz=3D512   attr=3D2, =
-projid32bit=3D1
-         =3D                       crc=3D1        finobt=3D1, sparse=3D1, =
-rmapbt=3D0
-         =3D                       reflink=3D1    bigtime=3D1 =
-inobtcount=3D1 nrext64=3D0
-         =3D                       exchange=3D0
-data     =3D                       bsize=3D4096   blocks=3D13106171, =
-imaxpct=3D25
-         =3D                       sunit=3D0      swidth=3D0 blks
-naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=3D1,=
- parent=3D0
-log      =3Dinternal log           bsize=3D4096   blocks=3D16384, =
-version=3D2
-         =3D                       sectsz=3D512   sunit=3D0 blks, =
-lazy-count=3D1
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, =
-rtextents=3D0
-
-# xfs_info /tmp/
-meta-data=3D/dev/vdb1              isize=3D512    agcount=3D8, =
-agsize=3D229376 blks
-         =3D                       sectsz=3D512   attr=3D2, =
-projid32bit=3D1
-         =3D                       crc=3D1        finobt=3D1, sparse=3D1, =
-rmapbt=3D0
-         =3D                       reflink=3D0    bigtime=3D0 =
-inobtcount=3D0 nrext64=3D0
-         =3D                       exchange=3D0
-data     =3D                       bsize=3D4096   blocks=3D1833979, =
-imaxpct=3D25
-         =3D                       sunit=3D1024   swidth=3D1024 blks
-naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=3D1,=
- parent=3D0
-log      =3Dinternal log           bsize=3D4096   blocks=3D2560, =
-version=3D2
-         =3D                       sectsz=3D512   sunit=3D8 blks, =
-lazy-count=3D1
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, =
-rtextents=3D0
-
-
->=20
->>=20
->>> There has been a few improvements though during Linux 6.9 on the log =
-performance,
->>> but I can't tell if you have any of those improvements around.
->>> I'd suggest you trying to run a newer upstream kernel, otherwise =
-you'll get very
->>> limited support from the upstream community. If you can't, I'd =
-suggest you
->>> reporting this issue to your vendor, so they can track what you =
-are/are not
->>> using in your current kernel.
->>=20
->> Yeah, we=E2=80=99ve started upgrading selected/affected projects to =
-6.12, to see whether this improves things.
->=20
-> Good enough.
->=20
->>=20
->>> FWIW, I'm not sure if NixOS uses linux-stable kernels or not. If =
-that's the
->>> case, running a newer kernel suggestion is still valid.
->>=20
->> We=E2=80=99re running the NixOS mainline versions which are very =
-vanilla. There are very very 4 small patches that only fix up things =
-around building and binary paths for helpers to call to adapt them to =
-the nix environment.
->=20
-> I see. There were some improvements in the newer versions, so if you =
-can rule
-> out any possibly fixed bug is worth it.
->=20
->=20
->>=20
->> Christian
->>=20
->>=20
->> --
->> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
->> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
->> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
->> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
-Theune, Christian Zagrodnick
-
-
---=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 7a5c5ef2db92..f7206e3edea2 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -257,7 +257,7 @@ larp_show(
+ 	struct kobject	*kobject,
+ 	char		*buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.larp);
++	return scnprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.larp);
+ }
+ XFS_SYSFS_ATTR_RW(larp);
+ 
+@@ -283,7 +283,7 @@ bload_leaf_slack_show(
+ 	struct kobject	*kobject,
+ 	char		*buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bload_leaf_slack);
++	return scnprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bload_leaf_slack);
+ }
+ XFS_SYSFS_ATTR_RW(bload_leaf_slack);
+ 
+@@ -309,7 +309,7 @@ bload_node_slack_show(
+ 	struct kobject	*kobject,
+ 	char		*buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bload_node_slack);
++	return scnprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bload_node_slack);
+ }
+ XFS_SYSFS_ATTR_RW(bload_node_slack);
+ 
+-- 
+2.49.0
 
