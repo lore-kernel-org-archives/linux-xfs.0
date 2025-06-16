@@ -1,106 +1,55 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1578F2E11CF;
-	Mon, 16 Jun 2025 05:48:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B0CE518E025;
+	Mon, 16 Jun 2025 07:48:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750052884; cv=none; b=RWJZTopeh34JuNxJmv1ToV2YVu6Xf8BNu22JFo3k080u52X/oJCnDjlPXtLXVDsMqCbEZF+y64pBNY5NnxPD85b76InkWaC5B32HFAff9a+ScB24LICrdRadltYunUeO8+BKWnuMV2zHi+QjaW+RGItYYV6qI0iXS4kIDqzm2EQ=
+	t=1750060101; cv=none; b=AS9NAZq9TlGYjvPZSMsX2jST+rN2KTFjXjhGf5kUFyQLPCz1x5aIwHzKmotXhnDohyfbFA4IUWj1pWsPPDvvGaEs2V5OycgcbGWRsTEp9tC9rhenWnl04lJXgg8g9VCUFZ1/KBfttEeN9gqAkTMCnPk6JsT8i54Ai9tYkiG321A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750052884; c=relaxed/simple;
-	bh=R1R7XJL/dhzJf9/hmRHHVbhhwCBr0Ta41EznGtut0IQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KuA7BFICfbJUcbVJc+of/g2IUXzHxC2XGILy7uc6KXSjBvclNzMTrJ2Qv5SgYngLE6d0FdITnijxeGWTIvIkhTEojbrtZHRRpSA4Imgr9TBLDdM5Hvk982JHUafz5YbUD6WQ4bvbskYoe+Yv2Yxw3rTKd2UVJjp8RFN5OvMyMR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=WU/F4j/Z; arc=none smtp.client-ip=220.197.31.2
+	s=arc-20240116; t=1750060101; c=relaxed/simple;
+	bh=+iIPmuYIR6F5LD+a0iF6PdJq5ltgbL412UY54MPIgwU=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=WCHTV0YOhCLN6m3fgCdS5C4yycleIz5DsmVNmL9oMmvR/8bpoW2BLWBjNptNrhQoUjU8KSLLVhunFk1QY8wqXya4azZnKdSz0/LUEyw3rFC2xCVlC4a6vF+EDSCjGlutZEDvxdXG/Av8z0RbPqFPWCeux0GwR8iz2QG5GhVXOjU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=bMTh2iGj; arc=none smtp.client-ip=117.135.210.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="WU/F4j/Z"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="bMTh2iGj"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=Jk
-	/BDnEMpsNlCN3FFv58EfDt4wHUty9REFl4NR/+Vps=; b=WU/F4j/ZQzxlOsOOTQ
-	KWFObuTa5MDsw4q+mg9BpFm6xC2SvVyNNbbfcI7rHQlID/vWi5rUSz/W4Ezavxmm
-	jqGN8jaaowDZS1unCTLJcIoRPEjXqSO7vEKKG3CCjOB0DmKC6DBQ7Ixes7N73evO
-	wnvfUS0bwTEIOnyIqLo2CFH+Q=
-Received: from chi-Redmi-Book.. (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wDXv+X5r09oXaT+IQ--.5361S2;
-	Mon, 16 Jun 2025 13:47:39 +0800 (CST)
-From: Chi Zhiling <chizhiling@163.com>
-To: brauner@kernel.org,
-	djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chi Zhiling <chizhiling@kylinos.cn>
-Subject: [PATCH] iomap: Reduce some calculations in iomap_adjust_read_range()
-Date: Mon, 16 Jun 2025 13:47:22 +0800
-Message-ID: <20250616054722.142310-1-chizhiling@163.com>
-X-Mailer: git-send-email 2.43.0
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:To:
+	Content-Type; bh=+iIPmuYIR6F5LD+a0iF6PdJq5ltgbL412UY54MPIgwU=;
+	b=bMTh2iGjANzqA0fkenXxijxFfsuq5hBLU1dpaT+kTeuFL1+ulIVofkiZUY3EnO
+	Y007zeOvFFxQ12wHOTN3I0/TazA3bjwADonDaQbZ3FwyLeU22khDK25PhTgm+I/y
+	0wg1wc21PXlETkky1e01YoGqrfubed6W+NVfVsyTiMVL4=
+Received: from [10.42.12.6] (unknown [])
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDXLrMxzE9okqQRIw--.24480S2;
+	Mon, 16 Jun 2025 15:48:01 +0800 (CST)
+Message-ID: <41095783-1f43-488b-880b-c0c1245d4640@163.com>
+Date: Mon, 16 Jun 2025 15:48:01 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDXv+X5r09oXaT+IQ--.5361S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Zr1kKryxCr1xuFWxArW7XFb_yoW8Ar13pr
-	yvkFWqkr4DWry09F10kFySqr95Ka97Wr45CFyfW34xXFZ8JrnIgr97Ga1Y9FW0vFs7XFnF
-	vr1kKryUZF4UAr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UP73PUUUUU=
-X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/1tbiKRZmnWhE8HbdegACsL
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] iomap: Reduce some calculations in
+ iomap_adjust_read_range()
+From: Chi Zhiling <chizhiling@163.com>
+To: brauner@kernel.org, djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Chi Zhiling <chizhiling@kylinos.cn>
+References: <20250616054722.142310-1-chizhiling@163.com>
+Content-Language: en-US
+In-Reply-To: <20250616054722.142310-1-chizhiling@163.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:_____wDXLrMxzE9okqQRIw--.24480S2
+X-Coremail-Antispam: 1Uf129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvj4RNL05UUUUU
+X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/xtbBgA9unWhPxTW0uwAAsk
 
-From: Chi Zhiling <chizhiling@kylinos.cn>
+On 2025/6/16 13:47, Chi Zhiling wrote:
+> From: Chi Zhiling <chizhiling@kylinos.cn>
 
-It's unnecessary to update the poff and plen in every loop, delay the
-calculations until return stage.
-
-Signed-off-by: Chi Zhiling <chizhiling@kylinos.cn>
----
- fs/iomap/buffered-io.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 3729391a18f3..0a1be45f7b96 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -233,7 +233,6 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
- 	loff_t orig_pos = *pos;
- 	loff_t isize = i_size_read(inode);
- 	unsigned block_bits = inode->i_blkbits;
--	unsigned block_size = (1 << block_bits);
- 	size_t poff = offset_in_folio(folio, *pos);
- 	size_t plen = min_t(loff_t, folio_size(folio) - poff, length);
- 	size_t orig_plen = plen;
-@@ -252,16 +251,12 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
- 		for (i = first; i <= last; i++) {
- 			if (!ifs_block_is_uptodate(ifs, i))
- 				break;
--			*pos += block_size;
--			poff += block_size;
--			plen -= block_size;
- 			first++;
- 		}
- 
- 		/* truncate len if we find any trailing uptodate block(s) */
- 		while (++i <= last) {
- 			if (ifs_block_is_uptodate(ifs, i)) {
--				plen -= (last - i + 1) * block_size;
- 				last = i - 1;
- 				break;
- 			}
-@@ -277,9 +272,13 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
- 		unsigned end = offset_in_folio(folio, isize - 1) >> block_bits;
- 
- 		if (first <= end && last > end)
--			plen -= (last - end) * block_size;
-+			last = end;
- 	}
- 
-+	poff = first << block_bits;
-+	plen = (last - first + 1) << block_bits;
-+	*pos = folio_pos(folio) + poff;
-+
- 	*offp = poff;
- 	*lenp = plen;
- }
--- 
-2.43.0
+I just noticed this patch has an issue, please ignore it.
 
