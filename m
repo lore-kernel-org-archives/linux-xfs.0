@@ -1,71 +1,106 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F336135947;
-	Mon, 16 Jun 2025 05:39:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1578F2E11CF;
+	Mon, 16 Jun 2025 05:48:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750052349; cv=none; b=e58LyCl1K9vOD1xd9YHnfrweQuEjorVFVQ8A8s8cSHhb8tlSeFyskBl3qm+H1JYWoE9BMDi1KjGncCa8cSvEFceCBk3gMGk+Eq50VoQi675WBPkHzBb6aUCkNzkgHkWXIwyibAsaz/lseQPG3kbkcYf6+f1CxCHd9OBJlaR5LHU=
+	t=1750052884; cv=none; b=RWJZTopeh34JuNxJmv1ToV2YVu6Xf8BNu22JFo3k080u52X/oJCnDjlPXtLXVDsMqCbEZF+y64pBNY5NnxPD85b76InkWaC5B32HFAff9a+ScB24LICrdRadltYunUeO8+BKWnuMV2zHi+QjaW+RGItYYV6qI0iXS4kIDqzm2EQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750052349; c=relaxed/simple;
-	bh=STav/yxP0DU2hAiPDTbOJaqsMjK8vZu+DSN1dLJfplU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iBj7pAJ3bQTJ1eUMd5OpW9oaXSaXkagPxahu2I/FpvX6HK90GAMAKtPnDkC7SoX2r9Bp5XEl1SexaaU+FfuYwIVRreD9TI3X5F2bQK3kFQgPxt15tD0FM+1/ckYaeOBxZzwfiIP0LmjcxKQSYVUQM2TG0A277HoS2NLB3G7bkfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 2C15E68BFE; Mon, 16 Jun 2025 07:39:02 +0200 (CEST)
-Date: Mon, 16 Jun 2025 07:39:01 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tytso@mit.edu, john.g.garry@oracle.com, bmarzins@redhat.com,
-	chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
-	brauner@kernel.org, martin.petersen@oracle.com, yi.zhang@huawei.com,
-	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH 01/10] block: introduce BLK_FEAT_WRITE_ZEROES_UNMAP to
- queue limits features
-Message-ID: <20250616053901.GA1533@lst.de>
-References: <20250604020850.1304633-2-yi.zhang@huaweicloud.com> <20250611060900.GA4613@lst.de> <343f7f06-9bf6-442f-8e77-0a774203ec3f@huaweicloud.com> <20250612044744.GA12828@lst.de> <41c21e20-5439-4157-ad73-6f133df42d28@huaweicloud.com> <20250612150347.GK6138@frogsfrogsfrogs> <3569a77f-1f38-4764-b1e3-d0075775c7bb@huaweicloud.com> <20250613055630.GA9119@lst.de> <20250613145433.GF6134@frogsfrogsfrogs> <3d749264-6fdd-458f-a3a8-35d2320193b3@huaweicloud.com>
+	s=arc-20240116; t=1750052884; c=relaxed/simple;
+	bh=R1R7XJL/dhzJf9/hmRHHVbhhwCBr0Ta41EznGtut0IQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KuA7BFICfbJUcbVJc+of/g2IUXzHxC2XGILy7uc6KXSjBvclNzMTrJ2Qv5SgYngLE6d0FdITnijxeGWTIvIkhTEojbrtZHRRpSA4Imgr9TBLDdM5Hvk982JHUafz5YbUD6WQ4bvbskYoe+Yv2Yxw3rTKd2UVJjp8RFN5OvMyMR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=WU/F4j/Z; arc=none smtp.client-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="WU/F4j/Z"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=Jk
+	/BDnEMpsNlCN3FFv58EfDt4wHUty9REFl4NR/+Vps=; b=WU/F4j/ZQzxlOsOOTQ
+	KWFObuTa5MDsw4q+mg9BpFm6xC2SvVyNNbbfcI7rHQlID/vWi5rUSz/W4Ezavxmm
+	jqGN8jaaowDZS1unCTLJcIoRPEjXqSO7vEKKG3CCjOB0DmKC6DBQ7Ixes7N73evO
+	wnvfUS0bwTEIOnyIqLo2CFH+Q=
+Received: from chi-Redmi-Book.. (unknown [])
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wDXv+X5r09oXaT+IQ--.5361S2;
+	Mon, 16 Jun 2025 13:47:39 +0800 (CST)
+From: Chi Zhiling <chizhiling@163.com>
+To: brauner@kernel.org,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Chi Zhiling <chizhiling@kylinos.cn>
+Subject: [PATCH] iomap: Reduce some calculations in iomap_adjust_read_range()
+Date: Mon, 16 Jun 2025 13:47:22 +0800
+Message-ID: <20250616054722.142310-1-chizhiling@163.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3d749264-6fdd-458f-a3a8-35d2320193b3@huaweicloud.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDXv+X5r09oXaT+IQ--.5361S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Zr1kKryxCr1xuFWxArW7XFb_yoW8Ar13pr
+	yvkFWqkr4DWry09F10kFySqr95Ka97Wr45CFyfW34xXFZ8JrnIgr97Ga1Y9FW0vFs7XFnF
+	vr1kKryUZF4UAr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UP73PUUUUU=
+X-CM-SenderInfo: hfkl6xxlol0wi6rwjhhfrp/1tbiKRZmnWhE8HbdegACsL
 
-On Sat, Jun 14, 2025 at 12:48:26PM +0800, Zhang Yi wrote:
-> >> Maybe we should redo this similar to the other hardware/software interfaces
-> >> and have a hw_ limit that is exposed by the driver and re-only in
-> >> sysfs, and then the user configurable one without _hw.  Setting it to
-> >> zero disables the feature.
-> > 
-> > Yeah, that fits the /sys/block/foo/queue model better.
-> > 
-> 
-> OK, well. Please let me confirm, are you both suggesting adding
-> max_hw_write_zeores_unmap_sectors and max_write_zeroes_unmap_sectors to
-> the queue_limits instead of adding BLK_FEAT_WRITE_ZEROES_UNMAP to the
-> queue_limits->features. Something like the following.
+From: Chi Zhiling <chizhiling@kylinos.cn>
 
-Yes.
+It's unnecessary to update the poff and plen in every loop, delay the
+calculations until return stage.
 
-> Besides, we should also rename max_write_zeroes_sectors to
-> max_hw_write_zeroes_sectors since it is a hardware limitation reported
-> by the driver.  If the device supports unmap write zeroes,
-> max_hw_write_zeores_unmap_sectors should be equal to
-> max_hw_write_zeroes_sectors, otherwise it should be 0.
+Signed-off-by: Chi Zhiling <chizhiling@kylinos.cn>
+---
+ fs/iomap/buffered-io.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-We've only done the hw names when we allow and overwrite or cap based
-on other values.  So far we've not done any of that to
-max_write_zeroes_sectors.
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 3729391a18f3..0a1be45f7b96 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -233,7 +233,6 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
+ 	loff_t orig_pos = *pos;
+ 	loff_t isize = i_size_read(inode);
+ 	unsigned block_bits = inode->i_blkbits;
+-	unsigned block_size = (1 << block_bits);
+ 	size_t poff = offset_in_folio(folio, *pos);
+ 	size_t plen = min_t(loff_t, folio_size(folio) - poff, length);
+ 	size_t orig_plen = plen;
+@@ -252,16 +251,12 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
+ 		for (i = first; i <= last; i++) {
+ 			if (!ifs_block_is_uptodate(ifs, i))
+ 				break;
+-			*pos += block_size;
+-			poff += block_size;
+-			plen -= block_size;
+ 			first++;
+ 		}
+ 
+ 		/* truncate len if we find any trailing uptodate block(s) */
+ 		while (++i <= last) {
+ 			if (ifs_block_is_uptodate(ifs, i)) {
+-				plen -= (last - i + 1) * block_size;
+ 				last = i - 1;
+ 				break;
+ 			}
+@@ -277,9 +272,13 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
+ 		unsigned end = offset_in_folio(folio, isize - 1) >> block_bits;
+ 
+ 		if (first <= end && last > end)
+-			plen -= (last - end) * block_size;
++			last = end;
+ 	}
+ 
++	poff = first << block_bits;
++	plen = (last - first + 1) << block_bits;
++	*pos = folio_pos(folio) + poff;
++
+ 	*offp = poff;
+ 	*lenp = plen;
+ }
+-- 
+2.43.0
 
