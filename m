@@ -1,95 +1,92 @@
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.hostedemail.com (smtprelay0011.hostedemail.com [216.40.44.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23A111C700D;
-	Mon, 16 Jun 2025 19:18:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 796721C700D;
+	Mon, 16 Jun 2025 19:18:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750101515; cv=none; b=YhcDcQZ4zzdlM25/0Bc94LZwYYso5qqGPWO4RQqEmxqmwpM8O3F0HSl9DchYWxl+2NZysaW9VJSkfxQYIPmlLAeV/ezN3SzGbGKeN4/16JoymKycHxJyPPmolDOLl6P4O3u+Op+ZwJsyXrYeEsYT7F9dPmiTkRJxpOfc2uwzLLM=
+	t=1750101535; cv=none; b=Zf79Q5Bg2odi8Zbo5tGnmu7TxQs1rxqw6ULzUBOgQfT7uJZUK07i5ssSJ9C2a7CeTfryTbxSGzpvS870SPmqzpD5fOAC/4pT8Igvi7a6Qtyyb0LfOdHoaf6wKKA/+bk+TcCXcidk8hb+i2tHXq+mJEoh1c/k2Q3+Us8getYO+Yk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750101515; c=relaxed/simple;
-	bh=i3usSHq05lye4YAButT+z5zjsiYafSPrxVulHWX24jY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ITqaCMFGyzzS13T8tXVARISk0/H+DFM8lln6PSruEof8D8Q/4KMXbrSX5oSdCpCQZikl1Qgq20ZBsd6VwiIrdV3rCNTlTuXCLveWyY6X/uHl5Ug6cMzzaEYrPdBZdrZaamDL8tJUaWPZ1Stas4uuU5hHSqapoomJBCRGukrKbmw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CrqBp/8p; arc=none smtp.client-ip=209.85.160.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CrqBp/8p"
-Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-4a44b9b2af8so29061261cf.3;
-        Mon, 16 Jun 2025 12:18:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750101513; x=1750706313; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MRscOyiPDdIukuM1LuwvCupynaovV01bVsU6lmvejUI=;
-        b=CrqBp/8p49R0vC+7L5002kQ/xVhSE+LPmxqXbGy0c0TKUcCgYpJYisYVUO1ixf1QhT
-         yYNkrb1MnMy2k7z8CwwJUqtsOIPIYbAK4DrfP67KpGEfePxKzrI31SRtiXLczOMxU6J3
-         z3ygFOBRfdCMnuSUjkmOTFc12pi/rL7xD/RHkupzr0gTCrL/h2l6DSfa0bayXHmDSejM
-         tqTfAZf4tkbBccousGGi8cPpx/L2Gt0QscmfLn8rLEvHjsSqv9yo70VjpVLGdttrxuo+
-         ezZ31YGfSAU/ty9ZNxPyHx/TXytD2EsiBaj/aOlXzLTrqLK2W+1XytpHEBp1paYZlYFn
-         GeVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750101513; x=1750706313;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=MRscOyiPDdIukuM1LuwvCupynaovV01bVsU6lmvejUI=;
-        b=Isu/hitaXLyXinvDOhDLBmvQKMCmu2P29WGut5PvBk4RuBnX4jH8NibGq2ZhGtXK7X
-         z7cq9jHauHM5r8moAM4r7ujHCWEQnxLdRAE+vkW4oUEAGavKcphqNuxyJlbY3Mo3VXNM
-         TKpyyIxkUPskD8iY/0v5K0E0mhD8gETJAXbbqlG03ZhhT8RoZXyswUvhDoSfAYx/VLqG
-         68kmmwxOJ9am5kWrRyd4j1AUluLJiEoNj6j7pDEFYC93G5g6zSQyAA5cbhB/EwbPrnVc
-         TNbEhmRxOwy3MvMU21bB5GOBMaYeNaSWH91lK0CmzkZBnXwXg8GSYquu4CEFej8sCrmZ
-         4+Qw==
-X-Forwarded-Encrypted: i=1; AJvYcCUegslpC5byuVEAkulOf0nv2PPMovafAAVba0nNVw8REcqGneTZXeqd/ogboc/KcszyFWj/Kqv3R6Q=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx5S0m279nJtZltAbC1097tx0fKrJmbYBMxrtnqS7shZqUh8nvA
-	8xeNlZ1KkqMm5oaVhttqTBKVGX8BAHao3OQJHLePhlBFbhsukTUmJErJKFjWjNrRCRBA4t7OFJR
-	47I/lg2Bga8bcqv1NtOpmX0yS4zPZ9UY=
-X-Gm-Gg: ASbGnct0P4BHtb5bkgsm61+6YK/q458/PP5+H/pEV13s6qKr/uVIjPWfgL6JrRT0D7E
-	ETj2LOfVrNiEsSU4DjOZ6TxBqu63cgDi01yOQGgHXlsbMFWd2L/mHVWk2Z1SobaNI7brBd5kiLi
-	xYAsXULuE1H6zOtNBQdMp5R6FpkxuENxH+22KH77I8GOeKwgjK/A8pdoHwT1o=
-X-Google-Smtp-Source: AGHT+IGanSFdRr8alb8GIG7qh8kKZrwi+dTnT8UozhNrNun6ozqmwD/7HzwczW9L51UIK/OrPnB5rwdNNKqCRXC9Jfc=
-X-Received: by 2002:ac8:5f48:0:b0:494:b258:abbf with SMTP id
- d75a77b69052e-4a73c5cb7e8mr171859261cf.52.1750101513062; Mon, 16 Jun 2025
- 12:18:33 -0700 (PDT)
+	s=arc-20240116; t=1750101535; c=relaxed/simple;
+	bh=EpxFWOeKKzby0k/IoO779qDJQTpZINzLmss4VsjsOO4=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=COZKo8NQMBEiwCcig7Wc0gEUtewOsTZwVJ3M1gSL3jxg6K1UAJ7sz/PzLpmqP5QHJOVat+b8bG+vEVcyTueWFUu6dBVImkIQNYfUVaee3glHQ+PqISX/cEZBDoS0i0vKu3yMXUndFyfSbh/jzWTBgpR5QoV8GQfi2R1t2lru+fk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
+Received: from omf01.hostedemail.com (a10.router.float.18 [10.200.18.1])
+	by unirelay07.hostedemail.com (Postfix) with ESMTP id 0750416032C;
+	Mon, 16 Jun 2025 19:18:51 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf01.hostedemail.com (Postfix) with ESMTPA id C50A46000C;
+	Mon, 16 Jun 2025 19:18:49 +0000 (UTC)
+Date: Mon, 16 Jun 2025 15:18:48 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Cc: Masami Hiramatsu <mhiramat@kernel.org>, Mark Rutland
+ <mark.rutland@arm.com>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Carlos  Maiolino
+ <cem@kernel.org>, Christoph Hellwig <hch@lst.de>, "Darrick J. Wong"
+ <djwong@kernel.org>
+Subject: Re: [PATCH v2 00/13] xfs: tracing: remove unused event
+ xfs_reflink_cow_found
+Message-ID: <20250616151848.36ddcee5@batman.local.home>
+In-Reply-To: <20250616175146.813055227@goodmis.org>
+References: <20250616175146.813055227@goodmis.org>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250613214642.2903225-1-joannelkoong@gmail.com>
- <20250613214642.2903225-5-joannelkoong@gmail.com> <aFAS9SMi1GkqFVg2@infradead.org>
-In-Reply-To: <aFAS9SMi1GkqFVg2@infradead.org>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Mon, 16 Jun 2025 12:18:21 -0700
-X-Gm-Features: AX0GCFsQrajJX7sQSu2P1t4Ggo8n2ojaWd77hr2Ye9txQywDhy1VBaDBGUadOK8
-Message-ID: <CAJnrk1ZCeeVumEaMy+kxqqwn3n1gtSBjtCGUrT1nctjnJaKkZA@mail.gmail.com>
-Subject: Re: [PATCH v2 04/16] iomap: add wrapper function iomap_bio_readpage()
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, djwong@kernel.org, anuj1072538@gmail.com, 
-	miklos@szeredi.hu, brauner@kernel.org, linux-xfs@vger.kernel.org, 
-	kernel-team@meta.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Rspamd-Queue-Id: C50A46000C
+X-Rspamd-Server: rspamout08
+X-Stat-Signature: t8djaqg6jmxc3r9qw4a4cdjrsbrwpznt
+X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
+X-Session-ID: U2FsdGVkX19sFy0mMt69Phvj+J8Y/DQjMU5FGDu9ueY=
+X-HE-Tag: 1750101529-661037
+X-HE-Meta: U2FsdGVkX19WkZNorP5ucOpv6p01Ousfxni3d9I9O6JFDXYkkCSBUjIBDSGuoT07HgwIoEeRO4OcxARt7CeH36+t4981QWdE9DKFdDZPY8+OlCMOYziQTfg7ck4g2iXgxYhgvHNOoGqKF02FST9REKID5i+Wkwnc9RvJjDhCqAXBCzgyv4Ng1VDduqPZCs8pyXXTxxZ45KLvWTlo+LaUjhY0ERK+KM+xIiOksvhe+VCcliubHDThRrfdZPA1MoALQez8xEKvysSP9R4rr2ks7gEslofQtc/QTvtfHAegTt6gPh24EiUFUqaSgARKwHDHV0XXDC2MDjhurUBlQKxAQyLReROr9Fv6Iu5poGEURYLJHT6ijZdPAcJwEBmDYgpNmlShi+NhmlJl+Vja5tFOKg==
 
-On Mon, Jun 16, 2025 at 5:49=E2=80=AFAM Christoph Hellwig <hch@infradead.or=
-g> wrote:
->
-> On Fri, Jun 13, 2025 at 02:46:29PM -0700, Joanne Koong wrote:
-> > Add a wrapper function, iomap_bio_readpage(), around the bio readpage
-> > logic so that callers that do not have CONFIG_BLOCK set may also use
-> > iomap for buffered io.
->
-> As far as I can tell nothing in this series actually uses the non-block
-> read path, and I also don't really understand how the current split
-> would facilitate that.  Can you explain a bit more where this is going?
->
 
-Nothing in this series uses the iomap read path, but fuse might be
-used in environments where CONFIG_BLOCK isn't set. What I'm trying to
-do with this patch is move the logic in iomap readpage that's block /
-bio dependent out of buffered-io.c and gate that behind a #ifdef
-CONFIG_BLOCK check so that fuse can use buffered-io.c without breaking
-compilation for non-CONFIG_BLOCK environments
+Bah, I hate the multiple clipboards of the Linux desktop. I had cut and
+pasted the above subject line in one clipboard and then cut the subject
+I wanted in another, and unfortunately pasted the former :-p
+
+This is what the subject was supposed to be:
+
+  "xfs: remove unused trace events"
+
+
+On Mon, 16 Jun 2025 13:51:46 -0400
+Steven Rostedt <rostedt@goodmis.org> wrote:
+
+> Trace events take up to 5K in memory for text and meta data. I have code that
+> will trigger a warning when it detects unused tracepoints[1]. The XFS file
+> system contains many events that are not called. Most of them used to be called
+> but due to code refactoring the calls were removed but the trace events stayed
+> behind.
+> 
+> Some events were added but never used. If they were recent, I just reported
+> them, but if they were older, this series simply removes them.
+> 
+> One is called only when CONFIG_COMPACT is defined, so an #ifdef was placed
+> around it.
+> 
+> Finally, one event is supposed to be a trace event class, but was created with
+> the TRACE_EVENT() macro and not the DECLARE_EVENT_CLASS() macro. This works
+> because a TRACE_EVENT() is simply a DECLARE_EVENT_CLASS() and DEFINE_EVENT()
+> where the class and event have the same name. But as this was a mistake, the
+> event created should not exist.
+> 
+> [1] https://patchwork.kernel.org/project/linux-trace-kernel/cover/20250612235827.011358765@goodmis.org/
+> 
+> Changes since v1: https://lore.kernel.org/linux-trace-kernel/20250612212405.877692069@goodmis.org/
+
+And this should have been to the lore link and not patchwork:
+
+  https://lore.kernel.org/linux-trace-kernel/20250612235827.011358765@goodmis.org/
+
+-- Steve
