@@ -1,58 +1,58 @@
-Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
+Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A94021D585;
-	Mon, 16 Jun 2025 18:49:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23A111C700D;
+	Mon, 16 Jun 2025 19:18:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750099783; cv=none; b=uBOAGGfq6IsqCdIZXUII2GgpFAs4u1Dub+2xTYjnD3SKOePGsbrars+w2fCcAFiKXexoyWhQwdQmLSMunhM+NwwlBSE9A682VkHso7ic7KQARcOE7P79xK9HETzf1OzeUnbuXQvw4lg732snTdS6Y27sXNm6zZ2hsg07v6k3r+k=
+	t=1750101515; cv=none; b=YhcDcQZ4zzdlM25/0Bc94LZwYYso5qqGPWO4RQqEmxqmwpM8O3F0HSl9DchYWxl+2NZysaW9VJSkfxQYIPmlLAeV/ezN3SzGbGKeN4/16JoymKycHxJyPPmolDOLl6P4O3u+Op+ZwJsyXrYeEsYT7F9dPmiTkRJxpOfc2uwzLLM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750099783; c=relaxed/simple;
-	bh=9qQ61Kp9umUHi4GxqExw5FJpuvThBeB78u+krMUOoCY=;
+	s=arc-20240116; t=1750101515; c=relaxed/simple;
+	bh=i3usSHq05lye4YAButT+z5zjsiYafSPrxVulHWX24jY=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Bg5ahCRL+O2/2BNTQeuUdSZPaDhGF6fQV3hJSxvxQ3H9EYHEDNosdJgWE+VSIoyAi5OoOgK8Raxj0JHXRNls3eiJre0FEFnjxszDZvuUMB/Yi9NI33ONxfi+G8319c/C99qh943RZYcuTwzgaQzv9eHGCXb2b9dGmEZUO7mBdfQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZxLFR8cQ; arc=none smtp.client-ip=209.85.160.171
+	 To:Cc:Content-Type; b=ITqaCMFGyzzS13T8tXVARISk0/H+DFM8lln6PSruEof8D8Q/4KMXbrSX5oSdCpCQZikl1Qgq20ZBsd6VwiIrdV3rCNTlTuXCLveWyY6X/uHl5Ug6cMzzaEYrPdBZdrZaamDL8tJUaWPZ1Stas4uuU5hHSqapoomJBCRGukrKbmw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CrqBp/8p; arc=none smtp.client-ip=209.85.160.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZxLFR8cQ"
-Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-4a44b0ed780so71726051cf.3;
-        Mon, 16 Jun 2025 11:49:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CrqBp/8p"
+Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-4a44b9b2af8so29061261cf.3;
+        Mon, 16 Jun 2025 12:18:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750099780; x=1750704580; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1750101513; x=1750706313; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ZbNgm74YKelcUXDbOCv5OUWQbQ2/2H3RfdKt5p5VlZA=;
-        b=ZxLFR8cQwgmRsWpY0v6qB7JRsTNDSDVBDgwI4+Tsaf/WsDD/lbhFx0MYJfgsAaBXns
-         LUDUMLXDveGI9eq1p5o+CiF9gVx0/g6kcyXcpBtMqtHFU4+ez1ya+TZEYibWoUMBAl00
-         cJAvLD1Fb3ao/TzjkUTc7DHydIbh76vHm2GTMfLcHAqjmV1m+IzXWvudsBdtSvhlyaxD
-         Dk2/5n5xoL7L09moRTN/cjbFdQ3x/gRJUmaMSLevAWZ4VeIxJ+gdFjHzjf6RPM1AaQyo
-         bJmaN1B8r7p4AxMKKuxIcsf34VR8RNRSK0HwdlzZ5vp02KaKsAPN8KYrhJLlvaIHRISq
-         haUg==
+        bh=MRscOyiPDdIukuM1LuwvCupynaovV01bVsU6lmvejUI=;
+        b=CrqBp/8p49R0vC+7L5002kQ/xVhSE+LPmxqXbGy0c0TKUcCgYpJYisYVUO1ixf1QhT
+         yYNkrb1MnMy2k7z8CwwJUqtsOIPIYbAK4DrfP67KpGEfePxKzrI31SRtiXLczOMxU6J3
+         z3ygFOBRfdCMnuSUjkmOTFc12pi/rL7xD/RHkupzr0gTCrL/h2l6DSfa0bayXHmDSejM
+         tqTfAZf4tkbBccousGGi8cPpx/L2Gt0QscmfLn8rLEvHjsSqv9yo70VjpVLGdttrxuo+
+         ezZ31YGfSAU/ty9ZNxPyHx/TXytD2EsiBaj/aOlXzLTrqLK2W+1XytpHEBp1paYZlYFn
+         GeVA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750099780; x=1750704580;
+        d=1e100.net; s=20230601; t=1750101513; x=1750706313;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ZbNgm74YKelcUXDbOCv5OUWQbQ2/2H3RfdKt5p5VlZA=;
-        b=uG5wmybjO1DfQx042eNviRHscxAQb4rFklIvK73RPaVNTUOrTh6BAOVfHyGMHkCAfy
-         D5GD7uQslvmy1GP6k2urtCOgaOyv5wHzSLGfavO4t4TxcoZ59RfniCM4JhI/tOqJT356
-         Zzq3gAd3C2bfnXd4zRf6HBxeq5OQmL6FL1l7hWFl66Lt7im0BJPEnKHnqzMq4R91oYMO
-         9OLEi1lTPAQsCgeH8GuO7x9TDssgx6AmYeZwSv/p77jXtJZpI6plgqx0xwI90lijVdoP
-         hm1F3cTDp253B6SEyLIMGis6s1G6Sh5W820l88e6Y/TIPeZAEQvJQbtH9y99+SoE/qXO
-         GtbA==
-X-Forwarded-Encrypted: i=1; AJvYcCUNEJIJ9R88CpcpXRIxMOmF5LAvQruUqTcQqXT3OPsgALYRTPr0/nOgzTvDPWR5W3tRAbQnOD0dyjc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyH1d7qrimwO4ybTAPaS49GZMRlJ0aJYOIbDxcKw5U6QI1rjzv1
-	/BiQS0aGCuhPxJEo2qqkXwOrDan0EUUGYisK2pyQ4y2V6y1+elmdaTRXQIMgLpnhBVvC5p1FWwA
-	XQMK/I6z1rJgV/fskHDCPQcfohRw9Jc+wIIsa
-X-Gm-Gg: ASbGncsn9b42lPphTPEXgfi7ZDdX+gFxJgBoaNztB+IOvsV/ZGlNuNOK2Qv5iIGfCBW
-	jaaGo7pos4zpCwdz8y2RpBozLYvyVggNHQvXrx1gwvGgekDLZwUUo2aNryEPknIFOovr71Z96ZF
-	GBlvAG3ULZyDElPPWNgG/m0evbvkCgrlIMvawXBW+V0ijdJeQdlxpkzReUKo4=
-X-Google-Smtp-Source: AGHT+IGLpiMCmBeTSbFoQsIrZlhUdYB0kqAULHCAu+w8Mgtog6QDPt8QCC8hl4dZyD8ugor7d/G7sgZ9V4+SDzgTRtQ=
-X-Received: by 2002:ac8:58c8:0:b0:4a5:9b9c:2d9f with SMTP id
- d75a77b69052e-4a73c4fce3dmr182509771cf.2.1750099780359; Mon, 16 Jun 2025
- 11:49:40 -0700 (PDT)
+        bh=MRscOyiPDdIukuM1LuwvCupynaovV01bVsU6lmvejUI=;
+        b=Isu/hitaXLyXinvDOhDLBmvQKMCmu2P29WGut5PvBk4RuBnX4jH8NibGq2ZhGtXK7X
+         z7cq9jHauHM5r8moAM4r7ujHCWEQnxLdRAE+vkW4oUEAGavKcphqNuxyJlbY3Mo3VXNM
+         TKpyyIxkUPskD8iY/0v5K0E0mhD8gETJAXbbqlG03ZhhT8RoZXyswUvhDoSfAYx/VLqG
+         68kmmwxOJ9am5kWrRyd4j1AUluLJiEoNj6j7pDEFYC93G5g6zSQyAA5cbhB/EwbPrnVc
+         TNbEhmRxOwy3MvMU21bB5GOBMaYeNaSWH91lK0CmzkZBnXwXg8GSYquu4CEFej8sCrmZ
+         4+Qw==
+X-Forwarded-Encrypted: i=1; AJvYcCUegslpC5byuVEAkulOf0nv2PPMovafAAVba0nNVw8REcqGneTZXeqd/ogboc/KcszyFWj/Kqv3R6Q=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx5S0m279nJtZltAbC1097tx0fKrJmbYBMxrtnqS7shZqUh8nvA
+	8xeNlZ1KkqMm5oaVhttqTBKVGX8BAHao3OQJHLePhlBFbhsukTUmJErJKFjWjNrRCRBA4t7OFJR
+	47I/lg2Bga8bcqv1NtOpmX0yS4zPZ9UY=
+X-Gm-Gg: ASbGnct0P4BHtb5bkgsm61+6YK/q458/PP5+H/pEV13s6qKr/uVIjPWfgL6JrRT0D7E
+	ETj2LOfVrNiEsSU4DjOZ6TxBqu63cgDi01yOQGgHXlsbMFWd2L/mHVWk2Z1SobaNI7brBd5kiLi
+	xYAsXULuE1H6zOtNBQdMp5R6FpkxuENxH+22KH77I8GOeKwgjK/A8pdoHwT1o=
+X-Google-Smtp-Source: AGHT+IGanSFdRr8alb8GIG7qh8kKZrwi+dTnT8UozhNrNun6ozqmwD/7HzwczW9L51UIK/OrPnB5rwdNNKqCRXC9Jfc=
+X-Received: by 2002:ac8:5f48:0:b0:494:b258:abbf with SMTP id
+ d75a77b69052e-4a73c5cb7e8mr171859261cf.52.1750101513062; Mon, 16 Jun 2025
+ 12:18:33 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -60,13 +60,13 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20250613214642.2903225-1-joannelkoong@gmail.com>
- <20250613214642.2903225-10-joannelkoong@gmail.com> <aFATg58omJ2405xC@infradead.org>
-In-Reply-To: <aFATg58omJ2405xC@infradead.org>
+ <20250613214642.2903225-5-joannelkoong@gmail.com> <aFAS9SMi1GkqFVg2@infradead.org>
+In-Reply-To: <aFAS9SMi1GkqFVg2@infradead.org>
 From: Joanne Koong <joannelkoong@gmail.com>
-Date: Mon, 16 Jun 2025 11:49:29 -0700
-X-Gm-Features: AX0GCFvBUNWuSpPPwssnIdbnfMc4X1HhAR1N3Dkoa9SeH6VgFYK4K-hGJ-eEvmQ
-Message-ID: <CAJnrk1a934dLVLjUo2hy1jTo4B6xcj4ODMRb_YO8aM7CfquUfg@mail.gmail.com>
-Subject: Re: [PATCH v2 09/16] iomap: change 'count' to 'async_writeback'
+Date: Mon, 16 Jun 2025 12:18:21 -0700
+X-Gm-Features: AX0GCFsQrajJX7sQSu2P1t4Ggo8n2ojaWd77hr2Ye9txQywDhy1VBaDBGUadOK8
+Message-ID: <CAJnrk1ZCeeVumEaMy+kxqqwn3n1gtSBjtCGUrT1nctjnJaKkZA@mail.gmail.com>
+Subject: Re: [PATCH v2 04/16] iomap: add wrapper function iomap_bio_readpage()
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-fsdevel@vger.kernel.org, djwong@kernel.org, anuj1072538@gmail.com, 
 	miklos@szeredi.hu, brauner@kernel.org, linux-xfs@vger.kernel.org, 
@@ -74,17 +74,22 @@ Cc: linux-fsdevel@vger.kernel.org, djwong@kernel.org, anuj1072538@gmail.com,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jun 16, 2025 at 5:52=E2=80=AFAM Christoph Hellwig <hch@infradead.or=
+On Mon, Jun 16, 2025 at 5:49=E2=80=AFAM Christoph Hellwig <hch@infradead.or=
 g> wrote:
 >
-> On Fri, Jun 13, 2025 at 02:46:34PM -0700, Joanne Koong wrote:
-> > Rename "count" to "async_writeback" to better reflect its function and
-> > since it is used as a boolean, change its type from unsigned to bool.
+> On Fri, Jun 13, 2025 at 02:46:29PM -0700, Joanne Koong wrote:
+> > Add a wrapper function, iomap_bio_readpage(), around the bio readpage
+> > logic so that callers that do not have CONFIG_BLOCK set may also use
+> > iomap for buffered io.
 >
-> Not sure async_writeback is really the right name here, the way it is
-> used is just that there is any writeback going on.  Which generally
-> is asynchronous as otherwise performance would suck, but the important
-> bit is that the responsibility for finishing the folio writeback shifted
-> to the caller.
+> As far as I can tell nothing in this series actually uses the non-block
+> read path, and I also don't really understand how the current split
+> would facilitate that.  Can you explain a bit more where this is going?
+>
 
-I like your name "wb_pending" a lot better.
+Nothing in this series uses the iomap read path, but fuse might be
+used in environments where CONFIG_BLOCK isn't set. What I'm trying to
+do with this patch is move the logic in iomap readpage that's block /
+bio dependent out of buffered-io.c and gate that behind a #ifdef
+CONFIG_BLOCK check so that fuse can use buffered-io.c without breaking
+compilation for non-CONFIG_BLOCK environments
