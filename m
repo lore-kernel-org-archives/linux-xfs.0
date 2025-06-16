@@ -1,31 +1,31 @@
-Received: from relay.hostedemail.com (smtprelay0012.hostedemail.com [216.40.44.12])
+Received: from relay.hostedemail.com (smtprelay0011.hostedemail.com [216.40.44.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4219E288C2D;
-	Mon, 16 Jun 2025 17:52:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A13AD28A1D5;
+	Mon, 16 Jun 2025 17:53:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750096380; cv=none; b=RCU7tCw0fgzlG/YJcRltPrUj6HZpyAGoICeq7gJ+P9eAGja97R5xT4wcbCWc4NvcF0SIcKNawLueuH/Vw6mv5EPiimt8LnJh/aMI7j5obFbsSbihhCI1sFkIGhCzRApCmrbvC+INUHxw6N8UP2K5iyCvT/ApjsVk1TN2A8Wg6zE=
+	t=1750096383; cv=none; b=nklz6qNQLdRBUnx5KyLz7+E2OjFvjDIVUwgdn2fxLxukUDw0qjeIlcetCXREnqF/uygKjPe7cgo1vobSkTaXOO6AWZWqIhgkzyG+YwBv1YeSo+WMgDX+bngLwVY+kKFvJmDXSTE7NniK935ctXzljgNG65oT0wEStqUx2N6jh9M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750096380; c=relaxed/simple;
-	bh=GkX6+5ssbSsWC2eRweu5p5dS6b/weFQGhxl3Vz1yWm4=;
+	s=arc-20240116; t=1750096383; c=relaxed/simple;
+	bh=a/MfSuVozGAacAKmarZnQF0n0dIVocJeRNqB4nOy+Qk=;
 	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=scRzjFWl2njWgnCzZ04rY67l5OFJNlDrHObsiZsM0GoTGZmYnP/oir+EaSFiefQxExxaLe1wyc3MUJp3l+7YQ2fgvfuVryGrVu5Lq1Ojfkn9oizaG+e50YL+WVtWte633ILTUqhKPBArGDDp4XkBN84q4A3WOLLZ6yGO02GGmKI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.12
+	 Content-Type; b=ehGykZfhF+whfRpFLPjDzUkXh/NSCwn3H2Y2qppDm2ZvVkUmaIv0zg5cu2tjG4iNtkaadAfrPqcKjwFQwQaokoSW6IIlufWw6GTOt6iSxhCb7nX+QhbK2UApV4YXZDZUm+AjtZO5CZxEUCy8tYyKCihawesgiyUUnBh8VC/BS9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
-Received: from omf11.hostedemail.com (a10.router.float.18 [10.200.18.1])
-	by unirelay10.hostedemail.com (Postfix) with ESMTP id 98518C0AF9;
-	Mon, 16 Jun 2025 17:52:56 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: nevets@goodmis.org) by omf11.hostedemail.com (Postfix) with ESMTPA id CFDA12002C;
+Received: from omf16.hostedemail.com (a10.router.float.18 [10.200.18.1])
+	by unirelay01.hostedemail.com (Postfix) with ESMTP id 8D7C11D6E7C;
 	Mon, 16 Jun 2025 17:52:54 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: nevets@goodmis.org) by omf16.hostedemail.com (Postfix) with ESMTPA id E3E6E20018;
+	Mon, 16 Jun 2025 17:52:52 +0000 (UTC)
 Received: from rostedt by gandalf with local (Exim 4.98.2)
 	(envelope-from <rostedt@goodmis.org>)
-	id 1uRE0w-00000001KZ6-3XJ8;
-	Mon, 16 Jun 2025 13:52:58 -0400
-Message-ID: <20250616175258.691664401@goodmis.org>
+	id 1uRE0u-00000001KTG-3Qmh;
+	Mon, 16 Jun 2025 13:52:56 -0400
+Message-ID: <20250616175256.669462692@goodmis.org>
 User-Agent: quilt/0.68
-Date: Mon, 16 Jun 2025 13:51:59 -0400
+Date: Mon, 16 Jun 2025 13:51:47 -0400
 From: Steven Rostedt <rostedt@goodmis.org>
 To: linux-kernel@vger.kernel.org,
  linux-trace-kernel@vger.kernel.org,
@@ -37,8 +37,7 @@ Cc: Masami Hiramatsu <mhiramat@kernel.org>,
  Carlos  Maiolino <cem@kernel.org>,
  Christoph Hellwig <hch@lst.de>,
  "Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH v2 13/13] xfs: change xfs_xattr_class from a TRACE_EVENT() to
- DECLARE_EVENT_CLASS()
+Subject: [PATCH v2 01/13] xfs: remove unused trace event xfs_attr_remove_iter_return
 References: <20250616175146.813055227@goodmis.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -47,57 +46,40 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Rspamd-Queue-Id: CFDA12002C
-X-Stat-Signature: 6151eycwd9aj61x8fugb3hnroagoiz49
-X-Rspamd-Server: rspamout05
+X-Stat-Signature: nxabk184tb74pc6weow7eq64r5xaidso
+X-Rspamd-Server: rspamout02
+X-Rspamd-Queue-Id: E3E6E20018
 X-Session-Marker: 6E657665747340676F6F646D69732E6F7267
-X-Session-ID: U2FsdGVkX19GNZDWZ6rXSZs0MgWJEFXBUVhlRJNZ5b4=
-X-HE-Tag: 1750096374-804361
-X-HE-Meta: U2FsdGVkX1+g5hTChwKkEzGc6weI1MJjDnZc/XzwPe7Mykeii7LOaV5B+syfA7Zl0zJ6NUf6pv49P1IZ89eBtI94uTBoT/jLlWB26uu+EeNbBhvXSr2gngHPGIV+yAtoRtO+dwLs4z0L7GnlBKbp8cf7Xm0pGaoIIpSrJs45tQ/gjUacW8fxzL8b9jhWLHm/iUGRSwFQhBZcp7UBd9lQqtz8Mlt3JOkvZoS9iSzhbQqlbb8aCyZs/tMHyot7vmZqeVoU6nP1eAZcZFL2qc9DNpgBcbEf/mO4jEgBb97lizzVEFRKwCzvEt9ZGJxs9baTbxngz1//Kh48zSyuXEStKdTMtyHCGMMt2gn8aj7CgGcndRXmB1SiZK+Nwq2eIkE4tQ0FfbIredHRI+PhKSeAfw==
+X-Session-ID: U2FsdGVkX1/EBVT/ypkTxI/+Sgk7S8G9jwsvgq2z58Y=
+X-HE-Tag: 1750096372-980939
+X-HE-Meta: U2FsdGVkX1/WRZXHROWxbBSJP25HM2voSaVKtXS4/NIuXQOaf9kfU66N37DnmFa9KxpbhZnR3htCjIwIpZRXgAxnKL7AmQ1DtzozIbGsgsKHagnoyN3mkZ8tmbWplKNTS0XScc2TgoDV+M35g/cD2k76QTyy6w0yUXlIWqpjyNQho5SfWgx9u3hamKbaZ9+mhtZ4C9R0bLWYggDrJnvjxDzRFIYs3cVctb2cMHoanMz+3bCSyG5UbG9G8EcQ/S66HO1ITWG3ZSZ0TFF31SrpQpzLTHfnnmlDOU8lSVOvDHv7u6ZGc0XZ2YxeSUOh7I+hGYcDGp7rddX56GHMc+JaXU+8g/tjchTdTQ2RUWBXG+JlppnsGc+Usv3saAXxBlOl75WQnOO9529jrpl05caE4A==
 
 From: Steven Rostedt <rostedt@goodmis.org>
 
-xfs_xattr_class was accidentally created as a TRACE_EVENT() instead of a
-class with DECLARE_EVENT_CLASS().
+When the function xfs_attri_remove_iter was removed, it did not remove the
+trace event that it called. As a trace event can take up to 5K of memory for
+text and meta data regardless of if it is used or not, remove this unused trace
+event.
 
-Note, TRACE_EVENT() is just defined as:
-
- #define TRACE_EVENT(name, proto, args, tstruct, assign, print) \
-	DECLARE_EVENT_CLASS(name,			       \
-			     PARAMS(proto),		       \
-			     PARAMS(args),		       \
-			     PARAMS(tstruct),		       \
-			     PARAMS(assign),		       \
-			     PARAMS(print));		       \
-	DEFINE_EVENT(name, name, PARAMS(proto), PARAMS(args));
-
-The difference between TRACE_EVENT() and DECLARE_EVENT_CLASS() is that
-TRACE_EVENT() also creates an event with the class name.
-
-Switch xfs_xattr_class over to being a class and not an event as it is not
-called directly, and that event with the class name takes up unnecessary
-memory.
-
-Fixes: e47dcf113ae3 ("xfs: repair extended attributes")
+Fixes: 59782a236b62 ("xfs: remove xfs_attri_remove_iter")
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Steven Rostedt (Google) <rostedt@goodmis.org>
 ---
- fs/xfs/scrub/trace.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_trace.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index d7c4ced47c15..1e6e9c10cea2 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -2996,7 +2996,7 @@ DEFINE_EVENT(xrep_pptr_salvage_class, name, \
- DEFINE_XREP_PPTR_SALVAGE_EVENT(xrep_xattr_salvage_pptr);
- DEFINE_XREP_PPTR_SALVAGE_EVENT(xrep_xattr_insert_pptr);
- 
--TRACE_EVENT(xrep_xattr_class,
-+DECLARE_EVENT_CLASS(xrep_xattr_class,
- 	TP_PROTO(struct xfs_inode *ip, struct xfs_inode *arg_ip),
- 	TP_ARGS(ip, arg_ip),
- 	TP_STRUCT__entry(
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 01d284a1c759..a8867f62ba18 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -5077,7 +5077,6 @@ DEFINE_DAS_STATE_EVENT(xfs_attr_sf_addname_return);
+ DEFINE_DAS_STATE_EVENT(xfs_attr_set_iter_return);
+ DEFINE_DAS_STATE_EVENT(xfs_attr_leaf_addname_return);
+ DEFINE_DAS_STATE_EVENT(xfs_attr_node_addname_return);
+-DEFINE_DAS_STATE_EVENT(xfs_attr_remove_iter_return);
+ DEFINE_DAS_STATE_EVENT(xfs_attr_rmtval_alloc);
+ DEFINE_DAS_STATE_EVENT(xfs_attr_rmtval_remove_return);
+ DEFINE_DAS_STATE_EVENT(xfs_attr_defer_add);
 -- 
 2.47.2
 
