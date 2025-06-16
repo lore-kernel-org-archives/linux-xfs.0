@@ -1,38 +1,39 @@
-Received: from relay.hostedemail.com (smtprelay0014.hostedemail.com [216.40.44.14])
+Received: from relay.hostedemail.com (smtprelay0013.hostedemail.com [216.40.44.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5E3820B807;
-	Mon, 16 Jun 2025 14:50:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A0B719D07E;
+	Mon, 16 Jun 2025 14:51:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750085423; cv=none; b=iWIPE1OpdChfKv4TXI3b6so9FbBV4B0jYHEQKCC3lR+q007NF2OCjWBJdBlynv0wpnqpSG/46kUZxaKy8Bd9Zk2ZtNyNtHIr5wP6jWCOhgu4AOtRjMp4Cu2SQEw1cqD8JqLaG9LIxSMOXZ9W0TDWC/9jT82MOx3QQN33URQNgo0=
+	t=1750085496; cv=none; b=JdM2riUP2dwE+XdDpoBmSDeDBjLWWHjIKQ7iDgs54COalOR3DD8fPTdj3oJid8u+oTntTwOmfyZFeVmR8zmO6pcTXaWdNyZzgZnzHv1wVawa+7MC+xhwgBww9ASjzhl0apxck5/zKgzEePNJSDIIz++vXF/pfoHTWvWYseG3GDk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750085423; c=relaxed/simple;
-	bh=eA7YMpGghvvwTSt9K1EZbouO635j9XtsXcoyrP1WGjQ=;
+	s=arc-20240116; t=1750085496; c=relaxed/simple;
+	bh=tQJikW5Zr1hDct+cq5tbqtDWdDTOPDXt6XW4m1kSBnk=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EaqXcOGBWYs8n5Y+UbPcRc6LTroF1iLhzvK1dzpOFEBxs2i7ae4zjmCizFDz5FrWQrzzfQSAc2aA+3JBDE79pe2ph9WIKEFF+ezVryK+kltIBi+L0u6XoWoVFYEVJuirjPcE2Aio7eOoxupHLy56zXWH0xOh8fygRgWPlokssL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.14
+	 MIME-Version:Content-Type; b=ij6Xr6cDxhzSI8FE1i+seR1eXs5b60lMBLJx5MDDnT7IL6tDy/EC945k320C0QL8U7Y2KyRBrM3nXahq3fTgy04BMib3Qbq+PutC9rHGljweI1C0c561QPL+oGibAWpDe7+Kb1bFM0SWyscybYQ9C/s9YlYoqx0AhtaDzP1enZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
-Received: from omf05.hostedemail.com (a10.router.float.18 [10.200.18.1])
-	by unirelay03.hostedemail.com (Postfix) with ESMTP id 1589BBA10C;
-	Mon, 16 Jun 2025 14:50:14 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf05.hostedemail.com (Postfix) with ESMTPA id 267F120011;
-	Mon, 16 Jun 2025 14:50:12 +0000 (UTC)
-Date: Mon, 16 Jun 2025 10:50:10 -0400
+Received: from omf17.hostedemail.com (a10.router.float.18 [10.200.18.1])
+	by unirelay09.hostedemail.com (Postfix) with ESMTP id 8215C805F4;
+	Mon, 16 Jun 2025 14:51:27 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf17.hostedemail.com (Postfix) with ESMTPA id 6E32A19;
+	Mon, 16 Jun 2025 14:51:25 +0000 (UTC)
+Date: Mon, 16 Jun 2025 10:51:24 -0400
 From: Steven Rostedt <rostedt@goodmis.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, LKML
- <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Carlos Maiolino
- <cem@kernel.org>, Christoph Hellwig <hch@lst.de>
-Subject: Re: Unused event xfs_growfs_check_rtgeom
-Message-ID: <20250616105010.11efd49f@batman.local.home>
-In-Reply-To: <aEu-U-va9q0QRuX0@infradead.org>
-References: <20250612131021.114e6ec8@batman.local.home>
-	<20250612131651.546936be@batman.local.home>
-	<20250612174737.GM6179@frogsfrogsfrogs>
-	<20250612144608.525860bc@batman.local.home>
-	<aEu-U-va9q0QRuX0@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org, Masami Hiramatsu <mhiramat@kernel.org>, Mathieu
+ Desnoyers <mathieu.desnoyers@efficios.com>, Andrew Morton
+ <akpm@linux-foundation.org>, Carlos Maiolino <cem@kernel.org>, "Darrick J.
+ Wong" <djwong@kernel.org>
+Subject: Re: [PATCH 02/14] xfs: Remove unused trace event
+ xfs_attr_remove_iter_return
+Message-ID: <20250616105124.65cbecb3@batman.local.home>
+In-Reply-To: <20250616052645.GA1148@lst.de>
+References: <20250612212405.877692069@goodmis.org>
+	<20250612212634.914730119@goodmis.org>
+	<20250616052645.GA1148@lst.de>
 X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -42,40 +43,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Rspamd-Server: rspamout01
-X-Rspamd-Queue-Id: 267F120011
-X-Stat-Signature: ijnqwr669i87ibkrhpcbcwt6q88hjb1s
+X-Rspamd-Queue-Id: 6E32A19
+X-Stat-Signature: tbd7e4fwsw6nmmfhzmmm8yrts4go5orh
+X-Rspamd-Server: rspamout06
 X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
-X-Session-ID: U2FsdGVkX18Kh8mRHqt8+6D0roufbHVC8u+e7jwxvSY=
-X-HE-Tag: 1750085412-706185
-X-HE-Meta: U2FsdGVkX1+of2ah6iD7vqtj+jIarF4Dt0DZpS7dhJfdro+EWaPpnww4gIMEc4ufvhwojCLo5T/yUAyAZecoOcmnYnHhasbTE4aIgkCDl4KDyCWyrTTX2PYfZhI5MhxhlfHLJU95wXyejl6AQ6hH45CHhgbbRMD/oE/wvkdjNHiMlyTK8KE7bgoChDLWOT8jm4OcfDeR6HaLgdrNCkXV4/1gyCwv8PXdOOgz/kgJkDFpN0nribnJap06X0GSL9ymxDgB40iqSdt4NU1f5ydNClUXQqhM9DqutMiizg4LqxdK3A9Be3NhXGL82NcXZKGnZUosZGwKihvJfKbsJv+QO2L3pLju5IlUYq55sP0Jny8YraBrvVuPEzJxM2V/v/H8ql1rxlXazUSjyUyboU8tLg==
+X-Session-ID: U2FsdGVkX18dGI0cxui9EqPLSLOpmftqEmeQC43qfec=
+X-HE-Tag: 1750085485-201666
+X-HE-Meta: U2FsdGVkX1/a9uSDGbTrtnETeEFHxirlvPg2ooXlZr28sQgDw5SbhDw1ngiFu/pC/Rn54zPfttX5I59n6a52CxMryoaTWsYsDDbg+HkEWVe2XzbNJqC/fG6FXggu3LcLh0XqpozmeIc4f/38P6DqVYrbprjvmtEBnswDrGRl3x4mpz07uz761Qu2LfnaKtynaJ94VMRsrlmQy3X4fQj1UfSMnmtewBj8sF3sTo3k50i+U00zTLWJ8lbySlJo3IwGRyS0NepEJ0thAcvB7ACPtP+n7N9mWn7HLKs0K05FZ22a5zUz2DdoB5+MtL/KCacJ
 
-On Thu, 12 Jun 2025 22:59:47 -0700
-Christoph Hellwig <hch@infradead.org> wrote:
+On Mon, 16 Jun 2025 07:26:45 +0200
+Christoph Hellwig <hch@lst.de> wrote:
 
-> On Thu, Jun 12, 2025 at 02:46:08PM -0400, Steven Rostedt wrote:
-> > On Thu, 12 Jun 2025 10:47:37 -0700
-> > "Darrick J. Wong" <djwong@kernel.org> wrote:
-> >   
-> > > On Thu, Jun 12, 2025 at 01:16:51PM -0400, Steven Rostedt wrote:  
-> > > > I also found events: xfs_metadir_link and xfs_metadir_start_link are
-> > > > defined in fs/xfs/libxfs/xfs_metadir.c in a #ifndef __KERNEL__ section.
-> > > > 
-> > > > Are these events ever used? Why are they called in !__KERNEL__ code?    
-> > > 
-> > > libxfs is shared with userspace, and xfs_repair uses them to relink old
-> > > quota files.
-> > >  
-> > 
-> > Does this userspace use these trace events? If so, I think the events
-> > need to have an:  
+> Please lover case the start of the commit message after the subsystem
+
+OK.
+
+> prefix like other xfs commits.  The Subject line / one line summary
+> is not a sentence.  Same for all the other pathes.
 > 
-> They have stubs for them.
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-If user space only has stubs for them, then why do they exist? The call
-to this tracepoints are within #ifndef __KERNEL__ so the kernel will
-never call them. Or can the user space stubs be replaced by actual content?
-
-Either case, the events in the header file should be hidden from the kernel.
+Thanks,
 
 -- Steve
