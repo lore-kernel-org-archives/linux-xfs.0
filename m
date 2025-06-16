@@ -1,72 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from relay.hostedemail.com (smtprelay0014.hostedemail.com [216.40.44.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87E2B2BF017;
-	Mon, 16 Jun 2025 14:27:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5E3820B807;
+	Mon, 16 Jun 2025 14:50:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750084034; cv=none; b=QlTEYjWFshZrhgyt721Elx/2ph+WlmteXr4KNEZcFRrnJxxOojV0FfLoh1nyoFg7j/v4pDSwq5Ixsmxu1kylM9MCdShD+I0Ndw/SWy/30Q3YqU4jo3D+mqdvNA5oRazeLl/amei47LAlQBtg73NnaLAQTlirZF9LpAsr/iSuqk4=
+	t=1750085423; cv=none; b=iWIPE1OpdChfKv4TXI3b6so9FbBV4B0jYHEQKCC3lR+q007NF2OCjWBJdBlynv0wpnqpSG/46kUZxaKy8Bd9Zk2ZtNyNtHIr5wP6jWCOhgu4AOtRjMp4Cu2SQEw1cqD8JqLaG9LIxSMOXZ9W0TDWC/9jT82MOx3QQN33URQNgo0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750084034; c=relaxed/simple;
-	bh=27LBzjkFKC0MWbPlUQj6Tt4KZ0Jk3l3sGSDRRlvA7Qg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rhqpd05+UhJQEADLxrAhSAapzJgcZXVebK45QjJlK94hmpzaxc/fRZnN1M+UsdySERbhtToGCRSGHuq2yXg8dOWjHKsYdGubF7GDLKyqY2pQM1jqKSFKYHebLQBfn+XXsfp8Lu8fSZCWo8O6STI+N98YHF3lZQKLUc8b5uMMA4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NTVakR5S; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NTVakR5S"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F3D8C4CEEA;
-	Mon, 16 Jun 2025 14:27:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750084034;
-	bh=27LBzjkFKC0MWbPlUQj6Tt4KZ0Jk3l3sGSDRRlvA7Qg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NTVakR5SXYu6c0BR4in/xtNji5OdDLRcOb+1S6kRPnlTkxHPWFuXHEYB2XKVOnV5V
-	 XKW8fuD7PUAxa0hc9pOLobc3bi0uPxw+HNln+mqm/IAkPNktMrm+/b1hQwe4msPHOt
-	 /RBrG+An7Q7/xCH/oFBha8sLE7asffKwinvo7s0gsMMJkwqWOFFVu1jWoUz0qVEXqh
-	 8nYbEvxVezT7bLn6rjAKCURMMss27siUxZLadBGHlsr1LHHNUVo8hPE4huYEBXn5E5
-	 fAacJRg0Mlzep6Qt2V5d4o+LEnwopKyEIQ5mGnZXFdLg6Twux+PSTbq1SyQ5q+r4bW
-	 c85QZmNSdOsqg==
-Date: Mon, 16 Jun 2025 16:27:07 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Zhang Yi <yi.zhang@huaweicloud.com>, linux-fsdevel@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-block@vger.kernel.org, dm-devel@lists.linux.dev, 
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, hch@lst.de, tytso@mit.edu, djwong@kernel.org, 
-	john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com, 
-	shinichiro.kawasaki@wdc.com, yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com, 
-	yangerkun@huawei.com
-Subject: Re: [PATCH 00/10] fallocate: introduce FALLOC_FL_WRITE_ZEROES flag
-Message-ID: <20250616-wasser-replizieren-c47bcfaa418a@brauner>
-References: <20250604020850.1304633-1-yi.zhang@huaweicloud.com>
- <yq17c1k74jd.fsf@ca-mkp.ca.oracle.com>
+	s=arc-20240116; t=1750085423; c=relaxed/simple;
+	bh=eA7YMpGghvvwTSt9K1EZbouO635j9XtsXcoyrP1WGjQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=EaqXcOGBWYs8n5Y+UbPcRc6LTroF1iLhzvK1dzpOFEBxs2i7ae4zjmCizFDz5FrWQrzzfQSAc2aA+3JBDE79pe2ph9WIKEFF+ezVryK+kltIBi+L0u6XoWoVFYEVJuirjPcE2Aio7eOoxupHLy56zXWH0xOh8fygRgWPlokssL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
+Received: from omf05.hostedemail.com (a10.router.float.18 [10.200.18.1])
+	by unirelay03.hostedemail.com (Postfix) with ESMTP id 1589BBA10C;
+	Mon, 16 Jun 2025 14:50:14 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf05.hostedemail.com (Postfix) with ESMTPA id 267F120011;
+	Mon, 16 Jun 2025 14:50:12 +0000 (UTC)
+Date: Mon, 16 Jun 2025 10:50:10 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, LKML
+ <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Carlos Maiolino
+ <cem@kernel.org>, Christoph Hellwig <hch@lst.de>
+Subject: Re: Unused event xfs_growfs_check_rtgeom
+Message-ID: <20250616105010.11efd49f@batman.local.home>
+In-Reply-To: <aEu-U-va9q0QRuX0@infradead.org>
+References: <20250612131021.114e6ec8@batman.local.home>
+	<20250612131651.546936be@batman.local.home>
+	<20250612174737.GM6179@frogsfrogsfrogs>
+	<20250612144608.525860bc@batman.local.home>
+	<aEu-U-va9q0QRuX0@infradead.org>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <yq17c1k74jd.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Rspamd-Server: rspamout01
+X-Rspamd-Queue-Id: 267F120011
+X-Stat-Signature: ijnqwr669i87ibkrhpcbcwt6q88hjb1s
+X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
+X-Session-ID: U2FsdGVkX18Kh8mRHqt8+6D0roufbHVC8u+e7jwxvSY=
+X-HE-Tag: 1750085412-706185
+X-HE-Meta: U2FsdGVkX1+of2ah6iD7vqtj+jIarF4Dt0DZpS7dhJfdro+EWaPpnww4gIMEc4ufvhwojCLo5T/yUAyAZecoOcmnYnHhasbTE4aIgkCDl4KDyCWyrTTX2PYfZhI5MhxhlfHLJU95wXyejl6AQ6hH45CHhgbbRMD/oE/wvkdjNHiMlyTK8KE7bgoChDLWOT8jm4OcfDeR6HaLgdrNCkXV4/1gyCwv8PXdOOgz/kgJkDFpN0nribnJap06X0GSL9ymxDgB40iqSdt4NU1f5ydNClUXQqhM9DqutMiizg4LqxdK3A9Be3NhXGL82NcXZKGnZUosZGwKihvJfKbsJv+QO2L3pLju5IlUYq55sP0Jny8YraBrvVuPEzJxM2V/v/H8ql1rxlXazUSjyUyboU8tLg==
 
-On Mon, Jun 09, 2025 at 09:47:13PM -0400, Martin K. Petersen wrote:
-> 
-> Zhang,
-> 
-> > Changes since RFC v4:
-> >  - Rebase codes on 6.16-rc1.
-> >  - Add a new queue_limit flag, and change the write_zeroes_unmap sysfs
-> >    interface to RW mode. User can disable the unmap write zeroes
-> >    operation by writing '0' to it when the operation is slow.
-> >  - Modify the documentation of write_zeroes_unmap sysfs interface as
-> >    Martin suggested.
-> >  - Remove the statx interface.
-> >  - Make the bdev and ext4 don't allow to submit FALLOC_FL_WRITE_ZEROES
-> >    if the block device does not enable the unmap write zeroes operation,
-> >    it should return -EOPNOTSUPP.
-> 
-> This looks OK to me as long as the fs folks agree on the fallocate()
-> semantics.
+On Thu, 12 Jun 2025 22:59:47 -0700
+Christoph Hellwig <hch@infradead.org> wrote:
 
-That looks overall fine. Should I queue this up in the vfs tree?
+> On Thu, Jun 12, 2025 at 02:46:08PM -0400, Steven Rostedt wrote:
+> > On Thu, 12 Jun 2025 10:47:37 -0700
+> > "Darrick J. Wong" <djwong@kernel.org> wrote:
+> >   
+> > > On Thu, Jun 12, 2025 at 01:16:51PM -0400, Steven Rostedt wrote:  
+> > > > I also found events: xfs_metadir_link and xfs_metadir_start_link are
+> > > > defined in fs/xfs/libxfs/xfs_metadir.c in a #ifndef __KERNEL__ section.
+> > > > 
+> > > > Are these events ever used? Why are they called in !__KERNEL__ code?    
+> > > 
+> > > libxfs is shared with userspace, and xfs_repair uses them to relink old
+> > > quota files.
+> > >  
+> > 
+> > Does this userspace use these trace events? If so, I think the events
+> > need to have an:  
+> 
+> They have stubs for them.
+
+If user space only has stubs for them, then why do they exist? The call
+to this tracepoints are within #ifndef __KERNEL__ so the kernel will
+never call them. Or can the user space stubs be replaced by actual content?
+
+Either case, the events in the header file should be hidden from the kernel.
+
+-- Steve
