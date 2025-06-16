@@ -1,90 +1,90 @@
-Received: from relay.hostedemail.com (smtprelay0016.hostedemail.com [216.40.44.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABF4F288CB5;
-	Mon, 16 Jun 2025 17:53:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A94021D585;
+	Mon, 16 Jun 2025 18:49:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750096386; cv=none; b=CVqajuLXT9+aRBSL84LI4k2gzk03A2gJZBlzSvki+Z9Ln82SmQgoPYfyL+V1+Fq1IVHlZg2UqskDFIfTOCyRL55jXzy00XRX5GgzvJs6W9781X2WwzsQUE3n+0YzS/l7rKu0vFTP2AfM1LNL4GZyPo5SLPhqMZlW4k4hFftpjy4=
+	t=1750099783; cv=none; b=uBOAGGfq6IsqCdIZXUII2GgpFAs4u1Dub+2xTYjnD3SKOePGsbrars+w2fCcAFiKXexoyWhQwdQmLSMunhM+NwwlBSE9A682VkHso7ic7KQARcOE7P79xK9HETzf1OzeUnbuXQvw4lg732snTdS6Y27sXNm6zZ2hsg07v6k3r+k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750096386; c=relaxed/simple;
-	bh=NKxXMIXzsSM7kZFMLFM188WPZyVP6ERPHjmDt7Sjzjs=;
-	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=fpHQuu932OxxyUbPy77WaGW8PpIZ/uvoxOWmghbAGFmV3gWwclWc72QjDmoiLNMoAL4zWaq3Skg4UInXs3tJchCiUvDxYqJpdExT13KPNvusgXXKulgLIfMCDacUXk3/jCKL+jMfIyeihSZASGUmOaEhRUVYQFfiuj96fFORNaw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
-Received: from omf14.hostedemail.com (a10.router.float.18 [10.200.18.1])
-	by unirelay06.hostedemail.com (Postfix) with ESMTP id 415D6101344;
-	Mon, 16 Jun 2025 17:52:56 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: nevets@goodmis.org) by omf14.hostedemail.com (Postfix) with ESMTPA id 8CF2C30;
-	Mon, 16 Jun 2025 17:52:54 +0000 (UTC)
-Received: from rostedt by gandalf with local (Exim 4.98.2)
-	(envelope-from <rostedt@goodmis.org>)
-	id 1uRE0w-00000001KYc-2opA;
-	Mon, 16 Jun 2025 13:52:58 -0400
-Message-ID: <20250616175258.528614307@goodmis.org>
-User-Agent: quilt/0.68
-Date: Mon, 16 Jun 2025 13:51:58 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: linux-kernel@vger.kernel.org,
- linux-trace-kernel@vger.kernel.org,
- linux-xfs@vger.kernel.org
-Cc: Masami Hiramatsu <mhiramat@kernel.org>,
- Mark Rutland <mark.rutland@arm.com>,
- Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Carlos  Maiolino <cem@kernel.org>,
- Christoph Hellwig <hch@lst.de>,
- "Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH v2 12/13] xfs: only create event xfs_file_compat_ioctl when CONFIG_COMPAT is
- configure
-References: <20250616175146.813055227@goodmis.org>
+	s=arc-20240116; t=1750099783; c=relaxed/simple;
+	bh=9qQ61Kp9umUHi4GxqExw5FJpuvThBeB78u+krMUOoCY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Bg5ahCRL+O2/2BNTQeuUdSZPaDhGF6fQV3hJSxvxQ3H9EYHEDNosdJgWE+VSIoyAi5OoOgK8Raxj0JHXRNls3eiJre0FEFnjxszDZvuUMB/Yi9NI33ONxfi+G8319c/C99qh943RZYcuTwzgaQzv9eHGCXb2b9dGmEZUO7mBdfQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZxLFR8cQ; arc=none smtp.client-ip=209.85.160.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZxLFR8cQ"
+Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-4a44b0ed780so71726051cf.3;
+        Mon, 16 Jun 2025 11:49:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1750099780; x=1750704580; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZbNgm74YKelcUXDbOCv5OUWQbQ2/2H3RfdKt5p5VlZA=;
+        b=ZxLFR8cQwgmRsWpY0v6qB7JRsTNDSDVBDgwI4+Tsaf/WsDD/lbhFx0MYJfgsAaBXns
+         LUDUMLXDveGI9eq1p5o+CiF9gVx0/g6kcyXcpBtMqtHFU4+ez1ya+TZEYibWoUMBAl00
+         cJAvLD1Fb3ao/TzjkUTc7DHydIbh76vHm2GTMfLcHAqjmV1m+IzXWvudsBdtSvhlyaxD
+         Dk2/5n5xoL7L09moRTN/cjbFdQ3x/gRJUmaMSLevAWZ4VeIxJ+gdFjHzjf6RPM1AaQyo
+         bJmaN1B8r7p4AxMKKuxIcsf34VR8RNRSK0HwdlzZ5vp02KaKsAPN8KYrhJLlvaIHRISq
+         haUg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750099780; x=1750704580;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ZbNgm74YKelcUXDbOCv5OUWQbQ2/2H3RfdKt5p5VlZA=;
+        b=uG5wmybjO1DfQx042eNviRHscxAQb4rFklIvK73RPaVNTUOrTh6BAOVfHyGMHkCAfy
+         D5GD7uQslvmy1GP6k2urtCOgaOyv5wHzSLGfavO4t4TxcoZ59RfniCM4JhI/tOqJT356
+         Zzq3gAd3C2bfnXd4zRf6HBxeq5OQmL6FL1l7hWFl66Lt7im0BJPEnKHnqzMq4R91oYMO
+         9OLEi1lTPAQsCgeH8GuO7x9TDssgx6AmYeZwSv/p77jXtJZpI6plgqx0xwI90lijVdoP
+         hm1F3cTDp253B6SEyLIMGis6s1G6Sh5W820l88e6Y/TIPeZAEQvJQbtH9y99+SoE/qXO
+         GtbA==
+X-Forwarded-Encrypted: i=1; AJvYcCUNEJIJ9R88CpcpXRIxMOmF5LAvQruUqTcQqXT3OPsgALYRTPr0/nOgzTvDPWR5W3tRAbQnOD0dyjc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyH1d7qrimwO4ybTAPaS49GZMRlJ0aJYOIbDxcKw5U6QI1rjzv1
+	/BiQS0aGCuhPxJEo2qqkXwOrDan0EUUGYisK2pyQ4y2V6y1+elmdaTRXQIMgLpnhBVvC5p1FWwA
+	XQMK/I6z1rJgV/fskHDCPQcfohRw9Jc+wIIsa
+X-Gm-Gg: ASbGncsn9b42lPphTPEXgfi7ZDdX+gFxJgBoaNztB+IOvsV/ZGlNuNOK2Qv5iIGfCBW
+	jaaGo7pos4zpCwdz8y2RpBozLYvyVggNHQvXrx1gwvGgekDLZwUUo2aNryEPknIFOovr71Z96ZF
+	GBlvAG3ULZyDElPPWNgG/m0evbvkCgrlIMvawXBW+V0ijdJeQdlxpkzReUKo4=
+X-Google-Smtp-Source: AGHT+IGLpiMCmBeTSbFoQsIrZlhUdYB0kqAULHCAu+w8Mgtog6QDPt8QCC8hl4dZyD8ugor7d/G7sgZ9V4+SDzgTRtQ=
+X-Received: by 2002:ac8:58c8:0:b0:4a5:9b9c:2d9f with SMTP id
+ d75a77b69052e-4a73c4fce3dmr182509771cf.2.1750099780359; Mon, 16 Jun 2025
+ 11:49:40 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Stat-Signature: bnkzq5i39athu4785ruc1wcg5jzjpyxf
-X-Rspamd-Server: rspamout02
-X-Rspamd-Queue-Id: 8CF2C30
-X-Session-Marker: 6E657665747340676F6F646D69732E6F7267
-X-Session-ID: U2FsdGVkX1+QZfLrgkevSGG6U4TZA9OYfpnsSZdbJIs=
-X-HE-Tag: 1750096374-221371
-X-HE-Meta: U2FsdGVkX19px8Fb8CkmNOiT1mEhlKTs0+8gaUgB8JXJqdaV4kFMqKW0pxevEZdglKLijc1+Xx4sDGHqlQ+8wkRiO5VyWNfrSLWT83FApzx/xlzL+Lo2dyK4fdgy/Fi6lK8ReI3xvUnIOK6Av6HNYgrOlTKtTk+9Jjt3gOTyQFO9yzoX4X0Y+Jy10Phl6AO+5O9PehVjceE4CorDoZfLEVULnXEFu8ADrSe+12MKRMT7SHXtP2gZA58ElcDPce543jIFtqNGzmFFjSQ40HOMofWl6Uqof7gquiJWvsBsSbKoGFpfxtIu0Hlf5iM1DkOgKb/L085+uV1sELqTr5Ayho2Cb5V7rWEHcBRXji2cDfXBOwLYz3qc9Tf1Dd/yzs+lFBwbiPFva8RW2V5p8J9HSw==
+References: <20250613214642.2903225-1-joannelkoong@gmail.com>
+ <20250613214642.2903225-10-joannelkoong@gmail.com> <aFATg58omJ2405xC@infradead.org>
+In-Reply-To: <aFATg58omJ2405xC@infradead.org>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Mon, 16 Jun 2025 11:49:29 -0700
+X-Gm-Features: AX0GCFvBUNWuSpPPwssnIdbnfMc4X1HhAR1N3Dkoa9SeH6VgFYK4K-hGJ-eEvmQ
+Message-ID: <CAJnrk1a934dLVLjUo2hy1jTo4B6xcj4ODMRb_YO8aM7CfquUfg@mail.gmail.com>
+Subject: Re: [PATCH v2 09/16] iomap: change 'count' to 'async_writeback'
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, djwong@kernel.org, anuj1072538@gmail.com, 
+	miklos@szeredi.hu, brauner@kernel.org, linux-xfs@vger.kernel.org, 
+	kernel-team@meta.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Steven Rostedt <rostedt@goodmis.org>
+On Mon, Jun 16, 2025 at 5:52=E2=80=AFAM Christoph Hellwig <hch@infradead.or=
+g> wrote:
+>
+> On Fri, Jun 13, 2025 at 02:46:34PM -0700, Joanne Koong wrote:
+> > Rename "count" to "async_writeback" to better reflect its function and
+> > since it is used as a boolean, change its type from unsigned to bool.
+>
+> Not sure async_writeback is really the right name here, the way it is
+> used is just that there is any writeback going on.  Which generally
+> is asynchronous as otherwise performance would suck, but the important
+> bit is that the responsibility for finishing the folio writeback shifted
+> to the caller.
 
-The trace event xfs_file_compat_ioctl is only used when CONFIG_COMPAT is
-configured in the build. As trace events can take up to 5K in memory for
-text and meta data regardless if they are used, they should not be created
-when unused. Add #ifdef CONFIG_COMPAT around the event so that it is only
-created when that is configured.
-
-Fixes: cca28fb83d9e6 ("xfs: split xfs_itrace_entry")
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Steven Rostedt (Google) <rostedt@goodmis.org>
----
- fs/xfs/xfs_trace.h | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 7977af7c6873..448dea97a052 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1083,7 +1083,9 @@ DEFINE_INODE_EVENT(xfs_get_acl);
- #endif
- DEFINE_INODE_EVENT(xfs_vm_bmap);
- DEFINE_INODE_EVENT(xfs_file_ioctl);
-+#ifdef CONFIG_COMPAT
- DEFINE_INODE_EVENT(xfs_file_compat_ioctl);
-+#endif
- DEFINE_INODE_EVENT(xfs_ioctl_setattr);
- DEFINE_INODE_EVENT(xfs_dir_fsync);
- DEFINE_INODE_EVENT(xfs_file_fsync);
--- 
-2.47.2
-
-
+I like your name "wb_pending" a lot better.
