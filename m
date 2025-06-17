@@ -1,71 +1,72 @@
-Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
+Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC8548F54;
-	Tue, 17 Jun 2025 19:22:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3484025CC55;
+	Tue, 17 Jun 2025 19:33:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750188180; cv=none; b=YDJ8sOsGov64LdkBESbNsHMbEG+VYS6n7vjUlkSJQRU9OzkjR0mQbLFap8CVfbmkhoy7bmmK+zUWBlKp9WA3JLqgtZP8mvnc94gPfihuCySq2ao7K9XAhZ71OlNshDzGLaEdDLFzsG4mcmMg+h4tnDBrvBe2Dzc3yisodEXlTWE=
+	t=1750188786; cv=none; b=aGmgTKqT9b3gSd3+H3Zi1SRCSfYaSS55+l2He+kNI0UPDe1A5PtBC77RrA5zR/DTsH6hhtc+Lyy9w54FV5MqSTSlJoaHTLKmcWZ6oC0cDL3fs4EyyTatEO0SYskzJJsY9G9WDA8/IpuTsontFSJOEDjI4G65MJr0ZRCWhYRBG8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750188180; c=relaxed/simple;
-	bh=FfaUNO8KpPoc0RWyB1GbfrG8lv9MFVQR/RiQ8i11xlc=;
+	s=arc-20240116; t=1750188786; c=relaxed/simple;
+	bh=Aah+HSubQPUZAeKPHbnCgcwk4Pv9SienJRhWfGPoXVM=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=m9/729bRkBdHeblTzFws4m4RbE0NL4fDxbBysBnjkciO614AmLXKvBJMOIanNx7MZJFFnr5+2maHssITo0cEd3LDMIDkNXMQkhLIB1r72QrnXMkIOiUecBBQ1pa/9B/dYzEJemLE4umm9e34YcMuTC+lvCpycfIrR5Rtu6sVqTw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MopxW7TR; arc=none smtp.client-ip=209.85.160.174
+	 To:Cc:Content-Type; b=KWsLebQpS2haiET7OHa4tKIlpauQVT2mGy5Lckb6VJrthuyRiD1hP0ZzeIl/MOnMdUSO+WaXPaHa+fNOhsr6UB0Kk0rMrLwYbO0iHMuge8vZTaJXzIcgDyq7zsGXlwITwzQO4Qhi3LiZHWmfC2gb4N5wABjUkegUJeY+DikwzLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eIvXlNt9; arc=none smtp.client-ip=209.85.160.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MopxW7TR"
-Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-4a43e277198so45548901cf.1;
-        Tue, 17 Jun 2025 12:22:58 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eIvXlNt9"
+Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-4a58b120bedso77055871cf.2;
+        Tue, 17 Jun 2025 12:33:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750188178; x=1750792978; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1750188784; x=1750793584; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=KTuPRhZ2hLfje0TtF5tXPw4TxRM1c2w1EC3x9NIb01o=;
-        b=MopxW7TR4k2LchI9/QNRrpMmW3ftufwNl8bHIkhbiu5WIaCOgqUpTJA0VmJLe42Bmm
-         kbcSpEwur6Jaa/4Roy4IzkZhqDic+QFq9vJH00RWZBO8uglcdMHs/LnusKQuHfsQ9Wd4
-         3eaqxlafTaA9HF1xo5PRb6RC70K4W8Mj7nPdZ2dLclaSq4JsdGSbTXoZK8bVfAnXsqNA
-         Fy3cnlz4ZFk71UxETVR2udjzIrWte8nWFe1Wpjmgcg4NCJMYURmHWPIDU9q4daXi9V6+
-         a8eNtsw3LqM5lHoZTQABeYyDa3GqdXrOVtShZJ7WYrBVlRBGvEopisU9V8oJgPnrqwN7
-         LQNw==
+        bh=nbe97D9Jmiian0+4yUZsYXhkQisqb/mr4o3dbA/bJbM=;
+        b=eIvXlNt9iyF/mPArua6df1n3/rJuQ+pFsG1PPUuw6DLAa3Y2FZbIR1fQHAS+UNFX/i
+         LR0Xa2OkVEh3jRuWxu63FZUpHOLyMtg938xHwqvohr/pksFtREV5WNLmeXt8JfjaWkdr
+         0bkKN0iKqe2C6CJyDIpJllJVUfV514ltt3GlKgVkP4x5/807C5/HFukbvcHhzBIk6LQD
+         Y38S0M5SL8iYUOOVZ1sZEQvJnMNKAVg8cyGdOxPJH2uyp+hs06R7smrFMwaAoe5dFFGJ
+         /IgUenZ/pp1UX2RzaBqBM1A+fG/rV9dhiUpeBNkzNMNsmEdzVIWYVZ0TY41qeI3kDp7W
+         qfOw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750188178; x=1750792978;
+        d=1e100.net; s=20230601; t=1750188784; x=1750793584;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=KTuPRhZ2hLfje0TtF5tXPw4TxRM1c2w1EC3x9NIb01o=;
-        b=J2mb5Y7u4/ySZMPEQif/yBPQV5vwpC7e8Z9LNYisNGk89cYx8GbWSUevwQ7P0kD1Uf
-         71Lgb8LOXflIP8XUPu56xULn+2QV1y59jXi+L1MlCAXYteFuXIPGGs5IIGqK1AzfqcB5
-         rpMUI3aqLwO11V73dN6oiiGj0bq+vKtArC9ykhx6lmCWYA/9sS0TZI01nsVXcn6e4Kqv
-         Aa7s+vC8zc5faM0ORxFz81YB0SuuJnE00ipMx7JPORcCReqMb7/cHXvG8izMME9Npnqn
-         cg6/IOr3t7zgziILdBffCCig8PNwXzHfCLNx9yzjT/+ALC/E3tF9uKOYRHI8g7+IwPik
-         8J5A==
-X-Forwarded-Encrypted: i=1; AJvYcCVZKqgy5gw1aNYjIe8hjEj1CNSS93wSZE9hUep6MZLCETQlTYPGd9hfLZRlzlVhs9rDgwNB+gw/dRN6@vger.kernel.org, AJvYcCWCey6JOOehbtGmI35bv2+b/229/f2TGE0bwgESM9rWjPDk3T1pUgMV0zMEgCU/7d9Vx6FUxU+HB5yBtdzO4A==@vger.kernel.org, AJvYcCWYuDPcowY0WGXp8pT3lrpJ6s9rzzybFvHXfuDqgrG+uGR6Fi3oCD6IQ3+ULp2sdX7J7xDnTbZrQgG9EQ==@vger.kernel.org, AJvYcCWvVrfB/ZzmFigQd9x+WbV2jBPkxGVC4g8yv5HkDfnyEJMLyjb3JsCEr8NGhK+Fj/FHbgyCnhZUXwhP@vger.kernel.org
-X-Gm-Message-State: AOJu0YwPKcg/NUdHIZXohihNt7C7POOFvVWv+sZ9NSThCM09DepC3VP6
-	RXOxoWnJB7F8rqk8fHXcCt5XoF+DDzrfHtj0UucOiMEwAETKk1QUZ4MbZIr74/o4oq1r9pNN617
-	9OxIVXKBJLP1Rh2Po/UwUIGVp7iFXFZo=
-X-Gm-Gg: ASbGncviUOjCo9d7bXtN1g7NbcVCknMnthq1Ss8v2IAtFxGJrDVWNREx3fvC/tUXqfp
-	ABuYm/U31P2d31xTn+0lupIGmptiIwFp0TdJLl+YTs+pVoKyQNc62G5mXHBRW3OndIsjpN0UN1O
-	WFX6/cjUNEJO/6PeJia1Lg+CPKJjBbBfQQzNfSZVjDgroYY10Y5xyKAdSXIUk+U9txR7mvXQ==
-X-Google-Smtp-Source: AGHT+IHRdI3/f0y0wG23sczG3px7bi68sqYFlEBf1JzYzdrdRrmEOwVECbVEbOweo6w8hQnxNrazxSmbQ0I0Ii7zvmw=
-X-Received: by 2002:ac8:5813:0:b0:4a7:1460:f1bf with SMTP id
- d75a77b69052e-4a73c4be974mr274238361cf.13.1750188177475; Tue, 17 Jun 2025
- 12:22:57 -0700 (PDT)
+        bh=nbe97D9Jmiian0+4yUZsYXhkQisqb/mr4o3dbA/bJbM=;
+        b=XQHwrVsE1L2fJiQlIt6YiQqLeWf+6ukLoZaYRnQcQeqpblpEYRAnk/xfJFSuOXTHqN
+         SVqBDlTbUlJBh5gXlfAl0Nj10sbaDF/nO2rRSvYbZhU1S+XpUHAd2a/DJexxFWQCah9/
+         FyCEnBo+veA+ICv4iAdJOtFYEub62ZcZHCNhAZ/LN1k+59cRg+0R9eTvMGwx9s2vwEHy
+         xruBtZ0fz60ocfgUVVOXDkyVqj0VpVFnIoVRfHAaSrrGf4PjLn9Hysx3toXgkdl0HlBr
+         FDCskqUSIRTWzsmpGoHmMin6HZxXeKhOXmatmDEIZKFbjuxU+asH2/c4vzlgsJihXAs4
+         dekQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVRyK0lKh0YB6ABbnEQ7Lk6pIYNqbOTfKPFqBLTyPzQYPIUhGj29+u8OeiiVVsYQhJBsRqiMxK+l7cTe1BLHQ==@vger.kernel.org, AJvYcCWN2x+dnPazGXpA9uKNAqlqb30WVmOl3ySGHFGwLsrYQGPKWFXwbnFuWHDqCkCGMZDRM5Sps24uduKj@vger.kernel.org, AJvYcCWihMmb9RN6fyucfUJXxtM0txMDhTIaTOD+Eawjlyt45c8nPz2Mzp3FtygTqMUguUPBU+Y5X/BOXB7p@vger.kernel.org, AJvYcCWy+Mbyhgp+sbhofuoF6ITxYm4NuyrwbmrqYvVDJ05XwUsnJSo9jkVyPh3XsxkbwjU9QKIM4FtyqJhV6A==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxr1TMALpzGQn4PP2r4jlB/bB7iH94oou5IFQ7umP8gVRC2JEla
+	oEKZM3PY9NnYLGo6UV2XhMuj/1h0y7+ldoRCizLqG7ss90kYnZycVmK72IW8ZE0iNTIFjEUNLXG
+	6A//qLuZLSYwLSI2C7deH4AyjAefYsF0=
+X-Gm-Gg: ASbGncs/6/87RPalc2Fsb567j1cPPJIqi7HS4xldWt6pb4me1FJXmACnTQajZQCymh9
+	hxcCFKElRGslDT6YhPwRzERhJaQM4UnQjstNob4wI6hxglzc6l9Tv4/lNO3cvINgKBDcHhP/XnW
+	HPD5cjjE/JF+cPKwf1hJV7SOT8wuR89HZ8IzCduFAMmmiH74Xr50F+VmrcoEUN9jeY3TGTjQ==
+X-Google-Smtp-Source: AGHT+IFs6szxS2r+gjeGsdqBiGo142lu+0TsxSL7Er/xKXXNedfsriBhcmkChn6VnN0EHL7qZN8FowNXo/P6UdDTHZM=
+X-Received: by 2002:a05:622a:1102:b0:477:e78:5a14 with SMTP id
+ d75a77b69052e-4a73c484bbfmr241088891cf.3.1750188784164; Tue, 17 Jun 2025
+ 12:33:04 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250617105514.3393938-1-hch@lst.de> <20250617105514.3393938-5-hch@lst.de>
-In-Reply-To: <20250617105514.3393938-5-hch@lst.de>
+References: <20250616125957.3139793-1-hch@lst.de> <20250616125957.3139793-7-hch@lst.de>
+ <CAJnrk1YtD2eYbtjxY4JWR3r75h1QyjwHPy+1NQBRUNrDmTUnQQ@mail.gmail.com> <20250617044420.GC1824@lst.de>
+In-Reply-To: <20250617044420.GC1824@lst.de>
 From: Joanne Koong <joannelkoong@gmail.com>
-Date: Tue, 17 Jun 2025 12:22:46 -0700
-X-Gm-Features: AX0GCFvfh7aYL5wq83zSBRZKADreiQZ79xGR92zC7vIzmrKoqBPJnWJXwA3DLRk
-Message-ID: <CAJnrk1bgWwmE8XeYe4gRrYCZFwTsn5JT3Aw7B+morrOLiZowFg@mail.gmail.com>
-Subject: Re: [PATCH 04/11] iomap: hide ioends from the generic writeback code
+Date: Tue, 17 Jun 2025 12:32:52 -0700
+X-Gm-Features: AX0GCFtRXAXeBs7bZNwJubD_2Slv0ZPzqWieKyeC3F6xMTrYOWwRlJxyDQUIKJ0
+Message-ID: <CAJnrk1ZYj0TvoLS=sE46p_8=b+3cZ=VNT1Zvd=HMembWUptHPQ@mail.gmail.com>
+Subject: Re: [PATCH 6/6] iomap: move all ioend handling to ioend.c
 To: Christoph Hellwig <hch@lst.de>
 Cc: Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
 	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org, 
@@ -73,101 +74,20 @@ Cc: Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jun 17, 2025 at 3:55=E2=80=AFAM Christoph Hellwig <hch@lst.de> wrot=
+On Mon, Jun 16, 2025 at 9:44=E2=80=AFPM Christoph Hellwig <hch@lst.de> wrot=
 e:
 >
-> Replace the ioend pointer in iomap_writeback_ctx with a void *wb_ctx
-> one to facilitate non-block, non-ioend writeback for use.  Rename
-> the submit_ioend method to writeback_submit and make it mandatory so
-
-I'm confused as to whether this is mandatory or not - afaict from the
-code, it's only needed if wpc->wb_ctx is also set. It seems like it's
-ok if a filesystem doesn't define ops->writeback_submit so long as
-they don't also set wpc->wb_ctx, but if they do set
-ops->writeback_submit but don't set wpc->wb_ctx then they shouldn't
-expect ->writeback_submit() to be called. It seems like there's a
-tight interdependency between the two, it might be worth mentioning
-that in the documentation to make that more clear. Or alternatively,
-just always calling wpc->ops->writeback_submit() in iomap_writepages()
-and having the caller check that wpc->wb_ctx is valid.
-
-> that the generic writeback code stops seeing ioends and bios.
+> On Mon, Jun 16, 2025 at 01:52:10PM -0700, Joanne Koong wrote:
+> > >  #define IOEND_BATCH_SIZE       4096
+> > >
+> > > -u32 iomap_finish_ioend_buffered(struct iomap_ioend *ioend);
+> > >  u32 iomap_finish_ioend_direct(struct iomap_ioend *ioend);
+> > >
+> >
+> > Should iomap_finish_ioend_direct() get moved to ioend.c as well?
 >
-> Co-developed-by: Joanne Koong <joannelkoong@gmail.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> It is pretty deeply tied into the direct I/O code, so I don't think
+> it is easily possible.   But I'll take another look.
 
-LGTM
-
-> ---
->  .../filesystems/iomap/operations.rst          | 16 +---
->  block/fops.c                                  |  1 +
->  fs/gfs2/bmap.c                                |  1 +
->  fs/iomap/buffered-io.c                        | 91 ++++++++++---------
->  fs/xfs/xfs_aops.c                             | 60 ++++++------
->  fs/zonefs/file.c                              |  1 +
->  include/linux/iomap.h                         | 19 ++--
->  7 files changed, 93 insertions(+), 96 deletions(-)
->
-> diff --git a/Documentation/filesystems/iomap/operations.rst b/Documentati=
-on/filesystems/iomap/operations.rst
-> index b28f215db6e5..ead56b27ec3f 100644
-> --- a/Documentation/filesystems/iomap/operations.rst
-> +++ b/Documentation/filesystems/iomap/operations.rst
-> @@ -285,7 +285,7 @@ The ``ops`` structure must be specified and is as fol=
-lows:
->   struct iomap_writeback_ops {
->      int (*writeback_range)(struct iomap_writepage_ctx *wpc,
->                 struct folio *folio, u64 pos, unsigned int len, u64 end_p=
-os);
-> -    int (*submit_ioend)(struct iomap_writepage_ctx *wpc, int status);
-> +    int (*writeback_submit)(struct iomap_writepage_ctx *wpc, int error);
->   };
->
->  The fields are as follows:
-> @@ -307,13 +307,7 @@ The fields are as follows:
->      purpose.
->      This function must be supplied by the filesystem.
->
-> -  - ``submit_ioend``: Allows the file systems to hook into writeback bio
-> -    submission.
-> -    This might include pre-write space accounting updates, or installing
-> -    a custom ``->bi_end_io`` function for internal purposes, such as
-> -    deferring the ioend completion to a workqueue to run metadata update
-> -    transactions from process context before submitting the bio.
-> -    This function is optional.
-> +  - ``writeback_submit``: Submit the previous built writeback context.
-
-It might be helpful here to add "This function must be supplied by the
-filesystem", especially since the paragraph above has that line for
-writeback_range()
-
->
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 063e18476286..047100f94092 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -391,8 +391,7 @@ sector_t iomap_bmap(struct address_space *mapping, se=
-ctor_t bno,
->  /*
->   * Structure for writeback I/O completions.
->   *
-> - * File systems implementing ->submit_ioend (for buffered I/O) or ->subm=
-it_io
-> - * for direct I/O) can split a bio generated by iomap.  In that case the=
- parent
-> + * File systems can split a bio generated by iomap.  In that case the pa=
-rent
->   * ioend it was split from is recorded in ioend->io_parent.
->   */
->  struct iomap_ioend {
-> @@ -416,7 +415,7 @@ static inline struct iomap_ioend *iomap_ioend_from_bi=
-o(struct bio *bio)
->
->  struct iomap_writeback_ops {
->         /*
-> -        * Required, performs writeback on the passed in range
-> +        * Performs writeback on the passed in range
-
-Is the reasoning behind removing "Required" that it's understood that
-the default is it's required, so there's no need to explicitly state
-that?
+Yeah, you're right. When I was testing this out yesterday it compiled
+cleanly for me because I had CONFIG_BLOCK=3Dn set.
