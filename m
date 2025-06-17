@@ -1,194 +1,142 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.flyingcircus.io (mail.flyingcircus.io [212.122.41.197])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36B0621C9FF;
-	Tue, 17 Jun 2025 11:54:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5FB621C9FF;
+	Tue, 17 Jun 2025 11:55:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.122.41.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750161288; cv=none; b=XCGvbWILQWm7cxo28S4PvooNHCIH626J6i4Zn8KsbPDvElv1W0jdVnEsELsFIMjnK5nnYYMcPHBv/jmb21B8IjClWVd7HMuIs9QW899+TwD79828JThQvWuGjJpzJ98UYOyt0qmQD9a8xyQzq4CTiOXjiLHhKFeIC2ANDzEOo2A=
+	t=1750161307; cv=none; b=njSuEDDPkvCotQXx1N6HRxAw2Fu0MWTMcJrPE6mA5H48yVYcIm8ZGZOi78hLHAth7ayk31wpM9LH8a/B9Iswwb2zFhaUcFU8bmDMADsNDGgm7+yhxMln5dllFF8FfaamF54dISijO9OpIShVqnFzdds+kDndeN8PFxtdh5UzqTI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750161288; c=relaxed/simple;
-	bh=FM4A89teoGTiVHD+mgfi0AiySK9n5DYBMecgMr0uDqg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hi+xBP+Cjg9gQIx3Ziv0eWWk+XcsfFL5FVRdXOJ7dpUwbd2aSYE6sT162UGZMsu6Utqz4ypWLvkHNjfuag35MxwFnoGAY9AHkwbu330JzuTBEUzICNOufGlqMyXy363e6kMb8VAYQ9GqexGNY1okpQUgMjg6WRtpOfJF4PaYUPk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tFaXplkY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750161307; c=relaxed/simple;
+	bh=VaY0RgAuVnNXtgF9bgVifYBMllpsTY06amRcyiMXzxo=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=bRs2G5GsbkhFlCh3qrgapBNaKYI0y1M2VV6sLzXmKQKlQFt8O/+Dq45H2KAz5ypcuHIDecHfzTuJpv7U9DVf7Sx3l0LCD+maNidqk3UKC0Z0Lfy+IJm0T0eU9m4C4FHcuQXsTDXjeSU3XZMqzlNyConfNdk9d4V6wRXXZjp655w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io; spf=pass smtp.mailfrom=flyingcircus.io; dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b=e344RWuE; arc=none smtp.client-ip=212.122.41.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flyingcircus.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flyingcircus.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tFaXplkY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FE2BC4CEE3;
-	Tue, 17 Jun 2025 11:54:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750161287;
-	bh=FM4A89teoGTiVHD+mgfi0AiySK9n5DYBMecgMr0uDqg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tFaXplkY5nyo20ol4Egr1jKpFof+Bu6EVWj8rd7Q/XVflaJDEuUt2QBZbBOzt+ds9
-	 QqRJ0416pNcF2gR1cOk/fhlCLM2NyYyFsqO7E+6LcmkPsrh7dOxbot5r+EPV6Mf/Eg
-	 m8Y6DUqcdfGWwY+D64Xca2p2YAi1GLXZEZrvZUt4zBrfooL7qgslbeGTMTkIs72Kmi
-	 ZyPQ8xq03VfK0FOehVNSaD+X4yl6DS92oWcHFB7su60iMijW1l2mzbjqhQKi8Q2XlY
-	 I0aiDlWsnalkNnHvD2WZzlIylBsOw4cpNRmvr5us4RCENbN2fbk5X67yCW3LloR+n5
-	 oLveA9uaTcrqQ==
-Date: Tue, 17 Jun 2025 13:54:21 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Jan Kara <jack@suse.cz>
-Cc: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, "Liam R . Howlett" <Liam.Howlett@oracle.com>, 
-	Jens Axboe <axboe@kernel.dk>, Jani Nikula <jani.nikula@linux.intel.com>, 
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
-	Tvrtko Ursulin <tursulin@ursulin.net>, David Airlie <airlied@gmail.com>, 
-	Simona Vetter <simona@ffwll.ch>, Eric Van Hensbergen <ericvh@kernel.org>, 
-	Latchesar Ionkov <lucho@ionkov.net>, Dominique Martinet <asmadeus@codewreck.org>, 
-	Christian Schoenebeck <linux_oss@crudebyte.com>, David Sterba <dsterba@suse.com>, 
-	David Howells <dhowells@redhat.com>, Marc Dionne <marc.dionne@auristor.com>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Benjamin LaHaise <bcrl@kvack.org>, 
-	Miklos Szeredi <miklos@szeredi.hu>, Amir Goldstein <amir73il@gmail.com>, 
-	Kent Overstreet <kent.overstreet@linux.dev>, "Tigran A . Aivazian" <aivazian.tigran@gmail.com>, 
-	Kees Cook <kees@kernel.org>, Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
-	Xiubo Li <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>, 
-	Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu, Tyler Hicks <code@tyhicks.com>, 
-	Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, Yue Hu <zbestahu@gmail.com>, 
-	Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep Dhavale <dhavale@google.com>, 
-	Hongbo Li <lihongbo22@huawei.com>, Namjae Jeon <linkinjeon@kernel.org>, 
-	Sungjong Seo <sj1557.seo@samsung.com>, Yuezhang Mo <yuezhang.mo@sony.com>, 
-	Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, 
-	Jaegeuk Kim <jaegeuk@kernel.org>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, 
-	Viacheslav Dubeyko <slava@dubeyko.com>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
-	Yangtao Li <frank.li@vivo.com>, Richard Weinberger <richard@nod.at>, 
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>, Johannes Berg <johannes@sipsolutions.net>, 
-	Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>, David Woodhouse <dwmw2@infradead.org>, 
-	Dave Kleikamp <shaggy@kernel.org>, Trond Myklebust <trondmy@kernel.org>, 
-	Anna Schumaker <anna@kernel.org>, Ryusuke Konishi <konishi.ryusuke@gmail.com>, 
-	Konstantin Komarov <almaz.alexandrovich@paragon-software.com>, Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>, 
-	Joseph Qi <joseph.qi@linux.alibaba.com>, Bob Copeland <me@bobcopeland.com>, 
-	Mike Marshall <hubcap@omnibond.com>, Martin Brandenburg <martin@omnibond.com>, 
-	Steve French <sfrench@samba.org>, Paulo Alcantara <pc@manguebit.org>, 
-	Ronnie Sahlberg <ronniesahlberg@gmail.com>, Shyam Prasad N <sprasad@microsoft.com>, 
-	Tom Talpey <tom@talpey.com>, Bharath SM <bharathsm@microsoft.com>, 
-	Zhihao Cheng <chengzhihao1@huawei.com>, Hans de Goede <hdegoede@redhat.com>, 
-	Carlos Maiolino <cem@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, 
-	Naohiro Aota <naohiro.aota@wdc.com>, Johannes Thumshirn <jth@kernel.org>, 
-	Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, 
-	Vlastimil Babka <vbabka@suse.cz>, Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, intel-gfx@lists.freedesktop.org, 
-	dri-devel@lists.freedesktop.org, v9fs@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
-	linux-afs@lists.infradead.org, linux-aio@kvack.org, linux-unionfs@vger.kernel.org, 
-	linux-bcachefs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, 
-	ceph-devel@vger.kernel.org, codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org, 
-	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org, 
-	linux-f2fs-devel@lists.sourceforge.net, linux-um@lists.infradead.org, linux-mtd@lists.infradead.org, 
-	jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org, linux-nilfs@vger.kernel.org, 
-	ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev, 
-	linux-karma-devel@lists.sourceforge.net, devel@lists.orangefs.org, linux-cifs@vger.kernel.org, 
-	samba-technical@lists.samba.org, linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev
-Subject: Re: [PATCH 09/10] fs: convert most other generic_file_*mmap() users
- to .mmap_prepare()
-Message-ID: <20250617-allenfalls-brummen-3ce2da5794f8@brauner>
-References: <cover.1750099179.git.lorenzo.stoakes@oracle.com>
- <08db85970d89b17a995d2cffae96fb4cc462377f.1750099179.git.lorenzo.stoakes@oracle.com>
- <gexpfonlstqrggxbwxlorn7c6qvt42e2dof6lahipfyfecgfru@vexc23jbaxwc>
+	dkim=pass (1024-bit key) header.d=flyingcircus.io header.i=@flyingcircus.io header.b="e344RWuE"
+Content-Type: text/plain;
+	charset=utf-8
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
+	s=mail; t=1750161294;
+	bh=nl9dgRpnr/U9J64zdugmIRjuY1ARPVJozT72kj+VcTw=;
+	h=Subject:From:In-Reply-To:Date:Cc:References:To;
+	b=e344RWuE1PZTULODECWnppROfyjtgI3CItM2uYxWDl9WqGTkGuGSI/xwAv6Fypnve
+	 /fsQb+P8znBkQJZx+8r16FAlK/foFGBzmhfKsq1YnmLb2bymAte4FbsyjDNqlo99Yf
+	 vi39aVt4NqJldl4F0S3pogYLC6TnyQ3Pg1CpXzxM=
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <gexpfonlstqrggxbwxlorn7c6qvt42e2dof6lahipfyfecgfru@vexc23jbaxwc>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.600.51.1.1\))
+Subject: Re: temporary hung tasks on XFS since updating to 6.6.92
+From: Christian Theune <ct@flyingcircus.io>
+In-Reply-To: <B380AC75-6B14-4EC9-A398-61A2D33033A7@flyingcircus.io>
+Date: Tue, 17 Jun 2025 13:54:43 +0200
+Cc: stable@vger.kernel.org,
+ "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+ regressions@lists.linux.dev
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <0FAE679D-6EE7-4F71-9451-94D0825D1BF8@flyingcircus.io>
+References: <M1JxD6k5Sdxnq-pztTdv_FZwURA8AaT9qWNFUYGCmhiTRQFESfH7xqdOqQjz-oKQiin8pQckoNhfNyCHu-cxEQ==@protonmail.internalid>
+ <14E1A49D-23BF-4929-A679-E6D5C8977D40@flyingcircus.io>
+ <umhydsim2pkxhtux5hizyahwd6hy36yct5znt6u6ewo4fojvgy@zn4gkroozwes>
+ <Z9Ih4yZoepxhmmH5Jrd1bCz35l6iPh5g2J61q2NR7loEdQb_aRquKdD1xLaE_5SPMlkBM8zLdVfdPvvKuNBrGQ==@protonmail.internalid>
+ <3E218629-EA2C-4FD1-B2DB-AA6E40D422EE@flyingcircus.io>
+ <g7wcgkxdlbshztwihayxma7xkxe23nic7zcreb3eyg3yeld5cu@yk7l2e4ibajk>
+ <M0QJfqa7-6M2vnPhyeyy36xCOmCEL83O7lj-ky1DXTqQXa677-oE8C_nAsBCBglBp_6k7vLeN4a2nJ6R3JuQxw==@protonmail.internalid>
+ <01751810-C689-4270-8797-FC0D632B6AB6@flyingcircus.io>
+ <hoszywa5az7z4yxubonbhs2p2ysnut3s7jjnkd7ckz4sgdyqw2@ifuor5qnl7yu>
+ <B380AC75-6B14-4EC9-A398-61A2D33033A7@flyingcircus.io>
+To: Carlos Maiolino <cem@kernel.org>
 
-On Tue, Jun 17, 2025 at 12:23:41PM +0200, Jan Kara wrote:
-> On Mon 16-06-25 20:33:28, Lorenzo Stoakes wrote:
-> > Update nearly all generic_file_mmap() and generic_file_readonly_mmap()
-> > callers to use generic_file_mmap_prepare() and
-> > generic_file_readonly_mmap_prepare() respectively.
-> > 
-> > We update blkdev, 9p, afs, erofs, ext2, nfs, ntfs3, smb, ubifs and vboxsf
-> > file systems this way.
-> > 
-> > Remaining users we cannot yet update are ecryptfs, fuse and cramfs. The
-> > former two are nested file systems that must support any underlying file
-> > ssytem, and cramfs inserts a mixed mapping which currently requires a VMA.
-> > 
-> > Once all file systems have been converted to mmap_prepare(), we can then
-> > update nested file systems.
-> > 
-> > Signed-off-by: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
-> 
-> Overall the patch looks good. Just a couple of notes regarding pointless
-> local variable being created...
-> 
-> > ---
-> >  block/fops.c           |  9 +++++----
-> >  fs/9p/vfs_file.c       | 11 ++++++-----
-> >  fs/afs/file.c          | 11 ++++++-----
-> >  fs/erofs/data.c        | 16 +++++++++-------
-> >  fs/ext2/file.c         | 12 +++++++-----
-> >  fs/nfs/file.c          | 13 +++++++------
-> >  fs/nfs/internal.h      |  2 +-
-> >  fs/nfs/nfs4file.c      |  2 +-
-> >  fs/ntfs3/file.c        | 15 ++++++++-------
-> >  fs/smb/client/cifsfs.c | 12 ++++++------
-> >  fs/smb/client/cifsfs.h |  4 ++--
-> >  fs/smb/client/file.c   | 14 ++++++++------
-> >  fs/ubifs/file.c        |  8 ++++----
-> >  fs/vboxsf/file.c       |  8 ++++----
-> >  14 files changed, 74 insertions(+), 63 deletions(-)
-> > 
-> > diff --git a/block/fops.c b/block/fops.c
-> > index 1309861d4c2c..5a0ebc81e489 100644
-> > --- a/block/fops.c
-> > +++ b/block/fops.c
-> > @@ -911,14 +911,15 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
-> >  	return error;
-> >  }
-> >  
-> > -static int blkdev_mmap(struct file *file, struct vm_area_struct *vma)
-> > +static int blkdev_mmap_prepare(struct vm_area_desc *desc)
-> >  {
-> > +	struct file *file = desc->file;
-> >  	struct inode *bd_inode = bdev_file_inode(file);
-> 
-> I guess no need to create 'file' variable here since it has only one use in
-> the line above...
 
-Agreed, fixed in-tree.
 
-> > -static int afs_file_mmap(struct file *file, struct vm_area_struct *vma)
-> > +static int afs_file_mmap_prepare(struct vm_area_desc *desc)
-> >  {
-> > +	struct file *file = desc->file;
-> >  	struct afs_vnode *vnode = AFS_FS_I(file_inode(file));
-> 
-> Same comment about pointless local variable here as well.
+> On 17. Jun 2025, at 07:44, Christian Theune <ct@flyingcircus.io> =
+wrote:
+>=20
+>=20
+>=20
+>> On 16. Jun 2025, at 14:15, Carlos Maiolino <cem@kernel.org> wrote:
+>>=20
+>> On Mon, Jun 16, 2025 at 12:09:21PM +0200, Christian Theune wrote:
+>>=20
+>>>=20
+>>> # xfs_info /tmp/
+>>> meta-data=3D/dev/vdb1              isize=3D512    agcount=3D8, =
+agsize=3D229376 blks
+>>>        =3D                       sectsz=3D512   attr=3D2, =
+projid32bit=3D1
+>>>        =3D                       crc=3D1        finobt=3D1, =
+sparse=3D1, rmapbt=3D0
+>>>        =3D                       reflink=3D0    bigtime=3D0 =
+inobtcount=3D0 nrext64=3D0
+>>>        =3D                       exchange=3D0
+>>> data     =3D                       bsize=3D4096   blocks=3D1833979, =
+imaxpct=3D25
+>>>        =3D                       sunit=3D1024   swidth=3D1024 blks
+>>> naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, =
+ftype=3D1, parent=3D0
+>>> log      =3Dinternal log           bsize=3D4096   blocks=3D2560, =
+version=3D2
+>>>        =3D                       sectsz=3D512   sunit=3D8 blks, =
+lazy-count=3D1
+>>> realtime =3Dnone                   extsz=3D4096   blocks=3D0, =
+rtextents=3D0
+>>=20
+>> This is worrisome. Your journal size is 10MiB, this can easily keep =
+stalling IO
+>> waiting for log space to be freed, depending on the nature of the =
+machine this
+>> can be easily triggered. I'm curious though how you made this FS, =
+because 2560
+>> is below the minimal log size that xfsprogs allows since (/me goes =
+look
+>> into git log) 2022, xfsprogs 5.15.
+>>=20
+>> FWIW, one of the reasons the minimum journal log size has been =
+increased is the
+>> latency/stalls that happens when waiting for free log space, which is =
+exactly
+>> the symptom you've been seeing.
+>>=20
+>> I'd suggest you to check the xfsprogs commit below if you want more =
+details,
+>> but if this is one of the filesystems where you see the stalls, this =
+might very
+>> well be the cause:
+>=20
+> Interesting catch! I=E2=80=99ll double check this against our fleet =
+and the affected machines and will dive into the traffic patterns of the =
+specific underlying devices.
+>=20
+> This filesystem is used for /tmp and is getting created fresh after a =
+=E2=80=9Ccold boot=E2=80=9D from our hypervisor. It could be that a =
+number of VMs have only seen warm reboots for a couple of years but get =
+kernel upgrades with warm reboots quite regularly. We=E2=80=99re in the =
+process of changing the /tmp filesystem creation to happen fresh during =
+initrd so that the VM internal xfsprogs will more closely match the =
+guest kernel.
 
-Same.
+I=E2=80=99ve checked the log size. A number of machines with very long =
+uptimes have this outdated 10 MiB size. Many machines with less uptime =
+have larger sizes (multiple hundred megabytes). Checking our codebase we =
+let xfsprogs do their thing and don=E2=80=99t fiddle with the defaults.
 
-> > -static int erofs_file_mmap(struct file *file, struct vm_area_struct *vma)
-> > +static int erofs_file_mmap_prepare(struct vm_area_desc *desc)
-> >  {
-> > +	struct file *file = desc->file;
-> > +
-> >  	if (!IS_DAX(file_inode(file)))
-> 
-> And here...
+The log sizes of the affected machines weren=E2=80=99t all set to 10 MiB =
+- even machines with larger sizes were affected.
 
-Same.
+I=E2=80=99ll follow up - as promised - with further analysis whether IO =
+starvation from the underlying storage may have occured.
 
-> > -int cifs_file_strict_mmap(struct file *file, struct vm_area_struct *vma)
-> > +int cifs_file_strict_mmap_prepare(struct vm_area_desc *desc)
-> >  {
-> > +	struct file *file = desc->file;
-> >  	int xid, rc = 0;
-> >  	struct inode *inode = file_inode(file);
-> 
-> Again pointless local variable 'file' here.
+Christian
 
-Same.
+--=20
+Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
+Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
+Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
+HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
+Christian Zagrodnick
 
-> > -int cifs_file_mmap(struct file *file, struct vm_area_struct *vma)
-> > +int cifs_file_mmap_prepare(struct vm_area_desc *desc)
-> >  {
-> > +	struct file *file = desc->file;
-> >  	int rc, xid;
-> 
-> And here (the only use is in cifs_revalidate_file(file)).
-
-Same.
