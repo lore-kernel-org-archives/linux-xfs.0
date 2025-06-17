@@ -1,123 +1,104 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 346742DBF5F;
-	Tue, 17 Jun 2025 12:45:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36E6C1F1311;
+	Tue, 17 Jun 2025 12:45:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750164304; cv=none; b=r1pTI0hbo0NZm0446ZtUOJTxzTsxEgooho0wZ9OLRZlJqYKYAs/Ef4a46ajG6i/qanbnpjzlp8OXuBdpV9FkuYrK/EjEBwMvA0xBhiKLr/UkpLftEPjM20M/Af+NbwcZA3uFTa/4T5WNW37WVHV0t5N0aWsBOEJW/C+p0p7K5v4=
+	t=1750164359; cv=none; b=f+yGN3zhmg/PFyBQrlIOnJKeQiU72u8M3RLSHLsv8XK1fZ2ri+3Lzg44eLH4oo9SCYBnQk5JMyuC6sNy4V6lc0m04B6L7uxJXUI65MZ2/E8qKG3pDxFtRbHQJ68jpPzyYGX1Pk7rO8lh5fgRs97bNx3XKxZeuYfgPreUgFRTA2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750164304; c=relaxed/simple;
-	bh=btFjE1s0qcxUFPoD5rLuwu/zQ5ZzD83LlZlyxmN4oG0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bqgB6XsiGHPMCop3LUlbznYdBR5E8p95rAMPweav9tm0V+r8SLjVlJorBOZmpMxIhwedIHObSbZSzOr8eUhNyr6qofa3FwVbiKMDGIkHqq6HpmWIPaLMippMvpq92HnmSmt76zuEVKmyuGL2yD0yFgH1GrMnxluOfxIK7GBrzP0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BNSpwbPh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750164359; c=relaxed/simple;
+	bh=kxyBVKCb12l5V36NGqS8vayy13b/AHgRj5tbAPrSDoQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NiGyFgS+Ck/lX/mmVyaDYuJ/8ksGONuZwkzIxs6a77QTEOVOCoTI5dfktQQPGiaAkN6xKG96h3tnn/aWxSQUluDaScWcfWHOYOC6vfqbcAx309mH5HqKhnXmXTMKwLVnZHePLKtuC0AdixmDQk/dqLnldjCjmVIR/Yosi//fWUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=keGTgzIk; arc=none smtp.client-ip=209.85.210.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BNSpwbPh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 911E7C4CEE3;
-	Tue, 17 Jun 2025 12:45:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750164303;
-	bh=btFjE1s0qcxUFPoD5rLuwu/zQ5ZzD83LlZlyxmN4oG0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BNSpwbPhri4YxN5J3FDj+6H0B4A13+TI+yZ1JEmru9MdBdEc7BZdoc5ZLcKarj3e0
-	 Rw3uPM+jlov1+2pGkcwnx3FQ/04rp3Bpfb1TIps9X/xDaF2U9hiOdND/K0U1iGKZ3p
-	 EgZHjNB7KDm/+AH8w36UHFS+A14cUhjzUThT0Hf2tEBpIVXWEsrlIVaJzwg8YgzBNo
-	 /lJoer/yPDddPuOLE1Gnbx7TB19f3pGRRkTcRnD6AK7Absy8hzdckZgxPzDj+Igy1D
-	 RugplDnA2VJzYn9zCNf3/YTTYISi40nsGptSaLvoFAYqzjmHgUxPGowjAz8IryjpVy
-	 AEM9pLbZ/Xpyg==
-Date: Tue, 17 Jun 2025 14:44:59 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christian Theune <ct@flyingcircus.io>
-Cc: stable@vger.kernel.org, 
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, regressions@lists.linux.dev
-Subject: Re: temporary hung tasks on XFS since updating to 6.6.92
-Message-ID: <gsuqdu3l3tdw5pbhfnkigs2mplpzgdhu7d6zok33f4e66ct6yh@gebktvf36kwn>
-References: <umhydsim2pkxhtux5hizyahwd6hy36yct5znt6u6ewo4fojvgy@zn4gkroozwes>
- <Z9Ih4yZoepxhmmH5Jrd1bCz35l6iPh5g2J61q2NR7loEdQb_aRquKdD1xLaE_5SPMlkBM8zLdVfdPvvKuNBrGQ==@protonmail.internalid>
- <3E218629-EA2C-4FD1-B2DB-AA6E40D422EE@flyingcircus.io>
- <g7wcgkxdlbshztwihayxma7xkxe23nic7zcreb3eyg3yeld5cu@yk7l2e4ibajk>
- <M0QJfqa7-6M2vnPhyeyy36xCOmCEL83O7lj-ky1DXTqQXa677-oE8C_nAsBCBglBp_6k7vLeN4a2nJ6R3JuQxw==@protonmail.internalid>
- <01751810-C689-4270-8797-FC0D632B6AB6@flyingcircus.io>
- <hoszywa5az7z4yxubonbhs2p2ysnut3s7jjnkd7ckz4sgdyqw2@ifuor5qnl7yu>
- <B380AC75-6B14-4EC9-A398-61A2D33033A7@flyingcircus.io>
- <SUCM2QMQ3TSn-abqhAXLpdEfSqdyFNhrwY0lcyPJNfPdl-2TGGBPkiBEueiV75Jl2UfC30lfhLMCSq7ND7st6Q==@protonmail.internalid>
- <0FAE679D-6EE7-4F71-9451-94D0825D1BF8@flyingcircus.io>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="keGTgzIk"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-7489addd403so2050408b3a.1;
+        Tue, 17 Jun 2025 05:45:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1750164357; x=1750769157; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=bboBEhTeDelkuNOFpiEgEDZG0DvToOz10wOL5urng2w=;
+        b=keGTgzIkrOqq0LXkmre27zHh+OZjSsSZKY/bE1vr3LEXxAW0KIYbVMcQi6fUDA2t6c
+         k4Ho7Wc7kDJY42agGI+coZVGghBD5MmwlABj8DQEJvQZPqehqyEX3kaMPGR/psF/1QM1
+         P0ocAYPC1JyK19MNn8HWNpWyuHyuhMbEyuzcopMWSPwT1A3UrOw3W/Ep8VlvjHcqSs9Z
+         Z10NO4VzbTzq3XYHEtfAZ+bTuTFMncKTg0rBDY7oYSLuV60DMRz9qBcisATqfTPhdsMU
+         YTITK36/nJRe5g+WuTUwF+dUhmw44HUhYbWJcPvFnGEs+y+rzp7g+xjIdbXQfgGfGN6b
+         83hQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750164357; x=1750769157;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=bboBEhTeDelkuNOFpiEgEDZG0DvToOz10wOL5urng2w=;
+        b=StxkpLWiM7oN5B/WijCo9xBxZJwsVANM2epeQXp4rBvoKNm+o1QUiQ1hDSgVZ1vp2m
+         8IZVhBBTpdQ4Z/XJirtqGUXpwYPhGJGsp7pSyEMZ2FxcZcrxykFq+UJtFKXtzbCogO55
+         4Vq8/TKU23mgP1U73hYML6Dkv7vvfKtErTrcJ5EltsXQUqLHS+C1x1wRYb0zoJqeAYhn
+         7fI8wE17hpVZKSmZMeUhVqOaywxFu3xb4l4rIA+wd2kGhZqWz6h8eKTWYbSx/pDxPGr1
+         PrBXqSekyIsIYorpnFRyjfFl8bzqBjeo+A941hUuxjznd2POCtx/wtkgd/zFlAl4JF7n
+         X8rQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUazAQMPOhsTPORV8QoKYbtsckX6wdzf20Ph3d5N1dV5EBuHqVcHzGdhVP7gWJ7QLRKEhKsszA8PpPdgoc=@vger.kernel.org, AJvYcCUzaTz8aKemaV0LChgwPwSgbAsm3nqYWfMI2EtEDN1JFD6cVbAP1TOJI+kPxUzGzCh3KmvcFzkAl9dp@vger.kernel.org
+X-Gm-Message-State: AOJu0YyTVvV4EoMe3+Sp3c8kjR7oZ5mPBKO8w1W7z13E4UeEJH6+igCR
+	jZ1YgwZb8PyLRtosVDTTyqPHbD8QpTZmqDbtU6qWzDGxioJZag8gnHDj
+X-Gm-Gg: ASbGncss6B7FeRk7LEvnzNWzD0r+J0m9a1dl0y72ZIPMLgvLV662JqrPZU9nd8A49Cj
+	ozksMk0FYrnsuwkrqveOojAb277xLaBYrfkMMfzkSV+rf7wO1ytSfif2VpHcClCXgOlO9s48EqS
+	Ho/J7qeUIafO7uATY+JGUybS+o8AZSv2SOtkGqcCKb6odn+Tah21QE+OQ3UgZQ3HSf++8fjD1uF
+	wGBSKof8iPJuDyQS9leATsaT5+b9HaiwddkSDM0RIvPYgz+KJcLNKNP0jm4GcyV4Q8ptn3bEpae
+	mFFtf2UxYyOsHtu4A7szJmUmGMhfhiMdkgn/KnC3ThFK9meiOgwB5i2pPWNMGl8H3RdLPnp2id0
+	ao6AkIODy9p5EAPFAhQ==
+X-Google-Smtp-Source: AGHT+IEcnAlq96r83hmBuDkaSLgE/L4K81xGQ7b9uueV7j2AKCyIg6m9EZcjORiZ90c5PRRiDwhXFg==
+X-Received: by 2002:a05:6a00:1895:b0:740:6630:633f with SMTP id d2e1a72fcca58-7489cf728ccmr20947000b3a.8.1750164357351;
+        Tue, 17 Jun 2025 05:45:57 -0700 (PDT)
+Received: from manjaro.domain.name ([2401:4900:1c68:884c:5800:7324:c411:408d])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74890083bb2sm9005450b3a.94.2025.06.17.05.45.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Jun 2025 05:45:56 -0700 (PDT)
+From: Pranav Tyagi <pranav.tyagi03@gmail.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: skhan@linuxfoundation.org,
+	linux-kernel-mentees@lists.linux.dev,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Pranav Tyagi <pranav.tyagi03@gmail.com>
+Subject: [PATCH] fs/xfs: replace strncpy with strscpy
+Date: Tue, 17 Jun 2025 18:15:46 +0530
+Message-ID: <20250617124546.24102-1-pranav.tyagi03@gmail.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <0FAE679D-6EE7-4F71-9451-94D0825D1BF8@flyingcircus.io>
 
-On Tue, Jun 17, 2025 at 01:54:43PM +0200, Christian Theune wrote:
-> 
-> 
-> > On 17. Jun 2025, at 07:44, Christian Theune <ct@flyingcircus.io> wrote:
-> >
-> >
-> >
-> >> On 16. Jun 2025, at 14:15, Carlos Maiolino <cem@kernel.org> wrote:
-> >>
-> >> On Mon, Jun 16, 2025 at 12:09:21PM +0200, Christian Theune wrote:
-> >>
-> >>>
-> >>> # xfs_info /tmp/
-> >>> meta-data=/dev/vdb1              isize=512    agcount=8, agsize=229376 blks
-> >>>        =                       sectsz=512   attr=2, projid32bit=1
-> >>>        =                       crc=1        finobt=1, sparse=1, rmapbt=0
-> >>>        =                       reflink=0    bigtime=0 inobtcount=0 nrext64=0
-> >>>        =                       exchange=0
-> >>> data     =                       bsize=4096   blocks=1833979, imaxpct=25
-> >>>        =                       sunit=1024   swidth=1024 blks
-> >>> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
-> >>> log      =internal log           bsize=4096   blocks=2560, version=2
-> >>>        =                       sectsz=512   sunit=8 blks, lazy-count=1
-> >>> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> >>
-> >> This is worrisome. Your journal size is 10MiB, this can easily keep stalling IO
-> >> waiting for log space to be freed, depending on the nature of the machine this
-> >> can be easily triggered. I'm curious though how you made this FS, because 2560
-> >> is below the minimal log size that xfsprogs allows since (/me goes look
-> >> into git log) 2022, xfsprogs 5.15.
-> >>
-> >> FWIW, one of the reasons the minimum journal log size has been increased is the
-> >> latency/stalls that happens when waiting for free log space, which is exactly
-> >> the symptom you've been seeing.
-> >>
-> >> I'd suggest you to check the xfsprogs commit below if you want more details,
-> >> but if this is one of the filesystems where you see the stalls, this might very
-> >> well be the cause:
-> >
-> > Interesting catch! I’ll double check this against our fleet and the affected machines and will dive into the traffic patterns of the specific underlying devices.
-> >
-> > This filesystem is used for /tmp and is getting created fresh after a “cold boot” from our hypervisor. It could be that a number of VMs have only seen warm reboots for a couple of years but get kernel upgrades with warm reboots quite regularly. We’re in the process of changing the /tmp filesystem creation to happen fresh during initrd so that the VM internal xfsprogs will more closely match the guest kernel.
-> 
-> I’ve checked the log size. A number of machines with very long uptimes have this outdated 10 MiB size. Many machines with less uptime have larger sizes (multiple hundred megabytes). Checking our codebase we let xfsprogs do their thing and don’t fiddle with the defaults.
-> 
-> The log sizes of the affected machines weren’t all set to 10 MiB - even machines with larger sizes were affected.
+Replace the deprecated strncpy() with strscpy() as the destination
+buffer should be NUL-terminated and does not require any trailing
+NUL-padding. Also, since NUL-termination is guaranteed,
+use sizeof(label) in place of XFSLABEL_MAX as the size
+parameter.
 
-Bear in mind that this was the worst one you sent me, just because the other FS
-had a larger log, it doesn't mean it's enough or it won't face the same problems
-too, IIRC, the other configuration FS you sent, had a 64MiB log. xfsprogs has a
-default log size based on the FS size, so it won't take too much disk space for
-just the log, but the default may not be enough.
-This of course is speculation from my part giving the logs you provided, but
-might be worth to test your VMs with larger log sizes.
+Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
+---
+ fs/xfs/xfs_ioctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> I’ll follow up - as promised - with further analysis whether IO starvation from the underlying storage may have occured.
-> 
-> Christian
-> 
-> --
-> Christian Theune · ct@flyingcircus.io · +49 345 219401 0
-> Flying Circus Internet Operations GmbH · https://flyingcircus.io
-> Leipziger Str. 70/71 · 06108 Halle (Saale) · Deutschland
-> HR Stendal HRB 21169 · Geschäftsführer: Christian Theune, Christian Zagrodnick
-> 
-> 
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index d250f7f74e3b..9f4d68c5b5ab 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -992,7 +992,7 @@ xfs_ioc_getlabel(
+ 	/* 1 larger than sb_fname, so this ensures a trailing NUL char */
+ 	memset(label, 0, sizeof(label));
+ 	spin_lock(&mp->m_sb_lock);
+-	strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
++	strscpy(label, sbp->sb_fname, sizeof(label));
+ 	spin_unlock(&mp->m_sb_lock);
+ 
+ 	if (copy_to_user(user_label, label, sizeof(label)))
+-- 
+2.49.0
+
