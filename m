@@ -1,103 +1,123 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F39F28D85F;
-	Tue, 17 Jun 2025 13:14:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BFA62E7160;
+	Tue, 17 Jun 2025 13:23:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750166101; cv=none; b=TlCOHeTLPrMx+h5dVvOEpxvymIAFal8XS1uI3+4AXotqvfcbEQ+kvGK8+xoiVXFua3xhoF5sOVhuzgc5t1epAYTnNszG1JYC9paJNiRxoqLuP4DKrgwqbmuQ7OAOCsjnd1WHRz+8NpDm/8beStFTSjKRj7esKxZC+zl8mRYjfhQ=
+	t=1750166619; cv=none; b=QwEIq2fiRVQUixobG+G5Ng7DjUA0rYMa/rOSGnqSW0J02XlMFtweaGS9J0yFMYI1Yr4J7Cce5HQqIBTalYesrRDm61s+/1CFvmnYBn34fdqg+gXJ5Sy1YM9CGfrjpCwLIpIRR+If/KlH4t1Mh4xctTdWHDYPuQwXlVDl+dWqtZs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750166101; c=relaxed/simple;
-	bh=p7DOfF+FVsKwThiS6DtW1TTjKjyRC+p9KTOjsE2PN9M=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WMRmr3I6xtJt0czo69+ZXSiwyHAgaDlEfVl2nCbFI4hVVhHTiONNCaiKkHOxcXg2zS7cEbmk7bboCxOEc2EMiQgQhn6QtROukIaOCwhaA4XAxWoKGWDPh20M46030shFsccYEio4yXMXnxhCw5SMmE7l+v5Hxh5xF8SXbytgEZ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JKALhbX6; arc=none smtp.client-ip=209.85.210.177
+	s=arc-20240116; t=1750166619; c=relaxed/simple;
+	bh=aq+jLmLEZueUREtaCloPI8dNoT19sceodfbAKjhjFCY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=UIdSW7XlExN9Sl1X9V4CWRMq2ivcf8mtwdiDNwMhi4fbbvHtdeKCLdXiB736iPupOjDyHcN4OuUBteuLKWUU96gzKO2yY5Dxq/MrP0Q+tt05b+WmLifYEwyltAgwyw/h559jOWZbSyC/ZAbu9dgELE++ZpZNznMNyQqPQPamv7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S/LLvZmM; arc=none smtp.client-ip=209.85.208.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JKALhbX6"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-748d982e97cso373271b3a.1;
-        Tue, 17 Jun 2025 06:14:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S/LLvZmM"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-60780d74c8cso10331975a12.2;
+        Tue, 17 Jun 2025 06:23:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750166099; x=1750770899; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Qdj6PEXQSBqXoHF+okOiKXmDKN7rBK1h3xMiJzkSQlg=;
-        b=JKALhbX6WfgsFdT6K2e1I4RWaepzUEQkkDnu/i0oonawi7u+FvqDDJndYe107Si6h9
-         wNHG3QmVnTRYv8Lvo0bQBCtvMy6Nn6ZgEKB019qBdKPJ+Ctgs58kAcVuEcXqvy3meTIh
-         XM48bZ/flYy0OkR67w6go9944Mv7Z4x9m2IM/Q5fjSGQU+Xna7Zf86Wl8+13cWNZjGFm
-         dGetDGedjS1x4ZSIr5IjRK66emInZ8+7FNzO/iLdz0LOhe/KQUdljm6XjtNBRquc3Cq4
-         PH4ng0+Qa39EPHalw36n9qltFruwDRQnAupgYTVb7Td2YLKKo9yVB95yM81K/uGLFSqR
-         0UXw==
+        d=gmail.com; s=20230601; t=1750166616; x=1750771416; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Da7GngsMQn+NCqkD4TvMnzofO+IHiaf6PmzIm2w+GkQ=;
+        b=S/LLvZmMYIc390LjFnsM/8hEit306FUYPx9j40KQLIqDjpAhto8LQqmfWmHBKycYnM
+         /koZfjoaJDiL+PyImkhJPS9rZJbZJxXAp1YTqDMJVdE6mp3jh7SbJDb1pjXoiCN3Ljz3
+         KXnwyMAQ4ag30VgrWcPii7NqtEh9XZgomFrqHZVnbI3BI1cEVDAfm4G5vLCpSdivg9FR
+         KKyidejDobs6jJqaaass3zkkAOBj9CXVP9Hi7Fs43dixN3lVw8yfsHWpj3jNFQ69FDrn
+         CUxmmJfIHrGS6E6eSI3UdBu2a7JqOBfSzLZVPgnmO4Z4MY9twGoXmL/ajf7IPWOT6vHz
+         9Otg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750166099; x=1750770899;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Qdj6PEXQSBqXoHF+okOiKXmDKN7rBK1h3xMiJzkSQlg=;
-        b=RXhnvwboYlv3uWcXl2F+OcURzHbLXaGdnOV18vZaDmntJLfGs7729P93jm28QC++TB
-         ktFH/lt7Nk1c6vJkMaTXnDx4jVX2VhDAQELQCAPVG4Q0kEepZXZLZsNmwENUXM2O9Jf5
-         FufNFtEx6UCxxNmqKrzPchW5CaQ7lopWubaAuPYsZFu16zYUGOTNY3p3sYWOhNk+eDvC
-         csD6eMkyG4ZH+4eOLcfLXlho1rgeY6YgVJVAZ0DKp9QQe5dw9v3fp2phQRx+r6qnQnI+
-         rBdgwL51/AKtKxAbADgaJ5BVwjlrbK3iw0sTBQNNEaLBAcbs+pLrjssceDf2kLkLpxE9
-         kkHw==
-X-Forwarded-Encrypted: i=1; AJvYcCWGi2U4GXggaw1/sQtR51jc6atAsc7Ldmw0qD2ruBJHYw0T9Q2m71Om6tZfnCisa/PwdMQVluvFzwrBzNk=@vger.kernel.org, AJvYcCXvRgKrghYL9AQXu3nmL1sFIijdXjQDQ23BWfAjuFv46q8iT8n3/tMRpm9Q/X23WS3TIuBLzQ12ui6Q@vger.kernel.org
-X-Gm-Message-State: AOJu0YwQgSYE5wzfec7bWtgkGg6uyeNClcQKFl4Xcnt7qBu3Drqw+KuV
-	ZJgMf1Mf/9nyXmxWk5jWuoMH8Ghv3p6QOmBG7oUFu3NzyC+mOHdhFH5ndof8n6TJ
-X-Gm-Gg: ASbGncvRq3LTiqurBOAz4VfsNTpLafwoFkC+1+DBI69ph6j5n5hD6r/p+ucADks3BL3
-	JL/IbYm0LvkFhuYPFWUrcEU3MFd279iPWIQHy3x3J4bXrEUNqzK5zJA/h0ws0GjM2netrb/pqq+
-	4HaCsof901SKHaH8hwd+J49WpUxO5FoP+fIwnvsA2aXsbn3G2OUnYahhi4ZTkwiUS3ta3LcYbve
-	omxbb6lsB1aWxJwbSn3ewaTm+wHkDw6SxZrbEpdWjQgkev98RoAEyPyMMfvQlA95BwFgWIM08oe
-	6PMfr2WV4XGPhMKeJQdi2VAd5JqTQY8FFFkGnGBAn+GQdl5AqYsU/+aB4gY4gC4nJ14o758Y21q
-	UxJMyl6s=
-X-Google-Smtp-Source: AGHT+IEj47XzIhTDcSayzRQ0CFz7ib3XQdJW80v1f1Wk6QFx4GpfqPmgDq8HhOc7YT3tqSGvz5AKdw==
-X-Received: by 2002:a05:6a00:13a9:b0:740:9c57:3907 with SMTP id d2e1a72fcca58-7489d175260mr18366198b3a.19.1750166099185;
-        Tue, 17 Jun 2025 06:14:59 -0700 (PDT)
-Received: from manjaro.domain.name ([2401:4900:1c68:884c:5800:7324:c411:408d])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-748900cec7dsm8775059b3a.153.2025.06.17.06.14.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Jun 2025 06:14:58 -0700 (PDT)
-From: Pranav Tyagi <pranav.tyagi03@gmail.com>
-To: cem@kernel.org
-Cc: skhan@linuxfoundation.org,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-kernel-mentees@lists.linux.dev,
-	Pranav Tyagi <pranav.tyagi03@gmail.com>
-Subject: [PATCH] xfs: replace strncpy with memcpy in xattr listing
-Date: Tue, 17 Jun 2025 18:44:46 +0530
-Message-ID: <20250617131446.25551-1-pranav.tyagi03@gmail.com>
-X-Mailer: git-send-email 2.49.0
+        d=1e100.net; s=20230601; t=1750166616; x=1750771416;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Da7GngsMQn+NCqkD4TvMnzofO+IHiaf6PmzIm2w+GkQ=;
+        b=TOO7rY5D/FC0/dqqZiEtLeIhiSzDEHW1TEWKJzDGNEskQIBCeuJ0stjgZsGmweoDs/
+         /csOv+4LqSoKQ4NBU8q436/ml6zenZ3dt2ON9qx82VcjNe+jyIsUG5yPOmhml7SXSN7l
+         Ab/aXObs8Q2Xz4h0bDl6OurAE2osPHijKliiZK0LU0zCeio6EBe49M25dEoxLXmpOOWP
+         WkCKaBGSc9s8u1k0hrgfPQwCFY46u1GDlEThwyXrXb0ZrQi0Vlqs98MtfzFxK+DmYlwz
+         Ce7gvp9uGmhGs0S87ATF/5m9VFMBATRyopSacBh1/MiIIM80OUb07QAcLOd3/2p5T2BY
+         Dmfw==
+X-Forwarded-Encrypted: i=1; AJvYcCUXXuazmmx581XZ76XssK+4R2b8h/HdBVbjHMegLO1jSem5ZAUEoyOLYqSjfH1rAaqeUuhlRx6qbPMR@vger.kernel.org, AJvYcCVTd/URaHSgAesFxAXbX50JDw9Qo0aU+2mGOA0RGjKDqKsidYxlQYlapIJ1dMNNwVENBdoB+v2WAxfUlw0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxcUUcKxprCWQA5q94TH9VoE3FWywg3EVmzkCIba1x0Whd3+wJ6
+	ilCz9QRAvS/P51NgmQukZ7kYeQQEW/ruiV/JC3POkIr1Jf/KL5pDKgb6WiFELXCgLn0Ut4ra5Ld
+	HK591qqGl3xZtGyluBH+JZ1DSOh7pV6mzjN+Wnf4=
+X-Gm-Gg: ASbGnctMhqH9QeG32FimNHQV4M2d21A8F81DhTXpfYsH6gb0FmZfw7cw0oPa7LkKjqP
+	I3Cdhi76W6YKr+6iGbXd7CD6HCZkGUhL1d+m0fUEX9pEriY9xVuwHh+CpLY4VQgKTg3OIhySSAG
+	TxW7NFGjGF5cL5Cgmoce286ZjtTp4AfVkP86GSisehmwEZ6i7Y5MOkBuvw3XkMUhxovrwX4qhdB
+	uSc4lD9uTDsQcFc
+X-Google-Smtp-Source: AGHT+IF35zRDouRKgsl23iu8Ip8Af2QD0L6RBLQ4Z6LxvD9CFO2X76jNFfDTlSdWniAE8FphyNnG7TzaPsay7oaHoT4=
+X-Received: by 2002:a05:6402:510c:b0:602:3e3:dada with SMTP id
+ 4fb4d7f45d1cf-608d0977a42mr11931446a12.25.1750166615605; Tue, 17 Jun 2025
+ 06:23:35 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20250616110313.372314-1-pranav.tyagi03@gmail.com> <2025061610-basics-attendee-cd02@gregkh>
+In-Reply-To: <2025061610-basics-attendee-cd02@gregkh>
+From: Pranav Tyagi <pranav.tyagi03@gmail.com>
+Date: Tue, 17 Jun 2025 18:53:23 +0530
+X-Gm-Features: AX0GCFvpbJIGp1gRUpPgvLsO-IJEhIBlsBKcgaCSHrIHCpbktmH_xOFexTbviFw
+Message-ID: <CAH4c4jLn78OYPqqEESh6vRhxfD8s=J8a-cX0WzVE1bEPKVAHEg@mail.gmail.com>
+Subject: Re: [PATCH] fs/xfs: use scnprintf() in show functions
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: cem@kernel.org, skhan@linuxfoundation.org, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Use memcpy() in place of strncpy() in __xfs_xattr_put_listent().
-The length is known and a null byte is added manually.
+On Mon, Jun 16, 2025 at 7:50=E2=80=AFPM Greg KH <gregkh@linuxfoundation.org=
+> wrote:
+>
+> On Mon, Jun 16, 2025 at 04:33:13PM +0530, Pranav Tyagi wrote:
+> > Replace all snprintf() instances with scnprintf(). snprintf() returns
+> > the number of bytes that would have been written had there been enough
+> > space. For sysfs attributes, snprintf() should not be used for the
+> > show() method. Instead use scnprintf() which returns the number of byte=
+s
+> > actually written.
+>
+> No, please use sysfs_emit() if you really want to change this.
+>
+> >
+> > Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
+> > ---
+> >  fs/xfs/xfs_sysfs.c | 6 +++---
+> >  1 file changed, 3 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> > index 7a5c5ef2db92..f7206e3edea2 100644
+> > --- a/fs/xfs/xfs_sysfs.c
+> > +++ b/fs/xfs/xfs_sysfs.c
+> > @@ -257,7 +257,7 @@ larp_show(
+> >       struct kobject  *kobject,
+> >       char            *buf)
+> >  {
+> > -     return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.larp);
+>
+> There is nothing wrong with the original code here, you could use
+> sprintf() and it too is ok.  So this type of change is not needed.  But
+> again, if you really want to, use sysfs_emit() instead.
+>
+> Same for all the other show() callback changes you just made.
+>
+> thanks,
+>
+> greg k-h
 
-No functional change intended.
+Hi,
 
-Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
----
- fs/xfs/xfs_xattr.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks for the feedback. I understand the original code is
+perfectly fine. All these show callback changes were intended as
+cleanups. I'll drop these patches. And will use sysfs_emit() if
+I ever have to.
 
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 0f641a9091ec..ac5cecec9aa1 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -243,7 +243,7 @@ __xfs_xattr_put_listent(
- 	offset = context->buffer + context->count;
- 	memcpy(offset, prefix, prefix_len);
- 	offset += prefix_len;
--	strncpy(offset, (char *)name, namelen);			/* real name */
-+	memcpy(offset, (char *)name, namelen);			/* real name */
- 	offset += namelen;
- 	*offset = '\0';
- 
--- 
-2.49.0
-
+Regards
+Pranav Tyagi
