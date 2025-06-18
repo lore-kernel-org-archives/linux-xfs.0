@@ -1,74 +1,74 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02AC42882A2
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Jun 2025 09:24:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BB0B28FA84;
+	Wed, 18 Jun 2025 09:25:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750238688; cv=none; b=OZ/xPupPALVMsHg2gwk3ti/8noSvr6uK+edZzH6uyxeUdD0+BPJC7+wquBF9ImgSympHGV6Rzr+dTAAnAjzJEWHC5OgE8NOWUa4ivqtokzAVNq1wwZEMp6jx8qqR+eIBsMdLd1zJ6VStG1yiu6PT5Ulje6jG6mRPD30yD2tNG1M=
+	t=1750238726; cv=none; b=ls2m2Gm9hFNN8gKwog22L/UKZ/cqR78hxa9726f48P0pAfRMWC0zXF3vlvzu1UuIVdpgAhBdx8Ojzye4BTZrjPPjYLlX8v/uq9HZ+t++d/RM3xSHWLdJ7vBOu6rQH2VPDqtNwvOlegRJPVkk6LddvhdbrNT7yCIU6z07VgmTaHA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750238688; c=relaxed/simple;
-	bh=hPR1S4Ay5wOLqXCwwkb6oZAS5alHQAg+RwEo5FUcjkg=;
+	s=arc-20240116; t=1750238726; c=relaxed/simple;
+	bh=a6Gvg5y8MpL5OOxAbzgLKu4qg+AYFxeldf4AvvLWsvo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=G8SOyPDpYz2AwYfeOEzglEn4cplq26zgwcoNL6JQegOE7SbUiGWeoZuuUpE7OdHz2kIpOIMv8bKceCC6pmTCNoVawuXlJmSBcJ8wfH713RFEKsyPI58KQtC1r8G3m9pPTj9HnZAyhPHUovOgCfOMzPXZM10ejrAenR1J94doKBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xdnHaUIj; arc=none smtp.client-ip=209.85.214.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=nJq6ZnOX9Vg0VPRxKN7pYpq2GaN5v/zbVuuffjeOZoTspaVkrdUrB6WN1xHgvdM0Ps+5tCo/sxMz4Y0xNc6uYTbaYEUXi2kYoWhzjUkf0+yqiirNqFCZermMOKQ8g3RbwvvJrCGAcfokKZnJgIn8RXLQEN4dVnWIkPSmgAQVrmo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=r2kvgHBA; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xdnHaUIj"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2352400344aso62990125ad.2
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jun 2025 02:24:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1750238686; x=1750843486; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=8iZ7PtUM9koqAnrWEE4I3YuC9qw2C2A5NGqaXjNU+5M=;
-        b=xdnHaUIjcLgzAn7PXDwWyEYYM3euXpI/C0lCE75vCHcGXKdXs2jqcHuxKFm71U8S9i
-         /I+ywah0kEW9LBJk68wT1euRKH0n3iyqJx09e5GJwRkbYpPfyymtNQQA0Sni8rrYNJTY
-         Vc4xlD/G04GyioS0Jv2/2AaaxPZWrO6QrqtrQ06Muy7sAUR/VKY+Z8J8xQEMrc/uzVxH
-         37AzSiL76BNyiomJVWDu+Cdv3pD0A21+CDQBND3qoQcKA8ii+/Ev8JT7DRquBaLDzIS0
-         JblXqVxufpYu+BvxGjQUrmUHNKr5jzFnM6fehvRHhZn1w51BME7OZYX1i9UpesXK2P2O
-         s1Wg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750238686; x=1750843486;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8iZ7PtUM9koqAnrWEE4I3YuC9qw2C2A5NGqaXjNU+5M=;
-        b=iWiDsEvhg1SJg8LpiHMSAQr6iPTC19zLcLF+brgTqJcDybdpiYIwSHzL2LvBm9xL+y
-         yqnTPJzQxrzT3BWIaoOjLgRxXoOLPa1Ne2vw8ZmR7EeWRH+ZVjSRO1tdsMHBBYwMeVCv
-         vnwGNSS1r6hPbyNwQrumJRLj1qWeR3GH1eHfsBYXrW7A9pjLGR49TtYDbPgCKZn0fZei
-         xDZwu16xUtFupQ/Za/6+ywvzb4qivuMI36jSHjljmuJNKmRHUb0JOWFJmYQ77PPCCxPl
-         m+8dQBSseUY0swWg0uQhzNn9GAB4eDOkPn+Bwua0aJPc97augqjq/Uzmb3SZbJbh9WPE
-         BBfg==
-X-Forwarded-Encrypted: i=1; AJvYcCXBkGVHJQGDPzaK5o0xsiRDwpMn8n8qNMa1CjuXRrNmawvRE2FcUU6reOCLOBATqmMdGMzZR75fNHg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyrgLZFDgWU+2F75IYh+RdT9YpIz48y60qS2yHD5JQGiBVkPlWU
-	sUVZCC11jGfAo9Zsuhsl2VJiqVOm7MxzS88CQe3Kk6BTh3DhQDcAlTw2+/nmk2Iz/SvhWvpBD/A
-	Ca5RD
-X-Gm-Gg: ASbGncsbsFOF1UlacAF/+o1ErpKlLwkJ0aK6MPzM3ejX4a8g9f/+BGkM++IDWkVfn+j
-	ukRnqmfZFSFRvIyNGfU6KGHQcU7Sxr1IDf7l1KTrfFlzDF2/V5LXsjZoOEikk+kklWIAu7fVfhy
-	5zXBTDGliIhTeGTHJgA1/j2ah65PNcZG8+qEo0z1Bn8KKIYM6iWYXnF/J1iN6oZE4Ahyc9FfHCS
-	aC0QPGg4jRCNZsRvtkct2wTIwk8iQrqv9wyLYfFVFmrm2kGsCCBOfREsM1QKhfUthaIlL+cJKah
-	rGOxhrddex/E70W1ju6s2mKG5wfolpYv/uqHKnGrMZNmuEwcL+ijo4MaNYFD+wgKUZMiriQq+vi
-	9+LRKMZ4huvDB2PNSPSk/ogmwOTFxXujwbXI3Qg==
-X-Google-Smtp-Source: AGHT+IGMN79g4+64qUD9Eadfx4LcIOPhhI42+eJGhEKlX4YZIZ7f3no0DhyF1hob9JzdyLHQmk7pdQ==
-X-Received: by 2002:a17:903:f90:b0:225:abd2:5e4b with SMTP id d9443c01a7336-2366afe7c13mr262705185ad.16.1750238686220;
-        Wed, 18 Jun 2025 02:24:46 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-184-88.pa.nsw.optusnet.com.au. [49.180.184.88])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2365deca2b5sm95902465ad.195.2025.06.18.02.24.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Jun 2025 02:24:45 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1uRp2A-000000008rd-0QhG;
-	Wed, 18 Jun 2025 19:24:42 +1000
-Date: Wed, 18 Jun 2025 19:24:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: cleanup log item formatting
-Message-ID: <aFKF2taXrSKl3QoO@dread.disaster.area>
-References: <20250610051644.2052814-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="r2kvgHBA"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55HMiQrA026479;
+	Wed, 18 Jun 2025 09:25:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=fkB0nitJZG3lDOymi7z9JQOx7cypOh
+	HCNqtvl0Nmu1Y=; b=r2kvgHBAag+d+lu2I7NMcmDzCKZvKNTtaHaWtFoaXfy8pH
+	VLaHM3jNRkuIdNXU7GJBYCgEDjGKcFeN7b3oYibbHoM12ESCpZYez//0IREo2QPI
+	inuifWpxcvyJ6/q/CGKxV9yPzFLauyTDz8H8T3+KcX2YS2KOgW10EvgRbk6W8dS0
+	iJRhLLRSSHuo+mrK20Gh6TG2a7rHvgVnUKX/dd/AlujtwLltWnDdmOyzsUof00kX
+	1auWhI6JshM5HF+85oFrnuG5C2YmCCer0tU+DlteNdEIPMoo0GnvnY6s0oE+WSer
+	mOP1TGQjnKHRlV78dIWGFuzslAfyC+2+sjWDuRWQ==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4790r25arg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 18 Jun 2025 09:25:13 +0000 (GMT)
+Received: from m0360072.ppops.net (m0360072.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 55I9Jd0k003542;
+	Wed, 18 Jun 2025 09:25:12 GMT
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4790r25arc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 18 Jun 2025 09:25:12 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 55I8IO7w025755;
+	Wed, 18 Jun 2025 09:25:11 GMT
+Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 479xy5xar9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 18 Jun 2025 09:25:11 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 55I9PAUj32768424
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 18 Jun 2025 09:25:10 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2BCBE2004B;
+	Wed, 18 Jun 2025 09:25:10 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 6451920040;
+	Wed, 18 Jun 2025 09:25:08 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.17.234])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Wed, 18 Jun 2025 09:25:08 +0000 (GMT)
+Date: Wed, 18 Jun 2025 14:55:05 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: Catherine Hoang <catherine.hoang@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, djwong@kernel.org,
+        john.g.garry@oracle.com, ritesh.list@gmail.com
+Subject: Re: [PATCH v5 2/3] generic: various atomic write tests with hardware
+ and scsi_debug
+Message-ID: <aFKF8YAuLPTHnBdD@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <20250616215213.36260-1-catherine.hoang@oracle.com>
+ <20250616215213.36260-3-catherine.hoang@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,100 +77,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250610051644.2052814-1-hch@lst.de>
+In-Reply-To: <20250616215213.36260-3-catherine.hoang@oracle.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: dKjmKoXpAPE9CpxjAux_FyqB0bPnE5z-
+X-Proofpoint-ORIG-GUID: 4IfGXqdcmweMZc80SolQ0IYszbINdLRa
+X-Authority-Analysis: v=2.4 cv=AqTu3P9P c=1 sm=1 tr=0 ts=685285f9 cx=c_pps a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17 a=kj9zAlcOel0A:10 a=6IFa9wvqVegA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8 a=VnNF1IyMAAAA:8 a=2nle5uG55BRm5s_oWRMA:9
+ a=CjuIK1q_8ugA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjE4MDA4MCBTYWx0ZWRfX9jUve1oChUgT k51xNuMAf43aT2RHPEeUrcbhehmBJrhBXajOuCOLQR5oep8TwWo0eXVIQ8Y9EPuc9Sb7I5eXTiC +sQD9MnjiQw0dDIlAj5qe8ycdwu+jpmw8sJVz5lrHPdSxRKdnhjadiCoKoFDCEnMNn+ZSVkSE4z
+ /YHEy9/J89YJeuA+8zTE1eBGT8h8du99e5mcVLs3ssiNkwzZw9xGOIjn3QDyCGgkWnPUXUItXUX ZpvR4nGyO90G2tPxfUVStVbnhwq3rQqXdynWNsCgxJzBaEcDGPimfxrx/LMVsFsb9YFwJ7koudv 7ajmZFLIcmH6lT6cCuQWe5w/UeVphCXUQ6YsDGhktz0TpJzwXCfRWXSuicZ/TlvjQVYBIT1oqAy
+ oi2SqQvr/tRKZ6EQ09qL1C0bnj1BVR5rV1JCqBML0k/jdfzaqzx1z031qFNbr/42KGfrVIJx
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-06-18_03,2025-06-18_02,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ lowpriorityscore=0 suspectscore=0 adultscore=0 impostorscore=0
+ priorityscore=1501 phishscore=0 mlxlogscore=909 mlxscore=0 spamscore=0
+ bulkscore=0 malwarescore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2506180080
 
-On Tue, Jun 10, 2025 at 07:14:57AM +0200, Christoph Hellwig wrote:
-> Hi all,
+On Mon, Jun 16, 2025 at 02:52:12PM -0700, Catherine Hoang wrote:
+> From: "Darrick J. Wong" <djwong@kernel.org>
 > 
-> I dug into a rabit hole about the log item formatting recently,
-> and noticed that the handling of the opheaders is still pretty
-> ugly because it leaks pre-delayed logging implementation
-> details into the log item implementations.
+> Simple tests of various atomic write requests and a (simulated) hardware
+> device.
 > 
-> The core of this series is to remove the to reserve space in the
-> CIL buffers/shadow buffers for the opheaders that already were
-> generated more or less on the fly by the lowlevel log write
-> code anyway, but there's lots of other cleanups around it.
+> The first test performs basic multi-block atomic writes on a scsi_debug device
+> with atomic writes enabled. We test all advertised sizes between the atomic
+> write unit min and max. We also ensure that the write fails when expected, such
+> as when attempting buffered io or unaligned directio.
+> 
+> The second test is similar to the one above, except that it verifies multi-block
+> atomic writes on actual hardware instead of simulated hardware. The device used
+> in this test is not required to support atomic writes.
+> 
+> The final two tests ensure multi-block atomic writes can be performed on various
+> interweaved mappings, including written, mapped, hole, and unwritten. We also
+> test large atomic writes on a heavily fragmented filesystem. These tests are
+> separated into reflink (shared) and non-reflink tests.
+> 
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 
-OK, so I found the xfs-log-format-cleanups branch in your
-tree. I just had check-parallel fail with:
+Looks good now, feel free to add:
+Reviewed-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
 
-[ 5060.219054] XFS (loop210): xlog_recovery_process_trans: bad flag 0x1
-[ 5060.225296] XFS: Assertion failed: 0, file: fs/xfs/xfs_log_recover.c, line: 2324
-[ 5060.233223] ------------[ cut here ]------------
-[ 5060.243515] kernel BUG at fs/xfs/xfs_message.c:102!
-[ 5060.262119] Oops: invalid opcode: 0000 [#2] SMP NOPTI
-[ 5060.295341] CPU: 9 UID: 0 PID: 2180403 Comm: mount Tainted: G      D             6.15.0-dgc+ #338 PREEMPT(full)
-[ 5060.295347] Tainted: [D]=DIE
-[ 5060.295348] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-[ 5060.295350] RIP: 0010:assfail+0x3a/0x40
-[ 5060.295360] Code: 89 f1 48 89 fe 48 c7 c7 8a f7 ed 82 48 c7 c2 f2 85 e8 82 e8 c8 fc ff ff 80 3d 19 b6 50 03 01 74 09 0f 0b 5d c3 cc cc cc cc cc <0f> 0b 0f 1f 40 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90
-[ 5060.295363] RSP: 0018:ffffc900198a79c8 EFLAGS: 00010246
-[ 5060.317824] RAX: f72505c615164000 RBX: ffff8888c8204680 RCX: f72505c615164000
-[ 5060.317826] RDX: ffffc900198a7898 RSI: 000000000000000a RDI: ffffffff82edf78a
-[ 5060.317827] RBP: ffffc900198a79c8 R08: 0000000000000000 R09: 000000000000000a
-[ 5060.317829] R10: 0000000000000000 R11: 0000000000000021 R12: ffff88821c475800
-[ 5060.317830] R13: ffff8881d27bcc70 R14: ffff8881d27bcc7c R15: ffffc900198a7b58
-[ 5060.317834] FS:  00007f6d916b8840(0000) GS:ffff88889a6be000(0000) knlGS:0000000000000000
-[ 5060.317835] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 5060.317836] CR2: 00007f4c2650d350 CR3: 0000000226620000 CR4: 0000000000350ef0
-[ 5060.317841] Call Trace:
-[ 5060.341040]  <TASK>
-[ 5060.341043]  xlog_recovery_process_trans+0xd6/0x100
-[ 5060.341050]  xlog_recover_process_ophdr+0xdd/0x140
-[ 5060.341052]  xlog_recover_process_data+0x9b/0x160
-[ 5060.341054]  xlog_recover_process+0xb2/0x110
-[ 5060.341056]  xlog_do_recovery_pass+0x685/0x900
-[ 5060.341059]  xlog_do_log_recovery+0x43/0xb0
-[ 5060.341061]  xlog_do_recover+0x2c/0x190
-[ 5060.341063]  xlog_recover+0x165/0x180
-[ 5060.341065]  xfs_log_mount+0x14d/0x270
-[ 5060.376607]  xfs_mountfs+0x3aa/0x990
-[ 5060.376616]  xfs_fs_fill_super+0x701/0x870
-[ 5060.376619]  ? __pfx_xfs_fs_fill_super+0x10/0x10
-[ 5060.474403]  get_tree_bdev_flags+0x120/0x1a0
-[ 5060.476710]  get_tree_bdev+0x10/0x20
-[ 5060.478520]  xfs_fs_get_tree+0x15/0x20
-[ 5060.480175]  vfs_get_tree+0x28/0xe0
-[ 5060.481861]  vfs_cmd_create+0x5f/0xd0
-[ 5060.483491]  vfs_fsconfig_locked+0x50/0x130
-[ 5060.485358]  __se_sys_fsconfig+0x349/0x3d0
-[ 5060.487273]  __x64_sys_fsconfig+0x25/0x30
-[ 5060.489136]  x64_sys_call+0x3be/0x2f60
-[ 5060.491533]  do_syscall_64+0x6c/0x140
-[ 5060.493430]  ? exc_page_fault+0x62/0xc0
-[ 5060.495220]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+Regards,
+ojaswin
 
-The test that triggered is was xfs/609 running with this config:
-
-[xfs_1k]
-FSTYP=xfs
-MKFS_OPTIONS="-m rmapbt=1 -b size=1k -i exchange=1"
-TEST_MKFS_OPTS="-m rmapbt=1 -b size=1k -i exchange=1"
-
-I don't know if this is reproducable yet.
-
-The assert failure is this case in xlog_recovery_process_trans():
-
-        case XLOG_START_TRANS:
-        default:
-                xfs_warn(log->l_mp, "%s: bad flag 0x%x", __func__, flags);
-                ASSERT(0);
-                error = -EFSCORRUPTED;
-                break;
-        }
-
-This implies that more that one ophdr in a transaction had the
-XLOG_START_TRANS flag set, or that there are duplicate transaction
-IDs in the journal. i.e. something likely went wrong in xlog_write()
-at runtime, but it's not until the journal is recovered that the
-issue is noticed....
-
-This reminds me of the subtle, hard to hit xlog_write bugs that
-took me months of recovery testing to shake out last time I rewrote
-the checkpoint and xlog_write() code... :/
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
