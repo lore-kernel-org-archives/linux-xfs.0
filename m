@@ -1,52 +1,29 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BC9613E02D;
-	Wed, 18 Jun 2025 04:47:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 964C01EE7B9
+	for <linux-xfs@vger.kernel.org>; Wed, 18 Jun 2025 04:50:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750222034; cv=none; b=D2w1JAHVc7lFH5A8oi6fVWC8OsrHSnCU8jRURZAbabYzqCezm8Nnz8SIJ489O0mfLdmGiNP468yRIpa/g771RPDQPLcZ6gsmlS6cehsLlJv+1DN3USEyaQnnhVEjp0nuTJbp4vo1wmv8YSHp0ybezasxiCxsonqMuySy6WSFTiI=
+	t=1750222226; cv=none; b=idOR18LaORX3kRxIwXU34G3hfzLVhhOuaLCsbXWhjxOvSKtw0Q0ZklVogUpsPe0W8+p+NkD5heFghDjdBkMo2tTay45TCNo3ycc5bZswR4+bOXpFNOn52cWCsUsETpbQd/pFrDT1SqOFdxnTN5hGFL0ip+Woo4zq3c0+RHhqOro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750222034; c=relaxed/simple;
-	bh=Hex2wf7cguz9O50FQk21t8Ar4bJrCkM5W2V/d1UWNX4=;
+	s=arc-20240116; t=1750222226; c=relaxed/simple;
+	bh=CnU1iyi12sf3wjn1H1ivEPGDhjLsI5ofOOSUulwyJcg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JFpB5TCUu3nZwvFUSuNNorFxtGmjFMCtd+sSR2ShjUdGhqPqM+A6ilmTr5WLRJ3OcnysZD2rE++hFKfdHL2bvpqBxnS49/AThrVdGnnDBjrmD8HmN+2E7NeW+H/BW/LL7OHtDIh9nZuuXu4vWRtpOnG1a8V/iDlakMQvtLnw8sw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xRnL3Qcl; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xRnL3Qcl"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=g0EyjvhAS1Km3yCILzus7ZZgUkl096TgjUz70d73o+s=; b=xRnL3QclCBTneZxyRvOQKeoAJw
-	WFWsJRoUO17O0yPeqzV/lXobZwMedKmPqKiQuYYY/W8cjidH9cYQY9TknREFhB54Vln4cAuuaKrfI
-	uQjqMorruhedHG2gDmZX9BdhJd3vPxGvK2HtGafdCxzVjwEkeHx/43ybyiXUanAUfCPTmO3jkuyOK
-	5WhZZejGs9FW9D8WEgSExF1Ca5NH5e9O7YFWgvEhEdZP8vciOyUNIhjHY5qHFrx1ytDrCeGMMHXeH
-	Nfi7EwG+OfK2fsKFiKLuxkUYgb9gv1LvvvVamBLUrYuz3aY0LyurBJEtxBE9vbFV9vu1W+bcwpKHH
-	w9wZMM7g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uRkhc-000000092bR-1D3q;
-	Wed, 18 Jun 2025 04:47:12 +0000
-Date: Tue, 17 Jun 2025 21:47:12 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Joanne Koong <joannelkoong@gmail.com>, miklos@szeredi.hu,
-	brauner@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, bernd.schubert@fastmail.fm,
-	kernel-team@meta.com, linux-mm@kvack.org, linux-nfs@vger.kernel.org
-Subject: does fuse need ->launder_folios, was: Re: [PATCH v1 5/8] iomap: add
- iomap_writeback_dirty_folio()
-Message-ID: <aFJE0L6P9LlHobIZ@infradead.org>
-References: <20250606233803.1421259-1-joannelkoong@gmail.com>
- <20250606233803.1421259-6-joannelkoong@gmail.com>
- <aEZoau3AuwoeqQgu@infradead.org>
- <20250609171444.GL6156@frogsfrogsfrogs>
- <aEetuahlyfHGTG7x@infradead.org>
- <aEkHarE9_LlxFTAi@casper.infradead.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=s+gtu2443QadrWcfVa5OdP3kwCxWOKT/xpDxeEpQ+vngINhiAQ1jSBUHiHx2piZPqQl5Zs7SFAflIOdA02gGSvB7rajUNRXwQxUT6X8PA16qHt8qTyhC6/bNj8R9AouWFnT1OnHSmeeBnQW00JWOx2C9Dasv+npiHwJW0oc3WPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 5AE4B68D0E; Wed, 18 Jun 2025 06:50:21 +0200 (CEST)
+Date: Wed, 18 Jun 2025 06:50:21 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: cleanup log item formatting
+Message-ID: <20250618045021.GA28218@lst.de>
+References: <20250610051644.2052814-1-hch@lst.de> <aFHtqTWIueE9IvOI@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -55,24 +32,13 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aEkHarE9_LlxFTAi@casper.infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <aFHtqTWIueE9IvOI@dread.disaster.area>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jun 11, 2025 at 05:34:50AM +0100, Matthew Wilcox wrote:
-> > My memory might be betraying me, but I think willy once launched an
-> > attempt to see if we can kill launder_folio.  Adding him, and the
-> > mm and nfs lists to check if I have a point :)
-> 
-> I ... got distracted with everything else.
-> 
-> Looking at the original addition of ->launder_page (e3db7691e9f3), I
-> don't understand why we need it.  invalidate_inode_pages2() isn't
-> supposed to invalidate dirty pages, so I don't understand why nfs
-> found it necessary to do writeback from ->releasepage() instead
-> of just returning false like iomap does.
+On Wed, Jun 18, 2025 at 08:35:21AM +1000, Dave Chinner wrote:
+> Do you have a git branch for this series that I can pull?
 
-Yeah.  Miklos (and other fuse folks), can you help figuring out
-if fuse really wants ->launder_folio?  Because it would be really good
-to settle this question before we have to add iomap infrastruture for
-it.
+git://git.infradead.org/users/hch/misc.git xfs-log-format-cleanups
+
+https://git.infradead.org/?p=users/hch/misc.git;a=shortlog;h=refs/heads/xfs-log-format-cleanups
 
