@@ -1,147 +1,186 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from NAM02-BN1-obe.outbound.protection.outlook.com (mail-bn1nam02on2058.outbound.protection.outlook.com [40.107.212.58])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 517552472AE
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Jun 2025 06:58:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750316334; cv=none; b=EM7Ndc6q94JThXOQaXhacQ+dmxnohmjfArVCyBBSMBVZuH3UjWeRd9mcWVGAwy3CGWGwOZljQsYqV87oSL7U+4U3KKzgwZBD5LHiDxnc/hLXpsljtOzTD4bHOkE6W0p6ykihKNg7Xo8awOoLsJ8qXYXvpFbcMVRn9uKMUjmqIK8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750316334; c=relaxed/simple;
-	bh=LEgZdtw4yy4wxW/YwPeGVtxh4mLgZu5S7bZ4Pnqi3zo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A1Lz4/cPk1PzuVX5YQPtHswixdFFADcZxqj3zxbujtYU9/rxLfbNTKYJ8NJ9wxxZL+SQA4uW97L37mjQu4ma0xhhgSYHviMEOotALNXfZSPSc4zJyS4WfAzzOQdsY+ICk28Ad/jmCMoS8zEq9u5xaqqevbvyaPuAhcli/LipCPE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=Gtg73a43; arc=none smtp.client-ip=209.85.210.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E30A25C71B;
+	Thu, 19 Jun 2025 07:56:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.212.58
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1750319783; cv=fail; b=ibu/5Gs190n0UnvI+aQJet9RdPUc9cjiQSkuV+o6UB1vnfqD4JeNHmrzqjX02mMHlNihX6b6kp9A5c36VjASu4+H+dKrmagyi4hrtIgGMOJl0gJVaaASbWc88OylbIyPmEfE4Whlt14B35k/rgQXYtO6rSUkhAK1+LWTBlXZaUQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1750319783; c=relaxed/simple;
+	bh=1QjX+NIPFKJZ6vuX5f3MJJX+8D8kkLouE7mwfPM4eoA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=ckqzbJWCUsU66DWibK2Y2dw/x25J7Oyfg8jRVZTMJIoMX7ZkNoo4pZiMFthgtAmJ+Vd5aTh2XBUwg8Ml3aBB4RkBi2XLSIxmoccAQpITnLCTVgxADEmQiTysKA/oFcdHF6VHk2mQq16u7NJ+7TgOZQI5vSLROsnWSXFt+v87Cic=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=D6WQp2A3; arc=fail smtp.client-ip=40.107.212.58
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="Gtg73a43"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-7425bd5a83aso334522b3a.0
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jun 2025 23:58:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1750316331; x=1750921131; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=FEOWds+bZgIKQAm0Gc3hmTHHUBV1bQQU4/mAuQcNS6k=;
-        b=Gtg73a43QjqA/UGCCGr0ZeFpLaCuDl3MRORj6j4xASpdVeCkxy4AxFLtf9qiF7xKOe
-         wInwTRIvJoxyQITzgkv30lj5+Z1idclnjyh1PDb2DTdQvSp/oXlSgVwifsC6nUWwvJvu
-         HUVo9wGiSUhX8F7bqrEn1AThHYlhsTx2jr0Crmr/uMapr0fr5kHV0DGTip2IvAz7pgoD
-         8AY9TCr4+gW83/gCT4oPc7WLNYwtaCxZSUN9WY+aWNpSiPSDB59hZ/G8axbERz7P6MEL
-         l9h7T+v6S2yEB7S2pr8nPyo4HC0lHJweG+j+7qmE99Z3sTit2LfiioKw0u8nXROBag1f
-         spmA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750316331; x=1750921131;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=FEOWds+bZgIKQAm0Gc3hmTHHUBV1bQQU4/mAuQcNS6k=;
-        b=h/NkOKpyHPmdSnV1k9JZoMVM4QJygeEDmUAttlcAM6HeDM8/Jg6LldDKPX8oqG9cMc
-         f8bSv/Kksi6rUS5tAxkoT5P5OLysOEZ5j2ND7uJ4spcwKFOFpKIP1wm78mT2/F8auMos
-         4kPSkuqZj24UmK5pBH2/6Eki+ikFCFGKg93kS8TSdJiuQ1GTP/JEkNA5oR0ashN3a5NE
-         QiaQRHyGrRYzwNRZ+6ORliAMZgdIhO52uEFhe86Q4fr3Hj6bFQxo0oss1cBIf2yyfFWL
-         D0KBz55lVvS08irPhNDZW2/YfXLAB9trXQSQ8RV0rCOqJXjuAMb5VaaKn9buCJO/sC8Y
-         ELXA==
-X-Forwarded-Encrypted: i=1; AJvYcCXFOERAFG+mDG+A8+OW43I/h8F4N88B4WsFVcPbq9oPOxryoz1oA6fwab5AjAOeZQ+zSJoN5M+Rc6k=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxQdTk8OTwz6VvxLx4TAyyUssuLXMIBpJcKcfktPuKy8muNikn6
-	l+xSaI/7CC1vqWpaP2NSPLRAJO+pPQc1MdN/FoLGd1kekeyB3rYtdQlSMEGDsU4IsqQ=
-X-Gm-Gg: ASbGncungzfV3rAX/ZtvIbr+pF9Rir675NKKu+Cx1Q0lvfjNRgpseW5cc6Qz6fqHvuY
-	wB7Pb/iPFP8rcRHC3277DEJE4VWELiBKGo3Mb7MIDf9WV6qA2M/rAmK+4DtfQ+g7HOPkHNrtbZK
-	DFUU3erwvaH5ebVR7L1di47x9oYuSk0qOAsCxIBxiFdUiX3AttNtSTJ0v0TpQsycV64hrJ+YjZD
-	3GfbjnA3Wry4aMdnR9+PtejcafqklzgLsk27RalzFgyYv3+W7LYBsuhqeu5qY+0LkHpJKYtErUL
-	phmDyAaTwqFBId02CLqIM6gxGz7hArOtW2TpDqe4ntEYc4pLy3hoZH19QURcyJoIL76i/dnVZqs
-	IaLXkqrdTlly89TRhnDmFCuNhleqgsjoTBGr9KQ==
-X-Google-Smtp-Source: AGHT+IG/t6AgewTKKFlu+zlGfeXTFh1ou5tRTtU465CwJD7ztn4RWuG2pzS3wWFsCC7qbrg0yXA0dQ==
-X-Received: by 2002:a05:6a20:7289:b0:218:17c4:248c with SMTP id adf61e73a8af0-21fbd559921mr33585411637.22.1750316331337;
-        Wed, 18 Jun 2025 23:58:51 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-184-88.pa.nsw.optusnet.com.au. [49.180.184.88])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-748ecb5468dsm2779741b3a.96.2025.06.18.23.58.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Jun 2025 23:58:50 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1uS9EV-00000000Vzq-2X9s;
-	Thu, 19 Jun 2025 16:58:47 +1000
-Date: Thu, 19 Jun 2025 16:58:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: cleanup log item formatting
-Message-ID: <aFO1J-1SO2Sn6GgV@dread.disaster.area>
-References: <20250610051644.2052814-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="D6WQp2A3"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=O6g3cd/zZAOv/5zIzzFvYUEjdFhSMX12f4RQuw7dTdNGzP64La0BgyRpZGTrzacL3jJtRTDQYXBHbS/xNecjuf7k9twwg4Aw9kZonR/1hsvD1k4IwtPFXPkGGnb/01TYgQxpIU7Ymlqz8S448a4vLJhvBoOUwDAQ5By2x7zpJoab1fksHOk/3ahcQM+JWoKx0tr1IF0EnFiYxP5bIOq3KgVLmPsoKCfe/ig/1gCwg9X5HrWstVlC0lnrb24G1Be7MADLQ8hx/CulYoc7LXtI1/u2fYr8WShFLvi8+hUQubh+XkVoOQZKieLY3AjUd3IKmIx1YdXobvqqZyCRn4Zrvw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=gTKySE4b1EFfFWauijegDFEssdPzD7QI+IdR6mlJDVw=;
+ b=kCvNiI4zaIdZPl/xVxY4hIrIBHQLG5jkigO649WUXrcs989ARyNYcfE/MPpnOr5J9E+gA2zp4Bd04p5WNhN7fEVAAFwPtpMVNKwMomuzXRX+1OXXkBEhIzTEc/3c8bIUf9WAaQgsM4tD7o29B4eIsWrvb1izaihA3VMGtu07lepcltjZAXDwNyrgHbw0O0frV4oyB3NWeoZAEGoOepjhUIWiBMKAmzH5PXMRExyiuwPbIimzXor4GIZkaEuIaNHvi761gq9HKWTX6oDmjkIE7311LU1Jk/ZrLUhnAPHkUU88n/lsZx1dasQMN0MsOzONLN+2XmS1CRsGOzLFtotYog==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gTKySE4b1EFfFWauijegDFEssdPzD7QI+IdR6mlJDVw=;
+ b=D6WQp2A3Xya76KcbucXMGcZuqKMApmktpawedkgdszrrSa2Cl2nbq+ei02XMnTD8iim0wlo3UZwHzCx/U9gu357Ni1ZH7t5MicQ/KgAM9RhgLV0QdKmuO1e3J+u9nETG+sv6tafsSIECT6qCbmNNqhkzTqTXl5iR1IS4PuQyfz9u2OJMdVCWybWshFU/3xJiBlxGiJPmiGSp8QGBWiRw4Bs5DPhb4FGU3d++cEWIjuLl7dwOC8WfAgndDN3M4c2joOnW0T5WNa0Hhq/0IpjHtZGdbUQYCEB1sqJcBsJaTknCT5KIWgkRKdTifSkiSuKJj6Q6H8QAGq99WTfD/64cQw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CY8PR12MB7705.namprd12.prod.outlook.com (2603:10b6:930:84::9)
+ by IA1PR12MB9030.namprd12.prod.outlook.com (2603:10b6:208:3f2::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8835.29; Thu, 19 Jun
+ 2025 07:56:18 +0000
+Received: from CY8PR12MB7705.namprd12.prod.outlook.com
+ ([fe80::4b06:5351:3db4:95f6]) by CY8PR12MB7705.namprd12.prod.outlook.com
+ ([fe80::4b06:5351:3db4:95f6%5]) with mapi id 15.20.8835.026; Thu, 19 Jun 2025
+ 07:56:18 +0000
+Date: Thu, 19 Jun 2025 17:56:14 +1000
+From: Alistair Popple <apopple@nvidia.com>
+To: David Hildenbrand <david@redhat.com>
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org, 
+	gerald.schaefer@linux.ibm.com, dan.j.williams@intel.com, jgg@ziepe.ca, willy@infradead.org, 
+	linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de, 
+	zhang.lyra@gmail.com, debug@rivosinc.com, bjorn@kernel.org, balbirs@nvidia.com, 
+	lorenzo.stoakes@oracle.com, linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev, 
+	linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org, linux-cxl@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, John@groves.net, m.szyprowski@samsung.com, 
+	Jason Gunthorpe <jgg@nvidia.com>
+Subject: Re: [PATCH v2 08/14] mm/khugepaged: Remove redundant pmd_devmap()
+ check
+Message-ID: <g2w3xqtz6kz3u3c7zxvpv76azlfjwhau7tjbkvfokhbz727hxr@c2po6fgf4gu3>
+References: <cover.8d04615eb17b9e46fc0ae7402ca54b69e04b1043.1750075065.git-series.apopple@nvidia.com>
+ <d4aa84277015fe21978232ed4ac91bd7270e9ee0.1750075065.git-series.apopple@nvidia.com>
+ <31bdbfcf-bbfa-46b7-a427-806d42d88cec@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <31bdbfcf-bbfa-46b7-a427-806d42d88cec@redhat.com>
+X-ClientProxiedBy: SY5PR01CA0047.ausprd01.prod.outlook.com
+ (2603:10c6:10:1fc::9) To CY8PR12MB7705.namprd12.prod.outlook.com
+ (2603:10b6:930:84::9)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250610051644.2052814-1-hch@lst.de>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CY8PR12MB7705:EE_|IA1PR12MB9030:EE_
+X-MS-Office365-Filtering-Correlation-Id: 21437370-7f51-40cd-08e3-08ddaf06c5e4
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|376014|366016|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?5qxQRc3El/9suMvitA+mp2tFZdWng/nmnoflTNHzEx1Ufoz94k5+kccKjYWz?=
+ =?us-ascii?Q?dSzonhcA2o9xLJRjSZktfSDqLxV+JXI3zUEO2CAzTNuAxYip+t9IvQ0RgzI4?=
+ =?us-ascii?Q?NY3JgdVPuV/Y+2poxCrCUvDzXwCPacLiU2iamiNZgTCXzVQF9wxCO0Uo445c?=
+ =?us-ascii?Q?TVDmHbRSGz7cvlKKhXcZiMDdCnFWa/xNJN1UBpDKy64b8I3oG55eAHclhoIR?=
+ =?us-ascii?Q?HGKOFlWbr1a5rwZ60789DhKI4Zqcr/1NDrr/mq5M50OpZqUoyMf80kZ61P+Z?=
+ =?us-ascii?Q?euYLAgr7j91pnXllMCvFYsCdXKo82plxGNkyyIS0mfBd3ZGnP0A0idMNExNm?=
+ =?us-ascii?Q?iSetwzyQfsTNXx8ZiCXICv6ubMTVewIiVHdiHML1Ep7+1bZ6vMaL9DowKEQn?=
+ =?us-ascii?Q?fGHZxmxReZCJUSgjgngeKeqg3F2WaHDksrRvMw02T2urmRw8deog+D38nT2h?=
+ =?us-ascii?Q?R+8x0WaU6kiuh/U9KvogmzygvVNy/1/NpZX/RhwSGICGDmABb7xhq7hvnz4P?=
+ =?us-ascii?Q?M+caE2TUV2g0mfiZW50TVj2ttMRU9Fxo/rqitT50KSJGc5ZLQjf86LQ6UTUT?=
+ =?us-ascii?Q?2h7kOI+nnqsbJRLh1cIcAOLxNDBMGRrZPjZjX5UKf8bwrb21Ih6UsVKcn406?=
+ =?us-ascii?Q?Kp5qNR5Gu5qB+he5VCCSOLEnJf5I7JLEgucm1Q4+6Ap8K76DcSJ401yNWkPi?=
+ =?us-ascii?Q?agElgcaYQHFwWwHp6QRva8UKWARKHzhUUTmwXVooka/lA7isuwMNfx5sQUlQ?=
+ =?us-ascii?Q?Y6/ji4d9b4Vx6ElPLasOt4BKLfvON1OsUpISD4w9T4o+QNQjI73xfTaqcuZ1?=
+ =?us-ascii?Q?s4dlgRXoTlfWPqFpLQGtZZY2TRcmqVWSuHJNr/jxBZtwI3eadxPxsUh5JHqq?=
+ =?us-ascii?Q?kRDCvCrnBN91/s1nSt4j6v6PlOA+RTQ1b0fAskn/vpTec48fh0kr7FoeoLBY?=
+ =?us-ascii?Q?s+7jJRihYdLZV7Wx0rBDbt7SyJ1khzQ2KedwxuQzM0Bhykt/DUEWLSCD61Kg?=
+ =?us-ascii?Q?dLavbnOgjA83Q8vogqx0eotTB00ieqKvGvLGyX7/zZesX5KpjNNMipOuiJor?=
+ =?us-ascii?Q?14IvJLa+rJafEso9uINa+4surpUWHlP8K4J08TZQDHfSp+Nbt6CAse6Zh2NX?=
+ =?us-ascii?Q?b+GRt0AXWYes+iXcKFXebR9TxdwM+yBtfk9s16ExCt/QvCbFzbHE+zqNts8J?=
+ =?us-ascii?Q?eDL5bHh+YJcRcwwYjWhjnW45ZT8CtbVs12uTMV9QZo3tNM87UYoGPFY1H0A3?=
+ =?us-ascii?Q?Vjp8owtoC0+ykn02oCDgEcX2LWVNhVDFSdVOoKrgNZCGvd5NaEDC5k2S3v8o?=
+ =?us-ascii?Q?I7ZQBi8jj+NtYDIO2jORJHneFNSCe5RUJmZ9ANiuecOirp0x4pubhgX1zt0e?=
+ =?us-ascii?Q?xZ/yYrsYAnMOptBGPCE56pS2X6gR8e5gNjMdTcFQ2EdVYhnjPUibxXdwgp6l?=
+ =?us-ascii?Q?vEA/Ip28FdA=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR12MB7705.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?WqL+BMdkA3kSoRZXTFDY91mdv2QDpYvTqnprD0Z/4zxPymPHpjnwU2eTC3Om?=
+ =?us-ascii?Q?hesMLh96ZxxSpPSEZkcE3ohbZgqCaUbP8qoFV2FvXQlIzCEKkGZtGoqVp9YT?=
+ =?us-ascii?Q?2tJ+94FOndqCRa6r9gST15x1/5vedgnZbsE+dpd6JeK3gLv/xZ0aCCSJLHM/?=
+ =?us-ascii?Q?m4OxI3YzB9IUAvCZ+UubZ0FLIZOV/9+JsLm01KBFDSz+yYYNBDfRmPnWRZSM?=
+ =?us-ascii?Q?m+7SMfkkdNrO3P9TpXdKCixoR6jZt2KGfIK8iDE7RlUSrDE8LP6HL/UXmEHR?=
+ =?us-ascii?Q?ZQ0nr3EYLPNKE7z61y15+J1T0zUi7UtYjDsDlk1KvjxyXGaHcDTxa4eiXCfu?=
+ =?us-ascii?Q?aYPK/VWR232VIWvJUPGDMgqT19ie7HNh8vNx6pyABw8x+rcm7BRFw6hnqL7u?=
+ =?us-ascii?Q?sAZvkjgG0YXi4l6BnY7RJS2r1yW8Qd2+1m8KLuhCxBGvOy89seVEhfC0apar?=
+ =?us-ascii?Q?9CujQObyQDjdAKYFeZD2qSxEI0lI0feqnD/gNdXYp9V0RQJ7XUS3amDM05BP?=
+ =?us-ascii?Q?VZnrrJQH1gEjD0nDFYmrx4C3InLFR81wgHD0mVbp3gJwVg2rTTf7dTuYFM30?=
+ =?us-ascii?Q?gA4inTnAxoslAkc9j5hI0Ex08UtltxcC7KFSSi9h70FrGvOuVIU2Ic/iiM56?=
+ =?us-ascii?Q?jAClLuh4EuNVAHHULDyy9JbOT1bj/ht5pVuLWijURVMlBuRSeKsKIXewaMf0?=
+ =?us-ascii?Q?/PoDq1Jv9JXiCtdYgh3S9q93HzVcDEW8hh249uWYve3hHQhksSVhrdtRSN1W?=
+ =?us-ascii?Q?fqaNNEky0cyMGmqw1N8kKlHOT8MMJQ8wJz4ZjLEQhC/cfScgG3abhAguVN/I?=
+ =?us-ascii?Q?doSd0F004FAvR7OnlOj229MRrAyQEMHoVrUbwq/W6KIYjXIGq5ER8OUUokeO?=
+ =?us-ascii?Q?hCpqqXqHZmI6btYJPuoffu8qv2KvCnNIvrbyJuSw7b+FQpI09dbNfEI3KQm3?=
+ =?us-ascii?Q?jr1nCodB4L5ajG93og1r+gnK+vVdi3k/JgptSNpOMSA3r3KlJPobKXcPuGnB?=
+ =?us-ascii?Q?UaBLfCZTlaXxqIgVu+SJccazklKGI5t9NKsRW5N6WwmxKIJE60csouLMxyES?=
+ =?us-ascii?Q?JM6DnTxmSWI+WpU0sXV1MIa5rpCg5QMU8/u9KIriK3PM/cY4KOWqayjIRw7U?=
+ =?us-ascii?Q?uB7kBo06XxFF/6kR2kXuiSXOaBWfUDp16zz+kzwVeCZ5e+vRFNZoAuq8jIR3?=
+ =?us-ascii?Q?jaLcQlTl5/SOXBI2kBt/TWtwYLL8i1Fpj/vv61tb3mMT94n4y7iWvHtJtbD1?=
+ =?us-ascii?Q?LtmOgSApiS3JdiLEBNNs9gYfBSZR8+GFXmvGI6xGj1Zb2ybIOO1E8d4Bg00H?=
+ =?us-ascii?Q?7uUYSKN5pm4kHS1Kkl16saR2z/xwop8dHH7mk9v/QiR2Q0jb3Rv9TrG5qLVq?=
+ =?us-ascii?Q?/Mf/2QFwb5E/NO1jIkdFDzTw5kg6vvhPBBOnPL9I79Ipv+9uWP/4wVRgBnpt?=
+ =?us-ascii?Q?r9tLaC2UZlGx8Y+JhVabTzBDXNLucodiHoaKEg988yEU0ZBff2RGG7OQVco3?=
+ =?us-ascii?Q?jAv299aDLy3NUpCBX6JOFA4aY5//pqa86dhLpg1g2R4vL8l5LC8K5Ncug2hS?=
+ =?us-ascii?Q?MN2kUCXp48zIOth/vh7yt/AnhDbwW1KnKiojKRQx?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 21437370-7f51-40cd-08e3-08ddaf06c5e4
+X-MS-Exchange-CrossTenant-AuthSource: CY8PR12MB7705.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Jun 2025 07:56:18.2916
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: PF5upqql6Qr0TIVEk3/QA1IsGDrbUF7D48bKagkasURtuCW//680mwCZow/vyzVr4K6NLzZFq9Jj1giQ5kCnvg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB9030
 
-On Tue, Jun 10, 2025 at 07:14:57AM +0200, Christoph Hellwig wrote:
-> Hi all,
+On Tue, Jun 17, 2025 at 11:44:30AM +0200, David Hildenbrand wrote:
+> On 16.06.25 13:58, Alistair Popple wrote:
+> > The only users of pmd_devmap were device dax and fs dax. The check for
+> > pmd_devmap() in check_pmd_state() is therefore redundant as callers
+> > explicitly check for is_zone_device_page(), so this check can be dropped.
+> > 
 > 
-> I dug into a rabit hole about the log item formatting recently,
-> and noticed that the handling of the opheaders is still pretty
-> ugly because it leaks pre-delayed logging implementation
-> details into the log item implementations.
+> Looking again, is this true?
 > 
-> The core of this series is to remove the to reserve space in the
-> CIL buffers/shadow buffers for the opheaders that already were
-> generated more or less on the fly by the lowlevel log write
-> code anyway, but there's lots of other cleanups around it.
+> If we return "SCAN_SUCCEED", we assume there is a page table there that we
+> can map and walk.
+> 
+> But I assume we can drop that check because nobody will ever set
+> pmd_devmap() anymore?
+> 
+> So likely just the description+sibject of this patch should be adjusted.
 
-Another journal header corruption failure - I've hit the original
-one I reported and this one a few times today:
+Ugh. I wish I had've documented this better because it's all very "obvious",
+but I think the description is still accurate. These devmap checks could never
+have been hit and were therefore redundant, because in practice all callers call
+thp_vma_allowable_order() either before or after check_pmd_state() (or both).
 
-[ 2217.226513] XFS (loop220): bad number of regions (33206) in inode log format  
-[ 2217.231292] XFS: Assertion failed: 0, file: fs/xfs/xfs_log_recover.c, line: 2220
-[ 2217.236193] ------------[ cut here ]------------                              
-[ 2217.239216] kernel BUG at fs/xfs/xfs_message.c:102!                           
-[ 2217.253064] Oops: invalid opcode: 0000 [#1] SMP NOPTI                         
-[ 2217.253224] XFS (loop390): Unmounting Filesystem d3058266-1835-4b17-a51a-7276edbea3e9
-[ 2217.267570] CPU: 31 UID: 0 PID: 1291175 Comm: mount Not tainted 6.15.0-dgc+ #339 PREEMPT(full) 
-[ 2217.267574] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-[ 2217.267577] RIP: 0010:assfail+0x3a/0x40                                       
-[ 2217.267588] Code: 89 f1 48 89 fe 48 c7 c7 8a f7 ed 82 48 c7 c2 f2 85 e8 82 e8 c8 fc ff ff 80 3d 19 b6 50 03 01 74 09 0f 0b 5d c3 cc cc cc cc cc <0f> 0b 0f 1f 40 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90
-[ 2217.285594] RSP: 0018:ffffc90028293980 EFLAGS: 00010246                       
-[ 2217.285598] RAX: ad5e2cca7393a700 RBX: 0000000000000000 RCX: ad5e2cca7393a700 
-[ 2217.285600] RDX: ffffc90028293848 RSI: 000000000000000a RDI: ffffffff82edf78a 
-[ 2217.285602] RBP: ffffc90028293980 R08: 0000000000000000 R09: 000000000000000a 
-[ 2217.285603] R10: 0000000000000000 R11: 0000000000000021 R12: ffff8888e4108c80 
-[ 2217.285605] R13: 00000000000000b0 R14: ffff8889008165c0 R15: ffff8889008165f0 
-[ 2217.285609] FS:  00007fc3143ce840(0000) GS:ffff88909a83e000(0000) knlGS:0000000000000000
-[ 2217.285612] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033                 
-[ 2217.285614] CR2: 00007ff4b56f0000 CR3: 000000013aaab000 CR4: 0000000000350ef0 
-[ 2217.285619] Call Trace:                                                       
-[ 2217.285622]  <TASK>                                                           
-[ 2217.285625]  xlog_recover_add_to_trans+0x24e/0x2a0                            
-[ 2217.294934]  xlog_recovery_process_trans+0x67/0x100                           
-[ 2217.294937]  xlog_recover_process_ophdr+0xdd/0x140                            
-[ 2217.294939]  xlog_recover_process_data+0x9b/0x160                             
-[ 2217.294942]  xlog_recover_process+0xb2/0x110                                  
-[ 2217.294943]  xlog_do_recovery_pass+0x685/0x900                                
-[ 2217.294946]  xlog_do_log_recovery+0x43/0xb0                                   
-[ 2217.306831]  xlog_do_recover+0x2c/0x190                                       
-[ 2217.306834]  xlog_recover+0x165/0x180                                         
-[ 2217.306835]  xfs_log_mount+0x14d/0x270                                        
-[ 2217.306843]  xfs_mountfs+0x3aa/0x990                                          
-[ 2217.306846]  xfs_fs_fill_super+0x701/0x870                                    
-[ 2217.306850]  ? __pfx_xfs_fs_fill_super+0x10/0x10                              
-[ 2217.321294]  get_tree_bdev_flags+0x120/0x1a0                                  
-[ 2217.321314]  get_tree_bdev+0x10/0x20                                          
-[ 2217.321316]  xfs_fs_get_tree+0x15/0x20                                        
-[ 2217.321319]  vfs_get_tree+0x28/0xe0                                           
-[ 2217.321321]  vfs_cmd_create+0x5f/0xd0                                         
-[ 2217.321326]  vfs_fsconfig_locked+0x50/0x130                                   
-[ 2217.321329]  __se_sys_fsconfig+0x349/0x3d0                                    
-[ 2217.321332]  __x64_sys_fsconfig+0x25/0x30                                     
-[ 2217.321336]  x64_sys_call+0x3be/0x2f60 
+thp_vma_allowable_order() will eventually (in __thp_vma_allowable_orders())
+check for a DAX VMA and bail. But yes, I should call that out in the patch
+subject so I don't have to keep relearning this obvious fact :-)
 
-I'm going to stop testing this branch now and leave it until the
-next version is posted for review.
+> FWIW, I think check_pmd_state() should be changed to work on pmd_leaf() etc,
+> but that's something for another day.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Sure, and I do appreciate these kind of remarks because sometimes I get bored
+enough to come back and actually do them. Not very often ... but sometimes.
+
+> -- 
+> Cheers,
+> 
+> David / dhildenb
+> 
