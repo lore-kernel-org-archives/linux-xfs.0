@@ -1,177 +1,131 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E93033085D4
-	for <linux-xfs@vger.kernel.org>; Thu, 19 Jun 2025 02:30:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43147184F
+	for <linux-xfs@vger.kernel.org>; Thu, 19 Jun 2025 02:42:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750300263; cv=none; b=sQbgLWAXeQd3sKT82IOt9leJbzpXaszAH/XeXXFQo6Pkt1MoZcdkJ7gP7vS8LaGZql5jNsXR4GuJUjEOWIRRn7QFz7vi8uNpZ41i9F4L9epEoNs2RJYubQfJ0Vqc5RScbRSZFUXwUKPaCNOxUDop1WdukF6ZkZ5JJG+2D+iEdoc=
+	t=1750300965; cv=none; b=ST1rMTLBLRrZZtS2l8uxEkUTd3cC4J3pJIunMQAoEGfxZsiy2tYO/xz6alCYLYjXozHid5WChTLR+FDsYhbl8r3V8bEu0EzuBk8zPJTlqNrpT8OLStLa11Kgzyl4IPXxyOfrgQpCF2Xigpg/PGwmrgkonj2krR51lr9N+kuwpWs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750300263; c=relaxed/simple;
-	bh=UaAwpSqZ97E4o9XpN2ivmb3ocDTQkkTuge/oOJao+Wk=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bZOZGsuwNxdJYyT00QvC0QpHzAWwxYp1NsGrTMU3lMSf3dlCE0ndGrS8fWEKHYyaEVZMPs+Zsd3ZC+ERplij9dYoRW7uwNbkC+xBV8hhtndnyqaOzMj4FEbdXHmY85zY0zTmFUAqLdvIb1sKhGVWkckdiAeBIICSAR3WBHvJv7U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.234])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4bN4Lb4cG5z2TSK0;
-	Thu, 19 Jun 2025 10:29:27 +0800 (CST)
-Received: from dggemv705-chm.china.huawei.com (unknown [10.3.19.32])
-	by mail.maildlp.com (Postfix) with ESMTPS id D5D3F140159;
-	Thu, 19 Jun 2025 10:30:56 +0800 (CST)
-Received: from kwepemn100013.china.huawei.com (7.202.194.116) by
- dggemv705-chm.china.huawei.com (10.3.19.32) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 19 Jun 2025 10:30:56 +0800
-Received: from localhost (10.175.112.188) by kwepemn100013.china.huawei.com
- (7.202.194.116) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 19 Jun
- 2025 10:30:56 +0800
-Date: Thu, 19 Jun 2025 10:17:27 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <djwong@kernel.org>, <cem@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <david@fromorbit.com>, <yi.zhang@huawei.com>,
-	<houtao1@huawei.com>, <yangerkun@huawei.com>, <lonuxli.64@gmail.com>
-Subject: Re: [PATCH] xfs: fix incorrect tail lsn tracking when AIL is empty
-Message-ID: <aFNzNxgPNvHj4J2O@localhost.localdomain>
-References: <20250523063046.564170-1-leo.lilong@huawei.com>
+	s=arc-20240116; t=1750300965; c=relaxed/simple;
+	bh=7wovHLABMUxOjzouPiBdM3z4rI+e4/Y5WEzhhi73ljA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TxxnKQQLNgcVo3IfpKAsOTgTrdH495BQPOWqO4SiLJPt8B1iObj2nBET8rbr0FEQdgICNsk5ehdgNa9eDPfUGUYDXmGtbzhoD4/VZMn+YCPDALU4j227JGEogebMb465AbYbkAVkHoEifIfbxfsg+bZvbB6xrsHicZylcdgL/Lc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=xfiJ5D8B; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="xfiJ5D8B"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3138d31e40aso202569a91.1
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jun 2025 19:42:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1750300963; x=1750905763; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=j+zqE2bUQla7RpyZpXqrV1wADVIc70PVNgtx5FzauDk=;
+        b=xfiJ5D8BYduoB+F7n5uhUbGQI9Ui5DE9LF4hioSafWkemyZlMhCM3jtLg7PDx+Q/NC
+         quGzFBhczBEGzVCr8fU3UkMB450zffVh4qLqxkElqVk4nPKURrhrWQhpQfHk5KU/zKhX
+         7ByEnjnQnxT/relmYR5vhkLrAl/XEV1RSEVpbF8JTrSTkz48P9bN90Okje0dJl1Te9lB
+         OMrX2Xf72TIKKMcYIwcx1x+GlNvSrOnPDEYEctQI47q92ajXbFgQhNPjVTrDVQuiTVX2
+         R0kK+UYoNORWVpymAQ9KpjynCHxRZlQEG0xxgsNbRaV2Xtl3SFQcN1aX+HwZiIX8au2V
+         Y8PA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750300963; x=1750905763;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=j+zqE2bUQla7RpyZpXqrV1wADVIc70PVNgtx5FzauDk=;
+        b=UbKeoBIan1WvNXJKksWm7gA44gADxWCiq+q9U+qaWxzGTVNFJ3qhfdQ4guu0B6EA6e
+         uWh3YvB8aSdWgf4Ht4D70OaHQSAxw1OXLkTNAgPQIk6/ArUH42RjJvDYCIO1gx5ikFRM
+         V3K4D9CJ8AsIq/cPJiSlHluuJwJ5pZQ4G73WEodcoDpJceZtz9sbMwX/qiPgetlCadj6
+         4U6Bjkc0xOk+k3FWMLe4vXke4MNvqgwiWB5+HGMGr48gUZ7K0fzy5HkTQpM/exYo8LJC
+         xAL5zMJcnHItjf/fktqzC7DSmN7ma2Nyq8jsWErTT/9bqDftdb0tEP1wnumj9NCaj12h
+         hfWA==
+X-Forwarded-Encrypted: i=1; AJvYcCWvXvYYeExzTcpuklyCzBrdkk51yRRIUOyjZ4p3NOeKZm+6PIjahgpCCOFWGMxalsbLiGLy+1qwWPs=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwIsP/jUcKnQY3j9NyFSaUP03aCWhpR5RkfqIihdHAjzzsaB0Xt
+	MuR4bH6dBQLR6p33H9xqYs7ZDB1V0MJubqp57XpFr0DLZsGAxO5K2BjHGiVPPsLHx9o=
+X-Gm-Gg: ASbGnctbY7pOol61hpUsAXPdOIb5ehVW5/r4QnNuZZF1hrFrDB8vmH/xrb+7fQ6Ei9I
+	Za5TCF4kHy624qwnBQMbFroeC2bH37hCqayLRgnfUF/aswjAY3vr19z2CRPVCsvz4sQdJMuGkDc
+	i1We6PuhqjtlAM2/3wgtq+3YhDIjapUfQ1i1q7VeiMgq7ttkNRKR7QsFhsgnP1AJE5rYhAWEDf8
+	t3Pyx4zaKrV8M0PUlg7recCqwQtePPr0Fkx+/Q7O2C+AilHUZ9J5ouve5/eFfPkLD8hzcObKauc
+	w0dc1VyGGPOsiJBWS099HkKWKLe04ntXcy28MI+rf+m8joQrqTl/loRH7bvVfFnCzPphgCwhgOV
+	pvNph+G6Qmq5D+b15SDCqxsKa4dX8maJdHeQHyg==
+X-Google-Smtp-Source: AGHT+IFC40tQbHF0XXT8ujRd0AXJBm1jxSMNVxz8L3VY4RURUurXUuPKkMgLoiEhSaopETS4JPCuhg==
+X-Received: by 2002:a17:90b:3d01:b0:311:c1ec:7d11 with SMTP id 98e67ed59e1d1-313f1db807amr33156046a91.18.1750300963422;
+        Wed, 18 Jun 2025 19:42:43 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-184-88.pa.nsw.optusnet.com.au. [49.180.184.88])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3158a331426sm849823a91.44.2025.06.18.19.42.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Jun 2025 19:42:42 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1uS5Ed-00000000RRj-28Hk;
+	Thu, 19 Jun 2025 12:42:39 +1000
+Date: Thu, 19 Jun 2025 12:42:39 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, John Garry <john.g.garry@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 7/7] xfs: remove the bt_meta_sectorsize field in struct
+ buftarg
+Message-ID: <aFN5H-uDW5vxQmZJ@dread.disaster.area>
+References: <20250617105238.3393499-1-hch@lst.de>
+ <20250617105238.3393499-8-hch@lst.de>
+ <aFH_bpJrowjwTeV_@dread.disaster.area>
+ <20250618051509.GF28260@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250523063046.564170-1-leo.lilong@huawei.com>
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemn100013.china.huawei.com (7.202.194.116)
+In-Reply-To: <20250618051509.GF28260@lst.de>
 
-On Fri, May 23, 2025 at 02:30:46PM +0800, Long Li wrote:
+On Wed, Jun 18, 2025 at 07:15:09AM +0200, Christoph Hellwig wrote:
+> On Wed, Jun 18, 2025 at 09:51:10AM +1000, Dave Chinner wrote:
+> > On Tue, Jun 17, 2025 at 12:52:05PM +0200, Christoph Hellwig wrote:
+> > > The file system only has a single file system sector size.
+> > 
+> > The external log device can have a different sector size to
+> > the rest of the filesystem. This series looks like it removes the
+> > ability to validate that the log device sector size in teh
+> > superblock is valid for the backing device....
+> 
+> I don't follow.  Do you mean it remove the future possibility to do this?
 
-Friendly ping, hoping someone can give me some suggestions.
+No, I mean that this:
 
-> When the AIL is empty, we track ail_head_lsn as the tail LSN, where
-> ail_head_lsn records the commit LSN of Checkpoint N, the last checkpoint
-> inserted into the AIL. There are two possible scenarios when the AIL is
-> empty:
-> 
-> 1. Items from Checkpoint N were previously inserted into the AIL, have
->    been written back, and subsequently removed from the AIL.
-> 2. Items from Checkpoint N have not yet been inserted into the AIL, but
->    the preparation for insertion is complete, and ail_head_lsn has already
->    been updated to Checkpoint N's commit LSN.
-> 
-> For scenario 1, the items in Checkpoint N have already been written to the
-> metadata area. Even in the event of a crash, Checkpoint N does not require
-> recovery, so forwarding the tail LSN to Checkpoint N's commit LSN is
-> reasonable.
-> 
-> For scenario 2, the items in Checkpoint N have not been written to the
-> metadata area. If new logs (ie., Checkpoint N+1) are flushed to disk with
-> the tail LSN recorded as Checkpoint N's commit LSN, a crash would make it
-> impossible to recover Checkpoint N.
-> 
-> Checkpoint N    start N       commit N
->                    +-------------+------------+--------------+
-> Checkpoint N+1                           start N+1      commit N+1
-> 
-> Scenario 2 is possible. I encountered this issue in the Linux 6.6, where
-> l_last_sync_lsn was used to track the tail LSN when the AIL is empty.
-> Although the code has been refactored and I have not reproduced this issue
-> in the latest mainline kernel, I believe the problem still exists.
-> 
-> In the function xlog_cil_ail_insert(), which inserts items from the ctx
-> into the AIL, the update of ail_head_lsn and the actual insertion of items
-> into the AIL are not atomic. This process is not protected by `ail_lock`
-> or `log->l_icloglock`, leaving a window that could result in the iclog
-> being filled with an incorrect tail LSN.
-> 
-> When the AIL is empty, the tail LSN should be set to Checkpoint N's start
-> LSN before the items from Checkpoint N are inserted into the AIL. This
-> ensures that Checkpoint N can be recovered in case of a crash. After the
-> items from Checkpoint N are inserted into the AIL, the tail LSN tracked
-> for an empty AIL can then be updated to Checkpoint N's commit LSN. This
-> cannot be achieved with ail_head_lsn alone, so a new variable,
-> ail_tail_lsn, is introduced specifically to track the tail LSN when the
-> AIL is empty.
-> 
-> Fixes: 14e15f1bcd73 ("xfs: push the grant head when the log head moves forward") # further than this
-> Signed-off-by: Long Li <leo.lilong@huawei.com>
-> ---
->  fs/xfs/xfs_log_cil.c     | 2 ++
->  fs/xfs/xfs_log_recover.c | 3 +++
->  fs/xfs/xfs_trans_ail.c   | 2 +-
->  fs/xfs/xfs_trans_priv.h  | 1 +
->  4 files changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index f66d2d430e4f..ecc31329669a 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -775,6 +775,7 @@ xlog_cil_ail_insert(
->  	xfs_trans_ail_cursor_last(ailp, &cur, ctx->start_lsn);
->  	old_head = ailp->ail_head_lsn;
->  	ailp->ail_head_lsn = ctx->commit_lsn;
-> +	ailp->ail_tail_lsn = ctx->start_lsn;
->  	/* xfs_ail_update_finish() drops the ail_lock */
->  	xfs_ail_update_finish(ailp, NULLCOMMITLSN);
->  
-> @@ -857,6 +858,7 @@ xlog_cil_ail_insert(
->  
->  	spin_lock(&ailp->ail_lock);
->  	xfs_trans_ail_cursor_done(&cur);
-> +	ailp->ail_tail_lsn = ctx->commit_lsn;
->  	spin_unlock(&ailp->ail_lock);
->  }
->  
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 2f76531842f8..ef04fd8ded67 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -1179,6 +1179,8 @@ xlog_check_unmount_rec(
->  					log->l_curr_cycle, after_umount_blk);
->  			log->l_ailp->ail_head_lsn =
->  					atomic64_read(&log->l_tail_lsn);
-> +			log->l_ailp->ail_tail_lsn =
-> +					atomic64_read(&log->l_tail_lsn);
->  			*tail_blk = after_umount_blk;
->  
->  			*clean = true;
-> @@ -1212,6 +1214,7 @@ xlog_set_state(
->  	if (bump_cycle)
->  		log->l_curr_cycle++;
->  	atomic64_set(&log->l_tail_lsn, be64_to_cpu(rhead->h_tail_lsn));
-> +	log->l_ailp->ail_tail_lsn = be64_to_cpu(rhead->h_lsn);
->  	log->l_ailp->ail_head_lsn = be64_to_cpu(rhead->h_lsn);
->  }
->  
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 67c328d23e4a..bdd45aaa5bc1 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -740,7 +740,7 @@ __xfs_ail_assign_tail_lsn(
->  
->  	tail_lsn = __xfs_ail_min_lsn(ailp);
->  	if (!tail_lsn)
-> -		tail_lsn = ailp->ail_head_lsn;
-> +		tail_lsn = ailp->ail_tail_lsn;
->  
->  	WRITE_ONCE(log->l_tail_space,
->  			xlog_lsn_sub(log, ailp->ail_head_lsn, tail_lsn));
-> diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-> index f945f0450b16..4ed9ada298ec 100644
-> --- a/fs/xfs/xfs_trans_priv.h
-> +++ b/fs/xfs/xfs_trans_priv.h
-> @@ -56,6 +56,7 @@ struct xfs_ail {
->  	spinlock_t		ail_lock;
->  	xfs_lsn_t		ail_last_pushed_lsn;
->  	xfs_lsn_t		ail_head_lsn;
-> +	xfs_lsn_t		ail_tail_lsn;
->  	int			ail_log_flush;
->  	unsigned long		ail_opstate;
->  	struct list_head	ail_buf_list;
-> -- 
-> 2.39.2
-> 
+# mkfs.xfs -l sectsize=512,logdev=/dev/nvme1n1 -d sectsize=4k ....  /dev/nvme0n1
+
+is an valid filesystem configuration and has been for a long, long
+time. i.e. the logdev does not have to have the same physical sector
+size support as the data device.
+
+If the above filesystem was moved to new devices where the external
+log device also had a minimum LBA sector size of 4kB, that
+filesystem must not mount. The 512 byte sector size for the journal
+means journal IO is aligned and rounded to 512 byte boundaries, not
+4kB boundaries like the new underlying device requires. IOWs, that
+fs config is unusable on that new device config.
+
+This sort of sector size mismatch is currently caught by the
+xfs_setup_devices() -> xfs_configure_buftarg() ->
+bdev_validate_blocksize() path. That validation path is what you are
+removing in this series, so you are introducing regressions in device
+sector size validation during mount....
+
+> Even then it would be better to do this directly based off the superblock
+> and not use a field in the buftarg currently only used for cached buffers
+> (which aren't used on anything but the main device).
+
+IDGI. The sector size passed to xfs_configure_buftarg() by
+xfs_setup_devices() for the bdev LBA size check comes directly from
+the superblock. You're advocating that we do exactly what the code
+you are removing already does....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
