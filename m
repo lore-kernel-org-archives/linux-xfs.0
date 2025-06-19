@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3755E238D49;
-	Thu, 19 Jun 2025 11:31:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A10A52472AF;
+	Thu, 19 Jun 2025 11:31:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750332717; cv=none; b=gZKRHI/JumITiGVkiHjjQFy3fBrSol/RiHQmJo0tNbfj0D9PrNe5yPhWNugcuFo+lW+v6ExaqhaGLnYhK2HenDLJWvvYhLJhVblG+h+1xKn/qhIYD/pVXg0MTEGeV9MdNlMw/uKdaWW90cgFT99SisCV2ECIuGai52NqZFaKaPI=
+	t=1750332719; cv=none; b=L7Kx+Zux8wo6ELJrnk6qcRtvXEicpm+I+/7jE4y7s5x16+jJnyQqH/0tpnWhd7X7LzQIzPeeUhNSK2Tn4b4Nr6XLW//WNFBNN4WmWy2UrAdfJ4GXJq3ZNwfzQY51AQgoZ8HmVMVKs5++GIYcMfCvMa/dmFgWOGzSRI3+uZ1ZZIg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750332717; c=relaxed/simple;
-	bh=vaeUbIf6g70eDUQHH0FVIYwdkXCZDfHjuQwn5m0Q7Ko=;
+	s=arc-20240116; t=1750332719; c=relaxed/simple;
+	bh=sSF9i2BsN1cG8BBQhoxQ70h+ctUaQWNPXUFO+RoPiK0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HHw0bzThzWAMQJklIff8SKgAiWv6vvaKbMbPfyEdvqR5HvqRjklXv+agWwjkdUa8Ihmu/JJsd6KRfJqRZLkhprb+rDrgEAM38kEqd59/txyNPvj9zbrwe5HFijk9O9dl7ighZooNaNXnVJk1S7YFxf3CHoOYRGSxDTrUNT3iqcY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=OavWjFHFVSslvjKT5iqgD7r/11H7mi+Esm94Em9RvzeJu1VZwPejjjfGPc72/Gf+lbAWKihibO4Vg9YF/4XiWEMiZUsG27a6vA8hWNSPb4FdKdZiP5IkZncOHHHBN56AG5jplqGgcfqvjU6etdaOX4kmAGfNbaoKo0Q4mVFMbxk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bNJNV3bY6zYQvHn;
-	Thu, 19 Jun 2025 19:31:54 +0800 (CST)
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bNJNR23nTzKHN4l;
+	Thu, 19 Jun 2025 19:31:51 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 6BC8C1A0E88;
-	Thu, 19 Jun 2025 19:31:53 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 9871C1A123C;
+	Thu, 19 Jun 2025 19:31:49 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.112.188])
-	by APP4 (Coremail) with SMTP id gCh0CgCH618Y9VNoihn_Pw--.51230S13;
-	Thu, 19 Jun 2025 19:31:53 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgCH618Y9VNoihn_Pw--.51230S8;
+	Thu, 19 Jun 2025 19:31:49 +0800 (CST)
 From: Zhang Yi <yi.zhang@huaweicloud.com>
 To: linux-fsdevel@vger.kernel.org,
 	linux-ext4@vger.kernel.org,
@@ -46,9 +46,9 @@ Cc: linux-xfs@vger.kernel.org,
 	chengzhihao1@huawei.com,
 	yukuai3@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v2 9/9] ext4: add FALLOC_FL_WRITE_ZEROES support
-Date: Thu, 19 Jun 2025 19:18:06 +0800
-Message-ID: <20250619111806.3546162-10-yi.zhang@huaweicloud.com>
+Subject: [PATCH v2 4/9] scsi: sd: set max_hw_wzeroes_unmap_sectors if device supports SD_ZERO_*_UNMAP
+Date: Thu, 19 Jun 2025 19:18:01 +0800
+Message-ID: <20250619111806.3546162-5-yi.zhang@huaweicloud.com>
 X-Mailer: git-send-email 2.46.1
 In-Reply-To: <20250619111806.3546162-1-yi.zhang@huaweicloud.com>
 References: <20250619111806.3546162-1-yi.zhang@huaweicloud.com>
@@ -59,181 +59,55 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCH618Y9VNoihn_Pw--.51230S13
-X-Coremail-Antispam: 1UD129KBjvJXoW3Xry7Ar1DWF4Dtry7KFyfZwb_yoW7CFyfpF
-	Z8XF1rKa4Iq3429r4fCw4kurn0q3WkKry5WrWSgry0939rJw1fKFn0gFyrZF90gFWUAF45
-	Xa1Y9ryjk3W7A37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
-	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
-	AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
-	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
-	4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
-	daVFxhVjvjDU0xZFpf9x0pRiF4iUUUUU=
+X-CM-TRANSID:gCh0CgCH618Y9VNoihn_Pw--.51230S8
+X-Coremail-Antispam: 1UD129KBjvdXoWrZFW3tF18AF48uFyDGryUWrg_yoWDKrc_ur
+	4fuFs7JrWjyF1IkrW7ZF43Ar9Iva1UZFy8uFnYv3ySvw4xXFnYkF10vF1a93WUXayUKFZx
+	CwsrXrySvr1DAjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbvAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
+	IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
+	F7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr
+	1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
+	M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+	v20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+	F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2
+	IY04v7MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY
+	6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17
+	CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF
+	0xvE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCw
+	CI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsG
+	vfC2KfnxnUUI43ZEXa7sRRtCztUUUUU==
 X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
 From: Zhang Yi <yi.zhang@huawei.com>
 
-Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
-the unmap write zeroes operation. This first allocates blocks as
-unwritten, then issues a zero command outside of the running journal
-handle, and finally converts them to a written state.
+When the device supports the Write Zeroes command and the zeroing mode
+is set to SD_ZERO_WS16_UNMAP or SD_ZERO_WS10_UNMAP, this means that the
+device supports unmap Write Zeroes, so set the corresponding
+max_hw_write_zeroes_unmap_sectors to max_write_zeroes_sectors on the
+device's queue limit.
 
 Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- fs/ext4/extents.c           | 66 ++++++++++++++++++++++++++++++-------
- include/trace/events/ext4.h |  3 +-
- 2 files changed, 57 insertions(+), 12 deletions(-)
+ drivers/scsi/sd.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-index b543a46fc809..b43aa82c1b39 100644
---- a/fs/ext4/extents.c
-+++ b/fs/ext4/extents.c
-@@ -4501,6 +4501,8 @@ static int ext4_alloc_file_blocks(struct file *file, ext4_lblk_t offset,
- 	struct ext4_map_blocks map;
- 	unsigned int credits;
- 	loff_t epos, old_size = i_size_read(inode);
-+	unsigned int blkbits = inode->i_blkbits;
-+	bool alloc_zero = false;
- 
- 	BUG_ON(!ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS));
- 	map.m_lblk = offset;
-@@ -4513,6 +4515,17 @@ static int ext4_alloc_file_blocks(struct file *file, ext4_lblk_t offset,
- 	if (len <= EXT_UNWRITTEN_MAX_LEN)
- 		flags |= EXT4_GET_BLOCKS_NO_NORMALIZE;
- 
-+	/*
-+	 * Do the actual write zero during a running journal transaction
-+	 * costs a lot. First allocate an unwritten extent and then
-+	 * convert it to written after zeroing it out.
-+	 */
-+	if (flags & EXT4_GET_BLOCKS_ZERO) {
-+		flags &= ~EXT4_GET_BLOCKS_ZERO;
-+		flags |= EXT4_GET_BLOCKS_UNWRIT_EXT;
-+		alloc_zero = true;
-+	}
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 3f6e87705b62..877dc34e8f37 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1141,6 +1141,11 @@ static void sd_config_write_same(struct scsi_disk *sdkp,
+ out:
+ 	lim->max_write_zeroes_sectors =
+ 		sdkp->max_ws_blocks * (logical_block_size >> SECTOR_SHIFT);
 +
- 	/*
- 	 * credits to insert 1 extent into extent tree
- 	 */
-@@ -4549,9 +4562,7 @@ static int ext4_alloc_file_blocks(struct file *file, ext4_lblk_t offset,
- 		 * allow a full retry cycle for any remaining allocations
- 		 */
- 		retries = 0;
--		map.m_lblk += ret;
--		map.m_len = len = len - ret;
--		epos = (loff_t)map.m_lblk << inode->i_blkbits;
-+		epos = (loff_t)(map.m_lblk + ret) << blkbits;
- 		inode_set_ctime_current(inode);
- 		if (new_size) {
- 			if (epos > new_size)
-@@ -4571,6 +4582,21 @@ static int ext4_alloc_file_blocks(struct file *file, ext4_lblk_t offset,
- 		ret2 = ret3 ? ret3 : ret2;
- 		if (unlikely(ret2))
- 			break;
-+
-+		if (alloc_zero &&
-+		    (map.m_flags & (EXT4_MAP_MAPPED | EXT4_MAP_UNWRITTEN))) {
-+			ret2 = ext4_issue_zeroout(inode, map.m_lblk, map.m_pblk,
-+						  map.m_len);
-+			if (likely(!ret2))
-+				ret2 = ext4_convert_unwritten_extents(NULL,
-+					inode, (loff_t)map.m_lblk << blkbits,
-+					(loff_t)map.m_len << blkbits);
-+			if (ret2)
-+				break;
-+		}
-+
-+		map.m_lblk += ret;
-+		map.m_len = len = len - ret;
- 	}
- 	if (ret == -ENOSPC && ext4_should_retry_alloc(inode->i_sb, &retries))
- 		goto retry;
-@@ -4636,7 +4662,11 @@ static long ext4_zero_range(struct file *file, loff_t offset,
- 	if (end_lblk > start_lblk) {
- 		ext4_lblk_t zero_blks = end_lblk - start_lblk;
++	if (sdkp->zeroing_mode == SD_ZERO_WS16_UNMAP ||
++	    sdkp->zeroing_mode == SD_ZERO_WS10_UNMAP)
++		lim->max_hw_wzeroes_unmap_sectors =
++				lim->max_write_zeroes_sectors;
+ }
  
--		flags |= (EXT4_GET_BLOCKS_CONVERT_UNWRITTEN | EXT4_EX_NOCACHE);
-+		if (mode & FALLOC_FL_WRITE_ZEROES)
-+			flags = EXT4_GET_BLOCKS_CREATE_ZERO | EXT4_EX_NOCACHE;
-+		else
-+			flags |= (EXT4_GET_BLOCKS_CONVERT_UNWRITTEN |
-+				  EXT4_EX_NOCACHE);
- 		ret = ext4_alloc_file_blocks(file, start_lblk, zero_blks,
- 					     new_size, flags);
- 		if (ret)
-@@ -4745,11 +4775,18 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 	if (IS_ENCRYPTED(inode) &&
- 	    (mode & (FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_INSERT_RANGE)))
- 		return -EOPNOTSUPP;
-+	/*
-+	 * Don't allow writing zeroes if the underlying device does not
-+	 * enable the unmap write zeroes operation.
-+	 */
-+	if ((mode & FALLOC_FL_WRITE_ZEROES) &&
-+	    !bdev_write_zeroes_unmap_sectors(inode->i_sb->s_bdev))
-+		return -EOPNOTSUPP;
- 
- 	/* Return error if mode is not supported */
- 	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
--		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |
--		     FALLOC_FL_INSERT_RANGE))
-+		     FALLOC_FL_ZERO_RANGE | FALLOC_FL_COLLAPSE_RANGE |
-+		     FALLOC_FL_INSERT_RANGE | FALLOC_FL_WRITE_ZEROES))
- 		return -EOPNOTSUPP;
- 
- 	inode_lock(inode);
-@@ -4780,16 +4817,23 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 	if (ret)
- 		goto out_invalidate_lock;
- 
--	if (mode & FALLOC_FL_PUNCH_HOLE)
-+	switch (mode & FALLOC_FL_MODE_MASK) {
-+	case FALLOC_FL_PUNCH_HOLE:
- 		ret = ext4_punch_hole(file, offset, len);
--	else if (mode & FALLOC_FL_COLLAPSE_RANGE)
-+		break;
-+	case FALLOC_FL_COLLAPSE_RANGE:
- 		ret = ext4_collapse_range(file, offset, len);
--	else if (mode & FALLOC_FL_INSERT_RANGE)
-+		break;
-+	case FALLOC_FL_INSERT_RANGE:
- 		ret = ext4_insert_range(file, offset, len);
--	else if (mode & FALLOC_FL_ZERO_RANGE)
-+		break;
-+	case FALLOC_FL_ZERO_RANGE:
-+	case FALLOC_FL_WRITE_ZEROES:
- 		ret = ext4_zero_range(file, offset, len, mode);
--	else
-+		break;
-+	default:
- 		ret = -EOPNOTSUPP;
-+	}
- 
- out_invalidate_lock:
- 	filemap_invalidate_unlock(mapping);
-diff --git a/include/trace/events/ext4.h b/include/trace/events/ext4.h
-index 156908641e68..6f9cf2811733 100644
---- a/include/trace/events/ext4.h
-+++ b/include/trace/events/ext4.h
-@@ -92,7 +92,8 @@ TRACE_DEFINE_ENUM(ES_REFERENCED_B);
- 	{ FALLOC_FL_KEEP_SIZE,		"KEEP_SIZE"},		\
- 	{ FALLOC_FL_PUNCH_HOLE,		"PUNCH_HOLE"},		\
- 	{ FALLOC_FL_COLLAPSE_RANGE,	"COLLAPSE_RANGE"},	\
--	{ FALLOC_FL_ZERO_RANGE,		"ZERO_RANGE"})
-+	{ FALLOC_FL_ZERO_RANGE,		"ZERO_RANGE"},		\
-+	{ FALLOC_FL_WRITE_ZEROES,	"WRITE_ZEROES"})
- 
- TRACE_DEFINE_ENUM(EXT4_FC_REASON_XATTR);
- TRACE_DEFINE_ENUM(EXT4_FC_REASON_CROSS_RENAME);
+ static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
 -- 
 2.46.1
 
