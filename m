@@ -1,253 +1,284 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2072.outbound.protection.outlook.com [40.107.93.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A9B827E05C
-	for <linux-xfs@vger.kernel.org>; Wed, 18 Jun 2025 21:54:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750283698; cv=none; b=eYYnF5aNtiWLLPK+9HrUTAZDOUH0Fnze/65xLohIDeR2wwSJEbkByIXmmYHyQPT3upVh+erv/U4+N1GLA37fAge9y23VRPmBxP9NBlfCgsyf4aHHU8j12T2RkA0L1oTkES7VIUmoGXcMwlyUzCxjKb8HKlU2puL3d4+t0RSkBlE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750283698; c=relaxed/simple;
-	bh=t39FVWDmcaJhaf+zVkBbiZy0L4P2c/pGkD2Q7QN6nlM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=X4VOqI8ZSEQU9K1l56LAD8thOolMCtdpNVcjObrL9GE6a3oCdR7PCvGraQoe9Me3SAfv2RTzPyDxDZAe5dRiOOXjLuNYrzFB6GZRxUWLgZqaggkN/UCpzFB/qNo7iXgNeF4aUuRuPS3JwPobfkkf/G4ZNVaNSJ9xpdL+DX7DA+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=SAhy6xA6; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B76B9152DE7;
+	Thu, 19 Jun 2025 00:41:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.93.72
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1750293705; cv=fail; b=JXd4ppJTT+9/mOQolBuwtPVLNqcdcjg52D56wVKILKkIRe46OwBINVWGMKERu8TF4b7QFaNY/zpFaRzfzcu7f2j5S0QhDiBGEWd27QMNwOIA5G51retmGGREhApxxAzhbIO+btEHI7S5pFGgKVrQHUAaga2d63my0ZiZXIEpJZU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1750293705; c=relaxed/simple;
+	bh=W7xh3dRw0IJJ5yKjR0iMr/+XDdhbPd9XJ6/iIqH3s64=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=B30etif7vRq1/53UCmqeSOYCD0nnMimXOCkeL+TPOApkei89D4WcUCHt3B75efRDaVBIJ5/fuk4sLqNbYZs/k0aMEk5fo5oeu0w2URjQVXys67tZDZXPyO/xueOpNfBslWd8mE9wUCuii7zDSJEHE9qOLi/lTxlB6ZmA9hyeyEg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=qrSl0Iuf; arc=fail smtp.client-ip=40.107.93.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="SAhy6xA6"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-236192f8770so1011965ad.0
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jun 2025 14:54:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1750283696; x=1750888496; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=ibZ9nQ6oICIpsadgHEQD284rA292hgtTlZ/xFlP3Si0=;
-        b=SAhy6xA6YrDiTXL9CqyVeZ2tyaX9S/WI6UWA5ffS8p6zR6BFno8m+Ez9qn4YizGnHh
-         NeSxzMlK39NU8BWPujuicpePjzqwKe2e9Ek29yOghQLcDKGNoAl0GV/9aJW/b7g1/puA
-         M8liHplScA5yFQdbN15BBGGn9YRPXwlHNPjFY8PW9ZuA3VPLzw5k8aJsYo2bX93eIg1G
-         8jeewyX3r/Orn3jPqT6f4IHIM6OcI9I1Jsexb7DSBF3gjgmgFdyTZ1H+EzwCOZY97GY1
-         I5Sgo0vdZhyKUy8LH3jcnotGBfTbxBXN9SjhrYMzAwqS+GjHkNQd3psBuEl6I3wutRYI
-         opdQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750283696; x=1750888496;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ibZ9nQ6oICIpsadgHEQD284rA292hgtTlZ/xFlP3Si0=;
-        b=FaPQblZxvsOsmLuVNQi3uOWWgNiCKUrGfuU9BSNyOJVm4NBUyBAiuzg8uEOdQJlx4K
-         4S7yufTAT31XoroqjfePTdjYSLZAhaluSjltRhRwkdCCUrvAYP+3teTqiywjT9OTn/YT
-         /XCiO21KKVvKGazcWmezHGgRnbz4dxUUqXYBep+IPw2jMRogRLFh+rHEFkVtF4gdKp2w
-         WaQlr5weGWnNUE1g/8kc2HgcDgOvsBeJ2nrw3R5YpAnez+Wyd/gvpor/PkIprCjfSdqf
-         u+oOXPxQhG8GJ1s2X4XRzxk4iCaaxSHi9qEs8IGrSFcnmnMn9UYxHNBLvvciISrep+DU
-         LxYg==
-X-Forwarded-Encrypted: i=1; AJvYcCVNEDeDbxWsV9pkGFAs0zP69AVzHx/AgOj5cJ1r7q5PYfYjN6Nfu+bz8+N7wLSw9Lc91etT8nNyXsY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YypLLkwnXkaWcpDEN1faK1j1qe6ilqHBQzMAclezGKB+F6LJgkk
-	saaj9EfMJ306U+f3TETv8GRFRMuHtI3e4Ttkv4DZTFYETfAdTT3zikyWMGPDq+gnTjg=
-X-Gm-Gg: ASbGncuBs8MeZ4tkPljo1oK5xKbCXbfxJapKjalDGww4uB5XEWdPzuICh7A4X8qhDdE
-	X8k0ZSWKfMvCCRnprrgM3pc37BagusUjHS7hTiA24PNxxKDDYPZFgJcdQx4Tol+43+6eSc4IYq5
-	GWPE9gjU2ar10c8qW3rFmGomC5Rl5SAqzb9wS03T8qyELigRmTOYtOSguoU5vFzLfHTItx8VJu3
-	HtBjVdcYcl4J6DNRE0bjtXa/065STAtr+GU+ppLPpNGWFKE7CjwsIN1fKz88ZVrrLth20FAvUnt
-	vxKJpBZHan8Bl24pijCfGnneVBSczjtI0EoeTtbgf8rXLkNvBCdN3kd96Pes7dPkJjXTSHil41+
-	3/t3VrxiRm6yYTJBACyfaGjIsLgS9gGDw8EYZiw==
-X-Google-Smtp-Source: AGHT+IEUIy1Ug7xua5mBZHByJ8Q4rsgKYtbliFIQ+Erm4QHJ1W80k3Lj161qO+rZEbPN8r2IUO9i9g==
-X-Received: by 2002:a17:902:ec90:b0:234:9ef7:a189 with SMTP id d9443c01a7336-237cbf317b1mr18466695ad.13.1750283696116;
-        Wed, 18 Jun 2025 14:54:56 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-184-88.pa.nsw.optusnet.com.au. [49.180.184.88])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2365de78169sm105813205ad.123.2025.06.18.14.54.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Jun 2025 14:54:55 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1uS0k8-00000000MLP-1QYT;
-	Thu, 19 Jun 2025 07:54:52 +1000
-Date: Thu, 19 Jun 2025 07:54:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Christian Theune <ct@flyingcircus.io>
-Cc: Carlos Maiolino <cem@kernel.org>, stable@vger.kernel.org,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	regressions@lists.linux.dev
-Subject: Re: temporary hung tasks on XFS since updating to 6.6.92
-Message-ID: <aFM1rGs1zW52M8ov@dread.disaster.area>
-References: <M1JxD6k5Sdxnq-pztTdv_FZwURA8AaT9qWNFUYGCmhiTRQFESfH7xqdOqQjz-oKQiin8pQckoNhfNyCHu-cxEQ==@protonmail.internalid>
- <14E1A49D-23BF-4929-A679-E6D5C8977D40@flyingcircus.io>
- <umhydsim2pkxhtux5hizyahwd6hy36yct5znt6u6ewo4fojvgy@zn4gkroozwes>
- <Z9Ih4yZoepxhmmH5Jrd1bCz35l6iPh5g2J61q2NR7loEdQb_aRquKdD1xLaE_5SPMlkBM8zLdVfdPvvKuNBrGQ==@protonmail.internalid>
- <3E218629-EA2C-4FD1-B2DB-AA6E40D422EE@flyingcircus.io>
- <g7wcgkxdlbshztwihayxma7xkxe23nic7zcreb3eyg3yeld5cu@yk7l2e4ibajk>
- <01751810-C689-4270-8797-FC0D632B6AB6@flyingcircus.io>
- <aFHsJmPhK6hBfEPC@dread.disaster.area>
- <E4F29FAF-D17F-48BC-9F13-05F04C0C2AF5@flyingcircus.io>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="qrSl0Iuf"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Ui0dDiHWQ4B83sLohfbyz0t9lkO5t9UCIgDp4mu+A09n7JfHNASeTxthu15libS3kiGB85GVHe6Z7nUwiTCMJTQmln0/0j8pjEAwRsX3agwooWrQZzSdOB4sY/eQorD7kwXgQYRWby5qXigWk2uMs+PD+/GiTfrUBGj0tdefhVnaum/TULuOcZY+IxLQBLBbAbPXoNNe7/U+wBN9wRhg7rSuwRIQuCLn09ORxTw84Iu6LiGeaAEHf/U4CY3FmZ7sa4LYlmMp+NunKCBgCSgnFkeja1kZ47wUcjIavX06Tez9RyyXv2MZDSU1KtnycSG6/gbbxx47/N821lol88ujxw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=lRlzqkTydM6SNii5dBh2dvD9J8DDJqQwFzUxGEbHsa0=;
+ b=fIGAsAIYHInzBucf9eCV+l+tsHU4PfnoIai9IiLjrdOrdlrBgQ7/b/oDso/yzq+sW/9wROk0Oj9Wo/GuuMzM5ddtLxpLjYS3S9P2jDg7C001D94Kw9NZkTjeiLVKnsRVBTGJxg8KUkknsiD9pDlJYnH30nkI8voX5HXVTttzNwws0tdT/TyHsOR8AoxclDaThSyPkV80WdaM+7XtDt9K/TQoxdiOOlNtbO+izPVRuAlWRWId9mhzTVnNHJ1+ouoXMQPrSdq8iRJBf5kLXeaIwP/Hf3bnevRqJnc0hEH4wjFdZov69NpOxZuDmPZUCa0yQ7G4KFY6YP6mR6hVUII5Vw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lRlzqkTydM6SNii5dBh2dvD9J8DDJqQwFzUxGEbHsa0=;
+ b=qrSl0IufcbbxKjUjt5RoQNov/TZGg94C9wkX4mc0pop+fAu5WdRfibvRqf9XUCMOoJCDyFEyp+SjMEZ73kHVnhfS591LpoysgbZhyogUSdtAigks0DIr8ulKGgxmFF/fNHj6a0U7/D+l7fj80IwztTIT5Ascwrvq1Wg3vx6B1g48ivgtG3RcI3gt3DeFHxr7y8MTLzw6+pHvb0bLKQxdmuOyoqJUhjTDDeXRfDQjtoRdI46KtqXVLw4O6xl65dVDMMpyY7b6QA96p2tvbZBLU7ao53QxOuokz3jPE0SwSZb50itYTwlk6PS6LZHlCiu7QBW7alCd581xEkHamjNu3w==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CY8PR12MB7705.namprd12.prod.outlook.com (2603:10b6:930:84::9)
+ by PH0PR12MB8128.namprd12.prod.outlook.com (2603:10b6:510:294::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8857.20; Thu, 19 Jun
+ 2025 00:41:40 +0000
+Received: from CY8PR12MB7705.namprd12.prod.outlook.com
+ ([fe80::4b06:5351:3db4:95f6]) by CY8PR12MB7705.namprd12.prod.outlook.com
+ ([fe80::4b06:5351:3db4:95f6%5]) with mapi id 15.20.8835.026; Thu, 19 Jun 2025
+ 00:41:40 +0000
+Date: Thu, 19 Jun 2025 10:41:34 +1000
+From: Alistair Popple <apopple@nvidia.com>
+To: David Hildenbrand <david@redhat.com>
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org, 
+	gerald.schaefer@linux.ibm.com, dan.j.williams@intel.com, jgg@ziepe.ca, willy@infradead.org, 
+	linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, jhubbard@nvidia.com, hch@lst.de, 
+	zhang.lyra@gmail.com, debug@rivosinc.com, bjorn@kernel.org, balbirs@nvidia.com, 
+	lorenzo.stoakes@oracle.com, linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev, 
+	linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org, linux-cxl@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, John@groves.net, m.szyprowski@samsung.com
+Subject: Re: [PATCH v2 02/14] mm: Filter zone device pages returned from
+ folio_walk_start()
+Message-ID: <5vxfjvgl5qu6n5qzru62mmk6saudeslt5f6fu4luhuezf6lh2p@dhz65hzro27h>
+References: <cover.8d04615eb17b9e46fc0ae7402ca54b69e04b1043.1750075065.git-series.apopple@nvidia.com>
+ <11dd5b70546ec67593a4bf79f087b113f15d6bb1.1750075065.git-series.apopple@nvidia.com>
+ <6afc2e67-3ecb-41a5-9c8f-00ecd64f035a@redhat.com>
+ <b67f8dea-dc22-4c83-a71f-f5a2ecc8a8d7@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b67f8dea-dc22-4c83-a71f-f5a2ecc8a8d7@redhat.com>
+X-ClientProxiedBy: SY5P282CA0097.AUSP282.PROD.OUTLOOK.COM
+ (2603:10c6:10:204::7) To CY8PR12MB7705.namprd12.prod.outlook.com
+ (2603:10b6:930:84::9)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <E4F29FAF-D17F-48BC-9F13-05F04C0C2AF5@flyingcircus.io>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CY8PR12MB7705:EE_|PH0PR12MB8128:EE_
+X-MS-Office365-Filtering-Correlation-Id: 615f7ef9-c92b-4adf-5cdd-08ddaeca0dc2
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|376014|1800799024|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?1R1FTHy6TStft9DyrmAoYI+bubnzGBmcfQ706HNOSCAcegatG7wxbXBxA7ZF?=
+ =?us-ascii?Q?cZoYVI0lfiQVn//I2QFUaGiapD/tUZxhFIDuobtjOd1VlY3J9ye8pxAdIpeC?=
+ =?us-ascii?Q?44EboM9t42w09xhO7ZxgxhfX5D3zeN5PeiroOeti9e6yKRXc0MPibrdzuWU6?=
+ =?us-ascii?Q?zctAC6ttd3gs4GZaJfFGQHSqrDbG85/KmgwL9HuNu9S9mZsWBMIV2yorKif9?=
+ =?us-ascii?Q?ZdcNHUNqEwKi+pIVSFKxkDEvRGeaeliY3c4CoNorsNXEYWrUg3+2kQiTfrK2?=
+ =?us-ascii?Q?nEuJy7Ilo5LOFJRZryPqsiGzdh5kSnzHaccJuxOVWtJAJGQ9BUlflAi92VL/?=
+ =?us-ascii?Q?IuS13Xm2Uv2nTS/rmTAMjnSmYaJw9F4WqFqL2hkHBNbDH80957END0fB7zgr?=
+ =?us-ascii?Q?wzO/lyLi0O5E6vMu8Wy/q3KvOUJRyJqxHy3SlnUSk0An8w03Vpbth/sYNWX6?=
+ =?us-ascii?Q?qqSOEFPsht4r75vHr7z1wqXxo0cbhfT1mMuYOTPAh3vU4p1ljlqfCUIilNk+?=
+ =?us-ascii?Q?XOSNxqRBXBzjl+JnKnzshoXyxN7BF3BdFt7+cHy/x9wyzra0cpQ3EHMqQX45?=
+ =?us-ascii?Q?wwzmx1VfZ5cPEQSxvx7pCqYxQJt4LhDMY3adaj6bAzr+5qozFg7O3H/MjUy5?=
+ =?us-ascii?Q?hRNN1zbWXkhvklH30W4DLIBQrSj3O719ocDOhu3MVXepaH2pxa/8hEUedlE/?=
+ =?us-ascii?Q?YugAKdR1v5c+C4JeiWI3MDi4QTnInNi6IwH3jV1TNp5oEDsO4Pcv05oOC5IQ?=
+ =?us-ascii?Q?7zfVzMcshtNlmEhvJX0lAfmhrWsggJMWTQgC4pOmmENdWRDyiidSQHLFYLuN?=
+ =?us-ascii?Q?a4vOnKAlX/UEkrvKUAb0jzNP7+yTR3AnPQX8srZ4LHcg67pdA4Ds4H1/YG+D?=
+ =?us-ascii?Q?Ay+JYOUF/vVgHRunCoAQXGF9wAMzf7q43kJaCOreg526NFhIsXENsWdr3AMr?=
+ =?us-ascii?Q?0vygMoSgKZ5SUXK7eRUsP4x+HE4zoUg4ji5m0JXJwRDoIhuD8X5rrWrlsTe+?=
+ =?us-ascii?Q?+neyJZwrvorerZHtQ6kEDpcGT6QxOOhjBgL3RP4znPYAY/SU/nBEGj8ZXGy2?=
+ =?us-ascii?Q?SSz4UCzbJMfy2PkA5AcN5Ax2/rNZY+OlVA4eEvj0IW1N5Tt3qGPinc3H7bTf?=
+ =?us-ascii?Q?KwlGEvDCYbf07smlmQuRjBNlkvC//95H8SvJ2F4x44m5WabArD2x7CHVgfWd?=
+ =?us-ascii?Q?e6Gky72d80mRlPAl53EuNGm2B/hGFX3HOt/iXeDe2A+DuQnJy199Ez3VczaM?=
+ =?us-ascii?Q?iN82hPUlPPV+Z1qJOdH1iV2sYAbPCqczX5ksrNn5h9PmHmVLbzSorKGY/G90?=
+ =?us-ascii?Q?qBZvknvRhGG9Q5Yyr57xYAAHKbaITEr7ea1vW3++lsGAtKiRtPkvAyb3JDAi?=
+ =?us-ascii?Q?BAvnKtg1dJmHql/uaQtKkOeSo3f3BY8mefv2+ZsBBHTlrR/6YD/fq/FWIRhZ?=
+ =?us-ascii?Q?iNvxQjP+2iE=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR12MB7705.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?HwXrLq7Hzr6LUA8gi5u+hx+e4ANBsaMzJWL0DZJ6/+sdwbhF0VuHl4zgRict?=
+ =?us-ascii?Q?uL2CDhHlmv4v8ZU2UaAE6IEmb8RYUDesXtsCXd01ExAM/GojhgYOaJLvcqcx?=
+ =?us-ascii?Q?Pw23FBwxuBUiyCRF+oq5S9P8Mr4VT0OQe8ku/y44grNxjlKAprnml7+7S5AP?=
+ =?us-ascii?Q?18w3teNEYsnJk97kWTNuH34RB9DO4HStlszRh8Hjh9yQbqyrZ2VQSVoEd/Gr?=
+ =?us-ascii?Q?eT8EolsJ1tHTUDHWiQHk5xQ2gVrz5TDzsqPwLSZuxKxD8571SgM2TwGzrWh5?=
+ =?us-ascii?Q?SYCSwMocc9TjuaQckRrB5k/+Dz11b82e5EGZqCq61Gszb1ZmVj8qS9aPA9o5?=
+ =?us-ascii?Q?n3lgYdXnV1x5yPqYEDqW5cLOgtO9d3cCir3Clwp3OVG0fIqiHehhc8bL6+wW?=
+ =?us-ascii?Q?Zhd6iUoOBzDCuYB+mkeoU7cERX5yA+AlIfsBK987gEJnJw8EUqISEvHCxjyJ?=
+ =?us-ascii?Q?OmEwaPLH22/64cE5tCH9vf9Be7/WP1upLNNYxfl0kUa8tBnqB9D96VnjTeF3?=
+ =?us-ascii?Q?geUdxgcLqpfmQqq6NiF0D5zr3+4mtqS5oqPGbi/Sr6pjWYos/TD4ayGHvaAz?=
+ =?us-ascii?Q?5H9+sh24PxGbqRVuxPsJlNSBQePtWkvVHKswAC7BY5RaYs+8LPHc6Qapre7p?=
+ =?us-ascii?Q?Q4t0CGlsu4zOT2d0FbAEA2sSTSpH9ssQK5wU5YFl7u42HQzBg2aC3eYh5xaa?=
+ =?us-ascii?Q?IABlgQHIDN86KhjI9S3cmJdlWUubwKSNATZfaH7yQCoavQYEe3FehfvFl+dr?=
+ =?us-ascii?Q?SftR23s+oMb5v+5aZXYh8bAmqaqHFLa1Dn62ebYlYBglaEkvORvQbr2yX/vo?=
+ =?us-ascii?Q?M9jrx2wwSwWAw8kD2OG3st1YIXPoeE84ZYVNzaVEg9gAW2h0wxVvlWePGaNN?=
+ =?us-ascii?Q?lTCXaR3BUnbBpGyZ1rXbvanbQko2SNY4P85sjsMEihKNb9GSHOrfL5OfIMTP?=
+ =?us-ascii?Q?PC2VH07S9S9c6ky0KAwZ1g9OVXH21wShC4mYaStcDdePu462LylLEyPYwiPZ?=
+ =?us-ascii?Q?eDJQg0W2YloYPhV8OXXLa3Kw8sHkEEnUVap2DOYX1iN1LBNC6h+5ZFTx7X88?=
+ =?us-ascii?Q?atSbRhXdQUs2PC9GxSOT8sP7zqf7t6XCinqNO89Zt6MpeJ/W57ioyg6a0fGF?=
+ =?us-ascii?Q?Q0nyawkmNxrkzk5miry54vhWfAT0+6UtsCNIfEkBtMEotqwWJ9aQ22JVGKrs?=
+ =?us-ascii?Q?Y3x0TB3SaJC4EWSj4oWW4zzhSCvqv53cmAQBOa+0xNT+vpb9SLqeueM4xG1C?=
+ =?us-ascii?Q?bvmPPi8juEQ52ornj1AMzs8dUvvuBbCR7Ls3DbKt3+em8sKO3qrsJNFbt+Bg?=
+ =?us-ascii?Q?+7bYT2x/X3QVjqJ9AmIYPuQF9DV0bCRIe/h9ItwYAKgWvAPYA0nxHWtizqgi?=
+ =?us-ascii?Q?jOv8eVSsyMhSMIuZyeaVTkVu4JHgUOFxNxddTKSfIBbBLqBQaT2o9xV9UK0c?=
+ =?us-ascii?Q?V7qk616x6k6tgc9JCjXeybD9n/OENNk3DzJoKiJYbJhmByKqrQCIsxnnxxrO?=
+ =?us-ascii?Q?rjGw1XHRDDZk6rpK2OSj7eDyPrvTAE52HqK9QlXL/7qU9ms9VhnkeZYRaMcH?=
+ =?us-ascii?Q?gI/QeHtgpOG7ETrKX8P/8iTx+S0ZRMfGDHp0WuXs?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 615f7ef9-c92b-4adf-5cdd-08ddaeca0dc2
+X-MS-Exchange-CrossTenant-AuthSource: CY8PR12MB7705.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Jun 2025 00:41:39.8438
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 16b0Q8jT3qpWEQt6p4/95YWilrUUdjmh9BWAwcSj1YsqG1YlME3ti5BrKWmVrPwtHU1KPzVcmk6od3seXA8L5w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB8128
 
-On Wed, Jun 18, 2025 at 03:01:26PM +0200, Christian Theune wrote:
+On Tue, Jun 17, 2025 at 11:30:20AM +0200, David Hildenbrand wrote:
+> On 17.06.25 11:25, David Hildenbrand wrote:
+> > On 16.06.25 13:58, Alistair Popple wrote:
+> > > Previously dax pages were skipped by the pagewalk code as pud_special() or
+> > > vm_normal_page{_pmd}() would be false for DAX pages. Now that dax pages are
+> > > refcounted normally that is no longer the case, so the pagewalk code will
+> > > start returning them.
+> > > 
+> > > Most callers already explicitly filter for DAX or zone device pages so
+> > > don't need updating. However some don't, so add checks to those callers.
+> > > 
+> > > Signed-off-by: Alistair Popple <apopple@nvidia.com>
+> > > 
+> > > ---
+> > > 
+> > > Changes since v1:
+> > > 
+> > >    - Dropped "mm/pagewalk: Skip dax pages in pagewalk" and replaced it
+> > >      with this new patch for v2
+> > > 
+> > >    - As suggested by David and Jason we can filter the folios in the
+> > >      callers instead of doing it in folio_start_walk(). Most callers
+> > >      already do this (see below).
+> > > 
+> > > I audited all callers of folio_walk_start() and found the following:
+> > > 
+> > > mm/ksm.c:
+> > > 
+> > > break_ksm() - doesn't need to filter zone_device pages because the can
+> > > never be KSM pages.
+> > > 
+> > > get_mergeable_page() - already filters out zone_device pages.
+> > > scan_get_next_rmap_iterm() - already filters out zone_device_pages.
+> > > 
+> > > mm/huge_memory.c:
+> > > 
+> > > split_huge_pages_pid() - already checks for DAX with
+> > > vma_not_suitable_for_thp_split()
+> > > 
+> > > mm/rmap.c:
+> > > 
+> > > make_device_exclusive() - only works on anonymous pages, although
+> > > there'd be no issue with finding a DAX page even if support was extended
+> > > to file-backed pages.
+> > > 
+> > > mm/migrate.c:
+> > > 
+> > > add_folio_for_migration() - already checks the vma with vma_migratable()
+> > > do_pages_stat_array() - explicitly checks for zone_device folios
+> > > 
+> > > kernel/event/uprobes.c:
+> > > 
+> > > uprobe_write_opcode() - only works on anonymous pages, not sure if
+> > > zone_device could ever work so add an explicit check
+> > > 
+> > > arch/s390/mm/fault.c:
+> > > 
+> > > do_secure_storage_access() - not sure so be conservative and add a check
+> > > 
+> > > arch/s390/kernel/uv.c:
+> > > 
+> > > make_hva_secure() - not sure so be conservative and add a check
+> > > ---
+> > >    arch/s390/kernel/uv.c   | 2 +-
+> > >    arch/s390/mm/fault.c    | 2 +-
+> > >    kernel/events/uprobes.c | 2 +-
+> > >    3 files changed, 3 insertions(+), 3 deletions(-)
+> > > 
+> > > diff --git a/arch/s390/kernel/uv.c b/arch/s390/kernel/uv.c
+> > > index b99478e..55aa280 100644
+> > > --- a/arch/s390/kernel/uv.c
+> > > +++ b/arch/s390/kernel/uv.c
+> > > @@ -424,7 +424,7 @@ int make_hva_secure(struct mm_struct *mm, unsigned long hva, struct uv_cb_header
+> > >    		return -EFAULT;
+> > >    	}
+> > >    	folio = folio_walk_start(&fw, vma, hva, 0);
+> > > -	if (!folio) {
+> > > +	if (!folio || folio_is_zone_device(folio)) {
+> > >    		mmap_read_unlock(mm);
+> > >    		return -ENXIO;
+> > >    	}
+> > > diff --git a/arch/s390/mm/fault.c b/arch/s390/mm/fault.c
+> > > index e1ad05b..df1a067 100644
+> > > --- a/arch/s390/mm/fault.c
+> > > +++ b/arch/s390/mm/fault.c
+> > > @@ -449,7 +449,7 @@ void do_secure_storage_access(struct pt_regs *regs)
+> > >    		if (!vma)
+> > >    			return handle_fault_error(regs, SEGV_MAPERR);
+> > >    		folio = folio_walk_start(&fw, vma, addr, 0);
+> > > -		if (!folio) {
+> > > +		if (!folio || folio_is_zone_device(folio)) {
+> > >    			mmap_read_unlock(mm);
+> > >    			return;
+> > >    		}
+> > 
+> > Curious, does s390 even support ZONE_DEVICE and could trigger this?
+
+In thoery yes. Now that we don't need the DEVMAP PTE bit someone could enable
+ZONE_DEVICE on s390 as it supports the rest of the prerequisites AFAICT:
+
+config ZONE_DEVICE
+        bool "Device memory (pmem, HMM, etc...) hotplug support"
+        depends on MEMORY_HOTPLUG
+        depends on MEMORY_HOTREMOVE
+        depends on SPARSEMEM_VMEMMAP
+ 
+> Ah, I see you raised this above. Even if it could be triggered (which I
+> don't think), I wonder if there would actually be a problem with zone_device
+> folios in here?
+
+Yes, I'm not sure either - it seems unlikely but I know nothing about how secure
+storage works on s390 so was trying to be be conservative.
+
+> I think these two can be dropped for now
+
+Ok.
+
+> > I wonder if __uprobe_write_opcode() would just work with anon device folios?
+> >
+> > We only modify page content, and conditionally zap the page. Would there 
+> > be a problem with anon device folios?
+
+The two main types of anon device folios I know of are DEVICE_COHERENT
+and DEVICE_PRIVATE. I doubt it would be a problem for the former, but it
+would definitely be a problem for the latter as the actual page content is
+unaddressable from the CPU.
+
+So we could probably make the check specific to DEVICE_PRIVATE, although it's
+hard to imagine anyone caring about uprobes from DEVICE_COHERENT memory.
+
+> -- 
+> Cheers,
 > 
+> David / dhildenb
 > 
-> > On 18. Jun 2025, at 00:28, Dave Chinner <david@fromorbit.com>
-> > wrote:
-> > 
-> > On Mon, Jun 16, 2025 at 12:09:21PM +0200, Christian Theune
-> > wrote:
-> >>> Can you share the xfs_info of one of these filesystems? I'm
-> >>> curious about the FS geometry.
-> >> 
-> >> Sure:
-> >> 
-> >> # xfs_info / meta-data=/dev/disk/by-label/root isize=512
-> >> agcount=21, agsize=655040 blks =
-> >> sectsz=512   attr=2, projid32bit=1 =
-> >> crc=1        finobt=1, sparse=1, rmapbt=0 =
-> >> reflink=1    bigtime=1 inobtcount=1 nrext64=0 =
-> >> exchange=0 data     =                       bsize=4096
-> >> blocks=13106171, imaxpct=25 =                       sunit=0
-> >> swidth=0 blks naming   =version 2              bsize=4096
-> >> ascii-ci=0, ftype=1, parent=0 log      =internal log
-> >> bsize=4096   blocks=16384, version=2 =
-> >> sectsz=512   sunit=0 blks, lazy-count=1 realtime =none
-> >> extsz=4096   blocks=0, rtextents=0
-> > 
-> > From the logs, it was /dev/vda1 that was getting hung up, so I'm
-> > going to assume the workload is hitting the root partition,
-> > not:
-> > 
-> >> # xfs_info /tmp/ meta-data=/dev/vdb1              isize=512
-> >> agcount=8, agsize=229376 blks
-> > 
-> > ... this one that has a small log.
-> > 
-> > IOWs, I don't think the log size is a contributing factor
-> > here.
-> > 
-> > The indication from the logs is that the system is hung up
-> > waiting on slow journal writes. e.g. there are processes hung
-> > waiting for transaction reservations (i.e. no journal space
-> > available). Journal space is backed up on metadata writeback
-> > trying to force the journal to stable storage (which is blocked
-> > waiting for journal IO completion so it can issue more journal
-> > IO) and getting blocked so it can't make progress, either.
-> > 
-> > I think part of the issue is that journal writes issue device
-> > cache flushes and FUA writes, both of which require written data
-> > to be on stable storage before returning.
-> > 
-> > All this points to whatever storage is backing these VMs is
-> > extremely slow at guaranteeing persistence of data and
-> > eventually it can't keep up with the application making changes
-> > to the filesystem.  When the journal IO latency gets high enough
-> > you start to see things backing up and stall warnings
-> > appearing.
-> > 
-> > IOWs, this does not look like a filesystem issue from the
-> > information presented, just storage that can't keep up with the
-> > rate at which the filesystem can make modifications in memory.
-> > When the fs finally starts to throttle on the slow storage,
-> > that's when you notice just how slow the storage actually
-> > is...
-> > 
-> > [ Historical note: this is exactly the sort of thing we have
-> > seen for years with hardware RAID5/6 adapters with large amounts
-> > of NVRAM and random write workloads. They run as fast as NVRAM
-> > can sink the 4kB random writes, then when the NVRAM fills, they
-> > have to wait for hundreds of MB of cached 4kB random writes to
-> > be written to the RAID5/6 luns at 50-100 IOPS. This causes the
-> > exact same "filesystem is hung" symptoms as you are describing
-> > in this thread. ]
-> 
-> Yeah, I’m very wary of reporting these tracebacks as potential
-> bugs because of them easily being just a hint on slow storage. My
-> problem here is that I can’t point to anything that says the
-> storage would have been slow.
-> 
-> I’ve gone through all metrics and logs on the KVM servers as well
-> as the Ceph servers and they’ve been performing completely at
-> baseline level regarding errors, queues, iops, latency.
-> 
-> I’ve done a measurement to try to emulate those accesses by
-> running
-> 
-> $ fio --rw=randrw --name=synctest --bs=4k --direct=1 --numjobs=1
-> --ioengine=libaio --iodepth=1 --runtime=600 --write_barrier=1
-> --size=60m
-> 
-> I hope this is sufficiently comparable behaviour (maybe with a
-> different read/write ratio instead of 0.5?) to what XFS log
-> flushing does. This resulted in [1]. 
-
-Not really comparable. "write-barrier" is not the option for data
-integrity - fdatasync=8 would be closer, but even that doesn't
-replicate the cache flush/fua write pattern of journal IOs.
-
-Also, journals are write only and sequential, not random. The
-iodepth is typically 8 when fully busy, and the IO size ranges from
-single sector to logbsize (from /proc/mounts) depending on the
-workload.
-
-Metadata writeback to clear the journal, OTOH, is larger random
-4kB writes with no data integrity implied (the journal cache flush
-mechanism I mention above handles that).
-
-
-> My interpretation of this measurement (and the VM showed no illnes
-> while this was running over 10 minutes): the VM is throttled at
-> 250 IOPs and is reporting back after 10 minutes of 4k random
-> writes with average IOPS of exactly 250. The latencies are a bit
-> varied, this could be due to Qemu throttling. The max latency was
-> 133ms, the average 2ms. This is on a 10g storage network with Ceph
-> that requires another network roundtrip for replication before
-> ACKing a write.
-
-Oh. Ceph.
-
-Slow random write performance on ceph rbd devices seem to be a
-recurring problem - the filesystem is way faster than the storage,
-and by the time the filesystem throttles on journal space (even with
-small logs), the backlog of IO cannot be drained very quickly and so
-everything stalls.
-
-IOWs, a hard cap of 250 random 4kB write IOPS is extremely slow and
-a likely cause of your random stall problems. When you have lots of
-dirty metadata in memory, then it can take minutes of IO for
-writeback to free journal space to allow progress to be made again.
-
-For example, modify an inode (e.g. chmod), and that only takes ~250
-bytes of journal space to record. So a 10MB journal can hold ~40,000
-dirty inodes. If we assume that there maximum locality in these
-inodes (i.e. best case writeback IO patterns) we have ~1300 x 16kB
-writes to perform to empty the journal.
-
-Hence there's up to 10-15s of writeback IO to "unstall" a small
-journal. Worst case, it's one 16kB write per inode, and that means
-potential for multiple minutes of writeback to unstall a 10MB
-journal. Now consider a 64MB journal, and the potential stalls
-waiting on metadata writeback are much, much worse...
-
-These stalls will come and go with workload peaks. The filesystem
-can soak up some of the peak into memory and the journal, then it
-throttles to storage speed and that's where the hung task warnings
-fire. Once the storage catches up, everything goes back to "normal"
-latencies.
-
-> I’m out of ideas for now, I’ll keep thinking about this. If anyone
-> has any pointer for further tests in any direction, I’m open to
-> anything. ;)
-
-Don't use hard throttling on IOPS rates. Measure IO rates over a
-longer period of time (e.g. rolling average over a minute) so that
-the storage can rapidly sink the short term IO peaks that occur when
-the workload runs the journal out of space and the fs throttles it
-whilst metadata writeback makes progress.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
