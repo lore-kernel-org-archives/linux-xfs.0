@@ -1,137 +1,136 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D75528682;
-	Thu, 19 Jun 2025 11:30:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A6B9132103;
+	Thu, 19 Jun 2025 11:31:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750332626; cv=none; b=pe41/69KafV65k+Q2OA9FALOMbeI2z/aXlpYV6zhnSdyYvdMHmqAfgJJwFEspjB5qOF9PKke7gV0+vcl+ff6gWNB8/WiUY0vUJ7zyumHgLOvJDROHNrUGtfVwtp1waHy33Dm8vRVG56pMn+2KABoiM1pyrn4U5S9uaiVRSIvHdM=
+	t=1750332713; cv=none; b=NsX7GOiiO2XR4ByWm9zNBgwwwtdVmUhfR+IAEG9MOMSCK2Iysc+v0otFbED41qyE5srCtO9nNz/L6x/I9O8dJmOOl625mQSacMY0e4a0CsjeAmKqBiz6AF7Adp8cwjzP++a0tI6r8uCFkaF3YryjP3QgsUcAr0qx9WFsmhWYuLc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750332626; c=relaxed/simple;
-	bh=06dcYr32eMU17iPm3Ydr8GIGR6UG3r1YmzA8+vfi3qs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FkjdGXmU9F6nFsjmuKWyW8PQs9ExW0wERxNeRyyGwNaQpk67IStBaVOYMscRAKtJ0V6HzZc+mOjfeeKOmL2qYrJJIaD+vDjkbJkUaqF+UIEY/gGnPnrLK9/GUiur8ttWGDyxVEcbNACxgSsYImJezVy9F8iroBPO0SIwVLyPVeU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xr8fTo72; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xr8fTo72"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E04FC4CEEA;
-	Thu, 19 Jun 2025 11:30:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750332625;
-	bh=06dcYr32eMU17iPm3Ydr8GIGR6UG3r1YmzA8+vfi3qs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Xr8fTo72oeNkbWUPP8PMsSo9z4DzmG+KfUj5FdWELQdcuDNxwAI7EURL3yP9m+yjG
-	 hG9TNN5IlhYOmNqHxt2zftiFC6uVH14jF98bWvtl8rfChoAZwr2Grt1WfS5oUV0FuH
-	 XqZ7Kw7yYyWWh9TeRSObwgz9kdNrROePQl409aHVdVht+KjPgZMKixmUDdBZo4LXnm
-	 A+fCMinVinPhZ19RrihdB4Dlo7bv45QmUCpm6nekR/zpmdCgUHF2Rccf+E1E1SZXsu
-	 F/ClcLEfRVXnm1c8aKxlDc5OjSNAUkePjnQtE6dpIFjLFlaMW/tgCAbbBCrGUsvbFY
-	 PkSZqRGxfvEYg==
-Date: Thu, 19 Jun 2025 13:30:17 +0200
-From: Alejandro Colomar <alx@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: linux-man@vger.kernel.org, linux-fsdevel@vger.kernel.org, hch@lst.de, 
-	djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] statx.2: Add stx_atomic_write_unit_max_opt
-Message-ID: <xuxvvxyka5utcr5rajxrxjjjo7adz66etczfbu4jlgqdoks3b6@4abjfqhqxtux>
-References: <20250619090510.229114-1-john.g.garry@oracle.com>
- <7ret5bl5nbtolpdu2muaoeaheu6klrrfm2pvp3vkdfvfw7jxbr@zwsz2dpx7vxz>
- <22295562-ac0e-41df-a995-a52c0ebcaa12@oracle.com>
+	s=arc-20240116; t=1750332713; c=relaxed/simple;
+	bh=8QBLpXQnmxXivG5DrxsrjAqte3GV9jc+kVp5fw8mp2s=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=IfpR3kjDot3tH+8sbSTswwDoK45syLt83eUPGjif1S6gAkkZtxMJLPPoO0IX9+TXJNNmtwsQOWbI4J4hOrN9Ef4AAlFk9ub7UHuoB/rL0TRG6WREjO0XKspfk3+PmlIBDZ3wRhcm59e+n1YiezAvbSBbtKpTVOW6jtc3lVHevmQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bNJNP1J8XzYQvKc;
+	Thu, 19 Jun 2025 19:31:49 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 19EF81A10F9;
+	Thu, 19 Jun 2025 19:31:48 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.112.188])
+	by APP4 (Coremail) with SMTP id gCh0CgCH618Y9VNoihn_Pw--.51230S6;
+	Thu, 19 Jun 2025 19:31:47 +0800 (CST)
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+To: linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	hch@lst.de,
+	tytso@mit.edu,
+	djwong@kernel.org,
+	john.g.garry@oracle.com,
+	bmarzins@redhat.com,
+	chaitanyak@nvidia.com,
+	shinichiro.kawasaki@wdc.com,
+	brauner@kernel.org,
+	martin.petersen@oracle.com,
+	yi.zhang@huawei.com,
+	yi.zhang@huaweicloud.com,
+	chengzhihao1@huawei.com,
+	yukuai3@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH v2 2/9] nvme: set max_hw_wzeroes_unmap_sectors if device supports DEAC bit
+Date: Thu, 19 Jun 2025 19:17:59 +0800
+Message-ID: <20250619111806.3546162-3-yi.zhang@huaweicloud.com>
+X-Mailer: git-send-email 2.46.1
+In-Reply-To: <20250619111806.3546162-1-yi.zhang@huaweicloud.com>
+References: <20250619111806.3546162-1-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="bmw6aukllnz5jphy"
-Content-Disposition: inline
-In-Reply-To: <22295562-ac0e-41df-a995-a52c0ebcaa12@oracle.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgCH618Y9VNoihn_Pw--.51230S6
+X-Coremail-Antispam: 1UD129KBjvJXoW7ury8Ar4xJF4kuF1UtryUAwb_yoW8Cw47pF
+	W3Xa42kw1kWFsrC3sxJw47AFy5G3s5Ja4UKF97K3sYgr13A34Sgr1Fka43XaykW3s3Wa4F
+	yF4DK3s7Ca98XwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+	kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+	6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42
+	IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIev
+	Ja73UjIFyTuYvjTRRCJPDUUUU
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
+From: Zhang Yi <yi.zhang@huawei.com>
 
---bmw6aukllnz5jphy
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-From: Alejandro Colomar <alx@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: linux-man@vger.kernel.org, linux-fsdevel@vger.kernel.org, hch@lst.de, 
-	djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] statx.2: Add stx_atomic_write_unit_max_opt
-References: <20250619090510.229114-1-john.g.garry@oracle.com>
- <7ret5bl5nbtolpdu2muaoeaheu6klrrfm2pvp3vkdfvfw7jxbr@zwsz2dpx7vxz>
- <22295562-ac0e-41df-a995-a52c0ebcaa12@oracle.com>
-MIME-Version: 1.0
-In-Reply-To: <22295562-ac0e-41df-a995-a52c0ebcaa12@oracle.com>
+When the device supports the Write Zeroes command and the DEAC bit, it
+indicates that the deallocate bit in the Write Zeroes command is
+supported, and the bytes read from a deallocated logical block are
+zeroes. This means the device supports unmap Write Zeroes operation, so
+set the max_hw_wzeroes_unmap_sectors to max_write_zeroes_sectors on the
+device's queue limit.
 
-Hi John,
+Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+---
+ drivers/nvme/host/core.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-On Thu, Jun 19, 2025 at 12:24:21PM +0100, John Garry wrote:
-> > > @@ -514,6 +518,20 @@ is supported on block devices since Linux 6.11.
-> > >   The support on regular files varies by filesystem;
-> > >   it is supported by xfs and ext4 since Linux 6.13.
-> > >   .TP
-> > > +.I stx_atomic_write_unit_max_opt
-> > > +The maximum size (in bytes) which is optimised for writes issued with
-> > > +torn-write protection.
-> >=20
-> > Please break the line before 'optimized' and remove the current line
-> > break.
->=20
-> ok, but I am not sure the issue with the current formatting
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 92697f98c601..90af4a15b696 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -2420,22 +2420,24 @@ static int nvme_update_ns_info_block(struct nvme_ns *ns,
+ 	else
+ 		lim.write_stream_granularity = 0;
+ 
+-	ret = queue_limits_commit_update(ns->disk->queue, &lim);
+-	if (ret) {
+-		blk_mq_unfreeze_queue(ns->disk->queue, memflags);
+-		goto out;
+-	}
+-
+-	set_capacity_and_notify(ns->disk, capacity);
+-
+ 	/*
+ 	 * Only set the DEAC bit if the device guarantees that reads from
+ 	 * deallocated data return zeroes.  While the DEAC bit does not
+ 	 * require that, it must be a no-op if reads from deallocated data
+ 	 * do not return zeroes.
+ 	 */
+-	if ((id->dlfeat & 0x7) == 0x1 && (id->dlfeat & (1 << 3)))
++	if ((id->dlfeat & 0x7) == 0x1 && (id->dlfeat & (1 << 3))) {
+ 		ns->head->features |= NVME_NS_DEAC;
++		lim.max_hw_wzeroes_unmap_sectors = lim.max_write_zeroes_sectors;
++	}
++
++	ret = queue_limits_commit_update(ns->disk->queue, &lim);
++	if (ret) {
++		blk_mq_unfreeze_queue(ns->disk->queue, memflags);
++		goto out;
++	}
++
++	set_capacity_and_notify(ns->disk, capacity);
+ 	set_disk_ro(ns->disk, nvme_ns_is_readonly(ns, info));
+ 	set_bit(NVME_NS_READY, &ns->flags);
+ 	blk_mq_unfreeze_queue(ns->disk->queue, memflags);
+-- 
+2.46.1
 
-It's because of
-
-$ MANWIDTH=3D72 man man-pages | sed -n '/Use semantic newlines/,/^$/p';
-   Use semantic newlines
-       In the source of a manual page, new sentences should be  started
-       on  new  lines,  long  sentences  should  be split into lines at
-       clause breaks (commas, semicolons, colons, and so on), and  long
-       clauses  should be split at phrase boundaries.  This convention,
-       sometimes known as "semantic newlines", makes it easier  to  see
-       the effect of patches, which often operate at the level of indi=E2=
-=80=90
-       vidual sentences, clauses, or phrases.
-
-> > > +.I stx_atomic_write_unit_max
-> > > +and will not be less than the value in
-> > > +.I stx_atomic_write_unit_min.
-> >=20
-> > This should be IR, and the '.' separated by a space, so that the '.' is
-> > not in italics.
->=20
-> So you mean like the following:
->=20
-> .IR stx_atomic_write_unit_min .
->=20
-> right?
-
-Yep.
-
-
-Cheers,
-Alex
-
---=20
-<https://www.alejandro-colomar.es/>
-
---bmw6aukllnz5jphy
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEES7Jt9u9GbmlWADAi64mZXMKQwqkFAmhT9MgACgkQ64mZXMKQ
-wqlcIxAAqeghkLwvrlcRBsM28tC/DTSgf6y8UtyWUYPt7IXvxt6i5zeDxTqCmqXF
-cg6coRyI9ZuK5sJ9xMCNHCxmei08BXA8Iia+j7B0tTa4pZzrWnXNl+4ACyUla7NZ
-XlF2ykhJmdWX1xg3SX7XHlUAI1kpkqZIOPumPRuukffXUC6bkC4ZLiyG+4obBeZp
-hJNJybF+1H4kMY9iIsuX9Jw7dW1LJwnMJ/bywPOs0ck1/hTbFaWv7cBNkmbJZQno
-pxoyYWnhjlqfpuMYHeqog2R/V/OU1wrupsjJru7qKup1f7CtV2lxkPC3zIl94TU9
-NISWKSuYNaAwr4IcH0bx1qUNeF+9xnf3DMYVwbsZ9ky5A1tCPsupcQyuzwRNC1KX
-4PwyG2blcYFWFv5htTCirIiNeOzc7eXaLZmd1Y2uK+t4R/tZgljULdrMXqGb744w
-DnbsJtqpwpy154qBA+Yt+IZipieza+ez4+BKRQ5b5Ppi2+Os7F2wbMUN51G+vZDk
-KZzLm0p6+1Oy4HJvTKW3K6W66cKsRX3HaVAZ7CGlMus07X7S4EX3t9P2GVBkA1Lm
-aA+9xmLMnFp2rPuPcNQh69boIe2M8v81jo4s8V5nc3Pxh0fSIeDr5C1znLtURqB6
-f3otGNp5/tN1C1dFSz3iCMhdU8DI1Av8QY29dl3rKi1CE2iaBbQ=
-=JLB1
------END PGP SIGNATURE-----
-
---bmw6aukllnz5jphy--
