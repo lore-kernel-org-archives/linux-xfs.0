@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A26DD227E82;
-	Thu, 19 Jun 2025 11:31:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 657E224EA8F;
+	Thu, 19 Jun 2025 11:31:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750332721; cv=none; b=A8q5m8z+O4X0UBzfyI5eS1aUzqnzxuDZGMVf/MQfUzMq2rthEHa95QXUQdWIv0E4JZNGplW6ymZJ5kLt7e7B/0qT20qRL1NulklGC08OmxN+vk3qzWwkzQgZF5Xngi8cZWy8kubNuTHr+EtKs8uPaAwuL75KnspWzSpyssWjwYw=
+	t=1750332721; cv=none; b=RE8WK3GRByqy/beRJtsbffgf/nPk8AdECtjbsExFvX0AAvVyhn8L3MV2oCDhNBDAMDikSh70f0VPqL7AwRrVF2SomspNy1nvBL+qwz+q1q86lzNISGe8G04+81hYo19hJCEsKjKHPCDF6Y8UPO6LUlMNWsTiecvIU16lEBi7sYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1750332721; c=relaxed/simple;
-	bh=sFv2ORpGDM9HNERtH/DxH74CpBIOMYirWFHeolvuejI=;
+	bh=83GJJst8jwxirdSyTar+kvybgHU1wa5oBuVzR0C3Xck=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pAu+YC0i+lopWJ6Ibyv6r/QoLXI5Zw5bEirm5aJ8wZkMTj1JCmZS5jrh04LStmJ514oMchCFLgwpx+L08fXd+ZAcMFI1qQ/A35g+q6mqF/YG55x1Mfda7vFTOQwMfKKX2S64aWJk/DSGAsikDBjHqMGtx6FjeeXqs3jf+LYm89s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=PTdLtddG66ntTESc5nRKdOsdYhSY2q1L4oaiLaWQDcLiqEsQgxON4hxxVX6agKfRHfRyz6rYKppGcDR/V7K/Ex2PT6l79i8JqmPorPPwq0F0kxubTXDcF8zQSlOziO1sooQzA7osi6LR9b08qGq4sC2uwZ9yud4BXcV1IuLKBx4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bNJNS5X4mzKHN7Y;
-	Thu, 19 Jun 2025 19:31:52 +0800 (CST)
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bNJNV2DlZzKHNDY;
+	Thu, 19 Jun 2025 19:31:54 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 1F6DE1A0DEC;
-	Thu, 19 Jun 2025 19:31:51 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id A52AD1A1A2C;
+	Thu, 19 Jun 2025 19:31:52 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.112.188])
-	by APP4 (Coremail) with SMTP id gCh0CgCH618Y9VNoihn_Pw--.51230S10;
-	Thu, 19 Jun 2025 19:31:50 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgCH618Y9VNoihn_Pw--.51230S12;
+	Thu, 19 Jun 2025 19:31:52 +0800 (CST)
 From: Zhang Yi <yi.zhang@huaweicloud.com>
 To: linux-fsdevel@vger.kernel.org,
 	linux-ext4@vger.kernel.org,
@@ -46,9 +46,9 @@ Cc: linux-xfs@vger.kernel.org,
 	chengzhihao1@huawei.com,
 	yukuai3@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH v2 6/9] fs: introduce FALLOC_FL_WRITE_ZEROES to fallocate
-Date: Thu, 19 Jun 2025 19:18:03 +0800
-Message-ID: <20250619111806.3546162-7-yi.zhang@huaweicloud.com>
+Subject: [PATCH v2 8/9] block: add FALLOC_FL_WRITE_ZEROES support
+Date: Thu, 19 Jun 2025 19:18:05 +0800
+Message-ID: <20250619111806.3546162-9-yi.zhang@huaweicloud.com>
 X-Mailer: git-send-email 2.46.1
 In-Reply-To: <20250619111806.3546162-1-yi.zhang@huaweicloud.com>
 References: <20250619111806.3546162-1-yi.zhang@huaweicloud.com>
@@ -59,10 +59,10 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCH618Y9VNoihn_Pw--.51230S10
-X-Coremail-Antispam: 1UD129KBjvJXoWxAryrGFW7Jr18Aw1kArW3GFg_yoWrCF1xpF
-	W3GF1rKrWvgF1rC3s3Can7ur98Zws5Gr43urWIgr1UZr45Jr1IgFsFgFyYva4xXrW3Aa1F
-	qFnI9r98ua47A3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgCH618Y9VNoihn_Pw--.51230S12
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zry7Xw4xJr4xAry7Gr1fCrg_yoW8AryUpF
+	4UX3WYgFWFgas3GF1rCa1DWrn5Za1kGrWfCayI9w1F9w47Jrn7Krn0gF98tF98JFWUAan5
+	XayavryUuF17ArDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
 	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
@@ -81,103 +81,53 @@ X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
 From: Zhang Yi <yi.zhang@huawei.com>
 
-With the development of flash-based storage devices, we can quickly
-write zeros to SSDs using the WRITE_ZERO command if the devices do not
-actually write physical zeroes to the media. Therefore, we can use this
-command to quickly preallocate a real all-zero file with written
-extents. This approach should be beneficial for subsequent pure
-overwriting within this file, as it can save on block allocation and,
-consequently, significant metadata changes, which should greatly improve
-overwrite performance on certain filesystems.
-
-Therefore, introduce a new operation FALLOC_FL_WRITE_ZEROES to
-fallocate. This flag is used to convert a specified range of a file to
-zeros by issuing a zeroing operation. Blocks should be allocated for the
-regions that span holes in the file, and the entire range is converted
-to written extents. If the underlying device supports the actual offload
-write zeroes command, the process of zeroing out operation can be
-accelerated. If it does not, we currently don't prevent the file system
-from writing actual zeros to the device. This provides users with a new
-method to quickly generate a zeroed file, users no longer need to write
-zero data to create a file with written extents.
-
-Users can determine whether a disk supports the unmap write zeroes
-feature through querying this sysfs interface:
-
-    /sys/block/<disk>/queue/write_zeroes_unmap_max_hw_bytes
-
-Users can also enable or disable the unmap write zeroes operation
-through this sysfs interface:
-
-    /sys/block/<disk>/queue/write_zeroes_unmap_max_bytes
-
-Finally, this flag cannot be specified in conjunction with the
-FALLOC_FL_KEEP_SIZE since allocating written extents beyond file EOF is
-not permitted. In addition, filesystems that always require out-of-place
-writes should not support this flag since they still need to allocated
-new blocks during subsequent overwrites.
+Add support for FALLOC_FL_WRITE_ZEROES, if the block device enables the
+unmap write zeroes operation, it will issue a write zeroes command.
 
 Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- fs/open.c                   |  1 +
- include/linux/falloc.h      |  3 ++-
- include/uapi/linux/falloc.h | 17 +++++++++++++++++
- 3 files changed, 20 insertions(+), 1 deletion(-)
+ block/fops.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/fs/open.c b/fs/open.c
-index 7828234a7caa..b777e11e5522 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -281,6 +281,7 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+diff --git a/block/fops.c b/block/fops.c
+index e1c921549d28..474656a0de70 100644
+--- a/block/fops.c
++++ b/block/fops.c
+@@ -841,7 +841,7 @@ static ssize_t blkdev_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ 
+ #define	BLKDEV_FALLOC_FL_SUPPORTED					\
+ 		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
+-		 FALLOC_FL_ZERO_RANGE)
++		 FALLOC_FL_ZERO_RANGE | FALLOC_FL_WRITE_ZEROES)
+ 
+ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
+ 			     loff_t len)
+@@ -856,6 +856,13 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
+ 	/* Fail if we don't recognize the flags. */
+ 	if (mode & ~BLKDEV_FALLOC_FL_SUPPORTED)
+ 		return -EOPNOTSUPP;
++	/*
++	 * Don't allow writing zeroes if the device does not enable the
++	 * unmap write zeroes operation.
++	 */
++	if ((mode & FALLOC_FL_WRITE_ZEROES) &&
++	    !bdev_write_zeroes_unmap_sectors(bdev))
++		return -EOPNOTSUPP;
+ 
+ 	/* Don't go off the end of the device. */
+ 	isize = bdev_nr_bytes(bdev);
+@@ -886,6 +893,9 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
+ 	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE:
+ 		flags = BLKDEV_ZERO_NOFALLBACK;
  		break;
- 	case FALLOC_FL_COLLAPSE_RANGE:
- 	case FALLOC_FL_INSERT_RANGE:
 +	case FALLOC_FL_WRITE_ZEROES:
- 		if (mode & FALLOC_FL_KEEP_SIZE)
- 			return -EOPNOTSUPP;
- 		break;
-diff --git a/include/linux/falloc.h b/include/linux/falloc.h
-index 3f49f3df6af5..7c38c6b76b60 100644
---- a/include/linux/falloc.h
-+++ b/include/linux/falloc.h
-@@ -36,7 +36,8 @@ struct space_resv {
- 				 FALLOC_FL_COLLAPSE_RANGE |	\
- 				 FALLOC_FL_ZERO_RANGE |		\
- 				 FALLOC_FL_INSERT_RANGE |	\
--				 FALLOC_FL_UNSHARE_RANGE)
-+				 FALLOC_FL_UNSHARE_RANGE |	\
-+				 FALLOC_FL_WRITE_ZEROES)
- 
- /* on ia32 l_start is on a 32-bit boundary */
- #if defined(CONFIG_X86_64)
-diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
-index 5810371ed72b..1f9ca757d02d 100644
---- a/include/uapi/linux/falloc.h
-+++ b/include/uapi/linux/falloc.h
-@@ -78,4 +78,21 @@
-  */
- #define FALLOC_FL_UNSHARE_RANGE		0x40
- 
-+/*
-+ * FALLOC_FL_WRITE_ZEROES zeroes a specified file range in such a way that
-+ * subsequent writes to that range do not require further changes to the file
-+ * mapping metadata. This flag is beneficial for subsequent pure overwriting
-+ * within this range, as it can save on block allocation and, consequently,
-+ * significant metadata changes. Therefore, filesystems that always require
-+ * out-of-place writes should not support this flag.
-+ *
-+ * Different filesystems may implement different limitations on the
-+ * granularity of the zeroing operation. Most will preferably be accelerated
-+ * by submitting write zeroes command if the backing storage supports, which
-+ * may not physically write zeros to the media.
-+ *
-+ * This flag cannot be specified in conjunction with the FALLOC_FL_KEEP_SIZE.
-+ */
-+#define FALLOC_FL_WRITE_ZEROES		0x80
-+
- #endif /* _UAPI_FALLOC_H_ */
++		flags = 0;
++		break;
+ 	default:
+ 		error = -EOPNOTSUPP;
+ 		goto fail;
 -- 
 2.46.1
 
