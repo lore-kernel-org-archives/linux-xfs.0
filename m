@@ -1,175 +1,123 @@
-Received: from mail-ej1-f65.google.com (mail-ej1-f65.google.com [209.85.218.65])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 286521B0F0A;
-	Sun, 22 Jun 2025 12:32:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E92AE1853;
+	Mon, 23 Jun 2025 00:55:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750595552; cv=none; b=jLhZG61uWg7B2Hlc4gjzrLCyUAZylmwIwYxb1XF8MY+c90QDz7CTHno2U/KIo+ZFJovlbqVD05dlhdzNUNeAbLJ8auUTHTQcC9cS+13pe6TNgNiqpxY2b/Ujz9vYIBOzwqCCJemh3ekecDzNd/41yYjNOlwpjoS4PCnFkW3lRto=
+	t=1750640160; cv=none; b=c2xObI8/Fl1lgKEcAVtpP626cKoQFIWMUU4ASqtBWQxdJbj1TK5vqh3kPWjUeVc9IfgoFnoXtORKTxHz3DVsqyVNWeISd+yCAIbR5hxwPn33oaWZPZJuQ2x54pEJpsq1SVodoefX/W+/7YFeWrva2VVsPOzyv4KU3Ree6Ix8FFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750595552; c=relaxed/simple;
-	bh=jXXXkw+FKbQmB/tcR68RCa7x6xWvdO657V53b7GpzSk=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=sF2HbGMeXUqVcaaZqFlTfgT5wApS2Sq58xdjpdP5fO6Qu5KrIgVxXzvQt7sSndMKPVXWNppgWmsRtC1VpV1uBNOMwCyESwbXB2PFPjFnVU9FIWSaGKomfNNxNEDHxX9WCV91R1gvgTdWT8rjOTa5j5UMLEQfYTwlIFWUMytyVmo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eKGmoZbv; arc=none smtp.client-ip=209.85.218.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1750640160; c=relaxed/simple;
+	bh=vcABYOkqq14g+eIUIf5QSuzIa5WGou1ACb34ZXbcWMU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TSnCG6h12HlBC4Gfk0doQsXJZyKcvNsh7hYORGWAslKXEumap2Px+IOpb63G3s0fozaFta7NA18jarfMXVQhbd8h+cnv4FpEyA0UnamU0Yrk2XlKJ/HEsJN9r3GhxiVBlc6iGUGdHZq2rOEcoFPO7BmJBk2tMjb+Ha2iva46/N8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OFJC0H2C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eKGmoZbv"
-Received: by mail-ej1-f65.google.com with SMTP id a640c23a62f3a-ad89c32a7b5so540328366b.2;
-        Sun, 22 Jun 2025 05:32:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750595549; x=1751200349; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=aSk4yzTW44Esyzw/wNejCuPulTn02jN2YGNDUPCIWYk=;
-        b=eKGmoZbvhwY7IBKBNGRvN4rVH83ARcQnd5fhix/QHX0+2eBiDulLFTbc4xiyW22sEx
-         FrtHrfwK4qBHKS4uw+sGzHiIzoPKVDa1OGpUBvyHaE4GYoC0MPf6x7noA8Z2ylTVwL0j
-         ZH2aodIzsbLTNGCXrefaRbBeVvO/ahLJ/QRgD045jrHCHkBNJ5R/9ZPfSBs5v5kVp/ZD
-         Cwu1tCXYes1YRenlusgjWLdwQcTtYq6+/x45eFOHknZemiEuVk/zZ+s+XPJ6JCid/NsA
-         w+LFZHxX4uIjGWSj2EkURMITJBBafxs2f4plxsCeq9jWxA4ajHZvygWXbu82ptDNvJ+P
-         rozg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750595549; x=1751200349;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=aSk4yzTW44Esyzw/wNejCuPulTn02jN2YGNDUPCIWYk=;
-        b=VNA8mQ6bBP+WKYx/CekgMnte9vaYfzA1vE7f99Hgx6JHNGdtXjKurXtBTeXl5M2Az6
-         fzUPJDg2czwo4jP2MdV6HpxzHS/Glg8dX3ND/RaLIl1CSdSFAWDhR2KXuak6VCp1yttm
-         btEri+0ilDfLkDHQhhJ3lSADTXQnWpIwQCTSmxG7jbAmHwpYmS1CRP6D+BOtLkO9iHsH
-         Qa8WZVEmdBcQLynCRuk50oVBUCbNEUWyjQRQgtVhhuL5ScVNRzpuHaNkZuDtsUzQ23wY
-         Pp3M+nx19zkk11fW/jZgBSlq8+ng+j7R1H0L2uimsX8IZMFgU/WFRYLYC/+3x4WnZu3y
-         Bh/Q==
-X-Forwarded-Encrypted: i=1; AJvYcCWdjcYEVzGKEExI/AED1JSG7aac2NUa20dT+y64/AC/JkvSVl1UIAJZkSt0nP2pFiuKQ5nKaOIRu5GqBrA=@vger.kernel.org, AJvYcCWzcf66/30uMfzapYQA2Af1JlxeYjTn5GVoUfGcgtMh6nSTHDYPB/AL0MQMWlDmYtu6be8D542MGbxe@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw86LmjqfecZWO75pbyyrXmFdUpAiNbBct+kczarlSUu+AJ+ekw
-	QX9ZrrE7EfyzelBKwBrKYHwdNPv5Bfa0TgJJu+W3I01EewVn+J8qhziJW8xftfFk9LBnebIwpho
-	F4AClQMeqWZo1/xgpr9ZocxER8wmmtxDY9d5xZ1I=
-X-Gm-Gg: ASbGncuwVL2+enFcmmVPyYIIPqgerD8DwrArnb6sR0XzWvvVi3Rte/Rom+9G9Wr1Lu7
-	/cWlZLP4lEANBahFXAtpeQ+TsIhElwLOvNjx8HcoRkzCcTK8shupYG0IYjWSuloK0or3BF7nI12
-	872llKIHa8Q15ovTUW+HGdSVvnay0ixLipRNVhM70FYSmI
-X-Google-Smtp-Source: AGHT+IE9OBYcaOHJZRl28LCepjQAPhnCJC5wHlYtncAitDnkEJr39Z3wrHc73rGhhccLPxyswT4nlwcy7/sGTOTntBM=
-X-Received: by 2002:a17:907:d2d2:b0:ad8:8d89:bbec with SMTP id
- a640c23a62f3a-ae057b89b81mr873810066b.28.1750595549263; Sun, 22 Jun 2025
- 05:32:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OFJC0H2C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 334A7C4CEE3;
+	Mon, 23 Jun 2025 00:55:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750640159;
+	bh=vcABYOkqq14g+eIUIf5QSuzIa5WGou1ACb34ZXbcWMU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=OFJC0H2Cd1jWpt4llw/3kqfljf/eymIjMOd6+6Sltgh7EyStjfN6KD7HKp6W3r14M
+	 HbUSj2uf75tNXzTvCivdLmxfUTINteTLaP+iWpO3FY2MH61IA7SGWwoeyvWAkvxeBq
+	 ZN6sYuP4lUe0bYKt9WZ05PkOfwVxmOa8uHn0JNIuFeVd+FFF3TLJ/phx8nX6e64TJk
+	 j9xS/eDLjYHxYOOSH06WaUUy2eibHTywlazrSeoTLznhpbeKGvx6/R2Qxn7hB4prN2
+	 CCGmSQOVhPzREWaRe+K5ng0IiRtqi4zbe+KcPN3S0j8/0+prl505srVzCDBIGTmDE0
+	 h//o+7r/08dlQ==
+Date: Mon, 23 Jun 2025 02:55:50 +0200
+From: Alejandro Colomar <alx@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: linux-man@vger.kernel.org, linux-fsdevel@vger.kernel.org, hch@lst.de, 
+	djwong@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] statx.2: properly align stx_dio_read_offset_align
+Message-ID: <kup2hb4ffghnxc3ceed5qtf4wqgizmjmaika72fhgv55gum25j@fgjqslihhopw>
+References: <20250619154455.321848-1-john.g.garry@oracle.com>
+ <20250619154455.321848-2-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: ying chen <yc1082463@gmail.com>
-Date: Sun, 22 Jun 2025 20:32:18 +0800
-X-Gm-Features: AX0GCFskuPouvmaUOWn_8Wqpj2uL6bAVD6Tu66NzJt9rqUcrykyiU8gyOEZOEEw
-Message-ID: <CAN2Y7hyi1HCrSiKsDT+KD8hBjQmsqzNp71Q9Z_RmBG0LLaZxCA@mail.gmail.com>
-Subject: [PATCH] xfs: report a writeback error on a read() call
-To: djwong@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="x3pfq6gjwi44iubs"
+Content-Disposition: inline
+In-Reply-To: <20250619154455.321848-2-john.g.garry@oracle.com>
 
-Normally, user space returns immediately after writing data to the
-buffer cache. However, if an error occurs during the actual disk
-write operation, data loss may ensue, and there is no way to report
-this error back to user space immediately. Current kernels may report
-writeback errors when fsync() is called, but frequent invocations of
-fsync() can degrade performance. Therefore, a new sysctl
-fs.xfs.report_writeback_error_on_read is introduced, which, when set
-to 1, reports writeback errors when read() is called. This allows user
-space to be notified of writeback errors more promptly.
 
-Signed-off-by: fengchangqing <fengchangqing@pinduoduo.com>
----
- fs/xfs/xfs_file.c    | 9 +++++++++
- fs/xfs/xfs_globals.c | 1 +
- fs/xfs/xfs_linux.h   | 1 +
- fs/xfs/xfs_sysctl.c  | 9 +++++++++
- fs/xfs/xfs_sysctl.h  | 1 +
- 5 files changed, 21 insertions(+)
+--x3pfq6gjwi44iubs
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+From: Alejandro Colomar <alx@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: linux-man@vger.kernel.org, linux-fsdevel@vger.kernel.org, hch@lst.de, 
+	djwong@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] statx.2: properly align stx_dio_read_offset_align
+References: <20250619154455.321848-1-john.g.garry@oracle.com>
+ <20250619154455.321848-2-john.g.garry@oracle.com>
+MIME-Version: 1.0
+In-Reply-To: <20250619154455.321848-2-john.g.garry@oracle.com>
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 595a5bc..8bf0a83 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -288,12 +288,21 @@
-        struct inode            *inode = file_inode(iocb->ki_filp);
-        struct xfs_mount        *mp = XFS_I(inode)->i_mount;
-        ssize_t                 ret = 0;
-+       int                     error = 0;
-+       errseq_t                since;
+Hi John,
 
-        XFS_STATS_INC(mp, xs_read_calls);
+On Thu, Jun 19, 2025 at 03:44:54PM +0000, John Garry wrote:
+> Align this member in struct statx with the members above it.
+>=20
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
 
-        if (xfs_is_shutdown(mp))
-                return -EIO;
+Thanks!  I've applied the patch.
+<https://www.alejandro-colomar.es/src/alx/linux/man-pages/man-pages.git/com=
+mit/?h=3Dcontrib&id=3D6006fe8bf74e400e060ff70f62ac03d911af13c5>
 
-+       if (xfs_report_writeback_error_on_read) {
-+               since = READ_ONCE(iocb->ki_filp->f_wb_err);
-+               error = filemap_check_wb_err(inode->i_mapping, since);
-+               if (error)
-+                       return  error;
-+       }
-+
-        if (IS_DAX(inode))
-                ret = xfs_file_dax_read(iocb, to);
-        else if (iocb->ki_flags & IOCB_DIRECT)
-diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
-index 4d0a98f..9983a2f 100644
---- a/fs/xfs/xfs_globals.c
-+++ b/fs/xfs/xfs_globals.c
-@@ -29,6 +29,7 @@
-        .inherit_nodfrg = {     0,              1,              1       },
-        .fstrm_timer    = {     1,              30*100,         3600*100},
-        .blockgc_timer  = {     1,              300,            3600*24},
-+       .report_writeback_error_on_read = {     0,              0,
-         1},
- };
 
- struct xfs_globals xfs_globals = {
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index f987802..bbe8bdb 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -100,6 +100,7 @@
- #define xfs_inherit_nodefrag   xfs_params.inherit_nodfrg.val
- #define xfs_fstrm_centisecs    xfs_params.fstrm_timer.val
- #define xfs_blockgc_secs       xfs_params.blockgc_timer.val
-+#define xfs_report_writeback_error_on_read
-xfs_params.report_writeback_error_on_read.val
+Have a lovely day!
+Alex
 
- #define current_cpu()          (raw_smp_processor_id())
- #define current_set_flags_nested(sp, f)                \
-diff --git a/fs/xfs/xfs_sysctl.c b/fs/xfs/xfs_sysctl.c
-index 546a6cd..fbec214 100644
---- a/fs/xfs/xfs_sysctl.c
-+++ b/fs/xfs/xfs_sysctl.c
-@@ -194,6 +194,15 @@
-                .extra1         = &xfs_params.blockgc_timer.min,
-                .extra2         = &xfs_params.blockgc_timer.max,
-        },
-+       {
-+               .procname       = "report_writeback_error_on_read",
-+               .data           =
-&xfs_params.report_writeback_error_on_read.val,
-+               .maxlen         = sizeof(int),
-+               .mode           = 0644,
-+               .proc_handler   = xfs_deprecated_dointvec_minmax,
-+               .extra1         =
-&xfs_params.report_writeback_error_on_read.min,
-+               .extra2         =
-&xfs_params.report_writeback_error_on_read.max,
-+       },
-        /* please keep this the last entry */
- #ifdef CONFIG_PROC_FS
-        {
-diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
-index f78ad6b..fa0688a 100644
---- a/fs/xfs/xfs_sysctl.h
-+++ b/fs/xfs/xfs_sysctl.h
-@@ -36,6 +36,7 @@
-        xfs_sysctl_val_t inherit_nodfrg;/* Inherit the "nodefrag" inode flag. */
-        xfs_sysctl_val_t fstrm_timer;   /* Filestream dir-AG assoc'n timeout. */
-        xfs_sysctl_val_t blockgc_timer; /* Interval between blockgc scans */
-+       xfs_sysctl_val_t report_writeback_error_on_read; /*  Report a
-writeback error on a read() call. */
- } xfs_param_t;
+> ---
+>  man/man2/statx.2 | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/man/man2/statx.2 b/man/man2/statx.2
+> index ef7dbbcf9..273d80711 100644
+> --- a/man/man2/statx.2
+> +++ b/man/man2/statx.2
+> @@ -73,7 +73,7 @@ struct statx {
+>      __u32 stx_atomic_write_segments_max;
+>  \&
+>      /* File offset alignment for direct I/O reads */
+> -    __u32   stx_dio_read_offset_align;
+> +    __u32 stx_dio_read_offset_align;
+>  };
+>  .EE
+>  .in
+> --=20
+> 2.31.1
+>=20
 
- /*
---
-1.8.3.1
+--=20
+<https://www.alejandro-colomar.es/>
+
+--x3pfq6gjwi44iubs
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEES7Jt9u9GbmlWADAi64mZXMKQwqkFAmhYphUACgkQ64mZXMKQ
+wqkFthAAq2tmV1O+v/i0SGWBkOuvAIyAJJrCosjtR9WLmtByFV8veF4ZMYHIz9P+
+3+V/1hovEdNTkx48JitK4Ye0RoGEmU4/lgpDFokBqN0zSVNfOJenayAgiTS+24WY
+FMFKUUeO6ZT60h/8SpRDgq1njlPjyq8/19yhqZVuwr3nb+lEzDCHIDrzyCxPd/Px
+T9IGJ66pNnWR2UryFK+p32g3H8Rd9qebXVgS2AON1lCHlAAut/7LEEpBfCzv+hcS
+Dh9RtoEwOe5ix/vKY2Sx5ZR1K8IB9TzoxcmwX9bVCfOIRochX1P/C84v2IVyKtXj
+9mHe9lDszZ0jamjJaAZZR88pXO3QG9y3l8NZuVJoFgHfudCJ5EtEoy1iD0YJCfj8
+fO4AaIP4xSfHXH4YdDY/0n+ag3tp5QfclK2q3eIjrUXmScQZap5VkuHds1925ZKU
+9ac55J1v+mGV0wQkMQypJJQqkuYWTh3QCmi6kj/aGqczMdJQxaIx59fKdmzIqzLe
+x6mXxPaY1GF8kHl/+X74zejZh379aYUigivHgiBZceCHyziZKT9VNM+veLeq8QkD
+qOx9zg1k6gcJ3J1EoYjum5TJgpOWJBq1sfTxGZP3aC3hkvFRkN1poD2l3YAe0n/r
+4ZAJFHJcSJjsq5T/mItL4u0p7dDDDo4XiilFWwnWOFJI7MkDThg=
+=fmra
+-----END PGP SIGNATURE-----
+
+--x3pfq6gjwi44iubs--
