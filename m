@@ -1,37 +1,50 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75BF21C6FFE;
-	Mon, 23 Jun 2025 05:40:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12A991B4240;
+	Mon, 23 Jun 2025 07:42:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750657229; cv=none; b=WYJyxZsvmkf2LowYSg6Zj5rg3XoyxifL39M1cRClB+ZlhCXC2I7anTgrwJ8H+oJ5hku19QKMr9aVMxFKlavNgTBk5s9Nh6iVcj7CDrvOdUfDySkM6Eb3vzdQRBKCeLpxI3qoNoovNR/n1puEgGVRmySzfDJFPd4WJiD2nE3pS6g=
+	t=1750664548; cv=none; b=j8X60R87arfZob67fFO14jOrOgim4vDhMy04cYDxKFxx04Jgt4tpDMvJwxLTpuirBh5KqDTaKpMr2ic6+cWAhPaBVUhtTo+jsrjUNdXewJpvQhLYtYPkUPRqUHBOMCvrw+xdW25qaRO35r0OMaLKoHBz9oJOAYmKIcWbLkladJs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750657229; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1750664548; c=relaxed/simple;
+	bh=Igc0gb/4fqGaP7PxgbaNOPDn2jKSvvZ/FT582jiBRuM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gee6Kfh/A1JpPHhVbXbqnLEQI9ZvDdV6WwkcN4Vp2Jle45i7dxdZrDMo6+v5u3JOuLpAP1ASGX7ZFiUYlySKsTsIodl0mpRDR9GN0LbZgKqMHzoZbAAN+E94AgjBLBAnu1LKT+GPn8lk8bjJeJyI8Fy9fK5ebjxozIoZDcjRH6w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 73BE7227A87; Mon, 23 Jun 2025 07:40:24 +0200 (CEST)
-Date: Mon, 23 Jun 2025 07:40:23 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de,
-	tytso@mit.edu, djwong@kernel.org, john.g.garry@oracle.com,
-	bmarzins@redhat.com, chaitanyak@nvidia.com,
-	shinichiro.kawasaki@wdc.com, brauner@kernel.org,
-	martin.petersen@oracle.com, yi.zhang@huawei.com,
-	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH v2 3/9] nvmet: set WZDS and DRB if device enables unmap
- write zeroes operation
-Message-ID: <20250623054023.GC29955@lst.de>
-References: <20250619111806.3546162-1-yi.zhang@huaweicloud.com> <20250619111806.3546162-4-yi.zhang@huaweicloud.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=NuR/CI/Q9Ea3Z8YGAe6DXMSn7YKVDo3SWY8P3IVg3wBve7psfc5EI2rdFo60u2aN+w+DfsuyG5Cp8WUHKbFVKkGvV2l2vjeViLb27BwXnEjnEu5x/sdeq9sD+kgzQ5CnGtSPmTbvTPl5juxjf5qHF24/bK0ukIbVyOApHQDGt2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hEBB7216; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hEBB7216"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=gO6BgaOURwVvfKJZL4NV0+ycIT42XYR9tx/8Rf/n8Y8=; b=hEBB7216jZyDUq0t35LTpI2Mdh
+	Zim3MfJyDOpirhznfv4bpqhDbnn1P10fI/ZVT7eRo76+qbagr2pLY4pNTo1GSuFRKwP1okdLCZxF2
+	VOispB5mBgW53eh7AzdciuKpgb66wrW2ubGsearpzcZ+dgreiXc5/PjuTeDFbkvCA/btF4UGn45Q4
+	3nmXiw++HduhE3D9Ssg6ADye1GsbVRO0vZ2noQEy+z/j5Teb1HQbd+65zWE/my9wBOQl4DG7fZqZ/
+	y8OLoqhL1uvIi5UqEZJDZsQ/6/X+5BODaPaAW7w/s9bzTzk/ML5fwpIBXqM751lH9q3XwfkV30cYO
+	ptZWuL+Q==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uTbow-00000001tk8-0wHD;
+	Mon, 23 Jun 2025 07:42:26 +0000
+Date: Mon, 23 Jun 2025 00:42:26 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org,
+	djwong@kernel.org, anuj1072538@gmail.com, miklos@szeredi.hu,
+	brauner@kernel.org, linux-xfs@vger.kernel.org, kernel-team@meta.com
+Subject: Re: [PATCH v2 04/16] iomap: add wrapper function iomap_bio_readpage()
+Message-ID: <aFkFYkleaEc9HxSr@infradead.org>
+References: <20250613214642.2903225-1-joannelkoong@gmail.com>
+ <20250613214642.2903225-5-joannelkoong@gmail.com>
+ <aFAS9SMi1GkqFVg2@infradead.org>
+ <CAJnrk1ZCeeVumEaMy+kxqqwn3n1gtSBjtCGUrT1nctjnJaKkZA@mail.gmail.com>
+ <aFDxNWQtInriqLU8@infradead.org>
+ <CAJnrk1ZrgXL2=7t2rCdAmBz0nNcRT0q7nBUtOUDfz2+CwCWb-A@mail.gmail.com>
+ <aFJEXZgiGuszZfh6@infradead.org>
+ <CAJnrk1aCo308fxgzYRnei1A29qskvMtiWNS50BJNwiyrQ2A_oA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,10 +53,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250619111806.3546162-4-yi.zhang@huaweicloud.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <CAJnrk1aCo308fxgzYRnei1A29qskvMtiWNS50BJNwiyrQ2A_oA@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+On Wed, Jun 18, 2025 at 12:17:14PM -0700, Joanne Koong wrote:
+> > Sure.  What I mean is that I want to do this last before getting the
+> > series ready to merge.  I.e. don't bother with until we have something
+> > we're all fine with on a conceptual level.
+> 
+> I'm pausing this patchset until yours lands and then I was planning to
+> rebase this (the CONFIG_BLOCK and fuse specifics) on top of yours. Not
+> sure if that's what you mean or not, but yes, happy to go with
+> whatever you think works best.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+It's not going to land without a user..
 
+At some point we'll need to fuse side of this to go ahead.  I'm happy
+to either hand control of the series to you, or work with you on a
+common tree to make that happen.
