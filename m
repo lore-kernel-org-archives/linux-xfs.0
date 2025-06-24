@@ -1,202 +1,360 @@
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f207.google.com (mail-il1-f207.google.com [209.85.166.207])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EC3522FF22;
-	Tue, 24 Jun 2025 06:09:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.153.144
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750745377; cv=fail; b=FQ33vzB5szZdfNV8uFHy5cGVBHh42CxAtDKE3TrsDWCrFg2hHwWLVX71yt64bXuEGgex39G8IsTE2Qn3jwWfR/8dw0IfVT8/URZPboPiQRBchj+0kylghePCQ5K+szv/Sr6iwHYDzF1yEpAX7CY+vIupxMWsjArru9OwiLe+tU4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750745377; c=relaxed/simple;
-	bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Ztses6k+LOFYdoVkINXaaky//frgaqCc3yCZB/GPwoHPZ9efcy5A8XrxY+yyKogXw59NW37IFArNS7/A/Mt5BdQEKtKBaamU9JPWg47trSe5Di+vKkITMMT/ZPOyPHODfYSIN3VpvIT6BsNEBR46wDr53sTLPeSQUv30Dy0v7rA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=D8CK1o7c; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=AD1zWscg; arc=fail smtp.client-ip=216.71.153.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="D8CK1o7c";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="AD1zWscg"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1750745375; x=1782281375;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
-  b=D8CK1o7cYSws8cgDQ0vFlTHtz9O6OA7JuxRLw2MoA9pZTR7fHFnkiY9x
-   SVwbhpXxczQlAbIqKloqNsboFgpBSHNm/8OXgnAiA5bzz3n+AG5CHdSxt
-   wBDA+rkeb9e7vfzdqaHQg7ijXDIT8KHwcyVLXjtam5Q1DUNtxAzltZ9ve
-   Vkcl757c5fMzmTT+4h7AXWUlP0wJxa5Wq+CzGpInElEjtV+DS1bYDarXV
-   dWuYXRP1wcXUH2Dau33A9R+cL4pLr4LrCb8Qlf7UWvidlaQL/gVZp3RB2
-   jHBQQxNrZeYYU2BWmdeb5CzIvphNYKDZrZcwGRe1kesbiFcoJ1JWd2L0L
-   w==;
-X-CSE-ConnectionGUID: QjeTfp56T6+VYh51FP3kbg==
-X-CSE-MsgGUID: 8ojIS4z3SYyAACb5zzOQsg==
-X-IronPort-AV: E=Sophos;i="6.16,260,1744041600"; 
-   d="scan'208";a="85119782"
-Received: from mail-bn8nam12on2042.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([40.107.237.42])
-  by ob1.hgst.iphmx.com with ESMTP; 24 Jun 2025 14:09:27 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=EW5hVxL0bf9MP5Vodqo5ejlZ/nsU8VRo+cDXBSZpFgnOLI1YLGd672lgK406hfRu6s1/relblsPzSpKJ/x13hHErS5zTCxZwOXifkmoGIDIYqV55oMSGlptIi/zTcz/zqEPDmuCvC83PVqHPCDCG7cqT2p/yJY14cY3Kzw8TGAFpdtIMpK21/JbFnFz3yHO6DHn6reargtAQpVdxNVadEvj31wUPHTmNKsNENtGRpwU90vUzVMlGbDRBm2brqCUPli8y029xZmd55qVHRs0KTng+F2022/OtsOivLWzr8WpMn22kifKVBU5wMgBAnP0nQHmq9SQ+w5yTvgPCWjnG8g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
- b=TFiWIOPGVAPVyHyZg1Ix+g0e+B26c3tB1USJo9hknmBBJ/KM/LxIikMy4kYTzW6UzprlaUc8lfOuyV7JS/aveU5klCcYQbK1WmtFq352l4wE3gRAqLFj74ahcMLoUU5NYKjAy06qBWpDfhBZNaTxDU/chStGitNDs0CAb6qQIfRjGiWLpmu4grkRaN3Q7W9UgJtIEGyDSu0Whi1yE53J2jmub0ZL/8ZNlwDkm8P+uVKAzxRzDteW0qYiCJiZqQrqxryMDOMnW2UWiuHJ6JU1EYJC7yEfKNqDZiSN/nsBuCBfSuZYOUC451Nhnc0WaKkzg6mQrXXEZs1iTZ4w13tWeg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
- b=AD1zWscgeWqkZAiF72lThGwnwnlxd6BuoFSnO6lN3Q7tPvX7ZCHofq5/BTZ7g1JmeGlwn+VMX2SBnbDzpiror8R+Ba4ZhZKVi6K4AYNvmLp8dw5SuM/EqE42crQ5W2eLB5Z8bmlziP5JzPPeXFXDa63pBTK2A8kURFvlWCwcJdk=
-Received: from PH0PR04MB7416.namprd04.prod.outlook.com (2603:10b6:510:12::17)
- by BY1PR04MB8629.namprd04.prod.outlook.com (2603:10b6:a03:52d::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8857.28; Tue, 24 Jun
- 2025 06:09:24 +0000
-Received: from PH0PR04MB7416.namprd04.prod.outlook.com
- ([fe80::ee22:5d81:bfcf:7969]) by PH0PR04MB7416.namprd04.prod.outlook.com
- ([fe80::ee22:5d81:bfcf:7969%7]) with mapi id 15.20.8857.026; Tue, 24 Jun 2025
- 06:09:24 +0000
-From: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To: Joanne Koong <joannelkoong@gmail.com>, "linux-fsdevel@vger.kernel.org"
-	<linux-fsdevel@vger.kernel.org>
-CC: hch <hch@lst.de>, "miklos@szeredi.hu" <miklos@szeredi.hu>,
-	"brauner@kernel.org" <brauner@kernel.org>, "djwong@kernel.org"
-	<djwong@kernel.org>, "anuj20.g@samsung.com" <anuj20.g@samsung.com>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"gfs2@lists.linux.dev" <gfs2@lists.linux.dev>, "kernel-team@meta.com"
-	<kernel-team@meta.com>
-Subject: Re: [PATCH v3 02/16] iomap: cleanup the pending writeback tracking in
- iomap_writepage_map_blocks
-Thread-Topic: [PATCH v3 02/16] iomap: cleanup the pending writeback tracking
- in iomap_writepage_map_blocks
-Thread-Index: AQHb5K72t5eOSvZKO0WovhdzwHd6lLQR07AA
-Date: Tue, 24 Jun 2025 06:09:23 +0000
-Message-ID: <284b449a-5ebb-4c11-bb77-37f8242472ff@wdc.com>
-References: <20250624022135.832899-1-joannelkoong@gmail.com>
- <20250624022135.832899-3-joannelkoong@gmail.com>
-In-Reply-To: <20250624022135.832899-3-joannelkoong@gmail.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-user-agent: Mozilla Thunderbird
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PH0PR04MB7416:EE_|BY1PR04MB8629:EE_
-x-ms-office365-filtering-correlation-id: 6dde3f47-1e50-4fa6-0ed9-08ddb2e5aad5
-x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|7416014|1800799024|376014|366016|38070700018;
-x-microsoft-antispam-message-info:
- =?utf-8?B?R3NlK3JkTGtUS3lvMVluZE1XdCtpYnlQeWkva05sbUlMTkpQWlNJcm9INUk3?=
- =?utf-8?B?eHA2WTh4ZXJpeC9kUytaTjNzMzNici9RMkxxMmNxYjBBbTJ4ajk1a2VCZll0?=
- =?utf-8?B?djRPU1VQRXlpSXcydXdMY3lZV3Z0NDQ1TjEwM2hSNlNSME1MeEl0SDVPYXhJ?=
- =?utf-8?B?SWxPY2pmNVdaUmNteXBpNUJWUTQ5eWM0OTEvNGQ1MHlGeGlpMWVlMlNUa3pq?=
- =?utf-8?B?UFM1R0tTd3l2ejFnZzlMNjlLcGc3ei9GNFhpSTRDMndqMVB1V3RLeVpNdUxa?=
- =?utf-8?B?U0s2blFTZEN1cTZXK3Z0Vm1iSWo1aG1WME9BQjVuN2tCSE5FbVI3QlE0cWRZ?=
- =?utf-8?B?YWZRckVqT0xFWTRTakFjWjR1dWRQQndULzgzSzBiR2lnSGs2eDRnUTU5bjdu?=
- =?utf-8?B?WFdJU203aW9xTlAwTGgxdzhGeG9BVTJ1VXZ0OVp3eHJjQmdDZnZETWRHTi8x?=
- =?utf-8?B?OTFac0Q5c1NWT1pXaUFZYUZIbzNOQTI0TTJwU0FHUFU3amxUUW4yUGFRd0Zl?=
- =?utf-8?B?SG9TekNnZVVuSFA3WW1sWjY2ZVR6RHRid0E1bERGUDNveTJZdStUMUU3dnA1?=
- =?utf-8?B?TlBPdG5IK1phNk1WWWdheC96SXFIcnpnL01xc01zWnhVRU13amFLQUFtelVQ?=
- =?utf-8?B?QWUrKzk4dTdTUXB3ZmFTVEpEaE9RTERvdlVOQURvdjliZFBTUkJ2Q3hxcXBx?=
- =?utf-8?B?cXIxTGsvOHVaSmNVdEZmaUprTjFmV0xobVJNREc0Wlp0Q01ITnZac3Z6UFFi?=
- =?utf-8?B?dHJ3aC9HbmREYTZrNmRVUUgrRmlEb0haMkpicU1IZjM5MEpvTm5UNDBkTU40?=
- =?utf-8?B?emEzY05Vbnc5aFpROXQ3bTB5R2NJeldpa2FWOUt1WU5YK3A4ZUNNZCtCSW5s?=
- =?utf-8?B?dzRtNE1nL0VOUTM3MnpQbTdmYzYzS0NpMDkyUWlDcE1IWlNLU1E5YzQzeitB?=
- =?utf-8?B?S2lDOXlxNnl1NTQ1c2RqMVI3NW5JU0dYVVRBb1dtNG4vTW40YjdRMXp3T3cw?=
- =?utf-8?B?aU8wdzVYdE1qekhJNTVwRHhGZHUwR0x4QTg2MU0vUloyZEJTNTF2bTYvNkpG?=
- =?utf-8?B?RXdObzRWay92ZWJCcUJES3Q4N1h2SWtrWlpkM1E1YmlkbHh5VVFYWGI2cytj?=
- =?utf-8?B?bjlUVWMwSUNrbHljandsaVo0c0l3a3Zod1NxdGdqNFhzZGZ6cmcwNW84QVZ5?=
- =?utf-8?B?V3ZUT1VyZDMwZXI2OXJreWtwSEYxUS9HUXhhMEtzNEh1SSt6SzJ1WEpURnQ2?=
- =?utf-8?B?NE1HaWllQ0pEZFlSV3hwMklJM21FK2xMSGRGVmFkRWFmcDl0OHpPZTBRaUhx?=
- =?utf-8?B?eitNS1h2QmNKdFdTUHhtOEg2UGVhUXFUUDVXeWdBVG1XSXA5N0kzUjVSL1pN?=
- =?utf-8?B?emdEdHNTZG5mRGo1UEZMQmhCbEQvNVlXK1RWOG0zRTJnR1ZuVjU0eUxGRGd5?=
- =?utf-8?B?Vm1rZVEyRzFiQ0RZVEQwbnVaQ2lISDhnZCt1RWNOTlljYkIwRmRwK1dGQkV0?=
- =?utf-8?B?VExGT1djQzIxYWxFa0N4TGg0bnJQMzhUWG9EUkl2dGxrNjhzWUZGeXBvdzk4?=
- =?utf-8?B?aXRwaXRub1Baem1oQWxiQmxGWk9FQUxSZDhYaTBlenIrZHg0c09VMmFLUlVY?=
- =?utf-8?B?K3lQaFVBL0hNOTlGZTl0VFpaOGNWKytZMHl5V1Z0N3R5aXh5cUZQZEE0TEN1?=
- =?utf-8?B?QUVBcU1EWVM1MTF6cDZoQkZmQjNxMHU3cTZFVHJZeFlFSE9Dc0FxVnFLM3J0?=
- =?utf-8?B?SXJsMjhTb0xLQlhRdTg1SHo2WC96NlU0czBMQ1F6L0NXUDYvVkQybHhieFJZ?=
- =?utf-8?B?VVh0L3owYy9TdXM2WnFFR1hjQnozZ2pNWlZIaG1HdmVHQnpOY2piVGlsQTNk?=
- =?utf-8?B?bHZwSFByYmJ3YmNxbnlqNlQ1K1JTakk5VjZnbEp2bHVXcFpBcFZRbmJZcFgz?=
- =?utf-8?B?SHlsM2JuYlpReHFjU1ZadlBUMVFxYU1hakI5ZHB3QUszeGNHY21MNWdYNnZD?=
- =?utf-8?Q?D5N3Op9ZAu7bmyd1HtXTc0Dq41OqxU=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7416.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(376014)(366016)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?WXh3d0wvbVBmNjE1ajZ1ZWZMMEtrTmdueThrN3dXNTJzVzgwZEFGbVRNZ25T?=
- =?utf-8?B?cVlWSXlvWTdYaFlyVGdDYUlCSHRDejM5bEV4cEJFUzM4cS9uaUQwVEZuY2VG?=
- =?utf-8?B?WVZWbUlBUDk0YzF2dTRzbXl5YjE5MXJoTHdQNWJlRW5vT0hWM01hS3FBSE9P?=
- =?utf-8?B?eDh6aWlhT0txSzhiVUtkZmxlWUtrQktzWW53SjE4cmpYcjVSYnBPVytBVVoy?=
- =?utf-8?B?TjB1Qm9GQ1VoQVQ5b0FHdVlWR3RQVll1d2J6QWo1eFlNRTVFZ1g0MXJhd2xJ?=
- =?utf-8?B?R0FHZG9BK0hGeEFkMVM0RVFqWEE1WW1BRVNJWXN1MGFud2hqZUhKeWd6Wkla?=
- =?utf-8?B?QzRRam1ZSmNNNy9JektDWDhkMDBxKzFmSTZyMUlDRVdRWE9WaDFVSHFnZmhj?=
- =?utf-8?B?UXQyVGtVVUN1WTdrOHF2Q1pGbjBvRHNKa2N5VkJvaWJucE9tbnZYOUJtQVpJ?=
- =?utf-8?B?TTN0elZuNlcyVnhSY2R1ajdueEs3WTN3VHNvZkJ1OXMzZ1JrTk1VdW10Sy9U?=
- =?utf-8?B?OGVlZW8rbDZyMXpHYTR4LzFYclIrcHJoT3JxdWxES2x2RU1kRmJBNkdybVlI?=
- =?utf-8?B?aG1TekJXaUdzRFlVQUZwS2pTMWVVY0VrNVNJTVVGTVA2UHdEYU90ZUxjREdq?=
- =?utf-8?B?T1BGZlZ3ZmFybEhJRG9DaGNCQ1M3UzN0UzZ5dHJFV0o2aGtHVnU3cmszcDVm?=
- =?utf-8?B?Y2c3WGVSUGhVbXJTY0YxTTRDTGJZdGI3RzJVaE1DcXMyNkJ3bkwxV0hKd0kz?=
- =?utf-8?B?WG5yY045MkZXeWk4UWRGSDgrZVNQUXpXeTI5eUFoZ3JFRFFDYkoyeXJqYkY1?=
- =?utf-8?B?bXBla1pRMHVrbEFXWjdscTVnSHhlblBUSmlnNU1oaWc2cG4vTlNkU2JYS1hj?=
- =?utf-8?B?WFZPWEV0RkJscGJ6VFNuMnd5VDJvZStJdkE2NS9RdFExVjNqVE5HYm80UDBH?=
- =?utf-8?B?MmhLUEhCbEk3WlpjM3YweW1yTlVyTlIxQVVYNitKWUZuVDdGRjIzMUhzbjF6?=
- =?utf-8?B?Qk54K1o5bEJILzNjb0NUZlF6TG1vWGI5YkZYRGtpSXBrbC85S2x4YkRVK3dD?=
- =?utf-8?B?NnJWQmhYRk02OFJ3emlZV1RZbmdCaVVDU2RYWXFLMmdCMmp1RnFFRWVvV0FO?=
- =?utf-8?B?U0VPWHFQeHg0M2xtcm9BdGRVUUd4REZMUkMwejlDWnV3dmt4SnZNM1V4c3BZ?=
- =?utf-8?B?dFhtUDFBZ0lESnVkZ2ptNVl1Wkc4WVJ1ekU3MmpWWHkzUmdmWVZGNEJLSzl2?=
- =?utf-8?B?a0MvbGFmVVZvbkRVTmtzQlg2MWJ4YTJ1cVZYYXY1RHVkQUo1UFN3RHdWMW9i?=
- =?utf-8?B?M0IxMFJ6RndWQXM1Q3U1RTN4WC9iSklLKzdpUm9mc0FDL3p1UzRpbXRKNWQv?=
- =?utf-8?B?L3BZQTlUYW13ejQzdU1tSFNGcDBoeU9saGQyWlBzTzgxQ0pva0FIamNPYUNG?=
- =?utf-8?B?NklPdWpxcmdKY3hTbzBsaGxmRVNTM25Nc0xaNVphNW9uNXpRaDJpQnIySjln?=
- =?utf-8?B?NVBHVkxqc0JKZlFmNlE4UndqaWhkKzhiYzNXaXJDZ0VBSFVWdWZlcEdxM01s?=
- =?utf-8?B?cXNCMGgwdWQ3R0dTbHo1L09BRU5BVFlFQXpvMHBSNXZUZzlONnBLYWw1aWxa?=
- =?utf-8?B?NUlUVWtiTXJ0NmRYcGxQYUxaK1VvK2hFbjR3bjl0d1BOUjhsbzBpQVFMY3Na?=
- =?utf-8?B?eTdKNy80RzdzT2R0ZjdxdFBZMm03QkwwSzlhc2F0ZUJuTXVsVWRNQWxNclV5?=
- =?utf-8?B?NThjVTNUVG4vS3NiZm9LZ1VnWFZrUCtSZ1Fsbzk2NGdJK3hSM1hJZTdHbHRV?=
- =?utf-8?B?aTFwd085RXR3U1o1bk5CSFF3M01sOFJ4NDlnSDBqN1BneFUyL0pjTkpGdXAz?=
- =?utf-8?B?cWhHcVVMNjNsa1FVbmJtUFJFdklKRUhvekEwMXRDOG1OemhzWkJJR0tydHk4?=
- =?utf-8?B?QklXNWtyYmlvTFRYallGMjJXUDBrUkdIR0pzZ0hzQ2M1TTdieHFmdEFTckd0?=
- =?utf-8?B?OWEra09uL0oweEp3TkhRYlRjSGxqWUFLTGxEeUxYVWp1emNjZUtMSTd1ZmZQ?=
- =?utf-8?B?c1pMUDh3OFpiTlcwQ2liLzI4dmtaNGJsNDVvejgwelRWRyt4eGdjLzFVS0tK?=
- =?utf-8?B?ZXVyOG1QUHE3MTB5MnV6RUNIUjBOVWRXVFJVSWRsdjVSbEp4bEFjM2tucWNB?=
- =?utf-8?B?emc9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <08D844BB9A5E4D4C9759D916248CF452@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8228B15748F
+	for <linux-xfs@vger.kernel.org>; Tue, 24 Jun 2025 06:56:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.207
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1750748190; cv=none; b=gg3O+Uuri3NqHBYRb8CAcj87Ahbh/BvbM8bjSP73wIXzRo0iekFG5q8wi647CHXXyIsmVd6sgc39bLZX4qfFM7gPKM1LfyerSIlshUIU8sV517TIRZVgpmlDRJAvZByTImsyApmehPixrF/oq0RpwQs5+TUK/W4wmei2IZpIJ9A=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1750748190; c=relaxed/simple;
+	bh=9h+PE3DRdwadgFr7j4C6c1BNz11udXoXSIHFTfUtpic=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=p4wf6ijtXnukjBf19HBwj1VCbspXE+ovaVJ5iiidZ7YisbbsAQB5tPf6hAMeAxMiIZ01y4/pjE03ry7+SrNe3uI7BaEQOlgNUQyfY3jMP/QmoZNFxn32nBJbvr4GgXjCA5O3KGuG6zXIBv9u8K7Q3zgxGMujYMgPcMhPYgtu5p0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.207
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f207.google.com with SMTP id e9e14a558f8ab-3df149301fdso46666895ab.1
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Jun 2025 23:56:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750748187; x=1751352987;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=MomSVgdlv0x7nXb9V7DSBsOWF81rrrcQGpLpKNlGx/o=;
+        b=aiVh5SvzyFx+LF4EROjVkInxVm3upQ0TEVOuyPJKhRSOJi/YuE394s5yphzdp9pkVt
+         FvlcS4ScPVIXfFmDK81In/Bc6RuVzeU5QT4qtRSz3i1wTLlv5wob0WcOFv8DtWMcXwwh
+         UpFgEObyYezckWYYwn7nPKkDFCD/Nuf37IIgWTmMMUymkYzEDiuct+nLB5dFYaaD3oNo
+         7/PFQGBCD+qda6/EAbQ5+KZ6Kl+5rFtt5YSXU7bM0llC5i2PfZHk3LS2mtnV1vp6AtjM
+         UoK1GDBdL1fZEHIFCakhEw8/sRjvC/NuXYrNb+fexXP05kMMw6wCqaLmnLLQ3zbTIOwb
+         rDng==
+X-Forwarded-Encrypted: i=1; AJvYcCW2AOiQTXGGZiLwRAIUQv7uFB9VLb3lShxu+bHDchky+j0bCXWrVlYhsVgLjyr92alS9RHHHM1ESfQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxw3R6Opd+keQsBfl+iCP2NZ1OeGTuwQwbcKEfOELafFlY2Dxe8
+	1p3zTB7sVSyOYIeFgO+2MzqD4jd7wGH8LMa0nJMWL99k19NsaU6koLh7+BiA2PLzTW47eEQRZgy
+	/mzIhMyE/8Wx3FtTBDvHCWuJgo0vKnRbus0z1zKND9R8/aeUoW0gFmdPBrQE=
+X-Google-Smtp-Source: AGHT+IGvoXMNldhgcCtWrwW0ybRg7YxVVmgvLNMV22mPFDC9KBSX+2GzZtLWAiel5SlFWe+QEyIJOGZQxE4aDEeW6T4pQBgNivp+
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	opbrc8Fmd4FyPRo/gAJGQm2TC3kwiF3kKVeRouObpW/bWCCPaTxrPm8urNftNRoiPZmbz/7ymM7LUyKLHH3LOTccu8gMx51oJBYdKqQ6XtXQjBTSiXBLYdn+zBTegW78mA1VROPTWFmyW6485bl8yk0Jhg1dgfI+DenP5s5+M97A1cXSkxRkiL3OxNk5I5wc86XWwF3j0gN5WdhYMOkdpbvYP15DqPczj0YwO+3pCncgCmIY9y7jq02+U6YACfFI21AXGVFQh82+/nw8jh4QrCZzZZeFbDIXcr2ofdICd7fTwsywq2YpvCg7P8pcWip2L4p4oXCALj8c9kJ74Yb62QKYWemY93PnoPNM7g7rCQkclNK3+R8DniBFLvYt/PbecjaoLkjCCy29/FHN6rEvk4Hg0LSO+r8reDy3XcDHo4gqwmbn8gp+8WFEQp93WRP3zgA9Ovbtf37YXi7vF9rIkeAhkAy44FzHeUyKu4DM12m0TeUBGKApmX4Dl5pPvRDXQt7lthH41xWUXYv2yY/0tcgaISc9MRTXiBIxoRWFw+69GTjfWszas4reoHfknPYLZLJngWGfBkUzx59CnCcMPRwCOWgncmqyotoU5e8Vt9l8HBympJaFrGSt+ycqajyL
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7416.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6dde3f47-1e50-4fa6-0ed9-08ddb2e5aad5
-X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Jun 2025 06:09:23.9422
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: C1TBA8gjQvzegbZH8z6+Eect5zeUrnC/VBKuW87HxL/Q7fvPnOXABBnAJmFENB5Li5rhIFHIMRvLWFxBVvbTQGbC2i66K2AhGYJS5PwhhAs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY1PR04MB8629
+X-Received: by 2002:a05:6e02:178e:b0:3dc:87c7:a5b9 with SMTP id
+ e9e14a558f8ab-3de38ca2cadmr160440945ab.10.1750748187622; Mon, 23 Jun 2025
+ 23:56:27 -0700 (PDT)
+Date: Mon, 23 Jun 2025 23:56:27 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <685a4c1b.a00a0220.2e5631.005a.GAE@google.com>
+Subject: [syzbot] [xfs?] INFO: task hung in xfs_map_blocks
+From: syzbot <syzbot+6acd9f2fce056265f549@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-TG9va3MgZ29vZCwNClJldmlld2VkLWJ5OiBKb2hhbm5lcyBUaHVtc2hpcm4gPGpvaGFubmVzLnRo
-dW1zaGlybkB3ZGMuY29tPg0K
+Hello,
+
+syzbot found the following issue on:
+
+HEAD commit:    2c923c845768 Add linux-next specific files for 20250619
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=13b39d0c580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=58afc4b78b52b7e3
+dashboard link: https://syzkaller.appspot.com/bug?extid=6acd9f2fce056265f549
+compiler:       Debian clang version 20.1.6 (++20250514063057+1e4d39e07757-1~exp1~20250514183223.118), Debian LLD 20.1.6
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1571f5d4580000
+
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/b4ef8488b2c5/disk-2c923c84.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/97fc575793ea/vmlinux-2c923c84.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/b8095fa1838d/bzImage-2c923c84.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/f420501f3e18/mount_0.gz
+  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=12fa030c580000)
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+6acd9f2fce056265f549@syzkaller.appspotmail.com
+
+INFO: task kworker/u8:7:1104 blocked for more than 143 seconds.
+      Not tainted 6.16.0-rc2-next-20250619-syzkaller #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:kworker/u8:7    state:D stack:24392 pid:1104  tgid:1104  ppid:2      task_flags:0x4208060 flags:0x00004000
+Workqueue: writeback wb_workfn (flush-7:4)
+Call Trace:
+ <TASK>
+ context_switch kernel/sched/core.c:5313 [inline]
+ __schedule+0x16f5/0x4d00 kernel/sched/core.c:6696
+ __schedule_loop kernel/sched/core.c:6774 [inline]
+ schedule+0x165/0x360 kernel/sched/core.c:6789
+ schedule_preempt_disabled+0x13/0x30 kernel/sched/core.c:6846
+ rwsem_down_read_slowpath+0x552/0x880 kernel/locking/rwsem.c:1084
+ __down_read_common kernel/locking/rwsem.c:1248 [inline]
+ __down_read kernel/locking/rwsem.c:1261 [inline]
+ down_read_nested+0x9a/0x2f0 kernel/locking/rwsem.c:1650
+ xfs_map_blocks+0x315/0xe80 fs/xfs/xfs_aops.c:330
+ iomap_writepage_map_blocks fs/iomap/buffered-io.c:1773 [inline]
+ iomap_writepage_map fs/iomap/buffered-io.c:1923 [inline]
+ iomap_writepages+0x10df/0x3240 fs/iomap/buffered-io.c:1977
+ xfs_vm_writepages+0x235/0x2b0 fs/xfs/xfs_aops.c:650
+ do_writepages+0x32e/0x550 mm/page-writeback.c:2636
+ __writeback_single_inode+0x145/0xff0 fs/fs-writeback.c:1680
+ writeback_sb_inodes+0x6c7/0x1010 fs/fs-writeback.c:1976
+ __writeback_inodes_wb+0x111/0x240 fs/fs-writeback.c:2047
+ wb_writeback+0x44f/0xaf0 fs/fs-writeback.c:2158
+ wb_check_old_data_flush fs/fs-writeback.c:2262 [inline]
+ wb_do_writeback fs/fs-writeback.c:2315 [inline]
+ wb_workfn+0xaef/0xef0 fs/fs-writeback.c:2343
+ process_one_work kernel/workqueue.c:3239 [inline]
+ process_scheduled_works+0xae1/0x17b0 kernel/workqueue.c:3322
+ worker_thread+0x8a0/0xda0 kernel/workqueue.c:3403
+ kthread+0x70e/0x8a0 kernel/kthread.c:464
+ ret_from_fork+0x3fc/0x770 arch/x86/kernel/process.c:148
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+
+Showing all locks held in the system:
+2 locks held by kworker/0:0/9:
+1 lock held by khungtaskd/31:
+ #0: ffffffff8e13ef20 (rcu_read_lock){....}-{1:3}, at: rcu_lock_acquire include/linux/rcupdate.h:331 [inline]
+ #0: ffffffff8e13ef20 (rcu_read_lock){....}-{1:3}, at: rcu_read_lock include/linux/rcupdate.h:841 [inline]
+ #0: ffffffff8e13ef20 (rcu_read_lock){....}-{1:3}, at: debug_show_all_locks+0x2e/0x180 kernel/locking/lockdep.c:6770
+4 locks held by kworker/u8:2/36:
+ #0: ffff8881404e5148 ((wq_completion)writeback){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3214 [inline]
+ #0: ffff8881404e5148 ((wq_completion)writeback){+.+.}-{0:0}, at: process_scheduled_works+0x9b4/0x17b0 kernel/workqueue.c:3322
+ #1: ffffc90000ac7bc0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3215 [inline]
+ #1: ffffc90000ac7bc0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_scheduled_works+0x9ef/0x17b0 kernel/workqueue.c:3322
+ #2: ffff8880633ca0e0 (&type->s_umount_key#53){++++}-{4:4}, at: super_trylock_shared+0x20/0xf0 fs/super.c:563
+ #3: ffff888050fbce98 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_map_blocks+0x315/0xe80 fs/xfs/xfs_aops.c:330
+4 locks held by kworker/u8:4/61:
+ #0: ffff8881404e5148 ((wq_completion)writeback){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3214 [inline]
+ #0: ffff8881404e5148 ((wq_completion)writeback){+.+.}-{0:0}, at: process_scheduled_works+0x9b4/0x17b0 kernel/workqueue.c:3322
+ #1: ffffc9000212fbc0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3215 [inline]
+ #1: ffffc9000212fbc0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_scheduled_works+0x9ef/0x17b0 kernel/workqueue.c:3322
+ #2: ffff8880278120e0 (&type->s_umount_key#53){++++}-{4:4}, at: super_trylock_shared+0x20/0xf0 fs/super.c:563
+ #3: ffff888050f80118 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_map_blocks+0x315/0xe80 fs/xfs/xfs_aops.c:330
+4 locks held by kworker/u8:5/1008:
+6 locks held by kworker/u8:6/1094:
+4 locks held by kworker/u8:7/1104:
+ #0: ffff8881404e5148 ((wq_completion)writeback){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3214 [inline]
+ #0: ffff8881404e5148 ((wq_completion)writeback){+.+.}-{0:0}, at: process_scheduled_works+0x9b4/0x17b0 kernel/workqueue.c:3322
+ #1: ffffc90003ecfbc0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3215 [inline]
+ #1: ffffc90003ecfbc0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_scheduled_works+0x9ef/0x17b0 kernel/workqueue.c:3322
+ #2: ffff88807e5340e0 (&type->s_umount_key#53){++++}-{4:4}, at: super_trylock_shared+0x20/0xf0 fs/super.c:563
+ #3: ffff88807670ed98 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_map_blocks+0x315/0xe80 fs/xfs/xfs_aops.c:330
+2 locks held by kworker/u8:8/1157:
+ #0: ffff88801a489148 ((wq_completion)events_unbound){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3214 [inline]
+ #0: ffff88801a489148 ((wq_completion)events_unbound){+.+.}-{0:0}, at: process_scheduled_works+0x9b4/0x17b0 kernel/workqueue.c:3322
+ #1: ffffc900040bfbc0 (connector_reaper_work){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3215 [inline]
+ #1: ffffc900040bfbc0 (connector_reaper_work){+.+.}-{0:0}, at: process_scheduled_works+0x9ef/0x17b0 kernel/workqueue.c:3322
+4 locks held by kworker/u8:9/3554:
+ #0: ffff8881404e5148 ((wq_completion)writeback){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3214 [inline]
+ #0: ffff8881404e5148 ((wq_completion)writeback){+.+.}-{0:0}, at: process_scheduled_works+0x9b4/0x17b0 kernel/workqueue.c:3322
+ #1: ffffc9000c7a7bc0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3215 [inline]
+ #1: ffffc9000c7a7bc0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_scheduled_works+0x9ef/0x17b0 kernel/workqueue.c:3322
+ #2: ffff8880705c80e0 (&type->s_umount_key#53){++++}-{4:4}, at: super_trylock_shared+0x20/0xf0 fs/super.c:563
+ #3: ffff88807656bf18 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_map_blocks+0x315/0xe80 fs/xfs/xfs_aops.c:330
+2 locks held by getty/5590:
+ #0: ffff88814d42c0a0 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x25/0x70 drivers/tty/tty_ldisc.c:243
+ #1: ffffc9000331b2f0 (&ldata->atomic_read_lock){+.+.}-{4:4}, at: n_tty_read+0x43e/0x1400 drivers/tty/n_tty.c:2222
+1 lock held by udevd/5913:
+3 locks held by kworker/0:6/6092:
+ #0: ffff88801a480d48 ((wq_completion)events){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3214 [inline]
+ #0: ffff88801a480d48 ((wq_completion)events){+.+.}-{0:0}, at: process_scheduled_works+0x9b4/0x17b0 kernel/workqueue.c:3322
+ #1: ffffc90003647bc0 ((work_completion)(&data->fib_event_work)){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3215 [inline]
+ #1: ffffc90003647bc0 ((work_completion)(&data->fib_event_work)){+.+.}-{0:0}, at: process_scheduled_works+0x9ef/0x17b0 kernel/workqueue.c:3322
+ #2: ffff888024298240 (&data->fib_lock){+.+.}-{4:4}, at: nsim_fib_event_work+0x26b/0x3180 drivers/net/netdevsim/fib.c:1490
+4 locks held by syz.4.110/7000:
+ #0: ffff88807e534428 (sb_writers#13){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:557
+ #1: ffff88807670efb0 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:869 [inline]
+ #1: ffff88807670efb0 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+ #2: ffff88807e534618 (sb_internal#2){.+.+}-{0:0}, at: xfs_trans_alloc_inode+0x13c/0x4a0 fs/xfs/xfs_trans.c:1096
+ #3: ffff88807670ed98 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_trans_alloc_inode+0x161/0x4a0 fs/xfs/xfs_trans.c:1102
+4 locks held by syz.1.142/7354:
+ #0: ffff8880633ca428 (sb_writers#13){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:557
+ #1: ffff888050fbd0b0 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:869 [inline]
+ #1: ffff888050fbd0b0 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+ #2: ffff8880633ca618 (sb_internal#2){.+.+}-{0:0}, at: xfs_trans_alloc_inode+0x13c/0x4a0 fs/xfs/xfs_trans.c:1096
+ #3: ffff888050fbce98 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_trans_alloc_inode+0x161/0x4a0 fs/xfs/xfs_trans.c:1102
+4 locks held by syz.0.181/7783:
+ #0: ffff888027812428 (sb_writers#13){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:557
+ #1: ffff888050f80330 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:869 [inline]
+ #1: ffff888050f80330 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+ #2: ffff888027812618 (sb_internal#2){.+.+}-{0:0}, at: xfs_trans_alloc_inode+0x13c/0x4a0 fs/xfs/xfs_trans.c:1096
+ #3: ffff888050f80118 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_trans_alloc_inode+0x161/0x4a0 fs/xfs/xfs_trans.c:1102
+6 locks held by syz.6.252/8512:
+ #0: ffff8880705c8428 (sb_writers#13){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:557
+ #1: ffff88807656c130 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:869 [inline]
+ #1: ffff88807656c130 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+ #2: ffff8880705c8618 (sb_internal#2){.+.+}-{0:0}, at: xfs_trans_alloc_inode+0x13c/0x4a0 fs/xfs/xfs_trans.c:1096
+ #3: ffff88807656bf18 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_trans_alloc_inode+0x161/0x4a0 fs/xfs/xfs_trans.c:1102
+ #4: ffff8880b8639f58 (&rq->__lock){-.-.}-{2:2}, at: raw_spin_rq_lock_nested+0x2a/0x140 kernel/sched/core.c:606
+ #5: ffff8880b8623f08 (&per_cpu_ptr(group->pcpu, cpu)->seq){-.-.}-{0:0}, at: psi_task_switch+0x39a/0x6d0 kernel/sched/psi.c:991
+4 locks held by syz.3.287/8865:
+ #0: ffff888069ff6428 (sb_writers#13){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:557
+ #1: ffff888050c8c8f0 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:869 [inline]
+ #1: ffff888050c8c8f0 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+ #2: ffff888069ff6618 (sb_internal#2){.+.+}-{0:0}, at: xfs_trans_alloc_inode+0x13c/0x4a0 fs/xfs/xfs_trans.c:1096
+ #3: ffff888050c8c6d8 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_trans_alloc_inode+0x161/0x4a0 fs/xfs/xfs_trans.c:1102
+4 locks held by kworker/u8:10/9073:
+ #0: ffff8881404e5148 ((wq_completion)writeback){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3214 [inline]
+ #0: ffff8881404e5148 ((wq_completion)writeback){+.+.}-{0:0}, at: process_scheduled_works+0x9b4/0x17b0 kernel/workqueue.c:3322
+ #1: ffffc9000e65fbc0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3215 [inline]
+ #1: ffffc9000e65fbc0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_scheduled_works+0x9ef/0x17b0 kernel/workqueue.c:3322
+ #2: ffff888069ff60e0 (&type->s_umount_key#53){++++}-{4:4}, at: super_trylock_shared+0x20/0xf0 fs/super.c:563
+ #3: ffff888050c8c6d8 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_map_blocks+0x315/0xe80 fs/xfs/xfs_aops.c:330
+1 lock held by syz-executor/9121:
+ #0: ffffffff8e144a38 (rcu_state.exp_mutex){+.+.}-{4:4}, at: exp_funnel_lock kernel/rcu/tree_exp.h:343 [inline]
+ #0: ffffffff8e144a38 (rcu_state.exp_mutex){+.+.}-{4:4}, at: synchronize_rcu_expedited+0x3b9/0x730 kernel/rcu/tree_exp.h:967
+4 locks held by syz.2.349/9538:
+ #0: ffff88802f6d6428 (sb_writers#13){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:557
+ #1: ffff88807e150af0 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:869 [inline]
+ #1: ffff88807e150af0 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+ #2: ffff88802f6d6618 (sb_internal#2){.+.+}-{0:0}, at: xfs_trans_alloc_inode+0x13c/0x4a0 fs/xfs/xfs_trans.c:1096
+ #3: ffff88807e1508d8 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_trans_alloc_inode+0x161/0x4a0 fs/xfs/xfs_trans.c:1102
+4 locks held by syz.7.350/9559:
+ #0: ffff888058944428 (sb_writers#13){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:557
+ #1: ffff88807e1531b0 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:869 [inline]
+ #1: ffff88807e1531b0 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+ #2: ffff888058944618 (sb_internal#2){.+.+}-{0:0}, at: xfs_trans_alloc_inode+0x13c/0x4a0 fs/xfs/xfs_trans.c:1096
+ #3: 
+ffff88807e152f98 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_trans_alloc_inode+0x161/0x4a0 fs/xfs/xfs_trans.c:1102
+2 locks held by syz-executor/9800:
+ #0: ffffffff8f519508 (rtnl_mutex){+.+.}-{4:4}, at: rtnl_lock net/core/rtnetlink.c:80 [inline]
+ #0: ffffffff8f519508 (rtnl_mutex){+.+.}-{4:4}, at: rtnl_nets_lock net/core/rtnetlink.c:341 [inline]
+ #0: ffffffff8f519508 (rtnl_mutex){+.+.}-{4:4}, at: rtnl_newlink+0x8db/0x1c70 net/core/rtnetlink.c:4054
+ #1: ffff88805d32d4e8 (&wg->device_update_lock){+.+.}-{4:4}, at: wg_open+0x227/0x420 drivers/net/wireguard/device.c:50
+4 locks held by kworker/u8:13/9958:
+ #0: ffff8881404e5148 ((wq_completion)writeback){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3214 [inline]
+ #0: ffff8881404e5148 ((wq_completion)writeback){+.+.}-{0:0}, at: process_scheduled_works+0x9b4/0x17b0 kernel/workqueue.c:3322
+ #1: ffffc900021afbc0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3215 [inline]
+ #1: ffffc900021afbc0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: process_scheduled_works+0x9ef/0x17b0 kernel/workqueue.c:3322
+ #2: ffff8880589440e0 (&type->s_umount_key#53){++++}-{4:4}, at: super_trylock_shared+0x20/0xf0 fs/super.c:563
+ #3: ffff88807e152f98 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_map_blocks+0x315/0xe80 fs/xfs/xfs_aops.c:330
+2 locks held by syz.8.394/10038:
+
+=============================================
+
+NMI backtrace for cpu 0
+CPU: 0 UID: 0 PID: 31 Comm: khungtaskd Not tainted 6.16.0-rc2-next-20250619-syzkaller #0 PREEMPT(full) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 05/07/2025
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x189/0x250 lib/dump_stack.c:120
+ nmi_cpu_backtrace+0x39e/0x3d0 lib/nmi_backtrace.c:113
+ nmi_trigger_cpumask_backtrace+0x17a/0x300 lib/nmi_backtrace.c:62
+ trigger_all_cpu_backtrace include/linux/nmi.h:158 [inline]
+ check_hung_uninterruptible_tasks kernel/hung_task.c:307 [inline]
+ watchdog+0xfee/0x1030 kernel/hung_task.c:470
+ kthread+0x70e/0x8a0 kernel/kthread.c:464
+ ret_from_fork+0x3fc/0x770 arch/x86/kernel/process.c:148
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+Sending NMI from CPU 0 to CPUs 1:
+NMI backtrace for cpu 1
+CPU: 1 UID: 0 PID: 9121 Comm: syz-executor Not tainted 6.16.0-rc2-next-20250619-syzkaller #0 PREEMPT(full) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 05/07/2025
+RIP: 0010:check_preemption_disabled+0x17/0x120 lib/smp_processor_id.c:14
+Code: 00 00 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 55 41 57 41 56 53 48 83 ec 10 65 48 8b 05 de fd 31 07 48 89 44 24 08 <65> 8b 05 e6 fd 31 07 65 8b 0d db fd 31 07 f7 c1 ff ff ff 7f 74 23
+RSP: 0018:ffffc90000a08700 EFLAGS: 00000086
+RAX: 4ef41329efdb5400 RBX: 00000000ffffffff RCX: 4ef41329efdb5400
+RDX: 0000000000000000 RSI: ffffffff8d9a4e0e RDI: ffffffff8be320e0
+RBP: 00000000ffffffff R08: 0000000000000000 R09: ffffffff821a1446
+R10: dffffc0000000000 R11: fffffbfff1f4317f R12: 0000000000000046
+R13: ffff888027481e00 R14: ffff8880b8742120 R15: ffff888140eaba00
+FS:  000055558bfad500(0000) GS:ffff888125d28000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f03dd865740 CR3: 000000007d080000 CR4: 00000000003526f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <IRQ>
+ lockdep_recursion_inc kernel/locking/lockdep.c:468 [inline]
+ lock_is_held_type+0x79/0x190 kernel/locking/lockdep.c:5942
+ lock_is_held include/linux/lockdep.h:249 [inline]
+ get_freelist+0x45/0x120 mm/slub.c:3655
+ ___slab_alloc+0x298/0x1410 mm/slub.c:3776
+ __slab_alloc mm/slub.c:3980 [inline]
+ __slab_alloc_node mm/slub.c:4055 [inline]
+ slab_alloc_node mm/slub.c:4216 [inline]
+ kmem_cache_alloc_node_noprof+0x280/0x3c0 mm/slub.c:4280
+ __alloc_skb+0x112/0x2d0 net/core/skbuff.c:660
+ __netdev_alloc_skb+0x108/0x970 net/core/skbuff.c:734
+ netdev_alloc_skb include/linux/skbuff.h:3414 [inline]
+ dev_alloc_skb include/linux/skbuff.h:3427 [inline]
+ hsr_init_skb+0xef/0x6e0 net/hsr/hsr_device.c:264
+ send_hsr_supervision_frame+0x133/0xb30 net/hsr/hsr_device.c:313
+ hsr_announce+0x1d5/0x360 net/hsr/hsr_device.c:415
+ call_timer_fn+0x17e/0x5f0 kernel/time/timer.c:1747
+ expire_timers kernel/time/timer.c:1798 [inline]
+ __run_timers kernel/time/timer.c:2372 [inline]
+ __run_timer_base+0x61a/0x860 kernel/time/timer.c:2384
+ run_timer_base kernel/time/timer.c:2393 [inline]
+ run_timer_softirq+0xb7/0x180 kernel/time/timer.c:2403
+ handle_softirqs+0x286/0x870 kernel/softirq.c:579
+ __do_softirq kernel/softirq.c:613 [inline]
+ invoke_softirq kernel/softirq.c:453 [inline]
+ __irq_exit_rcu+0xca/0x1f0 kernel/softirq.c:680
+ irq_exit_rcu+0x9/0x30 kernel/softirq.c:696
+ instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1050 [inline]
+ sysvec_apic_timer_interrupt+0xa6/0xc0 arch/x86/kernel/apic/apic.c:1050
+ </IRQ>
+ <TASK>
+ asm_sysvec_apic_timer_interrupt+0x1a/0x20 arch/x86/include/asm/idtentry.h:702
+RIP: 0010:console_trylock_spinning kernel/printk/printk.c:2061 [inline]
+RIP: 0010:vprintk_emit+0x58f/0x7a0 kernel/printk/printk.c:2449
+Code: 85 32 01 00 00 e8 c1 5b 1f 00 41 89 df 4d 85 f6 48 8b 1c 24 75 07 e8 b0 5b 1f 00 eb 06 e8 a9 5b 1f 00 fb 48 c7 c7 a0 31 13 8e <31> f6 ba 01 00 00 00 31 c9 41 b8 01 00 00 00 45 31 c9 53 e8 a9 36
+RSP: 0018:ffffc9000ea5f980 EFLAGS: 00000293
+RAX: ffffffff81a10ce7 RBX: ffffffff81a10ba4 RCX: ffff888027481e00
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffff8e1331a0
+RBP: ffffc9000ea5fa90 R08: ffffffff8fa18bf7 R09: 1ffffffff1f4317e
+R10: dffffc0000000000 R11: fffffbfff1f4317f R12: dffffc0000000000
+R13: 1ffff92001d4bf34 R14: 0000000000000200 R15: 0000000000000047
+ _printk+0xcf/0x120 kernel/printk/printk.c:2475
+ __xfs_printk fs/xfs/xfs_message.c:24 [inline]
+ xfs_printk_level+0x18b/0x280 fs/xfs/xfs_message.c:44
+ xfs_fs_put_super+0x55/0x160 fs/xfs/xfs_super.c:1245
+ generic_shutdown_super+0x135/0x2c0 fs/super.c:643
+ kill_block_super+0x44/0x90 fs/super.c:1755
+ xfs_kill_sb+0x15/0x50 fs/xfs/xfs_super.c:2317
+ deactivate_locked_super+0xb9/0x130 fs/super.c:474
+ cleanup_mnt+0x425/0x4c0 fs/namespace.c:1417
+ task_work_run+0x1d1/0x260 kernel/task_work.c:227
+ resume_user_mode_work include/linux/resume_user_mode.h:50 [inline]
+ exit_to_user_mode_loop+0xec/0x110 kernel/entry/common.c:114
+ exit_to_user_mode_prepare include/linux/entry-common.h:330 [inline]
+ syscall_exit_to_user_mode_work include/linux/entry-common.h:414 [inline]
+ syscall_exit_to_user_mode include/linux/entry-common.h:449 [inline]
+ do_syscall_64+0x2bd/0x3b0 arch/x86/entry/syscall_64.c:100
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7fcb38f8fc57
+Code: a8 ff ff ff f7 d8 64 89 01 48 83 c8 ff c3 0f 1f 44 00 00 31 f6 e9 09 00 00 00 66 0f 1f 84 00 00 00 00 00 b8 a6 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 01 c3 48 c7 c2 a8 ff ff ff f7 d8 64 89 02 b8
+RSP: 002b:00007ffdbc2dfef8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a6
+RAX: 0000000000000000 RBX: 00007fcb39010925 RCX: 00007fcb38f8fc57
+RDX: 0000000000000000 RSI: 0000000000000009 RDI: 00007ffdbc2dffb0
+RBP: 00007ffdbc2dffb0 R08: 0000000000000000 R09: 0000000000000000
+R10: 00000000ffffffff R11: 0000000000000246 R12: 00007ffdbc2e1040
+R13: 00007fcb39010925 R14: 0000000000053a61 R15: 00007ffdbc2e1080
+ </TASK>
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
