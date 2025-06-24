@@ -1,292 +1,180 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BE635464E
-	for <linux-xfs@vger.kernel.org>; Tue, 24 Jun 2025 02:16:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45AED35942;
+	Tue, 24 Jun 2025 02:22:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750731398; cv=none; b=C+pMeryDe3NjBU9VtIv2r7I/tCvPmwvYbTcjSk9bHjvgceZCI5gcgSZjhGYmI2BIw/MwUnRkQmeHZiNN20drw1wpNjtLhu2z9Z0S4vmOX8VKmxc8U3L3RENTMYiZ5JbZPMyZusztKU7ctL+S2jq5kHfr8s8+wp92ycxegAIQFH0=
+	t=1750731780; cv=none; b=GJWXiHBoRKTB2Zd0yAd+G+TQ+jlfHtrKD1fEGS/TClfTX8pVpFD+ogj3tUUkkLAw4t3VmPYGtVmv+9UadVJrD1d8i2K6Hx31xinbCKM/tJGwUdfG4XVTyVkSHvarTRxA0gk/VfRsJtjHvueix1RdbyuSe3SlYuH3wMzvP8zgG/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750731398; c=relaxed/simple;
-	bh=VJN8al8cPBJNSAn9dSJiikB1oh3oVLS7PC7CPM8u094=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EYnao8gPlXea/kPhD+tLcaiS2pFQq8fKZLppevooxrW9qYcUInl8dFxE2DmCVLQF6kUT0W708sUJLJE8YUmuB9nBJ+HZmf3frr9SYXUfRPG/Vi6XbVC7VGtqFvhUZXG31ZnVVRZap/VLHgpahbddIsa50ulRiZ+4xO1vjIo+nPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=SnYDdvfS; arc=none smtp.client-ip=209.85.214.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1750731780; c=relaxed/simple;
+	bh=Zkxit9aDe3QDjV0avyWQyXjfEcdh3Izbfk6AaNlXSzk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Nyq0TqxZ64yd0nmR9a8WSwio2foQIb9RrntAUxcWr99kexPv9QChQN+lbv/gr0MVEkuA+lzfa/KjKfDLtjUahMG4HyHGhosjxZB0uenK3MEuSjqZokgAOCgzt4hmwUgn3lhC5+VEYqgcXVFfda1T49gjsiBSbIITVmW8hdcppMU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ACEwRa3Q; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="SnYDdvfS"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-234b9dfb842so42880775ad.1
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Jun 2025 19:16:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ACEwRa3Q"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-235ea292956so51436525ad.1;
+        Mon, 23 Jun 2025 19:22:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1750731396; x=1751336196; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=enBa+3rd39dRH5am74f3zjyyGfyE7gF6/FnQJOGa+as=;
-        b=SnYDdvfS7gw49e36yYimXcrs/d3CJJ7H9DRdzua0F8uGkDtswIvzJrJSG/j/cT18Nd
-         1dxCBSzChjsJdQIYNoYh/wDMToT7OI+RmDJPUWNAFpp6sTp7ESgOxmfDJnjfrbj9PBlb
-         wOj6jlkA2+lgH7NqXvG9zmxp5gKcK2f7EIEid4YQ6VKtg2lFCCmlM6pxWaCjlZORPBWt
-         9dh0zzD7Ig8c7CGgM0JaSbMcANqoSMtblKFYEER7HOZeYlIQXYT7YqdmtkJgvL3+8GwN
-         gWO4SVtdakf8yzXP7mqN2MCm1I36Qqjb8oH6Qx53xnWzLOGmMjDq4cr2uW8pFJmc9uu9
-         5RTA==
+        d=gmail.com; s=20230601; t=1750731777; x=1751336577; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=8jUzS6DowcSpgl/rd8s76ozHCEh2xL61ewFyP0TWqmU=;
+        b=ACEwRa3QKZkLyzIApK2+tNzcGXG1/KA1ygCN/YPWJ8XKHC64plnXbYGpgVGbyKqq+U
+         e+3C11BLIYG6jMgqbTGix6V57/RE0t+3TbhV/kf8Q2SfP7ZiK4B43vDlut785SEeAWCH
+         SNgkZtPSqCUAXONWvvgf9Pd9SHazqF6/8wfCqGSQ+ge5NmrojiVQi9bCL1D3cb/A4uLn
+         ntONUYCFvTOmM7d3AZ7rOS4YAhfH1wd48c3wIqFyrKfboXJczG73rVB/TRorzwYDuKQn
+         B3nZprsrxsbTdesaXeAM+7iZBFT5343hXK0oQ9GH5qW3h8YvCIK0BQJ5QPVbJgm5ik2B
+         l9JA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750731396; x=1751336196;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=enBa+3rd39dRH5am74f3zjyyGfyE7gF6/FnQJOGa+as=;
-        b=A+FLkKxp8dvMGxQgV82YbP5SE5zDCYHp1MNxAXOqgIgiuCzZuF0NQrk8hs+tk7Sqor
-         kcku2fHKeam0qWCWqhNzh7tXDJ2rpfWci8CZ/mBIfJZDQHdY3gO+Li1X3d9TOLBUp+Ws
-         cQdAYQMSmuteRkbmJWkrMUGll02jd/0EyCO6E3szgjp5DhCYzFEHnk0P4B1Y4d/psqhx
-         X/CGcpW9a/dBYdilnvxsD6eHTiWKVOC76YJ+MCVri6tjNve1uniKs4aw+zaBUK5mirY8
-         9qVXOWDL1ysBTSy203GEv0x6q+ay3kvm1/BM+YOd/mSch5aL22nj1S32i3MyKUhq5VM5
-         XpMg==
-X-Gm-Message-State: AOJu0YxqrxQwsvoptlFFdP0I4YMWivmmzzqepFbiWytXU3Q++M01UOH6
-	1fsDwfVIm0q6V/eZYFVcLnTk8RiSt2P/vKysG7AHYEFzOvfPEbWlUpvfzlwJifCHC3yTagfZ8EX
-	k9QNQ
-X-Gm-Gg: ASbGnctVHMeyPg1pvRqk/i30C53jwvBGANFD4x9TO1eYDVfLXVKiFo8KWGoQkHFsnSx
-	FXTvOZ/I5f2wIGs9nCvLhI5/5+3mojJ5RHHsq77ajX6Nxvj9WZhfO1la8R2U8RzzwIqCJpH/5m0
-	+KSDJxj5ZeZDQk51MYakDatSq3RHUt7SL9UZVyj8fkljfWXHDqgT9M2NLpKub6pGbpMgUkMcvqZ
-	knLkXShdcUmVSqrfbVQYgJIvxWh/rtfA8vnDnlxVroPccevBz84SBvDO6XodQa+gwi9WoFP38jx
-	GuhcDkfOgp9PAWOdkZBEdV4/LLTkruayNgDubnynka5aSrGy9HGD0XfvezuEw1ngZncMsafyo7z
-	0wMWUsRKfRcdzvJo8IXS5C/U8XFmynlcZlhTL1Q==
-X-Google-Smtp-Source: AGHT+IHvIsrtrHT5mo4BXpzR4b6lGVnrTX9E68IUDPNlc16P/F1TiA119qciAJZrQOM2oX0+BOFSxg==
-X-Received: by 2002:a17:903:2f4b:b0:234:a139:120a with SMTP id d9443c01a7336-237d9a71c4fmr212714115ad.32.1750731396312;
-        Mon, 23 Jun 2025 19:16:36 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-184-88.pa.nsw.optusnet.com.au. [49.180.184.88])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-237d86c49d4sm97173255ad.200.2025.06.23.19.16.35
+        d=1e100.net; s=20230601; t=1750731777; x=1751336577;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=8jUzS6DowcSpgl/rd8s76ozHCEh2xL61ewFyP0TWqmU=;
+        b=oemr2H4L0bGaUl+PkJE9sjkDKR+h/I5PtwnQNNV969KmLDqSlyGHv9TB0SX1g7KWlV
+         Xlw8KF90lNGKMVmqNRYd3dO5BE4k03gxzlp+thC68bX0iI0R2ke6WD35IKshhcKpMA0I
+         Hu/svijzttMRKmcUiPtsW3usZ4XRD/G17PieiM5KIpNOvhx5JKBMJyyuDmj/hqKMtfkB
+         /tPIu1BceIgdLqU606TP02DHIbqMrWqOjBHNdf8BuFywZPGczfhX5GIv8lOpmJadDjoV
+         js13z6Jzk2wmVllvoTGurXuz0dnY6IGNfHccUeZaLq/rhiM8jlA43kRFqwpGKqOyz9pB
+         AfTw==
+X-Forwarded-Encrypted: i=1; AJvYcCUCWApB1x4KOMl/nEh09HkHVlBP1QDywWQYCl79Cig2DaJzcgfwXqO9RTYKUYEK8J6RGI+4UgjW+40i@vger.kernel.org, AJvYcCUGEU7SfDmI1OI5k4bM6L0Rf3l/t6a4dQksA7O3dUEr9CC8uTeDNaukK6QYCv1MKFs7lh0dXbBXwih9+g==@vger.kernel.org, AJvYcCW8keCcv/1kG76Xfja5nLw8gRn1VU+zHOzuzrE2F/2XGqMZdTm8iOVH9rsC/uYreRwtujbzhOC368w1@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxk0Ijq12QMt/upry0O9CTzcF1tPrqlkDhvazgSsOCZQrVEvJN8
+	kUZTiqdDpDMuxdNLb/jmTA+sZvK9IM1XxleSNE3EDFlcoFwktjdJ2pPxnRbvZA==
+X-Gm-Gg: ASbGncs9IHAP9ScAuFfuXlMzjYtP0EitVwBX6MJJwraPLU2xdSXKcrwe06DyIjeyg7q
+	5lYnfy8Qr9LWgbnSR1W6ass9/c/b4n1bPMzgKPp6ndERpMK6trZS3KCvAF3dzeuU/tpOUEojTY6
+	RY+ifvvpYlac/SiwsITuGBF/VVZ3Jr/pi2DTFkbmvXvisi/4pVsnBPKWNL40akTfhksGhVOVIgn
+	b8IjlFncxr/BibRQ7tFlLh4Q0WttRGFAC+3hK6EXRk3h4bzuwx3++I+xWEc7v22H5F0J+sFk1B0
+	WbHMDOV8oRrzVlYUA6a8oChe34TxkXFDp26av3a+1hwPhvzYwbCkmh03
+X-Google-Smtp-Source: AGHT+IHvoU587O1IfrDZ3oGsbMtevcv2Y/aQl7ISv9kHOlRxcRFEcp7DGfGYSrvCNryQwn+oKSH7Sg==
+X-Received: by 2002:a17:902:ebc1:b0:234:8c64:7885 with SMTP id d9443c01a7336-237d9baeb72mr230304865ad.53.1750731777286;
+        Mon, 23 Jun 2025 19:22:57 -0700 (PDT)
+Received: from localhost ([2a03:2880:ff:9::])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-237d8695195sm97070855ad.187.2025.06.23.19.22.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Jun 2025 19:16:35 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1uTtD6-00000002TtX-3Pb2;
-	Tue, 24 Jun 2025 12:16:32 +1000
-Date: Tue, 24 Jun 2025 12:16:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, djwong@kernel.org
-Subject: Re: [PATCH 1/2] xfs: replace iclogs circular list with a list_head
-Message-ID: <aFoKgNq6IuPJAJAv@dread.disaster.area>
-References: <20250620070813.919516-1-cem@kernel.org>
- <20250620070813.919516-2-cem@kernel.org>
+        Mon, 23 Jun 2025 19:22:57 -0700 (PDT)
+From: Joanne Koong <joannelkoong@gmail.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: hch@lst.de,
+	miklos@szeredi.hu,
+	brauner@kernel.org,
+	djwong@kernel.org,
+	anuj20.g@samsung.com,
+	linux-xfs@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	gfs2@lists.linux.dev,
+	kernel-team@meta.com
+Subject: [PATCH v3 00/16] fuse: use iomap for buffered writes + writeback
+Date: Mon, 23 Jun 2025 19:21:19 -0700
+Message-ID: <20250624022135.832899-1-joannelkoong@gmail.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250620070813.919516-2-cem@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Jun 20, 2025 at 09:07:59AM +0200, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
-> 
-> Instead of using ic_{next,prev}, replace it with list_head framework
-> to simplify its use.
-> 
-> This has a small logic change:
-> 
-> So far log->l_iclog holds the current iclog pointer and moves this
-> pointer sequentially to the next iclog in the ring.
-> 
-> Instead of keeping a separated iclog pointer as the 'current' one, make
-> the first list element the current iclog.
-> Once we mark the iclog as WANT_SYNC, just move it to the list tail,
-> making the the next iclog as the 'current' one.
+This series adds fuse iomap support for buffered writes and dirty folio
+writeback. This is needed so that granular uptodate and dirty tracking can
+be used in fuse when large folios are enabled. This has two big advantages.
+For writes, instead of the entire folio needing to be read into the page
+cache, only the relevant portions need to be. For writeback, only the
+dirty portions need to be written back instead of the entire folio.
 
-Hmmmm. I don't see a problem with using a list head for the ring,
-But I do see a problem with making the ring mutable.
+This patchset is composed of two parts:
+a) Christoph's iomap changes (patches 1 to 11) which are taken verbatim
+   from [1]
+b) fuse changes to use iomap (patches 12 to 16)
 
-The current code sets up the iclog list once and mount, and
-it is read-only from then on. i.e. we never modify the iclog ring
-pointers from then on, and the only thing that changes is the
-pointer to the first iclog.
+Please note the following:
+* this patchset version temporarily drops the CONFIG_BLOCK iomap refactoring
+  patches that will be needed to merge in the series. As of now, this breaks
+  compilation for environments where CONFIG_BLOCK is not set, but the
+  CONFIG_BLOCK iomap changes will be re-added back in once the core changes
+  in this patchset are ready to go.
+* this patchset does not enable large folios yet. That will be sent out in a
+  separate future patchset.
 
-This means it is always safe to walk the iclog ring, regardless of
-whether the icloglock is held or not.  I know there are asserts that
-walk the ring without the icloglock held, not sure about the rest of
-the code.
+This series is on top of commit 86731a2a6 ("Linux 6.16-rc3") in the linux
+tree.
 
-It also means that shared cacheline access is all that is needed to
-walk the ring, and because the ring is not mutable, updating the
-first iclog in the ring (i.e. writing to log->l_iclog) doesn't
-change the shared CPU cache state of the iclog ring pointers.
+Thanks,
+Joanne
 
-Converting it to a list head and making the iclog list mutable by
-moving items from head to tail instead of just changing which item
-log->l_iclog points to means it is no longer safe to walk the iclog
-ring without holding the icloglock.
-
-Further, the list_move_tail() call to update the first iclog in the
-ring now has to modify the list head cache line (i.e. log->iclog)
-and the list pointers for the iclog we are moving, the second iclog
-in the list that now becomes the head, and the old tail of the list
-we are inserting behind.
-
-IOWs, every time we switch to a new iclog, we now dirty 4 cachelines
-instead of just 1 (log->l_iclog). When the log is running hard (e.g.
-at 600MB/s on 32kB iclogs) we are switching iclogs around 20,000
-times a second. Hence this change results in a *lot* more cacheline
-dirtying in a fast path than we currently do, and that will likely
-have measurable performance impact.
-
-Further, we generally touch those cachelines next in interrupt
-context, so now journal IO completion will be having to flush those
-cachelines from the cache of a different CPU so they can be accessed
-whilst walking the iclog ring to complete iclogs in order. This will
-likely also have measurable impact on journal IO completion as well.
-
-Hence I think that the ring should remain immutable and the
-log->l_iclog pointer retained to index the first object in the ring.
-This means we don't need a list head in the struct xlog for the
-iclog ring, we can have the ring simply contain just the iclogs as
-they currently do.
+[1] https://lore.kernel.org/linux-fsdevel/20250617105514.3393938-1-hch@lst.de/
 
 
-> @@ -476,8 +476,7 @@ xlog_state_shutdown_callbacks(
->  	struct xlog_in_core	*iclog;
->  	LIST_HEAD(cb_list);
->  
-> -	iclog = log->l_iclog;
-> -	do {
-> +	list_for_each_entry(iclog, &log->l_iclogs, ic_list) {
->  		if (atomic_read(&iclog->ic_refcnt)) {
->  			/* Reference holder will re-run iclog callbacks. */
->  			continue;
-> @@ -490,7 +489,7 @@ xlog_state_shutdown_callbacks(
->  		spin_lock(&log->l_icloglock);
->  		wake_up_all(&iclog->ic_write_wait);
->  		wake_up_all(&iclog->ic_force_wait);
-> -	} while ((iclog = iclog->ic_next) != log->l_iclog);
-> +	}
+Changeset
+-------
+v2 -> v3:
+* Fix up fuse patches to use iomap APIs from Christoph's patches
+* Drop CONFIG_BLOCK patches
+* Add patch to use iomap for invalidation and partial uptodateness check
+* Add patch for refactoring fuse writeback to use iomap_writepage_ctx inode
+v2: https://lore.kernel.org/linux-fsdevel/20250613214642.2903225-1-joannelkoong@gmail.com/
 
-This is likely broken by the ring being made mutable. The
-l_icloglock is dropped in the middle of the list traversal, meaning
-the ring order can change whilst callbacks are running. It is
-critical that this operation occurs in ascending LSN order.
+v1 -> v2:
+* Drop IOMAP_IN_MEM type and just use IOMAP_MAPPED for fuse
+* Separate out new helper functions added to iomap into separate commits
+* Update iomap documentation
+* Clean up iomap_writeback_dirty_folio() locking logic w/ christoph's
+  recommendation 
+* Refactor ->map_blocks() to generic ->writeback_folio()
+* Refactor ->submit_ioend() to generic ->writeback_complete()
+* Add patch for changing 'count' to 'async_writeback'
+* Rebase commits onto linux branch instead of fuse branch
+v1: https://lore.kernel.org/linux-fsdevel/20250606233803.1421259-1-joannelkoong@gmail.com/
 
-This is why the ring is immutable; we can walk around the ring
-multiple times here whilst submission and completion is occurring
-concurrently with callback processing.
 
-Same goes for xlog_state_do_callback ->
-xlog_state_do_iclog_callbacks(), especially the bit about always
-iterating iclogs in ascending LSN order.
+Christoph Hellwig (7):
+  iomap: pass more arguments using struct iomap_writepage_ctx
+  iomap: refactor the writeback interface
+  iomap: hide ioends from the generic writeback code
+  iomap: move all ioend handling to ioend.c
+  iomap: rename iomap_writepage_map to iomap_writeback_folio
+  iomap: export iomap_writeback_folio
+  iomap: replace iomap_folio_ops with iomap_write_ops
 
->  	wake_up_all(&log->l_flush_wait);
->  }
-> @@ -810,13 +809,11 @@ xlog_force_iclog(
->  static void
->  xlog_wait_iclog_completion(struct xlog *log)
->  {
-> -	int		i;
-> -	struct xlog_in_core	*iclog = log->l_iclog;
-> +	struct xlog_in_core	*iclog;
->  
-> -	for (i = 0; i < log->l_iclog_bufs; i++) {
-> +	list_for_each_entry(iclog, &log->l_iclogs, ic_list) {
->  		down(&iclog->ic_sema);
->  		up(&iclog->ic_sema);
-> -		iclog = iclog->ic_next;
->  	}
->  }
+Joanne Koong (9):
+  iomap: cleanup the pending writeback tracking in
+    iomap_writepage_map_blocks
+  iomap: add public helpers for uptodate state manipulation
+  iomap: move folio_unlock out of iomap_writeback_folio
+  iomap: add read_folio_range() handler for buffered writes
+  fuse: use iomap for buffered writes
+  fuse: use iomap for writeback
+  fuse: use iomap for folio laundering
+  fuse: hook into iomap for invalidating and checking partial
+    uptodateness
+  fuse: refactor writeback to use iomap_writepage_ctx inode
 
-This is called without the l_icloglock held, so if the list is
-mutable this can go wrong....
+ Documentation/filesystems/iomap/design.rst    |   3 -
+ .../filesystems/iomap/operations.rst          |  51 +-
+ block/fops.c                                  |  37 +-
+ fs/fuse/Kconfig                               |   1 +
+ fs/fuse/file.c                                | 327 ++++++-------
+ fs/gfs2/aops.c                                |   8 +-
+ fs/gfs2/bmap.c                                |  48 +-
+ fs/gfs2/bmap.h                                |   1 +
+ fs/gfs2/file.c                                |   3 +-
+ fs/iomap/buffered-io.c                        | 438 +++++-------------
+ fs/iomap/internal.h                           |   1 -
+ fs/iomap/ioend.c                              | 220 ++++++++-
+ fs/iomap/trace.h                              |   2 +-
+ fs/xfs/xfs_aops.c                             | 238 ++++++----
+ fs/xfs/xfs_file.c                             |   6 +-
+ fs/xfs/xfs_iomap.c                            |  12 +-
+ fs/xfs/xfs_iomap.h                            |   1 +
+ fs/xfs/xfs_reflink.c                          |   3 +-
+ fs/zonefs/file.c                              |  40 +-
+ include/linux/iomap.h                         |  81 ++--
+ 20 files changed, 775 insertions(+), 746 deletions(-)
 
-> @@ -2486,19 +2471,17 @@ xlog_state_do_iclog_callbacks(
->  		__releases(&log->l_icloglock)
->  		__acquires(&log->l_icloglock)
->  {
-> -	struct xlog_in_core	*first_iclog = log->l_iclog;
-> -	struct xlog_in_core	*iclog = first_iclog;
-> +	struct xlog_in_core	*iclog;
->  	bool			ran_callback = false;
->  
-> -	do {
-> +	list_for_each_entry(iclog, &log->l_iclogs, ic_list) {
->  		LIST_HEAD(cb_list);
->  
->  		if (xlog_state_iodone_process_iclog(log, iclog))
->  			break;
-> -		if (iclog->ic_state != XLOG_STATE_CALLBACK) {
-> -			iclog = iclog->ic_next;
-> +		if (iclog->ic_state != XLOG_STATE_CALLBACK)
->  			continue;
-> -		}
-> +
->  		list_splice_init(&iclog->ic_callbacks, &cb_list);
->  		spin_unlock(&log->l_icloglock);
->  
-> @@ -2509,8 +2492,7 @@ xlog_state_do_iclog_callbacks(
->  
->  		spin_lock(&log->l_icloglock);
->  		xlog_state_clean_iclog(log, iclog);
-> -		iclog = iclog->ic_next;
-> -	} while (iclog != first_iclog);
-> +	}
-
-As per above, the icloglock is dropped during iteration here...
-
-> @@ -2913,7 +2898,7 @@ xfs_log_force(
->  		 * is nothing to sync out. Otherwise, we attach ourselves to the
->  		 * previous iclog and go to sleep.
->  		 */
-> -		iclog = iclog->ic_prev;
-> +		iclog = list_prev_entry_circular(iclog, &log->l_iclogs, ic_list);
-
-That's not really an improvement. :/
-
-But if we just make the iclogs a circular list without the
-log->l_iclogs head, then it's just list_prev_entry().
-
-Still not sure this is better than the current code....
-
-> @@ -3333,12 +3319,8 @@ xlog_verify_iclog(
->  
->  	/* check validity of iclog pointers */
->  	spin_lock(&log->l_icloglock);
-> -	icptr = log->l_iclog;
-> -	for (i = 0; i < log->l_iclog_bufs; i++, icptr = icptr->ic_next)
-> +	list_for_each_entry(icptr, &log->l_iclogs, ic_list)
->  		ASSERT(icptr);
-
-This needs to count the number of iclogs in the list, check it
-against log->l_iclog_bufs...
-
-> -
-> -	if (icptr != log->l_iclog)
-> -		xfs_emerg(log->l_mp, "%s: corrupt iclog ring", __func__);
-
-.... because that is what this checks.
-
->  	spin_unlock(&log->l_icloglock);
->  
->  	/* check log magic numbers */
-> @@ -3531,17 +3513,15 @@ STATIC int
->  xlog_iclogs_empty(
->  	struct xlog	*log)
->  {
-> -	xlog_in_core_t	*iclog;
-> +	struct xlog_in_core	*iclog;
->  
-> -	iclog = log->l_iclog;
-> -	do {
-> +	list_for_each_entry(iclog, &log->l_iclogs, ic_list) {
->  		/* endianness does not matter here, zero is zero in
->  		 * any language.
->  		 */
->  		if (iclog->ic_header.h_num_logops)
->  			return 0;
-> -		iclog = iclog->ic_next;
-> -	} while (iclog != log->l_iclog);
-> +	}
->  	return 1;
-
-Called without icloglock held from debug code.
-
--Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+2.47.1
+
