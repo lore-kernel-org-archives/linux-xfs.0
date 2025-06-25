@@ -1,114 +1,125 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0C8B25BF0F;
-	Wed, 25 Jun 2025 14:18:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A072F285C9E;
+	Wed, 25 Jun 2025 16:44:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750861085; cv=none; b=L5su9v8dPmjAirra4XOIlweKiuWl4j3K7TCDOnRl4dZo/EyDVUr1z0MCJgQ8uiLbYRdihBP4Y56WF1KjT6MNkQ3P9oeo++GQy1BybYpfUBiCVn9wAbsXnWEo3hZfK+g4wHFrp9Srur20sHMMpayHmMF26+tLtyHjIrmDIKcj13E=
+	t=1750869885; cv=none; b=eeQojDwyAgGyrNOABOgWnFYXWEV6RTkwUsJwrWt9qtCUgyLG+Ltfbw+1l2ALMc7ebNfQdhVrnQgggkgCRd8HPsm+tOxX7gMPbfe3Tki6ggbWupvqIvcFMKNsfSx8hGlC5KDKSRaIoMlgcv1oGHtVLRdjAuYan/DdIleZM3CsGkk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750861085; c=relaxed/simple;
-	bh=M4G5XDxRuWGuM0Ue4i3Qt7POHiiyrCSIdxYPmlP+Yhk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BPthsI44xvMrx0J9ZfS/p4grIyC370lMOtmS5//SOgmTxbXcXRQCem3BDQTTKC5OAa6yN4e/rGL7owypkkD1Iefe1yK3Z5nciT4o+ymrbka/gAoyJCinbYZbKjUHMAwnhQ8X7xJ4YEOdBEV8vkfztpOGYJ9zyz76hka1/ukAC8g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ow4JylV7; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1750869885; c=relaxed/simple;
+	bh=Xr9CsPOp6WcYt9Kq4OQjxQmD7ucdPm6PZ/Br4gkyjdw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=B3oDglcvCm0gvWIqe+KAYFD47BtrL9aq6T3x3jAElH0Z2CNFnvVq1UZnYocKmqCOGKPQU67qLD4E4ABA8WbqrWW2DNWmqPOJ1Wd3RINNq43f6shm6bD1OWpSGJc8dERjIpYWsQV/YlQKqh/Hm7PCALPmrmDW4KC0wER+Bwb0r/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kDq3wA9Y; arc=none smtp.client-ip=209.85.160.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ow4JylV7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1750861084; x=1782397084;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=M4G5XDxRuWGuM0Ue4i3Qt7POHiiyrCSIdxYPmlP+Yhk=;
-  b=Ow4JylV7E/MiEsVaJA4CZtIC/X3Kg6IjI49v+50CFJq4+WDhnzr5+Kpx
-   u+Ktp0o6iNCRttnc+HwYSxaZ0ynmEsBT/F7nM86/Qk/IoMjnq7U0X03hM
-   U+NlNhSNGq37YT5jAVJc+tFSnrJy6hTZuWdrANgJuLhvsODwbqm0zcYSk
-   Wv3mokhHxcwvt3qbekvs72Rrc6WNWhXe/GiZ74WwcSpKlkjW/nk9hmmzF
-   S34/XDAxoXsmZgRTprLVMxyDwifyCTV6BHHoRTu2OwnQsqSdYHnxjSCbI
-   Ojd8TWKBFygK+J9sYHq8uUmIK988RP7twpDKyXHa9fcePnh3ERFxAnD9u
-   A==;
-X-CSE-ConnectionGUID: vT2SbaOHQZOATg9jOfYC7w==
-X-CSE-MsgGUID: 0EQGdEoXQRKqBkYMBqDQXg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11475"; a="53197826"
-X-IronPort-AV: E=Sophos;i="6.16,264,1744095600"; 
-   d="scan'208";a="53197826"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jun 2025 07:17:49 -0700
-X-CSE-ConnectionGUID: kltvbGmNTs2VqFyO5g4Z5w==
-X-CSE-MsgGUID: gGNfuW1XSeS7l+BDROKwjA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,264,1744095600"; 
-   d="scan'208";a="151658653"
-Received: from lkp-server01.sh.intel.com (HELO e8142ee1dce2) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 25 Jun 2025 07:17:45 -0700
-Received: from kbuild by e8142ee1dce2 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1uUQwZ-000TB8-1Q;
-	Wed, 25 Jun 2025 14:17:43 +0000
-Date: Wed, 25 Jun 2025 22:17:42 +0800
-From: kernel test robot <lkp@intel.com>
-To: Joanne Koong <joannelkoong@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, hch@lst.de, miklos@szeredi.hu,
-	brauner@kernel.org, djwong@kernel.org, anuj20.g@samsung.com,
-	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-block@vger.kernel.org, gfs2@lists.linux.dev,
-	kernel-team@meta.com
-Subject: Re: [PATCH v3 13/16] fuse: use iomap for writeback
-Message-ID: <202506252117.9V3HTO0i-lkp@intel.com>
-References: <20250624022135.832899-14-joannelkoong@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kDq3wA9Y"
+Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-4a44b9b2af8so931631cf.3;
+        Wed, 25 Jun 2025 09:44:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1750869882; x=1751474682; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ARfY5zPdbMWR4dmRIiBvFi5s9kvzkJcvkpzDRoJBEK0=;
+        b=kDq3wA9YQKIauXuSci6EGrPMlaXNLKmnMRxd1X7WcDPTz/+V5Mugd0astdO4UIrN+7
+         tu0dKhqqoNgVNJliVCMW8jAAC6JtzrUI0LwCrLgPws7V8o67QwmhkMUTNbLFUyNx+oWu
+         N8nLq/rVjYUT8oIZLumrmISjwH/AHaJgdx8TuUt+MTiuGSTFJzFuLvRo0jyobplkh9cD
+         MZq28SYUZImUdy8RxOHMiYaitJvOcv6Od9+NL45Ynx0RoYnly5TURnUKSKi0UxF4MCyA
+         xk51dYGYw02G3rcqlGggNos34mdfSf5MecWku9PNaiiPbS4oufplJ1Fttx7egwDSUSit
+         hWVQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750869882; x=1751474682;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ARfY5zPdbMWR4dmRIiBvFi5s9kvzkJcvkpzDRoJBEK0=;
+        b=NmiDc/t2XzPqZOUGNtcb9WWZY4Ej2sd8OKDsPfmIvqPTfci4ByqvDimoAIF/Ht5zMc
+         VkSQKhZ8FD1dlULhD4Aec+84LPM5Oa+nZ9jYTT3PFO+VwhhyaZLVCbPF8l/mxK8QzuhY
+         PV3fmXAounp48eSoppBPbUrRIzeNjFVRZbPb494uM7uItfq4U/eM2ppyK81SaluHCDHD
+         zVkqCf37+cCHix+JpmFuEOvige3/wQQ8Qd6ZybSDoNHiP4ro4gEA44znhW5YFPuHLr8T
+         qazOTij+bltK+m3EMTBE3UMbcdlOxBCIWBdZuZWag5DsHPRYCHCnyIExM0jZgg6gdK+c
+         lz5w==
+X-Forwarded-Encrypted: i=1; AJvYcCW6lEWNw2ZBA17+ladNSlyk9E8ES48xp57L8dP5cBOdpJ5dermh85LWlCXW1PLf692gxcn6H4GO7TZu@vger.kernel.org, AJvYcCWljiwvJBOGbLJ7gPpLjF1Gm3jnXSblEyDPs7owMLnPCaXqwnuOwVDXo/cAfQO0Rfp7YPVEgpvOo80IPw==@vger.kernel.org, AJvYcCXqe7k99AekvRFzdfIn9CCFmK7uNCsWELWmGIkLKAdXudIimGZbheYc4te/fNad0LX1yxIXCV8UfoPT3ZkGIg==@vger.kernel.org, AJvYcCXtahdHXuq7sf0tZCkDPH7HakmITHpuqxUraVtCyLXLd7tHt5kqo+BKw3NAZZq3EAJ7taGN8Q/T+inZ@vger.kernel.org
+X-Gm-Message-State: AOJu0YzhdE1dhWvcW3Sb9+ScRtKPGcFyUOzSvVfPIL+oV4sp1qGLP1dY
+	2BEULeAy24lclvGdT4mBWwRvRckk/tISkeRIThIyNRempzaw4Lkfas4H6ptKiDotG7/rKjO5NNo
+	Gn+9zWPfeMC5ulbVeeFHrJw/UVH6EnjQ7hxaHfms=
+X-Gm-Gg: ASbGncvdUUefheonC3O1+6gSkQQ0yLTrT1dmKohn+LDRdOMmln2806RJ+wJ4GwUlbgK
+	MdEbRehcVn8wKer3F00KJuT2YBv4JHdytnGMsQC1WUwIO5D8dxg2zJqmZiCO7wn4JyYUBopxXKV
+	9iBlY9262RXSPrtuODR0KtSsyo1phtKKOm/BR88S7Cbflm4kLHgo58CpWmpdgZDpCPAVsEYw==
+X-Google-Smtp-Source: AGHT+IEt1TZjaS3R5h67itrFgkyntPJUD/CIMKEaOvyxiUhcZBapd1BPlkAKLlT0ccLQcSXu/Z+jtrxAl9OMK4WdDic=
+X-Received: by 2002:ac8:57c1:0:b0:49a:8542:b496 with SMTP id
+ d75a77b69052e-4a7c07d54bcmr54002001cf.25.1750869882315; Wed, 25 Jun 2025
+ 09:44:42 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250624022135.832899-14-joannelkoong@gmail.com>
+References: <20250606233803.1421259-1-joannelkoong@gmail.com>
+ <20250606233803.1421259-6-joannelkoong@gmail.com> <aEZoau3AuwoeqQgu@infradead.org>
+ <20250609171444.GL6156@frogsfrogsfrogs> <aEetuahlyfHGTG7x@infradead.org>
+ <aEkHarE9_LlxFTAi@casper.infradead.org> <ac1506958d4c260c8beb6b840809e1bc8167ba2a.camel@kernel.org>
+ <aFWlW6SUI6t-i0dN@casper.infradead.org> <CAJnrk1b3HfGOAkxXrJuhm3sFfJDzzd=Z7vQbKk3HO_JkGAxVuQ@mail.gmail.com>
+ <aFuWhnjsKqo6ftit@infradead.org>
+In-Reply-To: <aFuWhnjsKqo6ftit@infradead.org>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Wed, 25 Jun 2025 09:44:31 -0700
+X-Gm-Features: AX0GCFsfnY2NRe1Yl1NZniTcFCNWF9j0FX7uW-sdQQQn_7h6m7fdnADoW5ryf3M
+Message-ID: <CAJnrk1Zud2V5fn5SB6Wqbk8zyOFrD_wQp7B5jDBnUXiGyiJPvQ@mail.gmail.com>
+Subject: Re: [PATCH v1 5/8] iomap: add iomap_writeback_dirty_folio()
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Matthew Wilcox <willy@infradead.org>, Jeff Layton <jlayton@kernel.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, miklos@szeredi.hu, brauner@kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	bernd.schubert@fastmail.fm, kernel-team@meta.com, linux-mm@kvack.org, 
+	linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Joanne,
+On Tue, Jun 24, 2025 at 11:26=E2=80=AFPM Christoph Hellwig <hch@infradead.o=
+rg> wrote:
+>
+> On Tue, Jun 24, 2025 at 10:26:01PM -0700, Joanne Koong wrote:
+> > > The question is whether this is acceptable for all the filesystem
+> > > which implement ->launder_folio today.  Because we could just move th=
+e
+> > > folio_test_dirty() to after the folio_lock() and remove all the testi=
+ng
+> > > of folio dirtiness from individual filesystems.
+> >
+> > Or could the filesystems that implement ->launder_folio (from what I
+> > see, there's only 4: fuse, nfs, btrfs, and orangefs) just move that
+> > logic into their .release_folio implementation? I don't see why not.
+> > In folio_unmap_invalidate(), we call:
+>
+> Without even looking into the details from the iomap POV that basically
+> doesn't matter.  You'd still need the write back a single locked folio
+> interface, which adds API surface, and because it only writes a single
+> folio at a time is rather inefficient.  Not a deal breaker because
+> the current version look ok, but it would still be preferable to not
+> have an extra magic interface for it.
+>
 
-kernel test robot noticed the following build errors:
+Yes but as I understand it, the focus right now is on getting rid of
+->launder_folio as an API. The iomap pov imo is a separate issue with
+determining whether fuse in particular needs to write back the dirty
+page before releasing or should just fail.
 
-[auto build test ERROR on brauner-vfs/vfs.all]
-[also build test ERROR on xfs-linux/for-next linus/master v6.16-rc3 next-20250625]
-[cannot apply to gfs2/for-next mszeredi-fuse/for-next]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Joanne-Koong/iomap-pass-more-arguments-using-struct-iomap_writepage_ctx/20250624-102709
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git vfs.all
-patch link:    https://lore.kernel.org/r/20250624022135.832899-14-joannelkoong%40gmail.com
-patch subject: [PATCH v3 13/16] fuse: use iomap for writeback
-config: arm64-randconfig-003-20250625 (https://download.01.org/0day-ci/archive/20250625/202506252117.9V3HTO0i-lkp@intel.com/config)
-compiler: aarch64-linux-gcc (GCC) 12.3.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250625/202506252117.9V3HTO0i-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202506252117.9V3HTO0i-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   aarch64-linux-ld: fs/fuse/file.o: in function `fuse_writepages':
->> file.c:(.text+0xa30): undefined reference to `iomap_writepages'
->> file.c:(.text+0xa30): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_writepages'
-   aarch64-linux-ld: fs/fuse/file.o: in function `fuse_writepage_finish':
->> file.c:(.text+0x1fd8): undefined reference to `iomap_finish_folio_write'
->> file.c:(.text+0x1fd8): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_finish_folio_write'
-   aarch64-linux-ld: fs/fuse/file.o: in function `fuse_cache_write_iter':
-   file.c:(.text+0x888c): undefined reference to `iomap_file_buffered_write'
-   file.c:(.text+0x888c): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_file_buffered_write'
-   aarch64-linux-ld: fs/fuse/file.o: in function `fuse_iomap_writeback_range':
->> file.c:(.text+0x9258): undefined reference to `iomap_start_folio_write'
->> file.c:(.text+0x9258): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_start_folio_write'
->> aarch64-linux-ld: fs/fuse/file.o:(.rodata+0x370): undefined reference to `iomap_dirty_folio'
-   aarch64-linux-ld: fs/fuse/file.o:(.rodata+0x3a0): undefined reference to `iomap_release_folio'
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+btrfs uses ->launder_folio() to free some previously allocated
+reservation (added in commit 872617a "btrfs: implement launder_folio
+for clearing dirty page reserve") so at the very least, that logic
+would need to be moved to .release_folio() (if that suffices? Adding
+the btrfs group to cc). It's still vague to me whether
+fuse/nfs/orangefs need to write back the dirty page, but it seems fine
+to me not to - as I understand it, the worst that can happen (and
+please correct me if I'm wrong here, Matthew) from just failing it
+with -EBUSY is that the folio lingers longer in the page cache until
+it eventually gets written back and cleared out, and that only happens
+if the file is mapped and written to in that window between
+filemap_write_and_wait_range() and unmap_mapping_folio(). afaics, if
+fuse/nfs/orangefs do need to write back the dirty folio instead of
+failing w/ -EBUSY, they could just do that logic in .release_folio.
