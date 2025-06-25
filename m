@@ -1,99 +1,193 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88D951EA73;
-	Wed, 25 Jun 2025 02:45:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 871551CAA7B;
+	Wed, 25 Jun 2025 05:26:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750819511; cv=none; b=pczXFJD+AyIE1KhrTZnGI599grpGzXKi7HksH/jbI27ctmd67qXJPoC0egc2dQR/QSlbx5v7smcMoASNmLrDUpV9BRXZQ2Y7AE0aHIfhvoIlQjeRDFKcTmugJcp2U+c70Lb62aHsXelQ6aT2ivIAYOESKEj0ewSMrbU3UGs/USY=
+	t=1750829175; cv=none; b=htnc/CvHisM8WXoMGD//3zZ1zBGkghgOLE8kxUI7xVMX9sFwZHSBf64F64McSLD67qjGalk9mgJtsGS6lRKJigZ9SF0cR/rJt0UsURb92EeOabGB1EhrDqUSZPFfXCeqkQJkdN/yDYa6yk19XkYkH+asdQb5rS5b2hpy1PPHOJc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750819511; c=relaxed/simple;
-	bh=KXBPcvjxecqpUYr9b0QhfnTins+ndv5s/62yHwkOtMY=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=Mu/suYfbVQpkOR+coIonAt+fDxd4/osXHaa54DaYNqqVWmgtGOoY8Bl0kRT9UwdY/L+nUpWQW2j/QXscKV/jQm+sC7HaRXi2JuzaUIy8AiiJP5ZQ1vkWFVFe6dRamG74i4tkpXPMx/3AXu1mMD64r/8UlMhqiIVBcjDc0fw9+do=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IZb497+5; arc=none smtp.client-ip=209.85.214.180
+	s=arc-20240116; t=1750829175; c=relaxed/simple;
+	bh=bPkwXdejXFyRLQk4Xfroh5E1UVmTSiHpEgQNBAEuAaU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=d1HBStqaKSU+Tg4uxpQnLG332y5+7c5Zlony59D9zQCLaW+PoCXp5MxQjoZph0MAb629cRwst/FN57n+Xt07DTmQbdb2uu1aON629mNf6M48SDgokmfJh6twWouJ4yaIdAL32FRVn+oBzwDfvYwHYgGpdDQiCUE+LlQbCyyTi1k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=R6TgFnhs; arc=none smtp.client-ip=209.85.160.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IZb497+5"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-23649faf69fso62867895ad.0;
-        Tue, 24 Jun 2025 19:45:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R6TgFnhs"
+Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-4a77ea7ed49so6483031cf.0;
+        Tue, 24 Jun 2025 22:26:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750819509; x=1751424309; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=HhvY7PX162tmc88DemSdBagdKtzFJ3zivqXoYNkomV8=;
-        b=IZb497+5NSYUkPOX/o+3taE0Hl1puO4w7i4tID0PqcaTXyBBmmWFwUf+WsoJeKjH+J
-         RqLK0CU87JWExyhUJ2APl5C4+X3nj6hpPna4T9yhqQ3gmrAHD+7aHphCCl+Y8dkFos4L
-         AyTV0tzePARGjBRxqDTVB06XeKIEhih4aDc3+psc1p+2cyKg3xd3tZ5dABqd5DYQHAQD
-         zbb7rA6+kuqGnZAA81WZxoICliHkyIrfjnFUWF+Urfe6SXXoL3ubjK0wRiN2EcdW9Q6P
-         zaoPh3HztLVQeSIpX5D0xloansGpQei3bu036XvwlQA0LoXg1Uow/VE5XCPi4HhfNfnk
-         ONLg==
+        d=gmail.com; s=20230601; t=1750829172; x=1751433972; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Q19p5suBBHA0FjneVX/xMy9RvFn5wRCXcx5IQP+EzHg=;
+        b=R6TgFnhs5PBWfqVLJY1roA4FYpF7GCfslf182oISKTeCb9poHJ6S5tVw2ggouKzn9M
+         JbieFhToWmRkDRjQEkeSMU5dL9rCrFA/OTbX6Lq1bJD4hlMQtxqOFIesNp5Bck5zk+/r
+         5DL15HNS5aasOfEK5CA+0eS4EIq/0Lz3BUwRuJFMkgod8/xM/UUMbaA61j390/ZIYOqj
+         ni4rXuSIE3Wo/wtEs6rHm/TLxU7lstIpnaQZrKjJ289HZxF2uJ4ka1rtRmTcUE3vrear
+         /yDnEWzPbrARFvXQQcwtFjdopPyM4dRzs403l/RMFPPm5pfVsSvkgjWDLqti5uAaB2uW
+         rLWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750819509; x=1751424309;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=HhvY7PX162tmc88DemSdBagdKtzFJ3zivqXoYNkomV8=;
-        b=C7PFAz3P2xSHMYcvCSr/cR9TgoOXU+9xvpR6I5sq0b3ZSGc0zFa8hr6eXSTETNCvvE
-         t2hHtaZUl0wHnhaTURNqcEaODp1suG7Cps197e14Uk/ygeJNhF4q/J49ByoeevZjt9Ow
-         Yi3A1NTL4T6W4qhL91Zp9LXE6PhXHmJnQAwsD/FWgx5Om+ajmPfHgEiJk1E947s4uusA
-         3xCtGS7+ah8rbDMfWp2Zji/GOSuldn9EW+vcqobi3GaT1u7sSrF0m+CXUubKy4p6N9AK
-         GMeFYy881A/UNOx+jq1GJjuWtjNqJTkAm0eKsC1WSFR1fDliOvgHQFghA8vPs7ec3Zze
-         Gi5Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUBv1iKTbQwJ3UeOYHF3B4iFP51MA8wMWrX15Qxx4IpSkOpRbQ5HYMuMSOOdlgpudAvKTiXX6pd/2Ut@vger.kernel.org, AJvYcCUw8lWJVj3EkUoP4rdPIlp+27VFJopdPDGc81C7Pcg7Z7glH1bxS/cIf0VnyspQ+3cnoFjN3ZUnuQPUXYxm@vger.kernel.org, AJvYcCVQLS64JvPwznn1uoAp5uxbtPiLm3UogJwRpWIk9LFWx3Q3LPbIwfNZxzI94T4SNNEDgR67FoOWOuq8/kKf@vger.kernel.org
-X-Gm-Message-State: AOJu0YxQyH8J1whHNv0vbtaIhYqJCVwmwmasnD/qjTLeXbAJMMZ8JK2a
-	Ph/LAkwYGnpKG5Vf71gi4NOWz/a3FuFrRdEREepvWqwXJbQ9XO/4n925IZX/SFft
-X-Gm-Gg: ASbGncvCmZH21hZTBM7hrEFFlH47H32fsLbs0vhMwOKK4jH3k/I5V2TnT63+bCtZGtv
-	ia67sBywuw/vtQT8m85/lLMXhgvEzvRnAYhgUQns8bkwjvkXESns6QY/lKnQ0/zr83G8zY702bw
-	VqvrtTfH3/t2uuzOOt40gnod8N50XEz/YiJhGdvK1PlYK2EIObQU+17fXgZSQ0oFULRjmhWXSKE
-	ojz+1uM7hOOU9Ml0LqTPouXwtDOpYkoyw3b3rDnncjtlj6WAm4FlZKwf9DrIEVf52tffbl4yuug
-	ehQtb0wwBg0FsFShbhwx5Bv6XJZYilS1NlrFSdFO+OmT5MkvD8prufreMyv8guNzWkMvZxzkhRS
-	3vQ==
-X-Google-Smtp-Source: AGHT+IGilwpb0PS8N8Qub3Hu4wKOpVrVFXvWHbGxddVaNBLTFgdXifsh8aw/8/o0Lpmgs6mF5X3gNw==
-X-Received: by 2002:a17:902:e881:b0:234:909b:3dba with SMTP id d9443c01a7336-23823fe1503mr26559505ad.20.1750819508662;
-        Tue, 24 Jun 2025 19:45:08 -0700 (PDT)
-Received: from [172.20.10.7] ([61.171.244.110])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-237d869fbfcsm125015595ad.194.2025.06.24.19.45.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Jun 2025 19:45:08 -0700 (PDT)
-Message-ID: <51cc5d2e-b7b1-4e48-9a8c-d6563bbc5e2d@gmail.com>
-Date: Wed, 25 Jun 2025 10:44:57 +0800
+        d=1e100.net; s=20230601; t=1750829172; x=1751433972;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Q19p5suBBHA0FjneVX/xMy9RvFn5wRCXcx5IQP+EzHg=;
+        b=c3buDkXN6MPPjx2BmMm29mnjKks31rhsEWbEj1LX0cQnUUabBs+0jDqBFsHbecXE5i
+         Vu2h+nrB7EfTfbqmJ9Z9P2L84CrIzHjCGTn0Bw7Gh7Q+755FAI3h8v4KjkUCtfd9f4aI
+         uXURJqdDEM5OsoCVAKvUflz5e106IQQfOtdoWuRjRwgpddsO/G2w7LzNdb4rVg+A6Rly
+         Gf15z3ZB2N2KaA8VCazOwIDaOb7CRWxKL7mgVidUZY8UgWp4Pe4Om22wUfUr9x4BswIB
+         yE8dXTN3kKpwH7PdGcWWfySfvo6sbyWi4mcSNIa31RN4afTmufz6F50Viih2MuCx80gg
+         8r4w==
+X-Forwarded-Encrypted: i=1; AJvYcCU2P0pR+XRgnAbtlQpY7oaV8wwNjXjk0Zyh/EovpbgMF1f2SRKWGtq/1Ou8iy4pn6g8/gfPIJE351XQD62U@vger.kernel.org, AJvYcCXqYQ42P4Vf8G2sZ3GNJe2c12s46ScH1JP9H6jbPetHaWY0xgJAc+XX0efO1lw9U10Zgcw4mvAMAhgt@vger.kernel.org, AJvYcCXzdJsNmLIxE6nW/uaxFDaO1PmT+BNTkNj3alQr0Crwx7BQWM8WPHQQJUj2U2vQ/u0ltLf5JGfyogWM@vger.kernel.org
+X-Gm-Message-State: AOJu0YwUJG7g0ZR8gP/DVQU+r4n41q2yUAmAwMbunTEMPzXdKdqBfyBc
+	0dDqcOEdNQBqNntWmkPW3TKW87Mu6OfkV++092r8QU8v+xUplLuX7S00ZQOgmbrL7uZCSrmdSd3
+	MnF5zrs2fFkh00Mw6DIYhpAXasnnDG1qwGmRFx5c=
+X-Gm-Gg: ASbGncsTjDa2sY9lRD2AvsLMptNsPJiQiemHLGz/vMr36oM1hvhVgLcdL2Ol18yzk5r
+	9qR252C1n3aEUcSZsi2DtyHm0wQiGDGCtIF3DOrjUxXjODxGEZVixfHNg4x/23XysNVAc3ZzjBO
+	jGvC7WSTu9ZbBgNdxhAtTnsiuEEHQDJY7Y5ABhWZdWNe+V0lLuj6X/yb+rZ+c=
+X-Google-Smtp-Source: AGHT+IEiQ+a522oTrm3IuhY8zn1XjaYyirkPysZnwpniD0hAuVUhEKLWjlac8HKEKxMvq2cb3MQTvH7foHDEY6LGtng=
+X-Received: by 2002:ac8:7d82:0:b0:4a3:4412:dfcd with SMTP id
+ d75a77b69052e-4a7c12d4c65mr28227151cf.22.1750829172310; Tue, 24 Jun 2025
+ 22:26:12 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Yafang Shao <laoar.shao@gmail.com>
-Subject: Re: [PATCH] xfs: report a writeback error on a read() call
-To: hch@infradead.org, david@fromorbit.com
-Cc: djwong@kernel.org, jlayton@kernel.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, yc1082463@gmail.com
-References: <aFqyyUk9lO5mSguL@infradead.org>
-Content-Language: en-US
-In-Reply-To: <aFqyyUk9lO5mSguL@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <20250606233803.1421259-1-joannelkoong@gmail.com>
+ <20250606233803.1421259-6-joannelkoong@gmail.com> <aEZoau3AuwoeqQgu@infradead.org>
+ <20250609171444.GL6156@frogsfrogsfrogs> <aEetuahlyfHGTG7x@infradead.org>
+ <aEkHarE9_LlxFTAi@casper.infradead.org> <ac1506958d4c260c8beb6b840809e1bc8167ba2a.camel@kernel.org>
+ <aFWlW6SUI6t-i0dN@casper.infradead.org>
+In-Reply-To: <aFWlW6SUI6t-i0dN@casper.infradead.org>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Tue, 24 Jun 2025 22:26:01 -0700
+X-Gm-Features: AX0GCFu34MAEFWyIgKGdiwLU6rAivs8LUjM5RQDY_BGwbOBM6uVGfN-_Vs0Q5y0
+Message-ID: <CAJnrk1b3HfGOAkxXrJuhm3sFfJDzzd=Z7vQbKk3HO_JkGAxVuQ@mail.gmail.com>
+Subject: Re: [PATCH v1 5/8] iomap: add iomap_writeback_dirty_folio()
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Jeff Layton <jlayton@kernel.org>, Christoph Hellwig <hch@infradead.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, miklos@szeredi.hu, brauner@kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	bernd.schubert@fastmail.fm, kernel-team@meta.com, linux-mm@kvack.org, 
+	linux-nfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> That's really kernel wide policy and not something magic done by a
-> single file system.
+On Fri, Jun 20, 2025 at 11:15=E2=80=AFAM Matthew Wilcox <willy@infradead.or=
+g> wrote:
+>
+> On Wed, Jun 18, 2025 at 08:17:03AM -0400, Jeff Layton wrote:
+> > On Wed, 2025-06-11 at 05:34 +0100, Matthew Wilcox wrote:
+> > > On Mon, Jun 09, 2025 at 08:59:53PM -0700, Christoph Hellwig wrote:
+> > > > On Mon, Jun 09, 2025 at 10:14:44AM -0700, Darrick J. Wong wrote:
+> > > > > > Where "folio laundering" means calling ->launder_folio, right?
+> > > > >
+> > > > > What does fuse use folio laundering for, anyway?  It looks to me =
+like
+> > > > > the primary users are invalidate_inode_pages*.  Either the caller=
+ cares
+> > > > > about flushing dirty data and has called filemap_write_and_wait_r=
+ange;
+> > > > > or it doesn't and wants to tear down the pagecache ahead of some =
+other
+> > > > > operation that's going to change the file contents and doesn't ca=
+re.
+> > > > >
+> > > > > I suppose it could be useful as a last-chance operation on a dirt=
+y folio
+> > > > > that was dirtied after a filemap_write_and_wait_range but before
+> > > > > invalidate_inode_pages*?  Though for xfs we just return EBUSY and=
+ let
+> > > > > the caller try again (or not).  Is there a subtlety to fuse here =
+that I
+> > > > > don't know about?
+> > > >
+> > > > My memory might be betraying me, but I think willy once launched an
+> > > > attempt to see if we can kill launder_folio.  Adding him, and the
+> > > > mm and nfs lists to check if I have a point :)
+> > >
+> > > I ... got distracted with everything else.
+> > >
+> > > Looking at the original addition of ->launder_page (e3db7691e9f3), I
+> > > don't understand why we need it.  invalidate_inode_pages2() isn't
+> > > supposed to invalidate dirty pages, so I don't understand why nfs
+> > > found it necessary to do writeback from ->releasepage() instead
+> > > of just returning false like iomap does.
+> > >
+> > > There's now a new question of what the hell btrfs is up to with
+> > > ->launder_folio, which they just added recently.
+> >
+> > IIRC...
+> >
+> > The problem was a race where a task could could dirty a page in a
+> > mmap'ed file after it had been written back but before it was unmapped
+> > from the pagecache.
+> >
+> > Bear in mind that the NFS client may need write back and then
+> > invalidate the pagecache for a file that is still in use if it
+> > discovers that the inode's attributes have changed on the server.
+> >
+> > Trond's solution was to write the page out while holding the page lock
+> > in this situation. I think we'd all welcome a way to avoid this race
+> > that didn't require launder_folio().
+>
+> I think the problem is that we've left it up to the filesystem to handle
+> "what do we do if we've dirtied a page^W folio between, say, calling
+> filemap_write_and_wait_range() and calling filemap_release_folio()".
+> Just to make sure we're all on the same page here, this is the sample
+> path I'm looking at:
+>
+> __iomap_dio_rw
+>   kiocb_invalidate_pages
+>     filemap_invalidate_pages
+>       filemap_write_and_wait_range
+>       invalidate_inode_pages2_range
+>         unmap_mapping_pages
+>         folio_lock
+>         folio_wait_writeback
+>         folio_unmap_invalidate
+>           unmap_mapping_folio
+>         folio_launder
+>         filemap_release_folio
+>         if (folio_test_dirty(folio))
+>           return -EBUSY;
+>
+> So some filesystems opt to write back the folio which has been dirtied
+> (by implementing ->launder_folio) and others opt to fail (and fall back t=
+o
+> buffered I/O when the user has requested direct I/O).  iomap filesystems
+> all just "return false" for dirty folios, so it's clearly an acceptable
+> outcome as far as xfstests go.
+>
+> The question is whether this is acceptable for all the filesystem
+> which implement ->launder_folio today.  Because we could just move the
+> folio_test_dirty() to after the folio_lock() and remove all the testing
+> of folio dirtiness from individual filesystems.
 
-XFS already supports an optional policy for handling metadata errors via:
-/sys/fs/xfs/<disk>/error/metadata/
+Or could the filesystems that implement ->launder_folio (from what I
+see, there's only 4: fuse, nfs, btrfs, and orangefs) just move that
+logic into their .release_folio implementation? I don't see why not.
+In folio_unmap_invalidate(), we call:
 
-It would be reasonable to introduce a similar optional policy for data 
-errors:
-/sys/fs/xfs/<disk>/error/data/
+        ret =3D folio_launder(mapping, folio);
+        if (ret)
+                return ret;
+        if (folio->mapping !=3D mapping)
+                return -EBUSY;
+        if (!filemap_release_folio(folio, gfp))
+                return -EBUSY;
 
-This data error policy could allow the filesystem to shut down 
-immediately if corrupted data is detected that might otherwise be 
-exposed to userspace.
+If fuse, nfs, btrfs, and orangefs absolutely need to do whatever logic
+they're doing in .launder_folio, could they not just move it into
+.release_folio?
 
-While it’s unclear whether such a policy should be implemented at the 
-VFS level as a kernel-wide mechanism, we can certainly extend the 
-existing XFS error-handling framework to support it. In other words, 
-this would be a natural extension of current XFS functionality—not a 
-reinvention.
+>
+> Or have I missed something and picked the wrong sample path for
+> analysing why we do/don't need to writeback folios in
+> invalidate_inode_pages2_range()?
