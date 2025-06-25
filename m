@@ -1,45 +1,46 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41FF679F2;
-	Wed, 25 Jun 2025 07:01:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9717420DD42
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Jun 2025 08:20:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750834896; cv=none; b=bRsdePZT8loIFec8CoR6rv2o09Bwge6+nFSVTgHj2NAdhteHOYaH601w/V44dH0GtOiSJenL9TGCZDiWsCbA7qYGpJCZS0RniCI6lHxwttWitFnAn/LojUJRLLKEA3vsvHz2V7LZynNMXHRMwpKs27rkx0+NIMnbcbgVFdDDjpU=
+	t=1750839639; cv=none; b=nAfvpLRNmPV3m05YnlyoSIlKLFySpbqIqRDdh/34MzLjEgN79IZSMvUIeYHwB65/dnz8SpjeAuKtNX0nWibkMCjwaZ1cDtWBkRaq4SgSTzOi0fftlxEXd1IlbEqUIXXzMVlGGzyU86Ngde/dQJXPAkyhhfpVFQ2mrkh5nZumj0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750834896; c=relaxed/simple;
-	bh=gciUXRI5RoGH7MW8+6HdMvsnDB4tQnkO04ozRC3wZ7w=;
+	s=arc-20240116; t=1750839639; c=relaxed/simple;
+	bh=uftoQ1E5yC3GidayMJV7SO+t48znJGcD9LswRd0lKmo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pJkmcL/hf+4ydxSo3bWqFDrGCAEf8GTiTq9DJS1Q4woX/NRfAzAH3lWUkLOxclf+eHwCjIW+DPCOkeSs7v0VsNANL3LRIbl6g49UDLOsvuo6pjnqQLMG0VV0kg+Sga5I++JG4QoGjusorP5MIKZufRnjk8Kq0QVLl9pY2TKlsaQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=VOG3Z5ye; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=qnA39fZNJ6gdZPvMYoXOqBEPlZC5cAY2INLYdD+GTD4PkLVlNB6fRsk5GX08TT2uuUSYthTMYLmRbQ/fererN3dH0EppoAUFvyzVYAX8eTNaLUIN+lZU7MqLtE0kkab44ujY9rViFEaPD5j2HVtauyEfsoFEN6f3UlMUjryCxG0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bTqWZrYU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VOG3Z5ye"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=VrBYzP+Ry2B3NbNU4hQ6PEn7rOjvDYFr3WIL5OkLT8Q=; b=VOG3Z5yeGtYSi/UAOL3xpTDAbm
-	fz2EeUA3u057vMgix5kVW07dJWOiEr903LETeJwVnXiU/0ZVvFIV/YOuHRePOukvDhQliskEU7VhG
-	6FR0jY469yZ/tOAlLCUw6X0WmEpBWEf6XRXrD6AtNwZoSsBU2onD4CmDJm6v4cy9lrTCOsG5zMfNe
-	dHvdDx/4+AgGVQhVNm4CAg5vNiDuBT4t/3u/9xxroRahvGs73uxhIq3AB8paSWNdqHswJygmye6tl
-	OSUQD22dr9bnUe3+txxV20WY/n1c6Cz6qTtvhT41XUOrinoeQQ//47E2xXby0a9qh1MNNxzqqGOsX
-	iaTikL/Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uUK8U-00000007kXc-33oi;
-	Wed, 25 Jun 2025 07:01:34 +0000
-Date: Wed, 25 Jun 2025 00:01:34 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Yafang Shao <laoar.shao@gmail.com>
-Cc: hch@infradead.org, david@fromorbit.com, djwong@kernel.org,
-	jlayton@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	yc1082463@gmail.com
-Subject: Re: [PATCH] xfs: report a writeback error on a read() call
-Message-ID: <aFuezjrRG4L5dumV@infradead.org>
-References: <aFqyyUk9lO5mSguL@infradead.org>
- <51cc5d2e-b7b1-4e48-9a8c-d6563bbc5e2d@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bTqWZrYU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32522C4CEEA;
+	Wed, 25 Jun 2025 08:20:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750839639;
+	bh=uftoQ1E5yC3GidayMJV7SO+t48znJGcD9LswRd0lKmo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bTqWZrYUup37XmE6zGO6cytHT8z//KtUWRCXezAMSJvoQqgSxqlpOi3u+ZZc1s3m1
+	 XaGX+E+h0OSD25BoGtLjOu6qHiCrpUxtsQI9zixvlLs4GdBniixD7pvByy55BkviLK
+	 Jm+/laVXlloQta5Xhh6G346rQTwjC2rzD2KqwpmJLetwODSSuZgEzkXQqz8YsvCZgH
+	 RmqbEOOfTcko4eGgbqGVvXpET4WR4GHk8NKl9HNtjnxyKEig6DN25tZ7dGO7fjXM0i
+	 ZC+rnnWqkhSkJC8YZts/6jAkV7axLvv6+j4IePd+d3N6N7j2ggaNra9eVMf+RG66Xo
+	 C4zELxPYLij4g==
+Date: Wed, 25 Jun 2025 10:20:35 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, 
+	djwong@kernel.org
+Subject: Re: [PATCH 1/2] xfs: replace iclogs circular list with a list_head
+Message-ID: <tyu7x2ha543tu32auj4k32ot3lroqzm2epqn6e42hs54k3k3ox@4ubdiogmywqy>
+References: <20250620070813.919516-1-cem@kernel.org>
+ <20250620070813.919516-2-cem@kernel.org>
+ <aFoKgNq6IuPJAJAv@dread.disaster.area>
+ <39xujXwbUGTy3j2E9pH6kGvaRPmJbSuo2peOANlQ21_G69mQy2f2TQX2zhXE2fEvknjHBViVbuVkacBo3jLZ1w==@protonmail.internalid>
+ <20250624135740.GA24420@lst.de>
+ <b5q3uuhkn2jqcjgg6qcv6z444bftoec7dwxh4qoxbj64z2vnfv@gogvtu75o4qj>
+ <Xov06u5kQ-s2ZQXaFz0nUaYULne1GqJm_OEkG120aRXgOlMUgpYtYZ6I7noAjsto67svKHEFCMLeooos3iYkdg==@protonmail.internalid>
+ <20250625062157.GA9641@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,26 +49,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <51cc5d2e-b7b1-4e48-9a8c-d6563bbc5e2d@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250625062157.GA9641@lst.de>
 
-On Wed, Jun 25, 2025 at 10:44:57AM +0800, Yafang Shao wrote:
-> > That's really kernel wide policy and not something magic done by a
-> > single file system.
+On Wed, Jun 25, 2025 at 08:21:57AM +0200, Christoph Hellwig wrote:
+> On Tue, Jun 24, 2025 at 08:17:05PM +0200, Carlos Maiolino wrote:
+> > > 	struct xlog {
+> > > 		...
+> > > 		struct xlog_in_core	*l_iclog;
+> > > 		struct xlog_in_core	*l_iclogs[XLOG_MAX_ICLOGS];
+> > > 	};
+> >
+> > 	Thanks for the tip hch, but wouldn't this break the mount option? So far
+> > 	the user can specify how many iclogs will be in memory, by allocating
+> > 	a fixed array, we essentially lock it to 8 iclogs, no?
+> >
+> > Cheers, and thanks again for the review.
 > 
-> XFS already supports an optional policy for handling metadata errors via:
-> /sys/fs/xfs/<disk>/error/metadata/
+> Well, if you look at the helper I whiteboard coded below it only walks
+> the array until the number of specified.
+
+Sorry hch, my MUA miscolored your past message and I completely ignored it due
+its color, won't happen again.
+
+> As long as the maximum numbers
+> of iclogs is relatively slow and/or the default is close to the maximum
+> this seems optimal.  If we every support a very huge number or default
+> to something much lower than the default a separate allocation would
+> be better here, but that's a trivial change.
+
+Well, unless we decide in the future to increase the number of iclogs, this
+seems doable, and the iclogs pointers array will fit into its own cache line,
+eliminating the problem pointed by Dave.
+
+I can do the work if we agree this can be useful somehow, at this point I'm
+wondering if change this will actually improve anything :/
+
+What you think? Is it actually worth redoing it this way, with a fixed array for
+the iclogs pointers?
+
+hch, Dave ^
+
+Cheers.
+
 > 
-> It would be reasonable to introduce a similar optional policy for data
-> errors:
-> /sys/fs/xfs/<disk>/error/data/
 > 
-> This data error policy could allow the filesystem to shut down immediately
-> if corrupted data is detected that might otherwise be exposed to userspace.
-
-I fully agree on that part, and would in fact argue for making it the
-default.
-
-But reporting writeback errors on read just on one file system and with
-a specific option is really strange.
-
