@@ -1,117 +1,77 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f71.google.com (mail-io1-f71.google.com [209.85.166.71])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE8CD28D8FE;
-	Wed, 25 Jun 2025 17:03:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 121D01FBCB2
+	for <linux-xfs@vger.kernel.org>; Wed, 25 Jun 2025 21:10:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750870989; cv=none; b=MdNjlUINSSPjhQC24zbLqAaoVlSpZrMLHIpZoEfPcaOGCcf6iSHyvoPRCfmErDm1DAmJJ3lRPhc765MvXxKfAnl1v+UGxlyctVwPBJ1CVka+Peu6j3sani4AvQuLJdwaqTaQXyY5kTinbntlzthI2JVT8nJmG2sPnzbRTm6Ao2s=
+	t=1750885804; cv=none; b=qyW5tLRNWFVtsGY2gpGS3NBrtiu+rDqLLz8bcRn8gQC9UdA8crDju9q3yrbAsIyc25QPpUVA2yAQdUYHFKWhqE7mC5S11iQlKvViA+EO6cumMWQU7hytWVwCyYiYl2zSq1MTB1pKUbt+7TNegt1hT8r5f+2p2j8oa1i873zRsiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750870989; c=relaxed/simple;
-	bh=0+ImX5Z5+yST+Npw31q/8a7InEoeRMTLz6Y4D6JHFtI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JxU3e9j/0PZSAwl7LUBgyG1gcPJg44tY6emQ84Aa7q60jl1NvoGgUjtcLn03+R9Dxu1wU1cxDmGPZ0PwRVnaqOJIGfqE0WghSlLVeRY/UsRIrBYichap8wstFvWUOxTegIAGPE4mXYyQddZK7Fvae5JLG8y2KWTlA3BoCoVn1Y8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dLLPqjHW; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dLLPqjHW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1750870988; x=1782406988;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=0+ImX5Z5+yST+Npw31q/8a7InEoeRMTLz6Y4D6JHFtI=;
-  b=dLLPqjHWXaGqeSnjkuEa1a7bz8sbdqIX/773yiy+IXxJsinUJ/Jr3VqB
-   6VhcSuC6lSW8TeAjvBobWFu/At+rE/fNKhwhQdjfe0FNbHohs/D/WxMz+
-   a7GRfgLjqLjdwi3KKIT5M/biLWNss/AY0YA5giqTf7i+HOLuIdMDJKpIy
-   TPbNdudHtcOCiRqK5L4sqDl1tRqv/hZnMsK5rQ1UvEe/O3kER5asOx5Kk
-   l17++GzDo60pbDprtFPIV8uhdT1hCnM4rwkFY2iB5eQsSl9z7I06NL/bq
-   xgCQgA/nqeD1W7Vg+ISanyJm4zO9MGyauy4wOMTLN1nckR38ryqrNb8+Q
-   g==;
-X-CSE-ConnectionGUID: 4vIlUPlDQDmI4VsvWzq/1g==
-X-CSE-MsgGUID: 7FsA+Na/RLWpQ5EGg90yow==
-X-IronPort-AV: E=McAfee;i="6800,10657,11475"; a="78581520"
-X-IronPort-AV: E=Sophos;i="6.16,265,1744095600"; 
-   d="scan'208";a="78581520"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jun 2025 10:03:07 -0700
-X-CSE-ConnectionGUID: gy67ZgwNTDKWcXsuBplZwg==
-X-CSE-MsgGUID: e9r7QM1LQyqQI9aTuVfkMQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,265,1744095600"; 
-   d="scan'208";a="157767066"
-Received: from lkp-server01.sh.intel.com (HELO e8142ee1dce2) ([10.239.97.150])
-  by fmviesa004.fm.intel.com with ESMTP; 25 Jun 2025 10:03:04 -0700
-Received: from kbuild by e8142ee1dce2 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1uUTWY-000TLm-0J;
-	Wed, 25 Jun 2025 17:03:02 +0000
-Date: Thu, 26 Jun 2025 01:02:51 +0800
-From: kernel test robot <lkp@intel.com>
-To: Joanne Koong <joannelkoong@gmail.com>, linux-fsdevel@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, hch@lst.de, miklos@szeredi.hu,
-	brauner@kernel.org, djwong@kernel.org, anuj20.g@samsung.com,
-	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-block@vger.kernel.org, gfs2@lists.linux.dev,
-	kernel-team@meta.com
-Subject: Re: [PATCH v3 14/16] fuse: use iomap for folio laundering
-Message-ID: <202506260003.qJL8KxcS-lkp@intel.com>
-References: <20250624022135.832899-15-joannelkoong@gmail.com>
+	s=arc-20240116; t=1750885804; c=relaxed/simple;
+	bh=CNKw6tzEja4Qt6Nh8nMdXFeEWbdQjDHV1oVsSa0p4eQ=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=GUUNQTWqr1THPGHWuHxp3+4s0qQCKra9CuuWfp5GTN2+aCZ0jwPACwoG6kyNc3/gEIScu/zl+vcUJP6t5rNzRZVj5TLnq4HU+/LH+nd6zRlLaORagPlE884g/ePyzD72uUUX4GAWahBODpNiFZxzirYVZuGbiz2QJ+aKiz+v7bI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f71.google.com with SMTP id ca18e2360f4ac-86d0aa2dc99so39508339f.1
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Jun 2025 14:10:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750885802; x=1751490602;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Kc426aQB/Ls8eZ2ZTizs/1SQKrFEHeSjd9qsxqSJwL4=;
+        b=Z4PkgodVMmsVzpIEV/3vcWOtGCBKUiw/nZZh37Brq3vdEm8/GxI1hVZaOY7WX2ELqC
+         54wkcIj7/eliKHCKHNIVSAn/mTuOmH7pvFQzRBGWnq6YtoKZf02ERiA392qRX5XMAWsl
+         XOhzkeGmhWxFUJtnj4yd2krRNzBFZspSZ8/3FtqmyMgl3oziPc3+GI27D2y4a85dnUAe
+         /i0JWDoCc8FfeIVITBaoEm8kzhrLHxMNvma6lmeJw0Dl7TVqeVO+Ry9sNlJdAR6lqaA5
+         DVTPu0quwIbfIOkglwLQD2kiVy2dRzBj6ShDFUUYL8nhKCd+yCw0fiDhddIH/N610pBN
+         Z6bg==
+X-Forwarded-Encrypted: i=1; AJvYcCUfAlsQdS0g/JdHBgnZvuNIbL+ddZziLiSqxsIpW4nvyNPtsz0O6Eh9Y6q5c387QSRo+QqrI0VvLs8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyn3cDV98gvo+rwC3ATPeAOIdBIvBVQ83mAUdHXqsZ7d/bJTzFz
+	nZCOBpMtPdX0ZMhdLmJJbD9xESmDwT+xRgXqVU1L9PcSwhtD2uGKL0OAXiHYs7kka3ETm1G4nwi
+	rSKMSKbcN4VWzQ30efSkGZC5+InQ9Q6ey/0JlZ44RBT9UFxlfLgC9/ZlC71c=
+X-Google-Smtp-Source: AGHT+IFsLSGcBbmWtt1GPA7otyFNGoqQ39LiKIQmsCWWO9urExGRsP2gl2q2dUeo/rc0DVTmtRh5fh/sIrBSXo3bSUXE3QaQI689
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250624022135.832899-15-joannelkoong@gmail.com>
+X-Received: by 2002:a05:6602:a005:b0:86d:5b3:3b88 with SMTP id
+ ca18e2360f4ac-8766b73e5f1mr592236639f.1.1750885802133; Wed, 25 Jun 2025
+ 14:10:02 -0700 (PDT)
+Date: Wed, 25 Jun 2025 14:10:02 -0700
+In-Reply-To: <0000000000008905bf061fc61371@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <685c65aa.050a0220.2303ee.0098.GAE@google.com>
+Subject: Re: [syzbot] [xfs?] INFO: task hung in xfs_buf_item_unpin (2)
+From: syzbot <syzbot+837bcd54843dd6262f2f@syzkaller.appspotmail.com>
+To: axboe@kernel.dk, cem@kernel.org, chandan.babu@oracle.com, 
+	david@fromorbit.com, djwong@kernel.org, hch@lst.de, john.g.garry@oracle.com, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Joanne,
+syzbot suspects this issue was fixed by commit:
 
-kernel test robot noticed the following build errors:
+commit b1e09178b73adf10dc87fba9aee7787a7ad26874
+Author: John Garry <john.g.garry@oracle.com>
+Date:   Wed May 7 21:18:31 2025 +0000
 
-[auto build test ERROR on brauner-vfs/vfs.all]
-[also build test ERROR on xfs-linux/for-next linus/master v6.16-rc3 next-20250625]
-[cannot apply to gfs2/for-next mszeredi-fuse/for-next]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+    xfs: commit CoW-based atomic writes atomically
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Joanne-Koong/iomap-pass-more-arguments-using-struct-iomap_writepage_ctx/20250624-102709
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git vfs.all
-patch link:    https://lore.kernel.org/r/20250624022135.832899-15-joannelkoong%40gmail.com
-patch subject: [PATCH v3 14/16] fuse: use iomap for folio laundering
-config: arm64-randconfig-003-20250625 (https://download.01.org/0day-ci/archive/20250626/202506260003.qJL8KxcS-lkp@intel.com/config)
-compiler: aarch64-linux-gcc (GCC) 12.3.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250626/202506260003.qJL8KxcS-lkp@intel.com/reproduce)
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=1078f70c580000
+start commit:   85652baa895b Merge tag 'block-6.11-20240824' of git://git...
+git tree:       upstream
+kernel config:  https://syzkaller.appspot.com/x/.config?x=92c0312151c4e32e
+dashboard link: https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12350ad5980000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=147927c5980000
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202506260003.qJL8KxcS-lkp@intel.com/
+If the result looks correct, please mark the issue as fixed by replying with:
 
-All errors (new ones prefixed by >>):
+#syz fix: xfs: commit CoW-based atomic writes atomically
 
-   aarch64-linux-ld: fs/fuse/file.o: in function `fuse_writepages':
-   file.c:(.text+0xbf0): undefined reference to `iomap_writepages'
-   file.c:(.text+0xbf0): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_writepages'
-   aarch64-linux-ld: fs/fuse/file.o: in function `fuse_writepage_finish':
-   file.c:(.text+0x1fd8): undefined reference to `iomap_finish_folio_write'
-   file.c:(.text+0x1fd8): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_finish_folio_write'
-   aarch64-linux-ld: fs/fuse/file.o: in function `fuse_cache_write_iter':
-   file.c:(.text+0x888c): undefined reference to `iomap_file_buffered_write'
-   file.c:(.text+0x888c): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_file_buffered_write'
-   aarch64-linux-ld: fs/fuse/file.o: in function `fuse_launder_folio':
->> file.c:(.text+0x8f74): undefined reference to `iomap_writeback_folio'
->> file.c:(.text+0x8f74): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_writeback_folio'
-   aarch64-linux-ld: fs/fuse/file.o: in function `fuse_iomap_writeback_range':
-   file.c:(.text+0x90d8): undefined reference to `iomap_start_folio_write'
-   file.c:(.text+0x90d8): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_start_folio_write'
-   aarch64-linux-ld: fs/fuse/file.o:(.rodata+0x370): undefined reference to `iomap_dirty_folio'
-   aarch64-linux-ld: fs/fuse/file.o:(.rodata+0x3a0): undefined reference to `iomap_release_folio'
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
