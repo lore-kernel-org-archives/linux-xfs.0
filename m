@@ -1,152 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A43A0277CB9
-	for <linux-xfs@vger.kernel.org>; Thu, 26 Jun 2025 11:59:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A08491922F6;
+	Thu, 26 Jun 2025 13:57:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750939188; cv=none; b=ZTyG08qQYI2vWm2grdRYR5ani+TODI3dhmDabQMavpwz3ExPaMc1lKTixhXJ7dEeqCX6Ij2IceRdz489b6JghgjprJuYEPXHsB3uMRqXMM7eoiA+GGFuk80rbW0PDXt9xbvZ0AZ4A9ry7q5Icc9a/ur88bnr26z8yiEJYcugWGM=
+	t=1750946241; cv=none; b=sd2eZAyEaj2lhaf0Pwtn0XQXFoon4mRof2tFtjiYAfZLdNH1jsqGd+Le7RAVgZ9rv8yIgCc+TM6doyDK+rjS4XWzV6j6sMfhFyZQYe1Q21yfKhVBakMO9Cgzp4ZgtislYAIQE2ofOCiwOvLfZj/QN8/nzcB0rAMxh6Fj0lBbIuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750939188; c=relaxed/simple;
-	bh=hwg9UuH773BehMqTKrHJ5paz6wwvjmy2XdOv72HEPgg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kQhNUNihw5MWih7PRMlTX4bMD2MdrPZSWT8TyLvboQpH2XHb2Wt8uYIHi5pMAuiAj1fGwa+Fbe1+ScElVMt5BO2vzrJna5xH6Ganp2rEwaEHiCmrYmHZ+F+yQvOJrapONHVqR6a7ZDnwMXmmfKpEAo+WrtNbknlODzU1wPjT9iQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z5aUbuXH; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z5aUbuXH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CCE7C4CEEB;
-	Thu, 26 Jun 2025 11:59:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750939188;
-	bh=hwg9UuH773BehMqTKrHJ5paz6wwvjmy2XdOv72HEPgg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Z5aUbuXHpnfM2mC8NSSdIKNKYgEEm+VhVlRT5xNo9e9FOy1X6V0PmfeDxS8eIGu2s
-	 cwu7KD1XQJEJaFueLaOsXjEO+mbELdxr5AtFJRZe7IQFHIlY6Z48X131IphBaPXskE
-	 Q5sPTxITwe599H2ApgXXxF9rsQQuzLXE7Ffg9HbAJzUvA54dVuMJQZomOk0XXgHuw9
-	 yGrpTplaJwZcYcAAEC8R4gca8M5hHpJ3EXRZpiroGsSzdTFfTcs4q6LIuX5zUl49PT
-	 ZJVHG8X0hgbHAii4gampPyUPL/PRKE6ZNjPaWEsFcLHSuvcq5QnxXjL/OXCj41W6Sk
-	 olC+3iJ95Yu+g==
-Date: Thu, 26 Jun 2025 13:59:44 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/7] xfs: factor out stale buffer item completion
-Message-ID: <c66t2nksribmph42r6xzqjvc7pj3ii56z5ywwksg6tzpypfmul@dp326wmzx2m6>
-References: <20250625224957.1436116-1-david@fromorbit.com>
- <nmkMPg8SehDTHtd9Th3rilYsI7bOfS2g5mGNoFG0RWSztWRWavPjz1ay8cuE6PaJzGH9lWDsQSdSjWFTPca7dQ==@protonmail.internalid>
- <20250625224957.1436116-7-david@fromorbit.com>
+	s=arc-20240116; t=1750946241; c=relaxed/simple;
+	bh=0c7ZHZLsdl7RngXjNl2NpX2L2Tdel9+PLaSBG+/n1XA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=cu1w5KznyGw1a1CS4xnBWTUrzlk176gNs+l6rXVviwoMN0cua/ZFk9eJwci9Q8WEjNIFax1L6D9BExIE3VuCWsC78Mwbyxd78WIoq0MEeS2hrvJDZ8Nb3MfgVf0ImOKi9kXw8NuxEC6VbIiWTpXyIKpr0Zjj6O1R3J3wTB0YQM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bSgH11TkwzYQv0F;
+	Thu, 26 Jun 2025 21:57:17 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 164801A236D;
+	Thu, 26 Jun 2025 21:57:16 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgD3W2C6UV1ofP7jQg--.28741S3;
+	Thu, 26 Jun 2025 21:57:15 +0800 (CST)
+Message-ID: <e2fe408c-23be-4cb4-9cb2-04178fad947f@huaweicloud.com>
+Date: Thu, 26 Jun 2025 21:57:14 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250625224957.1436116-7-david@fromorbit.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/9] fallocate: introduce FALLOC_FL_WRITE_ZEROES flag
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, hch@lst.de
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, tytso@mit.edu,
+ djwong@kernel.org, john.g.garry@oracle.com, bmarzins@redhat.com,
+ chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com, brauner@kernel.org,
+ yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
+ yangerkun@huawei.com
+References: <20250619111806.3546162-1-yi.zhang@huaweicloud.com>
+ <yq11praqywi.fsf@ca-mkp.ca.oracle.com>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <yq11praqywi.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgD3W2C6UV1ofP7jQg--.28741S3
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYV7kC6x804xWl14x267AKxVW5JVWrJwAF
+	c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
+	0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
+	wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
+	x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG
+	64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r
+	1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kI
+	c2xKxwCF04k20xvY0x0EwIxGrwCF54CYxVCY1x0262kKe7AKxVW8ZVWrXwCFx2IqxVCFs4
+	IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1r
+	MI8E67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJV
+	WUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
+	6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+	BIdaVFxhVjvjDU0xZFpf9x07UdxhLUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Thu, Jun 26, 2025 at 08:48:59AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 2025/6/23 23:08, Martin K. Petersen wrote:
 > 
-> The stale buffer item completion handling is currently only done
-> from BLI unpinning. We need to perform this function from where-ever
-> the last reference to the BLI is dropped, so first we need to
-> factor this code out into a helper.
+> Zhang,
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+>> This series implements the BLK_FEAT_WRITE_ZEROES_UNMAP feature and
+>> BLK_FLAG_WRITE_ZEROES_UNMAP_DISABLED flag for SCSI, NVMe and
+>> device-mapper drivers, and add the FALLOC_FL_WRITE_ZEROES and
+>> STATX_ATTR_WRITE_ZEROES_UNMAP support for ext4 and raw bdev devices.
+>> Any comments are welcome.
+> 
+> This looks OK to me.
+> 
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> 
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Thank you, Martin and Christoph, for the patient review. I will update
+my test patches next.
 
-> ---
->  fs/xfs/xfs_buf_item.c | 60 ++++++++++++++++++++++++++-----------------
->  1 file changed, 37 insertions(+), 23 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 3e3c0f65a25c..c95826863c82 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -444,6 +444,42 @@ xfs_buf_item_pin(
->  	atomic_inc(&bip->bli_buf->b_pin_count);
->  }
-> 
-> +/*
-> + * For a stale BLI, process all the necessary completions that must be
-> + * performed when the final BLI reference goes away. The buffer will be
-> + * referenced and locked here - we return to the caller with the buffer still
-> + * referenced and locked for them to finalise processing of the buffer.
-> + */
-> +static void
-> +xfs_buf_item_finish_stale(
-> +	struct xfs_buf_log_item	*bip)
-> +{
-> +	struct xfs_buf		*bp = bip->bli_buf;
-> +	struct xfs_log_item	*lip = &bip->bli_item;
-> +
-> +	ASSERT(bip->bli_flags & XFS_BLI_STALE);
-> +	ASSERT(xfs_buf_islocked(bp));
-> +	ASSERT(bp->b_flags & XBF_STALE);
-> +	ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
-> +	ASSERT(list_empty(&lip->li_trans));
-> +	ASSERT(!bp->b_transp);
-> +
-> +	if (bip->bli_flags & XFS_BLI_STALE_INODE) {
-> +		xfs_buf_item_done(bp);
-> +		xfs_buf_inode_iodone(bp);
-> +		ASSERT(list_empty(&bp->b_li_list));
-> +		return;
-> +	}
-> +
-> +	/*
-> +	 * We may or may not be on the AIL here, xfs_trans_ail_delete() will do
-> +	 * the right thing regardless of the situation in which we are called.
-> +	 */
-> +	xfs_trans_ail_delete(lip, SHUTDOWN_LOG_IO_ERROR);
-> +	xfs_buf_item_relse(bip);
-> +	ASSERT(bp->b_log_item == NULL);
-> +}
-> +
->  /*
->   * This is called to unpin the buffer associated with the buf log item which was
->   * previously pinned with a call to xfs_buf_item_pin().  We enter this function
-> @@ -493,13 +529,6 @@ xfs_buf_item_unpin(
->  	}
-> 
->  	if (stale) {
-> -		ASSERT(bip->bli_flags & XFS_BLI_STALE);
-> -		ASSERT(xfs_buf_islocked(bp));
-> -		ASSERT(bp->b_flags & XBF_STALE);
-> -		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
-> -		ASSERT(list_empty(&lip->li_trans));
-> -		ASSERT(!bp->b_transp);
-> -
->  		trace_xfs_buf_item_unpin_stale(bip);
-> 
->  		/*
-> @@ -510,22 +539,7 @@ xfs_buf_item_unpin(
->  		 * processing is complete.
->  		 */
->  		xfs_buf_rele(bp);
-> -
-> -		/*
-> -		 * If we get called here because of an IO error, we may or may
-> -		 * not have the item on the AIL. xfs_trans_ail_delete() will
-> -		 * take care of that situation. xfs_trans_ail_delete() drops
-> -		 * the AIL lock.
-> -		 */
-> -		if (bip->bli_flags & XFS_BLI_STALE_INODE) {
-> -			xfs_buf_item_done(bp);
-> -			xfs_buf_inode_iodone(bp);
-> -			ASSERT(list_empty(&bp->b_li_list));
-> -		} else {
-> -			xfs_trans_ail_delete(lip, SHUTDOWN_LOG_IO_ERROR);
-> -			xfs_buf_item_relse(bip);
-> -			ASSERT(bp->b_log_item == NULL);
-> -		}
-> +		xfs_buf_item_finish_stale(bip);
->  		xfs_buf_relse(bp);
->  		return;
->  	}
-> --
-> 2.45.2
-> 
-> 
+Best regards,
+Yi.
+
