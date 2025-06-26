@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4061920C48D
-	for <linux-xfs@vger.kernel.org>; Thu, 26 Jun 2025 11:57:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A43A0277CB9
+	for <linux-xfs@vger.kernel.org>; Thu, 26 Jun 2025 11:59:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750939055; cv=none; b=e9G44PIfFQYsSaV19if0Y6hOYTZz37RLMW/n6p0SBJs90GBhn/MAulf4d9neA592X6cXJeqWG3QP7Ju3qUbeVMSuFTliyhs3ZHRH+Yl+gH6ozB7+dteNAYWty9VNWgJWSMpniERUbOgXThogKsmDzJKj3TFz+5yHIgC5ZpsIWLE=
+	t=1750939188; cv=none; b=ZTyG08qQYI2vWm2grdRYR5ani+TODI3dhmDabQMavpwz3ExPaMc1lKTixhXJ7dEeqCX6Ij2IceRdz489b6JghgjprJuYEPXHsB3uMRqXMM7eoiA+GGFuk80rbW0PDXt9xbvZ0AZ4A9ry7q5Icc9a/ur88bnr26z8yiEJYcugWGM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750939055; c=relaxed/simple;
-	bh=yYsRTdu6FUe6VdOY/+VhboYv6M7qX4SL+9FqNJCll9c=;
+	s=arc-20240116; t=1750939188; c=relaxed/simple;
+	bh=hwg9UuH773BehMqTKrHJ5paz6wwvjmy2XdOv72HEPgg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cwM7HRK8iYpgzrbcl1ihCNE+uIAS/rWL9eCT5+M8QBjjHWNr0NMzf73ryt07v3fcy5VITkIHw58FIg7bulPMlCmiHUFFSvry9BqZk7YnbFT/sE2XfhAprfUn/3rot/oOpVD5WUstP6I83IrxwHnoIq4d+cRB7mBVUg7zb9jJSxs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NK+R7CZH; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=kQhNUNihw5MWih7PRMlTX4bMD2MdrPZSWT8TyLvboQpH2XHb2Wt8uYIHi5pMAuiAj1fGwa+Fbe1+ScElVMt5BO2vzrJna5xH6Ganp2rEwaEHiCmrYmHZ+F+yQvOJrapONHVqR6a7ZDnwMXmmfKpEAo+WrtNbknlODzU1wPjT9iQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z5aUbuXH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NK+R7CZH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01547C4CEEB;
-	Thu, 26 Jun 2025 11:57:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z5aUbuXH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CCE7C4CEEB;
+	Thu, 26 Jun 2025 11:59:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750939054;
-	bh=yYsRTdu6FUe6VdOY/+VhboYv6M7qX4SL+9FqNJCll9c=;
+	s=k20201202; t=1750939188;
+	bh=hwg9UuH773BehMqTKrHJ5paz6wwvjmy2XdOv72HEPgg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NK+R7CZHktfWfbtqNoa7CmF6Z4zTL0dz9dNIT4kSYRJNqy+oTXFlnYsYu07egYiku
-	 kWdMpawevTpAZ+NOqidoqepl9mHNvEda79+h6Ui+unrI9cTMwZbBZb3mTfGDGKCedt
-	 4tgEEwETQW4VJ/9XgNztCxKC/4EK7qKMuKSab7+S0DhDB/9BDBclIoUbEU6jYJKDid
-	 TbEZgFOXqbjWnwe0QEJNtz+g2U86DiCPbJmlMxmYnQJfnUYoQjrNGTj2qXnD3mxcRm
-	 M15vDHeRu3TfxaDQoMXv8isiXJ2KfAGMAHZK/ApGd3QWWLPUN4rY7xt+HYqZyzjjMG
-	 WmYlBuS0vtYWg==
-Date: Thu, 26 Jun 2025 13:57:31 +0200
+	b=Z5aUbuXHpnfM2mC8NSSdIKNKYgEEm+VhVlRT5xNo9e9FOy1X6V0PmfeDxS8eIGu2s
+	 cwu7KD1XQJEJaFueLaOsXjEO+mbELdxr5AtFJRZe7IQFHIlY6Z48X131IphBaPXskE
+	 Q5sPTxITwe599H2ApgXXxF9rsQQuzLXE7Ffg9HbAJzUvA54dVuMJQZomOk0XXgHuw9
+	 yGrpTplaJwZcYcAAEC8R4gca8M5hHpJ3EXRZpiroGsSzdTFfTcs4q6LIuX5zUl49PT
+	 ZJVHG8X0hgbHAii4gampPyUPL/PRKE6ZNjPaWEsFcLHSuvcq5QnxXjL/OXCj41W6Sk
+	 olC+3iJ95Yu+g==
+Date: Thu, 26 Jun 2025 13:59:44 +0200
 From: Carlos Maiolino <cem@kernel.org>
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/7] xfs: rearrange code in xfs_buf_item.c
-Message-ID: <zolxrnbf2gomijkxhp74vd3ks75xytmznuhvfmileopgehcbu2@5gxh4g4y25h3>
+Subject: Re: [PATCH 6/7] xfs: factor out stale buffer item completion
+Message-ID: <c66t2nksribmph42r6xzqjvc7pj3ii56z5ywwksg6tzpypfmul@dp326wmzx2m6>
 References: <20250625224957.1436116-1-david@fromorbit.com>
- <t9db4y2ZpaNkNi8wkNSvCoYwbLOuuBIWoaDfqmPIIsquNTwIFj0nwmdaBVoz91V61VdpbU7Dojiq3mlG-0VMtw==@protonmail.internalid>
- <20250625224957.1436116-6-david@fromorbit.com>
+ <nmkMPg8SehDTHtd9Th3rilYsI7bOfS2g5mGNoFG0RWSztWRWavPjz1ay8cuE6PaJzGH9lWDsQSdSjWFTPca7dQ==@protonmail.internalid>
+ <20250625224957.1436116-7-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,200 +43,109 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250625224957.1436116-6-david@fromorbit.com>
+In-Reply-To: <20250625224957.1436116-7-david@fromorbit.com>
 
-On Thu, Jun 26, 2025 at 08:48:58AM +1000, Dave Chinner wrote:
+On Thu, Jun 26, 2025 at 08:48:59AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The code to initialise, release and free items is all the way down
-> the bottom of the file. Upcoming fixes need to these functions
-> earlier in the file, so move them to the top.
-> 
-> There is one code change in this move - the parameter to
-> xfs_buf_item_relse() is changed from the xfs_buf to the
-> xfs_buf_log_item - the thing that the function is releasing.
+> The stale buffer item completion handling is currently only done
+> from BLI unpinning. We need to perform this function from where-ever
+> the last reference to the BLI is dropped, so first we need to
+> factor this code out into a helper.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
 > ---
->  fs/xfs/xfs_buf_item.c | 116 +++++++++++++++++++++---------------------
->  fs/xfs/xfs_buf_item.h |   1 -
->  2 files changed, 58 insertions(+), 59 deletions(-)
+>  fs/xfs/xfs_buf_item.c | 60 ++++++++++++++++++++++++++-----------------
+>  1 file changed, 37 insertions(+), 23 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 90139e0f3271..3e3c0f65a25c 100644
+> index 3e3c0f65a25c..c95826863c82 100644
 > --- a/fs/xfs/xfs_buf_item.c
 > +++ b/fs/xfs/xfs_buf_item.c
-> @@ -32,6 +32,61 @@ static inline struct xfs_buf_log_item *BUF_ITEM(struct xfs_log_item *lip)
->  	return container_of(lip, struct xfs_buf_log_item, bli_item);
+> @@ -444,6 +444,42 @@ xfs_buf_item_pin(
+>  	atomic_inc(&bip->bli_buf->b_pin_count);
 >  }
 > 
-> +static void
-> +xfs_buf_item_get_format(
-> +	struct xfs_buf_log_item	*bip,
-> +	int			count)
-> +{
-> +	ASSERT(bip->bli_formats == NULL);
-> +	bip->bli_format_count = count;
-> +
-> +	if (count == 1) {
-> +		bip->bli_formats = &bip->__bli_format;
-> +		return;
-> +	}
-> +
-> +	bip->bli_formats = kzalloc(count * sizeof(struct xfs_buf_log_format),
-> +				GFP_KERNEL | __GFP_NOFAIL);
-> +}
-> +
-> +static void
-> +xfs_buf_item_free_format(
-> +	struct xfs_buf_log_item	*bip)
-> +{
-> +	if (bip->bli_formats != &bip->__bli_format) {
-> +		kfree(bip->bli_formats);
-> +		bip->bli_formats = NULL;
-> +	}
-> +}
-> +
-> +static void
-> +xfs_buf_item_free(
-> +	struct xfs_buf_log_item	*bip)
-> +{
-> +	xfs_buf_item_free_format(bip);
-> +	kvfree(bip->bli_item.li_lv_shadow);
-> +	kmem_cache_free(xfs_buf_item_cache, bip);
-> +}
-> +
 > +/*
-> + * xfs_buf_item_relse() is called when the buf log item is no longer needed.
+> + * For a stale BLI, process all the necessary completions that must be
+> + * performed when the final BLI reference goes away. The buffer will be
+> + * referenced and locked here - we return to the caller with the buffer still
+> + * referenced and locked for them to finalise processing of the buffer.
 > + */
 > +static void
-> +xfs_buf_item_relse(
+> +xfs_buf_item_finish_stale(
 > +	struct xfs_buf_log_item	*bip)
 > +{
 > +	struct xfs_buf		*bp = bip->bli_buf;
+> +	struct xfs_log_item	*lip = &bip->bli_item;
 > +
-> +	trace_xfs_buf_item_relse(bp, _RET_IP_);
+> +	ASSERT(bip->bli_flags & XFS_BLI_STALE);
+> +	ASSERT(xfs_buf_islocked(bp));
+> +	ASSERT(bp->b_flags & XBF_STALE);
+> +	ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
+> +	ASSERT(list_empty(&lip->li_trans));
+> +	ASSERT(!bp->b_transp);
 > +
-> +	ASSERT(!test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags));
-> +	ASSERT(atomic_read(&bip->bli_refcount) == 0);
+> +	if (bip->bli_flags & XFS_BLI_STALE_INODE) {
+> +		xfs_buf_item_done(bp);
+> +		xfs_buf_inode_iodone(bp);
+> +		ASSERT(list_empty(&bp->b_li_list));
+> +		return;
+> +	}
 > +
-> +	bp->b_log_item = NULL;
-> +	xfs_buf_rele(bp);
-> +	xfs_buf_item_free(bip);
+> +	/*
+> +	 * We may or may not be on the AIL here, xfs_trans_ail_delete() will do
+> +	 * the right thing regardless of the situation in which we are called.
+> +	 */
+> +	xfs_trans_ail_delete(lip, SHUTDOWN_LOG_IO_ERROR);
+> +	xfs_buf_item_relse(bip);
+> +	ASSERT(bp->b_log_item == NULL);
 > +}
 > +
->  /* Is this log iovec plausibly large enough to contain the buffer log format? */
->  bool
->  xfs_buf_log_check_iovec(
-> @@ -468,7 +523,7 @@ xfs_buf_item_unpin(
->  			ASSERT(list_empty(&bp->b_li_list));
->  		} else {
->  			xfs_trans_ail_delete(lip, SHUTDOWN_LOG_IO_ERROR);
-> -			xfs_buf_item_relse(bp);
-> +			xfs_buf_item_relse(bip);
->  			ASSERT(bp->b_log_item == NULL);
->  		}
->  		xfs_buf_relse(bp);
-> @@ -578,7 +633,7 @@ xfs_buf_item_put(
->  	 */
->  	if (aborted)
->  		xfs_trans_ail_delete(lip, 0);
-> -	xfs_buf_item_relse(bip->bli_buf);
-> +	xfs_buf_item_relse(bip);
->  	return true;
->  }
-> 
-> @@ -729,33 +784,6 @@ static const struct xfs_item_ops xfs_buf_item_ops = {
->  	.iop_push	= xfs_buf_item_push,
->  };
-> 
-> -STATIC void
-> -xfs_buf_item_get_format(
-> -	struct xfs_buf_log_item	*bip,
-> -	int			count)
-> -{
-> -	ASSERT(bip->bli_formats == NULL);
-> -	bip->bli_format_count = count;
-> -
-> -	if (count == 1) {
-> -		bip->bli_formats = &bip->__bli_format;
-> -		return;
-> -	}
-> -
-> -	bip->bli_formats = kzalloc(count * sizeof(struct xfs_buf_log_format),
-> -				GFP_KERNEL | __GFP_NOFAIL);
-> -}
-> -
-> -STATIC void
-> -xfs_buf_item_free_format(
-> -	struct xfs_buf_log_item	*bip)
-> -{
-> -	if (bip->bli_formats != &bip->__bli_format) {
-> -		kfree(bip->bli_formats);
-> -		bip->bli_formats = NULL;
-> -	}
-> -}
-> -
 >  /*
->   * Allocate a new buf log item to go with the given buffer.
->   * Set the buffer's b_log_item field to point to the new
-> @@ -976,34 +1004,6 @@ xfs_buf_item_dirty_format(
->  	return false;
->  }
+>   * This is called to unpin the buffer associated with the buf log item which was
+>   * previously pinned with a call to xfs_buf_item_pin().  We enter this function
+> @@ -493,13 +529,6 @@ xfs_buf_item_unpin(
+>  	}
 > 
-> -STATIC void
-> -xfs_buf_item_free(
-> -	struct xfs_buf_log_item	*bip)
-> -{
-> -	xfs_buf_item_free_format(bip);
-> -	kvfree(bip->bli_item.li_lv_shadow);
-> -	kmem_cache_free(xfs_buf_item_cache, bip);
-> -}
+>  	if (stale) {
+> -		ASSERT(bip->bli_flags & XFS_BLI_STALE);
+> -		ASSERT(xfs_buf_islocked(bp));
+> -		ASSERT(bp->b_flags & XBF_STALE);
+> -		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
+> -		ASSERT(list_empty(&lip->li_trans));
+> -		ASSERT(!bp->b_transp);
 > -
-> -/*
-> - * xfs_buf_item_relse() is called when the buf log item is no longer needed.
-> - */
-> -void
-> -xfs_buf_item_relse(
-> -	struct xfs_buf	*bp)
-> -{
-> -	struct xfs_buf_log_item	*bip = bp->b_log_item;
-> -
-> -	trace_xfs_buf_item_relse(bp, _RET_IP_);
-> -	ASSERT(!test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags));
-> -
-> -	if (atomic_read(&bip->bli_refcount))
-> -		return;
-> -	bp->b_log_item = NULL;
-> -	xfs_buf_rele(bp);
-> -	xfs_buf_item_free(bip);
-> -}
-> -
->  void
->  xfs_buf_item_done(
->  	struct xfs_buf		*bp)
-> @@ -1023,5 +1023,5 @@ xfs_buf_item_done(
->  	xfs_trans_ail_delete(&bp->b_log_item->bli_item,
->  			     (bp->b_flags & _XBF_LOGRECOVERY) ? 0 :
->  			     SHUTDOWN_CORRUPT_INCORE);
-> -	xfs_buf_item_relse(bp);
-> +	xfs_buf_item_relse(bp->b_log_item);
->  }
-> diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-> index e10e324cd245..50dd79b59cf5 100644
-> --- a/fs/xfs/xfs_buf_item.h
-> +++ b/fs/xfs/xfs_buf_item.h
-> @@ -49,7 +49,6 @@ struct xfs_buf_log_item {
+>  		trace_xfs_buf_item_unpin_stale(bip);
 > 
->  int	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
->  void	xfs_buf_item_done(struct xfs_buf *bp);
-> -void	xfs_buf_item_relse(struct xfs_buf *);
->  bool	xfs_buf_item_put(struct xfs_buf_log_item *);
->  void	xfs_buf_item_log(struct xfs_buf_log_item *, uint, uint);
->  bool	xfs_buf_item_dirty_format(struct xfs_buf_log_item *);
+>  		/*
+> @@ -510,22 +539,7 @@ xfs_buf_item_unpin(
+>  		 * processing is complete.
+>  		 */
+>  		xfs_buf_rele(bp);
+> -
+> -		/*
+> -		 * If we get called here because of an IO error, we may or may
+> -		 * not have the item on the AIL. xfs_trans_ail_delete() will
+> -		 * take care of that situation. xfs_trans_ail_delete() drops
+> -		 * the AIL lock.
+> -		 */
+> -		if (bip->bli_flags & XFS_BLI_STALE_INODE) {
+> -			xfs_buf_item_done(bp);
+> -			xfs_buf_inode_iodone(bp);
+> -			ASSERT(list_empty(&bp->b_li_list));
+> -		} else {
+> -			xfs_trans_ail_delete(lip, SHUTDOWN_LOG_IO_ERROR);
+> -			xfs_buf_item_relse(bip);
+> -			ASSERT(bp->b_log_item == NULL);
+> -		}
+> +		xfs_buf_item_finish_stale(bip);
+>  		xfs_buf_relse(bp);
+>  		return;
+>  	}
 > --
 > 2.45.2
 > 
