@@ -1,89 +1,129 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A08491922F6;
-	Thu, 26 Jun 2025 13:57:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A53326057B
+	for <linux-xfs@vger.kernel.org>; Thu, 26 Jun 2025 22:22:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750946241; cv=none; b=sd2eZAyEaj2lhaf0Pwtn0XQXFoon4mRof2tFtjiYAfZLdNH1jsqGd+Le7RAVgZ9rv8yIgCc+TM6doyDK+rjS4XWzV6j6sMfhFyZQYe1Q21yfKhVBakMO9Cgzp4ZgtislYAIQE2ofOCiwOvLfZj/QN8/nzcB0rAMxh6Fj0lBbIuM=
+	t=1750976579; cv=none; b=GAoZyPWku7fj5sBqPmmhp6CSG7MILxSVKV/e4B+swa2noFkH2XIuuZ96+CrG4YtlcBGcNunnBr6PnJYTa4hEux7XEKmGK/7AfCVFmC4q+VOds8Me9AqEYKdJAjpU2L5UUr5qBRPkmJuG4l2MzmHiwEuo1AtuvgQXLdcrFGpB3rY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750946241; c=relaxed/simple;
-	bh=0c7ZHZLsdl7RngXjNl2NpX2L2Tdel9+PLaSBG+/n1XA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cu1w5KznyGw1a1CS4xnBWTUrzlk176gNs+l6rXVviwoMN0cua/ZFk9eJwci9Q8WEjNIFax1L6D9BExIE3VuCWsC78Mwbyxd78WIoq0MEeS2hrvJDZ8Nb3MfgVf0ImOKi9kXw8NuxEC6VbIiWTpXyIKpr0Zjj6O1R3J3wTB0YQM0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bSgH11TkwzYQv0F;
-	Thu, 26 Jun 2025 21:57:17 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 164801A236D;
-	Thu, 26 Jun 2025 21:57:16 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgD3W2C6UV1ofP7jQg--.28741S3;
-	Thu, 26 Jun 2025 21:57:15 +0800 (CST)
-Message-ID: <e2fe408c-23be-4cb4-9cb2-04178fad947f@huaweicloud.com>
-Date: Thu, 26 Jun 2025 21:57:14 +0800
+	s=arc-20240116; t=1750976579; c=relaxed/simple;
+	bh=a4jHsPRr5enaP3Vr+DhkEerO8CUTIgG6L5ox3Cj8o0w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AFhlmnz/Koa01BdPcamanfxbdGVDMcK9t5ys2Zz04CBDyv8z1homO+OXjTr/obM8hD6nFRluIfPXwyVmoWABBDArPnkfsIQyOmnS5pN4mKBfw7kbHmmkE1WCcwYWDtFKgxv/Q5zkQQWOx7BE5k16FO8pdnWD8pzLYIOfIQIae8I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=VAFFwuGD; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="VAFFwuGD"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-7490cb9a892so1095140b3a.0
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Jun 2025 15:22:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1750976577; x=1751581377; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ah/vUtoe84nETT7QauJ1wYRip4EoEebv4kUDWBtoCmM=;
+        b=VAFFwuGDD8bY3oRCBCUfGf8jbQlV6rpsv1wd2H1JPRkGo947DKeybg2sB+Nd3/FAGw
+         3fKXZ4eRVjyRs6LVwVNCWzk9W3lxv6xQc6c/Ijds1xKt2p3l5arUuz6B12mhuhBNknm+
+         1D9Chjl09QUyd0uU2m62y5+KsKw/rrjqHx/kZ90UsHi6qngAF640VQXR2TAkFoCc1ofI
+         URyGpTBmzq4EvsDnPi21aDkJJPkWVSQInJQ+/YhI9YfRconUlrqFL/sdOYi6r77cAr8N
+         /BXaisFG4uw25fIXJLQerGg3hJlgAWw84FtThfoNHUwmNZVSPv2fGhijEExwYQyPMMtK
+         Me6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750976577; x=1751581377;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ah/vUtoe84nETT7QauJ1wYRip4EoEebv4kUDWBtoCmM=;
+        b=TH7x9j9N+7h4+oJXNa2b0S/qcavYbKH+8XlvyVomJmgJ3e5kbgmaPU5J/YnajX9+10
+         KIwTv6HgVd4Ehybl78vPFmV4XCZ1weGompol1Bo/1pOHhRTGPwGtvQs2PZW8PtUtHO62
+         I2CaZOgYnv4jpskVIhN7sKtEeHEknXjGd/qqT8DYJOWsFBdAm5A34CIPq+xkFSKiP4z6
+         kVN4Udvhk5x2I6hnnt7D6U4lFHKlC50IKJPYHCyP00KCdjzOIth1Qm8O3+pAil1tE+Dn
+         69hTDJA/QNauA+FemBv7dsN+892kPJ0cl6lbO5M4eE+WzxKNHH0Yrrqpc5/DIHIivb/I
+         JHYw==
+X-Forwarded-Encrypted: i=1; AJvYcCXlor6qiHVhHf8wDppX8UK5Vadya20MSkPEDuBXhCeK9veBosN2ShqJfRyiu0pZU17dZ7aZnfQI4Ok=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyyEDyaqkizgF3LJFc3KAzkfNkoE6Nf5HKi5bGW3Vm1+KEXXKAz
+	iXH+t2yzzSsA5WkhMK51dG6B/RuEk+K8yFp9irEVgBFtJqq3tbrqNHl0pgrcXL5LB48=
+X-Gm-Gg: ASbGncv9uFdj7mND9S6FOxAwrjTpKZ65Ae/DJaiD0nEYCmaIRRGbfeY6YT0mBJxdxHg
+	dFcaShUZ1VAOwMOk0VM1BJNJEQeGIoEf0l8nTPZeS6M4bxIrLyCy8n1rxFO0Q/YJmaQXzuy1qwg
+	r21Z7TADJkp9dYJpUjpIdx7LdOeseI12/9Aw0AZvNNVz3yHzVxqrRmJQZAc5+uEHpW02zNpMIDi
+	MkI4ph1QJ1Z7iieylX1Y4MuhXN/8ANi7swW89T7uJwMuf+HbtB4Z8iEQ6WRtzQATAT1KI/Bn5wP
+	ph7nEiekwQCmpnI5Cwy2+twi0z4AVcuYRQPkE2Asaiv85z5d2AMlsOZcheXwFtjEKAhpvQKgHVV
+	JeIMBbHU8BugOk7RVJv/pWYTSXDd50bfvSuPVpc8zVFUiE2jj
+X-Google-Smtp-Source: AGHT+IGZqxbYMtRvgBqsBbXs9pkjdt0WrMR6P1AO8ewf1WoamoQJAJslXOV5lUTFgbrAr4tvqgyCnQ==
+X-Received: by 2002:a05:6a00:2294:b0:740:9a4b:fb2a with SMTP id d2e1a72fcca58-74af6f2fb92mr1155053b3a.20.1750976576844;
+        Thu, 26 Jun 2025 15:22:56 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-184-88.pa.nsw.optusnet.com.au. [49.180.184.88])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74af55786efsm645858b3a.82.2025.06.26.15.22.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 26 Jun 2025 15:22:56 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1uUuzd-00000003eTL-2bwB;
+	Fri, 27 Jun 2025 08:22:53 +1000
+Date: Fri, 27 Jun 2025 08:22:53 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Yafang Shao <laoar.shao@gmail.com>, Jeff Layton <jlayton@kernel.org>,
+	djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	yc1082463@gmail.com
+Subject: Re: [PATCH] xfs: report a writeback error on a read() call
+Message-ID: <aF3IPcneKbUe9IdH@dread.disaster.area>
+References: <51cc5d2e-b7b1-4e48-9a8c-d6563bbc5e2d@gmail.com>
+ <aFuezjrRG4L5dumV@infradead.org>
+ <88e4b40b61f0860c28409bd50e3ae5f1d9c0410b.camel@kernel.org>
+ <aFvbr6H3WUyix2fR@infradead.org>
+ <6ac46aa32eee969d9d8bc55be035247e3fdc0ac8.camel@kernel.org>
+ <aFvkAIg4pAeCO3PN@infradead.org>
+ <11735cf2e1893c14435c91264d58fae48be2973d.camel@kernel.org>
+ <CALOAHbDtFh5P_P0aTzaKRcwGfQmkrhgmk09BQ1tu9ZdXvKi8vQ@mail.gmail.com>
+ <aFzFR6zD7X1_9bWj@dread.disaster.area>
+ <aF0gEWcA6bX1eNzU@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/9] fallocate: introduce FALLOC_FL_WRITE_ZEROES flag
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, hch@lst.de
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, tytso@mit.edu,
- djwong@kernel.org, john.g.garry@oracle.com, bmarzins@redhat.com,
- chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com, brauner@kernel.org,
- yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
- yangerkun@huawei.com
-References: <20250619111806.3546162-1-yi.zhang@huaweicloud.com>
- <yq11praqywi.fsf@ca-mkp.ca.oracle.com>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <yq11praqywi.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:gCh0CgD3W2C6UV1ofP7jQg--.28741S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYV7kC6x804xWl14x267AKxVW5JVWrJwAF
-	c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
-	0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
-	wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
-	x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG
-	64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r
-	1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kI
-	c2xKxwCF04k20xvY0x0EwIxGrwCF54CYxVCY1x0262kKe7AKxVW8ZVWrXwCFx2IqxVCFs4
-	IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1r
-	MI8E67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJV
-	WUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
-	6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-	BIdaVFxhVjvjDU0xZFpf9x07UdxhLUUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aF0gEWcA6bX1eNzU@infradead.org>
 
-On 2025/6/23 23:08, Martin K. Petersen wrote:
+On Thu, Jun 26, 2025 at 03:25:21AM -0700, Christoph Hellwig wrote:
+> On Thu, Jun 26, 2025 at 01:57:59PM +1000, Dave Chinner wrote:
+> > writeback errors. Because scientists and data analysts that wrote
+> > programs to chew through large amounts of data didn't care about
+> > persistence of their data mid-processing. They just wanted what they
+> > wrote to be there the next time the processing pipeline read it.
 > 
-> Zhang,
-> 
->> This series implements the BLK_FEAT_WRITE_ZEROES_UNMAP feature and
->> BLK_FLAG_WRITE_ZEROES_UNMAP_DISABLED flag for SCSI, NVMe and
->> device-mapper drivers, and add the FALLOC_FL_WRITE_ZEROES and
->> STATX_ATTR_WRITE_ZEROES_UNMAP support for ext4 and raw bdev devices.
->> Any comments are welcome.
-> 
-> This looks OK to me.
-> 
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
+> That's only going to work if your RAM is as large as your permanent
+> storage :)
 
-Thank you, Martin and Christoph, for the patient review. I will update
-my test patches next.
+No, the old behaviour worked just fine with data sets larger than
+RAM. When there is a random writeback error in a big data stream,
+only those pages remained dirty and so never get tossed out of RAM. Hence
+when a re-read of that file range occurred, the data was already in
+RAM and the read succeeded, regardless of the fact that writeback
+has been failing.
 
-Best regards,
-Yi.
+IOWs the behavioural problems that the user is reporting are present
+because we got rid of the historic XFS writeback error handling
+(leave the dirty pages in RAM and retry again later) and replaced it
+with the historic Linux behaviour (toss the data out and mark the
+mapping with an error).
 
+The result of this change is exactly what the OP is having problems
+with - reread of a range that had a writeback failure returns zeroes
+or garbage, not the original data. If we kept the original XFS
+behaviour, the user applications would handle these flakey writeback
+failures just fine...
+
+Put simply: we used to have more robust writeback failure handling
+than we do now. That could (and probably should) be considered a
+regression....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
