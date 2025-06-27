@@ -1,39 +1,54 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 178C82EBDC4
-	for <linux-xfs@vger.kernel.org>; Fri, 27 Jun 2025 19:24:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7827621ADAE;
+	Fri, 27 Jun 2025 21:19:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751052275; cv=none; b=Zv+BFokjaOt/arJ7scaB71ku/noc6lF/0qcoEnoAyIX/Kz+5V0zwFe78V/0GA3VdPixzgl1OdZh0Z73mjyw3sYvUIm+eWq3w76GEUv9+rDF6ZKsBIOzavs8spV8ftO5fZjbeIswcpdy1W+CYRzcey04icXWQPRYWd64sJE3FWus=
+	t=1751059152; cv=none; b=DCT/1RSGvTK7Lcc03Nq8m8vtG0kEKHShrdZ1LOudWt5EouvAczrwctXhQWMJS86+IaOLyzl84b68il1Mdq5NCK/+uE9q2MK4uxkIaYHpeN316WNTGFsNoraoJD3EijU1a0uMu9pGUDWePVBN7iiugFot44qU/boaiWp2ce7PvO8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751052275; c=relaxed/simple;
-	bh=ysxkERBY/Izo2swdGLkOr0uxnGwGMUx3tZKiW8dkUYU=;
+	s=arc-20240116; t=1751059152; c=relaxed/simple;
+	bh=CSDmqDjEEPtE67ns1OANFYqHt5N2irhJTWhyp+Bnppk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tP+CGWmmKSSnVPzMPdf/lrYVm42lISF8aCgDvxIgZLqRaDl4KY/98DSG3PCKvDxPpgqRGTZgSlfpxRlBTWHrIrPnEql8w9PkzUzhZ/5eXLC/kcWgLmEhprJDlFvjV0Pv2VtSy5R2GX55+KWmW/cI9TP1/UwUg9Lcqp2uEvlM/0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OCu3fUMx; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=O96Ibk8skI8NIrZS765idLk4mM/6G97EL9EO67QhxakK27AknhYzIxAgD4vl4pWaBp+6yzaxAxp2y+wYdM+7uS3GAKA/1AVB1R3+P+bp21t99qUZKiXufKO7+DW9vuBOLtuX/Y+Rumnch511Upck5YUbulw1PdZViFoXShoM56o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=V2yC73wF; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OCu3fUMx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAA05C4CEF7;
-	Fri, 27 Jun 2025 19:24:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751052273;
-	bh=ysxkERBY/Izo2swdGLkOr0uxnGwGMUx3tZKiW8dkUYU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OCu3fUMxgHiRLWFMKEKgey6IPl87AEYluB9XoeGgw9TEj7wZJWcRKJoK7jN+uLhF1
-	 mCn9diIvzOLY+aqtqj+Do5kWqxvsPXrirP/W5gKnbwzqxkyhsZ95M1riP4SaabsX54
-	 jc0ZRvUQ69gWhTZtwI5zoBtr/b4Ilm3Cif/XrpKMq2vwG9PPLDELlzoOjH1RyxUuhv
-	 oRju0QUkS/z3DXpyx/4V1iGKedVZkYXmEBmOVJc7CB0HI52V+uj0xx7jmdkScMDWom
-	 LledmWaWs5MHGl8yqAxa7HnGaEAfAh8VcyUQ5/eFFhzJRGpquoSaQ0anOPilk7wpaF
-	 5OKKhZyIN5qfw==
-Date: Fri, 27 Jun 2025 21:24:29 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Andi Kleen <andi@firstfloor.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: IO error handling in xfs_repair
-Message-ID: <77tpktkf5crzil62efoq5rxrzsi2rdz6axatvugj2zfv7qecar@e6c57jiebhmi>
-References: <RqbhOWAnTss1XJ3HuLRM056kHzvQab82moL4vq9btD1T0gH6JOPtM2N97utM_IQ1fwl65CM4Qoo90BmpcE7mJg==@protonmail.internalid>
- <aF5ArCN0M9940yK7@firstfloor.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="V2yC73wF"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=TK6YsxLqexPCwLZ//8Bes1uH4QD/vwQuoEwg7UlOgrc=; b=V2yC73wF9tfyUWoyl4YZZwayUa
+	3S/LisvhLTv+iP6YAqO7t7bEI10d7/yNV7xh/4K2f/jfmUTzE1lS9gDN3V9ji+gx1pNHD/lEyozou
+	MmT3K/BClKIqeCXdsFOYY5hMYiuVORKPNT3Pq09vuI6kHHo2QEbdfgdBxLCXM2ofp2Ofvua5flAyJ
+	1REKmhqmyf+NWavmLa25R+9V3AHXJe44DuSdO3PiZJ9mCCkLLSKRTPtyVIdax9ZkQ3YIfKD6VrUQk
+	Bc/3y3ScyurVqPMe5X4uW6Ai2QbOFrGSvxPoWOkUGcAN2preRlEz5wc55PWAR3IgMByNyEZHdDItD
+	W703Mxhw==;
+Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uVGTQ-0000000F0iH-2ZlW;
+	Fri, 27 Jun 2025 21:19:04 +0000
+Date: Fri, 27 Jun 2025 22:19:04 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Yafang Shao <laoar.shao@gmail.com>,
+	Jeff Layton <jlayton@kernel.org>, djwong@kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, yc1082463@gmail.com
+Subject: Re: [PATCH] xfs: report a writeback error on a read() call
+Message-ID: <aF8KyEQIhA-7GfAq@casper.infradead.org>
+References: <aFuezjrRG4L5dumV@infradead.org>
+ <88e4b40b61f0860c28409bd50e3ae5f1d9c0410b.camel@kernel.org>
+ <aFvbr6H3WUyix2fR@infradead.org>
+ <6ac46aa32eee969d9d8bc55be035247e3fdc0ac8.camel@kernel.org>
+ <aFvkAIg4pAeCO3PN@infradead.org>
+ <11735cf2e1893c14435c91264d58fae48be2973d.camel@kernel.org>
+ <CALOAHbDtFh5P_P0aTzaKRcwGfQmkrhgmk09BQ1tu9ZdXvKi8vQ@mail.gmail.com>
+ <aFzFR6zD7X1_9bWj@dread.disaster.area>
+ <aF0gEWcA6bX1eNzU@infradead.org>
+ <aF3IPcneKbUe9IdH@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,90 +57,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aF5ArCN0M9940yK7@firstfloor.org>
+In-Reply-To: <aF3IPcneKbUe9IdH@dread.disaster.area>
 
-On Thu, Jun 26, 2025 at 11:56:44PM -0700, Andi Kleen wrote:
-> Hi,
+On Fri, Jun 27, 2025 at 08:22:53AM +1000, Dave Chinner wrote:
+> On Thu, Jun 26, 2025 at 03:25:21AM -0700, Christoph Hellwig wrote:
+> > On Thu, Jun 26, 2025 at 01:57:59PM +1000, Dave Chinner wrote:
+> > > writeback errors. Because scientists and data analysts that wrote
+> > > programs to chew through large amounts of data didn't care about
+> > > persistence of their data mid-processing. They just wanted what they
+> > > wrote to be there the next time the processing pipeline read it.
+> > 
+> > That's only going to work if your RAM is as large as your permanent
+> > storage :)
 > 
-> I have a spinning disk with XFS that corrupted a sector containing some inodes.
-> Reading it always gave a IO error (ENODATA).
+> No, the old behaviour worked just fine with data sets larger than
+> RAM. When there is a random writeback error in a big data stream,
+> only those pages remained dirty and so never get tossed out of RAM. Hence
+> when a re-read of that file range occurred, the data was already in
+> RAM and the read succeeded, regardless of the fact that writeback
+> has been failing.
 > 
-> xfs_repair unfortunately couldn't handle this at all, running into this
-> gem:
+> IOWs the behavioural problems that the user is reporting are present
+> because we got rid of the historic XFS writeback error handling
+> (leave the dirty pages in RAM and retry again later) and replaced it
+> with the historic Linux behaviour (toss the data out and mark the
+> mapping with an error).
 > 
->          if (process_inode_chunk(mp, agno, num_inos, first_ino_rec,
->                                 ino_discovery, check_dups, extra_attr_check,
->                                 &bogus))  {
->                         /* XXX - i/o error, we've got a problem */
->                         abort();
->          }
+> The result of this change is exactly what the OP is having problems
+> with - reread of a range that had a writeback failure returns zeroes
+> or garbage, not the original data. If we kept the original XFS
+> behaviour, the user applications would handle these flakey writeback
+> failures just fine...
 > 
-> TBH I was a bit shocked that XFS repair doesn't handle IO errors.
-> Surely that's a common occurrence?
+> Put simply: we used to have more robust writeback failure handling
+> than we do now. That could (and probably should) be considered a
+> regression....
 
-Hi Andi.
-
-This behavior is well documented on xfs_repair man page:
-
-"
-Disk Errors
-	xfs_repair  aborts on most disk I/O errors. Therefore, if you are
-	trying to repair a filesystem that was damaged due to a disk drive
-	failure, steps should be taken to ensure that all blocks in the
-	filesystem are readable and writable before attempting to use
-	xfs_repair to repair the filesystem.
-	A  possible  method  is  using dd(8) to copy the data onto a good disk.
-"
-I don't think IO errors could be classified as a common occurrence.
-
-> 
-> Anyways, what I ended up doing was to use strace to get the seek offset
-> of the bad sector and then write a little python program to clear the block
-> (which then likely got remapped, or simply rewritten on the medium),
-> and apart from a few lost inodes everything was fine.
-> 
-> It seems that xfs_repair should have an option to clear erroring blocks that
-> it encounters? I realize that this option could be dangerous, but in many cases
-> it would seem like the only way to recover.
-
-I believe one of the problems is xfsprogs can't really pinpoint what
-happened. Could be a transient failure due a link problem or a bad
-block on disk, or whatever else. So it has been designed to bail out and
-let the admin handle it.
-
-IMO Adding an option to force to 'clear errored blocks', which basically
-means forcing a write() on the block so that it could possibly be
-relocated by the disk's firmware is not a good strategy.
-Depending how many bad sectors are in the disk, or the nature of the IO
-error, this would might end up damaging the filesystem beyond recovery,
-as you mentioned yourself.
-So, in some cases, you either gotta try to force the disk to relocate
-the block manually or copy the still not bad data somewhere else, both
-achievable with `dd` for example.
-
-> 
-> Or at a minimum print the seek offset on an error so that it can be cleared manually.
-> 
-
-This seems weird. If xfs bailed where you pointed, calling
-process_inode_chunk(), this likely bailed from here:
-
-
-if (error) {
-	do_warn(_("cannot read inode %" PRIu64 ", disk block %" PRId64 ", cnt %d\n"),
-		XFS_AGINO_TO_INO(mp, agno, first_irec->ino_startnum),
-		XFS_AGB_TO_DADDR(mp, agno, agbno),
-		XFS_FSB_TO_BB(mp,
-			M_IGEO(mp)->blocks_per_cluster));
-	while (bp_index > 0) {
-		bp_index--;
-		libxfs_buf_relse(bplist[bp_index]);
-	}
-	free(bplist);
-	return(1);
-}
-
-process_inode_chunk() was supposed to log the inode and disk block,
-perhaps the abort() prevented the stderr buffer to be flushed, do you
-still have the whole xfs_repair output to the point where it failed?
-
+When you say "used to" and "the old behaviour", when are you referring
+to, exactly?  When I came to XFS/iomap, the behaviour on writeback errors
+was to clear the Uptodate flag on writeback, which definitely did throw
+away the written data and forced a re-read from storage.
