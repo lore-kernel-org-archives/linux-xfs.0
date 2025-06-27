@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B714F221FA4;
-	Fri, 27 Jun 2025 08:26:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81CC614A82;
+	Fri, 27 Jun 2025 08:29:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751012795; cv=none; b=WT+IYmGakzbZtcQWTcVuGHacZQM5nNCl16gOEZSYy4R744aaaCRS5WYpCf5dOpdrE1L00pOTc1Q8ztftAeBqNVFw64eiEDWhZG3IWyfH2sGUXcFitkE5FDBY9VwZRuV8p/mYm4GAx1WxkoLW52tw0LW6tZOjuFuzXw6PxG42lqc=
+	t=1751012985; cv=none; b=Zjgeb3e8ojj24DKJtqwUOhl44zFvv23tzUna3OR1Deh9BqEVmJz4g09sbqXi+mytw8nWJ1Qd9/Kx/EgSl1DYmaVA6uIgTiBWnX2Z7P/FiPWxAvtVyh56DnRFaIyFZTay0NrmBtmB5NIIlmf/hU8hPoTYAimV8APz3aUIdfmJgrk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751012795; c=relaxed/simple;
-	bh=KxJpOYD+3nHKS3dwy4PM75505XQKwtvSJxp4O8pwOTA=;
+	s=arc-20240116; t=1751012985; c=relaxed/simple;
+	bh=S+0b6RBp5G0qxNe663dMVIN5ss+FqxgnHIgtbU+oHNE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aOBVKZJLx0O/j+UhhUChB+a7Vciv76G2gG5HnlZpEcDB+qP5xAEiEeEquzkhdEUVfzZkV9nIZw0KznpMvLR+BTJkJ/B2eh7DmL1tPAnRd4i+rfTGdrj4yeJPoZ8PVXxyG/B8zTZQwmSmZguXk8yirx8+ZMt3011bcttg7lSC7Uw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fsyw0vXR; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=Ur/B28eU8CH+2hvMTy3hkwZx+SMPrKnqWXxQz03AWcoX7+tBkNNBpZAlq0M/5O2qMOzmWPTdPF+R8HXriW592WHnwqNwYT4XRVYTQGdEUbPeTyO2D3lhcxC/66VydBe0uPDf3Vu1SFdUuNhzYqnGX90z0MH1m++9/6FhP9ePGVg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hVFWeBEC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fsyw0vXR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15503C4CEE3;
-	Fri, 27 Jun 2025 08:26:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hVFWeBEC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0508C4CEE3;
+	Fri, 27 Jun 2025 08:29:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751012795;
-	bh=KxJpOYD+3nHKS3dwy4PM75505XQKwtvSJxp4O8pwOTA=;
+	s=k20201202; t=1751012985;
+	bh=S+0b6RBp5G0qxNe663dMVIN5ss+FqxgnHIgtbU+oHNE=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Fsyw0vXRqV/SFIoD6NxzRCy1M+vH+xngMBKnYR3icuDCPuQLonUT3nuP87ItKWC9h
-	 LDg614GVm24IsZx/LJE8Abl/X4XASFxdT/FJdhHFqtnlzu3HtF7OU3SIHpnC6VIuOp
-	 Lg5gQbJ2Q/bvIkaYVLPJneZiXadtiXCk+e8Xcwc1NVUjxVlENMXJOWPhdW2d0ie7XR
-	 9lGNBtkf6AmzwxctidSmfOuCwErjbM0tv/Ps/mEB28O6mkVwyURAl5X0A4xoYYFqhr
-	 P6FjwJ4b36pHDowkZt3qgOKo8xQWSQ26TP1aSMhpNNWD0cik05T9QVP/K5yJKOHM7Z
-	 tspcAKrhgSSXw==
-Message-ID: <cfa09ea7-a446-4bf5-9c34-cbc3092ce986@kernel.org>
-Date: Fri, 27 Jun 2025 17:26:33 +0900
+	b=hVFWeBECPOImrvSE4B/jZTZ8hCfORPxnmPocap+XkdS42dMlPAu3cMJWN8ArLwHlV
+	 8qHk37W/kLJ9U4DcO8BMApOGk9VVbdL/RyNY6Wz/4K16oidde2YqqCR5X8kk92eUnN
+	 w0QGHhsFDubsVzr8zt5Y9Wt9cORKRJsumIfi3AMh3+G/TbotVYzY4p7nMfqnkR2WYt
+	 t3QjWwVKbiRhRsvJ2XaaBUIdgXkbP4ZImC+/GuRw9tzalQGiLmrvPP2hsJN8WE8L6n
+	 0nN4EbriPkkGTcVoFXdFYlmLf95ujwkJge3qZlT7vHre/gbH3JOxYUPA3knd/ogqvg
+	 9+BoKvviFXpXw==
+Message-ID: <df3ba688-2b76-4cb8-b47d-abbfbbd29e68@kernel.org>
+Date: Fri, 27 Jun 2025 17:29:42 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,29 +35,28 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 04/12] iomap: hide ioends from the generic writeback code
+Subject: Re: [PATCH 10/12] iomap: replace iomap_folio_ops with iomap_write_ops
 To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
  Joanne Koong <joannelkoong@gmail.com>, linux-xfs@vger.kernel.org,
  linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
  linux-block@vger.kernel.org, gfs2@lists.linux.dev
 References: <20250627070328.975394-1-hch@lst.de>
- <20250627070328.975394-5-hch@lst.de>
+ <20250627070328.975394-11-hch@lst.de>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20250627070328.975394-5-hch@lst.de>
+In-Reply-To: <20250627070328.975394-11-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 6/27/25 16:02, Christoph Hellwig wrote:
-> Replace the ioend pointer in iomap_writeback_ctx with a void *wb_ctx
-> one to facilitate non-block, non-ioend writeback for use.  Rename
-> the submit_ioend method to writeback_submit and make it mandatory so
-> that the generic writeback code stops seeing ioends and bios.
+> The iomap_folio_ops are only used for buffered writes, including
+> the zero and unshare variants.  Rename them to iomap_write_ops
+> to better describe the usage, and pass them through the callchain
+> like the other operation specific methods instead of through the
+> iomap.
 > 
-> Co-developed-by: Joanne Koong <joannelkoong@gmail.com>
-> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Acked-by: Damien Le Moal <dlemoal@kernel.org>
