@@ -1,47 +1,47 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6001B2E92DC
-	for <linux-xfs@vger.kernel.org>; Fri, 27 Jun 2025 15:11:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05A75EEDE
+	for <linux-xfs@vger.kernel.org>; Fri, 27 Jun 2025 16:34:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751037106; cv=none; b=BNvQIiwNkmHs8e75q47FIZdNMNytC4L4EA15/A21HhvBKG3k3iSwGqhfSVoe7sBEyD6RCQefNsQvrUFN1kog+ZtD7Jv+r/qbq0VdATESH8JZ2/viwc+jUgQsASmAwZCz/FdLqzNeXEAwYbP9F9q0ZR1WOMUoOir68IFIWscZt9U=
+	t=1751042093; cv=none; b=j2XEUi824e1sq8Nqtspftj9Dmu/xFgAukDq5T2ICy8SVB8XEPJn+/2175MfYytnH+G6c0gRwjXpX0G4Uo8kTYZJ1m1nLdIJeCvb07Ka4r+rn0kvPknlxHLkTOYPq8zdE8/GmX/OFF+LxNn5xkRKqgDtCWhWaRoKYYxKsFexJ2hk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751037106; c=relaxed/simple;
-	bh=MSR1rZ6axrEW/nag1GsZtrsc2NYT0HlHk8EAzHpGXpQ=;
+	s=arc-20240116; t=1751042093; c=relaxed/simple;
+	bh=rHkOemDdCFfylqTQV5hBs6gNxOJZzjk85RHJW/FVCoI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MEg2TAzPXHooGX4asT15TFKSRBK4CnOcpx2JH+TiRkQkvdAug1N4fiBTsPaF/MGVv4vJCKW3Xreelv9VDcTulxDhadUIMkrxZtmJicgYwopzPNRyLTB/rEQhUYWA4pDf9ANAS4XZS3VrFPBZi0xBVx41Sow8Kc8acDGW3zhsBJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IKhMGgs5; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=PuSBt3njfjGrzHzIShyDhBmJeBsDvtYHwi0mqp96cPYojvqtF3Gjcy/RNZM95M60IwA6H9EHNYTjYx2UDx7MG6nZN0oOmnJtGkji2sQXM5tjKsKmUCzP9sui9s3qZhg0WTXOJq4aL/bgnNOnTW+rsF0QOexFoiAmEFMFpB4ZFFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FLecwyxN; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IKhMGgs5"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FLecwyxN"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1751037103;
+	s=mimecast20190719; t=1751042090;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=H5x/w8e+UV/VFoG6Hnar4e49cwam42RN12S0+F3Q+Qg=;
-	b=IKhMGgs5k8UiBaKwnqoV7hm5hBsWBPl7YYKt3wFFsQjo7rIvU/racF2fxDLo1M9nVC9E3y
-	VquCEIQuo4pyAQiOmpxvlxwAaZ77MYQxxuOjRf0yR8rlvmfn4EsETGeM9IFLQHn7gDgeHd
-	qrewhbW0Q5KWvZoONecJ9wTivIUqYeA=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=spbMVZZxbYkDM6CEf0Wf+Dn5JHCUiY4z7C7IPr5gz2s=;
+	b=FLecwyxNX2iwES++MqoCIK42hqkx/GyzsIG0l5RLDrc+lZrMad2gxXHgXKluMZwbdMIUdk
+	RliDxyKuo4a+T6ZA7ZHmFGf3ribTWpfwcOF2gbaSa707maW/rNV7r7H1gJMjQ5DoBb4Zbu
+	xRGy64U4bgQ6/GX6FT0i8gShp04jz9s=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-417-8o15-kfDNtOKXa3iBiaWfQ-1; Fri,
- 27 Jun 2025 11:11:40 -0400
-X-MC-Unique: 8o15-kfDNtOKXa3iBiaWfQ-1
-X-Mimecast-MFC-AGG-ID: 8o15-kfDNtOKXa3iBiaWfQ_1751037098
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-103-e1K8rw1jNh2htVdesIEhCA-1; Fri,
+ 27 Jun 2025 12:34:49 -0400
+X-MC-Unique: e1K8rw1jNh2htVdesIEhCA-1
+X-Mimecast-MFC-AGG-ID: e1K8rw1jNh2htVdesIEhCA_1751042087
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A7D101809C9C;
-	Fri, 27 Jun 2025 15:11:38 +0000 (UTC)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8740C19560AD;
+	Fri, 27 Jun 2025 16:34:47 +0000 (UTC)
 Received: from bfoster (unknown [10.22.64.142])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E9B1019560A7;
-	Fri, 27 Jun 2025 15:11:36 +0000 (UTC)
-Date: Fri, 27 Jun 2025 11:15:14 -0400
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AE817180045C;
+	Fri, 27 Jun 2025 16:34:45 +0000 (UTC)
+Date: Fri, 27 Jun 2025 12:38:22 -0400
 From: Brian Foster <bfoster@redhat.com>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Christian Brauner <brauner@kernel.org>,
@@ -49,10 +49,11 @@ Cc: Christian Brauner <brauner@kernel.org>,
 	Joanne Koong <joannelkoong@gmail.com>, linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
 	linux-block@vger.kernel.org, gfs2@lists.linux.dev
-Subject: Re: [PATCH 06/12] iomap: move all ioend handling to ioend.c
-Message-ID: <aF61grplkxy7RXie@bfoster>
+Subject: Re: [PATCH 07/12] iomap: rename iomap_writepage_map to
+ iomap_writeback_folio
+Message-ID: <aF7I_hTYx8yr0lRa@bfoster>
 References: <20250627070328.975394-1-hch@lst.de>
- <20250627070328.975394-7-hch@lst.de>
+ <20250627070328.975394-8-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -61,270 +62,78 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250627070328.975394-7-hch@lst.de>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+In-Reply-To: <20250627070328.975394-8-hch@lst.de>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Fri, Jun 27, 2025 at 09:02:39AM +0200, Christoph Hellwig wrote:
-> Now that the writeback code has the proper abstractions, all the ioend
-> code can be self-contained in ioend.c.
+On Fri, Jun 27, 2025 at 09:02:40AM +0200, Christoph Hellwig wrote:
+> ->writepage is gone, and our naming wasn't always that great to start
+> with.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Joanne Koong <joannelkoong@gmail.com>
 > ---
->  fs/iomap/buffered-io.c | 215 ----------------------------------------
->  fs/iomap/internal.h    |   1 -
->  fs/iomap/ioend.c       | 220 ++++++++++++++++++++++++++++++++++++++++-
->  3 files changed, 219 insertions(+), 217 deletions(-)
-> 
-...
-> diff --git a/fs/iomap/ioend.c b/fs/iomap/ioend.c
-> index 18894ebba6db..ce0a4c13d008 100644
-> --- a/fs/iomap/ioend.c
-> +++ b/fs/iomap/ioend.c
-> @@ -1,10 +1,13 @@
->  // SPDX-License-Identifier: GPL-2.0
->  /*
-> - * Copyright (c) 2024-2025 Christoph Hellwig.
-> + * Copyright (c) 2016-2025 Christoph Hellwig.
->   */
->  #include <linux/iomap.h>
->  #include <linux/list_sort.h>
-> +#include <linux/pagemap.h>
-> +#include <linux/writeback.h>
->  #include "internal.h"
-> +#include "trace.h"
-
-Can any of these now be dropped from buffered-io.c?
-
-Otherwise LGTM:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  
->  struct bio_set iomap_ioend_bioset;
->  EXPORT_SYMBOL_GPL(iomap_ioend_bioset);
-> @@ -28,6 +31,221 @@ struct iomap_ioend *iomap_init_ioend(struct inode *inode,
->  }
->  EXPORT_SYMBOL_GPL(iomap_init_ioend);
->  
-> +/*
-> + * We're now finished for good with this ioend structure.  Update the folio
-> + * state, release holds on bios, and finally free up memory.  Do not use the
-> + * ioend after this.
-> + */
-> +static u32 iomap_finish_ioend_buffered(struct iomap_ioend *ioend)
-> +{
-> +	struct inode *inode = ioend->io_inode;
-> +	struct bio *bio = &ioend->io_bio;
-> +	struct folio_iter fi;
-> +	u32 folio_count = 0;
-> +
-> +	if (ioend->io_error) {
-> +		mapping_set_error(inode->i_mapping, ioend->io_error);
-> +		if (!bio_flagged(bio, BIO_QUIET)) {
-> +			pr_err_ratelimited(
-> +"%s: writeback error on inode %lu, offset %lld, sector %llu",
-> +				inode->i_sb->s_id, inode->i_ino,
-> +				ioend->io_offset, ioend->io_sector);
-> +		}
-> +	}
-> +
-> +	/* walk all folios in bio, ending page IO on them */
-> +	bio_for_each_folio_all(fi, bio) {
-> +		iomap_finish_folio_write(inode, fi.folio, fi.length);
-> +		folio_count++;
-> +	}
-> +
-> +	bio_put(bio);	/* frees the ioend */
-> +	return folio_count;
-> +}
-> +
-> +static void ioend_writeback_end_bio(struct bio *bio)
-> +{
-> +	struct iomap_ioend *ioend = iomap_ioend_from_bio(bio);
-> +
-> +	ioend->io_error = blk_status_to_errno(bio->bi_status);
-> +	iomap_finish_ioend_buffered(ioend);
-> +}
-> +
-> +/*
-> + * We cannot cancel the ioend directly in case of an error, so call the bio end
-> + * I/O handler with the error status here to run the normal I/O completion
-> + * handler.
-> + */
-> +int ioend_writeback_submit(struct iomap_writeback_ctx *wpc, int error)
-> +{
-> +	struct iomap_ioend *ioend = wpc->wb_ctx;
-> +
-> +	if (!ioend->io_bio.bi_end_io)
-> +		ioend->io_bio.bi_end_io = ioend_writeback_end_bio;
-> +
-> +	if (WARN_ON_ONCE(wpc->iomap.flags & IOMAP_F_ANON_WRITE))
-> +		error = -EIO;
-> +
-> +	if (error) {
-> +		ioend->io_bio.bi_status = errno_to_blk_status(error);
-> +		bio_endio(&ioend->io_bio);
-> +		return error;
-> +	}
-> +
-> +	submit_bio(&ioend->io_bio);
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(ioend_writeback_submit);
-> +
-> +static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writeback_ctx *wpc,
-> +		loff_t pos, u16 ioend_flags)
-> +{
-> +	struct bio *bio;
-> +
-> +	bio = bio_alloc_bioset(wpc->iomap.bdev, BIO_MAX_VECS,
-> +			       REQ_OP_WRITE | wbc_to_write_flags(wpc->wbc),
-> +			       GFP_NOFS, &iomap_ioend_bioset);
-> +	bio->bi_iter.bi_sector = iomap_sector(&wpc->iomap, pos);
-> +	bio->bi_write_hint = wpc->inode->i_write_hint;
-> +	wbc_init_bio(wpc->wbc, bio);
-> +	wpc->nr_folios = 0;
-> +	return iomap_init_ioend(wpc->inode, bio, pos, ioend_flags);
-> +}
-> +
-> +static bool iomap_can_add_to_ioend(struct iomap_writeback_ctx *wpc, loff_t pos,
-> +		u16 ioend_flags)
-> +{
-> +	struct iomap_ioend *ioend = wpc->wb_ctx;
-> +
-> +	if (ioend_flags & IOMAP_IOEND_BOUNDARY)
-> +		return false;
-> +	if ((ioend_flags & IOMAP_IOEND_NOMERGE_FLAGS) !=
-> +	    (ioend->io_flags & IOMAP_IOEND_NOMERGE_FLAGS))
-> +		return false;
-> +	if (pos != ioend->io_offset + ioend->io_size)
-> +		return false;
-> +	if (!(wpc->iomap.flags & IOMAP_F_ANON_WRITE) &&
-> +	    iomap_sector(&wpc->iomap, pos) != bio_end_sector(&ioend->io_bio))
-> +		return false;
-> +	/*
-> +	 * Limit ioend bio chain lengths to minimise IO completion latency. This
-> +	 * also prevents long tight loops ending page writeback on all the
-> +	 * folios in the ioend.
-> +	 */
-> +	if (wpc->nr_folios >= IOEND_BATCH_SIZE)
-> +		return false;
-> +	return true;
-> +}
-> +
-> +/*
-> + * Test to see if we have an existing ioend structure that we could append to
-> + * first; otherwise finish off the current ioend and start another.
-> + *
-> + * If a new ioend is created and cached, the old ioend is submitted to the block
-> + * layer instantly.  Batching optimisations are provided by higher level block
-> + * plugging.
-> + *
-> + * At the end of a writeback pass, there will be a cached ioend remaining on the
-> + * writepage context that the caller will need to submit.
-> + */
-> +ssize_t iomap_add_to_ioend(struct iomap_writeback_ctx *wpc, struct folio *folio,
-> +		loff_t pos, loff_t end_pos, unsigned int dirty_len)
-> +{
-> +	struct iomap_ioend *ioend = wpc->wb_ctx;
-> +	size_t poff = offset_in_folio(folio, pos);
-> +	unsigned int ioend_flags = 0;
-> +	unsigned int map_len = min_t(u64, dirty_len,
-> +		wpc->iomap.offset + wpc->iomap.length - pos);
-> +	int error;
-> +
-> +	trace_iomap_add_to_ioend(wpc->inode, pos, dirty_len, &wpc->iomap);
-> +
-> +	WARN_ON_ONCE(!folio->private && map_len < dirty_len);
-> +
-> +	switch (wpc->iomap.type) {
-> +	case IOMAP_INLINE:
-> +		WARN_ON_ONCE(1);
-> +		return -EIO;
-> +	case IOMAP_HOLE:
-> +		return map_len;
-> +	default:
-> +		break;
-> +	}
-> +
-> +	if (wpc->iomap.type == IOMAP_UNWRITTEN)
-> +		ioend_flags |= IOMAP_IOEND_UNWRITTEN;
-> +	if (wpc->iomap.flags & IOMAP_F_SHARED)
-> +		ioend_flags |= IOMAP_IOEND_SHARED;
-> +	if (folio_test_dropbehind(folio))
-> +		ioend_flags |= IOMAP_IOEND_DONTCACHE;
-> +	if (pos == wpc->iomap.offset && (wpc->iomap.flags & IOMAP_F_BOUNDARY))
-> +		ioend_flags |= IOMAP_IOEND_BOUNDARY;
-> +
-> +	if (!ioend || !iomap_can_add_to_ioend(wpc, pos, ioend_flags)) {
-> +new_ioend:
-> +		if (ioend) {
-> +			error = wpc->ops->writeback_submit(wpc, 0);
-> +			if (error)
-> +				return error;
-> +		}
-> +		wpc->wb_ctx = ioend = iomap_alloc_ioend(wpc, pos, ioend_flags);
-> +	}
-> +
-> +	if (!bio_add_folio(&ioend->io_bio, folio, map_len, poff))
-> +		goto new_ioend;
-> +
-> +	iomap_start_folio_write(wpc->inode, folio, map_len);
-> +
-> +	/*
-> +	 * Clamp io_offset and io_size to the incore EOF so that ondisk
-> +	 * file size updates in the ioend completion are byte-accurate.
-> +	 * This avoids recovering files with zeroed tail regions when
-> +	 * writeback races with appending writes:
-> +	 *
-> +	 *    Thread 1:                  Thread 2:
-> +	 *    ------------               -----------
-> +	 *    write [A, A+B]
-> +	 *    update inode size to A+B
-> +	 *    submit I/O [A, A+BS]
-> +	 *                               write [A+B, A+B+C]
-> +	 *                               update inode size to A+B+C
-> +	 *    <I/O completes, updates disk size to min(A+B+C, A+BS)>
-> +	 *    <power failure>
-> +	 *
-> +	 *  After reboot:
-> +	 *    1) with A+B+C < A+BS, the file has zero padding in range
-> +	 *       [A+B, A+B+C]
-> +	 *
-> +	 *    |<     Block Size (BS)   >|
-> +	 *    |DDDDDDDDDDDD0000000000000|
-> +	 *    ^           ^        ^
-> +	 *    A          A+B     A+B+C
-> +	 *                       (EOF)
-> +	 *
-> +	 *    2) with A+B+C > A+BS, the file has zero padding in range
-> +	 *       [A+B, A+BS]
-> +	 *
-> +	 *    |<     Block Size (BS)   >|<     Block Size (BS)    >|
-> +	 *    |DDDDDDDDDDDD0000000000000|00000000000000000000000000|
-> +	 *    ^           ^             ^           ^
-> +	 *    A          A+B           A+BS       A+B+C
-> +	 *                             (EOF)
-> +	 *
-> +	 *    D = Valid Data
-> +	 *    0 = Zero Padding
-> +	 *
-> +	 * Note that this defeats the ability to chain the ioends of
-> +	 * appending writes.
-> +	 */
-> +	ioend->io_size += map_len;
-> +	if (ioend->io_offset + ioend->io_size > end_pos)
-> +		ioend->io_size = end_pos - ioend->io_offset;
-> +
-> +	wbc_account_cgroup_owner(wpc->wbc, folio, map_len);
-> +	return map_len;
-> +}
-> +EXPORT_SYMBOL_GPL(iomap_add_to_ioend);
-> +
->  static u32 iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+>  fs/iomap/buffered-io.c | 10 +++++-----
+>  fs/iomap/trace.h       |  2 +-
+>  2 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 3e0ce6f42df5..c28eb6a6eee4 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1586,7 +1586,7 @@ static int iomap_writeback_range(struct iomap_writeback_ctx *wpc,
+>   * If the folio is entirely beyond i_size, return false.  If it straddles
+>   * i_size, adjust end_pos and zero all data beyond i_size.
+>   */
+> -static bool iomap_writepage_handle_eof(struct folio *folio, struct inode *inode,
+> +static bool iomap_writeback_handle_eof(struct folio *folio, struct inode *inode,
+>  		u64 *end_pos)
 >  {
->  	if (ioend->io_parent) {
+>  	u64 isize = i_size_read(inode);
+> @@ -1638,7 +1638,7 @@ static bool iomap_writepage_handle_eof(struct folio *folio, struct inode *inode,
+>  	return true;
+>  }
+>  
+> -static int iomap_writepage_map(struct iomap_writeback_ctx *wpc,
+> +static int iomap_writeback_folio(struct iomap_writeback_ctx *wpc,
+>  		struct folio *folio)
+>  {
+>  	struct iomap_folio_state *ifs = folio->private;
+> @@ -1654,9 +1654,9 @@ static int iomap_writepage_map(struct iomap_writeback_ctx *wpc,
+>  	WARN_ON_ONCE(folio_test_dirty(folio));
+>  	WARN_ON_ONCE(folio_test_writeback(folio));
+>  
+> -	trace_iomap_writepage(inode, pos, folio_size(folio));
+> +	trace_iomap_writeback_folio(inode, pos, folio_size(folio));
+>  
+> -	if (!iomap_writepage_handle_eof(folio, inode, &end_pos)) {
+> +	if (!iomap_writeback_handle_eof(folio, inode, &end_pos)) {
+>  		folio_unlock(folio);
+>  		return 0;
+>  	}
+> @@ -1741,7 +1741,7 @@ iomap_writepages(struct iomap_writeback_ctx *wpc)
+>  		return -EIO;
+>  
+>  	while ((folio = writeback_iter(mapping, wpc->wbc, folio, &error)))
+> -		error = iomap_writepage_map(wpc, folio);
+> +		error = iomap_writeback_folio(wpc, folio);
+>  
+>  	/*
+>  	 * If @error is non-zero, it means that we have a situation where some
+> diff --git a/fs/iomap/trace.h b/fs/iomap/trace.h
+> index aaea02c9560a..6ad66e6ba653 100644
+> --- a/fs/iomap/trace.h
+> +++ b/fs/iomap/trace.h
+> @@ -79,7 +79,7 @@ DECLARE_EVENT_CLASS(iomap_range_class,
+>  DEFINE_EVENT(iomap_range_class, name,	\
+>  	TP_PROTO(struct inode *inode, loff_t off, u64 len),\
+>  	TP_ARGS(inode, off, len))
+> -DEFINE_RANGE_EVENT(iomap_writepage);
+> +DEFINE_RANGE_EVENT(iomap_writeback_folio);
+>  DEFINE_RANGE_EVENT(iomap_release_folio);
+>  DEFINE_RANGE_EVENT(iomap_invalidate_folio);
+>  DEFINE_RANGE_EVENT(iomap_dio_invalidate_fail);
 > -- 
 > 2.47.2
 > 
