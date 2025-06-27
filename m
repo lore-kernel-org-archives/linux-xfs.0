@@ -1,65 +1,79 @@
-Received: from mail.growora.pl (mail.growora.pl [51.254.119.49])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14A9CC2FB
-	for <linux-xfs@vger.kernel.org>; Fri, 27 Jun 2025 07:47:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.254.119.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6212D234994;
+	Fri, 27 Jun 2025 08:23:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751010443; cv=none; b=YwIGWUWP0pTCiomydXMdAw80fQopuYAHt4V+RYOg+qwWkaz6UiWtcyLm2gsnf91Wc8i4AQEiG5hgXv90XvDzbbcpGUi5bGBLgDv1Wz125kPQ7wef5LJrLAWJ/Qr1ZoZZiBD3rsCtQGPzZd/KQrtesgmLrSYSJcS7DfK+kGR2DZw=
+	t=1751012598; cv=none; b=TmihBsGrhvU7u0OAIZIhNrNXpZAdHyHSFH+0lzKYLGqmd1M2Z+YLNSRVvZb0nyo8ajntoaXJ5y6pufA7YGuZlMc9w+bw8Jz5jubcwsncOYBVqkc4SjgqiP7d41x497v+rJEkCpgqIKzgf6xyIMrWoUCC4Vn4xH/vdQfWBYOu2GA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751010443; c=relaxed/simple;
-	bh=EB99enkNQ3/lKc2PdUObvM5/Gi3NF8gZrWwaTOp5KYs=;
-	h=Message-ID:Date:From:To:Subject:MIME-Version:Content-Type; b=qW0oqQsjOxmwaP6/uh4QM/1P/ACJ/ZkxLBFSRS/Y4JCLxQ4pfv7/vAiTosR5g05sEmZO2kyT8hmmGAXVKA2IQ4rNXlPbcUs8b/U1HlPlo0j4txDaTCTmnhpZ57Gdwa8MbJldduzCOdvKAt/Uid3xBEEDzHkNj1iS1jUuydyC1fw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=growora.pl; spf=pass smtp.mailfrom=growora.pl; dkim=pass (2048-bit key) header.d=growora.pl header.i=@growora.pl header.b=PF9s+zPH; arc=none smtp.client-ip=51.254.119.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=growora.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=growora.pl
+	s=arc-20240116; t=1751012598; c=relaxed/simple;
+	bh=1DCg+7SgOk9SWHlBdL0rkujTDi5yPr3Sw57TG6gX0MU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=O9hd23MNRD34dEtZBqWT/UN7H6ApA+2bIHtMZ0baPkdfC/gD9WXw0vecVMCt+N7b+hEEH76PB0Kfot2MipBdXKDZ66VGJ/wkzoH7El0gP9Sa+hq134V/0EC05wPbbQBTFtzCbp4aDr3T9Rk8U7u6y1AubI1TdGkY5TOuV3C/qRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eEG0xXYV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=growora.pl header.i=@growora.pl header.b="PF9s+zPH"
-Received: by mail.growora.pl (Postfix, from userid 1002)
-	id 6247323916; Fri, 27 Jun 2025 09:46:20 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=growora.pl; s=mail;
-	t=1751010433; bh=EB99enkNQ3/lKc2PdUObvM5/Gi3NF8gZrWwaTOp5KYs=;
-	h=Date:From:To:Subject:From;
-	b=PF9s+zPHlPv8K5FesbXzcM+Via9klKHQz5KN2ENxvqcJmA/LRjUPcCdY3LtqcTSNd
-	 6FRUNZ0RKxHAD2B13NNFedqU5DK1xawmdE0u+wuuMTFykN5eFQ5/AIu+gpeIug2HPW
-	 3H6brQmidH5siqNJPl+xEzkL7Ayl4wkFKajl4UZip8gdh4N+Qk3WHCLmxlO1VGkMEY
-	 tiMbLsKkUs7MFvyziJgdbIJFm5x65KSBu1t4AQzr/km+/GHQUolbjy6pYA8JMTjZEd
-	 8SeIvs6/y2uRdJ4X91SupSXM5t3V9gTUPnhWt4brHeQo1xT6lGG61gT3hJOiBb9BAM
-	 Ln6rts7ElFH2w==
-Received: by mail.growora.pl for <linux-xfs@vger.kernel.org>; Fri, 27 Jun 2025 07:45:48 GMT
-Message-ID: <20250627084500-0.1.ka.21kip.0.6i4jk50dxn@growora.pl>
-Date: Fri, 27 Jun 2025 07:45:48 GMT
-From: "Mateusz Hopczak" <mateusz.hopczak@growora.pl>
-To: <linux-xfs@vger.kernel.org>
-Subject: IT bez rekrutacji
-X-Mailer: mail.growora.pl
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eEG0xXYV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B153FC4CEE3;
+	Fri, 27 Jun 2025 08:23:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751012597;
+	bh=1DCg+7SgOk9SWHlBdL0rkujTDi5yPr3Sw57TG6gX0MU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=eEG0xXYVBC/pGaUKEYqSVk+qYa/DL9lo2VWIz9Nga8Sb/J4E2gjgEOnWFQLDwuNdP
+	 M4yv8u74LtOM2Ab3Ziuos43c7FRpg4w+VlP23rPeETBjEcGCTBtAkKHYo7/cYzLs0h
+	 E4c5wtxsKDvuc2PEhpk5eO6fwEBObbUEWaGJo8M2lXGZJBlDd+m2xDIgqf8eKrZ6RB
+	 CWeTODHhdruMhwMokDGsY26yHEMFfB2pwFhp9fubWA/WlTgAAKPk4A1gef7bHsX60N
+	 EbUAjrpcNEBqEyBvPRS4pfK/4zIRWd+7QiyWTIbFq/ROmnB5bzTGJBG4B5T8ckArH2
+	 93NgnUJb724yw==
+Message-ID: <e2041940-5673-4eeb-ba9c-9a18663b1b43@kernel.org>
+Date: Fri, 27 Jun 2025 17:23:15 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 03/12] iomap: refactor the writeback interface
+To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+ Joanne Koong <joannelkoong@gmail.com>, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-block@vger.kernel.org, gfs2@lists.linux.dev
+References: <20250627070328.975394-1-hch@lst.de>
+ <20250627070328.975394-4-hch@lst.de>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20250627070328.975394-4-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Cze=C5=9B=C4=87,
+On 6/27/25 16:02, Christoph Hellwig wrote:
+> Replace ->map_blocks with a new ->writeback_range, which differs in the
+> following ways:
+> 
+>  - it must also queue up the I/O for writeback, that is called into the
+>    slightly refactored and extended in scope iomap_add_to_ioend for
+>    each region
+>  - can handle only a part of the requested region, that is the retry
+>    loop for partial mappings moves to the caller
+>  - handles cleanup on failures as well, and thus also replaces the
+>    discard_folio method only implemented by XFS.
+> 
+> This will allow to use the iomap writeback code also for file systems
+> that are not block based like fuse.
+> 
+> Co-developed-by: Joanne Koong <joannelkoong@gmail.com>
+> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-wiem, =C5=BCe rozw=C3=B3j oprogramowania to dzi=C5=9B nie tylko kwestia t=
-echnologii, ale tempa i dost=C4=99pno=C5=9Bci odpowiednich ludzi.=20
+For zonefs:
 
-Je=C5=9Bli temat dotyczy r=C3=B3wnie=C5=BC Pa=C5=84stwa zespo=C5=82u, by=C4=
-=87 mo=C5=BCe warto porozmawia=C4=87 o wsp=C3=B3=C5=82pracy, w kt=C3=B3re=
-j to my przejmujemy ca=C5=82y proces tworzenia oprogramowania =E2=80=93 o=
-d analizy po utrzymanie. Pracujemy elastycznie, dostosowuj=C4=85c si=C4=99=
- do wewn=C4=99trznych procedur i Waszego stacku technologicznego.
-
-Dzia=C5=82amy tak, jakby=C5=9Bmy byli cz=C4=99=C5=9Bci=C4=85 zespo=C5=82u=
-, ale bez operacyjnego ci=C4=99=C5=BCaru, ryzyka kosztownych rekrutacji, =
-z elastycznym podej=C5=9Bciem i transparentnym modelem rozlicze=C5=84.
-
-Czy jeste=C5=9Bcie Pa=C5=84stwo zainteresowani pog=C5=82=C4=99bieniem tem=
-atu?
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
 
 
-Pozdrawiam
-Mateusz Hopczak
+-- 
+Damien Le Moal
+Western Digital Research
