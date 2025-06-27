@@ -1,88 +1,65 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.growora.pl (mail.growora.pl [51.254.119.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F9CD218589;
-	Fri, 27 Jun 2025 07:08:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14A9CC2FB
+	for <linux-xfs@vger.kernel.org>; Fri, 27 Jun 2025 07:47:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.254.119.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751008096; cv=none; b=Y6pp4zSb5L1wcApgqQtiNiDFVek7sefJeGHqXH23GlLpGqTo9ISDT89ajnAi7g+XhJfV57WN4Q1iMnB4a0GxlYLnKU6DYkoo1SDyqjn1gozblvjeByAfohS80wqaKypPHcW00sOZTIGEz6pCGNosGc2CrpjBy3LIwk7w5dVB6ZM=
+	t=1751010443; cv=none; b=YwIGWUWP0pTCiomydXMdAw80fQopuYAHt4V+RYOg+qwWkaz6UiWtcyLm2gsnf91Wc8i4AQEiG5hgXv90XvDzbbcpGUi5bGBLgDv1Wz125kPQ7wef5LJrLAWJ/Qr1ZoZZiBD3rsCtQGPzZd/KQrtesgmLrSYSJcS7DfK+kGR2DZw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751008096; c=relaxed/simple;
-	bh=Un8FcuM1U0z42K+EfQc8uy+JYqzt90xl0/US58u3YVs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rPC/5+PvxFa6XMqDspPhGutxI4YOKsWx/jAwZqd1K2TlW5xLcexIknAz3UMyQUNLVJJfFOhm3b+qb3TwyyC84Vbulm5kraif3CRoKy3tzkv/f2Yx7pGfF3w80k2OK136hDbKjONNlU/gm+74IQK4KG8d0zT3h6JbOuxIUYbl5NQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qC4lNqVh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751010443; c=relaxed/simple;
+	bh=EB99enkNQ3/lKc2PdUObvM5/Gi3NF8gZrWwaTOp5KYs=;
+	h=Message-ID:Date:From:To:Subject:MIME-Version:Content-Type; b=qW0oqQsjOxmwaP6/uh4QM/1P/ACJ/ZkxLBFSRS/Y4JCLxQ4pfv7/vAiTosR5g05sEmZO2kyT8hmmGAXVKA2IQ4rNXlPbcUs8b/U1HlPlo0j4txDaTCTmnhpZ57Gdwa8MbJldduzCOdvKAt/Uid3xBEEDzHkNj1iS1jUuydyC1fw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=growora.pl; spf=pass smtp.mailfrom=growora.pl; dkim=pass (2048-bit key) header.d=growora.pl header.i=@growora.pl header.b=PF9s+zPH; arc=none smtp.client-ip=51.254.119.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=growora.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=growora.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qC4lNqVh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21127C4CEE3;
-	Fri, 27 Jun 2025 07:08:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751008096;
-	bh=Un8FcuM1U0z42K+EfQc8uy+JYqzt90xl0/US58u3YVs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qC4lNqVhAyUtwSJ4iIYbtuihRNK98IFZayk00O8eywof4Q8x+8qvkrPKBe0a6J78T
-	 GvBA3HYPzHQvyEMK8YzXSPTDGlh6T/F/FDPSd6aRq7MFl6nJWh5kZ/5P93zVeT4nHE
-	 IMxV1su8+B5eh/8M+wSfl/hqoSHb6hvtwi8M6MopK3aimNCQu2B77SMTIl9+zDFZtJ
-	 2YF5w/RgT/s4GyQ+rrMk0vtBQuGM75vFT0lqazQUqyEF9pKlP3FsYezV9aka0i1MUm
-	 lZ44AsiSgHAKhlfZy37oVBZtD41j8EAmPbl0As9nDPKeDiGb+ggrAUVS0og1mx5re+
-	 I0rbvDRFhg/Lg==
-Date: Fri, 27 Jun 2025 09:08:12 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Youling Tang <youling.tang@linux.dev>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Youling Tang <tangyouling@kylinos.cn>
-Subject: Re: [PATCH] xfs: add FALLOC_FL_ALLOCATE_RANGE to supported flags mask
-Message-ID: <smvidb4nwokhjnh4g5qve3g4cu52nhrh5nslf56bjs6rp7qtug@qkuwln2srtvj>
-References: <RRIn7phtOPENw-VOR38lq9hw0cyJbioBOq7lxVO-pHAFmZ2BzH88tnc7V3pUxiT0xvHGo7SY4IJSk7FC31MNbw==@protonmail.internalid>
- <20250627053344.245197-1-youling.tang@linux.dev>
+	dkim=pass (2048-bit key) header.d=growora.pl header.i=@growora.pl header.b="PF9s+zPH"
+Received: by mail.growora.pl (Postfix, from userid 1002)
+	id 6247323916; Fri, 27 Jun 2025 09:46:20 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=growora.pl; s=mail;
+	t=1751010433; bh=EB99enkNQ3/lKc2PdUObvM5/Gi3NF8gZrWwaTOp5KYs=;
+	h=Date:From:To:Subject:From;
+	b=PF9s+zPHlPv8K5FesbXzcM+Via9klKHQz5KN2ENxvqcJmA/LRjUPcCdY3LtqcTSNd
+	 6FRUNZ0RKxHAD2B13NNFedqU5DK1xawmdE0u+wuuMTFykN5eFQ5/AIu+gpeIug2HPW
+	 3H6brQmidH5siqNJPl+xEzkL7Ayl4wkFKajl4UZip8gdh4N+Qk3WHCLmxlO1VGkMEY
+	 tiMbLsKkUs7MFvyziJgdbIJFm5x65KSBu1t4AQzr/km+/GHQUolbjy6pYA8JMTjZEd
+	 8SeIvs6/y2uRdJ4X91SupSXM5t3V9gTUPnhWt4brHeQo1xT6lGG61gT3hJOiBb9BAM
+	 Ln6rts7ElFH2w==
+Received: by mail.growora.pl for <linux-xfs@vger.kernel.org>; Fri, 27 Jun 2025 07:45:48 GMT
+Message-ID: <20250627084500-0.1.ka.21kip.0.6i4jk50dxn@growora.pl>
+Date: Fri, 27 Jun 2025 07:45:48 GMT
+From: "Mateusz Hopczak" <mateusz.hopczak@growora.pl>
+To: <linux-xfs@vger.kernel.org>
+Subject: IT bez rekrutacji
+X-Mailer: mail.growora.pl
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250627053344.245197-1-youling.tang@linux.dev>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jun 27, 2025 at 01:33:44PM +0800, Youling Tang wrote:
-> From: Youling Tang <tangyouling@kylinos.cn>
-> 
-> Add FALLOC_FL_ALLOCATE_RANGE to the set of supported fallocate flags in
-> XFS_FALLOC_FL_SUPPORTED. This change improves code clarity and maintains
-> by explicitly showing this flag in the supported flags mask.
-> 
-> Note that since FALLOC_FL_ALLOCATE_RANGE is defined as 0x00, this addition
-> has no functional modifications.
-> 
-> Signed-off-by: Youling Tang <tangyouling@kylinos.cn>
-> ---
->  fs/xfs/xfs_file.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 48254a72071b..d7f6b078d413 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1335,7 +1335,8 @@ xfs_falloc_allocate_range(
->  }
-> 
->  #define	XFS_FALLOC_FL_SUPPORTED						\
-> -		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
-> +		(FALLOC_FL_KEEP_SIZE |					\
-> +		 FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_PUNCH_HOLE |	\
->  		 FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |	\
->  		 FALLOC_FL_INSERT_RANGE | FALLOC_FL_UNSHARE_RANGE)
+Cze=C5=9B=C4=87,
 
-This sounds reasonable. Could you please add it as the first flag to
-keep "the right order"?
+wiem, =C5=BCe rozw=C3=B3j oprogramowania to dzi=C5=9B nie tylko kwestia t=
+echnologii, ale tempa i dost=C4=99pno=C5=9Bci odpowiednich ludzi.=20
 
-Other than this nitpick, you can add:
+Je=C5=9Bli temat dotyczy r=C3=B3wnie=C5=BC Pa=C5=84stwa zespo=C5=82u, by=C4=
+=87 mo=C5=BCe warto porozmawia=C4=87 o wsp=C3=B3=C5=82pracy, w kt=C3=B3re=
+j to my przejmujemy ca=C5=82y proces tworzenia oprogramowania =E2=80=93 o=
+d analizy po utrzymanie. Pracujemy elastycznie, dostosowuj=C4=85c si=C4=99=
+ do wewn=C4=99trznych procedur i Waszego stacku technologicznego.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Dzia=C5=82amy tak, jakby=C5=9Bmy byli cz=C4=99=C5=9Bci=C4=85 zespo=C5=82u=
+, ale bez operacyjnego ci=C4=99=C5=BCaru, ryzyka kosztownych rekrutacji, =
+z elastycznym podej=C5=9Bciem i transparentnym modelem rozlicze=C5=84.
 
-> 
-> --
-> 2.34.1
-> 
-> 
+Czy jeste=C5=9Bcie Pa=C5=84stwo zainteresowani pog=C5=82=C4=99bieniem tem=
+atu?
+
+
+Pozdrawiam
+Mateusz Hopczak
