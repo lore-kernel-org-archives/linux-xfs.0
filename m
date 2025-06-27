@@ -1,59 +1,39 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6305A20E716
-	for <linux-xfs@vger.kernel.org>; Fri, 27 Jun 2025 19:15:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 178C82EBDC4
+	for <linux-xfs@vger.kernel.org>; Fri, 27 Jun 2025 19:24:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751051711; cv=none; b=C5qfO9j5sMl2EkVXtvZOBSXz1Pi17jEyfAYmm2fhURO0Urpq5JRoolSMeibBTgLoYpMMm15Dmrg7xvDSMp9oXI8XheCx4ZgTLo+sOoLG9PBV957RYYWZWpdTtsLkDPyW18hPErAWyF7tWUdeW+xGmCu6TfwyEiSEyTcNc3S7fjA=
+	t=1751052275; cv=none; b=Zv+BFokjaOt/arJ7scaB71ku/noc6lF/0qcoEnoAyIX/Kz+5V0zwFe78V/0GA3VdPixzgl1OdZh0Z73mjyw3sYvUIm+eWq3w76GEUv9+rDF6ZKsBIOzavs8spV8ftO5fZjbeIswcpdy1W+CYRzcey04icXWQPRYWd64sJE3FWus=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751051711; c=relaxed/simple;
-	bh=SY70xkPa6mJlmsfKBvrjeQYhdfFQN5MBR1J/QFlBzTA=;
+	s=arc-20240116; t=1751052275; c=relaxed/simple;
+	bh=ysxkERBY/Izo2swdGLkOr0uxnGwGMUx3tZKiW8dkUYU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cWYlaipBdrjwHT89e8SKRT3NGL8KXmpOfhrAbGcWXDwA8BKTAff9WtWW4ywWWxoTpFxX8WpuzibWifNLlO473oYA5vS8+IhLdYojqcXxtq9m9CTTvFyl4uPY1BMwa0ZgNmNmv6WBiOllxoQe0zpJ+sYydMO+mUlHvVA2wkTSqy4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=R9eBJV3M; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=tP+CGWmmKSSnVPzMPdf/lrYVm42lISF8aCgDvxIgZLqRaDl4KY/98DSG3PCKvDxPpgqRGTZgSlfpxRlBTWHrIrPnEql8w9PkzUzhZ/5eXLC/kcWgLmEhprJDlFvjV0Pv2VtSy5R2GX55+KWmW/cI9TP1/UwUg9Lcqp2uEvlM/0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OCu3fUMx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="R9eBJV3M"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1751051708;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=CYSrLAo09ExIjtjKGHrLSh/0TiMV2cB4z2DIrI0u/xE=;
-	b=R9eBJV3MX0dOWGicNj74/pteVoXUxM9iOj1mkcsILxHlEDestzu2UYaJLTenjXWrbMEWsa
-	y4GXtKGB1QP7hJFb/ZGqGxeGzFxngd4ZnAyr4diCa8jLDJbJpP0kcQi6/hyk3AFn/5Yi9P
-	8w0WmUdDhL874nPnQk1eXsdvn6hDTYI=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-663-CMyhJzmuMdSDIRomBQcwvA-1; Fri,
- 27 Jun 2025 15:15:03 -0400
-X-MC-Unique: CMyhJzmuMdSDIRomBQcwvA-1
-X-Mimecast-MFC-AGG-ID: CMyhJzmuMdSDIRomBQcwvA_1751051701
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C9D851809C8A;
-	Fri, 27 Jun 2025 19:15:00 +0000 (UTC)
-Received: from bfoster (unknown [10.22.64.142])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2DBA1180045C;
-	Fri, 27 Jun 2025 19:14:58 +0000 (UTC)
-Date: Fri, 27 Jun 2025 15:18:36 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Joanne Koong <joannelkoong@gmail.com>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-block@vger.kernel.org, gfs2@lists.linux.dev
-Subject: Re: [PATCH 11/12] iomap: add read_folio_range() handler for buffered
- writes
-Message-ID: <aF7ujFij4GmYuYPu@bfoster>
-References: <20250627070328.975394-1-hch@lst.de>
- <20250627070328.975394-12-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OCu3fUMx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAA05C4CEF7;
+	Fri, 27 Jun 2025 19:24:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751052273;
+	bh=ysxkERBY/Izo2swdGLkOr0uxnGwGMUx3tZKiW8dkUYU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=OCu3fUMxgHiRLWFMKEKgey6IPl87AEYluB9XoeGgw9TEj7wZJWcRKJoK7jN+uLhF1
+	 mCn9diIvzOLY+aqtqj+Do5kWqxvsPXrirP/W5gKnbwzqxkyhsZ95M1riP4SaabsX54
+	 jc0ZRvUQ69gWhTZtwI5zoBtr/b4Ilm3Cif/XrpKMq2vwG9PPLDELlzoOjH1RyxUuhv
+	 oRju0QUkS/z3DXpyx/4V1iGKedVZkYXmEBmOVJc7CB0HI52V+uj0xx7jmdkScMDWom
+	 LledmWaWs5MHGl8yqAxa7HnGaEAfAh8VcyUQ5/eFFhzJRGpquoSaQ0anOPilk7wpaF
+	 5OKKhZyIN5qfw==
+Date: Fri, 27 Jun 2025 21:24:29 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: IO error handling in xfs_repair
+Message-ID: <77tpktkf5crzil62efoq5rxrzsi2rdz6axatvugj2zfv7qecar@e6c57jiebhmi>
+References: <RqbhOWAnTss1XJ3HuLRM056kHzvQab82moL4vq9btD1T0gH6JOPtM2N97utM_IQ1fwl65CM4Qoo90BmpcE7mJg==@protonmail.internalid>
+ <aF5ArCN0M9940yK7@firstfloor.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -62,137 +42,90 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250627070328.975394-12-hch@lst.de>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+In-Reply-To: <aF5ArCN0M9940yK7@firstfloor.org>
 
-On Fri, Jun 27, 2025 at 09:02:44AM +0200, Christoph Hellwig wrote:
-> From: Joanne Koong <joannelkoong@gmail.com>
+On Thu, Jun 26, 2025 at 11:56:44PM -0700, Andi Kleen wrote:
+> Hi,
 > 
-> Add a read_folio_range() handler for buffered writes that filesystems
-> may pass in if they wish to provide a custom handler for synchronously
-> reading in the contents of a folio.
+> I have a spinning disk with XFS that corrupted a sector containing some inodes.
+> Reading it always gave a IO error (ENODATA).
 > 
-> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> [hch: renamed to read_folio_range, pass less arguments]
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  .../filesystems/iomap/operations.rst          |  6 +++++
->  fs/iomap/buffered-io.c                        | 25 +++++++++++--------
->  include/linux/iomap.h                         | 10 ++++++++
->  3 files changed, 31 insertions(+), 10 deletions(-)
+> xfs_repair unfortunately couldn't handle this at all, running into this
+> gem:
 > 
-> diff --git a/Documentation/filesystems/iomap/operations.rst b/Documentation/filesystems/iomap/operations.rst
-> index 167d3ca7819c..04432f40e7a2 100644
-> --- a/Documentation/filesystems/iomap/operations.rst
-> +++ b/Documentation/filesystems/iomap/operations.rst
-> @@ -68,6 +68,8 @@ The following address space operations can be wrapped easily:
->       void (*put_folio)(struct inode *inode, loff_t pos, unsigned copied,
->                         struct folio *folio);
->       bool (*iomap_valid)(struct inode *inode, const struct iomap *iomap);
-> +     int (*read_folio_range)(const struct iomap_iter *iter,
-> +     			struct folio *folio, loff_t pos, size_t len);
-
-Whitespace ^
-
->   };
->  
->  iomap calls these functions:
-...
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index a77686977a2e..1a9ade77aeeb 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -667,22 +667,23 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
->  					 pos + len - 1);
->  }
->  
-> -static int iomap_read_folio_sync(loff_t block_start, struct folio *folio,
-> -		size_t poff, size_t plen, const struct iomap *iomap)
-> +static int iomap_read_folio_range(const struct iomap_iter *iter,
-> +		struct folio *folio, loff_t pos, size_t len)
->  {
-> +	const struct iomap *srcmap = iomap_iter_srcmap(iter);
->  	struct bio_vec bvec;
->  	struct bio bio;
->  
-> -	bio_init(&bio, iomap->bdev, &bvec, 1, REQ_OP_READ);
-> -	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
-> -	bio_add_folio_nofail(&bio, folio, plen, poff);
-> +	bio_init(&bio, srcmap->bdev, &bvec, 1, REQ_OP_READ);
-> +	bio.bi_iter.bi_sector = iomap_sector(srcmap, pos);
-> +	bio_add_folio_nofail(&bio, folio, len, offset_in_folio(folio, pos));
->  	return submit_bio_wait(&bio);
->  }
-
-Hmm, so this kind of makes my brain hurt... pos here is now the old
-block_start and len is the old plen. We used to pass poff to the
-add_folio_nofail() call, and now that is dropped and instead we use
-offset_in_folio(..., pos). The old poff is an output of the previous
-iomap_adjust_read_range() call, which is initially set to
-offset_in_folio(folio, *pos), of which *pos is block_start and is bumped
-in that function in the same places that poff is. Therefore old poff and
-new offset_in_folio(folio, pos) are logically equivalent. Am I following
-that correctly?
-
-Brian
-
->  
-> -static int __iomap_write_begin(const struct iomap_iter *iter, size_t len,
-> +static int __iomap_write_begin(const struct iomap_iter *iter,
-> +		const struct iomap_write_ops *write_ops, size_t len,
->  		struct folio *folio)
->  {
-> -	const struct iomap *srcmap = iomap_iter_srcmap(iter);
->  	struct iomap_folio_state *ifs;
->  	loff_t pos = iter->pos;
->  	loff_t block_size = i_blocksize(iter->inode);
-> @@ -731,8 +732,12 @@ static int __iomap_write_begin(const struct iomap_iter *iter, size_t len,
->  			if (iter->flags & IOMAP_NOWAIT)
->  				return -EAGAIN;
->  
-> -			status = iomap_read_folio_sync(block_start, folio,
-> -					poff, plen, srcmap);
-> +			if (write_ops && write_ops->read_folio_range)
-> +				status = write_ops->read_folio_range(iter,
-> +						folio, block_start, plen);
-> +			else
-> +				status = iomap_read_folio_range(iter,
-> +						folio, block_start, plen);
->  			if (status)
->  				return status;
->  		}
-> @@ -848,7 +853,7 @@ static int iomap_write_begin(struct iomap_iter *iter,
->  	else if (srcmap->flags & IOMAP_F_BUFFER_HEAD)
->  		status = __block_write_begin_int(folio, pos, len, NULL, srcmap);
->  	else
-> -		status = __iomap_write_begin(iter, len, folio);
-> +		status = __iomap_write_begin(iter, write_ops, len, folio);
->  
->  	if (unlikely(status))
->  		goto out_unlock;
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 482787013ff7..b3588dd43105 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -166,6 +166,16 @@ struct iomap_write_ops {
->  	 * locked by the iomap code.
->  	 */
->  	bool (*iomap_valid)(struct inode *inode, const struct iomap *iomap);
-> +
-> +	/*
-> +	 * Optional if the filesystem wishes to provide a custom handler for
-> +	 * reading in the contents of a folio, otherwise iomap will default to
-> +	 * submitting a bio read request.
-> +	 *
-> +	 * The read must be done synchronously.
-> +	 */
-> +	int (*read_folio_range)(const struct iomap_iter *iter,
-> +			struct folio *folio, loff_t pos, size_t len);
->  };
->  
->  /*
-> -- 
-> 2.47.2
+>          if (process_inode_chunk(mp, agno, num_inos, first_ino_rec,
+>                                 ino_discovery, check_dups, extra_attr_check,
+>                                 &bogus))  {
+>                         /* XXX - i/o error, we've got a problem */
+>                         abort();
+>          }
 > 
+> TBH I was a bit shocked that XFS repair doesn't handle IO errors.
+> Surely that's a common occurrence?
+
+Hi Andi.
+
+This behavior is well documented on xfs_repair man page:
+
+"
+Disk Errors
+	xfs_repair  aborts on most disk I/O errors. Therefore, if you are
+	trying to repair a filesystem that was damaged due to a disk drive
+	failure, steps should be taken to ensure that all blocks in the
+	filesystem are readable and writable before attempting to use
+	xfs_repair to repair the filesystem.
+	A  possible  method  is  using dd(8) to copy the data onto a good disk.
+"
+I don't think IO errors could be classified as a common occurrence.
+
 > 
+> Anyways, what I ended up doing was to use strace to get the seek offset
+> of the bad sector and then write a little python program to clear the block
+> (which then likely got remapped, or simply rewritten on the medium),
+> and apart from a few lost inodes everything was fine.
+> 
+> It seems that xfs_repair should have an option to clear erroring blocks that
+> it encounters? I realize that this option could be dangerous, but in many cases
+> it would seem like the only way to recover.
+
+I believe one of the problems is xfsprogs can't really pinpoint what
+happened. Could be a transient failure due a link problem or a bad
+block on disk, or whatever else. So it has been designed to bail out and
+let the admin handle it.
+
+IMO Adding an option to force to 'clear errored blocks', which basically
+means forcing a write() on the block so that it could possibly be
+relocated by the disk's firmware is not a good strategy.
+Depending how many bad sectors are in the disk, or the nature of the IO
+error, this would might end up damaging the filesystem beyond recovery,
+as you mentioned yourself.
+So, in some cases, you either gotta try to force the disk to relocate
+the block manually or copy the still not bad data somewhere else, both
+achievable with `dd` for example.
+
+> 
+> Or at a minimum print the seek offset on an error so that it can be cleared manually.
+> 
+
+This seems weird. If xfs bailed where you pointed, calling
+process_inode_chunk(), this likely bailed from here:
+
+
+if (error) {
+	do_warn(_("cannot read inode %" PRIu64 ", disk block %" PRId64 ", cnt %d\n"),
+		XFS_AGINO_TO_INO(mp, agno, first_irec->ino_startnum),
+		XFS_AGB_TO_DADDR(mp, agno, agbno),
+		XFS_FSB_TO_BB(mp,
+			M_IGEO(mp)->blocks_per_cluster));
+	while (bp_index > 0) {
+		bp_index--;
+		libxfs_buf_relse(bplist[bp_index]);
+	}
+	free(bplist);
+	return(1);
+}
+
+process_inode_chunk() was supposed to log the inode and disk block,
+perhaps the abort() prevented the stderr buffer to be flushed, do you
+still have the whole xfs_repair output to the point where it failed?
 
