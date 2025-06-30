@@ -1,169 +1,99 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEA5113774D;
-	Mon, 30 Jun 2025 18:05:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E32912F4A;
+	Mon, 30 Jun 2025 18:34:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751306721; cv=none; b=BN/Ch2GQjKP66YSm2qmnxvcTbtVeOpcLGw+uSzuA44c/J2MRQPVvjEdbne+F0UF9sx5Tc7OaRSxbhU0n4oI00BJeygKhTsXC4PM+H164xCon91/rFwYCHDcjwDcETQkGnM1O+Kd6ojzOSdsigQh/l+zY2KxKNL7Wos41y92LbXU=
+	t=1751308448; cv=none; b=kFoXPQFGxJ7N05FFI6zSeGAFgL6F+e20Hgjwqge9lAcIvmjfpwR2CGqWWQdeQmy1aqJeSawD4T3Xz9v3LDfhiK3HhBQbJ9qXczEt2jrD7EcO36lZqyhEKizXweyBQDDdcpAj/DH+x9R9q0+Bmhv3+IMI3W2+97yOkb5phWh/VKA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751306721; c=relaxed/simple;
-	bh=tl3IJSJVWYtA6RkFsx548Iw+3juorNIHo0GmkdIldYs=;
+	s=arc-20240116; t=1751308448; c=relaxed/simple;
+	bh=cQluqwPmQ2qsJ0mZQhJax1umRyFueorbna/ZicjbzcQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qz7Kg8Mq0rMaHVr0IElOiP4iLUROaWYuKa7v6YQEFvlIS7wBDjbiJwfRLjrj9Bs9G4zkwsN5ciL9jnH3dcgP7KDoBL8bRcCWkn8DHfuJuzax/7JMCyFi3ZgvwRi0IdcmW4se2kUqfVAuTDVJWiRMj9fnAkJ0y8CRqwEyPIom35o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mtPwYcXZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZZ5Z8MfJiGr9kqVj65E+MSuLUPhYeX5Pt6t5gKCYS8bhgFzv0oQZbyEzn1WuEqOWBOshSJFTYuohh9CYbammDOw1gToh3WFGS+QRGAjtdPNUxQqSIjGnhKK5cZ/M0Zo6Qv4YXlMVrqxIbMV5I8NBrAXlY29zOavi9ysTR9tkPNU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=onWCYXb8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mtPwYcXZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C4E9C4CEE3;
-	Mon, 30 Jun 2025 18:05:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="onWCYXb8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CFBFC4CEEB;
+	Mon, 30 Jun 2025 18:34:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751306720;
-	bh=tl3IJSJVWYtA6RkFsx548Iw+3juorNIHo0GmkdIldYs=;
+	s=k20201202; t=1751308447;
+	bh=cQluqwPmQ2qsJ0mZQhJax1umRyFueorbna/ZicjbzcQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mtPwYcXZCYQbUJ0UW5mJ3NLb5ej0jQhVjsJVjjsaONidi8/FG4sIG5VUW5i0BpmuC
-	 mKH8LIOymp+izoaWZ7GLbl7pykOcPNWtPCJ77LoEacc9QWgjb2xfP6X3H4cGT3ePhb
-	 4Q4c5hTrz/qFikIotbEyZRabHmHhn1zq2ME3aTwuP56fNcI8D/3ktwLU5T3UJo6dVi
-	 1PZWpqq3UMArcRuKfh+fgIVUUON+f9qlGsE2Ma5sbVLAz1ZGiiscerke8TfqGXN+/l
-	 QEDRO5BK2MwGDuWZpJtuAAJVls09YT9Xd13Z4V4WDbcqvHmfSAy4YUXzcxXnor+jMR
-	 DAdBaP4exac4A==
-Received: by pali.im (Postfix)
-	id 029617FE; Mon, 30 Jun 2025 20:05:17 +0200 (CEST)
-Date: Mon, 30 Jun 2025 20:05:17 +0200
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	Casey Schaufler <casey@schaufler-ca.com>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	Paul Moore <paul@paul-moore.com>, linux-api@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, selinux@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>
-Subject: Re: [PATCH v6 4/6] fs: make vfs_fileattr_[get|set] return -EOPNOSUPP
-Message-ID: <20250630180517.5jrptwuucy4c6ezk@pali>
-References: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
- <20250630-xattrat-syscall-v6-4-c4e3bc35227b@kernel.org>
+	b=onWCYXb8/9mUvdcFcjocorSkYQRThisfHLh6JbXX4ob7K3UIsUZCwtAp0lbbGnE/h
+	 6h/rQmI39xQwKR8ziHUm08Rf9ek5qtgubJksQDDLngnOFE3bibqZpKDBsu46+mOgcc
+	 2ZmRFe11+eqzCkYhy0BeWgIQdEhIDg+RoaOUZlyNf0CDSHoMqNxm9f+TbXB4klMY1u
+	 4fz02L5R5OBrNkE3uVyAuquqqg7W01f6zZp7M4i1VklEG2aSHG6gWlsjOeQqgIBoJs
+	 xylnCGmB/T9gtgGb6b/3pnhgrIp+PlZyRYRFgEAEIuBqIfqLTA6yzuWdit3akf4Mhe
+	 56gPi+NmYwRvA==
+Date: Mon, 30 Jun 2025 20:34:03 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Pranav Tyagi <pranav.tyagi03@gmail.com>
+Cc: skhan@linuxfoundation.org, linux-xfs@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linux.dev
+Subject: Re: [PATCH] xfs: replace strncpy with memcpy in xattr listing
+Message-ID: <aaywkct2isosqxd37njlua4xxxll2vlvv7huhh34ko3ths7iw4@cdgrtvlp3cwh>
+References: <oxpeGQP7AC5GXfnifSYyeW7X_URDJhOvCxTG09iGmuvIXd330ZdXanoBmbUB3wpOcIORP1CakEzevsjtJKynhw==@protonmail.internalid>
+ <20250617131446.25551-1-pranav.tyagi03@gmail.com>
+ <huml6d5naz4kf6a3kh5g74dyrtivlaqyzajzwwmyvnpsqhuj3d@7zazaxb3225t>
+ <rkCSJQOnZAt9nfcVUrC8gHDWqHhzMThp3xx38GD2BgJZM4iXJfvVgXZwa21-3xikSHHLO-scI4_47aO-O1d5FQ==@protonmail.internalid>
+ <CAH4c4j+dhh9uW=GOoxaaefBTWQtbLeWQs1SqrWwpka9R8mwBTg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20250630-xattrat-syscall-v6-4-c4e3bc35227b@kernel.org>
-User-Agent: NeoMutt/20180716
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAH4c4j+dhh9uW=GOoxaaefBTWQtbLeWQs1SqrWwpka9R8mwBTg@mail.gmail.com>
 
-nit: typo in commit subject and description: Missing T in EOPNO*T*SUPP.
-But please do not resend whole patch series just because of this.
-That is not needed.
+On Mon, Jun 30, 2025 at 06:18:06PM +0530, Pranav Tyagi wrote:
+> On Mon, Jun 30, 2025 at 5:49 PM Carlos Maiolino <cem@kernel.org> wrote:
+> >
+> > On Tue, Jun 17, 2025 at 06:44:46PM +0530, Pranav Tyagi wrote:
+> > > Use memcpy() in place of strncpy() in __xfs_xattr_put_listent().
+> > > The length is known and a null byte is added manually.
+> > >
+> > > No functional change intended.
+> > >
+> > > Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
+> > > ---
+> > >  fs/xfs/xfs_xattr.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > >
+> > > diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> > > index 0f641a9091ec..ac5cecec9aa1 100644
+> > > --- a/fs/xfs/xfs_xattr.c
+> > > +++ b/fs/xfs/xfs_xattr.c
+> > > @@ -243,7 +243,7 @@ __xfs_xattr_put_listent(
+> > >       offset = context->buffer + context->count;
+> > >       memcpy(offset, prefix, prefix_len);
+> > >       offset += prefix_len;
+> > > -     strncpy(offset, (char *)name, namelen);                 /* real name */
+> > > +     memcpy(offset, (char *)name, namelen);                  /* real name */
+> > >       offset += namelen;
+> > >       *offset = '\0';
+> >
+> > What difference does it make?
+> 
+> I intended this to be a cleanup patch as strncpy()
+> is deprecated and its use discouraged.
 
-On Monday 30 June 2025 18:20:14 Andrey Albershteyn wrote:
-> Future patches will add new syscalls which use these functions. As
-> this interface won't be used for ioctls only, the EOPNOSUPP is more
-> appropriate return code.
+Fair enough. This is the kind of information that's worth
+to add to the patch description on your future patches.
+
+No need to re-send this again.
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
 > 
-> This patch converts return code from ENOIOCTLCMD to EOPNOSUPP for
-> vfs_fileattr_get and vfs_fileattr_set. To save old behavior translate
-> EOPNOSUPP back for current users - overlayfs, encryptfs and fs/ioctl.c.
-> 
-> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> ---
->  fs/ecryptfs/inode.c  |  8 +++++++-
->  fs/file_attr.c       | 12 ++++++++++--
->  fs/overlayfs/inode.c |  2 +-
->  3 files changed, 18 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/ecryptfs/inode.c b/fs/ecryptfs/inode.c
-> index 493d7f194956..a55c1375127f 100644
-> --- a/fs/ecryptfs/inode.c
-> +++ b/fs/ecryptfs/inode.c
-> @@ -1126,7 +1126,13 @@ static int ecryptfs_removexattr(struct dentry *dentry, struct inode *inode,
->  
->  static int ecryptfs_fileattr_get(struct dentry *dentry, struct fileattr *fa)
->  {
-> -	return vfs_fileattr_get(ecryptfs_dentry_to_lower(dentry), fa);
-> +	int rc;
-> +
-> +	rc = vfs_fileattr_get(ecryptfs_dentry_to_lower(dentry), fa);
-> +	if (rc == -EOPNOTSUPP)
-> +		rc = -ENOIOCTLCMD;
-> +
-> +	return rc;
->  }
->  
->  static int ecryptfs_fileattr_set(struct mnt_idmap *idmap,
-> diff --git a/fs/file_attr.c b/fs/file_attr.c
-> index be62d97cc444..4e85fa00c092 100644
-> --- a/fs/file_attr.c
-> +++ b/fs/file_attr.c
-> @@ -79,7 +79,7 @@ int vfs_fileattr_get(struct dentry *dentry, struct fileattr *fa)
->  	int error;
->  
->  	if (!inode->i_op->fileattr_get)
-> -		return -ENOIOCTLCMD;
-> +		return -EOPNOTSUPP;
->  
->  	error = security_inode_file_getattr(dentry, fa);
->  	if (error)
-> @@ -229,7 +229,7 @@ int vfs_fileattr_set(struct mnt_idmap *idmap, struct dentry *dentry,
->  	int err;
->  
->  	if (!inode->i_op->fileattr_set)
-> -		return -ENOIOCTLCMD;
-> +		return -EOPNOTSUPP;
->  
->  	if (!inode_owner_or_capable(idmap, inode))
->  		return -EPERM;
-> @@ -271,6 +271,8 @@ int ioctl_getflags(struct file *file, unsigned int __user *argp)
->  	int err;
->  
->  	err = vfs_fileattr_get(file->f_path.dentry, &fa);
-> +	if (err == -EOPNOTSUPP)
-> +		err = -ENOIOCTLCMD;
->  	if (!err)
->  		err = put_user(fa.flags, argp);
->  	return err;
-> @@ -292,6 +294,8 @@ int ioctl_setflags(struct file *file, unsigned int __user *argp)
->  			fileattr_fill_flags(&fa, flags);
->  			err = vfs_fileattr_set(idmap, dentry, &fa);
->  			mnt_drop_write_file(file);
-> +			if (err == -EOPNOTSUPP)
-> +				err = -ENOIOCTLCMD;
->  		}
->  	}
->  	return err;
-> @@ -304,6 +308,8 @@ int ioctl_fsgetxattr(struct file *file, void __user *argp)
->  	int err;
->  
->  	err = vfs_fileattr_get(file->f_path.dentry, &fa);
-> +	if (err == -EOPNOTSUPP)
-> +		err = -ENOIOCTLCMD;
->  	if (!err)
->  		err = copy_fsxattr_to_user(&fa, argp);
->  
-> @@ -324,6 +330,8 @@ int ioctl_fssetxattr(struct file *file, void __user *argp)
->  		if (!err) {
->  			err = vfs_fileattr_set(idmap, dentry, &fa);
->  			mnt_drop_write_file(file);
-> +			if (err == -EOPNOTSUPP)
-> +				err = -ENOIOCTLCMD;
->  		}
->  	}
->  	return err;
-> diff --git a/fs/overlayfs/inode.c b/fs/overlayfs/inode.c
-> index 6f0e15f86c21..096d44712bb1 100644
-> --- a/fs/overlayfs/inode.c
-> +++ b/fs/overlayfs/inode.c
-> @@ -721,7 +721,7 @@ int ovl_real_fileattr_get(const struct path *realpath, struct fileattr *fa)
->  		return err;
->  
->  	err = vfs_fileattr_get(realpath->dentry, fa);
-> -	if (err == -ENOIOCTLCMD)
-> +	if (err == -EOPNOTSUPP)
->  		err = -ENOTTY;
->  	return err;
->  }
-> 
-> -- 
-> 2.47.2
-> 
+> Regards
+> Pranav Tyagi
+> >
+> >
+> > >
+> > > --
+> > > 2.49.0
+> > >
