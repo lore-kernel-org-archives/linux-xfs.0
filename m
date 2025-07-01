@@ -1,82 +1,77 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35C482741C0
-	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 13:06:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1686277026
+	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 13:24:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751375194; cv=none; b=LcegiRaIc84qVIhKjIC5YhKZEvBAPI4B2ZD+lUDeLYYW8EmgFUdnBE0Ild9vwG+4F2X3xxnisQk0s+h0fXcGT5oybPloFqkZBPOsvC0DIeFa39l+HbsB0+RwxA+XpYBetLMOcDFPmaZesHoKMIL81wQl3AZZ5ZLnUb98X416Avc=
+	t=1751376252; cv=none; b=m1lje8taNLiZFdEYu6jRCoDNzZYJOGdINHvCdV+1HoBubYYtwTcJmE9CJ4F5alEv+uPO8AoAt8VLt+QjUFNUh1yVODQYlYwyE0t2tXsfOViWX8wsY+Nen05gQ+C6VMnoFqf5N/kpINJlPlBAuXYEJ44sKI7ZqbGiZGYNDcV+s00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751375194; c=relaxed/simple;
-	bh=W7rUKWuRShXYZWdR3lbH69HaoFiUBNiFvvaqP4xwyDo=;
+	s=arc-20240116; t=1751376252; c=relaxed/simple;
+	bh=xXqDj1wJ7/Ymtp0P5loQ2F/FbTjzYl1Bd3O0meHUjcM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ImpUppFQCnQg8CohEucM5ISiYo17lQDGx1hA4HV7TlF8AH0xR8SaTHWXuc1X3xnoYFAbbcETyVh1ZKc7AQeGLrpPe+mBxH4FASCURfY8D7LB0/wyiVBcUN9FHktNAcRrxvBYWUz9JxY6HA8ClqfkxfSpTiW9JFvllO2l1Euv4d0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=EdGMfebH; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=3x0vMWhi; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=geOJrmOA; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=s+W8pYUV; arc=none smtp.client-ip=195.135.223.130
+	 Content-Type:Content-Disposition:In-Reply-To; b=FrxsVac1/fDTW0X5xQbCOXLL7N28kcvQlRKb2bTg/uhPiHW0JLo6pY/rR7t4V7ZwX4ifmpwbEKrf76UHtQevsirRGLZP9Wc16DF/6x4l/FEPc3q+4wzuGhHwhlIA8olDas6ymDZtM00A4GD9jNqcQ3RXeS/6VTi7myx60M420Bg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=0KfyUxeE; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=DSHFGY1d; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=k2g4a9TZ; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=pC2n33Vt; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="EdGMfebH";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="3x0vMWhi";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="geOJrmOA";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="s+W8pYUV"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="0KfyUxeE";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="DSHFGY1d";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="k2g4a9TZ";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="pC2n33Vt"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id BEBD921170;
-	Tue,  1 Jul 2025 13:06:30 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id F1C8A1F399;
+	Tue,  1 Jul 2025 13:24:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1751375191; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1751376249; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=STYBJ6/y5eb9NB4ntQPCGfmPLPuwaWN8f9mtVL8NvMg=;
-	b=EdGMfebH3HfaMC+wTG450iQ0AqNqkQK2x3LTfqHIyaxGakrWaElBk4jiFb97QC9greGvMb
-	1Q2xk36efRgz/+u2VPFudK5v7WktCIB9TXWbVU365dA5CFyyKqqsG+TyhF/PK4noIgvbFU
-	gIIzt/wLiRG3tHbJ1PPlyZ5aIaaVLxQ=
+	bh=Gj7LAvBX+B7AFcpf2gN6CbdwlzROH86VQ90+DxHz4P4=;
+	b=0KfyUxeE9gLBsCJl6eFvUMl/NUkTwajv4ObGZdRbU9BJPnT17eN3+orNTrZUNlyam1yXXq
+	XV7r9x/2czpeZ1D6E0r647nrpwd2MW6ulGGcQUxubUEUp8nA99+WEFC2+b5m4v05aCKuAo
+	iOtfao8NFhGvgGSnoTDUMtn4Oha+Dic=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1751375191;
+	s=susede2_ed25519; t=1751376249;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=STYBJ6/y5eb9NB4ntQPCGfmPLPuwaWN8f9mtVL8NvMg=;
-	b=3x0vMWhikqcewo3C3hWxU5aK+XA0gmHYzYUMtbcyo3XMMzkUPN7HqeYjuDVGotgUH/7nT9
-	WYjfVnf+l+7+BJCg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=geOJrmOA;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=s+W8pYUV
+	bh=Gj7LAvBX+B7AFcpf2gN6CbdwlzROH86VQ90+DxHz4P4=;
+	b=DSHFGY1dGBz2SIn1yXZcWDXIe31d+V1yj+mcqKsiyfB1TxLqz/tVQ2ym6WB65EYrbFsSGf
+	aasJqY5mJ2tdZhAQ==
+Authentication-Results: smtp-out2.suse.de;
+	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1751375190; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1751376248; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=STYBJ6/y5eb9NB4ntQPCGfmPLPuwaWN8f9mtVL8NvMg=;
-	b=geOJrmOArR76ltL85cdfmNDlnZRQboQgEh3JdADE3BE/XoMASiodgc85nEO2poaahBsTbR
-	6TsOO8XPpj6vjLQHTWNcFVeCs7b5FZ0tkAqM1GvV9KdlGUymKy0OSwq8t3ZtuhJb81ixdw
-	zZiMmjTn702bFgTQhDHKwvYearwVEeI=
+	bh=Gj7LAvBX+B7AFcpf2gN6CbdwlzROH86VQ90+DxHz4P4=;
+	b=k2g4a9TZ+mEeo+99ew/RtFpR81VTJ4o9bmhNLlBQQaYKRWFzS1pHslK6NUtRFJra+R8IIj
+	CC4TsxvTjOukEnrjsOqEeL+eR9VOj9qcz9ABPhhHGSSX/8zvUGRaVMYoTvY28lGBLAOWP5
+	oYFsG2rilj42FLn9xM83FVkqK1Bfq0k=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1751375190;
+	s=susede2_ed25519; t=1751376248;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=STYBJ6/y5eb9NB4ntQPCGfmPLPuwaWN8f9mtVL8NvMg=;
-	b=s+W8pYUVnV1//Tnb9TCUTjf1HZWDSft6YUh3W+enyBIkfmUOKmDP+dAP18U6L/rk9PkBuq
-	wyFZaxtYgN+DunCQ==
+	bh=Gj7LAvBX+B7AFcpf2gN6CbdwlzROH86VQ90+DxHz4P4=;
+	b=pC2n33VtzF+BIZOKEpB/xiCUBZENOCZvw1fRQrsMUNXxwdVQsmFLtK+R29KPL8KuthqJcQ
+	I5Nt7F47EfbQFACg==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id AE9E613890;
-	Tue,  1 Jul 2025 13:06:30 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E08B413890;
+	Tue,  1 Jul 2025 13:24:08 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 66CeKlbdY2j4dAAAD6G6ig
-	(envelope-from <jack@suse.cz>); Tue, 01 Jul 2025 13:06:30 +0000
+	id m5fbNnjhY2jBegAAD6G6ig
+	(envelope-from <jack@suse.cz>); Tue, 01 Jul 2025 13:24:08 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id C3A14A0A23; Tue,  1 Jul 2025 15:06:25 +0200 (CEST)
-Date: Tue, 1 Jul 2025 15:06:25 +0200
+	id B30ECA0A23; Tue,  1 Jul 2025 15:24:07 +0200 (CEST)
+Date: Tue, 1 Jul 2025 15:24:07 +0200
 From: Jan Kara <jack@suse.cz>
 To: Andrey Albershteyn <aalbersh@redhat.com>
 Cc: Amir Goldstein <amir73il@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
@@ -84,98 +79,209 @@ Cc: Amir Goldstein <amir73il@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
 	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Paul Moore <paul@paul-moore.com>, linux-api@vger.kernel.org, 
 	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	selinux@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
-Subject: Re: [PATCH v6 5/6] fs: prepare for extending file_get/setattr()
-Message-ID: <kxl5mwdql2f7i6mlvgitmquhci6oab5dluihc22x5w7y3cko4h@fig54f3dyidj>
+Subject: Re: [PATCH v6 6/6] fs: introduce file_getattr and file_setattr
+ syscalls
+Message-ID: <uvxftp37cpvn7emugit7zsmyjmkaivuzxerwfw36ukzrycxtfp@krnv7y7akpjl>
 References: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
- <20250630-xattrat-syscall-v6-5-c4e3bc35227b@kernel.org>
+ <20250630-xattrat-syscall-v6-6-c4e3bc35227b@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250630-xattrat-syscall-v6-5-c4e3bc35227b@kernel.org>
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: BEBD921170
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.01 / 50.00];
+In-Reply-To: <20250630-xattrat-syscall-v6-6-c4e3bc35227b@kernel.org>
+X-Spamd-Result: default: False [-3.80 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
 	MID_RHS_NOT_FQDN(0.50)[];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
 	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
 	ARC_NA(0.00)[];
 	MISSING_XM_UA(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
 	RCPT_COUNT_TWELVE(0.00)[14];
 	MIME_TRACE(0.00)[0:+];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_COUNT_THREE(0.00)[3];
 	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
 	FROM_HAS_DN(0.00)[];
 	FREEMAIL_CC(0.00)[gmail.com,arndb.de,schaufler-ca.com,kernel.org,suse.cz,paul-moore.com,vger.kernel.org];
-	RCVD_COUNT_THREE(0.00)[3];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:dkim,suse.cz:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
 	RCVD_TLS_LAST(0.00)[];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.cz:+]
-X-Spam-Score: -4.01
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email,suse.cz:email]
 X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spam-Score: -3.80
 
-On Mon 30-06-25 18:20:15, Andrey Albershteyn wrote:
-> From: Amir Goldstein <amir73il@gmail.com>
+On Mon 30-06-25 18:20:16, Andrey Albershteyn wrote:
+> From: Andrey Albershteyn <aalbersh@redhat.com>
 > 
-> We intend to add support for more xflags to selective filesystems and
-> We cannot rely on copy_struct_from_user() to detect this extension.
+> Introduce file_getattr() and file_setattr() syscalls to manipulate inode
+> extended attributes. The syscalls takes pair of file descriptor and
+> pathname. Then it operates on inode opened accroding to openat()
+						^^^ according
+
+> semantics. The struct fsx_fileattr is passed to obtain/change extended
+> attributes.
 > 
-> In preparation of extending the API, do not allow setting xflags unknown
-> by this kernel version.
+> This is an alternative to FS_IOC_FSSETXATTR ioctl with a difference
+> that file don't need to be open as we can reference it with a path
+            ^^^ doesn't
+
+> instead of fd. By having this we can manipulated inode extended
+> attributes not only on regular files but also on special ones. This
+> is not possible with FS_IOC_FSSETXATTR ioctl as with special files
+> we can not call ioctl() directly on the filesystem inode using fd.
 > 
-> Also do not pass the read-only flags and read-only field fsx_nextents to
-> filesystem.
+> This patch adds two new syscalls which allows userspace to get/set
+> extended inode attributes on special files by using parent directory
+> and a path - *at() like syscall.
 > 
-> These changes should not affect existing chattr programs that use the
-> ioctl to get fsxattr before setting the new values.
-> 
-> Link: https://lore.kernel.org/linux-fsdevel/20250216164029.20673-4-pali@kernel.org/
-> Cc: Pali Rohár <pali@kernel.org>
-> Cc: Andrey Albershteyn <aalbersh@redhat.com>
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> CC: linux-api@vger.kernel.org
+> CC: linux-fsdevel@vger.kernel.org
+> CC: linux-xfs@vger.kernel.org
 > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-Looks good. Feel free to add:
+There's possible NULL ptr deref bug below (2x) that's easy to fix. Once
+done feel free to add:
 
 Reviewed-by: Jan Kara <jack@suse.cz>
 
-I'd just note that:
-
-> @@ -118,11 +119,16 @@ static int copy_fsxattr_from_user(struct fileattr *fa,
->  				  struct fsxattr __user *ufa)
->  {
->  	struct fsxattr xfa;
-> +	__u32 mask = FS_XFLAGS_MASK;
->  
->  	if (copy_from_user(&xfa, ufa, sizeof(xfa)))
->  		return -EFAULT;
->  
-> +	if (xfa.fsx_xflags & ~mask)
+> @@ -343,3 +377,117 @@ int ioctl_fssetxattr(struct file *file, void __user *argp)
+>  	return err;
+>  }
+>  EXPORT_SYMBOL(ioctl_fssetxattr);
+> +
+> +SYSCALL_DEFINE5(file_getattr, int, dfd, const char __user *, filename,
+> +		struct fsx_fileattr __user *, ufsx, size_t, usize,
+> +		unsigned int, at_flags)
+> +{
+> +	struct fileattr fa;
+> +	struct path filepath __free(path_put) = {};
+> +	int error;
+> +	unsigned int lookup_flags = 0;
+> +	struct filename *name __free(putname) = NULL;
+> +	struct fsx_fileattr fsx;
+> +
+> +	BUILD_BUG_ON(sizeof(struct fsx_fileattr) < FSX_FILEATTR_SIZE_VER0);
+> +	BUILD_BUG_ON(sizeof(struct fsx_fileattr) != FSX_FILEATTR_SIZE_LATEST);
+> +
+> +	if ((at_flags & ~(AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH)) != 0)
 > +		return -EINVAL;
 > +
->  	fileattr_fill_xflags(fa, xfa.fsx_xflags);
-> +	fa->fsx_xflags &= ~FS_XFLAG_RDONLY_MASK;
+> +	if (!(at_flags & AT_SYMLINK_NOFOLLOW))
+> +		lookup_flags |= LOOKUP_FOLLOW;
+> +
+> +	if (usize > PAGE_SIZE)
+> +		return -E2BIG;
+> +
+> +	if (usize < FSX_FILEATTR_SIZE_VER0)
+> +		return -EINVAL;
+> +
+> +	name = getname_maybe_null(filename, at_flags);
+> +	if (IS_ERR(name))
+> +		return PTR_ERR(name);
+> +
+> +	if (!name && dfd >= 0) {
+> +		CLASS(fd, f)(dfd);
+> +
+> +		filepath = fd_file(f)->f_path;
 
-This means that the two flags in FS_XFLAG_RDONLY_MASK cannot easily become
-writeable in the future due to this. I think it is a sensible compromise
-but I wanted to mention it.
+If dfd is not correct fd, then this will dereference NULL AFAICT. I think
+you need here:
+
+		if (fd_empty(f))
+			return -EBADF;
+
+> +		path_get(&filepath);
+> +	} else {
+> +		error = filename_lookup(dfd, name, lookup_flags, &filepath,
+> +					NULL);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+> +	error = vfs_fileattr_get(filepath.dentry, &fa);
+> +	if (error)
+> +		return error;
+> +
+> +	fileattr_to_fsx_fileattr(&fa, &fsx);
+> +	error = copy_struct_to_user(ufsx, usize, &fsx,
+> +				    sizeof(struct fsx_fileattr), NULL);
+> +
+> +	return error;
+> +}
+> +
+> +SYSCALL_DEFINE5(file_setattr, int, dfd, const char __user *, filename,
+> +		struct fsx_fileattr __user *, ufsx, size_t, usize,
+> +		unsigned int, at_flags)
+> +{
+> +	struct fileattr fa;
+> +	struct path filepath __free(path_put) = {};
+> +	int error;
+> +	unsigned int lookup_flags = 0;
+> +	struct filename *name __free(putname) = NULL;
+> +	struct fsx_fileattr fsx;
+> +
+> +	BUILD_BUG_ON(sizeof(struct fsx_fileattr) < FSX_FILEATTR_SIZE_VER0);
+> +	BUILD_BUG_ON(sizeof(struct fsx_fileattr) != FSX_FILEATTR_SIZE_LATEST);
+> +
+> +	if ((at_flags & ~(AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH)) != 0)
+> +		return -EINVAL;
+> +
+> +	if (!(at_flags & AT_SYMLINK_NOFOLLOW))
+> +		lookup_flags |= LOOKUP_FOLLOW;
+> +
+> +	if (usize > PAGE_SIZE)
+> +		return -E2BIG;
+> +
+> +	if (usize < FSX_FILEATTR_SIZE_VER0)
+> +		return -EINVAL;
+> +
+> +	error = copy_struct_from_user(&fsx, sizeof(struct fsx_fileattr), ufsx,
+> +				      usize);
+> +	if (error)
+> +		return error;
+> +
+> +	error = fsx_fileattr_to_fileattr(&fsx, &fa);
+> +	if (error)
+> +		return error;
+> +
+> +	name = getname_maybe_null(filename, at_flags);
+> +	if (IS_ERR(name))
+> +		return PTR_ERR(name);
+> +
+> +	if (!name && dfd >= 0) {
+> +		CLASS(fd, f)(dfd);
+> +
+
+Same comment here as above.
+
+> +		filepath = fd_file(f)->f_path;
+> +		path_get(&filepath);
+> +	} else {
+> +		error = filename_lookup(dfd, name, lookup_flags, &filepath,
+> +					NULL);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+> +	error = mnt_want_write(filepath.mnt);
+> +	if (!error) {
+> +		error = vfs_fileattr_set(mnt_idmap(filepath.mnt),
+> +					 filepath.dentry, &fa);
+> +		mnt_drop_write(filepath.mnt);
+> +	}
+> +
+> +	return error;
+> +}
 
 								Honza
 -- 
