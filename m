@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50A5427CCE7
-	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 16:43:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4F2E27D770
+	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 16:43:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751388182; cv=none; b=lMZMFKsbNsGODL3/QirJfit6idqzmZvpujoIEoVT0dPiVri+WZ7yEVkcCVkcfDMbRB6W1kWzXmf1FT8BsNX87ICNuFm7NgMG57VjfG9pVBDD3bX0sUP6tbQE0l6dQ6qJmJJcRIsfZ2ZF1yznNVm4CbLrm/6ZBivBS4p1hNXog2g=
+	t=1751388234; cv=none; b=Aw3ZGtRh5pZ4xLHdeRD29od1b9pgn04h7ZWUo/vncG0W+Z3xtZ7EQVn/aKuT18OH3SvJihz9egha6hooS6yfgCCFSh18zL3aiQZTzRFhBsCI0XgHXx+foR9m74hPZj/xXJgRs32wezCZabhcSmtn8CgNRJZsI1F9HBZzGh954kw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751388182; c=relaxed/simple;
-	bh=yf5OwzYJft3AdnzQQtbtJT/ZkHXWTXxcYiVhDi3Pf2w=;
+	s=arc-20240116; t=1751388234; c=relaxed/simple;
+	bh=ek9wpg9xKqtOD1R8Q6LPxS+c0wNweqw4mr6C9K11mIg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Lc4F599UfsLFJNAY+E0kr08Sv5c65iIDaf/5lELLAZ4qnVq/CUHXHRm59CkOklF6yeNVT/xO45keC4P65YZ8uYwPqZgGjxt/A0Vq74qh5mePYf88ji/g9BbgVSLzyy4VxVW/eWBDtkNM3dfbaUfDQdseCWOJ+tgFyYB5ifVhB2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rwfGhFTh; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bQ5vMd0ylDqW3fIuGFCryRsGKvEleQkdzGwIAGqE2RbeHd7z94B6FQkMgbrgpTGcASlmCZFBQcVEe96PU9hE38WnHVktQeYAVu+AT7LFCuuehoiQp0ifPRk9ZpkrpgqrXPKaC9H92F2F2IFQ2CkMxLNrPP1qsi7VfbA2b3x6kzQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eKwtfdvw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rwfGhFTh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1F69C4CEEB;
-	Tue,  1 Jul 2025 16:43:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eKwtfdvw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A082C4CEEB;
+	Tue,  1 Jul 2025 16:43:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751388181;
-	bh=yf5OwzYJft3AdnzQQtbtJT/ZkHXWTXxcYiVhDi3Pf2w=;
+	s=k20201202; t=1751388234;
+	bh=ek9wpg9xKqtOD1R8Q6LPxS+c0wNweqw4mr6C9K11mIg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rwfGhFThSdvkUm2e9oV81IoPzuIP87okpiWX0ND4ogbY1DAdaDzpAZmlKhKAZaiqV
-	 vLe5IseFqT12Yu66MuVueJnYcuempBecquIxyw4G4aKOMGhqt+wOe0f3U7CoMii93X
-	 p+2og+6red8MkkKdmsJPCRuqyyhBiea1IgNb0C5cjfyMGCFGCyoFWNoGxdKdD50lAA
-	 7WRPX+ZWcfEk9sKSu03TkOmERLIBPXIDojcUkDNcZOnB4YuDahnMnEEa7OKFo9PyeS
-	 vaZl49stT/N2F8odx1UWNm26HAXW/Kzhh6jmPiC5QiOGK7th8GnqwQFUyNkGoHjMOe
-	 fttG2kYZXCoHA==
-Date: Tue, 1 Jul 2025 09:43:01 -0700
+	b=eKwtfdvwfEEu9Vhu5bYR4TluVcwFD+F0CpfH+GXn567oSvUd3UMq5CCwx8/RJqUwX
+	 rdVYjq7DKuv4Ts3m41COQ2bneKS5oHVfVnInRPKLEQ3zRoUL2NlARCLhtK5ZQ069ch
+	 1GfANWsdse3+IvxWHO/ZX5eEcgX3gmfEY8encauKj9xaz4qEFEO9NN2GnN7lhSYuHW
+	 +6MOxKdKIpWe1Ieds2+80pI4NZa1D0cG/96IAYQ0FDwafRAfNk3s/2rEEGMVucM/PU
+	 JHgsBllDaXwQegzmp+xnXBPj4s1tgmCNJejjcRlXMyhy2xfEYAsWlweM4SYclUKAU3
+	 94Hm62k4cnXhg==
+Date: Tue, 1 Jul 2025 09:43:53 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, John Garry <john.g.garry@oracle.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/7] xfs: clean up the initial read logic in xfs_readsb
-Message-ID: <20250701164301.GF10009@frogsfrogsfrogs>
+Subject: Re: [PATCH 3/7] xfs: add a xfs_group_type_buftarg helper
+Message-ID: <20250701164353.GG10009@frogsfrogsfrogs>
 References: <20250701104125.1681798-1-hch@lst.de>
- <20250701104125.1681798-2-hch@lst.de>
+ <20250701104125.1681798-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,83 +43,113 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250701104125.1681798-2-hch@lst.de>
+In-Reply-To: <20250701104125.1681798-4-hch@lst.de>
 
-On Tue, Jul 01, 2025 at 12:40:35PM +0200, Christoph Hellwig wrote:
-> The initial sb read is always for a device logical block size
-> buffer.  The device logical block size is provided in the
-> bt_logical_sectorsize in struct buftarg, so use that instead of the
-> confusingly named xfs_getsize_buftarg buffer that reads it from the bdev.
-> 
-> Update the comments surrounding the code to better describe what is going
-> on.
+On Tue, Jul 01, 2025 at 12:40:37PM +0200, Christoph Hellwig wrote:
+> Generalize the xfs_group_type helper in the discard code to return a buftarg
+> and move it to xfs_mount.h, and use the result in xfs_dax_notify_dev_failure.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good,
+Looks good to me,
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_buf.h   |  1 -
->  fs/xfs/xfs_mount.c | 21 +++++++++++----------
->  2 files changed, 11 insertions(+), 11 deletions(-)
+>  fs/xfs/xfs_discard.c        | 29 +++++++----------------------
+>  fs/xfs/xfs_mount.h          | 17 +++++++++++++++++
+>  fs/xfs/xfs_notify_failure.c |  3 +--
+>  3 files changed, 25 insertions(+), 24 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 15fc56948346..73a9686110e8 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -375,7 +375,6 @@ extern void xfs_buftarg_wait(struct xfs_buftarg *);
->  extern void xfs_buftarg_drain(struct xfs_buftarg *);
->  int xfs_configure_buftarg(struct xfs_buftarg *btp, unsigned int sectorsize);
+> diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+> index 94d0873bcd62..603d51365645 100644
+> --- a/fs/xfs/xfs_discard.c
+> +++ b/fs/xfs/xfs_discard.c
+> @@ -103,24 +103,6 @@ xfs_discard_endio(
+>  	bio_put(bio);
+>  }
 >  
-> -#define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
->  #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
+> -static inline struct block_device *
+> -xfs_group_bdev(
+> -	const struct xfs_group	*xg)
+> -{
+> -	struct xfs_mount	*mp = xg->xg_mount;
+> -
+> -	switch (xg->xg_type) {
+> -	case XG_TYPE_AG:
+> -		return mp->m_ddev_targp->bt_bdev;
+> -	case XG_TYPE_RTG:
+> -		return mp->m_rtdev_targp->bt_bdev;
+> -	default:
+> -		ASSERT(0);
+> -		break;
+> -	}
+> -	return NULL;
+> -}
+> -
+>  /*
+>   * Walk the discard list and issue discards on all the busy extents in the
+>   * list. We plug and chain the bios so that we only need a single completion
+> @@ -138,11 +120,14 @@ xfs_discard_extents(
 >  
->  int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 29276fe60df9..047100b080aa 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -171,19 +171,16 @@ xfs_readsb(
->  	ASSERT(mp->m_ddev_targp != NULL);
+>  	blk_start_plug(&plug);
+>  	list_for_each_entry(busyp, &extents->extent_list, list) {
+> -		trace_xfs_discard_extent(busyp->group, busyp->bno,
+> -				busyp->length);
+> +		struct xfs_group	*xg = busyp->group;
+> +		struct xfs_buftarg	*btp =
+> +			xfs_group_type_buftarg(xg->xg_mount, xg->xg_type);
+> +
+> +		trace_xfs_discard_extent(xg, busyp->bno, busyp->length);
 >  
->  	/*
-> -	 * For the initial read, we must guess at the sector
-> -	 * size based on the block device.  It's enough to
-> -	 * get the sb_sectsize out of the superblock and
-> -	 * then reread with the proper length.
-> -	 * We don't verify it yet, because it may not be complete.
-> +	 * In the first pass, use the device sector size to just read enough
-> +	 * of the superblock to extract the XFS sector size.
-> +	 *
-> +	 * The device sector size must be smaller than or equal to the XFS
-> +	 * sector size and thus we can always read the superblock.  Once we know
-> +	 * the XFS sector size, re-read it and run the buffer verifier.
->  	 */
-> -	sector_size = xfs_getsize_buftarg(mp->m_ddev_targp);
-> +	sector_size = mp->m_ddev_targp->bt_logical_sectorsize;
->  	buf_ops = NULL;
+> -		error = __blkdev_issue_discard(xfs_group_bdev(busyp->group),
+> -				xfs_gbno_to_daddr(busyp->group, busyp->bno),
+> +		error = __blkdev_issue_discard(btp->bt_bdev,
+> +				xfs_gbno_to_daddr(xg, busyp->bno),
+>  				XFS_FSB_TO_BB(mp, busyp->length),
+>  				GFP_KERNEL, &bio);
+>  		if (error && error != -EOPNOTSUPP) {
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index d85084f9f317..97de44c32272 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -802,4 +802,21 @@ static inline void xfs_mod_sb_delalloc(struct xfs_mount *mp, int64_t delta)
+>  int xfs_set_max_atomic_write_opt(struct xfs_mount *mp,
+>  		unsigned long long new_max_bytes);
 >  
-> -	/*
-> -	 * Allocate a (locked) buffer to hold the superblock. This will be kept
-> -	 * around at all times to optimize access to the superblock.
-> -	 */
->  reread:
->  	error = xfs_buf_read_uncached(mp->m_ddev_targp, XFS_SB_DADDR,
->  				      BTOBB(sector_size), &bp, buf_ops);
-> @@ -247,6 +244,10 @@ xfs_readsb(
->  	/* no need to be quiet anymore, so reset the buf ops */
->  	bp->b_ops = &xfs_sb_buf_ops;
+> +static inline struct xfs_buftarg *
+> +xfs_group_type_buftarg(
+> +	struct xfs_mount	*mp,
+> +	enum xfs_group_type	type)
+> +{
+> +	switch (type) {
+> +	case XG_TYPE_AG:
+> +		return mp->m_ddev_targp;
+> +	case XG_TYPE_RTG:
+> +		return mp->m_rtdev_targp;
+> +	default:
+> +		ASSERT(0);
+> +		break;
+> +	}
+> +	return NULL;
+> +}
+> +
+>  #endif	/* __XFS_MOUNT_H__ */
+> diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+> index 3545dc1d953c..42e9c72b85c0 100644
+> --- a/fs/xfs/xfs_notify_failure.c
+> +++ b/fs/xfs/xfs_notify_failure.c
+> @@ -253,8 +253,7 @@ xfs_dax_notify_dev_failure(
+>  		return -EOPNOTSUPP;
+>  	}
 >  
-> +	/*
-> +	 * Keep a pointer of the sb buffer around instead of caching it in the
-> +	 * buffer cache because we access it frequently.
-> +	 */
->  	mp->m_sb_bp = bp;
->  	xfs_buf_unlock(bp);
->  	return 0;
+> -	error = xfs_dax_translate_range(type == XG_TYPE_RTG ?
+> -			mp->m_rtdev_targp : mp->m_ddev_targp,
+> +	error = xfs_dax_translate_range(xfs_group_type_buftarg(mp, type),
+>  			offset, len, &daddr, &bblen);
+>  	if (error)
+>  		return error;
 > -- 
 > 2.47.2
 > 
