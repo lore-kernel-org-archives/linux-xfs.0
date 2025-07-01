@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AE931B95B
-	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 18:08:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E4EC1B95B
+	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 18:08:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751393311; cv=none; b=pjMkXSG0+0SMwACimmwoZn+bOyFVoSeJFmR4GpDKQYdHFPA6zxlRPVLs5t6llQkimztN8yIwpcQ0ShlbYkM26KeywMpUC2Ji1pdFTdzOFW5XlCtZiEy9g/AbjH/NjtY7JcFeef5m0+OBVaxRny1mHkX1uhcdr8OD4B7nhgFoSAc=
+	t=1751393327; cv=none; b=JXF+i8lQ7OzT9CkZuAS5u/2ZLA731rd+nCfSX0UKlGGo/BLRKkrciCw6/Ju9+ZC2tL2TjCJthePSLDElgncIwNKGffPUL118r3glsTFDg3uxoSHm44rNT8e4iRKIOfOTQbzAFtvPo1uKnlsqwGiT2eLEQyvGEzeK/fvRhntCQVc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751393311; c=relaxed/simple;
-	bh=w9XyH4IOBvKuB1NCUWKD6+XBJNydM0NmfEhvmd5RygA=;
+	s=arc-20240116; t=1751393327; c=relaxed/simple;
+	bh=cJhn9H6ZdmPPMMegiUzf+vkw/12HSOWQIHc+dGdRXZM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=D/V6FJnefdKiahCcCwxz3MpzLorKnKe0pZi6ufxMO6VCipSsK89VJW2yqSPg4l1KFkDv3EqHG1/Vhx7w112zP3ozXyX2doXcWzLlKCpnSpWOizW8e2z0bH4WQfRTXm5KVW3mCEpc5VNa0PuvxY7Y4EsHhfVHTQltWZL6IUN2pP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nSMaQ84J; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Mf3D9+47Ow5wYpZre7bXa6OxMfJm1Oqqj6OPPuQ7JeE0mmo8t7R4mwK09pb9bHcItVA3Wn7IHdUZWlYQddAE2nwOb1TWEFTHZCLUmVkMsX/ndPI1ZzLm0aSs8mnW5ecerLJnONfI2Z/a29ak4vfMMXKq5ewIHo1IG3KTYwh+kkM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VoLkca/N; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nSMaQ84J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29EEEC4CEEB;
-	Tue,  1 Jul 2025 18:08:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VoLkca/N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D836EC4CEEB;
+	Tue,  1 Jul 2025 18:08:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751393311;
-	bh=w9XyH4IOBvKuB1NCUWKD6+XBJNydM0NmfEhvmd5RygA=;
+	s=k20201202; t=1751393326;
+	bh=cJhn9H6ZdmPPMMegiUzf+vkw/12HSOWQIHc+dGdRXZM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=nSMaQ84JPSzX9//3OCmeHU83YpZNeSCCGSWSckT3lM2nXwAw+OWN2+a1m0J5uz0pH
-	 zeIio/3QNbAK/vyCjlSXPhC9cg51FzX+shHXkHJ05pob+6P6JtKocRMoAs9i5d50Md
-	 LQ1bW6wzMUogrMB9T8Hj+HxsvD7Zq8kHPAqn+P2m6uH8zJAKDC797alYb7LVG+NR/1
-	 YQhtYKR0muRGq+qRMFoEZSae5e9gv7vhwhKeV0xT1Ka53Wlpyi9u//RRw0AAme7XO/
-	 S0211Mx74BkFnRRDCuQMBHNjq2qTPyecHMUS52G04B9EDt30Pi3BycHByQYo1PBQ8F
-	 aM5o00GRpf3/A==
-Date: Tue, 01 Jul 2025 11:08:30 -0700
-Subject: [PATCH 6/7] mkfs: try to align AG size based on atomic write
- capabilities
+	b=VoLkca/NwKgAqatTKdmz/tT5AOpItuqFym1kGNpzquPWD5fVIKwFPx96E2rZo0zA3
+	 zpOpKQimNPdNa1LWxs+G8xVNjf2UPCqbJnJiHeTXsRF0UidolKUVKWbHTo6WztlLXX
+	 gdjxccHQNMLBKm04bIJcHDPFg9HIxY+E/jI1IaEseS30SMzYYLWCKTdTRUyKjeeAsw
+	 f3SaijmqdXXaqpNPArb/eqIaVKkkfRo7Gi6UBWOgJaCWox+k5crCMGvl2Pf0Uc80ra
+	 zTiz4PgVVoIWMqZX21ysnSUbfQoP6kwfFopzGlnU/2zQImGOFHA6dp30LowjWtQzLx
+	 TmjqG8bvkOlzw==
+Date: Tue, 01 Jul 2025 11:08:46 -0700
+Subject: [PATCH 7/7] mkfs: allow users to configure the desired maximum atomic
+ write size
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: catherine.hoang@oracle.com, john.g.garry@oracle.com,
  linux-xfs@vger.kernel.org
-Message-ID: <175139303947.916168.18334224285549571882.stgit@frogsfrogsfrogs>
+Message-ID: <175139303966.916168.14447520990668670279.stgit@frogsfrogsfrogs>
 In-Reply-To: <175139303809.916168.13664699895415552120.stgit@frogsfrogsfrogs>
 References: <175139303809.916168.13664699895415552120.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -47,187 +47,351 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Try to align the AG size to the maximum hardware atomic write unit so
-that we can give users maximum flexibility in choosing an RWF_ATOMIC
-write size.
+Allow callers of mkfs.xfs to specify a desired maximum atomic write
+size.  This value will cause the log size to be adjusted to support
+software atomic writes, and the AG size to be aligned to support
+hardware atomic writes.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- libxfs/topology.h |    6 ++++--
- libxfs/topology.c |   36 ++++++++++++++++++++++++++++++++++++
- mkfs/xfs_mkfs.c   |   48 +++++++++++++++++++++++++++++++++++++++++++-----
- 3 files changed, 83 insertions(+), 7 deletions(-)
+ include/bitops.h         |   12 +++
+ libxfs/libxfs_api_defs.h |    1 
+ man/man8/mkfs.xfs.8.in   |    7 ++
+ mkfs/xfs_mkfs.c          |  194 ++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 213 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/topology.h b/libxfs/topology.h
-index 207a8a7f150556..f0ca65f3576e92 100644
---- a/libxfs/topology.h
-+++ b/libxfs/topology.h
-@@ -13,8 +13,10 @@
- struct device_topology {
- 	int	logical_sector_size;	/* logical sector size */
- 	int	physical_sector_size;	/* physical sector size */
--	int	sunit;		/* stripe unit */
--	int	swidth;		/* stripe width  */
-+	int	sunit;			/* stripe unit */
-+	int	swidth;			/* stripe width  */
-+	int	awu_min;		/* min atomic write unit in bbcounts */
-+	int	awu_max;		/* max atomic write unit in bbcounts */
- };
- 
- struct fs_topology {
-diff --git a/libxfs/topology.c b/libxfs/topology.c
-index 96ee74b61b30f5..7764687beac000 100644
---- a/libxfs/topology.c
-+++ b/libxfs/topology.c
-@@ -4,11 +4,18 @@
-  * All Rights Reserved.
-  */
- 
-+#ifdef OVERRIDE_SYSTEM_STATX
-+#define statx sys_statx
-+#endif
-+#include <fcntl.h>
-+#include <sys/stat.h>
-+
- #include "libxfs_priv.h"
- #include "libxcmd.h"
- #include <blkid/blkid.h>
- #include "xfs_multidisk.h"
- #include "libfrog/platform.h"
-+#include "libfrog/statx.h"
- 
- #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
- #define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
-@@ -278,6 +285,34 @@ blkid_get_topology(
- 		device);
+diff --git a/include/bitops.h b/include/bitops.h
+index 1f1adceccf5d2b..d0c55827044e54 100644
+--- a/include/bitops.h
++++ b/include/bitops.h
+@@ -113,4 +113,16 @@ static inline int lowbit64(uint64_t v)
+ 	return n - 1;
  }
  
-+static void
-+get_hw_atomic_writes_topology(
-+	struct libxfs_dev	*dev,
-+	struct device_topology	*dt)
++/**
++ * __rounddown_pow_of_two() - round down to nearest power of two
++ * @n: value to round down
++ */
++static inline __attribute__((const))
++unsigned long __rounddown_pow_of_two(unsigned long n)
 +{
-+	struct statx		sx;
-+	int			fd;
-+	int			ret;
-+
-+	fd = open(dev->name, O_RDONLY);
-+	if (fd < 0)
-+		return;
-+
-+	ret = statx(fd, "", AT_EMPTY_PATH, STATX_WRITE_ATOMIC, &sx);
-+	if (ret)
-+		goto out_close;
-+
-+	if (!(sx.stx_mask & STATX_WRITE_ATOMIC))
-+		goto out_close;
-+
-+	dt->awu_min = sx.stx_atomic_write_unit_min >> 9;
-+	dt->awu_max = max(sx.stx_atomic_write_unit_max_opt,
-+			  sx.stx_atomic_write_unit_max) >> 9;
-+
-+out_close:
-+	close(fd);
++	return 1UL << (fls_long(n) - 1);
 +}
 +
- static void
- get_device_topology(
- 	struct libxfs_dev	*dev,
-@@ -316,6 +351,7 @@ get_device_topology(
- 		}
- 	} else {
- 		blkid_get_topology(dev->name, dt, force_overwrite);
-+		get_hw_atomic_writes_topology(dev, dt);
- 	}
- 
- 	ASSERT(dt->logical_sector_size);
++#define rounddown_pow_of_two(n) __rounddown_pow_of_two(n)
++
+ #endif
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 4bd02c57b496e6..fe00e19bada9d8 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -107,6 +107,7 @@
+ #define xfs_buftarg_drain		libxfs_buftarg_drain
+ #define xfs_bunmapi			libxfs_bunmapi
+ #define xfs_bwrite			libxfs_bwrite
++#define xfs_calc_atomic_write_log_geometry	libxfs_calc_atomic_write_log_geometry
+ #define xfs_calc_dquots_per_chunk	libxfs_calc_dquots_per_chunk
+ #define xfs_calc_finish_bui_reservation	libxfs_calc_finish_bui_reservation
+ #define xfs_calc_finish_cui_reservation	libxfs_calc_finish_cui_reservation
+diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
+index bc80493187f6f9..5f59d4b2da6e02 100644
+--- a/man/man8/mkfs.xfs.8.in
++++ b/man/man8/mkfs.xfs.8.in
+@@ -742,6 +742,13 @@ .SH OPTIONS
+ directories, symbolic links, and realtime metadata files.
+ This feature is disabled by default.
+ This feature is only available for filesystems formatted with -m crc=1.
++.TP
++.BI max_atomic_write[= value]
++When enabled, application programs can use the RWF_ATOMIC write flag to
++persist changes of up to this size without tearing.
++The default is chosen to allow a reasonable amount of scalability.
++This value must also be passed via mount option.
++This feature is only available for filesystems formatted with reflink.
+ .RE
+ .PP
+ .PD 0
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 6c8cc715d3476b..7d3e9dd567b7b2 100644
+index 7d3e9dd567b7b2..fc769df22357a6 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -3379,6 +3379,32 @@ _("illegal CoW extent size hint %lld, must be less than %u and a multiple of %u.
+@@ -94,6 +94,7 @@ enum {
+ 	I_SPINODES,
+ 	I_NREXT64,
+ 	I_EXCHANGE,
++	I_MAX_ATOMIC_WRITE,
+ 	I_MAX_OPTS,
+ };
+ 
+@@ -489,6 +490,7 @@ static struct opt_params iopts = {
+ 		[I_SPINODES] = "sparse",
+ 		[I_NREXT64] = "nrext64",
+ 		[I_EXCHANGE] = "exchange",
++		[I_MAX_ATOMIC_WRITE] = "max_atomic_write",
+ 		[I_MAX_OPTS] = NULL,
+ 	},
+ 	.subopt_params = {
+@@ -550,6 +552,13 @@ static struct opt_params iopts = {
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
++		{ .index = I_MAX_ATOMIC_WRITE,
++		  .conflicts = { { NULL, LAST_CONFLICT } },
++		  .convert = true,
++		  .minval = 1,
++		  .maxval = 1ULL << 30, /* 1GiB */
++		  .defaultval = SUBOPT_NEEDS_VAL,
++		},
+ 	},
+ };
+ 
+@@ -1069,6 +1078,7 @@ struct cli_params {
+ 	char	*rtsize;
+ 	char	*rtstart;
+ 	uint64_t rtreserved;
++	char	*max_atomic_write;
+ 
+ 	/* parameters where 0 is a valid CLI value */
+ 	int	dsunit;
+@@ -1157,6 +1167,8 @@ struct mkfs_params {
+ 	struct sb_feat_args	sb_feat;
+ 	uint64_t	rtstart;
+ 	uint64_t	rtreserved;
++
++	uint64_t	max_atomic_write;
+ };
+ 
+ /*
+@@ -1197,7 +1209,7 @@ usage( void )
+ /* force overwrite */	[-f]\n\
+ /* inode size */	[-i perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
+ 			    projid32bit=0|1,sparse=0|1,nrext64=0|1,\n\
+-			    exchange=0|1]\n\
++			    exchange=0|1,max_atomic_write=n]\n\
+ /* no discard */	[-K]\n\
+ /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
+ 			    sunit=value|su=num,sectsize=num,lazy-count=0|1,\n\
+@@ -1927,6 +1939,9 @@ inode_opts_parser(
+ 	case I_EXCHANGE:
+ 		cli->sb_feat.exchrange = getnum(value, opts, subopt);
+ 		break;
++	case I_MAX_ATOMIC_WRITE:
++		cli->max_atomic_write = getstr(value, opts, subopt);
++		break;
+ 	default:
+ 		return -EINVAL;
  	}
+@@ -4092,6 +4107,18 @@ align_ag_geometry(
+ 		dsunit = max(DTOBT(ft->data.awu_max, cfg->blocklog),
+ 				dsunit);
+ 
++	/*
++	 * If the user gave us a maximum atomic write size that is less than
++	 * a whole AG, try to align the AG size to that value.
++	 */
++	if (cfg->max_atomic_write > 0) {
++		xfs_extlen_t	max_atomic_fsbs =
++			cfg->max_atomic_write >> cfg->blocklog;
++
++		if (max_atomic_fsbs < cfg->agsize)
++			dsunit = max(dsunit, max_atomic_fsbs);
++	}
++
+ 	if (!dsunit)
+ 		goto validate;
+ 
+@@ -4971,6 +4998,140 @@ calc_concurrency_logblocks(
+ 	return logblocks;
  }
  
-+static void
-+validate_device_awu(
-+	struct mkfs_params	*cfg,
-+	struct device_topology	*dt)
++#define MAX_RW_COUNT (INT_MAX & ~(getpagesize() - 1))
++
++/* Maximum atomic write IO size that the kernel allows. */
++static inline xfs_extlen_t calc_atomic_write_max(struct mkfs_params *cfg)
 +{
-+	/* Ignore hw atomic write capability if it can't do even 1 fsblock */
-+	if (BBTOB(dt->awu_min) > cfg->blocksize ||
-+	    BBTOB(dt->awu_max) < cfg->blocksize) {
-+		dt->awu_min = 0;
-+		dt->awu_max = 0;
++	return rounddown_pow_of_two(MAX_RW_COUNT >> cfg->blocklog);
++}
++
++static inline unsigned int max_pow_of_two_factor(const unsigned int nr)
++{
++	return 1 << (ffs(nr) - 1);
++}
++
++/*
++ * If the data device advertises atomic write support, limit the size of data
++ * device atomic writes to the greatest power-of-two factor of the AG size so
++ * that every atomic write unit aligns with the start of every AG.  This is
++ * required so that the per-AG allocations for an atomic write will always be
++ * aligned compatibly with the alignment requirements of the storage.
++ *
++ * If the data device doesn't advertise atomic writes, then there are no
++ * alignment restrictions and the largest out-of-place write we can do
++ * ourselves is the number of blocks that user files can allocate from any AG.
++ */
++static inline xfs_extlen_t
++calc_perag_awu_max(
++	struct mkfs_params	*cfg,
++	struct fs_topology	*ft)
++{
++	if (ft->data.awu_min > 0)
++		return max_pow_of_two_factor(cfg->agsize);
++	return cfg->agsize;
++}
++
++/*
++ * Reflink on the realtime device requires rtgroups, and atomic writes require
++ * reflink.
++ *
++ * If the realtime device advertises atomic write support, limit the size of
++ * data device atomic writes to the greatest power-of-two factor of the rtgroup
++ * size so that every atomic write unit aligns with the start of every rtgroup.
++ * This is required so that the per-rtgroup allocations for an atomic write
++ * will always be aligned compatibly with the alignment requirements of the
++ * storage.
++ *
++ * If the rt device doesn't advertise atomic writes, then there are no
++ * alignment restrictions and the largest out-of-place write we can do
++ * ourselves is the number of blocks that user files can allocate from any
++ * rtgroup.
++ */
++static inline xfs_extlen_t
++calc_rtgroup_awu_max(
++	struct mkfs_params	*cfg,
++	struct fs_topology	*ft)
++{
++	if (ft->rt.awu_min > 0)
++		return max_pow_of_two_factor(cfg->rgsize);
++	return cfg->rgsize;
++}
++
++/*
++ * Validate the maximum atomic out of place write size passed in by the user.
++ */
++static void
++validate_max_atomic_write(
++	struct mkfs_params	*cfg,
++	struct cli_params	*cli,
++	struct fs_topology	*ft,
++	struct xfs_mount	*mp)
++{
++	const xfs_extlen_t	max_write = calc_atomic_write_max(cfg);
++	xfs_filblks_t		max_atomic_fsbcount;
++
++	cfg->max_atomic_write = getnum(cli->max_atomic_write, &iopts,
++			I_MAX_ATOMIC_WRITE);
++	max_atomic_fsbcount = cfg->max_atomic_write >> cfg->blocklog;
++
++	/* generic_atomic_write_valid enforces power of two length */
++	if (!is_power_of_2(cfg->max_atomic_write)) {
++		fprintf(stderr,
++ _("Max atomic write size of %llu bytes is not a power of 2\n"),
++			(unsigned long long)cfg->max_atomic_write);
++		exit(1);
++	}
++
++	if (cfg->max_atomic_write % cfg->blocksize) {
++		fprintf(stderr,
++ _("Max atomic write size of %llu bytes not aligned with fsblock.\n"),
++			(unsigned long long)cfg->max_atomic_write);
++		exit(1);
++	}
++
++	if (max_atomic_fsbcount > max_write) {
++		fprintf(stderr,
++ _("Max atomic write size of %lluk cannot be larger than max write size %lluk.\n"),
++			(unsigned long long)cfg->max_atomic_write >> 10,
++			(unsigned long long)max_write << (cfg->blocklog - 10));
++		exit(1);
 +	}
 +}
 +
++/*
++ * Validate the maximum atomic out of place write size passed in by the user
++ * actually works with the allocation groups sizes.
++ */
 +static void
-+validate_hw_atomic_writes(
++validate_max_atomic_write_ags(
 +	struct mkfs_params	*cfg,
-+	struct cli_params	*cli,
-+	struct fs_topology	*ft)
++	struct fs_topology	*ft,
++	struct xfs_mount	*mp)
 +{
-+	validate_device_awu(cfg, &ft->data);
-+	if (cli->xi->log.name)
-+		validate_device_awu(cfg, &ft->log);
-+	if (cli->xi->rt.name)
-+		validate_device_awu(cfg, &ft->rt);
++	const xfs_extlen_t	max_group = max(cfg->agsize, cfg->rgsize);
++	const xfs_extlen_t	max_group_write =
++		max(calc_perag_awu_max(cfg, ft), calc_rtgroup_awu_max(cfg, ft));
++	xfs_filblks_t		max_atomic_fsbcount =
++		XFS_B_TO_FSBT(mp, cfg->max_atomic_write);
++
++	if (max_atomic_fsbcount > max_group) {
++		fprintf(stderr,
++ _("Max atomic write size of %lluk cannot be larger than allocation group size %lluk.\n"),
++			(unsigned long long)cfg->max_atomic_write >> 10,
++			(unsigned long long)XFS_FSB_TO_B(mp, max_group) >> 10);
++		exit(1);
++	}
++
++	if (max_atomic_fsbcount > max_group_write) {
++		fprintf(stderr,
++ _("Max atomic write size of %lluk cannot be larger than max allocation group write size %lluk.\n"),
++			(unsigned long long)cfg->max_atomic_write >> 10,
++			(unsigned long long)XFS_FSB_TO_B(mp, max_group_write) >> 10);
++		exit(1);
++	}
 +}
 +
- /* Complain if this filesystem is not a supported configuration. */
  static void
- validate_supported(
-@@ -4051,10 +4077,20 @@ _("agsize (%s) not a multiple of fs blk size (%d)\n"),
-  */
- static void
- align_ag_geometry(
--	struct mkfs_params	*cfg)
-+	struct mkfs_params	*cfg,
-+	struct fs_topology	*ft)
- {
--	uint64_t	tmp_agsize;
--	int		dsunit = cfg->dsunit;
-+	uint64_t		tmp_agsize;
-+	int			dsunit = cfg->dsunit;
-+
-+	/*
-+	 * We've already validated (or discarded) the hardware atomic write
-+	 * geometry.  Try to align the agsize to the maximum atomic write unit
-+	 * to give users maximum flexibility in choosing atomic write sizes.
-+	 */
-+	if (ft->data.awu_max > 0)
-+		dsunit = max(DTOBT(ft->data.awu_max, cfg->blocklog),
-+				dsunit);
- 
- 	if (!dsunit)
- 		goto validate;
-@@ -4110,7 +4146,8 @@ _("agsize rounded to %lld, sunit = %d\n"),
- 				(long long)cfg->agsize, dsunit);
+ calculate_log_size(
+ 	struct mkfs_params	*cfg,
+@@ -4996,6 +5157,22 @@ calculate_log_size(
+ 		libxfs_log_get_max_trans_res(&mount, &res);
+ 		max_tx_bytes = res.tr_logres * res.tr_logcount;
  	}
++	if (cfg->max_atomic_write > 0) {
++		unsigned int	dontcare;
++		xfs_extlen_t	atomic_min_logblocks =
++			libxfs_calc_atomic_write_log_geometry(&mount,
++					cfg->max_atomic_write >> cfg->blocklog,
++					&dontcare);
++
++		if (!atomic_min_logblocks) {
++			fprintf(stderr,
++ _("atomic write size %lluk is too big for the log to handle.\n"),
++				(unsigned long long)cfg->max_atomic_write >> 10);
++			exit(1);
++		}
++
++		min_logblocks = max(min_logblocks, atomic_min_logblocks);
++	}
+ 	libxfs_umount(&mount);
  
--	if ((cfg->agsize % cfg->dswidth) == 0 &&
-+	if (cfg->dswidth > 0 &&
-+	    (cfg->agsize % cfg->dswidth) == 0 &&
- 	    cfg->dswidth != cfg->dsunit &&
- 	    cfg->agcount > 1) {
+ 	ASSERT(min_logblocks);
+@@ -5923,6 +6100,13 @@ main(
+ 	validate_rtdev(&cfg, &cli, &zt);
+ 	calc_stripe_factors(&cfg, &cli, &ft);
  
-@@ -5874,6 +5911,7 @@ main(
- 	cfg.rtblocks = calc_dev_size(cli.rtsize, &cfg, &ropts, R_SIZE, "rt");
- 
- 	validate_rtextsize(&cfg, &cli, &ft);
-+	validate_hw_atomic_writes(&cfg, &cli, &ft);
- 
++	/*
++	 * Now that we have basic geometry set up, we can validate the CLI
++	 * max atomic write parameter.
++	 */
++	if (cli.max_atomic_write)
++		validate_max_atomic_write(&cfg, &cli, &ft, mp);
++
  	/*
- 	 * Open and validate the device configurations
-@@ -5892,7 +5930,7 @@ main(
- 	 * aligns to device geometry correctly.
- 	 */
- 	calculate_initial_ag_geometry(&cfg, &cli, &xi);
--	align_ag_geometry(&cfg);
-+	align_ag_geometry(&cfg, &ft);
- 	if (cfg.sb_feat.zoned)
- 		calculate_zone_geometry(&cfg, &cli, &xi, &zt);
- 	else
+ 	 * At this point when know exactly what size all the devices are,
+ 	 * so we can start validating and calculating layout options that are
+@@ -5946,6 +6130,14 @@ main(
+ 	start_superblock_setup(&cfg, mp, sbp);
+ 	initialise_mount(mp, sbp);
+ 
++	/*
++	 * Now that we have computed the allocation group geometry, we can
++	 * continue validating the maximum software atomic write parameter, if
++	 * one was given.
++	 */
++	if (cfg.max_atomic_write)
++		validate_max_atomic_write_ags(&cfg, &ft, mp);
++
+ 	/*
+ 	 * With the mount set up, we can finally calculate the log size
+ 	 * constraints and do default size calculations and final validation
 
