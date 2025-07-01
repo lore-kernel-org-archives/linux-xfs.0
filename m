@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4906915E96
-	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 10:41:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E8E026F471
+	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 10:41:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751366504; cv=none; b=DrbpOsgn8s6EA1wDtCO2cMTMPpbAaiowd64278mx01K2judnHwkTPOnREuIWT4FlSIQhvzVntNCQNTB2uBdty5GyMb2o0mzYhz77RTDpPjmYf3ugGdoqSP9iNcvqRTqVZ5tuuk2UWcHgsUnr4NOMUYKrI/BHFFPasdeHXuAPZPM=
+	t=1751366508; cv=none; b=jrb/WCIr9t8Y4EZ40jQxt+qHswbBBlom/Uuqkdxurq/GrsZ8S96koA+C8yyXWihvtfKVg1IVUg6NlA5jAg+7CQcUbv7QR6VsL+GOCbNdCGL17F9DCBBcP7A+der/q6M6cWxjIQDkXw3AC0elieyOx7GdPLbvFp7kd3VenyvZlyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751366504; c=relaxed/simple;
-	bh=cX/lneuBjSLymcMhgM6uPWdvoUMOSXQ9Y2dHEldMf4Q=;
+	s=arc-20240116; t=1751366508; c=relaxed/simple;
+	bh=fAPIj3bPo5O0gIuH24wj2TP17nLopSafNgSpdxAP6Z0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ktXXO8/q5FamLxaym5BM/XTg68EysvoFaencnRsz46WssNeTChpXgersh6PhY0eX0lspqzBWO1oFpoICMSP10UzN1ZEJ1Os+7xhwjRV5Er4Ho0I2RdNX242WWvMRiThFnZY/yGxUBfTYhNGVrwJGEYOn08KT07tcGCsQ8KDk2R4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0Y0hW9eZ; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=CtsYVOmISt4QI/1hiAdXNaORg/dOkzdyX/kpEdEHFcXSstQfVxz2SuzOwsJC6p482ABQpP/NfIaKuh2dDf58t5/2pLoqmIYoEsWs5ro/jTS6l+ExMv/89vlCciXPMl0zoV6ODI/gekBvSNK/Yd8GeB9bseztNunLs27s6WrCpQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=MIrxYueT; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0Y0hW9eZ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MIrxYueT"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=jyTp3zJcCMgAd5Q+SA2fVN585qWx42rHRKdKHH3fEDU=; b=0Y0hW9eZR7hjZEwewFibgkWo/0
-	Lzo7a0jlDiBp6BPmuA+Y9+iMoz5VNkVVDWKWimQxBtEEgUw8mCMYcg47mfDshvPj1sBoQzHzQN+Ek
-	KLfFU7YRSWAWFKd+JLBlhMN3pkYv1igA2NjJkBKe49bzAuWZbLPh69iu1Cn2FRSakKaWBQrJr1cuE
-	5mIyv7kEjrep4+O2IT3I1bjADlpZUh17pj+FZUC9XyW/wY284We6laUBpqdMbWM3cwURVGgnNZgZW
-	VQyoItJpJOlf8O3LOQNNoczzCaxO+Dco6Iy3lh5DA5tBOsSTK+0B2gvB+moI2be+Q6vNgq4tOkO/j
-	SKgbzTlw==;
+	bh=a79aU6mfxdhFunvPSUEakEhpCJIraUjQVcp7BPyebjs=; b=MIrxYueTleFmVqDwVOtOiQ8kr7
+	IrtYd9qjXgYn+c7L59zx6OgcCcKJyKATIo4lmv508AsnGqU2yRXwpA6srGNo1MSyBf6DEXBwRT2yH
+	CeSHR0A5X+wrsfMk6ZAdITFTveCu6N+J8CdLxTnoDadlwlbzdgd3aXStqhn25iTrAqhqO/1EeGJpT
+	ytGdRC1p/XgxYrPDKb4JeukGsA2JoCh0KeNy+n8pk4Ryj4NbKi6ux8GCiT4E8/q7P2Dla6MX59iGb
+	cDal39x4fYimVgLHcw7+BJp3yrwrwoLOdFsrZP7g7oo/3+RPiX56W6csfALzuBmOC8exXnVeoXQ+r
+	L8jVSRNQ==;
 Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uWYQo-00000004m0t-1nAS;
-	Tue, 01 Jul 2025 10:41:43 +0000
+	id 1uWYQr-00000004m1g-1Y0i;
+	Tue, 01 Jul 2025 10:41:46 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: John Garry <john.g.garry@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/7] xfs: refactor xfs_calc_atomic_write_unit_max
-Date: Tue,  1 Jul 2025 12:40:38 +0200
-Message-ID: <20250701104125.1681798-5-hch@lst.de>
+Subject: [PATCH 5/7] xfs: rename the bt_bdev_* buftarg fields
+Date: Tue,  1 Jul 2025 12:40:39 +0200
+Message-ID: <20250701104125.1681798-6-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
 In-Reply-To: <20250701104125.1681798-1-hch@lst.de>
 References: <20250701104125.1681798-1-hch@lst.de>
@@ -50,188 +50,117 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-This function and the helpers used by it duplicate the same logic for AGs
-and RTGs.  Use the xfs_group_type enum to unify both variants.
+The extra bdev_ is weird, so drop it.  Also improve the comment to make
+it clear these are the hardware limits.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
 ---
- fs/xfs/xfs_mount.c | 76 +++++++++++++++++-----------------------------
- fs/xfs/xfs_trace.h | 31 +++++++++----------
- 2 files changed, 42 insertions(+), 65 deletions(-)
+ fs/xfs/xfs_buf.c   | 4 ++--
+ fs/xfs/xfs_buf.h   | 6 +++---
+ fs/xfs/xfs_file.c  | 2 +-
+ fs/xfs/xfs_inode.h | 2 +-
+ fs/xfs/xfs_iomap.c | 2 +-
+ fs/xfs/xfs_iops.c  | 2 +-
+ fs/xfs/xfs_mount.c | 2 +-
+ 7 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 047100b080aa..99fbb22bad4c 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -679,68 +679,46 @@ static inline unsigned int max_pow_of_two_factor(const unsigned int nr)
- }
- 
- /*
-- * If the data device advertises atomic write support, limit the size of data
-- * device atomic writes to the greatest power-of-two factor of the AG size so
-- * that every atomic write unit aligns with the start of every AG.  This is
-- * required so that the per-AG allocations for an atomic write will always be
-+ * If the underlying device advertises atomic write support, limit the size of
-+ * atomic writes to the greatest power-of-two factor of the group size so
-+ * that every atomic write unit aligns with the start of every group.  This is
-+ * required so that the allocations for an atomic write will always be
-  * aligned compatibly with the alignment requirements of the storage.
-  *
-- * If the data device doesn't advertise atomic writes, then there are no
-- * alignment restrictions and the largest out-of-place write we can do
-- * ourselves is the number of blocks that user files can allocate from any AG.
-+ * If the device doesn't advertise atomic writes, then there are no alignment
-+ * restrictions and the largest out-of-place write we can do ourselves is the
-+ * number of blocks that user files can allocate from any group.
-  */
--static inline xfs_extlen_t xfs_calc_perag_awu_max(struct xfs_mount *mp)
--{
--	if (mp->m_ddev_targp->bt_bdev_awu_min > 0)
--		return max_pow_of_two_factor(mp->m_sb.sb_agblocks);
--	return rounddown_pow_of_two(mp->m_ag_max_usable);
--}
--
--/*
-- * Reflink on the realtime device requires rtgroups, and atomic writes require
-- * reflink.
-- *
-- * If the realtime device advertises atomic write support, limit the size of
-- * data device atomic writes to the greatest power-of-two factor of the rtgroup
-- * size so that every atomic write unit aligns with the start of every rtgroup.
-- * This is required so that the per-rtgroup allocations for an atomic write
-- * will always be aligned compatibly with the alignment requirements of the
-- * storage.
-- *
-- * If the rt device doesn't advertise atomic writes, then there are no
-- * alignment restrictions and the largest out-of-place write we can do
-- * ourselves is the number of blocks that user files can allocate from any
-- * rtgroup.
-- */
--static inline xfs_extlen_t xfs_calc_rtgroup_awu_max(struct xfs_mount *mp)
-+static xfs_extlen_t
-+xfs_calc_group_awu_max(
-+	struct xfs_mount	*mp,
-+	enum xfs_group_type	type)
- {
--	struct xfs_groups	*rgs = &mp->m_groups[XG_TYPE_RTG];
-+	struct xfs_groups	*g = &mp->m_groups[type];
-+	struct xfs_buftarg	*btp = xfs_group_type_buftarg(mp, type);
- 
--	if (rgs->blocks == 0)
-+	if (g->blocks == 0)
- 		return 0;
--	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_bdev_awu_min > 0)
--		return max_pow_of_two_factor(rgs->blocks);
--	return rounddown_pow_of_two(rgs->blocks);
-+	if (btp && btp->bt_bdev_awu_min > 0)
-+		return max_pow_of_two_factor(g->blocks);
-+	return rounddown_pow_of_two(g->blocks);
- }
- 
- /* Compute the maximum atomic write unit size for each section. */
- static inline void
- xfs_calc_atomic_write_unit_max(
--	struct xfs_mount	*mp)
-+	struct xfs_mount	*mp,
-+	enum xfs_group_type	type)
- {
--	struct xfs_groups	*ags = &mp->m_groups[XG_TYPE_AG];
--	struct xfs_groups	*rgs = &mp->m_groups[XG_TYPE_RTG];
-+	struct xfs_groups	*g = &mp->m_groups[type];
- 
- 	const xfs_extlen_t	max_write = xfs_calc_atomic_write_max(mp);
- 	const xfs_extlen_t	max_ioend = xfs_reflink_max_atomic_cow(mp);
--	const xfs_extlen_t	max_agsize = xfs_calc_perag_awu_max(mp);
--	const xfs_extlen_t	max_rgsize = xfs_calc_rtgroup_awu_max(mp);
--
--	ags->awu_max = min3(max_write, max_ioend, max_agsize);
--	rgs->awu_max = min3(max_write, max_ioend, max_rgsize);
-+	const xfs_extlen_t	max_gsize = xfs_calc_group_awu_max(mp, type);
- 
--	trace_xfs_calc_atomic_write_unit_max(mp, max_write, max_ioend,
--			max_agsize, max_rgsize);
-+	g->awu_max = min3(max_write, max_ioend, max_gsize);
-+	trace_xfs_calc_atomic_write_unit_max(mp, type, max_write, max_ioend,
-+			max_gsize, g->awu_max);
- }
- 
- /*
-@@ -758,7 +736,8 @@ xfs_set_max_atomic_write_opt(
- 		max(mp->m_groups[XG_TYPE_AG].blocks,
- 		    mp->m_groups[XG_TYPE_RTG].blocks);
- 	const xfs_extlen_t	max_group_write =
--		max(xfs_calc_perag_awu_max(mp), xfs_calc_rtgroup_awu_max(mp));
-+		max(xfs_calc_group_awu_max(mp, XG_TYPE_AG),
-+		    xfs_calc_group_awu_max(mp, XG_TYPE_RTG));
- 	int			error;
- 
- 	if (new_max_bytes == 0)
-@@ -814,7 +793,8 @@ xfs_set_max_atomic_write_opt(
- 		return error;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 7a05310da895..661f6c70e9d0 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1712,8 +1712,8 @@ xfs_configure_buftarg_atomic_writes(
+ 		max_bytes = 0;
  	}
  
--	xfs_calc_atomic_write_unit_max(mp);
-+	xfs_calc_atomic_write_unit_max(mp, XG_TYPE_AG);
-+	xfs_calc_atomic_write_unit_max(mp, XG_TYPE_RTG);
- 	mp->m_awu_max_bytes = new_max_bytes;
- 	return 0;
+-	btp->bt_bdev_awu_min = min_bytes;
+-	btp->bt_bdev_awu_max = max_bytes;
++	btp->bt_awu_min = min_bytes;
++	btp->bt_awu_max = max_bytes;
  }
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index aae0d0ef84e0..6addebd764b0 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -171,36 +171,33 @@ DEFINE_ATTR_LIST_EVENT(xfs_attr_leaf_list);
- DEFINE_ATTR_LIST_EVENT(xfs_attr_node_list);
  
- TRACE_EVENT(xfs_calc_atomic_write_unit_max,
--	TP_PROTO(struct xfs_mount *mp, unsigned int max_write,
--		 unsigned int max_ioend, unsigned int max_agsize,
--		 unsigned int max_rgsize),
--	TP_ARGS(mp, max_write, max_ioend, max_agsize, max_rgsize),
-+	TP_PROTO(struct xfs_mount *mp, enum xfs_group_type type,
-+		 unsigned int max_write, unsigned int max_ioend,
-+		 unsigned int max_gsize, unsigned int awu_max),
-+	TP_ARGS(mp, type, max_write, max_ioend, max_gsize, awu_max),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
-+		__field(enum xfs_group_type, type)
- 		__field(unsigned int, max_write)
- 		__field(unsigned int, max_ioend)
--		__field(unsigned int, max_agsize)
--		__field(unsigned int, max_rgsize)
--		__field(unsigned int, data_awu_max)
--		__field(unsigned int, rt_awu_max)
-+		__field(unsigned int, max_gsize)
-+		__field(unsigned int, awu_max)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = mp->m_super->s_dev;
-+		__entry->type = type;
- 		__entry->max_write = max_write;
- 		__entry->max_ioend = max_ioend;
--		__entry->max_agsize = max_agsize;
--		__entry->max_rgsize = max_rgsize;
--		__entry->data_awu_max = mp->m_groups[XG_TYPE_AG].awu_max;
--		__entry->rt_awu_max = mp->m_groups[XG_TYPE_RTG].awu_max;
-+		__entry->max_gsize = max_gsize;
-+		__entry->awu_max = awu_max;
- 	),
--	TP_printk("dev %d:%d max_write %u max_ioend %u max_agsize %u max_rgsize %u data_awu_max %u rt_awu_max %u",
-+	TP_printk("dev %d:%d %s max_write %u max_ioend %u max_gsize %u awu_max %u",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __print_symbolic(__entry->type, XG_TYPE_STRINGS),
- 		  __entry->max_write,
- 		  __entry->max_ioend,
--		  __entry->max_agsize,
--		  __entry->max_rgsize,
--		  __entry->data_awu_max,
--		  __entry->rt_awu_max)
-+		  __entry->max_gsize,
-+		  __entry->awu_max)
- );
+ /* Configure a buffer target that abstracts a block device. */
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 73a9686110e8..7987a6d64874 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -112,9 +112,9 @@ struct xfs_buftarg {
+ 	struct percpu_counter	bt_readahead_count;
+ 	struct ratelimit_state	bt_ioerror_rl;
  
- TRACE_EVENT(xfs_calc_max_atomic_write_fsblocks,
+-	/* Atomic write unit values, bytes */
+-	unsigned int		bt_bdev_awu_min;
+-	unsigned int		bt_bdev_awu_max;
++	/* Hardware atomic write unit values, bytes */
++	unsigned int		bt_awu_min;
++	unsigned int		bt_awu_max;
+ 
+ 	/* built-in cache, if we're not using the perag one */
+ 	struct xfs_buf_cache	bt_cache[];
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 48254a72071b..377fc9077781 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -752,7 +752,7 @@ xfs_file_dio_write_atomic(
+ 	 * HW offload should be faster, so try that first if it is already
+ 	 * known that the write length is not too large.
+ 	 */
+-	if (ocount > xfs_inode_buftarg(ip)->bt_bdev_awu_max)
++	if (ocount > xfs_inode_buftarg(ip)->bt_awu_max)
+ 		dops = &xfs_atomic_write_cow_iomap_ops;
+ 	else
+ 		dops = &xfs_direct_write_iomap_ops;
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index d7e2b902ef5c..07fbdcc4cbf5 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -358,7 +358,7 @@ static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
+ 
+ static inline bool xfs_inode_can_hw_atomic_write(const struct xfs_inode *ip)
+ {
+-	return xfs_inode_buftarg(ip)->bt_bdev_awu_max > 0;
++	return xfs_inode_buftarg(ip)->bt_awu_max > 0;
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index ff05e6b1b0bb..ec30b78bf5c4 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -827,7 +827,7 @@ xfs_bmap_hw_atomic_write_possible(
+ 	/*
+ 	 * The ->iomap_begin caller should ensure this, but check anyway.
+ 	 */
+-	return len <= xfs_inode_buftarg(ip)->bt_bdev_awu_max;
++	return len <= xfs_inode_buftarg(ip)->bt_awu_max;
+ }
+ 
+ static int
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 8cddbb7c149b..01e597290eb5 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -665,7 +665,7 @@ xfs_get_atomic_write_max_opt(
+ 	 * less than our out of place write limit, but we don't want to exceed
+ 	 * the awu_max.
+ 	 */
+-	return min(awu_max, xfs_inode_buftarg(ip)->bt_bdev_awu_max);
++	return min(awu_max, xfs_inode_buftarg(ip)->bt_awu_max);
+ }
+ 
+ static void
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 99fbb22bad4c..0b690bc119d7 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -699,7 +699,7 @@ xfs_calc_group_awu_max(
+ 
+ 	if (g->blocks == 0)
+ 		return 0;
+-	if (btp && btp->bt_bdev_awu_min > 0)
++	if (btp && btp->bt_awu_min > 0)
+ 		return max_pow_of_two_factor(g->blocks);
+ 	return rounddown_pow_of_two(g->blocks);
+ }
 -- 
 2.47.2
 
