@@ -1,134 +1,306 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D09AEADC;
-	Mon, 30 Jun 2025 18:38:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98E7672601
+	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 05:33:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751308693; cv=none; b=L/fd73yB2arOYNHHnh6g/kdoCjrr6UiJK9Db95RO7bXycMLjzT1HEC+Wzns3VYYbfJW/SHxKaG1wCUwIHGgOuzgLUwM4EB6cgdEqZqTAEu9FaNhYGQNC4YuBJCfvhGmdN2+Xma10ZBLW+9oHiZEP1AKQhF9uEvtp28I8B1RrhLE=
+	t=1751347991; cv=none; b=s4gefrSxoyoLkdu1fyRyrBRIIbBDyjJvUaVr3au3Pi9Y0o9qr2Ey8FB8Um6Yv5HVLaxixTXErsnsQmHY/SKeT451ftpbelJYXX+ahTzsTXXlsVR6TwmtmL5PRu/Iq+mQ1gB4snQBK9CcvV2ZuLWMLJz5NSoPsVhwp1NSdNA5CrA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751308693; c=relaxed/simple;
-	bh=SFIdcYrq5Q88LPXoFIVLXlwzcx8YD6QNMwRzmkI9Dp0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=f9S3497opCHr2CS4Y58s4Ly803VvQiAjOfKAgEDJMP+K8VIv6TN5OXRsx/AbJw8oa9+p5qId4KvMdyZ4HmF1nMZ9N3mQkmt/zJbq7e/lU+elQNTAfn9V7jSWDhkJL9zmkixZJNLt2sg4pCxgnoSnlEtgT0aKp8KhuaAhPoxsaKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qQujNAHq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751347991; c=relaxed/simple;
+	bh=wXYKLDXwDqsFq/YJgt7pglZJMyXbZT5jTx+91TUDTTk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=IYcNFypqkXJQqOXVLn1IT3qpNKU+lAH+xvxPJckPW/s9aJ2WITsdHXsqlCzmBhD9Byclx7qu8m/BMp+H7hMaL/yqKFTyijTfpjs0P+l2EEboajjof8GY21g0n5IHaaJmlSq3qM+r+xyn8h3QQ2wXuxJ6v8XIMc5GZsalwTmTvvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=d07dpgTy; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=d07dpgTy; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qQujNAHq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80B07C4CEE3;
-	Mon, 30 Jun 2025 18:38:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751308692;
-	bh=SFIdcYrq5Q88LPXoFIVLXlwzcx8YD6QNMwRzmkI9Dp0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qQujNAHqJXzyU0+wI5QuEtq3II7dIwcAcY1GgDoSFk4EcTOh9huZHfqmynSryvROu
-	 Xjkp+vTxybo+jickeG4xhgCeZYOicbptcjUNt4Rg++7PhVU7+J5MCnaZQobBdWDTHH
-	 2ybSnPCRFJMY3L4k3dQ3F1n1JQW75riWbYT1XZPhq0KpIZxyDxTmzJK3tT26V6QC63
-	 avV7JqqPhAzltiievS7BnhFnaU6VBiKZCQ1mb1h2Apcwu9Y/nyKGDDPZ8IKrmaCHpD
-	 6jSKyy+imYH/eIvk2HyTI12RkHz6XH0Szw0otqho93P2SCP4+p75eCphQK6wkz45e+
-	 gawT01Et6qiBQ==
-Date: Mon, 30 Jun 2025 20:38:08 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Pranav Tyagi <pranav.tyagi03@gmail.com>
-Cc: skhan@linuxfoundation.org, linux-kernel-mentees@lists.linux.dev, 
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] fs/xfs: replace strncpy with strscpy
-Message-ID: <6grkelqkotgz6hnwce5n7gzdixgzlaqkwzo243f7vyqjas3c4g@viyu57vmxltz>
-References: <BgUaxdxshFCssVdvh_jiOf_C2IyUDDKB9gNz_bt5pLaC8fFmFa0E_Cvq6s9eXOGe8M0fvBUFYG3bqVQAsCyz3w==@protonmail.internalid>
- <20250617124546.24102-1-pranav.tyagi03@gmail.com>
- <qlogdnggv2y4nbzzt62oq4yguitq4ytkqavdwele3xrqi6gwfo@aj45rl7f3eik>
- <WBE4B1OP-kfASGRcvWwSonfk0K1Gt9aaX533GfEvt007c_wee2NnaupnonhPygu25xVhRW0racnd4Jig_diSMA==@protonmail.internalid>
- <CAH4c4jLjiBEqVxgRG0GH37RELDp=Py3EoY6bcJhzA+ydfV=Q1A@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="d07dpgTy";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="d07dpgTy"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id B78AE1F388;
+	Tue,  1 Jul 2025 05:33:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1751347981; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WbeWRKDa12GEmk3q18Hg+MtlKi+6VPPOPHQSSxl5eKs=;
+	b=d07dpgTyl20pk3+un0MazA6Lj/bmG73gWbxspZV3Ak4568YCCJGGSlA6k4yIpS44kgA+r/
+	dxsQuKfShqIIDVRjniWxzo6s1sNwHQIqI+4h0D4pseizMz3Lj4YivnE9wl+mCKAbSvA6vr
+	U9+GxiaHOlJOwyPpwmkKUFlWL7gPR9E=
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.com header.s=susede1 header.b=d07dpgTy
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1751347981; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WbeWRKDa12GEmk3q18Hg+MtlKi+6VPPOPHQSSxl5eKs=;
+	b=d07dpgTyl20pk3+un0MazA6Lj/bmG73gWbxspZV3Ak4568YCCJGGSlA6k4yIpS44kgA+r/
+	dxsQuKfShqIIDVRjniWxzo6s1sNwHQIqI+4h0D4pseizMz3Lj4YivnE9wl+mCKAbSvA6vr
+	U9+GxiaHOlJOwyPpwmkKUFlWL7gPR9E=
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 05A4213890;
+	Tue,  1 Jul 2025 05:32:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id kEx8LgpzY2hEYQAAD6G6ig
+	(envelope-from <wqu@suse.com>); Tue, 01 Jul 2025 05:32:58 +0000
+From: Qu Wenruo <wqu@suse.com>
+To: linux-btrfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Cc: viro@zeniv.linux.org.uk,
+	brauner@kernel.org,
+	jack@suse.cz,
+	linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	ntfs3@lists.linux.dev,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH v2 1/6] fs: enhance and rename shutdown() callback to remove_bdev()
+Date: Tue,  1 Jul 2025 15:02:34 +0930
+Message-ID: <6164b8c708b6606c640c066fbc42f8ca9838c24b.1751347436.git.wqu@suse.com>
+X-Mailer: git-send-email 2.50.0
+In-Reply-To: <cover.1751347436.git.wqu@suse.com>
+References: <cover.1751347436.git.wqu@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAH4c4jLjiBEqVxgRG0GH37RELDp=Py3EoY6bcJhzA+ydfV=Q1A@mail.gmail.com>
+X-Spamd-Result: default: False [-3.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.com:s=susede1];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:dkim,suse.com:mid,suse.com:email];
+	RCPT_COUNT_SEVEN(0.00)[9];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_TLS_ALL(0.00)[];
+	TO_DN_NONE(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.com:+]
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: B78AE1F388
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Score: -3.01
 
-On Mon, Jun 30, 2025 at 02:36:01PM +0530, Pranav Tyagi wrote:
-> On Mon, Jun 30, 2025 at 2:09 PM Carlos Maiolino <cem@kernel.org> wrote:
-> >
-> > On Tue, Jun 17, 2025 at 06:15:46PM +0530, Pranav Tyagi wrote:
-> > > Replace the deprecated strncpy() with strscpy() as the destination
-> > > buffer should be NUL-terminated and does not require any trailing
-> > > NUL-padding. Also, since NUL-termination is guaranteed,
-> >
-> > NUL-termination is only guaranteed if you copy into the buffer one less
-> > byte than the label requires, i.e XFSLABEL_MAX.
-> >
-> > > use sizeof(label) in place of XFSLABEL_MAX as the size
-> > > parameter.
-> >
-> > This is wrong, see below why.
-> >
-> > >
-> > > Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
-> > > ---
-> > >  fs/xfs/xfs_ioctl.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > >
-> > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > > index d250f7f74e3b..9f4d68c5b5ab 100644
-> > > --- a/fs/xfs/xfs_ioctl.c
-> > > +++ b/fs/xfs/xfs_ioctl.c
-> > > @@ -992,7 +992,7 @@ xfs_ioc_getlabel(
-> > >       /* 1 larger than sb_fname, so this ensures a trailing NUL char */
-> > >       memset(label, 0, sizeof(label));
-> > >       spin_lock(&mp->m_sb_lock);
-> > > -     strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
-> > > +     strscpy(label, sbp->sb_fname, sizeof(label));
-> >
-> > This is broken and you created a buffer overrun here.
-> >
-> > XFSLABEL_MAX is set to 12 bytes. The current label size is 13 bytes:
-> >
-> > char                    label[XFSLABEL_MAX + 1];
-> >
-> > This ensures the label will always have a null termination character as
-> > long as you copy XFSLABEL_MAX bytes into the label.
-> >
-> > - strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
-> >
-> > Copies 12 bytes from sb_fname into label. This ensures we always have a
-> > trailing \0 at the last byte.
-> >
-> > Your version:
-> >
-> > strscpy(label, sbp->sb_fname, sizeof(label));
-> >
-> > Copies 13 bytes from sb_fname into the label buffer.
-> >
-> > This not only could have copied a non-null byte to the last byte in the
-> > label buffer, but also But sbp->sb_fname size is XFSLABEL_MAX, so you
-> > are reading beyond the source buffer size, causing a buffer overrun as you
-> > can see on the kernel test robot report.
-> >
-> > Carlos
-> >
-> > >       spin_unlock(&mp->m_sb_lock);
-> > >
-> > >       if (copy_to_user(user_label, label, sizeof(label)))
-> > > --
-> > > 2.49.0
-> > >
-> 
-> Hi,
-> 
-> Thank you for the feedback. I understand that my patch is incorrect and
-> it causes a buffer overrun. The destination buffer is indeed, already, null
-> terminated. Would you like me to send a corrected patch which uses
-> strscpy() (as strncpy() is deprecated)?
+Currently all the filesystems implementing the
+super_opearations::shutdown() call back can not afford losing a device.
 
-Sure, do so.
+Thus fs_bdev_mark_dead() will just call the shutdown() callback for the
+involved filesystem.
 
-Carlos
+But it will no longer be the case, with multi-device filesystems like
+btrfs and bcachefs the filesystem can handle certain device loss without
+shutting down the whole filesystem.
 
-> 
-> Regret the inconvenience.
-> 
-> Regards
-> Pranav Tyagi
+To allow those multi-device filesystems to be integrated to use
+fs_holder_ops:
+
+- Rename shutdown() call back to remove_bdev()
+  To better describe when the call back is called.
+
+- Add a new @bdev parameter to remove_bdev() callback
+  To allow the fs to determine which device is missing, and do the
+  proper handling when needed.
+
+For the existing shutdown callback users, the change is minimal.
+
+They only need to follow the rename and the new parameter list.
+Since the behavior is still to shutdown the fs, they shouldn't change
+their function names.
+
+This has a good side effect that, a single line like
+".remove_bdev = ext4_shutdown," will easily show the fs behavior and
+indicate the fs will shutdown when a device went missing.
+
+Btrfs is going to implement the callback soon, which will either
+shutdown the fs or continue read-write operations.
+
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org
+Cc: linux-f2fs-devel@lists.sourceforge.net
+Cc: ntfs3@lists.linux.dev
+Cc: linux-xfs@vger.kernel.org
+Signed-off-by: Qu Wenruo <wqu@suse.com>
+---
+ fs/exfat/super.c   | 4 ++--
+ fs/ext4/super.c    | 4 ++--
+ fs/f2fs/super.c    | 4 ++--
+ fs/ntfs3/super.c   | 4 ++--
+ fs/super.c         | 4 ++--
+ fs/xfs/xfs_super.c | 5 +++--
+ include/linux/fs.h | 7 ++++++-
+ 7 files changed, 19 insertions(+), 13 deletions(-)
+
+diff --git a/fs/exfat/super.c b/fs/exfat/super.c
+index 7ed858937d45..5773026be84c 100644
+--- a/fs/exfat/super.c
++++ b/fs/exfat/super.c
+@@ -172,7 +172,7 @@ int exfat_force_shutdown(struct super_block *sb, u32 flags)
+ 	return 0;
+ }
+ 
+-static void exfat_shutdown(struct super_block *sb)
++static void exfat_shutdown(struct super_block *sb, struct block_device *bdev)
+ {
+ 	exfat_force_shutdown(sb, EXFAT_GOING_DOWN_NOSYNC);
+ }
+@@ -202,7 +202,7 @@ static const struct super_operations exfat_sops = {
+ 	.put_super	= exfat_put_super,
+ 	.statfs		= exfat_statfs,
+ 	.show_options	= exfat_show_options,
+-	.shutdown	= exfat_shutdown,
++	.remove_bdev	= exfat_shutdown,
+ };
+ 
+ enum {
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index c7d39da7e733..8724f89d20d8 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -1456,7 +1456,7 @@ static void ext4_destroy_inode(struct inode *inode)
+ 			 EXT4_I(inode)->i_reserved_data_blocks);
+ }
+ 
+-static void ext4_shutdown(struct super_block *sb)
++static void ext4_shutdown(struct super_block *sb, struct block_device *bdev)
+ {
+        ext4_force_shutdown(sb, EXT4_GOING_FLAGS_NOLOGFLUSH);
+ }
+@@ -1620,7 +1620,7 @@ static const struct super_operations ext4_sops = {
+ 	.unfreeze_fs	= ext4_unfreeze,
+ 	.statfs		= ext4_statfs,
+ 	.show_options	= ext4_show_options,
+-	.shutdown	= ext4_shutdown,
++	.remove_bdev	= ext4_shutdown,
+ #ifdef CONFIG_QUOTA
+ 	.quota_read	= ext4_quota_read,
+ 	.quota_write	= ext4_quota_write,
+diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+index bbf1dad6843f..51c60b429a31 100644
+--- a/fs/f2fs/super.c
++++ b/fs/f2fs/super.c
+@@ -2640,7 +2640,7 @@ static int f2fs_remount(struct super_block *sb, int *flags, char *data)
+ 	return err;
+ }
+ 
+-static void f2fs_shutdown(struct super_block *sb)
++static void f2fs_shutdown(struct super_block *sb, struct block_device *bdev)
+ {
+ 	f2fs_do_shutdown(F2FS_SB(sb), F2FS_GOING_DOWN_NOSYNC, false, false);
+ }
+@@ -3264,7 +3264,7 @@ static const struct super_operations f2fs_sops = {
+ 	.unfreeze_fs	= f2fs_unfreeze,
+ 	.statfs		= f2fs_statfs,
+ 	.remount_fs	= f2fs_remount,
+-	.shutdown	= f2fs_shutdown,
++	.remove_bdev	= f2fs_shutdown,
+ };
+ 
+ #ifdef CONFIG_FS_ENCRYPTION
+diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
+index 920a1ab47b63..5e422543b851 100644
+--- a/fs/ntfs3/super.c
++++ b/fs/ntfs3/super.c
+@@ -764,7 +764,7 @@ static int ntfs_show_options(struct seq_file *m, struct dentry *root)
+ /*
+  * ntfs_shutdown - super_operations::shutdown
+  */
+-static void ntfs_shutdown(struct super_block *sb)
++static void ntfs_shutdown(struct super_block *sb, struct block_device *bdev)
+ {
+ 	set_bit(NTFS_FLAGS_SHUTDOWN_BIT, &ntfs_sb(sb)->flags);
+ }
+@@ -821,7 +821,7 @@ static const struct super_operations ntfs_sops = {
+ 	.put_super = ntfs_put_super,
+ 	.statfs = ntfs_statfs,
+ 	.show_options = ntfs_show_options,
+-	.shutdown = ntfs_shutdown,
++	.remove_bdev = ntfs_shutdown,
+ 	.sync_fs = ntfs_sync_fs,
+ 	.write_inode = ntfs3_write_inode,
+ };
+diff --git a/fs/super.c b/fs/super.c
+index 80418ca8e215..c972efb38f6a 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -1463,8 +1463,8 @@ static void fs_bdev_mark_dead(struct block_device *bdev, bool surprise)
+ 		sync_filesystem(sb);
+ 	shrink_dcache_sb(sb);
+ 	evict_inodes(sb);
+-	if (sb->s_op->shutdown)
+-		sb->s_op->shutdown(sb);
++	if (sb->s_op->remove_bdev)
++		sb->s_op->remove_bdev(sb, bdev);
+ 
+ 	super_unlock_shared(sb);
+ }
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 0bc4b5489078..e47d427f4416 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1277,7 +1277,8 @@ xfs_fs_free_cached_objects(
+ 
+ static void
+ xfs_fs_shutdown(
+-	struct super_block	*sb)
++	struct super_block	*sb,
++	struct block_device	*bdev)
+ {
+ 	xfs_force_shutdown(XFS_M(sb), SHUTDOWN_DEVICE_REMOVED);
+ }
+@@ -1308,7 +1309,7 @@ static const struct super_operations xfs_super_operations = {
+ 	.show_options		= xfs_fs_show_options,
+ 	.nr_cached_objects	= xfs_fs_nr_cached_objects,
+ 	.free_cached_objects	= xfs_fs_free_cached_objects,
+-	.shutdown		= xfs_fs_shutdown,
++	.remove_bdev		= xfs_fs_shutdown,
+ 	.show_stats		= xfs_fs_show_stats,
+ };
+ 
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index b085f161ed22..b08af63d2d4f 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2367,7 +2367,12 @@ struct super_operations {
+ 				  struct shrink_control *);
+ 	long (*free_cached_objects)(struct super_block *,
+ 				    struct shrink_control *);
+-	void (*shutdown)(struct super_block *sb);
++	/*
++	 * Called when block device @bdev belonging to @sb is removed.
++	 *
++	 * If the fs can't afford the device loss, it should be shutdown.
++	 */
++	void (*remove_bdev)(struct super_block *sb, struct block_device *bdev);
+ };
+ 
+ /*
+-- 
+2.50.0
+
