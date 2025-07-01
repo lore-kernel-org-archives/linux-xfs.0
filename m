@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B50AD8821;
-	Tue,  1 Jul 2025 11:34:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC37D26E173;
+	Tue,  1 Jul 2025 12:29:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751369694; cv=none; b=JDcX40NMtMHPgFgT7cvukmiGznVQzHWX8PlEDPTCqHM7OQysqfql/z+uNKSnieIGiOwWbmptTX76FRKcdwJtBlS/JOtf6jmy6YT9hwcCctNYrQq983RisfAz3T7eaz0e80fT2Nuv8QiotM5zhPtGa+iDjKoAXNfBUoRjPrdPA9Q=
+	t=1751372987; cv=none; b=FXV4EE0NIwI16M/oLUluUKvt9BAr1QL0CBsC2iAecgENPyPsDuoYc5NubRcMTN7j20UL23tH8XYBrs9KK8ythmgKgqQcHKvOFMKU+A0lObKIqHUZ2hQJLxnXfY/e3JZPcUFxpLemqXXJV/+bz4fBpm+X8Wb4Ek30inkt5LjrheY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751369694; c=relaxed/simple;
-	bh=ivvvymmSfinokPA9qi1LGV8jWib2h8DV4cJuLS0xY2E=;
+	s=arc-20240116; t=1751372987; c=relaxed/simple;
+	bh=j9I8HOGBGHBbRN4p6Ae04QWoztYWFTPWSDJVpPf/55s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=f6poiBbmtdfzI0Hfb2P89bH+e94a6Ccts5EYpD4MpDUPfsCEz+urJQUVjo7I1DRLcOfegHt9pbq7N9XAuzSSecB0sOXLz2+O1VT3XgK5Wu0rb2zIUdOPrLsORvVOcvaIqb+uGLqrB25QRdq+RqeXkfl/hutwCAwUANtYnlwwUq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=on5fa/N7; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ghmfu2Qur3opBfywF8cv/eJkvS9mXb7c7XyDdbldwJrqxS30rrSYFkdhyrKoJ5OwXAuiBbFcKdG9puSJ0mh3zrW1Ekuj3EymYF8cJlGGARf1LIgHU+tKm+c6jBF2ObZv/7IIvo8dqAf1ea8+ra/7SUwH5YZqEn1rsqihSlEPP8E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z/5syfPQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="on5fa/N7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25244C4CEEB;
-	Tue,  1 Jul 2025 11:34:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z/5syfPQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66B50C4CEEB;
+	Tue,  1 Jul 2025 12:29:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751369693;
-	bh=ivvvymmSfinokPA9qi1LGV8jWib2h8DV4cJuLS0xY2E=;
+	s=k20201202; t=1751372987;
+	bh=j9I8HOGBGHBbRN4p6Ae04QWoztYWFTPWSDJVpPf/55s=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=on5fa/N7993Xiu8R8CmxLBfvJ25rLsGHcos0mtPx5h7O+Uf8PnRwRziavn1ZNk3qD
-	 dTlslotJxMgwQgJdXVemlWpk547OoKF09nmdwOK8mjg9Dw3s1arKSEV7tTpFEdh6CL
-	 NPKTxPzuKGG96E1Io5mCVhQJcuVdbIQr7g2WAtZWHqBLqFkVGUgpLGBnnyKZqHp0Vb
-	 SyfLuqjRiNIcavAZo9eM7r4tSbw+tiGx6AdcIMvQ+ypA9/f+T8O/0PhvLXdKbUnh9n
-	 wRC++Hv0QndQB4NIsjh8/mPRVtWo7RD9dV/TsgFK2FYIkOWjAQtc3iDsqfTq8TepTW
-	 55NYlUn9KniJQ==
-Date: Tue, 1 Jul 2025 13:34:47 +0200
+	b=Z/5syfPQTlf+ZWQy7hY4VLoPj10mA+0NQtMwsDg8CG0nF7pvpHDnWOLMhZV8w9zHa
+	 vZRKggAozrfcYtz+O0k4N6E+bFTWUrxoZTt4XujZ81HYPGhziY6Hy5hh3+1f72pkO6
+	 I6cWXqzvdaT0VRJuUfNuN6hbv7B6oVIREhkr3ViJWMCGKBOL/2CnsSsHLpeafANQJw
+	 77MTXUluiFLuvrinrdz/t5N+y6z8vpzvbxfRdgwvAuSGTWsyfH7R3095ugkC5gkV5p
+	 3spjUZmH3V1LzxJhEbMox7ZSJYJBySZMDeh1rHjA3H/u7ou5k+Qs+1UIiPdo5v7IeT
+	 vBW4VLwsvxMMA==
+Date: Tue, 1 Jul 2025 14:29:42 +0200
 From: Christian Brauner <brauner@kernel.org>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: kernel test robot <lkp@intel.com>, linux-fsdevel@vger.kernel.org, 
-	oe-kbuild-all@lists.linux.dev, hch@lst.de, miklos@szeredi.hu, djwong@kernel.org, 
-	anuj20.g@samsung.com, linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-block@vger.kernel.org, gfs2@lists.linux.dev, kernel-team@meta.com
-Subject: Re: [PATCH v3 13/16] fuse: use iomap for writeback
-Message-ID: <20250701-duktus-weitverbreitet-fb6b177ba0d8@brauner>
-References: <20250624022135.832899-14-joannelkoong@gmail.com>
- <202506252117.9V3HTO0i-lkp@intel.com>
- <CAJnrk1Z5NZ0_f=OMMam9hf0xJwM=SsmgFpyfbnKE7MT_i_kZMQ@mail.gmail.com>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: Amir Goldstein <amir73il@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
+	Casey Schaufler <casey@schaufler-ca.com>, Jan Kara <jack@suse.cz>, 
+	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Paul Moore <paul@paul-moore.com>, linux-api@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	selinux@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH v6 0/6] fs: introduce file_getattr and file_setattr
+ syscalls
+Message-ID: <20250701-quittung-garnieren-ceaf58dcb762@brauner>
+References: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,68 +46,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJnrk1Z5NZ0_f=OMMam9hf0xJwM=SsmgFpyfbnKE7MT_i_kZMQ@mail.gmail.com>
+In-Reply-To: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
 
-On Wed, Jun 25, 2025 at 09:48:15AM -0700, Joanne Koong wrote:
-> On Wed, Jun 25, 2025 at 7:18 AM kernel test robot <lkp@intel.com> wrote:
-> >
-> > Hi Joanne,
-> >
-> > kernel test robot noticed the following build errors:
-> >
-> > [auto build test ERROR on brauner-vfs/vfs.all]
-> > [also build test ERROR on xfs-linux/for-next linus/master v6.16-rc3 next-20250625]
-> > [cannot apply to gfs2/for-next mszeredi-fuse/for-next]
-> > [If your patch is applied to the wrong git tree, kindly drop us a note.
-> > And when submitting patch, we suggest to use '--base' as documented in
-> > https://git-scm.com/docs/git-format-patch#_base_tree_information]
-> >
-> > url:    https://github.com/intel-lab-lkp/linux/commits/Joanne-Koong/iomap-pass-more-arguments-using-struct-iomap_writepage_ctx/20250624-102709
-> > base:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git vfs.all
-> > patch link:    https://lore.kernel.org/r/20250624022135.832899-14-joannelkoong%40gmail.com
-> > patch subject: [PATCH v3 13/16] fuse: use iomap for writeback
-> > config: arm64-randconfig-003-20250625 (https://download.01.org/0day-ci/archive/20250625/202506252117.9V3HTO0i-lkp@intel.com/config)
-> > compiler: aarch64-linux-gcc (GCC) 12.3.0
-> > reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250625/202506252117.9V3HTO0i-lkp@intel.com/reproduce)
-> >
-> > If you fix the issue in a separate patch/commit (i.e. not just a new version of
-> > the same patch/commit), kindly add following tags
-> > | Reported-by: kernel test robot <lkp@intel.com>
-> > | Closes: https://lore.kernel.org/oe-kbuild-all/202506252117.9V3HTO0i-lkp@intel.com/
-> >
-> > All errors (new ones prefixed by >>):
-> >
-> >    aarch64-linux-ld: fs/fuse/file.o: in function `fuse_writepages':
-> > >> file.c:(.text+0xa30): undefined reference to `iomap_writepages'
-> > >> file.c:(.text+0xa30): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_writepages'
-> >    aarch64-linux-ld: fs/fuse/file.o: in function `fuse_writepage_finish':
-> > >> file.c:(.text+0x1fd8): undefined reference to `iomap_finish_folio_write'
-> > >> file.c:(.text+0x1fd8): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_finish_folio_write'
-> >    aarch64-linux-ld: fs/fuse/file.o: in function `fuse_cache_write_iter':
-> >    file.c:(.text+0x888c): undefined reference to `iomap_file_buffered_write'
-> >    file.c:(.text+0x888c): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_file_buffered_write'
-> >    aarch64-linux-ld: fs/fuse/file.o: in function `fuse_iomap_writeback_range':
-> > >> file.c:(.text+0x9258): undefined reference to `iomap_start_folio_write'
-> > >> file.c:(.text+0x9258): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `iomap_start_folio_write'
-> > >> aarch64-linux-ld: fs/fuse/file.o:(.rodata+0x370): undefined reference to `iomap_dirty_folio'
-> >    aarch64-linux-ld: fs/fuse/file.o:(.rodata+0x3a0): undefined reference to `iomap_release_folio'
-> >
-> > --
-> > 0-DAY CI Kernel Test Service
-> > https://github.com/intel/lkp-tests/wiki
+On Mon, Jun 30, 2025 at 06:20:10PM +0200, Andrey Albershteyn wrote:
+> This patchset introduced two new syscalls file_getattr() and
+> file_setattr(). These syscalls are similar to FS_IOC_FSSETXATTR ioctl()
+> except they use *at() semantics. Therefore, there's no need to open the
+> file to get a fd.
 > 
-> As noted in the cover letter [1]
+> These syscalls allow userspace to set filesystem inode attributes on
+> special files. One of the usage examples is XFS quota projects.
 > 
->    Please note the following:
->    * this patchset version temporarily drops the CONFIG_BLOCK iomap refactoring
->      patches that will be needed to merge in the series. As of now, this breaks
->      compilation for environments where CONFIG_BLOCK is not set, but the
->      CONFIG_BLOCK iomap changes will be re-added back in once the core changes
->      in this patchset are ready to go.
+> XFS has project quotas which could be attached to a directory. All
+> new inodes in these directories inherit project ID set on parent
+> directory.
 > 
-> 
-> These errors will be fixed in later versions when the CONFIG_BLOCK
-> patches get added in.
+> The project is created from userspace by opening and calling
+> FS_IOC_FSSETXATTR on each inode. This is not possible for special
+> files such as FIFO, SOCK, BLK etc. Therefore, some inodes are left
+> with empty project ID. Those inodes then are not shown in the quota
+> accounting but still exist in the directory. This is not critical but in
+> the case when special files are created in the directory with already
+> existing project quota, these new inodes inherit extended attributes.
+> This creates a mix of special files with and without attributes.
+> Moreover, special files with attributes don't have a possibility to
+> become clear or change the attributes. This, in turn, prevents userspace
+> from re-creating quota project on these existing files.
 
-Ok, sounds good. Main thing is I can merge it all in one go.
+Only small nits I'm going to comment on that I can fix myself.
+Otherwise looks great.
