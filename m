@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABEC51F3B98
-	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 18:06:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFEE91B95B
+	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 18:06:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751393201; cv=none; b=JDSS5v12WAYitAY0K8stSgEeiPET/f1pwzGOYn+iscU5p6I5SlYqw7yrgo4IMfj29TTL92BP7m1EjTBD/wBgh7fPE4m+y3+3DTG3W4Jd58rC/G9IvKJ6EhDmExgWomBaWbWyXAqzpn+twx3ugFClG1q0UlGm7RLQGy8SCTvK1A0=
+	t=1751393217; cv=none; b=hVFQ2C33DqcdN+4GIq2rVO9TygI2HJHMbkEmtG5MzIwopcX7NkiJ63Rj07ny8Yzmr+aK45OmJ3PKhJN4YNbX1TjaIg/yWiIzFCib6xR53U4CfBpMHNpQmHpBBFUIflVrLVc5mwh5zQujFtrGOEygZ/eu0nm1yUphghJ+mGX8k0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751393201; c=relaxed/simple;
-	bh=MF/ZaO8AIWbmbtOnTws63z9nf14RA5Se/2wq9ldIZzk=;
+	s=arc-20240116; t=1751393217; c=relaxed/simple;
+	bh=x0mXkzApIRemcwU4JsdvQp7Lr61IIMj1PfQ3IefuoUM=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cFL3dyfKbSVpAuYgiMFpY+iAJOO7oQb1J9Gu66bdWycMar43MTQtEV5LKemaodVBqLC28qUbtSdPknm74sZNvHsOuXdX9ltjNkZhh5DfE5pZYh0CmEixnBCrlbENw4/as7GoQ7UyWY7p2weE/cKzBE/wCHoQZy2L4x/ZOO32jcM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VyFlG/wv; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Iy4SKq89C9gcqnTX9vVuR0cN+JpS1atCcfgLnjKTHuEwVzyDRVPH3YT1VEhnE85UI84npliPa7QacNo73gPYwYk2ZV155z3GaA9pDAfM9ptcfzV9wYjlahpjXZR1t2dcqniNGde4LBztqKIef+75zN5rvXAFTVaK8CdZE010L48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KNzghdKJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VyFlG/wv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84BDAC4CEEB;
-	Tue,  1 Jul 2025 18:06:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KNzghdKJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D6D1C4CEEB;
+	Tue,  1 Jul 2025 18:06:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751393201;
-	bh=MF/ZaO8AIWbmbtOnTws63z9nf14RA5Se/2wq9ldIZzk=;
+	s=k20201202; t=1751393217;
+	bh=x0mXkzApIRemcwU4JsdvQp7Lr61IIMj1PfQ3IefuoUM=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=VyFlG/wvOc0KCGXQuXItiWBkCsHCMe3c94QUHo94yS58DZM2Vuwq+yMKt15xwyvB1
-	 7jlfqYqZ1TzEDyPfz5bPdoZhnXyWjExN8j71xvQhZYg/2CtMn57gifkY6lLBKCiFnm
-	 EnpcpYbca+mp2mONB4pSDyKyG/XIzvFMrHOhT2YEpQ1iDFGx0xKnf3GItffa47QT7j
-	 O1VhMOB/aG4mZklOVUqtYzVnAjGn9sRbKdb+YA95oDsrpCIuijNzwFPFcrvw+vS5v5
-	 hEmPBz3kr+BeukbZzmE5VXcEt+5mg73wnfepkDIV/RJUDqqqbHb1W9c/sSsP6F2+m6
-	 i+JUu2C9+nx/g==
-Date: Tue, 01 Jul 2025 11:06:41 -0700
-Subject: [PATCH 5/6] xfs: add xfs_calc_atomic_write_unit_max()
+	b=KNzghdKJtZnHNTj5CEMjonQLt9Iu+S+Co8GJIs9BbYR5M1VcGOyVbxLHQ0np3p6UW
+	 eVySw8O1ZA8W/SjmkndG8PEa/IMfixCE/Kmmm4GkDhT3sH1DKd8wb21emS3/3Hvg2a
+	 o8aglWqcpxB0qmBkkfIPpvtjXbmzDkmiFacSBlttscAhShnf7KhLEpfafoX63xlQ4P
+	 teRfhYx7htvOk7+6X5YT8iAT+RhdoPc/n8Hu+dhfchiH7a43aAzxRVX20t2y7Au/Ou
+	 JG5KOvUem5GqVzfatWSDu0FtsOQ8GUW3zUQva5a9XIRZyAZMtIzTEPEAwtsJK7tHeL
+	 oaMP0EEFJhPIQ==
+Date: Tue, 01 Jul 2025 11:06:56 -0700
+Subject: [PATCH 6/6] xfs: allow sysadmins to specify a maximum atomic write
+ limit at mount time
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
-Cc: hch@lst.de, john.g.garry@oracle.com, catherine.hoang@oracle.com,
+Cc: john.g.garry@oracle.com, catherine.hoang@oracle.com,
  john.g.garry@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <175139303585.915889.5902786132831410797.stgit@frogsfrogsfrogs>
+Message-ID: <175139303603.915889.12593392054731762042.stgit@frogsfrogsfrogs>
 In-Reply-To: <175139303469.915889.13789913656019867003.stgit@frogsfrogsfrogs>
 References: <175139303469.915889.13789913656019867003.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,173 +45,162 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: John Garry <john.g.garry@oracle.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 0c438dcc31504bf4f50b20dc52f8f5ca7fab53e2
+Source kernel commit: 4528b9052731f14c1a9be16b98e33c9401e6d1bc
 
-Now that CoW-based atomic writes are supported, update the max size of an
-atomic write for the data device.
+Introduce a mount option to allow sysadmins to specify the maximum size
+of an atomic write.  If the filesystem can work with the supplied value,
+that becomes the new guaranteed maximum.
 
-The limit of a CoW-based atomic write will be the limit of the number of
-logitems which can fit into a single transaction.
+The value mustn't be too big for the existing filesystem geometry (max
+write size, max AG/rtgroup size).  We dynamically recompute the
+tr_atomic_write transaction reservation based on the given block size,
+check that the current log size isn't less than the new minimum log size
+constraints, and set a new maximum.
 
-In addition, the max atomic write size needs to be aligned to the agsize.
-Limit the size of atomic writes to the greatest power-of-two factor of the
-agsize so that allocations for an atomic write will always be aligned
-compatibly with the alignment requirements of the storage.
+The actual software atomic write max is still computed based off of
+tr_atomic_ioend the same way it has for the past few commits.  Note also
+that xfs_calc_atomic_write_log_geometry is non-static because mkfs will
+need that.
 
-Function xfs_atomic_write_logitems() is added to find the limit the number
-of log items which can fit in a single transaction.
-
-Amend the max atomic write computation to create a new transaction
-reservation type, and compute the maximum size of an atomic write
-completion (in fsblocks) based on this new transaction reservation.
-Initially, tr_atomic_write is a clone of tr_itruncate, which provides a
-reasonable level of parallelism.  In the next patch, we'll add a mount
-option so that sysadmins can configure their own limits.
-
-[djwong: use a new reservation type for atomic write ioends, refactor
-group limit calculations]
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-[jpg: rounddown power-of-2 always]
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: John Garry <john.g.garry@oracle.com>
+Reviewed-by: John Garry <john.g.garry@oracle.com>
 ---
- include/xfs_trace.h     |    2 +
- libxfs/xfs_trans_resv.h |    2 +
- libxfs/xfs_trans_resv.c |   90 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 94 insertions(+)
+ include/platform_defs.h |   14 ++++++++++
+ include/xfs_trace.h     |    1 +
+ libxfs/xfs_trans_resv.h |    4 +++
+ libxfs/xfs_trans_resv.c |   69 +++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 88 insertions(+)
 
 
+diff --git a/include/platform_defs.h b/include/platform_defs.h
+index 9af7b4318f8917..74a00583ebd6cb 100644
+--- a/include/platform_defs.h
++++ b/include/platform_defs.h
+@@ -261,6 +261,20 @@ static inline bool __must_check __must_check_overflow(bool overflow)
+ 	__builtin_add_overflow(__a, __b, __d);	\
+ }))
+ 
++/**
++ * check_mul_overflow() - Calculate multiplication with overflow checking
++ * @a: first factor
++ * @b: second factor
++ * @d: pointer to store product
++ *
++ * Returns true on wrap-around, false otherwise.
++ *
++ * *@d holds the results of the attempted multiplication, regardless of whether
++ * wrap-around occurred.
++ */
++#define check_mul_overflow(a, b, d)	\
++	__must_check_overflow(__builtin_mul_overflow(a, b, d))
++
+ /**
+  * abs_diff - return absolute value of the difference between the arguments
+  * @a: the first argument
 diff --git a/include/xfs_trace.h b/include/xfs_trace.h
-index 30166c11dd597b..965c109cc1941a 100644
+index 965c109cc1941a..6bbf4007cbbbd9 100644
 --- a/include/xfs_trace.h
 +++ b/include/xfs_trace.h
-@@ -64,6 +64,8 @@
- #define trace_xfs_attr_rmtval_alloc(...)	((void) 0)
+@@ -65,6 +65,7 @@
  #define trace_xfs_attr_rmtval_remove_return(...) ((void) 0)
  
-+#define trace_xfs_calc_max_atomic_write_fsblocks(...) ((void) 0)
-+
+ #define trace_xfs_calc_max_atomic_write_fsblocks(...) ((void) 0)
++#define trace_xfs_calc_max_atomic_write_log_geometry(...) ((void) 0)
+ 
  #define trace_xfs_log_recover_item_add_cont(a,b,c,d)	((void) 0)
  #define trace_xfs_log_recover_item_add(a,b,c,d)	((void) 0)
- 
 diff --git a/libxfs/xfs_trans_resv.h b/libxfs/xfs_trans_resv.h
-index 670045d417a65f..a6d303b836883f 100644
+index a6d303b836883f..336279e0fc6137 100644
 --- a/libxfs/xfs_trans_resv.h
 +++ b/libxfs/xfs_trans_resv.h
-@@ -121,4 +121,6 @@ unsigned int xfs_calc_itruncate_reservation_minlogsize(struct xfs_mount *mp);
- unsigned int xfs_calc_write_reservation_minlogsize(struct xfs_mount *mp);
+@@ -122,5 +122,9 @@ unsigned int xfs_calc_write_reservation_minlogsize(struct xfs_mount *mp);
  unsigned int xfs_calc_qm_dqalloc_reservation_minlogsize(struct xfs_mount *mp);
  
-+xfs_extlen_t xfs_calc_max_atomic_write_fsblocks(struct xfs_mount *mp);
-+
+ xfs_extlen_t xfs_calc_max_atomic_write_fsblocks(struct xfs_mount *mp);
++xfs_extlen_t xfs_calc_atomic_write_log_geometry(struct xfs_mount *mp,
++		xfs_extlen_t blockcount, unsigned int *new_logres);
++int xfs_calc_atomic_write_reservation(struct xfs_mount *mp,
++		xfs_extlen_t blockcount);
+ 
  #endif	/* __XFS_TRANS_RESV_H__ */
 diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index cf735f946c8ac7..ec61ddfba44601 100644
+index ec61ddfba44601..b3b9d22b54515d 100644
 --- a/libxfs/xfs_trans_resv.c
 +++ b/libxfs/xfs_trans_resv.c
-@@ -19,6 +19,8 @@
- #include "xfs_trans_space.h"
- #include "xfs_quota_defs.h"
- #include "xfs_rtbitmap.h"
-+#include "xfs_trace.h"
-+#include "defer_item.h"
+@@ -1481,3 +1481,72 @@ xfs_calc_max_atomic_write_fsblocks(
  
- #define _ALLOC	true
- #define _FREE	false
-@@ -1391,3 +1393,91 @@ xfs_trans_resv_calc(
- 	 */
- 	xfs_calc_default_atomic_ioend_reservation(mp, resp);
+ 	return ret;
  }
 +
 +/*
-+ * Return the per-extent and fixed transaction reservation sizes needed to
-+ * complete an atomic write.
++ * Compute the log blocks and transaction reservation needed to complete an
++ * atomic write of a given number of blocks.  Worst case, each block requires
++ * separate handling.  A return value of 0 means something went wrong.
 + */
-+STATIC unsigned int
-+xfs_calc_atomic_write_ioend_geometry(
++xfs_extlen_t
++xfs_calc_atomic_write_log_geometry(
 +	struct xfs_mount	*mp,
-+	unsigned int		*step_size)
++	xfs_extlen_t		blockcount,
++	unsigned int		*new_logres)
 +{
-+	const unsigned int	efi = xfs_efi_log_space(1);
-+	const unsigned int	efd = xfs_efd_log_space(1);
-+	const unsigned int	rui = xfs_rui_log_space(1);
-+	const unsigned int	rud = xfs_rud_log_space();
-+	const unsigned int	cui = xfs_cui_log_space(1);
-+	const unsigned int	cud = xfs_cud_log_space();
-+	const unsigned int	bui = xfs_bui_log_space(1);
-+	const unsigned int	bud = xfs_bud_log_space();
++	struct xfs_trans_res	*curr_res = &M_RES(mp)->tr_atomic_ioend;
++	uint			old_logres = curr_res->tr_logres;
++	unsigned int		per_intent, step_size;
++	unsigned int		logres;
++	xfs_extlen_t		min_logblocks;
 +
-+	/*
-+	 * Maximum overhead to complete an atomic write ioend in software:
-+	 * remove data fork extent + remove cow fork extent + map extent into
-+	 * data fork.
-+	 *
-+	 * tx0: Creates a BUI and a CUI and that's all it needs.
-+	 *
-+	 * tx1: Roll to finish the BUI.  Need space for the BUD, an RUI, and
-+	 * enough space to relog the CUI (== CUI + CUD).
-+	 *
-+	 * tx2: Roll again to finish the RUI.  Need space for the RUD and space
-+	 * to relog the CUI.
-+	 *
-+	 * tx3: Roll again, need space for the CUD and possibly a new EFI.
-+	 *
-+	 * tx4: Roll again, need space for an EFD.
-+	 *
-+	 * If the extent referenced by the pair of BUI/CUI items is not the one
-+	 * being currently processed, then we need to reserve space to relog
-+	 * both items.
-+	 */
-+	const unsigned int	tx0 = bui + cui;
-+	const unsigned int	tx1 = bud + rui + cui + cud;
-+	const unsigned int	tx2 = rud + cui + cud;
-+	const unsigned int	tx3 = cud + efi;
-+	const unsigned int	tx4 = efd;
-+	const unsigned int	relog = bui + bud + cui + cud;
++	ASSERT(blockcount > 0);
 +
-+	const unsigned int	per_intent = max(max3(tx0, tx1, tx2),
-+						 max3(tx3, tx4, relog));
++	xfs_calc_default_atomic_ioend_reservation(mp, M_RES(mp));
 +
-+	/* Overhead to finish one step of each intent item type */
-+	const unsigned int	f1 = xfs_calc_finish_efi_reservation(mp, 1);
-+	const unsigned int	f2 = xfs_calc_finish_rui_reservation(mp, 1);
-+	const unsigned int	f3 = xfs_calc_finish_cui_reservation(mp, 1);
-+	const unsigned int	f4 = xfs_calc_finish_bui_reservation(mp, 1);
++	per_intent = xfs_calc_atomic_write_ioend_geometry(mp, &step_size);
 +
-+	/* We only finish one item per transaction in a chain */
-+	*step_size = max(f4, max3(f1, f2, f3));
++	/* Check for overflows */
++	if (check_mul_overflow(blockcount, per_intent, &logres) ||
++	    check_add_overflow(logres, step_size, &logres))
++		return 0;
 +
-+	return per_intent;
++	curr_res->tr_logres = logres;
++	min_logblocks = xfs_log_calc_minimum_size(mp);
++	curr_res->tr_logres = old_logres;
++
++	trace_xfs_calc_max_atomic_write_log_geometry(mp, per_intent, step_size,
++			blockcount, min_logblocks, logres);
++
++	*new_logres = logres;
++	return min_logblocks;
 +}
 +
 +/*
-+ * Compute the maximum size (in fsblocks) of atomic writes that we can complete
-+ * given the existing log reservations.
++ * Compute the transaction reservation needed to complete an out of place
++ * atomic write of a given number of blocks.
 + */
-+xfs_extlen_t
-+xfs_calc_max_atomic_write_fsblocks(
-+	struct xfs_mount		*mp)
++int
++xfs_calc_atomic_write_reservation(
++	struct xfs_mount	*mp,
++	xfs_extlen_t		blockcount)
 +{
-+	const struct xfs_trans_res	*resv = &M_RES(mp)->tr_atomic_ioend;
-+	unsigned int			per_intent = 0;
-+	unsigned int			step_size = 0;
-+	unsigned int			ret = 0;
++	unsigned int		new_logres;
++	xfs_extlen_t		min_logblocks;
 +
-+	if (resv->tr_logres > 0) {
-+		per_intent = xfs_calc_atomic_write_ioend_geometry(mp,
-+				&step_size);
-+
-+		if (resv->tr_logres >= step_size)
-+			ret = (resv->tr_logres - step_size) / per_intent;
++	/*
++	 * If the caller doesn't ask for a specific atomic write size, then
++	 * use the defaults.
++	 */
++	if (blockcount == 0) {
++		xfs_calc_default_atomic_ioend_reservation(mp, M_RES(mp));
++		return 0;
 +	}
 +
-+	trace_xfs_calc_max_atomic_write_fsblocks(mp, per_intent, step_size,
-+			resv->tr_logres, ret);
++	min_logblocks = xfs_calc_atomic_write_log_geometry(mp, blockcount,
++			&new_logres);
++	if (!min_logblocks || min_logblocks > mp->m_sb.sb_logblocks)
++		return -EINVAL;
 +
-+	return ret;
++	M_RES(mp)->tr_atomic_ioend.tr_logres = new_logres;
++	return 0;
 +}
 
