@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA0981F3B98
-	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 16:51:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B914927D770
+	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 16:53:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751388712; cv=none; b=KZP/Uf0+IQ2ITxiZEaI57lYXyAFdUY9D6QN48VV8qPCMp4dKiIC1RXtaPv7C2eRic+gwl0hNxsA+NN2ZmO/ggt8iQCp+7w5HvrRinc5N3eH+ZnyvhDK13vWQNDHcLvkCyOKhk8PIBbyNM89qyROqBNpfOrI8v2WFfGw1PAKN6eo=
+	t=1751388787; cv=none; b=IxdQWbmJJgXbKm4SEeyTHjybl2Ke/j2PGv0rOvaZ/e48tYnLTX8CddI0ioqB+fVdxer91u0UvRryKXcp2wqLVN4zABuLc2zg7q5GCmB6z4PISSFxuQUje7SEIaFyeq6wYtzZGP2KGOGB5c4TnMJyC9uYwnLfbaltVf3UcjEeI+Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751388712; c=relaxed/simple;
-	bh=ot1BQu5MNqez82h7x1Hhc77u+5v8KPahxF627KoW5+g=;
+	s=arc-20240116; t=1751388787; c=relaxed/simple;
+	bh=ZFGrAsQtty49Y9XmO+YS1hMVSkTwb72beqxOKOT/g20=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bSjV8eUsGdGxc0uZe3k/l8g0CHBcP9a7E8HHB4qMVDyWbmm1bqcqt/3gj6FVU2tMdXbLG9VAFu1772m3PxCnOprNo4m4J0hvpuxOMIW+3gnGs57QmaqP+lcQ+ZocSY7WUNsCC6TqymyIt8BmycHDCdDOVVO16chMhasis89ntdU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ErtABLpy; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=QAi/mm3D2SynmmCXa/eYXajUu0pCWl4JJWW+R6mGBMo9RVHw71VYkIkCXFvLiXksjHEfo4brMoY/cm/VnJ9vBx0jaa3HQ4Nl3nDM5LbGFVF8mTVFjLl4I22ifFoho3AuBKF087BJw7PnuhCyiLV+6mRM9lKtt1FyfOaMfVJhMis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sp4JddCo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ErtABLpy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05924C4CEEB;
-	Tue,  1 Jul 2025 16:51:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sp4JddCo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F93FC4CEEF;
+	Tue,  1 Jul 2025 16:53:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751388712;
-	bh=ot1BQu5MNqez82h7x1Hhc77u+5v8KPahxF627KoW5+g=;
+	s=k20201202; t=1751388787;
+	bh=ZFGrAsQtty49Y9XmO+YS1hMVSkTwb72beqxOKOT/g20=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ErtABLpyOWUZBlvbC5TjGxLxl+c9k9Q3/hh/N5KnRgoaGLSABghF4dXueTnGWdEp7
-	 8zsxQf17pdRm4pz5aLpJU+o2R8vBFSn9mF2AWx+8OOPrIHprBcgP4K1mmzd1IaFqIT
-	 ubQyU/mmsmLl2wB2XsPmaYe1+Uydiv2zUkqCJts2v3Sz6VVKz++vMP/2+yWLIs1W6h
-	 0U4CajXq83aYcpzcM78xzxUfIXu3rcb4GMqYTixmP93EqwqPiTnneIqjD2x2Bj/mXv
-	 /I1CCgQLG/V7dZB5+NGJQLtabyZN3Sl+YwerG4oUcrFWNAjtNg8MAbLXmOnt2ouBed
-	 XeFJBqoQOp7jg==
-Date: Tue, 1 Jul 2025 09:51:51 -0700
+	b=sp4JddCojKGsFOe1w7R/qlvh4NMuZplkdNw7Nq1A2b6E5HqBB1jc/TQIK+uKY8A/i
+	 5ImX4g8A4YV0Q4pN8rIBpYy6mxWLVLJr/tj9/qdIBkYWPzxm2oHll4xYMKf6w8sTDy
+	 f7YPy4RN51ph+m+WQATFS2Oy5iYTK5s42lP52JZiEKGlNg+9VmvBGRqWKxYNGjtXNQ
+	 ci1FvXo2/4SGp6ZVf2UCxWdxmrJlxDWRIdtPTNgUkHJoVyVguPPH4GZGoCJQ5B2rks
+	 TTMgaOfD9YXMBOfb24k88mxdmSUzdS12oZ+k24IpUNdkVk6AYzf3fpq7cbFdu/9jgY
+	 T1lro0d4AgonA==
+Date: Tue, 1 Jul 2025 09:53:06 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, John Garry <john.g.garry@oracle.com>,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs: remove the bt_meta_sectorsize field in struct
- buftarg
-Message-ID: <20250701165151.GJ10009@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/7] xfs: refactor xfs_calc_atomic_write_unit_max
+Message-ID: <20250701165306.GK10009@frogsfrogsfrogs>
 References: <20250701104125.1681798-1-hch@lst.de>
- <20250701104125.1681798-8-hch@lst.de>
+ <20250701104125.1681798-5-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,136 +43,197 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250701104125.1681798-8-hch@lst.de>
+In-Reply-To: <20250701104125.1681798-5-hch@lst.de>
 
-On Tue, Jul 01, 2025 at 12:40:41PM +0200, Christoph Hellwig wrote:
-> The file system only has a single file system sector size.  Read that
-> from the in-core super block to avoid confusion about the two different
-> "sector sizes" stored in the buftarg.
-
-Yeah, that whole bt_meta_sectorsize stuff was confusing.
-
->                                        Note that this loosens the
-> alignment asserts for memory backed buftargs that set the page size here.
-
-Doesn't matter at all since shmem files are byte addressable anyway. :)
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_buf.c     | 20 +++++---------------
->  fs/xfs/xfs_buf.h     | 15 ---------------
->  fs/xfs/xfs_buf_mem.c |  2 --
->  3 files changed, 5 insertions(+), 32 deletions(-)
+On Tue, Jul 01, 2025 at 12:40:38PM +0200, Christoph Hellwig wrote:
+> This function and the helpers used by it duplicate the same logic for AGs
+> and RTGs.  Use the xfs_group_type enum to unify both variants.
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index b73da43f489c..0f20d9514d0d 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -387,17 +387,18 @@ xfs_buf_map_verify(
->  	struct xfs_buftarg	*btp,
->  	struct xfs_buf_map	*map)
->  {
-> +	struct xfs_mount	*mp = btp->bt_mount;
->  	xfs_daddr_t		eofs;
->  
->  	/* Check for IOs smaller than the sector size / not sector aligned */
-> -	ASSERT(!(BBTOB(map->bm_len) < btp->bt_meta_sectorsize));
-> -	ASSERT(!(BBTOB(map->bm_bn) & (xfs_off_t)btp->bt_meta_sectormask));
-> +	ASSERT(!(BBTOB(map->bm_len) < mp->m_sb.sb_sectsize));
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
 
-Urgh, should the polarity of this be reversed?
-
-	ASSERT(BBTOB(map->bm_len) >= mp->m_sb.sb_sectsize);
-
-Though I don't really care enough to block the patch so
+LGTM,
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> +	ASSERT(!(BBTOB(map->bm_bn) & (xfs_off_t)(mp->m_sb.sb_sectsize - 1)));
+> ---
+>  fs/xfs/xfs_mount.c | 76 +++++++++++++++++-----------------------------
+>  fs/xfs/xfs_trace.h | 31 +++++++++----------
+>  2 files changed, 42 insertions(+), 65 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 047100b080aa..99fbb22bad4c 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -679,68 +679,46 @@ static inline unsigned int max_pow_of_two_factor(const unsigned int nr)
+>  }
 >  
->  	/*
->  	 * Corrupted block numbers can get through to here, unfortunately, so we
->  	 * have to check that the buffer falls within the filesystem bounds.
->  	 */
-> -	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
-> +	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
->  	if (map->bm_bn < 0 || map->bm_bn >= eofs) {
->  		xfs_alert(btp->bt_mount,
->  			  "%s: daddr 0x%llx out of range, EOFS 0x%llx",
-> @@ -1726,10 +1727,6 @@ xfs_configure_buftarg(
->  
->  	ASSERT(btp->bt_bdev != NULL);
->  
-> -	/* Set up metadata sector size info */
-> -	btp->bt_meta_sectorsize = sectorsize;
-> -	btp->bt_meta_sectormask = sectorsize - 1;
+>  /*
+> - * If the data device advertises atomic write support, limit the size of data
+> - * device atomic writes to the greatest power-of-two factor of the AG size so
+> - * that every atomic write unit aligns with the start of every AG.  This is
+> - * required so that the per-AG allocations for an atomic write will always be
+> + * If the underlying device advertises atomic write support, limit the size of
+> + * atomic writes to the greatest power-of-two factor of the group size so
+> + * that every atomic write unit aligns with the start of every group.  This is
+> + * required so that the allocations for an atomic write will always be
+>   * aligned compatibly with the alignment requirements of the storage.
+>   *
+> - * If the data device doesn't advertise atomic writes, then there are no
+> - * alignment restrictions and the largest out-of-place write we can do
+> - * ourselves is the number of blocks that user files can allocate from any AG.
+> + * If the device doesn't advertise atomic writes, then there are no alignment
+> + * restrictions and the largest out-of-place write we can do ourselves is the
+> + * number of blocks that user files can allocate from any group.
+>   */
+> -static inline xfs_extlen_t xfs_calc_perag_awu_max(struct xfs_mount *mp)
+> -{
+> -	if (mp->m_ddev_targp->bt_bdev_awu_min > 0)
+> -		return max_pow_of_two_factor(mp->m_sb.sb_agblocks);
+> -	return rounddown_pow_of_two(mp->m_ag_max_usable);
+> -}
 > -
->  	error = bdev_validate_blocksize(btp->bt_bdev, sectorsize);
->  	if (error) {
->  		xfs_warn(btp->bt_mount,
-> @@ -1816,14 +1813,7 @@ xfs_alloc_buftarg(
->  	if (error)
->  		goto error_free;
->  
-> -	/*
-> -	 * When allocating the buftargs we have not yet read the super block and
-> -	 * thus don't know the file system sector size yet.
-> -	 */
-> -	btp->bt_meta_sectorsize = bdev_logical_block_size(btp->bt_bdev);
-> -	btp->bt_meta_sectormask = btp->bt_meta_sectorsize - 1;
-> -
-> -	error = xfs_init_buftarg(btp, btp->bt_meta_sectorsize,
-> +	error = xfs_init_buftarg(btp, bdev_logical_block_size(btp->bt_bdev),
->  				mp->m_super->s_id);
->  	if (error)
->  		goto error_free;
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index b269e115d9ac..8edfd9ed799e 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -79,19 +79,6 @@ struct xfs_buf_cache {
->  int xfs_buf_cache_init(struct xfs_buf_cache *bch);
->  void xfs_buf_cache_destroy(struct xfs_buf_cache *bch);
->  
 > -/*
-> - * The xfs_buftarg contains 2 notions of "sector size" -
+> - * Reflink on the realtime device requires rtgroups, and atomic writes require
+> - * reflink.
 > - *
-> - * 1) The metadata sector size, which is the minimum unit and
-> - *    alignment of IO which will be performed by metadata operations.
-> - * 2) The device logical sector size
+> - * If the realtime device advertises atomic write support, limit the size of
+> - * data device atomic writes to the greatest power-of-two factor of the rtgroup
+> - * size so that every atomic write unit aligns with the start of every rtgroup.
+> - * This is required so that the per-rtgroup allocations for an atomic write
+> - * will always be aligned compatibly with the alignment requirements of the
+> - * storage.
 > - *
-> - * The first is specified at mkfs time, and is stored on-disk in the
-> - * superblock's sb_sectsize.
-> - *
-> - * The latter is derived from the underlying device, and controls direct IO
-> - * alignment constraints.
+> - * If the rt device doesn't advertise atomic writes, then there are no
+> - * alignment restrictions and the largest out-of-place write we can do
+> - * ourselves is the number of blocks that user files can allocate from any
+> - * rtgroup.
 > - */
->  struct xfs_buftarg {
->  	dev_t			bt_dev;
->  	struct block_device	*bt_bdev;
-> @@ -99,8 +86,6 @@ struct xfs_buftarg {
->  	struct file		*bt_file;
->  	u64			bt_dax_part_off;
->  	struct xfs_mount	*bt_mount;
-> -	unsigned int		bt_meta_sectorsize;
-> -	size_t			bt_meta_sectormask;
->  	size_t			bt_logical_sectorsize;
->  	size_t			bt_logical_sectormask;
+> -static inline xfs_extlen_t xfs_calc_rtgroup_awu_max(struct xfs_mount *mp)
+> +static xfs_extlen_t
+> +xfs_calc_group_awu_max(
+> +	struct xfs_mount	*mp,
+> +	enum xfs_group_type	type)
+>  {
+> -	struct xfs_groups	*rgs = &mp->m_groups[XG_TYPE_RTG];
+> +	struct xfs_groups	*g = &mp->m_groups[type];
+> +	struct xfs_buftarg	*btp = xfs_group_type_buftarg(mp, type);
 >  
-> diff --git a/fs/xfs/xfs_buf_mem.c b/fs/xfs/xfs_buf_mem.c
-> index dcbfa274e06d..46f527750d34 100644
-> --- a/fs/xfs/xfs_buf_mem.c
-> +++ b/fs/xfs/xfs_buf_mem.c
-> @@ -90,8 +90,6 @@ xmbuf_alloc(
->  	btp->bt_dev = (dev_t)-1U;
->  	btp->bt_bdev = NULL; /* in-memory buftargs have no bdev */
->  	btp->bt_file = file;
-> -	btp->bt_meta_sectorsize = XMBUF_BLOCKSIZE;
-> -	btp->bt_meta_sectormask = XMBUF_BLOCKSIZE - 1;
+> -	if (rgs->blocks == 0)
+> +	if (g->blocks == 0)
+>  		return 0;
+> -	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_bdev_awu_min > 0)
+> -		return max_pow_of_two_factor(rgs->blocks);
+> -	return rounddown_pow_of_two(rgs->blocks);
+> +	if (btp && btp->bt_bdev_awu_min > 0)
+> +		return max_pow_of_two_factor(g->blocks);
+> +	return rounddown_pow_of_two(g->blocks);
+>  }
 >  
->  	error = xfs_init_buftarg(btp, XMBUF_BLOCKSIZE, descr);
->  	if (error)
+>  /* Compute the maximum atomic write unit size for each section. */
+>  static inline void
+>  xfs_calc_atomic_write_unit_max(
+> -	struct xfs_mount	*mp)
+> +	struct xfs_mount	*mp,
+> +	enum xfs_group_type	type)
+>  {
+> -	struct xfs_groups	*ags = &mp->m_groups[XG_TYPE_AG];
+> -	struct xfs_groups	*rgs = &mp->m_groups[XG_TYPE_RTG];
+> +	struct xfs_groups	*g = &mp->m_groups[type];
+>  
+>  	const xfs_extlen_t	max_write = xfs_calc_atomic_write_max(mp);
+>  	const xfs_extlen_t	max_ioend = xfs_reflink_max_atomic_cow(mp);
+> -	const xfs_extlen_t	max_agsize = xfs_calc_perag_awu_max(mp);
+> -	const xfs_extlen_t	max_rgsize = xfs_calc_rtgroup_awu_max(mp);
+> -
+> -	ags->awu_max = min3(max_write, max_ioend, max_agsize);
+> -	rgs->awu_max = min3(max_write, max_ioend, max_rgsize);
+> +	const xfs_extlen_t	max_gsize = xfs_calc_group_awu_max(mp, type);
+>  
+> -	trace_xfs_calc_atomic_write_unit_max(mp, max_write, max_ioend,
+> -			max_agsize, max_rgsize);
+> +	g->awu_max = min3(max_write, max_ioend, max_gsize);
+> +	trace_xfs_calc_atomic_write_unit_max(mp, type, max_write, max_ioend,
+> +			max_gsize, g->awu_max);
+>  }
+>  
+>  /*
+> @@ -758,7 +736,8 @@ xfs_set_max_atomic_write_opt(
+>  		max(mp->m_groups[XG_TYPE_AG].blocks,
+>  		    mp->m_groups[XG_TYPE_RTG].blocks);
+>  	const xfs_extlen_t	max_group_write =
+> -		max(xfs_calc_perag_awu_max(mp), xfs_calc_rtgroup_awu_max(mp));
+> +		max(xfs_calc_group_awu_max(mp, XG_TYPE_AG),
+> +		    xfs_calc_group_awu_max(mp, XG_TYPE_RTG));
+>  	int			error;
+>  
+>  	if (new_max_bytes == 0)
+> @@ -814,7 +793,8 @@ xfs_set_max_atomic_write_opt(
+>  		return error;
+>  	}
+>  
+> -	xfs_calc_atomic_write_unit_max(mp);
+> +	xfs_calc_atomic_write_unit_max(mp, XG_TYPE_AG);
+> +	xfs_calc_atomic_write_unit_max(mp, XG_TYPE_RTG);
+>  	mp->m_awu_max_bytes = new_max_bytes;
+>  	return 0;
+>  }
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index aae0d0ef84e0..6addebd764b0 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -171,36 +171,33 @@ DEFINE_ATTR_LIST_EVENT(xfs_attr_leaf_list);
+>  DEFINE_ATTR_LIST_EVENT(xfs_attr_node_list);
+>  
+>  TRACE_EVENT(xfs_calc_atomic_write_unit_max,
+> -	TP_PROTO(struct xfs_mount *mp, unsigned int max_write,
+> -		 unsigned int max_ioend, unsigned int max_agsize,
+> -		 unsigned int max_rgsize),
+> -	TP_ARGS(mp, max_write, max_ioend, max_agsize, max_rgsize),
+> +	TP_PROTO(struct xfs_mount *mp, enum xfs_group_type type,
+> +		 unsigned int max_write, unsigned int max_ioend,
+> +		 unsigned int max_gsize, unsigned int awu_max),
+> +	TP_ARGS(mp, type, max_write, max_ioend, max_gsize, awu_max),
+>  	TP_STRUCT__entry(
+>  		__field(dev_t, dev)
+> +		__field(enum xfs_group_type, type)
+>  		__field(unsigned int, max_write)
+>  		__field(unsigned int, max_ioend)
+> -		__field(unsigned int, max_agsize)
+> -		__field(unsigned int, max_rgsize)
+> -		__field(unsigned int, data_awu_max)
+> -		__field(unsigned int, rt_awu_max)
+> +		__field(unsigned int, max_gsize)
+> +		__field(unsigned int, awu_max)
+>  	),
+>  	TP_fast_assign(
+>  		__entry->dev = mp->m_super->s_dev;
+> +		__entry->type = type;
+>  		__entry->max_write = max_write;
+>  		__entry->max_ioend = max_ioend;
+> -		__entry->max_agsize = max_agsize;
+> -		__entry->max_rgsize = max_rgsize;
+> -		__entry->data_awu_max = mp->m_groups[XG_TYPE_AG].awu_max;
+> -		__entry->rt_awu_max = mp->m_groups[XG_TYPE_RTG].awu_max;
+> +		__entry->max_gsize = max_gsize;
+> +		__entry->awu_max = awu_max;
+>  	),
+> -	TP_printk("dev %d:%d max_write %u max_ioend %u max_agsize %u max_rgsize %u data_awu_max %u rt_awu_max %u",
+> +	TP_printk("dev %d:%d %s max_write %u max_ioend %u max_gsize %u awu_max %u",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __print_symbolic(__entry->type, XG_TYPE_STRINGS),
+>  		  __entry->max_write,
+>  		  __entry->max_ioend,
+> -		  __entry->max_agsize,
+> -		  __entry->max_rgsize,
+> -		  __entry->data_awu_max,
+> -		  __entry->rt_awu_max)
+> +		  __entry->max_gsize,
+> +		  __entry->awu_max)
+>  );
+>  
+>  TRACE_EVENT(xfs_calc_max_atomic_write_fsblocks,
 > -- 
 > 2.47.2
 > 
