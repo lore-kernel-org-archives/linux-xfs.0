@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02F2E1F3B98
-	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 18:05:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67F061B95B
+	for <linux-xfs@vger.kernel.org>; Tue,  1 Jul 2025 18:06:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751393155; cv=none; b=GxTEnr09tvC9kTRWGYVMf+aK99KW2TNhaytSCfMJtnAjIYFsYYmSYSJw/xSP5DRSdcoN1LXGveGYDymokbAZPIUJP40G/zzQBUprGSE+U76udXwgvyqw8fRJg0ygktq47tbKlI3FrPHFQCNARqnRr8hBMNFZcY1SQCYt+iI0CPQ=
+	t=1751393170; cv=none; b=uUZejKCRT9vzdOgfF6EVFFoyjbIgmNxKw+cE0NEO0Q/uSAa/3BKyP6Gt2O/kbcd2CSDI10oHDP0JmDDdYECh7LTmu4r+4WARCED2/p8BB/LfrxNRdzFi9Gb9VMkGQjktbHrN1yq2elE/aET376zpbHuzcOhYwFAlpg2bvNFSR20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751393155; c=relaxed/simple;
-	bh=4yKl9Jfzm/Luy//bvyd36gZQVIGLGo9tNOPZ8NLoYjI=;
+	s=arc-20240116; t=1751393170; c=relaxed/simple;
+	bh=RakYFV8V0qt7wLFhRgGzFnLoKOeWov8dObyuXlfaW/Q=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=O2WumZw91AKAN/CKeIolDSVhab2XHSdX7PVHum0XaHZEzFPNZCaZN7AY3i8RkUTSq6J0N/6GdpOgZ0S6eH7ZXqJdQTtTH3cxGwRsd6ol/jKn+BpZ5UcMXGuAGadUmGl8WEfdDPMr0SyZVjgh85LKkTzQAeQ5XB+2PFDVeD2GSH0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tugokgcw; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=UmqY8Rgt2YROUslN9no4oJ50XgTRLILhY4EhNGM5YIW6pUwMDD3qI1CdeDBhRGBhyaC2NWSHz3DJ+abFOMxyj3MIM0DT1IEKOQvhr9YEaFEoIBPeOlI7xs7bC4Su13WprCsfFOLsKgjh+kimoi4wKwLftVz/pmJdj8jaxI7NmhM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JfkQYMsu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tugokgcw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BF36C4CEEF;
-	Tue,  1 Jul 2025 18:05:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JfkQYMsu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39880C4CEEB;
+	Tue,  1 Jul 2025 18:06:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751393154;
-	bh=4yKl9Jfzm/Luy//bvyd36gZQVIGLGo9tNOPZ8NLoYjI=;
+	s=k20201202; t=1751393170;
+	bh=RakYFV8V0qt7wLFhRgGzFnLoKOeWov8dObyuXlfaW/Q=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Tugokgcw+oi6+0zoL/b5rSz4AkXOjrvO+YWHUp3oSU/FkZDuZkMWilASw6nOqmwdr
-	 oFvjA4eIvoUcogdcB/F+6euwOpDnYtlVZxvd+BBrKp2FmrDiYdihDwLAxAlCBv/jU9
-	 5wJASBdJqQkUq8OCsH3FtPH5iNz9c//vTBLAj3Bilms1pCXWsDjPF2HveSbAONQi6V
-	 jfrb8twI+XU3mGSV1W5I7gtysphlVm7hTaJrqO/Em00DgNDhLezysZmspxifevQf+6
-	 B5wCy7AXyaGQiu1FjFGFilBGyHZs8kdX9WllMb9rSVWFktKq03donRYRyDMSHu1Yy1
-	 Xqt0cPV3OzWag==
-Date: Tue, 01 Jul 2025 11:05:54 -0700
-Subject: [PATCH 2/6] xfs: allow block allocator to take an alignment hint
+	b=JfkQYMsu1I0BXo/6ekJ48u4RyIoDyB3SlD9JntNz+gDFUDxRMGwh0wG5tlGwAj0KK
+	 rwhqyWvCETvHJzCqx/ItNM+ZwECP70UT+OT9YB2wN1J6UbCZIYnHMrjNIfq4O5dbnM
+	 OG/V/GBbr0H8ci7so2qG8jAzKAASUlC4hkqQWG3ZB6xK1FkWFT1KsuEVyedJw3SUxY
+	 bNx+cikolynbM/ubjKbR62k/WlNj5CDvEL7WpAM+sBgkxzOgyPx+aZM/t2+abGUbZ4
+	 bUc1bjfUF2Naiqg8G7uvv7tfWVylTCzjzhHr0v8zYqkT6+cOTJKrvv2s2PtmPmIgoV
+	 86QytqxXFhewA==
+Date: Tue, 01 Jul 2025 11:06:09 -0700
+Subject: [PATCH 3/6] xfs: commit CoW-based atomic writes atomically
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: hch@lst.de, john.g.garry@oracle.com, catherine.hoang@oracle.com,
  john.g.garry@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <175139303530.915889.1612902381629024819.stgit@frogsfrogsfrogs>
+Message-ID: <175139303549.915889.11392310575906404058.stgit@frogsfrogsfrogs>
 In-Reply-To: <175139303469.915889.13789913656019867003.stgit@frogsfrogsfrogs>
 References: <175139303469.915889.13789913656019867003.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,62 +46,96 @@ Content-Transfer-Encoding: 7bit
 
 From: John Garry <john.g.garry@oracle.com>
 
-Source kernel commit: 6baf4cc47a741024d37e6149d5d035d3fc9ed1fe
+Source kernel commit: b1e09178b73adf10dc87fba9aee7787a7ad26874
 
-Add a BMAPI flag to provide a hint to the block allocator to align extents
-according to the extszhint.
+When completing a CoW-based write, each extent range mapping update is
+covered by a separate transaction.
 
-This will be useful for atomic writes to ensure that we are not being
-allocated extents which are not suitable (for atomic writes).
+For a CoW-based atomic write, all mappings must be changed at once, so
+change to use a single transaction.
+
+Note that there is a limit on the amount of log intent items which can be
+fit into a single transaction, but this is being ignored for now since
+the count of items for a typical atomic write would be much less than is
+typically supported. A typical atomic write would be expected to be 64KB
+or less, which means only 16 possible extents unmaps, which is quite
+small.
 
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+[djwong: add tr_atomic_ioend]
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: John Garry <john.g.garry@oracle.com>
 ---
- libxfs/xfs_bmap.h |    6 +++++-
- libxfs/xfs_bmap.c |    5 +++++
- 2 files changed, 10 insertions(+), 1 deletion(-)
+ libxfs/xfs_trans_resv.h |    1 +
+ libxfs/xfs_log_rlimit.c |    4 ++++
+ libxfs/xfs_trans_resv.c |   15 +++++++++++++++
+ 3 files changed, 20 insertions(+)
 
 
-diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index b4d9c6e0f3f9b6..d5f2729305fada 100644
---- a/libxfs/xfs_bmap.h
-+++ b/libxfs/xfs_bmap.h
-@@ -87,6 +87,9 @@ struct xfs_bmalloca {
- /* Do not update the rmap btree.  Used for reconstructing bmbt from rmapbt. */
- #define XFS_BMAPI_NORMAP	(1u << 10)
+diff --git a/libxfs/xfs_trans_resv.h b/libxfs/xfs_trans_resv.h
+index d9d0032cbbc5d4..670045d417a65f 100644
+--- a/libxfs/xfs_trans_resv.h
++++ b/libxfs/xfs_trans_resv.h
+@@ -48,6 +48,7 @@ struct xfs_trans_resv {
+ 	struct xfs_trans_res	tr_qm_dqalloc;	/* allocate quota on disk */
+ 	struct xfs_trans_res	tr_sb;		/* modify superblock */
+ 	struct xfs_trans_res	tr_fsyncts;	/* update timestamps on fsync */
++	struct xfs_trans_res	tr_atomic_ioend; /* untorn write completion */
+ };
  
-+/* Try to align allocations to the extent size hint */
-+#define XFS_BMAPI_EXTSZALIGN	(1u << 11)
-+
- #define XFS_BMAPI_FLAGS \
- 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
- 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-@@ -98,7 +101,8 @@ struct xfs_bmalloca {
- 	{ XFS_BMAPI_REMAP,	"REMAP" }, \
- 	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
- 	{ XFS_BMAPI_NODISCARD,	"NODISCARD" }, \
--	{ XFS_BMAPI_NORMAP,	"NORMAP" }
-+	{ XFS_BMAPI_NORMAP,	"NORMAP" },\
-+	{ XFS_BMAPI_EXTSZALIGN,	"EXTSZALIGN" }
+ /* shorthand way of accessing reservation structure */
+diff --git a/libxfs/xfs_log_rlimit.c b/libxfs/xfs_log_rlimit.c
+index 246d5f486d024a..2b9047f5ffb58b 100644
+--- a/libxfs/xfs_log_rlimit.c
++++ b/libxfs/xfs_log_rlimit.c
+@@ -91,6 +91,7 @@ xfs_log_calc_trans_resv_for_minlogblocks(
+ 	 */
+ 	if (xfs_want_minlogsize_fixes(&mp->m_sb)) {
+ 		xfs_trans_resv_calc(mp, resv);
++		resv->tr_atomic_ioend = M_RES(mp)->tr_atomic_ioend;
+ 		return;
+ 	}
  
+@@ -107,6 +108,9 @@ xfs_log_calc_trans_resv_for_minlogblocks(
  
- static inline int xfs_bmapi_aflag(int w)
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 3cb47c3c8707db..99f5e6f9d545a4 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -3306,6 +3306,11 @@ xfs_bmap_compute_alignments(
- 		align = xfs_get_cowextsz_hint(ap->ip);
- 	else if (ap->datatype & XFS_ALLOC_USERDATA)
- 		align = xfs_get_extsz_hint(ap->ip);
+ 	xfs_trans_resv_calc(mp, resv);
+ 
++	/* Copy the dynamic transaction reservation types from the running fs */
++	resv->tr_atomic_ioend = M_RES(mp)->tr_atomic_ioend;
 +
-+	/* Try to align start block to any minimum allocation alignment */
-+	if (align > 1 && (ap->flags & XFS_BMAPI_EXTSZALIGN))
-+		args->alignment = align;
+ 	if (xfs_has_reflink(mp)) {
+ 		/*
+ 		 * In the early days of reflink, typical log operation counts
+diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
+index 0a843deb50a118..cf735f946c8ac7 100644
+--- a/libxfs/xfs_trans_resv.c
++++ b/libxfs/xfs_trans_resv.c
+@@ -1281,6 +1281,15 @@ xfs_calc_namespace_reservations(
+ 	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ }
+ 
++STATIC void
++xfs_calc_default_atomic_ioend_reservation(
++	struct xfs_mount	*mp,
++	struct xfs_trans_resv	*resp)
++{
++	/* Pick a default that will scale reasonably for the log size. */
++	resp->tr_atomic_ioend = resp->tr_itruncate;
++}
 +
- 	if (align) {
- 		if (xfs_bmap_extsize_align(mp, &ap->got, &ap->prev, align, 0,
- 					ap->eof, 0, ap->conv, &ap->offset,
+ void
+ xfs_trans_resv_calc(
+ 	struct xfs_mount	*mp,
+@@ -1375,4 +1384,10 @@ xfs_trans_resv_calc(
+ 	resp->tr_itruncate.tr_logcount += logcount_adj;
+ 	resp->tr_write.tr_logcount += logcount_adj;
+ 	resp->tr_qm_dqalloc.tr_logcount += logcount_adj;
++
++	/*
++	 * Now that we've finished computing the static reservations, we can
++	 * compute the dynamic reservation for atomic writes.
++	 */
++	xfs_calc_default_atomic_ioend_reservation(mp, resp);
+ }
 
