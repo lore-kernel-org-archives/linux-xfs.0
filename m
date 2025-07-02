@@ -1,116 +1,85 @@
-Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BABA4219A8D;
-	Wed,  2 Jul 2025 09:14:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A010224A064;
+	Wed,  2 Jul 2025 09:40:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751447643; cv=none; b=gXE9WJ8QlPHGGguZFeTHIYailiaVLxgflva+T0urd5DfjmjsdcbCeNLk2/lz4s/CjqoEIxn1OBjomcgs7sVtwaZ5VtJJD1cwAdNmE7WKXf/8I+ybjy14gByMmA/hwuPF3qiGGjvBLx2o65nrZqCkBcb0p0sdjJhdTKj1vq0xvnE=
+	t=1751449222; cv=none; b=UV2q5TgP4qHxxoBmNr8IQM8oOSz3qCVxWFBaAohqeM/UDPLYU8jmNth7WPsVUcjfHgk7sY14yKoaV906WmI9gxmK5gSQUrunBcFrW4cVVHepmbJblCf4kLDNggFxUwkoqBCYkCDIaorlSGyMr/pRyvl1gqsS1pwpJUloKgE+6VU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751447643; c=relaxed/simple;
-	bh=arp/RXJFijFrUN/wQbLbSmWxuyiKJielKbqEREc+Y6U=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ol2jHyHFefd1KDiCciCbGw+4/t2ig1nMLAMeluIeg2AdQ8/XGQzAryF9mTD9m5H8MZqbwMG9GmKrm3X4HUg77BvrjmHq29owajkEjx3b59JxJXiFhG21FkIgyLvtET9RC6sTFzfNL1rW3xBYi3sqOYs/v99RVaRYE3/9srhkHVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=b90bYBqD; arc=none smtp.client-ip=209.85.208.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1751449222; c=relaxed/simple;
+	bh=GWDg1DsV7ZUuNOZFTWt0spsHVa1siSyNSPhHN8LfY2U=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZOG6rVeSP9KA6ECAxQCFuLCfgCd8a5lhCiZpi/hUx8OMHZxSOfh9CpZtXNpYnpmNMUp8YMGjvYuYRHPBlb9OSqc4fy15mZZHtYb02CD2KOYJJZQBHmkhDh9ETGYSjvuxrcMYnsGYOJ+tJX04gT1DSesxmmMin/Xzgjq3I5kEgfQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=TSm1KzR8; arc=none smtp.client-ip=83.149.199.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b90bYBqD"
-Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-60c5b7cae8bso7024594a12.1;
-        Wed, 02 Jul 2025 02:14:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751447640; x=1752052440; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=YOnKL2iySZqX8VVh+L223ZxSRCRPq10Nr2PZwBL+7sg=;
-        b=b90bYBqDrbJrzU3s3ghZlttO3/Zv+ncaWuah9dZLZUAWFNNfVGDoTNtIRlv39Cf0pX
-         tCaGaXmi/r5ON9Z5j3Fn+SoC+Dn0Xyb8oNjIk9Auep1VYxQgupMfCKHDqxigomHkhmwm
-         5MGopEKNMF7nzSIEi1fW+y/A+S+XvevZiV0mtBf/4a/60ei9MCJ1+qyHYY/DB3HZCGyw
-         rHUQCEQwLH0CmPJVFeD+SYAztkugfgAQoyQHUPn/IC0s8RVtW3RxlVWixLiMrYFFSU3v
-         aP9aEPEdYvwD4esDuZH2H6RGzPHKpgW2Y1sEW1mEdzDMHU8vdTtp5NdE0WwHe2WXngyQ
-         E4Kw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751447640; x=1752052440;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=YOnKL2iySZqX8VVh+L223ZxSRCRPq10Nr2PZwBL+7sg=;
-        b=Meh2qccrN75Psdg8tQKvBVFn/EE0hibpNSg6vPRlQ9nyt0pITdrAWzlOeoQQeZrNfU
-         JGNyL3qSS0Xwf240W8ZW1K2lPCoiuUM3igURkcpED00vjLUfQRC0CvD6+falUp/cYswT
-         GXDb8TJqu1xglM0acUefSajQ4nNcm1ZwZQjHNHNC/g5fOEZzKQgM0I6iTetwRa6cXd30
-         Rbdai8rBIwk7nKUrJWXQYLJI8aRhI+Hz1FbYww5ThHPoJQ6xMdCWm5YAeBeJkjcPpZnc
-         iuwoUFAGjLHTsPWKOI61QzXqFziuTNZY2U+V6HDFWtlhaph0m8aFsx5+uItWibfpRJKj
-         CcYA==
-X-Forwarded-Encrypted: i=1; AJvYcCUw4zEoPjHzrMXRKgiFkVCWOGDqCESVj2C4sk5vQCFdeUArs53i7gfDsAgrgD8TTAf0Mo3w01Lt/FSN6xYv6Q==@vger.kernel.org, AJvYcCV8o9/QKj23j9ONlAi58V3TV6OCQpg1QqIUAeJnOPhNVX2am2a90iIYjTUraZgX0Ooqf/KRhXI+2xe3@vger.kernel.org, AJvYcCViAhHhrL4Y6OlxvjAh71MMY5h6K6XFLfjyzuyZxqsMa5Z7w486tYr7/EWRJXqKsxMEkfWJ/TFlrPM=@vger.kernel.org, AJvYcCWDnLP2Auo2dC6CEPbMA9O/TeH5bD3BvmW9B7HP7gcoZtduAhuQjy5IRnXnayG0mS2VWvNLKVvW8Q==@vger.kernel.org, AJvYcCWVNlHl7mM7UN+YZT+skqUg8fvjB2Rq5NtcsutyxERRwIxMdVOEPckQIF2/VR9CwxoU0IYJG8Bogv/ezNCW@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy9eiT/JP11azitllBg1w+YkG2PVxV0EPwrTIufMS3ACOMF2Hr/
-	AKVLNcLmZEL6TjI5t1fPeHiOtwjkE0XlGEU2RTm+M6D6wcOpw+62qpR3acvQjDPEwgiW0+0reeu
-	8oQaq4oGqN1fNqI4DY4USwDTydTJ8kAQ=
-X-Gm-Gg: ASbGnctg5wiXqaUbbJPpc/bjndt1NN1bb7DALM2h+UUwaW3lUYwEABSMhH0vCJnDdLm
-	8SszhGfO8t+cgmZspNG1ie4fX504GbBPxSdITP94Mfow+UBaeo/3g9JgS567gDMPN1CC7qbcXg1
-	IjgXU8RpMJanE+OU4YqO+siPsxnRp3RG5MZYMBDLGPSbGoZPUgCY5XqQ==
-X-Google-Smtp-Source: AGHT+IGlk8ck2yGJiSvYpbNFUVRsx8Y0aQIabBLOLnPDFVgvwubtNKreUJ+vATAAMAwvHsiBczX2MScCqWUycc9KxFQ=
-X-Received: by 2002:a17:907:94c3:b0:add:ed3a:e792 with SMTP id
- a640c23a62f3a-ae3c2da9581mr192429266b.47.1751447639461; Wed, 02 Jul 2025
- 02:13:59 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="TSm1KzR8"
+Received: from fedora.intra.ispras.ru (unknown [10.10.165.14])
+	by mail.ispras.ru (Postfix) with ESMTPSA id A7C554076B26;
+	Wed,  2 Jul 2025 09:40:10 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru A7C554076B26
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
+	s=default; t=1751449210;
+	bh=SqlyDeJL19m2IBE/mA82Oc+yp/iCsg9QxFSUf4E0sVs=;
+	h=From:To:Cc:Subject:Date:From;
+	b=TSm1KzR8oTVhJI6J6YqeztuZWtspR7Gx5nyttntXKglGHExjiN0IaNXhGhox3h/PN
+	 TCGBylPBs7IqBxUrY5qX8NrTztOk64csI5DZq8mTLZRT2oE+QPCqMGkFq6D47q64LM
+	 IGumUN7n2wFxlRHGDD1ZyCkXSONcaygQwj7oTJuE=
+From: Fedor Pchelkin <pchelkin@ispras.ru>
+To: Carlos Maiolino <cem@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
+	Christoph Hellwig <hch@lst.de>,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org
+Subject: [PATCH v2 0/6] xfs: cleanup key comparing routines
+Date: Wed,  2 Jul 2025 12:39:27 +0300
+Message-ID: <20250702093935.123798-1-pchelkin@ispras.ru>
+X-Mailer: git-send-email 2.50.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
- <20250630-xattrat-syscall-v6-6-c4e3bc35227b@kernel.org> <20250701-bauzaun-riskieren-595464ef81c4@brauner>
-In-Reply-To: <20250701-bauzaun-riskieren-595464ef81c4@brauner>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 2 Jul 2025 11:13:48 +0200
-X-Gm-Features: Ac12FXwQ_wZQ_QCTo4zCnlXIsD2UE88jy3YPrf_EnnTl4HhmrEsOq9hi_uihdY0
-Message-ID: <CAOQ4uxjfs=YJmgj0CfJ1NxuPaHgh4B6Vou6jG-WBoi1hGdSDdQ@mail.gmail.com>
-Subject: Re: [PATCH v6 6/6] fs: introduce file_getattr and file_setattr syscalls
-To: Christian Brauner <brauner@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Casey Schaufler <casey@schaufler-ca.com>, Jan Kara <jack@suse.cz>, =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, linux-api@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, selinux@vger.kernel.org, 
-	Andrey Albershteyn <aalbersh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-> > +/*
-> > + * Variable size structure for file_[sg]et_attr().
-> > + *
-> > + * Note. This is alternative to the structure 'struct fileattr'/'struct fsxattr'.
-> > + * As this structure is passed to/from userspace with its size, this can
-> > + * be versioned based on the size.
-> > + */
-> > +struct fsx_fileattr {
-> > +     __u32   fsx_xflags;     /* xflags field value (get/set) */
-> > +     __u32   fsx_extsize;    /* extsize field value (get/set)*/
-> > +     __u32   fsx_nextents;   /* nextents field value (get)   */
-> > +     __u32   fsx_projid;     /* project identifier (get/set) */
-> > +     __u32   fsx_cowextsize; /* CoW extsize field value (get/set) */
->
-> This misses a:
->
-> __u32 __spare;
->
-> so there's no holes in the struct. :)
+Key comparing routines are currently opencoded with extra casts and
+subtractions which is error prone and can be replaced with a neat
+cmp_int() helper which is now in a generic header file.
 
-Adding __spare and not verifying that it is zeroed gets us to the
-point that we are not able to replace __spare with a real field later.
+Started from:
+https://lore.kernel.org/linux-xfs/20250426134232.128864-1-pchelkin@ispras.ru/T/#u
 
-I suggest to resolve this hole as Darrick and Pali suggested by making it
-__u64 fsx_xflags
+Thanks Darrick for suggestion!
 
-w.r.t Darrick's comment, I kind of like it that the name for the UAPI
-struct (fsxattr)
-differs from the name of the kernel internal representation (fileattr), but
-I agree that fsx_fileattr does not give a good hint on what it is.
+v1: https://lore.kernel.org/linux-xfs/20250612102455.63024-1-pchelkin@ispras.ru/T/#u
+v2: tune 6/6 patch to rename the "diff_two_ptrs" part
 
-I think that renaming struct fsx_fileattr to struct fsxattr64 along
-with changing the
-width of fsx_xflags will help reduce the confusion of users.
+Fedor Pchelkin (6):
+  xfs: rename diff_two_keys routines
+  xfs: rename key_diff routines
+  xfs: refactor cmp_two_keys routines to take advantage of cmp_int()
+  xfs: refactor cmp_key_with_cur routines to take advantage of cmp_int()
+  xfs: use a proper variable name and type for storing a comparison
+    result
+  xfs: refactor xfs_btree_diff_two_ptrs() to take advantage of cmp_int()
 
-What do you guys think?
+ fs/xfs/libxfs/xfs_alloc_btree.c      | 52 +++++++++------------
+ fs/xfs/libxfs/xfs_bmap_btree.c       | 32 +++++--------
+ fs/xfs/libxfs/xfs_btree.c            | 33 +++++++-------
+ fs/xfs/libxfs/xfs_btree.h            | 41 +++++++++--------
+ fs/xfs/libxfs/xfs_ialloc_btree.c     | 24 +++++-----
+ fs/xfs/libxfs/xfs_refcount_btree.c   | 18 ++++----
+ fs/xfs/libxfs/xfs_rmap_btree.c       | 67 ++++++++++------------------
+ fs/xfs/libxfs/xfs_rtrefcount_btree.c | 18 ++++----
+ fs/xfs/libxfs/xfs_rtrmap_btree.c     | 67 ++++++++++------------------
+ fs/xfs/scrub/btree.c                 |  2 +-
+ fs/xfs/scrub/rcbag_btree.c           | 38 +++++-----------
+ 11 files changed, 158 insertions(+), 234 deletions(-)
 
-Thanks,
-Amir.
+-- 
+2.50.0
+
