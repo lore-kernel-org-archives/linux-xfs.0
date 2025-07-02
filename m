@@ -1,111 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C689970805;
-	Wed,  2 Jul 2025 22:23:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B21592DE710;
+	Wed,  2 Jul 2025 22:57:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751494995; cv=none; b=FtUfNUE6GUHOdV/urvKqUuJS1MlIlO8vbzETVcbVOTJiaSSQC1k/kibC0IHAZzzefS2zXBBg5zMKgR1nhdjAf+ukb8kMWHvN2fe8nSEJon9jXsiTIAFusx4ePud50ZlJhB7iGUXT7+1/HCNO07G5UZcxeaK8J23EjQFHms0iQuI=
+	t=1751497045; cv=none; b=enzGUcKIh4fvWAOFYGPDrKskITCI3h69DIg069/cUxFlR/5CgV6eC2czusdQPS1N0xG3HPUFG0dTIUoB9TnDh6Yq2irfkxUrAa7jWGd3gp0J1Ov/V+ylb3YEZU3uLonPoPh91AzTy5zyhZHUT9zZfeTgszZv0jl7uHk6Zoovj/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751494995; c=relaxed/simple;
-	bh=LVmaI22NMWk9nHFNJ/A528jljikC5KaEan2NqadkjSg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XYWBgu4ZK42PifNFdb0ZDhqJo/Dt9bs7b5dgYbIOrQ+Axy+SdziqCU6NU/SvS/6vVcfsUUjQLFneQ3ofogHZSW2R2ZUflum76yKOl3u2pmeyrRTu/lI4nkmxLlwYdmv90qh4DD8zSs6c0ONo4CHLl9A5I/BzdEThSBZGpKPwqLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mx8C1zUs; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751497045; c=relaxed/simple;
+	bh=8EW0hGGxBNPaepJB/kat+o+7PivqzOmIdnFN/RapTEk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=JfP4E/p12yiZmKk2+exAAsF8bHjID6xv/NDe9qcxesZWmqaJ72sFnmmVi9F8GS6iApVLuXavt2rabACqVEVGoplPdepk3hRe1SK48WFsx+FvXp3+5FnKxLtaUjKl/fHYbYNPN/d9oYH7QfrcZjAWEdoXYj9/DpnFfuWKS8ItytY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y47i09IZ; arc=none smtp.client-ip=209.85.160.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mx8C1zUs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BB73C4CEE7;
-	Wed,  2 Jul 2025 22:23:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751494995;
-	bh=LVmaI22NMWk9nHFNJ/A528jljikC5KaEan2NqadkjSg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mx8C1zUsS1ZWyO8ZpwurYk+HZEZ9ouQ4ugxjMEb0F+Us68GPGF7iqMHer3boyd3Sw
-	 a1nvIjNgDsnJR4QIxn5sWTqoJxAhpn39/QF7rAI49MSNPkVq1OYP/VfuoXZKMoffXi
-	 2ihvbZ1s4M6IFD06t+ToXPFa1oX3ywC8PjkNbrESbYa03ZKRQHfNi3LFwqdy1FAEsY
-	 SUlgei1ECb2vYcCMSecVu+KnyhH+wvu/iKvyYw2Xg94Vqex3aYRZ6cl51j++QCBSX+
-	 viKdCeHEydawfI4Eq3MsBw+S+0wPdNYxP6shPmrnVpUz3qMtANooHFH6lqAZrtTXa/
-	 +monDaqm4OKCQ==
-Date: Wed, 2 Jul 2025 15:23:14 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>,
-	Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-block@vger.kernel.org, gfs2@lists.linux.dev,
-	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: Re: [PATCH 01/12] iomap: pass more arguments using the iomap
- writeback context
-Message-ID: <20250702222314.GE9991@frogsfrogsfrogs>
-References: <20250627070328.975394-1-hch@lst.de>
- <20250627070328.975394-2-hch@lst.de>
- <aF601H1HVkw-g_Gk@bfoster>
- <20250630054407.GC28532@lst.de>
- <aGKF6Tfg4M94U3iA@bfoster>
- <20250702181847.GL10009@frogsfrogsfrogs>
- <CAJnrk1YWjSO-FmnzHGRerBP6r6rPSAAm3MgUKfkr_AYjDJjUxA@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y47i09IZ"
+Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-4a5840ec53dso89973261cf.0;
+        Wed, 02 Jul 2025 15:57:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1751497043; x=1752101843; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=L+sj4DzOPih53SQUVn5/WouvC+G14JrQj6it97lI9Kg=;
+        b=Y47i09IZk5Et4ftvV1FxOZmTsZ4EWF/yIKUxArsHWI8s9/7v3cPW2VHOxJIUZNZydx
+         HybZ9We+llzhu6swD1Wk6yf6WDOEVdPUMjKSdvTI7UTHkb5N4QPSqDCZFR5TDDIVrcob
+         IF6N6da3AsvPLkSJpTNsCSznssP2bMKAS9FOAXPnh2P4HSsdD6helG1QFPXWbNBzTSs4
+         /XTjZYec4Ip3phcorCNliRRSSKyZubVJTQc/NzvU8GhzrsLMzexaJYAT9caD1NGzzQx7
+         wKA8+oivWFUKAY4wj/Q8E2hS8QVleUxoJ91ptjblZeQaQu3n3+wp2aWQYNMAk63XWz9H
+         TPFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1751497043; x=1752101843;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=L+sj4DzOPih53SQUVn5/WouvC+G14JrQj6it97lI9Kg=;
+        b=da9yHRZ16laDkJkaxmizfbcVNlKIs0Uog6HbrLYMXrOa8iq5H+FLmOlWq2Q99RdHaK
+         ZPA6JerCgP7j5I09fYJL/fmWFs90zKLNmxL07i8UBXMOKI5N//Sj9PTYhIPH0rZM6H5g
+         tKG7cDGIUhALFpSS48cs43wwwAdL8DX0xM3JpLxUW4tmIDQWQDiQi6cIjghOGiit2FIq
+         AS3MkNVO7GynAvqKZh5eqjs3TFdmxZQi9KVc+hf8FkplQuNxvu2607XTkyox6mFuL/yC
+         H6YomETs+F1LZYOAw7I/0J5cVhDNv6M8Izu3+/r5YSyihfAOWUs/5562efQAMsuJxuq2
+         ZPIw==
+X-Forwarded-Encrypted: i=1; AJvYcCU+XLmNaCzygWE0qQ3mpN+OP6YFD2m/dgZJ1YuDVNjhZMKn/MSa1UPTPpvuVAaDGA1EvBD2A7Y5QM7v@vger.kernel.org, AJvYcCUr3nPNIPEcNAZ+tO9tBmR3MX9WI6NqJaG3L+LUAU7S1fxJUS92gI1FMQXwRQbGjBCvMx13AFZO69kSVg==@vger.kernel.org, AJvYcCXuVWmhuvWHED6uDRXwiP4HY7Mt36HfavKqa3sWv7ITrWRw21t2qSDl2QbHdKzG5SVDtTMzmDrDNWRI@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxtk5rNqDDAFC+QCrKsrESUv6MDF9H3yLtvVhpMnayhMylW+vDv
+	aM01pxSFQysowEkB2hA+JdB5bJ6bhLKGzwQTT10MIpU3mptopJuUCdw3INU0FTtrU0Oze/aJp7A
+	bpVfJV2O+7Ei8iObCTHSoyw904dLr3+k=
+X-Gm-Gg: ASbGncvrEzdPb8KL7crHyAS8Swy5R1btdo+HHJZ43ghJY0umYV32mlWjW1IUzKB+ZIH
+	vXVtWxoArXxqMpRo1tYTxjCRIeZjQ/Xd0aAwWspWpB+ttni541cAUYKLox9rEGX5fh2UBebWqAq
+	FmDlKbhqZUPF1XarnxQlbD5Xk7ue/Bv1QaMGNQ5TaeSdxXBwI2f2TfbNl9UZo=
+X-Google-Smtp-Source: AGHT+IGh+uw6/WknPh/VOBOhELlnb2ckIXgQMw+Dl8Agj8uw+6O+8N23tvom7rsshXm0+/bXl2b6LhX8aRmfe9JENnM=
+X-Received: by 2002:a05:622a:1343:b0:494:9455:5731 with SMTP id
+ d75a77b69052e-4a9768dc925mr69623251cf.7.1751497042623; Wed, 02 Jul 2025
+ 15:57:22 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJnrk1YWjSO-FmnzHGRerBP6r6rPSAAm3MgUKfkr_AYjDJjUxA@mail.gmail.com>
+References: <20250624022135.832899-1-joannelkoong@gmail.com>
+ <20250624022135.832899-13-joannelkoong@gmail.com> <20250702175509.GF10009@frogsfrogsfrogs>
+ <20250702175743.GG10009@frogsfrogsfrogs>
+In-Reply-To: <20250702175743.GG10009@frogsfrogsfrogs>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Wed, 2 Jul 2025 15:57:10 -0700
+X-Gm-Features: Ac12FXz7lG-Jak0UpEVy1wDinr93eTqUtI8IoSMS4xFeGJDW7InC6JSRScIU8tA
+Message-ID: <CAJnrk1ZhFropUE-qoXcfa4VB740quF7nkQ3cs+NNbwPTFgpLsw@mail.gmail.com>
+Subject: Re: [PATCH v3 12/16] fuse: use iomap for buffered writes
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, hch@lst.de, miklos@szeredi.hu, 
+	brauner@kernel.org, anuj20.g@samsung.com, linux-xfs@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-block@vger.kernel.org, gfs2@lists.linux.dev, 
+	kernel-team@meta.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jul 02, 2025 at 03:00:42PM -0700, Joanne Koong wrote:
-> On Wed, Jul 2, 2025 at 11:18 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Mon, Jun 30, 2025 at 08:41:13AM -0400, Brian Foster wrote:
-> > > On Mon, Jun 30, 2025 at 07:44:07AM +0200, Christoph Hellwig wrote:
-> > > > On Fri, Jun 27, 2025 at 11:12:20AM -0400, Brian Foster wrote:
-> > > > > I find it slightly annoying that the struct name now implies 'wbc,'
-> > > > > which is obviously used by the writeback_control inside it. It would be
-> > > > > nice to eventually rename wpc to something more useful, but that's for
-> > > > > another patch:
-> > > >
-> > > > True, but wbc is already taken by the writeback_control structure.
-> > > > Maybe I should just drop the renaming for now?
-> > > >
+On Wed, Jul 2, 2025 at 10:57=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> On Wed, Jul 02, 2025 at 10:55:09AM -0700, Darrick J. Wong wrote:
+> > On Mon, Jun 23, 2025 at 07:21:31PM -0700, Joanne Koong wrote:
+> > > Have buffered writes go through iomap. This has two advantages:
+> > > * granular large folio synchronous reads
+> > > * granular large folio dirty tracking
 > > >
-> > > Yeah, that's what makes it confusing IMO. writeback_ctx looks like it
-> > > would be wbc, but it's actually wpc and wbc is something internal. But I
-> > > dunno.. it's not like the original struct name is great either.
+> > > If for example there is a 1 MB large folio and a write issued at pos =
+1
+> > > to pos 1 MB - 2, only the head and tail pages will need to be read in
+> > > and marked uptodate instead of the entire folio needing to be read in=
+.
+> > > Non-relevant trailing pages are also skipped (eg if for a 1 MB large
+> > > folio a write is issued at pos 1 to 4099, only the first two pages ar=
+e
+> > > read in and the ones after that are skipped).
 > > >
-> > > I was thinking maybe rename the wpc variable name to something like
-> > > wbctx (or maybe wbctx and wbctl? *shrug*). Not to say that is elegant by
-> > > any stretch, but just to better differentiate from wbc/wpc and make the
-> > > code a little easier to read going forward. I don't really have a strong
-> > > opinion wrt this series so I don't want to bikeshed too much. Whatever
-> > > you want to go with is fine by me.
+> > > iomap also has granular dirty tracking. This is useful in that when i=
+t
+> > > comes to writeback time, only the dirty portions of the large folio w=
+ill
+> > > be written instead of having to write out the entire folio. For examp=
+le
+> > > if there is a 1 MB large folio and only 2 bytes in it are dirty, only
+> > > the page for those dirty bytes get written out. Please note that
+> > > granular writeback is only done once fuse also uses iomap in writebac=
+k
+> > > (separate commit).
+> > >
+> > > .release_folio needs to be set to iomap_release_folio so that any
+> > > allocated iomap ifs structs get freed.
 > >
-> > I'd have gone with iwc or iwbc, but I don't really care that much. :)
-> >
-> > Now I'm confused because I've now seen the same patch from joanne and
-> > hch and don't know which one is going forward.  Maybe I should just wait
-> > for a combined megaseries...
-> 
-> Christoph's is the main source of truth and mine is just pulling his
-> patches and putting the fuse changes on top of that :) For the v3 fuse
-> iomap patchset [1], the iomap patches in that were taken verbatim from
-> his "refactor the iomap writeback code v2" patchset [2].
-> 
-> 
-> [1] https://lore.kernel.org/linux-fsdevel/20250624022135.832899-1-joannelkoong@gmail.com/
-> [2] https://lore.kernel.org/linux-fsdevel/20250617105514.3393938-1-hch@lst.de/
+> > What happens in the !iomap case, which can still happen for
+> > !writeback_cache filesystems?  I don't think you can call
+> > iomap_release_folio, because iomap doesn't own folio->private in that
+> > case.
 
-<nod> Well I migrated all my replies to hch's "refactor the iomap
-writeback code v3" patchset so I guess I'll... wait for whoever makes
-the next move. ;)
+AFAICS, there's otherwise no private data attached to the folio for
+fuse for the non-writeback paths, so I don't think this is an issue.
+ifs_free() would be a no-op.
 
---D
+>
+> ...and I think the answer to that is that the !writeback_cache case
+> passes all file IO directly to the fuse server and never touches the
+> page cache at all?
 
-> >
-> > --D
-> >
-> > > Brian
-> > >
-> > >
-> 
+There's two !writeback_cache cases, direct io and writethrough.
+For writethrough, the file IO gets passed to the fuse server and it
+also gets written to the page cache.
+
+>
+> --D
+>
