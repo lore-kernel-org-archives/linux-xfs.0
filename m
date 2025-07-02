@@ -1,151 +1,75 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6A0B26B77C;
-	Wed,  2 Jul 2025 12:09:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77A43260592;
+	Wed,  2 Jul 2025 12:24:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751458158; cv=none; b=REKK8gFRoXFb6OcxKQjZSBb9eEqrVrLOSBfMfc983J0gpXU//CRzPoOAmPXgq7LAVQDyhB2TCcPbnpJ0052PxJTrwIkhOl7+SaOYa+cCgV032hr3EbjpQpfm1m35w/oKU5SqbYSLm3EWWXfn5rR81caxhbZHkyoAPPfAhMBGdu8=
+	t=1751459079; cv=none; b=lqXYjbVvWEE0JDfM4u025GaTAd0XkVUF0ZOnWLOOy/S6dHeH7UKKWT6/sM76hiHr2Hvnfq/n/C9+RbbIEsl7dNmMxZKDfUbvEg8+HUDyevI4FWGod/LkYL2t8y42WR60N8KdIdMsXw6f/WUoE7sUElEknqnNJShOjyLIZpPbWOs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751458158; c=relaxed/simple;
-	bh=nWlDCMP58hOFWTq0axrXpQHRvPb4QwTJpACpOuwdVsM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cfQgwDq+LxVMxgSwDtkeuAeqysaQ7BIj5Fv94Wwwrt1CmYHAhQhCJH+FECKk7Fh+YW57vxPjpzFD4cbuT7Cfc7CfA7XbX6nXhzn3eKTCC2RHcgQQiZHnY/Srgf8iyQOkpGfGF6wa3Y+bHemPu9PrgTb9j1DyEFc2YO1csbqjKy4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SATrPgp0; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1751459079; c=relaxed/simple;
+	bh=+4g/O9KavdfNBDEeSgTgC6+6CMsSSnI/shhS+omw080=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=U/Z+bAfZAX+IDdtj1XGib0r4XnIG0emmAr31eKjwZnMMKSfGJeFNGSI27tkxEqXaNaaTvKBZjHRcf+5SSiwxdr3iDUAWNPCXfhAdLAWOANrLSncJj8mFha4v4ztMcRjKGo0KuzjwUPxm+dg0spXcmDm7sgIKklpgTVxr6qq8pEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kbuLl7NI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SATrPgp0"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-235e1d710d8so79772005ad.1;
-        Wed, 02 Jul 2025 05:09:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751458155; x=1752062955; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Hs5XLsalwzapO540In/uO9OhozwTRN8n/LOOBhKcKHY=;
-        b=SATrPgp0O7SwpyLXo0wc1SRq+5TJ7u1pCdDDniOHYlIsWIInyCaqLt9R40mYkZIQd+
-         6oM9XrJpyEvU9UkyEASFn+4SByU4oU4KDDvN5/5BPLmePkMNBcwnIVPJrHUavB7yCoXq
-         mObD6ss0k7MIQuYspnxSYhFjD1206bB/+Pfhk4+lDT4QKZNHIsSDWkUdrPKrb65qDauu
-         LjZrClzJTQg/L4721YmmTzl4GlU50sgZG0qwqkb1nsK23G498HQHPS7NJledZ2s1/Vmc
-         FMputq0+GeWyfAEIAxbCSIuqLnd8WOO8TDMo6v9rtnCglkwbx2EkpVh3rKRpfDrGM5wW
-         +qXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751458155; x=1752062955;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Hs5XLsalwzapO540In/uO9OhozwTRN8n/LOOBhKcKHY=;
-        b=BMzVVSk2YYSSy3OWmrgYUvJJv0NhIMRD4e0BNBx3sRcFWxYEa9YneWh723VCdvqMRI
-         wfWoUbxAmZWQIIMXNTteObsA8eGHXXXXVUAfkc14bP3jQcn492gI0a6X+o81vkIzaAna
-         +4b48v9xIzGKOScEABKK8SFcLWnZcVNlmhkhrNeGt+LksBL4c56/gq4cyy6PtaMAxiWu
-         yYBVTMfXkX8Nhi6ZM15Uq4yvhcw1iEQNKECWFtsVexD0iHg0cQQDQssTs/AXZt5AO5JT
-         pyNIuWDFsIFoMPjUfPvcDUoVlFFQ2stEoTayG0G616+hkWDsbwPubPHcLv71PiSFqzHQ
-         Pk7A==
-X-Forwarded-Encrypted: i=1; AJvYcCUZnjuS98w15grtDPZkTdrF5eWr/LAqWW74axaM9tnBrPDJHurXlyG7P7oGnaLTX2b4WJ1MJkm/Ptdvopv/@vger.kernel.org, AJvYcCVcokLnltiWOCB6yENPVDvxfHzk5YLR3P1pXHR0ecxS1p6+/O2JkB/AYi6SPMqknNikzZS9lE99GqeC@vger.kernel.org, AJvYcCWNRXGSXTY8JTuRruCsNGBermAww3v9YUsX6BCD1IcQPnbPzV+Sq3NX2dNZQnrS+1DzjpSdw+1eoNzIOS3Q@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx5KFK3naxOFwk0cINddOTMDDA9oo/SBkDgHFN2PDd3ONC9I09K
-	pK8i/q6i3fix8djz4fCci20yGrDjU+Q2saYjFq68KwqTnKVJRoYEOu54OQVsko+N
-X-Gm-Gg: ASbGncuX7GdCrLxm9xCRjkvqFI8jvywB4vCdRuRkAoOgnzo8dAKZtFAy0jZANt2PvYh
-	IvmdaufZpSbP/cT+6aHTNAg8SQTxxNCeHchGoSUh6fajHHzaJGmJVqsLKa+JCrxCvCMnH9WJrzQ
-	S8dg754oaBiebVdgIP6eIq3Dt0ZJdvfG7PHzr/Ay+PP9mtJWmFbL+OfrCgQRJ1Z9T4rRI0b4IrG
-	IJ6XTTPvchR/PCuwYayWF0XBl9GfZeKwPZ8/1MeV6RUW2NKzQbxjy6Wv7a+vNXHXOz/gNC8AcXt
-	VOARUrir1Q9X7wLuHILOeux1VkLXmDFNZz/Uj1jSGk+E5Dsu0jLgnXSQZfSL1CzGCaKjI/zlX4g
-	=
-X-Google-Smtp-Source: AGHT+IExaVpuYpi7D3hH/cDxFE+Ue5Om6VAYFyjkLoHEu40YV+B0qu6u+f3KaDzPw7fih6wRctT+mA==
-X-Received: by 2002:a17:902:f64f:b0:235:f459:69c7 with SMTP id d9443c01a7336-23c6e5ed89dmr46270605ad.52.1751458154933;
-        Wed, 02 Jul 2025 05:09:14 -0700 (PDT)
-Received: from VM-16-24-fedora.. ([43.153.32.141])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23acb2e1b03sm135015125ad.10.2025.07.02.05.09.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Jul 2025 05:09:14 -0700 (PDT)
-From: Jinliang Zheng <alexjlzheng@gmail.com>
-X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
-To: djwong@kernel.org
-Cc: alexjlzheng@gmail.com,
-	alexjlzheng@tencent.com,
-	brauner@kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] iomap: avoid unnecessary ifs_set_range_uptodate() with locks
-Date: Wed,  2 Jul 2025 20:09:12 +0800
-Message-ID: <20250702120912.36380-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250701184737.GA9991@frogsfrogsfrogs>
-References: <20250701184737.GA9991@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kbuLl7NI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC5D7C4CEED;
+	Wed,  2 Jul 2025 12:24:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751459078;
+	bh=+4g/O9KavdfNBDEeSgTgC6+6CMsSSnI/shhS+omw080=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=kbuLl7NIBnEYmnPsgKXjoq0qMYuLvGVLef1YLrQdw90i4COG97ap70uC43+frYYOu
+	 Sd0O2rrR8wdT1adpP97yHioNjM2+K1/XvJpRuOAP2H2qhS9ZmwP5Rmqb5NnJqlmbVh
+	 bKPQAq+P8vl+tMW2Vwnm1+Ow6FtjRpgWEKkB/UXdjyn53DE1IbZHylle0eJ+hjg5ls
+	 6ysAJe0Ovr5Ua1oxVYn9soULYh2jXiW/TqCItj+2tPZrcA69U8KE+r/71ubdNmu+R0
+	 resL4bBiogg/H4jipdni0N/OERFPyynRck/ckAZFilSAhmLSWI0DzJjJFcCjjwiBqm
+	 fhMRCIGA23zlA==
+Date: Wed, 2 Jul 2025 14:24:33 +0200
+From: Christian Brauner <brauner@kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, Andrey Albershteyn <aalbersh@redhat.com>, 
+	Arnd Bergmann <arnd@arndb.de>, Casey Schaufler <casey@schaufler-ca.com>, 
+	Jan Kara <jack@suse.cz>, Paul Moore <paul@paul-moore.com>, linux-api@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	selinux@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH v6 5/6] fs: prepare for extending file_get/setattr()
+Message-ID: <20250702-herzrasen-anlocken-d4971baeba1b@brauner>
+References: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
+ <20250630-xattrat-syscall-v6-5-c4e3bc35227b@kernel.org>
+ <20250701183105.GP10009@frogsfrogsfrogs>
+ <CAOQ4uxiCpGcZ7V8OqssP2xKsN0ZiAO7mQ_1Qt705BrcHeSPmBg@mail.gmail.com>
+ <20250701194002.GS10009@frogsfrogsfrogs>
+ <20250701195405.xf27mjknu5bnunue@pali>
+ <CAOQ4uxjZWGz2bqen4F+fkQqZYQjKyufFVky4tOTnwng4D5G4nQ@mail.gmail.com>
+ <CAOQ4uxhrW--Du4XvSWficnRenv24U4hwnCQtNsH4F5d4jaPjFg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxhrW--Du4XvSWficnRenv24U4hwnCQtNsH4F5d4jaPjFg@mail.gmail.com>
 
-On Tue, 1 Jul 2025 11:47:37 -0700, djwong@kernel.org wrote:
-> On Tue, Jul 03, 2025 at 10:48:47PM +0800, alexjlzheng@gmail.com wrote:
-> > From: Jinliang Zheng <alexjlzheng@tencent.com>
-> > 
-> > In the buffer write path, iomap_set_range_uptodate() is called every
-> > time iomap_end_write() is called. But if folio_test_uptodate() holds, we
-> > know that all blocks in this folio are already in the uptodate state, so
-> > there is no need to go deep into the critical section of state_lock to
-> > execute bitmap_set().
-> > 
-> > Although state_lock may not have significant lock contention due to
-> > folio lock, this patch at least reduces the number of instructions.
-> > 
-> > Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
-> > ---
-> >  fs/iomap/buffered-io.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index 3729391a18f3..fb4519158f3a 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -71,6 +71,9 @@ static void iomap_set_range_uptodate(struct folio *folio, size_t off,
-> >  	unsigned long flags;
-> >  	bool uptodate = true;
-> >  
-> > +	if (folio_test_uptodate(folio))
-> > +		return;
+> Christian,
 > 
-> Looks fine, but how exhaustively have you tested this with heavy IO
-> workloads?  I /think/ it's the case that folios always creep towards
-> ifs_is_fully_uptodate() == true state and once they've gotten there
-> never go back.  But folio state bugs are tricky to detect once they've
-> crept in.
-
-I tested fio, ltp and xfstests combined for about 30 hours. The command
-used for fio test is:
-
-  fio --name=4k-rw \
-    --filename=/data2/testfile \
-    --size=1G \
-    --bs=4096 \
-    --ioengine=libaio \
-    --iodepth=32 \
-    --rw=randrw \
-    --direct=0 \
-    --buffered=1 \
-    --numjobs=16 \
-    --runtime=60 \
-    --time_based \
-    --group_reporting
-
-ltp and xfstests showed no noticeable errors caused by this patch.
-
-thanks,
-Jinliang Zheng. :)
-
+> Can you please amend the return value in the following chunk:
 > 
-> --D
+> @@ -119,11 +120,16 @@ static int copy_fsxattr_from_user(struct fileattr *fa,
+>                                   struct fsxattr __user *ufa)
+>  {
+>         struct fsxattr xfa;
+> +       __u32 mask = FS_XFLAGS_MASK;
 > 
-> > +
-> >  	if (ifs) {
-> >  		spin_lock_irqsave(&ifs->state_lock, flags);
-> >  		uptodate = ifs_set_range_uptodate(folio, ifs, off, len);
-> > -- 
-> > 2.49.0
-> > 
-> > 
+>         if (copy_from_user(&xfa, ufa, sizeof(xfa)))
+>                 return -EFAULT;
+> 
+> +       if (xfa.fsx_xflags & ~mask)
+> +               return -EOPNOTSUPP;
+> +
+
+Done.
