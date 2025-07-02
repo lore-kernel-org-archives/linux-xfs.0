@@ -1,116 +1,130 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA78D210FB;
-	Wed,  2 Jul 2025 13:43:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C53652D5C73;
+	Wed,  2 Jul 2025 14:43:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751463823; cv=none; b=JkHJ7UoCEBs/271fGK1sJ6l8bM1vSSF9D4gilD2Yyi1s1VWZlPIDf6apku5xh/4D/IIsBo1FmyH2AZOrmdOAfg03dTQ0JQjDEtCCW4PCnrlEGcfWXiIBtXa/yQrr4FNsjsgnjBrdpd1HV1og0odA8DT/VXsepdzX/o1Ly05HIF0=
+	t=1751467398; cv=none; b=eBOp77BWsfPUefNg7lCRaJ4cUwGmogASUL8Rh+/oEQRaTaz9qfPQkfl2WkbwFJ36s8ZdPRsPcCwkCNfalEz6TSAjddVKFJjGhky8fmhrktC6L2WQQisFBh/J4IlwWIzPl/CbYJJ64P3remOfNmuticMPxQlG8/kIWA39nXPWfG4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751463823; c=relaxed/simple;
-	bh=1sxzDC5zf3UuhHKDufGOR1abNbNpZjrzvWoD6tTHOSg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=o1Ffhdh+yPWGfI2nmzYABBBfhuPte52Df9phVO5yRpp33zJgiW/knhfhk1fAp1qRKvhpa6qNTvHs+kruQMpI07AINrFQAVoEbMYkmJlpAts/R+fyhM8499kMVGo7kXDhN9nWjg9sr7Mpzmccj1Dm374Qhuqsb0JpOwy80bJVAlE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mke0nmCj; arc=none smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1751467398; c=relaxed/simple;
+	bh=FB8noNZwJPcaZSUUsSezeKLPzsPLDkdKDVUkz/TTaDc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hBoxFyNndCIGyOUgZEBKaxkA7aywHvl+wo8v3hrCKmTflq1a157JWvSoWdRT7gGxETqLOzMmN4X6LrGCkilGobNIM6BuDOJt5flj0Bf2PEq/JSwAidHIa/nsUczscxN1/0wQAxYxv7NAyGyedp5nbvxprm5XaWJMEMWWYFE5mx8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TA9+JaPn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mke0nmCj"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-ae360b6249fso895828766b.1;
-        Wed, 02 Jul 2025 06:43:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751463820; x=1752068620; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UwIDCZCusW6djd9Ye3kiK32Dnzf8SQVyvqtNWdIs4aA=;
-        b=mke0nmCjT67d3SNVWwFFFCFv9qH2cwkheJ5n9PLjnOkMqaP7GCJpqvuRbH1qipyzM5
-         3s57ro02sfj0ohRhXHfy6zo+RFzVRxXpNAP7imEtw6yXrZ842vpFYM+sLWSxNWsrqLma
-         GKOmhcqG2x9b8vmSWdomyqAEt4/h50KkyjCrstf6t/d0jdIS+BqIjslFEuSCLS9OZXOD
-         3od2hvu5JOxVu4r7drmnayUju58WjVFae1B4f6VR70t0c677wu3pXzgyRnS7bSAl2mqy
-         x3G3NUWp8cjNC5jsOX4bxd6yEd+L8KyOwekEuXBqmH5FOASmQPlSBZt3XQMtgZkfXOC0
-         mqCw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751463820; x=1752068620;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=UwIDCZCusW6djd9Ye3kiK32Dnzf8SQVyvqtNWdIs4aA=;
-        b=o4x8QErHvBfRvSvGdzI/mSYk1NB/kDbRqUcQrOO8BZeyBAgAaJygsW603mGs7W7jdP
-         bpyQCRRTg5tf2tzGe/iEyu2SB73yJEd75ZGS6HrjUsHA7JdJSx3UOT9Lud6mkLe/pq3h
-         rBmf9j2PiT+IehuaYk4fi7OfzV2RUFKLd61i5wVhwCpYRhuytENBZdRfETfGYDkiXmdo
-         0K3Geydh6tpLBu8v0dBsy/2JqQRzVasYFH1upZfEApNaprjRd9gd1R7KHQJOnRadT51F
-         3uOuO0QqkYE9fBWRsAaz2ihtjkPktPV+WtiMFUJnbireTYqgEFSOG3gDXQcLX+nyhK5h
-         QNoQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVzAhtAAXXS8+XKnbNlztPFihB48vVwTHqPx1LMVzcMX3dlj+CCY/C581embZFz69RqG6gN/Rv75fzHfMFV7Q==@vger.kernel.org, AJvYcCW2dlUy73DnHfsPasdQ33rFCCE7UWpq8s9xAfZ+yh+E+v64OiiUq9Ng1YPKfKxiyAmw12JTM36gXuLVG9d5@vger.kernel.org, AJvYcCX+6QnJ8jqYUvLHPdfnOq+7QayqVkuQboYYegPZGAEkz7tnqW8k8FDhJd+J44zw/ztAoPySduXZVA==@vger.kernel.org, AJvYcCXCxcaX3/icHivWXcf1x0qIzgDi5nDcHIfwlOgCvJvaEjrY15B6Twzm2AbUS93VuFE+FecnBXD8RX8=@vger.kernel.org, AJvYcCXky29fUalaaEnj7n7nkQXBnutH245fOm2TDAKO0fbFp2qTsUdE+kjnyC2w4erSPxHPXH5DXSj0CzdQ@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5lv6YQmTqNSd3Z1VguwxnXOtng2YUz+95z7taR7Bh96W89LLU
-	NWr/ZeDIxU+mJfwjH47RxOcQLlOrLcRmZ5Dr+Zl+59S3pbOEQrOJeRMw0RkrSg4/I963RDnVx9/
-	Bf4MNFHW8S42NlKdzQKqO2xrbWa6N9G8=
-X-Gm-Gg: ASbGncsHjsX8einJNq5rxCjzuBfFNfqNy462ToNP1iclW8ZAmTvWyDuJfhICuVZqxCx
-	0amc3vnwJZF5bz2ZRmUGXv9+h9NvNIGfetcCnJlqC/pR0qdlbM/RXV5lULSKZhpqjrcGr0Yegb0
-	fSmzD2sutmqU95jATonzV/04iLrqRg3xmygJY7LUINIuZzD9Km7eGYRA==
-X-Google-Smtp-Source: AGHT+IEJPX6UR9g84WoexbzzHUEQq6h3wPdSNSsyqViJdHMEb+94B4bmHAHCPHuJ0zmK7ftG43fN0Hd7MLLMLWsWtBg=
-X-Received: by 2002:a17:906:6a09:b0:ae3:8c9b:bd64 with SMTP id
- a640c23a62f3a-ae3c2ce7628mr342266566b.29.1751463819440; Wed, 02 Jul 2025
- 06:43:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TA9+JaPn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68A8EC4CEE7;
+	Wed,  2 Jul 2025 14:43:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751467398;
+	bh=FB8noNZwJPcaZSUUsSezeKLPzsPLDkdKDVUkz/TTaDc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TA9+JaPnzXZgfqUtR2Kp6fenYBoQJtSEbVeBT90BZuos1svfviGrYk4TdqPlpCCOq
+	 xq99+BMr+RJs6EGHp1RjkrAc4HuRk2tlzD8twaw1TuklOZCUJEEjmegu0UKW8Tz5aU
+	 LAbqwW0PPHsSTvaRn42uNzo06GNIurD3904Lj/kZjUQlA6dzoYmUIjf1HqlI3b1GdD
+	 mpjJD/pfmIO1SzFyHBBCL8IIFpvPKRjuckirst/YUfMRuwd/d8jHAfhehBZ1lhDgK0
+	 utDIrwHN2wezGSFb982Mzj6UUoght24ZJIObSGyf29CoGCIqY8uNnp+CBj6gCqXGqe
+	 ROBn5PcGJOPlQ==
+Date: Wed, 2 Jul 2025 07:43:17 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Fedor Pchelkin <pchelkin@ispras.ru>
+Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org
+Subject: Re: [PATCH v2 6/6] xfs: refactor xfs_btree_diff_two_ptrs() to take
+ advantage of cmp_int()
+Message-ID: <20250702144317.GT10009@frogsfrogsfrogs>
+References: <20250702093935.123798-1-pchelkin@ispras.ru>
+ <20250702093935.123798-7-pchelkin@ispras.ru>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
- <20250630-xattrat-syscall-v6-6-c4e3bc35227b@kernel.org> <20250701184317.GQ10009@frogsfrogsfrogs>
- <20250702-stagnation-dackel-294bb4cd9f3d@brauner>
-In-Reply-To: <20250702-stagnation-dackel-294bb4cd9f3d@brauner>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 2 Jul 2025 15:43:28 +0200
-X-Gm-Features: Ac12FXw1I6BqbNe0ftFra8l5z14QYm57oMc5TjvDPGU72Dw-9sfBMZjzC6un8jM
-Message-ID: <CAOQ4uximwjYabeO=-ktMtnzMsx6KXBs=pUsgNno=_qgpQnpHCA@mail.gmail.com>
-Subject: Re: [PATCH v6 6/6] fs: introduce file_getattr and file_setattr syscalls
-To: Christian Brauner <brauner@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Andrey Albershteyn <aalbersh@redhat.com>, 
-	Arnd Bergmann <arnd@arndb.de>, Casey Schaufler <casey@schaufler-ca.com>, Jan Kara <jack@suse.cz>, 
-	=?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, linux-api@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, selinux@vger.kernel.org, 
-	Andrey Albershteyn <aalbersh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250702093935.123798-7-pchelkin@ispras.ru>
 
-On Wed, Jul 2, 2025 at 2:40=E2=80=AFPM Christian Brauner <brauner@kernel.or=
-g> wrote:
->
-> > Er... "fsx_fileattr" is the struct that the system call uses?
-> >
-> > That's a little confusing considering that xfs already has a
-> > xfs_fill_fsxattr function that actually fills a struct fileattr.
-> > That could be renamed xfs_fill_fileattr.
-> >
-> > I dunno.  There's a part of me that would really rather that the
-> > file_getattr and file_setattr syscalls operate on a struct file_attr.
->
-> Agreed, I'm pretty sure I suggested this during an earlier review. Fits
-> in line with struct mount_attr and others. Fwiw, struct fileattr (the
-> kernel internal thing) should've really been struct file_kattr or struct
-> kernel_file_attr. This is a common pattern now:
->
-> struct mount_attr vs struct mount_kattr
->
-> struct clone_args vs struct kernel_clone_kargs
->
-> etc.
->file_attr
+On Wed, Jul 02, 2025 at 12:39:33PM +0300, Fedor Pchelkin wrote:
+> Use cmp_int() to yield the result of a three-way-comparison instead of
+> performing subtractions with extra casts. Thus also rename the function
+> to make its name clearer in purpose.
+> 
+> Found by Linux Verification Center (linuxtesting.org).
+> 
+> Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+> ---
+> 
+> v2: rename the "diff_two_ptrs" part (Darrick)
 
-I can see the allure, but we have a long history here with fsxattr,
-so I think it serves the users better to reference this history with
-fsxattr64.
+Looks good now, thanks for the cmp_int cleanups!
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-That, and also, avoid the churn of s/fileattr/file_kattr/
-If you want to do this renaming, please do it in the same PR
-because I don't like the idea of having both file_attr and fileattr
-in the tree for an unknown period.
+--D
 
-Thanks,
-Amir.
+> 
+>  fs/xfs/libxfs/xfs_btree.c | 8 ++++----
+>  fs/xfs/libxfs/xfs_btree.h | 6 +++---
+>  fs/xfs/scrub/btree.c      | 2 +-
+>  3 files changed, 8 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index d3591728998e..a61211d253f1 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -5353,15 +5353,15 @@ xfs_btree_count_blocks(
+>  }
+>  
+>  /* Compare two btree pointers. */
+> -int64_t
+> -xfs_btree_diff_two_ptrs(
+> +int
+> +xfs_btree_cmp_two_ptrs(
+>  	struct xfs_btree_cur		*cur,
+>  	const union xfs_btree_ptr	*a,
+>  	const union xfs_btree_ptr	*b)
+>  {
+>  	if (cur->bc_ops->ptr_len == XFS_BTREE_LONG_PTR_LEN)
+> -		return (int64_t)be64_to_cpu(a->l) - be64_to_cpu(b->l);
+> -	return (int64_t)be32_to_cpu(a->s) - be32_to_cpu(b->s);
+> +		return cmp_int(be64_to_cpu(a->l), be64_to_cpu(b->l));
+> +	return cmp_int(be32_to_cpu(a->s), be32_to_cpu(b->s));
+>  }
+>  
+>  struct xfs_btree_has_records {
+> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> index 1bf20d509ac9..60e78572e725 100644
+> --- a/fs/xfs/libxfs/xfs_btree.h
+> +++ b/fs/xfs/libxfs/xfs_btree.h
+> @@ -519,9 +519,9 @@ struct xfs_btree_block *xfs_btree_get_block(struct xfs_btree_cur *cur,
+>  		int level, struct xfs_buf **bpp);
+>  bool xfs_btree_ptr_is_null(struct xfs_btree_cur *cur,
+>  		const union xfs_btree_ptr *ptr);
+> -int64_t xfs_btree_diff_two_ptrs(struct xfs_btree_cur *cur,
+> -				const union xfs_btree_ptr *a,
+> -				const union xfs_btree_ptr *b);
+> +int xfs_btree_cmp_two_ptrs(struct xfs_btree_cur *cur,
+> +			   const union xfs_btree_ptr *a,
+> +			   const union xfs_btree_ptr *b);
+>  void xfs_btree_get_sibling(struct xfs_btree_cur *cur,
+>  			   struct xfs_btree_block *block,
+>  			   union xfs_btree_ptr *ptr, int lr);
+> diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+> index fe678a0438bc..cd6f0ff382a7 100644
+> --- a/fs/xfs/scrub/btree.c
+> +++ b/fs/xfs/scrub/btree.c
+> @@ -306,7 +306,7 @@ xchk_btree_block_check_sibling(
+>  	if (pbp)
+>  		xchk_buffer_recheck(bs->sc, pbp);
+>  
+> -	if (xfs_btree_diff_two_ptrs(cur, pp, sibling))
+> +	if (xfs_btree_cmp_two_ptrs(cur, pp, sibling))
+>  		xchk_btree_set_corrupt(bs->sc, cur, level);
+>  out:
+>  	xfs_btree_del_cursor(ncur, XFS_BTREE_ERROR);
+> -- 
+> 2.50.0
+> 
+> 
