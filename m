@@ -1,247 +1,151 @@
-Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A43F9248886;
-	Wed,  2 Jul 2025 09:48:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6A0B26B77C;
+	Wed,  2 Jul 2025 12:09:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751449735; cv=none; b=UR5lyrggaDlrP421LrmkCWxiaWdsF+EjHACu42qIW6wN/EHT1kB6PovmsdjWtI1JiEbJudTa02rrSuKYHtvvh9P3nQKJavsAxovDkKWQw4OURViipI6SkbeBEYTTCdnmH3wXnkMMk33HKSLxRYAVipIvU65Rhx2vTf2cW6/SiTw=
+	t=1751458158; cv=none; b=REKK8gFRoXFb6OcxKQjZSBb9eEqrVrLOSBfMfc983J0gpXU//CRzPoOAmPXgq7LAVQDyhB2TCcPbnpJ0052PxJTrwIkhOl7+SaOYa+cCgV032hr3EbjpQpfm1m35w/oKU5SqbYSLm3EWWXfn5rR81caxhbZHkyoAPPfAhMBGdu8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751449735; c=relaxed/simple;
-	bh=8bvu6RQ9bOq4O7IorMEYHaYhu7iXNr7d73XJajJuo6E=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=tyV0W7Dit1h3OoyrF8QF4+0VVNge3Z8qHslDcMcGKU1tH65xlVbpR0Uk6TkhzjvXEhp2g0EJn1geEU6IIgq1vmftNB7M8qfX0Tic2N2e10nL0yPQmknyRb8K8e2qO3aEqW07NJ64AlY58kjz7RJKIEOXpWm4Cybtc8XrlHCVY2A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RZWAMP+p; arc=none smtp.client-ip=209.85.218.51
+	s=arc-20240116; t=1751458158; c=relaxed/simple;
+	bh=nWlDCMP58hOFWTq0axrXpQHRvPb4QwTJpACpOuwdVsM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=cfQgwDq+LxVMxgSwDtkeuAeqysaQ7BIj5Fv94Wwwrt1CmYHAhQhCJH+FECKk7Fh+YW57vxPjpzFD4cbuT7Cfc7CfA7XbX6nXhzn3eKTCC2RHcgQQiZHnY/Srgf8iyQOkpGfGF6wa3Y+bHemPu9PrgTb9j1DyEFc2YO1csbqjKy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SATrPgp0; arc=none smtp.client-ip=209.85.214.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RZWAMP+p"
-Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-ae36e88a5daso837394066b.1;
-        Wed, 02 Jul 2025 02:48:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SATrPgp0"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-235e1d710d8so79772005ad.1;
+        Wed, 02 Jul 2025 05:09:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751449732; x=1752054532; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1751458155; x=1752062955; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=hybYjnvwAm+UD7pG+n18JpAuRvA2jfHhyn3nT8VWieU=;
-        b=RZWAMP+pdn09WkZJWHC+rLdnmbhJ9BcCP6rro+7vAHY1rR+mwRTcpk+JTnQxuh9WCN
-         wFTxn+Bt72bLjDELkFhLT4/asx5mV1rTmKJdgXyafQNnQ2eVCr0NXfkSZXzazUrQq42/
-         fw9kuF+bXBeYVGd7y0VsoJVIuAf4kR0L1DXsW7NX4MrLwoTqKZLGyxEil3mw4o9CPb7K
-         c2r7ojZYOhm5/wTBF/rNDA729B2A+VjOGDHHiPd5TB+qhJQeJDeYlsrS1huGpL064Tiu
-         0q0FKHiMYrWfEIkqzIsO1Ph+v+GifLlvjLR3huA5/96lbVwp2/Ghkh+369ec8RPIUJEt
-         xVsg==
+        bh=Hs5XLsalwzapO540In/uO9OhozwTRN8n/LOOBhKcKHY=;
+        b=SATrPgp0O7SwpyLXo0wc1SRq+5TJ7u1pCdDDniOHYlIsWIInyCaqLt9R40mYkZIQd+
+         6oM9XrJpyEvU9UkyEASFn+4SByU4oU4KDDvN5/5BPLmePkMNBcwnIVPJrHUavB7yCoXq
+         mObD6ss0k7MIQuYspnxSYhFjD1206bB/+Pfhk4+lDT4QKZNHIsSDWkUdrPKrb65qDauu
+         LjZrClzJTQg/L4721YmmTzl4GlU50sgZG0qwqkb1nsK23G498HQHPS7NJledZ2s1/Vmc
+         FMputq0+GeWyfAEIAxbCSIuqLnd8WOO8TDMo6v9rtnCglkwbx2EkpVh3rKRpfDrGM5wW
+         +qXQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751449732; x=1752054532;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1751458155; x=1752062955;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=hybYjnvwAm+UD7pG+n18JpAuRvA2jfHhyn3nT8VWieU=;
-        b=McpFZj9PFcqKMQVmb24dPxgXn7wiF9F18fS/3w+m4hHRn2xlkbafWVSN13t41d4rai
-         mXthYtOYpccjhg/IrM5T0Pbfzr0JtZmh10HX5dhk5RVo+0Ru+VA3P8yAmCS7072fAzRw
-         UGuiWK9qoqooUU56+9vHzfaxxuldrjoufGD6PuVwzImOs8aW0dRspXbktzm5+73RNlM8
-         vU9MAjs6454CJ0Pj744dDaks4IErERQj5sOw4WjG5adf4wuPkNf45D94qe4UaO+kDC1m
-         X3N63e/EvjtYXmDJqAsvnKWMtHS8XD3TAPZhamixU8UcIpWl+/sXYAVRtbp0w1SF5cXQ
-         j7ZA==
-X-Forwarded-Encrypted: i=1; AJvYcCWGWAgXVAQXXVXfk29P8QD9YzPI/jUn5/WoDrurxRYAT6aSyWAQclrXJSfOUto9760RzfONi1iExrxk5qel@vger.kernel.org, AJvYcCWg+4ontzOtx9wo6E4SXW2Vo0M640ErrVQhZwnJEhAygnj8AwM6D/Br/06sTvRo7F+hKy4GmoZRGgo=@vger.kernel.org, AJvYcCWjU3N7SwsApTPCYwTMbkE2fS2aBHNmdM2+3htgZQ/qh/1nLA2I5zhRUSOMAj3/j8GTT51EZ177D/nRbW4zzg==@vger.kernel.org, AJvYcCXJy/6hoJnq4QSScexFbyDUoy5MFbdcldSOkXUv+7CXm7c7f52tvCJgXp9a3Jq7HkYYj7Z6T/wO7Yy8@vger.kernel.org, AJvYcCXLAgRpKFKp96WtnajaJXQUopwGX+VzgyIjEI7gAoNFxBzfUV1IDKAkTc3hzSoCcfX0zudtd2WT0g==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxY50VAqqBwKxhXfoyxX3CR9GQQLt3UZEFyaRMxvfStdXbR2SRQ
-	qPJJkesoXKZ1LlHwC9TtAnM2yS/O+vlV2uZlD3yv74CO54m/887mUMW4o9fBHZ1h8Xsw0hH4wcr
-	GoeNbyK3Jr0oKBxn6hKKSvF/YE0+P2dI=
-X-Gm-Gg: ASbGnct+SngJHs4UMKAso/imSOaCqOJB3mOrN3IZY0fqQvt8/yJkbMS6/pa/icfPmhu
-	Emy97ZW6nFj6S5zZZxWerUEj5dq5XgysDxgbhzADMhR4qWPqD9BDsoyAdIKflwuHBK1xAZiAET3
-	1U8QfQV1ZGdXeXzUBk5sfJ4jH6uhsEyXgaEZsDiS1FEHQ=
-X-Google-Smtp-Source: AGHT+IHLqiR5a8+aLQTtKNl+EMNjlPIqitVXeaPDfSISN7eMa1focgYCTjl8R2KUTfI0pf6WE2boiiwz9b4vZPegI9E=
-X-Received: by 2002:a17:906:c105:b0:ae3:a799:8e81 with SMTP id
- a640c23a62f3a-ae3c2e198fcmr211718066b.39.1751449731340; Wed, 02 Jul 2025
- 02:48:51 -0700 (PDT)
+        bh=Hs5XLsalwzapO540In/uO9OhozwTRN8n/LOOBhKcKHY=;
+        b=BMzVVSk2YYSSy3OWmrgYUvJJv0NhIMRD4e0BNBx3sRcFWxYEa9YneWh723VCdvqMRI
+         wfWoUbxAmZWQIIMXNTteObsA8eGHXXXXVUAfkc14bP3jQcn492gI0a6X+o81vkIzaAna
+         +4b48v9xIzGKOScEABKK8SFcLWnZcVNlmhkhrNeGt+LksBL4c56/gq4cyy6PtaMAxiWu
+         yYBVTMfXkX8Nhi6ZM15Uq4yvhcw1iEQNKECWFtsVexD0iHg0cQQDQssTs/AXZt5AO5JT
+         pyNIuWDFsIFoMPjUfPvcDUoVlFFQ2stEoTayG0G616+hkWDsbwPubPHcLv71PiSFqzHQ
+         Pk7A==
+X-Forwarded-Encrypted: i=1; AJvYcCUZnjuS98w15grtDPZkTdrF5eWr/LAqWW74axaM9tnBrPDJHurXlyG7P7oGnaLTX2b4WJ1MJkm/Ptdvopv/@vger.kernel.org, AJvYcCVcokLnltiWOCB6yENPVDvxfHzk5YLR3P1pXHR0ecxS1p6+/O2JkB/AYi6SPMqknNikzZS9lE99GqeC@vger.kernel.org, AJvYcCWNRXGSXTY8JTuRruCsNGBermAww3v9YUsX6BCD1IcQPnbPzV+Sq3NX2dNZQnrS+1DzjpSdw+1eoNzIOS3Q@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx5KFK3naxOFwk0cINddOTMDDA9oo/SBkDgHFN2PDd3ONC9I09K
+	pK8i/q6i3fix8djz4fCci20yGrDjU+Q2saYjFq68KwqTnKVJRoYEOu54OQVsko+N
+X-Gm-Gg: ASbGncuX7GdCrLxm9xCRjkvqFI8jvywB4vCdRuRkAoOgnzo8dAKZtFAy0jZANt2PvYh
+	IvmdaufZpSbP/cT+6aHTNAg8SQTxxNCeHchGoSUh6fajHHzaJGmJVqsLKa+JCrxCvCMnH9WJrzQ
+	S8dg754oaBiebVdgIP6eIq3Dt0ZJdvfG7PHzr/Ay+PP9mtJWmFbL+OfrCgQRJ1Z9T4rRI0b4IrG
+	IJ6XTTPvchR/PCuwYayWF0XBl9GfZeKwPZ8/1MeV6RUW2NKzQbxjy6Wv7a+vNXHXOz/gNC8AcXt
+	VOARUrir1Q9X7wLuHILOeux1VkLXmDFNZz/Uj1jSGk+E5Dsu0jLgnXSQZfSL1CzGCaKjI/zlX4g
+	=
+X-Google-Smtp-Source: AGHT+IExaVpuYpi7D3hH/cDxFE+Ue5Om6VAYFyjkLoHEu40YV+B0qu6u+f3KaDzPw7fih6wRctT+mA==
+X-Received: by 2002:a17:902:f64f:b0:235:f459:69c7 with SMTP id d9443c01a7336-23c6e5ed89dmr46270605ad.52.1751458154933;
+        Wed, 02 Jul 2025 05:09:14 -0700 (PDT)
+Received: from VM-16-24-fedora.. ([43.153.32.141])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23acb2e1b03sm135015125ad.10.2025.07.02.05.09.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Jul 2025 05:09:14 -0700 (PDT)
+From: Jinliang Zheng <alexjlzheng@gmail.com>
+X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
+To: djwong@kernel.org
+Cc: alexjlzheng@gmail.com,
+	alexjlzheng@tencent.com,
+	brauner@kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] iomap: avoid unnecessary ifs_set_range_uptodate() with locks
+Date: Wed,  2 Jul 2025 20:09:12 +0800
+Message-ID: <20250702120912.36380-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20250701184737.GA9991@frogsfrogsfrogs>
+References: <20250701184737.GA9991@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
- <20250630-xattrat-syscall-v6-5-c4e3bc35227b@kernel.org> <20250701183105.GP10009@frogsfrogsfrogs>
- <CAOQ4uxiCpGcZ7V8OqssP2xKsN0ZiAO7mQ_1Qt705BrcHeSPmBg@mail.gmail.com>
- <20250701194002.GS10009@frogsfrogsfrogs> <20250701195405.xf27mjknu5bnunue@pali>
- <CAOQ4uxjZWGz2bqen4F+fkQqZYQjKyufFVky4tOTnwng4D5G4nQ@mail.gmail.com>
-In-Reply-To: <CAOQ4uxjZWGz2bqen4F+fkQqZYQjKyufFVky4tOTnwng4D5G4nQ@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 2 Jul 2025 11:48:39 +0200
-X-Gm-Features: Ac12FXxV4u1B6-BmM0AZMJvjzMTREyX2SAzPlWjz7bFYcU7JeOVoqxtdkyrdRVE
-Message-ID: <CAOQ4uxhrW--Du4XvSWficnRenv24U4hwnCQtNsH4F5d4jaPjFg@mail.gmail.com>
-Subject: Re: [PATCH v6 5/6] fs: prepare for extending file_get/setattr()
-To: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Andrey Albershteyn <aalbersh@redhat.com>, 
-	Arnd Bergmann <arnd@arndb.de>, Casey Schaufler <casey@schaufler-ca.com>, 
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Paul Moore <paul@paul-moore.com>, 
-	linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	selinux@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jul 2, 2025 at 9:03=E2=80=AFAM Amir Goldstein <amir73il@gmail.com> =
-wrote:
->
-> On Tue, Jul 1, 2025 at 9:54=E2=80=AFPM Pali Roh=C3=A1r <pali@kernel.org> =
-wrote:
-> >
-> > On Tuesday 01 July 2025 12:40:02 Darrick J. Wong wrote:
-> > > On Tue, Jul 01, 2025 at 09:27:38PM +0200, Amir Goldstein wrote:
-> > > > On Tue, Jul 1, 2025 at 8:31=E2=80=AFPM Darrick J. Wong <djwong@kern=
-el.org> wrote:
-> > > > >
-> > > > > On Mon, Jun 30, 2025 at 06:20:15PM +0200, Andrey Albershteyn wrot=
-e:
-> > > > > > From: Amir Goldstein <amir73il@gmail.com>
-> > > > > >
-> > > > > > We intend to add support for more xflags to selective filesyste=
-ms and
-> > > > > > We cannot rely on copy_struct_from_user() to detect this extens=
-ion.
-> > > > > >
-> > > > > > In preparation of extending the API, do not allow setting xflag=
-s unknown
-> > > > > > by this kernel version.
-> > > > > >
-> > > > > > Also do not pass the read-only flags and read-only field fsx_ne=
-xtents to
-> > > > > > filesystem.
-> > > > > >
-> > > > > > These changes should not affect existing chattr programs that u=
-se the
-> > > > > > ioctl to get fsxattr before setting the new values.
-> > > > > >
-> > > > > > Link: https://lore.kernel.org/linux-fsdevel/20250216164029.2067=
-3-4-pali@kernel.org/
-> > > > > > Cc: Pali Roh=C3=A1r <pali@kernel.org>
-> > > > > > Cc: Andrey Albershteyn <aalbersh@redhat.com>
-> > > > > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > > > > > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> > > > > > ---
-> > > > > >  fs/file_attr.c           |  8 +++++++-
-> > > > > >  include/linux/fileattr.h | 20 ++++++++++++++++++++
-> > > > > >  2 files changed, 27 insertions(+), 1 deletion(-)
-> > > > > >
-> > > > > > diff --git a/fs/file_attr.c b/fs/file_attr.c
-> > > > > > index 4e85fa00c092..62f08872d4ad 100644
-> > > > > > --- a/fs/file_attr.c
-> > > > > > +++ b/fs/file_attr.c
-> > > > > > @@ -99,9 +99,10 @@ EXPORT_SYMBOL(vfs_fileattr_get);
-> > > > > >  int copy_fsxattr_to_user(const struct fileattr *fa, struct fsx=
-attr __user *ufa)
-> > > > > >  {
-> > > > > >       struct fsxattr xfa;
-> > > > > > +     __u32 mask =3D FS_XFLAGS_MASK;
-> > > > > >
-> > > > > >       memset(&xfa, 0, sizeof(xfa));
-> > > > > > -     xfa.fsx_xflags =3D fa->fsx_xflags;
-> > > > > > +     xfa.fsx_xflags =3D fa->fsx_xflags & mask;
-> > > > >
-> > > > > I wonder, should it be an error if a filesystem sets an fsx_xflag=
-s bit
-> > > > > outside of FS_XFLAGS_MASK?  I guess that's one way to prevent
-> > > > > filesystems from overriding the VFS bits. ;)
-> > > >
-> > > > I think Pali has a plan on how to ensure that later
-> > > > when the mask is provided via the API.
-> > > >
-> > > > >
-> > > > > Though couldn't that be:
-> > > > >
-> > > > >         xfa.fsx_xflags =3D fa->fsx_xflags & FS_XFLAGS_MASK;
-> > > > >
-> > > > > instead?  And same below?
-> > > > >
-> > > >
-> > > > Indeed. There is a reason for the var, because the next series
-> > > > by Pali will use a user provided mask, which defaults to FS_XFLAGS_=
-MASK,
-> > > > so I left it this way.
-> > > >
-> > > > I don't see a problem with it keeping as is, but if it bothers you
-> > > > I guess we can re-add the var later.
-> > >
-> > > Nah, it doesn't bother me that much.
-> > >
-> > > > > >       xfa.fsx_extsize =3D fa->fsx_extsize;
-> > > > > >       xfa.fsx_nextents =3D fa->fsx_nextents;
-> > > > > >       xfa.fsx_projid =3D fa->fsx_projid;
-> > > > > > @@ -118,11 +119,16 @@ static int copy_fsxattr_from_user(struct =
-fileattr *fa,
-> > > > > >                                 struct fsxattr __user *ufa)
-> > > > > >  {
-> > > > > >       struct fsxattr xfa;
-> > > > > > +     __u32 mask =3D FS_XFLAGS_MASK;
-> > > > > >
-> > > > > >       if (copy_from_user(&xfa, ufa, sizeof(xfa)))
-> > > > > >               return -EFAULT;
-> > > > > >
-> > > > > > +     if (xfa.fsx_xflags & ~mask)
-> > > > > > +             return -EINVAL;
-> > > > >
-> > > > > I wonder if you want EOPNOTSUPP here?  We don't know how to suppo=
-rt
-> > > > > unknown xflags.  OTOH if you all have beaten this to death while =
-I was
-> > > > > out then don't start another round just for me. :P
-> > > >
-> > > > We have beaten this API almost to death for sure ;)
-> > > > I don't remember if we discussed this specific aspect,
-> > > > but I am personally in favor of
-> > > > EOPNOTSUPP :=3D the fs does not support the set/get operation
-> > > > EINVAL :=3D some flags provided as value is invalid
-> > > >
-> > > > For example, if the get API provides you with a mask of the
-> > > > valid flags that you can set, if you try to set flags outside of
-> > > > that mask you get EINVAL.
-> > > >
-> > > > That's my interpretation, but I agree that EOPNOTSUPP can also
-> > > > make sense in this situation.
-> > >
-> > > <nod> I think I'd rather EOPNOTSUPP for "bits are set that the kernel
-> > > doesn't recognize" and EINVAL (or maybe something else like
-> > > EPROTONOSUPPORT) for "fs driver will not let you change this bit".
-> > > At least for the syscall interface; we probably have to flatten that =
-to
-> > > EOPNOTSUPP for both legacy ioctls.
->
-> Given the precedents of returning EOPNOTSUPP in xfs_fileattr_set()
-> and ext4_ioctl_setflags() for flags that cannot be set, I agree.
->
+On Tue, 1 Jul 2025 11:47:37 -0700, djwong@kernel.org wrote:
+> On Tue, Jul 03, 2025 at 10:48:47PM +0800, alexjlzheng@gmail.com wrote:
+> > From: Jinliang Zheng <alexjlzheng@tencent.com>
+> > 
+> > In the buffer write path, iomap_set_range_uptodate() is called every
+> > time iomap_end_write() is called. But if folio_test_uptodate() holds, we
+> > know that all blocks in this folio are already in the uptodate state, so
+> > there is no need to go deep into the critical section of state_lock to
+> > execute bitmap_set().
+> > 
+> > Although state_lock may not have significant lock contention due to
+> > folio lock, this patch at least reduces the number of instructions.
+> > 
+> > Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
+> > ---
+> >  fs/iomap/buffered-io.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index 3729391a18f3..fb4519158f3a 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -71,6 +71,9 @@ static void iomap_set_range_uptodate(struct folio *folio, size_t off,
+> >  	unsigned long flags;
+> >  	bool uptodate = true;
+> >  
+> > +	if (folio_test_uptodate(folio))
+> > +		return;
+> 
+> Looks fine, but how exhaustively have you tested this with heavy IO
+> workloads?  I /think/ it's the case that folios always creep towards
+> ifs_is_fully_uptodate() == true state and once they've gotten there
+> never go back.  But folio state bugs are tricky to detect once they've
+> crept in.
 
-Wait, I misparsed what you wrote, so I think I "agreed" only to the
-first part of your suggestion.
+I tested fio, ltp and xfstests combined for about 30 hours. The command
+used for fio test is:
 
-My claim is that unlike the xfs_has_v3inodes() check in
-xfs_ioctl_setattr_xflags(),
-ext4/f2fs etc return EOPNOTSUPP for various flags depending on supported fs
-features (e.g. casefold,dax,encryption), so I think it will be hard to
-impose a strict rule
-where "fs does not support the feature" returns EINVAL in the syscalls API.
+  fio --name=4k-rw \
+    --filename=/data2/testfile \
+    --size=1G \
+    --bs=4096 \
+    --ioengine=libaio \
+    --iodepth=32 \
+    --rw=randrw \
+    --direct=0 \
+    --buffered=1 \
+    --numjobs=16 \
+    --runtime=60 \
+    --time_based \
+    --group_reporting
 
-Therefore, I propose to change the code in this patch to
-return EOPNOTSUPP for flags that kernel does not support
-and with coming changes from Pali, it will also return the same
-EOPNOTSUPP for flags that the fs instance does not support.
+ltp and xfstests showed no noticeable errors caused by this patch.
 
-Christian,
+thanks,
+Jinliang Zheng. :)
 
-Can you please amend the return value in the following chunk:
-
-@@ -119,11 +120,16 @@ static int copy_fsxattr_from_user(struct fileattr *fa=
-,
-                                  struct fsxattr __user *ufa)
- {
-        struct fsxattr xfa;
-+       __u32 mask =3D FS_XFLAGS_MASK;
-
-        if (copy_from_user(&xfa, ufa, sizeof(xfa)))
-                return -EFAULT;
-
-+       if (xfa.fsx_xflags & ~mask)
-+               return -EOPNOTSUPP;
-+
-
-Thanks,
-Amir.
+> 
+> --D
+> 
+> > +
+> >  	if (ifs) {
+> >  		spin_lock_irqsave(&ifs->state_lock, flags);
+> >  		uptodate = ifs_set_range_uptodate(folio, ifs, off, len);
+> > -- 
+> > 2.49.0
+> > 
+> > 
