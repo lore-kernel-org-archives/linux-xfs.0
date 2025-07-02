@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C53652D5C73;
-	Wed,  2 Jul 2025 14:43:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E9442DCF74;
+	Wed,  2 Jul 2025 15:57:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751467398; cv=none; b=eBOp77BWsfPUefNg7lCRaJ4cUwGmogASUL8Rh+/oEQRaTaz9qfPQkfl2WkbwFJ36s8ZdPRsPcCwkCNfalEz6TSAjddVKFJjGhky8fmhrktC6L2WQQisFBh/J4IlwWIzPl/CbYJJ64P3remOfNmuticMPxQlG8/kIWA39nXPWfG4=
+	t=1751471835; cv=none; b=A+bCXUwKk1hmYnqFenLZdfyVKTDlTh+4+ofPTsu58Xdkw8AQm7BXLRi8o1P8bOkQ8kx58MMWhhFreGvASsQAw+njNb4w3QebRqB4BSfqZGa3l52b7JwIcGBY4sVGKfcG2Nzi6J5thrIhQjBSwNseE2Bdrz+9KqlAvoneWb8xVVU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751467398; c=relaxed/simple;
-	bh=FB8noNZwJPcaZSUUsSezeKLPzsPLDkdKDVUkz/TTaDc=;
+	s=arc-20240116; t=1751471835; c=relaxed/simple;
+	bh=+jJGguGp8blqNRR3aZ85WTmu7rE0aA4dBsEswsV3YWg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hBoxFyNndCIGyOUgZEBKaxkA7aywHvl+wo8v3hrCKmTflq1a157JWvSoWdRT7gGxETqLOzMmN4X6LrGCkilGobNIM6BuDOJt5flj0Bf2PEq/JSwAidHIa/nsUczscxN1/0wQAxYxv7NAyGyedp5nbvxprm5XaWJMEMWWYFE5mx8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TA9+JaPn; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=C57hDF5pUYHLU7YMhxr0fbNDRhG44GOdN/Q75ELDn7Uw6P7CocQJzieVkwWZZ2mGu5OBhFu/Zc75iBX9FP2Qzm85JbKxOaz6oDL8Z4/j1K0NTCDAVwUwksUGcGkD2DD4QIR8ZDsVn+PPp6lD1xI/VA1EHIuZ6NKtMHApDQdyuoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZExg+esE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TA9+JaPn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68A8EC4CEE7;
-	Wed,  2 Jul 2025 14:43:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZExg+esE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22D70C4CEE7;
+	Wed,  2 Jul 2025 15:57:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751467398;
-	bh=FB8noNZwJPcaZSUUsSezeKLPzsPLDkdKDVUkz/TTaDc=;
+	s=k20201202; t=1751471834;
+	bh=+jJGguGp8blqNRR3aZ85WTmu7rE0aA4dBsEswsV3YWg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TA9+JaPnzXZgfqUtR2Kp6fenYBoQJtSEbVeBT90BZuos1svfviGrYk4TdqPlpCCOq
-	 xq99+BMr+RJs6EGHp1RjkrAc4HuRk2tlzD8twaw1TuklOZCUJEEjmegu0UKW8Tz5aU
-	 LAbqwW0PPHsSTvaRn42uNzo06GNIurD3904Lj/kZjUQlA6dzoYmUIjf1HqlI3b1GdD
-	 mpjJD/pfmIO1SzFyHBBCL8IIFpvPKRjuckirst/YUfMRuwd/d8jHAfhehBZ1lhDgK0
-	 utDIrwHN2wezGSFb982Mzj6UUoght24ZJIObSGyf29CoGCIqY8uNnp+CBj6gCqXGqe
-	 ROBn5PcGJOPlQ==
-Date: Wed, 2 Jul 2025 07:43:17 -0700
+	b=ZExg+esEGbgTqAdougPVnJ202jcICDTd3Qq7Hiy//YVL9bKjxcY+OoTBCuuUpJxuS
+	 xVRBN9fZdHAYpaH384c4F+szw7HuEpHQaQ+HMtsmZET/PpyqcHHgqzkQRujzaa5yrk
+	 SzwI5KmbhFpVMyEEMz1AZuTREfy/una9eZpaFuhC4HTF2NjQJ1ixtWTkZ5+caeKfwn
+	 KprwJ7GFRjtQUkxEEL/Q0HRpSgUF+NRhwCgb6H0MiIdAc5IFZNmNHjDAozGAU9B5nk
+	 FmJDbzl8zlm72EmRBgUlui6mxGzOTnzA5LZWHGxJZAW9cAFvjy9g37LvWZijrtaDlj
+	 MjuPeK3ra+CIA==
+Date: Wed, 2 Jul 2025 08:57:13 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Fedor Pchelkin <pchelkin@ispras.ru>
-Cc: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org
-Subject: Re: [PATCH v2 6/6] xfs: refactor xfs_btree_diff_two_ptrs() to take
- advantage of cmp_int()
-Message-ID: <20250702144317.GT10009@frogsfrogsfrogs>
-References: <20250702093935.123798-1-pchelkin@ispras.ru>
- <20250702093935.123798-7-pchelkin@ispras.ru>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, hch@lst.de, miklos@szeredi.hu,
+	brauner@kernel.org, anuj20.g@samsung.com, linux-xfs@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-block@vger.kernel.org,
+	gfs2@lists.linux.dev, kernel-team@meta.com
+Subject: Re: [PATCH v3 01/16] iomap: pass more arguments using struct
+ iomap_writepage_ctx
+Message-ID: <20250702155713.GU10009@frogsfrogsfrogs>
+References: <20250624022135.832899-1-joannelkoong@gmail.com>
+ <20250624022135.832899-2-joannelkoong@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,86 +46,307 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250702093935.123798-7-pchelkin@ispras.ru>
+In-Reply-To: <20250624022135.832899-2-joannelkoong@gmail.com>
 
-On Wed, Jul 02, 2025 at 12:39:33PM +0300, Fedor Pchelkin wrote:
-> Use cmp_int() to yield the result of a three-way-comparison instead of
-> performing subtractions with extra casts. Thus also rename the function
-> to make its name clearer in purpose.
+On Mon, Jun 23, 2025 at 07:21:20PM -0700, Joanne Koong wrote:
+> From: Christoph Hellwig <hch@lst.de>
 > 
-> Found by Linux Verification Center (linuxtesting.org).
+> Add inode and wpc fields to pass the inode and writeback context that
+> are needed in the entire writeback call chain, and let the callers
+> initialize all fields in the writeback context before calling
+> iomap_writepages to simplify the argument passing.
 > 
-> Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
-> ---
-> 
-> v2: rename the "diff_two_ptrs" part (Darrick)
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Joanne Koong <joannelkoong@gmail.com>
 
-Looks good now, thanks for the cmp_int cleanups!
+Nice signature reduction :)
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
+> ---
+>  block/fops.c           |  8 +++++--
+>  fs/gfs2/aops.c         |  8 +++++--
+>  fs/iomap/buffered-io.c | 52 +++++++++++++++++++-----------------------
+>  fs/xfs/xfs_aops.c      | 24 +++++++++++++------
+>  fs/zonefs/file.c       |  8 +++++--
+>  include/linux/iomap.h  |  6 ++---
+>  6 files changed, 61 insertions(+), 45 deletions(-)
 > 
->  fs/xfs/libxfs/xfs_btree.c | 8 ++++----
->  fs/xfs/libxfs/xfs_btree.h | 6 +++---
->  fs/xfs/scrub/btree.c      | 2 +-
->  3 files changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index d3591728998e..a61211d253f1 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -5353,15 +5353,15 @@ xfs_btree_count_blocks(
->  }
->  
->  /* Compare two btree pointers. */
-> -int64_t
-> -xfs_btree_diff_two_ptrs(
-> +int
-> +xfs_btree_cmp_two_ptrs(
->  	struct xfs_btree_cur		*cur,
->  	const union xfs_btree_ptr	*a,
->  	const union xfs_btree_ptr	*b)
+> diff --git a/block/fops.c b/block/fops.c
+> index 1309861d4c2c..3394263d942b 100644
+> --- a/block/fops.c
+> +++ b/block/fops.c
+> @@ -558,9 +558,13 @@ static const struct iomap_writeback_ops blkdev_writeback_ops = {
+>  static int blkdev_writepages(struct address_space *mapping,
+>  		struct writeback_control *wbc)
 >  {
->  	if (cur->bc_ops->ptr_len == XFS_BTREE_LONG_PTR_LEN)
-> -		return (int64_t)be64_to_cpu(a->l) - be64_to_cpu(b->l);
-> -	return (int64_t)be32_to_cpu(a->s) - be32_to_cpu(b->s);
-> +		return cmp_int(be64_to_cpu(a->l), be64_to_cpu(b->l));
-> +	return cmp_int(be32_to_cpu(a->s), be32_to_cpu(b->s));
+> -	struct iomap_writepage_ctx wpc = { };
+> +	struct iomap_writepage_ctx wpc = {
+> +		.inode		= mapping->host,
+> +		.wbc		= wbc,
+> +		.ops		= &blkdev_writeback_ops
+> +	};
+>  
+> -	return iomap_writepages(mapping, wbc, &wpc, &blkdev_writeback_ops);
+> +	return iomap_writepages(&wpc);
 >  }
 >  
->  struct xfs_btree_has_records {
-> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> index 1bf20d509ac9..60e78572e725 100644
-> --- a/fs/xfs/libxfs/xfs_btree.h
-> +++ b/fs/xfs/libxfs/xfs_btree.h
-> @@ -519,9 +519,9 @@ struct xfs_btree_block *xfs_btree_get_block(struct xfs_btree_cur *cur,
->  		int level, struct xfs_buf **bpp);
->  bool xfs_btree_ptr_is_null(struct xfs_btree_cur *cur,
->  		const union xfs_btree_ptr *ptr);
-> -int64_t xfs_btree_diff_two_ptrs(struct xfs_btree_cur *cur,
-> -				const union xfs_btree_ptr *a,
-> -				const union xfs_btree_ptr *b);
-> +int xfs_btree_cmp_two_ptrs(struct xfs_btree_cur *cur,
-> +			   const union xfs_btree_ptr *a,
-> +			   const union xfs_btree_ptr *b);
->  void xfs_btree_get_sibling(struct xfs_btree_cur *cur,
->  			   struct xfs_btree_block *block,
->  			   union xfs_btree_ptr *ptr, int lr);
-> diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-> index fe678a0438bc..cd6f0ff382a7 100644
-> --- a/fs/xfs/scrub/btree.c
-> +++ b/fs/xfs/scrub/btree.c
-> @@ -306,7 +306,7 @@ xchk_btree_block_check_sibling(
->  	if (pbp)
->  		xchk_buffer_recheck(bs->sc, pbp);
+>  const struct address_space_operations def_blk_aops = {
+> diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
+> index 14f204cd5a82..47d74afd63ac 100644
+> --- a/fs/gfs2/aops.c
+> +++ b/fs/gfs2/aops.c
+> @@ -159,7 +159,11 @@ static int gfs2_writepages(struct address_space *mapping,
+>  			   struct writeback_control *wbc)
+>  {
+>  	struct gfs2_sbd *sdp = gfs2_mapping2sbd(mapping);
+> -	struct iomap_writepage_ctx wpc = { };
+> +	struct iomap_writepage_ctx wpc = {
+> +		.inode		= mapping->host,
+> +		.wbc		= wbc,
+> +		.ops		= &gfs2_writeback_ops,
+> +	};
+>  	int ret;
 >  
-> -	if (xfs_btree_diff_two_ptrs(cur, pp, sibling))
-> +	if (xfs_btree_cmp_two_ptrs(cur, pp, sibling))
->  		xchk_btree_set_corrupt(bs->sc, cur, level);
->  out:
->  	xfs_btree_del_cursor(ncur, XFS_BTREE_ERROR);
+>  	/*
+> @@ -168,7 +172,7 @@ static int gfs2_writepages(struct address_space *mapping,
+>  	 * want balance_dirty_pages() to loop indefinitely trying to write out
+>  	 * pages held in the ail that it can't find.
+>  	 */
+> -	ret = iomap_writepages(mapping, wbc, &wpc, &gfs2_writeback_ops);
+> +	ret = iomap_writepages(&wpc);
+>  	if (ret == 0 && wbc->nr_to_write > 0)
+>  		set_bit(SDF_FORCE_AIL_FLUSH, &sdp->sd_flags);
+>  	return ret;
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 3729391a18f3..71ad17bf827f 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1626,20 +1626,19 @@ static int iomap_submit_ioend(struct iomap_writepage_ctx *wpc, int error)
+>  }
+>  
+>  static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writepage_ctx *wpc,
+> -		struct writeback_control *wbc, struct inode *inode, loff_t pos,
+> -		u16 ioend_flags)
+> +		loff_t pos, u16 ioend_flags)
+>  {
+>  	struct bio *bio;
+>  
+>  	bio = bio_alloc_bioset(wpc->iomap.bdev, BIO_MAX_VECS,
+> -			       REQ_OP_WRITE | wbc_to_write_flags(wbc),
+> +			       REQ_OP_WRITE | wbc_to_write_flags(wpc->wbc),
+>  			       GFP_NOFS, &iomap_ioend_bioset);
+>  	bio->bi_iter.bi_sector = iomap_sector(&wpc->iomap, pos);
+>  	bio->bi_end_io = iomap_writepage_end_bio;
+> -	bio->bi_write_hint = inode->i_write_hint;
+> -	wbc_init_bio(wbc, bio);
+> +	bio->bi_write_hint = wpc->inode->i_write_hint;
+> +	wbc_init_bio(wpc->wbc, bio);
+>  	wpc->nr_folios = 0;
+> -	return iomap_init_ioend(inode, bio, pos, ioend_flags);
+> +	return iomap_init_ioend(wpc->inode, bio, pos, ioend_flags);
+>  }
+>  
+>  static bool iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t pos,
+> @@ -1678,9 +1677,7 @@ static bool iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t pos,
+>   * writepage context that the caller will need to submit.
+>   */
+>  static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+> -		struct writeback_control *wbc, struct folio *folio,
+> -		struct inode *inode, loff_t pos, loff_t end_pos,
+> -		unsigned len)
+> +		struct folio *folio, loff_t pos, loff_t end_pos, unsigned len)
+>  {
+>  	struct iomap_folio_state *ifs = folio->private;
+>  	size_t poff = offset_in_folio(folio, pos);
+> @@ -1701,8 +1698,7 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+>  		error = iomap_submit_ioend(wpc, 0);
+>  		if (error)
+>  			return error;
+> -		wpc->ioend = iomap_alloc_ioend(wpc, wbc, inode, pos,
+> -				ioend_flags);
+> +		wpc->ioend = iomap_alloc_ioend(wpc, pos, ioend_flags);
+>  	}
+>  
+>  	if (!bio_add_folio(&wpc->ioend->io_bio, folio, len, poff))
+> @@ -1756,24 +1752,24 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+>  	if (wpc->ioend->io_offset + wpc->ioend->io_size > end_pos)
+>  		wpc->ioend->io_size = end_pos - wpc->ioend->io_offset;
+>  
+> -	wbc_account_cgroup_owner(wbc, folio, len);
+> +	wbc_account_cgroup_owner(wpc->wbc, folio, len);
+>  	return 0;
+>  }
+>  
+>  static int iomap_writepage_map_blocks(struct iomap_writepage_ctx *wpc,
+> -		struct writeback_control *wbc, struct folio *folio,
+> -		struct inode *inode, u64 pos, u64 end_pos,
+> -		unsigned dirty_len, unsigned *count)
+> +		struct folio *folio, u64 pos, u64 end_pos, unsigned dirty_len,
+> +		unsigned *count)
+>  {
+>  	int error;
+>  
+>  	do {
+>  		unsigned map_len;
+>  
+> -		error = wpc->ops->map_blocks(wpc, inode, pos, dirty_len);
+> +		error = wpc->ops->map_blocks(wpc, wpc->inode, pos, dirty_len);
+>  		if (error)
+>  			break;
+> -		trace_iomap_writepage_map(inode, pos, dirty_len, &wpc->iomap);
+> +		trace_iomap_writepage_map(wpc->inode, pos, dirty_len,
+> +				&wpc->iomap);
+>  
+>  		map_len = min_t(u64, dirty_len,
+>  			wpc->iomap.offset + wpc->iomap.length - pos);
+> @@ -1787,8 +1783,8 @@ static int iomap_writepage_map_blocks(struct iomap_writepage_ctx *wpc,
+>  		case IOMAP_HOLE:
+>  			break;
+>  		default:
+> -			error = iomap_add_to_ioend(wpc, wbc, folio, inode, pos,
+> -					end_pos, map_len);
+> +			error = iomap_add_to_ioend(wpc, folio, pos, end_pos,
+> +					map_len);
+>  			if (!error)
+>  				(*count)++;
+>  			break;
+> @@ -1870,10 +1866,10 @@ static bool iomap_writepage_handle_eof(struct folio *folio, struct inode *inode,
+>  }
+>  
+>  static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+> -		struct writeback_control *wbc, struct folio *folio)
+> +		struct folio *folio)
+>  {
+>  	struct iomap_folio_state *ifs = folio->private;
+> -	struct inode *inode = folio->mapping->host;
+> +	struct inode *inode = wpc->inode;
+>  	u64 pos = folio_pos(folio);
+>  	u64 end_pos = pos + folio_size(folio);
+>  	u64 end_aligned = 0;
+> @@ -1920,8 +1916,8 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+>  	 */
+>  	end_aligned = round_up(end_pos, i_blocksize(inode));
+>  	while ((rlen = iomap_find_dirty_range(folio, &pos, end_aligned))) {
+> -		error = iomap_writepage_map_blocks(wpc, wbc, folio, inode,
+> -				pos, end_pos, rlen, &count);
+> +		error = iomap_writepage_map_blocks(wpc, folio, pos, end_pos,
+> +				rlen, &count);
+>  		if (error)
+>  			break;
+>  		pos += rlen;
+> @@ -1957,10 +1953,9 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+>  }
+>  
+>  int
+> -iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
+> -		struct iomap_writepage_ctx *wpc,
+> -		const struct iomap_writeback_ops *ops)
+> +iomap_writepages(struct iomap_writepage_ctx *wpc)
+>  {
+> +	struct address_space *mapping = wpc->inode->i_mapping;
+>  	struct folio *folio = NULL;
+>  	int error;
+>  
+> @@ -1972,9 +1967,8 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
+>  			PF_MEMALLOC))
+>  		return -EIO;
+>  
+> -	wpc->ops = ops;
+> -	while ((folio = writeback_iter(mapping, wbc, folio, &error)))
+> -		error = iomap_writepage_map(wpc, wbc, folio);
+> +	while ((folio = writeback_iter(mapping, wpc->wbc, folio, &error)))
+> +		error = iomap_writepage_map(wpc, folio);
+>  	return iomap_submit_ioend(wpc, error);
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_writepages);
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 63151feb9c3f..65485a52df3b 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -636,19 +636,29 @@ xfs_vm_writepages(
+>  	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+>  
+>  	if (xfs_is_zoned_inode(ip)) {
+> -		struct xfs_zoned_writepage_ctx	xc = { };
+> +		struct xfs_zoned_writepage_ctx	xc = {
+> +			.ctx = {
+> +				.inode	= mapping->host,
+> +				.wbc	= wbc,
+> +				.ops	= &xfs_zoned_writeback_ops
+> +			},
+> +		};
+>  		int				error;
+>  
+> -		error = iomap_writepages(mapping, wbc, &xc.ctx,
+> -					 &xfs_zoned_writeback_ops);
+> +		error = iomap_writepages(&xc.ctx);
+>  		if (xc.open_zone)
+>  			xfs_open_zone_put(xc.open_zone);
+>  		return error;
+>  	} else {
+> -		struct xfs_writepage_ctx	wpc = { };
+> -
+> -		return iomap_writepages(mapping, wbc, &wpc.ctx,
+> -				&xfs_writeback_ops);
+> +		struct xfs_writepage_ctx	wpc = {
+> +			.ctx = {
+> +				.inode	= mapping->host,
+> +				.wbc	= wbc,
+> +				.ops	= &xfs_writeback_ops
+> +			},
+> +		};
+> +
+> +		return iomap_writepages(&wpc.ctx);
+>  	}
+>  }
+>  
+> diff --git a/fs/zonefs/file.c b/fs/zonefs/file.c
+> index 42e2c0065bb3..edca4bbe4b72 100644
+> --- a/fs/zonefs/file.c
+> +++ b/fs/zonefs/file.c
+> @@ -152,9 +152,13 @@ static const struct iomap_writeback_ops zonefs_writeback_ops = {
+>  static int zonefs_writepages(struct address_space *mapping,
+>  			     struct writeback_control *wbc)
+>  {
+> -	struct iomap_writepage_ctx wpc = { };
+> +	struct iomap_writepage_ctx wpc = {
+> +		.inode		= mapping->host,
+> +		.wbc		= wbc,
+> +		.ops		= &zonefs_writeback_ops,
+> +	};
+>  
+> -	return iomap_writepages(mapping, wbc, &wpc, &zonefs_writeback_ops);
+> +	return iomap_writepages(&wpc);
+>  }
+>  
+>  static int zonefs_swap_activate(struct swap_info_struct *sis,
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 522644d62f30..00179c9387c5 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -448,6 +448,8 @@ struct iomap_writeback_ops {
+>  
+>  struct iomap_writepage_ctx {
+>  	struct iomap		iomap;
+> +	struct inode		*inode;
+> +	struct writeback_control *wbc;
+>  	struct iomap_ioend	*ioend;
+>  	const struct iomap_writeback_ops *ops;
+>  	u32			nr_folios;	/* folios added to the ioend */
+> @@ -461,9 +463,7 @@ void iomap_finish_ioends(struct iomap_ioend *ioend, int error);
+>  void iomap_ioend_try_merge(struct iomap_ioend *ioend,
+>  		struct list_head *more_ioends);
+>  void iomap_sort_ioends(struct list_head *ioend_list);
+> -int iomap_writepages(struct address_space *mapping,
+> -		struct writeback_control *wbc, struct iomap_writepage_ctx *wpc,
+> -		const struct iomap_writeback_ops *ops);
+> +int iomap_writepages(struct iomap_writepage_ctx *wpc);
+>  
+>  /*
+>   * Flags for direct I/O ->end_io:
 > -- 
-> 2.50.0
+> 2.47.1
 > 
 > 
