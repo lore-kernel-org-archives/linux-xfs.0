@@ -1,116 +1,155 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 785062F7D00
-	for <linux-xfs@vger.kernel.org>; Wed,  2 Jul 2025 19:01:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2659F2BE630;
+	Wed,  2 Jul 2025 21:36:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751482890; cv=none; b=huO2ip3T4BfSI9+eL1mKKooSTxFcwYvZ7dl5ujEkfgCLXaorzsEBZvaluRyzRQDBnRL0arh47XhhS4ynWOFx/Xk8o4TJaF5p76Qsu9GKfCXSK8qH5gZCgl3uYvow9BmJ08qeYtUQwsu1c2avEyU3gKBm/4TjvOsjifJdWFaotI8=
+	t=1751492210; cv=none; b=KH5ZVWHAS6zGERHgFXDu5CE5664Cj/kzMv/PCtL6CpRJ+s88B4n2mx/7amA/WsoHvvqGi+rylQsOGw+4Uy7m/gc+FkNndCl9hAfubg4diEkONrbrLUfEPk8QKUNJmsAQ6fpuT6PMCWABWli0ioshghNDHfWIE+CHfmcsRdo6e1g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751482890; c=relaxed/simple;
-	bh=w8fcYKR+zibjWMznn+rbKCTGSFRA8TljVvKZ6qGP9Kk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aiHzwHUHuiQakyOZayucMcI0nCoBi+Nn9dezMg2Ynk2d5BCLrc28JIwUSKTpN9P2mcM7Y6boRtQRgbRo4WddFnNnXiaFK5gvcTk3SwDTz9PXYvwsub4lHb/bGPj5kAfJzF7iC8OWOsNROLZ7BJwm+SAW2QBLQ53VNwXa8w+xosg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EIyeDTpg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751492210; c=relaxed/simple;
+	bh=E4uzS6CMms6elvBobIW++yNP0Xp03xJB9bt4GThSsFA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=vAHCa8aak61oH3rcDncIieTgsu10HQ4pOnfPH6RMZaS/lX2qfkL5veR3wGJEg0/yA2ihodzx7N+4MPZGBcJaA8V3hCpQRRnLM3wagc+niNlp7xC7+QRrrWTtb5LZYpsvCM26GEUD3s5HrB/aGcSLpXxC0quQMWZ66uxLmTtufcc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IkVTD0eZ; arc=none smtp.client-ip=209.85.160.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EIyeDTpg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F38D6C4CEE7;
-	Wed,  2 Jul 2025 19:01:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751482890;
-	bh=w8fcYKR+zibjWMznn+rbKCTGSFRA8TljVvKZ6qGP9Kk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=EIyeDTpgASffnSjZ+eNvLmmykYZ7NUM8Vliu40ulEGzSh0EiQe7zbPbqzT/ezqHt6
-	 na21co1jIqLBBZ4rUPZnzHBtMITtuw8/dzQbYYz0ypOued2glDWWNzMnLO98+84WJl
-	 DdN3XV9QRfVZTwmUDvHYuDQGPasjyeqMbl9iX7/Wl0bJPptmq1bokWOUm0GD7/xjHt
-	 Tzeh5IyZGjuoAZlW6OTQrQk+MUN3wPyCRA3T1QcGauafShP4BWgJgOa5951FuwrRi+
-	 yOFQgmQjNieeUUhNhD2QJrcXh8WsRyme4JuMkRRnWpT+REJO1Dbay/c15oOiiz0/0g
-	 5Ksd2dPadZoEw==
-Date: Wed, 2 Jul 2025 12:01:29 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: aalbersh@kernel.org, catherine.hoang@oracle.com,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/7] mkfs: allow users to configure the desired maximum
- atomic write size
-Message-ID: <20250702190129.GA10009@frogsfrogsfrogs>
-References: <175139303809.916168.13664699895415552120.stgit@frogsfrogsfrogs>
- <175139303966.916168.14447520990668670279.stgit@frogsfrogsfrogs>
- <b131893c-9952-4f23-8332-2191c3d1198c@oracle.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IkVTD0eZ"
+Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-4a5903bceffso101385371cf.3;
+        Wed, 02 Jul 2025 14:36:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1751492208; x=1752097008; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Plb9BF29bvzrheIEVugeqNq8ipYFwItYmCmavrVWnAg=;
+        b=IkVTD0eZuZcDiQsVmHmSG4n7pmmRI2ti3LFCERnOaQC91akmdMGytwRHplpoAi9p7y
+         d5zdTbh3cxUgzB620fCVV9NUV9jT9+05GZv5FfPxfC0wACOJetLQe7KYsP2rW46OiDh3
+         +9M7pNvqji+77ZX9z1iOBKYrpvkAUiEqmAjvLn/ILAL9+R8fjPAzq3PU9JRtU+AZKg3V
+         Rb6Njw38eTkzAlU6abLcXX7Y2la6WZEFdK0cz02hjtUsNqZTkmINqcBmu8Xt4GVMX5HP
+         o56JTcUAaupjUrDui3Wo8YbM0K3X6piHbx4On62QUnY6Uy3Njone7t0q3DgKMSKccFCm
+         IKRg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1751492208; x=1752097008;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Plb9BF29bvzrheIEVugeqNq8ipYFwItYmCmavrVWnAg=;
+        b=UnZ1PFwijjZnvkBURqURD10zl9yogYTa9aaqvqNpKNBoeKXU7inkORYHGB7p8TxTRW
+         UpCa3A3EMbK40v7bLnj1Jhgav9VWYkRw/WuUdC5NrnA/sMAPssKzzywJUNFSEevrWWta
+         9czVzc5wHBUDETjj7wY6NAwCLcIgeO4Hexd8pDYVCFU2CrCNWFAdmdIMYBtZsRX3LaLJ
+         W0MjgkL7xJk+Ns0X2iRhKXMS1Mut7DNLj7uJztreQyWwlFcn24z45UuG/bPMyo9emnjz
+         xvUHQvrtW+X4UgY5uno5Mj7hKiWEnqMD2hsHg61xhfONrYKZ0EAIeng5dMWqUuai9TgH
+         mX0g==
+X-Forwarded-Encrypted: i=1; AJvYcCU5TlEv6dwxEBOzqHEHEAH99D0ggK0GB8sljrAyrSRyQhLRs8VfG+zwZN7mj0ls1R2QcUIVjdLX8F0nFv79DA==@vger.kernel.org, AJvYcCV9tjw/tAbLCjbXXxeLCxCx1Uzn0Z9Dtw/g7pgPkMKvR9htWxOnWO9E53YQdpjEmDFR0gDAdRBhkzQvGg==@vger.kernel.org, AJvYcCWrVehvHI2IyTGKON3ih2AB2YOh5GK2sngjcj69Rmd/oKY9mEOHpcW5T9rAlV/iFNsO0B6NUPQ8RSYl@vger.kernel.org, AJvYcCX3VOD3aSnf39+witNdj5R50pUtmkwL+iaXuWG0HMCS8Hpvgk0jt7pZpG+VY8WKdAqFhIDmu1Bf9Zuy@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw53Kks8iKz7KLvsxApHjffCVr6rtQ+bmWkjPMkZ+WvF1sdXDHn
+	2/t58OY4StQJFjHyR9Lba7lGqduvRH7pE/MbsZAA/ShScXSwp2J9A740tP//ENN9Nj0IQLXAVQL
+	b4JHfoPMptp0djpvTuI/VkzLCEL0hLAy4+FWG
+X-Gm-Gg: ASbGncuTyvjHpIR8zztsg7m0G8cbW/1M+814vLvr00U4DYHjIxdwI/QRqDuetw1xG9X
+	P1CWpsJhs4ol1vOgfi9/2Cpps6tLWFYkMQcYlooiiVv+G2k7YDA+1Qhgna747iagcI+4hWadYAr
+	n3dLwaSDuTXcxOCaomfQOV/CS+1+ql5XrFvLk7Ak7HbGWiM+qBXuK0YKgYYFz3hDAd/zo9wQ==
+X-Google-Smtp-Source: AGHT+IGoQva0z93Hsr6cBS/xQ/Id5Yqj3FdAJiwkeHWw3E4i6JnSDSeEzC3aoZIo+aKKEQD7P9uX+qd4H+iuIJAjkfw=
+X-Received: by 2002:ac8:5794:0:b0:4a6:b603:c37e with SMTP id
+ d75a77b69052e-4a987bd7e34mr16338791cf.2.1751492207835; Wed, 02 Jul 2025
+ 14:36:47 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b131893c-9952-4f23-8332-2191c3d1198c@oracle.com>
+References: <20250606233803.1421259-6-joannelkoong@gmail.com>
+ <aEZoau3AuwoeqQgu@infradead.org> <20250609171444.GL6156@frogsfrogsfrogs>
+ <aEetuahlyfHGTG7x@infradead.org> <aEkHarE9_LlxFTAi@casper.infradead.org>
+ <ac1506958d4c260c8beb6b840809e1bc8167ba2a.camel@kernel.org>
+ <aFWlW6SUI6t-i0dN@casper.infradead.org> <CAJnrk1b3HfGOAkxXrJuhm3sFfJDzzd=Z7vQbKk3HO_JkGAxVuQ@mail.gmail.com>
+ <aFuWhnjsKqo6ftit@infradead.org> <CAJnrk1Zud2V5fn5SB6Wqbk8zyOFrD_wQp7B5jDBnUXiGyiJPvQ@mail.gmail.com>
+ <20250701054101.GE10035@frogsfrogsfrogs>
+In-Reply-To: <20250701054101.GE10035@frogsfrogsfrogs>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Wed, 2 Jul 2025 14:36:37 -0700
+X-Gm-Features: Ac12FXzkj0LAvJbdt1VVEKID79S4TlNmpTpl9CLd_GKa4oYm2ZgQZsYKKutZU60
+Message-ID: <CAJnrk1bRL47BawgTCjLdrsuK=hpd+zkRwA+ZgLDUN7GzzJzNxw@mail.gmail.com>
+Subject: Re: [PATCH v1 5/8] iomap: add iomap_writeback_dirty_folio()
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <willy@infradead.org>, 
+	Jeff Layton <jlayton@kernel.org>, miklos@szeredi.hu, brauner@kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	bernd.schubert@fastmail.fm, kernel-team@meta.com, linux-mm@kvack.org, 
+	linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jul 02, 2025 at 09:50:04AM +0100, John Garry wrote:
-> On 01/07/2025 19:08, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Allow callers of mkfs.xfs to specify a desired maximum atomic write
-> > size.  This value will cause the log size to be adjusted to support
-> > software atomic writes, and the AG size to be aligned to support
-> > hardware atomic writes.
-> > 
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> 
-> thanks, regardless of comments below, FWIW:
-> 
-> Reviewed-by: John Garry <john.g.garry@oracle.com>
-> 
-> >   		goto validate;
-> > @@ -4971,6 +4998,140 @@ calc_concurrency_logblocks(
-> >   	return logblocks;
-> >   }
-> > +#define MAX_RW_COUNT (INT_MAX & ~(getpagesize() - 1))
-> > +
-> > +/* Maximum atomic write IO size that the kernel allows. */
-> 
-> FWIW, statx atomic write unit max is a 32b value, so we get a 2GB limit just
-> from that factor
+On Mon, Jun 30, 2025 at 10:41=E2=80=AFPM Darrick J. Wong <djwong@kernel.org=
+> wrote:
+>
+> On Wed, Jun 25, 2025 at 09:44:31AM -0700, Joanne Koong wrote:
+> > On Tue, Jun 24, 2025 at 11:26=E2=80=AFPM Christoph Hellwig <hch@infrade=
+ad.org> wrote:
+> > >
+> > > On Tue, Jun 24, 2025 at 10:26:01PM -0700, Joanne Koong wrote:
+> > > > > The question is whether this is acceptable for all the filesystem
+> > > > > which implement ->launder_folio today.  Because we could just mov=
+e the
+> > > > > folio_test_dirty() to after the folio_lock() and remove all the t=
+esting
+> > > > > of folio dirtiness from individual filesystems.
+> > > >
+> > > > Or could the filesystems that implement ->launder_folio (from what =
+I
+> > > > see, there's only 4: fuse, nfs, btrfs, and orangefs) just move that
+> > > > logic into their .release_folio implementation? I don't see why not=
+.
+> > > > In folio_unmap_invalidate(), we call:
+> > >
+> > > Without even looking into the details from the iomap POV that basical=
+ly
+> > > doesn't matter.  You'd still need the write back a single locked foli=
+o
+> > > interface, which adds API surface, and because it only writes a singl=
+e
+> > > folio at a time is rather inefficient.  Not a deal breaker because
+> > > the current version look ok, but it would still be preferable to not
+> > > have an extra magic interface for it.
+> > >
+> >
+> > Yes but as I understand it, the focus right now is on getting rid of
+> > ->launder_folio as an API. The iomap pov imo is a separate issue with
+> > determining whether fuse in particular needs to write back the dirty
+> > page before releasing or should just fail.
+>
+> This might not help for Joanne's case, but so far the lack of a
+> launder_folio in my fuse+iomap prototype hasn't hindered it at all.
+> From what I can tell it's ok to bounce EBUSY back to dio callers...
+>
+> > btrfs uses ->launder_folio() to free some previously allocated
+> > reservation (added in commit 872617a "btrfs: implement launder_folio
+> > for clearing dirty page reserve") so at the very least, that logic
+> > would need to be moved to .release_folio() (if that suffices? Adding
+> > the btrfs group to cc). It's still vague to me whether
+> > fuse/nfs/orangefs need to write back the dirty page, but it seems fine
+>
+> ...but only because a retry will initiate another writeback so
+> eventually we can make some forward progress.  But it helps a lot that
+> fuse+iomap is handing the entire IO stack over to iomap.
+>
+> > to me not to - as I understand it, the worst that can happen (and
+> > please correct me if I'm wrong here, Matthew) from just failing it
+> > with -EBUSY is that the folio lingers longer in the page cache until
+> > it eventually gets written back and cleared out, and that only happens
+> > if the file is mapped and written to in that window between
+> > filemap_write_and_wait_range() and unmap_mapping_folio(). afaics, if
+> > fuse/nfs/orangefs do need to write back the dirty folio instead of
+> > failing w/ -EBUSY, they could just do that logic in .release_folio.
+>
+> What do you do in ->release_folio if writeback fails?  Redirty it and
+> return false?
 
-<nod> But we might as well mirror the kernel's calculations...
-
-> > +static inline xfs_extlen_t calc_atomic_write_max(struct mkfs_params *cfg)
-> > +{
-> > +	return rounddown_pow_of_two(MAX_RW_COUNT >> cfg->blocklog);
-> > +}
-> > +
-> > +static inline unsigned int max_pow_of_two_factor(const unsigned int nr)
-> > +{
-> > +	return 1 << (ffs(nr) - 1);
-> > +}
-> > +
-> > +/*
-> > + * If the data device advertises atomic write support, limit the size of data
-> > + * device atomic writes to the greatest power-of-two factor of the AG size so
-> > + * that every atomic write unit aligns with the start of every AG.  This is
-> > + * required so that the per-AG allocations for an atomic write will always be
-> > + * aligned compatibly with the alignment requirements of the storage.
-> > + *
-> > + * If the data device doesn't advertise atomic writes, then there are no
-> > + * alignment restrictions and the largest out-of-place write we can do
-> > + * ourselves is the number of blocks that user files can allocate from any AG.
-> > + */
-> > +static inline xfs_extlen_t
-> > +calc_perag_awu_max(
-> > +	struct mkfs_params	*cfg,
-> > +	struct fs_topology	*ft)
-> > +{
-> > +	if (ft->data.awu_min > 0)
-> > +		return max_pow_of_two_factor(cfg->agsize);
-> > +	return cfg->agsize;
-> 
-> out of curiosity, for out-of-place atomic writes, is there anything to stop
-> the blocks being allocated across multiple AGs?
-
-Nope.  But they'll at least get the software fallback, same as if they
-were writing to a severely fragmented filesystem.
-
---D
-
---D
+Yeah, I was thinking we just redirty it and return false. I don't
+think that leads to any deviation from existing behavior (eg in
+folio_unmap_invalidate(), a failed writeback will return -EBUSY
+regardless of whether the writeback attempt happens from
+->launder_folio() or ->release_folio()).
+>
+> --D
