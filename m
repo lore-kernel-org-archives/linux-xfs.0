@@ -1,99 +1,105 @@
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50D092EBDF9;
-	Thu,  3 Jul 2025 14:33:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7340C223324
+	for <linux-xfs@vger.kernel.org>; Thu,  3 Jul 2025 16:11:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751553192; cv=none; b=joGYZTGunu9fuuK4pmtCDnTwZzmkWHPxgsXy0irqwdXYgPWB1Tup4iqDd6X4v+3gqrilr2eukzkMYsPXfS+JgKg4GlVUWlvfuoKycRzX1SXYC+L6uwVxxaUS5pp4qi3kObxES39BgcfwqpAiBwsW6sQGbNN+GsJaClA8BknJbt8=
+	t=1751559084; cv=none; b=PBdYlqg5Gu0/mBnRxnAjwGWpuKH/RTY78U9fcPzTfC+WduyTT9Y9OudguzPwmRNyXHTDFfve99MnUh0ND1naoghBiyERra/3f9Tv9v7EFw2Nm+36C0D8EscDSy8mBZZM7oA6Tv8cJwj0+ikJenl+3D9YhZMftB56dxAYDOc3eXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751553192; c=relaxed/simple;
-	bh=pbnpZTecA/emnfYuNr9pfpPVP71XL99mm/JpD31d6Bo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tW6pUmK21182jVKKjJJb06sUiqMjD80VO+qdAoY3OzA4WrcYBeSO4Y6eiyiqUvOstpaPRuoeJgShkIwi1ipikuKwaAscU70gql0IS1SRwkGBLSPbRfKckdo/uc0LEwe5Tak0mV5B9DyMrahey9RYws6/UCB2fcNxQfS34cwlfcs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ASEaO95Z; arc=none smtp.client-ip=209.85.216.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1751559084; c=relaxed/simple;
+	bh=5Q15mTl7zXDjGUybgjZSm2naXG4wk8u3Td0vuFWnnhE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=DN/CFQniweeOkzL1m5jsFYoZdMAf86SCuLQa36KMVLPZWN9eUWcFZ7PFSHud2rd2eMxP7HZH1lW7pBIMnveBRKUsqiWhGiMpmHDMe9gWDaCQy+hGPLfs7sSZO8dv+UzhUyAvFcJvvVLOLQqbqeHWsyD3cNakN0Sjt04hnbvNdlM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=AJgSJ86f; arc=none smtp.client-ip=209.85.218.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ASEaO95Z"
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-3139027b825so37568a91.0;
-        Thu, 03 Jul 2025 07:33:11 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="AJgSJ86f"
+Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-ae360b6249fso10046166b.1
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Jul 2025 09:11:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751553190; x=1752157990; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=c6ULj4GSQdITNFr+qLBDFzv5ASstogN2mu1F9t/ePJQ=;
-        b=ASEaO95Z+SPOpEHhaEdMvpW4zM+tPmij7fMNC+/2HeErWS9MVS//qKJK6yWSNdg4Mr
-         1/29CWYxan8aAwpQrMIAbZczf2Mfq8wJVlQu9fFIkYhUTHtwWk401EXMl+YBePONbgoB
-         j1VcRNxz0Dg4oYELzfW+bic8vygVbzO9rqHmwD0nJMy/l2urCoymUFJ6Dc6BcwIAaW8j
-         HDRfc07UDpDvfk+fXir/GutVW+pfoO8lB2G2EW6PKVMeOx1Upr+apq6cZA0SLXcBQFbt
-         PyC470y/L171Eg/FAjBa+JvtPjZsejuQKAX7SO3wSFkfQLVf9Q+lKYLzmJ/2KUJnQOsP
-         GDRg==
+        d=linux-foundation.org; s=google; t=1751559080; x=1752163880; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=VsY1evypvVJJ4XOG81Dwk+h0yBxzTVC3dQW0NAq6kj4=;
+        b=AJgSJ86fSivHF95x79mU+TYnKnGHgtzCiFBLi8TfksB89ESQHoYRMRyZh5RQzaoHKG
+         cGQo7AY0j8RhDi3vrMjci4v4JKy06/+kwrIXqUFg02gzNG5Kli8x4Cee9uFn1MnomKl1
+         0avNfvDy9YC5tjwx2Goex5OU+yQ4V/8KHEJsI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751553190; x=1752157990;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=c6ULj4GSQdITNFr+qLBDFzv5ASstogN2mu1F9t/ePJQ=;
-        b=f6sQ9KRl2B1lrjFZbOd6we6CjUAMQ3yy7FmRuG8Pj39ccuV0XOI3AEuaEbqAXMFPPh
-         zeOVtQ8CqGBOfqB9aZju7aXMm1jkZ2xPjuuYBsLR9Ih0nCm88RXZ8DNf3AsAPO3dIe4G
-         OJiRtdD8XjTF+GtpNGx2ByWHTMdLWZvKMS9v6sRpzesx3xIgHQBjW1CSisI0WoBO2uCp
-         dIxN+VSHiST1bxe4UctjNAbK+7IXmbcWU7AVSopXuDTgkag5aXAVH4f+ev+3dEA55Aiu
-         jM0L8knZAh0gRuvCXDLTRQLf0xL/8nYfMKyW8s7RW78vBSN2MaVf1tQnGsFVDqlQt5Ky
-         lg4w==
-X-Forwarded-Encrypted: i=1; AJvYcCV6mZiPKduBuKW+T1f+SMOusDFmGKDUSco7kjUoLnlY7svU9L4464Vh3of0+OUzfnFAfLUxrRUy4HE/@vger.kernel.org, AJvYcCWpoDiOuCOtnPK07puDPNS0EISo4RuroRzf3ZShlZa5P5xf9QPGDi7DVtBTNGP3BGlSEJlqpuxIBe+uwxHh@vger.kernel.org, AJvYcCX8z0dMwS8QLTJYHxnmzqoMNS56drID+Z2Q9/79H7N0MlIXbYPnDJ2PVVRCui4E6ixEUg0l0z5/NALuxLex@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz7qPqIV5AGv+CPQUE1YW7qbRecdccHVPnNmMU+BQHlKdMtBWSx
-	v8e4NUqUdS5bdAncHjtAgmN2jlNtGAxoitD79ZXc+O/FQJWgtRzC73Jm
-X-Gm-Gg: ASbGncs6gy8IFgKLhzmXMZloaS6ryAmMPX4dHPpkbLQoBJE+1JfD3qKjW1sIa/9qLnm
-	eCpx13OJnkkVjY5Mby55rQqlfowHFkPA9PHehOxBnZE0DYEq313Kub+bLSJs/PJK+ddHJxK6gSW
-	/NPwLxhCgwXTsw0QrBSrIWlj0WxwAUEvX4kbYiz/1v2rH99zSrNNIBOGcih2me84md28njLC5E/
-	Zza7uIu3jN3TZdrP2FuvDDdzhKNphoOLb5U7McKykuhBHHhSKRX/nQAn5cjChgn2IMRdTsBVFUH
-	Tj7W2SvV9cfQ8p186PFBPL4oaI8kKjAnf6hgBuf6UaN2iis29PuVxBfeDity7aSwPi7S61ifcWA
-	=
-X-Google-Smtp-Source: AGHT+IFw+K7j7iqmYpcjjjtR+iwrjkgRPl3+q+ppwsYlqqPKEE+ZodtA8iPQzN0yAnBxDlmUm9+6mw==
-X-Received: by 2002:a17:90b:3848:b0:315:9ac2:8700 with SMTP id 98e67ed59e1d1-31a9d5c8bcamr4442778a91.24.1751553190359;
-        Thu, 03 Jul 2025 07:33:10 -0700 (PDT)
-Received: from VM-16-24-fedora.. ([43.153.32.141])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23c7c59cbb3sm14972705ad.110.2025.07.03.07.33.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Jul 2025 07:33:09 -0700 (PDT)
-From: Jinliang Zheng <alexjlzheng@gmail.com>
-X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
-To: hch@infradead.org
-Cc: alexjlzheng@gmail.com,
-	alexjlzheng@tencent.com,
-	brauner@kernel.org,
-	djwong@kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] iomap: avoid unnecessary ifs_set_range_uptodate() with locks
-Date: Thu,  3 Jul 2025 22:33:08 +0800
-Message-ID: <20250703143308.661683-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <aGaKoDhuw72wZ9dM@infradead.org>
-References: <aGaKoDhuw72wZ9dM@infradead.org>
+        d=1e100.net; s=20230601; t=1751559080; x=1752163880;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=VsY1evypvVJJ4XOG81Dwk+h0yBxzTVC3dQW0NAq6kj4=;
+        b=BswzwJpK1ETfVu/0ryy9SEScH693Lws5mv2acIjG8UYZLhRBLOdQqKB8pj56aCUcuk
+         EA7/N0LxIN45c2Daul8D5M9RyTOP4SHGFuthsZzj7JVqKnLw02XCJCMXUwr8bZqQ4Gm7
+         tTe6IloWPveFixmPGPPzsEKFp7kapemhJ0gOHuKvTL7ipxz/tox8/1e0troX19P6mmRH
+         rQF+J8pdxZarPs+jeNQ/zpvPd5QnrRyA5hFYXMkqoB27XPHNApdgv8itARXU47McB2dk
+         ev5ku6+PgQzTBMhPsf7bkCnpwts2mBYga/QxYQkd0BYixOri0l0vOaWnpF7b9c81i3T0
+         VQUg==
+X-Gm-Message-State: AOJu0YxpojhW57ElY08aNLRGoXezPkF11ViUlmTH5Oa/gBpdfsb3v02D
+	xtJ73xro77aUhf3f5uo58kigN9bjZUBUUiQANIlrx6qO50G8ONbibuROCSIlBNWELqxa/i2mGEI
+	FHkfMXko=
+X-Gm-Gg: ASbGncv2ka2Ee4InlzNUdpiuvVkFxx1K3zIyZCp6fmzs2OPgTVg/3NRvTKV3n/Jihnw
+	OzS9+xq1W3kueM7hXo3Q0rmYChD0dXwQsz3+nSg6jUQjVUtUB/oOymCe5oxuyaoWWAYdN6ICHLz
+	r572KPWJg9277a5YeHfoTd4ptn5Zidz2Tvwg8tsqZZJe43tyKLr4n6F6hvqKLcxLWhcr39J9zeT
+	EQmSav2lwiEEndayvGyeDXaUbBvwxdye0jy1G4LcM9e5jg/YLy5MGxwCRiUSGFQdio4cNZ4sXOx
+	D0NJqXtUxSj8HlmS8AZ51clWbm8eEjuNBbnN5V9R4PhHeVk7zAcvnmW9t/zXc2boU7XL8eP9Mf1
+	LHfe1hH2mWXNrL5dI51wV1YDdY7yH9tyCIjMT
+X-Google-Smtp-Source: AGHT+IF2pY9lwSuWAm/gN+x6gZerm7uEVCquNRK0be/li4e5NMTItHYYiXd2ODs7/lMgbxGp4XkoBA==
+X-Received: by 2002:a17:907:9724:b0:ae0:b22a:29b4 with SMTP id a640c23a62f3a-ae3c2ce80e6mr720266166b.39.1751559080379;
+        Thu, 03 Jul 2025 09:11:20 -0700 (PDT)
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com. [209.85.208.44])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ae353ca20a0sm1299585266b.177.2025.07.03.09.11.19
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 03 Jul 2025 09:11:19 -0700 (PDT)
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-60780d74c85so12414823a12.2
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Jul 2025 09:11:19 -0700 (PDT)
+X-Received: by 2002:a05:6402:1d4f:b0:60c:3d54:4d2d with SMTP id
+ 4fb4d7f45d1cf-60e536053b8mr7263788a12.22.1751559079433; Thu, 03 Jul 2025
+ 09:11:19 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <fy5upmtfgiuzh55xaghv3w3vqqsbgszlraw6hv23a4qycirsg3@qzbwz5m2q7f6>
+In-Reply-To: <fy5upmtfgiuzh55xaghv3w3vqqsbgszlraw6hv23a4qycirsg3@qzbwz5m2q7f6>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 3 Jul 2025 09:11:03 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wj=uUjzNAnAdZ-XpaU-GB9E4fH3tk0CST6W3m3vvObruA@mail.gmail.com>
+X-Gm-Features: Ac12FXzW_sJ6UZrTioISauqQe0s7M0GJyi2BqWAkz77eEdkS8RSJ9j4tX4AxwSs
+Message-ID: <CAHk-=wj=uUjzNAnAdZ-XpaU-GB9E4fH3tk0CST6W3m3vvObruA@mail.gmail.com>
+Subject: Re: [GIT PULL] XFS fixes for v6.16-rc5
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, 3 Jul 2025 06:50:24 -0700, Christoph Hellwig wrote:
-> On Wed, Jul 03, 2025 at 08:09:12PM +0800, Jinliang Zheng wrote:
-> > ltp and xfstests showed no noticeable errors caused by this patch.
-> 
-> With what block and page size?  I guess it was block size < PAGE_SIZE
-> as otherwise you wouldn't want to optimize this past, but just asking
-> in case.
+On Thu, 3 Jul 2025 at 00:27, Carlos Maiolino <cem@kernel.org> wrote:
+>
+> An attempt merge against your current TOT has been successful, and the
+> merge stat is at the bottom.
+>
+> The patches have been cooking on linux-next for a while, with exception
+> of the last one which is there for a couple days only, it includes the
+> FALLOC_FL_ALLOCATE_RANGE as a supported flag to the flags mask, but in
+> practice it adds no functional changes.
+>
+> This pull contains the addition of a new tracepoint which has been used
+> for debugging of one of the bugs fixed in this same series, I don't
+> consider it as a new feature and it seems to me ok to add it into an
+> -rc, please let me know if you have any objections.
 
-Hahaha, I really want to try -b size=512, but I don't want to turn off
-crc, so I can only choose -b size=1024.
+The only objection I have is that the explanation of what the fixes
+actually _do_ was entirely missing.
 
-By the way, the test was done on xfs.
+I appreciate the "metadata" explanations too, but for the merge
+message what I need is the "what do the fixes actually do".
 
-thanks,
-Jinliang Zheng. :)
+I made up my own explanations from looking at the commits, but please
+don't make me do that in general.
+
+              Linus
