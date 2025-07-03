@@ -1,42 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BE4C12B17C
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Jul 2025 13:45:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 524DF2E6D35;
+	Thu,  3 Jul 2025 13:50:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751550352; cv=none; b=LqYXtO7BHBU5LkFPWP6inFGCxaH6I35MB9iC1RBkJiElPDEKMauii8UmC7Tqq4oAgnREwslA2auLxrYC9eobTfXz15zX7it07Ha8C8Y+lHWa5yoGrnMD2TAa+bifoG1mk00r2XAyeOGVGOE9ZtLbsIkltIWiCZ2yyYpmA8BL4Ng=
+	t=1751550629; cv=none; b=cT5XVA+QIWDlekmHQcPKNMmoU2TicQduiykZvNWcVvI1KoDYzNc9WPEraOh8zCY/SjtUyL9XkhtK/VdUZyGDvmkiXNycCCj55Y0Z8XeSipm7gxyiTsONOGy/ZVIQt/lRoz+Y2Y+V8s5J2w3VhL7lPqUqpnm7VuOQzugeOepwbjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751550352; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1751550629; c=relaxed/simple;
+	bh=yBkyQVzTj11JeCCE8CwjO7US3wdU6W1CTw8UVQdITNA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Cow9CdvUN68E0D2YGPVHsJY9B8riwOqcywSfJZL+nZKjthyS5z8Evh3FjwUF7dFXD1xlm1UZE2Fev+C5gIvRX9tbTP4D+lt8ZSiPo7ZVVYChxHl5Zywb5804vPGVtiMZh4WCRHna87pRwF3TKduNRikv1q+Lx3zALMUxeFiB+OE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CEXynlc6; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=rpECAZ4WWzhUKJ5oASMbbKTFP5Rkwrz6gH7DsBGu6UimAdy5frw54fiGqR7b9MHprKLMyVUoK8L661aDxomMjxKMZwaaREMb+HtXzHsZQDyBsqOL6JCYkK+tLstuGKiTnS9rJNjGJJy3A8Rn1GrguZ6Xw9LlD2qRql+4Q7oGVLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Wj76+C79; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CEXynlc6"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Wj76+C79"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=CEXynlc6Xi/TBXJp665tTgDlE5
-	+FpL+7yRpJhEDVM04Uj2jzKP/oeNcbwZBPb40R3KciK8dmaEXRoHdDsQ44pBqmIsIHOcDWe5TEROw
-	wSgYfm6ZV4QaUU7RNNixttrJ4naNGxu2rZWUdZBmly5XPdUmsIbvYuc8/rnwn3rI4pYwOL7J4whU1
-	fmzt8ac42qBz1pspR3xTYczJHjGWBUAA94yCFWY/I9zUSUV47AHElFmU3rQQruP2PB6k0N02dtlxe
-	Av5Y8HLn34tBKPekMd7ztafw5bqJWGePkooQbR8yUsVcPRok5e2v6zQaDc5sF20+R43w3E7e4r4YS
-	EO1rI16g==;
+	bh=Ab9+M0Wwt286fsDWoPAsSY/Y3oyNMaCJy+7VX1xGd4I=; b=Wj76+C79gmLbu6iFcE2+Q67mjF
+	DYQrCWxdTZrv5py4rxaC8uj0aMsyX0yjkjZ8osnFH2V84sHVTtZYpKfO3AHtaRgagiZmhKsbheMr+
+	zex7OCatCGmEbvVo5M15wEmJsAUiQxCN3C69NBQCI/GQVMrskNUrKz20VK63IXRGXoxxPWcyHUKSe
+	4Q7DZ5ol6HalqZEqusfBhkqF/jkZj2bGKxxUQNbhHOTsfxjisLOO1bHUPniDFVFcPa+nZstvRjw/k
+	+47iIupZNjV8BieF8HObH91KvQes/s6+dEJzxtwJPDGBLw30cQQlCE76dJsqfnXP5p7BmR5TvqNyh
+	kcxYVjqA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uXKG6-0000000BXTW-16Fi;
-	Thu, 03 Jul 2025 13:45:50 +0000
-Date: Thu, 3 Jul 2025 06:45:50 -0700
+	id 1uXKKW-0000000BY8t-0aYF;
+	Thu, 03 Jul 2025 13:50:24 +0000
+Date: Thu, 3 Jul 2025 06:50:24 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs_scrub: remove EXPERIMENTAL warnings
-Message-ID: <aGaJjgYKd5M7UyDy@infradead.org>
-References: <175139304129.916487.5190678533940893960.stgit@frogsfrogsfrogs>
- <175139304146.916487.764787367428200733.stgit@frogsfrogsfrogs>
+To: Jinliang Zheng <alexjlzheng@gmail.com>
+Cc: djwong@kernel.org, alexjlzheng@tencent.com, brauner@kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] iomap: avoid unnecessary ifs_set_range_uptodate() with
+ locks
+Message-ID: <aGaKoDhuw72wZ9dM@infradead.org>
+References: <20250701184737.GA9991@frogsfrogsfrogs>
+ <20250702120912.36380-1-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,10 +48,13 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <175139304146.916487.764787367428200733.stgit@frogsfrogsfrogs>
+In-Reply-To: <20250702120912.36380-1-alexjlzheng@tencent.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+On Wed, Jul 02, 2025 at 08:09:12PM +0800, Jinliang Zheng wrote:
+> ltp and xfstests showed no noticeable errors caused by this patch.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+With what block and page size?  I guess it was block size < PAGE_SIZE
+as otherwise you wouldn't want to optimize this past, but just asking
+in case.
 
