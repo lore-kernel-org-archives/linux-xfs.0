@@ -1,287 +1,174 @@
-Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C716C238150;
-	Wed,  2 Jul 2025 23:20:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B41982356CB;
+	Thu,  3 Jul 2025 03:35:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751498425; cv=none; b=j0OLCT8/0Bd/96c5jcV3Q8YoFS+2VuL3jUK4wmeDD7DX69hqb0OiQXfybnAmRfhrHOlTDpzzoyxSdDE4mb4dZ9hqrkGO/veC3QHIncrsGC9vzNjV0WczZWOIcBYBYRZtL9ZDEP/LBrhDPocc0IEDPaQNf2dxYSlyIVNFxKZltpU=
+	t=1751513751; cv=none; b=M2qq9J+n25bWLP31FcMT74Xgk1wkSDTCoPPMBnRzcT4NzgE3fF/sVzZqUFiKr43DrkONV2PLyTnO7ahyX3JSIbbMvmDo2r37r27mLYdkPhGydq4aHuE7s8s+NQtDjq3rC/FNiNgMgEMmpxO8bGx2cBwuhVSKX3n17ERWb+QlkTw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751498425; c=relaxed/simple;
-	bh=blCkfpz21rn1nv9mgJ/oPvUVXFZla3hl/MNsev/a4Gw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=kvtnDnqt5EkQxKm52Es/3E50jJz3eE/Ipd/z8ewEq7FINZ1toGspAGhbdO6ShcuSc3bQYiVeyI4rhQoQKDfP6wliVvN1pKoz8ANq8+vXxbp7L3t46beKVuv79H5BJlXfM3DM3F9PD0ssvMb2b+lxcBu0XfhVVu3m4sTrnDh01L8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bRAlTf1d; arc=none smtp.client-ip=209.85.160.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bRAlTf1d"
-Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-4a7a8c2b7b9so74607291cf.1;
-        Wed, 02 Jul 2025 16:20:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751498423; x=1752103223; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=zRo94/lWqiwbS1Rl5pxqVdA19w+jpv0tMe/8YRHBmYg=;
-        b=bRAlTf1dpsSHIjZpvRZE6SSfYL89fCi6Gy/gWlmoM7/easYngMnn6BeeGt++qo9+j/
-         hYlOimNN8GhU4bG8WMS90KQZ6stLsqL+FnqqUs/+7lno9PLSaesWeqKOt4of8zA6QfPo
-         O5qsXQ151SC9HJUEzSvqCWbbuL0Z4thknjEPlfqtYHLUfPQWPuCikeUJ0Tum7nyJhKQ1
-         ZiY6/KqufwyOmJQZTvwsxuRa7fUfDBQysclTRsUXKhkQMJn1hpW7I2YIhGd3EqlIw6/R
-         3EQx5KEpXobQtIBEQ5hur1oMpV4K3W1+KCUtvWO9xzjhsiUppjEOYL+w9CP9k4reiYk8
-         8TLQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751498423; x=1752103223;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=zRo94/lWqiwbS1Rl5pxqVdA19w+jpv0tMe/8YRHBmYg=;
-        b=smIM6p4n47eBcCQfsAUuRoC7GdjIdi8K0qhX4k2QkOVJRmGOl7HMQrBpYbtgEAINxz
-         Gy5iFPXWoZOnujzQddOg1GL2gUjRTOqgqLD5hOYgrUPCXAobORZfu5xwv55xeBE6TlQm
-         deyUh0Fc/EP/iwXj6+hLgFoYo3GJI8g50eOg7NxjLWB78yR8q2JWO8cVVfZNnoBrYhtR
-         Ee3S3hvSZRBrupll3jMM7iSH+KD7oRSSI8vk1XIYnUql6aKDTWlOO6Mz3eIVJEzuC+Ww
-         YofCFMN7VTcew9YpJXtPcIlq+ucEZCzqxwRODOeWaUINIBX3k3ZGbI69mTr6HDBbKTfx
-         AdsQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUokt1xJKp5XZnyZ+78/jxMauwAVp7+yYdw62ai70pD0rmVZ7lt7lec22+LB/6Gk3pTYn8UBGGBxUm/Lg==@vger.kernel.org, AJvYcCVJxdX9KkQxD4x/YQJZq7gztsvVXppDBjdzdCp4vUOVIevb+5s9ZJtPWZSZvoP1beER3e7Y7jW/Lis9@vger.kernel.org, AJvYcCWZbC28ZArO1T0nFEOGFF98uTz+xZO+9gDesWzWo8K2Oc+OhcWcaLhmQgb0imjPImLEAHjcazXwgimD@vger.kernel.org
-X-Gm-Message-State: AOJu0YyHpxbxW32Ig8wagYwIMRuIuiluuG2A2zRumHEx4nmTBFPemLLw
-	9nizXE2rFpt84HhbOBv11yTRp/yBRZEEkAXWAVa2E/iUZGRE3o3A7FcVoLezovbzx3UEt6fOUSH
-	COZBE+YXhPI54mwewG5QM/eaaQC7yxdE=
-X-Gm-Gg: ASbGncs589+ktyq7h4x1F9u6tFd3QUHRSWLvqXijpiLOoULKasu5ohGsX4R9kNDBtWz
-	IeL2czMJBCOQVPznMykXAbHwQV5+KEDb4cu7lfsQX7CiJ/ar1HVxdV5IKtX5eXBL+PbzQd549D8
-	PFHQjTIAW/7nTIMXk5i9Dx9IvOsnuhISIbTtXZoaSJEms7eEl4S6IIio76StQ=
-X-Google-Smtp-Source: AGHT+IG9s4tMDn5+3npL/jz5mUHQ8KIgvpktx7fqFXcoH4WVcqnLgRMMx//WSoYNhumBoQZLuaZJvAAWFENRUKnlPLs=
-X-Received: by 2002:ac8:7f89:0:b0:4a8:eb1:9b7 with SMTP id d75a77b69052e-4a9769f4383mr79493981cf.49.1751498422475;
- Wed, 02 Jul 2025 16:20:22 -0700 (PDT)
+	s=arc-20240116; t=1751513751; c=relaxed/simple;
+	bh=aAiZg72MzhU/nwICqHjkhrX5X7yDG6hB2keLduoAXfU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rP3x7ENl+MzP7CcMHIkTRJ05oHHO+/d2u0mKLGU/jI/rPcRDAuDGTd+NDD83wYMB4uA2xi8gDQMwo8UxHYDrgvZ3/WX5pwh8Z6h3lo34dzyNhgSrDA0xMf3wECCgey5hRr+zirRdxo4uXTzaQ4ctji5ystQmuFaiy5/f9M4r9cE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bXj8g3pglzKHMbj;
+	Thu,  3 Jul 2025 11:35:47 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.252])
+	by mail.maildlp.com (Postfix) with ESMTP id E416B1A1101;
+	Thu,  3 Jul 2025 11:35:45 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP3 (Coremail) with SMTP id _Ch0CgBHpySN+mVo3w_yAQ--.57305S3;
+	Thu, 03 Jul 2025 11:35:43 +0800 (CST)
+Message-ID: <99010bfd-c968-49c7-b62b-c72b38722c1b@huaweicloud.com>
+Date: Thu, 3 Jul 2025 11:35:41 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250624022135.832899-1-joannelkoong@gmail.com>
- <20250624022135.832899-14-joannelkoong@gmail.com> <20250702181324.GH10009@frogsfrogsfrogs>
-In-Reply-To: <20250702181324.GH10009@frogsfrogsfrogs>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Wed, 2 Jul 2025 16:20:11 -0700
-X-Gm-Features: Ac12FXyBoj6U4xrAWUwxsCBkfqXVQVy6soHuMPeiWNU01YCndBaQj6kmRs9zfcA
-Message-ID: <CAJnrk1Z8ycJpyj3RuWvb-snKM6JxUQL5-RAhaHdVm+wz3u1+7w@mail.gmail.com>
-Subject: Re: [PATCH v3 13/16] fuse: use iomap for writeback
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, hch@lst.de, miklos@szeredi.hu, 
-	brauner@kernel.org, anuj20.g@samsung.com, linux-xfs@vger.kernel.org, 
-	linux-doc@vger.kernel.org, linux-block@vger.kernel.org, gfs2@lists.linux.dev, 
-	kernel-team@meta.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/9] fallocate: introduce FALLOC_FL_WRITE_ZEROES flag
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de,
+ tytso@mit.edu, djwong@kernel.org, john.g.garry@oracle.com,
+ bmarzins@redhat.com, chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+ martin.petersen@oracle.com, yi.zhang@huawei.com, chengzhihao1@huawei.com,
+ yukuai3@huawei.com, yangerkun@huawei.com, linux-fsdevel@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
+ dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org
+References: <20250619111806.3546162-1-yi.zhang@huaweicloud.com>
+ <20250623-woanders-allabendlich-f87ae2d9c704@brauner>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20250623-woanders-allabendlich-f87ae2d9c704@brauner>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:_Ch0CgBHpySN+mVo3w_yAQ--.57305S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxZF45tr1Duw4ftrWrZw1kZrb_yoWrtw15pa
+	yUJFZ8KF4DJr17J397uF109F15Zws3Ar15Ka1rKw1kZrWYqrnagFWIga4UXasrCr93Ww1x
+	ZFsFya4q9ay7AFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
+	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
+	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
+	s2-5UUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Wed, Jul 2, 2025 at 11:13=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
- wrote:
->
-> On Mon, Jun 23, 2025 at 07:21:32PM -0700, Joanne Koong wrote:
-> > Use iomap for dirty folio writeback in ->writepages().
-> > This allows for granular dirty writeback of large folios.
-> >
-> > Only the dirty portions of the large folio will be written instead of
-> > having to write out the entire folio. For example if there is a 1 MB
-> > large folio and only 2 bytes in it are dirty, only the page for those
-> > dirty bytes will be written out.
-> >
-> > .dirty_folio needs to be set to iomap_dirty_folio so that the bitmap
-> > iomap uses for dirty tracking correctly reflects dirty regions that nee=
-d
-> > to be written back.
-> >
-> > Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> > ---
-> >  fs/fuse/file.c | 124 ++++++++++++++++++++++++++++++-------------------
-> >  1 file changed, 75 insertions(+), 49 deletions(-)
-> >
-> > diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-> > index a7f11c1a4f89..2b4b950eaeed 100644
-> > --- a/fs/fuse/file.c
-> > +++ b/fs/fuse/file.c
-> > @@ -1837,7 +1837,7 @@ static void fuse_writepage_finish(struct fuse_wri=
-tepage_args *wpa)
-> >                * scope of the fi->lock alleviates xarray lock
-> >                * contention and noticeably improves performance.
-> >                */
-> > -             folio_end_writeback(ap->folios[i]);
-> > +             iomap_finish_folio_write(inode, ap->folios[i], 1);
-> >               dec_wb_stat(&bdi->wb, WB_WRITEBACK);
-> >               wb_writeout_inc(&bdi->wb);
-> >       }
-> > @@ -2024,19 +2024,20 @@ static void fuse_writepage_add_to_bucket(struct=
- fuse_conn *fc,
-> >  }
-> >
-> >  static void fuse_writepage_args_page_fill(struct fuse_writepage_args *=
-wpa, struct folio *folio,
-> > -                                       uint32_t folio_index)
-> > +                                       uint32_t folio_index, loff_t of=
-fset, unsigned len)
-> >  {
-> >       struct inode *inode =3D folio->mapping->host;
-> >       struct fuse_args_pages *ap =3D &wpa->ia.ap;
-> >
-> >       ap->folios[folio_index] =3D folio;
-> > -     ap->descs[folio_index].offset =3D 0;
-> > -     ap->descs[folio_index].length =3D folio_size(folio);
-> > +     ap->descs[folio_index].offset =3D offset;
-> > +     ap->descs[folio_index].length =3D len;
-> >
-> >       inc_wb_stat(&inode_to_bdi(inode)->wb, WB_WRITEBACK);
-> >  }
-> >
-> >  static struct fuse_writepage_args *fuse_writepage_args_setup(struct fo=
-lio *folio,
-> > +                                                          size_t offse=
-t,
-> >                                                            struct fuse_=
-file *ff)
-> >  {
-> >       struct inode *inode =3D folio->mapping->host;
-> > @@ -2049,7 +2050,7 @@ static struct fuse_writepage_args *fuse_writepage=
-_args_setup(struct folio *folio
-> >               return NULL;
-> >
-> >       fuse_writepage_add_to_bucket(fc, wpa);
-> > -     fuse_write_args_fill(&wpa->ia, ff, folio_pos(folio), 0);
-> > +     fuse_write_args_fill(&wpa->ia, ff, folio_pos(folio) + offset, 0);
-> >       wpa->ia.write.in.write_flags |=3D FUSE_WRITE_CACHE;
-> >       wpa->inode =3D inode;
-> >       wpa->ia.ff =3D ff;
-> > @@ -2075,7 +2076,7 @@ static int fuse_writepage_locked(struct folio *fo=
-lio)
-> >       if (!ff)
-> >               goto err;
-> >
-> > -     wpa =3D fuse_writepage_args_setup(folio, ff);
-> > +     wpa =3D fuse_writepage_args_setup(folio, 0, ff);
-> >       error =3D -ENOMEM;
-> >       if (!wpa)
-> >               goto err_writepage_args;
-> > @@ -2084,7 +2085,7 @@ static int fuse_writepage_locked(struct folio *fo=
-lio)
-> >       ap->num_folios =3D 1;
-> >
-> >       folio_start_writeback(folio);
-> > -     fuse_writepage_args_page_fill(wpa, folio, 0);
-> > +     fuse_writepage_args_page_fill(wpa, folio, 0, 0, folio_size(folio)=
-);
-> >
-> >       spin_lock(&fi->lock);
-> >       list_add_tail(&wpa->queue_entry, &fi->queued_writes);
-> > @@ -2105,7 +2106,7 @@ struct fuse_fill_wb_data {
-> >       struct fuse_file *ff;
-> >       struct inode *inode;
-> >       unsigned int max_folios;
-> > -     unsigned int nr_pages;
-> > +     unsigned int nr_bytes;
-> >  };
-> >
-> >  static bool fuse_pages_realloc(struct fuse_fill_wb_data *data)
-> > @@ -2147,21 +2148,28 @@ static void fuse_writepages_send(struct fuse_fi=
-ll_wb_data *data)
-> >  }
-> >
-> >  static bool fuse_writepage_need_send(struct fuse_conn *fc, struct foli=
-o *folio,
-> > +                                  loff_t offset, unsigned len,
-> >                                    struct fuse_args_pages *ap,
-> >                                    struct fuse_fill_wb_data *data)
-> >  {
-> > +     struct folio *prev_folio;
-> > +     struct fuse_folio_desc prev_desc;
-> > +
-> >       WARN_ON(!ap->num_folios);
-> >
-> >       /* Reached max pages */
-> > -     if (data->nr_pages + folio_nr_pages(folio) > fc->max_pages)
-> > +     if ((data->nr_bytes + len) / PAGE_SIZE > fc->max_pages)
-> >               return true;
-> >
-> >       /* Reached max write bytes */
-> > -     if ((data->nr_pages * PAGE_SIZE) + folio_size(folio) > fc->max_wr=
-ite)
-> > +     if (data->nr_bytes + len > fc->max_write)
-> >               return true;
-> >
-> >       /* Discontinuity */
-> > -     if (folio_next_index(ap->folios[ap->num_folios - 1]) !=3D folio->=
-index)
-> > +     prev_folio =3D ap->folios[ap->num_folios - 1];
-> > +     prev_desc =3D ap->descs[ap->num_folios - 1];
-> > +     if ((folio_pos(prev_folio) + prev_desc.offset + prev_desc.length)=
- !=3D
-> > +         folio_pos(folio) + offset)
-> >               return true;
-> >
-> >       /* Need to grow the pages array?  If so, did the expansion fail? =
-*/
-> > @@ -2171,85 +2179,103 @@ static bool fuse_writepage_need_send(struct fu=
-se_conn *fc, struct folio *folio,
-> >       return false;
-> >  }
-> >
-> > -static int fuse_writepages_fill(struct folio *folio,
-> > -             struct writeback_control *wbc, void *_data)
-> > +static ssize_t fuse_iomap_writeback_range(struct iomap_writepage_ctx *=
-wpc,
-> > +                                       struct folio *folio, u64 pos,
-> > +                                       unsigned len, u64 end_pos)
-> >  {
-> > -     struct fuse_fill_wb_data *data =3D _data;
-> > +     struct fuse_fill_wb_data *data =3D wpc->wb_ctx;
-> >       struct fuse_writepage_args *wpa =3D data->wpa;
-> >       struct fuse_args_pages *ap =3D &wpa->ia.ap;
-> >       struct inode *inode =3D data->inode;
-> >       struct fuse_inode *fi =3D get_fuse_inode(inode);
-> >       struct fuse_conn *fc =3D get_fuse_conn(inode);
-> > -     int err;
-> > +     loff_t offset =3D offset_in_folio(folio, pos);
-> > +
-> > +     WARN_ON_ONCE(!data);
-> > +     /* len will always be page aligned */
-> > +     WARN_ON_ONCE(len & (PAGE_SIZE - 1));
-> >
-> >       if (!data->ff) {
-> > -             err =3D -EIO;
-> >               data->ff =3D fuse_write_file_get(fi);
-> >               if (!data->ff)
-> > -                     goto out_unlock;
-> > +                     return -EIO;
-> >       }
-> >
-> > -     if (wpa && fuse_writepage_need_send(fc, folio, ap, data)) {
-> > +     iomap_start_folio_write(inode, folio, 1);
-> > +
-> > +     if (wpa && fuse_writepage_need_send(fc, folio, offset, len, ap, d=
-ata)) {
-> >               fuse_writepages_send(data);
-> >               data->wpa =3D NULL;
-> > -             data->nr_pages =3D 0;
-> > +             data->nr_bytes =3D 0;
-> >       }
-> >
-> >       if (data->wpa =3D=3D NULL) {
-> > -             err =3D -ENOMEM;
-> > -             wpa =3D fuse_writepage_args_setup(folio, data->ff);
-> > +             wpa =3D fuse_writepage_args_setup(folio, offset, data->ff=
-);
-> >               if (!wpa)
-> > -                     goto out_unlock;
-> > +                     return -ENOMEM;
->
-> If we error out here, what subtracts from write_bytes_pending the
-> quantity that we just added in iomap_start_folio_write?
->
-> (It would have helped a lot if the cover letter had linked to a git
-> branch so I could go look at the final product for myself...)
->
+On 2025/6/23 18:46, Christian Brauner wrote:
+> On Thu, 19 Jun 2025 19:17:57 +0800, Zhang Yi wrote:
+>> From: Zhang Yi <yi.zhang@huawei.com>
+>>
+>> Changes since v1:
+>>  - Rebase codes on 6.16-rc2.
+>>  - Use max_{hw|user}_wzeroes_unmap_sectors queue limits instead of
+>>    BLK_FEAT_WRITE_ZEROES_UNMAP feature to represent the status of the
+>>    unmap write zeroes operation as Christoph and Darrick suggested. This
+>>    redoes the first 5 patches, so remove all the reviewed-by tags,
+>>    please review them again.
+>>  - Simplify the description of FALLOC_FL_WRITE_ZEROES in patch 06 as
+>>    Darrick suggested.
+>>  - Revise the check order of FALLOC_FL_WRITE_ZEROES in patch 08 as
+>>    Christoph suggested.
+>> Changes since RFC v4:
+>>  - Rebase codes on 6.16-rc1.
+>>  - Add a new queue_limit flag, and change the write_zeroes_unmap sysfs
+>>    interface to RW mode. User can disable the unmap write zeroes
+>>    operation by writing '0' to it when the operation is slow.
+>>  - Modify the documentation of write_zeroes_unmap sysfs interface as
+>>    Martin suggested.
+>>  - Remove the statx interface.
+>>  - Make the bdev and ext4 don't allow to submit FALLOC_FL_WRITE_ZEROES
+>>    if the block device does not enable the unmap write zeroes operation,
+>>    it should return -EOPNOTSUPP.
+>> Changes sicne RFC v3:
+>>  - Rebase codes on 6.15-rc2.
+>>  - Add a note in patch 1 to indicate that the unmap write zeros command
+>>    is not always guaranteed as Christoph suggested.
+>>  - Rename bdev_unmap_write_zeroes() helper and move it to patch 1 as
+>>    Christoph suggested.
+>>  - Introduce a new statx attribute flag STATX_ATTR_WRITE_ZEROES_UNMAP as
+>>    Christoph and Christian suggested.
+>>  - Exchange the order of the two patches that modified
+>>    blkdev_fallocate() as Christoph suggested.
+>> Changes since RFC v2:
+>>  - Rebase codes on next-20250314.
+>>  - Add support for nvme multipath.
+>>  - Add support for NVMeT with block device backing.
+>>  - Clear FALLOC_FL_WRITE_ZEROES if dm clear
+>>    limits->max_write_zeroes_sectors.
+>>  - Complement the counterpart userspace tools(util-linux and xfs_io)
+>>    and tests(blktests and xfstests), please see below for details.
+>> Changes since RFC v1:
+>>  - Switch to add a new write zeroes operation, FALLOC_FL_WRITE_ZEROES,
+>>    in fallocate, instead of just adding a supported flag to
+>>    FALLOC_FL_ZERO_RANGE.
+>>  - Introduce a new flag BLK_FEAT_WRITE_ZEROES_UNMAP to the block
+>>    device's queue limit features, and implement it on SCSI sd driver,
+>>    NVMe SSD driver and dm driver.
+>>  - Implement FALLOC_FL_WRITE_ZEROES on both the ext4 filesystem and
+>>    block device (bdev).
+>>
+>> [...]
+> 
+> If needed, the branch can be declared stable and thus be used as base
+> for other work.
+> 
+> ---
+> 
+> Applied to the vfs-6.17.fallocate branch of the vfs/vfs.git tree.
+> Patches in the vfs-6.17.fallocate branch should appear in linux-next soon.
+> 
+> Please report any outstanding bugs that were missed during review in a
+> new review to the original patch series allowing us to drop it.
+> 
+> It's encouraged to provide Acked-bys and Reviewed-bys even though the
+> patch has now been applied. If possible patch trailers will be updated.
+> 
+> Note that commit hashes shown below are subject to change due to rebase,
+> trailer updates or similar. If in doubt, please check the listed branch.
+> 
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+> branch: vfs-6.17.fallocate
 
-Ugh you're right, this needs to be accounted for in the error cases.
-I'll fix this in v4. Thanks for spotting this. I'll make a git branch
-and include a link to it in v4 as well.
+Hi Christian,
 
-> --D
->
+I noticed that this patch series doesn't appear to be merged into this
+branch. Just wondering if it might have been missed?
+
+Best regards,
+Yi.
+
+> 
+> [1/9] block: introduce max_{hw|user}_wzeroes_unmap_sectors to queue limits
+>       https://git.kernel.org/vfs/vfs/c/2695a9b086fd
+> [2/9] nvme: set max_hw_wzeroes_unmap_sectors if device supports DEAC bit
+>       https://git.kernel.org/vfs/vfs/c/bf07c1180194
+> [3/9] nvmet: set WZDS and DRB if device enables unmap write zeroes operation
+>       https://git.kernel.org/vfs/vfs/c/a6c7ab5adcba
+> [4/9] scsi: sd: set max_hw_wzeroes_unmap_sectors if device supports SD_ZERO_*_UNMAP
+>       https://git.kernel.org/vfs/vfs/c/92372ed1cc88
+> [5/9] dm: clear unmap write zeroes limits when disabling write zeroes
+>       https://git.kernel.org/vfs/vfs/c/e383d550e716
+> [6/9] fs: introduce FALLOC_FL_WRITE_ZEROES to fallocate
+>       https://git.kernel.org/vfs/vfs/c/1ed1b5df86ec
+> [7/9] block: factor out common part in blkdev_fallocate()
+>       https://git.kernel.org/vfs/vfs/c/96433508c8c0
+> [8/9] block: add FALLOC_FL_WRITE_ZEROES support
+>       https://git.kernel.org/vfs/vfs/c/2b4e5f9b3eb9
+> [9/9] ext4: add FALLOC_FL_WRITE_ZEROES support
+>       https://git.kernel.org/vfs/vfs/c/51954e469396
+
