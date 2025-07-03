@@ -1,95 +1,99 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD7AB17332C;
-	Thu,  3 Jul 2025 13:52:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50D092EBDF9;
+	Thu,  3 Jul 2025 14:33:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751550769; cv=none; b=rx4j8rBoRAAtaM4DiwAv+jCSCBxMfLrSU1ZuRnNF4cFBPJzqW7H00n1OmUUWeRS1tx2cfGHholBIQ/xrNrLsAgy/qBpkedD11xDZdNH95yo1XlZ8GBkMch/W1ysP/cQSiaXEcWE+OCMVElNhSBte7J4ghs/etgD0nhWy+SdML5s=
+	t=1751553192; cv=none; b=joGYZTGunu9fuuK4pmtCDnTwZzmkWHPxgsXy0irqwdXYgPWB1Tup4iqDd6X4v+3gqrilr2eukzkMYsPXfS+JgKg4GlVUWlvfuoKycRzX1SXYC+L6uwVxxaUS5pp4qi3kObxES39BgcfwqpAiBwsW6sQGbNN+GsJaClA8BknJbt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751550769; c=relaxed/simple;
-	bh=33qRgg1e0mQ5mosYkkIKlnqZlLmvu7IPY5YeHzf6CJk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Zo4/T54fmZ0lw3VE+gEuF0JX0nQNqr/GEsQUixbO/XXuZH0HhKO7SxXkKkRJw78v5J+PiZ6r3Wo/ZXRxVLRxy80EANf8wEVh8ftp1L6bxwCm5WIw2mxOl+cRY+M9nd8gQLOU0zh5hSdBnCMJhDEyMGGumREGe6Lt4VdGHbq9VXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=NVuByjLG; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1751553192; c=relaxed/simple;
+	bh=pbnpZTecA/emnfYuNr9pfpPVP71XL99mm/JpD31d6Bo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=tW6pUmK21182jVKKjJJb06sUiqMjD80VO+qdAoY3OzA4WrcYBeSO4Y6eiyiqUvOstpaPRuoeJgShkIwi1ipikuKwaAscU70gql0IS1SRwkGBLSPbRfKckdo/uc0LEwe5Tak0mV5B9DyMrahey9RYws6/UCB2fcNxQfS34cwlfcs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ASEaO95Z; arc=none smtp.client-ip=209.85.216.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NVuByjLG"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=uce3SwGRj1PM1jnKvZzMFY4bzlcSVJEXs+lkeyaTxDI=; b=NVuByjLGPcFFrErcrLRZT0g6w7
-	wjNc+N/oGDv0dj+MSdPtCjBqWn2DgUHrFZld/JjUxcQ2GJdZ5QjEs1RiFMsKXtzyPRDJ5zUIPe69m
-	9cmWc0ApCz20z/ClhALD5Uag2Zg+QX+3Zba8Wbna9G0mDSov4yc8Z1qpEVDNwjcDo98TJ262Qksba
-	EBnNLcpYt6jyb3b0WVU1HwU2ENbPMzsnrYMpLv+6aFL9C3U/GSgzpbo21AcGl8nKRSXnwtYs77Eas
-	OyUiCziuMjeBe8WDWcHzpBZmrVan09lPzh5quOzhLBPSW60hBXb1HXrQy5LtT3auHUfJThPKPxqQN
-	OmXnXtZg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uXKMm-0000000BYPP-0Nco;
-	Thu, 03 Jul 2025 13:52:44 +0000
-Date: Thu, 3 Jul 2025 06:52:44 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: alexjlzheng@gmail.com
-Cc: brauner@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jinliang Zheng <alexjlzheng@tencent.com>, linux-mm@kvack.org
-Subject: Re: [PATCH] iomap: avoid unnecessary ifs_set_range_uptodate() with
- locks
-Message-ID: <aGaLLHq3pRjGlO2W@infradead.org>
-References: <20250701144847.12752-1-alexjlzheng@tencent.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ASEaO95Z"
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-3139027b825so37568a91.0;
+        Thu, 03 Jul 2025 07:33:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1751553190; x=1752157990; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=c6ULj4GSQdITNFr+qLBDFzv5ASstogN2mu1F9t/ePJQ=;
+        b=ASEaO95Z+SPOpEHhaEdMvpW4zM+tPmij7fMNC+/2HeErWS9MVS//qKJK6yWSNdg4Mr
+         1/29CWYxan8aAwpQrMIAbZczf2Mfq8wJVlQu9fFIkYhUTHtwWk401EXMl+YBePONbgoB
+         j1VcRNxz0Dg4oYELzfW+bic8vygVbzO9rqHmwD0nJMy/l2urCoymUFJ6Dc6BcwIAaW8j
+         HDRfc07UDpDvfk+fXir/GutVW+pfoO8lB2G2EW6PKVMeOx1Upr+apq6cZA0SLXcBQFbt
+         PyC470y/L171Eg/FAjBa+JvtPjZsejuQKAX7SO3wSFkfQLVf9Q+lKYLzmJ/2KUJnQOsP
+         GDRg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1751553190; x=1752157990;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=c6ULj4GSQdITNFr+qLBDFzv5ASstogN2mu1F9t/ePJQ=;
+        b=f6sQ9KRl2B1lrjFZbOd6we6CjUAMQ3yy7FmRuG8Pj39ccuV0XOI3AEuaEbqAXMFPPh
+         zeOVtQ8CqGBOfqB9aZju7aXMm1jkZ2xPjuuYBsLR9Ih0nCm88RXZ8DNf3AsAPO3dIe4G
+         OJiRtdD8XjTF+GtpNGx2ByWHTMdLWZvKMS9v6sRpzesx3xIgHQBjW1CSisI0WoBO2uCp
+         dIxN+VSHiST1bxe4UctjNAbK+7IXmbcWU7AVSopXuDTgkag5aXAVH4f+ev+3dEA55Aiu
+         jM0L8knZAh0gRuvCXDLTRQLf0xL/8nYfMKyW8s7RW78vBSN2MaVf1tQnGsFVDqlQt5Ky
+         lg4w==
+X-Forwarded-Encrypted: i=1; AJvYcCV6mZiPKduBuKW+T1f+SMOusDFmGKDUSco7kjUoLnlY7svU9L4464Vh3of0+OUzfnFAfLUxrRUy4HE/@vger.kernel.org, AJvYcCWpoDiOuCOtnPK07puDPNS0EISo4RuroRzf3ZShlZa5P5xf9QPGDi7DVtBTNGP3BGlSEJlqpuxIBe+uwxHh@vger.kernel.org, AJvYcCX8z0dMwS8QLTJYHxnmzqoMNS56drID+Z2Q9/79H7N0MlIXbYPnDJ2PVVRCui4E6ixEUg0l0z5/NALuxLex@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz7qPqIV5AGv+CPQUE1YW7qbRecdccHVPnNmMU+BQHlKdMtBWSx
+	v8e4NUqUdS5bdAncHjtAgmN2jlNtGAxoitD79ZXc+O/FQJWgtRzC73Jm
+X-Gm-Gg: ASbGncs6gy8IFgKLhzmXMZloaS6ryAmMPX4dHPpkbLQoBJE+1JfD3qKjW1sIa/9qLnm
+	eCpx13OJnkkVjY5Mby55rQqlfowHFkPA9PHehOxBnZE0DYEq313Kub+bLSJs/PJK+ddHJxK6gSW
+	/NPwLxhCgwXTsw0QrBSrIWlj0WxwAUEvX4kbYiz/1v2rH99zSrNNIBOGcih2me84md28njLC5E/
+	Zza7uIu3jN3TZdrP2FuvDDdzhKNphoOLb5U7McKykuhBHHhSKRX/nQAn5cjChgn2IMRdTsBVFUH
+	Tj7W2SvV9cfQ8p186PFBPL4oaI8kKjAnf6hgBuf6UaN2iis29PuVxBfeDity7aSwPi7S61ifcWA
+	=
+X-Google-Smtp-Source: AGHT+IFw+K7j7iqmYpcjjjtR+iwrjkgRPl3+q+ppwsYlqqPKEE+ZodtA8iPQzN0yAnBxDlmUm9+6mw==
+X-Received: by 2002:a17:90b:3848:b0:315:9ac2:8700 with SMTP id 98e67ed59e1d1-31a9d5c8bcamr4442778a91.24.1751553190359;
+        Thu, 03 Jul 2025 07:33:10 -0700 (PDT)
+Received: from VM-16-24-fedora.. ([43.153.32.141])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23c7c59cbb3sm14972705ad.110.2025.07.03.07.33.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Jul 2025 07:33:09 -0700 (PDT)
+From: Jinliang Zheng <alexjlzheng@gmail.com>
+X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
+To: hch@infradead.org
+Cc: alexjlzheng@gmail.com,
+	alexjlzheng@tencent.com,
+	brauner@kernel.org,
+	djwong@kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] iomap: avoid unnecessary ifs_set_range_uptodate() with locks
+Date: Thu,  3 Jul 2025 22:33:08 +0800
+Message-ID: <20250703143308.661683-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.49.0
+In-Reply-To: <aGaKoDhuw72wZ9dM@infradead.org>
+References: <aGaKoDhuw72wZ9dM@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250701144847.12752-1-alexjlzheng@tencent.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jul 01, 2025 at 10:48:47PM +0800, alexjlzheng@gmail.com wrote:
-> From: Jinliang Zheng <alexjlzheng@tencent.com>
+On Thu, 3 Jul 2025 06:50:24 -0700, Christoph Hellwig wrote:
+> On Wed, Jul 03, 2025 at 08:09:12PM +0800, Jinliang Zheng wrote:
+> > ltp and xfstests showed no noticeable errors caused by this patch.
 > 
-> In the buffer write path, iomap_set_range_uptodate() is called every
-> time iomap_end_write() is called. But if folio_test_uptodate() holds, we
-> know that all blocks in this folio are already in the uptodate state, so
-> there is no need to go deep into the critical section of state_lock to
-> execute bitmap_set().
-> 
-> Although state_lock may not have significant lock contention due to
-> folio lock, this patch at least reduces the number of instructions.
+> With what block and page size?  I guess it was block size < PAGE_SIZE
+> as otherwise you wouldn't want to optimize this past, but just asking
+> in case.
 
-That means the uptodate bitmap is stale in that case.  That would
-only matter if we could clear the folio uptodate bit and still
-expect the page content to survive.  Which sounds dubious and I could
-not find anything relevant grepping the tree, but I'm adding the
-linux-mm list just in case.
+Hahaha, I really want to try -b size=512, but I don't want to turn off
+crc, so I can only choose -b size=1024.
 
-> 
-> Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
-> ---
->  fs/iomap/buffered-io.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 3729391a18f3..fb4519158f3a 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -71,6 +71,9 @@ static void iomap_set_range_uptodate(struct folio *folio, size_t off,
->  	unsigned long flags;
->  	bool uptodate = true;
->  
-> +	if (folio_test_uptodate(folio))
-> +		return;
-> +
->  	if (ifs) {
->  		spin_lock_irqsave(&ifs->state_lock, flags);
->  		uptodate = ifs_set_range_uptodate(folio, ifs, off, len);
-> -- 
-> 2.49.0
-> 
-> 
----end quoted text---
+By the way, the test was done on xfs.
+
+thanks,
+Jinliang Zheng. :)
