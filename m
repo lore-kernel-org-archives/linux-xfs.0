@@ -1,63 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13DDD257AEE
-	for <linux-xfs@vger.kernel.org>; Thu,  3 Jul 2025 16:30:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B9E233DF;
+	Thu,  3 Jul 2025 16:51:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751560247; cv=none; b=i1rvbf9/hrfHGcGnFj0O0B5HOcsgpgs9owaXYiSfqwDV+1tPn3cZ3mM+9NGsn9sYG/uK45BWHNeFd8aFvvP2mr9cHr1xQQH50ioM4FPws3dNlQLWsmjSjGKftIB/qG2X/MwWsLUrjCaNpIkNePmoMAaeIzxIiUB5ZLT4EXnkd8o=
+	t=1751561479; cv=none; b=n0B68CATdkms+cWeKiq1NIwUg7a8lmsjxfRTWN8qwEGvaClhaZDmMyDYoqf4t6oP0NONnHuiP6ilu3ry8SUtR4kU0nyZLaKTDHCvg3cBZkCxzslfArpabUTZfEijT3wJiPzm3UTluffBw06aJazbZEmgpkEDsHpeIwXAqhjLmsw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751560247; c=relaxed/simple;
-	bh=4vZKth5hZOEyXs2/A37gwilA2w2UXoqqbcdzgLLlM+I=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=V0gUEru1YmofYm3EZ9SGO3YQNC9cQ6U41Z94TNu43yfT5SEfOzh7wZ74/H7rZZokN2d46Uek+wyTy+64u3eC3XPdem2fz9JZIj6wJfkMSJBjjBh1tf0ewv0o2cROHNTsfMJTVsjTEWftzhTiVyS09R4BlPTGg9BBh5zX0X+gJj8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DOkDhSZt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751561479; c=relaxed/simple;
+	bh=KgNWAEPsvGLZYpBhpkLVwDOSCjtLzdipdUOgdEkAzQc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gl8Jcl9ugglozNN0k53kEkGf7GivQfVVdeI54ibBaSyt5Q0ZT8JjHYg7sPOudPKdNS64OoST4IW/DdsYuXUa0XWuuYB+A9WCwQQWQm3htsSGq/EljDO+OR6PTu1qXKblG3ppzjowVVnfE+C1DA+dt9mwbLiBWqU15/I4AkelXUo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QCyLAN9U; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DOkDhSZt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC80CC4CEE3;
-	Thu,  3 Jul 2025 16:30:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QCyLAN9U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12CFCC4CEE3;
+	Thu,  3 Jul 2025 16:51:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751560247;
-	bh=4vZKth5hZOEyXs2/A37gwilA2w2UXoqqbcdzgLLlM+I=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=DOkDhSZtul5vSYU12xpAkKTl++n2eTPky2WtFLtz+UmPKXhv5rvjyMKSi/N/fkrxA
-	 I03fQndYKfXjPumy+4hoiBR6Mnnm0fNiMXshLJsgeb5qqK8hIGigeQYP+oxB/Jzocf
-	 lCeGyVLuScuyXGPNf0K+MLOib151oXTj/zI6/2QB2Tli9onkj8479Ox3OijCid0Ioi
-	 UFGCoK+PAKCqfAd22dJMiyv6xDDtJ3PxozUcejJIxFa+rNRriJB3mOoiPwjOiNWjur
-	 Iv+3tA5hCkuGdlV3KXFkbU7yhK+kvWBmKoe5mXnRas3CO8eHMJ848P0ti515KLoJoQ
-	 xI7xFP2C5dPgg==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 70E09383B274;
-	Thu,  3 Jul 2025 16:31:12 +0000 (UTC)
-Subject: Re: [GIT PULL] XFS fixes for v6.16-rc5
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <fy5upmtfgiuzh55xaghv3w3vqqsbgszlraw6hv23a4qycirsg3@qzbwz5m2q7f6>
-References: <fy5upmtfgiuzh55xaghv3w3vqqsbgszlraw6hv23a4qycirsg3@qzbwz5m2q7f6>
-X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
-X-PR-Tracked-Message-Id: <fy5upmtfgiuzh55xaghv3w3vqqsbgszlraw6hv23a4qycirsg3@qzbwz5m2q7f6>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-6.16-rc5
-X-PR-Tracked-Commit-Id: 9e9b46672b1daac814b384286c21fb8332a87392
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: d32e907d15f7257f69d38b4c829f87a79ecf8b7f
-Message-Id: <175156027089.1548768.1860202571333543352.pr-tracker-bot@kernel.org>
-Date: Thu, 03 Jul 2025 16:31:10 +0000
-To: Carlos Maiolino <cem@kernel.org>
-Cc: torvalds@linux-foundation.org, linux-xfs@vger.kernel.org
+	s=k20201202; t=1751561478;
+	bh=KgNWAEPsvGLZYpBhpkLVwDOSCjtLzdipdUOgdEkAzQc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=QCyLAN9UKompBN/Txlb0N5sKTjycQuUVbNWq4uLmWMH+EOFlkomwkRhux+XdKcStW
+	 C74wJfVSHPKYVez5me2dCemHJjc2S9KvtOszihXM/VZ/cw+mW3PrFJP3gmDL69LCvZ
+	 PjqOKJRdOFzlptOQn54UQPBwAB8Uvx9SF2aSgnH8/+meQiHY0sXkJ+tdWEZ2QHNKrl
+	 3VH6OjTGPBVP6ZVeCL9ImVd3UWXM2igfFdg6OmWh35wXgCuE2LEzYVguBxZ+0vmxn/
+	 WnpiGFITbqBAASKYir2sRwlPWv9ZxmxqZKMXEHM+PxBAj8PUUNpXQ14xAGY5ggACOb
+	 cJbuiF4zwJ3nA==
+Date: Thu, 3 Jul 2025 09:51:17 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Joanne Koong <joannelkoong@gmail.com>, linux-fsdevel@vger.kernel.org,
+	miklos@szeredi.hu, brauner@kernel.org, anuj20.g@samsung.com,
+	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-block@vger.kernel.org, gfs2@lists.linux.dev,
+	kernel-team@meta.com
+Subject: Re: [PATCH v3 03/16] iomap: refactor the writeback interface
+Message-ID: <20250703165117.GA2672049@frogsfrogsfrogs>
+References: <20250624022135.832899-1-joannelkoong@gmail.com>
+ <20250624022135.832899-4-joannelkoong@gmail.com>
+ <20250702171353.GW10009@frogsfrogsfrogs>
+ <20250703121654.GA19114@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250703121654.GA19114@lst.de>
 
-The pull request you sent on Thu, 3 Jul 2025 09:27:51 +0200:
+On Thu, Jul 03, 2025 at 02:16:54PM +0200, Christoph Hellwig wrote:
+> On Wed, Jul 02, 2025 at 10:13:53AM -0700, Darrick J. Wong wrote:
+> > > +    int (*writeback_range)(struct iomap_writepage_ctx *wpc,
+> > > +    		struct folio *folio, u64 pos, unsigned int len, u64 end_pos);
+> > 
+> > Why does @pos change from loff_t to u64 here?  Are we expecting
+> > filesystems that set FOP_UNSIGNED_OFFSET?
+> 
+> It doesn't really change, it matches what iomap_writepage_map_blocks
+> was doing.  I guess it simply doesn't fix the existing inconsistency.
+> 
+> > > +    int (*submit_ioend)(struct iomap_writepage_ctx *wpc, int status);
+> > 
+> > Nit:   ^^ indenting change here.
+> 
+> Yeah, RST formatting is a mess unfortunately.   I think the problem is
+> that the exiting code uses 4 space indents.  I wonder if that's required
+> by %##% RST?
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-6.16-rc5
+It's a code block, so it's not going to make the rst parser choke.
+However it will result in an weirdly indented output:
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/d32e907d15f7257f69d38b4c829f87a79ecf8b7f
+ struct iomap_writeback_ops {
+     int (*map_blocks)(struct iomap_writepage_ctx *wpc, struct inode *inode,
+                       loff_t offset, unsigned len);
+     int (*submit_ioend)(struct iomap_writepage_ctx *wpc, int status);
+    void (*discard_folio)(struct folio *folio, loff_t pos);
+ };
 
-Thank you!
+is what I got when I removed an indentation space from discard_folio.
+Hilariously it actually makes the "(" line up which appeals to my column
+aligning brain and actually looks better. :P
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+So having now seriously undercut my own point, I'll relax to "meh do
+whatever".
+
+> > > +		if (wpc->iomap.type != IOMAP_HOLE)
+> > > +			*wb_pending = true;
+> > 
+> > /me wonders if this should be an outparam of ->writeback_range to signal
+> > that it actually added the folio to the writeback ioend chain?  Or maybe
+> > just a boolean in iomap_writepage_ctx that we clear before calling
+> > ->writeback_range and iomap_add_to_ioend can set it as appropriate?
+> 
+> What's the benefit of that?  A hole pretty clearly signal there is
+> no writeback here.
+
+Fair enough.  In my head it was "the code that actually sets up the
+ioend should set this flag" but I guess we can detect it from the
+mapping after the fact instead of passing things around.
+
+> > Should this jump label should be named add_to_ioend or something?  We
+> > already mapped the blocks.  The same applies to the zoned version of
+> > this function.
+> 
+> The newer version already uses a map_blocks helper for both again.
+
+Ah, so it does.
+
+--D
