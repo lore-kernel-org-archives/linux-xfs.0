@@ -1,115 +1,75 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 829B21D63F0;
-	Thu,  3 Jul 2025 08:46:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A806C2E6119;
+	Thu,  3 Jul 2025 12:17:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751532396; cv=none; b=fHCWcdMCufuyVYwnmEJrQSWzYrH85/xoAH5QbjE9MImJAHIbaWlHze0a9axAFpuHd49Wc1LjrN6wMGifAQ4EVQcjvLpJdekioLsU+EbaisN1XSflSiP/e1blB03c+b3fxrifdSsUMs/zOHXHx58bjige3IWBScXf2Qv5Ac+CyLk=
+	t=1751545022; cv=none; b=qmurSEpnETf7NVLjc97/CiE2/t2JaNPlRmqkomjT8IaeL9LsOpPypIhVEVlXF62BEoJskV3JYjzAehiSZgR53zb+Vz7v/wdPJmcjQQQSMqkuRxmjbMYTWP4DOSTP7Wq9SoVyCMSWqQ5GGEkGBbMTlf0xBW6v4V1GDdmC9nJhNYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751532396; c=relaxed/simple;
-	bh=N3F0YfTU14Bdzkrb+Vya0WNvwRnCq7n/y/mLYwUwtdY=;
+	s=arc-20240116; t=1751545022; c=relaxed/simple;
+	bh=YhSYv4Apjbr3Oj47VGbhmJgYZ9AgT0VyunWVMHcnmU0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZW6He1+CnXiBfViKdpGGZFXxS4zzVsP2H9sAApFftX+N9Dz++PRSaBH3fhBSU9pmBShcyRbnKeEN0NvB9Bu28QYkcHhzbTTcHF1ZqUyd8DpS4dF12IZ62y9Xlv+GRFLulzhK91abwPXZlmdogA9+iws0mST/RpoFsH4zRGST728=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XsodEsW3; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XsodEsW3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06CE6C4CEE3;
-	Thu,  3 Jul 2025 08:46:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751532396;
-	bh=N3F0YfTU14Bdzkrb+Vya0WNvwRnCq7n/y/mLYwUwtdY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XsodEsW3xvLfHNF3bR4IF6OSGD/uneAvcgddtue0WFyNvYS1C5HVD/4pPkGhizX5N
-	 PfwAItZxlAY/p+x5scC8ZhiSxETIdCc/Ft8n126TzIJ0ch1c4/IZYpcv1YPJj8/Yx6
-	 V1YIeCDhWWXWbh2qWzGxcohXWGPVnbHNbpIB0M1OC3+HBL01yUZxnJCU+9299VSQ0u
-	 UDmR2iAGrOVmZrgIXM6w1j70DDf8odGpKp+8siCiTw3mvJIXFU8swBXvgfLlqJCeB4
-	 +VHefz6ZJDVEE27kJN3o3XiXNwaUI5EG4MwKaZlGCw/25rkgc5t9XssyLSrVpVr4iD
-	 NdBuAUCno7xeA==
-Date: Thu, 3 Jul 2025 10:46:30 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Andrey Albershteyn <aalbersh@redhat.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Casey Schaufler <casey@schaufler-ca.com>, Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, selinux@vger.kernel.org, 
-	Andrey Albershteyn <aalbersh@kernel.org>
-Subject: Re: [PATCH v6 6/6] fs: introduce file_getattr and file_setattr
- syscalls
-Message-ID: <20250703-haufen-problemlos-c2569d208bd8@brauner>
-References: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
- <20250630-xattrat-syscall-v6-6-c4e3bc35227b@kernel.org>
- <20250701184317.GQ10009@frogsfrogsfrogs>
- <20250702-stagnation-dackel-294bb4cd9f3d@brauner>
- <CAOQ4uximwjYabeO=-ktMtnzMsx6KXBs=pUsgNno=_qgpQnpHCA@mail.gmail.com>
- <20250702183750.GW10009@frogsfrogsfrogs>
- <20250703-restlaufzeit-baurecht-9ed44552b481@brauner>
- <CAOQ4uxjouOA+RkiVQ8H11nNVcsi24qOujruqKgfajOCKP1SMpQ@mail.gmail.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=pQxPY6E1uY4/2REteJp+sZ3aEwCyXJBqBCpwB4FcDi7silEnav2VT2UbP2y5Nabu3XgCPAZ3m/Fg61GSjb6+aGx2aiH/4Ogewv60m0q/eeT0+5Ow+NlxBjvtYLHcI5DbppCaZyUCwKkSkTr4IlvKAgsICMVjsn5VLbsFZJ3fUoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id E0FB368C7B; Thu,  3 Jul 2025 14:16:54 +0200 (CEST)
+Date: Thu, 3 Jul 2025 14:16:54 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Joanne Koong <joannelkoong@gmail.com>, linux-fsdevel@vger.kernel.org,
+	hch@lst.de, miklos@szeredi.hu, brauner@kernel.org,
+	anuj20.g@samsung.com, linux-xfs@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-block@vger.kernel.org,
+	gfs2@lists.linux.dev, kernel-team@meta.com
+Subject: Re: [PATCH v3 03/16] iomap: refactor the writeback interface
+Message-ID: <20250703121654.GA19114@lst.de>
+References: <20250624022135.832899-1-joannelkoong@gmail.com> <20250624022135.832899-4-joannelkoong@gmail.com> <20250702171353.GW10009@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxjouOA+RkiVQ8H11nNVcsi24qOujruqKgfajOCKP1SMpQ@mail.gmail.com>
+In-Reply-To: <20250702171353.GW10009@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Jul 03, 2025 at 10:42:27AM +0200, Amir Goldstein wrote:
-> On Thu, Jul 3, 2025 at 10:28 AM Christian Brauner <brauner@kernel.org> wrote:
-> >
-> > On Wed, Jul 02, 2025 at 11:37:50AM -0700, Darrick J. Wong wrote:
-> > > On Wed, Jul 02, 2025 at 03:43:28PM +0200, Amir Goldstein wrote:
-> > > > On Wed, Jul 2, 2025 at 2:40 PM Christian Brauner <brauner@kernel.org> wrote:
-> > > > >
-> > > > > > Er... "fsx_fileattr" is the struct that the system call uses?
-> > > > > >
-> > > > > > That's a little confusing considering that xfs already has a
-> > > > > > xfs_fill_fsxattr function that actually fills a struct fileattr.
-> > > > > > That could be renamed xfs_fill_fileattr.
-> > > > > >
-> > > > > > I dunno.  There's a part of me that would really rather that the
-> > > > > > file_getattr and file_setattr syscalls operate on a struct file_attr.
-> > > > >
-> > > > > Agreed, I'm pretty sure I suggested this during an earlier review. Fits
-> > > > > in line with struct mount_attr and others. Fwiw, struct fileattr (the
-> > > > > kernel internal thing) should've really been struct file_kattr or struct
-> > > > > kernel_file_attr. This is a common pattern now:
-> > > > >
-> > > > > struct mount_attr vs struct mount_kattr
-> > > > >
-> > > > > struct clone_args vs struct kernel_clone_kargs
-> > > > >
-> > > > > etc.
-> > > > >file_attr
-> > > >
-> > > > I can see the allure, but we have a long history here with fsxattr,
-> > > > so I think it serves the users better to reference this history with
-> > > > fsxattr64.
-> > >
-> > > <shrug> XFS has a long history with 'struct fsxattr' (the structure you
-> > > passed to XFS_IOC_FSGETXATTR) but the rest of the kernel needn't be so
-> > > fixated upon the historical name.  ext4/f2fs/overlay afaict are just
-> > > going along for the ride.
-> > >
-> > > IOWs I like brauner's struct file_attr and struct file_kattr
-> > > suggestions.
-> > >
-> > > > That, and also, avoid the churn of s/fileattr/file_kattr/
-> > > > If you want to do this renaming, please do it in the same PR
-> > > > because I don't like the idea of having both file_attr and fileattr
-> > > > in the tree for an unknown period.
-> > >
-> > > But yeah, that ought to be a treewide change done at the same time.
-> >
-> > Why do you all hate me? ;)
-> > See the appended patch.
+On Wed, Jul 02, 2025 at 10:13:53AM -0700, Darrick J. Wong wrote:
+> > +    int (*writeback_range)(struct iomap_writepage_ctx *wpc,
+> > +    		struct folio *folio, u64 pos, unsigned int len, u64 end_pos);
 > 
-> This looks obviously fine, but I wonder how much conflicts that would
-> cause in linux-next?
-> It may just be small enough to get by.
+> Why does @pos change from loff_t to u64 here?  Are we expecting
+> filesystems that set FOP_UNSIGNED_OFFSET?
 
-With such changes that's always a possibility but really I'll just
-provide a branch with the resolutions for Linus to pull.
+It doesn't really change, it matches what iomap_writepage_map_blocks
+was doing.  I guess it simply doesn't fix the existing inconsistency.
+
+> > +    int (*submit_ioend)(struct iomap_writepage_ctx *wpc, int status);
+> 
+> Nit:   ^^ indenting change here.
+
+Yeah, RST formatting is a mess unfortunately.   I think the problem is
+that the exiting code uses 4 space indents.  I wonder if that's required
+by %##% RST?
+
+> > +		if (wpc->iomap.type != IOMAP_HOLE)
+> > +			*wb_pending = true;
+> 
+> /me wonders if this should be an outparam of ->writeback_range to signal
+> that it actually added the folio to the writeback ioend chain?  Or maybe
+> just a boolean in iomap_writepage_ctx that we clear before calling
+> ->writeback_range and iomap_add_to_ioend can set it as appropriate?
+
+What's the benefit of that?  A hole pretty clearly signal there is
+no writeback here.
+
+> Should this jump label should be named add_to_ioend or something?  We
+> already mapped the blocks.  The same applies to the zoned version of
+> this function.
+
+The newer version already uses a map_blocks helper for both again.
+
