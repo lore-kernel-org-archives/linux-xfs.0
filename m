@@ -1,76 +1,129 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB66F289E17;
-	Thu,  3 Jul 2025 17:34:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66709239E6B;
+	Thu,  3 Jul 2025 22:35:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751564072; cv=none; b=XXvAoj53QLbGRMORwI269V1T8AEsEDPdq+S5uSshz99TF5KwXdPgxdqG5IBTC7glX6iaYPpsTZ+SzdsUAD2CumGie7y6CsR+qyu6dIqWD/dFR8XJd8L8QIPfcL1xcuMBdxxYYH4zq/taQ/r2ZbkI2vPdbwoFmWxqY7iJqL/ylh0=
+	t=1751582150; cv=none; b=otcSxaGVtAQZj+Mfl7zjNLsIqmVBn416EUXTQmlee7EgoTsNvsZfHR96L/zfwBguHq8Yx85SASgF5obdbxs4poTkNGbG7ypfw6zBAfLvktlJyXKLlhhQMfckf3pRvz7Mut4PSTIs8TVwI4WApGyxC1JG/BRdp1iCAQoCt9orj8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751564072; c=relaxed/simple;
-	bh=rnJj1lAmOczNutJS2NXs1aB/YBX4KrH5s6OETafbVrk=;
+	s=arc-20240116; t=1751582150; c=relaxed/simple;
+	bh=AlJk2xQunl62/+VSHOBeCHmjXQob70EjT8VDdy6SYyU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m37WNiuN9e198M2ZsgcHhwVZpgQebrwTT295Vtoq+Dudz+W/DkMoajcaAdtzBzaTjqbLbu2zNMnmVHAkW437pTZ/59EdhSqYEM92SCzHvKgtR4ZGdIA973rOpLLI1Oz/igdsd05KU6gWb3jk2KQ7eEJeFjOZcLvpsJbHRGoxt4w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=FPzHa813; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=U4aWMsPsuGkDfCwYF3CJHE+O0bbnpyiXRnY0IgKPLP2qfeIcx4vcvD2JtiPnYrFHrzbhew2sdOIVqyu8PGq96PU55U9vmkt7/wPLWVAE3vQKL11cmEMc+J7PqxJshxo9VP4DnUgeLPJjKSHODyY684B+XwJCD+Ye4Q2zhmNmz/w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oeaLb3kn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FPzHa813"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=OWB1t5fsA1yteyotlpnQA7pAyDo5DDfi98K8/8ko/0w=; b=FPzHa813kryaam2+V7sRBYnun/
-	y/egD8SelkoS0Nt7ZCPIt4bOotNndyMv/qlv2AOw6jG03lKOVurJkvycQbZl4KLgy63na1tBft+RM
-	hhFAHH8dsRXzCrxiFb6k57gkTwpXPnIpwLrAVr5H6i+BjMm9xuDitLTM2Rz4uhW6PJFdgTs1H9ru+
-	T3ah/X7EJaBaptqpAQgf6HWXzQopYJFt33PVAMp9183A+EkLf9wQhnS4zupnxROY8+/dS06JOOAoX
-	zYYtfP/tEL6zei7usyZPy9g755PwxDZzncMopeiH5YRJnBt1Jrrvne9Am1Oi/mDxOGjUmYu8IKuTB
-	NNsRtefg==;
-Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uXNpE-0000000DsHI-3pNd;
-	Thu, 03 Jul 2025 17:34:20 +0000
-Date: Thu, 3 Jul 2025 18:34:20 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: alexjlzheng@gmail.com, brauner@kernel.org, djwong@kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jinliang Zheng <alexjlzheng@tencent.com>, linux-mm@kvack.org
-Subject: Re: [PATCH] iomap: avoid unnecessary ifs_set_range_uptodate() with
- locks
-Message-ID: <aGa_HFAupmxO_iri@casper.infradead.org>
-References: <20250701144847.12752-1-alexjlzheng@tencent.com>
- <aGaLLHq3pRjGlO2W@infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oeaLb3kn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D785C4CEE3;
+	Thu,  3 Jul 2025 22:35:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751582150;
+	bh=AlJk2xQunl62/+VSHOBeCHmjXQob70EjT8VDdy6SYyU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=oeaLb3kn+WHfZRnrdLxOLSD/6uJyDJUkSuZRSJF7uUrUz5MYOOBey3B4sAhmUx8YU
+	 FvNvLp8hpODDXoDg2TbNgdW95pg+nerBvKl3JujNgWn/sE4k8xXAjBmLvPeMmEX6cL
+	 /vNlU4yKBhkzzsCroEDOH0poaKFGjVDlBSIz36866iQ5UEN/d+Ojgd52WBsgP6EJR0
+	 v8/KhooaC1xWsWo1rooyhDokq5+Y4VbZSlZWdpS9lrWnquXLElQp1W9RAhNP5zY7qn
+	 wR3sOHGJ8eEfH5yoPRC8YZSUN/rg8LZSSGJ19zLhfASR5X/r7+6ZDR12gzUZcgj4pR
+	 XDERRPCfKGoBA==
+Date: Thu, 3 Jul 2025 15:35:49 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christian Brauner <brauner@kernel.org>
+Cc: Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>,
+	Andrey Albershteyn <aalbersh@redhat.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Casey Schaufler <casey@schaufler-ca.com>,
+	Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+	Paul Moore <paul@paul-moore.com>, linux-api@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, selinux@vger.kernel.org,
+	Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH v6 6/6] fs: introduce file_getattr and file_setattr
+ syscalls
+Message-ID: <20250703223549.GA2672029@frogsfrogsfrogs>
+References: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
+ <20250630-xattrat-syscall-v6-6-c4e3bc35227b@kernel.org>
+ <20250701184317.GQ10009@frogsfrogsfrogs>
+ <20250702-stagnation-dackel-294bb4cd9f3d@brauner>
+ <CAOQ4uximwjYabeO=-ktMtnzMsx6KXBs=pUsgNno=_qgpQnpHCA@mail.gmail.com>
+ <20250702183750.GW10009@frogsfrogsfrogs>
+ <20250703-restlaufzeit-baurecht-9ed44552b481@brauner>
+ <CAOQ4uxjouOA+RkiVQ8H11nNVcsi24qOujruqKgfajOCKP1SMpQ@mail.gmail.com>
+ <20250703-haufen-problemlos-c2569d208bd8@brauner>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <aGaLLHq3pRjGlO2W@infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250703-haufen-problemlos-c2569d208bd8@brauner>
 
-On Thu, Jul 03, 2025 at 06:52:44AM -0700, Christoph Hellwig wrote:
-> On Tue, Jul 01, 2025 at 10:48:47PM +0800, alexjlzheng@gmail.com wrote:
-> > From: Jinliang Zheng <alexjlzheng@tencent.com>
+On Thu, Jul 03, 2025 at 10:46:30AM +0200, Christian Brauner wrote:
+> On Thu, Jul 03, 2025 at 10:42:27AM +0200, Amir Goldstein wrote:
+> > On Thu, Jul 3, 2025 at 10:28 AM Christian Brauner <brauner@kernel.org> wrote:
+> > >
+> > > On Wed, Jul 02, 2025 at 11:37:50AM -0700, Darrick J. Wong wrote:
+> > > > On Wed, Jul 02, 2025 at 03:43:28PM +0200, Amir Goldstein wrote:
+> > > > > On Wed, Jul 2, 2025 at 2:40 PM Christian Brauner <brauner@kernel.org> wrote:
+> > > > > >
+> > > > > > > Er... "fsx_fileattr" is the struct that the system call uses?
+> > > > > > >
+> > > > > > > That's a little confusing considering that xfs already has a
+> > > > > > > xfs_fill_fsxattr function that actually fills a struct fileattr.
+> > > > > > > That could be renamed xfs_fill_fileattr.
+> > > > > > >
+> > > > > > > I dunno.  There's a part of me that would really rather that the
+> > > > > > > file_getattr and file_setattr syscalls operate on a struct file_attr.
+> > > > > >
+> > > > > > Agreed, I'm pretty sure I suggested this during an earlier review. Fits
+> > > > > > in line with struct mount_attr and others. Fwiw, struct fileattr (the
+> > > > > > kernel internal thing) should've really been struct file_kattr or struct
+> > > > > > kernel_file_attr. This is a common pattern now:
+> > > > > >
+> > > > > > struct mount_attr vs struct mount_kattr
+> > > > > >
+> > > > > > struct clone_args vs struct kernel_clone_kargs
+> > > > > >
+> > > > > > etc.
+> > > > > >file_attr
+> > > > >
+> > > > > I can see the allure, but we have a long history here with fsxattr,
+> > > > > so I think it serves the users better to reference this history with
+> > > > > fsxattr64.
+> > > >
+> > > > <shrug> XFS has a long history with 'struct fsxattr' (the structure you
+> > > > passed to XFS_IOC_FSGETXATTR) but the rest of the kernel needn't be so
+> > > > fixated upon the historical name.  ext4/f2fs/overlay afaict are just
+> > > > going along for the ride.
+> > > >
+> > > > IOWs I like brauner's struct file_attr and struct file_kattr
+> > > > suggestions.
+> > > >
+> > > > > That, and also, avoid the churn of s/fileattr/file_kattr/
+> > > > > If you want to do this renaming, please do it in the same PR
+> > > > > because I don't like the idea of having both file_attr and fileattr
+> > > > > in the tree for an unknown period.
+> > > >
+> > > > But yeah, that ought to be a treewide change done at the same time.
+> > >
+> > > Why do you all hate me? ;)
+> > > See the appended patch.
 > > 
-> > In the buffer write path, iomap_set_range_uptodate() is called every
-> > time iomap_end_write() is called. But if folio_test_uptodate() holds, we
-> > know that all blocks in this folio are already in the uptodate state, so
-> > there is no need to go deep into the critical section of state_lock to
-> > execute bitmap_set().
-> > 
-> > Although state_lock may not have significant lock contention due to
-> > folio lock, this patch at least reduces the number of instructions.
+> > This looks obviously fine, but I wonder how much conflicts that would
+> > cause in linux-next?
+> > It may just be small enough to get by.
 > 
-> That means the uptodate bitmap is stale in that case.  That would
-> only matter if we could clear the folio uptodate bit and still
-> expect the page content to survive.  Which sounds dubious and I could
-> not find anything relevant grepping the tree, but I'm adding the
-> linux-mm list just in case.
+> With such changes that's always a possibility but really I'll just
+> provide a branch with the resolutions for Linus to pull.
 
-Once a folio is uptodate, there is no route back to !uptodate without
-going through the removal of the folio from the page cache.  The read()
-path relies on this for example; once it has a refcount on the folio,
-and has checked the uptodate bit, it will copy the contents to userspace.
+<nod> That looks good to me. :)
+
+At worst you can always ask Linus "Hey I want to do a treewide name
+change of $X to $Y, can I stuff that in at the very end of the merge
+window?" and IME he'll let you do that.  Even better if someone keeps
+him supplied with fresh change patches.
+
+--D
