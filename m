@@ -1,137 +1,109 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD4E1328AE4;
-	Fri,  4 Jul 2025 08:40:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1C1A22DF9E;
+	Fri,  4 Jul 2025 08:52:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751618400; cv=none; b=DO+4XH/igW6zNQMj0MVkKegBUBQ5eHX2kwSpIIBpWYNCR67Na0tpeQqzLdMOyHyp2/Cr3r6v7DDQ+HotVFFZE3hpUxgCrku98eRVEvUZK+O28N7aIXDISxzOUUmPW177vHnnVrY0+lL5+Vwf01+U0pLv9VsHbtzdttH9xpMVTFE=
+	t=1751619173; cv=none; b=m50hDBnw89I+iz1WodgbTssBITEujTenAc9pNQUj4ilpNM+3XHewduVjuwoZ1aBTjcz683PwwXp9m1W+BzjK3/CmpwErwdPQC51Q7XTuKch7unOx3QZC8Ff4y0ENctQ+A/Z84+LD51l+vpCwiw/Xt7HQhWOXFyKmbEnl2MEnqvg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751618400; c=relaxed/simple;
-	bh=FHas3OLzhcWmJla/w9SVAWfRsC/N5brO1Le2ihalCNg=;
+	s=arc-20240116; t=1751619173; c=relaxed/simple;
+	bh=DW6ZZg7OqmfmNQY4yfB0bhS9zFryDvFWDls1s/E6PpU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TN2UI3xyCfwRG2Zl3GjjqEP0gUD97Lrde26YuFL2ocVGOzIcKvc4MrsbLy7pOFTOE+SYnfxnbQwcJ/byijjLYkVgyMtM4bvdb/ZaPjiHX6cF53fbz1/XHoGaNUhohKRw6JpXr+sywUrNN/+CZ2gCEdKBEZBuydk+4csAmU3hG+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VLpy79R3; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Mc8xLOuB7FGjscaBLzJScZlY9pCi3DqYjN1PvsedG+8OI/Dca1ht4SAf/AyOVk9qKtUyo3th5UrlQ0bkbekF0629aQ6uHgQRFjVWLCMtwelaDsFbJfZtFz9gBp+/TxPG/G79t560sS9an+1eNayXqrn4IBMoA4/PzFFcL4y6+fc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P/d0hYb/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VLpy79R3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11EA7C4CEF0;
-	Fri,  4 Jul 2025 08:39:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P/d0hYb/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61A4DC4CEE3;
+	Fri,  4 Jul 2025 08:52:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751618400;
-	bh=FHas3OLzhcWmJla/w9SVAWfRsC/N5brO1Le2ihalCNg=;
+	s=k20201202; t=1751619173;
+	bh=DW6ZZg7OqmfmNQY4yfB0bhS9zFryDvFWDls1s/E6PpU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VLpy79R3WoowQ0dde0FpFT1YyHsXsurqva+SkoBcww5fjPVnQMcwqe87L2wtjyLYi
-	 kRKqWJIQ81p4a1f0xNgpRmdmn+OPlPkQk/4+3lz4NrJRi0wbmnDt4pjvgXFACOvZxO
-	 qU9E5LKN5/hna1bw+wpVR2YB99mwlJCTB2beguJ1mHivp02SKA4At/U4wBW5k3iT/Q
-	 u3HMCjJxxvd2r71zcnuKhwU/Z06IvtD7wFREJ9CXS/1miJCbu6oYZeK5DrvOvTrTgE
-	 IHzvXhhXfrV+PFyTdnHzAjREeo0FCEO0Q5nKDCaILrTwFadudwtNVY/apMjWmKyCd5
-	 QDeadiD91wJeA==
-Date: Fri, 4 Jul 2025 10:39:53 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de, 
-	tytso@mit.edu, djwong@kernel.org, john.g.garry@oracle.com, bmarzins@redhat.com, 
-	chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com, martin.petersen@oracle.com, 
-	yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com, 
-	yangerkun@huawei.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-block@vger.kernel.org, dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org, 
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2 0/9] fallocate: introduce FALLOC_FL_WRITE_ZEROES flag
-Message-ID: <20250704-gemein-addieren-62ad4d210c70@brauner>
-References: <20250619111806.3546162-1-yi.zhang@huaweicloud.com>
- <20250623-woanders-allabendlich-f87ae2d9c704@brauner>
- <99010bfd-c968-49c7-b62b-c72b38722c1b@huaweicloud.com>
+	b=P/d0hYb/Fs3sF9qfGqEbKMwGxOobdAyP8B5XQ9OPbNP58vYJuonHTl72lXpspxIRJ
+	 cQb8GaO7vUvDY8dYI0Dql+UBXrDzIGbHGf5m/PVKTAc7zSu6OW9cfoBbqyJ+qQfvNi
+	 +N11mLRlJBQrGWCwDgvTb4yNPUU0rS6W9hKBAwq3GZAlYaCPKymf9HtqxJ+gpANOPH
+	 HAeXNpoV7R2P9ouFzG6KXkBI0OWdLlui3PcG7eB5+3uk18rWG7mwC8Q5RhUuQ40p0A
+	 KSJUCi/BqdmG6wKZq6t7uei6N01xLx4+arywBe+AtcZhiHCceRl+Ww0sv6cXOvXRje
+	 xw1CD4wwYCGiw==
+Date: Fri, 4 Jul 2025 10:52:48 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Pranav Tyagi <pranav.tyagi03@gmail.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	djwong@kernel.org, skhan@linuxfoundation.org, linux-kernel-mentees@lists.linux.dev, 
+	kernel test robot <oliver.sang@intel.com>
+Subject: Re: [PATCH] fs/xfs: replace strncpy with memtostr_pad()
+Message-ID: <y5d46toqsrrbqfxfioo5yqo532tzqh3f2arsidbe4gq4w3jdqp@rktbxszwtsbh>
+References: <nrq9MPwFBIHZRQzC6iAdiUz7uvBdbqKNxdfM8Jus8lTDZCwtPkFMjtJ1V5mkcpX0YX34TYNOddSEOgsXngLtHQ==@protonmail.internalid>
+ <20250704072604.13605-1-pranav.tyagi03@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <99010bfd-c968-49c7-b62b-c72b38722c1b@huaweicloud.com>
+In-Reply-To: <20250704072604.13605-1-pranav.tyagi03@gmail.com>
 
-On Thu, Jul 03, 2025 at 11:35:41AM +0800, Zhang Yi wrote:
-> On 2025/6/23 18:46, Christian Brauner wrote:
-> > On Thu, 19 Jun 2025 19:17:57 +0800, Zhang Yi wrote:
-> >> From: Zhang Yi <yi.zhang@huawei.com>
-> >>
-> >> Changes since v1:
-> >>  - Rebase codes on 6.16-rc2.
-> >>  - Use max_{hw|user}_wzeroes_unmap_sectors queue limits instead of
-> >>    BLK_FEAT_WRITE_ZEROES_UNMAP feature to represent the status of the
-> >>    unmap write zeroes operation as Christoph and Darrick suggested. This
-> >>    redoes the first 5 patches, so remove all the reviewed-by tags,
-> >>    please review them again.
-> >>  - Simplify the description of FALLOC_FL_WRITE_ZEROES in patch 06 as
-> >>    Darrick suggested.
-> >>  - Revise the check order of FALLOC_FL_WRITE_ZEROES in patch 08 as
-> >>    Christoph suggested.
-> >> Changes since RFC v4:
-> >>  - Rebase codes on 6.16-rc1.
-> >>  - Add a new queue_limit flag, and change the write_zeroes_unmap sysfs
-> >>    interface to RW mode. User can disable the unmap write zeroes
-> >>    operation by writing '0' to it when the operation is slow.
-> >>  - Modify the documentation of write_zeroes_unmap sysfs interface as
-> >>    Martin suggested.
-> >>  - Remove the statx interface.
-> >>  - Make the bdev and ext4 don't allow to submit FALLOC_FL_WRITE_ZEROES
-> >>    if the block device does not enable the unmap write zeroes operation,
-> >>    it should return -EOPNOTSUPP.
-> >> Changes sicne RFC v3:
-> >>  - Rebase codes on 6.15-rc2.
-> >>  - Add a note in patch 1 to indicate that the unmap write zeros command
-> >>    is not always guaranteed as Christoph suggested.
-> >>  - Rename bdev_unmap_write_zeroes() helper and move it to patch 1 as
-> >>    Christoph suggested.
-> >>  - Introduce a new statx attribute flag STATX_ATTR_WRITE_ZEROES_UNMAP as
-> >>    Christoph and Christian suggested.
-> >>  - Exchange the order of the two patches that modified
-> >>    blkdev_fallocate() as Christoph suggested.
-> >> Changes since RFC v2:
-> >>  - Rebase codes on next-20250314.
-> >>  - Add support for nvme multipath.
-> >>  - Add support for NVMeT with block device backing.
-> >>  - Clear FALLOC_FL_WRITE_ZEROES if dm clear
-> >>    limits->max_write_zeroes_sectors.
-> >>  - Complement the counterpart userspace tools(util-linux and xfs_io)
-> >>    and tests(blktests and xfstests), please see below for details.
-> >> Changes since RFC v1:
-> >>  - Switch to add a new write zeroes operation, FALLOC_FL_WRITE_ZEROES,
-> >>    in fallocate, instead of just adding a supported flag to
-> >>    FALLOC_FL_ZERO_RANGE.
-> >>  - Introduce a new flag BLK_FEAT_WRITE_ZEROES_UNMAP to the block
-> >>    device's queue limit features, and implement it on SCSI sd driver,
-> >>    NVMe SSD driver and dm driver.
-> >>  - Implement FALLOC_FL_WRITE_ZEROES on both the ext4 filesystem and
-> >>    block device (bdev).
-> >>
-> >> [...]
-> > 
-> > If needed, the branch can be declared stable and thus be used as base
-> > for other work.
-> > 
-> > ---
-> > 
-> > Applied to the vfs-6.17.fallocate branch of the vfs/vfs.git tree.
-> > Patches in the vfs-6.17.fallocate branch should appear in linux-next soon.
-> > 
-> > Please report any outstanding bugs that were missed during review in a
-> > new review to the original patch series allowing us to drop it.
-> > 
-> > It's encouraged to provide Acked-bys and Reviewed-bys even though the
-> > patch has now been applied. If possible patch trailers will be updated.
-> > 
-> > Note that commit hashes shown below are subject to change due to rebase,
-> > trailer updates or similar. If in doubt, please check the listed branch.
-> > 
-> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-> > branch: vfs-6.17.fallocate
+On Fri, Jul 04, 2025 at 12:56:04PM +0530, Pranav Tyagi wrote:
+> Replace the deprecated strncpy() with memtostr_pad(). This also avoids
+> the need for separate zeroing using memset(). Mark sb_fname buffer with
+> __nonstring as its size is XFSLABEL_MAX and so no terminating NULL for
+> sb_fname.
 > 
-> Hi Christian,
-> 
-> I noticed that this patch series doesn't appear to be merged into this
-> branch. Just wondering if it might have been missed?
+> Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
+> Reported-by: kernel test robot <oliver.sang@intel.com>
+> Closes: https://lore.kernel.org/oe-lkp/202506300953.8b18c4e0-lkp@intel.com
 
-Dammit, my script missed to push the branch. Fixed now. Thanks for
-checking!
+Hi Pranav.
+
+Please Read the kernel-test-robot email:
+
+"
+If you fix the issue in a separate patch/commit (i.e. not just a new
+version of the same patch/commit), kindly add following tags...
+"
+
+Those tags shouldn't be added here as you are not fixing anything, your
+previous patch have not been committed.
+
+Cheers,
+Carlos
+
+> ---
+>  fs/xfs/libxfs/xfs_format.h | 2 +-
+>  fs/xfs/xfs_ioctl.c         | 3 +--
+>  2 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 9566a7623365..779dac59b1f3 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -112,7 +112,7 @@ typedef struct xfs_sb {
+>  	uint16_t	sb_sectsize;	/* volume sector size, bytes */
+>  	uint16_t	sb_inodesize;	/* inode size, bytes */
+>  	uint16_t	sb_inopblock;	/* inodes per block */
+> -	char		sb_fname[XFSLABEL_MAX]; /* file system name */
+> +	char		sb_fname[XFSLABEL_MAX] __nonstring; /* file system name */
+>  	uint8_t		sb_blocklog;	/* log2 of sb_blocksize */
+>  	uint8_t		sb_sectlog;	/* log2 of sb_sectsize */
+>  	uint8_t		sb_inodelog;	/* log2 of sb_inodesize */
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index d250f7f74e3b..c3e8c5c1084f 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -990,9 +990,8 @@ xfs_ioc_getlabel(
+>  	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
+> 
+>  	/* 1 larger than sb_fname, so this ensures a trailing NUL char */
+> -	memset(label, 0, sizeof(label));
+>  	spin_lock(&mp->m_sb_lock);
+> -	strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
+> +	memtostr_pad(label, sbp->sb_fname);
+>  	spin_unlock(&mp->m_sb_lock);
+> 
+>  	if (copy_to_user(user_label, label, sizeof(label)))
+> --
+> 2.49.0
+> 
