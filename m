@@ -1,73 +1,81 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E1B72EE96F;
-	Fri,  4 Jul 2025 10:13:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE82ACA6F;
+	Mon,  7 Jul 2025 04:08:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751623981; cv=none; b=EQRjV4BhkGxKU58z6EJS5x3vVEuB5WeukXcREfS44gyntsLgqxwmeNhUkHmdJOxVa0p0lW11zrKFoD897C4zHsCnKC6XNUrUucKGpXXRHWW+pmQLWEK1GxL5H95W20IYt9mgbW493T3NTmYhMg8VjK3inCyyCIcrWrY5FCtJRUM=
+	t=1751861301; cv=none; b=IHz2ce81WiODiWndCA4BBwR7OYR5AnpzH1M+SK/5DHJ8wQFJ7rcC6RoCTJKMSQh3tsICBd9A8BOH+2LO6obNUIe37MPFTIHvVMSe1c7/r6Kfl2Y1f2B3RGlbqrJYAtvH4j3g9jNA/VBhQ7EyxUWs+kLMJA8I7Tx2jnxLd15hdXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751623981; c=relaxed/simple;
-	bh=strF/qF+HXTlakY4UdqZE40XmR25ZXBwyUj3EmP1zvY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bJh2Wm+bRwoDXS94B+wkDSvI2YSCjxlWUJ0JH52Tqs+SwJ3mL8PhwiEFrHwsCLTC9i7T2FA/P7Xv6V13bfX8VCGjCVd1EHwef49YD0XhGxLlozIrZ/LcOPjj8AOHiu9ncBOvTkMfL8fUXC5L/oumW8Pi0Kx5REGDbF9SzThIkvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=X8ZDsIPj; arc=none smtp.client-ip=209.85.214.173
+	s=arc-20240116; t=1751861301; c=relaxed/simple;
+	bh=7kljyLasa4RCWBu+oXf+zibRVKJHm1v8BYaX7xW6azg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=lhDGk5PJQbFRBUck2BcX16OjLQwutufmyE24C+VgPBOsYTGolm8KSJ+Rgrc2UEQEcjnLkQE/D5EfubuG/nUKYpwYRtESo1mAFGM9eERRag0E0vvANXYpu9yDWC90Z6/0+kvO6Ra9wNVQVzSBibwY6URwIrtV7xPum4BTnVWXJYY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=caFnALio; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X8ZDsIPj"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-234f17910d8so7078555ad.3;
-        Fri, 04 Jul 2025 03:13:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="caFnALio"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-747c2cc3419so2104056b3a.2;
+        Sun, 06 Jul 2025 21:08:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751623979; x=1752228779; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=l1y1NR7p8TbbSgnXEpVgZrK6g8G4GQPFzDyyvDynoD8=;
-        b=X8ZDsIPjvHU+pC8t7xztDHxRdH1AYHgBcalpMxNfRKRgTMTrHDptHpEnT3LHk9LuVD
-         1V8jhSkWWcqA8iQUby5WfVmbzcdDmkNFHUK37LTIY98wtCWZR4RSVp3cMOZHp2JVtRUr
-         +/EnoSFrDiZvtmdixbskKrG6Wc4cgiucEE9duYLNtcr9+ibVMZ8Zgw7f/uqwlHUWAbuw
-         s0/AcUoAtl4EwjkObY5cikMV0XRxu6UktAnZrxfazR292vy12GahRDf6qitTqwDCIKEa
-         fI6XJXU0OgGE12XrF3eHWRsPxbMElZsjSrgUO72WpWaDKVN/rNIkdFmAL9BAb5eWghma
-         sThw==
+        d=gmail.com; s=20230601; t=1751861299; x=1752466099; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=myoakGvr/PnaCBbS7GuiApsE0/VILHenuI5anvIitlo=;
+        b=caFnALioJpnnseww5z7kMJag6/9cpLry/RduR36Inoj4Zgs3tEO3sIp4rw4QnlXVxp
+         nnJ8nPlhIeYdVynuzr1cv1FTYAkLMClWB0bdHWo4BuXl4TV5jx5gxZ6h3b7hZCQ2GMJy
+         NRZArXklIQjfpBMtJx3r3d8HcPG7PkBxNoj5LI7kni7sWu3Z8mPZKMQYoyG/yiR6OoTe
+         ZhT02uRpBMN/u9XlRWB/rmiwe9TgIxlG4CsGGJBeFNlUj6c6kCMyVV/8OK5GjQvjZPD1
+         r7mS4fQ6yrfnA7xiHKQsO3OZaRPkYNxRP4aMeBqXwBermpB/UjcK01MccbBz+zKV4nMz
+         LPLQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751623979; x=1752228779;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=l1y1NR7p8TbbSgnXEpVgZrK6g8G4GQPFzDyyvDynoD8=;
-        b=gx+gEDR2XNTuIqxEcRo7BnMkUQoTdJS1UIExWVcLNV+D4h+Cr8LTVfvlMrqM2EBnqW
-         MDop32B1RjkOg4gOGYpEqY7ZFfptIfDSpDaJ+M72059GeVBJr0Y5DCKRpLB7FFgqRqxE
-         HYpyMYnHOI+xyRHS0x7Xt6IBSWzKz9iCZ64qJprV3tiezJEo3YG3zGl+NJdLd7NZx/jz
-         /KE4kvIgXFL//IvZLFAl6DozpbFLPsCFxwqcMvnPq79h3S6voO6rilxq5KQAyEaqR8X3
-         h0gq9q8cHSvATn3DPWkVWcCMAwLbIwBOhUwyhwnOQHSs00gwVjX/bg0tczMo3HNUH4iI
-         /Fxg==
-X-Forwarded-Encrypted: i=1; AJvYcCXLsLsfskMKpDWv7B5EhTrd1YwRvOixBAxswTaeQho1JdIt1RS3H/rzSBJRZLSaOG5cM4K2+wNkp1Uvw/g=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzvi0FgktQjnCqBE9SOC9OkJiYye4aWsTbZ0cx5X8CWMW6mgvXi
-	TbdA7gQAQpcKISaiOoxHsoaZA4kr4x7q8LN11gCki6CbDrBqu90SkE+JMzpa9pCQ4R0=
-X-Gm-Gg: ASbGncvl6Fho9JbEUDRrhmpaYqJNxq+BJSI/awgammknTEDYbAHkVmWhJWTPbf9suIz
-	DAqqM3SGuh41gGO3r85Mn7Mi7b2hZZyBNmTj/Mq+oNSoE2V2ljzAk9grc+5guoZ6KgM8aCoNbdS
-	i17wezV6POst06IfRWVqie/TxmSIo+caJi6FxHQdp4ZN0282F5wMGMarMB9bolxw0c5n5fI66y/
-	cem18Evvw7zwiZ/UgOyu38OfLZGQBRHqrlqfXKp0t8Rno1UKodOxmuWh+/3Sin2K/vKe9AONEFv
-	kip5pigzXRAiyid392d7j+ofJoBgmuQPEVWoIP3MmJbweJzz5a+pr5y3+YH3YlcUWrdd8qVlc15
-	+GPx3Fw==
-X-Google-Smtp-Source: AGHT+IEhlz75hcIMScbZOGrIIhpGBtexZtJVFZxnnJZmRv2uDCi7FVBVuU1Wr0ccc3OHMr11OZfp6A==
-X-Received: by 2002:a17:90b:3d43:b0:311:eb85:96f0 with SMTP id 98e67ed59e1d1-31aac53b7ccmr3344373a91.29.1751623979053;
-        Fri, 04 Jul 2025 03:12:59 -0700 (PDT)
-Received: from manjaro.domain.name ([2401:4900:1c30:6f3f:3d1:c4c0:3855:2a18])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-31a9cd0cfd9sm4465076a91.39.2025.07.04.03.12.56
+        d=1e100.net; s=20230601; t=1751861299; x=1752466099;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=myoakGvr/PnaCBbS7GuiApsE0/VILHenuI5anvIitlo=;
+        b=a0k63iTLtMDLszOTGEcTCJze1zm/lX2AgHE+WHoBlKleuOuG93f/l+DDKuDJmSye/c
+         zFJygeQqVJpfOrGv041XRUD2AwSzFVN4vGSuaXeIRtO+rgIMrLh1nnZV920KU3oHKQQW
+         YgQN4L6ZhW1FQGz9UdshITieaQZEWctmY1zzHABqu4Vpz3HEfl9eDtGL2RRnnV9s7Cng
+         Iv4E+U7tYf5+ZnP9TciipiffTiPPH02TuJ3seUeT5/84xloSa3MiNu6lilM9gGvbvTTG
+         L+5JDFX8L23Dm2pl4FAj6cCXkCdTvkWW2Nod9l6FzRqmgi7WJFWaMC86+wa1w1nwu518
+         wfXQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV+eLzsjOIXYAjO+AC5KtvXikIQBH1djjOZ6i2TVHQVOXXGX7uqCmSSa2ZXfj8FWxGZEGdSDIaKv8e/@vger.kernel.org, AJvYcCVW1o7Q3+sjqt3pZeGddhBuJOzGQtG3pzgZGKf8MJc+iHdH6dDnlaFU19XL6DgBnePzvBQ1fMPxGxRQg5YZ@vger.kernel.org, AJvYcCWNqG0fHyM8QO9FWZErxMXZ1EbwwyccxGfOz5yAdYYwtSVVBiR2ggiioxOmMsaRVNDGFWFqxUDJRKZHEjcp@vger.kernel.org
+X-Gm-Message-State: AOJu0YxKR0XptFrLnneAiIAmizg0A32PJRsdC0dia4YwujQ+tMRXTM6R
+	+L5R7b2+atEXFf+M1zcUM2zhiijmAEgUEAfxhfqqAlCu7vMS5iOQNu9C
+X-Gm-Gg: ASbGncumL38DSO69abFe4opx2YZDAIiwfSTeVWGMMi2UngrYw0Wtp4HD66ehvm9CoBR
+	7upqPV5e25TqxZBLlo8uLj9vRpJsxULFwZ+ELhiz0EwaaqY/6N/RXx3zwsKMIXy9IFl3gci/4/K
+	Ct8gqmr2S2NUFyrxuzaaikBOZDPx/HXOnpziU61kM3e0Jrb7u7YGDK+kTCahnqB2hZIRSZGPXrb
+	I1SqCCAfImWIxC4vRSkLoTqe/G5LOmRHK6j9fXA3b+ySpeIQtn7t+XYCTW+5aItfLOaKHxmHsqu
+	85ppBzbxMKzNqtSahR3NExJsqZZnnbUhEfX/M2pPsKNMGi4VKDOet0SxABEtekqcyzca+nqEVPY
+	=
+X-Google-Smtp-Source: AGHT+IHjcKlgZP5rEIcH8q8oD+vqdyt/ATNmp47t3M4RZoOFNboIAWwmALMF+gViP+z0CkL3f+aLbw==
+X-Received: by 2002:a05:6a20:7f99:b0:21c:fa68:c33a with SMTP id adf61e73a8af0-227213b11c9mr11528432637.23.1751861298943;
+        Sun, 06 Jul 2025 21:08:18 -0700 (PDT)
+Received: from VM-16-24-fedora.. ([43.153.32.141])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74ce4180970sm7892801b3a.93.2025.07.06.21.08.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Jul 2025 03:12:58 -0700 (PDT)
-From: Pranav Tyagi <pranav.tyagi03@gmail.com>
-To: linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: cem@kernel.org,
+        Sun, 06 Jul 2025 21:08:18 -0700 (PDT)
+From: Jinliang Zheng <alexjlzheng@gmail.com>
+X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
+To: willy@infradead.org
+Cc: alexjlzheng@gmail.com,
+	alexjlzheng@tencent.com,
+	brauner@kernel.org,
 	djwong@kernel.org,
-	skhan@linuxfoundation.org,
-	linux-kernel-mentees@lists.linux.dev,
-	Pranav Tyagi <pranav.tyagi03@gmail.com>
-Subject: [PATCH v2] fs/xfs: replace strncpy with memtostr_pad()
-Date: Fri,  4 Jul 2025 15:42:50 +0530
-Message-ID: <20250704101250.24629-1-pranav.tyagi03@gmail.com>
+	hch@infradead.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] iomap: avoid unnecessary ifs_set_range_uptodate() with locks
+Date: Mon,  7 Jul 2025 12:08:16 +0800
+Message-ID: <20250707040816.3062776-1-alexjlzheng@tencent.com>
 X-Mailer: git-send-email 2.49.0
+In-Reply-To: <aGa_HFAupmxO_iri@casper.infradead.org>
+References: <aGa_HFAupmxO_iri@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,45 +84,31 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Replace the deprecated strncpy() with memtostr_pad(). This also avoids
-the need for separate zeroing using memset(). Mark sb_fname buffer with
-__nonstring as its size is XFSLABEL_MAX and so no terminating NULL for
-sb_fname.
+On Thu, 3 Jul 2025 18:34:20 +0100, Matthew Wilcox wrote:
+> On Thu, Jul 03, 2025 at 06:52:44AM -0700, Christoph Hellwig wrote:
+> > On Tue, Jul 01, 2025 at 10:48:47PM +0800, alexjlzheng@gmail.com wrote:
+> > > From: Jinliang Zheng <alexjlzheng@tencent.com>
+> > > 
+> > > In the buffer write path, iomap_set_range_uptodate() is called every
+> > > time iomap_end_write() is called. But if folio_test_uptodate() holds, we
+> > > know that all blocks in this folio are already in the uptodate state, so
+> > > there is no need to go deep into the critical section of state_lock to
+> > > execute bitmap_set().
+> > > 
+> > > Although state_lock may not have significant lock contention due to
+> > > folio lock, this patch at least reduces the number of instructions.
+> > 
+> > That means the uptodate bitmap is stale in that case.  That would
+> > only matter if we could clear the folio uptodate bit and still
+> > expect the page content to survive.  Which sounds dubious and I could
+> > not find anything relevant grepping the tree, but I'm adding the
+> > linux-mm list just in case.
+> 
+> Once a folio is uptodate, there is no route back to !uptodate without
+> going through the removal of the folio from the page cache.  The read()
+> path relies on this for example; once it has a refcount on the folio,
+> and has checked the uptodate bit, it will copy the contents to userspace.
 
-Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
----
- fs/xfs/libxfs/xfs_format.h | 2 +-
- fs/xfs/xfs_ioctl.c         | 3 +--
- 2 files changed, 2 insertions(+), 3 deletions(-)
+I agree, and this aligns with my perspective. Thank you for confirming this.
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 9566a7623365..779dac59b1f3 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -112,7 +112,7 @@ typedef struct xfs_sb {
- 	uint16_t	sb_sectsize;	/* volume sector size, bytes */
- 	uint16_t	sb_inodesize;	/* inode size, bytes */
- 	uint16_t	sb_inopblock;	/* inodes per block */
--	char		sb_fname[XFSLABEL_MAX]; /* file system name */
-+	char		sb_fname[XFSLABEL_MAX] __nonstring; /* file system name */
- 	uint8_t		sb_blocklog;	/* log2 of sb_blocksize */
- 	uint8_t		sb_sectlog;	/* log2 of sb_sectsize */
- 	uint8_t		sb_inodelog;	/* log2 of sb_inodesize */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index d250f7f74e3b..c3e8c5c1084f 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -990,9 +990,8 @@ xfs_ioc_getlabel(
- 	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
- 
- 	/* 1 larger than sb_fname, so this ensures a trailing NUL char */
--	memset(label, 0, sizeof(label));
- 	spin_lock(&mp->m_sb_lock);
--	strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
-+	memtostr_pad(label, sbp->sb_fname);
- 	spin_unlock(&mp->m_sb_lock);
- 
- 	if (copy_to_user(user_label, label, sizeof(label)))
--- 
-2.49.0
-
+Jinliang Zheng. :)
