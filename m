@@ -1,149 +1,114 @@
-Received: from mail-qk1-f178.google.com (mail-qk1-f178.google.com [209.85.222.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.hostedemail.com (smtprelay0016.hostedemail.com [216.40.44.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D40431A8F84;
-	Tue,  8 Jul 2025 21:31:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DA19AD21;
+	Tue,  8 Jul 2025 22:09:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752010265; cv=none; b=K4lTxru4WtW98bAmiZG7uyEq55YQBkDEyG4q+3GKjLW6FGzzMbYmucLwtvUDsIX1g2WaWJ0CiBA5O4NWha02ONBOJqaTRZsazPHT3B0oAlqi1aX8j3xMlbepmYzjHHH4juUhsRH53znCM2RNurA+iMCYT5hyoTIKSLSAPrmwipU=
+	t=1752012579; cv=none; b=oHbofOykhfUDyUiDkheSPKBEcMn8JclfYFuRtMq59H4nt94Lrl0BdFf/oV6q56DezAm+MSlJShp0QOfdYz5RTQvYpH3qsuPejyEtif1YywPnERa2ce+VQf7HsGiZJQ3SeUljd2hPSbDd1srzoYr6oITb0fSoV1ryHIYS5PmzsDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752010265; c=relaxed/simple;
-	bh=pHbIZYR/cPjhqgkSQJwswTCukX1J3YAVEComlN6LLFM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=as0JiPskw7RXb+Vqy/L0KhPCFIjmTesDWwp6D3IRMtSwEbnNV86UmBi2X2sPRb0+W9cm6dku/fa9NWAnLO8gYtp4Q4TroTOkdudB8HUBbfro77JmG5rgyO3f6o2goJQ5EoLPaQ5cpf1UgTpknCoTQSMmsVCRB8IBLadO5+IHP14=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TGiZlfYw; arc=none smtp.client-ip=209.85.222.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TGiZlfYw"
-Received: by mail-qk1-f178.google.com with SMTP id af79cd13be357-7d45f5fde50so456763685a.2;
-        Tue, 08 Jul 2025 14:31:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1752010263; x=1752615063; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ZUU5TRDaN6ALyyrygW/6RzwmiAYhH4pOYiMcpic0/PY=;
-        b=TGiZlfYwgMTQ1JipyMsF2y5AHWGNvuFoP0/4nyoGKkPQa5deV9SioM4YgT3oiktl/y
-         cewroEIdxfjHsoaCGdAzTI8SnqwIc8UG+Ai6wWfDYaPt/JqlhAx3JaWkbw8eS792V5dq
-         x5N1cOz8yN5qC9+Od3yaapW/9y7CT05oni1nM7q94Nekjmog5QYUHdej18wt7CwcFGbf
-         X6Oyh/JoamqltAa1DAEpUcFEVS1dcteQkCg8Z6h3jeW3PMPT7YMjNgsCo2b68CMFWaS6
-         8ZhsGZ/skLWRf5XgKXqFxtCI9c1nJodCbd++Yg1PLJTJAaUnhd/fW4Z+WjwdKZhCKcLM
-         iZVQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752010263; x=1752615063;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ZUU5TRDaN6ALyyrygW/6RzwmiAYhH4pOYiMcpic0/PY=;
-        b=H2tx0bvkB/9pCLEzpAx/TfKEz4B+AM/XhE4AazSSpIeHwmGIaYYlaP228pJ4cn9nUM
-         xtd8vrniavadx8n3zIiy6LIbbJLeg/RHZeOSMl/+14KiQbWZpn8hOYMEbYviGHZklFIk
-         /0L/RuzzT/tXviHCSQTIuGM5sPoXwotMVVQ9w1QJL5mLs7O9Ls2T4rUNm8p7HhI6CQAB
-         MRhTLN2roWc7ruqLjUtGZigcBS4c1jPWaiR44GHbGlMmTN3boo/Pmjh610ewsLHVu5i5
-         EMrnLplHei/gc8fMMZMNrGfDeAZPD2REvbiYaTyvdrcG3q8KU2FGl447YjFtr4teeMUi
-         z+bA==
-X-Forwarded-Encrypted: i=1; AJvYcCU4aQGEPN7SH2DdhNkpDT7j9QoHriZ7iD++LjZktj9w0bGSg/KL7+llG5lINTmvu+HqgbxVClFrYhoh8g==@vger.kernel.org, AJvYcCVIUhB3HTfw/If4gK32OrfETT7nFtfZlt2LZTbyaYq9cFKvLqV52iyZtkkZApqgqjIRiMKSKLqbN8cb@vger.kernel.org, AJvYcCWhQGNYv29gOtJhsPFSLx1Nl+16EcFsMILfyKaaUjVMne7qzAsv1wz2qeVCkvogho4+IuSupTai6ZcwY/EXaA==@vger.kernel.org, AJvYcCX4B4565C3+PNNMDqNuBjSJbsSa/PfW87Y66hRn3MCahh6D42M9i8wsPY+hkRLg+3Xy8c1+ROv5wmeL@vger.kernel.org
-X-Gm-Message-State: AOJu0YyrhwXfoqKCdMITdzG9tBYKxXcLa+vC7fY1UC0xhm2VewL8PDim
-	f476EvLT2aDbTBycBzmP+7nCXbnSG9mDjtqY153i3qVXC7ZD+YXV1d454T1wluu4TMZFy679z5P
-	z6jk3E60QmZ1fZuiWSkEdIWMOhZnQCzo=
-X-Gm-Gg: ASbGncupF/6VGnoJ4Q3B2QZIxtqazMuTpFjR0kD/srjrUvu3UlhiwCh8iEj0VYaY8F6
-	1FbD2Bg3/GezPYriINgpg8IGWTWbRCT/upudOpCgCy4rJUX3cKnplp/DYMVDZHP6phN95NUpJCy
-	Sa0FbssTGrszjF486Qt2BkDKgbIozNorohN6KhLaOITMU=
-X-Google-Smtp-Source: AGHT+IH0d/vk43vmyXPKIpP94pCK3w1qCzYdnwJNVDW8qW5d8MHocQso6Lt/gQSIfRkmy6R/U41ZJn66Xk4Bv0SJdK0=
-X-Received: by 2002:a05:620a:2544:b0:7d5:d0a1:c907 with SMTP id
- af79cd13be357-7db7cfa32f5mr45846185a.30.1752010262414; Tue, 08 Jul 2025
- 14:31:02 -0700 (PDT)
+	s=arc-20240116; t=1752012579; c=relaxed/simple;
+	bh=Zrcf/4rib4V7MmaFntVQOz4YMBCbvsWPfjhkWyYeAB8=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=eWrXlVQnZJKUOySoW4W6V3oPKQhPPdIyU0QgBY2TRp3ag4b58btqNPcyFS3JRkISevp2FlOhdxugz2s6zot7Kbhnrd+pI1sth/pqM0bWtbJvVjvYeZEOSeIySv6MIE3OV4gt2f9ADlckGQ20o1lYAHzFElaCwl6DHId4vmltQEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
+Received: from omf07.hostedemail.com (a10.router.float.18 [10.200.18.1])
+	by unirelay01.hostedemail.com (Postfix) with ESMTP id 3DA511D853C;
+	Tue,  8 Jul 2025 22:09:33 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf07.hostedemail.com (Postfix) with ESMTPA id 29B7A20024;
+	Tue,  8 Jul 2025 22:09:31 +0000 (UTC)
+Date: Tue, 8 Jul 2025 18:09:32 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Cc: Masami Hiramatsu <mhiramat@kernel.org>, Mark Rutland
+ <mark.rutland@arm.com>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Carlos  Maiolino
+ <cem@kernel.org>, Christoph Hellwig <hch@lst.de>, "Darrick J. Wong"
+ <djwong@kernel.org>
+Subject: Re: [PATCH v2 00/13] xfs: tracing: remove unused event
+ xfs_reflink_cow_found
+Message-ID: <20250708180932.1ffdca63@gandalf.local.home>
+In-Reply-To: <20250616175146.813055227@goodmis.org>
+References: <20250616175146.813055227@goodmis.org>
+X-Mailer: Claws Mail 3.20.0git84 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250708135132.3347932-1-hch@lst.de>
-In-Reply-To: <20250708135132.3347932-1-hch@lst.de>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Tue, 8 Jul 2025 14:30:51 -0700
-X-Gm-Features: Ac12FXwa5YtLizBFDxdywhwayE5_QcC1_suEMiJs_748sHEtc47znVbUJrRxab8
-Message-ID: <CAJnrk1byAutqR6A1fyqKHvoAisK=MfrfD1p778dPqZDBPsp+Wg@mail.gmail.com>
-Subject: Re: refactor the iomap writeback code v4
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-block@vger.kernel.org, gfs2@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Stat-Signature: pm7k4g8qysdsrm1wtfihrks9f6pniye1
+X-Rspamd-Server: rspamout05
+X-Rspamd-Queue-Id: 29B7A20024
+X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
+X-Session-ID: U2FsdGVkX18zyU2k3dO5Lc1tmm0xtU6mAOSFP+U3xjI=
+X-HE-Tag: 1752012571-580348
+X-HE-Meta: U2FsdGVkX1+gP+LMV0n4w+CJAzKr0PBeKS4qefE50YlXdw1XPxWzeym1Bh3VLuVFAn4/FIg5fDtpfxLOW3Dm54FNszDfCfK/YXjtbutpwS0MBUlqZMCSNgNdyzu9LdbroZP/VGbmSQTeMtmjb51as0xW+ddFSstyTyS0TeGhamawP03ylTeaVvGYKTp38cTX6EwPoNjsu3Bz5V0V8/sqwBehtAwC7DfmkxY4GOqvZLLJkEKA1D7/zeOLK65uLaJ9cLDqYaVrdAUASwGjFhZVqfRaF+l6+rjRxxrHA+7vSmI0qwjmZPUwi3kYxr0M6fo/TrozhbEoFLwqsB8UEzhMvh7QwgHjxaEDOLR+lkVUcwascAoZpVEc+buFuccm41fGkTrF/87DR3h6N9HzsYzyJw==
 
-On Tue, Jul 8, 2025 at 6:51=E2=80=AFAM Christoph Hellwig <hch@lst.de> wrote=
-:
->
-> Hi all,
->
-> this is an alternative approach to the writeback part of the
-> "fuse: use iomap for buffered writes + writeback" series from Joanne.
-> It doesn't try to make the code build without CONFIG_BLOCK yet.
->
-> The big difference compared to Joanne's version is that I hope the
-> split between the generic and ioend/bio based writeback code is a bit
-> cleaner here.  We have two methods that define the split between the
-> generic writeback code, and the implemementation of it, and all knowledge
-> of ioends and bios now sits below that layer.
->
-> This version passes testing on xfs, and gets as far as mainline for
-> gfs2 (crashes in generic/361).
->
-> Changes since v3:
->  - add a patch to drop unused includes
->  - drop the iomap_writepage_ctx renaming - we should do this separately a=
-nd
->    including the variable names if desired
->  - add a comment about special casing of holes in iomap_writeback_range
->  - split the cleanups to iomap_read_folio_sync into a separate prep patch
->  - explain the IOMAP_HOLE check in xfs_iomap_valid
->  - explain the iomap_writeback_folio later folio unlock vs dropbehind
->  - some cargo culting for the #$W# RST formatting
->  - "improve" the documentation coverage a bit
->
-> Changes since v2:
->  - rename iomap_writepage_ctx to iomap_writeback_ctx
->  - keep local map_blocks helpers in XFS
->  - allow buildinging the writeback and write code for !CONFIG_BLOCK
->
-> Changes since v1:
->  - fix iomap reuse in block/zonefs/gfs2
->  - catch too large return value from ->writeback_range
->  - mention the correct file name in a commit log
->  - add patches for folio laundering
->  - add patches for read/modify write in the generic write helpers
->
-> Diffstat:
->  Documentation/filesystems/iomap/design.rst     |    3
->  Documentation/filesystems/iomap/operations.rst |   57 +-
->  block/fops.c                                   |   37 +
->  fs/gfs2/aops.c                                 |    8
->  fs/gfs2/bmap.c                                 |   48 +-
->  fs/gfs2/bmap.h                                 |    1
->  fs/gfs2/file.c                                 |    3
->  fs/iomap/Makefile                              |    6
->  fs/iomap/buffered-io.c                         |  554 +++++++-----------=
--------
->  fs/iomap/direct-io.c                           |    5
->  fs/iomap/fiemap.c                              |    3
->  fs/iomap/internal.h                            |    1
->  fs/iomap/ioend.c                               |  220 +++++++++
->  fs/iomap/iter.c                                |    1
->  fs/iomap/seek.c                                |    4
->  fs/iomap/swapfile.c                            |    3
->  fs/iomap/trace.c                               |    1
->  fs/iomap/trace.h                               |    4
->  fs/xfs/xfs_aops.c                              |  212 +++++----
->  fs/xfs/xfs_file.c                              |    6
->  fs/xfs/xfs_iomap.c                             |   12
->  fs/xfs/xfs_iomap.h                             |    1
->  fs/xfs/xfs_reflink.c                           |    3
->  fs/zonefs/file.c                               |   40 +
->  include/linux/iomap.h                          |   82 ++-
->  25 files changed, 705 insertions(+), 610 deletions(-)
 
-Thanks Christoph for all your work on this. I'll pull this and put v4
-of the fuse iomap changes on top of this. I'll send that out this
-week.
+Should this go through the XFS tree, or should I take it?
+
+-- Steve
+
+
+On Mon, 16 Jun 2025 13:51:46 -0400
+Steven Rostedt <rostedt@goodmis.org> wrote:
+
+> Trace events take up to 5K in memory for text and meta data. I have code that
+> will trigger a warning when it detects unused tracepoints[1]. The XFS file
+> system contains many events that are not called. Most of them used to be called
+> but due to code refactoring the calls were removed but the trace events stayed
+> behind.
+> 
+> Some events were added but never used. If they were recent, I just reported
+> them, but if they were older, this series simply removes them.
+> 
+> One is called only when CONFIG_COMPACT is defined, so an #ifdef was placed
+> around it.
+> 
+> Finally, one event is supposed to be a trace event class, but was created with
+> the TRACE_EVENT() macro and not the DECLARE_EVENT_CLASS() macro. This works
+> because a TRACE_EVENT() is simply a DECLARE_EVENT_CLASS() and DEFINE_EVENT()
+> where the class and event have the same name. But as this was a mistake, the
+> event created should not exist.
+> 
+> [1] https://patchwork.kernel.org/project/linux-trace-kernel/cover/20250612235827.011358765@goodmis.org/
+> 
+> Changes since v1: https://lore.kernel.org/linux-trace-kernel/20250612212405.877692069@goodmis.org/
+> 
+> - Removed the first patch that mistakenly removed xfs_reflink_cow_found
+> 
+> - Change subjects to start with lowercase
+> 
+> - Removed xfs_attr events that are used in an #if 0 section instead of
+>   adding #if 0 around them
+> 
+> - I added: Reviewed-by: Christoph Hellwig <hch@lst.de>
+>   to all patches but the one with the modified #if 0 as Christoph
+>   said he looked at them all.
+> 
+> Steven Rostedt (13):
+>       xfs: remove unused trace event xfs_attr_remove_iter_return
+>       xfs: remove unused event xlog_iclog_want_sync
+>       xfs: remove unused event xfs_ioctl_clone
+>       xfs: remove unused xfs_reflink_compare_extents events
+>       xfs: remove unused trace event xfs_attr_rmtval_set
+>       xfs: remove unused xfs_attr events
+>       xfs: remove unused event xfs_attr_node_removename
+>       xfs: remove unused event xfs_alloc_near_error
+>       xfs: remove unused event xfs_alloc_near_nominleft
+>       xfs: remove unused event xfs_pagecache_inval
+>       xfs: remove usused xfs_end_io_direct events
+>       xfs: only create event xfs_file_compat_ioctl when CONFIG_COMPAT is configure
+>       xfs: change xfs_xattr_class from a TRACE_EVENT() to DECLARE_EVENT_CLASS()
+> 
+> ----
+>  fs/xfs/scrub/trace.h |  2 +-
+>  fs/xfs/xfs_trace.h   | 68 ++--------------------------------------------------
+>  2 files changed, 3 insertions(+), 67 deletions(-)
+
