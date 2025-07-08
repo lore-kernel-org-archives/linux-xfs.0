@@ -1,93 +1,91 @@
-Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 553FB24290E;
-	Tue,  8 Jul 2025 21:12:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8061524169A;
+	Tue,  8 Jul 2025 21:24:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752009175; cv=none; b=qOyK+8Zqg5rBhZggyQ0p44zhshVgJDVeyZanbi31ptk2VJNeNgyZJeRt/08YELl+sm7yuD3JEGkGjWCzCXAMuJPYuiZs9Zoz1uqwzVJ3k7uXRCRlLfpr6P8xsKknudlp+2pypVk8KJ/HHaapRqUrziZ29sEvJz3vs6C7QuPtL6c=
+	t=1752009853; cv=none; b=UmG3pssJyIO05X0vagkLYk5WMdYbYaddwIt1gwtVsMUiM97V4MU2oWNemmejXHrjDSJd1QGtOnzr2c3ZTalm1yfWh80yxSsQeDEEsUe39oG7btd/M4FHgzHf8l11KKF/t8X1q5BTxLuZlmpWIAM9gHLJX0ihD6DkBrrLgrlbHY4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752009175; c=relaxed/simple;
-	bh=WHPQ1X00dK/NL0Zwe5X897Rr/QyO2GlGUXdGHCynPQQ=;
+	s=arc-20240116; t=1752009853; c=relaxed/simple;
+	bh=TAarUlwoipeJdtGaBy0q0huqZ06XrAcygU/VwbsqJ5U=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=EUBXGgrvyPWZ9qeytxcfAtZ6mDWj+cOj7N4b9AE6K3k5qU+C/gCWoM6GgpLA8gfgU4YBHthkQud0S5B945S4ELkyqat898Tm9wloGT6wl5Ymjkdzdmd/49PAEwiqOWqj92Kzn0A65s0ffQK28TKGgQkdgFTN0uRV/FgKoz/woYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kEYAr6aa; arc=none smtp.client-ip=209.85.160.178
+	 To:Cc:Content-Type; b=P/TzsJSoQ9Ly72TflCvfc8D2pw3tKqHf3xVxSOzVDy4C3r0x3XoSTTAICFMsKzmMA389+zoS5zri+b+s6JvK0iKRMQVOSKZR6xd5j3KufJv8bqYFpze9XpZxW6q/sM/vIuSKraSFhx5OYa0YujM3B9QqMgdMNurG85RO2UPDGS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gCJjph1h; arc=none smtp.client-ip=209.85.160.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kEYAr6aa"
-Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-4a58d95ea53so4790361cf.0;
-        Tue, 08 Jul 2025 14:12:54 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gCJjph1h"
+Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-4a5851764e1so107914381cf.2;
+        Tue, 08 Jul 2025 14:24:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1752009173; x=1752613973; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1752009849; x=1752614649; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=f2oGPkj1+e6ZzCV+BwunmQ0FgWNvFRc97SBF/zT2kb4=;
-        b=kEYAr6aa5qz8pmnC+kpz195e7Lr42kuqKzbUIC4PZk9Mu5SRb8pydgKwGMVEG1QZX+
-         8KHA8IcbDj28NSRjmfRmQ7fDlX0S7yNJwXyxMHmfckbSBVdKkHMh0zcMNCTU18ymF9vC
-         Z0ETpNENfVD1neI7pN1/WUgLfx1C5hWk8Wnf6UPsll/xuV639phUaqv6SEVBHQFCG15U
-         3xCCEc7L4QxTDyH66cSoEkct8lmO4h8tnib32NGgqIp6xgGgCdHJk4BPsxTp1phFaUi1
-         WXJ2qw5lv5leEcPGPqe+DlatiiiKdW7N18+S+whbB9hKwghkF97IS9d02M8MbFnE5kaP
-         ph1w==
+        bh=Lb1DWyul4+z//HafPpBpv8sBo6GJaLU8G6uUisvGiGs=;
+        b=gCJjph1hut8z+W90Eh9RqoYuCP5btAzeVdSqF+XjCyYY7WUPLGs6BoJo4D9glX76pp
+         nbAcFIZ7h1K5jH+e4m9hPTQQMryEqiE3xDaCxg0dCzAHkgxzRQNHmHkj9LtzRfM629xB
+         +19fIG6hTr8G8H06SKGVu2X/GXvGCqaQn4fllcpSOv94+QrYLPRnL5+z1/CRSoNs8hho
+         p74vt1l0LhFLrudhfqNJ++ENnCsupqAH/WF4AcJpy1tcELdyjU/eCJdHQLU87xG1Q0WK
+         Vq8wk+w/4F9luRu3XGtashLQ+2L6h4btS9cBsLqt0YqobNGNsRDmz6NncNA3tswISdNX
+         kfMA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752009173; x=1752613973;
+        d=1e100.net; s=20230601; t=1752009849; x=1752614649;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=f2oGPkj1+e6ZzCV+BwunmQ0FgWNvFRc97SBF/zT2kb4=;
-        b=KkmiSCnXofrwq+Qy3Y9RqvCx8VBDm2Qw+c0udJ/ovsmkmlVz3QDmmxmDYoVeQfthwa
-         mtGpRqZzJBJe6SrDKzhWi5i9zjhIUBtI8d+Sb6vDckeHsmv3W3/H1dz4FQvtGPGRvKFm
-         7IM84sdvbOgNciUqHZdi8OQACQDhxVkxmDVdVSWFNFTLjBs53jfyWXEVSOF84qOssvCp
-         hzlRvZCnzYA0puuWrICMnchifGAGq4V6cMSj+NebCg9/BoA4SwNSlrvQdXNh7vU8EPEk
-         icmwmcvORfvbDDFXzxIzWxDhQ7B5snooxI9EUXI51njKtG0jIORwCLfzXTq3ySOtGuR+
-         utZg==
-X-Forwarded-Encrypted: i=1; AJvYcCUM2SujOdrxbxpVxMY0pj2rPQvdkWVD27phxHsK1+b6kovOdOq+2IYcyxj7R1MLEL2ZDq4IePrbV0pSOgKgPg==@vger.kernel.org, AJvYcCX7yQ1L+TfN4H2RipmiA2eBOcXXndCZXUY6r723sgFNSTbWuoafWP/m0h5kR9vL1H1FzTlPurTvED+tVQ==@vger.kernel.org, AJvYcCXEvCHwdQhMcxRNsG7rrY9roW9HN6dQAondZxnlMYQ3i0txZ5MjCNveLmZddr/YRvDXDXsqQuX4evyM@vger.kernel.org, AJvYcCXII6M7OS4VUxAw2kYdyKMsQrYTKTf3qB8r1yolSLIl4CW4ODNXcIaPISSPXpPCiIq5TL9wc1lAiE8o@vger.kernel.org
-X-Gm-Message-State: AOJu0YwcLy2f8DyWtHxvHdG6cc06DpSjSjgYDthZQUrWnPdVyti1vf0p
-	yIptCU4rkTjpHh5jlZRxXlKBf+Ezfuz5UWjKfnVZoc+yCmA/qymZe09uYuZQwB8Gh/Jw7Ak8pTS
-	+CkTRKzegNLK2O9XimqJvERnwCiI58do7X3Hg
-X-Gm-Gg: ASbGncugcEXiARYTlS604U7VNh0Xw35cCs3qQDkDnkEuP24Pjz3p4rRvEaXDazkts6s
-	UFpBj1qyOJrQ2lmRWp9y5sfsNdVfb05EaF6XUUvLiofvBFCH8xm6A0Tt9onYr5hTeSYR6LZDwXY
-	outq3f7Lm0RK3Z/Raakh72ozbrU75K7SDpysEjtVvYQlg=
-X-Google-Smtp-Source: AGHT+IGxCVJpLD1WN9FUxd+61MwdovAd25GfBDp2pHqBMaA+5eKnsXsWYlx+E2Xzp3tgOraZ0J9J7jqGMceu4pZJfJ4=
-X-Received: by 2002:a05:622a:350:b0:4a6:f0d0:d4af with SMTP id
- d75a77b69052e-4a9dc2735c4mr18050411cf.16.1752009173068; Tue, 08 Jul 2025
- 14:12:53 -0700 (PDT)
+        bh=Lb1DWyul4+z//HafPpBpv8sBo6GJaLU8G6uUisvGiGs=;
+        b=eyMxkc2XHLnrgs05RLDjNLwNxIyzkNl9em2ZudEuSYLd4PASey2Xf5/zdgP6Bwvfnv
+         Olec2lRO9dABqhYvYxqUXuqisawU3gJUQS7C9bzvVJU03bnAt9KrgkWzKVUILi4zg6FG
+         iPTtp6g60nOD7EzidrYjWgh4Y/IZIyft+ycrZVHOohiQLxIQDJHTPP/sJ9WIJy0hiaQZ
+         TyMcB4rlgFkbeJPXgI7kR7Ofoj2PJP+KmrIeCQV/nLbT6f6ylutMczK+jv1ilwmV1vCk
+         69DOuJIifuRBVyPVIDBG0UAXmyVizTJU1Id5tMCjxZMVC9FOA5ndbjM5G8AWXdCQSRRh
+         tQ1Q==
+X-Forwarded-Encrypted: i=1; AJvYcCU4iIb/IPYDMoely6VSlsctOzFExvC4eSnXY38XXQAvLwB0jqIuIhBp9Ii6DJXF8vEdLe4o7mXaF28m@vger.kernel.org, AJvYcCWU8lql8CX/5z649JR+pVL5Wr18shqz5u4NkejOMGe9uMxVhi5IC4s7oDUwTaeVK9boM2W3nth1wpnz@vger.kernel.org, AJvYcCWaH0hdhPx/SbEtg3/DZDbjk+gxmd2kMxXrjI+veaTR3XdQO3hWMmm6pe3Vbd/Nd/JfizRpURZMZXVLQS5Ulg==@vger.kernel.org, AJvYcCWg+8CUMtLCxgwHODfASZKMoIdtDxBEYInA1or6ttZrx9pGLfyZuH7LscjYn0u/N2ZZZFIpELMoVQRN6Q==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzrMNCCvrpXOxVnNV2KGD11PWnyt8yp1FAwgsY6MWnnHuLeja41
+	1xYyNIIPLeKy4/frxt+3S5OvQJqGrNkuGf03qHgOiJAzhSs+UY8uNbjwnwnPRKq8dOGk4qn3v3o
+	Gj3+66xX10BOzf+kd+P6M/IGetBkENKs=
+X-Gm-Gg: ASbGncvGneekteM5n8fB23GbxXZpIVuB9v1dIwROr9dxkZyrzSfWHxlpdZbBI+SfDDM
+	HDHxsWKM/dL+TLq9m3pkOOQ1b2ch3aYRK4hT2C20Iu3YhhG2zZWGDLPDSBcLUUwITwNBHRMVP1/
+	Ce7Ab7OMGiQpFhu847UNdHhSyskaBjf9sLzN277Q0mVTU=
+X-Google-Smtp-Source: AGHT+IFMTz6SH0zhjDTLZOgfQJaIbPlc/Q7hBu5Jk+gXOKsGzS+9pZssAMoKgD3aM67ZjEkpBcgMRTo0DP2oOJg2FHU=
+X-Received: by 2002:a05:622a:15cb:b0:4a6:f6e6:7693 with SMTP id
+ d75a77b69052e-4a9dd212a82mr11067851cf.6.1752009849424; Tue, 08 Jul 2025
+ 14:24:09 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250708135132.3347932-1-hch@lst.de> <20250708135132.3347932-9-hch@lst.de>
-In-Reply-To: <20250708135132.3347932-9-hch@lst.de>
+References: <20250708135132.3347932-1-hch@lst.de> <20250708135132.3347932-13-hch@lst.de>
+In-Reply-To: <20250708135132.3347932-13-hch@lst.de>
 From: Joanne Koong <joannelkoong@gmail.com>
-Date: Tue, 8 Jul 2025 14:12:42 -0700
-X-Gm-Features: Ac12FXzEh3jhezVsM9Yn9RD9LsQJ1pCxI4nlbDq2cmHUqPFOjSkqphPTgXPwTCg
-Message-ID: <CAJnrk1acMOb=0EQe6FZwzn_3tw8g-0HrDMjR1OrCBEQsZXyt7g@mail.gmail.com>
-Subject: Re: [PATCH 08/14] iomap: rename iomap_writepage_map to iomap_writeback_folio
+Date: Tue, 8 Jul 2025 14:23:58 -0700
+X-Gm-Features: Ac12FXxgJU6oVRwVQoF3qI9wrV1DgytPuRVdvsm-iLn1Wf05V3VDBvGeBQNSiQI
+Message-ID: <CAJnrk1bqfEH3E19x67P8Ciq+8Tp-K7WusDPyzJGt5G7BFyhQHg@mail.gmail.com>
+Subject: Re: [PATCH 12/14] iomap: improve argument passing to iomap_read_folio_sync
 To: Christoph Hellwig <hch@lst.de>
 Cc: Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
 	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-block@vger.kernel.org, gfs2@lists.linux.dev, 
-	Brian Foster <bfoster@redhat.com>
+	linux-block@vger.kernel.org, gfs2@lists.linux.dev
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
 On Tue, Jul 8, 2025 at 6:52=E2=80=AFAM Christoph Hellwig <hch@lst.de> wrote=
 :
 >
-> ->writepage is gone, and our naming wasn't always that great to start
-> with.
+> Pass the iomap_iter and derive the map inside iomap_read_folio_sync
+> instead of in the caller, and use the more descriptive srcmap name for
+> the source iomap.  Stop passing the offset into folio argument as it
+> can be derived from the folio and the file offset.  Rename the
+> variables for the offset into the file and the length to be more
+> descriptive and match the rest of the code.
+>
+> Rename the function itself to iomap_read_folio_range to make the use
+> more clear.
 >
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 Reviewed-by: Joanne Koong <joannelkoong@gmail.com>
-
-> ---
->  fs/iomap/buffered-io.c | 10 +++++-----
->  fs/iomap/trace.h       |  2 +-
->  2 files changed, 6 insertions(+), 6 deletions(-)
->
