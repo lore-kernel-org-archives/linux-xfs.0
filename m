@@ -1,41 +1,41 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BBA621883F;
-	Tue,  8 Jul 2025 02:10:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 812071E2838;
+	Tue,  8 Jul 2025 03:07:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751940617; cv=none; b=bAGy+2Frdvx7UdvHep/snAJ8tW+dbV1qhpLxWAoRqDoZtil1yKwQIyEhKvT7ogKcMJc6NhVXAQCrf8TGFAs6diTrWjiK2nTx7Y+d3RI8BvinUOHxNvosFINrGmtMbBGp7SqyWByxMHWg5a5kN3CHVjwTxNK5NhHEanzVlZ2ZhQM=
+	t=1751944026; cv=none; b=lltJr0ZkWpGWSSHS2grLrq4zur13apS5Raiz1qFWd4lNnibXatIsf0asHe553ywXPN/ejQKXz9+D9XQUXn1Tc3WMWfJyV2qq831dhRnHEmIKF2sp8ehaDpYH8Lmu+qOiqvUo5B3Ly5aJ42Bh6cOT0wFH5w+/2OeNe8FNbCnwSME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751940617; c=relaxed/simple;
-	bh=IS2SOsI8AEa2vY4ttEk43WaJKe9m69fh3kSiDj7OMpY=;
+	s=arc-20240116; t=1751944026; c=relaxed/simple;
+	bh=PaHuVfJC+k3tFxfJhrCwUlDKM9NB4b03RRhYql896gM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VHtVjmIki/K7LazCLtQbPt7SKa3E8Z5JegOx/zjnIDFJlXu01ChFhPM8f8azzjDSEAZXzBV4/meScNkFHu9kBWBbov+HcXyFyv8I9/vMsEqifI3mOLw/cMU7WwD7fkFiLf2xzSC9iVepxlyl5tXFzI0JRxHe/C2+DlJRoMKAT+Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.com; spf=pass smtp.mailfrom=gmx.com; dkim=pass (2048-bit key) header.d=gmx.com header.i=quwenruo.btrfs@gmx.com header.b=aFbYN7eX; arc=none smtp.client-ip=212.227.17.20
+	 In-Reply-To:Content-Type; b=dPH8DCHstb+9S4svkM4zZg8cIsimhMv2MDAEWj4HqyTlGQcD/AgGebr6DYOM7psTqKhaOTQYUeAwmk7cNyijHbZ+5oJvSOE4xk2LQ6JnzFyXa7sdkaoFXehiHi+Vx0PQgUZJ85jIOKA6X4iUyrkbtkQGKGbCY9PbEdCUmgNuUmY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.com; spf=pass smtp.mailfrom=gmx.com; dkim=pass (2048-bit key) header.d=gmx.com header.i=quwenruo.btrfs@gmx.com header.b=QGjBb7Xg; arc=none smtp.client-ip=212.227.17.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmx.com header.i=quwenruo.btrfs@gmx.com header.b="aFbYN7eX"
+	dkim=pass (2048-bit key) header.d=gmx.com header.i=quwenruo.btrfs@gmx.com header.b="QGjBb7Xg"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.com;
-	s=s31663417; t=1751940590; x=1752545390; i=quwenruo.btrfs@gmx.com;
-	bh=0h5VDs/ZUqYitD9U3zCLJQXOlFnOTO0lH7VNO4yWm1o=;
+	s=s31663417; t=1751944016; x=1752548816; i=quwenruo.btrfs@gmx.com;
+	bh=9AkzgC4LlgXiHeb40Q9FmYsfdBTPMHgFtx84I6wW3D4=;
 	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
 	 References:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding:cc:content-transfer-encoding:
 	 content-type:date:from:message-id:mime-version:reply-to:subject:
 	 to;
-	b=aFbYN7eXZ1e/aKYoUwoDgU20cCqPFEg5zR7Gs3BrJDK+vrSjkAaL3vqEHxUj37GF
-	 JHVtFZxu93XEl+GNo5x40+aDuTouonHo6szImifyFO2R5EROwsIt4vA4NyOn6mIMs
-	 jDaShxYI31H3BZVkROP68nzx3jc5c1OLwUgCZ+qjv+i1Onq3zAU6YKHy8UFiPXWdn
-	 aMUXokgp+tOHNQHBwg+FtUu9OIxkIsrh/LmuYPD+6JxPcbHDV7teenMsabvoEwJhi
-	 J2gom3jhhscbBpj68ZgVfQBt09tWMml9IMxnEPhUavS7YpXFpVDgtmx5W8cfUef6F
-	 oijnnAoHH32HC4XcdQ==
+	b=QGjBb7Xg76I5cepZC7k+sDhZKiY9iZBexu2Slm5KiAoVa6wAi26NQIoSpK5MMFgS
+	 zCSnGqba7J6DP0Z1qNIZ53wXLv+PgZFuqDT0ND0quKkTdPQuX1G06QNIEEhP/yUVs
+	 bkemeR+Z9HuYb8Cb41twO+KpyIBw9YVVDHWU8PY8YlbG5tlu7nktyKlQy+hQtyuPx
+	 yB5BNF+SGdgOtltiHjfR4FqkHP8eRz0JtBU1FnHxprpJY5lehgq4jlZhEb0vVmoj5
+	 1NUKArBjAlg5vrmQDefy3p161M2IgSL0DgpoXdFBhfwUpDoG+nAP8uKl90kYM3xCa
+	 67n5CD400KtneLbelQ==
 X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
 Received: from [172.16.0.229] ([159.196.52.54]) by mail.gmx.net (mrgmx105
- [212.227.17.174]) with ESMTPSA (Nemesis) id 1MyKHc-1urhS546iy-015pS4; Tue, 08
- Jul 2025 04:09:50 +0200
-Message-ID: <02584a40-a2c0-4565-ab46-50c1a4100b21@gmx.com>
-Date: Tue, 8 Jul 2025 11:39:42 +0930
+ [212.227.17.174]) with ESMTPSA (Nemesis) id 1MOzSu-1uIYmR1jB6-00WURW; Tue, 08
+ Jul 2025 05:06:55 +0200
+Message-ID: <bdce1e62-c6dd-4f40-b207-cfaf4c5e25e4@gmx.com>
+Date: Tue, 8 Jul 2025 12:36:48 +0930
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -56,6 +56,7 @@ References: <cover.1751589725.git.wqu@suse.com>
  <aGxSHKeyldrR1Q0T@dread.disaster.area>
  <dbd955f7-b9b4-402f-97bf-6b38f0c3237e@gmx.com>
  <20250708004532.GA2672018@frogsfrogsfrogs>
+ <02584a40-a2c0-4565-ab46-50c1a4100b21@gmx.com>
 Content-Language: en-US
 From: Qu Wenruo <quwenruo.btrfs@gmx.com>
 Autocrypt: addr=quwenruo.btrfs@gmx.com; keydata=
@@ -82,168 +83,216 @@ Autocrypt: addr=quwenruo.btrfs@gmx.com; keydata=
  Vmi36kmq8o5c0f97QVjMryHlmSlEZ2Wwc1kURAe4lsRG2dNeAd4CAqmTw0cMIrR6R/Dpt3ma
  +8oGXJOmwWuDFKNV4G2XLKcghqrtcRf2zAGNogg3KulCykHHripG3kPKsb7fYVcSQtlt5R6v
  HZStaZBzw4PcDiaAF3pPDBd+0fIKS6BlpeNRSFG94RYrt84Qw77JWDOAZsyNfEIEE0J6LSR/
-In-Reply-To: <20250708004532.GA2672018@frogsfrogsfrogs>
+In-Reply-To: <02584a40-a2c0-4565-ab46-50c1a4100b21@gmx.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:LtuoZyNaToYftOWmNW8wynAcLNGgt+BTG26KXfqxGFyysSJQjTY
- dGo/srMDXitMVyTRVSmSOtL1PY7v+HCDDQ5vpZsUIIfbSl6Bs7Rni7glh6FXMu0TjDaxYaQ
- yCqbBIQ0ZYlyLA09sy6wJ03IwRa6XFPsuELICG2CuXtgr7Q/P3Su+/HGfif4SkQZxEd//nI
- KGoR/TiIp7+sEKBCSd/2w==
+X-Provags-ID: V03:K1:2uUHVMbXI47p/AI325FvUcM1/NPkQSa7e22wurBVRkYZWtBEG9+
+ KxGZW9RvAvS4omNKm93sr2isMPhuwkIAR1Te9f4cB0gx35BTUzUIsd+b1qC7CVb7OAYuZcw
+ Yu8UZcmytWqWW8HALz0VRXMuG4rW3jXgVhSjW8qGzTOvLoJSMH8bnFkgWtvvUmohZBUICnC
+ TQ/uRc/BhQwcegfxg4f+g==
 X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:wZmAZRbajo0=;PNV3xrk5N3151j3iXOadSy+eecD
- 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
+UI-OutboundReport: notjunk:1;M01:P0:cqTZ8MddLiQ=;OOTm8pMVOQ0XR4tqU/yKcjDSCxc
+ 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
 
 
 
-=E5=9C=A8 2025/7/8 10:15, Darrick J. Wong =E5=86=99=E9=81=93:
-[...]
+=E5=9C=A8 2025/7/8 11:39, Qu Wenruo =E5=86=99=E9=81=93:
+>=20
+>=20
+> =E5=9C=A8 2025/7/8 10:15, Darrick J. Wong =E5=86=99=E9=81=93:
+> [...]
+>>>
+>>> I do not think it's the correct way to go, especially when there is=20
+>>> already
+>>> fs_holder_ops.
+>>>
+>>> We're always going towards a more generic solution, other than=20
+>>> letting the
+>>> individual fs to do the same thing slightly differently.
 >>
->> I do not think it's the correct way to go, especially when there is alr=
-eady
->> fs_holder_ops.
+>> On second thought -- it's weird that you'd flush the filesystem and
+>> shrink the inode/dentry caches in a "your device went away" handler.
+>> Fancy filesystems like bcachefs and btrfs would likely just shift IO to
+>> a different bdev, right?=C2=A0 And there's no good reason to run shrink=
+ers on
+>> either of those fses, right?
+>=20
+> That's right, some part of fs_bdev_mark_dead() is not making much sense=
+=20
+> if the fs can handle the dev loss.
+>=20
 >>
->> We're always going towards a more generic solution, other than letting =
-the
->> individual fs to do the same thing slightly differently.
+>>> Yes, the naming is not perfect and mixing cause and action, but the en=
+d
+>>> result is still a more generic and less duplicated code base.
+>>
+>> I think dchinner makes a good point that if your filesystem can do
+>> something clever on device removal, it should provide its own block
+>> device holder ops instead of using fs_holder_ops.
 >=20
-> On second thought -- it's weird that you'd flush the filesystem and
-> shrink the inode/dentry caches in a "your device went away" handler.
-> Fancy filesystems like bcachefs and btrfs would likely just shift IO to
-> a different bdev, right?  And there's no good reason to run shrinkers on
-> either of those fses, right?
-
-That's right, some part of fs_bdev_mark_dead() is not making much sense=20
-if the fs can handle the dev loss.
-
+> Then re-implement a lot of things like bdev_super_lock()?
 >=20
->> Yes, the naming is not perfect and mixing cause and action, but the end
->> result is still a more generic and less duplicated code base.
+> I'd prefer not.
 >=20
-> I think dchinner makes a good point that if your filesystem can do
-> something clever on device removal, it should provide its own block
-> device holder ops instead of using fs_holder_ops.
+>=20
+> fs_holder_ops solves a lot of things like handling mounting/inactive=20
+> fses, and pushing it back again to the fs code is just causing more=20
+> duplication.
+>=20
+> Not really worthy if we only want a single different behavior.
+>=20
+> Thus I strongly prefer to do with the existing fs_holder_ops, no matter=
+=20
+> if it's using/renaming the shutdown() callback, or a new callback.
 
-Then re-implement a lot of things like bdev_super_lock()?
+Previously Christoph is against a new ->remove_bdev() callback, as it is=
+=20
+conflicting with the existing ->shutdown().
 
-I'd prefer not.
+So what about a new ->handle_bdev_remove() callback, that we do=20
+something like this inside fs_bdev_mark_dead():
 
+{
+	bdev_super_lock();
+	if (!surprise)
+		sync_filesystem();
 
-fs_holder_ops solves a lot of things like handling mounting/inactive=20
-fses, and pushing it back again to the fs code is just causing more=20
-duplication.
+	if (s_op->handle_bdev_remove) {
+		ret =3D s_op->handle_bdev_remove();
+		if (!ret) {
+			super_unlock_shared();
+			return;
+		}
+	}
+	shrink_dcache_sb();
+	evict_inodes();
+	if (s_op->shutdown)
+		s_op->shutdown();
+}
 
-Not really worthy if we only want a single different behavior.
+So that the new ->handle_bdev_remove() is not conflicting with
+->shutdown() but an optional one.
 
-Thus I strongly prefer to do with the existing fs_holder_ops, no matter=20
-if it's using/renaming the shutdown() callback, or a new callback.
+And if the fs can not handle the removal, just let
+->handle_bdev_remove() return an error so that we fallback to the=20
+existing shutdown routine.
 
->  I don't understand
-> why you need a "generic" solution for btrfs when it's not going to do
-> what the others do anyway.
-
-Because there is only one behavior different.
-
-Other things like freezing/thawing/syncing are all the same.
+Would this be more acceptable?
 
 Thanks,
 Qu
 
 >=20
-> Awkward naming is often a sign that further thought (or at least
-> separation of code) is needed.
+>> =C2=A0I don't understand
+>> why you need a "generic" solution for btrfs when it's not going to do
+>> what the others do anyway.
 >=20
-> As an aside:
-> 'twould be nice if we could lift the *FS_IOC_SHUTDOWN dispatch out of
-> everyone's ioctl functions into the VFS, and then move the "I am dead"
-> state into super_block so that you could actually shut down any
-> filesystem, not just the seven that currently implement it.
+> Because there is only one behavior different.
 >=20
-> --D
+> Other things like freezing/thawing/syncing are all the same.
 >=20
->>> Hence Btrfs should be doing the same thing as bcachefs. The
->>> bdev_handle_ops structure exists precisly because it allows the
->>> filesystem to handle block device events in the exact manner they
->>> require....
->>>
->>>> - Add a new @bdev parameter to remove_bdev() callback
->>>>     To allow the fs to determine which device is missing, and do the
->>>>     proper handling when needed.
+> Thanks,
+> Qu
+>=20
+>>
+>> Awkward naming is often a sign that further thought (or at least
+>> separation of code) is needed.
+>>
+>> As an aside:
+>> 'twould be nice if we could lift the *FS_IOC_SHUTDOWN dispatch out of
+>> everyone's ioctl functions into the VFS, and then move the "I am dead"
+>> state into super_block so that you could actually shut down any
+>> filesystem, not just the seven that currently implement it.
+>>
+>> --D
+>>
+>>>> Hence Btrfs should be doing the same thing as bcachefs. The
+>>>> bdev_handle_ops structure exists precisly because it allows the
+>>>> filesystem to handle block device events in the exact manner they
+>>>> require....
 >>>>
->>>> For the existing shutdown callback users, the change is minimal.
+>>>>> - Add a new @bdev parameter to remove_bdev() callback
+>>>>> =C2=A0=C2=A0=C2=A0 To allow the fs to determine which device is miss=
+ing, and do the
+>>>>> =C2=A0=C2=A0=C2=A0 proper handling when needed.
+>>>>>
+>>>>> For the existing shutdown callback users, the change is minimal.
+>>>>
+>>>> Except for the change in API semantics. ->shutdown is an external
+>>>> shutdown trigger for the filesystem, not a generic "block device
+>>>> removed" notification.
 >>>
->>> Except for the change in API semantics. ->shutdown is an external
->>> shutdown trigger for the filesystem, not a generic "block device
->>> removed" notification.
->>
->> The problem is, there is no one utilizing ->shutdown() out of
->> fs_bdev_mark_dead().
->>
->> If shutdown ioctl is handled through super_operations::shutdown, it wil=
-l be
->> more meaningful to split shutdown and dev removal.
->>
->> But that's not the case, and different fses even have slightly differen=
-t
->> handling for the shutdown flags (not all fses even utilize journal to
->> protect their metadata).
->>
->> Thanks,
->> Qu
->>
->>
+>>> The problem is, there is no one utilizing ->shutdown() out of
+>>> fs_bdev_mark_dead().
 >>>
->>> Hooking blk_holder_ops->mark_dead means that btrfs can also provide
->>> a ->shutdown implementation for when something external other than a
->>> block device removal needs to shut down the filesystem....
+>>> If shutdown ioctl is handled through super_operations::shutdown, it=20
+>>> will be
+>>> more meaningful to split shutdown and dev removal.
 >>>
->>> -Dave.
+>>> But that's not the case, and different fses even have slightly differe=
+nt
+>>> handling for the shutdown flags (not all fses even utilize journal to
+>>> protect their metadata).
+>>>
+>>> Thanks,
+>>> Qu
+>>>
+>>>
+>>>>
+>>>> Hooking blk_holder_ops->mark_dead means that btrfs can also provide
+>>>> a ->shutdown implementation for when something external other than a
+>>>> block device removal needs to shut down the filesystem....
+>>>>
+>>>> -Dave.
+>>>
 >>
+>=20
 >=20
 
