@@ -1,184 +1,185 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5653923C507;
-	Tue,  8 Jul 2025 19:45:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BAC11D54E2;
+	Tue,  8 Jul 2025 20:20:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752003944; cv=none; b=XR3WSiUwv0u/sQuF2scx6gf94TpFpwp1K1//Vn/PdTA/UdLfPKAzwxmjoXzP4b30gvhqaFOTpw3aCKCp1koTuAitYSAK/xlEjOwJCCW7Ehcvpqsx1Bslzs8f8Wp2NHMx4jSnQOS40MpPaUqyZehN+i2rNH9/slw+xUTv6nbS0Cs=
+	t=1752006052; cv=none; b=dEPLau6gg5JBwuabax/pHvDyJMiiWCsRdkAkFnYeGj4h+V7MKGVtrUtFfyKJ0E/0kgcOCJdvDCHNblJnOnGgk+9ruZguYG/TVN0bScVecxJZooQPdIWV+jqJF9XJmUuN3WjnRb1FHGn4sjSd25edXqxM/e+6cV+wxmos4yynScU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752003944; c=relaxed/simple;
-	bh=/8NzYs9A6jTvYl+W2Y15ETEaIfiQ2pFc4/Y+QOFtzwY=;
+	s=arc-20240116; t=1752006052; c=relaxed/simple;
+	bh=+yxZ08dKrAbdFZ6sAL+9jMwOYAMn3pq6/TMoNHiAVqM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C+YJ+/Om0WLWpVC59+3LE3coSepx6VyvAisAF5UgedHbezyaKgE0NoPtq5JmZPwhVp9hq40BYHJB1UUuJpr5K/7OC/6/TBT8ArlTVSqxYNkm+PvJ8G84GCdOSEEXXattPaqzjBIKyeErw2nwPcEoqkATjNDk7Y4xYTi0wiw6omU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KRIL5sdr; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=POqngLEtnY7UOEA1+VhFCNGe5YPKhl9DFMSdzSwhChJOxQopnmP7kwSOjfvFZHJ35dn/m7YMKRBX4K3+S5PZayMHntqKPQ7Dqxf/gmhWoLhnBUp3EMwOcl3iXvrC7zUZ0mtFvXwAYTI/PZpFsvHdIsVJQcfNkCwOuugM3Gc3oX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hPMEhSkU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KRIL5sdr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1947C4CEED;
-	Tue,  8 Jul 2025 19:45:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hPMEhSkU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58E7EC4CEED;
+	Tue,  8 Jul 2025 20:20:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752003943;
-	bh=/8NzYs9A6jTvYl+W2Y15ETEaIfiQ2pFc4/Y+QOFtzwY=;
+	s=k20201202; t=1752006051;
+	bh=+yxZ08dKrAbdFZ6sAL+9jMwOYAMn3pq6/TMoNHiAVqM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KRIL5sdrTuZ3xR/HnQB+yrlbcM6dbmX40jxMdm/cb2jGN7adWe4jDZE6V764vNfpY
-	 FeMMxb6gk4i6XO+AMqmu79cxCvEo41d8bPowi7vR9WSe5Lj+hDeS6lefSvUBXJX4BK
-	 +A7NXZCOeaXxZSHfshMRqlLmkL9l9qcb30jg+Oh35v1KeKbMBiXOlZusOuKF2YoVxL
-	 miZQRw+2/eMsrP3GBRx6qSFWgHNlwKvTWBCR92saZl15XL9uRcaGlntyWx47ALqmeE
-	 nySw/IT4YNxg9ZwsG6DfdPTRoY/nVKTHuwV7etlq+5OxoKEjrJgqsWK+m6/CcMcXea
-	 vPy5nQjPnqLvg==
-Date: Tue, 8 Jul 2025 12:45:43 -0700
+	b=hPMEhSkUX/LsvtZLeds9iEsFR445eshxWZXvoRnSLujgLEPzAcfHTEY1hKzvOZwLi
+	 CO6xBgdyPLvwJKOyvRvQbfayjvwz//qmWRwCqXX9eJfnurVWX9yJjB+FGnGJqw9Bdo
+	 YvTa4ZUzOiq4x/0+MnhVWgvty8CXom2KMAk1lU1DdgCV3QPlLlzl63cgXPodHeUmuR
+	 c/DyafLAONZHqILRSCVnIMh6DkLySD8sZvd+yvzKsb2YGHyNZ8+dzvy79GVsPU2CIa
+	 QSxZLDXRKYoNFJq9mC7u92Mfs4HyGdJgpKNx3bbNB6DnNtxSNNOGKynr+rejYv2LwT
+	 nVQjowPhBvE+A==
+Date: Tue, 8 Jul 2025 13:20:50 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	Joanne Koong <joannelkoong@gmail.com>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-block@vger.kernel.org, gfs2@lists.linux.dev
-Subject: Re: [PATCH 01/14] iomap: header diet
-Message-ID: <20250708194543.GF2672049@frogsfrogsfrogs>
-References: <20250708135132.3347932-1-hch@lst.de>
- <20250708135132.3347932-2-hch@lst.de>
+To: Jan Kara <jack@suse.cz>
+Cc: Qu Wenruo <quwenruo.btrfs@gmx.com>, Dave Chinner <david@fromorbit.com>,
+	Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+	brauner@kernel.org, linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net, ntfs3@lists.linux.dev,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4 1/6] fs: enhance and rename shutdown() callback to
+ remove_bdev()
+Message-ID: <20250708202050.GG2672049@frogsfrogsfrogs>
+References: <cover.1751589725.git.wqu@suse.com>
+ <de25bbdb572c75df38b1002d3779bf19e3ad0ff6.1751589725.git.wqu@suse.com>
+ <aGxSHKeyldrR1Q0T@dread.disaster.area>
+ <dbd955f7-b9b4-402f-97bf-6b38f0c3237e@gmx.com>
+ <20250708004532.GA2672018@frogsfrogsfrogs>
+ <2dm6bsup7vxwl4vwmllkvt5erncirr272bov4ehd5gix7n2vnw@bkagb26tjtj5>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20250708135132.3347932-2-hch@lst.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <2dm6bsup7vxwl4vwmllkvt5erncirr272bov4ehd5gix7n2vnw@bkagb26tjtj5>
 
-On Tue, Jul 08, 2025 at 03:51:07PM +0200, Christoph Hellwig wrote:
-> Drop various unused #include statements.
+On Tue, Jul 08, 2025 at 12:20:00PM +0200, Jan Kara wrote:
+> On Mon 07-07-25 17:45:32, Darrick J. Wong wrote:
+> > On Tue, Jul 08, 2025 at 08:52:47AM +0930, Qu Wenruo wrote:
+> > > 在 2025/7/8 08:32, Dave Chinner 写道:
+> > > > On Fri, Jul 04, 2025 at 10:12:29AM +0930, Qu Wenruo wrote:
+> > > > > Currently all the filesystems implementing the
+> > > > > super_opearations::shutdown() callback can not afford losing a device.
+> > > > > 
+> > > > > Thus fs_bdev_mark_dead() will just call the shutdown() callback for the
+> > > > > involved filesystem.
+> > > > > 
+> > > > > But it will no longer be the case, with multi-device filesystems like
+> > > > > btrfs and bcachefs the filesystem can handle certain device loss without
+> > > > > shutting down the whole filesystem.
+> > > > > 
+> > > > > To allow those multi-device filesystems to be integrated to use
+> > > > > fs_holder_ops:
+> > > > > 
+> > > > > - Replace super_opearation::shutdown() with
+> > > > >    super_opearations::remove_bdev()
+> > > > >    To better describe when the callback is called.
+> > > > 
+> > > > This conflates cause with action.
+> > > > 
+> > > > The shutdown callout is an action that the filesystem must execute,
+> > > > whilst "remove bdev" is a cause notification that might require an
+> > > > action to be take.
+> > > > 
+> > > > Yes, the cause could be someone doing hot-unplug of the block
+> > > > device, but it could also be something going wrong in software
+> > > > layers below the filesystem. e.g. dm-thinp having an unrecoverable
+> > > > corruption or ENOSPC errors.
+> > > > 
+> > > > We already have a "cause" notification: blk_holder_ops->mark_dead().
+> > > > 
+> > > > The generic fs action that is taken by this notification is
+> > > > fs_bdev_mark_dead().  That action is to invalidate caches and shut
+> > > > down the filesystem.
+> > > > 
+> > > > btrfs needs to do something different to a blk_holder_ops->mark_dead
+> > > > notification. i.e. it needs an action that is different to
+> > > > fs_bdev_mark_dead().
+> > > > 
+> > > > Indeed, this is how bcachefs already handles "single device
+> > > > died" events for multi-device filesystems - see
+> > > > bch2_fs_bdev_mark_dead().
+> > > 
+> > > I do not think it's the correct way to go, especially when there is already
+> > > fs_holder_ops.
+> > > 
+> > > We're always going towards a more generic solution, other than letting the
+> > > individual fs to do the same thing slightly differently.
+> > 
+> > On second thought -- it's weird that you'd flush the filesystem and
+> > shrink the inode/dentry caches in a "your device went away" handler.
+> > Fancy filesystems like bcachefs and btrfs would likely just shift IO to
+> > a different bdev, right?  And there's no good reason to run shrinkers on
+> > either of those fses, right?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> I agree it is awkward and bcachefs avoids these in case of removal it can
+> handle gracefully AFAICS.
+> 
+> > > Yes, the naming is not perfect and mixing cause and action, but the end
+> > > result is still a more generic and less duplicated code base.
+> > 
+> > I think dchinner makes a good point that if your filesystem can do
+> > something clever on device removal, it should provide its own block
+> > device holder ops instead of using fs_holder_ops.  I don't understand
+> > why you need a "generic" solution for btrfs when it's not going to do
+> > what the others do anyway.
+> 
+> Well, I'd also say just go for own fs_holder_ops if it was not for the
+> awkward "get super from bdev" step. As Christian wrote we've encapsulated
+> that in fs/super.c and bdev_super_lock() in particular but the calling
+> conventions for the fs_holder_ops are not very nice (holding
+> bdev_holder_lock, need to release it before grabbing practically anything
+> else) so I'd have much greater peace of mind if this didn't spread too
+> much. Once you call bdev_super_lock() and hold on to sb with s_umount held,
+> things are much more conventional for the fs land so I'd like if this
+> step happened before any fs hook got called. So I prefer something like
+> Qu's proposal of separate sb op for device removal over exporting
+> bdev_super_lock(). Like:
+> 
+> static void fs_bdev_mark_dead(struct block_device *bdev, bool surprise)
+> {
+>         struct super_block *sb;
+> 
+>         sb = bdev_super_lock(bdev, false);
+>         if (!sb)
+>                 return;
+> 
+> 	if (sb->s_op->remove_bdev) {
+> 		sb->s_op->remove_bdev(sb, bdev, surprise);
+> 		return;
+> 	}
 
-Assuming the build bots don't hate this,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+It feels odd but I could live with this, particularly since that's the
+direction that brauner is laying down. :)
+
+Do we still need to super_unlock_shared here?
 
 --D
 
-> ---
->  fs/iomap/buffered-io.c | 10 ----------
->  fs/iomap/direct-io.c   |  5 -----
->  fs/iomap/fiemap.c      |  3 ---
->  fs/iomap/iter.c        |  1 -
->  fs/iomap/seek.c        |  4 ----
->  fs/iomap/swapfile.c    |  3 ---
->  fs/iomap/trace.c       |  1 -
->  7 files changed, 27 deletions(-)
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 3729391a18f3..addf6ed13061 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -3,18 +3,8 @@
->   * Copyright (C) 2010 Red Hat, Inc.
->   * Copyright (C) 2016-2023 Christoph Hellwig.
->   */
-> -#include <linux/module.h>
-> -#include <linux/compiler.h>
-> -#include <linux/fs.h>
->  #include <linux/iomap.h>
-> -#include <linux/pagemap.h>
-> -#include <linux/uio.h>
->  #include <linux/buffer_head.h>
-> -#include <linux/dax.h>
-> -#include <linux/writeback.h>
-> -#include <linux/swap.h>
-> -#include <linux/bio.h>
-> -#include <linux/sched/signal.h>
->  #include <linux/migrate.h>
->  #include "internal.h"
->  #include "trace.h"
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index 844261a31156..6f25d4cfea9f 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -3,14 +3,9 @@
->   * Copyright (C) 2010 Red Hat, Inc.
->   * Copyright (c) 2016-2025 Christoph Hellwig.
->   */
-> -#include <linux/module.h>
-> -#include <linux/compiler.h>
-> -#include <linux/fs.h>
->  #include <linux/fscrypt.h>
->  #include <linux/pagemap.h>
->  #include <linux/iomap.h>
-> -#include <linux/backing-dev.h>
-> -#include <linux/uio.h>
->  #include <linux/task_io_accounting_ops.h>
->  #include "internal.h"
->  #include "trace.h"
-> diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
-> index 80675c42e94e..d11dadff8286 100644
-> --- a/fs/iomap/fiemap.c
-> +++ b/fs/iomap/fiemap.c
-> @@ -2,9 +2,6 @@
->  /*
->   * Copyright (c) 2016-2021 Christoph Hellwig.
->   */
-> -#include <linux/module.h>
-> -#include <linux/compiler.h>
-> -#include <linux/fs.h>
->  #include <linux/iomap.h>
->  #include <linux/fiemap.h>
->  #include <linux/pagemap.h>
-> diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
-> index 6ffc6a7b9ba5..cef77ca0c20b 100644
-> --- a/fs/iomap/iter.c
-> +++ b/fs/iomap/iter.c
-> @@ -3,7 +3,6 @@
->   * Copyright (C) 2010 Red Hat, Inc.
->   * Copyright (c) 2016-2021 Christoph Hellwig.
->   */
-> -#include <linux/fs.h>
->  #include <linux/iomap.h>
->  #include "trace.h"
->  
-> diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
-> index 04d7919636c1..56db2dd4b10d 100644
-> --- a/fs/iomap/seek.c
-> +++ b/fs/iomap/seek.c
-> @@ -3,12 +3,8 @@
->   * Copyright (C) 2017 Red Hat, Inc.
->   * Copyright (c) 2018-2021 Christoph Hellwig.
->   */
-> -#include <linux/module.h>
-> -#include <linux/compiler.h>
-> -#include <linux/fs.h>
->  #include <linux/iomap.h>
->  #include <linux/pagemap.h>
-> -#include <linux/pagevec.h>
->  
->  static int iomap_seek_hole_iter(struct iomap_iter *iter,
->  		loff_t *hole_pos)
-> diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
-> index c1a762c10ce4..0db77c449467 100644
-> --- a/fs/iomap/swapfile.c
-> +++ b/fs/iomap/swapfile.c
-> @@ -3,9 +3,6 @@
->   * Copyright (C) 2018 Oracle.  All Rights Reserved.
->   * Author: Darrick J. Wong <darrick.wong@oracle.com>
->   */
-> -#include <linux/module.h>
-> -#include <linux/compiler.h>
-> -#include <linux/fs.h>
->  #include <linux/iomap.h>
->  #include <linux/swap.h>
->  
-> diff --git a/fs/iomap/trace.c b/fs/iomap/trace.c
-> index 728d5443daf5..da217246b1a9 100644
-> --- a/fs/iomap/trace.c
-> +++ b/fs/iomap/trace.c
-> @@ -3,7 +3,6 @@
->   * Copyright (c) 2019 Christoph Hellwig
->   */
->  #include <linux/iomap.h>
-> -#include <linux/uio.h>
->  
->  /*
->   * We include this last to have the helpers above available for the trace
+> 	if (!surprise)
+> 		sync_filesystem(sb);
+> 	shrink_dcache_sb(sb);
+> 	evict_inodes(sb);
+> 	if (sb->s_op->shutdown)
+> 		sb->s_op->shutdown(sb);
+> 
+> 	super_unlock_shared(sb);
+> }
+> 
+> > As an aside:
+> > 'twould be nice if we could lift the *FS_IOC_SHUTDOWN dispatch out of
+> > everyone's ioctl functions into the VFS, and then move the "I am dead"
+> > state into super_block so that you could actually shut down any
+> > filesystem, not just the seven that currently implement it.
+> 
+> Yes, I should find time to revive that patch series... It was not *that*
+> hard to do.
+> 
+> 								Honza
 > -- 
-> 2.47.2
-> 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
 > 
