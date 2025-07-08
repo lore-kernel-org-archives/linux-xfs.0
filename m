@@ -1,47 +1,96 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCB8716DEB3;
-	Tue,  8 Jul 2025 09:59:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67B96269B1C
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Jul 2025 10:20:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751968791; cv=none; b=hISDR6VSCM36f8S7cEIRkjLkCpjhtfykt2EV3pAvzy/kL7Ux3AFL+Gyyun45Bd/wB152bOWqneIJTuJ0Do4uPfbMjewIHaiOmlAxTB35OicrFpjm3g5cqxkYrGYYq6r6wEsJ9G4wLnWJSj7uGKxMPY62KX48dPp/JFtQOJJejeE=
+	t=1751970005; cv=none; b=danZyWiBNl+RT0XdWDSioQAPipM0f8XqvpcBJtst30cywEWmgTbAzsu5Jtz/gKWaz2OcwHk6uVGX1TCXk7I+/9tNjRnvg2wNxLa8e/hgW9ta4ixFgOsFo1ZbewLPuXj/UAeCTqk1KtbRArZvEr0WPOtWITN50MifUx8kJ0H1OL0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751968791; c=relaxed/simple;
-	bh=U+ALmIvtauUGQfRxu/HLRvT7GiUuFduo9KYZ9g3pIvk=;
+	s=arc-20240116; t=1751970005; c=relaxed/simple;
+	bh=6F+F/iGv3OA5nxQdu8gCwkz1tTRlsBjIS7mrQcANGjY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KRNCw2BjPqBdVUpkvoLAjGS7QRoXYGZuIpRj2iLTDXQDae5c37Dp74tRpR2SWsop86lGHJWN8Qp3KLZBV/A3ekpm5yzcSHXrWlhZifuAvF1sxpww1zRjqgEqQvrc2qo0FPwJDR/Ymdb+EZ2m80jUc16i57WHZPiL7m90BzqSoXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Amefj1Rm; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=H1KdHUJPUNVIGUCAw8C1vM7cjZOSDWUFsMEJ8ZefKUh3SC1JFt00kZUeDnsikRQRr15ZuSzg6HF9P9+IRKNpPo3zdfMMd1aazB5nA8b5U0PZfkTZc5IcCmynkFyLgyV2wFVqGgeMGOf3Cw02E3DoJ9/TruoBykOeFEBUoZShUjA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=gvcSW/jb; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=JPeLmiN4; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=gvcSW/jb; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=JPeLmiN4; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Amefj1Rm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3950C4CEED;
-	Tue,  8 Jul 2025 09:59:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751968790;
-	bh=U+ALmIvtauUGQfRxu/HLRvT7GiUuFduo9KYZ9g3pIvk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Amefj1Rmg+fI/XRubKDeZ7IUZEnSfmrH6Njg7/73ml52H0kWvBbZjY/CP1IOIxRZv
-	 N3E3IQUet2ziFlYsm/lda+gLecuMRZFaTlON02n8IQ0Pj2vjIvnwZl2ewYXp7FsjYL
-	 AYTiwHzezEenNnQZg81CRyIHJG2YJ7Rp4XjploQio+6d4QqVlmXfqMIosH/0mHTOtT
-	 8ObsTXXeEyt9iSz7nCVEL52ohy24GZZHTp8VCgwy3Fgw9Iy0Ods4HDpRjV2HOTGDmk
-	 qvPhfxArg3zgagcFyw9QJiO6seV+rgwR8X7+Qpky+WzEqZjOSSYke77G1AbTN9OYMa
-	 mEYFGprXBIEoA==
-Date: Tue, 8 Jul 2025 11:59:44 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Pranav Tyagi <pranav.tyagi03@gmail.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, skhan@linuxfoundation.org, 
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kernel-mentees@lists.linux.dev
-Subject: Re: [PATCH] xfs: replace strncpy with memcpy in xattr listing
-Message-ID: <l6sjutxf7g3gafcmwtzaadm7ngoqoss5lh6sc4f6naugb3vo2b@e4mdbr43xwge>
-References: <oxpeGQP7AC5GXfnifSYyeW7X_URDJhOvCxTG09iGmuvIXd330ZdXanoBmbUB3wpOcIORP1CakEzevsjtJKynhw==@protonmail.internalid>
- <20250617131446.25551-1-pranav.tyagi03@gmail.com>
- <huml6d5naz4kf6a3kh5g74dyrtivlaqyzajzwwmyvnpsqhuj3d@7zazaxb3225t>
- <rkCSJQOnZAt9nfcVUrC8gHDWqHhzMThp3xx38GD2BgJZM4iXJfvVgXZwa21-3xikSHHLO-scI4_47aO-O1d5FQ==@protonmail.internalid>
- <CAH4c4j+dhh9uW=GOoxaaefBTWQtbLeWQs1SqrWwpka9R8mwBTg@mail.gmail.com>
- <aaywkct2isosqxd37njlua4xxxll2vlvv7huhh34ko3ths7iw4@cdgrtvlp3cwh>
- <pygwb44kAWjcvW1e9Rveg6qGlQmY2r81JtgZ1dM1qhWT6DxalgoXub31RDJH0Mcx2S3cNbWTiFXM9o74gelVnA==@protonmail.internalid>
- <CAH4c4jKisoACHNOQH5Cusduu-_51_PcevxYJT3k_o6MjBWsVJw@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="gvcSW/jb";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="JPeLmiN4";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="gvcSW/jb";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="JPeLmiN4"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 77A321F38D;
+	Tue,  8 Jul 2025 10:20:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1751970001; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hj1CDaVD+4BtlFnopoRZeD5WKkVDF86m6K5HhWwwKt8=;
+	b=gvcSW/jbIbPJe4xojVrkaRri64CmwfkMCivzcOcy7X/5Ulw+aCiQctp3+++b5kqbwtKWfd
+	XZQLG1KLyBLvSIpnHoUMBP0JhOPCk/9pWF975zNBS2Z89IyO8R3f1A0MnwdyqV1ahHhof+
+	2hJTSd2oiBrpFPJh/W1vOOSMyXPKh1E=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1751970001;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hj1CDaVD+4BtlFnopoRZeD5WKkVDF86m6K5HhWwwKt8=;
+	b=JPeLmiN4a6hJiNlYT+wM83pfzh7kRvuR3E14GWwd7cCJViE7FCdJgiAGCQ4t0tbrbV7KE0
+	6is/9OuH+76f87BA==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b="gvcSW/jb";
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=JPeLmiN4
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1751970001; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hj1CDaVD+4BtlFnopoRZeD5WKkVDF86m6K5HhWwwKt8=;
+	b=gvcSW/jbIbPJe4xojVrkaRri64CmwfkMCivzcOcy7X/5Ulw+aCiQctp3+++b5kqbwtKWfd
+	XZQLG1KLyBLvSIpnHoUMBP0JhOPCk/9pWF975zNBS2Z89IyO8R3f1A0MnwdyqV1ahHhof+
+	2hJTSd2oiBrpFPJh/W1vOOSMyXPKh1E=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1751970001;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hj1CDaVD+4BtlFnopoRZeD5WKkVDF86m6K5HhWwwKt8=;
+	b=JPeLmiN4a6hJiNlYT+wM83pfzh7kRvuR3E14GWwd7cCJViE7FCdJgiAGCQ4t0tbrbV7KE0
+	6is/9OuH+76f87BA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6340A13A54;
+	Tue,  8 Jul 2025 10:20:01 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 9+I3GNHwbGi7eQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Tue, 08 Jul 2025 10:20:01 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id EA382A098F; Tue,  8 Jul 2025 12:20:00 +0200 (CEST)
+Date: Tue, 8 Jul 2025 12:20:00 +0200
+From: Jan Kara <jack@suse.cz>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Qu Wenruo <quwenruo.btrfs@gmx.com>, Dave Chinner <david@fromorbit.com>, 
+	Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org, 
+	linux-f2fs-devel@lists.sourceforge.net, ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4 1/6] fs: enhance and rename shutdown() callback to
+ remove_bdev()
+Message-ID: <2dm6bsup7vxwl4vwmllkvt5erncirr272bov4ehd5gix7n2vnw@bkagb26tjtj5>
+References: <cover.1751589725.git.wqu@suse.com>
+ <de25bbdb572c75df38b1002d3779bf19e3ad0ff6.1751589725.git.wqu@suse.com>
+ <aGxSHKeyldrR1Q0T@dread.disaster.area>
+ <dbd955f7-b9b4-402f-97bf-6b38f0c3237e@gmx.com>
+ <20250708004532.GA2672018@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,81 +100,156 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAH4c4jKisoACHNOQH5Cusduu-_51_PcevxYJT3k_o6MjBWsVJw@mail.gmail.com>
+In-Reply-To: <20250708004532.GA2672018@frogsfrogsfrogs>
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_COUNT_THREE(0.00)[3];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[13];
+	RCVD_TLS_LAST(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmx.com];
+	TO_DN_SOME(0.00)[];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DWL_DNSWL_BLOCKED(0.00)[suse.cz:dkim];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FREEMAIL_CC(0.00)[gmx.com,fromorbit.com,suse.com,vger.kernel.org,zeniv.linux.org.uk,kernel.org,suse.cz,lists.sourceforge.net,lists.linux.dev];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email]
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Rspamd-Queue-Id: 77A321F38D
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -4.01
 
-On Mon, Jul 07, 2025 at 08:02:06PM +0530, Pranav Tyagi wrote:
-> On Tue, Jul 1, 2025 at 12:04 AM Carlos Maiolino <cem@kernel.org> wrote:
-> >
-> > On Mon, Jun 30, 2025 at 06:18:06PM +0530, Pranav Tyagi wrote:
-> > > On Mon, Jun 30, 2025 at 5:49 PM Carlos Maiolino <cem@kernel.org> wrote:
-> > > >
-> > > > On Tue, Jun 17, 2025 at 06:44:46PM +0530, Pranav Tyagi wrote:
-> > > > > Use memcpy() in place of strncpy() in __xfs_xattr_put_listent().
-> > > > > The length is known and a null byte is added manually.
-> > > > >
-> > > > > No functional change intended.
-> > > > >
-> > > > > Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
-> > > > > ---
-> > > > >  fs/xfs/xfs_xattr.c | 2 +-
-> > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > >
-> > > > > diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> > > > > index 0f641a9091ec..ac5cecec9aa1 100644
-> > > > > --- a/fs/xfs/xfs_xattr.c
-> > > > > +++ b/fs/xfs/xfs_xattr.c
-> > > > > @@ -243,7 +243,7 @@ __xfs_xattr_put_listent(
-> > > > >       offset = context->buffer + context->count;
-> > > > >       memcpy(offset, prefix, prefix_len);
-> > > > >       offset += prefix_len;
-> > > > > -     strncpy(offset, (char *)name, namelen);                 /* real name */
-> > > > > +     memcpy(offset, (char *)name, namelen);                  /* real name */
-> > > > >       offset += namelen;
-> > > > >       *offset = '\0';
-> > > >
-> > > > What difference does it make?
-> > >
-> > > I intended this to be a cleanup patch as strncpy()
-> > > is deprecated and its use discouraged.
-> >
-> > Fair enough. This is the kind of information that's worth
-> > to add to the patch description on your future patches.
-> >
-> > No need to re-send this again.
-> >
-> > Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+On Mon 07-07-25 17:45:32, Darrick J. Wong wrote:
+> On Tue, Jul 08, 2025 at 08:52:47AM +0930, Qu Wenruo wrote:
+> > 在 2025/7/8 08:32, Dave Chinner 写道:
+> > > On Fri, Jul 04, 2025 at 10:12:29AM +0930, Qu Wenruo wrote:
+> > > > Currently all the filesystems implementing the
+> > > > super_opearations::shutdown() callback can not afford losing a device.
+> > > > 
+> > > > Thus fs_bdev_mark_dead() will just call the shutdown() callback for the
+> > > > involved filesystem.
+> > > > 
+> > > > But it will no longer be the case, with multi-device filesystems like
+> > > > btrfs and bcachefs the filesystem can handle certain device loss without
+> > > > shutting down the whole filesystem.
+> > > > 
+> > > > To allow those multi-device filesystems to be integrated to use
+> > > > fs_holder_ops:
+> > > > 
+> > > > - Replace super_opearation::shutdown() with
+> > > >    super_opearations::remove_bdev()
+> > > >    To better describe when the callback is called.
+> > > 
+> > > This conflates cause with action.
+> > > 
+> > > The shutdown callout is an action that the filesystem must execute,
+> > > whilst "remove bdev" is a cause notification that might require an
+> > > action to be take.
+> > > 
+> > > Yes, the cause could be someone doing hot-unplug of the block
+> > > device, but it could also be something going wrong in software
+> > > layers below the filesystem. e.g. dm-thinp having an unrecoverable
+> > > corruption or ENOSPC errors.
+> > > 
+> > > We already have a "cause" notification: blk_holder_ops->mark_dead().
+> > > 
+> > > The generic fs action that is taken by this notification is
+> > > fs_bdev_mark_dead().  That action is to invalidate caches and shut
+> > > down the filesystem.
+> > > 
+> > > btrfs needs to do something different to a blk_holder_ops->mark_dead
+> > > notification. i.e. it needs an action that is different to
+> > > fs_bdev_mark_dead().
+> > > 
+> > > Indeed, this is how bcachefs already handles "single device
+> > > died" events for multi-device filesystems - see
+> > > bch2_fs_bdev_mark_dead().
+> > 
+> > I do not think it's the correct way to go, especially when there is already
+> > fs_holder_ops.
+> > 
+> > We're always going towards a more generic solution, other than letting the
+> > individual fs to do the same thing slightly differently.
 > 
-> Thanks Darrick and Carlos for the Reviewed-by tag.
+> On second thought -- it's weird that you'd flush the filesystem and
+> shrink the inode/dentry caches in a "your device went away" handler.
+> Fancy filesystems like bcachefs and btrfs would likely just shift IO to
+> a different bdev, right?  And there's no good reason to run shrinkers on
+> either of those fses, right?
+
+I agree it is awkward and bcachefs avoids these in case of removal it can
+handle gracefully AFAICS.
+
+> > Yes, the naming is not perfect and mixing cause and action, but the end
+> > result is still a more generic and less duplicated code base.
 > 
-> I also wanted to ask if this patch has been queued for merging.
+> I think dchinner makes a good point that if your filesystem can do
+> something clever on device removal, it should provide its own block
+> device holder ops instead of using fs_holder_ops.  I don't understand
+> why you need a "generic" solution for btrfs when it's not going to do
+> what the others do anyway.
 
-xfs teams sends an ANNOUNCE email every merge done to the for-next
-branch, you can check if your patches are mentioned there, if not
-they are not queued up yet.
+Well, I'd also say just go for own fs_holder_ops if it was not for the
+awkward "get super from bdev" step. As Christian wrote we've encapsulated
+that in fs/super.c and bdev_super_lock() in particular but the calling
+conventions for the fs_holder_ops are not very nice (holding
+bdev_holder_lock, need to release it before grabbing practically anything
+else) so I'd have much greater peace of mind if this didn't spread too
+much. Once you call bdev_super_lock() and hold on to sb with s_umount held,
+things are much more conventional for the fs land so I'd like if this
+step happened before any fs hook got called. So I prefer something like
+Qu's proposal of separate sb op for device removal over exporting
+bdev_super_lock(). Like:
 
-Also, you'll likely receive a message saying your patch has been pushed
-into for-next.
+static void fs_bdev_mark_dead(struct block_device *bdev, bool surprise)
+{
+        struct super_block *sb;
 
-Note though that just because your patch has been added to for-next,
-doesn't automatically mean it will be merged. Several tests still
-happens on patches pushed to for-next branch (which are merged into
-linux-next) and linux-next 'after' your patch has been merged into.
+        sb = bdev_super_lock(bdev, false);
+        if (!sb)
+                return;
 
-So your patch(es) being merged are conditional to that.
+	if (sb->s_op->remove_bdev) {
+		sb->s_op->remove_bdev(sb, bdev, surprise);
+		return;
+	}
 
-Carlos
+	if (!surprise)
+		sync_filesystem(sb);
+	shrink_dcache_sb(sb);
+	evict_inodes(sb);
+	if (sb->s_op->shutdown)
+		sb->s_op->shutdown(sb);
 
-> 
-> Regards
-> Pranav Tyagi
-> >
-> > >
-> > > Regards
-> > > Pranav Tyagi
-> > > >
-> > > >
-> > > > >
-> > > > > --
-> > > > > 2.49.0
-> > > > >
-> 
+	super_unlock_shared(sb);
+}
+
+> As an aside:
+> 'twould be nice if we could lift the *FS_IOC_SHUTDOWN dispatch out of
+> everyone's ioctl functions into the VFS, and then move the "I am dead"
+> state into super_block so that you could actually shut down any
+> filesystem, not just the seven that currently implement it.
+
+Yes, I should find time to revive that patch series... It was not *that*
+hard to do.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
