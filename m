@@ -1,177 +1,111 @@
-Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F0F92356D9;
-	Tue,  8 Jul 2025 10:20:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 146D027147B
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Jul 2025 11:56:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751970013; cv=none; b=YLRZ2meJv8KUv39b/MAuO+KHOJRWt3S698YCJh17S/G1egIeSqPS71e/xDy0TUUrFOBYMsUpwODDmF705wiqmDue+uc5RXS6Q2bFZVpjBsmWhqcSA6SMcHIwTs4opcz/ezJ3kGZN/whmvY+I6QY0j0HIL09n1dKwWg+f22EVNAg=
+	t=1751975768; cv=none; b=dbBARnkvCmAHEEOx5GHcXmvwMAqrctT6MTNvrezyboxu5GeVWgXTzETYuqTZiLTGvIgj2qebMlKopIlxbAAlWTkb/Ebxb8vAU0BKz0jegHaXrl3ft0bnLml7M3ZnAWLXAd0z2tSD8vPO7XdDL3FgQ1wPCWTbnyTMvxDiJlVbp0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751970013; c=relaxed/simple;
-	bh=D/rugq62NqRvUoEsmLUFEoWjO27aaV0wos1Jt2fg5/8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=DVpKhn4erUH6zdSGI5wTW7xitDdYzOfX7OgBPificWufiX+jZYSAMr8On3RK5DL4W19qhV/tP6QjtpZ2WdfRNFzhwkYrZqp4evSeTs4v2wknmpY42YwKeNPEs5xayGeogKiA6lv33Ni3M1ylSb7hemvbNPayLo5yLy22ZChPiik=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eAwAUkt9; arc=none smtp.client-ip=209.85.208.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1751975768; c=relaxed/simple;
+	bh=g/mMlGQ6OpR7pji6K44YIeHCvyggh3aVDhH2xMjjc7c=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=YXwVZwRjuC19vixzHYiLO9WXbYOz2vVTnOSLbx5HVt1jIyj8Z4B7I8rxM3P1uzaGVmyEXpYVbpKj/ct5zKCIt39N8jBLisRCSnfbpEcqDumi6Gn9rc04tb5kt6Hc2GPC0nn++Cqal/LqqSDiQro1knR4NjlGi7LM9Nwje51AtMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AYmyffyd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eAwAUkt9"
-Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-32cd0dfbdb8so32728051fa.0;
-        Tue, 08 Jul 2025 03:20:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751970009; x=1752574809; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Awb6tXNQDJ0dFL9aG2IwmxWJj9BT8w+at9VdX9y3gZ8=;
-        b=eAwAUkt9w8uXwnXMVmCJGQ/yif27c1xpnTOCHtj+Ovv3LhlMdrrjgeMN17BUqw/Kxi
-         IbrbkBSNtJTglr5w/zgFMz3wO0gYe8NL4qy6kLQPlewFOa8pHlQST6Z3W9CjxjGoYtrF
-         TP57Kw+J7wQgjmLeViO5yAXwjMQ0tf94zdB+vx265GK/sFufyXZr/8ZI0T+qWl5t0W+v
-         uJ0NkMrOld8joeG0UYtDJzC/YnMOJnB0Ap9TdPXdsaHEN4NxoGGKc2GMk8SQ+AlDB1T3
-         z0pRzyDt6mVpxfD39lUq8X7PACTxd6dwKd1UkqBIVxp8l8sD7SoNQ/YGPN0KC1a3U5YV
-         JIcA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751970009; x=1752574809;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Awb6tXNQDJ0dFL9aG2IwmxWJj9BT8w+at9VdX9y3gZ8=;
-        b=L3wqDB2CyoCfrFQFhpERshOGnDOxei+fkC2MvowV8SlSAN6sciJM11vPWmg0niRYqn
-         XIYlzsRzrB8cQpK3BSEoqYqxw5RJeXpW2sTmnyWljbAseCuhKSTXeJBpMRw8SylS+0+a
-         e+nFM5TlRFwdi366so9sXeVrVePORkpgTnJheDCBzjzKSrFs2fBCCWHqEFOsCOzWItjk
-         bme198CxYZ5FlwQq9sBxgV749ptbC3lLyaTu9g7gxpSWnR9ZNdb3izzwok/SqzKy1KQa
-         AEjwKzIla3Mxwdf7cN38c/YunlkXoms5H2EG9MRXi0CbL73gE11pTTFgcQQjLFJVZz3K
-         wqtQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUgGYg4NiWarKLLzH+nj8vXo4Sq2YfVlI//F2eqE0lCj4AQjIt+3GKA/id3qIhzFPA8eQLbTFZ6hnyxo2E=@vger.kernel.org, AJvYcCX9DU7o16QHBhTzv4iph+tClbdP7RXunlzOgLqibEi30V98Bl7uY0LOJgIXftNu1mgzeE003k8cpq6h@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzinw0LfjZycPBN8ZFLiA1wFmEdw+5Mc2epUncS02b4fRlKhMOv
-	G81/uvSLEJ0ar+kRMKDrEK6Tud1n59qA3wYDR6LoWJjVyM3h/DF1wpP8gNweX1N29oK1qKXYL42
-	5nRWRzZGaAjwuT+XHCgxzCcfu69TNJESCBN9uLaQ=
-X-Gm-Gg: ASbGncsUEUiaMe4H3ZvKFIgmIPmIM8KBo5gwoYjs5vwAr/8PE9xRFT3Dcn2S+3bZjia
-	ZBS2xyaNyF+qVoEyAJFH+VB9lvfuxIaE3xwLCZEevqAwSbT3XTvU+Z5nyA64amStbY0h56bgvj6
-	aH8a0D5B8vfmnYRn/VUYFM1CybySzAFUEVRQhclsxZxRDrqsBzq6+/bmLYBAhSdBwSNZRwgzBqo
-	n4CIg==
-X-Google-Smtp-Source: AGHT+IGDNA/hdoUmcRyc8lUIdC6VR0yRoUpGjkizdwlk7FkpbVDTvL8sttZNsL8lYZejDPkViSX9aVc5pKcKshAplco=
-X-Received: by 2002:a05:651c:4209:b0:32b:881e:9723 with SMTP id
- 38308e7fff4ca-32f092f309emr43000991fa.30.1751970008852; Tue, 08 Jul 2025
- 03:20:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AYmyffyd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C74BEC4CEF0
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Jul 2025 11:56:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751975767;
+	bh=g/mMlGQ6OpR7pji6K44YIeHCvyggh3aVDhH2xMjjc7c=;
+	h=Date:From:To:Subject:From;
+	b=AYmyffyd3xFkskJFOil059oYaxyI4QFCPiTHrHIPLggAKiMBwxJq7k7KnXDfJPrnT
+	 +CWN9/34CMh4ThgRyAOuRtCHQTwIA4VEW0x28DgQeT2kBYr1wEJYEQfPvV/XiovxCp
+	 qncXKs3v8lg1FD8cWYJmiBzgEPkNwiY9dUi0J+IAmgcZC0boVPVmfcP6bjLSIjTCKG
+	 QzaYGqYAZUBfZtU7ZTlHU8sPyk4MFe5Fm8ewDhwlNjPcIAGx435JK4ivOaWoSH8T27
+	 3TSLTZdRUH7WMZCLsjEDSbNArgGk3M2/az9xygGasFxVA36qGTP8ah5jAWfiYLOBnc
+	 VlfbYbwd46OKA==
+Date: Tue, 8 Jul 2025 13:56:03 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 1928a4228b2f
+Message-ID: <z3bupeq3h5bqdebjqu2gkrg5ndov3cyzywqcoymrf5yagnv6cz@p7s2awrglr4z>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <oxpeGQP7AC5GXfnifSYyeW7X_URDJhOvCxTG09iGmuvIXd330ZdXanoBmbUB3wpOcIORP1CakEzevsjtJKynhw==@protonmail.internalid>
- <20250617131446.25551-1-pranav.tyagi03@gmail.com> <huml6d5naz4kf6a3kh5g74dyrtivlaqyzajzwwmyvnpsqhuj3d@7zazaxb3225t>
- <rkCSJQOnZAt9nfcVUrC8gHDWqHhzMThp3xx38GD2BgJZM4iXJfvVgXZwa21-3xikSHHLO-scI4_47aO-O1d5FQ==@protonmail.internalid>
- <CAH4c4j+dhh9uW=GOoxaaefBTWQtbLeWQs1SqrWwpka9R8mwBTg@mail.gmail.com>
- <aaywkct2isosqxd37njlua4xxxll2vlvv7huhh34ko3ths7iw4@cdgrtvlp3cwh>
- <pygwb44kAWjcvW1e9Rveg6qGlQmY2r81JtgZ1dM1qhWT6DxalgoXub31RDJH0Mcx2S3cNbWTiFXM9o74gelVnA==@protonmail.internalid>
- <CAH4c4jKisoACHNOQH5Cusduu-_51_PcevxYJT3k_o6MjBWsVJw@mail.gmail.com> <l6sjutxf7g3gafcmwtzaadm7ngoqoss5lh6sc4f6naugb3vo2b@e4mdbr43xwge>
-In-Reply-To: <l6sjutxf7g3gafcmwtzaadm7ngoqoss5lh6sc4f6naugb3vo2b@e4mdbr43xwge>
-From: Pranav Tyagi <pranav.tyagi03@gmail.com>
-Date: Tue, 8 Jul 2025 15:49:57 +0530
-X-Gm-Features: Ac12FXzcUqWzQrXUdy5z9S1JxAuoOKEZAS97LEvaHWnhsnetkFCia41LgEAWzYE
-Message-ID: <CAH4c4j+ocaGrTYUz8t_P02itOZkVPcRRAZPe3iHrgsHjxjN9LQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: replace strncpy with memcpy in xattr listing
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, skhan@linuxfoundation.org, linux-xfs@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Tue, Jul 8, 2025 at 3:29=E2=80=AFPM Carlos Maiolino <cem@kernel.org> wro=
-te:
->
-> On Mon, Jul 07, 2025 at 08:02:06PM +0530, Pranav Tyagi wrote:
-> > On Tue, Jul 1, 2025 at 12:04=E2=80=AFAM Carlos Maiolino <cem@kernel.org=
-> wrote:
-> > >
-> > > On Mon, Jun 30, 2025 at 06:18:06PM +0530, Pranav Tyagi wrote:
-> > > > On Mon, Jun 30, 2025 at 5:49=E2=80=AFPM Carlos Maiolino <cem@kernel=
-.org> wrote:
-> > > > >
-> > > > > On Tue, Jun 17, 2025 at 06:44:46PM +0530, Pranav Tyagi wrote:
-> > > > > > Use memcpy() in place of strncpy() in __xfs_xattr_put_listent()=
-.
-> > > > > > The length is known and a null byte is added manually.
-> > > > > >
-> > > > > > No functional change intended.
-> > > > > >
-> > > > > > Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
-> > > > > > ---
-> > > > > >  fs/xfs/xfs_xattr.c | 2 +-
-> > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > > >
-> > > > > > diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> > > > > > index 0f641a9091ec..ac5cecec9aa1 100644
-> > > > > > --- a/fs/xfs/xfs_xattr.c
-> > > > > > +++ b/fs/xfs/xfs_xattr.c
-> > > > > > @@ -243,7 +243,7 @@ __xfs_xattr_put_listent(
-> > > > > >       offset =3D context->buffer + context->count;
-> > > > > >       memcpy(offset, prefix, prefix_len);
-> > > > > >       offset +=3D prefix_len;
-> > > > > > -     strncpy(offset, (char *)name, namelen);                 /=
-* real name */
-> > > > > > +     memcpy(offset, (char *)name, namelen);                  /=
-* real name */
-> > > > > >       offset +=3D namelen;
-> > > > > >       *offset =3D '\0';
-> > > > >
-> > > > > What difference does it make?
-> > > >
-> > > > I intended this to be a cleanup patch as strncpy()
-> > > > is deprecated and its use discouraged.
-> > >
-> > > Fair enough. This is the kind of information that's worth
-> > > to add to the patch description on your future patches.
-> > >
-> > > No need to re-send this again.
-> > >
-> > > Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> >
-> > Thanks Darrick and Carlos for the Reviewed-by tag.
-> >
-> > I also wanted to ask if this patch has been queued for merging.
->
-> xfs teams sends an ANNOUNCE email every merge done to the for-next
-> branch, you can check if your patches are mentioned there, if not
-> they are not queued up yet.
->
-> Also, you'll likely receive a message saying your patch has been pushed
-> into for-next.
->
-> Note though that just because your patch has been added to for-next,
-> doesn't automatically mean it will be merged. Several tests still
-> happens on patches pushed to for-next branch (which are merged into
-> linux-next) and linux-next 'after' your patch has been merged into.
->
-> So your patch(es) being merged are conditional to that.
->
-> Carlos
->
 
-Hi,
+Hi folks,
 
-Thanks for the clarification. I'll keep an eye on the announce emails
-and wait to see if my patch gets mentioned or pushed to the for-next
-branch.
+The for-next branch of the xfs-linux repository at:
 
-Appreciate the insight into the review and testing process. That
-helps a lot.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Regards
-Pranav Tyagi
-> >
-> > Regards
-> > Pranav Tyagi
-> > >
-> > > >
-> > > > Regards
-> > > > Pranav Tyagi
-> > > > >
-> > > > >
-> > > > > >
-> > > > > > --
-> > > > > > 2.49.0
-> > > > > >
-> >
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+1928a4228b2f Merge branch 'xfs-6.17-merge' into for-next
+
+15 new commits:
+
+Carlos Maiolino (2):
+      [ec5a785ea7c5] Merge branch 'xfs-6.16-fixes' into for-next
+      [1928a4228b2f] Merge branch 'xfs-6.17-merge' into for-next
+
+Christoph Hellwig (6):
+      [a578a8efa707] xfs: clean up the initial read logic in xfs_readsb
+      [d9b1e348cff7] xfs: remove the call to sync_blockdev in xfs_configure_buftarg
+      [e74d1fa6a7d7] xfs: add a xfs_group_type_buftarg helper
+      [e4a7a3f9b243] xfs: refactor xfs_calc_atomic_write_unit_max
+      [988a16827582] xfs: rename the bt_bdev_* buftarg fields
+      [9b027aa3e8c4] xfs: remove the bt_bdev_file buftarg field
+
+Fedor Pchelkin (6):
+      [c4c6aee6ba87] xfs: rename diff_two_keys routines
+      [fb7eff8c9f1b] xfs: rename key_diff routines
+      [ff48e83c9dcd] xfs: refactor cmp_two_keys routines to take advantage of cmp_int()
+      [786b3b2e1660] xfs: refactor cmp_key_with_cur routines to take advantage of cmp_int()
+      [a0b2b28e1cc1] xfs: use a proper variable name and type for storing a comparison result
+      [10e4f0aebdad] xfs: refactor xfs_btree_diff_two_ptrs() to take advantage of cmp_int()
+
+Pranav Tyagi (1):
+      [f2eb2796b951] xfs: replace strncpy with memcpy in xattr listing
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_alloc_btree.c      | 52 ++++++++-----------
+ fs/xfs/libxfs/xfs_bmap_btree.c       | 32 ++++--------
+ fs/xfs/libxfs/xfs_btree.c            | 33 ++++++------
+ fs/xfs/libxfs/xfs_btree.h            | 41 ++++++++-------
+ fs/xfs/libxfs/xfs_ialloc_btree.c     | 24 ++++-----
+ fs/xfs/libxfs/xfs_refcount_btree.c   | 18 +++----
+ fs/xfs/libxfs/xfs_rmap_btree.c       | 67 +++++++++----------------
+ fs/xfs/libxfs/xfs_rtrefcount_btree.c | 18 +++----
+ fs/xfs/libxfs/xfs_rtrmap_btree.c     | 67 +++++++++----------------
+ fs/xfs/scrub/btree.c                 |  2 +-
+ fs/xfs/scrub/rcbag_btree.c           | 38 ++++----------
+ fs/xfs/xfs_buf.c                     | 15 ++----
+ fs/xfs/xfs_buf.h                     |  8 ++-
+ fs/xfs/xfs_discard.c                 | 29 +++--------
+ fs/xfs/xfs_file.c                    |  2 +-
+ fs/xfs/xfs_inode.h                   |  2 +-
+ fs/xfs/xfs_iomap.c                   |  2 +-
+ fs/xfs/xfs_iops.c                    |  2 +-
+ fs/xfs/xfs_mount.c                   | 97 +++++++++++++++---------------------
+ fs/xfs/xfs_mount.h                   | 17 +++++++
+ fs/xfs/xfs_notify_failure.c          |  3 +-
+ fs/xfs/xfs_trace.h                   | 31 ++++++------
+ fs/xfs/xfs_xattr.c                   |  2 +-
+ 23 files changed, 249 insertions(+), 353 deletions(-)
