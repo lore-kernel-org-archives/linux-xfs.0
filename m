@@ -1,153 +1,236 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66D4B221282;
-	Tue,  8 Jul 2025 07:55:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 891D5221D87
+	for <linux-xfs@vger.kernel.org>; Tue,  8 Jul 2025 08:50:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751961320; cv=none; b=UiZVNYDfkhpVvfDohNtu2JY/IpU106/bx2uiqCe5oTNx1YDWCtpFxZ3X7cnDFBpkS337bwIKjTh2NLqQKCZCAewTfRwGx1DxLXAjZQHJQa9eQn4FE+fFRuYqQcgfcaMdQtsRwRmgvzdwCkTDTav1M7Z+ykfvps8jZnbxcIr5dys=
+	t=1751964635; cv=none; b=rd2mvxP5CzRtFb12Dn/eCQJOdVjSMfIRQFa8p9g10kFTOWaNdSJsuiCQOVjq9idLbnFHzSOu9pDYe7qifXfIcfhmz5bt4QAC65kXrH7gMaaMz9I0jzn5k1PPjjbLhDyb/wFfcgcenf01+tEUm4PZSDU9e2YnAv4HPQe4g1I0LI4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751961320; c=relaxed/simple;
-	bh=qsPSN2BpCezUCvdd+RaM6scGQ8lIU5NoJZv7E/OP/1I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MY2gHv0KybElIM+eF7K+SrSE74pcjdUOT6OCdWyniDDI5nEPUTxfRI6LcS2+JaKpq2B3iuGfFU4PkKSP4za2il6giWfDYtUlU7dA9BiVOl37QQhjcKg1aglhBMrYeEOym/T5IFBReM9ai+ZM1jHumYzPexLNERPGkvCxRMKH12Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sgxuPBfh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751964635; c=relaxed/simple;
+	bh=rU5S56Tjywba/GATBHNOl3N9qJOjs9GN3IxgTVFIRZg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UaeZtFBsSiXG07zmPVP/+pwUiK18sQeDyar/bA/b471Pr6UySg5FZB8Sb2Jv3+pC4JhtYGhazzOJUpuUoRkW7eEVcEYfVdMJWAIO9B4mYq9PiXeOaDb53JGUPcDvfpctRJgESC3d4n0hAbw/J2wBGSSzAejgs8lWxccyz+q+fXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=yb8kEekc; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=RMaswhTs; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=yb8kEekc; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=RMaswhTs; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sgxuPBfh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59B88C4CEED;
-	Tue,  8 Jul 2025 07:55:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751961320;
-	bh=qsPSN2BpCezUCvdd+RaM6scGQ8lIU5NoJZv7E/OP/1I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sgxuPBfh3cZ0dSDKch6I5Rqryw9OXZSRJcFlBBbK2wZk7UGITXp4prgxpzNUQi6VS
-	 +nmmibndMCtDY0Li8hfg7Jw/0gZudYRJblZ6FolRAubFzcLMuAsK7XEoKiSDxIgIW1
-	 9qRXNQoc/ihFCGt2UwXeahyM5dgBpX/hh1PBhZEkRleJQEzgoAcBwUYxCiRTCaUC1o
-	 XPGqDJKxSp5j5XzA1ld1uWapoMzVkWw9oV5u9f/lfYdSi0W1PygUXlIMOWdhVsP0C/
-	 ABdtdShHTLFroT13TzZA/Ayi8o093gg45lzstPUfEDRdSAW6wkVshNvzkuIsltRaXJ
-	 tIjDK/9jXsNog==
-Date: Tue, 8 Jul 2025 09:55:14 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Qu Wenruo <quwenruo.btrfs@gmx.com>, Dave Chinner <david@fromorbit.com>, 
-	Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	viro@zeniv.linux.org.uk, jack@suse.cz, linux-ext4@vger.kernel.org, 
-	linux-f2fs-devel@lists.sourceforge.net, ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 1/6] fs: enhance and rename shutdown() callback to
- remove_bdev()
-Message-ID: <20250708-geahndet-rohmaterial-0419fd6a76b3@brauner>
-References: <cover.1751589725.git.wqu@suse.com>
- <de25bbdb572c75df38b1002d3779bf19e3ad0ff6.1751589725.git.wqu@suse.com>
- <aGxSHKeyldrR1Q0T@dread.disaster.area>
- <dbd955f7-b9b4-402f-97bf-6b38f0c3237e@gmx.com>
- <20250708004532.GA2672018@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="yb8kEekc";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="RMaswhTs";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="yb8kEekc";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="RMaswhTs"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 9AFF721163;
+	Tue,  8 Jul 2025 08:50:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1751964631; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=gMCFCpkthoPDnqZLoQ6eE0mOo4CJZy8pXcbBxUNA1GI=;
+	b=yb8kEekcx7VMwrl0kqiIlutBxj+2f6qt2heMp3G+HTTBlPjhI7hgFURWUFp3jX1p/4WsWa
+	EbEtKf8ufIgG/2WJ2HL33urHp4Lb/uam8/G8xt1LrLs4KDAK8oVdi0YxkneuDW5FoOtA6E
+	aC8U+sYARX+3VdTjUJfBOwO4+uGvzL0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1751964631;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=gMCFCpkthoPDnqZLoQ6eE0mOo4CJZy8pXcbBxUNA1GI=;
+	b=RMaswhTsn4A2xOxws0wkKpz7lfGLUzzijcRjr4bjXQWPfWfRzlowgKApTqz5EdWoAH4sVL
+	j0GNxqZGAAQBM7Cg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1751964631; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=gMCFCpkthoPDnqZLoQ6eE0mOo4CJZy8pXcbBxUNA1GI=;
+	b=yb8kEekcx7VMwrl0kqiIlutBxj+2f6qt2heMp3G+HTTBlPjhI7hgFURWUFp3jX1p/4WsWa
+	EbEtKf8ufIgG/2WJ2HL33urHp4Lb/uam8/G8xt1LrLs4KDAK8oVdi0YxkneuDW5FoOtA6E
+	aC8U+sYARX+3VdTjUJfBOwO4+uGvzL0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1751964631;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=gMCFCpkthoPDnqZLoQ6eE0mOo4CJZy8pXcbBxUNA1GI=;
+	b=RMaswhTsn4A2xOxws0wkKpz7lfGLUzzijcRjr4bjXQWPfWfRzlowgKApTqz5EdWoAH4sVL
+	j0GNxqZGAAQBM7Cg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 64C4C13A68;
+	Tue,  8 Jul 2025 08:50:31 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id tNGDF9fbbGgXXgAAD6G6ig
+	(envelope-from <vbabka@suse.cz>); Tue, 08 Jul 2025 08:50:31 +0000
+Message-ID: <5397779c-9a89-4dd3-9937-208fefb58f78@suse.cz>
+Date: Tue, 8 Jul 2025 10:50:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250708004532.GA2672018@frogsfrogsfrogs>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [syzbot] [mm?] WARNING in xfs_init_fs_context
+To: Dave Chinner <david@fromorbit.com>
+Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Zi Yan
+ <ziy@nvidia.com>, Barry Song <baohua@kernel.org>,
+ Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+ syzbot <syzbot+359a67b608de1ef72f65@syzkaller.appspotmail.com>,
+ akpm@linux-foundation.org, apopple@nvidia.com, byungchul@sk.com,
+ david@redhat.com, gourry@gourry.net, joshua.hahnjy@gmail.com,
+ linux-kernel@vger.kernel.org, linux-mm@kvack.org, matthew.brost@intel.com,
+ rakie.kim@sk.com, syzkaller-bugs@googlegroups.com,
+ ying.huang@linux.alibaba.com, Harry Yoo <harry.yoo@oracle.com>,
+ Michal Hocko <mhocko@suse.com>, Matthew Wilcox <willy@infradead.org>
+References: <6861c281.a70a0220.3b7e22.0ab8.GAE@google.com>
+ <DDD5FAAF-F698-4FC8-B49C-FD1D3B283A8E@nvidia.com>
+ <1921ec99-7abb-42f1-a56b-d1f0f5bc1377@I-love.SAKURA.ne.jp>
+ <630b4379-751a-4bf1-a249-f2e051ec77d6@suse.cz>
+ <aGxF7NqHNK7Vtd1_@dread.disaster.area>
+Content-Language: en-US
+From: Vlastimil Babka <vbabka@suse.cz>
+Autocrypt: addr=vbabka@suse.cz; keydata=
+ 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
+ m6M14QORSWTLRg==
+In-Reply-To: <aGxF7NqHNK7Vtd1_@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-2.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	TAGGED_RCPT(0.00)[359a67b608de1ef72f65];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[22];
+	MIME_TRACE(0.00)[0:+];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[i-love.sakura.ne.jp,nvidia.com,kernel.org,vger.kernel.org,syzkaller.appspotmail.com,linux-foundation.org,sk.com,redhat.com,gourry.net,gmail.com,kvack.org,intel.com,googlegroups.com,linux.alibaba.com,oracle.com,suse.com,infradead.org];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo];
+	RCVD_COUNT_TWO(0.00)[2];
+	SUBJECT_HAS_QUESTION(0.00)[]
+X-Spam-Flag: NO
+X-Spam-Score: -2.80
 
-On Mon, Jul 07, 2025 at 05:45:32PM -0700, Darrick J. Wong wrote:
-> On Tue, Jul 08, 2025 at 08:52:47AM +0930, Qu Wenruo wrote:
-> > 
-> > 
-> > 在 2025/7/8 08:32, Dave Chinner 写道:
-> > > On Fri, Jul 04, 2025 at 10:12:29AM +0930, Qu Wenruo wrote:
-> > > > Currently all the filesystems implementing the
-> > > > super_opearations::shutdown() callback can not afford losing a device.
-> > > > 
-> > > > Thus fs_bdev_mark_dead() will just call the shutdown() callback for the
-> > > > involved filesystem.
-> > > > 
-> > > > But it will no longer be the case, with multi-device filesystems like
-> > > > btrfs and bcachefs the filesystem can handle certain device loss without
-> > > > shutting down the whole filesystem.
-> > > > 
-> > > > To allow those multi-device filesystems to be integrated to use
-> > > > fs_holder_ops:
-> > > > 
-> > > > - Replace super_opearation::shutdown() with
-> > > >    super_opearations::remove_bdev()
-> > > >    To better describe when the callback is called.
-> > > 
-> > > This conflates cause with action.
-> > > 
-> > > The shutdown callout is an action that the filesystem must execute,
-> > > whilst "remove bdev" is a cause notification that might require an
-> > > action to be take.
-> > > 
-> > > Yes, the cause could be someone doing hot-unplug of the block
-> > > device, but it could also be something going wrong in software
-> > > layers below the filesystem. e.g. dm-thinp having an unrecoverable
-> > > corruption or ENOSPC errors.
-> > > 
-> > > We already have a "cause" notification: blk_holder_ops->mark_dead().
-> > > 
-> > > The generic fs action that is taken by this notification is
-> > > fs_bdev_mark_dead().  That action is to invalidate caches and shut
-> > > down the filesystem.
-> > > 
-> > > btrfs needs to do something different to a blk_holder_ops->mark_dead
-> > > notification. i.e. it needs an action that is different to
-> > > fs_bdev_mark_dead().
-> > > 
-> > > Indeed, this is how bcachefs already handles "single device
-> > > died" events for multi-device filesystems - see
-> > > bch2_fs_bdev_mark_dead().
-> > 
-> > I do not think it's the correct way to go, especially when there is already
-> > fs_holder_ops.
-> > 
-> > We're always going towards a more generic solution, other than letting the
-> > individual fs to do the same thing slightly differently.
+On 7/8/25 00:10, Dave Chinner wrote:
+> On Wed, Jul 02, 2025 at 09:30:30AM +0200, Vlastimil Babka wrote:
+>> On 7/2/25 3:41 AM, Tetsuo Handa wrote:
+>> > By the way, why is xfs_init_fs_context() using __GFP_NOFAIL ?
+>> > 
+>> > 	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL | __GFP_NOFAIL);
+>> > 	if (!mp)
+>> > 		return -ENOMEM;
+>> > 
+>> > This looks an allocation attempt which can fail safely.
 > 
-> On second thought -- it's weird that you'd flush the filesystem and
-> shrink the inode/dentry caches in a "your device went away" handler.
-> Fancy filesystems like bcachefs and btrfs would likely just shift IO to
-> a different bdev, right?  And there's no good reason to run shrinkers on
-> either of those fses, right?
+> It's irrelevant - it shouldn't fail regardless of __GFP_NOFAIL being
+> specified.
+
+If you mean the "too small to fail" behavior then it's generally true,
+except in some corner cases like being an oom victim, in which case the
+allocation can fail - the userspace process is doomed anyway. But a (small)
+kernel allocation not handling NULL would still need __GFP_NOFAIL to prevent
+that corner case.
+
+>> Indeed. Dave Chinner's commit f078d4ea82760 ("xfs: convert kmem_alloc()
+>> to kmalloc()") dropped the xfs wrapper. This allocation didn't use
+>> KM_MAYFAIL so it got __GFP_NOFAIL. The commit mentions this high-order
+>> nofail issue for another allocation site that had to use xlog_kvmalloc().
 > 
-> > Yes, the naming is not perfect and mixing cause and action, but the end
-> > result is still a more generic and less duplicated code base.
+> I don't see how high-order allocation behaviour is relevant here.
 > 
-> I think dchinner makes a good point that if your filesystem can do
-> something clever on device removal, it should provide its own block
-> device holder ops instead of using fs_holder_ops.  I don't understand
-> why you need a "generic" solution for btrfs when it's not going to do
-> what the others do anyway.
+> Pahole says the struct xfs_mount is 4224 bytes in length. It is an
+> order-1 allocation and if we've fragmented memory so badly that slab
+> can't allocate an order-1 page then *lots* of other stuff is going
+> to be stalling. (e.g. slab pages for inodes are typically order-3,
+> same as the kmalloc-8kk slab).
 
-I think letting filesystems implement their own holder ops should be
-avoided if we can. Christoph may chime in here. I have no appettite for
-exporting stuff like get_bdev_super() unless absolutely necessary. We
-tried to move all that handling into the VFS to eliminate a slew of
-deadlocks we detected and fixed. I have no appetite to repeat that
-cycle.
+Elsewhere in this thread we figured it out since I wrote the quoted reply.
+4224 bytes means kmalloc-8k where the fallback allocation (the one that
+passes on the __GFP_NOFAIL) order is 1 normally. But due to KASAN enabled
+its metadata means the per-object size goes above 8k and thus the fallback
+order will be 2. It's a corner case that wasn't anticipated and existed for
+years without known reports. We'll need to deal with it somehow.
 
-The shutdown method is implemented only by block-based filesystems and
-arguably shutdown was always a misnomer because it assumed that the
-filesystem needs to actually shut down when it is called. IOW, we made
-it so that it is a call to action but that doesn't have to be the case.
-Calling it ->remove_bdev() is imo the correct thing because it gives
-block based filesystem the ability to handle device events how they see
-fit.
-
-Once we will have non-block based filesystems that need a method to
-always shut down the filesystem itself we might have to revisit this
-design anyway but no one had that use-case yet.
-
+> Note that the size of the structure is largely because of the
+> embedded cpumask for inodegc:
 > 
-> Awkward naming is often a sign that further thought (or at least
-> separation of code) is needed.
+> 	struct cpumask             m_inodegc_cpumask;    /*  3104  1024 */
 > 
-> As an aside:
-> 'twould be nice if we could lift the *FS_IOC_SHUTDOWN dispatch out of
-> everyone's ioctl functions into the VFS, and then move the "I am dead"
-> state into super_block so that you could actually shut down any
-> filesystem, not just the seven that currently implement it.
+> This should probably be pulled out into a dynamically allocated
+> inodegc specific structure. Then the struct xfs_mount is only a
+> order-0 allocation and should never fail, regardless of
+> __GFP_NOFAIL being specified or not.
+> 
+>> I think either this allocation really can fail as the code (return
+>> -ENOMEM) suggests and thus can drop __GFP_NOFAIL, or it can use
+>> kvmalloc() - I think the wrapper for that can be removed now too after
+>> the discussion in [1] resulted in commit 46459154f997 ("mm: kvmalloc:
+>> make kmalloc fast path real fast path").
+> 
+> I know about that - I have patches that I'm testing that replace
+> xlog_kvmalloc() with kvmalloc calls.
 
-That goes back to my earlier point. Fwiw, I think that's valuable work.
+Great, thanks!
+
+> -Dave.
+
