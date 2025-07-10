@@ -1,107 +1,139 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f45.google.com (mail-io1-f45.google.com [209.85.166.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D94D27145E
-	for <linux-xfs@vger.kernel.org>; Thu, 10 Jul 2025 15:04:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EF5D272E54
+	for <linux-xfs@vger.kernel.org>; Thu, 10 Jul 2025 15:08:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752159847; cv=none; b=G78YLTSyC334RI92r8zHlU2DuUurm6zJnDeoICyOZzuPRRV+4+IR7pGnD/iHAXJKcmgFg4PwFqMFT6EqQXoLEVSMyUyA0KlZ2XSoL/GV91V/qpyOKhhQ97H6b0ABvNUtIxeqaCwmp5TCKeqEiV0BR47rVyBIPkUz/XPOjCxl40k=
+	t=1752160130; cv=none; b=JrYaScSGSF/MWsh6OmPEPsjgKj6qsMKgrQ+CUJMB4Nd1h9Y7QHHQcc7GnPHJP//TlK0/kX/vyJc5rKm3xKEnHxIAqyQxet64UgYdHR1iZkI52XKRLnCkpxooyXXMPhIrVtrpcPOig5CHFqe8yrj2PXC3bL8SzGm8g4NrfJVvzTI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752159847; c=relaxed/simple;
-	bh=kttiDqozO+WQNGP1tvbnqpD9ilF2IK07GUI4Ye+djuA=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=RJx2Q6Pq558VbTFA112rb1PtZZ7SEdYzkhMikjt1RyNKzkNHEppVmabt8f3Kc0cxWsbFS1nt+DgcpXll1IWVxPBtXI9fUJJRNyQhGpZFGNDagyIHjMor1CXn/hIAq5FWx0Jx2B/bp3ZG54h2JtRRWcOtCoy/qZZaWdtIfRi/yQQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PY29ptmf; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1752160130; c=relaxed/simple;
+	bh=QyVa336Ax4fYxIVQnHT2lv1xl803ARX1EKCvvArbBpo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qyWX2My1IhfFqR0mj37JJL+0mN0hLJza3lMvkxy0vyBkDOWu9I/i5ei3W9eHdAdRZiWWMj7INFkwq5F82/lJiJAMWUNFAx+tGCqDzQzIEwtdhVSzM0UzoFcn3u06EEnvk4z4xhuI/SsZ+/VQIbkc8Z/qB7vS15qLk0j8yI2by7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=hygZvzP2; arc=none smtp.client-ip=209.85.166.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PY29ptmf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1752159845;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=TQGHAobwwa27OfNzUbQzcEFwWIUKV1Qc4DtxoIyeEUQ=;
-	b=PY29ptmfTyOIZbKm+lIJsV5jq04qAqmAOh6atQAZCrZuXl8Qc9LnPSgOOa2Liv8jmQgpzW
-	vktQpg44Bd1zhjCB7pLkGKIlJZ6oayEUCdD6BEDYprmm60K1lWIWphde5KVAMFCpk8XXIk
-	uDZCQvugTsNlp4vyZ/2rB0yy9mDDppI=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-692-vU9GuSbkM7K9mnx_sH6I4Q-1; Thu,
- 10 Jul 2025 11:04:00 -0400
-X-MC-Unique: vU9GuSbkM7K9mnx_sH6I4Q-1
-X-Mimecast-MFC-AGG-ID: vU9GuSbkM7K9mnx_sH6I4Q_1752159836
-Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D62511956075;
-	Thu, 10 Jul 2025 15:03:55 +0000 (UTC)
-Received: from [10.22.80.10] (unknown [10.22.80.10])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6330F19560A3;
-	Thu, 10 Jul 2025 15:03:50 +0000 (UTC)
-Date: Thu, 10 Jul 2025 17:03:43 +0200 (CEST)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: John Garry <john.g.garry@oracle.com>
-cc: agk@redhat.com, snitzer@kernel.org, song@kernel.org, yukuai3@huawei.com, 
-    hch@lst.de, nilay@linux.ibm.com, axboe@kernel.dk, cem@kernel.org, 
-    dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org, 
-    linux-raid@vger.kernel.org, linux-block@vger.kernel.org, 
-    ojaswin@linux.ibm.com, martin.petersen@oracle.com, 
-    akpm@linux-foundation.org, linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH v5 5/6] dm-stripe: limit chunk_sectors to the stripe
- size
-In-Reply-To: <20250709100238.2295112-6-john.g.garry@oracle.com>
-Message-ID: <5e2bbd34-e112-c15a-37ea-f97cbede910c@redhat.com>
-References: <20250709100238.2295112-1-john.g.garry@oracle.com> <20250709100238.2295112-6-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="hygZvzP2"
+Received: by mail-io1-f45.google.com with SMTP id ca18e2360f4ac-875ce3c8e24so43320639f.1
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Jul 2025 08:08:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1752160127; x=1752764927; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Ge1nC4yCBIiNPQ1G0qBajhIAzAiOK+EhF/zLDgsIM/U=;
+        b=hygZvzP26whIkw5yAmbYEnJbTkbkptUkFYL+QQqXQqP7RQ9Z/WHtj1KVe+IchID8uo
+         z5Uz0KBbeDaPrn+1ds8EXobtSe8pmxU2q5jxYg/I8DD5PtsbsiyN4xYuJiwJnYG8k8EF
+         GEu+5BVrt8igKHkHv0TSnujJhRWTmkAtYDRWyZH0Jxq9Ekbeeko3dx2FzfW8MRFG6+t3
+         xChK9WauqbAgU6iQ0UTkMoHCfRqv0j9Oe3Z0Blp0y3MU/TWlOfo3sRgLRbTcPuANCdbL
+         r5joFfAuF9HKTm+hmiAiY20+P+41wFkxHQvwdJP4h7vwMhCo2bfkvFHc2Ut5J1Kb6gEf
+         LlvQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752160127; x=1752764927;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Ge1nC4yCBIiNPQ1G0qBajhIAzAiOK+EhF/zLDgsIM/U=;
+        b=vBWpzBOUzayPyKGkmQzHyxbkyfnKoKJ6R4c9gSOVZNAy6T+xm4q6YYk2b2uvaghfCC
+         FhwQBZ6GcER8JOspkyJ+6CnybeEUPHrksrAipJUq65RXyBgMg8i8j4TIs2XiiL4aNE+0
+         zHbHFV+y+2c/h0OlH40doHNs90JmB2st8oNn5XrlYGelkQjS5CMxPFCuiRyC5epNsS2P
+         nbhOtH7z2tWqyGd6ovqFld8Wx0q9b4edY/wV1k6AIBJBv509mp879JSP4xKVRPE/EPsc
+         MmE9vsb1I+0BZ75gFlUNhBDY7KVJ28z4HnBS1googcfwCcOp5Z5y7apsYvJ5IXPU43nd
+         NMVg==
+X-Forwarded-Encrypted: i=1; AJvYcCUVGtehY+Nno6ToYn2FGFxEHSN4nMHDErQjqz+KRzqVXcRpAwv1VUIeJj1D9EAUbtoodHsbntkvo88=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5OR6KmU6CWfKAemln2U177Rdhib9uhanP2fzFdIFpgwQZu1gY
+	wA2eqFViH7Pm6IlzZOgPrn8fuLwkrzbPEIvUOpdWAi3IkrFOameu8tSzEPYccZj1bTY=
+X-Gm-Gg: ASbGncsSfQsYKmmxsDo1sh/0dnG2jUsRwCG+zGpU1KJZsPqztHrMGKA2m24ki5DJpRw
+	OWvyemqzluAOMMr6lAxC3AOS7ywL1hl9OEdPIxFdxWwI7UFfM2Ul3zH9rN2q641futsVNuVluHP
+	DC0JCjJN3/xAsuRgHNkk6PdCeh4/dQC7JBFCWtkC3ly9aoqdf0M88Tqo6bjQFd2ulHPJVeeEe6Q
+	LeCR75jDX9dRdFzKgYFKwiQhNZwEM4FWYSEvojoYCOv/Fbri8NpN9kSVveIl6KGMKTxYBXHIszC
+	IZUP8bcf1yul5FRDwX5yqTAoslpexLYjFYqNmIzl/PFkkUQFOCh+FjgINFzW1UZGkflgIA==
+X-Google-Smtp-Source: AGHT+IGmdMCnI9PM5J20YVfQZv3O6vQotnLPNVuRWKQQFulsqOrvRtJsNYHyRleOJsO9cj/dzaQlSw==
+X-Received: by 2002:a05:6602:13c2:b0:873:47fb:a455 with SMTP id ca18e2360f4ac-87966269ef0mr451794739f.2.1752160126577;
+        Thu, 10 Jul 2025 08:08:46 -0700 (PDT)
+Received: from [192.168.1.150] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-8796bc5bc60sm41323839f.47.2025.07.10.08.08.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Jul 2025 08:08:45 -0700 (PDT)
+Message-ID: <04620cc5-7c3a-4e4f-87ce-b691d9b57917@kernel.dk>
+Date: Thu, 10 Jul 2025 09:08:44 -0600
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 2/6] block: sanitize chunk_sectors for atomic write
+ limits
+To: John Garry <john.g.garry@oracle.com>, agk@redhat.com, snitzer@kernel.org,
+ mpatocka@redhat.com, song@kernel.org, yukuai3@huawei.com, hch@lst.de,
+ nilay@linux.ibm.com, cem@kernel.org
+Cc: dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
+ ojaswin@linux.ibm.com, martin.petersen@oracle.com,
+ akpm@linux-foundation.org, linux-xfs@vger.kernel.org, djwong@kernel.org
+References: <20250709100238.2295112-1-john.g.garry@oracle.com>
+ <20250709100238.2295112-3-john.g.garry@oracle.com>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20250709100238.2295112-3-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-
-
-On Wed, 9 Jul 2025, John Garry wrote:
-
-> Same as done for raid0, set chunk_sectors limit to appropriately set the
-> atomic write size limit.
+On 7/9/25 4:02 AM, John Garry wrote:
+> Currently we just ensure that a non-zero value in chunk_sectors aligns
+> with any atomic write boundary, as the blk boundary functionality uses
+> both these values.
 > 
-> Setting chunk_sectors limit in this way overrides the stacked limit
-> already calculated based on the bottom device limits. This is ok, as
-> when any bios are sent to the bottom devices, the block layer will still
-> respect the bottom device chunk_sectors.
+> However it is also improper to have atomic write unit max > chunk_sectors
+> (for non-zero chunk_sectors), as this would lead to splitting of atomic
+> write bios (which is disallowed).
 > 
+> Sanitize atomic write unit max against chunk_sectors to avoid any
+> potential problems.
+> 
+> Fixes: d00eea91deaf3 ("block: Add extra checks in blk_validate_atomic_write_limits()")
 > Reviewed-by: Nilay Shroff <nilay@linux.ibm.com>
-> Reviewed-by: Mikulas Patocka <mpatocka@redhat.com>
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  drivers/md/dm-stripe.c | 1 +
->  1 file changed, 1 insertion(+)
+>  block/blk-settings.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> diff --git a/drivers/md/dm-stripe.c b/drivers/md/dm-stripe.c
-> index a7dc04bd55e5..5bbbdf8fc1bd 100644
-> --- a/drivers/md/dm-stripe.c
-> +++ b/drivers/md/dm-stripe.c
-> @@ -458,6 +458,7 @@ static void stripe_io_hints(struct dm_target *ti,
->  	struct stripe_c *sc = ti->private;
->  	unsigned int chunk_size = sc->chunk_size << SECTOR_SHIFT;
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index a000daafbfb4..725035376f51 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -180,6 +180,7 @@ static void blk_atomic_writes_update_limits(struct queue_limits *lim)
 >  
-> +	limits->chunk_sectors = sc->chunk_size;
->  	limits->io_min = chunk_size;
->  	limits->io_opt = chunk_size * sc->stripes;
->  }
-> -- 
-> 2.43.5
+>  static void blk_validate_atomic_write_limits(struct queue_limits *lim)
+>  {
+> +	unsigned long long chunk_bytes;
+>  	unsigned int boundary_sectors;
+>  
+>  	if (!(lim->features & BLK_FEAT_ATOMIC_WRITES))
+> @@ -202,6 +203,13 @@ static void blk_validate_atomic_write_limits(struct queue_limits *lim)
+>  			 lim->atomic_write_hw_max))
+>  		goto unsupported;
+>  
+> +	chunk_bytes = lim->chunk_sectors << SECTOR_SHIFT;
+> +	if (chunk_bytes) {
+> +		if (WARN_ON_ONCE(lim->atomic_write_hw_unit_max >
+> +			chunk_bytes))
+> +			goto unsupported;
+> +	}
 
-Hi
+Unnecessary indentation here. Why not just:
 
-This will conflict with the current dm code in linux-dm.git. Should I fix 
-up the conflict and commit it through the linux-dm git?
+	chunk_bytes = lim->chunk_sectors << SECTOR_SHIFT;
+	if (WARN_ON_ONCE(chunk_bytes &&
+			 lim->atomic_write_hw_unit_max > chunk_bytes))
+		goto unsupposed.
 
-Mikulas
+Also avoids splitting a comparison over multiple lines, which is always
+annoying to read.
 
+-- 
+Jens Axboe
