@@ -1,168 +1,122 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD3822D0298
-	for <linux-xfs@vger.kernel.org>; Thu, 10 Jul 2025 13:10:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A31EF258CFF;
+	Thu, 10 Jul 2025 13:33:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752153013; cv=none; b=TFsIQY5uOWPj5O9WaVp7Ygtv4S1Y/25k2XT6D3JLUUahz4rNP1QriDCSreHSEuhe2/3RxEfPitQd/ijyL4OhgtnQc1i9NlYnQMrVpwNCoMayTQufe795z8socNFjgHoDi3LLtK1DVjX0QsqkzWB2K4AO9nIUKvFEXD9HDcWibpQ=
+	t=1752154433; cv=none; b=uy3n5+vIdubIykSEVlsJEsL8lb5e6q5ZpZ3bbshhjdNMCqnlcrXuXqYhc7/M7trZyCojgY1EaGdtRZ4ItzRH9kZ9IMj4Q3xgA8IjYrHazmAVVRzvkPheteOxShpq8BL/orCARO1WAA0bqtxxWxtC5ueVWX6Z/isOup9vG90Rlxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752153013; c=relaxed/simple;
-	bh=6wzNeHKe2BwweMlq895MbtGooUY62kwoBduxkWK5Nos=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=I7ZlFmtOFRWA8K/mIO0JqINtMYVWskWAqzmJUmoF4APwAgnJHAalxuV5uaXdMJG5StFvbefvsEfP+hiL6rwVidiKGn14fOX8x0T4Vbzf/IckzphWd/R+CssdrqElr3QVvBMtOH+G9TmlHCBorhL3LxVSm6Tkqb5+4Lz2TrBqFPk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=eD+Hvn7Z; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=mJOuKh4P; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=AE8gmRXK; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=2iNx+RTI; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1752154433; c=relaxed/simple;
+	bh=MWn5XlCdAjB+sK9dSdXIVMPxxACg3YrERKdTXwshHVk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WVrQFUzvVoFYGvCCQA24UldrNluyjfDCrC/zDc6hZNRL8pgSkM5AjeP7rLBRaVFlXD8K+8VVTZW1fBl/sbUrh3LiDn8W9aF9yeKtR1GuTYJ+3rqlhWpvOUdzYp8QbIKodd5ctWNbYXKbCCHt3IpWlM1+/s+I4S/XiXS/Z7KBRAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1oem0Rlo; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="eD+Hvn7Z";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="mJOuKh4P";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="AE8gmRXK";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="2iNx+RTI"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id C424121175;
-	Thu, 10 Jul 2025 13:10:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1752153009; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=zyJYnzTWJud5qEGhrZj76b5jt76YQEEA8Xla8XnWYCI=;
-	b=eD+Hvn7ZLTFWMgSHZCTGec0Q2nrnVMxsDS60BVl3tkuQTfzJX6NKCouIsq0gvJDK5qTDZm
-	hzfec7UPwkOq03Rut0QrPDclglmvIM1JlhtM+PxiclYYwxAnSAPEvXEWYUJdRbQtjYpCYQ
-	8VUrnp1QnIyaTXxt0OXdlTD8PNxA2uk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1752153009;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=zyJYnzTWJud5qEGhrZj76b5jt76YQEEA8Xla8XnWYCI=;
-	b=mJOuKh4P+rH23nX5Slq2qnqcl4aZaxTkud0cBp7E7uk23R/O5aN339AWOIzgj4zkFjKs2B
-	4txzG5FZizrEKTAA==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=AE8gmRXK;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=2iNx+RTI
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1752153008; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=zyJYnzTWJud5qEGhrZj76b5jt76YQEEA8Xla8XnWYCI=;
-	b=AE8gmRXK97XQg+ako5dNJ/Am6nwNeQMZiPTHlyWjH6cESCeSKiwH9t1kre4nAFCpWAP8S4
-	X23Nw3M+4bpMfjDKqHk1AczAhxCwLZuqoN5T3BnMmOR7hvNlofMWFvsVTkFNTlJxST/7BT
-	vCIRTWq9DcbaVWNDvbLNERrcO2tWf9E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1752153008;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=zyJYnzTWJud5qEGhrZj76b5jt76YQEEA8Xla8XnWYCI=;
-	b=2iNx+RTILnuNSLzwrBa6OKoCkNZ1ZxkYVIT/m5OgKQDqKVYd6EnQ0dRySRNKTdE2+gYWyd
-	/d5t9pC4FFZl+wBw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B6119136CB;
-	Thu, 10 Jul 2025 13:10:08 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id esQeLLC7b2jGGQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 10 Jul 2025 13:10:08 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 5A12EA098F; Thu, 10 Jul 2025 15:10:04 +0200 (CEST)
-Date: Thu, 10 Jul 2025 15:10:04 +0200
-From: Jan Kara <jack@suse.cz>
-To: Kent Overstreet <kent.overstreet@linux.dev>
-Cc: Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, 
-	Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Qu Wenruo <quwenruo.btrfs@gmx.com>, Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-ext4@vger.kernel.org, 
-	linux-f2fs-devel@lists.sourceforge.net, ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org, 
-	linux-bcachefs@vger.kernel.org
-Subject: Re: [PATCH v4 1/6] fs: enhance and rename shutdown() callback to
- remove_bdev()
-Message-ID: <kgolzhhd47x3iqkdrwyzh65ng4mm6cauxdjgiao2otztncyc3f@rskadwaph2l5>
-References: <343vlonfhw76mnbjnysejihoxsjyp2kzwvedhjjjml4ccaygbq@72m67s3e2ped>
- <y2rpp6u6pksjrzgxsn5rtcsl2vspffkcbtu6tfzgo7thn7g23p@7quhaixfx5yh>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1oem0Rlo"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=tetkzlCfenrpH7MgGkZct/9GsLBQFBzGpcaOg7hONcs=; b=1oem0RlogcLMNVqqMJ4Y/EJTeP
+	cWLlfzX7BH8XzjU0z7Bcx7TTQLlM1R8QHpcxv5YT+5NnGw0i0cr7gYVkUflo8bojjqInu3ThiRRXZ
+	XIxmKal8isykNv6LnYb5G05wRnujmp2EjhdOPBdjaZ7xQJUrroEi52bQ/+YEHrVgSW6j2VRa4821U
+	dZtcl0/n91f5q4TuChnxrkunFYm57HDRxsv8g64cYxrVGa8O6gud9V22PvGNz/QEQgB4SrplM7hjK
+	8op6FfnX32uYJqWPGBg6/gUhee9M8rVq2hKIITyi4Vys7sIMcFGDe9A/YfNSMRNLHOHNgXQv94m0h
+	p48NlWgg==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uZrPI-0000000BwQQ-2Dbk;
+	Thu, 10 Jul 2025 13:33:48 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Joanne Koong <joannelkoong@gmail.com>,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	gfs2@lists.linux.dev
+Subject: refactor the iomap writeback code v5
+Date: Thu, 10 Jul 2025 15:33:24 +0200
+Message-ID: <20250710133343.399917-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <y2rpp6u6pksjrzgxsn5rtcsl2vspffkcbtu6tfzgo7thn7g23p@7quhaixfx5yh>
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FREEMAIL_ENVRCPT(0.00)[gmx.com];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[15];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	MIME_TRACE(0.00)[0:+];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_COUNT_THREE(0.00)[3];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	MISSING_XM_UA(0.00)[];
-	FREEMAIL_CC(0.00)[suse.cz,fromorbit.com,kernel.org,gmx.com,suse.com,vger.kernel.org,zeniv.linux.org.uk,lists.sourceforge.net,lists.linux.dev];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.com:email]
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Rspamd-Queue-Id: C424121175
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -4.01
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed 09-07-25 13:49:12, Kent Overstreet wrote:
-> On Wed, Jul 09, 2025 at 07:23:07PM +0200, Jan Kara wrote:
-> > > It also avoids the problem of ->mark_dead events being generated
-> > > from a context that holds filesystem/vfs locks and then deadlocking
-> > > waiting for those locks to be released.
-> > > 
-> > > IOWs, a multi-device filesystem should really be implementing
-> > > ->mark_dead itself, and should not be depending on being able to
-> > > lock the superblock to take an active reference to it.
-> > > 
-> > > It should be pretty clear that these are not issues that the generic
-> > > filesystem ->mark_dead implementation should be trying to
-> > > handle.....
-> > 
-> > Well, IMO every fs implementation needs to do the bdev -> sb transition and
-> > make sb somehow stable. It may be that grabbing s_umount and active sb
-> > reference is not what everybody wants but AFAIU btrfs as the second
-> > multi-device filesystem would be fine with that and for bcachefs this
-> > doesn't work only because they have special superblock instantiation
-> > behavior on mount for independent reasons (i.e., not because active ref
-> > + s_umount would be problematic for them) if I understand Kent right.
-> > So I'm still not fully convinced each multi-device filesystem should be
-> > shipping their special method to get from device to stable sb reference.
-> 
-> Honestly, the sync_filesystem() call seems bogus.
-> 
-> If the block device is truly dead, what's it going to accomplish?
+Hi all,
 
-Notice that fs_bdev_mark_dead() calls sync_filesystem() only in case
-'surprise' argument is false - meaning this is actually a notification
-*before* the device is going away. I.e., graceful device hot unplug when
-you can access the device to clean up as much as possible.
+this is an alternative approach to the writeback part of the
+"fuse: use iomap for buffered writes + writeback" series from Joanne.
+It doesn't try to make the code build without CONFIG_BLOCK yet.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+The big difference compared to Joanne's version is that I hope the
+split between the generic and ioend/bio based writeback code is a bit
+cleaner here.  We have two methods that define the split between the
+generic writeback code, and the implemementation of it, and all knowledge
+of ioends and bios now sits below that layer.
+
+This version passes testing on xfs, and gets as far as mainline for
+gfs2 (crashes in generic/361).
+
+Changes since v4:
+ - add back includes needed in some configs
+ - drop an include not needed after a code move
+
+Changes since v3:
+ - add a patch to drop unused includes
+ - drop the iomap_writepage_ctx renaming - we should do this separately and
+   including the variable names if desired
+ - add a comment about special casing of holes in iomap_writeback_range
+ - split the cleanups to iomap_read_folio_sync into a separate prep patch
+ - explain the IOMAP_HOLE check in xfs_iomap_valid
+ - explain the iomap_writeback_folio later folio unlock vs dropbehind
+ - some cargo culting for the #$W# RST formatting
+ - "improve" the documentation coverage a bit
+
+Changes since v2:
+ - rename iomap_writepage_ctx to iomap_writeback_ctx
+ - keep local map_blocks helpers in XFS
+ - allow buildinging the writeback and write code for !CONFIG_BLOCK
+
+Changes since v1:
+ - fix iomap reuse in block/zonefs/gfs2 
+ - catch too large return value from ->writeback_range
+ - mention the correct file name in a commit log
+ - add patches for folio laundering
+ - add patches for read/modify write in the generic write helpers
+
+Diffstat:
+ Documentation/filesystems/iomap/design.rst     |    3 
+ Documentation/filesystems/iomap/operations.rst |   57 +-
+ block/fops.c                                   |   37 +
+ fs/gfs2/aops.c                                 |    8 
+ fs/gfs2/bmap.c                                 |   48 +-
+ fs/gfs2/bmap.h                                 |    1 
+ fs/gfs2/file.c                                 |    3 
+ fs/iomap/Makefile                              |    6 
+ fs/iomap/buffered-io.c                         |  553 +++++++------------------
+ fs/iomap/direct-io.c                           |    5 
+ fs/iomap/fiemap.c                              |    3 
+ fs/iomap/internal.h                            |    1 
+ fs/iomap/ioend.c                               |  220 +++++++++
+ fs/iomap/iter.c                                |    1 
+ fs/iomap/seek.c                                |    4 
+ fs/iomap/swapfile.c                            |    3 
+ fs/iomap/trace.c                               |    1 
+ fs/iomap/trace.h                               |    4 
+ fs/xfs/xfs_aops.c                              |  212 +++++----
+ fs/xfs/xfs_file.c                              |    6 
+ fs/xfs/xfs_iomap.c                             |   12 
+ fs/xfs/xfs_iomap.h                             |    1 
+ fs/xfs/xfs_reflink.c                           |    3 
+ fs/zonefs/file.c                               |   40 +
+ include/linux/iomap.h                          |   82 ++-
+ 25 files changed, 705 insertions(+), 609 deletions(-)
