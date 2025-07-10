@@ -1,233 +1,107 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84DF2269AFB;
-	Thu, 10 Jul 2025 13:34:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D94D27145E
+	for <linux-xfs@vger.kernel.org>; Thu, 10 Jul 2025 15:04:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752154476; cv=none; b=H4poJqR1IdWz20tZcSBS3WQTn3M0hAbBleT9w3Fnku4weleO6/gTar2M/hK0oWD/kqYfD0W2WbVJ60dJoh/VODtLfxyOB6AmGn77icL0Djc6WWP4aCuAEC3sfWT3uk7ZH5uJaBA+J+gT6ExoOghn+mar0JlmygMrHEVoL097uos=
+	t=1752159847; cv=none; b=G78YLTSyC334RI92r8zHlU2DuUurm6zJnDeoICyOZzuPRRV+4+IR7pGnD/iHAXJKcmgFg4PwFqMFT6EqQXoLEVSMyUyA0KlZ2XSoL/GV91V/qpyOKhhQ97H6b0ABvNUtIxeqaCwmp5TCKeqEiV0BR47rVyBIPkUz/XPOjCxl40k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752154476; c=relaxed/simple;
-	bh=7tPGMYPHbHGZgOj0ddDCtmtbNiOnqych1NPJ0EF3vC4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YzAHsksFklj8aVUP0BX7K9n9Fe4QSRtAR0hWNgSmVJGjmKNUtpvpVo5Ysvehd70HLe3dfoardfOKaoUeHveKwhPxM1BYpGON0BddH3u5hKD34sh6esLr2+ZkagGSV4iFbmzTccFMi9FF0NhbnriZzKj3KyGw+/G7URzOBh2KZOo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=zTkCe9V3; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1752159847; c=relaxed/simple;
+	bh=kttiDqozO+WQNGP1tvbnqpD9ilF2IK07GUI4Ye+djuA=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=RJx2Q6Pq558VbTFA112rb1PtZZ7SEdYzkhMikjt1RyNKzkNHEppVmabt8f3Kc0cxWsbFS1nt+DgcpXll1IWVxPBtXI9fUJJRNyQhGpZFGNDagyIHjMor1CXn/hIAq5FWx0Jx2B/bp3ZG54h2JtRRWcOtCoy/qZZaWdtIfRi/yQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PY29ptmf; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zTkCe9V3"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=9jO/b5GbV1F578JLXAT//1ndQAOMWRuN1b0ajCKbils=; b=zTkCe9V3g1OLWwApOjuR/zPXVc
-	Dxv6NcqGry8PzwaLZVjt2o7cD8e6JuB+MJU6CFtu8VMMjpjLaFd5/j+DfHaLJB0jgxdV6aBl91zB7
-	+H7UjAwa+fTD4mr1EyBUBSRHwl/tv/d5dvMev33XT/9pfjTItzAHWDZG9aU/WAMTsdgYrxIJiMedA
-	l6R3an0/byZELQOyzE8Iv3kxSGLe4Umg3mcGXnfPnwc4PIXPjWpxiyChS+v8ak7Udeuuw+FoplVf5
-	WWim6Mbb0WfS0hG7G3IYlfIyGLpIAfjg2HEMTZQwxklDbMonGeoNydq3gdgiQhc7xhtqGwhAQUkzJ
-	gOyj2oCQ==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uZrQ1-0000000Bwdi-2DxR;
-	Thu, 10 Jul 2025 13:34:33 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Christian Brauner <brauner@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Joanne Koong <joannelkoong@gmail.com>,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	gfs2@lists.linux.dev
-Subject: [PATCH 14/14] iomap: build the writeback code without CONFIG_BLOCK
-Date: Thu, 10 Jul 2025 15:33:38 +0200
-Message-ID: <20250710133343.399917-15-hch@lst.de>
-X-Mailer: git-send-email 2.47.2
-In-Reply-To: <20250710133343.399917-1-hch@lst.de>
-References: <20250710133343.399917-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PY29ptmf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1752159845;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TQGHAobwwa27OfNzUbQzcEFwWIUKV1Qc4DtxoIyeEUQ=;
+	b=PY29ptmfTyOIZbKm+lIJsV5jq04qAqmAOh6atQAZCrZuXl8Qc9LnPSgOOa2Liv8jmQgpzW
+	vktQpg44Bd1zhjCB7pLkGKIlJZ6oayEUCdD6BEDYprmm60K1lWIWphde5KVAMFCpk8XXIk
+	uDZCQvugTsNlp4vyZ/2rB0yy9mDDppI=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-692-vU9GuSbkM7K9mnx_sH6I4Q-1; Thu,
+ 10 Jul 2025 11:04:00 -0400
+X-MC-Unique: vU9GuSbkM7K9mnx_sH6I4Q-1
+X-Mimecast-MFC-AGG-ID: vU9GuSbkM7K9mnx_sH6I4Q_1752159836
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D62511956075;
+	Thu, 10 Jul 2025 15:03:55 +0000 (UTC)
+Received: from [10.22.80.10] (unknown [10.22.80.10])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6330F19560A3;
+	Thu, 10 Jul 2025 15:03:50 +0000 (UTC)
+Date: Thu, 10 Jul 2025 17:03:43 +0200 (CEST)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: John Garry <john.g.garry@oracle.com>
+cc: agk@redhat.com, snitzer@kernel.org, song@kernel.org, yukuai3@huawei.com, 
+    hch@lst.de, nilay@linux.ibm.com, axboe@kernel.dk, cem@kernel.org, 
+    dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org, 
+    linux-raid@vger.kernel.org, linux-block@vger.kernel.org, 
+    ojaswin@linux.ibm.com, martin.petersen@oracle.com, 
+    akpm@linux-foundation.org, linux-xfs@vger.kernel.org, djwong@kernel.org
+Subject: Re: [PATCH v5 5/6] dm-stripe: limit chunk_sectors to the stripe
+ size
+In-Reply-To: <20250709100238.2295112-6-john.g.garry@oracle.com>
+Message-ID: <5e2bbd34-e112-c15a-37ea-f97cbede910c@redhat.com>
+References: <20250709100238.2295112-1-john.g.garry@oracle.com> <20250709100238.2295112-6-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=US-ASCII
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-Allow fuse to use the iomap writeback code even when CONFIG_BLOCK is
-not enabled.  Do this with an ifdef instead of a separate file to keep
-the iomap_folio_state local to buffered-io.c.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Joanne Koong <joannelkoong@gmail.com>
----
- fs/iomap/Makefile      |   6 +--
- fs/iomap/buffered-io.c | 113 ++++++++++++++++++++++-------------------
- 2 files changed, 64 insertions(+), 55 deletions(-)
 
-diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
-index 69e8ebb41302..f7e1c8534c46 100644
---- a/fs/iomap/Makefile
-+++ b/fs/iomap/Makefile
-@@ -9,9 +9,9 @@ ccflags-y += -I $(src)		# needed for trace events
- obj-$(CONFIG_FS_IOMAP)		+= iomap.o
- 
- iomap-y				+= trace.o \
--				   iter.o
--iomap-$(CONFIG_BLOCK)		+= buffered-io.o \
--				   direct-io.o \
-+				   iter.o \
-+				   buffered-io.o
-+iomap-$(CONFIG_BLOCK)		+= direct-io.o \
- 				   ioend.o \
- 				   fiemap.o \
- 				   seek.o
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index aed4fc30a849..bcc6e0e5334e 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -275,6 +275,46 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
- 	*lenp = plen;
- }
- 
-+static inline bool iomap_block_needs_zeroing(const struct iomap_iter *iter,
-+		loff_t pos)
-+{
-+	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-+
-+	return srcmap->type != IOMAP_MAPPED ||
-+		(srcmap->flags & IOMAP_F_NEW) ||
-+		pos >= i_size_read(iter->inode);
-+}
-+
-+/**
-+ * iomap_read_inline_data - copy inline data into the page cache
-+ * @iter: iteration structure
-+ * @folio: folio to copy to
-+ *
-+ * Copy the inline data in @iter into @folio and zero out the rest of the folio.
-+ * Only a single IOMAP_INLINE extent is allowed at the end of each file.
-+ * Returns zero for success to complete the read, or the usual negative errno.
-+ */
-+static int iomap_read_inline_data(const struct iomap_iter *iter,
-+		struct folio *folio)
-+{
-+	const struct iomap *iomap = iomap_iter_srcmap(iter);
-+	size_t size = i_size_read(iter->inode) - iomap->offset;
-+	size_t offset = offset_in_folio(folio, iomap->offset);
-+
-+	if (folio_test_uptodate(folio))
-+		return 0;
-+
-+	if (WARN_ON_ONCE(size > iomap->length))
-+		return -EIO;
-+	if (offset > 0)
-+		ifs_alloc(iter->inode, folio, iter->flags);
-+
-+	folio_fill_tail(folio, offset, iomap->inline_data, size);
-+	iomap_set_range_uptodate(folio, offset, folio_size(folio) - offset);
-+	return 0;
-+}
-+
-+#ifdef CONFIG_BLOCK
- static void iomap_finish_folio_read(struct folio *folio, size_t off,
- 		size_t len, int error)
- {
-@@ -314,45 +354,6 @@ struct iomap_readpage_ctx {
- 	struct readahead_control *rac;
- };
- 
--/**
-- * iomap_read_inline_data - copy inline data into the page cache
-- * @iter: iteration structure
-- * @folio: folio to copy to
-- *
-- * Copy the inline data in @iter into @folio and zero out the rest of the folio.
-- * Only a single IOMAP_INLINE extent is allowed at the end of each file.
-- * Returns zero for success to complete the read, or the usual negative errno.
-- */
--static int iomap_read_inline_data(const struct iomap_iter *iter,
--		struct folio *folio)
--{
--	const struct iomap *iomap = iomap_iter_srcmap(iter);
--	size_t size = i_size_read(iter->inode) - iomap->offset;
--	size_t offset = offset_in_folio(folio, iomap->offset);
--
--	if (folio_test_uptodate(folio))
--		return 0;
--
--	if (WARN_ON_ONCE(size > iomap->length))
--		return -EIO;
--	if (offset > 0)
--		ifs_alloc(iter->inode, folio, iter->flags);
--
--	folio_fill_tail(folio, offset, iomap->inline_data, size);
--	iomap_set_range_uptodate(folio, offset, folio_size(folio) - offset);
--	return 0;
--}
--
--static inline bool iomap_block_needs_zeroing(const struct iomap_iter *iter,
--		loff_t pos)
--{
--	const struct iomap *srcmap = iomap_iter_srcmap(iter);
--
--	return srcmap->type != IOMAP_MAPPED ||
--		(srcmap->flags & IOMAP_F_NEW) ||
--		pos >= i_size_read(iter->inode);
--}
--
- static int iomap_readpage_iter(struct iomap_iter *iter,
- 		struct iomap_readpage_ctx *ctx)
- {
-@@ -545,6 +546,27 @@ void iomap_readahead(struct readahead_control *rac, const struct iomap_ops *ops)
- }
- EXPORT_SYMBOL_GPL(iomap_readahead);
- 
-+static int iomap_read_folio_range(const struct iomap_iter *iter,
-+		struct folio *folio, loff_t pos, size_t len)
-+{
-+	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-+	struct bio_vec bvec;
-+	struct bio bio;
-+
-+	bio_init(&bio, srcmap->bdev, &bvec, 1, REQ_OP_READ);
-+	bio.bi_iter.bi_sector = iomap_sector(srcmap, pos);
-+	bio_add_folio_nofail(&bio, folio, len, offset_in_folio(folio, pos));
-+	return submit_bio_wait(&bio);
-+}
-+#else
-+static int iomap_read_folio_range(const struct iomap_iter *iter,
-+		struct folio *folio, loff_t pos, size_t len)
-+{
-+	WARN_ON_ONCE(1);
-+	return -EIO;
-+}
-+#endif /* CONFIG_BLOCK */
-+
- /*
-  * iomap_is_partially_uptodate checks whether blocks within a folio are
-  * uptodate or not.
-@@ -658,19 +680,6 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
- 					 pos + len - 1);
- }
- 
--static int iomap_read_folio_range(const struct iomap_iter *iter,
--		struct folio *folio, loff_t pos, size_t len)
--{
--	const struct iomap *srcmap = iomap_iter_srcmap(iter);
--	struct bio_vec bvec;
--	struct bio bio;
--
--	bio_init(&bio, srcmap->bdev, &bvec, 1, REQ_OP_READ);
--	bio.bi_iter.bi_sector = iomap_sector(srcmap, pos);
--	bio_add_folio_nofail(&bio, folio, len, offset_in_folio(folio, pos));
--	return submit_bio_wait(&bio);
--}
--
- static int __iomap_write_begin(const struct iomap_iter *iter,
- 		const struct iomap_write_ops *write_ops, size_t len,
- 		struct folio *folio)
--- 
-2.47.2
+On Wed, 9 Jul 2025, John Garry wrote:
+
+> Same as done for raid0, set chunk_sectors limit to appropriately set the
+> atomic write size limit.
+> 
+> Setting chunk_sectors limit in this way overrides the stacked limit
+> already calculated based on the bottom device limits. This is ok, as
+> when any bios are sent to the bottom devices, the block layer will still
+> respect the bottom device chunk_sectors.
+> 
+> Reviewed-by: Nilay Shroff <nilay@linux.ibm.com>
+> Reviewed-by: Mikulas Patocka <mpatocka@redhat.com>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>  drivers/md/dm-stripe.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/md/dm-stripe.c b/drivers/md/dm-stripe.c
+> index a7dc04bd55e5..5bbbdf8fc1bd 100644
+> --- a/drivers/md/dm-stripe.c
+> +++ b/drivers/md/dm-stripe.c
+> @@ -458,6 +458,7 @@ static void stripe_io_hints(struct dm_target *ti,
+>  	struct stripe_c *sc = ti->private;
+>  	unsigned int chunk_size = sc->chunk_size << SECTOR_SHIFT;
+>  
+> +	limits->chunk_sectors = sc->chunk_size;
+>  	limits->io_min = chunk_size;
+>  	limits->io_opt = chunk_size * sc->stripes;
+>  }
+> -- 
+> 2.43.5
+
+Hi
+
+This will conflict with the current dm code in linux-dm.git. Should I fix 
+up the conflict and commit it through the linux-dm git?
+
+Mikulas
 
