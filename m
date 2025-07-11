@@ -1,46 +1,46 @@
-Received: from out-178.mta0.migadu.com (out-178.mta0.migadu.com [91.218.175.178])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF95D1E8333;
-	Thu, 10 Jul 2025 18:41:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E830D1F4E34;
+	Fri, 11 Jul 2025 07:44:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752172886; cv=none; b=Dez44LtrwX4c8NKX92Rl44xk/AdZg8T5USCI8jlz69zP5JzXBoenBTT4q9a4lD5n3AS25Mo4WKOCTKtJT9IgdqvRZ90P1v0k80ibQY2BGxW6PsCerDy65sb3Twh9J4I1YzqYUh39aWkwCM/uQ2MyLq3FceHDRbda+SO2zzrO4qA=
+	t=1752219862; cv=none; b=JtNnD8LotnKdX+gHhXczIBKwU2149Fa+rRgU73OpjG3mFTqZKvcMSrEpYuJVTtIxzD/WDKiygAEQtXXcjLaX70djhz3kL6Ov7bEX0i9VHsy5y8gSoZO1Hitxz5015HED8lRy2XJ0CptfEDcrOzAJb45Y30BHlbHnlx4/NywsWMU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752172886; c=relaxed/simple;
-	bh=nSYtxsroVKUHT9UvaB/DZeOq2Pt7+h1yZzB58Fh4XdQ=;
+	s=arc-20240116; t=1752219862; c=relaxed/simple;
+	bh=RB1sFH6b2xQkebBeiQsOerryCg0Aj3zPN+yrOmqcFvE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uw/sp/sKzuQLTrcwSDrRCr+g2u+GJ7BVWeYRAuFhEC/PDDxye0bn7lgEnw6XKV6IUGuz2Yjsaa09O82AZbghXzy0IcsrHmrEXJ125Ydm3cWbNonUc19HsJB9Bp0wWqo76cZYT+5Li89fIfuegWPNIpmH+sz94op9133Pd3pD9Eg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=YR3JBw0d; arc=none smtp.client-ip=91.218.175.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 Content-Type:Content-Disposition:In-Reply-To; b=hfLvvrKiioRWnAsfCprhRvSjJ241VOgiTdtW5jDohSuRiNjlL1zEHMqHoGAmzTUbxrw8naFkf+zd8w6NYyB1nIz7cVkrSGpIsaToudYiuamtVKKD/CQYWvEo3TZdemDCDCVLkQba5AD4JD0Yil1IlelucuNNNdoDctYQXFYc+S0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Xjps7REC; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="YR3JBw0d"
-Date: Thu, 10 Jul 2025 14:41:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1752172882;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4BIQ0YzbWgDLZuTNtQ8L6nBVEh6ENrzY2g79PLtP8UI=;
-	b=YR3JBw0dNQxWT8gbfOrQApQA3Dr/mncyvyWlhdULFlpmatye4WQWSGg+jo14ol4mS36JHY
-	HHEptsY8mnK7lMtHhlgU9ZWw06YTXudIOiL3YY7WVl8TqHFp7dZrbySpEs9bEUWoszkMXv
-	xx0hqlX1kXJ+NYMyOY8UTChQdDIsxs0=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Kent Overstreet <kent.overstreet@linux.dev>
-To: Jan Kara <jack@suse.cz>
-Cc: Dave Chinner <david@fromorbit.com>, 
-	Christian Brauner <brauner@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, 
-	Qu Wenruo <quwenruo.btrfs@gmx.com>, Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-ext4@vger.kernel.org, 
-	linux-f2fs-devel@lists.sourceforge.net, ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org, 
-	linux-bcachefs@vger.kernel.org
-Subject: Re: [PATCH v4 1/6] fs: enhance and rename shutdown() callback to
- remove_bdev()
-Message-ID: <5xno4s25lsd2sqq6judn7moorgy2h3konejgassnzlccfa6jsf@ez6ciofy3bwp>
-References: <343vlonfhw76mnbjnysejihoxsjyp2kzwvedhjjjml4ccaygbq@72m67s3e2ped>
- <y2rpp6u6pksjrzgxsn5rtcsl2vspffkcbtu6tfzgo7thn7g23p@7quhaixfx5yh>
- <kgolzhhd47x3iqkdrwyzh65ng4mm6cauxdjgiao2otztncyc3f@rskadwaph2l5>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Xjps7REC"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=MuN+Al+ugsSZkiKtnKTZ8BlZNb3ssd//9YQiEWcYVm8=; b=Xjps7RECqthfJ6sxTSYVPLQiwL
+	FzRrLdepGyG++mr80FZt1bYSukuJvqWcE28T7MklVGBReJeVe6c+cjEiR/3apon0YHkvo8aielt8q
+	2Jj8u5ZxARHYNrRD7yH3T+06pGXoSQ5AbLL4RQSwUe124QQb6uaitby2C1UcIAKGCN1FyCbQop8/r
+	Sc/vTm3IZlrTeOS35wdoaqU3fHCpPLc/3ipSbwEAGTyhK6m2Qrn7b/TrJ37UQEF5qhm8nxu82sd31
+	kbFATO6xtLxdP72krGpxaIxtONWHCNqQBPSlkIPNECKna64yqGoD8op3+wjeduEja1pJZksxyxWps
+	cnDDlHDw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1ua8QU-0000000E0sc-16jE;
+	Fri, 11 Jul 2025 07:44:10 +0000
+Date: Fri, 11 Jul 2025 00:44:10 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Jinliang Zheng <alexjlzheng@gmail.com>
+Cc: hch@infradead.org, alexjlzheng@tencent.com, brauner@kernel.org,
+	djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] iomap: avoid unnecessary ifs_set_range_uptodate() with
+ locks
+Message-ID: <aHDAykGCnDXeUZD1@infradead.org>
+References: <aGaLLHq3pRjGlO2W@infradead.org>
+ <20250709033042.249954-1-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,49 +49,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <kgolzhhd47x3iqkdrwyzh65ng4mm6cauxdjgiao2otztncyc3f@rskadwaph2l5>
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <20250709033042.249954-1-alexjlzheng@tencent.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Jul 10, 2025 at 03:10:04PM +0200, Jan Kara wrote:
-> On Wed 09-07-25 13:49:12, Kent Overstreet wrote:
-> > On Wed, Jul 09, 2025 at 07:23:07PM +0200, Jan Kara wrote:
-> > > > It also avoids the problem of ->mark_dead events being generated
-> > > > from a context that holds filesystem/vfs locks and then deadlocking
-> > > > waiting for those locks to be released.
-> > > > 
-> > > > IOWs, a multi-device filesystem should really be implementing
-> > > > ->mark_dead itself, and should not be depending on being able to
-> > > > lock the superblock to take an active reference to it.
-> > > > 
-> > > > It should be pretty clear that these are not issues that the generic
-> > > > filesystem ->mark_dead implementation should be trying to
-> > > > handle.....
-> > > 
-> > > Well, IMO every fs implementation needs to do the bdev -> sb transition and
-> > > make sb somehow stable. It may be that grabbing s_umount and active sb
-> > > reference is not what everybody wants but AFAIU btrfs as the second
-> > > multi-device filesystem would be fine with that and for bcachefs this
-> > > doesn't work only because they have special superblock instantiation
-> > > behavior on mount for independent reasons (i.e., not because active ref
-> > > + s_umount would be problematic for them) if I understand Kent right.
-> > > So I'm still not fully convinced each multi-device filesystem should be
-> > > shipping their special method to get from device to stable sb reference.
-> > 
-> > Honestly, the sync_filesystem() call seems bogus.
-> > 
-> > If the block device is truly dead, what's it going to accomplish?
-> 
-> Notice that fs_bdev_mark_dead() calls sync_filesystem() only in case
-> 'surprise' argument is false - meaning this is actually a notification
-> *before* the device is going away. I.e., graceful device hot unplug when
-> you can access the device to clean up as much as possible.
+On Wed, Jul 09, 2025 at 11:30:42AM +0800, Jinliang Zheng wrote:
+> In addition, what I want to say is that once folio_test_uptodate() is
+> true, all bits in ifs->state are in the uptodate state. So there is no
+> need to acquire the lock and set it again. This repeated setting happens
+> in __iomap_write_end().
 
-That doesn't seem to be hooked up to anything?
+Yes, that seems fine.  Can you update the commit message with some of
+the insights from this discussion, and with that the patch should be
+fine.
 
-blk_mark_disk_dead() -> blk_report_disk_dead(), surprise is always true
-
-disk_force_media_change(), same
-
-The only call where it's falso is in s390 code. If we know that a disk
-is going away, that would be a userspace thing, and they can just
-unmount.
