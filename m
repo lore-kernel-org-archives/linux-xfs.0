@@ -1,47 +1,47 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7697D238150
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Jul 2025 20:37:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5133E26A1AC
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Jul 2025 20:37:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752525478; cv=none; b=rQ3lDkzOShts7xMYDq1W0nZeuu6IjqcKlHfcM4JS8PmtqOLU2skmV0RVd7fR4M+/54gLSdIEt/Bse/T+FzQZ0U2UPKt2vqQyoo0Ko8WDrlrx/xKD3meOZUxI5WiPzrtzu+d4WpKl9Wga5vOs20kOzUQWm15YBarlW7DI1mj0sbU=
+	t=1752525480; cv=none; b=PAzP5lcdl6r6TpkK0ZEdpDQrbJ5C/ROst7PEqTxSFWbv/bRoZGIYb9qpxLZhJJy9OQyXZroH6b4pZYZoK7Bp9O1cXWwGfiyeDOgmcyxk34ihKR4qcynF4ZZePOVoFm4wKn7u6W8Xyj8yEoBvj1QEHTFI1OYCKIAyjRj/Vu8/gV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752525478; c=relaxed/simple;
-	bh=7ExjyS1rst3OhkmJxETpxj6nsTXqfiUefjr84av0J/E=;
+	s=arc-20240116; t=1752525480; c=relaxed/simple;
+	bh=jJMfljaOL4FlyX3wz77h0W3BJi1DDItuXJuKmljxZQI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ihHqI1ck01RWvU6fTAY8I3Uqt9VZBshwTABFIFC3VXCVHaS/ELjTUZk0gu95n+l9gaCDceaS+LtgTkzcBIgOIaJmEabkKsoje5Elj7rVX1up1j3Ajq8fSIk7MJStdvA34d4ohDsSBDRdhFLEPBtJICSof0J/kqWIjbiwIIwCeDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MpG2ExYv; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version:Content-Type; b=a998dYkyruSByiHFRY1ZPWF+OxUdZaxxlDepiNwllTkWvcABWF1k5jmCO8SzsHNDrjyeY6uuzC+GQiboYqNy+Uo/crOkY2maP81nzvcRzhD8Iybvbo5nxtpwF/aGDQNcVBoLL9R9Ejt44xcrmDV0yte7xKJxmr5svWVxRHeO5Ls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bA38LAmV; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MpG2ExYv"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bA38LAmV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1752525476;
+	s=mimecast20190719; t=1752525478;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=hooFAAb2LyfYsY6syiVx3vKXoJCft1FIzUwOLKeoBCA=;
-	b=MpG2ExYvPHyS4DokmBOYr2sFISBAWw2h4Q734rHtRVofrA097ajT+pEB9vGO2kHNKZmDhf
-	cwO2F7gzvCetoKNHIpsFhOoEw6Ch2RIsn0eiNnAR7/aNrVDKuJGAB42hh3XA+5NizvYUB1
-	qMdYElH3brYSyWGqiTyRpXNOO3w5xXE=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=Wsy0af5qGU/BY2e0Peax02/9WolVcMYE/LpbqVdqbCE=;
+	b=bA38LAmVtlHhoaLwuHI1BLSrStWUqMicIUC++jqnaBYJCcZnzWfrUaAODwGrQldcEbDYg7
+	nFh6FuUzZIXB0ZK+ZFXUECOuqHpOAalQPKcQGJ2ynWlsvzutUIsuiAMoXRydrFSFzwOIYr
+	wBfbyCgFkvntsSzKV6ODsJymfcCYAio=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-652-_DSMM__jPKGZa9FcPaY93w-1; Mon,
- 14 Jul 2025 16:37:53 -0400
-X-MC-Unique: _DSMM__jPKGZa9FcPaY93w-1
-X-Mimecast-MFC-AGG-ID: _DSMM__jPKGZa9FcPaY93w_1752525472
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-28-HCjOX-oDOSSzPcSNIZFjLw-1; Mon,
+ 14 Jul 2025 16:37:55 -0400
+X-MC-Unique: HCjOX-oDOSSzPcSNIZFjLw-1
+X-Mimecast-MFC-AGG-ID: HCjOX-oDOSSzPcSNIZFjLw_1752525474
 Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2523218002ED;
-	Mon, 14 Jul 2025 20:37:52 +0000 (UTC)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DBD70195608E;
+	Mon, 14 Jul 2025 20:37:53 +0000 (UTC)
 Received: from bfoster.redhat.com (unknown [10.22.64.43])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C8BD819560A3;
-	Mon, 14 Jul 2025 20:37:50 +0000 (UTC)
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6A4B019560A3;
+	Mon, 14 Jul 2025 20:37:52 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc: linux-xfs@vger.kernel.org,
 	hch@infradead.org,
 	djwong@kernel.org,
 	willy@infradead.org
-Subject: [PATCH v3 6/7] iomap: remove old partial eof zeroing optimization
-Date: Mon, 14 Jul 2025 16:41:21 -0400
-Message-ID: <20250714204122.349582-7-bfoster@redhat.com>
+Subject: [PATCH v3 7/7] xfs: error tag to force zeroing on debug kernels
+Date: Mon, 14 Jul 2025 16:41:22 -0400
+Message-ID: <20250714204122.349582-8-bfoster@redhat.com>
 In-Reply-To: <20250714204122.349582-1-bfoster@redhat.com>
 References: <20250714204122.349582-1-bfoster@redhat.com>
 Precedence: bulk
@@ -64,59 +64,119 @@ Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-iomap_zero_range() optimizes the partial eof block zeroing use case
-by force zeroing if the mapping is dirty. This is to avoid frequent
-flushing on file extending workloads, which hurts performance.
+iomap_zero_range() has to cover various corner cases that are
+difficult to test on production kernels because it is used in fairly
+limited use cases. For example, it is currently only used by XFS and
+mostly only in partial block zeroing cases.
 
-Now that the folio batch mechanism provides a more generic solution
-and is used by the only real zero range user (XFS), this isolated
-optimization is no longer needed. Remove the unnecessary code and
-let callers use the folio batch or fall back to flushing by default.
+While it's possible to test most of these functional cases, we can
+provide more robust test coverage by co-opting fallocate zero range
+to invoke zeroing of the entire range instead of the more efficient
+block punch/allocate sequence. Add an errortag to occasionally
+invoke forced zeroing.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 24 ------------------------
- 1 file changed, 24 deletions(-)
+ fs/xfs/libxfs/xfs_errortag.h |  4 +++-
+ fs/xfs/xfs_error.c           |  3 +++
+ fs/xfs/xfs_file.c            | 26 ++++++++++++++++++++------
+ 3 files changed, 26 insertions(+), 7 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 194e3cc0857f..d2bbed692c06 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1484,33 +1484,9 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 		.private	= private,
- 	};
- 	struct address_space *mapping = inode->i_mapping;
--	unsigned int blocksize = i_blocksize(inode);
--	unsigned int off = pos & (blocksize - 1);
--	loff_t plen = min_t(loff_t, len, blocksize - off);
- 	int ret;
- 	bool range_dirty;
+diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+index a53c5d40e084..33ca3fc2ca88 100644
+--- a/fs/xfs/libxfs/xfs_errortag.h
++++ b/fs/xfs/libxfs/xfs_errortag.h
+@@ -65,7 +65,8 @@
+ #define XFS_ERRTAG_WRITE_DELAY_MS			43
+ #define XFS_ERRTAG_EXCHMAPS_FINISH_ONE			44
+ #define XFS_ERRTAG_METAFILE_RESV_CRITICAL		45
+-#define XFS_ERRTAG_MAX					46
++#define XFS_ERRTAG_FORCE_ZERO_RANGE			46
++#define XFS_ERRTAG_MAX					47
  
--	/*
--	 * Zero range can skip mappings that are zero on disk so long as
--	 * pagecache is clean. If pagecache was dirty prior to zero range, the
--	 * mapping converts on writeback completion and so must be zeroed.
--	 *
--	 * The simplest way to deal with this across a range is to flush
--	 * pagecache and process the updated mappings. To avoid excessive
--	 * flushing on partial eof zeroing, special case it to zero the
--	 * unaligned start portion if already dirty in pagecache.
--	 */
--	if (!iter.fbatch && off &&
--	    filemap_range_needs_writeback(mapping, pos, pos + plen - 1)) {
--		iter.len = plen;
--		while ((ret = iomap_iter(&iter, ops)) > 0)
--			iter.status = iomap_zero_iter(&iter, did_zero);
--
--		iter.len = len - (iter.pos - pos);
--		if (ret || !iter.len)
--			return ret;
--	}
--
- 	/*
- 	 * To avoid an unconditional flush, check pagecache state and only flush
- 	 * if dirty and the fs returns a mapping that might convert on
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -115,5 +116,6 @@
+ #define XFS_RANDOM_WRITE_DELAY_MS			3000
+ #define XFS_RANDOM_EXCHMAPS_FINISH_ONE			1
+ #define XFS_RANDOM_METAFILE_RESV_CRITICAL		4
++#define XFS_RANDOM_FORCE_ZERO_RANGE			4
+ 
+ #endif /* __XFS_ERRORTAG_H_ */
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index dbd87e137694..00c0c391c329 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -64,6 +64,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_WRITE_DELAY_MS,
+ 	XFS_RANDOM_EXCHMAPS_FINISH_ONE,
+ 	XFS_RANDOM_METAFILE_RESV_CRITICAL,
++	XFS_RANDOM_FORCE_ZERO_RANGE,
+ };
+ 
+ struct xfs_errortag_attr {
+@@ -183,6 +184,7 @@ XFS_ERRORTAG_ATTR_RW(wb_delay_ms,	XFS_ERRTAG_WB_DELAY_MS);
+ XFS_ERRORTAG_ATTR_RW(write_delay_ms,	XFS_ERRTAG_WRITE_DELAY_MS);
+ XFS_ERRORTAG_ATTR_RW(exchmaps_finish_one, XFS_ERRTAG_EXCHMAPS_FINISH_ONE);
+ XFS_ERRORTAG_ATTR_RW(metafile_resv_crit, XFS_ERRTAG_METAFILE_RESV_CRITICAL);
++XFS_ERRORTAG_ATTR_RW(force_zero_range, XFS_ERRTAG_FORCE_ZERO_RANGE);
+ 
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -230,6 +232,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(write_delay_ms),
+ 	XFS_ERRORTAG_ATTR_LIST(exchmaps_finish_one),
+ 	XFS_ERRORTAG_ATTR_LIST(metafile_resv_crit),
++	XFS_ERRORTAG_ATTR_LIST(force_zero_range),
+ 	NULL,
+ };
+ ATTRIBUTE_GROUPS(xfs_errortag);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 0b41b18debf3..c865f9555b77 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -27,6 +27,8 @@
+ #include "xfs_file.h"
+ #include "xfs_aops.h"
+ #include "xfs_zone_alloc.h"
++#include "xfs_error.h"
++#include "xfs_errortag.h"
+ 
+ #include <linux/dax.h>
+ #include <linux/falloc.h>
+@@ -1269,13 +1271,25 @@ xfs_falloc_zero_range(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
+-	if (error)
+-		return error;
++	/*
++	 * Zero range implements a full zeroing mechanism but is only used in
++	 * limited situations. It is more efficient to allocate unwritten
++	 * extents than to perform zeroing here, so use an errortag to randomly
++	 * force zeroing on DEBUG kernels for added test coverage.
++	 */
++	if (XFS_TEST_ERROR(false, XFS_I(inode)->i_mount,
++			   XFS_ERRTAG_FORCE_ZERO_RANGE)) {
++		error = xfs_zero_range(XFS_I(inode), offset, len, ac, NULL);
++	} else {
++		error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
++		if (error)
++			return error;
+ 
+-	len = round_up(offset + len, blksize) - round_down(offset, blksize);
+-	offset = round_down(offset, blksize);
+-	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
++		len = round_up(offset + len, blksize) -
++			round_down(offset, blksize);
++		offset = round_down(offset, blksize);
++		error = xfs_alloc_file_space(XFS_I(inode), offset, len);
++	}
+ 	if (error)
+ 		return error;
+ 	return xfs_falloc_setsize(file, new_size);
 -- 
 2.50.0
 
