@@ -1,114 +1,59 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 619202E3718;
-	Mon, 14 Jul 2025 08:52:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC498233701;
+	Mon, 14 Jul 2025 10:46:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752483158; cv=none; b=WN/BRM14KxLWEgmJ7Fvvp1LO4jZMAPH3xbm3Lco5fFXmEb1yxXPw0PJswjjWHvgH1O7jb8Dc0gYBnfh6SbG7sXrteb1Vuq8CtXONw42Aqb3leOI5+5qFFnsg2i2EaPz3aaxNS93cCWB/TU/im4uUffrydahw2rv+5/nJCZLf9G0=
+	t=1752489984; cv=none; b=aRQsXEVbBM1dAkws5idy3cn1MowE+hvrdzC8aVGbvD+wHmMXhFvR+ZhzSaU5hhT4N9mxM1n9Eq67iCz8e3RHdBZoPYQrXvKFDNvwPFzmUjN7LqwUgfLt1zKvJGd8nsQvLKsoKkpWfhTlYdNgOOtcDUqFRI5XUDUs4S6btNdIcPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752483158; c=relaxed/simple;
-	bh=FMNrS1Z1UilPJzSrb1Ap/6lM+9eqZRJQR6eXPg4Hlxc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=h/ikDVFWF9WYB4VUQG5xqWMs7KGGTw2ZlXHAlVAMxAriqYAQ+kH3EpGzzouRlinYqQz0PC1rrk3ihSdacQpCU7hOY5ASkikNJ2lR0tsFhYx+oy1rooB8qSOGAPqUBRtlieGxBMYdQQ+Z7UGAA5IUd1du1WJIuj/bAzgNqAgricY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=py0ZCIOV; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="py0ZCIOV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AADABC4CEED;
-	Mon, 14 Jul 2025 08:52:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752483157;
-	bh=FMNrS1Z1UilPJzSrb1Ap/6lM+9eqZRJQR6eXPg4Hlxc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=py0ZCIOVIui3LKHdgAy9ffVUUf72EMbd0ZoWs6qMQc2905RrwGDd3SySm0k4zeV/l
-	 NMki8OSXEU5962IcQn3u40q6UCo3C2xF6m864tCZzZTf3z6PQ48dxn7cXOhEw01cmi
-	 B75+cIeYMA4/CKIua3oKVducjyMaVsP64oLLhDmyRqKzuATzVHYbkZynhndSh+Eg3L
-	 nnJYtIIagI+IrtdRCmAuaEIgCMq+QaHm2iyuu77M70pGLk6g4GQrVHfkpVHvgjH120
-	 SJFimMnKDu8XjxbkK8V75lMKw83KFmzLsDBOG1iNKYfYtRwl32YWf7TCoKDLdwcPm+
-	 FTNDDbDfzwLsg==
-From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Joanne Koong <joannelkoong@gmail.com>,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	gfs2@lists.linux.dev
-Subject: Re: refactor the iomap writeback code v5
-Date: Mon, 14 Jul 2025 10:52:07 +0200
-Message-ID: <20250714-untiefen-zonen-36da5ea68518@brauner>
-X-Mailer: git-send-email 2.47.2
-In-Reply-To: <20250710133343.399917-1-hch@lst.de>
-References: <20250710133343.399917-1-hch@lst.de>
+	s=arc-20240116; t=1752489984; c=relaxed/simple;
+	bh=i90h/U4It8j6YmE1GXWWlAAcqeV4kuKibWn5+OgURX0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QwnmqPpNIsCRCxichf4Lu1sVAqHzO8+3kOBL2Wnb2RXVC+9Re+TQNXmjFvf/FZ25aY8IIV2ZQwfD09J6NxfpKdIbOyz8nX1FItglv0caSRoZppm7U/hYiIKS5PH4U08VJ1TF02fIvjSbKAI0T6jzMsY1ocLKHXdBrc7I0iVkTUI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id AF7E5227A87; Mon, 14 Jul 2025 12:46:15 +0200 (CEST)
+Date: Mon, 14 Jul 2025 12:46:15 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <dlemoal@kernel.org>,
+	agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
+	song@kernel.org, yukuai3@huawei.com, nilay@linux.ibm.com,
+	axboe@kernel.dk, cem@kernel.org, dm-devel@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+	linux-block@vger.kernel.org, ojaswin@linux.ibm.com,
+	martin.petersen@oracle.com, akpm@linux-foundation.org,
+	linux-xfs@vger.kernel.org, djwong@kernel.org
+Subject: Re: [PATCH v6 0/6] block/md/dm: set chunk_sectors from stacked dev
+ stripe size
+Message-ID: <20250714104615.GA30407@lst.de>
+References: <20250711080929.3091196-1-john.g.garry@oracle.com> <f80713ec-fef1-4a33-b7bf-820ca69cb6ce@kernel.org> <20250714055338.GA13470@lst.de> <706d13cf-d0e2-4c30-8943-2c719f9be083@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2905; i=brauner@kernel.org; h=from:subject:message-id; bh=y7lmWAifSLj+7kxdAkI5hCPYWKy8/kHG+/dQ0pKC5Ng=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSUHLWMDzx/1DbrLcs/fYvVr+JmNb9wXp2xZpHfdx1mu ffP22VFO0pZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACbyfyXD/5Bp7mwzLG9JHP6a zZ6yo/HyIRetWytumgfsn/rJoH72rUyG/6kTG3cF/J+8KeWV/54Zj5SaPQT8XVo5ku2PTT2Xc9R 4CzcA
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <706d13cf-d0e2-4c30-8943-2c719f9be083@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, 10 Jul 2025 15:33:24 +0200, Christoph Hellwig wrote:
-> this is an alternative approach to the writeback part of the
-> "fuse: use iomap for buffered writes + writeback" series from Joanne.
-> It doesn't try to make the code build without CONFIG_BLOCK yet.
+On Mon, Jul 14, 2025 at 08:52:39AM +0100, John Garry wrote:
+> On 14/07/2025 06:53, Christoph Hellwig wrote:
+>> Now we should be able to implement the software atomic writes pretty
+>> easily for zoned XFS, and funnily they might actually be slightly faster
+>> than normal writes due to the transaction batching.  Now that we're
+>> getting reasonable test coverage we should be able to give it a spin, but
+>> I have a few too many things on my plate at the moment.
+>
+> Isn't reflink currently incompatible with zoned xfs?
 
-I dropped that sentence from the merge commit.
+reflink itself yes due to the garbage collection algorithm that is not
+reflink aware.  But all I/O on zoned file RT device uses the same I/O
+path design as writes that unshare reflinks because it always has to
+write out of place.
 
-> 
-> The big difference compared to Joanne's version is that I hope the
-> split between the generic and ioend/bio based writeback code is a bit
-> cleaner here.  We have two methods that define the split between the
-> generic writeback code, and the implemementation of it, and all knowledge
-> of ioends and bios now sits below that layer.
-> 
-> [...]
-
-Applied to the vfs-6.17.iomap branch of the vfs/vfs.git tree.
-Patches in the vfs-6.17.iomap branch should appear in linux-next soon.
-
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-6.17.iomap
-
-[01/14] iomap: header diet
-        https://git.kernel.org/vfs/vfs/c/8cd0a39cab56
-[02/14] iomap: pass more arguments using the iomap writeback context
-        https://git.kernel.org/vfs/vfs/c/67fd9615a782
-[03/14] iomap: cleanup the pending writeback tracking in iomap_writepage_map_blocks
-        https://git.kernel.org/vfs/vfs/c/40368a6acb95
-[04/14] iomap: refactor the writeback interface
-        https://git.kernel.org/vfs/vfs/c/fb7399cf2d0b
-[05/14] iomap: hide ioends from the generic writeback code
-        https://git.kernel.org/vfs/vfs/c/f4fa7981fa26
-[06/14] iomap: add public helpers for uptodate state manipulation
-        https://git.kernel.org/vfs/vfs/c/9caf1ea80ced
-[07/14] iomap: move all ioend handling to ioend.c
-        https://git.kernel.org/vfs/vfs/c/8f02cecd80b9
-[08/14] iomap: rename iomap_writepage_map to iomap_writeback_folio
-        https://git.kernel.org/vfs/vfs/c/58f0d5a30427
-[09/14] iomap: move folio_unlock out of iomap_writeback_folio
-        https://git.kernel.org/vfs/vfs/c/f8b6a94a4cca
-[10/14] iomap: export iomap_writeback_folio
-        https://git.kernel.org/vfs/vfs/c/8b217cf779cb
-[11/14] iomap: replace iomap_folio_ops with iomap_write_ops
-        https://git.kernel.org/vfs/vfs/c/2a5574fc57d1
-[12/14] iomap: improve argument passing to iomap_read_folio_sync
-        https://git.kernel.org/vfs/vfs/c/e6caf01d3f57
-[13/14] iomap: add read_folio_range() handler for buffered writes
-        https://git.kernel.org/vfs/vfs/c/c5690dd01978
-[14/14] iomap: build the writeback code without CONFIG_BLOCK
-        https://git.kernel.org/vfs/vfs/c/5699b7e21d20
