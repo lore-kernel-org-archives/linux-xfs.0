@@ -1,182 +1,114 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5133E26A1AC
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Jul 2025 20:37:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52261239E6B
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Jul 2025 20:53:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752525480; cv=none; b=PAzP5lcdl6r6TpkK0ZEdpDQrbJ5C/ROst7PEqTxSFWbv/bRoZGIYb9qpxLZhJJy9OQyXZroH6b4pZYZoK7Bp9O1cXWwGfiyeDOgmcyxk34ihKR4qcynF4ZZePOVoFm4wKn7u6W8Xyj8yEoBvj1QEHTFI1OYCKIAyjRj/Vu8/gV0=
+	t=1752526415; cv=none; b=O/ZSlyLn1re9h0ur6HtNkSDUVcJ/tjS9nanrkn8ICBcW+63IodDccRCPBvbFujtZPs+zhHe+m/pZNiqOZIrtKPcMy1wZVAu0JRe+wPVL4J9X/Orebv1Ajhe7WWO/CRFXI/GWaRKTr6iV3EMRMk/9XHkZzK3SaCJtXynaWcBl2ds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752525480; c=relaxed/simple;
-	bh=jJMfljaOL4FlyX3wz77h0W3BJi1DDItuXJuKmljxZQI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=a998dYkyruSByiHFRY1ZPWF+OxUdZaxxlDepiNwllTkWvcABWF1k5jmCO8SzsHNDrjyeY6uuzC+GQiboYqNy+Uo/crOkY2maP81nzvcRzhD8Iybvbo5nxtpwF/aGDQNcVBoLL9R9Ejt44xcrmDV0yte7xKJxmr5svWVxRHeO5Ls=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bA38LAmV; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1752526415; c=relaxed/simple;
+	bh=tawgDwkEVojw2NKv3CCTeFgxnOZvyRkv0Ij9fIpT1q8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uW+DkSwBhohAWtjAcE2FGb96Ikbhm46ZGnyhvS6dbc4tauAViT7ByPscRLh1jQGoURNE8QL5g2OYGGk/rovHJCx2BcUeuBv9Upowp8W23jWkUAbekUXpZ01vK67lwh1fqt4X5MVwgb+fO9SoAs/+5Y7M1TF+7SuyzntvsoXWIFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=WVcUu3Ec; arc=none smtp.client-ip=209.85.210.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bA38LAmV"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1752525478;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Wsy0af5qGU/BY2e0Peax02/9WolVcMYE/LpbqVdqbCE=;
-	b=bA38LAmVtlHhoaLwuHI1BLSrStWUqMicIUC++jqnaBYJCcZnzWfrUaAODwGrQldcEbDYg7
-	nFh6FuUzZIXB0ZK+ZFXUECOuqHpOAalQPKcQGJ2ynWlsvzutUIsuiAMoXRydrFSFzwOIYr
-	wBfbyCgFkvntsSzKV6ODsJymfcCYAio=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-28-HCjOX-oDOSSzPcSNIZFjLw-1; Mon,
- 14 Jul 2025 16:37:55 -0400
-X-MC-Unique: HCjOX-oDOSSzPcSNIZFjLw-1
-X-Mimecast-MFC-AGG-ID: HCjOX-oDOSSzPcSNIZFjLw_1752525474
-Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DBD70195608E;
-	Mon, 14 Jul 2025 20:37:53 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.64.43])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6A4B019560A3;
-	Mon, 14 Jul 2025 20:37:52 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org,
-	hch@infradead.org,
-	djwong@kernel.org,
-	willy@infradead.org
-Subject: [PATCH v3 7/7] xfs: error tag to force zeroing on debug kernels
-Date: Mon, 14 Jul 2025 16:41:22 -0400
-Message-ID: <20250714204122.349582-8-bfoster@redhat.com>
-In-Reply-To: <20250714204122.349582-1-bfoster@redhat.com>
-References: <20250714204122.349582-1-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="WVcUu3Ec"
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-73972a54919so4312502b3a.3
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Jul 2025 13:53:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1752526413; x=1753131213; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=5cPjSq9x4JfK6ES05iG56c2eRWJnFpbKNKAZhIdXJx4=;
+        b=WVcUu3EcyUWDMr4Db3o/k3d1rGqBToLoC4m6y7TOnYgaQF6NVsoW4Qz1hJFxqVy/rb
+         yvdvB03zGshWUydtQl9Ki5USN8M3JvnCiRk4CcgPUUez8WYwn0P7dbK0l4Hh1kWZN41k
+         PY8OQjJbpphLNFzraemZ3WHnLqXoxZzvOPGRm11OWCLmq0hngEuvVQWZUTMx3h9MGkPp
+         rtlXoS3MNwRzraFe7JqspyFbBI1XFkWRnkDAhEvzTxblL35OJxF5WRuo/XVkFV8v2KMW
+         FRNYxf114pSiL+L60F/xcUneJewAOmZueur0anMFLWpMh8skgjCWAD0enfSDvYnC68nq
+         k5dg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752526413; x=1753131213;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5cPjSq9x4JfK6ES05iG56c2eRWJnFpbKNKAZhIdXJx4=;
+        b=RsNtirQ4/9JqnO4VGv5v7Bd1riIlZR3D3I8CarUSH+R22L/tR/3RChe9R7RirB5xLk
+         O5qipAK1KUPaGjRBoSZ4o7QbpkL9X3yknPnHPENp+nSE2a4hzSSwI9MSxU4Xt3bu/1dM
+         nZYFt1OQM83VncUOham5l2C3bFLBhCzDX1dLXuzIJ1EVckZxlF2hce4AuAdnGRPvSQ2m
+         t8I0gU+TRfQJJvDNb+XCTfxqhdfBZq1/R1yL7MH5aeLNc08D6tFWA83eNSPseS7OZFGT
+         9zvjGiDLSnCSAfJRAFYgTGoaKhbz+L7G5dp9x+Rsx7cZGb3nxS91OenlNl4NvEIXVIj6
+         lXHQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVOLiI62mlOcziTd7sZn+gu5XkTUDPiiT7EB+nGgR0sGg4VeKQtYGntMxZ4wyuZawkuo0PL7N5TY2Q=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzvAgZ7w1jKhmADsvO2tQpeV5W8VFZgaOvLIO2AKNQbGnhidi3W
+	GX2QZSfu2FSm5nNCXxTyPQRSrODnyRSUXG/M9/GWOPRADY/Epo+0tPfZ/Ll/BTLf1k8=
+X-Gm-Gg: ASbGnctbg0WEn1R6FocFHUsELtmXgF7uh1I7aV0Tf0Bw8+Dw3vh9V9YhkTQo2PPaeTR
+	+JgYARwIqiHoU1eT0NBQr/vDOYm8bz+C1WuqBFepqLuV0q6/6qEUAx2Z7+k1km3VWinyTvc7Rvq
+	2+Mn4kT9xHvfjVwPVF4Egb9cif/wqAmOeYH0ExfAQFL6h3WFGyV0PUnORvwTmRr5GwUazA54Vq4
+	vZy+KTmV1q+JdF5+6FL4A8+ATjD+nDhRXcMkwZEtj+UsrTLaRXGj3OJN7PWyuLOg/bkyIxa6QfW
+	RIjPDFjLmkYm/gUN9dwV+GV7AYEgXckVzdMJe67J/mMWaUoyQI2wD2NFjp/dinaRGMFc/k6pTqh
+	r9SSSjIvCG/Hdj+vG9fOy+X8kxtDJavKRQDT8rNdFSGP2kvMm1vW4Klkplayy+gn4oLpChquPwQ
+	==
+X-Google-Smtp-Source: AGHT+IHnv77H5wfprCmfDWdElJKQH3XAqXLK31tfmThyrslKpxVkW1UVIPHA5IdRfKXL32HPE3IWSA==
+X-Received: by 2002:a05:6300:40f:b0:232:1668:848d with SMTP id adf61e73a8af0-23216688519mr15759146637.27.1752526413510;
+        Mon, 14 Jul 2025 13:53:33 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-184-88.pa.nsw.optusnet.com.au. [49.180.184.88])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b3bbe7297bcsm10529816a12.73.2025.07.14.13.53.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Jul 2025 13:53:32 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1ubQAz-0000000B4D2-3tkT;
+	Tue, 15 Jul 2025 06:53:29 +1000
+Date: Tue, 15 Jul 2025 06:53:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: John Garry <john.g.garry@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: Re: Do we need an opt-in for file systems use of hw atomic writes?
+Message-ID: <aHVuSU3TB4eNRq8V@dread.disaster.area>
+References: <20250714131713.GA8742@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250714131713.GA8742@lst.de>
 
-iomap_zero_range() has to cover various corner cases that are
-difficult to test on production kernels because it is used in fairly
-limited use cases. For example, it is currently only used by XFS and
-mostly only in partial block zeroing cases.
+On Mon, Jul 14, 2025 at 03:17:13PM +0200, Christoph Hellwig wrote:
+> Hi all,
+> 
+> I'm currently trying to sort out the nvme atomics limits mess, and
+> between that, the lack of a atomic write command in nvme, and the
+> overall degrading quality of cheap consumer nvme devices I'm starting
+> to free really uneasy about XFS using hardware atomics by default without
+> an explicit opt-in, as broken atomics implementations will lead to
+> really subtle data corruption.
+> 
+> Is is just me, or would it be a good idea to require an explicit
+> opt-in to user hardware atomics?
 
-While it's possible to test most of these functional cases, we can
-provide more robust test coverage by co-opting fallocate zero range
-to invoke zeroing of the entire range instead of the more efficient
-block punch/allocate sequence. Add an errortag to occasionally
-invoke forced zeroing.
+This isn't a filesystem question - this is a question about what
+features the block device should expose by default to the
+user/filesystem by default.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_errortag.h |  4 +++-
- fs/xfs/xfs_error.c           |  3 +++
- fs/xfs/xfs_file.c            | 26 ++++++++++++++++++++------
- 3 files changed, 26 insertions(+), 7 deletions(-)
+Block device feature configuration is typically done at hotplug time
+with udev rules.  Require the user to add a custom udev rule for the
+block device to enable hardware atomics if you are concerned that
+hardware atomic writes are problematic.
 
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index a53c5d40e084..33ca3fc2ca88 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -65,7 +65,8 @@
- #define XFS_ERRTAG_WRITE_DELAY_MS			43
- #define XFS_ERRTAG_EXCHMAPS_FINISH_ONE			44
- #define XFS_ERRTAG_METAFILE_RESV_CRITICAL		45
--#define XFS_ERRTAG_MAX					46
-+#define XFS_ERRTAG_FORCE_ZERO_RANGE			46
-+#define XFS_ERRTAG_MAX					47
- 
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -115,5 +116,6 @@
- #define XFS_RANDOM_WRITE_DELAY_MS			3000
- #define XFS_RANDOM_EXCHMAPS_FINISH_ONE			1
- #define XFS_RANDOM_METAFILE_RESV_CRITICAL		4
-+#define XFS_RANDOM_FORCE_ZERO_RANGE			4
- 
- #endif /* __XFS_ERRORTAG_H_ */
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index dbd87e137694..00c0c391c329 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -64,6 +64,7 @@ static unsigned int xfs_errortag_random_default[] = {
- 	XFS_RANDOM_WRITE_DELAY_MS,
- 	XFS_RANDOM_EXCHMAPS_FINISH_ONE,
- 	XFS_RANDOM_METAFILE_RESV_CRITICAL,
-+	XFS_RANDOM_FORCE_ZERO_RANGE,
- };
- 
- struct xfs_errortag_attr {
-@@ -183,6 +184,7 @@ XFS_ERRORTAG_ATTR_RW(wb_delay_ms,	XFS_ERRTAG_WB_DELAY_MS);
- XFS_ERRORTAG_ATTR_RW(write_delay_ms,	XFS_ERRTAG_WRITE_DELAY_MS);
- XFS_ERRORTAG_ATTR_RW(exchmaps_finish_one, XFS_ERRTAG_EXCHMAPS_FINISH_ONE);
- XFS_ERRORTAG_ATTR_RW(metafile_resv_crit, XFS_ERRTAG_METAFILE_RESV_CRITICAL);
-+XFS_ERRORTAG_ATTR_RW(force_zero_range, XFS_ERRTAG_FORCE_ZERO_RANGE);
- 
- static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(noerror),
-@@ -230,6 +232,7 @@ static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(write_delay_ms),
- 	XFS_ERRORTAG_ATTR_LIST(exchmaps_finish_one),
- 	XFS_ERRORTAG_ATTR_LIST(metafile_resv_crit),
-+	XFS_ERRORTAG_ATTR_LIST(force_zero_range),
- 	NULL,
- };
- ATTRIBUTE_GROUPS(xfs_errortag);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 0b41b18debf3..c865f9555b77 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -27,6 +27,8 @@
- #include "xfs_file.h"
- #include "xfs_aops.h"
- #include "xfs_zone_alloc.h"
-+#include "xfs_error.h"
-+#include "xfs_errortag.h"
- 
- #include <linux/dax.h>
- #include <linux/falloc.h>
-@@ -1269,13 +1271,25 @@ xfs_falloc_zero_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
--	if (error)
--		return error;
-+	/*
-+	 * Zero range implements a full zeroing mechanism but is only used in
-+	 * limited situations. It is more efficient to allocate unwritten
-+	 * extents than to perform zeroing here, so use an errortag to randomly
-+	 * force zeroing on DEBUG kernels for added test coverage.
-+	 */
-+	if (XFS_TEST_ERROR(false, XFS_I(inode)->i_mount,
-+			   XFS_ERRTAG_FORCE_ZERO_RANGE)) {
-+		error = xfs_zero_range(XFS_I(inode), offset, len, ac, NULL);
-+	} else {
-+		error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
-+		if (error)
-+			return error;
- 
--	len = round_up(offset + len, blksize) - round_down(offset, blksize);
--	offset = round_down(offset, blksize);
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+		len = round_up(offset + len, blksize) -
-+			round_down(offset, blksize);
-+		offset = round_down(offset, blksize);
-+		error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	}
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
+Once the user has opted in to having their bdev feature activated,
+then the filesystem should be able to detect and use it
+automatically.
+
+-Dave.
 -- 
-2.50.0
-
+Dave Chinner
+david@fromorbit.com
