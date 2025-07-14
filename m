@@ -1,47 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E43E924DCE8
-	for <linux-xfs@vger.kernel.org>; Mon, 14 Jul 2025 13:17:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 082B624E4C6
+	for <linux-xfs@vger.kernel.org>; Mon, 14 Jul 2025 13:17:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752499049; cv=none; b=NLXq5ilZqkRKn7GlMkPH40psK2TtEWgr5kuxCBDe9VQKfBkVQh0neivSvV/izB7K64693xCEWR0BOZTmAcUlgJnj6wUwd7Wj21EHrzXMsB/UxyimKFlAvpCInKQOYYvGtCpHJwKkVAdaen9hPH2nPFWTcS6BNEbAzvQajEkYTU4=
+	t=1752499052; cv=none; b=gN5pDd9NNtVJLQAPQbARHo1GZV4xA0FPcwnTvjuHELMnXWHM1HVSL42ygUawBD6KZeCKtqmcbRele1Q9CadPICWNcYwzI+Ai2SFmvJOWdl2164uFYaGFaeI73F4+VqkwdfI4uHaS2Vqz4UxbZOQU4adRhhSobN+sJC1GwiFiusw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752499049; c=relaxed/simple;
-	bh=8It2NPJx89fwmgFXC92Rht3sa35JYCfaO3Z59T2uBvE=;
+	s=arc-20240116; t=1752499052; c=relaxed/simple;
+	bh=7ExjyS1rst3OhkmJxETpxj6nsTXqfiUefjr84av0J/E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=B1ZxrJpNKZP0Gj5EBTC9WtnSfferdATI6SU1v6TYQjk/wRcezv8fLHun1Wn9X0w4tSwCNK+5NYoi5weg1GXctFv+dnhvDtReNdxOvvBgauc40t1+AI7aTOUIrGzOI3/WjFL+nmZl+3YJeHVUEmQtU6iMoy0Lql+lECrbbVE8TEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TYG2GQQl; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version:Content-Type; b=Su3bCuUzfbp+eSq1TbGOQVw8+CpFVL+QLNIxP5iMdatljXzj4mvX7UGvrenN/nv34yXIA7VJmCN+RiUyJaDIN2WHqGQieZHSWbBFwV9K+eefonsKjl0ss4S1RSvc9+vktZYtBqStKcMkTqu8ErP+TBlMT9WkBENUtwKjG2fsbmY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JxyXoYIM; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TYG2GQQl"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JxyXoYIM"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1752499047;
+	s=mimecast20190719; t=1752499050;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=3d7+aTpFG2q5k8m7QCJzVExxCJHPn2TXr1hZPgcAlxA=;
-	b=TYG2GQQlAzN+5c03PFG1Z9zG5hL9W8b5cy0ZRwqBFayJ66sl9jX2zlEa1jODjC6mrAAvVU
-	r4n7aanrSs8Z4FaqUTiHlejiLLE7EOYSQKqpa9X3IVefWz6iSz4VlKgWG4qaXZKWhxoIO9
-	Fi9uYT+GKKV2JTC4+1vw1TwSTwRzwJI=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	bh=hooFAAb2LyfYsY6syiVx3vKXoJCft1FIzUwOLKeoBCA=;
+	b=JxyXoYIMZeqZM22GyP78sH6CZqN9qb+nRHQaTE6DRV7Ao7mCfUlVACTLgFYGM0FFLA8Rco
+	OwWpBgupMTaI1YobuTKhqZe0G/BicHW1tagMTMX35VE1CuvroRMyZqAHXJ5y7MJQCGxKIS
+	EK/gIhGxBW7IHdsxMzd1/bDB84uWpUI=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-644-jF7E60NgPpqWDXe2R5oyFg-1; Mon,
- 14 Jul 2025 09:17:23 -0400
-X-MC-Unique: jF7E60NgPpqWDXe2R5oyFg-1
-X-Mimecast-MFC-AGG-ID: jF7E60NgPpqWDXe2R5oyFg_1752499042
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-41-E94ZUlsXMVO-bf8rHj4F9Q-1; Mon,
+ 14 Jul 2025 09:17:28 -0400
+X-MC-Unique: E94ZUlsXMVO-bf8rHj4F9Q-1
+X-Mimecast-MFC-AGG-ID: E94ZUlsXMVO-bf8rHj4F9Q_1752499047
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 49D5319560BA;
-	Mon, 14 Jul 2025 13:17:22 +0000 (UTC)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EBD89180028A;
+	Mon, 14 Jul 2025 13:17:26 +0000 (UTC)
 Received: from bfoster.redhat.com (unknown [10.22.64.43])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 160D61800285;
-	Mon, 14 Jul 2025 13:17:20 +0000 (UTC)
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 967B2180045B;
+	Mon, 14 Jul 2025 13:17:25 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc: linux-xfs@vger.kernel.org,
 	hch@infradead.org,
 	djwong@kernel.org,
 	willy@infradead.org
-Subject: [PATCH v2 3/7] iomap: optional zero range dirty folio processing
-Date: Mon, 14 Jul 2025 09:20:55 -0400
-Message-ID: <20250714132059.288129-4-bfoster@redhat.com>
+Subject: [PATCH v2 6/7] iomap: remove old partial eof zeroing optimization
+Date: Mon, 14 Jul 2025 09:20:58 -0400
+Message-ID: <20250714132059.288129-7-bfoster@redhat.com>
 In-Reply-To: <20250714132059.288129-1-bfoster@redhat.com>
 References: <20250714132059.288129-1-bfoster@redhat.com>
 Precedence: bulk
@@ -64,229 +64,59 @@ Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-The only way zero range can currently process unwritten mappings
-with dirty pagecache is to check whether the range is dirty before
-mapping lookup and then flush when at least one underlying mapping
-is unwritten. This ordering is required to prevent iomap lookup from
-racing with folio writeback and reclaim.
+iomap_zero_range() optimizes the partial eof block zeroing use case
+by force zeroing if the mapping is dirty. This is to avoid frequent
+flushing on file extending workloads, which hurts performance.
 
-Since zero range can skip ranges of unwritten mappings that are
-clean in cache, this operation can be improved by allowing the
-filesystem to provide a set of dirty folios that require zeroing. In
-turn, rather than flush or iterate file offsets, zero range can
-iterate on folios in the batch and advance over clean or uncached
-ranges in between.
-
-Add a folio_batch in struct iomap and provide a helper for fs' to
-populate the batch at lookup time. Update the folio lookup path to
-return the next folio in the batch, if provided, and advance the
-iter if the folio starts beyond the current offset.
+Now that the folio batch mechanism provides a more generic solution
+and is used by the only real zero range user (XFS), this isolated
+optimization is no longer needed. Remove the unnecessary code and
+let callers use the folio batch or fall back to flushing by default.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 89 +++++++++++++++++++++++++++++++++++++++---
- fs/iomap/iter.c        |  6 +++
- include/linux/iomap.h  |  4 ++
- 3 files changed, 94 insertions(+), 5 deletions(-)
+ fs/iomap/buffered-io.c | 24 ------------------------
+ 1 file changed, 24 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 38da2fa6e6b0..194e3cc0857f 100644
+index 194e3cc0857f..d2bbed692c06 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -750,6 +750,28 @@ static struct folio *__iomap_get_folio(struct iomap_iter *iter, size_t len)
- 	if (!mapping_large_folio_support(iter->inode->i_mapping))
- 		len = min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
+@@ -1484,33 +1484,9 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+ 		.private	= private,
+ 	};
+ 	struct address_space *mapping = inode->i_mapping;
+-	unsigned int blocksize = i_blocksize(inode);
+-	unsigned int off = pos & (blocksize - 1);
+-	loff_t plen = min_t(loff_t, len, blocksize - off);
+ 	int ret;
+ 	bool range_dirty;
  
-+	if (iter->fbatch) {
-+		struct folio *folio = folio_batch_next(iter->fbatch);
-+
-+		if (!folio)
-+			return NULL;
-+
-+		/*
-+		 * The folio mapping generally shouldn't have changed based on
-+		 * fs locks, but be consistent with filemap lookup and retry
-+		 * the iter if it does.
-+		 */
-+		folio_lock(folio);
-+		if (unlikely(folio->mapping != iter->inode->i_mapping)) {
-+			iter->iomap.flags |= IOMAP_F_STALE;
-+			folio_unlock(folio);
-+			return NULL;
-+		}
-+
-+		folio_get(folio);
-+		return folio;
-+	}
-+
- 	if (folio_ops && folio_ops->get_folio)
- 		return folio_ops->get_folio(iter, pos, len);
- 	else
-@@ -811,6 +833,8 @@ static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
- 	int status = 0;
- 
- 	len = min_not_zero(len, *plen);
-+	*foliop = NULL;
-+	*plen = 0;
- 
- 	if (fatal_signal_pending(current))
- 		return -EINTR;
-@@ -819,6 +843,15 @@ static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
- 	if (IS_ERR(folio))
- 		return PTR_ERR(folio);
- 
-+	/*
-+	 * No folio means we're done with a batch. We still have range to
-+	 * process so return and let the caller iterate and refill the batch.
-+	 */
-+	if (!folio) {
-+		WARN_ON_ONCE(!iter->fbatch);
-+		return 0;
-+	}
-+
+-	/*
+-	 * Zero range can skip mappings that are zero on disk so long as
+-	 * pagecache is clean. If pagecache was dirty prior to zero range, the
+-	 * mapping converts on writeback completion and so must be zeroed.
+-	 *
+-	 * The simplest way to deal with this across a range is to flush
+-	 * pagecache and process the updated mappings. To avoid excessive
+-	 * flushing on partial eof zeroing, special case it to zero the
+-	 * unaligned start portion if already dirty in pagecache.
+-	 */
+-	if (!iter.fbatch && off &&
+-	    filemap_range_needs_writeback(mapping, pos, pos + plen - 1)) {
+-		iter.len = plen;
+-		while ((ret = iomap_iter(&iter, ops)) > 0)
+-			iter.status = iomap_zero_iter(&iter, did_zero);
+-
+-		iter.len = len - (iter.pos - pos);
+-		if (ret || !iter.len)
+-			return ret;
+-	}
+-
  	/*
- 	 * Now we have a locked folio, before we do anything with it we need to
- 	 * check that the iomap we have cached is not stale. The inode extent
-@@ -839,6 +872,21 @@ static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
- 		}
- 	}
- 
-+	/*
-+	 * The folios in a batch may not be contiguous. If we've skipped
-+	 * forward, advance the iter to the pos of the current folio. If the
-+	 * folio starts beyond the end of the mapping, it may have been trimmed
-+	 * since the lookup for whatever reason. Return a NULL folio to
-+	 * terminate the op.
-+	 */
-+	if (folio_pos(folio) > iter->pos) {
-+		len = min_t(u64, folio_pos(folio) - iter->pos,
-+				 iomap_length(iter));
-+		status = iomap_iter_advance(iter, &len);
-+		if (status || !len)
-+			goto out_unlock;
-+	}
-+
- 	pos = iomap_trim_folio_range(iter, folio, poffset, &len);
- 
- 	if (srcmap->type == IOMAP_INLINE)
-@@ -1377,6 +1425,12 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		if (iter->iomap.flags & IOMAP_F_STALE)
- 			break;
- 
-+		/* a NULL folio means we're done with a folio batch */
-+		if (!folio) {
-+			status = iomap_iter_advance_full(iter);
-+			break;
-+		}
-+
- 		/* warn about zeroing folios beyond eof that won't write back */
- 		WARN_ON_ONCE(folio_pos(folio) > iter->inode->i_size);
- 
-@@ -1398,6 +1452,26 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 	return status;
- }
- 
-+loff_t
-+iomap_fill_dirty_folios(
-+	struct iomap_iter	*iter,
-+	loff_t			offset,
-+	loff_t			length)
-+{
-+	struct address_space	*mapping = iter->inode->i_mapping;
-+	pgoff_t			start = offset >> PAGE_SHIFT;
-+	pgoff_t			end = (offset + length - 1) >> PAGE_SHIFT;
-+
-+	iter->fbatch = kmalloc(sizeof(struct folio_batch), GFP_KERNEL);
-+	if (!iter->fbatch)
-+		return offset + length;
-+	folio_batch_init(iter->fbatch);
-+
-+	filemap_get_folios_dirty(mapping, &start, end, iter->fbatch);
-+	return (start << PAGE_SHIFT);
-+}
-+EXPORT_SYMBOL_GPL(iomap_fill_dirty_folios);
-+
- int
- iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 		const struct iomap_ops *ops, void *private)
-@@ -1426,7 +1500,7 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 	 * flushing on partial eof zeroing, special case it to zero the
- 	 * unaligned start portion if already dirty in pagecache.
- 	 */
--	if (off &&
-+	if (!iter.fbatch && off &&
- 	    filemap_range_needs_writeback(mapping, pos, pos + plen - 1)) {
- 		iter.len = plen;
- 		while ((ret = iomap_iter(&iter, ops)) > 0)
-@@ -1442,13 +1516,18 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+ 	 * To avoid an unconditional flush, check pagecache state and only flush
  	 * if dirty and the fs returns a mapping that might convert on
- 	 * writeback.
- 	 */
--	range_dirty = filemap_range_needs_writeback(inode->i_mapping,
--					iter.pos, iter.pos + iter.len - 1);
-+	range_dirty = filemap_range_needs_writeback(mapping, iter.pos,
-+					iter.pos + iter.len - 1);
- 	while ((ret = iomap_iter(&iter, ops)) > 0) {
- 		const struct iomap *srcmap = iomap_iter_srcmap(&iter);
- 
--		if (srcmap->type == IOMAP_HOLE ||
--		    srcmap->type == IOMAP_UNWRITTEN) {
-+		if (WARN_ON_ONCE(iter.fbatch &&
-+				 srcmap->type != IOMAP_UNWRITTEN))
-+			return -EIO;
-+
-+		if (!iter.fbatch &&
-+		    (srcmap->type == IOMAP_HOLE ||
-+		     srcmap->type == IOMAP_UNWRITTEN)) {
- 			s64 status;
- 
- 			if (range_dirty) {
-diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
-index 6ffc6a7b9ba5..89bd5951a6fd 100644
---- a/fs/iomap/iter.c
-+++ b/fs/iomap/iter.c
-@@ -9,6 +9,12 @@
- 
- static inline void iomap_iter_reset_iomap(struct iomap_iter *iter)
- {
-+	if (iter->fbatch) {
-+		folio_batch_release(iter->fbatch);
-+		kfree(iter->fbatch);
-+		iter->fbatch = NULL;
-+	}
-+
- 	iter->status = 0;
- 	memset(&iter->iomap, 0, sizeof(iter->iomap));
- 	memset(&iter->srcmap, 0, sizeof(iter->srcmap));
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 522644d62f30..0b9b460b2873 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -9,6 +9,7 @@
- #include <linux/types.h>
- #include <linux/mm_types.h>
- #include <linux/blkdev.h>
-+#include <linux/pagevec.h>
- 
- struct address_space;
- struct fiemap_extent_info;
-@@ -239,6 +240,7 @@ struct iomap_iter {
- 	unsigned flags;
- 	struct iomap iomap;
- 	struct iomap srcmap;
-+	struct folio_batch *fbatch;
- 	void *private;
- };
- 
-@@ -345,6 +347,8 @@ void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len);
- bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio);
- int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops);
-+loff_t iomap_fill_dirty_folios(struct iomap_iter *iter, loff_t offset,
-+		loff_t length);
- int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
- 		bool *did_zero, const struct iomap_ops *ops, void *private);
- int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
 -- 
 2.50.0
 
