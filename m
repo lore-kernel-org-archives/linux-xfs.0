@@ -1,36 +1,44 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC498233701;
-	Mon, 14 Jul 2025 10:46:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46B3B1DF26A;
+	Mon, 14 Jul 2025 10:59:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752489984; cv=none; b=aRQsXEVbBM1dAkws5idy3cn1MowE+hvrdzC8aVGbvD+wHmMXhFvR+ZhzSaU5hhT4N9mxM1n9Eq67iCz8e3RHdBZoPYQrXvKFDNvwPFzmUjN7LqwUgfLt1zKvJGd8nsQvLKsoKkpWfhTlYdNgOOtcDUqFRI5XUDUs4S6btNdIcPA=
+	t=1752490769; cv=none; b=pzjlDfJ2U3jh+vOeFI7eOTP8qHSTmymrS7PFgMOIqdbVX6TqJeI8X+Dl3fAVKhOr+2DM3eiJitn30QLmfiiCy1oOn7b7ny30p41IDzYFwF0tg8SSW4Nc7oxRpp1RySOLMNM2rFni4GjwbOXhpSlrZwZ+xVhtYn2c1WINj1NI98E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752489984; c=relaxed/simple;
-	bh=i90h/U4It8j6YmE1GXWWlAAcqeV4kuKibWn5+OgURX0=;
+	s=arc-20240116; t=1752490769; c=relaxed/simple;
+	bh=cpatPhjGSChBfeayVzxZ9beDHoG63u9phrhYlNlQ/Vk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QwnmqPpNIsCRCxichf4Lu1sVAqHzO8+3kOBL2Wnb2RXVC+9Re+TQNXmjFvf/FZ25aY8IIV2ZQwfD09J6NxfpKdIbOyz8nX1FItglv0caSRoZppm7U/hYiIKS5PH4U08VJ1TF02fIvjSbKAI0T6jzMsY1ocLKHXdBrc7I0iVkTUI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id AF7E5227A87; Mon, 14 Jul 2025 12:46:15 +0200 (CEST)
-Date: Mon, 14 Jul 2025 12:46:15 +0200
-From: Christoph Hellwig <hch@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=H2wSxcozQz+gcB+Nrjw/xSTNsRyQn9o3uion+vxrDADO4xbM65lOt/NgPBIBXRvP9RViq+hTP/YJKWTp0ZI81AkSRsjiXtIQUsdxDXoi5uqBLnVRA+CTFUxoG9FkewT6CIgspCNx2Aup1q3MBN5uCRylJAQzvJtdGEaE8keYNKE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3uzhHdHK; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3uzhHdHK"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Vm+j97b5alvltA79gK6cjufqYW1r2riUwjMxVXnVH9U=; b=3uzhHdHKKgUEL315yDZTsyTjkl
+	viGOcwMPdYYqGVIUQMQP4uGUQsfTtw1Nd+/Nf10SVGt8fkP3BwseN2CT8moTA6pYKyhV3HKHZdpuB
+	cBR0TXo4SlEDvt7omSH9nFzbRhFUS1ybjTwMMfNwyhfga3xtRQqpMzdPRpdeOnejvGa9h3+6BJPbv
+	hAmYVlZa49Ibn052FdddYQxMhpye/KfGLqAw/6pZHe8Du0lYjznvmMbkP+bvoWRcNkNcqLvS9VL7h
+	aBilYADw9GutwPSeSJ6Xcio9T9yEs5L+ZHSE7gm0JG2BdWCX86AoG8ss1ZiF3vxGsy6thdd9XgOkZ
+	SkKZqUgA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1ubGu7-00000001ysx-0t2U;
+	Mon, 14 Jul 2025 10:59:27 +0000
+Date: Mon, 14 Jul 2025 03:59:27 -0700
+From: Christoph Hellwig <hch@infradead.org>
 To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <dlemoal@kernel.org>,
-	agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
-	song@kernel.org, yukuai3@huawei.com, nilay@linux.ibm.com,
-	axboe@kernel.dk, cem@kernel.org, dm-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-block@vger.kernel.org, ojaswin@linux.ibm.com,
-	martin.petersen@oracle.com, akpm@linux-foundation.org,
-	linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH v6 0/6] block/md/dm: set chunk_sectors from stacked dev
- stripe size
-Message-ID: <20250714104615.GA30407@lst.de>
-References: <20250711080929.3091196-1-john.g.garry@oracle.com> <f80713ec-fef1-4a33-b7bf-820ca69cb6ce@kernel.org> <20250714055338.GA13470@lst.de> <706d13cf-d0e2-4c30-8943-2c719f9be083@oracle.com>
+Cc: George Hu <integral@archlinux.org>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: replace min & max with clamp() in
+ xfs_max_open_zones()
+Message-ID: <aHTjD6FxJYEu6C6R@infradead.org>
+References: <20250712145741.41433-1-integral@archlinux.org>
+ <9ba1a836-c4c9-4e1a-903d-42c8b88b03c4@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,21 +47,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <706d13cf-d0e2-4c30-8943-2c719f9be083@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <9ba1a836-c4c9-4e1a-903d-42c8b88b03c4@oracle.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jul 14, 2025 at 08:52:39AM +0100, John Garry wrote:
-> On 14/07/2025 06:53, Christoph Hellwig wrote:
->> Now we should be able to implement the software atomic writes pretty
->> easily for zoned XFS, and funnily they might actually be slightly faster
->> than normal writes due to the transaction batching.  Now that we're
->> getting reasonable test coverage we should be able to give it a spin, but
->> I have a few too many things on my plate at the moment.
->
-> Isn't reflink currently incompatible with zoned xfs?
+On Mon, Jul 14, 2025 at 08:58:59AM +0100, John Garry wrote:
+> > @@ -1133,9 +1133,7 @@ xfs_max_open_zones(
+> >   	/*
+> >   	 * Cap the max open limit to 1/4 of available space
+> >   	 */
+> 
+> Maybe you can keep this comment, but it was pretty much describing the code
+> and not explaining the rationale.
 
-reflink itself yes due to the garbage collection algorithm that is not
-reflink aware.  But all I/O on zoned file RT device uses the same I/O
-path design as writes that unshare reflinks because it always has to
-write out of place.
+Let me send an incremental patch to explain the rational as long as I
+can still remember it :)
 
