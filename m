@@ -1,44 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9746B19F464;
-	Tue, 15 Jul 2025 16:30:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEF0F1F0E24;
+	Tue, 15 Jul 2025 20:56:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752597058; cv=none; b=V0ICyWZOOzaD/GUVkd3pnaln4jn8s88PyYaLOJ05vC4dljwGMp4g+nbBrrsaoLNwf0cEvarxc47eNUcLRSCPZVvukLSbGK+ZOQQ6vAcGsexLDBbjC3XYXl1cPwg2DJp5XtNBoXk1gUXsdTdNRoUAk0JJgr4n8BELmpPNAjuP3vo=
+	t=1752612967; cv=none; b=DJavZePG0VKMzZOzM4nmQpXtaszkhz7UagdAXih+/QDpOlvgZLMJUmsFckkt/zeLA3Ho4RCQL3YNw8YRzx2w6A8H71jvs7jQxshI03K/ArXgmCzePhpcHqUknlBbZmavzJHtR3Z/vfo/vntrkCN5goLF9OLqd72DSOLaKPFBSvU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752597058; c=relaxed/simple;
-	bh=boqYpnyjQkrnOLC5/e/LhE8fcrdUQRoDXg4rbAi8Tic=;
+	s=arc-20240116; t=1752612967; c=relaxed/simple;
+	bh=BypLHT8P3y7WLcxpAqRf9nezS1MXJSKqpoWXatLi35Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NQWAB64qpm5g365dXbyN3L1ama/Bw+Eadg5UqZRTu0uBREDAqsF/s30cs1ZXRiyEOxifhHKTshMxiOkKX1iXbGy0D3G8gbjnzuwUFeVJIurqEPTTN+ZZojGTw9ZGsSiKtszGfKMLQDvDT0guTJs0EAMogtXXRIF8sQFhPTuqihE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RhayR7Dp; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GwM3cgZGp7vTJ1fIUFVhwLvjcw7yRjxZl34kuGXMdW0i9FaTsvmFkACshM+cE3x2Xmy0ebtshA7KU8HdQqcSvBmD59GP4XoRhkn+oqAheC9yMG74JaSnWFk9HONv4dLDjWS5a68ytbj/OHklv25WjrepOpfce/VFdXzakk0mnho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gAgPb5sS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RhayR7Dp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A3C3C4CEE3;
-	Tue, 15 Jul 2025 16:30:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gAgPb5sS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFC9BC4CEE3;
+	Tue, 15 Jul 2025 20:56:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752597058;
-	bh=boqYpnyjQkrnOLC5/e/LhE8fcrdUQRoDXg4rbAi8Tic=;
+	s=k20201202; t=1752612967;
+	bh=BypLHT8P3y7WLcxpAqRf9nezS1MXJSKqpoWXatLi35Q=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=RhayR7DpK5GaiEctLq2Vpx92vMICy3+cmIoQXsIsYM98vRGeJvQMBEcoOK27BinYU
-	 CLHx2zmUQvUJew1UstlfkOO53PfpcTXIbeqAl++QnD/YyHZS9aSWAjQrXm33D37kab
-	 LneWhUTyHxRREgXPuFoSzaQKV9u9zUH4wRJXaQyUUaupM3yt9tRYJQ1ofwFAb2Hz4u
-	 CCACbT4g9Z/6chKnbP0WJxAWBnLdvRaP78nJOBFYPhcVzQAMwvM4KfALuceTFp3ECA
-	 d9IvQOGQhcwXOfwppkluzwsQ7l/nqR6PApSn/ODqqNNSF5Zt30zejsKr2mbgapk2uY
-	 Gv1NLAxRcAR5g==
-Date: Tue, 15 Jul 2025 09:30:57 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org, hch@infradead.org, willy@infradead.org
-Subject: Re: [PATCH v3 6/7] iomap: remove old partial eof zeroing optimization
-Message-ID: <20250715163057.GC2672049@frogsfrogsfrogs>
-References: <20250714204122.349582-1-bfoster@redhat.com>
- <20250714204122.349582-7-bfoster@redhat.com>
- <20250715053417.GR2672049@frogsfrogsfrogs>
- <aHZLZid5gggmDD09@bfoster>
- <20250715143733.GO2672029@frogsfrogsfrogs>
- <aHZ_vnMnph_4zg_o@bfoster>
+	b=gAgPb5sSG955z0OLvwZTks1uWTR0zFbzL+bgn37yNPO9OwCbjWyZenxB2NhU9PjEK
+	 2nWUmDRao/DnjxwrGOKGCopYuqmXp5ayTa31AnSCS7eJDn5LQ4+uMFKCleJoWTT2S8
+	 rXtFFVJQLFcf/k1KI7+rlsN6jNlj/774pp24ThYNdEjBonSXFG43QamgWrp9Gpe3sl
+	 jlwU1bKkMxYBR2vx29ZCNEgaCZtfJ/2zgbJ/zTOUmlAOg3OtD3I5ytGaTSdYmjsFA2
+	 8mtVnEu0K64YvnY5WsHSwP/3eV7MjGMPai0FcDwYWWWQOC85+m+9JVNVX3raJGWwcm
+	 sYESA+iKvoLFA==
+Date: Tue, 15 Jul 2025 14:56:04 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: John Garry <john.g.garry@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: Re: Do we need an opt-in for file systems use of hw atomic writes?
+Message-ID: <aHbAZBf12kiEdXfH@kbusch-mbp>
+References: <20250714131713.GA8742@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,148 +44,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aHZ_vnMnph_4zg_o@bfoster>
+In-Reply-To: <20250714131713.GA8742@lst.de>
 
-On Tue, Jul 15, 2025 at 12:20:14PM -0400, Brian Foster wrote:
-> On Tue, Jul 15, 2025 at 07:37:33AM -0700, Darrick J. Wong wrote:
-> > On Tue, Jul 15, 2025 at 08:36:54AM -0400, Brian Foster wrote:
-> > > On Mon, Jul 14, 2025 at 10:34:17PM -0700, Darrick J. Wong wrote:
-> > > > On Mon, Jul 14, 2025 at 04:41:21PM -0400, Brian Foster wrote:
-> > > > > iomap_zero_range() optimizes the partial eof block zeroing use case
-> > > > > by force zeroing if the mapping is dirty. This is to avoid frequent
-> > > > > flushing on file extending workloads, which hurts performance.
-> > > > > 
-> > > > > Now that the folio batch mechanism provides a more generic solution
-> > > > > and is used by the only real zero range user (XFS), this isolated
-> > > > > optimization is no longer needed. Remove the unnecessary code and
-> > > > > let callers use the folio batch or fall back to flushing by default.
-> > > > > 
-> > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > > 
-> > > > Heh, I was staring at this last Friday chasing fuse+iomap bugs in
-> > > > fallocate zerorange and straining to remember what this does.
-> > > > Is this chunk still needed if the ->iomap_begin implementation doesn't
-> > > > (or forgets to) grab the folio batch for iomap?
-> > > > 
-> > > 
-> > > No, the hunk removed by this patch is just an optimization. The fallback
-> > > code here flushes the range if it's dirty and retries the lookup (i.e.
-> > > picking up unwritten conversions that were pending via dirty pagecache).
-> > > That flush logic caused a performance regression in a particular
-> > > workload, so this was introduced to mitigate that regression by just
-> > > doing the zeroing for the first block or so if the folio is dirty. [1]
-> > > 
-> > > The reason for removing it is more just for maintainability. XFS is
-> > > really the only user here and it is changing over to the more generic
-> > > batch mechanism, which effectively provides the same optimization, so
-> > > this basically becomes dead/duplicate code. If an fs doesn't use the
-> > > batch mechanism it will just fall back to the flush and retry approach,
-> > > which can be slower but is functionally correct.
-> > 
-> > Oh ok thanks for the reminder.
-> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> > 
-> > > > My bug turned out to be a bug in my fuse+iomap design -- with the way
-> > > > iomap_zero_range does things, you have to flush+unmap, punch the range
-> > > > and zero the range.  If you punch and realloc the range and *then* try
-> > > > to zero the range, the new unwritten extents cause iomap to miss dirty
-> > > > pages that fuse should've unmapped.  Ooops.
-> > > > 
-> > > 
-> > > I don't quite follow. How do you mean it misses dirty pages?
-> > 
-> > Oops, I misspoke, the folios were clean.  Let's say the pagecache is
-> > sparsely populated with some folios for written space:
-> > 
-> > -------fffff-------fffffff
-> > wwwwwwwwwwwwwwwwwwwwwwwwww
-> > 
-> > Now you tell it to go zero range the middle.  fuse's fallocate code
-> > issues the upcall to userspace, whch changes some mappings:
-> > 
-> > -------fffff-------fffffff
-> > wwwwwuuuuuuuuuuuwwwwwwwwww
-> > 
-> > Only after the upcall returns does the kernel try to do the pagecache
-> > zeroing.  Unfortunately, the mapping changed to unwritten so
-> > iomap_zero_range doesn't see the "fffff" and leaves its contents intact.
-> > 
-> 
-> Ah, interesting. So presumably the fuse fs is not doing any cache
-> managment, and this creates an unexpected inconsistency between
-> pagecache and block state.
-> 
-> So what's the solution to this for fuse+iomap? Invalidate the cache
-> range before or after the callback or something?
+On Mon, Jul 14, 2025 at 03:17:13PM +0200, Christoph Hellwig wrote:
+> Is is just me, or would it be a good idea to require an explicit
+> opt-in to user hardware atomics?
 
-Port xfs_flush_unmap_range, I think.
+IMO, if the block device's limits reports atomic capabilities, it's fair
+game for any in kernel use. These are used outside of filesystems too,
+like through raw block fops.
 
---D
-
-> Brian
-> 
-> > (Note: Non-iomap fuse defers everything to the fuse server so this isn't
-> > a problem if the fuse server does all the zeroing itself.)
-> > 
-> > --D
-> > 
-> > > Brian
-> > > 
-> > > [1] Details described in the commit log of fde4c4c3ec1c ("iomap: elide
-> > > flush from partial eof zero range").
-> > > 
-> > > > --D
-> > > > 
-> > > > > ---
-> > > > >  fs/iomap/buffered-io.c | 24 ------------------------
-> > > > >  1 file changed, 24 deletions(-)
-> > > > > 
-> > > > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > > > > index 194e3cc0857f..d2bbed692c06 100644
-> > > > > --- a/fs/iomap/buffered-io.c
-> > > > > +++ b/fs/iomap/buffered-io.c
-> > > > > @@ -1484,33 +1484,9 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
-> > > > >  		.private	= private,
-> > > > >  	};
-> > > > >  	struct address_space *mapping = inode->i_mapping;
-> > > > > -	unsigned int blocksize = i_blocksize(inode);
-> > > > > -	unsigned int off = pos & (blocksize - 1);
-> > > > > -	loff_t plen = min_t(loff_t, len, blocksize - off);
-> > > > >  	int ret;
-> > > > >  	bool range_dirty;
-> > > > >  
-> > > > > -	/*
-> > > > > -	 * Zero range can skip mappings that are zero on disk so long as
-> > > > > -	 * pagecache is clean. If pagecache was dirty prior to zero range, the
-> > > > > -	 * mapping converts on writeback completion and so must be zeroed.
-> > > > > -	 *
-> > > > > -	 * The simplest way to deal with this across a range is to flush
-> > > > > -	 * pagecache and process the updated mappings. To avoid excessive
-> > > > > -	 * flushing on partial eof zeroing, special case it to zero the
-> > > > > -	 * unaligned start portion if already dirty in pagecache.
-> > > > > -	 */
-> > > > > -	if (!iter.fbatch && off &&
-> > > > > -	    filemap_range_needs_writeback(mapping, pos, pos + plen - 1)) {
-> > > > > -		iter.len = plen;
-> > > > > -		while ((ret = iomap_iter(&iter, ops)) > 0)
-> > > > > -			iter.status = iomap_zero_iter(&iter, did_zero);
-> > > > > -
-> > > > > -		iter.len = len - (iter.pos - pos);
-> > > > > -		if (ret || !iter.len)
-> > > > > -			return ret;
-> > > > > -	}
-> > > > > -
-> > > > >  	/*
-> > > > >  	 * To avoid an unconditional flush, check pagecache state and only flush
-> > > > >  	 * if dirty and the fs returns a mapping that might convert on
-> > > > > -- 
-> > > > > 2.50.0
-> > > > > 
-> > > > > 
-> > > > 
-> > > 
-> > > 
-> > 
-> 
-> 
+We've already settled on discarding problematic nvme attributes from
+consideration. Is there something beyond that you've really found? If
+so, maybe we should continue down the path of splitting more queue
+limits into "hardware" and "user" values, and make filesystems subscribe
+to the udev value where it defaults to "unsupported" for untrusted
+devices.
