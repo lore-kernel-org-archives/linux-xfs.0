@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A6EA2BAF7
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 05:17:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 071C02D3A86
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 05:17:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752556645; cv=none; b=CHygOv5A1VVLmPDUiQVH1QCv+AeJytj3MqShiBvBhIpVqX6XXGVs0bDp6hEGnAT0nEyCMZuJPDQmYvxKg20V3IeFqdcjgKxqiPBLHxfOchL7o+pirMbNreHoxMIRqEukZv5jcb2lNbK3z9uirPDp6lKXUAV1aovzFqfAmlTUvMA=
+	t=1752556661; cv=none; b=oHR6P8SeIq/1GtJ0PzACrbRYGh4y+5rFHydXOt8DYiepbbJ9m8uwFh/JDaIZGHMGTESyynPhjB+vfty2Derkz632J1fJqdmKmaAKkd2mlobuYyBYPlLdh9hq0eYHcz5D4Cd1nh//pqYXI4p30wAVyD5j8P/+9UVrn7JXMG6i5MQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752556645; c=relaxed/simple;
-	bh=jWweVFSjxrwI/CSpbF0s7VEL2eY9QSZR+hb0/lxkKxg=;
+	s=arc-20240116; t=1752556661; c=relaxed/simple;
+	bh=MF/ZaO8AIWbmbtOnTws63z9nf14RA5Se/2wq9ldIZzk=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ePtIoNG84kyqBVMp98nEG47xp9b/m1pRgRf59p0pz6ZwoXYZFcYndsmvBHPV8lweZPxbMG0aXBguByMrttXcqWJWNxW6oJi2xvQX1cOdlRouUX8IjEBC0nHqTIsn9zzKiohFyf+GZf7hf0Cq6l/zy0crtYu7ORBioH3ipZbfdCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dd38n2lL; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Rp9tf8oXp2Ku7TBKBFen7sRem+hAyBHhcjsrHsiWrt+RScQolRr4EJ3q53ypoCAJSzkCXrBKH0v/Xgvj4emyvGIbW96h/zYSEuDGTFXUyvpMgRmpjH+p53TkAaXWNhabiO035SM9AkGWyH+qKEUSPOZLeCXE/1/hD4NBf7wfd5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D0/hjZEA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dd38n2lL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 391B4C4CEE3;
-	Tue, 15 Jul 2025 05:17:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D0/hjZEA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3997C4CEE3;
+	Tue, 15 Jul 2025 05:17:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752556645;
-	bh=jWweVFSjxrwI/CSpbF0s7VEL2eY9QSZR+hb0/lxkKxg=;
+	s=k20201202; t=1752556660;
+	bh=MF/ZaO8AIWbmbtOnTws63z9nf14RA5Se/2wq9ldIZzk=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=Dd38n2lLze7jq1Htndzksdf7+JHfk1LKMEmrhftePHCtj4IqlGynliW14fUHYqTQA
-	 7Tw17TJOJM8cxeAq6q0M7DXhQrB0eaL51MAznsXhHXDxiFSnecjrWZYtgs93McbLOY
-	 25MwHgxMWs1J7oG7aaOCHyXFV0H7QOtPXrcFnuTI4KJkI+paUpWF085kw4fVgFUYaI
-	 DnJMBb05qHxJ6g0FwHaxo8aHHDkZNIpXxpeTdtj1I5lI4xaSqmRRZH2pWS3M++BEqD
-	 bzTsV89wdFMK5rhojdWCX8UbV+hfnAvxJ8LqIjQF5bgJi6TK+5+wmRZ5dafR1aeutD
-	 BLXqJdjf+UCcg==
-Date: Mon, 14 Jul 2025 22:17:24 -0700
-Subject: [PATCH 4/6] libxfs: add helpers to compute log item overhead
+	b=D0/hjZEAlCN0tDZ00sHv+1LOo4O4XYeffcyHSZFRtzeKc6pes/xTYjyM2za9O6ChJ
+	 QBVzi1gBIB29Sd+GhhOb3BfDcVjAuVVN1uD2KelV2XTDWTC2sMnGbRu0cvwj+1vu+N
+	 2DC8386Gx/OmydYsdOZ9pXhqkXzYsmpbbIoPH1C9mpApkY6sB9kG0qwiLlVZFmymz4
+	 gBR6dODhjqGnaaOFhFI/OHdJQe311DQaDObni1IUkHZydJJOy1gqR5vQfRuPFEs9mV
+	 Xu+256fj88FOm0bpgy+9VlYpyy8dV/I98toZ05TcZGLTX0LXjDSHEbZORDnn/cnGvO
+	 AwGD29HJsubeQ==
+Date: Mon, 14 Jul 2025 22:17:40 -0700
+Subject: [PATCH 5/6] xfs: add xfs_calc_atomic_write_unit_max()
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: catherine.hoang@oracle.com, john.g.garry@oracle.com,
- linux-xfs@vger.kernel.org
-Message-ID: <175255652185.1830720.4881929981063380399.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, john.g.garry@oracle.com, catherine.hoang@oracle.com,
+ john.g.garry@oracle.com, linux-xfs@vger.kernel.org
+Message-ID: <175255652203.1830720.16427932226193042656.stgit@frogsfrogsfrogs>
 In-Reply-To: <175255652087.1830720.17606543077660806130.stgit@frogsfrogsfrogs>
 References: <175255652087.1830720.17606543077660806130.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -44,100 +44,173 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: John Garry <john.g.garry@oracle.com>
 
-Add selected helpers to estimate the transaction reservation required to
-write various log intent and buffer items to the log.  These helpers
-will be used by the online repair code for more precise estimations of
-how much work can be done in a single transaction.
+Source kernel commit: 0c438dcc31504bf4f50b20dc52f8f5ca7fab53e2
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Now that CoW-based atomic writes are supported, update the max size of an
+atomic write for the data device.
+
+The limit of a CoW-based atomic write will be the limit of the number of
+logitems which can fit into a single transaction.
+
+In addition, the max atomic write size needs to be aligned to the agsize.
+Limit the size of atomic writes to the greatest power-of-two factor of the
+agsize so that allocations for an atomic write will always be aligned
+compatibly with the alignment requirements of the storage.
+
+Function xfs_atomic_write_logitems() is added to find the limit the number
+of log items which can fit in a single transaction.
+
+Amend the max atomic write computation to create a new transaction
+reservation type, and compute the maximum size of an atomic write
+completion (in fsblocks) based on this new transaction reservation.
+Initially, tr_atomic_write is a clone of tr_itruncate, which provides a
+reasonable level of parallelism.  In the next patch, we'll add a mount
+option so that sysadmins can configure their own limits.
+
+[djwong: use a new reservation type for atomic write ioends, refactor
+group limit calculations]
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+[jpg: rounddown power-of-2 always]
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: John Garry <john.g.garry@oracle.com>
 ---
- libxfs/defer_item.h |   14 ++++++++++++++
- libxfs/defer_item.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 65 insertions(+)
+ include/xfs_trace.h     |    2 +
+ libxfs/xfs_trans_resv.h |    2 +
+ libxfs/xfs_trans_resv.c |   90 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 94 insertions(+)
 
 
-diff --git a/libxfs/defer_item.h b/libxfs/defer_item.h
-index 93cf1eed58a382..325a6f7b2dcbce 100644
---- a/libxfs/defer_item.h
-+++ b/libxfs/defer_item.h
-@@ -39,4 +39,18 @@ struct xfs_refcount_intent;
- void xfs_refcount_defer_add(struct xfs_trans *tp,
- 		struct xfs_refcount_intent *ri);
+diff --git a/include/xfs_trace.h b/include/xfs_trace.h
+index 30166c11dd597b..965c109cc1941a 100644
+--- a/include/xfs_trace.h
++++ b/include/xfs_trace.h
+@@ -64,6 +64,8 @@
+ #define trace_xfs_attr_rmtval_alloc(...)	((void) 0)
+ #define trace_xfs_attr_rmtval_remove_return(...) ((void) 0)
  
-+/* log intent size calculations */
++#define trace_xfs_calc_max_atomic_write_fsblocks(...) ((void) 0)
 +
-+unsigned int xfs_efi_log_space(unsigned int nr);
-+unsigned int xfs_efd_log_space(unsigned int nr);
+ #define trace_xfs_log_recover_item_add_cont(a,b,c,d)	((void) 0)
+ #define trace_xfs_log_recover_item_add(a,b,c,d)	((void) 0)
+ 
+diff --git a/libxfs/xfs_trans_resv.h b/libxfs/xfs_trans_resv.h
+index 670045d417a65f..a6d303b836883f 100644
+--- a/libxfs/xfs_trans_resv.h
++++ b/libxfs/xfs_trans_resv.h
+@@ -121,4 +121,6 @@ unsigned int xfs_calc_itruncate_reservation_minlogsize(struct xfs_mount *mp);
+ unsigned int xfs_calc_write_reservation_minlogsize(struct xfs_mount *mp);
+ unsigned int xfs_calc_qm_dqalloc_reservation_minlogsize(struct xfs_mount *mp);
+ 
++xfs_extlen_t xfs_calc_max_atomic_write_fsblocks(struct xfs_mount *mp);
 +
-+unsigned int xfs_rui_log_space(unsigned int nr);
-+unsigned int xfs_rud_log_space(void);
+ #endif	/* __XFS_TRANS_RESV_H__ */
+diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
+index cf735f946c8ac7..ec61ddfba44601 100644
+--- a/libxfs/xfs_trans_resv.c
++++ b/libxfs/xfs_trans_resv.c
+@@ -19,6 +19,8 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_quota_defs.h"
+ #include "xfs_rtbitmap.h"
++#include "xfs_trace.h"
++#include "defer_item.h"
+ 
+ #define _ALLOC	true
+ #define _FREE	false
+@@ -1391,3 +1393,91 @@ xfs_trans_resv_calc(
+ 	 */
+ 	xfs_calc_default_atomic_ioend_reservation(mp, resp);
+ }
 +
-+unsigned int xfs_bui_log_space(unsigned int nr);
-+unsigned int xfs_bud_log_space(void);
-+
-+unsigned int xfs_cui_log_space(unsigned int nr);
-+unsigned int xfs_cud_log_space(void);
-+
- #endif /* __LIBXFS_DEFER_ITEM_H_ */
-diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index 6beefa6a439980..4530583ddabae1 100644
---- a/libxfs/defer_item.c
-+++ b/libxfs/defer_item.c
-@@ -942,3 +942,54 @@ const struct xfs_defer_op_type xfs_exchmaps_defer_type = {
- 	.finish_item	= xfs_exchmaps_finish_item,
- 	.cancel_item	= xfs_exchmaps_cancel_item,
- };
-+
-+/* log intent size calculations */
-+
-+static inline unsigned int
-+xlog_item_space(
-+	unsigned int	niovecs,
-+	unsigned int	nbytes)
++/*
++ * Return the per-extent and fixed transaction reservation sizes needed to
++ * complete an atomic write.
++ */
++STATIC unsigned int
++xfs_calc_atomic_write_ioend_geometry(
++	struct xfs_mount	*mp,
++	unsigned int		*step_size)
 +{
-+	nbytes += niovecs * (sizeof(uint64_t) + sizeof(struct xlog_op_header));
-+	return round_up(nbytes, sizeof(uint64_t));
++	const unsigned int	efi = xfs_efi_log_space(1);
++	const unsigned int	efd = xfs_efd_log_space(1);
++	const unsigned int	rui = xfs_rui_log_space(1);
++	const unsigned int	rud = xfs_rud_log_space();
++	const unsigned int	cui = xfs_cui_log_space(1);
++	const unsigned int	cud = xfs_cud_log_space();
++	const unsigned int	bui = xfs_bui_log_space(1);
++	const unsigned int	bud = xfs_bud_log_space();
++
++	/*
++	 * Maximum overhead to complete an atomic write ioend in software:
++	 * remove data fork extent + remove cow fork extent + map extent into
++	 * data fork.
++	 *
++	 * tx0: Creates a BUI and a CUI and that's all it needs.
++	 *
++	 * tx1: Roll to finish the BUI.  Need space for the BUD, an RUI, and
++	 * enough space to relog the CUI (== CUI + CUD).
++	 *
++	 * tx2: Roll again to finish the RUI.  Need space for the RUD and space
++	 * to relog the CUI.
++	 *
++	 * tx3: Roll again, need space for the CUD and possibly a new EFI.
++	 *
++	 * tx4: Roll again, need space for an EFD.
++	 *
++	 * If the extent referenced by the pair of BUI/CUI items is not the one
++	 * being currently processed, then we need to reserve space to relog
++	 * both items.
++	 */
++	const unsigned int	tx0 = bui + cui;
++	const unsigned int	tx1 = bud + rui + cui + cud;
++	const unsigned int	tx2 = rud + cui + cud;
++	const unsigned int	tx3 = cud + efi;
++	const unsigned int	tx4 = efd;
++	const unsigned int	relog = bui + bud + cui + cud;
++
++	const unsigned int	per_intent = max(max3(tx0, tx1, tx2),
++						 max3(tx3, tx4, relog));
++
++	/* Overhead to finish one step of each intent item type */
++	const unsigned int	f1 = xfs_calc_finish_efi_reservation(mp, 1);
++	const unsigned int	f2 = xfs_calc_finish_rui_reservation(mp, 1);
++	const unsigned int	f3 = xfs_calc_finish_cui_reservation(mp, 1);
++	const unsigned int	f4 = xfs_calc_finish_bui_reservation(mp, 1);
++
++	/* We only finish one item per transaction in a chain */
++	*step_size = max(f4, max3(f1, f2, f3));
++
++	return per_intent;
 +}
 +
-+unsigned int xfs_efi_log_space(unsigned int nr)
++/*
++ * Compute the maximum size (in fsblocks) of atomic writes that we can complete
++ * given the existing log reservations.
++ */
++xfs_extlen_t
++xfs_calc_max_atomic_write_fsblocks(
++	struct xfs_mount		*mp)
 +{
-+	return xlog_item_space(1, xfs_efi_log_format_sizeof(nr));
-+}
++	const struct xfs_trans_res	*resv = &M_RES(mp)->tr_atomic_ioend;
++	unsigned int			per_intent = 0;
++	unsigned int			step_size = 0;
++	unsigned int			ret = 0;
 +
-+unsigned int xfs_efd_log_space(unsigned int nr)
-+{
-+	return xlog_item_space(1, xfs_efd_log_format_sizeof(nr));
-+}
++	if (resv->tr_logres > 0) {
++		per_intent = xfs_calc_atomic_write_ioend_geometry(mp,
++				&step_size);
 +
-+unsigned int xfs_rui_log_space(unsigned int nr)
-+{
-+	return xlog_item_space(1, xfs_rui_log_format_sizeof(nr));
-+}
++		if (resv->tr_logres >= step_size)
++			ret = (resv->tr_logres - step_size) / per_intent;
++	}
 +
-+unsigned int xfs_rud_log_space(void)
-+{
-+	return xlog_item_space(1, sizeof(struct xfs_rud_log_format));
-+}
++	trace_xfs_calc_max_atomic_write_fsblocks(mp, per_intent, step_size,
++			resv->tr_logres, ret);
 +
-+unsigned int xfs_bui_log_space(unsigned int nr)
-+{
-+	return xlog_item_space(1, xfs_bui_log_format_sizeof(nr));
-+}
-+
-+unsigned int xfs_bud_log_space(void)
-+{
-+	return xlog_item_space(1, sizeof(struct xfs_bud_log_format));
-+}
-+
-+unsigned int xfs_cui_log_space(unsigned int nr)
-+{
-+	return xlog_item_space(1, xfs_cui_log_format_sizeof(nr));
-+}
-+
-+unsigned int xfs_cud_log_space(void)
-+{
-+	return xlog_item_space(1, sizeof(struct xfs_cud_log_format));
++	return ret;
 +}
 
