@@ -1,106 +1,152 @@
-Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C89052E762D
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 13:51:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 893C423ABA8;
+	Tue, 15 Jul 2025 14:19:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752587499; cv=none; b=KCHf5XfPp9nJUACz7qiUJ9nl8jtP9U7J6liRVUdIAHYA2bB3ZCSersXaOcsV92tVuh4J4oW+HjOE2ph9Kuq+SGpBQq5wEw4ypNKvK7KNYiigojQI+AMQYIRgQS42vX7ffOENnHkSnFeXkEf1J9N7SUzaYncQgzcuwUwvdYaZMUg=
+	t=1752589194; cv=none; b=MlXMr3mG0jLFbiA8ITKnr7GI0pcZM5v6Vh/KPgQv9Th/gGqIVmW0Q/8MyZTWNQKHzO6rHd5h9A4mBpov337upnUjoeMo2VUwYaX81PiGnkyV00XDjlm8535BWrnGb4OucZykM1BbQ3SFhat3Evj2xl341Syi5uNCVI4/LOULFDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752587499; c=relaxed/simple;
-	bh=xYnsJEEKmjPoR6xVBk1TVqzwQQq5B+P+Ave+N2LTG3s=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qatgiNd6T8WlsF7IB8JVpK0k0OCdeB38BYueFWyYB2DQy5TYPBXFoG+4b+Unl3aHJFHrO20FtnjiFyw2WZ1EYP8MFx0T8JJMizd5POljrL5BiIGC5O8Yis7ps8YrObHSzxvE56NS9PXZsWGtyuhm5XHPkTcREVNVWOsSx/9NBfE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JMin4lcU; arc=none smtp.client-ip=209.85.208.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1752589194; c=relaxed/simple;
+	bh=qZ+LC3FTqFJ27mtCLEBJ1uKtZR3TIsj7xDBbTuuliR0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=j+pOqwYotsWHYcHa/04+azBCCN4wLAXRf8SKchZd7b32nwUHRAEN5GYZIX6syB/Ba9C/kW3wFJxYqHkbf9TIauMiZG8ptW42TmzK/M49V8y9A/zcGeRAXpXQmabrsNX0jGkhjr20uGycTG49rDvcm+82mn5FOdiX2dXYGkk1P5c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tkXbgtRc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JMin4lcU"
-Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-32cd0dfbdb8so44255041fa.0
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 06:51:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1752587495; x=1753192295; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=CDlxdanljwl0KU52CSiZjUdQkJ9lc3GcPx2JPxzzEcQ=;
-        b=JMin4lcUBLAPpVtaZvsy/vvM3HmMrjBAwJKB0ILmt9pZssu2koi00MyS5Cc57VWy1M
-         0komo1P27hcYR6ypJ6HVgaRnmpaBx1yqEQnvVto+bjfbTEPrljSkdRJntLExltb88ypr
-         uy7zB5+4gz0YzIFpdd555cmrBQJpJO8vAmC1BIy7hYRUudmmsCy89IV+mgA1KP35hZMd
-         xmNBm9g3phqWyMRGKrKL/PXozLlXuvmG5NklzklQfLO8qOd/Azy9ptyRADnplA4tfaiO
-         gvjAGyeCoRiZTLSruMogyZOTM0ZxS4RqbPzljN379fcxPhG4GEjUj7EMM6hJ3KW8wdmr
-         RhiQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752587495; x=1753192295;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=CDlxdanljwl0KU52CSiZjUdQkJ9lc3GcPx2JPxzzEcQ=;
-        b=VTWcfE0zZdqpcxeLf6yxSAMLXPlIwwYl4hYEWL9lqOTOBbCORF1Ynx1MckcA2sUrx7
-         XAM716tCUeQLnPAsPx9UMHBFodQHCBwLg/zuExw7tnDBc9S9GnCUVs9fZG5Umz/zds9z
-         hFvx0ZCfnNzscOMYfk2TxGGDVou2x/dshTgj1qi8l0DUSgkp3koObgELlMRe076qKZy3
-         bd2+DcL7jaAL2zjGDfuS30WprpHbQVapC+VUIBhoZwgR8jwfDzRdbUtn89fIk/UHBJRC
-         O8B0YffSsXXvcb1et5i4g9TBGNG+I/dRTBn1RZ87kDPnLb/1WbuoPCmOqL65Zn99xxUp
-         wtow==
-X-Gm-Message-State: AOJu0Yx7/NNkrrzwJ50J4jwBgW2jlygyq2DoCJvvDE4JKXEJwOQu+i/w
-	kOgeYKY3EVhLkdR4ZK/NhpTMpp6pbpF8SF2Lzjf0cAxTHDWmqU/Nj58zBxsSloSpSzrfsAuLFCH
-	OlEEN2G2lldLwwXc4dvugBLcJdNmzCburhxug
-X-Gm-Gg: ASbGncvHdY3Oeu9f60xj1KGjjTXL2Gahabnqc4w83sqfnKKJJLrsXuYbVL3eoOOjPfR
-	pHLgS5sJPAPo06wBBn8OZIae0LmVGfKhYrjj9augIGEbg4JazjyZtWFZQWv7TnQ4JRUQ6Zxdj1E
-	qv8hhDY8TyaEJwmfmiz5cU4R8SURO50eWHKsjNPv2aNTiCqQ2ky3PHVVYpemhDzrCH0c4+EOkiz
-	rwgxett
-X-Google-Smtp-Source: AGHT+IHP0ND7bRPAcfe1jvLscJAB5tkj6HeWH8fe+J+sRdeov8GfCGXX0HhqwCuW5K7IB8n+0WICsu9DuYBimLMWyQo=
-X-Received: by 2002:a05:651c:555:b0:32b:7ddd:279e with SMTP id
- 38308e7fff4ca-330532dfb0emr53129721fa.14.1752587494368; Tue, 15 Jul 2025
- 06:51:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tkXbgtRc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F651C4CEE3;
+	Tue, 15 Jul 2025 14:19:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752589194;
+	bh=qZ+LC3FTqFJ27mtCLEBJ1uKtZR3TIsj7xDBbTuuliR0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=tkXbgtRclBrdKKwGxvl2fyRNA7ZDXaoB+JpC8gJMJZ0co1wjgMD3t/uVkWC0Z1Lwg
+	 m+ituiGN8QClgVE6taDhix9JV2m8tLPwxtfhu0DC0tKszE3FMBnAeaHlAW/09f5f1P
+	 XFkBEcXhrDjsZJp1yzuZMmJOUynwZwxNXZ6fQFfzn5178LruEEQ5CKonDtpweRdVYy
+	 4Ruu/VLP37alTWyoVwm5XdzPeTa0s1Zh6JNfeM3JX2/lUhXZifcvKlGdDdS6le+kGY
+	 +H/L3kvidQDgy+eAHZbWehwEP84xsXp4GVZ6PI3QVFgRzLPGi5BSnS0MpCrPKoumJA
+	 QDhs46ChF6lyg==
+Date: Tue, 15 Jul 2025 07:19:53 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, hch@infradead.org, willy@infradead.org
+Subject: Re: [PATCH v3 5/7] xfs: fill dirty folios on zero range of unwritten
+ mappings
+Message-ID: <20250715141953.GM2672029@frogsfrogsfrogs>
+References: <20250714204122.349582-1-bfoster@redhat.com>
+ <20250714204122.349582-6-bfoster@redhat.com>
+ <20250715052811.GQ2672049@frogsfrogsfrogs>
+ <aHZLJyPmZPmDtLE_@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAP=9937nv-k1dTbHHRZF3=jizvRKcQNAa9_nM_Z1RA8VMYhKSg@mail.gmail.com>
- <aHScbEVwQad_ryX5@infradead.org>
-In-Reply-To: <aHScbEVwQad_ryX5@infradead.org>
-From: Priya PM <pmpriya@gmail.com>
-Date: Tue, 15 Jul 2025 19:21:22 +0530
-X-Gm-Features: Ac12FXyb5aVrjXWZgDTlSfI66pEcX86Bb4fHbUeK-iM_BMEG0-_AMFTPLuoyjTk
-Message-ID: <CAP=9937tVVUkFCOudoJWx7O8aBhrAkRmkGQY7YpOU_4aHgyrJA@mail.gmail.com>
-Subject: Re: Query: XFS reflink unique block measurement / snapshot accounting
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aHZLJyPmZPmDtLE_@bfoster>
 
-For example,
-/mnt/fs1 has file1 of size 40KB
-Do a reflink cp of /mnt/fs1 to /mnt/.snap/1
-Now, when I check the size of /mnt/.snap/1/, it should show only snap
-usage. In this case, it should be 0, as no blocks are unique to this
-snap.
-Modify file1 in /mnt/fs1, modify 2 blocks of block size 4 KB.
-Take snapshot /mnt/snap/2 --.> This should show only the unique snap
-usage as 8KB.
+On Tue, Jul 15, 2025 at 08:35:51AM -0400, Brian Foster wrote:
+> On Mon, Jul 14, 2025 at 10:28:11PM -0700, Darrick J. Wong wrote:
+> > On Mon, Jul 14, 2025 at 04:41:20PM -0400, Brian Foster wrote:
+> > > Use the iomap folio batch mechanism to select folios to zero on zero
+> > > range of unwritten mappings. Trim the resulting mapping if the batch
+> > > is filled (unlikely for current use cases) to distinguish between a
+> > > range to skip and one that requires another iteration due to a full
+> > > batch.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > ---
+> > >  fs/xfs/xfs_iomap.c | 23 +++++++++++++++++++++++
+> > >  1 file changed, 23 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > > index b5cf5bc6308d..63054f7ead0e 100644
+> > > --- a/fs/xfs/xfs_iomap.c
+> > > +++ b/fs/xfs/xfs_iomap.c
+> > > @@ -1691,6 +1691,8 @@ xfs_buffered_write_iomap_begin(
+> > >  	struct iomap		*iomap,
+> > >  	struct iomap		*srcmap)
+> > >  {
+> > > +	struct iomap_iter	*iter = container_of(iomap, struct iomap_iter,
+> > > +						     iomap);
+> > >  	struct xfs_inode	*ip = XFS_I(inode);
+> > >  	struct xfs_mount	*mp = ip->i_mount;
+> > >  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> > > @@ -1762,6 +1764,7 @@ xfs_buffered_write_iomap_begin(
+> > >  	 */
+> > >  	if (flags & IOMAP_ZERO) {
+> > >  		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+> > > +		u64 end;
+> > >  
+> > >  		if (isnullstartblock(imap.br_startblock) &&
+> > >  		    offset_fsb >= eof_fsb)
+> > > @@ -1769,6 +1772,26 @@ xfs_buffered_write_iomap_begin(
+> > >  		if (offset_fsb < eof_fsb && end_fsb > eof_fsb)
+> > >  			end_fsb = eof_fsb;
+> > >  
+> > > +		/*
+> > > +		 * Look up dirty folios for unwritten mappings within EOF.
+> > > +		 * Providing this bypasses the flush iomap uses to trigger
+> > > +		 * extent conversion when unwritten mappings have dirty
+> > > +		 * pagecache in need of zeroing.
+> > > +		 *
+> > > +		 * Trim the mapping to the end pos of the lookup, which in turn
+> > > +		 * was trimmed to the end of the batch if it became full before
+> > > +		 * the end of the mapping.
+> > > +		 */
+> > > +		if (imap.br_state == XFS_EXT_UNWRITTEN &&
+> > > +		    offset_fsb < eof_fsb) {
+> > > +			loff_t len = min(count,
+> > > +					 XFS_FSB_TO_B(mp, imap.br_blockcount));
+> > > +
+> > > +			end = iomap_fill_dirty_folios(iter, offset, len);
+> > > +			end_fsb = min_t(xfs_fileoff_t, end_fsb,
+> > > +					XFS_B_TO_FSB(mp, end));
+> > 
+> > Hrmm.  XFS_B_TO_FSB and not _FSBT?  Can the rounding up behavior result
+> > in a missed byte range?  I think the answer is no because @end should be
+> > aligned to a folio boundary, and folios can't be smaller than an
+> > fsblock.
+> > 
+> 
+> Hmm.. not that I'm aware of..? Please elaborate if there's a case you're
+> suspicious of because I could have certainly got my wires crossed.
 
-I understand there is no snap accounting in XFS. However, to achieve
-the above things, is there any XFS command that can help?
+I don't have a specific case in mind.  I saw the conversion function and
+thought "well, what IF the return value from iomap_fill_dirty_folios
+isn't aligned to a fsblock?" and then went around trying to prove that
+isn't possible. :)
 
-Thanks in advance for your time.
+> My thinking is that end_fsb reflects the first fsb beyond the target
+> range. I.e., it's calculated and used as such in xfs_iomap_end_fsb() and
+> the various xfs_trim_extent() calls throughout the rest of the function.
 
-On Mon, Jul 14, 2025 at 11:28=E2=80=AFAM Christoph Hellwig <hch@infradead.o=
-rg> wrote:
->
-> On Sat, Jul 12, 2025 at 01:19:19PM +0530, Priya PM wrote:
-> > Hi,
-> >
-> > I was using reflinks to create snapshots of an XFS filesystem;
-> > however, I=E2=80=99m looking for ways to determine the unique snapshot =
-usage
-> > or perform snapshot accounting.
->
-> Can you explain what you are trying to measure?  How many blocks in a
-> given file are refcounted blocks with other users?  Or the difference
-> between i_blocks for all files combined vs actual space usage?
->
-> There isn't really such a thing as snapshot accouting in XFS.
->
+<nod> So I think we're fine here.
+
+--D
+
+> Brian
+> 
+> > If the answer to the second question is indeed "no" then I think this is
+> > ok and
+> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> > 
+> > --D
+> > 
+> > 
+> > > +		}
+> > > +
+> > >  		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+> > >  	}
+> > >  
+> > > -- 
+> > > 2.50.0
+> > > 
+> > > 
+> > 
+> 
+> 
