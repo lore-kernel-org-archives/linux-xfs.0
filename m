@@ -1,40 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3C0D260578
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 05:18:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 431F5260578
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 05:19:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752556739; cv=none; b=XhKzF4sLp1vuWFeeJaGDyGzROW9ToHjinMCYKfy/Q/LQ7ZvzCjlOdxC4Q7SmbEk6ANuE/SgWw8TjPLSXgS/54ThXQs1BEZ1+sx+eRtSAGTgZ7LJYZiC+0c7PA4aYIEu6PzISPwyLZI0s4d6y7h5J8Bfwv4B7aeI4ttjBRcSCBI8=
+	t=1752556755; cv=none; b=XWe4rwHdIj40ceodGI2jZtNxF87/QG3AnohqR1nrdy48Vnr04z6xPkA1lSNFw+FRlO+kwGbon4f7U70FY0nbWeorQpeEVqLPkJVaEYM8uA7wt2F6MZAxEVTleI768ex0A8x2jm0HtwMVKFwGfVNHB38BwLGYYNFdp2rysP670g4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752556739; c=relaxed/simple;
-	bh=l6usV31D0VG/Jqt/yz1yYYtpc6gOQX8LeF+GrplSSHg=;
+	s=arc-20240116; t=1752556755; c=relaxed/simple;
+	bh=p6bqhYTVwXP08+tlqPbuP50pIcrGpiQEP8E5nOvBl34=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=C/mgzP8qsz12ZIUtmddbiUb12LmRR3PQ5nsN095vOLbRf0Y5YdZ0wj9ThBnEcGqcSQtykGyC8C0MfD7SxsDFmv54WYoiu3G+YZep8MHJ2C+DvH0k8RofiBMBia1BcrKZXywlfjVrLUrCcxNHLixElNZU8lONv648Im9SWk1ADlE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eEuTjL1Z; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=YoV3TKwEOvBikUtlwL/PmTpXcahmQWdXZYTDNiTqL5cdae8/pubhVgEWfRSrlPeLxXiRZ8E28aGUJIiLaXPIG50R8ITgM7M2M6dVCq2JaVoayZbyW5tS89nRbYMU5LoPsR230mNKzLg5zPd+vVwf9eo1ng+aBMkT4r3RYbeviYY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y106uaBc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eEuTjL1Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 376F5C4CEE3;
-	Tue, 15 Jul 2025 05:18:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y106uaBc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0BFDC4CEE3;
+	Tue, 15 Jul 2025 05:19:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752556739;
-	bh=l6usV31D0VG/Jqt/yz1yYYtpc6gOQX8LeF+GrplSSHg=;
+	s=k20201202; t=1752556754;
+	bh=p6bqhYTVwXP08+tlqPbuP50pIcrGpiQEP8E5nOvBl34=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=eEuTjL1Zd1C4ltpuf5zKv15kig149hi2FS2Ef5KIGfiqMN/YDxb5VKetsGFV3+IDD
-	 uTtgu30OUt9sFmy4MRfz4ojZSTqJtRqTi2JWh9JAYZwi7ouELnFTZ0PbBmaNvPTAdI
-	 YHF4+d66UHQDXjCy9vyMctoTEyjpw/FmdM7WLRP1+z1wiPqXTHToDyb6M7kFdrerlj
-	 H9AiZZGR32/zskUgPylEEMxm6EW9lYBe4FesYV+dSI7cYDemr4TyELXA/nugiu/ULj
-	 lUcm7QjSF0mjp7BsSqZG6Dk69o+GZUbDu36lF29q+ZvbA6avDJK6BLKRAy4INeVIdi
-	 t9x3p8V/Tcprw==
-Date: Mon, 14 Jul 2025 22:18:58 -0700
-Subject: [PATCH 4/7] mkfs: don't complain about overly large auto-detected log
- stripe units
+	b=Y106uaBcz3RC5NsupTcrJ7yaiq/0nm8sRuNCLm480Sdo1UipZCUWyEfPI/R8k4pHE
+	 DiAmxJojIEq53x2jFzLKLWH+qeegfUbAd94ZAxRSj3OgGjkYOvZyylkkr4Ux24pI9V
+	 UzLxg/1cnksnhTH3NYAqNZ4vQ6cUUXFSHq0mhcEXqpkgPLNuEALgaaKnaCGRuxgAGH
+	 pkbQA9HfC6/4MEvsNHsYPS3QDlGOEgojtF3P+ANrl//71NnnCgXluNspARO+NwwR3v
+	 bOIp4dAwge/bMdMJzWJ8/pTA88SWchMEBAiOhXu/fAlhloF0xhkrp+bYJmPL/HtiSb
+	 QV1lXLdxcrSUw==
+Date: Mon, 14 Jul 2025 22:19:14 -0700
+Subject: [PATCH 5/7] mkfs: autodetect log stripe unit for external log devices
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: john.g.garry@oracle.com, linux-xfs@vger.kernel.org,
- catherine.hoang@oracle.com, john.g.garry@oracle.com,
- linux-xfs@vger.kernel.org
-Message-ID: <175255652528.1831001.4886923245781681144.stgit@frogsfrogsfrogs>
+Cc: john.g.garry@oracle.com, catherine.hoang@oracle.com,
+ john.g.garry@oracle.com, linux-xfs@vger.kernel.org
+Message-ID: <175255652546.1831001.9226314939908329303.stgit@frogsfrogsfrogs>
 In-Reply-To: <175255652424.1831001.9800800142745344742.stgit@frogsfrogsfrogs>
 References: <175255652424.1831001.9800800142745344742.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -48,33 +46,39 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If mkfs declines to apply what it thinks is an overly large data device
-stripe unit to the log device, it should only log a message about that
-if the lsunit parameter was actually supplied by the caller.  It should
-not do that when the lsunit was autodetected from the block devices.
+If we're using an external log device and the caller doesn't give us a
+lsunit, use the block device geometry (if present) to set it.
 
-The cli parameters are zero-initialized in main and always have been.
-
-Cc: <linux-xfs@vger.kernel.org> # v4.15.0
-Fixes: 2f44b1b0e5adc4 ("mkfs: rework stripe calculations")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: John Garry <john.g.garry@oracle.com>
 ---
- mkfs/xfs_mkfs.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mkfs/xfs_mkfs.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 812241c49a5494..8b946f3ef817da 100644
+index 8b946f3ef817da..b6de13cebc93ed 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -3629,7 +3629,7 @@ _("log stripe unit (%d) must be a multiple of the block size (%d)\n"),
+@@ -3615,7 +3615,8 @@ _("log stripe unit (%d) must be a multiple of the block size (%d)\n"),
+ 	}
+ 
+ 	/*
+-	 * check that log sunit is modulo fsblksize or default it to dsunit.
++	 * check that log sunit is modulo fsblksize; default it to dsunit for
++	 * an internal log; or the log device stripe unit if it's external.
+ 	 */
+ 	if (lsunit) {
+ 		/* convert from 512 byte blocks to fs blocks */
+@@ -3624,6 +3625,10 @@ _("log stripe unit (%d) must be a multiple of the block size (%d)\n"),
+ 		   cfg->loginternal && cfg->dsunit) {
+ 		/* lsunit and dsunit now in fs blocks */
+ 		cfg->lsunit = cfg->dsunit;
++	} else if (cfg->sb_feat.log_version == 2 &&
++		   !cfg->loginternal) {
++		/* use the external log device properties */
++		cfg->lsunit = DTOBT(ft->log.sunit, cfg->blocklog);
+ 	}
+ 
  	if (cfg->sb_feat.log_version == 2 &&
- 	    cfg->lsunit * cfg->blocksize > 256 * 1024) {
- 		/* Warn only if specified on commandline */
--		if (cli->lsu || cli->lsunit != -1) {
-+		if (cli->lsu || cli->lsunit) {
- 			fprintf(stderr,
- _("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
-   "log stripe unit adjusted to 32KiB\n"),
 
