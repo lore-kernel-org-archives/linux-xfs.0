@@ -1,127 +1,162 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F04EE1EDA09
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 12:32:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99DAA1EDA09
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 12:33:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752582747; cv=none; b=IIPosYR0o0fM1KDBsdBe7NnPPx/jNN0KAl8RIGD0caRfC90qa1uMUcyQTIY4Dm63cZI8J4Cmtc4JxRdCZlOYuwTAHU1gznx8ZXyUtMPBwVHRfS+TGH11rtP840DfD30Y6QmSw0B9iVEqM9SJN+IVGPhg83D3q8q3IOFuW0/qDJs=
+	t=1752582801; cv=none; b=mffso6F3s8Z/51utBWTXIEkv9u/gZBHmFBEooFw0QNN4IL0X67zYTpnmf/r3JTOH0QaqnfilGB+dsbjTTslrvQnPe6tKKVgqSHS75Suja9lKjLQ/Wx6BNZGBNZhrrPmVmak13aP/y1d8Xc2m0F2xmqWkSxbSaRiUqidBHClTKbM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752582747; c=relaxed/simple;
-	bh=T+zdwgDAaYS2dus57slfYtb2nl5tVw72nHatVqjVH3Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rCOeYxjRcGO5fBBebm5WU+5WJi1DoUt9o2+a1av6M3waGDyu04fQ1H6ar7BXnvqA89Gw1j31JNy3v73hv343vhJ2Qcrqf1y5Z32ZfN/9ALYGcsyqc2cZdFLI89YFb/xADE2Ej8wUkPt2TDPNtmDCiAfG2kuwFVn0B5gbqZR1lNE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hgJiO0k5; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1752582801; c=relaxed/simple;
+	bh=ZCTKZHhE/8raos7BFnTKBZQWzfrDceSKLO/DwBBoOkc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mu/CxZ17TwYRrHP7WIrfKw2WBTIS0Aowm9YUCAesoyrrSmnm8i7+3rsE4OsqsLmaXz4qCLjrjCJXCuXPfbtWwexDayWQAOQ+ZxVsNsxK+SYCSxkRFYvCLJ7qKMD2jQmIdZhzc02Mm8FEZJHN2UubVz+dwLfD8rHlZnuuAj+wHOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HS76gZ4a; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hgJiO0k5"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=QcQ45ukXduoDE+649ewLkelA+Tx24yG8hBp5sGrO3ug=; b=hgJiO0k5esd90ubJKwdjJchrNw
-	l0BOAr8zieON5/Qsn5y3v7mc55dqY/VS4zUD2MgCZxYkGlkMoOHUpDoK3cmPExSV98xlC+PwXePsh
-	FhUGpDm/dUAKJvnjQFft/bBguXvtqVJP8CrOhqLvnFKy+/phFMmG9oNhVnb3GoWsbNZAVSK7vQXQE
-	F+Cxt8cDdY8oEnqojzz1XMqEysm+1VLhG6X0Alz8tyaaYexf0xUJl1fEyO/yBfW+OpfRXJZWgmYoZ
-	aSY4h/R+whuvv0/L5o1Eb+NWUhb061s4y8p8Be8mEB95s20aYTa90RcGTSjpAsnAwWxUTpIP1BpFy
-	MlCPDRKw==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1ubepd-000000054yt-0ZU5;
-	Tue, 15 Jul 2025 12:32:25 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 18/18] xfs: factor out a xlog_write_space_advance helper
-Date: Tue, 15 Jul 2025 14:30:23 +0200
-Message-ID: <20250715123125.1945534-19-hch@lst.de>
-X-Mailer: git-send-email 2.47.2
-In-Reply-To: <20250715123125.1945534-1-hch@lst.de>
-References: <20250715123125.1945534-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HS76gZ4a"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1752582798;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RQtJyFP7X5BTw4M4oIiSkwuzTkd7xoUWdmFzDtewm2Y=;
+	b=HS76gZ4afaGb6yJWGmzZV5YKy+BB7DWDJdoUgB9kDsVtmsxhTY8VE3fUws/OojX+yRIZui
+	u3m7WssVSb9Xmu3i1eKaNMyM/6MDB7cVh+kRILD3YjxUjUiqt5u+ymLs4WR0aQblcEX420
+	af2wXntQhnmV4Z3rPI0TkqphClH9Mv0=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-113-j9ug-E7EOFeFv4KEQzktzQ-1; Tue,
+ 15 Jul 2025 08:33:15 -0400
+X-MC-Unique: j9ug-E7EOFeFv4KEQzktzQ-1
+X-Mimecast-MFC-AGG-ID: j9ug-E7EOFeFv4KEQzktzQ_1752582794
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0F51019560B6;
+	Tue, 15 Jul 2025 12:33:14 +0000 (UTC)
+Received: from bfoster (unknown [10.22.64.43])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C09A81800285;
+	Tue, 15 Jul 2025 12:33:12 +0000 (UTC)
+Date: Tue, 15 Jul 2025 08:36:54 -0400
+From: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, hch@infradead.org, willy@infradead.org
+Subject: Re: [PATCH v3 6/7] iomap: remove old partial eof zeroing optimization
+Message-ID: <aHZLZid5gggmDD09@bfoster>
+References: <20250714204122.349582-1-bfoster@redhat.com>
+ <20250714204122.349582-7-bfoster@redhat.com>
+ <20250715053417.GR2672049@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250715053417.GR2672049@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-Add a new xlog_write_space_advance that returns the current place in the
-iclog that data is written to, and advances the various counters by the
-amount taken from xlog_write_iovec, and also use it xlog_write_partial,
-which open codes the counter adjustments, but misses the asserts.
+On Mon, Jul 14, 2025 at 10:34:17PM -0700, Darrick J. Wong wrote:
+> On Mon, Jul 14, 2025 at 04:41:21PM -0400, Brian Foster wrote:
+> > iomap_zero_range() optimizes the partial eof block zeroing use case
+> > by force zeroing if the mapping is dirty. This is to avoid frequent
+> > flushing on file extending workloads, which hurts performance.
+> > 
+> > Now that the folio batch mechanism provides a more generic solution
+> > and is used by the only real zero range user (XFS), this isolated
+> > optimization is no longer needed. Remove the unnecessary code and
+> > let callers use the folio batch or fall back to flushing by default.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Heh, I was staring at this last Friday chasing fuse+iomap bugs in
+> fallocate zerorange and straining to remember what this does.
+> Is this chunk still needed if the ->iomap_begin implementation doesn't
+> (or forgets to) grab the folio batch for iomap?
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_log.c | 32 ++++++++++++++++++++------------
- 1 file changed, 20 insertions(+), 12 deletions(-)
+No, the hunk removed by this patch is just an optimization. The fallback
+code here flushes the range if it's dirty and retries the lookup (i.e.
+picking up unwritten conversions that were pending via dirty pagecache).
+That flush logic caused a performance regression in a particular
+workload, so this was introduced to mitigate that regression by just
+doing the zeroing for the first block or so if the folio is dirty. [1]
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 48fc17cad60a..802329d2e360 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1914,21 +1914,31 @@ static inline uint32_t xlog_write_space_left(struct xlog_write_data *data)
- 	return data->iclog->ic_size - data->log_offset;
- }
- 
-+static void *
-+xlog_write_space_advance(
-+	struct xlog_write_data	*data,
-+	unsigned int		len)
-+{
-+	void			*p = data->iclog->ic_datap + data->log_offset;
-+
-+	ASSERT(xlog_write_space_left(data) >= len);
-+	ASSERT(data->log_offset % sizeof(int32_t) == 0);
-+	ASSERT(len % sizeof(int32_t) == 0);
-+
-+	data->data_cnt += len;
-+	data->log_offset += len;
-+	data->bytes_left -= len;
-+	return p;
-+}
-+
- static inline void
- xlog_write_iovec(
- 	struct xlog_write_data	*data,
- 	void			*buf,
- 	uint32_t		buf_len)
- {
--	ASSERT(xlog_write_space_left(data) >= buf_len);
--	ASSERT(data->log_offset % sizeof(int32_t) == 0);
--	ASSERT(buf_len % sizeof(int32_t) == 0);
--
--	memcpy(data->iclog->ic_datap + data->log_offset, buf, buf_len);
--	data->log_offset += buf_len;
--	data->bytes_left -= buf_len;
-+	memcpy(xlog_write_space_advance(data, buf_len), buf, buf_len);
- 	data->record_cnt++;
--	data->data_cnt += buf_len;
- }
- 
- /*
-@@ -2069,7 +2079,8 @@ xlog_write_partial(
- 			if (error)
- 				return error;
- 
--			ophdr = data->iclog->ic_datap + data->log_offset;
-+			ophdr = xlog_write_space_advance(data,
-+					sizeof(struct xlog_op_header));
- 			ophdr->oh_tid = cpu_to_be32(data->ticket->t_tid);
- 			ophdr->oh_clientid = XFS_TRANSACTION;
- 			ophdr->oh_res2 = 0;
-@@ -2077,9 +2088,6 @@ xlog_write_partial(
- 
- 			data->ticket->t_curr_res -=
- 				sizeof(struct xlog_op_header);
--			data->log_offset += sizeof(struct xlog_op_header);
--			data->data_cnt += sizeof(struct xlog_op_header);
--			data->bytes_left -= sizeof(struct xlog_op_header);
- 
- 			/*
- 			 * If rlen fits in the iclog, then end the region
--- 
-2.47.2
+The reason for removing it is more just for maintainability. XFS is
+really the only user here and it is changing over to the more generic
+batch mechanism, which effectively provides the same optimization, so
+this basically becomes dead/duplicate code. If an fs doesn't use the
+batch mechanism it will just fall back to the flush and retry approach,
+which can be slower but is functionally correct.
+
+> My bug turned out to be a bug in my fuse+iomap design -- with the way
+> iomap_zero_range does things, you have to flush+unmap, punch the range
+> and zero the range.  If you punch and realloc the range and *then* try
+> to zero the range, the new unwritten extents cause iomap to miss dirty
+> pages that fuse should've unmapped.  Ooops.
+> 
+
+I don't quite follow. How do you mean it misses dirty pages?
+
+Brian
+
+[1] Details described in the commit log of fde4c4c3ec1c ("iomap: elide
+flush from partial eof zero range").
+
+> --D
+> 
+> > ---
+> >  fs/iomap/buffered-io.c | 24 ------------------------
+> >  1 file changed, 24 deletions(-)
+> > 
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index 194e3cc0857f..d2bbed692c06 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -1484,33 +1484,9 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+> >  		.private	= private,
+> >  	};
+> >  	struct address_space *mapping = inode->i_mapping;
+> > -	unsigned int blocksize = i_blocksize(inode);
+> > -	unsigned int off = pos & (blocksize - 1);
+> > -	loff_t plen = min_t(loff_t, len, blocksize - off);
+> >  	int ret;
+> >  	bool range_dirty;
+> >  
+> > -	/*
+> > -	 * Zero range can skip mappings that are zero on disk so long as
+> > -	 * pagecache is clean. If pagecache was dirty prior to zero range, the
+> > -	 * mapping converts on writeback completion and so must be zeroed.
+> > -	 *
+> > -	 * The simplest way to deal with this across a range is to flush
+> > -	 * pagecache and process the updated mappings. To avoid excessive
+> > -	 * flushing on partial eof zeroing, special case it to zero the
+> > -	 * unaligned start portion if already dirty in pagecache.
+> > -	 */
+> > -	if (!iter.fbatch && off &&
+> > -	    filemap_range_needs_writeback(mapping, pos, pos + plen - 1)) {
+> > -		iter.len = plen;
+> > -		while ((ret = iomap_iter(&iter, ops)) > 0)
+> > -			iter.status = iomap_zero_iter(&iter, did_zero);
+> > -
+> > -		iter.len = len - (iter.pos - pos);
+> > -		if (ret || !iter.len)
+> > -			return ret;
+> > -	}
+> > -
+> >  	/*
+> >  	 * To avoid an unconditional flush, check pagecache state and only flush
+> >  	 * if dirty and the fs returns a mapping that might convert on
+> > -- 
+> > 2.50.0
+> > 
+> > 
+> 
 
