@@ -1,31 +1,43 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37E39148830;
-	Tue, 15 Jul 2025 09:04:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8814A1B7F4;
+	Tue, 15 Jul 2025 09:49:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752570244; cv=none; b=ZfsVebTOYZ+2B6Kf9Rli6FnjyZisi2n03CqaVOsajh/Q12Zd15tL80e6TSOHWtnvecFeqBbvWmRxY5niXEUTkMh5FsYt4VgjLiDMPKLjqbL9ss+9KVF0+AGQKEdTislI59GwNuy5ngK/u2iqLAH/rUwWGw/JqVMt/GvhVHCbuUs=
+	t=1752572998; cv=none; b=OUSAd/FGCo3ptvaupAbNDtkF2mlJg7MTu422ehYKb6NQjRuP5QI6lTHC7J4k5BK6lZfHeKbrb1HFYtgQ52nKZi2LO2gaMFVcDconDhhRmGH7yCyYSphq7xzWar8OIJhklYSkTDKV9s9OvW+7sv5h2bOw26HXrtDmcrEgADU3SPY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752570244; c=relaxed/simple;
-	bh=HybFUc4/dPKNTBKqJlDZckyq4d+dmPdiBzBgjr7/KIE=;
+	s=arc-20240116; t=1752572998; c=relaxed/simple;
+	bh=vRVgCvsQ04ahIBDrKrozggdpXhjzZn5ayYqDp1soTJQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m/p4K3HujqPC8HIRzl6qdlQRUNV9CA/N58/KBXaU0IBVblDiGBmuuQ9IRDLDOQuH7UWpP6GSi/s//pM5V8Grgmed9UjzWVGGI5sF5Ssp0zZvp0QHIr8TLxV2z5Dv51mJiCayb8u2SFcGfD1t2R07JWZFz5LxcLjh/WdPl028TMM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 4F22368AFE; Tue, 15 Jul 2025 11:03:58 +0200 (CEST)
-Date: Tue, 15 Jul 2025 11:03:57 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Christoph Hellwig <hch@infradead.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org
-Subject: Re: Do we need an opt-in for file systems use of hw atomic writes?
-Message-ID: <20250715090357.GA21818@lst.de>
-References: <20250714131713.GA8742@lst.de> <6c3e1c90-1d3d-4567-a392-85870226144f@oracle.com> <aHULEGt3d0niAz2e@infradead.org> <6babdebb-45d1-4f33-b8b5-6b1c4e381e35@oracle.com> <20250715060247.GC18349@lst.de> <072b174d-8efe-49d6-a7e3-c23481fdb3fc@oracle.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=gudhT3VG/lRx3ByeZx8QH1N0/nj6X+UHSd23NJdLG6MLwS53jzeFCF3roGvsEdmMP1m6FzG/d4PiROmUaTSsm/l9H+UJ6JCIf0qv9aEltrJ70m/E8g3JUCdeABzOJesQVvplyqIIRgUL+DQ8aP8Iw9Bh4D5oWON+UOR1I2XZX2I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MT6CFhjU; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MT6CFhjU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5368C4CEE3;
+	Tue, 15 Jul 2025 09:49:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752572998;
+	bh=vRVgCvsQ04ahIBDrKrozggdpXhjzZn5ayYqDp1soTJQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=MT6CFhjUDX+hcPdl7BVvFdQ+jIOt4wIzvW9+gIiSNCKjzYelPPyNwixoWt3q2WisC
+	 8OSCro36xiwR/coUpojtvu+ZZ+I/cpH0u8qKh9FQvcZ3Um07OfZAWxWZ7Xw0KoyDAB
+	 U2Iy+VBnowuKuE/Yj0x1K7avgvhRrI7pwUqVFZPnUxPm3TMb0k1R+scWHbt/JC3gO0
+	 loiGzvcV79GQIxQOAsT6iIS8Qm++Jf9b+seEGOl10s1j7j2mt9oslEQbbnhCl39UPo
+	 a2hsHVM5yHkC5UMwMUCVJzR+tvLwlcCem7QPj33AJbVaB64sAAJis4Ppo2xkHSqYhY
+	 80Bijcui5a9Iw==
+Date: Tue, 15 Jul 2025 11:49:53 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: John Garry <john.g.garry@oracle.com>, 
+	George Hu <integral@archlinux.org>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: replace min & max with clamp() in
+ xfs_max_open_zones()
+Message-ID: <xpuse6544mmww24s7hqtgwcky2wyc5amykfdftfqeb2ghaqejy@6zj65eavbm6x>
+References: <20250712145741.41433-1-integral@archlinux.org>
+ <9ba1a836-c4c9-4e1a-903d-42c8b88b03c4@oracle.com>
+ <ga3ch5pToaSs5VutqCDXTiZyaa4EZg1p-X4AOtoebVJBWEm2VpV_vy_jNeU6OIUzCdiSn38P2W_vgZVOWrHG3Q==@protonmail.internalid>
+ <aHTjD6FxJYEu6C6R@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,27 +46,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <072b174d-8efe-49d6-a7e3-c23481fdb3fc@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <aHTjD6FxJYEu6C6R@infradead.org>
 
-On Tue, Jul 15, 2025 at 09:42:33AM +0100, John Garry wrote:
->> I'm not sure a XFLAG is all that useful.  It's not really a per-file
->> persistent thing.  It's more of a mount option, or better persistent
->> mount-option attr like we did for autofsck.
->
-> For all these options, the admin must know that the atomic behaviour of 
-> their disk is as advertised - I am not sure how realistic it is.
+On Mon, Jul 14, 2025 at 03:59:27AM -0700, Christoph Hellwig wrote:
+> On Mon, Jul 14, 2025 at 08:58:59AM +0100, John Garry wrote:
+> > > @@ -1133,9 +1133,7 @@ xfs_max_open_zones(
+> > >   	/*
+> > >   	 * Cap the max open limit to 1/4 of available space
+> > >   	 */
+> >
+> > Maybe you can keep this comment, but it was pretty much describing the code
+> > and not explaining the rationale.
+> 
+> Let me send an incremental patch to explain the rational as long as I
+> can still remember it :)
 
-Well, who else would know it, or rather who else can do the risk
-calculation?
+Sounds good, I'll wait and merge both together.
 
-I'm not worried about Oracle cloud running data bases on drives written
-to their purchase spec and validated by them.
-
-I'm worried about $RANDOMUSER running $APPLICATION here that thing
-atomic write APIs are nice (they finally are) and while that works
-fine with the software implemenetation and even reasonably high end
-consumer devices, they now get the $CHEAPO SSD off Alibab and while
-things work fine their entire browinshistory / ledger / movie data
-base or whatever is toast and the file system gets blamed.
-
+> 
+> 
