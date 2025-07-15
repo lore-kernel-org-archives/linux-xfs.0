@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DD791B85FD
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 05:15:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 465871B85FD
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 05:16:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752556551; cv=none; b=d2xKYcxuDsHRWtObAZim64hoDM5ijuwbyA/c9ZuLNTkfhmqK3RcYOV9QqL0qi/Eq2aUxPjZiAaC1zbFMnVASJmx98dJYJhtZktf7aNQV9iAMNJnd6mTprREh9pDmJMD7DdCu7Qvz5aIToQ2FNEP1M7RB6SJl46fEndX+3lwKnd8=
+	t=1752556567; cv=none; b=opDn4uW13ONRt7qlzJtPMyA7ksWZx2Vc9xQpIv26KGH9OJBXDQggoPs01k7yRqwq6gGnF8e98b6Zr9SpL8wonWC/kkc6jWYOnNwYzC+l2RpInsXh/W+GJ1FrgZza8Kj+Y6LE9KsB8xKJc4kUl1JQxPOv1o/oX9UlgmpkAooAKCA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752556551; c=relaxed/simple;
-	bh=lj7og8+cc+svuQxvG3S2Cdoe559Upney2rSdaYNJgwE=;
+	s=arc-20240116; t=1752556567; c=relaxed/simple;
+	bh=CCOFiQcIQ3leLbcW6v21DXqK3J2CX4uWUnqBHeIXSlQ=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jEKmf+DSPnzXhQsiORyydR+VDCNNSHgsYqCoSAvPeKghF6XNgr6P6gx13tTHmV/CYosGX+oqXEgyEEhJaHPcDD/jdvsCOYQGPHpmBPyWl0FQx+Y+Htdd2Ed2uY+SIRDrLujodlQZq60EB6mqdmg3MtlzkP2GnrQdmZIsWntmYh4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tgBr+4dD; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=jWUQChK7hI71lbqMkljFo+Kxodx3UfqWxY6BNZtEAxUMlNCLReX18ye3482AXLtdoYgfB9bXDW9xCSA0AiDBjvRJ74FcMqBhTM2J02UgbPEbbWGCE4QyYB3xRjMFbBOtZIJny2Cd72kZhfufXMvJihTef4Us0v7W7+MIWkrxclE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oaHTLX/o; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tgBr+4dD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D76FC4CEE3;
-	Tue, 15 Jul 2025 05:15:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oaHTLX/o"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C57CBC4CEE3;
+	Tue, 15 Jul 2025 05:16:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752556551;
-	bh=lj7og8+cc+svuQxvG3S2Cdoe559Upney2rSdaYNJgwE=;
+	s=k20201202; t=1752556566;
+	bh=CCOFiQcIQ3leLbcW6v21DXqK3J2CX4uWUnqBHeIXSlQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=tgBr+4dDYeJQ+x6zdn/LUKeOz/i9hJrZ9+L31Y9frHFThUPYJKlXsMJC7nOTY8wKu
-	 7kBGc3fOD0Vd6nqZNUxwTHf1aZv2zR6++aomsOfPHky2n+ZBKZ+lArNfNMHEN/LIZ7
-	 Rtdq9VeGl3BWbusux4uJoIX6nKxyKoqJNlA/kYUE9gVHOR7/XxLnTSaysLzDxDhh7s
-	 UUirHWQfRvbhm/Gk2fwJQTiE6SkELZSnknh5zChPMM8bvHN43QqgvX067utmnLkyl/
-	 2eV8+Le07/AyZ1lk2yrVpZauRMaJISD7NJsdzzgC5iKj/C2apBzh/lJXV1W7jcSwA7
-	 TEQwQYN/6n8iQ==
-Date: Mon, 14 Jul 2025 22:15:50 -0700
-Subject: [PATCHSET 1/3] xfsprogs: new libxfs code from kernel 6.16
+	b=oaHTLX/oq0TEnBOiLeRcXzy+uVZZtFyyiXXBMiLkXKtZ0chNwV6CYH79Orwo03plN
+	 uYvycohw4mWkKXTfzUFOEcVLyAIHBwoMOG8tQcKk83W++GIzDvowbmdjRSRtgovvDZ
+	 Ii/x/8eCi66a1jXHoTaTE/vDe3L+NvNlHdvpgoy/TYv7a1KQIYX5MfSBVyGWgJGS3D
+	 gL/ZUbOSE9rNZLLjRYa2wrFw87UQcnTlvaIwrtG+HKDRlTxvpD00ubkhPNtzaCBaBe
+	 Be4ZCA/PkJPAqlXG1QpyYDQIlCXm4wswuJH+w8pk4bAVz1UFDfsGOMd7oHQsx699zp
+	 kl82kCq5Y/m3w==
+Date: Mon, 14 Jul 2025 22:16:06 -0700
+Subject: [PATCHSET 2/3] xfsprogs: atomic writes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: john.g.garry@oracle.com, hch@lst.de, catherine.hoang@oracle.com,
- john.g.garry@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <175255652087.1830720.17606543077660806130.stgit@frogsfrogsfrogs>
+Cc: john.g.garry@oracle.com, linux-xfs@vger.kernel.org,
+ catherine.hoang@oracle.com, john.g.garry@oracle.com,
+ linux-xfs@vger.kernel.org
+Message-ID: <175255652424.1831001.9800800142745344742.stgit@frogsfrogsfrogs>
 In-Reply-To: <20250715051328.GL2672049@frogsfrogsfrogs>
 References: <20250715051328.GL2672049@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,32 +47,42 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Port kernel libxfs code to userspace.
+Utility updates for dumping atomic writes configuration and formatting
+filesystems to take advantage of the new functionality.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
 
 Comments and questions are, as always, welcome.
 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=atomic-writes-6.16
+
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=libxfs-sync-6.16
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=atomic-writes-6.16
 ---
 Commits in this patchset:
- * xfs: add helpers to compute transaction reservation for finishing intent items
- * xfs: allow block allocator to take an alignment hint
- * xfs: commit CoW-based atomic writes atomically
- * libxfs: add helpers to compute log item overhead
- * xfs: add xfs_calc_atomic_write_unit_max()
- * xfs: allow sysadmins to specify a maximum atomic write limit at mount time
+ * libfrog: move statx.h from io/ to libfrog/
+ * xfs_db: create an untorn_max subcommand
+ * xfs_io: dump new atomic_write_unit_max_opt statx field
+ * mkfs: don't complain about overly large auto-detected log stripe units
+ * mkfs: autodetect log stripe unit for external log devices
+ * mkfs: try to align AG size based on atomic write capabilities
+ * mkfs: allow users to configure the desired maximum atomic write size
 ---
- include/platform_defs.h |   14 ++
- include/xfs_trace.h     |    3 
- libxfs/defer_item.h     |   14 ++
- libxfs/xfs_bmap.h       |    6 +
- libxfs/xfs_trans_resv.h |   25 +++
- libxfs/defer_item.c     |   51 +++++++
- libxfs/xfs_bmap.c       |    5 +
- libxfs/xfs_log_rlimit.c |    4 +
- libxfs/xfs_trans_resv.c |  339 +++++++++++++++++++++++++++++++++++++++++++----
- 9 files changed, 429 insertions(+), 32 deletions(-)
+ include/bitops.h         |   12 ++
+ include/libxfs.h         |    1 
+ libfrog/statx.h          |   23 ++++
+ libxfs/libxfs_api_defs.h |    5 +
+ libxfs/topology.h        |    6 +
+ db/logformat.c           |  129 ++++++++++++++++++++++++
+ io/stat.c                |   21 +---
+ libfrog/Makefile         |    1 
+ libxfs/topology.c        |   36 +++++++
+ m4/package_libcdev.m4    |    2 
+ man/man8/mkfs.xfs.8.in   |    7 +
+ man/man8/xfs_db.8        |   10 ++
+ mkfs/xfs_mkfs.c          |  251 +++++++++++++++++++++++++++++++++++++++++++++-
+ 13 files changed, 474 insertions(+), 30 deletions(-)
+ rename io/statx.h => libfrog/statx.h (94%)
 
