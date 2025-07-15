@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 893C423ABA8;
-	Tue, 15 Jul 2025 14:19:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFD89218AB0;
+	Tue, 15 Jul 2025 14:30:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752589194; cv=none; b=MlXMr3mG0jLFbiA8ITKnr7GI0pcZM5v6Vh/KPgQv9Th/gGqIVmW0Q/8MyZTWNQKHzO6rHd5h9A4mBpov337upnUjoeMo2VUwYaX81PiGnkyV00XDjlm8535BWrnGb4OucZykM1BbQ3SFhat3Evj2xl341Syi5uNCVI4/LOULFDg=
+	t=1752589843; cv=none; b=Sh1otrZtfqEhL5sfom2x304xgqnkbA6GjM5sSFmw8eEh2l7FUI3pvAqzQude/X5fiP2H9OSx0LNIW6pHZZ2iucUL3dJ6wPwk5n13EAUQpRJE0Zfnxamh4cs/UFRRDEwSsq0oIwEY6AgIrw1JSBuWa7LR2lyAlcLQTs0sGApphe0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752589194; c=relaxed/simple;
-	bh=qZ+LC3FTqFJ27mtCLEBJ1uKtZR3TIsj7xDBbTuuliR0=;
+	s=arc-20240116; t=1752589843; c=relaxed/simple;
+	bh=sV1OZP5WMBeyKyulfXGILmszhTuQ8xOGFvfPdffvOJ0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j+pOqwYotsWHYcHa/04+azBCCN4wLAXRf8SKchZd7b32nwUHRAEN5GYZIX6syB/Ba9C/kW3wFJxYqHkbf9TIauMiZG8ptW42TmzK/M49V8y9A/zcGeRAXpXQmabrsNX0jGkhjr20uGycTG49rDvcm+82mn5FOdiX2dXYGkk1P5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tkXbgtRc; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nPi7E2wHxxF7cgOji2waFlRXfUin12WyvmDXvTYKV6EaHtHXLMf2x3FVo2rb1/b9pRZMRQuT2FKZQxxqgsr6o/agIJbk6LjPvFDkCJ+qd7itXVQi598cQK2KTES37FaNT34vztYQJfspOhfuZSZA0tLygfntFsnRm7JAjAmYgN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fFmIrfPm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tkXbgtRc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F651C4CEE3;
-	Tue, 15 Jul 2025 14:19:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fFmIrfPm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B8C9C4CEE3;
+	Tue, 15 Jul 2025 14:30:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752589194;
-	bh=qZ+LC3FTqFJ27mtCLEBJ1uKtZR3TIsj7xDBbTuuliR0=;
+	s=k20201202; t=1752589842;
+	bh=sV1OZP5WMBeyKyulfXGILmszhTuQ8xOGFvfPdffvOJ0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tkXbgtRclBrdKKwGxvl2fyRNA7ZDXaoB+JpC8gJMJZ0co1wjgMD3t/uVkWC0Z1Lwg
-	 m+ituiGN8QClgVE6taDhix9JV2m8tLPwxtfhu0DC0tKszE3FMBnAeaHlAW/09f5f1P
-	 XFkBEcXhrDjsZJp1yzuZMmJOUynwZwxNXZ6fQFfzn5178LruEEQ5CKonDtpweRdVYy
-	 4Ruu/VLP37alTWyoVwm5XdzPeTa0s1Zh6JNfeM3JX2/lUhXZifcvKlGdDdS6le+kGY
-	 +H/L3kvidQDgy+eAHZbWehwEP84xsXp4GVZ6PI3QVFgRzLPGi5BSnS0MpCrPKoumJA
-	 QDhs46ChF6lyg==
-Date: Tue, 15 Jul 2025 07:19:53 -0700
+	b=fFmIrfPmJ7DAsHWOUFFVRGodoN8liMahk8iM7VXw3B4q+tfagwCYomKPsHLGjw8tC
+	 DMTG4TdnPN+ppLpbKF07Qqcq+jEEe3uPHEvKkL3+TTT4/f8mWadzhV+VildbgUx7/Y
+	 r5ugytVSnUVAezv+EsFWTy7W9gNy3LmqGBrmiybyLbpgpacc4jae2bwuTDpV2/i5/D
+	 gzmjgIR5tcH0Q2IzGdMIC4FC3mmHAxVzDhLxHmTiG0xRPu6Rmoq3FCxAIF/fjtDrzJ
+	 FQuN9LseWR1zN0mMvQ08GUIA45xgdup4iKjOVC9aOw5qqVoInuUrafaW1Qm1KziLpG
+	 aEpL7JDge/YGA==
+Date: Tue, 15 Jul 2025 07:30:41 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
 	linux-mm@kvack.org, hch@infradead.org, willy@infradead.org
-Subject: Re: [PATCH v3 5/7] xfs: fill dirty folios on zero range of unwritten
- mappings
-Message-ID: <20250715141953.GM2672029@frogsfrogsfrogs>
+Subject: Re: [PATCH v3 7/7] xfs: error tag to force zeroing on debug kernels
+Message-ID: <20250715143041.GN2672029@frogsfrogsfrogs>
 References: <20250714204122.349582-1-bfoster@redhat.com>
- <20250714204122.349582-6-bfoster@redhat.com>
- <20250715052811.GQ2672049@frogsfrogsfrogs>
- <aHZLJyPmZPmDtLE_@bfoster>
+ <20250714204122.349582-8-bfoster@redhat.com>
+ <20250715052444.GP2672049@frogsfrogsfrogs>
+ <aHZL55AcNnAD-uAn@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,103 +45,118 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aHZLJyPmZPmDtLE_@bfoster>
+In-Reply-To: <aHZL55AcNnAD-uAn@bfoster>
 
-On Tue, Jul 15, 2025 at 08:35:51AM -0400, Brian Foster wrote:
-> On Mon, Jul 14, 2025 at 10:28:11PM -0700, Darrick J. Wong wrote:
-> > On Mon, Jul 14, 2025 at 04:41:20PM -0400, Brian Foster wrote:
-> > > Use the iomap folio batch mechanism to select folios to zero on zero
-> > > range of unwritten mappings. Trim the resulting mapping if the batch
-> > > is filled (unlikely for current use cases) to distinguish between a
-> > > range to skip and one that requires another iteration due to a full
-> > > batch.
+On Tue, Jul 15, 2025 at 08:39:03AM -0400, Brian Foster wrote:
+> On Mon, Jul 14, 2025 at 10:24:44PM -0700, Darrick J. Wong wrote:
+> > On Mon, Jul 14, 2025 at 04:41:22PM -0400, Brian Foster wrote:
+> > > iomap_zero_range() has to cover various corner cases that are
+> > > difficult to test on production kernels because it is used in fairly
+> > > limited use cases. For example, it is currently only used by XFS and
+> > > mostly only in partial block zeroing cases.
+> > > 
+> > > While it's possible to test most of these functional cases, we can
+> > > provide more robust test coverage by co-opting fallocate zero range
+> > > to invoke zeroing of the entire range instead of the more efficient
+> > > block punch/allocate sequence. Add an errortag to occasionally
+> > > invoke forced zeroing.
 > > > 
 > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > > > ---
-> > >  fs/xfs/xfs_iomap.c | 23 +++++++++++++++++++++++
-> > >  1 file changed, 23 insertions(+)
+> > >  fs/xfs/libxfs/xfs_errortag.h |  4 +++-
+> > >  fs/xfs/xfs_error.c           |  3 +++
+> > >  fs/xfs/xfs_file.c            | 26 ++++++++++++++++++++------
+> > >  3 files changed, 26 insertions(+), 7 deletions(-)
 > > > 
-> > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > > index b5cf5bc6308d..63054f7ead0e 100644
-> > > --- a/fs/xfs/xfs_iomap.c
-> > > +++ b/fs/xfs/xfs_iomap.c
-> > > @@ -1691,6 +1691,8 @@ xfs_buffered_write_iomap_begin(
-> > >  	struct iomap		*iomap,
-> > >  	struct iomap		*srcmap)
-> > >  {
-> > > +	struct iomap_iter	*iter = container_of(iomap, struct iomap_iter,
-> > > +						     iomap);
-> > >  	struct xfs_inode	*ip = XFS_I(inode);
-> > >  	struct xfs_mount	*mp = ip->i_mount;
-> > >  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> > > @@ -1762,6 +1764,7 @@ xfs_buffered_write_iomap_begin(
-> > >  	 */
-> > >  	if (flags & IOMAP_ZERO) {
-> > >  		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
-> > > +		u64 end;
+> ...
+> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > index 0b41b18debf3..c865f9555b77 100644
+> > > --- a/fs/xfs/xfs_file.c
+> > > +++ b/fs/xfs/xfs_file.c
+> > > @@ -27,6 +27,8 @@
+> > >  #include "xfs_file.h"
+> > >  #include "xfs_aops.h"
+> > >  #include "xfs_zone_alloc.h"
+> > > +#include "xfs_error.h"
+> > > +#include "xfs_errortag.h"
 > > >  
-> > >  		if (isnullstartblock(imap.br_startblock) &&
-> > >  		    offset_fsb >= eof_fsb)
-> > > @@ -1769,6 +1772,26 @@ xfs_buffered_write_iomap_begin(
-> > >  		if (offset_fsb < eof_fsb && end_fsb > eof_fsb)
-> > >  			end_fsb = eof_fsb;
+> > >  #include <linux/dax.h>
+> > >  #include <linux/falloc.h>
+> > > @@ -1269,13 +1271,25 @@ xfs_falloc_zero_range(
+> > >  	if (error)
+> > >  		return error;
 > > >  
-> > > +		/*
-> > > +		 * Look up dirty folios for unwritten mappings within EOF.
-> > > +		 * Providing this bypasses the flush iomap uses to trigger
-> > > +		 * extent conversion when unwritten mappings have dirty
-> > > +		 * pagecache in need of zeroing.
-> > > +		 *
-> > > +		 * Trim the mapping to the end pos of the lookup, which in turn
-> > > +		 * was trimmed to the end of the batch if it became full before
-> > > +		 * the end of the mapping.
-> > > +		 */
-> > > +		if (imap.br_state == XFS_EXT_UNWRITTEN &&
-> > > +		    offset_fsb < eof_fsb) {
-> > > +			loff_t len = min(count,
-> > > +					 XFS_FSB_TO_B(mp, imap.br_blockcount));
-> > > +
-> > > +			end = iomap_fill_dirty_folios(iter, offset, len);
-> > > +			end_fsb = min_t(xfs_fileoff_t, end_fsb,
-> > > +					XFS_B_TO_FSB(mp, end));
+> > > -	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
+> > > -	if (error)
+> > > -		return error;
+> > > +	/*
+> > > +	 * Zero range implements a full zeroing mechanism but is only used in
+> > > +	 * limited situations. It is more efficient to allocate unwritten
+> > > +	 * extents than to perform zeroing here, so use an errortag to randomly
+> > > +	 * force zeroing on DEBUG kernels for added test coverage.
+> > > +	 */
+> > > +	if (XFS_TEST_ERROR(false, XFS_I(inode)->i_mount,
+> > > +			   XFS_ERRTAG_FORCE_ZERO_RANGE)) {
+> > > +		error = xfs_zero_range(XFS_I(inode), offset, len, ac, NULL);
 > > 
-> > Hrmm.  XFS_B_TO_FSB and not _FSBT?  Can the rounding up behavior result
-> > in a missed byte range?  I think the answer is no because @end should be
-> > aligned to a folio boundary, and folios can't be smaller than an
-> > fsblock.
+> > Isn't this basically the ultra slow version fallback version of
+> > FALLOC_FL_WRITE_ZEROES ?
 > > 
 > 
-> Hmm.. not that I'm aware of..? Please elaborate if there's a case you're
-> suspicious of because I could have certainly got my wires crossed.
+> ~/linux$ git grep FALLOC_FL_WRITE_ZEROES
+> ~/linux$ 
+> 
+> IIRC write zeroes is intended to expose fast hardware (physical) zeroing
+> (i.e. zeroed written extents)..? If so, I suppose you could consider
+> this a fallback of sorts. I'm not sure what write zeroes is expected to
+> do in the unwritten extent case, whereas iomap zero range is happy to
+> skip those mappings unless they're already dirty in pagecache.
 
-I don't have a specific case in mind.  I saw the conversion function and
-thought "well, what IF the return value from iomap_fill_dirty_folios
-isn't aligned to a fsblock?" and then went around trying to prove that
-isn't possible. :)
+Sorry, forgot that they weren't wiring anything up in xfs so it never
+showed up here:
+https://lore.kernel.org/linux-fsdevel/20250619111806.3546162-1-yi.zhang@huaweicloud.com/
 
-> My thinking is that end_fsb reflects the first fsb beyond the target
-> range. I.e., it's calculated and used as such in xfs_iomap_end_fsb() and
-> the various xfs_trim_extent() calls throughout the rest of the function.
+Basically they want to avoid the unwritten extent conversion overhead by
+providing a way to preallocate written zeroed extents and sending magic
+commands to hardware that unmaps LBAs in such a way that rereads return
+zero.
 
-<nod> So I think we're fine here.
+> Regardless, the purpose of this patch is not to add support for physical
+> zeroing, but rather to increase test coverage for the additional code on
+> debug kernels because the production use case tends to be more limited.
+> This could easily be moved/applied to write zeroes if it makes sense in
+> the future and test infra grows support for it.
+
+<nod> On second look, I don't think the new fallocate flag allows for
+letting the kernel do pagecache zeroing + flush.  Admittedly that would
+be beside the point (and userspaces already do that anyway).
+
+Anyway enough mumbling from me,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > Brian
 > 
-> > If the answer to the second question is indeed "no" then I think this is
-> > ok and
-> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> > 
 > > --D
 > > 
-> > 
-> > > +		}
-> > > +
-> > >  		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
-> > >  	}
+> > > +	} else {
+> > > +		error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
+> > > +		if (error)
+> > > +			return error;
 > > >  
+> > > -	len = round_up(offset + len, blksize) - round_down(offset, blksize);
+> > > -	offset = round_down(offset, blksize);
+> > > -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> > > +		len = round_up(offset + len, blksize) -
+> > > +			round_down(offset, blksize);
+> > > +		offset = round_down(offset, blksize);
+> > > +		error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> > > +	}
+> > >  	if (error)
+> > >  		return error;
+> > >  	return xfs_falloc_setsize(file, new_size);
 > > > -- 
 > > > 2.50.0
 > > > 
