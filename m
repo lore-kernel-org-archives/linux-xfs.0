@@ -1,151 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4F092CCC5;
-	Tue, 15 Jul 2025 12:20:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F5A12CCC5
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 12:25:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752582041; cv=none; b=shpogM62T4ZH9rMiQT/5rC/9cZOhyrmBIB11A2GXczjvHOuBIL3FXjHf9vJvDms+WwRBEjRF1zbui2LDKMh0X/Xsl18eKRDpjqM4MupM6SHukKFPJ2pcCSmj6JsgTAOtTBWS65VVS5FaEYvEsB9J09kLbKaxH5ep05MZToMNacY=
+	t=1752582352; cv=none; b=f8bg5V3mLe23krnQuEFm3nekv7rIe8uixyVq3ZqXCnf9y/ueAXu423TgucrtnEUI96TJwGcKqcekQbW+hp66uuG8PYBNfr51+ZCaZofaJkRnCCiDbIYzeg7eCbBmk2kkjOUSRjjDMCd6AIbpYYFQayGH2Xk1kYduV8xgDrXbwwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752582041; c=relaxed/simple;
-	bh=tMl1JvlwlYhUCWAJRzNllyLX2xjK9CnGH96Qoit7K4o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=G/EsgYzxAdjRM3J0N/wcEG6DOSX9LNBv9L88vn3MnIu6E9WH1y8K6kGfQpoSRU+2AOGpOsZqcyBj5upFJVKBgoQRNwffQ1jvcCZ0CgrUt92xvO76kKoC07oR3LPJJmbD+oP8bURtcm4RSRWgQVx3eOVaA249b8aO72Mm3bTlkEk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hzZNBylO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752582352; c=relaxed/simple;
+	bh=hDVhj75CgXIlLtw03GpDqzrWadv/y6x0MdIZZGNj010=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KD5oaAhFX7elqWRVLPF/5Z1v+53CYvd26MPMuEjPlRRUjliLjD2QND7GmwrQWg1HBzd0zo8a+Mk2NVemWF7OhKV4vyr05TFpQ12YjFnAgoTQhzjiz80SNZzFlCC5lkoyYrrCOoWOJMBLIQLMwvX/MCuwTXukrDCSusLqMtBxRHs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=alMnlLdP; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hzZNBylO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34CDEC4CEE3;
-	Tue, 15 Jul 2025 12:20:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752582041;
-	bh=tMl1JvlwlYhUCWAJRzNllyLX2xjK9CnGH96Qoit7K4o=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hzZNBylOhtaXDKpYwRumyL4AAGY6tVlnbwOdsYIS8EypLyTy3KxtuC/R4rZiHxD9t
-	 dBOCAsI+w41ty6KcfglTwCv2GwgEm4cVvSamDN2wJ3Pgmh+b4XC2VaFIE7GoEVQJha
-	 GFQhcxa490toVKN3yXsydwKx/Rh7IEkT5fLieqa2KcSzq1BQkfWXi/U4d3rCP3UaPp
-	 MRRtlnKyYWWMNdGhfwRaesKaWvq3glrI1vZ4K5r3eYeFFhu6u+Gl7rd6aNQVkFIOqO
-	 IKoQjOpJuifXqHNUh1+O7oGPETsDEdt4V9l7IX/w0Ro2FgBOQM05ijKCPwhuUxsRrd
-	 dnmKYyY/xUkuA==
-Date: Tue, 15 Jul 2025 14:20:36 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: John Garry <john.g.garry@oracle.com>, 
-	Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@kernel.org>, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-nvme@lists.infradead.org
-Subject: Re: Do we need an opt-in for file systems use of hw atomic writes?
-Message-ID: <20250715-gekapert-einsam-4645671c7555@brauner>
-References: <20250714131713.GA8742@lst.de>
- <6c3e1c90-1d3d-4567-a392-85870226144f@oracle.com>
- <aHULEGt3d0niAz2e@infradead.org>
- <6babdebb-45d1-4f33-b8b5-6b1c4e381e35@oracle.com>
- <20250715060247.GC18349@lst.de>
- <20250715-rundreise-resignieren-34550a8d92e3@brauner>
- <20250715112952.GA23935@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="alMnlLdP"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=27dO5cXps6fs95pw2mCqwHGAl7vaBZ/YqIWOGiY/Q+g=; b=alMnlLdPO0uXiOEe28Py0gjLOK
+	u8lEgBo6/0hQjqEat0q+xUm8pZgyQU1jj1YGlSqwc8c4dph9HsWdqyLHaRsVqGSgLRD+dOStMaits
+	JXyRuvD01E3Nig4UruiCx0ko2k4qoPHNH9qfU8YVEU8zp4yP/tFGbK5Ah18h3H2GpkQPBqXu88gUF
+	In3WH8XN/j2UrFESyxd9TwV3URuDoXONzpDf92B1Ek161gtYCq/dRMz029K7EfpssSSNyoyXPKsIo
+	NUJNWBK6gYlmu426000loGHkuIPRcUQ04HItJU89Rdz6N4Y/m97VA6orh0FV1Zvky+7bCMKx16eGj
+	kHU0K7xA==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1ubejE-000000053xj-1Eff;
+	Tue, 15 Jul 2025 12:25:49 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: cleanup transaction allocation
+Date: Tue, 15 Jul 2025 14:25:33 +0200
+Message-ID: <20250715122544.1943403-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20250715112952.GA23935@lst.de>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Jul 15, 2025 at 01:29:52PM +0200, Christoph Hellwig wrote:
-> On Tue, Jul 15, 2025 at 12:02:06PM +0200, Christian Brauner wrote:
-> > > I'm not sure a XFLAG is all that useful.  It's not really a per-file
-> > > persistent thing.  It's more of a mount option, or better persistent
-> > > mount-option attr like we did for autofsck.
-> > 
-> > If we were to make this a mount option it would be really really ugly.
-> > Either it is a filesystem specific mount option and then we have the
-> > problem that we're ending up with different mount option names
-> > per-filesystem.
-> 
-> Not that I'm arguing for a mount option (this should be sticky), but
-> we've had plenty of fs parsed mount options with common semantics.
-> 
-> > It feels like this is something that needs to be done on the block
-> > layer. IOW, maybe add generic block layer ioctls or a per-device sysfs
-> > entry that allows to turn atomic writes on or off. That information
-> > would then also potentially available to the filesystem to e.g.,
-> > generate an info message during mount that hardware atomics are used or
-> > aren't used. Because ultimately the block layer is where the decision
-> > needs to be made.
-> 
-> The block layer just passes things through.
+Hi all,
 
-We already have bdev_can_atomic_write() which checks whether the
-underlying device is capable of hardware assisted atomic writes. If
-that's the case the filesystem currently just uses them, fine.
+this series cleans up the xfs_trans_alloc* and xfs_trans_reserve*
+interfaces by keeping different code paths more separate and thus
+removing redundant arguments and error returns.
 
-So it is possible to implement an ioctl() that allows an administrator
-to mark a device as untrusted for hardware assisted atomic writes.
+A git tree is also available here:
 
-This is also nice is because this can be integrated with udev easily. If
-a device is know to have broken hardware assisted atomic writes then add
-the device into systemd-udev's hardware database (hwdb).
+    git://git.infradead.org/users/hch/xfs.git xfs-trans-cleanups
 
-When systemd-udev sees that device show up during boot it will
-automatically mark that device as having broken atomic write support and
-any mount of that device will have the filesystem immediately see the
-broken hardware assisted atomic write support in bdev_can_atomic_write()
-and not use it.
+Gitweb:
 
-Fwiw, this pattern is already used for other stuff. For example for the
-iocost stuff that udev will auto-apply if known. The broken atomic write
-stuff would fit very well in there. Either it's an allowlist or a
-denylist.
+    https://git.infradead.org/?p=users/hch/xfs.git;a=shortlog;h=refs/heads/xfs-trans-cleanups
 
-commit 6b8e90545e918a4653281b3672a873e948f12b65
-Author:     Gustavo Noronha Silva <gustavo.noronha@collabora.com>
-AuthorDate: Mon May 2 14:02:23 2022 -0300
-Commit:     Lennart Poettering <lennart@poettering.net>
-CommitDate: Thu Apr 20 16:45:57 2023 +0200
-
-    Apply known iocost solutions to block devices
-
-    Meta's resource control demo project[0] includes a benchmark tool that can
-    be used to calculate the best iocost solutions for a given SSD.
-
-      [0]: https://github.com/facebookexperimental/resctl-demo
-
-    A project[1] has now been started to create a publicly available database
-    of results that can be used to apply them automatically.
-
-      [1]: https://github.com/iocost-benchmark/iocost-benchmarks
-
-    This change adds a new tool that gets triggered by a udev rule for any
-    block device and queries the hwdb for known solutions. The format for
-    the hwdb file that is currently generated by the github action looks like
-    this:
-
-      # This file was auto-generated on Tue, 23 Aug 2022 13:03:57 +0000.
-      # From the following commit:
-      # https://github.com/iocost-benchmark/iocost-benchmarks/commit/ca82acfe93c40f21d3b513c055779f43f1126f88
-      #
-      # Match key format:
-      # block:<devpath>:name:<model name>:
-
-      # 12 points, MOF=[1.346,1.346], aMOF=[1.249,1.249]
-      block:*:name:HFS256GD9TNG-62A0A:fwver:*:
-        IOCOST_SOLUTIONS=isolation isolated-bandwidth bandwidth naive
-        IOCOST_MODEL_ISOLATION=rbps=1091439492 rseqiops=52286 rrandiops=63784 wbps=192329466 wseqiops=12309 wrandiops=16119
-        IOCOST_QOS_ISOLATION=rpct=0.00 rlat=8807 wpct=0.00 wlat=59023 min=100.00 max=100.00
-        IOCOST_MODEL_ISOLATED_BANDWIDTH=rbps=1091439492 rseqiops=52286 rrandiops=63784 wbps=192329466 wseqiops=12309 wrandiops=16119
-        IOCOST_QOS_ISOLATED_BANDWIDTH=rpct=0.00 rlat=8807 wpct=0.00 wlat=59023 min=100.00 max=100.00
-        IOCOST_MODEL_BANDWIDTH=rbps=1091439492 rseqiops=52286 rrandiops=63784 wbps=192329466 wseqiops=12309 wrandiops=16119
-        IOCOST_QOS_BANDWIDTH=rpct=0.00 rlat=8807 wpct=0.00 wlat=59023 min=100.00 max=100.00
-        IOCOST_MODEL_NAIVE=rbps=1091439492 rseqiops=52286 rrandiops=63784 wbps=192329466 wseqiops=12309 wrandiops=16119
-        IOCOST_QOS_NAIVE=rpct=99.00 rlat=8807 wpct=99.00 wlat=59023 min=75.00 max=100.00
-
-    The IOCOST_SOLUTIONS key lists the solutions available for that device
-    in the preferred order for higher isolation, which is a reasonable
-    default for most client systems. This can be overriden to choose better
-    defaults for custom use cases, like the various data center workloads.
-
-    The tool can also be used to query the known solutions for a specific
-    device or to apply a non-default solution (say, isolation or bandwidth).
-
-    Co-authored-by: Santosh Mahto <santosh.mahto@collabora.com>
+Diffstat:
+ libxfs/xfs_refcount.c |    4 -
+ scrub/common.c        |    7 +
+ scrub/common.h        |    2 
+ scrub/dir_repair.c    |    8 --
+ scrub/fscounters.c    |    3 
+ scrub/metapath.c      |    4 -
+ scrub/nlinks.c        |    8 --
+ scrub/nlinks_repair.c |    4 -
+ scrub/parent_repair.c |   12 ---
+ scrub/quotacheck.c    |    4 -
+ scrub/repair.c        |   16 ----
+ scrub/repair.h        |    4 -
+ scrub/rmap_repair.c   |    9 --
+ scrub/rtrmap_repair.c |    9 --
+ scrub/scrub.c         |    5 -
+ xfs_attr_item.c       |    5 -
+ xfs_discard.c         |   12 ---
+ xfs_fsmap.c           |    4 -
+ xfs_icache.c          |    5 -
+ xfs_inode.c           |    5 -
+ xfs_itable.c          |   18 ----
+ xfs_iwalk.c           |   11 --
+ xfs_log.c             |    6 -
+ xfs_log_priv.h        |    4 -
+ xfs_notify_failure.c  |    5 -
+ xfs_qm.c              |   10 --
+ xfs_rtalloc.c         |   13 ---
+ xfs_trans.c           |  196 +++++++++++++++++++++++---------------------------
+ xfs_trans.h           |    3 
+ xfs_zone_gc.c         |    5 -
+ 30 files changed, 147 insertions(+), 254 deletions(-)
