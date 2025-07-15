@@ -1,156 +1,74 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0D78219E8
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 12:32:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48E392DA77D
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 12:32:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752582740; cv=none; b=Q0O7g4xcsslb9dDW/fFMTwd/cbOphq9A0y3hZp0wfsym0ub+q/vWUo2VYoiq7oOA3ZJHQUoUGbFmaxRO58K+tpeF9mavwMva976dzI3j0OryhaXzLHiw8zX0QC7SVDShMxYT670x8hAsBxymIzDPgPj7j4t2d1sKfVACyqdWuoo=
+	t=1752582743; cv=none; b=HbbjFBHXC8BymzyfVnUNw2xiz5r6NDLZAHjEThz9oh2oSMN790sMP8pKUQWY+/WCDoj6xOSXFBo0w+nTG66MZ56yibRa65b2ZADLPB0HBsY1iAEPDTand4RCXWgo3yVLCiWCgdCqjLSFJWSIzJvcfliYGZ14xudUUAA30yRlUf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752582740; c=relaxed/simple;
-	bh=QhxxavKEeslk4mvgCW4mccrCCAQZPOApxboINqcRKbI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CqrD6IBHFFpQMaBSnS8C3MDFhmlrz3JY5HsympOabaEPQRMyq+kwji5oiuWQF1x6pfs3FO8U9jjWT/VILY2wvLtoHR5+TMebmvwGg7TTDRvlY3ZWOtUHJJGQgp3IKLYkzjJ2+Y8OvNCk+KyI/jVeLz18jQpRJI2dYr58/wSKo1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aK3Jh508; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1752582743; c=relaxed/simple;
+	bh=9mA7qyo9Uy93TgXB9mI7ctF/8cDafZyllGyht4cSHEw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=SMQZlH4Y2xSilmW7YDtjaZd6BV9CuP2t2BFx9OJbPVVJl7QZbysnrWcDj2A9eCv7cIT66xIvtcAz6gEeuYXB/RbgbU+go5rnKL9FqJsQeIb9/XDdbEJg6TcrxTNFLI2qlzx0BvQdUqkHIKuyi0n3t15hXWW2FA+kykrh3rcsF4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=NGUXJbMI; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aK3Jh508"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1752582737;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=PMWLDsaxYk3mtycE5KTlBYX1K5MmGbSOcv51c5mvkh8=;
-	b=aK3Jh508hYm7EGAeLyYowgaz8Awndf3xcd73XimJTDzHtTM9ezG5brsID5fLZMiOkK2+np
-	Louf11UZ/Jz5H4tdk1Qlt8UC/za2AlFluqMeFIrQAF4ksAw+u9vhbayQZRffTCFuVYE3ya
-	l/wyW4UFOn51gQlHHUjYegh69nYNmY4=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-161-TC3fsio2O-iujKV3UFtL8w-1; Tue,
- 15 Jul 2025 08:32:12 -0400
-X-MC-Unique: TC3fsio2O-iujKV3UFtL8w-1
-X-Mimecast-MFC-AGG-ID: TC3fsio2O-iujKV3UFtL8w_1752582731
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 507B018001E2;
-	Tue, 15 Jul 2025 12:32:11 +0000 (UTC)
-Received: from bfoster (unknown [10.22.64.43])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D1655195609D;
-	Tue, 15 Jul 2025 12:32:09 +0000 (UTC)
-Date: Tue, 15 Jul 2025 08:35:51 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org, hch@infradead.org, willy@infradead.org
-Subject: Re: [PATCH v3 5/7] xfs: fill dirty folios on zero range of unwritten
- mappings
-Message-ID: <aHZLJyPmZPmDtLE_@bfoster>
-References: <20250714204122.349582-1-bfoster@redhat.com>
- <20250714204122.349582-6-bfoster@redhat.com>
- <20250715052811.GQ2672049@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NGUXJbMI"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=dAiT4ULBwwJoWMnTUD4UyHZEASaGAhDgxteKtIuHL3I=; b=NGUXJbMI8Hg+Q9IFzB1rJgaLli
+	VU8KncP7LmU5Pp8c+oC00QdreSS4ZC0kiNG5XFp9pAuaD3qJM0aIGz9oULTQnJwa+77Aj6e/vRPhf
+	RkmWsQMwP63QF1qJ1efLRSgf70cq8EZmxUVdhwKN0n/NaNlcow9yHRXGf9GP83+HTaIlq/7rTFCtB
+	v2namOHHES9yq34vNJ4nR2LE6wVQHPR0CcNaYXjfzzjfQ71Le5Jba8lWx4CGfzvnx9IXFiPqKVude
+	MhA+O9v99pKcxf3zRZotXhkjlyPpg24Uguf5IpPkZiReaysg2hx3egCjPbTXMWXdoDrCqfrb9WR5L
+	2xrRzURA==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1ubepZ-000000054xZ-1t9a;
+	Tue, 15 Jul 2025 12:32:21 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: [PATCH 17/18] xfs: improve the iclog space assert in xlog_write_iovec
+Date: Tue, 15 Jul 2025 14:30:22 +0200
+Message-ID: <20250715123125.1945534-18-hch@lst.de>
+X-Mailer: git-send-email 2.47.2
+In-Reply-To: <20250715123125.1945534-1-hch@lst.de>
+References: <20250715123125.1945534-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250715052811.GQ2672049@frogsfrogsfrogs>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jul 14, 2025 at 10:28:11PM -0700, Darrick J. Wong wrote:
-> On Mon, Jul 14, 2025 at 04:41:20PM -0400, Brian Foster wrote:
-> > Use the iomap folio batch mechanism to select folios to zero on zero
-> > range of unwritten mappings. Trim the resulting mapping if the batch
-> > is filled (unlikely for current use cases) to distinguish between a
-> > range to skip and one that requires another iteration due to a full
-> > batch.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/xfs_iomap.c | 23 +++++++++++++++++++++++
-> >  1 file changed, 23 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index b5cf5bc6308d..63054f7ead0e 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -1691,6 +1691,8 @@ xfs_buffered_write_iomap_begin(
-> >  	struct iomap		*iomap,
-> >  	struct iomap		*srcmap)
-> >  {
-> > +	struct iomap_iter	*iter = container_of(iomap, struct iomap_iter,
-> > +						     iomap);
-> >  	struct xfs_inode	*ip = XFS_I(inode);
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> >  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> > @@ -1762,6 +1764,7 @@ xfs_buffered_write_iomap_begin(
-> >  	 */
-> >  	if (flags & IOMAP_ZERO) {
-> >  		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
-> > +		u64 end;
-> >  
-> >  		if (isnullstartblock(imap.br_startblock) &&
-> >  		    offset_fsb >= eof_fsb)
-> > @@ -1769,6 +1772,26 @@ xfs_buffered_write_iomap_begin(
-> >  		if (offset_fsb < eof_fsb && end_fsb > eof_fsb)
-> >  			end_fsb = eof_fsb;
-> >  
-> > +		/*
-> > +		 * Look up dirty folios for unwritten mappings within EOF.
-> > +		 * Providing this bypasses the flush iomap uses to trigger
-> > +		 * extent conversion when unwritten mappings have dirty
-> > +		 * pagecache in need of zeroing.
-> > +		 *
-> > +		 * Trim the mapping to the end pos of the lookup, which in turn
-> > +		 * was trimmed to the end of the batch if it became full before
-> > +		 * the end of the mapping.
-> > +		 */
-> > +		if (imap.br_state == XFS_EXT_UNWRITTEN &&
-> > +		    offset_fsb < eof_fsb) {
-> > +			loff_t len = min(count,
-> > +					 XFS_FSB_TO_B(mp, imap.br_blockcount));
-> > +
-> > +			end = iomap_fill_dirty_folios(iter, offset, len);
-> > +			end_fsb = min_t(xfs_fileoff_t, end_fsb,
-> > +					XFS_B_TO_FSB(mp, end));
-> 
-> Hrmm.  XFS_B_TO_FSB and not _FSBT?  Can the rounding up behavior result
-> in a missed byte range?  I think the answer is no because @end should be
-> aligned to a folio boundary, and folios can't be smaller than an
-> fsblock.
-> 
+We need enough space for the length we copy into the iclog, not just
+some space, so tighten up the check a bit.
 
-Hmm.. not that I'm aware of..? Please elaborate if there's a case you're
-suspicious of because I could have certainly got my wires crossed.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_log.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-My thinking is that end_fsb reflects the first fsb beyond the target
-range. I.e., it's calculated and used as such in xfs_iomap_end_fsb() and
-the various xfs_trim_extent() calls throughout the rest of the function.
-
-Brian
-
-> If the answer to the second question is indeed "no" then I think this is
-> ok and
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> 
-> --D
-> 
-> 
-> > +		}
-> > +
-> >  		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
-> >  	}
-> >  
-> > -- 
-> > 2.50.0
-> > 
-> > 
-> 
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 062eefac1a36..48fc17cad60a 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1920,7 +1920,7 @@ xlog_write_iovec(
+ 	void			*buf,
+ 	uint32_t		buf_len)
+ {
+-	ASSERT(xlog_write_space_left(data) > 0);
++	ASSERT(xlog_write_space_left(data) >= buf_len);
+ 	ASSERT(data->log_offset % sizeof(int32_t) == 0);
+ 	ASSERT(buf_len % sizeof(int32_t) == 0);
+ 
+-- 
+2.47.2
 
