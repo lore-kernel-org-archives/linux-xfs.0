@@ -1,38 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B21212D130B
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 05:18:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3C0D260578
+	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 05:18:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752556723; cv=none; b=fIOpczhlyGK69YQk3X6qtcnYPO5m9JEZ/QJgTKNdKmtB1Vw7qmqiELZRyRPXh6Kz45L68/vI7MCg55fmFIOKQz4nn5qvPMMSP/pMhIzgyKgCjdihpNmLCgULKi/pUez9TADzKJw4IUIDRVk1Og2lIbuQokokYyCTd0brSSONe+s=
+	t=1752556739; cv=none; b=XhKzF4sLp1vuWFeeJaGDyGzROW9ToHjinMCYKfy/Q/LQ7ZvzCjlOdxC4Q7SmbEk6ANuE/SgWw8TjPLSXgS/54ThXQs1BEZ1+sx+eRtSAGTgZ7LJYZiC+0c7PA4aYIEu6PzISPwyLZI0s4d6y7h5J8Bfwv4B7aeI4ttjBRcSCBI8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752556723; c=relaxed/simple;
-	bh=fuZRe3ZHPALyVt3mp/MNsnXIjASgnesRBsoKCGm8f5I=;
+	s=arc-20240116; t=1752556739; c=relaxed/simple;
+	bh=l6usV31D0VG/Jqt/yz1yYYtpc6gOQX8LeF+GrplSSHg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hsgIK3Kd80szDyJKe8sLEZLwxEfhBzcOrddU5ZeeXDeBKcCIXRtLvNxhFBt24TPOqvShhUc0HzeOqQHncs0GfD6RmiyNgSLYdKSKG5D7sLonO6RsNR6m69A3lFwXyk3Q6JNe67H1xXSf9LoD6EBsbp7pzKfAiqU9T+jQRzFwv5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S4GmR2lB; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=C/mgzP8qsz12ZIUtmddbiUb12LmRR3PQ5nsN095vOLbRf0Y5YdZ0wj9ThBnEcGqcSQtykGyC8C0MfD7SxsDFmv54WYoiu3G+YZep8MHJ2C+DvH0k8RofiBMBia1BcrKZXywlfjVrLUrCcxNHLixElNZU8lONv648Im9SWk1ADlE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eEuTjL1Z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S4GmR2lB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89DC6C4CEE3;
-	Tue, 15 Jul 2025 05:18:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eEuTjL1Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 376F5C4CEE3;
+	Tue, 15 Jul 2025 05:18:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752556723;
-	bh=fuZRe3ZHPALyVt3mp/MNsnXIjASgnesRBsoKCGm8f5I=;
+	s=k20201202; t=1752556739;
+	bh=l6usV31D0VG/Jqt/yz1yYYtpc6gOQX8LeF+GrplSSHg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=S4GmR2lB81GHZlD3qW2wFXqQSEahaHcbhlE9uJ3C08UiXbBe3oJS06eUGNpx/2W62
-	 KJNgRmHsBINToot7CBSdSYZJLKkVNbVVHsD+gpHY7ct/B8cqgPLlA3xsPzUfA25nlR
-	 HDz67At9icoKVLZu4rlnohsKiepECTN91veYwAes83e3ygfjkCWqnYviobhfzNa4Kh
-	 jzaKaY/ecJiJmweiSDiOFWSPrp338NTZgzjyPAyBhSOEUJBY3qlGuiGzOJnF0gcfnD
-	 1dIpn49eAk1EirYYrxem0fUtCSUsXz6pIe5c+1U3eYq2fa275aGBtmQ4TlGc1snmdK
-	 UNx2Lm39cbTOg==
-Date: Mon, 14 Jul 2025 22:18:43 -0700
-Subject: [PATCH 3/7] xfs_io: dump new atomic_write_unit_max_opt statx field
+	b=eEuTjL1Zd1C4ltpuf5zKv15kig149hi2FS2Ef5KIGfiqMN/YDxb5VKetsGFV3+IDD
+	 uTtgu30OUt9sFmy4MRfz4ojZSTqJtRqTi2JWh9JAYZwi7ouELnFTZ0PbBmaNvPTAdI
+	 YHF4+d66UHQDXjCy9vyMctoTEyjpw/FmdM7WLRP1+z1wiPqXTHToDyb6M7kFdrerlj
+	 H9AiZZGR32/zskUgPylEEMxm6EW9lYBe4FesYV+dSI7cYDemr4TyELXA/nugiu/ULj
+	 lUcm7QjSF0mjp7BsSqZG6Dk69o+GZUbDu36lF29q+ZvbA6avDJK6BLKRAy4INeVIdi
+	 t9x3p8V/Tcprw==
+Date: Mon, 14 Jul 2025 22:18:58 -0700
+Subject: [PATCH 4/7] mkfs: don't complain about overly large auto-detected log
+ stripe units
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: john.g.garry@oracle.com, catherine.hoang@oracle.com,
- john.g.garry@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <175255652509.1831001.15375900558391013689.stgit@frogsfrogsfrogs>
+Cc: john.g.garry@oracle.com, linux-xfs@vger.kernel.org,
+ catherine.hoang@oracle.com, john.g.garry@oracle.com,
+ linux-xfs@vger.kernel.org
+Message-ID: <175255652528.1831001.4886923245781681144.stgit@frogsfrogsfrogs>
 In-Reply-To: <175255652424.1831001.9800800142745344742.stgit@frogsfrogsfrogs>
 References: <175255652424.1831001.9800800142745344742.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,57 +48,33 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Dump the new atomic writes statx field that's being submitted for 6.16.
+If mkfs declines to apply what it thinks is an overly large data device
+stripe unit to the log device, it should only log a message about that
+if the lsunit parameter was actually supplied by the caller.  It should
+not do that when the lsunit was autodetected from the block devices.
 
+The cli parameters are zero-initialized in main and always have been.
+
+Cc: <linux-xfs@vger.kernel.org> # v4.15.0
+Fixes: 2f44b1b0e5adc4 ("mkfs: rework stripe calculations")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: John Garry <john.g.garry@oracle.com>
 ---
- libfrog/statx.h       |    6 +++++-
- io/stat.c             |    1 +
- m4/package_libcdev.m4 |    2 +-
- 3 files changed, 7 insertions(+), 2 deletions(-)
+ mkfs/xfs_mkfs.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/libfrog/statx.h b/libfrog/statx.h
-index b76dfae21e7092..e11e2d8f49fa5f 100644
---- a/libfrog/statx.h
-+++ b/libfrog/statx.h
-@@ -143,7 +143,11 @@ struct statx {
- 	__u32	stx_dio_read_offset_align;
- 
- 	/* 0xb8 */
--	__u64	__spare3[9];	/* Spare space for future expansion */
-+	/* Optimised max atomic write unit in bytes */
-+	__u32	stx_atomic_write_unit_max_opt;
-+	__u32	__spare2[1];
-+	/* 0xc0 */
-+	__u64	__spare3[8];	/* Spare space for future expansion */
- 	/* 0x100 */
- };
- 
-diff --git a/io/stat.c b/io/stat.c
-index 46475df343470c..c257037aa8eec3 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -396,6 +396,7 @@ dump_raw_statx(struct statx *stx)
- 	printf("stat.atomic_write_unit_max = %u\n", stx->stx_atomic_write_unit_max);
- 	printf("stat.atomic_write_segments_max = %u\n", stx->stx_atomic_write_segments_max);
- 	printf("stat.dio_read_offset_align = %u\n", stx->stx_dio_read_offset_align);
-+	printf("stat.atomic_write_unit_max_opt = %u\n", stx->stx_atomic_write_unit_max_opt);
- 	return 0;
- }
- 
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 61353d0aa9d536..b77ac1a7580a80 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -126,7 +126,7 @@ AC_DEFUN([AC_NEED_INTERNAL_FSCRYPT_POLICY_V2],
- AC_DEFUN([AC_NEED_INTERNAL_STATX],
-   [ AC_CHECK_TYPE(struct statx,
-       [
--        AC_CHECK_MEMBER(struct statx.stx_dio_read_offset_align,
-+        AC_CHECK_MEMBER(struct statx.stx_atomic_write_unit_max_opt,
-           ,
-           need_internal_statx=yes,
-           [#include <linux/stat.h>]
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 812241c49a5494..8b946f3ef817da 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3629,7 +3629,7 @@ _("log stripe unit (%d) must be a multiple of the block size (%d)\n"),
+ 	if (cfg->sb_feat.log_version == 2 &&
+ 	    cfg->lsunit * cfg->blocksize > 256 * 1024) {
+ 		/* Warn only if specified on commandline */
+-		if (cli->lsu || cli->lsunit != -1) {
++		if (cli->lsu || cli->lsunit) {
+ 			fprintf(stderr,
+ _("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
+   "log stripe unit adjusted to 32KiB\n"),
 
