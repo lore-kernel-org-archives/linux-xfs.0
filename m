@@ -1,38 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 711653FE7
-	for <linux-xfs@vger.kernel.org>; Tue, 15 Jul 2025 05:13:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9869D2D1925;
+	Tue, 15 Jul 2025 05:14:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752556409; cv=none; b=JnCDNorUL7AnjkgbucfkQa/qTqq/fTivuPGGP+yildaNW4RzxT3/4ch3I1xz7teB4Y1mGWJ2ask0tghMAmKb597TcjDOSlHqBCajiZWFa3NzNZ3hlakGWKFdrseqBcVSixocwzk/bsg0IUtqwnp7aB63l5SMJGjHPOijs7r1ecI=
+	t=1752556478; cv=none; b=ifvKFJr8u1y0fqGDunCUc/lBsEQRdcaY413rFNTusLEasjlH+XUmxeC8wHlDNkZRwV/iU++eWSX5ByN3UVxtjjmeOyFu3Vdt7YXyVZTmTPCf14IZFaKGP6UjpBYbuwYIih1YfafcnoqZJeGUBoYws0Fv+wrHh2xQXGdaY0JrxE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752556409; c=relaxed/simple;
-	bh=mVfj/RN9CLrpM2R72nAOEUhMksb1QLvA2RTW6JsT0a8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=b+3kcvUlDMoOTp/UhmgJ6zSY5Zo1CBbnWmrXOyQcOB3tHT0GtGmpLMguC70sjV1I6GvdAvw6ehjkEEihSfakS6eIgNb/OBQiO2XOR8GgK8OyuPhA5GBxBQImWL3LFScBn4YeOBu/Ng1Qot78Z1awLJaiHkPHPWX8JQftBVZhgqo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LFtdc1dE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752556478; c=relaxed/simple;
+	bh=h2X1TkpXtIdnrt/ph0/EuZP8g9aNItNrhlGKSgwtUqA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=N0FELjY0GKK9Ze6f7EPjCAzYgUCNKq+EbDVeXsmVOmiAwPRCFK9bvASWdSwRQLhGOMfJOHC9m0H0VYKpnKz6DxlH1nsqZBZkCyBxAegnvyAADx5QlgYAV5RNTzzf+LxoXOVb0r4LleIqavxP3vf1I8FyVW2XnNrV+0+EijElbB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lyq/nPRD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LFtdc1dE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05701C4CEE3;
-	Tue, 15 Jul 2025 05:13:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lyq/nPRD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 085A9C4CEE3;
+	Tue, 15 Jul 2025 05:14:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752556409;
-	bh=mVfj/RN9CLrpM2R72nAOEUhMksb1QLvA2RTW6JsT0a8=;
-	h=Date:From:To:Cc:Subject:From;
-	b=LFtdc1dEDDlta3ZWuqEKRowJklrkkDwZ7FzKWR7MvGGwftiz61sQs+xt+OeaUUKwE
-	 WrRMj7aLjBwydGifo1Sp6FqH6zZ+pBNg60oA228nK8Wey2HLO8wDpa95ePsHTIHD0b
-	 HX5NtieHG2RXNjQ/6uXPTwkASzHQ2BFPjlQjr2a/iD1QCbAAMa35Ty+QBDfe42UBW8
-	 DsBt7JacLnScrEpo1b5CBgmEFIzoNUWNVOuGs0t7Bh5VYsX7D5t/db2uZb8LTkB/hE
-	 5s+Dq90m3FFjRWZPTs4EFrzViUsElamsc8JwBjGjP5fQsleibVjUvdz/L1xO/nRXXD
-	 1XURaM/ic0F0w==
-Date: Mon, 14 Jul 2025 22:13:28 -0700
+	s=k20201202; t=1752556476;
+	bh=h2X1TkpXtIdnrt/ph0/EuZP8g9aNItNrhlGKSgwtUqA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=lyq/nPRDEbopPISGr/hXs1gGTURraTsM8XNBcR9s21YeOCjvFaxcYzjDdkCl7WmT5
+	 PV1Jgg7HPuc7W1H7q07MvMyJO8pYgMvGjl8hX7yoPk2Y6ch4xSmSjjvvb2yQQZiOQV
+	 VGODeuQ+aoP/rHcyk+RbsTV00SX1ujaT2LpVKoiKS4J5+N98pUIdxZhQkLO5IhtfjW
+	 vjihgVJG8lNuokuiqU8fOi5IRozNuUOBPKEeaZOsaEC47pIqzmaNped5Ks73MALVlo
+	 qvycxDwhLpRGNQE3lBSb/sqbfgwc9UFBa+XybZRD2pU5b3UUsWzU+VrH7r0MClTcpe
+	 /jD6r5wxo/a4g==
+Date: Mon, 14 Jul 2025 22:14:35 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: linux-xfs@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
-	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [PATCHBOMB v2] xfsprogs: ports and new code for 6.16
-Message-ID: <20250715051328.GL2672049@frogsfrogsfrogs>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, hch@infradead.org, willy@infradead.org
+Subject: Re: [PATCH v3 2/7] iomap: remove pos+len BUG_ON() to after folio
+ lookup
+Message-ID: <20250715051435.GM2672049@frogsfrogsfrogs>
+References: <20250714204122.349582-1-bfoster@redhat.com>
+ <20250714204122.349582-3-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,15 +44,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20250714204122.349582-3-bfoster@redhat.com>
 
-Hi everyone,
+On Mon, Jul 14, 2025 at 04:41:17PM -0400, Brian Foster wrote:
+> The bug checks at the top of iomap_write_begin() assume the pos/len
+> reflect exactly the next range to process. This may no longer be the
+> case once the get folio path is able to process a folio batch from
+> the filesystem. On top of that, len is already trimmed to within the
+> iomap/srcmap by iomap_length(), so these checks aren't terribly
+> useful. Remove the unnecessary BUG_ON() checks.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-This is a collection of all the new code that I have for xfsprogs 6.16.
-First are the libxfs ports from Linux 6.16; after that come the
-userspace changes to report hardware atomic write capabilities and
-format a filesystem that will play nicely with the storage; and finally
-a patch to remove EXPERIMENTAL from xfs_scrub.
-
-v2: add RVBs, fix a few comments as needed.
+Heh, glad this went away
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
+
+> ---
+>  fs/iomap/buffered-io.c | 5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 3729391a18f3..38da2fa6e6b0 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -805,15 +805,12 @@ static int iomap_write_begin(struct iomap_iter *iter, struct folio **foliop,
+>  {
+>  	const struct iomap_folio_ops *folio_ops = iter->iomap.folio_ops;
+>  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+> -	loff_t pos = iter->pos;
+> +	loff_t pos;
+>  	u64 len = min_t(u64, SIZE_MAX, iomap_length(iter));
+>  	struct folio *folio;
+>  	int status = 0;
+>  
+>  	len = min_not_zero(len, *plen);
+> -	BUG_ON(pos + len > iter->iomap.offset + iter->iomap.length);
+> -	if (srcmap != &iter->iomap)
+> -		BUG_ON(pos + len > srcmap->offset + srcmap->length);
+>  
+>  	if (fatal_signal_pending(current))
+>  		return -EINTR;
+> -- 
+> 2.50.0
+> 
+> 
