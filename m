@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFD89218AB0;
-	Tue, 15 Jul 2025 14:30:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5B3F13AD1C;
+	Tue, 15 Jul 2025 14:37:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752589843; cv=none; b=Sh1otrZtfqEhL5sfom2x304xgqnkbA6GjM5sSFmw8eEh2l7FUI3pvAqzQude/X5fiP2H9OSx0LNIW6pHZZ2iucUL3dJ6wPwk5n13EAUQpRJE0Zfnxamh4cs/UFRRDEwSsq0oIwEY6AgIrw1JSBuWa7LR2lyAlcLQTs0sGApphe0=
+	t=1752590253; cv=none; b=dVMAgwZgut/i/7P4aeM/I23x4h1v6Nkv2oV9wy8bUVLwZRjjtqgbgKGJOgvbF2vhaNsvegio13H/5sliJ+XbloDDIS79rjQA2wWDCkE3mSN/nrz1E7piZRoU5pNJtMwHVuqgS6a2LTAjzlWUrtmHNbPAlrDV0NiRHuhDQgKgva0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752589843; c=relaxed/simple;
-	bh=sV1OZP5WMBeyKyulfXGILmszhTuQ8xOGFvfPdffvOJ0=;
+	s=arc-20240116; t=1752590253; c=relaxed/simple;
+	bh=4xv5/UPT8nXhMWZuxQNTUwAJ/ZNAv+qsk6EDFikuCRQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nPi7E2wHxxF7cgOji2waFlRXfUin12WyvmDXvTYKV6EaHtHXLMf2x3FVo2rb1/b9pRZMRQuT2FKZQxxqgsr6o/agIJbk6LjPvFDkCJ+qd7itXVQi598cQK2KTES37FaNT34vztYQJfspOhfuZSZA0tLygfntFsnRm7JAjAmYgN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fFmIrfPm; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jt4t+CQzBg6yNkmQ0aBcFtDtVg2zdBTkf4iYhmKbyzh37+f8TNNwsSFkvm4Bex+wQcnE5J8WTBJdogvJNyyyuZhV3hT8uwg9VWsucDWmJ1CT15NMLrlpY6WnssEgyXSsr/F52P7U9efPDaEiInQpOvD1ndYlZEN2nyi5TXwWK/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hkhtV5n/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fFmIrfPm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B8C9C4CEE3;
-	Tue, 15 Jul 2025 14:30:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hkhtV5n/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A87E8C4CEE3;
+	Tue, 15 Jul 2025 14:37:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752589842;
-	bh=sV1OZP5WMBeyKyulfXGILmszhTuQ8xOGFvfPdffvOJ0=;
+	s=k20201202; t=1752590253;
+	bh=4xv5/UPT8nXhMWZuxQNTUwAJ/ZNAv+qsk6EDFikuCRQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fFmIrfPmJ7DAsHWOUFFVRGodoN8liMahk8iM7VXw3B4q+tfagwCYomKPsHLGjw8tC
-	 DMTG4TdnPN+ppLpbKF07Qqcq+jEEe3uPHEvKkL3+TTT4/f8mWadzhV+VildbgUx7/Y
-	 r5ugytVSnUVAezv+EsFWTy7W9gNy3LmqGBrmiybyLbpgpacc4jae2bwuTDpV2/i5/D
-	 gzmjgIR5tcH0Q2IzGdMIC4FC3mmHAxVzDhLxHmTiG0xRPu6Rmoq3FCxAIF/fjtDrzJ
-	 FQuN9LseWR1zN0mMvQ08GUIA45xgdup4iKjOVC9aOw5qqVoInuUrafaW1Qm1KziLpG
-	 aEpL7JDge/YGA==
-Date: Tue, 15 Jul 2025 07:30:41 -0700
+	b=hkhtV5n/j7MM3TN5WebjgziDEpogVIRekHXMAFmCH4qnPaAQhc44rxsI8QOr0JSmJ
+	 ZoLT7k7cseFjT2FcAnSsu4oTRaDhp/JrhAKoxbyhZj9VRpPGGSp5tUFLrwMU0g7xCt
+	 PLhoJYuX1a/ySv0n7UA9mrOJ4wmYWtMiLTKy6fMlkk0cIJ2vdme+dnW38s81S7PaVR
+	 ZRlXhrDRe596qHchhv3nbtsGAAl7L/y3rYOce0M9SCGq4dK9e7vlVfmjDU1IBHxTBU
+	 iD8fXYQyMl+kzM2DLKOcCwt3rCHW61e1kHKzE3zfBIM6wFP5zZkpHDleTpJRyGAdhn
+	 bydIIM1Jgx9JA==
+Date: Tue, 15 Jul 2025 07:37:33 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
 	linux-mm@kvack.org, hch@infradead.org, willy@infradead.org
-Subject: Re: [PATCH v3 7/7] xfs: error tag to force zeroing on debug kernels
-Message-ID: <20250715143041.GN2672029@frogsfrogsfrogs>
+Subject: Re: [PATCH v3 6/7] iomap: remove old partial eof zeroing optimization
+Message-ID: <20250715143733.GO2672029@frogsfrogsfrogs>
 References: <20250714204122.349582-1-bfoster@redhat.com>
- <20250714204122.349582-8-bfoster@redhat.com>
- <20250715052444.GP2672049@frogsfrogsfrogs>
- <aHZL55AcNnAD-uAn@bfoster>
+ <20250714204122.349582-7-bfoster@redhat.com>
+ <20250715053417.GR2672049@frogsfrogsfrogs>
+ <aHZLZid5gggmDD09@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,118 +45,125 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aHZL55AcNnAD-uAn@bfoster>
+In-Reply-To: <aHZLZid5gggmDD09@bfoster>
 
-On Tue, Jul 15, 2025 at 08:39:03AM -0400, Brian Foster wrote:
-> On Mon, Jul 14, 2025 at 10:24:44PM -0700, Darrick J. Wong wrote:
-> > On Mon, Jul 14, 2025 at 04:41:22PM -0400, Brian Foster wrote:
-> > > iomap_zero_range() has to cover various corner cases that are
-> > > difficult to test on production kernels because it is used in fairly
-> > > limited use cases. For example, it is currently only used by XFS and
-> > > mostly only in partial block zeroing cases.
+On Tue, Jul 15, 2025 at 08:36:54AM -0400, Brian Foster wrote:
+> On Mon, Jul 14, 2025 at 10:34:17PM -0700, Darrick J. Wong wrote:
+> > On Mon, Jul 14, 2025 at 04:41:21PM -0400, Brian Foster wrote:
+> > > iomap_zero_range() optimizes the partial eof block zeroing use case
+> > > by force zeroing if the mapping is dirty. This is to avoid frequent
+> > > flushing on file extending workloads, which hurts performance.
 > > > 
-> > > While it's possible to test most of these functional cases, we can
-> > > provide more robust test coverage by co-opting fallocate zero range
-> > > to invoke zeroing of the entire range instead of the more efficient
-> > > block punch/allocate sequence. Add an errortag to occasionally
-> > > invoke forced zeroing.
+> > > Now that the folio batch mechanism provides a more generic solution
+> > > and is used by the only real zero range user (XFS), this isolated
+> > > optimization is no longer needed. Remove the unnecessary code and
+> > > let callers use the folio batch or fall back to flushing by default.
 > > > 
 > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_errortag.h |  4 +++-
-> > >  fs/xfs/xfs_error.c           |  3 +++
-> > >  fs/xfs/xfs_file.c            | 26 ++++++++++++++++++++------
-> > >  3 files changed, 26 insertions(+), 7 deletions(-)
-> > > 
-> ...
-> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > > index 0b41b18debf3..c865f9555b77 100644
-> > > --- a/fs/xfs/xfs_file.c
-> > > +++ b/fs/xfs/xfs_file.c
-> > > @@ -27,6 +27,8 @@
-> > >  #include "xfs_file.h"
-> > >  #include "xfs_aops.h"
-> > >  #include "xfs_zone_alloc.h"
-> > > +#include "xfs_error.h"
-> > > +#include "xfs_errortag.h"
-> > >  
-> > >  #include <linux/dax.h>
-> > >  #include <linux/falloc.h>
-> > > @@ -1269,13 +1271,25 @@ xfs_falloc_zero_range(
-> > >  	if (error)
-> > >  		return error;
-> > >  
-> > > -	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
-> > > -	if (error)
-> > > -		return error;
-> > > +	/*
-> > > +	 * Zero range implements a full zeroing mechanism but is only used in
-> > > +	 * limited situations. It is more efficient to allocate unwritten
-> > > +	 * extents than to perform zeroing here, so use an errortag to randomly
-> > > +	 * force zeroing on DEBUG kernels for added test coverage.
-> > > +	 */
-> > > +	if (XFS_TEST_ERROR(false, XFS_I(inode)->i_mount,
-> > > +			   XFS_ERRTAG_FORCE_ZERO_RANGE)) {
-> > > +		error = xfs_zero_range(XFS_I(inode), offset, len, ac, NULL);
 > > 
-> > Isn't this basically the ultra slow version fallback version of
-> > FALLOC_FL_WRITE_ZEROES ?
+> > Heh, I was staring at this last Friday chasing fuse+iomap bugs in
+> > fallocate zerorange and straining to remember what this does.
+> > Is this chunk still needed if the ->iomap_begin implementation doesn't
+> > (or forgets to) grab the folio batch for iomap?
 > > 
 > 
-> ~/linux$ git grep FALLOC_FL_WRITE_ZEROES
-> ~/linux$ 
+> No, the hunk removed by this patch is just an optimization. The fallback
+> code here flushes the range if it's dirty and retries the lookup (i.e.
+> picking up unwritten conversions that were pending via dirty pagecache).
+> That flush logic caused a performance regression in a particular
+> workload, so this was introduced to mitigate that regression by just
+> doing the zeroing for the first block or so if the folio is dirty. [1]
 > 
-> IIRC write zeroes is intended to expose fast hardware (physical) zeroing
-> (i.e. zeroed written extents)..? If so, I suppose you could consider
-> this a fallback of sorts. I'm not sure what write zeroes is expected to
-> do in the unwritten extent case, whereas iomap zero range is happy to
-> skip those mappings unless they're already dirty in pagecache.
+> The reason for removing it is more just for maintainability. XFS is
+> really the only user here and it is changing over to the more generic
+> batch mechanism, which effectively provides the same optimization, so
+> this basically becomes dead/duplicate code. If an fs doesn't use the
+> batch mechanism it will just fall back to the flush and retry approach,
+> which can be slower but is functionally correct.
 
-Sorry, forgot that they weren't wiring anything up in xfs so it never
-showed up here:
-https://lore.kernel.org/linux-fsdevel/20250619111806.3546162-1-yi.zhang@huaweicloud.com/
-
-Basically they want to avoid the unwritten extent conversion overhead by
-providing a way to preallocate written zeroed extents and sending magic
-commands to hardware that unmaps LBAs in such a way that rereads return
-zero.
-
-> Regardless, the purpose of this patch is not to add support for physical
-> zeroing, but rather to increase test coverage for the additional code on
-> debug kernels because the production use case tends to be more limited.
-> This could easily be moved/applied to write zeroes if it makes sense in
-> the future and test infra grows support for it.
-
-<nod> On second look, I don't think the new fallocate flag allows for
-letting the kernel do pagecache zeroing + flush.  Admittedly that would
-be beside the point (and userspaces already do that anyway).
-
-Anyway enough mumbling from me,
+Oh ok thanks for the reminder.
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+> > My bug turned out to be a bug in my fuse+iomap design -- with the way
+> > iomap_zero_range does things, you have to flush+unmap, punch the range
+> > and zero the range.  If you punch and realloc the range and *then* try
+> > to zero the range, the new unwritten extents cause iomap to miss dirty
+> > pages that fuse should've unmapped.  Ooops.
+> > 
+> 
+> I don't quite follow. How do you mean it misses dirty pages?
+
+Oops, I misspoke, the folios were clean.  Let's say the pagecache is
+sparsely populated with some folios for written space:
+
+-------fffff-------fffffff
+wwwwwwwwwwwwwwwwwwwwwwwwww
+
+Now you tell it to go zero range the middle.  fuse's fallocate code
+issues the upcall to userspace, whch changes some mappings:
+
+-------fffff-------fffffff
+wwwwwuuuuuuuuuuuwwwwwwwwww
+
+Only after the upcall returns does the kernel try to do the pagecache
+zeroing.  Unfortunately, the mapping changed to unwritten so
+iomap_zero_range doesn't see the "fffff" and leaves its contents intact.
+
+(Note: Non-iomap fuse defers everything to the fuse server so this isn't
+a problem if the fuse server does all the zeroing itself.)
 
 --D
 
 > Brian
 > 
+> [1] Details described in the commit log of fde4c4c3ec1c ("iomap: elide
+> flush from partial eof zero range").
+> 
 > > --D
 > > 
-> > > +	} else {
-> > > +		error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
-> > > +		if (error)
-> > > +			return error;
+> > > ---
+> > >  fs/iomap/buffered-io.c | 24 ------------------------
+> > >  1 file changed, 24 deletions(-)
+> > > 
+> > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > > index 194e3cc0857f..d2bbed692c06 100644
+> > > --- a/fs/iomap/buffered-io.c
+> > > +++ b/fs/iomap/buffered-io.c
+> > > @@ -1484,33 +1484,9 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+> > >  		.private	= private,
+> > >  	};
+> > >  	struct address_space *mapping = inode->i_mapping;
+> > > -	unsigned int blocksize = i_blocksize(inode);
+> > > -	unsigned int off = pos & (blocksize - 1);
+> > > -	loff_t plen = min_t(loff_t, len, blocksize - off);
+> > >  	int ret;
+> > >  	bool range_dirty;
 > > >  
-> > > -	len = round_up(offset + len, blksize) - round_down(offset, blksize);
-> > > -	offset = round_down(offset, blksize);
-> > > -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-> > > +		len = round_up(offset + len, blksize) -
-> > > +			round_down(offset, blksize);
-> > > +		offset = round_down(offset, blksize);
-> > > +		error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-> > > +	}
-> > >  	if (error)
-> > >  		return error;
-> > >  	return xfs_falloc_setsize(file, new_size);
+> > > -	/*
+> > > -	 * Zero range can skip mappings that are zero on disk so long as
+> > > -	 * pagecache is clean. If pagecache was dirty prior to zero range, the
+> > > -	 * mapping converts on writeback completion and so must be zeroed.
+> > > -	 *
+> > > -	 * The simplest way to deal with this across a range is to flush
+> > > -	 * pagecache and process the updated mappings. To avoid excessive
+> > > -	 * flushing on partial eof zeroing, special case it to zero the
+> > > -	 * unaligned start portion if already dirty in pagecache.
+> > > -	 */
+> > > -	if (!iter.fbatch && off &&
+> > > -	    filemap_range_needs_writeback(mapping, pos, pos + plen - 1)) {
+> > > -		iter.len = plen;
+> > > -		while ((ret = iomap_iter(&iter, ops)) > 0)
+> > > -			iter.status = iomap_zero_iter(&iter, did_zero);
+> > > -
+> > > -		iter.len = len - (iter.pos - pos);
+> > > -		if (ret || !iter.len)
+> > > -			return ret;
+> > > -	}
+> > > -
+> > >  	/*
+> > >  	 * To avoid an unconditional flush, check pagecache state and only flush
+> > >  	 * if dirty and the fs returns a mapping that might convert on
 > > > -- 
 > > > 2.50.0
 > > > 
