@@ -1,30 +1,40 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6211D7E26
-	for <linux-xfs@vger.kernel.org>; Wed, 16 Jul 2025 16:02:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 807D11D7E26
+	for <linux-xfs@vger.kernel.org>; Wed, 16 Jul 2025 16:03:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752681761; cv=none; b=Rt8/2aiCPMZXHTgbRGyzpt+v9o3O3De+7s2sNMhWyjcOxkQLSXa1Sy1Smn2Y32cXFh7IDeVaUmRkozgov2E58EioiElGwS0fnJDhaysMKi5hL+36//sCR//9JBLtPbciwMdZPJGhXBEAJNPQZh3yrF1ZINy0NrNu9ve0JFqRhNc=
+	t=1752681781; cv=none; b=GAYgJNs7OFrmXLnudSmLo2VQk50MUaznmuta2+YOauF2hDNlinoSYqno1Sskjged2psPD1jTyFXLYKHDVGh/BQIYb4PjTPTuqaDAM8zkafMaZpp3CmaoWhm40uXMa9nLjehzoK/1a+BfnHaSXA0wDHlYHmEMRC2zfsIUVewgED8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752681761; c=relaxed/simple;
-	bh=M24oBZXjGXPNtxozfWJRVakTGrli4bykecBxu3fkCy4=;
+	s=arc-20240116; t=1752681781; c=relaxed/simple;
+	bh=z6H6MpcSvxEQDgOZ9+vME4rJ9jwXYwLHbwOXRd5Tro0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k+haFO9SioZ6+B63ujXIMsOcU+VcveVzl0VLfkhpgUyi+TQpf9QV/SCOh+lw7r3KMiMCTGb8DrQGyIzeYeBjjpIn0eOSHQ1sGLqxb38O7ICB6mMT5rP0o035JpBN5XC6m8MfhTflaEv9QTejLfcAUJRP4/WkKH5htA4zJ1fMmVM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 50FB068BFE; Wed, 16 Jul 2025 18:02:35 +0200 (CEST)
-Date: Wed, 16 Jul 2025 18:02:34 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org, Fedor Pchelkin <pchelkin@ispras.ru>,
-	Chandan Babu R <chandanbabu@kernel.org>
-Subject: Re: flakey assert failures in xfs/538 in for-next
-Message-ID: <20250716160234.GA15830@lst.de>
-References: <20250716121339.GA2043@lst.de> <20250716153812.GG2672049@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=knims8hvcamWW7//aI3bYUg3AzALIa1cNckQuiN1VtcplCk9ilSCiWNBUMk/9ao6iJRF0qi6JQNJS9UOYqgnY/ijnUWRh/yLJYHRr96gnWxZSW9iZXKNMibNFPGam26jOX8wj234aDJaSuwkxUBo+cgHsoNz44ss6egZwjwlXEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XavNWOHo; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XavNWOHo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5777FC4CEF0;
+	Wed, 16 Jul 2025 16:03:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752681781;
+	bh=z6H6MpcSvxEQDgOZ9+vME4rJ9jwXYwLHbwOXRd5Tro0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XavNWOHonw1cdqJsYmM8nEmJZzwjCRLjcExA4GqLhu/BnX2j1n8geJS9bIAy1z91n
+	 mcsmEPfDGR0g16G8BCWxl3IhI3I2J8yhE+1Qv26ra2QUoy0/4o14DR1Yz4TFBGC4Z7
+	 Yg7ykdU1/ibkewLevXIltsMlLv4ZGANfdHormWdSUDFusvHGm4k+/ofvkG7BgrW+PK
+	 jMvcLFEc3XCBitmHVmNqgBA9ndp13NtLD0Arynidho9KNLcnGyAhCnN6KgtrcIcIJs
+	 GKyFtlBxB454qNxpG4FmnKy4q3Z6GygO1b6jqXthTBrCPNtde2cZvJxACsvz6FpuDW
+	 L/WIl/XdtqtLQ==
+Date: Wed, 16 Jul 2025 09:03:00 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Hans Holmberg <hans.holmberg@wdc.com>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/7] xfs: improve the comments in xfs_max_open_zones
+Message-ID: <20250716160300.GM2672049@frogsfrogsfrogs>
+References: <20250716125413.2148420-1-hch@lst.de>
+ <20250716125413.2148420-7-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,34 +43,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250716153812.GG2672049@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20250716125413.2148420-7-hch@lst.de>
 
-On Wed, Jul 16, 2025 at 08:38:12AM -0700, Darrick J. Wong wrote:
-> I've seen this happen maybe once or twice, I think the problem is that
-> the symlink xfs_bmapi_write fails to allocate enough blocks to store the
-> symlink target, doesn't notice, and then the actual target write runs
-> out of blocks before it runs out of pathlen and kaboom.
+On Wed, Jul 16, 2025 at 02:54:06PM +0200, Christoph Hellwig wrote:
+> Describe the rationale for the decisions a bit better.
 > 
-> Probably the right answer is to ENOSPC if we can't allocate blocks, but
-> I guess we did reserve free space so perhaps we just keep bmapi'ing
-> until we get all the space we need?
-> 
-> The weird part is that XFS_SYMLINK_MAPS should be large enough to fit
-> all the target we need, so ... I don't know if bmapi_write is returning
-> fewer than 3 nmaps because it hit ENOSPC or what?
-> 
-> (and because I can't reproduce it reliably, I have not investigated
-> further :()
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I guess the recent cleanups are not too blame then, or just slightly
-changed the timing for me to have a streak to frequently hit it.
+Looks good,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-xfs/538 is the alloc minlen test that injects getting back the minlen
-or failing allocations if minlen > 1.  I guess that interacts badly
-somehow with the rather uncommon multi-map allocations.  The only
-other one is xfs_da_grow_inode_int, and that only for directories
-with a larger directory block size, and as a fallback when the contig
-allocations fails.  It might be worth crafting a test doing a lot
-of symlinking while doing that error injetion to trigger it more
-reliably.
+--D
+
+> ---
+>  fs/xfs/xfs_zone_alloc.c | 15 +++++++++------
+>  1 file changed, 9 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+> index d9e2b1411434..c1f053f4a82a 100644
+> --- a/fs/xfs/xfs_zone_alloc.c
+> +++ b/fs/xfs/xfs_zone_alloc.c
+> @@ -1114,24 +1114,27 @@ xfs_get_zone_info_cb(
+>  }
+>  
+>  /*
+> - * Calculate the max open zone limit based on the of number of
+> - * backing zones available
+> + * Calculate the max open zone limit based on the of number of backing zones
+> + * available.
+>   */
+>  static inline uint32_t
+>  xfs_max_open_zones(
+>  	struct xfs_mount	*mp)
+>  {
+>  	unsigned int		max_open, max_open_data_zones;
+> +
+>  	/*
+> -	 * We need two zones for every open data zone,
+> -	 * one in reserve as we don't reclaim open zones. One data zone
+> -	 * and its spare is included in XFS_MIN_ZONES.
+> +	 * We need two zones for every open data zone, one in reserve as we
+> +	 * don't reclaim open zones.  One data zone and its spare is included
+> +	 * in XFS_MIN_ZONES to support at least one user data writer.
+>  	 */
+>  	max_open_data_zones = (mp->m_sb.sb_rgcount - XFS_MIN_ZONES) / 2 + 1;
+>  	max_open = max_open_data_zones + XFS_OPEN_GC_ZONES;
+>  
+>  	/*
+> -	 * Cap the max open limit to 1/4 of available space
+> +	 * Cap the max open limit to 1/4 of available space.  Without this we'd
+> +	 * run out of easy reclaim targets too quickly and storage devices don't
+> +	 * handle huge numbers of concurrent write streams overly well.
+>  	 */
+>  	return clamp(max_open, XFS_MIN_OPEN_ZONES, mp->m_sb.sb_rgcount / 4);
+>  }
+> -- 
+> 2.47.2
+> 
+> 
