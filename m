@@ -1,131 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9455F53BE
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 08:26:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 505E21F5413
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 10:32:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752740807; cv=none; b=cQ2Y/NIj1PXhcl2svFII0UfaRBAzrpg23r8h/xEuhhbk6npoiFkE4a0BwjMM9UEyadJt/4hbrnIx/e1FY/3C0J3SZV0a2412zCaXhSGrmM7/ZoqaEbJ6OZ2fu8BoTZD042IYboWIEh2tgeiRPPm3dZKioeEAPoiaYfRmIjOKLTM=
+	t=1752748349; cv=none; b=FX5hNuLnAp3pfOChYlg0Z5vipvy7mG8Uu8LHzlEXRg8eQnAcDy254/hAVN22binCUi+yuS4b171NBZ6ZE5dCCkQZdNjgz+e/i7Gub5SXWJ3U3mR1dHAqY79SalSbQ025xwqMMbfrFP1xPXHHo8McppMX6TJBE2yCKAGQi36LVLY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752740807; c=relaxed/simple;
-	bh=iBrFhseGtINIomVT6BrnnWTfLwCbKXIcm/a0Hy0tYY8=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=RIP7sXQ1x9j777BTYD255pK4sGhiHkJYw7SNZetH7ql2EGBpMutmAG6bGIQGKcX41IVJxPUCB4iLAyl3IN2T8M1Kha4YJBGZO4P4vs8PSRqpT7IuPUVS54bAXdAXVIP3BhKBA43mYLxpdHt2EKOm0bHkndrCmu8Bv8uV8RKPEWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=csoH3eV0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752748349; c=relaxed/simple;
+	bh=BNHTKzuMp9A49VkRmkfDNRJajKu9K5RvETmW/XvOilg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZOXhZ7PxNMkqvTO62yELLOklH7mZYwuqbiXWB+RIZ10Ow3N1UC8e0fe3uciZQv0CW+SLyXAaivm1khOVEtkXopQFBNAVQGZJdzEDuu0gB9XZ/xyxr1+3+tHLloPzcslCN4DCU8naK3oPb3UZRacyhIU/CBjMpmWsueCqYdrGBoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bM8q3pwd; arc=none smtp.client-ip=209.85.216.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="csoH3eV0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 944A3C4CEE3
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 08:26:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752740807;
-	bh=iBrFhseGtINIomVT6BrnnWTfLwCbKXIcm/a0Hy0tYY8=;
-	h=Date:From:To:Subject:From;
-	b=csoH3eV0eqnRT1RNlSZQ9ekl5wJGHNoXcjYGBh7hbQubekTs3Vh8viKXCBtSSUg1W
-	 bHFP7aqfjy8NDl979rxEAwX4FVoRVMTWAwiJnSVX5DWDR+NKSuSTO4gTwY/i7bN1As
-	 0nPNx5AHggcNXoa0e+eDeFFckYH+9jScPQsWsUxhUspJbNoa44x0xJmOiazQpLamAM
-	 4Sxl0p93rrYDCMB5LLjlIEFXdznf2cF30asajYW/wzrnpWSC7eUcss2OuAAQwaVIP3
-	 CN+PrydZpvgja2k97iamLz+Ma50c5TCTVwPdxgqXAZv+Ejz9IF/BfPOj7wvTZuaRnN
-	 sLVvthm+SXTlA==
-Date: Thu, 17 Jul 2025 10:26:43 +0200
-From: Carlos Maiolino <cem@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bM8q3pwd"
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-3138b2f0249so693088a91.2
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 03:32:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1752748347; x=1753353147; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Uk8CAARJSXbthFFgKScGupXUcZQ1c1qVXu7NJ5gsYHE=;
+        b=bM8q3pwd0vvWKPLQEIWkrRfYDHCrLCvwI3Zh0P9JLfmBMX2tvyk4bQg8IFzbjiYv0s
+         mbBquv3oJ0BR48qhx5WdixlCRiJiXYZhxA6pTheFbIGcBm80/i9W6JKdbj5fTPPY/4tr
+         37OjImPBubFQvJkSVNbJn0vuzhE8on7gFSwge1IEUiB8WgFG5RNZOqbgZKfwnsUwLcTi
+         e5snyV7NxwcT9l9PHdB+76GDJP71f7PgIcw3G+jCC3T8UYhbOsv9roFG5WoiQZrL238T
+         siJ/pOdGMj+jJ0AdD3koP1GvIaDVSjIx6LdXkKcN6mPxbsy3QstY4tMTWXeCB+iXmm9f
+         KNbw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752748347; x=1753353147;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Uk8CAARJSXbthFFgKScGupXUcZQ1c1qVXu7NJ5gsYHE=;
+        b=vgRKsxnR4M1/VEdTEf3NyuHVgEjsiceQdmURZ8ebM74V3SIXVPg/5vL0hLfkX0J+Jx
+         OqBxXvWrcvonndwNM4fIju1TJS+30UcoaZjo9CZz2QTAqtrfSHAGJYx6VMQBzXLd1rYL
+         UHChZQef9bKKYxle+chY7LY2iv+3VjOCbn9lWVBXFegEzRtI3JGssUV4GokZIZxURNQi
+         6nQwBKBd/8a5QeoIeOnTLKXZVykUHgdtvZ8uYq+M4km9InJRg7ur9eWXtbw0nxbHtY8r
+         xZqddAD7a4bimcu4iewEQku4tF7Cs++wrGD0C8rdscmShep2FWOBobtNcKbusTX073Dk
+         hKBw==
+X-Gm-Message-State: AOJu0YyikD8uc+BF20wzQGd027UxlzCB7XuvzXDgXHz+kXSCobzbdsCL
+	RGfmePJkYJhVcqE1Zf8vcICfg7J8ls+tka50MHbK2RTwh4Bmtl6IWJgsMKTcIg==
+X-Gm-Gg: ASbGncv1WbrmFOP1uSg/vBx8XvLuJ95EDtYEEKvOgwq/wCtI2Q6B1QlEd/AMc8SBtVE
+	0RdaL1OJEBiOlN6FAi55EOHl2msm1e+Z0HpjMNRYvhtKX6JF7oE3BpIRyc9QndDsBgf5G1WbF2v
+	OHQi+eSGDr+u0H4N8HbkmvWDSqZZ1WZzySGye8bPzUEIGNvFEkKobY/B6GItfJGkmQGnOG2peJX
+	4cYm+IIt5Kd7rvfr0HWJbg4OPRKF7JeyHDwEI7+Kpn2HTRCMB8NNT5rD00uGadnQMJnCTh4B9sl
+	OtroiWJ3PXS1UOcnDMajkshwOLgEXCfl/ALepRsbz7B3fW8fpnl0uO87Sch7z8YkpBXaMLAeR79
+	A9EnexCEjPIMQ3EO29rtu0bqQlMGlhsLF4gTRggwgHHqNPyDz/o+K4vB+hE+ofVaxIN6kOLhON5
+	QY
+X-Google-Smtp-Source: AGHT+IGPxuIux51TWHjKn4nBNjNZeirhjZ3xPaiU8MutydUyEESIYjaooWtJ3K4V5gGNg/+pl/Ec9A==
+X-Received: by 2002:a17:90b:52cf:b0:311:b3e7:fb3c with SMTP id 98e67ed59e1d1-31c9e799c85mr9238592a91.31.1752748346965;
+        Thu, 17 Jul 2025 03:32:26 -0700 (PDT)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.in.ibm.com ([129.41.58.6])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-31caf805069sm1275145a91.32.2025.07.17.03.32.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Jul 2025 03:32:26 -0700 (PDT)
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
 To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to ef3bdb8107c4
-Message-ID: <hxblkucjcpfbypf3blmajeq4jb2mifdc772qkb4gvisam4uv7j@allahj33xd7z>
+Cc: ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com,
+	djwong@kernel.org,
+	bfoster@redhat.com,
+	david@fromorbit.com,
+	nirjhar.roy.lists@gmail.com,
+	hsiangkao@linux.alibaba.com
+Subject: [RFC 0/3] xfs: Add support to shrink multiple empty AGs
+Date: Thu, 17 Jul 2025 16:00:42 +0530
+Message-ID: <cover.1752746805.git.nirjhar.roy.lists@gmail.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
+This work is based on a previous RFC[1] by Gao Xiang and various ideas
+proposed by Dave Chinner in the RFC[1].
 
-Hi folks,
+Currently the functionality of shrink is limited to shrinking the last
+AG partially but not beyond that. This patch extends the functionality
+to support shrinking beyond 1 AG. However the AGs that we will be remove
+have to empty in order to prevent any loss of data.
 
-The for-next branch of the xfs-linux repository at:
+The patch begins with the re-introduction of some of the data
+structures that were removed, some code refactoring, then
+introduction of some helper functions and finally the patch
+that implements the multi AG shrink design. The final patch has
+all the details including the definition of the terminologies
+and the overall design.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+We will have the tests soon.
 
-has just been updated.
+[1] https://lore.kernel.org/all/20210414195240.1802221-1-hsiangkao@redhat.com/
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+Nirjhar Roy (IBM) (3):
+  xfs: Re-introduce xg_active_wq field in struct xfs_group
+  xfs: Refactoring the nagcount and delta calculation
+  xfs: Add support to shrink multiple empty AGs
 
-The new head of the for-next branch is commit:
+ fs/xfs/libxfs/xfs_ag.c        | 160 ++++++++++++++++++++-
+ fs/xfs/libxfs/xfs_ag.h        |  13 ++
+ fs/xfs/libxfs/xfs_alloc.c     |   9 +-
+ fs/xfs/libxfs/xfs_group.c     |   4 +-
+ fs/xfs/libxfs/xfs_group.h     |   1 +
+ fs/xfs/xfs_buf.c              |  76 ++++++++++
+ fs/xfs/xfs_buf.h              |   1 +
+ fs/xfs/xfs_buf_item_recover.c |  37 +++--
+ fs/xfs/xfs_extent_busy.c      |  28 ++++
+ fs/xfs/xfs_extent_busy.h      |   2 +
+ fs/xfs/xfs_fsops.c            | 258 ++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_trans.c            |   1 -
+ 12 files changed, 536 insertions(+), 54 deletions(-)
 
-ef3bdb8107c4 Merge branch 'xfs-6.17-merge' into for-next
+--
+2.43.5
 
-18 new commits:
-
-Carlos Maiolino (2):
-      [43b8ad99827e] Merge branch 'xfs-6.16-fixes' into for-next
-      [ef3bdb8107c4] Merge branch 'xfs-6.17-merge' into for-next
-
-Christoph Hellwig (15):
-      [8f89c581c0da] xfs: use xfs_trans_reserve_more in xfs_trans_reserve_more_inode
-      [e13f9ce5bec1] xfs: don't use xfs_trans_reserve in xfs_trans_reserve_more
-      [ddf9708277eb] xfs: decouple xfs_trans_alloc_empty from xfs_trans_alloc
-      [b4e174c374f6] xfs: don't use xfs_trans_reserve in xfs_trans_roll
-      [e967dc40d501] xfs: return the allocated transaction from xfs_trans_alloc_empty
-      [149b5cf8c7d2] xfs: return the allocated transaction from xchk_trans_alloc_empty
-      [a766ae6fe120] xfs: remove xrep_trans_{alloc,cancel}_hook_dummy
-      [d9dbddd143db] xfs: remove the xlog_ticket_t typedef
-      [a10f18bc6778] xfs: improve the xg_active_ref check in xfs_group_free
-      [48510b0d8522] xfs: don't allocate the xfs_extent_busy structure for zoned RTGs
-      [c11330b4ac11] xfs: use a uint32_t to cache i_used_blocks in xfs_init_zone
-      [8a034f984dfe] xfs: rename oz_write_pointer to oz_allocated
-      [7a779c6867fa] xfs: stop passing an inode to the zone space reservation helpers
-      [8196283484ec] xfs: improve the comments in xfs_max_open_zones
-      [e381d3e2c80d] xfs: improve the comments in xfs_select_zone_nowait
-
-Pranav Tyagi (1):
-      [f161da941891] fs/xfs: replace strncpy with memtostr_pad()
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_format.h   |   2 +-
- fs/xfs/libxfs/xfs_group.c    |  17 ++--
- fs/xfs/libxfs/xfs_refcount.c |   4 +-
- fs/xfs/scrub/common.c        |   7 +-
- fs/xfs/scrub/common.h        |   2 +-
- fs/xfs/scrub/dir_repair.c    |   8 +-
- fs/xfs/scrub/fscounters.c    |   3 +-
- fs/xfs/scrub/metapath.c      |   4 +-
- fs/xfs/scrub/nlinks.c        |   8 +-
- fs/xfs/scrub/nlinks_repair.c |   4 +-
- fs/xfs/scrub/parent_repair.c |  12 +--
- fs/xfs/scrub/quotacheck.c    |   4 +-
- fs/xfs/scrub/repair.c        |  36 --------
- fs/xfs/scrub/repair.h        |   4 -
- fs/xfs/scrub/rmap_repair.c   |  14 +--
- fs/xfs/scrub/rtrmap_repair.c |  14 +--
- fs/xfs/scrub/scrub.c         |   5 +-
- fs/xfs/xfs_attr_item.c       |   5 +-
- fs/xfs/xfs_discard.c         |  12 +--
- fs/xfs/xfs_extent_busy.h     |   8 ++
- fs/xfs/xfs_file.c            |  24 ++---
- fs/xfs/xfs_fsmap.c           |   4 +-
- fs/xfs/xfs_icache.c          |   5 +-
- fs/xfs/xfs_inode.c           |   7 +-
- fs/xfs/xfs_ioctl.c           |   3 +-
- fs/xfs/xfs_iops.c            |   4 +-
- fs/xfs/xfs_itable.c          |  18 +---
- fs/xfs/xfs_iwalk.c           |  11 +--
- fs/xfs/xfs_log.c             |   6 +-
- fs/xfs/xfs_log_priv.h        |   4 +-
- fs/xfs/xfs_notify_failure.c  |   5 +-
- fs/xfs/xfs_qm.c              |  10 +--
- fs/xfs/xfs_rtalloc.c         |  13 +--
- fs/xfs/xfs_trace.h           |   8 +-
- fs/xfs/xfs_trans.c           | 207 ++++++++++++++++++++-----------------------
- fs/xfs/xfs_trans.h           |   3 +-
- fs/xfs/xfs_zone_alloc.c      |  45 +++++-----
- fs/xfs/xfs_zone_alloc.h      |   4 +-
- fs/xfs/xfs_zone_gc.c         |  18 ++--
- fs/xfs/xfs_zone_info.c       |   2 +-
- fs/xfs/xfs_zone_priv.h       |  16 ++--
- fs/xfs/xfs_zone_space_resv.c |  17 ++--
- 42 files changed, 233 insertions(+), 374 deletions(-)
