@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBCCA2F8C28
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 16:02:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DA3535963
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 16:03:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752768177; cv=none; b=KGwkIbYlzfO3Ach0fzyic+KBphSZCIRNnpeGMc6trokaSzIfIJhdpg0bVfj+2z6WhA9EdFQOp/6oq/6Mk05ie72aeZE8z87159Utjg8yOdiCM6frNx540dUXuNp3ZtYNxvIYV0e5NFleFrpFk3CYzO3V6e2793WY5UcfYbTK638=
+	t=1752768238; cv=none; b=DfbmWzY3KojQch5Mkh72YTBPn7I2rpE9+AzZHtSjkDcXP4NxQteJNP8SOgiyKihd4zGVGiaqUg8fKzYimQ5E0eSLqGyiY0DA/OlUXSdZKymLNm3xCfnuI5CabTBLeB0nSAzTce7KBTp98VO/p3dTpH0nMq1NWUFkuIjpc0nUS0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752768177; c=relaxed/simple;
-	bh=oCl6qenrAaatXqzQUUnAHOP/pICE85dKwvjVx+41xxk=;
+	s=arc-20240116; t=1752768238; c=relaxed/simple;
+	bh=HoR30XefTE+r7B6n2vi9MZvzLWm7u0i5aYaxUO/fscs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aGQWjjZYa1Zh3f3TM+JMnxpAiXvyRjyCNQaZrkjFl/L4u3Yak5j5kXiELmYlMwq01Qt5phcO2DG06uII4mTF2zhu+vaJHIFDDxyti/d4PeYv2RxjBInDJ7qHs9z0ZGoD2072vFqQ/JXTtGBUhrIyZVUXJ74InHFCN4HIrzzSDTA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IRjCSyGP; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=cZtgnUb2eC61MK44q1mP4Ww9rCEdBoQdQumQIxpXu+3JFOFjtDpjEGkGNNYZJjloehLkBwmKBXpxXdIKHZrePbA+JtdIPT7XeC2DtyKEwjzZb8rJDOiF0Fl/IdWDuBmhyU4xYDjBWMTcso88a4MaRL3e4hwm0Y8CTnt0X4ujy4I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dQlAXxOq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IRjCSyGP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7135DC4CEE3;
-	Thu, 17 Jul 2025 16:02:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dQlAXxOq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3D35C4CEE3;
+	Thu, 17 Jul 2025 16:03:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752768176;
-	bh=oCl6qenrAaatXqzQUUnAHOP/pICE85dKwvjVx+41xxk=;
+	s=k20201202; t=1752768237;
+	bh=HoR30XefTE+r7B6n2vi9MZvzLWm7u0i5aYaxUO/fscs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IRjCSyGPe5lj5FpdmWFh2jyIVntUiNx9SGdRp1IacOE4dwreWx+tdEXqKZ07b2OzT
-	 TmcWuYsGaL6akiE0f9YTPuyeiLpjH+q3bRIk+7TZtUkfaAd9UKMZT8hkLnLG/lcxfF
-	 aV0VaLOKgCpYNjWaHO6im+Wt7x3ZB55yJgJoXELIbDjc0bHZ/BqmDNAD0EtCt7PlrS
-	 aM7JP+ThEoKL8ocGTfgfExDzvLHsa3eMURQntdTEBMlUZPX6uMwxoGA2RfZ8Wq34b2
-	 pH2MwKeMGrnKVYk2qHT3HR7pDc0edoRm2JGYH+A2+Gb7fH5km0QaMBqPBOMz2FHrQR
-	 nYmCroggLeBGw==
-Date: Thu, 17 Jul 2025 09:02:55 -0700
+	b=dQlAXxOq0DnQBuPhy4cUdPG0n+uzw2UKN/G/YpY87dmKVJZLe+C9gklJuaMVIH8hE
+	 NYv7kyI+GUZopk2HJI80oDoWmbM/+LjTI+PcQcYtga5TbtDOIw06GRmOzQz7zHSMUu
+	 jfdgSxntEpL17InRWaXWStNN4c+vSwePrM+17tMBGFlOvxn9s5NplXUsQHii5yBtU+
+	 32P7Lo5nMcdumoRV1C9lAGlXAznedgokYf2wDFzn8nuM0cyZInbqhjquvjnaLHn5iN
+	 5To4chuREMovCqsyC14xmkJ1xNLjeCU4j6QVbc1iQX+6Hj44SbOrLSt/mQpXxt4efM
+	 q+rK0WakG7gqw==
+Date: Thu, 17 Jul 2025 09:03:57 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: hch@lst.de, cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: disallow atomic writes on DAX
-Message-ID: <20250717160255.GP2672049@frogsfrogsfrogs>
-References: <20250717151900.1362655-1-john.g.garry@oracle.com>
+To: Wang Yugui <wangyugui@e16-tech.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: a deadloop(?) when mkfs.xfs -o rtdev
+Message-ID: <20250717160357.GQ2672049@frogsfrogsfrogs>
+References: <20250717081332.E87F.409509F4@e16-tech.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,167 +41,54 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250717151900.1362655-1-john.g.garry@oracle.com>
+In-Reply-To: <20250717081332.E87F.409509F4@e16-tech.com>
 
-On Thu, Jul 17, 2025 at 03:19:00PM +0000, John Garry wrote:
-> Atomic writes are not currently supported for DAX, but two problems exist:
-> - we may go down DAX write path for IOCB_ATOMIC, which does not handle
->   IOCB_ATOMIC properly
-> - we report non-zero atomic write limits in statx (for DAX inodes)
+On Thu, Jul 17, 2025 at 08:13:33AM +0800, Wang Yugui wrote:
+> Hi,
 > 
-> We may want atomic writes support on DAX in future, but just disallow for
-> now.
+> There seems a deadloop(?) when mkfs.xfs -o rtdev.
 > 
-> For this, ensure when IOCB_ATOMIC is set that we check the write size
-> versus the atomic write min and max before branching off to the DAX write
-> path. This is not strictly required for DAX, as we should not get this far
-> in the write path as FMODE_CAN_ATOMIC_WRITE should not be set.
+> # mkfs.xfs -r rtdev=/dev/disk/by-id/ata-MZ7KM1T6HAJM00D3_S2CXNAAH600026 /dev/d
+> isk/by-id/scsi-SHITACHI_HUSMH842_CLAR100_0LX0JWVA -f
+> meta-data=/dev/disk/by-id/scsi-SHITACHI_HUSMH842_CLAR100_0LX0JWVA isize=512    agcount=20, agsize=1221072 blks
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=0    bigtime=1 inobtcount=1 nrext64=1
+>          =                       exchange=0
+> data     =                       bsize=4096   blocks=24421440, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
+> log      =internal log           bsize=4096   blocks=41799, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =/dev/disk/by-id/ata-MZ7KM1T6HAJM00D3_S2CXNAAH600026 extsz=4096   blocks=390703446, rtextents=390703446
+> Discarding blocks...Done.
+> Discarding blocks...Done.
 > 
-> In addition, due to reflink being supported for DAX, we automatically get
-> CoW-based atomic writes support being advertised. Remedy this by
-> disallowing atomic writes for a DAX inode for both sw and hw modes.
-
-...because it's fsdax and who's really going to test/use software atomic
-writes there ?
-
-> Finally make atomic write size and DAX mount always mutually exclusive.
-
-Why?  You could have a rt-on-pmem filesystem with S_DAX files, and still
-want to do atomic writes to files on the data device.
-
-> Reported-by: "Darrick J. Wong" <djwong@kernel.org>
-> Fixes: 9dffc58f2384 ("xfs: update atomic write limits")
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> It did not fishish after 10 mins.
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index db21b5a4b881..84876f41da93 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1102,9 +1102,6 @@ xfs_file_write_iter(
->  	if (xfs_is_shutdown(ip->i_mount))
->  		return -EIO;
->  
-> -	if (IS_DAX(inode))
-> -		return xfs_file_dax_write(iocb, from);
-> -
->  	if (iocb->ki_flags & IOCB_ATOMIC) {
->  		if (ocount < xfs_get_atomic_write_min(ip))
->  			return -EINVAL;
-> @@ -1117,6 +1114,9 @@ xfs_file_write_iter(
->  			return ret;
->  	}
->  
-> +	if (IS_DAX(inode))
-> +		return xfs_file_dax_write(iocb, from);
-> +
->  	if (iocb->ki_flags & IOCB_DIRECT) {
->  		/*
->  		 * Allow a directio write to fall back to a buffered
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 07fbdcc4cbf5..b142cd4f446a 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -356,11 +356,22 @@ static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
->  	(XFS_IS_REALTIME_INODE(ip) ? \
->  		(ip)->i_mount->m_rtdev_targp : (ip)->i_mount->m_ddev_targp)
->  
-> -static inline bool xfs_inode_can_hw_atomic_write(const struct xfs_inode *ip)
-> +static inline bool xfs_inode_can_hw_atomic_write(struct xfs_inode *ip)
+> # pstack 5785
+> #0  0x00007f8df5efc01a in pread64 () from /lib64/libc.so.6
+> #1  0x0000557b7bbfe9c3 in __read_buf.constprop.0 ()
+> #2  0x0000557b7bbc3030 in libxfs_buf_read_map ()
+> #3  0x0000557b7bbfe1ae in libxfs_trans_read_buf_map.constprop ()
+> #4  0x0000557b7bbee7ef in xfs_rtbuf_get ()
+> #5  0x0000557b7bbf03d8 in libxfs_rtfree_extent ()
+> #6  0x0000557b7bbbb322 in parseproto.lto_priv ()
+> #7  0x0000557b7bbb7643 in main ()
+> 
+> And,
+> 1) more chance happen when kernel 6.12.36, but yet not happen when kernel 6.6.93.
+> 2) it happen on both xfsprogs-6.11.0 and xfsprogs-6.4.
 
-Why drop const here?  VFS_IC() should be sufficient, I think.
+You /could/ strace the mkfs process to see if it's really stuck, or just
+issuing IOs really slowly.
 
 --D
 
->  {
-> +	if (IS_DAX(VFS_I(ip)))
-> +		return false;
-> +
->  	return xfs_inode_buftarg(ip)->bt_awu_max > 0;
->  }
->  
-> +static inline bool xfs_inode_can_sw_atomic_write(struct xfs_inode *ip)
-> +{
-> +	if (IS_DAX(VFS_I(ip)))
-> +		return false;
-> +
-> +	return xfs_can_sw_atomic_write(ip->i_mount);
-> +}
-> +
->  /*
->   * In-core inode flags.
->   */
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 01e597290eb5..b39a19dbc386 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -616,7 +616,8 @@ xfs_get_atomic_write_min(
->  	 * write of exactly one single fsblock if the bdev will make that
->  	 * guarantee for us.
->  	 */
-> -	if (xfs_inode_can_hw_atomic_write(ip) || xfs_can_sw_atomic_write(mp))
-> +	if (xfs_inode_can_hw_atomic_write(ip) ||
-> +	    xfs_inode_can_sw_atomic_write(ip))
->  		return mp->m_sb.sb_blocksize;
->  
->  	return 0;
-> @@ -633,7 +634,7 @@ xfs_get_atomic_write_max(
->  	 * write of exactly one single fsblock if the bdev will make that
->  	 * guarantee for us.
->  	 */
-> -	if (!xfs_can_sw_atomic_write(mp)) {
-> +	if (!xfs_inode_can_sw_atomic_write(ip)) {
->  		if (xfs_inode_can_hw_atomic_write(ip))
->  			return mp->m_sb.sb_blocksize;
->  		return 0;
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 0b690bc119d7..6a5543e08198 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -745,6 +745,12 @@ xfs_set_max_atomic_write_opt(
->  
->  	ASSERT(max_write <= U32_MAX);
->  
-> +	if (xfs_has_dax_always(mp)) {
-> +		xfs_warn(mp,
-> + "atomic writes not supported for DAX");
-> +		return -EINVAL;
-> +	}
-> +
->  	/* generic_atomic_write_valid enforces power of two length */
->  	if (!is_power_of_2(new_max_bytes)) {
->  		xfs_warn(mp,
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 97de44c32272..3c858b42a54a 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -474,11 +474,6 @@ static inline bool xfs_has_nonzoned(const struct xfs_mount *mp)
->  	return !xfs_has_zoned(mp);
->  }
->  
-> -static inline bool xfs_can_sw_atomic_write(struct xfs_mount *mp)
-> -{
-> -	return xfs_has_reflink(mp);
-> -}
-> -
->  /*
->   * Some features are always on for v5 file systems, allow the compiler to
->   * eliminiate dead code when building without v4 support.
-> @@ -534,6 +529,14 @@ __XFS_HAS_FEAT(dax_never, DAX_NEVER)
->  __XFS_HAS_FEAT(norecovery, NORECOVERY)
->  __XFS_HAS_FEAT(nouuid, NOUUID)
->  
-> +static inline bool xfs_can_sw_atomic_write(struct xfs_mount *mp)
-> +{
-> +	if (xfs_has_dax_always(mp))
-> +		return false;
-> +
-> +	return xfs_has_reflink(mp);
-> +}
-> +
->  /*
->   * Operational mount state flags
->   *
-> -- 
-> 2.43.5
+> 
+> Best Regards
+> Wang Yugui (wangyugui@e16-tech.com)
+> 2025/07/17
+> 
 > 
 > 
