@@ -1,61 +1,63 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 505E21F5413
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 10:32:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E8E7246BD1
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 10:32:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752748349; cv=none; b=FX5hNuLnAp3pfOChYlg0Z5vipvy7mG8Uu8LHzlEXRg8eQnAcDy254/hAVN22binCUi+yuS4b171NBZ6ZE5dCCkQZdNjgz+e/i7Gub5SXWJ3U3mR1dHAqY79SalSbQ025xwqMMbfrFP1xPXHHo8McppMX6TJBE2yCKAGQi36LVLY=
+	t=1752748372; cv=none; b=C8lW0Ashw469jexg7q8xJoyr95s/QL/p2Pq1Y54luY8Ddwq2VlxAJrlSCwts7guCRwz1B4yOkCY+/qWDnpWbDvK3P5BqshgZhd5iJXQK7mOae3ImXPWuq+R8/Roo7vpkX8fG5HD8kU+UISoQA+kbiwvpZWTGOCJWAlkW+EkVD9s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752748349; c=relaxed/simple;
-	bh=BNHTKzuMp9A49VkRmkfDNRJajKu9K5RvETmW/XvOilg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZOXhZ7PxNMkqvTO62yELLOklH7mZYwuqbiXWB+RIZ10Ow3N1UC8e0fe3uciZQv0CW+SLyXAaivm1khOVEtkXopQFBNAVQGZJdzEDuu0gB9XZ/xyxr1+3+tHLloPzcslCN4DCU8naK3oPb3UZRacyhIU/CBjMpmWsueCqYdrGBoQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bM8q3pwd; arc=none smtp.client-ip=209.85.216.52
+	s=arc-20240116; t=1752748372; c=relaxed/simple;
+	bh=NtY1gBbcJ3iWQwCUT+QqDaNC4fzi5+xYEhdMK279RxM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=URyBlis2hvAxfQhED7bxzB0YjDU1vI/IfSK8tUsY2zlaSk1S3wpStm+ZgIkg/PzPrMhiL+6b5JC/7fs5N+dWvrdX7KNRVuL8a6G57vX1qGbSD5vtyR+Zcz8gaiOzAPTkfows361tAWhrYPSAWRX9JBPUl2aA9t3J+l3BaXa1P3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Hgl4bwzB; arc=none smtp.client-ip=209.85.215.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bM8q3pwd"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-3138b2f0249so693088a91.2
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 03:32:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hgl4bwzB"
+Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-b31d489a76dso635885a12.1
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 03:32:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1752748347; x=1753353147; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Uk8CAARJSXbthFFgKScGupXUcZQ1c1qVXu7NJ5gsYHE=;
-        b=bM8q3pwd0vvWKPLQEIWkrRfYDHCrLCvwI3Zh0P9JLfmBMX2tvyk4bQg8IFzbjiYv0s
-         mbBquv3oJ0BR48qhx5WdixlCRiJiXYZhxA6pTheFbIGcBm80/i9W6JKdbj5fTPPY/4tr
-         37OjImPBubFQvJkSVNbJn0vuzhE8on7gFSwge1IEUiB8WgFG5RNZOqbgZKfwnsUwLcTi
-         e5snyV7NxwcT9l9PHdB+76GDJP71f7PgIcw3G+jCC3T8UYhbOsv9roFG5WoiQZrL238T
-         siJ/pOdGMj+jJ0AdD3koP1GvIaDVSjIx6LdXkKcN6mPxbsy3QstY4tMTWXeCB+iXmm9f
-         KNbw==
+        d=gmail.com; s=20230601; t=1752748370; x=1753353170; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=XhXI2GuNpDRboNlSyRg4F2i9gjfLNYXIma2dDARTN6c=;
+        b=Hgl4bwzBmvLrARUVEMraMzy7qSRF2kDFA3B3OcLvfwxINDGrks2YTvNroHJfFTqkJ0
+         OYMdQSuZHi+auXX/gGhyOPQkbgbtydYLWKVJ8mMS2cytdWv6fVlWhev4wUaWuPlxMsIJ
+         Tb10o1rX/n6ZszqubBPhwkvlASa8SxgKJPC/P/s+GNAdskpwIJvkYmsSnCZBFS2ew3Le
+         tRD2bJNPhIyrcrrfXKMvdi9p0Du8A6nA/XCFjw0JPkzm8xaJXYosB2+03sBQTcu7lvEE
+         yvdZWg+Sfg+Mz0T4rF4lyqS3ouhfUmuASpFLgixSor4+Iqz88RRC5rzT/ufhEO3XbBt3
+         cP9Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752748347; x=1753353147;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Uk8CAARJSXbthFFgKScGupXUcZQ1c1qVXu7NJ5gsYHE=;
-        b=vgRKsxnR4M1/VEdTEf3NyuHVgEjsiceQdmURZ8ebM74V3SIXVPg/5vL0hLfkX0J+Jx
-         OqBxXvWrcvonndwNM4fIju1TJS+30UcoaZjo9CZz2QTAqtrfSHAGJYx6VMQBzXLd1rYL
-         UHChZQef9bKKYxle+chY7LY2iv+3VjOCbn9lWVBXFegEzRtI3JGssUV4GokZIZxURNQi
-         6nQwBKBd/8a5QeoIeOnTLKXZVykUHgdtvZ8uYq+M4km9InJRg7ur9eWXtbw0nxbHtY8r
-         xZqddAD7a4bimcu4iewEQku4tF7Cs++wrGD0C8rdscmShep2FWOBobtNcKbusTX073Dk
-         hKBw==
-X-Gm-Message-State: AOJu0YyikD8uc+BF20wzQGd027UxlzCB7XuvzXDgXHz+kXSCobzbdsCL
-	RGfmePJkYJhVcqE1Zf8vcICfg7J8ls+tka50MHbK2RTwh4Bmtl6IWJgsMKTcIg==
-X-Gm-Gg: ASbGncv1WbrmFOP1uSg/vBx8XvLuJ95EDtYEEKvOgwq/wCtI2Q6B1QlEd/AMc8SBtVE
-	0RdaL1OJEBiOlN6FAi55EOHl2msm1e+Z0HpjMNRYvhtKX6JF7oE3BpIRyc9QndDsBgf5G1WbF2v
-	OHQi+eSGDr+u0H4N8HbkmvWDSqZZ1WZzySGye8bPzUEIGNvFEkKobY/B6GItfJGkmQGnOG2peJX
-	4cYm+IIt5Kd7rvfr0HWJbg4OPRKF7JeyHDwEI7+Kpn2HTRCMB8NNT5rD00uGadnQMJnCTh4B9sl
-	OtroiWJ3PXS1UOcnDMajkshwOLgEXCfl/ALepRsbz7B3fW8fpnl0uO87Sch7z8YkpBXaMLAeR79
-	A9EnexCEjPIMQ3EO29rtu0bqQlMGlhsLF4gTRggwgHHqNPyDz/o+K4vB+hE+ofVaxIN6kOLhON5
-	QY
-X-Google-Smtp-Source: AGHT+IGPxuIux51TWHjKn4nBNjNZeirhjZ3xPaiU8MutydUyEESIYjaooWtJ3K4V5gGNg/+pl/Ec9A==
-X-Received: by 2002:a17:90b:52cf:b0:311:b3e7:fb3c with SMTP id 98e67ed59e1d1-31c9e799c85mr9238592a91.31.1752748346965;
-        Thu, 17 Jul 2025 03:32:26 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1752748370; x=1753353170;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=XhXI2GuNpDRboNlSyRg4F2i9gjfLNYXIma2dDARTN6c=;
+        b=MPDA1gMjXp5mAnCx6FMIiCiUPG0HH0Xu+9IjG+UnrFICEcKI4t+QjcBXSR9s4MGjEB
+         roGwC3kuDpPVxvMRSEI+/BxIWvgADTnlzU7uabsP1iL9xjIYzG2g1/b2s4NRM9gVnDvy
+         +b9HvP3ymq973VZ9d6hpf6QDuAUUItP1NPg7F0bxL7iGpgF4Dd9Ka3O7corsp/T39993
+         8HnQEiMBGJZn94Nb/M57C/VqK7hcONjxbh56S+26yPuuofk1K6JZqmlBHWzlU4olxSWP
+         2KOXjqceHEM3W6wbMtWFHmyXSLgSCeIcXYi4zEFeq0ysylTeiAXp2xndIaMYVjB3I1zM
+         FKuw==
+X-Gm-Message-State: AOJu0YyRQUmby+pKlRF29HRxkthYaLnCh5UdFvREUZPYSGC2eV8yc+CH
+	U8D2/weNghJH10PwwYxmShybe+21DnDXziaStt1J7Sn23IY+wxHTGtgETb02lA==
+X-Gm-Gg: ASbGncucSwQHy/WvV/oQMdM89qlakPLgXArk6KoPhY+5fXXY8CTGpNi10N4VvWAHsVk
+	nIWo03DxMOrC5AbWE9vH5iPLa/0lBxTP474DM3Oz77BTWcWxqfyZ3E4wjKalh8mg1bdx/sxteQe
+	SWOXbXVGsfP0RpK4lhQx48E0w0addMpqmRz392OCwYCasHZZWJgnCv3kpQTUJgcUUWO3aFB4Z21
+	IfPTmA//TLqfhfQ9JIpfcGCt6fVDtG47/u92ZCIlhNSZqrGwMDy1yo+Hk3+TDxSebCfDkvrEqNB
+	iDeUwyDtNHCvUZQFo7t2JZCdMkLc468OKMJreUt4UpNe+p5y+XoHglr/eJVe93is/BYk7JCQ9k/
+	0ehH6U4BtFeIxYXBSErOei0jd3c81AUpE1y3WpZkYnsqINbNaC/iLACBCGrXeMv6ffDt/TMTrkX
+	Cm
+X-Google-Smtp-Source: AGHT+IGgBwRicQmDy2UicxEwZpxsD9CmCT/CbT/S6VEYV8waebW9eM/z1vLNskmPwOMFBry2j6dwnw==
+X-Received: by 2002:a17:90b:254d:b0:31c:3c45:87c with SMTP id 98e67ed59e1d1-31c9f44b592mr7536995a91.13.1752748370003;
+        Thu, 17 Jul 2025 03:32:50 -0700 (PDT)
 Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.in.ibm.com ([129.41.58.6])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-31caf805069sm1275145a91.32.2025.07.17.03.32.24
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-31caf805069sm1275145a91.32.2025.07.17.03.32.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Jul 2025 03:32:26 -0700 (PDT)
+        Thu, 17 Jul 2025 03:32:49 -0700 (PDT)
 From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
 To: linux-xfs@vger.kernel.org
 Cc: ritesh.list@gmail.com,
@@ -65,10 +67,12 @@ Cc: ritesh.list@gmail.com,
 	david@fromorbit.com,
 	nirjhar.roy.lists@gmail.com,
 	hsiangkao@linux.alibaba.com
-Subject: [RFC 0/3] xfs: Add support to shrink multiple empty AGs
-Date: Thu, 17 Jul 2025 16:00:42 +0530
-Message-ID: <cover.1752746805.git.nirjhar.roy.lists@gmail.com>
+Subject: [RFC 1/3] xfs: Re-introduce xg_active_wq field in struct xfs_group
+Date: Thu, 17 Jul 2025 16:00:43 +0530
+Message-ID: <70c065f02299e09b1569c3bc45ff493c9ac55fda.1752746805.git.nirjhar.roy.lists@gmail.com>
 X-Mailer: git-send-email 2.43.5
+In-Reply-To: <cover.1752746805.git.nirjhar.roy.lists@gmail.com>
+References: <cover.1752746805.git.nirjhar.roy.lists@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,44 +81,60 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This work is based on a previous RFC[1] by Gao Xiang and various ideas
-proposed by Dave Chinner in the RFC[1].
+pag_active_wq was removed in
+commit 9943b4573290
+	("xfs: remove the unused pag_active_wq field in struct xfs_perag")
+because it was not waited upon. Re-introducing this in struct xfs_group.
+This patch also replaces atomic_dec() in xfs_group_rele() with
 
-Currently the functionality of shrink is limited to shrinking the last
-AG partially but not beyond that. This patch extends the functionality
-to support shrinking beyond 1 AG. However the AGs that we will be remove
-have to empty in order to prevent any loss of data.
+if (atomic_dec_and_test(&xg->xg_active_ref))
+	wake_up(&xg->xg_active_wq);
 
-The patch begins with the re-introduction of some of the data
-structures that were removed, some code refactoring, then
-introduction of some helper functions and finally the patch
-that implements the multi AG shrink design. The final patch has
-all the details including the definition of the terminologies
-and the overall design.
+The reason for this change is that the online shrink code will wait
+for all the active references to come down to zero before actually
+starting the shrink process (only if the number of blocks that
+we are trying to remove is worth 1 or more AGs).
 
-We will have the tests soon.
+Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+---
+ fs/xfs/libxfs/xfs_group.c | 4 +++-
+ fs/xfs/libxfs/xfs_group.h | 1 +
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-[1] https://lore.kernel.org/all/20210414195240.1802221-1-hsiangkao@redhat.com/
-
-Nirjhar Roy (IBM) (3):
-  xfs: Re-introduce xg_active_wq field in struct xfs_group
-  xfs: Refactoring the nagcount and delta calculation
-  xfs: Add support to shrink multiple empty AGs
-
- fs/xfs/libxfs/xfs_ag.c        | 160 ++++++++++++++++++++-
- fs/xfs/libxfs/xfs_ag.h        |  13 ++
- fs/xfs/libxfs/xfs_alloc.c     |   9 +-
- fs/xfs/libxfs/xfs_group.c     |   4 +-
- fs/xfs/libxfs/xfs_group.h     |   1 +
- fs/xfs/xfs_buf.c              |  76 ++++++++++
- fs/xfs/xfs_buf.h              |   1 +
- fs/xfs/xfs_buf_item_recover.c |  37 +++--
- fs/xfs/xfs_extent_busy.c      |  28 ++++
- fs/xfs/xfs_extent_busy.h      |   2 +
- fs/xfs/xfs_fsops.c            | 258 ++++++++++++++++++++++++++++++----
- fs/xfs/xfs_trans.c            |   1 -
- 12 files changed, 536 insertions(+), 54 deletions(-)
-
---
+diff --git a/fs/xfs/libxfs/xfs_group.c b/fs/xfs/libxfs/xfs_group.c
+index e9d76bcdc820..1fe5319de338 100644
+--- a/fs/xfs/libxfs/xfs_group.c
++++ b/fs/xfs/libxfs/xfs_group.c
+@@ -147,7 +147,8 @@ xfs_group_rele(
+ 	struct xfs_group	*xg)
+ {
+ 	trace_xfs_group_rele(xg, _RET_IP_);
+-	atomic_dec(&xg->xg_active_ref);
++	if (atomic_dec_and_test(&xg->xg_active_ref))
++		wake_up(&xg->xg_active_wq);
+ }
+ 
+ void
+@@ -198,6 +199,7 @@ xfs_group_insert(
+ 	xfs_defer_drain_init(&xg->xg_intents_drain);
+ 
+ 	/* Active ref owned by mount indicates group is online. */
++	init_waitqueue_head(&xg->xg_active_wq);
+ 	atomic_set(&xg->xg_active_ref, 1);
+ 
+ 	error = xa_insert(&mp->m_groups[type].xa, index, xg, GFP_KERNEL);
+diff --git a/fs/xfs/libxfs/xfs_group.h b/fs/xfs/libxfs/xfs_group.h
+index 4423932a2313..dbef389ef838 100644
+--- a/fs/xfs/libxfs/xfs_group.h
++++ b/fs/xfs/libxfs/xfs_group.h
+@@ -11,6 +11,7 @@ struct xfs_group {
+ 	enum xfs_group_type	xg_type;
+ 	atomic_t		xg_ref;		/* passive reference count */
+ 	atomic_t		xg_active_ref;	/* active reference count */
++	wait_queue_head_t xg_active_wq; /* woken active_ref falls to zero */
+ 
+ 	/* Precalculated geometry info */
+ 	uint32_t		xg_block_count;	/* max usable gbno */
+-- 
 2.43.5
 
