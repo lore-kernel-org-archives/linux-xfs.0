@@ -1,39 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFF0B27A904
-	for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 08:11:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23DEF1FBEB0
+	for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 08:11:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752739918; cv=none; b=ih9CiU/fdMvaZJROUS7WB4G2got6umy4Dj7gP5KEeOzis7eP4vBPQGPa7ljk2t/9IcjeYQqwRblSJYyjHoOaKudIYyUuJ4PbC5Isa1tIb3QUH+BvCKbHo5a6xjoNOkBj89Sh7N8l/1TKM9nIqh2S7cJ3VmIcQJ+Ofv0CdTq9Zvg=
+	t=1752739920; cv=none; b=h92S3Dvw7kcQyA2VcFg1lsY3zO8zEYk6GnJsf4QJjcaDzuHUFzVcm6O9RQoLkQSdbNM12Fttkr9fOQClLpQaOC4bAOPCIMRnzFh0dw9+OnWkvXg6PScWiBKgPPLg+VNStYiT/OnOTGsCfJ8h/MD8sH+omJpmTCEQDr3jifks7EU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752739918; c=relaxed/simple;
-	bh=Ov3uKYwZcT1Knyiz43n2JwBNx9XUwpPI6TDGuElrg8Q=;
+	s=arc-20240116; t=1752739920; c=relaxed/simple;
+	bh=PyUnszIXIIXN8n/fAAH8VhJYEwQRaeQpn6unTvLqUfA=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=QfSNzAZpWPwPW8nQ1CNnKLqgumQNa8NygPg3tJAjK1nTOtC1vR6pvv/m6tZmN5FFSyxuh5RCeU3FRxepjjCewKTUiyC4b+yfW4jEviG4Mgb0+k2x5wpLnmcwRiUz38LrhQ0MfOpY/0cTWit1+QJqpIlyvkBVMZu670PHvTQJqLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HeHBMvqP; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=cXSC9rjD5NRfVenluSdtcrdkg8pD2cQcKzcP3a3hBwDrJzTRUrtFQNieA5tPnW7P5T6FZjDDkEy730sScDsDfEzg7YL/ZZgq7TlyC+1orlf9Y+vWDgqn72OQnvqowg4i6CpR2UCZQ1MJHuzbgUitw/4NNW/Mp3kUgIQ94fZjih4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mvcZjf2K; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HeHBMvqP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7039C4CEEB;
-	Thu, 17 Jul 2025 08:11:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mvcZjf2K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF4A8C4CEF5;
+	Thu, 17 Jul 2025 08:11:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752739918;
-	bh=Ov3uKYwZcT1Knyiz43n2JwBNx9XUwpPI6TDGuElrg8Q=;
+	s=k20201202; t=1752739919;
+	bh=PyUnszIXIIXN8n/fAAH8VhJYEwQRaeQpn6unTvLqUfA=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=HeHBMvqPbPkx2sH8CqmfMUPPRpYQ+edUGPbXVDSX8nzhXl5CwbWn6gX/EOxoSNVUU
-	 ot/VVJf8YAZIrdYJNlzsZWETuqe4tUfeb8Jh3hrbTve6QH/froiZ4vcLPCl4EfDeIN
-	 mvfelbI1ICawO+X4hMTuBe2he1n7mYjsHYnas0x/TINaq+iL/UAFSU68foEvtYJQFY
-	 5TmnzDa7hI9P/UHQJBZoVLkkIu1EfL5CDL2R7h8p2cqlE5yGCL503kCIQZ1QT+EPzK
-	 NWpPUTxeT8NWOVpnfWfR3v8CMyLIdBv4WZJb7sXXpsxMhKnbzi9ovwKvuYj1oQYxOd
-	 CqM4vfgGXY1tg==
+	b=mvcZjf2KeXZu/x+bihv91xUh58cnLnplwgKWmejMCxwBMJa+5LrP8sYKtIfvzGK3s
+	 j8dVHueZZwiVrtJWFxnFLbG9rLnBxeGNPdJKOrJEMyazrsL05bkdHU/WFPZR1/8hfT
+	 KNhSZBnBtgZ6qmkHkKszdI+6ll08MUEmStY7mzkeX0yOHJsjPh0PEpNI3pujP2PABm
+	 iMUPe8M6ADAKdLqT3uueXD/AzjnzhnCEfq85Z7hoZ8gug9EP/FxPHmnYJM6cchGXOR
+	 qae+QD8nhlAxvvE+G1SOtbD96s6AM9bCyPlieUeEn/PQmCx0cxjhuplOK7qghAzx83
+	 D3aufSjaokeQw==
 From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-In-Reply-To: <20250716130322.2149165-1-hch@lst.de>
-References: <20250716130322.2149165-1-hch@lst.de>
-Subject: Re: [PATCH] xfs: improve the xg_active_ref check in xfs_group_free
-Message-Id: <175273991740.1798976.12119597253064855944.b4-ty@kernel.org>
-Date: Thu, 17 Jul 2025 10:11:57 +0200
+Cc: Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org
+In-Reply-To: <20250716125413.2148420-2-hch@lst.de>
+References: <20250716125413.2148420-1-hch@lst.de>
+ <20250716125413.2148420-2-hch@lst.de>
+Subject: Re: [PATCH 1/7] xfs: don't allocate the xfs_extent_busy structure
+ for zoned RTGs
+Message-Id: <175273991858.1798976.13418892695089034429.b4-ty@kernel.org>
+Date: Thu, 17 Jul 2025 10:11:58 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,21 +46,32 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Wed, 16 Jul 2025 15:03:19 +0200, Christoph Hellwig wrote:
-> Split up the XFS_IS_CORRUPT statement so that it immediately shows
-> if the reference counter overflowed or underflowed.
-> 
-> I ran into this quite a bit when developing the zoned allocator, and had
-> to reapply the patch for some work recently.  We might as well just apply
-> it upstream given that freeing group is far removed from performance
-> critical code.
+On Wed, 16 Jul 2025 14:54:01 +0200, Christoph Hellwig wrote:
+> Busy extent tracking is primarily used to ensure that freed blocks are
+> not reused for data allocations before the transaction that deleted them
+> has been committed to stable storage, and secondarily to drive online
+> discard.  None of the use cases applies to zoned RTGs, as the zoned
+> allocator can't overwrite blocks before resetting the zone, which already
+> flushes out all transactions touching the RTGs.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: improve the xg_active_ref check in xfs_group_free
-      commit: a10f18bc67785b947396ddd0529b3df7df3d5d6f
+[1/7] xfs: don't allocate the xfs_extent_busy structure for zoned RTGs
+      commit: 48510b0d85220f61337ad497dfc26ac2beb50413
+[2/7] xfs: use a uint32_t to cache i_used_blocks in xfs_init_zone
+      commit: c11330b4ac1141ac6c3bfce93333405dc3bb5628
+[3/7] xfs: rename oz_write_pointer to oz_allocated
+      commit: 8a034f984dfe32b4bf23d6729b04d37b14a76cbd
+[4/7] xfs: stop passing an inode to the zone space reservation helpers
+      commit: 7a779c6867faf3e2e06e60d2774af648da468c7d
+[5/7] xfs: replace min & max with clamp() in xfs_max_open_zones()
+      (no commit info)
+[6/7] xfs: improve the comments in xfs_max_open_zones
+      commit: 8196283484ec758b067adb9405299da675e2411d
+[7/7] xfs: improve the comments in xfs_select_zone_nowait
+      commit: e381d3e2c80d4b163302e53d0a0879c59ccff148
 
 Best regards,
 -- 
