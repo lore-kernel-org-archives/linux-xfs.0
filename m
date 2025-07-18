@@ -1,46 +1,44 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C81820E71D;
-	Fri, 18 Jul 2025 08:33:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FE0D21B9F1;
+	Fri, 18 Jul 2025 08:45:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752827601; cv=none; b=LnwfAdJlauGdaZlW57FB5P5X1AeRgYzT3cKw5RrQAHK/VNcuHnCyHVrJAPk31pL1wTtb0VC4CVGuHx4UiUb2SZ+x+2vL1kGml0zWHlpbM7ZC8401yEhT7FnLHSg5/4Os6WtYbSQGM7UZ1JCXV4+LxYVaYHPV0Z1i9f+W0bKPTyg=
+	t=1752828352; cv=none; b=nKW0nUcEznJ20AVK2wHIHhCm78FgAPmFjfklO6qj8SPZpdHZmc9+YcNBZAZYd0acGWcfqs4OQ3hZ32GAmD8pt8obR2AHdkaR061f4J1k0WANoeIL/dIOW0GLgqYMnYeWmg7Djvb8rRro4BUVsaT3Lqw6zcUCcbOZLjuE7uNvobk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752827601; c=relaxed/simple;
-	bh=J0la2E51liPRAU72Jdnl5lCR48J9xdBV8TdPsieZgXc=;
+	s=arc-20240116; t=1752828352; c=relaxed/simple;
+	bh=xxoKlqY7tpdbQYl1k1rMlb6plPhcFbQU8qEgcZttzs8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SwrBIfqzO6sPHCSL+rV1VfMaURf6jqIsthx4DNQDLE9HsxstNoOmmSCBPjyEQwitJ5y5YytoOhbw2HkbahjpxvNhJTLz25Pss1lgnlW4a/xa5gs3zt1E+LMf+Ym0OlA0+DeIvgXSwK1ENd8p3Q7jjSQoxNCOp38kvGNzKCXzIts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=OKgUOx7x; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=oPOnO8zxmeJf+sP/5DVaHHBio0sP5hDKWy6C6XwgdAqtRdEljS/Dkw7lSJ2n9t/i5La2ADlvw7GkDZXxHi1qgNG+60qXKNJyjWdIRr4wCkz7S85nfne/zBSyGv+m6oZQ6GTe+d4ua7Z3HCi1csNmKRzGT2ksGR94ZfE9Ew+a/9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ax7dGiDj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OKgUOx7x"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=J0la2E51liPRAU72Jdnl5lCR48J9xdBV8TdPsieZgXc=; b=OKgUOx7x/Q074rsbXBD/OJgSLn
-	jWLaEbbtzAtmSmuwTAEDa/dzYbAwFSFwhdcUYBYTSjPUDfXF/LStMPeRe6jiEGQ2Kr0g8AmbZJzPw
-	oUrZDFYdSxd+Ne6FbbhHc1mWskeK400gL4nXujWLHrclp2jzlIrnE8K8TE6MPYA6+A246y2P9Toku
-	sgiD363eAczJ6qNAo7CZ9yiFygZJngOF30gSHUvDxe5schUrkbbpFrnsgaQTUcv9fTeOOmq2qnV+8
-	E7JgioGrJRm89tgNO90Zye+U+5W3BTWuYyfnOUPzMp3PLkwZ6y4pSyoC9SVAGM/MRkLtbgiIen5Yj
-	BzxZ0Gng==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1ucgWt-0000000C3Wi-00S1;
-	Fri, 18 Jul 2025 08:33:19 +0000
-Date: Fri, 18 Jul 2025 01:33:18 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Next Mailing List <linux-next@vger.kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ax7dGiDj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A99AC4CEF0;
+	Fri, 18 Jul 2025 08:45:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752828352;
+	bh=xxoKlqY7tpdbQYl1k1rMlb6plPhcFbQU8qEgcZttzs8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ax7dGiDjKS5HW9aNTnNXer1BNadRAFGX6pOR1cnRHD/A4L5jKRPEss5Vnj/4bdhyZ
+	 XhDfENNt5GXwqxU7zbuV73NFm0Mn7/zceHGNiL8Ef7Mw9smbOW+HVp3MJeKBbcyDDn
+	 ne/FPQli3qVA8Okx30aHdkanstJcoZ98Lh2H1NleBZU7VITbnPnssv+dSnYUhJf1WB
+	 Wua+viDXoKP6UTkH5Z9GS+cLp1tkDyZAy1QqXQQye8f7FtHBA6p1S1VUyFNBeMesSn
+	 u34UpEV1aJe2/5hjDoS140vFP+v+nqJtzVJ6FdOLtdP/leSI+Bd+jSJy9/awgAuN9X
+	 xLnNhDG8XCJEQ==
+Date: Fri, 18 Jul 2025 10:45:47 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, 
+	David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, 
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Next Mailing List <linux-next@vger.kernel.org>
 Subject: Re: linux-next: build failure after merge of the xfs tree
-Message-ID: <aHoGzku_ey2ClrzD@infradead.org>
+Message-ID: <biqcjscrlgfmznvysigpkqqyr3xvy7dbtmdwwxf4bkirbri5l5@rgkuif4novc6>
 References: <jZld0KWAlgFM0KGNf6_lm-4ZXRf4uFdfuPXGopJi8jUD3StPMObAqCIaJUvNZvyoyxrWEJus6A_a0yxRt7X0Eg==@protonmail.internalid>
  <20250718100836.06da20b3@canb.auug.org.au>
  <hmc6flnzhy3fvryk5c4bjgo7qehhnfpecm2w6wfyz7q7wly3a4@nvo6ow5j3ffl>
+ <lIRl0Kr0swAUaCb-rM9B3N7ey2F4OYOGLhUTy5UcChhvBMVYona6pjJ0VbWLdzwNImVQPYgYDvYLqWEawwOXGg==@protonmail.internalid>
+ <aHoGzku_ey2ClrzD@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,15 +47,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <hmc6flnzhy3fvryk5c4bjgo7qehhnfpecm2w6wfyz7q7wly3a4@nvo6ow5j3ffl>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <aHoGzku_ey2ClrzD@infradead.org>
 
-On Fri, Jul 18, 2025 at 10:30:56AM +0200, Carlos Maiolino wrote:
-> Thanks for the heads up Stephen. I didn't catch those errors while build
-> testing here. Could you please share with me the build options you usually
-> use so I can tweak my system to catch those errors before pushing them to
-> linux-next?
+On Fri, Jul 18, 2025 at 01:33:18AM -0700, Christoph Hellwig wrote:
+> On Fri, Jul 18, 2025 at 10:30:56AM +0200, Carlos Maiolino wrote:
+> > Thanks for the heads up Stephen. I didn't catch those errors while build
+> > testing here. Could you please share with me the build options you usually
+> > use so I can tweak my system to catch those errors before pushing them to
+> > linux-next?
+> 
+> You'll need CONFIG_MEMORY_FAILURE and CONFIG_FS_DAX to trigger this.
+> All my test setups seem to lack the former.
+> 
 
-You'll need CONFIG_MEMORY_FAILURE and CONFIG_FS_DAX to trigger this.
-All my test setups seem to lack the former.
+Heh, same. I'll default my build tests to use allmodconfig.
 
+Thanks hch.
