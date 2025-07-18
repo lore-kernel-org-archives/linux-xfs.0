@@ -1,111 +1,151 @@
-Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 384712E7F19;
-	Fri, 18 Jul 2025 19:10:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A3E516DEB3
+	for <linux-xfs@vger.kernel.org>; Fri, 18 Jul 2025 19:38:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752865853; cv=none; b=OPyTb4AuBav3URqymSrbiIfoivbebs0gkAh0iSQv2KeC7z8mvPARblvPCneTJgJ9HkGQtsiAlI8Ka0m00BVxkW5p3aMf25yn8ZvavkIPuI4tZMWRvTBAuVoYkzyjeR56T9I1vUuH52GsJFte+kwe6LZ45s87S3yMCpnxFvjFbr8=
+	t=1752867533; cv=none; b=LTlrIFf0q2B3J7PuU1KzdasnlENAtK5zK47xthidgxD4rJ0cygxquAMJxuqkHzXzrn6Is/vYzdKkuA9WRbOSwzol8lj4JuptqSA91Iya56BvG2OhhAzSnY8+xrYwQJ60EUPrursqRmMv4az2uRiJBWlpWbjGwgwbHj7HDt5NW7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752865853; c=relaxed/simple;
-	bh=NBeZpzm7GJCFLtcVOkWgo1+H9JM9w028NRbEWcA1PWU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=d+sX1rKyfA1cGK9Kr4wdu2alm7Vs+BeLwqTya/gOAODbRncFpfJ4Iw1s0Exad+Bjem8C6cCbl45ocAYoF6UVxbydbno/ivlvIYxn0rQYPTTfnECSOiZCp7dSappmXqAq5Onwzf0J2tdk1XRpzzpBDeTqoDGpBcjDeuASuC3pBEs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aN4GnqDG; arc=none smtp.client-ip=209.85.161.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1752867533; c=relaxed/simple;
+	bh=uiBj5hwBBOcB7BnZ+zEonlGQIHVs0sW7CScoEY4D3Z0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UCakkzYcKHTi/UsX8+qskbtU1kmN5ptTuvdjQSQ6xfLA7aFiOwW95kbliwWHUKuZRJXMx4xNbS+LuiXAbrUzmGTZnOTB1bhGMLwLUPDILzRSZg6sueTkCPMXHOBrZFzRfaGSRPBBTb07IWGBCsi4e9b1BIsBH4I8D3cFZrSff6E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DjwG+fMK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aN4GnqDG"
-Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-615a02ebcc7so746511eaf.3;
-        Fri, 18 Jul 2025 12:10:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1752865851; x=1753470651; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=NBeZpzm7GJCFLtcVOkWgo1+H9JM9w028NRbEWcA1PWU=;
-        b=aN4GnqDGXZ8rVwgHKb+lESvEoZmEA+aUwgrFpB7BShCTn+pK6JxyuwkhkpL0t6YgxM
-         LATiNz9A/36FVZPLqPXoooyG4tdncCvM1AwVk5qN6M+D7ZJ/gqOLasPkF+DFP3VRJs0H
-         YDwrCeIeCzpwxTlBBgEJJ7RSr6kx7pki7b3vTxqWcwiyNGwN1hL9k1/iIz0uMrA+GN++
-         rOnvB7290jRYIJ64gCu7UeJ8vqrEXoO222KSWeDA56Xlp1RtCK+cdtQF0u3WQFPQpodz
-         vQHzATvNdogX8oVms6vqVK4z4irHQGU/vNDiDf3PPByTKyOOoqhaQ4yrYwZhciwV0und
-         cN/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752865851; x=1753470651;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=NBeZpzm7GJCFLtcVOkWgo1+H9JM9w028NRbEWcA1PWU=;
-        b=tnQumjnE9mO9lGvkJCDNjFEE3XFNBXi4gUg5BSgcM+Fw/zcZnd6mvE7NotFN30c3L+
-         mOvLki28QoUf+sJYhmSERO53R34JqAe/rAna/7FfRDOyymf8G8GPPc/6xpHFlX4gW9H+
-         4/ldrL01PU8o1bTFNnXUrGd/ehy294H87dnoMdqYN+xyI+nErtBLcPdljKH9nozB1HwV
-         n7Qd/VjC9YdVIohta2wYoBBeZJ4MuHWs+TJNJPYMCJWirlEIek5BoHiXAqiahJHtDcSA
-         A8/0Bk7+5/keHWDIFz8/RVENYDJwWy5P/0w/g/KUfBozugEU3F2BwVbclzEm+yvW69hZ
-         eDTw==
-X-Forwarded-Encrypted: i=1; AJvYcCVzUVIUH94UQ25n4kgRdFptEyZYiKgpYTuTR1WBI6UyXP84Qi7v/UzUmRCSN9ReLM7wYuSb98uqSo+cliM=@vger.kernel.org, AJvYcCXhqCS2I5/iFtjgxb0mn1j92up35qca0JqNT+RdUn7Sky+ylYsWn9p6Det8zeLJBdVQRgifp1TvTOsk@vger.kernel.org
-X-Gm-Message-State: AOJu0YzsqPVBy512RZHuc/vKrp4JV6k4DUu0XKy7PqF7ZCUY0ZLyr80h
-	I6Kxerc4wbRY7+4AjoZEhOFbJ36SV5pkiTDGyLyhN5cm5I9Uznh13B60K4aXsS9jl5o2dekSgn1
-	Xi7ozlkGPyHW7H4nSirjye/+E1OodW88=
-X-Gm-Gg: ASbGncvEHKB/xlPmyhnDSSLLGS6UlYyFXrXe2VHeHjLb4z0EM9lfOlZueYFlvEoxkS/
-	+dX4bjUAR8UDQHAHTlNYPBtbWjcTZS51WW9AdOuAv1oMOYDMR5TCXQZsuzasMCpy4WdA70it5bF
-	MTChpVpw2YyjhtjXDb3RMQ/eCSqfnrVsqvjihQKVL50tbG0jQbScHk6d428xSVuEhotrlyK1DpV
-	BvjsGhVGNaj2nFyd0E=
-X-Google-Smtp-Source: AGHT+IFvT9uZeX9R+yE8NA4HuE9JOuCVycgp4n4KGotR19hAge+18sehg3O/ostkpGjx7rtjx/On6spc1kzGGj+W8SM=
-X-Received: by 2002:a05:6820:1b0a:b0:613:cd27:2fe0 with SMTP id
- 006d021491bc7-615bbb1d011mr2697179eaf.1.1752865851181; Fri, 18 Jul 2025
- 12:10:51 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DjwG+fMK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51147C4CEEB;
+	Fri, 18 Jul 2025 19:38:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752867533;
+	bh=uiBj5hwBBOcB7BnZ+zEonlGQIHVs0sW7CScoEY4D3Z0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=DjwG+fMKFgRA2nT0PJXMMKIbZK+yL8nmSwIsxP35UvOVnqIDfiis3+aZi3N0If6N1
+	 vuf5r86KLpPWZZlaMf+cMil/b7Xvenr6vDY2oCrarFxhNs3hFio2WpeuFun1T3sgTy
+	 0/dr1T/05kANU7QBs6rIbZArNzlhYfXA2osj88akiD87V1Gkv9/ijXxQTTSsQ3KPzh
+	 /wkFCIxvsAz5fDtJU87EGBK7LMeOfYmlevyS1JDHpiMbC18o2Az2XU1s1dkTX734VV
+	 QHU6q+ZZfn6ebZ3O6R+JY9uTTaMySKvyIZNpKLh17xjxeT+tR+O5FOGbX+5wHzg+pr
+	 gdOu6d20gCMUw==
+Date: Fri, 18 Jul 2025 12:38:52 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: hch@lst.de, cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: disallow atomic writes on DAX
+Message-ID: <20250718193852.GR2672070@frogsfrogsfrogs>
+References: <20250717151900.1362655-1-john.g.garry@oracle.com>
+ <20250717160255.GP2672049@frogsfrogsfrogs>
+ <1b61ffa1-870d-4b30-9ba8-014a9ca5d33f@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250716182220.203631-1-marcelomoreira1905@gmail.com>
- <aHg7JOY5UrOck9ck@dread.disaster.area> <CAPZ3m_gL-K1d2r1YSZhFXmy4v3xHs5uigGOmC2TdsAAoZx+Tyg@mail.gmail.com>
- <aHos-A3d0T6qcL0o@dread.disaster.area>
-In-Reply-To: <aHos-A3d0T6qcL0o@dread.disaster.area>
-From: Marcelo Moreira <marcelomoreira1905@gmail.com>
-Date: Fri, 18 Jul 2025 16:10:39 -0300
-X-Gm-Features: Ac12FXyZ6w5FS6LO45cJmpbQwjoFWm7SdiNSX09zxUTjp_5jnU0jujAIHAJKXV0
-Message-ID: <CAPZ3m_iwS6EOogN0gN51JcweYH0zuHmrgVvD7yTXTi1AoDA7hQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: Replace strncpy with strscpy
-To: Dave Chinner <david@fromorbit.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	skhan@linuxfoundation.org, linux-kernel-mentees@lists.linuxfoundation.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1b61ffa1-870d-4b30-9ba8-014a9ca5d33f@oracle.com>
 
-Em sex., 18 de jul. de 2025 =C3=A0s 08:16, Dave Chinner
-<david@fromorbit.com> escreveu:
->
-> On Thu, Jul 17, 2025 at 02:34:25PM -0300, Marcelo Moreira wrote:
-> > Given that the original `strncpy()` is safe and correctly implemented
-> > for this context, and understanding that `memcpy()` would be the
-> > correct replacement if a change were deemed necessary for
-> > non-NUL-terminated raw data, I have a question:
-> >
-> > Do you still think a replacement is necessary here, or would you
-> > prefer to keep the existing `strncpy()` given its correct and safe
-> > usage in this context? If a replacement is preferred, I will resubmit
-> > a V2 using `memcpy()` instead.
->
-> IMO: if it isn't broken, don't try to fix it. Hence I -personally-
-> wouldn't change it.
->
-> However, modernisation and cleaning up of the code base to be
-> consistent is a useful endeavour. So from this perspective replacing
-> strncpy with memcpy() would be something I'd consider an acceptible
-> change.
->
-> Largely it is up to the maintainer to decide.....
+On Fri, Jul 18, 2025 at 09:15:07AM +0100, John Garry wrote:
+> On 17/07/2025 17:02, Darrick J. Wong wrote:
+> > On Thu, Jul 17, 2025 at 03:19:00PM +0000, John Garry wrote:
+> > > Atomic writes are not currently supported for DAX, but two problems exist:
+> > > - we may go down DAX write path for IOCB_ATOMIC, which does not handle
+> > >    IOCB_ATOMIC properly
+> > > - we report non-zero atomic write limits in statx (for DAX inodes)
+> > > 
+> > > We may want atomic writes support on DAX in future, but just disallow for
+> > > now.
+> > > 
+> > > For this, ensure when IOCB_ATOMIC is set that we check the write size
+> > > versus the atomic write min and max before branching off to the DAX write
+> > > path. This is not strictly required for DAX, as we should not get this far
+> > > in the write path as FMODE_CAN_ATOMIC_WRITE should not be set.
+> > > 
+> > > In addition, due to reflink being supported for DAX, we automatically get
+> > > CoW-based atomic writes support being advertised. Remedy this by
+> > > disallowing atomic writes for a DAX inode for both sw and hw modes.
+> > 
+> > ...because it's fsdax and who's really going to test/use software atomic
+> > writes there ?
+> 
+> Right
+> 
+> > 
+> > > Finally make atomic write size and DAX mount always mutually exclusive.
+> > 
+> > Why?  You could have a rt-on-pmem filesystem with S_DAX files, and still
+> > want to do atomic writes to files on the data device.
+> 
+> How can I test that, i.e. put something on data device?
+> 
+> I tried something like this:
+> 
+> $mkfs.xfs -f -m rmapbt=0,reflink=1 -d rtinherit=1 -r rtdev=/dev/pmem0
+> /dev/pmem1
+> $mount /dev/pmem1 mnt -o dax=always,rtdev=/dev/pmem0  -o
+> max_atomic_write=16k
+> $mkdir mnt/non_rt
+> $xfs_io -c "chattr -t" mnt/non_rt/ #make non-rt
+> $touch mnt/non_rt/file
+> $xfs_io -c "lsattr -v" mnt/non_rt/file
+> [has-xattr] mnt/non_rt/file
+> $xfs_io -c "statx -r -m 0x10000" mnt/non_rt/file
+> ---
+> stat.atomic_write_unit_min = 0
+> stat.atomic_write_unit_max = 0
+> stat.atomic_write_segments_max = 0
+> ---
+> 
+> I thought that losing the rtinherit flag would put the file on the data
+> device. From adding some kernel debug, it seems that this file is still
+> IS_DAX() == true
 
-Hmm ok, thanks for the teaching :)
+The data device should be a regular scsi disk, not pmem.
 
-So, I'll prepare v2 replacing `strncpy` with `memcpy` aiming for that
-modernization and cleanup you mentioned, but it's clear that the
-intention is to focus on changes that cause real bugs.
-Thanks!
+--D
 
---=20
-Cheers,
-Marcelo Moreira
+> > 
+> > > Reported-by: "Darrick J. Wong" <djwong@kernel.org>
+> > > Fixes: 9dffc58f2384 ("xfs: update atomic write limits")
+> > > Signed-off-by: John Garry <john.g.garry@oracle.com>
+> > > 
+> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > index db21b5a4b881..84876f41da93 100644
+> > > --- a/fs/xfs/xfs_file.c
+> > > +++ b/fs/xfs/xfs_file.c
+> > > @@ -1102,9 +1102,6 @@ xfs_file_write_iter(
+> > >   	if (xfs_is_shutdown(ip->i_mount))
+> > >   		return -EIO;
+> > > -	if (IS_DAX(inode))
+> > > -		return xfs_file_dax_write(iocb, from);
+> > > -
+> > >   	if (iocb->ki_flags & IOCB_ATOMIC) {
+> > >   		if (ocount < xfs_get_atomic_write_min(ip))
+> > >   			return -EINVAL;
+> > > @@ -1117,6 +1114,9 @@ xfs_file_write_iter(
+> > >   			return ret;
+> > >   	}
+> > > +	if (IS_DAX(inode))
+> > > +		return xfs_file_dax_write(iocb, from);
+> > > +
+> > >   	if (iocb->ki_flags & IOCB_DIRECT) {
+> > >   		/*
+> > >   		 * Allow a directio write to fall back to a buffered
+> > > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> > > index 07fbdcc4cbf5..b142cd4f446a 100644
+> > > --- a/fs/xfs/xfs_inode.h
+> > > +++ b/fs/xfs/xfs_inode.h
+> > > @@ -356,11 +356,22 @@ static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
+> > >   	(XFS_IS_REALTIME_INODE(ip) ? \
+> > >   		(ip)->i_mount->m_rtdev_targp : (ip)->i_mount->m_ddev_targp)
+> > > -static inline bool xfs_inode_can_hw_atomic_write(const struct xfs_inode *ip)
+> > > +static inline bool xfs_inode_can_hw_atomic_write(struct xfs_inode *ip)
+> > 
+> > Why drop const here?  VFS_IC() should be sufficient, I think.
+> > 
+> 
+> I dropped that const as I got a complaint about ignoring the const when
+> passing to VFS_I(). But, as you say, I can use VFS_IC()
+> 
+> Thanks,
+> John
