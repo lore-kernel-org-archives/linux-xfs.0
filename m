@@ -1,110 +1,94 @@
-Received: from out28-80.mail.aliyun.com (out28-80.mail.aliyun.com [115.124.28.80])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C6EB46B8
-	for <linux-xfs@vger.kernel.org>; Fri, 18 Jul 2025 01:39:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.28.80
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DD9C4A33
+	for <linux-xfs@vger.kernel.org>; Fri, 18 Jul 2025 03:42:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752802758; cv=none; b=A1ygMYifgCcNJnoyOFktGV/knUmcCheUrH5I19D2rFW3u2NBpEesQeqPidnlIvqpEjc+bLLHhfTrEREjTTFRG3J4bpVnMf/xl2O7xoBQwN9ouqNxqbp5trMQry9sAIZIVXQrdXaiI4k9D3kMNV8QlAulSrXH3Gwh5gHu0TOoVYk=
+	t=1752810157; cv=none; b=gBqKojUoMRNXWH7nFzP/1De1zvyVXM9LwvzgE73986t+t9/fKcnm7pISyHqI7T4p0A06jZBngCmom1Lkx0RMlphQpyXj8gIkuIYbHPGPaS9jGYgqw8LfNqMbIxIiOxuCffAunSSD5C2jwcGnzMjrhleLa/ca7IzJ7hSBH4HXP3w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752802758; c=relaxed/simple;
-	bh=97yhLLaHNtr51kdZUWYFZROWGT1Z/6CEn7CojhcjxU8=;
-	h=Date:From:To:Subject:In-Reply-To:References:Message-Id:
-	 MIME-Version:Content-Type; b=sqfFoXToISCwmhxSvGpnWHLNNeNgXKRAB4tZsiry/NhONVOAfCxe72NZ6UwczUe9S0LqjkDv32t9pHrl2HQZo72/rO1T6qX3S/pKEBOxJUTJpEin1VNpoOFWC4IEo+JfGhiNXVdwC2a/9R4KwlIUPr0h4WDRShD33GOW4TBFE5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=e16-tech.com; spf=pass smtp.mailfrom=e16-tech.com; arc=none smtp.client-ip=115.124.28.80
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=e16-tech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=e16-tech.com
-Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.dqTPzzY_1752800897 cluster:ay29)
-          by smtp.aliyun-inc.com;
-          Fri, 18 Jul 2025 09:08:17 +0800
-Date: Fri, 18 Jul 2025 09:08:18 +0800
-From: Wang Yugui <wangyugui@e16-tech.com>
-To: "Darrick J. Wong" <djwong@kernel.org>,
- linux-xfs@vger.kernel.org
-Subject: Re: a deadloop(?) when mkfs.xfs -o rtdev
-In-Reply-To: <20250718085829.CA35.409509F4@e16-tech.com>
-References: <20250717160357.GQ2672049@frogsfrogsfrogs> <20250718085829.CA35.409509F4@e16-tech.com>
-Message-Id: <20250718090817.A951.409509F4@e16-tech.com>
+	s=arc-20240116; t=1752810157; c=relaxed/simple;
+	bh=xGUfSCc0mEpTuXvvqwBYQ/kR1sIRfkjxeLOwzaZi5G8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Dc/s8PWCEkHgIql+8AA+yYqnUIRoixX4SUGhO60aDxxnLuR8z1OeOUEtz6eiK3O2sr/6/WWq8ktiRBn4lEqoLV1KzkBlma2cpxuJW1bhiJeTDXAH0e8Iu6+oIq6rpGHQ6c0zdk5oShh4Y+QWC7Ywc/XxhryVjQWEATUOU0ahEHI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mCkMTQg/; arc=none smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mCkMTQg/"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-313a188174fso2102869a91.1
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 20:42:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1752810155; x=1753414955; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=8eAbptHiIrg3m7paHMdjGPnPgZ6QoZhxkureZn50ipg=;
+        b=mCkMTQg/is0YB1ruyN9aUPF0aipgF5ATdCm7iUGZK3nRUlAVM0Q0jF6fUBVpkN3+ii
+         B3VsgE4duk0o70ssIpEtIV3JCShK4iCHEI9CYt7QWAqZJcrzlJhSEeq/HcKipEvSd7fM
+         pyUgYCqaEjeYtPnuj0PyA9X3JVmyqQ9vzLB1/la3AiQ3FSpGDBhplHO2RWnxUEsgjGYE
+         EfZCh7JayvoR2KelQetpyxQYPNRxF0xLghnomHTnFmf7VdG1armypJNjrdQBBhO/x3//
+         HHPoB4p+R2ayx3FUkbDs1V6aqnKKov4g+fxB3QC8rZdbp4IloZGXdjp4nNrpBMOPbXmn
+         xn7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752810155; x=1753414955;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=8eAbptHiIrg3m7paHMdjGPnPgZ6QoZhxkureZn50ipg=;
+        b=xK1aNe31JaOY/gim9uE0wyHoMTEejve+1BCgQR/Nf3wJICPRIOYjoqWNHK7IEuG6Wh
+         dZDiTFO3BoM6frti7ZkonnlSjTC/dd9eW9O0hsxB2ZU9Bn+11DvoYP07zlQ6w2ObfZTA
+         1txCawUu+yOJA3IOOaMmJ7H0mTEY2HJqTuZ8wgpqxZ5afIGSVWqt6mW+m3yzdUzm3fxI
+         Qew8rF9jEZvR4ZI0wxQM+dzGi31uI00p1EPT+b1/KotChveYSby9QBgcDIi7ANhzklJk
+         AgUFobHApP/6fkctHW16fqt4orrtOtnwgpuAQTe7QOpUOy2f9HfLsglG/guGquArJTax
+         Kn0Q==
+X-Gm-Message-State: AOJu0YxPN0XWtWhvjjAwNt/6xYbF4Azuyu6JbODfXvQU/0oWA+04wGQw
+	1iBWmaOLTnukgbXi+ZRaSUmxwcnrgpXeiA83PJXZd10zC8whF2Wz0cm54Hut54EC
+X-Gm-Gg: ASbGncv2MhrNleFPEr3+cjxNMFUK1g2CSGljhjHD3pBp92PGnrbu0Re0O9MybLdtz4E
+	s9lxtBol4COzuM5HDA1Rtqj2e0oqn6QkL8cKHoaEO9nCs3xMoYj+oOv7zVFDXgoRgynfZ/UPKEt
+	fCtzQDPAQlTXhyr6S01kE5hgCFxIDwQh+yirEGblI0g1GmyZAK03VQhtGrwxpeTQ60QDxN/jUIX
+	u3UEhRKkPd/cpEcIXSAx/hL3c7nEcsOLBnh4Zqr2rCVt4tGM+yATURChnZDDiCZUxoYTxpdT5BX
+	Os4Xwqyd9dhl3apxGvvgTqyi4o9z5kPNVA5x9RgXP0E20+eSGU9IZpSgNJHt9cooPLi6NdPa
+X-Google-Smtp-Source: AGHT+IEC5x5trrgct5DxJCC6F+ymE1DzlExCUnKq7tUvs4FncYjfaiflo7WlPfqMXpHY+k4BWD37sw==
+X-Received: by 2002:a17:90b:3d8a:b0:312:e73e:cded with SMTP id 98e67ed59e1d1-31cc045b2dcmr3052702a91.16.1752810154648;
+        Thu, 17 Jul 2025 20:42:34 -0700 (PDT)
+Received: from localhost ([2402:d0c0:11:86::1])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-31c9f1e61e8sm4086449a91.16.2025.07.17.20.42.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Jul 2025 20:42:34 -0700 (PDT)
+From: Alan Huang <mmpgouride@gmail.com>
+To: cem@kernel.org,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	Alan Huang <mmpgouride@gmail.com>
+Subject: [PATCH] xfs: Remove unused label in xfs_dax_notify_dev_failure
+Date: Fri, 18 Jul 2025 11:42:22 +0800
+Message-ID: <20250718034222.1403370-1-mmpgouride@gmail.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Mailer: Becky! ver. 2.81.08 [en]
+Content-Transfer-Encoding: 8bit
 
-Hi,
+Fixes: e967dc40d501 ("xfs: return the allocated transaction from xfs_trans_alloc_empty")
+Signed-off-by: Alan Huang <mmpgouride@gmail.com>
+---
+ fs/xfs/xfs_notify_failure.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-
-> Hi,
-> 
-> > On Thu, Jul 17, 2025 at 08:13:33AM +0800, Wang Yugui wrote:
-> > > Hi,
-> > > 
-> > > There seems a deadloop(?) when mkfs.xfs -o rtdev.
-> > > 
-> > > # mkfs.xfs -r rtdev=/dev/disk/by-id/ata-MZ7KM1T6HAJM00D3_S2CXNAAH600026 /dev/d
-> > > isk/by-id/scsi-SHITACHI_HUSMH842_CLAR100_0LX0JWVA -f
-> > > meta-data=/dev/disk/by-id/scsi-SHITACHI_HUSMH842_CLAR100_0LX0JWVA isize=512    agcount=20, agsize=1221072 blks
-> > >          =                       sectsz=4096  attr=2, projid32bit=1
-> > >          =                       crc=1        finobt=1, sparse=1, rmapbt=0
-> > >          =                       reflink=0    bigtime=1 inobtcount=1 nrext64=1
-> > >          =                       exchange=0
-> > > data     =                       bsize=4096   blocks=24421440, imaxpct=25
-> > >          =                       sunit=0      swidth=0 blks
-> > > naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
-> > > log      =internal log           bsize=4096   blocks=41799, version=2
-> > >          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> > > realtime =/dev/disk/by-id/ata-MZ7KM1T6HAJM00D3_S2CXNAAH600026 extsz=4096   blocks=390703446, rtextents=390703446
-> > > Discarding blocks...Done.
-> > > Discarding blocks...Done.
-> > > 
-> > > It did not fishish after 10 mins.
-> > > 
-> > > # pstack 5785
-> > > #0  0x00007f8df5efc01a in pread64 () from /lib64/libc.so.6
-> > > #1  0x0000557b7bbfe9c3 in __read_buf.constprop.0 ()
-> > > #2  0x0000557b7bbc3030 in libxfs_buf_read_map ()
-> > > #3  0x0000557b7bbfe1ae in libxfs_trans_read_buf_map.constprop ()
-> > > #4  0x0000557b7bbee7ef in xfs_rtbuf_get ()
-> > > #5  0x0000557b7bbf03d8 in libxfs_rtfree_extent ()
-> > > #6  0x0000557b7bbbb322 in parseproto.lto_priv ()
-> > > #7  0x0000557b7bbb7643 in main ()
-> > > 
-> > > And,
-> > > 1) more chance happen when kernel 6.12.36, but yet not happen when kernel 6.6.93.
-> > > 2) it happen on both xfsprogs-6.11.0 and xfsprogs-6.4.
-> > 
-> > You /could/ strace the mkfs process to see if it's really stuck, or just
-> > issuing IOs really slowly.
-> 
-> Today the mkfs.xfs with rtdev all finished in 110s-160s on kernel 6.6.93/6.12.38.
-> 
-> the result of strace show that pread64() with 4K size so it is just slow.
-> 
-> pread64(3, "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"..., 4096, 868352) = 4096
-> pread64(3, "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"..., 4096, 864256) = 4096
-> pread64(3, "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"..., 4096, 860160) = 4096
-> pread64(3, "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"..., 4096, 856064) = 4096
-> pread64(3, "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"..., 4096, 851968) = 4096
-> 
-
-the offset of pread64() is in DECE order, not in ASCE order , so the readahead
-does not help too.
-
-Best Regards
-Wang Yugui (wangyugui@e16-tech.com)
-2025/07/18
-
-
-
-> Thanks a lot.
-> 
-> Best Regards
-> Wang Yugui (wangyugui@e16-tech.com)
-> 2025/07/18
-> 
-
+diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+index fbd521f89874..fbeddcac4792 100644
+--- a/fs/xfs/xfs_notify_failure.c
++++ b/fs/xfs/xfs_notify_failure.c
+@@ -350,7 +350,6 @@ xfs_dax_notify_dev_failure(
+ 			error = -EFSCORRUPTED;
+ 	}
+ 
+-out:
+ 	/* Thaw the fs if it has been frozen before. */
+ 	if (mf_flags & MF_MEM_PRE_REMOVE)
+ 		xfs_dax_notify_failure_thaw(mp, kernel_frozen);
+-- 
+2.48.1
 
