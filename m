@@ -1,93 +1,96 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from out28-87.mail.aliyun.com (out28-87.mail.aliyun.com [115.124.28.87])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E762B3C38;
-	Fri, 18 Jul 2025 00:08:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCCF9135A53
+	for <linux-xfs@vger.kernel.org>; Fri, 18 Jul 2025 01:14:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.28.87
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752797324; cv=none; b=ATV1GH2M5iG1Vgs4xHXVD4yLyjhXeD/7hyPpRoPMzqo9LaJ+d4bTbN3EwKYWzBfvmacOi5TvzVZoA/lBwlGMm7a/FH3jvg0uttKFulYdeDDvB7QckaQyMZYgYvBA3GrCFYlf+2MJYxutXSnHYzKBIZMNkHY0IK0W4o6MAIdmguo=
+	t=1752801251; cv=none; b=WAcVI2USYL+ziJCbzWQ7FbF5q/xK1H7o5wLRSNrNkE0wY3D+nryJ9CgicRb/2jB3yHhgQh6Nh5SNjc9BCNayS4izRhm3wPW9nvXgRjLk/GEqCyXvmYLTS5d++80rar6GW/vs2kJgAQ11kJ5ECLdrzJPVpfdIofkzJvO54zhlcJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752797324; c=relaxed/simple;
-	bh=jQa0fsMfau5mt8ky/yztS6c1bLnYyDwpxMTZtLSz4dc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=nQSAE6d936hYTE5y6pXPVbbxUBoYHrOSPECeRKsqng9cXy0nKz48dNq5ifE8IHv1LWHWcLPDUrJbL7D+qXQqi4tR+KHtOXWiDfTj9PGrkvNROjCs1VUkUaCB/2k1sN3LupdqrerZuxd85dhPaE3Dl54vbq6fQDXJcJSJaXW/mQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=WwzB7/7w; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="WwzB7/7w"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
-	s=202503; t=1752797190;
-	bh=esC4Uup2wEWTmg3ir3LaXHjT0gvhLN8OQc4RHeGGv7Q=;
-	h=Date:From:To:Cc:Subject:From;
-	b=WwzB7/7w9RqYUxvn4zpSUVFz/TgWywJ1PPq0XO+ANA8tolel32UEPRUWqhKHqpYg+
-	 raXfqjXKrKcix71HAUVBzd8WeRQ+WwFcb54DHWHzyD5YviMjdWZz5FelvB/5twu5i0
-	 7wMsRJNvxVf+2k6B7IUj0tbUh5lCi/cfHlcXQFC/U5KWKU7fpw0iSGbFXQvYKh+Xht
-	 i+vHt89lA82rD40YifStPpCzkv+M8WZGSbiIqpMQq1gv46ERBfoFIc6hbNOleJdGJK
-	 bxXKxF+ayG6er+2MhxOJi8bc5mtYDFqaGS/SZYG5JMqlKBSDo4vNgUHRvM+fLAi9RG
-	 27I7T4GDY5aYA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4bjqpG4qDMz4xQ1;
-	Fri, 18 Jul 2025 10:06:30 +1000 (AEST)
-Date: Fri, 18 Jul 2025 10:08:36 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: David Chinner <david@fromorbit.com>, Carlos Maiolino <cem@kernel.org>,
- <linux-xfs@vger.kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Next
- Mailing List <linux-next@vger.kernel.org>
-Subject: linux-next: build failure after merge of the xfs tree
-Message-ID: <20250718100836.06da20b3@canb.auug.org.au>
+	s=arc-20240116; t=1752801251; c=relaxed/simple;
+	bh=cYDURyPC1EgANo627IJaetB6XS2oi/yVwUiox73EhVU=;
+	h=Date:From:To:Subject:Cc:In-Reply-To:References:Message-Id:
+	 MIME-Version:Content-Type; b=dzAMKxPM8+gJhW6wLNIlg458R9fsF1ei+ONHou/lSPlZ9aTBataXxgQQZu9hQs3DTBqC/tE4Vpdi5t/vTZpJlfuJMzx3lOuPfVNdcIfVxTi8qqt8+dhU5Jo9BPXFVnuWaJnZSI1S5R6CXcQ+oFAKMrV2oZJBF1GyONN+0ekQukA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=e16-tech.com; spf=pass smtp.mailfrom=e16-tech.com; arc=none smtp.client-ip=115.124.28.87
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=e16-tech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=e16-tech.com
+Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.dqO7DdL_1752800309 cluster:ay29)
+          by smtp.aliyun-inc.com;
+          Fri, 18 Jul 2025 08:58:29 +0800
+Date: Fri, 18 Jul 2025 08:58:30 +0800
+From: Wang Yugui <wangyugui@e16-tech.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: a deadloop(?) when mkfs.xfs -o rtdev
+Cc: linux-xfs@vger.kernel.org
+In-Reply-To: <20250717160357.GQ2672049@frogsfrogsfrogs>
+References: <20250717081332.E87F.409509F4@e16-tech.com> <20250717160357.GQ2672049@frogsfrogsfrogs>
+Message-Id: <20250718085829.CA35.409509F4@e16-tech.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/9_/vyAbBdNaLJaIxMSP=2c=";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Becky! ver. 2.81.08 [en]
 
---Sig_/9_/vyAbBdNaLJaIxMSP=2c=
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-Hi all,
+> On Thu, Jul 17, 2025 at 08:13:33AM +0800, Wang Yugui wrote:
+> > Hi,
+> > 
+> > There seems a deadloop(?) when mkfs.xfs -o rtdev.
+> > 
+> > # mkfs.xfs -r rtdev=/dev/disk/by-id/ata-MZ7KM1T6HAJM00D3_S2CXNAAH600026 /dev/d
+> > isk/by-id/scsi-SHITACHI_HUSMH842_CLAR100_0LX0JWVA -f
+> > meta-data=/dev/disk/by-id/scsi-SHITACHI_HUSMH842_CLAR100_0LX0JWVA isize=512    agcount=20, agsize=1221072 blks
+> >          =                       sectsz=4096  attr=2, projid32bit=1
+> >          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+> >          =                       reflink=0    bigtime=1 inobtcount=1 nrext64=1
+> >          =                       exchange=0
+> > data     =                       bsize=4096   blocks=24421440, imaxpct=25
+> >          =                       sunit=0      swidth=0 blks
+> > naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
+> > log      =internal log           bsize=4096   blocks=41799, version=2
+> >          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> > realtime =/dev/disk/by-id/ata-MZ7KM1T6HAJM00D3_S2CXNAAH600026 extsz=4096   blocks=390703446, rtextents=390703446
+> > Discarding blocks...Done.
+> > Discarding blocks...Done.
+> > 
+> > It did not fishish after 10 mins.
+> > 
+> > # pstack 5785
+> > #0  0x00007f8df5efc01a in pread64 () from /lib64/libc.so.6
+> > #1  0x0000557b7bbfe9c3 in __read_buf.constprop.0 ()
+> > #2  0x0000557b7bbc3030 in libxfs_buf_read_map ()
+> > #3  0x0000557b7bbfe1ae in libxfs_trans_read_buf_map.constprop ()
+> > #4  0x0000557b7bbee7ef in xfs_rtbuf_get ()
+> > #5  0x0000557b7bbf03d8 in libxfs_rtfree_extent ()
+> > #6  0x0000557b7bbbb322 in parseproto.lto_priv ()
+> > #7  0x0000557b7bbb7643 in main ()
+> > 
+> > And,
+> > 1) more chance happen when kernel 6.12.36, but yet not happen when kernel 6.6.93.
+> > 2) it happen on both xfsprogs-6.11.0 and xfsprogs-6.4.
+> 
+> You /could/ strace the mkfs process to see if it's really stuck, or just
+> issuing IOs really slowly.
 
-After merging the xfs tree, today's linux-next build (x86_64 allmodconfig)
-failed like this:
+Today the mkfs.xfs with rtdev all finished in 110s-160s on kernel 6.6.93/6.12.38.
 
-fs/xfs/xfs_notify_failure.c: In function 'xfs_dax_notify_dev_failure':
-fs/xfs/xfs_notify_failure.c:353:1: error: label 'out' defined but not used =
-[-Werror=3Dunused-label]
-  353 | out:
-      | ^~~
+the result of strace show that pread64() with 4K size so it is just slow.
 
-Caused by commit
+pread64(3, "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"..., 4096, 868352) = 4096
+pread64(3, "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"..., 4096, 864256) = 4096
+pread64(3, "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"..., 4096, 860160) = 4096
+pread64(3, "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"..., 4096, 856064) = 4096
+pread64(3, "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"..., 4096, 851968) = 4096
 
-  e967dc40d501 ("xfs: return the allocated transaction from xfs_trans_alloc=
-_empty")
+Thanks a lot.
 
-I have used the xfs tree from next-20250717 for today.
+Best Regards
+Wang Yugui (wangyugui@e16-tech.com)
+2025/07/18
 
---=20
-Cheers,
-Stephen Rothwell
 
---Sig_/9_/vyAbBdNaLJaIxMSP=2c=
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmh5kIQACgkQAVBC80lX
-0GxuuQgAgpfHS/UXVp3Po8lBi3mwJJqKaRY4r3BXdeH/kh0tJWaRWpT4EvgpfbLJ
-PSCEuzY6pMDn+Vb1f187A2Cub5gqBxyUG6X6aijGZkvOQskIw4JgiukpCZ21fROC
-uWeKqhIvbDtP64vWvuoZ150xTyDMj3MXxHAkgMGvYEWGoktQ7YxeslaQF4/Uh77t
-A5Rh7RKFglLWfwOZ73iN743QL+bP4FRHFZky1KfoqapNwDDAXT5LaFU+5TDsuEBl
-EIk4PY7/0WwenZUJKNt3L+WnFuVMgs99VRwOiE2ePe7sd623Vo8P3zNovjfa9NlR
-1jSdFx1vIGT/dsQWI9BSR3PwGTjY6A==
-=0R+Y
------END PGP SIGNATURE-----
-
---Sig_/9_/vyAbBdNaLJaIxMSP=2c=--
