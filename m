@@ -1,94 +1,52 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DD9C4A33
-	for <linux-xfs@vger.kernel.org>; Fri, 18 Jul 2025 03:42:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB782292B4F
+	for <linux-xfs@vger.kernel.org>; Fri, 18 Jul 2025 07:54:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752810157; cv=none; b=gBqKojUoMRNXWH7nFzP/1De1zvyVXM9LwvzgE73986t+t9/fKcnm7pISyHqI7T4p0A06jZBngCmom1Lkx0RMlphQpyXj8gIkuIYbHPGPaS9jGYgqw8LfNqMbIxIiOxuCffAunSSD5C2jwcGnzMjrhleLa/ca7IzJ7hSBH4HXP3w=
+	t=1752825274; cv=none; b=mqRcMp9vIU8pn79ycINOpvyJEh3gl9Cb1i+8galFqIrqS2VTRZ0ZsVtE639fBows3E7zus5xk8Ya6U6d8DXYAxPHgn7rx4KM3x+4tw+ZMlxTex7LUVoKO5t/gcCzZieokrTstpH5CbQ3v5XHQH0CIjzjy9hWSfMSwzsf5QgrsDk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752810157; c=relaxed/simple;
-	bh=xGUfSCc0mEpTuXvvqwBYQ/kR1sIRfkjxeLOwzaZi5G8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Dc/s8PWCEkHgIql+8AA+yYqnUIRoixX4SUGhO60aDxxnLuR8z1OeOUEtz6eiK3O2sr/6/WWq8ktiRBn4lEqoLV1KzkBlma2cpxuJW1bhiJeTDXAH0e8Iu6+oIq6rpGHQ6c0zdk5oShh4Y+QWC7Ywc/XxhryVjQWEATUOU0ahEHI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mCkMTQg/; arc=none smtp.client-ip=209.85.216.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1752825274; c=relaxed/simple;
+	bh=h+vMDnxBC3UBOy0JWLb8SR6NljUIMvGs2/J1h6jCfi4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UMZ8vZi//NsmfoQbf3B4bfvvfX6rjrkJHiZuHrMlspKkWSG9uxorQEd7dFx0ausu9LJvyY5KcAqKlkSxLGrHnKyy7NE1ZqNwVtX2xoH9Zxo1cV0xbRFXUadHTiw01bCGkz1Je0hEZYzcee/UHyVb1dJeD0CbCNyOZ4xVmeepLA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eSuyarmA; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mCkMTQg/"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-313a188174fso2102869a91.1
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Jul 2025 20:42:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1752810155; x=1753414955; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=8eAbptHiIrg3m7paHMdjGPnPgZ6QoZhxkureZn50ipg=;
-        b=mCkMTQg/is0YB1ruyN9aUPF0aipgF5ATdCm7iUGZK3nRUlAVM0Q0jF6fUBVpkN3+ii
-         B3VsgE4duk0o70ssIpEtIV3JCShK4iCHEI9CYt7QWAqZJcrzlJhSEeq/HcKipEvSd7fM
-         pyUgYCqaEjeYtPnuj0PyA9X3JVmyqQ9vzLB1/la3AiQ3FSpGDBhplHO2RWnxUEsgjGYE
-         EfZCh7JayvoR2KelQetpyxQYPNRxF0xLghnomHTnFmf7VdG1armypJNjrdQBBhO/x3//
-         HHPoB4p+R2ayx3FUkbDs1V6aqnKKov4g+fxB3QC8rZdbp4IloZGXdjp4nNrpBMOPbXmn
-         xn7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752810155; x=1753414955;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=8eAbptHiIrg3m7paHMdjGPnPgZ6QoZhxkureZn50ipg=;
-        b=xK1aNe31JaOY/gim9uE0wyHoMTEejve+1BCgQR/Nf3wJICPRIOYjoqWNHK7IEuG6Wh
-         dZDiTFO3BoM6frti7ZkonnlSjTC/dd9eW9O0hsxB2ZU9Bn+11DvoYP07zlQ6w2ObfZTA
-         1txCawUu+yOJA3IOOaMmJ7H0mTEY2HJqTuZ8wgpqxZ5afIGSVWqt6mW+m3yzdUzm3fxI
-         Qew8rF9jEZvR4ZI0wxQM+dzGi31uI00p1EPT+b1/KotChveYSby9QBgcDIi7ANhzklJk
-         AgUFobHApP/6fkctHW16fqt4orrtOtnwgpuAQTe7QOpUOy2f9HfLsglG/guGquArJTax
-         Kn0Q==
-X-Gm-Message-State: AOJu0YxPN0XWtWhvjjAwNt/6xYbF4Azuyu6JbODfXvQU/0oWA+04wGQw
-	1iBWmaOLTnukgbXi+ZRaSUmxwcnrgpXeiA83PJXZd10zC8whF2Wz0cm54Hut54EC
-X-Gm-Gg: ASbGncv2MhrNleFPEr3+cjxNMFUK1g2CSGljhjHD3pBp92PGnrbu0Re0O9MybLdtz4E
-	s9lxtBol4COzuM5HDA1Rtqj2e0oqn6QkL8cKHoaEO9nCs3xMoYj+oOv7zVFDXgoRgynfZ/UPKEt
-	fCtzQDPAQlTXhyr6S01kE5hgCFxIDwQh+yirEGblI0g1GmyZAK03VQhtGrwxpeTQ60QDxN/jUIX
-	u3UEhRKkPd/cpEcIXSAx/hL3c7nEcsOLBnh4Zqr2rCVt4tGM+yATURChnZDDiCZUxoYTxpdT5BX
-	Os4Xwqyd9dhl3apxGvvgTqyi4o9z5kPNVA5x9RgXP0E20+eSGU9IZpSgNJHt9cooPLi6NdPa
-X-Google-Smtp-Source: AGHT+IEC5x5trrgct5DxJCC6F+ymE1DzlExCUnKq7tUvs4FncYjfaiflo7WlPfqMXpHY+k4BWD37sw==
-X-Received: by 2002:a17:90b:3d8a:b0:312:e73e:cded with SMTP id 98e67ed59e1d1-31cc045b2dcmr3052702a91.16.1752810154648;
-        Thu, 17 Jul 2025 20:42:34 -0700 (PDT)
-Received: from localhost ([2402:d0c0:11:86::1])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-31c9f1e61e8sm4086449a91.16.2025.07.17.20.42.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Jul 2025 20:42:34 -0700 (PDT)
-From: Alan Huang <mmpgouride@gmail.com>
-To: cem@kernel.org,
-	djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	Alan Huang <mmpgouride@gmail.com>
-Subject: [PATCH] xfs: Remove unused label in xfs_dax_notify_dev_failure
-Date: Fri, 18 Jul 2025 11:42:22 +0800
-Message-ID: <20250718034222.1403370-1-mmpgouride@gmail.com>
-X-Mailer: git-send-email 2.48.1
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eSuyarmA"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=h+vMDnxBC3UBOy0JWLb8SR6NljUIMvGs2/J1h6jCfi4=; b=eSuyarmAHgPkwgEOGCNHXbvVMq
+	4qP1SV4MhxKpccG5bPu10Wl70x9lMYS3gneEiM/k/AY5+GbHKd5QZxXhiHXgh4px5F5HWpbazFwOo
+	WF0xYNdj4EvROGmK0AwXNBaKQF7uMLPEYxgwCiA6BtSMnPJnorxN9HO8uHT9X9dewBky/+PFch3cS
+	4BewbHw9hD+rAjS9zwYbaC+hIO4YPshQDdoBOHVTNLWRoEdyb4wvahx84bZqkMls58o4rCBCzGF5K
+	BfgDMf8q9c34LxXjIqOkT3dLyZUtYrFfCh9job8tgVbVAsnxpTnI13aELPSZCiHkDcZ855C2STSQH
+	CbN0pXoA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1ucfvL-0000000BwHg-3MSO;
+	Fri, 18 Jul 2025 07:54:31 +0000
+Date: Fri, 18 Jul 2025 00:54:31 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Alan Huang <mmpgouride@gmail.com>
+Cc: cem@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: Remove unused label in xfs_dax_notify_dev_failure
+Message-ID: <aHn9tyrlEwRUyLvW@infradead.org>
+References: <20250718034222.1403370-1-mmpgouride@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250718034222.1403370-1-mmpgouride@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Fixes: e967dc40d501 ("xfs: return the allocated transaction from xfs_trans_alloc_empty")
-Signed-off-by: Alan Huang <mmpgouride@gmail.com>
----
- fs/xfs/xfs_notify_failure.c | 1 -
- 1 file changed, 1 deletion(-)
+Ooops, the fix looks good:
 
-diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-index fbd521f89874..fbeddcac4792 100644
---- a/fs/xfs/xfs_notify_failure.c
-+++ b/fs/xfs/xfs_notify_failure.c
-@@ -350,7 +350,6 @@ xfs_dax_notify_dev_failure(
- 			error = -EFSCORRUPTED;
- 	}
- 
--out:
- 	/* Thaw the fs if it has been frozen before. */
- 	if (mf_flags & MF_MEM_PRE_REMOVE)
- 		xfs_dax_notify_failure_thaw(mp, kernel_frozen);
--- 
-2.48.1
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
