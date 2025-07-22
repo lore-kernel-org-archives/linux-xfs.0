@@ -1,204 +1,91 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DE012E03E0;
-	Tue, 22 Jul 2025 09:59:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C29D288528;
+	Tue, 22 Jul 2025 10:28:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753178381; cv=none; b=VpERZmFdDGD8Nkgt4npf4dHrDN0olwyTcNv89Znnw8YGllTK+To2i54QMykYIC5FQ6i3KvyY5+vswzVBL5JPIKY+NsqYfCana8BF+51DvGA3e316n8oFso12Ul7MfzyGK4qEDmPSWp69hIjIwdp6MYE/I8mGu2MjAe4RZqBO6Ns=
+	t=1753180095; cv=none; b=NLgwkcBDSz+98B9K7pTlAux/DHyO0wCfh1AjqJDqHDDVjlmuQJc80HLZCVVILr/n2sDiGWrCZCRHU24YngFEM0ZZ/RhlwpIjZ9KuLFkMidg0C8aCXzOwC0Xuvkp/NPYO9lzReCV4v0VKKoR7nQzi0ZhVzMtAPpe73eeVV26qvjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753178381; c=relaxed/simple;
-	bh=9lAHiBwoo8jGTNinYh/ijsaneKOOiolgCjybVc2fj1U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UO8k3Vl5n44oWn/pCI832ulSxn1OQoL7WXaI2+XM4xkbamEhZev8vRLm0mevlCQ8frBeRnNON9l2mqo//yvjfWzLGTuXa0CRGggrCXmB9YXYJ73qANosZEyf7gpS5yvxcRdJlr6Utv9n+jhWD0qWMjrgPssr/ZiUqqPH3dcETQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=m/O49DTU; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1753180095; c=relaxed/simple;
+	bh=wAQp4UJPt1k6OlL+SfPFcrPM2o5kvsPngTLM2IfRLuE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ldvMcn/kOOmRDTHMSoVJOhHLKB9Nv5P1TNp3DoqonwIc/YR5VmTBaRv7GqBMOXaqqswHdXeXsiXwKhuFpPyUezCa7eUsjZXlpjVbqDt1JtSPd6OEj3SBkk9HP6btJboHJCG+oZvs2IEiXFdqBd+Q5b8sAg9Mhlh+AhqTlOrVVkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pz2ofdMc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="m/O49DTU"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56M8xTd5009164;
-	Tue, 22 Jul 2025 09:59:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=QNi9XzvfVxCwjgas+8tBNVhNwsc6Wl
-	y29wriyx3/p7g=; b=m/O49DTUDdwY7AISTXrwrRvug3FDe4RCwEjkgJMjIK5f8k
-	gTPyiraUNoWEe8n6MOFReNFfHX/GjX1upniWgyTpj5NPKFFqKhmXIk3U417BqDI2
-	7AYPlDiJ78cvytPbXcfbJXKTMUgIzWsLc9l9pbQc7N3kpaTyOwuHiBEbj5e+ynbZ
-	+so/XPY+QDg2H1ZiSbHAC+tnKDTqlvGWrocHSNkFvC0oALERZRjocTGXGiulzjmC
-	Vj+42bzcmVWJL5mOr/um2ifK9WD/nkE5Rxk8W+TJCmQEwj8cMM82wlgngCuMdy2f
-	CxFOWpPDFf0U+68u/BVrQbAWmzUbFl9u7GRwM90Q==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4805ut5grt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 22 Jul 2025 09:59:11 +0000 (GMT)
-Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 56M9vwHl015887;
-	Tue, 22 Jul 2025 09:59:10 GMT
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4805ut5grn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 22 Jul 2025 09:59:10 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 56M6AHHd005470;
-	Tue, 22 Jul 2025 09:59:09 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 480tvqsfua-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 22 Jul 2025 09:59:09 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 56M9x7gN52822374
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 22 Jul 2025 09:59:07 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C56B520043;
-	Tue, 22 Jul 2025 09:59:07 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 8760020040;
-	Tue, 22 Jul 2025 09:59:05 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.18.185])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Tue, 22 Jul 2025 09:59:05 +0000 (GMT)
-Date: Tue, 22 Jul 2025 15:29:02 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
-        Ritesh Harjani <ritesh.list@gmail.com>, john.g.garry@oracle.com,
-        tytso@mit.edu, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v3 04/13] ltp/fsx.c: Add atomic writes support to fsx
-Message-ID: <aH9g5jkwnXAkQUJl@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <cover.1752329098.git.ojaswin@linux.ibm.com>
- <5bbd19e1615ca2a485b3b430c92f0260ee576f5e.1752329098.git.ojaswin@linux.ibm.com>
- <20250717161747.GG2672039@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pz2ofdMc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11CA7C4CEF4;
+	Tue, 22 Jul 2025 10:28:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1753180094;
+	bh=wAQp4UJPt1k6OlL+SfPFcrPM2o5kvsPngTLM2IfRLuE=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=pz2ofdMcxzqXDXtUkVA5VQRbKINhlIbS0XGYcxEunv+nFo3g09ayCftjR+vpoKfVv
+	 M1U+Ovd2RSxrVRJsBUxNNj7tZ3YK0tx5tFjf+lmjkBAwDjdfGzPFe+FRpjmViHHoAQ
+	 bVgiMun94vA40pPWYFWEqpI+tdCoiL9uh9wWz9GKxYJYNAQ76KMC6ufngY6BzS3CUE
+	 o8wnsO1NVemhCr66N+H2R1JtESDaYLxvIhWaaHZZ9ctN1XJ8Rl0DDUujtLaimmQ/t2
+	 HLKGa+YS0EyTrIDqWYGopnO/sgfTOway4i0upV+rdmVOuXLj2/ZOEZ3uGdMrTyAX+O
+	 kPfrW2WHcALjg==
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-60867565fb5so8294472a12.3;
+        Tue, 22 Jul 2025 03:28:13 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCVHe6q0I+RM963sAuWl9w/jWVVu/b/HKK5QH+Ldl4VoH0MBkiTw03fZY4R0/qEcLsM1tPy7DqHVYSrn@vger.kernel.org, AJvYcCWsz3aeb3nop2+5XzmANBoJ1tMa0bqdP+NQQrIGaDtaKA/h2Jn7c8K1tcYy9cv/aMI0IrDY0r97Xh4XBA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwauVXg6bt6dl3ZJYte1b8oF6DTew4plmz3u8uJ7EeAwq2uuXRR
+	kVJtPpp/bV6K9wLrWgkTEuusaygXWShXAb7XuwJjsExVdETt9YsNiZGZjciyw5EFwub6Ejf3PzE
+	AHruLWJ7KQ/r3ok2BURSDGpO3wnqr2mk=
+X-Google-Smtp-Source: AGHT+IEPSjUrslGSRpOWvpB1GW/LCK/sbMGWwMUpcChwJ3pu+iv1FYXXHDi1+GVwsbFQKOIypBLCYViInLQpRAHb/IY=
+X-Received: by 2002:a17:907:9617:b0:ae0:ca8e:5561 with SMTP id
+ a640c23a62f3a-ae9c998730cmr2209096066b.13.1753180092691; Tue, 22 Jul 2025
+ 03:28:12 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250717161747.GG2672039@frogsfrogsfrogs>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzIyMDA3OSBTYWx0ZWRfX1d0DcaK6nuRc
- Ykn4QE+rWz1xLNyk01nNXPFVshatEvYaqlOcrLWJGMLyRu1RUIH/8Gu09U1vTZpVggolp4Ou29q
- Zslfq1aTj8mJqCILMhvecMIZUcF3aNsH4pKz3W+zZTViYEM93jLgGFjUPSYKs1muVRTDXho61pd
- 9hCg0niKlOeCzNXKgV1wVt8i1x4/fIqhe/AnJWUK6UiknngXwMseG+h8B1Eglxn+7eC0aXzVzeV
- SvAqVnH7znABNEW5aemXvsAe28E+QfVrfJau33rAqZ2POOGQUuqAqhcKJw+OBYDfEcL1S3m7Ty4
- CgEDHFuPmZRvcDUn46/67MhnaRweUfkGHBkwSm6aHQhnvtfqSRdaoU4wTk7Bz1cAiopHfUuT4fA
- CFYeu8V3M66kbub9Ck1FRWJ2xLu1+NfN0tJLaugSFDFI7Ie2rmwvI+ku7jZkwmSUfcyJZ6RO
-X-Proofpoint-ORIG-GUID: xmIFSctcK-dyd90AKesi5vAaqMFHatIm
-X-Authority-Analysis: v=2.4 cv=cIDgskeN c=1 sm=1 tr=0 ts=687f60ef cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=kj9zAlcOel0A:10 a=Wb1JkmetP80A:10 a=IipzgdfrNufsr-TDSacA:9
- a=CjuIK1q_8ugA:10
-X-Proofpoint-GUID: pLWncaHFwhK7sN5QcqX_s5BCD-TJg0qo
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-07-22_01,2025-07-21_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 mlxlogscore=999 mlxscore=0 spamscore=0 suspectscore=0
- adultscore=0 phishscore=0 impostorscore=0 bulkscore=0 lowpriorityscore=0
- priorityscore=1501 clxscore=1015 classifier=spam authscore=0 authtc=n/a
- authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505280000 definitions=main-2507220079
+References: <f28ef5098ed18d53df6f94faded1b352bb833527.1752049536.git.fdmanana@suse.com>
+ <681c9dcaca0bf16a694d8f56449618001cf20df6.1752166696.git.fdmanana@suse.com> <aH81_3bxZZrG4R2b@infradead.org>
+In-Reply-To: <aH81_3bxZZrG4R2b@infradead.org>
+From: Filipe Manana <fdmanana@kernel.org>
+Date: Tue, 22 Jul 2025 11:27:35 +0100
+X-Gmail-Original-Message-ID: <CAL3q7H4_Pc8F6QA4qY420MZzpF8gyEXsr8Dg83UksSBG2mmWCw@mail.gmail.com>
+X-Gm-Features: Ac12FXzq_Sj-K7fr1Dp3rldndlCEdCE0U4TWo9FctGqXM0uq9DMTzNZdRyFwnOs
+Message-ID: <CAL3q7H4_Pc8F6QA4qY420MZzpF8gyEXsr8Dg83UksSBG2mmWCw@mail.gmail.com>
+Subject: Re: [PATCH v2] generic: test overwriting file with mmap on a full filesystem
+To: Christoph Hellwig <hch@infradead.org>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	Filipe Manana <fdmanana@suse.com>, linux-xfs@vger.kernel.org, johannes.thumshirn@wdc.com, 
+	naohiro.aota@wdc.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jul 17, 2025 at 09:17:47AM -0700, Darrick J. Wong wrote:
+On Tue, Jul 22, 2025 at 7:56=E2=80=AFAM Christoph Hellwig <hch@infradead.or=
+g> wrote:
+>
+> I just noticed this test failing on zoned xfs in current for-next.
+>
+> That's because for out of place overwrite file systems writing at
+> ENOSPC will obviously fail, and I think the test acknowledges that
+> by forcing nocow for btrfs.
+>
+> But that leaves "real" out of place write file systems affected, which
+> should also include zone btrfs, but the test actually fails there
+> in mkfs already due to some reason.
 
-<snip>
+If the mkfs fails, it's probably _small_fs_size_mb that needs to be
+updated with a sane size for zoned btrfs.
+Johannes at Aota could give some advice there.
 
-> > +
-> > +/*
-> > + * Round down n to nearest power of 2.
-> > + * If n is already a power of 2, return n;
-> > + */
-> > +static int rounddown_pow_of_2(int n) {
-> > +	int i = 0;
-> > +
-> > +	if (is_power_of_2(n))
-> > +		return n;
-> > +
-> > +	for (; (1 << i) < n; i++);
-> > +
-> > +	return 1 << (i - 1);
-> > +}
-> > +
-> >  void
-> >  dowrite(unsigned offset, unsigned size, int flags)
-> >  {
-> > @@ -1081,6 +1113,27 @@ dowrite(unsigned offset, unsigned size, int flags)
-> >  	offset -= offset % writebdy;
-> >  	if (o_direct)
-> >  		size -= size % writebdy;
-> > +	if (flags & RWF_ATOMIC) {
-> > +		/* atomic write len must be inbetween awu_min and awu_max */
-> > +		if (size < awu_min)
-> > +			size = awu_min;
-> > +		if (size > awu_max)
-> > +			size = awu_max;
-> > +
-> > +		/* atomic writes need power-of-2 sizes */
-> > +		size = rounddown_pow_of_2(size);
-> > +
-> > +		/* atomic writes need naturally aligned offsets */
-> > +		offset -= offset % size;
-> 
-> I don't think you should be modifying offset/size here.  Normally for
-> fsx we do all the rounding of the file range in the switch statement
-> after the "calculate appropriate op to run" comment statement.
-> 
-> --D
+>
+> Can you please rework the patch to see that setting the nocow flag
+> works first and only try with that or something like that?
 
-Yes, I noticed that but then I saw we make size/offset adjustments in
-do write for writebdy and I wanted atomic writes adjustments to be done
-after that.
+Reworking it is late as it's already in for-next, but we can add a
+patch to skip it on zoned xfs:
 
-Regads,
-ojaswin
+1) The quickest way would be to add to the test:
+_require_non_zoned_device $SCRATCH_DEV
 
-> 
-> > +
-> > +		/* Skip the write if we are crossing max filesize */
-> > +		if ((offset + size) > maxfilelen) {
-> > +			if (!quiet && testcalls > simulatedopcount)
-> > +				prt("skipping atomic write past maxfilelen\n");
-> > +			log4(OP_WRITE_ATOMIC, offset, size, FL_SKIPPED);
-> > +			return;
-> > +		}
-> > +	}
-> >  	if (size == 0) {
-> >  		if (!quiet && testcalls > simulatedopcount && !o_direct)
-> >  			prt("skipping zero size write\n");
-> > @@ -1088,7 +1141,10 @@ dowrite(unsigned offset, unsigned size, int flags)
-> >  		return;
-> >  	}
-> >  
-> > -	log4(OP_WRITE, offset, size, FL_NONE);
-> > +	if (flags & RWF_ATOMIC)
-> > +		log4(OP_WRITE_ATOMIC, offset, size, FL_NONE);
-> > +	else
-> > +		log4(OP_WRITE, offset, size, FL_NONE);
-> >  
-> >  	gendata(original_buf, good_buf, offset, size);
-> >  	if (offset + size > file_size) {
-> > @@ -1108,8 +1164,9 @@ dowrite(unsigned offset, unsigned size, int flags)
-> >  		       (monitorstart == -1 ||
-> >  			(offset + size > monitorstart &&
-> >  			(monitorend == -1 || offset <= monitorend))))))
-> > -		prt("%lld write\t0x%x thru\t0x%x\t(0x%x bytes)\tdontcache=%d\n", testcalls,
-> > -		    offset, offset + size - 1, size, (flags & RWF_DONTCACHE) != 0);
-> > +		prt("%lld write\t0x%x thru\t0x%x\t(0x%x bytes)\tdontcache=%d atomic_wr=%d\n", testcalls,
-> > +		    offset, offset + size - 1, size, (flags & RWF_DONTCACHE) != 0,
-> > +		    (flags & RWF_ATOMIC) != 0);
-> >  	iret = fsxwrite(fd, good_buf + offset, size, offset, flags);
-> >  	if (iret != size) {
-> >  		if (iret == -1)
-> > @@ -1785,6 +1842,30 @@ do_dedupe_range(unsigned offset, unsigned length, unsigned dest)
-> >  }
-> >  #endif
-> >  
-> > +int test_atomic_writes(void) {
-> > +	int ret;
-> > +	struct statx stx;
-> > +
+2) Or add a "_require_nocow_data_writes" helper to check we can write
+in place and skip the test if not, as you suggest, as it's more
+generic in case there are other filesystems or configurations where
+data writes are always COWed.
