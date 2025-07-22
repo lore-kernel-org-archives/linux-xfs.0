@@ -1,39 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82E6B280025;
-	Tue, 22 Jul 2025 17:58:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 447E627F747;
+	Tue, 22 Jul 2025 18:35:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753207101; cv=none; b=nIsuG2N8XlPFc1rMkiqgG6+Mjtjf6u+z92A78Q4Vz0g6UQE+TPOd6cQVvauN/ue9YyXG+/VH464BBG/9+OrIqNfCZYZYHM9NENydvqiXn2sGqZUtug88sC8BLz046XK0yLOP7+ZMEs/c6FstbAZlHWqYJU7p2x1/jXl/CdmFFkE=
+	t=1753209338; cv=none; b=VbaaDz+mB9Bbk583kwBOqU+oGzRWJ8hbfDYGrrKdgGw/vwmCnzvXT528CO+sUrwzv+NlXpcxm1pgJH5fwY/QgoVrBQvREPuwCt730k8AaxM/Z12l+vWzdoOjGAXNjfHuR454gck0jzqtgjxHdCki5UUkov7MMqYzDPezDTVhbVY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753207101; c=relaxed/simple;
-	bh=rTGJ4FpBPs31eng44jVccK+/A2bp5NVU33SO120uDME=;
+	s=arc-20240116; t=1753209338; c=relaxed/simple;
+	bh=tmsG48jECFf0zV4CrIt7ct1LswYIhppt329VQrzKfTU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rxSVH2WK+lWT6SzrpsGnPlPwt5Ix4JDxT0Lmfys0RVbm0Khpit0kX25M76ksH+qpspFpPbohxaH9frTMJx2LMGSEqVX2b1TkHPA8NMw9c1tL5ESp8K56GqkYEpcjflehfpF6pbUv4AQ7acF7+tv7hpzHzYmbUNAMnu0yuhWGsI8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IkNyL6Rb; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=m9DNE5qs4yMUVzbHR9O0D0lIKDmACbiy6tL1fhA/EVZk0voxqEEU3PHmtA6wDnZ4Vsx8AQvu62ScudHJjQWB1dxIblXSflDaHyUOXmTfJxMig3XPnIgoTN89hsgCPAtIdX2NvuzYo0ywk94r8u5eGWmDJeriLsIfjk1Evbq2Z0A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vMmetN+W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IkNyL6Rb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6D45C4CEF1;
-	Tue, 22 Jul 2025 17:58:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vMmetN+W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 977D5C4CEF4;
+	Tue, 22 Jul 2025 18:35:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753207101;
-	bh=rTGJ4FpBPs31eng44jVccK+/A2bp5NVU33SO120uDME=;
+	s=k20201202; t=1753209337;
+	bh=tmsG48jECFf0zV4CrIt7ct1LswYIhppt329VQrzKfTU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IkNyL6RbQJ/tyLVELIJpngeP2TAs/LEhQTj0whbK6VCznM4HkEzDRDXM5VHWUmffA
-	 PSFLanYaJKfrRX/mHCVuIs/as216AYjmvj+rPt7ZrkIPHXpfbWe5Wx0i5iUk1vr4dE
-	 xq7ULjuuZK+lsgS4TDPoaLdv1HfF0do1nGpXnR//UOUANRuRafLe/obr3NJRSZSpob
-	 Ly4O4vqzNecg3H5cyO6zZM5w+Uf6l43AtdVSctjtbe4lRGFVdhLGGlMbUwlMSus2mr
-	 C7ttRy9jbwIKyliiYn64fjIbiiiAlOiCUIXjB+w2NNKGWYOnfCcF7ITao9lb4FFrkc
-	 C8bKA8/4PGoyw==
-Date: Tue, 22 Jul 2025 10:58:20 -0700
+	b=vMmetN+WxlUYyGnFV3/cMZtG4rJoL57AMu9HBGuSoUcO9GAfybGpvaJay4JPzonov
+	 4WSx4PEpRzWlSCUWnbrMyoqPk4ZK9iaDizsdyLKlFC+9rz+ICC89BX8XCs2DK3vyCp
+	 99YCw99ZkqlaO71ZRwPY6tfNZUxotSTZMu8GOAlu1vzQfl4946yfBVLnIv9iJwM/9k
+	 g8wCgL2VqDEpBypOyyqADzlbzzsHf9AlCUK/Z61Q9jPvnaaOtuRM1Z7xfPMjJlpdvI
+	 T+yY6BdKiNfm6N2KDYP9KsK5B7R/vLVRV4vCoyjGvrpEeFOK6AttpQGzF9IWvWJ8gP
+	 MLvBbwnSriobQ==
+Date: Tue, 22 Jul 2025 11:35:37 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: hch@lst.de, cem@kernel.org, linux-xfs@vger.kernel.org,
-	linux-ext4 <linux-ext4@vger.kernel.org>
-Subject: Re: [PATCH v2] xfs: disallow atomic writes on DAX
-Message-ID: <20250722175820.GV2672070@frogsfrogsfrogs>
-References: <20250722150016.3282435-1-john.g.garry@oracle.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: cen zhang <zzzccc427@gmail.com>, cem@kernel.org,
+	linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
+	zhenghaoran154@gmail.com, r33s3n6@gmail.com, gality365@gmail.com,
+	linux-xfs@vger.kernel.org
+Subject: Re: [BUG] xfs: Assertion failed in xfs_iwalk_args triggered by
+ XFS_IOC_INUMBERS
+Message-ID: <20250722183537.GU2672049@frogsfrogsfrogs>
+References: <CAFRLqsU-k2GYx4D9HUmu+tSTvmMbY_ea9aYwE+2yvHwLP_+JDQ@mail.gmail.com>
+ <aH3fXv5tlfGtzVD1@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,121 +46,44 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250722150016.3282435-1-john.g.garry@oracle.com>
+In-Reply-To: <aH3fXv5tlfGtzVD1@infradead.org>
 
-[cc linux-ext4 because ext4_file_write_iter has the same problem]
+On Sun, Jul 20, 2025 at 11:34:06PM -0700, Christoph Hellwig wrote:
+> The patch below should fix the issue.  But I wonder if we should split
+> the flags a bit better to make things more obvious.
 
-On Tue, Jul 22, 2025 at 03:00:16PM +0000, John Garry wrote:
-> Atomic writes are not currently supported for DAX, but two problems exist:
-> - we may go down DAX write path for IOCB_ATOMIC, which does not handle
->   IOCB_ATOMIC properly
-> - we report non-zero atomic write limits in statx (for DAX inodes)
-> 
-> We may want atomic writes support on DAX in future, but just disallow for
-> now.
-> 
-> For this, ensure when IOCB_ATOMIC is set that we check the write size
-> versus the atomic write min and max before branching off to the DAX write
-> path. This is not strictly required for DAX, as we should not get this far
-> in the write path as FMODE_CAN_ATOMIC_WRITE should not be set.
-> 
-> In addition, due to reflink being supported for DAX, we automatically get
-> CoW-based atomic writes support being advertised. Remedy this by
-> disallowing atomic writes for a DAX inode for both sw and hw modes.
+We did in [1], but did you have something else in mind?
 
-You might want to add a separate patch to insert:
+[1] https://lore.kernel.org/linux-xfs/20220321051750.400056-18-chandan.babu@oracle.com/
 
-	if (WARN_ON_ONCE(iocb->ki_flags & IOCB_ATOMIC))
-		return -EIO;
+> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> index c8c9b8d8309f..302efe54e2af 100644
+> --- a/fs/xfs/xfs_itable.c
+> +++ b/fs/xfs/xfs_itable.c
+> @@ -457,7 +457,8 @@ xfs_inumbers(
+>  	 * locking abilities to detect cycles in the inobt without deadlocking.
+>  	 */
+>  	tp = xfs_trans_alloc_empty(breq->mp);
+> -	error = xfs_inobt_walk(breq->mp, tp, breq->startino, breq->flags,
+> +	error = xfs_inobt_walk(breq->mp, tp, breq->startino,
+> +			breq->flags & XFS_IBULK_SAME_AG,
 
-into dax_iomap_rw to make it clear that DAX doesn't support ATOMIC
-writes.
+That's correct -- the only IBULK flag with meaning for xfs_inobt_walk is
+SAME_AG because the others affect bulkstat output.
 
-> Reported-by: Darrick J. Wong <djwong@kernel.org>
-> Fixes: 9dffc58f2384 ("xfs: update atomic write limits")
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
+But it might be clearer to make this explicit the same way that
+xfs_bulkstat does:
 
-Otherwise seems reasonable to me...
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+	unsigned int iwalk_flags = 0;
+
+	if (breq->flags & XFS_IBULK_SAME_AG)
+		iwalk_flags |= XFS_IWALK_SAME_AG;
+
+	error = xfs_inobt_walk(..., iwalk_flags, ...);
+
+This probably should have been included in [1] so:
+
+Cc: <stable@vger.kernel.org> # v5.19
+Fixes: 5b35d922c52798 ("xfs: Decouple XFS_IBULK flags from XFS_IWALK flags")
 
 --D
-
-> ---
-> Difference to v1:
-> - allow use max atomic mount option and always dax together (Darrick)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index ed69a65f56d7..979abcb25bc7 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1099,9 +1099,6 @@ xfs_file_write_iter(
->  	if (xfs_is_shutdown(ip->i_mount))
->  		return -EIO;
->  
-> -	if (IS_DAX(inode))
-> -		return xfs_file_dax_write(iocb, from);
-> -
->  	if (iocb->ki_flags & IOCB_ATOMIC) {
->  		if (ocount < xfs_get_atomic_write_min(ip))
->  			return -EINVAL;
-> @@ -1114,6 +1111,9 @@ xfs_file_write_iter(
->  			return ret;
->  	}
->  
-> +	if (IS_DAX(inode))
-> +		return xfs_file_dax_write(iocb, from);
-> +
->  	if (iocb->ki_flags & IOCB_DIRECT) {
->  		/*
->  		 * Allow a directio write to fall back to a buffered
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 07fbdcc4cbf5..bd6d33557194 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -358,9 +358,20 @@ static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
->  
->  static inline bool xfs_inode_can_hw_atomic_write(const struct xfs_inode *ip)
->  {
-> +	if (IS_DAX(VFS_IC(ip)))
-> +		return false;
-> +
->  	return xfs_inode_buftarg(ip)->bt_awu_max > 0;
->  }
->  
-> +static inline bool xfs_inode_can_sw_atomic_write(const struct xfs_inode *ip)
-> +{
-> +	if (IS_DAX(VFS_IC(ip)))
-> +		return false;
-> +
-> +	return xfs_can_sw_atomic_write(ip->i_mount);
-> +}
-> +
->  /*
->   * In-core inode flags.
->   */
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 149b5460fbfd..603effabe1ee 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -616,7 +616,8 @@ xfs_get_atomic_write_min(
->  	 * write of exactly one single fsblock if the bdev will make that
->  	 * guarantee for us.
->  	 */
-> -	if (xfs_inode_can_hw_atomic_write(ip) || xfs_can_sw_atomic_write(mp))
-> +	if (xfs_inode_can_hw_atomic_write(ip) ||
-> +	    xfs_inode_can_sw_atomic_write(ip))
->  		return mp->m_sb.sb_blocksize;
->  
->  	return 0;
-> @@ -633,7 +634,7 @@ xfs_get_atomic_write_max(
->  	 * write of exactly one single fsblock if the bdev will make that
->  	 * guarantee for us.
->  	 */
-> -	if (!xfs_can_sw_atomic_write(mp)) {
-> +	if (!xfs_inode_can_sw_atomic_write(ip)) {
->  		if (xfs_inode_can_hw_atomic_write(ip))
->  			return mp->m_sb.sb_blocksize;
->  		return 0;
-> -- 
-> 2.43.5
-> 
