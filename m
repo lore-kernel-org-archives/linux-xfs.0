@@ -1,51 +1,79 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34A671EB9FF;
-	Tue, 22 Jul 2025 08:16:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 346B528A3E2;
+	Tue, 22 Jul 2025 08:47:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753172181; cv=none; b=dVcqmZ+Dh/equVoUTAdthCSduOGyiM0fl4pGvS0sO54k8IW+HNSYAH0gMhNqbrsxIt2tPLskxSUK2W80B4tjNbhQfUTAEr9tV3rBi/tv4ezdKK1N/EqO7ap1x0AIa79KyASXgfGafApBXYWgzB+zpMujHi+5A3UEo6OefY60Wp8=
+	t=1753174062; cv=none; b=pUEnLxpNZYZ+0qJ/COHACE5Wv80ZlBDWqTVtGaB+xzMFF9cuous/Nn7Y3BMa6CzpT8kpLajSlV6SLjExjQFhbRBJtiPML04EofD32hxDmRsO3Uj2uRbyt1i/VjKuTrWG7A/nJ/Z95nKtmwJZabBEMCt7UqRilwSczqaYSuBUon0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753172181; c=relaxed/simple;
-	bh=QH9N8xGLNGpk2Srk8msJhdqgUd/p4bty86Z/5jwVq+A=;
+	s=arc-20240116; t=1753174062; c=relaxed/simple;
+	bh=o4ITgAzkFAbQTkygTxs+hGAZKG+lRrwfSadsb29Xvis=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jHv6JAO/OD6R5mQ9pl1jsQ1ynaOZiaDYf2nXwFZFZpK1Hk+DyXvUPnd86dTSLtYqh8M7vVCi5Z4u3C6aMOJ5VnV+AJfwBZPRUicTDLxnnCIvHg70DwS8hIuYu6bSvmgVGbezyULv5ZMfsK88x+kMaz9VS7+a/J7F7UWeeNz7w+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rN87E8E8; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=WerPedtOPq8hi7RaEd8GrfybJaCf5Er6TlCPrO6OQute555zkC4v0KxezF6V5EviLBl90xBjXrVllbFr+EDmyYMlR+cJqfKXu0a77vinyFW3ywAFCi1IJL3aSYFzO59BzLg2vnp75AeBboyTDVmD8BCeou+hgC+yU0QKMwNHT6g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=db9MJRWp; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rN87E8E8"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=w7SDQNCqmEtC4WzvVvc28QG/QoNPCtOImKQljNjeG4U=; b=rN87E8E8oOwUK+imBtBPMU0t/f
-	YvEmeawneYojFChEQEVKmnbcS3T8SJx62Y4+bjgz9YO9lOjMVvlFvl9G+Ni0KFzMDxMAbWMaC2MAn
-	TJDHkjB9QO2fmhz5MApAIslzofjy1BXtjf5qfEyEYJlGN2iLjtBcWdrL6N56ggR4/hlOAyiDfa55n
-	B7wJwqYLxXlMGPS9Wwy/K8BOdUOfD24lUiUJYmdoUzluZjbrTFXkJewClewtOeJ9VmP/whcPTuCVl
-	UBMjGMDoClHVwPRLZmoi1TILVQKXDMCADNCSS13PoY0BXf85f/QC7jClZ64+QQRmkbSpPtGHEJoEP
-	bLOkgSaQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1ue8Ad-00000001mzX-3QNF;
-	Tue, 22 Jul 2025 08:16:19 +0000
-Date: Tue, 22 Jul 2025 01:16:19 -0700
-From: "hch@infradead.org" <hch@infradead.org>
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc: "hch@infradead.org" <hch@infradead.org>,
-	"fdmanana@kernel.org" <fdmanana@kernel.org>,
-	"fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-	Filipe Manana <fdmanana@suse.com>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	Naohiro Aota <Naohiro.Aota@wdc.com>
-Subject: Re: [PATCH v2] generic: test overwriting file with mmap on a full
- filesystem
-Message-ID: <aH9I02-KLVuyybId@infradead.org>
-References: <f28ef5098ed18d53df6f94faded1b352bb833527.1752049536.git.fdmanana@suse.com>
- <681c9dcaca0bf16a694d8f56449618001cf20df6.1752166696.git.fdmanana@suse.com>
- <aH81_3bxZZrG4R2b@infradead.org>
- <ee8d5d39-7898-4e45-9f4c-359c2c7a64fd@wdc.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="db9MJRWp"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56M2VYd1027323;
+	Tue, 22 Jul 2025 08:47:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=+w2y0K65jhToR49D5iq9NrD5o0Ku8I
+	TXpDRw/BW1X94=; b=db9MJRWpmUGEcTlBlVx/R8AP7UbMuTV+0aV56YFQfYAzU9
+	dAtNSnC60+6tDDPReC80kGmtZVcJB42DgCWpNz9WxbRD99xupd0DUXW9R9n0p1dU
+	kEyTBVHox1BMnFX0e0pw8kuaKa1JLsCkqYoAtAE6jzy3RBwfRhIb7naZRHuCzK2r
+	iQd/N4pv3k/Fk8WQiPAdV95JA/moGfE6wPrc+ucVsIIYi6tAn46O/c05tzfXTQnS
+	4XfdByvNyukr14+FzfoTq7UIkkx/DcIpXOBqLP+G1WcVLnJNLvID6sMz/C2+LzCQ
+	JQcZJhhuw2bFTImwa7OMcdkF8cGO3IWbvCI9Vb4w==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4805uqwacn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 22 Jul 2025 08:47:33 +0000 (GMT)
+Received: from m0360072.ppops.net (m0360072.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 56M8lWee024513;
+	Tue, 22 Jul 2025 08:47:32 GMT
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4805uqwacj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 22 Jul 2025 08:47:32 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 56M6AFgX004727;
+	Tue, 22 Jul 2025 08:47:32 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 480u8fs7jj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 22 Jul 2025 08:47:31 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 56M8lUIE24380126
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 22 Jul 2025 08:47:30 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 084C62004B;
+	Tue, 22 Jul 2025 08:47:30 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id A366820040;
+	Tue, 22 Jul 2025 08:47:27 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.18.185])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Tue, 22 Jul 2025 08:47:27 +0000 (GMT)
+Date: Tue, 22 Jul 2025 14:17:24 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
+        Ritesh Harjani <ritesh.list@gmail.com>, djwong@kernel.org,
+        tytso@mit.edu, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v3 05/13] generic/1226: Add atomic write test using fio
+ crc check verifier
+Message-ID: <aH9PwFm06n9KQ0mE@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <cover.1752329098.git.ojaswin@linux.ibm.com>
+ <1e6dad5f4bdc8107e670cc0bd3ce0fccd0c9037a.1752329098.git.ojaswin@linux.ibm.com>
+ <5211dff7-579b-48ea-8180-72d8c6083400@oracle.com>
+ <aHkAJJkvaWYJu7gC@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <b270bb66-721e-4433-adaf-fe5ae100ca6e@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,27 +82,86 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ee8d5d39-7898-4e45-9f4c-359c2c7a64fd@wdc.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <b270bb66-721e-4433-adaf-fe5ae100ca6e@oracle.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: SQFbqDHPjYj27IoY55UmaGyQPvNXYcnJ
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzIyMDA3MSBTYWx0ZWRfXwzlFntubH1e2
+ aCZdIxxLr0w4OnPgPqap2muy1NrQxTQNAUDArssN/8hh7hF8Y7xqqInmqJzD7nFIZgk8eqVZmHc
+ NoeKSL0h6iwZeta8akkoDO6rFdOLhwpeZbmRTDiAWcBVlc2qDDiyfEsNiSY32S+FOHR5b1WVbVR
+ fDfEz5kKfYJgS5LXdF2u3X+EuA+thwaKkhSvSMx8s22olVOb/w6TeUfQXPsbYCTLCO3TmnVJd3d
+ wxIvcDYaJwzTMLHMz8MhPrGdAkpAva8dfnhB67bg2BLixUB9/C8THGj8/9e6ZtvU/KFeTZHUR7p
+ bLur77/qyZ4e8BBE2J6geML1IIUZGvzyDTmJ92CUuDFXXPo6OHnRNUb+HUOln7wE9Gv8UT+0V6I
+ scgahz9KMVXSbFER0td7dRVA8W+o+Wopoc9t/VUPUWQIEpL58N23jgQF5kL7Q8geCt7ozWE/
+X-Authority-Analysis: v=2.4 cv=dpnbC0g4 c=1 sm=1 tr=0 ts=687f5025 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=kj9zAlcOel0A:10 a=Wb1JkmetP80A:10 a=pGLkceISAAAA:8 a=VnNF1IyMAAAA:8
+ a=9kuFc5caclUvU4WTlC0A:9 a=CjuIK1q_8ugA:10
+X-Proofpoint-GUID: u0iMYmm1INaOaeqJ-op82qMK-WTPtMYa
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-07-22_01,2025-07-21_02,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 impostorscore=0 suspectscore=0 adultscore=0 phishscore=0
+ lowpriorityscore=0 priorityscore=1501 bulkscore=0 mlxscore=0 malwarescore=0
+ mlxlogscore=851 clxscore=1015 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2507220071
 
-On Tue, Jul 22, 2025 at 07:50:48AM +0000, Johannes Thumshirn wrote:
-> On 22.07.25 08:56, Christoph Hellwig wrote:
-> > I just noticed this test failing on zoned xfs in current for-next.
+On Thu, Jul 17, 2025 at 03:06:01PM +0100, John Garry wrote:
+> On 17/07/2025 14:52, Ojaswin Mujoo wrote:
+> > On Thu, Jul 17, 2025 at 02:00:18PM +0100, John Garry wrote:
+> > > On 12/07/2025 15:12, Ojaswin Mujoo wrote:
+> > > > From: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+> > > > 
+> > > > This adds atomic write test using fio based on it's crc check verifier.
+> > > > fio adds a crc for each data block. If the underlying device supports atomic
+> > > > write then it is guaranteed that we will never have a mix data from two
+> > > > threads writing on the same physical block.
+> > > 
+> > > I think that you should mention that 2-phase approach.
 > > 
-> > That's because for out of place overwrite file systems writing at
-> > ENOSPC will obviously fail, and I think the test acknowledges that
-> > by forcing nocow for btrfs.
+> > Sure I can add a comment and update the commit message with this.
 > > 
-> > But that leaves "real" out of place write file systems affected, which
-> > should also include zone btrfs, but the test actually fails there
-> > in mkfs already due to some reason.
+> > > 
+> > > Is there something which ensures that we have fio which supports RWF_ATOMIC?
+> > > fio for some time supported the "atomic" cmdline param, but did not do
+> > > anything until recently
+> > 
+> > We do have _require_fio which ensures the options passed are supported
+> > by the current fio. If you are saying some versions of fio have --atomic
+> > valid but dont do an RWF_ATOMIC then I'm not really sure if that can be
+> > caught though.
 > 
-> It probably fails the _try_scratch_mkfs_sized() call because that goes 
-> into _check_minimal_fs_size() and that should _notrun if $fssize < 
-> $MIN_FSSIZE.
+> Can you check the fio version?
 
-Btw, it would be really helpful to improve the test coverage if btrfs did
-the same adjustment for the nimimum size as zone xfs, where mkfs run up 
-the requested size to the zone size and then adds the required extra
-zones that don't show up in the user capacity.  That way all the small
-size based tests just work.
+We don't have a helper but yes I think that should be possible
+> 
+> > 
+> > > 
+> > > > 
+> > > > Co-developed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> > > > Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> > > > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> > > > ---
+> > > >    tests/generic/1226     | 101 +++++++++++++++++++++++++++++++++++++++++
+> > > >    tests/generic/1226.out |   2 +
+> > > 
+> > > Was this tested with xfs?
+> > 
+> > Yes, I've tested with XFS with software fallback as well. Also, tested
+> > xfs while keeping io size as 16kb so we stress the hw paths too.
+> 
+> so is that requirement implemented with the _require_scratch_write_atomic
+> check?
+
+No, its just something i hardcoded for that particular run. This patch
+doesn't enforce hardware only atomic writes 
+
+Regards,
+ojaswin
+> 
+> > Both
+> > seem to be passing as expected.
+> > > 
+> 
+> 
