@@ -1,77 +1,51 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77792288503;
-	Wed, 23 Jul 2025 13:54:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE84F230268;
+	Wed, 23 Jul 2025 14:46:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753278879; cv=none; b=sjVrX5MA10/83zoifAcMIxf9sEK+f11a/60ITG2WiTjseZJA+oFN6eBlGzKRmFszaYQmzQsaKKc5Qx91WMNzCj16P9g+fSVnC6KsvEBee9uNWAXCS4Fshls2awAfzd/VvzlHXEW0emsatrutSAf1VAWQ4lmuPNrEP4yY9Rl4vTo=
+	t=1753281998; cv=none; b=VdYoLUxXy9EhIcWWEpEf1CIIcKKroDi9xujFVUk3jxp+LxWGskia2FGQqUaf2uyjxCYVviE4JMBn85UIi8nfhnEEQPY8/qG2NV3pbzj+cN+Nlm/gZwoLfvYJUv7kzuBjm9mtCy4Tlh2EYRKLzjWdWDCY656t4yYFJL6iHQqLK/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753278879; c=relaxed/simple;
-	bh=RMuYBp0A6vyzQ766WOPRpQROGETcbc/JOZdzOJjILX4=;
+	s=arc-20240116; t=1753281998; c=relaxed/simple;
+	bh=gGlgOle8BYTBsJBazgGXJhWVGajCQhO/jB9JlJx7bKI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eInZSfST6tCk0Fc/SChmlFAPtF06v1YQA1nnw6OfSEfqJy4qj5f98LdzW73jreAbtYjmvJ40b+9+10GUZfhXntibICAeNQE44TKw6DbXXq9zk0CHQpRXlT99wgRQOVWO71x2GtPHCuNHD8WDUKaDacicIIVLxsFz9ZuuJBQbXx0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=jS+gQDnv; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=vCX+9evfdrWkVcNv34XrCaYu7dHydxshWyIjrcmoaYeDu+zFCkZ03ehoW2tk2KIgqNQUVh72FlToz9JNLId6P+zQBHbrTXw8RSi7ddS2YWtjwEwVp0qUYjDW89/90Z0uWFv85VTHRYH1JOobk+tn3eZ+ZVIQypGQORV3SnuoU/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CPmkABex; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="jS+gQDnv"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56N8Poq9029669;
-	Wed, 23 Jul 2025 13:54:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=0YWJBrxGaCoqQ3YrHFW0WvtlSgQQ3Z
-	qrq2kfmLR+Icw=; b=jS+gQDnvdCG2Ssa0l/lB95EmUmOXHCxRLDNCxgBFUo6aFV
-	SvsW/Ym0J4QF3kA8TiC3fYd9NDZDJbbqioDMHBvCDedAMaZvBwd76R67DiNvpuSD
-	yKQbiH3I3LxqyfiDSo9prfB5WjbD0ixS6ffr28uEXUCuBKWNF/qCfduZbyymf/s1
-	FvCZuRW6BHjnQMwmLXWO7FOhwyW9z57OYd+ZLk1nHCck6DHCWD3QLTRxy4/Op/yO
-	Npdm6xA/pzPud8luAx+rCAGyvzizObdlUKrg+/HviI/JHN8jvtNJhlnNpsh2x8H2
-	HXvm/5SgMggYUdiUunyopF9+CVZr1Wn9rqgjjBaQ==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 482kdykv8a-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 23 Jul 2025 13:54:15 +0000 (GMT)
-Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 56NDmflY009745;
-	Wed, 23 Jul 2025 13:54:15 GMT
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 482kdykv86-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 23 Jul 2025 13:54:15 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 56N9hdf0024744;
-	Wed, 23 Jul 2025 13:54:14 GMT
-Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 480rd2fsxv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 23 Jul 2025 13:54:13 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 56NDsCL520775184
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 23 Jul 2025 13:54:12 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 4911A20043;
-	Wed, 23 Jul 2025 13:54:12 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 32BB420040;
-	Wed, 23 Jul 2025 13:54:10 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.19.8])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Wed, 23 Jul 2025 13:54:09 +0000 (GMT)
-Date: Wed, 23 Jul 2025 19:23:58 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
-        Ritesh Harjani <ritesh.list@gmail.com>, john.g.garry@oracle.com,
-        tytso@mit.edu, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v3 07/13] generic/1228: Add atomic write multi-fsblock
- O_[D]SYNC tests
-Message-ID: <aIDpdg_SibBYFAPy@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <cover.1752329098.git.ojaswin@linux.ibm.com>
- <ae247b8d0a9b1309a2e4887f8dd30c1d6e479848.1752329098.git.ojaswin@linux.ibm.com>
- <20250717163510.GJ2672039@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CPmkABex"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FB37C4CEE7;
+	Wed, 23 Jul 2025 14:46:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1753281998;
+	bh=gGlgOle8BYTBsJBazgGXJhWVGajCQhO/jB9JlJx7bKI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=CPmkABexxAU563jj7cXZaiWnoX+pnf4iOwVvkCw4AT6U/HSGybCbAbGLwwEGNM6Ai
+	 QJ9n5xUuyavgOf3JmFofdCwrfxivrB2jgdH0a92AvLXnrGHNbx2vZxDU68XhgaVFMw
+	 wt+XI8owSrdHF91Gtd/EdzzhM5+XHQ7jc0eVcKujgraTivRyLqnMgCHKgzlyRKkJyf
+	 QqRSCyB3y65mhvOlJSZbQGhbL+GLrfiUwNZNwun0sDf1ItpaB4GwdQcgClNYIssqpS
+	 x++qS5yONt75+1zkUDnLIB5MGT8bJjuqCr46B3rDyeozd0vfYvZUbe8Oq1GJ07fZUn
+	 69FiRPwbeweQQ==
+Date: Wed, 23 Jul 2025 07:46:37 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Naresh Kamboju <naresh.kamboju@linaro.org>, joannelkoong@gmail.com
+Cc: linux-fsdevel@vger.kernel.org, linux-mm <linux-mm@kvack.org>,
+	linux-xfs@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+	lkft-triage@lists.linaro.org,
+	Linux Regressions <regressions@lists.linux.dev>,
+	Miklos Szeredi <miklos@szeredi.hu>, Jan Kara <jack@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Christian Brauner <brauner@kernel.org>,
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+	"Liam R. Howlett" <liam.howlett@oracle.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dan Carpenter <dan.carpenter@linaro.org>,
+	Anders Roxell <anders.roxell@linaro.org>,
+	Ben Copeland <benjamin.copeland@linaro.org>
+Subject: Re: next-20250721 arm64 16K and 64K page size WARNING fs fuse file.c
+ at fuse_iomap_writeback_range
+Message-ID: <20250723144637.GW2672070@frogsfrogsfrogs>
+References: <CA+G9fYs5AdVM-T2Tf3LciNCwLZEHetcnSkHsjZajVwwpM2HmJw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -80,72 +54,122 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250717163510.GJ2672039@frogsfrogsfrogs>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: wrwQ8mGAXZHX7I1lKsC4Q6DSqTqQiQBG
-X-Authority-Analysis: v=2.4 cv=XP0wSRhE c=1 sm=1 tr=0 ts=6880e987 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=kj9zAlcOel0A:10 a=Wb1JkmetP80A:10 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8
- a=vSSht2dO2PesWFsvtsoA:9 a=CjuIK1q_8ugA:10
-X-Proofpoint-GUID: F1TixKmTGwGx9V2IRWYqtOckXbGe6GaD
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzIzMDExNyBTYWx0ZWRfX0z51h7rs0F3g
- Aj8xxKSfQVzwP4K09yqLUm8FQMCFk/4NzT7qtxZfJtQ+TdvUFzZ0tWbqwJGZ9I8kqpNXyKQKYTX
- 6KW8HLYty+2hEwSDUCwB34iSLsemFTDiHGE5eobqNL51e+7kKpbYOg8PP6/nrUeFwY2PzVw3PgD
- tbJ3uoUp5ReIwvQYB2v6m1Jah/wNXI3e1atstarFQF64O/eogn34jsaTYSqeZtCI777N1v4Q1TW
- K5dOtKKvi17lKMd+oUe8H3q1r0ChqQHsZejjchBN/lRVxq/oJqPwby3InX4SFQUzovS0jJ6bnuJ
- gSj0iaahInTITWjHh+KxOR2c29s+2KrfawMaVGmPNomUDH0+FVPp77CUDdor1FuXswxsRNBDqau
- 0tm09jpkFL77itakMHxKEewHN5TIHvUKxSaFY9vqJ/MoXhGAevoVozHi9g0+JwN0J413vAif
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-07-23_02,2025-07-22_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- mlxscore=0 bulkscore=0 priorityscore=1501 mlxlogscore=768 spamscore=0
- suspectscore=0 clxscore=1015 malwarescore=0 impostorscore=0
- lowpriorityscore=0 adultscore=0 phishscore=0 classifier=spam authscore=0
- authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505280000 definitions=main-2507230117
+In-Reply-To: <CA+G9fYs5AdVM-T2Tf3LciNCwLZEHetcnSkHsjZajVwwpM2HmJw@mail.gmail.com>
 
-On Thu, Jul 17, 2025 at 09:35:10AM -0700, Darrick J. Wong wrote:
+[cc Joanne]
 
-<snip>
-
-> > +verify_atomic_write() {
-> > +	if [[ "$1" == "shutdown" ]]
-> > +	then
-> > +		local do_shutdown=1
-> > +	fi
-> > +
-> > +	test $bytes_written -eq $awu_max || _fail "atomic write len=$awu_max assertion failed"
-> > +
-> > +	if [[ $do_shutdown -eq "1" ]]
-> > +	then
-> > +		echo "Shutting down filesystem" >> $seqres.full
-> > +		_scratch_shutdown >> $seqres.full
-> > +		_scratch_cycle_mount >>$seqres.full 2>&1 || _fail "remount failed for Test-3"
-> > +	fi
-> > +
-> > +	check_data_integrity
-> > +}
-> > +
-> > +mixed_mapping_test() {
-> > +	prep_mixed_mapping
-> > +
-> > +	echo "+ + Performing O_DSYNC atomic write from 0 to $awu_max" >> $seqres.full
-> > +	bytes_written=$($XFS_IO_PROG -dc "pwrite -DA -V1 -b $awu_max 0 $awu_max" $testfile | \
-> > +		        grep wrote | awk -F'[/ ]' '{print $2}')
-> > +
-> > +	verify_atomic_write $1
+On Wed, Jul 23, 2025 at 05:14:28PM +0530, Naresh Kamboju wrote:
+> Regressions found while running LTP msync04 tests on qemu-arm64 running
+> Linux next-20250721, next-20250722 and next-20250723 with 16K and 64K
+> page size enabled builds.
 > 
-> The shutdown happens after the synchronous write completes?  If so, then
-> what part of recovery is this testing?
+> CONFIG_ARM64_64K_PAGES=y ( kernel warning as below )
+> CONFIG_ARM64_16K_PAGES=y ( kernel warning as below )
 > 
-> --D
+> No warning noticed with 4K page size.
+> CONFIG_ARM64_4K_PAGES=y works as expected
 
-Right, it is mostly inspired by [1] where sometimes isize update could
-be lost after dio completion. Although this might not exactly be
-affected by atomic writes, we added it here out of caution.
+You might want to cc Joanne since she's been working on large folio
+support in fuse.
 
-[1] https://lore.kernel.org/fstests/434beffaf18d39f898518ea9eb1cea4548e77c3a.1695383715.git.ritesh.list@gmail.com/
+> First seen on the tag next-20250721.
+> Good: next-20250718
+> Bad:  next-20250721 to next-20250723
 > 
-> > +}
-> > +
+> Regression Analysis:
+> - New regression? Yes
+> - Reproducibility? Yes
+> 
+> Test regression: next-20250721 arm64 16K and 64K page size WARNING fs
+> fuse file.c at fuse_iomap_writeback_range
+> 
+> Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
+> 
+> ## Test log
+> ------------[ cut here ]------------
+> [  343.828105] WARNING: fs/fuse/file.c:2146 at
+> fuse_iomap_writeback_range+0x478/0x558 [fuse], CPU#0: msync04/4190
+
+	WARN_ON_ONCE(len & (PAGE_SIZE - 1));
+
+/me speculates that this might be triggered by an attempt to write back
+some 4k fsblock within a 16/64k base page?
+
+--D
+
+> [  343.830969] Modules linked in: btrfs blake2b_generic xor xor_neon
+> raid6_pq zstd_compress sm3_ce sha3_ce drm fuse backlight ip_tables
+> x_tables
+> [  343.833830] CPU: 0 UID: 0 PID: 4190 Comm: msync04 Not tainted
+> 6.16.0-rc7-next-20250723 #1 PREEMPT
+> [  343.834736] Hardware name: linux,dummy-virt (DT)
+> [  343.835788] pstate: 03402009 (nzcv daif +PAN -UAO +TCO +DIT -SSBS BTYPE=--)
+> [  343.836455] pc : fuse_iomap_writeback_range+0x478/0x558 fuse
+> [  343.837294] lr : iomap_writeback_folio (fs/iomap/buffered-io.c:1586
+> fs/iomap/buffered-io.c:1710)
+> [  343.838178] sp : ffff80008b26f8d0
+> [  343.838668] x29: ffff80008b26f8d0 x28: fff00000e7f8c800 x27: 0000000000000000
+> [  343.839391] x26: fff00000d4b30000 x25: 0000000000000000 x24: 0000000000000000
+> [  343.840305] x23: 0000000000000000 x22: fffffc1fc0334200 x21: 0000000000001000
+> [  343.840928] x20: ffff80008b26fa00 x19: 0000000000000000 x18: 0000000000000000
+> [  343.841782] x17: 0000000000000000 x16: ffffb8d3b90c67c8 x15: 0000000000000000
+> [  343.842565] x14: ffffb8d3ba91e340 x13: 0000ffff8ff3ffff x12: 0000000000000000
+> [  343.843002] x11: 1ffe000004b74a21 x10: fff0000025ba510c x9 : ffffb8d3b90c6308
+> [  343.843962] x8 : ffff80008b26f788 x7 : ffffb8d365830b90 x6 : ffffb8d3bb6c9000
+> [  343.844718] x5 : 0000000000000000 x4 : 000000000000000a x3 : 0000000000001000
+> [  343.845333] x2 : fff00000c0b5ecc0 x1 : 000000000000ffff x0 : 0bfffe000000400b
+> [  343.846323] Call trace:
+> [  343.846767] fuse_iomap_writeback_range+0x478/0x558 fuse (P)
+> [  343.847288] iomap_writeback_folio (fs/iomap/buffered-io.c:1586
+> fs/iomap/buffered-io.c:1710)
+> [  343.847930] iomap_writepages (fs/iomap/buffered-io.c:1762)
+> [  343.848494] fuse_writepages+0xa0/0xe8 fuse
+> [  343.849112] do_writepages (mm/page-writeback.c:2634)
+> [  343.849614] filemap_fdatawrite_wbc (mm/filemap.c:386 mm/filemap.c:376)
+> [  343.850202] __filemap_fdatawrite_range (mm/filemap.c:420)
+> [  343.850791] file_write_and_wait_range (mm/filemap.c:794)
+> [  343.851108] fuse_fsync+0x6c/0x138 fuse
+> [  343.851688] vfs_fsync_range (fs/sync.c:188)
+> [  343.852002] __arm64_sys_msync (mm/msync.c:96 mm/msync.c:32 mm/msync.c:32)
+> [  343.852197] invoke_syscall.constprop.0
+> (arch/arm64/include/asm/syscall.h:61 arch/arm64/kernel/syscall.c:54)
+> [  343.852914] do_el0_svc (include/linux/thread_info.h:135
+> (discriminator 2) arch/arm64/kernel/syscall.c:140 (discriminator 2)
+> arch/arm64/kernel/syscall.c:151 (discriminator 2))
+> [  343.853389] el0_svc (arch/arm64/include/asm/irqflags.h:82
+> (discriminator 1) arch/arm64/include/asm/irqflags.h:123 (discriminator
+> 1) arch/arm64/include/asm/irqflags.h:136 (discriminator 1)
+> arch/arm64/kernel/entry-common.c:169 (discriminator 1)
+> arch/arm64/kernel/entry-common.c:182 (discriminator 1)
+> arch/arm64/kernel/entry-common.c:880 (discriminator 1))
+> [  343.853829] el0t_64_sync_handler (arch/arm64/kernel/entry-common.c:899)
+> [  343.854350] el0t_64_sync (arch/arm64/kernel/entry.S:596)
+> [  343.854652] ---[ end trace 0000000000000000 ]---
+> 
+> 
+> 
+> ## Source
+> * Git tree: https://kernel.googlesource.com/pub/scm/linux/kernel/git/next/linux-next.git
+> * Project: https://qa-reports.linaro.org/lkft/linux-next-master/build/next-20250723/
+> * Git sha: a933d3dc1968fcfb0ab72879ec304b1971ed1b9a
+> * Git describe: 6.16.0-rc7-next-20250723
+> * kernel version: next-20250723
+> * Architectures: arm64
+> * Toolchains: gcc-13
+> * Kconfigs: defconfig + CONFIG_ARM64_64K_PAGES=y
+> * Kconfigs: defconfig + CONFIG_ARM64_16K_PAGES=y
+> 
+> ## Test
+> * Test log 1: https://qa-reports.linaro.org/api/testruns/29227309/log_file/
+> * Test log 2: https://qa-reports.linaro.org/api/testruns/29227074/log_file/
+> * Test run: https://regressions.linaro.org/lkft/linux-next-master/next-20250723/testruns/1713367/
+> * Test history:
+> https://qa-reports.linaro.org/lkft/linux-next-master/build/next-20250723/testrun/29227309/suite/log-parser-test/test/exception-warning-fsfusefile-at-fuse_iomap_writeback_range/history/
+> * Test plan: https://tuxapi.tuxsuite.com/v1/groups/linaro/projects/lkft/tests/30G3hpJVVdXkZKnB15v1qoQOL03
+> * Build link: https://storage.tuxsuite.com/public/linaro/lkft/builds/30G3dvSFyHHQ3E8CvKH7tjU98I6/
+> * Kernel config:
+> https://storage.tuxsuite.com/public/linaro/lkft/builds/30G3dvSFyHHQ3E8CvKH7tjU98I6/config
+> 
+> --
+> Linaro LKFT
+> https://lkft.linaro.org
