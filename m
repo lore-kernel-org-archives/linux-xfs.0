@@ -1,244 +1,132 @@
-Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42FAB274B3C;
-	Thu, 24 Jul 2025 19:14:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 151CA1E47AD;
+	Fri, 25 Jul 2025 06:27:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753384465; cv=none; b=kq9SkJuxwtSjh+dvUHNBZ3O+I6s7QX6GYL0lVGkbEGJDIrsenukawxMqx5cl8kyjX7JsqiawxiC+YYRK1hKpF7Yd0lRgDrYQ/ddVNhJuONWGJbs4z7DpTTWjFJ2rhtAoWkcNRkkWfr0AX6PdPmf+xJ7hHkkS52gD999+ojWSae8=
+	t=1753424880; cv=none; b=tP3MB3cwbZI4scIhOkqllGh7Ka02MlK5uDffNnPB5r4I17Usmk6DvbTJX3/AFZJyswaQQBsVHEkWpz7HyDJW5EymS3BYe2xmrsv+3Q1e/3cEWnbzNl6yKNpdl04uHtM8DhMhQbjfBn99xWmsX5rZ6wkwNOEEumKcu2+QGZByGtc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753384465; c=relaxed/simple;
-	bh=9JY7p80c86n6GjRiruyjjExy0MOzgPy1y+oe7BuOM1I=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=PrGWy6z6b3ny1MmRTWEGXhzun5YBjQGt9FYP1B1o3XgnR5otb8v3Saoy7h098BmQuERbEQK3W4nhgY67n7BWwik43ZMtPTPNigC+SgmBIVgy4zmJgB5+cy6eMLhw9DFlH2UVlSneN1Z8HLedIK1CKreOwY2xf6IQrJB9YV/11WA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aJq1br8H; arc=none smtp.client-ip=209.85.160.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1753424880; c=relaxed/simple;
+	bh=e/ZyDH4WWdJfn9bdaRkj8a5fNMoH+piypyKZpyuRjiI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Gjgctn7sZ3psKdbZbFjw5lulK8hT5Hq87AN7gAnaWoo1rNnIzGbotfUFm3jtS4iPP5oYg2ykVBRSdmdy6Weq8d4soIaFqNdzQ57EpVJBHqhxgnArQl2QhVBkoR72KRtJt2slzpinwVVfRdDAtW26grS5deY0/yekt3QZVib3jn4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=LI8COTNG; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aJq1br8H"
-Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-4abc006bcadso17142071cf.0;
-        Thu, 24 Jul 2025 12:14:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753384463; x=1753989263; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2jOSnyBDxczFG/IHSIdGMkE63XZ2hP+zlYXbjMuUNLc=;
-        b=aJq1br8HeFmH4qOa3iZ/UnttxtHLSTMkn4llPcmfZFh8+UfUdHPVwDGnT4hH8SMyh6
-         0ZsjvKv8wcXUyMZ5azjvvqkHjRW8IPZPyt7QBbZM4manHDsML70yAuDd9d8Tb4wVuYbZ
-         YgC9lcuPzyT2Ittj5HBGAb9HHNiRH6EwSwSJ9OpZhIXiiPoxzxq47Qdr55pM4Fr6vBKZ
-         GtOD9iiOwglFRULV97Org+5WmM0aA3hqvfWbZqlEWGpQRNQcIo02OVeCbhxv098vf2H6
-         Ipu9hHPeoAVwBdR8bgM8d/9QVp0YDI8EBp3ULykiJohN603WHH5zpIsU2j4sYw8sTFrd
-         /IVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753384463; x=1753989263;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=2jOSnyBDxczFG/IHSIdGMkE63XZ2hP+zlYXbjMuUNLc=;
-        b=QY8gL1z3TC2JyKFGbzCRKffApoYmIYQdei+tWcFJTam374Acv87ftgEfXOZCxERRan
-         eLKjUxlH9H4P/O5qsUmHRaUTWigok2f8eBt+uYFQMxPIIywJQFl1w/j1GxuSXUwGyO5X
-         LFuVSF+PKBNI7eQrniNniU8zSLCGRbMhai1Igif+CaomZW2xE+V1gagdlt5fmV2UKrl8
-         QHL2tev8UyeEB45pK/xA/IK5Xy6zyyMwq8bM9kokbAyCP5LfVc6iVh6rc2xGIgOjd7MV
-         tpCpEuqwuBWVXLY+kiN+5Lm+qglquFo8CXVQh4JAnWbwvMu0djkZgW2hJIr/2d6sQ3dW
-         HBeA==
-X-Forwarded-Encrypted: i=1; AJvYcCVvRIS9RgTCIXKFryfYc5uOfVPK/AGpRV+XFfPRkDekGootYxbl8zRtS9QErmBvAdAOh9THmEozctC/mKjF@vger.kernel.org, AJvYcCWZRJRgBHZ5w8R7d7TWbiYolY+euhhgN9TZ78FLPKD51bUKIqCfyWXvFtCgI/PsJ5F3GfTiXs8bEq3mYYLU@vger.kernel.org, AJvYcCXhxVYAtRdcbJRTp1IsDxRjYmDuG3uj/D1OrKYCC1YqyieNKJqhgtTuaJBremKotOkHN7aLcpmIMhKN@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywkz04Hhe9Ue8tXPWrFR3I74GF0gQUWhE/3mgXcFU7RaJ93O7aT
-	sBBJ/FfUrf2BxHLwxYPJr/mwQPmH+ZZcND2NC3T2nQoW6mgxOTWKwmrQj66a+m3o28OCOJylg90
-	TSxMov2qVX3psSgM9i3SaZQtFQ5UEsJI=
-X-Gm-Gg: ASbGncvbMTyG85acHbkH7wHYOLps6iB9rCb9Vth3Po2pgeMXNyFoR4NVcJs26LV7Ph3
-	IZBwPdQ5lGjOHsZNdpbVMrvfgFFIxslRIsCVym+bZaq8jLXtBQ2IS5eoSZekSG0qNiZMv1EOqld
-	8ApHbsZg57Fiqs7ERpp1UGKx1cWS88uqmT9Jds88Ac8jB3CalHSpdw2fa7MMXz3nGv42eNbE84q
-	Bb47sE=
-X-Google-Smtp-Source: AGHT+IGm06QE4HAxdtDrbkTCJlc3WBllGjE2CLQfWltUi2scOuGwGhLY9rcqQVvFXqhFOXNUBQN8GPgnjRiXL0ZxnAk=
-X-Received: by 2002:a05:622a:2486:b0:4ab:db27:4775 with SMTP id
- d75a77b69052e-4ae6e0370b9mr94057441cf.54.1753384462745; Thu, 24 Jul 2025
- 12:14:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="LI8COTNG"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56OM9PDo008091;
+	Fri, 25 Jul 2025 06:27:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=4yGrmkLLgCYTkHhTdUotm3WNf/3d+Y
+	qOyCYfoKmz7k4=; b=LI8COTNGdoJHxx/pJX1VXDM9vwILwCijzsOb1M0a0am3zi
+	ekXKUEapDng1ZO+XggNCPSSC1gIMUWkaG+ToqfESlxu+QlJlh+dH1a9rky3ywCz4
+	C2i4pt0cJ+2uFZXPc9AwvUCq188EiPV9TScnD4P1yLYAVZq9ABs8qRx0zwYJKwCm
+	VvzF754oEF2Pbe7DfNWPaSZi7XTgjdPTvpscX2mnzA57Swc2okHSORoj4KgJQYcB
+	a6S/vOsp1jRc+TpDqUl91/wIoJkfJxm19DztWU7bPTvu1/aq0QYuB7sK37vDjIQA
+	F4JKHLx0g81/fLrfGJDJ5XlAcP98lUf40YeQYFtw==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 483wcksfkq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 25 Jul 2025 06:27:45 +0000 (GMT)
+Received: from m0360072.ppops.net (m0360072.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 56P6RiOL032412;
+	Fri, 25 Jul 2025 06:27:44 GMT
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 483wcksfkn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 25 Jul 2025 06:27:44 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 56P2r6gS025452;
+	Fri, 25 Jul 2025 06:27:43 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 480npu0fh0-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 25 Jul 2025 06:27:43 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 56P6Rg9r33292962
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 25 Jul 2025 06:27:42 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id ED78920043;
+	Fri, 25 Jul 2025 06:27:41 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id AFCC920040;
+	Fri, 25 Jul 2025 06:27:39 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.18.98])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Fri, 25 Jul 2025 06:27:39 +0000 (GMT)
+Date: Fri, 25 Jul 2025 11:57:37 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
+        Ritesh Harjani <ritesh.list@gmail.com>, djwong@kernel.org,
+        tytso@mit.edu, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v3 05/13] generic/1226: Add atomic write test using fio
+ crc check verifier
+Message-ID: <aIMjrunlU04jI2lF@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <cover.1752329098.git.ojaswin@linux.ibm.com>
+ <1e6dad5f4bdc8107e670cc0bd3ce0fccd0c9037a.1752329098.git.ojaswin@linux.ibm.com>
+ <5211dff7-579b-48ea-8180-72d8c6083400@oracle.com>
+ <aHkAJJkvaWYJu7gC@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <b270bb66-721e-4433-adaf-fe5ae100ca6e@oracle.com>
+ <aH9PwFm06n9KQ0mE@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <7fc0f04e-dcec-47a4-b522-eb5a8b90637c@oracle.com>
+ <aIDozETJ8aLparYV@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <9b9ed959-bda5-4a92-90c7-a621ffe58240@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CA+G9fYs5AdVM-T2Tf3LciNCwLZEHetcnSkHsjZajVwwpM2HmJw@mail.gmail.com>
- <20250723144637.GW2672070@frogsfrogsfrogs> <CAJnrk1Z7wcB8uKWcrAuRAZ8B-f8SKnOuwtEr-=cHa+ApR_sgXQ@mail.gmail.com>
- <20250723212020.GY2672070@frogsfrogsfrogs> <CAJnrk1bFWRTGnpNhW_9MwSYZw3qPnPXZBeiwtPSrMhCvb9C3qg@mail.gmail.com>
-In-Reply-To: <CAJnrk1bFWRTGnpNhW_9MwSYZw3qPnPXZBeiwtPSrMhCvb9C3qg@mail.gmail.com>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Thu, 24 Jul 2025 12:14:10 -0700
-X-Gm-Features: Ac12FXzB5jWOM2jLEHuea3HtXx8QVU4kwGFHqdvioSKikDPZlGiijO3gRX8BQys
-Message-ID: <CAJnrk1byTVJtuOyAyZSVYrusjhA-bW6pxBOQQopgHHbD3cDUHw@mail.gmail.com>
-Subject: Re: next-20250721 arm64 16K and 64K page size WARNING fs fuse file.c
- at fuse_iomap_writeback_range
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Naresh Kamboju <naresh.kamboju@linaro.org>, linux-fsdevel@vger.kernel.org, 
-	linux-mm <linux-mm@kvack.org>, linux-xfs@vger.kernel.org, 
-	open list <linux-kernel@vger.kernel.org>, lkft-triage@lists.linaro.org, 
-	Linux Regressions <regressions@lists.linux.dev>, Miklos Szeredi <miklos@szeredi.hu>, Jan Kara <jack@suse.cz>, 
-	Andrew Morton <akpm@linux-foundation.org>, Christian Brauner <brauner@kernel.org>, 
-	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, "Liam R. Howlett" <liam.howlett@oracle.com>, 
-	Arnd Bergmann <arnd@arndb.de>, Dan Carpenter <dan.carpenter@linaro.org>, 
-	Anders Roxell <anders.roxell@linaro.org>, Ben Copeland <benjamin.copeland@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9b9ed959-bda5-4a92-90c7-a621ffe58240@oracle.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: sYc_7PBpxTvlyPqHDuagicv_eKpY5kS2
+X-Proofpoint-ORIG-GUID: vMzHBz-bSwqd2v5TMvw1ADXB7G6xhMlm
+X-Authority-Analysis: v=2.4 cv=JM47s9Kb c=1 sm=1 tr=0 ts=688323e1 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=kj9zAlcOel0A:10 a=Wb1JkmetP80A:10 a=z_VCc1e3h6uH1eZaKfUA:9
+ a=CjuIK1q_8ugA:10 a=zZCYzV9kfG8A:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzI1MDA1MCBTYWx0ZWRfX9JeDm/uSvI9i
+ 64NWeb4GGZlGjhk0tjegxTOAYQfET7cOa6hNY+YJO3kxnJu1DIBh3vBFVvIFRRHeE3aW3Y5skXk
+ Snu7cf0foEBenbTROZ522RhAahMUIgA13C99SivCCWa4KAHOncYBl6IAekoZT1t7tMKvbGmrJN6
+ WheFc5abStptoVQl+Z3YR+sATLyOED9qahQaT0NofGmudumyKab+5e0Lejw+PsyOp0Yc0gyaKQ4
+ 7+N6plRiLYyaTuDEkQ0Qtx+6elFUhqabdEOc+i2PA8x01Lvt4JtXCig2kYFSWtkLZloAiHTu1kv
+ 7jwfSZr0bxmG8Q0S34q9Vy9JOgZwOmg5Zj3K8YR0aUhpDsRi5bIKkcG7wKAwbhZb4hatnpYbL5/
+ 1mar8bdD9fHF4lnAi5G/I+YUvMilp2quDcvjDPYWkdz2DiWmUitXtgBFofSEQ4CSXc2DRb1V
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-07-25_01,2025-07-24_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 mlxscore=0 bulkscore=0 mlxlogscore=570 phishscore=0
+ priorityscore=1501 suspectscore=0 adultscore=0 lowpriorityscore=0 spamscore=0
+ malwarescore=0 clxscore=1015 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2507250050
 
-On Wed, Jul 23, 2025 at 3:37=E2=80=AFPM Joanne Koong <joannelkoong@gmail.co=
-m> wrote:
->
-> On Wed, Jul 23, 2025 at 2:20=E2=80=AFPM Darrick J. Wong <djwong@kernel.or=
-g> wrote:
-> >
-> > On Wed, Jul 23, 2025 at 11:42:42AM -0700, Joanne Koong wrote:
-> > > On Wed, Jul 23, 2025 at 7:46=E2=80=AFAM Darrick J. Wong <djwong@kerne=
-l.org> wrote:
-> > > >
-> > > > [cc Joanne]
-> > > >
-> > > > On Wed, Jul 23, 2025 at 05:14:28PM +0530, Naresh Kamboju wrote:
-> > > > > Regressions found while running LTP msync04 tests on qemu-arm64 r=
-unning
-> > > > > Linux next-20250721, next-20250722 and next-20250723 with 16K and=
- 64K
-> > > > > page size enabled builds.
-> > > > >
-> > > > > CONFIG_ARM64_64K_PAGES=3Dy ( kernel warning as below )
-> > > > > CONFIG_ARM64_16K_PAGES=3Dy ( kernel warning as below )
-> > > > >
-> > > > > No warning noticed with 4K page size.
-> > > > > CONFIG_ARM64_4K_PAGES=3Dy works as expected
-> > > >
-> > > > You might want to cc Joanne since she's been working on large folio
-> > > > support in fuse.
-> > > >
-> > > > > First seen on the tag next-20250721.
-> > > > > Good: next-20250718
-> > > > > Bad:  next-20250721 to next-20250723
-> > >
-> > > Thanks for the report. Is there a link to the script that mounts the
-> > > fuse server for these tests? I'm curious whether this was mounted as =
-a
-> > > fuseblk filesystem.
-> > >
-> > > > >
-> > > > > Regression Analysis:
-> > > > > - New regression? Yes
-> > > > > - Reproducibility? Yes
-> > > > >
-> > > > > Test regression: next-20250721 arm64 16K and 64K page size WARNIN=
-G fs
-> > > > > fuse file.c at fuse_iomap_writeback_range
-> > > > >
-> > > > > Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
-> > > > >
-> > > > > ## Test log
-> > > > > ------------[ cut here ]------------
-> > > > > [  343.828105] WARNING: fs/fuse/file.c:2146 at
-> > > > > fuse_iomap_writeback_range+0x478/0x558 [fuse], CPU#0: msync04/419=
-0
-> > > >
-> > > >         WARN_ON_ONCE(len & (PAGE_SIZE - 1));
-> > > >
-> > > > /me speculates that this might be triggered by an attempt to write =
-back
-> > > > some 4k fsblock within a 16/64k base page?
-> > > >
-> > >
-> > > I think this can happen on 4k base pages as well actually. On the
-> > > iomap side, the length passed is always block-aligned and in fuse, we
-> > > set blkbits to be PAGE_SHIFT so theoretically block-aligned is always
-> > > page-aligned, but I missed that if it's a "fuseblk" filesystem, that
-> > > isn't true and the blocksize is initialized to a default size of 512
-> > > or whatever block size is passed in when it's mounted.
-> >
-> > <nod> I think you're correct.
-> >
-> > > I'll send out a patch to remove this line. It doesn't make any
-> > > difference for fuse_iomap_writeback_range() logic whether len is
-> > > page-aligned or not; I had added it as a sanity-check against sketchy
-> > > ranges.
-> > >
-> > > Also, I just noticed that apparently the blocksize can change
-> > > dynamically for an inode in fuse through getattr replies from the
-> > > server (see fuse_change_attributes_common()). This is a problem since
-> > > the iomap uses inode->i_blkbits for reading/writing to the bitmap. I
-> > > think we will have to cache the inode blkbits in the iomap_folio_stat=
-e
-> > > struct unfortunately :( I'll think about this some more and send out =
-a
-> > > patch for this.
-> >
-> > From my understanding of the iomap code, it's possible to do that if yo=
-u
-> > flush and unmap the entire pagecache (whilst holding i_rwsem and
-> > mmap_invalidate_lock) before you change i_blkbits.  Nobody *does* this
-> > so I have no idea if it actually works, however.  Note that even I don'=
-t
-> > implement the flush and unmap bit; I just scream loudly and do nothing:
->
-> lol! i wish I could scream loudly and do nothing too for my case.
->
-> AFAICT, I think I just need to flush and unmap that file and can leave
-> the rest of the files/folios in the pagecache as is? But then if the
-> file has active refcounts on it or has been pinned into memory, can I
-> still unmap and remove it from the page cache? I see the
-> invalidate_inode_pages2() function but my understanding is that the
-> page still stays in the cache if it has has active references, and if
-> the page gets mmaped and there's a page fault on it, it'll end up
-> using the preexisting old page in the page cache.
+On Wed, Jul 23, 2025 at 05:25:41PM +0100, John Garry wrote:
+> On 23/07/2025 14:51, Ojaswin Mujoo wrote:
+> > > > No, its just something i hardcoded for that particular run. This patch
+> > > > doesn't enforce hardware only atomic writes
+> > > If we are to test this for XFS then we need to ensure that HW atomics are
+> > > available.
+> > Why is that? Now with the verification step happening after writes,
+> > software atomic writes should also pass this test since there are no
+> > racing writes to the verify reads.
+> 
+> Sure, but racing software atomic writes against other software atomic writes
+> is not safe.
+> 
+> Thanks,
+> John
 
-Never mind, I was mistaken about this. Johannes confirmed that even if
-there's active refcounts on the folio, it'll still get removed from
-the page cache after unmapping and the page cache reference will get
-dropped.
+What do you mean by not safe? Does it mean the test can fail? 
 
-I think I can just do what you suggested and call
-filemap_invalidate_inode() in fuse_change_attributes_common() then if
-the inode blksize gets changed. Thanks for the suggestion!
 
->
-> I don't think I really need to have it removed from the page cache so
-> much as just have the ifs state for all the folios in the file freed
-> (after flushing the file) so that it can start over with a new ifs.
-> Ideally we could just flush the file, then iterate through all the
-> folios in the mapping in order of ascending index, and kfree their
-> ->private, but I'm not seeing how we can prevent the case of new
-> writes / a new ifs getting allocated for folios at previous indexes
-> while we're trying to do the iteration/kfreeing.
->
-> >
-> > void fuse_iomap_set_i_blkbits(struct inode *inode, u8 new_blkbits)
-> > {
-> >         trace_fuse_iomap_set_i_blkbits(inode, new_blkbits);
-> >
-> >         if (inode->i_blkbits =3D=3D new_blkbits)
-> >                 return;
-> >
-> >         if (!S_ISREG(inode->i_mode))
-> >                 goto set_it;
-> >
-> >         /*
-> >          * iomap attaches per-block state to each folio, so we cannot a=
-llow
-> >          * the file block size to change if there's anything in the pag=
-e cache.
-> >          * In theory, fuse servers should never be doing this.
-> >          */
-> >         if (inode->i_mapping->nrpages > 0) {
-> >                 WARN_ON(inode->i_blkbits !=3D new_blkbits &&
-> >                         inode->i_mapping->nrpages > 0);
-> >                 return;
-> >         }
-> >
-> > set_it:
-> >         inode->i_blkbits =3D new_blkbits;
-> > }
-> >
-> > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/co=
-mmit/?h=3Dfuse-iomap-attrs&id=3Dda9b25d994c1140aae2f5ebf10e54d0872f5c884
-> >
-> > --D
-> >
-> > >
-> > > Thanks,
-> > > Joanne
-> > >
