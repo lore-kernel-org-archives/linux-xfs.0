@@ -1,103 +1,149 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 192301DD525
-	for <linux-xfs@vger.kernel.org>; Sat, 26 Jul 2025 03:52:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F32231C5F13;
+	Sat, 26 Jul 2025 09:10:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753501923; cv=none; b=AE46fVmaTTRpKNW96cEoqttfNwVphRkMqGkqOlbtvVDq+0sWlRo8A9VHa5PyHMGb/4nzExUskDzrzDuHS5nEB2hcUNa4HTbN2FDO4Va4bARegZAnzJ/ThZfjGehqsXIC4F+H/DGCdTA3yiStXcPjDhfWS8hSArgMZjjVbBKXHE8=
+	t=1753521034; cv=none; b=hjVp9CU3f7Vd50PbPJsv75WFd7MCWXqBMaGKLWJm1mInp6PFEoeR+P5biMAx5cbHWqqfd86ejtu8QFJi3eYxweKWIjfyiTQaFIt6PazA6IVnBR+0bO1lxLHouqPmmDj3NqbtYb2XqpDybJni82QLCMdibeOBPEO3cUdYoWZ+wUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753501923; c=relaxed/simple;
-	bh=T4wr8nnJjER6D9zGAs8IiqQxrrmE4wgH45CXBo8toG0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=I/6FJwWG1u06mgrxyNfy24/DCSeOn2LP7vbR/GJ3kjTQHsEcTvCY+Y0v4X3AicLFNo53f6kowdN0Jr7RttynyUKI80z6ZlA8M6SYuPlfCzsiuOvINDjoVd9dmiqDgF4TLwv8Krvw2uP+cRp6uzbI6LsNAF5Jk5/YmNiYUekX6c4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MuyUR2k3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1753521034; c=relaxed/simple;
+	bh=SfggtfGe7PB58v5DZwweW+m6rEGnnfzyw02zI8O1v5Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nAsaQEPW2bbzbd4li4IBaEWU7kBJP8jDOBmJbal2Yd+yqBy5AL+HbiLIYDYH0Y/cMOfgD0P2oWe4ynFCQDFfpBx8PtH2G8Kr/GrGvfnXILRUMCxTRviSIUF2OYydobsImZOTTrtjN2if3kRlnc0n03LyFzVCXWiPILlBy8VZWFo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z+fh0C/P; arc=none smtp.client-ip=209.85.210.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MuyUR2k3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DE14C4CEED;
-	Sat, 26 Jul 2025 03:52:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753501922;
-	bh=T4wr8nnJjER6D9zGAs8IiqQxrrmE4wgH45CXBo8toG0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=MuyUR2k3bZibbl/Shq+J5BOdevvUvHiv/MA9T000YjRSHjTo9i8WXKJ+0GEXUybVq
-	 wJUhJQPUJga9yAtA9l5BlFH74AddEv2MSUAs98E6e3LLaEuKHF7LVRb02VT+hmoAkW
-	 mySdKN7ahll7/5XBqTjkqez7FMevwaWXDTSBVUyTs9jtGwrXIt+z/7m4qBJtQ/OQnp
-	 bQbGste25CGTeP30916sK3XgiU8PypYqWryTUBMvpxPxzKD+IT8ooX+5rIqmaQjeLx
-	 vSi2WD7podrwEkyP1p8hvke0kpLHgMYD2eBW5mn89+nFnBCzspsaNiLQUdkpwls1Jy
-	 rR+H71OPcyQrQ==
-Date: Sat, 26 Jul 2025 05:51:58 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: "hubert ." <hubjin657@outlook.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: xfs_metadump segmentation fault on large fs - xfsprogs 6.1
-Message-ID: <6tqlc3mcf3ovkbzf4345m7oztoeagevfycpdnxizrtdbhq53p2@mrlmjhs6n7gy>
-References: <f9Etb2La9b1KOT-5VdCdf6cd10olyT-FsRb8AZh8HNI1D4Czb610tw4BE15cNrEhY5OiXDGS7xR6R1trRyn1LA==@protonmail.internalid>
- <CH3PR05MB10392E816C6A1051847D214A2FA59A@CH3PR05MB10392.namprd05.prod.outlook.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z+fh0C/P"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-74b54af901bso1947751b3a.2;
+        Sat, 26 Jul 2025 02:10:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1753521032; x=1754125832; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=WRyjZ/Xf4lOxF8UOomre3BOUYmwqK2BErDCowQX7LUU=;
+        b=Z+fh0C/Px5RUEz2D/4pH9WdRcCWE6EqNvdR2D6vFwYIycgESmoYolRgNCdt8GBv/Cy
+         8p8K+dt2TlfMIt3pCokcFIbxke/Nz1RQRJ8wEDHV7rQJcYF9g7zWSINevxkJHLb/ENHS
+         DZj0qNP4xcO68Fil3JR2ze0IZElEKEoP1HNdeO0b3VgFLn0+JPzUIsgtEqq2loZ8mlW7
+         eQSzsJ2eRSmjSKMDlDG/LaLgZRvwJ/iWKl+2qwU1vu+kYT6VVntx+jSEkAwToIVJsaig
+         7uxVjirGSUO8TmVkcDFXfz50mxITNJ+EQWcRel1GAfNHDz+92f8KDCJMvY+Fd16n0elr
+         ImfA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753521032; x=1754125832;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=WRyjZ/Xf4lOxF8UOomre3BOUYmwqK2BErDCowQX7LUU=;
+        b=IgHPlnGfCAASkDUgNC+QStj1Ldghy/oZVUbKGZ+Iq7BaXFbXxd23Qq/Lr2XNCdA+UH
+         lioaBXBkfD3yXTwOiJEShmvdC2kLM98M0homSnjklr4L4i8CqdtTEZGxi2RmL5tjWpSn
+         w8qKoXP2oOe4Ofy2ZWcJUuGKC6P2OnKET+wccGoU/RmWSTwwR6BF3q3QRH25mc5p0Aqe
+         oHoyNezAzmGdtkrM8KBR94UZBN5dSwwTEttk2wY/o5p8cXG6Xvf/1Y/4ca/hJUHXn8d3
+         MfbK30FFuSVbgpj0BqtdlpeHNQRNqJkd/M2Vt71/85uZqn7fXOoKQOFDi64U/qMGwEM1
+         z+Fg==
+X-Forwarded-Encrypted: i=1; AJvYcCWgVWWE49GvSNaTxCvzcOVRTe5jzY4ipC16007woNSo4GbFY2AMdtTC5fy4oLV76zsoJAtUJNXpOhGu7ubb@vger.kernel.org, AJvYcCXIkHeHFLTD6tMNBaAObyjYkbgPI1tPymel3k75mYve1quEdBiUm0eCo6YED6ziPydKwqqBTkNl+36vQtyw@vger.kernel.org
+X-Gm-Message-State: AOJu0YxMVVnVp588TBdlQ6KucP75n/LRQBCsywGh6hWmIge/asvqlQEc
+	ljzpdJCsvAi1SX/SSb2+VDfbbwlLGE4a/pGXnMDCsP5IpuXNm2PxKneJ
+X-Gm-Gg: ASbGnct5J83LlGhx6DntW9wyhzh+ja3M2gLPw1UKRI5c6UU+5zvNKOG6JvUIQfMdjy4
+	QKgS+zX0Njai92wXc4A+aN9nZ4wwgv5z0J+DNl7Vx/R0uwkGibWCroaoQOx2qJtBBLJeNeOFynj
+	yPG8I7PD428Fh7yZ8/ItQEwS+F8yvTeN8hz8rdJpILjf7wCrxaXzUcAiWwwT3gE2Cx+TsujKBUl
+	YP/udM7fWaolUR1pZW9CXlmi6Z3LuE8G5Ke0SgVVuj9U60r9aE3cNvasTtp0hDjssC45uBFvUEN
+	Qj859Forl99ENxAl20BGDeBTdZwT23QeQP6duZQBbZyVO9JmXw/b5A14rSs2ppmMVGv9Rp52oV1
+	jro53SF1ythJUEOZ1X/hAEw2csYfGEI0t9l0=
+X-Google-Smtp-Source: AGHT+IGZS6pTHqZ5rb7hDVsSbzXKvhMO0G9S2a0CiiBuFqmzrdodLqGIhuUumFEtrki7ydwMiFBtZw==
+X-Received: by 2002:a05:6a20:939d:b0:232:4a42:dfd1 with SMTP id adf61e73a8af0-23d701e8b28mr7433231637.36.1753521031959;
+        Sat, 26 Jul 2025 02:10:31 -0700 (PDT)
+Received: from VM-16-24-fedora.. ([43.153.32.141])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b3f7f4ad5a7sm1056088a12.0.2025.07.26.02.10.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 26 Jul 2025 02:10:31 -0700 (PDT)
+From: alexjlzheng@gmail.com
+X-Google-Original-From: alexjlzheng@tencent.com
+To: brauner@kernel.org,
+	djwong@kernel.org,
+	dave.hansen@linux.intel.com
+Cc: linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jinliang Zheng <alexjlzheng@tencent.com>
+Subject: [PATCH] iomap: move prefaulting out of hot write path
+Date: Sat, 26 Jul 2025 17:09:56 +0800
+Message-ID: <20250726090955.647131-2-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CH3PR05MB10392E816C6A1051847D214A2FA59A@CH3PR05MB10392.namprd05.prod.outlook.com>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Jul 25, 2025 at 11:27:40AM +0000, hubert . wrote:
-> Hi,
-> 
-> A few months ago we had a serious crash in our monster RAID60 (~590TB) when one of the subvolume's disks failed and then then rebuild process triggered failures in other drives (you guessed it, no backup).
-> The hardware issues were plenty to the point where we don't rule out problems in the Areca controller either, compounding to some probably poor decisions on my part.
-> The rebuild took weeks to complete and we left it in a degraded state not to make things worse.
-> The first attempt to mount it read-only of course failed. From journalctl:
-> 
-> kernel: XFS (sdb1): Mounting V5 Filesystem
-> kernel: XFS (sdb1): Starting recovery (logdev: internal)
-> kernel: XFS (sdb1): Metadata CRC error detected at xfs_agf_read_verify+0x70/0x120 [xfs], xfs_agf block 0xa7fffff59
-> kernel: XFS (sdb1): Unmount and run xfs_repair
-> kernel: XFS (sdb1): First 64 bytes of corrupted metadata buffer:
-> kernel: ffff89b444a94400: 74 4e 5a cc ae eb a0 6d 6c 08 95 5e ed 6b a4 ff  tNZ....ml..^.k..
-> kernel: ffff89b444a94410: be d2 05 24 09 f2 0a d2 66 f3 be 3a 7b 97 9a 84  ...$....f..:{...
-> kernel: ffff89b444a94420: a4 95 78 72 58 08 ca ec 10 a7 c3 20 1a a3 a6 08  ..xrX...... ....
-> kernel: ffff89b444a94430: b0 43 0f d6 80 fd 12 25 70 de 7f 28 78 26 3d 94  .C.....%p..(x&=.
-> kernel: XFS (sdb1): metadata I/O error: block 0xa7fffff59 ("xfs_trans_read_buf_map") error 74 numblks 1
-> 
-> Following the advice in the list, I attempted to run a xfs_metadump (xfsprogs 4.5.0), but after after copying 30 out of 590 AGs, it segfaulted:
-> /usr/sbin/xfs_metadump: line 33:  3139 Segmentation fault      (core dumped) xfs_db$DBOPTS -i -p xfs_metadump -c "metadump$OPTS $2" $1
+From: Jinliang Zheng <alexjlzheng@tencent.com>
 
-I'm not sure what you expect from a metadump, this is usually used for
-post-mortem analysis, but you already know what went wrong and why.
+Similar to commit 665575cff098 ("filemap: move prefaulting out of hot
+write path"), there's no need to do the faultin unconditionally. It is
+more reasonable to perform faultin operation only when an exception
+occurs.
 
-> 
-> -journalctl:
-> xfs_db[3139]: segfault at 1015390b1 ip 0000000000407906 sp 00007ffcaef2c2c0 error 4 in xfs_db[400000+8a000]
-> 
-> Now, the host machine is rather critical and old, running CentOS 7, 3.10 kernel on a Xeon X5650. Not trusting the hardware, I used ddrescue to clone the partition to some other luckily available system.
-> The copy went ok(?), but it did encounter reading errors at the end, which confirmed my suspicion that the rebuild process was not as successful. About 10MB could not be retrieved.
-> 
-> I attempted a metadump on the copy too, now on a machine with AMD EPYC 7302, 128GB RAM, a 6.1 kernel and xfsprogs v6.1.0.
-> 
-> # xfs_metadump -aogfw  /storage/image/sdb1.img   /storage/metadump/sdb1.metadump 2>&1 | tee mddump2.log
-> 
-> It creates again a 280MB dump and at 30 AGs it segfaults:
-> 
-> Jul24 14:47] xfs_db[42584]: segfault at 557051a1d2b0 ip 0000556f19f1e090 sp 00007ffe431a7be0 error 4 in xfs_db[556f19f04000+64000] likely on CPU 21 (core 9, socket 0)
-> [  +0.000025] Code: 00 00 00 83 f8 0a 0f 84 90 07 00 00 c6 44 24 53 00 48 63 f1 49 89 ff 48 c1 e6 04 48 8d 54 37 f0 48 bf ff ff ff ff ff ff 3f 00 <48> 8b 02 48 8b 52 08 48 0f c8 48 c1 e8 09 48 0f ca 81 e2 ff ff 1f
-> 
-> This is the log https://pastebin.com/jsSFeCr6, which looks similar to the first one. The machine does not seem loaded at all and further tries result in the same code.
-> 
-> My next step would be trying a later xfsprogs version, or maybe xfs_repair -n on a compatible CPU machine as non-destructive options, but I feel I'm kidding myself as to what I can try to recover anything at all from such humongous disaster.
+And copy_folio_from_iter_atomic() short-circuits page fault handle logics
+via pagefault_disable(), which prevents deadlock scenarios when both
+source and destination buffers reside within the same folio. So it's
+safe move prefaulting after copy failed.
 
-Yes, that's probably the best approach now. To run the latest xfsprogs
-available.
+Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
+---
+ fs/iomap/buffered-io.c | 25 ++++++++++---------------
+ 1 file changed, 10 insertions(+), 15 deletions(-)
 
-Also, xfs_repair does not need to be executed on the same architecture
-as the FS was running. Despite log replay (which is done by the Linux
-kernel), xfs_repair is capable of converting the filesystem data
-structures back and forth to the current machine endianness
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index fb4519158f3a..7ca3f3b9d57e 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -964,21 +964,6 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 		if (bytes > iomap_length(iter))
+ 			bytes = iomap_length(iter);
+ 
+-		/*
+-		 * Bring in the user page that we'll copy from _first_.
+-		 * Otherwise there's a nasty deadlock on copying from the
+-		 * same page as we're writing to, without it being marked
+-		 * up-to-date.
+-		 *
+-		 * For async buffered writes the assumption is that the user
+-		 * page has already been faulted in. This can be optimized by
+-		 * faulting the user page.
+-		 */
+-		if (unlikely(fault_in_iov_iter_readable(i, bytes) == bytes)) {
+-			status = -EFAULT;
+-			break;
+-		}
+-
+ 		status = iomap_write_begin(iter, &folio, &offset, &bytes);
+ 		if (unlikely(status)) {
+ 			iomap_write_failed(iter->inode, iter->pos, bytes);
+@@ -992,6 +977,12 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 		if (mapping_writably_mapped(mapping))
+ 			flush_dcache_folio(folio);
+ 
++		/*
++		 * copy_folio_from_iter_atomic() short-circuits page fault handle
++		 * logics via pagefault_disable(), to prevent deadlock scenarios
++		 * when both source and destination buffers reside within the same
++		 * folio (mmap, ...).
++		 */
+ 		copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
+ 		written = iomap_write_end(iter, bytes, copied, folio) ?
+ 			  copied : 0;
+@@ -1030,6 +1021,10 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 				bytes = copied;
+ 				goto retry;
+ 			}
++			if (fault_in_iov_iter_readable(i, bytes) == bytes) {
++				status = -EFAULT;
++				break;
++			}
+ 		} else {
+ 			total_written += written;
+ 			iomap_iter_advance(iter, &written);
+-- 
+2.49.0
 
-
-> 
-> Thanks in advance for any input
-> Hub
