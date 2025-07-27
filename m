@@ -1,149 +1,67 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F32231C5F13;
-	Sat, 26 Jul 2025 09:10:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2FFB1DE4FB;
+	Sun, 27 Jul 2025 22:11:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753521034; cv=none; b=hjVp9CU3f7Vd50PbPJsv75WFd7MCWXqBMaGKLWJm1mInp6PFEoeR+P5biMAx5cbHWqqfd86ejtu8QFJi3eYxweKWIjfyiTQaFIt6PazA6IVnBR+0bO1lxLHouqPmmDj3NqbtYb2XqpDybJni82QLCMdibeOBPEO3cUdYoWZ+wUg=
+	t=1753654275; cv=none; b=ifw6PshWPap4DLlJV4DmkP9V1TWutZ9BcLJ0kQLsrpwbrazaWqbZeb6yeJVoqJMLy47LZFqtbH4X/fWeik9cbsbiwv0lJQTQDUoJZO6Z1xM9lS9ClUOGp7OsqXuUlpLgDyfpRPh2VJywMsAYieGZhM68sampxRySKrzauXrpyOY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753521034; c=relaxed/simple;
-	bh=SfggtfGe7PB58v5DZwweW+m6rEGnnfzyw02zI8O1v5Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nAsaQEPW2bbzbd4li4IBaEWU7kBJP8jDOBmJbal2Yd+yqBy5AL+HbiLIYDYH0Y/cMOfgD0P2oWe4ynFCQDFfpBx8PtH2G8Kr/GrGvfnXILRUMCxTRviSIUF2OYydobsImZOTTrtjN2if3kRlnc0n03LyFzVCXWiPILlBy8VZWFo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z+fh0C/P; arc=none smtp.client-ip=209.85.210.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1753654275; c=relaxed/simple;
+	bh=30hp32qG5yGyWXbTJhUAM3eIIZb3cEDwJ8ZUZKMcD8s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Pc80R223W4dqWFtUAV7Uaz47KF7cHYorsDFJt4ZkYkuEIu4eBFVDQioB0q7zqmLQ+TWVOKMIW5Pmw4iMob8wqvG/8Ymev/a8dZX+ZYF9JDywGRkfRmm6ccRvKaDuMqpNGiF9qwVh9Q4iFB9ZziDKRJ1LjhMZlCyxlLLpzXYy8oc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dpaUWuT/; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z+fh0C/P"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-74b54af901bso1947751b3a.2;
-        Sat, 26 Jul 2025 02:10:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753521032; x=1754125832; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=WRyjZ/Xf4lOxF8UOomre3BOUYmwqK2BErDCowQX7LUU=;
-        b=Z+fh0C/Px5RUEz2D/4pH9WdRcCWE6EqNvdR2D6vFwYIycgESmoYolRgNCdt8GBv/Cy
-         8p8K+dt2TlfMIt3pCokcFIbxke/Nz1RQRJ8wEDHV7rQJcYF9g7zWSINevxkJHLb/ENHS
-         DZj0qNP4xcO68Fil3JR2ze0IZElEKEoP1HNdeO0b3VgFLn0+JPzUIsgtEqq2loZ8mlW7
-         eQSzsJ2eRSmjSKMDlDG/LaLgZRvwJ/iWKl+2qwU1vu+kYT6VVntx+jSEkAwToIVJsaig
-         7uxVjirGSUO8TmVkcDFXfz50mxITNJ+EQWcRel1GAfNHDz+92f8KDCJMvY+Fd16n0elr
-         ImfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753521032; x=1754125832;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=WRyjZ/Xf4lOxF8UOomre3BOUYmwqK2BErDCowQX7LUU=;
-        b=IgHPlnGfCAASkDUgNC+QStj1Ldghy/oZVUbKGZ+Iq7BaXFbXxd23Qq/Lr2XNCdA+UH
-         lioaBXBkfD3yXTwOiJEShmvdC2kLM98M0homSnjklr4L4i8CqdtTEZGxi2RmL5tjWpSn
-         w8qKoXP2oOe4Ofy2ZWcJUuGKC6P2OnKET+wccGoU/RmWSTwwR6BF3q3QRH25mc5p0Aqe
-         oHoyNezAzmGdtkrM8KBR94UZBN5dSwwTEttk2wY/o5p8cXG6Xvf/1Y/4ca/hJUHXn8d3
-         MfbK30FFuSVbgpj0BqtdlpeHNQRNqJkd/M2Vt71/85uZqn7fXOoKQOFDi64U/qMGwEM1
-         z+Fg==
-X-Forwarded-Encrypted: i=1; AJvYcCWgVWWE49GvSNaTxCvzcOVRTe5jzY4ipC16007woNSo4GbFY2AMdtTC5fy4oLV76zsoJAtUJNXpOhGu7ubb@vger.kernel.org, AJvYcCXIkHeHFLTD6tMNBaAObyjYkbgPI1tPymel3k75mYve1quEdBiUm0eCo6YED6ziPydKwqqBTkNl+36vQtyw@vger.kernel.org
-X-Gm-Message-State: AOJu0YxMVVnVp588TBdlQ6KucP75n/LRQBCsywGh6hWmIge/asvqlQEc
-	ljzpdJCsvAi1SX/SSb2+VDfbbwlLGE4a/pGXnMDCsP5IpuXNm2PxKneJ
-X-Gm-Gg: ASbGnct5J83LlGhx6DntW9wyhzh+ja3M2gLPw1UKRI5c6UU+5zvNKOG6JvUIQfMdjy4
-	QKgS+zX0Njai92wXc4A+aN9nZ4wwgv5z0J+DNl7Vx/R0uwkGibWCroaoQOx2qJtBBLJeNeOFynj
-	yPG8I7PD428Fh7yZ8/ItQEwS+F8yvTeN8hz8rdJpILjf7wCrxaXzUcAiWwwT3gE2Cx+TsujKBUl
-	YP/udM7fWaolUR1pZW9CXlmi6Z3LuE8G5Ke0SgVVuj9U60r9aE3cNvasTtp0hDjssC45uBFvUEN
-	Qj859Forl99ENxAl20BGDeBTdZwT23QeQP6duZQBbZyVO9JmXw/b5A14rSs2ppmMVGv9Rp52oV1
-	jro53SF1ythJUEOZ1X/hAEw2csYfGEI0t9l0=
-X-Google-Smtp-Source: AGHT+IGZS6pTHqZ5rb7hDVsSbzXKvhMO0G9S2a0CiiBuFqmzrdodLqGIhuUumFEtrki7ydwMiFBtZw==
-X-Received: by 2002:a05:6a20:939d:b0:232:4a42:dfd1 with SMTP id adf61e73a8af0-23d701e8b28mr7433231637.36.1753521031959;
-        Sat, 26 Jul 2025 02:10:31 -0700 (PDT)
-Received: from VM-16-24-fedora.. ([43.153.32.141])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b3f7f4ad5a7sm1056088a12.0.2025.07.26.02.10.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 26 Jul 2025 02:10:31 -0700 (PDT)
-From: alexjlzheng@gmail.com
-X-Google-Original-From: alexjlzheng@tencent.com
-To: brauner@kernel.org,
-	djwong@kernel.org,
-	dave.hansen@linux.intel.com
-Cc: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dpaUWuT/"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=+hW4d7DI3zWYNgpta3mmqm8OPL25IKhqBbArFcbHXd8=; b=dpaUWuT/ujQoHZobKmJKT/dBLC
+	/f0WkM9WTQryrsor7WZ4ag8hTzEgeqc75dnIeiWUHK69AgSdFji9S3Fi8J58qdAPvg1xIlVXFu+k+
+	03mohxWGmmuDSCS6y8UWRcqzDji+SIuRPsUEhkhhhxq65fNBXss4CWeP/DLuJj1kYtGbBoEbS/xd5
+	deW8xhv/13mpcn5BkpVhBO68toOK6+/KDyCJenA+tQWZ5J/+W0JC2lY8z2DeQsm2mSQbE+MTnna3a
+	KdNprXWJM2irc4pux1ngybWKZvsdQyth7Rfk2+TPMAaLZAt/Fcmk+P0fZMjLYOXZ4Yj7BgS9bsy3n
+	Jw3kALjg==;
+Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1ug9Zz-00000000Dqj-1nZK;
+	Sun, 27 Jul 2025 22:10:51 +0000
+Date: Sun, 27 Jul 2025 23:10:51 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: alexjlzheng@gmail.com
+Cc: brauner@kernel.org, djwong@kernel.org, dave.hansen@linux.intel.com,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Jinliang Zheng <alexjlzheng@tencent.com>
-Subject: [PATCH] iomap: move prefaulting out of hot write path
-Date: Sat, 26 Jul 2025 17:09:56 +0800
-Message-ID: <20250726090955.647131-2-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.49.0
+Subject: Re: [PATCH] iomap: move prefaulting out of hot write path
+Message-ID: <aIaj69N19WCbKKy8@casper.infradead.org>
+References: <20250726090955.647131-2-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250726090955.647131-2-alexjlzheng@tencent.com>
 
-From: Jinliang Zheng <alexjlzheng@tencent.com>
+On Sat, Jul 26, 2025 at 05:09:56PM +0800, alexjlzheng@gmail.com wrote:
+> @@ -992,6 +977,12 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+>  		if (mapping_writably_mapped(mapping))
+>  			flush_dcache_folio(folio);
+>  
+> +		/*
+> +		 * copy_folio_from_iter_atomic() short-circuits page fault handle
+> +		 * logics via pagefault_disable(), to prevent deadlock scenarios
+> +		 * when both source and destination buffers reside within the same
+> +		 * folio (mmap, ...).
+> +		 */
 
-Similar to commit 665575cff098 ("filemap: move prefaulting out of hot
-write path"), there's no need to do the faultin unconditionally. It is
-more reasonable to perform faultin operation only when an exception
-occurs.
-
-And copy_folio_from_iter_atomic() short-circuits page fault handle logics
-via pagefault_disable(), which prevents deadlock scenarios when both
-source and destination buffers reside within the same folio. So it's
-safe move prefaulting after copy failed.
-
-Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
----
- fs/iomap/buffered-io.c | 25 ++++++++++---------------
- 1 file changed, 10 insertions(+), 15 deletions(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index fb4519158f3a..7ca3f3b9d57e 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -964,21 +964,6 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
- 		if (bytes > iomap_length(iter))
- 			bytes = iomap_length(iter);
- 
--		/*
--		 * Bring in the user page that we'll copy from _first_.
--		 * Otherwise there's a nasty deadlock on copying from the
--		 * same page as we're writing to, without it being marked
--		 * up-to-date.
--		 *
--		 * For async buffered writes the assumption is that the user
--		 * page has already been faulted in. This can be optimized by
--		 * faulting the user page.
--		 */
--		if (unlikely(fault_in_iov_iter_readable(i, bytes) == bytes)) {
--			status = -EFAULT;
--			break;
--		}
--
- 		status = iomap_write_begin(iter, &folio, &offset, &bytes);
- 		if (unlikely(status)) {
- 			iomap_write_failed(iter->inode, iter->pos, bytes);
-@@ -992,6 +977,12 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
- 		if (mapping_writably_mapped(mapping))
- 			flush_dcache_folio(folio);
- 
-+		/*
-+		 * copy_folio_from_iter_atomic() short-circuits page fault handle
-+		 * logics via pagefault_disable(), to prevent deadlock scenarios
-+		 * when both source and destination buffers reside within the same
-+		 * folio (mmap, ...).
-+		 */
- 		copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
- 		written = iomap_write_end(iter, bytes, copied, folio) ?
- 			  copied : 0;
-@@ -1030,6 +1021,10 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
- 				bytes = copied;
- 				goto retry;
- 			}
-+			if (fault_in_iov_iter_readable(i, bytes) == bytes) {
-+				status = -EFAULT;
-+				break;
-+			}
- 		} else {
- 			total_written += written;
- 			iomap_iter_advance(iter, &written);
--- 
-2.49.0
+Why did you change this comment from the one in 665575cff098?
+The comment in that commit is correct.  This comment is so badly
+mangled, it isn't even wrong.
 
