@@ -1,74 +1,73 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E7B727A448
-	for <linux-xfs@vger.kernel.org>; Mon, 28 Jul 2025 20:31:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE058279DD6
+	for <linux-xfs@vger.kernel.org>; Mon, 28 Jul 2025 20:31:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753734694; cv=none; b=hqVY16uO6GuskugvR39atdTGJK7DHUiCyQdvXK+L/MeVuCouRVg34wBJBKYwjIwTIaYiVg2XE5ZOd9N5/dJj2ma/Dwfzrxl0R4FsyU9dQM0Ee4MopttUOGK99A1hlNfYpvxHoaMjS9TxLYDymWZhywGFseZ3VxfPRsXpHqhBQaQ=
+	t=1753734695; cv=none; b=DcBBZu2vkeV6B+LO/yCzfh/GfxDuSMvyHyEM7wuvwSihVSCqCBfrDRkEUCtUFZgpVA4X5uwHFvX9k+Mz7IiMgxueebblW44gh0uij0C+HC7qKrTj57135EqUsJLlczNuNPawi09KM3H7a/twWccCkCGro1zM74LeSNVRL8ISAFs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753734694; c=relaxed/simple;
-	bh=Cc8jfD9UXHnTL28T91p6u/Kf5oNqaZTP/JPhzrOnvHE=;
+	s=arc-20240116; t=1753734695; c=relaxed/simple;
+	bh=oywUNdy9SXNgRvU0YoeafcjM/3VIs70znQ1LmSPU2B4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To; b=pnRXqFQSJp14+v+hT7RWMPU5t1CF/JrB7ROf1JcvVl6mINtHahkr4KTeyZFKopqnNhA0fSKMs7yA1t2brN1qKk3r+ewTGE6+lfvurkJrBYbAFRuYYZ+NKr3Dx/G8S7LYc531X+l2gQYgFi5mcKigsFGkSwzFaFlBeVFJ8jbIjew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GWN2xvXP; arc=none smtp.client-ip=170.10.133.124
+	 In-Reply-To:To; b=YEl9YDVw9KF6lz1R7exHZv1L1FqcZx1SBX2vgJjoUJaL0CScUzf8Xxm8THM21yn79/ssrTK43JkGtoIVepJZ1OzzHhn1atcyF+ULYaWT0ru8BB/h3j2Pt+IHBbh5PmthF7MwAfZ87FBfk0t7EymYDeG7CHNWx5f3/EZEUZXDKDE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EpJcShfa; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GWN2xvXP"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EpJcShfa"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1753734691;
+	s=mimecast20190719; t=1753734692;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=gsNqASzsrM4FhxhYhZwqXoEsfSVZFoKy3EvjkkcLH3A=;
-	b=GWN2xvXPRaBVb5A5QUoifb2d98Uu/iSID2D/lIgDCk9NOQOuuUHxVnY3/uSavjaLu/JiAH
-	XAgt8kmGxkuFNwa3eemS8SCwb8pfHGqHhvqfliLU9oeXRH6FMJeXwBPwcBezxtouMXK1A4
-	IOcrM4VSrC+S2TLT8lvIRQH4wk8EV64=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=Why2a90OOR2KPUrmkOK42TjhIsW0VoTnCqJDDVQ6oe4=;
+	b=EpJcShfa57FW4xofjSUQG610BOU51qaUUHiWF2ki2QEbOTXpIcBg0j5KlN81MiFdWxT2kC
+	mCJzv3eAjakoJvkI0sbRmQIrVQIo0BuZlNeYZpei4tpw/dMUpWOvWcUXpwXayeCZY2r8L1
+	smSuFib+FckI8VfF+Oib23uj506+4Ik=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-338-vpRoEwUWMcG2eqGMcM7DZw-1; Mon, 28 Jul 2025 16:31:30 -0400
-X-MC-Unique: vpRoEwUWMcG2eqGMcM7DZw-1
-X-Mimecast-MFC-AGG-ID: vpRoEwUWMcG2eqGMcM7DZw_1753734689
-Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-612e67cee87so3873134a12.0
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Jul 2025 13:31:29 -0700 (PDT)
+ us-mta-372-MUpsdRb8On6MRwPmxzSfVg-1; Mon, 28 Jul 2025 16:31:30 -0400
+X-MC-Unique: MUpsdRb8On6MRwPmxzSfVg-1
+X-Mimecast-MFC-AGG-ID: MUpsdRb8On6MRwPmxzSfVg_1753734689
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-ade6db50b9cso507518866b.1
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Jul 2025 13:31:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20230601; t=1753734689; x=1754339489;
         h=to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=gsNqASzsrM4FhxhYhZwqXoEsfSVZFoKy3EvjkkcLH3A=;
-        b=laZs1Z2MaCtlnT57t2tS+kQt5mR2H+/6coRcbshBUieSqhhHvfELZnnFhPJ1S22YvT
-         cp4jpUS6RWxiKCeQySI2f1zEnshSbU+lnIijJ+Veg6i9YWDNbZ1rI0qVb6IV588vLwZN
-         fJrChsOAreegfV3r+fzTcDiCHX4er7Dp4lJx1Kx4KgBJmEZC1GlPhXenViJxqsbO3j2H
-         Hek+F6V5rihZPF6xz84DWE/ph0Koi1rDbEJ0BwQIFgnRZMF95l61ffFIxq1C5gy3vIwA
-         IcJS85j46ya3+lGj0KVhyo44pQgJHlqVJpYjZXoqOIBmOwOEovwVsvJCp7qE+lajYysg
-         ySwg==
-X-Forwarded-Encrypted: i=1; AJvYcCXHj1fYDoxdO9UoLWSCSFCODWvXYlEnXnLC9yPTgj3zoNOJY5/PQ/igLUzu7L0+qUGEBGg08kaI0cw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJmeRa6sYbwjBKh3Qu9uD7IakkAiA4Yb4SBYyNhNBs7+Pioy5T
-	DxBrnhSmuCigIo5gcL1iabgQpxg4PbexdQA1rD9gqrV+LLEVOZtwjcwH0HMNBQyR1F/lynmjtDn
-	4XDnouDtNl7UrGDKElnrO0JEZx1RbLlVdGRrYG1vncSRsHuyt+XKWERBPSfEX
-X-Gm-Gg: ASbGnctApAW2z4Lwn2IJBBf7Mh9v3K1eCrSCP/FrXg7NY8aK2LCuionLzAjNER5i/Hw
-	mm25aCmsB6mldUXm+0fhin6X6tSV/q/Urg9lNpk3X+U/SpbUDPkj8Yu0c6M7uGHM5ZB3VnzCRpZ
-	ZReq3v3YqZqVkGbKrENPgLWpj5fhgHWjhTQcmcMVXUBn9dJZxn15k0lIie3CVVCilWDjulljklw
-	vztkDEyqhkKdVDqpsui6O4g4rtSB9aiLOvPLyw14yLe8dcDPlRUjcqtbUqdqEVTTqAtFzR8eJJi
-	TOdzNLSNnJZc0VN8oqxo4IVM2g6ZzTkwgEz/28EJ2LqXoQ==
-X-Received: by 2002:a05:6402:518e:b0:615:5799:72eb with SMTP id 4fb4d7f45d1cf-61557997743mr3139598a12.4.1753734688659;
-        Mon, 28 Jul 2025 13:31:28 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHaXCTtgJBVa+Xs6kxiTyulJmF/M7m0cchmWiQmoT0v4y+AxWRRt3r7Xo334Ukqtepms8Dudg==
-X-Received: by 2002:a05:6402:518e:b0:615:5799:72eb with SMTP id 4fb4d7f45d1cf-61557997743mr3139564a12.4.1753734688186;
+        bh=Why2a90OOR2KPUrmkOK42TjhIsW0VoTnCqJDDVQ6oe4=;
+        b=OByNUSBTkoezeyhOrKLkSfsGYvF9RV718Xrq+vfuxeYe78WK6YgecwruzqvyKsNCxV
+         Y07uBRIRoXKmEkz8MAuyWKD8dkisFPrl63KCbN9UZGm3OUvG1xLDBo+jawIG+Nz11xIR
+         xeT//tUtMT3+FbCY9IibCF0QOt2k/zoK7hToJw+SybcuFON87aqU0u/DjZrTY+4VQpjg
+         UJ6mS0qZEP6USO71Q6ZI5wepE2wuKAKelq+3O4Ii6592aTa0nWl2+Sj3ndSgJyjCZpAr
+         S//3rNPikMAKfYr9Lcft8YrHqvtPlwvnj7/zD2RIE8HPhnGzBej0R68v/3KV9PGQucn9
+         p7Qw==
+X-Forwarded-Encrypted: i=1; AJvYcCUycMMF/NvZOrLVSMH9VLEzDuow/iGwuF8EUt3HSn5es2+WUNYjSqlBPBnj3wFdIciwjP0X0HWEa0A=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzNLXgRtUM/zmHi/O/K7ezqr6oKGM459uERSWAaVoTo+CJ7SrxQ
+	ZwtP4U26p+wJkIWwYTSQ/c7XoDZJ1H0+E8S6CMEiVRFwjqo4Usm70aLaSEB/qtSMFieeMFlSkN1
+	MTIsBOFqxCPfUbR67OPuWWMnuNIHxcP0q6tLPqWVL9MEJ9R/2zsx0XLGHStwD
+X-Gm-Gg: ASbGncv9Bby9yaukf3UwG18EuntBg0yxPgHEsHHtZGpcLEuIhR9dvHvINPRlOjd9So2
+	j5gmvkHkPdN7GM8SJs5slLd383WM9j6JIwrzr0aWPN+9M6ybji4TavFCg2+9GC3sK1DR+z4JxbL
+	5zpu1jCxh4h56y5+vnzVkiG6uoR2hokzjDogzkt2fF/HkjGcoIV8t8f5+cLXMCWlp5dTZS75e8P
+	/Sj7ya3aVhqd6jlowAmJSePp5piSbxt7OshhSVfh0ULJGMYeTv6OqzudVeMCqzyJ/IG4oUBUTwr
+	cdNQcKlKrmWF4oLL3IpJ2D8Zso1l22GX+jx8MI7+D72JLg==
+X-Received: by 2002:a17:907:7f0c:b0:ad8:9257:573a with SMTP id a640c23a62f3a-af616efc71dmr1429829466b.5.1753734689310;
+        Mon, 28 Jul 2025 13:31:29 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IElqLNNpMpUzeIxl4kr/PFatnBAKdgVdcL/2FQoChJ3mBvf5eeLG5rjoJQ3gDbaVWDOhBqS3g==
+X-Received: by 2002:a17:907:7f0c:b0:ad8:9257:573a with SMTP id a640c23a62f3a-af616efc71dmr1429825766b.5.1753734688875;
         Mon, 28 Jul 2025 13:31:28 -0700 (PDT)
 Received: from [127.0.0.2] (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-615226558d3sm2730656a12.45.2025.07.28.13.31.27
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-615226558d3sm2730656a12.45.2025.07.28.13.31.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Jul 2025 13:31:27 -0700 (PDT)
+        Mon, 28 Jul 2025 13:31:28 -0700 (PDT)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Mon, 28 Jul 2025 22:30:11 +0200
-Subject: [PATCH RFC 07/29] fsverity: pass super_block to
- fsverity_enqueue_verify_work
+Date: Mon, 28 Jul 2025 22:30:12 +0200
+Subject: [PATCH RFC 08/29] ext4: use a per-superblock fsverity workqueue
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,170 +76,54 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250728-fsverity-v1-7-9e5443af0e34@kernel.org>
+Message-Id: <20250728-fsverity-v1-8-9e5443af0e34@kernel.org>
 References: <20250728-fsverity-v1-0-9e5443af0e34@kernel.org>
 In-Reply-To: <20250728-fsverity-v1-0-9e5443af0e34@kernel.org>
 To: fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
  linux-xfs@vger.kernel.org, david@fromorbit.com, djwong@kernel.org, 
  ebiggers@kernel.org, hch@lst.de
 X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5317; i=aalbersh@kernel.org;
- h=from:subject:message-id; bh=1QRoKp7YVPVu+fLZj5koefoGqFZX89pyv0L/h2jQYGc=;
- b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIYMtrvibdN+/JCpGnfUXNz+X1rPJ8H8bJIuRzTSzsWP
- f2J/47tduEdpSwMYlwMsmKKLOuktaYmFUnlHzGokYeZw8oEMoSBi1MAJhJ7g5GheVdk1ctL5zRD
- 7OY0yn0vubOxPpXP2kb/WMdxBt/156PsGBmmGH9eyBBcxbozT8i95Lv6ird39X8e/VNu73FCd9J
- 6NmNuAP6WRjs=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1033; i=aalbersh@kernel.org;
+ h=from:subject:message-id; bh=8eioOXLwKFbWQjOAzR05yR6o85tqQ9fD9/ewRMN73qY=;
+ b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIYMtrviStxfr8V+zzu88HeFq/NhRLCl9kXnNFsPcB6e
+ /qJDIHzVtkdpSwMYlwMsmKKLOuktaYmFUnlHzGokYeZw8oEMoSBi1MAJmL/guF/6StJt4ZHu6Un
+ uucKypWZSByuXP24xklOeHFOkcuX5k+VDP+07MNvHDm/Yo/UfNu9K/zj3jfwikiapM5v9Wv/+qO
+ iei8/AGH0SCI=
 X-Developer-Key: i=aalbersh@kernel.org; a=openpgp;
  fpr=AE1B2A9562721A6FC4307C1F46A7EA18AC33E108
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-In preparation for having per-superblock fsverity workqueues, pass the
-super_block object to fsverity_enqueue_verify_work.
+Switch ext4 to use a per-sb fsverity workqueue instead of a systemwide
+workqueue.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/buffer.c              | 7 +++++--
- fs/ext4/readpage.c       | 4 +++-
- fs/f2fs/compress.c       | 3 ++-
- fs/f2fs/data.c           | 2 +-
- fs/verity/verify.c       | 6 ++++--
- include/linux/fsverity.h | 6 ++++--
- 6 files changed, 19 insertions(+), 9 deletions(-)
+ fs/ext4/super.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 8cf4a1dc481e..9d56eb353ced 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -336,13 +336,15 @@ static void decrypt_bh(struct work_struct *work)
- 	err = fscrypt_decrypt_pagecache_blocks(bh->b_folio, bh->b_size,
- 					       bh_offset(bh));
- 	if (err == 0 && need_fsverity(bh)) {
-+		struct super_block *sb = bh->b_folio->mapping->host->i_sb;
-+
- 		/*
- 		 * We use different work queues for decryption and for verity
- 		 * because verity may require reading metadata pages that need
- 		 * decryption, and we shouldn't recurse to the same workqueue.
- 		 */
- 		INIT_WORK(&ctx->work, verify_bh);
--		fsverity_enqueue_verify_work(&ctx->work);
-+		fsverity_enqueue_verify_work(sb, &ctx->work);
- 		return;
- 	}
- 	end_buffer_async_read(bh, err == 0);
-@@ -371,7 +373,8 @@ static void end_buffer_async_read_io(struct buffer_head *bh, int uptodate)
- 				fscrypt_enqueue_decrypt_work(&ctx->work);
- 			} else {
- 				INIT_WORK(&ctx->work, verify_bh);
--				fsverity_enqueue_verify_work(&ctx->work);
-+				fsverity_enqueue_verify_work(inode->i_sb,
-+							     &ctx->work);
- 			}
- 			return;
- 		}
-diff --git a/fs/ext4/readpage.c b/fs/ext4/readpage.c
-index f329daf6e5c7..e9ecfc7830d7 100644
---- a/fs/ext4/readpage.c
-+++ b/fs/ext4/readpage.c
-@@ -61,6 +61,7 @@ enum bio_post_read_step {
- 
- struct bio_post_read_ctx {
- 	struct bio *bio;
-+	struct super_block *sb;
- 	struct work_struct work;
- 	unsigned int cur_step;
- 	unsigned int enabled_steps;
-@@ -132,7 +133,7 @@ static void bio_post_read_processing(struct bio_post_read_ctx *ctx)
- 	case STEP_VERITY:
- 		if (ctx->enabled_steps & (1 << STEP_VERITY)) {
- 			INIT_WORK(&ctx->work, verity_work);
--			fsverity_enqueue_verify_work(&ctx->work);
-+			fsverity_enqueue_verify_work(ctx->sb, &ctx->work);
- 			return;
- 		}
- 		ctx->cur_step++;
-@@ -195,6 +196,7 @@ static void ext4_set_bio_post_read_ctx(struct bio *bio,
- 			mempool_alloc(bio_post_read_ctx_pool, GFP_NOFS);
- 
- 		ctx->bio = bio;
-+		ctx->sb = inode->i_sb;
- 		ctx->enabled_steps = post_read_steps;
- 		bio->bi_private = ctx;
- 	}
-diff --git a/fs/f2fs/compress.c b/fs/f2fs/compress.c
-index b3c1df93a163..31b45abb26b7 100644
---- a/fs/f2fs/compress.c
-+++ b/fs/f2fs/compress.c
-@@ -1839,7 +1839,8 @@ void f2fs_decompress_end_io(struct decompress_io_ctx *dic, bool failed,
- 		 * file, and these metadata pages may be compressed.
- 		 */
- 		INIT_WORK(&dic->verity_work, f2fs_verify_cluster);
--		fsverity_enqueue_verify_work(&dic->verity_work);
-+		fsverity_enqueue_verify_work(dic->inode->i_sb,
-+					     &dic->verity_work);
- 		return;
- 	}
- 
-diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-index 31e892842625..e4e4697ad0d3 100644
---- a/fs/f2fs/data.c
-+++ b/fs/f2fs/data.c
-@@ -215,7 +215,7 @@ static void f2fs_verify_and_finish_bio(struct bio *bio, bool in_task)
- 
- 	if (ctx && (ctx->enabled_steps & STEP_VERITY)) {
- 		INIT_WORK(&ctx->work, f2fs_verify_bio);
--		fsverity_enqueue_verify_work(&ctx->work);
-+		fsverity_enqueue_verify_work(ctx->sbi->sb, &ctx->work);
- 	} else {
- 		f2fs_finish_read_bio(bio, in_task);
- 	}
-diff --git a/fs/verity/verify.c b/fs/verity/verify.c
-index 917a5fb5388f..ef5d27039c98 100644
---- a/fs/verity/verify.c
-+++ b/fs/verity/verify.c
-@@ -363,13 +363,15 @@ EXPORT_SYMBOL_GPL(fsverity_init_wq);
- 
- /**
-  * fsverity_enqueue_verify_work() - enqueue work on the fs-verity workqueue
-+ * @sb: superblock for this filesystem
-  * @work: the work to enqueue
-  *
-  * Enqueue verification work for asynchronous processing.
-  */
--void fsverity_enqueue_verify_work(struct work_struct *work)
-+void fsverity_enqueue_verify_work(struct super_block *sb,
-+				  struct work_struct *work)
- {
--	queue_work(fsverity_read_workqueue, work);
-+	queue_work(sb->s_verity_wq ?: fsverity_read_workqueue, work);
- }
- EXPORT_SYMBOL_GPL(fsverity_enqueue_verify_work);
- 
-diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
-index d263e988bec2..8155407a7e4c 100644
---- a/include/linux/fsverity.h
-+++ b/include/linux/fsverity.h
-@@ -186,7 +186,8 @@ int fsverity_ioctl_read_metadata(struct file *filp, const void __user *uarg);
- 
- bool fsverity_verify_blocks(struct folio *folio, size_t len, size_t offset);
- void fsverity_verify_bio(struct bio *bio);
--void fsverity_enqueue_verify_work(struct work_struct *work);
-+void fsverity_enqueue_verify_work(struct super_block *sb,
-+				  struct work_struct *work);
- 
- int fsverity_init_wq(struct super_block *sb, unsigned int wq_flags,
- 		       int max_active);
-@@ -271,7 +272,8 @@ static inline void fsverity_verify_bio(struct bio *bio)
- 	WARN_ON_ONCE(1);
- }
- 
--static inline void fsverity_enqueue_verify_work(struct work_struct *work)
-+static inline void fsverity_enqueue_verify_work(struct super_block *sb,
-+						struct work_struct *work)
- {
- 	WARN_ON_ONCE(1);
- }
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index c7d39da7e733..dcb9d1933c2e 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -5373,6 +5373,17 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
+ #endif
+ #ifdef CONFIG_FS_VERITY
+ 	sb->s_vop = &ext4_verityops;
++	/*
++	 * Use a high-priority workqueue to prioritize verification work, which
++	 * blocks reads from completing, over regular application tasks.
++	 *
++	 * For performance reasons, don't use an unbound workqueue.  Using an
++	 * unbound workqueue for crypto operations causes excessive scheduler
++	 * latency on ARM64.
++	 */
++	err = fsverity_init_wq(sb, WQ_HIGHPRI, num_online_cpus());
++	if (err)
++		goto failed_mount3a;
+ #endif
+ #ifdef CONFIG_QUOTA
+ 	sb->dq_op = &ext4_quota_operations;
 
 -- 
 2.50.0
