@@ -1,122 +1,106 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2874728B417;
-	Tue, 29 Jul 2025 12:06:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFDFE1E0DCB
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 14:32:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753790801; cv=none; b=A+BvAuTbHsX7x7zGyCMPQCug3BmveZ3uNdvAfS7mpmGI4byz8pH0c50iKJBtvm6h2KpDA/N0NXhxc0Fqraz2HElzAXEG2vfZ9XToBI02A1nXEkhcXfJiCG5U+7RO0tMxRJJCS9snCGWBeskpzG3qzyu9VqyWXZWZCGjoX4mKaik=
+	t=1753799575; cv=none; b=NrawK2iKzwTmSxrqJeAC6U8OPe6EVnbV5X0rrF0qofCMXjktkKUTp3f7R70nhXTFIg/aYRJrBCB8EUF7vbWCIzMuZQSMiUBpUrSSPZIwMGaKg1pZwRax3W7+dn3MTjDrTsT03qBLy+l69ifVT6sy6j3ppa1CMvCYv/8AwtkTsvk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753790801; c=relaxed/simple;
-	bh=DXWM/ypqIDZ58I2QbqRtV7LraPXmMsDAr8ESaTpEyVE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=UvHndhEetqYUNKzuLAz6plmY2cSECp2vLP+jWrbk8+EVg1QcRxooE5YFN/XDpnx8+T6cn0NW9r75MjatRWNtO+cFqWRdAG5EnjN97O5Dgsp42xEMkZp0DPufrSe2bL3+ysmJTNdrJ0BAbOvWIY5JfTWkpQa0PLi9qoDJjvtodO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZnDi6ozh; arc=none smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1753799575; c=relaxed/simple;
+	bh=G71kRrH4Uu91v1DvRlZ+GjPR3P8wXk91J54pJ6jEezQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UX6ASfRbnd7A+lKE9vywPWAJcGJdSxtgpt7qNhmW14hkrfgvKqQZgFCBxlYOAqnoQfprQtARrQe/0Z9v43kfWuhGP/K5/CI3b+B4yFjsQ34/7VxeMgIq6dZDWxQhp2bbNaBXj1LDTNwp/ALth/73aI5N4uQrGNaYDU40SD9mS5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s+Sz+rqR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZnDi6ozh"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-6155e75a9acso2079401a12.0;
-        Tue, 29 Jul 2025 05:06:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753790798; x=1754395598; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=DXWM/ypqIDZ58I2QbqRtV7LraPXmMsDAr8ESaTpEyVE=;
-        b=ZnDi6ozh3bqzuBC4SS8y3Dvqcwxj/8Z1ithLUJy69afD/WWQ31ocKg3BkvoHmFXmkD
-         yDcbmQmHYeyYmI/RGSpvOcGhwiLLZMizJzcJS/mDHqGtFa6n9m1RFUFcqWZyOUQ7OMd9
-         gq7jbKA47gAU+6fc+jqHKPiD+IkjxMr/Dj7GHCOKdpBZxnF7LVaV4G61S+8adoHRO3SL
-         kBTm64FauU6AELrf74Jm+LZdiaEUf0kLj4pMuFDcncusygYoXxMOHqw583wYjoaIfxPd
-         i2KELFGJinhCjmxOy1hJDtZfn+6beXinpaDciyo1WELIKzL5b4C1MCVg8igwW80h32mA
-         xEjw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753790798; x=1754395598;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=DXWM/ypqIDZ58I2QbqRtV7LraPXmMsDAr8ESaTpEyVE=;
-        b=xM4peJZBGf/MVSz9+chZ3EFTHtB2uCnsHg3xxlwgbRqv0uYUxSB8DG5s8rIuMxU5eH
-         wR8jQCds1/ZpD4OOsGYDKWSqPrmpM1+iL0UTXGDyo5uOIvDYrUN6alv8dnbocKb8FxVZ
-         zZ3XcNAXTBeaFMh+m8JEZcSNj+BwTlEx4hs2DonYnZcNlulQcjeyojTOB9ghpAF2C/UQ
-         Umjm52o2OT+99Ja7BJziWhaeNmYCUJeB5nguFvU10hc2NAqH5ibMKllFdNYDUnkHDeTZ
-         KDtb0uJhpkSEtJKlZuYLo5jWE54yEperwBoS+ljdFLhaxnp6EpF6eVcE31Fw8lxYekzh
-         tXmA==
-X-Forwarded-Encrypted: i=1; AJvYcCU7eE5RssItTAExl1dQnXrRSWn7CDYEJyz/LOFhlZHVlqvXh+Mg5NJn0v6EbFGZujIKaHHZ6++V/KkR@vger.kernel.org, AJvYcCUmgpVGx8mgNBL4q8p4LxywZkbR2qvK1bhx8Fjjuyl7h5IaiKYXWWe/2sXNW0tUkYV0WUKneUcvYdgYiIUk@vger.kernel.org
-X-Gm-Message-State: AOJu0YybwyOlXDBm41XkXQtigbUgcqIsxeItzX/D4WtmWPqJB8fwTWTQ
-	mjatnU6315ldMupObPzzNAEB/FJjx+ERIUPaDbuxYrxKD2Tz13xi5mHZ+orPJ+LUJcuWoVl5s0a
-	IOscdGQiClwG7uCNjmnrjITa7lvDD4Qk=
-X-Gm-Gg: ASbGncs1H4bXgICzpPS/6a1Yu8gmQK6gte3JR4z+3UTF9/QBGGGDGzWe0zzzt19f8oW
-	mcNaFVGgKvzPZojUjb+yDjqYAynmgSre79bvfndpU/oqXfYpkhHD72Iav009OlHQi0eitSgJz7y
-	7Lb5COokihao/n8k2wigW+mKKYDrhGsxInlxQrRUXvQwsr9L55hN2WBoy6edgTX2EfIsH3mhTJd
-	9ovh90=
-X-Google-Smtp-Source: AGHT+IEf+MIS97B7TPFbqcda/Jx9eHeq1SlqXKCodea7X91A4GGrjGOuW5kxjPHpb2b7c6ZvuSJ1EY/0SG2I5iBGMqs=
-X-Received: by 2002:a05:6402:2710:b0:615:3a7a:5108 with SMTP id
- 4fb4d7f45d1cf-6153a7a5347mr5806402a12.21.1753790798120; Tue, 29 Jul 2025
- 05:06:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s+Sz+rqR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AC7FC4CEEF;
+	Tue, 29 Jul 2025 14:32:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1753799575;
+	bh=G71kRrH4Uu91v1DvRlZ+GjPR3P8wXk91J54pJ6jEezQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=s+Sz+rqRB8ZFoBY6y5UMOwncS6bWiylIIIiqTr96ZWWGvAFqDfgjzcPk8ij5kWzjg
+	 upSBecHafsrHLpjNb2Xm9+HlKnB1V31uvLMK29VjdlTZyeBad1ZqBIE6+hZmOQBMgn
+	 udIZ+jOqJgA0VPhIaV42sn6RdCo2lElK1MYhRtAI90fN7svgL49k8rCpPpgCoFjzIL
+	 b0zG0fDdLbgUCOFnaHknKTHKB0o5QB7BvzHsyGZiK/kuyt813yEfGG+LU4ubN56tVx
+	 yxCj3J5fU4x7e/L92U/Lkpj4h5ApXj10P0gsPGMrwKri3kWteWBspFM8BOJTCqFHd9
+	 35sqwuC4vqsIg==
+Date: Tue, 29 Jul 2025 07:32:54 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: allow setting xattrs on special files
+Message-ID: <20250729143254.GZ2672049@frogsfrogsfrogs>
+References: <20250729-xfs-xattrat-v1-0-7b392eee3587@kernel.org>
+ <20250729-xfs-xattrat-v1-2-7b392eee3587@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250728-fsverity-v1-0-9e5443af0e34@kernel.org>
- <20250728-fsverity-v1-3-9e5443af0e34@kernel.org> <CAOQ4uxjXucbQderHmkd7Dw9---U4hA7PjdgA7M7r5BZ+kXbKiQ@mail.gmail.com>
- <ppcw73dlw4qdumbmel4spy2uvlaocnqfowquiop4mhauw3xxc4@kjad3vbucx7v>
-In-Reply-To: <ppcw73dlw4qdumbmel4spy2uvlaocnqfowquiop4mhauw3xxc4@kjad3vbucx7v>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 29 Jul 2025 14:06:26 +0200
-X-Gm-Features: Ac12FXxizHAQToV0suLhQNsm6KvYYdlbWlziqM1NTUuwTvmkgl5EEy7GOiXJo8E
-Message-ID: <CAOQ4uxjZ9zOpo==20xw9dQnumCMY3Buk0vhGgSft0tOEf2+k=A@mail.gmail.com>
-Subject: Re: [PATCH RFC 03/29] fs: add FS_XFLAG_VERITY for verity files
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: Christian Brauner <brauner@kernel.org>, fsverity@lists.linux.dev, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com, 
-	djwong@kernel.org, ebiggers@kernel.org, hch@lst.de, 
-	Andrey Albershteyn <aalbersh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250729-xfs-xattrat-v1-2-7b392eee3587@kernel.org>
 
-On Tue, Jul 29, 2025 at 12:35=E2=80=AFPM Andrey Albershteyn <aalbersh@redha=
-t.com> wrote:
->
-> On 2025-07-29 11:53:09, Amir Goldstein wrote:
-> > On Mon, Jul 28, 2025 at 10:31=E2=80=AFPM Andrey Albershteyn <aalbersh@r=
-edhat.com> wrote:
-> > >
-> > > From: Andrey Albershteyn <aalbersh@redhat.com>
-> > >
-> > > Add extended attribute FS_XFLAG_VERITY for inodes with fs-verity
-> > > enabled.
-> >
-> > Oh man! Please don't refer to this as an "extended attribute".
-> >
-> > I was quite surprised to see actually how many times the term
-> > "extended attribute" was used in commit messages in your series
-> > that Linus just merged including 4 such references in the Kernel-doc
-> > comments of security_inode_file_[sg]etattr(). :-/
->
-> You can comment on this, I'm fine with fixing these, I definitely
-> don't have all the context to know the best suitable terms.
->
-> >
-> > The terminology used in Documentation/filesystem/vfs.rst and fileattr.h
-> > are some permutations of "miscellaneous file flags and attributes".
-> > Not perfect, but less confusing than "extended attributes", which are
-> > famously known as something else.
->
-> Yeah sorry, it's very difficult to find out what is named how and
-> what is outdated.
+On Tue, Jul 29, 2025 at 01:00:36PM +0200, Andrey Albershteyn wrote:
+> From: Andrey Albershteyn <aalbersh@redhat.com>
+> 
+> XFS does't have extended attributes manipulation ioctls for special
+> files. Changing or reading file extended attributes is rejected for them
 
-indeed.
+"extended file attributes" or "fileattrs" as Amir suggested,
+but never "extended attributes" because that's a separate thing.
 
->
-> I will update commit messages to "file flags".
->
+(no need to drop the rvb over this)
 
-"file attributes" is better fit IMO considering the method name fileatte_*
-and structs file_attr file_kattr and the comments in file_attr.c/fileatttr.=
-h.
+--D
 
-Thanks,
-Amir.
+> in xfs_fileattr_*et().
+> 
+> In XFS, this is necessary to work for project quota directories.
+> When project is set up, xfs_quota opens and calls FS_IOC_SETFSXATTR on
+> every inode in the directory. However, special files are skipped due to
+> open() returning a special inode for them. So, they don't even get to
+> this check.
+> 
+> The recently added file_getattr/file_setattr will call xfs_fileattr_*et,
+> on special files. This patch allows reading/changing extended file
+> attributes on special files.
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_ioctl.c | 6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index fe1f74a3b6a3..f3c89172cc27 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -512,9 +512,6 @@ xfs_fileattr_get(
+>  {
+>  	struct xfs_inode	*ip = XFS_I(d_inode(dentry));
+>  
+> -	if (d_is_special(dentry))
+> -		return -ENOTTY;
+> -
+>  	xfs_ilock(ip, XFS_ILOCK_SHARED);
+>  	xfs_fill_fsxattr(ip, XFS_DATA_FORK, fa);
+>  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> @@ -736,9 +733,6 @@ xfs_fileattr_set(
+>  
+>  	trace_xfs_ioctl_setattr(ip);
+>  
+> -	if (d_is_special(dentry))
+> -		return -ENOTTY;
+> -
+>  	if (!fa->fsx_valid) {
+>  		if (fa->flags & ~(FS_IMMUTABLE_FL | FS_APPEND_FL |
+>  				  FS_NOATIME_FL | FS_NODUMP_FL |
+> 
+> -- 
+> 2.49.0
+> 
+> 
