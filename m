@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB31B2BE027
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 20:13:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DF8E2BE044
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 20:14:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753820040; cv=none; b=ZLSjGuksIM1J/Ym85Sz1jk949bg85XXamhwcpXUKc797sde6REnujUnKHW1Q3mZS+7uQIIh5q77TFVhGRwPb+KFlCenm+AHYWJ6BHX5x5Hsy0Z7ZnubTBeL4m3jYvd0EGdSw8xkep23Rx52WbDURH21UxyKwE5G+S4zwaqdCat4=
+	t=1753820055; cv=none; b=BHQ3bdY3uNCC2vYklrn5Q+irBGO/l++DDZhQX9DuQstIzzwVEAdqlAuqA7Uznnhlm+rMxxRqNUxHW5jFTX9OR83jMzjSjQ/781uxkcKpQ6NpMnL6t9eXZ5eZ29PLtEw/BUErJoVE5HicXjTo4KPp1S3N7XsG69fQg72DI20GgHk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753820040; c=relaxed/simple;
-	bh=T9zIFpDnJzUoZVamDsPqLWHTrnJC1gpoYyszcb/BEgY=;
+	s=arc-20240116; t=1753820055; c=relaxed/simple;
+	bh=cA7Km08RFy/o8JQEcg03CsgKi2ze7KSIVHBNZYZ4RFU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jv1PqsSfiAYkIvTv6sVIkVvi4Aw0llb+yIUs5BH9YU73ub0tXJ2NChEXc1ZNtU5k4wzIh2WFJLVWNt5kh9bfv/EFBNafoTiwdcjCa2z3AlZ4YZ3envNPK26CsSiU+dOkkrMyKWUmlRM8P69yBR/OPxPvYEj7EV+x6+Z/u8dUeqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RHGDtgW8; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=I8ZZa+Pa1H5uRyFTjKK7fTp3pDWJDhGlpTXPidmWMnbpadVuHNrop43V9qJTwpUM6rFH873cZFMyoAwJ2G/vqb354DGcHpc86psteDBIo4RdsmWD6V7axlCHbXrk1RjeTtZMHtu3e61lsDXjaoNH8hJu4aBinZpJCoKUld1c/IY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HZZp/fY4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RHGDtgW8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CAE7C4CEF7;
-	Tue, 29 Jul 2025 20:13:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HZZp/fY4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1375DC4CEEF;
+	Tue, 29 Jul 2025 20:14:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753820039;
-	bh=T9zIFpDnJzUoZVamDsPqLWHTrnJC1gpoYyszcb/BEgY=;
+	s=k20201202; t=1753820055;
+	bh=cA7Km08RFy/o8JQEcg03CsgKi2ze7KSIVHBNZYZ4RFU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=RHGDtgW85amWWodkTgBP2/LFVFsFPRSwe8d8KAVc2xzvg6lJos8Z8KfpdzyB1j0ZX
-	 6TR7okONvGHcSp/Vl/JvGShQF8ZW4nP9JXrnHd5aCZBcV6YbUvlhLZzOfBymKctHBO
-	 DE96SohpX1H8dc7teAgV0UBcxt+iO41HGDl+T9GUvSofoXfPw96mHaWhkPURs2b86J
-	 OiTPKZ0/8AfGIbJ9WVhbH4GDuUxbRjmFUgsCd3JLjxKEkFIq1kq7uRzOYQZEH0MrlC
-	 mTNw/MLzmlsjHmr7IsrDNWC2cd6hx7VSqkFvmoV395TaxbdW8MUCpPFOxDXLqmuEIh
-	 Rj8+e/iZdcKZQ==
-Date: Tue, 29 Jul 2025 13:13:59 -0700
-Subject: [PATCH 2/2] xfs: don't allocate the xfs_extent_busy structure for
- zoned RTGs
+	b=HZZp/fY48g3T6fC7FLkWr9iVtdJYDfPnAdLT178YVkhCpauq305Kh2LmG1/YJz1h+
+	 r2id7AzPGCSxOw0BwTxSx6QJiF9Kd8wzvWYAZbahwvN51IQ4KudgJw2ZpaHHcsrfhZ
+	 i71EbRLyZsWdouEKCJsOgrgsdGNBz6l2i0Huad+Ll+Ph2saS4HdU3hSbKwrjR7Gr+W
+	 rVICo3XwmULJOj9ov18vBZgkenEUj8sS9Zbp3WIho3BGGSRJ06y4OvXekz8eLk2bKw
+	 jdCJKZBUzFSZVFVKWHC8GI0nWdK0Q6wB0A4fqGFeJFj4vzUUh8nA8UvDxzxleVMdY5
+	 YzzY9eD9CoACg==
+Date: Tue, 29 Jul 2025 13:14:14 -0700
+Subject: [PATCH 1/1] misc: fix reversed calloc arguments
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: aalbersh@kernel.org, djwong@kernel.org
-Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Message-ID: <175381998816.3030433.5519105974751924380.stgit@frogsfrogsfrogs>
-In-Reply-To: <175381998773.3030433.8863651616404014831.stgit@frogsfrogsfrogs>
-References: <175381998773.3030433.8863651616404014831.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <175381999075.3030568.1303902231364782556.stgit@frogsfrogsfrogs>
+In-Reply-To: <175381999056.3030568.12773129144419141720.stgit@frogsfrogsfrogs>
+References: <175381999056.3030568.12773129144419141720.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,77 +41,93 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: 5948705adbf1a7afcecfe9a13ff39221ef61e16b
+gcc 14 complains about reversed arguments to calloc:
 
-Busy extent tracking is primarily used to ensure that freed blocks are
-not reused for data allocations before the transaction that deleted them
-has been committed to stable storage, and secondarily to drive online
-discard.  None of the use cases applies to zoned RTGs, as the zoned
-allocator can't overwrite blocks before resetting the zone, which already
-flushes out all transactions touching the RTGs.
+namei.c: In function ‘path_parse’:
+namei.c:51:32: warning: ‘calloc’ sizes specified with ‘sizeof’ in the earlier argument and not in the later argument [-Wcalloc-transposed-args]
+   51 |         dirpath = calloc(sizeof(*dirpath), 1);
+      |                                ^
+namei.c:51:32: note: earlier argument should specify number of elements, later size of each element
 
-So the busy extent tracking is not needed for zoned RTGs, and also not
-called for zoned RTGs.  But somehow the code to skip allocating and
-freeing the structure got lost during the zoned XFS upstreaming process.
-This not only causes these structures to unnecessarily allocated, but can
-also lead to memory leaks as the xg_busy_extents pointer in the
-xfs_group structure is overlayed with the pointer for the linked list
-of to be reset zones.
+Fix all of these.
 
-Stop allocating and freeing the structure to not pointlessly allocate
-memory which is then leaked when the zone is reset.
-
-Fixes: 080d01c41d44 ("xfs: implement zoned garbage collection")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-[cem: Fix type and add stable tag]
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- libxfs/xfs_group.c |   14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ db/namei.c          |    2 +-
+ libxcmd/input.c     |    2 +-
+ logprint/log_misc.c |    2 +-
+ repair/phase3.c     |    2 +-
+ repair/quotacheck.c |    2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 
 
-diff --git a/libxfs/xfs_group.c b/libxfs/xfs_group.c
-index 80b6993cc9916e..b7ac9dbd8e79d6 100644
---- a/libxfs/xfs_group.c
-+++ b/libxfs/xfs_group.c
-@@ -161,7 +161,8 @@ xfs_group_free(
+diff --git a/db/namei.c b/db/namei.c
+index 2586e0591c2357..1d9581c323cd67 100644
+--- a/db/namei.c
++++ b/db/namei.c
+@@ -48,7 +48,7 @@ path_parse(
+ 	const char	*p = path;
+ 	const char	*endp = path + strlen(path);
  
- 	xfs_defer_drain_free(&xg->xg_intents_drain);
- #ifdef __KERNEL__
--	kfree(xg->xg_busy_extents);
-+	if (xfs_group_has_extent_busy(xg->xg_mount, xg->xg_type))
-+		kfree(xg->xg_busy_extents);
- #endif
+-	dirpath = calloc(sizeof(*dirpath), 1);
++	dirpath = calloc(1, sizeof(*dirpath));
+ 	if (!dirpath)
+ 		return NULL;
  
- 	if (uninit)
-@@ -187,9 +188,11 @@ xfs_group_insert(
- 	xg->xg_type = type;
+diff --git a/libxcmd/input.c b/libxcmd/input.c
+index fa80e5abb224ee..4092d9d06382e9 100644
+--- a/libxcmd/input.c
++++ b/libxcmd/input.c
+@@ -90,7 +90,7 @@ breakline(
+ {
+ 	int	c = 0;
+ 	char	*p;
+-	char	**rval = calloc(sizeof(char *), 1);
++	char	**rval = calloc(1, sizeof(char *));
  
- #ifdef __KERNEL__
--	xg->xg_busy_extents = xfs_extent_busy_alloc();
--	if (!xg->xg_busy_extents)
--		return -ENOMEM;
-+	if (xfs_group_has_extent_busy(mp, type)) {
-+		xg->xg_busy_extents = xfs_extent_busy_alloc();
-+		if (!xg->xg_busy_extents)
-+			return -ENOMEM;
-+	}
- 	spin_lock_init(&xg->xg_state_lock);
- 	xfs_hooks_init(&xg->xg_rmap_update_hooks);
- #endif
-@@ -208,7 +211,8 @@ xfs_group_insert(
- out_drain:
- 	xfs_defer_drain_free(&xg->xg_intents_drain);
- #ifdef __KERNEL__
--	kfree(xg->xg_busy_extents);
-+	if (xfs_group_has_extent_busy(xg->xg_mount, xg->xg_type))
-+		kfree(xg->xg_busy_extents);
- #endif
- 	return error;
- }
+ 	while (rval && (p = strsep(&input, " ")) != NULL) {
+ 		if (!*p)
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index 144695753211aa..88679e9ee1dce6 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -140,7 +140,7 @@ xlog_print_add_to_trans(xlog_tid_t	tid,
+ {
+     xlog_split_item_t *item;
+ 
+-    item	  = (xlog_split_item_t *)calloc(sizeof(xlog_split_item_t), 1);
++    item	  = (xlog_split_item_t *)calloc(1, sizeof(xlog_split_item_t));
+     item->si_xtid  = tid;
+     item->si_skip = skip;
+     item->si_next = split_list;
+diff --git a/repair/phase3.c b/repair/phase3.c
+index 3a3ca22de14d26..6ec616d9b31d44 100644
+--- a/repair/phase3.c
++++ b/repair/phase3.c
+@@ -150,7 +150,7 @@ phase3(
+ 	do_log(_("        - process newly discovered inodes...\n"));
+ 	set_progress_msg(PROG_FMT_NEW_INODES, (uint64_t) glob_agcount);
+ 
+-	counts = calloc(sizeof(*counts), mp->m_sb.sb_agcount);
++	counts = calloc(mp->m_sb.sb_agcount, sizeof(*counts));
+ 	if (!counts) {
+ 		do_abort(_("no memory for uncertain inode counts\n"));
+ 		return;
+diff --git a/repair/quotacheck.c b/repair/quotacheck.c
+index 7953144c3f416b..df6cde2d58aec0 100644
+--- a/repair/quotacheck.c
++++ b/repair/quotacheck.c
+@@ -116,7 +116,7 @@ qc_rec_get(
+ 	pthread_mutex_lock(&dquots->lock);
+ 	node = avl64_find(&dquots->tree, id);
+ 	if (!node && can_alloc) {
+-		qrec = calloc(sizeof(struct qc_rec), 1);
++		qrec = calloc(1, sizeof(struct qc_rec));
+ 		if (qrec) {
+ 			qrec->id = id;
+ 			node = avl64_insert(&dquots->tree, &qrec->node);
 
