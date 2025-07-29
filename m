@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDBDD13FD86
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 21:05:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A81C22539D
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 21:43:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753823152; cv=none; b=nCe4bbFqaoKDtTPO5x3tMSbYe1IA6/4HeV3/nYDhr6sgNnGJ07JpclllDz7nROqZyjj6YI7QlN1rnHQSSDcncJxqAamPYK7UFIACRVnmngXSbHGlHz+GygxXTGw4Ta9ejjVT8C3582M1IWb0TLanrCguFYdxf16EutSr3l20cvI=
+	t=1753825403; cv=none; b=eji3H9N3OCfruzkvGIXz2gU2sSN85/An6enLezyE9uT4NW12MucWe9xpOZ4+HbGpiDCO4Md6Z8ZlMG3V0cUXi+GpK8lOLqP6m8ARtjbouQ8ifxsXtrTlq+hm5N1PT5QkxdxZ0Y7Lb+oLsUU59S+rT/5vE3SgIHdbkrm+C2eQ+XI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753823152; c=relaxed/simple;
-	bh=GQrybCG9sbrdJhxfuSr0PSxVUjoFri2ZeTKDg3yvZlc=;
+	s=arc-20240116; t=1753825403; c=relaxed/simple;
+	bh=8ABhTswFYzPe6kosdX4aAvMsv4UvFKmdqZbVGjELkRA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=h5wiZJzJwY+V9iiCZblkcUKOSyeUWWWKvxzmdMNEPNsmBRdQiwgPCYq0p2GWZfkx8D071ExKTZvaNSWttVo8lIq12QxgSWGYeoQZx9a1vY12Ad6y2PsiVS4mgx72QJh0sy6AlmDUToQOBpQo8xVuMiI/eBACbkynGgHJhVHH/XM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uopC/Oxe; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Nn08dlOtD6hmMc/a0yxOC1N72FoNIefDPZOFcA5kgOcLftTwsz/l/7ruEQYXpGf8rZeLa8K7Zj3fAP9yljHk0VBka0sEM9oRNAl4nI3CT9bigZ3KQXL6kMhOuqZFhSlyA6tM6lq5IEFFwH5SY6Kq9UgQgbZ5mEdttcF0K1rc5/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oC70uWEi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uopC/Oxe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4415FC4CEEF;
-	Tue, 29 Jul 2025 21:05:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oC70uWEi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7D44C4CEF7;
+	Tue, 29 Jul 2025 21:43:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753823151;
-	bh=GQrybCG9sbrdJhxfuSr0PSxVUjoFri2ZeTKDg3yvZlc=;
+	s=k20201202; t=1753825402;
+	bh=8ABhTswFYzPe6kosdX4aAvMsv4UvFKmdqZbVGjELkRA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uopC/OxeQTg+yeRh/HhRX9OCDrdMdIoinl3iyPumlddizmz07KLo3seMuL4EE4YEU
-	 12OyguueH3IkFzNcIki1Z6AOK2k85EQ2ztlQzM07XxuDNMmTKkG4TDbM6WKzuCJ00n
-	 Xcl5TRauU2L94/vZPAK7Uq2MaOq3EvIQ2QvZWfEx2jWjibrAS2c0kGejWhkep2TmLD
-	 j78DyctZFvZ8bleBlUrAgE8kJ6NHH95fhtDDD1RIdV3xROpIacdJaaoogzdC782IK4
-	 lPE0QvdFj+GRP7ON37Glz9YMR6pG9QmtFhtgZY00xAn3Oqc/3oFJxmsAMgWRrAVrHl
-	 TfXen+j82a15w==
-Date: Tue, 29 Jul 2025 14:05:50 -0700
+	b=oC70uWEiML26GRKe95D/I5UcpvXk7g+XrNL9IbgpaK7O5btHkEqSopx9087RvyrGD
+	 L8XfPGZ7C7TfFstDw+yRonosQ/RnlscoxesbJuqF1nnvtYmD+IcJ72Rv/DPnra6VXQ
+	 kZcsz9NvqwoInjw3yJeGPajwQwmozAoem09O1HYBTmqoYnPq1thO9a/nuSbwVvJkcB
+	 8LIZysNzv0U7e1VOpolPgswHXLEjuF22IWEH8ABXARwY4wSOdNHDH0kauEPzNVaz4i
+	 rVhWlFbCoefBuXppFgXFnI+EykZv5nN+9JG0gHZsF0N+s68Rwt9iyYqylM2RFXmcpP
+	 cPbbK99nqROKA==
+Date: Tue, 29 Jul 2025 14:43:22 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
-	bfoster@redhat.com, david@fromorbit.com,
-	hsiangkao@linux.alibaba.com
-Subject: Re: [RFC 3/3] xfs: Add support to shrink multiple empty AGs
-Message-ID: <20250729210550.GG2672049@frogsfrogsfrogs>
-References: <cover.1752746805.git.nirjhar.roy.lists@gmail.com>
- <e38c2351099405d9d808a2156f82a604f8409291.1752746805.git.nirjhar.roy.lists@gmail.com>
+To: Luca Di Maio <luca.dimaio1@gmail.com>
+Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev,
+	smoser@chainguard.dev, hch@infradead.org
+Subject: Re: [PATCH v11 1/1] proto: add ability to populate a filesystem from
+ a directory
+Message-ID: <20250729214322.GH2672049@frogsfrogsfrogs>
+References: <20250728152919.654513-2-luca.dimaio1@gmail.com>
+ <20250728152919.654513-4-luca.dimaio1@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,980 +44,1178 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e38c2351099405d9d808a2156f82a604f8409291.1752746805.git.nirjhar.roy.lists@gmail.com>
+In-Reply-To: <20250728152919.654513-4-luca.dimaio1@gmail.com>
 
-On Thu, Jul 17, 2025 at 04:00:45PM +0530, Nirjhar Roy (IBM) wrote:
-> This patch is based on a previous RFC[1] by Gao Xiang and various
-> ideas proposed by Dave Chinner in the RFC[1].
+On Mon, Jul 28, 2025 at 05:29:21PM +0200, Luca Di Maio wrote:
+> This patch implements the functionality to populate a newly created XFS
+> filesystem directly from an existing directory structure.
 > 
-> This patch adds the functionality to shrink the filesystem beyond
-> 1 AG. We can remove only empty AGs to prevent loss of data.
-> Before I summarize the overall steps of the shrink process, I
-> would like to introduce some of the terminologies:
+> It resuses existing protofile logic, it branches if input is a
+> directory.
 > 
-> 1. Empty AG - An AG that is completely used, and no block
->    is being used/allocated for data or metadata and no
->    log blocks are allocated here. This ensures that
->    removal of this AG doesn't result in data loss.
+> The population process steps are as follows:
+>   - create the root inode before populating content
+>   - recursively process nested directories
+>   - handle regular files, directories, symlinks, char devices, block
+>     devices, sockets, fifos
+>   - preserve attributes (ownership, permissions)
+>   - preserve mtime timestamps from source files to maintain file history
+>     - use current time for atime/ctime/crtime
+>     - possible to specify atime=1 to preserve atime timestamps from
+>       source files
+>   - preserve extended attributes and fsxattrs for all file types
+>   - preserve hardlinks
 > 
-> 2. Active/Online AG - Online AG and active AG will be used
->    interchangebly. An AG is active or online when all the regular
->    operations can be done on it. When we mount a filesystem, all
->    the AGs are by default online/active. In terms of implementation,
->    an online AG will have number of active references greater than 1
->    (default is 1 i.e, an AG by default is online/active).
+> At the moment, the implementation for the hardlink tracking is very
+> simple, as it involves a linear search.
+> from my local testing using larger source directories
+> (1.3mln inodes, ~400k hardlinks) the difference was actually
+> just a few seconds (given that most of the time is doing i/o).
+> We might want to revisit that in the future if this becomes a
+> bottleneck.
 > 
-> 3. AG offlining/deactivation - AG Offlining and AG deactivation will
->    be used interchangebly. An AG is said to be offline/deactivated
->    when no new high level operation can be started on the AG. This is
->    implemented with the help of active references. When the active
->    reference count of an AG is 0, the AG is said to be deactivated.
->    No new active reference can be taken if the present active reference
->    count is 0. This way a barrier is formed from preventing new high
->    level operations to get started on an already offlined AG.
+> This functionality makes it easier to create populated filesystems
+> without having to mount them, it's particularly useful for
+> reproducible builds.
 > 
-> 4. Reactivating an AG - If we try to remove an offline AG but for some
->    reason, we can't, then we reactivate the AG i.e, the AG will once
->    more be in an usable state i.e, the active reference count will be
->    set to 1. All the high level operations can now be performed on this
->    AG. In terms of implementation, in order to activate an AG, we
->    atomically set the active reference count to 1.
-> 
-> 5. AG removal - This means that AG no longer exists in the filesystem.
->    It will be reflected in the usable/total size of the device too
->    (using tools like df).
-> 
-> 6. New tail AG - This refers to the last AG that will be formed after
->    removal of 1 or more AGs. For example if there 4 AGs and each
->    with 32 blocks, so there are total of 4 * 32 = 128 blocks. Now,
->    if we remove 40 blocks, AG 3(indexed at 0 will be completely
->    removed (32 blocks) and from AG 2, we will remove 8 blocks.
->    So AG 2, is the new tail AG.
-> 7. Old tail AG - This is the last AG before the start of the shrink
->    process.
-> 
-> 8. AG stabilization - This simply means that the in-memory contents
->    are synched to the disk.
-> 
-> The overall steps for shrinking AGs is as follows:
-> PHASE 1: Preparing the AGs for removal
-> 1. Deactivate the AGs to be removed completely - This is done
->    by the function xfs_shrinkfs_deactivate_ags(). This step involves
->    waiting for the active references for target AGs to go come down
->    to 0.
->    This is done so that no other entity is racing while the removal
->    is in progress i.e, no new high level operation can start on that
->    AG while we are trying to remove the AG.
-> 2. Once we have waited for the active references to come down to 0,
->    we make sure that all the pending operations on that AG are completed
->    and the in-core and on-disk structures are in synch i.e, the AG is
->    stablized on to the disk.
-
-     stabilized
-
->    The steps to stablize the AG onto the disk are as follows:
->    2.a Wait for all the busy extents for the target AGs to be resolved
->       (done by the function xfs_extent_busy_wait_range())
->    2.b Flush the xfs_discard_wq workqueue
->    2.c We need to flush and empty the logs and wait for all the pending
->        I/Os to complete - for this perform a log quiesce by calling
->        xfs_log_quiesce(). This also ensures that none of the future
->        logged transactions will refer to these AGs during log
->        recovery in case if sudden shutdown/crash happens while we
->        are trying to remove these AGs.
-
-Doesn't flushing the log put a bunch of busy extents on xfs_discard_wq?
-So doesn't 2c have to happen before 2b?
-
-> 3. Once the AG is deactivated and stabilized on to the disk, we check if
->    all the target AGs are empty, and if not, we fail the shrink process.
->    We are not supporting partial shrink support i.e, the shrink will
->    either completely fail or completely succeed.
-> 
-> PHASE 2: Actual removal of the AGs
-
-So in phase 2, we know that all the AGs can be freed and the new tail AG
-shrunk?
-
-> 4. Once the preparation phase is over, we start the actual removal
->    process. This is done in the function xfs_shrink_start(). Here we
->    first remove the blocks, then update the metadata of new last tail
->    AG and then remove the  AGs (and their associated data structures)
->    one by one (in function xfs_shrink_remove_empty_ag()).
-> 5. In the end we log the changes and commit the transaction.
-> 
-> Removal of each AG is done by the function xfs_shrink_remove_empty_ag().
-> The steps can be outlined as follows:
-> 1. Free the per AG reservation - this will result in correct free
->    space/used space information.
-> 2. Freeing the intents drain queue.
-> 3. Freeing busy extents list.
-> 4. Remove the perag cached buffers and then the buffer cache.
-> 5. Freeing the struct xfs_group pointer - Before this is done, we
->    assert that all the active and passive references are down to 0.
->    We remove all the cached buffers associated with the offlined AGs
->    to be removed - this releases the passive references of the AGs
->    consumed by the cached buffers.
-
-Migrating data out of the AG is left as an exercise to userspace, I
-assume?
-
-> [1] https://lore.kernel.org/all/20210414195240.1802221-1-hsiangkao@redhat.com/
-> 
-> Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-> Inspired-by: Gao Xiang <hsiangkao@linux.alibaba.com>
-> Suggested-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
 > ---
->  fs/xfs/libxfs/xfs_ag.c        | 135 ++++++++++++++++++-
->  fs/xfs/libxfs/xfs_ag.h        |  10 ++
->  fs/xfs/libxfs/xfs_alloc.c     |   9 +-
->  fs/xfs/xfs_buf.c              |  76 +++++++++++
->  fs/xfs/xfs_buf.h              |   1 +
->  fs/xfs/xfs_buf_item_recover.c |  37 ++++--
->  fs/xfs/xfs_extent_busy.c      |  28 ++++
->  fs/xfs/xfs_extent_busy.h      |   2 +
->  fs/xfs/xfs_fsops.c            | 241 ++++++++++++++++++++++++++++++++--
->  fs/xfs/xfs_trans.c            |   1 -
->  10 files changed, 502 insertions(+), 38 deletions(-)
+>  man/man8/mkfs.xfs.8.in |  41 ++-
+>  mkfs/proto.c           | 748 ++++++++++++++++++++++++++++++++++++++++-
+>  mkfs/proto.h           |  18 +-
+>  mkfs/xfs_mkfs.c        |  23 +-
+>  4 files changed, 804 insertions(+), 26 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-> index dcaf5683028e..f7fa7f53f2ec 100644
-> --- a/fs/xfs/libxfs/xfs_ag.c
-> +++ b/fs/xfs/libxfs/xfs_ag.c
-> @@ -193,21 +193,32 @@ xfs_agino_range(
->  }
->  
->  /*
-> - * Update the perag of the previous tail AG if it has been changed during
-> - * recovery (i.e. recovery of a growfs).
-> + * This function does the following:
-> + * - Updates the previous perag tail if prev_agcount < current agcount i.e, the
-> + *   filesystem has grown OR
-> + * - Updates the current tail AG when prev_agcount > current agcount i.e, the
-> + *   filesystem has shrunk beyond 1 AG OR
-> + * - Updates the current tail AG when only the last AG was shrunk or grown i.e,
-> + *   prev_agcount == mp->m_sb.sb_agcount.
->   */
->  int
->  xfs_update_last_ag_size(
->  	struct xfs_mount	*mp,
->  	xfs_agnumber_t		prev_agcount)
->  {
-> -	struct xfs_perag	*pag = xfs_perag_grab(mp, prev_agcount - 1);
-> +	xfs_agnumber_t agno;
-> +
-> +	if (prev_agcount >= mp->m_sb.sb_agcount)
-> +		agno = mp->m_sb.sb_agcount - 1;
-> +	else
-> +		agno = prev_agcount - 1;
-> +
-> +	struct xfs_perag	*pag = xfs_perag_grab(mp, agno);
-
-Can we please keep the variable declarations at the top?
-
-I know I'm an old C89 dinosaur.
-
->  	if (!pag)
->  		return -EFSCORRUPTED;
-> -	pag_group(pag)->xg_block_count = __xfs_ag_block_count(mp,
-> -			prev_agcount - 1, mp->m_sb.sb_agcount,
-> -			mp->m_sb.sb_dblocks);
-> +	pag_group(pag)->xg_block_count = __xfs_ag_block_count(mp, agno,
-> +		mp->m_sb.sb_agcount, mp->m_sb.sb_dblocks);
-
-and please keep the two level indent for the continuation
-
->  	__xfs_agino_range(mp, pag_group(pag)->xg_block_count, &pag->agino_min,
->  			&pag->agino_max);
->  	xfs_perag_rele(pag);
-> @@ -290,6 +301,22 @@ xfs_initialize_perag(
->  	return error;
->  }
->  
-> +void
-> +xfs_activate_ag(struct xfs_perag *pag)
-
-xfs_perag_activate() ?
-
-Functions that act upon an xfs_perag object tend to have "xfs_perag" in
-their name, not xfs_ag.
-
-> +{
-> +	ASSERT(!xfs_ag_is_active(pag));
-> +	init_waitqueue_head(&pag_group(pag)->xg_active_wq);
-> +	atomic_set(&pag_group(pag)->xg_active_ref, 1);
-> +}
-> +
-> +void
-> +xfs_deactivate_ag(struct xfs_perag *pag)
-> +{
-> +	ASSERT(xfs_ag_is_active(pag));
-> +	xfs_perag_rele(pag);
-> +	wait_event(pag_group(pag)->xg_active_wq, !xfs_ag_is_active(pag));
-> +}
-> +
->  static int
->  xfs_get_aghdr_buf(
->  	struct xfs_mount	*mp,
-> @@ -758,7 +785,6 @@ xfs_ag_shrink_space(
->  	xfs_agblock_t		aglen;
->  	int			error, err2;
->  
-> -	ASSERT(pag_agno(pag) == mp->m_sb.sb_agcount - 1);
->  	error = xfs_ialloc_read_agi(pag, *tpp, 0, &agibp);
->  	if (error)
->  		return error;
-> @@ -872,6 +898,101 @@ xfs_ag_shrink_space(
->  	return err2;
->  }
->  
-> +/*
-> + * This function checks whether an AG is empty. An AG is eligbible to be
-
-eligible
-1
-> + * removed if it empty.
-> + */
-> +bool
-> +xfs_ag_is_empty(struct xfs_perag *pag)
-> +{
-> +	struct xfs_buf *agfbp = NULL;
-> +	struct xfs_mount *mp = pag_mount(pag);
-> +	bool is_empty = false;
-> +	int error = 0;
-
-(More indenting/style problems)
-
-> +
-> +	/*
-> +	 * Read the on-disk data structures to get the correct length of the AG.
-> +	 * All the AGs have the same length except the last AG.
-> +	 */
-> +	error = xfs_alloc_read_agf(pag, NULL, 0, &agfbp);
-> +	if (!error) {
-> +		struct xfs_agf *agf = agfbp->b_addr;
-> +		/*
-> +		 * We don't need to check if log blocks belong here since the
-> +		 * log blocks are taken from the number of free blocks, and if
-> +		 * the given AG has log blocks, then those many number of
-> +		 * blocks will be consumed from the number of free blocks and
-> +		 * the AG empty condition will not hold true.
-> +		 */
-> +		if (pag->pagf_freeblks + pag->pagf_flcount +
-> +			mp->m_ag_prealloc_blocks ==
-> +			be32_to_cpu(agf->agf_length)) {
-> +			ASSERT(!xfs_ag_contains_log(mp, pag_agno(pag)));
-
-Why not just check for this at the top?
-
-	if (xfs_ag_contains_log(mp, pag_agno(pag)))
-		return false;
-
-	error = xfs_alloc_read_agf()
-
-> +			is_empty = true;
-> +		}
-> +		xfs_buf_relse(agfbp);
-> +	}
-> +	return is_empty;
-> +}
-> +
-> +/*
-> + * This function removes an entire empty AG. Before removing the struct
-> + * xfs_perag reference, it removes the associated data structures. Before
-> + * removing an AG, the caller must ensure that the AG has been deactivated with
-> + * no active references and it has been fully stabilized on the disk.
-> + */
-> +void
-> +xfs_shrinkfs_remove_ag(struct xfs_mount *mp, xfs_agnumber_t agno)
-> +{
-> +	/*
-> +	 * Number of AGs can't be less than 2
-> +	 */
-> +	ASSERT(agno >= 2);
-> +	struct xfs_group *xg = xa_erase(&mp->m_groups[XG_TYPE_AG].xa, agno);
-> +	struct xfs_perag *cur_pag = to_perag(xg);
-> +
-> +	ASSERT(!xfs_ag_is_active(cur_pag));
-> +	/*
-> +	 * Since we are freeing the AG, we should clear the perag reservations
-> +	 * for the corresponding AGs.
-> +	 */
-> +	xfs_ag_resv_free(cur_pag);
-> +	/*
-> +	 * We have already ensured in the AG preparation phase that all intents
-> +	 * for the offlined AGs have been resolved. So it safe to free it here.
-> +	 */
-> +	xfs_defer_drain_free(&xg->xg_intents_drain);
-> +	/*
-> +	 * We have already ensured in the AG preparation phase that all busy
-> +	 * extents for the offlined AGs have been resolved. So it safe to free
-> +	 * it here.
-> +	 */
-> +	kfree(xg->xg_busy_extents);
-> +	cancel_delayed_work_sync(&cur_pag->pag_blockgc_work);
-> +
-> +	/*
-> +	 * Remove all the cached buffers for the given AG.
-> +	 */
-> +	xfs_buf_offline_perag_rele_cached(cur_pag);
-> +	/*
-> +	 * Now that the cached buffers have been released, remove the
-> +	 * cache/hashtable itself. We should not change the order of the buffer
-> +	 * removal and cache removal.
-> +	 */
-> +	xfs_buf_cache_destroy(&cur_pag->pag_bcache);
-> +	/*
-> +	 * One final assert, before we remove the xg. Since the cached buffers
-> +	 * for the offlined AGs are already removed, their passive references
-> +	 * should be 0. Also, the active references are 0 too, so no new
-> +	 * operation can start and race and get new references.
-> +	 */
-> +	XFS_IS_CORRUPT(mp, atomic_read(&pag_group(cur_pag)->xg_ref) != 0);
-> +	/*
-> +	 * Finally free the struct xfs_perag of the AG.
-> +	 */
-> +	kfree_rcu_mightsleep(xg);
-> +}
-> +
->  void
->  xfs_growfs_get_delta(struct xfs_mount *mp, xfs_rfsblock_t nb,
->  	int64_t *deltap, xfs_agnumber_t *nagcountp)
-> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-> index 190af11f6941..15886e2b40aa 100644
-> --- a/fs/xfs/libxfs/xfs_ag.h
-> +++ b/fs/xfs/libxfs/xfs_ag.h
-> @@ -112,6 +112,11 @@ static inline xfs_agnumber_t pag_agno(const struct xfs_perag *pag)
->  	return pag->pag_group.xg_gno;
->  }
->  
-> +static inline bool xfs_ag_is_active(struct xfs_perag *pag)
-> +{
-> +	return atomic_read(&pag_group(pag)->xg_active_ref) > 0;
-> +}
-> +
->  /*
->   * Per-AG operational state. These are atomic flag bits.
->   */
-> @@ -140,6 +145,7 @@ void xfs_free_perag_range(struct xfs_mount *mp, xfs_agnumber_t first_agno,
->  		xfs_agnumber_t end_agno);
->  int xfs_initialize_perag_data(struct xfs_mount *mp, xfs_agnumber_t agno);
->  int xfs_update_last_ag_size(struct xfs_mount *mp, xfs_agnumber_t prev_agcount);
-> +bool xfs_ag_is_empty(struct xfs_perag *pag);
->  
->  /* Passive AG references */
->  static inline struct xfs_perag *
-> @@ -263,6 +269,9 @@ xfs_ag_contains_log(struct xfs_mount *mp, xfs_agnumber_t agno)
->  	       agno == XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart);
->  }
->  
-> +void xfs_activate_ag(struct xfs_perag *pag);
-> +void xfs_deactivate_ag(struct xfs_perag *pag);
-> +
->  static inline struct xfs_perag *
->  xfs_perag_next_wrap(
->  	struct xfs_perag	*pag,
-> @@ -331,6 +340,7 @@ struct aghdr_init_data {
->  int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
->  int xfs_ag_shrink_space(struct xfs_perag *pag, struct xfs_trans **tpp,
->  			xfs_extlen_t delta);
-> +void xfs_shrinkfs_remove_ag(struct xfs_mount *mp, xfs_agnumber_t agno);
->  void
->  xfs_growfs_get_delta(struct xfs_mount *mp, xfs_rfsblock_t nb,
->  	int64_t *deltap, xfs_agnumber_t *nagcountp);
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 000cc7f4a3ce..e16803214223 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -3209,11 +3209,12 @@ xfs_validate_ag_length(
->  	if (length != mp->m_sb.sb_agblocks) {
->  		/*
->  		 * During growfs, the new last AG can get here before we
-> -		 * have updated the superblock. Give it a pass on the seqno
-> -		 * check.
-> +		 * have updated the superblock. During shrink, the new last AG
-> +		 * will be updated and the AGs from newag to old AG will be
-> +		 * removed. So seqno here maybe not be equal to
-> +		 * mp->m_sb.sb_agcount - 1 since the super block is not yet
-> +		 * updated globally.
->  		 */
-> -		if (bp->b_pag && seqno != mp->m_sb.sb_agcount - 1)
-> -			return __this_address;
->  		if (length < XFS_MIN_AG_BLOCKS)
->  			return __this_address;
->  		if (length > mp->m_sb.sb_agblocks)
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index ba5bd6031ece..d372f65068a2 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -951,6 +951,82 @@ xfs_buf_rele(
->  		xfs_buf_rele_cached(bp);
->  }
->  
-> +/*
-> + * This function populates a list of all the cached buffers of the given AG
-> + * in the to_be_free list head.
-> + */
-> +static void
-> +xfs_pag_populate_cached_bufs(struct xfs_perag *pag,
-
-Do both of these functions implement a buf_cache invalidation?
-This one I think is xfs_buf_cache_grab_all()...
-
-> +	struct list_head *to_be_freed)
-> +{
-> +	struct xfs_buf *bp;
-> +	struct rhashtable_iter iter;
-> +
-> +	INIT_LIST_HEAD(to_be_freed);
-
-Initialize the list where you declare it, please.
-
-> +	rhashtable_walk_enter(&pag->pag_bcache.bc_hash, &iter);
-> +	do {
-> +		rhashtable_walk_start(&iter);
-> +		while ((bp = rhashtable_walk_next(&iter)) && !IS_ERR(bp)) {
-> +			ASSERT(list_empty(&bp->b_list));
-> +			ASSERT(list_empty(&bp->b_li_list));
-> +			list_add_tail(&bp->b_list, to_be_freed);
-> +		}
-> +		rhashtable_walk_stop(&iter);
-> +	} while (cond_resched(), bp == ERR_PTR(-EAGAIN));
-> +	rhashtable_walk_exit(&iter);
-> +}
-> +
-> +/*
-> + * This function frees all the cached buffers (struct xfs_buf) associated with
-> + * the given offline AG. The caller must ensure that the AG which is passed
-> + * is offline and completely stabilized on the disk. Also, the caller should
-> + * ensure that all the cached buffers are not queued for any pending i/o
-> + * i.e, the b_list for all the cached buffers are empty - since we will be using
-> + * b_list to get list of all the bufs that need to be freed.
-> + */
-> +void
-> +xfs_buf_offline_perag_rele_cached(struct xfs_perag *pag)
-
-...and this is xfs_buf_cache_invalidate().
-
-> +{
-> +	ASSERT(!xfs_ag_is_active(pag));
-> +	/*
-> +	 * First get the list of buffers we want to free.
-> +	 * We need to populate to_be_freed list and cannot directly free
-> +	 * the buffers during the hashtable walk. rhashtable_walk_start() takes
-> +	 * an RCU and xfs_buf_rele eventually calls xfs_buf_free (for
-> +	 * cached buffers). xfs_buf_free() might sleep (depending on the
-> +	 * whether the buffer was allocated using vmalloc or kmalloc) and
-> +	 * cannot be called within an RCU context. Hence we first populate
-> +	 * the buffers within an RCU context and free them outside it.
-> +	 */
-> +	struct list_head to_be_freed;
-> +	struct xfs_buf *bp, *tmp;
-> +
-> +	xfs_pag_populate_cached_bufs(pag, &to_be_freed);
-> +	list_for_each_entry_safe(bp, tmp, &to_be_freed, b_list) {
-> +		list_del(&bp->b_list);
-> +		spin_lock(&bp->b_lock);
-> +		ASSERT(bp->b_pag == pag);
-> +		ASSERT(!xfs_buf_is_uncached(bp));
-> +		/*
-> +		 * Since we have made sure that this is being called on an
-> +		 * AG with active refcount = 0, the b_hold value of any cached
-> +		 * buffer should not exceed 1 (i.e, the default value) and hence
-> +		 * can be safely removed. Hence, it should also be in an
-> +		 * unlocked state.
-> +		 */
-> +		ASSERT(bp->b_hold == 1);
-> +		ASSERT(!xfs_buf_islocked(bp));
-> +		/*
-> +		 * We should set b_lru_ref to 0 so that it gets deleted from
-> +		 * the lru during the call to xfs_buf_rele.
-> +		 */
-> +		atomic_set(&bp->b_lru_ref, 0);
-> +		spin_unlock(&bp->b_lock);
-> +		xfs_buf_rele(bp);
-> +	}
-> +}
-> +
->  /*
->   *	Lock a buffer object, if it is not already locked.
->   *
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 15fc56948346..4c7023a5afb2 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -282,6 +282,7 @@ void xfs_buf_hold(struct xfs_buf *bp);
->  
->  /* Releasing Buffers */
->  extern void xfs_buf_rele(struct xfs_buf *);
-> +void xfs_buf_offline_perag_rele_cached(struct xfs_perag *pag);
->  
->  /* Locking and Unlocking Buffers */
->  extern int xfs_buf_trylock(struct xfs_buf *);
-> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-> index d4c5cef5bc43..088a9b046af1 100644
-> --- a/fs/xfs/xfs_buf_item_recover.c
-> +++ b/fs/xfs/xfs_buf_item_recover.c
-> @@ -737,8 +737,7 @@ xlog_recover_do_primary_sb_buffer(
->  	xfs_sb_from_disk(&mp->m_sb, dsb);
->  
->  	if (mp->m_sb.sb_agcount < orig_agcount) {
-> -		xfs_alert(mp, "Shrinking AG count in log recovery not supported");
-> -		return -EFSCORRUPTED;
-> +		xfs_warn_experimental(mp, XFS_EXPERIMENTAL_SHRINK);
->  	}
->  	if (mp->m_sb.sb_rgcount < orig_rgcount) {
->  		xfs_warn(mp,
-> @@ -764,18 +763,28 @@ xlog_recover_do_primary_sb_buffer(
->  		if (error)
->  			return error;
->  	}
+> diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
+> index bc804931..8c393ba2 100644
+> --- a/man/man8/mkfs.xfs.8.in
+> +++ b/man/man8/mkfs.xfs.8.in
+> @@ -28,7 +28,7 @@ mkfs.xfs \- construct an XFS filesystem
+>  .I naming_options
+>  ] [
+>  .B \-p
+> -.I protofile_options
+> +.I prototype_options
+>  ] [
+>  .B \-q
+>  ] [
+> @@ -977,30 +977,39 @@ option set.
+>  .PP
+>  .PD 0
+>  .TP
+> -.BI \-p " protofile_options"
+> +.BI \-p " prototype_options"
+>  .TP
+>  .BI "Section Name: " [proto]
+>  .PD
+> -These options specify the protofile parameters for populating the filesystem.
+> +These options specify the prototype parameters for populating the filesystem.
+>  The valid
+> -.I protofile_options
+> +.I prototype_options
+>  are:
+>  .RS 1.2i
+>  .TP
+> -.BI [file=] protofile
+> +.BI [file=]
+>  The
+>  .B file=
+>  prefix is not required for this CLI argument for legacy reasons.
+>  If specified as a config file directive, the prefix is required.
 > -
-> -	/*
-> -	 * Initialize the new perags, and also update various block and inode
-> -	 * allocator setting based off the number of AGs or total blocks.
-> -	 * Because of the latter this also needs to happen if the agcount did
-> -	 * not change.
-> -	 */
-> -	error = xfs_initialize_perag(mp, orig_agcount, mp->m_sb.sb_agcount,
-> -			mp->m_sb.sb_dblocks, &mp->m_maxagi);
-> -	if (error) {
-> -		xfs_warn(mp, "Failed recovery per-ag init: %d", error);
-> -		return error;
-> +	if (orig_agcount > mp->m_sb.sb_agcount) {
-> +		/*
-> +		 * Remove the old AGs that were removed previously by a growfs
-> +		 */
-> +		xfs_free_perag_range(mp, mp->m_sb.sb_agcount, orig_agcount);
-> +		mp->m_maxagi = xfs_set_inode_alloc(mp, mp->m_sb.sb_agcount);
-> +		mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
-> +	} else {
-> +		/*
-> +		 * Initialize the new perags, and also the update various block
-> +		 * and inode allocator setting based off the number of AGs or
-> +		 * total blocks.
-> +		 * Because of the latter, this also needs to happen if the
-> +		 * agcount did not change.
-> +		 */
-> +		error = xfs_initialize_perag(mp, orig_agcount,
-> +				mp->m_sb.sb_agcount,
-> +				mp->m_sb.sb_dblocks, &mp->m_maxagi);
-> +		if (error) {
-> +			xfs_warn(mp, "Failed recovery per-ag init: %d", error);
-> +			return error;
-> +		}
->  	}
->  	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
->  
-> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-> index da3161572735..1055681648ba 100644
-> --- a/fs/xfs/xfs_extent_busy.c
-> +++ b/fs/xfs/xfs_extent_busy.c
-> @@ -676,6 +676,34 @@ xfs_extent_busy_wait_all(
->  			xfs_extent_busy_wait_group(rtg_group(rtg));
->  }
->  
-> +/*
-> + * Similar to xfs_extent_busy_wait_all() - It waits for all the busy extents to
-> + * get resolved for the range of AGs provided. For now, this function is
-> + * introduced to be used in online shrink process. Unlike
-> + * xfs_extent_busy_wait_all(), this takes a passive reference, because this
-> + * function is expected to be called for the AGs whose active reference has
-> + * been reduced to 0 i.e, offline AGs.
-> + *
-> + * @mp - The xfs mount point
-> + * @first_agno - The 0 based AG index of the range of AGs from which we will
-> + *     start.
-> + * @end_agno - The 0 based AG index of the range of AGs from till which we will
-> + *     traverse.
-> + */
-> +void
-> +xfs_extent_busy_wait_range(struct xfs_mount *mp, xfs_agnumber_t first_agno,
+> +.TP
+> +.BI [file=] directory
+>  If the optional
+>  .PD
+> -.I protofile
+> -argument is given,
+> +.I prototype
+> +argument is given, and it's a directory,
+>  .B mkfs.xfs
+> -uses
+> -.I protofile
+> -as a prototype file and takes its directions from that file.
+> +will populate the root file system with the contents of the given directory.
 
-Range of what?  Blocks?
+"...of the given directory tree."
 
-> +	xfs_agnumber_t end_agno)
-> +{
+(It's a subtle hint that it recursively imports the whole tree, not
+one single directory)
 
-Perhaps this should be called xfs_extent_busy_wait_ags().
+> +Content, timestamps (atime, mtime), attributes and extended attributes
+> +are preserved for all file types.
+> +.TP
+> +.BI [file=] protofile
+> +If the optional
+> +.PD
+> +.I prototype
+> +argument is given, and points to a regular file,
+> +.B mkfs.xfs
+> +uses it as a prototype file and takes its directions from that file.
+>  The blocks and inodes specifiers in the
+>  .I protofile
+>  are provided for backwards compatibility, but are otherwise unused.
+> @@ -1136,8 +1145,16 @@ always terminated with the dollar (
+>  .B $
+>  ) token.
+>  .TP
+> +.BI atime= value
+> +If set to 1, when we're populating the root filesystem from a directory (
 
-> +	xfs_agnumber_t agno;
-> +	struct xfs_perag *pag = NULL;
-> +
-> +	for (agno = end_agno; agno >= first_agno; agno--) {
-> +		pag = xfs_perag_get(mp, agno);
-> +		xfs_extent_busy_wait_group(pag_group(pag));
-> +		xfs_perag_put(pag);
-> +	}
-> +}
-> +
->  /*
->   * Callback for list_sort to sort busy extents by the group they reside in.
+Who is "we"?
+
+"If set to 1, mkfs will copy in access timestamps from the source
+files.
+Otherwise, access timestamps will be set to the current time."
+
+> +.B file=directory
+> +option)
+> +access times are going to be preserved and are copied from the source files.
+> +Set to 0 to set access times to the current time instead.
+> +By default, this is set to 0.
+> +.TP
+>  .BI slashes_are_spaces= value
+> -If set to 1, slashes ("/") in the first token of each line of the protofile
+> +If set to 1, slashes ("/") in the first token of each line of the prototype file
+>  are converted to spaces.
+>  This enables the creation of a filesystem containing filenames with spaces.
+>  By default, this is set to 0.
+> diff --git a/mkfs/proto.c b/mkfs/proto.c
+> index 7f80bef8..31626211 100644
+> --- a/mkfs/proto.c
+> +++ b/mkfs/proto.c
+> @@ -5,6 +5,8 @@
 >   */
-> diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
-> index f069b04e8ea1..69ae78964828 100644
-> --- a/fs/xfs/xfs_extent_busy.h
-> +++ b/fs/xfs/xfs_extent_busy.h
-> @@ -57,6 +57,8 @@ bool xfs_extent_busy_trim(struct xfs_group *xg, xfs_extlen_t minlen,
->  		unsigned *busy_gen);
->  int xfs_extent_busy_flush(struct xfs_trans *tp, struct xfs_group *xg,
->  		unsigned busy_gen, uint32_t alloc_flags);
-> +void xfs_extent_busy_wait_range(struct xfs_mount *mp, xfs_agnumber_t first_agno,
-> +						xfs_agnumber_t end_agno);
->  void xfs_extent_busy_wait_all(struct xfs_mount *mp);
->  bool xfs_extent_busy_list_empty(struct xfs_group *xg, unsigned int *busy_gen);
->  struct xfs_extent_busy_tree *xfs_extent_busy_alloc(void);
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 91da9f733659..d9d33de4e679 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -83,6 +83,219 @@ xfs_resizefs_init_new_ags(
->  	return error;
+> 
+>  #include "libxfs.h"
+> +#include <dirent.h>
+> +#include <sys/resource.h>
+>  #include <sys/stat.h>
+>  #include <sys/xattr.h>
+>  #include <linux/xattr.h>
+> @@ -21,6 +23,11 @@ static void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
+>  static int newregfile(char **pp, char **fname);
+>  static void rtinit(xfs_mount_t *mp);
+>  static off_t filesize(int fd);
+> +static void populate_from_dir(struct xfs_mount *mp, struct fsxattr *fsxp,
+> +		char *source_dir);
+> +static void walk_dir(struct xfs_mount *mp, struct xfs_inode *pip,
+> +		struct fsxattr *fsxp, char *path_buf);
+> +static int preserve_atime;
+>  static int slashes_are_spaces;
+> 
+>  /*
+> @@ -54,7 +61,7 @@ getnum(
+>  	return i;
 >  }
->  
-> +/*
-> + * Get new active references for all the AGs. This might be called when
-> + * shrinkage process encounters a failure at an intermediate stage after the
-> + * active references of all the target AGs have become 0.
-> + */
+> 
+> -char *
+> +struct proto_source
+>  setup_proto(
+>  	char	*fname)
+>  {
+> @@ -63,14 +70,40 @@ setup_proto(
+>  	int		fd;
+>  	long		size;
+> 
+> -	if (!fname)
+> -		return dflt;
+> +	struct proto_source	result = {};
+> +	struct stat	statbuf;
+> +
+> +	/*
+> +	 * If no prototype path is supplied, use the default protofile which
+> +	 * creates only a root directory.
+> +	 */
+> +	if (!fname) {
+> +		result.type = PROTO_SRC_PROTOFILE;
+> +		result.data = dflt;
+> +		return result;
+> +	}
+> +
+>  	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
+>  		fprintf(stderr, _("%s: failed to open %s: %s\n"),
+>  			progname, fname, strerror(errno));
+>  		goto out_fail;
+>  	}
+> 
+> +	if (fstat(fd, &statbuf) < 0)
+> +		fail(_("invalid or unreadable source path"), errno);
+> +
+> +	/*
+> +	 * Handle directory inputs.
+> +	 */
+> +	if (S_ISDIR(statbuf.st_mode)) {
+> +		result.type = PROTO_SRC_DIR;
+> +		result.data = fname;
+> +		return result;
+
+Er... this leaks the fd that you opened above.
+
+> +	}
+> +
+> +	/*
+> +	 * Else this is a protofile, let's handle traditionally.
+> +	 */
+>  	buf = malloc(size + 1);
+>  	if (read(fd, buf, size) < size) {
+>  		fprintf(stderr, _("%s: read failed on %s: %s\n"),
+> @@ -90,7 +123,10 @@ setup_proto(
+>  	(void)getnum(getstr(&buf), 0, 0, false);	/* block count */
+>  	(void)getnum(getstr(&buf), 0, 0, false);	/* inode count */
+>  	close(fd);
+> -	return buf;
+> +
+> +	result.type = PROTO_SRC_PROTOFILE;
+> +	result.data = buf;
+> +	return result;
+> 
+>  out_fail:
+>  	if (fd >= 0)
+> @@ -379,6 +415,13 @@ writeattr(
+>  	int			error;
+> 
+>  	ret = fgetxattr(fd, attrname, valuebuf, valuelen);
+> +	/*
+> +	 * In case of filedescriptors with O_PATH, fgetxattr() will fail with
+> +	 * EBADF.
+> +	 * Let's try to fallback to lgetxattr() using input path.
+> +	 */
+> +	if (ret < 0 && errno == EBADF)
+> +		ret = lgetxattr(fname, attrname, valuebuf, valuelen);
+>  	if (ret < 0) {
+>  		if (errno == EOPNOTSUPP)
+>  			return;
+> @@ -425,6 +468,13 @@ writeattrs(
+>  		fail(_("error allocating xattr name buffer"), errno);
+> 
+>  	ret = flistxattr(fd, namebuf, XATTR_LIST_MAX);
+> +	/*
+> +	 * In case of filedescriptors with O_PATH, flistxattr() will fail with
+> +	 * EBADF.
+> +	 * Let's try to fallback to llistxattr() using input path.
+> +	 */
+> +	if (ret < 0 && errno == EBADF)
+> +		ret = llistxattr(fname, namebuf, XATTR_LIST_MAX);
+>  	if (ret < 0) {
+>  		if (errno == EOPNOTSUPP)
+>  			goto out_namebuf;
+> @@ -933,11 +983,27 @@ void
+>  parse_proto(
+>  	xfs_mount_t	*mp,
+>  	struct fsxattr	*fsx,
+> -	char		**pp,
+> -	int		proto_slashes_are_spaces)
+> +	struct proto_source	*protosource,
+> +	int		proto_slashes_are_spaces,
+> +	int		proto_preserve_atime)
+>  {
+>  	slashes_are_spaces = proto_slashes_are_spaces;
+> -	parseproto(mp, NULL, fsx, pp, NULL);
+> +	preserve_atime = proto_preserve_atime;
+> +
+> +	/*
+> +	 * In case of a file input, we will use the prototype file logic else
+> +	 * we will fallback to populate from dir.
+> +	 */
+> +	switch(protosource->type) {
+> +	case PROTO_SRC_PROTOFILE:
+> +		parseproto(mp, NULL, fsx, &protosource->data, NULL);
+> +		break;
+> +	case PROTO_SRC_DIR:
+> +		populate_from_dir(mp, fsx, protosource->data);
+> +		break;
+> +	case PROTO_SRC_NONE:
+> +		fail(_("invalid or unreadable source path"), ENOENT);
+> +	}
+>  }
+> 
+>  /* Create a sb-rooted metadata file. */
+> @@ -1172,3 +1238,671 @@ filesize(
+>  		return -1;
+>  	return stb.st_size;
+>  }
+> +
+> +/* Try to allow as many open directories as possible. */
 > +static void
-> +xfs_shrinkfs_reactivate_ags(struct xfs_mount *mp, xfs_agnumber_t oagcount,
-> +	xfs_agnumber_t nagcount)
+> +bump_max_fds(void)
 > +{
-> +	struct xfs_perag *pag = NULL;
+> +	struct rlimit	rlim = {};
+> +	int		ret;
 > +
-> +	if (nagcount >= oagcount)
+> +	ret = getrlimit(RLIMIT_NOFILE, &rlim);
+> +	if (ret)
 > +		return;
+> +
+> +	rlim.rlim_cur = rlim.rlim_max;
+> +	ret = setrlimit(RLIMIT_NOFILE, &rlim);
+> +	if (ret < 0)
+> +		fprintf(stderr, _("%s: could not bump fd limit: [ %d - %s]\n"),
+> +			progname, errno, strerror(errno));
+> +}
+> +
+> +static void
+> +writefsxattrs(
+> +	struct xfs_inode	*ip,
+> +	struct fsxattr	*fsxp)
 
-When would anyone call xfs_shrinkfs_reactivate_ags with n >= o?
-
-> +	for (xfs_agnumber_t agno = oagcount - 1; agno > nagcount - 1; agno--) {
-
-(Plz follow XFS coding conventions for consistency with the rest of the
-codebase.)
-
-> +		pag = xfs_perag_get(mp, agno);
-> +		xfs_activate_ag(pag);
-> +		xfs_perag_put(pag);
+		      ^ one more tab to line these up, please
+> +{
+> +	ip->i_projid = fsxp->fsx_projid;
+> +	ip->i_extsize = fsxp->fsx_extsize;
+> +	ip->i_diflags = xfs_flags2diflags(ip, fsxp->fsx_xflags);
+> +	if (xfs_has_v3inodes(ip->i_mount)) {
+> +		ip->i_diflags2 = xfs_flags2diflags2(ip, fsxp->fsx_xflags);
+> +		ip->i_cowextsize = fsxp->fsx_cowextsize;
 > +	}
 > +}
 > +
-> +/*
-> + * The function deactivates or puts the AGs to an offline mode. AG deactivation
-> + * or AG offlining means that no new operation can be started on that AG. The AG
-> + * still exists, however no new high level operation (like extent allocation)
-> + * can be started. In terms of implementation, an AG is taken offline or is
-> + * deactivated when xg_active_ref of the struct xfs_perag is 0 i.e, the number
-> + * of active references becomes 0.
-> + * Since active references act as a form of barrier, so once the active
-> + * reference of an AG is 0, no new entity can get an active reference and in
-> + * this way we ensure that once an AG is offline (i.e, active reference count is
-> + * 0), no one will be able to start a new operation in it unless the active
-> + * reference count is explicitly set to 1 i.e, the AG is made online/activated.
-> + */
-> +static int
-> +xfs_shrinkfs_deactivate_ags(struct xfs_mount *mp, xfs_agnumber_t oagcount,
-> +	xfs_agnumber_t nagcount)
+> +static void
+> +writetimestamps(
+> +	struct xfs_inode	*ip,
+> +	struct stat	*statbuf)
+
+		      ^ one more tab to line these up, please
 > +{
-> +	int error = 0;
-> +	struct xfs_perag *pag = NULL;
+> +	struct timespec64	ts;
 > +
-> +	if (oagcount <= nagcount)
-> +		return 0;
 > +	/*
-> +	 * If we are removing 1 or more entire AGs, we only need to take those
-> +	 * AGs offline which we are planning to remove completely. The new tail
-> +	 * AG which will be partially shrunk need not be taken offline - since
-
-should not be taken offline
-
-> +	 * we will be doing an online operation on them, just like any other
-> +	 * high level operation. For complete AG removal, we need to take them
-> +	 * offline since we cannot start any new operation on them as they will
-> +	 * be removed eventually.
-> +	 *
-> +	 * However, if the number of blocks that we are trying to remove is
-> +	 * an exact multiple of the AG size (in blocks), then the new tail AG
-> +	 * will not be shrunk at all.
+> +	 * Copy timestamps from source file to destination inode.
+> +	 * Usually reproducible archives will delete or not register
+> +	 * atime and ctime, for example:
+> +	 *    https://www.gnu.org/software/tar/manual/html_section/Reproducibility.html
+> +	 * hence we will only copy mtime, and let ctime/crtime be set to
+> +	 * current time.
+> +	 * atime will be copied over if atime is true.
 > +	 */
-> +	for (xfs_agnumber_t agno = oagcount - 1; agno > nagcount - 1; agno--) {
-
-maybe this ought to be a for_each_perag_range_reverse() iterator macro?
-
-> +		pag = xfs_perag_get(mp, agno);
-> +		xfs_deactivate_ag(pag);
-> +		xfs_perag_put(pag);
+> +	ts.tv_sec = statbuf->st_mtim.tv_sec;
+> +	ts.tv_nsec = statbuf->st_mtim.tv_nsec;
+> +	inode_set_mtime_to_ts(VFS_I(ip), ts);
+> +
+> +	/*
+> +	 * In case of atime option, we will copy the atime  timestamp
+> +	 * from source.
+> +	 */
+> +	if (preserve_atime) {
+> +		ts.tv_sec = statbuf->st_atim.tv_sec;
+> +		ts.tv_nsec = statbuf->st_atim.tv_nsec;
+> +		inode_set_atime_to_ts(VFS_I(ip), ts);
 > +	}
-> +	/*
-> +	 * Now that we have deactivated/offlined the AGs, we need to make sure
-> +	 * that all the pending operations are completed and the in-core and
-> +	 * the on disk contents are completely in synch.
-> +	 */
-> +
-> +	/*
-> +	 * Wait for all the busy extents to get resolved along with pending trim
-> +	 * ops for all the offlined AGs.
-> +	 */
-> +	xfs_extent_busy_wait_range(mp, nagcount, oagcount - 1);
-> +	flush_workqueue(xfs_discard_wq);
-> +	/*
-> +	 * We should wait for the log to be empty and all the pending I/Os to
-> +	 * be completed so that the AGs are compeletly stabilized before we
-
-completely
-
-> +	 * start tearing them down. xfs_log_quiesce() call here ensures that
-> +	 * none of the future logged transactions will refer to these AGs
-> +	 * during log recovery in case if sudden shutdown/crash happens while
-> +	 * we are trying to remove these AGs.
-> +	 */
-> +	error = xfs_log_quiesce(mp);
-
-So I guess we're quiescing the log here so that it flushes the log to
-disk, pushes the AIL so everything in the log is written back to the
-filesystem, and then covers the log so that after this point, recovery
-will only see log contents from this point forward -- the log won't
-updates involving the perags that we just deactivated 30 lines ago?
-
-> +	if (error)
-> +		xfs_shrinkfs_reactivate_ags(mp, oagcount, nagcount);
-> +	/*
-> +	 * Reactivate the log work queue which was deactivated in
-> +	 * xfs_log_quiesce
-> +	 */
-> +	xfs_log_work_queue(mp);
-> +	return error;
 > +}
 > +
-> +/*
-> + * This function does 3 things:
-> + * 1. Deactivate the AGs i.e, wait for all the active references to come to 0.
-> + * 2. Checks whether all the AGs that shrink process needs to remove are empty.
-> + *    If at least one of the target AGs is non-empty, shrink fails and
-> + *    xfs_shrinkfs_reactivate_ags() is called.
-> + * 3. Calculates the total number of fdblocks (free data blocks) that will be
-> + *    removed and stores in id->nfree.
-> + * Please look into the individual functions for more details and the definition
-> + * of the terminologies.
-> + */
-> +static int
-> +xfs_shrinkfs_prepare_ags(struct xfs_mount *mp, xfs_agnumber_t oagcount,
-> +	xfs_agnumber_t nagcount, struct aghdr_init_data	*id)
-> +{
-> +	ASSERT(nagcount < oagcount);
-> +	struct xfs_perag *pag = NULL;
-> +	xfs_agnumber_t agno;
-> +	int error = 0;
-> +	/*
-> +	 * Deactivating/offlining the AGs i.e waiting for the active references
-> +	 * to come down to 0.
-> +	 */
-> +	error = xfs_shrinkfs_deactivate_ags(mp, oagcount, nagcount);
-> +	if (error)
-> +		return error;
-> +	/*
-> +	 * At this point the AGs have been deactivated/offlined and the in-core
-> +	 * and the on-disk are synch. So now we need to check whether all the
-> +	 * AGs that we are trying to remove/delete are empty. Since we are not
-> +	 * supporting partial shrink success (i.e, the entire requested size
-> +	 * will be removed or none), we will bail out with a failure code even
-> +	 * if 1 AG is non-empty.
-> +	 */
-> +	for (agno = oagcount - 1; agno > nagcount - 1; agno--) {
-> +		pag = xfs_perag_get(mp, agno);
-> +		if (!xfs_ag_is_empty(pag)) {
-> +			/* Error out even if one AG is non-empty */
-> +			error = -ENOTEMPTY;
-> +			xfs_perag_put(pag);
-> +			xfs_shrinkfs_reactivate_ags(mp, oagcount, nagcount);
-> +			return error;
-> +		}
-> +		/*
-> +		 * Since these are removed, these free blocks should also be
-> +		 * subtracted from the total list of free blocks.
-> +		 */
-> +		id->nfree += (pag->pagf_freeblks + pag->pagf_flcount);
-> +		xfs_perag_put(pag);
+> +struct hardlink {
+> +	ino_t	src_ino;
+
+	      ^ one more tab to line these up, please
+
+> +	xfs_ino_t	dst_ino;
+> +};
 > +
+> +struct hardlinks {
+> +	size_t		count;
+> +	size_t		size;
+> +	struct hardlink	*entries;
+> +};
+> +
+> +/* Growth strategy for hardlink tracking array */
+> +/* Double size for small arrays */
+> +#define HARDLINK_DEFAULT_GROWTH_FACTOR	2
+> +/* Grow by 25% for large arrays */
+> +#define HARDLINK_LARGE_GROWTH_FACTOR	0.25
+> +/* Threshold to switch growth strategies */
+> +#define HARDLINK_THRESHOLD		1024
+> +/* Initial allocation size */
+> +#define HARDLINK_TRACKER_INITIAL_SIZE	4096
+> +
+> +/*
+> + * Keep track of source inodes that are from hardlinks so we can retrieve them
+> + * when needed to setup in destination.
+> + */
+> +static struct hardlinks hardlink_tracker = { 0 };
+> +
+> +static void
+> +init_hardlink_tracker(void)
+> +{
+> +	hardlink_tracker.size = HARDLINK_TRACKER_INITIAL_SIZE;
+> +	hardlink_tracker.entries = calloc(
+> +			hardlink_tracker.size,
+> +			sizeof(struct hardlink));
+> +	if (!hardlink_tracker.entries)
+> +		fail(_("error allocating hardlinks tracking array"), errno);
+> +}
+> +
+> +static void
+> +cleanup_hardlink_tracker(void)
+> +{
+> +	free(hardlink_tracker.entries);
+> +	hardlink_tracker.entries = NULL;
+> +	hardlink_tracker.count = 0;
+> +	hardlink_tracker.size = 0;
+> +}
+> +
+> +static xfs_ino_t
+> +get_hardlink_dst_inode(
+> +	xfs_ino_t	i_ino)
+> +{
+> +	for (size_t i = 0; i < hardlink_tracker.count; i++) {
+> +		if (hardlink_tracker.entries[i].src_ino == i_ino)
+> +			return hardlink_tracker.entries[i].dst_ino;
 > +	}
 > +	return 0;
 > +}
 > +
-> +/*
-> + * This function does the job of fully removing the blocks and empty AGs (
-> + * depending of the values of oagcount and nagcount). By removal it means,
-> + * removal of all the perag data structures, other data structures associated
-> + * with it and all the perag cached buffers (when AGs are removed). Once this
-> + * function succeeds, the AGs/blocks will no longer exist.
-> + * The overall steps are as follows (details are in the function):
-> + * - calculate the number of blocks that will be removed from the new tail AG
-> + *   i.e, the AG that will be shrunk partially.
-> + * - call xfs_shrinkfs_remove_ag() that removes the perag cached buffers,
-> + *   then frees the perag reservation, other associated datastructures and
-> + *   finally the in-memory perag group instance.
-> + */
-> +static int
-> +xfs_shrinkfs_remove_ags(struct xfs_mount *mp, struct xfs_trans **tp,
-> +	xfs_agnumber_t oagcount, xfs_agnumber_t nagcount,
-> +	int64_t delta_rem, xfs_agnumber_t *nagmax)
+> +static void
+> +track_hardlink_inode(
+> +	ino_t	src_ino,
+> +	xfs_ino_t	dst_ino)
 > +{
-> +	xfs_agnumber_t agno;
-> +	int error = 0;
-> +	struct xfs_perag *cur_pag = NULL;
-> +
-> +	/*
-> +	 * This loop is calculating the number of blocks that needs to be
-> +	 * removed from the new tail AG. If delta_rem is 0 after the loop exits,
-> +	 * then it means that the number of blocks we want to remove is a
-> +	 * multiple of AG size (in blocks).
-> +	 */
-> +	for (agno = oagcount - 1; agno > nagcount - 1; agno--) {
-> +		cur_pag = xfs_perag_get(mp, agno);
-> +		delta_rem -= xfs_ag_block_count(mp, agno);
-> +		xfs_perag_put(cur_pag);
-> +	}
-> +	/*
-> +	 * We are first removing blocks from the AG that will form the new tail
-> +	 * AG. The reason is that, if we encounter an error here, we can simply
-> +	 * reactivate the AGs (by calling xfs_shrinkfs_reactivate_ags()).
-> +	 * Removal of complete empty AGs always succeed anyway. However if we
-> +	 * remove the empty AGs first (which will succeed) and then the new
-> +	 * last AG shrink fails, then we will again have to re-initialize the
-> +	 * removed AGs. Hence the former approach seems more efficient to me.
-> +	 */
-> +	if (delta_rem) {
+> +	if (hardlink_tracker.count >= hardlink_tracker.size) {
 > +		/*
-> +		 * Remove delta_rem blocks from the AG that will form the new
-> +		 * tail AG after the AGs are removed. If the number of blocks to
-> +		 * be removed is a multiple of AG size, then nothing is done
-> +		 * here.
+> +		 * double for smaller capacity.
+> +		 * instead grow by 25% steps for larger capacities.
 > +		 */
-> +		cur_pag = xfs_perag_get(mp, nagcount - 1);
-> +		error = xfs_ag_shrink_space(cur_pag, tp, delta_rem);
-> +		xfs_perag_put(cur_pag);
-> +		if (error) {
-> +			xfs_shrinkfs_reactivate_ags(mp, oagcount, nagcount);
-> +			return error;
-> +		}
+> +		const size_t old_size = hardlink_tracker.size;
+> +		size_t new_size = old_size * HARDLINK_DEFAULT_GROWTH_FACTOR;
+> +		if (old_size > HARDLINK_THRESHOLD)
+> +			new_size = old_size + (old_size * HARDLINK_LARGE_GROWTH_FACTOR);
+> +
+> +		struct hardlink *resized_array = reallocarray(
+> +			hardlink_tracker.entries,
+> +			new_size,
+> +			sizeof(struct hardlink));
 
-How do we know that the last @delta_rem fsblocks in the new tail AG are
-free?
+Continuations should be indented twice (not once) so that they don't
+line up with code that's in the body of an if statement:
 
+> +		if (!resized_array)
+> +			fail(_("error enlarging hardlinks tracking array"), errno);
+> +
+> +		memset(&resized_array[old_size], 0,
+> +				(new_size - old_size) * sizeof(struct hardlink));
+> +
+> +		hardlink_tracker.entries = resized_array;
+> +		hardlink_tracker.size = new_size;
 > +	}
-> +	/*
-> +	 * Now, in this final step we remove the perag instance and the
-> +	 * associated datastructures and cached buffers. This fully removes the
-> +	 * AG.
-> +	 */
-> +	for (agno = oagcount - 1; agno > nagcount - 1; agno--)
-> +		xfs_shrinkfs_remove_ag(mp, agno);
-> +	*nagmax = xfs_set_inode_alloc(mp, nagcount);
-> +	return error;
+> +	hardlink_tracker.entries[hardlink_tracker.count].src_ino = src_ino;
+> +	hardlink_tracker.entries[hardlink_tracker.count].dst_ino = dst_ino;
+> +	hardlink_tracker.count++;
 > +}
 > +
->  /*
->   * growfs operations
->   */
-> @@ -101,7 +314,6 @@ xfs_growfs_data_private(
->  	bool			lastag_extended = false;
->  	struct xfs_trans	*tp;
->  	struct aghdr_init_data	id = {};
-> -	struct xfs_perag	*last_pag;
->  
->  	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
->  	if (error)
-> @@ -122,7 +334,6 @@ xfs_growfs_data_private(
->  	if (error)
->  		return error;
->  	xfs_growfs_get_delta(mp, nb, &delta, &nagcount);
-> -
->  	/*
->  	 * Reject filesystems with a single AG because they are not
->  	 * supported, and reject a shrink operation that would cause a
-> @@ -135,9 +346,11 @@ xfs_growfs_data_private(
->  	if (delta == 0)
->  		return 0;
->  
-> -	/* TODO: shrinking the entire AGs hasn't yet completed */
-> -	if (nagcount < oagcount)
-> -		return -EINVAL;
-> +	if (nagcount < oagcount) {
-> +		error = xfs_shrinkfs_prepare_ags(mp, oagcount, nagcount, &id);
-> +		if (error)
-> +			return error;
-> +	}
->  
->  	/* allocate the new per-ag structures */
->  	error = xfs_initialize_perag(mp, oagcount, nagcount, nb, &nagimax);
-> @@ -154,15 +367,16 @@ xfs_growfs_data_private(
->  	if (error)
->  		goto out_free_unused_perag;
->  
-> -	last_pag = xfs_perag_get(mp, oagcount - 1);
->  	if (delta > 0) {
-> +		struct xfs_perag *last_pag = xfs_perag_get(mp, oagcount - 1);
+> +/*
+> + * This function will first check in our tracker if the input hardlink has
+> + * already been stored, if not report false so create_inode() can continue
+> + * handling the inode as regularly, and later save the source inode in our
+> + * buffer for future consumption.
+> + */
+> +static bool
+> +handle_hardlink(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_inode	*pip,
+> +	struct xfs_name	xname,
+> +	struct stat	file_stat)
+> +{
+> +	int		error;
 
-Blank line between declarations and code please.
+		      ^ one more tab to line these up, please
+
+> +	xfs_ino_t		dst_ino;
+> +	struct xfs_inode	*ip;
+> +	struct xfs_trans	*tp;
+> +	struct xfs_parent_args *ppargs = NULL;
+> +
+> +	tp = getres(mp, 0);
+> +	ppargs = newpptr(mp);
+> +	dst_ino = get_hardlink_dst_inode(file_stat.st_ino);
+> +
+> +	/*
+> +	 * We didn't find the hardlink inode, this means it's the first time
+> +	 * we see it, report error so create_inode() can continue handling the
+> +	 * inode as a regular file type, and later save the source inode in our
+> +	 * buffer for future consumption.
+> +	 */
+> +	if (dst_ino == 0)
+> +		return false;
+> +
+> +	error = libxfs_iget(mp, NULL, dst_ino, 0, &ip);
+> +	if (error)
+> +		fail(_("failed to get inode"), error);
+> +
+> +	/*
+> +	 * In case the inode was already in our tracker we need to setup the
+> +	 * hardlink and skip file copy.
+> +	 */
+> +	libxfs_trans_ijoin(tp, pip, 0);
+> +	libxfs_trans_ijoin(tp, ip, 0);
+> +	newdirent(mp, tp, pip, &xname, ip, ppargs);
+> +
+> +	/*
+> +	 * Increment the link count
+> +	 */
+> +	libxfs_bumplink(tp, ip);
+> +
+> +	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> +
+> +	error = -libxfs_trans_commit(tp);
+> +	if (error)
+> +		fail(_("Error encountered creating file from prototype file"), error);
+> +
+> +	libxfs_parent_finish(mp, ppargs);
+> +	libxfs_irele(ip);
+> +
+> +	return true;
+> +}
+> +
+> +static void
+> +create_directory_inode(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_inode	*pip,
+> +	struct fsxattr  	*fsxp,
+
+                      ^^ space before tab
+
+> +	int		mode,
+> +	struct cred	creds,
+> +	struct xfs_name	xname,
+> +	int		flags,
+> +	struct stat	file_stat,
+> +	int 		fd,
+
+           ^ space before tab
+
+> +	char		*entryname,
+> +	char		*path)
+> +{
+> +
+> +	int		error;
+		      ^ one more tab to line these up, please
+
+> +	struct xfs_inode	*ip;
+> +	struct xfs_trans	*tp;
+> +	struct xfs_parent_args *ppargs = NULL;
+> +
+> +	tp = getres(mp, 0);
+> +	ppargs = newpptr(mp);
+> +
+> +	error = creatproto(&tp, pip, mode, 0, &creds, fsxp, &ip);
+> +	if (error)
+> +		fail(_("Inode allocation failed"), error);
+> +
+> +	libxfs_trans_ijoin(tp, pip, 0);
+> +
+> +	newdirent(mp, tp, pip, &xname, ip, ppargs);
+> +
+> +	libxfs_bumplink(tp, pip);
+> +	libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
+> +	newdirectory(mp, tp, ip, pip);
+> +
+> +	/*
+> +	 * Copy over timestamps.
+> +	 */
+> +	writetimestamps(ip, &file_stat);
+> +
+> +	libxfs_trans_log_inode(tp, ip, flags);
+> +
+> +	error = -libxfs_trans_commit(tp);
+> +	if (error)
+> +		fail(_("Directory inode allocation failed."), error);
+> +
+> +	libxfs_parent_finish(mp, ppargs);
+> +	tp = NULL;
+> +
+> +	/*
+> +	 * Copy over attributes.
+> +	 */
+> +	writeattrs(ip, entryname, fd);
+> +	writefsxattrs(ip, fsxp);
+> +	close(fd);
+> +
+> +	walk_dir(mp, ip, fsxp, path);
+> +
+> +	libxfs_irele(ip);
+> +}
+> +
+> +static void
+> +create_inode(
+
+Might want to call this create_nondir_inode to distinguish it from
+create_directory_inode.
+
+> +	struct xfs_mount	*mp,
+> +	struct xfs_inode	*pip,
+> +	struct fsxattr  	*fsxp,
+
+                      ^^ space before tab
+
+> +	int		mode,
+> +	struct cred	creds,
+> +	struct xfs_name	xname,
+> +	int		flags,
+> +	struct stat	file_stat,
+> +	xfs_dev_t	rdev,
+> +	int 		fd,
+
+           ^ space before tab
+
+> +	char		*fname)
+
+Hrmm, is @xname the filename we're creating in pip, and @fname is the
+path to the original file so that we can copy the contents and various
+other attributes?  If so, then maybe s/fname/src_fname/ to make this
+clearer?
+
+> +{
+> +
+> +	char		link_target[XFS_SYMLINK_MAXLEN];
+> +	ssize_t		link_len;
+> +	int		error;
+		      ^ one more tab to line these up, please
+
+> +	struct xfs_inode	*ip;
+> +	struct xfs_trans	*tp;
+> +	struct xfs_parent_args *ppargs = NULL;
+> +
+> +	/*
+> +	 * If handle_hardlink() returns true it means the hardlink has been
+> +	 * correctly found and set, so we don't need to do anything else.
+> +	 */
+> +	if (file_stat.st_nlink > 1 && handle_hardlink(mp, pip, xname, file_stat)) {
+> +		close(fd);
+> +		return;
+> +	}
+> +	/*
+> +	 * If instead we have an error it means the hardlink was not registered,
+> +	 * so we proceed to treat it like a regular file, and save it to our
+> +	 * tracker later.
+> +	 */
+> +	tp = getres(mp, 0);
+> +	/*
+> +	 * In case of symlinks, we need to handle things a little differently.
+> +	 * We need to read out our link target and act accordingly.
+> +	 */
+> +	if (xname.type == XFS_DIR3_FT_SYMLINK) {
+> +		link_len = readlink(fname, link_target, XFS_SYMLINK_MAXLEN);
+> +		if (link_len < 0)
+> +			fail(_("could not resolve symlink"), errno);
+> +		if (link_len >= PATH_MAX)
+> +			fail(_("symlink target too long"), ENAMETOOLONG);
+> +		tp = getres(mp, XFS_B_TO_FSB(mp, link_len));
+> +	}
+> +	ppargs = newpptr(mp);
+> +
+> +	error = creatproto(&tp, pip, mode, rdev, &creds, fsxp, &ip);
+> +	if (error)
+> +		fail(_("Inode allocation failed"), error);
+> +
+> +	/*
+> +	 * In case of symlinks, we now write it down, for other file types
+> +	 * this is handled later before cleanup.
+> +	 */
+> +	if (xname.type == XFS_DIR3_FT_SYMLINK)
+> +		writesymlink(tp, ip, link_target, link_len);
+> +
+> +	libxfs_trans_ijoin(tp, pip, 0);
+> +	newdirent(mp, tp, pip, &xname, ip, ppargs);
+> +
+> +	/*
+> +	 * Copy over timestamps.
+> +	 */
+> +	writetimestamps(ip, &file_stat);
+> +
+> +	libxfs_trans_log_inode(tp, ip, flags);
+> +
+> +	error = -libxfs_trans_commit(tp);
+> +	if (error)
+> +		fail(_("Error encountered creating file from prototype file"), error);
+> +
+> +	libxfs_parent_finish(mp, ppargs);
+> +
+> +	/*
+> +	 * Copy over file content, attributes, extended attributes and
+> +	 * timestamps.
+> +	 */
+> +	if (fd >= 0) {
+> +		/* We need to writefile only when not dealing with a symlink. */
+> +		if (xname.type != XFS_DIR3_FT_SYMLINK)
+> +			writefile(ip, fname, fd);
+> +		writeattrs(ip, fname, fd);
+> +		close(fd);
+> +	}
+> +	/*
+> +	 * We do fsxattr also for file types where we don't have an fd,
+> +	 * for example FIFOs.
+> +	 */
+> +	writefsxattrs(ip, fsxp);
+> +
+> +	/*
+> +	 * If we're here it means this is the first time we're encountering an
+> +	 * hardlink, so we need to store it.
+> +	 */
+> +	if (file_stat.st_nlink > 1)
+> +		track_hardlink_inode(file_stat.st_ino, ip->i_ino);
+> +
+> +	libxfs_irele(ip);
+> +}
+> +
+> +static void
+> +handle_direntry(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_inode	*pip,
+> +	struct fsxattr		*fsxp,
+> +	char			*path_buf,
+> +	struct dirent		*entry)
+> +{
+> +	char		cur_path_buf[PATH_MAX];
+
+Hrmm.  For each level of the source directory tree we allocate another
+PATH_MAX buffer on the stack just to snprintf from @path_buf (which is
+itself a stack buffer).
+
+Even assuming the usual 8M thread stack, that means a directory
+structure more than ~2000 levels deep will overflow the stack and crash
+mkfs.
+
+I really think you ought to consider allocating /one/ buffer at the
+start, passing (path_buf, path_len) down the stack, and then snprinting
+at the end of the buffer:
+
+	size_t avail = PATH_MAX - path_len;
+	size_t wrote = snprintf(path_buf + path_len, avail, "/%s", entry->d_name);
+
+	if (wrote > avail)
+		fail(path_buf, ENAMETOOLONG);
+
+	...
+
+	if (S_ISDIR(...)) {
+		create_directory_inode(..., path_buf, path_len + strlen(entry->d_name), ...);
+
+	...
+
+	path_buf[path_len] = 0;
+
+One buffer, much less memory usage.
+
+> +	char		*fname = "";
+
+                        ^ another tab to line things up with the
+                          declarations
+
+> +	int 		pathfd,fd = -1;
+> +	int 		flags;
+> +	int 		majdev;
+> +	int 		mindev;
+> +	int 		mode;
+> +	int 		rdev = 0;
+
+           ^ space before tab
+
+> +	struct stat	file_stat;
+> +	struct xfs_name	xname;
+> +
+> +	/* Ensure we're within the limits of PATH_MAX. */
+> +	if (strlen(path_buf) + strlen(entry->d_name) >= PATH_MAX)
+> +		fail(_("path name too long"), ENAMETOOLONG);
+> +	/*
+> +	 * Keep a reference to our current file path it will be useful
+> +	 * afterwards for fds open with O_PATH where we will have to fallback
+> +	 * to path based attribute handling.
+> +	 */
+> +	if (snprintf(cur_path_buf, PATH_MAX, "%s/%s",
+> +		     path_buf, entry->d_name) < 0)
+> +		fail(_("path encoding error"), -1);
+> +
+> +	pathfd = open(path_buf, O_NOFOLLOW | O_PATH);
+> +	if (pathfd < 0){
+> +		fprintf(stderr, _("%s: cannot open %s: %s\n"), progname,
+> +			cur_path_buf, strerror(errno));
+> +		exit(1);
+> +	}
+> +
+> +	/*
+> +	 * Symlinks and sockets will need to be opened with O_PATH to work, so
+> +	 * we handle this special case.
+> +	 */
+> +	fd = openat(pathfd, entry->d_name, O_NOFOLLOW | O_PATH);
+> +	if(fd < 0) {
+> +		fprintf(stderr, _("%s: cannot open %s: %s\n"), progname,
+> +			cur_path_buf, strerror(errno));
+> +		exit(1);
+> +	}
+> +
+> +	if (fstat(fd, &file_stat) < 0) {
+> +		fprintf(stderr, _("%s: cannot stat '%s': %s (errno=%d)\n"),
+> +				progname, cur_path_buf, strerror(errno), errno);
+> +		exit(1);
+> +	}
+> +
+> +	/*
+> +	 * Regular files instead need to be reopened with broader flags so we
+> +	 * check if that's the case and reopen those.
+> +	 */
+> +	if (!S_ISSOCK(file_stat.st_mode) &&
+> +	    !S_ISLNK(file_stat.st_mode)  &&
+> +	    !S_ISFIFO(file_stat.st_mode)) {
+> +		close(fd);
+> +		fd = openat(pathfd, entry->d_name,
+> +			    O_NOFOLLOW | O_RDONLY | O_NOATIME);
+
+Just out of curiosity, does O_NOATIME not work in the previous openat?
+
+> +		if(fd < 0) {
+> +			fprintf(stderr, _("%s: cannot open %s: %s\n"), progname,
+> +				cur_path_buf, strerror(errno));
+> +			exit(1);
+> +		}
+> +	}
+> +
+> +	struct cred creds = {
+> +		.cr_uid = file_stat.st_uid,
+> +		.cr_gid = file_stat.st_gid,
+> +	};
+> +
+> +	xname.name = (unsigned char *)entry->d_name;
+> +	xname.len = strlen(entry->d_name);
+> +	xname.type = 0;
+> +	mode = file_stat.st_mode;
+> +	flags = XFS_ILOG_CORE;
+> +
+> +	switch (file_stat.st_mode & S_IFMT) {
+> +	case S_IFDIR:
+> +		xname.type = XFS_DIR3_FT_DIR;
+> +		create_directory_inode(mp, pip, fsxp, mode, creds, xname, flags,
+> +				       file_stat, fd, entry->d_name, cur_path_buf);
+> +		return;
+> +	case S_IFREG:
+> +		xname.type = XFS_DIR3_FT_REG_FILE;
+> +		fname = entry->d_name;
+> +		break;
+> +	case S_IFCHR:
+> +		flags |= XFS_ILOG_DEV;
+> +		xname.type = XFS_DIR3_FT_CHRDEV;
+> +		majdev = major(file_stat.st_rdev);
+> +		mindev = minor(file_stat.st_rdev);
+> +		rdev = IRIX_MKDEV(majdev, mindev);
+> +		fname = entry->d_name;
+> +		break;
+> +	case S_IFBLK:
+> +		flags |= XFS_ILOG_DEV;
+> +		xname.type = XFS_DIR3_FT_BLKDEV;
+> +		majdev = major(file_stat.st_rdev);
+> +		mindev = minor(file_stat.st_rdev);
+> +		rdev = IRIX_MKDEV(majdev, mindev);
+> +		fname = entry->d_name;
+> +		break;
+> +	case S_IFLNK:
+> +		/*
+> +		 * Being a symlink we opened the filedescriptor with O_PATH
+> +		 * this will make flistxattr() and fgetxattr() fail wil EBADF,
+> +		 * so we  will need to fallback to llistxattr() and lgetxattr(),
+> +		 * this will need the full path to the original file, not just
+> +		 * the entry name.
+> +		 */
+> +		xname.type = XFS_DIR3_FT_SYMLINK;
+> +		fname = cur_path_buf;
+> +		break;
+> +	case S_IFIFO:
+> +		/*
+> +		 * Being a fifo we opened the filedescriptor with O_PATH
+> +		 * this will make flistxattr() and fgetxattr() fail wil EBADF,
+
+"fail with EBADF"...
+
+> +		 * so we  will need to fallback to llistxattr() and lgetxattr(),
+> +		 * this will need the full path to the original file, not just
+> +		 * the entry name.
+> +		 */
+> +		xname.type = XFS_DIR3_FT_FIFO;
+> +		fname = cur_path_buf;
+> +		break;
+> +	case S_IFSOCK:
+> +		/*
+> +		 * Being a socket we opened the filedescriptor with O_PATH
+> +		 * this will make flistxattr() and fgetxattr() fail wil EBADF,
+> +		 * so we  will need to fallback to llistxattr() and lgetxattr(),
+> +		 * this will need the full path to the original file, not just
+> +		 * the entry name.
+> +		 */
+> +		xname.type = XFS_DIR3_FT_SOCK;
+> +		fname = cur_path_buf;
+> +		break;
+> +	default:
+> +		break;
+> +	}
+> +
+> +	create_inode(mp, pip, fsxp, mode, creds, xname, flags, file_stat,
+> +		     rdev, fd, fname);
+> +}
+> +
+> +/*
+> + * Walk_dir will recursively list files and directories and populate the
+> + * mountpoint *mp with them using handle_direntry().
+> + */
+> +static void
+> +walk_dir(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_inode	*pip,
+> +	struct fsxattr		*fsxp,
+> +	char			*path_buf)
+> +{
+> +	DIR 			*dir;
+
+           ^ space before tab
+
+> +	struct dirent		*entry;
+> +
+> +	/*
+> +	 * Open input directory and iterate over all entries in it.
+> +	 * when another directory is found, we will recursively call walk_dir.
+> +	 */
+> +	if ((dir = opendir(path_buf)) == NULL) {
+> +		fprintf(stderr, _("%s: cannot open input dir: %s [%d - %s]\n"),
+> +				progname, path_buf, errno, strerror(errno));
+> +		exit(1);
+> +	}
+> +	while ((entry = readdir(dir)) != NULL) {
+> +		if (strcmp(entry->d_name, ".") == 0 ||
+> +		    strcmp(entry->d_name, "..") == 0)
+> +			continue;
+> +
+> +		handle_direntry(mp, pip, fsxp, path_buf, entry);
+> +	}
+> +	closedir(dir);
+> +}
+> +
+> +static void
+> +populate_from_dir(
+> +	struct xfs_mount	*mp,
+> +	struct fsxattr		*fsxp,
+> +	char			*cur_path)
+> +{
+> +	int 			error;
+> +	int 			mode;
+> +	int 			fd = -1;
+
+           ^ space before tab
+
+> +	char			path_buf[PATH_MAX];
+> +	struct stat		file_stat;
+> +	struct xfs_inode	*ip;
+> +	struct xfs_trans	*tp;
+> +
+> +	/*
+> +	 * Initialize path_buf cur_path, strip trailing slashes they're
+> +	 * automatically added when walking the dir.
+> +	 */
+> +	if (strlen(cur_path) > 1 && cur_path[strlen(cur_path)-1] == '/')
+> +		cur_path[strlen(cur_path)-1] = '\0';
+> +	if (snprintf(path_buf, PATH_MAX, "%s", cur_path) >= PATH_MAX)
+> +		fail(_("path name too long"), ENAMETOOLONG);
+> +
+> +	if (lstat(path_buf, &file_stat) < 0) {
+> +		fprintf(stderr, _("%s: cannot stat '%s': %s (errno=%d)\n"),
+> +			progname, path_buf, strerror(errno), errno);
+> +		exit(1);
+> +	}
+> +	fd = open(path_buf, O_NOFOLLOW | O_RDONLY | O_NOATIME);
+> +	if (fd < 0) {
+> +		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+> +			progname, path_buf, strerror(errno));
+> +		exit(1);
+> +	}
+> +
+> +	/*
+> +	 * We first ensure we have the root inode.
+> +	 */
+> +	struct cred creds = {
+> +		.cr_uid = file_stat.st_uid,
+> +		.cr_gid = file_stat.st_gid,
+> +	};
+> +	mode = file_stat.st_mode;
+> +
+> +	tp = getres(mp, 0);
+> +
+> +	error = creatproto(&tp, NULL, mode | S_IFDIR, 0, &creds, fsxp, &ip);
+> +	if (error)
+> +		fail(_("Inode allocation failed"), error);
+> +
+> +	mp->m_sb.sb_rootino = ip->i_ino;
+> +	libxfs_log_sb(tp);
+> +	newdirectory(mp, tp, ip, ip);
+> +	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> +
+> +	error = -libxfs_trans_commit(tp);
+> +	if (error)
+> +		fail(_("Inode allocation failed"), error);
+> +
+> +	libxfs_parent_finish(mp, NULL);
+> +
+> +	/*
+> +	 * Copy over attributes.
+> +	 */
+> +	writeattrs(ip, path_buf, fd);
+
+Nothing closes fd here; does it leak?
 
 --D
 
->  		error = xfs_resizefs_init_new_ags(tp, &id, oagcount, nagcount,
->  				delta, last_pag, &lastag_extended);
-> +		xfs_perag_put(last_pag);
->  	} else {
->  		xfs_warn_experimental(mp, XFS_EXPERIMENTAL_SHRINK);
-> -		error = xfs_ag_shrink_space(last_pag, &tp, -delta);
-> +		error = xfs_shrinkfs_remove_ags(mp, &tp, oagcount, nagcount,
-> +				-delta, &nagimax);
->  	}
-> -	xfs_perag_put(last_pag);
->  	if (error)
->  		goto out_trans_cancel;
->  
-> @@ -171,12 +385,14 @@ xfs_growfs_data_private(
->  	 * seen by the rest of the world until the transaction commit applies
->  	 * them atomically to the superblock.
->  	 */
-> -	if (nagcount > oagcount)
-> -		xfs_trans_mod_sb(tp, XFS_TRANS_SB_AGCOUNT, nagcount - oagcount);
-> +	if (nagcount != oagcount)
-> +		xfs_trans_mod_sb(tp, XFS_TRANS_SB_AGCOUNT,
-> +			(int64_t)nagcount - (int64_t)oagcount);
->  	if (delta)
->  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_DBLOCKS, delta);
->  	if (id.nfree)
-> -		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, id.nfree);
-> +		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS,
-> +			delta > 0 ? id.nfree : (int64_t)-id.nfree);
->  
->  	/*
->  	 * Sync sb counters now to reflect the updated values. This is
-> @@ -190,10 +406,11 @@ xfs_growfs_data_private(
->  	error = xfs_trans_commit(tp);
->  	if (error)
->  		return error;
-> -
->  	/* New allocation groups fully initialized, so update mount struct */
->  	if (nagimax)
->  		mp->m_maxagi = nagimax;
-> +	if (nagcount < oagcount)
-> +		mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
->  	xfs_set_low_space_thresholds(mp);
->  	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
->  
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index b4a07af513ba..e94d96db5383 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -438,7 +438,6 @@ xfs_trans_mod_sb(
->  		tp->t_dblocks_delta += delta;
->  		break;
->  	case XFS_TRANS_SB_AGCOUNT:
-> -		ASSERT(delta > 0);
->  		tp->t_agcount_delta += delta;
->  		break;
->  	case XFS_TRANS_SB_IMAXPCT:
-> -- 
-> 2.43.5
+> +	writefsxattrs(ip, fsxp);
+> +
+> +	/*
+> +	 * RT initialization. Do this here to ensure that the RT inodes get
+> +	 * placed after the root inode.
+> +	 */
+> +	error = create_metadir(mp);
+> +	if (error)
+> +		fail(_("Creation of the metadata directory inode failed"), error);
+> +
+> +	rtinit(mp);
+> +
+> +	/*
+> +	 * By nature of walk_dir() we could be opening a great number of fds
+> +	 * for deeply nested directory trees. try to bump max fds limit.
+> +	 */
+> +	bump_max_fds();
+> +
+> +	/*
+> +	 * Initialize the hardlinks tracker.
+> +	 */
+> +	init_hardlink_tracker();
+> +	/*
+> +	 * Now that we have a root inode, let's walk the input dir and populate
+> +	 * the partition.
+> +	 */
+> +	walk_dir(mp, ip, fsxp, path_buf);
+> +
+> +	/*
+> +	 * Cleanup hardlinks tracker.
+> +	 */
+> +	cleanup_hardlink_tracker();
+> +
+> +	/*
+> +	 * We free up our root inode only when we finished populating the root
+> +	 * filesystem.
+> +	 */
+> +	libxfs_irele(ip);
+> +}
+> diff --git a/mkfs/proto.h b/mkfs/proto.h
+> index be1ceb45..476f7851 100644
+> --- a/mkfs/proto.h
+> +++ b/mkfs/proto.h
+> @@ -6,9 +6,21 @@
+>  #ifndef MKFS_PROTO_H_
+>  #define MKFS_PROTO_H_
 > 
+> -char *setup_proto(char *fname);
+> -void parse_proto(struct xfs_mount *mp, struct fsxattr *fsx, char **pp,
+> -		int proto_slashes_are_spaces);
+> +enum proto_source_type {
+> +	PROTO_SRC_NONE = 0,
+> +	PROTO_SRC_PROTOFILE,
+> +	PROTO_SRC_DIR
+> +};
+> +struct proto_source {
+> +	enum	proto_source_type type;
+> +	char	*data;
+> +};
+> +
+> +struct proto_source setup_proto(char *fname);
+> +void parse_proto(struct xfs_mount *mp, struct fsxattr *fsx,
+> +		 struct proto_source *protosource,
+> +		 int proto_slashes_are_spaces,
+> +		 int proto_preserve_atime);
+>  void res_failed(int err);
+> 
+>  #endif /* MKFS_PROTO_H_ */
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 812241c4..885377f1 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -123,6 +123,7 @@ enum {
+> 
+>  enum {
+>  	P_FILE = 0,
+> +	P_ATIME,
+>  	P_SLASHES,
+>  	P_MAX_OPTS,
+>  };
+> @@ -714,6 +715,7 @@ static struct opt_params popts = {
+>  	.ini_section = "proto",
+>  	.subopts = {
+>  		[P_FILE] = "file",
+> +		[P_ATIME] = "atime",
+>  		[P_SLASHES] = "slashes_are_spaces",
+>  		[P_MAX_OPTS] = NULL,
+>  	},
+> @@ -722,6 +724,12 @@ static struct opt_params popts = {
+>  		  .conflicts = { { NULL, LAST_CONFLICT } },
+>  		  .defaultval = SUBOPT_NEEDS_VAL,
+>  		},
+> +		{ .index = P_ATIME,
+> +		  .conflicts = { { NULL, LAST_CONFLICT } },
+> +		  .minval = 0,
+> +		  .maxval = 1,
+> +		  .defaultval = 1,
+> +		},
+>  		{ .index = P_SLASHES,
+>  		  .conflicts = { { NULL, LAST_CONFLICT } },
+>  		  .minval = 0,
+> @@ -1079,6 +1087,7 @@ struct cli_params {
+>  	int	lsunit;
+>  	int	is_supported;
+>  	int	proto_slashes_are_spaces;
+> +	int	proto_atime;
+>  	int	data_concurrency;
+>  	int	log_concurrency;
+>  	int	rtvol_concurrency;
+> @@ -1206,6 +1215,7 @@ usage( void )
+>  /* naming */		[-n size=num,version=2|ci,ftype=0|1,parent=0|1]]\n\
+>  /* no-op info only */	[-N]\n\
+>  /* prototype file */	[-p fname]\n\
+> +/* populate from directory */	[-p dirname,atime=0|1]\n\
+>  /* quiet */		[-q]\n\
+>  /* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx,rgcount=n,rgsize=n,\n\
+>  			    concurrency=num,zoned=0|1,start=n,reserved=n]\n\
+> @@ -2131,6 +2141,9 @@ proto_opts_parser(
+>  	case P_SLASHES:
+>  		cli->proto_slashes_are_spaces = getnum(value, opts, subopt);
+>  		break;
+> +	case P_ATIME:
+> +		cli->proto_atime = getnum(value, opts, subopt);
+> +		break;
+>  	case P_FILE:
+>  		fallthrough;
+>  	default:
+> @@ -5682,7 +5695,7 @@ main(
+>  	int			discard = 1;
+>  	int			force_overwrite = 0;
+>  	int			quiet = 0;
+> -	char			*protostring = NULL;
+> +	struct proto_source	protosource;
+>  	int			worst_freelist = 0;
+> 
+>  	struct libxfs_init	xi = {
+> @@ -5832,8 +5845,6 @@ main(
+>  	 */
+>  	cfgfile_parse(&cli);
+> 
+> -	protostring = setup_proto(cli.protofile);
+> -
+>  	/*
+>  	 * Extract as much of the valid config as we can from the CLI input
+>  	 * before opening the libxfs devices.
+> @@ -6010,7 +6021,11 @@ main(
+>  	/*
+>  	 * Allocate the root inode and anything else in the proto file.
+>  	 */
+> -	parse_proto(mp, &cli.fsx, &protostring, cli.proto_slashes_are_spaces);
+> +	protosource = setup_proto(cli.protofile);
+> +	parse_proto(mp, &cli.fsx,
+> +			&protosource,
+> +			cli.proto_slashes_are_spaces,
+> +			cli.proto_atime);
+> 
+>  	/*
+>  	 * Protect ourselves against possible stupidity
+> --
+> 2.50.0
 > 
