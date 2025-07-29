@@ -1,96 +1,185 @@
-Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB22B239E66
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 21:49:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CA1C21B908;
+	Tue, 29 Jul 2025 22:07:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753825751; cv=none; b=eVJXBYx2KsBqZs6LhIy9ALT1N8kqI8MWIvLFVyJYqp6fGwkF5C9FdD13Ht4lmo8hrWI4SFMwG7/tUEpXjZDHoC4TIZ6uUAVIK4Y+iZxtfW1jvn1WCQCziwC/9AqttQ8h4nCgvlWiMV25L8UwmDcEYVTBaAiSJIvnFX5nTwK+68g=
+	t=1753826864; cv=none; b=MNfVFWb89+7uzqY6oKkYiyYQgzuMeKzfqdgcczUCarXIWsHT+1nA1E6Row7P7fHy4Bs60XsWFu/UMC59Jxb/E4u8uTTLrWq+Jokv65Dqgzaj6C4AuQ5J4Jf8odU9V7JARORHb7p27p4uuqNS6J9Syou55WShuH79ZY1CzfIzZyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753825751; c=relaxed/simple;
-	bh=geL9Ftjhdqd9egcM/lHhi25CiP49eRIwJI76CvTYyZk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bwYGkDXQnslE/LvWICoWLOFPCdVw6E031R7qe/vS/9HVGX1FqwvPdb9MNTdHDY0jW778eOmaAUN0mLOYaOhyXxfeTgg9opURPyW944Y6zTE8D7v59fTS5kcMZzU18turQUBZTARvGm9uZvOFxDbxmM+QttOWinuFsjJrOAysSDA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=fail (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=Xv9tbmhk reason="signature verification failed"; arc=none smtp.client-ip=72.215.153.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
+	s=arc-20240116; t=1753826864; c=relaxed/simple;
+	bh=Sfq5QjFkz2SK/zAK/YtWTk1A6MRQh5sud+qPxZdZ2UI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qVTNgYqYPn4GTqKWuf1xQ5JzOB1fY2vzNyS324HyJtELPWstFrkd2l5LPGzFnVnEaHRWjFBzTlKTQrTTem4Ul8Drg5ddXk0syxLwgwkHW1/ivNYz2U5Q6koTbgTPn9r+rnYoDLPVxhT8Ia3fB5VnWn0jDs5Cc0w0gD6WZpBL8Kc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tiEv0YZD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="Xv9tbmhk"
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id fs1NZj9U34EIeUGl; Tue, 29 Jul 2025 17:49:07 -0400 (EDT)
-X-Barracuda-Envelope-From: tonyb@cybernetics.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
-X-ASG-Whitelist: Client
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
-	bh=AYKmDyN4bYXhwJrjzg9T8Cn2Ox5lAXwONinxtJCgb5o=;
-	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:Cc:To:
-	Content-Language:Subject:MIME-Version:Date:Message-ID; b=Xv9tbmhk6jhNYTtkhXLz
-	q+Wh6k31x8gi5fM2VMM/Suipsu8NeuQBqISUezcnE21Cc1s9YNYjmURHVVjptPaecy9ux8KZsupPt
-	KtPJbI6wrCr3lgQC9MK75+uZCsm56sG7Yw8rHFmaMlPw18qlggJz+67jrzvUZmBfbyLl7PTPS0=
-Received: from [10.157.2.224] (HELO [192.168.200.1])
-  by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
-  with ESMTPS id 14114358; Tue, 29 Jul 2025 17:49:07 -0400
-Message-ID: <b6af511e-9128-4775-8994-9bbaef3465a2@cybernetics.com>
-X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
-Date: Tue, 29 Jul 2025 17:49:07 -0400
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tiEv0YZD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01E36C4CEEF;
+	Tue, 29 Jul 2025 22:07:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1753826864;
+	bh=Sfq5QjFkz2SK/zAK/YtWTk1A6MRQh5sud+qPxZdZ2UI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=tiEv0YZDlW9mt7pcAEZrIjsReOnlk/q2o2nmkTr+6pj4Tum/Hwh2Z8/qlLqORRpD3
+	 KnFnkONMivW7z0uuWTy/R+iVy6F7A7c2tHEzUgIB7/hY6BE/5VbI/lR5WN5vNwgtWI
+	 p4HJfkPEG0THW0p4M8uAQjZ7Z10Kv2Al/2jcrieGR95EH4AAhUGHwkCbhTwcdff5P6
+	 ur68rXT/89u36NUzfE3NTADEjEtoSiZhq8E+Z1W1nltJUsgUmvapM7/rbc62v00nqk
+	 V0HniZxZ2Tv4PeVd6NiOwSkLVoDbW/4X1olB0gQUEhmBGkzJ6N49tGGgLgfqK5L3f0
+	 0nz4oj2sDrmQg==
+Date: Tue, 29 Jul 2025 15:07:43 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, david@fromorbit.com, ebiggers@kernel.org,
+	hch@lst.de, Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH RFC 01/29] iomap: add iomap_writepages_unbound() to write
+ beyond EOF
+Message-ID: <20250729220743.GI2672049@frogsfrogsfrogs>
+References: <20250728-fsverity-v1-0-9e5443af0e34@kernel.org>
+ <20250728-fsverity-v1-1-9e5443af0e34@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] md/raid0,raid4,raid5,raid6,raid10: fix bogus io_opt
- value
-Content-Language: en-US
-X-ASG-Orig-Subj: Re: [PATCH 1/2] md/raid0,raid4,raid5,raid6,raid10: fix bogus io_opt
- value
-To: yukuai@kernel.org, Song Liu <song@kernel.org>,
- Yu Kuai <yukuai3@huawei.com>, Christian Brauner <brauner@kernel.org>,
- "Darrick J. Wong" <djwong@kernel.org>,
- "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc: linux-raid@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <b122fa8c-f6a0-4dee-b998-bde65d212c11@cybernetics.com>
- <3660751f-e230-498c-b857-99d61fe442e6@kernel.org>
-From: Tony Battersby <tonyb@cybernetics.com>
-In-Reply-To: <3660751f-e230-498c-b857-99d61fe442e6@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1753825747
-X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 1280
-X-Barracuda-BRTS-Status: 1
-Content-Transfer-Encoding: quoted-printable
-X-ASG-Debug-ID: 1753825747-1cf43947df83540001-7j46Zh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250728-fsverity-v1-1-9e5443af0e34@kernel.org>
 
-On 7/29/25 12:56, Yu Kuai wrote:
-> Hi,
->
-> =E5=9C=A8 2025/7/30 0:12, Tony Battersby =E5=86=99=E9=81=93:
->> md-raid currently sets io_min and io_opt to the RAID chunk and stripe
->> sizes and then calls queue_limits_stack_bdev() to combine the io_min a=
-nd
->> io_opt values with those of the component devices.  The io_opt size is
->> notably combined using the least common multiple (lcm), which does not
->> work well in practice for some drives (1), resulting in overflow or
->> unreasonable values.
->>
->> dm-raid, on the other hand, sets io_min and io_opt through the
->> raid_io_hints() function, which is called after stacking all the queue
->> limits of the component drives, so the RAID chunk and stripe sizes
->> override the values of the stacking.
->>
->> Change md-raid to be more like dm-raid by setting io_min and io_opt to
->> the RAID chunk and stripe sizes after stacking the queue limits of the
->> component devies.  This fixes /sys/block/md0/queue/optimal_io_size fro=
-m
->> being a bogus value like 3221127168 to being the correct RAID stripe
->> size.
-> This is already discussed, and mtp3sas should fix this strange value.
+On Mon, Jul 28, 2025 at 10:30:05PM +0200, Andrey Albershteyn wrote:
+> From: Andrey Albershteyn <aalbersh@redhat.com>
+> 
+> Add iomap_writepages_unbound() without limit in form of EOF. XFS
+> will use this to write metadata (fs-verity Merkle tree) in range far
+> beyond EOF.
 
-Thanks, I will follow that ongoing discussion.
+...and I guess some day fscrypt might use it to encrypt merkle trees
+too?
 
-https://lore.kernel.org/all/ywsfp3lqnijgig6yrlv2ztxram6ohf5z4yfeebswjkvp2=
-dzisd@f5ikoyo3sfq5/
+> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> ---
+>  fs/iomap/buffered-io.c | 51 +++++++++++++++++++++++++++++++++++++++-----------
+>  include/linux/iomap.h  |  3 +++
+>  2 files changed, 43 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 3729391a18f3..7bef232254a3 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1881,18 +1881,10 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+>  	int error = 0;
+>  	u32 rlen;
+>  
+> -	WARN_ON_ONCE(!folio_test_locked(folio));
+> -	WARN_ON_ONCE(folio_test_dirty(folio));
+> -	WARN_ON_ONCE(folio_test_writeback(folio));
+> -
+> -	trace_iomap_writepage(inode, pos, folio_size(folio));
+> -
+> -	if (!iomap_writepage_handle_eof(folio, inode, &end_pos)) {
+> -		folio_unlock(folio);
+> -		return 0;
+> -	}
+>  	WARN_ON_ONCE(end_pos <= pos);
+>  
+> +	trace_iomap_writepage(inode, pos, folio_size(folio));
+> +
+>  	if (i_blocks_per_folio(inode, folio) > 1) {
+>  		if (!ifs) {
+>  			ifs = ifs_alloc(inode, folio, 0);
+> @@ -1956,6 +1948,23 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+>  	return error;
+>  }
+>  
+> +/* Map pages bound by EOF */
+> +static int iomap_writepage_map_eof(struct iomap_writepage_ctx *wpc,
 
+iomap_writepage_map_within_eof ?
+
+> +		struct writeback_control *wbc, struct folio *folio)
+> +{
+> +	int error;
+> +	struct inode *inode = folio->mapping->host;
+> +	u64 end_pos = folio_pos(folio) + folio_size(folio);
+> +
+> +	if (!iomap_writepage_handle_eof(folio, inode, &end_pos)) {
+> +		folio_unlock(folio);
+> +		return 0;
+> +	}
+> +
+> +	error = iomap_writepage_map(wpc, wbc, folio);
+> +	return error;
+> +}
+> +
+>  int
+>  iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
+>  		struct iomap_writepage_ctx *wpc,
+> @@ -1972,9 +1981,29 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
+>  			PF_MEMALLOC))
+>  		return -EIO;
+>  
+> +	wpc->ops = ops;
+> +	while ((folio = writeback_iter(mapping, wbc, folio, &error))) {
+> +		WARN_ON_ONCE(!folio_test_locked(folio));
+> +		WARN_ON_ONCE(folio_test_dirty(folio));
+> +		WARN_ON_ONCE(folio_test_writeback(folio));
+> +
+> +		error = iomap_writepage_map_eof(wpc, wbc, folio);
+> +	}
+> +	return iomap_submit_ioend(wpc, error);
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_writepages);
+> +
+> +int
+> +iomap_writepages_unbound(struct address_space *mapping, struct writeback_control *wbc,
+
+Might want to leave a comment here explaining what's the difference
+between the two iomap_writepages exports:
+
+/*
+ * Write dirty pages, including any beyond EOF.  This is solely for use
+ * by files that allow post-EOF pagecache, which means fsverity.
+ */
+
+> +		struct iomap_writepage_ctx *wpc,
+> +		const struct iomap_writeback_ops *ops)
+> +{
+> +	struct folio *folio = NULL;
+> +	int error;
+> +
+
+...and you might want a:
+
+	WARN_ON(!IS_VERITY(wpc->inode));
+
+to keep it that way.
+
+--D
+
+>  	wpc->ops = ops;
+>  	while ((folio = writeback_iter(mapping, wbc, folio, &error)))
+>  		error = iomap_writepage_map(wpc, wbc, folio);
+>  	return iomap_submit_ioend(wpc, error);
+>  }
+> -EXPORT_SYMBOL_GPL(iomap_writepages);
+> +EXPORT_SYMBOL_GPL(iomap_writepages_unbound);
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 522644d62f30..4a0b5ebb79e9 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -464,6 +464,9 @@ void iomap_sort_ioends(struct list_head *ioend_list);
+>  int iomap_writepages(struct address_space *mapping,
+>  		struct writeback_control *wbc, struct iomap_writepage_ctx *wpc,
+>  		const struct iomap_writeback_ops *ops);
+> +int iomap_writepages_unbound(struct address_space *mapping,
+> +		struct writeback_control *wbc, struct iomap_writepage_ctx *wpc,
+> +		const struct iomap_writeback_ops *ops);
+>  
+>  /*
+>   * Flags for direct I/O ->end_io:
+> 
+> -- 
+> 2.50.0
+> 
+> 
