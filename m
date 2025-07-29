@@ -1,188 +1,211 @@
-Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57D1228689B;
-	Tue, 29 Jul 2025 09:53:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45DB019E971
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 10:35:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753782805; cv=none; b=gk4uEQufrkZBpDjyuexkejeSrQj1vqez4+zNPGhilWSF44PdMg3QrOpAcmI3R94VYwuZqQOfmRdboAekKFdYpRCNHpHAkGOgRZVfkoGZrqr52T6rDwQHv7t1fiL/O9Lo6W5qUocAS+cuG3eGIAIj6cQ6AB2d+vqLGy1Rh3JqQCs=
+	t=1753785359; cv=none; b=oA53rPbcUymTZUMHVPXxX+vtqQHNezXepF7bDP5uWYZZtjdBWVajlhBZEg0aD1aiebVhHwIhamjFj4QDmzT4f0x0VawzYO6MlV2pToyiH3287DgoiVhSdCzf13txYjxghqoGLedPglD0MZKr9pyhs5epnXPtL0mEkCIsz9xV9Uk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753782805; c=relaxed/simple;
-	bh=7+SJUIAuwlucDpr/Ujqn/MTDxXbwcZf6SPuXrL327zc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=b2EzGeB5Qqi5z0aq9YDQz/SSRr61M7bRdOw14srRb+C/kDUTWLdyfSEI+wFnZrlPxcef1x9SibW1Yfw02bGSjvTV47qOzCyJ+AwY86VkqlbUkm0EP+510AE3r3vqfiDbTqbM/G0cdy8qsK4HS56xxzggx9qGCZy5iWWdPsr9tn0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MegOfusf; arc=none smtp.client-ip=209.85.218.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1753785359; c=relaxed/simple;
+	bh=HO5d2wAJgWq6Tl4cr7avtyFxxM9YP0MhCx3yLUH1H/Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hfLx+cYI5VWWNf+2K74sBhwvbLsHUOWiQ0TIopmUtI63CkEVdqF0lwosJ7qiMBlqxypsibV2vfmc0o0hvKJXt3hzknLmdEkUIlbuDzNipo2G/pZfkkCAsv7k0YHC3ZJUzyuNbwe4VRoTVBjoFuEkklaJVxh6Dw4Dgm/KUEOoPGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gHbvAT1f; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MegOfusf"
-Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-ae0dd7ac1f5so1106477266b.2;
-        Tue, 29 Jul 2025 02:53:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753782802; x=1754387602; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=HFX+lzexMcAGbZ75ILE4gw1AriEScd2jvceXRZZOKC4=;
-        b=MegOfusf46fWsJi8yMkR4BOqsii2WLQHMSp+hrIYerojWX2cU7S22AHOnT+D+S2pF6
-         1SGvVd0FImL5AQeOHfKjBTdZ4GFOfzwp+S8fVhmJGeQkPtsjibm8gDdahc5KPjx+ZQ0E
-         +25M2tCw9/f49rZv59jCfqeyZauoNzk19+z3jtvTTCewjhKLqaQxHGoQZ31j0/aYhWgL
-         IetMlIWcFgmJy81fMvHWWueDYfQntjFfRIFKXVxYhhSOOh9OSe8zuha2BAWBdkN2srim
-         T4YXbyCJjOl39XjBVLz34Ninn3TigIhyslIs7kq/EsF7j7rLJSZuAdgvxcUmzXN3AVyL
-         KNLg==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gHbvAT1f"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1753785356;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nTPMGB6z2nyOCHdJ7CbXMpiw/sTsf8ojO933mhQUepA=;
+	b=gHbvAT1fLIXC712nz6WiznW9684rnuMlwh9rvWGhHseU0dIij926lFBvydBcdLl+kSJuDn
+	ufopNWeW+82p1QcpwCX6hTyqZCt7yQgMNFZuz0nInlGO7gv4jPBWp0inoYMfVKaW1G3q6N
+	FcmPaCVh6u8rCTVLdxQzX263gsvIy6E=
+Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
+ [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-33-GdeqR-9ZO3uaIj0zCnd5EA-1; Tue, 29 Jul 2025 06:35:54 -0400
+X-MC-Unique: GdeqR-9ZO3uaIj0zCnd5EA-1
+X-Mimecast-MFC-AGG-ID: GdeqR-9ZO3uaIj0zCnd5EA_1753785354
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-ad56a52edc5so537353066b.0
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 03:35:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753782802; x=1754387602;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=HFX+lzexMcAGbZ75ILE4gw1AriEScd2jvceXRZZOKC4=;
-        b=kctJnz1yo21tOk4jgiqC4VzE4jLbritQkNpT0tSj8oOUWRoomN3BMctOHLyUO2TxtF
-         NccywKIWeeRyD6iMjfxgY593UNwqcz+EhHxdrQAyaK+r26Obu8ivlh22LQwN4BBH328m
-         mgXJ72Un5vFcxqHUcU8qrvBuR0WtQ562XP8dL9o9wXtcey9ElosPv9+SzAdAE79XKDcR
-         GHnJ+BUr6Luag+IgW6HU8Tc6oBTP0lhG7cnim2H86ZzfpkXOMAxMFG4TSpNKgAYFOc6C
-         /mwYBoiYCCJy7A6UTlhYUJT8aSVNYXlb8lU69epK8j4lKq90rw18oqRIwPiUrDQHr3cG
-         X+9Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVTeiB8SmibbckZMNGtanfr5Ekn0g71Fd9URTmfuuHR09NhQ+lY+WSchUI0GDTwV2qqffn5PifDncIokqYT@vger.kernel.org, AJvYcCXBRlwNDsVgwOXT/NtjAJEkDccZ5IhHC7suK+cj/jAMl8QAWXUAlmwbO7NJyb4zd/ja6dMO6TQhR4PK@vger.kernel.org
-X-Gm-Message-State: AOJu0YxE058eFO74tWyk40kO03ao6Qy8KTD9tVddXhXbwhWmCIM51KMD
-	V+3pof3E3UdVPRUvKKODzRHMSEhhiCvwjOzkXyBnQlsRFTGUYheY4IKtS+pjxYkhVIC4Qmw4X4Q
-	IEsD4d3u1UUgJOcd5BKkpq9Sm1kVyLafAgQYY6/A=
-X-Gm-Gg: ASbGncu4ELn2lk+fal3lmoQDnFNDKCL5lUZx6UxqUvsGiXgfgJgrVJI9a1glEAW2J7J
-	bLZhaLqoc0zv/gXsZbZ/KLOXXZHGk5t+fSC0O4jumz5pEf+QTz43fPRVx15hLmOHMmQQLytHwd/
-	mx7UFpLvQ0CJLgo2hlfrguytXxdEHJPaONZWkFVNxVZOInB6M9baOXDwDa5sYQO8PjDt7bwLx9O
-	BJaC7U=
-X-Google-Smtp-Source: AGHT+IHI/EjqqMmf950Go3Z5plmrSUsz6yT8F0YJthhOd/QbOT9YKyo4zEAy4B5Ob1BOlXMqOQ8qFmSeRWJYCXTVneU=
-X-Received: by 2002:a17:907:1ca3:b0:ad4:d00f:b4ca with SMTP id
- a640c23a62f3a-af619a0795cmr1505116566b.50.1753782801221; Tue, 29 Jul 2025
- 02:53:21 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1753785354; x=1754390154;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=nTPMGB6z2nyOCHdJ7CbXMpiw/sTsf8ojO933mhQUepA=;
+        b=THldnGqduwlwHZ/MgD5xo7cRPdRvpYbSccgUxX8h2w6iOfv2P3HQllX7fpM5b8CFdx
+         oI2I3TcJcs4cfwZKqHMFQF7BTR6n/biyqHSa+LvedJwVxz2YmfPBXX6h755F+lOynVuv
+         WD49pIGXKrcKlceS4jtDesb0wNOeuMCOOP2PDivotDal7tJwiT4ftC/KdyVRopVSDGVt
+         vUpTrYdOop3hR1fkeNmBAjX0ekzY3r0UZXGobayycrwNkh6mqQpOIsItSV1QcqAVrxe1
+         by2n3Wn4GhKN1y5Rz4NDUqrKo+F8Knr4A2vo68nyTW8+TIhyhGouDyPdlstUrH/lzGqe
+         dgwg==
+X-Forwarded-Encrypted: i=1; AJvYcCXgcV4q31lSq2RbGPtI3e46nzaBWQJpPEv9vZYl5czT5wKWAVUB7r4afS7WeGYF+BeX8ptrOYtgH+4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwGAfrlIuyD/qDicxP8J1NJAUlqcBR4UgB5dtfkiXxxNzs8YgZY
+	MzLS9RW1DkXiDo05ATJuaQPNOowMMTbG8fymSIvtmu2HXeYGdIevdJralhQvOB1GHaYA5u6IBTp
+	FmnN26jXLE7+vfM3cJ/QjxSS/r3mk+hdn1fDY/rAuk7hQpLNwvL1xsCPAeFMe
+X-Gm-Gg: ASbGncsYjujst42sODYu1xl6fjSfpRhb/KyMPEJMApSc4T5j8wdv9NGiUpm8iiZd8J3
+	P6HTv0GWEpdcSQZLtur3NWGzzjR0Qwati9pvo87PdG0VszalshJPf3l0uIBIfUrk5eKNeKZ/D8Q
+	I5XebeCS/AJDu5HVe6BPu2eW2+3DVo05XOWjTjpkaHua2ie+v1I1jVwY/Nbd9yNFyJS2ARpz66B
+	GjS6sG1jv5DroDig6TIutFfYkky9J8gxJKk4yXp37cS9NBdJaVfmB8e/M4g2e7Dw5bszs7tQ0nT
+	u/CdO6rlVpLMy16+M1SJa47MxdRqiejfo/MMm/JuqxBNFhpGk3+qGL/1t0Y=
+X-Received: by 2002:a17:907:7f0b:b0:ae0:a483:39bc with SMTP id a640c23a62f3a-af61960265emr1623453066b.46.1753785353622;
+        Tue, 29 Jul 2025 03:35:53 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFrTT+nSEpY2hTKBRWCIHp8//T157MzOq0SO4kMFDOhKTEbq9mH172vvX2jSKOC7gjPBDNa1Q==
+X-Received: by 2002:a17:907:7f0b:b0:ae0:a483:39bc with SMTP id a640c23a62f3a-af61960265emr1623449166b.46.1753785353121;
+        Tue, 29 Jul 2025 03:35:53 -0700 (PDT)
+Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-af635860003sm571051066b.10.2025.07.29.03.35.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Jul 2025 03:35:52 -0700 (PDT)
+Date: Tue, 29 Jul 2025 12:35:51 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christian Brauner <brauner@kernel.org>, fsverity@lists.linux.dev, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com, 
+	djwong@kernel.org, ebiggers@kernel.org, hch@lst.de, 
+	Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH RFC 03/29] fs: add FS_XFLAG_VERITY for verity files
+Message-ID: <ppcw73dlw4qdumbmel4spy2uvlaocnqfowquiop4mhauw3xxc4@kjad3vbucx7v>
+References: <20250728-fsverity-v1-0-9e5443af0e34@kernel.org>
+ <20250728-fsverity-v1-3-9e5443af0e34@kernel.org>
+ <CAOQ4uxjXucbQderHmkd7Dw9---U4hA7PjdgA7M7r5BZ+kXbKiQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250728-fsverity-v1-0-9e5443af0e34@kernel.org> <20250728-fsverity-v1-3-9e5443af0e34@kernel.org>
-In-Reply-To: <20250728-fsverity-v1-3-9e5443af0e34@kernel.org>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 29 Jul 2025 11:53:09 +0200
-X-Gm-Features: Ac12FXx2e9WU_rYdw6lpKj0TUobg7gmcCx3m27ycNICGFD2Gmpnq_21heHmT1Mk
-Message-ID: <CAOQ4uxjXucbQderHmkd7Dw9---U4hA7PjdgA7M7r5BZ+kXbKiQ@mail.gmail.com>
-Subject: Re: [PATCH RFC 03/29] fs: add FS_XFLAG_VERITY for verity files
-To: Andrey Albershteyn <aalbersh@redhat.com>, Christian Brauner <brauner@kernel.org>
-Cc: fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, david@fromorbit.com, djwong@kernel.org, 
-	ebiggers@kernel.org, hch@lst.de, Andrey Albershteyn <aalbersh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAOQ4uxjXucbQderHmkd7Dw9---U4hA7PjdgA7M7r5BZ+kXbKiQ@mail.gmail.com>
 
-On Mon, Jul 28, 2025 at 10:31=E2=80=AFPM Andrey Albershteyn <aalbersh@redha=
-t.com> wrote:
->
-> From: Andrey Albershteyn <aalbersh@redhat.com>
->
-> Add extended attribute FS_XFLAG_VERITY for inodes with fs-verity
-> enabled.
+On 2025-07-29 11:53:09, Amir Goldstein wrote:
+> On Mon, Jul 28, 2025 at 10:31 PM Andrey Albershteyn <aalbersh@redhat.com> wrote:
+> >
+> > From: Andrey Albershteyn <aalbersh@redhat.com>
+> >
+> > Add extended attribute FS_XFLAG_VERITY for inodes with fs-verity
+> > enabled.
+> 
+> Oh man! Please don't refer to this as an "extended attribute".
+> 
+> I was quite surprised to see actually how many times the term
+> "extended attribute" was used in commit messages in your series
+> that Linus just merged including 4 such references in the Kernel-doc
+> comments of security_inode_file_[sg]etattr(). :-/
 
-Oh man! Please don't refer to this as an "extended attribute".
+You can comment on this, I'm fine with fixing these, I definitely
+don't have all the context to know the best suitable terms.
 
-I was quite surprised to see actually how many times the term
-"extended attribute" was used in commit messages in your series
-that Linus just merged including 4 such references in the Kernel-doc
-comments of security_inode_file_[sg]etattr(). :-/
+> 
+> The terminology used in Documentation/filesystem/vfs.rst and fileattr.h
+> are some permutations of "miscellaneous file flags and attributes".
+> Not perfect, but less confusing than "extended attributes", which are
+> famously known as something else.
 
-The terminology used in Documentation/filesystem/vfs.rst and fileattr.h
-are some permutations of "miscellaneous file flags and attributes".
-Not perfect, but less confusing than "extended attributes", which are
-famously known as something else.
+Yeah sorry, it's very difficult to find out what is named how and
+what is outdated.
 
->
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> [djwong: fix broken verity flag checks]
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> ---
->  Documentation/filesystems/fsverity.rst |  8 ++++++++
->  fs/ioctl.c                             | 11 +++++++++++
->  include/uapi/linux/fs.h                |  1 +
->  3 files changed, 20 insertions(+)
->
-> diff --git a/Documentation/filesystems/fsverity.rst b/Documentation/files=
-ystems/fsverity.rst
-> index dacdbc1149e6..33b588c32ed1 100644
-> --- a/Documentation/filesystems/fsverity.rst
-> +++ b/Documentation/filesystems/fsverity.rst
-> @@ -342,6 +342,14 @@ the file has fs-verity enabled.  This can perform be=
-tter than
->  FS_IOC_GETFLAGS and FS_IOC_MEASURE_VERITY because it doesn't require
->  opening the file, and opening verity files can be expensive.
->
-> +FS_IOC_FSGETXATTR
-> +-----------------
-> +
-> +Since Linux v6.17, the FS_IOC_FSGETXATTR ioctl sets FS_XFLAG_VERITY (0x0=
-0020000)
-> +in the returned flags when the file has verity enabled. Note that this a=
-ttribute
-> +cannot be set with FS_IOC_FSSETXATTR as enabling verity requires input
-> +parameters. See FS_IOC_ENABLE_VERITY.
-> +
->  .. _accessing_verity_files:
->
->  Accessing verity files
-> diff --git a/fs/ioctl.c b/fs/ioctl.c
-> index 69107a245b4c..6b94da2b93f5 100644
-> --- a/fs/ioctl.c
-> +++ b/fs/ioctl.c
-> @@ -480,6 +480,8 @@ void fileattr_fill_xflags(struct fileattr *fa, u32 xf=
-lags)
->                 fa->flags |=3D FS_DAX_FL;
->         if (fa->fsx_xflags & FS_XFLAG_PROJINHERIT)
->                 fa->flags |=3D FS_PROJINHERIT_FL;
-> +       if (fa->fsx_xflags & FS_XFLAG_VERITY)
-> +               fa->flags |=3D FS_VERITY_FL;
->  }
->  EXPORT_SYMBOL(fileattr_fill_xflags);
->
-> @@ -510,6 +512,8 @@ void fileattr_fill_flags(struct fileattr *fa, u32 fla=
-gs)
->                 fa->fsx_xflags |=3D FS_XFLAG_DAX;
->         if (fa->flags & FS_PROJINHERIT_FL)
->                 fa->fsx_xflags |=3D FS_XFLAG_PROJINHERIT;
-> +       if (fa->flags & FS_VERITY_FL)
-> +               fa->fsx_xflags |=3D FS_XFLAG_VERITY;
->  }
->  EXPORT_SYMBOL(fileattr_fill_flags);
->
+I will update commit messages to "file flags".
 
-I think you should add it to FS_COMMON_FL/FS_XFLAG_COMMON?
-
-And I guess also to FS_XFLAGS_MASK/FS_XFLAG_RDONLY_MASK
-after rebasing to master.
-
-> @@ -640,6 +644,13 @@ static int fileattr_set_prepare(struct inode *inode,
->             !(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
->                 return -EINVAL;
->
-> +       /*
-> +        * Verity cannot be changed through FS_IOC_FSSETXATTR/FS_IOC_SETF=
-LAGS.
-> +        * See FS_IOC_ENABLE_VERITY.
-> +        */
-> +       if ((fa->fsx_xflags ^ old_ma->fsx_xflags) & FS_XFLAG_VERITY)
+> 
+> >
+> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> > [djwong: fix broken verity flag checks]
+> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> > ---
+> >  Documentation/filesystems/fsverity.rst |  8 ++++++++
+> >  fs/ioctl.c                             | 11 +++++++++++
+> >  include/uapi/linux/fs.h                |  1 +
+> >  3 files changed, 20 insertions(+)
+> >
+> > diff --git a/Documentation/filesystems/fsverity.rst b/Documentation/filesystems/fsverity.rst
+> > index dacdbc1149e6..33b588c32ed1 100644
+> > --- a/Documentation/filesystems/fsverity.rst
+> > +++ b/Documentation/filesystems/fsverity.rst
+> > @@ -342,6 +342,14 @@ the file has fs-verity enabled.  This can perform better than
+> >  FS_IOC_GETFLAGS and FS_IOC_MEASURE_VERITY because it doesn't require
+> >  opening the file, and opening verity files can be expensive.
+> >
+> > +FS_IOC_FSGETXATTR
+> > +-----------------
+> > +
+> > +Since Linux v6.17, the FS_IOC_FSGETXATTR ioctl sets FS_XFLAG_VERITY (0x00020000)
+> > +in the returned flags when the file has verity enabled. Note that this attribute
+> > +cannot be set with FS_IOC_FSSETXATTR as enabling verity requires input
+> > +parameters. See FS_IOC_ENABLE_VERITY.
+> > +
+> >  .. _accessing_verity_files:
+> >
+> >  Accessing verity files
+> > diff --git a/fs/ioctl.c b/fs/ioctl.c
+> > index 69107a245b4c..6b94da2b93f5 100644
+> > --- a/fs/ioctl.c
+> > +++ b/fs/ioctl.c
+> > @@ -480,6 +480,8 @@ void fileattr_fill_xflags(struct fileattr *fa, u32 xflags)
+> >                 fa->flags |= FS_DAX_FL;
+> >         if (fa->fsx_xflags & FS_XFLAG_PROJINHERIT)
+> >                 fa->flags |= FS_PROJINHERIT_FL;
+> > +       if (fa->fsx_xflags & FS_XFLAG_VERITY)
+> > +               fa->flags |= FS_VERITY_FL;
+> >  }
+> >  EXPORT_SYMBOL(fileattr_fill_xflags);
+> >
+> > @@ -510,6 +512,8 @@ void fileattr_fill_flags(struct fileattr *fa, u32 flags)
+> >                 fa->fsx_xflags |= FS_XFLAG_DAX;
+> >         if (fa->flags & FS_PROJINHERIT_FL)
+> >                 fa->fsx_xflags |= FS_XFLAG_PROJINHERIT;
+> > +       if (fa->flags & FS_VERITY_FL)
+> > +               fa->fsx_xflags |= FS_XFLAG_VERITY;
+> >  }
+> >  EXPORT_SYMBOL(fileattr_fill_flags);
+> >
+> 
+> I think you should add it to FS_COMMON_FL/FS_XFLAG_COMMON?
+> 
+> And I guess also to FS_XFLAGS_MASK/FS_XFLAG_RDONLY_MASK
+> after rebasing to master.
+> 
+> > @@ -640,6 +644,13 @@ static int fileattr_set_prepare(struct inode *inode,
+> >             !(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
+> >                 return -EINVAL;
+> >
+> > +       /*
+> > +        * Verity cannot be changed through FS_IOC_FSSETXATTR/FS_IOC_SETFLAGS.
+> > +        * See FS_IOC_ENABLE_VERITY.
+> > +        */
+> > +       if ((fa->fsx_xflags ^ old_ma->fsx_xflags) & FS_XFLAG_VERITY)
+> > +               return -EINVAL;
+> > +
+> 
+> I think that after rebase, if you add the flag to FS_XFLAG_RDONLY_MASK
+> This check will fail, so can either remove this check and ignore user trying to
+> set FS_XFLAG_VERITY, same as if user was trying to set FS_XFLAG_HASATTR.
+> or, as I think Darrick may have suggested during review, we remove the masking
+> of FS_XFLAG_RDONLY_MASK in the fill helpers and we make this check more
+> generic here:
+> 
+> +       if ((fa->fsx_xflags ^ old_ma->fsx_xflags) & FS_XFLAG_RDONLY_MASK)
 > +               return -EINVAL;
-> +
 
-I think that after rebase, if you add the flag to FS_XFLAG_RDONLY_MASK
-This check will fail, so can either remove this check and ignore user tryin=
-g to
-set FS_XFLAG_VERITY, same as if user was trying to set FS_XFLAG_HASATTR.
-or, as I think Darrick may have suggested during review, we remove the mask=
-ing
-of FS_XFLAG_RDONLY_MASK in the fill helpers and we make this check more
-generic here:
+Sure, will look into that in the next revision, I haven't used the
+latest master, so this wasn't updated
 
-+       if ((fa->fsx_xflags ^ old_ma->fsx_xflags) & FS_XFLAG_RDONLY_MASK)
-+               return -EINVAL;
+> 
+> Thanks,
+> Amir.
+> 
 
-Thanks,
-Amir.
+-- 
+- Andrey
+
