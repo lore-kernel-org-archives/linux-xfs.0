@@ -1,37 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE3B71E51F6;
-	Tue, 29 Jul 2025 20:08:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4B4B1E51F6;
+	Tue, 29 Jul 2025 20:08:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753819709; cv=none; b=BRo2yzY2TluiiWU9uUqE7yHmj7lBcHMh42NB4b5FjRpyeWF5ashPTthPg4HAx9SNC2yRMvaCUZml0UsCVdZ5zNZOfS28ZywHnOq0RurwIWwedGVpQDBTLWYGIFtpBF6ugImMjCasUXijFdSPjyNwr6GWhrDgf5INABJUnMF4K1s=
+	t=1753819715; cv=none; b=SDTaCdYZ0Osjzfl9pHR6RPC04Fm3NuTQ2PXTm5xTPY7kbe20TfR05IsCcCgGDQjeG/J8gl+IxRKcoKdNUW3U+qwWE9HepvkPOTJQvtHXGLdWRTiT4kqmZKuDmdzN1XWq0c/gcVFgS1svcZnUu2ifvcXfyX7LmMyr+yvhoDLWs4M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753819709; c=relaxed/simple;
-	bh=fsWjrguQEbFLlD+9NMF3vDmIOfUZC+wQaxyCMqZPVHM=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=gKlyMBG2GzWWbTUAoQFj0sX4OW+PtW7iLkMYkcHvVA2mo00XoOxDearz3d7V3Q+KDNFYveTK1++xHIvdzYk0LUNkLTPgmniHppN1I+i+9RbMoBZsXrXJrwdF5aaIbX0ag+lCuXD+PbNIMnAIwyF2tttEk/CbI5oCO+Ttf9OXTSc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TxbKeCNI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1753819715; c=relaxed/simple;
+	bh=yT1fwgoLECFUrKTllBrUw8+0bBnjzRTJzDFA13LQ9tQ=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=OqMdx/FxcL18SswVfG+JmAlHTt232E5Df621ZXtOX2p/OWpQ37nCalHg/VqNzMgVd0rfHfsEuFGE1Rjd3Jsejh61oRUOtlyT5qOaEbDamBuTN315RNkb+6EJbZM/sriRjtN1EWl35SWImfeJZrO+NuhMEwK0OCo/6fGjUyk3IM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xyr+1vDw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TxbKeCNI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B1B5C4CEF6;
-	Tue, 29 Jul 2025 20:08:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xyr+1vDw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F1E5C4CEF7;
+	Tue, 29 Jul 2025 20:08:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753819709;
-	bh=fsWjrguQEbFLlD+9NMF3vDmIOfUZC+wQaxyCMqZPVHM=;
+	s=k20201202; t=1753819715;
+	bh=yT1fwgoLECFUrKTllBrUw8+0bBnjzRTJzDFA13LQ9tQ=;
 	h=Date:Subject:From:To:Cc:From;
-	b=TxbKeCNIMZBoQVaoAONI8RCPYUiKisWmJpPWeUqsGrPqODXsojrXF8pVr1Swj0bro
-	 HvlMMpemsGP6VDtfhLaOtmsaGzf5pxgXTwy2SfOEjpBA03hoOpN/chu9DUTGBB65ny
-	 iar0oG5J71BvL8Hzp3j5yaUCvW0o/BXO8qhiWXMrMIyBqNbGJrQu7oF6qxARa1tJOw
-	 jaBHwiCab+K3y2fyGAHOxF7rw/NXPMjhzmgJSqQUmzLD0kpdAqGlGzBtv2VGtYecRo
-	 OpDiix1CDsdK4zoonU6Bp9FJ3BHEv7nnGXkvYt9flDoFF8dulyFyS/u4mOf8idpO9g
-	 x/hfZztaSyl4A==
-Date: Tue, 29 Jul 2025 13:08:28 -0700
-Subject: [PATCHSET 1/3] fstests: fixes for atomic writes tests
+	b=Xyr+1vDwfltbPBYAqG2QFZg6qRvhZcH93RfIatRaro7J7waYStLxn1E9f9uBJT10r
+	 XNAwErckMeGUAkM6n2/ylabziiheAW60t210Sgi+12g6KnDCuq/7LaylTXnLM2DDJW
+	 mOr6SwTgQI3MxaiJ8oI3hRx1+XcHysWN3EufnwDA/+4dw6/f+Rs0voUas4eWQ7zmi8
+	 1wg654hp8YWfQCbCg/q5jCMdegnpqMCM6xiOwZKvaOgEOkpmsulHcJeah7x70IRE5m
+	 go+LNpkzSnl+6HycAybfxub5i4yZdsb3RIdPB8gavQF5ieiDIN159AVfxtqJGAQZA0
+	 2eRk9X3lADn6w==
+Date: Tue, 29 Jul 2025 13:08:34 -0700
+Subject: [PATCHSET 2/3] fstests: check new 6.15 behaviors
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
-Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
- linux-xfs@vger.kernel.org
-Message-ID: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <175381958191.3021057.13973475638062852804.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,36 +42,28 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Here's a pile of bug fixes for the atomic writes tests.
+Adjust fstests to check for new behaviors introduced in 6.15.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
 
-This has been running on the djcloud for months with no problems.  Enjoy!
+With a bit of luck, this should all go splendidly.
 Comments and questions are, as always, welcome.
 
 --D
 
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=atomic-writes
-
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=atomic-writes
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=linux-6.15-sync
 ---
 Commits in this patchset:
- * generic/211: don't run on an xfs that can't do inplace writes
- * generic/427: try to ensure there's some free space before we do the aio test
- * generic/767: require fallocate support
- * generic/767: only test the hardware atomic write unit
- * generic/767: allow on any atomic writes filesystem
- * xfs/838: actually force usage of the realtime device
- * common: fix _require_xfs_io_command pwrite -A for various blocksizes
+ * xfs/259: try to force loop device block size
+ * xfs/432: fix metadump loop device blocksize problems
 ---
- common/atomicwrites |    6 ++++++
- common/rc           |   14 +++++++++++---
- tests/generic/211   |    6 ++++++
- tests/generic/427   |    5 +++++
- tests/generic/767   |   19 +++++++++++++++----
- tests/xfs/838       |    1 +
- 6 files changed, 44 insertions(+), 7 deletions(-)
+ common/metadump   |   12 ++++++++----
+ common/rc         |   37 ++++++++++++++++++++++++++++++++++---
+ tests/generic/563 |    2 +-
+ tests/xfs/078     |    4 ++--
+ tests/xfs/259     |    2 +-
+ tests/xfs/613     |    3 ++-
+ 6 files changed, 48 insertions(+), 12 deletions(-)
 
