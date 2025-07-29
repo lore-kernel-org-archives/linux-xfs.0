@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FB132BDC1D;
-	Tue, 29 Jul 2025 20:10:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E37A61F956;
+	Tue, 29 Jul 2025 20:10:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753819837; cv=none; b=gq+zYtWCgzelbWz+2Y1at/74JYgXOmrUtUbrrTtlKcXBcU43wX5cHFtVt0lYZm1UwwSmnWx7T9lrGLTTr6zU82UtQ1EZkjEZHZckw40RgwbhCVFbPpsOx+QfthSHOFnVd/JxK9jA6vBtvGqx/KmBj9YHyHg03ro9OOC4aRREFQ4=
+	t=1753819852; cv=none; b=S0v+OsgsAccMsui7IXDEDUpDNN6CZBlOoQBa/eHCmu4+k4KnL/Grv4BaaNPFm6hWY5CbzEtWn2LrOI+QzRufQkhLcCRrAp4fZTiSt8tc5qOrjtPJtcqHqhl9uO8Xs1FvFSwAG63yRPUwhytTAHYlAP50OSOqqvjmWTaoM+nDe6I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753819837; c=relaxed/simple;
-	bh=mkM/4oTPkGuVFiCg1THma3BEAP4D/4KFHify4SIUGfs=;
+	s=arc-20240116; t=1753819852; c=relaxed/simple;
+	bh=eFMH2R/0KfUawUidYMXBLYMCF4XzE8uF70j6RwFFoMU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kTsCare/+xMyhU+YNuiYu2+cK3JMEY348zdLU3usn0794f+VyKlRZYCeWiIvg7y5Y14CMHnwYV6ECATLrGgtvRQ4Q+7SrCiR+tspi5feVU6PNhcB0IqscF6DVrRCt7/lhfNLDp4Cf7HBm7P0iCZYVegHrD/e4hs+GUuWoKTzwvc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BMpDfChE; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Fs/68SiBnvnqu0/1elwfR9gKspzBwz1pSIoQKDFR3U2jA52q1aK33cEEkkiHjGQvhbjaEgszOopwxNUUtKBQpa1ZwvMXoQof8QE3IZcFqnk4P261ZEgTE5NHTm6YS9oc6MOUROynRUdlW3WngAEze+Umn0lN8Y8TARQka6lzIPk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SY0jHdTp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BMpDfChE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0EF3C4CEF7;
-	Tue, 29 Jul 2025 20:10:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SY0jHdTp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 735B3C4CEEF;
+	Tue, 29 Jul 2025 20:10:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753819835;
-	bh=mkM/4oTPkGuVFiCg1THma3BEAP4D/4KFHify4SIUGfs=;
+	s=k20201202; t=1753819851;
+	bh=eFMH2R/0KfUawUidYMXBLYMCF4XzE8uF70j6RwFFoMU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=BMpDfChElH4pQUNRYRRpIBZITVZhTvp3kKQcsGWC3ZwPK/TahjBv+lPPXV8os4VP/
-	 ceuw6ePGFWQhyhAScvrc43qq4qZDDZ32Ag6mhvW+x1TwnJrQ1nXj66RK4re358g0qV
-	 aasHYBgg39GLL7Zzx0x/PGHsiSlbBolaaPoGJYwqG58sBR47wD1d5bGN8Eust4JlDB
-	 AcqFQmCOHFSa2YrGwikBMkj2QNmenwMWIA7RDOKUsYBElHOxpMhjaaisTNbLDsj8tE
-	 5v3eyO2VF6SeyR6Ixo3MQCqoMMDwKguxG319VC+nLgVc9u1VuuY8wEUEpY1mP318lM
-	 vV3R2/UN8d1kg==
-Date: Tue, 29 Jul 2025 13:10:35 -0700
-Subject: [PATCH 2/2] xfs/432: fix metadump loop device blocksize problems
+	b=SY0jHdTpi2v4SFxTM8gmc+lNGrUIvIs09oDfiuwSx6aPx2Pt7ZIzBs9pnEbx+jZlr
+	 r4CeQ0iK/ov0VjtXtNwkE80uQ8Sw2EsY9FNU3G0JP09raMAN6iQPJqGp3ZdLgL0IFr
+	 dJwlQiWXaeyl2b2CI5SNUgxnM+GVMrVnQ1k74ba2ySj+2HM8TcLiID9X+yVf2OJW6Y
+	 VI+3bvNk4bLWWAJ4DHRuFya25vUS0gLjpulsNDNcB3G2uzD2YXi1Z6dRa1skAQjW4Q
+	 8dPOuL1CtEVqHyeHP7ir0t0HWkxmxAYPhWwvDfq4q8iQI7XHF/z/VEFixxPuCMQwbf
+	 O4KH3V2c0+AHw==
+Date: Tue, 29 Jul 2025 13:10:50 -0700
+Subject: [PATCH 1/2] fsstress: don't abort when stat(".") returns EIO
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <175381958234.3021057.8571406990911180650.stgit@frogsfrogsfrogs>
-In-Reply-To: <175381958191.3021057.13973475638062852804.stgit@frogsfrogsfrogs>
-References: <175381958191.3021057.13973475638062852804.stgit@frogsfrogsfrogs>
+Message-ID: <175381958421.3021194.16249782318690545446.stgit@frogsfrogsfrogs>
+In-Reply-To: <175381958396.3021194.15630936445319512317.stgit@frogsfrogsfrogs>
+References: <175381958396.3021194.15630936445319512317.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,91 +45,66 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure the lba size of the loop devices created for the metadump
-tests actually match that of the real SCRATCH_ devices or else the tests
-will fail.
+First, start with the premise that fstests is run with a nonzero limit
+on the size of core dumps so that we can capture the state of
+misbehaving fs utilities like fsck and scrub if they crash.
+
+When fsstress is compiled with DEBUG defined (which is the default), it
+will periodically call check_cwd to ensure that the current working
+directory hasn't changed out from underneath it.
+
+If the filesystem is XFS and it shuts down, the stat64() calls will
+start returning EIO.  In this case, we follow the out: label and call
+abort() to exit the program.  Historically this did not produce any core
+dumps because $PWD is on the dead filesystem and the write fails.
+
+However, modern systems are often configured to capture coredumps using
+some external mechanism, e.g. abrt/systemd-coredump.   In this case, the
+capture tool will succeeds in capturing every crashed process, which
+fills the crash dump directory with a lot of useless junk.  Worse, if
+the capture tool is configured to pass the dumps to fstests, it will
+flag the test as failed because something dumped core.
+
+This is really silly, because basic stat requests for the current
+working directory can be satisfied from the inode cache without a disk
+access.  In this narrow situation, EIO only happens when the fs has shut
+down, so just exit the program.
+
+We really should have a way to query if a filesystem is shut down that
+isn't conflated with (possibly transient) EIO errors.  But for now this
+is what we have to do. :(
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- common/metadump   |   12 ++++++++----
- common/rc         |   17 +++++++++++++++++
- tests/generic/563 |    2 +-
- 3 files changed, 26 insertions(+), 5 deletions(-)
+ ltp/fsstress.c |   15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
 
-diff --git a/common/metadump b/common/metadump
-index 61ba3cbb91647c..d411bc0d32d792 100644
---- a/common/metadump
-+++ b/common/metadump
-@@ -75,7 +75,7 @@ _xfs_verify_metadump_v1()
- 	SCRATCH_DEV=$data_img _scratch_xfs_mdrestore $metadump_file
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index 8dbfb81f95a538..d4abe561787f19 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -1049,8 +1049,21 @@ check_cwd(void)
  
- 	# Create loopdev for data device so we can mount the fs
--	METADUMP_DATA_LOOP_DEV=$(_create_loop_device $data_img)
-+	METADUMP_DATA_LOOP_DEV=$(_create_loop_device_like_bdev $data_img $SCRATCH_DEV)
- 
- 	# Mount fs, run an extra test, fsck, and unmount
- 	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV _scratch_mount
-@@ -122,13 +122,17 @@ _xfs_verify_metadump_v2()
- 		_scratch_xfs_mdrestore $metadump_file
- 
- 	# Create loopdev for data device so we can mount the fs
--	METADUMP_DATA_LOOP_DEV=$(_create_loop_device $data_img)
-+	METADUMP_DATA_LOOP_DEV=$(_create_loop_device_like_bdev $data_img $SCRATCH_DEV)
- 
- 	# Create loopdev for log device if we recovered anything
--	test -s "$log_img" && METADUMP_LOG_LOOP_DEV=$(_create_loop_device $log_img)
-+	if [ -s "$log_img" ]; then
-+		METADUMP_LOG_LOOP_DEV=$(_create_loop_device_like_bdev $log_img $SCRATCH_LOGDEV)
-+	fi
- 
- 	# Create loopdev for rt device if we recovered anything
--	test -s "$rt_img" && METADUMP_RT_LOOP_DEV=$(_create_loop_device $rt_img)
-+	if [ -s "$rt_img" ]; then
-+		METADUMP_RT_LOOP_DEV=$(_create_loop_device_like_bdev $rt_img $SCRATCH_RTDEV)
-+	fi
- 
- 	# Mount fs, run an extra test, fsck, and unmount
- 	SCRATCH_DEV=$METADUMP_DATA_LOOP_DEV SCRATCH_LOGDEV=$METADUMP_LOG_LOOP_DEV SCRATCH_RTDEV=$METADUMP_RT_LOOP_DEV _scratch_mount
-diff --git a/common/rc b/common/rc
-index b3f63111c6ea6c..04b721b7318a7e 100644
---- a/common/rc
-+++ b/common/rc
-@@ -4608,6 +4608,23 @@ _create_loop_device()
- 	echo $dev
- }
- 
-+# Create a loop device from a given file and configure it to support the same
-+# sector size as the given block device.
-+_create_loop_device_like_bdev()
-+{
-+	local file=$1
-+	local bdev=$2
-+	local dev
-+	local blksize
+ 	ret = stat64(".", &statbuf);
+ 	if (ret != 0) {
++		int error = errno;
 +
-+	test -b "$bdev" || \
-+		_fail "$file: must be a block device"
+ 		fprintf(stderr, "fsstress: check_cwd stat64() returned %d with errno: %d (%s)\n",
+-			ret, errno, strerror(errno));
++			ret, error, strerror(error));
 +
-+	blksize="$(blockdev --getss "$bdev")"
++		/*
++		 * The current working directory is pinned in memory, which
++		 * means that stat should not have had to do any disk accesses
++		 * to retrieve stat information.  Treat an EIO as an indication
++		 * that the filesystem shut down and exit instead of dumping
++		 * core like the abort() below does.
++		 */
++		if (error == EIO)
++			exit(1);
 +
-+	_create_loop_device "$file" "$blksize"
-+}
-+
- _destroy_loop_device()
- {
- 	local dev=$1
-diff --git a/tests/generic/563 b/tests/generic/563
-index 89a71aa44938ea..a43ffcbd127e17 100755
---- a/tests/generic/563
-+++ b/tests/generic/563
-@@ -91,7 +91,7 @@ reset()
- 
- # cgroup I/O accounting doesn't work on partitions. Use a loop device to rule
- # that out.
--loop_dev=$(_create_loop_device $SCRATCH_DEV)
-+loop_dev=$(_create_loop_device_like_bdev $SCRATCH_DEV $SCRATCH_DEV)
- smajor=$((0x`stat -L -c %t $loop_dev`))
- sminor=$((0x`stat -L -c %T $loop_dev`))
+ 		goto out;
+ 	}
  
 
