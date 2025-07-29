@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D1C12571C3;
-	Tue, 29 Jul 2025 20:09:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B2821F956;
+	Tue, 29 Jul 2025 20:10:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753819789; cv=none; b=fNZiS40AN8pJCVipBbQY3b+xyvL4jvLAJurGNmtrPcQgSQpBpOvmFf74SmP9ylOJj65B6U+z4JQk8ifKH3YoLkhMoqClNISUIr4h/SoemD6ysHSNUKvWIyVuZpGvt9xFmw1ye0iE/ctgLLIXRseOzqfHue8asevPK/s/tQCfr+8=
+	t=1753819806; cv=none; b=PDmaeMiLXPeHUdAgCVhQSAEzM0zhwrfMhpDEkTb9yzxO5I3MwoK4q9U+0bNuKMv0bhezZ5+RToINLi7JFbdta0hWMtLFg3PzRdstBoir25Zv486bcMjrMJh2rF5qwN+Y+07riLGdZl/m2YsazbCBnTNR9a6069aKBtgB3/sRY58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753819789; c=relaxed/simple;
-	bh=U14m81c6SpDL3KOSbnQNUlbuP1kXEcn40Irqpzq1ab8=;
+	s=arc-20240116; t=1753819806; c=relaxed/simple;
+	bh=/1FzX0dBfAi/RWYdYBLB5YlRM0sEY73pcpIxW1Js3dA=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WrYEZx13O9J3w0selEw6yXQ8gmnbxY31FNuSxbm+qFH1hodvHz60DzCVPKm5hl5UBjb71BlEDjqEIKgnsxnFB6VLWJJfdl5B8HamiDxOopq9dqyG0tkidnZvAy5skKmsA7m4egmSRmreI7eNVX4QpU6MrtOQTW1QjVG6RgxSXwA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jCpka+Ra; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=c9jSa8+0yw4PjXR5F4QURJnrn1rPr/oSWA5t9erAPR/8Gz5jrgu9lHLa+5PgRhCeQy2IGURpr8L+LkypB3aGzAFCxO7qc14BjHaHuapCr8q2Ey0TjbptLa6GFie6RbIPBMmnMaw3bzeF85LuVIhkO13oNb+T4DEFHbWxg331XnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W1Oc8XiV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jCpka+Ra"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D71C9C4CEEF;
-	Tue, 29 Jul 2025 20:09:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W1Oc8XiV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85F4BC4CEEF;
+	Tue, 29 Jul 2025 20:10:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753819788;
-	bh=U14m81c6SpDL3KOSbnQNUlbuP1kXEcn40Irqpzq1ab8=;
+	s=k20201202; t=1753819804;
+	bh=/1FzX0dBfAi/RWYdYBLB5YlRM0sEY73pcpIxW1Js3dA=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=jCpka+RaIrQaCKVr37H930FztgERtAPPNRXUXlY+lN3AmTxii1FmoRXtJM9phBnw9
-	 OcdkK/Pnz/ysdpLMtGDBybsn8VAYb0/zCSV4irHn86hvtdiPC+Kz2BSPGAcXIrEEZd
-	 Qh7kN+YqigIMl6XbXOa5PtEURPTKESelAPk8Vy56mm0NZTow+zIlboLZaTOAc4qdwN
-	 qw+Kt9N1HMFcXVCdOBiEZFXPleW1W2BoQGZnPa+VAh8sOAMQ2DOX/Rba3B+VM/9KHi
-	 GjOZxlp9CNBcET46JZlQ3swnFcoVKPZqu+0fhTPYBmrCcV/UYvhA2FDtM0DvQPs9/5
-	 I7lV4/O1omY6A==
-Date: Tue, 29 Jul 2025 13:09:48 -0700
-Subject: [PATCH 6/7] xfs/838: actually force usage of the realtime device
+	b=W1Oc8XiVgEsY6yLfI/Z0fIRE6xsysqUc6wMDlzSSthlkJD/bujACqtK4d6arFql6L
+	 KgNbnrQsScjr7k/dvpwfA4C6AiaeFxB9ERVdKFCvnF93DzdMjGrM44j8wpn21jVX3Y
+	 3OmvLgPuQPtuEGuNgKy9oZz8eRpU61BX0uDz81QtDOca7xFkz/lpE134Kt3HozDBjr
+	 yCeFeIY3eAIyI49j38KvUl/Zc9/rKm85Q1NfRooxYYs0XQUOjbM95l1K4ez4DvC2mh
+	 kpMQ0XCM8zVRDB5MJ6U4DAK0hXrS7TmyvAtCFYvgbnmyhI/x4aWRKfw7wf+jFnMnDL
+	 G99WRHUrnE6yg==
+Date: Tue, 29 Jul 2025 13:10:04 -0700
+Subject: [PATCH 7/7] common: fix _require_xfs_io_command pwrite -A for various
+ blocksizes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
  linux-xfs@vger.kernel.org
-Message-ID: <175381958010.3020742.15091248211656555031.stgit@frogsfrogsfrogs>
+Message-ID: <175381958029.3020742.354788781592227856.stgit@frogsfrogsfrogs>
 In-Reply-To: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
 References: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,27 +47,49 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Actually force the filesystem to create testfile as a realtime file so
-that the test does anything useful.
+In this predicate, we should test an atomic write of the minimum
+supported size, not just 4k.  This fixes a problem where none of the
+atomic write tests actually run on a 32k-fsblock xfs because you can't
+do a sub-fsblock atomic write.
 
-Cc: <fstests@vger.kernel.org> # v2025.07.13
-Fixes: 7ca990e22e0d61 ("xfs: more multi-block atomic writes tests")
+Cc: <fstests@vger.kernel.org> # v2025.04.13
+Fixes: d90ee3b6496346 ("generic: add a test for atomic writes")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/xfs/838 |    1 +
- 1 file changed, 1 insertion(+)
+ common/rc |   14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
 
-diff --git a/tests/xfs/838 b/tests/xfs/838
-index 73e91530b53a67..84e6a750eb07ab 100755
---- a/tests/xfs/838
-+++ b/tests/xfs/838
-@@ -23,6 +23,7 @@ $XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $SCRATCH_RTDEV >> $seqres.full
- 
- _scratch_mkfs >> $seqres.full
- _scratch_mount
-+_xfs_force_bdev realtime $SCRATCH_MNT
- 
- testfile=$SCRATCH_MNT/testfile
- touch $testfile
+diff --git a/common/rc b/common/rc
+index 96578d152dafb9..177e7748f4bb89 100644
+--- a/common/rc
++++ b/common/rc
+@@ -3027,16 +3027,24 @@ _require_xfs_io_command()
+ 	"pwrite")
+ 		# -N (RWF_NOWAIT) only works with direct vectored I/O writes
+ 		local pwrite_opts=" "
++		local write_size="4k"
+ 		if [ "$param" == "-N" ]; then
+ 			opts+=" -d"
+-			pwrite_opts+="-V 1 -b 4k"
++			pwrite_opts+="-V 1 -b $write_size"
+ 		fi
+ 		if [ "$param" == "-A" ]; then
+ 			opts+=" -d"
+-			pwrite_opts+="-V 1 -b 4k"
++			# try to write the minimum supported atomic write size
++			write_size="$($XFS_IO_PROG -f -c "statx -r -m $STATX_WRITE_ATOMIC" $testfile 2>/dev/null | \
++				grep atomic_write_unit_min | \
++				grep -o '[0-9]\+')"
++			if [ -z "$write_size" ] || [ "$write_size" = "0" ]; then
++				write_size="0 --not-supported"
++			fi
++			pwrite_opts+="-V 1 -b $write_size"
+ 		fi
+ 		testio=`$XFS_IO_PROG -f $opts -c \
+-		        "pwrite $pwrite_opts $param 0 4k" $testfile 2>&1`
++		        "pwrite $pwrite_opts $param 0 $write_size" $testfile 2>&1`
+ 		param_checked="$pwrite_opts $param"
+ 		;;
+ 	"scrub"|"repair")
 
