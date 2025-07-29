@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 018521E51F6;
-	Tue, 29 Jul 2025 20:08:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 909BD1E51F6;
+	Tue, 29 Jul 2025 20:09:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753819727; cv=none; b=LFz44MADtAthyosDflwAanpGk2+F1W4iSCHt48BqD5iceCienfKWkkBHa2lEoxbDmd6X0m6njr7yGbunDgzpoTUf0jzclhSPgmK+28c7RpttIIByvpQw5n26iWiM6crh8TCaw0YRabisYt+65j/iqTZqE+JKPL1dwZ9ubvA8Ptc=
+	t=1753819742; cv=none; b=saQT09H7P6+QkSzrIN0Y3ht1NwvOBOFabhXX2yTlqNZ+cD/82Pf15iuaXOXK6BmPu3thvuVBokzpDj/AHXQAbBfNn144C7nADURaNPfO7KlXw20QaPf+HkcJYgUgi8Bwfut5Rq/9L0P6mtiygT5K3kYW+x6/V6qzUYp3yzW6ogA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753819727; c=relaxed/simple;
-	bh=4j9iKrCfCYDTYQnW7UGtDFlQMuPs6L5J+634ra8rYr0=;
+	s=arc-20240116; t=1753819742; c=relaxed/simple;
+	bh=xQRuJbk4y32m4ZZf6Cm9K/QFH6QbQlSLWCVrMiniktU=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fO79OnP5V4MUhtW770tiuPicJnrhE9gbUhPHpIxzKxmFeNLYNqd+k3X6kcroFE8v/YBIxoDMR0a1cRA+YmoTkNjvZag/mZwsl/OhxnxijT0pjyjX7KiqS3Y0fosy/ZqgKY1k8W9ppB4fmBk4THDwyP2log64je/CEEgJ3PuJphs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CnSAipB9; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Kw8wr+Pkhsf/VNfhasbQsLE08LoxnYMsYplONfXIEUFQuPt6oxmMIdh24466xyR55LPJ/+A9LYSrKoYdcZeSVG4P6V7DYxRGVet+G4YWtiTKUv42G1A6kU6Pe6f60vHnnHt0/Wp5XHDX8ocj+dyGVnIh53XdM4FD0HKTfs5KCJI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UFNJj12f; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CnSAipB9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7537DC4CEF6;
-	Tue, 29 Jul 2025 20:08:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UFNJj12f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13F92C4CEF6;
+	Tue, 29 Jul 2025 20:09:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753819726;
-	bh=4j9iKrCfCYDTYQnW7UGtDFlQMuPs6L5J+634ra8rYr0=;
+	s=k20201202; t=1753819742;
+	bh=xQRuJbk4y32m4ZZf6Cm9K/QFH6QbQlSLWCVrMiniktU=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CnSAipB9gaDHz9jQzBKkhdE1IES5BKHO7ThdygHqzQVBOwvCsoSstEFWVDVRsUDWs
-	 jQszNdaA2xq3tzB89Lq2aUDpsSdbzYJW/su8LELD/llTC4qoW6ZjmkXaCoXU/ZB3nZ
-	 2JVQxoLiz6oexjm9TDLuuRLA9JlGyW7wDLMj+cTHPXQKveQDZ2o/WGdg/4+9OoFb+S
-	 TfSsYjJaV3jYnNTYesS7sj9Lqmmx8yEbsjnJGX/BZHdppdpA8MS8jX6R+IoBPc2MbV
-	 IagNK5mXNnMv3+HLz06VaErvAOdmP1sOPoRKtEQZCb6NxI68GUSpYZZ0HSkfaT6uvN
-	 OahsO2wqLsE9g==
-Date: Tue, 29 Jul 2025 13:08:46 -0700
-Subject: [PATCH 2/7] generic/427: try to ensure there's some free space before
- we do the aio test
+	b=UFNJj12fUpZmfa1r4v/YuzGpfR9dxQAmMp67nHlVnNjWW+rg5+N52+6L2ywUNw5Co
+	 ZDwlrV2qu1NUjtynyJ1gkZ80yhLlGaUY13F75ep1IWzaaSTqQJhtwhsIZZinkjrneP
+	 pcg5rLVuF+5eHsJxoXDKdloXMz9qMvyVh9HRE1/jEZRRZfodHimxTFwO9BG52/tn0i
+	 lsZOWafw0Y8wak533gTWaSLVdBRD8Zi2/COAw9Bdh7oiL7WFnMMZpsz2anwioOtP9S
+	 EZCrxbdggEdA+zzlilejjIB8WLQXUuyTwtqVwB2oSH4nk4SJHY6GBaflqVnEgqLIWS
+	 f2hFPU6gCD5zQ==
+Date: Tue, 29 Jul 2025 13:09:01 -0700
+Subject: [PATCH 3/7] generic/767: require fallocate support
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <175381957936.3020742.7058031120679185727.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Message-ID: <175381957955.3020742.3992038586505582880.stgit@frogsfrogsfrogs>
 In-Reply-To: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
 References: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,43 +46,28 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-On a filesystem configured like this:
-MKFS_OPTIONS="-m metadir=1,autofsck=1,uquota,gquota,pquota -d rtinherit=1 -r zoned=1"
+This test fails on filesystems that don't support fallocate, so screen
+them out.
 
-This test fails like this:
-
---- a/tests/generic/427.out      2025-04-30 16:20:44.584246582 -0700
-+++ b/tests/generic/427.out.bad        2025-07-14 10:47:07.605377287 -0700
-@@ -1,2 +1,2 @@
- QA output created by 427
--Success, all done.
-+pwrite: No space left on device
-
-The pwrite failure comes from the aio-dio-eof-race.c program because the
-filesystem ran out of space.  There are no speculative posteof
-preallocations on a zoned filesystem, so let's skip this test on those
-setups.
-
+Cc: <fstests@vger.kernel.org> # v2025.07.13
+Fixes: fa8694c823d853 ("generic: various atomic write tests with hardware and scsi_debug")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/generic/427 |    5 +++++
- 1 file changed, 5 insertions(+)
+ tests/generic/767 |    2 ++
+ 1 file changed, 2 insertions(+)
 
 
-diff --git a/tests/generic/427 b/tests/generic/427
-index bddfdb8714e9a7..a6b2571f563167 100755
---- a/tests/generic/427
-+++ b/tests/generic/427
-@@ -28,6 +28,11 @@ _require_no_compress
- _scratch_mkfs_sized $((256 * 1024 * 1024)) >>$seqres.full 2>&1
- _scratch_mount
- 
-+# Zoned filesystems don't support speculative preallocations
-+if [ "$FSTYP" = "xfs" ]; then
-+	_require_xfs_scratch_non_zoned
-+fi
+diff --git a/tests/generic/767 b/tests/generic/767
+index 758222f4f8666b..31d599eacfd63b 100755
+--- a/tests/generic/767
++++ b/tests/generic/767
+@@ -23,6 +23,8 @@ _cleanup()
+ _require_scsi_debug
+ _require_scratch
+ _require_block_device $SCRATCH_DEV
++_require_xfs_io_command "falloc"
 +
- # try to write more bytes than filesystem size to fill the filesystem,
- # then remove all these data. If we still can find these stale data in
- # a file' eofblock, then it's a bug
+ # Format something so that ./check doesn't freak out
+ _scratch_mkfs >> $seqres.full
+ 
 
