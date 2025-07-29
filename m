@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFDFE1E0DCB
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 14:32:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F8381F956
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 14:34:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753799575; cv=none; b=NrawK2iKzwTmSxrqJeAC6U8OPe6EVnbV5X0rrF0qofCMXjktkKUTp3f7R70nhXTFIg/aYRJrBCB8EUF7vbWCIzMuZQSMiUBpUrSSPZIwMGaKg1pZwRax3W7+dn3MTjDrTsT03qBLy+l69ifVT6sy6j3ppa1CMvCYv/8AwtkTsvk=
+	t=1753799652; cv=none; b=NUvvosrIpVqJSJk1wjqwHZeSiZL7f/njJyHiNfwIlEhobZTCj5lUhyoTOwg45hsoMEi9Pr3UhpI0TpYmZ67yRIXk5A7ShsyHy4eVsVqymc72reTI7YXvy+sgQevVsrSNTEf34tMCQVw1mMCCCeV+xqxm0KGFrSZl/yWPBjUMioU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753799575; c=relaxed/simple;
-	bh=G71kRrH4Uu91v1DvRlZ+GjPR3P8wXk91J54pJ6jEezQ=;
+	s=arc-20240116; t=1753799652; c=relaxed/simple;
+	bh=rpz0MpyDZ2wnU599ndCa0kwYHAhetQUCWOO8/LVFJWU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UX6ASfRbnd7A+lKE9vywPWAJcGJdSxtgpt7qNhmW14hkrfgvKqQZgFCBxlYOAqnoQfprQtARrQe/0Z9v43kfWuhGP/K5/CI3b+B4yFjsQ34/7VxeMgIq6dZDWxQhp2bbNaBXj1LDTNwp/ALth/73aI5N4uQrGNaYDU40SD9mS5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s+Sz+rqR; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=QuiT5H1SKIQ9H/RbSlcB/tfP7nTEUf0sE6UbwjhLaZUvZu4GHRQG9QCKAD3DeNU2mCJUT28XhQLVlHi16+QQE5MqwhBIzT9nWvjVkb3QEkZdS09x8ud6GsMmxsFc4FUrye0Rm3UTt4q09DCY0b0VLHp7nk+QBfw3G88SAjxB6hQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZCJY7jyo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s+Sz+rqR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AC7FC4CEEF;
-	Tue, 29 Jul 2025 14:32:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZCJY7jyo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0175DC4CEEF;
+	Tue, 29 Jul 2025 14:34:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753799575;
-	bh=G71kRrH4Uu91v1DvRlZ+GjPR3P8wXk91J54pJ6jEezQ=;
+	s=k20201202; t=1753799652;
+	bh=rpz0MpyDZ2wnU599ndCa0kwYHAhetQUCWOO8/LVFJWU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=s+Sz+rqRB8ZFoBY6y5UMOwncS6bWiylIIIiqTr96ZWWGvAFqDfgjzcPk8ij5kWzjg
-	 upSBecHafsrHLpjNb2Xm9+HlKnB1V31uvLMK29VjdlTZyeBad1ZqBIE6+hZmOQBMgn
-	 udIZ+jOqJgA0VPhIaV42sn6RdCo2lElK1MYhRtAI90fN7svgL49k8rCpPpgCoFjzIL
-	 b0zG0fDdLbgUCOFnaHknKTHKB0o5QB7BvzHsyGZiK/kuyt813yEfGG+LU4ubN56tVx
-	 yxCj3J5fU4x7e/L92U/Lkpj4h5ApXj10P0gsPGMrwKri3kWteWBspFM8BOJTCqFHd9
-	 35sqwuC4vqsIg==
-Date: Tue, 29 Jul 2025 07:32:54 -0700
+	b=ZCJY7jyobVagQWDxZZ7nJ4HN8KdwKUCAVDBM6u2qx3AlQXwbqOKWkSemqOktnf2dn
+	 fT/aFmokfnq+5AwFoOLYnoRELNIKTCMjGlMWnSOvXh0MK8WuAuvaa9Uz7aHSAHLnr9
+	 mwgzdEx74GohriaXxRtLQp1/OyXDnDvM3cApJhjYcjjyLJjM9xd15jAA5YdabWwd3a
+	 INgErsJkiHZI7duosd5va8UUCVEGNCmgTuUEtr0xDWZIH8pV50bd052UbxO3oCB2Cn
+	 ap9RCm1hhSeqXR3vTInxKLbpAY6tfI9w8UpBtwxa8f5LVCwTravY9GufkAI8yM3Xs6
+	 M/FEStkdHvbTg==
+Date: Tue, 29 Jul 2025 07:34:11 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Andrey Albershteyn <aalbersh@redhat.com>
 Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: allow setting xattrs on special files
-Message-ID: <20250729143254.GZ2672049@frogsfrogsfrogs>
+Subject: Re: [PATCH 0/3] Use new syscalls to set filesystem inode attributes
+ on any inode
+Message-ID: <20250729143411.GA2672049@frogsfrogsfrogs>
 References: <20250729-xfs-xattrat-v1-0-7b392eee3587@kernel.org>
- <20250729-xfs-xattrat-v1-2-7b392eee3587@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,65 +42,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250729-xfs-xattrat-v1-2-7b392eee3587@kernel.org>
+In-Reply-To: <20250729-xfs-xattrat-v1-0-7b392eee3587@kernel.org>
 
-On Tue, Jul 29, 2025 at 01:00:36PM +0200, Andrey Albershteyn wrote:
-> From: Andrey Albershteyn <aalbersh@redhat.com>
+On Tue, Jul 29, 2025 at 01:00:34PM +0200, Andrey Albershteyn wrote:
+> With addition of new syscalls file_getattr/file_setattr allow changing
+> filesystem inode attributes on special files. Fix project ID inheritance
+> for special files in renames.
 > 
-> XFS does't have extended attributes manipulation ioctls for special
-> files. Changing or reading file extended attributes is rejected for them
+> Cc: linux-xfs@vger.kernel.org
+> 
+> ---
+> Darrick, I left your reviewed-by tags, as the code didn't changed, I just
+> updated the commit messages. Let me know if you have any new feedback on
+> this.
 
-"extended file attributes" or "fileattrs" as Amir suggested,
-but never "extended attributes" because that's a separate thing.
+It all looks ok except for s/(file| )extended attribute/fileattr/
 
-(no need to drop the rvb over this)
+Seeing as the VFS part just went in for 6.17 this should probably get
+merged soonish, right?
 
 --D
 
-> in xfs_fileattr_*et().
-> 
-> In XFS, this is necessary to work for project quota directories.
-> When project is set up, xfs_quota opens and calls FS_IOC_SETFSXATTR on
-> every inode in the directory. However, special files are skipped due to
-> open() returning a special inode for them. So, they don't even get to
-> this check.
-> 
-> The recently added file_getattr/file_setattr will call xfs_fileattr_*et,
-> on special files. This patch allows reading/changing extended file
-> attributes on special files.
-> 
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/xfs/xfs_ioctl.c | 6 ------
->  1 file changed, 6 deletions(-)
+> Andrey Albershteyn (3):
+>       xfs: allow renames of project-less inodes
+>       xfs: allow setting xattrs on special files
+>       xfs: add .fileattr_set and fileattr_get callbacks for symlinks
 > 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index fe1f74a3b6a3..f3c89172cc27 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -512,9 +512,6 @@ xfs_fileattr_get(
->  {
->  	struct xfs_inode	*ip = XFS_I(d_inode(dentry));
->  
-> -	if (d_is_special(dentry))
-> -		return -ENOTTY;
-> -
->  	xfs_ilock(ip, XFS_ILOCK_SHARED);
->  	xfs_fill_fsxattr(ip, XFS_DATA_FORK, fa);
->  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> @@ -736,9 +733,6 @@ xfs_fileattr_set(
->  
->  	trace_xfs_ioctl_setattr(ip);
->  
-> -	if (d_is_special(dentry))
-> -		return -ENOTTY;
-> -
->  	if (!fa->fsx_valid) {
->  		if (fa->flags & ~(FS_IMMUTABLE_FL | FS_APPEND_FL |
->  				  FS_NOATIME_FL | FS_NODUMP_FL |
+>  fs/xfs/xfs_inode.c | 64 +++++++++++++++++++++++++++++-------------------------
+>  fs/xfs/xfs_ioctl.c |  6 -----
+>  fs/xfs/xfs_iops.c  |  2 ++
+>  3 files changed, 36 insertions(+), 36 deletions(-)
+> ---
+> base-commit: 86aa721820952b793a12fc6e5a01734186c0c238
+> change-id: 20250320-xfs-xattrat-b31a9f5ed284
 > 
+> Best regards,
 > -- 
-> 2.49.0
+> Andrey Albershteyn <aalbersh@kernel.org>
 > 
 > 
