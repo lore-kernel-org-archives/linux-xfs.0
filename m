@@ -1,51 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78FE91E492;
-	Tue, 29 Jul 2025 14:45:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B98423370F
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 14:55:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753800327; cv=none; b=IW2O1wbFxrbZZcOCKfF6DMYcsysESh5jDMyH59TzrKFiVGS+JoyVoJmn+BQfwmD7vCXvpPwrYEhbGOu2ETubdq/iRnWtMJIbV6jjln001QWfs2dlL13q9FtkJM4cLffdxV1Q8nsNQ7RzBA1AkZYNHecLgXWJC7FAKwDlB3OwYgc=
+	t=1753800912; cv=none; b=LvascxWT1foGg6NSNcgiIlmvAomtU2jwTHErQoX/vasQWUr5PcSe7GQ957AcAnCkB+RTe3/etRw3q4biBrepYGDgxhqhvIXIuvMIFPigjudsYx3gh140g1Lc+nVKA7UtbmMhHsvg5T5ObGJxQSXiDF2DCn4Lgh5k+Zv/STyEjIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753800327; c=relaxed/simple;
-	bh=F/Bh+Ko7ppvbg/wnZKDwtyoTD+8mKkxRf3M7eQV81Rc=;
+	s=arc-20240116; t=1753800912; c=relaxed/simple;
+	bh=u05V42ByiHjQvOOi9BsBHGHDUWV+gNVZB5dFW5EZ/+4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aQSGH4AyDtqHklkl0tGiPe8BorZLbQBQHa1hXdGNKECaezXc34huLYOpbhtsLHQQqLCtv/s9rVmpo+NlcpkvFyp8Zm+rW0Up5pMboMIaVemGKfpNaYHJTcjfqoYklNzdsG07NNo4jpV6HCBrNKHQoy5Sfz40WjGld4AVYzgrgek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uwk+hC9D; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=OxX46ciaQhfD63I5KDOQL6DQs5l4zmSJaZcamN1PhbiekSwHLIRRNMefpaGhIsemI1MO8b/ARNjiwowGMb1d+yd4vzW1XYperDRw80F5E0PqSO6chA03/2l1zzV6h/yfNNyvqIA+63l7L6Ow7H9+or754s8YS3C4xJdbE/OUnJQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=awton8Ci; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uwk+hC9D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0354FC4CEF4;
-	Tue, 29 Jul 2025 14:45:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753800327;
-	bh=F/Bh+Ko7ppvbg/wnZKDwtyoTD+8mKkxRf3M7eQV81Rc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uwk+hC9DrAJEjata9Hgdy5oewaZG9KXV8YmIkeUonkXlDl9Mo/ZaRNNAAFHmLlXIm
-	 KLHSpkAK72Q0nnZKayxuc8nOidM4LctrisYowwCVXZ0GcqvgP6CwEc2BrW49MlMhII
-	 QffzsvQNO4ow09OKUf8X1rnNUinMUPXjz63ccvCaoZRxTXxjy2neZm4rMNokYZhfSW
-	 2bPa/99E7L7WnnOlI1tOfD+ALfreLAq4WKutVmwVgktgg7u+4/vPIHsWJL/PYiNt9i
-	 c0OmBB5PYJXqf/iRUoposDzCl13gxxlfMU5R744HRzpyscXfbxBADBajxAfGIKc1j3
-	 NtG88owBSUi/A==
-Date: Tue, 29 Jul 2025 07:45:26 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc: John Garry <john.g.garry@oracle.com>, Zorro Lang <zlang@redhat.com>,
-	fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
-	tytso@mit.edu, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v3 05/13] generic/1226: Add atomic write test using fio
- crc check verifier
-Message-ID: <20250729144526.GB2672049@frogsfrogsfrogs>
-References: <7fc0f04e-dcec-47a4-b522-eb5a8b90637c@oracle.com>
- <aIDozETJ8aLparYV@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <9b9ed959-bda5-4a92-90c7-a621ffe58240@oracle.com>
- <aIMjrunlU04jI2lF@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <0af205d9-6093-4931-abe9-f236acae8d44@oracle.com>
- <aIccCgrCuQ4Wf1OH@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <2ae4bb04-fbf7-4a53-b498-ea6361cdab3e@oracle.com>
- <aId8oZGXSg5DW48X@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <3a4854ac-75ad-4783-acbd-048fe7c7fdb0@oracle.com>
- <aIhmG-l4nWOAzz2I@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="awton8Ci"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1753800909;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XSrzENXEUqAG4xYhi7LkHLNBglJqdLHYS0/Iu08pFOM=;
+	b=awton8CiDoaaPQD5iWcJ0Dpb8vn86MSEVYfrD8T/AExb29bYujbplGG1s1jZTdyWXLxYAL
+	aM2uuJmb9Mccol1aGlHOwz2FEvzOwK6QFI1HM6fL3bw48UYksiF4X4fTAupb6YodS8pM1O
+	2wIU4ymmWrHLXpGgjOOoLusDpi2dnFs=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-636-r6rYm24VNQOkVv2Ejf-Uew-1; Tue, 29 Jul 2025 10:55:07 -0400
+X-MC-Unique: r6rYm24VNQOkVv2Ejf-Uew-1
+X-Mimecast-MFC-AGG-ID: r6rYm24VNQOkVv2Ejf-Uew_1753800906
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-ae401eba66aso374426866b.3
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 07:55:07 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753800906; x=1754405706;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=XSrzENXEUqAG4xYhi7LkHLNBglJqdLHYS0/Iu08pFOM=;
+        b=J3AS6brPEU+fcQ1G38Pzd0p6ROhe2Gz92MxxL7DStYX707TJpdd1a2yISFphc49p79
+         y+ooTDKmNlwDYMngYGrV//BiXY6aiUhcYZiI64bi6Y3PVwmwqzyPKWanaUN59hDNA2Rf
+         WaU5BVOQyBG6X4PviJDpd5ZLFs3LHt/7lInPWOdEgyf60f58cYQu/sjbW2Yalnm6FWG2
+         PZ98CyrRuZVKj9OkttEX8Lp2ZUuxg/51Zk37cf+JFNt7gvX/fCuGi+etTmNA4r0v8dyG
+         dw0i/9cnAs2qYdhKZwlnW2PNGLgV6OG4M82ZYSlKz03ZRJCzfjrn/+p22u2IrS624mPi
+         fSaQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUijbUzVZyqr2+se3jJSkb2oWFXJeN2xhA/PsEMqX4hKUWlalLaNEBgtpRCW8HoeVLfnkHkeO6/M18=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzajejTW3FGklOcBMshODpjlQrzWh5FmIFQBahzgoShwXbMiE83
+	SNhrU/FECg5Kzt+arho9KCRgvr2n6EIqoChlDH27oLPPIeYCVkotGZ6VX4BJgeqEfDkjIc5HSkX
+	rfjUub32l9BtW1xftrHBpC6mjbK490dfQwKZbVxd146Bt2FAzsZLhhaYa/DzBTWxc7OAf
+X-Gm-Gg: ASbGnctjkANW90ZN7MF/SlTQqiAzKSBAjM1VTxb7kvtWUgI20N/Ps0qBUrptboWl8cQ
+	7l0vo85tqdJZfOer1/G9UpARRiu5O1HMXGQf2KZuzvW2tQaz5goW0u3bDZkrmw7Uqthh/XrMhga
+	7o/bVtmAfn8Gr+IbfsAdtax7gZ3SfW0Kq2hZGG6uaux8rYQf2K4ZCfxR5KSGjQw0V7DB21q8IZF
+	vjicVaT0EgpL8eEo/B+Ydd0gMognClnIzdZjXFcQ5O2mSGuieoYAYPnHwJ1nNDHZmsyHaaCRZbu
+	Y5IcmrEwjJX1A53RMVmYxkoTcm0/GanzwuUubv556LYbkiGbjr+23LJiaRg=
+X-Received: by 2002:a17:907:948d:b0:add:fb01:c64a with SMTP id a640c23a62f3a-af61e43b3d5mr1708809866b.43.1753800906043;
+        Tue, 29 Jul 2025 07:55:06 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFHd+MoTgpSO7r7vlcoVrPb9CgpUhhZOR4sUjxNgI2hnZPxiAUyPDLQeFa48qmlCH+6mwgHGg==
+X-Received: by 2002:a17:907:948d:b0:add:fb01:c64a with SMTP id a640c23a62f3a-af61e43b3d5mr1708805566b.43.1753800905618;
+        Tue, 29 Jul 2025 07:55:05 -0700 (PDT)
+Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-af635a63116sm603133866b.90.2025.07.29.07.55.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Jul 2025 07:55:05 -0700 (PDT)
+Date: Tue, 29 Jul 2025 16:55:04 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: allow setting xattrs on special files
+Message-ID: <bpj4pnks3d4uswsjjtjlcuczvinkyzypxaswv5xhpn6vnfyec5@ngfiv2stkbdn>
+References: <20250729-xfs-xattrat-v1-0-7b392eee3587@kernel.org>
+ <20250729-xfs-xattrat-v1-2-7b392eee3587@kernel.org>
+ <20250729143254.GZ2672049@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,58 +80,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aIhmG-l4nWOAzz2I@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+In-Reply-To: <20250729143254.GZ2672049@frogsfrogsfrogs>
 
-On Tue, Jul 29, 2025 at 11:41:39AM +0530, Ojaswin Mujoo wrote:
-> On Mon, Jul 28, 2025 at 03:00:40PM +0100, John Garry wrote:
-> > On 28/07/2025 14:35, Ojaswin Mujoo wrote:
-> > > > We guarantee that the write is committed all-or-nothing, but do rely on
-> > > > userspace not issuing racing atomic writes or racing regular writes.
-> > > > 
-> > > > I can easily change this, as I mentioned, but I am not convinced that it is
-> > > > a must.
-> > > Purely from a design point of view, I feel we are breaking atomicity and
-> > > hence we should serialize or just stop userspace from doing this (which
-> > > is a bit extreme).
+On 2025-07-29 07:32:54, Darrick J. Wong wrote:
+> On Tue, Jul 29, 2025 at 01:00:36PM +0200, Andrey Albershteyn wrote:
+> > From: Andrey Albershteyn <aalbersh@redhat.com>
 > > 
-> > If you check the man page description of RWF_ATOMIC, it does not mention
-> > serialization. The user should conclude that usual direct IO rules apply,
-> > i.e. userspace is responsible for serializing.
+> > XFS does't have extended attributes manipulation ioctls for special
+> > files. Changing or reading file extended attributes is rejected for them
 > 
-> My mental model of serialization in context of atomic writes is that if
-> user does 64k atomic write A followed by a parallel overlapping 64kb
-> atomic write B then the user might see complete A or complete B (we
-> don't guarantee) but not a mix of A and B.
+> "extended file attributes" or "fileattrs" as Amir suggested,
+> but never "extended attributes" because that's a separate thing.
 
-Heh, here comes that feature naming confusing again.  This is my
-definition:
+sure
 
-RWF_ATOMIC means the system won't introduce new tearing when persisting
-file writes.  The application is allowed to introduce tearing by writing
-to overlapping ranges at the same time.  The system does not isolate
-overlapping reads from writes.
-
---D
-
-> > 
-> > > 
-> > > I know userspace should ideally not do overwriting atomic writes but if
-> > > it is something we are allowing (which we do) then it is
-> > > kernel's responsibility to ensure atomicity. Sure we can penalize them
-> > > by serializing the writes but not by tearing it.
-> > > 
-> > > With that reasoning, I don't think the test should accomodate for this
-> > > particular scenario.
-> > 
-> > I can send a patch to the community for xfs (to provide serialization), like
-> > I showed earlier, to get opinion.
 > 
-> Thanks, that would be great.
+> (no need to drop the rvb over this)
 > 
-> Regards,
-> John
-> > 
-> > Thanks,
-> > John
-> > 
-> 
+
+Thanks!
+
+-- 
+- Andrey
+
