@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 909BD1E51F6;
-	Tue, 29 Jul 2025 20:09:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AE641FBCAF;
+	Tue, 29 Jul 2025 20:09:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753819742; cv=none; b=saQT09H7P6+QkSzrIN0Y3ht1NwvOBOFabhXX2yTlqNZ+cD/82Pf15iuaXOXK6BmPu3thvuVBokzpDj/AHXQAbBfNn144C7nADURaNPfO7KlXw20QaPf+HkcJYgUgi8Bwfut5Rq/9L0P6mtiygT5K3kYW+x6/V6qzUYp3yzW6ogA=
+	t=1753819758; cv=none; b=nbkz4+Ayauq+ZkLKJBfUjvF2Vu3QA4E+DLan8QtTWs04SY2TNUdYG2VGqh260ZWirLlm0xwD0qu81xpjdz6pRwaHtnfWB1u39EZryVHZnK1fmfO3dBgSdQHqm18wMD4INNhLhia4VieFHTArEUYJrKh+8KozWmtZeA92c/Vd/i4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753819742; c=relaxed/simple;
-	bh=xQRuJbk4y32m4ZZf6Cm9K/QFH6QbQlSLWCVrMiniktU=;
+	s=arc-20240116; t=1753819758; c=relaxed/simple;
+	bh=0h14q8EhiT1Apvmj6m4wxrlZRngrzGo7ZmopHTGFZtY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Kw8wr+Pkhsf/VNfhasbQsLE08LoxnYMsYplONfXIEUFQuPt6oxmMIdh24466xyR55LPJ/+A9LYSrKoYdcZeSVG4P6V7DYxRGVet+G4YWtiTKUv42G1A6kU6Pe6f60vHnnHt0/Wp5XHDX8ocj+dyGVnIh53XdM4FD0HKTfs5KCJI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UFNJj12f; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=u33Y1l8Hl6TRO1yQH9/YTmOfTaYdi8tYhs7uNKyf+Y7fPSsDozEXqdoAD76ghDXoAWbmAyWBY5zFUj1b/Z1ivVha0d+y6LjXQZt6wqkenk3e7Ru04NjZily32oS9ID886h+eHvysaSuubNv3sdzr0kdGyCUX0HTJgvHHppI4mYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UzEQ2axN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UFNJj12f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13F92C4CEF6;
-	Tue, 29 Jul 2025 20:09:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UzEQ2axN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5D84C4CEF7;
+	Tue, 29 Jul 2025 20:09:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753819742;
-	bh=xQRuJbk4y32m4ZZf6Cm9K/QFH6QbQlSLWCVrMiniktU=;
+	s=k20201202; t=1753819757;
+	bh=0h14q8EhiT1Apvmj6m4wxrlZRngrzGo7ZmopHTGFZtY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=UFNJj12fUpZmfa1r4v/YuzGpfR9dxQAmMp67nHlVnNjWW+rg5+N52+6L2ywUNw5Co
-	 ZDwlrV2qu1NUjtynyJ1gkZ80yhLlGaUY13F75ep1IWzaaSTqQJhtwhsIZZinkjrneP
-	 pcg5rLVuF+5eHsJxoXDKdloXMz9qMvyVh9HRE1/jEZRRZfodHimxTFwO9BG52/tn0i
-	 lsZOWafw0Y8wak533gTWaSLVdBRD8Zi2/COAw9Bdh7oiL7WFnMMZpsz2anwioOtP9S
-	 EZCrxbdggEdA+zzlilejjIB8WLQXUuyTwtqVwB2oSH4nk4SJHY6GBaflqVnEgqLIWS
-	 f2hFPU6gCD5zQ==
-Date: Tue, 29 Jul 2025 13:09:01 -0700
-Subject: [PATCH 3/7] generic/767: require fallocate support
+	b=UzEQ2axNzZEvvgYzyBmPkzCE3oYUB/nT9FVzr0eZAohHofbgfjoAxVJL1m2wuIwuE
+	 y1qGxEQq70Lu52Tsh1PTtxjiENjxM5hPI2B1xx1RDCPCt0qGwQFG1yfWX5fIol0XoM
+	 OghkhcWzgJoCWCBnlhwgRY/d7hIqEgLnnp8+O2jrhR9fJsljdFIznmEzl1x4P2uCbB
+	 N1gfe2cWse803pYVdZAAdyQXVL7srJsNP++0xhUzrY0pbqJ77nCmnAIVwU6m06sdys
+	 tvi6J/0p8c1OxaW7AMsC3J9BLussadHe+XXUY3ixO81IB0Gprt0AS8ty9ymdBtRzo7
+	 apIty7d/QfDjg==
+Date: Tue, 29 Jul 2025 13:09:17 -0700
+Subject: [PATCH 4/7] generic/767: only test the hardware atomic write unit
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
  linux-xfs@vger.kernel.org
-Message-ID: <175381957955.3020742.3992038586505582880.stgit@frogsfrogsfrogs>
+Message-ID: <175381957973.3020742.7280346741094447176.stgit@frogsfrogsfrogs>
 In-Reply-To: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
 References: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,28 +46,77 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This test fails on filesystems that don't support fallocate, so screen
-them out.
+This test sets up scsi_debug so that we can test the fs and block layer
+code for hardware-accelerated atomic writes (and not just a software
+fallback).  However, the userspace ABI for detecting atomic write
+geometry has changed since the start of development (to include said
+software fallback) so we must add some extra code to find the real
+hardware capabilities, and base the write sizes based on that.
+
+This fixes a test failure with 32k blocksizes because the advertised
+atomic_write_unit_max is 128M and fallocate quickly runs out of space.
+
+While we're at it fix a stupid variable usage bug in the loop.
 
 Cc: <fstests@vger.kernel.org> # v2025.07.13
 Fixes: fa8694c823d853 ("generic: various atomic write tests with hardware and scsi_debug")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/generic/767 |    2 ++
- 1 file changed, 2 insertions(+)
+ common/atomicwrites |    6 ++++++
+ tests/generic/767   |   16 +++++++++++++---
+ 2 files changed, 19 insertions(+), 3 deletions(-)
 
 
+diff --git a/common/atomicwrites b/common/atomicwrites
+index 95d545a67cadda..33526399d2e980 100644
+--- a/common/atomicwrites
++++ b/common/atomicwrites
+@@ -18,6 +18,12 @@ _get_atomic_write_unit_max()
+         grep -w atomic_write_unit_max | grep -o '[0-9]\+'
+ }
+ 
++_get_atomic_write_unit_max_opt()
++{
++	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | \
++        grep -w atomic_write_unit_max_opt | grep -o '[0-9]\+'
++}
++
+ _get_atomic_write_segments_max()
+ {
+ 	$XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $1 | \
 diff --git a/tests/generic/767 b/tests/generic/767
-index 758222f4f8666b..31d599eacfd63b 100755
+index 31d599eacfd63b..161fef03825db4 100755
 --- a/tests/generic/767
 +++ b/tests/generic/767
-@@ -23,6 +23,8 @@ _cleanup()
- _require_scsi_debug
- _require_scratch
- _require_block_device $SCRATCH_DEV
-+_require_xfs_io_command "falloc"
+@@ -61,8 +61,18 @@ $XFS_IO_PROG -c "statx -r -m $STATX_WRITE_ATOMIC" $testfile >> $seqres.full
+ sector_size=$(blockdev --getss $SCRATCH_DEV)
+ min_awu=$(_get_atomic_write_unit_min $testfile)
+ max_awu=$(_get_atomic_write_unit_max $testfile)
++opt_awu=$(_get_atomic_write_unit_max_opt $testfile)
+ 
+-$XFS_IO_PROG -f -c "falloc 0 $((max_awu * 2))" -c fsync $testfile
++echo "min:$min_awu max:$max_awu opt:$opt_awu" >> $seqres.full
 +
- # Format something so that ./check doesn't freak out
- _scratch_mkfs >> $seqres.full
++# We want to test hardware support, so use that if detected
++if [ -n "$opt_awu" ] && [ "$opt_awu" != "0" ]; then
++	write_size="$opt_awu"
++else
++	write_size="$max_awu"
++fi
++
++$XFS_IO_PROG -f -c "falloc 0 $((write_size * 2))" -c fsync $testfile
+ 
+ # try outside the advertised sizes
+ echo "two EINVAL for unsupported sizes"
+@@ -73,8 +83,8 @@ _simple_atomic_write $max_i $max_i $testfile -d
+ 
+ # try all of the advertised sizes
+ echo "all should work"
+-for ((i = min_awu; i <= max_awu; i *= 2)); do
+-	$XFS_IO_PROG -f -c "falloc 0 $((max_awu * 2))" -c fsync $testfile
++for ((i = min_awu; i <= write_size; i *= 2)); do
++	$XFS_IO_PROG -f -c "falloc 0 $((write_size * 2))" -c fsync $testfile
+ 	_test_atomic_file_writes $i $testfile
+ done
  
 
