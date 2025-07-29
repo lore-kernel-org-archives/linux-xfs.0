@@ -1,102 +1,269 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6A78294A16
-	for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 15:52:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C67D3226D1F
+	for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 16:25:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753804327; cv=none; b=HDv36JT6cYehlyklT8l3/phLbRokQ1MhGN8r/vx0r+rgfh6OVtezP/EWe/9W3D+hleC9cO31Gc6GorhtbJRDK6A5SaavF+yt0UBL/Tvst0ZKJdFL7tGosd35A++/4orF7GoQu5+uWBs3B0EC/A/AFYf27e0ivWcsqlcKKPrRdtk=
+	t=1753806311; cv=none; b=EQBwHcsNcMfLa0Y97kKsBxF0A7FUUIYlLrOLtBElmp20IM2FjGppkN6neIqPiDdH6OOFqkAWSmgpU+HvZM2yfd0zyNLDSMTOlAGLcz6qeTy2K4kAAdR0ln473ayUyOi9BHOR2O3Dyvrrn7d/AL58FbEsMoFMMfqriCH/f/CsBa4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753804327; c=relaxed/simple;
-	bh=801ltDIEMD7IlnPzK1CtAyaCeIGSIVezNyYsjBngNoA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gjXzbTwibkEJMcySkiV2xixo77lCcYc/Z76anQr1dC2ZnA+nc87KULYsWgLJaE6WZNp9WxdNIJ8EiH1tZogWD6EiWsTBcnZSqp+D/+rw3L/XdS230IA92a3p3y+nk61oCMO10h6qzonzdG4Yf2q2r88MLRuLLLW06dCVcoVV1ss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T9FLswoU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1753806311; c=relaxed/simple;
+	bh=8WGW/u332m7iBIRo2+VYkware56X+PiBWChv1QdxcB0=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=PYOmwODQZ9on8EWrw8MH19XZyipYy6itU9k7lxgLuTa+F9/Ayd0vtzIKDFCvQNAuaMJizQDzoF3ycry9ZrE60wN9aLil2mVLIPf+s4COH6FiPERAtxwgABmYtoNKH91wFGp1LQduL/Zev4u0/cwjgnCUuvdEmjFgWNBb3AcGO9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=dFUnq/TV; arc=none smtp.client-ip=72.215.153.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T9FLswoU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E4FEC4CEF4;
-	Tue, 29 Jul 2025 15:52:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753804326;
-	bh=801ltDIEMD7IlnPzK1CtAyaCeIGSIVezNyYsjBngNoA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=T9FLswoUSBpB/xbA9HB0xHmYbiRpiU5F7/c2hxAln+Wer5MisklmpauIievOtIIkG
-	 wz7Z3ooxmmLrpBaKkgLBf1iWO87N0joyuGh3OMCg5zJI8fny/sllUguorWqPzU38tv
-	 lrG1/fyNxsbXyd/CcTkk/dmqbSEJxNKL+3JGziqoVkmBjbtK7PCv7aFFMAXDAi/7gS
-	 5I9aJ88/939YM86+ymB7U6ULf3n+FooEjBuS5Bl9v8T5FWaBF1xBNXR1dr3CxjyN2c
-	 Y4a3MJK7k0AjlPo+bU6eDpLqkJ1aumZTPIZbH1eZKO4yH8BysLC3U5+RQGfrpu92ZL
-	 vv+1bBjHmbZYA==
-Date: Tue, 29 Jul 2025 08:52:05 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/3] Use new syscalls to set filesystem inode attributes
- on any inode
-Message-ID: <20250729155205.GF2672070@frogsfrogsfrogs>
-References: <20250729-xfs-xattrat-v1-0-7b392eee3587@kernel.org>
- <20250729143411.GA2672049@frogsfrogsfrogs>
- <5jw4nzpg26faxkzyeo3n2yczqxjczyq5c7qukfvqkx5e254m4k@tafsr7bdstcd>
+	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="dFUnq/TV"
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id 2UNKs8FjwTgmAkKy; Tue, 29 Jul 2025 12:13:43 -0400 (EDT)
+X-Barracuda-Envelope-From: tonyb@cybernetics.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
+X-ASG-Whitelist: Client
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
+	bh=bX58Gpj8MJieSZ3eNdrwAn/t64m13puMU7fg2+7Zx0w=;
+	h=Content-Transfer-Encoding:Content-Type:Subject:From:Cc:To:Content-Language:
+	MIME-Version:Date:Message-ID; b=dFUnq/TVl3t81JN7hElW3rtu4ATn5LgcQkSo54IovGShE
+	VME2N4n+4aU+Ypa0j/63IXbRAMyyEdpMUTnqUzmdNxXaUP2cY3mtLdIq7okzyy6cZuOLSSzWhRRnb
+	xHjTEPUnSIbHLMgtc9r04mTseGyHjjOOX65ZqgEyX0NubAkS4=
+Received: from [10.157.2.224] (HELO [192.168.200.1])
+  by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
+  with ESMTPS id 14113446; Tue, 29 Jul 2025 12:13:43 -0400
+Message-ID: <55deda1d-967d-4d68-a9ba-4d5139374a37@cybernetics.com>
+X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
+Date: Tue, 29 Jul 2025 12:13:42 -0400
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5jw4nzpg26faxkzyeo3n2yczqxjczyq5c7qukfvqkx5e254m4k@tafsr7bdstcd>
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
+ Christian Brauner <brauner@kernel.org>, "Darrick J. Wong"
+ <djwong@kernel.org>, "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc: linux-raid@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: [PATCH 2/2] iomap: align writeback to RAID stripe boundaries
+Content-Type: text/plain; charset=UTF-8
+X-ASG-Orig-Subj: [PATCH 2/2] iomap: align writeback to RAID stripe boundaries
+Content-Transfer-Encoding: 7bit
+X-Barracuda-Connect: UNKNOWN[10.10.4.126]
+X-Barracuda-Start-Time: 1753805623
+X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
+X-Barracuda-BRTS-Status: 1
+X-Virus-Scanned: by bsmtpd at cybernetics.com
+X-Barracuda-Scan-Msg-Size: 7085
+X-ASG-Debug-ID: 1753805623-1cf43947df801f0001-7j46Zh
 
-On Tue, Jul 29, 2025 at 05:50:08PM +0200, Andrey Albershteyn wrote:
-> On 2025-07-29 07:34:11, Darrick J. Wong wrote:
-> > On Tue, Jul 29, 2025 at 01:00:34PM +0200, Andrey Albershteyn wrote:
-> > > With addition of new syscalls file_getattr/file_setattr allow changing
-> > > filesystem inode attributes on special files. Fix project ID inheritance
-> > > for special files in renames.
-> > > 
-> > > Cc: linux-xfs@vger.kernel.org
-> > > 
-> > > ---
-> > > Darrick, I left your reviewed-by tags, as the code didn't changed, I just
-> > > updated the commit messages. Let me know if you have any new feedback on
-> > > this.
-> > 
-> > It all looks ok except for s/(file| )extended attribute/fileattr/
-> > 
-> > Seeing as the VFS part just went in for 6.17 this should probably get
-> > merged soonish, right?
-> 
-> Without this special files won't be able to use these syscalls, but
-> otherwise, for regular files nothing changes. So, I think it not
-> necessary for this to get into this merge window.
+Improve writeback performance to RAID-4/5/6 by aligning writes to stripe
+boundaries.  This relies on io_opt being set to the stripe size (or
+a multiple) when BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE is set.
 
-<nod> Ok.
+Benchmark of sequential writing to a large file on XFS using
+io_uring with 8-disk md-raid6:
+Before:      601.0 MB/s
+After:       614.5 MB/s
+Improvement: +2.3%
 
---D
+Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+---
+ fs/iomap/buffered-io.c | 175 +++++++++++++++++++++++++----------------
+ 1 file changed, 106 insertions(+), 69 deletions(-)
 
-> > 
-> > --D
-> > 
-> > > ---
-> > > Andrey Albershteyn (3):
-> > >       xfs: allow renames of project-less inodes
-> > >       xfs: allow setting xattrs on special files
-> > >       xfs: add .fileattr_set and fileattr_get callbacks for symlinks
-> > > 
-> > >  fs/xfs/xfs_inode.c | 64 +++++++++++++++++++++++++++++-------------------------
-> > >  fs/xfs/xfs_ioctl.c |  6 -----
-> > >  fs/xfs/xfs_iops.c  |  2 ++
-> > >  3 files changed, 36 insertions(+), 36 deletions(-)
-> > > ---
-> > > base-commit: 86aa721820952b793a12fc6e5a01734186c0c238
-> > > change-id: 20250320-xfs-xattrat-b31a9f5ed284
-> > > 
-> > > Best regards,
-> > > -- 
-> > > Andrey Albershteyn <aalbersh@kernel.org>
-> > > 
-> > > 
-> > 
-> 
-> -- 
-> - Andrey
-> 
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index fb4519158f3a..f9020f916268 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1685,81 +1685,118 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+ 		struct inode *inode, loff_t pos, loff_t end_pos,
+ 		unsigned len)
+ {
+-	struct iomap_folio_state *ifs = folio->private;
+-	size_t poff = offset_in_folio(folio, pos);
+-	unsigned int ioend_flags = 0;
+-	int error;
+-
+-	if (wpc->iomap.type == IOMAP_UNWRITTEN)
+-		ioend_flags |= IOMAP_IOEND_UNWRITTEN;
+-	if (wpc->iomap.flags & IOMAP_F_SHARED)
+-		ioend_flags |= IOMAP_IOEND_SHARED;
+-	if (folio_test_dropbehind(folio))
+-		ioend_flags |= IOMAP_IOEND_DONTCACHE;
+-	if (pos == wpc->iomap.offset && (wpc->iomap.flags & IOMAP_F_BOUNDARY))
+-		ioend_flags |= IOMAP_IOEND_BOUNDARY;
++	struct queue_limits *lim = bdev_limits(wpc->iomap.bdev);
++	unsigned int io_align =
++		(lim->features & BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE) ?
++		lim->io_opt >> SECTOR_SHIFT : 0;
+ 
+-	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, pos, ioend_flags)) {
++	do {
++		struct iomap_folio_state *ifs = folio->private;
++		size_t poff = offset_in_folio(folio, pos);
++		unsigned int ioend_flags = 0;
++		unsigned int rem_len = 0;
++		int error;
++
++		if (wpc->iomap.type == IOMAP_UNWRITTEN)
++			ioend_flags |= IOMAP_IOEND_UNWRITTEN;
++		if (wpc->iomap.flags & IOMAP_F_SHARED)
++			ioend_flags |= IOMAP_IOEND_SHARED;
++		if (folio_test_dropbehind(folio))
++			ioend_flags |= IOMAP_IOEND_DONTCACHE;
++		if (pos == wpc->iomap.offset &&
++		    (wpc->iomap.flags & IOMAP_F_BOUNDARY))
++			ioend_flags |= IOMAP_IOEND_BOUNDARY;
++
++		if (!wpc->ioend ||
++		    !iomap_can_add_to_ioend(wpc, pos, ioend_flags)) {
+ new_ioend:
+-		error = iomap_submit_ioend(wpc, 0);
+-		if (error)
+-			return error;
+-		wpc->ioend = iomap_alloc_ioend(wpc, wbc, inode, pos,
+-				ioend_flags);
+-	}
++			error = iomap_submit_ioend(wpc, 0);
++			if (error)
++				return error;
++			wpc->ioend = iomap_alloc_ioend(wpc, wbc, inode, pos,
++					ioend_flags);
++		}
+ 
+-	if (!bio_add_folio(&wpc->ioend->io_bio, folio, len, poff))
+-		goto new_ioend;
++		/* Align writes to io_align if given. */
++		if (io_align && !(wpc->iomap.flags & IOMAP_F_ANON_WRITE)) {
++			sector_t lba = bio_end_sector(&wpc->ioend->io_bio);
++			unsigned int mod = lba % io_align;
++			unsigned int max_len;
+ 
+-	if (ifs)
+-		atomic_add(len, &ifs->write_bytes_pending);
++			/*
++			 * If the end sector is already aligned and the bio is
++			 * nonempty, then start a new bio for the remainder.
++			 */
++			if (!mod && wpc->ioend->io_bio.bi_iter.bi_size)
++				goto new_ioend;
+ 
+-	/*
+-	 * Clamp io_offset and io_size to the incore EOF so that ondisk
+-	 * file size updates in the ioend completion are byte-accurate.
+-	 * This avoids recovering files with zeroed tail regions when
+-	 * writeback races with appending writes:
+-	 *
+-	 *    Thread 1:                  Thread 2:
+-	 *    ------------               -----------
+-	 *    write [A, A+B]
+-	 *    update inode size to A+B
+-	 *    submit I/O [A, A+BS]
+-	 *                               write [A+B, A+B+C]
+-	 *                               update inode size to A+B+C
+-	 *    <I/O completes, updates disk size to min(A+B+C, A+BS)>
+-	 *    <power failure>
+-	 *
+-	 *  After reboot:
+-	 *    1) with A+B+C < A+BS, the file has zero padding in range
+-	 *       [A+B, A+B+C]
+-	 *
+-	 *    |<     Block Size (BS)   >|
+-	 *    |DDDDDDDDDDDD0000000000000|
+-	 *    ^           ^        ^
+-	 *    A          A+B     A+B+C
+-	 *                       (EOF)
+-	 *
+-	 *    2) with A+B+C > A+BS, the file has zero padding in range
+-	 *       [A+B, A+BS]
+-	 *
+-	 *    |<     Block Size (BS)   >|<     Block Size (BS)    >|
+-	 *    |DDDDDDDDDDDD0000000000000|00000000000000000000000000|
+-	 *    ^           ^             ^           ^
+-	 *    A          A+B           A+BS       A+B+C
+-	 *                             (EOF)
+-	 *
+-	 *    D = Valid Data
+-	 *    0 = Zero Padding
+-	 *
+-	 * Note that this defeats the ability to chain the ioends of
+-	 * appending writes.
+-	 */
+-	wpc->ioend->io_size += len;
+-	if (wpc->ioend->io_offset + wpc->ioend->io_size > end_pos)
+-		wpc->ioend->io_size = end_pos - wpc->ioend->io_offset;
++			/*
++			 * Clip the end of the bio to the alignment boundary.
++			 */
++			max_len = (io_align - mod) << SECTOR_SHIFT;
++			if (len > max_len) {
++				rem_len = len - max_len;
++				len = max_len;
++			}
++		}
++
++		if (!bio_add_folio(&wpc->ioend->io_bio, folio, len, poff))
++			goto new_ioend;
++
++		if (ifs)
++			atomic_add(len, &ifs->write_bytes_pending);
++
++		/*
++		 * Clamp io_offset and io_size to the incore EOF so that ondisk
++		 * file size updates in the ioend completion are byte-accurate.
++		 * This avoids recovering files with zeroed tail regions when
++		 * writeback races with appending writes:
++		 *
++		 *    Thread 1:                  Thread 2:
++		 *    ------------               -----------
++		 *    write [A, A+B]
++		 *    update inode size to A+B
++		 *    submit I/O [A, A+BS]
++		 *                               write [A+B, A+B+C]
++		 *                               update inode size to A+B+C
++		 *    <I/O completes, updates disk size to min(A+B+C, A+BS)>
++		 *    <power failure>
++		 *
++		 *  After reboot:
++		 *    1) with A+B+C < A+BS, the file has zero padding in range
++		 *       [A+B, A+B+C]
++		 *
++		 *    |<     Block Size (BS)   >|
++		 *    |DDDDDDDDDDDD0000000000000|
++		 *    ^           ^        ^
++		 *    A          A+B     A+B+C
++		 *                       (EOF)
++		 *
++		 *    2) with A+B+C > A+BS, the file has zero padding in range
++		 *       [A+B, A+BS]
++		 *
++		 *    |<     Block Size (BS)   >|<     Block Size (BS)    >|
++		 *    |DDDDDDDDDDDD0000000000000|00000000000000000000000000|
++		 *    ^           ^             ^           ^
++		 *    A          A+B           A+BS       A+B+C
++		 *                             (EOF)
++		 *
++		 *    D = Valid Data
++		 *    0 = Zero Padding
++		 *
++		 * Note that this defeats the ability to chain the ioends of
++		 * appending writes.
++		 */
++		wpc->ioend->io_size += len;
++		if (wpc->ioend->io_offset + wpc->ioend->io_size > end_pos)
++			wpc->ioend->io_size = end_pos - wpc->ioend->io_offset;
++
++		wbc_account_cgroup_owner(wbc, folio, len);
++
++		pos += len;
++		len = rem_len;
++	} while (len);
+ 
+-	wbc_account_cgroup_owner(wbc, folio, len);
+ 	return 0;
+ }
+ 
+-- 
+2.43.0
+
