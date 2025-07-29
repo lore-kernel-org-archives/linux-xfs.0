@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E37A61F956;
-	Tue, 29 Jul 2025 20:10:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC8F1F956;
+	Tue, 29 Jul 2025 20:11:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753819852; cv=none; b=S0v+OsgsAccMsui7IXDEDUpDNN6CZBlOoQBa/eHCmu4+k4KnL/Grv4BaaNPFm6hWY5CbzEtWn2LrOI+QzRufQkhLcCRrAp4fZTiSt8tc5qOrjtPJtcqHqhl9uO8Xs1FvFSwAG63yRPUwhytTAHYlAP50OSOqqvjmWTaoM+nDe6I=
+	t=1753819867; cv=none; b=PYkoYDhcL/wnw9lgYerU0puy+RbJuTkWXoTY+VXlILFP/veiycdufJhckgv7b00Cki6PwIgegeMtM16CB/yaWsxA97xK0FW1+39iJscYSEoCNiKybDgKviAN3g3cFKvoQGPw+iHSJIh16tzB3qH3Ia87gYkbKbPXv6XMJVFzwhM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753819852; c=relaxed/simple;
-	bh=eFMH2R/0KfUawUidYMXBLYMCF4XzE8uF70j6RwFFoMU=;
+	s=arc-20240116; t=1753819867; c=relaxed/simple;
+	bh=kc5U0hLoGfGaJ0/Z2qdqDZxObo5maAIOUTFfNx5+bbs=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Fs/68SiBnvnqu0/1elwfR9gKspzBwz1pSIoQKDFR3U2jA52q1aK33cEEkkiHjGQvhbjaEgszOopwxNUUtKBQpa1ZwvMXoQof8QE3IZcFqnk4P261ZEgTE5NHTm6YS9oc6MOUROynRUdlW3WngAEze+Umn0lN8Y8TARQka6lzIPk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SY0jHdTp; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=N9nqi+VREOQwrKFmmfBq6Uia/2BjUsq5FYLpfHnWwCTxFqEp9y7kSmHZZgU3odeb/fxAP+U1SGOJnyxdCXlgMoZpT/iH4GmlAvfCjXbryyhekCr7AenxVzuooAfgY6VqvHR6+ytL0bRDBVCqKEQTqoOSCNYgf/PE1w6cxiWuwdI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l5iGb8MH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SY0jHdTp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 735B3C4CEEF;
-	Tue, 29 Jul 2025 20:10:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l5iGb8MH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15FC6C4CEEF;
+	Tue, 29 Jul 2025 20:11:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753819851;
-	bh=eFMH2R/0KfUawUidYMXBLYMCF4XzE8uF70j6RwFFoMU=;
+	s=k20201202; t=1753819867;
+	bh=kc5U0hLoGfGaJ0/Z2qdqDZxObo5maAIOUTFfNx5+bbs=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=SY0jHdTpi2v4SFxTM8gmc+lNGrUIvIs09oDfiuwSx6aPx2Pt7ZIzBs9pnEbx+jZlr
-	 r4CeQ0iK/ov0VjtXtNwkE80uQ8Sw2EsY9FNU3G0JP09raMAN6iQPJqGp3ZdLgL0IFr
-	 dJwlQiWXaeyl2b2CI5SNUgxnM+GVMrVnQ1k74ba2ySj+2HM8TcLiID9X+yVf2OJW6Y
-	 VI+3bvNk4bLWWAJ4DHRuFya25vUS0gLjpulsNDNcB3G2uzD2YXi1Z6dRa1skAQjW4Q
-	 8dPOuL1CtEVqHyeHP7ir0t0HWkxmxAYPhWwvDfq4q8iQI7XHF/z/VEFixxPuCMQwbf
-	 O4KH3V2c0+AHw==
-Date: Tue, 29 Jul 2025 13:10:50 -0700
-Subject: [PATCH 1/2] fsstress: don't abort when stat(".") returns EIO
+	b=l5iGb8MHM302BmnTNo3XtAxQ3dwAyc0tzBOSgUrclRxV0N5TB0cDdwVXTsI+tYors
+	 sn7BwUs40kWhuw5irAqTexQifgLTnyYOgS/ETfqLFUk2nObbQRHJT0MKfHgx+agg1+
+	 gpWAJujfq6hUnQ1JMvih1suDEpOZCfGwp3KHszaGZSCpBHUQbFMewblimz1D6QpKrU
+	 zFaTcHAbntpEMjT1z8jFoEomS6uFqGWYiizMTJMCIm/ZrF78I5Bn5nCh/xD2mDywDU
+	 Rz6ziz56IKoalqBCZB24drC9HoVejv4bR5nrpsaqBy9+i4sHDVhCzFRsccXRvLJDIC
+	 waPZN7Cjj4vvw==
+Date: Tue, 29 Jul 2025 13:11:06 -0700
+Subject: [PATCH 2/2] check: collect core dumps from systemd-coredump
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <175381958421.3021194.16249782318690545446.stgit@frogsfrogsfrogs>
+Message-ID: <175381958439.3021194.17530499480231032752.stgit@frogsfrogsfrogs>
 In-Reply-To: <175381958396.3021194.15630936445319512317.stgit@frogsfrogsfrogs>
 References: <175381958396.3021194.15630936445319512317.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,66 +45,93 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-First, start with the premise that fstests is run with a nonzero limit
-on the size of core dumps so that we can capture the state of
-misbehaving fs utilities like fsck and scrub if they crash.
-
-When fsstress is compiled with DEBUG defined (which is the default), it
-will periodically call check_cwd to ensure that the current working
-directory hasn't changed out from underneath it.
-
-If the filesystem is XFS and it shuts down, the stat64() calls will
-start returning EIO.  In this case, we follow the out: label and call
-abort() to exit the program.  Historically this did not produce any core
-dumps because $PWD is on the dead filesystem and the write fails.
-
-However, modern systems are often configured to capture coredumps using
-some external mechanism, e.g. abrt/systemd-coredump.   In this case, the
-capture tool will succeeds in capturing every crashed process, which
-fills the crash dump directory with a lot of useless junk.  Worse, if
-the capture tool is configured to pass the dumps to fstests, it will
-flag the test as failed because something dumped core.
-
-This is really silly, because basic stat requests for the current
-working directory can be satisfied from the inode cache without a disk
-access.  In this narrow situation, EIO only happens when the fs has shut
-down, so just exit the program.
-
-We really should have a way to query if a filesystem is shut down that
-isn't conflated with (possibly transient) EIO errors.  But for now this
-is what we have to do. :(
+On modern RHEL (>=8) and Debian KDE systems, systemd-coredump can be
+installed to capture core dumps from crashed programs.  If this is the
+case, we would like to capture core dumps from programs that crash
+during the test.  Set up an (admittedly overwrought) pipeline to extract
+dumps created during the test and then capture them the same way that we
+pick up "core" and "core.$pid" files.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- ltp/fsstress.c |   15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+ check     |    2 ++
+ common/rc |   44 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+)
 
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 8dbfb81f95a538..d4abe561787f19 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -1049,8 +1049,21 @@ check_cwd(void)
+diff --git a/check b/check
+index ce7eacb7c45d9e..77581e438c46b9 100755
+--- a/check
++++ b/check
+@@ -924,6 +924,7 @@ function run_section()
+ 		     $1 == "'$seqnum'" {lasttime=" " $2 "s ... "; exit} \
+ 		     END {printf "%s", lasttime}' "$check.time"
+ 		rm -f core $seqres.notrun
++		_start_coredumpctl_collection
  
- 	ret = stat64(".", &statbuf);
- 	if (ret != 0) {
-+		int error = errno;
-+
- 		fprintf(stderr, "fsstress: check_cwd stat64() returned %d with errno: %d (%s)\n",
--			ret, errno, strerror(errno));
-+			ret, error, strerror(error));
-+
-+		/*
-+		 * The current working directory is pinned in memory, which
-+		 * means that stat should not have had to do any disk accesses
-+		 * to retrieve stat information.  Treat an EIO as an indication
-+		 * that the filesystem shut down and exit instead of dumping
-+		 * core like the abort() below does.
-+		 */
-+		if (error == EIO)
-+			exit(1);
-+
- 		goto out;
- 	}
+ 		start=`_wallclock`
+ 		$timestamp && _timestamp
+@@ -957,6 +958,7 @@ function run_section()
+ 		# just "core".  Use globbing to find the most common patterns,
+ 		# assuming there are no other coredump capture packages set up.
+ 		local cores=0
++		_finish_coredumpctl_collection
+ 		for i in core core.*; do
+ 			test -f "$i" || continue
+ 			if ((cores++ == 0)); then
+diff --git a/common/rc b/common/rc
+index 04b721b7318a7e..e4c4d05387f44e 100644
+--- a/common/rc
++++ b/common/rc
+@@ -5034,6 +5034,50 @@ _check_kmemleak()
+ 	fi
+ }
  
++# Current timestamp, in a format that systemd likes
++_systemd_now() {
++	timedatectl show --property=TimeUSec --value
++}
++
++# Do what we need to do to capture core dumps from coredumpctl
++_start_coredumpctl_collection() {
++	command -v coredumpctl &>/dev/null || return
++	command -v timedatectl &>/dev/null || return
++	command -v jq &>/dev/null || return
++
++	sysctl kernel.core_pattern | grep -q systemd-coredump || return
++	COREDUMPCTL_START_TIMESTAMP="$(_systemd_now)"
++}
++
++# Capture core dumps from coredumpctl.
++#
++# coredumpctl list only supports json output as a machine-readable format.  The
++# human-readable format intermingles spaces from the timestamp with actual
++# column separators, so we cannot parse that sanely.  The json output is an
++# array of:
++#        {
++#                "time" : 1749744847150926,
++#                "pid" : 2297,
++#                "uid" : 0,
++#                "gid" : 0,
++#                "sig" : 6,
++#                "corefile" : "present",
++#                "exe" : "/run/fstests/e2fsprogs/fuse2fs",
++#                "size" : 47245
++#        },
++# So we use jq to filter out lost corefiles, then print the pid and exe
++# separated by a pipe and hope that nobody ever puts a pipe in an executable
++# name.
++_finish_coredumpctl_collection() {
++	test -n "$COREDUMPCTL_START_TIMESTAMP" || return
++
++	coredumpctl list --since="$COREDUMPCTL_START_TIMESTAMP" --json=short 2>/dev/null | \
++	jq --raw-output 'map(select(.corefile == "present")) | map("\(.pid)|\(.exe)") | .[]' | while IFS='|' read pid exe; do
++		test -e "core.$pid" || coredumpctl dump --output="core.$pid" "$pid" "$exe" &>> $seqres.full
++	done
++	unset COREDUMPCTL_START_TIMESTAMP
++}
++
+ # don't check dmesg log after test
+ _disable_dmesg_check()
+ {
 
