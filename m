@@ -1,43 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C6F226CE1D;
-	Wed, 30 Jul 2025 14:18:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08ECA2AE84;
+	Wed, 30 Jul 2025 14:19:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753885130; cv=none; b=jXAo4zKMN3OF54t6y5inZpCXkQxZTJeX+2vIhWAzpovdaDMwylfN/dsjinlugsSE5GsckBvywzYlqBnsPnFqwSx5ga0qNiCB1Bzaia+uZSVoJXzA75wJZQDn5smBL648/ISCDyBap+fzdI3GjEGtsR0E30XrQ2Dh4pIrGpeBuAk=
+	t=1753885158; cv=none; b=qW1G32QB84RmbWA50Vml2C1rDyOaJ2dwLYiYbzhy1Ud2lLwEm72zePL9g89EWc9OvobOQVPVbUN8kvUpJXNpAvT+c4TmCWCogj/Dc3KTj0QxHunjRFajNwKoEPu8Gz4AJtBdqoDxfNjFN/7yOU61Dl8Iu8nxUez6lyrEts7gkWU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753885130; c=relaxed/simple;
-	bh=LM06zyEsuw5zS1Jlmdf30ry1i+NOrjgnfJWJ+sMYvxM=;
+	s=arc-20240116; t=1753885158; c=relaxed/simple;
+	bh=l8L3lymksBlk3rcl6ZOMnK0s42qYm9hcrhp2HtNdeAg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rG0tCmvwjkQdDuprrRO0o4/0dQt68YeMr+Jv+OS/S9ENflPujxgripB9P3EYjs4GjdiSrScA/Mt4ZR2F5ztYQPb1eYD0m/ZFxLtOqMV/0lSOGXL6LKVA3UHXGhFu0/4bMLoDgVtcGYAIEMLbMX/ziaZQ/LlwIURDzGdRKtH0PqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JimnvxRb; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=h+3srcbJde4eUTLXPKQymGPsQ7vvgZy5qARXpnw/8RJNzWAU5ixOyEFMOzjGesVlOMf3ggpPholrWQ1TaxRS1IOB/46KWHBL/eO1sZW34hKX/KiHeVm9ys0OS62Wk33vNgq+L4KsGGJI90uIPPJYBJl1NoNvWKDV4lvYZsL4WD8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LUHgJlnd; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JimnvxRb"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LUHgJlnd"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=1SLinhCNImfO2gFMc9jg3UI23/mSSu6Nfz+qHjlQT8A=; b=JimnvxRba+5lwlkzmU6WtrK/v1
-	tgf69pZAmLDKd7WdfUKOgHf/ormCYESnZxdQzK+7YMXwUY+jFCuHr5l79AAA27aiqfuOkhwcol+A+
-	ILmyZ2Q5a8PgGPgDuUqLxnnlHpS8gXjgj5EglQCNV7Krvp8TtpDjbhusrB6sJAv9rhbzhsMMvgNok
-	9bWtJtkgmLcTbCKxFq9n7t1Jl/8Gz2MD6mbpsGqkSHcjOSZdfyDeES3GVeRi2olyLEsVnGFw6cYkG
-	pfxR03ZwFmyi96hADRM9/FWE7gDYyikIP9BDV8uyp9TdQt29jbihE/Wz+ENrNVrd5LImRPkDaA+vQ
-	8n0aoURA==;
+	bh=pQSqeTZ7/wH2OpAnaS1NShrsX+MJAqtGb5UPG65SWWo=; b=LUHgJlndjs04W+Z9VuFGMAa2mi
+	bJfecWdxJ2GgOfVFjNHtCDdlpwtopZnm9DCp63vu2h+ceMQFWL3xzZxzDsATpX2ztisP+8Jtb8an9
+	OUC+fQDzw+/BXm1VResmYVoGE+Scvm3wq8RgoI5lM6Zp0oceGz4jg5lS3MaigmSG9gWZqumnkVH8i
+	x6vknqHT5eqSmf4QDsk9TyoUiaBNKzwnioEoONMk9Etixh87mPwGsXlRePsgyP/vAT+5B44FuEV2+
+	QvPohFi8+w2N2weY1CmgzfqMZbWOSXVg+NfhsZ+0Dz1GvPOPjLEDxrI7V3uDJK2h+na7bsvBfFz6D
+	YzSBwFZQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uh7do-00000001ibD-3i1t;
-	Wed, 30 Jul 2025 14:18:48 +0000
-Date: Wed, 30 Jul 2025 07:18:48 -0700
+	id 1uh7eG-00000001ifj-2ewt;
+	Wed, 30 Jul 2025 14:19:16 +0000
+Date: Wed, 30 Jul 2025 07:19:16 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/7] generic/427: try to ensure there's some free space
- before we do the aio test
-Message-ID: <aIopyOh1TDosDK1m@infradead.org>
+Subject: Re: [PATCH 3/7] generic/767: require fallocate support
+Message-ID: <aIop5EoM8IZbdApZ@infradead.org>
 References: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
- <175381957936.3020742.7058031120679185727.stgit@frogsfrogsfrogs>
+ <175381957955.3020742.3992038586505582880.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,20 +45,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <175381957936.3020742.7058031120679185727.stgit@frogsfrogsfrogs>
+In-Reply-To: <175381957955.3020742.3992038586505582880.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Jul 29, 2025 at 01:08:46PM -0700, Darrick J. Wong wrote:
-> The pwrite failure comes from the aio-dio-eof-race.c program because the
-> filesystem ran out of space.  There are no speculative posteof
-> preallocations on a zoned filesystem, so let's skip this test on those
-> setups.
+On Tue, Jul 29, 2025 at 01:09:01PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> This test fails on filesystems that don't support fallocate, so screen
+> them out.
 
-Did it run out of space because it is overwriting and we need a new
-allocation (I've not actually seen this fail in my zoned testing,
-that's why I'm asking)?  If so it really should be using the new
-_require_inplace_writes Filipe just sent to the list.
+Looks good, I was just going to send this as well..
 
-If now we need to figure out what this depends on instead of adding
-random xfs-specific hacks to common code.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
