@@ -1,43 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF1F217C21E
-	for <linux-xfs@vger.kernel.org>; Wed, 30 Jul 2025 15:04:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CBEA481A3
+	for <linux-xfs@vger.kernel.org>; Wed, 30 Jul 2025 15:12:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753887851; cv=none; b=OlzA70fpuZ4mX3i1gu6IaHtnlWUOjrs/AsKCIAWtJd1sa7Gxm3V+s4i91PHNsKhxMFx2fkHZN3a3W2JvBZCZoqfMe8z3FWJp7k2Tf/mnnp9PkX9vFhIMCyR+9ZReRuxQ9FMog8gp7jTHfJUD6RxFGQvUmJaj+m/s5YQ4L+DyVWk=
+	t=1753888327; cv=none; b=iA2f5QW04jEFRa3sojtKyQBkwKtIZ/vlLZeu14k08BLnpqSQvjBhu3L0szuetSG9U6wjoj9Mt0sUHr5g50QfrvHQTSj/P3jU032Ti8VLVzK4A7fr5htqC8dNAzPxyfJ81VzA8lNuqAiEnS4c9ZRh9CtvoVHTLaDOph8EU1i5sHw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753887851; c=relaxed/simple;
-	bh=Sn1T+E9t//ymiad0N12BmI1IkFSKXPuD3CyYaGrrpsE=;
+	s=arc-20240116; t=1753888327; c=relaxed/simple;
+	bh=pd9a2HrcoZlQHRD4BnFCf5WXbgxLlcXBPNyT15Vbrdo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EVBA8Qe3ztaJA7h4Mr5ql0zuv7eDoh9UJqtrteMOQFcGXIzPHOSEdxbx4V0US4EzLq+/1xf3jTqkqbsrBCoNmieFz9kfP4BzPxq1Kq1v+a9kYuJRazNnTtFMN0d6kUZxtYtYTRAbzNZeh3qFJewkypVapWXorJTKHg5i+Li6I+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d+BmF6sG; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=VfRxPF7XL3N73LGHE+RkgWjM+u2QPjqIP0+vPeSIboG8MA94WfhN8r6WEfQirPupDkcpcrLaiiuWSgBUr2hAAYhLjwIUd2sK5AmJtvAdHLhuj2gXhs1YiX76dnDc7HS8sB8WU4r4rBPgHPhyqmoYshldTdhFCBU2AVc25PVfNt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K+58b8Ih; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d+BmF6sG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6958FC4CEE3;
-	Wed, 30 Jul 2025 15:04:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K+58b8Ih"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00EF8C4CEE3;
+	Wed, 30 Jul 2025 15:12:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753887850;
-	bh=Sn1T+E9t//ymiad0N12BmI1IkFSKXPuD3CyYaGrrpsE=;
+	s=k20201202; t=1753888327;
+	bh=pd9a2HrcoZlQHRD4BnFCf5WXbgxLlcXBPNyT15Vbrdo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=d+BmF6sGDuFMAgGpDPU+kFn4Rz/gyFKCMtA/B9XnL5OEKBfL1twS9yIAmg7ZH2dOr
-	 Hh5ajL0pUpX7qdkID33QLtph+haGlGOFmTqMhgU2+Lvl1c4ky1ophvkHoiT8nRRxEQ
-	 CjBPrHRiigCwIehc7MamNRdycIxs2rz9AME8eLEh1wm2vgjSKU/tBI3TIBp6ZLXJ4C
-	 dUjnAdhJG0sPRs5Wi+xF3QiuxwCuE2+u015i6/Up9JKF6BkC4GevCqcP8Fq4HMnBXi
-	 C9bYzHyv9dK8IRoY6pr9uFfUgB0arSrvTpufuA2FouNDR02JdkZjI7bCmfSfurcxYK
-	 61TCpjThS33cA==
-Date: Wed, 30 Jul 2025 08:04:09 -0700
+	b=K+58b8Ih0AHY42ZSTYyNQF2sP/40SzXPPjh/LU9NmIQOY/e5siC+7l2JQtWNHYG6E
+	 y0QRr1WjO5FkILVHgCLELo3tSyB6fn5DSu7fQNO5x17XkOPRx8rnpSRd/cvhV6ZBbd
+	 b+sZnpfHVzAo2xhz39f2dWTeaVGiYKvljF8khi4H8re79UcfB16EG41xkW/Fcm6DLz
+	 WuTPlsVkNCTrLRAQp7ERZdubmp/4lI2oetEe8lXIlEc9Elbgt0vXQceOQqmZKKWXDR
+	 j8+chOSSmsGIU9RtIqNgA+/IhAEwgo6117QEVhzrFe6XVEzYB350JRcS029a6S03uk
+	 5O8LwlAGAFnBQ==
+Date: Wed, 30 Jul 2025 08:12:06 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Luca Di Maio <luca.dimaio1@gmail.com>
-Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev,
-	smoser@chainguard.dev, hch@infradead.org
-Subject: Re: [PATCH v11 1/1] proto: add ability to populate a filesystem from
- a directory
-Message-ID: <20250730150409.GG2672070@frogsfrogsfrogs>
-References: <20250728152919.654513-2-luca.dimaio1@gmail.com>
- <20250728152919.654513-4-luca.dimaio1@gmail.com>
- <20250729214322.GH2672049@frogsfrogsfrogs>
- <bowzj7lobz6tv73swiauishctrryozcwqmqyeqck65o2qjyt5v@vufmu67nwlkc>
+To: John Garry <john.g.garry@oracle.com>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] mkfs: require reflink for max_atomic_write option
+Message-ID: <20250730151206.GQ2672049@frogsfrogsfrogs>
+References: <20250730101320.2091895-1-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,83 +41,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bowzj7lobz6tv73swiauishctrryozcwqmqyeqck65o2qjyt5v@vufmu67nwlkc>
+In-Reply-To: <20250730101320.2091895-1-john.g.garry@oracle.com>
 
-On Wed, Jul 30, 2025 at 04:40:39PM +0200, Luca Di Maio wrote:
-> Thanks Darrick for the review!
-> Sorry again for this indentation mess, I'm going to basically align all
-> function arguments and all the top-function declarations
-> I was a bit confused because elsewhere in the code is not like that so
-> it's a bit difficult to infere
+On Wed, Jul 30, 2025 at 10:13:20AM +0000, John Garry wrote:
+> For max_atomic_write option to be set, it means that the user wants to
+> support atomic writes up to that size.
 > 
-> Offtopic: maybe we could also introduce an editorconfig setup? so that
-> all various editors will be correctly set to see the tabs/spaces as
-> needed (https://editorconfig.org/)
-
-Hrmm, that /would/ be useful.
-
-> Back on topic:
+> However, to support this we must have reflink, so enforce that this is
+> available.
 > 
-> On Tue, Jul 29, 2025 at 02:43:22PM -0700, Darrick J. Wong wrote:
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
 
-<snipping>
-
-> > > +	if (!S_ISSOCK(file_stat.st_mode) &&
-> > > +	    !S_ISLNK(file_stat.st_mode)  &&
-> > > +	    !S_ISFIFO(file_stat.st_mode)) {
-> > > +		close(fd);
-> > > +		fd = openat(pathfd, entry->d_name,
-> > > +			    O_NOFOLLOW | O_RDONLY | O_NOATIME);
-> >
-> > Just out of curiosity, does O_NOATIME not work in the previous openat?
-
-[narrator: it doesn't]
-
-> Actually on my test setup (mainly using docker/podman to test), opening
-> with and without O_NOATIME when using O_PATH, does not change accesstime
-> checking with `stat`, but also it works if I add it.
-> As a precautionary measure (not sure if podman/docker is messing with
-> noatime) I'll add it, as it seems to work correctly.
-
-On second thought I think you might leave the double opens because
-O_NOATIME is only allowed if the current user owns source file, or has
-CAP_FOWNER.  If you're running mkfs as an unprivileged user trying to
-capture a rootfs (with uid 0 files) then O_NOATIME won't be allowed.
-
-Maybe something along the lines of:
-
-	/*
-	 * Try to open the source file noatime to avoid a flood of
-	 * writes to the source fs, but we can fall back to plain
-	 * readonly mode if we don't have enough permission.
-	 */
-	fd = openat(pathfd, entry->d_name, O_NOFOLLOW | O_RDONLY | O_NOATIME);
-	if (fd < 0)
-		fd = openat(pathfd, entry->d_name, O_NOFOLLOW | O_RDONLY);
-	if (fd < 0)
-		/* whine and exit */
-
-Just to see if you can open the source file without touching atime?
+Yeah, makes sense to me :P
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> > > +		 * this will make flistxattr() and fgetxattr() fail wil EBADF,
-> >
-> > "fail with EBADF"...
-> >
 > 
-> Ack.
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index b889c0de..8cd4ccd7 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3101,6 +3101,12 @@ _("metadir not supported without exchange-range support\n"));
+>  		cli->sb_feat.exchrange = true;
+>  	}
+>  
+> +	if (cli_opt_set(&iopts, I_MAX_ATOMIC_WRITE) && !cli->sb_feat.reflink) {
+> +		fprintf(stderr,
+> +_("max_atomic_write option not supported without reflink support\n"));
+> +		usage();
+> +	}
+> +
+>  	/*
+>  	 * Copy features across to config structure now.
+>  	 */
+> -- 
+> 2.43.5
 > 
-> > > +	/*
-> > > +	 * Copy over attributes.
-> > > +	 */
-> > > +	writeattrs(ip, path_buf, fd);
-> >
-> > Nothing closes fd here; does it leak?
-> >
-> > --D
-> >
 > 
-> Ack.
-> 
-> L.
