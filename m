@@ -1,80 +1,73 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8245478F37
-	for <linux-xfs@vger.kernel.org>; Wed, 30 Jul 2025 00:52:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A05DB27726
+	for <linux-xfs@vger.kernel.org>; Wed, 30 Jul 2025 02:16:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753836730; cv=none; b=X6gEvX951DH6tDPo3RtVwpP3gizcd8X12Or0friOOJ1wOgEL13TIViZQQGKzwP1BKl5k+UmMA2EMp11zz7+UvinGnZ6xUQ1nLRx+0hjbZx1nugI1ZWPf+3TyS84vmQGatuwvHfiZ/9rkhw8FoU1dQNZ7B8LQz0cDtYbd19ViMbs=
+	t=1753841797; cv=none; b=WfVcubpqDot+VdPOM7voBFex+6yxflXKd99Ww0T0g3IGA6Ne4MyfeCf3JwhXysSzrWU8+t028NMBh9BGZtrrId2L+yjuUFYtiMDgimJVGUyUdm65EptMbhc+rJcL4C6oR50AVxpb2aAwoKvXFrzZVgub7iTTZBiTmUaeckFnx/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753836730; c=relaxed/simple;
-	bh=K55yfrmOAgZyuht6by9RhaCl9tnqxjffX2Sf34/XSXI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nXdmE7AhEPosmNp/A4koqk+lUBYQm3/0ChNR10/hqrQBTgiyLvPVQz+ORoukfiUuAxDISCe5ygPaXT1zVtHl7i7nDRAfcfi+ephKNkCUb2f6fuvKI2JTzNStKf3R33TQ6b0CSa8NkPNqmLVsPmMeDedMZI0jsihxxhC88zjc94U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=DbsWvAkt; arc=none smtp.client-ip=209.85.214.173
+	s=arc-20240116; t=1753841797; c=relaxed/simple;
+	bh=NdcEv9vL9+iqZobzb+0hMtHFQj0Vvu/4WBNU1SU+No0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=If0d8R5WKym57sJgKst4DS2yM+F9q3bskxiWws5MttFWsJQyD5xz+iuoXmThErrNss5XrsZkXMV+x3L47cjlz1HXjT6bMSmqSel3ns4efAHE2cAirazWxhZQZ8ak37dX+29JxbiBCrzqMP1oqWZAX+90XT9PkI5YENEbzF40CPk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=BTgqaxbf; arc=none smtp.client-ip=209.85.210.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="DbsWvAkt"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-236377f00a1so54871975ad.3
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 17:52:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="BTgqaxbf"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-748d982e97cso5756068b3a.1
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jul 2025 19:16:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1753836728; x=1754441528; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=q3+0fPD4oAPKgGx3/6LlKQLIWFdF50ERDWtVLnGX0c4=;
-        b=DbsWvAktSLQ1q9fV8KALw0+r98lpxiPmqf/2V1w4xB+PJREVmlF/M3lUOj3vb7id46
-         MsXaONMIE2c814J8VQzYO9/8W30oHV1GNYDnUsSQ4mIpdrcSDN9W9bsEccKAiBL2LmHl
-         41aubhn+Yqr6zsx9DcGCWkF1slzbkIFrFRr7vGXSFHuY6CGqfIe63Ljcn2dptkHBwvpp
-         ItcV2cE1PpeaSj6Yq8T7X7/gf7lSV98OY+Xx9fVX9l6SgJPpQbwwpHAOp18Zv6es3X2v
-         mVUw41y16xgZsT06zLEmkH12O0JZUpZVgy/+V7LKJv5rab1CLCrqilPq4FJN6cvq8qQL
-         xQHw==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1753841795; x=1754446595; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=5Bf1JLX3RLa9/lPoTn5oCa2s9cw86Hf3zqIJpbIUcpE=;
+        b=BTgqaxbfWLHsWsTZcohhrrSo2BuR8XVaoup3/0AYmqq7LkIHlDs5cV8y0HBdpL/9/t
+         u4nH1EPrt8Du4o29+WtqJ1D5TGjQ0/i24VacuCVxc7q927fQDLDDHW799Qgd5aQXGxac
+         DJ32k4IiXvtmpRicsH7vs7v+2Txu/3clPMrY64JngeYgpB4o+ZD1df7+eFJ+3/GnO4mB
+         3qV1FA7UIaioL3V6+xiRGk89HUYjwlmdguxi4tF32T72Dd6KaulCom8vdrG68UVz9ow/
+         Mm8ifyACb4vXNBSGeV8KrOIN++d0mXgmtp/vXx6UTMdnE8O9qJgRUaikOMLliNMEGxXZ
+         RxDA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753836728; x=1754441528;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=q3+0fPD4oAPKgGx3/6LlKQLIWFdF50ERDWtVLnGX0c4=;
-        b=WgYgsOrOBN/BsVnuySgKtgynbS/EwsD45mk8BrzLbuDab9qUP0brqQri+8ybcGHQXm
-         tdz5U36jkwjxRVw0nvan83L6sp6u2N/jIDsPrEBrUmRK/1OYIiLoB4u2G2pd32CPwb+v
-         5mX53LG7q98YyMo0s8iFkRzuJy0/rClLDOkCz88l4053bbXdf9ccSSa3axrFC3QPS+U3
-         7M0NB1Sjr50lh2U2q1FwDIRHXI1K/P3Eio6ggtp48e2I2UijlVN63/7rdQPilCL8HysT
-         C7KFW7AYhJpkCGyvmmfLw372cXNNJ/1B2ClIUSK2M5zU0UN/p9IAJxRLhkOPMXXhdQkK
-         iL6Q==
-X-Forwarded-Encrypted: i=1; AJvYcCWFwBXdXiS+PtTlaa4mtiKj70HMKyD58pxlUY+PMX5iyflUpc5C4NlmBPiQXT9JZMkdGRKek0lIXws=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy6d1oDIrCieSzyyVkrkedB2Ycb18cStxFhc7fDf+a/weLnKHMg
-	oQ5c2J8AiVFe26+DK1jbc2C/MHPAZoJ57PIOa+iPxdnHBtSKiI07Q0biSXeCoITbvGLsMxN+ZzM
-	7N5Yi
-X-Gm-Gg: ASbGnct49r+gcyGjnRphRILwQ4iFA1d0NqKnplL5jhOfQs3yAtHHerK49Y5CRbc527U
-	OVPqJDWU/u5PYCDquAJwSPDYMfHB0pgliDQJcgQWUjd4QNNFuiYB4cwnyVpMDWexEIjKTDkHIwo
-	TKwl90vLyzLCK2U+OaJb3tZfrYwO3x4eeA/ZlAioR1zTzkoPcHxGGWEyejxWdU7FIbUYQ3Bh7U9
-	Opgpee7eNq2Cab7SXgrDXKLtJ+yq2LvdWhozOYhdlB56mKueMOyngGgBY30hDX989bwiT0nA2XN
-	QJFaMis/qvcwnMiHvKNf2HxN+/l0k9dx+8RD+KR5nk/I0jDNBWK4eNm1A5hW0UetR+m7DMD7Q96
-	Pt9CPD5nDAA0Sj4FzZ6j+vohU3tMc/t0Wl+X8wKsMw9SGmm1QtlnsvnHDNs/zLmqEju4rAJZ84H
-	8fFCVOhuAb
-X-Google-Smtp-Source: AGHT+IHkORekrsc1P7gAq4NM+SMvbGxBMz8RFSwmBgPVjXtpoGecdqjtTizgxax0+6dsRPmU0LGDIQ==
-X-Received: by 2002:a17:902:d482:b0:234:986c:66bf with SMTP id d9443c01a7336-24096a4f534mr17428045ad.11.1753836727661;
-        Tue, 29 Jul 2025 17:52:07 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1753841795; x=1754446595;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=5Bf1JLX3RLa9/lPoTn5oCa2s9cw86Hf3zqIJpbIUcpE=;
+        b=sTXlu33Lu2yurrZ9AveOCPXsonw7Pp2RxpeMwx2X3lphBb9wusADNZhFFOqk+/gkG/
+         QRIQqVNUIaUc+4FM7C1WXVrxME3F0DnJFIgavqmpgBDRNl5erglDtClh+a9mHdrC08UJ
+         fKdFrmIumqmUltVjeuyBmIc5h/G6u0NKVQU/+ODKV3plBWBEd5dEDC+Ia5/3xTnx7e+i
+         Dno3Xj/Jzp326Oc0+em77g82YFqZXetPP7BosIg8ZwvNtDMaMXwPQu9pBEIMWn/njl+m
+         c/scdOIze76UFuXWU+6N826KoFKAP48y3sA58fs7N/dr8Vc0UzUVAXY1nKvZTCYdKkN9
+         lf9g==
+X-Gm-Message-State: AOJu0Yy22BRSNRprtFs1D5Gu4YflFbMGeSQ1xjhLf8H8rqVQza1dIKHr
+	9OyFhiJJiy7eLCoaqYeVuLxVqqZhR8ULGcm1Fk3JHryek4i6pipTdOlxoW9eeOP3OjuErSXnLsN
+	BE2q/
+X-Gm-Gg: ASbGncvmQUyAUn8C4HQzv+yXN/IbOSlHTtrNbnqfgfV0EW9uh7f0qoyHA5zK9gIxzxn
+	CG23/G+iPd+KMVIgnLXGdJ1hAqdTlss6wQU7tLU1PPAVZ59NWLf4cFsuNWxqG/hId1jrJIhwHqE
+	yktTTGICPULRtbnulOmmDslV8iYH2m+npC30D5hFyXD/nQVGJHA87EPLhwO3Do+COgvgQ9gy8+Q
+	U6daNHe0I5oPo4Y2a7INTG1e1Ytwd38TBEajtjBpJxTA7sKdMVtkJOFzhVgr0lB6GKmQ55L4pOP
+	FwMQtCIOFbtRUslfFTRTdXMDl4D9gV8nbinJ8mFxfsdRQ04/g1sDXa35aMUcdrcyGKhpCOgLfZp
+	tQHZ0u7aDq9RnSzvFdBooY43SQByfozXKUqFdx5Wfz8kC/UVPru6tOOdv48XucL2Rbq625JLMUA
+	==
+X-Google-Smtp-Source: AGHT+IFha5dcHF92WcRMrGk5pjovt09eKJu820EznKEWj5+3hKOvF13ENoP+ay3JJBruSZbV9zvORA==
+X-Received: by 2002:a05:6a00:986:b0:747:aa79:e2f5 with SMTP id d2e1a72fcca58-76aae05a757mr2650042b3a.0.1753841794668;
+        Tue, 29 Jul 2025 19:16:34 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-64-170.pa.nsw.optusnet.com.au. [49.181.64.170])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23fe648707asm76888805ad.135.2025.07.29.17.52.06
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7640adfebd3sm9150923b3a.67.2025.07.29.19.16.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Jul 2025 17:52:07 -0700 (PDT)
+        Tue, 29 Jul 2025 19:16:34 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.98.2)
 	(envelope-from <david@fromorbit.com>)
-	id 1ugv36-0000000HNDV-0H38;
-	Wed, 30 Jul 2025 10:52:04 +1000
-Date: Wed, 30 Jul 2025 10:52:04 +1000
+	id 1ugwMp-0000000HOmJ-0pPu;
+	Wed, 30 Jul 2025 12:16:31 +1000
+Date: Wed, 30 Jul 2025 12:16:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
-	Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	linux-raid@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] iomap: align writeback to RAID stripe boundaries
-Message-ID: <aIlstOWckYGw34rM@dread.disaster.area>
-References: <55deda1d-967d-4d68-a9ba-4d5139374a37@cybernetics.com>
+To: linux-xfs@vger.kernel.org
+Cc: hch@lst.de
+Subject: [6.17-rc0 regression] WARNING: CPU: 15 PID: 321705 at
+ fs/xfs/xfs_trans.c:256 xfs_trans_alloc+0x19b/0x280
+Message-ID: <aImAfw5TLefSY9Ha@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -83,54 +76,79 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <55deda1d-967d-4d68-a9ba-4d5139374a37@cybernetics.com>
 
-On Tue, Jul 29, 2025 at 12:13:42PM -0400, Tony Battersby wrote:
-> Improve writeback performance to RAID-4/5/6 by aligning writes to stripe
-> boundaries.  This relies on io_opt being set to the stripe size (or
-> a multiple) when BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE is set.
+Hi folks,
 
-This is the wrong layer to be pulling filesystem write alignments
-from.
+Just pulled the latest Linus kernel and running it through
+check-parallel on a 1kB block size filesystem throws a lots of these
+warnings:
 
-Filesystems already have alignment information in their on-disk
-formats. XFS has stripe unit and stripe width information in the
-filesysetm superblock that is set by mkfs.xfs.
+ ------------[ cut here ]------------
+ WARNING: CPU: 15 PID: 321705 at fs/xfs/xfs_trans.c:256 xfs_trans_alloc+0x19b/0x280
+ Modules linked in:
+ CPU: 15 UID: 0 PID: 321705 Comm: kworker/15:9 Tainted: G        W           6.16.0-dgc+ #349 PREEMPT(full)
+ Tainted: G   WARN
+ Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+ Workqueue: xfs-inodegc/loop124 xfs_inodegc_worker
+ RIP: 0010:xfs_trans_alloc+0x19b/0x280
+ Code: 00 49 c7 47 20 00 00 00 00 41 c7 07 00 00 00 00 41 80 67 18 fb 41 bc e4 ff ff ff 83 7d d4 00 0f 85 4e ff ff ff e9 5f ff ff ff <0f> 0b e9 b8 fe ff ff 31 ff 48 c7 c6 61 b0 eb 82 48 c7 c2 04 4b e5
+ RSP: 0018:ffffc9001b24fd10 EFLAGS: 00010246
+ RIP: 0010:xfs_trans_alloc+0x19b/0x280
+ RAX: ffff888244cc2000 RBX: 0000000000000000 RCX: 0000000000000000
+ RDX: 0000000000000000 RSI: ffff88828f9ee39c RDI: ffff88828f9ee000
+ Code: 00 49 c7 47 20 00 00 00 00 41 c7 07 00 00 00 00 41 80 67 18 fb 41 bc e4 ff ff ff 83 7d d4 00 0f 85 4e ff ff ff e9 5f ff ff ff <0f> 0b e9 b8 fe ff ff 31 ff 48 c7 c6 61 b0 eb 82 48 c7 c2 04 4b e5
+ RBP: ffffc9001b24fd68 R08: 0000000000000000 R09: ffffc9001b24fd78
+ R10: 0000000000343231 R11: ffffffff81abf660 R12: ffff88828f9ee000
+ R13: ffff88828f9ee39c R14: ffff88828f9ee000 R15: ffff88828f9ee000
+ FS:  0000000000000000(0000) GS:ffff88889a82e000(0000) knlGS:0000000000000000
+ CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ CR2: 0000559141e5a0c8 CR3: 0000000866625000 CR4: 0000000000350ef0
+ Call Trace:
+  <TASK>
+  xfs_free_eofblocks+0x88/0x1b0
+  xfs_inactive+0x1ad/0x3b0
+  xfs_inodegc_worker+0xaa/0x180
+  process_scheduled_works+0x1d6/0x400
+  worker_thread+0x202/0x2e0
+  kthread+0x20c/0x240
+  ret_from_fork+0x77/0x140
+  ret_from_fork_asm+0x1a/0x30
+  </TASK>
+ ---[ end trace 0000000000000000 ]---
 
-This information comes from the block device io-opt/io-min values
-exposed to userspace at mkfs time, so the filesystem already knows
-what the optimal IO alignment parameters are for the storage stack
-underneath it.
 
-Indeed, we already align extent allocations to these parameters, so
-aligning filesystem writeback to the same configured alignment makes
-a lot more sense than pulling random stuff from block devices during
-IO submission...
+I'm also seeing them from inodegc worker threads via:
 
-> @@ -1685,81 +1685,118 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
->  		struct inode *inode, loff_t pos, loff_t end_pos,
->  		unsigned len)
->  {
-> -	struct iomap_folio_state *ifs = folio->private;
-> -	size_t poff = offset_in_folio(folio, pos);
-> -	unsigned int ioend_flags = 0;
-> -	int error;
-> -
-> -	if (wpc->iomap.type == IOMAP_UNWRITTEN)
-> -		ioend_flags |= IOMAP_IOEND_UNWRITTEN;
-> -	if (wpc->iomap.flags & IOMAP_F_SHARED)
-> -		ioend_flags |= IOMAP_IOEND_SHARED;
-> -	if (folio_test_dropbehind(folio))
-> -		ioend_flags |= IOMAP_IOEND_DONTCACHE;
-> -	if (pos == wpc->iomap.offset && (wpc->iomap.flags & IOMAP_F_BOUNDARY))
-> -		ioend_flags |= IOMAP_IOEND_BOUNDARY;
-> +	struct queue_limits *lim = bdev_limits(wpc->iomap.bdev);
-> +	unsigned int io_align =
-> +		(lim->features & BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE) ?
-> +		lim->io_opt >> SECTOR_SHIFT : 0;
+  xfs_reflink_cancel_cow_range+0x79/0x200
+  xfs_inactive+0x188/0x3b0
+  xfs_inodegc_worker+0xaa/0x180
+  process_scheduled_works+0x1d6/0x400
 
-i.e. this alignment should come from the filesystem, not the block
-device.
+The warning is:
+
+	WARN_ON(mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
+
+Which indicates that we are doing inodegc on a frozen filesystem.
+We should have called xfs_inodegc_stop() from xfs_fs_sync_fs() once
+all data modification had been frozen and written back at
+SB_FREEZE_PAGEFAULT level....
+
+Ah, just got the same warning from xfs_quota_normap config, which is
+running a 4kB block size filesystem. So it has nothing to do with
+the filesystem block size. Looks like a freeze regression, then?
+
+Hmmm - this warning is in code that was modified in this merge
+window.  Specifically, commit 83a80e95e797 ("xfs: decouple
+xfs_trans_alloc_empty from xfs_trans_alloc") that was merged in the
+merge window changes how this specific warning is triggered...
+
+Christoph, looks like this is one for you - these transactions
+previously got caught in sb_start_intwrite() before the freeze state
+warning check (i.e. modifications get blocked once freeze starts, so
+never get to the warning whilst the fs is frozen). The new code
+checks the freeze state and emits the warning before the transaction
+can (correctly) account/block on freeze state via
+sb_start_intwrite().
 
 -Dave.
 -- 
