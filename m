@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 303472AE84;
-	Wed, 30 Jul 2025 14:21:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E801B2D662D;
+	Wed, 30 Jul 2025 14:23:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753885273; cv=none; b=THn7nMsfmZUsdhQsaZBTzc7F69LC9mRDewjP9vq/8srsovCKJ4EoR1+pzh6+J9d6phLwOjrKY3Jkss19VjZ+YscJ30UU2hj0/8MGQM0qcptfaI41DxMJsUHPXw7+bO3nMlDsFLJs5Sz4HJaCL2hUOmBl0X4ziXPbgwJbJBs3Reg=
+	t=1753885406; cv=none; b=KPOE8/er59JzOGi72qxo8LKu9oUxE6wGYI/UnmXMAsKVIjxZJFw0fXXPlc4tcIcjP9aIW8ypMDPGBaOejbndM5CF4cLT1Bpd8pEQW2u63UE2BVyEysrDG9KdbYCtdqZIEO23TEJJbedVXzkgVNcfyGTS/F5VO2KY6OdG3wFn/NE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753885273; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1753885406; c=relaxed/simple;
+	bh=FNip1lJ11LmzMVpo0gkxbEKPZPJ5pZDVsdSGr3tGFLA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=t9ydWMn9kca5XHxEDHTdO+UVp/jJ2fZQrZPVtrXTHOZn0JV5mYJIZK5e1wnuwkEFXr9+BWWqlJfPKIYVO4k4hyMBUREqUM1bXc8O7jWLRPEe9VZOf5DSsgVqTGmrI4VFOyWDBPqScoueTvm26oxSOgpkzzlZB4ZiRt2xdg25Knc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=05fn+5kG; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=gM6VJr8zz8ntfCVcr/wKr6jtpWbbzqvId0G3WhFN0mkDzS70paAW4Mpu/G3iJbfw/uFZ9rrpbzT527ucVONOSIeLqOM0G0HqROSmQkEghyBZ3WIZtmiLc79OtNYFhs6KK/5002ZTggMtO83QNVq/B4luqDBI894n9ogKyR6/2t4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=QYMGvZat; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="05fn+5kG"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QYMGvZat"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=05fn+5kG6S51ZTLrZ0MghA1Snq
-	qMettGxUq4zL0FKtWQYmpuuX9q8s6ROJ1cwQLGUNLV47srRCIh+ycyl2iPwk2jS13K3efa8cBQCW6
-	Bym3YL4ALLrsfNnAXJlVx5xgP1ui46HTiMAh2SEOd2gx+ZKiq8dMJ2/JbroR47ULt7qWgW5QVkgCX
-	7B9MX7TBJAQ3TdpKKTkcshBEBGQnuU99wa76QB6iFFG2Yt7wrJ6XZrZJr7f+EGWu26+bn3SCBijXU
-	JiJu+51/RbybIaEJbWwva9kcNEpqQepNIEv6AW/wU1Fm/eP7SsCilCnFbOzuTDmLL3uRhWRyFmWjh
-	C7Mwm5yw==;
+	bh=9GKp2r8p0VKwKQRo0R27r6Ik8ukpO80qLA1j84snWDc=; b=QYMGvZatFn/yMgLOwzWz59NYHg
+	PcvWn1Kn+lhdMH7q+72AzlId//VZtqLNtz+vPNysumWBYF0gwaorfb5my+SxkANMM+h9vvZHeIoXs
+	lTnbdba+nVGRaCVu9ACo19W3iQkrl412JQlc3qeP3R0bol2PAQYSZNeIEc5A38K9WdQKW5nXFrZo4
+	wGnVL68qeHfJLLG+aDhiM4fJBfTfNRuTLvKdGnDw33QF85EVDFKYyhvnpWrf8/81o/i+c5k6WmIT4
+	1jDi1dXrsEnwqe+b51PdiEajTm/6sbIx7dCsvjKCRUNFEXUnO8uweoJ+wMkmSxuJCiHQBmTtQauCA
+	URY1iZcw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uh7g7-00000001ivT-2wsT;
-	Wed, 30 Jul 2025 14:21:11 +0000
-Date: Wed, 30 Jul 2025 07:21:11 -0700
+	id 1uh7iG-00000001jKD-2NBq;
+	Wed, 30 Jul 2025 14:23:24 +0000
+Date: Wed, 30 Jul 2025 07:23:24 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs/432: fix metadump loop device blocksize problems
-Message-ID: <aIoqV0OhoCtk-ggH@infradead.org>
-References: <175381958191.3021057.13973475638062852804.stgit@frogsfrogsfrogs>
- <175381958234.3021057.8571406990911180650.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCH 1/2] fsstress: don't abort when stat(".") returns EIO
+Message-ID: <aIoq3LgL2ODgENFy@infradead.org>
+References: <175381958396.3021194.15630936445319512317.stgit@frogsfrogsfrogs>
+ <175381958421.3021194.16249782318690545446.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,10 +45,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <175381958234.3021057.8571406990911180650.stgit@frogsfrogsfrogs>
+In-Reply-To: <175381958421.3021194.16249782318690545446.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+On Tue, Jul 29, 2025 at 01:10:50PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> First, start with the premise that fstests is run with a nonzero limit
+> on the size of core dumps so that we can capture the state of
+> misbehaving fs utilities like fsck and scrub if they crash.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Can you explain what this has to do with core dumping?
+
+I'm just really confused between this patch content and the subject of
+this patch and the entire series..
+
+> This is really silly, because basic stat requests for the current
+> working directory can be satisfied from the inode cache without a disk
+> access.  In this narrow situation, EIO only happens when the fs has shut
+> down, so just exit the program.
+
+If we think it's silly we can trivially drop the xfs_is_shutdown check
+in xfs_vn_getattr.  But is it really silly?  We've tried to basically
+make every file system operation consistently fail on shut down
+file systems,
+
+> We really should have a way to query if a filesystem is shut down that
+> isn't conflated with (possibly transient) EIO errors.  But for now this
+> is what we have to do. :(
+
+Well, a new STATX_ flag would work, assuming stat doesn't actually
+fail :)  Otherwise a new ioctl/fcntl would make sense, especially as
+the shutdown concept has spread beyond XFS.
 
