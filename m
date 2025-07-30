@@ -1,1158 +1,334 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF0012DE1F0
-	for <linux-xfs@vger.kernel.org>; Wed, 30 Jul 2025 16:12:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAB92190692
+	for <linux-xfs@vger.kernel.org>; Wed, 30 Jul 2025 16:37:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753891967; cv=none; b=WFou5tFFXYTLT9nM97R/6ONncEpGkn+7LlZpB34juNRvmEGP98D/MXrFSBCGoIwsIAT0QCvPH8EiEBPIVWr8XKrwevvRiNy3IWSnWCtiUQme0Z7VJIzD8LShfe7TaSqqf7ioG4bKCZfHMH74xUvWZGAcEPJMfpFl0un5ZyX9xLU=
+	t=1753893440; cv=none; b=HZ3z7zcSF9lCImDKMSvMdaH6VdR473COlNmzdF7nld0znYq3Ugg9wgs+57CCKFxABe8hK9znthONZSzMd5d1bpHZyY3GhUMoi1srz7PxZszDbijDx81YgF4lSsYazO9UYQmhKRhog+dtWL7yDY1Ek6lAqldlI3QpURhtYHlPnQE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753891967; c=relaxed/simple;
-	bh=65VjIlLKYqpYLzKUbn9DosRpznaGSgli7TEKZzKW+F8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aTRLrvMWIZMzwZGbOw5PCo3SzaW23VgprX9EvRdLTlsV2FXKfLEAl9E38/eYFfvS+I3Q93Q6Kr5aHA1NBkh1wwbnJAhDlthtZmQUPU6ujYvoy6yTxylLTnhlBy0XOUXMMNX7Ws7wsdSLZ+ZHJyFuD9YNbunCQlaFvOjD86QGI8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Dug2Ua4M; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1753893440; c=relaxed/simple;
+	bh=mO07ZDy4L62/O4ihgL0sahyImHYfrp24QFGfwZNLdc8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Lc22a2w99VqHT/i05dKv/LABdVDM8fsgStlyc73X+qgXnXB+kRByhRxm2PXFINTDCJypNsVgeL5N+FyylghVjTCOCXYvoDxABfKWD4uiCz0rXGeglQ2Qn8r3PJ9OH84ZCCHKxP9laUbl7s/3KDyKzsGQ8E8LHFZvsRxdqOeZ7rE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i6hhpN8n; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Dug2Ua4M"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-45892deb25bso9631075e9.3
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Jul 2025 09:12:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753891963; x=1754496763; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=EOLQUZOkDaDOnbp5zocd1uRcRBkcZCNQcvdaPZH/EoA=;
-        b=Dug2Ua4MAkoHzLVYP50SdsUCE+fhJr3LpYdprZmAZs1KotbToVTBDf+XwjUx0MH9m8
-         93MZ7I7eiLh5HMFDqieYzzwIqx9FGg7NX17cRb1yEToDf3WJ8rlSdPFVBJKJPi98GWcX
-         StH+vA+9bo7hLq5SoWq6jK4eIA33ymYDS4UhzoKiJCMN2lIozd6uRqbnR7r95DB9PSmx
-         0L08ksxNja3VD/KNpvLcby4j4bT21o6UH+WAqCtG0kNBE3iFabFu3Is0RzwGOlPZ7TqR
-         Yy4UP/HN0l/E6oSaxuthQY5OHvkaKTFwKSdb5AKi3uCb2jWciq0HheTy/ycSD2ZxRIum
-         AOvA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753891963; x=1754496763;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=EOLQUZOkDaDOnbp5zocd1uRcRBkcZCNQcvdaPZH/EoA=;
-        b=Q8XMwJNIUIFC+qQoGDFRqXeLuCsUL9Bbs3azQ2lGNaI4rCr3JE6JyQys3CDA2Mkae0
-         GH580Xntlwf2HV2tLpTYmwypCfCC2tJyvpM43IrNJU60VMTk715IZwPFhnMZ9X7cIcQn
-         LtARj3inAm7ApM2D8uMD2qvweCGebPpxRV4GcTqd+uarzyYJzyR4g89AD3Ge0E2bdk8p
-         +vI0UIaspo+8hhZqqq+wsfb70VnN2nu3J/QLeHlT6vdTx6nYnpgvcqz53JtwZLYNIkY4
-         ZmUrpezUIRPe15aB56VjVNk5/CAksPAjJigfuL5G1yuNZHfzutkNHJdv/kwVrHQmTTr2
-         SLrQ==
-X-Gm-Message-State: AOJu0YxViY0BZA3zAgFAGCEuQwItsuQKvribg8SCuPA4Z0cdXL4qS/R/
-	P3UFtJO2cQ9n2tYhODD+JdF6TxuwZpZ3HbiClvtviR+RZkjUkG7KNZRlwO+rENGA
-X-Gm-Gg: ASbGnct/sZ7/yTkalckk+dkxNXY7vUZzqmZqtD7IvdEKJReAL0Ju7AuimqO7lqpC8hJ
-	EaRAd+ObV9aegsXpyHvZ16Jv8X6M5VFJsNus/zjbYGviikI2tTkS6ecEgDEQiWF+wsI4i7ePDd3
-	0N1I6kiDSu2CDTwCUJTICsAy0EPvjwQmok3M5T70JPgoxc85YPIVmlgFGMhXuu/uNe69SJFdaGy
-	PsmFWTHjz0+9egu7KyXq01pCrJWM73G5Z1miVFUR2pRN2GUlbQu74fd/iaSsoK13jr4kAx+nXzn
-	i/BWgBTg2EQj/Re54No+Fn+ETiLc5GQSeacCyGag3IVtTO3PFYBgnv3P84uCdgQrcurBBz2XZJ7
-	XLTpps1zmQrXQflEeiwzXmGKoIsTWV6x7A9l7g7VG1siGB+5fdLE/9pFobtYdZn9KOp6YlvwTnz
-	2C3lK3nA==
-X-Google-Smtp-Source: AGHT+IGRw642EZTi/zcXI22kiXwzp5n+qjIbawY+lSv7ca7mMGCmT2IHxEkl+FxhA/yUgJJEjrJmHg==
-X-Received: by 2002:a05:600c:4e47:b0:456:43c:dcdc with SMTP id 5b1f17b1804b1-45892bdf6c0mr32841575e9.33.1753891962815;
-        Wed, 30 Jul 2025 09:12:42 -0700 (PDT)
-Received: from framework13.tail696c1.ts.net (93-44-110-195.ip96.fastwebnet.it. [93.44.110.195])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-458952f24c2sm33680095e9.0.2025.07.30.09.12.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Jul 2025 09:12:42 -0700 (PDT)
-From: Luca Di Maio <luca.dimaio1@gmail.com>
-To: linux-xfs@vger.kernel.org
-Cc: Luca Di Maio <luca.dimaio1@gmail.com>,
-	dimitri.ledkov@chainguard.dev,
-	smoser@chainguard.dev,
-	djwong@kernel.org,
-	hch@infradead.org
-Subject: [PATCH v12 1/1] proto: add ability to populate a filesystem from a directory
-Date: Wed, 30 Jul 2025 18:12:22 +0200
-Message-ID: <20250730161222.1583872-2-luca.dimaio1@gmail.com>
-X-Mailer: git-send-email 2.50.0
-In-Reply-To: <20250730161222.1583872-1-luca.dimaio1@gmail.com>
-References: <20250730161222.1583872-1-luca.dimaio1@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i6hhpN8n"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E47CC4CEE3;
+	Wed, 30 Jul 2025 16:37:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1753893439;
+	bh=mO07ZDy4L62/O4ihgL0sahyImHYfrp24QFGfwZNLdc8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=i6hhpN8ngEKd7xB2KCbjmvmS2r679Zes7tT7dQ0nHPaF7VMwtza9fR6f7+dfPBngp
+	 BqjZZt/s21DqWTsCIbUCJ+1siSFyOGY9vVgsdIb7XIAW0d/g1bv/Lp26s88oxbysvE
+	 ewTfvUPRIbsLFFlj4ozr+JsP+u+2H77d+m2vqdjlpenidTHvpcu/kAf1J2V4/1wPpp
+	 AqDg+xnLCIG3RMMpucTXWS0nzE8fjFbR3nrTU0crMNr5T6P+E3s1H+7+ZmTGvd06ly
+	 oIWAFkVWq+cPzEkNya5OfpACq3EfQuUip974zTFke/vP7la7P1xod5CZ+cA7QP6B4R
+	 G/oWn4uiA/QWA==
+Date: Wed, 30 Jul 2025 18:37:15 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, 
+	hch@lst.de
+Subject: Re: [ regression] WARNING: CPU: 15 PID: 321705 at
+ fs/xfs/xfs_trans.c:256 xfs_trans_alloc+0x19b/0x280
+Message-ID: <vgznarj4ummxldvcmhxhhnwgzkc23ixoaimwufnxgncjsaimep@qi4xbbdjfwnt>
+References: <4Pdlams-6A6GKExDCiB0UCMs05wgppYESFHPkiWWLomRD-zUJABHPKzUijI8wpMOGqJUEgmdH-CGMHWXzl-2Lg==@protonmail.internalid>
+ <aImAfw5TLefSY9Ha@dread.disaster.area>
+ <5buaxegd7ojyrovcuk5bke4re3stb5d6lpfpeog2t7zy6ggrxj@gyacvoh26bqv>
+ <S4Pnp-OInGCJ6Wsj2N0ck5DC4sxWx8I1JV6F_hRk7vmL05Z3WVohFtywBfqy5Os3Znolf79WU2xc5MCT938NfA==@protonmail.internalid>
+ <20250730152409.GR2672049@frogsfrogsfrogs>
+ <wde2dc5xiukoglhrymvho7wn7z7aq6opqh3uao7o7kp43jtsrv@fe2vfb7ve664>
+ <dy_QEyeQ7fDCmPs5PXkhdj6LJ9EYujYFEACCzqCPVVCHnDBDmLmtwBTv_RlyYdhuifDHlEeddoIfhzDuRSmEqA==@protonmail.internalid>
+ <20250730160849.GH2672070@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250730160849.GH2672070@frogsfrogsfrogs>
 
-This patch implements the functionality to populate a newly created XFS
-filesystem directly from an existing directory structure.
+On Wed, Jul 30, 2025 at 09:08:49AM -0700, Darrick J. Wong wrote:
+> On Wed, Jul 30, 2025 at 05:35:45PM +0200, Carlos Maiolino wrote:
+> > On Wed, Jul 30, 2025 at 08:24:09AM -0700, Darrick J. Wong wrote:
+> > > On Wed, Jul 30, 2025 at 05:16:22PM +0200, Carlos Maiolino wrote:
+> > > > On Wed, Jul 30, 2025 at 12:16:31PM +1000, Dave Chinner wrote:
+> > > > > Hi folks,
+> > > > >
+> > > > > Just pulled the latest Linus kernel and running it through
+> > > > > check-parallel on a 1kB block size filesystem throws a lots of these
+> > > > > warnings:
+> > > > >
+> > > > >  ------------[ cut here ]------------
+> > > > >  WARNING: CPU: 15 PID: 321705 at fs/xfs/xfs_trans.c:256 xfs_trans_alloc+0x19b/0x280
+> > > > >  Modules linked in:
+> > > > >  CPU: 15 UID: 0 PID: 321705 Comm: kworker/15:9 Tainted: G        W           6.16.0-dgc+ #349 PREEMPT(full)
+> > > > >  Tainted: G   WARN
+> > > >
+> > > > FWIW, I *just* hit the assertion below on generic/475 running with 1k
+> > > > blocks:
+> > > >
+> > > > My apologies for not having much more information, I didn't have time to debug
+> > > > it yet. I'm posting it here for broader audience by now as I haven't seen this
+> > > > before, I'll try to find some time to look more into it.
+> > >
+> > > Can you post the ~20 or so lines before timestamp 6690.585792?  That'll
+> > > tell us where the actual validation failure came from.
+> >
+> > Woops, sorry, my bad
+> >
+> > /me recovers from journalctl...
+> >
+> > Jul 30 05:09:44 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942914, async page read
+> > Jul 30 05:09:44 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942915, async page read
+> > Jul 30 05:09:44 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942916, async page read
+> > Jul 30 05:09:44 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942917, async page read
+> > Jul 30 05:09:44 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942918, async page read
+> > Jul 30 05:09:44 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942919, async page read
+> > Jul 30 05:09:44 kvm-03-guest-02 XFS (dm-0): Unmounting Filesystem 1ea140bb-1c75-4cbf-b223-fbc920d915dc
+> > Jul 30 05:09:44 kvm-03-guest-02 XFS (dm-0): Mounting V5 Filesystem 1ea140bb-1c75-4cbf-b223-fbc920d915dc
+> > Jul 30 05:09:44 kvm-03-guest-02 XFS (dm-0): Starting recovery (logdev: /dev/mapper/error-logtest.475)
+> > Jul 30 05:09:45 kvm-03-guest-02 XFS (dm-0): Ending recovery (logdev: /dev/mapper/error-logtest.475)
+> > Jul 30 05:09:46 kvm-03-guest-02 Buffer I/O error on dev dm-1, logical block 243952, async page read
+> > Jul 30 05:09:46 kvm-03-guest-02 iomap_finish_ioend_buffered: 13 callbacks suppressed
+> > Jul 30 05:09:46 kvm-03-guest-02 dm-0: writeback error on inode 34139758, offset 937984, sector 21556064
+> > Jul 30 05:09:46 kvm-03-guest-02 dm-0: writeback error on inode 2291073, offset 983040, sector 2775570
+> > Jul 30 05:09:46 kvm-03-guest-02 dm-0: writeback error on inode 36255614, offset 6242304, sector 23842146
+> > Jul 30 05:09:46 kvm-03-guest-02 dm-0: writeback error on inode 51105153, offset 105472, sector 33829804
+> > Jul 30 05:09:46 kvm-03-guest-02 dm-0: writeback error on inode 2291073, offset 949248, sector 2775504
+> > Jul 30 05:09:46 kvm-03-guest-02 XFS (dm-0): metadata I/O error in "xfs_btree_read_buf_block+0xb7/0x170 [xfs]" at daddr 0x1c06e len 2 error 5
+> > Jul 30 05:09:46 kvm-03-guest-02 XFS (dm-0): log I/O error -5
+> > Jul 30 05:09:46 kvm-03-guest-02 XFS (dm-0): log I/O error -5
+> > Jul 30 05:09:46 kvm-03-guest-02 dm-0: writeback error on inode 34294626, offset 617472, sector 23879134
+> > Jul 30 05:09:46 kvm-03-guest-02 dm-0: writeback error on inode 651041, offset 7212032, sector 13289178
+> > Jul 30 05:09:46 kvm-03-guest-02 dm-0: writeback error on inode 651041, offset 7569408, sector 13301400
+> > Jul 30 05:09:46 kvm-03-guest-02 XFS (dm-0): log I/O error -5
+> > Jul 30 05:09:46 kvm-03-guest-02 dm-0: writeback error on inode 2028146, offset 184320, sector 2789202
+> > Jul 30 05:09:46 kvm-03-guest-02 dm-0: writeback error on inode 17609905, offset 2296832, sector 12848410
+> > Jul 30 05:09:46 kvm-03-guest-02 XFS (dm-0): log I/O error -5
+> > Jul 30 05:09:46 kvm-03-guest-02 XFS (dm-0): log I/O error -5
+> > Jul 30 05:09:46 kvm-03-guest-02 XFS (dm-0): Metadata I/O Error (0x1) detected at xfs_trans_read_buf_map+0x1fe/0x4c0 [xfs] (fs/xfs/xfs_trans_buf.c:311).  Shutting down filesystem.
+> > Jul 30 05:09:46 kvm-03-guest-02 XFS (dm-0): Please unmount the filesystem and rectify the problem(s)
+> > Jul 30 05:09:46 kvm-03-guest-02 XFS (dm-0): Unmounting Filesystem 1ea140bb-1c75-4cbf-b223-fbc920d915dc
+> > Jul 30 05:09:47 kvm-03-guest-02 XFS (dm-0): Mounting V5 Filesystem 1ea140bb-1c75-4cbf-b223-fbc920d915dc
+> > Jul 30 05:09:47 kvm-03-guest-02 XFS (dm-0): Starting recovery (logdev: /dev/mapper/error-logtest.475)
+> > Jul 30 05:09:47 kvm-03-guest-02 XFS (dm-0): Ending recovery (logdev: /dev/mapper/error-logtest.475)
+> > Jul 30 05:09:49 kvm-03-guest-02 buffer_io_error: 8 callbacks suppressed
+> > Jul 30 05:09:49 kvm-03-guest-02 Buffer I/O error on dev dm-1, logical block 243952, async page read
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): metadata I/O error in "xfs_btree_read_buf_block+0xb7/0x170 [xfs]" at daddr 0x14669bc len 2 error 5
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): metadata I/O error in "xfs_btree_read_buf_block+0xb7/0x170 [xfs]" at daddr 0xa02598 len 2 error 5
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): log I/O error -5
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): log I/O error -5
+> > Jul 30 05:09:49 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942912, async page read
+> > Jul 30 05:09:49 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942913, async page read
+> > Jul 30 05:09:49 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942914, async page read
+> > Jul 30 05:09:49 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942915, async page read
+> > Jul 30 05:09:49 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942916, async page read
+> > Jul 30 05:09:49 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942917, async page read
+> > Jul 30 05:09:49 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942918, async page read
+> > Jul 30 05:09:49 kvm-03-guest-02 Buffer I/O error on dev dm-0, logical block 41942919, async page read
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): log I/O error -5
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): log I/O error -5
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): log I/O error -5
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): log I/O error -5
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): log I/O error -5
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): Metadata I/O Error (0x1) detected at xfs_trans_read_buf_map+0x1fe/0x4c0 [xfs] (fs/xfs/xfs_trans_buf.c:311).  Shutting down filesystem.
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): Please unmount the filesystem and rectify the problem(s)
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): Metadata corruption detected at xfs_dinode_verify.part.0+0x434/0xcb0 [xfs], inode 0x11cfdad xfs_inode_item_precommit_check
+> 
+> Could you addr2line xfs_dinode_verify.part.0+0x434/0xcb0, please?
 
-It resuses existing protofile logic, it branches if input is a
-directory.
+Unless I messed up, it should be this:
 
-The population process steps are as follows:
-  - create the root inode before populating content
-  - recursively process nested directories
-  - handle regular files, directories, symlinks, char devices, block
-    devices, sockets, fifos
-  - preserve attributes (ownership, permissions)
-  - preserve mtime timestamps from source files to maintain file history
-    - use current time for atime/ctime/crtime
-    - possible to specify atime=1 to preserve atime timestamps from
-      source files
-  - preserve extended attributes and fsxattrs for all file types
-  - preserve hardlinks
+$ addr2line --exe=fs/xfs/xfs.ko  xfs_dinode_verify.part.0+0x434/0xcb0
+kernel/run-test/fs/xfs/libxfs/xfs_inode_buf.c:438 (discriminator 20)
 
-At the moment, the implementation for the hardlink tracking is very
-simple, as it involves a linear search.
-from my local testing using larger source directories
-(1.3mln inodes, ~400k hardlinks) the difference was actually
-just a few seconds (given that most of the time is doing i/o).
-We might want to revisit that in the future if this becomes a
-bottleneck.
 
-This functionality makes it easier to create populated filesystems
-without having to mount them, it's particularly useful for
-reproducible builds.
 
-Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
----
- man/man8/mkfs.xfs.8.in |  38 +-
- mkfs/proto.c           | 771 ++++++++++++++++++++++++++++++++++++++++-
- mkfs/proto.h           |  18 +-
- mkfs/xfs_mkfs.c        |  23 +-
- 4 files changed, 817 insertions(+), 33 deletions(-)
-
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index bc804931..4497468f 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -28,7 +28,7 @@ mkfs.xfs \- construct an XFS filesystem
- .I naming_options
- ] [
- .B \-p
--.I protofile_options
-+.I prototype_options
- ] [
- .B \-q
- ] [
-@@ -977,30 +977,40 @@ option set.
- .PP
- .PD 0
- .TP
--.BI \-p " protofile_options"
-+.BI \-p " prototype_options"
- .TP
- .BI "Section Name: " [proto]
- .PD
--These options specify the protofile parameters for populating the filesystem.
-+These options specify the prototype parameters for populating the filesystem.
- The valid
--.I protofile_options
-+.I prototype_options
- are:
- .RS 1.2i
- .TP
--.BI [file=] protofile
-+.BI [file=]
- The
- .B file=
- prefix is not required for this CLI argument for legacy reasons.
- If specified as a config file directive, the prefix is required.
--
-+.TP
-+.BI [file=] directory
- If the optional
- .PD
--.I protofile
--argument is given,
-+.I prototype
-+argument is given, and it's a directory,
- .B mkfs.xfs
--uses
--.I protofile
--as a prototype file and takes its directions from that file.
-+will populate the root file system with the contents of the given directory
-+tree.
-+Content, timestamps (atime, mtime), attributes and extended attributes
-+are preserved for all file types.
-+.TP
-+.BI [file=] protofile
-+If the optional
-+.PD
-+.I prototype
-+argument is given, and points to a regular file,
-+.B mkfs.xfs
-+uses it as a prototype file and takes its directions from that file.
- The blocks and inodes specifiers in the
- .I protofile
- are provided for backwards compatibility, but are otherwise unused.
-@@ -1136,8 +1146,12 @@ always terminated with the dollar (
- .B $
- ) token.
- .TP
-+.BI atime= value
-+If set to 1,  mkfs will copy in access timestamps from the source files.
-+Otherwise, access timestamps will be set to the current time.
-+.TP
- .BI slashes_are_spaces= value
--If set to 1, slashes ("/") in the first token of each line of the protofile
-+If set to 1, slashes ("/") in the first token of each line of the prototype file
- are converted to spaces.
- This enables the creation of a filesystem containing filenames with spaces.
- By default, this is set to 0.
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 7f80bef8..bd73d38c 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -5,6 +5,8 @@
-  */
-
- #include "libxfs.h"
-+#include <dirent.h>
-+#include <sys/resource.h>
- #include <sys/stat.h>
- #include <sys/xattr.h>
- #include <linux/xattr.h>
-@@ -21,6 +23,11 @@ static void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
- static int newregfile(char **pp, char **fname);
- static void rtinit(xfs_mount_t *mp);
- static off_t filesize(int fd);
-+static void populate_from_dir(struct xfs_mount *mp, struct fsxattr *fsxp,
-+		char *source_dir);
-+static void walk_dir(struct xfs_mount *mp, struct xfs_inode *pip,
-+		struct fsxattr *fsxp, char *path_buf, int path_len);
-+static int preserve_atime;
- static int slashes_are_spaces;
-
- /*
-@@ -54,23 +61,49 @@ getnum(
- 	return i;
- }
-
--char *
-+struct proto_source
- setup_proto(
--	char	*fname)
-+	char			*fname)
- {
--	char		*buf = NULL;
--	static char	dflt[] = "d--755 0 0 $";
--	int		fd;
--	long		size;
-+	struct proto_source	result = {};
-+	struct stat		statbuf;
-+	char			*buf = NULL;
-+	static char		dflt[] = "d--755 0 0 $";
-+	int			fd;
-+	long			size;
-+
-+	/*
-+	 * If no prototype path is supplied, use the default protofile which
-+	 * creates only a root directory.
-+	 */
-+	if (!fname) {
-+		result.type = PROTO_SRC_PROTOFILE;
-+		result.data = dflt;
-+		return result;
-+	}
-
--	if (!fname)
--		return dflt;
- 	if ((fd = open(fname, O_RDONLY)) < 0 || (size = filesize(fd)) < 0) {
- 		fprintf(stderr, _("%s: failed to open %s: %s\n"),
- 			progname, fname, strerror(errno));
- 		goto out_fail;
- 	}
-
-+	if (fstat(fd, &statbuf) < 0)
-+		fail(_("invalid or unreadable source path"), errno);
-+
-+	/*
-+	 * Handle directory inputs.
-+	 */
-+	if (S_ISDIR(statbuf.st_mode)) {
-+		close(fd);
-+		result.type = PROTO_SRC_DIR;
-+		result.data = fname;
-+		return result;
-+	}
-+
-+	/*
-+	 * Else this is a protofile, let's handle traditionally.
-+	 */
- 	buf = malloc(size + 1);
- 	if (read(fd, buf, size) < size) {
- 		fprintf(stderr, _("%s: read failed on %s: %s\n"),
-@@ -90,7 +123,10 @@ setup_proto(
- 	(void)getnum(getstr(&buf), 0, 0, false);	/* block count */
- 	(void)getnum(getstr(&buf), 0, 0, false);	/* inode count */
- 	close(fd);
--	return buf;
-+
-+	result.type = PROTO_SRC_PROTOFILE;
-+	result.data = buf;
-+	return result;
-
- out_fail:
- 	if (fd >= 0)
-@@ -379,6 +415,13 @@ writeattr(
- 	int			error;
-
- 	ret = fgetxattr(fd, attrname, valuebuf, valuelen);
-+	/*
-+	 * In case of filedescriptors with O_PATH, fgetxattr() will fail with
-+	 * EBADF.
-+	 * Let's try to fallback to lgetxattr() using input path.
-+	 */
-+	if (ret < 0 && errno == EBADF)
-+		ret = lgetxattr(fname, attrname, valuebuf, valuelen);
- 	if (ret < 0) {
- 		if (errno == EOPNOTSUPP)
- 			return;
-@@ -425,6 +468,13 @@ writeattrs(
- 		fail(_("error allocating xattr name buffer"), errno);
-
- 	ret = flistxattr(fd, namebuf, XATTR_LIST_MAX);
-+	/*
-+	 * In case of filedescriptors with O_PATH, flistxattr() will fail with
-+	 * EBADF.
-+	 * Let's try to fallback to llistxattr() using input path.
-+	 */
-+	if (ret < 0 && errno == EBADF)
-+		ret = llistxattr(fname, namebuf, XATTR_LIST_MAX);
- 	if (ret < 0) {
- 		if (errno == EOPNOTSUPP)
- 			goto out_namebuf;
-@@ -931,13 +981,29 @@ parseproto(
-
- void
- parse_proto(
--	xfs_mount_t	*mp,
--	struct fsxattr	*fsx,
--	char		**pp,
--	int		proto_slashes_are_spaces)
-+	xfs_mount_t		*mp,
-+	struct fsxattr		*fsx,
-+	struct proto_source	*protosource,
-+	int			proto_slashes_are_spaces,
-+	int			proto_preserve_atime)
- {
-+	preserve_atime = proto_preserve_atime;
- 	slashes_are_spaces = proto_slashes_are_spaces;
--	parseproto(mp, NULL, fsx, pp, NULL);
-+
-+	/*
-+	 * In case of a file input, we will use the prototype file logic else
-+	 * we will fallback to populate from dir.
-+	 */
-+	switch(protosource->type) {
-+	case PROTO_SRC_PROTOFILE:
-+		parseproto(mp, NULL, fsx, &protosource->data, NULL);
-+		break;
-+	case PROTO_SRC_DIR:
-+		populate_from_dir(mp, fsx, protosource->data);
-+		break;
-+	case PROTO_SRC_NONE:
-+		fail(_("invalid or unreadable source path"), ENOENT);
-+	}
- }
-
- /* Create a sb-rooted metadata file. */
-@@ -1172,3 +1238,680 @@ filesize(
- 		return -1;
- 	return stb.st_size;
- }
-+
-+/* Try to allow as many open directories as possible. */
-+static void
-+bump_max_fds(void)
-+{
-+	struct rlimit	rlim = {};
-+	int		ret;
-+
-+	ret = getrlimit(RLIMIT_NOFILE, &rlim);
-+	if (ret)
-+		return;
-+
-+	rlim.rlim_cur = rlim.rlim_max;
-+	ret = setrlimit(RLIMIT_NOFILE, &rlim);
-+	if (ret < 0)
-+		fprintf(stderr, _("%s: could not bump fd limit: [ %d - %s]\n"),
-+			progname, errno, strerror(errno));
-+}
-+
-+static void
-+writefsxattrs(
-+	struct xfs_inode	*ip,
-+	struct fsxattr		*fsxp)
-+{
-+	ip->i_projid  = fsxp->fsx_projid;
-+	ip->i_extsize = fsxp->fsx_extsize;
-+	ip->i_diflags = xfs_flags2diflags(ip, fsxp->fsx_xflags);
-+	if (xfs_has_v3inodes(ip->i_mount)) {
-+		ip->i_diflags2   = xfs_flags2diflags2(ip, fsxp->fsx_xflags);
-+		ip->i_cowextsize = fsxp->fsx_cowextsize;
-+	}
-+}
-+
-+static void
-+writetimestamps(
-+	struct xfs_inode	*ip,
-+	struct stat		*statbuf)
-+{
-+	struct timespec64	ts;
-+
-+	/*
-+	 * Copy timestamps from source file to destination inode.
-+	 * Usually reproducible archives will delete or not register
-+	 * atime and ctime, for example:
-+	 *    https://www.gnu.org/software/tar/manual/html_section/Reproducibility.html
-+	 * hence we will only copy mtime, and let ctime/crtime be set to
-+	 * current time.
-+	 * atime will be copied over if atime is true.
-+	 */
-+	ts.tv_sec  = statbuf->st_mtim.tv_sec;
-+	ts.tv_nsec = statbuf->st_mtim.tv_nsec;
-+	inode_set_mtime_to_ts(VFS_I(ip), ts);
-+
-+	/*
-+	 * In case of atime option, we will copy the atime  timestamp
-+	 * from source.
-+	 */
-+	if (preserve_atime) {
-+		ts.tv_sec  = statbuf->st_atim.tv_sec;
-+		ts.tv_nsec = statbuf->st_atim.tv_nsec;
-+		inode_set_atime_to_ts(VFS_I(ip), ts);
-+	}
-+}
-+
-+struct hardlink {
-+	ino_t		src_ino;
-+	xfs_ino_t	dst_ino;
-+};
-+
-+struct hardlinks {
-+	size_t		count;
-+	size_t		size;
-+	struct hardlink	*entries;
-+};
-+
-+/* Growth strategy for hardlink tracking array */
-+/* Double size for small arrays */
-+#define HARDLINK_DEFAULT_GROWTH_FACTOR	2
-+/* Grow by 25% for large arrays */
-+#define HARDLINK_LARGE_GROWTH_FACTOR	0.25
-+/* Threshold to switch growth strategies */
-+#define HARDLINK_THRESHOLD		1024
-+/* Initial allocation size */
-+#define HARDLINK_TRACKER_INITIAL_SIZE	4096
-+
-+/*
-+ * Keep track of source inodes that are from hardlinks so we can retrieve them
-+ * when needed to setup in destination.
-+ */
-+static struct hardlinks hardlink_tracker = { 0 };
-+
-+static void
-+init_hardlink_tracker(void)
-+{
-+	hardlink_tracker.size = HARDLINK_TRACKER_INITIAL_SIZE;
-+	hardlink_tracker.entries = calloc(
-+			hardlink_tracker.size,
-+			sizeof(struct hardlink));
-+	if (!hardlink_tracker.entries)
-+		fail(_("error allocating hardlinks tracking array"), errno);
-+}
-+
-+static void
-+cleanup_hardlink_tracker(void)
-+{
-+	free(hardlink_tracker.entries);
-+	hardlink_tracker.entries = NULL;
-+	hardlink_tracker.count = 0;
-+	hardlink_tracker.size = 0;
-+}
-+
-+static xfs_ino_t
-+get_hardlink_dst_inode(
-+	xfs_ino_t	i_ino)
-+{
-+	for (size_t i = 0; i < hardlink_tracker.count; i++) {
-+		if (hardlink_tracker.entries[i].src_ino == i_ino)
-+			return hardlink_tracker.entries[i].dst_ino;
-+	}
-+	return 0;
-+}
-+
-+static void
-+track_hardlink_inode(
-+	ino_t	src_ino,
-+	xfs_ino_t	dst_ino)
-+{
-+	if (hardlink_tracker.count >= hardlink_tracker.size) {
-+		/*
-+		 * double for smaller capacity.
-+		 * instead grow by 25% steps for larger capacities.
-+		 */
-+		const size_t old_size = hardlink_tracker.size;
-+		size_t new_size = old_size * HARDLINK_DEFAULT_GROWTH_FACTOR;
-+		if (old_size > HARDLINK_THRESHOLD)
-+			new_size = old_size + (old_size * HARDLINK_LARGE_GROWTH_FACTOR);
-+
-+		struct hardlink *resized_array = reallocarray(
-+				hardlink_tracker.entries,
-+				new_size,
-+				sizeof(struct hardlink));
-+		if (!resized_array)
-+			fail(_("error enlarging hardlinks tracking array"), errno);
-+
-+		memset(&resized_array[old_size], 0,
-+				(new_size - old_size) * sizeof(struct hardlink));
-+
-+		hardlink_tracker.entries = resized_array;
-+		hardlink_tracker.size = new_size;
-+	}
-+	hardlink_tracker.entries[hardlink_tracker.count].src_ino = src_ino;
-+	hardlink_tracker.entries[hardlink_tracker.count].dst_ino = dst_ino;
-+	hardlink_tracker.count++;
-+}
-+
-+/*
-+ * This function will first check in our tracker if the input hardlink has
-+ * already been stored, if not report false so create_nondir_inode() can continue
-+ * handling the inode as regularly, and later save the source inode in our
-+ * buffer for future consumption.
-+ */
-+static bool
-+handle_hardlink(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*pip,
-+	struct xfs_name		xname,
-+	struct stat		file_stat)
-+{
-+	int			error;
-+	xfs_ino_t		dst_ino;
-+	struct xfs_inode	*ip;
-+	struct xfs_trans	*tp;
-+	struct xfs_parent_args	*ppargs = NULL;
-+
-+	tp = getres(mp, 0);
-+	ppargs = newpptr(mp);
-+	dst_ino = get_hardlink_dst_inode(file_stat.st_ino);
-+
-+	/*
-+	 * We didn't find the hardlink inode, this means it's the first time
-+	 * we see it, report error so create_nondir_inode() can continue handling the
-+	 * inode as a regular file type, and later save the source inode in our
-+	 * buffer for future consumption.
-+	 */
-+	if (dst_ino == 0)
-+		return false;
-+
-+	error = libxfs_iget(mp, NULL, dst_ino, 0, &ip);
-+	if (error)
-+		fail(_("failed to get inode"), error);
-+
-+	/*
-+	 * In case the inode was already in our tracker we need to setup the
-+	 * hardlink and skip file copy.
-+	 */
-+	libxfs_trans_ijoin(tp, pip, 0);
-+	libxfs_trans_ijoin(tp, ip, 0);
-+	newdirent(mp, tp, pip, &xname, ip, ppargs);
-+
-+	/*
-+	 * Increment the link count
-+	 */
-+	libxfs_bumplink(tp, ip);
-+
-+	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		fail(_("Error encountered creating file from prototype file"), error);
-+
-+	libxfs_parent_finish(mp, ppargs);
-+	libxfs_irele(ip);
-+
-+	return true;
-+}
-+
-+static void
-+create_directory_inode(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*pip,
-+	struct fsxattr		*fsxp,
-+	int			mode,
-+	struct cred		creds,
-+	struct xfs_name		xname,
-+	int			flags,
-+	struct stat		file_stat,
-+	int			fd,
-+	char			*entryname,
-+	char			*path_buf,
-+	int			path_len)
-+{
-+
-+	int			error;
-+	struct xfs_inode	*ip;
-+	struct xfs_trans	*tp;
-+	struct xfs_parent_args	*ppargs = NULL;
-+
-+	tp = getres(mp, 0);
-+	ppargs = newpptr(mp);
-+
-+	error = creatproto(&tp, pip, mode, 0, &creds, fsxp, &ip);
-+	if (error)
-+		fail(_("Inode allocation failed"), error);
-+
-+	libxfs_trans_ijoin(tp, pip, 0);
-+
-+	newdirent(mp, tp, pip, &xname, ip, ppargs);
-+
-+	libxfs_bumplink(tp, pip);
-+	libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
-+	newdirectory(mp, tp, ip, pip);
-+
-+	/*
-+	 * Copy over timestamps.
-+	 */
-+	writetimestamps(ip, &file_stat);
-+
-+	libxfs_trans_log_inode(tp, ip, flags);
-+
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		fail(_("Directory inode allocation failed."), error);
-+
-+	libxfs_parent_finish(mp, ppargs);
-+	tp = NULL;
-+
-+	/*
-+	 * Copy over attributes.
-+	 */
-+	writeattrs(ip, entryname, fd);
-+	writefsxattrs(ip, fsxp);
-+	close(fd);
-+
-+	walk_dir(mp, ip, fsxp, path_buf, path_len);
-+
-+	libxfs_irele(ip);
-+}
-+
-+static void
-+create_nondir_inode(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*pip,
-+	struct fsxattr		*fsxp,
-+	int			mode,
-+	struct cred		creds,
-+	struct xfs_name		xname,
-+	int			flags,
-+	struct stat		file_stat,
-+	xfs_dev_t		rdev,
-+	int			fd,
-+	char			*src_fname)
-+{
-+
-+	char			link_target[XFS_SYMLINK_MAXLEN];
-+	int			error;
-+	ssize_t			link_len = 0;
-+	struct xfs_inode	*ip;
-+	struct xfs_trans	*tp;
-+	struct xfs_parent_args	*ppargs = NULL;
-+
-+	/*
-+	 * If handle_hardlink() returns true it means the hardlink has been
-+	 * correctly found and set, so we don't need to do anything else.
-+	 */
-+	if (file_stat.st_nlink > 1 && handle_hardlink(mp, pip, xname, file_stat)) {
-+		close(fd);
-+		return;
-+	}
-+	/*
-+	 * If instead we have an error it means the hardlink was not registered,
-+	 * so we proceed to treat it like a regular file, and save it to our
-+	 * tracker later.
-+	 */
-+	tp = getres(mp, 0);
-+	/*
-+	 * In case of symlinks, we need to handle things a little differently.
-+	 * We need to read out our link target and act accordingly.
-+	 */
-+	if (xname.type == XFS_DIR3_FT_SYMLINK) {
-+		link_len = readlink(src_fname, link_target, XFS_SYMLINK_MAXLEN);
-+		if (link_len < 0)
-+			fail(_("could not resolve symlink"), errno);
-+		if (link_len >= PATH_MAX)
-+			fail(_("symlink target too long"), ENAMETOOLONG);
-+		tp = getres(mp, XFS_B_TO_FSB(mp, link_len));
-+	}
-+	ppargs = newpptr(mp);
-+
-+	error = creatproto(&tp, pip, mode, rdev, &creds, fsxp, &ip);
-+	if (error)
-+		fail(_("Inode allocation failed"), error);
-+
-+	/*
-+	 * In case of symlinks, we now write it down, for other file types
-+	 * this is handled later before cleanup.
-+	 */
-+	if (xname.type == XFS_DIR3_FT_SYMLINK)
-+		writesymlink(tp, ip, link_target, link_len);
-+
-+	libxfs_trans_ijoin(tp, pip, 0);
-+	newdirent(mp, tp, pip, &xname, ip, ppargs);
-+
-+	/*
-+	 * Copy over timestamps.
-+	 */
-+	writetimestamps(ip, &file_stat);
-+
-+	libxfs_trans_log_inode(tp, ip, flags);
-+
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		fail(_("Error encountered creating non dir inode"), error);
-+
-+	libxfs_parent_finish(mp, ppargs);
-+
-+	/*
-+	 * Copy over file content, attributes, extended attributes and
-+	 * timestamps.
-+	 */
-+	if (fd >= 0) {
-+		/* We need to writefile only when not dealing with a symlink. */
-+		if (xname.type != XFS_DIR3_FT_SYMLINK)
-+			writefile(ip, src_fname, fd);
-+		writeattrs(ip, src_fname, fd);
-+		close(fd);
-+	}
-+	/*
-+	 * We do fsxattr also for file types where we don't have an fd,
-+	 * for example FIFOs.
-+	 */
-+	writefsxattrs(ip, fsxp);
-+
-+	/*
-+	 * If we're here it means this is the first time we're encountering an
-+	 * hardlink, so we need to store it.
-+	 */
-+	if (file_stat.st_nlink > 1)
-+		track_hardlink_inode(file_stat.st_ino, ip->i_ino);
-+
-+	libxfs_irele(ip);
-+}
-+
-+static void
-+handle_direntry(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*pip,
-+	struct fsxattr		*fsxp,
-+	char			*path_buf,
-+	int			path_len,
-+	struct dirent		*entry)
-+{
-+	char			*fname = "";
-+	int			flags;
-+	int			majdev;
-+	int			mindev;
-+	int			mode;
-+	int			pathfd,fd = -1;
-+	int			rdev = 0;
-+	struct stat		file_stat;
-+	struct xfs_name		xname;
-+
-+	pathfd = open(path_buf, O_NOFOLLOW | O_PATH);
-+	if (pathfd < 0){
-+		fprintf(stderr, _("%s: cannot open %s: %s\n"), progname,
-+			path_buf, strerror(errno));
-+		exit(1);
-+	}
-+
-+	/*
-+	 * Symlinks and sockets will need to be opened with O_PATH to work, so
-+	 * we handle this special case.
-+	 */
-+	fd = openat(pathfd, entry->d_name, O_NOFOLLOW | O_PATH);
-+	if(fd < 0) {
-+		fprintf(stderr, _("%s: cannot open %s: %s\n"), progname,
-+			path_buf, strerror(errno));
-+		exit(1);
-+	}
-+
-+	if (fstat(fd, &file_stat) < 0) {
-+		fprintf(stderr, _("%s: cannot stat '%s': %s (errno=%d)\n"),
-+			progname, path_buf, strerror(errno), errno);
-+		exit(1);
-+	}
-+
-+	/* Ensure we're within the limits of PATH_MAX. */
-+	size_t avail = PATH_MAX - path_len;
-+	size_t wrote = snprintf(path_buf + path_len, avail, "/%s", entry->d_name);
-+	if (wrote > avail)
-+		fail(path_buf, ENAMETOOLONG);
-+
-+	/*
-+	 * Regular files instead need to be reopened with broader flags so we
-+	 * check if that's the case and reopen those.
-+	 */
-+	if (!S_ISSOCK(file_stat.st_mode) &&
-+	    !S_ISLNK(file_stat.st_mode)  &&
-+	    !S_ISFIFO(file_stat.st_mode)) {
-+		close(fd);
-+		/*
-+		 * Try to open the source file noatime to avoid a flood of
-+		 * writes to the source fs, but we can fall back to plain
-+		 * readonly mode if we don't have enough permission.
-+		 */
-+		fd = openat(pathfd, entry->d_name,
-+			    O_NOFOLLOW | O_RDONLY | O_NOATIME);
-+		if (fd < 0)
-+			fd = openat(pathfd, entry->d_name,
-+				    O_NOFOLLOW | O_RDONLY);
-+		if(fd < 0) {
-+			fprintf(stderr, _("%s: cannot open %s: %s\n"), progname,
-+				path_buf, strerror(errno));
-+			exit(1);
-+		}
-+	}
-+
-+	struct cred creds = {
-+		.cr_uid = file_stat.st_uid,
-+		.cr_gid = file_stat.st_gid,
-+	};
-+
-+	xname.name = (unsigned char *)entry->d_name;
-+	xname.len = strlen(entry->d_name);
-+	xname.type = 0;
-+	mode = file_stat.st_mode;
-+	flags = XFS_ILOG_CORE;
-+
-+	switch (file_stat.st_mode & S_IFMT) {
-+	case S_IFDIR:
-+		xname.type = XFS_DIR3_FT_DIR;
-+		create_directory_inode(mp, pip, fsxp, mode, creds, xname, flags,
-+				       file_stat, fd, entry->d_name, path_buf,
-+				       path_len + strlen(entry->d_name) + 1);
-+		goto out;
-+	case S_IFREG:
-+		xname.type = XFS_DIR3_FT_REG_FILE;
-+		fname = entry->d_name;
-+		break;
-+	case S_IFCHR:
-+		flags |= XFS_ILOG_DEV;
-+		xname.type = XFS_DIR3_FT_CHRDEV;
-+		majdev = major(file_stat.st_rdev);
-+		mindev = minor(file_stat.st_rdev);
-+		rdev = IRIX_MKDEV(majdev, mindev);
-+		fname = entry->d_name;
-+		break;
-+	case S_IFBLK:
-+		flags |= XFS_ILOG_DEV;
-+		xname.type = XFS_DIR3_FT_BLKDEV;
-+		majdev = major(file_stat.st_rdev);
-+		mindev = minor(file_stat.st_rdev);
-+		rdev = IRIX_MKDEV(majdev, mindev);
-+		fname = entry->d_name;
-+		break;
-+	case S_IFLNK:
-+		/*
-+		 * Being a symlink we opened the filedescriptor with O_PATH
-+		 * this will make flistxattr() and fgetxattr() fail with EBADF,
-+		 * so we  will need to fallback to llistxattr() and lgetxattr(),
-+		 * this will need the full path to the original file, not just
-+		 * the entry name.
-+		 */
-+		xname.type = XFS_DIR3_FT_SYMLINK;
-+		fname = path_buf;
-+		break;
-+	case S_IFIFO:
-+		/*
-+		 * Being a fifo we opened the filedescriptor with O_PATH
-+		 * this will make flistxattr() and fgetxattr() fail with EBADF,
-+		 * so we  will need to fallback to llistxattr() and lgetxattr(),
-+		 * this will need the full path to the original file, not just
-+		 * the entry name.
-+		 */
-+		xname.type = XFS_DIR3_FT_FIFO;
-+		fname = path_buf;
-+		break;
-+	case S_IFSOCK:
-+		/*
-+		 * Being a socket we opened the filedescriptor with O_PATH
-+		 * this will make flistxattr() and fgetxattr() fail with EBADF,
-+		 * so we  will need to fallback to llistxattr() and lgetxattr(),
-+		 * this will need the full path to the original file, not just
-+		 * the entry name.
-+		 */
-+		xname.type = XFS_DIR3_FT_SOCK;
-+		fname = path_buf;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	create_nondir_inode(mp, pip, fsxp, mode, creds, xname, flags, file_stat,
-+			    rdev, fd, fname);
-+out:
-+	/* Reset path_buf to original */
-+	path_buf[path_len] = '\0';
-+}
-+
-+/*
-+ * Walk_dir will recursively list files and directories and populate the
-+ * mountpoint *mp with them using handle_direntry().
-+ */
-+static void
-+walk_dir(
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*pip,
-+	struct fsxattr		*fsxp,
-+	char			*path_buf,
-+	int			path_len)
-+{
-+	DIR			*dir;
-+	struct dirent		*entry;
-+
-+	/*
-+	 * Open input directory and iterate over all entries in it.
-+	 * when another directory is found, we will recursively call walk_dir.
-+	 */
-+	if ((dir = opendir(path_buf)) == NULL) {
-+		fprintf(stderr, _("%s: cannot open input dir: %s [%d - %s]\n"),
-+				progname, path_buf, errno, strerror(errno));
-+		exit(1);
-+	}
-+	while ((entry = readdir(dir)) != NULL) {
-+		if (strcmp(entry->d_name, ".") == 0 ||
-+		    strcmp(entry->d_name, "..") == 0)
-+			continue;
-+
-+		handle_direntry(mp, pip, fsxp, path_buf, path_len, entry);
-+	}
-+	closedir(dir);
-+}
-+
-+static void
-+populate_from_dir(
-+	struct xfs_mount	*mp,
-+	struct fsxattr		*fsxp,
-+	char			*cur_path)
-+{
-+	int			error;
-+	int			mode;
-+	int			fd = -1;
-+	char			path_buf[PATH_MAX];
-+	struct stat		file_stat;
-+	struct xfs_inode	*ip;
-+	struct xfs_trans	*tp;
-+
-+	/*
-+	 * Initialize path_buf cur_path, strip trailing slashes they're
-+	 * automatically added when walking the dir.
-+	 */
-+	if (strlen(cur_path) > 1 && cur_path[strlen(cur_path)-1] == '/')
-+		cur_path[strlen(cur_path)-1] = '\0';
-+	if (snprintf(path_buf, PATH_MAX, "%s", cur_path) >= PATH_MAX)
-+		fail(_("path name too long"), ENAMETOOLONG);
-+
-+	if (lstat(path_buf, &file_stat) < 0) {
-+		fprintf(stderr, _("%s: cannot stat '%s': %s (errno=%d)\n"),
-+			progname, path_buf, strerror(errno), errno);
-+		exit(1);
-+	}
-+	fd = open(path_buf, O_NOFOLLOW | O_RDONLY | O_NOATIME);
-+	if (fd < 0) {
-+		fprintf(stderr, _("%s: cannot open %s: %s\n"),
-+			progname, path_buf, strerror(errno));
-+		exit(1);
-+	}
-+
-+	/*
-+	 * We first ensure we have the root inode.
-+	 */
-+	struct cred creds = {
-+		.cr_uid = file_stat.st_uid,
-+		.cr_gid = file_stat.st_gid,
-+	};
-+	mode = file_stat.st_mode;
-+
-+	tp = getres(mp, 0);
-+
-+	error = creatproto(&tp, NULL, mode | S_IFDIR, 0, &creds, fsxp, &ip);
-+	if (error)
-+		fail(_("Inode allocation failed"), error);
-+
-+	mp->m_sb.sb_rootino = ip->i_ino;
-+	libxfs_log_sb(tp);
-+	newdirectory(mp, tp, ip, ip);
-+	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		fail(_("Inode allocation failed"), error);
-+
-+	libxfs_parent_finish(mp, NULL);
-+
-+	/*
-+	 * Copy over attributes.
-+	 */
-+	writeattrs(ip, path_buf, fd);
-+	writefsxattrs(ip, fsxp);
-+	close(fd);
-+
-+	/*
-+	 * RT initialization. Do this here to ensure that the RT inodes get
-+	 * placed after the root inode.
-+	 */
-+	error = create_metadir(mp);
-+	if (error)
-+		fail(_("Creation of the metadata directory inode failed"), error);
-+
-+	rtinit(mp);
-+
-+	/*
-+	 * By nature of walk_dir() we could be opening a great number of fds
-+	 * for deeply nested directory trees. try to bump max fds limit.
-+	 */
-+	bump_max_fds();
-+
-+	/*
-+	 * Initialize the hardlinks tracker.
-+	 */
-+	init_hardlink_tracker();
-+	/*
-+	 * Now that we have a root inode, let's walk the input dir and populate
-+	 * the partition.
-+	 */
-+	walk_dir(mp, ip, fsxp, path_buf, strlen(cur_path));
-+
-+	/*
-+	 * Cleanup hardlinks tracker.
-+	 */
-+	cleanup_hardlink_tracker();
-+
-+	/*
-+	 * We free up our root inode only when we finished populating the root
-+	 * filesystem.
-+	 */
-+	libxfs_irele(ip);
-+}
-diff --git a/mkfs/proto.h b/mkfs/proto.h
-index be1ceb45..476f7851 100644
---- a/mkfs/proto.h
-+++ b/mkfs/proto.h
-@@ -6,9 +6,21 @@
- #ifndef MKFS_PROTO_H_
- #define MKFS_PROTO_H_
-
--char *setup_proto(char *fname);
--void parse_proto(struct xfs_mount *mp, struct fsxattr *fsx, char **pp,
--		int proto_slashes_are_spaces);
-+enum proto_source_type {
-+	PROTO_SRC_NONE = 0,
-+	PROTO_SRC_PROTOFILE,
-+	PROTO_SRC_DIR
-+};
-+struct proto_source {
-+	enum	proto_source_type type;
-+	char	*data;
-+};
-+
-+struct proto_source setup_proto(char *fname);
-+void parse_proto(struct xfs_mount *mp, struct fsxattr *fsx,
-+		 struct proto_source *protosource,
-+		 int proto_slashes_are_spaces,
-+		 int proto_preserve_atime);
- void res_failed(int err);
-
- #endif /* MKFS_PROTO_H_ */
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 812241c4..885377f1 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -123,6 +123,7 @@ enum {
-
- enum {
- 	P_FILE = 0,
-+	P_ATIME,
- 	P_SLASHES,
- 	P_MAX_OPTS,
- };
-@@ -714,6 +715,7 @@ static struct opt_params popts = {
- 	.ini_section = "proto",
- 	.subopts = {
- 		[P_FILE] = "file",
-+		[P_ATIME] = "atime",
- 		[P_SLASHES] = "slashes_are_spaces",
- 		[P_MAX_OPTS] = NULL,
- 	},
-@@ -722,6 +724,12 @@ static struct opt_params popts = {
- 		  .conflicts = { { NULL, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
-+		{ .index = P_ATIME,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .minval = 0,
-+		  .maxval = 1,
-+		  .defaultval = 1,
-+		},
- 		{ .index = P_SLASHES,
- 		  .conflicts = { { NULL, LAST_CONFLICT } },
- 		  .minval = 0,
-@@ -1079,6 +1087,7 @@ struct cli_params {
- 	int	lsunit;
- 	int	is_supported;
- 	int	proto_slashes_are_spaces;
-+	int	proto_atime;
- 	int	data_concurrency;
- 	int	log_concurrency;
- 	int	rtvol_concurrency;
-@@ -1206,6 +1215,7 @@ usage( void )
- /* naming */		[-n size=num,version=2|ci,ftype=0|1,parent=0|1]]\n\
- /* no-op info only */	[-N]\n\
- /* prototype file */	[-p fname]\n\
-+/* populate from directory */	[-p dirname,atime=0|1]\n\
- /* quiet */		[-q]\n\
- /* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx,rgcount=n,rgsize=n,\n\
- 			    concurrency=num,zoned=0|1,start=n,reserved=n]\n\
-@@ -2131,6 +2141,9 @@ proto_opts_parser(
- 	case P_SLASHES:
- 		cli->proto_slashes_are_spaces = getnum(value, opts, subopt);
- 		break;
-+	case P_ATIME:
-+		cli->proto_atime = getnum(value, opts, subopt);
-+		break;
- 	case P_FILE:
- 		fallthrough;
- 	default:
-@@ -5682,7 +5695,7 @@ main(
- 	int			discard = 1;
- 	int			force_overwrite = 0;
- 	int			quiet = 0;
--	char			*protostring = NULL;
-+	struct proto_source	protosource;
- 	int			worst_freelist = 0;
-
- 	struct libxfs_init	xi = {
-@@ -5832,8 +5845,6 @@ main(
- 	 */
- 	cfgfile_parse(&cli);
-
--	protostring = setup_proto(cli.protofile);
--
- 	/*
- 	 * Extract as much of the valid config as we can from the CLI input
- 	 * before opening the libxfs devices.
-@@ -6010,7 +6021,11 @@ main(
- 	/*
- 	 * Allocate the root inode and anything else in the proto file.
- 	 */
--	parse_proto(mp, &cli.fsx, &protostring, cli.proto_slashes_are_spaces);
-+	protosource = setup_proto(cli.protofile);
-+	parse_proto(mp, &cli.fsx,
-+			&protosource,
-+			cli.proto_slashes_are_spaces,
-+			cli.proto_atime);
-
- 	/*
- 	 * Protect ourselves against possible stupidity
---
-2.50.0
+> 
+> --D
+> 
+> > Jul 30 05:09:49 kvm-03-guest-02 XFS (dm-0): Unmount and run xfs_repair
+> >
+> > >
+> > > > [ 6690.585792] XFS (dm-0): First 128 bytes of corrupted metadata buffer:
+> > > > [ 6690.587280] 00000000: 49 4e 81 b6 03 02 00 00 00 00 00 00 00 00 00 00  IN..............
+> > > > [ 6690.588985] 00000010: 00 00 00 03 00 00 00 00 00 00 00 00 00 00 00 0d  ................
+> > > > [ 6690.590491] 00000020: 36 24 61 5e d4 57 d4 cc 36 24 61 5e e7 1e 59 8c  6$a^.W..6$a^..Y.
+> > > > [ 6690.592160] 00000030: 36 24 61 5e e7 1e 59 8c 00 00 00 00 00 52 8a 13  6$a^..Y......R..
+> > > > [ 6690.593338] 00000040: 00 00 00 00 00 00 02 ce 00 00 00 00 00 00 00 00  ................
+> > > > [ 6690.594100] 00000050: 00 00 18 01 00 00 00 00 00 00 00 02 3e 8f 13 e2  ............>...
+> > > > [ 6690.594878] 00000060: 00 00 00 00 e6 2b 99 8d 00 00 00 00 00 00 00 26  .....+.........&
+> > > > [ 6690.595686] 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 1a  ................
+> > > > [ 6690.596431] XFS: Assertion failed: fa == NULL, file: fs/xfs/xfs_inode_item.c, line: 62
+> > > > [ 6690.597549] ------------[ cut here ]------------
+> > > > [ 6690.597983] kernel BUG at fs/xfs/xfs_message.c:102!
+> > > > [ 6690.598529] Oops: invalid opcode: 0000 [#1] SMP NOPTI
+> > > > [ 6690.599185] CPU: 15 UID: 0 PID: 3235576 Comm: fsstress Not tainted 6.16.0+ #2 PREEMPT(voluntary)
+> > > > [ 6690.600061] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-2.fc40 04/01/2014
+> > > > [ 6690.601054] RIP: 0010:assfail+0x35/0x3f [xfs]
+> > > > [ 6690.601725] Code: 89 d0 41 89 c9 48 c7 c2 b0 96 3b c0 48 89 f1 48 89 fe 48 c7 c7 03 67 3a c0
+> > > > 		     48 89 e5 e8 a4 fd ff ff 80 3d 35 98 26 00 00 74 02 <0f> 0b 0f 0b 5d c3 cc
+> > > > 		     cc cc cc 48 8d 45 10 4c 8d 6c 24 10 48 89 e2
+> > > > [ 6690.603330] RSP: 0018:ffffb6e0619078a0 EFLAGS: 00010202
+> > > > [ 6690.603985] RAX: 0000000000000000 RBX: ffff9de24ebff6a8 RCX: 000000007fffffff
+> > > > [ 6690.604648] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffffc03a6703
+> > > > [ 6690.605481] RBP: ffffb6e0619078a0 R08: 0000000000000000 R09: 000000000000000a
+> > > > [ 6690.606122] R10: 000000000000000a R11: 0fffffffffffffff R12: ffff9de25040e400
+> > > > [ 6690.606727] R13: ffff9de2415d9e00 R14: ffff9de24fd66000 R15: ffff9de29126d6a8
+> > > > [ 6690.607590] FS:  00007fc229e6c740(0000) GS:ffff9de61b969000(0000) knlGS:0000000000000000
+> > > > [ 6690.608241] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > > [ 6690.608781] CR2: 00007fc229e6b000 CR3: 000000035eab0004 CR4: 0000000000772ef0
+> > > > [ 6690.609381] PKRU: 55555554
+> > > > [ 6690.609606] Call Trace:
+> > > > [ 6690.609923]  <TASK>
+> > > > [ 6690.610276]  xfs_inode_item_precommit+0x18d/0x390 [xfs]
+> > > > [ 6690.611061]  __xfs_trans_commit+0xba/0x410 [xfs]
+> > > > [ 6690.611898]  xfs_trans_commit+0x3b/0x70 [xfs]
+> > > > [ 6690.612514]  xfs_vn_update_time+0xee/0x1a0 [xfs]
+> > > > [ 6690.613164]  file_modified+0x80/0xb0
+> > > > [ 6690.613477]  __xfs_file_fallocate+0xaf/0x4d0 [xfs]
+> > > > [ 6690.614262]  xfs_file_fallocate+0x76/0x140 [xfs]
+> > > > [ 6690.615163]  vfs_fallocate+0x16e/0x3a0
+> > > > [ 6690.615504]  __x64_sys_fallocate+0x4e/0xb0
+> > > > [ 6690.615852]  x64_sys_call+0xf55/0x1d80
+> > > > [ 6690.616170]  do_syscall_64+0x7f/0x2c0
+> > > > [ 6690.616478]  ? security_inode_permission+0x51/0xd0
+> > > > [ 6690.616871]  ? __legitimize_path+0x30/0x70
+> > > > [ 6690.617203]  ? try_to_unlazy+0x63/0xe0
+> > > > [ 6690.617518]  ? avc_has_perm_noaudit+0x6e/0xf0
+> > > > [ 6690.617879]  ? avc_has_perm+0x5b/0xf0
+> > > > [ 6690.618178]  ? _copy_to_user+0x35/0x50
+> > > > [ 6690.618492]  ? cp_new_stat+0x141/0x180
+> > > > [ 6690.618799]  ? __do_sys_newfstat+0x4c/0x80
+> > > > [ 6690.619138]  ? __x64_sys_newfstat+0x19/0x20
+> > > > [ 6690.619486]  ? x64_sys_call+0x1b97/0x1d80
+> > > > [ 6690.619810]  ? do_syscall_64+0x7f/0x2c0
+> > > > [ 6690.620206]  ? __x64_sys_newfstatat+0x20/0x30
+> > > > [ 6690.620566]  ? x64_sys_call+0x10bc/0x1d80
+> > > > [ 6690.620897]  ? do_syscall_64+0x7f/0x2c0
+> > > > [ 6690.621213]  ? clear_bhb_loop+0x50/0xa0
+> > > > [ 6690.621533]  ? clear_bhb_loop+0x50/0xa0
+> > > > [ 6690.621843]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> > > > [ 6690.622257] RIP: 0033:0x7fc229f57457
+> > > > [ 6690.622580] Code: 10 00 f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 f3 0f 1e fa 80
+> > > > 		     3d 75 8c 10 00 00 49 89 ca 74 10 b8 1d 01 00 00 0f 05 <48> 3d 00 f0 ff
+> > > > 		     ff 77 51 c3 55 48 89 e5 48 83 ec 20 48 89 55 f0 89
+> > > > [ 6690.624055] RSP: 002b:00007fffec23e628 EFLAGS: 00000202 ORIG_RAX: 000000000000011d
+> > > > [ 6690.624661] RAX: ffffffffffffffda RBX: 0000000000000e2b RCX: 00007fc229f57457
+> > > > [ 6690.625233] RDX: 0000000000452000 RSI: 0000000000000008 RDI: 0000000000000003
+> > > > [ 6690.625803] RBP: 0000000000000008 R08: 0000000000000051 R09: 00007fffec23e64c
+> > > > [ 6690.626496] R10: 0000000000018000 R11: 0000000000000202 R12: 00007fffec23e6f0
+> > > > [ 6690.627070] R13: 0000000000000003 R14: 0000000000018000 R15: 0000000000000000
+> > > > [ 6690.627650]  </TASK>
+> > > > [ 6690.627841] Modules linked in: dm_thin_pool dm_persistent_data dm_bio_prison dm_snapshot
+> > > > 				  dm_bufio dm_flakey ip_set nf_tables sunrpc intel_rapl_msr
+> > > > 				  intel_rapl_common intel_uncore_frequency_common kvm_intel
+> > > > 				  kvm iTCO_wdt intel_pmc_bxt iTCO_vendor_support
+> > > > 				  irqbypass i2c_i801 rapl i2c_smbus lpc_ich virtio_balloon
+> > > > 				  joydev loop dm_mod nfnetlink zram xfs polyval_clmulni
+> > > > 				  ghash_clmulni_intel serio_raw fuse qemu_fw_cfg
+> > > > 				  [last unloaded: scsi_debug]
+> > > > [ 6690.631650] ---[ end trace 0000000000000000 ]---
+> > > > [ 6690.632043] RIP: 0010:assfail+0x35/0x3f [xfs]
+> > > > [ 6690.632656] Code: 89 d0 41 89 c9 48 c7 c2 b0 96 3b c0 48 89 f1 48 89 fe 48 c7 c7 03 67 3a
+> > > > 		     c0 48 89 e5 e8 a4 fd ff ff 80 3d 35 98 26 00 00 74 02 <0f> 0b 0f 0b 5d
+> > > > 		     c3 cc cc cc cc 48 8d 45 10 4c 8d 6c 24 10 48 89 e2
+> > > > [ 6690.634150] RSP: 0018:ffffb6e0619078a0 EFLAGS: 00010202
+> > > > [ 6690.634571] RAX: 0000000000000000 RBX: ffff9de24ebff6a8 RCX: 000000007fffffff
+> > > > [ 6690.635370] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffffc03a6703
+> > > > [ 6690.636276] RBP: ffffb6e0619078a0 R08: 0000000000000000 R09: 000000000000000a
+> > > > [ 6690.637083] R10: 000000000000000a R11: 0fffffffffffffff R12: ffff9de25040e400
+> > > > [ 6690.637656] R13: ffff9de2415d9e00 R14: ffff9de24fd66000 R15: ffff9de29126d6a8
+> > > > [ 6690.638236] FS:  00007fc229e6c740(0000) GS:ffff9de61b969000(0000) knlGS:0000000000000000
+> > > > [ 6690.638884] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > > [ 6690.639352] CR2: 00007fc229e6b000 CR3: 000000035eab0004 CR4: 0000000000772ef0
+> > > > [ 6690.639922] PKRU: 55555554
+> > > > [ 6690.773340] XFS: Assertion failed: !rwsem_is_locked(&inode->i_rwsem), file: fs/xfs/xfs_super.c, line: 699
+> > >
+> > > Ohhh that's bad, whatever went wrong we also fail to inode_unlock.
+> > >
+> > > --D
+> > >
+> > > > [ 6690.774539] ------------[ cut here ]------------
+> > > > [ 6690.775033] kernel BUG at fs/xfs/xfs_message.c:102!
+> > > > [ 6690.775504] Oops: invalid opcode: 0000 [#2] SMP NOPTI
+> > > > [ 6690.776058] CPU: 3 UID: 0 PID: 3235665 Comm: umount Tainted: G      D             6.16.0+ #2 PREEMPT(voluntary)
+> > > > [ 6690.776925] Tainted: [D]=DIE
+> > > > [ 6690.777165] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-2.fc40 04/01/2014
+> > > > [ 6690.777835] RIP: 0010:assfail+0x35/0x3f [xfs]
+> > > > [ 6690.778463] Code: 89 d0 41 89 c9 48 c7 c2 b0 96 3b c0 48 89 f1 48 89 fe 48 c7 c7 03 67 3a
+> > > > 		     c0 48 89 e5 e8 a4 fd ff ff 80 3d 35 98 26 00 00 74 02 <0f> 0b 0f 0b 5d
+> > > > 		     c3 cc cc cc cc 48 8d 45 10 4c 8d 6c 24 10 48 89 e2
+> > > > [ 6690.779917] RSP: 0018:ffffb6e061247c98 EFLAGS: 00010202
+> > > > [ 6690.780338] RAX: 0000000000000000 RBX: ffff9de25040e538 RCX: 000000007fffffff
+> > > > [ 6690.780902] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffffc03a6703
+> > > > [ 6690.781468] RBP: ffffb6e061247c98 R08: 0000000000000000 R09: 000000000000000a
+> > > > [ 6690.782288] R10: 000000000000000a R11: 0fffffffffffffff R12: ffffffffc038c360
+> > > > [ 6690.782878] R13: ffff9de25040e400 R14: ffff9de25040e538 R15: ffff9de24eb0ad38
+> > > > [ 6690.783446] FS:  00007f48df3e9800(0000) GS:ffff9de61b369000(0000) knlGS:0000000000000000
+> > > > [ 6690.784092] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > > [ 6690.784555] CR2: 00007ffe61fe3d6c CR3: 000000010e717002 CR4: 0000000000772ef0
+> > > > [ 6690.785127] PKRU: 55555554
+> > > > [ 6690.785360] Call Trace:
+> > > > [ 6690.785566]  <TASK>
+> > > > [ 6690.785748]  xfs_fs_destroy_inode+0x16b/0x1c0 [xfs]
+> > > > [ 6690.786445]  destroy_inode+0x41/0x80
+> > > > [ 6690.786747]  evict+0x1b9/0x290
+> > > > [ 6690.787006]  evict_inodes+0x1fe/0x220
+> > > > [ 6690.787302]  generic_shutdown_super+0x47/0x110
+> > > > [ 6690.787677]  kill_block_super+0x1f/0x50
+> > > > [ 6690.787997]  xfs_kill_sb+0x16/0x30 [xfs]
+> > > > [ 6690.788593]  deactivate_locked_super+0x39/0xb0
+> > > > [ 6690.788959]  deactivate_super+0x44/0x50
+> > > > [ 6690.789269]  cleanup_mnt+0xc3/0x160
+> > > > [ 6690.789566]  __cleanup_mnt+0x16/0x20
+> > > > [ 6690.789870]  task_work_run+0x64/0xa0
+> > > > [ 6690.790160]  exit_to_user_mode_loop+0x132/0x160
+> > > > [ 6690.790554]  do_syscall_64+0x193/0x2c0
+> > > > [ 6690.790884]  ? irqentry_exit+0x3f/0x50
+> > > > [ 6690.791350]  ? clear_bhb_loop+0x50/0xa0
+> > > > [ 6690.791684]  ? clear_bhb_loop+0x50/0xa0
+> > > > [ 6690.792005]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> > > > [ 6690.792420] RIP: 0033:0x7f48df5ecd6b
+> > > > [ 6690.792737] Code: c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 f3 0f 1e fa 31 f6 e9 05 00
+> > > > 		     00 00 0f 1f 44 00 00 f3 0f 1e fa b8 a6 00 00 00 0f 05 <48> 3d 00 f0 ff
+> > > > 		     ff 77 05 c3 0f 1f 40 00 48 8b 15 71 30 0f 00 f7 d8
+> > > > [ 6690.794204] RSP: 002b:00007ffe61fe5508 EFLAGS: 00000246 ORIG_RAX: 00000000000000a6
+> > > > [ 6690.794820] RAX: 0000000000000000 RBX: 000055cacecb1420 RCX: 00007f48df5ecd6b
+> > > > [ 6690.795552] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 000055cacecb74d0
+> > > > [ 6690.796400] RBP: 00007ffe61fe55e0 R08: 000055cacecb1010 R09: 0000000000000007
+> > > > [ 6690.797255] R10: 0000000000000000 R11: 0000000000000246 R12: 000055cacecb1528
+> > > > [ 6690.797825] R13: 0000000000000000 R14: 000055cacecb74d0 R15: 000055cacecb74a0
+> > > > [ 6690.798399]  </TASK>
+> > > > [ 6690.798590] Modules linked in: dm_thin_pool dm_persistent_data dm_bio_prison dm_snapshot
+> > > > 				  dm_bufio dm_flakey ip_set nf_tables sunrpc intel_rapl_msr
+> > > > 				  intel_rapl_common intel_uncore_frequency_common kvm_intel
+> > > > 				  kvm iTCO_wdt intel_pmc_bxt iTCO_vendor_support irqbypass
+> > > > 				  i2c_i801 rapl i2c_smbus lpc_ich virtio_balloon joydev
+> > > > 				  loop dm_mod nfnetlink zram xfs polyval_clmulni
+> > > > 				  ghash_clmulni_intel serio_raw fuse qemu_fw_cfg
+> > > > 				  [last unloaded: scsi_debug]
+> > > > [ 6690.802742] ---[ end trace 0000000000000000 ]---
+> > > > [ 6690.803147] RIP: 0010:assfail+0x35/0x3f [xfs]
+> > > > [ 6690.803726] Code: 89 d0 41 89 c9 48 c7 c2 b0 96 3b c0 48 89 f1 48 89 fe 48 c7 c7 03 67 3a
+> > > > 		     c0 48 89 e5 e8 a4 fd ff ff 80 3d 35 98 26 00 00 74 02 <0f> 0b 0f 0b 5d c3
+> > > > 		     cc cc cc cc 48 8d 45 10 4c 8d 6c 24 10 48 89 e2
+> > > > [ 6690.805205] RSP: 0018:ffffb6e0619078a0 EFLAGS: 00010202
+> > > > [ 6690.805629] RAX: 0000000000000000 RBX: ffff9de24ebff6a8 RCX: 000000007fffffff
+> > > > [ 6690.806252] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffffc03a6703
+> > > > [ 6690.806818] RBP: ffffb6e0619078a0 R08: 0000000000000000 R09: 000000000000000a
+> > > > [ 6690.807392] R10: 000000000000000a R11: 0fffffffffffffff R12: ffff9de25040e400
+> > > > [ 6690.807964] R13: ffff9de2415d9e00 R14: ffff9de24fd66000 R15: ffff9de29126d6a8
+> > > > [ 6690.808530] FS:  00007f48df3e9800(0000) GS:ffff9de61b369000(0000) knlGS:0000000000000000
+> > > > [ 6690.809189] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > > [ 6690.809650] CR2: 00007ffe61fe3d6c CR3: 000000010e717002 CR4: 0000000000772ef0
+> > > > [ 6690.810226] PKRU: 55555554
+> > > > [27605.136424] XFS (vdb1): Unmounting Filesystem 83bac02f-3cc7-4758-aaaa-7021c100acb1
+> > > > [27606.335870] run fstests generic/475 at 2025-07-30 10:58:25
+> > > >
+> > > >
