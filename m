@@ -1,45 +1,29 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DBD02BD58E;
-	Thu, 31 Jul 2025 16:03:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A258F2264BF
+	for <linux-xfs@vger.kernel.org>; Thu, 31 Jul 2025 16:16:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753977836; cv=none; b=Uxu9W5HD08YxK4KGNyUDlSh2OOTvtBS+njs5gAVKYTyRWkdt4W3aQgRuKS/IbXRBMj8zDdgUryjLw6Jr44AuY/MTrPxiAnS/Tlt8sEcRyrEdLg/szFd1iR8Ly5wvLp1wX03cXLSxdgVy8k5XrXNonma6VdyQi4JDCiWwn9jtXWU=
+	t=1753978571; cv=none; b=H4soMSjv8UI3auCqHN+8rqZIA2oKeeS+Ml2SEnK25JkLENBjLhBnV1sWbAqqSeuz5z0q31SXPF+G2dAIvWl/Zx5gEfXJ3WmYvCHGuCv/4cvZiBR6ypE61/B0AWw5dRFv3F6UAptr9fHxCa+jFP0V9jtbYhC6rI4eFWtqtE3MvhU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753977836; c=relaxed/simple;
-	bh=FoJVd4ZwsAg3dczFHPLLdiXTUwMJYOTGXZXwEPJ6CjI=;
+	s=arc-20240116; t=1753978571; c=relaxed/simple;
+	bh=pbj+1yS3Ct4QgODuy3LO8NstxwmotXNy09YVRcWv3yg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ar+lIaTnKKEDpO1MpnRPmAfAiAusBFmNXRPVt6bLY6NGH5SF1QiaMNbaPFgQGtoVX+TVHzOvoVpKOx1KGzgVj0xhHG7ZAyMCyjPNN5epSaI+5bZeze6hI7qYxqbB1MV47+nszXjXxCHj9DLJ8GGkbuAMfmxKqNsYtlmjlGiMfrg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YF2HBVP6; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YF2HBVP6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA428C4CEEF;
-	Thu, 31 Jul 2025 16:03:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753977836;
-	bh=FoJVd4ZwsAg3dczFHPLLdiXTUwMJYOTGXZXwEPJ6CjI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YF2HBVP6qdt+eLmPppziskZVKA16Vqah3Gk74VfImqvm4mvfbFN4gYVlrIAe2QDRL
-	 /sispgCBlarwEWH886YFqB3eCOsxNio+skexa5tHkWPQnO5mAZcRf0DWspXIfYaxqp
-	 jFuSA8SP2rlljjoWKLXdmMWH0jZ36BqIYK4U1eczSevuo+qVfyo9IPeDoPJngDznzg
-	 kyFWOzUe1K3oZICNCRjIl+q/k5X5Htvew8wEDnCblLYsa/Z0UyDFvEavZQtB6t7B2V
-	 JI7yZOmic2gFWpYuLmjK23QtaEvWtPjBOHi+VjBZN72spItqFbhyPo9ZAQ20EEnNgK
-	 k58YexbATehLA==
-Date: Thu, 31 Jul 2025 18:03:50 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, fsverity@lists.linux.dev, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com, 
-	ebiggers@kernel.org, hch@lst.de, Andrey Albershteyn <aalbersh@kernel.org>
-Subject: Re: [PATCH RFC 26/29] xfs: fix scrub trace with null pointer in
- quotacheck
-Message-ID: <qo6znctky4vztjqewafqjc4gz3urbej6ux7zikp6fm5mpccnhl@qbycsfaikqgb>
-References: <20250728-fsverity-v1-0-9e5443af0e34@kernel.org>
- <20250728-fsverity-v1-26-9e5443af0e34@kernel.org>
- <20250729152839.GC2672049@frogsfrogsfrogs>
- <-DbaWXaCN_e5KnqMY2BMk4CzJU6iCFfXox_PClVrR77u4tP-i9XjOWbWAyxAQnVXT4ompbgItUSIBbvJ5iiUWw==@protonmail.internalid>
- <s36etkudrevqb35gfscyfeibrwetxyrepuc2z2xg2bcgp7dzpb@hhaaawzg7vjq>
+	 Content-Type:Content-Disposition:In-Reply-To; b=o7XIUD2SZkSsi3p+0HK2BnD8EdS2x/B4OywaauzzRD1BBSG60x0+piGar7+keZQuwTW47UaiVtNGGZ1205pSgIna1PEGYqHi/7xHVzA4Y5EJcUami59Hphh4oJVvz6VGLi+N7wJ2Qxu10NZHtTCf+ZQl+cckdCgB+MD2DNJmC+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 006BD68AA6; Thu, 31 Jul 2025 18:15:58 +0200 (CEST)
+Date: Thu, 31 Jul 2025 18:15:58 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, cem@kernel.org,
+	linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix frozen file system assert in xfs_trans_alloc
+Message-ID: <20250731161558.GA10215@lst.de>
+References: <20250731141941.859866-1-hch@lst.de> <20250731155941.GT2672049@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,28 +32,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <s36etkudrevqb35gfscyfeibrwetxyrepuc2z2xg2bcgp7dzpb@hhaaawzg7vjq>
+In-Reply-To: <20250731155941.GT2672049@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Jul 31, 2025 at 04:54:46PM +0200, Andrey Albershteyn wrote:
-> On 2025-07-29 08:28:39, Darrick J. Wong wrote:
-> > On Mon, Jul 28, 2025 at 10:30:30PM +0200, Andrey Albershteyn wrote:
-> > > The quotacheck doesn't initialize sc->ip.
-> > >
-> > > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> >
-> > Looks good,
-> > Cc: <stable@vger.kernel.org> # v6.8
-> > Fixes: 21d7500929c8a0 ("xfs: improve dquot iteration for scrub")
-> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+On Thu, Jul 31, 2025 at 08:59:41AM -0700, Darrick J. Wong wrote:
+> >  retry:
+> > -	WARN_ON(mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
+> >  	tp = __xfs_trans_alloc(mp, flags);
+> > +	WARN_ON(mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
 > 
-> @cem, could pick this one? Or if you want I can resend it separately
-> with tags
+> Empty transactions can run during a freeze, so please put back the
+> original warning and comment:
 
-Yes, please, send it again, without the RFC tag, with the rest of
-shenanigans :)
+Empty transactions don't end up in this code path any more.
 
-> 
-> --
-> - Andrey
-> 
-> 
