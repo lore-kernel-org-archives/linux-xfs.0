@@ -1,77 +1,84 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43EB628D8E2
-	for <linux-xfs@vger.kernel.org>; Fri,  1 Aug 2025 18:56:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 743CF17A30A;
+	Sat,  2 Aug 2025 06:49:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754074603; cv=none; b=OTmYM+9scJr2tpVd0Ttx7LYaYQCTVDVRDJD/rkf1BeFsjNBCTqDgvHwjH8UEys80CRTpIJ8AzZE9+t/gXXCC+0xu1McMEOIy2LxSL/6MscfY5JnCxaOja9fulelIERzwNLxGZEjmNRPu1CsSdHoM/tNkqidggLPzKC3dPilYSQA=
+	t=1754117368; cv=none; b=DdWDSE4sBDpLrkH9rW86CyD0hnqA5P6a49EhSeqtqpKqgFZHCkTdbq+BmdlYAlDig1ulY755RgIwoKD+OhVK1hVo1fG2WmWck3DyWHB8LFRTvYuYeoPeBEsV0zujUrYYhOR1dX2hLS+7TPU21NcznLRYiVg2PkikE9J2QChP4yk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754074603; c=relaxed/simple;
-	bh=NZSjdVx87HnyrSVozT0uc3abOkujfjk601OHRy2o96Y=;
+	s=arc-20240116; t=1754117368; c=relaxed/simple;
+	bh=V1YpHzZqr/JZLEnYNM01rkbOEf3tC/T7wDWkpa1ppzQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OnUYwU1HOuvxt64zafqtQeobQxEHfYVsLKXks0eZFqjeWrDW7RsFc/bpOOzs1x7U9xu448KlSgHQhVL2UMbmGKaVsokurHlPv6vQ7PytL/FfSY6eWOmCKEbyZxn8SX39CDPNmfaQeYupkh9dFtBVMQbuSrCW4qesu5PGaZbPgGQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AYdJtHPu; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=AoBRPH9Cq3BHw3m/Ugu5grecci9XyQxTl2q7wwl67rXojQaR7EJqVPrOK+AaZ8ExZCp4iixcf6DHn402hP6fcOOn/HYUUdJM1CTXgB0i+/dl9424+g2Aj8tHHCcPR8ZyrX/MPiApvqDEJ8DBUr1ULrlg8mmhdd683qxUat+0SsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=n6m4bs4f; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AYdJtHPu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1754074600;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rLYdaEMzvcgs5Y4Lenm9HObKKAnQF1XP3lyqD9Xr2LY=;
-	b=AYdJtHPux6AdxCQqeQGJTM5NCjZXIHVC0vgU/MFdU5XuOzeap7slNvAmhpfXHMjVdvg8A0
-	ol7Qf789yzku7wwjBXxx2n6gg0bqoSU5vJZKUC+wwcUX0M86BrvGBH7k6ytHaduxX9Qmdj
-	D7zOVnQhU9XTqkrql/mTQFY8n/cwpH0=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-115-HeExZmsNMK-bsBK7kRA19g-1; Fri, 01 Aug 2025 14:56:38 -0400
-X-MC-Unique: HeExZmsNMK-bsBK7kRA19g-1
-X-Mimecast-MFC-AGG-ID: HeExZmsNMK-bsBK7kRA19g_1754074598
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2400a932e59so26763395ad.1
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Aug 2025 11:56:38 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754074597; x=1754679397;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rLYdaEMzvcgs5Y4Lenm9HObKKAnQF1XP3lyqD9Xr2LY=;
-        b=n3awBTmmnzotZtmPoNQeD/VK5kWVLzYxUK9tdfjZSsa6AjI37sQ7zCpRRczWfp5a1N
-         i/ngAKYY5pGYC7a8ih4Na1OKaN+OgxW/o6uUg9yLdsW4LpMdH2kwcYxOdlTTtbUcY6km
-         By0euIqo8vnXS4AYMRcKG0zj0BplgbODgWTVoDWg7hbaVEFSq2599YiJkrcDM55tcJdp
-         oSsgz6Y0YwLN/NOmnuV/0gC92/bURp0C6cSOpcmKyi7WpNuzrbyw1SWNq2CuSVIkXQ1f
-         KkSBn9iAOYE7TsMlrXCua08cJvyjBKrjdCBsFy7gfywmzzbeJ58oiv/EG2RjzM2il8Td
-         +7ow==
-X-Forwarded-Encrypted: i=1; AJvYcCWRFyIX9saQjvfLkBjW0D8erZrKpCPgLhGl2Vi9xGhtDvyUb5H0GaSBy+nvzjI3oWpLKWTpQ7HXmU0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5khwK+TD+5ELkTIJai5Kla+TqzoQXWQ0EGK0WIUoF2TIX/m+t
-	AwZkl6HQszOh8t/lKr3ilcCsC6DiifyfZb17ViVUcMGxBEnsgYtVFer5hpfhB3HuAOhcSrIpXWB
-	ERthOUu/gp1G7ENKTx1fZgUU/znKWseF6aTPUv5cHsn5YaNiTU0gtFTjj71Sdlvrs6DJivQ==
-X-Gm-Gg: ASbGncsGt3KNfte7EctHEYcbyVfe0QbwdtYQaU5TnEEI7UJG/gXsiId8isuVYcWvfhw
-	AYyfAIUS77E9RCjRivDVUEfcIl+mKVwTancLNk1fZgfSJPvNWtUzvBj7/GUz4rSwJg0OdEeknJs
-	43jobf2bZb6Zuf4aS6eQPTMaEiLRvj3Kg7B8TPEtxf8ePe0uWqE1Fhe1f5Sp4PV2Qo9+VBLiri4
-	n20ZtDdRtxX65lQCx0agQRJyn00tuvdidC8worMNJzbjNFPYNqvrEJ3ECf0MNn4Onzn7nve+/m+
-	l7tVbn5RroRg1nx2CwyU8cNE28jjoiipymyUqmfhaXAsrenou8MWRECIII18EKAw40LotFHu6E7
-	vZaQx
-X-Received: by 2002:a17:903:22c8:b0:234:d292:be95 with SMTP id d9443c01a7336-2424703f838mr7568875ad.42.1754074597616;
-        Fri, 01 Aug 2025 11:56:37 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGbdDKWOMveqEbR97E8SC6jcWbRc3Z47TQmEoWmo/5+dYS5uWtB0AIUOciMua+aT+b1mJs8wA==
-X-Received: by 2002:a17:903:22c8:b0:234:d292:be95 with SMTP id d9443c01a7336-2424703f838mr7568645ad.42.1754074597260;
-        Fri, 01 Aug 2025 11:56:37 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-241e8aaac0esm49972555ad.152.2025.08.01.11.56.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Aug 2025 11:56:36 -0700 (PDT)
-Date: Sat, 2 Aug 2025 02:56:33 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/7] generic/767: allow on any atomic writes filesystem
-Message-ID: <20250801185633.adgwyt5qbhbs4mcf@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
- <175381957992.3020742.8103178252494146518.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="n6m4bs4f"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5723k4JF022005;
+	Sat, 2 Aug 2025 06:49:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=iG8H/C1N4lMlgdeXB1lassnTUx/2rU
+	RASJICgpfdVp8=; b=n6m4bs4fWZxY6nJjJnQ0+oEW38liPCSG22dVni4IJCc3tA
+	F3z8peh5KQTlQcKY11lH+gsW3RSC2FdXPpur9Nl+J8j6/C/pUDWPGZ7yHvYBe4Ng
+	N2V/V/Ihdn+Vbn+Mut3DHd3f3t9Exkr9IUUvjoEimmOIaAPmgEAWJ6G372Vxznid
+	9ZPZzimYjkKJpWN/uYaL9lKrddIUo6VPDQfA6XICotwz9fDxv/OekepSJzsE2P0w
+	pWUI0ngh16Y/oeaZ9utnVjwMxajygZZ7wJivNEVsU3iwAWv6sLg6+z1N1Dhc36SQ
+	pVI/Qe6lODqNx0akjSn27G2B7FjN3cMbYeIpST6A==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48983srve5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 02 Aug 2025 06:49:17 +0000 (GMT)
+Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 5726nH3N015508;
+	Sat, 2 Aug 2025 06:49:17 GMT
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48983srve3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 02 Aug 2025 06:49:17 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 5723g4dL032450;
+	Sat, 2 Aug 2025 06:49:16 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 489b0j0eqk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 02 Aug 2025 06:49:16 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 5726nENc52101410
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 2 Aug 2025 06:49:14 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 467B62004B;
+	Sat,  2 Aug 2025 06:49:14 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 42B0E20040;
+	Sat,  2 Aug 2025 06:49:12 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.124.211.139])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Sat,  2 Aug 2025 06:49:12 +0000 (GMT)
+Date: Sat, 2 Aug 2025 12:19:09 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Zorro Lang <zlang@redhat.com>,
+        fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
+        tytso@mit.edu, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v3 05/13] generic/1226: Add atomic write test using fio
+ crc check verifier
+Message-ID: <aI205U8Afi7tALyr@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <aIccCgrCuQ4Wf1OH@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <2ae4bb04-fbf7-4a53-b498-ea6361cdab3e@oracle.com>
+ <aId8oZGXSg5DW48X@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <3a4854ac-75ad-4783-acbd-048fe7c7fdb0@oracle.com>
+ <aIhmG-l4nWOAzz2I@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <20250729144526.GB2672049@frogsfrogsfrogs>
+ <aIrun9794W0eZA8d@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <22ccfefc-1be8-4942-ac27-c01706ef843e@oracle.com>
+ <aIxhsV8heTrSH537@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <76974111-88f6-4de8-96bc-9806c6317d19@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -80,37 +87,79 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <175381957992.3020742.8103178252494146518.stgit@frogsfrogsfrogs>
+In-Reply-To: <76974111-88f6-4de8-96bc-9806c6317d19@oracle.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODAyMDA1MyBTYWx0ZWRfX8CMkxRSQv68l
+ 8XEMTs+ID43snzHJI/6rrIvXt7rMmB2n9mnP8/pPzZlr+x5weIqjS5+jXqt55ET6xZnJAG9Zd0E
+ WgCIzTeSv8om2ZeDsJQxc5b3uTSVP6ZB96+yt6ck8x4p3IjSXG826cEsv/W1qUy1mSJcrrS7ivb
+ xkZY/ci5Gjbq+b/7rRAiy7zq3YauM8D6ETIFdR/ko8CZBZMW043x9PnEvz8IzTERBrTYHav3vEd
+ 2nglOtyF1oIrGWOfXAh0N99IpYgIbeFn7urEfY6vaiTXB8SH2OdDRYRu42+PQhIGzaVdBhUm04m
+ DiLWp13ldjs6+hKPDVAqFuacPV97DJqKGS+H6zh9on2qEY7hPe0DnRSghd6jZnvZ19l0Y6/MRjP
+ UwEenxRBKyJ0AxRoN32ZPz+9KpGSqf42bavTpHJGcqwxoplvurNyTn7J7qHTcvaiimHfIUNo
+X-Proofpoint-GUID: 8FveycUg9qHZs-eZteskl3CHibgBl4BO
+X-Proofpoint-ORIG-GUID: eJ59yteqryUWi-nSwAY09znim4LOkcCw
+X-Authority-Analysis: v=2.4 cv=AZSxH2XG c=1 sm=1 tr=0 ts=688db4ed cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=kj9zAlcOel0A:10 a=2OwXVqhp2XgA:10 a=sVsNyQL_5Ag_R6nxsGUA:9
+ a=CjuIK1q_8ugA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-01_08,2025-08-01_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 priorityscore=1501 impostorscore=0 bulkscore=0
+ lowpriorityscore=0 mlxscore=0 spamscore=0 malwarescore=0 phishscore=0
+ suspectscore=0 mlxlogscore=999 adultscore=0 classifier=spam authscore=0
+ authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2505280000 definitions=main-2508020053
 
-On Tue, Jul 29, 2025 at 01:09:32PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Aug 01, 2025 at 09:23:46AM +0100, John Garry wrote:
+> On 01/08/2025 07:41, Ojaswin Mujoo wrote:
+> > Got it, I think I can make this test work for ext4 only but then it might
+> > be more appropriate to run the fio tests directly on atomic blkdev and
+> > skip the FS, since we anyways want to focus on the storage stack.
+> > 
 > 
-> This test now works correctly for any atomic writes geometry since we
-> control all the parameters.  Remove this restriction so that we can get
-> minimal testing on ext4 and fuse2fs.
-> 
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
+> testing on ext4 will prove also that the FS and iomap behave correctly in
+> that they generate a single bio per atomic write (as well as testing the
+> block stack and below).
 
-Makes sense to me,
+Okay, I think we are already testing those in the ext4/061 ext4/062
+tests of this patchset. Just thought blkdev test might be useful to keep
+in generic. Do you see a value in that or shall I just drop the generic
+overlapping write tests?
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+Also, just for the records, ext4 passes the fio tests ONLY because we use
+the same io size for all threads. If we happen to start overlapping
+RWF_ATOMIC writes with different sizes that can get torn due to racing
+unwritten conversion. 
 
->  tests/generic/767 |    1 -
->  1 file changed, 1 deletion(-)
 > 
+> > > > I'll try to check if we can modify the tests to write on non-overlapping
+> > > > ranges in a file.
+> > > JFYI, for testing SW-based atomic writes on XFS, I do something like this. I
+> > > have multiple threads each writing to separate regions of a file or writing
+> > > to separate files. I use this for power-fail testing with my RPI. Indeed, I
+> > > have also being using this sort of test in qemu for shutting down the VM
+> > > when fio is running - I would like to automate this, but I am not sure how
+> > > yet.
+> > > 
+> > > Please let me know if you want further info on the fio script.
+> > Got it, thanks for the insights. I was thinking of something similar now
+> > where I can modify the fio files of this test to write on non
+> > overlapping ranges in the same file. The only doubt i have right now is
+> > that when I have eg, numjobs=10 filesize=1G, how do i ensure each job
+> > writes to its own separate range and not overlap with each other.
+> > 
+> > I saw the offset_increment= fio options which might help, yet to try it
+> > out though. If you know any better way please do share.
 > 
-> diff --git a/tests/generic/767 b/tests/generic/767
-> index 161fef03825db4..558aab1e6acf34 100755
-> --- a/tests/generic/767
-> +++ b/tests/generic/767
-> @@ -36,7 +36,6 @@ export SCRATCH_DEV=$dev
->  unset USE_EXTERNAL
->  
->  _require_scratch_write_atomic
-> -_require_scratch_write_atomic_multi_fsblock
->  
->  # Check that xfs_io supports the commands needed to run this test
->  # Note: _require_xfs_io_command is not used here because we want to
-> 
+> Yeah, so I use something like:
+> --numjobs=2 --offset_align=0 --offset_increment=1M --size=1M
 
+Got it, thanks!
+ojaswin
+
+> 
+> Thanks,
+> John
+> 
