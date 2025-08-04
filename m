@@ -1,73 +1,74 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54F622046A9
-	for <linux-xfs@vger.kernel.org>; Mon,  4 Aug 2025 12:08:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37CB6248F7D
+	for <linux-xfs@vger.kernel.org>; Mon,  4 Aug 2025 12:08:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754309316; cv=none; b=gijF6qN5QPh1xDhRKMsp+mnQ+gsI4Ghw8EXS3h3txc4p8ZpmmtaptlkV2AJS3IAxJ01Jish8Xgtq9ID2ERhqnsZzgMj7X7NSFg6MB0M0piN4dfkJmdTEF/qy97wn9FwMvLZqgDqGKDd0HDinMCyw85qBQ5nGLNO5ov5YwtU+hmA=
+	t=1754309317; cv=none; b=gXBISWl0jfDoTp2dtMe8lu8sv2DiKwITlSZ+Ocz7/1dRFpQOEFGp983zXCNKaJ0kwLf5lq2cnMjjTWrQqKJCxtQ9M/9a3j1+M2Zh7J6pm5g/I/Vc5xd6I1xG/GP74e2Z41VDJqYq1pNLqWGEfjHUcwTh1Ga48QZY7QyJ5alX1dE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754309316; c=relaxed/simple;
-	bh=zGUR9DpansGJXstIciFJ6TgR/4+TAzouRHMrN3dVYD8=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=VGKuqZwM6U/usIILB3KcwMNJSqVGNFj8hlxo9P1ASCzJZIM38m18NY24hNkINrxviB4tk2n9V6IwIvyUbs/LDljjmJD2nFkcGuIaqiUwi5/OUobrYJSMDFCMvn21rImzCo9/clxk/eUWzDhiPYlteMD2ACLNxqp+22AsDuIqn5o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gJaQ5msh; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1754309317; c=relaxed/simple;
+	bh=iNnO15/BfgmaMPqw0h4U0UuERiRQHOSjrTOw49XBO3I=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=bkxI1FmcJd7GATyGNw9xvVUTlaJ6m5kIbSxnbRffqFxa/1TdiLfQ6F03MWIEPRgvxc8fYD5kq61LUVSU8HuT3gZdeH+iv5fvkvlwTZiN2g4PYtSyfWmLuregXoLaWQAdWr7JJ7oMaPOgm+FbZ3NtxyWkgnkBiuEV+l5JQd/hzHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dLA55NUr; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gJaQ5msh"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dLA55NUr"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1754309314;
+	s=mimecast20190719; t=1754309315;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=+juhKJLRasyryJIZ07BPSgVKdQPnC3B3zRrA0jMHHXQ=;
-	b=gJaQ5mshACeThB0fm5FT+5nTVsNxyDLD9+fY5mOr6xpKRTKsQEHspXQDOJohf3ad05pMtB
-	huzguw8MHTjn3CT5dWhRsj/EX42Dra+0wxBHJx47bAlMQWfdybN2BGE5eSiZvnf/f9es6k
-	tcQAEYd+KYx+DvsYoihSOfc9Gwpqd3c=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=q/FwRKBqadlCqzUW765IWOU0vfo8gDyZ/uGIP5dqCW0=;
+	b=dLA55NUr9vFLiU1LWBo+KHRZtij+YXsWfHHpAd0EKlgbehkKEAb627obGjkxbHf2e1whTF
+	sdJ5P86vM4QFGMEScQoS1BHTkMrx1gtG8tO27/+jbI9uto6yPqA6sOB8uetYeXu07dhMvs
+	bsstJ+yLVtcmX8HggeMUJ1P5Bp/I6cI=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-79-sB6H9rA9OQu46YgTyoUk3w-1; Mon, 04 Aug 2025 08:08:31 -0400
-X-MC-Unique: sB6H9rA9OQu46YgTyoUk3w-1
-X-Mimecast-MFC-AGG-ID: sB6H9rA9OQu46YgTyoUk3w_1754309310
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-459de0d5fb1so3345915e9.0
-        for <linux-xfs@vger.kernel.org>; Mon, 04 Aug 2025 05:08:31 -0700 (PDT)
+ us-mta-341-94bhGhpbNP-49wgcZQImzA-1; Mon, 04 Aug 2025 08:08:33 -0400
+X-MC-Unique: 94bhGhpbNP-49wgcZQImzA-1
+X-Mimecast-MFC-AGG-ID: 94bhGhpbNP-49wgcZQImzA_1754309312
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-459d7ed90baso6938415e9.2
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Aug 2025 05:08:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754309310; x=1754914110;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=+juhKJLRasyryJIZ07BPSgVKdQPnC3B3zRrA0jMHHXQ=;
-        b=aFdjAZ4k6bCvdzT4wDEwFVNVZ1LFWIS5y+LWeYOF54SjUkyC2dRdQFEYq6zyJy4H7+
-         FbwgkTVs2pUFtIw1rbyeDNSD/wkLzqabtMA9bS+ZoNLjT/kznWdZPAC0higL5t0rcJIX
-         LstBmubmK7Xq3JGZJ1r97dyRZa0oc3R6pzsnviPEAQwvA7Hw3xYrhHatNzG77PMIx91z
-         Oz42Z6J+bMI17aFYRW+3XjqzPB1qZ3xfd2FnU37orYjor2rlZr/sbkt9DtMQAADpHeZJ
-         dN2klRuvf0Rv9VSpa60+8it4rdTdliJSul1L7Nn2/mH50sgJvFjiMEVgriq7lOWRehjM
-         B7vw==
-X-Forwarded-Encrypted: i=1; AJvYcCXsVNnJ83nGDvqmrcruERlmCmgMeD9LG2shIUWXvUxGSpYDVe0KqR7HAp4wooNNld+yfIyS7+4+6to=@vger.kernel.org
-X-Gm-Message-State: AOJu0YydG1650swzrQJSvQiLvNulrp7HyL2RxYr1kgvEzuXbwWVg/m2+
-	kYD4UqKyUuMxq3EmdrtzhktnOe2vjDpXyoXYayZ6bYXfuUf+epXxlNSc80LKKv9hW03JdG/WaRu
-	sig1/Ja+czd64502+qWgJa8Co8VAyIfjZNBmSlaSYbinyB/3XJCAJQhyvUkjX
-X-Gm-Gg: ASbGncu5/SgdUuyW2WBp9GVoDEWss7cvhuwdbS16+bn4FR1RdSpReFsOFf2MsUSU6vR
-	1PTSFYrCOh7yyqxi/Plog1sSM5L8veXZPldDoKloFcVOaH8NGXJbyRXFs8rGY4SMpvrStP4Js2R
-	23tLQ5pdE2Nrteeeu2B5M4IuR6kvHU4/yl1PLEAo+PADunJiAS+0vXqtNiXhFfI7la7m3OyyUSv
-	Hly7moPcs5+d/o1U9pDyFA2NDpJ6Oj5/IBi8i3YlVAmr0CdiL0DWkGONlM8S+Npw8jCy4yUzCaa
-	6egwmW5tQWj/8Pd3FtAmI13imEeaeZIhTSJ8b7wZzilHKw==
-X-Received: by 2002:a05:600c:1382:b0:455:f59e:fdaa with SMTP id 5b1f17b1804b1-458b6b3066amr69030515e9.21.1754309310356;
-        Mon, 04 Aug 2025 05:08:30 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEXxMwtOO5ml8lNLq1//EbF/khCCFiDqjX91sgHh5BBDJ+MFnHs5f8sHA3NRR4Yj4PvxWM/Qw==
-X-Received: by 2002:a05:600c:1382:b0:455:f59e:fdaa with SMTP id 5b1f17b1804b1-458b6b3066amr69030235e9.21.1754309309873;
-        Mon, 04 Aug 2025 05:08:29 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1754309312; x=1754914112;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=q/FwRKBqadlCqzUW765IWOU0vfo8gDyZ/uGIP5dqCW0=;
+        b=RDhGOOcgdnW/TtVwJK0DLFxNgRbrAlqRrJnemOZ4IK3WPkI9BsIy0K6vGJjGEk+1Aq
+         y6ylsMBRxXd7rEOZqdgJsaqL2vXzcGmO66ygoi3BpIq0SLv6iciZvpHQAIdPXSko+Sf0
+         ghLkM6HzFLxdXITTgyHjBbIFDxbD553bVwbyUHcRNse+xDUABD+rchDcXvNMkcRjywvj
+         nYEh5pxU7xTi3IWJQSm+iZNHDsU6WrAMcwSfvBl+S8LFGX0RCf36PXbmZl4w7axbsfEe
+         m/kZCo18kkXYm+YwGj66lor3fMaX+H6+m3bU7pT/E0/Wa2t0EP5igMpUu6i4fGbyImno
+         I9YQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWe5+2Anq4LX7bZzibyv5vvat7rP4hmWYnpIPH2RMSXeKzbSz8WNBrZhweITI7r23gPCCYWYhQOWKQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx5WCWeLvz42oDpYbPbswFv8JqmurXlRPTyyEzIRPJc8IlMycYQ
+	wvHAijSH8PDZYft/b+6MJadPbn+pMw1nuf23NQVifG6mtGhws35G7y7cXzhVSYWa/KWLLyhvVAS
+	VullAk8475nyNiJnlVa7deBmh9UIZkIPCiwDEyuv6DRQEBw0ekLxKQYsIb7H+
+X-Gm-Gg: ASbGncvqtCECzBraU2ncKSrvi4pvTmmAutF7GcM71X0gcq6Fe878fj3mr8on/ONVNXI
+	sgURE6TdyyNbKKZrFJitoFj7lJLFzqEv6PESSrdWNKkUq6cw0ZYITyoonJlroqizhelje5AzB62
+	AbS97e8oHnPoFnPb0/Cuce6YoHEWbiMrjZX1WS2cK6TbsBPZ+KISSgTckC++RuNK3KG8y7eb7GD
+	oSzln+dYTevsC4WqhHVf0yckuG1x14P8ZpN42yRjqNBp7P/BKbooXP468+Zvhi2khg5R01jayST
+	G1fCoGj8FsZREphZMk/4VgVFMd7uT8joh1e5er04iMHACQ==
+X-Received: by 2002:a05:600c:1c1e:b0:459:d3ce:2cbd with SMTP id 5b1f17b1804b1-459d3ce2e7cmr39876995e9.13.1754309311771;
+        Mon, 04 Aug 2025 05:08:31 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IE2p0Hzw8PhvQqO6TN7HsM4e2SSRxpXLCkMQhtXMrvz0d+PvdnVidFNhWbD9QimC/lSRgVGWg==
+X-Received: by 2002:a05:600c:1c1e:b0:459:d3ce:2cbd with SMTP id 5b1f17b1804b1-459d3ce2e7cmr39876665e9.13.1754309311301;
+        Mon, 04 Aug 2025 05:08:31 -0700 (PDT)
 Received: from [127.0.0.2] (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4589ee4f239sm163962675e9.21.2025.08.04.05.08.29
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4589ee4f239sm163962675e9.21.2025.08.04.05.08.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Aug 2025 05:08:29 -0700 (PDT)
+        Mon, 04 Aug 2025 05:08:30 -0700 (PDT)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Subject: [PATCH v2 0/3] Use new syscalls to set filesystem file attributes
- on any inode
-Date: Mon, 04 Aug 2025 14:08:13 +0200
-Message-Id: <20250804-xfs-xattrat-v2-0-71b4ead9a83e@kernel.org>
+Date: Mon, 04 Aug 2025 14:08:15 +0200
+Subject: [PATCH v2 2/3] xfs: add .fileattr_set and fileattr_get callbacks
+ for symlinks
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,51 +77,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAK2ikGgC/1XMQQ6CMBCF4auQWVtTpjalrryHYVFkCo0GyLQhG
- NK7W3Hl8n/J+3aIxIEiXKsdmNYQwzyVwFMFj9FNA4nQlwaUqKVCKTYfxeZSYpdEp2pnvaYemwu
- Ux8Lkw3Zo97b0GGKa+X3ga/1df45B++estZDCdMoiESndmNuTeKLXeeYB2pzzB5NNMS2nAAAA
-X-Change-ID: 20250320-xfs-xattrat-b31a9f5ed284
+Message-Id: <20250804-xfs-xattrat-v2-2-71b4ead9a83e@kernel.org>
+References: <20250804-xfs-xattrat-v2-0-71b4ead9a83e@kernel.org>
+In-Reply-To: <20250804-xfs-xattrat-v2-0-71b4ead9a83e@kernel.org>
 To: cem@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org
 Cc: Andrey Albershteyn <aalbersh@redhat.com>
 X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1077; i=aalbersh@kernel.org;
- h=from:subject:message-id; bh=zGUR9DpansGJXstIciFJ6TgR/4+TAzouRHMrN3dVYD8=;
- b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIYMiYs2hvMy1Lf98u4UvAAU7do3/5VPiZXDs/te3Rl3
- wS/hfzK1QYdpSwMYlwMsmKKLOuktaYmFUnlHzGokYeZw8oEMoSBi1MAJiIfzcjwMvQkw7+DEoIR
- k6p/3nr4lf3hk6rZm1yLHl+L4mz7oP9/LsP/gm5NdTfBO+ky3zdtO9O+99G8Vb+5Klev1tVe3PS
- Ov/U1AwB060sI
+X-Developer-Signature: v=1; a=openpgp-sha256; l=973; i=aalbersh@kernel.org;
+ h=from:subject:message-id; bh=+9pE0msIOVxUWErFY4H4swlZ9Ocywde2UapClW+AhcA=;
+ b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIYMiYs2vssIdbv45HXerqCcXE/f/Otv67704ZjgmvYy
+ rvthTHRnk0dpSwMYlwMsmKKLOuktaYmFUnlHzGokYeZw8oEMoSBi1MAJjKTmeF/VIV2uPz5pdE7
+ DuadeMr4Sf2KM3e5o+5vBtZv7l6ujzTuMvwz3qZkk6DizVVpzfJt84ss3UTl50xLV++YddaUQ4A
+ p5jIXAICORXw=
 X-Developer-Key: i=aalbersh@kernel.org; a=openpgp;
  fpr=AE1B2A9562721A6FC4307C1F46A7EA18AC33E108
 
-With addition of new syscalls file_getattr/file_setattr allow changing
-filesystem file attributes on special files. Fix project ID inheritance
-for special files in renames.
+From: Andrey Albershteyn <aalbersh@redhat.com>
 
-Cc: linux-xfs@vger.kernel.org
+As there are now file_getattr() and file_setattr(), xfs_quota will
+call them on special files. These new syscalls call ->fileattr_get/set.
 
+Symlink inodes don't have callbacks to set file attributes. This
+patch adds them. The attribute values combinations are checked in
+fileattr_set_prepare().
+
+Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
-Changes in v2:
-- Swapped patch 2 and 3 as it make more sense to add callback and then
-  allow calling them
-- Replace "file extended attributes"/"inode attributes" with "file
-  attributes"
-- Link to v1: https://lore.kernel.org/r/20250729-xfs-xattrat-v1-0-7b392eee3587@kernel.org
+ fs/xfs/xfs_iops.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
----
-Andrey Albershteyn (3):
-      xfs: allow renames of project-less inodes
-      xfs: add .fileattr_set and fileattr_get callbacks for symlinks
-      xfs: allow setting file attributes on special files
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 149b5460fbfd..c1234aad11e9 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1334,6 +1334,8 @@ static const struct inode_operations xfs_symlink_inode_operations = {
+ 	.setattr		= xfs_vn_setattr,
+ 	.listxattr		= xfs_vn_listxattr,
+ 	.update_time		= xfs_vn_update_time,
++	.fileattr_get		= xfs_fileattr_get,
++	.fileattr_set		= xfs_fileattr_set,
+ };
+ 
+ /* Figure out if this file actually supports DAX. */
 
- fs/xfs/xfs_inode.c | 64 +++++++++++++++++++++++++++++-------------------------
- fs/xfs/xfs_ioctl.c |  6 -----
- fs/xfs/xfs_iops.c  |  2 ++
- 3 files changed, 36 insertions(+), 36 deletions(-)
----
-base-commit: 86aa721820952b793a12fc6e5a01734186c0c238
-change-id: 20250320-xfs-xattrat-b31a9f5ed284
-
-Best regards,
 -- 
-Andrey Albershteyn <aalbersh@kernel.org>
+2.50.0
 
