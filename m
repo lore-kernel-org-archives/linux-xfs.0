@@ -1,220 +1,98 @@
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FBFE1E47CA;
-	Tue,  5 Aug 2025 05:01:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE84117A2FA
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Aug 2025 05:01:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754370084; cv=none; b=mS+VJ0J58TivoK+texpVpSY4jvf2vNzHMwgjyweTYSaYJtN2uPbNpc37AxeEGttnA6wCGwv9uaIOf0VkXD7WoXwRJh8Vvep2mF7XjKcL+HpFWdS2nTFXiEceGJgcl5gTFmaaZDBttnj1fvqPrLJc9m5TyZNMHPFrVv5C7yOsEA8=
+	t=1754370105; cv=none; b=V1ZOCNc4uWdK2IHD29zNTNRNamypse5MPuZZ2R+qSPLOXWHkuqbxygpFBhEYT6FGLrWFplV0hCsRvw5VCihVs6peg/pxVO6shl03EC4v0ucy5hnUbVMb+kmyeBT2U6k4lepU/xvs1TlFh7mQ6d/RzNZxKR4EPWQ6C6elPjHMfBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754370084; c=relaxed/simple;
-	bh=UvU99nEZePGyVcWOc3JbH1BeYWMApkt1hfytTnmOT6M=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=b84uPK+b3SnNb8jpqDiXkzp6hgNNLBAW4w3LiZyyNCmS96qpTX3ehjCOSI4XWk5kxt+h38op4vpb47cE/cZdIrX7Dmx5QYoMBvyQjj1S3KS1F7P6/TN+ilGBZm5ozwkt8Y5e1L0P63rA5HwdzOt9hnXyaK8Y+m2Mztl0oytUWGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HL+/R4Lh; arc=none smtp.client-ip=209.85.215.178
+	s=arc-20240116; t=1754370105; c=relaxed/simple;
+	bh=pqq+FcQQ+NEVd+1xiYm/Xmfeo5vnLdRpsqdkPhfcSvI=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:Mime-Version; b=bcJucKa0lZ7FK9Wooco2a2Qb4Rj0xffRCrZPv7D/NTjazK7t2mn8NC2Lit4/nJL+CHjEr5nyvF4hDvDE2sDNfZqrgJE1DI6kuOh/6603pNNcWV1fp/JkvamhGPJJcgmuFx4ZzgGN8InG2+82c4XSxm/YnxOMaS45NwUHdKh9OLA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GNmltnP2; arc=none smtp.client-ip=209.85.210.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HL+/R4Lh"
-Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-b2c4331c50eso3889017a12.3;
-        Mon, 04 Aug 2025 22:01:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GNmltnP2"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-76bc5e68d96so4163959b3a.3
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Aug 2025 22:01:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1754370079; x=1754974879; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=B0TmagIM6Mc/JObSwVkC/rWfmooLv6wfWY26OeBBeN0=;
-        b=HL+/R4LhS5gw6Rp2J/2a3TQTw21VgC8ErQtXw7LuWtGskclT2WTwCBH/npaOgjjgmQ
-         nUtpMbyJZvCBz9EE9Wng8oh96FcuPKIjKJeaISo2Tkk5xjWxuxuKSuk9bFHh1QigfDyn
-         xGoJHjJ4iBYCvZyMIkBZpB1pPS0sHiwZMTftWvv482dXPzXcUWn6GY+M2hjQcUN2vYKV
-         oFYd2+oJOri65Zpd1BCGgenKdmsc2M59zNXmpD7v4rCle+KsQvBWkIYS53alJUhsUnxp
-         jH7fY7Jc2Yo/x4m2+mJiSB6kZl/1K7NadsmBBtqisgAXE6bav44l+6paQfRjVlT+3Phl
-         qZSw==
+        d=gmail.com; s=20230601; t=1754370103; x=1754974903; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=RE7Mct/T3NR0Z3Wd9KMBh3LaJwbBGPXI9IqPsbgZHmE=;
+        b=GNmltnP2BZ3n03khjpOw97ZGje/NKvBmmtVnUvCsB+MkCRlHFgimwzZroMij1j6qSy
+         1jMJ7DgVgF96NgMIH7c85YKZOkgSp8Bx0W1AFCNb1aveegnq5ybKA99H3QWQQORrPt90
+         sxHhVkce794FEtJARA1ysjH7EGKAXTJQr8BL6yV02GnDCRtqw+uFqUF4WMaok37WTKfA
+         vz0rA4H3R15bHzim3isfswrazAS33RiSzPoUegh0oTxIO4uafnnHZFWYKWJMY1oI+yNa
+         FSPTnkB3gFql3MFCLq3IF2dhecVOy051JpENAmrkg7GMqkbYQPkhx8T4CNLbnKToIjwM
+         0s5Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754370079; x=1754974879;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=B0TmagIM6Mc/JObSwVkC/rWfmooLv6wfWY26OeBBeN0=;
-        b=f5RYqYizApMer3EigeWpEd5rHMnfX1WoTvQkskBLx9/kRvKIw2rl4CqERKWFnwdxJN
-         lI7frt2JNrmaZHxWoutb/IjD8R7zfNxWZ+vzePImfWaYrs8dzmBg1HZmwkki42u+3QsD
-         HtC0TxKmkxLNoHZCPZWatJ+ipA07wH5SKYmvnU3UsTpt6MmmST31u9i8gYoGewlYuuxc
-         Qv2gEV1Ng2fe2l5LXG9WszpO2RioqvCgBFV40MKqhNwmOalYjDP+tbZGsmKuJiNQicy+
-         ttpUW6We54o29+971pOXTS9MfNMF9T198Sf0rEH0myfkpgzcU1aKdwNu6VZzaZrvWSt6
-         Be3g==
-X-Forwarded-Encrypted: i=1; AJvYcCUQ7elmEWdC4uVhsjLa8LG6dn6OjoLGJJoAiGPublek83jfJQATH4SdfEnaPLEKw7RimQ2BtGrSPAxb@vger.kernel.org, AJvYcCW2TaUeLHE+88XKIdKP+b/n1lNR9jjgE18QZTZoruqQOIAz8O2NmnPmP89oBCwP3FaPabSrqvrCaRua@vger.kernel.org
-X-Gm-Message-State: AOJu0YxVtDWIzhC6uCrwUpGYdflEYiahvP33JK8zeJya20Me0OEZTdwP
-	YI+BJEhycLBXsjI8RAGMQcgI74DTxN9wnzVeblmM4ZfexyIU1zF3/QcBZ0pJ3A==
-X-Gm-Gg: ASbGncs7krIljpMBFfiREmZ9RtRqB96EOKR7hxGwervMdA4aypuy7WDz5fmWe4yDu5v
-	7VGJq97jSyfJDaA/0TfxsAcgynIZ8d+EmAIJhnLce3T4Q/Hw+4sEXIJWjDNPhNAyxcQEfkNwJPf
-	zBltAZ4SsgE4DJWHnrzXDdr+KDK5kkCEKrg96IxnIq4COMUs8BqqXcF3fjubB5m+2Y7xF+4EG9o
-	tGw0ZWN6HGLCUFDiAvolnGAf8vOEDBsM4gfjJ7FhAjYH4PJxQg8wyZjPlQ2+j9mWVOzgCfzeLGq
-	aKCSFiCKvht9AHLQoo/GDhwQTKH7APgE9AEVepL6+z7yZ8hAWeBGypDgWUfvmMxBhUf5h7svZqW
-	OJVfWstpNnVul79iZdbMrvu1W6A==
-X-Google-Smtp-Source: AGHT+IHpSJcES+hh8acfeo9cx5Ee5zHW3zV73S05GZ7M3Sk+hbHMo03tD0NDolX6c1s90E/Yn1fBBA==
-X-Received: by 2002:a05:6300:210c:b0:21a:e751:e048 with SMTP id adf61e73a8af0-23df90f64f5mr18130097637.35.1754370078754;
-        Mon, 04 Aug 2025 22:01:18 -0700 (PDT)
-Received: from dw-tp ([49.205.218.89])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b422be2b3a5sm10182728a12.46.2025.08.04.22.01.15
+        d=1e100.net; s=20230601; t=1754370103; x=1754974903;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :to:from:subject:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=RE7Mct/T3NR0Z3Wd9KMBh3LaJwbBGPXI9IqPsbgZHmE=;
+        b=ZswL2sk//W/gSGp3tzhTBIZMsF4km5T0ztz6WKZBVSBDLB7p8iLP3XrWBMMK2F30RL
+         H5yZSNmAVpvNdJ+d5U8djdLOb0AQ8Mt+OOakUaShH6fhlY4LGHP/IZCxzto8jhatrmo4
+         0t33TaOGRc2xOqga9QdpySqTCWK9S01OwYWW20ak97n7aroWCcfL58tgWiwGHYZTGl6e
+         bmF+3l1UxtjE/DHnJKF28LVyRjhmhRSv4rhHrsxWU7CArYRmhr614L7UPq6iH6pfozVx
+         hIlgCJ1HVkof+Ib4O7X6/1MzIDOKCXT136mI2V0kCrJyFP3Dgcto9CTCBgtgqkFwlzza
+         Azxg==
+X-Forwarded-Encrypted: i=1; AJvYcCXtvyjx+E3at/VoEZ4OKP95RHK51fMZ36hku+tZ0ej76V8vvC67DSFcOLhMpoRf1GVftWk49TsQ7CA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzriVOLJnRjzE+s9inyViKqzwrg5G5M59RyWqrGLkojaLPbWg+i
+	1lOvNtbDIFj5xmlnZlqGzXdaiFLycu6IzBryaT5qTjkHPI7xDpSKZZ4KgS8gOQ==
+X-Gm-Gg: ASbGncuR0dF9uqqfvnwqCYI2St4qKuej0WCTWVPigtsDkTBFOxUAagt1OfthmVOZpX/
+	fLLNLTaW2iUZgs8f37GMvwRhPCHoqcX3HR+jnBITsboXt6/7oGjJIu7GRzjqSHBpCh+u3la0x/4
+	bfOVBPZA98vYdjcelkK6Zp1N9Xbmp32iloXpdJCYvKvm0gr/UNRzVp/sZdR323unkV+yhTKu7Sb
+	2TILCgmt9AhAfKBcBsrZSnF+enkIH15YvRwIF4qxZA8tqRNPcZJ5atWziKGLgmKl+10jqCbiSD3
+	dguCq28kqTBWd3DNg44CyEY4gokb50olB4u3+GedzPtuXLq79/nF7+ZCxMGu2+32pv7YE35DGKY
+	+kmdYv8XBpA8c5AlZPbq2tbXM7xZhqDBO/x8zEsRcIks8GX8lwna5SgrFhkxUON1adEJEXRpiHP
+	Y=
+X-Google-Smtp-Source: AGHT+IEjQO7mZlWs85w5JCpY5U05Lia0DINHalw+GnEdRv1gJQNZNPC2isdgajfD5U/2K7FWhI0Xvw==
+X-Received: by 2002:a05:6a00:1495:b0:748:323f:ba21 with SMTP id d2e1a72fcca58-76bec302002mr15019380b3a.1.1754370102951;
+        Mon, 04 Aug 2025 22:01:42 -0700 (PDT)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.198.59])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-76c09adf8efsm3437682b3a.68.2025.08.04.22.01.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Aug 2025 22:01:18 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: "Darrick J. Wong" <djwong@kernel.org>, John Garry <john.g.garry@oracle.com>
-Cc: hch@lst.de, cem@kernel.org, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
-Subject: Re: [PATCH v2] xfs: disallow atomic writes on DAX
-In-Reply-To: <20250722175820.GV2672070@frogsfrogsfrogs>
-Date: Tue, 05 Aug 2025 10:02:20 +0530
-Message-ID: <87a54e4cdn.fsf@gmail.com>
-References: <20250722150016.3282435-1-john.g.garry@oracle.com> <20250722175820.GV2672070@frogsfrogsfrogs>
+        Mon, 04 Aug 2025 22:01:42 -0700 (PDT)
+Message-ID: <58fc5e2ae7f658863c6934260221aeb917a3b2d6.camel@gmail.com>
+Subject: Re: Shrinking XFS - is that happening?
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, linux-xfs@vger.kernel.org
+Date: Tue, 05 Aug 2025 10:31:39 +0530
+In-Reply-To: <B96A5598-3A5F-4166-8566-2792E5AADB3E@karlsbakk.net>
+References: <B96A5598-3A5F-4166-8566-2792E5AADB3E@karlsbakk.net>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-"Darrick J. Wong" <djwong@kernel.org> writes:
+On Mon, 2025-08-04 at 17:13 +0200, Roy Sigurd Karlsbakk wrote:
+> Hi all!
+> 
+> I beleive I heard something from someone some time back about work in progress on shrinking xfs filesystems. Is this something that's been worked with or have I been lied to or just had a nice dream?
+I have recently posted an RFC[1]. The work is based/inspired from an old RFC[2] by Gao and ideas
+given by Dave Chinner.
 
-> [cc linux-ext4 because ext4_file_write_iter has the same problem]
->
+[1] https://lore.kernel.org/all/cover.1752746805.git.nirjhar.roy.lists@gmail.com/
+[2] https://lore.kernel.org/all/20210414195240.1802221-1-hsiangkao@redhat.com/
+--NR
+> 
+> roy
+> 
+> --
+> Roy Sigurd Karlsbakk
+> roy@karlsbakk.net
+> --
+> I all pedagogikk er det essensielt at pensum presenteres intelligibelt. Det er et elementært imperativ for alle pedagoger å unngå eksessiv anvendelse av idiomer med xenotyp etymologi. I de fleste tilfeller eksisterer adekvate og relevante synonymer på norsk.
+> 
 
-Thanks Darrick for the cc.
-
-So ext4 currently will not issue atomic writes requests on DAX device,
-unless the DAX device advertizes atomic write support (which IMO, it
-doesn't). That is because, sbi->s_awu_min should be 0. I guess the
-problem in case of XFS was the software fallback, where we only check if
-the xfs_mount has reflink enabled, if yes, then we set
-FMODE_CAN_ATOMIC_WRITE on file open. Since ext4 does not have such a
-fallback, then the atomic write requests on EXT4 DAX should fail with
--EOPNOTSUPP.
-
-static inline bool ext4_inode_can_atomic_write(struct inode *inode)
-{
-
-	return S_ISREG(inode->i_mode) &&
-		ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS) &&
-		EXT4_SB(inode->i_sb)->s_awu_min > 0;
-}
-
-But having said that - I guess we could still add an explicit check in
-above to disable atomic write if inode is IS_DAX(inode) and make the
-same changes in ext4_file_write_iter() as XFS. Logically it make sense to
-disable atomic writes explicitly if inode is of type DAX and also to do
-any generic checks on the iocb before calling their respective file I/O
-operations in ext4_file_write_iter().
-
--ritesh
-
-
-
-> On Tue, Jul 22, 2025 at 03:00:16PM +0000, John Garry wrote:
->> Atomic writes are not currently supported for DAX, but two problems exist:
->> - we may go down DAX write path for IOCB_ATOMIC, which does not handle
->>   IOCB_ATOMIC properly
->> - we report non-zero atomic write limits in statx (for DAX inodes)
->> 
->> We may want atomic writes support on DAX in future, but just disallow for
->> now.
->> 
->> For this, ensure when IOCB_ATOMIC is set that we check the write size
->> versus the atomic write min and max before branching off to the DAX write
->> path. This is not strictly required for DAX, as we should not get this far
->> in the write path as FMODE_CAN_ATOMIC_WRITE should not be set.
->> 
->> In addition, due to reflink being supported for DAX, we automatically get
->> CoW-based atomic writes support being advertised. Remedy this by
->> disallowing atomic writes for a DAX inode for both sw and hw modes.
->
-> You might want to add a separate patch to insert:
->
-> 	if (WARN_ON_ONCE(iocb->ki_flags & IOCB_ATOMIC))
-> 		return -EIO;
->
-> into dax_iomap_rw to make it clear that DAX doesn't support ATOMIC
-> writes.
->
->> Reported-by: Darrick J. Wong <djwong@kernel.org>
->> Fixes: 9dffc58f2384 ("xfs: update atomic write limits")
->> Signed-off-by: John Garry <john.g.garry@oracle.com>
->
-> Otherwise seems reasonable to me...
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
->
-> --D
->
->> ---
->> Difference to v1:
->> - allow use max atomic mount option and always dax together (Darrick)
->> 
->> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
->> index ed69a65f56d7..979abcb25bc7 100644
->> --- a/fs/xfs/xfs_file.c
->> +++ b/fs/xfs/xfs_file.c
->> @@ -1099,9 +1099,6 @@ xfs_file_write_iter(
->>  	if (xfs_is_shutdown(ip->i_mount))
->>  		return -EIO;
->>  
->> -	if (IS_DAX(inode))
->> -		return xfs_file_dax_write(iocb, from);
->> -
->>  	if (iocb->ki_flags & IOCB_ATOMIC) {
->>  		if (ocount < xfs_get_atomic_write_min(ip))
->>  			return -EINVAL;
->> @@ -1114,6 +1111,9 @@ xfs_file_write_iter(
->>  			return ret;
->>  	}
->>  
->> +	if (IS_DAX(inode))
->> +		return xfs_file_dax_write(iocb, from);
->> +
->>  	if (iocb->ki_flags & IOCB_DIRECT) {
->>  		/*
->>  		 * Allow a directio write to fall back to a buffered
->> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
->> index 07fbdcc4cbf5..bd6d33557194 100644
->> --- a/fs/xfs/xfs_inode.h
->> +++ b/fs/xfs/xfs_inode.h
->> @@ -358,9 +358,20 @@ static inline bool xfs_inode_has_bigrtalloc(const struct xfs_inode *ip)
->>  
->>  static inline bool xfs_inode_can_hw_atomic_write(const struct xfs_inode *ip)
->>  {
->> +	if (IS_DAX(VFS_IC(ip)))
->> +		return false;
->> +
->>  	return xfs_inode_buftarg(ip)->bt_awu_max > 0;
->>  }
->>  
->> +static inline bool xfs_inode_can_sw_atomic_write(const struct xfs_inode *ip)
->> +{
->> +	if (IS_DAX(VFS_IC(ip)))
->> +		return false;
->> +
->> +	return xfs_can_sw_atomic_write(ip->i_mount);
->> +}
->> +
->>  /*
->>   * In-core inode flags.
->>   */
->> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->> index 149b5460fbfd..603effabe1ee 100644
->> --- a/fs/xfs/xfs_iops.c
->> +++ b/fs/xfs/xfs_iops.c
->> @@ -616,7 +616,8 @@ xfs_get_atomic_write_min(
->>  	 * write of exactly one single fsblock if the bdev will make that
->>  	 * guarantee for us.
->>  	 */
->> -	if (xfs_inode_can_hw_atomic_write(ip) || xfs_can_sw_atomic_write(mp))
->> +	if (xfs_inode_can_hw_atomic_write(ip) ||
->> +	    xfs_inode_can_sw_atomic_write(ip))
->>  		return mp->m_sb.sb_blocksize;
->>  
->>  	return 0;
->> @@ -633,7 +634,7 @@ xfs_get_atomic_write_max(
->>  	 * write of exactly one single fsblock if the bdev will make that
->>  	 * guarantee for us.
->>  	 */
->> -	if (!xfs_can_sw_atomic_write(mp)) {
->> +	if (!xfs_inode_can_sw_atomic_write(ip)) {
->>  		if (xfs_inode_can_hw_atomic_write(ip))
->>  			return mp->m_sb.sb_blocksize;
->>  		return 0;
->> -- 
->> 2.43.5
->> 
