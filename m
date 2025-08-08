@@ -1,151 +1,171 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11012009.outbound.protection.outlook.com [52.101.126.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B9021FF39;
-	Fri,  8 Aug 2025 06:01:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754632865; cv=none; b=Gq06FGn6jkYyXwof89OzQ2puIq2JwjlFbacT97iHoVk5NpELpyEtGNpG6HCX5i+LFQR+X7yBISKMsvm6aHLIuDPov4y5U4LUqExvmScbU0KlK4LUuLjSGCLU0sJwJXqNussYUIoiuzH5ZX/R36vL557czRbIBQZieqUqjVZRRHI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754632865; c=relaxed/simple;
-	bh=MjI/zU8qCooN8dLbMdIOUGEjfZaj8l6X7GnTu/rSb7s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ywz/GORT7VZ6lsHfqqmjGweLcx76mtBXAGocYEJqEiySxWzPhCe7GlXZkBQJ9OXORi7DuSqoDIFSA7AroZ10tlii962Z26JmtS6KXzb0bT4bssYIA1ss+cVsd55ON4wgPqdHKf+b6gQwmmjvOBG0Oll/bPBg+DwsrZGlnSIdLwE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=sBu3xAsZ; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15299226D18;
+	Fri,  8 Aug 2025 07:15:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.126.9
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1754637315; cv=fail; b=EpKe2MVcNFogPe0JMc9MTp461zdMbCbPMrsbZgrqLGe+zDLF6UG7xfWR/W7lTE17SsJHgAnP2bUamwud9FfbeeeKRVIskwGUQRuZ3vSQZCcCNWDBMKpcS3FAruG8SXc/QjyPAZUeIpoL2OOvFkzKYdyrLcHqRPkpfn3wixbnCQQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1754637315; c=relaxed/simple;
+	bh=uvuvHvjX6yh5ylMwhA3at7/5eNgiaTjwCI1Vuk5zgWA=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=elbUKIUesCb7lltlI2JXRoGvtisFKNMbAxNfwJ0m7Pz/9LeND4+BOALu63vcwvGty+cl5tMrlA41DT4YCalyy1tERuyzgdjqh/ReOvyRcpCBKI61F3Y6Ri3zg+DJnuhV4SqFsTQAC3RZcIzAmaecr3iX5rrpaDMjOLF9H1jgrcc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=XcdUpotE; arc=fail smtp.client-ip=52.101.126.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="sBu3xAsZ"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57812HTf021221;
-	Fri, 8 Aug 2025 06:00:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=TqVIlPEXdBGYYQWx6dmdE3sRD5TRo5
-	cHpU0SRXejBZA=; b=sBu3xAsZI374rXJLKfb4vbLkuNRecfU4GcKiDV8QoWBel8
-	ydy0hzp4qfd2rDnfmfYjggaqBjIM62KK5EyX+j5UalE2CkDnkb1d3uiDWBAvuXs3
-	ZRtZT5FduQ7zjr1uGPcg9N+seBKed7ZwA/5Eyj/WbslQJGgLTmE/pYPGhnuHyy55
-	WMtN4yuVvNBnCUEPsqomX6vqID/LEuDrinTsgeMGa7GAogM9VZhpWea1WTbQtqqP
-	YbJKVXDfIxEsdDO9NYnOBTLp67Gzojwm8by2Ud1YItqJb+nvymB4Lh/1Uh3fg6aw
-	z3Su7r1hyb+k1FhUpfZ2DaBnGHA7E7srvaQhnE2g==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48bq63eavw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 08 Aug 2025 06:00:34 +0000 (GMT)
-Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 5785wsTU005698;
-	Fri, 8 Aug 2025 06:00:34 GMT
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48bq63eavr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 08 Aug 2025 06:00:34 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 5781LJnl001586;
-	Fri, 8 Aug 2025 06:00:33 GMT
-Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 48bpwr4agf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 08 Aug 2025 06:00:33 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 57860Vfc45548022
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 8 Aug 2025 06:00:31 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 6BA4D20043;
-	Fri,  8 Aug 2025 06:00:31 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id A68EA2004F;
-	Fri,  8 Aug 2025 06:00:29 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.29.239])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Fri,  8 Aug 2025 06:00:29 +0000 (GMT)
-Date: Fri, 8 Aug 2025 11:30:27 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Zorro Lang <zlang@redhat.com>,
-        fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
-        tytso@mit.edu, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v3 05/13] generic/1226: Add atomic write test using fio
- crc check verifier
-Message-ID: <aJWRoCMhKj91T1z8@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <aId8oZGXSg5DW48X@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <3a4854ac-75ad-4783-acbd-048fe7c7fdb0@oracle.com>
- <aIhmG-l4nWOAzz2I@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <20250729144526.GB2672049@frogsfrogsfrogs>
- <aIrun9794W0eZA8d@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <22ccfefc-1be8-4942-ac27-c01706ef843e@oracle.com>
- <aIxhsV8heTrSH537@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <76974111-88f6-4de8-96bc-9806c6317d19@oracle.com>
- <aI205U8Afi7tALyr@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <83e05a05-e517-4d41-96ff-da4d49482471@oracle.com>
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="XcdUpotE"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=a5RoJ9cJWHru3pF709wapTJeT+w0VEaA+1hmlsHR/CubuaeeM+JFGJoYtuGp2/2nBDTwWHnJJ9G3/6MxBM1vXojfjGGVEfuysON3I7OW1SpeZG9cBjXPFftidpOEJDorXqJsUjOne6MNo20Rjb/L42kPZ/MLAc301lWcejDTJGZLzxLetnneNMM7IZFZvbDgoCVZJtRWugwPV/hTE37W+nNPy3iS9tyqY/q0zfYjwKM0usEn79+Wet3s28t4Ndens+bZGkKUfiNHqUUDtO7EHfWkruvJ7GHbSkHvYBfiNSRpJ6nwghrPI3ucwAk4V1kWUN5sg+cVppXW1DdtnMqpUg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=EaRsp2hafX5T79uW/jAUVQCj5NhROIBp0mmhNdGdHyo=;
+ b=e2yVbDl7YMSKNXp69AqlvxWZlYYC1w3ARRBQlxq3WUwxodPg5HRvrnp/Hm+SVC6qxbe4BohxPTY8n7KK7HBIXIxJwmbDvxOugq7rbnpwwWzJZtJIoeJSrYR9HnWpMc8iufuiR3X4s3CbGIAb+RRkyTbkMxsPm95VXckxQ8VhLVU1e47SF7ar/nPC64eBxfG9ZjTbeN1zW2xBs3FE8e616lATq/1TBl0GbI0+hT9fI4UW/RaW9Jn3wvLV3Z0L9zJtEHtfr7x6UX6qkOVqgu0DsEp7PSGA5jJZrP2Sqb9B17PMO3bdStRfcqw0/ecHqPqLE7AcJiBSLxLjVJ2qfOddZQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EaRsp2hafX5T79uW/jAUVQCj5NhROIBp0mmhNdGdHyo=;
+ b=XcdUpotEzvEKdHFQ7X5hUbD9JAQGecySRP2q6OYXAJYIQyYQoXqx89ZP5esqqP7a51sGADCWFpxsmdhvw6M2w7g5KTtVVQ7aNneYNzK2V23N91lfDCSwpb26II48Z3wAmm/6IZaZY3RnM+5G1i3x3TL4BUeQls3Dqfhamnbprn76Kbd2PttQTy0WhrdN2+p8127QGXWq3XMiR4Snorz81b4YC2hKzHEtkc9nW+U+AuC+Vtn/YxM9QDVWPomw7tqTWfZ4Df8N62zG9kvqs5MaU6mgOs8LMW0LOpzl7wnXSLwbCfzun+T6x1vYg771oaN1fimFgTpVb4nSHneB0/9jvQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from KL1PR06MB6020.apcprd06.prod.outlook.com (2603:1096:820:d8::5)
+ by TYZPR06MB6463.apcprd06.prod.outlook.com (2603:1096:400:464::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9009.15; Fri, 8 Aug
+ 2025 07:15:09 +0000
+Received: from KL1PR06MB6020.apcprd06.prod.outlook.com
+ ([fe80::4ec9:a94d:c986:2ceb]) by KL1PR06MB6020.apcprd06.prod.outlook.com
+ ([fe80::4ec9:a94d:c986:2ceb%5]) with mapi id 15.20.9009.017; Fri, 8 Aug 2025
+ 07:15:09 +0000
+From: Xichao Zhao <zhao.xichao@vivo.com>
+To: Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Trond Myklebust <trondmy@kernel.org>,
+	Anna Schumaker <anna@kernel.org>,
+	Amir Goldstein <amir73il@gmail.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	Johannes Thumshirn <jth@kernel.org>,
+	linux-fsdevel@vger.kernel.org (open list:FILESYSTEMS (VFS and infrastructure)),
+	linux-kernel@vger.kernel.org (open list),
+	linux-nfs@vger.kernel.org (open list:NFS, SUNRPC, AND LOCKD CLIENTS),
+	linux-xfs@vger.kernel.org (open list:XFS FILESYSTEM)
+Cc: Xichao Zhao <zhao.xichao@vivo.com>
+Subject: [PATCH 0/6] fs: correct some spelling mistakes
+Date: Fri,  8 Aug 2025 15:14:52 +0800
+Message-Id: <20250808071459.174087-1-zhao.xichao@vivo.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SG2P153CA0021.APCP153.PROD.OUTLOOK.COM (2603:1096:4:c7::8)
+ To KL1PR06MB6020.apcprd06.prod.outlook.com (2603:1096:820:d8::5)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <83e05a05-e517-4d41-96ff-da4d49482471@oracle.com>
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=NInV+16g c=1 sm=1 tr=0 ts=68959282 cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=kj9zAlcOel0A:10 a=2OwXVqhp2XgA:10 a=6yZzKTUn8j-8rjHs7NAA:9
- a=CjuIK1q_8ugA:10
-X-Proofpoint-GUID: foxn4ZVbnOOoYxzRqC7YB18yaBdp0tDq
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODA4MDA0NyBTYWx0ZWRfX9j8mCvcfTgLh
- 4R3reE0El8Kl+pm+mN1datibZYmgg/CQVkC+bi9yi3HgnMK7TsXlJwC0gvv1peuaCI4nSUCS4yJ
- t6zUCqNmion/7XfZ9fc+Rf8M8u6WuP/MsY4E/td4rUmM2LfsqLDHky9uox5Rpm41Kdc6GTosS7q
- 4qjqukTzRSN0RtX/AViPXmDsGBxhGsXd+2ufqkRyWWRaoCmKuey94k9LuRmg2VAch4fTvzohRMi
- wUNkzJ5VV6hIwvBVIHri+2S1cIgbMtR51NU67xVh3cE6FAc7eSpYJv1Kq8rX37LBar5JN65RdtI
- ExM0znN7qC0xkxZ5aYaqUuDoMAE2J9fjH+qWAYG2OpzLWJo8XxsNbrPQAkTfgIFkf0pNrUUZo3A
- JJXp/qDXdJoYhkRKG829Kivmd7mdSZ71JTf+t+YcfnqV+N7QIub3j76zqjKcGs9cEIWFBGto
-X-Proofpoint-ORIG-GUID: jTyKt8jTh_GQvseQDQMGqDEJC0yPUJtQ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-08-08_01,2025-08-06_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 suspectscore=0 impostorscore=0 mlxlogscore=999
- lowpriorityscore=0 malwarescore=0 clxscore=1015 adultscore=0 mlxscore=0
- bulkscore=0 priorityscore=1501 spamscore=0 classifier=spam authscore=0
- authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2507300000 definitions=main-2508080047
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: KL1PR06MB6020:EE_|TYZPR06MB6463:EE_
+X-MS-Office365-Filtering-Correlation-Id: fcb5ed14-2b15-4b1c-7c81-08ddd64b4f17
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|7416014|52116014|376014|921020|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?tyWK/eClma1Rp+YUtrvNaahw+83Pkfen5d+86EKzo2O/9Zn7VrSDi1WQIoa8?=
+ =?us-ascii?Q?56xBgYmHv6gS3rMxvMIzk5a3QYtEmoNjdEHbNqIp59+8CAUik9O8nEXe2FIN?=
+ =?us-ascii?Q?dCwDCtbwiSxdpmVlslrfayDJ1tIz2oN9o68chokXPANsyv+zUKTZSZ0gmh3A?=
+ =?us-ascii?Q?cCvbJ1ABwDy2Dv4GqJUQc70drxtoZjl1PtYwQabuEteH1hjJoXv5UIdjDtDk?=
+ =?us-ascii?Q?Zd2XEdVl1GmbBLpCP6Ysgyx7xlSELDxcwHDbum6xIZduoukX8e9fL+xfJZK3?=
+ =?us-ascii?Q?uaOyzhNMs5XSFRVgS+TGp0D/Z/QgcDxsvH8UJzMAEC9SsVWP1hPfhj3IucLn?=
+ =?us-ascii?Q?L/07vW+6kwWaU8PH2ywzcJSbnSd+p1Z8R58RprM+boXYhYGtOmruzhF2yQpn?=
+ =?us-ascii?Q?4Dg0wrMAsG7gerhjjy8I8G2YMhtAvvd9y2IMx6kjgwLR0x9846jKdZWn+dHW?=
+ =?us-ascii?Q?DqrDjZAahqPWnug7Tq8+J7qcWpsKsotgTsJtLi4uX18rS3Hgr7R5nbgPGwdI?=
+ =?us-ascii?Q?m1+Lewm15sSD17VxJlAAJesS37fDYkmerjAVhX63pf7DsIApGTYkAkWUGbC6?=
+ =?us-ascii?Q?93CfQ0pbHQej6N6UAUfZDUHdB7hFLEHVE1nQiddeHmPaueRAU91d26EzD+0E?=
+ =?us-ascii?Q?wKLCzggyi6RE7UYdWxJOoCO77vlBjA039/OMCr2wn+hHUP7p0QYoUXbh/yOj?=
+ =?us-ascii?Q?n2WsAUVb3GH2Vh/ViCRmMGcGYyBBpUSPEZqENJeDeemPkqYizMvbyiFscaIP?=
+ =?us-ascii?Q?8e+hTEJW/5OO4C2E5Ia1Ux3XXH8wDi++fHkZRUjs5G7QPIih9HFntex1ousI?=
+ =?us-ascii?Q?o3QWWV1n4MkAmYuSVlFfq2hPywVsdn6Z7uhyYGjUc7ODMFd8IplhbdBdTPaa?=
+ =?us-ascii?Q?uCz+iFsj2h92L8cBGVkO/L/HCK1yeIjTNGkUyNiYCfiwjztCAE/Y255AfFNB?=
+ =?us-ascii?Q?iKSEfrO7eU+FQIFeIylH1sSsIReMfFCPLUCbpaIItRZ5MQRDPeJfTWyqjOdr?=
+ =?us-ascii?Q?5bJ24gbAERxw4WmuDBARD2p1uP57Tbt8Sx3+KSl7Em26/+Jn2wU30Wi8ITQj?=
+ =?us-ascii?Q?+MlaJfIiwAFh0a1laMDrqtuiUc7JrEdGZmx1vZH8yEBdwzG9QBKr2BMJFSgt?=
+ =?us-ascii?Q?TrCY+xefOwOt9zHbv2GCt5jqQ4Rc5pZZ7/XPAZKdQzf5qEHs6Z8YAh4Z+SoT?=
+ =?us-ascii?Q?oX1z/Fc42MRsxgMKkncxPT3PcuaVpXG+pKv7HdDYQ8YMI1S+G9wVnc4MvSMt?=
+ =?us-ascii?Q?5SuzCjgTWS5Q2egqfHdaPelNvwMXUolluh0FhFGCl//JVZZoQgKIa7++dwOA?=
+ =?us-ascii?Q?1ZN/ua9WBgYkQ2SM+qXnRbN8Tb4Z7RkylSeXpER0PBJwdCBa1zFVHE8Us4eD?=
+ =?us-ascii?Q?SDPdxP6D2YZebqmxlN2RCJYEPmdH2Vr5hf1uor7b/SBNQbDHZKMOXYNkLFQM?=
+ =?us-ascii?Q?Fp8dTFHnljddXW+2ejWt46tH+MASvxaEQBDmV/gzTyaQbueBNzyGMduCi2t2?=
+ =?us-ascii?Q?Ou64gYhlUCZboV8=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:KL1PR06MB6020.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(52116014)(376014)(921020)(38350700014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?/z4MSPtNXtjDozKsgWYMFstQrXyhu+nCeDNlXCfiCu926eWPsd+QJF1ouHmj?=
+ =?us-ascii?Q?ERfqsM25dWLdo8O/nZhja2XcKULsHuF2+qi1iD+nowgf81H0DhyWuM+BTpBj?=
+ =?us-ascii?Q?rWmFFSV8LlqOKN7XtmmiKnkjAMcOT1sjlpckzkYxYwPms5WeJ42hDYnGb9T1?=
+ =?us-ascii?Q?/5Sx7MbTKnFq2qwxonVPik7p6h5Wttis+zNhMezgEEa2TwRUzO1K+4V4BQMz?=
+ =?us-ascii?Q?JyT7lmGVPQ7aqPaNIfdslvh0rkVGobuE846v+//b7eVjOvUA6lsXzC+NpDg5?=
+ =?us-ascii?Q?UlEdL6K5P1M3XzJl0LwddnOqI98YZNu/0BHem7lCdQwZd1coOApDeyCIqoHv?=
+ =?us-ascii?Q?/55O9SC4YXA+DTVExAtROTT2ZWCsQEl1qEmHuUhb1uELgdfZ6/vas9GzN81z?=
+ =?us-ascii?Q?7jz5JiL/QUkz646EEmpktifPC1Nq8g84U2Hw6571Uy4SkAWFFGX9XMloGMvZ?=
+ =?us-ascii?Q?B7Mr0zjFUXBJqmoPwN0QG2Xd1DbReLcJyIaEAhMlIQk2wAN1Phl7WkahUEY2?=
+ =?us-ascii?Q?5yR72ZJv3s2rHj54IT7YRK3ZbWHhjeEdXpbaN9trc7s4UTPOBMhRgvCpE7v2?=
+ =?us-ascii?Q?/akHxBRaLu4VarjM7jeJx/5u46resmMbolMNyyzVMHnEIM4GA2AjHMuyGfnS?=
+ =?us-ascii?Q?nuImymkBfo2O4W9DB8MYvQqFMTZOGVYHkJ57Qa1P7Yatv33EzlXSjyefPqyh?=
+ =?us-ascii?Q?oWTtOSebb8A4WhpTuL5/Bqbmit5GXZ+pDsjgJksjLsfW4BCoXO26JQx+Zv0j?=
+ =?us-ascii?Q?UFipsd8MEebkXTmxRHPGgrqO3UKGLb7qNIx92Pw3CZLFmKpntwy/IFN82v+R?=
+ =?us-ascii?Q?KmZ89tzrCLT41RwQetxrrGitSezksAZnlTbSardR29RRsZbtuvPPrMwqn/i6?=
+ =?us-ascii?Q?clMIY7xX7/EwcKXRYFT9nE7s5e/wRG0907sC/FcE1P9F04GZ0PVb7VBeKiE1?=
+ =?us-ascii?Q?bazBAeNE/SZksKBIUxhCVzmOQU2MSAdnk0DPxkvlqY8TCXi1UWMPaXeiwsqy?=
+ =?us-ascii?Q?KbrnnfNRIatllounoSCzb8YWTG0UKylU0TpR5tAHAdXhQ8R3nXoVIh39QGRC?=
+ =?us-ascii?Q?cZ/yoqTJgTj4+3B63hcKcFTaPJ0rd1GgRMVsjRkHID1BwI60HGJ8yiUwxaQe?=
+ =?us-ascii?Q?V9j30akAdujgJ6CF2sCWO82++VkpVlpRTlVfwFw8g2AyLQuKhUBfW/PmiOeR?=
+ =?us-ascii?Q?unpcVpd5zBkd5vuZykdQvsOzLfzJeNJkqsNmTD6KAB4OCUP1AagXQHRj8AXj?=
+ =?us-ascii?Q?9TPTR+xfvjHQ9C7mmGXgnM721gtM7FbQmt/KeVnjJwmcmoG7RQPBIaIRbwyR?=
+ =?us-ascii?Q?5+kEakLfVbPe5gyJoOI5AJ3wFGbktmmEQ20jusMhpNkU2aHcty21VTPv1XXs?=
+ =?us-ascii?Q?hFBhbidshHUdGnzd9DvXhZGBNafhiaas362JAwalOFT6a0PzNnpRpKznxSu/?=
+ =?us-ascii?Q?7oyriVxOSoOMoIsQD4/1sQruLqXgbLIucSiPfz8r+aC/qobGLPp5K4lNZI5K?=
+ =?us-ascii?Q?L7kA8PppWaNkA8bK1+lQfH+YYcdk93nu1D2cknjD2Po5+E29VJJ6+MS40PxL?=
+ =?us-ascii?Q?mlVBhebNbquPgLZTuWWV+jHNcWfcci5pYTn1Be2E?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fcb5ed14-2b15-4b1c-7c81-08ddd64b4f17
+X-MS-Exchange-CrossTenant-AuthSource: KL1PR06MB6020.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Aug 2025 07:15:09.7238
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: TNhnmAsApkWxL6gxypAmINRm235rrfPZfYWmdidh3lVV0bpjyqKpKIg43RIAIYPpXYkMsoScnxJVGdau7AJaBQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR06MB6463
 
-On Mon, Aug 04, 2025 at 08:12:00AM +0100, John Garry wrote:
-> On 02/08/2025 07:49, Ojaswin Mujoo wrote:
-> > On Fri, Aug 01, 2025 at 09:23:46AM +0100, John Garry wrote:
-> > > On 01/08/2025 07:41, Ojaswin Mujoo wrote:
-> > > > Got it, I think I can make this test work for ext4 only but then it might
-> > > > be more appropriate to run the fio tests directly on atomic blkdev and
-> > > > skip the FS, since we anyways want to focus on the storage stack.
-> > > > 
-> > > testing on ext4 will prove also that the FS and iomap behave correctly in
-> > > that they generate a single bio per atomic write (as well as testing the
-> > > block stack and below).
-> > Okay, I think we are already testing those in the ext4/061 ext4/062
-> > tests of this patchset. Just thought blkdev test might be useful to keep
-> > in generic. Do you see a value in that or shall I just drop the generic
-> > overlapping write tests?
-> 
-> If you want to just test fio on the blkdev, then I think that is fine.
-> Indeed, maybe such tests are useful in blktests also.
+Trivial fix to spelling mistake in comment text.
 
-Okay, I think it is better suited for blktests, so I'll add it there.
 
-> 
-> > 
-> > Also, just for the records, ext4 passes the fio tests ONLY because we use
-> > the same io size for all threads. If we happen to start overlapping
-> > RWF_ATOMIC writes with different sizes that can get torn due to racing
-> > unwritten conversion.
-> 
-> I'd keep the same io size for all threads in the tests.
+Xichao Zhao (6):
+  fs: fix "writen"->"written"
+  NFSv4: fix prefered -> preferred
+  fsnotify: fix "rewriten"->"rewritten"
+  xfs: fix "acheive"->"achieve"
+  zonefs: fix "unwriten"->"unwritten"
+  zonefs: fix "writen"->"written"
 
-Yep
+ fs/namei.c                           | 2 +-
+ fs/nfs/nfs4xdr.c                     | 2 +-
+ fs/notify/inotify/inotify_fsnotify.c | 2 +-
+ fs/xfs/xfs_inode.c                   | 2 +-
+ fs/zonefs/file.c                     | 2 +-
+ fs/zonefs/super.c                    | 4 ++--
+ 6 files changed, 7 insertions(+), 7 deletions(-)
 
-Thanks,
-Ojaswin
-> 
-> Thanks,
-> John
+-- 
+2.34.1
+
