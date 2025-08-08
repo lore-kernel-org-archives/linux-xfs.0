@@ -1,183 +1,151 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F0DD266B40
-	for <linux-xfs@vger.kernel.org>; Thu,  7 Aug 2025 14:43:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B9021FF39;
+	Fri,  8 Aug 2025 06:01:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754577822; cv=none; b=GcrYrV1qcAKp8dxIjWwEyxYi2DFpM6d1TkUo1/L04T2b4AYkQ93gPBDSq8yd+zz42Hp7mtPCOrk3yXtrv43sLQKpX4J1Hb0xfbU0FxGdByJbzDhHTmfnQMtIgUboDoJZf0quu1bh1Z4cim3eLRcUmAIj6jynhso7bGENsDQ85cQ=
+	t=1754632865; cv=none; b=Gq06FGn6jkYyXwof89OzQ2puIq2JwjlFbacT97iHoVk5NpELpyEtGNpG6HCX5i+LFQR+X7yBISKMsvm6aHLIuDPov4y5U4LUqExvmScbU0KlK4LUuLjSGCLU0sJwJXqNussYUIoiuzH5ZX/R36vL557czRbIBQZieqUqjVZRRHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754577822; c=relaxed/simple;
-	bh=LhU77/GljgwlfeWkOiaySnUnIiVZ/nugigKvlA19ods=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NGIoJc5XCxCxFQzU99jN5jsEGUoS6M7V11vTpBKHvYj1+/rIW4krzv6zGjcOz1cZiFz6zagVXFBOnLMLxdwxuUGfOP8W8UvpvfWyfs1gYuWatPbf7/wJhkFGqXDyjnN7qgUEl2uCsd8/C+mjgz4sV7Wci55mB70uQyELQsPgNbQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BoARhp1L; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1754632865; c=relaxed/simple;
+	bh=MjI/zU8qCooN8dLbMdIOUGEjfZaj8l6X7GnTu/rSb7s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ywz/GORT7VZ6lsHfqqmjGweLcx76mtBXAGocYEJqEiySxWzPhCe7GlXZkBQJ9OXORi7DuSqoDIFSA7AroZ10tlii962Z26JmtS6KXzb0bT4bssYIA1ss+cVsd55ON4wgPqdHKf+b6gQwmmjvOBG0Oll/bPBg+DwsrZGlnSIdLwE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=sBu3xAsZ; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BoARhp1L"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1754577820;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=SGsnHH/7ANS+cU/5LhZY4MqydsQWx1VmAjvofEAotZs=;
-	b=BoARhp1LheUaFunUrunyLKSyRUVeXSuENAkAL9JNDKG1jYaHeq38io5Pdfku+7AHfJcVrA
-	+/rn2zqCJ+PquY5oV1ta05GmQFxubDAEAZOQO1r7Kc/J7MdlvGJxw20tzKc+Fd6NFOeMNs
-	Q0cP+1YoG4+5Nf/0tdlI91sCBR4T9OA=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-326-haI_EDJfMNeBWdrXrIQdtQ-1; Thu,
- 07 Aug 2025 10:43:35 -0400
-X-MC-Unique: haI_EDJfMNeBWdrXrIQdtQ-1
-X-Mimecast-MFC-AGG-ID: haI_EDJfMNeBWdrXrIQdtQ_1754577814
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DB0851956050;
-	Thu,  7 Aug 2025 14:43:33 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.88.68])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id AB582180035C;
-	Thu,  7 Aug 2025 14:43:32 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org,
-	hch@infradead.org,
-	djwong@kernel.org,
-	willy@infradead.org
-Subject: [PATCH v4 7/7] xfs: error tag to force zeroing on debug kernels
-Date: Thu,  7 Aug 2025 10:47:10 -0400
-Message-ID: <20250807144711.564137-8-bfoster@redhat.com>
-In-Reply-To: <20250807144711.564137-1-bfoster@redhat.com>
-References: <20250807144711.564137-1-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="sBu3xAsZ"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57812HTf021221;
+	Fri, 8 Aug 2025 06:00:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=TqVIlPEXdBGYYQWx6dmdE3sRD5TRo5
+	cHpU0SRXejBZA=; b=sBu3xAsZI374rXJLKfb4vbLkuNRecfU4GcKiDV8QoWBel8
+	ydy0hzp4qfd2rDnfmfYjggaqBjIM62KK5EyX+j5UalE2CkDnkb1d3uiDWBAvuXs3
+	ZRtZT5FduQ7zjr1uGPcg9N+seBKed7ZwA/5Eyj/WbslQJGgLTmE/pYPGhnuHyy55
+	WMtN4yuVvNBnCUEPsqomX6vqID/LEuDrinTsgeMGa7GAogM9VZhpWea1WTbQtqqP
+	YbJKVXDfIxEsdDO9NYnOBTLp67Gzojwm8by2Ud1YItqJb+nvymB4Lh/1Uh3fg6aw
+	z3Su7r1hyb+k1FhUpfZ2DaBnGHA7E7srvaQhnE2g==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48bq63eavw-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 08 Aug 2025 06:00:34 +0000 (GMT)
+Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 5785wsTU005698;
+	Fri, 8 Aug 2025 06:00:34 GMT
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48bq63eavr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 08 Aug 2025 06:00:34 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 5781LJnl001586;
+	Fri, 8 Aug 2025 06:00:33 GMT
+Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 48bpwr4agf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 08 Aug 2025 06:00:33 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 57860Vfc45548022
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 8 Aug 2025 06:00:31 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 6BA4D20043;
+	Fri,  8 Aug 2025 06:00:31 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id A68EA2004F;
+	Fri,  8 Aug 2025 06:00:29 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.29.239])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Fri,  8 Aug 2025 06:00:29 +0000 (GMT)
+Date: Fri, 8 Aug 2025 11:30:27 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Zorro Lang <zlang@redhat.com>,
+        fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
+        tytso@mit.edu, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v3 05/13] generic/1226: Add atomic write test using fio
+ crc check verifier
+Message-ID: <aJWRoCMhKj91T1z8@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <aId8oZGXSg5DW48X@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <3a4854ac-75ad-4783-acbd-048fe7c7fdb0@oracle.com>
+ <aIhmG-l4nWOAzz2I@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <20250729144526.GB2672049@frogsfrogsfrogs>
+ <aIrun9794W0eZA8d@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <22ccfefc-1be8-4942-ac27-c01706ef843e@oracle.com>
+ <aIxhsV8heTrSH537@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <76974111-88f6-4de8-96bc-9806c6317d19@oracle.com>
+ <aI205U8Afi7tALyr@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <83e05a05-e517-4d41-96ff-da4d49482471@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <83e05a05-e517-4d41-96ff-da4d49482471@oracle.com>
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=NInV+16g c=1 sm=1 tr=0 ts=68959282 cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=kj9zAlcOel0A:10 a=2OwXVqhp2XgA:10 a=6yZzKTUn8j-8rjHs7NAA:9
+ a=CjuIK1q_8ugA:10
+X-Proofpoint-GUID: foxn4ZVbnOOoYxzRqC7YB18yaBdp0tDq
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODA4MDA0NyBTYWx0ZWRfX9j8mCvcfTgLh
+ 4R3reE0El8Kl+pm+mN1datibZYmgg/CQVkC+bi9yi3HgnMK7TsXlJwC0gvv1peuaCI4nSUCS4yJ
+ t6zUCqNmion/7XfZ9fc+Rf8M8u6WuP/MsY4E/td4rUmM2LfsqLDHky9uox5Rpm41Kdc6GTosS7q
+ 4qjqukTzRSN0RtX/AViPXmDsGBxhGsXd+2ufqkRyWWRaoCmKuey94k9LuRmg2VAch4fTvzohRMi
+ wUNkzJ5VV6hIwvBVIHri+2S1cIgbMtR51NU67xVh3cE6FAc7eSpYJv1Kq8rX37LBar5JN65RdtI
+ ExM0znN7qC0xkxZ5aYaqUuDoMAE2J9fjH+qWAYG2OpzLWJo8XxsNbrPQAkTfgIFkf0pNrUUZo3A
+ JJXp/qDXdJoYhkRKG829Kivmd7mdSZ71JTf+t+YcfnqV+N7QIub3j76zqjKcGs9cEIWFBGto
+X-Proofpoint-ORIG-GUID: jTyKt8jTh_GQvseQDQMGqDEJC0yPUJtQ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-08_01,2025-08-06_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 suspectscore=0 impostorscore=0 mlxlogscore=999
+ lowpriorityscore=0 malwarescore=0 clxscore=1015 adultscore=0 mlxscore=0
+ bulkscore=0 priorityscore=1501 spamscore=0 classifier=spam authscore=0
+ authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2507300000 definitions=main-2508080047
 
-iomap_zero_range() has to cover various corner cases that are
-difficult to test on production kernels because it is used in fairly
-limited use cases. For example, it is currently only used by XFS and
-mostly only in partial block zeroing cases.
+On Mon, Aug 04, 2025 at 08:12:00AM +0100, John Garry wrote:
+> On 02/08/2025 07:49, Ojaswin Mujoo wrote:
+> > On Fri, Aug 01, 2025 at 09:23:46AM +0100, John Garry wrote:
+> > > On 01/08/2025 07:41, Ojaswin Mujoo wrote:
+> > > > Got it, I think I can make this test work for ext4 only but then it might
+> > > > be more appropriate to run the fio tests directly on atomic blkdev and
+> > > > skip the FS, since we anyways want to focus on the storage stack.
+> > > > 
+> > > testing on ext4 will prove also that the FS and iomap behave correctly in
+> > > that they generate a single bio per atomic write (as well as testing the
+> > > block stack and below).
+> > Okay, I think we are already testing those in the ext4/061 ext4/062
+> > tests of this patchset. Just thought blkdev test might be useful to keep
+> > in generic. Do you see a value in that or shall I just drop the generic
+> > overlapping write tests?
+> 
+> If you want to just test fio on the blkdev, then I think that is fine.
+> Indeed, maybe such tests are useful in blktests also.
 
-While it's possible to test most of these functional cases, we can
-provide more robust test coverage by co-opting fallocate zero range
-to invoke zeroing of the entire range instead of the more efficient
-block punch/allocate sequence. Add an errortag to occasionally
-invoke forced zeroing.
+Okay, I think it is better suited for blktests, so I'll add it there.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_errortag.h |  4 +++-
- fs/xfs/xfs_error.c           |  3 +++
- fs/xfs/xfs_file.c            | 26 ++++++++++++++++++++------
- 3 files changed, 26 insertions(+), 7 deletions(-)
+> 
+> > 
+> > Also, just for the records, ext4 passes the fio tests ONLY because we use
+> > the same io size for all threads. If we happen to start overlapping
+> > RWF_ATOMIC writes with different sizes that can get torn due to racing
+> > unwritten conversion.
+> 
+> I'd keep the same io size for all threads in the tests.
 
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index a53c5d40e084..33ca3fc2ca88 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -65,7 +65,8 @@
- #define XFS_ERRTAG_WRITE_DELAY_MS			43
- #define XFS_ERRTAG_EXCHMAPS_FINISH_ONE			44
- #define XFS_ERRTAG_METAFILE_RESV_CRITICAL		45
--#define XFS_ERRTAG_MAX					46
-+#define XFS_ERRTAG_FORCE_ZERO_RANGE			46
-+#define XFS_ERRTAG_MAX					47
- 
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -115,5 +116,6 @@
- #define XFS_RANDOM_WRITE_DELAY_MS			3000
- #define XFS_RANDOM_EXCHMAPS_FINISH_ONE			1
- #define XFS_RANDOM_METAFILE_RESV_CRITICAL		4
-+#define XFS_RANDOM_FORCE_ZERO_RANGE			4
- 
- #endif /* __XFS_ERRORTAG_H_ */
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index dbd87e137694..00c0c391c329 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -64,6 +64,7 @@ static unsigned int xfs_errortag_random_default[] = {
- 	XFS_RANDOM_WRITE_DELAY_MS,
- 	XFS_RANDOM_EXCHMAPS_FINISH_ONE,
- 	XFS_RANDOM_METAFILE_RESV_CRITICAL,
-+	XFS_RANDOM_FORCE_ZERO_RANGE,
- };
- 
- struct xfs_errortag_attr {
-@@ -183,6 +184,7 @@ XFS_ERRORTAG_ATTR_RW(wb_delay_ms,	XFS_ERRTAG_WB_DELAY_MS);
- XFS_ERRORTAG_ATTR_RW(write_delay_ms,	XFS_ERRTAG_WRITE_DELAY_MS);
- XFS_ERRORTAG_ATTR_RW(exchmaps_finish_one, XFS_ERRTAG_EXCHMAPS_FINISH_ONE);
- XFS_ERRORTAG_ATTR_RW(metafile_resv_crit, XFS_ERRTAG_METAFILE_RESV_CRITICAL);
-+XFS_ERRORTAG_ATTR_RW(force_zero_range, XFS_ERRTAG_FORCE_ZERO_RANGE);
- 
- static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(noerror),
-@@ -230,6 +232,7 @@ static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(write_delay_ms),
- 	XFS_ERRORTAG_ATTR_LIST(exchmaps_finish_one),
- 	XFS_ERRORTAG_ATTR_LIST(metafile_resv_crit),
-+	XFS_ERRORTAG_ATTR_LIST(force_zero_range),
- 	NULL,
- };
- ATTRIBUTE_GROUPS(xfs_errortag);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 55a304cb3aef..7d1dda56ebdf 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -27,6 +27,8 @@
- #include "xfs_file.h"
- #include "xfs_aops.h"
- #include "xfs_zone_alloc.h"
-+#include "xfs_error.h"
-+#include "xfs_errortag.h"
- 
- #include <linux/dax.h>
- #include <linux/falloc.h>
-@@ -1271,13 +1273,25 @@ xfs_falloc_zero_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
--	if (error)
--		return error;
-+	/*
-+	 * Zero range implements a full zeroing mechanism but is only used in
-+	 * limited situations. It is more efficient to allocate unwritten
-+	 * extents than to perform zeroing here, so use an errortag to randomly
-+	 * force zeroing on DEBUG kernels for added test coverage.
-+	 */
-+	if (XFS_TEST_ERROR(false, XFS_I(inode)->i_mount,
-+			   XFS_ERRTAG_FORCE_ZERO_RANGE)) {
-+		error = xfs_zero_range(XFS_I(inode), offset, len, ac, NULL);
-+	} else {
-+		error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
-+		if (error)
-+			return error;
- 
--	len = round_up(offset + len, blksize) - round_down(offset, blksize);
--	offset = round_down(offset, blksize);
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+		len = round_up(offset + len, blksize) -
-+			round_down(offset, blksize);
-+		offset = round_down(offset, blksize);
-+		error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	}
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
--- 
-2.50.1
+Yep
 
+Thanks,
+Ojaswin
+> 
+> Thanks,
+> John
