@@ -1,73 +1,32 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from shadowice.org (shadowice.org [95.216.8.22])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B0BB2877E5
-	for <linux-xfs@vger.kernel.org>; Fri,  8 Aug 2025 19:32:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1957242D89
+	for <linux-xfs@vger.kernel.org>; Sat,  9 Aug 2025 17:40:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.216.8.22
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754681543; cv=none; b=QeLaq9/Pi2HgvLL75//pUCsFMc/4Zkcf0EycqdrveinwSTqfnIbqobkvdtYFop3n28iDWv6122TNj0iPbi388vqgW+wQegFum79Ren7bVaolgwonunaj+tGOmVxdqenWhGwXK9fgFvABoLZJrHihPXf2mKzkXVHoYB6PRnEHaPM=
+	t=1754761216; cv=none; b=oYXsWMEcMd3M+b1X7AXhcfYQ0+uDhvhJA0wf32vRFIQhcO1i6bzcl00yBHgsCxLwNAORtf0Qa7ldIwSMRDHa3hreiJmWnjCvFt+J1r0dDepA3H98uzhPf6yXCqnTK8lYaaLu0CZ/OK4GXSrxWXsrurgdKr560HcXD0J0xnBa9Hs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754681543; c=relaxed/simple;
-	bh=rd0gHPs9r3n1uqaeogh6lISRfiKMIbMIwGCvZPqFvjY=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=QWJ8ePgYM1D/o8O4irXcERYmkFFDAgv15jHp5ugBC/bpNcmJG7OFJjWK/GQOKu5BKDIrainpJCRVKk056pkn+sDRkUs20Ef9R/OYjxIriD8FblGdWVw3m4kvR49V8f8Rozt3ncZzueBxXWrR5SBHFYWTdDofGfjW9dAUQHWRGt4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Rwi8hDZU; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1754761216; c=relaxed/simple;
+	bh=GGZIL3SbaOKDOoVghci21IwvG4AT6WgutIaRd/xUAtc=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=PSwECypOE2ctEtEIrVJwKZz8qNgfTqr9hymK+jeBm/E0/jB+WBo8oyBFZVK5s11WdrLRZCoykYDUHHzb15LS4QtI6npVtP/ELMKv5gORvLm+FiXbXm21uhBHQ8uJ78mxwCNwKn8ECYWXDlHX6JopA51vsDJnnVtXRfxhSdB0cU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nixdorf.dev; spf=none smtp.mailfrom=nixdorf.dev; dkim=fail (0-bit key) header.d=nixdorf.dev header.i=@nixdorf.dev header.b=vFI7lRLc reason="key not found in DNS"; arc=none smtp.client-ip=95.216.8.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nixdorf.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nixdorf.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Rwi8hDZU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1754681540;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4DY1Hu90O7055hYQlq+ozgQX5TkAPtJWGsG/dYblQRY=;
-	b=Rwi8hDZUXb8hKN1FxkNPOre6NxASH3e8pPmEeVU4DJtZY99Z60k61BahEDSd9E/oMQh0F1
-	JTlnTLTV4CKnviFg//ETsTx8vnEUia4WXQqjOrLCCRhOMS+BM+yqTv7orveNIk+3hEtBEj
-	pFyNv2f4TGM6Xldf6kVm1Zhu97KZig8=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-554--cKsNMvvOBWFuTzKbc4q8Q-1; Fri, 08 Aug 2025 15:32:18 -0400
-X-MC-Unique: -cKsNMvvOBWFuTzKbc4q8Q-1
-X-Mimecast-MFC-AGG-ID: -cKsNMvvOBWFuTzKbc4q8Q_1754681537
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-459d7ae12b8so17506715e9.1
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Aug 2025 12:32:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754681537; x=1755286337;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=4DY1Hu90O7055hYQlq+ozgQX5TkAPtJWGsG/dYblQRY=;
-        b=IV+hd6yIKDsgvBPsOEJaxZTDYjcLC6HpTEXnLm1Y0DUsVe6qQC2y47gMHTKSPe45Ml
-         fmbDWl+BeY8Van7A2aEYa25tpFvh/KpmU6AA7vxa8mSA1VvLY5jfV+uhLaDnnqo7LPNU
-         8uop2OXgY/E0JXRtDegx2mOeoX0QM8XouuO30xw/ueEWgXmT4MQSxdvGBOGK27V1G8bq
-         bm/PpwVEpK3UwgLvczyTQwemweWVKEttEEMAESl6zwUCF2UOFTZ2K7bO25dyDwQdyAdg
-         JNHDKOyq9xdBfEsFDI6nWbDnYzIRDLr6YC1Q1PvScCpRxw383NyL+UI5seNdB9nnAUU8
-         TJSQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWDkx7Q7wyCWZ35z/St/p9g6zevvGoG7cj8aafRFzh1HNvsxAAtBwu+KXI+sxwVVlay/0zmHsrzB5E=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxHMg7Y1YT1+1gKKbY9IH5j8capiDK62AmJzA0gEhhPYSE/Zlec
-	MPwBbvSa2uoI5wL4regW/QZGP9+qS+lxsUpfjlqqVAwXPv70v6crffrS7/H4eUxlPqFUbfNUUjm
-	FoqWrcrho5cOgK4XchZWetEt+urLQG8TmMsnbTuasgZsKgi85eCS1UPCK4YbE
-X-Gm-Gg: ASbGncuAthvdREMynHfVqqUC4Yu7Ni1IB9N+bsvyBPEIjKtTltI2u1kbOnVmq1Q8ez7
-	dhICfzN8sG+Ke90ZdarY5kOC9v213HzfJjYqVGEYbZ9V5/TlCquGYJTJNwU0SUPfiLo5jT++cls
-	FBbIlDq4ErHvSdlxt6etm93EIxL+T235/rkBGaQ1NmnpRenu/4b6vjI4XUsyre768KVXf4oUw7d
-	42sBR86cYu6vcpShPQhJtxy85QGaw0iaakMMdVrG9DFSDzclw5UUF8zC3rwuYhXgT1C7oOgjLZx
-	XMYxfdqSnzRmiHG9bTuXB4uIikhYESj6/kFrBZZTGJagLQ==
-X-Received: by 2002:a05:600c:1988:b0:456:214f:f78d with SMTP id 5b1f17b1804b1-459f4f0f55bmr33822065e9.22.1754681537336;
-        Fri, 08 Aug 2025 12:32:17 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IH4Zzp0+e8x86fu4vkp2zl133cRaxb2jV1ttAjta9TTzPN3gXe0PibXkLKt2GjRw6aWnewDbg==
-X-Received: by 2002:a05:600c:1988:b0:456:214f:f78d with SMTP id 5b1f17b1804b1-459f4f0f55bmr33821805e9.22.1754681536917;
-        Fri, 08 Aug 2025 12:32:16 -0700 (PDT)
-Received: from [127.0.0.2] (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-459e5869cccsm164906135e9.17.2025.08.08.12.32.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Aug 2025 12:32:15 -0700 (PDT)
-From: Andrey Albershteyn <aalbersh@redhat.com>
-X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Fri, 08 Aug 2025 21:31:58 +0200
-Subject: [PATCH 3/3] xfs: test quota's project ID on special files
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=nixdorf.dev header.i=@nixdorf.dev header.b="vFI7lRLc"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; s=default; bh=GGZIL3SbaOKD
+	OoVghci21IwvG4AT6WgutIaRd/xUAtc=; h=cc:to:date:subject:from;
+	d=nixdorf.dev; b=vFI7lRLcbtA2ezNgJOxreuTkRvNjf22C8AxTZWcU7VChJuWiikN0f
+	6Hbx+fNIBW1deH7+gjnanYtQ0NU45UE9HrMo/KQbqidRk+MgBI7jPJBJ+0bHVMVwmqmfcY
+	zuMFagV8kZ1YyDmhdx3A5N7/ba3GtV3GKVsqtfGmRLZ4f9aE=
+Received: from [127.0.0.1] (p5b09f668.dip0.t-ipconnect.de [91.9.246.104])
+	by shadowice.org (OpenSMTPD) with ESMTPSA id 8c674f53 (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
+	Sat, 9 Aug 2025 19:13:29 +0200 (CEST)
+From: Johannes Nixdorf <johannes@nixdorf.dev>
+Subject: [PATCH 0/2] xfsprogs: Fix compiling against musl libc
+Date: Sat, 09 Aug 2025 19:13:06 +0200
+Message-Id: <20250809-musl-fixes-v1-0-d0958fffb1af@nixdorf.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,143 +35,49 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250808-xattrat-syscall-v1-3-6a09c4f37f10@kernel.org>
-References: <20250808-xattrat-syscall-v1-0-6a09c4f37f10@kernel.org>
-In-Reply-To: <20250808-xattrat-syscall-v1-0-6a09c4f37f10@kernel.org>
-To: fstests@vger.kernel.org
-Cc: zlang@redhat.com, linux-fsdevel@vger.kernel.org, 
- linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>, 
- Andrey Albershteyn <aalbersh@redhat.com>
-X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4286; i=aalbersh@kernel.org;
- h=from:subject:message-id; bh=JD0ZSorQ60c/tMR/lOTbqcoU/0PVcdELTNmMcs0rJ7M=;
- b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIYMqYF7FViWNvIkifo6s3Npn1Hz4jnjZxTQ3eLxI+b5
- zt7y2p+fukoZWEQ42KQFVNkWSetNTWpSCr/iEGNPMwcViaQIQxcnAIwkTfPGBn+f+J2+3uDyXPH
- a1udjV7H2LL+X92rfUxulsSJqSFlu74UMDLM9tvkIrfvc/3r775Lz/JNfHV2JYMahzcfo6PifKa
- PhZXsAGntRho=
-X-Developer-Key: i=aalbersh@kernel.org; a=openpgp;
- fpr=AE1B2A9562721A6FC4307C1F46A7EA18AC33E108
+X-B4-Tracking: v=1; b=H4sIAKKBl2gC/x2LQQqAIBAAvyJ7TlChyL4SHUTXWigLlyIQ/550H
+ GamAGMmZJhEgYwPMZ2pge4E+M2lFSWFxmCU6dWorDxu3mWkF1laqwflogs+RGjDlfEXrZ+XWj/
+ wUBXFXAAAAA==
+X-Change-ID: 20250809-musl-fixes-99160afadcdf
+To: XFS Development Team <linux-xfs@vger.kernel.org>
+Cc: Johannes Nixdorf <johannes@nixdorf.dev>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1754759609; l=1240;
+ i=johannes@nixdorf.dev; s=20250722; h=from:subject:message-id;
+ bh=GGZIL3SbaOKDOoVghci21IwvG4AT6WgutIaRd/xUAtc=;
+ b=ppD8X0YBltICh5yRuIeHeKvG2z5V3qbhAJy3Zf8q4ZUlmKIDzHeztERVpu+pD7Y2dHDPuxPDp
+ f6Zh0FEf4dEByrrV+Z6Mp3sEDE01uA7Fr92O8Cj4x4KDaeK/3b9zmIm
+X-Developer-Key: i=johannes@nixdorf.dev; a=ed25519;
+ pk=6Mv9a34ZxWm/f3K6MdzLRKgty83xawuXPS5bMkbLzWs=
 
-From: Andrey Albershteyn <aalbersh@redhat.com>
+The musl libc statx interface is provided independently from the
+kernel headers, so not all defines from the kernel header (here:
+STATX__RESERVED) are exported, and checking linux/stat.h as in the
+current configure test checking for newest additions to struct statx
+will not provide a result that is consistent with the actual code
+using the libc interface.
 
-With addition of file_getattr() and file_setattr(), xfs_quota now can
-set project ID on filesystem inodes behind special files. Previously,
-quota reporting didn't count inodes of special files created before
-project initialization. Only new inodes had project ID set.
+On Alpine Linux this is already fixed by providing the defines
+OVERRIDE_SYSTEM_STATX and STATX__RESERVED manually instead of fixing
+up the autodetection (OVERRIDE_SYSTEM_STATX) and providing a fallback
+(STATX__RESERVED) [1].
 
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+[1]: https://gitlab.alpinelinux.org/alpine/aports/-/blob/8ff6aa1e459a75b66375f56269fce43ca2c2f9bf/main/xfsprogs/APKBUILD#L27
+
+Signed-off-by: Johannes Nixdorf <johannes@nixdorf.dev>
 ---
- tests/xfs/2000     | 77 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/2000.out | 17 ++++++++++++
- 2 files changed, 94 insertions(+)
+Johannes Nixdorf (2):
+      configure: Base NEED_INTERNAL_STATX on libc headers first
+      libfrog: Define STATX__RESERVED if not provided by the system
 
-diff --git a/tests/xfs/2000 b/tests/xfs/2000
-new file mode 100755
-index 000000000000..26a0093c1da1
---- /dev/null
-+++ b/tests/xfs/2000
-@@ -0,0 +1,77 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2024 Red Hat.  All Rights Reserved.
-+#
-+# FS QA Test No. 2000
-+#
-+# Test that XFS can set quota project ID on special files
-+#
-+. ./common/preamble
-+_begin_fstest auto quota
-+
-+# Import common functions.
-+. ./common/quota
-+. ./common/filter
-+
-+_wants_kernel_commit xxxxxxxxxxx \
-+	"xfs: allow setting file attributes on special files"
-+_wants_git_commit xfsprogs xxxxxxxxxxx \
-+	"xfs_quota: utilize file_setattr to set prjid on special files"
-+
-+# Modify as appropriate.
-+_require_scratch
-+_require_xfs_quota
-+_require_test_program "af_unix"
-+_require_symlinks
-+_require_mknod
-+
-+_scratch_mkfs >>$seqres.full 2>&1
-+_qmount_option "pquota"
-+_scratch_mount
-+
-+create_af_unix () {
-+	$here/src/af_unix $* || echo af_unix failed
-+}
-+
-+filter_quota() {
-+	_filter_quota | sed "s~$tmp.projects~PROJECTS_FILE~"
-+}
-+
-+projectdir=$SCRATCH_MNT/prj
-+id=42
-+
-+mkdir $projectdir
-+mkfifo $projectdir/fifo
-+mknod $projectdir/chardev c 1 1
-+mknod $projectdir/blockdev b 1 1
-+create_af_unix $projectdir/socket
-+touch $projectdir/foo
-+ln -s $projectdir/foo $projectdir/symlink
-+touch $projectdir/bar
-+ln -s $projectdir/bar $projectdir/broken-symlink
-+rm -f $projectdir/bar
-+
-+$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+	-c "project -sp $projectdir $id" $SCRATCH_DEV | filter_quota
-+$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+	-c "limit -p isoft=20 ihard=20 $id " $SCRATCH_DEV | filter_quota
-+$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+	-c "project -cp $projectdir $id" $SCRATCH_DEV | filter_quota
-+$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+	-c "report -inN -p" $SCRATCH_DEV
-+$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+	-c "project -Cp $projectdir $id" $SCRATCH_DEV | filter_quota
-+
-+# Let's check that we can recreate the project (flags were cleared out)
-+$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+	-c "project -sp $projectdir $id" $SCRATCH_DEV | filter_quota
-+$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+	-c "limit -p isoft=20 ihard=20 $id " $SCRATCH_DEV | filter_quota
-+$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+	-c "report -inN -p" $SCRATCH_DEV
-+$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+	-c "project -Cp $projectdir $id" $SCRATCH_DEV | filter_quota
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/2000.out b/tests/xfs/2000.out
-new file mode 100644
-index 000000000000..dd3918f1376d
---- /dev/null
-+++ b/tests/xfs/2000.out
-@@ -0,0 +1,17 @@
-+QA output created by 2000
-+Setting up project 42 (path SCRATCH_MNT/prj)...
-+Processed 1 (PROJECTS_FILE and cmdline) paths for project 42 with recursion depth infinite (-1).
-+Checking project 42 (path SCRATCH_MNT/prj)...
-+Processed 1 (PROJECTS_FILE and cmdline) paths for project 42 with recursion depth infinite (-1).
-+#0                   3          0          0     00 [--------]
-+#42                  8         20         20     00 [--------]
-+
-+Clearing project 42 (path SCRATCH_MNT/prj)...
-+Processed 1 (PROJECTS_FILE and cmdline) paths for project 42 with recursion depth infinite (-1).
-+Setting up project 42 (path SCRATCH_MNT/prj)...
-+Processed 1 (PROJECTS_FILE and cmdline) paths for project 42 with recursion depth infinite (-1).
-+#0                   3          0          0     00 [--------]
-+#42                  8         20         20     00 [--------]
-+
-+Clearing project 42 (path SCRATCH_MNT/prj)...
-+Processed 1 (PROJECTS_FILE and cmdline) paths for project 42 with recursion depth infinite (-1).
+ libfrog/statx.h       |  5 ++++-
+ m4/package_libcdev.m4 | 10 +++++++++-
+ 2 files changed, 13 insertions(+), 2 deletions(-)
+---
+base-commit: 854665693e6770c0730c1354871f08d01be6a333
+change-id: 20250809-musl-fixes-99160afadcdf
 
+Best regards,
 -- 
-2.49.0
+Johannes Nixdorf <johannes@nixdorf.dev>
 
