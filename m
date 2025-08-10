@@ -1,77 +1,72 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6581223FC42;
-	Sun, 10 Aug 2025 10:16:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48C53335C7;
+	Sun, 10 Aug 2025 13:42:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754820968; cv=none; b=OA0MIuIQD6QBaxcl3RvlCnvQCMRZtka9AxN0AEqBYuRLEr6uL9p1KADcs300r0XF6CQJ6I1oHVQpqVXe2ykAaX0E4jM8D+8JXEhcgD46rlVDCsVZmdxYLVBQtZF06R0gQcGonDPhEk4K6slX2Mrfy0iqZvoa16GrgvhRYrc6HwI=
+	t=1754833339; cv=none; b=KTzVg14ZHJtoCMPpvWjWMWi7RGzkjFWu6CxPOULr2tJHAvg39svQDzgUNcDYOxv8m+LsytgGiDrP9orX6zdhPVrvO3/DzunIv/RkRiNO4K8jOk4EH9uyONYhl8T4SsFf5xdLAiJcSyccrAI8J2Z7/uAWJa6z30/Ah77aCEGshDo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754820968; c=relaxed/simple;
-	bh=rDQIx1s6A6hGmi9HbZcEjXtoTdyxpU+DpS5cyiDpCqs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DDe/fbt9pB5rHEhzhk5lpxR/RHoj/jqZNP0DwqDCCgQZvhGwTaI3r8AAUbqOvegCEJJLSEVzujjKNUuRCKvhOd3UfkygbxC+YVGXeTebvJAcTnDkDSW9fII1o6PfiLz9M6jb2YPkvb7wmG8kv9sXkrQwDWGv34hIzRKfpLHHQxE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mFbw6hvG; arc=none smtp.client-ip=209.85.215.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1754833339; c=relaxed/simple;
+	bh=eBSdJbmxbZYL0Ditld2pAWjUEPM/2am4aaqO2klRFr0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DdwtA0YPGNoMARBrVIYB3wXmqjs9ops2HhZhMwHeXSYqGZt+74MX70UTYfv164PHamyXl1t1Xs8TjYH9JDORuw1RLIGhyoFXEKb4MmrcvWYhRQTuAw0N4KJuKV6M2t/BurrRFyf4jpbraJ+TwgvZW2DSVaFrxwEbbERbw/JfE1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=prrCeoFw; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mFbw6hvG"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-b34a8f69862so2490250a12.2;
-        Sun, 10 Aug 2025 03:16:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1754820967; x=1755425767; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=y2OT5F7bZ/arjZTso2AUwwEE0thLjDqJvHVad93pKuM=;
-        b=mFbw6hvGLvoMahE0p51EHAvIUB3WPzywNgIvWj8QsbqTaq+/pMM9y8Gdi/hXytJqep
-         1pru4AksJ9UddzlisCFr0aEjZTR2Bbja7tJb3ws38trz54NCBZu/MA9G9Wt2meCKQlfv
-         +zxDKifr9/SWtJ+QaP9T48drAZ9WzG4+gBAVDPxqVPH7F5ql4NGSC8iVMleBBnwGlBC3
-         iTraatSIQ4b3Htuuu3G32Zw6APLScJo8S4aa/YByMn4f4SDJo99XIayvPQ4yYuKJYdKQ
-         uwQ38oB3WSh2boQolLrmicWKr2Kmo9nCPMAP7B8BohAYJD3Lrr1FyQ5ydv9kk4OGleiv
-         IiMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754820967; x=1755425767;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=y2OT5F7bZ/arjZTso2AUwwEE0thLjDqJvHVad93pKuM=;
-        b=w3LLOQxDrJY2Mfeba7CitJANmCaTVDu159IEHed6qDcwISS+9lgMjyklrCILjbaPtV
-         mFiEAXFwRBZ/UQeTVj5env44XC3JPm8D1COFJM6lLDVDfLlAJLXvwNwnJTBOAvZDkvrV
-         9qLzejUgmJXc1QEfjET3IVg/gWoXON/4mpuCVpl+Sr3zN+UpAXektU3vyh0E38cmSMMa
-         TVxebOgXNy3JQnXgD3/9Cinn2KvBJpcfmIiHpUw8e3Tckr87AdVBKVrZYTgNz6O6pTJ/
-         pyiPALipThCH3B1pMvDoHOvsx9eYjzSUGuZjUJVQI0X/3Q8vsP7NJUbxyZZyfxCCZFJ2
-         iFoA==
-X-Forwarded-Encrypted: i=1; AJvYcCWJy+L+DYt1sFEwR/9e/dTbvpf3plkZFncRHHv7bAOn8juyDkGaVvMBfKBN0Hsdx6YPm2M4Jz54kd7pcDID@vger.kernel.org, AJvYcCXQM74ixIaCknYoLjRkw3XFdGoMPRXsHU2gqxdxAg21uRKScB1uI/tnp4aQcswg1ZHNV38EfQVvUxF4sV5Y@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyp1euaY+W1QPX3wfLxb/4zDEIT4vzOWx+r0NnWG5oBwZq23PRg
-	+zaUs2IG1SMZa/FA9YLHJNDE0YYRrs+3mvbEr6mZ/HNLeHpH+KwceQjM
-X-Gm-Gg: ASbGncsLcPywx2W386SnOAGEkJokk8IfLnqGV91jTk1iRw+i1UUeLqPoEny5BxvXxc6
-	j4tA3CK3fvIxB9qgcuzjWBTNJK3nOPnt7CfDz4dp3f9CwAtGFWnBB/b49mQRtxG+XFinh5mQAx/
-	eW4JzM046p3/EuUpN1xnlBfmHOHQaHkRiKmpnt4rBfWa5LzmyLtZs/89tWzrCG6RmmkUXCpL+ft
-	oVAjIIFoaxU49SVUyoMkUd2YxQdUHbSvsqRzV1ipv7fU4zOaUwNIc/nH0jxsXp1OfeZdM9K4xal
-	HtT4gqmZWIfmmnG5JKMr8AhBEJ5YFhu1JTtqN5blqHo7dZlLBCHCrOyePwotCavI+he+vDF1vVB
-	YY1Fij/aTBCNzoyW4g8N/D8qU2Py8pJPapjXwBmNIO4Rfcg==
-X-Google-Smtp-Source: AGHT+IEfzIB/bMwT0gz0dl/X1susnwXrNxFT85X7Tg/EAtUZIdu1PG7GaBu71SPqPgTGFInFXAWt6A==
-X-Received: by 2002:a17:90b:48c4:b0:31e:fe18:c6df with SMTP id 98e67ed59e1d1-32183e32f54mr15165340a91.16.1754820966597;
-        Sun, 10 Aug 2025 03:16:06 -0700 (PDT)
-Received: from VM-16-24-fedora.. ([43.153.32.141])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-32161259329sm11923432a91.17.2025.08.10.03.16.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 10 Aug 2025 03:16:06 -0700 (PDT)
-From: alexjlzheng@gmail.com
-X-Google-Original-From: alexjlzheng@tencent.com
-To: brauner@kernel.org,
-	djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jinliang Zheng <alexjlzheng@tencent.com>
-Subject: [PATCH v2 4/4] iomap: don't abandon the whole thing with iomap_folio_state
-Date: Sun, 10 Aug 2025 18:15:54 +0800
-Message-ID: <20250810101554.257060-5-alexjlzheng@tencent.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="prrCeoFw"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57A8kmtZ013794;
+	Sun, 10 Aug 2025 13:42:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=pp1; bh=9MaeqQRmqCIb07g4pLtMVewudppB2WtsXzdJPTqQ4
+	Ks=; b=prrCeoFw2bCaPbkzk+O+1Y06P1XlgRE1J5JWj8vzYFOZOdtKVIgDdhhq4
+	Oqgm4ecQ9AOO06uc0oy/jBtv3WyelFMUjb3OAIzItbbUeN/6ttl5AeHdNF8SJtjB
+	rc4+d5SHKBPa0ItL2Ww3450zJiBDEgvwnsvRQKdtbxS1LyT9c06s2sY0gZat4Eb5
+	1By7AWmI2Qg0JY2wINn7bkvrcGWdNWaKF9vUHtCEBu+7+0gWQN1xBx3dxMHJKNQi
+	LZ0WpRNkQFbmAwJSD55nFxo43kc7fGB2GcT22/etYpsx00ivcjoi7m9o+UDVJ5il
+	JjO1tB3pcLJ2xVa4Q3cbYmQcmcA5w==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48durtwjak-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 10 Aug 2025 13:42:09 +0000 (GMT)
+Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 57ADg8d6006698;
+	Sun, 10 Aug 2025 13:42:08 GMT
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48durtwjag-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 10 Aug 2025 13:42:08 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 57ABqr6a010646;
+	Sun, 10 Aug 2025 13:42:07 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 48egnua5yk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 10 Aug 2025 13:42:07 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 57ADg66529098592
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sun, 10 Aug 2025 13:42:06 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 28C2C20043;
+	Sun, 10 Aug 2025 13:42:06 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id DEDD220040;
+	Sun, 10 Aug 2025 13:42:03 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.124.216.43])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Sun, 10 Aug 2025 13:42:03 +0000 (GMT)
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, djwong@kernel.org,
+        john.g.garry@oracle.com, tytso@mit.edu, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: [PATCH v4 00/11] Add more tests for multi fs block atomic writes
+Date: Sun, 10 Aug 2025 19:11:51 +0530
+Message-ID: <cover.1754833177.git.ojaswin@linux.ibm.com>
 X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250810101554.257060-1-alexjlzheng@tencent.com>
-References: <20250810101554.257060-1-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,72 +74,139 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: QGujCYFCGKlwnUPWOj_iIG2jLeitjQnY
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODEwMDA5NyBTYWx0ZWRfX+4kTR010G2j3
+ Q5RiFtBmYlEp/cvM7Nv38pd8Pmy61JsNbailFcLcPEoDsFrZamJH7euISJwqPA6DD9HU+z1u1YP
+ EX1rYUeMv/f2nLgf2XqZ+iIINxb0bFy5Gp+STDFuDhKZFdfHW6Xd+6FpHMvQ11zrn4TYzCE+iLT
+ HoBf1B9FoGSvUAt9g4e4Mn2ss8BD4tbfguHexCmcI85GXRd+oNz34UflaTdgb+ji57j0gTp+EGq
+ qn5gGhnjUTdTsBm/lhAZbyYHrxEkpUhCHNFGVyfeZ7iB7zqAPinrUSqhzlARqdQ5gWh+TP/gPPP
+ jty1B5Azxi80uv1EYgPE2Qn0RCconB/6BtEROYAjPb5QNxzILoWj1Vlx1HLkmYJdytlQtiVAOZf
+ Duuacq+S7mELkKvQUpuyKqfkeKP+O/BqYO2AjB7vTXAckt6iIOYZwt7/OSDLuCaSYhqGF6fV
+X-Authority-Analysis: v=2.4 cv=QtNe3Uyd c=1 sm=1 tr=0 ts=6898a1b1 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=2OwXVqhp2XgA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8 a=VnNF1IyMAAAA:8
+ a=jc9Yl3RBPp2OVu_FEiAA:9
+X-Proofpoint-ORIG-GUID: 8vnx56vtEP_BQxVBtUwdmpvQiVLhhLrX
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-10_04,2025-08-06_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 priorityscore=1501 lowpriorityscore=0 clxscore=1015
+ mlxlogscore=999 impostorscore=0 suspectscore=0 bulkscore=0 mlxscore=0
+ phishscore=0 malwarescore=0 spamscore=0 classifier=spam authscore=0
+ authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2507300000 definitions=main-2508100097
 
-From: Jinliang Zheng <alexjlzheng@tencent.com>
+Changes in v4: (Thanks to Darrick, John and Zorro for the reviews)
 
-With iomap_folio_state, we can identify uptodate states at the block
-level, and a read_folio reading can correctly handle partially
-uptodate folios.
+- g/1226,1227: Modify fio threads to not issue overlapping atomic writes
+- g/1228: Use xfs_io -c "shutdown" instead of _scratch_shutdown to avoid
+          bash overhead
+- g/1229: Remove FSX_AVOID handling for bigalloc from common/rc. It is
+          part of the specific test now
+- ext4/063: add more clearer extent diagram
+- ext4/064: Drop the test for now as im taking sometime to understand
+            the behavior better.
+- Removed test numbers from commit message
+- For tests with significant changes I've removed the RVBs
 
-Therefore, when a partial write occurs, accept the block-aligned
-partial write instead of rejecting the entire write.
+Changes in v3 [3]:
 
-Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
----
- fs/iomap/buffered-io.c | 32 +++++++++++++++++++++++++++-----
- 1 file changed, 27 insertions(+), 5 deletions(-)
+- (2/13) use dumpe2fs to figure out if FS is bigalloc
+- (9/13) generic/1230: Detect device speeds for more accurate testing. ALso
+  speeds up the test
+- fio tests - switch to write followed by verify approach to avoid false
+  failures due to fio verify reads splitting and racing with atomic
+  writes. Discussion thread:
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index f80386a57d37..19bf879f3333 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -873,6 +873,25 @@ static int iomap_write_begin(struct iomap_iter *iter,
- 	return status;
- }
- 
-+static int iomap_trim_tail_partial(struct inode *inode, loff_t pos,
-+		size_t copied, struct folio *folio)
-+{
-+	struct iomap_folio_state *ifs = folio->private;
-+	unsigned block_size, last_blk, last_blk_bytes;
-+
-+	if (!ifs || !copied)
-+		return 0;
-+
-+	block_size = 1 << inode->i_blkbits;
-+	last_blk = offset_in_folio(folio, pos + copied - 1) >> inode->i_blkbits;
-+	last_blk_bytes = (pos + copied) & (block_size - 1);
-+
-+	if (!ifs_block_is_uptodate(ifs, last_blk))
-+		copied -= min(copied, last_blk_bytes);
-+
-+	return copied;
-+}
-+
- static int __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
- 		size_t copied, struct folio *folio)
- {
-@@ -886,12 +905,15 @@ static int __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
- 	 * read_folio might come in and destroy our partial write.
- 	 *
- 	 * Do the simplest thing and just treat any short write to a
--	 * non-uptodate page as a zero-length write, and force the caller to
--	 * redo the whole thing.
-+	 * non-uptodate block as a zero-length write, and force the caller to
-+	 * redo the things begin from the block.
- 	 */
--	if (unlikely(copied < len && !folio_test_uptodate(folio)))
--		return 0;
--	iomap_set_range_uptodate(folio, offset_in_folio(folio, pos), len);
-+	if (unlikely(copied < len && !folio_test_uptodate(folio))) {
-+		copied = iomap_trim_tail_partial(inode, pos, copied, folio);
-+		if (!copied)
-+			return 0;
-+	}
-+	iomap_set_range_uptodate(folio, offset_in_folio(folio, pos), copied);
- 	iomap_set_range_dirty(folio, offset_in_folio(folio, pos), copied);
- 	filemap_dirty_folio(inode->i_mapping, folio);
- 	return copied;
+  https://lore.kernel.org/fstests/0430bd73-e6c2-4ce9-af24-67b1e1fa9b5b@oracle.com/
+
+  [3] https://lore.kernel.org/fstests/cover.1752329098.git.ojaswin@linux.ibm.com/
+
+Changes in v2 [1]:
+
+- (1/13) new patch with _min and _max helpers
+- (2/13) remove setup_fs_options and add fsx specifc helper
+- (4/13) skip atomic write instead of falling back to normal write (fsx)
+- (4/13) make atomic write default on instead of default off (fsx)
+- (5,6/13) refactor and cleanup fio tests
+- (7/13) refactored common code
+- (8/13) dont ignore mmap writes for fsx with atomic writes
+- (9/13) use od instead of xxd. handle cleanup of bg threads in _cleanup()
+- (10-13/13) minor refactors
+- change all tests use _fail for better consistency
+- use higher tests numbers for easier merging
+
+ [1] https://lore.kernel.org/fstests/cover.1750924903.git.ojaswin@linux.ibm.com/
+
+* Original cover [2] *
+
+These are the tests we were using to verify that filesystems are not
+tearing multi fs block atomic writes. Infact some of the tests like
+generic/772 (now: g/1230) actually helped us catch and fix issues in
+ext4's early implementations of multi fs block atomic writes and hence
+we feel these tests are useful to have in xfstests.
+
+We have tested these with scsi debug as well as a real nvme device
+supporting multi fs block atomic writes.
+
+Thoughts and suggestions are welcome!
+
+[2] rfc: https://lore.kernel.org/fstests/cover.1749629233.git.ojaswin@linux.ibm.com/
+
+Ojaswin Mujoo (9):
+  common/rc: Add _min() and _max() helpers
+  common/rc: Add a helper to run fsx on a given file
+  ltp/fsx.c: Add atomic writes support to fsx
+  generic: Add atomic write test using fio crc check verifier
+  generic: Add atomic write test using fio verify on file mixed mappings
+  generic: Add atomic write multi-fsblock O_[D]SYNC tests
+  generic: Stress fsx with atomic writes enabled
+  generic: Add sudden shutdown tests for multi block atomic writes
+  ext4: Atomic write test for extent split across leaf nodes
+
+Ritesh Harjani (IBM) (2):
+  ext4: Atomic writes stress test for bigalloc using fio crc verifier
+  ext4: Atomic writes test for bigalloc using fio crc verifier on
+    multiple files
+
+ common/rc              |  45 ++++-
+ ltp/fsx.c              | 109 ++++++++++-
+ tests/ext4/061         | 130 ++++++++++++++
+ tests/ext4/061.out     |   2 +
+ tests/ext4/062         | 176 ++++++++++++++++++
+ tests/ext4/062.out     |   2 +
+ tests/ext4/063         | 129 +++++++++++++
+ tests/ext4/063.out     |   2 +
+ tests/generic/1226     | 107 +++++++++++
+ tests/generic/1226.out |   2 +
+ tests/generic/1227     | 131 ++++++++++++++
+ tests/generic/1227.out |   2 +
+ tests/generic/1228     | 137 ++++++++++++++
+ tests/generic/1228.out |   2 +
+ tests/generic/1229     |  68 +++++++
+ tests/generic/1229.out |   2 +
+ tests/generic/1230     | 397 +++++++++++++++++++++++++++++++++++++++++
+ tests/generic/1230.out |   2 +
+ 18 files changed, 1437 insertions(+), 8 deletions(-)
+ create mode 100755 tests/ext4/061
+ create mode 100644 tests/ext4/061.out
+ create mode 100755 tests/ext4/062
+ create mode 100644 tests/ext4/062.out
+ create mode 100755 tests/ext4/063
+ create mode 100644 tests/ext4/063.out
+ create mode 100755 tests/generic/1226
+ create mode 100644 tests/generic/1226.out
+ create mode 100755 tests/generic/1227
+ create mode 100644 tests/generic/1227.out
+ create mode 100755 tests/generic/1228
+ create mode 100644 tests/generic/1228.out
+ create mode 100755 tests/generic/1229
+ create mode 100644 tests/generic/1229.out
+ create mode 100755 tests/generic/1230
+ create mode 100644 tests/generic/1230.out
+
 -- 
 2.49.0
 
