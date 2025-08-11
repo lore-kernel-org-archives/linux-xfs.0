@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 624B418EB0;
-	Mon, 11 Aug 2025 15:07:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95758238150;
+	Mon, 11 Aug 2025 15:12:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754924868; cv=none; b=hXmsapH21v3cP7rFnPr8TVbNbc842Gm1jttvJnKN62/dP2/SqOBIymd3vc4Gf5HlvSEUSYo8kgrMyC1jSEOfSuXJighZkXRLLVwcWGk9fJ5Z6IphUrGZrURAApywApJWgq9RLB/7IrWUjJ3l0xmAp2uOHyXh6d/L66a1CoQqYdo=
+	t=1754925138; cv=none; b=fF14n6lw+cqgXKgnuB8r/VjvSJujH2W3+f+KRAVShss41lT2I1ZovCWGaR/N96S5gYoa36ITRUOPP8EVLlIUba0xjVo9fRVGepyGQwabZZZlfn4aJ6UQ5q614OQwcp8hDQLNY5qchYmRtXEL3mYoYTCXwah5xALsh0sdYEhJ2yI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754924868; c=relaxed/simple;
-	bh=DMZxfkZQ/KEYNXJ1rWpPkTdH+TcVBH0OC1iNUOxqhcc=;
+	s=arc-20240116; t=1754925138; c=relaxed/simple;
+	bh=8eZx9i04RnI5EQR6arVRDob9c1B+I50FwXifnrZsFv4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CBEcHpDJNmWjHx+e9BSZtw419Vm4VIFeAha/gZsMR1InjuzURLjPxy22KKpFYjDU7gnpPZMCL+sQV8vTs1XRtoTPhW2BNeOyq7wHhgKvXQmZs5/oOacArAXU+UGV3j1+ffpS6pcZGDffyJvBg5D+S+t8iW2wF/MpDpshs+lm68k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iw3d87zu; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZPUHMCk2u2yplD2AqVl20UdeFf53QHik0es2mb+fn2oj7rrUWwm164iDhgLOe0r6tfx7iiwJO08GfPzaOkK8UebWMqs7ntVMIMC061CXgCc08/W+5c6QUme4hD7V2y05+unLCfuJxDyNEieotZRUVspGyqppi9d5ciLihB4E8sc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lUutmAEo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iw3d87zu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C37C1C4CEED;
-	Mon, 11 Aug 2025 15:07:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lUutmAEo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26192C4CEED;
+	Mon, 11 Aug 2025 15:12:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754924867;
-	bh=DMZxfkZQ/KEYNXJ1rWpPkTdH+TcVBH0OC1iNUOxqhcc=;
+	s=k20201202; t=1754925138;
+	bh=8eZx9i04RnI5EQR6arVRDob9c1B+I50FwXifnrZsFv4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=iw3d87zuoq2QjgiqpL/lVO7XiZyyexveFajj9DVgtSezNG/fImiPC79vUppnbPoJ6
-	 QbtrBIyLdeR4FY9gm7+39vls1EjpQu5wNQyNxNN7VbR87kILZWAQJGMFuuxsuN24OG
-	 jT5Dq7eteUpwwYZVGRpm/k2quTWTK+jGw62A0HVXVArlKJ/ZMLJbiuAVDiaKbRQIZT
-	 23WqfNJwAe0upBAh+dcxabV2lrBBqI+p4CvDVd5Vw4VwYcyQ7skVzlQcpX+k9aZqfE
-	 My4qrdOIpr9UfxKWdxMz44zt+WjXj+2VI4W3YLI2x3RpY06mLsXP0SX89tTHW/2xBT
-	 kloylr2j1UtQw==
-Date: Mon, 11 Aug 2025 08:07:47 -0700
+	b=lUutmAEofKXh1qB2lfoocJAtoqdmTNbS0tACoiiDvGmlQdyK4hfLm6uttomvS7+Nt
+	 bU1CzkhG4rTKN6M/7B+VIXM5eynEUH7ikzw9PhjV2/MRNZ/zXS4PGXSXlFY17pe6DT
+	 e4771H0pdYz9SzcCAcU+y9K3CmUQJXsalGSCUq+A7GXSquzxWDudYhPgZ7LZVs1z3p
+	 //P07rK6YICx++sTSwX7YCY/hNSyc8PYBOBKJrrjo6ch3j+klkPxZfAQef7fclQuoD
+	 0sM/BkoNt5VBsetpVdK8zPF06zUYJ7uVZnxy0GOXGeRoIkuF4f3wShklD5aN1ofiD7
+	 3v6CgrahO5V6w==
+Date: Mon, 11 Aug 2025 08:12:17 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Andrey Albershteyn <aalbersh@redhat.com>
 Cc: aalbersh@kernel.org, linux-fsdevel@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] xfs_quota: utilize file_setattr to set prjid on
- special files
-Message-ID: <20250811150747.GB7965@frogsfrogsfrogs>
+Subject: Re: [PATCH 3/4] xfs_io: make ls/chattr work with special files
+Message-ID: <20250811151217.GC7965@frogsfrogsfrogs>
 References: <20250808-xattrat-syscall-v1-0-48567c29e45c@kernel.org>
- <20250808-xattrat-syscall-v1-2-48567c29e45c@kernel.org>
+ <20250808-xattrat-syscall-v1-3-48567c29e45c@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,287 +43,239 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250808-xattrat-syscall-v1-2-48567c29e45c@kernel.org>
+In-Reply-To: <20250808-xattrat-syscall-v1-3-48567c29e45c@kernel.org>
 
-On Fri, Aug 08, 2025 at 09:30:17PM +0200, Andrey Albershteyn wrote:
+On Fri, Aug 08, 2025 at 09:30:18PM +0200, Andrey Albershteyn wrote:
 > From: Andrey Albershteyn <aalbersh@redhat.com>
 > 
-> Utilize new file_getattr/file_setattr syscalls to set project ID on
-> special files. Previously, special files were skipped due to lack of the
-> way to call FS_IOC_SETFSXATTR ioctl on them. The quota accounting was
-> therefore missing these inodes (special files created before project
-> setup). The ones created after porject initialization did inherit the
-> projid flag from the parent.
+> With new file_getattr/file_setattr syscalls we can now list/change file
+> attributes on special files instead for ignoring them.
 > 
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 > ---
->  quota/project.c | 144 +++++++++++++++++++++++++++++---------------------------
->  1 file changed, 74 insertions(+), 70 deletions(-)
+>  io/attr.c | 130 ++++++++++++++++++++++++++++++++++++--------------------------
+>  1 file changed, 75 insertions(+), 55 deletions(-)
 > 
-> diff --git a/quota/project.c b/quota/project.c
-> index adb26945fa57..93d7ace0e11b 100644
-> --- a/quota/project.c
-> +++ b/quota/project.c
-> @@ -4,14 +4,17 @@
->   * All Rights Reserved.
->   */
->  
-> +#include <unistd.h>
->  #include "command.h"
+> diff --git a/io/attr.c b/io/attr.c
+> index fd82a2e73801..1cce602074f4 100644
+> --- a/io/attr.c
+> +++ b/io/attr.c
+> @@ -8,6 +8,7 @@
 >  #include "input.h"
 >  #include "init.h"
+>  #include "io.h"
 > +#include "libfrog/file_attr.h"
->  #include "quota.h"
 >  
->  static cmdinfo_t project_cmd;
->  static prid_t prid;
->  static int recurse_depth = -1;
-> +static int dfd;
-
-Ew, global scope variables, can we pass that through to check_project?
-
->  enum {
->  	CHECK_PROJECT	= 0x1,
-> @@ -19,13 +22,6 @@ enum {
->  	CLEAR_PROJECT	= 0x4,
->  };
->  
-> -#define EXCLUDED_FILE_TYPES(x) \
-> -	   (S_ISCHR((x)) \
-> -	|| S_ISBLK((x)) \
-> -	|| S_ISFIFO((x)) \
-> -	|| S_ISLNK((x)) \
-> -	|| S_ISSOCK((x)))
-> -
->  static void
->  project_help(void)
->  {
-> @@ -85,8 +81,8 @@ check_project(
->  	int			flag,
+>  static cmdinfo_t chattr_cmd;
+>  static cmdinfo_t lsattr_cmd;
+> @@ -156,36 +157,35 @@ lsattr_callback(
+>  	int			status,
 >  	struct FTW		*data)
 >  {
 > -	struct fsxattr		fsx;
 > -	int			fd;
+> +	struct file_attr	fa;
 > +	int			error;
-> +	struct file_attr	fa = { 0 };
 >  
->  	if (recurse_depth >= 0 && data->level > recurse_depth)
+>  	if (recurse_dir && !S_ISDIR(stat->st_mode))
 >  		return 0;
-> @@ -96,30 +92,30 @@ check_project(
->  		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
->  		return 0;
->  	}
-> -	if (EXCLUDED_FILE_TYPES(stat->st_mode)) {
-> -		fprintf(stderr, _("%s: skipping special file %s\n"), progname, path);
-> -		return 0;
-> -	}
 >  
-> -	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
-> -		exitcode = 1;
+> -	if ((fd = open(path, O_RDONLY)) == -1) {
 > -		fprintf(stderr, _("%s: cannot open %s: %s\n"),
 > -			progname, path, strerror(errno));
+> -		exitcode = 1;
 > -	} else if ((xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
-> -		exitcode = 1;
-> +	error = file_getattr(dfd, path, stat, &fa, AT_SYMLINK_NOFOLLOW);
+> +	error = file_getattr(AT_FDCWD, path, stat, &fa, AT_SYMLINK_NOFOLLOW);
 > +	if (error) {
-> +#ifndef HAVE_FILE_ATTR
-> +		if (SPECIAL_FILE(stat->st_mode)) {
-> +			fprintf(stderr, _("%s: skipping special file %s\n"),
-> +					progname, path);
-> +			return 0;
-> +		}
-> +#endif
-
-Yeah, file_getattr really ought to return some error code for "not
-supported" and then this becomes:
-
-	error = file_getattr(...);
-	if (error && errno == EOPNOTSUPP) {
-		fprintf(stderr, _("%s: skipping special file %s\n"),
-					progname, path);
-		return 0;
-	}
-	if (error) {
-		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
-			progname, path, strerror(errno));
-		exitcode = 1;
-		return 0;
-	}
-
 >  		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
-> -			progname, path, strerror(errno));
-> -	} else {
-> -		if (fsx.fsx_projid != prid)
-> -			printf(_("%s - project identifier is not set"
-> -				 " (inode=%u, tree=%u)\n"),
-> -				path, fsx.fsx_projid, (unsigned int)prid);
-> -		if (!(fsx.fsx_xflags & FS_XFLAG_PROJINHERIT) && S_ISDIR(stat->st_mode))
-> -			printf(_("%s - project inheritance flag is not set\n"),
-> -				path);
-> +				progname, path, strerror(errno));
-> +		exitcode = 1;
+>  			progname, path, strerror(errno));
+>  		exitcode = 1;
+> -	} else
+> -		printxattr(fsx.fsx_xflags, 0, 1, path, 0, 1);
 > +		return 0;
->  	}
-> -	if (fd != -1)
-> -		close(fd);
-> +
-> +	if (fa.fa_projid != prid)
-> +		printf(_("%s - project identifier is not set"
-> +				" (inode=%u, tree=%u)\n"),
-> +			path, fa.fa_projid, (unsigned int)prid);
-> +	if (!(fa.fa_xflags & FS_XFLAG_PROJINHERIT) && S_ISDIR(stat->st_mode))
-> +		printf(_("%s - project inheritance flag is not set\n"),
-> +			path);
-> +
->  	return 0;
->  }
->  
-> @@ -130,8 +126,8 @@ clear_project(
->  	int			flag,
->  	struct FTW		*data)
->  {
-> -	struct fsxattr		fsx;
-> -	int			fd;
-> +	int			error;
-> +	struct file_attr	fa;
->  
->  	if (recurse_depth >= 0 && data->level > recurse_depth)
->  		return 0;
-> @@ -141,32 +137,31 @@ clear_project(
->  		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
->  		return 0;
->  	}
-> -	if (EXCLUDED_FILE_TYPES(stat->st_mode)) {
-> -		fprintf(stderr, _("%s: skipping special file %s\n"), progname, path);
-> -		return 0;
-> -	}
->  
-> -	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
-> -		exitcode = 1;
-> -		fprintf(stderr, _("%s: cannot open %s: %s\n"),
-> -			progname, path, strerror(errno));
-> -		return 0;
-> -	} else if (xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx) < 0) {
-> -		exitcode = 1;
-> +	error = file_getattr(dfd, path, stat, &fa, AT_SYMLINK_NOFOLLOW);
-> +	if (error) {
-> +#ifndef HAVE_FILE_ATTR
-> +		if (SPECIAL_FILE(stat->st_mode)) {
-> +			fprintf(stderr, _("%s: skipping special file %s\n"),
-> +					progname, path);
-> +			return 0;
-> +		}
-> +#endif
->  		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
-> -			progname, path, strerror(errno));
-> -		close(fd);
-> +				progname, path, strerror(errno));
-> +		exitcode = 1;
->  		return 0;
->  	}
->  
-> -	fsx.fsx_projid = 0;
-> -	fsx.fsx_xflags &= ~FS_XFLAG_PROJINHERIT;
-> -	if (xfsctl(path, fd, FS_IOC_FSSETXATTR, &fsx) < 0) {
-> -		exitcode = 1;
-> +	fa.fa_projid = 0;
-> +	fa.fa_xflags &= ~FS_XFLAG_PROJINHERIT;
-> +
-> +	error = file_setattr(dfd, path, stat, &fa, AT_SYMLINK_NOFOLLOW);
-> +	if (error) {
->  		fprintf(stderr, _("%s: cannot clear project on %s: %s\n"),
->  			progname, path, strerror(errno));
-> +		exitcode = 1;
->  	}
-> -	close(fd);
->  	return 0;
->  }
->  
-> @@ -177,8 +172,8 @@ setup_project(
->  	int			flag,
->  	struct FTW		*data)
->  {
-> -	struct fsxattr		fsx;
-> -	int			fd;
-> +	struct file_attr	fa;
-> +	int			error;
->  
->  	if (recurse_depth >= 0 && data->level > recurse_depth)
->  		return 0;
-> @@ -188,32 +183,32 @@ setup_project(
->  		fprintf(stderr, _("%s: cannot stat file %s\n"), progname, path);
->  		return 0;
->  	}
-> -	if (EXCLUDED_FILE_TYPES(stat->st_mode)) {
-> -		fprintf(stderr, _("%s: skipping special file %s\n"), progname, path);
-> -		return 0;
-> -	}
->  
-> -	if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1) {
-> -		exitcode = 1;
-> -		fprintf(stderr, _("%s: cannot open %s: %s\n"),
-> -			progname, path, strerror(errno));
-> -		return 0;
-> -	} else if (xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx) < 0) {
-> -		exitcode = 1;
-> +	error = file_getattr(dfd, path, stat, &fa, AT_SYMLINK_NOFOLLOW);
-> +	if (error) {
-> +#ifndef HAVE_FILE_ATTR
-> +		if (SPECIAL_FILE(stat->st_mode)) {
-> +			fprintf(stderr, _("%s: skipping special file %s\n"),
-> +					progname, path);
-> +			return 0;
-> +		}
-> +#endif
->  		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
-> -			progname, path, strerror(errno));
-> -		close(fd);
-> +				progname, path, strerror(errno));
-> +		exitcode = 1;
->  		return 0;
->  	}
->  
-> -	fsx.fsx_projid = prid;
-> -	fsx.fsx_xflags |= FS_XFLAG_PROJINHERIT;
-> -	if (xfsctl(path, fd, FS_IOC_FSSETXATTR, &fsx) < 0) {
-> -		exitcode = 1;
-> +	fa.fa_projid = prid;
-> +	if (S_ISDIR(stat->st_mode))
-> +		fa.fa_xflags |= FS_XFLAG_PROJINHERIT;
-> +
-> +	error = file_setattr(dfd, path, stat, &fa, AT_SYMLINK_NOFOLLOW);
-> +	if (error) {
->  		fprintf(stderr, _("%s: cannot set project on %s: %s\n"),
->  			progname, path, strerror(errno));
-> +		exitcode = 1;
->  	}
-> -	close(fd);
->  	return 0;
->  }
->  
-> @@ -223,6 +218,13 @@ project_operations(
->  	char		*dir,
->  	int		type)
->  {
-> +	dfd = open(dir, O_RDONLY|O_NOCTTY);
-> +	if (dfd < -1) {
-> +		printf(_("Error opening dir %s for project %s...\n"), dir,
-> +				project);
-> +		return;
 > +	}
 > +
->  	switch (type) {
->  	case CHECK_PROJECT:
->  		printf(_("Checking project %s (path %s)...\n"), project, dir);
-> @@ -237,6 +239,8 @@ project_operations(
->  		nftw(dir, clear_project, 100, FTW_PHYS|FTW_MOUNT);
->  		break;
->  	}
-> +
-> +	close(dfd);
+> +	printxattr(fa.fa_xflags, 0, 1, path, 0, 1);
+
+Maybe it's time to rename this printxflags or something that's less
+easily confused with extended attributes...
+
+>  
+> -	if (fd != -1)
+> -		close(fd);
+>  	return 0;
 >  }
 >  
->  static void
+>  static int
+>  lsattr_f(
+> -	int		argc,
+> -	char		**argv)
+> +	int			argc,
+> +	char			**argv)
+>  {
+> -	struct fsxattr	fsx;
+> -	char		*name = file->name;
+> -	int		c, aflag = 0, vflag = 0;
+> +	struct file_attr	fa;
+> +	char			*name = file->name;
+> +	int			c, aflag = 0, vflag = 0;
+> +	struct stat		st;
+> +	int			error;
+>  
+>  	recurse_all = recurse_dir = 0;
+>  	while ((c = getopt(argc, argv, "DRav")) != EOF) {
+> @@ -211,17 +211,27 @@ lsattr_f(
+>  	if (recurse_all || recurse_dir) {
+>  		nftw(name, lsattr_callback,
+>  			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+> -	} else if ((xfsctl(name, file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
+> +		return 0;
+> +	}
+> +
+> +	error = stat(name, &st);
+> +	if (error)
+> +		return error;
+> +
+> +	error = file_getattr(AT_FDCWD, name, &st, &fa, AT_SYMLINK_NOFOLLOW);
+> +	if (error) {
+>  		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+>  			progname, name, strerror(errno));
+>  		exitcode = 1;
+> -	} else {
+> -		printxattr(fsx.fsx_xflags, vflag, !aflag, name, vflag, !aflag);
+> -		if (aflag) {
+> -			fputs("/", stdout);
+> -			printxattr(-1, 0, 1, name, 0, 1);
+> -		}
+> +		return 0;
+>  	}
+> +
+> +	printxattr(fa.fa_xflags, vflag, !aflag, name, vflag, !aflag);
+> +	if (aflag) {
+> +		fputs("/", stdout);
+> +		printxattr(-1, 0, 1, name, 0, 1);
+> +	}
+> +
+>  	return 0;
+>  }
+>  
+> @@ -232,44 +242,43 @@ chattr_callback(
+>  	int			status,
+>  	struct FTW		*data)
+>  {
+> -	struct fsxattr		attr;
+> -	int			fd;
+> +	struct file_attr	attr;
+> +	int			error;
+>  
+>  	if (recurse_dir && !S_ISDIR(stat->st_mode))
+>  		return 0;
+>  
+> -	if ((fd = open(path, O_RDONLY)) == -1) {
+> -		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+> -			progname, path, strerror(errno));
+> -		exitcode = 1;
+> -	} else if (xfsctl(path, fd, FS_IOC_FSGETXATTR, &attr) < 0) {
+> +	error = file_getattr(AT_FDCWD, path, stat, &attr, AT_SYMLINK_NOFOLLOW);
+> +	if (error) {
+>  		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+>  			progname, path, strerror(errno));
+>  		exitcode = 1;
+> -	} else {
+> -		attr.fsx_xflags |= orflags;
+> -		attr.fsx_xflags &= ~andflags;
+> -		if (xfsctl(path, fd, FS_IOC_FSSETXATTR, &attr) < 0) {
+> -			fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
+> -				progname, path, strerror(errno));
+> -			exitcode = 1;
+> -		}
+> +		return 0;
+> +	}
+> +
+> +	attr.fa_xflags |= orflags;
+> +	attr.fa_xflags &= ~andflags;
+> +	error = file_setattr(AT_FDCWD, path, stat, &attr, AT_SYMLINK_NOFOLLOW);
+> +	if (error) {
+> +		fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
+> +			progname, path, strerror(errno));
+> +		exitcode = 1;
+>  	}
+>  
+> -	if (fd != -1)
+> -		close(fd);
+>  	return 0;
+>  }
+>  
+>  static int
+>  chattr_f(
+> -	int		argc,
+> -	char		**argv)
+> +	int			argc,
+> +	char			**argv)
+>  {
+> -	struct fsxattr	attr;
+> -	struct xflags	*p;
+> -	unsigned int	i = 0;
+> -	char		*c, *name = file->name;
+> +	struct file_attr	attr;
+> +	struct xflags		*p;
+> +	unsigned int		i = 0;
+> +	char			*c, *name = file->name;
+> +	struct stat		st;
+> +	int			error;
+>  
+>  	orflags = andflags = 0;
+>  	recurse_all = recurse_dir = 0;
+> @@ -326,19 +335,30 @@ chattr_f(
+>  	if (recurse_all || recurse_dir) {
+>  		nftw(name, chattr_callback,
+>  			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+> -	} else if (xfsctl(name, file->fd, FS_IOC_FSGETXATTR, &attr) < 0) {
+> +		return 0;
+> +	}
+> +
+> +	error = stat(name, &st);
+> +	if (error)
+> +		return error;
+> +
+> +	error = file_getattr(AT_FDCWD, name, &st, &attr, AT_SYMLINK_NOFOLLOW);
+> +	if (error) {
+>  		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+>  			progname, name, strerror(errno));
+>  		exitcode = 1;
+> -	} else {
+> -		attr.fsx_xflags |= orflags;
+> -		attr.fsx_xflags &= ~andflags;
+> -		if (xfsctl(name, file->fd, FS_IOC_FSSETXATTR, &attr) < 0) {
+> -			fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
+> -				progname, name, strerror(errno));
+> -			exitcode = 1;
+> -		}
+> +		return 0;
+>  	}
+> +
+> +	attr.fa_xflags |= orflags;
+> +	attr.fa_xflags &= ~andflags;
+> +	error = file_setattr(AT_FDCWD, name, &st, &attr, AT_SYMLINK_NOFOLLOW);
+
+For my own curiosity, if you wanted to do the get/set sequence on a file
+that's already open, is that just:
+
+	file_getattr(fd, "", &attr, AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW);
+	...
+	file_setattr(fd, "", &attr, AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW);
+
+--D
+
+> +	if (error) {
+> +		fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
+> +			progname, name, strerror(errno));
+> +		exitcode = 1;
+> +	}
+> +
+>  	return 0;
+>  }
+>  
 > 
 > -- 
 > 2.49.0
