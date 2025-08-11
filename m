@@ -1,31 +1,31 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6541F25393B;
-	Mon, 11 Aug 2025 11:48:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C58B2264DE;
+	Mon, 11 Aug 2025 11:50:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754912899; cv=none; b=ouLywpBuVcK48bg8btUISpbIuOubSAn1Gh1SIS9Jg9w0+rz2brVU0qtlDpD93lCMTARGJfiLTZor84F4lNdA0hlhu65WROVRd7h38lPpg5a3prj1oRDPyaM2HQOLFm52gBmnU7CzBbJ2c9ZQX1SNVQMPv4lZmGZaLNrAlRifaF0=
+	t=1754913030; cv=none; b=UTYkzENZT3dS0TW3bpcGbpy4QxTmnlg5ITjomZhsOWUl/Ki+714OgsBHAq/4CvSoPkKxpq0IyAkgv+T/SHZ7cEL0tg7ZdKt1Hr1JLYRgOPpNSy/ZHeV6/5mpKtpcBY9UzgWnLOCf2ElesdXn0CWEs6b/4iI+oNPdS6UuCr90VjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754912899; c=relaxed/simple;
-	bh=tRbMDcNQ0vtPKuZP5lOrlXscoR4bTElRU9QwEMRI3cY=;
+	s=arc-20240116; t=1754913030; c=relaxed/simple;
+	bh=H4X9Pk+nJIJFC+/8Auh/s7oadlBVdQdjPoyt2wnKcO0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U/tJufyE4C4fe0vRA33PI8NbYwS9jkaituLHjlC9Twbydxu6antOmJTeeVKluttFvfhaYSHBWpu7UiVVbziyhl65yKWPOeFXlp3lFZaOCmNvyxZ5KrqtWSVcpifcMob3NjJkT4mBbvKDqKiXBVa0f4ZPxVLPOaEFpe9S66VuEcs=
+	 Content-Type:Content-Disposition:In-Reply-To; b=d2qqfRZioXFTDbalJQn6OsiHdxorh8pgJH3xuHZwTEL5UjC4kiDqepAZdfks5BxuuLz32EQqhOI6qZYFeZ0jH4TRe167SZ5ns3JA6huo0drfZqD4Ne/0Ji1Ui+Vp5PEZYJxxGR3Y9dQjy01ewTH0ZXxAYWveHJyeEA+IIq7Gbps=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id E962468BFE; Mon, 11 Aug 2025 13:48:13 +0200 (CEST)
-Date: Mon, 11 Aug 2025 13:48:13 +0200
+	id 5070468AA6; Mon, 11 Aug 2025 13:50:24 +0200 (CEST)
+Date: Mon, 11 Aug 2025 13:50:23 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@redhat.com>
 Cc: fsverity@lists.linux.dev, linux-fsdevel@vger.kernel.org,
 	linux-xfs@vger.kernel.org, david@fromorbit.com, djwong@kernel.org,
-	ebiggers@kernel.org, hch@lst.de
-Subject: Re: [PATCH RFC 12/29] fsverity: expose merkle tree geometry to
- callers
-Message-ID: <20250811114813.GC8969@lst.de>
-References: <20250728-fsverity-v1-0-9e5443af0e34@kernel.org> <20250728-fsverity-v1-12-9e5443af0e34@kernel.org>
+	ebiggers@kernel.org, hch@lst.de,
+	Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH RFC 14/29] xfs: add attribute type for fs-verity
+Message-ID: <20250811115023.GD8969@lst.de>
+References: <20250728-fsverity-v1-0-9e5443af0e34@kernel.org> <20250728-fsverity-v1-14-9e5443af0e34@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,30 +34,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250728-fsverity-v1-12-9e5443af0e34@kernel.org>
+In-Reply-To: <20250728-fsverity-v1-14-9e5443af0e34@kernel.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Jul 28, 2025 at 10:30:16PM +0200, Andrey Albershteyn wrote:
-> From: "Darrick J. Wong" <djwong@kernel.org>
+On Mon, Jul 28, 2025 at 10:30:18PM +0200, Andrey Albershteyn wrote:
+> From: Andrey Albershteyn <aalbersh@redhat.com>
 > 
-> Create a function that will return selected information about the
-> geometry of the merkle tree.  Online fsck for XFS will need this piece
-> to perform basic checks of the merkle tree.
+> The fsverity descriptor is stored in the extended attributes of the
+> inode. Add new attribute type for fs-verity metadata. Add
+> XFS_ATTR_INTERNAL_MASK to skip parent pointer and fs-verity attributes
+> as those are only for internal use. While we're at it add a few comments
+> in relevant places that internally visible attributes are not suppose to
+> be handled via interface defined in xfs_xattr.c.
 
-Just curious, why does xfs need this, but the existing file systems
-don't?  That would be some good background information for the commit
-message.
-
-> +	if (!IS_VERITY(inode))
-> +		return -ENODATA;
-> +
-> +	error = ensure_verity_info(inode);
-> +	if (error)
-> +		return error;
-> +
-> +	vi = inode->i_verity_info;
-
-Wouldn't it be a better interface to return the verity_ino from
-ensure_verity_info (NULL for !IS_VERITY, ERR_PTR for real error)
-and then just look at the fields directly?
+So ext4 and other seems to place the descriptor just before the verity
+data.  What is the benefit of an attr?
 
