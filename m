@@ -1,199 +1,378 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2F151C27;
-	Mon, 11 Aug 2025 13:38:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51FFA274FF1;
+	Mon, 11 Aug 2025 15:02:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754919514; cv=none; b=Rhlq2d3HF0BUb8iIm9hI9vpAl6WRDScJYbJAn2IbBOBfvJrheDzONebJO6FBQMY+4KCthU1I4QmOCxyo5zZosXeYXEqoBbyCDOys8XWPhE0Ed+Q1W9HsBFJWTwNwCz+wj9ZHOopiVTJP7qT132tsb9EsstKFVo/VWf3yh6tzAJ8=
+	t=1754924563; cv=none; b=TypVluqaKNi173EysGqOWUFmuEHl9lXs7iOt7jCr9ViYAfKKt0QP0ONygUgMXWxtRmaZyq2LuRHtprdAgxT8+FTjC6D8lzcj8bQ8bLN4AoRtabS0wPlIinsXyImSdE0nJTs5qxUa8uvgEF6KYIC3zp/m84vb0rHgT3OTJUVPm7Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754919514; c=relaxed/simple;
-	bh=GF3G4G8QjoOvA7O7APe71DN965A1wlJFRL7n5YynW1A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=rW+0biAuzF8jXV0JTNTumc1Aj+SS2Sl9LctwWZcsYv/kN/0JMLnu3xOlHTMXsZukMTRGCrn6yB3OjnsIGWqyYBLAF0MbTcIQKxjzk8J0OSbsg9BRv3gMMCAMkI95JKHMuPuRqenZceuT2hayQpDUX75qrEi3dD2Z8PBTOQ3uz3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XR0uCimK; arc=none smtp.client-ip=209.85.128.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1754924563; c=relaxed/simple;
+	bh=KPc/FgqxNORc9BQ6sgBZ9q9y2Tb+z1cYtzb3tzWhrOU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VeVY7E52njpPLIJySHQHvh0X5mdSylbxDmp4BEVNYDayZHu+0pweUWlB/WhJCJM1ZvZE6u3U/5yT0mkY8V6zXDIKT33EYba4s6YRVWsM7jkTRtG2781FIxIFjIggfShHYJemJSl3z11Wfz73XhYkOZ+nKa1u8DuVYcAlEf8Dlk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SN6vWqOQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XR0uCimK"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-458b885d6eeso27646845e9.3;
-        Mon, 11 Aug 2025 06:38:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1754919511; x=1755524311; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1kbINbP8WLaLr5mOXjjJSrdAAtJw6w4ZFXcoqIl+hSs=;
-        b=XR0uCimKXONRSc+URWZ71FoHCo2hw77ngQKDDGPBrzjcwfVFAon1xhdRtX5pToTy7p
-         MReQUJgV7qeTgS7ta772RiMVwNn3aWXTJzNmB/eVLqbkEMD4QcH14oEJtUo0WHMnyHZA
-         S8Q7s8ZXd/q5+hszFGGtCfcG7pZNcE7T3mC5qJekeP2xiLgfUzIdm1QMsJz+0K0G5J4a
-         e5GSAPw0LrlNYQeiodtCrjFlW24ImA7df5aIXZzL9TkOnH1xajYqUW59y/Din1xNnYom
-         6RoFKX1pH5ehvqd+yR6mft9InRXErQUkHnO4J8luLDZFDpaKhqmmkuXIqnnRygE1+1yF
-         aKFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754919511; x=1755524311;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=1kbINbP8WLaLr5mOXjjJSrdAAtJw6w4ZFXcoqIl+hSs=;
-        b=SjCav3lCSoc1NVp6P6jdU/9O6PLO/rD4aZGVOnsMPoUIyAu1HVadh6cQGy8Ow8z+e2
-         aaFPEZCpBGzSkZySPJD8tkILHqj/qCUg5Wm/U7fplb3JNCJbkD67DSHCPwp8kR7bjl5k
-         UfuuoFW93nPyA3eL8JEwPlMEPbezR87jwL9A8+jBkk3IdJFyicxe1wm/m0kQVN6fcOqM
-         TCpzO7zpZYrP9uIGCW0Jz5BKp/0GHL5tlfFCZXVYYCSk5OIh2yU8nmWz3Qeakz+54H5C
-         EiRO+5c6tPmoVLZJdI6Nl2Z25MqNrQiYe7w6nyQn3KzIG0Ha10E6gVqNSwxNpOialmnq
-         dDHg==
-X-Forwarded-Encrypted: i=1; AJvYcCU1Ya5tAytbHjRwU26knqCT57Aoyo9Y+ozLtIaTM9YInaZXOCpizQ/MrBa7Z++/WBWadgmaoWYLpeeK6eM=@vger.kernel.org, AJvYcCVAuX3Ha4yUjRHfbOJ/q2mpzguP33XOnky9f1LBF8pMh4lz18FNaviBTaqtYL3JkPFNqo+7eiHIhL5N@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz4KnW45CJeo8BQNd7wuXd+1hqkq7q5o3/FC/IzymO8WPG6DZON
-	NnrxR7Yh6yF55waJ0BNJV9hXcbG+L7ceeRBGFDziNEVMByx6cyzbq2q4Lz3yLVzXwOVrme25sav
-	cS3/Q4MIY19OvM1GEmS+mSPGEhvLxSJE=
-X-Gm-Gg: ASbGncuxszoVSeoNPA42NvA2XibW3vuiHVhGCuQNvuxuv9/hDQpQEnCvczBgifNGSAm
-	Qct1QEyFNEBOHqDAJWBAJICJYikiT8aBCH7IQIxHFgsakEWwhL6Hf1IgPy5t6z6AinWVENjcgQB
-	ce4fsqWhxl6wo3s7svGpCrSwsii4yU/SFeeO9keEfPMzdhjVkW8qpjh+SE0PWefny12sSZMU95B
-	vA7yw==
-X-Google-Smtp-Source: AGHT+IGwJht/dXHwAmkHJXbCjztZIMDTFgdNk0j6k4sj8lYAMPqMYE3e7E2/T9xKzl59W06kLwS6I3p/Z1pD7uhJ/P4=
-X-Received: by 2002:a05:6000:2011:b0:3a5:1cc5:aa6f with SMTP id
- ffacd0b85a97d-3b900b4dbdemr9521937f8f.34.1754919510792; Mon, 11 Aug 2025
- 06:38:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SN6vWqOQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB5D1C4CEED;
+	Mon, 11 Aug 2025 15:02:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1754924562;
+	bh=KPc/FgqxNORc9BQ6sgBZ9q9y2Tb+z1cYtzb3tzWhrOU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=SN6vWqOQSeAsTM7eX9NHMSP8fELRasMjwpTJAceYSpQCHGY85I4WRjMkbylHdiKXe
+	 C/qsH11lcYUvX6/fvk9G+wRUOcMiDVymOgVQiQEJ9w4agc2KjGdSsI2sTNIJvpkGyq
+	 xHfS+IytmpuLFIw01QC6FnyNlYEuus9GAPVJgFiY9rsBjx8fl2TCUjwAkoNZ2z0tA6
+	 paiqAuX6n+G4108f4nEEQBibSXK1MIg7TAE6DKTweUoS5iM1GKViEPZ+UZGinfWT88
+	 s9YdY+Ie32yM+r+YBZo1Ws93uL18OJPlPlrDi3sSX34oOYEGvPH8YdSQvhmqfuQ/R4
+	 VBEDvDeqwvhPQ==
+Date: Mon, 11 Aug 2025 08:02:42 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: aalbersh@kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] libfrog: add wrappers for file_getattr/file_setattr
+ syscalls
+Message-ID: <20250811150242.GA7965@frogsfrogsfrogs>
+References: <20250808-xattrat-syscall-v1-0-48567c29e45c@kernel.org>
+ <20250808-xattrat-syscall-v1-1-48567c29e45c@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <686ea951.050a0220.385921.0016.GAE@google.com> <aG7pfqqhk47YXFNz@dread.disaster.area>
- <CANp29Y700diEaeHd6bHksAL_60D+vJD-95EqcveqMME0smNJnw@mail.gmail.com>
-In-Reply-To: <CANp29Y700diEaeHd6bHksAL_60D+vJD-95EqcveqMME0smNJnw@mail.gmail.com>
-From: Andrey Konovalov <andreyknvl@gmail.com>
-Date: Mon, 11 Aug 2025 15:38:17 +0200
-X-Gm-Features: Ac12FXyLwMPgBtXA0Gq8HKHELEpcXOwD5qy9_RF6aOPgWMkTUfSEdQ1ChL4vEts
-Message-ID: <CA+fCnZfMMb0Rw68BczORoDQSDJaQy93n8TAA44JwS4P0s=abkw@mail.gmail.com>
-Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_ilock_attr_map_shared (2)
-To: Aleksandr Nogikh <nogikh@google.com>, Dave Chinner <david@fromorbit.com>
-Cc: syzbot <syzbot+3470c9ffee63e4abafeb@syzkaller.appspotmail.com>, cem@kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com, kasan-dev <kasan-dev@googlegroups.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250808-xattrat-syscall-v1-1-48567c29e45c@kernel.org>
 
-On Thu, Jul 10, 2025 at 10:03=E2=80=AFAM 'Aleksandr Nogikh' via kasan-dev
-<kasan-dev@googlegroups.com> wrote:
->
-> Hi Dave,
->
-> On Thu, Jul 10, 2025 at 12:13=E2=80=AFAM 'Dave Chinner' via syzkaller-bug=
-s
-> <syzkaller-bugs@googlegroups.com> wrote:
-> >
-> > On Wed, Jul 09, 2025 at 10:39:29AM -0700, syzbot wrote:
-> > > Hello,
-> > >
-> > > syzbot found the following issue on:
-> > >
-> > > HEAD commit:    733923397fd9 Merge tag 'pwm/for-6.16-rc6-fixes' of gi=
-t://g..
-> > > git tree:       upstream
-> > > console output: https://syzkaller.appspot.com/x/log.txt?x=3D13f535825=
-80000
-> > > kernel config:  https://syzkaller.appspot.com/x/.config?x=3Db309c907e=
-aab29da
-> > > dashboard link: https://syzkaller.appspot.com/bug?extid=3D3470c9ffee6=
-3e4abafeb
-> > > compiler:       Debian clang version 20.1.7 (++20250616065708+6146a88=
-f6049-1~exp1~20250616065826.132), Debian LLD 20.1.7
-> > >
-> > > Unfortunately, I don't have any reproducer for this issue yet.
-> > >
-> > > Downloadable assets:
-> > > disk image (non-bootable): https://storage.googleapis.com/syzbot-asse=
-ts/d900f083ada3/non_bootable_disk-73392339.raw.xz
-> > > vmlinux: https://storage.googleapis.com/syzbot-assets/be7feaa77b8c/vm=
-linux-73392339.xz
-> > > kernel image: https://storage.googleapis.com/syzbot-assets/a663b3e314=
-63/bzImage-73392339.xz
-> > >
-> > > IMPORTANT: if you fix the issue, please add the following tag to the =
-commit:
-> > > Reported-by: syzbot+3470c9ffee63e4abafeb@syzkaller.appspotmail.com
-> > >
-> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D
-> > > WARNING: possible circular locking dependency detected
-> > > 6.16.0-rc5-syzkaller-00038-g733923397fd9 #0 Not tainted
-> > > ------------------------------------------------------
-> > > syz.0.0/5339 is trying to acquire lock:
-> > > ffffffff8e247500 (fs_reclaim){+.+.}-{0:0}, at: might_alloc include/li=
-nux/sched/mm.h:318 [inline]
-> > > ffffffff8e247500 (fs_reclaim){+.+.}-{0:0}, at: prepare_alloc_pages+0x=
-153/0x610 mm/page_alloc.c:4727
-> > >
-> > > but task is already holding lock:
-> > > ffff888053415098 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_ilock=
-_attr_map_shared+0x92/0xd0 fs/xfs/xfs_inode.c:85
-> > >
-> > > which lock already depends on the new lock.
-> > >
-> > >
-> > > the existing dependency chain (in reverse order) is:
-> > >
-> > > -> #1 (&xfs_nondir_ilock_class){++++}-{4:4}:
-> > >        lock_acquire+0x120/0x360 kernel/locking/lockdep.c:5871
-> > >        down_write_nested+0x9d/0x200 kernel/locking/rwsem.c:1693
-> > >        xfs_reclaim_inode fs/xfs/xfs_icache.c:1045 [inline]
-> > >        xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1737 [inline]
-> > >        xfs_icwalk_ag+0x12c5/0x1ab0 fs/xfs/xfs_icache.c:1819
-> > >        xfs_icwalk fs/xfs/xfs_icache.c:1867 [inline]
-> > >        xfs_reclaim_inodes_nr+0x1e3/0x260 fs/xfs/xfs_icache.c:1111
-> > >        super_cache_scan+0x41b/0x4b0 fs/super.c:228
-> > >        do_shrink_slab+0x6ec/0x1110 mm/shrinker.c:437
-> > >        shrink_slab+0xd74/0x10d0 mm/shrinker.c:664
-> > >        shrink_one+0x28a/0x7c0 mm/vmscan.c:4939
-> > >        shrink_many mm/vmscan.c:5000 [inline]
-> > >        lru_gen_shrink_node mm/vmscan.c:5078 [inline]
-> > >        shrink_node+0x314e/0x3760 mm/vmscan.c:6060
-> > >        kswapd_shrink_node mm/vmscan.c:6911 [inline]
-> > >        balance_pgdat mm/vmscan.c:7094 [inline]
-> > >        kswapd+0x147c/0x2830 mm/vmscan.c:7359
-> > >        kthread+0x70e/0x8a0 kernel/kthread.c:464
-> > >        ret_from_fork+0x3f9/0x770 arch/x86/kernel/process.c:148
-> > >        ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
-> > >
-> > > -> #0 (fs_reclaim){+.+.}-{0:0}:
-> > >        check_prev_add kernel/locking/lockdep.c:3168 [inline]
-> > >        check_prevs_add kernel/locking/lockdep.c:3287 [inline]
-> > >        validate_chain+0xb9b/0x2140 kernel/locking/lockdep.c:3911
-> > >        __lock_acquire+0xab9/0xd20 kernel/locking/lockdep.c:5240
-> > >        lock_acquire+0x120/0x360 kernel/locking/lockdep.c:5871
-> > >        __fs_reclaim_acquire mm/page_alloc.c:4045 [inline]
-> > >        fs_reclaim_acquire+0x72/0x100 mm/page_alloc.c:4059
-> > >        might_alloc include/linux/sched/mm.h:318 [inline]
-> > >        prepare_alloc_pages+0x153/0x610 mm/page_alloc.c:4727
-> > >        __alloc_frozen_pages_noprof+0x123/0x370 mm/page_alloc.c:4948
-> > >        alloc_pages_mpol+0x232/0x4a0 mm/mempolicy.c:2419
-> > >        alloc_frozen_pages_noprof mm/mempolicy.c:2490 [inline]
-> > >        alloc_pages_noprof+0xa9/0x190 mm/mempolicy.c:2510
-> > >        get_free_pages_noprof+0xf/0x80 mm/page_alloc.c:5018
-> > >        __kasan_populate_vmalloc mm/kasan/shadow.c:362 [inline]
-> > >        kasan_populate_vmalloc+0x33/0x1a0 mm/kasan/shadow.c:417
-> > >        alloc_vmap_area+0xd51/0x1490 mm/vmalloc.c:2084
-> > >        __get_vm_area_node+0x1f8/0x300 mm/vmalloc.c:3179
-> > >        __vmalloc_node_range_noprof+0x301/0x12f0 mm/vmalloc.c:3845
-> > >        __vmalloc_node_noprof mm/vmalloc.c:3948 [inline]
-> > >        __vmalloc_noprof+0xb1/0xf0 mm/vmalloc.c:3962
-> > >        xfs_buf_alloc_backing_mem fs/xfs/xfs_buf.c:239 [inline]
-> >
-> > KASAN is still failing to pass through __GFP_NOLOCKDEP allocation
-> > context flags. It's also failing to pass through other important
-> > context restrictions like GFP_NOFS, GFP_NOIO, __GFP_NOFAIL, etc.
-> >
-> > Fundamentally, it's a bug to be doing nested GFP_KERNEL allocations
-> > inside an allocation context that has a more restricted allocation
-> > context...
-> >
-> > #syz set subsystems: kasan
->
-> Thanks for the analysis!
->
-> I've added the kasan-dev list to Cc.
+On Fri, Aug 08, 2025 at 09:30:16PM +0200, Andrey Albershteyn wrote:
+> Add wrappers for new file_getattr/file_setattr inode syscalls which will
+> be used by xfs_quota and xfs_io.
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> ---
+>  configure.ac          |   1 +
+>  include/builddefs.in  |   5 +++
+>  include/linux.h       |  20 ++++++++++
+>  libfrog/Makefile      |   2 +
+>  libfrog/file_attr.c   | 105 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  libfrog/file_attr.h   |  35 +++++++++++++++++
+>  m4/package_libcdev.m4 |  19 +++++++++
+>  7 files changed, 187 insertions(+)
+> 
+> diff --git a/configure.ac b/configure.ac
+> index 9a3309bcdfd1..40a44c571e7b 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -156,6 +156,7 @@ AC_PACKAGE_NEED_RCU_INIT
+>  AC_HAVE_PWRITEV2
+>  AC_HAVE_COPY_FILE_RANGE
+>  AC_HAVE_CACHESTAT
+> +AC_HAVE_FILE_ATTR
+>  AC_NEED_INTERNAL_FSXATTR
+>  AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG
+>  AC_NEED_INTERNAL_FSCRYPT_POLICY_V2
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index 04b4e0880a84..d727b55b854f 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -97,6 +97,7 @@ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
+>  HAVE_PWRITEV2 = @have_pwritev2@
+>  HAVE_COPY_FILE_RANGE = @have_copy_file_range@
+>  HAVE_CACHESTAT = @have_cachestat@
+> +HAVE_FILE_ATTR = @have_file_attr@
+>  NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
+>  NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
+>  NEED_INTERNAL_FSCRYPT_POLICY_V2 = @need_internal_fscrypt_policy_v2@
+> @@ -169,6 +170,10 @@ ifeq ($(ENABLE_GETTEXT),yes)
+>  GCFLAGS += -DENABLE_GETTEXT
+>  endif
+>  
+> +ifeq ($(HAVE_FILE_ATTR),yes)
+> +LCFLAGS += -DHAVE_FILE_ATTR
+> +endif
+> +
+>  # Override these if C++ needs other options
+>  SANITIZER_CXXFLAGS = $(SANITIZER_CFLAGS)
+>  GCXXFLAGS = $(GCFLAGS)
+> diff --git a/include/linux.h b/include/linux.h
+> index 6e83e073aa2e..018cc78960e3 100644
+> --- a/include/linux.h
+> +++ b/include/linux.h
+> @@ -16,6 +16,7 @@
+>  #include <sys/param.h>
+>  #include <sys/sysmacros.h>
+>  #include <sys/stat.h>
+> +#include <sys/syscall.h>
+>  #include <inttypes.h>
+>  #include <malloc.h>
+>  #include <getopt.h>
+> @@ -202,6 +203,25 @@ struct fsxattr {
+>  };
+>  #endif
+>  
+> +/*
+> + * Use __NR_file_getattr instead of build system HAVE_FILE_ATTR as this header
+> + * could be included in other places where HAVE_FILE_ATTR is not defined (e.g.
+> + * xfstests's conftest.c in ./configure)
+> + */
+> +#ifndef __NR_file_getattr
 
-Filed a bug: https://bugzilla.kernel.org/show_bug.cgi?id=3D220434
+Seeing as uapi fs.h now has:
+
+#define FILE_ATTR_SIZE_VER0 24
+#define FILE_ATTR_SIZE_LATEST FILE_ATTR_SIZE_VER0
+
+I wonder if you'd be better off gating on one of those defines rather
+than the presence of the syscall number?
+
+> +/*
+> + * We need to define file_attr if it's missing to know how to convert it to
+> + * fsxattr
+> + */
+> +struct file_attr {
+> +	__u32		fa_xflags;
+> +	__u32		fa_extsize;
+> +	__u32		fa_nextents;
+> +	__u32		fa_projid;
+> +	__u32		fa_cowextsize;
+> +};
+> +#endif
+> +
+>  #ifndef FS_IOC_FSGETXATTR
+>  /*
+>   * Flags for the fsx_xflags field
+> diff --git a/libfrog/Makefile b/libfrog/Makefile
+> index b64ca4597f4e..7d49fd0fe6cc 100644
+> --- a/libfrog/Makefile
+> +++ b/libfrog/Makefile
+> @@ -24,6 +24,7 @@ fsproperties.c \
+>  fsprops.c \
+>  getparents.c \
+>  histogram.c \
+> +file_attr.c \
+>  list_sort.c \
+>  linux.c \
+>  logging.c \
+> @@ -55,6 +56,7 @@ fsprops.h \
+>  getparents.h \
+>  handle_priv.h \
+>  histogram.h \
+> +file_attr.h \
+>  logging.h \
+>  paths.h \
+>  projects.h \
+> diff --git a/libfrog/file_attr.c b/libfrog/file_attr.c
+> new file mode 100644
+> index 000000000000..8592d775f554
+> --- /dev/null
+> +++ b/libfrog/file_attr.c
+> @@ -0,0 +1,105 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2024 Red Hat, Inc.
+> + * All Rights Reserved.
+> + */
+> +
+> +#include "file_attr.h"
+> +#include <stdio.h>
+> +#include <errno.h>
+> +#include <string.h>
+> +#include <sys/syscall.h>
+> +#include <asm/types.h>
+> +#include <fcntl.h>
+> +
+> +static void
+> +file_attr_to_fsxattr(
+> +	const struct file_attr	*fa,
+> +	struct fsxattr		*fsxa)
+> +{
+> +     memset(fsxa, 0, sizeof(struct fsxattr));
+> +
+> +     fsxa->fsx_xflags = fa->fa_xflags;
+> +     fsxa->fsx_extsize = fa->fa_extsize;
+> +     fsxa->fsx_nextents = fa->fa_nextents;
+> +     fsxa->fsx_projid = fa->fa_projid;
+> +     fsxa->fsx_cowextsize = fa->fa_cowextsize;
+> +
+> +}
+> +
+> +static void
+> +fsxattr_to_file_attr(
+> +	const struct fsxattr	*fsxa,
+> +	struct file_attr	*fa)
+> +{
+> +     memset(fa, 0, sizeof(struct file_attr));
+> +
+> +     fa->fa_xflags = fsxa->fsx_xflags;
+> +     fa->fa_extsize = fsxa->fsx_extsize;
+> +     fa->fa_nextents = fsxa->fsx_nextents;
+> +     fa->fa_projid = fsxa->fsx_projid;
+> +     fa->fa_cowextsize = fsxa->fsx_cowextsize;
+> +}
+> +
+> +int
+> +file_getattr(
+> +	const int		dfd,
+> +	const char		*path,
+> +	const struct stat	*stat,
+> +	struct file_attr	*fa,
+> +	const unsigned int	at_flags)
+> +{
+
+Will this cause a naming conflict when libc wraps the new syscall?
+
+> +	int			error;
+> +	int			fd;
+> +	struct fsxattr		fsxa;
+> +
+> +#ifdef HAVE_FILE_ATTR
+> +	return syscall(__NR_file_getattr, dfd, path, fa,
+> +			sizeof(struct file_attr), at_flags);
+
+What happens if we build xfsprogs on new userspace but it then gets run
+on an old kernel that doesn't support file_getattr(2)?  Shouldn't we
+fall back to the old ioctl on ENOSYS?
+
+> +#else
+> +	if (SPECIAL_FILE(stat->st_mode))
+> +		return 0;
+
+Why does it return 0 without filling out @fa?  Shouldn't this be
+EOPNOTSUPP or something?
+
+> +#endif
+> +
+> +	fd = open(path, O_RDONLY|O_NOCTTY);
+> +	if (fd == -1)
+> +		return errno;
+> +
+> +	error = ioctl(fd, FS_IOC_FSGETXATTR, &fsxa);
+> +	close(fd);
+> +
+> +	fsxattr_to_file_attr(&fsxa, fa);
+
+Er... if the ioctl errors out, fsxa will still be uninitialized stack
+garbage, which is (pointlessly) copied to the caller's fa structure.
+
+> +
+> +	return error;
+
+I'm confused about the return value of this function.  If the syscall
+or the ioctl fail we'll pass the -1 to the caller and let them access
+errno, but if the open fails we return errno directly?
+
+> +}
+> +
+> +int
+> +file_setattr(
+> +	const int		dfd,
+> +	const char		*path,
+> +	const struct stat	*stat,
+> +	struct file_attr	*fa,
+> +	const unsigned int	at_flags)
+> +{
+> +	int			error;
+> +	int			fd;
+> +	struct fsxattr		fsxa;
+> +
+> +#ifdef HAVE_FILE_ATTR
+> +	return syscall(__NR_file_setattr, dfd, path, fa,
+> +			sizeof(struct file_attr), at_flags);
+> +#else
+> +	if (SPECIAL_FILE(stat->st_mode))
+> +		return 0;
+> +#endif
+> +
+> +	fd = open(path, O_RDONLY|O_NOCTTY);
+> +	if (fd == -1)
+> +		return errno;
+
+Same comments that I had about file_getattr.
+
+> +
+> +	file_attr_to_fsxattr(fa, &fsxa);
+> +	error = ioctl(fd, FS_IOC_FSSETXATTR, fa);
+> +	close(fd);
+> +
+> +	return error;
+> +}
+> diff --git a/libfrog/file_attr.h b/libfrog/file_attr.h
+> new file mode 100644
+> index 000000000000..3e56e80a6f95
+> --- /dev/null
+> +++ b/libfrog/file_attr.h
+> @@ -0,0 +1,35 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2024 Red Hat, Inc.
+> + * All Rights Reserved.
+> + */
+> +#ifndef __LIBFROG_IXATTR_H__
+> +#define __LIBFROG_IXATTR_H__
+
+__LIBFROG_FILE_ATTR_H__ ?
+
+--D
+
+> +
+> +#include "linux.h"
+> +#include <sys/stat.h>
+> +
+> +#define SPECIAL_FILE(x) \
+> +	   (S_ISCHR((x)) \
+> +	|| S_ISBLK((x)) \
+> +	|| S_ISFIFO((x)) \
+> +	|| S_ISLNK((x)) \
+> +	|| S_ISSOCK((x)))
+> +
+> +int
+> +file_getattr(
+> +	const int		dfd,
+> +	const char		*path,
+> +	const struct stat	*stat,
+> +	struct file_attr	*fa,
+> +	const unsigned int	at_flags);
+> +
+> +int
+> +file_setattr(
+> +	const int		dfd,
+> +	const char		*path,
+> +	const struct stat	*stat,
+> +	struct file_attr	*fa,
+> +	const unsigned int	at_flags);
+> +
+> +#endif /* __LIBFROG_IXATTR_H__ */
+> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+> index 61353d0aa9d5..cb8ff1576d01 100644
+> --- a/m4/package_libcdev.m4
+> +++ b/m4/package_libcdev.m4
+> @@ -274,3 +274,22 @@ AC_DEFUN([AC_PACKAGE_CHECK_LTO],
+>      AC_SUBST(lto_cflags)
+>      AC_SUBST(lto_ldflags)
+>    ])
+> +
+> +#
+> +# Check if we have a file_getattr/file_setattr system call (Linux)
+> +#
+> +AC_DEFUN([AC_HAVE_FILE_ATTR],
+> +  [ AC_MSG_CHECKING([for file_getattr/file_setattr syscalls])
+> +    AC_LINK_IFELSE(
+> +    [	AC_LANG_PROGRAM([[
+> +#define _GNU_SOURCE
+> +#include <sys/syscall.h>
+> +#include <unistd.h>
+> +	]], [[
+> +syscall(__NR_file_getattr, 0, 0, 0, 0, 0);
+> +	]])
+> +    ], have_file_attr=yes
+> +       AC_MSG_RESULT(yes),
+> +       AC_MSG_RESULT(no))
+> +    AC_SUBST(have_file_attr)
+> +  ])
+> 
+> -- 
+> 2.49.0
+> 
+> 
