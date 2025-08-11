@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6664B2E11AB;
-	Mon, 11 Aug 2025 15:23:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 150B82DECA3
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Aug 2025 15:25:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754925821; cv=none; b=ZQELw0O3Q5DraEfB1FdaLVsNJEcaFHXlrfJnJFRjVshaId4LEThMmkR4QQsIjQF+/jj++Qjl/+PGqknjcAEkq/X1mU6vheL0lNT9rK4nsawpF2awqqUEzLuyUGZaX0NJCvvkHEgGzNjdgPT3NOnlmnneVmqcTgl25fxbT4VmNho=
+	t=1754925933; cv=none; b=MA1Y1LFHDSiY0KYyhJnPnL8ZMYwUxkCwkvxyduWuCKKezcc4LcM1G6eXDjzDsBA8ooF+yBfKsY6YWIf9Yev3ZjYyvhX5OoubVSx1xCyDFvMJjsBgrN+S0BTIrI8JAZzhuG05FrrqGRlAkd4s5u2T1Io7eGtb+9Tx6hYKKqI1vWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754925821; c=relaxed/simple;
-	bh=ALoUN+EaOqtkFNKVO8C2SCpoLQ4fq89wUNvoA8JsWv0=;
+	s=arc-20240116; t=1754925933; c=relaxed/simple;
+	bh=31LY9u2VmBQ7Ooq6uVLDkW22B93dYyQSl6gGbJcjB5I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JLlbCA9Xe9fkTxw6otPTfl5hNNUHCdODIwCqzNSp2ga1w8OVLaMTyhLPdC6kWEvI8vVIqpPLOQXyR9wSwElt4fp3DPm4UZKLA1R3u3vg07gxwVpSn99kYPj5jnxi+3BnKFbtlle5aGFjUGWQMWX2Nc+H5AE4dnReSWpEt0mWis0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X/gonzKU; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Xf0aOjTnvcURVXJtxg46bsk5UHL8qRipPSbEakttmEMYdYXa9i0Q1CZOSnIGaXaEPCnbzTURCgKoSvDvjPyTJHZj/qP/4qz0hVWhYbFQdSrUbZhbnzqkMdDhAPoKuWEH0x12g4XiwOSdKAmFB+0XL+OoBtkGUxNT5lfQDhhoU3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tUvpd8BK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X/gonzKU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B477C4CEF4;
-	Mon, 11 Aug 2025 15:23:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tUvpd8BK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91127C4CEED;
+	Mon, 11 Aug 2025 15:25:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754925821;
-	bh=ALoUN+EaOqtkFNKVO8C2SCpoLQ4fq89wUNvoA8JsWv0=;
+	s=k20201202; t=1754925932;
+	bh=31LY9u2VmBQ7Ooq6uVLDkW22B93dYyQSl6gGbJcjB5I=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=X/gonzKUNSAtIkxsMBASVsoy7UDe/2udd6ip8BMkRljSEEWtpD0QLad/Pc8W3dtZ+
-	 eam8AK7kClYnfsczWU5P6ntzPvScqjlq7YyK3aGIjRZV2JH239MQMwP7M57P7/P/Vx
-	 2MCOGTG4x8bhnJ5ARAXIg8zU9s/nP+uwJIqx4t710QxUQBS0ElEJgaZQU2UXuNxOnj
-	 rqzrLO2tImn8gb6yp7Ye9iMyjeXCWqWqsNTvhHzwS+l5rNNt/BA5gQnd6EBrR2+Z2E
-	 s71PORtl7ZmIvWQXzKCzivoKfBTZ71gsLHC2yNZH28ZM1FqwDPp1USpAGxwVgoUtdH
-	 TQ/DYRplaNOEw==
-Date: Mon, 11 Aug 2025 08:23:40 -0700
+	b=tUvpd8BKDyhDzvqtORH+KJw1VwVvrqSEYZ8MjCArnpxsINwwI5VabvfUM91HnIFg6
+	 U9ssyEJEDEOCdddDc23uBRnZ/5G91W+WlEowrBaG1Sd9ADr5akahIrn+Vv/GKJSngE
+	 sV4HTqX32nSa5EnYEjfWvvx8kiDdJcKO+vGlspjzALo15Wu1KUlBo3HGL9OXvAz1fx
+	 v/pJL+XzRq3Wz02sCsue1Za5IuyoVqLU1pw7oebZXbN26Ur+hcJuYr0i2OI1QJzJqk
+	 C/Bkcy72C6lu2qNyWuRjkz4J7TpiA4WXCDjGwcMj2byx8TmJcKnfG191q4xjQUH8tU
+	 bX3JSKDW6qG9A==
+Date: Mon, 11 Aug 2025 08:25:32 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: fstests@vger.kernel.org, zlang@redhat.com,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Andrey Albershteyn <aalbersh@kernel.org>
-Subject: Re: [PATCH 1/3] file_attr: introduce program to set/get fsxattr
-Message-ID: <20250811152340.GG7965@frogsfrogsfrogs>
-References: <20250808-xattrat-syscall-v1-0-6a09c4f37f10@kernel.org>
- <20250808-xattrat-syscall-v1-1-6a09c4f37f10@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>,
+	Roy Sigurd Karlsbakk <roy@karlsbakk.net>, linux-xfs@vger.kernel.org
+Subject: Re: Shrinking XFS - is that happening?
+Message-ID: <20250811152532.GH7965@frogsfrogsfrogs>
+References: <B96A5598-3A5F-4166-8566-2792E5AADB3E@karlsbakk.net>
+ <8a9071104eec47d91ab44c86465d08d76e0cf808.camel@gmail.com>
+ <aJnKcktFW6jPBETP@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,396 +44,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250808-xattrat-syscall-v1-1-6a09c4f37f10@kernel.org>
+In-Reply-To: <aJnKcktFW6jPBETP@infradead.org>
 
-On Fri, Aug 08, 2025 at 09:31:56PM +0200, Andrey Albershteyn wrote:
-> This programs uses newly introduced file_getattr and file_setattr
-> syscalls. This program is partially a test of invalid options. This will
-> be used further in the test.
+On Mon, Aug 11, 2025 at 03:48:18AM -0700, Christoph Hellwig wrote:
+> On Tue, Aug 05, 2025 at 10:20:15AM +0530, Nirjhar Roy (IBM) wrote:
+> > On Mon, 2025-08-04 at 17:13 +0200, Roy Sigurd Karlsbakk wrote:
+> > > Hi all!
+> > > 
+> > > I beleive I heard something from someone some time back about work in progress on shrinking xfs filesystems. Is this something that's been worked with or have I been lied to or just had a nice dream?
+> > > 
+> > > roy
+> > I have recently posted an RFC[1]. The work is based/inspired from an old RFC[2] by Gao and ideas
+> > given by Dave Chinner.
 > 
-> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> ---
->  .gitignore            |   1 +
->  configure.ac          |   1 +
->  include/builddefs.in  |   1 +
->  m4/package_libcdev.m4 |  16 +++
->  src/Makefile          |   5 +
->  src/file_attr.c       | 277 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  6 files changed, 301 insertions(+)
-> 
-> diff --git a/.gitignore b/.gitignore
-> index 4fd817243dca..1a578eab1ea0 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -210,6 +210,7 @@ tags
->  /src/fiemap-fault
->  /src/min_dio_alignment
->  /src/dio-writeback-race
-> +/src/file_attr
->  
->  # Symlinked files
->  /tests/generic/035.out
-> diff --git a/configure.ac b/configure.ac
-> index f3c8c643f0eb..6fe54e8e1d54 100644
-> --- a/configure.ac
-> +++ b/configure.ac
-> @@ -73,6 +73,7 @@ AC_HAVE_RLIMIT_NOFILE
->  AC_NEED_INTERNAL_XFS_IOC_EXCHANGE_RANGE
->  AC_HAVE_FICLONE
->  AC_HAVE_TRIVIAL_AUTO_VAR_INIT
-> +AC_HAVE_FILE_ATTR
->  
->  AC_CHECK_FUNCS([renameat2])
->  AC_CHECK_FUNCS([reallocarray])
-> diff --git a/include/builddefs.in b/include/builddefs.in
-> index 96d5ed25b3e2..821237339cc7 100644
-> --- a/include/builddefs.in
-> +++ b/include/builddefs.in
-> @@ -74,6 +74,7 @@ HAVE_BMV_OF_SHARED = @have_bmv_of_shared@
->  HAVE_RLIMIT_NOFILE = @have_rlimit_nofile@
->  NEED_INTERNAL_XFS_IOC_EXCHANGE_RANGE = @need_internal_xfs_ioc_exchange_range@
->  HAVE_FICLONE = @have_ficlone@
-> +HAVE_FILE_ATTR = @have_file_attr@
->  
->  GCCFLAGS = -std=gnu11 -funsigned-char -fno-strict-aliasing -Wall
->  SANITIZER_CFLAGS += @autovar_init_cflags@
-> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-> index ed8fe6e32ae0..e68a70f7d87e 100644
-> --- a/m4/package_libcdev.m4
-> +++ b/m4/package_libcdev.m4
-> @@ -86,3 +86,19 @@ AC_DEFUN([AC_HAVE_TRIVIAL_AUTO_VAR_INIT],
->      CFLAGS="${OLD_CFLAGS}"
->      AC_SUBST(autovar_init_cflags)
->    ])
-> +
-> +#
-> +# Check if we have a file_getattr/file_setattr system call (Linux)
-> +#
-> +AC_DEFUN([AC_HAVE_FILE_ATTR],
-> +  [ AC_MSG_CHECKING([for file_getattr/file_setattr syscalls])
-> +    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-> +#define _GNU_SOURCE
-> +#include <sys/syscall.h>
-> +#include <unistd.h>
-> +    ]], [[
-> +         syscall(__NR_file_getattr, 0, 0, 0, 0, 0, 0);
-> +    ]])],[have_file_attr=yes
-> +       AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)])
-> +    AC_SUBST(have_file_attr)
-> +  ])
-> diff --git a/src/Makefile b/src/Makefile
-> index 6ac72b366257..f3137acf687f 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -61,6 +61,11 @@ ifeq ($(HAVE_FALLOCATE), true)
->  LCFLAGS += -DHAVE_FALLOCATE
->  endif
->  
-> +ifeq ($(HAVE_FILE_ATTR), yes)
-> +LINUX_TARGETS += file_attr
-> +LCFLAGS += -DHAVE_FILE_ATTR
-> +endif
-> +
->  ifeq ($(PKG_PLATFORM),linux)
->  TARGETS += $(LINUX_TARGETS)
->  endif
-> diff --git a/src/file_attr.c b/src/file_attr.c
-> new file mode 100644
-> index 000000000000..9756ab265a57
-> --- /dev/null
-> +++ b/src/file_attr.c
-> @@ -0,0 +1,277 @@
-> +#include "global.h"
-> +#include <sys/syscall.h>
-> +#include <getopt.h>
-> +#include <errno.h>
-> +#include <linux/fs.h>
-> +#include <sys/stat.h>
-> +#include <string.h>
-> +#include <getopt.h>
-> +#include <stdlib.h>
-> +#include <unistd.h>
-> +
-> +#ifndef HAVE_FILE_ATTR
-> +#define __NR_file_getattr 468
-> +#define __NR_file_setattr 469
-> +
-> +struct file_attr {
-> +       __u32           fa_xflags;     /* xflags field value (get/set) */
-> +       __u32           fa_extsize;    /* extsize field value (get/set)*/
-> +       __u32           fa_nextents;   /* nextents field value (get)   */
-> +       __u32           fa_projid;     /* project identifier (get/set) */
-> +       __u32           fa_cowextsize; /* CoW extsize field value (get/set) */
-> +};
-> +
-> +#endif
-> +
-> +#define SPECIAL_FILE(x) \
-> +	   (S_ISCHR((x)) \
-> +	|| S_ISBLK((x)) \
-> +	|| S_ISFIFO((x)) \
-> +	|| S_ISLNK((x)) \
-> +	|| S_ISSOCK((x)))
-> +
-> +static struct option long_options[] = {
-> +	{"set",			no_argument,	0,	's' },
-> +	{"get",			no_argument,	0,	'g' },
-> +	{"no-follow",		no_argument,	0,	'n' },
-> +	{"at-cwd",		no_argument,	0,	'a' },
-> +	{"set-nodump",		no_argument,	0,	'd' },
-> +	{"invalid-at",		no_argument,	0,	'i' },
-> +	{"too-big-arg",		no_argument,	0,	'b' },
-> +	{"too-small-arg",	no_argument,	0,	'm' },
-> +	{"new-fsx-flag",	no_argument,	0,	'x' },
-> +	{0,			0,		0,	0 }
-> +};
-> +
-> +static struct xflags {
-> +	uint	flag;
-> +	char	*shortname;
-> +	char	*longname;
-> +} xflags[] = {
-> +	{ FS_XFLAG_REALTIME,		"r", "realtime"		},
-> +	{ FS_XFLAG_PREALLOC,		"p", "prealloc"		},
-> +	{ FS_XFLAG_IMMUTABLE,		"i", "immutable"	},
-> +	{ FS_XFLAG_APPEND,		"a", "append-only"	},
-> +	{ FS_XFLAG_SYNC,		"s", "sync"		},
-> +	{ FS_XFLAG_NOATIME,		"A", "no-atime"		},
-> +	{ FS_XFLAG_NODUMP,		"d", "no-dump"		},
-> +	{ FS_XFLAG_RTINHERIT,		"t", "rt-inherit"	},
-> +	{ FS_XFLAG_PROJINHERIT,		"P", "proj-inherit"	},
-> +	{ FS_XFLAG_NOSYMLINKS,		"n", "nosymlinks"	},
-> +	{ FS_XFLAG_EXTSIZE,		"e", "extsize"		},
-> +	{ FS_XFLAG_EXTSZINHERIT,	"E", "extsz-inherit"	},
-> +	{ FS_XFLAG_NODEFRAG,		"f", "no-defrag"	},
-> +	{ FS_XFLAG_FILESTREAM,		"S", "filestream"	},
-> +	{ FS_XFLAG_DAX,			"x", "dax"		},
-> +	{ FS_XFLAG_COWEXTSIZE,		"C", "cowextsize"	},
-> +	{ FS_XFLAG_HASATTR,		"X", "has-xattr"	},
-> +	{ 0, NULL, NULL }
-> +};
-> +
-> +static int
-> +file_getattr(
-> +		int			dfd,
-> +		const char		*filename,
-> +		struct file_attr	*fsx,
-> +		size_t			usize,
-> +		unsigned int		at_flags)
-> +{
-> +	return syscall(__NR_file_getattr, dfd, filename, fsx, usize, at_flags);
-> +}
-> +
-> +static int
-> +file_setattr(
-> +		int			dfd,
-> +		const char		*filename,
-> +		struct file_attr	*fsx,
-> +		size_t			usize,
-> +		unsigned int		at_flags)
-> +{
-> +	return syscall(__NR_file_setattr, dfd, filename, fsx, usize, at_flags);
-> +}
-> +
-> +void
-> +printxattr(
-> +	uint		flags,
-> +	int		verbose,
-> +	int		dofname,
-> +	const char	*fname,
-> +	int		dobraces,
-> +	int		doeol)
-> +{
-> +	struct xflags	*p;
-> +	int		first = 1;
-> +
-> +	if (dobraces)
-> +		fputs("[", stdout);
-> +	for (p = xflags; p->flag; p++) {
-> +		if (flags & p->flag) {
-> +			if (verbose) {
-> +				if (first)
-> +					first = 0;
-> +				else
-> +					fputs(", ", stdout);
-> +				fputs(p->longname, stdout);
-> +			} else {
-> +				fputs(p->shortname, stdout);
-> +			}
-> +		} else if (!verbose) {
-> +			fputs("-", stdout);
-> +		}
-> +	}
-> +	if (dobraces)
-> +		fputs("]", stdout);
-> +	if (dofname)
-> +		printf(" %s ", fname);
-> +	if (doeol)
-> +		fputs("\n", stdout);
-> +}
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	int error;
-> +	int c;
-> +	const char *path = NULL;
-> +	const char *path1 = NULL;
-> +	const char *path2 = NULL;
-> +	unsigned int at_flags = 0;
-> +	unsigned int fa_xflags = 0;
-> +	int action = 0; /* 0 get; 1 set */
-> +	struct file_attr fsx = { };
-> +	int fa_size = sizeof(struct file_attr);
-> +	struct stat status;
-> +	int fd;
-> +	int at_fdcwd = 0;
-> +	int unknwon_fa_flag = 0;
-> +
-> +        while (1) {
-> +            int option_index = 0;
-> +
-> +            c = getopt_long_only(argc, argv, "", long_options, &option_index);
-> +            if (c == -1)
-> +                break;
-> +
-> +            switch (c) {
-> +	    case 's':
-> +		action = 1;
-> +		break;
-> +	    case 'g':
-> +		action = 0;
-> +		break;
-> +	    case 'n':
-> +		at_flags |= AT_SYMLINK_NOFOLLOW;
-> +		break;
-> +	    case 'a':
-> +		at_fdcwd = 1;
-> +		break;
-> +	    case 'd':
-> +		fa_xflags |= FS_XFLAG_NODUMP;
-> +		break;
-> +	    case 'i':
-> +		at_flags |= (1 << 25);
-> +		break;
-> +	    case 'b':
-> +		fa_size = getpagesize() + 1; /* max size if page size */
-> +		break;
-> +	    case 'm':
-> +		fa_size = 19; /* VER0 size of fsxattr is 20 */
-> +		break;
-> +	    case 'x':
-> +		unknwon_fa_flag = (1 << 27);
-> +		break;
-> +	    default:
-> +		goto usage;
-> +            }
-> +        }
-> +
-> +	if (!path1 && optind < argc)
-> +		path1 = argv[optind++];
-> +	if (!path2 && optind < argc)
-> +		path2 = argv[optind++];
-> +
-> +	if (at_fdcwd) {
-> +		fd = AT_FDCWD;
-> +		path = path1;
-> +	} else if (!path2) {
-> +		error = stat(path1, &status);
-> +		if (error) {
-> +			fprintf(stderr,
-> +"Can not get file status of %s: %s\n", path1, strerror(errno));
-> +			return error;
-> +		}
-> +
-> +		if (SPECIAL_FILE(status.st_mode)) {
-> +			fprintf(stderr,
-> +"Can not open special file %s without parent dir: %s\n", path1, strerror(errno));
-> +			return errno;
-> +		}
-> +
-> +		fd = open(path1, O_RDONLY);
-> +		if (fd == -1) {
-> +			fprintf(stderr, "Can not open %s: %s\n", path1,
-> +					strerror(errno));
-> +			return errno;
-> +		}
-> +	} else {
-> +		fd = open(path1, O_RDONLY);
-> +		if (fd == -1) {
-> +			fprintf(stderr, "Can not open %s: %s\n", path1,
-> +					strerror(errno));
-> +			return errno;
-> +		}
-> +		path = path2;
-> +	}
-> +
-> +	if (!path)
-> +		at_flags |= AT_EMPTY_PATH;
-> +
-> +	if (action) {
-> +		error = file_getattr(fd, path, &fsx, fa_size,
-> +				at_flags);
-> +		if (error) {
-> +			fprintf(stderr, "Can not get fsxattr on %s: %s\n", path,
-> +					strerror(errno));
-> +			return error;
-> +		}
-> +
-> +		fsx.fa_xflags |= (fa_xflags | unknwon_fa_flag);
-> +
-> +		error = file_setattr(fd, path, &fsx, fa_size,
-> +				at_flags);
-> +		if (error) {
-> +			fprintf(stderr, "Can not set fsxattr on %s: %s\n", path,
-> +					strerror(errno));
-> +			return error;
-> +		}
-> +	} else {
-> +		error = file_getattr(fd, path, &fsx, fa_size,
-> +				at_flags);
-> +		if (error) {
-> +			fprintf(stderr, "Can not get fsxattr on %s: %s\n", path,
-> +					strerror(errno));
-> +			return error;
-> +		}
+> Like the previous attempts it doesn't seem to include an attempt to
+> address the elephant in the room:  moving inodes out of the to be
+> removed AGs or tail blocks of an AG.
 
-Can the file_getattr be lifted above the if (action) ?
-
-> +
-> +		if (path2)
-> +			printxattr(fsx.fa_xflags, 0, 1, path, 0, 1);
-> +		else
-> +			printxattr(fsx.fa_xflags, 0, 1, path1, 0, 1);
-> +	}
-> +
-> +	return error;
-> +
-> +usage:
-> +	printf("Usage: %s [options]\n", argv[0]);
-> +	printf("Options:\n");
-> +	printf("\t--get\t\tget filesystem inode attributes\n");
-> +	printf("\t--set\t\tset filesystem inode attributes\n");
-> +	printf("\t--at-cwd\t\topen file at current working directory\n");
-> +	printf("\t--no-follow\t\tdon't follow symlinks\n");
-> +	printf("\t--set-nodump\t\tset FS_XFLAG_NODUMP on an inode\n");
-> +	printf("\t--invalid-at\t\tUse invalida AT_* flag\n");
-> +	printf("\t--too-big-arg\t\tSet fsxattr size bigger than PAGE_SIZE\n");
-> +	printf("\t--too-small-arg\t\tSet fsxattr size to 27 bytes\n");
-
-27?  I thought you put in 19 above?
-
-Also it'd be nice if the help listed the short and long versions.
-
-(Or skip the short cli switches ;))
+Anyone who wants to finish the evacuation part is welcome to pick this
+up:
+https://lore.kernel.org/linux-xfs/173568777852.2709794.6356870909327619205.stgit@frogsfrogsfrogs/
 
 --D
-
-> +	printf("\t--new-fsx-flag\t\tUse unknown fa_flags flag\n");
-> +
-> +	return 1;
-> +}
-> 
-> -- 
-> 2.49.0
-> 
-> 
