@@ -1,43 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2B6B1DE8BE;
-	Mon, 11 Aug 2025 12:06:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 671F720B81D
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Aug 2025 12:07:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754913985; cv=none; b=J13tdZcltaCmSAovvJ18nROlkDeAWyg1DE44awDFKJRnSEHlYyDKVlo9QuNEXyUkAO3XpE60n7MdO9uw1Id8HXQEkj16hG7V9o8x8C3sX2N31QRYJC1cRVdYF03hXCYrr8N5rOiLCLoN2MChCdYP1kt+WBY38nSXbNc6q67xjCc=
+	t=1754914068; cv=none; b=IOrC75dsNj/KyfeJjOsDJafLYY3dJJozrxBNKqd2zeZcw3uGJspJTSuQm366ISUTDU08b0QMGgQkGCAX7goFmmSeSfrEO9dANo3dv/RBpleVIFdZTsFmb2IMpdqZvP143owR9ET3rc87pUW0mXoUdINUqb8juIzX5Pl9fJgPbuI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754913985; c=relaxed/simple;
-	bh=o2YJG+MeGWtvu1qgNMDBrtl/83Z8YV0DO1VakB5ngI0=;
+	s=arc-20240116; t=1754914068; c=relaxed/simple;
+	bh=LyCvZyUCcIUf8f01o3EQhOnrVwbaZj6Gey4w4TEKO50=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hszTvHI5iSugosEWVlWHDDHdNYnfeWnh8zztmU4TzISTNHfp7gWwhNZ+LSps04r0JmGleSfl5JLxj4S7tHu/FiltdxDn9l3fArwfcoWcjSpw0XhsmiAqf8TmSwgWT51XpUYDfn8EKqN0Nxy5yvAEqN1E/VUs7Kj8FM1qCwxfkg4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E3LwUshb; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=sr+CR4WQzAdmmAJkK9P645hA0WOUYxoJznbww2WCbwbvFYBvwhAPpud7bDSnqefQ47j3t6Zb4VtM12tKC/esfB78b+iAbKKeeuCPLMGJJjiH+Om+tE6CICy2iURp9uWCGuRdI201rRF/u1JXWwvsTnQKcpc5AuBv92bCr0U17Mc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SSZM8S8X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E3LwUshb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57797C4CEED;
-	Mon, 11 Aug 2025 12:06:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SSZM8S8X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7F3FC4CEED;
+	Mon, 11 Aug 2025 12:07:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754913985;
-	bh=o2YJG+MeGWtvu1qgNMDBrtl/83Z8YV0DO1VakB5ngI0=;
+	s=k20201202; t=1754914067;
+	bh=LyCvZyUCcIUf8f01o3EQhOnrVwbaZj6Gey4w4TEKO50=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=E3LwUshbwWZotC1ig6EK0DIsBqHCyP7qRBuW0JrW3nfiIPb0uodDgMl6I5AEVQ4Fc
-	 X8AuzuftlqADwU3aG6ESsnTVCGqlRTcOt4y7ZOtVRiZd7zvon/E9vB5iiJveUfZequ
-	 8ljZarxt3phIlvW6P4J637tOJAbZGWF6v2pjxO46oCEbTAy+cB7i+AhBmTv3aZ3Yk1
-	 kCrmTQ4XCfs07gD9DqNazsoWPEvwFL0iE+vMOnLeIziB6MfY7MUMHGMuq5M5VLhtCE
-	 3T+90WkKj9hWNbE2jpYI6riW/N3cYBwn7s9XiIqsU5eD4NmQ+Yw/lZXLgO3/KBUeGE
-	 HUq5Jj4IbdSWA==
-Date: Mon, 11 Aug 2025 14:06:19 +0200
+	b=SSZM8S8XucKdAM+p0vWv1S88YH9BD0yAyQc9Bj8O0QhIYeksT+CUYS1ASI6Col5gT
+	 QpiT/pMMLaTQrbPZDgImcn+U5wb2GDnZPx6QK2sqUOIAg7pJFyypKBXZ/WHOOC/Cci
+	 HLQxyf4ll7csIWW2ZUp+3POqHV9tecQnkz03cSd5h6PkMYO2FAaa5mnMUq0TB5zT/I
+	 zqf2y1d3eN1vFPo4w9hvg3HBI2RBWD2chb7vC3oxAIT1ToPRTfDywQzho0++jQ/iez
+	 ixVkXPZeG+1/baTLcGIrDaGV6AX6y/qMvwnQyYWpFf7SbAgcmPX7V+MeF6LgOmolTY
+	 nY5zfJ7OU+71w==
+Date: Mon, 11 Aug 2025 14:07:44 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: djwong@kernel.org, hch@lst.de, dan.j.williams@intel.com, 
-	willy@infradead.org, jack@suse.cz, brauner@kernel.org, viro@zeniv.linux.org.uk, 
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/3] xfs and DAX atomic writes changes
-Message-ID: <rnils56yqukku5j5t22ac5zru7esi35beo25nhz2ybhxqks5nf@u2xt7j4biinr>
-References: <20250724081215.3943871-1-john.g.garry@oracle.com>
- <IjNvoQKwdHYKQEFJpk3MZtLta5TfTNXqa5VwODhIR7CCUFwuBNcKIXLDbHTYUlXgFiBE24MFzi8WAeK6AletEA==@protonmail.internalid>
- <32397cf6-6c6a-4091-9100-d7395450ae02@oracle.com>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] xfs: Improve CONFIG_XFS_RT Kconfig help
+Message-ID: <qvvtpcj2lnvblecqfcstxbm4hsrgu6jrqyzqrlporriek5nwa4@7rs5hn523eku>
+References: <kKXUIiXOoMsPMpRsmYCR1_l18oSyQGIV5yApvbbZS23U9u_Tz1D3npu22B_aOWZplsFFJ_Bl_UmoTmTLGm90Fg==@protonmail.internalid>
+ <20250807055630.841381-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,47 +42,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <32397cf6-6c6a-4091-9100-d7395450ae02@oracle.com>
+In-Reply-To: <20250807055630.841381-1-dlemoal@kernel.org>
 
-On Wed, Aug 06, 2025 at 10:15:10AM +0100, John Garry wrote:
-> On 24/07/2025 09:12, John Garry wrote:
+On Thu, Aug 07, 2025 at 02:56:30PM +0900, Damien Le Moal wrote:
+> Improve the description of the XFS_RT configuration option to document
+> that this option is required for zoned block devices.
 > 
-> Hi Carlos,
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>  fs/xfs/Kconfig | 9 +++++++++
+>  1 file changed, 9 insertions(+)
 > 
-> I was expecting you to pick these up.
+> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+> index ae0ca6858496..68724dec3d19 100644
+> --- a/fs/xfs/Kconfig
+> +++ b/fs/xfs/Kconfig
+> @@ -118,6 +118,15 @@ config XFS_RT
+> 
+>  	  See the xfs man page in section 5 for additional information.
+> 
+> +	  This option is mandatory to support zoned block devices. For these
+> +	  devices, the realtime subvolume must be backed by a zoned block
+> +	  device and a regular block device used as the main device (for
+> +	  metadata). If the zoned block device is a host-managed SMR hard-disk
+> +	  containing conventional zones at the beginning of its address space,
+> +	  XFS will use the disk conventional zones as the main device and the
+> +	  remaining sequential write required zones as the backing storage for
+> +	  the realtime subvolume.
+> +
+>  	  If unsure, say N.
 
-I did, for -rc1.
+Looks good!
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
 > 
-> Shall I resend next week after v6.17-rc1 is released?
-
-No, I already have them queued up for -rc1, no need to send them again
-
-Carlos
-
-> 
-> Thanks,
-> John
-> 
-> > This series contains an atomic writes fix for DAX support on xfs and
-> > an improvement to WARN against using IOCB_ATOMIC on the DAX write path.
-> >
-> > Also included is an xfs atomic writes mount option fix.
-> >
-> > Based on xfs -next at ("b0494366bd5b Merge branch 'xfs-6.17-merge' into
-> > for-next")
-> >
-> > John Garry (3):
-> >    fs/dax: Reject IOCB_ATOMIC in dax_iomap_rw()
-> >    xfs: disallow atomic writes on DAX
-> >    xfs: reject max_atomic_write mount option for no reflink
-> >
-> >   fs/dax.c           |  3 +++
-> >   fs/xfs/xfs_file.c  |  6 +++---
-> >   fs/xfs/xfs_inode.h | 11 +++++++++++
-> >   fs/xfs/xfs_iops.c  |  5 +++--
-> >   fs/xfs/xfs_mount.c | 19 +++++++++++++++++++
-> >   5 files changed, 39 insertions(+), 5 deletions(-)
-> >
+>  config XFS_DRAIN_INTENTS
+> --
+> 2.50.1
 > 
 > 
