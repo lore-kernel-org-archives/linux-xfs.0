@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 190A219D88F;
-	Mon, 11 Aug 2025 15:31:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F0FB2E92AD;
+	Mon, 11 Aug 2025 15:38:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754926303; cv=none; b=SqivB4xwM/pWOY+wBkMDbnwYu5ue9s/AF2sFPAMjo6o3M8I9hpTd9jzPjoax/xE9c6OWFJKoCHsk9pcP2wd4NFerKwUKXp+M4VvKCCebsmy5YMde+9mLzVEutdJhebjrpjFktYiYvq/PBFHUUSWiAz7lj00Ew1ZRWjYCUQH5aLI=
+	t=1754926704; cv=none; b=tzKsQtHhepkmV1sBc5XKen6EwlVazm/zyZpJgdoh1xHGNyp/l6B3TOjHAo16gwAP+cIGFaJ6B2kB8lK2Hozjmn0DFHwD7/AxVshfAg0NzaosXOr3RybRqshIQTLAf1zIkhfqP3YamiNPElS1xkwezcrQ+4aIUzEZqw+oqYWD/iY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754926303; c=relaxed/simple;
-	bh=0So7KQGnjijVzM0TWA5+/BW8vDimww8+bmIianA+pQE=;
+	s=arc-20240116; t=1754926704; c=relaxed/simple;
+	bh=GeWuknlfFgAJsGUf9dlyyJbNRzQgCCg7mlxqSPsoH1c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qhXhI0xVX2vGRpi4qOUm+ckFnMHz4GQrvCa3/5mzxHNQdm7DyxVVt87voJ+NDIsHmuHz4Sid8bCFkIPBOOH3YCislRXzX7e9VaTyuu+NlEdOp65hfhVj6yzutX6t3GcZ9c2LJbOTKuxnTf7Od3/KT02prwE0vcDRIfmJp0XayG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XGVAw1Da; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=K1e4laSVj963kedB2vU2gTPDYbqixbJg0ROvUzVZIzOh+YPGnrC9V/2AUn4Wj5oNnv2cV9V8dBGo3CShc7GNOCiQrC+m5M6LGJ4PQTmEHnNICMVt53i0kyV3cjjPhnNs2TcP6Hl6d6qpoMCKRfyzinmWVlyiA1u3zKTXfBBIgu0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pw3QAD2v; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XGVAw1Da"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92702C4CEED;
-	Mon, 11 Aug 2025 15:31:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pw3QAD2v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90027C4CEED;
+	Mon, 11 Aug 2025 15:38:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754926302;
-	bh=0So7KQGnjijVzM0TWA5+/BW8vDimww8+bmIianA+pQE=;
+	s=k20201202; t=1754926703;
+	bh=GeWuknlfFgAJsGUf9dlyyJbNRzQgCCg7mlxqSPsoH1c=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XGVAw1DaymnZ+EX5FBTOzydJAkEv2+wIPPKKSQ/YAiODdwDjzr0niPMHIEQt4Vp13
-	 Hju/LgNaJJ50bf//ckE9Dr/0v7g+CeqnlwaQyk71f4R98Ez/TOc1j9khQ+ZcUsT9pc
-	 LTRh4oGt1FaNriVmubhqzM7nVZeL6QmPI+lnJKlINttjW/Ya3e5Mez6TpNsbXq1QeQ
-	 a/SLYuXv70/BJ7BzcEGGYk4KgSFaIVGfVUS71jDcsIVmgpApuEG+2EWqeajWWm2A+x
-	 7vEDbhYAN0YtK7XrKqUxsRA+JChbqRl8FUIOXYq6hUgS27E3ZcqpE5oOUVa8Ct50ro
-	 1wUREb/80ViXQ==
-Date: Mon, 11 Aug 2025 08:31:42 -0700
+	b=Pw3QAD2vnypwGbaIGQPLUzCHUHmLNCEdcJSflXMOZJqnwTZxqpHK01BGsbil5gvJd
+	 SvlcTHJ9JKBI7FtkRqkKGCbEaqrAIFwf+fN+HuuXRbQ5QwfnvnAGU912cZDYvqHEoA
+	 NMVgBeUsByYu4LqOSDWqNehiW4CGVyoLsJANaoCNL+DJhpwMwfWTUVAH2mvgc80ea2
+	 ntyAJkEtRmdOHa4Gb7wTieBlm1REQ4tYe6i/0CpY1k5rC3FuFli591xE6fLDYFV+qM
+	 6XaR88UckCXsalfYxevNSVy1z+Da+Mk7NEH77wioNVu4NYZtG5VKkT4gvJTxIHDfiF
+	 oNGbFv7WvW/Kg==
+Date: Mon, 11 Aug 2025 08:38:22 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
 	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
 	david@fromorbit.com, ebiggers@kernel.org
-Subject: Re: [PATCH RFC 06/29] fsverity: report validation errors back to the
- filesystem
-Message-ID: <20250811153142.GJ7965@frogsfrogsfrogs>
+Subject: Re: [PATCH RFC 12/29] fsverity: expose merkle tree geometry to
+ callers
+Message-ID: <20250811153822.GK7965@frogsfrogsfrogs>
 References: <20250728-fsverity-v1-0-9e5443af0e34@kernel.org>
- <20250728-fsverity-v1-6-9e5443af0e34@kernel.org>
- <20250811114603.GB8969@lst.de>
+ <20250728-fsverity-v1-12-9e5443af0e34@kernel.org>
+ <20250811114813.GC8969@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,25 +46,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250811114603.GB8969@lst.de>
+In-Reply-To: <20250811114813.GC8969@lst.de>
 
-On Mon, Aug 11, 2025 at 01:46:03PM +0200, Christoph Hellwig wrote:
-> On Mon, Jul 28, 2025 at 10:30:10PM +0200, Andrey Albershteyn wrote:
+On Mon, Aug 11, 2025 at 01:48:13PM +0200, Christoph Hellwig wrote:
+> On Mon, Jul 28, 2025 at 10:30:16PM +0200, Andrey Albershteyn wrote:
 > > From: "Darrick J. Wong" <djwong@kernel.org>
 > > 
-> > Provide a new function call so that validation errors can be reported
-> > back to the filesystem.
+> > Create a function that will return selected information about the
+> > geometry of the merkle tree.  Online fsck for XFS will need this piece
+> > to perform basic checks of the merkle tree.
 > 
-> This feels like an awfull generic name for a very specific error
-> condition.
+> Just curious, why does xfs need this, but the existing file systems
+> don't?  That would be some good background information for the commit
+> message.
 
-<shrug> ->verity_failure?
+Hrmmm... the last time I sent this RFC, online fsck used it to check the
+validity of the merkle tree xattrs.
 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+I think you could also use it to locate the merkle tree at the highest
+possible offset in the data fork, though IIRC Andrey decided to pin it
+at 1<<53.
+
+(I think ext4 just opencodes the logic everywhere...)
+
+> > +	if (!IS_VERITY(inode))
+> > +		return -ENODATA;
+> > +
+> > +	error = ensure_verity_info(inode);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	vi = inode->i_verity_info;
 > 
-> Btw, this is missing a signoff from Andrey as the series submitter
-> needs to sign off after the author.
+> Wouldn't it be a better interface to return the verity_ino from
+> ensure_verity_info (NULL for !IS_VERITY, ERR_PTR for real error)
+> and then just look at the fields directly?
 
-Yes.
+They're private to fsverity_private.h.
 
 --D
