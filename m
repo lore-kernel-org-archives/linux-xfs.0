@@ -1,42 +1,29 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 857BB261593
-	for <linux-xfs@vger.kernel.org>; Mon, 11 Aug 2025 10:48:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D7DE268C40
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Aug 2025 10:50:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754909301; cv=none; b=kT8RARAkGhRTuCrbDbNAyBZClnUHDJFu70NivE/ZwoPJpnKJ4XkGRoHTilHtIVahLZ1Xl7zFgWG/zrUvq+3g6JCACncalAP5jeU5TUBqTkUMMIzDDjH9QadAI6uTqtLCiQi5m7GX3UnjVRvXJbuVWQUVTswQBYIabOV11gJvkSc=
+	t=1754909414; cv=none; b=Y9B2g3kn0LAB6S05Z+DHSlTuZO5uMH3l21sR0405UvvtPANH6pLqjnSqxM5xcT6kqysuEc7SvgbB+hWtSEpHedkF1Wop1TcBvFuXE/sbAROUKOor6sM3RmPWnH4neS53mfSjet/vIbxadDAAHX1nwno3Uve0TUvPaOmdbJnMoLM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754909301; c=relaxed/simple;
-	bh=CQgX+40GhXe+YnUGPM3rnjJMHUa9NTGFy26+aldJpl8=;
+	s=arc-20240116; t=1754909414; c=relaxed/simple;
+	bh=7ag2rAxGx3YWMkweJnDP4gf6b/EIQn1bNSOorAW02c8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VuL1Rw81nxYQ4s0WQtxVNIHGN+VlnkJ6Kn/hiLfWL730eYpQzM5TNbAcQOU7igYmmQRBVHWWVKqrzy18HnYSMm4/LVEm78mE7Dv/enbsE7NspBaFkn7RxN0fhhgKfgIsAQHLlbpd2IMBNHY+fm78OQWSEOJsuwpdHQRmkuJaJCc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=W9HdBUtt; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="W9HdBUtt"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=3xjW8b/kM4yT456AyiC69zUpTATy9CQeobAbehpAx30=; b=W9HdBUttni5MVpv2FS/S5ITckE
-	YRV6s513+uvbDGI4C6uEKfzHKqpY45GLAh9U58WRYZfHE9hX/4FeJs7g6kftWwNLPdYwsiOymAZKQ
-	PBzo9UeW1IPUDvRgBHUOtmf4KLLoQEa3kQmz5az7/RLPTaE2Hjdpe4S0lkP4Vsc7FTvP9Zu7Y9ZS4
-	AWBahZ1WYhL+3DwfmavJ1FRZcET65bMpPnaiQlTKNHUzOddCRSKxqZLUWqo44vSfxai/byvfpuz4B
-	GETAYp6TyyQeIICvH9upXFaZ89ez69QTWpqcdvta36B5q/dgOn2On6fLzQl4KVaPK8g9ZdtFo0jur
-	lDGI5ZUA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1ulQ4g-00000007OhB-3HyO;
-	Mon, 11 Aug 2025 10:48:18 +0000
-Date: Mon, 11 Aug 2025 03:48:18 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: Roy Sigurd Karlsbakk <roy@karlsbakk.net>, linux-xfs@vger.kernel.org
-Subject: Re: Shrinking XFS - is that happening?
-Message-ID: <aJnKcktFW6jPBETP@infradead.org>
-References: <B96A5598-3A5F-4166-8566-2792E5AADB3E@karlsbakk.net>
- <8a9071104eec47d91ab44c86465d08d76e0cf808.camel@gmail.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=kpnj9RusiXHaMJx30aKASA5waFVjWg0n+Ry6qgFmE7Vyu/mJTYxGKP5cxCysmRcCzxay8VCClNsbORulZZsooJv1A8HBewDIsFmYAmlvgfPWwiNFP0tTvVwaI1R5c8GScW8NLhlQRWFIK2Gm8Mtr4urMrkeWRZi5cdnap3smLZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 2933368AA6; Mon, 11 Aug 2025 12:50:08 +0200 (CEST)
+Date: Mon, 11 Aug 2025 12:50:07 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-xfs@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] xfs: Select XFS_RT if BLK_DEV_ZONED is enabled
+Message-ID: <20250811105007.GA4581@lst.de>
+References: <04bqii558CCUiFEGBhKdf6qd18qly22OSKw2E3RSDAyvVmxUF09ljpQZ7lIfwSBhPXEsfzj1XUcZ29zXkR2jyQ==@protonmail.internalid> <20250806043449.728373-1-dlemoal@kernel.org> <q5jrbwhotk5kf3dm6wekreyu5cq2d2g5xs3boipu22mwbsxbj2@cxol3zyusizd>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,19 +32,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <8a9071104eec47d91ab44c86465d08d76e0cf808.camel@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <q5jrbwhotk5kf3dm6wekreyu5cq2d2g5xs3boipu22mwbsxbj2@cxol3zyusizd>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Aug 05, 2025 at 10:20:15AM +0530, Nirjhar Roy (IBM) wrote:
-> On Mon, 2025-08-04 at 17:13 +0200, Roy Sigurd Karlsbakk wrote:
-> > Hi all!
-> > 
-> > I beleive I heard something from someone some time back about work in progress on shrinking xfs filesystems. Is this something that's been worked with or have I been lied to or just had a nice dream?
-> > 
-> > roy
-> I have recently posted an RFC[1]. The work is based/inspired from an old RFC[2] by Gao and ideas
-> given by Dave Chinner.
+On Wed, Aug 06, 2025 at 09:46:58AM +0200, Carlos Maiolino wrote:
+> > +	select XFS_RT if BLK_DEV_ZONED
+> 
+> This looks weird to me.
+> Obligating users to enable an optional feature in xfs if their
+> kernel are configured with a specific block dev feature doesn't
+> sound the right thing to do.
+> What if the user doesn't want to use XFS RT devices even though
+> BLK_DEV_ZONED is enabled, for whatever other purpose?
+> 
+> Forcing enabling a filesystem configuration because a specific block
+> feature is enabled doesn't sound the right thing to do IMHO.
 
-Like the previous attempts it doesn't seem to include an attempt to
-address the elephant in the room:  moving inodes out of the to be
-removed AGs or tail blocks of an AG.
+Yes.  What might be useful is to default XFS_RT to on for BLK_DEV_ZONED.
+I.e.
+
+	config XFS_RT
+		...
+		default BLK_DEV_ZONED
+		...
+
+That way we get a good default, but still allow full selection /
+deselection.
