@@ -1,45 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B37FC2264C7;
-	Mon, 11 Aug 2025 10:41:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EA4C24293B
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Aug 2025 10:42:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754908910; cv=none; b=Mq0kPAImWhNJsJ1mZKSi572mT29Ux0l59Z1YT3/eu3itu2UBki6zk5e2HU9R6sgWu+CBQ3IZWKOFwJ2VW+rpk7JF/80ZRdOrQ//8rahr+2E08mRakQhF2uYKCWlgmpn7OsQqnjLdDOSdrlPIEQ6/NNoZT+uwkZNJrZkN2abzzwU=
+	t=1754908974; cv=none; b=n9ZJML8/GxiZcXaERjaKJkwD/m+z1UTyEXSwe4D44J9RryNCGH/3thxSO+kYPzEWEgVeu5tpe6kT1lpYuYThedk2/X3Pn2tYjEtOmYLCC7EmffzXIU6m4TD/1vGrXyjsudcrAO/mvUL3jZOr6LsztCq9P1k+o7lYrHxlaW4qM70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754908910; c=relaxed/simple;
-	bh=ogNDkN0Kti67wyjDkFkj3V/1dOo2vGXEtQDlghmP1JE=;
+	s=arc-20240116; t=1754908974; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z8lkGvatNAEQrSHwhW4+xUA9sid46O+Oie4dXfpxh/m2PrGBiwTunGs7xRa/TN69v8gsrmSi8gftgO3QWxONNH8FsIgXmFBmFjRkB6B5B6bkv0ZkInCG1eSIMLmrI2s1fcLY3FnN3UKMIvYPVQI6DOYj4Hr+hNtoL7ASUi0qy00=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ffqmA0fB; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tzoemisgd7pUoOjcX95/nwVqAG7EK0fWBO9xGCPAarTYZF4KeglxnSiSNjgiyRCN8Ucl8Bp7J4qsBtR/DA0ZzpEMe8yA/LQp9oQzsd7sokNZR3bAhyMCBrfAobJ9mE+bg8GyHVFzu1mxVFiEbwZU3ZykdRKSdUUaAu/4sfQ6mUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Z+9BTF5Z; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ffqmA0fB"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Z+9BTF5Z"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=ogNDkN0Kti67wyjDkFkj3V/1dOo2vGXEtQDlghmP1JE=; b=ffqmA0fBOVEiLoSiu2XMUCtY5W
-	yErdxopJdli+VogUfdGfEwFhU+940mHrbFxnIRTiyQhqPnJWnQk+b91BgvMqaooQTeMQ0RyojMxBB
-	Yj7sPeQQaaDYFocd9q+s9XyeNt9dGre/JBZbNtnOhlXMVi+HMELHZWsZOuNiiMCaylgYV6UrjI306
-	BaiXOk8uLtQzjeO9QHqFD/mlzdmY9huKnI7hRnJ3DSh3ljm+o1dbGonizhpXlXH9zxq6octWTAebF
-	5jbahh9R7w9Y11ssWY8ArZ5OP7H3n/3qmWAzeytm1z0lbGHkq2X1mQKwQ6hdalJ3LRg9I/kQ7OJ7u
-	gaP2cRIA==;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=Z+9BTF5Z88VPKLawOFFttzwTjN
+	r7TlETu5KGdunPpI+cELkSgz0esMos0dQhSZXNmrqiwmkGGMYgmwz9GPrRcjsn8nADz0ETIGY9l8n
+	aIyIcc5l/WHR1tOBM7vVFLmX5OlKuvIL09vPXAL5ytwuPXeXut+9GXWBQwSz7Xag8ld9KELTvMgwc
+	bpIy9hfRTqv6yA/qr3ca8uHhHKC7uVjmHqa19542VQZPRyCmpEQpPn2mKV+DELfId33AexBu04YGb
+	gXX+c9on3RG9WGR2dTh7iFWfBLXEZg719fOVMagqL6O3M8uDJ+hsK3aVncycCUtKTjqic6FyrLopa
+	forSJdRw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1ulPyF-00000007MiG-1faC;
-	Mon, 11 Aug 2025 10:41:39 +0000
-Date: Mon, 11 Aug 2025 03:41:39 -0700
+	id 1ulPzQ-00000007Mxz-1r2t;
+	Mon, 11 Aug 2025 10:42:52 +0000
+Date: Mon, 11 Aug 2025 03:42:52 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: alexjlzheng@gmail.com
-Cc: brauner@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jinliang Zheng <alexjlzheng@tencent.com>
-Subject: Re: [PATCH v2 4/4] iomap: don't abandon the whole thing with
- iomap_folio_state
-Message-ID: <aJnI49GCSfILx8eE@infradead.org>
-References: <20250810101554.257060-1-alexjlzheng@tencent.com>
- <20250810101554.257060-5-alexjlzheng@tencent.com>
+To: Johannes Nixdorf <johannes@nixdorf.dev>
+Cc: XFS Development Team <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 1/2] configure: Base NEED_INTERNAL_STATX on libc headers
+ first
+Message-ID: <aJnJLKz2Km8JWko9@infradead.org>
+References: <20250809-musl-fixes-v1-0-d0958fffb1af@nixdorf.dev>
+ <20250809-musl-fixes-v1-1-d0958fffb1af@nixdorf.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,12 +46,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250810101554.257060-5-alexjlzheng@tencent.com>
+In-Reply-To: <20250809-musl-fixes-v1-1-d0958fffb1af@nixdorf.dev>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Where "the whole thing" is the current iteration in the write loop.
-Can you spell this out a bit better?
+Looks good:
 
-Also please include the rationale why you are changing the logic
-here in the commit log.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
