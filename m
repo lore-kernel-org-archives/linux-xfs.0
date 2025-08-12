@@ -1,89 +1,65 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 700F31DC994
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Aug 2025 07:33:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBCE71A9FA6
+	for <linux-xfs@vger.kernel.org>; Tue, 12 Aug 2025 07:33:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754984000; cv=none; b=L+04WRCyFo5T2F7IofF/AHw4Tfmx6gnfUEgcZBz1JhjgBX80FWrY4mI0NBaPB0Khn2F7KGbKHA4veMLGJXN4PGR2DGaZqRGwoQSwRdjligEZd7q6E3dDds0efjgkUvyqc0BYRHVDDjCvoyevjBTvFyNJFsFP0Dir0pBB+ePShQk=
+	t=1754984001; cv=none; b=qmdtomgUSSCuDz24oG8hUPvBX9MtK7dOmnNHMjaONRPQBrsF9ELqyl3w1l8HdRWy9nKEsZ6oFy0z26L8GLjGoH6Iq3yfc1O9108g4sn4sFRhPByj1xPWW7xcIxHCxgQ6Lj6HujqCNWFt7Ug7HJrE8g+qMDyPgnXElutXfieQlfI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754984000; c=relaxed/simple;
-	bh=yNxeHBnwISp7e/pI7dZfPkDIsAoHjmA2TfH/VnY7Syg=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=YiiDQSRU+0CJHPgB2NXP6dpl18N1wDDLEFmvIf05IB+yhZVekd1FnDGKG5fJgEaublB/FsgtOwYR/MCWCW7Igv3PLXgqYy1XrV8Tz3oTEIvOm+uPNJg7Kshbev2Ar3kvw73icez+O19OYezlnlbJkL8INDWA8bkvKAyOwxfnllU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IBYPJwzp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1754984001; c=relaxed/simple;
+	bh=tWG9HqoBEutpGkDIxefvQoDh+WUgKahObG9z974SrEA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=sNjkN1BEDbZOMxzcQvkeYDtppbEuhsYIYazdRInoZa4dptOX/hjDS5bUWh5tzopF+QOFyTWPeQ6IESkIUmuQSa/gea4BXhq6wVsMdT1z+B6oVn0td7npbomHKWlYl6iBHHKyufGMDdoFoXb7+kiIfAekwd7HDBjtNC6GoS1bnlw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ug2i0dWT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IBYPJwzp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D11AC4CEF0
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Aug 2025 07:33:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ug2i0dWT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93DC7C4CEF0;
+	Tue, 12 Aug 2025 07:33:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754983997;
-	bh=yNxeHBnwISp7e/pI7dZfPkDIsAoHjmA2TfH/VnY7Syg=;
-	h=Date:From:To:Subject:From;
-	b=IBYPJwzpX9bEs4Ed0WW9ORM8IzcYWQD9+qg1stFbkROMkfixBhVkJZrE2VI+coY0n
-	 PsTtMgWlt7TmKqRH7r+vGgWsKqi9K2K2oF1Nnz5KZBMcrzhOK26Cir/aS32DTzrD7d
-	 AmrNwx+ZYuqAHBYAbyvRIUM5B2LCf/3MTDje6xSz/aaAXBrAkRGSBV98nOqGEGzLGM
-	 TTgGVH8EMCeQ97aRqdQr8iNxanqlsPhRO94i6xYmnH6NhgeVieFpG8Nhep1g7viyW1
-	 WmBfN4qJle94y6fBfsf03MBPDlz8f5Ndrk/w1eE78LPhhqi3TrHe62lwQBuLeSPJJJ
-	 in++sOv3NcoMw==
-Date: Tue, 12 Aug 2025 09:33:13 +0200
+	s=k20201202; t=1754984001;
+	bh=tWG9HqoBEutpGkDIxefvQoDh+WUgKahObG9z974SrEA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=Ug2i0dWTi2YoBhiqQuv8Gc9P0Sv2kKbrYRcVXj+89Leo9dKh+XEBh91HLWCN50X1h
+	 lJGx0pgEaby4AWSt1fPXQmkL01TNtsaoxaiIZhaZMeNiYr1u0IW1kyFolD697TKQZA
+	 EtwMNGXshq5Rzsy+2vx7/FkQZWgAvMvEAhRJ/3BDE5lUolMD8gQ+xb87EqYjvZMjBN
+	 Wid5OMI/X2p0XRsotRCjR4JciPsKuseqN2P5RcgR1tBBDcLa2NHKevNnTvfkYrrCAu
+	 T7yXXfBIahBjH+D8XathQeOttxN6QBPXEcP0X5GLr5X9aEgUm71+hp1FFNM/N6xsT6
+	 WvK32L0L4eX4w==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to f76823e3b284
-Message-ID: <nsgsn5yrkfushdddgwnkl4v4ymwzon7tk2ngkatxysfsbpbpn7@r43ytlvgybfd>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+In-Reply-To: <20250731141941.859866-1-hch@lst.de>
+References: <20250731141941.859866-1-hch@lst.de>
+Subject: Re: [PATCH] xfs: fix frozen file system assert in xfs_trans_alloc
+Message-Id: <175498400023.824422.4701464763309155508.b4-ty@kernel.org>
+Date: Tue, 12 Aug 2025 09:33:20 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
+On Thu, 31 Jul 2025 07:19:41 -0700, Christoph Hellwig wrote:
+> Commit 83a80e95e797 ("xfs: decouple xfs_trans_alloc_empty from
+> xfs_trans_alloc") move the place of the assert for a frozen file system
+> after the sb_start_intwrite call that ensures it doesn't run on frozen
+> file systems, and thus allows to incorrect trigger it.
+> 
+> Fix that by moving it back to where it belongs.
+> 
+> [...]
 
-Hi folks,
+Applied to for-next, thanks!
 
-The for-next branch of the xfs-linux repository at:
+[1/1] xfs: fix frozen file system assert in xfs_trans_alloc
+      commit: 647b3d59c768d7638dd17c78c8044178364383ca
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-f76823e3b284 xfs: split xfs_zone_record_blocks
-
-8 new commits:
-
-Andrey Albershteyn (1):
-      [5d94b19f0664] xfs: fix scrub trace with null pointer in quotacheck
-
-Christoph Hellwig (4):
-      [647b3d59c768] xfs: fix frozen file system assert in xfs_trans_alloc
-      [d2845519b072] xfs: fully decouple XFS_IBULK* flags from XFS_IWALK* flags
-      [82efde9cf2e4] xfs: remove XFS_IBULK_SAME_AG
-      [f76823e3b284] xfs: split xfs_zone_record_blocks
-
-John Garry (2):
-      [68456d05eb57] xfs: disallow atomic writes on DAX
-      [8dc5e9b03713] xfs: reject max_atomic_write mount option for no reflink
-
-Code Diffstat:
-
- fs/xfs/scrub/trace.h    |  2 +-
- fs/xfs/xfs_file.c       |  6 +++---
- fs/xfs/xfs_inode.h      | 11 +++++++++++
- fs/xfs/xfs_ioctl.c      |  2 +-
- fs/xfs/xfs_iops.c       |  5 +++--
- fs/xfs/xfs_itable.c     |  8 ++------
- fs/xfs/xfs_itable.h     | 10 ++++------
- fs/xfs/xfs_mount.c      | 19 +++++++++++++++++++
- fs/xfs/xfs_trace.h      |  1 +
- fs/xfs/xfs_trans.c      |  2 +-
- fs/xfs/xfs_zone_alloc.c | 42 +++++++++++++++++++++++++++++-------------
- 11 files changed, 75 insertions(+), 33 deletions(-)
