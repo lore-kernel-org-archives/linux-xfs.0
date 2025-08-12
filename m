@@ -1,24 +1,24 @@
 Received: from neil.brown.name (neil.brown.name [103.29.64.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03A452D7396;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE5F42D46C6;
 	Tue, 12 Aug 2025 23:53:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.29.64.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755042784; cv=none; b=RcuSZ3Wun1Gk5qajZLxMI4BouWWLJ0aROkai0F+QHoe3bLBwszIzETWiLFDt2LTsQH37ufwIJxtSk/jct1TP9jjyqW6rECl8zztD/HhEmHc7Rc7tHjwEXP2w3/u530ontQAfyD/Nzz7RhtFDhsAPsvCOqpRqszj94ua+yh+DIPo=
+	t=1755042784; cv=none; b=G7UUeNf3nY1cPVy/GwPbrDJfRVR9hkj8CBS9DEVRUbN/VxExGC38pD6g0EJECSmbd8Wnc2VtZsQEK1SmlX16ZpfPeFPojeSDVE0WftupEPOsroi8WHcB6u6ADozuTFtiWHkVKFvqYse1ZdIy2P3YK2XKM5XwiCMXuyLJzthAXv8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1755042784; c=relaxed/simple;
-	bh=ZRhRQQI6uo3FxzRK6qWDy6tEgqtjrrXxGIqMJAzbusg=;
+	bh=I90cfJ5hxWQAKE5THF1GA3BmLbMCQgMmZktcIxEsAWo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JmKu/L0025t/mUsW4VuP9o6sT8Z7XcAhraAyMWW6vCG8gqIw10rwENfEt8vmzFKQfAELbgW8b+Yqr1uPhizGMfmavruDDFuSP6fiJg9cyjjZEL0Xey0iNRSya0Grdet4ypDK7lqr2xPWK0rK/wWM6sykKmL3/8gl9B0O0JfLzSQ=
+	 MIME-Version; b=qE78BvY6hRnXd/b+pBTZlTbH/NgiKZUaMMoNXONZHPNY2r1obIHEBue9M1b5cGeqj56mEvNmvssabdEHihL/p+jZpUXcDW3+Awg4NHyBpGLrygW0DP3nnKNFi54C/MJGlqci8ROno8hf8zbaWutGMmtUmum1mP/wHpFwMCB/ocM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name; spf=pass smtp.mailfrom=neil.brown.name; arc=none smtp.client-ip=103.29.64.221
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=neil.brown.name
 Received: from 196.186.233.220.static.exetel.com.au ([220.233.186.196] helo=home.neil.brown.name)
 	by neil.brown.name with esmtp (Exim 4.95)
 	(envelope-from <mr@neil.brown.name>)
-	id 1ulynN-005Y25-0b;
-	Tue, 12 Aug 2025 23:52:46 +0000
+	id 1ulynJ-005Y1w-PX;
+	Tue, 12 Aug 2025 23:52:43 +0000
 From: NeilBrown <neil@brown.name>
 To: Alexander Viro <viro@zeniv.linux.org.uk>,
 	Christian Brauner <brauner@kernel.org>,
@@ -51,9 +51,9 @@ Cc: David Howells <dhowells@redhat.com>,
 	linux-cifs@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 06/11] VFS: unify old_mnt_idmap and new_mnt_idmap in renamedata
-Date: Tue, 12 Aug 2025 12:25:09 +1000
-Message-ID: <20250812235228.3072318-7-neil@brown.name>
+Subject: [PATCH 02/11] VFS: introduce dentry_lookup() and friends
+Date: Tue, 12 Aug 2025 12:25:05 +1000
+Message-ID: <20250812235228.3072318-3-neil@brown.name>
 X-Mailer: git-send-email 2.50.0.107.gf914562f5916.dirty
 In-Reply-To: <20250812235228.3072318-1-neil@brown.name>
 References: <20250812235228.3072318-1-neil@brown.name>
@@ -65,219 +65,486 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A rename can only rename with a single mount.  Callers of vfs_rename()
-must and do ensure this is the case.
+This patch is the first step in introducing a new API for locked
+operation on names in directories.  It supports operations that create or
+remove names.  Rename operations will also be part of this new API but
+require different specific interfaces.
 
-So there is no point in having two mnt_idmaps in renamedata as they are
-always the same.  Only of of them is passed to ->rename in any case.
+The plan is to lock just the dentry (or dentries), not the whole
+directory.  dentry_lookup() combines locking the directory and
+performing a lookup prior to a change to the directory.  On success it
+returns a dentry which is consider to be locked, though at this stage
+the whole parent directory is actually locked.
 
-This patch replaces both with a single "mnt_idmap" and changes all
-callers.
+dentry_lookup_noperm() does the same without needing a mnt_idmap and
+without checking permissions.  This is useful for internal filesystem
+management (e.g.  creating virtual files in response to events) and in
+other cases similar to lookup_noperm().
 
-Reviewed-by: Jeff Layton <jlayton@kernel.org>
+__dentry_lookup() is a VFS-internal interface which does no permissions
+checking and assumes that the hash of the name has already been stored
+in the qstr.  This is useful following filename_parentat().
+
+done_dentry_lookup() is provided which performs the inverse of putting
+the dentry and unlocking.
+
+Like lookup_one_qstr_excl(), dentry_lookup() returns -ENOENT if
+LOOKUP_CREATE was NOT given and the name cannot be found,, and returns
+-EEXIST if LOOKUP_EXCL WAS given and the name CAN be found.
+
+These functions replace all uses of lookup_one_qstr_excl() in namei.c
+except for those used for rename.
+
+They also allow simple_start_creating() to be simplified into a
+static-inline.
+
+A __free() class is provided to allow done_dentry_lookup() to be called
+transparently on scope exit.  dget() is extended to ignore ERR_PTR()s
+so that "return dget(dentry);" is always safe when dentry was provided
+by dentry_lookup() and the variable was declared __free(dentry_lookup).
+
+lookup_noperm_common() and lookup_one_common() are moved earlier in
+namei.c.
+
+Note that done_dentry_lookup() can NOT currently be used for vfs_mkdir() as
+that function consumes the dentry on error, providing a PTR_ERR instead.
+This can be passed to done_dentry_lookup(), but the directory won't be
+unlocked.   A future patch will resolve this so done_dentry_lookup() can
+be used in done_path_create().
+
 Signed-off-by: NeilBrown <neil@brown.name>
 ---
- fs/cachefiles/namei.c    |  3 +--
- fs/ecryptfs/inode.c      |  3 +--
- fs/namei.c               | 21 ++++++++++-----------
- fs/nfsd/vfs.c            |  3 +--
- fs/overlayfs/overlayfs.h |  3 +--
- fs/smb/server/vfs.c      |  3 +--
- include/linux/fs.h       |  6 ++----
- 7 files changed, 17 insertions(+), 25 deletions(-)
+ fs/libfs.c             |  25 -----
+ fs/namei.c             | 229 +++++++++++++++++++++++++++++------------
+ include/linux/dcache.h |  16 +--
+ include/linux/fs.h     |   1 -
+ include/linux/namei.h  |  15 +++
+ 5 files changed, 184 insertions(+), 102 deletions(-)
 
-diff --git a/fs/cachefiles/namei.c b/fs/cachefiles/namei.c
-index 91dfd0231877..d1edb2ac3837 100644
---- a/fs/cachefiles/namei.c
-+++ b/fs/cachefiles/namei.c
-@@ -387,10 +387,9 @@ int cachefiles_bury_object(struct cachefiles_cache *cache,
- 		cachefiles_io_error(cache, "Rename security error %d", ret);
- 	} else {
- 		struct renamedata rd = {
--			.old_mnt_idmap	= &nop_mnt_idmap,
-+			.mnt_idmap	= &nop_mnt_idmap,
- 			.old_parent	= dir,
- 			.old_dentry	= rep,
--			.new_mnt_idmap	= &nop_mnt_idmap,
- 			.new_parent	= cache->graveyard,
- 			.new_dentry	= grave,
- 		};
-diff --git a/fs/ecryptfs/inode.c b/fs/ecryptfs/inode.c
-index 72fbe1316ab8..abd954c6a14e 100644
---- a/fs/ecryptfs/inode.c
-+++ b/fs/ecryptfs/inode.c
-@@ -634,10 +634,9 @@ ecryptfs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
- 		goto out_lock;
- 	}
- 
--	rd.old_mnt_idmap	= &nop_mnt_idmap;
-+	rd.mnt_idmap		= &nop_mnt_idmap;
- 	rd.old_parent		= lower_old_dir_dentry;
- 	rd.old_dentry		= lower_old_dentry;
--	rd.new_mnt_idmap	= &nop_mnt_idmap;
- 	rd.new_parent		= lower_new_dir_dentry;
- 	rd.new_dentry		= lower_new_dentry;
- 	rc = vfs_rename(&rd);
+diff --git a/fs/libfs.c b/fs/libfs.c
+index ce8c496a6940..f31b80d8de18 100644
+--- a/fs/libfs.c
++++ b/fs/libfs.c
+@@ -2288,28 +2288,3 @@ void stashed_dentry_prune(struct dentry *dentry)
+ 	 */
+ 	cmpxchg(stashed, dentry, NULL);
+ }
+-
+-/* parent must be held exclusive */
+-struct dentry *simple_start_creating(struct dentry *parent, const char *name)
+-{
+-	struct dentry *dentry;
+-	struct inode *dir = d_inode(parent);
+-
+-	inode_lock(dir);
+-	if (unlikely(IS_DEADDIR(dir))) {
+-		inode_unlock(dir);
+-		return ERR_PTR(-ENOENT);
+-	}
+-	dentry = lookup_noperm(&QSTR(name), parent);
+-	if (IS_ERR(dentry)) {
+-		inode_unlock(dir);
+-		return dentry;
+-	}
+-	if (dentry->d_inode) {
+-		dput(dentry);
+-		inode_unlock(dir);
+-		return ERR_PTR(-EEXIST);
+-	}
+-	return dentry;
+-}
+-EXPORT_SYMBOL(simple_start_creating);
 diff --git a/fs/namei.c b/fs/namei.c
-index cead810d53c6..3f930811e952 100644
+index 62c1e2268942..85b981248a90 100644
 --- a/fs/namei.c
 +++ b/fs/namei.c
-@@ -3702,13 +3702,13 @@ int rename_lookup(struct renamedata *rd, int lookup_flags)
- 	int err;
+@@ -1714,6 +1714,152 @@ struct dentry *lookup_one_qstr_excl(const struct qstr *name,
+ }
+ EXPORT_SYMBOL(lookup_one_qstr_excl);
  
- 	if (!rd->old_dentry) {
--		err = lookup_one_common(rd->old_mnt_idmap, &rd->old_last,
-+		err = lookup_one_common(rd->mnt_idmap, &rd->old_last,
- 					rd->old_parent);
- 		if (err)
- 			return err;
- 	}
- 	if (!rd->new_dentry) {
--		err = lookup_one_common(rd->new_mnt_idmap, &rd->new_last,
-+		err = lookup_one_common(rd->mnt_idmap, &rd->new_last,
- 					rd->new_parent);
- 		if (err)
- 			return err;
-@@ -5418,20 +5418,20 @@ int vfs_rename(struct renamedata *rd)
- 	if (source == target)
- 		return 0;
++static int lookup_noperm_common(struct qstr *qname, struct dentry *base)
++{
++	const char *name = qname->name;
++	u32 len = qname->len;
++
++	qname->hash = full_name_hash(base, name, len);
++	if (!len)
++		return -EACCES;
++
++	if (is_dot_dotdot(name, len))
++		return -EACCES;
++
++	while (len--) {
++		unsigned int c = *(const unsigned char *)name++;
++		if (c == '/' || c == '\0')
++			return -EACCES;
++	}
++	/*
++	 * See if the low-level filesystem might want
++	 * to use its own hash..
++	 */
++	if (base->d_flags & DCACHE_OP_HASH) {
++		int err = base->d_op->d_hash(base, qname);
++		if (err < 0)
++			return err;
++	}
++	return 0;
++}
++
++static int lookup_one_common(struct mnt_idmap *idmap,
++			     struct qstr *qname, struct dentry *base)
++{
++	int err;
++	err = lookup_noperm_common(qname, base);
++	if (err < 0)
++		return err;
++	return inode_permission(idmap, base->d_inode, MAY_EXEC);
++}
++
++/**
++ * __dentry_lookup - lookup and lock a name prior to dir ops
++ * @last: the name in the given directory
++ * @base: the directory in which the name is to be found
++ * @lookup_flags: %LOOKUP_xxx flags
++ *
++ * The name is looked up and necessary locks are taken so that
++ * the name can be created or removed.
++ * The "necessary locks" are currently the inode lock on @base.
++ * The name @last is expected to already have the hash calculated.
++ * No permission checks are performed.
++ * This function is for VFS-internal use only.
++ *
++ * Returns: the dentry, suitably locked, or an ERR_PTR().
++ */
++static struct dentry *__dentry_lookup(struct qstr *last,
++				      struct dentry *base,
++				      unsigned int lookup_flags)
++{
++	struct dentry *dentry;
++
++	inode_lock_nested(base->d_inode, I_MUTEX_PARENT);
++
++	dentry = lookup_one_qstr_excl(last, base, lookup_flags);
++	if (IS_ERR(dentry))
++		inode_unlock(base->d_inode);
++	return dentry;
++}
++
++/**
++ * dentry_lookup_noperm - lookup and lock a name prior to dir ops
++ * @last: the name in the given directory
++ * @base: the directory in which the name is to be found
++ * @lookup_flags: %LOOKUP_xxx flags
++ *
++ * The name is looked up and necessary locks are taken so that
++ * the name can be created or removed.
++ * The "necessary locks" are currently the inode lock on @base.
++ * The name @last is NOT expected to have the hash calculated.
++ * No permission checks are performed.
++ * Returns: the dentry, suitably locked, or an ERR_PTR().
++ */
++struct dentry *dentry_lookup_noperm(struct qstr *last,
++				    struct dentry *base,
++				    unsigned int lookup_flags)
++{
++	int err;
++
++	err = lookup_noperm_common(last, base);
++	if (err < 0)
++		return ERR_PTR(err);
++	return __dentry_lookup(last, base, lookup_flags);
++}
++EXPORT_SYMBOL(dentry_lookup_noperm);
++
++/**
++ * dentry_lookup - lookup and lock a name prior to dir ops
++ * @idmap: idmap of the mount the lookup is performed from
++ * @last: the name in the given directory
++ * @base: the directory in which the name is to be found
++ * @lookup_flags: %LOOKUP_xxx flags
++ *
++ * The name is looked up and necessary locks are taken so that
++ * the name can be created or removed.
++ * The "necessary locks" are currently the inode lock on @base.
++ * The name @last is NOT expected to already have the hash calculated.
++ * Permission checks are performed to ensure %MAY_EXEC access to @base.
++ *
++ * Returns: the dentry, suitably locked, or an ERR_PTR().
++ */
++struct dentry *dentry_lookup(struct mnt_idmap *idmap,
++			     struct qstr *last,
++			     struct dentry *base,
++			     unsigned int lookup_flags)
++{
++	int err;
++
++	err = lookup_one_common(idmap, last, base);
++	if (err < 0)
++		return ERR_PTR(err);
++	return __dentry_lookup(last, base, lookup_flags);
++}
++EXPORT_SYMBOL(dentry_lookup);
++
++/**
++ * done_dentry_lookup - finish a lookup used for create/delete
++ * @dentry:  the target dentry
++ *
++ * Reverse the effects of dentry_lookup() or similar.  If the
++ * @dentry is not an error, the lock and the reference to the dentry
++ * are dropped.
++ *
++ * This interface allows a smooth transition from parent-dir based
++ * locking to dentry based locking.
++ *
++ * This interface is NOT suficient for vfs_mkdir() usage without
++ * extra care as vfs_mkdir() consumes a dentry withouty dropping the lock.
++ */
++void done_dentry_lookup(struct dentry *dentry)
++{
++	if (!IS_ERR(dentry)) {
++		inode_unlock(dentry->d_parent->d_inode);
++		dput(dentry);
++	}
++}
++EXPORT_SYMBOL(done_dentry_lookup);
++
+ /**
+  * lookup_fast - do fast lockless (but racy) lookup of a dentry
+  * @nd: current nameidata
+@@ -2756,12 +2902,9 @@ static struct dentry *__kern_path_locked(int dfd, struct filename *name, struct
+ 		return ERR_PTR(error);
+ 	if (unlikely(type != LAST_NORM))
+ 		return ERR_PTR(-EINVAL);
+-	inode_lock_nested(parent_path.dentry->d_inode, I_MUTEX_PARENT);
+-	d = lookup_one_qstr_excl(&last, parent_path.dentry, 0);
+-	if (IS_ERR(d)) {
+-		inode_unlock(parent_path.dentry->d_inode);
++	d = __dentry_lookup(&last, parent_path.dentry, 0);
++	if (IS_ERR(d))
+ 		return d;
+-	}
+ 	path->dentry = no_free_ptr(parent_path.dentry);
+ 	path->mnt = no_free_ptr(parent_path.mnt);
+ 	return d;
+@@ -2780,12 +2923,9 @@ struct dentry *kern_path_locked_negative(const char *name, struct path *path)
+ 		return ERR_PTR(error);
+ 	if (unlikely(type != LAST_NORM))
+ 		return ERR_PTR(-EINVAL);
+-	inode_lock_nested(parent_path.dentry->d_inode, I_MUTEX_PARENT);
+-	d = lookup_one_qstr_excl(&last, parent_path.dentry, LOOKUP_CREATE);
+-	if (IS_ERR(d)) {
+-		inode_unlock(parent_path.dentry->d_inode);
++	d = __dentry_lookup(&last, parent_path.dentry, LOOKUP_CREATE);
++	if (IS_ERR(d))
+ 		return d;
+-	}
+ 	path->dentry = no_free_ptr(parent_path.dentry);
+ 	path->mnt = no_free_ptr(parent_path.mnt);
+ 	return d;
+@@ -2863,45 +3003,6 @@ int vfs_path_lookup(struct dentry *dentry, struct vfsmount *mnt,
+ }
+ EXPORT_SYMBOL(vfs_path_lookup);
  
--	error = may_delete(rd->old_mnt_idmap, old_dir, old_dentry, is_dir);
-+	error = may_delete(rd->mnt_idmap, old_dir, old_dentry, is_dir);
- 	if (error)
- 		return error;
- 
- 	if (!target) {
--		error = may_create(rd->new_mnt_idmap, new_dir, new_dentry);
-+		error = may_create(rd->mnt_idmap, new_dir, new_dentry);
- 	} else {
- 		new_is_dir = d_is_dir(new_dentry);
- 
- 		if (!(flags & RENAME_EXCHANGE))
--			error = may_delete(rd->new_mnt_idmap, new_dir,
-+			error = may_delete(rd->mnt_idmap, new_dir,
- 					   new_dentry, is_dir);
- 		else
--			error = may_delete(rd->new_mnt_idmap, new_dir,
-+			error = may_delete(rd->mnt_idmap, new_dir,
- 					   new_dentry, new_is_dir);
- 	}
- 	if (error)
-@@ -5446,13 +5446,13 @@ int vfs_rename(struct renamedata *rd)
+-static int lookup_noperm_common(struct qstr *qname, struct dentry *base)
+-{
+-	const char *name = qname->name;
+-	u32 len = qname->len;
+-
+-	qname->hash = full_name_hash(base, name, len);
+-	if (!len)
+-		return -EACCES;
+-
+-	if (is_dot_dotdot(name, len))
+-		return -EACCES;
+-
+-	while (len--) {
+-		unsigned int c = *(const unsigned char *)name++;
+-		if (c == '/' || c == '\0')
+-			return -EACCES;
+-	}
+-	/*
+-	 * See if the low-level filesystem might want
+-	 * to use its own hash..
+-	 */
+-	if (base->d_flags & DCACHE_OP_HASH) {
+-		int err = base->d_op->d_hash(base, qname);
+-		if (err < 0)
+-			return err;
+-	}
+-	return 0;
+-}
+-
+-static int lookup_one_common(struct mnt_idmap *idmap,
+-			     struct qstr *qname, struct dentry *base)
+-{
+-	int err;
+-	err = lookup_noperm_common(qname, base);
+-	if (err < 0)
+-		return err;
+-	return inode_permission(idmap, base->d_inode, MAY_EXEC);
+-}
+-
+ /**
+  * try_lookup_noperm - filesystem helper to lookup single pathname component
+  * @name:	qstr storing pathname component to lookup
+@@ -4125,7 +4226,7 @@ static struct dentry *filename_create(int dfd, struct filename *name,
+ 	 * (foo/., foo/.., /////)
  	 */
- 	if (new_dir != old_dir) {
- 		if (is_dir) {
--			error = inode_permission(rd->old_mnt_idmap, source,
-+			error = inode_permission(rd->mnt_idmap, source,
- 						 MAY_WRITE);
- 			if (error)
- 				return error;
- 		}
- 		if ((flags & RENAME_EXCHANGE) && new_is_dir) {
--			error = inode_permission(rd->new_mnt_idmap, target,
-+			error = inode_permission(rd->mnt_idmap, target,
- 						 MAY_WRITE);
- 			if (error)
- 				return error;
-@@ -5520,7 +5520,7 @@ int vfs_rename(struct renamedata *rd)
- 		if (error)
- 			goto out;
- 	}
--	error = old_dir->i_op->rename(rd->new_mnt_idmap, old_dir, old_dentry,
-+	error = old_dir->i_op->rename(rd->mnt_idmap, old_dir, old_dentry,
- 				      new_dir, new_dentry, flags);
+ 	if (unlikely(type != LAST_NORM))
+-		goto out;
++		goto put;
+ 
+ 	/* don't fail immediately if it's r/o, at least try to report other errors */
+ 	error = mnt_want_write(path->mnt);
+@@ -4135,24 +4236,20 @@ static struct dentry *filename_create(int dfd, struct filename *name,
+ 	 */
+ 	if (last.name[last.len] && !want_dir)
+ 		create_flags &= ~LOOKUP_CREATE;
+-	inode_lock_nested(path->dentry->d_inode, I_MUTEX_PARENT);
+-	dentry = lookup_one_qstr_excl(&last, path->dentry,
+-				      reval_flag | create_flags);
++	dentry = __dentry_lookup(&last, path->dentry, reval_flag | create_flags);
+ 	if (IS_ERR(dentry))
+-		goto unlock;
++		goto drop;
+ 
+ 	if (unlikely(error))
+ 		goto fail;
+-
+ 	return dentry;
+ fail:
+-	dput(dentry);
++	done_dentry_lookup(dentry);
+ 	dentry = ERR_PTR(error);
+-unlock:
+-	inode_unlock(path->dentry->d_inode);
++drop:
+ 	if (!error)
+ 		mnt_drop_write(path->mnt);
+-out:
++put:
+ 	path_put(path);
+ 	return dentry;
+ }
+@@ -4503,19 +4600,18 @@ int do_rmdir(int dfd, struct filename *name)
  	if (error)
- 		goto out;
-@@ -5607,10 +5607,9 @@ int do_renameat2(int olddfd, struct filename *from, int newdfd,
+ 		goto exit2;
  
+-	inode_lock_nested(path.dentry->d_inode, I_MUTEX_PARENT);
+-	dentry = lookup_one_qstr_excl(&last, path.dentry, lookup_flags);
++	dentry = __dentry_lookup(&last, path.dentry, lookup_flags);
+ 	error = PTR_ERR(dentry);
+ 	if (IS_ERR(dentry))
+ 		goto exit3;
++
+ 	error = security_path_rmdir(&path, dentry);
+ 	if (error)
+ 		goto exit4;
+ 	error = vfs_rmdir(mnt_idmap(path.mnt), path.dentry->d_inode, dentry);
+ exit4:
+-	dput(dentry);
++	done_dentry_lookup(dentry);
+ exit3:
+-	inode_unlock(path.dentry->d_inode);
+ 	mnt_drop_write(path.mnt);
+ exit2:
+ 	path_put(&path);
+@@ -4632,11 +4728,9 @@ int do_unlinkat(int dfd, struct filename *name)
+ 	if (error)
+ 		goto exit2;
  retry_deleg:
- 	rd.old_parent	   = old_path.dentry;
--	rd.old_mnt_idmap   = mnt_idmap(old_path.mnt);
-+	rd.mnt_idmap	   = mnt_idmap(old_path.mnt);
- 	rd.old_dentry	   = NULL;
- 	rd.new_parent	   = new_path.dentry;
--	rd.new_mnt_idmap   = mnt_idmap(new_path.mnt);
- 	rd.new_dentry	   = NULL;
- 	rd.delegated_inode = &delegated_inode;
- 	rd.flags	   = flags;
-diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
-index 98ab55ba3ced..5f3e99f956ca 100644
---- a/fs/nfsd/vfs.c
-+++ b/fs/nfsd/vfs.c
-@@ -1943,10 +1943,9 @@ nfsd_rename(struct svc_rqst *rqstp, struct svc_fh *ffhp, char *fname, int flen,
- 		goto out_dput_old;
- 	} else {
- 		struct renamedata rd = {
--			.old_mnt_idmap	= &nop_mnt_idmap,
-+			.mnt_idmap	= &nop_mnt_idmap,
- 			.old_parent	= fdentry,
- 			.old_dentry	= odentry,
--			.new_mnt_idmap	= &nop_mnt_idmap,
- 			.new_parent	= tdentry,
- 			.new_dentry	= ndentry,
- 		};
-diff --git a/fs/overlayfs/overlayfs.h b/fs/overlayfs/overlayfs.h
-index bb0d7ded8e76..4f84abaa0d68 100644
---- a/fs/overlayfs/overlayfs.h
-+++ b/fs/overlayfs/overlayfs.h
-@@ -361,10 +361,9 @@ static inline int ovl_do_rename(struct ovl_fs *ofs, struct dentry *olddir,
- {
- 	int err;
- 	struct renamedata rd = {
--		.old_mnt_idmap	= ovl_upper_mnt_idmap(ofs),
-+		.mnt_idmap	= ovl_upper_mnt_idmap(ofs),
- 		.old_parent	= olddir,
- 		.old_dentry	= olddentry,
--		.new_mnt_idmap	= ovl_upper_mnt_idmap(ofs),
- 		.new_parent	= newdir,
- 		.new_dentry	= newdentry,
- 		.flags		= flags,
-diff --git a/fs/smb/server/vfs.c b/fs/smb/server/vfs.c
-index 04539037108c..07739055ac9f 100644
---- a/fs/smb/server/vfs.c
-+++ b/fs/smb/server/vfs.c
-@@ -770,10 +770,9 @@ int ksmbd_vfs_rename(struct ksmbd_work *work, const struct path *old_path,
- 		goto out4;
+-	inode_lock_nested(path.dentry->d_inode, I_MUTEX_PARENT);
+-	dentry = lookup_one_qstr_excl(&last, path.dentry, lookup_flags);
++	dentry = __dentry_lookup(&last, path.dentry, lookup_flags);
+ 	error = PTR_ERR(dentry);
+ 	if (!IS_ERR(dentry)) {
+-
+ 		/* Why not before? Because we want correct error value */
+ 		if (last.name[last.len])
+ 			goto slashes;
+@@ -4648,9 +4742,8 @@ int do_unlinkat(int dfd, struct filename *name)
+ 		error = vfs_unlink(mnt_idmap(path.mnt), path.dentry->d_inode,
+ 				   dentry, &delegated_inode);
+ exit3:
+-		dput(dentry);
++		done_dentry_lookup(dentry);
  	}
- 
--	rd.old_mnt_idmap	= mnt_idmap(old_path->mnt),
-+	rd.mnt_idmap		= mnt_idmap(old_path->mnt),
- 	rd.old_parent		= old_parent,
- 	rd.old_dentry		= old_child,
--	rd.new_mnt_idmap	= mnt_idmap(new_path.mnt),
- 	rd.new_parent		= new_path.dentry,
- 	rd.new_dentry		= new_dentry,
- 	rd.flags		= flags,
+-	inode_unlock(path.dentry->d_inode);
+ 	if (inode)
+ 		iput(inode);	/* truncate the inode here */
+ 	inode = NULL;
+diff --git a/include/linux/dcache.h b/include/linux/dcache.h
+index cc3e1c1a3454..5d53489e5556 100644
+--- a/include/linux/dcache.h
++++ b/include/linux/dcache.h
+@@ -327,13 +327,13 @@ static inline struct dentry *dget_dlock(struct dentry *dentry)
+  * dget - get a reference to a dentry
+  * @dentry: dentry to get a reference to
+  *
+- * Given a dentry or %NULL pointer increment the reference count
+- * if appropriate and return the dentry.  A dentry will not be
+- * destroyed when it has references.  Conversely, a dentry with
+- * no references can disappear for any number of reasons, starting
+- * with memory pressure.  In other words, that primitive is
+- * used to clone an existing reference; using it on something with
+- * zero refcount is a bug.
++ * Given a dentry, PTR_ERR, or %NULL pointer increment the reference
++ * count if appropriate and return the dentry.  A dentry will not be
++ * destroyed when it has references.  Conversely, a dentry with no
++ * references can disappear for any number of reasons, starting with
++ * memory pressure.  In other words, that primitive is used to clone an
++ * existing reference; using it on something with zero refcount is a
++ * bug.
+  *
+  * NOTE: it will spin if @dentry->d_lock is held.  From the deadlock
+  * avoidance point of view it is equivalent to spin_lock()/increment
+@@ -343,7 +343,7 @@ static inline struct dentry *dget_dlock(struct dentry *dentry)
+  */
+ static inline struct dentry *dget(struct dentry *dentry)
+ {
+-	if (dentry)
++	if (!IS_ERR_OR_NULL(dentry))
+ 		lockref_get(&dentry->d_lockref);
+ 	return dentry;
+ }
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index b12203afa0da..172c3d703c43 100644
+index d7ab4f96d705..db644150b58f 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -2008,11 +2008,10 @@ int vfs_unlink(struct mnt_idmap *, struct inode *, struct dentry *,
+@@ -3656,7 +3656,6 @@ extern int simple_fill_super(struct super_block *, unsigned long,
+ 			     const struct tree_descr *);
+ extern int simple_pin_fs(struct file_system_type *, struct vfsmount **mount, int *count);
+ extern void simple_release_fs(struct vfsmount **mount, int *count);
+-struct dentry *simple_start_creating(struct dentry *, const char *);
  
- /**
-  * struct renamedata - contains all information required for renaming
-- * @old_mnt_idmap:     idmap of the old mount the inode was found from
-+ * @mnt_idmap:     idmap of the mount in which the rename is happening.
-  * @old_parent:        parent of source
-  * @old_dentry:                source
-  * @old_last:          name for old_dentry in old_dir, if old_dentry not given
-- * @new_mnt_idmap:     idmap of the new mount the inode was found from
-  * @new_parent:        parent of destination
-  * @new_dentry:                destination
-  * @new_last:          name for new_dentry in new_dir, if new_dentry not given
-@@ -2020,11 +2019,10 @@ int vfs_unlink(struct mnt_idmap *, struct inode *, struct dentry *,
-  * @flags:             rename flags
-  */
- struct renamedata {
--	struct mnt_idmap *old_mnt_idmap;
-+	struct mnt_idmap *mnt_idmap;
- 	struct dentry *old_parent;
- 	struct dentry *old_dentry;
- 	struct qstr old_last;
--	struct mnt_idmap *new_mnt_idmap;
- 	struct dentry *new_parent;
- 	struct dentry *new_dentry;
- 	struct qstr new_last;
+ extern ssize_t simple_read_from_buffer(void __user *to, size_t count,
+ 			loff_t *ppos, const void *from, size_t available);
+diff --git a/include/linux/namei.h b/include/linux/namei.h
+index 5d085428e471..932cb94c3538 100644
+--- a/include/linux/namei.h
++++ b/include/linux/namei.h
+@@ -80,6 +80,21 @@ struct dentry *lookup_one_unlocked(struct mnt_idmap *idmap,
+ struct dentry *lookup_one_positive_unlocked(struct mnt_idmap *idmap,
+ 					    struct qstr *name,
+ 					    struct dentry *base);
++struct dentry *dentry_lookup(struct mnt_idmap *idmap,
++			       struct qstr *last, struct dentry *base,
++			       unsigned int lookup_flags);
++struct dentry *dentry_lookup_noperm(struct qstr *name, struct dentry *base,
++				      unsigned int lookup_flags);
++void done_dentry_lookup(struct dentry *dentry);
++/* no_free_ptr() must not be used here - use dget() */
++DEFINE_FREE(dentry_lookup, struct dentry *, if (_T) done_dentry_lookup(_T))
++
++static inline
++struct dentry *simple_start_creating(struct dentry *parent, const char *name)
++{
++	return dentry_lookup_noperm(&QSTR(name), parent,
++				    LOOKUP_CREATE | LOOKUP_EXCL);
++}
+ 
+ extern int follow_down_one(struct path *);
+ extern int follow_down(struct path *path, unsigned int flags);
 -- 
 2.50.0.107.gf914562f5916.dirty
 
