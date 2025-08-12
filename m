@@ -1,68 +1,57 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 788541FBE87
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Aug 2025 07:33:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C96E31FBE87;
+	Tue, 12 Aug 2025 07:35:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754984009; cv=none; b=VvA6BK49+SVAwZRoxC5FYk5+kz6l29qfKsEMKeMz1AVaDQpxobglqzThrz8x1ojPYs4XO9YFsa5TcvoLCgFH/ftNvLvvMgMPEi6lJg3yFovNZhjb76+VUotzXbHM4CkyfxjNGAmqasbKKVLE6NL3k7sFQDNvtD42Kyr0Nq5HAz0=
+	t=1754984103; cv=none; b=Rskhv3ut2gotU3Pp/7nchVIj9cslo3OB3QvN9ODRgfxYv7r+bGzDszsn2q3WHosc1qOqjTI52LA6hsLvJHmRvpLNOxZxvpJTGWE/DQD6etRNbkRABsm9n6BjBJZDEIhVta0db47FzsctvaS6iq8gOfzM+LnEtn9T/Yt4/Ardeco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754984009; c=relaxed/simple;
-	bh=L4tws+aMYe5ZoxGopsjIazjBbanIp4toRIyrxbtE+Rg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Rese9RSmLYkZhIyScJMY+XpqacVluc0cq9JNsnjWnyFXj0xFsoTst5chRdtP12eWiRY3GQCsre2URPj8KUv59oSsKQHq8OHaS0bK5GKMgHtdSblkFY1aBqcu+gVsBrclJY5CsnUMf3I38SHqqpUg2da3Lx4ezsWnfz1ixEFs9kk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RUgmsGJC; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RUgmsGJC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 770BCC4CEF1;
-	Tue, 12 Aug 2025 07:33:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754984009;
-	bh=L4tws+aMYe5ZoxGopsjIazjBbanIp4toRIyrxbtE+Rg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=RUgmsGJC1zw+DARvcgdlDgpQbevCS2brPH+r1AvGwHMuzrI/C5n8vUqqfoO4qAJ6m
-	 HsrWHSLT3EJ0SOJ52uhWTL2yKsL3Sv9MfpI3INI+g5qYjaSmPqjBzvqBhKZ7Ydu7Gv
-	 QRzRrEVk/Sx1ktDnF6eqU/VeIu0mgSKhssAjni+nJY2XwY0nQ6UbSs5praUGQ3eAF3
-	 rwlPYsQ6XMAzWN2vXSRHi3ZenLkeSnApidWyZ15//Vdw2CU2jlfWtCEet2VoZbZiNL
-	 /38DQs1rStci6lXQ5Hqj9Z80NFurqwEaF/TrbGYHtsC8EkJiLU0PYKBXUtl14XU0MX
-	 0kg9kH6ZcfSAg==
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-In-Reply-To: <20250723053544.3069555-1-hch@lst.de>
-References: <20250723053544.3069555-1-hch@lst.de>
-Subject: Re: [PATCH] xfs: split xfs_zone_record_blocks
-Message-Id: <175498400817.824422.2096415196645532496.b4-ty@kernel.org>
-Date: Tue, 12 Aug 2025 09:33:28 +0200
+	s=arc-20240116; t=1754984103; c=relaxed/simple;
+	bh=fpPmlW0i9kHCUWfSkI6CZ14DUBCPw4G4k3GCkQNT3OQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ss8AMjq3KmXTMTYJqZMt2ZlCq17pbSOVyCALxsRiT9Y/S6OPpVoOoFoYjAbiq4RzP6gtCiLeNhReGlK1nOhM6Shma8b3NnLzDrYRPw5FxKm51Wq/6ylO2v5b6ns3KxmJEqtlLIzg0AZsBOmQ+SBjwYkmALpmBZBETJwuGByc9eM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 9E9B268AA6; Tue, 12 Aug 2025 09:34:56 +0200 (CEST)
+Date: Tue, 12 Aug 2025 09:34:55 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Andrey Albershteyn <aalbersh@redhat.com>, fsverity@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	david@fromorbit.com, ebiggers@kernel.org
+Subject: Re: [PATCH RFC 06/29] fsverity: report validation errors back to
+ the filesystem
+Message-ID: <20250812073455.GA18413@lst.de>
+References: <20250728-fsverity-v1-0-9e5443af0e34@kernel.org> <20250728-fsverity-v1-6-9e5443af0e34@kernel.org> <20250811114603.GB8969@lst.de> <20250811153142.GJ7965@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250811153142.GJ7965@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, 23 Jul 2025 07:35:44 +0200, Christoph Hellwig wrote:
-> xfs_zone_record_blocks not only records successfully written blocks that
-> now back file data, but is also used for blocks speculatively written by
-> garbage collection that were never linked to an inode and instantly
-> become invalid.
+On Mon, Aug 11, 2025 at 08:31:42AM -0700, Darrick J. Wong wrote:
+> On Mon, Aug 11, 2025 at 01:46:03PM +0200, Christoph Hellwig wrote:
+> > On Mon, Jul 28, 2025 at 10:30:10PM +0200, Andrey Albershteyn wrote:
+> > > From: "Darrick J. Wong" <djwong@kernel.org>
+> > > 
+> > > Provide a new function call so that validation errors can be reported
+> > > back to the filesystem.
+> > 
+> > This feels like an awfull generic name for a very specific error
+> > condition.
 > 
-> Split the latter functionality out to be easier to understand.  This also
-> make it clear that we don't need to attach the rmap inode to a
-> transaction for the skipped blocks case as we never dirty any peristent
-> data structure.
-> 
-> [...]
+> <shrug> ->verity_failure?
 
-Applied to for-next, thanks!
-
-[1/1] xfs: split xfs_zone_record_blocks
-      commit: f76823e3b284aae30797fded988a807eab2da246
-
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
+Either that or make it generic.  Either way it needs to be documented
+in the usual places that document file operations including explaining
+when it is supposed to be called.
 
