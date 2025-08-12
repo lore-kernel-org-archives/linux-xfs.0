@@ -1,24 +1,24 @@
 Received: from neil.brown.name (neil.brown.name [103.29.64.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFE162D4B6D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE5862F0661;
 	Tue, 12 Aug 2025 23:53:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.29.64.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755042784; cv=none; b=iV05z4v0d3gnUvprKJzocxpd0r2v/x7bR9Mh9jt0ryGYbLmOdoHJov/5avMIRmdJVJHHPhrhQSOA+DAWbLBugJ6pahtgJ0P7xSSUUMKfBOnWaWNiLMqkN+jbUW2QuJ/SJK6jB1zYwt4BFy+KzAZZJb825e4kNy7uL4wEoVmkOkc=
+	t=1755042784; cv=none; b=SuBPxSoFFvFes6+CvtewIjBJhuDdmmZJJrEYzmyZBRTMkz5+0H+4vNkcPuOGBx6Pe4GwED4+iO7KGnzQelimhJYNHCATWQSqYLd+lMYhVyEGNHoXHQeVCwPsm6FDjZiAacJk+5URAY48h6dmeY/n+M9gqG5K3kJTFWNetTE58m8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1755042784; c=relaxed/simple;
-	bh=wY0rj6H9uNX526KJkK3oQKoJg0U9wk/QJcI6qW2yVlg=;
+	bh=oJDs9cs0PMUxO+Y7vEWjvv4x8YaRwIGuciOUq8hARic=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rcoyDzD/BnJxPRfGx/DD2XPnTaNox/xWGCU137RLX0x7YyI6s/OxVQCkjLycdkjRTW9GfijiVUVyyYMCanZa6tM0qlyrnsdgftyGc3ra0dmSdbGBiE0b6XEdLZe/4NzfWnmQh/XmvybfrPFUXdDY7O8w3ERFsOTluHYDgAUeWp0=
+	 MIME-Version; b=sZHpjCJy8s7veVfYkgTQLAj9QMFqP6MA0nfKjAgBsyaKGA9pXGaMM9z1R6n+aLEVvzH9r7Q4zx88Oft/t07RowXyb2wzRDV3Lwd8YIAKV8FzMPHrPFAUOcRZPwyQPbJY3WnseruAE8jt1C2dKgf+oX/bTEJp9NQsMgAw8ohOPWc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name; spf=pass smtp.mailfrom=neil.brown.name; arc=none smtp.client-ip=103.29.64.221
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=neil.brown.name
 Received: from 196.186.233.220.static.exetel.com.au ([220.233.186.196] helo=home.neil.brown.name)
 	by neil.brown.name with esmtp (Exim 4.95)
 	(envelope-from <mr@neil.brown.name>)
-	id 1ulynK-005Y1y-Ic;
-	Tue, 12 Aug 2025 23:52:44 +0000
+	id 1ulynI-005Y1u-W6;
+	Tue, 12 Aug 2025 23:52:42 +0000
 From: NeilBrown <neil@brown.name>
 To: Alexander Viro <viro@zeniv.linux.org.uk>,
 	Christian Brauner <brauner@kernel.org>,
@@ -51,9 +51,9 @@ Cc: David Howells <dhowells@redhat.com>,
 	linux-cifs@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 03/11] VFS: add dentry_lookup_killable()
-Date: Tue, 12 Aug 2025 12:25:06 +1000
-Message-ID: <20250812235228.3072318-4-neil@brown.name>
+Subject: [PATCH 01/11] VFS: discard err2 in filename_create()
+Date: Tue, 12 Aug 2025 12:25:04 +1000
+Message-ID: <20250812235228.3072318-2-neil@brown.name>
 X-Mailer: git-send-email 2.50.0.107.gf914562f5916.dirty
 In-Reply-To: <20250812235228.3072318-1-neil@brown.name>
 References: <20250812235228.3072318-1-neil@brown.name>
@@ -65,82 +65,57 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-btrfs/ioctl.c uses a "killable" lock on the directory when creating an
-destroying subvols.  overlayfs also does this.
-
-This patch adds dentry_lookup_killable() for these users.
-
-Possibly all dentry_lookup should be killable as there is no down-side,
-but that can come in a later patch.
+During the time when "err2" holds a value, "error" does not hold any
+meaningful value.  So there is no need for two different err variables.
+This patch discards "err2" and uses "error' throughout.
 
 Signed-off-by: NeilBrown <neil@brown.name>
 ---
- fs/namei.c            | 37 +++++++++++++++++++++++++++++++++++++
- include/linux/namei.h |  3 +++
- 2 files changed, 40 insertions(+)
+ fs/namei.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/fs/namei.c b/fs/namei.c
-index 85b981248a90..7af9b464886a 100644
+index cd43ff89fbaa..62c1e2268942 100644
 --- a/fs/namei.c
 +++ b/fs/namei.c
-@@ -1837,6 +1837,43 @@ struct dentry *dentry_lookup(struct mnt_idmap *idmap,
- }
- EXPORT_SYMBOL(dentry_lookup);
+@@ -4114,7 +4114,6 @@ static struct dentry *filename_create(int dfd, struct filename *name,
+ 	unsigned int reval_flag = lookup_flags & LOOKUP_REVAL;
+ 	unsigned int create_flags = LOOKUP_CREATE | LOOKUP_EXCL;
+ 	int type;
+-	int err2;
+ 	int error;
  
-+/**
-+ * dentry_lookup_killable - lookup and lock a name prior to dir ops
-+ * @last: the name in the given directory
-+ * @base: the directory in which the name is to be found
-+ * @lookup_flags: %LOOKUP_xxx flags
-+ *
-+ * The name is looked up and necessary locks are taken so that
-+ * the name can be created or removed.
-+ * The "necessary locks" are currently the inode lock on @base.
-+ * If a fatal signal arrives, or is already pending, the operation is aborted.
-+ * The name @last is NOT expected to already have the hash calculated.
-+ * Permission checks are performed to ensure %MAY_EXEC access to @base.
-+ * Returns: the dentry, suitably locked, or an ERR_PTR().
-+ */
-+struct dentry *dentry_lookup_killable(struct mnt_idmap *idmap,
-+				      struct qstr *last,
-+				      struct dentry *base,
-+				      unsigned int lookup_flags)
-+{
-+	struct dentry *dentry;
-+	int err;
+ 	error = filename_parentat(dfd, name, reval_flag, path, &last, &type);
+@@ -4129,7 +4128,7 @@ static struct dentry *filename_create(int dfd, struct filename *name,
+ 		goto out;
+ 
+ 	/* don't fail immediately if it's r/o, at least try to report other errors */
+-	err2 = mnt_want_write(path->mnt);
++	error = mnt_want_write(path->mnt);
+ 	/*
+ 	 * Do the final lookup.  Suppress 'create' if there is a trailing
+ 	 * '/', and a directory wasn't requested.
+@@ -4142,17 +4141,16 @@ static struct dentry *filename_create(int dfd, struct filename *name,
+ 	if (IS_ERR(dentry))
+ 		goto unlock;
+ 
+-	if (unlikely(err2)) {
+-		error = err2;
++	if (unlikely(error))
+ 		goto fail;
+-	}
 +
-+	err = lookup_one_common(idmap, last, base);
-+	if (err < 0)
-+		return ERR_PTR(err);
-+
-+	err = down_write_killable_nested(&base->d_inode->i_rwsem, I_MUTEX_PARENT);
-+	if (err)
-+		return ERR_PTR(err);
-+
-+	dentry = lookup_one_qstr_excl(last, base, lookup_flags);
-+	if (IS_ERR(dentry))
-+		inode_unlock(base->d_inode);
-+	return dentry;
-+}
-+EXPORT_SYMBOL(dentry_lookup_killable);
-+
- /**
-  * done_dentry_lookup - finish a lookup used for create/delete
-  * @dentry:  the target dentry
-diff --git a/include/linux/namei.h b/include/linux/namei.h
-index 932cb94c3538..facb5852afa9 100644
---- a/include/linux/namei.h
-+++ b/include/linux/namei.h
-@@ -83,6 +83,9 @@ struct dentry *lookup_one_positive_unlocked(struct mnt_idmap *idmap,
- struct dentry *dentry_lookup(struct mnt_idmap *idmap,
- 			       struct qstr *last, struct dentry *base,
- 			       unsigned int lookup_flags);
-+struct dentry *dentry_lookup_killable(struct mnt_idmap *idmap,
-+				      struct qstr *last, struct dentry *base,
-+				      unsigned int lookup_flags);
- struct dentry *dentry_lookup_noperm(struct qstr *name, struct dentry *base,
- 				      unsigned int lookup_flags);
- void done_dentry_lookup(struct dentry *dentry);
+ 	return dentry;
+ fail:
+ 	dput(dentry);
+ 	dentry = ERR_PTR(error);
+ unlock:
+ 	inode_unlock(path->dentry->d_inode);
+-	if (!err2)
++	if (!error)
+ 		mnt_drop_write(path->mnt);
+ out:
+ 	path_put(path);
 -- 
 2.50.0.107.gf914562f5916.dirty
 
