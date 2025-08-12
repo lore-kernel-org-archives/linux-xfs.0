@@ -1,24 +1,24 @@
 Received: from neil.brown.name (neil.brown.name [103.29.64.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14E272D878A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1651D2D97B0;
 	Tue, 12 Aug 2025 23:53:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.29.64.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755042786; cv=none; b=YGwLAwUgbYQHww2qPQQXyfEJeWKRsShnb7Zlx2OCGTgW14Omr/6P/EheDCEHFoGs2DWagtdc5Bc79BpQBRj3vi+ZJYnWlgrLujb/Th9wdKDcqm5Fky7GGpsAORNiWQlc1BEdVF+tF9gTyIlPWNtorysda3T43wqWf8lDExraXLQ=
+	t=1755042786; cv=none; b=d+cW59WnT9Z74PysFhXypjzuP+O6khVNzgj3LilWArd5VVtbpsm86b5A5phZ2K0eOJ9Fk5TAz8d9mo6+Cf2NQO4EtlxsEgCMGxJKWPcKTjotIgDDOgnvxJymo/EmcMZZQWP5F891xkfP+DLLJHOY7TUoFBnDAxLIE0r/IT/+tEs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1755042786; c=relaxed/simple;
-	bh=YEbDMsfF/nlYvvDCki2jzQZCDr4K7nmCD6F0mff6Lz0=;
+	bh=Fxzyw9jaYjDcrQDDTrdlviF3rA886DmUXWc9I/mH1Po=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=b9NEoIHrXTSeCTFtd8yp2BUK1T2IGoDXNhhs6ekZ/kTf9GCOGdV7v+WSzAniWWYD9x6Q5w6fE0Jhg8zXZV62GWdqARMmOluCvWBtmHKUlaIyTQsh2fhf0K02xFqbgRrYEqqHtFOzavjxUPALsdisZRS/jD2apPtBqPXE1diKn78=
+	 MIME-Version; b=TgZc7KnYsd303yW2WSubI5lUywODwzN+/y/3yjE6AfqILT8bphRxSU2IRDhIQ5913Oov0KV3KVnN4l9uSsoGk4Cd+bueCsf7HjU2hNyMFihJVF76AnHl6LBfVxSVFo+L5o8I3wv1ekd9sYt5qlY1BPz6/gKeKrP9ZEBmYX5E54Y=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name; spf=pass smtp.mailfrom=neil.brown.name; arc=none smtp.client-ip=103.29.64.221
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=neil.brown.name
 Received: from 196.186.233.220.static.exetel.com.au ([220.233.186.196] helo=home.neil.brown.name)
 	by neil.brown.name with esmtp (Exim 4.95)
 	(envelope-from <mr@neil.brown.name>)
-	id 1ulynP-005Y2B-Eh;
-	Tue, 12 Aug 2025 23:52:49 +0000
+	id 1ulynM-005Y23-70;
+	Tue, 12 Aug 2025 23:52:45 +0000
 From: NeilBrown <neil@brown.name>
 To: Alexander Viro <viro@zeniv.linux.org.uk>,
 	Christian Brauner <brauner@kernel.org>,
@@ -51,9 +51,9 @@ Cc: David Howells <dhowells@redhat.com>,
 	linux-cifs@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 09/11] VFS: use global wait-queue table for d_alloc_parallel()
-Date: Tue, 12 Aug 2025 12:25:12 +1000
-Message-ID: <20250812235228.3072318-10-neil@brown.name>
+Subject: [PATCH 05/11] VFS: add rename_lookup()
+Date: Tue, 12 Aug 2025 12:25:08 +1000
+Message-ID: <20250812235228.3072318-6-neil@brown.name>
 X-Mailer: git-send-email 2.50.0.107.gf914562f5916.dirty
 In-Reply-To: <20250812235228.3072318-1-neil@brown.name>
 References: <20250812235228.3072318-1-neil@brown.name>
@@ -65,432 +65,452 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-d_alloc_parallel() currently requires a wait_queue_head to be passed in.
-This must have a life time which extends until the lookup is completed.
+rename_lookup() combines lookup and locking for a rename.
 
-Future proposed patches will use d_alloc_parallel() for names being
-created/unlinked etc.  Some filesystems combine lookup with create
-making a longer code path that the wq needs to live for.  If it is still
-to be allocated on-stack this can be cumbersome.
+Two names - new_last and old_last - are added to struct renamedata so it
+can be passed to rename_lookup() to have the old and new dentries filled
+in.
 
-This patch replaces the on-stack wqs with a global array of wqs which
-are used as needed.  A wq is NOT allocated when a dentry is first
-created but only when a second thread attempts to use the same name and
-so is forced to wait.  At this moment a wq is chosen using a hash of the
-dentry pointer and that wq is assigned to ->d_wait.  The ->d_lock is
-then dropped and the task waits.
+__rename_lookup() in vfs-internal and assumes that the names are already
+hashed and skips permission checking.  This is appropriate for use after
+filename_parentat().
 
-When the dentry is finally moved out of "in_lookup" a wake up is only
-sent if ->d_wait is not NULL.  This avoids an (uncontended) spin
-lock/unlock which saves a couple of atomic operations in a common case.
+rename_lookup_noperm() does hash the name but avoids permission
+checking.  This will be used by debugfs.
 
-The wake up passes the dentry that the wake up is for as the "key" and
-the waiter will only wake processes waiting on the same key.  This means
-that when these global waitqueues are shared (which is inevitable
-though unlikely to be frequent), a task will not be woken prematurely.
+If either old_dentry or new_dentry are not NULL, the corresponding
+"last" is ignored and the dentry is used as-is.  This provides similar
+functionality to dentry_lookup_continue().  After locks are obtained we
+check that the parent is still correct.  If old_parent was not given,
+then it is set to the parent of old_dentry which was locked.  new_parent
+must never be NULL.
+
+On success new references are geld on old_dentry, new_dentry and old_parent.
+
+done_rename_lookup() unlocks and drops those three references.
+
+No __free() support is provided as done_rename_lookup() cannot be safely
+called after rename_lookup() returns an error.
 
 Signed-off-by: NeilBrown <neil@brown.name>
 ---
- Documentation/filesystems/porting.rst |  6 +++
- fs/afs/dir_silly.c                    |  4 +-
- fs/dcache.c                           | 77 ++++++++++++++++++++++-----
- fs/fuse/readdir.c                     |  3 +-
- fs/namei.c                            |  6 +--
- fs/nfs/dir.c                          |  6 +--
- fs/nfs/unlink.c                       |  3 +-
- fs/proc/base.c                        |  3 +-
- fs/proc/proc_sysctl.c                 |  3 +-
- fs/smb/client/readdir.c               |  3 +-
- include/linux/dcache.h                |  3 +-
- include/linux/nfs_xdr.h               |  1 -
- 12 files changed, 80 insertions(+), 38 deletions(-)
+ fs/namei.c            | 318 ++++++++++++++++++++++++++++++++++--------
+ include/linux/fs.h    |   4 +
+ include/linux/namei.h |   3 +
+ 3 files changed, 263 insertions(+), 62 deletions(-)
 
-diff --git a/Documentation/filesystems/porting.rst b/Documentation/filesystems/porting.rst
-index 85f590254f07..e4a326e8fa4c 100644
---- a/Documentation/filesystems/porting.rst
-+++ b/Documentation/filesystems/porting.rst
-@@ -1285,3 +1285,9 @@ rather than a VMA, as the VMA at this stage is not yet valid.
- The vm_area_desc provides the minimum required information for a filesystem
- to initialise state upon memory mapping of a file-backed region, and output
- parameters for the file system to set this state.
-+---
-+
-+** mandatory**
-+
-+d_alloc_parallel() no longer requires a waitqueue_head.  It uses one
-+from an internal table when needed.
-diff --git a/fs/afs/dir_silly.c b/fs/afs/dir_silly.c
-index 0b80eb93fa40..ce76b3b30850 100644
---- a/fs/afs/dir_silly.c
-+++ b/fs/afs/dir_silly.c
-@@ -237,13 +237,11 @@ int afs_silly_iput(struct dentry *dentry, struct inode *inode)
- 	struct dentry *alias;
- 	int ret;
- 
--	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
--
- 	_enter("%p{%pd},%llx", dentry, dentry, vnode->fid.vnode);
- 
- 	down_read(&dvnode->rmdir_lock);
- 
--	alias = d_alloc_parallel(dentry->d_parent, &dentry->d_name, &wq);
-+	alias = d_alloc_parallel(dentry->d_parent, &dentry->d_name);
- 	if (IS_ERR(alias)) {
- 		up_read(&dvnode->rmdir_lock);
- 		return 0;
-diff --git a/fs/dcache.c b/fs/dcache.c
-index 0db256098adb..5473d906783e 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -2137,8 +2137,7 @@ struct dentry *d_add_ci(struct dentry *dentry, struct inode *inode,
- 		return found;
- 	}
- 	if (d_in_lookup(dentry)) {
--		found = d_alloc_parallel(dentry->d_parent, name,
--					dentry->d_wait);
-+		found = d_alloc_parallel(dentry->d_parent, name);
- 		if (IS_ERR(found) || !d_in_lookup(found)) {
- 			iput(inode);
- 			return found;
-@@ -2148,7 +2147,7 @@ struct dentry *d_add_ci(struct dentry *dentry, struct inode *inode,
- 		if (!found) {
- 			iput(inode);
- 			return ERR_PTR(-ENOMEM);
--		} 
-+		}
- 	}
- 	res = d_splice_alias(inode, found);
- 	if (res) {
-@@ -2505,6 +2504,46 @@ void d_rehash(struct dentry * entry)
- }
- EXPORT_SYMBOL(d_rehash);
- 
-+#define	PAR_LOOKUP_WQ_BITS	8
-+#define PAR_LOOKUP_WQS (1 << PAR_LOOKUP_WQ_BITS)
-+static wait_queue_head_t par_wait_table[PAR_LOOKUP_WQS] __cacheline_aligned;
-+
-+static int __init par_wait_init(void)
-+{
-+	int i;
-+
-+	for (i = 0; i < PAR_LOOKUP_WQS; i++)
-+		init_waitqueue_head(&par_wait_table[i]);
-+	return 0;
-+}
-+fs_initcall(par_wait_init);
-+
-+struct par_wait_key {
-+	struct dentry *de;
-+	struct wait_queue_entry wqe;
-+};
-+
-+static int d_wait_wake_fn(struct wait_queue_entry *wq_entry,
-+			  unsigned mode, int sync, void *key)
-+{
-+	struct par_wait_key *pwk = container_of(wq_entry,
-+						 struct par_wait_key, wqe);
-+	if (pwk->de == key)
-+		return default_wake_function(wq_entry, mode, sync, key);
-+	return 0;
-+}
-+
-+static inline void d_wake_waiters(struct wait_queue_head *d_wait,
-+				  struct dentry *dentry)
-+{
-+	/* ->d_wait is only set if some thread is actually waiting.
-+	 * If we find it is NULL - the common case - then there was no
-+	 * contention and there are no waiters to be woken.
-+	 */
-+	if (d_wait)
-+		__wake_up(d_wait, TASK_NORMAL, 0, dentry);
-+}
-+
- static inline unsigned start_dir_add(struct inode *dir)
- {
- 	preempt_disable_nested();
-@@ -2517,31 +2556,41 @@ static inline unsigned start_dir_add(struct inode *dir)
- }
- 
- static inline void end_dir_add(struct inode *dir, unsigned int n,
--			       wait_queue_head_t *d_wait)
-+			       wait_queue_head_t *d_wait, struct dentry *de)
- {
- 	smp_store_release(&dir->i_dir_seq, n + 2);
- 	preempt_enable_nested();
--	if (wq_has_sleeper(d_wait))
--		wake_up_all(d_wait);
-+	d_wake_waiters(d_wait, de);
- }
- 
- static void d_wait_lookup(struct dentry *dentry)
- {
- 	if (d_in_lookup(dentry)) {
--		DECLARE_WAITQUEUE(wait, current);
--		add_wait_queue(dentry->d_wait, &wait);
-+		struct par_wait_key wk = {
-+			.de = dentry,
-+			.wqe = {
-+				.private = current,
-+				.func = d_wait_wake_fn,
-+			},
-+		};
-+		struct wait_queue_head *wq;
-+		if (!dentry->d_wait)
-+			dentry->d_wait = &par_wait_table[hash_ptr(dentry,
-+								  PAR_LOOKUP_WQ_BITS)];
-+		wq = dentry->d_wait;
-+		add_wait_queue(wq, &wk.wqe);
- 		do {
- 			set_current_state(TASK_UNINTERRUPTIBLE);
- 			spin_unlock(&dentry->d_lock);
- 			schedule();
- 			spin_lock(&dentry->d_lock);
- 		} while (d_in_lookup(dentry));
-+		remove_wait_queue(wq, &wk.wqe);
- 	}
- }
- 
- struct dentry *d_alloc_parallel(struct dentry *parent,
--				const struct qstr *name,
--				wait_queue_head_t *wq)
-+				const struct qstr *name)
- {
- 	unsigned int hash = name->hash;
- 	struct hlist_bl_head *b = in_lookup_hash(parent, hash);
-@@ -2554,6 +2603,7 @@ struct dentry *d_alloc_parallel(struct dentry *parent,
- 		return ERR_PTR(-ENOMEM);
- 
- 	new->d_flags |= DCACHE_PAR_LOOKUP;
-+	new->d_wait = NULL;
- 	spin_lock(&parent->d_lock);
- 	new->d_parent = dget_dlock(parent);
- 	hlist_add_head(&new->d_sib, &parent->d_children);
-@@ -2642,7 +2692,6 @@ struct dentry *d_alloc_parallel(struct dentry *parent,
- 		return dentry;
- 	}
- 	rcu_read_unlock();
--	new->d_wait = wq;
- 	hlist_bl_add_head(&new->d_u.d_in_lookup_hash, b);
- 	hlist_bl_unlock(b);
- 	return new;
-@@ -2680,7 +2729,7 @@ static wait_queue_head_t *__d_lookup_unhash(struct dentry *dentry)
- void __d_lookup_unhash_wake(struct dentry *dentry)
- {
- 	spin_lock(&dentry->d_lock);
--	wake_up_all(__d_lookup_unhash(dentry));
-+	d_wake_waiters(__d_lookup_unhash(dentry), dentry);
- 	spin_unlock(&dentry->d_lock);
- }
- EXPORT_SYMBOL(__d_lookup_unhash_wake);
-@@ -2715,7 +2764,7 @@ static inline void __d_add(struct dentry *dentry, struct inode *inode,
- 			   (DCACHE_LRU_LIST|DCACHE_SHRINK_LIST)) == DCACHE_LRU_LIST)
- 		this_cpu_dec(nr_dentry_negative);
- 	if (dir)
--		end_dir_add(dir, n, d_wait);
-+		end_dir_add(dir, n, d_wait, dentry);
- 	spin_unlock(&dentry->d_lock);
- 	if (inode)
- 		spin_unlock(&inode->i_lock);
-@@ -2881,7 +2930,7 @@ static void __d_move(struct dentry *dentry, struct dentry *target,
- 	write_seqcount_end(&dentry->d_seq);
- 
- 	if (dir)
--		end_dir_add(dir, n, d_wait);
-+		end_dir_add(dir, n, d_wait, target);
- 
- 	if (dentry->d_parent != old_parent)
- 		spin_unlock(&dentry->d_parent->d_lock);
-diff --git a/fs/fuse/readdir.c b/fs/fuse/readdir.c
-index c2aae2eef086..f588252891af 100644
---- a/fs/fuse/readdir.c
-+++ b/fs/fuse/readdir.c
-@@ -160,7 +160,6 @@ static int fuse_direntplus_link(struct file *file,
- 	struct inode *dir = d_inode(parent);
- 	struct fuse_conn *fc;
- 	struct inode *inode;
--	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
- 	int epoch;
- 
- 	if (!o->nodeid) {
-@@ -197,7 +196,7 @@ static int fuse_direntplus_link(struct file *file,
- 	dentry = d_lookup(parent, &name);
- 	if (!dentry) {
- retry:
--		dentry = d_alloc_parallel(parent, &name, &wq);
-+		dentry = d_alloc_parallel(parent, &name);
- 		if (IS_ERR(dentry))
- 			return PTR_ERR(dentry);
- 	}
 diff --git a/fs/namei.c b/fs/namei.c
-index fb075573157a..2c98672fdb6a 100644
+index df21b6fa5a0e..cead810d53c6 100644
 --- a/fs/namei.c
 +++ b/fs/namei.c
-@@ -2012,13 +2012,12 @@ static struct dentry *__lookup_slow(const struct qstr *name,
+@@ -3507,6 +3507,233 @@ void unlock_rename(struct dentry *p1, struct dentry *p2)
+ }
+ EXPORT_SYMBOL(unlock_rename);
+ 
++/**
++ * __rename_lookup - lookup and lock names for rename
++ * @rd:           rename data containing relevant details
++ * @lookup_flags: extra flags to pass to ->lookup (e.g. LOOKUP_REVAL,
++ *                LOOKUP_NO_SYMLINKS etc).
++ *
++ * Optionally look up two names and ensure locks are in place for
++ * rename.
++ * Normally @rd.old_dentry and @rd.new_dentry are %NULL and the
++ * old and new directories and last names are given in @rd.  In this
++ * case the names are looked up with appropriate locking and the
++ * results stored in @rd.old_dentry and @rd.new_dentry.
++ *
++ * If either are not NULL, then the corresponding lookup is avoided but
++ * the required locks are still taken.  In this case @rd.old_parent may
++ * be %NULL, otherwise @rd.old_dentry must still have @rd.old_parent as
++ * its d_parent after the locks are obtained.  @rd.new_parent must
++ * always be non-NULL, and must always be the correct parent after
++ * locking.
++ *
++ * On success a reference is held on @rd.old_dentry, @rd.new_dentry,
++ * and @rd.old_parent whether they were originally %NULL or not.  These
++ * references are dropped by done_rename_lookup().  @rd.new_parent
++ * must always be non-NULL and no extra reference is taken.
++ *
++ * The passed in qstrs must have the hash calculated, and no permission
++ * checking is performed.
++ *
++ * Returns: zero or an error.
++ */
++static int
++__rename_lookup(struct renamedata *rd, int lookup_flags)
++{
++	struct dentry *p;
++	struct dentry *d1, *d2;
++	int target_flags = LOOKUP_RENAME_TARGET | LOOKUP_CREATE;
++	int err;
++
++	if (rd->flags & RENAME_EXCHANGE)
++		target_flags = 0;
++	if (rd->flags & RENAME_NOREPLACE)
++		target_flags |= LOOKUP_EXCL;
++
++	if (rd->old_dentry) {
++		/* Already have the dentry - need to be sure to lock the correct parent */
++		p = lock_rename_child(rd->old_dentry, rd->new_parent);
++		if (IS_ERR(p))
++			return PTR_ERR(p);
++		if (d_unhashed(rd->old_dentry) ||
++		    (rd->old_parent && rd->old_parent != rd->old_dentry->d_parent)) {
++			/* dentry was removed, or moved and explicit parent requested */
++			unlock_rename(rd->old_dentry->d_parent, rd->new_parent);
++			return -EINVAL;
++		}
++		rd->old_parent = dget(rd->old_dentry->d_parent);
++		d1 = dget(rd->old_dentry);
++	} else {
++		p = lock_rename(rd->old_parent, rd->new_parent);
++		if (IS_ERR(p))
++			return PTR_ERR(p);
++		dget(rd->old_parent);
++
++		d1 = lookup_one_qstr_excl(&rd->old_last, rd->old_parent,
++					  lookup_flags);
++		if (IS_ERR(d1))
++			goto out_unlock_1;
++	}
++	if (rd->new_dentry) {
++		if (d_unhashed(rd->new_dentry) ||
++		    rd->new_dentry->d_parent != rd->new_parent) {
++			/* new_dentry was moved or removed! */
++			goto out_unlock_2;
++		}
++		d2 = dget(rd->new_dentry);
++	} else {
++		d2 = lookup_one_qstr_excl(&rd->new_last, rd->new_parent,
++					  lookup_flags | target_flags);
++		if (IS_ERR(d2))
++			goto out_unlock_2;
++	}
++
++	if (d1 == p) {
++		/* source is an ancestor of target */
++		err = -EINVAL;
++		goto out_unlock_3;
++	}
++
++	if (d2 == p) {
++		/* target is an ancestor of source */
++		if (rd->flags & RENAME_EXCHANGE)
++			err = -EINVAL;
++		else
++			err = -ENOTEMPTY;
++		goto out_unlock_3;
++	}
++
++	rd->old_dentry = d1;
++	rd->new_dentry = d2;
++	return 0;
++
++out_unlock_3:
++	dput(d2);
++	d2 = ERR_PTR(err);
++out_unlock_2:
++	dput(d1);
++	d1 = d2;
++out_unlock_1:
++	unlock_rename(rd->old_parent, rd->new_parent);
++	dput(rd->old_parent);
++	return PTR_ERR(d1);
++}
++
++/**
++ * rename_lookup_noperm - lookup and lock names for rename
++ * @rd:           rename data containing relevant details
++ * @lookup_flags: extra flags to pass to ->lookup (e.g. LOOKUP_REVAL,
++ *                LOOKUP_NO_SYMLINKS etc).
++ *
++ * Optionally look up two names and ensure locks are in place for
++ * rename.
++ * Normally @rd.old_dentry and @rd.new_dentry are %NULL and the
++ * old and new directories and last names are given in @rd.  In this
++ * case the names are looked up with appropriate locking and the
++ * results stored in @rd.old_dentry and @rd.new_dentry.
++ *
++ * If either are not NULL, then the corresponding lookup is avoided but
++ * the required locks are still taken.  In this case @rd.old_parent may
++ * be %NULL, otherwise @rd.old_dentry must still have @rd.old_parent as
++ * its d_parent after the locks are obtained.  @rd.new_parent must
++ * always be non-NULL, and must always be the correct parent after
++ * locking.
++ *
++ * On success a reference is held on @rd.old_dentry, @rd.new_dentry,
++ * and @rd.old_parent whether they were originally %NULL or not.  These
++ * references are dropped by done_rename_lookup().  @rd.new_parent
++ * must always be non-NULL and no extra reference is taken.
++ *
++ * The passed in qstrs need not have the hash calculated, and no
++ * permission checking is performed.
++ *
++ * Returns: zero or an error.
++ */
++int rename_lookup_noperm(struct renamedata *rd, int lookup_flags)
++{
++	int err;
++
++	if (!rd->old_dentry) {
++		err = lookup_noperm_common(&rd->old_last, rd->old_parent);
++		if (err)
++			return err;
++	}
++	if (!rd->new_dentry) {
++		err = lookup_noperm_common(&rd->new_last, rd->new_parent);
++		if (err)
++			return err;
++	}
++	return __rename_lookup(rd, lookup_flags);
++}
++EXPORT_SYMBOL(rename_lookup_noperm);
++
++/**
++ * rename_lookup - lookup and lock names for rename
++ * @rd:           rename data containing relevant details
++ * @lookup_flags: extra flags to pass to ->lookup (e.g. LOOKUP_REVAL,
++ *                LOOKUP_NO_SYMLINKS etc).
++ *
++ * Optionally look up two names and ensure locks are in place for
++ * rename.
++ * Normally @rd.old_dentry and @rd.new_dentry are %NULL and the
++ * old and new directories and last names are given in @rd.  In this
++ * case the names are looked up with appropriate locking and the
++ * results stored in @rd.old_dentry and @rd.new_dentry.
++ *
++ * If either are not NULL, then the corresponding lookup is avoided but
++ * the required locks are still taken.  In this case @rd.old_parent may
++ * be %NULL, otherwise @rd.old_dentry must still have @rd.old_parent as
++ * its d_parent after the locks are obtained.  @rd.new_parent must
++ * always be non-NULL, and must always be the correct parent after
++ * locking.
++ *
++ * On success a reference is held on @rd.old_dentry, @rd.new_dentry,
++ * and @rd.old_parent whether they were originally %NULL or not.  These
++ * references are dropped by done_rename_lookup().  @rd.new_parent
++ * must always be non-NULL and no extra reference is taken.
++ *
++ * The passed in qstrs need not have the hash calculated, and normal
++ * permission checking for MAY_EXEC is performed.
++ *
++ * Returns: zero or an error.
++ */
++int rename_lookup(struct renamedata *rd, int lookup_flags)
++{
++	int err;
++
++	if (!rd->old_dentry) {
++		err = lookup_one_common(rd->old_mnt_idmap, &rd->old_last,
++					rd->old_parent);
++		if (err)
++			return err;
++	}
++	if (!rd->new_dentry) {
++		err = lookup_one_common(rd->new_mnt_idmap, &rd->new_last,
++					rd->new_parent);
++		if (err)
++			return err;
++	}
++	return __rename_lookup(rd, lookup_flags);
++}
++EXPORT_SYMBOL(rename_lookup);
++
++/**
++ * done_rename_lookup - unlock dentries after rename
++ * @rd: the struct renamedata that was passed to rename_lookup()
++ *
++ * After a successful rename_lookup() (or similar) call, and after
++ * any required renaming is performed, done_rename_rename() must be called
++ * to drop any locks and references that were obtained by the earlier function.
++ */
++void done_rename_lookup(struct renamedata *rd)
++{
++	unlock_rename(rd->old_parent, rd->new_parent);
++	dput(rd->old_parent);
++	dput(rd->old_dentry);
++	dput(rd->new_dentry);
++}
++EXPORT_SYMBOL(done_rename_lookup);
++
+ /**
+  * vfs_prepare_mode - prepare the mode to be used for a new inode
+  * @idmap:	idmap of the mount the inode was found from
+@@ -5336,14 +5563,10 @@ int do_renameat2(int olddfd, struct filename *from, int newdfd,
+ 		 struct filename *to, unsigned int flags)
  {
- 	struct dentry *dentry, *old;
- 	struct inode *inode = dir->d_inode;
--	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
+ 	struct renamedata rd;
+-	struct dentry *old_dentry, *new_dentry;
+-	struct dentry *trap;
+ 	struct path old_path, new_path;
+-	struct qstr old_last, new_last;
+ 	int old_type, new_type;
+ 	struct inode *delegated_inode = NULL;
+-	unsigned int lookup_flags = 0, target_flags =
+-		LOOKUP_RENAME_TARGET | LOOKUP_CREATE;
++	unsigned int lookup_flags = 0;
+ 	bool should_retry = false;
+ 	int error = -EINVAL;
  
- 	/* Don't go there if it's already dead */
- 	if (unlikely(IS_DEADDIR(inode)))
- 		return ERR_PTR(-ENOENT);
- again:
--	dentry = d_alloc_parallel(dir, name, &wq);
-+	dentry = d_alloc_parallel(dir, name);
- 	if (IS_ERR(dentry))
- 		return dentry;
- 	if (unlikely(!d_in_lookup(dentry))) {
-@@ -4028,7 +4027,6 @@ static struct dentry *lookup_open(struct nameidata *nd, struct file *file,
- 	struct dentry *dentry;
- 	int error, create_error = 0;
- 	umode_t mode = op->mode;
--	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
+@@ -5354,19 +5577,14 @@ int do_renameat2(int olddfd, struct filename *from, int newdfd,
+ 	    (flags & RENAME_EXCHANGE))
+ 		goto put_names;
  
- 	if (unlikely(IS_DEADDIR(dir_inode)))
- 		return ERR_PTR(-ENOENT);
-@@ -4037,7 +4035,7 @@ static struct dentry *lookup_open(struct nameidata *nd, struct file *file,
- 	dentry = d_lookup(dir, &nd->last);
- 	for (;;) {
- 		if (!dentry) {
--			dentry = d_alloc_parallel(dir, &nd->last, &wq);
-+			dentry = d_alloc_parallel(dir, &nd->last);
- 			if (IS_ERR(dentry))
- 				return dentry;
+-	if (flags & RENAME_EXCHANGE)
+-		target_flags = 0;
+-	if (flags & RENAME_NOREPLACE)
+-		target_flags |= LOOKUP_EXCL;
+-
+ retry:
+ 	error = filename_parentat(olddfd, from, lookup_flags, &old_path,
+-				  &old_last, &old_type);
++				  &rd.old_last, &old_type);
+ 	if (error)
+ 		goto put_names;
+ 
+-	error = filename_parentat(newdfd, to, lookup_flags, &new_path, &new_last,
+-				  &new_type);
++	error = filename_parentat(newdfd, to, lookup_flags, &new_path,
++				  &rd.new_last, &new_type);
+ 	if (error)
+ 		goto exit1;
+ 
+@@ -5388,67 +5606,43 @@ int do_renameat2(int olddfd, struct filename *from, int newdfd,
+ 		goto exit2;
+ 
+ retry_deleg:
+-	trap = lock_rename(new_path.dentry, old_path.dentry);
+-	if (IS_ERR(trap)) {
+-		error = PTR_ERR(trap);
++	rd.old_parent	   = old_path.dentry;
++	rd.old_mnt_idmap   = mnt_idmap(old_path.mnt);
++	rd.old_dentry	   = NULL;
++	rd.new_parent	   = new_path.dentry;
++	rd.new_mnt_idmap   = mnt_idmap(new_path.mnt);
++	rd.new_dentry	   = NULL;
++	rd.delegated_inode = &delegated_inode;
++	rd.flags	   = flags;
++
++	error = __rename_lookup(&rd, lookup_flags);
++	if (error)
+ 		goto exit_lock_rename;
+-	}
+ 
+-	old_dentry = lookup_one_qstr_excl(&old_last, old_path.dentry,
+-					  lookup_flags);
+-	error = PTR_ERR(old_dentry);
+-	if (IS_ERR(old_dentry))
+-		goto exit3;
+-	new_dentry = lookup_one_qstr_excl(&new_last, new_path.dentry,
+-					  lookup_flags | target_flags);
+-	error = PTR_ERR(new_dentry);
+-	if (IS_ERR(new_dentry))
+-		goto exit4;
+ 	if (flags & RENAME_EXCHANGE) {
+-		if (!d_is_dir(new_dentry)) {
++		if (!d_is_dir(rd.new_dentry)) {
+ 			error = -ENOTDIR;
+-			if (new_last.name[new_last.len])
+-				goto exit5;
++			if (rd.new_last.name[rd.new_last.len])
++				goto exit_unlock;
  		}
-diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
-index 250a826d5480..bbeb24805a0e 100644
---- a/fs/nfs/dir.c
-+++ b/fs/nfs/dir.c
-@@ -727,7 +727,6 @@ void nfs_prime_dcache(struct dentry *parent, struct nfs_entry *entry,
- 		unsigned long dir_verifier)
- {
- 	struct qstr filename = QSTR_INIT(entry->name, entry->len);
--	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
- 	struct dentry *dentry;
- 	struct dentry *alias;
- 	struct inode *inode;
-@@ -756,7 +755,7 @@ void nfs_prime_dcache(struct dentry *parent, struct nfs_entry *entry,
- 	dentry = d_lookup(parent, &filename);
- again:
- 	if (!dentry) {
--		dentry = d_alloc_parallel(parent, &filename, &wq);
-+		dentry = d_alloc_parallel(parent, &filename);
- 		if (IS_ERR(dentry))
- 			return;
  	}
-@@ -2060,7 +2059,6 @@ int nfs_atomic_open(struct inode *dir, struct dentry *dentry,
- 		    struct file *file, unsigned open_flags,
- 		    umode_t mode)
- {
--	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
- 	struct nfs_open_context *ctx;
- 	struct dentry *res;
- 	struct iattr attr = { .ia_valid = ATTR_OPEN };
-@@ -2116,7 +2114,7 @@ int nfs_atomic_open(struct inode *dir, struct dentry *dentry,
- 		d_drop(dentry);
- 		switched = true;
- 		dentry = d_alloc_parallel(dentry->d_parent,
--					  &dentry->d_name, &wq);
-+					  &dentry->d_name);
- 		if (IS_ERR(dentry))
- 			return PTR_ERR(dentry);
- 		if (unlikely(!d_in_lookup(dentry)))
-diff --git a/fs/nfs/unlink.c b/fs/nfs/unlink.c
-index b55467911648..894af85830fa 100644
---- a/fs/nfs/unlink.c
-+++ b/fs/nfs/unlink.c
-@@ -124,7 +124,7 @@ static int nfs_call_unlink(struct dentry *dentry, struct inode *inode, struct nf
- 	struct dentry *alias;
+ 	/* unless the source is a directory trailing slashes give -ENOTDIR */
+-	if (!d_is_dir(old_dentry)) {
++	if (!d_is_dir(rd.old_dentry)) {
+ 		error = -ENOTDIR;
+-		if (old_last.name[old_last.len])
+-			goto exit5;
+-		if (!(flags & RENAME_EXCHANGE) && new_last.name[new_last.len])
+-			goto exit5;
+-	}
+-	/* source should not be ancestor of target */
+-	error = -EINVAL;
+-	if (old_dentry == trap)
+-		goto exit5;
+-	/* target should not be an ancestor of source */
+-	if (!(flags & RENAME_EXCHANGE))
+-		error = -ENOTEMPTY;
+-	if (new_dentry == trap)
+-		goto exit5;
++		if (rd.old_last.name[rd.old_last.len])
++			goto exit_unlock;
++		if (!(flags & RENAME_EXCHANGE) && rd.new_last.name[rd.new_last.len])
++			goto exit_unlock;
++	}
  
- 	down_read_non_owner(&NFS_I(dir)->rmdir_sem);
--	alias = d_alloc_parallel(dentry->d_parent, &data->args.name, &data->wq);
-+	alias = d_alloc_parallel(dentry->d_parent, &data->args.name);
- 	if (IS_ERR(alias)) {
- 		up_read_non_owner(&NFS_I(dir)->rmdir_sem);
- 		return 0;
-@@ -185,7 +185,6 @@ nfs_async_unlink(struct dentry *dentry, const struct qstr *name)
+-	error = security_path_rename(&old_path, old_dentry,
+-				     &new_path, new_dentry, flags);
++	error = security_path_rename(&old_path, rd.old_dentry,
++				     &new_path, rd.new_dentry, flags);
+ 	if (error)
+-		goto exit5;
++		goto exit_unlock;
  
- 	data->cred = get_current_cred();
- 	data->res.dir_attr = &data->dir_attr;
--	init_waitqueue_head(&data->wq);
+-	rd.old_parent	   = old_path.dentry;
+-	rd.old_dentry	   = old_dentry;
+-	rd.old_mnt_idmap   = mnt_idmap(old_path.mnt);
+-	rd.new_parent	   = new_path.dentry;
+-	rd.new_dentry	   = new_dentry;
+-	rd.new_mnt_idmap   = mnt_idmap(new_path.mnt);
+-	rd.delegated_inode = &delegated_inode;
+-	rd.flags	   = flags;
+ 	error = vfs_rename(&rd);
+-exit5:
+-	dput(new_dentry);
+-exit4:
+-	dput(old_dentry);
+-exit3:
+-	unlock_rename(new_path.dentry, old_path.dentry);
++exit_unlock:
++	done_rename_lookup(&rd);
+ exit_lock_rename:
+ 	if (delegated_inode) {
+ 		error = break_deleg_wait(&delegated_inode);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index db644150b58f..b12203afa0da 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2011,9 +2011,11 @@ int vfs_unlink(struct mnt_idmap *, struct inode *, struct dentry *,
+  * @old_mnt_idmap:     idmap of the old mount the inode was found from
+  * @old_parent:        parent of source
+  * @old_dentry:                source
++ * @old_last:          name for old_dentry in old_dir, if old_dentry not given
+  * @new_mnt_idmap:     idmap of the new mount the inode was found from
+  * @new_parent:        parent of destination
+  * @new_dentry:                destination
++ * @new_last:          name for new_dentry in new_dir, if new_dentry not given
+  * @delegated_inode:   returns an inode needing a delegation break
+  * @flags:             rename flags
+  */
+@@ -2021,9 +2023,11 @@ struct renamedata {
+ 	struct mnt_idmap *old_mnt_idmap;
+ 	struct dentry *old_parent;
+ 	struct dentry *old_dentry;
++	struct qstr old_last;
+ 	struct mnt_idmap *new_mnt_idmap;
+ 	struct dentry *new_parent;
+ 	struct dentry *new_dentry;
++	struct qstr new_last;
+ 	struct inode **delegated_inode;
+ 	unsigned int flags;
+ } __randomize_layout;
+diff --git a/include/linux/namei.h b/include/linux/namei.h
+index 67eef91603cc..26e5778c665f 100644
+--- a/include/linux/namei.h
++++ b/include/linux/namei.h
+@@ -108,6 +108,9 @@ extern int follow_up(struct path *);
+ extern struct dentry *lock_rename(struct dentry *, struct dentry *);
+ extern struct dentry *lock_rename_child(struct dentry *, struct dentry *);
+ extern void unlock_rename(struct dentry *, struct dentry *);
++int rename_lookup(struct renamedata *rd, int lookup_flags);
++int rename_lookup_noperm(struct renamedata *rd, int lookup_flags);
++void done_rename_lookup(struct renamedata *rd);
  
- 	status = -EBUSY;
- 	spin_lock(&dentry->d_lock);
-diff --git a/fs/proc/base.c b/fs/proc/base.c
-index 62d35631ba8c..0b296c94000e 100644
---- a/fs/proc/base.c
-+++ b/fs/proc/base.c
-@@ -2129,8 +2129,7 @@ bool proc_fill_cache(struct file *file, struct dir_context *ctx,
- 
- 	child = try_lookup_noperm(&qname, dir);
- 	if (!child) {
--		DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
--		child = d_alloc_parallel(dir, &qname, &wq);
-+		child = d_alloc_parallel(dir, &qname);
- 		if (IS_ERR(child))
- 			goto end_instantiate;
- 		if (d_in_lookup(child)) {
-diff --git a/fs/proc/proc_sysctl.c b/fs/proc/proc_sysctl.c
-index 49ab74e0bfde..04a382178c65 100644
---- a/fs/proc/proc_sysctl.c
-+++ b/fs/proc/proc_sysctl.c
-@@ -692,8 +692,7 @@ static bool proc_sys_fill_cache(struct file *file,
- 
- 	child = d_lookup(dir, &qname);
- 	if (!child) {
--		DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
--		child = d_alloc_parallel(dir, &qname, &wq);
-+		child = d_alloc_parallel(dir, &qname);
- 		if (IS_ERR(child))
- 			return false;
- 		if (d_in_lookup(child)) {
-diff --git a/fs/smb/client/readdir.c b/fs/smb/client/readdir.c
-index 4e5460206397..5a92a1ad317d 100644
---- a/fs/smb/client/readdir.c
-+++ b/fs/smb/client/readdir.c
-@@ -74,7 +74,6 @@ cifs_prime_dcache(struct dentry *parent, struct qstr *name,
- 	struct cifs_sb_info *cifs_sb = CIFS_SB(sb);
- 	bool posix = cifs_sb_master_tcon(cifs_sb)->posix_extensions;
- 	bool reparse_need_reval = false;
--	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
- 	int rc;
- 
- 	cifs_dbg(FYI, "%s: for %s\n", __func__, name->name);
-@@ -106,7 +105,7 @@ cifs_prime_dcache(struct dentry *parent, struct qstr *name,
- 		    (fattr->cf_flags & CIFS_FATTR_NEED_REVAL))
- 			return;
- 
--		dentry = d_alloc_parallel(parent, name, &wq);
-+		dentry = d_alloc_parallel(parent, name);
- 	}
- 	if (IS_ERR(dentry))
- 		return;
-diff --git a/include/linux/dcache.h b/include/linux/dcache.h
-index 5d53489e5556..996259d1bc88 100644
---- a/include/linux/dcache.h
-+++ b/include/linux/dcache.h
-@@ -241,8 +241,7 @@ extern void d_delete(struct dentry *);
- /* allocate/de-allocate */
- extern struct dentry * d_alloc(struct dentry *, const struct qstr *);
- extern struct dentry * d_alloc_anon(struct super_block *);
--extern struct dentry * d_alloc_parallel(struct dentry *, const struct qstr *,
--					wait_queue_head_t *);
-+extern struct dentry * d_alloc_parallel(struct dentry *, const struct qstr *);
- extern struct dentry * d_splice_alias(struct inode *, struct dentry *);
- /* weird procfs mess; *NOT* exported */
- extern struct dentry * d_splice_alias_ops(struct inode *, struct dentry *,
-diff --git a/include/linux/nfs_xdr.h b/include/linux/nfs_xdr.h
-index ac4bff6e9913..197c9b30dfdf 100644
---- a/include/linux/nfs_xdr.h
-+++ b/include/linux/nfs_xdr.h
-@@ -1735,7 +1735,6 @@ struct nfs_unlinkdata {
- 	struct nfs_removeargs args;
- 	struct nfs_removeres res;
- 	struct dentry *dentry;
--	wait_queue_head_t wq;
- 	const struct cred *cred;
- 	struct nfs_fattr dir_attr;
- 	long timeout;
+ /**
+  * mode_strip_umask - handle vfs umask stripping
 -- 
 2.50.0.107.gf914562f5916.dirty
 
