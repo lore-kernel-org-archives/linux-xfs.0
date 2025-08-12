@@ -1,42 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D24E21D596;
-	Tue, 12 Aug 2025 17:28:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BCA02D46B3;
+	Tue, 12 Aug 2025 18:14:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755019688; cv=none; b=GLCWsIlFYIOWkwIEfn9DI7D05JwdM8sl9FVAgaIVKV1n8Y1DXydzXop9Z4V84jPtbOkPt2fHt3cZSb82deGWB5hsyxjdFI/OvPtbM3iyqHGqr8LiEkIXFLgeiAQqb7KalC6cXRpR/K2CWPigzEun4qP4eP0eobLVLTghUQBAlis=
+	t=1755022491; cv=none; b=EKJDWTmkt7RWiYCm0yuPv0iMFqjXf8lfGq+7Wikm1Z+42GSArJ/vrvbY9duNZzob3+g9ojg98ymU28S3ecUzECNKzZfMrlt/e+o8Up5lfqMhEmFC83JTJZTtBj8H7DIp36VmUIUP3xg/8RH8XaSu3SfxvFzBuYSlpZzHaN57dDY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755019688; c=relaxed/simple;
-	bh=0A6gNOcVkUiRTxlRG+XQ6gS+Dz81Jv29CzJ1M41z5Yg=;
+	s=arc-20240116; t=1755022491; c=relaxed/simple;
+	bh=sAoBOEvWEdraurNeJ6nJyT0jLimlUA4fKcuuor4ohU4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ASXLtb+SwdkccBKRntVlYULJROEPDgXDpVMeTfrCIC+sEHIaspg8fuFRWFVT8DETgbtYxyLLXgCSEyzMYNYQq3alu4QLJ/ChQdy0eq37xIsSKBxJRKzm0cFi3g/NrXHDP9UtJV3kas64S23XNf7oVDtOrFWEnkj7ouY+1ogEQV0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LUKm3slb; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=uPF3nPhPx4YMfaC5xP0uAM7J8yjKqa1MKVsAITrOgRDkgTTLI6fnR2ZMZurD1GWmFB7K0FPCFFFbNc4W8/uiLGNr6lMCD85IjpLfpEedQMV4sUfZ/mDRaVao+8cdlRMwrd6lw+FFG8XX96d1stwxkbNULXCaLSUPpsB7Hp84p/E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F7a/XaFl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LUKm3slb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 646FAC4CEF0;
-	Tue, 12 Aug 2025 17:28:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F7a/XaFl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DC51C4CEF1;
+	Tue, 12 Aug 2025 18:14:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755019688;
-	bh=0A6gNOcVkUiRTxlRG+XQ6gS+Dz81Jv29CzJ1M41z5Yg=;
+	s=k20201202; t=1755022491;
+	bh=sAoBOEvWEdraurNeJ6nJyT0jLimlUA4fKcuuor4ohU4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LUKm3slbWiCBHsU9daETxVeZPkrBDRh5xzJgf95W2KBOwGSElr5/FleQO/PKh6543
-	 TeuNC7zTc5V5M68AamjWo2bcPSYR3Lk0bphN77YquOW5mikxsZrE1dzfB0Vb4Pl172
-	 cAXZFKmMh7NCkJJ6X9oot3OPdpM762x+swFUgc3aMr+KSKe2sCOHEJMOY/Nrn7Uips
-	 54QqVJgXjkpwSkopalxasUXDBC9QfsdyDtfFZh4iRi/DY3JaUaJtMJnHMrk6PHcYd6
-	 W3M2WLMDAoVFkJwf/UmR9aoMQ/AiQhK+r4CzhtJ0I999suJK9B5Ci+2JtLvelUJrkv
-	 fL/xf4fypzjFQ==
-Date: Tue, 12 Aug 2025 10:28:07 -0700
+	b=F7a/XaFlCiqR1gmEor9WBexHDJPCtr8af+UnnU1LSrUDZC0SFQd7WH7QwCXm3PCBn
+	 vA1axi+e97ui535Q6PL6tp+TBspkynQWyaiUScTpy0xvA4BIkVKrN017sx+7m0BB/Q
+	 GIt3sEfsaWizJZE1y4l3MGKzW3qflJozNtVvdq6YuKfF4rMLHZiHA3t10FJtpj0pKG
+	 mDznCUwmuQYgEBRw6ksCfm77pCr3yYF8CPdMYBUytRtbvqXGQ3cbKT1+i+co+ZigzF
+	 1EFa1cvj8WHeWpbsjQ+kMP4m5Y3dOcYcSRltyWrlyj5NHMN7nsVoiMTXdGZmlEAz/G
+	 BmOzWBma6JnhA==
+Date: Tue, 12 Aug 2025 11:14:50 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: aalbersh@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs_io: make ls/chattr work with special files
-Message-ID: <20250812172807.GL7965@frogsfrogsfrogs>
-References: <20250808-xattrat-syscall-v1-0-48567c29e45c@kernel.org>
- <20250808-xattrat-syscall-v1-3-48567c29e45c@kernel.org>
- <20250811151217.GC7965@frogsfrogsfrogs>
- <4566ibfc2eljlicxwgdyp3q2m4o72vm3mxe6epg7e7grbkvqv4@564comcelktz>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] check: collect core dumps from systemd-coredump
+Message-ID: <20250812181450.GA7952@frogsfrogsfrogs>
+References: <175381958396.3021194.15630936445319512317.stgit@frogsfrogsfrogs>
+ <175381958439.3021194.17530499480231032752.stgit@frogsfrogsfrogs>
+ <20250802134700.khtlw7thzqyclfnt@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,261 +43,120 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4566ibfc2eljlicxwgdyp3q2m4o72vm3mxe6epg7e7grbkvqv4@564comcelktz>
+In-Reply-To: <20250802134700.khtlw7thzqyclfnt@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Mon, Aug 11, 2025 at 07:57:20PM +0200, Andrey Albershteyn wrote:
-> On 2025-08-11 08:12:17, Darrick J. Wong wrote:
-> > On Fri, Aug 08, 2025 at 09:30:18PM +0200, Andrey Albershteyn wrote:
-> > > From: Andrey Albershteyn <aalbersh@redhat.com>
-> > > 
-> > > With new file_getattr/file_setattr syscalls we can now list/change file
-> > > attributes on special files instead for ignoring them.
-> > > 
-> > > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> > > ---
-> > >  io/attr.c | 130 ++++++++++++++++++++++++++++++++++++--------------------------
-> > >  1 file changed, 75 insertions(+), 55 deletions(-)
-> > > 
-> > > diff --git a/io/attr.c b/io/attr.c
-> > > index fd82a2e73801..1cce602074f4 100644
-> > > --- a/io/attr.c
-> > > +++ b/io/attr.c
-> > > @@ -8,6 +8,7 @@
-> > >  #include "input.h"
-> > >  #include "init.h"
-> > >  #include "io.h"
-> > > +#include "libfrog/file_attr.h"
-> > >  
-> > >  static cmdinfo_t chattr_cmd;
-> > >  static cmdinfo_t lsattr_cmd;
-> > > @@ -156,36 +157,35 @@ lsattr_callback(
-> > >  	int			status,
-> > >  	struct FTW		*data)
-> > >  {
-> > > -	struct fsxattr		fsx;
-> > > -	int			fd;
-> > > +	struct file_attr	fa;
-> > > +	int			error;
-> > >  
-> > >  	if (recurse_dir && !S_ISDIR(stat->st_mode))
-> > >  		return 0;
-> > >  
-> > > -	if ((fd = open(path, O_RDONLY)) == -1) {
-> > > -		fprintf(stderr, _("%s: cannot open %s: %s\n"),
-> > > -			progname, path, strerror(errno));
-> > > -		exitcode = 1;
-> > > -	} else if ((xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
-> > > +	error = file_getattr(AT_FDCWD, path, stat, &fa, AT_SYMLINK_NOFOLLOW);
-> > > +	if (error) {
-> > >  		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
-> > >  			progname, path, strerror(errno));
-> > >  		exitcode = 1;
-> > > -	} else
-> > > -		printxattr(fsx.fsx_xflags, 0, 1, path, 0, 1);
-> > > +		return 0;
-> > > +	}
-> > > +
-> > > +	printxattr(fa.fa_xflags, 0, 1, path, 0, 1);
+On Sat, Aug 02, 2025 at 09:47:00PM +0800, Zorro Lang wrote:
+> On Tue, Jul 29, 2025 at 01:11:06PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Maybe it's time to rename this printxflags or something that's less
-> > easily confused with extended attributes...
+> > On modern RHEL (>=8) and Debian KDE systems, systemd-coredump can be
+> > installed to capture core dumps from crashed programs.  If this is the
+> > case, we would like to capture core dumps from programs that crash
+> > during the test.  Set up an (admittedly overwrought) pipeline to extract
+> > dumps created during the test and then capture them the same way that we
+> > pick up "core" and "core.$pid" files.
+> > 
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  check     |    2 ++
+> >  common/rc |   44 ++++++++++++++++++++++++++++++++++++++++++++
+> >  2 files changed, 46 insertions(+)
+> > 
+> > 
+> > diff --git a/check b/check
+> > index ce7eacb7c45d9e..77581e438c46b9 100755
+> > --- a/check
+> > +++ b/check
+> > @@ -924,6 +924,7 @@ function run_section()
+> >  		     $1 == "'$seqnum'" {lasttime=" " $2 "s ... "; exit} \
+> >  		     END {printf "%s", lasttime}' "$check.time"
+> >  		rm -f core $seqres.notrun
+> > +		_start_coredumpctl_collection
+> >  
+> >  		start=`_wallclock`
+> >  		$timestamp && _timestamp
+> > @@ -957,6 +958,7 @@ function run_section()
+> >  		# just "core".  Use globbing to find the most common patterns,
+> >  		# assuming there are no other coredump capture packages set up.
+> >  		local cores=0
+> > +		_finish_coredumpctl_collection
+> >  		for i in core core.*; do
+> >  			test -f "$i" || continue
+> >  			if ((cores++ == 0)); then
+> > diff --git a/common/rc b/common/rc
+> > index 04b721b7318a7e..e4c4d05387f44e 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -5034,6 +5034,50 @@ _check_kmemleak()
+> >  	fi
+> >  }
+> >  
+> > +# Current timestamp, in a format that systemd likes
+> > +_systemd_now() {
+> > +	timedatectl show --property=TimeUSec --value
+> > +}
+> > +
+> > +# Do what we need to do to capture core dumps from coredumpctl
+> > +_start_coredumpctl_collection() {
+> > +	command -v coredumpctl &>/dev/null || return
+> > +	command -v timedatectl &>/dev/null || return
+> > +	command -v jq &>/dev/null || return
+> > +
+> > +	sysctl kernel.core_pattern | grep -q systemd-coredump || return
 > 
-> print_xflags()?
-
-Sounds good to me.
-
-> > 
-> > >  
-> > > -	if (fd != -1)
-> > > -		close(fd);
-> > >  	return 0;
-> > >  }
-> > >  
-> > >  static int
-> > >  lsattr_f(
-> > > -	int		argc,
-> > > -	char		**argv)
-> > > +	int			argc,
-> > > +	char			**argv)
-> > >  {
-> > > -	struct fsxattr	fsx;
-> > > -	char		*name = file->name;
-> > > -	int		c, aflag = 0, vflag = 0;
-> > > +	struct file_attr	fa;
-> > > +	char			*name = file->name;
-> > > +	int			c, aflag = 0, vflag = 0;
-> > > +	struct stat		st;
-> > > +	int			error;
-> > >  
-> > >  	recurse_all = recurse_dir = 0;
-> > >  	while ((c = getopt(argc, argv, "DRav")) != EOF) {
-> > > @@ -211,17 +211,27 @@ lsattr_f(
-> > >  	if (recurse_all || recurse_dir) {
-> > >  		nftw(name, lsattr_callback,
-> > >  			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
-> > > -	} else if ((xfsctl(name, file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
-> > > +		return 0;
-> > > +	}
-> > > +
-> > > +	error = stat(name, &st);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	error = file_getattr(AT_FDCWD, name, &st, &fa, AT_SYMLINK_NOFOLLOW);
-> > > +	if (error) {
-> > >  		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
-> > >  			progname, name, strerror(errno));
-> > >  		exitcode = 1;
-> > > -	} else {
-> > > -		printxattr(fsx.fsx_xflags, vflag, !aflag, name, vflag, !aflag);
-> > > -		if (aflag) {
-> > > -			fputs("/", stdout);
-> > > -			printxattr(-1, 0, 1, name, 0, 1);
-> > > -		}
-> > > +		return 0;
-> > >  	}
-> > > +
-> > > +	printxattr(fa.fa_xflags, vflag, !aflag, name, vflag, !aflag);
-> > > +	if (aflag) {
-> > > +		fputs("/", stdout);
-> > > +		printxattr(-1, 0, 1, name, 0, 1);
-> > > +	}
-> > > +
-> > >  	return 0;
-> > >  }
-> > >  
-> > > @@ -232,44 +242,43 @@ chattr_callback(
-> > >  	int			status,
-> > >  	struct FTW		*data)
-> > >  {
-> > > -	struct fsxattr		attr;
-> > > -	int			fd;
-> > > +	struct file_attr	attr;
-> > > +	int			error;
-> > >  
-> > >  	if (recurse_dir && !S_ISDIR(stat->st_mode))
-> > >  		return 0;
-> > >  
-> > > -	if ((fd = open(path, O_RDONLY)) == -1) {
-> > > -		fprintf(stderr, _("%s: cannot open %s: %s\n"),
-> > > -			progname, path, strerror(errno));
-> > > -		exitcode = 1;
-> > > -	} else if (xfsctl(path, fd, FS_IOC_FSGETXATTR, &attr) < 0) {
-> > > +	error = file_getattr(AT_FDCWD, path, stat, &attr, AT_SYMLINK_NOFOLLOW);
-> > > +	if (error) {
-> > >  		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
-> > >  			progname, path, strerror(errno));
-> > >  		exitcode = 1;
-> > > -	} else {
-> > > -		attr.fsx_xflags |= orflags;
-> > > -		attr.fsx_xflags &= ~andflags;
-> > > -		if (xfsctl(path, fd, FS_IOC_FSSETXATTR, &attr) < 0) {
-> > > -			fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
-> > > -				progname, path, strerror(errno));
-> > > -			exitcode = 1;
-> > > -		}
-> > > +		return 0;
-> > > +	}
-> > > +
-> > > +	attr.fa_xflags |= orflags;
-> > > +	attr.fa_xflags &= ~andflags;
-> > > +	error = file_setattr(AT_FDCWD, path, stat, &attr, AT_SYMLINK_NOFOLLOW);
-> > > +	if (error) {
-> > > +		fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
-> > > +			progname, path, strerror(errno));
-> > > +		exitcode = 1;
-> > >  	}
-> > >  
-> > > -	if (fd != -1)
-> > > -		close(fd);
-> > >  	return 0;
-> > >  }
-> > >  
-> > >  static int
-> > >  chattr_f(
-> > > -	int		argc,
-> > > -	char		**argv)
-> > > +	int			argc,
-> > > +	char			**argv)
-> > >  {
-> > > -	struct fsxattr	attr;
-> > > -	struct xflags	*p;
-> > > -	unsigned int	i = 0;
-> > > -	char		*c, *name = file->name;
-> > > +	struct file_attr	attr;
-> > > +	struct xflags		*p;
-> > > +	unsigned int		i = 0;
-> > > +	char			*c, *name = file->name;
-> > > +	struct stat		st;
-> > > +	int			error;
-> > >  
-> > >  	orflags = andflags = 0;
-> > >  	recurse_all = recurse_dir = 0;
-> > > @@ -326,19 +335,30 @@ chattr_f(
-> > >  	if (recurse_all || recurse_dir) {
-> > >  		nftw(name, chattr_callback,
-> > >  			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
-> > > -	} else if (xfsctl(name, file->fd, FS_IOC_FSGETXATTR, &attr) < 0) {
-> > > +		return 0;
-> > > +	}
-> > > +
-> > > +	error = stat(name, &st);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	error = file_getattr(AT_FDCWD, name, &st, &attr, AT_SYMLINK_NOFOLLOW);
-> > > +	if (error) {
-> > >  		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
-> > >  			progname, name, strerror(errno));
-> > >  		exitcode = 1;
-> > > -	} else {
-> > > -		attr.fsx_xflags |= orflags;
-> > > -		attr.fsx_xflags &= ~andflags;
-> > > -		if (xfsctl(name, file->fd, FS_IOC_FSSETXATTR, &attr) < 0) {
-> > > -			fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
-> > > -				progname, name, strerror(errno));
-> > > -			exitcode = 1;
-> > > -		}
-> > > +		return 0;
-> > >  	}
-> > > +
-> > > +	attr.fa_xflags |= orflags;
-> > > +	attr.fa_xflags &= ~andflags;
-> > > +	error = file_setattr(AT_FDCWD, name, &st, &attr, AT_SYMLINK_NOFOLLOW);
-> > 
-> > For my own curiosity, if you wanted to do the get/set sequence on a file
-> > that's already open, is that just:
-> > 
-> > 	file_getattr(fd, "", &attr, AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW);
-> > 	...
-> > 	file_setattr(fd, "", &attr, AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW);
+> # rpm -qf `which coredumpctl`
+> systemd-udev-252-53.el9.x86_64
+> # rpm -qf `which timedatectl`
+> systemd-252-53.el9.x86_64
+> # rpm -qf `which jq`
+> jq-1.6-17.el9.x86_64
+> # rpm -qf /usr/lib/systemd/systemd-coredump 
+> systemd-udev-252-53.el9.x86_64
 > 
-> yeah, that should work
+> So we have 3 optional running dependences, how about metion that in README?
 
-Cool, thanks for confirming my understanding. :)
+Done.
 
 --D
 
-> > 
-> > --D
-> > 
-> > > +	if (error) {
-> > > +		fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
-> > > +			progname, name, strerror(errno));
-> > > +		exitcode = 1;
-> > > +	}
-> > > +
-> > >  	return 0;
-> > >  }
-> > >  
-> > > 
-> > > -- 
-> > > 2.49.0
-> > > 
-> > > 
-> > 
+> Thanks,
+> Zorro
 > 
-> -- 
-> - Andrey
+> > +	COREDUMPCTL_START_TIMESTAMP="$(_systemd_now)"
+> > +}
+> > +
+> > +# Capture core dumps from coredumpctl.
+> > +#
+> > +# coredumpctl list only supports json output as a machine-readable format.  The
+> > +# human-readable format intermingles spaces from the timestamp with actual
+> > +# column separators, so we cannot parse that sanely.  The json output is an
+> > +# array of:
+> > +#        {
+> > +#                "time" : 1749744847150926,
+> > +#                "pid" : 2297,
+> > +#                "uid" : 0,
+> > +#                "gid" : 0,
+> > +#                "sig" : 6,
+> > +#                "corefile" : "present",
+> > +#                "exe" : "/run/fstests/e2fsprogs/fuse2fs",
+> > +#                "size" : 47245
+> > +#        },
+> > +# So we use jq to filter out lost corefiles, then print the pid and exe
+> > +# separated by a pipe and hope that nobody ever puts a pipe in an executable
+> > +# name.
+> > +_finish_coredumpctl_collection() {
+> > +	test -n "$COREDUMPCTL_START_TIMESTAMP" || return
+> > +
+> > +	coredumpctl list --since="$COREDUMPCTL_START_TIMESTAMP" --json=short 2>/dev/null | \
+> > +	jq --raw-output 'map(select(.corefile == "present")) | map("\(.pid)|\(.exe)") | .[]' | while IFS='|' read pid exe; do
+> > +		test -e "core.$pid" || coredumpctl dump --output="core.$pid" "$pid" "$exe" &>> $seqres.full
+> > +	done
+> > +	unset COREDUMPCTL_START_TIMESTAMP
+> > +}
+> > +
+> >  # don't check dmesg log after test
+> >  _disable_dmesg_check()
+> >  {
+> > 
 > 
 > 
