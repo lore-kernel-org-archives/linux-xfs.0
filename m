@@ -1,39 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D53791A9F99
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Aug 2025 07:33:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 710771FBE87;
+	Tue, 12 Aug 2025 07:33:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754984002; cv=none; b=A2LElo1neCD3RYAXg5HduTuYLEeBo00tOnZ4z6zExNNBGW3CZ8X9PrHkNfyw70fuVlcPJdOmmi/l/onJJVZt22yMSbtOo3TOldDDoYLzJVjHE2UgAbp3CpgzjX/Pb9V2IG86kp41cCNOwDOD99TVErCCU96cQbCHP8XaAyCkdT0=
+	t=1754984006; cv=none; b=nSZoticI9EBmADuY6Gen0B0M5j6JcXUsWeFbXlao75WEMHY4EFrxGbIKW1QqhUhFdb7mgFjywuZHb2eH5iek3bURF5wttYNgARodkAYry07cT/Cxs6Oc76tr9HPxMVkWckv+EnbnbFPiq/Wbv6Vj/8t5PhNNxBUGfxU/fKU45k8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754984002; c=relaxed/simple;
-	bh=SAA2fAGcShQNqlddo83E+u+laYhfOzVGkmNJu4nCjvM=;
+	s=arc-20240116; t=1754984006; c=relaxed/simple;
+	bh=1zwIg61p0aZAz/MHzJHLtHrthB9VhlqRgKswzzLDMvg=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=ScvmW6+Ka23yZhGAcb6sIWF6hsDp4gm1BE6inm53uQk9UJuYFHg/FxrEsu2HT4vZTpmeaCICQf0Vo7zdycF22zEEyrEdIhqcYpX6tgVlj827BlIykmWVqvIXWqK5t23DKIUqLAgJZteVv+8M/XdmLuGTpq5Bc3S8peiZA8Esyj0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EpwBMP+w; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=PprAxaeiaGe7eqgk227Kimh86z1XVoJw3hE2Jp7SiCVlRWXwj9cEPB7jr6Z1smllUnTJuB2+vxNgiIv6jt/mI/YbHrbb/MIfF971Myyu3nvQ7c+l/gqFidyeemx4bOYwnfJKXsEgSHuftlRw2n3EM1EHNod3ob2SijCUpVuGibE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EV7aYnWL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EpwBMP+w"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E580AC4CEF1;
-	Tue, 12 Aug 2025 07:33:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EV7aYnWL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A0F1C4CEF7;
+	Tue, 12 Aug 2025 07:33:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754984002;
-	bh=SAA2fAGcShQNqlddo83E+u+laYhfOzVGkmNJu4nCjvM=;
+	s=k20201202; t=1754984006;
+	bh=1zwIg61p0aZAz/MHzJHLtHrthB9VhlqRgKswzzLDMvg=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=EpwBMP+wAD14JSWO2SeoLikdyCFRIRaKTgKNJIPhiEG4NH13ebtxdpxohxiozG53c
-	 l7EHDvG6P6S6dYTpZ31XE/iKc5ivrjuzKhQXLGAeu3uIbFMjG4tI8JyFm22gDUNA/k
-	 beCvJpt0Pu51jY07wCFNz8hTz6ArXq0X6DVXeOy++LHMVzXPO4yEu8QNpEekW8KWRS
-	 bnHFtp4iVKuWB5hCNh0l4Fi41YOXGUarZqAgHBwqpk54DOiY6rnjJl5g3ROrvGHFpD
-	 AlZVOcENea4cfRpTDZGVnvuGMduzWw685YkkVWZJkiAvxROs4sR9AkHhurhj0jitA6
-	 u4YYgs8HLKVrw==
+	b=EV7aYnWLpVgEV8DPgJrDBgLiTguQZXAAcUklGDv+bi/inh03vNkEXU3h2cGGK5Z6U
+	 /LQY4KruwgX6C5avdYZQoDDe7lrLP6kKBo0n2f4V/GUYbkwJ77Qqlw0CmzDSucgREX
+	 zLf2WnOUG//kBuBmP0fbpYE1/y/adcfbyf6dSv9JvUZJz2F6lWoGC+SyUv60c5FKH2
+	 tvn5SW1U7e/vjgLbNJ64XBW95zcxVWRxhVazy4yZDo6sSJkOnjlQHtd1ZSEEn7gOPd
+	 j2t9RhINxZ5/nCX5vldW7z7C511tEiVOPtGUVas3JsgdtWMXhagoanJRlfZwXxlAg8
+	 lJB8kzowbad6w==
 From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cen zhang <zzzccc427@gmail.com>, linux-xfs@vger.kernel.org
-In-Reply-To: <20250723122011.3178474-1-hch@lst.de>
-References: <20250723122011.3178474-1-hch@lst.de>
-Subject: Re: fix XFS_IBULK_* vs XFS_IWALK_* confusion
-Message-Id: <175498400163.824422.7373728260565245975.b4-ty@kernel.org>
-Date: Tue, 12 Aug 2025 09:33:21 +0200
+To: djwong@kernel.org, hch@lst.de, dan.j.williams@intel.com, 
+ willy@infradead.org, jack@suse.cz, brauner@kernel.org, 
+ viro@zeniv.linux.org.uk, John Garry <john.g.garry@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+ nvdimm@lists.linux.dev, linux-kernel@vger.kernel.org
+In-Reply-To: <20250724081215.3943871-1-john.g.garry@oracle.com>
+References: <20250724081215.3943871-1-john.g.garry@oracle.com>
+Subject: Re: [PATCH v3 0/3] xfs and DAX atomic writes changes
+Message-Id: <175498400299.824422.14848821788318521460.b4-ty@kernel.org>
+Date: Tue, 12 Aug 2025 09:33:22 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,26 +47,25 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Wed, 23 Jul 2025 14:19:43 +0200, Christoph Hellwig wrote:
-> this fixes a syzcall triggered assert due to the somewhat sloppy split
-> between the XFS_IBULK and XFS_IWALK flags.  The first is the minimal
-> fix for the reported problem, and the second one cleans up the
-> interface to avoid problems like this in the future.
+On Thu, 24 Jul 2025 08:12:12 +0000, John Garry wrote:
+> This series contains an atomic writes fix for DAX support on xfs and
+> an improvement to WARN against using IOCB_ATOMIC on the DAX write path.
 > 
-> Diffstat:
->  xfs_ioctl.c  |    2 +-
->  xfs_itable.c |    8 ++------
->  xfs_itable.h |   10 ++++------
->  3 files changed, 7 insertions(+), 13 deletions(-)
+> Also included is an xfs atomic writes mount option fix.
+> 
+> Based on xfs -next at ("b0494366bd5b Merge branch 'xfs-6.17-merge' into
+> for-next")
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/2] xfs: fully decouple XFS_IBULK* flags from XFS_IWALK* flags
-      commit: d2845519b0723c5d5a0266cbf410495f9b8fd65c
-[2/2] xfs: remove XFS_IBULK_SAME_AG
-      commit: 82efde9cf2e4ce25eac96a20e36eae7c338df1e0
+[1/3] fs/dax: Reject IOCB_ATOMIC in dax_iomap_rw()
+      commit: e7fb9b71326f43bab25fb8f18c6bfebd7a628696
+[2/3] xfs: disallow atomic writes on DAX
+      commit: 68456d05eb57a5d16b4be2d3caf421bdcf2de72e
+[3/3] xfs: reject max_atomic_write mount option for no reflink
+      commit: 8dc5e9b037138317c1d3151a7dabe41fa171cee1
 
 Best regards,
 -- 
