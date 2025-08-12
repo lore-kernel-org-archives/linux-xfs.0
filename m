@@ -1,126 +1,175 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B13EB640
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Aug 2025 11:17:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8435E218827
+	for <linux-xfs@vger.kernel.org>; Tue, 12 Aug 2025 12:44:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754997479; cv=none; b=kSwNmexKUjLYj3Y5V9BnzHfdbBp/wq0P43GKR8Tc7FzkQGSsFA8hYkgsNTGiSt43Z4jr2YwXPXIrwlF6o9aX6a5j9dOfb1qA7/L+KsJ1OinBRzOGz+W6u7L5jA3Pk+RKHP/PCcXLp5Hn239lpDPir5kzkIbCaFDbMbwKsF/d4SE=
+	t=1755002645; cv=none; b=aoIDJyuq0QZODEv3IoFupnzOhLaR4rAyl3TrH2RTkuBILE5E8g5PbhUX9T33SVs5DeKq6udeAcGg+zmutcWFQC6cSf2poeaAA2VGkCjSOVVcm/Eszrs4y1nSZjqebvm2UN7mkyoGJtiQ8zwyrlfj3MniYau5IdB9KCX3EdkvyuY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754997479; c=relaxed/simple;
-	bh=uz/OccvxeyMRISc72M25e/ICJNuef/rRGH+18MgtYOg=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=FWhYZ4oj3h3lWPFWYLrX8V1ZcA38fi7cg8tryAEoVAWGYwxp/jFRzds6pzx4y0+17IAvwsLFpMnbn1OGeCq5UzdBS7JbiDF6VOOc1wBNJ0JR9suzEWmnfbpWcfLiCYgoCQCJqTre+gPAXLlJqiM01oqqWHwvcBglh8ZBY+begKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DoXTkegw; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1755002645; c=relaxed/simple;
+	bh=DlQcevM7+C9MSLFEX6ktkWhHHdDvr3v7yQ2q0pAXh7Y=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=LbIZEjOn7bV96HElvRWC81oVAeW4GSklqHfIPahAJTEaktwmZxG/TGWbD4ORHm3TveOhJHZJ6ykKjaZhVALOj2UWe1IE6cd2wVHz7HljwEEwppOQRcw/oSCB7jYOlWBKUOo/mAM57SNA7Sd2mBaAvC4a2IShW5Md7PdSJNUstoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mri83nX0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DoXTkegw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1754997477;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-	bh=YIWiNDONBJfVwJemh5Bs9NOsWk2zrzr9oGcu7F0jx50=;
-	b=DoXTkegwuhrKbMMmpzMCd8b6wt3dnTT89kB7dva93+sRzv+IfhSJ8dHLc7IhP2rUWOt7fe
-	3RKliZQ0RQaV+YPV64yJ8yiJHL9J3cgjcWt1h1kSww4JuNobibr2MsGwotfmDAxXneZ1uQ
-	RIfJHwu9+w6LqX652CPWJuXBS38pBgc=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-684-fzBFb3_MP6ylQt7ihg4nSQ-1; Tue, 12 Aug 2025 07:17:56 -0400
-X-MC-Unique: fzBFb3_MP6ylQt7ihg4nSQ-1
-X-Mimecast-MFC-AGG-ID: fzBFb3_MP6ylQt7ihg4nSQ_1754997475
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-3b793f76a46so3491059f8f.2
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Aug 2025 04:17:55 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754997474; x=1755602274;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=YIWiNDONBJfVwJemh5Bs9NOsWk2zrzr9oGcu7F0jx50=;
-        b=J8Ve7MHFAw8kptfFWJ8gIapDBK3tztGQOT3YmDonb5jWenD9h4d5VQXEqmZ0Y23sP0
-         8KYugEE+y/cohD7ylo+dcYlv++kELyQGbiLFtdtGD49eM/XGsAgLDVdde4qqztxjv7gz
-         8EOCtepRu5J62kYNH87u3UZJSmLfcZT2zM3ek51xYPVkI80lhdawx0YLCsk3J3vtBvBK
-         RPOa/pGdPye2RXEdLrA/5Q1seDn4QjvrbuG+wkvpahKo//aS0WBV39mHidIiRhUzbIT7
-         DAz4Lq/P7R5UypcyBQw8UTb1ouZ/FB1XI84HH4G877r4zyLBJJYIg0JgqKXdTNxORilM
-         S9+w==
-X-Gm-Message-State: AOJu0YwSgjOmWDBojfEdLt6NL6+gNCNK9aXGhKnV/IMUEP6wYI8jHZEk
-	OBj59QG9JxH9FCmyo9wYEWHdMl1Aq5Nlu1qi8GRnCn+56kZdazl0Zfq26yXbjXZC90qx7WowWNP
-	jhc6nfU65q9/WAaI/WPLmRiHhFJBy11WaaqnfUcEqIAC1qXp2XBOZPiuD37boeWdJyjOu3jgvX2
-	S7qD+53qe0ODfcluyfG0WZ1vj05oGf55xq/bBb2B6+Zj9c
-X-Gm-Gg: ASbGncvEv88Ae1SF6n1Bfxv2QVw3cBmoxhY3ahGikEC9BbG0eykZ4AAieuQ7rgFR5oY
-	tpHFPWsHg+664jhlEAI9nyKg6q73fxPgjzkeyYWsgPcHu69d6/6GM9gOXm9KyZfVqbbzh+bQgzH
-	ReBpru2q2NLAGAqxV+vRY0IBumO8Rcf0IwhKr38iGpv6tnWxk1RbZqY28zLbJ6IUszxVQtqr/t7
-	tOH+HXFePJ2hfPVfW3B+cFcsIyWE28mU/IKJrAQ85SEpmuwD0bRpGVsZskivGF2wUnMu3xC7lvs
-	5Jbibh++zLVOvWYqayjo3U8EW2agPvnbULtbN+hFu2Z3OsvDB/fe751OgTc=
-X-Received: by 2002:a05:6000:2f86:b0:3b8:eb9f:e65 with SMTP id ffacd0b85a97d-3b910fce97bmr2672866f8f.5.1754997474284;
-        Tue, 12 Aug 2025 04:17:54 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IES1DQhY7rrNcFOo1v1PrG5ytGPI33EZQMtCbxn6dI/iCbESg6q+VzEt8EbQXXuEQP+TUBYYg==
-X-Received: by 2002:a05:6000:2f86:b0:3b8:eb9f:e65 with SMTP id ffacd0b85a97d-3b910fce97bmr2672836f8f.5.1754997473839;
-        Tue, 12 Aug 2025 04:17:53 -0700 (PDT)
-Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-459e5862fd9sm314350855e9.16.2025.08.12.04.17.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Aug 2025 04:17:53 -0700 (PDT)
-Date: Tue, 12 Aug 2025 13:17:52 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mri83nX0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FFA6C4CEF0
+	for <linux-xfs@vger.kernel.org>; Tue, 12 Aug 2025 12:44:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755002645;
+	bh=DlQcevM7+C9MSLFEX6ktkWhHHdDvr3v7yQ2q0pAXh7Y=;
+	h=From:To:Subject:Date:From;
+	b=Mri83nX0gK/bPsVeJb8QHa0rEJIvTkavr9hyjFmU6zNB9Hzx0RVcgXbzvgFIFP62N
+	 DzWzlmzjNs40crlnDOyd2bNcSbgIPVzUxPSJro03sFjUYMS5lDt8jWm60WZGg+LGbI
+	 7Kv8tUvQQobYmodPglNscgzPlCWBafRN0FteFUIefXE+Iu+8SKsUf698hU1rdwvedI
+	 qRFQipc3XDG3XrnqoovF7sKMBTTL6UqHqRdnxdLwRxN8av2HdGSZVW7TcCihdAyHA5
+	 k01ZlxBDLQXJdsXv5zGwpH68JqoSUaOMlAR1g6QJ/rg8P+pPdqo653rsG4bvHRKeyK
+	 MAaoMNgEzWyPA==
+From: cem@kernel.org
 To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org, cmaiolino@redhat.com, dchinner@redhat.com, 
-	djwong@kernel.org, hch@lst.de, john.g.garry@oracle.com
-Subject: [ANNOUNCE] xfsprogs: for-next updated to 264762bb42b9
-Message-ID: <vifmhk45tyxy5sbho754aj5r2j7iv3jr4w44bgkvudzxzmhzsy@zzesfmoopzgy>
+Subject: [RFC PATCH] xfs: Fix logbsize validation
+Date: Tue, 12 Aug 2025 14:43:41 +0200
+Message-ID: <20250812124350.849381-1-cem@kernel.org>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-Hi folks,
+From: Carlos Maiolino <cem@kernel.org>
 
-The xfsprogs for-next branch in repository at:
+An user reported an inconsistency while mounting a V2 log filesystem
+with logbsize equals to the stripe unit being used (192k).
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+The current validation algorithm for the log buffer size enforces the
+user to pass a power_of_2 value between [16k-256k].
+The manpage dictates the log buffer size must be a multiple of the log
+stripe unit, but doesn't specify it must be a power_of_2. Also, if
+logbsize is not specified at mount time, it will be set to
+max(32768, log_sunit), where log_sunit not necessarily is a power_of_2.
 
-has just been updated.
+It does seem to me then that logbsize being a power_of_2 constraint must
+be relaxed if there is a configured log stripe unit, so this patch
+updates the logbsize validation logic to ensure that:
 
-Patches often get missed, so if your outstanding patches are properly reviewed
-on the list and not included in this update, please let me know.
+- It can only be set to a specific range [16k-256k]
 
-The for-next branch has also been updated to match the state of master.
+- Will be aligned to log stripe unit when the latter is set,
+  and will be at least the same size as the log stripe unit.
 
-The new head of the for-next branch is commit:
+- Enforce it to be power_of_2 aligned when log stripe unit is not set.
 
-264762bb42b9d32793161c0d64c5a34e1f741fd3
+This is achieved by factoring out the logbsize validation to a separated
+function to avoid a big chain of if conditionals
 
-New commits:
+While at it, update m_logbufs and m_logbsize conditionals in
+xfs_fs_validate_params from:
+	(x != -1 && x != 0) to (x > 0)
 
-Christoph Hellwig (1):
-      [f3fe5f5eecfa] xfs: don't allocate the xfs_extent_busy structure for zoned RTGs
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
 
-Darrick J. Wong (1):
-      [466e8aa6e0e8] misc: fix reversed calloc arguments
+I am sending this as a RFC because although I did some basic testing,
+xfstests is still running, so I can't tell yet if it will fail on some configuration even though I am not expecting it to.
 
-Dave Chinner (1):
-      [68facb8397c5] xfs: catch stale AGF/AGF metadata
+ fs/xfs/xfs_super.c | 57 ++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 40 insertions(+), 17 deletions(-)
 
-John Garry (1):
-      [264762bb42b9] mkfs: require reflink for max_atomic_write option
-
-Code Diffstat:
-
- db/namei.c          |  2 +-
- libxcmd/input.c     |  2 +-
- libxfs/xfs_alloc.c  | 41 +++++++++++++++++++++++++++++++++--------
- libxfs/xfs_group.c  | 14 +++++++++-----
- libxfs/xfs_ialloc.c | 31 +++++++++++++++++++++++++++----
- logprint/log_misc.c |  2 +-
- mkfs/xfs_mkfs.c     |  6 ++++++
- repair/phase3.c     |  2 +-
- repair/quotacheck.c |  2 +-
- 9 files changed, 80 insertions(+), 22 deletions(-)
-
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index bb0a82635a77..38d3d8a0b026 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1059,6 +1059,29 @@ xfs_fs_unfreeze(
+ 	return 0;
+ }
+ 
++STATIC int
++xfs_validate_logbsize(
++	struct xfs_mount	*mp)
++{
++	int			logbsize = mp->m_logbsize;
++	uint32_t		logsunit = mp->m_sb.sb_logsunit;
++
++	if (logsunit > 1) {
++		if (logbsize < logsunit ||
++		    logbsize % logsunit) {
++			xfs_warn(mp,
++		"logbuf size must be a multiple of the log stripe unit");
++			return -EINVAL;
++		}
++	} else {
++		if (!is_power_of_2(logbsize)) {
++		    xfs_warn(mp,
++		     "invalid logbufsize: %d [not a power of 2]", logbsize);
++		    return -EINVAL;
++		}
++	}
++	return 0;
++}
+ /*
+  * This function fills in xfs_mount_t fields based on mount args.
+  * Note: the superblock _has_ now been read in.
+@@ -1067,16 +1090,13 @@ STATIC int
+ xfs_finish_flags(
+ 	struct xfs_mount	*mp)
+ {
+-	/* Fail a mount where the logbuf is smaller than the log stripe */
+ 	if (xfs_has_logv2(mp)) {
+-		if (mp->m_logbsize <= 0 &&
+-		    mp->m_sb.sb_logsunit > XLOG_BIG_RECORD_BSIZE) {
+-			mp->m_logbsize = mp->m_sb.sb_logsunit;
+-		} else if (mp->m_logbsize > 0 &&
+-			   mp->m_logbsize < mp->m_sb.sb_logsunit) {
+-			xfs_warn(mp,
+-		"logbuf size must be greater than or equal to log stripe size");
+-			return -EINVAL;
++		if (mp->m_logbsize > 0) {
++			if (xfs_validate_logbsize(mp))
++				return -EINVAL;
++		} else {
++			if (mp->m_sb.sb_logsunit > XLOG_BIG_RECORD_BSIZE)
++				mp->m_logbsize = mp->m_sb.sb_logsunit;
+ 		}
+ 	} else {
+ 		/* Fail a mount if the logbuf is larger than 32K */
+@@ -1628,8 +1648,7 @@ xfs_fs_validate_params(
+ 		return -EINVAL;
+ 	}
+ 
+-	if (mp->m_logbufs != -1 &&
+-	    mp->m_logbufs != 0 &&
++	if (mp->m_logbufs > 0 &&
+ 	    (mp->m_logbufs < XLOG_MIN_ICLOGS ||
+ 	     mp->m_logbufs > XLOG_MAX_ICLOGS)) {
+ 		xfs_warn(mp, "invalid logbufs value: %d [not %d-%d]",
+@@ -1637,14 +1656,18 @@ xfs_fs_validate_params(
+ 		return -EINVAL;
+ 	}
+ 
+-	if (mp->m_logbsize != -1 &&
+-	    mp->m_logbsize !=  0 &&
++	/*
++	 * We have not yet read the superblock, so we can't check against
++	 * logsunit here.
++	 */
++	if (mp->m_logbsize > 0 &&
+ 	    (mp->m_logbsize < XLOG_MIN_RECORD_BSIZE ||
+-	     mp->m_logbsize > XLOG_MAX_RECORD_BSIZE ||
+-	     !is_power_of_2(mp->m_logbsize))) {
++	     mp->m_logbsize > XLOG_MAX_RECORD_BSIZE)) {
+ 		xfs_warn(mp,
+-			"invalid logbufsize: %d [not 16k,32k,64k,128k or 256k]",
+-			mp->m_logbsize);
++			"invalid logbufsize: %d [not in range %dk-%dk]",
++			mp->m_logbsize,
++			(XLOG_MIN_RECORD_BSIZE/1024),
++			(XLOG_MAX_RECORD_BSIZE/1024));
+ 		return -EINVAL;
+ 	}
+ 
 -- 
-- Andrey
+2.50.1
 
