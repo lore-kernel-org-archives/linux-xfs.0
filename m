@@ -1,233 +1,261 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from neil.brown.name (neil.brown.name [103.29.64.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9791B2E5411
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Aug 2025 07:55:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F438286433;
+	Wed, 13 Aug 2025 08:04:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.29.64.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755071733; cv=none; b=cuuCF6VmwAYwEBtmPPP3z+e3piVrm/yDV6P0QKamkkBbY01n7aE42UoCHPvcRDL9VSo3fkcdvlWFiw3qwEzlvxzrGQ1qnAoW9GnTcEulJljMteZgjlasrd0DKoN7SM5Ilti1jHWYccKYXrxm4h2gGQi+lozFyp/zNqgzxZerRQA=
+	t=1755072282; cv=none; b=mziKFNgfCz0jmUUSsOjh5TXzjHth+UlsqcutfpmGLhrmbAutSAuoEEoLs3fQmRPxK7w6HzYab4OE7N5byqxC6Yf0H5NxvsKg33k6t6LUCsQRxOHTLs0mkIL8HcGzUbZg7fjTGMU0ejVi+TRnDYBdYDT+ghoUOMsFYpKzxchn6Gc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755071733; c=relaxed/simple;
-	bh=JsazoS1i0FD2+Cq8n4BwF7ZF9/NDgO1tQMbuIk8JJTQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gBGkDpxMrD5O4xFJCl65Fit7H+Hdn4taxZQ1EXsF4JM5lNzGxFanseeQp/p/casoTxBJU/ltX90zKXXAi7rPpeErpPUXZsm3g1Vh2y3Kln9PmaIUq2yLrXd1lYNY6qfdOlPTlQWrYv0AGV+Wefmjv5Do0vnMGZXnJ22VlfcmXfA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SBWAyMJ4; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SBWAyMJ4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 338F8C4CEEB;
-	Wed, 13 Aug 2025 07:55:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755071733;
-	bh=JsazoS1i0FD2+Cq8n4BwF7ZF9/NDgO1tQMbuIk8JJTQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SBWAyMJ4TCYGm6/q1rQiol1u5L8ZdjyDc+TrIzH5U978drI0qxKpuJ+WwPcpAP6EU
-	 2/Dfn4Nf0LyYP0J3l45ch6HdzXirTe9oBuUoLXgKueGmwpUGdowGHwY7ssQ1nqb2aw
-	 /FC8JQQSYAJmJ9pXE1frBdRzUsJoqJqoWSPn5ZG/il/loeAVDEkVEg4ka6b+soilMc
-	 LLI8CHm7DrHjTebva4nzxXzZUvpBOhwecrAZdj7wS3XAj23uMJ6TAPHhiE2xwrbKmb
-	 ZABYEqYrswFnCV+rE4NZMiyVqhJVFean8CVJMsdiT6VHQvqsvQErx2WOi57IyJ27rt
-	 CCjqBeiWP4OUA==
-Date: Wed, 13 Aug 2025 09:55:29 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH] xfs: Fix logbsize validation
-Message-ID: <st5ta5gtndv3imwhctcg7jcn43xycaneqrolaasst4oad7kcmw@qwsrrp5jw24q>
-References: <20250812124350.849381-1-cem@kernel.org>
- <NEhMkOfkHiSb1Z_kFTIY6gdvqPkD5X1fHfzBwZdzLcRKofvVBfkIyJ_05PVDnki1B_dGpDdTpixxuJIzFDb5pg==@protonmail.internalid>
- <20250813021655.GQ7965@frogsfrogsfrogs>
+	s=arc-20240116; t=1755072282; c=relaxed/simple;
+	bh=FhzdVlboS0uvBRS2ec6VoJqaPXvCKsIFRA8PZ0M7YZc=;
+	h=Content-Type:MIME-Version:From:To:Cc:Subject:In-reply-to:
+	 References:Date:Message-id; b=VEpT6kl/CeIHjNET535VUxGOgrFM+XfcQnS5QZW2cO86Pdq7Itc92dsdtXEvaLJ4pZE59ztd+kYS5vZWhc12k3XGTVf1Ae9MJZaatIWxcQBlZYO6KCNM5O5d8J4/nsMdKC5qmH9WIOoo9Awkh7GI+/4r68IyDKnyhLNlPiYfYz0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name; spf=pass smtp.mailfrom=neil.brown.name; arc=none smtp.client-ip=103.29.64.221
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=neil.brown.name
+Received: from 196.186.233.220.static.exetel.com.au ([220.233.186.196] helo=home.neil.brown.name)
+	by neil.brown.name with esmtp (Exim 4.95)
+	(envelope-from <mr@neil.brown.name>)
+	id 1um6TH-005b1O-BY;
+	Wed, 13 Aug 2025 08:04:33 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250813021655.GQ7965@frogsfrogsfrogs>
+From: "NeilBrown" <neil@brown.name>
+To: "Al Viro" <viro@zeniv.linux.org.uk>
+Cc: "Christian Brauner" <brauner@kernel.org>, "Jan Kara" <jack@suse.cz>,
+ "David Howells" <dhowells@redhat.com>,
+ "Marc Dionne" <marc.dionne@auristor.com>, "Xiubo Li" <xiubli@redhat.com>,
+ "Ilya Dryomov" <idryomov@gmail.com>, "Tyler Hicks" <code@tyhicks.com>,
+ "Miklos Szeredi" <miklos@szeredi.hu>, "Richard Weinberger" <richard@nod.at>,
+ "Anton Ivanov" <anton.ivanov@cambridgegreys.com>,
+ "Johannes Berg" <johannes@sipsolutions.net>,
+ "Trond Myklebust" <trondmy@kernel.org>, "Anna Schumaker" <anna@kernel.org>,
+ "Chuck Lever" <chuck.lever@oracle.com>, "Jeff Layton" <jlayton@kernel.org>,
+ "Amir Goldstein" <amir73il@gmail.com>, "Steve French" <sfrench@samba.org>,
+ "Namjae Jeon" <linkinjeon@kernel.org>, "Carlos Maiolino" <cem@kernel.org>,
+ linux-fsdevel@vger.kernel.org, linux-afs@lists.infradead.org,
+ netfs@lists.linux.dev, ceph-devel@vger.kernel.org, ecryptfs@vger.kernel.org,
+ linux-um@lists.infradead.org, linux-nfs@vger.kernel.org,
+ linux-unionfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 05/11] VFS: add rename_lookup()
+In-reply-to: <20250813043531.GB222315@ZenIV>
+References: <>, <20250813043531.GB222315@ZenIV>
+Date: Wed, 13 Aug 2025 18:04:32 +1000
+Message-id: <175507227245.2234665.4311084523419609794@noble.neil.brown.name>
 
-On Tue, Aug 12, 2025 at 07:16:55PM -0700, Darrick J. Wong wrote:
-> On Tue, Aug 12, 2025 at 02:43:41PM +0200, cem@kernel.org wrote:
-> > From: Carlos Maiolino <cem@kernel.org>
-> >
-> > An user reported an inconsistency while mounting a V2 log filesystem
-> > with logbsize equals to the stripe unit being used (192k).
-> >
-> > The current validation algorithm for the log buffer size enforces the
-> > user to pass a power_of_2 value between [16k-256k].
-> > The manpage dictates the log buffer size must be a multiple of the log
-> > stripe unit, but doesn't specify it must be a power_of_2. Also, if
-> > logbsize is not specified at mount time, it will be set to
-> > max(32768, log_sunit), where log_sunit not necessarily is a power_of_2.
-> >
-> > It does seem to me then that logbsize being a power_of_2 constraint must
-> > be relaxed if there is a configured log stripe unit, so this patch
-> > updates the logbsize validation logic to ensure that:
-> >
-> > - It can only be set to a specific range [16k-256k]
-> >
-> > - Will be aligned to log stripe unit when the latter is set,
-> >   and will be at least the same size as the log stripe unit.
-> >
-> > - Enforce it to be power_of_2 aligned when log stripe unit is not set.
-> >
-> > This is achieved by factoring out the logbsize validation to a separated
-> > function to avoid a big chain of if conditionals
-> >
-> > While at it, update m_logbufs and m_logbsize conditionals in
-> > xfs_fs_validate_params from:
-> > 	(x != -1 && x != 0) to (x > 0)
-> >
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+On Wed, 13 Aug 2025, Al Viro wrote:
+> On Tue, Aug 12, 2025 at 12:25:08PM +1000, NeilBrown wrote:
+> > rename_lookup() combines lookup and locking for a rename.
+> >=20
+> > Two names - new_last and old_last - are added to struct renamedata so it
+> > can be passed to rename_lookup() to have the old and new dentries filled
+> > in.
+> >=20
+> > __rename_lookup() in vfs-internal and assumes that the names are already
+> > hashed and skips permission checking.  This is appropriate for use after
+> > filename_parentat().
+> >=20
+> > rename_lookup_noperm() does hash the name but avoids permission
+> > checking.  This will be used by debugfs.
+>=20
+> WTF would debugfs do anything of that sort?  Explain.  Unlike vfs_rename(),
+> there we
+> 	* are given the source dentry
+> 	* are limited to pure name changes - same-directory only and
+> target must not exist.
+> 	* do not take ->s_vfs_rename_mutex
+> 	...
+
+Sure, debugfs_change_name() could have a simplified rename_lookup()
+which doesn't just skip the perm checking but also skips other
+s_vfs_rename_mutex etc.  But is there any value in creating a neutered
+interface just because there is a case where all the functionality isn't
+needed?
+
+Or maybe I misunderstand your problem with rename_lookup_noperm().
+
+
+>=20
+> > If either old_dentry or new_dentry are not NULL, the corresponding
+> > "last" is ignored and the dentry is used as-is.  This provides similar
+> > functionality to dentry_lookup_continue().  After locks are obtained we
+> > check that the parent is still correct.  If old_parent was not given,
+> > then it is set to the parent of old_dentry which was locked.  new_parent
+> > must never be NULL.
+>=20
+> That screams "bad API" to me...  Again, I want to see the users; you are
+> asking to accept a semantics that smells really odd, and it's impossible
+> to review without seeing the users.
+
+There is a git tree you could pull.....
+
+My API effectively supports both lock_rename() users and
+lock_rename_child() users.  Maybe you want to preserve the two different
+APIs.  I'd rather avoid the code duplication.
+
+>=20
+> > On success new references are geld on old_dentry, new_dentry and old_pare=
+nt.
+> >=20
+> > done_rename_lookup() unlocks and drops those three references.
+> >=20
+> > No __free() support is provided as done_rename_lookup() cannot be safely
+> > called after rename_lookup() returns an error.
+> >=20
+> > Signed-off-by: NeilBrown <neil@brown.name>
 > > ---
-> >
-> > I am sending this as a RFC because although I did some basic testing,
-> > xfstests is still running, so I can't tell yet if it will fail on some configuration even though I am not expecting it to.
-> 
-> Heheh, how did that go?
-
-quick group seems ok, I'll run something more complete today
-
-> 
-> >  fs/xfs/xfs_super.c | 57 ++++++++++++++++++++++++++++++++--------------
-> >  1 file changed, 40 insertions(+), 17 deletions(-)
-> >
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index bb0a82635a77..38d3d8a0b026 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1059,6 +1059,29 @@ xfs_fs_unfreeze(
-> >  	return 0;
+> >  fs/namei.c            | 318 ++++++++++++++++++++++++++++++++++--------
+> >  include/linux/fs.h    |   4 +
+> >  include/linux/namei.h |   3 +
+> >  3 files changed, 263 insertions(+), 62 deletions(-)
+> >=20
+> > diff --git a/fs/namei.c b/fs/namei.c
+> > index df21b6fa5a0e..cead810d53c6 100644
+> > --- a/fs/namei.c
+> > +++ b/fs/namei.c
+> > @@ -3507,6 +3507,233 @@ void unlock_rename(struct dentry *p1, struct dent=
+ry *p2)
 > >  }
-> >
-> > +STATIC int
-> > +xfs_validate_logbsize(
-> > +	struct xfs_mount	*mp)
+> >  EXPORT_SYMBOL(unlock_rename);
+> > =20
+> > +/**
+> > + * __rename_lookup - lookup and lock names for rename
+> > + * @rd:           rename data containing relevant details
+> > + * @lookup_flags: extra flags to pass to ->lookup (e.g. LOOKUP_REVAL,
+> > + *                LOOKUP_NO_SYMLINKS etc).
+> > + *
+> > + * Optionally look up two names and ensure locks are in place for
+> > + * rename.
+> > + * Normally @rd.old_dentry and @rd.new_dentry are %NULL and the
+> > + * old and new directories and last names are given in @rd.  In this
+> > + * case the names are looked up with appropriate locking and the
+> > + * results stored in @rd.old_dentry and @rd.new_dentry.
+> > + *
+> > + * If either are not NULL, then the corresponding lookup is avoided but
+> > + * the required locks are still taken.  In this case @rd.old_parent may
+> > + * be %NULL, otherwise @rd.old_dentry must still have @rd.old_parent as
+> > + * its d_parent after the locks are obtained.  @rd.new_parent must
+> > + * always be non-NULL, and must always be the correct parent after
+> > + * locking.
+> > + *
+> > + * On success a reference is held on @rd.old_dentry, @rd.new_dentry,
+> > + * and @rd.old_parent whether they were originally %NULL or not.  These
+> > + * references are dropped by done_rename_lookup().  @rd.new_parent
+> > + * must always be non-NULL and no extra reference is taken.
+> > + *
+> > + * The passed in qstrs must have the hash calculated, and no permission
+> > + * checking is performed.
+> > + *
+> > + * Returns: zero or an error.
+> > + */
+> > +static int
+> > +__rename_lookup(struct renamedata *rd, int lookup_flags)
 > > +{
-> > +	int			logbsize = mp->m_logbsize;
-> > +	uint32_t		logsunit = mp->m_sb.sb_logsunit;
-> 
-> Why not access the fields directly instead of going through convenience
-> variables?
-
-I did this to pack the lines length a bit, I initially was writing it
-inline to xfs_finish_flags(), then decided to move it to a different
-function and I kept the local vars.
-
-> 
-> > +	if (logsunit > 1) {
-> > +		if (logbsize < logsunit ||
-> > +		    logbsize % logsunit) {
-> > +			xfs_warn(mp,
-> > +		"logbuf size must be a multiple of the log stripe unit");
+> > +	struct dentry *p;
+> > +	struct dentry *d1, *d2;
+> > +	int target_flags =3D LOOKUP_RENAME_TARGET | LOOKUP_CREATE;
+> > +	int err;
+> > +
+> > +	if (rd->flags & RENAME_EXCHANGE)
+> > +		target_flags =3D 0;
+> > +	if (rd->flags & RENAME_NOREPLACE)
+> > +		target_flags |=3D LOOKUP_EXCL;
+> > +
+> > +	if (rd->old_dentry) {
+> > +		/* Already have the dentry - need to be sure to lock the correct paren=
+t */
+> > +		p =3D lock_rename_child(rd->old_dentry, rd->new_parent);
+> > +		if (IS_ERR(p))
+> > +			return PTR_ERR(p);
+> > +		if (d_unhashed(rd->old_dentry) ||
+> > +		    (rd->old_parent && rd->old_parent !=3D rd->old_dentry->d_parent)) {
+> > +			/* dentry was removed, or moved and explicit parent requested */
+> > +			unlock_rename(rd->old_dentry->d_parent, rd->new_parent);
 > > +			return -EINVAL;
 > > +		}
+> > +		rd->old_parent =3D dget(rd->old_dentry->d_parent);
+> > +		d1 =3D dget(rd->old_dentry);
 > > +	} else {
-> > +		if (!is_power_of_2(logbsize)) {
-> > +		    xfs_warn(mp,
-> 
-> Odd indenting here  ^^^
-
-Yeah, sorry, will fix that.
-
-> 
-> > +		     "invalid logbufsize: %d [not a power of 2]", logbsize);
-> > +		    return -EINVAL;
-> > +		}
+> > +		p =3D lock_rename(rd->old_parent, rd->new_parent);
+> > +		if (IS_ERR(p))
+> > +			return PTR_ERR(p);
+> > +		dget(rd->old_parent);
+> > +
+> > +		d1 =3D lookup_one_qstr_excl(&rd->old_last, rd->old_parent,
+> > +					  lookup_flags);
+> > +		if (IS_ERR(d1))
+> > +			goto out_unlock_1;
 > > +	}
+> > +	if (rd->new_dentry) {
+> > +		if (d_unhashed(rd->new_dentry) ||
+> > +		    rd->new_dentry->d_parent !=3D rd->new_parent) {
+> > +			/* new_dentry was moved or removed! */
+> > +			goto out_unlock_2;
+> > +		}
+> > +		d2 =3D dget(rd->new_dentry);
+> > +	} else {
+> > +		d2 =3D lookup_one_qstr_excl(&rd->new_last, rd->new_parent,
+> > +					  lookup_flags | target_flags);
+> > +		if (IS_ERR(d2))
+> > +			goto out_unlock_2;
+> > +	}
+> > +
+> > +	if (d1 =3D=3D p) {
+> > +		/* source is an ancestor of target */
+> > +		err =3D -EINVAL;
+> > +		goto out_unlock_3;
+> > +	}
+> > +
+> > +	if (d2 =3D=3D p) {
+> > +		/* target is an ancestor of source */
+> > +		if (rd->flags & RENAME_EXCHANGE)
+> > +			err =3D -EINVAL;
+> > +		else
+> > +			err =3D -ENOTEMPTY;
+> > +		goto out_unlock_3;
+> > +	}
+> > +
+> > +	rd->old_dentry =3D d1;
+> > +	rd->new_dentry =3D d2;
 > > +	return 0;
+> > +
+> > +out_unlock_3:
+> > +	dput(d2);
+> > +	d2 =3D ERR_PTR(err);
+> > +out_unlock_2:
+> > +	dput(d1);
+> > +	d1 =3D d2;
+> > +out_unlock_1:
+> > +	unlock_rename(rd->old_parent, rd->new_parent);
+> > +	dput(rd->old_parent);
+> > +	return PTR_ERR(d1);
 > > +}
-> >  /*
-> >   * This function fills in xfs_mount_t fields based on mount args.
-> >   * Note: the superblock _has_ now been read in.
-> > @@ -1067,16 +1090,13 @@ STATIC int
-> >  xfs_finish_flags(
-> >  	struct xfs_mount	*mp)
-> >  {
-> > -	/* Fail a mount where the logbuf is smaller than the log stripe */
-> >  	if (xfs_has_logv2(mp)) {
-> > -		if (mp->m_logbsize <= 0 &&
-> > -		    mp->m_sb.sb_logsunit > XLOG_BIG_RECORD_BSIZE) {
-> > -			mp->m_logbsize = mp->m_sb.sb_logsunit;
-> > -		} else if (mp->m_logbsize > 0 &&
-> > -			   mp->m_logbsize < mp->m_sb.sb_logsunit) {
-> > -			xfs_warn(mp,
-> > -		"logbuf size must be greater than or equal to log stripe size");
-> > -			return -EINVAL;
-> > +		if (mp->m_logbsize > 0) {
-> > +			if (xfs_validate_logbsize(mp))
-> > +				return -EINVAL;
-> 
-> If you're going to have xfs_validate_logbsize return an errno, then
-> capture it and return that, instead squashing them all to EINVAL.
+>=20
+> This is too fucking ugly to live, IMO.  Too many things are mixed into it.
+> I will NAK that until I get a chance to see the users of all that stuff.
+> Sorry.
+>=20
 
-Fair enough.
+Can you say more about what you think it ugly?
 
-> 
-> AFAICT it's no big deal to have non-power-of-two log buffers, right?
-> I *think* everything looks ok, but I'm no expert in the bottom levels of
-> the xfs logging code. :/
+Are you OK with combining the lookup and the locking in the one
+function?
+Are you OK with passing a 'struct rename_data' rather than a list of
+assorted args?
+Are you OK with deducing the target flags in this function, or do you
+want them explicitly passed in?
+Is it just that the function can use with lock_rename or
+lock_rename_child depending on context?
 
-Heh, I couldn't find anything that really prevents log buffers to be
-non-power-of-to, in fact, that's what happens today when we don't
-specify a logbsize, but we have a non-power-of-2 log stripe unit.
+???
 
-FWIW, I thought a bit about the possibility to simply prevent log stripe
-units to be a non-power-of-2, but the whole reason the user who reported
-this hit this problem was that he's using a SSD reporting 192k stripe.
-Quoting his own words:
-
-"if you are wondering why I am using a 48b stripe, ask the ssd
-manufacturer"
-
-So, it seems to me that restricting log sunit to be power-of-2 aligned,
-is not gonna play well with some hardware out there.
-
-
-> 
-> --D
-> 
-> > +		} else {
-> > +			if (mp->m_sb.sb_logsunit > XLOG_BIG_RECORD_BSIZE)
-> > +				mp->m_logbsize = mp->m_sb.sb_logsunit;
-> >  		}
-> >  	} else {
-> >  		/* Fail a mount if the logbuf is larger than 32K */
-> > @@ -1628,8 +1648,7 @@ xfs_fs_validate_params(
-> >  		return -EINVAL;
-> >  	}
-> >
-> > -	if (mp->m_logbufs != -1 &&
-> > -	    mp->m_logbufs != 0 &&
-> > +	if (mp->m_logbufs > 0 &&
-> >  	    (mp->m_logbufs < XLOG_MIN_ICLOGS ||
-> >  	     mp->m_logbufs > XLOG_MAX_ICLOGS)) {
-> >  		xfs_warn(mp, "invalid logbufs value: %d [not %d-%d]",
-> > @@ -1637,14 +1656,18 @@ xfs_fs_validate_params(
-> >  		return -EINVAL;
-> >  	}
-> >
-> > -	if (mp->m_logbsize != -1 &&
-> > -	    mp->m_logbsize !=  0 &&
-> > +	/*
-> > +	 * We have not yet read the superblock, so we can't check against
-> > +	 * logsunit here.
-> > +	 */
-> > +	if (mp->m_logbsize > 0 &&
-> >  	    (mp->m_logbsize < XLOG_MIN_RECORD_BSIZE ||
-> > -	     mp->m_logbsize > XLOG_MAX_RECORD_BSIZE ||
-> > -	     !is_power_of_2(mp->m_logbsize))) {
-> > +	     mp->m_logbsize > XLOG_MAX_RECORD_BSIZE)) {
-> >  		xfs_warn(mp,
-> > -			"invalid logbufsize: %d [not 16k,32k,64k,128k or 256k]",
-> > -			mp->m_logbsize);
-> > +			"invalid logbufsize: %d [not in range %dk-%dk]",
-> > +			mp->m_logbsize,
-> > +			(XLOG_MIN_RECORD_BSIZE/1024),
-> > +			(XLOG_MAX_RECORD_BSIZE/1024));
-> >  		return -EINVAL;
-> >  	}
-> >
-> > --
-> > 2.50.1
-> >
-> >
+Thanks,
+NeilBrown
