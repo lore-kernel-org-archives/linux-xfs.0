@@ -1,43 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F023E2C1585;
-	Wed, 13 Aug 2025 06:14:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B98FE23D7CF;
+	Wed, 13 Aug 2025 06:24:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755065693; cv=none; b=se2R+9PeT//e8/0aNAWvBh+OYZUS+Qf5sdidjy5fnUjw3Ja39RIqz0p9w1AUBIg04LHXM747nMfUu72r5AB7MBICOPfueRVDmCkY9NIIjVqmBMys8UI4b0kWMM4PphD9/0wszFB6zxbmfRl3div1m60RwJSpLSedG4NlqmsyX9o=
+	t=1755066253; cv=none; b=L1Xa5CCP+mpEAb9tgkmoEOv6jeLc+4CpDbwq8gibi5dyrTlIdgtD8ESNB4ITHSh0S0EDd++c/tOaxSBYZ6qu+vRsEmNEPN6/ArIcrokJSfcheAV/OmjZTP8w/KGZe+q6XEJo3CEk9MeabrDhkr09px72fsEYQpA/NUkcEA4g1RY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755065693; c=relaxed/simple;
-	bh=ViLZ5Tc73kivdDFEKOl5oYPBzGq6XRQvk+ce04LMZLk=;
+	s=arc-20240116; t=1755066253; c=relaxed/simple;
+	bh=tTtu3lAYSZ2g6pudhAAcHgwH7DVpotk0bve6JuhwFf8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PdXZDcjCzheqmUl0c7CoE92NzzlNFV/HGIZ8gPyzvce4/ZXu7ApJ67XETbqYAWpj5nlgn670LhuppxKoVvBhA5LauqdW576Dh3W6rrP3CjuSPKH/3oM8gdOKtU8s5gTD6N/f841FTchJ04rAutXWKFgtDcNExxOBOqAUL5TmPUo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=spfxZYgu; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=RCNXRW89iGKia0lVb4r6uYot3tDUCUr7/uWlUEF7IfG6mbjlhF901FxK2t1SAq9e45YxM3000fuAC5KIFmJ3NuWA+wtBpNo8ROlItWBTdjG22iSEslTk3PwVbOGOhAMtpNwWrjRnxKZvaLlEkstl+0e9F7d5c5z4cKazTacozo0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=EJinVF5S; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="spfxZYgu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 885FAC4CEEB;
-	Wed, 13 Aug 2025 06:14:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755065692;
-	bh=ViLZ5Tc73kivdDFEKOl5oYPBzGq6XRQvk+ce04LMZLk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=spfxZYguSr9/QSSAnq6c0IR6NIRukeL9OjDhWvlyhtvdAd0JqZTusBE1+QVlSHdoF
-	 XhQ3eV2P2W9SUyFyVNUWyd1ORrUFrHjQHsHe49qwdOnbzmJq2uK0nHPqfuHmMlvx/Z
-	 GU58rjpzZFvSwgqq/7gmLKjMHC8PrfWSafZu/MLpkvH6nXloPe8bUn1zNwSbodbq+/
-	 /9EEbsUmVT2yo7sMiaM1Se1Kn3AU3bnolvKzCTH9wNgfoJ0svBFM2af0WjCSM5ZG1j
-	 GSDt/128bCFoVRuT1HpHjNLvryz58OfHeNE1ktz2xJqlB4prUSl5L3dCDbr4CKHyJ1
-	 eyUVHmVNiAeiA==
-Date: Tue, 12 Aug 2025 23:14:52 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EJinVF5S"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=54LJmhJljoMGWoOaJ3VCI/+s1nNBIJe6jafJebmvdgA=; b=EJinVF5Si1aKxAZsH5vvRVOxOi
+	VtjzpgHd8Uyo0t1nxYbJB9XweNHFLDP1rItSDpJv6WPwgUdqD+YuXzKsMKTR8Arm7ol7KlbLcgEQy
+	ST6H6iuCbXZ7pNfs2mjLjvhpib0sX7bQgFyKKuvS8WwElDGdQ6LqsrEErUW7ubjxQmnHqOQIhkO1w
+	u2nmtL7pGId7NR3ifJ5F4brjCwEEZs6jflLxakR1JerNLa5J5dvX9gEBTBkH3aC49NGHA1dfXLjbH
+	QetekfjQdoMzdvB3IHpnZGONIGt196ioKZftOrG3zvoUYyEKlzaMilCZak5nikSmLfMtolBEzXCe7
+	IGPCkgUQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1um4uB-0000000CmBy-12Y3;
+	Wed, 13 Aug 2025 06:24:11 +0000
+Date: Tue, 12 Aug 2025 23:24:11 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, zlang@redhat.com,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 2/7] generic/427: try to ensure there's some free space
  before we do the aio test
-Message-ID: <20250813061452.GC7981@frogsfrogsfrogs>
+Message-ID: <aJwvi03EX0LWzXfI@infradead.org>
 References: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
  <175381957936.3020742.7058031120679185727.stgit@frogsfrogsfrogs>
  <aIopyOh1TDosDK1m@infradead.org>
  <20250812185459.GB7952@frogsfrogsfrogs>
  <aJwfiw9radbDZq-p@infradead.org>
+ <20250813061452.GC7981@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,46 +51,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aJwfiw9radbDZq-p@infradead.org>
+In-Reply-To: <20250813061452.GC7981@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Aug 12, 2025 at 10:15:55PM -0700, Christoph Hellwig wrote:
-> On Tue, Aug 12, 2025 at 11:54:59AM -0700, Darrick J. Wong wrote:
-> > On Wed, Jul 30, 2025 at 07:18:48AM -0700, Christoph Hellwig wrote:
-> > > On Tue, Jul 29, 2025 at 01:08:46PM -0700, Darrick J. Wong wrote:
-> > > > The pwrite failure comes from the aio-dio-eof-race.c program because the
-> > > > filesystem ran out of space.  There are no speculative posteof
-> > > > preallocations on a zoned filesystem, so let's skip this test on those
-> > > > setups.
-> > > 
-> > > Did it run out of space because it is overwriting and we need a new
-> > > allocation (I've not actually seen this fail in my zoned testing,
-> > > that's why I'm asking)?  If so it really should be using the new
-> > > _require_inplace_writes Filipe just sent to the list.
-> > 
-> > I took a deeper look into what's going on here, and I think the
-> > intermittent ENOSPC failures are caused by:
-> > 
-> > 1. First we write to every byte in the 256M zoned rt device so that
-> >    0x55 gets written to the disk.
-> > 2. Then we delete the huge file we created.
-> > 3. The zoned garbage collector doesn't run.
-> > 4. aio-dio-eof-race starts up and initiates an aiodio at pos 0.
-> > 5. xfs_file_dio_write_zoned calls xfs_zoned_write_space_reserve
-> > 6. xfs_zoned_space_reserve tries to decrement 64k from XC_FREE_RTEXTENTS
-> >    but gets ENOSPC.
-> > 7. We didn't pass XFS_ZR_GREEDY, so we error out.
-> > 
-> > If I make the test sleep until I see zonegc do some work before starting
-> > aio-dio-eof-race, the problem goes away.  I'm not sure what the proper
-> > solution is, but maybe it's adding a wake_up to the gc process and
-> > waiting for it?
-> 
-> Isn't the problem here that zonegc only even sees the freed block
-> after inodegc did run?  i.e. after 2 the inode hasn't been truncated
-> yet, and thus the blocks haven't been marked as free.
+On Tue, Aug 12, 2025 at 11:14:52PM -0700, Darrick J. Wong wrote:
+> Yeah... for the other ENOSPC-on-write paths, we kick inodegc, so maybe
+> xfs_zoned_space_reserve (or its caller, more likely) ought to do that
+> too?
 
-Yeah... for the other ENOSPC-on-write paths, we kick inodegc, so maybe
-xfs_zoned_space_reserve (or its caller, more likely) ought to do that
-too?
+Can you give this a spin?  Still running testing here, but so far
+nothing blew up.
 
---D
+diff --git a/fs/xfs/xfs_zone_space_resv.c b/fs/xfs/xfs_zone_space_resv.c
+index 1313c55b8cbe..9cd38716fd25 100644
+--- a/fs/xfs/xfs_zone_space_resv.c
++++ b/fs/xfs/xfs_zone_space_resv.c
+@@ -10,6 +10,7 @@
+ #include "xfs_mount.h"
+ #include "xfs_inode.h"
+ #include "xfs_rtbitmap.h"
++#include "xfs_icache.h"
+ #include "xfs_zone_alloc.h"
+ #include "xfs_zone_priv.h"
+ #include "xfs_zones.h"
+@@ -230,6 +231,11 @@ xfs_zoned_space_reserve(
+ 
+ 	error = xfs_dec_freecounter(mp, XC_FREE_RTEXTENTS, count_fsb,
+ 			flags & XFS_ZR_RESERVED);
++	if (error == -ENOSPC && !(flags & XFS_ZR_NOWAIT)) {
++		xfs_inodegc_flush(mp);
++		error = xfs_dec_freecounter(mp, XC_FREE_RTEXTENTS, count_fsb,
++				flags & XFS_ZR_RESERVED);
++	}
+ 	if (error == -ENOSPC && (flags & XFS_ZR_GREEDY) && count_fsb > 1)
+ 		error = xfs_zoned_reserve_extents_greedy(mp, &count_fsb, flags);
+ 	if (error)
