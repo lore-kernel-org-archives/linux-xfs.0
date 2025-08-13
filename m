@@ -1,179 +1,81 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D19D1FAC4D;
-	Wed, 13 Aug 2025 02:50:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 503D71C860B;
+	Wed, 13 Aug 2025 03:22:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755053443; cv=none; b=Nl9qdr4unwvvKbD+eLGBlGja1FC46ysHNvOEn0aIk2HNh8wlg9KKEQVtA6dyqrG5RF/kclZrbezQRKqam16IiWBFZ46VW08qE+ukmN0pl7lvRWcLvNrwcQxyMNNHuOfjW1Kj08+LlU7xAus7xt1ubIGbViG6TeKC2Lx4mpRoFmA=
+	t=1755055354; cv=none; b=eT+6lbq8K5dj4JLIWcWxiHY97U90Ut6dj9x75+JwN6caLPvkurXSZy9mDYdG1hXpmaOh1ZyqPt++VnTNTklIYc8f8mbOnDB+TY5UH8eZM3mMRtddI3vKE9nY3FHLJBqk258tkvuQhAu6mSnAVJvz6tZKMdXUfj8Z1E4X2o2CsEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755053443; c=relaxed/simple;
-	bh=65xTXBS7eGQ2OVVFDS+gtYw/5G72uYv1DJdogCLu8CU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Apd1R9/HKVEiJbRJA7I5bbIc10klDNKi7xSaxeopNBRX2U2+4YmKBiZo4HolZD1mnxM6RxYZYtUPvSCvCBny+zFEDPca/QmFXHwhL0keNQQZG2t7qnf/KmRvYR1OvWv2LsYtQeggtLxS+8fWhnrwSCFOj9LHv/snuKRkoqc84nM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c1tCf5RH1zKHMmM;
-	Wed, 13 Aug 2025 10:50:38 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 039291A0E9C;
-	Wed, 13 Aug 2025 10:50:38 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDHjxB2_ZtofKcBDg--.14943S4;
-	Wed, 13 Aug 2025 10:50:37 +0800 (CST)
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: linux-fsdevel@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	linux-api@vger.kernel.org,
-	hch@lst.de,
-	tytso@mit.edu,
-	djwong@kernel.org,
-	bmarzins@redhat.com,
-	chaitanyak@nvidia.com,
-	shinichiro.kawasaki@wdc.com,
-	brauner@kernel.org,
-	martin.petersen@oracle.com,
-	yi.zhang@huawei.com,
-	yi.zhang@huaweicloud.com,
-	chengzhihao1@huawei.com,
-	yukuai3@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH xfsprogs v2] xfs_io: add FALLOC_FL_WRITE_ZEROES support
-Date: Wed, 13 Aug 2025 10:42:50 +0800
-Message-Id: <20250813024250.2504126-1-yi.zhang@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1755055354; c=relaxed/simple;
+	bh=zxMEJ8m+zRkwij8kWIT31y8xRPVRlMmpgTq7ZqEzhG8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bk3av9VmFKu0F520qnq1rUSMmdws56OasBnfWVlO/5YgO+LT8/Edu5prLC50em76LFXS0u6piQsQaHay0XuMiZlD8o16UFx0DvY9KnB0oS+3Ivrybb0m7juN8V3f8jR23MLo1dZCSqkiUHzIm2tV1thuNJKMnbXGcSCDMnlah3A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=fAFNgc1a; arc=none smtp.client-ip=62.89.141.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="fAFNgc1a"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
+	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=mZv6+PvJUXtJWPttoq47kMgqdSRNoX5QOTrEIOYs1uE=; b=fAFNgc1auSoV8mA7b6YMBtX+j5
+	rl8bDV/EeCqND0al4fPbDzIAEpPYcyF7qkiUImV7O4z6/z4uY4kXywRzc1pGW1crAJalXzhJBGEzd
+	S6obRySg4KfM6Rlmcyo74FXF9pwKE1B0Uz9zgiAO73PqvC5pg/VHWinHUWiWDIDBgZElXJt0aq0XM
+	tvIU6HFgTuPeaU4k8wfdhReTrAd/x6tskDlpsFNzLn1+69HtZ8V07NJFErG7xVWEdqrKPndQ4zIOJ
+	yLXsMqeqHWjN1NAVE5WT0ZDeTc2PqoTipg/C9vNxL5JZKL1GnCqx5nKXIadgYfbGnlkr7P1ZiQwmV
+	l/wZ3+4w==;
+Received: from viro by zeniv.linux.org.uk with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1um24B-00000004v1A-2JpQ;
+	Wed, 13 Aug 2025 03:22:19 +0000
+Date: Wed, 13 Aug 2025 04:22:19 +0100
+From: Al Viro <viro@zeniv.linux.org.uk>
+To: NeilBrown <neil@brown.name>
+Cc: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	David Howells <dhowells@redhat.com>,
+	Marc Dionne <marc.dionne@auristor.com>,
+	Xiubo Li <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
+	Tyler Hicks <code@tyhicks.com>, Miklos Szeredi <miklos@szeredi.hu>,
+	Richard Weinberger <richard@nod.at>,
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Trond Myklebust <trondmy@kernel.org>,
+	Anna Schumaker <anna@kernel.org>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Jeff Layton <jlayton@kernel.org>,
+	Amir Goldstein <amir73il@gmail.com>,
+	Steve French <sfrench@samba.org>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>, linux-fsdevel@vger.kernel.org,
+	linux-afs@lists.infradead.org, netfs@lists.linux.dev,
+	ceph-devel@vger.kernel.org, ecryptfs@vger.kernel.org,
+	linux-um@lists.infradead.org, linux-nfs@vger.kernel.org,
+	linux-unionfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 01/11] VFS: discard err2 in filename_create()
+Message-ID: <20250813032219.GX222315@ZenIV>
+References: <20250812235228.3072318-1-neil@brown.name>
+ <20250812235228.3072318-2-neil@brown.name>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDHjxB2_ZtofKcBDg--.14943S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxur17Jw1kCF1rXw15JF15twb_yoW5Xr1Up3
-	9rXF1UKa45Xry7WayfGws7WFn8Wws2kr1fJr4xWr1UZ3W5AFyxKFn8G3Z5X3s7WFWxCa1U
-	JFnIqFy5G3WSy3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
-	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
-	zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
-	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
-	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-	nIWIevJa73UjIFyTuYvjTR_OzsDUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250812235228.3072318-2-neil@brown.name>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 
-From: Zhang Yi <yi.zhang@huawei.com>
+On Tue, Aug 12, 2025 at 12:25:04PM +1000, NeilBrown wrote:
+> During the time when "err2" holds a value, "error" does not hold any
+> meaningful value.  So there is no need for two different err variables.
+> This patch discards "err2" and uses "error' throughout.
 
-The Linux kernel (since version 6.17) supports FALLOC_FL_WRITE_ZEROES in
-fallocate(2). Add support for FALLOC_FL_WRITE_ZEROES support to the
-fallocate utility by introducing a new 'fwzero' command in the xfs_io
-tool.
+I'd probably replace the first sentence with something like this:
 
-Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=278c7d9b5e0c
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
----
-v1->v2:
- - Minor description modification to align with the kernel.
-
- io/prealloc.c     | 36 ++++++++++++++++++++++++++++++++++++
- man/man8/xfs_io.8 |  6 ++++++
- 2 files changed, 42 insertions(+)
-
-diff --git a/io/prealloc.c b/io/prealloc.c
-index 8e968c9f..9a64bf53 100644
---- a/io/prealloc.c
-+++ b/io/prealloc.c
-@@ -30,6 +30,10 @@
- #define FALLOC_FL_UNSHARE_RANGE 0x40
- #endif
- 
-+#ifndef FALLOC_FL_WRITE_ZEROES
-+#define FALLOC_FL_WRITE_ZEROES 0x80
-+#endif
-+
- static cmdinfo_t allocsp_cmd;
- static cmdinfo_t freesp_cmd;
- static cmdinfo_t resvsp_cmd;
-@@ -41,6 +45,7 @@ static cmdinfo_t fcollapse_cmd;
- static cmdinfo_t finsert_cmd;
- static cmdinfo_t fzero_cmd;
- static cmdinfo_t funshare_cmd;
-+static cmdinfo_t fwzero_cmd;
- 
- static int
- offset_length(
-@@ -377,6 +382,27 @@ funshare_f(
- 	return 0;
- }
- 
-+static int
-+fwzero_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	xfs_flock64_t	segment;
-+	int		mode = FALLOC_FL_WRITE_ZEROES;
-+
-+	if (!offset_length(argv[1], argv[2], &segment)) {
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	if (fallocate(file->fd, mode, segment.l_start, segment.l_len)) {
-+		perror("fallocate");
-+		exitcode = 1;
-+		return 0;
-+	}
-+	return 0;
-+}
-+
- void
- prealloc_init(void)
- {
-@@ -489,4 +515,14 @@ prealloc_init(void)
- 	funshare_cmd.oneline =
- 	_("unshares shared blocks within the range");
- 	add_command(&funshare_cmd);
-+
-+	fwzero_cmd.name = "fwzero";
-+	fwzero_cmd.cfunc = fwzero_f;
-+	fwzero_cmd.argmin = 2;
-+	fwzero_cmd.argmax = 2;
-+	fwzero_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-+	fwzero_cmd.args = _("off len");
-+	fwzero_cmd.oneline =
-+	_("zeroes space and eliminates holes by allocating and submitting write zeroes");
-+	add_command(&fwzero_cmd);
- }
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index b0dcfdb7..0a673322 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -550,6 +550,12 @@ With the
- .B -k
- option, use the FALLOC_FL_KEEP_SIZE flag as well.
- .TP
-+.BI fwzero " offset length"
-+Call fallocate with FALLOC_FL_WRITE_ZEROES flag as described in the
-+.BR fallocate (2)
-+manual page to allocate and zero blocks within the range by submitting write
-+zeroes.
-+.TP
- .BI zero " offset length"
- Call xfsctl with
- .B XFS_IOC_ZERO_RANGE
--- 
-2.39.2
-
+Since 204a575e91f3 "VFS: add common error checks to lookup_one_qstr_excl()"
+filename_create() does not need to stash the error value from mnt_want_write()
+into a separate variable - the logics that used to clobber 'error' after the
+call of mnt_want_write() has migrated into lookup_one_qstr_excl().
