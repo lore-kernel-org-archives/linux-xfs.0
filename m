@@ -1,40 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB7CF29ACC2
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Aug 2025 17:58:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77736302750
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Aug 2025 22:24:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755107900; cv=none; b=iJIEqPWZLm5AOGwh+0aw11ijVWSUm1vBIpp73g/6KoGs8IpoLTAYhEK++k+8i+/xghaSLAsn5LtR5Del4aS2AU8vnuWTtBXT0KyfzpkUXdcaBolRBhs+f9wZFdcNP5AZGzH0wRGK+UPP+KmJFH95gdRfA7FWxWF9fI4dgCnDtRA=
+	t=1755123844; cv=none; b=JYoQ56XLFCGQSNRd5I07O07o5BiPQJp4T+tDssapH1bzDGyRdJ3dF6/VwalmwAskR4za1Pb3010ki5Ka9g0Js5hNfy6pfYljUt4LAE3tmhWqjn9jCSepl4z5O8gUSULSxV7vs7KyWhwtsmgSUm2Qh0G0Vg2N4TG6wKdnsK/qZR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755107900; c=relaxed/simple;
-	bh=Wi2gxulqB3mOWHV8bposI4OVMCFM1zW6FTeHAXelSDM=;
+	s=arc-20240116; t=1755123844; c=relaxed/simple;
+	bh=t+iaxS48bavZm7Vx1PdFbFYHb2gesBylSOt17isRlpM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m/6+W8MlGw0EIBbpuP4sie7UEBP2nq/WNC9ANZ3SiV4N6q+XWVLePL37pFH5EW+Ert+LCPZB4uE/SpL/homNgw3VU6NmwQsLQu2OQ0F3rwrF1l0Sj/EEy+f/8xvM6dY08EbGiKYWQYe0YVrA45zqYO5A9EqMvWBR+Vjzh4vnTCE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kt1nG2rv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=foC6BaxqwImg7OSe+kjL01AU+810CUmQbnI+WEHp03pZfmhk1MHvvrxvCrxU63iQAIb8y3vln+2GXRsiAsszrMTfDyV/t0/Hc5GmRdbu5PQyNMeVtdVakz7UQGcIy/Jy70NH3vP3HiiXCOSr/qqDVaG4DsKSfryhXFWl7d/KS84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=U7FXo2lg; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kt1nG2rv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD8C1C4CEEB;
-	Wed, 13 Aug 2025 17:58:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755107900;
-	bh=Wi2gxulqB3mOWHV8bposI4OVMCFM1zW6FTeHAXelSDM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kt1nG2rvSv9ghx5w8DGK5nUTqFWh4hgJTOGRv0R70K2IX/OYND1ftRZ2cGC7h/5z9
-	 K3US5BfdLmVOz5MAXr9TtJnbqvn35//otxtWThRb5k71ep/rd6InXGQ/7RmdTfIt3x
-	 0IxjRy1v5ZjvwbQZLXbgCGSjtzmSTXAf5JqZWrmBYgPuI4Vbr/iTE0VKebTL4ocnG8
-	 zVBPUNPTzBpHUYYczafQfVSS6ywKseX4a3mGSiSuAKzV0YrJhu7HWlL1oOhGJnOdFZ
-	 Qq7tMI1F+/wYSPq30vzs5Rac9vxHTpRSABFGn/qtHkgbZkZTm88jCgaz3Oc5w5IgvV
-	 mnU2iu9U/ymZg==
-Date: Wed, 13 Aug 2025 19:58:16 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="U7FXo2lg"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-76e1fc69f86so1146864b3a.0
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Aug 2025 15:24:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1755123842; x=1755728642; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=0L9MZd2C29Owk+tSwbubAyj7GAaQwkku4ZJfpEOS8FM=;
+        b=U7FXo2lgELuUuAUpthSA+hzwOTyKsc4HJNzxDkY9qmp/AtA8Yp/XQvlc8F6x/jlUoM
+         4tlGBD2nwYydz+AuP9Lmb1KmL7dG2zCOlaIU0K2nhW9fiOJF0cfgr8svie10lqfSzuGk
+         H5GE/X5VQnyb/CDrkoGkhxmVMHxoSFOGZDDM/cfQAnnwfn/VojeRAI2PMrAS4rMZakOx
+         3yCESrSH3rpxZwuA198CpMBFj00yLoKFzsyqnMUc5NqfHgfP0ga7M637GiqKiBdAnq8p
+         nnpiVHZVN8dXenT30au0iBn47aQW3C9qW0O0tUPY9C6FP2tg8+J6zl/5ln/7QLSlyvik
+         BZ7w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755123842; x=1755728642;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0L9MZd2C29Owk+tSwbubAyj7GAaQwkku4ZJfpEOS8FM=;
+        b=FFIGAEhNuisgtCrPFHpI0FjQeS+bRTJcce+kN7FbZwjRcOhqvDhYcvJY+HESZEp6gn
+         2m4k474l49hL+vaI8lXf2sSE+tGTeLSfn0hee7myl2oA9LftPYX9Fl3VC5/owqhebaGC
+         fc22y2xMxMz+hVMEM9rMzb9qz0+ysc6CsQ0oKmkMwYxH+FklawBGYc/fxku55rGkrj2p
+         65p0MAXAK6wZTyT7u4LDrsjlyFMFGK1s97x2tlsk8nQ/v9G9QrPx5bodBlHJtPyJccyt
+         uy0Uhi59yEg3EwZUm6PGNzr21e7flqNdBPFCQOdonJ+exOWa+du/VwNZ2ndpWl4SGb1I
+         yF7w==
+X-Gm-Message-State: AOJu0YxvoUF2R+T+hOky5foevIgFjJSyVIMiqefDKVmYBuAOhfMoaBzG
+	u3GIiiMRNQbUMYVkJRjx2bTnFxsZfHLZoip6mU02ueL0bpAnGQpOSFUIlyJqFj1zDzltLWPuvD3
+	CU/DI
+X-Gm-Gg: ASbGncsgfAM45Re2rf9l6oFM0ANfb5wudU4sGJo5YDtaIQ/XT2hNXz1htkjaFlnIboP
+	1gRLPb0bgaqxwQfdpeyNDdw/qiiVFZlSoYP/cjeNp+4hwsWwxcIXrWhNo9FSeVH7ehCnALEa6kv
+	D66snRi66K5UOZBOXv23RwhBCTqMwEZf2Tylwiz4OEEys1eXhQqeeeIPAdNDJ9r9KGnnyYNz/8N
+	39EgIOTCU/rQeWlEE/nPUXDUqN25uQceiWUsIlFzUKq6yc4Y7ijnd/eV7nHuTiRhtBPPFs99Geo
+	U9QfbZecZzlfd3wwfNyaSr3+icsu1490EaMw/IwKwKmv4WFF7OcsdFjaxa9sxvNjFyzbtGD2irv
+	LsB/zixJas2bBBjy6xjZUzMCYhlVH4TiGMYdFu+SwiNrky+Up+HGE1qsnLOq+FHzUqkNLf8PEdw
+	==
+X-Google-Smtp-Source: AGHT+IH4Q3cxR0gd5uG0OyJTKtrFv+VsfevDd153NDQZu/EDBWJynY4REehHOy51YtsXHmSIQPJjzg==
+X-Received: by 2002:a17:903:1986:b0:240:3245:6d40 with SMTP id d9443c01a7336-2445bc29896mr117445ad.0.1755123841663;
+        Wed, 13 Aug 2025 15:24:01 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-241d1ef7d96sm333976665ad.18.2025.08.13.15.24.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 13 Aug 2025 15:24:01 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1umJt0-000000061aF-1yJh;
+	Thu, 14 Aug 2025 08:23:58 +1000
+Date: Thu, 14 Aug 2025 08:23:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: cem@kernel.org
 Cc: linux-xfs@vger.kernel.org
 Subject: Re: [RFC PATCH] xfs: Fix logbsize validation
-Message-ID: <y7s7s4izmd457th2pjrgqly7gc2tseug6iicvk6b4ilfmn3lxg@53riwveulxmf>
+Message-ID: <aJ0QfhQ1kPZRIVUq@dread.disaster.area>
 References: <20250812124350.849381-1-cem@kernel.org>
- <JiCSSspf-x-3gGFloaKdzhXSAOa84v2GfYvqxB0i8saN-ccGtafdnD4Cwqf-NnjfgpVpp1fBOVnBlNQeG44FLA==@protonmail.internalid>
- <20250813021655.GQ7965@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,168 +77,66 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250813021655.GQ7965@frogsfrogsfrogs>
+In-Reply-To: <20250812124350.849381-1-cem@kernel.org>
 
-On Tue, Aug 12, 2025 at 07:16:55PM -0700, Darrick J. Wong wrote:
-> On Tue, Aug 12, 2025 at 02:43:41PM +0200, cem@kernel.org wrote:
-> > From: Carlos Maiolino <cem@kernel.org>
-> >
-> > An user reported an inconsistency while mounting a V2 log filesystem
-> > with logbsize equals to the stripe unit being used (192k).
-> >
-> > The current validation algorithm for the log buffer size enforces the
-> > user to pass a power_of_2 value between [16k-256k].
-> > The manpage dictates the log buffer size must be a multiple of the log
-> > stripe unit, but doesn't specify it must be a power_of_2. Also, if
-> > logbsize is not specified at mount time, it will be set to
-> > max(32768, log_sunit), where log_sunit not necessarily is a power_of_2.
-> >
-> > It does seem to me then that logbsize being a power_of_2 constraint must
-> > be relaxed if there is a configured log stripe unit, so this patch
-> > updates the logbsize validation logic to ensure that:
-> >
-> > - It can only be set to a specific range [16k-256k]
-> >
-> > - Will be aligned to log stripe unit when the latter is set,
-> >   and will be at least the same size as the log stripe unit.
-> >
-> > - Enforce it to be power_of_2 aligned when log stripe unit is not set.
-> >
-> > This is achieved by factoring out the logbsize validation to a separated
-> > function to avoid a big chain of if conditionals
-> >
-> > While at it, update m_logbufs and m_logbsize conditionals in
-> > xfs_fs_validate_params from:
-> > 	(x != -1 && x != 0) to (x > 0)
-> >
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> >
-> > I am sending this as a RFC because although I did some basic testing,
-> > xfstests is still running, so I can't tell yet if it will fail on some configuration even though I am not expecting it to.
+On Tue, Aug 12, 2025 at 02:43:41PM +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
 > 
-> Heheh, how did that go?
+> An user reported an inconsistency while mounting a V2 log filesystem
+> with logbsize equals to the stripe unit being used (192k).
+> 
+> The current validation algorithm for the log buffer size enforces the
+> user to pass a power_of_2 value between [16k-256k].
+> The manpage dictates the log buffer size must be a multiple of the log
+> stripe unit, but doesn't specify it must be a power_of_2.
 
-Tests looks mostly fine, there were a few extra failures which seemed
-all related to tests which uses a custom geometry, not compatible with
-those I was forcing on all the tests, I'll double check if there is
-anything suspicious, and if everything is ok, I'll send a proper non-rfc
-version.
+The xfs(5) man page explicitly lists a set of fixed sizes that are
+supported, all of which are a power of two.
 
+> Also, if
+> logbsize is not specified at mount time, it will be set to
+> max(32768, log_sunit), where log_sunit not necessarily is a power_of_2.
+
+log_sunit is set by mkfs, so the user cannot change that
+dynmaically. LSU is generally something that should not be
+overridden by users - it is set by mkfs for optimal performance on
+devices that require specific write alignment to avoid costly RMW
+cycles...
+
+> It does seem to me then that logbsize being a power_of_2 constraint must
+> be relaxed if there is a configured log stripe unit, so this patch
+> updates the logbsize validation logic to ensure that:
 > 
-> >  fs/xfs/xfs_super.c | 57 ++++++++++++++++++++++++++++++++--------------
-> >  1 file changed, 40 insertions(+), 17 deletions(-)
-> >
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index bb0a82635a77..38d3d8a0b026 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1059,6 +1059,29 @@ xfs_fs_unfreeze(
-> >  	return 0;
-> >  }
-> >
-> > +STATIC int
-> > +xfs_validate_logbsize(
-> > +	struct xfs_mount	*mp)
-> > +{
-> > +	int			logbsize = mp->m_logbsize;
-> > +	uint32_t		logsunit = mp->m_sb.sb_logsunit;
+> - It can only be set to a specific range [16k-256k]
 > 
-> Why not access the fields directly instead of going through convenience
-> variables?
-> 
-> > +	if (logsunit > 1) {
-> > +		if (logbsize < logsunit ||
-> > +		    logbsize % logsunit) {
-> > +			xfs_warn(mp,
-> > +		"logbuf size must be a multiple of the log stripe unit");
-> > +			return -EINVAL;
-> > +		}
-> > +	} else {
-> > +		if (!is_power_of_2(logbsize)) {
-> > +		    xfs_warn(mp,
-> 
-> Odd indenting here  ^^^
-> 
-> > +		     "invalid logbufsize: %d [not a power of 2]", logbsize);
-> > +		    return -EINVAL;
-> > +		}
-> > +	}
-> > +	return 0;
-> > +}
-> >  /*
-> >   * This function fills in xfs_mount_t fields based on mount args.
-> >   * Note: the superblock _has_ now been read in.
-> > @@ -1067,16 +1090,13 @@ STATIC int
-> >  xfs_finish_flags(
-> >  	struct xfs_mount	*mp)
-> >  {
-> > -	/* Fail a mount where the logbuf is smaller than the log stripe */
-> >  	if (xfs_has_logv2(mp)) {
-> > -		if (mp->m_logbsize <= 0 &&
-> > -		    mp->m_sb.sb_logsunit > XLOG_BIG_RECORD_BSIZE) {
-> > -			mp->m_logbsize = mp->m_sb.sb_logsunit;
-> > -		} else if (mp->m_logbsize > 0 &&
-> > -			   mp->m_logbsize < mp->m_sb.sb_logsunit) {
-> > -			xfs_warn(mp,
-> > -		"logbuf size must be greater than or equal to log stripe size");
-> > -			return -EINVAL;
-> > +		if (mp->m_logbsize > 0) {
-> > +			if (xfs_validate_logbsize(mp))
-> > +				return -EINVAL;
-> 
-> If you're going to have xfs_validate_logbsize return an errno, then
-> capture it and return that, instead squashing them all to EINVAL.
-> 
-> AFAICT it's no big deal to have non-power-of-two log buffers, right?
-> I *think* everything looks ok, but I'm no expert in the bottom levels of
-> the xfs logging code. :/
-> 
-> --D
-> 
-> > +		} else {
-> > +			if (mp->m_sb.sb_logsunit > XLOG_BIG_RECORD_BSIZE)
-> > +				mp->m_logbsize = mp->m_sb.sb_logsunit;
-> >  		}
-> >  	} else {
-> >  		/* Fail a mount if the logbuf is larger than 32K */
-> > @@ -1628,8 +1648,7 @@ xfs_fs_validate_params(
-> >  		return -EINVAL;
-> >  	}
-> >
-> > -	if (mp->m_logbufs != -1 &&
-> > -	    mp->m_logbufs != 0 &&
-> > +	if (mp->m_logbufs > 0 &&
-> >  	    (mp->m_logbufs < XLOG_MIN_ICLOGS ||
-> >  	     mp->m_logbufs > XLOG_MAX_ICLOGS)) {
-> >  		xfs_warn(mp, "invalid logbufs value: %d [not %d-%d]",
-> > @@ -1637,14 +1656,18 @@ xfs_fs_validate_params(
-> >  		return -EINVAL;
-> >  	}
-> >
-> > -	if (mp->m_logbsize != -1 &&
-> > -	    mp->m_logbsize !=  0 &&
-> > +	/*
-> > +	 * We have not yet read the superblock, so we can't check against
-> > +	 * logsunit here.
-> > +	 */
-> > +	if (mp->m_logbsize > 0 &&
-> >  	    (mp->m_logbsize < XLOG_MIN_RECORD_BSIZE ||
-> > -	     mp->m_logbsize > XLOG_MAX_RECORD_BSIZE ||
-> > -	     !is_power_of_2(mp->m_logbsize))) {
-> > +	     mp->m_logbsize > XLOG_MAX_RECORD_BSIZE)) {
-> >  		xfs_warn(mp,
-> > -			"invalid logbufsize: %d [not 16k,32k,64k,128k or 256k]",
-> > -			mp->m_logbsize);
-> > +			"invalid logbufsize: %d [not in range %dk-%dk]",
-> > +			mp->m_logbsize,
-> > +			(XLOG_MIN_RECORD_BSIZE/1024),
-> > +			(XLOG_MAX_RECORD_BSIZE/1024));
-> >  		return -EINVAL;
-> >  	}
-> >
-> > --
-> > 2.50.1
-> >
-> >
-> 
+> - Will be aligned to log stripe unit when the latter is set,
+>   and will be at least the same size as the log stripe unit.
+
+Have you tested what happens when LSU is set to, say 72kB and
+logbsize is set to 216kB? (i.e. integer multiple of 3). What about a
+LSU of 19kB on a 1kB filesystem and a logbsize of 247kB? 
+
+These are weird and wacky configurations, but this change allows
+users to create them. i.e. it greatly expands the test matrix for
+these mount and mkfs options by adding an entirely new
+dimension to LSU configuration testing matrix.
+
+Does the benefit that this change provide outweigh the risk of
+uncovering some hidden corner case in the iclog alignment code? And
+failure here will result in journal corruption, and that may be very
+difficult to detect as it will only be noticed if there are
+subsequent recovery failures. That's a pretty nasty failure mode -
+it's difficult to triage and find the root cause, and it guarantees
+data loss and downtime for the user because it can only be fixed by
+running xfs_repair to zero the log.
+
+So, do the risks associated with greatly expanding the supported
+iclogbuf/LSU configurations outweigh the benefits that users will
+gain from having this expanded functionality?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
