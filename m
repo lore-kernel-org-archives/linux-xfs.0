@@ -1,39 +1,46 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEABD188A0C;
-	Wed, 13 Aug 2025 15:18:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80E3422A1D4;
+	Wed, 13 Aug 2025 15:22:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755098317; cv=none; b=jKvD8detPTexsOfL3YvWSRNVSPS8J9AfRpDlmoXGz/xMMy4BpaAmiOCUlBlLkeLQaMBm1ITFXzsDCii+MV8u1AMrOaVqDmQZA83UDQqTn0ccvDBWZsufLAFWD5f5Js4QM66yxdEYXHkBAzYYx4hdMGcy9rTI/e/f5SDwwLuAZKs=
+	t=1755098562; cv=none; b=UzGC2ZbBQphKDjylZtiBsXjRj3zKDsBreCdGvDpO0NGYJLceZG4EMKy+ymNEuNDpNMQc2980b796E7vf7QLHc3iAP8FFO3wCje1b3gt7rCTEzWYmS5TId1bqluoruQpENQnmI0Un2gPvyQ4wFJHeDOtz+cEkgWtOuGRXbrhcRUo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755098317; c=relaxed/simple;
-	bh=/cCZ0J8HYbHeehuodruuC87QWAo2CjRdwJQIXFDC+34=;
+	s=arc-20240116; t=1755098562; c=relaxed/simple;
+	bh=jZGa+5p8OKMxDeASZIZ7juQprGKdJaAUxc70fbNmq0Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GyqnKA5LlZ8hzj0S1N8YQB8dDbfU0Kwyteu6m+7HbpeK8rwUNZypWAFCamfCFh4q8jrKSPoB0OoVEGznvq1bSRSm2IXIdPYVoxSTMikcwzwJOSw8P1Ce1Vg8k2R84KImq6q3FziwgxAS2+5nuVRN8CsPdn/n2N4QL4QCNYZjsvk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AOcc7Ecg; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=aMtG7SR6aUebmerLPKqTJoKsm/gUiwVAQPLkYv27fokUOXRc0VnThsY8Gdh4Zpx24SwUMJYXMVpvnOeyRhdqrCfTZarxEy0+0CkRb5VUsLa2TpAF3mVcU8Cd+KHwftdw8fTcCFrDgWnJtsenYIu6GlG775+DYsAJrjxTjDaWHPo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=MvbJ0v1m; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AOcc7Ecg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34542C4CEEB;
-	Wed, 13 Aug 2025 15:18:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755098317;
-	bh=/cCZ0J8HYbHeehuodruuC87QWAo2CjRdwJQIXFDC+34=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AOcc7Ecgbne1cdoxE1zT7t6BEDTWgQXabokOMk4CXfoHBCEb8uYgr4QmES0nxT1BI
-	 PR5qqxO08phuw15RIVDhJ1NTmSXmxwirxpyv+EKnVo8YMTv20YLvrD+4b06WD2Z04Z
-	 YuAGMjGJpterFYY8ertD0A2VX68k6I9qEX/BrbaDHO3Cbo2CYWWa1YabdmtIuacaxl
-	 9nW0LjhgH9UH712tFOzoFj5q+zU3wReZG/EpJvZMuTgURFlNs3YW1NxU13gPYbvW5r
-	 y8RsqlcimVzzbVkq5FMG7IDoOhwdk/SU4rPWCT3AO2h5olpUWiNBTCq99z7q9fG4UO
-	 siNOo3ZSh2+RQ==
-Date: Wed, 13 Aug 2025 08:18:36 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: zlang@redhat.com
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH v2 2/2] check: collect core dumps from systemd-coredump
-Message-ID: <20250813151836.GC7952@frogsfrogsfrogs>
-References: <175381958396.3021194.15630936445319512317.stgit@frogsfrogsfrogs>
- <175381958439.3021194.17530499480231032752.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MvbJ0v1m"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=nhPtYN4tBHcWvztkc3kAGUGMgKwq0x8atHjNCcCB+AU=; b=MvbJ0v1mtVZc5PT7sWWSuBsGL7
+	SzLxpDpNszmZwJS+xuNDdz8iN9dhJYUkjEtY2V3QnIOnNaZPA7MU6ooTpTIxtsyg1dAZPKVukr7Kx
+	W6ywSRF2O1yMdy+vnckHnsBnL+K1TrYZdsgKEv4S6juE5LYNhN8pKfSJKUVc1icJN8727SqBgvc9q
+	+JvufEKldxI7BN/RfuwNpg04ElcGL4gzwYtI5EeKr04XuQxhFoRrmXaTDoVCWTgFfzq5Sprtd9LS0
+	pvOupbV2RuOvM4BCMMr8J4rOj8rBowZYvS/04gc4CXDI7DL38wCpjo6l2feSZdUI6JuwFcge0BhHa
+	vLMRCmlA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1umDJF-0000000EAgH-0ana;
+	Wed, 13 Aug 2025 15:22:37 +0000
+Date: Wed, 13 Aug 2025 08:22:37 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Nanzhe Zhao <nzzhao@126.com>
+Cc: Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs@lists.sourceforge.net,
+	linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
+	Chao Yu <chao@kernel.org>, Yi Zhang <yi.zhang@huawei.com>,
+	Barry Song <21cnbao@gmail.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [f2fs-dev] [RFC PATCH 0/9] f2fs: Enable buffered read/write
+ large folios support with extended iomap
+Message-ID: <aJytvfsMcR2hzWKI@infradead.org>
+References: <20250813092131.44762-1-nzzhao@126.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,150 +49,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <175381958439.3021194.17530499480231032752.stgit@frogsfrogsfrogs>
+In-Reply-To: <20250813092131.44762-1-nzzhao@126.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Aug 13, 2025 at 05:21:22PM +0800, Nanzhe Zhao wrote:
+> * **Why extends iomap**
+>   * F2FS stores its flags in the folio's private field,
+>     which conflicts with iomap_folio_state.
+>   * To resolve this, we designed f2fs_iomap_folio_state,
+>     compatible with iomap_folio_state's layout while extending
+>     its flexible state array for F2FS private flags.
+>   * We store a magic number in read_bytes_pending to distinguish
+>     whether a folio uses the original or F2FS's iomap_folio_state.
+>     It's chosen because it remains 0 after readahead completes.
 
-On modern RHEL (>=8) and Debian KDE systems, systemd-coredump can be
-installed to capture core dumps from crashed programs.  If this is the
-case, we would like to capture core dumps from programs that crash
-during the test.  Set up an (admittedly overwrought) pipeline to extract
-dumps created during the test and then capture them the same way that we
-pick up "core" and "core.$pid" files.
+That's pretty ugly.  What additionals flags do you need?  We should
+try to figure out if there is a sensible way to support the needs
+with a single codebase and data structure if that the requirements
+are sensible.
 
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
-v2: update reamde
----
- README    |   20 ++++++++++++++++++++
- check     |    2 ++
- common/rc |   44 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 66 insertions(+)
-
-diff --git a/README b/README
-index de452485af87a3..14e54a00c9e1a2 100644
---- a/README
-+++ b/README
-@@ -109,6 +109,11 @@ Ubuntu or Debian
-    $ sudo apt-get install exfatprogs f2fs-tools ocfs2-tools udftools xfsdump \
-         xfslibs-dev
- 
-+3. Install packages for optional features:
-+
-+    systemd coredump capture:
-+    $ sudo apt install systemd-coredump systemd jq
-+
- Fedora
- ------
- 
-@@ -124,6 +129,11 @@ Fedora
-     $ sudo yum install btrfs-progs exfatprogs f2fs-tools ocfs2-tools xfsdump \
-         xfsprogs-devel
- 
-+3. Install packages for optional features:
-+
-+    systemd coredump capture:
-+    $ sudo yum install systemd systemd-udev jq
-+
- RHEL or CentOS
- --------------
- 
-@@ -159,6 +169,11 @@ RHEL or CentOS
-     For ocfs2 build and install:
-      - see https://github.com/markfasheh/ocfs2-tools
- 
-+5. Install packages for optional features:
-+
-+    systemd coredump capture:
-+    $ sudo yum install systemd systemd-udev jq
-+
- SUSE Linux Enterprise or openSUSE
- ---------------------------------
- 
-@@ -176,6 +191,11 @@ SUSE Linux Enterprise or openSUSE
-     For XFS install:
-      $ sudo zypper install xfsdump xfsprogs-devel
- 
-+3. Install packages for optional features:
-+
-+    systemd coredump capture:
-+    $ sudo yum install systemd systemd-coredump jq
-+
- Build and install test, libs and utils
- --------------------------------------
- 
-diff --git a/check b/check
-index 7ef6c9b3d69df5..37f733d0f2afb2 100755
---- a/check
-+++ b/check
-@@ -924,6 +924,7 @@ function run_section()
- 		     $1 == "'$seqnum'" {lasttime=" " $2 "s ... "; exit} \
- 		     END {printf "%s", lasttime}' "$check.time"
- 		rm -f core $seqres.notrun
-+		_start_coredumpctl_collection
- 
- 		start=`_wallclock`
- 		$timestamp && _timestamp
-@@ -957,6 +958,7 @@ function run_section()
- 		# just "core".  Use globbing to find the most common patterns,
- 		# assuming there are no other coredump capture packages set up.
- 		local cores=0
-+		_finish_coredumpctl_collection
- 		for i in core core.*; do
- 			test -f "$i" || continue
- 			if ((cores++ == 0)); then
-diff --git a/common/rc b/common/rc
-index 3b853a913bee44..335d995909f74c 100644
---- a/common/rc
-+++ b/common/rc
-@@ -5053,6 +5053,50 @@ _check_kmemleak()
- 	fi
- }
- 
-+# Current timestamp, in a format that systemd likes
-+_systemd_now() {
-+	timedatectl show --property=TimeUSec --value
-+}
-+
-+# Do what we need to do to capture core dumps from coredumpctl
-+_start_coredumpctl_collection() {
-+	command -v coredumpctl &>/dev/null || return
-+	command -v timedatectl &>/dev/null || return
-+	command -v jq &>/dev/null || return
-+
-+	sysctl kernel.core_pattern | grep -q systemd-coredump || return
-+	COREDUMPCTL_START_TIMESTAMP="$(_systemd_now)"
-+}
-+
-+# Capture core dumps from coredumpctl.
-+#
-+# coredumpctl list only supports json output as a machine-readable format.  The
-+# human-readable format intermingles spaces from the timestamp with actual
-+# column separators, so we cannot parse that sanely.  The json output is an
-+# array of:
-+#        {
-+#                "time" : 1749744847150926,
-+#                "pid" : 2297,
-+#                "uid" : 0,
-+#                "gid" : 0,
-+#                "sig" : 6,
-+#                "corefile" : "present",
-+#                "exe" : "/run/fstests/e2fsprogs/fuse2fs",
-+#                "size" : 47245
-+#        },
-+# So we use jq to filter out lost corefiles, then print the pid and exe
-+# separated by a pipe and hope that nobody ever puts a pipe in an executable
-+# name.
-+_finish_coredumpctl_collection() {
-+	test -n "$COREDUMPCTL_START_TIMESTAMP" || return
-+
-+	coredumpctl list --since="$COREDUMPCTL_START_TIMESTAMP" --json=short 2>/dev/null | \
-+	jq --raw-output 'map(select(.corefile == "present")) | map("\(.pid)|\(.exe)") | .[]' | while IFS='|' read pid exe; do
-+		test -e "core.$pid" || coredumpctl dump --output="core.$pid" "$pid" "$exe" &>> $seqres.full
-+	done
-+	unset COREDUMPCTL_START_TIMESTAMP
-+}
-+
- # don't check dmesg log after test
- _disable_dmesg_check()
- {
