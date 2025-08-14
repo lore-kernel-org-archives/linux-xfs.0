@@ -1,48 +1,45 @@
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F76624DFE6;
-	Thu, 14 Aug 2025 21:19:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F74322D78F;
+	Thu, 14 Aug 2025 22:16:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755206346; cv=none; b=YUni/hVyZewFBADBY6ZyW4t/tVx65aQ0Cw5y69C33U0WmKb81D5RbQBNGFvlvpp+3Gc/cfQERNEr38e/JuM5HgRuiwGoKoNe6ldarLKs3DKEv+jKu+dUtDuRjDPIP2ZUmvdzUImoeZ+FnpaDyfyZqQGFSd4KsYP9JBAJ4H8aV1E=
+	t=1755209784; cv=none; b=ZvH8lCMugfvIalX5cHvUJ5k82tpUn/sEutzbNOzFQHsGBcMdk35LtrBxFrGc3y4pfmtYyqlJVgXhQZOfJD+uwSzfzlny/b1qJn8TQwCRtA4Yk8JrrrMa9oa8jqi3KM8gWiowx0m+B0U5zx7MCQCyT1sTB+Psty3g/MkgtniRnW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755206346; c=relaxed/simple;
-	bh=u0J0/YnPeGRJ3hclaLO4KYX3+QmnfN14rrUH4j85gEk=;
+	s=arc-20240116; t=1755209784; c=relaxed/simple;
+	bh=DGKJ0X14A+iJxb1MR4mBNAXUDwjcwcJkSd/Mx2UnfRU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YA6ix7TD9v0GwgvU4T7yiay4yA8NQAXlbRuBtKtvv7bpWsSEEeQ8dkmM9rcaOIgZcf/cAkghxsYxvqYn47lsvAyGGzKFj6ErgE+kurwRjJAm0mL0RZk571cLfn+rvjdIZkRtOP0/1Jplt7/veKiUb1HNRQfVUlwgj8IzscHGXkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=yrijASuw; arc=none smtp.client-ip=80.241.56.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=TkuXMZMNBmxQJwxA7si6SlGbk+soiDyEChE92GtoRJtTb2JzXcEhFUbrjdeFWrh9mNTkJxsSWBREtLYcvXyRjFzCdhvqU7wb/Fs3+YRkT4Nz3FhkwmGXQNP+1Ddhks84XgD0GKrzx2ZvkKBytsiwIF6pqtCE87yIApsCGLN1XhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PiF9ttuP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="yrijASuw"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4c2ym429tKz9sdD;
-	Thu, 14 Aug 2025 23:19:00 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1755206340;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=232qte4tMCviyR8d5oDa9j6UWlzKhLlAuwX6y+U88Us=;
-	b=yrijASuwWj8sI6kdjAZ2ctYzAt6Jt4DAlJykv0dI9SRYCzEN5jTPH1tueE+p+Wg36jFvsY
-	lbm7jrP7snafljMqwzN1a69Jsk5nWDmrD6XAZe0nf8wZ7aL4ll5ELKOs02ECNy/JwgeoUf
-	hMEEeDHHESqgGbr/Lxpiw0NXBLJB3juogFjCYZWeGtnb2IXjB8C/jWeMBpUAnS54yhlDZT
-	QEQQq+TiKCk/kVUT3U/6TTVbn+GFKCJZlOa9AFIbpwO9xwcLIawMYjK6YYgQBvgezCox6Z
-	WH4VSE0m7V7U9mqZ1rp6i5m7+703hnMkujunQ655cddfIWnaxDNtfMeGFXUrqQ==
-Date: Thu, 14 Aug 2025 23:18:53 +0200
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christian Brauner <brauner@kernel.org>, linux-kernel@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, mcgrof@kernel.org, gost.dev@samsung.com, 
-	linux-xfs@vger.kernel.org, Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH] iomap: use largest_zero_folio() in iomap_dio_zero()
-Message-ID: <ujw7gc4mg4oi5qpkjqrvvto7qewpqthuid63etsetzag5epyug@zmpq2g2btd5i>
-References: <20250814142137.45469-1-kernel@pankajraghav.com>
- <20250814182713.GS7965@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PiF9ttuP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0466C4CEED;
+	Thu, 14 Aug 2025 22:16:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755209783;
+	bh=DGKJ0X14A+iJxb1MR4mBNAXUDwjcwcJkSd/Mx2UnfRU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=PiF9ttuPiNjnDphzPUu26Uj/m0aWRFnQPRl/RUN0AlaOfeot1Ug2brelGPYzTTgpz
+	 cz7mLhCU+h19ye/f+oiLOBAJJ+oh09QK2IkQ1MQlpUwBblK4+4YG9abb53uJK/GaUZ
+	 I6EaAdKDOE7Ycnm8+7A1Rd2XpokPXl1gVUw8TcVpIum4LSI42pwzd/8N8zIqfxJTD5
+	 +2Qo+PIHmWBj4r3p3k5+4GMDdgaQwR6j60JZyikXROSScfyyTCRugvt/ctLFwD5tiW
+	 y4ip2CITZ7Wy2oBmi/3WR2f9TE5sXqpVP8yWMggGf+OkcgRk2QGZGA9pH0KeQARLl8
+	 1lXyFXdQ6Q0Aw==
+Date: Thu, 14 Aug 2025 15:16:23 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/7] generic/427: try to ensure there's some free space
+ before we do the aio test
+Message-ID: <20250814221623.GT7965@frogsfrogsfrogs>
+References: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
+ <175381957936.3020742.7058031120679185727.stgit@frogsfrogsfrogs>
+ <aIopyOh1TDosDK1m@infradead.org>
+ <20250812185459.GB7952@frogsfrogsfrogs>
+ <aJwfiw9radbDZq-p@infradead.org>
+ <20250813061452.GC7981@frogsfrogsfrogs>
+ <aJwvi03EX0LWzXfI@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,34 +48,43 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250814182713.GS7965@frogsfrogsfrogs>
+In-Reply-To: <aJwvi03EX0LWzXfI@infradead.org>
 
-On Thu, Aug 14, 2025 at 11:27:13AM -0700, Darrick J. Wong wrote:
-> On Thu, Aug 14, 2025 at 04:21:37PM +0200, Pankaj Raghav (Samsung) wrote:
-> > From: Pankaj Raghav <p.raghav@samsung.com>
-> > 
-> > iomap_dio_zero() uses a custom allocated memory of zeroes for padding
-> > zeroes. This was a temporary solution until there was a way to request a
-> > zero folio that was greater than the PAGE_SIZE.
-> > 
-> > Use largest_zero_folio() function instead of using the custom allocated
-> > memory of zeroes. There is no guarantee from largest_zero_folio()
-> > function that it will always return a PMD sized folio. Adapt the code so
-> > that it can also work if largest_zero_folio() returns a ZERO_PAGE.
-> > 
-> > Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+On Tue, Aug 12, 2025 at 11:24:11PM -0700, Christoph Hellwig wrote:
+> On Tue, Aug 12, 2025 at 11:14:52PM -0700, Darrick J. Wong wrote:
+> > Yeah... for the other ENOSPC-on-write paths, we kick inodegc, so maybe
+> > xfs_zoned_space_reserve (or its caller, more likely) ought to do that
+> > too?
 > 
-> Seems fine to me, though I wonder if this oughn't go along with the
-> rest of the largest_zero_folio changes?
+> Can you give this a spin?  Still running testing here, but so far
+> nothing blew up.
 
-I included them in one of the early versions but later removed as we had
-to rework the implementation multiple times. I just wanted to reduce the
-scope of the series and send out changes that uses the API separately :).
+Running inodegc_flush() once doesn't fix it, but doesn't hurt either.
 
+--D
+
+> diff --git a/fs/xfs/xfs_zone_space_resv.c b/fs/xfs/xfs_zone_space_resv.c
+> index 1313c55b8cbe..9cd38716fd25 100644
+> --- a/fs/xfs/xfs_zone_space_resv.c
+> +++ b/fs/xfs/xfs_zone_space_resv.c
+> @@ -10,6 +10,7 @@
+>  #include "xfs_mount.h"
+>  #include "xfs_inode.h"
+>  #include "xfs_rtbitmap.h"
+> +#include "xfs_icache.h"
+>  #include "xfs_zone_alloc.h"
+>  #include "xfs_zone_priv.h"
+>  #include "xfs_zones.h"
+> @@ -230,6 +231,11 @@ xfs_zoned_space_reserve(
+>  
+>  	error = xfs_dec_freecounter(mp, XC_FREE_RTEXTENTS, count_fsb,
+>  			flags & XFS_ZR_RESERVED);
+> +	if (error == -ENOSPC && !(flags & XFS_ZR_NOWAIT)) {
+> +		xfs_inodegc_flush(mp);
+> +		error = xfs_dec_freecounter(mp, XC_FREE_RTEXTENTS, count_fsb,
+> +				flags & XFS_ZR_RESERVED);
+> +	}
+>  	if (error == -ENOSPC && (flags & XFS_ZR_GREEDY) && count_fsb > 1)
+>  		error = xfs_zoned_reserve_extents_greedy(mp, &count_fsb, flags);
+>  	if (error)
 > 
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
-Thanks!
-
--- 
-Pankaj Raghav
