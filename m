@@ -1,154 +1,164 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32C3432142A;
-	Thu, 14 Aug 2025 14:21:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 935A3166F1A;
+	Thu, 14 Aug 2025 16:54:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755181308; cv=none; b=bc2d8GHG211QDGY3wuCeq++RLGJnUrXyJcCCV2QLDF6A96IXRhxZ/nihrl/Q5pz+bizykAX/P7Ed/Z8sw6eeDaRy3gH45hW4hRuHUs4bhM/ilBIyLDmXERhiR7p3eprADLLh1RwBZcn7/EJsrCXankanVMmWGi7B0je17Yim4mY=
+	t=1755190471; cv=none; b=Mng35y6LGam56qCAyXJJKDA/RiZjJFYarUHdAejIFJYP/JlpF5lwRgRMoBfHcok9TZ1huOeCPk3hjvTuMIR6im5lMCeI8jyoGwvnmM7vKSb40QxdIr+zF+O+OzeMSFZ4YxmRNer+mr8gj90dXq0HF11pzMAKxuJhaTWKsE5OfNU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755181308; c=relaxed/simple;
-	bh=RwyioGqHpNLArXgX5EMwEOrG2VbvcPLtrOSmzrNLb7Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EC1c67vY50TMGe9U31W2FMHt1l+dOv7vJXvwyBZR1sLtsiZ9w+KhU+TMsEJsGsR3e9ZqVG3nZTkt+k+lqKIXVpOUiFU2NBXTDhze5q47YUgDhkUujFPYRv5JUvr3mKkuir1jTZpo7ifZn+mY/mGgQrM8Og1EKFYPGrdYibzEctY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=r9xClWN3; arc=none smtp.client-ip=80.241.56.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
+	s=arc-20240116; t=1755190471; c=relaxed/simple;
+	bh=l+BdPGU5s1lSz+Wn4Skj6yNZHRqBxCYdP1QbhjGj46w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dc07DHx9nFSHmzBYwR7BbcJmg7lOKpRasaYF+uZqdyptW55paegCO4RlJvEhoYTQudzshijREYsIjGbp1LXX8zMgPOB/oXPKu1+7mlVg5wLwDPGuSSj9OF7TGl2lmefY/Nxq+ZJeUybdkPscwKYRXU6alJZsBvdkUxT1Glh2pw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uAijTxAu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="r9xClWN3"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4c2nVZ2T0xz9shX;
-	Thu, 14 Aug 2025 16:21:42 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-	s=MBO0001; t=1755181302;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=TuUVUGDrxlPwL85eCorobk2whR7srtFUu6MloQXOaWE=;
-	b=r9xClWN3bAYV76AT8/Dra0Dfa9BDhLnp6UW5BIR2M9wFNsyhwwWQ8jeYSj/Kv+Y/FryjEP
-	WuWlv8Q1KZ99/kPXWmN9FPOAuWbP+fm6XeXJDXA8qhD7SFRuQgPhvTeGe0ACR5hHSvOKXP
-	uqu42nXvQ4Jn5Z4neVeF97U+cy55EZKGWB0Rm81y44Ui45htFKGmyQS514y/eUO7e3D2hJ
-	SwCVnfUHy+WIF/uzUmtpWUL+Yuj6o5qWEEZsCt/chZBVjzL08oY3yAyBGCCdrpJgphpvUF
-	d5QEqqAUjl+GH6HtwX7co9D0gFmzD6iBkrzm9Tq3axMQvpuzSt95aEpru2ULcw==
-Authentication-Results: outgoing_mbo_mout;
-	dkim=none;
-	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::202 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
-From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-To: "Darrick J . Wong" <djwong@kernel.org>,
-	Christian Brauner <brauner@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	mcgrof@kernel.org,
-	gost.dev@samsung.com,
-	linux-xfs@vger.kernel.org,
-	kernel@pankajraghav.com,
-	Pankaj Raghav <p.raghav@samsung.com>
-Subject: [PATCH] iomap: use largest_zero_folio() in iomap_dio_zero()
-Date: Thu, 14 Aug 2025 16:21:37 +0200
-Message-ID: <20250814142137.45469-1-kernel@pankajraghav.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uAijTxAu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2593AC4CEED;
+	Thu, 14 Aug 2025 16:54:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755190471;
+	bh=l+BdPGU5s1lSz+Wn4Skj6yNZHRqBxCYdP1QbhjGj46w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uAijTxAuY3vGwM78+PrRc/fCQLGARlU2IACUe8szD/QvaX7trsuwHqBZM0fU/BkJ0
+	 PrKRsyPReVqn1jx+XoArIoQSdVBZ6pgLV5XJ3gwVZsxMoPqw64Rd5/ba5m5Giswfef
+	 +pWR5d1bRDswR628xphF8ZJg5OzExBiI+bx4OjoJXq70IScPa3+UDFRffBnH7BGs6t
+	 Z0b1epTyG+7p8SS4oKLtdLRaB4oVYY2J/7eVwEiWHaGt2ultzwauOolHjFJbFepz6P
+	 8AtC40MBVot4IzdXlUjfNKsre/FmlM+TNETCjpS5bIV9PHVY5//XDsMmFYJmeboDSM
+	 trEYUGuKC9C6A==
+Date: Thu, 14 Aug 2025 09:54:30 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-api@vger.kernel.org, hch@lst.de,
+	tytso@mit.edu, bmarzins@redhat.com, chaitanyak@nvidia.com,
+	shinichiro.kawasaki@wdc.com, brauner@kernel.org,
+	martin.petersen@oracle.com, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH xfsprogs v2] xfs_io: add FALLOC_FL_WRITE_ZEROES support
+Message-ID: <20250814165430.GR7942@frogsfrogsfrogs>
+References: <20250813024250.2504126-1-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4c2nVZ2T0xz9shX
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250813024250.2504126-1-yi.zhang@huaweicloud.com>
 
-From: Pankaj Raghav <p.raghav@samsung.com>
+On Wed, Aug 13, 2025 at 10:42:50AM +0800, Zhang Yi wrote:
+> From: Zhang Yi <yi.zhang@huawei.com>
+> 
+> The Linux kernel (since version 6.17) supports FALLOC_FL_WRITE_ZEROES in
+> fallocate(2). Add support for FALLOC_FL_WRITE_ZEROES support to the
+> fallocate utility by introducing a new 'fwzero' command in the xfs_io
+> tool.
+> 
+> Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=278c7d9b5e0c
+> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+> ---
+> v1->v2:
+>  - Minor description modification to align with the kernel.
+> 
+>  io/prealloc.c     | 36 ++++++++++++++++++++++++++++++++++++
+>  man/man8/xfs_io.8 |  6 ++++++
+>  2 files changed, 42 insertions(+)
+> 
+> diff --git a/io/prealloc.c b/io/prealloc.c
+> index 8e968c9f..9a64bf53 100644
+> --- a/io/prealloc.c
+> +++ b/io/prealloc.c
+> @@ -30,6 +30,10 @@
+>  #define FALLOC_FL_UNSHARE_RANGE 0x40
+>  #endif
+>  
+> +#ifndef FALLOC_FL_WRITE_ZEROES
+> +#define FALLOC_FL_WRITE_ZEROES 0x80
+> +#endif
+> +
+>  static cmdinfo_t allocsp_cmd;
+>  static cmdinfo_t freesp_cmd;
+>  static cmdinfo_t resvsp_cmd;
+> @@ -41,6 +45,7 @@ static cmdinfo_t fcollapse_cmd;
+>  static cmdinfo_t finsert_cmd;
+>  static cmdinfo_t fzero_cmd;
+>  static cmdinfo_t funshare_cmd;
+> +static cmdinfo_t fwzero_cmd;
+>  
+>  static int
+>  offset_length(
+> @@ -377,6 +382,27 @@ funshare_f(
+>  	return 0;
+>  }
+>  
+> +static int
+> +fwzero_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	xfs_flock64_t	segment;
+> +	int		mode = FALLOC_FL_WRITE_ZEROES;
 
-iomap_dio_zero() uses a custom allocated memory of zeroes for padding
-zeroes. This was a temporary solution until there was a way to request a
-zero folio that was greater than the PAGE_SIZE.
+Shouldn't this take a -k to add FALLOC_FL_KEEP_SIZE like fzero?
 
-Use largest_zero_folio() function instead of using the custom allocated
-memory of zeroes. There is no guarantee from largest_zero_folio()
-function that it will always return a PMD sized folio. Adapt the code so
-that it can also work if largest_zero_folio() returns a ZERO_PAGE.
+(The code otherwise looks fine to me)
 
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
----
- fs/iomap/direct-io.c | 38 +++++++++++++++-----------------------
- 1 file changed, 15 insertions(+), 23 deletions(-)
+--D
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index b84f6af2eb4c..a7a281ea3e50 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -24,13 +24,6 @@
- #define IOMAP_DIO_WRITE		(1U << 30)
- #define IOMAP_DIO_DIRTY		(1U << 31)
- 
--/*
-- * Used for sub block zeroing in iomap_dio_zero()
-- */
--#define IOMAP_ZERO_PAGE_SIZE (SZ_64K)
--#define IOMAP_ZERO_PAGE_ORDER (get_order(IOMAP_ZERO_PAGE_SIZE))
--static struct page *zero_page;
--
- struct iomap_dio {
- 	struct kiocb		*iocb;
- 	const struct iomap_dio_ops *dops;
-@@ -285,24 +278,35 @@ static int iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
- {
- 	struct inode *inode = file_inode(dio->iocb->ki_filp);
- 	struct bio *bio;
-+	struct folio *zero_folio = largest_zero_folio();
-+	int nr_vecs = max(1, i_blocksize(inode) / folio_size(zero_folio));
- 
- 	if (!len)
- 		return 0;
-+
- 	/*
--	 * Max block size supported is 64k
-+	 * This limit shall never be reached as most filesystems have a
-+	 * maximum blocksize of 64k.
- 	 */
--	if (WARN_ON_ONCE(len > IOMAP_ZERO_PAGE_SIZE))
-+	if (WARN_ON_ONCE(nr_vecs > BIO_MAX_VECS))
- 		return -EINVAL;
- 
--	bio = iomap_dio_alloc_bio(iter, dio, 1, REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
-+	bio = iomap_dio_alloc_bio(iter, dio, nr_vecs,
-+				  REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
- 	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
- 				  GFP_KERNEL);
- 	bio->bi_iter.bi_sector = iomap_sector(&iter->iomap, pos);
- 	bio->bi_private = dio;
- 	bio->bi_end_io = iomap_dio_bio_end_io;
- 
--	__bio_add_page(bio, zero_page, len, 0);
-+	while (len > 0) {
-+		unsigned int io_len = min(len, folio_size(zero_folio));
-+
-+		bio_add_folio_nofail(bio, zero_folio, io_len, 0);
-+		len -= io_len;
-+	}
- 	iomap_dio_submit_bio(iter, dio, bio, pos);
-+
- 	return 0;
- }
- 
-@@ -822,15 +826,3 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	return iomap_dio_complete(dio);
- }
- EXPORT_SYMBOL_GPL(iomap_dio_rw);
--
--static int __init iomap_dio_init(void)
--{
--	zero_page = alloc_pages(GFP_KERNEL | __GFP_ZERO,
--				IOMAP_ZERO_PAGE_ORDER);
--
--	if (!zero_page)
--		return -ENOMEM;
--
--	return 0;
--}
--fs_initcall(iomap_dio_init);
-
-base-commit: 931e46dcbc7e6035a90e9c4a27a84b660e083f0a
--- 
-2.50.1
-
+> +
+> +	if (!offset_length(argv[1], argv[2], &segment)) {
+> +		exitcode = 1;
+> +		return 0;
+> +	}
+> +
+> +	if (fallocate(file->fd, mode, segment.l_start, segment.l_len)) {
+> +		perror("fallocate");
+> +		exitcode = 1;
+> +		return 0;
+> +	}
+> +	return 0;
+> +}
+> +
+>  void
+>  prealloc_init(void)
+>  {
+> @@ -489,4 +515,14 @@ prealloc_init(void)
+>  	funshare_cmd.oneline =
+>  	_("unshares shared blocks within the range");
+>  	add_command(&funshare_cmd);
+> +
+> +	fwzero_cmd.name = "fwzero";
+> +	fwzero_cmd.cfunc = fwzero_f;
+> +	fwzero_cmd.argmin = 2;
+> +	fwzero_cmd.argmax = 2;
+> +	fwzero_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+> +	fwzero_cmd.args = _("off len");
+> +	fwzero_cmd.oneline =
+> +	_("zeroes space and eliminates holes by allocating and submitting write zeroes");
+> +	add_command(&fwzero_cmd);
+>  }
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index b0dcfdb7..0a673322 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -550,6 +550,12 @@ With the
+>  .B -k
+>  option, use the FALLOC_FL_KEEP_SIZE flag as well.
+>  .TP
+> +.BI fwzero " offset length"
+> +Call fallocate with FALLOC_FL_WRITE_ZEROES flag as described in the
+> +.BR fallocate (2)
+> +manual page to allocate and zero blocks within the range by submitting write
+> +zeroes.
+> +.TP
+>  .BI zero " offset length"
+>  Call xfsctl with
+>  .B XFS_IOC_ZERO_RANGE
+> -- 
+> 2.39.2
+> 
+> 
