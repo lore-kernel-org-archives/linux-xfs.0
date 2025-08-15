@@ -1,90 +1,192 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F74322D78F;
-	Thu, 14 Aug 2025 22:16:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 777922FCBEC;
+	Fri, 15 Aug 2025 09:59:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755209784; cv=none; b=ZvH8lCMugfvIalX5cHvUJ5k82tpUn/sEutzbNOzFQHsGBcMdk35LtrBxFrGc3y4pfmtYyqlJVgXhQZOfJD+uwSzfzlny/b1qJn8TQwCRtA4Yk8JrrrMa9oa8jqi3KM8gWiowx0m+B0U5zx7MCQCyT1sTB+Psty3g/MkgtniRnW4=
+	t=1755251951; cv=none; b=ssJt6KgS570w+hF7B53+f5eY3uTvQXBoM4OWLfywehuk78wXzSb4RYfUX+6hhUtiw68h+Q1ZoSEPQCl0Yv6iqTk28eiIVEEn2DybLActnL7KPI6WGn0OPDUm7R5RbtxCMN0lfo5l8cRnv3nJoKmR01/MkELekgZfeWtfeWEYpL8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755209784; c=relaxed/simple;
-	bh=DGKJ0X14A+iJxb1MR4mBNAXUDwjcwcJkSd/Mx2UnfRU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TkuXMZMNBmxQJwxA7si6SlGbk+soiDyEChE92GtoRJtTb2JzXcEhFUbrjdeFWrh9mNTkJxsSWBREtLYcvXyRjFzCdhvqU7wb/Fs3+YRkT4Nz3FhkwmGXQNP+1Ddhks84XgD0GKrzx2ZvkKBytsiwIF6pqtCE87yIApsCGLN1XhA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PiF9ttuP; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PiF9ttuP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0466C4CEED;
-	Thu, 14 Aug 2025 22:16:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755209783;
-	bh=DGKJ0X14A+iJxb1MR4mBNAXUDwjcwcJkSd/Mx2UnfRU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PiF9ttuPiNjnDphzPUu26Uj/m0aWRFnQPRl/RUN0AlaOfeot1Ug2brelGPYzTTgpz
-	 cz7mLhCU+h19ye/f+oiLOBAJJ+oh09QK2IkQ1MQlpUwBblK4+4YG9abb53uJK/GaUZ
-	 I6EaAdKDOE7Ycnm8+7A1Rd2XpokPXl1gVUw8TcVpIum4LSI42pwzd/8N8zIqfxJTD5
-	 +2Qo+PIHmWBj4r3p3k5+4GMDdgaQwR6j60JZyikXROSScfyyTCRugvt/ctLFwD5tiW
-	 y4ip2CITZ7Wy2oBmi/3WR2f9TE5sXqpVP8yWMggGf+OkcgRk2QGZGA9pH0KeQARLl8
-	 1lXyFXdQ6Q0Aw==
-Date: Thu, 14 Aug 2025 15:16:23 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/7] generic/427: try to ensure there's some free space
- before we do the aio test
-Message-ID: <20250814221623.GT7965@frogsfrogsfrogs>
-References: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
- <175381957936.3020742.7058031120679185727.stgit@frogsfrogsfrogs>
- <aIopyOh1TDosDK1m@infradead.org>
- <20250812185459.GB7952@frogsfrogsfrogs>
- <aJwfiw9radbDZq-p@infradead.org>
- <20250813061452.GC7981@frogsfrogsfrogs>
- <aJwvi03EX0LWzXfI@infradead.org>
+	s=arc-20240116; t=1755251951; c=relaxed/simple;
+	bh=BPj2WyclCZXem/yITttTFUz9oSCQhbl2IdcrQ+sLCf8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sdd421YGTHLAH5SrvKhNNAVSB23Zs9hRuWm5z8UTY1fbeRQFB4gvIv3pUT1lZNQMYc5XBZYiVPv3NLFMHzWb0RLv7ShpnCd6MJ5c4mz9ZM+Q9Dbj7h6NVH44/0Zy7Ksnw+lXjvNKBZqWmUVprdunBUGZk791tv49FrYEZWeFhO0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c3Hd56804zKHMnb;
+	Fri, 15 Aug 2025 17:59:05 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 2707D1A0A8D;
+	Fri, 15 Aug 2025 17:59:05 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgDnrxDlBJ9or8EHDw--.35151S3;
+	Fri, 15 Aug 2025 17:59:03 +0800 (CST)
+Message-ID: <1428e3fe-ae7a-410d-97b5-7dd0249c41c0@huaweicloud.com>
+Date: Fri, 15 Aug 2025 17:59:01 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aJwvi03EX0LWzXfI@infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH xfsprogs v2] xfs_io: add FALLOC_FL_WRITE_ZEROES support
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+ dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-api@vger.kernel.org, hch@lst.de,
+ tytso@mit.edu, bmarzins@redhat.com, chaitanyak@nvidia.com,
+ shinichiro.kawasaki@wdc.com, brauner@kernel.org, martin.petersen@oracle.com,
+ yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
+ yangerkun@huawei.com
+References: <20250813024250.2504126-1-yi.zhang@huaweicloud.com>
+ <20250814165430.GR7942@frogsfrogsfrogs>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20250814165430.GR7942@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgDnrxDlBJ9or8EHDw--.35151S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxAw4fKFyrGry8tFWkJF4UXFb_yoW5uF17pa
+	47XF1jkFW5Xry7uayfKw4kuF98Xws3tF43Gr4xWr10v3Z8ZF1fKF1DGwsY93s7ur1xCa10
+	qFn0gFy3C3WSy37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
+	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
+	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
+	s2-5UUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Tue, Aug 12, 2025 at 11:24:11PM -0700, Christoph Hellwig wrote:
-> On Tue, Aug 12, 2025 at 11:14:52PM -0700, Darrick J. Wong wrote:
-> > Yeah... for the other ENOSPC-on-write paths, we kick inodegc, so maybe
-> > xfs_zoned_space_reserve (or its caller, more likely) ought to do that
-> > too?
+On 2025/8/15 0:54, Darrick J. Wong wrote:
+> On Wed, Aug 13, 2025 at 10:42:50AM +0800, Zhang Yi wrote:
+>> From: Zhang Yi <yi.zhang@huawei.com>
+>>
+>> The Linux kernel (since version 6.17) supports FALLOC_FL_WRITE_ZEROES in
+>> fallocate(2). Add support for FALLOC_FL_WRITE_ZEROES support to the
+>> fallocate utility by introducing a new 'fwzero' command in the xfs_io
+>> tool.
+>>
+>> Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=278c7d9b5e0c
+>> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+>> ---
+>> v1->v2:
+>>  - Minor description modification to align with the kernel.
+>>
+>>  io/prealloc.c     | 36 ++++++++++++++++++++++++++++++++++++
+>>  man/man8/xfs_io.8 |  6 ++++++
+>>  2 files changed, 42 insertions(+)
+>>
+>> diff --git a/io/prealloc.c b/io/prealloc.c
+>> index 8e968c9f..9a64bf53 100644
+>> --- a/io/prealloc.c
+>> +++ b/io/prealloc.c
+>> @@ -30,6 +30,10 @@
+>>  #define FALLOC_FL_UNSHARE_RANGE 0x40
+>>  #endif
+>>  
+>> +#ifndef FALLOC_FL_WRITE_ZEROES
+>> +#define FALLOC_FL_WRITE_ZEROES 0x80
+>> +#endif
+>> +
+>>  static cmdinfo_t allocsp_cmd;
+>>  static cmdinfo_t freesp_cmd;
+>>  static cmdinfo_t resvsp_cmd;
+>> @@ -41,6 +45,7 @@ static cmdinfo_t fcollapse_cmd;
+>>  static cmdinfo_t finsert_cmd;
+>>  static cmdinfo_t fzero_cmd;
+>>  static cmdinfo_t funshare_cmd;
+>> +static cmdinfo_t fwzero_cmd;
+>>  
+>>  static int
+>>  offset_length(
+>> @@ -377,6 +382,27 @@ funshare_f(
+>>  	return 0;
+>>  }
+>>  
+>> +static int
+>> +fwzero_f(
+>> +	int		argc,
+>> +	char		**argv)
+>> +{
+>> +	xfs_flock64_t	segment;
+>> +	int		mode = FALLOC_FL_WRITE_ZEROES;
 > 
-> Can you give this a spin?  Still running testing here, but so far
-> nothing blew up.
-
-Running inodegc_flush() once doesn't fix it, but doesn't hurt either.
-
---D
-
-> diff --git a/fs/xfs/xfs_zone_space_resv.c b/fs/xfs/xfs_zone_space_resv.c
-> index 1313c55b8cbe..9cd38716fd25 100644
-> --- a/fs/xfs/xfs_zone_space_resv.c
-> +++ b/fs/xfs/xfs_zone_space_resv.c
-> @@ -10,6 +10,7 @@
->  #include "xfs_mount.h"
->  #include "xfs_inode.h"
->  #include "xfs_rtbitmap.h"
-> +#include "xfs_icache.h"
->  #include "xfs_zone_alloc.h"
->  #include "xfs_zone_priv.h"
->  #include "xfs_zones.h"
-> @@ -230,6 +231,11 @@ xfs_zoned_space_reserve(
->  
->  	error = xfs_dec_freecounter(mp, XC_FREE_RTEXTENTS, count_fsb,
->  			flags & XFS_ZR_RESERVED);
-> +	if (error == -ENOSPC && !(flags & XFS_ZR_NOWAIT)) {
-> +		xfs_inodegc_flush(mp);
-> +		error = xfs_dec_freecounter(mp, XC_FREE_RTEXTENTS, count_fsb,
-> +				flags & XFS_ZR_RESERVED);
-> +	}
->  	if (error == -ENOSPC && (flags & XFS_ZR_GREEDY) && count_fsb > 1)
->  		error = xfs_zoned_reserve_extents_greedy(mp, &count_fsb, flags);
->  	if (error)
+> Shouldn't this take a -k to add FALLOC_FL_KEEP_SIZE like fzero?
 > 
+
+Since allocating blocks with written extents beyond the inode size
+is not permitted, the FALLOC_FL_WRITE_ZEROES flag cannot be used
+together with the FALLOC_FL_KEEP_SIZE.
+
+Thanks,
+Yi.
+
+> (The code otherwise looks fine to me)
+> 
+> --D
+> 
+>> +
+>> +	if (!offset_length(argv[1], argv[2], &segment)) {
+>> +		exitcode = 1;
+>> +		return 0;
+>> +	}
+>> +
+>> +	if (fallocate(file->fd, mode, segment.l_start, segment.l_len)) {
+>> +		perror("fallocate");
+>> +		exitcode = 1;
+>> +		return 0;
+>> +	}
+>> +	return 0;
+>> +}
+>> +
+>>  void
+>>  prealloc_init(void)
+>>  {
+>> @@ -489,4 +515,14 @@ prealloc_init(void)
+>>  	funshare_cmd.oneline =
+>>  	_("unshares shared blocks within the range");
+>>  	add_command(&funshare_cmd);
+>> +
+>> +	fwzero_cmd.name = "fwzero";
+>> +	fwzero_cmd.cfunc = fwzero_f;
+>> +	fwzero_cmd.argmin = 2;
+>> +	fwzero_cmd.argmax = 2;
+>> +	fwzero_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+>> +	fwzero_cmd.args = _("off len");
+>> +	fwzero_cmd.oneline =
+>> +	_("zeroes space and eliminates holes by allocating and submitting write zeroes");
+>> +	add_command(&fwzero_cmd);
+>>  }
+>> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+>> index b0dcfdb7..0a673322 100644
+>> --- a/man/man8/xfs_io.8
+>> +++ b/man/man8/xfs_io.8
+>> @@ -550,6 +550,12 @@ With the
+>>  .B -k
+>>  option, use the FALLOC_FL_KEEP_SIZE flag as well.
+>>  .TP
+>> +.BI fwzero " offset length"
+>> +Call fallocate with FALLOC_FL_WRITE_ZEROES flag as described in the
+>> +.BR fallocate (2)
+>> +manual page to allocate and zero blocks within the range by submitting write
+>> +zeroes.
+>> +.TP
+>>  .BI zero " offset length"
+>>  Call xfsctl with
+>>  .B XFS_IOC_ZERO_RANGE
+>> -- 
+>> 2.39.2
+>>
+>>
+
