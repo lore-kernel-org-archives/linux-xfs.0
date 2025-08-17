@@ -1,136 +1,119 @@
-Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FA2D16DEB1;
-	Sun, 17 Aug 2025 04:44:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 980A539FCE;
+	Sun, 17 Aug 2025 15:51:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755405849; cv=none; b=TIBff+BFtz9tP2hIUKLS8qPdB35npgvBydFTN0cgLi/HLhKoZnM3gO1e+oDlkNn0WDMavLLl7AO5Cv4NSp6S1OmW6ub5X0TVaXaqMgPTEc3SCtihrppEbrhD3tMZ+K6o1n8kmDJkKjFsEZkAy6Y/L9vQoHIi2rFBHFcNSYBlK6Q=
+	t=1755445868; cv=none; b=LxZFtDiqsdCGdEWbTWNSctfBzZ91/GN1TWRr7SsrTaj97Qf291GNyHOKKK1qSx09RmPijXS3leL/tARiQ9RyDV39RjAIB5vDILpViQiXACUUJy4Mzzt4MLkuG1V5W+ZLIOnBaMuSMCg6QuQ4okX4HuS5XByxh8/vKKj337iRN4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755405849; c=relaxed/simple;
-	bh=P3VOaa2AHqjcGObv6vHwnEfq1cYCBzytJb2Lv6uoxLc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=ecrOcRXWupQltifaypoYMbj5WKQY853uGVkxvaMk00F2DG0BGC8Qux++eZQffqdkY/rh0ec4reFI/zarffwOKy6IMjO8DL129S226yz3NKBVwq+FWTnPrlhJ3/yqhW4InwKUYEiPRrdKaPjYh4QxR8Bki6YWv+N5GtduaMKS4V0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com; spf=pass smtp.mailfrom=126.com; dkim=fail (1024-bit key) header.d=126.com header.i=@126.com header.b=ZqWuRZOH reason="signature verification failed"; arc=none smtp.client-ip=220.197.31.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
+	s=arc-20240116; t=1755445868; c=relaxed/simple;
+	bh=JR8jbMCs8QxjEzkOj58G229hlMPUMqRiNV2+nI2zpTc=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=aj64DifwaZX1DKiTQh5HWLFzqhji9VTtObVYLfBkYKYmc3G+hY/MI9+YMEg4IJ3p6C8KgRBzZzCOUbTIhaJSwoJw7ntC0vPbyxL4ACbR92viKQm5O7vimlNJVPiMCxATQAbVnJ6Fyy7Aov3h8CFoke4OKwUouhUuxBQXphv1+dE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OwVgzwA4; arc=none smtp.client-ip=209.85.216.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=126.com header.i=@126.com header.b="ZqWuRZOH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
-	Message-ID; bh=TTUBPNPGlI/pbOhVvgZ3yq4pwbsl1IdZ8XlTgeU2je8=; b=Z
-	qWuRZOHVv42DOWA7lmZrS5T2RT7r8sMZgEZd0LkTIKIK8fn/aSVpbiVFwOMdi5e/
-	zN14ZRHH3qYUgZO56ujLR6nvRmGcgdHoaV81amxsp9yYf+0zgX/mCedep/aB5nHW
-	hnbW0G6kwuceGZ1u7dK7fdiXDppfLdkxFlnTErrbQs=
-Received: from nzzhao$126.com ( [112.86.116.50] ) by
- ajax-webmail-wmsvr-41-110 (Coremail) ; Sun, 17 Aug 2025 12:43:11 +0800
- (CST)
-Date: Sun, 17 Aug 2025 12:43:11 +0800 (CST)
-From: "Nanzhe Zhao" <nzzhao@126.com>
-To: "Christoph Hellwig" <hch@infradead.org>
-Cc: "Jaegeuk Kim" <jaegeuk@kernel.org>,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-fsdevel@vger.kernel.org,
-	"Matthew Wilcox" <willy@infradead.org>, "Chao Yu" <chao@kernel.org>,
-	"Yi Zhang" <yi.zhang@huawei.com>, "Barry Song" <21cnbao@gmail.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re:Re:Re: [f2fs-dev] [RFC PATCH 0/9] f2fs: Enable buffered
- read/write large folios support with extended iomap
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
- 20250723(a044bf12) Copyright (c) 2002-2025 www.mailtech.cn 126com
-In-Reply-To: <e81c31e.56a.198a604868e.Coremail.nzzhao@126.com>
-References: <20250813092131.44762-1-nzzhao@126.com>
- <aJytvfsMcR2hzWKI@infradead.org>
- <e81c31e.56a.198a604868e.Coremail.nzzhao@126.com>
-X-NTES-SC: AL_Qu2eB/ibuk8i5yWRZOkfmUgRgOw3XMSyu/oi2o9UO5FwjDHjwAEMdlNvPmP86+SWEwalmwasXgpj785Bco1jU44bXwcKXxuA31xYV6iKzEAS+w==
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OwVgzwA4"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-323266baa22so2563872a91.0;
+        Sun, 17 Aug 2025 08:51:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1755445866; x=1756050666; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=QjOJABZCp548naVzq1SVUQpsRTFmVx7Vnw2LNaJgSpc=;
+        b=OwVgzwA4hXT/z39dvOfJPk1T/+IyPZxIcXdfQ+KS0Dw6DkrZdSO4mrg+THaquOOT9/
+         18WT2m3+fgou8u4dGUni19O4a3GmCxrZQOU6QN2CFhRg0f8d0mb65fzVITy7jeS2RZc+
+         Y67NqDz3gOJnlJM4WSL7+k0TtqWhcglyIGm7/E19NVxLlAer+7i1f19tpEKPQsueYLTT
+         34dgmtpi65pt7B0nAb8TS3GNxoxWipXXgiV/kwFPV33yzXpXdOQc20N/ExUwVJq8ga23
+         OZdpE3QTRnSfcB1SR/Sa1964BSxd1AXb7MUb+2uONM3ePCvEY8FHJHoF3LLUeQIKKMTY
+         /9MQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755445866; x=1756050666;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QjOJABZCp548naVzq1SVUQpsRTFmVx7Vnw2LNaJgSpc=;
+        b=QOSp0uOBs4EyltwDqpHtSyttQSS/BhwKhjeu9q6T8XDyUTCYu2KNk0khXbz0DMspRG
+         LxHvQI2Cx5O+e/v+SPT1JgiiAHZCJ10IxaiQzIUsIbLxg8GCc0WyvJrcaYNE06BObR5U
+         RLhBh9m7uknP/P7gJvr/zOoTQ+R4wr3IWkyqKTdBqfLKGdDVD/sKYATfnmvOYM5tK9yz
+         2Tmyq1SsiVH6gOrU7wnjS2Om2zkCn1N/QxojPivXwLPXAluekYpArmnyfNkM2v71xZKv
+         BYheb6kVkNZUQWyvKNsPpEffeCNQ1A+1OFgFeBcdyqUtRnUr/XT7OnrPTSDv1Qp0nxzY
+         9xbw==
+X-Forwarded-Encrypted: i=1; AJvYcCXD6M3rLp7gQTyq6aEoftRzjlqLlZAWwLa2YRaechT6YhZ9Ztl8+aRZ64YtzK2polI0TiYkE/ggAygKTqc=@vger.kernel.org, AJvYcCXXpT1OhN2NJv8by/P9iwarLwYomA6Xxp4RwKk8l26pUWqY4JjVR8drwScu4nkowq4ySgeZemWpl5KW@vger.kernel.org
+X-Gm-Message-State: AOJu0YwLyUFL3ysnEOFj4EGHBdCDmaUNU7/Q8tuOFDesus9nWoM41SCB
+	u/qIWjgiVR98Yaq/3f12VDOlII9kNMEnboPxJf9Hwg3UsRZMIXUoAeIq
+X-Gm-Gg: ASbGnctVC24YD9lzMCtcS0M2dfNnTe9E/OELSK5LqZRcXmsBgzVP7LmwWHLp0AfLHrt
+	fA08T5yqKXp57nNSe9xSxCaKuMT0VomMGtEkZ3ILRtmz0xKfFdebYX6mv4Xud7hES33sl9jiWKq
+	ihNMA1ons3/HAC+fwlft2J2ftXhKnZKxc8pJ6E5pIkWYblWsppaDtRtoBcDYyH3Eqgw3naGS9/5
+	ED5M0+vNJggxByj+TX2+ZBmVTtq+H+agZmgeihObUneQ/lt+QAFsCRDIiaYHydPNqBvQjfDKDD1
+	zSmWbmG78A4LZ11Z6CvyKPAF9MKVXWLzoDb+GO5sD+r0ZDP2edqJbU7LqQUVRxW5TlkazXnbDCx
+	WMXr6kA1xx+dsCL/5t4U=
+X-Google-Smtp-Source: AGHT+IHpRWgCYbDi4joXJa+E8544/3ray+wLKLWD1YuD6ZGN7D13+dewr7cVSoJHVCWGfA+uB3mVkw==
+X-Received: by 2002:a17:90b:3b8c:b0:31c:3651:2d18 with SMTP id 98e67ed59e1d1-3234dc64767mr9865139a91.16.1755445865738;
+        Sun, 17 Aug 2025 08:51:05 -0700 (PDT)
+Received: from fedora ([2804:14c:64:af90::1000])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-76e45292dc1sm5221495b3a.50.2025.08.17.08.51.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 17 Aug 2025 08:51:05 -0700 (PDT)
+From: Marcelo Moreira <marcelomoreira1905@gmail.com>
+To: cem@kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	skhan@linuxfoundation.org,
+	linux-kernel-mentees@lists.linuxfoundation.org
+Subject: [PATCH v2] xfs: Replace strncpy with memcpy
+Date: Sun, 17 Aug 2025 12:50:41 -0300
+Message-ID: <20250817155053.15856-1-marcelomoreira1905@gmail.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <6be3b4b7.83a.198b656b16c.Coremail.nzzhao@126.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:bikvCgD3v9XfXaFoM9AbAA--.3364W
-X-CM-SenderInfo: xq22xtbr6rjloofrz/1tbiZBWrz2igkwCEcQAKsx
-X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
+Content-Transfer-Encoding: 8bit
 
-ClRoZXJlJ3MgYW5vdGhlciBpbXBvcnRhbnQgcmVhc29uIHRvIHV0aWxpemUgYW4gZjJmc19pb21h
-cF9mb2xpb19zdGF0ZS7CoAoKQmVjYXVzZSBmMmZzIGRvZXNuJ3QgcG9zc2VzcyBhIHBlciBibG9j
-ayBzdGF0ZSB0cmFja2luZyBkYXRhIHN0cnVjdHVyZSAKbGlrZSBidWZmZXIgaGVhZHMgb3Igc3Vi
-cGFnZXMswqBpdCBjYW4ndCB0cmFjayBwZXIgYmxvY2sgZGlydHkgc3RhdGUgb3IgCnJlYWQvd3Jp
-dGUgYnl0ZXMgcGVuZGluZyBpdHNlbGYuIEdyb3dpbmcgc3VjaCBhIHN0cnVjdHVyZSBmb3IgZjJm
-cyBhbmQgIAphcHBseWluZyBpdCB0byBhbGwgY29kZSBwYXRocyBjb3VsZCBiZSBhIHRyZW1lbmRv
-dXMgYW5kIGRlc3RydWN0aXZlIAp0YXNrLsKgCgpTbyBJIHRoaW5rIGl0J3MgY29udmVuaWVudCB0
-byBwb3NzZXNzIGFuIGYyZnMgb3duIHBlciBmb2xpbyAKcHJpdmF0ZSBkYXRhIHN0cnVjdHVyZSB0
-aGF0IGNhbiBib3RoIGJlIGNvbXBhdGlibGXCoAp3aXRoIGlvbWFwIGFuZCBmMmZzJ3MgIG5lZWRz
-LCBlc3BlY2lhbGx5IGhlbHBmdWwgZm9yIG90aGVyIGYyZnMncyBpL28gcGF0aHMKIHRoYXQgbmVl
-ZCB0byAgc3VwcG9ydMKgbGFyZ2UgZm9saW9zIGFsdG9nZXRoZXIgd2l0aCBidWZmZXJlZCBpbyBi
-dXQgY2FuJ3QgCmdvIGludG8gaW9tYXAgIHBhdGggKGkuZS4sIGdhcmJhZ2UgY29sbGVjdGlvbiku
-CgogSXQgY2FuIGFsc28gYmUgZXh0ZW5kZWQgd2l0aCBmaWVsZHMgdG8KIG1lZXQgdGhlIG5lZWRz
-IG9mIG90aGVyIHR5cGVzIG9mIGYyZnMgZmlsZXMgKGUuZy4sIGNvbXByZXNzZWQgZmlsZXMpIGlm
-CiB0aGV5IG5lZWQgdG8gc3VwcG9ydCBsYXJnZSBmb2xpb3MgdG9vLgoKCgoKCkF0IDIwMjUtMDgt
-MTQgMDg6Mzk6MzEsICLotbXljZflk7IgIiA8bnp6aGFvQDEyNi5jb20+IHdyb3RlOgo+SGkgTXIu
-Q2hyaXN0b3BoLAo+Cj5UaGFua3MgZm9yIHRoZSBxdWljayBmZWVkYmFjayEKPgo+PiBUaGF0J3Mg
-cHJldHR5IHVnbHkuICBXaGF0IGFkZGl0aW9uYWwgZmxhZ3MgZG8geW91IG5lZWQ/ICAKPgo+RjJG
-UyBjYW4gdXRpbGl6ZSB0aGUgZm9saW8ncyBwcml2YXRlIGZpZWxkIGluIGEgbm9uLXBvaW50ZXIg
-bW9kZSB0byBzdG9yZSBpdHMgZXh0cmEgZmxhZ3MsIHdoaWNoIGluZGljYXRlIHRoZSBmb2xpbydz
-IGFkZGl0aW9uYWwgc3RhdHVzLiAKPlBsZWFzZSB0YWtlIGEgbG9vayBhdCB0aGUgZjJmcy5oIGZp
-bGUgZnJvbSBQQUdFX1BSSVZBVEVfR0VUX0ZVTkMgdG8gdGhlIGVuZCBvZiBjbGVhcl9wYWdlX3By
-aXZhdGVfYWxsKCkuCj4KPlRoZXNlIGZsYWdzIHBlcnNpc3QgdGhyb3VnaG91dCB0aGUgZW50aXJl
-IGxpZmV0aW1lIG9mIGEgZm9saW8sIHdoaWNoIGNvbmZsaWN0cyB3aXRoIHRoZSBpb21hcF9mb2xp
-b19zdGF0ZSBwb2ludGVyLgo+Q3VycmVudGx5LCB0aGUgcHJpdmF0ZSBmaWVsZHMgb2YgaW9tYXAn
-cyBleGlzdGluZyBkYXRhIHN0cnVjdHVyZXMsbmFtZWx5IHN0cnVjdCBpb21hcCdzIHByaXZhdGUs
-IHN0cnVjdCBpb21hcF9pdGVyJ3MgcHJpdmF0ZSwgCj5hbmQgc3RydWN0IGlvbWFwX2lvZW5kJ3Mg
-aW9fcHJpdmF0ZSxhcmUgZWl0aGVyIGFsbG9jYXRlZCBsb2NhbGx5IG9uIHRoZSBzdGFjayBvciBo
-YXZlIGEgbGlmZWN5Y2xlIG9uIHRoZSBoZWFwIHRoYXQgb25seSBleGlzdHMgCj5mb3IgdGhlIGR1
-cmF0aW9uIG9mIHRoZSBJL08gcm91dGluZS4gVGhpcyBjYW5ub3QgbWVldCBGMkZTJ3MgcmVxdWly
-ZW1lbnRzLgo+Cj4+IFdlIHNob3VsZCAgdHJ5IHRvIGZpZ3VyZSBvdXQgaWYgdGhlcmUgaXMgYSBz
-ZW5zaWJsZSB3YXkgdG8gc3VwcG9ydCB0aGUgbmVlZHMKPj4gd2l0aCBhIHNpbmdsZSBjb2RlYmFz
-ZSBhbmQgZGF0YSBzdHJ1Y3R1cmUuCj4KPkFzIGZhciBhcyBJIGtub3csIG9ubHkgRjJGUyBoYXMg
-dGhpcyByZXF1aXJlbWVudCwgd2hpbGUgb3RoZXIgZmlsZSBzeXN0ZW1zIGRvIG5vdC4gCj5UaGVy
-ZWZvcmUsIG15IGluaXRpYWwgdGhvdWdodCB3YXMgdG8gYXZvaWQgZGlyZWN0bHkgbW9kaWZ5aW5n
-IHRoZSBnZW5lcmljIGxvZ2ljIGluIGZzL2lvbWFwLiBJbnN0ZWFkLCBJIHByb3Bvc2UgZGVzaWdu
-aW5nIAo+YSB3cmFwcGVyIHN0cnVjdHVyZSBmb3IgaW9tYXBfZm9saW9fc3RhdGUgc3BlY2lmaWNh
-bGx5IGZvciBGMkZTIHRvIHNhdGlzZnkgYm90aCBpb21hcCdzIGFuZCBGMkZTJ3Mgb3duIG5lZWRz
-Lgo+Cj5Bbm90aGVyIGlzc3VlIGlzIHRoZSBoYW5kbGluZyBvZiBvcmRlci0wIGZvbGlvcy4gU2lu
-Y2UgdGhlIGlvbWFwIGZyYW1ld29yayBkb2VzIG5vdCBhbGxvY2F0ZSBhbiBpb21hcF9mb2xpb19z
-dGF0ZSBmb3IgdGhlc2UgZm9saW9zLCAKPkYyRlMgd2lsbCBhbHdheXMgc3RvcmVzIGl0cyBwcml2
-YXRlIGZsYWdzIGluIHRoZSBmb2xpby0+cHJpdmF0ZSBmaWVsZC4gVGhlbiBpb21hcCBmcmFtZXdv
-cmsgd291bGQgbWlzdGFrZW5seSBpbnRlcnByZXQgdGhlc2UgZmxhZ3MgYXMgYSBwb2ludGVyLiAK
-Pgo+SWYgd2UgYXJlIHRvIHNvbHZlIHRoaXMgaXNzdWUgaW4gZ2VuZXJpYyBpb21hcCBsYXllciwg
-YSBtaW5pbWFsIGNoYW5nZXMgbWV0aG9kIHRvIGlvbWFwIGZyYW1ld29yayBJIHN1cHBvc2UgaXMg
-dG8gbGV0IGlvbWFwIGxvZ2ljIGNhbgo+Ym90aCBkaXN0aW5ndWlzaCBwb2ludGVyIGFuZCBub24g
-cG9pbnRlciBtb2RlIG9mIGZvbGlvLT5wcml2YXRlLiBXZSBzaG91bGQgYWxzbyBhZGQgYSBwcml2
-YXRlIGZpZWxkIHRvIGlvbWFwX2ZvbGlvX3N0YXRlICwgb3IgZXh0ZW5kIGhlIHN0YXRlIAo+Zmxl
-eGlibGUgYXJyYXkgdG8gc3RvcmUgdGhlIGV4dHJhIGluZm9tYXRpb24uIElmIGlvbWFwIGRldGVj
-dHMgYSBvcmRlcj4wIGZvbGlvJ3MgZm9saW8tPnByaXZhdGUgaXMgdXNlZCBpbiBub24gcG9pbnRl
-ciBtb2RlLCB0aGVuIGl0IHN0b3JlIHRoZSBmbGFncyBpbiBhIG5ld2x5IAo+YWxsb2N0ZWQgaW9t
-YXBfZm9saW9fc3RhdGUgZmlyc3QgLCBjbGVhciB0aGUgcHJpdmF0ZSBmaWVsZCBhbmQgdGhlbiBz
-dG9yZSdzIGl0cyBhZGRyZXNzIGluIGl0Lgo+Cj5QLlMuICBJIGp1c3Qgbm90aWNlZCB5b3UgZGlk
-bid0IHJlcGx5IHZpYSBteSByZXNlbmQgcGF0Y2guIEkgbWlzc3BlbGxlZCBmMmZzJ3Mgc3Vic3l0
-ZW0gbWFpbCBhZGRyZXNzIGluIHRoZSBvcmlnaW5hbCBwYXRjaCBhbmQgSSBzaW5jZXJlbHkgYXBv
-bG9naXplIGZvciB0aGF0Lgo+SSBhbHJlYWR5IHJlLXNlbnQgdGhlIHNlcmllcyBhcyAgCj4gIltm
-MmZzLWRldl0gW1JFU0VORCBSRkMgUEFUQ0ggMC85XSBmMmZzOiBFbmFibGUgYnVmZmVyZWQgcmVh
-ZC93cml0ZSBsYXJnZSBmb2xpb3Mgc3VwcG9ydCB3aXRoIGV4dGVuZGVkIGlvbWFwIgo+Q291bGQg
-d2UgY29udGludWUgdGhlIGRpc2N1c3Npb24gb24gdGhhdCB0aHJlYWQgc28gdGhlIHJpZ2h0IGxp
-c3QgZ2V0cyB0aGUKPmZ1bGwgY29udGV4dD8gIFRoYW5rcyEKPgo+QmVzdCByZWdhcmRzLAo+TmFu
-emhlIFpoYW8KPgo+QXQgMjAyNS0wOC0xMyAyMzoyMjozNywgIkNocmlzdG9waCBIZWxsd2lnIiA8
-aGNoQGluZnJhZGVhZC5vcmc+IHdyb3RlOgo+Pk9uIFdlZCwgQXVnIDEzLCAyMDI1IGF0IDA1OjIx
-OjIyUE0gKzA4MDAsIE5hbnpoZSBaaGFvIHdyb3RlOgo+Pj4gKiAqKldoeSBleHRlbmRzIGlvbWFw
-KioKPj4+ICAgKiBGMkZTIHN0b3JlcyBpdHMgZmxhZ3MgaW4gdGhlIGZvbGlvJ3MgcHJpdmF0ZSBm
-aWVsZCwKPj4+ICAgICB3aGljaCBjb25mbGljdHMgd2l0aCBpb21hcF9mb2xpb19zdGF0ZS4KPj4+
-ICAgKiBUbyByZXNvbHZlIHRoaXMsIHdlIGRlc2lnbmVkIGYyZnNfaW9tYXBfZm9saW9fc3RhdGUs
-Cj4+PiAgICAgY29tcGF0aWJsZSB3aXRoIGlvbWFwX2ZvbGlvX3N0YXRlJ3MgbGF5b3V0IHdoaWxl
-IGV4dGVuZGluZwo+Pj4gICAgIGl0cyBmbGV4aWJsZSBzdGF0ZSBhcnJheSBmb3IgRjJGUyBwcml2
-YXRlIGZsYWdzLgo+Pj4gICAqIFdlIHN0b3JlIGEgbWFnaWMgbnVtYmVyIGluIHJlYWRfYnl0ZXNf
-cGVuZGluZyB0byBkaXN0aW5ndWlzaAo+Pj4gICAgIHdoZXRoZXIgYSBmb2xpbyB1c2VzIHRoZSBv
-cmlnaW5hbCBvciBGMkZTJ3MgaW9tYXBfZm9saW9fc3RhdGUuCj4+PiAgICAgSXQncyBjaG9zZW4g
-YmVjYXVzZSBpdCByZW1haW5zIDAgYWZ0ZXIgcmVhZGFoZWFkIGNvbXBsZXRlcy4KPj4KPj5UaGF0
-J3MgcHJldHR5IHVnbHkuICBXaGF0IGFkZGl0aW9uYWxzIGZsYWdzIGRvIHlvdSBuZWVkPyAgV2Ug
-c2hvdWxkCj4+dHJ5IHRvIGZpZ3VyZSBvdXQgaWYgdGhlcmUgaXMgYSBzZW5zaWJsZSB3YXkgdG8g
-c3VwcG9ydCB0aGUgbmVlZHMKPj53aXRoIGEgc2luZ2xlIGNvZGViYXNlIGFuZCBkYXRhIHN0cnVj
-dHVyZSBpZiB0aGF0IHRoZSByZXF1aXJlbWVudHMKPj5hcmUgc2Vuc2libGUuCg==
+Following a suggestion from Dave and everyone who contributed to v1, this
+changes modernizes the code by aligning it with current kernel best practices.
+It improves code clarity and consistency, as strncpy is deprecated as explained
+in Documentation/process/deprecated.rst. Furthermore, this change was tested
+by xfstests and as it was not an easy task I decided to document on my blog
+the step by step of how I did it https://meritissimo1.com/blog/2-xfs-tests :).
+
+This change does not alter the functionality or introduce any behavioral
+changes.
+
+Changes include:
+ - Replace strncpy with memcpy.
+
+---
+Changelog:
+
+Changes since v1:
+- Replace strncpy with memcpy instead of strscpy.
+- The change was tested using xfstests.
+
+Link to v1: https://lore.kernel.org/linux-kernel-mentees/CAPZ3m_jXwp1FfsvtR2s3nwATT3fER=Mc6qj+GzKuUhY5tjQFNQ@mail.gmail.com/T/#t
+
+Suggested-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Marcelo Moreira <marcelomoreira1905@gmail.com>
+---
+ fs/xfs/scrub/symlink_repair.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
+index 953ce7be78dc..5902398185a8 100644
+--- a/fs/xfs/scrub/symlink_repair.c
++++ b/fs/xfs/scrub/symlink_repair.c
+@@ -185,7 +185,7 @@ xrep_symlink_salvage_inline(
+ 		return 0;
+ 
+ 	nr = min(XFS_SYMLINK_MAXLEN, xfs_inode_data_fork_size(ip));
+-	strncpy(target_buf, ifp->if_data, nr);
++	memcpy(target_buf, ifp->if_data, nr);
+ 	return nr;
+ }
+ 
+-- 
+2.50.1
+
