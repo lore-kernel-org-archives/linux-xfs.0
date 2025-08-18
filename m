@@ -1,126 +1,73 @@
-Received: from mail-io1-f80.google.com (mail-io1-f80.google.com [209.85.166.80])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61BE419DFAB
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Aug 2025 01:51:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.80
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45D9A263F52;
+	Mon, 18 Aug 2025 04:37:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755481890; cv=none; b=INneN86oRtwMUkh0wWDrCQEodGXIf8VtfPiWGxYtluNa5S1//p0fphkKntoIYfzcIgxsX0VLBZ+Sb/ywe5arblRwC048j2c7a6v7mA5ULgK3YXOiDewUi8NxJGBQWyYbjYAdwIguhs3HplxXmiqr3h0NlzNpIbkEEJ/4+dzRrC0=
+	t=1755491856; cv=none; b=DqxzdMMAacRIotHqY8rwGEggjPP++hG021BHCcQ3sXD0yEpqTINjZ+gt0EOksRjmnqS0UxTZQpbsa72xtZ6r5nxtBcbsvymu7ITW24Eaak8ef8OXHawxU4blFsG+6mHEfhqQlctAcwAHvumR+Nmb5ijj9SMZOCxzS9gHWrEckXY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755481890; c=relaxed/simple;
-	bh=GTKj99jgKPX44cFsHEjuWHT3/Sv1bBvUxx4iw1Ex1Uk=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=Mzjw0Mw6fuJERD0OcFFanCK13flVnRE4ZnwHNEe0/VWmCUFaz6MaVEdrkhgilHHaxmBN1EEX546Fcq5BetWYPQvA6NDIR7KFTJ69sfwAoVV1eVBQ8wa7dL8FBqbb8IKUJ3ZlAt6nVWcZDa1DXtw5Kv7BneX5dysXCxWTVBIUxQU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.80
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-io1-f80.google.com with SMTP id ca18e2360f4ac-88432e1d004so405180139f.2
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Aug 2025 18:51:29 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755481888; x=1756086688;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=RK5qO1TPZ8k2YOyWwCFjYhmfAaUf62lFW133PN4xikA=;
-        b=dazcC3ZQmlUmQkeIO2aEPOtVcg/AuXk8g/W+NevlVVU+Mt8EkDysX+f+Iii/u6yXTo
-         reKuUwlHsBKyVg/vyP55NjPERU9v0f1mRPAEe2PZ+BwtfGAOXeWlPqdkdPNN6v3+Wwwu
-         dyQIu0z7EtmFvoEvbMlnnak9mibViXtXj0Hqd69vuaE/4298JWGTbHoEfQBeVVrN+Q+L
-         P+NkzFR/KZhFbdCWq2jEDNM5M0mC5RH0FqdaJJ1L+Ke3FY9S7U4bVEohE9U5rFnG+L10
-         QzV6qBVI0fsvlZyieb6vfq9PZ+XWAdFF5y4DvjVqyhiJIzq5JjYdylQdGaqUxTkkgyNq
-         z0iw==
-X-Forwarded-Encrypted: i=1; AJvYcCVfXDS53i75Bbvxf5aIec4kBTF4SG7GUPnbhVRQhCt9fh8f4NEehl9qRt5Sjz88+qIyOufQh1jNK2s=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxBvezrN0w3eg3gzIuCLISCnTCe6yphQ7Nc/uUS4t8cpGCHieco
-	oNMmXOVUM1EVec9uD1xTvtC8RNagyUjnZQ/oD0QPFVk+vGh8p2/BXrTGk1ndXta923f5HC425dX
-	JybtrWJlFcyEEe1nWM4UvhmZ1lEGFGprnx89LLjWZyTxKtY2ULNUOdOHQFpo=
-X-Google-Smtp-Source: AGHT+IFUtAwSNFpept1CqNTKNeDDA07oPYmKqdl6pqgDtDO8tElJJ1359AwRLqXK2QGmHt2IAqsqS3NHAt3lbXiGrPjU1aO6t0zP
+	s=arc-20240116; t=1755491856; c=relaxed/simple;
+	bh=OzKhllUJgxE8f5DRItzMWTr/zxmwFP09zIVFJRCdTcw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jdzii0JvG/MCNgVKVzObAHAoqUdO/omEKqPUPamDWaARy73ZiQmzFWhR85CeuznxwmDTS/VP+koHpDfbvek/l8vc4/97e0sikQcLl90eEwHw1UchMst+aZpOXMFEgjb8zPfcizZPC2wGY5qXHTWL3iR4jY7ylWJTj0SMZAfDub8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vUZItgjx; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vUZItgjx"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=maYmslETCWG8Wv0ihlJT3aab029z77BNwcKFXO/89co=; b=vUZItgjxxZas5wL13tDBNXNK7t
+	PX6Q4zBDQnENVNwDdJKtZXjVbF7D+JflkRgwsADb6sNjvhslRZ0TUhS2vdSY1mPxyJu1M+uAiELMR
+	5mQOZVja3o1W8nJN4hQMEtuVcnavMc+Lmnx27XyfAoVvDojMItVpQCZEiuQSbpuOxtFkGIqTlU6cl
+	fIR6sYH+p6Pzh0Xs/SY2t03+h+EfDWaEVX8DLv3dhm59/WuwR4rL+bmSxVjSHgjXljQZPdGQE6ZCA
+	jGVjzxae3YSAUPNDVqS/+9c/9Ohghzf7bz3fmiiquBOSmPBU79C8qsTz+vqvPsW7TI1LL29GUBo0I
+	K7R6ZLHg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1unrci-00000006Taw-4Bg1;
+	Mon, 18 Aug 2025 04:37:32 +0000
+Date: Sun, 17 Aug 2025 21:37:32 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, zlang@redhat.com,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/7] generic/427: try to ensure there's some free space
+ before we do the aio test
+Message-ID: <aKKuDLPgJqlCKXYz@infradead.org>
+References: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
+ <175381957936.3020742.7058031120679185727.stgit@frogsfrogsfrogs>
+ <aIopyOh1TDosDK1m@infradead.org>
+ <20250812185459.GB7952@frogsfrogsfrogs>
+ <aJwfiw9radbDZq-p@infradead.org>
+ <20250813061452.GC7981@frogsfrogsfrogs>
+ <aJwvi03EX0LWzXfI@infradead.org>
+ <20250814221623.GT7965@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6602:6d84:b0:87c:30c6:a7cf with SMTP id
- ca18e2360f4ac-8843e23ef9fmr1885138139f.0.1755481888561; Sun, 17 Aug 2025
- 18:51:28 -0700 (PDT)
-Date: Sun, 17 Aug 2025 18:51:28 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <68a28720.050a0220.e29e5.0080.GAE@google.com>
-Subject: [syzbot] [xfs?] WARNING in xfs_trans_alloc
-From: syzbot <syzbot+ab02e4744b96de7d3499@syzkaller.appspotmail.com>
-To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250814221623.GT7965@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hello,
+On Thu, Aug 14, 2025 at 03:16:23PM -0700, Darrick J. Wong wrote:
+> On Tue, Aug 12, 2025 at 11:24:11PM -0700, Christoph Hellwig wrote:
+> > On Tue, Aug 12, 2025 at 11:14:52PM -0700, Darrick J. Wong wrote:
+> > > Yeah... for the other ENOSPC-on-write paths, we kick inodegc, so maybe
+> > > xfs_zoned_space_reserve (or its caller, more likely) ought to do that
+> > > too?
+> > 
+> > Can you give this a spin?  Still running testing here, but so far
+> > nothing blew up.
+> 
+> Running inodegc_flush() once doesn't fix it, but doesn't hurt either.
 
-syzbot found the following issue on:
+Weird.  I can't think of anything else that would hide the available
+space in this case.
 
-HEAD commit:    dfc0f6373094 Merge tag 'erofs-for-6.17-rc2-fixes' of git:/..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=12bfcda2580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=13f39c6a0380a209
-dashboard link: https://syzkaller.appspot.com/bug?extid=ab02e4744b96de7d3499
-compiler:       Debian clang version 20.1.7 (++20250616065708+6146a88f6049-1~exp1~20250616065826.132), Debian LLD 20.1.7
-
-Unfortunately, I don't have any reproducer for this issue yet.
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/471a095bde0f/disk-dfc0f637.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/dfa0446324a1/vmlinux-dfc0f637.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/9a43829df052/bzImage-dfc0f637.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+ab02e4744b96de7d3499@syzkaller.appspotmail.com
-
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 990 at fs/xfs/xfs_trans.c:256 xfs_trans_alloc+0x4d8/0x980 fs/xfs/xfs_trans.c:256
-Modules linked in:
-CPU: 0 UID: 0 PID: 990 Comm: kworker/0:2 Tainted: G        W           6.17.0-rc1-syzkaller-00036-gdfc0f6373094 #0 PREEMPT_{RT,(full)} 
-Tainted: [W]=WARN
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/12/2025
-Workqueue: xfs-inodegc/loop2 xfs_inodegc_worker
-RIP: 0010:xfs_trans_alloc+0x4d8/0x980 fs/xfs/xfs_trans.c:256
-Code: 89 ef e8 1b 49 fa ff 85 c0 0f 85 14 02 00 00 e8 8e 3e 57 fe b0 01 89 44 24 24 4c 8b 64 24 78 e9 f9 fb ff ff e8 79 3e 57 fe 90 <0f> 0b 90 e9 3f fc ff ff 89 d9 80 e1 07 fe c1 38 c1 0f 8c 13 fc ff
-RSP: 0018:ffffc90004acf7f8 EFLAGS: 00010293
-RAX: ffffffff83671cc7 RBX: 0000000000000004 RCX: ffff8880253cd940
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
-RBP: ffff888053a08000 R08: 0000000000000000 R09: 0000000000000000
-R10: dffffc0000000000 R11: fffffbfff1e3a727 R12: ffff888053a08130
-R13: 0000000000000000 R14: 1ffff1100a741073 R15: dffffc0000000000
-FS:  0000000000000000(0000) GS:ffff8881268c5000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007ff8b6a64f98 CR3: 000000002370a000 CR4: 00000000003526f0
-Call Trace:
- <TASK>
- xfs_inactive_truncate+0xa5/0x1b0 fs/xfs/xfs_inode.c:1152
- xfs_inactive+0x949/0xcd0 fs/xfs/xfs_inode.c:1454
- xfs_inodegc_inactivate fs/xfs/xfs_icache.c:1944 [inline]
- xfs_inodegc_worker+0x31e/0x7c0 fs/xfs/xfs_icache.c:1990
- process_one_work kernel/workqueue.c:3236 [inline]
- process_scheduled_works+0xae1/0x17b0 kernel/workqueue.c:3319
- worker_thread+0x8a0/0xda0 kernel/workqueue.c:3400
- kthread+0x711/0x8a0 kernel/kthread.c:463
- ret_from_fork+0x3fc/0x770 arch/x86/kernel/process.c:148
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
