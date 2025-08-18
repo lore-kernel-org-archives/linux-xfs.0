@@ -1,124 +1,81 @@
-Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+Received: from mail-10624.protonmail.ch (mail-10624.protonmail.ch [79.135.106.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD5322765C4
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Aug 2025 14:35:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2FF125228B
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Aug 2025 15:19:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.135.106.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755527710; cv=none; b=g5kHJ/Q3hJP/UIK43H/FkY29UI6ZUIME+/0/DFHQ34q8lwAoYjLO0GmJir5xy95+V6T9kRsp8faRywCfRS4nxN0Jf1drgS7zKcFIpLMqb5s7jRG6AORnnitiXFz5CQoEBUA3iKgTWCIPkF5wqYFBx/PzbIv1EEhw6FD7abJMYR0=
+	t=1755530375; cv=none; b=Ufnu2cPC2E361huUKmjuUvMvu6u9MPKqzBTMj+bdmfM4sAepe3/VhnY1t81oiTsy4v+gXoqFqgdK0DN3i71LnLcucP827MJtm05UFw914cUg+jNrp/9Y2LPT1yRraPoY/9DHPF75myiTGPLmSm5CL6M7x/FmgAuO1mk2RVUM2Z8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755527710; c=relaxed/simple;
-	bh=otXVTHL+BeB20xbOxHwwF3/CnEk52ra2iOqsDFK0oZY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:From:In-Reply-To:
-	 Content-Type:References; b=njvosoSx9xRFRVI3exZfhpVTBJKk8qfPaZkBLf3Ahvx/yXIwKDZQbQG58quppINCSnJAYXX0AqjDURNhXi6uyugBULae/q+atxMFvmTbfCH3+LDK/Gl7SF3tPh1YZzjeKKHF49Eg8i+AKMdr5ea2WPpPUDPdq1Nivvg3n/46VJE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=g/8Y2lpo; arc=none smtp.client-ip=210.118.77.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1755530375; c=relaxed/simple;
+	bh=YMYAbv7B7gsAcwtjDy+CMQLzk/4e9Uur9c1cJ87rH90=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=Vce9Ujre9MkRQB/xoKoonaHZzReFhiwC36qDsU4cZ9+uNt6ATfEU4Yh2v4lrSY3P4wQwCw3APL+7LnCo9DHy5cccvjnLFzEne8dnRNJ/8xWnzGXM/F4yNiuj1aIMgJfpsxUcIbEJZdOhepQv5eKqlGZhYUSeRe0ZOkQ/oqrtk2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=xavierclaude.be; spf=pass smtp.mailfrom=xavierclaude.be; dkim=pass (2048-bit key) header.d=xavierclaude.be header.i=@xavierclaude.be header.b=D/1W/6Hr; arc=none smtp.client-ip=79.135.106.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=xavierclaude.be
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xavierclaude.be
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="g/8Y2lpo"
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-	by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20250818143506euoutp01e0ad5dc60020fb043d964878a5d9298b~c4yXvExRv1414814148euoutp01u
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Aug 2025 14:35:06 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20250818143506euoutp01e0ad5dc60020fb043d964878a5d9298b~c4yXvExRv1414814148euoutp01u
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1755527706;
-	bh=ieZPe4l8Sl+NzpVwCMHVhCAI7HNLwj+x2OinGuiBzIA=;
-	h=Date:Subject:To:CC:From:In-Reply-To:References:From;
-	b=g/8Y2lpoTXwKQUIap6/NdRV20IFT9OLTG83AXoJMYdHzX3B0hrm1WELZQ2oj4n2GO
-	 sEjEiuQpDYaU08DYrw1/VgAJ/zHuGFJrnKkzPtvwrKaH86QIuwuz7S471w6zoM3efR
-	 8ihwkRKC8IemvzcupGoM0eQnGpg0PKVWLtDSCdNs=
-Received: from eucas1p2.samsung.com (unknown [182.198.248.175]) by
-	eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-	20250818143506eucas1p120acf5eeaad600f05730a688268dc79f~c4yXWhy1w0945209452eucas1p1J;
-	Mon, 18 Aug 2025 14:35:06 +0000 (GMT)
-Received: from eusmtip1.samsung.com (unknown [203.254.199.221]) by
-	eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-	20250818143506eucas1p1d0b69a5a401f01fff45e589e1afe5196~c4yW-MBKO0946009460eucas1p1S;
-	Mon, 18 Aug 2025 14:35:06 +0000 (GMT)
-Received: from CAMSPWEXC02.scsc.local (unknown [106.1.227.4]) by
-	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20250818143505eusmtip1400e876fb2ca5c15d4c14541a9b4f660~c4yW4Ojir1594715947eusmtip1g;
-	Mon, 18 Aug 2025 14:35:05 +0000 (GMT)
-Received: from [106.110.32.110] (106.110.32.110) by CAMSPWEXC02.scsc.local
-	(106.1.227.4) with Microsoft SMTP Server (version=TLS1_2,
-	cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.26; Mon, 18 Aug
-	2025 15:35:04 +0100
-Message-ID: <43bca78e-fa89-4b0e-94f1-de7385818950@samsung.com>
-Date: Mon, 18 Aug 2025 16:35:04 +0200
+	dkim=pass (2048-bit key) header.d=xavierclaude.be header.i=@xavierclaude.be header.b="D/1W/6Hr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=xavierclaude.be;
+	s=protonmail3; t=1755530361; x=1755789561;
+	bh=YMYAbv7B7gsAcwtjDy+CMQLzk/4e9Uur9c1cJ87rH90=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=D/1W/6HrCQNtrEqIVWoKXYOVnGHFj5t5+zYB+zuaLC8cQCE/q3Pq1vqfUWfG1Ni6Q
+	 QdX92vNviPP5+BCZC3+oi4L1ENas6Ua5/WgRAOH8IyYsrrNHtu7ToqGbFV3XR9TbDM
+	 Ng3oWEM25qDNQX8tA0OZMeos9V0ekImM8Zbw51djoqbY7gQSCvWUV3LcIPhcxoGaVF
+	 fzmyPNVzRBlOz9iRnnPbyRYt5L06aLYUMFKEghJeW9QTAav8Wtjt0xQzKLuIm54J72
+	 +grf1usl6u9Adzw/4ErN17AeCwsHJJbEApvp5jUfpuE0o5+MjHoIDbw28K1AHNNYAC
+	 4OD3BZ+ZmEtWw==
+Date: Mon, 18 Aug 2025 15:19:10 +0000
+To: linux-xfs@vger.kernel.org
+From: Xavier Claude <contact@xavierclaude.be>
+Cc: Xavier Claude <contact@xavierclaude.be>
+Subject: [PATCH xfsprogs] Document current limitation of shrinking fs
+Message-ID: <20250818151858.83521-1-contact@xavierclaude.be>
+Feedback-ID: 36077759:user:proton
+X-Pm-Message-ID: a935aaea59e24bf5a51491ffe1d62ec0277a5ede
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] iomap: use largest_zero_folio() in iomap_dio_zero()
-To: =?UTF-8?Q?Andr=C3=A9_Almeida?= <andrealmeid@igalia.com>, Christoph
-	Hellwig <hch@infradead.org>, Christian Brauner <brauner@kernel.org>,
-	<akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>
-CC: "Darrick J . Wong" <djwong@kernel.org>, "Pankaj Raghav (Samsung)"
-	<kernel@pankajraghav.com>, <linux-kernel@vger.kernel.org>,
-	<linux-fsdevel@vger.kernel.org>, <mcgrof@kernel.org>,
-	<gost.dev@samsung.com>, <linux-xfs@vger.kernel.org>
-Content-Language: en-US
-From: Pankaj Raghav <p.raghav@samsung.com>
-In-Reply-To: <4b225908-f788-413b-ba07-57a0d6012145@igalia.com>
-Content-Type: text/plain; charset="UTF-8"; format="flowed"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: CAMSPWEXC01.scsc.local (106.1.227.3) To
-	CAMSPWEXC02.scsc.local (106.1.227.4)
-X-CMS-MailID: 20250818143506eucas1p1d0b69a5a401f01fff45e589e1afe5196
-X-Msg-Generator: CA
-X-RootMTR: 20250818141331eucas1p21bf686b508f2b37883a954fd8aed891f
-X-EPHeader: CA
-cpgsPolicy: EUCPGSC10-065,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250818141331eucas1p21bf686b508f2b37883a954fd8aed891f
-References: <20250814142137.45469-1-kernel@pankajraghav.com>
-	<20250815-gauner-brokkoli-1855864a9dff@brauner>
-	<aKKu7jN6HrcXt3WC@infradead.org>
-	<CGME20250818141331eucas1p21bf686b508f2b37883a954fd8aed891f@eucas1p2.samsung.com>
-	<4b225908-f788-413b-ba07-57a0d6012145@igalia.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On 18/08/2025 16:12, André Almeida wrote:
-> Em 18/08/2025 01:41, Christoph Hellwig escreveu:
->> On Fri, Aug 15, 2025 at 04:02:58PM +0200, Christian Brauner wrote:
->>> On Thu, 14 Aug 2025 16:21:37 +0200, Pankaj Raghav (Samsung) wrote:
->>>> iomap_dio_zero() uses a custom allocated memory of zeroes for padding
->>>> zeroes. This was a temporary solution until there was a way to 
->>>> request a
->>>> zero folio that was greater than the PAGE_SIZE.
->>>>
->>>> Use largest_zero_folio() function instead of using the custom allocated
->>>> memory of zeroes. There is no guarantee from largest_zero_folio()
->>>> function that it will always return a PMD sized folio. Adapt the 
->>>> code so
->>>> that it can also work if largest_zero_folio() returns a ZERO_PAGE.
->>>>
->>>> [...]
->>>
->>> Applied to the vfs-6.18.iomap branch of the vfs/vfs.git tree.
->>> Patches in the vfs-6.18.iomap branch should appear in linux-next soon.
->>
->> Hmm, AFAIK largest_zero_folio just showed up in mm.git a few days ago.
->> Wouldn't it be better to queue up this change there?
->>
->>
-> 
-> Indeed, compiling vfs/vfs.all as of today fails with:
-> 
-> fs/iomap/direct-io.c:281:36: error: implicit declaration of function 
-> ‘largest_zero_folio’; did you mean ‘is_zero_folio’? [-Wimplicit- 
-> function-declaration]
-> 
-> Reverting "iomap: use largest_zero_folio() in iomap_dio_zero()" fixes 
-> the compilation.
-> 
+Hello,
 
-I also got some reports from Stephen in linux-next. As Christoph 
-suggested, maybe we drop the patches from Christian's tree and queue it 
-up via Andrew's tree
+If I understand the code correctly[1], shrinking more than one AG is not
+supported. So I propose to add it to the manpage, like for the log
+shrinking option.
 
---
-Pankaj
+[1]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tre=
+e/fs/xfs/xfs_fsops.c?h=3Dv6.17-rc2#n152
+-- >8 --
+
+Current implementation in the kernel doesn't allow to shrink more that
+one AG
+
+Signed-off-by: Xavier Claude <contact@xavierclaude.be>
+---
+ man/man8/xfs_growfs.8 | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/man/man8/xfs_growfs.8 b/man/man8/xfs_growfs.8
+index a0126927..2e329fa6 100644
+--- a/man/man8/xfs_growfs.8
++++ b/man/man8/xfs_growfs.8
+@@ -70,6 +70,7 @@ otherwise the data section is grown to the largest size p=
+ossible with the
+ option. The size is expressed in filesystem blocks. A filesystem with only
+ 1 AG cannot be shrunk further, and a filesystem cannot be shrunk to the po=
+int
+ where it would only have 1 AG.
++.B [NOTE: Only shrinking the last AG without removing it is implemented]
+ .TP
+ .B \-e
+ Allows the real-time extent size to be specified. In
+--=20
+2.50.1
+
 
