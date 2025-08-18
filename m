@@ -1,46 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 711C326B0BC
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Aug 2025 05:07:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 639F721770C
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Aug 2025 05:11:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755493647; cv=none; b=b6tQcs7U3A/DaaPYDhsFE+n4a6/eiQEz67sp54HbEGshN7AdGRKBnjeB5UbzEZM05mx7CQwJG2xPSoN7xZKmaxj7GCf/n8MI8/EOpeTqsneA38HOExHPGbz+sZIdsB8UWTln1kiRm3AIXDQpS+uevQ4l8Cs6WFabCw5ABANO+MQ=
+	t=1755493919; cv=none; b=ns6WtZWEVBkN3dBgKegSuuTQTnFG6MOevBDnlspMD4Qf3mpUzU+W3KwZRKbbAS+MVFf4xq+cGjqzHjd95JxucpzIpX4hRHB3wjVqMClQY/T1rk/magoymAdbnAmnw/0JFUMdX5D5o09rCpWlPsN8HGMgjotmEjr0HXVHmgqCNM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755493647; c=relaxed/simple;
-	bh=Iux7IrzCLzvYhhMxsIj5HyyxNU1V2SsmH9T8rZbYXrE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aKu25ObUJAyPuvGgnFILExSTlpkJiNUH6LrF/OueFTRkkX57J+Jp48Z0wHy/BX4Mg8pP2Ei3PMcr26MtSMa/xH9Jhhgd/PT9KOJg8u/zpwYTrCjGUYcOulsVo2ASUM1ckf+1u0NySuHlK+KSNjxAHL7tXvAefn6BQsQqDULLOUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=VJLAOlCZ; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1755493919; c=relaxed/simple;
+	bh=uDgxO2cPkWbTMqvUasLuI8VLLmsdO8i5BV7WBccfpyY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hApcQVKZCSVZ6WF8ZAUWhBIxDkMxrwHTNEX13sGAv5UTPeAgxRBGbE4JH+KJ3yRk0twVkZjlZ0GCWszD0SJKjJQxCqHrtjoQgQIwN6dZOvNUKMoUGGhUlpD9nbny9LQdUdv3vb4+rlD3oU61scM4qGgGIAv7BAt78bb4o944Cs0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=V0+ypunl; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VJLAOlCZ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="V0+ypunl"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=kHbphyR4Nh1l1kNGw/pZpVGBvnL7K8zVhHTMlj7tGQA=; b=VJLAOlCZN8A55IDzGpYqSXpEy8
-	lz22GdUOyvp36KJjiZDb9c7IbOVGkJL3Ouq2WFQziR+wRMupIHDXep3D4K1bBNkfHLucFPZle7LmP
-	J0f3bGklUzwA/8Xs6aa/rYKtYOFXK0BNxpasM4OqFKW/f8fVcOItnw4My5JRP3iCD8b8NSQYJxyi2
-	P+ahFuCDq9zy0GcOHl1Jjm6mUQ48D6g7fNsRyWN2hxWplGCxMJ72fEyGAjawRrej93l48lsqd4zdz
-	NWuM/zPT6OjkZW5KztKxxIrTceAHR01rXgSDZR/LOEuWsX2qk71MYvRDZuATk9hZdm70g7mys9yMq
-	58DFbk2Q==;
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=TAbYChIvejupsc7PjcGDhS1mhK9H8ceYqqe04ekJYO0=; b=V0+ypunl8Jd3U1E9IZBwfBeh4n
+	/A3HB4CZrNZjBCx/0Lpy/jeNO7Y/2GuOokoAtpo4zGpMmSy+fWZRNO22JLgKb3zToXhu+PQOb7dUA
+	bYdNAGuTcY9pzpHe3tK04EVFxveRSy54T3YwDfJPQMsD+IXxl4NNVlLNWDDhsn+LMSbbN02tF2J7u
+	sCuTZtscXb4SETFdU6vemQTJdg6vkFBzsZ02N/KiF7jCr7HwJ/8aRo2pmaocjvWXTIktN4X3jupDT
+	TuFc0dwYHnKcsM9OEyw2kCQ61UjyrA7SZLA9FPr0BSTCOaxbaQTun0Xn+I4eh+A6+QE8g9sWfsvlP
+	tE+Z+X0g==;
 Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uns5d-00000006WZ0-2lkC;
-	Mon, 18 Aug 2025 05:07:26 +0000
+	id 1unsA1-00000006Wm2-1xrI;
+	Mon, 18 Aug 2025 05:11:57 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
-Cc: Hans Holmberg <hans.holmberg@wdc.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 3/3] xfs: reject swapon for inodes on a zoned file system earlier
-Date: Mon, 18 Aug 2025 07:06:45 +0200
-Message-ID: <20250818050716.1485521-4-hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: store the buftarg size in the buftarg
+Date: Mon, 18 Aug 2025 07:11:22 +0200
+Message-ID: <20250818051155.1486253-1-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
-In-Reply-To: <20250818050716.1485521-1-hch@lst.de>
-References: <20250818050716.1485521-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,28 +45,26 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-No point in going down into the iomap mapping loop when we known it
-will be rejected.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 3 +++
- 1 file changed, 3 insertions(+)
+when playing around with new code that stores more than the current
+superblock in block zero of the RT device I ran into the assert in
+xfs_buf_map_verify that checks that a buffer is withing sb_dblocks.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 1ee4f835ac3c..a26f79815533 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -760,6 +760,9 @@ xfs_vm_swap_activate(
- {
- 	struct xfs_inode		*ip = XFS_I(file_inode(swap_file));
- 
-+	if (xfs_is_zoned_inode(ip))
-+		return -EINVAL;
-+
- 	/*
- 	 * Swap file activation can race against concurrent shared extent
- 	 * removal in files that have been cloned.  If this happens,
--- 
-2.47.2
+That check is obviously incorrect for targets that are not the main data
+device, but unlike to hit in practice as the log buftarg doesn't store
+any cached buffers, the RT device currently only one for block 0, and
+the in-memory buftargs better don't grow larger than the data device.
 
+It's probably better to fix it anyway before running into real issues
+on day, and storing the value also removes the need for the notify
+failure code to poke into the block device.
+
+Diffstat:
+ xfs_buf.c              |   38 +++++++++++++++++++++-----------------
+ xfs_buf.h              |    4 +++-
+ xfs_buf_item_recover.c |    7 +++++++
+ xfs_notify_failure.c   |    2 +-
+ xfs_super.c            |    7 ++++---
+ xfs_trans.c            |   21 ++++++++++-----------
+ 6 files changed, 46 insertions(+), 33 deletions(-)
