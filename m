@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FFFD221DB3
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Aug 2025 20:45:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79BDE17A318
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Aug 2025 20:46:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755549935; cv=none; b=QzxXrwhznFClwaa8aO1WDBEhi7mO1NfPcd9sDNOLnMUkeE9UIA8GOBzTHLGrVoWa6o5QwR72SM9FDSh+Ka9N+hXSdEeJrVmQqClB6zN4Vv7E8YEcIH3fwpEvPgxIR67kkNC7AhOodP/1eJq1h7L7i2oY8G8dXASlwdlxHNjAf0E=
+	t=1755549961; cv=none; b=qtiWNnvld458p8kGysC5WRTGwr5V5DUNUgygb0qn/b3Gr6DzKgGEY6yAwRzrbF6Yrr49AvM5KG0zMuGJuAiDTz7jfWl5ioNlruhUuuteRBeiupGF1SQKC+H4LhckrfWLqdB/+NyOQ8hkLdYWYyp6Ri6pbc4L6ng1w+40hR6ao7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755549935; c=relaxed/simple;
-	bh=x5FgEidMJhslyq0zquGk3/nuNEmDTc9TsmbKsbjuQu0=;
+	s=arc-20240116; t=1755549961; c=relaxed/simple;
+	bh=9hinBuc7rsznGLsVOeVedvzxKEicQwHwoWDXegTNT2A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qUgNfolMKSOJUI+YzSYvocXFeEIW56jNmBs0+ZXAsUKPfTxeBcDyybBMyAwyGnwYDg96c0MQC7mQzb/YdJ0FE80ay1M85FBktMKfA25J9DNjpR5rEGfFLohRko3U94u3KNfTp90kafHbbQ6xyqZvJ6bR3Thcv0PzaNmnchtkaSk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GMX40NI/; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=LoIo0tzOOadnmLwYPqkZbJfzHpMLCEPhqtP673nZn924+pWnHexQkicyMjkgaYQKL5rggdGALbJy6yxbBifgxp2FNLqKNKhIXE8Ph+7bqhThmgdJLDfv+gSuCSa1qEO26RaSvEu7E7E3t09UCbwFUsjh+o5FGcxAiw1ne2cwSYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ppxPNzqK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GMX40NI/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BB6AC116B1;
-	Mon, 18 Aug 2025 20:45:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ppxPNzqK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF368C4CEEB;
+	Mon, 18 Aug 2025 20:46:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755549934;
-	bh=x5FgEidMJhslyq0zquGk3/nuNEmDTc9TsmbKsbjuQu0=;
+	s=k20201202; t=1755549961;
+	bh=9hinBuc7rsznGLsVOeVedvzxKEicQwHwoWDXegTNT2A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=GMX40NI/B490ebrIlHGgwJiJImjwF2MgQaEPrOmLpdZNIW6uYJez+U0lETJOG/DSd
-	 G/wnjIM7l4SCgOwwvfC8gWMguTdmABsNQjBTdouH0U/+xMtoV90JOXlimr8q0ggE4r
-	 DfacnGjUN2sVfAGigEhyhaHBBbpMJjcmwAzVsNNWWqC2eQDZ9nMA2d5OjykgIbSvta
-	 ppJj3JezVdkJojcQKbLMt0iPYFuEyG/LBa9wdo/sr+E0Qa8UjQij7p7TU5j/D9Prk5
-	 gIF8VK5cSD5PYbir8JR3xW2JqJcnntn0DUYCWwuYhX3oMBdxFCY6xF1my7HZZ1qbUD
-	 /cyXJwr5ZMFPQ==
-Date: Mon, 18 Aug 2025 13:45:33 -0700
+	b=ppxPNzqKsmfXLciJUPHbnDe+uxHG/W30CwfO0606R24Vv/IDSOm33WLnrmyVKzZMo
+	 0FjkZyY4dKcVvZkRgiE/hCpnEW/5PZRDupKgLkyxrVagh6bk6Q3E+e0FEJxe2ODXlY
+	 lbPlj7CfV4RFKa+c0EVdDEXwuwY34cG0tOZPgkJgA4kll/Gdox4jtf615+CUHxIDlT
+	 XanZ3u0sxEhTnhVGoOJv8wEnizXq66p0XOHLqSymwpoH5e1GG8YGhnbYCoWu0slkbi
+	 erBNLzB4Yzin/TmSjAzh14W1fUOSlhil9r0owEGSWv1+ukPsqj02zuUiAPBBmQvYS7
+	 L2hPAX+oLlDiw==
+Date: Mon, 18 Aug 2025 13:46:00 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	Donald Douwsma <ddouwsma@redhat.com>
-Subject: Re: [PATCH RFC] xfs: remap block layer ENODATA read errors to EIO
-Message-ID: <20250818204533.GV7965@frogsfrogsfrogs>
-References: <1bd13475-3154-4ab4-8930-2c8cdc295829@redhat.com>
+To: Xavier Claude <contact@xavierclaude.be>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH xfsprogs] Document current limitation of shrinking fs
+Message-ID: <20250818204600.GW7965@frogsfrogsfrogs>
+References: <20250818151858.83521-1-contact@xavierclaude.be>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,54 +41,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1bd13475-3154-4ab4-8930-2c8cdc295829@redhat.com>
+In-Reply-To: <20250818151858.83521-1-contact@xavierclaude.be>
 
-On Mon, Aug 18, 2025 at 03:22:02PM -0500, Eric Sandeen wrote:
-> We had a report that a failing scsi disk was oopsing XFS when an xattr
-> read encountered a media error. This is because the media error returned
-> -ENODATA, which we map in xattr code to -ENOATTR and treat specially.
+On Mon, Aug 18, 2025 at 03:19:10PM +0000, Xavier Claude wrote:
+> Hello,
 > 
-> In this particular case, it looked like:
+> If I understand the code correctly[1], shrinking more than one AG is not
+> supported. So I propose to add it to the manpage, like for the log
+> shrinking option.
 > 
-> xfs_attr_leaf_get()
-> 	error = xfs_attr_leaf_hasname(args, &bp);
-> 	// here bp is NULL, error == -ENODATA from disk failure
-> 	// but we define ENOATTR as ENODATA, so ...
-> 	if (error == -ENOATTR)  {
-> 		// whoops, surprise! bp is NULL, OOPS here
-> 		xfs_trans_brelse(args->trans, bp);
-> 		return error;
-> 	} ...
+> [1]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/xfs/xfs_fsops.c?h=v6.17-rc2#n152
+> -- >8 --
 > 
-> To avoid whack-a-mole "test for null bp" or "which -ENODATA do we really
-> mean in this function?" throughout the xattr code, my first thought is
-> that we should simply map -ENODATA in lower level read functions back to
-> -EIO, which is unambiguous, even if we lose the nuance of the underlying
-> error code. (The block device probably already squawked.) Thoughts?
+> Current implementation in the kernel doesn't allow to shrink more that
+> one AG
+> 
+> Signed-off-by: Xavier Claude <contact@xavierclaude.be>
+> ---
+>  man/man8/xfs_growfs.8 | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/man/man8/xfs_growfs.8 b/man/man8/xfs_growfs.8
+> index a0126927..2e329fa6 100644
+> --- a/man/man8/xfs_growfs.8
+> +++ b/man/man8/xfs_growfs.8
+> @@ -70,6 +70,7 @@ otherwise the data section is grown to the largest size possible with the
+>  option. The size is expressed in filesystem blocks. A filesystem with only
+>  1 AG cannot be shrunk further, and a filesystem cannot be shrunk to the point
+>  where it would only have 1 AG.
+> +.B [NOTE: Only shrinking the last AG without removing it is implemented]
 
-Uhhhh where does this ENODATA come from?  Is it the block layer?
+That's my understanding of where growfs is right now wrt shrinking
 
-$ git grep -w ENODATA block/
-block/blk-core.c:146:   [BLK_STS_MEDIUM]        = { -ENODATA,   "critical medium" },
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+>  .TP
+>  .B \-e
+>  Allows the real-time extent size to be specified. In
+> -- 
+> 2.50.1
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index f9ef3b2a332a..6ba57ccaa25f 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -747,6 +747,9 @@ xfs_buf_read_map(
->  		/* bad CRC means corrupted metadata */
->  		if (error == -EFSBADCRC)
->  			error = -EFSCORRUPTED;
-> +		/* ENODATA == ENOATTR which confuses xattr layers */
-> +		if (error == -ENODATA)
-> +			error = -EIO;
->  		return error;
->  	}
->  
 > 
 > 
