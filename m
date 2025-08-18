@@ -1,50 +1,29 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45D9A263F52;
-	Mon, 18 Aug 2025 04:37:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD2C2262FFC
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Aug 2025 04:39:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755491856; cv=none; b=DqxzdMMAacRIotHqY8rwGEggjPP++hG021BHCcQ3sXD0yEpqTINjZ+gt0EOksRjmnqS0UxTZQpbsa72xtZ6r5nxtBcbsvymu7ITW24Eaak8ef8OXHawxU4blFsG+6mHEfhqQlctAcwAHvumR+Nmb5ijj9SMZOCxzS9gHWrEckXY=
+	t=1755491985; cv=none; b=DPEIyEHbr/rsrHzGBC/qjC8dcOebI74cIct4iek2ebTCJtagIH5FCd7FNLOmGKheE+jvmlZv9p9TmvLSn2KxtU1aH2KmCnPPE0RvA+lTdv7mCN/Knzc2bI9RlecYu043S/h1wP8ddV2XUCtpX6JzSyK9yfjCDqiwBECE9YcL1r8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755491856; c=relaxed/simple;
-	bh=OzKhllUJgxE8f5DRItzMWTr/zxmwFP09zIVFJRCdTcw=;
+	s=arc-20240116; t=1755491985; c=relaxed/simple;
+	bh=j5jUXmKwmVr0PX4jsuZao2RLlrtVKECt1joJJRP43Z4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jdzii0JvG/MCNgVKVzObAHAoqUdO/omEKqPUPamDWaARy73ZiQmzFWhR85CeuznxwmDTS/VP+koHpDfbvek/l8vc4/97e0sikQcLl90eEwHw1UchMst+aZpOXMFEgjb8zPfcizZPC2wGY5qXHTWL3iR4jY7ylWJTj0SMZAfDub8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vUZItgjx; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vUZItgjx"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=maYmslETCWG8Wv0ihlJT3aab029z77BNwcKFXO/89co=; b=vUZItgjxxZas5wL13tDBNXNK7t
-	PX6Q4zBDQnENVNwDdJKtZXjVbF7D+JflkRgwsADb6sNjvhslRZ0TUhS2vdSY1mPxyJu1M+uAiELMR
-	5mQOZVja3o1W8nJN4hQMEtuVcnavMc+Lmnx27XyfAoVvDojMItVpQCZEiuQSbpuOxtFkGIqTlU6cl
-	fIR6sYH+p6Pzh0Xs/SY2t03+h+EfDWaEVX8DLv3dhm59/WuwR4rL+bmSxVjSHgjXljQZPdGQE6ZCA
-	jGVjzxae3YSAUPNDVqS/+9c/9Ohghzf7bz3fmiiquBOSmPBU79C8qsTz+vqvPsW7TI1LL29GUBo0I
-	K7R6ZLHg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1unrci-00000006Taw-4Bg1;
-	Mon, 18 Aug 2025 04:37:32 +0000
-Date: Sun, 17 Aug 2025 21:37:32 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, zlang@redhat.com,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/7] generic/427: try to ensure there's some free space
- before we do the aio test
-Message-ID: <aKKuDLPgJqlCKXYz@infradead.org>
-References: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
- <175381957936.3020742.7058031120679185727.stgit@frogsfrogsfrogs>
- <aIopyOh1TDosDK1m@infradead.org>
- <20250812185459.GB7952@frogsfrogsfrogs>
- <aJwfiw9radbDZq-p@infradead.org>
- <20250813061452.GC7981@frogsfrogsfrogs>
- <aJwvi03EX0LWzXfI@infradead.org>
- <20250814221623.GT7965@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Wjq/wxfyEsw14LUZd6ago2uW/z15jYm1nZdqSF+w/XUZDZcoSVoEIECEw8IfiUG8wti09ErSknvEWZBSKDYVLShV65tCfoF7EEWQWa1J5t/5PrxPb5D41FFb9NlgynzxVSJ1I0spf0/MqI6c0Olv7u7iBisVASGcpPK4djNJGTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 9723167373; Mon, 18 Aug 2025 06:39:29 +0200 (CEST)
+Date: Mon, 18 Aug 2025 06:39:28 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: linux@treblig.org
+Cc: dave@treblig.org, linux-xfs@vger.kernel.org, djwong@kernel.org,
+	hch@lst.de
+Subject: Re: [PATCH] man: Fix XFS_IOC_GETPARENTS ioctl example
+Message-ID: <20250818043928.GA14427@lst.de>
+References: <20250816002842.112518-1-linux@treblig.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,21 +32,54 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250814221623.GT7965@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250816002842.112518-1-linux@treblig.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Aug 14, 2025 at 03:16:23PM -0700, Darrick J. Wong wrote:
-> On Tue, Aug 12, 2025 at 11:24:11PM -0700, Christoph Hellwig wrote:
-> > On Tue, Aug 12, 2025 at 11:14:52PM -0700, Darrick J. Wong wrote:
-> > > Yeah... for the other ENOSPC-on-write paths, we kick inodegc, so maybe
-> > > xfs_zoned_space_reserve (or its caller, more likely) ought to do that
-> > > too?
-> > 
-> > Can you give this a spin?  Still running testing here, but so far
-> > nothing blew up.
+On Sat, Aug 16, 2025 at 01:28:42AM +0100, linux@treblig.org wrote:
+> From: "Dr. David Alan Gilbert" <linux@treblig.org>
 > 
-> Running inodegc_flush() once doesn't fix it, but doesn't hurt either.
+> Fix various typos that stopped the example building.
+> Add perror calls everywhere so it doesn't fail silently
+> and mysteriously.
+> 
+> Now builds cleanly with -Wpedantic.
+> 
+> Fixes: a24294c2 ("man: document the XFS_IOC_GETPARENTS ioctl")
+> Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
+> ---
+>  man/man2/ioctl_xfs_getparents.2 | 18 +++++++++++-------
+>  1 file changed, 11 insertions(+), 7 deletions(-)
+> 
+> diff --git a/man/man2/ioctl_xfs_getparents.2 b/man/man2/ioctl_xfs_getparents.2
+> index 5bb9b96a..63926016 100644
+> --- a/man/man2/ioctl_xfs_getparents.2
+> +++ b/man/man2/ioctl_xfs_getparents.2
+> @@ -119,7 +119,7 @@ If the name is a zero-length string, the file queried has no parents.
+>  Calling programs should allocate a large memory buffer, initialize the head
+>  structure to zeroes, set gp_bufsize to the size of the buffer, and call the
+>  ioctl.
+> -The XFS_GETPARENTS_OFLAG_DONE flag will be set in gp_flags when there are no
+> +The XFS_GETPARENTS_OFLAG_DONE flag will be set in gp_oflags when there are no
+>  more parent pointers to be read.
+>  The below code is an example of XFS_IOC_GETPARENTS usage:
+>  
+> @@ -142,16 +142,20 @@ int main() {
+>  		perror("malloc");
+>  		return 1;
+>  	}
+> -	gp->gp_bufsize = 65536;
+> +	gp.gp_bufsize = 65536;
+>  
+> -	fd = open("/mnt/test/foo.txt", O_RDONLY | O_CREAT);
+> -	if (fd  == -1)
+> +	fd = open("/mnt/test/foo.txt", O_RDONLY | O_CREAT, 0666);
+> +	if (fd  == -1) {
+> +    perror("open");
+>  		return errno;
+> +  }
 
-Weird.  I can't think of anything else that would hide the available
-space in this case.
+Formatting looks really weird here, probably because of a mix of
+tabs and space an different tabstop settings for the original version
+of the code and your edits.
 
+The technical changes look good to me.
