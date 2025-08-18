@@ -1,156 +1,161 @@
-Received: from fout-b8-smtp.messagingengine.com (fout-b8-smtp.messagingengine.com [202.12.124.151])
+Received: from neil.brown.name (neil.brown.name [103.29.64.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B1132571BD
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Aug 2025 21:11:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46F725BAF0;
+	Mon, 18 Aug 2025 21:53:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.29.64.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755551505; cv=none; b=BcCWsJ5qVc/jldpWRG7sTqAB5vFyVko33k/8oBvWuYo9213GCD+W87RLCYxq8imSuWFYQfN+LwoFZldLkRYPjv1X45cW3YD+rK1WIXOndQSRkwbAa4i9z7comnaXgZXrnJ642ous4xM9MbfNW/WHNOKyyVhr5s2Mtg10eJo9o+g=
+	t=1755553983; cv=none; b=fxQbzjpHBb02KM6Y0ENJTqANnT2Jd4yW4Szm2rRQMubeJ/sONfT9P1Bct+gjroT6W0Zt8RMSktWxe2TtuFA7bc1v1x0jwhHkU1syBlRYL8H47XJlqWyNjjnvlVFNhw3yPKCjdoU/bYoPy8orYtQtqlFcbVW/gs0Yb+5L9TGkIyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755551505; c=relaxed/simple;
-	bh=mbDiTNwNJlQg/HzZXCUCcIXGxM5SM8RnWZ+/fwiRYwg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MeLqjLlnQlw6rFDqvePaE7xKaHvmiX+N5GbU7dWChqR9Ydazf/MXQ1mBGBHx0MzDP5AixNX7Hyd7C+6WFzUKBlFCxhxfQkTjja1MtxFs/dTeK4TeI1L0mh1qvaaZO+EqvgqYF32jjjxjEEo+jxR6BJ6xcfyj6fDwOHXpkn6xl7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=ORK6Mp+O; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=jQ8332Hk; arc=none smtp.client-ip=202.12.124.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="ORK6Mp+O";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="jQ8332Hk"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfout.stl.internal (Postfix) with ESMTP id 182C21D00198;
-	Mon, 18 Aug 2025 17:11:42 -0400 (EDT)
-Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-04.internal (MEProxy); Mon, 18 Aug 2025 17:11:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1755551501;
-	 x=1755637901; bh=BNYCVuZD+4T1f+Cxst0gJCYta1TpTZxPuJIY4BHy9ns=; b=
-	ORK6Mp+OsWjLN03RzUx/roe6SCe3hC+d8qPGwSFsoVRuTkbytIo6Gh52IDrU3GCU
-	aZWsrbXJO4odtE9wDdPc9bFzp3Ldt6hxGbhbpdCHWdEucjseDMmPzPxH4Uu4aejX
-	V/JFIYasoLjcix0OeJRQHHtO7RPBjlea3TVfCNQJGlPTYoTB/wYQoPKsD+RCbdv6
-	ItO8MxcW94B7pr9B0VFtgVmTzRHuRyTzyiIzDgZIq/jNhspo09digR1hNB2/XKAm
-	oCEExLwaMYk+7YkgQ/nUsgE8mM5vbXBgXiBrZN8JuOgqZ0+ud+i4Mi5Q0vRnqqpV
-	V4aWhtM3i+Ydt14uvGZADQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1755551501; x=
-	1755637901; bh=BNYCVuZD+4T1f+Cxst0gJCYta1TpTZxPuJIY4BHy9ns=; b=j
-	Q8332HkAjJ/htG94KkoOQAoNvk7JXLZbW5ZFBOxx3mw8GlUMSOUNhqaDvPLhfkKf
-	tDhGzXaBrWjxF+ftQUH52T/bas3IzgnNVWMaXFLOHciofss9Z/FcEVDWJ/SV7hxb
-	xRky7OGU+nP5LEc3ASIVkzc/wPKGip2W4ccP+61oR92mQL1oMGZ4PvBoJKORWLxW
-	ysnS8GMwiN5uaskx4xA5cWMj073h64EIFYrdCgA/goa/q73IeAv+KgNTYM5ttc0t
-	f1SiFsBUSF4Nu1BzaSOBN4bOiFyIsicxKFf5y5Hp3oK+EvUAN670QlJlOjoCE7j2
-	U0vD5dvVchPo4NGZWePSA==
-X-ME-Sender: <xms:DZejaHQ5zP4U_VTBNYJR3X84qPtSoHLNQaSOW0yR3hg9LJ-td6tdLw>
-    <xme:DZejaDW8bPWzF79BwMMeub3ziXJZTqZEW6H2-RhDsGNjWfjR14M3NBN55oiEye2rm
-    zVQEweSqAQplWRIrEQ>
-X-ME-Received: <xmr:DZejaJbOX4DOhBH8oe7N3rcRX5C459keESpHKmNYiAwm0WXVBFRY4gMhDZkLHTdFAc1zCkpEx_ZfHOfS9QBf8WfK_g>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdefgdduheefieeiucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepkfffgggfuffvvehfhfgjtgfgsehtjeertddtvdejnecuhfhrohhmpefgrhhitgcu
-    ufgrnhguvggvnhcuoehsrghnuggvvghnsehsrghnuggvvghnrdhnvghtqeenucggtffrrg
-    htthgvrhhnpeevieekueetfeeujedtheeffedvgeffiedvjeejleffhfeggeejuedtjeeu
-    lefhvdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    hsrghnuggvvghnsehsrghnuggvvghnrdhnvghtpdhnsggprhgtphhtthhopeegpdhmohgu
-    vgepshhmthhpohhuthdprhgtphhtthhopegujhifohhngheskhgvrhhnvghlrdhorhhgpd
-    hrtghpthhtohepshgrnhguvggvnhesrhgvughhrghtrdgtohhmpdhrtghpthhtoheplhhi
-    nhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopeguughouh
-    ifshhmrgesrhgvughhrghtrdgtohhm
-X-ME-Proxy: <xmx:DZejaJ3v7u9sa2syVYAQ2_PC0QdW76fviYdTKWy5f9mOtOe7eT9b6Q>
-    <xmx:DZejaLhhVS2lEhSeD_5rMzCw0FEGhJpX-hC18-Xt1EbpUaQhq6rehA>
-    <xmx:DZejaNb-sDAOl0-mVsS1Vue2xtwkF7beeAjlj5-Xe7sYLGHc9ooy9Q>
-    <xmx:DZejaLSrxVwY2_mWzZxGpSKY3NcfQpAxDoq-xr6r-j7hE_hRa_plnQ>
-    <xmx:DZejaLemDRE8camJPQpA9vhSkB-AmCwK3v5nkPGpE6GiHRdCOgu044Dw>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 18 Aug 2025 17:11:41 -0400 (EDT)
-Message-ID: <8fd28450-d577-4921-96d9-69af0c9b1aa4@sandeen.net>
-Date: Mon, 18 Aug 2025 16:11:41 -0500
+	s=arc-20240116; t=1755553983; c=relaxed/simple;
+	bh=DRMHdG3YWKwtd/b4JUaXjeLRAB0QV9VPh5fLSKg7/3g=;
+	h=Content-Type:MIME-Version:From:To:Cc:Subject:In-reply-to:
+	 References:Date:Message-id; b=M67OWXZDympLyU5ZO9+VBC7a0VAHNq88LPWc3bU+DuLBL0DMcQwJCnjuZvCOwM1o+R3BYGSiFcaiuJdIJYiSRDyPGUIhO6q+B4NuFS2Mg1KQOgY/U6XWbcMuNs/P8g5eBBalss3vJH8EGR1b7uq2/PJp1fj9UDouNr+73azUx7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name; spf=pass smtp.mailfrom=neil.brown.name; arc=none smtp.client-ip=103.29.64.221
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=brown.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=neil.brown.name
+Received: from 196.186.233.220.static.exetel.com.au ([220.233.186.196] helo=home.neil.brown.name)
+	by neil.brown.name with esmtp (Exim 4.95)
+	(envelope-from <mr@neil.brown.name>)
+	id 1uo7mP-006FjJ-U7;
+	Mon, 18 Aug 2025 21:52:39 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC] xfs: remap block layer ENODATA read errors to EIO
-To: "Darrick J. Wong" <djwong@kernel.org>, Eric Sandeen <sandeen@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- Donald Douwsma <ddouwsma@redhat.com>
-References: <1bd13475-3154-4ab4-8930-2c8cdc295829@redhat.com>
- <20250818204533.GV7965@frogsfrogsfrogs>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20250818204533.GV7965@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: "NeilBrown" <neil@brown.name>
+To: "Amir Goldstein" <amir73il@gmail.com>
+Cc: "Alexander Viro" <viro@zeniv.linux.org.uk>,
+ "Christian Brauner" <brauner@kernel.org>, "Jan Kara" <jack@suse.cz>,
+ "David Howells" <dhowells@redhat.com>,
+ "Marc Dionne" <marc.dionne@auristor.com>, "Xiubo Li" <xiubli@redhat.com>,
+ "Ilya Dryomov" <idryomov@gmail.com>, "Tyler Hicks" <code@tyhicks.com>,
+ "Miklos Szeredi" <miklos@szeredi.hu>, "Richard Weinberger" <richard@nod.at>,
+ "Anton Ivanov" <anton.ivanov@cambridgegreys.com>,
+ "Johannes Berg" <johannes@sipsolutions.net>,
+ "Trond Myklebust" <trondmy@kernel.org>, "Anna Schumaker" <anna@kernel.org>,
+ "Chuck Lever" <chuck.lever@oracle.com>, "Jeff Layton" <jlayton@kernel.org>,
+ "Steve French" <sfrench@samba.org>, "Namjae Jeon" <linkinjeon@kernel.org>,
+ "Carlos Maiolino" <cem@kernel.org>, linux-fsdevel@vger.kernel.org,
+ linux-afs@lists.infradead.org, netfs@lists.linux.dev,
+ ceph-devel@vger.kernel.org, ecryptfs@vger.kernel.org,
+ linux-um@lists.infradead.org, linux-nfs@vger.kernel.org,
+ linux-unionfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 04/11] VFS: introduce dentry_lookup_continue()
+In-reply-to:
+ <CAOQ4uxjFPOZe004Cv+tT=NyQg2JOY6MOYQniSjaefVcg+3s-Kg@mail.gmail.com>
+References:
+ <>, <CAOQ4uxjFPOZe004Cv+tT=NyQg2JOY6MOYQniSjaefVcg+3s-Kg@mail.gmail.com>
+Date: Tue, 19 Aug 2025 07:52:39 +1000
+Message-id: <175555395905.2234665.9441673384189011517@noble.neil.brown.name>
 
-On 8/18/25 3:45 PM, Darrick J. Wong wrote:
-> On Mon, Aug 18, 2025 at 03:22:02PM -0500, Eric Sandeen wrote:
->> We had a report that a failing scsi disk was oopsing XFS when an xattr
->> read encountered a media error. This is because the media error returned
->> -ENODATA, which we map in xattr code to -ENOATTR and treat specially.
->>
->> In this particular case, it looked like:
->>
->> xfs_attr_leaf_get()
->> 	error = xfs_attr_leaf_hasname(args, &bp);
->> 	// here bp is NULL, error == -ENODATA from disk failure
->> 	// but we define ENOATTR as ENODATA, so ...
->> 	if (error == -ENOATTR)  {
->> 		// whoops, surprise! bp is NULL, OOPS here
->> 		xfs_trans_brelse(args->trans, bp);
->> 		return error;
->> 	} ...
->>
->> To avoid whack-a-mole "test for null bp" or "which -ENODATA do we really
->> mean in this function?" throughout the xattr code, my first thought is
->> that we should simply map -ENODATA in lower level read functions back to
->> -EIO, which is unambiguous, even if we lose the nuance of the underlying
->> error code. (The block device probably already squawked.) Thoughts?
-> 
-> Uhhhh where does this ENODATA come from?  Is it the block layer?
-> 
-> $ git grep -w ENODATA block/
-> block/blk-core.c:146:   [BLK_STS_MEDIUM]        = { -ENODATA,   "critical medium" },
+On Mon, 18 Aug 2025, Amir Goldstein wrote:
+> On Wed, Aug 13, 2025 at 1:53=E2=80=AFAM NeilBrown <neil@brown.name> wrote:
+> >
+> > A few callers operate on a dentry which they already have - unlike the
+> > normal case where a lookup proceeds an operation.
+> >
+> > For these callers dentry_lookup_continue() is provided where other
+> > callers would use dentry_lookup().  The call will fail if, after the
+> > lock was gained, the child is no longer a child of the given parent.
+> >
+> > There are a couple of callers that want to lock a dentry in whatever
+> > its current parent is.  For these a NULL parent can be passed, in which
+> > case ->d_parent is used.  In this case the call cannot fail.
+> >
+> > The idea behind the name is that the actual lookup occurred some time
+> > ago, and now we are continuing with an operation on the dentry.
+> >
+> > When the operation completes done_dentry_lookup() must be called.  An
+> > extra reference is taken when the dentry_lookup_continue() call succeeds
+> > and will be dropped by done_dentry_lookup().
+> >
+> > This will be used in smb/server, ecryptfs, and overlayfs, each of which
+> > have their own lock_parent() or parent_lock() or similar; and a few
+> > other places which lock the parent but don't check if the parent is
+> > still correct (often because rename isn't supported so parent cannot be
+> > incorrect).
+> >
+> > Signed-off-by: NeilBrown <neil@brown.name>
+> > ---
+> >  fs/namei.c            | 39 +++++++++++++++++++++++++++++++++++++++
+> >  include/linux/namei.h |  2 ++
+> >  2 files changed, 41 insertions(+)
+> >
+> > diff --git a/fs/namei.c b/fs/namei.c
+> > index 7af9b464886a..df21b6fa5a0e 100644
+> > --- a/fs/namei.c
+> > +++ b/fs/namei.c
+> > @@ -1874,6 +1874,45 @@ struct dentry *dentry_lookup_killable(struct mnt_i=
+dmap *idmap,
+> >  }
+> >  EXPORT_SYMBOL(dentry_lookup_killable);
+> >
+> > +/**
+> > + * dentry_lookup_continue: lock a dentry if it is still in the given par=
+ent, prior to dir ops
+> > + * @child: the dentry to lock
+> > + * @parent: the dentry of the assumed parent
+> > + *
+> > + * The child is locked - currently by taking i_rwsem on the parent - to
+> > + * prepare for create/remove operations.  If the given parent is not
+> > + * %NULL and is no longer the parent of the dentry after the lock is
+> > + * gained, the lock is released and the call fails (returns
+> > + * ERR_PTR(-EINVAL).
+> > + *
+> > + * On success a reference to the child is taken and returned.  The lock
+> > + * and reference must both be dropped by done_dentry_lookup() after the
+> > + * operation completes.
+> > + */
+> > +struct dentry *dentry_lookup_continue(struct dentry *child,
+> > +                                     struct dentry *parent)
+> > +{
+> > +       struct dentry *p =3D parent;
+> > +
+> > +again:
+> > +       if (!parent)
+> > +               p =3D dget_parent(child);
+> > +       inode_lock_nested(d_inode(p), I_MUTEX_PARENT);
+> > +       if (child->d_parent !=3D p) {
+>=20
+> || d_unhashed(child))
+>=20
+> ;)
 
-That, probably, though I don't speak block layer very well. As mentioned, it was a
-SCSI disk error, and it appeared in XFS as -ENODATA:
+As you say!
 
-sd 0:0:23:0: [sdad] tag#937 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=2s
-sd 0:0:23:0: [sdad] tag#937 Sense Key : Medium Error [current] 
-sd 0:0:23:0: [sdad] tag#937 Add. Sense: Read retries exhausted
-sd 0:0:23:0: [sdad] tag#937 CDB: Read(16) 88 00 00 00 00 00 9b df 5e 78 00 00 00 08 00 00
-critical medium error, dev sdad, sector 2615107192 op 0x0:(READ) flags 0x1000 phys_seg 1 prio class 2
-XFS (sdad1): metadata I/O error in "xfs_da_read_buf+0xe1/0x140 [xfs]" at daddr 0x9bdf5678 len 8 error 61 
-(see error 61, ENODATA)
+>=20
+> and what about silly renames? are those also d_unhashed()?
 
-> --D
-> 
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
->> index f9ef3b2a332a..6ba57ccaa25f 100644
->> --- a/fs/xfs/xfs_buf.c
->> +++ b/fs/xfs/xfs_buf.c
->> @@ -747,6 +747,9 @@ xfs_buf_read_map(
->>  		/* bad CRC means corrupted metadata */
->>  		if (error == -EFSBADCRC)
->>  			error = -EFSCORRUPTED;
->> +		/* ENODATA == ENOATTR which confuses xattr layers */
->> +		if (error == -ENODATA)
->> +			error = -EIO;
->>  		return error;
->>  	}
->>  
->>
->>
-> 
+With NFS it is not unhashed (i.e.  it is still hashed, but with a
+different name).  I haven't checked AFS.
+
+But does it matter?  As long as it has the right parent and is not
+unhashed, it is a suitable dentry to pass to vfs_unlink() etc.
+
+If this race happened with NFS then ovl could try to remove the .nfsXXX
+file and would get ETXBUSY due to DCACH_NFSFS_RENAMED.  I don't think
+this is a problem.
+
+If we really wanted to be sure the name hadn't changed we could do a
+lookup and check that the same dentry is returned.
+
+OVL is by nature exposed to possible races if something else tried to
+modify the upper directory tree.  I don't think it needs to provide
+perfect semantics in that case, it only needs to fail-safe.  I think
+this recent change is enough to be safe in the face of concurrent
+unlinks.
+
+Thanks,
+NeilBrown
+
+=20
+> Thanks,
+> Amir.
+>=20
 
