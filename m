@@ -1,40 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1831D27874F
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Aug 2025 22:54:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD37735337A;
+	Tue, 19 Aug 2025 23:36:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755644043; cv=none; b=sL6dSj9NzZr4wj1dhvaCAhCSVTy7DMVrUIupZoMn8i/Oz0g5DU7kHRlxb9VnCa5ZhxnObNj7bEKlR7EKTcUWoyZsidAhu0tkZEQP3kLWYSyaJ8US7mofuud02EGT+YS9YNciJrSYeiE5jKHUzB6HFB2WkMWfe47QSMAXZmq9hTs=
+	t=1755646578; cv=none; b=oiHegR6HhrS65dhkXmiT6sQyMOb2VfyQQnQQ5KRLRcVTA1HwvqfPx/AabABHAbGiUJVxhdSm3yFljmE/n2MKc68x7qOTS/Gj+gz2u9XczA/yy9uSWehltLBsUB5/A7/fcR9jy6yKTkmXeSxKJDSgldFnanuurZGc7jfHYi0Ucvo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755644043; c=relaxed/simple;
-	bh=HvhnMb3wN1H8mxEpL4ss2360O63Tj3YQ7CMPpXcyBRk=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=nPcLpSLed2aC5DxVNXqX0n15L18T1q/8cwLlbQ3yCdasNJzQPSapnBjExvkfwbWkfxdTi4BUmHscmSn1ijoFO4piODMOTVF7fcyTjJXKmQxRZZ4edjP3zRof6ff55U0VsxOLgjIq+T1Nll/ey76vxg0lGQgaJWujaSGT7zIUsY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uDxuFYW0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1755646578; c=relaxed/simple;
+	bh=OUiImZ/OymQmu2CCcYUgaGwLWJ5r4RdCQDFeCi6weYA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tVxJlyHaQxNFv3oGkoeDeK985IFUc1wA5TAcuqQZIRjjLbLvdKg79t98r9DuaJ4/iEnQMZq5e81pJ1EZ43keBSsiQtIoauUeAwI9g9+ypFUxNPWQbQkanzeHU36yR5NZh8g2G5TmggmnDzk2keqyKLgXuqD0pT5v0icFEP68xck=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VrixnQh9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uDxuFYW0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85391C4CEF1;
-	Tue, 19 Aug 2025 22:54:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VrixnQh9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25E2CC4CEF1;
+	Tue, 19 Aug 2025 23:36:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755644041;
-	bh=HvhnMb3wN1H8mxEpL4ss2360O63Tj3YQ7CMPpXcyBRk=;
-	h=Date:From:To:Cc:Subject:From;
-	b=uDxuFYW0zc3e+pYbHjHEJKoVc9q8WKlJ2mhQD2SCs2Rbu2QZ7mKmv5JWFyKIltRQO
-	 2phHpfiFR2Vw63HPqJuyXtrZoEzK72s64jv8IEKgXxbgAdYE7rw9Ryd3JlAesBWwT5
-	 sF4pdPoPoyqIs/k0pyuGD2l09v5q2xw5vOJduZCNv0i+sgQSLLMP25UJZsKOWrO+X+
-	 DhXjYs48Or28pm1c9sq0JrPoDUzMecryzXc0SL6Kz73cRzdaNXoOipTA52vrNENT/b
-	 6aVqgg8kvgQ9ofb9pSFB+GJ98ysSgZSXF4HZ3A5ZPwcYrlIv/CbwJy0Qo+jHrVSGIO
-	 FviRqVINLVnyQ==
-Date: Tue, 19 Aug 2025 15:54:00 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Carlos Maiolino <cem@kernel.org>,
-	Andrey Albershteyn <aalbersh@redhat.com>,
-	Chandan Babu R <chandanbabu@kernel.org>,
-	Zorro Lang <zlang@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: Yearly maintainership rotation?
-Message-ID: <20250819225400.GB7965@frogsfrogsfrogs>
+	s=k20201202; t=1755646577;
+	bh=OUiImZ/OymQmu2CCcYUgaGwLWJ5r4RdCQDFeCi6weYA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=VrixnQh9594Z7RH6439sNQIWdZdIU00qc0OaUNkjIcyqP6trzqwtQVt6EobTTxyaE
+	 3bpl/pniyJrmm5NBnukzjrgxWpdJCES+qMrAmfmetRKMKnrr73G9FxFrg28BbK464K
+	 hGGgKGTObXEyt6vNmoIl2CpZQu9QEu+LVrqIS9La6rRKFJ+v4NXKcSykYD4MGd6BXl
+	 71FnPAhBFyBrOQPlgIwu4x4lU0aTpdeRrYFyTBFmDIvnf3n65abApMxJ1Nlhwffg3R
+	 zrW8SO0INsR+5r25/9+PGcTps5xkWF+DqX75Vs900riF7ILGKzAttE/zRIvVbmeReR
+	 bmQhAEROCcOZA==
+Date: Tue, 19 Aug 2025 19:36:16 -0400
+From: Mike Snitzer <snitzer@kernel.org>
+To: Keith Busch <kbusch@meta.com>
+Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, axboe@kernel.dk, dw@davidwei.uk,
+	brauner@kernel.org, hch@lst.de, martin.petersen@oracle.com,
+	djwong@kernel.org, linux-xfs@vger.kernel.org,
+	viro@zeniv.linux.org.uk, Keith Busch <kbusch@kernel.org>,
+	linux-nfs@vger.kernel.org
+Subject: Re: [PATCHv3 0/8] direct-io: even more flexible io vectors
+Message-ID: <aKUKcCIGDc79ulZ_@kernel.org>
+References: <20250819164922.640964-1-kbusch@meta.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,14 +46,108 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20250819164922.640964-1-kbusch@meta.com>
 
-Hi everyone,
+On Tue, Aug 19, 2025 at 09:49:14AM -0700, Keith Busch wrote:
+> From: Keith Busch <kbusch@kernel.org>
+> 
+> Previous version:
+> 
+>   https://lore.kernel.org/linux-block/20250805141123.332298-1-kbusch@meta.com/
+> 
+> This series removes the direct io requirement that io vector lengths
+> align to the logical block size.
+> 
+> I tested this on a few raw block device types including nvme,
+> virtio-blk, ahci, and loop. NVMe is the only one I tested with 4k
+> logical sectors; everything else was 512.
+> 
+> On each of those, I tested several iomap filesystems: xfs, ext4, and
+> btrfs. I found it interesting that each behave a little
+> differently with handling invalid vector alignments:
+> 
+>   - XFS is the most straight forward and reports failures on invalid
+>     vector conditions, same as raw blocks devices.
+> 
+>   - EXT4 falls back to buffered io for writes but not for reads.
+> 
+>   - BTRFS doesn't even try direct io for any unusual alignments; it
+>     chooses buffered io from the start.
+> 
+> So it has been a little slow going figuring out which results to expect
+> from various tests, but I think I've got all the corner cases covered. I
+> can submit the tests cases to blktests and fstests for consideration
+> separately, too.
+> 
+> I'm not 100% sure where we're at with the last patch. I think Mike
+> initially indicated this was okay to remove, but I could swear I read
+> something saying that might not be the case anymore. I just can't find
+> the message now. Mike?
 
-Now that it's nearly September again, what do you all think about
-rotating release managers?  Chandan has told me that he'd be willing to
-step into maintaining upstream xfsprogs; what do the rest of you think
-about that?
+Hey,
 
-Also, does anyone want to tackle fstests? :D
+Yes, I don't have pointers immediately available but I did mention it
+and cc'd you.  I have found that my work relative to NFS and NFSD does
+still need to use iov_iter_aligned_bvec -- otherwise misaligned DIO
+can get issued to the underlying filesystem.
 
---D
+I did try to push all the relevant checking down to NFS/NFSD code that
+assembles their respective bvec into an iov_iter, like you suggested,
+but came up short after my first attempt.
+
+I don't want to speak for the NFS or NFSD miantainers, but I'm
+personally still OK with the broader iov_iter_is_aligned() interface
+and even iov_iter_aligned_bvec() going away (and NFS/NFSD carrying
+their own until I can circle back to hopefully eliminating the need).
+
+Either that, or we remove all but iov_iter_aligned_bvec() and export
+it so that NFS/NFSD can use it, _and_  tweak it so that it offers more
+coarse-grained length checking, like so:
+https://lore.kernel.org/linux-nfs/20250708160619.64800-5-snitzer@kernel.org/
+(this is probably the best intermediate solution actually, though it'd
+force my NFS and NFSD changes to be dependent on your series landing
+-- which is probably a perfectly appropriate constraint)
+
+Thanks,
+Mike
+
+
+> 
+> Changes from v2:
+> 
+>   Include vector lengths when validating a split. The length check is
+>   only valid for r/w commands, and skipped for passthrough
+>   DRV_IN/DRV_OUT commands.
+> 
+>   Introduce a prep patch having bio_iov_iter_get_pages() take the
+>   caller's desired length alignment.
+> 
+>   Additional code comments explaing less obvious error conditions.
+> 
+>   Added reviews on the patches that haven't changed.
+> 
+> Keith Busch (8):
+>   block: check for valid bio while splitting
+>   block: add size alignment to bio_iov_iter_get_pages
+>   block: align the bio after building it
+>   block: simplify direct io validity check
+>   iomap: simplify direct io validity check
+>   block: remove bdev_iter_is_aligned
+>   blk-integrity: use simpler alignment check
+>   iov_iter: remove iov_iter_is_aligned
+> 
+>  block/bio-integrity.c  |  4 +-
+>  block/bio.c            | 64 ++++++++++++++++++----------
+>  block/blk-map.c        |  2 +-
+>  block/blk-merge.c      | 20 +++++++--
+>  block/fops.c           | 13 +++---
+>  fs/iomap/direct-io.c   |  6 +--
+>  include/linux/bio.h    | 13 ++++--
+>  include/linux/blkdev.h | 20 +++++----
+>  include/linux/uio.h    |  2 -
+>  lib/iov_iter.c         | 95 ------------------------------------------
+>  10 files changed, 94 insertions(+), 145 deletions(-)
+> 
+> -- 
+> 2.47.3
+> 
