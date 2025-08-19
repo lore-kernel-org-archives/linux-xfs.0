@@ -1,65 +1,46 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFCFF31AF25
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Aug 2025 07:17:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3B8620B80D
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Aug 2025 08:06:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755587856; cv=none; b=rVgEKe1x8+Yes1cSvCFPMc2852pBnWv0kz9s8++MIrt60fk7tt1ompgUJ2CrjNgHdYr1eFzwzvNAmq8Rb3CIMwtuEjK0s9/JcLBHlCSF8LtoVvyvdRVZ78qtxTxu7VYg3/20/fevNYG+irl+aQrlAUO/EdASUQhN/CdCH7WVOZ8=
+	t=1755590792; cv=none; b=GovB5YsfBAIoti6kAobxZNidTjOenPF7quHyqT/ji8S3a0+ZNVeFoBgf3NssEes1EsN0x+3u3+gETqURvVmA6DPY6/DvIFpiFtvA7RkEV6KSV+ve1W8osfFdSKmm3dDX1byW6dCG3DRKzeLut2At+EV0ox2l60NjCR1rvpFwO0c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755587856; c=relaxed/simple;
-	bh=0IO/5w7tMqmhJ4gTqGNr1ZvyhBoqyFitJL84E9tw5Yc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=K1nEGPh3Zti5p3NYwuiORCRv8v4RMT6Q7m9T9BVirAkRyafJ/oeY1cZpb9RPtADC9cBKbkDppT4unruduVtFLJ38WEt+ofIslXeL1wV9rPEUvDAhNv3Tv8+EHkLmMWgtJ75GpRYQeLpmSqRH1TBLnXNSI1OjrWSuSO4hgFI2tpk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QMrcZ4h4; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QMrcZ4h4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9B79C116C6;
-	Tue, 19 Aug 2025 07:17:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755587856;
-	bh=0IO/5w7tMqmhJ4gTqGNr1ZvyhBoqyFitJL84E9tw5Yc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=QMrcZ4h4NqMtql2Vz9Qtz1+jALMdd/+0t1vIwqN7T0I6Ytj5J1XvOi4KeVjeXyrMe
-	 5/XAiDquJm0KSz6BJjltk0KHaZZXxQZW3+yDagQHXmha9HhuDdY4Oxc4/zvnliSN2k
-	 6iIC6O3gIule5gKgNa86CO1OP2H8gbydN5QPD400PwLPQKgqE6DpePyfb9OEaMxDAi
-	 3F5xhJ7LDpDO5w2UxRYViqWAeSX8t1K2NeAXYb3tkpsLr60h6/8Qh63tvBYjBbDbkg
-	 d3LmN6fGOTYhlMFFuzAsIyA1ENmTy0GSxNEIH8Zetu9EoenxZ9L4V726bkl8u6JUhp
-	 +eCJUY3mjWK2w==
-Message-ID: <c2fee9f2-5eb7-4e35-9242-7fdb5efb4420@kernel.org>
-Date: Tue, 19 Aug 2025 16:17:34 +0900
+	s=arc-20240116; t=1755590792; c=relaxed/simple;
+	bh=mdg/ej+Bgg8BEKXyJLvl/VjYdSt8JSLObI3bMAwQCJ0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=T4QszukW5mUj2akIxpkOT6ZgsBfN/owTUvP6FAoZeKwU5gqoXTBo3PGNHKnYzm5SnX8Z/Oxlwuo9pisfavdJmy9K7lB0WiLtGqToOZ2zGD2e1t9mmbI7XLN+Tr6MP9g4rakyuCS/mJph4Akd9A/nT3hZH3mdt+BKxtPgAblmOXk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 7E3A967373; Tue, 19 Aug 2025 10:06:17 +0200 (CEST)
+Date: Tue, 19 Aug 2025 10:06:16 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: track the number of blocks in each buftarg
+Message-ID: <20250819080616.GB32675@lst.de>
+References: <20250818051155.1486253-1-hch@lst.de> <20250818051155.1486253-2-hch@lst.de> <20250818204830.GY7965@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] xfs: reject swapon for inodes on a zoned file system
- earlier
-To: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>
-Cc: Hans Holmberg <hans.holmberg@wdc.com>, "Darrick J. Wong"
- <djwong@kernel.org>, linux-xfs@vger.kernel.org
-References: <20250818050716.1485521-1-hch@lst.de>
- <20250818050716.1485521-4-hch@lst.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20250818050716.1485521-4-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250818204830.GY7965@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On 8/18/25 14:06, Christoph Hellwig wrote:
-> No point in going down into the iomap mapping loop when we known it
-> will be rejected.
-
-s/known/know
-
+On Mon, Aug 18, 2025 at 01:48:30PM -0700, Darrick J. Wong wrote:
+> >  	if (tp->t_rblocks_delta) {
+> >  		be64_add_cpu(&sbp->sb_rblocks, tp->t_rblocks_delta);
+> > +		mp->m_rtdev_targp->bt_nr_blocks += tp->t_dblocks_delta;
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Should this be += tp->t_rblocks_delta here?
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Yes.
 
--- 
-Damien Le Moal
-Western Digital Research
