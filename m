@@ -1,31 +1,41 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3F267262F;
-	Tue, 19 Aug 2025 13:39:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFCB61DF75D
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Aug 2025 14:34:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755610779; cv=none; b=Km6qeqxdzjdtdegedYkKQCQ68RU6fhSGDV6DA+nr7MWA5vyB8Q/QdoeMzxk8jvxViU585Xdp5V4qDBmqLBUlaKbEUG6mKWG7l6kss9rZL9VPUDcWiHfqWxMvixBCsnGxYxslvTkDr6d89fnUGJRGAjipCBnO8ywEdHNOAw5ODcY=
+	t=1755614086; cv=none; b=OqEcUHuPDIRxbRLpU1O4BCTCmivRlEBlYXG1K7Ls2aTGa9bbsaHLUKlfWIQg3Sc7XPQmrpiX5D1TRNHoL6XrL0Pla791mpUB6pB+DhVuKwclCsI/EB+WkYq31hfSPgoZ+BR1IY1sZ4p0PhPVWXThTN/ofoH+7LykPtiGl0M6ozc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755610779; c=relaxed/simple;
-	bh=1/4cIOt+U4/hlR420fqjfHC6lNwfpZSERDpwpJmgoEY=;
+	s=arc-20240116; t=1755614086; c=relaxed/simple;
+	bh=kju48dnN77sFszu3yMeWl/guuAyb+E3W8Vy9/Zvh1Fc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MU2ygLPRS5sOVpN7auUKim/X+sHdhLagHNseuyMHax+UYDdnRTgPM1rAQFiZLDXJXmMzS5I+E15bXRF+i6CqmWswpn3BSqeCGnYe1olHf7Cwu6DxDwNVo1Ztt7j3qiglll52c60ZMM1LFPGtjvPi3wGz9AkI7kPdkWZbYw5JUg8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 6963E227A88; Tue, 19 Aug 2025 15:39:32 +0200 (CEST)
-Date: Tue, 19 Aug 2025 15:39:32 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Christoph Hellwig <hch@infradead.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org
-Subject: Re: Do we need an opt-in for file systems use of hw atomic writes?
-Message-ID: <20250819133932.GA16857@lst.de>
-References: <20250714131713.GA8742@lst.de> <6c3e1c90-1d3d-4567-a392-85870226144f@oracle.com> <aHULEGt3d0niAz2e@infradead.org> <6babdebb-45d1-4f33-b8b5-6b1c4e381e35@oracle.com> <20250715060247.GC18349@lst.de> <072b174d-8efe-49d6-a7e3-c23481fdb3fc@oracle.com> <20250715090357.GA21818@lst.de> <bd7b1eea-18bc-431e-bc29-42b780ff3c31@oracle.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=TEWCrp6FWemDnmOxALFiiOqvLo3ygmK2gBiujB3wU/QkczGeZrbhpj9xEYmayRxylSpSdaBWNmj6ENfgKOQDaOZrh9aTlNjLD+vEzRdk0TqBwqC6si+WKJs0Cd/jbftRgrY7jXdGjT7uFKSQsZdycc3Vpm2A87bDJDZCFKgeY+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vR9gSvXA; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vR9gSvXA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60675C4CEF1;
+	Tue, 19 Aug 2025 14:34:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755614084;
+	bh=kju48dnN77sFszu3yMeWl/guuAyb+E3W8Vy9/Zvh1Fc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=vR9gSvXAWD07i6WtGwM9U01Sr3LaHPyA02tBdXlXZMdFlvzc0mMIw3up+6vLiuyQB
+	 lV7ZnOoVkbunZylBd86zMbPp9HWSIC1MNc7i7+gSYC5YsdoT0IXY0N7CBGWtAjY2BO
+	 3ANK8LVAxZcNhM4b1YB6RvMCSoADGCur/Ei1LJSNvLCN6N1ryN+h4goIBfv9W0/txi
+	 lMQYa9Ez5SvFodM+oGK5oWyrXn6oXpTW2njti3ewUrAXMjQ6yi264C3/hW2HU+xmQX
+	 tAhzMs40cxM00T4NRdFnTfjZ+maNHWaVcjvLzjbnl1Q3WFE8p0I+BgjwyDPULLfxpt
+	 8M7KGcdjpNocw==
+Date: Tue, 19 Aug 2025 07:34:43 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@redhat.com>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	Donald Douwsma <ddouwsma@redhat.com>
+Subject: Re: [PATCH RFC] xfs: remap block layer ENODATA read errors to EIO
+Message-ID: <20250819143443.GA7965@frogsfrogsfrogs>
+References: <1bd13475-3154-4ab4-8930-2c8cdc295829@redhat.com>
+ <aKQxD_txX68w4Tb-@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,31 +44,38 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bd7b1eea-18bc-431e-bc29-42b780ff3c31@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <aKQxD_txX68w4Tb-@infradead.org>
 
-On Tue, Aug 19, 2025 at 12:42:01PM +0100, John Garry wrote:
-> nothing has been happening on this thread for a while. I figure that it is 
-> because we have no good or obvious options.
->
-> I think that it's better deal with the NVMe driver handling of AWUPF first, 
-> as this applies to block fops as well.
->
-> As for the suggestion to have an opt-in to use AWUPF, you wrote above that 
-> users may not know when to enable this opt-in or not.
->
-> It seems to me that we can give the option, but clearly label that it is 
-> potentially dangerous. Hopefully the $RANDOMUSER with the $CHEAPO SSD will 
-> be wise and steer clear.
->
-> If we always ignore AWUPF, I fear that lots of sound NVMe implementations 
-> will be excluded from HW atomics.
+On Tue, Aug 19, 2025 at 01:08:47AM -0700, Christoph Hellwig wrote:
+> On Mon, Aug 18, 2025 at 03:22:02PM -0500, Eric Sandeen wrote:
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index f9ef3b2a332a..6ba57ccaa25f 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -747,6 +747,9 @@ xfs_buf_read_map(
+> >  		/* bad CRC means corrupted metadata */
+> >  		if (error == -EFSBADCRC)
+> >  			error = -EFSCORRUPTED;
+> > +		/* ENODATA == ENOATTR which confuses xattr layers */
+> > +		if (error == -ENODATA)
+> > +			error = -EIO;
+> 
+> I think we need to stop passing random errors through here (same
+> for the write side).  Unless we have an explicit handler (which we
+> have for a tiny number of errors), passing random stuff we got through
+> and which higher layers use for their own purpose will cause trouble.
+> 
+> Btw, your patch is timely as I've just seen something that probably
+> is the same root cause when running XFS on a device with messed up
+> PI, which is another of those cases where the block layer returns
+> "odd" error codes.
 
-I think ignoring AWUPF is a good idea, but I've also hard some folks
-not liking that.
+Maybe xfs should translate bi_status into whatever error codes it wants
+directly instead of relying on blk_status_to_errno, which can change in
+subtle ways?
 
-The reason why I prefer a mount option is because we add that to fstab
-and the kernel command line easily.  For block layer or driver options
-we'd either need a sysfs file which is always annoying to apply at boot
-time, or a module option which has the downside of applying to all
-devices.
+Though how many of those status codes actually need a different error?
+BLK_STS_MEDIUM (ENODATA) and BLK_STS_NOTSUPP (EOPNOTSUPP) are the only
+ones that look (to me) like they could be confused easily.
+
+--D
