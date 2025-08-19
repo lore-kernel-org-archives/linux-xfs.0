@@ -1,129 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fout-b3-smtp.messagingengine.com (fout-b3-smtp.messagingengine.com [202.12.124.146])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 451FC5BAF0
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Aug 2025 23:04:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EFCF18E3F
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Aug 2025 02:27:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755558276; cv=none; b=D6BQBtWJrKXUdl1VLhRr4aDQsTstxkhoybod8Cicge45jxPLQUAL1l4L12+mIha+hqKqpp9eqbjJ/xGQ3hhYEBj4uj3cO8Y1FuRHfAUcmG8da8M+limZF8XJWoZG5D7GQVNy5GKwYnu+KdeO5JqIKP1TW4gJ+ZZRISrXrl296qY=
+	t=1755570455; cv=none; b=rKblyksnu4Tj6ZFusTWvfvXWxPaT6jyAWijQvGs8voDSnGgJQUHCB0QqFqqIi1TtNN/r1P/0kDoL9p+T3D8QfS635iyay0xPkTeOrrnuDnF0EGGRb3vdEtNbl+FBb2wDTQUQu6kPZHR+xn724MpjW9J4r03DNhD4k3lnepMccEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755558276; c=relaxed/simple;
-	bh=+pe4/5Y8tWbZY0+6/MnGxG/AJme51VqEr2mfeDr0Ht0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=seHco0fzLQohj4JjDaVIn5+y9Wm7fKym3YDVD3q5tj5f01klzUbwcc7jWCzMvhpC/vXC90dl3py/STbMIV23s9OevtwdlQLhjd+R2gydCpz4CdTm5JH5WOeaMjoem1Q1S6aL90Mub1uHrQeaYkww46CXXOwiXKxpCz9YjgC2Wpw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q0Kg1oDi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1755570455; c=relaxed/simple;
+	bh=PMn/7gIMySmOk4R+A7zu+ge+u9qtneQuwrtJGwwU2yo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=neL4Eh6sDDew7lx3fa0DkOSxng9KCvX4lnrPWdrTwED0qKFExasXUxs+gj94HfgtIcv+bfuI4xguR/MbjYNSAWMBgkmtjCqFH4OIfWAn8Y3PYp9wzm6l3LY+SwJATIAISrZNkQYYnFigIlj5xDTnimwh/CQMLvQE7UMZExLmOkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=RW1bsYTc; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=g1RB77Kd; arc=none smtp.client-ip=202.12.124.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q0Kg1oDi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A853FC4CEEB;
-	Mon, 18 Aug 2025 23:04:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755558275;
-	bh=+pe4/5Y8tWbZY0+6/MnGxG/AJme51VqEr2mfeDr0Ht0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=q0Kg1oDi5sNQaZASYrRqMQrSx+T90ZmWZvZuQ/KjGZ4X5vNHq/O+G4+m+hARypoSz
-	 AiMlSBwqjkN8Osot9QKcFtWvllAssjx0hg4NNfk7AJwBU2kRFBiKVXIHahuxCuVsV8
-	 ecT7i1t/wBQYm7rhYv/d4qw7Ixxkh/ouKY/v33ay48A0twESf0GQKtjtIjqEhliMQr
-	 b1PyokdpwJAF/7E4CsI/hbinpMtvQbU9kNVyMGhwweMIal6WMdiJKcfRpKi8fu7/Bb
-	 fR0VKrUp+CWomzz19VxFP7F0uR58AebC2OSTxzEJKHf3nOyrPIK2hiHocvQBj7bF7p
-	 3Y3bRJ05QqsdA==
-Date: Mon, 18 Aug 2025 16:04:35 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	Donald Douwsma <ddouwsma@redhat.com>
-Subject: Re: [PATCH RFC] xfs: remap block layer ENODATA read errors to EIO
-Message-ID: <20250818230435.GH7981@frogsfrogsfrogs>
-References: <1bd13475-3154-4ab4-8930-2c8cdc295829@redhat.com>
- <20250818204533.GV7965@frogsfrogsfrogs>
- <8fd28450-d577-4921-96d9-69af0c9b1aa4@sandeen.net>
+	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="RW1bsYTc";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="g1RB77Kd"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailfout.stl.internal (Postfix) with ESMTP id AEC351D00260;
+	Mon, 18 Aug 2025 22:27:31 -0400 (EDT)
+Received: from phl-mailfrontend-01 ([10.202.2.162])
+  by phl-compute-02.internal (MEProxy); Mon, 18 Aug 2025 22:27:31 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1755570451;
+	 x=1755656851; bh=ITC9AskXLEh9LUrxkGN0fD8wdZXLHvKMAHH3kk9WYHo=; b=
+	RW1bsYTcgllAAgZvnkskDzxc0Z+iQzJ7IMzfzxaMGRfqeUI2oF1WX23Rz/FZrzxD
+	Dkbkj4vvj0CLSltT8y8+q34g3XBwEyGelfeCSseC4PoY4dvnyLu6M1dXawscUTri
+	7kmXBHuwHUHVxhpFGkd+JdU3PusdR679bAlhchkbQ8dTrVqDWgy+ezjC1KZn64e5
+	QxulS1wmjGrc1W6ZXIk4P0iGgtv4hiSxa/ru5GwOkzH2SzQq3O8fXc3iDu5V+F/O
+	HreKWTez/vm2a5ERH6QiCKH1eL97FOgBS7t6WTf97BGEXJcF1hbdBxicx5pNqk3/
+	ZGHEUSdiozuylZ72BbW00Q==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1755570451; x=
+	1755656851; bh=ITC9AskXLEh9LUrxkGN0fD8wdZXLHvKMAHH3kk9WYHo=; b=g
+	1RB77KdKfZxvjJsmkoyrk3zsyz2OF2/1JHnXQYPtsDChhu7FUeVYvDKUc7E85jsi
+	wznJR7SjVnkqgWkSjcd2Ny+XQG4m1bwrnT+RB2F4oW/MfMahFeyZY4ZYkF00CtRk
+	2VF/5XlOdabTzjrT3FrjRgB72q4OHJJLr5zRSbWetM+QeJVz3OSRrTXaoMEHxYHa
+	BTqmGa2zr5h0DRaQpdMVgFg+MApIREQ64c1MnBFl8dPblBIljY1b9V03ZU6KaWvG
+	t5mUD7ecWdLlB2KXtobehNZmilKD6TZ3Bu0npwoTfru6Inb6lWm26tjRKMRBltXy
+	QTlHb41LdO4MzhVuEiY0Q==
+X-ME-Sender: <xms:E-GjaDSj0dVcPKNYNcZjKqq-uVR4y0LdJD4ynVzjhPzdmaadXCXLlw>
+    <xme:E-GjaPVCvVwHJmWEItzrTUeLYdGOENbtxAGCPQpuQueV7rzq2d9x4rBRTJtQTiudz
+    kGifmryx2deOnljcZw>
+X-ME-Received: <xmr:E-GjaFauuY_GoxjH1L7k2ksgRwtq-bnK4GCh9-3HNxD-psbrB2tnOcyaNwyJynlIw5NSh7cZ9QcBe3WsX63WPL2joQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdefgdduheegvdekucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepkfffgggfuffvvehfhfgjtgfgsehtjeertddtvdejnecuhfhrohhmpefgrhhitgcu
+    ufgrnhguvggvnhcuoehsrghnuggvvghnsehsrghnuggvvghnrdhnvghtqeenucggtffrrg
+    htthgvrhhnpeevieekueetfeeujedtheeffedvgeffiedvjeejleffhfeggeejuedtjeeu
+    lefhvdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    hsrghnuggvvghnsehsrghnuggvvghnrdhnvghtpdhnsggprhgtphhtthhopeegpdhmohgu
+    vgepshhmthhpohhuthdprhgtphhtthhopegurghvihgusehfrhhomhhorhgsihhtrdgtoh
+    hmpdhrtghpthhtohepshgrnhguvggvnhesrhgvughhrghtrdgtohhmpdhrtghpthhtohep
+    lhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopeguug
+    houhifshhmrgesrhgvughhrghtrdgtohhm
+X-ME-Proxy: <xmx:E-GjaF20Of0CFNTIH_5x3BF3m0XW9cTaR96r_6EexHhdi5oPu-EMXg>
+    <xmx:E-GjaHin7-P_1aJomi3Mc8sE2RoyYzGLKJQP7quLX2qJaEhv_r6p4w>
+    <xmx:E-GjaJYxC1i26HusJm9wFpRCAQ5oWEoiYIjMDmfCqtPmhOOD9GTWrw>
+    <xmx:E-GjaHTHxXAkTGWXOGflODoSzVxO-6ummsTwQfo7PPkcYUNnGGsmfA>
+    <xmx:E-GjaKDje7ltQ9kkoj0jn2XOhCLux00qYlwqzZ75G2toq5bx09rSy8Pg>
+Feedback-ID: i2b59495a:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 18 Aug 2025 22:27:31 -0400 (EDT)
+Message-ID: <52429b81-7e7f-41e5-8d73-bdc26a237746@sandeen.net>
+Date: Mon, 18 Aug 2025 21:27:30 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8fd28450-d577-4921-96d9-69af0c9b1aa4@sandeen.net>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC] xfs: remap block layer ENODATA read errors to EIO
+To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+ Donald Douwsma <ddouwsma@redhat.com>
+References: <1bd13475-3154-4ab4-8930-2c8cdc295829@redhat.com>
+ <aKOkqUL17skszJ4e@dread.disaster.area>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <aKOkqUL17skszJ4e@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Aug 18, 2025 at 04:11:41PM -0500, Eric Sandeen wrote:
-> On 8/18/25 3:45 PM, Darrick J. Wong wrote:
-> > On Mon, Aug 18, 2025 at 03:22:02PM -0500, Eric Sandeen wrote:
-> >> We had a report that a failing scsi disk was oopsing XFS when an xattr
-> >> read encountered a media error. This is because the media error returned
-> >> -ENODATA, which we map in xattr code to -ENOATTR and treat specially.
-> >>
-> >> In this particular case, it looked like:
-> >>
-> >> xfs_attr_leaf_get()
-> >> 	error = xfs_attr_leaf_hasname(args, &bp);
-> >> 	// here bp is NULL, error == -ENODATA from disk failure
-> >> 	// but we define ENOATTR as ENODATA, so ...
-> >> 	if (error == -ENOATTR)  {
-> >> 		// whoops, surprise! bp is NULL, OOPS here
-> >> 		xfs_trans_brelse(args->trans, bp);
-> >> 		return error;
-> >> 	} ...
-> >>
-> >> To avoid whack-a-mole "test for null bp" or "which -ENODATA do we really
-> >> mean in this function?" throughout the xattr code, my first thought is
-> >> that we should simply map -ENODATA in lower level read functions back to
-> >> -EIO, which is unambiguous, even if we lose the nuance of the underlying
-> >> error code. (The block device probably already squawked.) Thoughts?
-> > 
-> > Uhhhh where does this ENODATA come from?  Is it the block layer?
-> > 
-> > $ git grep -w ENODATA block/
-> > block/blk-core.c:146:   [BLK_STS_MEDIUM]        = { -ENODATA,   "critical medium" },
+On 8/18/25 5:09 PM, Dave Chinner wrote:
+>> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+>> index f9ef3b2a332a..6ba57ccaa25f 100644
+>> --- a/fs/xfs/xfs_buf.c
+>> +++ b/fs/xfs/xfs_buf.c
+>> @@ -747,6 +747,9 @@ xfs_buf_read_map(
+>>  		/* bad CRC means corrupted metadata */
+>>  		if (error == -EFSBADCRC)
+>>  			error = -EFSCORRUPTED;
+>> +		/* ENODATA == ENOATTR which confuses xattr layers */
+>> +		if (error == -ENODATA)
+>> +			error = -EIO;
+> Not sure this is the right place to map this. It is only relevant to
+> the XFS xattr layer in the kernel, so mapping it for everything
+> seems like overkill.
 > 
-> That, probably, though I don't speak block layer very well. As mentioned, it was a
-> SCSI disk error, and it appeared in XFS as -ENODATA:
-> 
-> sd 0:0:23:0: [sdad] tag#937 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=2s
-> sd 0:0:23:0: [sdad] tag#937 Sense Key : Medium Error [current] 
-> sd 0:0:23:0: [sdad] tag#937 Add. Sense: Read retries exhausted
-> sd 0:0:23:0: [sdad] tag#937 CDB: Read(16) 88 00 00 00 00 00 9b df 5e 78 00 00 00 08 00 00
-> critical medium error, dev sdad, sector 2615107192 op 0x0:(READ) flags 0x1000 phys_seg 1 prio class 2
+> I suspect that this error mapping should really be in
+> xfs_attr3_leaf_read() and xfs_da_read_buf() so it is done for
+> xattr fork metadata read IO only...
 
-Ah, yup, critical error, we ran out of retries.
+yeah, that's partly why RFC. The higher up it gets added, the more
+risk of adding another caller later that doesn't handle it. I didn't
+see much downside to doing it lower, and just saying well, ENODATA
+is kinda another way to spell EIO.
 
-> XFS (sdad1): metadata I/O error in "xfs_da_read_buf+0xe1/0x140 [xfs]" at daddr 0x9bdf5678 len 8 error 61 
-> (see error 61, ENODATA)
-> 
-> > --D
-> > 
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> ---
-> >>
-> >> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> >> index f9ef3b2a332a..6ba57ccaa25f 100644
-> >> --- a/fs/xfs/xfs_buf.c
-> >> +++ b/fs/xfs/xfs_buf.c
-> >> @@ -747,6 +747,9 @@ xfs_buf_read_map(
-> >>  		/* bad CRC means corrupted metadata */
-> >>  		if (error == -EFSBADCRC)
-> >>  			error = -EFSCORRUPTED;
-> >> +		/* ENODATA == ENOATTR which confuses xattr layers */
+So I don't really care, but doing it in one place seemed better
+than doing it in several.
 
-Can this comment mention that ENODATA comes from the block layer?
+Doing it lower might also be more consistent - only remapping ENODATA
+for xattr reads is a little strange? But you're right that other
+IOs shouldn't need it.  *shrug*
 
-		/*
-		 * ENODATA means critical medium error, don't let it
-		 * get mixed up with the xattr usage
-		 */
-
-With that changed,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
---D
-
-> >> +		if (error == -ENODATA)
-> >> +			error = -EIO;
-> >>  		return error;
-> >>  	}
-> >>  
-> >>
-> >>
-> > 
-> 
+-Eric
