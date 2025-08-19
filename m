@@ -1,76 +1,66 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E8EC2AE66
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Aug 2025 13:10:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC2A33A019
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Aug 2025 13:11:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755609057; cv=none; b=Nql+rxKsAu1pLDqzt90YtF+0uKZBm9DORB2MQw5F9J/EycrD49d0nJn0ifIptavjtyAkHFaWbl3wykZBKtKdT6EXdGstCRR/m3GaaSP2imbIt8Rgm7x+hqASYUVrBQRaLtmbK5karTTA9Em7eLoMYQvWMvhs2oX2RbkYjD/smPA=
+	t=1755609063; cv=none; b=Fj7rdQ/PStP9KTMdwygTzZjFrk/x4rHW0ah4CI9T8+wm2N22jySXGquUiigPUMtYUjYis6VjtCb+MQ0ldrKuR1kqbEHgXS6CMeeA37iLRHvbgL7GbYodnOty6D1De07uYuC2hRPZx1f074F5fegKq+p39ijNbEDANyy6e23lfBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755609057; c=relaxed/simple;
-	bh=jKPYuhdR4CtotnTq+xeJq41XgIAFUlnwUXCSHkvgdEo=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=jpMCk5suwfw8e2AdmkvtEjlrLXj1vb5cMoWqOxrXT89oSEyKPBEGBWuC1UPr0GbtW8ZOKq80jjv7CHfqsEtkCkAENT2J6KqY3omJnuc+wCS9XlkvfQ2urKmyEfaeS/WfKOuw9JKSdqHlsDr2muaFNVv0p7J/g3iGUQ5zyD9YuBI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HduzeyIT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1755609063; c=relaxed/simple;
+	bh=SBUzHVbvBfqdnyk3PR+hdyPe13W34eBWiOjwZcJ8IyA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=cxQAQE7WxiuivOuIUnKVVEGrDnuECamaDKheIwc4SB1os4+SWC6WEZNRw2I2j6gSBrNxIUc9fJABjMkxLgEmICevkpeF6EgdfiWjaXYa+heJ7fVuDnwZHsV/yG5yykZlFd4WiPHJ8KfzuNOJF9TT9FEhCO1QZX/g920FbE6+Fos=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NxcFxbnm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HduzeyIT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D656C4CEF1
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Aug 2025 13:10:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NxcFxbnm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2373C113D0;
+	Tue, 19 Aug 2025 13:11:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755609056;
-	bh=jKPYuhdR4CtotnTq+xeJq41XgIAFUlnwUXCSHkvgdEo=;
-	h=Date:From:To:Subject:From;
-	b=HduzeyIT1CW3oJVoDK240P7hfhLwsNAKLK2kELt/FN/iZVP3SZgPNoQ/xqChQUceF
-	 0Z68pqk0E/8u1rNCwDN9n880lLN8jqm1vI4uzjbCtpyxvFpgbXUFL//25RKHXHWcT4
-	 3iSPM2GS5NJJMpIk7KTvfu+tEfrH/cdH8ywXHX8zlDDcePhLYEbsJXrfQyorwPPKr3
-	 c9aXdaYeBWrpocKs1BWucdeIN0SiSlMfjHXc1Gl/TGULYtXd478iv2LXam2XnrUZij
-	 tpze/tHPg/Ocbw1VLUKdcxaeD2h6+vmtN7NOQi+SHEc9A9sG2xnMqdA7tpvGQ7/D8l
-	 RAr9xOYMnLeSw==
-Date: Tue, 19 Aug 2025 15:10:53 +0200
+	s=k20201202; t=1755609063;
+	bh=SBUzHVbvBfqdnyk3PR+hdyPe13W34eBWiOjwZcJ8IyA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=NxcFxbnmjfWHM+Gn0WQrNigkcPqGjVOcUGvmK8HiDDvffjVXaK0O8tvUwqjuKKhq7
+	 PaTZjtJGzfv3b6AFJz98ayOd+kbbBMmuiAMWPSYn8Ax7S+xvxkhXXqkKKwAe8GAfHG
+	 C4pjvteskvm+D75g0wx04kqHzIba2334BDpsdtykhCt0LV9T3o7awprejl7E4jy1+f
+	 d2huoxgY39apj/1jbdx6QUuWqjwlAzjpxOyjJdv0fpGr2sb00GLUflMG6f3pSAmDV7
+	 60sll0UWgA2xna5NFHU58S6/We9HESkw5FY5Cc5dst6cebcooQmXiljclh2Ff+sz7v
+	 yhjbEAIvJRZLQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 8e5a2441e186
-Message-ID: <esxnoimp2phpyir6nzgj346vazrl3cm2ofxtbtxffl3yvidmbo@47wrf32gello>
+To: linux-xfs@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+In-Reply-To: <20250812025519.141486-1-dlemoal@kernel.org>
+References: <20250812025519.141486-1-dlemoal@kernel.org>
+Subject: Re: [PATCH] xfs: Default XFS_RT to Y if CONFIG_BLK_DEV_ZONED is
+ enabled
+Message-Id: <175560906231.126210.18067705164822718709.b4-ty@kernel.org>
+Date: Tue, 19 Aug 2025 15:11:02 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-Hi folks,
+On Tue, 12 Aug 2025 11:55:19 +0900, Damien Le Moal wrote:
+> XFS support for zoned block devices requires the realtime subvolume
+> support (XFS_RT) to be enabled. Change the default configuration value
+> of XFS_RT from N to CONFIG_BLK_DEV_ZONED to align with this requirement.
+> This change still allows the user to disable XFS_RT if this feature is
+> not desired for the user use case.
+> 
+> 
+> [...]
 
-The for-next branch of the xfs-linux repository at:
+Applied to for-next, thanks!
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+[1/1] xfs: Default XFS_RT to Y if CONFIG_BLK_DEV_ZONED is enabled
+      commit: 9ce43caa4b7be707638d49ad4fb358b6ff646e91
 
-has just been updated.
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-8e5a2441e186 xfs: reject swapon for inodes on a zoned file system earlier
-
-4 new commits:
-
-Christoph Hellwig (3):
-      [d004d70d6cdf] xfs: remove xfs_last_used_zone
-      [7d523255f524] xfs: kick off inodegc when failing to reserve zoned blocks
-      [8e5a2441e186] xfs: reject swapon for inodes on a zoned file system earlier
-
-Damien Le Moal (1):
-      [9ce43caa4b7b] xfs: Default XFS_RT to Y if CONFIG_BLK_DEV_ZONED is enabled
-
-Code Diffstat:
-
- fs/xfs/Kconfig               |  1 +
- fs/xfs/xfs_aops.c            |  3 +++
- fs/xfs/xfs_zone_alloc.c      | 45 ++------------------------------------------
- fs/xfs/xfs_zone_space_resv.c |  6 ++++++
- 4 files changed, 12 insertions(+), 43 deletions(-)
