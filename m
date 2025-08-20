@@ -1,153 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD37735337A;
-	Tue, 19 Aug 2025 23:36:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E47A2256D
+	for <linux-xfs@vger.kernel.org>; Wed, 20 Aug 2025 00:16:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755646578; cv=none; b=oiHegR6HhrS65dhkXmiT6sQyMOb2VfyQQnQQ5KRLRcVTA1HwvqfPx/AabABHAbGiUJVxhdSm3yFljmE/n2MKc68x7qOTS/Gj+gz2u9XczA/yy9uSWehltLBsUB5/A7/fcR9jy6yKTkmXeSxKJDSgldFnanuurZGc7jfHYi0Ucvo=
+	t=1755648993; cv=none; b=RVkDG5HVjx26KiFTCzWqh8nzbrcuDTtsfabOA3+qJOkRoMz2aOEAHzOuPprfw25xj++b4RYjTrcae8ySBxzyWvjn2vHiwatZErmy3NnoSAANP9sWuUoT8Znjl5RhJHq8IVr9Ih99xPxS7FiouLTaZ0u4B5f4UPUmgqi6CTHUCHY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755646578; c=relaxed/simple;
-	bh=OUiImZ/OymQmu2CCcYUgaGwLWJ5r4RdCQDFeCi6weYA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tVxJlyHaQxNFv3oGkoeDeK985IFUc1wA5TAcuqQZIRjjLbLvdKg79t98r9DuaJ4/iEnQMZq5e81pJ1EZ43keBSsiQtIoauUeAwI9g9+ypFUxNPWQbQkanzeHU36yR5NZh8g2G5TmggmnDzk2keqyKLgXuqD0pT5v0icFEP68xck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VrixnQh9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1755648993; c=relaxed/simple;
+	bh=GDvADdeqxjdKyATgnnevu4e7YoIPfWPOHk7+2ewnUYc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=R8IuODHvXWwtQEbrTqAranXzFXzmh22gT5npWcv+oLnBIgFDldgAEgDMJ4MgcfF3h+vAmPa4JqywyC+JvksMTbevkly/ioNnWEtvdor2HrL5kobzYaivxc0fbn6hkaMm6wgAhi7rEWsC50Qh8y0UYfqwdXqTaYVIZv8icXtNLZk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KyIqdava; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VrixnQh9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25E2CC4CEF1;
-	Tue, 19 Aug 2025 23:36:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755646577;
-	bh=OUiImZ/OymQmu2CCcYUgaGwLWJ5r4RdCQDFeCi6weYA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VrixnQh9594Z7RH6439sNQIWdZdIU00qc0OaUNkjIcyqP6trzqwtQVt6EobTTxyaE
-	 3bpl/pniyJrmm5NBnukzjrgxWpdJCES+qMrAmfmetRKMKnrr73G9FxFrg28BbK464K
-	 hGGgKGTObXEyt6vNmoIl2CpZQu9QEu+LVrqIS9La6rRKFJ+v4NXKcSykYD4MGd6BXl
-	 71FnPAhBFyBrOQPlgIwu4x4lU0aTpdeRrYFyTBFmDIvnf3n65abApMxJ1Nlhwffg3R
-	 zrW8SO0INsR+5r25/9+PGcTps5xkWF+DqX75Vs900riF7ILGKzAttE/zRIvVbmeReR
-	 bmQhAEROCcOZA==
-Date: Tue, 19 Aug 2025 19:36:16 -0400
-From: Mike Snitzer <snitzer@kernel.org>
-To: Keith Busch <kbusch@meta.com>
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, axboe@kernel.dk, dw@davidwei.uk,
-	brauner@kernel.org, hch@lst.de, martin.petersen@oracle.com,
-	djwong@kernel.org, linux-xfs@vger.kernel.org,
-	viro@zeniv.linux.org.uk, Keith Busch <kbusch@kernel.org>,
-	linux-nfs@vger.kernel.org
-Subject: Re: [PATCHv3 0/8] direct-io: even more flexible io vectors
-Message-ID: <aKUKcCIGDc79ulZ_@kernel.org>
-References: <20250819164922.640964-1-kbusch@meta.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KyIqdava"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1755648990;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=zhCdA4IvAz0+fhnpFxV1YFQvf/0ftVh/ycxxwzlfWB0=;
+	b=KyIqdava1jxMiJHSZDP380YDYbsSPmnSngE3EPYpA349a0j1JWmdW7+0/tIIbL38omA4WJ
+	ipzlMYab5qt3ZGKiNAjH7rFrB8U0vBf9+M4U0A995M6SpbYYxjsKy7j/yl/FdC2ELkFNU7
+	iOShoYGS5bn6HmQ7lRO5uujGOyg+E70=
+Received: from mail-il1-f198.google.com (mail-il1-f198.google.com
+ [209.85.166.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-33-N3mr11CDOI22gXbfqeBV3w-1; Tue, 19 Aug 2025 20:16:29 -0400
+X-MC-Unique: N3mr11CDOI22gXbfqeBV3w-1
+X-Mimecast-MFC-AGG-ID: N3mr11CDOI22gXbfqeBV3w_1755648988
+Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-3e67a51f6b0so21138955ab.3
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Aug 2025 17:16:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755648988; x=1756253788;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zhCdA4IvAz0+fhnpFxV1YFQvf/0ftVh/ycxxwzlfWB0=;
+        b=urvS8s1RLGbTxxHSEnLaS3HeiLE5/KbaBfr/21FHg4bZSq4b5lCN1oOxOh5zTVkR7g
+         2OHtO8DppMxXDb810/BZFtlB5h9P8ULBghMhFyw4cKParr9VxzAzk/Efwp0er7/8CPD0
+         cbqIMYf+fya3ymxLxrkUDcLxue7HyFcugq+KI/DXi2CHeWbrV9fH8xrTwGd8sZYuncVv
+         G78lbkPZE81bKUSIM1jp/6H0OxhKpJKfUGMCzP6kXfZXuhaYVr41dqlPHpwHnxn3ww07
+         87z+WyqfvYdYQlLq1Ykl8VDgjNVY2C22N8Q9OuZzDy4KhEKmQzFGpYx2jcLW1ESwOj1v
+         ILpw==
+X-Forwarded-Encrypted: i=1; AJvYcCWiDfngYOIvQfIhOZ8c/UQpS/uHQQfB6OcGYrxM0mVKE4QU5bZToKUULLiZrkZkAJCX9s3Oc2beT9I=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzr8Oq9kW9bEADsYCNCQCwB2aldo0gCOPMaNR6wQF7GenjNmtou
+	7wzR5LtVjc3HJcXEdIuMU1m6gDjnX5Whi2b1xWcMiG/c9Qh3BK5bxaLeWwJT+BX7g0TtVLkScAO
+	0R9EqxW7c32bNF3RJ9bUH+V+hqG2fckMYwa9GemGFqNp2zyF3TDMvhLfce92DFQ==
+X-Gm-Gg: ASbGncuY9DZfzY+ZHJC7c63r2MXuhJU2gixHS7QfyNpqtwg83qMUNY272fW5jpKewYx
+	BJk7UZA6Qk/bdSJFFQO7LA234iH7KjgHee09IjZE3k5qtyNF1om3xhriIQtJDs7lwOu2PE02kSj
+	HpLa8wu/7lGio7zjHZF9tz4GPh+gvEMOEhNcBL2eNsSvXYcKxvgXV37YLtk/gcCoza27AjEXkpo
+	5WnKAKM2BkriW53Ga8IomaAUZdcA85HVqkDsS1KG5GAy3I4Mg556U0ph3Rb6jq4Wtr7UvyQS3XO
+	kGDfocJLmWh0hhdj56Hsdf0D7LHR4wRdfajdGaZXHqzSZm9VsjDgFei1e3tKg/NAkmtFRAK5DK3
+	R
+X-Received: by 2002:a05:6e02:1b07:b0:3e5:7c6d:ec8a with SMTP id e9e14a558f8ab-3e67ca8cbedmr18482195ab.16.1755648988171;
+        Tue, 19 Aug 2025 17:16:28 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFTetA2a08HI+XJ0QKI7N72THcuoB2/RJ5LLZokoTiTD10QKAIeNhQxnvHVdXSuRreBnA0AmQ==
+X-Received: by 2002:a05:6e02:1b07:b0:3e5:7c6d:ec8a with SMTP id e9e14a558f8ab-3e67ca8cbedmr18481905ab.16.1755648987850;
+        Tue, 19 Aug 2025 17:16:27 -0700 (PDT)
+Received: from [10.0.0.82] (75-168-243-62.mpls.qwest.net. [75.168.243.62])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-50c94a47d31sm3664360173.89.2025.08.19.17.16.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 Aug 2025 17:16:26 -0700 (PDT)
+Message-ID: <3b40e330-4fa3-4e08-85ef-bfd4069059a9@redhat.com>
+Date: Tue, 19 Aug 2025 19:16:25 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250819164922.640964-1-kbusch@meta.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC] xfs: remap block layer ENODATA read errors to EIO
+To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>,
+ "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+ Donald Douwsma <ddouwsma@redhat.com>
+References: <1bd13475-3154-4ab4-8930-2c8cdc295829@redhat.com>
+ <aKQxD_txX68w4Tb-@infradead.org>
+ <573177fd-202d-4853-b0d1-c7b7d9bbf2f2@sandeen.net>
+ <aKSW1yC3yyR6anIM@infradead.org>
+ <0d424258-e1ba-47c3-a0ae-60e241ca3c7c@sandeen.net>
+ <aKTwbJvRP1PA-vit@dread.disaster.area>
+Content-Language: en-US
+From: Eric Sandeen <sandeen@redhat.com>
+In-Reply-To: <aKTwbJvRP1PA-vit@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Aug 19, 2025 at 09:49:14AM -0700, Keith Busch wrote:
-> From: Keith Busch <kbusch@kernel.org>
-> 
-> Previous version:
-> 
->   https://lore.kernel.org/linux-block/20250805141123.332298-1-kbusch@meta.com/
-> 
-> This series removes the direct io requirement that io vector lengths
-> align to the logical block size.
-> 
-> I tested this on a few raw block device types including nvme,
-> virtio-blk, ahci, and loop. NVMe is the only one I tested with 4k
-> logical sectors; everything else was 512.
-> 
-> On each of those, I tested several iomap filesystems: xfs, ext4, and
-> btrfs. I found it interesting that each behave a little
-> differently with handling invalid vector alignments:
-> 
->   - XFS is the most straight forward and reports failures on invalid
->     vector conditions, same as raw blocks devices.
-> 
->   - EXT4 falls back to buffered io for writes but not for reads.
-> 
->   - BTRFS doesn't even try direct io for any unusual alignments; it
->     chooses buffered io from the start.
-> 
-> So it has been a little slow going figuring out which results to expect
-> from various tests, but I think I've got all the corner cases covered. I
-> can submit the tests cases to blktests and fstests for consideration
-> separately, too.
-> 
-> I'm not 100% sure where we're at with the last patch. I think Mike
-> initially indicated this was okay to remove, but I could swear I read
-> something saying that might not be the case anymore. I just can't find
-> the message now. Mike?
+On 8/19/25 4:45 PM, Dave Chinner wrote:
+> On Tue, Aug 19, 2025 at 10:38:54AM -0500, Eric Sandeen wrote:
 
-Hey,
+...
 
-Yes, I don't have pointers immediately available but I did mention it
-and cc'd you.  I have found that my work relative to NFS and NFSD does
-still need to use iov_iter_aligned_bvec -- otherwise misaligned DIO
-can get issued to the underlying filesystem.
+>> Ok, this is getting a little more complex. The ENODATA problem is
+>> very specific, and has (oddly) been reported by users/customers twice
+>> in recent days. Maybe I can send an acceptable fix for that specific,
+>> observed problem (also suitable for -stable etc), then another
+>> one that is more ambitious on top of that.
+> 
+> Right, the lowest risk, minimal targetted fix for the problem
+> reported is to remap the error in the attr layers. Nothing else is
+> then affected (ie. global changes of behaviour have significant
+> potential for unexpected regressions), but the issue is solved for
+> the users that are tripping over it.
+> 
+> Then, if someone really wants to completely rearchitect how we
+> handle IO errors in XFS, that can be done as a separate project,
+> with it's own justification, design review, planning for
+> integration/deprecation/removal of existing error handling
+> infrastructure, etc.
+> 
+> We do not tie acceptance of trivial bug fixes with a requirement to
+> completely rearchitect fundamental filesystem behaviours that are
+> only vaguely related to the bug that needs to be fixed.
 
-I did try to push all the relevant checking down to NFS/NFSD code that
-assembles their respective bvec into an iov_iter, like you suggested,
-but came up short after my first attempt.
+Agree, though I don't think (I hope) that any of this discussion was
+a NAK, just a "there might be a bigger problem to solve here, too" and
+I agree with that. I do want to push to get the demonstrable bug fixed
+in a direct, safe way first, though, and not bog it down with grander
+plans.
 
-I don't want to speak for the NFS or NFSD miantainers, but I'm
-personally still OK with the broader iov_iter_is_aligned() interface
-and even iov_iter_aligned_bvec() going away (and NFS/NFSD carrying
-their own until I can circle back to hopefully eliminating the need).
-
-Either that, or we remove all but iov_iter_aligned_bvec() and export
-it so that NFS/NFSD can use it, _and_  tweak it so that it offers more
-coarse-grained length checking, like so:
-https://lore.kernel.org/linux-nfs/20250708160619.64800-5-snitzer@kernel.org/
-(this is probably the best intermediate solution actually, though it'd
-force my NFS and NFSD changes to be dependent on your series landing
--- which is probably a perfectly appropriate constraint)
+I'll try to find time to do that, and look at the bigger problem,
+if I have the time and ability. :)
 
 Thanks,
-Mike
+-Eric
 
+> -Dave.
 
-> 
-> Changes from v2:
-> 
->   Include vector lengths when validating a split. The length check is
->   only valid for r/w commands, and skipped for passthrough
->   DRV_IN/DRV_OUT commands.
-> 
->   Introduce a prep patch having bio_iov_iter_get_pages() take the
->   caller's desired length alignment.
-> 
->   Additional code comments explaing less obvious error conditions.
-> 
->   Added reviews on the patches that haven't changed.
-> 
-> Keith Busch (8):
->   block: check for valid bio while splitting
->   block: add size alignment to bio_iov_iter_get_pages
->   block: align the bio after building it
->   block: simplify direct io validity check
->   iomap: simplify direct io validity check
->   block: remove bdev_iter_is_aligned
->   blk-integrity: use simpler alignment check
->   iov_iter: remove iov_iter_is_aligned
-> 
->  block/bio-integrity.c  |  4 +-
->  block/bio.c            | 64 ++++++++++++++++++----------
->  block/blk-map.c        |  2 +-
->  block/blk-merge.c      | 20 +++++++--
->  block/fops.c           | 13 +++---
->  fs/iomap/direct-io.c   |  6 +--
->  include/linux/bio.h    | 13 ++++--
->  include/linux/blkdev.h | 20 +++++----
->  include/linux/uio.h    |  2 -
->  lib/iov_iter.c         | 95 ------------------------------------------
->  10 files changed, 94 insertions(+), 145 deletions(-)
-> 
-> -- 
-> 2.47.3
-> 
