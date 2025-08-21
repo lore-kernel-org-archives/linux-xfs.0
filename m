@@ -1,127 +1,78 @@
-Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-171.mta1.migadu.com (out-171.mta1.migadu.com [95.215.58.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE3843932A7
-	for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 20:21:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AD2D2C0278
+	for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 21:35:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755807695; cv=none; b=Cb9y6Rt0ThZKMgngrPfbpTCndx+0nRDIZkKdcjcD+vZbOzpETMjv4LWe1feUFZtGq3BxvK2ur4EmGqjgiGrCR9gc3HOtD47YJfR4NPgiyxZE8afLnLZ8RgUz7x+j6q1C9n3hlr4ievwxQnQyO14Y7yk+dzzkuxIr0UgJL3s3gPs=
+	t=1755812114; cv=none; b=IQkQbZXiAgjLz6OfYko5T6b5rcbhjnOx9pdnmR+b9Q2vKhCC5vhDiNEG1xAWoeL5VRzcDobOrNOBo9vuFSaZadn2CUfHpdr15U/ACj0MbMP+88jDoa1XAJFLlc9Fd2FjKfPuUEAly1wJtAMGSZK06PIAOJ4V4mbpBPlgiDX0phg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755807695; c=relaxed/simple;
-	bh=9eIXs22x+6CL7qvaQyYl91mn2xaK0DYu7NpRW3TBpJI=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CingAfTvLIqhbyQtN6lHr+QEjbhz/EZ1ybxH1O2KKUBS+nEYeeAnsAbpFAGR164jrcN10Sq3TwtP7dtAfo/YCoCyklvQyKwoP/Y2l+o0loOGgyB1hKUyxh8UA1GV2IKrGCcuFlcI+INp65qqth0iaMQukhBXTcKBo+qyC3/yy/Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=o3N0+ha3; arc=none smtp.client-ip=209.85.128.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
+	s=arc-20240116; t=1755812114; c=relaxed/simple;
+	bh=bAmN/AfX5lwIEYmHilniwpETgpxib6iulemfl4KOa1k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jJz4UH1PgKw9AzAJEeiD16eEbzUNLSN5zuXoA5CmzshXWqyjvFtA4wcyt5Fh/JZyQ+UAxj1AgdP1QUcyPyTfhuCzgueco7A0hp4q2sheGjbr3kAwkIh65zzuTeamejd8wEyTO98tVUjOP5AQV5aaz54R4fJpIa9vDmSASntCg9I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=cKVa/0E1; arc=none smtp.client-ip=95.215.58.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="o3N0+ha3"
-Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-71d605c6501so13444047b3.3
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 13:21:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1755807693; x=1756412493; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Dz+9ZPRtHF20/Ye4ntcMEWPyYkBueHiqaZncIf/k5Cw=;
-        b=o3N0+ha3+/uMD1MiRPxB6eePMtVkG73ouNrfxIn1vXl/Oqxr1VOIZbAdrU9uitWTML
-         tkbHLfGfBz1FTPe5c1E9P4IfJW3F0KscoDgtl6gVQYHjTwiotaFkZ5K2cspHWwTeAFgK
-         yycE7BClVG9Adrz29Wg3Y5uvFIy4i0c9JogHpVbyUgovwWSIKuGa6lSLgSoxTCkCmAkQ
-         q4BDI76Kpxm22a0GNqWm0iWbePEb0VD8/R3AOUGIwqEGSgZ9LEOTQqSw/CtYLsraKjCa
-         MaSTPddndEOD6/Bn5LpHeXQYb3uf/kyoNxmYlMlfrIw6x7MAaGi0JYULLQUqbOJibLPN
-         mLhg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755807693; x=1756412493;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Dz+9ZPRtHF20/Ye4ntcMEWPyYkBueHiqaZncIf/k5Cw=;
-        b=QcmTKrLy6ZnBUYQzq7g8WXy5KDk58VRcYDsIWZMC+P+3Px76r5RHOPzetqeEs4LXgB
-         Js+cp0CiwzkwOdBoCv6FSjb5DvtF8TvwvGQS5wBLFjHYn7aIneXZo5qQ3vyGyh+EsJUO
-         BE/pKv6l+T8/445/bks8QTF8ntXDequFGS3bca6ALk12i/P/ZcuQ02czy/oTjWqwGtfx
-         MVvhi9MI+BA4I/eRc7liahnNdf3D4xYn83d85G3lA62nmnmatgJ7ImQZelG+UpWIngdM
-         dHzv17ufVTX6g7YnfwDGBkhD77mrO0cYRG1TQJ2NUdxe66b5Uo2zXhbgF4g8PRfDZf8s
-         i3Rw==
-X-Forwarded-Encrypted: i=1; AJvYcCWypdJI87qODPGIpucHcIpRImZqlwe3+e5bSeUT8Ygp+vU+oCQRibRjPNN+szfy8/wPAy4iio4WAag=@vger.kernel.org
-X-Gm-Message-State: AOJu0YznCml7Qu0+1GEaWQN0IPdxZWlU2h7MN3RQJEeWISfzNndZdpki
-	WVTCVkElh503lBHOcejqo2IFePj5N02CTrhqoU3l/SWKL+JXGIjkgMWB+GU7h0u6J8I=
-X-Gm-Gg: ASbGncsSnmFFDlk+fSqlxfvRNrZw4C1F7b+LxnuBr//9GBFKBiWGLrD29jz+aUwLLK5
-	wS+DNCnUn3caxEqMasYXp5mCNQKxOPSHIunAiGP3X/RZbH2Bzd6ANchEnFIp2pByy3b31T+cAAp
-	AuycneniFGyzmlENNtrFqIHtafd1q363iQxKXOQLH9es1Z+//Ek+YnX/OWoAWe538+wuDItmwDI
-	B8UX8mGNYRjmMcIZTE9jyqxx3RCth1rTCzOV21SsD75+6dIytbxxta6mVeAYVh6MhmdheA3geoM
-	ODnexif8rXQvhfdjnncmvLE2MdBwnKYRygTeO6jDXvw7NuccfiLui9sYjRIsmsNDdAnZZzyH+6V
-	LRssW5CCBIl7+zkxr18hWCJR7bjAK6UCIdaRXXHSTqmBhEdhgODgyk6fAUNuWvppmTzbFUw==
-X-Google-Smtp-Source: AGHT+IH3d4NO39oYjHUAQEiHon1LYMDlbEVVPoRdh8HJgQEduyc/E9u2KwocBbAXQxqvyeIIecSuHQ==
-X-Received: by 2002:a05:690c:e21:b0:71e:7053:262 with SMTP id 00721157ae682-71fdc530cabmr5849657b3.26.1755807692625;
-        Thu, 21 Aug 2025 13:21:32 -0700 (PDT)
-Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-71fb0252d27sm16706807b3.12.2025.08.21.13.21.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Aug 2025 13:21:31 -0700 (PDT)
-From: Josef Bacik <josef@toxicpanda.com>
-To: linux-fsdevel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	kernel-team@fb.com,
-	linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	brauner@kernel.org,
-	viro@ZenIV.linux.org.uk
-Subject: [PATCH 50/50] fs: add documentation explaining the reference count rules for inodes
-Date: Thu, 21 Aug 2025 16:19:01 -0400
-Message-ID: <e0bdfc839c71c8e7264e570125cc4573d9613df4.1755806649.git.josef@toxicpanda.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <cover.1755806649.git.josef@toxicpanda.com>
-References: <cover.1755806649.git.josef@toxicpanda.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="cKVa/0E1"
+Date: Thu, 21 Aug 2025 17:34:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1755812099;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=6l9aSgAb2E3cUwpa0ZqVYq3A36zEuUkKRZnMLOQjDf8=;
+	b=cKVa/0E117buhr5K37hgJtj77Pc13bOzosQtOW8ViKUo5puIjXVou9iw13GGpUM01YbA2g
+	9WYuRCTqBCClWY7v9v/iJHFJYU9SgNCws9F3lyh4TB3azy0TfEjV5kwHqRzpgmhHj/9b8B
+	BLVZRZ8axbAUdLovgVvsMfxZ3JRdkak=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Kent Overstreet <kent.overstreet@linux.dev>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: Sahil Chandna <chandna.linuxkernel@gmail.com>, corbet@lwn.net, 
+	linux-doc@vger.kernel.org, tj@kernel.org, cem@kernel.org, linux-bcachefs@vger.kernel.org, 
+	cgroups@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	skhan@linuxfoundation.org
+Subject: Re: [PATCH] Documentation: Fix documentation typos
+Message-ID: <23de3jgp44vih5g6hjgc2ji6momi5t3w7rfkm5mgtajicbbg7a@7r5hgt5e7eir>
+References: <20250821185145.18944-1-chandna.linuxkernel@gmail.com>
+ <4cae933a-d171-48aa-a854-b4323d10b347@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4cae933a-d171-48aa-a854-b4323d10b347@infradead.org>
+X-Migadu-Flow: FLOW_OUT
 
-Now that we've made these changes to the inode, document the reference
-count rules in the vfs documentation.
+On Thu, Aug 21, 2025 at 12:09:57PM -0700, Randy Dunlap wrote:
+> 
+> 
+> On 8/21/25 11:51 AM, Sahil Chandna wrote:
+> > Fix several spelling mistakes in documentation:
+> > 
+> > - Availablity -> Availability
+> > - heirarchy  -> hierarchy
+> > - maping     -> mapping
+> > Findings are based on v6.17-rc2.
+> > 
+> > Signed-off-by: Sahil Chandna <chandna.linuxkernel@gmail.com>
+> > ---
+> >  Documentation/admin-guide/cgroup-v2.rst                  | 2 +-
+> >  Documentation/filesystems/bcachefs/future/idle_work.rst  | 6 +++---
+> >  Documentation/filesystems/xfs/xfs-online-fsck-design.rst | 2 +-
+> >  3 files changed, 5 insertions(+), 5 deletions(-)
+> > 
+> 
+> Looks good, although there was just another patch that also fixed the maping/mapping
+> spelling for XFS.
+> 
+> And various maintainers might request that you split the patch up by
+> subsystem/filesystem (i.e., 3 patches here) unless Jon merges it as is.
+> 
+> Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
 
-Signed-off-by: Josef Bacik <josef@toxicpanda.com>
----
- Documentation/filesystems/vfs.rst | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
-
-diff --git a/Documentation/filesystems/vfs.rst b/Documentation/filesystems/vfs.rst
-index 229eb90c96f2..5bfe7863a5de 100644
---- a/Documentation/filesystems/vfs.rst
-+++ b/Documentation/filesystems/vfs.rst
-@@ -457,6 +457,29 @@ The Inode Object
- 
- An inode object represents an object within the filesystem.
- 
-+Reference counting rules
-+------------------------
-+
-+The inode is reference counted in two distinct ways, an i_obj_count refcount and
-+an i_count refcount. These control two different lifetimes of the inode. The
-+i_obj_count is the simplest, think of it as a reference count on the object
-+itself. When the i_obj_count reaches zero, the inode is freed.  Inode freeing
-+happens in the RCU context, so the inode is not freed immediately, but rather
-+after a grace period.
-+
-+The i_count reference is the indicator that the inode is "alive". That is to
-+say, it is available for use by all the ways that a user can access the inode.
-+Once this count reaches zero, we begin the process of evicting the inode. This
-+is where the final truncate of an unlinked inode will normally occur.  Once
-+i_count has reached 0, only the final iput() is allowed to do things like
-+writeback, truncate, etc. All users that want to do these style of operation
-+must use igrab() or, in very rare and specific circumstances, use
-+inode_tryget().
-+
-+Every access to an inode must include one of these two references. Generally
-+i_obj_count is reserved for internal VFS references, the s_inode_list for
-+example. All file systems should use igrab()/lookup() to get a live reference on
-+the inode, with very few exceptions.
- 
- struct inode_operations
- -----------------------
--- 
-2.49.0
-
+I'll take the bcachefs patch if it's split up.
