@@ -1,63 +1,63 @@
-Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
+Received: from mail-yb1-f181.google.com (mail-yb1-f181.google.com [209.85.219.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 074D438CFBD
-	for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 20:20:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B2BA373F9D
+	for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 20:20:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755807655; cv=none; b=Vdi4TPmmDjZVP2OSw7zwKYjbXVglhxFfjWQelU6sHpdRJN5NER9+PIcqdGd3PY5uvXLyZ5f07yqHpGcNRpvYOQfFZkZEbnTTGeHZ2pKL/RdRUtVZ8d8C56oIgT3gE7+UYYq4qhi/NaLHLsPR9fgUCK/L6y24J6XE7HzZCCr4R8A=
+	t=1755807657; cv=none; b=WlnkjwkuRNJzujwN0zVskkQl4ESs2sH1dCuKZj8sUw8sbGT+I9uhKpJ3f6CMHW2ZcLWcEDWDOaWtomHWT6b1eZH3g7mihMdapwdbept939+yTs5AQRc7on3GRbQ4m6IqplqEPejTqYYKmxCUzGfMeCIvZmCE3y3AUhL9aOnHo8k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755807655; c=relaxed/simple;
-	bh=0lJmklD4oxs+QmY0EdOdZ2TKHxQWMnxFR9kZzYDsLSQ=;
+	s=arc-20240116; t=1755807657; c=relaxed/simple;
+	bh=NKVthHrTpyCuYxypL0G6ZssB8gJJwQE+Gjakb3Uib/0=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OMKxEy1JIZp71YMoQiuzXAWBVbQDUdzQw6xWcD/NHYRWbrowHMNrxuWAMnpnC3ZIB/uZaMEPH6lI/zWs/m9Xm/S6iFD34WwTqT9PzxVnehnxdD0W6rV1gBq1yaxSUgWCNAxllvUBmgfh2kZj1N+UrxHY1E9K7QTv/9x9fySZZNA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=3FnSnXr2; arc=none smtp.client-ip=209.85.128.179
+	 MIME-Version; b=myhDgVAew20izb/eLze/WOyQ+1eFLxrrJE8fmslsURmlTtutoVSLGNQEVl8adyVQGoozZN3t9HMSpq6WL5m12Nm/f82U6LlnwjmiX52inAYfogCXSq42JzHCPrX0wRqb2h4+mg59EW8kO0krjDyh5O4GAapQWaaN9WfxL6ZyLC4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=aOBn9oFN; arc=none smtp.client-ip=209.85.219.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="3FnSnXr2"
-Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-71fab75fc97so13250327b3.3
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 13:20:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="aOBn9oFN"
+Received: by mail-yb1-f181.google.com with SMTP id 3f1490d57ef6-e9513a4b346so988541276.1
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 13:20:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1755807653; x=1756412453; darn=vger.kernel.org;
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1755807654; x=1756412454; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=pjkT2Nr/N4rw5SgF7OU0ePclbgK+JFKERg5adjLRg54=;
-        b=3FnSnXr2Gj5yC8LL+E8khTsGRxQamoR5vf1dQWNL4hxgzLoq/lAjbNhEDY+7v1VghA
-         hpnXAwgQ/zOa/dK8jd5kYbjpGbKaojRnnoOaDQFsicvONuE77VBScYZiX0x1wkYQcwP+
-         /9AhsJDlL6L+2+b/E/BHisu5fzYxOPuQpQvAsOpCmc2rwO9ClErZtv1MD0chfwZMcut6
-         NVZ3y0AMCblXREB/tHmAAPERlFqUrw1Qbw2hMx33CoksEQutGTjBXAP8QfUKwT5Ze8N4
-         72noxgyDc/0S0dGpqOqnechN/3lyTkk2ODALTSRMOuG7JUENrIlz2pXVS+6UP2Q/SHcn
-         YuXQ==
+        bh=PorrIJhHXaHO27cDWxDKTAUw8tGpPd1qttfIj42aEmU=;
+        b=aOBn9oFNsc51+699KhZE2yc79RJokgJKK9twxQhRbiO48sY/4ek8a9vjqBoCAFFBoh
+         wyGcYOMGeCvDABETL7qL9UrzrtEvjEMrUgd80UtZhMTldUb3kClKs4SmdNdkWg/xlYs/
+         E6rMPvGBXy1sg0FsKBBNDTjnVb3KU77NC4xSO7bfWccIqnn4/9YVl0gwUTbKrwelCtTy
+         2aalGomFgU9e9NZJ5teqxdgsBDR3EL+3D5wG+QPAxN9/rhQpQUj6nKUMAjVMOurDkpPL
+         6X+ZtPNWvujefTv5NiYyaqdvRTlUr9btUibDyvnnMwsn4ar6qdjCOXjbu7/UwoJbNW21
+         /EXg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755807653; x=1756412453;
+        d=1e100.net; s=20230601; t=1755807654; x=1756412454;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=pjkT2Nr/N4rw5SgF7OU0ePclbgK+JFKERg5adjLRg54=;
-        b=KHQp7yr7jzCzUtSQftV4v0lK2kv48RUDc0o9MwpPj0QBzIVN5NbmBcaN9oCqcSHA5s
-         9TIr7FV20LswqyVHHgnjt3se6o4UC8hwjeR/GMYB4+BuiVI0uNxGv9DBxUZAaeQmHn2o
-         VnlTusVFhZQmZI6ffydhHxQQe9QDimwcrWKeTnBIX7T2RjBYRa2Fcah9YpvfpxtlU7KY
-         uu6OlGFzd/vwTS4HD6S+t6YxZYZZmEhU6ykJJLlOpDkBedzIijgA+G6/gV0LPDBOAPkc
-         Br21wVuJcQ66LEBqB02VKb5p7I0LkPGTMdNk+qwo+ulW90wtUr4hrcY3wMdf+N/czooc
-         mM8w==
-X-Forwarded-Encrypted: i=1; AJvYcCWatKrP+LL4zrqTUL4WeJ7sN+OCDoNzp9QU7qn4e+N9uAhr1wXVhoI9RgQGLQEGmeoCLNE1+u0RUGY=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx1rzOnx5DzsEGUsAc4P8mCMWEVXBf5LbqM7SASbiVpECUlVJam
-	PjZF7Xqm0sKNmMkUQk5EKHnsBT3BKUCcCxqLU63+AHnmUvo4OhQYWM5aVcTNB/veTMg=
-X-Gm-Gg: ASbGncsfop+PXnV+cpNn3zk+MG7pesSkxv4O4YsiH7fey1UsrKDA+KSi6fcjL0XzMak
-	wRRf4t2tNIN3UBms5CT/fNVFICZFz2RX9Uac7WMsqaJy9KYKf5DbeMP98Zd0hLVqCcGtxanmQGo
-	3lXuhLeTJy384w83BrxLGCqgkmKNB6gZGc9G8kN/zzDI3fqKGkR9oIDz0CJLbOSxYKnMoiQqIgC
-	wunWRe8q33jJuS0++fHPooNM71F1R1Kg0OTHkNVy6mWDsx6blLuqj/9wlX8DHDzWq4uHUwb/h4X
-	YX+sXjPN2R1pnwZQ7iVrJF0KUpCp+jvE7a3y8b8EQuQZKZpgWwf/AMcpHcdwKvnj0j277sMRDYK
-	8MHcREHidYSmQvXz1TZq+ILmsau5AABtkX44MeXH4hv2eo5xJaQlYmW6U8og=
-X-Google-Smtp-Source: AGHT+IHkbsShVmVIQwfdIh0hUjUE61OmSFNVWODMerAHLv7/HcdmGwNwtKO6+Co21rSFectU4cHp5g==
-X-Received: by 2002:a05:690c:45c3:b0:71c:44eb:fae6 with SMTP id 00721157ae682-71fdc3cdb12mr6675767b3.27.1755807652956;
-        Thu, 21 Aug 2025 13:20:52 -0700 (PDT)
+        bh=PorrIJhHXaHO27cDWxDKTAUw8tGpPd1qttfIj42aEmU=;
+        b=XZ1f3XGw5oF3ToBclprof2e1QIbycSAGHQcZQ9Z7NlqjrJbZlg5ZCtGz6UloRA39hW
+         IEm5qZBoA6Fh9wEAiwI13WGWRoNV+uMDXTin6xknBTYHT7no4/hoT9XhagWosbnfQVm3
+         jea4rVoXA0q+tNM8fDg6kObX+TFEcPEVD+FDoRheuzHcPlGo8lZObcNsFfkHIFcahBg/
+         9zAjOpOcb/Xsh688UiHI0w/CUuBxG9c5Wd8bhLlO8GM6fhkBde9pMPPYtfOiiTpvaFrb
+         +eRka62WrIOpQiNTPk/eajCZh80TGa7divsyVolatEevtQNjQENrFciJh8KtJpN7EWQv
+         sDYA==
+X-Forwarded-Encrypted: i=1; AJvYcCU1Hok0vfHizaeluA7VBd+RvAKqUkOmpMuJ1i/3dK2ecPas7unfI4tAggLWr1yaq/rJ0pwIZiwH6tc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy7ZaoMnWUaO/f1iLpjKA0+KLdgceDZe9jOiPKFXuDrmlp4GDKj
+	PS3Eyuck51jXV3xu0Wjg7oLjXEsC4mKToMpSXHwfGmS/18IMKAza/z9lRAmdU9ymw3c=
+X-Gm-Gg: ASbGncswvCmhMRAkCQDnCcEuaLqlGPC/ljmVALQV8Sb4GweO0LRRQd+1RRVA1VdPgUE
+	c8GsqDHxuPSQhnNOd0kOexqo+xzdAOqsszHqae9J5zkBvCgWb9/aCmmWrM8gDO5pXljBgtkQsKX
+	U1xBKl0FQKKcU63w8WqPtvxlXSacq718kbm8Wr3rVsInxjp8tHTpn07TtDTtqj7e9aDWfkZ87J6
+	ap5OpnG/Jn8zKk5ZZ6+ipM/RTe5aF190A/4RO7R66+/Gx8wqib9FVbo33pMKd7axCPZ8VGL2Vem
+	Xu9tEcla9EIhAeULfn4QjssGLA9S9FMLNgK1ixZWPQgBQrdRxgfI2etGhwFusrislvNldyUqy6F
+	T3Q+5tmyyDn2Jjp98ESIl1msrSNxqWKt7XOej0Ga4/xzNFwf6LvbOizqp3jcH2Ksp3iJqjA==
+X-Google-Smtp-Source: AGHT+IGbGhHtW+dkKRPeIKh0lukvvT4QFrNpyVadJdYASbUMv52STVjCCLg+pYG9C9deIRU2g8iINg==
+X-Received: by 2002:a05:6902:2b8d:b0:e95:18dd:6a83 with SMTP id 3f1490d57ef6-e951ce0495emr555156276.11.1755807654366;
+        Thu, 21 Aug 2025 13:20:54 -0700 (PDT)
 Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-5f52b903320sm54724d50.0.2025.08.21.13.20.52
+        by smtp.gmail.com with ESMTPSA id 3f1490d57ef6-e951c976124sm142232276.34.2025.08.21.13.20.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Aug 2025 13:20:52 -0700 (PDT)
+        Thu, 21 Aug 2025 13:20:53 -0700 (PDT)
 From: Josef Bacik <josef@toxicpanda.com>
 To: linux-fsdevel@vger.kernel.org,
 	linux-btrfs@vger.kernel.org,
@@ -66,9 +66,9 @@ To: linux-fsdevel@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	brauner@kernel.org,
 	viro@ZenIV.linux.org.uk
-Subject: [PATCH 25/50] fs: remove I_WILL_FREE|I_FREEING check from __inode_add_lru
-Date: Thu, 21 Aug 2025 16:18:36 -0400
-Message-ID: <e42de7e9cd9b5fb17d159dda3de200b1800d671b.1755806649.git.josef@toxicpanda.com>
+Subject: [PATCH 26/50] fs: remove I_WILL_FREE|I_FREEING check in inode_pin_lru_isolating
+Date: Thu, 21 Aug 2025 16:18:37 -0400
+Message-ID: <954a16d781fd9bfc1b6cfec40af80475f710acf2.1755806649.git.josef@toxicpanda.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <cover.1755806649.git.josef@toxicpanda.com>
 References: <cover.1755806649.git.josef@toxicpanda.com>
@@ -80,29 +80,27 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-We only want to add to the LRU if the current caller is potentially the
-last one dropping a reference, so if our refcount is 0 we're being
-deleted, and if the refcount is > 1 then there is another ref holder and
-they can add the inode to the LRU list.
+If the inode is on the LRU list then it has a valid reference and we do
+not need to check for these flags.
 
 Signed-off-by: Josef Bacik <josef@toxicpanda.com>
 ---
- fs/inode.c | 2 --
- 1 file changed, 2 deletions(-)
+ fs/inode.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/fs/inode.c b/fs/inode.c
-index 6b772b9883ec..c61400f39876 100644
+index c61400f39876..a14b3a54c4b5 100644
 --- a/fs/inode.c
 +++ b/fs/inode.c
-@@ -613,8 +613,6 @@ static void __inode_add_lru(struct inode *inode, bool rotate)
- 
+@@ -682,7 +682,7 @@ void inode_lru_list_del(struct inode *inode)
+ static void inode_pin_lru_isolating(struct inode *inode)
+ {
  	lockdep_assert_held(&inode->i_lock);
+-	WARN_ON(inode->i_state & (I_LRU_ISOLATING | I_FREEING | I_WILL_FREE));
++	WARN_ON(inode->i_state & I_LRU_ISOLATING);
+ 	inode->i_state |= I_LRU_ISOLATING;
+ }
  
--	if (inode->i_state & (I_FREEING | I_WILL_FREE))
--		return;
- 	if (refcount_read(&inode->i_count) != 1)
- 		return;
- 	if (inode->__i_nlink == 0)
 -- 
 2.49.0
 
