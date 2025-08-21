@@ -1,63 +1,61 @@
-Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
+Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com [209.85.219.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2210A38A607
-	for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 20:20:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39E1034F473
+	for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 20:20:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755807623; cv=none; b=XlDoYj6HhIqxWeybAfFW1T4NtYUtqt0w+9Fta/5ggR9rhs3QHlibklBTiaDucyig2C1CZsQKB//lPa4yhBYQ1awbGf4xot9lOH6jYhxZaa9/tsyPNhExaYuHAFxw/gi/UvtvBLcXPx5Mm2mJp0uJtISkP5mrvRQId45bpWo4lzQ=
+	t=1755807623; cv=none; b=mF+ULeJja657b28oDA9pNrg6olat7ZPzb+/6dIL7VOFWnsb6VL/dpkBr1O3NvwI8UtJcpRV5YeJtvhB3WIilBOdQ/qFyM3ijodv3CXZ3beIS4eQGaIuTq18A/QRR+TRNqGxuxSV/GgNrXfGBrnKT4ctsbA3PFG1cCF6kdBpretE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1755807623; c=relaxed/simple;
-	bh=aMn/6ao90XzzaC4s0c7CDFRUmP2ZTM6xnRau/8BGgmM=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IVvuR5OiqUPzKINnEAkj40651c4mA9e0MbMpLVS2fSi/TgRyr39Xyc/QxGbI3DVE5dBCFz9Blz+arSyjHORj69q5sNUDQlsgI2uc/vnGJOXjhQtj88edzAGkmxQVZ14ZqGx5MXr/bq8qXxuc1FCeUleculYG//xOoN/Q1khIg4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=ifMkrRm7; arc=none smtp.client-ip=209.85.128.177
+	bh=/BdIefG1/27tHJXIb/J7ReJQO+Wd/JMyOnilC6r+beI=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=SwDKbDtQq54qeqpDbTVe7oPUTVMCcoPPDpac1isHR4l1m8pJgTEIuIOKm2rNGm76wf1/a/lWWzvsKRclqrCSSO3Ipfo00rWs8rBM5zyhC7pZ0kiN+A9P/7V/GiuxBO17I5WBqiQbcjsxzE6VUazJIIpGLHrshTZBJBPoexJcRso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=XyllwlvQ; arc=none smtp.client-ip=209.85.219.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="ifMkrRm7"
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-71d60150590so12041647b3.0
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 13:20:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="XyllwlvQ"
+Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-e932ded97easo1379340276.1
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 13:20:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1755807620; x=1756412420; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=XLN4UbEHNtGwPYNoqmeGrAHZvRznKShz2RgBNkDqb/A=;
-        b=ifMkrRm7ay32qJZgOfIEyjhwpWOScgUbN9sWTuHTBsvcij8ymIcrx+ONEZeZ0IBn22
-         TIG4gT552lSvTEOfdc+23VuK1CnpMb7w24kAPoRJAAlzCPO2fvkkTG0gp3xPyRWx4dAc
-         re/lAV9JBg2TrweT+tevjQRsJizGAS6anJxRQ1QN4Kl6Jfqr3quDpGPo3r5hodCNZRLR
-         plhTPrivgk70/GRWVmX6c8V0Sz5dioG9oGQs29DVt+vVs09UXpovNCxZb3b0juF0iYLG
-         BMuJPKxZqi3a77vvxecvjU2YKKzRElCisRqMuoVmvwOMVoTtZDfq6x5ivJwWaiFuQ+yW
-         nrxQ==
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1755807616; x=1756412416; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=0SeVezRefrCpYYDCsSNYu7Co/BY5e8f2aGHEoMEe3eM=;
+        b=XyllwlvQ6uPHQhwkWYYO4WrSXeL/jZZnBWsH/2D1yH8tDDkJoQex0WhEQR9mgQLLhg
+         DcRl552u4lNDETTeGR3M8NTaIEYhJV/Y0ZwdvurtkcgN7duySD9L7Q2PJA/sLUTiD3XV
+         rYsgQ4UZwg5SEbUhmqp/31V+777HAZCTJ05784bOFwxXSKIOb41ZBv791p/g/+H7/5Hp
+         mmlIDj0eTCJsPUiMJ89/EsfmY7ugTN27YEY3jXaWx/z0Oc9P3NSLY7aJiUISUbNtAbr0
+         kxjSixxzC6aCi85Oz9kykFujNIwCjHFoo00yRE2My4Lmo36SoZD/ptrZFozUrzGOCIlU
+         66rw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755807620; x=1756412420;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=XLN4UbEHNtGwPYNoqmeGrAHZvRznKShz2RgBNkDqb/A=;
-        b=acracpKIGPeaL2d9ArO3h1E/IVlw61MAtXpRIWqDPm5V0/FChE6cN5lYbikeV7BkPd
-         E2zOJToyMi2qlPCAq8RNV9fRX0VimsG5QXAIcI2ugj9JgI5vwi7MzDS8NBXDeLj7Lqe4
-         pv4uFR3fqtGcAkgmmiz0fjrFqBGZ35jnyNjshgRFDfdpZiAw94Kpt5amjJrFq9TXfhxb
-         OCybndURyg/T9/Z6H4NwTPQZR6URFQJYGkyH/umv/HcH/nD6z3aE7K0VUwmAd5/hJgtS
-         95NaQRWxeZkvIXqquePsN38BMQsOOlHCt+Q2B/L0MiFlUFDlu4/N5dgn5Qve9jy2ghvL
-         k8KA==
-X-Forwarded-Encrypted: i=1; AJvYcCXGmRqOcJXZTdBTfwiQkc4ZRhsyHGJKdngoAD30jN2V03zL9INuZVohjhEGCtsXgK/4c1UHJL+7330=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxscK1YDUEzYPEwM5YYKIt+ZZyf3bcJxE75WtvRFLjllEMmhUei
-	95VOQiScXhIN0mbWhR/Zd/ze1jXRAB1KqMjvp4Uk7fMZECRhx9RfvOb+Og1obyClNuk=
-X-Gm-Gg: ASbGncssqzcXnGbCtjtJ4gBP6cXp4lHpomKncbtstSyTFawy/zGevSAmMXRwvQf8ar5
-	kBwb0ORV/OikYE5sqErZvz7GVeO2Pn5UP3eJQyx4QiH4EuEUN4xJ3uSwc6CagSWFwetS3xNKGeb
-	CKTrCgvcizoM/SaM/tMVPVylnJnNwmwd+8kbhBbTQQK8iI5JLo3jzx35iRTCK6nCFMyedu3DmwN
-	oEHRJLGKAPtRZmw4QWlTf4Gzq+temxTnigM+d9GnrRgvuIPkZ5YHZjF41xb7lQvKO3OIScpnM6M
-	N/gYQC1QKxApXYeTMO+Lpk55F2yERX1DMBxpj3YrdmepJjfvVCAgR80yrpd1xXIJI/ZdcIA13Og
-	qoLrFYWznqwsUnC9aajzglFLI4CtUX5UnCQWo1T8pVGAByj1YfCj17aShQqncTykf/Hg1iw==
-X-Google-Smtp-Source: AGHT+IGb0qgYBLWVZIch3EbtVHWOhrkqQCA2jAcmKvem4xmtzmk5uwLi8F7ETWvIrlxUB1p8XxL6IA==
-X-Received: by 2002:a05:690c:6711:b0:71c:1673:7bb6 with SMTP id 00721157ae682-71fdc326e68mr7121847b3.23.1755807620154;
-        Thu, 21 Aug 2025 13:20:20 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1755807616; x=1756412416;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=0SeVezRefrCpYYDCsSNYu7Co/BY5e8f2aGHEoMEe3eM=;
+        b=Ae6RxWHz48CTi89DLcvIFB1I+qE8k+ccNTN2nmbEbEkL86qgOUUJ0Uq476TeDnIgrn
+         PlMfVodMLN64CHtqtj0PZnqokusXb5F6ktGqljj0UXvb+c0jh/elhUs6TcSchyTBcfkG
+         S0TWNcZyEvLZLbHsaupaQY7x0Ybc1WXnEHF+ZG2SHWdB4RpVyFRRVKPeBoV9WAmKzqe0
+         BKRmxN4r01RsLH5UrxxOFPxsRD6BhmMjhIn8KzP3y+eTQuSGUmY8ziR6GGT3mCYkj4qv
+         sLEJweUc0mP20jgm8U4JvGvDaWejdFnQeY4xQqAuiTxJ3ihpTB6d8flbHM9Hdo3NwM8G
+         X3PA==
+X-Forwarded-Encrypted: i=1; AJvYcCX9yfEBzdTBZZsk/e+Dpx83Wp/TvEQq4ysJQrSidDz3oPsJut1nnv/Q9xtcPObhJV3OdzY8D/G8f14=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx2COWECik5MCGFbqEDLCbsTQ/d0hW7brgsX2IXNkW0EYgs4+oj
+	iNiVrsVNldDOlLYbSL9wjAkOE738m/bP+YhEl5imQ2DCtSAm0VIR5my1u+VOF1q6fQlh73DMuIa
+	rA1Ts63IPMQ==
+X-Gm-Gg: ASbGncvdQXdLQOddpCXqj8LNxy7oVgHiqOyT25kka+qJ8ul5z8UNHnBojBrfPakAW3Q
+	7iApY2Fv5VlTk6BcPklrwlFbB+xGytZnXVyUapWw/TJFr9DWpuwLSNlkCCjO6OAnPlUK7dqzuua
+	ad6rExQOgl3L3R5KQ1l6iwPxPNLZEY5jdbTeDni++RhYblIkUkW8k9aOm6IQhw4xcAH2A8YKmX/
+	6JFJRNXDQ30IrWEnTXMGNVEvtfpXP+udGPNGBDdix18UuSN8sQ2hdd/ijrZ9nQmq++993NHVq5C
+	Jc19BOgCx0DTI0WaJr5srz2kKh5o3/cWEnpinrVQmp0cEoks3BqDTbmRs/FbTrpNvFJ/lCaddWo
+	ehEpcU1/YilPjHBLgYU+LuM8JWk6qNpKBu2ONgDBtAL+x7Ggw5g5WaI/AGnY=
+X-Google-Smtp-Source: AGHT+IE6Qk/uCJGKI3wxomxr6wsEq4XUy1mGV5MwcGWRTIhxV9r/kfkTBxnBTTgL2CLxX+LStcCrXA==
+X-Received: by 2002:a05:6902:600c:b0:e90:39b7:6085 with SMTP id 3f1490d57ef6-e951c3200fdmr856373276.17.1755807615867;
+        Thu, 21 Aug 2025 13:20:15 -0700 (PDT)
 Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-71e6e0be8b0sm45782287b3.66.2025.08.21.13.20.19
+        by smtp.gmail.com with ESMTPSA id 3f1490d57ef6-e94f1ddbbbfsm2363100276.12.2025.08.21.13.20.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Aug 2025 13:20:19 -0700 (PDT)
+        Thu, 21 Aug 2025 13:20:15 -0700 (PDT)
 From: Josef Bacik <josef@toxicpanda.com>
 To: linux-fsdevel@vger.kernel.org,
 	linux-btrfs@vger.kernel.org,
@@ -66,12 +64,10 @@ To: linux-fsdevel@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	brauner@kernel.org,
 	viro@ZenIV.linux.org.uk
-Subject: [PATCH 03/50] fs: hold an i_obj_count reference in wait_sb_inodes
-Date: Thu, 21 Aug 2025 16:18:14 -0400
-Message-ID: <e8edf6189d036e2222ed2094cf625d3cf06e0111.1755806649.git.josef@toxicpanda.com>
+Subject: [PATCH 00/50] fs: rework inode reference counting
+Date: Thu, 21 Aug 2025 16:18:11 -0400
+Message-ID: <cover.1755806649.git.josef@toxicpanda.com>
 X-Mailer: git-send-email 2.49.0
-In-Reply-To: <cover.1755806649.git.josef@toxicpanda.com>
-References: <cover.1755806649.git.josef@toxicpanda.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -80,35 +76,153 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In wait_sb_inodes we need to hold a reference for the inode while we're
-waiting on writeback to complete, hold a reference on the inode object
-during this operation.
+Hello,
 
-Signed-off-by: Josef Bacik <josef@toxicpanda.com>
----
- fs/fs-writeback.c | 2 ++
- 1 file changed, 2 insertions(+)
+This series is the first part of a larger body of work geared towards solving a
+variety of scalability issues in the VFS.
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index a6cc3d305b84..001773e6e95c 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -2704,6 +2704,7 @@ static void wait_sb_inodes(struct super_block *sb)
- 			continue;
- 		}
- 		__iget(inode);
-+		iobj_get(inode);
- 		spin_unlock(&inode->i_lock);
- 		rcu_read_unlock();
- 
-@@ -2717,6 +2718,7 @@ static void wait_sb_inodes(struct super_block *sb)
- 		cond_resched();
- 
- 		iput(inode);
-+		iobj_put(inode);
- 
- 		rcu_read_lock();
- 		spin_lock_irq(&sb->s_inode_wblist_lock);
+We have historically had a variety of foot-guns related to inode freeing.  We
+have I_WILL_FREE and I_FREEING flags that indicated when the inode was in the
+different stages of being reclaimed.  This lead to confusion, and bugs in cases
+where one was checked but the other wasn't.  Additionally, it's frankly
+confusing to have both of these flags and to deal with them in practice.
+
+However, this exists because we have an odd behavior with inodes, we allow them
+to have a 0 reference count and still be usable. This again is a pretty unfun
+footgun, because generally speaking we want reference counts to be meaningful.
+
+The problem with the way we reference inodes is the final iput(). The majority
+of file systems do their final truncate of a unlinked inode in their
+->evict_inode() callback, which happens when the inode is actually being
+evicted. This can be a long process for large inodes, and thus isn't safe to
+happen in a variety of contexts. Btrfs, for example, has an entire delayed iput
+infrastructure to make sure that we do not do the final iput() in a dangerous
+context. We cannot expand the use of this reference count to all the places the
+inode is used, because there are cases where we would need to iput() in an IRQ
+context  (end folio writeback) or other unsafe context, which is not allowed.
+
+To that end, resolve this by introducing a new i_obj_count reference count. This
+will be used to control when we can actually free the inode. We then can use
+this reference count in all the places where we may reference the inode. This
+removes another huge footgun, having ways to access the inode itself without
+having an actual reference to it. The writeback code is one of the main places
+where we see this. Inodes end up on all sorts of lists here without a proper
+reference count. This allows us to protect the inode from being freed by giving
+this an other code mechanisms to protect their access to the inode.
+
+With this we can separate the concept of the inode being usable, and the inode
+being freed.  The next part of the patch series is to stop allowing for inodes
+to have an i_count of 0 and still be viable.  This comes with some warts. The
+biggest wart is now if we choose to cache inodes in the LRU list we have to
+remove the inode from the LRU list if we access it once it's on the LRU list.
+This will result in more contention on the lru list lock, but in practice we
+rarely have inodes that do not have a dentry, and if we do that inode is not
+long for this world.
+
+With not allowing inodes to hit a refcount of 0, we can take advantage of that
+common pattern of using refcount_inc_not_zero() in all of the lockless places
+where we do inode lookup in cache.  From there we can change all the users who
+check I_WILL_FREE or I_FREEING to simply check the i_count. If it is 0 then they
+aren't allowed to do their work, othrwise they can proceed as normal.
+
+With all of that in place we can finally remove these two flags.
+
+This is a large series, but it is mostly mechanical. I've kept the patches very
+small, to make it easy to review and logic about each change. I have run this
+through fstests for btrfs and ext4, xfs is currently going. I wanted to get this
+out for review to make sure this big design changes are reasonable to everybody.
+
+The series is based on vfs/vfs.all branch, which is based on 6.9-rc1. Thanks,
+
+Josef
+
+Josef Bacik (50):
+  fs: add an i_obj_count refcount to the inode
+  fs: make the i_state flags an enum
+  fs: hold an i_obj_count reference in wait_sb_inodes
+  fs: hold an i_obj_count reference for the i_wb_list
+  fs: hold an i_obj_count reference for the i_io_list
+  fs: hold an i_obj_count reference in writeback_sb_inodes
+  fs: hold an i_obj_count reference while on the hashtable
+  fs: hold an i_obj_count reference while on the LRU list
+  fs: hold an i_obj_count reference while on the sb inode list
+  fs: stop accessing ->i_count directly in f2fs and gfs2
+  fs: hold an i_obj_count when we have an i_count reference
+  fs: rework iput logic
+  fs: add an I_LRU flag to the inode
+  fs: maintain a list of pinned inodes
+  fs: delete the inode from the LRU list on lookup
+  fs: change evict_inodes to use iput instead of evict directly
+  fs: hold a full ref while the inode is on a LRU
+  fs: disallow 0 reference count inodes
+  fs: make evict_inodes add to the dispose list under the i_lock
+  fs: convert i_count to refcount_t
+  fs: use refcount_inc_not_zero in igrab
+  fs: use inode_tryget in find_inode*
+  fs: update find_inode_*rcu to check the i_count count
+  fs: use igrab in insert_inode_locked
+  fs: remove I_WILL_FREE|I_FREEING check from __inode_add_lru
+  fs: remove I_WILL_FREE|I_FREEING check in inode_pin_lru_isolating
+  fs: use inode_tryget in evict_inodes
+  fs: change evict_dentries_for_decrypted_inodes to use refcount
+  block: use igrab in sync_bdevs
+  bcachefs: use the refcount instead of I_WILL_FREE|I_FREEING
+  btrfs: don't check I_WILL_FREE|I_FREEING
+  fs: use igrab in drop_pagecache_sb
+  fs: stop checking I_FREEING in d_find_alias_rcu
+  ext4: stop checking I_WILL_FREE|IFREEING in ext4_check_map_extents_env
+  fs: remove I_WILL_FREE|I_FREEING from fs-writeback.c
+  gfs2: remove I_WILL_FREE|I_FREEING usage
+  fs: remove I_WILL_FREE|I_FREEING check from dquot.c
+  notify: remove I_WILL_FREE|I_FREEING checks in fsnotify_unmount_inodes
+  xfs: remove I_FREEING check
+  landlock: remove I_FREEING|I_WILL_FREE check
+  fs: change inode_is_dirtytime_only to use refcount
+  btrfs: remove references to I_FREEING
+  ext4: remove reference to I_FREEING in inode.c
+  ext4: remove reference to I_FREEING in orphan.c
+  pnfs: use i_count refcount to determine if the inode is going away
+  fs: remove some spurious I_FREEING references in inode.c
+  xfs: remove reference to I_FREEING|I_WILL_FREE
+  ocfs2: do not set I_WILL_FREE
+  fs: remove I_FREEING|I_WILL_FREE
+  fs: add documentation explaining the reference count rules for inodes
+
+ Documentation/filesystems/vfs.rst        |  23 ++
+ arch/powerpc/platforms/cell/spufs/file.c |   2 +-
+ block/bdev.c                             |   8 +-
+ fs/bcachefs/fs.c                         |   3 +-
+ fs/btrfs/inode.c                         |  11 +-
+ fs/ceph/mds_client.c                     |   2 +-
+ fs/crypto/keyring.c                      |   7 +-
+ fs/dcache.c                              |   4 +-
+ fs/drop_caches.c                         |  11 +-
+ fs/ext4/ialloc.c                         |   4 +-
+ fs/ext4/inode.c                          |   8 +-
+ fs/ext4/orphan.c                         |   6 +-
+ fs/f2fs/super.c                          |   4 +-
+ fs/fs-writeback.c                        | 105 +++++--
+ fs/gfs2/ops_fstype.c                     |  17 +-
+ fs/hpfs/inode.c                          |   2 +-
+ fs/inode.c                               | 371 ++++++++++++++++-------
+ fs/internal.h                            |   1 +
+ fs/nfs/inode.c                           |   4 +-
+ fs/nfs/pnfs.c                            |   2 +-
+ fs/notify/fsnotify.c                     |  26 +-
+ fs/ocfs2/inode.c                         |   4 -
+ fs/quota/dquot.c                         |   6 +-
+ fs/super.c                               |   3 +
+ fs/ubifs/super.c                         |   2 +-
+ fs/xfs/scrub/common.c                    |   3 +-
+ fs/xfs/xfs_bmap_util.c                   |   2 +-
+ fs/xfs/xfs_inode.c                       |   2 +-
+ fs/xfs/xfs_trace.h                       |   2 +-
+ include/linux/fs.h                       | 284 ++++++++++-------
+ include/trace/events/filelock.h          |   2 +-
+ include/trace/events/writeback.h         |   6 +-
+ security/landlock/fs.c                   |  22 +-
+ 33 files changed, 607 insertions(+), 352 deletions(-)
+
 -- 
 2.49.0
 
