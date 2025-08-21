@@ -1,110 +1,63 @@
-Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFFD232A3EA;
-	Thu, 21 Aug 2025 13:17:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A372923D7E5;
+	Thu, 21 Aug 2025 14:01:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755782245; cv=none; b=FCkuQTWSN5FQThhVezArLGt2OE+Zh7sE1ieH5VssAoA/palJY/W5Ip2dFFFSEkmSn4EnE03b798ObdJ/aQkQhlGZlGlpDU63zHKLyunU7JV32lXww+hMXlTHbsgBJD5Odd2g0JUZ/oQL3dG4FksRN7VFKvIB8eBMj5RwJLvdoC0=
+	t=1755784896; cv=none; b=PPpXtEqU35PZvghwjSVbUK2oVhkAe4eCmtnsjOzdZfbNNum8mWrhhbXgei1fG3lv/43RjywaeHxyHIAX9Sqpl5+neE+32dsf4Xts/FEw762y6c159u5Hzurvbac2BWJXtpSvM2wH4g6hysFmvw9dSVj/aca3F1Y5H/Hb6AR0eEM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755782245; c=relaxed/simple;
-	bh=BfUFIpKi0jNSO8qQJnc/RDNHrnU9cLghiPrJydtwd/Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iE94843xgj8ZT+zT4pQxu/5TwZOSedn6VhIVlG/vw0pneB1blcEhBUP6VgvbYFmsiJ1DcCtfNbprGXcJIHthObKJeAKo651moFaD5dcfI+9u4t7rO9HHDkBL39/6/q4GRwiCV9vrEukzDaZ87ZjZJH9Rq6L2vDpOXxlD/0dXW0w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gvMshqzC; arc=none smtp.client-ip=209.85.218.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1755784896; c=relaxed/simple;
+	bh=fPFpDcD5IoxktsMx43cYimZsbxu1wQFHGY0B5ONqI+Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WBRv5NRGR4i4jwq1GGIgf67G5Qs/83ZFkd4d7KAUg8QC0RUuej2+8wyD3H+UxM0mxF7RoqV9STHlanL4j+hXQTvLGJnxs/Ns3INL4rhIn8hAZ8/UCH4ctBINroSqflBB/FHkkiA2w+fZSnGzEapzsoPHQTtJT9xLAkLJNDhggiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CBZbiO+u; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gvMshqzC"
-Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-afcb73394b4so146180666b.0;
-        Thu, 21 Aug 2025 06:17:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1755782242; x=1756387042; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=YergQZ9XutIei6tpuNz/ymS/WZO1vUxU6NUoUNtJ1kI=;
-        b=gvMshqzCRh0b/aYspPjyrCd8XQe5moLlAXvXuSW9gbQ8eBcgRcJ1jCm+3oRX9/hHsw
-         zk8Zr+dKI7JlIR+Mqx4ImhAROk65LJQyLdqiZS2oiy3miiJS5hwNshIp5OqZ0g55lBoi
-         EJQV7dr4JQEk5cDVcusQo3UZIdg7FdfGXBOZscqpYvz+Fros6K/YObY7t4DcHCi5Giuv
-         oGd3DoiVPGl0P9PdbmMsd0mPfZHvkIII6OAclK+1X4UxBTNk4Jq1/aNwKU/8Jatp0SiU
-         jNPNXhz+Czf6F+67WNJ/99IAYQxpJMDDsLp2k7rHzaqur4P1YzY+uK+viOUZTJB7KZo+
-         OVVg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755782242; x=1756387042;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=YergQZ9XutIei6tpuNz/ymS/WZO1vUxU6NUoUNtJ1kI=;
-        b=WkgpficMT8Ecjc9WeTStT21B2wZKoVTVCV0YKX4xeLoxdIC7o7VojHrP5xvANa/IFX
-         DJmEYjm1bWCaF+F/GPoVgDRrJ+ZnMiBSGxfd3Efs9Z9vNODp1O9W4LrDsqvc82wTmo9o
-         wnBbjsY0VQ6KZRm1KJ3OtaCe25bwaK+DMG/cneasqeik4yVesVVBYIkIo4EGQmB7Bykp
-         gnV+sG3AUPZhRUflSkLtvldVlstv4jW0UBmLLExZdJjBzPqKr0/BSY7Be+3RM7yyunUB
-         DnbI5BsAag60ZPkw6HyFXGIOwV3XmEy6shOxx8Co5nB4Lk5SRZQCZBhGp/7VwTe1wkHN
-         YORQ==
-X-Forwarded-Encrypted: i=1; AJvYcCW4aUI/gKYr7vTAbaWqSJRY5W+gesBkKQvu6fBNgca6yBSNbJ16wHCCQNAKoaZt2h+KAsFJF15wJk0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwYXplhGUCEqJeK5J/XGgDCoeo5vhHPUEE1jt881kkhEZbPH95q
-	KQSlRahP974P5/SCawRIK/hPKuCPaUurux5snPmNHsaNhnleFTqQLO36
-X-Gm-Gg: ASbGncvYZAK7dr1aF1tmRK86GkmVUhsIGjLe8NKCErFTV3B1G5OqbOgm2Urecb1l8kh
-	MseedlxBvw23dghFAjGua5rX9dVpKQgCWgu/17q115N/HO+seZA8iMfX4WrC9Kg6gqARXhhrGQA
-	DQG2D8coRLxIbJ/IHQvQpkbaehoQYhUEs+E2mNvfx+tMHN9f1nGLBg+nFJhCH/FB/LnMrVA/B6u
-	CO0YH1izq44Rn7Gb3H+UGNiHLmuGYyrH38yZBE6jYOdL6X0YqYP9yFyg24d6pHS7+wkUTUOHOO1
-	secCIuLj8KpgCgOJf1MWJXsjUqPZezyDJmeqPLNL6TeLQ6sgMjFF87tXZDc56k7SQ2zrZcaQYCm
-	HFJL5OMC/0YzXTIuvc7QqAN6/PJss
-X-Google-Smtp-Source: AGHT+IGb0Fy1MDmZpYB0kO3JQdBxpxrwB4Us7cifwwRvXmL6XzplmdSQCPTzJas31V+oGDqyhOJSCg==
-X-Received: by 2002:a17:906:d249:b0:afc:a330:e423 with SMTP id a640c23a62f3a-afe07c09c50mr195291066b.42.1755782241851;
-        Thu, 21 Aug 2025 06:17:21 -0700 (PDT)
-Received: from vagrant.. ([31.223.98.68])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-afe1367efbdsm88671666b.25.2025.08.21.06.17.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Aug 2025 06:17:21 -0700 (PDT)
-From: Alperen Aksu <aksulperen@gmail.com>
-To: corbet@lwn.net
-Cc: linux-xfs@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	skhan@linuxfoundation.org,
-	linux-kernel-mentees@lists.linux.dev,
-	Alperen Aksu <aksulperen@gmail.com>
-Subject: [PATCH] Documentation/filesystems/xfs: Fix typo error
-Date: Thu, 21 Aug 2025 13:13:47 +0000
-Message-ID: <20250821131404.25461-1-aksulperen@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CBZbiO+u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7EE0C4CEED;
+	Thu, 21 Aug 2025 14:01:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755784896;
+	bh=fPFpDcD5IoxktsMx43cYimZsbxu1wQFHGY0B5ONqI+Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=CBZbiO+u0jnyT/QGYfPK58tb7SkDHf7TnD6mTq5jfAmGCYn5ThhwQBfRcPNhHFcTM
+	 eQjyVgQ69lPhefuQvvkjB7K5TAsb5ZQdv1w7eFx6j64qrpBWhzIYrqxL6AoJCebPEm
+	 E3ds54S/IKBi7nfgAt1pkwRuEJbiTa1ZJXCtbUCHmYXrqcN2SFZ3Egk8tgVcylrGje
+	 re2tLHiZpiaoH2XbU7utb+SJZdcbYpxhCEQ/ZeDsceUCweYwTq0DWlO4PtQJv5tflI
+	 AwCCEyK6rYOhejR/MLYuvMQt2yiuCqXn0QQ977AvzvqlweOjjqkj0h+mYH4VM7TooN
+	 r1fVhUxmBnb8A==
+Date: Thu, 21 Aug 2025 08:01:34 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Christoph Hellwig <hch@infradead.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: Re: Do we need an opt-in for file systems use of hw atomic writes?
+Message-ID: <aKcmvfECWdv6CedK@kbusch-mbp>
+References: <20250714131713.GA8742@lst.de>
+ <6c3e1c90-1d3d-4567-a392-85870226144f@oracle.com>
+ <aHULEGt3d0niAz2e@infradead.org>
+ <6babdebb-45d1-4f33-b8b5-6b1c4e381e35@oracle.com>
+ <20250715060247.GC18349@lst.de>
+ <072b174d-8efe-49d6-a7e3-c23481fdb3fc@oracle.com>
+ <20250715090357.GA21818@lst.de>
+ <bd7b1eea-18bc-431e-bc29-42b780ff3c31@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bd7b1eea-18bc-431e-bc29-42b780ff3c31@oracle.com>
 
-Fixed typo error in referring to the section's headline
-Fixed to correct spelling of "mapping"
+On Tue, Aug 19, 2025 at 12:42:01PM +0100, John Garry wrote:
+> 
+> If we always ignore AWUPF, I fear that lots of sound NVMe implementations
+> will be excluded from HW atomics.
 
-Signed-off-by: Alperen Aksu <aksulperen@gmail.com>
----
- Documentation/filesystems/xfs/xfs-online-fsck-design.rst | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/filesystems/xfs/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-index e231d127cd40..b39b588bb995 100644
---- a/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-+++ b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-@@ -475,7 +475,7 @@ operation, which may cause application failure or an unplanned filesystem
- shutdown.
- 
- Inspiration for the secondary metadata repair strategy was drawn from section
--2.4 of Srinivasan above, and sections 2 ("NSF: Inded Build Without Side-File")
-+2.4 of Srinivasan above, and sections 2 ("NSF: Index Build Without Side-File")
- and 3.1.1 ("Duplicate Key Insert Problem") in C. Mohan, `"Algorithms for
- Creating Indexes for Very Large Tables Without Quiescing Updates"
- <https://dl.acm.org/doi/10.1145/130283.130337>`_, 1992.
-@@ -4179,7 +4179,7 @@ When the exchange is initiated, the sequence of operations is as follows:
-    This will be discussed in more detail in subsequent sections.
- 
- If the filesystem goes down in the middle of an operation, log recovery will
--find the most recent unfinished maping exchange log intent item and restart
-+find the most recent unfinished mapping exchange log intent item and restart
- from there.
- This is how atomic file mapping exchanges guarantees that an outside observer
- will either see the old broken structure or the new one, and never a mismash of
--- 
-2.43.0
-
+It's not that they're excluded from HW atomics. They're just excluded
+from the block layer's attributes and guard rails. People were using
+NVMe atomics long before those block layer features, at least.
