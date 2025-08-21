@@ -1,76 +1,42 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A2FC20D4E9;
-	Thu, 21 Aug 2025 10:36:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55C0B2ED17C
+	for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 10:59:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755772564; cv=none; b=VaQpUXJvVQO012vrdrKV4+c1aJyX3E9PKb7iHxgHfQBg/ei8z1Si9DZ1Zh28c/s6zkfVpfEIiZnQdHNSLP3iIo4kk8G1KzGGnJpFzbHTQ4b5TY2z3wbY3NmfXJW5XafmQP+iBcCnRihHCvNFfXKM+yQAQYTyGkwvVjLXEE2pHMk=
+	t=1755773998; cv=none; b=mD53fcoxkOSg7FlZS7PFLvpLJ4gb1BExKWV3ObgEcgErOHyKUmAq3p7rieaiJ2E5ejBnZZjqMGW6Y28WjJrESWf5QmqhPzcySG2IBaN46pd3n2o+ZpGa0v3DCRpIWwDsMiYvxPM3CRYWRoSeAqd+J707OwPCssV7NFGLVdESyWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755772564; c=relaxed/simple;
-	bh=3eiXtDFL+TiNhIYNwcA17FNhl8ql+o1EmOT6uDEdQhs=;
+	s=arc-20240116; t=1755773998; c=relaxed/simple;
+	bh=GJ3uPF2uNEQcOaTWzSO3RE3IsvLDy0hhVhP8nmKP0os=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JkNPXJihFMDa/RRts+XRDP9EHhkoLOpdhJ9YiGvZyAJZnxrOuQyjBG6nZpIRL6+n0dvX57uc+7P8yz6q+hp7qNBSUI5zFK5TWV30iRK2fhO6uAUInZftojYYVcp3+R6viiBaoLZEXSk3snsICSB5sDzZEUkA4aeXS0bhtwSyobU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Zzu56/8X; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=muBBJ+z1AEB/Oxp+C/D7G8GEEf+Ru20plTYRc8bhUW4Yuxvhy7X522o3az9tJBVOMVzmQfmjnHnsZoPRaLvcTSN4vzNLfCf6F0yDA1fifNnXeuhouJ7yf4L6IgTm3QtfDQjENGTYepJ7AAKoNhE0JPsNo5Qj/1AB04VFRle+fRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VMJNpNVo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Zzu56/8X"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57L6WhGX007291;
-	Thu, 21 Aug 2025 10:35:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=p/B2y/2toKUTDV+0i8ur2afBFLuK9+
-	7m6jozN7zkskE=; b=Zzu56/8Xd7rWEycqLXBrmMmsiSvR1Z9OP1rlzvoX1r39ou
-	P7XS2SMvf6bjXL5odogK/6+hhBVL/M9sThHYV6TAhAFHvde9AaxeY/TZH6ofEmwO
-	jAMi9Sb847mjGpaMo3vBNsOcaaQvybBumZ4plNRQdNN92tEmjSuDQ83Mw0T15BZ5
-	O17KesFhcz+jYQSTk4tAfBpaO4VLLyj/zzr8XtckXr8dtCszqmKmVNtZDcDB2CAf
-	A6n24rSF7NajU73bHz28rHBDCXIFTGWSFAIbNX/TDaa/mvHQ84HGCT9v1N2beJvp
-	rzQlO+eNk5btLgXWDLT1CjK5yz1s/CKAghhy4xsQ==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48n38w0092-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 21 Aug 2025 10:35:52 +0000 (GMT)
-Received: from m0360072.ppops.net (m0360072.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 57LAJHK4006441;
-	Thu, 21 Aug 2025 10:35:51 GMT
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48n38w008y-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 21 Aug 2025 10:35:51 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 57L6pSOj024786;
-	Thu, 21 Aug 2025 10:35:50 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 48my5vyupd-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 21 Aug 2025 10:35:50 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 57LAZmAN41812236
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 21 Aug 2025 10:35:48 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id A66C220043;
-	Thu, 21 Aug 2025 10:35:48 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 8D16D20040;
-	Thu, 21 Aug 2025 10:35:46 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.109.219.158])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Thu, 21 Aug 2025 10:35:46 +0000 (GMT)
-Date: Thu, 21 Aug 2025 16:05:44 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: David Laight <david.laight.linux@gmail.com>
-Cc: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
-        Ritesh Harjani <ritesh.list@gmail.com>, djwong@kernel.org,
-        john.g.garry@oracle.com, tytso@mit.edu, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v4 01/11] common/rc: Add _min() and _max() helpers
-Message-ID: <aKb2gB9WC8mdez6e@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <cover.1754833177.git.ojaswin@linux.ibm.com>
- <43f45a0885f28fd1d1a88122a42830dd9eeb7e2c.1754833177.git.ojaswin@linux.ibm.com>
- <20250813132034.6d0771de@pumpkin>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VMJNpNVo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DF77C4CEEB;
+	Thu, 21 Aug 2025 10:59:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755773997;
+	bh=GJ3uPF2uNEQcOaTWzSO3RE3IsvLDy0hhVhP8nmKP0os=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=VMJNpNVo7/xcsnMtDJs6HaIoJaVrwiAKls6MDzbIASG3B1mgPcgCcwcPQBTKJS9PR
+	 6r34dtTSRpZFoNjhQ+BGUjW4qSPOfxvvgssU8+5kJ13LU5WvxGOjaqbAWC18stOoKD
+	 ZIk3hQ7X+YGmC6jPLSpox8jlDFHzVEE4sDauA1FKtXwWpgIO0XnzCgYKhhyvbQmRqa
+	 XjYYR6htoXVlCWKTUQwmQHVwNEMhefnt53/Vta2Gnec5RFNoRPrCQJ5CEiyUHN8wT2
+	 VwR+ceKPusi5qgSlESiX3msVyhmg3LOp6Y5vZ5O8EGqdW1rEDman89yrtJxOES20Y4
+	 xBYYGEUSXMQ5g==
+Date: Thu, 21 Aug 2025 12:59:54 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: implement XFS_IOC_DIOINFO in terms of vfs_getattr
+Message-ID: <qmwujttlrrwb6cbeifjbuahuw2ltujx4k5d7xlkaeds76v7d4e@7hnzg2kzhykl>
+References: <9aG8Tf3X2d-4A9_uy7q50gPfuQH-xjOf3Bdbw4mJ5ITHbBXXDwYG2uqAYoSKE-pRy5iYgqRbd79paOGW-Sk_SA==@protonmail.internalid>
+ <20250818051348.1486572-1-hch@lst.de>
+ <bcwk3ezkikdmkgisfhukyxk3ojtkmbeonnepaxt3pmzof662b6@iddfobua7bme>
+ <F_PoQgaWY6li_3B25eViM2xapPKR5U-P4BdzFW-krgO7YwRyn0g4hcXn2bF0TKqnoYJuMW2NrzQQH7oZUb4_CQ==@protonmail.internalid>
+ <20250821084037.GA29746@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,103 +45,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250813132034.6d0771de@pumpkin>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: vECXwCi-SPoW-pZk6aQNMll0Be370F7r
-X-Proofpoint-GUID: bkkIkRjOvtNhHZyKpktEU6OsgE2YOM6v
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODE5MDIyMiBTYWx0ZWRfX2NJ2ouscLGit
- 16q1JnD8uHPR7fKGC/tGNCONy/Ca8vCC32v28rvm3UvtGat3A74clzQupwwRybm0WSJf4Q8Q2vu
- QQySN1r0HyL136jGlE/j1WAmX31bC5NEJnicaIFYhaXUxqObyGEPrbs9BtwkB9Ui5TUW0VqzNAd
- 1MXTwXzVj+N1MGK7A5aeQa0r7u/spcqekda1y4VCyE0d4Mczm+HVwIxyHNsgYZSBsJ3XDc/yyVu
- NgP0J4jPQX1TCZbN+LlgmrwpDyJ0PkpvRzFPix8DVwE5+xLhBMublFZFZcqPbw2+eIMWYL+Jtsn
- DIkxCpXydy4Vyi1RKvggazetOyw906Lc/H1AXCoNFh51qjBhO9h6zMX5y34iw7EuEZKMSz6CnFU
- ttSp3cQzw9edJQoWDu5TdCIpAyjUFw==
-X-Authority-Analysis: v=2.4 cv=a9dpNUSF c=1 sm=1 tr=0 ts=68a6f688 cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=kj9zAlcOel0A:10 a=2OwXVqhp2XgA:10 a=VnNF1IyMAAAA:8 a=VwQbUJbxAAAA:8
- a=TSqor-If1qTvfEId-wcA:9 a=CjuIK1q_8ugA:10 a=cPQSjfK2_nFv0Q5t_7PE:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-08-21_02,2025-08-20_03,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 spamscore=0 suspectscore=0 adultscore=0 impostorscore=0
- malwarescore=0 bulkscore=0 priorityscore=1501 clxscore=1015 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2508110000 definitions=main-2508190222
+In-Reply-To: <20250821084037.GA29746@lst.de>
 
-On Wed, Aug 13, 2025 at 01:20:34PM +0100, David Laight wrote:
-> On Sun, 10 Aug 2025 19:11:52 +0530
-> Ojaswin Mujoo <ojaswin@linux.ibm.com> wrote:
+On Thu, Aug 21, 2025 at 10:40:37AM +0200, Christoph Hellwig wrote:
+> On Wed, Aug 20, 2025 at 10:23:27AM +0200, Carlos Maiolino wrote:
+> > Do we need to keep this comment that tied to an userspace tool?
 > 
-> > Many programs open code these functionalities so add it as a generic helper
-> > in common/rc
-> > 
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> > ---
-> >  common/rc | 22 ++++++++++++++++++++++
-> >  1 file changed, 22 insertions(+)
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index 96578d15..3858ddce 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -5873,6 +5873,28 @@ _require_program() {
-> >  	_have_program "$1" || _notrun "$tag required"
-> >  }
-> >  
-> > +_min() {
-> > +	local ret
-> > +
-> > +	for arg in "$@"; do
-> > +		if [ -z "$ret" ] || (( $arg < $ret )); then
-> > +			ret="$arg"
-> > +		fi
-> > +	done
-> > +	echo $ret
-> > +}
-> 
-> Perhaps:
-> 	local ret="$1"
-> 	shift
-> 	for arg in "$@"; do
-> 		ret=$(((arg) < (ret) ? (arg) : (ret)))
-> 	done;
-> 	echo "$ret"
-> that should work for 'min 10 "2 + 3"' (with bash, but not dash).
-> 
-> 	David
+> It think it is a pretty good reminder why it is here.
 
-Hi David,
-
-Thanks for the feedback. I agree that your way is slightly better but i
-would like to keep the current patch as is since we already have some
-reviews on it and I would prefer to keep the code as is (especially
-since both ways are close enough). Hope this is okay.
-
-Also, we can always do 
-
-_min 10 $((2 + 3)) 
-
-which is a bit more intuitive imo
-
-Regards,
-ojaswin
+Fair enough. I'm not opposing to it, just looks weird to me.
 
 > 
-> > +
-> > +_max() {
-> > +	local ret
-> > +
-> > +	for arg in "$@"; do
-> > +		if [ -z "$ret" ] || (( $arg > $ret )); then
-> > +			ret="$arg"
-> > +		fi
-> > +	done
-> > +	echo $ret
-> > +}
-> > +
-> >  ################################################################################
-> >  # make sure this script returns success
-> >  /bin/true
+> > The issue with randholes is that it uses posix_memalign, and the pointer
+> > size constraint comes from that.
+> >
+> > I couldn't find any details on why this is required, but I'm assuming
+> > it's to keep posix_memalign architecture/implementation independent?!
+> >
+> > So, perhaps instead of being 'randholes' specific, it should specify to
+> > be posix compliant or because posix requires this way?
 > 
+> Posix does not require the alignment to be larger than void *.
+
+Sorry, I'm not sure if I got what you mean here, perhaps I phrased it
+wrong, but I didn't mean to infer posix requires an alignment larger
+than void*, but that posix_memalign requires the 'alignment' to be a
+multiple of sizeof(void*). Although the smallest alignment, well, would
+be sizeof(void*) per se.
+
+FWIW, I'm not questioning your patch anymore, I'm just curious about
+these posix constraints.
+
+> Applications that directly feed the value to posix_memalign do.
+> And maybe that what could go into the comment.
+
+yeah, that would be nice to have.
+
+Cheers.
