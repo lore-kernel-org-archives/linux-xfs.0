@@ -1,63 +1,63 @@
-Received: from mail-yw1-f170.google.com (mail-yw1-f170.google.com [209.85.128.170])
+Received: from mail-yw1-f182.google.com (mail-yw1-f182.google.com [209.85.128.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A371B392193
-	for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 20:21:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C57AD3921A6
+	for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 20:21:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755807684; cv=none; b=jneluIpfwk6jppLC4oxkq8+U4Mvup3Y+VsfMr6hvTYqQTSAZWPK5/KbegrJscxh63t17dEjI/1nuITY5YcPf7kKUqP9rlR//J7ICIq/7+jiGDSMOnMYHPDRHptdtMq03Umw9MOdZEyxPSYlJZEPvbhHF56HMzjidHU13rBIQf4U=
+	t=1755807685; cv=none; b=Riddif+cvxmrqw50s0on4UoLvD7OrjTOc5oqbM8GX2PL669aT1oaPgz8oJ3px44RAlVvoWPAV6D377npIqoNZ5eM6n1EXR1vzNzJC4PPGAlE24JYy9NpYE/3tCVeOaJrzwZnpposivpYTtTWTBCxpJTm4iHp3tlPFMwnXCmMrvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755807684; c=relaxed/simple;
-	bh=dcsAxEHT5Jq2nRSpkM5+vx6RORRZ4KO+wi+OUDbhG0Q=;
+	s=arc-20240116; t=1755807685; c=relaxed/simple;
+	bh=0ZjV+DUCSr2pMjxDPkN/PoOVM2MR73/8MF8nar2aCc0=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=epWfTDXXq7PVuQu9U9m3ICs1cOcr2Pq0GLb2chhQAPPOhpJxA8xh6QG725JK59PoFL9XCoYNbSEygZ8RD2VRC7F+3w/rxd75AzN7krdDNMgPdZoIZAYWt8Qx7I6tMYLf0/cB86O9kbczmx4+hOlW+ahVFS2HKDRHgBFgD/sEPyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=mHgOvNMB; arc=none smtp.client-ip=209.85.128.170
+	 MIME-Version; b=mtzuRb+SJZ8EHSv/eVrp4pG+tBZ/eGIyjrMkUQgw1s+R2oDZWzlEDHOURWObEctbnENPyqpsa7vRo5PvixsB6rSQQhAnss79/a8OOWCzcCLT5eNjF88ZXQhiD0axLPMxBHUoJgDxUnFYmhBFzHDJo6o+meUEK7AL+w846axoEGc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=VnRff4S1; arc=none smtp.client-ip=209.85.128.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="mHgOvNMB"
-Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-71e6f84b77eso12796047b3.2
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 13:21:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="VnRff4S1"
+Received: by mail-yw1-f182.google.com with SMTP id 00721157ae682-71fb85c4b59so25542367b3.1
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Aug 2025 13:21:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1755807681; x=1756412481; darn=vger.kernel.org;
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1755807683; x=1756412483; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=AHd+4Vz7kPVwWP6qqpZo346lGeZ1ejCBP7K3x1LyEEE=;
-        b=mHgOvNMBzYdTWyof322s66jOucc2q08/MzV/xZ6yIs68LuEQFsPDQiKpgqruUbkZVZ
-         QJLfgykxXhhEo7I5B70Qd/tJbXqZFpoqO7VYZEDp6/EcYsuRR73OTOK0EXx7qqrfcOkJ
-         0lDLZNuvSklFEAkeYMR0KAI3xpEShNzf+uNRLP+J6b/cTnn7NE5jeQWcghM/02+jNR2K
-         RvfJH4vOJlZn7E4OfDJmJvvctBKIzcD5AimKMQdJvO6VqjqVgtpLbVr+5Bvx4abTDvPQ
-         k7I3dkzfPrcJTSyxLEeA8Y8IWZN9kE4yqly0AxznwrI2MH5zHV+wgurMMKRXk8QSMtma
-         FwGg==
+        bh=3dx0/asqotG4rq6EdmXwwX9N7zT6RzPtjLNznPWUyIY=;
+        b=VnRff4S1NyTjF6Wv4trGP6bKHc5cpMxvcVUKD5DYc+jaXv3qa/saOtoI58ljFhapSv
+         dgP7kFl5W41+9GNsCT5lIfWcvIwt1VFo+62WBiVA9rrj/jS697XidiOCOePeNJB7ZncK
+         oi9LYJj9GshsVaB8j/JMuNYBd4cLHgoEF5vlJNPmmbGjQwuhuCJzJhVAajcRD8tMsdHO
+         qWVODynV7sfegkm7F5UnmW9XRXKtfAYgGY8vHtdx2xOsrTOsAAOx6/lePAZbZplAx2iY
+         MVAbHQEyBH7PSonMfYnser3L+W3LITLH51jZFabt2BiNonQbKfrygzuozGL5Lh9sD23i
+         xFdw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755807682; x=1756412482;
+        d=1e100.net; s=20230601; t=1755807683; x=1756412483;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=AHd+4Vz7kPVwWP6qqpZo346lGeZ1ejCBP7K3x1LyEEE=;
-        b=CYuKWNPADdtCJmm7+ZFmZmy8R2KS+YIPtTRdKR9yUDc1yPTQ+z37SrbJm/UpOa8mZG
-         EL+iWywXAw/abKjXVbHTiqoVg+RK+BsZ3Z12DZ5+Q4Mctxud5lWK7Om4t3DU7lpHVRFp
-         LTZY5QAWqEfZAmPAwSaWy0Orl5e5wOJSqX5uIBXB8QPdQMRwn/uWK3QP26+LXxIot8qb
-         fRXVUrSdxBg0CqQgH6y2573Dm/zVOSjLUShtYOiOpr+d9kgN3quW/296cDABTFKS3MyI
-         TcPYE78j23RfWbSZE9/5/1paR/YH6+F508FG/p70bSL9I4emxXoDQWRyUxLmr4VVtPqY
-         DN3w==
-X-Forwarded-Encrypted: i=1; AJvYcCUDHg6PuY2Hp9sYB6oJG7JM6KKES2AUJNHKC59TnMwDjjo4PtbDjLQEOFECyuNtRyvYdM0173y4voo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwkGtTUfCWOKX9FnP7JkfHFdcyuW7uwuBW5Cvdo25n7jEZ1QZvW
-	r9NleXO0wCtrsgHg9TZ8jmWpFOOMFKuaKJVMvXSsnkAAy8yUm8qwVwDOffyMoY58d6g=
-X-Gm-Gg: ASbGncvZtOpMEJKv5tWsBYNerE3T8vKbrC7zl9eh5tLo695n5v+8mFuxc9+a1IdMKlc
-	whtvlpCuXg61CjXP26NyNBF22llncUtQBy9t5x8gZGgv/yoUfKNcoaQ8W62AL5hWxqMQPpw8G9c
-	r4XYghuQzn2S4bnIPvbnnkl00ysOzvZ0Ks2MO8eIoCabsP1F0iYRLI2kZghJSvNHnOSoWoBxwHk
-	Y6Kjy8MuoByPYE0a8HOzzTUJAPQC3JdXtyGp0oqGtmncgM+uohbZZvNRnU+UsOqCQ1gn9/s8Ukn
-	KyYtwdintcAGhdtWDl/790tZ5DnjITGNdvz6CyN07IBI5J9HQaMoU3sGsqpYoa0ykSqr+G21vhn
-	BoAihsi+qBV+CNwGDlX6I+07jfwcWAM5g7mZ4nCvflRrN1U7Z4LHVUl1D9pahP3nilQwMfw==
-X-Google-Smtp-Source: AGHT+IEzo0QXY9VIuY4baShzyB2YhjsCyUBZU5mUEwfUAhGbJD1bAOOlVU8KN48xmuT/FokHR6oSiw==
-X-Received: by 2002:a05:690c:9a11:b0:71a:a9c:30de with SMTP id 00721157ae682-71fdc418f92mr7089417b3.41.1755807681418;
-        Thu, 21 Aug 2025 13:21:21 -0700 (PDT)
+        bh=3dx0/asqotG4rq6EdmXwwX9N7zT6RzPtjLNznPWUyIY=;
+        b=nMBePyWMRdNf6SIzx1ikl53bT3OPm6REwutrl/zhl4c2X5s9pkvdbk6Won2uDKmh+h
+         43b8c40AVKsNCs4b1wDlfqNwoFKzr05/zAvCt8uvQubavsvjnha/zL60Uq7pKAGT1+zU
+         pcCYqNwNu49kpyc11bm61/tyunlWF9YmAk5O8XwHb3qtLCurpAkxu2k4x07IBkcOrn+n
+         3cvLiYKK2EZBfmfsPnLfIO2fmQrWhUlcvsFlEtbniKL3sD58i1iV6OZyrVeo0AfkNE2M
+         +GlLZgCWgXFysGyHAqBqMG+I7MLRbUYM6KaKOmdNMySPudnbBOp4E6a2R1xfJWyfgIsF
+         zx2w==
+X-Forwarded-Encrypted: i=1; AJvYcCV80ryWwi1cgWE4+tuwpybT59cTVwxjrBp5Ubjlcbz6iIgg9NzFEgcWh7MwIV6WFmOdH/h0BCnaoTU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx5MC7/HJJZ7Su5xaY/AjVjVWyXAaVeobCORzqw8uOeWGMLVu68
+	u1Z18lv9B9f0kZrS7B38TY/HTRLCeQJXmA069R/JGtN/KWcQPSmg5tn8KuAmLy+6vbI=
+X-Gm-Gg: ASbGncvq8uAVIT5k++JE8XWJf55xT1TDGTnGjeEikDMWeUEKxp3BFnyVqYdu0TurEKb
+	XQZNhv23TVX+f1TcaMYRtis376bsCWn10iAqFZNKdzojB0VLrlf9SYaclg+18Dz3F5G81wWBjB7
+	PSzYRw++Aza/ogKsNvhE2/geKipLnfyHEQqGfwiSV7roFXcuJST1boP1DW7hY5XtKJSBPje0aNg
+	vNxyaJxmTndMwHROvL0QnANx5dMB46ql6XUAJrzu0hg16yX3sQkUpw3uitPxnGehOxgT9S1F83V
+	4n7G9IOh5XYFL8mXolP9f1iM1YCQphdr78XsgmLsPARZRo/gl3FSMQH/RiT3ltC9MqY8FZFMBSy
+	rDgXx4CP4NivO57Tg2qEw5p4Z4gOFmHv6mKiYdklTklku/YHuklaiK66n4dOeEl/PwhARjQ==
+X-Google-Smtp-Source: AGHT+IE3MKR1OshrNQhYMfUHpxtul5RNV78jpcHZ1k48ccvq/Xk3W8ycFnx2cvyOFBjMaIDV2N2ulA==
+X-Received: by 2002:a05:690c:3345:b0:71f:9a36:d330 with SMTP id 00721157ae682-71fdc8da73emr5864447b3.25.1755807682899;
+        Thu, 21 Aug 2025 13:21:22 -0700 (PDT)
 Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-71f96ec62cfsm24521717b3.22.2025.08.21.13.21.20
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-71fb71c1acfsm13948477b3.71.2025.08.21.13.21.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Aug 2025 13:21:20 -0700 (PDT)
+        Thu, 21 Aug 2025 13:21:22 -0700 (PDT)
 From: Josef Bacik <josef@toxicpanda.com>
 To: linux-fsdevel@vger.kernel.org,
 	linux-btrfs@vger.kernel.org,
@@ -66,9 +66,9 @@ To: linux-fsdevel@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	brauner@kernel.org,
 	viro@ZenIV.linux.org.uk
-Subject: [PATCH 43/50] ext4: remove reference to I_FREEING in inode.c
-Date: Thu, 21 Aug 2025 16:18:54 -0400
-Message-ID: <ed4673380176f640f0d33201387999207dc1426a.1755806649.git.josef@toxicpanda.com>
+Subject: [PATCH 44/50] ext4: remove reference to I_FREEING in orphan.c
+Date: Thu, 21 Aug 2025 16:18:55 -0400
+Message-ID: <cd9f2a5d78d6863fa529da33950e5f2f0f26de60.1755806649.git.josef@toxicpanda.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <cover.1755806649.git.josef@toxicpanda.com>
 References: <cover.1755806649.git.josef@toxicpanda.com>
@@ -80,38 +80,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Instead of checking I_FREEING, simply check the i_count reference to see
-if this inode is going away.
+We can use the i_count refcount to see if this inode is being freed.
 
 Signed-off-by: Josef Bacik <josef@toxicpanda.com>
 ---
- fs/ext4/inode.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/ext4/orphan.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 7674c1f614b1..3950e19cf862 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -199,8 +199,8 @@ void ext4_evict_inode(struct inode *inode)
- 	 * For inodes with journalled data, transaction commit could have
- 	 * dirtied the inode. And for inodes with dioread_nolock, unwritten
- 	 * extents converting worker could merge extents and also have dirtied
--	 * the inode. Flush worker is ignoring it because of I_FREEING flag but
--	 * we still need to remove the inode from the writeback lists.
-+	 * the inode. Flush worker is ignoring it because the of the 0 i_count
-+	 * but we still need to remove the inode from the writeback lists.
- 	 */
- 	if (!list_empty_careful(&inode->i_io_list))
- 		inode_io_list_del(inode);
-@@ -4581,7 +4581,7 @@ int ext4_truncate(struct inode *inode)
- 	 * or it's a completely new inode. In those cases we might not
- 	 * have i_rwsem locked because it's not necessary.
- 	 */
--	if (!(inode->i_state & (I_NEW|I_FREEING)))
-+	if (!(inode->i_state & I_NEW) && refcount_read(&inode->i_count) > 0)
- 		WARN_ON(!inode_is_locked(inode));
- 	trace_ext4_truncate_enter(inode);
+diff --git a/fs/ext4/orphan.c b/fs/ext4/orphan.c
+index 524d4658fa40..40d3eac7b003 100644
+--- a/fs/ext4/orphan.c
++++ b/fs/ext4/orphan.c
+@@ -107,7 +107,8 @@ int ext4_orphan_add(handle_t *handle, struct inode *inode)
+ 	if (!sbi->s_journal || is_bad_inode(inode))
+ 		return 0;
  
+-	WARN_ON_ONCE(!(inode->i_state & (I_NEW | I_FREEING)) &&
++	WARN_ON_ONCE(!(inode->i_state & I_NEW) &&
++		     refcount_read(&inode->i_count) > 0 &&
+ 		     !inode_is_locked(inode));
+ 	/*
+ 	 * Inode orphaned in orphan file or in orphan list?
+@@ -236,7 +237,8 @@ int ext4_orphan_del(handle_t *handle, struct inode *inode)
+ 	if (!sbi->s_journal && !(sbi->s_mount_state & EXT4_ORPHAN_FS))
+ 		return 0;
+ 
+-	WARN_ON_ONCE(!(inode->i_state & (I_NEW | I_FREEING)) &&
++	WARN_ON_ONCE(!(inode->i_state & I_NEW) &&
++		     refcount_read(&inode->i_count) > 0 &&
+ 		     !inode_is_locked(inode));
+ 	if (ext4_test_inode_state(inode, EXT4_STATE_ORPHAN_FILE))
+ 		return ext4_orphan_file_del(handle, inode);
 -- 
 2.49.0
 
