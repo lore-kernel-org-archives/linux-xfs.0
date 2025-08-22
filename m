@@ -1,72 +1,72 @@
 Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7454C2E54C7;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7B2B17BA3;
 	Fri, 22 Aug 2025 08:02:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755849760; cv=none; b=MXpnLpwwyE2qIHUIX8/kDgeiLsWik5idj3sQpkkD7MFuUPZ0asu1Y1LS9Dpc6EoTTInvSZkICjeYI/zKyQRLRysSYS3KKXStuRPnALYy5MLD+pg5x6zCp9We34Ah2W7zC87tt01xiTiNNnM4m63LXHrp1cjLFeeEZp1g5+gGY1g=
+	t=1755849760; cv=none; b=FiGEJXKVPgXpu8qoyH9T6SgzMWU4Lcov2zsniXgm0L769gTh2EuRw9ASYggc0qrjSrYDHBXPjhn/l0uIaOU1zyywJX9PeeBq4xONg0I6f8kn7P67YITb/6fIKe0/Mo7b33oYKsLKLVHMVep2KDr0Y0MHTCV3SDMigK0ydZSdemw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1755849760; c=relaxed/simple;
-	bh=h7wbbamg4JolKV3mimLB8bIlNNmks/rM2pudmV6msgw=;
+	bh=1Zv5IS2OEvsc1CKEUq7+MH1dZdSqezFI+uP8i9Vi4oQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fveoaE3VOGTvLbMpWILDIEvm5bZeiMo+o+rhK17PYSd6OoNtF4Kz/shdjjbPqCrkjWjRcLgEmk1AN78sx/GTUfesmR0NugPB/PM2rQKoPbEkjLOU+B86m5NH9sgeOKSHW6BZXLz8vBXYCjHjmUOsJ5b/WbbW3g7xgWMq8usgAGo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=FZ8afuQx; arc=none smtp.client-ip=148.163.156.1
+	 MIME-Version; b=mlIXjcBcsH1USHDyn2oRutRAoI26GjpKe8nwzpGtIWE151T/20ga80f6JklYsxb/qmqVUvTJQNYa/J6WhYdxQGUsFZWvQoBeWjQybKoTVy76TT/3FDg6a92beoE+lxU8IAR/jfWCIe6uSCxlAej+v5NZUjchc9GWm0BbxRDLPb8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=cnWmEWuI; arc=none smtp.client-ip=148.163.156.1
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="FZ8afuQx"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="cnWmEWuI"
 Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57LIXov7012217;
-	Fri, 22 Aug 2025 08:02:24 GMT
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57LKhJRe012171;
+	Fri, 22 Aug 2025 08:02:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=pp1; bh=zpb085wPGmEPbAst3
-	E2KRxlV+xk0WkLGfPuijn8WhgI=; b=FZ8afuQxmlJ6/eBt68nDdc7Yr1/Oju5Xq
-	2/0WSaN120Tl8VSBGOa4vQ0mDUvd1S+u+LT+auebq+5KUqVP9RngZPVZcIiS87/i
-	OF7BBVjd1ceUTC7Vsbtta3dniD7O5dgjKHmS4EAy2hDAAPDEUV4OfWgWNFv9vO4R
-	UlFB/Q4/WDuuZTu0EpUXbeAwttoPpvG40lg4UDlpL1s9k1rAwB6KuLHhMEPFdxYY
-	iUyDzm/w8fjwt26SpsQiXvPXe0sWRgHNAfSWfNUxTHJ8qOor68bhx9NSOsD5RQa0
-	DPIqB/XClOpwz/wMCi/GBlNA0y2sfa3YW9D9tbJ9P2Dpaw5ow1A/g==
+	:mime-version:references:subject:to; s=pp1; bh=5CB5aNgIhq1p3l6D2
+	7WH6MDjxvFiRVYR09zhXrF2E5E=; b=cnWmEWuISpHcTUNBNdilLfq0zLjwL5q39
+	6ImS3qkHmHP6cA7HoPAtPibEuMxwfxoaEvyeQIZlVOQFowvGGqMI402juoOnsaJp
+	hh2YTtdYFyigYVTxL8HZSdDDyUzz70gxT5kFJ+phIyGLGl9ZiwBFbh7/Fm6UZ0p6
+	4JEDFfjf9He7C79b6Vo4sgEf+1BwIF5KhS9/W6dF1wxikIH68jpSC88HbfNlCIVi
+	Ngeah7zzEWp0OX719lumXz6/zWu7pGsy+f6ZxLkQcDHuUP1QR5TmhluT5liM1/Gn
+	dEiFnh/tJEYb9IhIeraRLerMjeFpAKVqvFK4nyc/8E6Bxd80kcqAg==
 Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48n38vnawp-1
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48n38vnaxk-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 22 Aug 2025 08:02:23 +0000 (GMT)
+	Fri, 22 Aug 2025 08:02:31 +0000 (GMT)
 Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 57M82NWT010015;
-	Fri, 22 Aug 2025 08:02:23 GMT
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48n38vnawg-1
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 57M82Vj3010348;
+	Fri, 22 Aug 2025 08:02:31 GMT
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48n38vnaxg-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 22 Aug 2025 08:02:23 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 57M4KUCm008726;
-	Fri, 22 Aug 2025 08:02:22 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 48my42cadf-1
+	Fri, 22 Aug 2025 08:02:31 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 57M7dJR2016047;
+	Fri, 22 Aug 2025 08:02:30 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 48my42cacu-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 22 Aug 2025 08:02:22 +0000
+	Fri, 22 Aug 2025 08:02:30 +0000
 Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 57M82KnQ58917324
+	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 57M82SLh20709776
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 22 Aug 2025 08:02:20 GMT
+	Fri, 22 Aug 2025 08:02:28 GMT
 Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 219C420040;
-	Fri, 22 Aug 2025 08:02:20 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id 8241F2004B;
+	Fri, 22 Aug 2025 08:02:28 +0000 (GMT)
 Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C964D20043;
-	Fri, 22 Aug 2025 08:02:17 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id 13A3920040;
+	Fri, 22 Aug 2025 08:02:26 +0000 (GMT)
 Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.124.210.10])
 	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 22 Aug 2025 08:02:17 +0000 (GMT)
+	Fri, 22 Aug 2025 08:02:25 +0000 (GMT)
 From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
 To: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org
 Cc: Ritesh Harjani <ritesh.list@gmail.com>, djwong@kernel.org,
         john.g.garry@oracle.com, tytso@mit.edu, linux-xfs@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
-Subject: [PATCH v5 02/12] common/rc: Add _require_fio_version helper
-Date: Fri, 22 Aug 2025 13:32:01 +0530
-Message-ID: <955d47b2534d9236adbd2bbd13598bbd1da8fc04.1755849134.git.ojaswin@linux.ibm.com>
+Subject: [PATCH v5 05/12] generic: Add atomic write test using fio crc check verifier
+Date: Fri, 22 Aug 2025 13:32:04 +0530
+Message-ID: <90241ec96d84e6e87d8cf8bd0d0d75fcc296757c.1755849134.git.ojaswin@linux.ibm.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <cover.1755849134.git.ojaswin@linux.ibm.com>
 References: <cover.1755849134.git.ojaswin@linux.ibm.com>
@@ -78,19 +78,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: FQ5llxCM6DH61Rgdbx68JJqk60laNYSh
-X-Authority-Analysis: v=2.4 cv=IrhHsL/g c=1 sm=1 tr=0 ts=68a82410 cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=2OwXVqhp2XgA:10 a=VnNF1IyMAAAA:8 a=0B_TZz9YXGle3_EXArAA:9
- a=cPQSjfK2_nFv0Q5t_7PE:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODE5MDIyMiBTYWx0ZWRfXxrD64K5fCyeB
- O4tZskCw6In2YscmVoKx7c1Blj1vvn2bymwK+Jfa5hSNrt+tN8XXgYR8OdIEmcgX+RaXUgu56NV
- YaZqDe0v/thsY+VhM8DxtuAjXPD711TYRCjJLv6+YR9nbxoKN1OCBBiYqyIx9f5BABM5/byApzx
- dXxVrdNYC1HuT1p3la0Y/mMWkTNsQsJLtli5VqHTPaVeuJcJdaFTsW7oUiksF3iUJEcI/Zcr34o
- dm+3gdBkXrMfOmkbLvtHbuADHJICEgdliTyU5U0D9FKzMGZjIZNtzlQtRtpk2iont8o+QSE8MJ/
- RPZzA2wrmMKL5OcmGt5ocaofa4Sf2lHZw4QgNqPgbGBqkIQ5vXoUdpwYRsE/7LA4POsTGEQ1iPA
- 6rsTsjEfsTZAUrFs39rSvxwKXtAKgw==
-X-Proofpoint-ORIG-GUID: bB2KwJJOyyLW5hz9oicfrl2rFA6IoRer
+X-Proofpoint-GUID: U5r_lrmHFMLHvoCrNeKlwncZMwkiABg8
+X-Authority-Analysis: v=2.4 cv=IrhHsL/g c=1 sm=1 tr=0 ts=68a82417 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=2OwXVqhp2XgA:10 a=pGLkceISAAAA:8 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
+ a=TDUsxBfbQoAVH7yvDjsA:9 a=cPQSjfK2_nFv0Q5t_7PE:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODE5MDIyMiBTYWx0ZWRfX0/LaShGk/rgI
+ zdx2Q5dqP8In2Qaccy0XTrxFNqYPUVZDNrTziKuxW1vqzbIYk2Qx10VQkeX4yUjrqEc3R6eEhIx
+ ou+YgOVHBWsWRxh/i8LItvl4fdQDIOi5bTDpXRv0E5HiUlOobFoUiRhQ7gwmUclZ3uaaEPiLaR0
+ PO3pmENPTxBCA34NL9fMo0FdPY9sr2kfwTYoObUZUkGwBsrXEjc8l10xJ0f/seiyzsqzlDADI2S
+ GKEbA/2Omrk80cqCVPLMBfz3wBols4zKTJzmrg13Kgg/WsN7YKULR8EEBm9eR+JYb4045KT49IJ
+ ZTfllDi+DILWcaPtxaDGHeTRpBlzWOMzJzXGbdXVy+j6LRTpUim92wQU1gushQxyScS+sO17L3p
+ elgXZl8JDqaR3Vs4NBwejvDEsQhTRg==
+X-Proofpoint-ORIG-GUID: 0FV5Qu1ubGrCdpfBVXmPrtCOfFuk0lJ9
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-08-22_02,2025-08-20_03,2025-03-28_01
@@ -101,65 +101,152 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2508110000
  definitions=main-2508190222
 
-The main motivation of adding this function on top of _require_fio is
-that there has been a case in fio where atomic= option was added but
-later it was changed to noop since kernel didn't yet have support for
-atomic writes. It was then again utilized to do atomic writes in a later
-version, once kernel got the support. Due to this there is a point in
-fio where _require_fio w/ atomic=1 will succeed even though it would
-not be doing atomic writes.
+This adds atomic write test using fio based on it's crc check verifier.
+fio adds a crc header for each data block, which is verified later to
+ensure there is no data corruption or torn write.
 
-Hence, add an explicit helper to ensure tests to require specific
-versions of fio to work past such issues.
+This test essentially does a lot of parallel RWF_ATOMIC IO on a
+preallocated file to stress the write and end-io unwritten conversion
+code paths. The idea is to increase code coverage to ensure RWF_ATOMIC
+hasn't introduced any issues.
 
+Avoid doing overlapping parallel atomic writes because it might give
+unexpected results. Use offset_increment=, size= fio options to achieve
+this behavior.
+
+Co-developed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
 ---
- common/rc | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ tests/generic/1226     | 108 +++++++++++++++++++++++++++++++++++++++++
+ tests/generic/1226.out |   2 +
+ 2 files changed, 110 insertions(+)
+ create mode 100755 tests/generic/1226
+ create mode 100644 tests/generic/1226.out
 
-diff --git a/common/rc b/common/rc
-index 35a1c835..f45b9a38 100644
---- a/common/rc
-+++ b/common/rc
-@@ -5997,6 +5997,38 @@ _max() {
- 	echo $ret
- }
- 
-+# Check the required fio version. Examples:
-+#   _require_fio_version 3.38 (matches 3.38 only)
-+#   _require_fio_version 3.38+ (matches 3.38 and above)
-+#   _require_fio_version 3.38- (matches 3.38 and below)
-+_require_fio_version() {
-+	local req_ver="$1"
-+	local fio_ver
+diff --git a/tests/generic/1226 b/tests/generic/1226
+new file mode 100755
+index 00000000..4584f062
+--- /dev/null
++++ b/tests/generic/1226
+@@ -0,0 +1,108 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2025 IBM Corporation. All Rights Reserved.
++#
++# FS QA Test 1226
++#
++# Validate FS atomic write using fio crc check verifier.
++#
++. ./common/preamble
++. ./common/atomicwrites
 +
-+	_require_fio
-+	_require_math
++_begin_fstest auto aio rw atomicwrites
 +
-+	fio_ver=$(fio -v | cut -d"-" -f2)
++_require_scratch_write_atomic
++_require_odirect
++_require_aio
++_require_fio_version "3.38+"
 +
-+	case "$req_ver" in
-+	*+)
-+		req_ver=${req_ver%+}
-+		test $(_math "$fio_ver >= $req_ver") -eq 1 || \
-+			_notrun "need fio >= $req_ver (found $fio_ver)"
-+		;;
-+	*-)
-+		req_ver=${req_ver%-}
-+		test $(_math "$fio_ver <= $req_ver") -eq 1 || \
-+			_notrun "need fio <= $req_ver (found $fio_ver)"
-+		;;
-+	*)
-+		req_ver=${req_ver%-}
-+		test $(_math "$fio_ver == $req_ver") -eq 1 || \
-+			_notrun "need fio = $req_ver (found $fio_ver)"
-+		;;
-+	esac
++_scratch_mkfs >> $seqres.full 2>&1
++_scratch_mount
++_require_xfs_io_command "falloc"
++
++touch "$SCRATCH_MNT/f1"
++awu_min_write=$(_get_atomic_write_unit_min "$SCRATCH_MNT/f1")
++awu_max_write=$(_get_atomic_write_unit_max "$SCRATCH_MNT/f1")
++
++blocksize=$(_max "$awu_min_write" "$((awu_max_write/2))")
++threads=$(_min "$(($(nproc) * 2 * LOAD_FACTOR))" "100")
++filesize=$((blocksize * threads * 100))
++depth=$threads
++io_size=$((filesize / threads))
++io_inc=$io_size
++testfile=$SCRATCH_MNT/test-file
++
++fio_config=$tmp.fio
++fio_out=$tmp.fio.out
++
++fio_aw_config=$tmp.aw.fio
++fio_verify_config=$tmp.verify.fio
++
++function create_fio_configs()
++{
++	create_fio_aw_config
++	create_fio_verify_config
 +}
 +
- ################################################################################
- # make sure this script returns success
- /bin/true
++function create_fio_verify_config()
++{
++cat >$fio_verify_config <<EOF
++	[verify-job]
++	direct=1
++	ioengine=libaio
++	rw=read
++	bs=$blocksize
++	filename=$testfile
++	size=$filesize
++	iodepth=$depth
++	group_reporting=1
++
++	verify_only=1
++	verify=crc32c
++	verify_fatal=1
++	verify_state_save=0
++	verify_write_sequence=0
++EOF
++}
++
++function create_fio_aw_config()
++{
++cat >$fio_aw_config <<EOF
++	[atomicwrite-job]
++	direct=1
++	ioengine=libaio
++	rw=randwrite
++	bs=$blocksize
++	filename=$testfile
++	size=$io_inc
++	offset_increment=$io_inc
++	iodepth=$depth
++	numjobs=$threads
++	group_reporting=1
++	atomic=1
++
++	verify_state_save=0
++	verify=crc32c
++	do_verify=0
++EOF
++}
++
++create_fio_configs
++_require_fio $fio_aw_config
++
++cat $fio_aw_config >> $seqres.full
++cat $fio_verify_config >> $seqres.full
++
++$XFS_IO_PROG -fc "falloc 0 $filesize" $testfile >> $seqres.full
++
++$FIO_PROG $fio_aw_config >> $seqres.full
++ret1=$?
++$FIO_PROG $fio_verify_config >> $seqres.full
++ret2=$?
++
++[[ $ret1 -eq 0 && $ret2 -eq 0 ]] || _fail "fio with atomic write failed"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/generic/1226.out b/tests/generic/1226.out
+new file mode 100644
+index 00000000..6dce0ea5
+--- /dev/null
++++ b/tests/generic/1226.out
+@@ -0,0 +1,2 @@
++QA output created by 1226
++Silence is golden
 -- 
 2.49.0
 
