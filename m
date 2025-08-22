@@ -1,171 +1,106 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01DB420371E;
-	Fri, 22 Aug 2025 15:21:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 887981C5D7B;
+	Fri, 22 Aug 2025 15:28:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755876100; cv=none; b=LroAT+ZtlOL9IIhzg3Lc7aA3RMaF2fgd2eLnDyupmC06v9bTEPN+IwvyFGF59kDKYxB4GOa4RJyJ8/OehTpEOSRHmt0QuT0FfFnrKKHcXahhhpXm/ghPO5nslZHtVDmJd8+bm4s9dop8sGKYn1qmEix9wH090wLRjHPlknM+6us=
+	t=1755876480; cv=none; b=oD1BEMWM1wMa9OLUSzf6CJXDL9KW/Mi4NApt05IgJzEzVEB/PTIGPz1qDDsFIllu+3mVT6JbsxC7WbxnQWclYOGgS2r7coL4CAKBfJj6I3YrCuhMqWIktAecVefkTKEbw9oDuNBsLol+FK5BufWJAohRnW5JLswn/EjK7g1nMb4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755876100; c=relaxed/simple;
-	bh=Rf7CEFvTvQH4upCUHlaBHZ50O7RvcFpKRMNUv3ou5cU=;
+	s=arc-20240116; t=1755876480; c=relaxed/simple;
+	bh=muNdSXseEu/rJMTulvsFLDBQqTzFlcX+DPy3jXqZ7Uc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F9BarC1Ko34Q8Er7yf2LhPYuzEMRdSoeKPOyelb/pd7+J8GHugzzTkRUzsFf8H76rY3CAhYWq5uuoukX1ZQ5h8ck4N7Y7+GAwCYd9EdFJaFaJ9P9CfiFZwQco792Gunb3+26DhjSlLgVAg8qnqDm1cZ/wtB59NXTM4114uyaQrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vJpI6Q+Y; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bHtnO3BCqegsSQDwu7Yd1K1cCDNHm78C5rWSKUnOrgYiXW7V0QoYLoX/pSrYTwaeqM9F9Ma+gSkFn2lF6V1c2Hccb38VTVn7Gq391UyJw4tLiB9z+RmpyheWasrzwYST4uxkua5KZ/lEcu0vaU36eiOXooCJCcFA66c183UQxqY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lKcXE9PV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vJpI6Q+Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DAF1C4CEED;
-	Fri, 22 Aug 2025 15:21:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lKcXE9PV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6415AC4CEED;
+	Fri, 22 Aug 2025 15:27:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755876098;
-	bh=Rf7CEFvTvQH4upCUHlaBHZ50O7RvcFpKRMNUv3ou5cU=;
+	s=k20201202; t=1755876480;
+	bh=muNdSXseEu/rJMTulvsFLDBQqTzFlcX+DPy3jXqZ7Uc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=vJpI6Q+YeulW8yV3EWPl/I7EuVFDT5j0HTa9a/t6wJ49Uu0eO50ItgLkK0pqCK1Gi
-	 lNLjztA0kXCdzT5A4dwa/F108f4cx0olkUgau5pxqh3lTkJHy5f0Pi9nGDHJwY/TR/
-	 FIgP0DGOFwwbB9aFq2zlgBVGR7ty8XHF4yjaGBmpm9FlfMUQuB/10ktgdQxGQIcOBJ
-	 MmgokUD5YkBBtzXBFtsGJC3dWu3g0uA/YxDtWAj0rvzQqZW1W1bxF37yuQ+G0bHdxz
-	 XyhppNHBTO+3uH/VvkZ7Sibmk/LzsuaVdjx4nAqeKMdecYqGnkDAxEfmbPeWq73V6S
-	 Y5E60NB9Loqww==
-Date: Fri, 22 Aug 2025 08:21:37 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	Donald Douwsma <ddouwsma@redhat.com>,
-	Dave Chinner <dchinner@redhat.com>,
-	Christoph Hellwig <hch@infradead.org>, stable@vger.kernel.org
-Subject: Re: [PATCH] xfs: do not propagate ENODATA disk errors into xattr code
-Message-ID: <20250822152137.GE7965@frogsfrogsfrogs>
-References: <a896ce2b-1c3b-4298-a90c-c2c0e18de4cb@redhat.com>
+	b=lKcXE9PVGNET2gtGcgqz+g2YJRH4nIhWIjneaBa9U0x/P1cKWlR9GNky6U9FXeDHf
+	 MbkkDBlqfwt52qWAZPQTT1Vz6rzpOrMGBaeqksnQm8YHRKfmTmDpoeztkVL87iLriY
+	 JdDOi8BYdZ/DEu5YHUilhCrnjakcX/5pJ6qgEikPVc6eqNeEyILAw0NA8gpYB5Z+zW
+	 dFmoWyJf9SJHil+J19xnRVXguIe3zBNooDn9I0uJJGq0N0dn7IU2TujOBsqhXtsWyE
+	 fX+ej3rX+H1rThLz4b13rHvEr3d2p484J+ZEn/qhXy05v85mmN0rcNTS4oI2WGzb2f
+	 A/Y4BD0IhboHw==
+Date: Fri, 22 Aug 2025 17:27:56 +0200
+From: Christian Brauner <brauner@kernel.org>
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	kernel-team@fb.com, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	viro@zeniv.linux.org.uk
+Subject: Re: [PATCH 15/50] fs: delete the inode from the LRU list on lookup
+Message-ID: <20250822-werden-hinein-419c34f78154@brauner>
+References: <cover.1755806649.git.josef@toxicpanda.com>
+ <d595f459d9574e980628eb43f617cbf4fd1a9137.1755806649.git.josef@toxicpanda.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <a896ce2b-1c3b-4298-a90c-c2c0e18de4cb@redhat.com>
+In-Reply-To: <d595f459d9574e980628eb43f617cbf4fd1a9137.1755806649.git.josef@toxicpanda.com>
 
-On Thu, Aug 21, 2025 at 04:36:10PM -0500, Eric Sandeen wrote:
-> ENODATA (aka ENOATTR) has a very specific meaning in the xfs xattr code;
-> namely, that the requested attribute name could not be found.
+On Thu, Aug 21, 2025 at 04:18:26PM -0400, Josef Bacik wrote:
+> When we move to holding a full reference on the inode when it is on an
+> LRU list we need to have a mechanism to re-run the LRU add logic. The
+> use case for this is btrfs's snapshot delete, we will lookup all the
+> inodes and try to drop them, but if they're on the LRU we will not call
+> ->drop_inode() because their refcount will be elevated, so we won't know
+> that we need to drop the inode.
 > 
-> However, a medium error from disk may also return ENODATA. At best,
-> this medium error may escape to userspace as "attribute not found"
-> when in fact it's an IO (disk) error.
+> Fix this by simply removing the inode from it's respective LRU list when
+> we grab a reference to it in a way that we have active users.  This will
+> ensure that the logic to add the inode to the LRU or drop the inode will
+> be run on the final iput from the user.
 > 
-> At worst, we may oops in xfs_attr_leaf_get() when we do:
-> 
-> 	error = xfs_attr_leaf_hasname(args, &bp);
-> 	if (error == -ENOATTR)  {
-> 		xfs_trans_brelse(args->trans, bp);
-> 		return error;
-> 	}
-> 
-> because an ENODATA/ENOATTR error from disk leaves us with a null bp,
-> and the xfs_trans_brelse will then null-deref it.
-> 
-> As discussed on the list, we really need to modify the lower level
-> IO functions to trap all disk errors and ensure that we don't let
-> unique errors like this leak up into higher xfs functions - many
-> like this should be remapped to EIO.
-> 
-> However, this patch directly addresses a reported bug in the xattr
-> code, and should be safe to backport to stable kernels. A larger-scope
-> patch to handle more unique errors at lower levels can follow later.
-> 
-> (Note, prior to 07120f1abdff we did not oops, but we did return the
-> wrong error code to userspace.)
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
-> Cc: <stable@vger.kernel.org> # v5.9+
+> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
 > ---
+>  fs/inode.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> (I get it that sprinkling this around to 3 places might have an ick
-> factor but I think it's necessary to make a surgical strike on this bug
-> before we address the general problem.)
-> 
-> Thanks,
-> -Eric
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index fddb55605e0c..9b54cfb0e13d 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -478,6 +478,12 @@ xfs_attr3_leaf_read(
->  
->  	err = xfs_da_read_buf(tp, dp, bno, 0, bpp, XFS_ATTR_FORK,
->  			&xfs_attr3_leaf_buf_ops);
-> +	/*
-> +	 * ENODATA from disk implies a disk medium failure; ENODATA for
-> +	 * xattrs means attribute not found, so disambiguate that here.
-> +	 */
-> +	if (err == -ENODATA)
-> +		err = -EIO;
+> diff --git a/fs/inode.c b/fs/inode.c
+> index adcba0a4d776..72981b890ec6 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -1146,6 +1146,7 @@ static struct inode *find_inode(struct super_block *sb,
+>  			return ERR_PTR(-ESTALE);
+>  		}
+>  		__iget(inode);
+> +		inode_lru_list_del(inode);
+>  		spin_unlock(&inode->i_lock);
+>  		rcu_read_unlock();
+>  		return inode;
+> @@ -1187,6 +1188,7 @@ static struct inode *find_inode_fast(struct super_block *sb,
+>  			return ERR_PTR(-ESTALE);
+>  		}
+>  		__iget(inode);
+> +		inode_lru_list_del(inode);
+>  		spin_unlock(&inode->i_lock);
+>  		rcu_read_unlock();
+>  		return inode;
+> @@ -1653,6 +1655,7 @@ struct inode *igrab(struct inode *inode)
+>  	spin_lock(&inode->i_lock);
+>  	if (!(inode->i_state & (I_FREEING|I_WILL_FREE))) {
+>  		__iget(inode);
+> +		inode_lru_list_del(inode);
+>  		spin_unlock(&inode->i_lock);
+>  	} else {
+>  		spin_unlock(&inode->i_lock);
 
-I think this first chunk isn't needed since you also changed
-xfs_da_read_buf to filter the error code, right?
+Interesting, so the previous behavior implies that igrab(),
+find_inode(), find_inode_fast() are called on inodes that are hashed and
+on an LRU. None of them even raise I_REFERENCED.
 
-(Shifting towards the giant reconsideration of ENODATA -> EIO filtering)
+I would think that this means that there are callers that grab very
+temporary references to inodes that they immediately drop without
+wanting to prevent reclaim.
 
-Do we now also need to adjust the online fsck code to turn ENODATA into
-a corruption report?  From __xchk_process_error:
-
-	case -EFSBADCRC:
-	case -EFSCORRUPTED:
-		/* Note the badness but don't abort. */
-		sc->sm->sm_flags |= errflag;
-		*error = 0;
-		fallthrough;
-	default:
-		trace_xchk_op_error(sc, agno, bno, *error, ret_ip);
-		break;
-	}
-
-We only flag corruptions for these two error codes, but ENODATA from the
-block layer means "critical medium error".  I take that to mean the
-media has permanently lost whatever was persisted there, right?
-
---D
-
->  	if (err || !(*bpp))
->  		return err;
->  
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index 4c44ce1c8a64..bff3dc226f81 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -435,6 +435,13 @@ xfs_attr_rmtval_get(
->  					0, &bp, &xfs_attr3_rmt_buf_ops);
->  			if (xfs_metadata_is_sick(error))
->  				xfs_dirattr_mark_sick(args->dp, XFS_ATTR_FORK);
-> +			/*
-> +			 * ENODATA from disk implies a disk medium failure;
-> +			 * ENODATA for xattrs means attribute not found, so
-> +			 * disambiguate that here.
-> +			 */
-> +			if (error == -ENODATA)
-> +				error = -EIO;
->  			if (error)
->  				return error;
->  
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index 17d9e6154f19..723a0643b838 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -2833,6 +2833,12 @@ xfs_da_read_buf(
->  			&bp, ops);
->  	if (xfs_metadata_is_sick(error))
->  		xfs_dirattr_mark_sick(dp, whichfork);
-> +	/*
-> +	 * ENODATA from disk implies a disk medium failure; ENODATA for
-> +	 * xattrs means attribute not found, so disambiguate that here.
-> +	 */
-> +	if (error == -ENODATA && whichfork == XFS_ATTR_FORK)
-> +		error = -EIO;
->  	if (error)
->  		goto out_free;
->  
-> 
-> 
+Oh, because btrfs subvolume delete is effectively a recursive directory
+removal and that's why that happens? I wonder if there are other users.
+So if this regresses someone it would regress btrfs I guess. :)
