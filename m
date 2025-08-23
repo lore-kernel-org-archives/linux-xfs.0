@@ -1,166 +1,119 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 299AF27F732
-	for <linux-xfs@vger.kernel.org>; Fri, 22 Aug 2025 17:56:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70BB7846F;
+	Sat, 23 Aug 2025 04:35:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755885364; cv=none; b=Iq0J+2qkakxiQknqjB2lmSTUbKlivc6/RGQ+jbaz78IL7yRq8OSgiCzx0TrDtkwtSMxFQi7bNt7Ju5UU2bqZbQ8YDf/p3Uipe4mDKKOQ/bX1IlG9pDY08Lyex7KGhIjHUBPrPts3ElQ3HK+jyE8qqRZjar5lCkNGwNeX1kHWFMI=
+	t=1755923743; cv=none; b=J8dO6sbFctNmzSb+4CwGWLW8knuIQAdlUnW53zv2X4rIyxf+QgLmByjteSzFsUhWX7bJ//M/IhfJOVxjJnz46KuHPsGT0bVNuUOAaRiXlMP2Funi9B9YEx73kZUG3kAkfYaNbVSDkxDlM+5AfHRJEOGifymMfKlazHNp1uxJwnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755885364; c=relaxed/simple;
-	bh=xQ+zVOciUe9esHEkfPFHQqVaOS4MGWLxMv83onPRSEg=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=mzlkhWAJiDOmCoG2oFhu5BoT7siGLxvqw6ArT29bIvG3VJMPg3iG19tt2cbjrbYCDX83EyX7S8yJTxUZYByh1igHHLXcVMmPSIFEGvVD67xtFHiGn5lMOxP68l1hBLHfTnpdA7uNAJ+B3IeAUZqw/ZPkT++asl14obXAGd1lvhQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RZbHBmGh; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1755923743; c=relaxed/simple;
+	bh=vLOUpS0c+16o4GUVU4uMlndQ3RpzzA05XwYUjRsY5sU=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=QHw/t+yRD+y3wLVtasRh8ycoj+KRWGmPPQ3Eyej0XMThVmJNLmpKPzDHVEH1LJcH6Y+l8puIziDSWAQ7/d2K3xTrsEvJAVKJrbPoR+3wJGEVBFgF52+vOqZOBNOzQYvKxGsWS1at20JG2Yrmp/kW62b7BY49gEEuq1zqGrw1MwU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FbdGFDAZ; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RZbHBmGh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1755885361;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=2C9uMmDzJgvIqVnkRpI+9UCzK4E2EO+0JQESM7awR7Y=;
-	b=RZbHBmGhImvAvH7FTckLqFvpOB91mloGaeinQIAqDBPEps+JGrDhka9b8amxJtqsYm9i7Y
-	n/tmk/0R3x7ONv5j/yoLpNv+x9cfAd6sk/Og4THRtz6TSrgVaV6MrShoyFEMIV0TjtnZoo
-	fS3+UqKArezZF2dcelNF5sTexmJFRjY=
-Received: from mail-io1-f70.google.com (mail-io1-f70.google.com
- [209.85.166.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-380-mRmVnM_cMDGyo7fBRTmQTw-1; Fri, 22 Aug 2025 13:55:59 -0400
-X-MC-Unique: mRmVnM_cMDGyo7fBRTmQTw-1
-X-Mimecast-MFC-AGG-ID: mRmVnM_cMDGyo7fBRTmQTw_1755885359
-Received: by mail-io1-f70.google.com with SMTP id ca18e2360f4ac-88432e62b4aso576932039f.3
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Aug 2025 10:55:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755885358; x=1756490158;
-        h=content-transfer-encoding:subject:from:cc:to:content-language
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FbdGFDAZ"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-7704799d798so78982b3a.3;
+        Fri, 22 Aug 2025 21:35:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1755923741; x=1756528541; darn=vger.kernel.org;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=2C9uMmDzJgvIqVnkRpI+9UCzK4E2EO+0JQESM7awR7Y=;
-        b=GDXlNb9FYwq2tck+DrbQfXdM+ieK1N4unkFwudV3boDbEozBa0GIHfg0Ab1aN3j+q0
-         jpm+xCXmw3auI/oq4BuLDlByX1MTyLKNvtOON7sk7zNrX3taTA/Oy8TuusSVKyOF46X3
-         BIxWWzwXdx9ScUu+/kgqO4Pm+XT3aGP2gdGxAHonsMaY1xchYL8mdnV5RTvce5MaC3UO
-         0nOhO3CFpZpEScJS5BTU6793Vx0V5/gTkgTfROIC/RiCJwwAiLcOL0jMYSdQZlW2nmPi
-         AHYIw+QBR3X8OYpeYJ3N8/ygeaQejh0GXbechR9d14vL3F1CtniMrbfVawaVjlno5mPs
-         5G4A==
-X-Gm-Message-State: AOJu0Yz7UZS/bpz2FC7cJxyxbS/asZmSyPOqB4Fbg9WsUtSPFE1PzL+u
-	46VNXixfrRwcCrG4WNsDfqUV5N6CFSMe3oDqrVimTZFgHfNFITuDLyEVQej4C5wYRN2jW+x3GZV
-	Y20R/T6bnKNYL0IN6bQZKYWyRXPwYheXtEOES2vsFGEmTYnAYP4yiinUownZaH6FvWx29rvm0oz
-	TL5REPoTwNMf9ImN+nSNfE98j1kUYctdQ770/TFMGXg6FZGcc=
-X-Gm-Gg: ASbGncsiOEShGBIDe6aKIlKiGwFypquuxBhHSK+G/6L5dDTWm3W45sV2TPwCINyFbRn
-	qxF9W1wzoLwR5/vrmiuNo1PZ/26ij8dO0eQdQBrjS/ZJ3Kxm4XOEZxhCMXB7fW8DDZBCs5VHNbV
-	m3RuvumnGlkzvAzL0XMOejGUcjS4Hth8rgGBBpGz5JL/smqjOF830qddNpKB02a/i4kdPUqrgF0
-	Ihi+Xc93/1th1WOf3u/Cl0q+88mh3IDlBCfrMRwMOxgp7L9Fu0nrShm2e7oEpxnWCw6Ts5O3/uH
-	hpCgnXlEUn9XE4qEW0hK5dQ7pP7h3XL1xJSS0IZ9vQ9mqtbwqiMloDT2qAprAJFw0rEkEb3u4gU
-	+
-X-Received: by 2002:a05:6e02:1a02:b0:3e5:50a5:a7ef with SMTP id e9e14a558f8ab-3e921a5d65emr63056345ab.15.1755885358620;
-        Fri, 22 Aug 2025 10:55:58 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IG99RzF6KCqfmUFjX3cBBUX7QwUbXxiwJZ9DeMwhOkE+Oq4K7yuee4+FqmL1gWqJYt+egCtJg==
-X-Received: by 2002:a05:6e02:1a02:b0:3e5:50a5:a7ef with SMTP id e9e14a558f8ab-3e921a5d65emr63055755ab.15.1755885357953;
-        Fri, 22 Aug 2025 10:55:57 -0700 (PDT)
-Received: from [10.0.0.82] (75-168-243-62.mpls.qwest.net. [75.168.243.62])
-        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3ea4ec1f7d2sm3425805ab.42.2025.08.22.10.55.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 Aug 2025 10:55:57 -0700 (PDT)
-Message-ID: <06c9617f-a753-40f3-a632-ab08fe0c4d4d@redhat.com>
-Date: Fri, 22 Aug 2025 12:55:56 -0500
+        bh=fs7g43mtKgqeCDpzvEATjIv8lEXb98nEFJtwUsNE7jk=;
+        b=FbdGFDAZw97Yr0OCODZNzmYcAvwx5UQ9dFrw/l2NyqJ6NJgbs032TzI0xtQkIwlSyp
+         8HM9D39UZCpIzMXYdX3BRG+KATSPKC7UOUVTZFZMokdqenDdxzkrCVwpiuS/YxMgJJVS
+         xuiizAZsGFBvrmRvWzRQCz398G2qt9vvszoNBb1o8qI0e/V35lts3aMkbrF9zLofU24W
+         fjkDXxqIDKZtd+txJaOBkRmP8aXR056ll0jitgTNEDnzmpJQcJ85Qw0cX2y4orlhlX+E
+         rTfghwrxxO+ia3LwGiGJpYost0bvoF96Ehj9qJUrjBzqJIC30Naexfk9xS9O+jPeT0Ox
+         t/IA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755923741; x=1756528541;
+        h=references:message-id:date:in-reply-to:subject:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=fs7g43mtKgqeCDpzvEATjIv8lEXb98nEFJtwUsNE7jk=;
+        b=M+NSex3WmPM63wNJwBIj4FXwRtRhEtLEisyt5xlqSLpUkQRyOG5hQgI17nvDF2LpA5
+         JtJuEb+f1ULAfa4c/dnSAvQ5cb1hdGIadb0nG7wnc5KczeCBYPc5xJCG+c3JEVg8dfko
+         8Hsiec16WC9PfxWEN2jRi+pnm4HZwT8HqSftQeL37D8ELwz7gFPX/a8dfKmKz6X7gute
+         lgns16AzSjbJatOXBBJXiXES6yTYSzsg/Mse0dVW7urdgiWATRsgspzQXqh9u85sIx4u
+         INBVvZsa1e3XQUdd1Mv0h+5OJoFxco73uaeWwwn4OAiC//2e2mTAZ99waTW57gMq24ns
+         943w==
+X-Forwarded-Encrypted: i=1; AJvYcCUDZTux8z5Q2kHLDYhSJ7vTDo0JdleyytQxFGddjUF868KGujCg+/eVjUHkGaudAL2OjwrlnVXE4RTc@vger.kernel.org, AJvYcCUf2qzj42VYj/82odqE0CEh7erRrn+SrWYNqKIjZBEmWtYFIGW6reSE0vm7th4MHszAdICtv7WoN9GtFw==@vger.kernel.org, AJvYcCW2l4XBK+WlXCkCq21YsBX21y+Fe8He4Zx10Pxa1lbH2AjV3OC7IiS9o1qmLCH5FFD1qQHsAeRdJEIqFAGxSQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyHgbQ0IgFOcxKY5hjrAW3mNqupZ9oM7ZGRDFsDIe8Jfu18OOne
+	JmkPVxXGHif/InErFOjf7NkJaVEkOmB4i+7E6Pmt/TxVQ4RndOVnhfDYOdkTxA==
+X-Gm-Gg: ASbGncvbqwFXvt8/EMwkn/NNWDku+Mt7Ry5rQaqsp9jERmscpE8MLH1cakXMtQsVw9o
+	byPOGckidg34HIU943Z8o8Zs4V+lXzLXB/WM2fwJWtcmkDEpE5yyhTs2siCXPhC7IVBnnd0JhEm
+	q1rzSM6fUNqYzlcix6p9OpaJuGsZg2snHmGy1/qWRGG/e/bhZ/GeHOy7jqzTbiGFRpmq1MdjNCF
+	aguw2OWiSyhnD4MW67OsPk4myA557IcV5amiZARTmbpqkTleDLydK6XwhCK1tJ67ijTFdosqcsa
+	5GaP5bQpLlXnPDQaUHfqeSo8nIR0E9B1Ukv+Zj86A0lW1ptf82pc8Zc9f1zm9XyENXGxkrmAiWo
+	vE2VtQQBu+MHY+Q==
+X-Google-Smtp-Source: AGHT+IGpH0q4iRdnF9pk8qFZlEdCpSCnZAqzLaID28PfTP5JpU+Y8WR0+8Qq9D0HksmyTFsSLhRSGA==
+X-Received: by 2002:a05:6a20:3ca5:b0:220:78b9:f849 with SMTP id adf61e73a8af0-24340b89e47mr8804182637.24.1755923741069;
+        Fri, 22 Aug 2025 21:35:41 -0700 (PDT)
+Received: from dw-tp ([171.76.85.35])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b49cbb9d226sm1228525a12.41.2025.08.22.21.35.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 22 Aug 2025 21:35:40 -0700 (PDT)
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Fengnan Chang <changfengnan@bytedance.com>, brauner@kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org
+Subject: Re: [PATCH] iomap: allow iomap using the per-cpu bio cache
+In-Reply-To: <aKif_644529sRXhN@casper.infradead.org>
+Date: Sat, 23 Aug 2025 09:45:58 +0530
+Message-ID: <874ityad1d.fsf@gmail.com>
+References: <20250822082606.66375-1-changfengnan@bytedance.com> <20250822150550.GP7942@frogsfrogsfrogs> <aKiP966iRv5gEBwm@casper.infradead.org> <877byv9w6z.fsf@gmail.com> <aKif_644529sRXhN@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Cc: Donald Douwsma <ddouwsma@redhat.com>, Dave Chinner <dchinner@redhat.com>,
- "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig
- <hch@infradead.org>, stable@vger.kernel.org
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH V2] xfs: do not propagate ENODATA disk errors into xattr code
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-ENODATA (aka ENOATTR) has a very specific meaning in the xfs xattr code;
-namely, that the requested attribute name could not be found.
+Matthew Wilcox <willy@infradead.org> writes:
 
-However, a medium error from disk may also return ENODATA. At best,
-this medium error may escape to userspace as "attribute not found"
-when in fact it's an IO (disk) error.
+> On Fri, Aug 22, 2025 at 09:37:32PM +0530, Ritesh Harjani wrote:
+>> Matthew Wilcox <willy@infradead.org> writes:
+>> > On Fri, Aug 22, 2025 at 08:05:50AM -0700, Darrick J. Wong wrote:
+>> >> Is there a reason /not/ to use the per-cpu bio cache unconditionally?
+>> >
+>> > AIUI it's not safe because completions might happen on a different CPU
+>> > from the submission.
+>> 
+>> At max the bio de-queued from cpu X can be returned to cpu Y cache, this
+>> shouldn't be unsafe right? e.g. bio_put_percpu_cache(). 
+>> Not optimal for performance though.
+>> 
+>> Also even for io-uring the IRQ completions (non-polling requests) can
+>> get routed to a different cpu then the submitting cpu, correct?
+>> Then the completions (bio completion processing) are handled via IPIs on
+>> the submtting cpu or based on the cache topology, right?
+>> 
+>> > At least, there's nowhere that sets REQ_ALLOC_CACHE unconditionally.
+>> >
+>> > This could do with some better documentation ..
+>> 
+>> Agreed. Looking at the history this got added for polling mode first but
+>> later got enabled for even irq driven io-uring rw requests [1]. So it
+>> make sense to understand if this can be added unconditionally for DIO
+>> requests or not.
+>
+> So why does the flag now exist at all?  Why not use the cache
+> unconditionally?
 
-At worst, we may oops in xfs_attr_leaf_get() when we do:
+I am hoping the author of this patch or folks with io-uring expertise
+(which added the per-cpu bio cache in the first place) could answer
+this better. i.e. 
 
-	error = xfs_attr_leaf_hasname(args, &bp);
-	if (error == -ENOATTR)  {
-		xfs_trans_brelse(args->trans, bp);
-		return error;
-	}
+Now that per-cpu bio cache is being used by io-uring rw requests for
+both polled and non-polled I/O. Does that mean, we can kill
+IOCB_ALLOC_CACHE check from iomap dio path completely and use per-cpu
+bio cache unconditionally by passing REQ_ALLOC_CACHE flag?  That means
+all DIO requests via iomap can now use this per-cpu bio cache and not
+just the one initiated via io-uring path.
 
-because an ENODATA/ENOATTR error from disk leaves us with a null bp,
-and the xfs_trans_brelse will then null-deref it.
+Or are there still restrictions in using this per-cpu bio cache, which
+limits it to be only used via io-uring path? If yes, what are they? And
+can this be documented somewhere?
 
-As discussed on the list, we really need to modify the lower level
-IO functions to trap all disk errors and ensure that we don't let
-unique errors like this leak up into higher xfs functions - many
-like this should be remapped to EIO.
-
-However, this patch directly addresses a reported bug in the xattr
-code, and should be safe to backport to stable kernels. A larger-scope
-patch to handle more unique errors at lower levels can follow later.
-
-(Note, prior to 07120f1abdff we did not oops, but we did return the
-wrong error code to userspace.)
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
-Cc: <stable@vger.kernel.org> # v5.9+
----
-
-V2: Remove the extraneous trap point as pointed out by djwong, oops.
-
-(I get it that sprinkling this around in 2 places might have an ick
-factor but I think it's necessary to make a surgical strike on this bug
-before we address the general problem.)
-
-Thanks,
--Eric
-
-
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index 4c44ce1c8a64..bff3dc226f81 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.c
-+++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -435,6 +435,13 @@ xfs_attr_rmtval_get(
- 					0, &bp, &xfs_attr3_rmt_buf_ops);
- 			if (xfs_metadata_is_sick(error))
- 				xfs_dirattr_mark_sick(args->dp, XFS_ATTR_FORK);
-+			/*
-+			 * ENODATA from disk implies a disk medium failure;
-+			 * ENODATA for xattrs means attribute not found, so
-+			 * disambiguate that here.
-+			 */
-+			if (error == -ENODATA)
-+				error = -EIO;
- 			if (error)
- 				return error;
- 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 17d9e6154f19..723a0643b838 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -2833,6 +2833,12 @@ xfs_da_read_buf(
- 			&bp, ops);
- 	if (xfs_metadata_is_sick(error))
- 		xfs_dirattr_mark_sick(dp, whichfork);
-+	/*
-+	 * ENODATA from disk implies a disk medium failure; ENODATA for
-+	 * xattrs means attribute not found, so disambiguate that here.
-+	 */
-+	if (error == -ENODATA && whichfork == XFS_ATTR_FORK)
-+		error = -EIO;
- 	if (error)
- 		goto out_free;
- 
-
+-ritesh
 
