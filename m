@@ -1,39 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D55B02D29D6
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 11:59:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1383B2EFDA5
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 12:07:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756123180; cv=none; b=gTd9n0I7UASoyjgNOli9N2gdkFapQgHzbcb3XQ3FZd1F4qE5e4BVZMXldMv+9Q8Pxm2wmEgu16YifZgjZFsXlruX96GvphPtcyVupBeCUIPJMtG/ZrF0gnKUoFZTIJj7qw6Age11ThgfXFWCHOKKOrOM9bX962TeC6u7cuvMmIc=
+	t=1756123648; cv=none; b=a5jN2JcHjh2ikbuIa8e++jf9H5Zy4qu2F4iPoBNNbQYwGeu8jCtvZ85/zpzPaozxvJDkEiA/Ax5R425i2ZiTMHZvzoQNY2dOSLTqheAWuTNpEh4P3I6IDEEHLewwOMfyadZFKyZP8yj9b7dhnIIgHlFnSOrVapG4KpWRwgjKYpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756123180; c=relaxed/simple;
-	bh=lS3AWOgvDy1xyQdjhiTyovsqjPpiIeoliD87yKstrzU=;
+	s=arc-20240116; t=1756123648; c=relaxed/simple;
+	bh=MWkWojGEIs+5EgCLVlLnBOjxSlqnFs4gPeEtmO3HGug=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GEDimrMOBBLNU47wZN+q7/C4+pFddo08pWSSKbKAWFB+ViQnloH5ziUuTZrDi8Nq7zEfmMnz0snZ6FcLWeQ6HJX4f2+Q6+BhSdXFI++gv5JFXDErV+EA421fZEtx8rdhQozcbrfXALUxUsbCTnOWJrLNXrrHasLv8Tpj76CUpQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UkTGXf19; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ujJPQ/utKea1a/GBJJnx8+TRJ5f4eeuCMj35B+EcKD0AAodrK90g+DIxnWwQAeLNIHqrZHtM05/E0Fb8fdLmOVnUu6L+khGGIlIc96v/n3Qx2VC38cfjE66zFpqQtc87utYCx+K/wY9ZXWLCmc/ABDnUfzYhqxyRFlpoAzApNoM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=t1ZmTaIM; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=83HSOpmW; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=t1ZmTaIM; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=83HSOpmW; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UkTGXf19"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81F2BC4CEED;
-	Mon, 25 Aug 2025 11:59:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756123180;
-	bh=lS3AWOgvDy1xyQdjhiTyovsqjPpiIeoliD87yKstrzU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=UkTGXf19V8ywJ5fx51VMc0L65R5hh7RUeUGr1nnceWCQHHPHGbFvtBeVvzW7L81yZ
-	 rOsCIYkqhB0Az2FW/EJ0FGdK+iFqKlv37nWX7lyHEgau2TrmtimUZ3RZyfIdPtCNvd
-	 9BKNPjT7aRdiBd3Bd/T+GBLuTEOAOAM/YaWOKFQ/UNgWeVTefBnKUgLYQ6mW3BX5bK
-	 vXxq/o8kw5QfA/hzqMApFUSx7uCt0rprvojVAu4HV2hVwO7tb5GkO9XnL/zvlXGX56
-	 Xo5Ym4jX3bxVhs367Ap/LCoBy3fStl8lEIZELJGEPUDnQpFVWSptIJ7EYD/64ztUn6
-	 +HdID3IlMJmFw==
-Date: Mon, 25 Aug 2025 13:59:36 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Hans.Holmberg@wdc.com
-Subject: Re: [PATCH] xfs: remove the unused bv field in struct xfs_gc_bio
-Message-ID: <ak5tpekapqnezdta6nbdjs3xfw7o5turr5ps5rz3bj3qcznlt4@hcf6l3va6taz>
-References: <sacMDWwSlHWPe4rLfJnV7cWv85IhaVjJ0oRPoFGpRMrscPhlMY_P-nMHPJ_WN4LFkd_ga9PdbD81l2dtjqD2ag==@protonmail.internalid>
- <20250825113511.474923-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="t1ZmTaIM";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="83HSOpmW";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="t1ZmTaIM";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="83HSOpmW"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id F26CE2125B;
+	Mon, 25 Aug 2025 12:07:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1756123644; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5esCATGxFy1rPdQ5wxmc7jMFTL/ZNi1qRrQlBSRFzPk=;
+	b=t1ZmTaIM0+z6zSJxxyOEwYyPqpiki++QwLvf6SbdhQDAXsJzbiPx6tgrlLwtDXBYKzjUz6
+	XmNeoO6v4iiBYcICYhf9+vPppYOsxvqC0O4Z72aLVDKRmHnsaowAsXrRZ/ZkawLyUHVbbD
+	GD4rB/NSxgCYXEY0yC3iDkhx6piJlwo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1756123644;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5esCATGxFy1rPdQ5wxmc7jMFTL/ZNi1qRrQlBSRFzPk=;
+	b=83HSOpmWO0E4yGKjz/4xp57phgsCaOgr6D95jxGWvKcSI3kfxKy5OpEcOUKKfaG93/AcKo
+	9/pSeIvPZeujdIDA==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=t1ZmTaIM;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=83HSOpmW
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1756123644; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5esCATGxFy1rPdQ5wxmc7jMFTL/ZNi1qRrQlBSRFzPk=;
+	b=t1ZmTaIM0+z6zSJxxyOEwYyPqpiki++QwLvf6SbdhQDAXsJzbiPx6tgrlLwtDXBYKzjUz6
+	XmNeoO6v4iiBYcICYhf9+vPppYOsxvqC0O4Z72aLVDKRmHnsaowAsXrRZ/ZkawLyUHVbbD
+	GD4rB/NSxgCYXEY0yC3iDkhx6piJlwo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1756123644;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5esCATGxFy1rPdQ5wxmc7jMFTL/ZNi1qRrQlBSRFzPk=;
+	b=83HSOpmWO0E4yGKjz/4xp57phgsCaOgr6D95jxGWvKcSI3kfxKy5OpEcOUKKfaG93/AcKo
+	9/pSeIvPZeujdIDA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id DC8EC1368F;
+	Mon, 25 Aug 2025 12:07:23 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id cU+HNftRrGjtDQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Mon, 25 Aug 2025 12:07:23 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 707ACA0951; Mon, 25 Aug 2025 14:07:15 +0200 (CEST)
+Date: Mon, 25 Aug 2025 14:07:15 +0200
+From: Jan Kara <jack@suse.cz>
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	snitzer@kernel.org, axboe@kernel.dk, dw@davidwei.uk, brauner@kernel.org, hch@lst.de, 
+	martin.petersen@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org, 
+	viro@zeniv.linux.org.uk, Keith Busch <kbusch@kernel.org>, Jan Kara <jack@suse.com>
+Subject: Re: [PATCHv3 0/8] direct-io: even more flexible io vectors
+Message-ID: <g35u5ugmyldqao7evqfeb3hfcbn3xddvpssawttqzljpigy7u4@k3hehh3grecq>
+References: <20250819164922.640964-1-kbusch@meta.com>
+ <87a53ra3mb.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,31 +92,78 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250825113511.474923-1-hch@lst.de>
+In-Reply-To: <87a53ra3mb.fsf@gmail.com>
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: F26CE2125B
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-2.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_COUNT_THREE(0.00)[3];
+	FREEMAIL_TO(0.00)[gmail.com];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCPT_COUNT_TWELVE(0.00)[17];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TAGGED_RCPT(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.cz:dkim]
+X-Spam-Score: -2.51
 
-On Mon, Aug 25, 2025 at 01:35:11PM +0200, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_zone_gc.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+On Fri 22-08-25 18:57:08, Ritesh Harjani wrote:
+> Keith Busch <kbusch@meta.com> writes:
 > 
-> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-> index 064cd1a857a0..d2d8fe547074 100644
-> --- a/fs/xfs/xfs_zone_gc.c
-> +++ b/fs/xfs/xfs_zone_gc.c
-> @@ -114,8 +114,7 @@ struct xfs_gc_bio {
->  	/* Open Zone being written to */
->  	struct xfs_open_zone		*oz;
+> > From: Keith Busch <kbusch@kernel.org>
+> >
+> > Previous version:
+> >
+> >   https://lore.kernel.org/linux-block/20250805141123.332298-1-kbusch@meta.com/
+> >
+> > This series removes the direct io requirement that io vector lengths
+> > align to the logical block size.
+> >
+> > I tested this on a few raw block device types including nvme,
+> > virtio-blk, ahci, and loop. NVMe is the only one I tested with 4k
+> > logical sectors; everything else was 512.
+> >
+> > On each of those, I tested several iomap filesystems: xfs, ext4, and
+> > btrfs. I found it interesting that each behave a little
+> > differently with handling invalid vector alignments:
+> >
+> >   - XFS is the most straight forward and reports failures on invalid
+> >     vector conditions, same as raw blocks devices.
+> >
+> >   - EXT4 falls back to buffered io for writes but not for reads.
 > 
-> -	/* Bio used for reads and writes, including the bvec used by it */
-> -	struct bio_vec			bv;
-> +	/* Bio used for reads and writes */
->  	struct bio			bio;	/* must be last */
->  };
+> ++linux-ext4 to get any historical context behind why the difference of
+> behaviour in reads v/s writes for EXT4 DIO. 
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Hum, how did you test? Because in the basic testing I did (with vanilla
+kernel) I get EINVAL when doing unaligned DIO write in ext4... We should be
+falling back to buffered IO only if the underlying file itself does not
+support any kind of direct IO.
 
-> 
-> --
-> 2.47.2
-> 
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
