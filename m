@@ -1,39 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 455452FB60D
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 15:26:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C8F82FD7D5
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 15:29:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756135610; cv=none; b=iE6NChusgClErrIIJSlC0get+K20hkl5M9E+MivVGooaNjGGP74OLaYcgk9/lpcgVUrxlQcA+840uvysUfyr2yEw/rmNybKJfisJGdEc22X4dRary21QC48Hf3kc86SjZw0NVdwsHhWACK9MwhT7mNMNMjA+SLI2Gnl43WWfodM=
+	t=1756135778; cv=none; b=oVlfRSeOM/ExthupDMBr1MuWAv9BCgVxjM2Z5TyRZCAMoslZIjKbFBv6iabRM2o9tC/PfYdd6UhRnkI/UNRhRijPaqJJLtWoyx67TOVX7X6K8KDPNW7mU9HV4+iqHo0ynfyOcPBKDrS57oMJjNElA8LlQ1SQljmmQYSi9AyiOe0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756135610; c=relaxed/simple;
-	bh=8C4ND9DMJTRA/KsYmRfgEOJMox6FEccmzxeIWwtbRgs=;
+	s=arc-20240116; t=1756135778; c=relaxed/simple;
+	bh=qs/qm3prXMEShFI0lzbwyxI6rZ/LJnP1xe/AQNmiHQk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AsIsKixmwfPK5jXpiBbaLEFUa2HDHusqZKTSAamQ+oK4/xvszt2qogUrvAM5fLORVR/O4lIoM1LzIoK1clAIQryHymld6q4OCiEXv6LbBYMtDk7j1WxzmpH3tpRkxF5aweqkxNdmK7m3opVLXKV/7dzq5DiuzEmDnNU+3mzSPk8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ht8AjIhp; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nuVKLesWLgoeZJOKW8vft4OSz8wU8vYwv2klJlVeJ3frW8tStJiRxo97F0LpB9MS4LenxR0Zi3bgLeDHASjaFnJ254gaSNQZXMiMZm8Lmo38GRRKQWA28ZQb/NGhL1FSgTlmUP//pCuF/RuLLzfi1Z5H4wrxSgiwxrBf4NqgKMQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PoNBwbDY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ht8AjIhp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1C35C4CEF4;
-	Mon, 25 Aug 2025 15:26:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PoNBwbDY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1702C4CEED;
+	Mon, 25 Aug 2025 15:29:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756135609;
-	bh=8C4ND9DMJTRA/KsYmRfgEOJMox6FEccmzxeIWwtbRgs=;
+	s=k20201202; t=1756135777;
+	bh=qs/qm3prXMEShFI0lzbwyxI6rZ/LJnP1xe/AQNmiHQk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Ht8AjIhpyG7N8vLILI7a2A1kGiXdfy2SUHKJzmSGl/83UIY0cyhwWYIn8/PaedvI4
-	 WAmN9clhndL71BGUm4z/qhAlFKx31k/Fk097j+OHhloXl8gYPWVjDrdaHpArrZkPuc
-	 X0tCtj/2wJjXnOHdggN8gy2JPxcSYSknSU8YgOQUadNMdQyD6uKyIDUFEiejb9shHh
-	 zQxp33h+5Ex5Hm+DDaE+oXflLZn1faUTsWqrw0RhgB79FpkN1AhM/a7J2//d5vkwkT
-	 IPv0lJUizAdymIwC3zdBPLb3D7i/c/peDX59/dBA1Jm5ImsbvfnwrVAKUtrtW+PGi9
-	 bAjdObyHdG5gA==
-Date: Mon, 25 Aug 2025 08:26:49 -0700
+	b=PoNBwbDYSCHc7Woac0CD9s0h0qvWZEt/jHGe2cxzkzkZbVn05TG3G+ta39s/j5u7c
+	 SbFpppAk3czfCbt12RnRaC3CGOBOU3TCLw6XLTE/gUb8gavTlu8ZLDBbAJsDt774zW
+	 lqC8oLF12OqM85JtSWGFyZ8ZF80crhRyZ/JdMwxD88sk7rZ7DKcgAob3duTASr/ySu
+	 NiMyreZnz8YDxFt67THcqX867gvkKPCCHv1uj33pwDMtYQgttz4zHuZXHQRRP9TbO/
+	 bpAh3Kw7pI9Cgm6wD3foN2PEu8k1TNcvKRbq7xbjyebljALlPucfMUQwrqUoOuELbs
+	 7hOVZwuzyaoFA==
+Date: Mon, 25 Aug 2025 08:29:36 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: track the number of blocks in each buftarg
-Message-ID: <20250825152649.GA812310@frogsfrogsfrogs>
-References: <20250825111944.460955-1-hch@lst.de>
- <20250825111944.460955-2-hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: implement XFS_IOC_DIOINFO in terms of vfs_getattr
+Message-ID: <20250825152936.GB812310@frogsfrogsfrogs>
+References: <20250825111510.457731-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,242 +41,73 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250825111944.460955-2-hch@lst.de>
+In-Reply-To: <20250825111510.457731-1-hch@lst.de>
 
-On Mon, Aug 25, 2025 at 01:19:35PM +0200, Christoph Hellwig wrote:
-> Add a bt_nr_blocks to track the number of blocks in each buftarg, and
-> replace the check that hard codes sb_dblock in xfs_buf_map_verify with
-> this new value so that it is correct for non-ddev buftargs.  The
-> RT buftarg only has a superblock in the first block, so it is unlikely
-> to trigger this, or are we likely to ever have enough blocks in the
-> in-memory buftargs, but we might as well get the check right.
+On Mon, Aug 25, 2025 at 01:15:00PM +0200, Christoph Hellwig wrote:
+> Use the direct I/O alignment reporting from ->getattr instead of
+> reimplementing it.  This exposes the relaxation of the memory
+> alignment in the XFS_IOC_DIOINFO info and ensure the information will
+> stay in sync.  Note that randholes.c in xfstests has a bug where it
+> incorrectly fails when the required memory alignment is smaller than the
+> pointer size.  Round up the reported value as there is a fair chance that
+> this code got copied into various applications.
 > 
-> Fixes: 10616b806d1d ("xfs: fix _xfs_buf_find oops on blocks beyond the filesystem end")
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_buf.c              | 38 +++++++++++++++++++----------------
->  fs/xfs/xfs_buf.h              |  4 +++-
->  fs/xfs/xfs_buf_item_recover.c |  7 +++++++
->  fs/xfs/xfs_super.c            |  7 ++++---
->  fs/xfs/xfs_trans.c            | 21 +++++++++----------
->  5 files changed, 45 insertions(+), 32 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index f9ef3b2a332a..b9b89f1243a0 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -397,7 +397,7 @@ xfs_buf_map_verify(
->  	 * Corrupted block numbers can get through to here, unfortunately, so we
->  	 * have to check that the buffer falls within the filesystem bounds.
->  	 */
-> -	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
-> +	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_nr_blocks);
->  	if (map->bm_bn < 0 || map->bm_bn >= eofs) {
->  		xfs_alert(btp->bt_mount,
->  			  "%s: daddr 0x%llx out of range, EOFS 0x%llx",
-> @@ -1720,26 +1720,27 @@ xfs_configure_buftarg_atomic_writes(
->  int
->  xfs_configure_buftarg(
->  	struct xfs_buftarg	*btp,
-> -	unsigned int		sectorsize)
-> -{
-> -	int			error;
-> +	unsigned int		sectorsize,
-> +	xfs_rfsblock_t		nr_blocks)
-> +{
-> +	if (btp->bt_bdev) {
-> +		int		error;
-> +
-> +		error = bdev_validate_blocksize(btp->bt_bdev, sectorsize);
-> +		if (error) {
-> +			xfs_warn(btp->bt_mount,
-> +				"Cannot use blocksize %u on device %pg, err %d",
-> +				sectorsize, btp->bt_bdev, error);
-> +			return -EINVAL;
-> +		}
+> Changes since v1:
+>  - update the comment
+> 
+>  fs/xfs/xfs_ioctl.c | 18 +++++++++---------
+>  1 file changed, 9 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index e1051a530a50..ff0a8dc74948 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1209,21 +1209,21 @@ xfs_file_ioctl(
+>  				current->comm);
+>  		return -ENOTTY;
+>  	case XFS_IOC_DIOINFO: {
+> -		struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
+> +		struct kstat		st;
+>  		struct dioattr		da;
 >  
-> -	ASSERT(btp->bt_bdev != NULL);
-> +		if (bdev_can_atomic_write(btp->bt_bdev))
-> +			xfs_configure_buftarg_atomic_writes(btp);
-> +	}
+> -		da.d_mem = target->bt_logical_sectorsize;
+> +		error = vfs_getattr(&filp->f_path, &st, STATX_DIOALIGN, 0);
+> +		if (error)
+> +			return error;
 >  
-> -	/* Set up metadata sector size info */
->  	btp->bt_meta_sectorsize = sectorsize;
->  	btp->bt_meta_sectormask = sectorsize - 1;
-> -
-> -	error = bdev_validate_blocksize(btp->bt_bdev, sectorsize);
-> -	if (error) {
-> -		xfs_warn(btp->bt_mount,
-> -			"Cannot use blocksize %u on device %pg, err %d",
-> -			sectorsize, btp->bt_bdev, error);
-> -		return -EINVAL;
-> -	}
-> -
-> -	if (bdev_can_atomic_write(btp->bt_bdev))
-> -		xfs_configure_buftarg_atomic_writes(btp);
-> +	btp->bt_nr_blocks = nr_blocks;
->  	return 0;
->  }
->  
-> @@ -1749,6 +1750,9 @@ xfs_init_buftarg(
->  	size_t				logical_sectorsize,
->  	const char			*descr)
->  {
-> +	/* The maximum size of the buftarg is only known once the sb is read. */
-> +	btp->bt_nr_blocks = (xfs_rfsblock_t)-1;
-> +
->  	/* Set up device logical sector size mask */
->  	btp->bt_logical_sectorsize = logical_sectorsize;
->  	btp->bt_logical_sectormask = logical_sectorsize - 1;
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index b269e115d9ac..a9b3def89cfb 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -103,6 +103,7 @@ struct xfs_buftarg {
->  	size_t			bt_meta_sectormask;
->  	size_t			bt_logical_sectorsize;
->  	size_t			bt_logical_sectormask;
-> +	xfs_rfsblock_t		bt_nr_blocks;
->  
->  	/* LRU control structures */
->  	struct shrinker		*bt_shrinker;
-> @@ -372,7 +373,8 @@ struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *mp,
->  extern void xfs_free_buftarg(struct xfs_buftarg *);
->  extern void xfs_buftarg_wait(struct xfs_buftarg *);
->  extern void xfs_buftarg_drain(struct xfs_buftarg *);
-> -int xfs_configure_buftarg(struct xfs_buftarg *btp, unsigned int sectorsize);
-> +int xfs_configure_buftarg(struct xfs_buftarg *btp, unsigned int sectorsize,
-> +		xfs_rfsblock_t nr_blocks);
->  
->  #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
->  
-> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-> index 5d58e2ae4972..d43234e04174 100644
-> --- a/fs/xfs/xfs_buf_item_recover.c
-> +++ b/fs/xfs/xfs_buf_item_recover.c
-> @@ -736,6 +736,13 @@ xlog_recover_do_primary_sb_buffer(
->  	 */
->  	xfs_sb_from_disk(&mp->m_sb, dsb);
->  
-> +	/*
-> +	 * Grow can change the device size.  Mirror that into the buftarg.
-> +	 */
-> +	mp->m_ddev_targp->bt_nr_blocks = mp->m_sb.sb_dblocks;
-> +	if (mp->m_rtdev_targp && mp->m_rtdev_targp != mp->m_ddev_targp)
-> +		mp->m_rtdev_targp->bt_nr_blocks = mp->m_sb.sb_dblocks;
+>  		/*
+> -		 * See xfs_report_dioalign() for an explanation about why this
+> -		 * reports a value larger than the sector size for COW inodes.
+> +		 * Some userspace directly feeds the return value to
+> +		 * posix_memalign, which fails for values that are smaller than
+> +		 * the pointer size.  Round up the value to not break userspace.
 
-Crazy question here: say we start with dblocks==1G on a 2GB disk.  Then
-we start growfs to double the size of the filesystem, but crash midway
-through.  Then in the process of restarting the system, some harried
-sysadmin accidentally shrinks the disk to 1GB before letting the
-filesystem mount.  Log recovery will try to replay the expansion, but
-now the disk is no longer large enough to contain the filesystem.
+Looks ok, don't care much if you say "userspace" or "userspace
+programs".
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Should we be checking for that here and erroring out?
+>  		 */
+> -		if (xfs_is_cow_inode(ip))
+> -			da.d_miniosz = xfs_inode_alloc_unitsize(ip);
+> -		else
+> -			da.d_miniosz = target->bt_logical_sectorsize;
+> +		da.d_mem = roundup(st.dio_mem_align, sizeof(void *));
+
+...though one thing I /do/ wonder is whether this roundup() should be in
+the vfs statx code?  Do people need to be able to initiate directio with
+buffers that are not aligned even to pointer size?
 
 --D
 
-> +
->  	if (mp->m_sb.sb_agcount < orig_agcount) {
->  		xfs_alert(mp, "Shrinking AG count in log recovery not supported");
->  		return -EFSCORRUPTED;
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index bb0a82635a77..78f0c4707c22 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -541,7 +541,8 @@ xfs_setup_devices(
->  {
->  	int			error;
->  
-> -	error = xfs_configure_buftarg(mp->m_ddev_targp, mp->m_sb.sb_sectsize);
-> +	error = xfs_configure_buftarg(mp->m_ddev_targp, mp->m_sb.sb_sectsize,
-> +			mp->m_sb.sb_dblocks);
->  	if (error)
->  		return error;
->  
-> @@ -551,7 +552,7 @@ xfs_setup_devices(
->  		if (xfs_has_sector(mp))
->  			log_sector_size = mp->m_sb.sb_logsectsize;
->  		error = xfs_configure_buftarg(mp->m_logdev_targp,
-> -					    log_sector_size);
-> +				log_sector_size, mp->m_sb.sb_logblocks);
->  		if (error)
->  			return error;
->  	}
-> @@ -565,7 +566,7 @@ xfs_setup_devices(
->  		mp->m_rtdev_targp = mp->m_ddev_targp;
->  	} else if (mp->m_rtname) {
->  		error = xfs_configure_buftarg(mp->m_rtdev_targp,
-> -					    mp->m_sb.sb_sectsize);
-> +				mp->m_sb.sb_sectsize, mp->m_sb.sb_rblocks);
->  		if (error)
->  			return error;
->  	}
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 575e7028f423..d56820de863e 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -452,19 +452,17 @@ xfs_trans_mod_sb(
->   */
->  STATIC void
->  xfs_trans_apply_sb_deltas(
-> -	xfs_trans_t	*tp)
-> +	struct xfs_trans	*tp)
->  {
-> -	struct xfs_dsb	*sbp;
-> -	struct xfs_buf	*bp;
-> -	int		whole = 0;
+> +		da.d_miniosz = st.dio_offset_align;
+>  		da.d_maxiosz = INT_MAX & ~(da.d_miniosz - 1);
 > -
-> -	bp = xfs_trans_getsb(tp);
-> -	sbp = bp->b_addr;
-> +	struct xfs_mount	*mp = tp->t_mountp;
-> +	struct xfs_buf		*bp = xfs_trans_getsb(tp);
-> +	struct xfs_dsb		*sbp = bp->b_addr;
-> +	int			whole = 0;
->  
->  	/*
->  	 * Only update the superblock counters if we are logging them
->  	 */
-> -	if (!xfs_has_lazysbcount((tp->t_mountp))) {
-> +	if (!xfs_has_lazysbcount(mp)) {
->  		if (tp->t_icount_delta)
->  			be64_add_cpu(&sbp->sb_icount, tp->t_icount_delta);
->  		if (tp->t_ifree_delta)
-> @@ -491,8 +489,7 @@ xfs_trans_apply_sb_deltas(
->  	 * write the correct value ondisk.
->  	 */
->  	if ((tp->t_frextents_delta || tp->t_res_frextents_delta) &&
-> -	    !xfs_has_rtgroups(tp->t_mountp)) {
-> -		struct xfs_mount	*mp = tp->t_mountp;
-> +	    !xfs_has_rtgroups(mp)) {
->  		int64_t			rtxdelta;
->  
->  		rtxdelta = tp->t_frextents_delta + tp->t_res_frextents_delta;
-> @@ -505,6 +502,7 @@ xfs_trans_apply_sb_deltas(
->  
->  	if (tp->t_dblocks_delta) {
->  		be64_add_cpu(&sbp->sb_dblocks, tp->t_dblocks_delta);
-> +		mp->m_ddev_targp->bt_nr_blocks += tp->t_dblocks_delta;
->  		whole = 1;
->  	}
->  	if (tp->t_agcount_delta) {
-> @@ -524,7 +522,7 @@ xfs_trans_apply_sb_deltas(
->  		 * recompute the ondisk rtgroup block log.  The incore values
->  		 * will be recomputed in xfs_trans_unreserve_and_mod_sb.
->  		 */
-> -		if (xfs_has_rtgroups(tp->t_mountp)) {
-> +		if (xfs_has_rtgroups(mp)) {
->  			sbp->sb_rgblklog = xfs_compute_rgblklog(
->  						be32_to_cpu(sbp->sb_rgextents),
->  						be32_to_cpu(sbp->sb_rextsize));
-> @@ -537,6 +535,7 @@ xfs_trans_apply_sb_deltas(
->  	}
->  	if (tp->t_rblocks_delta) {
->  		be64_add_cpu(&sbp->sb_rblocks, tp->t_rblocks_delta);
-> +		mp->m_rtdev_targp->bt_nr_blocks += tp->t_rblocks_delta;
->  		whole = 1;
->  	}
->  	if (tp->t_rextents_delta) {
+>  		if (copy_to_user(arg, &da, sizeof(da)))
+>  			return -EFAULT;
+>  		return 0;
 > -- 
 > 2.47.2
 > 
