@@ -1,49 +1,70 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94CFE2E92DF
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 11:33:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28734239E9D
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 11:35:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756121631; cv=none; b=GHZnnWmNVAv0YkGNPPCy/t/KUx6JkjwIubQRLF5us848iRMIm5FYHLJdk2WscvHKzciBLLeCl5DCz5hIwTlSO3FhIq9bkPath9Lgwwn3u14dGIqsj08yBOF2JRWSjbVS5s7mnldLz9eFxuMNQNOvq3lPIRjBVoXTcx5DuQl9nW0=
+	t=1756121717; cv=none; b=rh/73HHwnaLRbK4EAqpqHmNpx/k7K6J6JCDg5k4nLwWLH1StmtfulTRuPXf1s1HQsQR1Lk0QHbnqpWNgv+vzIjrUwT3W0zzKxCsFxhup4mJvXJAsq0bIJR1N81UlPfj8UP7FU6FScmMMpomW8pdwXp8SIfQ0E735Vl9i4RXECoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756121631; c=relaxed/simple;
-	bh=/d+swR/dxd3DyI9A2LxayRowhDBduVB7AvKFvmekUMw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cifs3bCPor5NLmc13V8kyXz54FL38xIV+0htq0lyAbUgv2hYfwLHo+G9SrasAnjx0W4ubxOJ+jcD06OHSXtQJ9VeusOsuNxRq9Xg2RMTP8bKwU3nSCpScnmScQsIScNcROdh5Gc+OoqPnCjD3FNqM+VL41P8XAOvqRv2UEymjSs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 6BB8868AFE; Mon, 25 Aug 2025 13:33:45 +0200 (CEST)
-Date: Mon, 25 Aug 2025 13:33:45 +0200
+	s=arc-20240116; t=1756121717; c=relaxed/simple;
+	bh=EobWhK8zOoiPIlpjXkS/R0vKcvOeQfjArIYUdGcoPNI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=o4726lUHXfIeVOjsltWz7xJLRh5OU1SFY9E4/fxNngiPRDJ4c+9G5eMFd9b7zVjVbO67OnMPBVLeiOhXwa2yCDNXF3fwfS/EThznFuJ7mlVRPlZ+80ir6wuDKVIkC0Sm6o26tJsQW6QVkrs87drhWWRLxva6YQfRtBJoWF9x9R8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WsoEwa5/; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WsoEwa5/"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=MoUhy+RCZCBCbh8YdHwibHF/B616DaTBP8BqHhCC3tw=; b=WsoEwa5/zv9Otkete/EQ8XSXcK
+	lM1EVbzMMT96itg4n1MNDQnQHEEo5P23snyOJuaAwJ4mhEJZdP0u5jPu3s6XMgFqP/P0gmQdLGYwJ
+	9mPFRmk16Yy0E2aRA/aUbay379ltVXySFlBwXcnGgQ68yYqGkkvIsAzg3U7wzvpbu9rvHNDwXsn9L
+	2t7bBKA0SemddNNE7yaCAxwQD7DWvmDYjZ3iEo3ut0GwsijT7xVrauN7imiPJRaFS2v7JREaIF+A6
+	XUDmgmqUyzZsjSBkayjB2Osz4Weunvg8/RZQIFp2F6soFY60tWv/bkRgu8kqJ4N9F24cwdxyqRGUA
+	BDWZn2ZA==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uqVTm-00000007mJX-1QnZ;
+	Mon, 25 Aug 2025 11:35:14 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: implement XFS_IOC_DIOINFO in terms of
- vfs_getattr
-Message-ID: <20250825113345.GA5897@lst.de>
-References: <cG84V92R_rvXt_xDUKDRAZU_E6E69atqXw04uiv_deBLGkFtMFj_XYvumw4sZh6EOFZpn33yItQ55aPJs5hNNw==@protonmail.internalid> <20250825111510.457731-1-hch@lst.de> <fhpfunzcfllg2k7qslumh3n3vsac3h3aaq7k4l6vxcxhdqmeqv@3rb266uid7bx>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	Hans.Holmberg@wdc.com
+Subject: [PATCH] xfs: remove the unused bv field in struct xfs_gc_bio
+Date: Mon, 25 Aug 2025 13:35:11 +0200
+Message-ID: <20250825113511.474923-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fhpfunzcfllg2k7qslumh3n3vsac3h3aaq7k4l6vxcxhdqmeqv@3rb266uid7bx>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Aug 25, 2025 at 01:32:23PM +0200, Carlos Maiolino wrote:
-> >  		/*
-> > -		 * See xfs_report_dioalign() for an explanation about why this
-> > -		 * reports a value larger than the sector size for COW inodes.
-> > +		 * Some userspace directly feeds the return value to
-> 
-> 		Some userspace /tools/ directly... ?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_zone_gc.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Tools, programs.  Or just userspace :)
-
-I don't really care which way.
+diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+index 064cd1a857a0..d2d8fe547074 100644
+--- a/fs/xfs/xfs_zone_gc.c
++++ b/fs/xfs/xfs_zone_gc.c
+@@ -114,8 +114,7 @@ struct xfs_gc_bio {
+ 	/* Open Zone being written to */
+ 	struct xfs_open_zone		*oz;
+ 
+-	/* Bio used for reads and writes, including the bvec used by it */
+-	struct bio_vec			bv;
++	/* Bio used for reads and writes */
+ 	struct bio			bio;	/* must be last */
+ };
+ 
+-- 
+2.47.2
 
