@@ -1,51 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAED5190664;
-	Mon, 25 Aug 2025 09:21:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE4D3393DC1;
+	Mon, 25 Aug 2025 09:34:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756113665; cv=none; b=YhxlNqrFqwaKWLIvBcnIoLTdGc/Hl+w7FGrg1JMeGwoQZcvYDC0GonezybYp75R/YaiqvtKJ9qzJC7JOC/Uq4m3bH4wtTjboyfajvi6YrDVZV2Da19J1skP01vudqX4JMy2kBLGdyW1LwjnFvICejrzMwmy23sJd5QEhgZr9ano=
+	t=1756114484; cv=none; b=MTi2lNnel9nDUlF01SGMAkFN1YDWdOWsCOUD9L8EuShqs7EaeAqxJFDDwyw2Xw7qNxDIOMa3T5LyV+uxdeEenpTAOeYX9POHxA5DKunscIx9w1sDFKjnPJa7TKLhCsy62/gL3MMoLlZcoIJ/bpWInG4odrIBC9EyQTl0PDAntog=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756113665; c=relaxed/simple;
-	bh=lbwwu9GkccV8IALX4pZOCD5WicHbuX6iwVCs1iocpkU=;
+	s=arc-20240116; t=1756114484; c=relaxed/simple;
+	bh=MvtAWtfKPb4hnTohO5qtneHIrMJbGiqKJhIWV1Rvf2M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sr4u4ffJbCgYnxgVC2dGt0gMBKetyhGDXAWfB7RdLecpDB4YJ1LMGZChuLT1MERhyIlK2bVuq6a9eb9IPLmw069pGoQMj8EssSrYZV/qUg5+3ET8f3GTdrT09OiK2Y/G0873wqjepLcGTNE8K/xW/PvoZSaIrI1MzGlmOvq4C9k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Y+miYzet; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=PWaSGIwfSUMD7f/5rqGeQZmgduv97D19rrvtGTW1Mw58X2D46+ZQN09Jv4ab6h+MlUha6nU7jJEp8Wph4+/0xvwdKiqwCM89X6FcgpmZTutRQpyzB3j2lOxbjxjYft15yB1pTaXescg3Rk5tqjEM0fZJgmPnTTVUGxvrvZDL7MU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=2D1ZdU+k; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Y+miYzet"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="2D1ZdU+k"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Sc+4JMWsbFGBBm8p/kWO4ggW989b86QDhZeWOOAn3rI=; b=Y+miYzetmddZoPUtzWBaeCZ++j
-	gcJOULlYnYuqAoIHehypEMijuD1lpgjTMuqg7+MAkipyyhC/N6SRqQgjM9haj7OTmUHEap5pkutun
-	l1/wfld0HBTRJdL1Bt6/ZGyPs6HZ8xGWu1v3Ru+vHSF5mJaUNAY6KVwMHC0/i7Z6sXJIrd5p9bdFQ
-	qE0MITL9C/h5nQjh7TFTRsQqY7H0/x7lRfo2MRKlFRtbSgwgdSW5b1K3bumHRV1m0tFkcIW2rZHvr
-	9drEcleajm8VQ2k2TrI/xxq6ishDtVUbPUd9yyAK4ScTTHkehWj9q3PUFLDzykIEBZWL1Chedf+Ze
-	zIFG2wPw==;
+	bh=7Nqg/rQBOOl0cufmDMreXF7fdBPqq2mi8wohNeldYaI=; b=2D1ZdU+ktlNflPPjejftKh3Mn8
+	h4X9jpME7XeGjhT0l0gooWMmZQcv/6Zk9NWl1H5MFmyxTgcYNTzu7kp6KWHli4cSWxE+yVts8fy1c
+	PPyMn58Gi3wlpt2tCOxdlEBSp7qOaPCQ7wXZoc+7m0VNx0T5KezrlbL/0dXWOrgo+3EIh4J6NmSOH
+	48CL/sMRL1ieDB1atuBq4q1RfuRdVPY0xGnuf8IDbzELVqKrKSOakk6mVy5D9HpR0/gcx3alSe/Kj
+	FykC+KtgQimMR0DIL0Ld5VBDF7yBn27mDZxTwJ+sv3ykyvlEOn03KdEmUIJ8kfzPLS4d9XBwZFFz9
+	YfgcUlcw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uqTNt-00000007Tvp-3p1b;
-	Mon, 25 Aug 2025 09:21:01 +0000
-Date: Mon, 25 Aug 2025 02:21:01 -0700
+	id 1uqTaw-00000007Vkl-2L9D;
+	Mon, 25 Aug 2025 09:34:30 +0000
+Date: Mon, 25 Aug 2025 02:34:30 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Fengnan Chang <changfengnan@bytedance.com>
-Cc: Ritesh Harjani <ritesh.list@gmail.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, brauner@kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org
-Subject: Re: [PATCH] iomap: allow iomap using the per-cpu bio cache
-Message-ID: <aKwq_QoiEvtK89vY@infradead.org>
-References: <20250822082606.66375-1-changfengnan@bytedance.com>
- <20250822150550.GP7942@frogsfrogsfrogs>
- <aKiP966iRv5gEBwm@casper.infradead.org>
- <877byv9w6z.fsf@gmail.com>
- <aKif_644529sRXhN@casper.infradead.org>
- <874ityad1d.fsf@gmail.com>
- <CAPFOzZufTPCT_56-7LCc6oGHYiaPixix30yFNEsiFfN1s9ySMQ@mail.gmail.com>
+To: alexjlzheng@gmail.com
+Cc: brauner@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	yi.zhang@huawei.com, Jinliang Zheng <alexjlzheng@tencent.com>
+Subject: Re: [PATCH v3 0/4] allow partial folio write with iomap_folio_state
+Message-ID: <aKwuJptHVsx-Ed82@infradead.org>
+References: <20250812091538.2004295-1-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,13 +46,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPFOzZufTPCT_56-7LCc6oGHYiaPixix30yFNEsiFfN1s9ySMQ@mail.gmail.com>
+In-Reply-To: <20250812091538.2004295-1-alexjlzheng@tencent.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Aug 25, 2025 at 04:51:27PM +0800, Fengnan Chang wrote:
-> No restrictions for now, I think we can enable this by default.
-> Maybe better solution is modify in bio.c?  Let me do some test first.
+On Tue, Aug 12, 2025 at 05:15:34PM +0800, alexjlzheng@gmail.com wrote:
+> From: Jinliang Zheng <alexjlzheng@tencent.com>
+> 
+> With iomap_folio_state, we can identify uptodate states at the block
+> level, and a read_folio reading can correctly handle partially
+> uptodate folios.
+> 
+> Therefore, when a partial write occurs, accept the block-aligned
+> partial write instead of rejecting the entire write.
+> 
+> For example, suppose a folio is 2MB, blocksize is 4kB, and the copied
+> bytes are 2MB-3kB.
 
-Any kind of numbers you see where this makes a different, including
-the workloads would also be very valuable here.
+I'd still love to see some explanation of why you are doing this.
+Do you have a workload that actually hits this regularly, and where
+it makes a difference.  Can you provide numbers to quantify them?
 
