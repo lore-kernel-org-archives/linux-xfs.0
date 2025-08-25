@@ -1,44 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2897278170;
-	Mon, 25 Aug 2025 13:57:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2BDE86250;
+	Mon, 25 Aug 2025 14:53:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756130272; cv=none; b=OY4l7OfE5D7ffjxpKB95HBLa8tmG509rr0MDFXXqPEfDV6LPFUjBK0vP32OzAIkKjj2BUA+QUEVxfz1ptRcAJHQJem4m1V1W5g4LhfIyDCSfnAAmO15JpBMYUMI2I+4udYO8++/KmbEDAClAy94DTexcVB/sskf8GSXflelLZzo=
+	t=1756133623; cv=none; b=BmB1RK0FbIQMEv/M0De3Rl7n7/S4RMaVkQKaMkRYSFlRK+UbTug5WycKqImuImzV+F/a38iAy5b2DMnXhljnvAKt4evg2nRiRMqbE7p7Q6ple4Ila5rqxxgV5R0DaDt7T0ZuUpxzPFNAQjYg2GBbncEc3rYz7Qs2AP4YN8DPrZ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756130272; c=relaxed/simple;
-	bh=RD7ZdQoGMjvaubPhFckIDse+M6IQ4kZ8VhNw/j4RLzA=;
+	s=arc-20240116; t=1756133623; c=relaxed/simple;
+	bh=rvSkBlgHXvVyOVF6z+Syfl+8sP5Q6VJ3ma8KracCPto=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CieWb2eJVI1mQ1yrHqBBjU4Nr2rFJytgzkSvK0jsSheXkJhdpw65iY6074csIw8EJ67WVUXBmlkFVZOLyQoFFhsFcxh3Q7dFzXLnaUt19iSC9L2dGglRWktejqlm6iPShR4zgGU6R0JaJ3P+ajBjpTubUye/QwmjeKXBu2f+5hw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tpCAUO/L; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=N0sPt02zenm0QRvz+YqJeEZhLvRkkCO5cXEUPMdEJYKqEoTGI+NCVk07Jon7ebdIYYmpEcIrYRrDf6HCgnbOakdhb/DjNPoGOrrOFBxyAsC05BJgv22GFoFV7EZo2UFvmPQKOBDA3RM4uYZISTYJRYr0HAJawuWSzXnWltLwee0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sm6BrVYa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tpCAUO/L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC3DCC4CEED;
-	Mon, 25 Aug 2025 13:57:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sm6BrVYa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9690AC4CEED;
+	Mon, 25 Aug 2025 14:53:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756130272;
-	bh=RD7ZdQoGMjvaubPhFckIDse+M6IQ4kZ8VhNw/j4RLzA=;
+	s=k20201202; t=1756133622;
+	bh=rvSkBlgHXvVyOVF6z+Syfl+8sP5Q6VJ3ma8KracCPto=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tpCAUO/Llr8Fk7D6kmi1YLLsE7fupabtAgCnW4HS6JjV7vqpYaAaaE08fe4/iIw11
-	 7h4bNY2TNBmVfO56tX+AZ1Bv/V7p/cWpBbq1AbP95DLD3VFrqRrrAbi1we1BtZk/Cs
-	 sqLuc26/H1aXU2hTWWsRym99+YsdRZny+U6zGZ4pM4wejbjoJ1dUDcMq/vZpcQV44a
-	 Fy66zEbkb/1a7g6Cc47+J1FszuB+YvgFyoZQRB0DKkjWjJV7o2yCNTF0uCS6Pib/Ii
-	 oFlQ62sJ3IICQuYdfZ407lQTSRE71kwK9DKhK8Q2UMcH79zB0F9HwD8zGer8P1QkPf
-	 JsS3YhDyGI0Kw==
-Date: Mon, 25 Aug 2025 07:57:49 -0600
+	b=Sm6BrVYa9/c1MVTPYHPv5SPROdM0sxumHFmknVIZd93l7YwUB9cfMJIFL5zXlhwYo
+	 K6a8cEkh2PMpf1wXqjScjo1Apm5vnfaJerx85k4LHZGn4JyWGeq9gkoo53jHFmnU8t
+	 jpGLxt4CRlZnOQP0TKD0Fl6m/+9ZT0CwUFKc+j65i0rUfaMhHLw7dhc7BhsQgvRRCS
+	 4vj/qTn8GUcuWUgr6RUQcvRgl1Rl6RL9/fWVPOA3aXbInBxemJasvXsd4MtB4hPiyv
+	 XaLpymDNR8aYEoEjgJQ1ZQy815pS4x0iGHL8tWGHCC38OjoHS8kNMY2kDaoDhKlxS+
+	 YQT+cYOVVTrIw==
+Date: Mon, 25 Aug 2025 08:53:39 -0600
 From: Keith Busch <kbusch@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+To: Jan Kara <jack@suse.cz>
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, Keith Busch <kbusch@meta.com>,
+	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org,
 	snitzer@kernel.org, axboe@kernel.dk, dw@davidwei.uk,
-	brauner@kernel.org, martin.petersen@oracle.com, djwong@kernel.org,
-	linux-xfs@vger.kernel.org, viro@zeniv.linux.org.uk
-Subject: Re: [PATCHv3 3/8] block: align the bio after building it
-Message-ID: <aKxr3a74EjiyEUUA@kbusch-mbp>
+	brauner@kernel.org, hch@lst.de, martin.petersen@oracle.com,
+	djwong@kernel.org, linux-xfs@vger.kernel.org,
+	viro@zeniv.linux.org.uk, Jan Kara <jack@suse.com>
+Subject: Re: [PATCHv3 0/8] direct-io: even more flexible io vectors
+Message-ID: <aKx485EMthHfBWef@kbusch-mbp>
 References: <20250819164922.640964-1-kbusch@meta.com>
- <20250819164922.640964-4-kbusch@meta.com>
- <20250825074606.GE20853@lst.de>
+ <87a53ra3mb.fsf@gmail.com>
+ <g35u5ugmyldqao7evqfeb3hfcbn3xddvpssawttqzljpigy7u4@k3hehh3grecq>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,18 +49,79 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250825074606.GE20853@lst.de>
+In-Reply-To: <g35u5ugmyldqao7evqfeb3hfcbn3xddvpssawttqzljpigy7u4@k3hehh3grecq>
 
-On Mon, Aug 25, 2025 at 09:46:06AM +0200, Christoph Hellwig wrote:
-> On Tue, Aug 19, 2025 at 09:49:17AM -0700, Keith Busch wrote:
-> > +
-> > +	if (!bio->bi_iter.bi_size)
-> > +		return -EFAULT;
+On Mon, Aug 25, 2025 at 02:07:15PM +0200, Jan Kara wrote:
+> On Fri 22-08-25 18:57:08, Ritesh Harjani wrote:
+> > Keith Busch <kbusch@meta.com> writes:
+> > >
+> > >   - EXT4 falls back to buffered io for writes but not for reads.
+> > 
+> > ++linux-ext4 to get any historical context behind why the difference of
+> > behaviour in reads v/s writes for EXT4 DIO. 
 > 
-> And as bi_size doesn't change in the loop, this should probably move
-> above the loop.
+> Hum, how did you test? Because in the basic testing I did (with vanilla
+> kernel) I get EINVAL when doing unaligned DIO write in ext4... We should be
+> falling back to buffered IO only if the underlying file itself does not
+> support any kind of direct IO.
 
-The loop also releases pinned pages if necessary. We can't count on the
-caller to do that if we return error here.  __blkdev_direct_IO is the
-only one that tries to release pages on error, everyone else would leak
-them.
+Simple test case (dio-offset-test.c) below.
+
+I also ran this on vanilla kernel and got these results:
+
+  # mkfs.ext4 /dev/vda
+  # mount /dev/vda /mnt/ext4/
+  # make dio-offset-test
+  # ./dio-offset-test /mnt/ext4/foobar
+  write: Success
+  read: Invalid argument
+
+I tracked the "write: Success" down to ext4's handling for the "special"
+-ENOTBLK error after ext4_want_directio_fallback() returns "true".
+
+dio-offset-test.c:
+---
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include <sys/uio.h>
+#include <err.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+
+int main(int argc, char **argv)
+{
+	unsigned int pagesize;
+	struct iovec iov[2];
+	int ret, fd;
+	void *buf;
+
+	if (argc < 2)
+		err(EINVAL, "usage: %s <file>", argv[0]);
+	
+	pagesize = sysconf(_SC_PAGE_SIZE);
+	ret = posix_memalign((void **)&buf, pagesize, 2 * pagesize);
+	if (ret)
+		err(errno, "%s: failed to allocate buf", __func__);
+	
+	fd = open(argv[1], O_RDWR | O_CREAT | O_TRUNC | O_DIRECT);
+	if (fd < 0)
+		err(errno, "%s: failed to open %s", __func__, argv[1]);
+	
+	iov[0].iov_base = buf;
+	iov[0].iov_len = 256;
+	iov[1].iov_base = buf + pagesize;
+	iov[1].iov_len = 256;
+	ret = pwritev(fd, iov, 2, 0);
+	perror("write");
+	
+	ret = preadv(fd, iov, 2, 0);
+	perror("read");
+	
+	return 0;
+}
+--
