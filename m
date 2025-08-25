@@ -1,96 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 400CF38D;
-	Mon, 25 Aug 2025 11:56:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D55B02D29D6
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 11:59:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756122971; cv=none; b=ZwgmIwLU4fHuSpmfAQ9kGCgoySurTUY2lQ1IfCUDsJoU81coPCt3odiCxxo2zL0uvT9wjkssobfsJ1Nt56eC5Onn5Vy6AhNKKcR6aSWrSSKT7Cb8E+o1w3pqYJJPJdc3hD5XcPj7oKXmaQXz/7//JomMjaFCiAxAZgHPdTdXuao=
+	t=1756123180; cv=none; b=gTd9n0I7UASoyjgNOli9N2gdkFapQgHzbcb3XQ3FZd1F4qE5e4BVZMXldMv+9Q8Pxm2wmEgu16YifZgjZFsXlruX96GvphPtcyVupBeCUIPJMtG/ZrF0gnKUoFZTIJj7qw6Age11ThgfXFWCHOKKOrOM9bX962TeC6u7cuvMmIc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756122971; c=relaxed/simple;
-	bh=MDSWgn6WKv+gJIuM/KMh250oQpC7dHfexKwoxreXAtc=;
+	s=arc-20240116; t=1756123180; c=relaxed/simple;
+	bh=lS3AWOgvDy1xyQdjhiTyovsqjPpiIeoliD87yKstrzU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kbFoxBXxK4STmFlVQ1hfE8xdSyq4hkgCX5OWeEllQYjThmY+BCvKcQx3uhh1EebT9voHAtwcFv7BCIlNKBaj5jJyWdZEghqwwM+1idBVr5CLWJVEStre9RxYF04ccb8gB/lPgV5CipUvNsrS/msfbOhbkRLKu/ddmyhxa/28rag=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CPkoEoxv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GEDimrMOBBLNU47wZN+q7/C4+pFddo08pWSSKbKAWFB+ViQnloH5ziUuTZrDi8Nq7zEfmMnz0snZ6FcLWeQ6HJX4f2+Q6+BhSdXFI++gv5JFXDErV+EA421fZEtx8rdhQozcbrfXALUxUsbCTnOWJrLNXrrHasLv8Tpj76CUpQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UkTGXf19; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CPkoEoxv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26FF5C4CEED;
-	Mon, 25 Aug 2025 11:56:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UkTGXf19"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81F2BC4CEED;
+	Mon, 25 Aug 2025 11:59:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756122970;
-	bh=MDSWgn6WKv+gJIuM/KMh250oQpC7dHfexKwoxreXAtc=;
+	s=k20201202; t=1756123180;
+	bh=lS3AWOgvDy1xyQdjhiTyovsqjPpiIeoliD87yKstrzU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CPkoEoxvHfgM+V7S4D/WFHpuNZ0OztvUfx+8JrDAC6WCCyKOGfofT392bUTFo+d0L
-	 jUByDTZKk77wKlMuRUbbnMUhzDELt76eEAGciBD9sdxdT4RpifTPanfxRY2Mp29O+7
-	 c6dCbh1KXx8QNOici8N5M6SEhafagC+bQJqvDaxEen/vU+1omdfRx6ryn/+Hlxfnly
-	 H4+YagonfpyWr0RcyGTP5/8S+fGG7AIemHsqHbL8Ef7+Gn7pbp1fUjCEXpBgX6Cw47
-	 p5TO56K1k/U/Ubwe24Vg8UeHicfrpmmPYjZZ0hTzCqK6HnzyWfo57OQo0v8jOhFil4
-	 5yltmj8H7f2/A==
-Date: Mon, 25 Aug 2025 13:56:06 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	kernel-team@fb.com, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	viro@zeniv.linux.org.uk
-Subject: Re: [PATCH 50/50] fs: add documentation explaining the reference
- count rules for inodes
-Message-ID: <20250825-evakuieren-ansetzen-105f384692dc@brauner>
-References: <cover.1755806649.git.josef@toxicpanda.com>
- <e0bdfc839c71c8e7264e570125cc4573d9613df4.1755806649.git.josef@toxicpanda.com>
+	b=UkTGXf19V8ywJ5fx51VMc0L65R5hh7RUeUGr1nnceWCQHHPHGbFvtBeVvzW7L81yZ
+	 rOsCIYkqhB0Az2FW/EJ0FGdK+iFqKlv37nWX7lyHEgau2TrmtimUZ3RZyfIdPtCNvd
+	 9BKNPjT7aRdiBd3Bd/T+GBLuTEOAOAM/YaWOKFQ/UNgWeVTefBnKUgLYQ6mW3BX5bK
+	 vXxq/o8kw5QfA/hzqMApFUSx7uCt0rprvojVAu4HV2hVwO7tb5GkO9XnL/zvlXGX56
+	 Xo5Ym4jX3bxVhs367Ap/LCoBy3fStl8lEIZELJGEPUDnQpFVWSptIJ7EYD/64ztUn6
+	 +HdID3IlMJmFw==
+Date: Mon, 25 Aug 2025 13:59:36 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, Hans.Holmberg@wdc.com
+Subject: Re: [PATCH] xfs: remove the unused bv field in struct xfs_gc_bio
+Message-ID: <ak5tpekapqnezdta6nbdjs3xfw7o5turr5ps5rz3bj3qcznlt4@hcf6l3va6taz>
+References: <sacMDWwSlHWPe4rLfJnV7cWv85IhaVjJ0oRPoFGpRMrscPhlMY_P-nMHPJ_WN4LFkd_ga9PdbD81l2dtjqD2ag==@protonmail.internalid>
+ <20250825113511.474923-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e0bdfc839c71c8e7264e570125cc4573d9613df4.1755806649.git.josef@toxicpanda.com>
+In-Reply-To: <20250825113511.474923-1-hch@lst.de>
 
-On Thu, Aug 21, 2025 at 04:19:01PM -0400, Josef Bacik wrote:
-> Now that we've made these changes to the inode, document the reference
-> count rules in the vfs documentation.
-> 
-> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+On Mon, Aug 25, 2025 at 01:35:11PM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  Documentation/filesystems/vfs.rst | 23 +++++++++++++++++++++++
->  1 file changed, 23 insertions(+)
+>  fs/xfs/xfs_zone_gc.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> diff --git a/Documentation/filesystems/vfs.rst b/Documentation/filesystems/vfs.rst
-> index 229eb90c96f2..5bfe7863a5de 100644
-> --- a/Documentation/filesystems/vfs.rst
-> +++ b/Documentation/filesystems/vfs.rst
-> @@ -457,6 +457,29 @@ The Inode Object
->  
->  An inode object represents an object within the filesystem.
->  
-> +Reference counting rules
-> +------------------------
-> +
-> +The inode is reference counted in two distinct ways, an i_obj_count refcount and
-> +an i_count refcount. These control two different lifetimes of the inode. The
-> +i_obj_count is the simplest, think of it as a reference count on the object
-> +itself. When the i_obj_count reaches zero, the inode is freed.  Inode freeing
-> +happens in the RCU context, so the inode is not freed immediately, but rather
-> +after a grace period.
-> +
-> +The i_count reference is the indicator that the inode is "alive". That is to
-> +say, it is available for use by all the ways that a user can access the inode.
-> +Once this count reaches zero, we begin the process of evicting the inode. This
-> +is where the final truncate of an unlinked inode will normally occur.  Once
-> +i_count has reached 0, only the final iput() is allowed to do things like
-> +writeback, truncate, etc. All users that want to do these style of operation
-> +must use igrab() or, in very rare and specific circumstances, use
-> +inode_tryget().
-> +
-> +Every access to an inode must include one of these two references. Generally
-> +i_obj_count is reserved for internal VFS references, the s_inode_list for
-> +example. All file systems should use igrab()/lookup() to get a live reference on
-> +the inode, with very few exceptions.
+> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+> index 064cd1a857a0..d2d8fe547074 100644
+> --- a/fs/xfs/xfs_zone_gc.c
+> +++ b/fs/xfs/xfs_zone_gc.c
+> @@ -114,8 +114,7 @@ struct xfs_gc_bio {
+>  	/* Open Zone being written to */
+>  	struct xfs_open_zone		*oz;
+> 
+> -	/* Bio used for reads and writes, including the bvec used by it */
+> -	struct bio_vec			bv;
+> +	/* Bio used for reads and writes */
+>  	struct bio			bio;	/* must be last */
+>  };
 
-It would be awesome if you could document in more detail how LRU
-handling and reference counts works.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-I_FREEING | I_WILL_FREE was tightly interconnected with LRU handling and
-it was frankly a mess to understand so having the new stuff clearly
-documented would help us all a lot. Thanks!
+> 
+> --
+> 2.47.2
+> 
