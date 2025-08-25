@@ -1,91 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A94023D7D0;
-	Mon, 25 Aug 2025 11:27:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 841EF194C75
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 11:32:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756121232; cv=none; b=s4JyFuVkmBy4sj1yPO+V++0KlD9aOo0KxokP5WPuGZmutjAG5sKNI2wqb0vRjfphdKc/4SB+ipJ1sy7ZdB3HTNPyIK0iRvuXNdcz/h4cBXpUFG/IEb+uU1mII/89/IVuTf7WH85kYf/YfPbDGPCDbpLU5C6w4yN+JSBxfkP4a6Y=
+	t=1756121547; cv=none; b=LnShXVSQnVcBlgcaU36OgKj8Uoale5w+MJBCDKg8xFpsJ1PGMYENx4aHFwRgVDC0z9p84c1O5ONDttsZnvRjeqVexbyu952XgffeHS/S+NnwKmUBb6UM+BTNIiXvZniyS442ZOMX6m/XQY0IlcohRMlZTnfDaW1DloUgd2gaKUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756121232; c=relaxed/simple;
-	bh=/VtQ7ETa3CypWKOMyl6DvJVpl8M0zdkqzmkAvgEGI40=;
+	s=arc-20240116; t=1756121547; c=relaxed/simple;
+	bh=N1ln4LIJNK38UPIBUpPE+8dYyNABZxNd6HXYFoDsPGg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L/R9xzMFzFuWscuRlQP1Lh32gz0h4tIa/1mYf5IWhow7AGu0MVZf7zfC5zXb3f+qvcSiCPYWTQ1MBLiYWzjOV0mxeIwptKWz6I5mQjBBaBfueq7Ad4ZYKNcRAjyQrnBVoE+7zg1j5gUZSIsSu3tZN2oAiusPGSryz2g92x2BzGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s0Fsyomn; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=UK6WND31+xL057xlmCKQ4y/+YJ15EdHca4w0MpDwgcXrzVQMxU1rhdO7Kr40b7E5s7Ul1QLiEbTB8RVtTO814A940vSx8uuKPAv2B6eKPUgohDDmVtgpPRdsj1OcsFkBFJcYpg7crjbQlKtKDZR+j/T0uBCY9+RKoQErO1C3BDM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aPz9AoIR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s0Fsyomn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48D8CC4CEED;
-	Mon, 25 Aug 2025 11:27:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aPz9AoIR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 323C2C4CEED;
+	Mon, 25 Aug 2025 11:32:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756121232;
-	bh=/VtQ7ETa3CypWKOMyl6DvJVpl8M0zdkqzmkAvgEGI40=;
+	s=k20201202; t=1756121547;
+	bh=N1ln4LIJNK38UPIBUpPE+8dYyNABZxNd6HXYFoDsPGg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=s0Fsyomn82ghlSsqg8Oeb/Vqp3ixfboIEzu8pQCjTAqy7tuf6qVbA2Ko/WDki6ENE
-	 eb9NUnAFmBtPAH0zyEpGo1GfTb1y49D9+iei929rvDIlpoVI9xbQcLUGGPw047aBf0
-	 YalgYicNkXcErkSGNQTYPMgYE26I3sdoMVAWTDUGZrMsnAmthmXmFi/ulkhWsWKUjB
-	 YBNRAoBN+mjqSXB9G4FyMW4kgDzjLJCGM3pUkJNznRHF13GCHFu0DGTAqjQ4hhg1UC
-	 v2uid0lra6GaImbbzyPpx3nnYYCnyQ+KUnScX7AodHz1SN4tnt9aKlicOJvh1TiRDh
-	 pV5Yc9pArd9ng==
-Date: Mon, 25 Aug 2025 13:27:08 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	kernel-team@fb.com, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	viro@zeniv.linux.org.uk
-Subject: Re: [PATCH 23/50] fs: update find_inode_*rcu to check the i_count
- count
-Message-ID: <20250825-ameisen-reaktion-4898c02dd545@brauner>
-References: <cover.1755806649.git.josef@toxicpanda.com>
- <73ac2ba542806f2d43ee4fa444e3032294c9a931.1755806649.git.josef@toxicpanda.com>
+	b=aPz9AoIRzbUpTdHsoPkud0ht/YHthY6vnilaQV7bYJ4ZMhbEAyw9WhYj1CXgEG1n+
+	 0900ipkqLPIOnSK10FTrBXzkleDBEcPQuvQ7OtVN3WzCrGKWffOofgr5ChB9GPl5vR
+	 O+6aTGLVbDgPvNpoQBJo5VhzzVw2MzNu5EYzU4iq3sW6YbNPesxLJGJNmFHQD8jJL7
+	 xDPAYOM0VQ6rAlp22dx90cXNSHqscOzi7OYPq1G/R1WQ9ezQFQ4ftfRxTiWlbfysv4
+	 BxzK9UC3ZniLsLYgf19prgnp92zUMIzbKEvopE8Yyy9CFx2deMEhJKNboem4J8bl8v
+	 kGDIIt5Oz9MBg==
+Date: Mon, 25 Aug 2025 13:32:23 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: implement XFS_IOC_DIOINFO in terms of vfs_getattr
+Message-ID: <fhpfunzcfllg2k7qslumh3n3vsac3h3aaq7k4l6vxcxhdqmeqv@3rb266uid7bx>
+References: <cG84V92R_rvXt_xDUKDRAZU_E6E69atqXw04uiv_deBLGkFtMFj_XYvumw4sZh6EOFZpn33yItQ55aPJs5hNNw==@protonmail.internalid>
+ <20250825111510.457731-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <73ac2ba542806f2d43ee4fa444e3032294c9a931.1755806649.git.josef@toxicpanda.com>
+In-Reply-To: <20250825111510.457731-1-hch@lst.de>
 
-On Thu, Aug 21, 2025 at 04:18:34PM -0400, Josef Bacik wrote:
-> These two helpers are always used under the RCU and don't appear to mind
-> if the inode state changes in between time of check and time of use.
-> Update them to use the i_count refcount instead of I_WILL_FREE or
-> I_FREEING.
+On Mon, Aug 25, 2025 at 01:15:00PM +0200, Christoph Hellwig wrote:
+> Use the direct I/O alignment reporting from ->getattr instead of
+> reimplementing it.  This exposes the relaxation of the memory
+> alignment in the XFS_IOC_DIOINFO info and ensure the information will
+> stay in sync.  Note that randholes.c in xfstests has a bug where it
+> incorrectly fails when the required memory alignment is smaller than the
+> pointer size.  Round up the reported value as there is a fair chance that
+> this code got copied into various applications.
 > 
-> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/inode.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 893ac902268b..63ccd32fa221 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -1839,7 +1839,7 @@ struct inode *find_inode_rcu(struct super_block *sb, unsigned long hashval,
->  
->  	hlist_for_each_entry_rcu(inode, head, i_hash) {
->  		if (inode->i_sb == sb &&
-> -		    !(READ_ONCE(inode->i_state) & (I_FREEING | I_WILL_FREE)) &&
-> +		    refcount_read(&inode->i_count) > 0 &&
+> Changes since v1:
+>  - update the comment
+> 
+>  fs/xfs/xfs_ioctl.c | 18 +++++++++---------
+>  1 file changed, 9 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index e1051a530a50..ff0a8dc74948 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1209,21 +1209,21 @@ xfs_file_ioctl(
+>  				current->comm);
+>  		return -ENOTTY;
+>  	case XFS_IOC_DIOINFO: {
+> -		struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
+> +		struct kstat		st;
+>  		struct dioattr		da;
+> 
+> -		da.d_mem = target->bt_logical_sectorsize;
+> +		error = vfs_getattr(&filp->f_path, &st, STATX_DIOALIGN, 0);
+> +		if (error)
+> +			return error;
+> 
+>  		/*
+> -		 * See xfs_report_dioalign() for an explanation about why this
+> -		 * reports a value larger than the sector size for COW inodes.
+> +		 * Some userspace directly feeds the return value to
 
-No direct i_count access, otherwise another nice change. Not having to
-look at these terribly named flags anymore is wonderful.
+		Some userspace /tools/ directly... ?
 
->  		    test(inode, data))
->  			return inode;
->  	}
-> @@ -1878,8 +1878,8 @@ struct inode *find_inode_by_ino_rcu(struct super_block *sb,
->  	hlist_for_each_entry_rcu(inode, head, i_hash) {
->  		if (inode->i_ino == ino &&
->  		    inode->i_sb == sb &&
-> -		    !(READ_ONCE(inode->i_state) & (I_FREEING | I_WILL_FREE)))
-> -		    return inode;
-> +		    refcount_read(&inode->i_count) > 0)
-> +			return inode;
->  	}
->  	return NULL;
->  }
-> -- 
-> 2.49.0
+		I could fix this at commit time if this is the only
+		change
+
+> +		 * posix_memalign, which fails for values that are smaller than
+> +		 * the pointer size.  Round up the value to not break userspace.
+>  		 */
+> -		if (xfs_is_cow_inode(ip))
+> -			da.d_miniosz = xfs_inode_alloc_unitsize(ip);
+> -		else
+> -			da.d_miniosz = target->bt_logical_sectorsize;
+> +		da.d_mem = roundup(st.dio_mem_align, sizeof(void *));
+> +		da.d_miniosz = st.dio_offset_align;
+>  		da.d_maxiosz = INT_MAX & ~(da.d_miniosz - 1);
+> -
+>  		if (copy_to_user(arg, &da, sizeof(da)))
+>  			return -EFAULT;
+>  		return 0;
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> --
+> 2.47.2
 > 
