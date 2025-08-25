@@ -1,42 +1,80 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 728E122A4FC;
-	Mon, 25 Aug 2025 15:34:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0CB62FF16B
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 16:08:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756136095; cv=none; b=AowAmwDkluhg1TANMpLQAYrI1TGJmBISw2irA9whSNNKCHReWCWFluEQkwWpCiSw8Z9WTOEn0JaFJtuVQFEgbqjwpHVxjK8oadmJ+wniaa6UwExdHRPYIScLFn8aslPf2g2VyXcDihyMf3BB8W3mhjYzHkOn4YUlngWc2ka8YeE=
+	t=1756138094; cv=none; b=FK/iCILLGZLHtoudG8inQjBk88IFadu1BIF+Fn2hb1SMEbUlImFmnLiFC48vh9iCikBCWztqgkDPo7QZ+p+t1puY7t970DX6GFcMWRPL6VbIlpaoBMclG1GfYpHaALCY9hFQjmEGJJWmIIIN433TAtR5Cz8XJOzLrDlIcn7JRuw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756136095; c=relaxed/simple;
-	bh=93WjmWmv98uW6CWBXIe87q2NVPy62VRzd3+wmMkUvm4=;
+	s=arc-20240116; t=1756138094; c=relaxed/simple;
+	bh=lx8unmZZotH1lOPOwGBWaz+oEXYueOAZnio+N2QuHm4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gf/oM6fwtt8whDin9KM0nNOt70bMUYj8VVfNikRfNmhLodmw6Hltbou1gfSqVC3bLUKdnUWYcO43qJokaAiIVgJhqyvZTPqO+O6do6XZm1vtsa7PeveZ56qAYTfFw5sCj8CtjUn7xOy07B8/5CKjt+yVamHc11Z0/mxuqU2sk7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yees0J03; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=TRAGxZwHAwQmpqVo1gYsMflUhZvqe5PzZ6p8dVzmTbO/cVpGNh/URsOMuZRITB9Zsj/6BnoloaOTPhT3zseDZ9to/hriiAk/5UmthYzVfdohVMeHBWZ8gxnkjfZxeBtTMbWS3Vz2yUDkTkHKMoCSkmiDic995jD0HUOY6UlVu0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aAPKs58T; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yees0J03"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8D3DC4CEF4;
-	Mon, 25 Aug 2025 15:34:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756136095;
-	bh=93WjmWmv98uW6CWBXIe87q2NVPy62VRzd3+wmMkUvm4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Yees0J03TA5nNO8j7AVY7eEPgh+ufm8d83jghnz6tz5aEkdXVSqrMG7Fcyr7gjVyx
-	 bMUSsqhI1M97znMqyUuCoa47UAg+YJQn8q2ED1dTySh1fdNArM+BP32HbAwLobM8oZ
-	 ejh8fCpAZDrf3bSbYOfDagfgIzkJ0Yx6DDgu3lWh16l2HSaruK6Hr6xEZYx+yVMrzu
-	 UDzsro1xZ/Qw/sMPOYsISEu6NAo1iWaYhGHBzHb3MdCkj9I0E1Iea98YILwYVj+JnB
-	 YmuAFKiFzT4CEnhUm2E4FmgoQk4eUhjjIH8nFQSPY5XGWophgYi1Ou6am37oiJpFTF
-	 BoydFRjnj7DVw==
-Date: Mon, 25 Aug 2025 08:34:54 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	Donald Douwsma <ddouwsma@redhat.com>,
-	Dave Chinner <dchinner@redhat.com>,
-	Christoph Hellwig <hch@infradead.org>, stable@vger.kernel.org
-Subject: Re: [PATCH V2] xfs: do not propagate ENODATA disk errors into xattr
- code
-Message-ID: <20250825153454.GD812310@frogsfrogsfrogs>
-References: <06c9617f-a753-40f3-a632-ab08fe0c4d4d@redhat.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aAPKs58T"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1756138092;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=S26mrjD5N2pdJld3xZ+GOHAoTX+ohujbOU33KruSQAI=;
+	b=aAPKs58TzQhtc0je8KghmU6FG7wRafWB4AGY8weOP8zAbxYb0TF3sExski+kWOl8W+xlov
+	fUvXQGTV7ozNqmD5bIYi8UsUNUmxDIa9WuMeZGp2N40+vIHlGywFpRPDgHxta1y0RitEX6
+	q1CeGy98OEfonk5mMOO+QjlAprNL8ZU=
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
+ [209.85.215.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-499-EdeWY5eTN-Sm2m9D-TYLxA-1; Mon, 25 Aug 2025 12:08:08 -0400
+X-MC-Unique: EdeWY5eTN-Sm2m9D-TYLxA-1
+X-Mimecast-MFC-AGG-ID: EdeWY5eTN-Sm2m9D-TYLxA_1756138087
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-b49de40e845so873535a12.1
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 09:08:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1756138087; x=1756742887;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=S26mrjD5N2pdJld3xZ+GOHAoTX+ohujbOU33KruSQAI=;
+        b=Njo77CjIKcp5Kwp3nJ1Q0NYUXQlHgMT3zrPu4bjC9RkOnaJi2iap92Gd81IgguQ6NV
+         m+z9nf/b9p8w1A2r4jt9aMr2DtNC09YsS+toIr2aRss1QJ48ZUHoHAi/8Ar7Kn5l7uXt
+         +WmEdSxZ6llOUVVJUWbXCeV36flfsh0Tqr+pcQ3mpnnIBojRWGGxP9LCugDPGn+0hFQH
+         5HrEq/jgeN/lRBafoogWMhA8/fe2apIFr9MsWlFjKG2lJWl/1YN35or78+OxB/KG1v5L
+         YryO8fW0S6t2rW7xjZfuHn+X1EaoyRlmkOzyAKXXDsJX+KQ+QYWTJO5KvVwsKU3Zw9Dc
+         HW6w==
+X-Forwarded-Encrypted: i=1; AJvYcCVOi5rCNgiU5GzYLPMmDt3xMatbyLpCLqG+SqWZxQUKUhX/ShcHv2H5BfNkRumJLkGujmcuLGqc1+E=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxoFQJ1QY2o5kQFcpucPBiVCwMLPl3YKODeGCFgyM95Ggg4Jzh+
+	FuNqv124QHfTZFXe95ReDAL8W95r1FkfuT+sYRDV+lAEPJ0fF5NfAm3nBn0GBbTrob3/Da+QEDl
+	lt/BQZxSRNULVsT6W1cbBreDb+gfA3Nlk0LmOOhEXf6R0/5zRAAeRgBBsiPEUQg==
+X-Gm-Gg: ASbGncvGxkzV7WdJAQupinQcC8+E5oG0YODidWf/7tbCZzvCJU1ESC/O2ZZr5cPl59z
+	GDdoZ9e0vnmSIybth/kqLvki2pYyWU/8IcWozf6crNKLeWNFM6ZcwNfvGE2f/S3eXp2JGzWaO3E
+	RJUGjSgGLIr61mMb40K/hts9lBIFTMQQQVa6qFEgA8EslqVQuawKfcbaOMPfVj8ZQOLRU1Pvz+N
+	eLwZ72Ba/MkZ4qBktuCT9KxcJ+vzu+c1hfu1Mw8IYff3VtLdIPAEc2dDuM+tRV5u4agUtUAIsJc
+	67429Tmv6xYwkAubTm4GY4KfGpibZsvSsTeIplZbUvEHsizpQWiISIO6p70ab7NN8cX4Rsx13qJ
+	y+FjT
+X-Received: by 2002:a05:6a20:7fa7:b0:220:631c:e090 with SMTP id adf61e73a8af0-24340884ecfmr17792504637.0.1756138087328;
+        Mon, 25 Aug 2025 09:08:07 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFuGQjcHakFAYSJasLNIwmwH5AbB+ig9C8K1dte2zhi+ECS9Vuy2ZlNckCYG18AokysGYZ0Zw==
+X-Received: by 2002:a05:6a20:7fa7:b0:220:631c:e090 with SMTP id adf61e73a8af0-24340884ecfmr17792475637.0.1756138086873;
+        Mon, 25 Aug 2025 09:08:06 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b49cbb7c09fsm6956388a12.26.2025.08.25.09.08.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Aug 2025 09:08:06 -0700 (PDT)
+Date: Tue, 26 Aug 2025 00:08:01 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
+	djwong@kernel.org, john.g.garry@oracle.com, tytso@mit.edu,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v5 02/12] common/rc: Add _require_fio_version helper
+Message-ID: <20250825160801.ffktqauw2o6l5ql3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <cover.1755849134.git.ojaswin@linux.ibm.com>
+ <955d47b2534d9236adbd2bbd13598bbd1da8fc04.1755849134.git.ojaswin@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,95 +83,79 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <06c9617f-a753-40f3-a632-ab08fe0c4d4d@redhat.com>
+In-Reply-To: <955d47b2534d9236adbd2bbd13598bbd1da8fc04.1755849134.git.ojaswin@linux.ibm.com>
 
-On Fri, Aug 22, 2025 at 12:55:56PM -0500, Eric Sandeen wrote:
-> ENODATA (aka ENOATTR) has a very specific meaning in the xfs xattr code;
-> namely, that the requested attribute name could not be found.
+On Fri, Aug 22, 2025 at 01:32:01PM +0530, Ojaswin Mujoo wrote:
+> The main motivation of adding this function on top of _require_fio is
+> that there has been a case in fio where atomic= option was added but
+> later it was changed to noop since kernel didn't yet have support for
+> atomic writes. It was then again utilized to do atomic writes in a later
+> version, once kernel got the support. Due to this there is a point in
+> fio where _require_fio w/ atomic=1 will succeed even though it would
+> not be doing atomic writes.
 > 
-> However, a medium error from disk may also return ENODATA. At best,
-> this medium error may escape to userspace as "attribute not found"
-> when in fact it's an IO (disk) error.
-> 
-> At worst, we may oops in xfs_attr_leaf_get() when we do:
-> 
-> 	error = xfs_attr_leaf_hasname(args, &bp);
-> 	if (error == -ENOATTR)  {
-> 		xfs_trans_brelse(args->trans, bp);
-> 		return error;
-> 	}
-> 
-> because an ENODATA/ENOATTR error from disk leaves us with a null bp,
-> and the xfs_trans_brelse will then null-deref it.
-> 
-> As discussed on the list, we really need to modify the lower level
-> IO functions to trap all disk errors and ensure that we don't let
-> unique errors like this leak up into higher xfs functions - many
-> like this should be remapped to EIO.
-> 
-> However, this patch directly addresses a reported bug in the xattr
-> code, and should be safe to backport to stable kernels. A larger-scope
-> patch to handle more unique errors at lower levels can follow later.
-> 
-> (Note, prior to 07120f1abdff we did not oops, but we did return the
-> wrong error code to userspace.)
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
-> Cc: <stable@vger.kernel.org> # v5.9+
+> Hence, add an explicit helper to ensure tests to require specific
+> versions of fio to work past such issues.
 
-Yeah, seems fine to me.  Thanks for putting this together.
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Actually I'm wondering if fstests really needs to care about this. This's
+just a temporary issue of fio, not kernel or any fs usespace program. Do
+we need to add a seperated helper only for a temporary fio issue? If fio
+doesn't break fstests running, let it run. Just the testers install proper
+fio (maybe latest) they need. What do you and others think?
 
---D
+Thanks,
+Zorro
 
+> 
+> Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
 > ---
+>  common/rc | 32 ++++++++++++++++++++++++++++++++
+>  1 file changed, 32 insertions(+)
 > 
-> V2: Remove the extraneous trap point as pointed out by djwong, oops.
-> 
-> (I get it that sprinkling this around in 2 places might have an ick
-> factor but I think it's necessary to make a surgical strike on this bug
-> before we address the general problem.)
-> 
-> Thanks,
-> -Eric
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index 4c44ce1c8a64..bff3dc226f81 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -435,6 +435,13 @@ xfs_attr_rmtval_get(
->  					0, &bp, &xfs_attr3_rmt_buf_ops);
->  			if (xfs_metadata_is_sick(error))
->  				xfs_dirattr_mark_sick(args->dp, XFS_ATTR_FORK);
-> +			/*
-> +			 * ENODATA from disk implies a disk medium failure;
-> +			 * ENODATA for xattrs means attribute not found, so
-> +			 * disambiguate that here.
-> +			 */
-> +			if (error == -ENODATA)
-> +				error = -EIO;
->  			if (error)
->  				return error;
+> diff --git a/common/rc b/common/rc
+> index 35a1c835..f45b9a38 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -5997,6 +5997,38 @@ _max() {
+>  	echo $ret
+>  }
 >  
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index 17d9e6154f19..723a0643b838 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -2833,6 +2833,12 @@ xfs_da_read_buf(
->  			&bp, ops);
->  	if (xfs_metadata_is_sick(error))
->  		xfs_dirattr_mark_sick(dp, whichfork);
-> +	/*
-> +	 * ENODATA from disk implies a disk medium failure; ENODATA for
-> +	 * xattrs means attribute not found, so disambiguate that here.
-> +	 */
-> +	if (error == -ENODATA && whichfork == XFS_ATTR_FORK)
-> +		error = -EIO;
->  	if (error)
->  		goto out_free;
->  
+> +# Check the required fio version. Examples:
+> +#   _require_fio_version 3.38 (matches 3.38 only)
+> +#   _require_fio_version 3.38+ (matches 3.38 and above)
+> +#   _require_fio_version 3.38- (matches 3.38 and below)
+> +_require_fio_version() {
+> +	local req_ver="$1"
+> +	local fio_ver
+> +
+> +	_require_fio
+> +	_require_math
+> +
+> +	fio_ver=$(fio -v | cut -d"-" -f2)
+> +
+> +	case "$req_ver" in
+> +	*+)
+> +		req_ver=${req_ver%+}
+> +		test $(_math "$fio_ver >= $req_ver") -eq 1 || \
+> +			_notrun "need fio >= $req_ver (found $fio_ver)"
+> +		;;
+> +	*-)
+> +		req_ver=${req_ver%-}
+> +		test $(_math "$fio_ver <= $req_ver") -eq 1 || \
+> +			_notrun "need fio <= $req_ver (found $fio_ver)"
+> +		;;
+> +	*)
+> +		req_ver=${req_ver%-}
+> +		test $(_math "$fio_ver == $req_ver") -eq 1 || \
+> +			_notrun "need fio = $req_ver (found $fio_ver)"
+> +		;;
+> +	esac
+> +}
+> +
+>  ################################################################################
+>  # make sure this script returns success
+>  /bin/true
+> -- 
+> 2.49.0
 > 
-> 
-> 
+
