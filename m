@@ -1,68 +1,105 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f41.google.com (mail-oo1-f41.google.com [209.85.161.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE4D3393DC1;
-	Mon, 25 Aug 2025 09:34:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 659BA28850B
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 09:42:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756114484; cv=none; b=MTi2lNnel9nDUlF01SGMAkFN1YDWdOWsCOUD9L8EuShqs7EaeAqxJFDDwyw2Xw7qNxDIOMa3T5LyV+uxdeEenpTAOeYX9POHxA5DKunscIx9w1sDFKjnPJa7TKLhCsy62/gL3MMoLlZcoIJ/bpWInG4odrIBC9EyQTl0PDAntog=
+	t=1756114932; cv=none; b=ElVktcXEwtqw7mET6h2ohvqbyb2UreaEWP63LhF9OuycEm5j9k2ZH3LPs9jB0IGiuSsHuw2ZdQayqJHB6jvk03bwoWtkn+WV8mioy3DIiL83lHL0j/HhyDGmVTEevYT442WVzxEZdFiwX5qWwpT7SlGpR7CLtRJAQJ39uG4LFqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756114484; c=relaxed/simple;
-	bh=MvtAWtfKPb4hnTohO5qtneHIrMJbGiqKJhIWV1Rvf2M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PWaSGIwfSUMD7f/5rqGeQZmgduv97D19rrvtGTW1Mw58X2D46+ZQN09Jv4ab6h+MlUha6nU7jJEp8Wph4+/0xvwdKiqwCM89X6FcgpmZTutRQpyzB3j2lOxbjxjYft15yB1pTaXescg3Rk5tqjEM0fZJgmPnTTVUGxvrvZDL7MU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=2D1ZdU+k; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1756114932; c=relaxed/simple;
+	bh=qSxAdEFkr92eN+3eEeJ9Yx+AdgaO5dXFSmZHlto/gbY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=V88LdpKukM9PugC2sYYxQRZSTvgpIsXBlZ1iA9g9qAo5aYz6IOiX+xMUhO6CRziBzKDhbUcAHnJwqdP4ujmmj+9BHBTXlvz+qV11Q8UvGjFaSOY4iJNzpndyJAh2C9kKLSGBduPbiVg/F0chupxJt+G+dHfa46e/dhVZ+s1Zh9k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=T7KT1Qha; arc=none smtp.client-ip=209.85.161.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="2D1ZdU+k"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=7Nqg/rQBOOl0cufmDMreXF7fdBPqq2mi8wohNeldYaI=; b=2D1ZdU+ktlNflPPjejftKh3Mn8
-	h4X9jpME7XeGjhT0l0gooWMmZQcv/6Zk9NWl1H5MFmyxTgcYNTzu7kp6KWHli4cSWxE+yVts8fy1c
-	PPyMn58Gi3wlpt2tCOxdlEBSp7qOaPCQ7wXZoc+7m0VNx0T5KezrlbL/0dXWOrgo+3EIh4J6NmSOH
-	48CL/sMRL1ieDB1atuBq4q1RfuRdVPY0xGnuf8IDbzELVqKrKSOakk6mVy5D9HpR0/gcx3alSe/Kj
-	FykC+KtgQimMR0DIL0Ld5VBDF7yBn27mDZxTwJ+sv3ykyvlEOn03KdEmUIJ8kfzPLS4d9XBwZFFz9
-	YfgcUlcw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uqTaw-00000007Vkl-2L9D;
-	Mon, 25 Aug 2025 09:34:30 +0000
-Date: Mon, 25 Aug 2025 02:34:30 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: alexjlzheng@gmail.com
-Cc: brauner@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	yi.zhang@huawei.com, Jinliang Zheng <alexjlzheng@tencent.com>
-Subject: Re: [PATCH v3 0/4] allow partial folio write with iomap_folio_state
-Message-ID: <aKwuJptHVsx-Ed82@infradead.org>
-References: <20250812091538.2004295-1-alexjlzheng@tencent.com>
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="T7KT1Qha"
+Received: by mail-oo1-f41.google.com with SMTP id 006d021491bc7-61d9c53be51so1510526eaf.3
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 02:42:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1756114928; x=1756719728; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+GRu22p3tVeEW2VrGOdoxPvOS1mLmNVegFteBbU78nI=;
+        b=T7KT1QhaStHCSKMvU7GPD2OmBkxi0cCXr3UmxNrRBbY+rXsozpojT9GP0Oo0Avidn2
+         LyZ/A9hDc7l6Ju4MGsoVGzUjGLfSzpnS9JMMdf4bUwNAlSQa3IIjieSIuyQJAkuoNwe+
+         VYlCu6LKO8xYSBeXQKG4PSOVBkILLEyQKwPTaTnz7uJqdNz1IU6R1LM9ZSd8zr+ueqHP
+         Fu2PWhU3GMy8CLg3kjKZ67D+afTpvCJnrFjq4/k5ZGFPSM6JWBB3wH3IeG4lSUPmra9w
+         bGp9GUC+o5Vc8dvF8aDUhXGyzbBlkfZk3Z3PPyd4nrXI7UOhXu6Fs7Qkuz6uJa6AE2M2
+         3UfQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1756114928; x=1756719728;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+GRu22p3tVeEW2VrGOdoxPvOS1mLmNVegFteBbU78nI=;
+        b=D12IXWt9LD/to3POd4n/X9hoBti6KqDmeouhTd4Y+O6e+hSmbMK+5TEvgbL+0Phs4W
+         QP48dclQPGrRxnEOe1X+SafzDBi7T+VciBWbYMB7lCnA5gceaMIeq+PGkzoApSmXXkf6
+         sEo1hcozl5/K7FKmIkf/6YVLnSUYTAn8b3r103EThpbE6WhoNPAUEZWtvUnf08haRCb5
+         cNmYG/AZe2PFx6sf1fXLEWxbYf+Io0rzrZt8CwhsGcmmCbshZAe82MHinNHJ1uiblhKa
+         mp3yEmJTqbnNqnhyQYBDsxrQHLdsX4gUSz2/DkfXpfZIbQk25jdo3hNIpVsMwL2IrI/B
+         F2Cw==
+X-Forwarded-Encrypted: i=1; AJvYcCXlxuQyvY7eZc8HhYy6zXxC0AEN9W6bx1axQeOHZqFssKOSFvWAwGa/DOMf9ASPqrOQkKtjJ/yuKSQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyKqis9gcYl/kGcaSvCI/GoAJHHXnEPfasisIrUx32r0Z4w2qiu
+	NxVN7jVPGEDtS4zQ2aspZ1J0iyuF+iTUVv6Gw3QOSKcUOTdP7N0dDLkwuFBPm5jzJTz8bomBKU7
+	hu/tPpJW5u8w9g6W9GgCxTtX0DaaJi6QntpuARq1G2Q==
+X-Gm-Gg: ASbGncurC34mlhWOJn2PeIM1V2/UvV7A0kbFEInEzrnhNpsqVNS9p3SNFEevCFjHUkY
+	BHy8NMt8TZslzEMB0avHOTM9CnoGmIW9FyZ21+k75mSCiHjvPon2wOWicZ1UvO/Up1xrNTLPpdm
+	eg6qI8s4xPmeCorhTbIUjJ9DtvXms7VApQETMmdE29VGfhBeoyogQVXipj9SnoQG0BZSsEjzFuJ
+	+SH3CXtD076
+X-Google-Smtp-Source: AGHT+IH9whC+Nt+KP6zMOInVqQwfTRZ9vyaBO1gLszlXrDLuQ8rxx0C4w5IQE2c6Fn1IFfz6+QQxtpnzgbhuqH3KxgU=
+X-Received: by 2002:a05:6808:1883:b0:40b:2566:9569 with SMTP id
+ 5614622812f47-4378525e610mr4960520b6e.24.1756114928355; Mon, 25 Aug 2025
+ 02:42:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250812091538.2004295-1-alexjlzheng@tencent.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20250822082606.66375-1-changfengnan@bytedance.com>
+ <20250822150550.GP7942@frogsfrogsfrogs> <aKiP966iRv5gEBwm@casper.infradead.org>
+ <877byv9w6z.fsf@gmail.com> <aKif_644529sRXhN@casper.infradead.org>
+ <874ityad1d.fsf@gmail.com> <CAPFOzZufTPCT_56-7LCc6oGHYiaPixix30yFNEsiFfN1s9ySMQ@mail.gmail.com>
+ <aKwq_QoiEvtK89vY@infradead.org>
+In-Reply-To: <aKwq_QoiEvtK89vY@infradead.org>
+From: Fengnan Chang <changfengnan@bytedance.com>
+Date: Mon, 25 Aug 2025 17:41:57 +0800
+X-Gm-Features: Ac12FXxB3S3g0sTu8keoah4lgnqnAcyUyXsuVt_e56y_rQP7QRz4QmS_1ZuROw0
+Message-ID: <CAPFOzZvBvHWHUwNLnH+Ss90OMdu91oZsSD0D7_ncjVh0pF29rQ@mail.gmail.com>
+Subject: Re: [PATCH] iomap: allow iomap using the per-cpu bio cache
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, Matthew Wilcox <willy@infradead.org>, 
+	"Darrick J. Wong" <djwong@kernel.org>, brauner@kernel.org, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, 
+	linux-block@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Aug 12, 2025 at 05:15:34PM +0800, alexjlzheng@gmail.com wrote:
-> From: Jinliang Zheng <alexjlzheng@tencent.com>
-> 
-> With iomap_folio_state, we can identify uptodate states at the block
-> level, and a read_folio reading can correctly handle partially
-> uptodate folios.
-> 
-> Therefore, when a partial write occurs, accept the block-aligned
-> partial write instead of rejecting the entire write.
-> 
-> For example, suppose a folio is 2MB, blocksize is 4kB, and the copied
-> bytes are 2MB-3kB.
+Christoph Hellwig <hch@infradead.org> =E4=BA=8E2025=E5=B9=B48=E6=9C=8825=E6=
+=97=A5=E5=91=A8=E4=B8=80 17:21=E5=86=99=E9=81=93=EF=BC=9A
+>
+> On Mon, Aug 25, 2025 at 04:51:27PM +0800, Fengnan Chang wrote:
+> > No restrictions for now, I think we can enable this by default.
+> > Maybe better solution is modify in bio.c?  Let me do some test first.
+>
+> Any kind of numbers you see where this makes a different, including
+> the workloads would also be very valuable here.
+I'm test random direct read performance on  io_uring+ext4, and try
+compare to io_uring+ raw blkdev,  io_uring+ext4 is quite poor, I'm try to
+improve this, I found ext4 is quite different with blkdev when run
+bio_alloc_bioset. It's beacuse blkdev ext4  use percpu bio cache, but ext4
+path not. So I make this modify.
+My test command is:
+/fio/t/io_uring -p0 -d128 -b4096 -s1 -c1 -F1 -B1 -R1 -X1 -n1 -P1 -t0
+/data01/testfile
+Without this patch:
+BW is 1950MB
+with this patch
+BW is 2001MB.
 
-I'd still love to see some explanation of why you are doing this.
-Do you have a workload that actually hits this regularly, and where
-it makes a difference.  Can you provide numbers to quantify them?
 
+>
