@@ -1,74 +1,72 @@
-Received: from mail-yw1-f174.google.com (mail-yw1-f174.google.com [209.85.128.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FACE27700A
-	for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 19:35:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE9682877C7
+	for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 20:01:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756150508; cv=none; b=qywLyWyUsASKv8TwSSrovJS8mUSlxO0R9qUrX2cGkUyo2l3FJeIMPAS8GwPBDgmJZMtBHVohEIm389FqFVMhpnLww0ZiSioDVBOrpf2G9ld4XSW6laZk986QuO/nKRRChXITm1GkVZMFFC0+9DykdEw1zzCtFn69i0LQsTp2KQU=
+	t=1756152101; cv=none; b=MbpuM8dCttfLtlqmlco8LL9d/qwqPb7VPKota4WO9y++Re6V0WQmPZlQJhO6HZQFj9crW2CfaHH5JJVduH3x2PdHiFsyK/V5KpFpDgiePf1PD6droCcbF2hbKPpXJO29nev/M8qNhuJOYACwwMNgwkpjvY4ZD0T3QI2JwghQkW0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756150508; c=relaxed/simple;
-	bh=oezHH2OV9IQAQTvmhi0PGkJGTakD8P6Kca8eDrWjLaw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LUvrJB1Up/T+w041MX55MSa6t+CUWU+EXYaFviBVYIC8/80PzNXqkfQJL4KrEQBbtGxAvME9cA4DqcxS5KmEPludoIiaC/t3xf7S4kYck5aYBKcTmmGEfsFeE5VIKz6TNHuoCyXrUA7iO5Yh8+MaQKkQoMdcy8ZzPYzBqUnZeTE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=ouM+Sjx8; arc=none smtp.client-ip=209.85.128.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
+	s=arc-20240116; t=1756152101; c=relaxed/simple;
+	bh=+UO3Z8ylt4jmprU+t0yr32BPIeQoRTu3BOgKfEYW8Sk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=MHv4udilBYcePOSwDaFTHk4+YBLmoSueP0xYTFg54K31OyqnB4KOM00SiirO8YHQNQxsgfIo7yOzDG8pJywSi6ysZfjkhuUm1bjQv3/AUAJc9xNsvavhTxWD3aWN8+32MNwD6AKl8hEzO8kD1GI5DdLDPZjRSTY0BHK3+Zu8Zhs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GTKqVRH0; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="ouM+Sjx8"
-Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-71d605a70bdso32742837b3.3
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 12:35:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1756150505; x=1756755305; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=wYuLPKGcVdOQFox0yjz3XsNMcHe6CSns2VOTsCthOLA=;
-        b=ouM+Sjx8atQGgmj2FimpaoUdomTlALAZka266IV6mj3TaqOcCow8jyOp+dcRRd4EkT
-         RgAgZI0lX0wXbstYYt29tyJNeT3KJaAj+s1wMbw3TJvqzkGjX7/qE4lcyB+IdGmziZPa
-         whjKTplbsKkCXGNIbX/NyvMOHso406xqfdf45lEz2IPyhKPnKN5klGtJQ7k31aRheFdO
-         zuNh/df6hj2eqgNQh5y4pJssR7fo/vQn6Iu5ncKRTOsMs2ILDkjh4dYWsiAMJPENB8ev
-         jHfwv9mOXuGHxscgSLSQaMVgmd9pJ65ls3EMqElVwoqUPIitBryejqcna3FuQrC2DVID
-         pb8g==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GTKqVRH0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1756152091;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=fpPVCsB0CpPc94HdfL2qFImbg1jkREPaZiikuuRyx2w=;
+	b=GTKqVRH0J8vtZMji9gZzXkIM01Q1VMrh0hsgGbQkm+r7rdDKpC/k1oQiTAS406nV+vyOeE
+	SL1pmKoIFwKc2uk4Mdq7V4I6hR531nqCpYiwebF29K3K0IuEshs0Daxlab9ccuZ14z712l
+	ovswj+9a+yytOp+egtBj7vYraANa+e4=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-178-E1LDJ0k3OHmSOm2bz6jQnw-1; Mon, 25 Aug 2025 16:01:24 -0400
+X-MC-Unique: E1LDJ0k3OHmSOm2bz6jQnw-1
+X-Mimecast-MFC-AGG-ID: E1LDJ0k3OHmSOm2bz6jQnw_1756152083
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-3c897f28ab0so1213689f8f.2
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Aug 2025 13:01:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756150505; x=1756755305;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wYuLPKGcVdOQFox0yjz3XsNMcHe6CSns2VOTsCthOLA=;
-        b=T9Bm32T3qUgWBCWwn+9NM3a5SF872gKGF78N1HZmAnnuRzKrGU184Q7+S1DJPLJvkE
-         4Ji2XhrMSipyvuYUo7QC7hLeiYV4U0U31keWSujBdMNUloJujcLO2RBhRJpnnOz2krnl
-         ZteZ0LPMyOmi6bbPdTKHA/4JR2uM2I0gDEgX7jZLibiAf+z/M9AYzz5llCXvt7PuBosw
-         Xw+YhAdyEsJlidXc4igyLJMyaKC4xHsRzuFjZMo5ycHNo2jQcWQMP5wGgOIpYbfb5xsk
-         iMhHfKRBX3XuiJHfz9FdNKJOv75pcY2lC2g0LeG2MfFcm898BhBDTtjbbxWs5PDtdeZG
-         k7xA==
-X-Forwarded-Encrypted: i=1; AJvYcCV46C9Z7R3n1eEHL29fSysNkqPbAPTOqXPyWtVrALO2Q1hbQY9d3T307U6u3e1enHZa3gfc2Q2K6b0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5fo/9H5VAMiGuzlsURneAa0HhH/mMdMQQftjvTM+psbGSm96b
-	i9dTLj/gs/7hqW/tPRkSxFTS2yZ2VbYqG8LUIeVQbien7DpOtn6ZtQSqr2lCqlYYoHU=
-X-Gm-Gg: ASbGnctADJCa9vtHZ8yJeg4zapiafnVoMZdiBnxaB//EXYnP5lEMC9Z14mnjvvj3DDO
-	oPcn/ccIPfZ/ArIexUriijc1Pd2a5yvICzpCz6F0vc1uprg/AgDGf2IygK35ekFsq46K85zeJhB
-	4yyAKraIzYDxolBgCn+UHvpj60z00wHiGFVKW/TJB6axFLYRb2nn7XOBA5zneXILgqLZC92PStn
-	a1yU5gMvpBdmlbqRPeFW0Azh3Kgw4+crc4Eec/3J6Tft3fgsZsgPbIDjHjaD0/CGwKoDPSfdY/H
-	SXhNsowMkKoVdBQPNQFteOWyAhcQk4mCEPJy5nC3ngUi+JytmTUGqX9BTC4d3Ryine66lpCgFkV
-	ip1HXm8zuhnjjFix/Fm0UFgnnHWhNcohZb66G5anQtADR/qmwsuYx+cTEkeI=
-X-Google-Smtp-Source: AGHT+IG2LKen8WXlKCVG4rUuv5H4Bl3N4h2X8DwUeXxNFNEgbfsUd99hFbjqhhw3cYiYoTH7LHEqTg==
-X-Received: by 2002:a05:690c:6c83:b0:71f:9a36:d339 with SMTP id 00721157ae682-71fdc40fcebmr122974027b3.43.1756150504855;
-        Mon, 25 Aug 2025 12:35:04 -0700 (PDT)
-Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-71ff18b3794sm19383027b3.63.2025.08.25.12.35.03
+        d=1e100.net; s=20230601; t=1756152083; x=1756756883;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=fpPVCsB0CpPc94HdfL2qFImbg1jkREPaZiikuuRyx2w=;
+        b=r7ych536h+T+NDyS1xa+k+OqJTK+w6+wivJYNcZMkAc0F1DNB+lhj3NXKX8WMfgZ/a
+         oB8UeIVtLA381Mmax3FL2hJB1/T+lvjO51+3SyNoBJgZxpG5mBQ69rQzNiPAnz3zfkZF
+         zbCSh5dLcMoy8bLiH5w/beUP9rj8OIhp2uXJ/F3eHVJLhkrA0KKkumHit8LSbdhD8zsW
+         ZL13Ep1nUZuKU0VHThSIAfsUXHXuH+nNFJjUIyBCEmh5fQhhBTKWcs3xSS0k1AjlIhV5
+         1iQeaqRjdv+RqJCcCzK28iwL+BsCNCb9EReKo7FM3cQhbjnXq1sefjXKV6jk98eHP/ds
+         konQ==
+X-Gm-Message-State: AOJu0YzTxrfnh+qgUlcTlTIBDk/x4m7btxmRYdhWuIN9w0g44Z287t+J
+	XbvLqnjWfS+Ew7aXecg8VLGiYADODZuTdydkhU06kLUUvQBO9MRKuaCXqUeUj8UP7g6VJYg8AT1
+	ephiDJMO6zVR50hpSaah71wuVzpg1v6ObTxydleV+4h9Xdzj67hIiv+yBF55OX8il2QptBN2/m4
+	oyf3MF9ifnTb6OUMLOzGX1ka38GYEbAgDWUCAdn5VFYS9C
+X-Gm-Gg: ASbGnct2Km/xQ1KKBgBh0/EzLfBGp+kVeRd4Mnn5x9YxV60WFbOUNpSxMfL+SzVC1Ra
+	N13eeHNVCd8KHh0WvOW1LsXoWkfo+PkGpNv9bx/d+OyetNQlknUTS5nPGrYSjhAg3y+FGeFEuIh
+	frJ8LYRR61tTDciY6ziNMRvngKvGuvZ/yJ2esNTNte1t9i6VAPbjNfb9P8pu2DXRiS8iZN7+p0L
+	HzvNSxMvCuETXrEjM/lajPuX0Oq0PECyyXN1HwgU3j6d5vV5Nr2KJRyLIksRLRUVS3tSUcGbNeA
+	TJGSOymfl7dDgMJMSV20HMNyAtCXFZw=
+X-Received: by 2002:a05:6000:2891:b0:3b8:d5cb:ae1c with SMTP id ffacd0b85a97d-3c5db2dce36mr10599947f8f.28.1756152083190;
+        Mon, 25 Aug 2025 13:01:23 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFRB9vRw0x5qi9dPvzb4rbjl6QunVaI0GW1j8vL06YmVcRcQO/xn73lw0UftnoWx53QQqWpAQ==
+X-Received: by 2002:a05:6000:2891:b0:3b8:d5cb:ae1c with SMTP id ffacd0b85a97d-3c5db2dce36mr10599867f8f.28.1756152080783;
+        Mon, 25 Aug 2025 13:01:20 -0700 (PDT)
+Received: from thinky ([91.245.205.131])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3c70ef55aabsm12571967f8f.23.2025.08.25.13.01.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 Aug 2025 12:35:03 -0700 (PDT)
-Date: Mon, 25 Aug 2025 15:35:02 -0400
-From: Josef Bacik <josef@toxicpanda.com>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	kernel-team@fb.com, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, viro@zeniv.linux.org.uk
-Subject: Re: [PATCH 16/50] fs: change evict_inodes to use iput instead of
- evict directly
-Message-ID: <20250825193502.GB1310133@perftesting>
-References: <cover.1755806649.git.josef@toxicpanda.com>
- <1198cd4cd35c5875fbf95dc3dca68650bb176bb1.1755806649.git.josef@toxicpanda.com>
- <20250825-entbinden-kehle-2e1f8b67b190@brauner>
+        Mon, 25 Aug 2025 13:01:20 -0700 (PDT)
+Date: Mon, 25 Aug 2025 22:01:19 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: contact@xavierclaude.be, djwong@kernel.org, hch@lst.de
+Subject: [ANNOUNCE] xfsprogs: for-next updated to 9ec44397ea2a
+Message-ID: <kmkoyhtz4mjuy5xlucr4noywsgons5n6pn5ti3fjs4uv34fzlx@zsopyugtig6f>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,136 +75,42 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250825-entbinden-kehle-2e1f8b67b190@brauner>
 
-On Mon, Aug 25, 2025 at 11:07:55AM +0200, Christian Brauner wrote:
-> On Thu, Aug 21, 2025 at 04:18:27PM -0400, Josef Bacik wrote:
-> > At evict_inodes() time, we no longer have SB_ACTIVE set, so we can
-> > easily go through the normal iput path to clear any inodes. Update
-> 
-> I'm a bit lost why SB_ACTIVE is used here as a justification to call
-> iput(). I think it's because iput_final() would somehow add it back to
-> the LRU if SB_ACTIVE was still set and the filesystem somehow would
-> indicate it wouldn't want to drop the inode.
-> 
-> I'm confused where that would even happen. IOW, which filesystem would
-> indicate "don't drop the inode" even though it's about to vanish. But
-> anyway, that's probably not important because...
-> 
-> > dispose_list() to check how we need to free the inode, and then grab a
-> > full reference to the inode while we're looping through the remaining
-> > inodes, and simply iput them at the end.
-> > 
-> > Since we're just calling iput we don't really care about the i_count on
-> > the inode at the current time.  Remove the i_count checks and just call
-> > iput on every inode we find.
-> > 
-> > Signed-off-by: Josef Bacik <josef@toxicpanda.com>
-> > ---
-> >  fs/inode.c | 26 +++++++++++---------------
-> >  1 file changed, 11 insertions(+), 15 deletions(-)
-> > 
-> > diff --git a/fs/inode.c b/fs/inode.c
-> > index 72981b890ec6..80ad327746a7 100644
-> > --- a/fs/inode.c
-> > +++ b/fs/inode.c
-> > @@ -933,7 +933,7 @@ static void evict(struct inode *inode)
-> >   * Dispose-list gets a local list with local inodes in it, so it doesn't
-> >   * need to worry about list corruption and SMP locks.
-> >   */
-> > -static void dispose_list(struct list_head *head)
-> > +static void dispose_list(struct list_head *head, bool for_lru)
-> >  {
-> >  	while (!list_empty(head)) {
-> >  		struct inode *inode;
-> > @@ -941,8 +941,12 @@ static void dispose_list(struct list_head *head)
-> >  		inode = list_first_entry(head, struct inode, i_lru);
-> >  		list_del_init(&inode->i_lru);
-> >  
-> > -		evict(inode);
-> > -		iobj_put(inode);
-> > +		if (for_lru) {
-> > +			evict(inode);
-> > +			iobj_put(inode);
-> > +		} else {
-> > +			iput(inode);
-> > +		}
-> 
-> ... Afaict, if we end up in dispose_list() we came from one of two
-> locations:
-> 
-> (1) prune_icache_sb()
->     In which case inode_lru_isolate() will have only returned inodes
->     that prior to your changes would have inode->i_count zero.
-> 
-> (2) evict_inodes()
->     Similar story, this only hits inodes with inode->i_count zero.
-> 
-> With your change you're adding an increment from zero for (2) via
-> __iget() so that you always end up with a full refcount, and that is
-> backing your changes to dispose_list() later.
-> 
-> I don't see the same done for (1) though and so your later call to
-> iput() drops the reference below zero? It's accidently benign because
-> iiuc atomic_dec_and_test() will simply tell you that reference count
-> didn't go to zero and so iput() will back off. But still this should be
-> fixed if I'm right.
+Hi folks,
 
-Because (1) at this point doesn't have a full reference, it only has an
-i_obj_count reference. The next patch converts this, and removes this bit. I did
-it this way to clearly mark the change in behavior.
+The xfsprogs for-next branch in repository at:
 
-prune_icache_sb() will call dispose_list(&list, true), which will do the
-evict(inode) and iobj_put(inode). This is correct because the inodes on the list
-from prune_icache_sb() will have an i_count == and have I_WILL_FREE set, so it
-will never have it's i_count increased to 1.
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-The change here is to change evict_inodes() to simply call iput(), as it calls
-dispose_list(&list, false). We will increase the i_count to 1 from zero via
-__iget(), which at this point in the series is completely correct behavior. Then
-we will call iput() which will drop the i_count back to zero, and then call
-iput_final, and since SB_ACTIVE is not set, it will call evict(inode) and clean
-everything up properly.
+has just been updated.
 
-> 
-> The conversion to iput() is introducing a lot of subtlety in the middle
-> of the series. If I'm right then the iput() is a always a nop because in
-> all cases it was an increment from zero. But it isn't really a nop
-> because we still do stuff like call ->drop_inode() again. Maybe it's
-> fine because no filesystem would have issues with this but I wouldn't
-> count on it and also it feels rather unclean to do it this way.
+Patches often get missed, so if your outstanding patches are properly reviewed
+on the list and not included in this update, please let me know.
 
-So I'm definitely introducing another call to ->drop_inode() here, but
-->drop_inode() has always been a "do we want to keep this inode on the LRU"
-call, calling it again doesn't really change anything.
+The for-next branch has also been updated to match the state of master.
 
-That being said it is a subtle functional change. I put it here specifically
-because it is a functional change. If it bites us in the ass in some unforseen
-way we'll be able to bisect it down to here and then we can all laugh at Josef
-because he missed something.
+The new head of the for-next branch is commit:
 
-> 
-> So, under the assumption, that after the increment from zero you did, we
-> really only have a blatant zombie inode on our hands and we only need to
-> get rid of the i_count we took make that explicit and do:
-> 
-> 	if (for_lru) {
-> 		evict(inode);
-> 		iobj_put(inode);
-> 	} else {
-> 		/* This inode was always incremented from zero.
-> 		 * Get rid of that reference without doing anything else.
-> 		 */
-> 		WARN_ON_ONCE(!atomic_dec_and_test(&inode->i_count));
-> 	}
+9ec44397ea2afd001278c33733433f67394b6c87
 
-We still need the evict() to actually free the inode.  We're just getting there
-via iput_final() now instead of directly calling evict().
+New commits:
 
-> 
-> Btw, for the iobj_put() above, I assume that we're not guaranteed that
-> i_obj_count == 1?
+Christoph Hellwig (2):
+      [ea5d15f34e81] move xfs_log_recover.h to libxfs/
+      [0c5c99ee8669] libxfs: update xfs_log_recover.h to kernel version as of Linux 6.16
 
-Right, it's purely dropping the LRU list i_obj_count reference.  Thanks,
+Xavier Claude (1):
+      [9ec44397ea2a] Document current limitation of shrinking fs
 
-Josef
+Code Diffstat:
+
+ include/xfs_log_recover.h |  47 -------------
+ libxfs/xfs_log_recover.h  | 174 ++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_growfs.8     |   1 +
+ 3 files changed, 175 insertions(+), 47 deletions(-)
+ delete mode 100644 include/xfs_log_recover.h
+ create mode 100644 libxfs/xfs_log_recover.h
+
+-- 
+- Andrey
+
