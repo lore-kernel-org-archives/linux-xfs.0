@@ -1,63 +1,170 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD6161D5178;
-	Tue, 26 Aug 2025 08:02:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77E9629ACDB;
+	Tue, 26 Aug 2025 09:28:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756195327; cv=none; b=YiWAPr7bLtaGPKob/e8wI9DrSB0F3IOj4KFGMJxkxs0YFqW1S6aR/e+zY46M2pcet02S/+8XBq9H+shihQJ5P3hrrn3kfyXfiZh4SOSts6WM0FeDkK+d8ufT1O8lzs20nUx+Ly5pzH9Y+y5Z87TTqRsg3Wjgp7M8QXUdsZDigeM=
+	t=1756200490; cv=none; b=CGnAXMuGSvqkDhAm+crEvXiVhqMqnoC1PyfjgEauSr4ajbX3p7qAhaCAvkjcjUK+PguLDfeyEXTq4RJoCdT2tKTTCYCCdNn5ak0LxETW2i2z4cNJN/ezlVO7pLk+qq5x5UP4WzI/Ts8L76hpmRTzR3TDePvicLHQVLl0TvfDiT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756195327; c=relaxed/simple;
-	bh=n/Tqydyh65lEECKEPzhd6XkDIOw2QWBJQ49RNnonqsU=;
+	s=arc-20240116; t=1756200490; c=relaxed/simple;
+	bh=O3iN0jD6PenlzfLPlOGEZZfLRHixSQ3x5jl4pZxP18E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jUeSJLPUYEXaAe71527nEyYNWJ4YsPJsave1rbWEndF49eX92iMdYX+E1cy5pgCqquhaoYJ3MYfKVaQiWZnLvsOdj4dUbnoLFsptDOKUruKGBxXCPiBOoUQ7P4EOV6P2Sqsl9BZ2RX48iNXuVcRKIJF5YAABIpJvxyKohwroPyM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 13EB367373; Tue, 26 Aug 2025 10:02:01 +0200 (CEST)
-Date: Tue, 26 Aug 2025 10:02:00 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Keith Busch <kbusch@kernel.org>
-Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	snitzer@kernel.org, axboe@kernel.dk, dw@davidwei.uk,
-	brauner@kernel.org, martin.petersen@oracle.com, djwong@kernel.org,
-	linux-xfs@vger.kernel.org, viro@zeniv.linux.org.uk
-Subject: Re: [PATCHv3 3/8] block: align the bio after building it
-Message-ID: <20250826080200.GA23095@lst.de>
-References: <20250819164922.640964-1-kbusch@meta.com> <20250819164922.640964-4-kbusch@meta.com> <20250825074744.GF20853@lst.de> <aK0Bsf6AKL8a0wFy@kbusch-mbp>
+	 Content-Type:Content-Disposition:In-Reply-To; b=g6HoQyjqCo7tUyu52rbOiPvKm6tpwryH2qEq03EkOlYf4i6MY5W3zv5YXmykFoVHxwWEP43R9aWQhyczHn3wlwFwrqrGivP4bmwjFUGm1RXwWDVo7XPREpBsNBuUsmweUdjBn3CcAwY5Be+skKcttnuzV201FY5iKhK48ekOF5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ea4ru5og; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ea4ru5og"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F39CC4CEF1;
+	Tue, 26 Aug 2025 09:28:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756200489;
+	bh=O3iN0jD6PenlzfLPlOGEZZfLRHixSQ3x5jl4pZxP18E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Ea4ru5ogSJey9drBsOFOIkw+HwL0/JBeiPxEVKQ1jwG+HvvBhS/erYaM2Apw/mPgL
+	 wh+1mKaQt56/fmi6l90Kq+ZKvc2lldJrxktURZwIpYs7bh3WU7a1zVYFaiya4VBhCY
+	 ii8DoXbArqhxH/bjoEL7BE2SdKoBxTf4TbzilQx9kkGDkWLq+IjeMsbEOUOWOz2mlc
+	 7wmEDBj23AdZKV6jjdDXOTiBfzCkuvVQWaCAyduVNQGFlWsBa/Pwr0AHZ02b29D12T
+	 F6uZ+17nu6AA+Ql9sX0uTd7WjteHNpno9pLVPECeyBaXfwNBe+APx10ZARgm8b5FjD
+	 ukv6+7OqKHpaQ==
+Date: Tue, 26 Aug 2025 11:28:05 +0200
+From: Christian Brauner <brauner@kernel.org>
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	kernel-team@fb.com, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	viro@zeniv.linux.org.uk
+Subject: Re: [PATCH 18/50] fs: disallow 0 reference count inodes
+Message-ID: <20250826-benimm-muster-781f3fa24fe8@brauner>
+References: <cover.1755806649.git.josef@toxicpanda.com>
+ <6f4fb1baddecbdab4231c6094bbb05a98bbb7365.1755806649.git.josef@toxicpanda.com>
+ <20250825-person-knapp-e802daccfe5b@brauner>
+ <20250825192610.GA1310133@perftesting>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <aK0Bsf6AKL8a0wFy@kbusch-mbp>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20250825192610.GA1310133@perftesting>
 
-On Mon, Aug 25, 2025 at 06:37:05PM -0600, Keith Busch wrote:
-> On Mon, Aug 25, 2025 at 09:47:44AM +0200, Christoph Hellwig wrote:
-> > Also with this we should be able to drop the iov_iter_alignment check
-> > for always COW inodes in xfs_file_dio_write.  If you don't feel like
-> > doing that yourself I can add it to my todo list.
+On Mon, Aug 25, 2025 at 03:26:10PM -0400, Josef Bacik wrote:
+> On Mon, Aug 25, 2025 at 12:54:01PM +0200, Christian Brauner wrote:
+> > On Thu, Aug 21, 2025 at 04:18:29PM -0400, Josef Bacik wrote:
+> > > Now that we take a full reference for inodes on the LRU, move the logic
+> > > to add the inode to the LRU to before we drop our last reference. This
+> > > allows us to ensure that if the inode has a reference count it can be
+> > > used, and we no longer hold onto inodes that have a 0 reference count.
+> > > 
+> > > Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+> > > ---
+> > >  fs/inode.c | 53 +++++++++++++++++++++++++++++++++--------------------
+> > >  1 file changed, 33 insertions(+), 20 deletions(-)
+> > > 
+> > > diff --git a/fs/inode.c b/fs/inode.c
+> > > index de0ec791f9a3..b4145ddbaf8e 100644
+> > > --- a/fs/inode.c
+> > > +++ b/fs/inode.c
+> > > @@ -614,7 +614,7 @@ static void __inode_add_lru(struct inode *inode, bool rotate)
+> > >  
+> > >  	if (inode->i_state & (I_FREEING | I_WILL_FREE))
+> > >  		return;
+> > > -	if (atomic_read(&inode->i_count))
+> > > +	if (atomic_read(&inode->i_count) != 1)
+> > >  		return;
+> > >  	if (inode->__i_nlink == 0)
+> > >  		return;
+> > > @@ -1966,28 +1966,11 @@ EXPORT_SYMBOL(generic_delete_inode);
+> > >   * in cache if fs is alive, sync and evict if fs is
+> > >   * shutting down.
+> > >   */
+> > > -static void iput_final(struct inode *inode, bool skip_lru)
+> > > +static void iput_final(struct inode *inode, bool drop)
+> > >  {
+> > > -	struct super_block *sb = inode->i_sb;
+> > > -	const struct super_operations *op = inode->i_sb->s_op;
+> > >  	unsigned long state;
+> > > -	int drop;
+> > >  
+> > >  	WARN_ON(inode->i_state & I_NEW);
+> > > -
+> > > -	if (op->drop_inode)
+> > > -		drop = op->drop_inode(inode);
+> > > -	else
+> > > -		drop = generic_drop_inode(inode);
+> > > -
+> > > -	if (!drop && !skip_lru &&
+> > > -	    !(inode->i_state & I_DONTCACHE) &&
+> > > -	    (sb->s_flags & SB_ACTIVE)) {
+> > > -		__inode_add_lru(inode, true);
+> > > -		spin_unlock(&inode->i_lock);
+> > > -		return;
+> > > -	}
+> > > -
+> > >  	WARN_ON(!list_empty(&inode->i_lru));
+> > >  
+> > >  	state = inode->i_state;
+> > > @@ -2009,8 +1992,29 @@ static void iput_final(struct inode *inode, bool skip_lru)
+> > >  	evict(inode);
+> > >  }
+> > >  
+> > > +static bool maybe_add_lru(struct inode *inode, bool skip_lru)
+> > > +{
+> > > +	const struct super_operations *op = inode->i_sb->s_op;
+> > > +	struct super_block *sb = inode->i_sb;
+> > > +	bool drop = false;
+> > > +
+> > > +	if (op->drop_inode)
+> > > +		drop = op->drop_inode(inode);
+> > > +	else
+> > > +		drop = generic_drop_inode(inode);
+> > > +
+> > > +	if (!drop && !skip_lru &&
+> > > +	    !(inode->i_state & I_DONTCACHE) &&
+> > > +	    (sb->s_flags & SB_ACTIVE))
+> > > +		__inode_add_lru(inode, true);
+> > > +
+> > > +	return drop;
+> > > +}
+> > 
+> > Can we rewrite this as:
+> > 
+> > static bool maybe_add_lru(struct inode *inode, bool skip_lru)
+> > {
+> > 	const struct super_operations *op = inode->i_sb->s_op;
+> > 	const struct super_block *sb = inode->i_sb;
+> > 	bool drop = false;
+> > 
+> > 	if (op->drop_inode)
+> > 		drop = op->drop_inode(inode);
+> > 	else
+> > 		drop = generic_drop_inode(inode);
+> > 
+> > 	if (drop)
+> > 		return drop;
+> > 
+> > 	if (skip_lru)
+> > 		return drop;
+> > 
+> > 	if (inode->i_state & I_DONTCACHE)
+> > 		return drop;
+> > 
+> > 	if (!(sb->s_flags & SB_ACTIVE))
+> > 		return drop;
+> > 
+> > 	__inode_add_lru(inode, true);
+> > 	return drop;
+> > }
+> > 
+> > so it's a lot easier to follow. I really dislike munging conditions
+> > together with a bunch of ands and negations mixed in.
+> > 
+> > And btw for both I_DONTCACHE and !SB_ACTIVE it seems that returning
+> > anything other than false from op->drop_inode() would be a bug probably
+> > a technicality but I find it pretty odd.
 > 
-> I'm unsure about the commit that introduced that behavior, so I think
-> you should remove it if you know its okay. :)
+> Not necsessarily, maybe we had some delayed iput (*cough* btrfs *cough*) that
+> didn't run until umount time and now we have true coming from ->drop_inode()
+> with SB_ACTIVE turned off.  That would be completely valid.  Thanks,
 
-Yeah.
-
-> Specifically, we have this in the comments and commit message:
-> 
->   check the alignment of each individual iovec segment, as they could
->   end up with different I/Os due to the way bio_iov_iter_get_pages works 
-> 
-> bio_iov_iter_get_pages() might submit the segments as separate IO's
-> anyway for other reasons. I am not sure why the alignment conditions are
-> handled specifically here.
-
-I'll take another look.  Basically what this wants to prevent is
-bio_iov_iter_get_pages creating bios not aligned to file system
-block size.
+Ah, right, thanks! Yeah, that's seems legit.
