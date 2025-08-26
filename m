@@ -1,55 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE10034A31D;
-	Tue, 26 Aug 2025 13:15:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75008312803;
+	Tue, 26 Aug 2025 13:20:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756214130; cv=none; b=N5T16VJ1kTo/kqXnyiQkbVqP1gGh4yCV5eDQsNuvqciHuXSxZuBri/xR8lcnqig472tWL/+Qmju6W7oCKMQMHJeC1IxRgY7njYYBUO7x/OTNhpX5VnhdZCgAtbRFY+hpJbMA3MwYuATwgHFq/7xLagRr3qh2+b1rm+03F5Q4JqM=
+	t=1756214426; cv=none; b=J+41U809sBaCODd8R0AkKEXUZ0QViC03AfQunIytfv39MRIKR+sjgVvIkLGUSE6phdZ2vMWrj3cP6BRD+lh93Q6fu3oB5vSR2v4NHPw+nNx55/bGScsL0+2nMkd9LytioybJ0IAM3raRxtr2+4MrcHY3/h0OXIxVoQ9ZfJh5KWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756214130; c=relaxed/simple;
-	bh=/GF/EE8LSbkG5+vnM2Y9COqE8FiD1Xe9jn2p6rxdpZ4=;
+	s=arc-20240116; t=1756214426; c=relaxed/simple;
+	bh=jjuPapsgWGN+1Nrpf5amo90HYScgmnPUiRwCTJLjtng=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NhS7Xhng62aMLSVC4Q1217sq8HwYZQTQuZv1jwzo6eE17HiM8FqNvPo9iXHVIPTUm4OeUt9pHq87pZvwzns6eAhG9c2l24aTuOxfyTJhtm2F5yyslyT4pcBpO1XRrXxZIe2lAd8yTwHrjuY/ExTKNsB9WsDuLUv3sO1Tx9UuVzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=W3DUy03A; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=QJaZfHaTf8t0mWo0N3vXPa9VvmZdl5pt1cyfnbUzKqqfvDOmIYMW4Fhu99HJq5x4b1XcndWpkqon0D24ZAwFa+TwnOqpF3tZY58dlgmvdnnwx1lflBBK8BO6m7ooyc1xVtRzBHpK3TYzIC7UaTBlS0KzrldyCBK3XHefeCbX2KQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hBwOCIwF; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="W3DUy03A"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hBwOCIwF"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=wgBlLzPE+bIG9QXx0H4m5iqszn2RpK1T27yebeWsnBE=; b=W3DUy03AvAMTLbFDQRviP/lnDk
-	db1RPwBWBpQX2ng+76PGsqI5uqyj15i7XKq5/P7H4Xtpg0/1JSfBdtKUzrwlxDdOVtLkTR777JuqI
-	OCy+y9clZdX68f/IbLKZx94+rbicQtQ6edhKJwFQB0d6YEEzEDzWA0PkYym+7gYvreKmQK/gkqjPs
-	8nB2Jwne2dDX+oQonE84tJOVI1CGMOn+dejWAzUm+S6cljSW8lvodPg+Da+nC21O9dDZO05TBC4V0
-	kj1WaAsL7Nw3EJ8+L1IzImh5+A6dhcVxJRMmxZNUU27j98itAfnNCEyasQO1Wo0p8CTl4kzkp7fF9
-	TDGj6LWg==;
+	bh=08FyapFBrrTQwRGwpcVtG9uDqwyWlKXLu+km+C9VdQU=; b=hBwOCIwFJIBSYAJABpSjMN+oNy
+	NNoVgkKjMTFVeUHScuDRssT9CFkFNU1WtW91Bwut1vWPBU7I6LM5S9DXewQlsE3M7CbQk4XFcyW3D
+	082mDFTozH/s6Ps7tfFhe6ZLGmadeVGiRqP1Ynks+7M+FP8tynLgI3RCL+xPHrGOD3aa0iU7BITQV
+	fwc4+S+7m4uLG/qiuoZv5No6IVyZIez7BNu4A6ls3rWpvzXEl69vt7IAUORis+xQhMpIdMMe9VESP
+	7AyCc3jG1TWdSI2V1s+pIq1n0yHnBqyXpbHtZA4GbPq2Oo7na6Pe9J23jpelKOm5mjXaoO8kKsgbd
+	FIYiLH2g==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uqtWJ-0000000C4Ad-0jgj;
-	Tue, 26 Aug 2025 13:15:27 +0000
-Date: Tue, 26 Aug 2025 06:15:27 -0700
+	id 1uqtav-0000000C4xd-3sR2;
+	Tue, 26 Aug 2025 13:20:13 +0000
+Date: Tue, 26 Aug 2025 06:20:13 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Fengnan Chang <changfengnan@bytedance.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Ritesh Harjani <ritesh.list@gmail.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, brauner@kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org
-Subject: Re: [PATCH] iomap: allow iomap using the per-cpu bio cache
-Message-ID: <aK2zbz9KU4T3oFTu@infradead.org>
-References: <20250822150550.GP7942@frogsfrogsfrogs>
- <aKiP966iRv5gEBwm@casper.infradead.org>
- <877byv9w6z.fsf@gmail.com>
- <aKif_644529sRXhN@casper.infradead.org>
- <874ityad1d.fsf@gmail.com>
- <CAPFOzZufTPCT_56-7LCc6oGHYiaPixix30yFNEsiFfN1s9ySMQ@mail.gmail.com>
- <aKwq_QoiEvtK89vY@infradead.org>
- <CAPFOzZvBvHWHUwNLnH+Ss90OMdu91oZsSD0D7_ncjVh0pF29rQ@mail.gmail.com>
- <aKw_XSEEFVG4n79_@infradead.org>
- <CAPFOzZuH=Mb2D_sNTZrnbcx0SYKcQOqMydk373_eTLc19-H+cQ@mail.gmail.com>
+To: Jinliang Zheng <alexjlzheng@gmail.com>
+Cc: hch@infradead.org, alexjlzheng@tencent.com, brauner@kernel.org,
+	djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	yi.zhang@huawei.com
+Subject: Re: [PATCH v3 0/4] allow partial folio write with iomap_folio_state
+Message-ID: <aK20jalLkbKedAz8@infradead.org>
+References: <aKwuJptHVsx-Ed82@infradead.org>
+ <20250825113921.2933350-1-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -58,13 +48,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPFOzZuH=Mb2D_sNTZrnbcx0SYKcQOqMydk373_eTLc19-H+cQ@mail.gmail.com>
+In-Reply-To: <20250825113921.2933350-1-alexjlzheng@tencent.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Aug 26, 2025 at 05:46:03PM +0800, Fengnan Chang wrote:
-> > Interesting.  This is why the not yet merged ext4 iomap patches I guess?
-> > Do you see similar numbers with XFS?
-> Yes, similar numbers with XFS.
+On Mon, Aug 25, 2025 at 07:39:21PM +0800, Jinliang Zheng wrote:
+> Actually, I discovered this while reading (and studying) the code for large
+> folios.
+> 
+> Given that short-writes are inherently unusual, I don't think this patchset
+> will significantly improve performance in hot paths. It might help in scenarios
+> with frequent memory hardware errors, but unfortunately, I haven't built a
+> test scenario like that.
+> 
+> I'm posting this patchset just because I think we can do better in exception
+> handling: if we can reduce unnecessary copying, why not?
 
-Can you add the numbers to the next submission of the patch?
+I'm always interested in the motivation, especially for something
+adding more code or doing large changes.  If it actually improves
+performance it's much easier to argue for.  If it doesn't that doesn't
+mean the patch is bad, but it needs to have other upsides.  I'll take
+another close look, but please also add your motivation to the cover
+letter and commit log for the next round.
 
