@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60D2D1FDA89
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Aug 2025 16:10:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D8352D8371
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Aug 2025 16:57:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756224654; cv=none; b=cHUMd1YkL0Qt8sFINEpk9BTQVPVqJNYpipMOtRKi8/LHE7236e0IAYHPwoQeUpsvoigyTaIZVUze3jHfu6HYx6oYtNk7CKCskHrYOz6ejomLU5eK199FGOq9iR2phr26UirMk76HKdXF0U5DzaqE/9SK3AUSFO4Q5NxdEcKxkao=
+	t=1756227451; cv=none; b=XeOZNHCNkVKFLhz1e0MiyV2L2T+eLWYv+uZvoPVtXPh0xWE3Fxpx0m9CqmvGHEE4WuGLa9adyaM5ddIyKkzflmyAabp4dl7SYcSl9mRRWkb43ocJEvRZ1MpgcQl335GxIOuagp7Atj1Rawa3IE50GFJQX4bcJhwlw7EybINL1GM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756224654; c=relaxed/simple;
-	bh=TGhQmenEs+xboOCL7IjRtlw6trZifDAiYYBHxoWbKMw=;
+	s=arc-20240116; t=1756227451; c=relaxed/simple;
+	bh=jKTBXGMPXt0A/iFsjplgW+IX6UA5YkvqlQOQIKjIqv4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oFk2WrqGNTaOiKUv1GHLsfR0p4Jbv2PeDoZ9SH2Pf9X4J9C1XdEQuCARUKCUa8/7HSoc/GizQSGjpGX9hZPBbVYx9Kbos3RA2RnweuEYztDKDajxB53otIjEOxo6UuwMMlNPakWkCBTTNG+K/QGRA24qdsTEXVn0iPpQR7fvpwc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=scJB2VC1; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=JHyFaZ23jqrro8dP+xcqPhf4l9j+oNifk/ku4pa+BavfsSaXingy5L/+BeRYunAGnyVHLrKVlmKQZdrAm0/wtMrn+XyBqRufi52m7uP7iAOycajXzPn2XOm0Q4ofUHHvPOIOZijYMhHJC+wzBzgT+kdIPlCKDYLvd09x9DJkpVM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rnM8Ui2n; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="scJB2VC1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD4BDC4CEF1;
-	Tue, 26 Aug 2025 16:10:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rnM8Ui2n"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC12AC4CEF1;
+	Tue, 26 Aug 2025 16:57:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756224651;
-	bh=TGhQmenEs+xboOCL7IjRtlw6trZifDAiYYBHxoWbKMw=;
+	s=k20201202; t=1756227451;
+	bh=jKTBXGMPXt0A/iFsjplgW+IX6UA5YkvqlQOQIKjIqv4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=scJB2VC1qbG9JwAkZPZSi/+IhUoXt8nTbF7ryZdsj3H219H8ozfkmQt6sHT/40SCk
-	 MBju+NECoNMIV1klDUnv37Izhy5H7aFr+HP8wSX1P2AhAS1FaUBWOyXbm3yZfDmy/0
-	 u8Qw4nBSqFnj4XR7i/XiHkXwwbAHoO8GdsyV2T0Y0B6ml/Pa+QtQhXQkzBDHhK+B9k
-	 HpKo0gftPtbnzvo9j+jtboewlBsxlv0b4DmNHnUbl0oKIEpHDWA9HcTxAtBk3m6uxG
-	 0KB2PX9hjaiTbMYJyZMh3J+892O6zOrY4CYynpqoX1mHdtpLowYPnCyQMqewhKa+kP
-	 RdyqQ4vBxyy1w==
-Date: Tue, 26 Aug 2025 09:10:51 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@redhat.com>
-Subject: Re: xfsprogs: fix utcnow deprecation warning in xfs_scrub_all.py [v2]
-Message-ID: <20250826161051.GC19817@frogsfrogsfrogs>
-References: <ce844705-550d-3eb2-0d08-d779f9ebc029@nerdbynature.de>
- <20250826155747.GB19817@frogsfrogsfrogs>
- <9ad33531-f8c0-07cf-59e4-7e6bbb173ebc@nerdbynature.de>
+	b=rnM8Ui2nGxlsIm8HHQADjqQL/+TUdQA09FsabWP92AS5pczD7Y2h8XuXDi1z9PM8b
+	 b29BQiHmbcGq37mQ+cHepM4ZdMC4I4iyrIuNEetlHB/tEDz5cms5R01zkzKwmI6ldG
+	 bJJKGmvwy26qerZeDl+0HHHJzZyelxpJ1Z43VZV2kdrsE3oVxYhwO8dZYqnQavCAJE
+	 EpAmQ3++GH/l+HEpYYDnRiL7XHYMs9U2ZG1SGoq2tYmpWqIfTAHMc9s2h40xZdsT7o
+	 2e6yMU9U4+CqdYLxIxacv/UHjimMRCbEt36gqDLc+q7Y6XJR0nPrCoVDFzT+9Dik04
+	 W0BXWjQil8X1Q==
+Date: Tue, 26 Aug 2025 10:57:28 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: implement XFS_IOC_DIOINFO in terms of vfs_getattr
+Message-ID: <aK3neNcY1vA9lubz@kbusch-mbp>
+References: <20250825111510.457731-1-hch@lst.de>
+ <20250825152936.GB812310@frogsfrogsfrogs>
+ <20250826131447.GA527@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,57 +44,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9ad33531-f8c0-07cf-59e4-7e6bbb173ebc@nerdbynature.de>
+In-Reply-To: <20250826131447.GA527@lst.de>
 
-On Tue, Aug 26, 2025 at 06:06:26PM +0200, Christian Kujau wrote:
-> On Tue, 26 Aug 2025, Darrick J. Wong wrote:
-> > Heh heh heh.  That old code was for compatibility with RHEL6(?) back
-> > when I started writing online fsck.  That's indeed no longer needed
-> > because even RHEL7 supports datetime.now, so thank you for the update!
+On Tue, Aug 26, 2025 at 03:14:47PM +0200, Christoph Hellwig wrote:
+> On Mon, Aug 25, 2025 at 08:29:36AM -0700, Darrick J. Wong wrote:
+> > > -		if (xfs_is_cow_inode(ip))
+> > > -			da.d_miniosz = xfs_inode_alloc_unitsize(ip);
+> > > -		else
+> > > -			da.d_miniosz = target->bt_logical_sectorsize;
+> > > +		da.d_mem = roundup(st.dio_mem_align, sizeof(void *));
+> > 
+> > ...though one thing I /do/ wonder is whether this roundup() should be in
+> > the vfs statx code?  Do people need to be able to initiate directio with
+> > buffers that are not aligned even to pointer size?
 > 
-> Thanks for providing the context. Scrolling through that whole script I'd 
-> say the helper function is not even needed anymore. So, if it's not too 
-> much hassle, here's a version 2 of the same:
-> 
-> Signed-off-by: Christian Kujau <lists@nerdbynature.de>
+> I've added Keith to Cc who is on a quest to reduce alignment requirement
+> as much as possible to add some input.  But as the new statx interface
+> never had it, adding it now seems off.  Also dword (4 byte) alignment
+> is pretty common in all kinds of storage specifications, so being able
+> to support this for things running on top of file systems seems like
+> a good idea in general.
 
-That also works for me--
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Yeah, dword dma support is so common in part because that's the
+granularity of PCIe TLP lengths.
 
---D
-
-> 
-> Thanks!
-> 
-> diff --git a/scrub/xfs_scrub_all.py.in b/scrub/xfs_scrub_all.py.in
-> index 515cc144..ce251dae 100644
-> --- a/scrub/xfs_scrub_all.py.in
-> +++ b/scrub/xfs_scrub_all.py.in
-> @@ -493,12 +493,6 @@ def scan_interval(string):
->  		return timedelta(seconds = float(string[:-1]))
->  	return timedelta(seconds = int(string))
->  
-> -def utcnow():
-> -	'''Create a representation of the time right now, in UTC.'''
-> -
-> -	dt = datetime.utcnow()
-> -	return dt.replace(tzinfo = timezone.utc)
-> -
->  def enable_automatic_media_scan(args):
->  	'''Decide if we enable media scanning automatically.'''
->  	already_enabled = args.x
-> @@ -515,7 +509,7 @@ def enable_automatic_media_scan(args):
->  	else:
->  		try:
->  			last_run = p.stat().st_mtime
-> -			now = utcnow().timestamp()
-> +			now = datetime.now(timezone.utc).timestamp()
->  			res = last_run + interval.total_seconds() < now
->  		except FileNotFoundError:
->  			res = True
-> 
-> -- 
-> BOFH excuse #72:
-> 
-> Satan did it
-> 
+Not sure what to say about this patch right now, but it triggered
+a thought: if I can successfully get filesystem and block layers to
+tolerate the hardware's minimum alignments, how is user space to know
+it's allowed to send IO aligned to it? The existing statx dio fields
+just refer to address alignments, but lengths are still assumed to be
+block sized.
