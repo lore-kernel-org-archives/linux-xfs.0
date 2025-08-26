@@ -1,64 +1,63 @@
-Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C4CC36808B
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Aug 2025 15:41:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 888AE36298D
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Aug 2025 15:41:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756222893; cv=none; b=AKjOEsmE86Wh2E5HPBYkho7Du4tMrxlC3m+88JgtiTot7L9w46j2TkB8CJlrpt1m9LZoDHffddOhLoGJRHXKQArW2kMjOuynWm1iDHqAJdxyQMPy1Q0InIDfN4u2w8Qz5Z+A5oZ6TuqBEQpwSwFOVgT/M0zaU4IvRe9agg66vHk=
+	t=1756222895; cv=none; b=k+KusiruhJP88iC1QYbasfXjmChvtzoAQzl3bTZ26vsbM5Q89/nD82+H7+WEwpUjToMiWIb9DLJ4xfV1FCR/xUia5vp3vj/hGN+BS1/RENDlH9GIuoF9xzNNfAP/RQyi5+sVcLrkUKF+nG/2IZOL/C7GA+uoQF4PN2/nIqSOGbA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756222893; c=relaxed/simple;
-	bh=KH914xoQJXrO8N3ZjmL923rQ+0fw5BtVRwkJcmLo93g=;
+	s=arc-20240116; t=1756222895; c=relaxed/simple;
+	bh=HO3qn6E2mu4iKLp4ae70vUhOoqfZurpCVV09CRALkRY=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bbgqaRWKnh1aTlCG/tgftUDHs2ATWDICtd53+2GknPO8Jpw5MdePWyt5Vv8l5sMjjerChUwsVmb9pN1JCX7IWOJoDAu1AsXvTHaOW6SNddT0zN5XuZrBVRAhy2Vfh2kUiM4flmcF95T6yczWQ7R2uHcNyV1405f4PsUBRyuZ3/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=PAIBrMSp; arc=none smtp.client-ip=209.85.128.173
+	 MIME-Version; b=rQ4qFdLLLvjb1i9D0PAAw2UuzVN7A9pKpQJ0chuuqpyl0cH5DmOVy9irhZFD7gxGVnNT83xNXgXyCA/rVGJuTiDp6sIEO7EgHHbAZQslBCZ4OKs79AtFf4wj8GeL5JRPCg2cYY+zPycs76Dexa9XSE3hNItUyAqm5kFe/ze2nX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=sEstQBzG; arc=none smtp.client-ip=209.85.128.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="PAIBrMSp"
-Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-72019872530so23005097b3.1
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Aug 2025 08:41:31 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="sEstQBzG"
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-71d60504788so47004777b3.2
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Aug 2025 08:41:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1756222891; x=1756827691; darn=vger.kernel.org;
+        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1756222892; x=1756827692; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=C5KAKsh2PfGXT4+TYPG/ltaJ7kkJlF6llKvHHQC7hMo=;
-        b=PAIBrMSpjeDzuYzNJC62+RMhL/Fl6xdLmvBwZflI1a2/qZ0H7VxahgeFe2J2cCNZRY
-         B7WCA2M7b7ZxDaLu8Pv1/LjFNsZODqQwetoe6/v53qB85BF4QxQRvZt+epApAW5nmbox
-         5K4Z5S9FFpR5PrM1gDfEFGHtONcq8m5NWSsyG+D3GR2Xr6y9n/29LBjdYnoYNqyDtZ6a
-         aqoCK/SRshuysx1TLXRFN6UKV6pcIFgfMJamxsm/QRbcCddYijlsCeSpK+3iW5MlUTpL
-         QIbe3e8BkATd0PTHj2lgJVw7U8vA7LWjvbcnN36GpewVJX01gNebt/D18gy6m+PdtcNT
-         zUPw==
+        bh=PY21hOB+0muSrNOgrHptmS8Lc85J39c8M537N7BFIe4=;
+        b=sEstQBzGN1LPfhVQ2Rz5gE9Q1fD8N/GQEnAqr8Svk8lo2CdmDjEQF4SGIAR45zluP0
+         eYc9gFHTsGaJ+dtZ1b/J9RQz2D49IKVzp/y2VeyjzmQ4bx3hzQc5RCDknQ+Km2/yp/S4
+         a/QKOnWyx53s6PTckNaPJO1JPJbcp4TurWvzaWUfjUJuoUM84QgQ93egZUHK1rQswQmx
+         Zv4Z0enm/kpHqLBS1+a6J1orIP2n65XxzvFIHtFc6xB2YHRhvhC2gOq8mCNS8ptOyljd
+         g7Hb1T/EyczmSiiYX3ANbXTUywkeRBNRQ+e6tN6SyQjgCozQuF/0uAbpu265w3FrJLc3
+         zu3w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756222891; x=1756827691;
+        d=1e100.net; s=20230601; t=1756222892; x=1756827692;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=C5KAKsh2PfGXT4+TYPG/ltaJ7kkJlF6llKvHHQC7hMo=;
-        b=XxvJ3bzIxkGq/jvGpvNCqTgiGFZ6iCgNgE2WDtNHHouHTI5hbUGOn9Wdqi8dCzgGtu
-         jb8KtK0AjemqNTeZpu7wUM8fs4DiezOsb8RU3tfA+QNw2QH721Jt5u4Vsgf9PpbQNJwy
-         8+y21VF5A4hdBEyQqEuIRcs+rnQ6i9/24dee+IBL15hr1hnjRStymmrwfrpGTR4XmtR4
-         xMtvcjo6fGsOXZOLtwkzW2ZAiriBw2pk/BiimKh4KGe42rckv2/F7G/5XvU1rDUCIXnk
-         DgNsO7+EKIO7vckH7WbcsSxlfZaTaXADCOqKY91FRrY/VkiSft3k8rvsmfM6S8MXCaqq
-         TOug==
-X-Forwarded-Encrypted: i=1; AJvYcCU2cxlZBtz/2ovCPUMCCARPaak+kSquupfsof237qFmGRK2nBrYvJDXoAJmHKGQXUcYEeY8kjYmtRI=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywtz2wTgtujA6wMiOp23omq9glBMJ+yNoKxEseouoOfqAxjv2tk
-	+71MycpFMerQBPY4cDLLb7bkuZqZix+7TPOmhSFxdJD9X9oCN1OWbQzHk1HiXeMdsMLupNfWh/1
-	OyaQG
-X-Gm-Gg: ASbGncufxf8sy3e8kUgLnVZOWjR9sIvCgclSZCrmAU0Gak0IfE18ecaK0G7vrnUO3BF
-	Q36uZQVDpczMXFxKuFz4RJ1S1RaCGJNJqsFvRLFCHJRsLAva7vi4Gn0eaqixz7K5JKTyJrra/v6
-	W17C5MSpVf1xjnQZ+6IEGVURs8SM+FhQoThwZjJ5jX8serV6qsB+eG2+vPIRx6r+SAzk++Hxnkr
-	w7xHyF0EPi1PdD1/rp65VhS+yoDBS8/2z1cdEtrMNuJDL1JCXbyl5xUrGRX13Nn3GMDIaWeMK9p
-	qEIqpD4U6euxtgpn2ECQ7yl6/CDVhZ12etpwuZzFuXh8hORdXV6Fzycmwx0JDPkgRzmiZicYezH
-	q4g6SaCMeXKrgi7vQIIHj2GBpH/7JmLU3P1c5Avd9HrRNxi/P3vhCb/Of29/9MjhenMJnTw==
-X-Google-Smtp-Source: AGHT+IFKqwEmHNx5eQFlQTUVO696PTRIuWbfxVqgnshRh3PzZ7/9O1IwzGnfu42E66nP2s6IML84qQ==
-X-Received: by 2002:a05:690c:620d:b0:721:369e:44e4 with SMTP id 00721157ae682-721369e668dmr18015457b3.45.1756222890893;
-        Tue, 26 Aug 2025 08:41:30 -0700 (PDT)
+        bh=PY21hOB+0muSrNOgrHptmS8Lc85J39c8M537N7BFIe4=;
+        b=Ot8Q1Ya4E2gF0WHjngi9HXSSLUIrPlEK6XD6e9R/tf8uh/EudkrZOqx3l70TowDLCp
+         gaba3ik1IMukduAH/7Ln1s1yWh36+JDJGvdpeiBIA5vhynZZTchN6PtTVw2C3f4nwe+x
+         2QImDsoO5hctw+BhaMDCMiO5PgTe8HfIM6lbD/VqgRYJ2seOJxBOPEemLK/PkMHLhKiG
+         2xInXaNLjwSBFqsHgWYDZMlcjVmheS4NBCYOqA6iJ6SC1Nx8AO5+JPXzRyN3yok7hGt8
+         VFpj/goekZb9iBu9//TyjZcuvySho2JoQW4rGLZBoS+e4VRwbHsMXQoBaHQAsoEp2YpF
+         WDkA==
+X-Forwarded-Encrypted: i=1; AJvYcCUL38yC4Qr93/RnkoTts+u2NsMN4st8GhvLvO7HAmUCV62nabrxT0mDeFC6qxixhQmfZO2EEqd9T6s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyNp3SgiL3SNDkPlhOeqrdZfpO2AMgktdZ4cL4RQn1g9sOERtb3
+	XYhodIAJ3lVwfxe5xd12tBaUwNwbEexXR/MgExWi2eZtd9OWHLgW+oPgALHY+8EoLYA=
+X-Gm-Gg: ASbGncssIZA+h5iU0W40ngaCDQ50lLW6Z64XCMejYCjCnCO4ZIQoZBf8B6rCcX7COUL
+	R1H15htQ6IfKgtg6iJ2uyIIv4iR9gx1R3HOhCJTxtRGjzYKJ8Kqm1ZfgmmU/FOSY2VzATz4COZ5
+	R9xSNjg3IUMS7MHxPLWJqjUe7nXhwJ9tS4C4KnalrjXxezNQZUbSeh7S+jD2eEkQbs4SBqY38CP
+	lMq0/k8/Th1OqiEg275AnjRXrVdh5IJijbsFB1ZeOmzY2Y0v+0u6odfK/RLyVjzu6vYNy0YnLLh
+	srBBL4oOmHcQTTgsQGkBkXQexT9Q4U0GMw/hY94uUWLkxQfdsLnWxnAlkqhWrASTs2GBiVjZpbZ
+	uWxavOau/wG7CctYz7SeTYr2JL+7t+yk4zRtoCHxymQfsK0ouNoIO7e5yLEk=
+X-Google-Smtp-Source: AGHT+IEGTe9J6APE8G1RzLna9v2A4NhqUMcOqyHW3B9fdF1qoADqmNsdHuHOZlvMk5nr/NaX035KJQ==
+X-Received: by 2002:a05:690c:7009:b0:720:999:cc91 with SMTP id 00721157ae682-7200999d319mr90958807b3.28.1756222892428;
+        Tue, 26 Aug 2025 08:41:32 -0700 (PDT)
 Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-71ffce104d1sm21641597b3.28.2025.08.26.08.41.29
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-5f657f58b61sm2303577d50.2.2025.08.26.08.41.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Aug 2025 08:41:30 -0700 (PDT)
+        Tue, 26 Aug 2025 08:41:31 -0700 (PDT)
 From: Josef Bacik <josef@toxicpanda.com>
 To: linux-fsdevel@vger.kernel.org,
 	linux-btrfs@vger.kernel.org,
@@ -68,9 +67,9 @@ To: linux-fsdevel@vger.kernel.org,
 	brauner@kernel.org,
 	viro@ZenIV.linux.org.uk,
 	amir73il@gmail.com
-Subject: [PATCH v2 29/54] fs: use inode_tryget in evict_inodes
-Date: Tue, 26 Aug 2025 11:39:29 -0400
-Message-ID: <a9182c9716b474752c0110af726b95125a7007db.1756222465.git.josef@toxicpanda.com>
+Subject: [PATCH v2 30/54] fs: change evict_dentries_for_decrypted_inodes to use refcount
+Date: Tue, 26 Aug 2025 11:39:30 -0400
+Message-ID: <283eebefe938d9a1dd4a3a162820058f3550505c.1756222465.git.josef@toxicpanda.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <cover.1756222464.git.josef@toxicpanda.com>
 References: <cover.1756222464.git.josef@toxicpanda.com>
@@ -82,37 +81,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Instead of checking I_WILL_FREE|I_FREEING we can simply use
-inode_tryget() to determine if we have a live inode that can be evicted.
+Instead of checking for I_WILL_FREE|I_FREEING simply use the refcount to
+make sure we have a live inode.
 
 Signed-off-by: Josef Bacik <josef@toxicpanda.com>
 ---
- fs/inode.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ fs/crypto/keyring.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/fs/inode.c b/fs/inode.c
-index 2ceceb30be4d..eb74f7b5e967 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -967,12 +967,16 @@ void evict_inodes(struct super_block *sb)
- 	spin_lock(&sb->s_inode_list_lock);
- 	list_for_each_entry(inode, &sb->s_inodes, i_sb_list) {
- 		spin_lock(&inode->i_lock);
--		if (inode->i_state & (I_NEW | I_FREEING | I_WILL_FREE)) {
-+		if (inode->i_state & I_NEW) {
-+			spin_unlock(&inode->i_lock);
-+			continue;
-+		}
+diff --git a/fs/crypto/keyring.c b/fs/crypto/keyring.c
+index 7557f6a88b8f..969db498149a 100644
+--- a/fs/crypto/keyring.c
++++ b/fs/crypto/keyring.c
+@@ -956,13 +956,16 @@ static void evict_dentries_for_decrypted_inodes(struct fscrypt_master_key *mk)
+ 
+ 	list_for_each_entry(ci, &mk->mk_decrypted_inodes, ci_master_key_link) {
+ 		inode = ci->ci_inode;
 +
-+		if (!inode_tryget(inode)) {
+ 		spin_lock(&inode->i_lock);
+-		if (inode->i_state & (I_FREEING | I_WILL_FREE | I_NEW)) {
++		if (inode->i_state & I_NEW) {
  			spin_unlock(&inode->i_lock);
  			continue;
  		}
- 
 -		__iget(inode);
- 		inode_lru_list_del(inode);
- 		list_add(&inode->i_lru, &dispose);
  		spin_unlock(&inode->i_lock);
++
++		if (!igrab(inode))
++			continue;
+ 		spin_unlock(&mk->mk_decrypted_inodes_lock);
+ 
+ 		shrink_dcache_inode(inode);
 -- 
 2.49.0
 
