@@ -1,75 +1,38 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 775DC350D7C
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Aug 2025 14:34:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CC2E1A76B1
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Aug 2025 14:54:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756218855; cv=none; b=R3a0340I7H/KAvQQzYVeqbZdPCj96Y9nDURY9/p1DDrFSOuOiJd5mBAhn4l/6+ovsCOyyQ1PTew518pvAZIIVm1/wm0oliF8UvxH/s83wfgbkHZaGjGMqobs3JF1x/BVEk6g2VCXe9dwX0nh6fKcr6x154alqn6YQwiuZvogK3g=
+	t=1756220084; cv=none; b=V5c2iOW6RP2wbwXYh0Qt6iGeoKmNgPOBw+N2NQjXQH2eh8ZuSQsyQQ6KBUS9m0lwbUOlBRWR5LRbFpV5lmKBdnR/opP41Q2I/P7IpaUsHlSoy1dwcRfZ80KdFUK95mjBtTdEylMmihj1AHZdpi3lzHVSyMQVGfFFrwvz24cc7pU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756218855; c=relaxed/simple;
-	bh=IVAtbYFrJBJo3+l92CYFYeNf853uP3DhAg+om2SqUbA=;
+	s=arc-20240116; t=1756220084; c=relaxed/simple;
+	bh=JN7tUhYPm2yMFYqBruoae9GivgjipaUXNjEamr9hp14=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IT7yYglXy0suqH82xF8aR7m14aZ/uTs8vr4YrYrDDnwSsMrCgEXBGHH/Er/SUhQhHewchOdFWhZU2ojRRgHbIpNkPThGReFsby6xAXkubjDGI77N4PCXRBkl7FwN0r9HYXicO+XzlF1LxTxxT4RAdn9wME6rfhpRsFjD5Ck0TtQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HkRO4la+; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=F8qZ7+m2BSJTN1k+RQ0NkPywt8kKTS5c6v+XwV9kWjg323T91kgzp/ZHoj1OSXWNqVqPAIhdKlgyzhL2rGocdXYaPrIwhIa/IHLWp8efNmClvo18Z7D2QxoXgOasf0idKn4jd8khoXdZR+zhBDUPPAvWCAGSzWwcKh4PBsFSyl4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QpZMq1Ff; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HkRO4la+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756218852;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=tsYCfTHEsmnh4IU2r8RRiTMk5vL5C/FnW7HgNQZTgAk=;
-	b=HkRO4la+z90UG0/tmtccKUx9+eAsS+hD13OwuUMbmS+slmIVy2mNpyRAyOc2KAJpfPsmwK
-	gM/OyHqhjpZVwADVBtF/rfrVppEPb/i8P0y6EGTBZgjZ0RIn1WguaJa/iW2xYjsZVZZ4RA
-	ITJRArIWsndgEcnKDk+KZXVqpxXPA5M=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-543-oG-9zsf8PwG0G9CzROoGuw-1; Tue, 26 Aug 2025 10:34:10 -0400
-X-MC-Unique: oG-9zsf8PwG0G9CzROoGuw-1
-X-Mimecast-MFC-AGG-ID: oG-9zsf8PwG0G9CzROoGuw_1756218849
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-45a15f10f31so43664555e9.0
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Aug 2025 07:34:09 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756218848; x=1756823648;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tsYCfTHEsmnh4IU2r8RRiTMk5vL5C/FnW7HgNQZTgAk=;
-        b=VmCaETNLxYLeTACJp2rjLiCRD2uzL6wXIAVLkwtXitwDWeLVfrvlYoctD1ErmMvLfq
-         UdukGDfuM2RNqRYz4ReJs8bGjQzpo/CfvnfxCSMc+dmLH2+jnLW+r+7xfAVLDmZKcABg
-         EqIFTs+B3GVonRPIbP0jyOOD79g2EjQZWNpC5xUL0+O58TYvVo5vpERZyMd3UyUiIHUf
-         60wtIQNevc5krJAUjcj7tR44OniEbZJfyoF/VltAAnMjOEG8UMNmQbfBpgUUG9pEUETQ
-         FkMLtuYxe+j11UEk2oWp0vlPAcjJr8fqeCVmRr0PQxk0o96v90PUvp9bIvBV7vCwWcFt
-         6gXw==
-X-Gm-Message-State: AOJu0YyE9PEhDVf6et3U5Vf3hDmFj1fnVtAawPmSqdFqawcdM0mOXUdb
-	Ld8t5qFkwkja6yUtlf+nD+3aP7G2YjG6JU3kQVFBTKsiVj5JyiWioRgQb9mAO6qabWV+qbyyeYE
-	uADAzpRY7LgI2tX+3CxDLQsu9U8jNn2YlRCJqOCvNb2jFatEhPBzl02ITLqD0nNM0lFFO
-X-Gm-Gg: ASbGncs5Dhpy5VXgoe5w0b7U3dDkSyp0Z8wIYIkvjgEUz0attJhzkkyr6p5CaJkU/fL
-	cXVq5ypv0bPvovrXd2P2au89xoJOzh8ihTkqXFpIHWBPwKy/dhhAJWnX7PPhUzCD5uy9av6guLj
-	9qCwgg4Rupd6H2yIQhFyJ4qCus/CzD3kwEdL7Nw/A1ZLF5q+u41XYcWu3orXbDiYClQiBqrKY74
-	kybiASgl2suEYWOzwD5iULE9woAjjNio7M8VDFjzNUlIf2MgTbGHr/IiCPsbMzLrL4fjmhbYMM8
-	XVZDlhFRmbKUXhRfRghYNeLAgmCd6FA=
-X-Received: by 2002:a05:600c:a315:b0:458:b4a9:b024 with SMTP id 5b1f17b1804b1-45b6870e72emr15133175e9.11.1756218848305;
-        Tue, 26 Aug 2025 07:34:08 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IF2US2Sob0r+3nZ9Eku15FgdTYFzqCNcxs3eNaUOtFT3y4qb+QuXZ+GEwFnu7000Fi86arEKQ==
-X-Received: by 2002:a05:600c:a315:b0:458:b4a9:b024 with SMTP id 5b1f17b1804b1-45b6870e72emr15132935e9.11.1756218847921;
-        Tue, 26 Aug 2025 07:34:07 -0700 (PDT)
-Received: from thinky ([91.245.205.131])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45b60ab957bsm80367895e9.12.2025.08.26.07.34.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Aug 2025 07:34:07 -0700 (PDT)
-Date: Tue, 26 Aug 2025 16:34:06 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, contact@xavierclaude.be, djwong@kernel.org
-Subject: Re: [ANNOUNCE] xfsprogs: for-next updated to 9ec44397ea2a
-Message-ID: <p3a26gtzrro4csf2bxgwc5qc5d42askusfw6cy2xbcp7tttdva@33bhgcgguuhg>
-References: <kmkoyhtz4mjuy5xlucr4noywsgons5n6pn5ti3fjs4uv34fzlx@zsopyugtig6f>
- <aK201Ikol4QsG8Yl@infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QpZMq1Ff"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29B7AC4CEF1;
+	Tue, 26 Aug 2025 14:54:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756220083;
+	bh=JN7tUhYPm2yMFYqBruoae9GivgjipaUXNjEamr9hp14=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=QpZMq1FftT5hA94xgsxw1psPTI/XqlkghPYgCpvynAYVatoj/ggimP2AJt5OvizDc
+	 vIlaZ25/mW9/1iI1OrueKXB3DnFU/OkN5pl9fZGEFmU8kuCf3hclUHEbs5kIh2mi16
+	 kkSiq8SB8YXpFQaxp5X+EUE09ZpRkZ67F3yqr3PR7STHNV9TDwwhovKUIEy3N/G6Yd
+	 XyY04UJGMVJ4ObK68GYk4yXlDz6J6qBnShrgq9jrjliiH/50h9BTVElLlr2HmYAk0o
+	 8dw8JH5XLpcImOghpk/zq/rrp4lTmWO+r4xkbjm0iCxyKdjL7fqeS7ISsR/LbQdog3
+	 ddXUewXuF03Gg==
+Date: Tue, 26 Aug 2025 07:54:42 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: cem@kernel.org
+Cc: aalbersh@redhat.com, david@fromorbit.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] Improve information about logbsize valid values
+Message-ID: <20250826145442.GA19817@frogsfrogsfrogs>
+References: <20250826122320.237816-1-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,15 +41,72 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aK201Ikol4QsG8Yl@infradead.org>
+In-Reply-To: <20250826122320.237816-1-cem@kernel.org>
 
-On 2025-08-26 06:21:24, Christoph Hellwig wrote:
-> Btw, do you to pick up the support for populate from a directory from
-> Luca?  I think this will be a really nice feature to have.
+On Tue, Aug 26, 2025 at 02:23:12PM +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
+> 
+> Valid values for logbsize depends on whether log_sunit is set
+> on the filesystem or not and if logbsize is manually set or not.
+> 
+> When manually set, logbsize must be one of the speficied values -
+> 32k to 256k inclusive in power-of-to increments. And, the specified
+> value must also be a multiple of log_sunit.
+> 
+> The default configuration for v2 logs uses a relaxed restriction,
+> setting logbsize to log_sunit, independent if it is one of the valid
+> values or not - also implicitly ignoring the power of two restriction.
+> 
+> Instead of changing valid possible values for logbsize, increasing the
+> testing matrix and allowing users to use some dubious configuration,
+> just update the man page to describe this difference in behavior when
+> manually setting logbsize or leave it to defaults.
+> 
+> This has originally been found by an user attempting to manually set
+> logbsize to the same value picked by the default configuration just so
+> to receive an error message as result.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+>  man/man5/xfs.5 | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
+> 
+> diff --git a/man/man5/xfs.5 b/man/man5/xfs.5
+> index f9c046d4721a..b2069d17b0fe 100644
+> --- a/man/man5/xfs.5
+> +++ b/man/man5/xfs.5
+> @@ -246,16 +246,18 @@ controls the size of each buffer and so is also relevant to
+>  this case.
+>  .TP
+>  .B logbsize=value
+> -Set the size of each in-memory log buffer.  The size may be
+> +Set the size of each in-memory log buffer. The size may be
+>  specified in bytes, or in kibibytes (KiB) with a "k" suffix.
+> +If set manually, logbsize must be one of the specified valid
+> +sizes and a multiple of the log stripe unit - configured at mkfs time.
+> +.sp
+>  Valid sizes for version 1 and version 2 logs are 16384 (value=16k)
+>  and 32768 (value=32k).  Valid sizes for version 2 logs also
+> -include 65536 (value=64k), 131072 (value=128k) and 262144 (value=256k). The
+> -logbsize must be an integer multiple of the log
+> -stripe unit configured at mkfs time.
+> +include 65536 (value=64k), 131072 (value=128k) and 262144 (value=256k).
+>  .sp
+>  The default value for version 1 logs is 32768, while the
+> -default value for version 2 logs is max(32768, log_sunit).
+> +default value for version 2 logs is max(32768, log_sunit) even if
+> +log_sunit does not match one of the valid values above.
 
-Oh thanks! I missed that last version. I will do 6.16, and then
-include that in next for-next update
+Weird, but as a documentation stopgap until someone figures out if
+there are any bad effects of non-power-of-2 logbsizes,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
--- 
-- Andrey
+--D
 
+>  .TP
+>  .BR logdev=device " and " rtdev=device
+>  Use an external log (metadata journal) and/or real-time device.
+> -- 
+> 2.51.0
+> 
+> 
