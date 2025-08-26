@@ -1,41 +1,50 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from trent.utfs.org (trent.utfs.org [94.185.90.103])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE718187554
-	for <linux-xfs@vger.kernel.org>; Tue, 26 Aug 2025 13:21:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F33BD139579
+	for <linux-xfs@vger.kernel.org>; Tue, 26 Aug 2025 13:22:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=94.185.90.103
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756214485; cv=none; b=OVLYkeutiAlgZyaJHkJ9sZyNCEmQCieeTbdK/qem25gp9bu15flkH1mCDqfsgjHnOHUgiRZGM7gxos2osr8Oj8wkEfUAbOm8/tlkD6+oWcjPAMR8rw+r5exmj9vMS6WGBt2iDaNrYjod9F5oL20609Nv1d9QY3woSG4TtSpLuz4=
+	t=1756214573; cv=none; b=jFiSpqaM2wwgHnvy1QwfyHO8rB808VqrYec5wEyFc5HiBVkEuDTu9R0HKioGtSWmGubJB4AKOi0BDnosuQkoiOaKUPEABePvd23vW1+Y3/TQrRgYBejbopunkpjRFWRDK5Rx6ArcLyZ1+83/GqdoXx7+mcpcb8Gh/TLBpfXqx9g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756214485; c=relaxed/simple;
-	bh=BbO5gshgzmou5xtEa3rVWdh9Fu8W/DFr14RwZwgeZ8E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TVmqZyCRV0te0/kSeqGeqaQe+j/g5t9rHy1szoJv7ofwSNpRINd2VJDOumzrCMvDQz7WW/Updx8kNTGG5vkTmMr7HBGs8gHH5/GBHlVP8q7aqySCwZRnYBOs475ChHInrTf4+WNYdSpwOEbbgJi24Hozielf4jBmWZqmC17reB8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZJoAfnvN; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1756214573; c=relaxed/simple;
+	bh=VJ/q/jbbNSamEaDBMkge77mKJlNf7zt+n6EtTi7+w8o=;
+	h=Date:From:To:cc:Subject:Message-ID:MIME-Version:Content-Type; b=sz9RNKvoq6NacDP6Hopiu9o8a4VuNS4Jsm3cG2Jsyj4rmXSTmiimYqXbl+R5UZnOaPdJNQEgUwLU8En9RozQpaEeK3u3JS0kRrI6j3xkc6xXx2ttAMcwfUR8dp8yog7PEHzE+gd7SoHN7o/7Kzm3InOlez9tFEOO27n6oiA1AUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nerdbynature.de; spf=pass smtp.mailfrom=nerdbynature.de; dkim=permerror (0-bit key) header.d=nerdbynature.de header.i=@nerdbynature.de header.b=6Gyt/z+B; dkim=pass (2048-bit key) header.d=nerdbynature.de header.i=@nerdbynature.de header.b=Cb3RGTnk; arc=none smtp.client-ip=94.185.90.103
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nerdbynature.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nerdbynature.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZJoAfnvN"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=5dS/wNrp+jL5cd4wuBJgvlp397KkEzokaW2v4WWtGf0=; b=ZJoAfnvNXRt8n7XFxD2xUK37XV
-	+dvBHUvgodWt76clcEIw2o+fkaebZ1M6OQfOkt+5ZrsoalGijllI3vV4aNHpGmvKoVFVzdTtxq52L
-	RKaeoOdlU4Uva6A242suLcVm5Srton6n593i18Q5m/e1swLpILMRXrK02BS3HKPuBy0pc6z7LH2T8
-	XUPBR3NcUZWYVlU+LCqMte1X2FpI0ykbwGhcd/1uGQAjf1BUwP1KLFuoZU3D+mtF5KFYEQII3qs1h
-	C/TmnXMeWZKzKU9FC1+YklB3KnyX6Kwe7ZbwaKYZAnFNL/EBEk5CjJ2TuOphFcnpBI0lokZYtYOab
-	1s2FurfA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uqtc4-0000000C58m-0Cnf;
-	Tue, 26 Aug 2025 13:21:24 +0000
-Date: Tue, 26 Aug 2025 06:21:24 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: linux-xfs@vger.kernel.org, contact@xavierclaude.be, djwong@kernel.org
-Subject: Re: [ANNOUNCE] xfsprogs: for-next updated to 9ec44397ea2a
-Message-ID: <aK201Ikol4QsG8Yl@infradead.org>
-References: <kmkoyhtz4mjuy5xlucr4noywsgons5n6pn5ti3fjs4uv34fzlx@zsopyugtig6f>
+	dkim=permerror (0-bit key) header.d=nerdbynature.de header.i=@nerdbynature.de header.b="6Gyt/z+B";
+	dkim=pass (2048-bit key) header.d=nerdbynature.de header.i=@nerdbynature.de header.b="Cb3RGTnk"
+Authentication-Results: mail.nerdbynature.de; dmarc=fail (p=none dis=none) header.from=nerdbynature.de
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/simple;
+ d=nerdbynature.de; i=@nerdbynature.de; q=dns/txt; s=key1;
+ t=1756214142; h=date : from : to : cc : subject : message-id :
+ mime-version : content-type : from;
+ bh=VJ/q/jbbNSamEaDBMkge77mKJlNf7zt+n6EtTi7+w8o=;
+ b=6Gyt/z+BZ3HqZ/5cpRK0bQNxA23/gsyOKVPQ/Ue2/7Vq7zH9Kc11SZDi9DxkxSUh5jwcn
+ huR1iLAyC0yY8mxDQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=nerdbynature.de;
+ i=@nerdbynature.de; q=dns/txt; s=key0; t=1756214142; h=date : from :
+ to : cc : subject : message-id : mime-version : content-type : from;
+ bh=VJ/q/jbbNSamEaDBMkge77mKJlNf7zt+n6EtTi7+w8o=;
+ b=Cb3RGTnkrfujJ2xP1a/FST57OggcPMmLvIe5E4NeDHqPhVDeieeWBPuNd3PfST5Ah+UbL
+ IwIrMVM7wik1W6pjTeupn47VchyyYZ2Nm0PVjPuicz7u9lljPJ3zFNilM7ejnLsbJmMwH3O
+ 6j5j2dx0SjIY/urTj1N8Xre73an/gvIljlQ+odgTVTxfM1FBKUmNUj9r1yDZy9CgLCWpNjy
+ /3WuX0NNDN2wI0/46G1JBPa+zWpGgupB6OYW9t5sdpm50WX9Dtrlgs73bFKu3HBEXqFOC2M
+ iDtMV5qCJNmnslRvbcxAfNwYXNUyImm11Mcmr6hl1/HbZ3ilQlFL2OiGpJhQ==
+Received: from localhost (localhost [IPv6:::1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by trent.utfs.org (Postfix) with ESMTPS id E3BBC5FEFC;
+	Tue, 26 Aug 2025 15:15:42 +0200 (CEST)
+Date: Tue, 26 Aug 2025 15:15:42 +0200 (CEST)
+From: Christian Kujau <lists@nerdbynature.de>
+To: linux-xfs@vger.kernel.org
+cc: "Darrick J. Wong" <djwong@kernel.org>
+Subject: xfsprogs: fix utcnow deprecation warning in xfs_scrub_all.py
+Message-ID: <ce844705-550d-3eb2-0d08-d779f9ebc029@nerdbynature.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,10 +52,48 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <kmkoyhtz4mjuy5xlucr4noywsgons5n6pn5ti3fjs4uv34fzlx@zsopyugtig6f>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Btw, do you to pick up the support for populate from a directory from
-Luca?  I think this will be a really nice feature to have.
+Running xfs_scrub_all under Python 3.13.5 prints the following warning:
 
+----------------------------------------------
+$ /usr/sbin/xfs_scrub_all --auto-media-scan-stamp \
+   /var/lib/xfsprogs/xfs_scrub_all_media.stamp \
+   --auto-media-scan-interval 1d
+/usr/sbin/xfs_scrub_all:489: DeprecationWarning: 
+datetime.datetime.utcnow() is deprecated and scheduled for removal in a 
+future version. Use timezone-aware objects to represent datetimes in UTC: 
+datetime.datetime.now(datetime.UTC).
+  dt = datetime.utcnow()
+Automatically enabling file data scrub.
+----------------------------------------------
+
+Python documentation for context: 
+https://docs.python.org/3/library/datetime.html#datetime.datetime.utcnow
+
+Fix this by using datetime.now() instead.
+
+NB: Debian/13 ships Python 3.13.5 and has a xfs_scrub_all.timer active, 
+I'd assume that many systems will have that warning now in their logs :-)
+
+Signed-off-by: Christian Kujau <lists@nerdbynature.de>
+
+diff --git a/scrub/xfs_scrub_all.py.in b/scrub/xfs_scrub_all.py.in
+index 515cc144..a94b1b71 100644
+--- a/scrub/xfs_scrub_all.py.in
++++ b/scrub/xfs_scrub_all.py.in
+@@ -496,8 +496,7 @@ def scan_interval(string):
+ def utcnow():
+ 	'''Create a representation of the time right now, in UTC.'''
+ 
+-	dt = datetime.utcnow()
+-	return dt.replace(tzinfo = timezone.utc)
++	return datetime.now(timezone.utc)
+ 
+ def enable_automatic_media_scan(args):
+ 	'''Decide if we enable media scanning automatically.'''
+
+
+-- 
+BOFH excuse #360:
+
+Your parity check is overdrawn and you're out of cache.
