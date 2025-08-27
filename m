@@ -1,318 +1,97 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82CB02765F8
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 15:20:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEC822116E7;
+	Wed, 27 Aug 2025 15:56:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756308058; cv=none; b=BagXwpMCBFudAk2Z1meFoZISKTFBzA/TY00R3ubJb5Yon6JrpcQgUpHNlPZm9l/4OoGwrPyPmsMP3ub1j2ToyQsmW1OyRS96umeIdFBxk+Ct3CTZfx3m0Hc2kMDxrnf2yTNM6F9MpESC7RbMhtvmcwQLUdb+rgcNvnG49ZCC8iA=
+	t=1756310182; cv=none; b=MEgs1ZRTlsPGHSmd+Vjkj8p6qzAOoxOEFztsAgeF62/WhTkxYGE1mKiqtGbPU67QnjvlBbyw70aFWH4GQSJbh4E4pVoDPuYxnZTNYBn4QGMWlpQ0ePKMiTvFDzny+/6uEml+eWm3xW63IMuCSeJ8mB64WKmkJkJoq2Jr23tToPk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756308058; c=relaxed/simple;
-	bh=2wuf/nHdFysBGBlr5kTnDgd5NgVKF4J69Lu6nnyta4M=;
+	s=arc-20240116; t=1756310182; c=relaxed/simple;
+	bh=E332t6OVei1PrXs7bFwzaapdIzJ0sL3jKj74PlWIlNc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hZj+Msb2c0YtMozFOBYuE5TwHtyLsO3jKt83eyLtiuvBXACMf4bXzA0cXxJA9dSOZeyR4Re3dHVBG6gxK4vMffgkdM/W6g682/QlRQFuAnjmfuzuK0t7n02s+IrFRhNGN6vwf3BQlJvQv6eYm6+yyg8BktMQ5GGj4ntwocOl+A8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=hNJ1gfKo; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=+n9khl2d; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=hNJ1gfKo; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=+n9khl2d; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=kEyK2Tw6v+Zf6B5CJF9GEJU6k8FtybROWxnrLe/UiI7vxM8yJ2hSaQNsfWXd8GSOC2xi2s32X5lehCiVXNxUWszkh6HrYKTHcus6TpVrjYj7QfS9lpBqS3KECvt0r2Ko9SDF9nb4j2hQSooSQUQgKTwhQ+CSlKhjMxuzefAvfCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fSUeez9F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="hNJ1gfKo";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="+n9khl2d";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="hNJ1gfKo";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="+n9khl2d"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 9CAA122852;
-	Wed, 27 Aug 2025 15:20:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1756308054; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jIUV/rvBNFGtnWoz6AMDWcfQSNFQrImn3StxIXuCvcY=;
-	b=hNJ1gfKoug0X+QSVF/LIxJImahP6cGP2oX6BEFPvhOy66hDhOSFMzY3/mrklfuOZBw3rR0
-	8Q7i2eQvuocJdvvIRpw3XRyngoNwIWu0XGWWmKUMKx1mrnGdGIuJJ+TSwP/aFpuBMiVfa4
-	vQKYj/VheBJKa4esq+8A86Z5mv/kG8I=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1756308054;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jIUV/rvBNFGtnWoz6AMDWcfQSNFQrImn3StxIXuCvcY=;
-	b=+n9khl2dkHFNup0m6p3/3gGv7KWesh/bRWwJuPsnjqWa8ULhrcERGZatAF2TLNOeHupMkt
-	4XAt6SLUdlV4xoAA==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=hNJ1gfKo;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=+n9khl2d
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1756308054; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jIUV/rvBNFGtnWoz6AMDWcfQSNFQrImn3StxIXuCvcY=;
-	b=hNJ1gfKoug0X+QSVF/LIxJImahP6cGP2oX6BEFPvhOy66hDhOSFMzY3/mrklfuOZBw3rR0
-	8Q7i2eQvuocJdvvIRpw3XRyngoNwIWu0XGWWmKUMKx1mrnGdGIuJJ+TSwP/aFpuBMiVfa4
-	vQKYj/VheBJKa4esq+8A86Z5mv/kG8I=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1756308054;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jIUV/rvBNFGtnWoz6AMDWcfQSNFQrImn3StxIXuCvcY=;
-	b=+n9khl2dkHFNup0m6p3/3gGv7KWesh/bRWwJuPsnjqWa8ULhrcERGZatAF2TLNOeHupMkt
-	4XAt6SLUdlV4xoAA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6E1CF13867;
-	Wed, 27 Aug 2025 15:20:54 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id AunaGlYir2hiDQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Wed, 27 Aug 2025 15:20:54 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 84F96A0999; Wed, 27 Aug 2025 17:20:53 +0200 (CEST)
-Date: Wed, 27 Aug 2025 17:20:53 +0200
-From: Jan Kara <jack@suse.cz>
-To: Ritesh Harjani <ritesh.list@gmail.com>
-Cc: Keith Busch <kbusch@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, snitzer@kernel.org, axboe@kernel.dk, 
-	dw@davidwei.uk, brauner@kernel.org, hch@lst.de, martin.petersen@oracle.com, 
-	djwong@kernel.org, linux-xfs@vger.kernel.org, viro@zeniv.linux.org.uk, 
-	Jan Kara <jack@suse.com>, Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCHv3 0/8] direct-io: even more flexible io vectors
-Message-ID: <ua7ib34kk5s6yfthqkgy3m2pnbk33a34g7prezmwl7hfwv6lwq@fljhjaogd6gq>
-References: <20250819164922.640964-1-kbusch@meta.com>
- <87a53ra3mb.fsf@gmail.com>
- <g35u5ugmyldqao7evqfeb3hfcbn3xddvpssawttqzljpigy7u4@k3hehh3grecq>
- <aKx485EMthHfBWef@kbusch-mbp>
- <87cy8ir835.fsf@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fSUeez9F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75C40C4CEEB;
+	Wed, 27 Aug 2025 15:56:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756310181;
+	bh=E332t6OVei1PrXs7bFwzaapdIzJ0sL3jKj74PlWIlNc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fSUeez9F4689JhIn/zNJgSBVr/BIUJ0t0c4aHmJt4a4KaOhKCmpEBvBn9gxuEd6UJ
+	 xhOqVMxqtp0sf3crCyZXMKBf0v9cRo3lKtH98H4zjBpy7+M8uuompTFOxy39VjJI4n
+	 B1pbHCT4T76BmQVVhFSkA1quvUANG3oIxFoKOR7x423GwQiuzFQykN4z0dqUm1bg5F
+	 EPaFNpJg7yVrTWxhlTQmQMicA/JJr40bKIeM238yG8QjzMSJkzbneTbiDoPFKJe3I7
+	 6E9e2NOWR/p6BVHiuk4rDZREcajFdvptFiIXtyoe1s8pwpCJyJJK31phQ2dWp2Wurl
+	 jovnmcOYd9PIQ==
+Date: Wed, 27 Aug 2025 08:56:20 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@redhat.com>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	Donald Douwsma <ddouwsma@redhat.com>,
+	Dave Chinner <dchinner@redhat.com>, stable@vger.kernel.org
+Subject: Re: [PATCH] xfs: do not propagate ENODATA disk errors into xattr code
+Message-ID: <20250827155620.GA8117@frogsfrogsfrogs>
+References: <a896ce2b-1c3b-4298-a90c-c2c0e18de4cb@redhat.com>
+ <20250822152137.GE7965@frogsfrogsfrogs>
+ <aKwW2gEnQdIdDONk@infradead.org>
+ <20250825153414.GC812310@frogsfrogsfrogs>
+ <aK61FCz0wgz1s2Ab@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="na3a25opjxispaux"
-Content-Disposition: inline
-In-Reply-To: <87cy8ir835.fsf@gmail.com>
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 9CAA122852
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-2.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[multipart/mixed,text/plain,text/x-patch];
-	MX_GOOD(-0.01)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	FREEMAIL_TO(0.00)[gmail.com];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCPT_COUNT_TWELVE(0.00)[19];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MIME_TRACE(0.00)[0:+,1:+,2:+];
-	ARC_NA(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_DN_SOME(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	HAS_ATTACHMENT(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.com:email]
-X-Spam-Score: -2.51
-
-
---na3a25opjxispaux
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <aK61FCz0wgz1s2Ab@infradead.org>
 
-On Tue 26-08-25 10:29:58, Ritesh Harjani wrote:
-> Keith Busch <kbusch@kernel.org> writes:
+On Wed, Aug 27, 2025 at 12:34:44AM -0700, Christoph Hellwig wrote:
+> On Mon, Aug 25, 2025 at 08:34:14AM -0700, Darrick J. Wong wrote:
+> > > +	case BLK_STS_NOSPC:
+> > > +		return -ENOSPC;
+> > > +	case BLK_STS_OFFLINE:
+> > > +		return -ENODEV;
+> > > +	default:
+> > > +		return -EIO;
+> > 
+> > Well as I pointed out earlier, one interesting "quality" of the current
+> > behavior is that online fsck captures the ENODATA and turns that into a
+> > metadata corruption report.  I'd like to keep that behavior.
 > 
-> > On Mon, Aug 25, 2025 at 02:07:15PM +0200, Jan Kara wrote:
-> >> On Fri 22-08-25 18:57:08, Ritesh Harjani wrote:
-> >> > Keith Busch <kbusch@meta.com> writes:
-> >> > >
-> >> > >   - EXT4 falls back to buffered io for writes but not for reads.
-> >> > 
-> >> > ++linux-ext4 to get any historical context behind why the difference of
-> >> > behaviour in reads v/s writes for EXT4 DIO. 
-> >> 
-> >> Hum, how did you test? Because in the basic testing I did (with vanilla
-> >> kernel) I get EINVAL when doing unaligned DIO write in ext4... We should be
-> >> falling back to buffered IO only if the underlying file itself does not
-> >> support any kind of direct IO.
-> >
-> > Simple test case (dio-offset-test.c) below.
-> >
-> > I also ran this on vanilla kernel and got these results:
-> >
-> >   # mkfs.ext4 /dev/vda
-> >   # mount /dev/vda /mnt/ext4/
-> >   # make dio-offset-test
-> >   # ./dio-offset-test /mnt/ext4/foobar
-> >   write: Success
-> >   read: Invalid argument
-> >
-> > I tracked the "write: Success" down to ext4's handling for the "special"
-> > -ENOTBLK error after ext4_want_directio_fallback() returns "true".
-> >
+> -EIO is just as much of a metadata corruption, so if you only catch
+> ENODATA you're missing most of them.
+
+Hrmm, well an EIO (or an ENODATA) coming from the block layer causes the
+scrub code to return to userspace with EIO, and xfs_scrub will complain
+about the IO error and exit.
+
+It doesn't explicitly mark the data structure as corrupt, but scrub
+failing should be enough to conclude that the fs is corrupt.
+
+I could patch the kernel to set the CORRUPT flag on the data structure
+and keep going, since the likelihood of random bit errors causing media
+errors is pretty high now that we have disks that store more than 1e15
+bits.
+
+> > >  	if (bio->bi_status)
+> > > -		xfs_buf_ioerror(bp, blk_status_to_errno(bio->bi_status));
+> > > +		xfs_buf_ioerror(bp, xfs_buf_bio_status(bio));
+> > 
+> > I think you'd also want to wrap all the submit_bio_wait here too, right?
+> > 
+> > Hrm, only discard bios, log writes, and zonegc use that function.  Maybe
+> > not?  I think a failed log write takes down the system no matter what
+> > error code, nobody cares about failing discard, and I think zonegc write
+> > failures just lead to the gc ... aborting?
 > 
-> Right. Ext4 has fallback only for dio writes but not for DIO reads... 
-> 
-> buffered
-> static inline bool ext4_want_directio_fallback(unsigned flags, ssize_t written)
-> {
-> 	/* must be a directio to fall back to buffered */
-> 	if ((flags & (IOMAP_WRITE | IOMAP_DIRECT)) !=
-> 		    (IOMAP_WRITE | IOMAP_DIRECT))
-> 		return false;
-> 
->     ...
-> }
-> 
-> So basically the path is ext4_file_[read|write]_iter() -> iomap_dio_rw
->     -> iomap_dio_bio_iter() -> return -EINVAL. i.e. from...
-> 
-> 
-> 	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1) ||
-> 	    !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
-> 		return -EINVAL;
-> 
-> EXT4 then fallsback to buffered-io only for writes, but not for reads. 
+> Yes.  In Linux -EIO means an unrecoverable I/O error that the lower
+> layers gave up retrying. Not much we can do about that.
 
-Right. And the fallback for writes was actually inadvertedly "added" by
-commit bc264fea0f6f "iomap: support incremental iomap_iter advances". That
-changed the error handling logic. Previously if iomap_dio_bio_iter()
-returned EINVAL, it got propagated to userspace regardless of what
-->iomap_end() returned. After this commit if ->iomap_end() returns error
-(which is ENOTBLK in ext4 case), it gets propagated to userspace instead of
-the error returned by iomap_dio_bio_iter().
+<nod>
 
-Now both the old and new behavior make some sense so I won't argue that the
-new iomap_iter() behavior is wrong. But I think we should change ext4 back
-to the old behavior of failing unaligned dio writes instead of them falling
-back to buffered IO. I think something like the attached patch should do
-the trick - it makes unaligned dio writes fail again while writes to holes
-of indirect-block mapped files still correctly fall back to buffered IO.
-Once fstests run completes, I'll do a proper submission...
-
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
-
---na3a25opjxispaux
-Content-Type: text/x-patch; charset=us-ascii
-Content-Disposition: attachment;
-	filename="0001-ext4-Fail-unaligned-direct-IO-write-with-EINVAL.patch"
-
-From ce6da00a09647a03013c3f420c2e7ef7489c3de8 Mon Sep 17 00:00:00 2001
-From: Jan Kara <jack@suse.cz>
-Date: Wed, 27 Aug 2025 14:55:19 +0200
-Subject: [PATCH] ext4: Fail unaligned direct IO write with EINVAL
-
-Commit bc264fea0f6f ("iomap: support incremental iomap_iter advances")
-changed the error handling logic in iomap_iter(). Previously any error
-from iomap_dio_bio_iter() got propagated to userspace, after this commit
-if ->iomap_end returns error, it gets propagated to userspace instead of
-an error from iomap_dio_bio_iter(). This results in unaligned writes to
-ext4 to silently fallback to buffered IO instead of erroring out.
-
-Now returning ENOTBLK for DIO writes from ext4_iomap_end() seems
-unnecessary these days. It is enough to return ENOTBLK from
-ext4_iomap_begin() when we don't support DIO write for that particular
-file offset (due to hole).
-
-Fixes: bc264fea0f6f ("iomap: support incremental iomap_iter advances")
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/ext4/file.c  |  2 --
- fs/ext4/inode.c | 35 -----------------------------------
- 2 files changed, 37 deletions(-)
-
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 93240e35ee36..cf39f57d21e9 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -579,8 +579,6 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		iomap_ops = &ext4_iomap_overwrite_ops;
- 	ret = iomap_dio_rw(iocb, from, iomap_ops, &ext4_dio_write_ops,
- 			   dio_flags, NULL, 0);
--	if (ret == -ENOTBLK)
--		ret = 0;
- 	if (extend) {
- 		/*
- 		 * We always perform extending DIO write synchronously so by
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 5b7a15db4953..c3b23c90fd11 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3872,47 +3872,12 @@ static int ext4_iomap_overwrite_begin(struct inode *inode, loff_t offset,
- 	return ret;
- }
- 
--static inline bool ext4_want_directio_fallback(unsigned flags, ssize_t written)
--{
--	/* must be a directio to fall back to buffered */
--	if ((flags & (IOMAP_WRITE | IOMAP_DIRECT)) !=
--		    (IOMAP_WRITE | IOMAP_DIRECT))
--		return false;
--
--	/* atomic writes are all-or-nothing */
--	if (flags & IOMAP_ATOMIC)
--		return false;
--
--	/* can only try again if we wrote nothing */
--	return written == 0;
--}
--
--static int ext4_iomap_end(struct inode *inode, loff_t offset, loff_t length,
--			  ssize_t written, unsigned flags, struct iomap *iomap)
--{
--	/*
--	 * Check to see whether an error occurred while writing out the data to
--	 * the allocated blocks. If so, return the magic error code for
--	 * non-atomic write so that we fallback to buffered I/O and attempt to
--	 * complete the remainder of the I/O.
--	 * For non-atomic writes, any blocks that may have been
--	 * allocated in preparation for the direct I/O will be reused during
--	 * buffered I/O. For atomic write, we never fallback to buffered-io.
--	 */
--	if (ext4_want_directio_fallback(flags, written))
--		return -ENOTBLK;
--
--	return 0;
--}
--
- const struct iomap_ops ext4_iomap_ops = {
- 	.iomap_begin		= ext4_iomap_begin,
--	.iomap_end		= ext4_iomap_end,
- };
- 
- const struct iomap_ops ext4_iomap_overwrite_ops = {
- 	.iomap_begin		= ext4_iomap_overwrite_begin,
--	.iomap_end		= ext4_iomap_end,
- };
- 
- static int ext4_iomap_begin_report(struct inode *inode, loff_t offset,
--- 
-2.43.0
-
-
---na3a25opjxispaux--
+--D
