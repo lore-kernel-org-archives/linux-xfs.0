@@ -1,65 +1,41 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D44131E230E
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 17:48:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9203F2727EA;
+	Wed, 27 Aug 2025 18:04:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756316936; cv=none; b=eDjcvWoLxrKtdaJOZLk80irP8L3EyYreXvjurYFmzKrDjQwCnLDqXlQP1bJl7nRvqEtMW/vHrkG0+1oQUn8Rg2IleZx3r0khTcq280IWpFprSOHA5ObUk4xhnSkvVw9pooEX/F07QR7U4afp4NcPTsptoVQPLGZmET5JY5iImwA=
+	t=1756317888; cv=none; b=MIaVI3vLTyP40ECAgMcZkit23i7CcFGJ3X7QgqVmCWaVgzb/P1r1MnhRgnAKMzPhDIen8Nz8ZJWsOejdXwr0WSMaxWQWNr0a1bhOvw7HZJMVHV6Z/vWICPMws8xAt/JynB0S5pMosko1BNgw71FKIAenZ8oM+k1v4lP54oAFWOo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756316936; c=relaxed/simple;
-	bh=jUFz9jruHYXkyKMr2r0i+WWI9/MTQ7vAdaDz5a2Ztwo=;
+	s=arc-20240116; t=1756317888; c=relaxed/simple;
+	bh=6WlgShXTPlpTvd/GztbCg8VM5Dsy7drHlTuT71fnv6M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QZ58hWXrWYxF/AIEjcJBIaqP6dkvTuBllIq9ZdMKMoA/pqDFHAkzrIylxosLxNU0aMoKHPGQg/QZBaqPDOUA8c9PMPHnfq4871yc1GaZ/ugv9vK1Bcc/9Kqgcd18c2ny+GBCmeF1iU5++QUBxLPffxh5UXKxTe2ulkHxEX13GHU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=O4l3/ZHi; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=phPTSgiX6R7bsjP5o+4EyjKBXis0xDb7ce96lxXumDEKc1M+YINzyNvwoPTeE5f9Es19D9iPiLwD3XmH7T/bxFRGaLqCfQhOI7pTyPnCBZvYnAfMrUczrWCGARBgbXa1DYFpDsBSkgHe0R8zhquaRRhj0YiG7MEoGXjev7D4+lg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fd5Ie8SX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="O4l3/ZHi"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756316933;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=CY1ybBNELINlBW46BpY0I29Oa4pllqZv5dG3GvoWIX0=;
-	b=O4l3/ZHiCAyimDc4gMBMUGoiel4GtohOEoOKKHZUQVIGhsUfDLuQ0gH8ZpT3b8a/UseNdY
-	pCZtLCG/ztxEiW3TMLzpMADncD7kR518qzsrWhRq8S7WHQ7H+txxxIJx0NRo38xhxIIF49
-	rVFHs2J5xPKIlWDZ9EGp2e2MIfyzvLk=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-339-jQMARTUAN46urj9FdaLopg-1; Wed,
- 27 Aug 2025 13:48:48 -0400
-X-MC-Unique: jQMARTUAN46urj9FdaLopg-1
-X-Mimecast-MFC-AGG-ID: jQMARTUAN46urj9FdaLopg_1756316925
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 634BD19560B5;
-	Wed, 27 Aug 2025 17:48:44 +0000 (UTC)
-Received: from bfoster (unknown [10.22.80.41])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A795C30001A6;
-	Wed, 27 Aug 2025 17:48:40 +0000 (UTC)
-Date: Wed, 27 Aug 2025 13:52:37 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Jan Kara <jack@suse.cz>
-Cc: Ritesh Harjani <ritesh.list@gmail.com>, Keith Busch <kbusch@kernel.org>,
-	Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-ext4@vger.kernel.org, snitzer@kernel.org, axboe@kernel.dk,
-	dw@davidwei.uk, brauner@kernel.org, hch@lst.de,
-	martin.petersen@oracle.com, djwong@kernel.org,
-	linux-xfs@vger.kernel.org, viro@zeniv.linux.org.uk,
-	Jan Kara <jack@suse.com>
-Subject: Re: [PATCHv3 0/8] direct-io: even more flexible io vectors
-Message-ID: <aK9F5euA3kQdGaMi@bfoster>
-References: <20250819164922.640964-1-kbusch@meta.com>
- <87a53ra3mb.fsf@gmail.com>
- <g35u5ugmyldqao7evqfeb3hfcbn3xddvpssawttqzljpigy7u4@k3hehh3grecq>
- <aKx485EMthHfBWef@kbusch-mbp>
- <87cy8ir835.fsf@gmail.com>
- <ua7ib34kk5s6yfthqkgy3m2pnbk33a34g7prezmwl7hfwv6lwq@fljhjaogd6gq>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fd5Ie8SX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13651C4CEEB;
+	Wed, 27 Aug 2025 18:04:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756317888;
+	bh=6WlgShXTPlpTvd/GztbCg8VM5Dsy7drHlTuT71fnv6M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Fd5Ie8SX+ZykJ7iiT8jV+yWZJgioFZzGrUyZpE1Ecr0oLEBWIuv8rR/voHypzCpka
+	 pxMT91zP/3U9Dc5XvBBmzgFFjKF70Nzb4+vjzW4Oe+Y2fuQvD29c//r+MICUs8zqf4
+	 BFYEk+g5LHBsjG4Oz0HxN4a4cWelbDhatFHWHCdEbpKX8yydBcRWiwmqriSYzlkaO5
+	 JIwD6TpMqtpdJmCM9IOifcBiFqg9Ljh8ihyz01ak003UhXqfjPNtLdPN7Y/CHHTP76
+	 izKsRSG/WVummBw+XMSSp6t70Y0C4yUaWMPQ0MmcQxlKtdWoJw5Sd9RYCLSGzZw/x/
+	 pIRQKktwgy7nQ==
+Date: Wed, 27 Aug 2025 11:04:47 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 7/7] common: fix _require_xfs_io_command pwrite -A for
+ various blocksizes
+Message-ID: <20250827180447.GA8092@frogsfrogsfrogs>
+References: <175381957865.3020742.6707679007956321815.stgit@frogsfrogsfrogs>
+ <175381958029.3020742.354788781592227856.stgit@frogsfrogsfrogs>
+ <20250801185315.2d2mfehoqybtiizb@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -68,201 +44,75 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ua7ib34kk5s6yfthqkgy3m2pnbk33a34g7prezmwl7hfwv6lwq@fljhjaogd6gq>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+In-Reply-To: <20250801185315.2d2mfehoqybtiizb@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Wed, Aug 27, 2025 at 05:20:53PM +0200, Jan Kara wrote:
-> On Tue 26-08-25 10:29:58, Ritesh Harjani wrote:
-> > Keith Busch <kbusch@kernel.org> writes:
+On Sat, Aug 02, 2025 at 02:53:15AM +0800, Zorro Lang wrote:
+> On Tue, Jul 29, 2025 at 01:10:04PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > > On Mon, Aug 25, 2025 at 02:07:15PM +0200, Jan Kara wrote:
-> > >> On Fri 22-08-25 18:57:08, Ritesh Harjani wrote:
-> > >> > Keith Busch <kbusch@meta.com> writes:
-> > >> > >
-> > >> > >   - EXT4 falls back to buffered io for writes but not for reads.
-> > >> > 
-> > >> > ++linux-ext4 to get any historical context behind why the difference of
-> > >> > behaviour in reads v/s writes for EXT4 DIO. 
-> > >> 
-> > >> Hum, how did you test? Because in the basic testing I did (with vanilla
-> > >> kernel) I get EINVAL when doing unaligned DIO write in ext4... We should be
-> > >> falling back to buffered IO only if the underlying file itself does not
-> > >> support any kind of direct IO.
-> > >
-> > > Simple test case (dio-offset-test.c) below.
-> > >
-> > > I also ran this on vanilla kernel and got these results:
-> > >
-> > >   # mkfs.ext4 /dev/vda
-> > >   # mount /dev/vda /mnt/ext4/
-> > >   # make dio-offset-test
-> > >   # ./dio-offset-test /mnt/ext4/foobar
-> > >   write: Success
-> > >   read: Invalid argument
-> > >
-> > > I tracked the "write: Success" down to ext4's handling for the "special"
-> > > -ENOTBLK error after ext4_want_directio_fallback() returns "true".
-> > >
+> > In this predicate, we should test an atomic write of the minimum
+> > supported size, not just 4k.  This fixes a problem where none of the
+> > atomic write tests actually run on a 32k-fsblock xfs because you can't
+> > do a sub-fsblock atomic write.
 > > 
-> > Right. Ext4 has fallback only for dio writes but not for DIO reads... 
-> > 
-> > buffered
-> > static inline bool ext4_want_directio_fallback(unsigned flags, ssize_t written)
-> > {
-> > 	/* must be a directio to fall back to buffered */
-> > 	if ((flags & (IOMAP_WRITE | IOMAP_DIRECT)) !=
-> > 		    (IOMAP_WRITE | IOMAP_DIRECT))
-> > 		return false;
-> > 
-> >     ...
-> > }
-> > 
-> > So basically the path is ext4_file_[read|write]_iter() -> iomap_dio_rw
-> >     -> iomap_dio_bio_iter() -> return -EINVAL. i.e. from...
+> > Cc: <fstests@vger.kernel.org> # v2025.04.13
+> > Fixes: d90ee3b6496346 ("generic: add a test for atomic writes")
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  common/rc |   14 +++++++++++---
+> >  1 file changed, 11 insertions(+), 3 deletions(-)
 > > 
 > > 
-> > 	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1) ||
-> > 	    !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
-> > 		return -EINVAL;
+> > diff --git a/common/rc b/common/rc
+> > index 96578d152dafb9..177e7748f4bb89 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -3027,16 +3027,24 @@ _require_xfs_io_command()
+> >  	"pwrite")
+> >  		# -N (RWF_NOWAIT) only works with direct vectored I/O writes
+> >  		local pwrite_opts=" "
+> > +		local write_size="4k"
+> >  		if [ "$param" == "-N" ]; then
+> >  			opts+=" -d"
+> > -			pwrite_opts+="-V 1 -b 4k"
+> > +			pwrite_opts+="-V 1 -b $write_size"
+> >  		fi
+> >  		if [ "$param" == "-A" ]; then
+> >  			opts+=" -d"
+> > -			pwrite_opts+="-V 1 -b 4k"
+> > +			# try to write the minimum supported atomic write size
+> > +			write_size="$($XFS_IO_PROG -f -c "statx -r -m $STATX_WRITE_ATOMIC" $testfile 2>/dev/null | \
+> > +				grep atomic_write_unit_min | \
+> > +				grep -o '[0-9]\+')"
+> > +			if [ -z "$write_size" ] || [ "$write_size" = "0" ]; then
+> > +				write_size="0 --not-supported"
+>                                               ^^^^^^^^^^^^^^^
+> 
+> What is this "--not-supported" for? If write_size="0 --not-supported", will we get...
+> 
+> 
+> > +			fi
+> > +			pwrite_opts+="-V 1 -b $write_size"
+> >  		fi
+> >  		testio=`$XFS_IO_PROG -f $opts -c \
+> > -		        "pwrite $pwrite_opts $param 0 4k" $testfile 2>&1`
+> > +		        "pwrite $pwrite_opts $param 0 $write_size" $testfile 2>&1`
+> 
+> "pwrite -V 1 -b  0 --not-supported 0 0 --not-supported" at here?
+
+Yes, this is correct.  "--not-supported" is not a valid flag to the
+pwrite subcommand.  I'm injecting it here intentionally when we don't
+detect any atomic write capability so that the _require checks will
+behave as if xfs_io doesn't support the -A flag, and _notrun the test.
+
+--D
+
+> Thanks,
+> Zorro
+> 
+> >  		param_checked="$pwrite_opts $param"
+> >  		;;
+> >  	"scrub"|"repair")
 > > 
-> > EXT4 then fallsback to buffered-io only for writes, but not for reads. 
-> 
-> Right. And the fallback for writes was actually inadvertedly "added" by
-> commit bc264fea0f6f "iomap: support incremental iomap_iter advances". That
-> changed the error handling logic. Previously if iomap_dio_bio_iter()
-> returned EINVAL, it got propagated to userspace regardless of what
-> ->iomap_end() returned. After this commit if ->iomap_end() returns error
-> (which is ENOTBLK in ext4 case), it gets propagated to userspace instead of
-> the error returned by iomap_dio_bio_iter().
-> 
-
-Ah, so IIUC you're referring to the change in iomap_iter() where the
-iomap_end() error code was returned "if (ret < 0 && !iter->processed)",
-where iter->processed held a potential error code from the iterator.
-That was changed to !advanced, which filters out the processed < 0 case
-and allows the error to return from iomap_end here rather than from
-iter->processed a few lines down.
-
-There were further changes to eliminate the advance from iomap_iter()
-case (and rename processed -> status), so I suppose we could consider
-changing that to something like:
-
-	if (ret < 0 && !advanced && !iter->status)
-		return ret;
-
-... which I think would restore original error behavior. But I agree
-it's not totally clear which is preferable. Certainly the change in
-behavior was not intentional so thanks for the analysis. I'd have to
-stare at the code and think (and test) some more to form an opinion on
-whether it's worth changing. Meanwhile it looks like you have a
-reasonable enough workaround..
-
-Brian
-
-> Now both the old and new behavior make some sense so I won't argue that the
-> new iomap_iter() behavior is wrong. But I think we should change ext4 back
-> to the old behavior of failing unaligned dio writes instead of them falling
-> back to buffered IO. I think something like the attached patch should do
-> the trick - it makes unaligned dio writes fail again while writes to holes
-> of indirect-block mapped files still correctly fall back to buffered IO.
-> Once fstests run completes, I'll do a proper submission...
 > 
 > 
-> 								Honza
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
-
-> From ce6da00a09647a03013c3f420c2e7ef7489c3de8 Mon Sep 17 00:00:00 2001
-> From: Jan Kara <jack@suse.cz>
-> Date: Wed, 27 Aug 2025 14:55:19 +0200
-> Subject: [PATCH] ext4: Fail unaligned direct IO write with EINVAL
-> 
-> Commit bc264fea0f6f ("iomap: support incremental iomap_iter advances")
-> changed the error handling logic in iomap_iter(). Previously any error
-> from iomap_dio_bio_iter() got propagated to userspace, after this commit
-> if ->iomap_end returns error, it gets propagated to userspace instead of
-> an error from iomap_dio_bio_iter(). This results in unaligned writes to
-> ext4 to silently fallback to buffered IO instead of erroring out.
-> 
-> Now returning ENOTBLK for DIO writes from ext4_iomap_end() seems
-> unnecessary these days. It is enough to return ENOTBLK from
-> ext4_iomap_begin() when we don't support DIO write for that particular
-> file offset (due to hole).
-> 
-> Fixes: bc264fea0f6f ("iomap: support incremental iomap_iter advances")
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/ext4/file.c  |  2 --
->  fs/ext4/inode.c | 35 -----------------------------------
->  2 files changed, 37 deletions(-)
-> 
-> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-> index 93240e35ee36..cf39f57d21e9 100644
-> --- a/fs/ext4/file.c
-> +++ b/fs/ext4/file.c
-> @@ -579,8 +579,6 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  		iomap_ops = &ext4_iomap_overwrite_ops;
->  	ret = iomap_dio_rw(iocb, from, iomap_ops, &ext4_dio_write_ops,
->  			   dio_flags, NULL, 0);
-> -	if (ret == -ENOTBLK)
-> -		ret = 0;
->  	if (extend) {
->  		/*
->  		 * We always perform extending DIO write synchronously so by
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 5b7a15db4953..c3b23c90fd11 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -3872,47 +3872,12 @@ static int ext4_iomap_overwrite_begin(struct inode *inode, loff_t offset,
->  	return ret;
->  }
->  
-> -static inline bool ext4_want_directio_fallback(unsigned flags, ssize_t written)
-> -{
-> -	/* must be a directio to fall back to buffered */
-> -	if ((flags & (IOMAP_WRITE | IOMAP_DIRECT)) !=
-> -		    (IOMAP_WRITE | IOMAP_DIRECT))
-> -		return false;
-> -
-> -	/* atomic writes are all-or-nothing */
-> -	if (flags & IOMAP_ATOMIC)
-> -		return false;
-> -
-> -	/* can only try again if we wrote nothing */
-> -	return written == 0;
-> -}
-> -
-> -static int ext4_iomap_end(struct inode *inode, loff_t offset, loff_t length,
-> -			  ssize_t written, unsigned flags, struct iomap *iomap)
-> -{
-> -	/*
-> -	 * Check to see whether an error occurred while writing out the data to
-> -	 * the allocated blocks. If so, return the magic error code for
-> -	 * non-atomic write so that we fallback to buffered I/O and attempt to
-> -	 * complete the remainder of the I/O.
-> -	 * For non-atomic writes, any blocks that may have been
-> -	 * allocated in preparation for the direct I/O will be reused during
-> -	 * buffered I/O. For atomic write, we never fallback to buffered-io.
-> -	 */
-> -	if (ext4_want_directio_fallback(flags, written))
-> -		return -ENOTBLK;
-> -
-> -	return 0;
-> -}
-> -
->  const struct iomap_ops ext4_iomap_ops = {
->  	.iomap_begin		= ext4_iomap_begin,
-> -	.iomap_end		= ext4_iomap_end,
->  };
->  
->  const struct iomap_ops ext4_iomap_overwrite_ops = {
->  	.iomap_begin		= ext4_iomap_overwrite_begin,
-> -	.iomap_end		= ext4_iomap_end,
->  };
->  
->  static int ext4_iomap_begin_report(struct inode *inode, loff_t offset,
-> -- 
-> 2.43.0
-> 
-
