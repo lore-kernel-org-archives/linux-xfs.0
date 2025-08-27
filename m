@@ -1,144 +1,87 @@
-Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
+Received: from mail-io1-f70.google.com (mail-io1-f70.google.com [209.85.166.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F3B131CA45
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 08:03:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B53127EFFE
+	for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 08:15:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756281831; cv=none; b=Nr63Pl+WeQX4EU0ea4dX1FM2rH+zQBVqkBbZoNhJkEwVj8MIBdSIq/lJTYfFDaZaN/XqkKmOV5XeiqJwGKrmWkwLWAc8/dAqcI0gP770VkB4866rW+PutOjOsQJU9sdMW6DvER5DdAW0QykVEHDgJEXDDw1dd4SNVZNx0ooxb7c=
+	t=1756282536; cv=none; b=dHLPOb45dmuEBiwimmk0M6QDGdb5JL0Wb9qt4aX0Do+g28raoYE+jOuWFoqSGVvNnHG5ca79vm2qkkbsnY3YYOxnhRE8lWJaBcaL+/ONribTxkKXK5Hc1WfAZJGRr9qmiknttUv2mc9P/5TmUqjQyFOhrYq2VrUDWXNVQXv28KM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756281831; c=relaxed/simple;
-	bh=GKFP0cKg8X36DYXTs4AnKInFPQYLUC25oeO1ip+uIVo=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
-	 Content-Type; b=pyFoUIrPfwfbMSpY6NjkKd4Ct6HUjY9cABmK/YQ76Yi3lL6NYvJV/dpuGdxRS+syLY2P9/nMR1ueZdoPVqs1w1D36+4UCVpTMa9Q05LHiKlzuFO5jGzO7SmfQT8umC6WPCSQHHrNkTeCL+ZESLtRLEEX+l+x9YUNRFOMDLzFm5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.199
+	s=arc-20240116; t=1756282536; c=relaxed/simple;
+	bh=m4FL+YwjjxPHuiR7uqDuYt9gdrCleurGT7eiu4YHhms=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=MtN3DBmWUc5k8c2hGDdHvr0nvvhSGSvd++5zEJhX3+7+QMvmJB7uKX1rgYnB3+i+b3k8kC+Xj+ciLCZC7hY2DaaonRy0TT1sxPR1p7Nh9k03bcTJVfJ7h+m2I/+BWxgcQzPqu7Hv1ihTk7Sg7epqa09xv/SbthUS7H79WS2sjmo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3ed6502add9so27203485ab.3
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 01:03:49 -0700 (PDT)
+Received: by mail-io1-f70.google.com with SMTP id ca18e2360f4ac-886febbe196so11873639f.3
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 01:15:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756281829; x=1756886629;
-        h=cc:to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xXVGAuQnn9XzlKQXqXAG7puergh7qbhhO9p5PMqXgkw=;
-        b=J5FSqWVcXg3KDI3wnixiHIJ1KZ31IO36A2Q1sj2ldkvCGpMm3Nqddp1wpcFCOyVOl7
-         JLId+I4ZBhgDWCc8ZXZwxDMtCupvzlkbdVYcThL5nNS8T5BAR3qokwbF4VeDuSyOtfQX
-         5DZ/FUfVuycckNAzlsy+0CxC0lZzfRQhfAWs+aJKIdTOCr2CoPGmnb42OcspTPccf9LX
-         RdXJCioOgogHIua0Y/LGLtTw/9t8N/o4hNaDffYlAIRdy+0HPbuwhp9yeedndcEUg19n
-         FCXRnHh/yYvW4sj/QgJgsqieX1G6ox0DWFNV/G8F86/6GuKLJpJkP6kWdnjK6pRFQcP7
-         OvFQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUJQoLjQXYyAavkbgG96V8+brsr8hfIfksddRHStOK9NNp4ZtagdUwSKszOwk06uzVNWYA1B2ZPduc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzroKjZTHoEsz/KxNkCjx/Y+wwlXqyi2CZkjuquu19+YzV2bwwE
-	C02ylLLB+RybS8oRGhaqaEPRz0SJ5D+XdBsIy05W8YSzwcaiCkUPJ92+r5Q63gIhOLlGThFsInN
-	+shLtYj/+he89flPwJ72tD0OVM4uCnLmb8S2m1LDaqxYY+SG393D8v0cllXw=
-X-Google-Smtp-Source: AGHT+IHgGgCW/4gHUt8t/levoYYyVNCC5/Uo1Faz0rZusbCMW0pjQ6aBYk5jawEFHvtzIMDbLkK5lYOmXgLbgGbFV0yzSJsjx3T1
+        d=1e100.net; s=20230601; t=1756282534; x=1756887334;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=gTgJdBfA0oZMPicavM9FELt37YbVpVxthJ0GDI4sbTQ=;
+        b=rt+vF85UpAZQ8tK6U64EF6fl4LwIV1bTvJgtB6C6x/tzwb6uQ/hiZNJI9d7K004zgk
+         tRrTmwZkEqnhdv0PQOiEPoAZ3DjZyd71TkYt/6sco5KIucIDmy7LsnpLwI7zQ8H2HB1L
+         7tusPmZwPXkH1kLaKPPom3eshW136UDBHD4UVENErT9kS/Dh88yD9mbMCXJxldiDVdmP
+         f9LeQvHPbPLS5iidONhnwpiVZbwSBcvdpw4Xu/Ef7u3azx61FYTYUJGeJ0f2G8Tmx84F
+         Ajs/kWSbkSrGsC6cVmNLaNcplVX/IvfIC+rhPo1qtUJOKx9WCwNWuWGQVlpUIPG99KYX
+         HUWQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUzseBINyv5LsGFezSyL1i+7dE9PVR+Yn1GCZzfGc25JjlNLF6lqQKkabutDimKgPDqPfDKH46Er68=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwJuWDSdLz2hoM15hcJuhVdrtZmUNbdaGBqFcJi4InnqKHr1Pof
+	CAZQbUhNGHLwZWBcL/uK5TGZfKvQ4YCFDsBHLrfzAgWliV2O5xj6apJe9GPccm76NB/yZs6mdch
+	KqWx3u13GDwq8k/QC0J+cixxysOwUrqZGFWUzYpxb8052Y0wuhWRqoRGUw/Y=
+X-Google-Smtp-Source: AGHT+IETxI0GYk51S/ALlsOosxU/0xdROpMYDujoZT7ejlUZ3SuB9LC1DjO4nVdbY9MZ0gcKayq8kPOXOlHau29fuQqFpMLwZBz7
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:4813:b0:3ea:114c:83a6 with SMTP id
- e9e14a558f8ab-3ea114c860fmr227055435ab.1.1756281828839; Wed, 27 Aug 2025
- 01:03:48 -0700 (PDT)
-Date: Wed, 27 Aug 2025 01:03:48 -0700
-In-Reply-To: <cover.1756222464.git.josef@toxicpanda.com>
+X-Received: by 2002:a05:6e02:216b:b0:3ed:a4b6:55eb with SMTP id
+ e9e14a558f8ab-3eda4b65723mr105044525ab.10.1756282534577; Wed, 27 Aug 2025
+ 01:15:34 -0700 (PDT)
+Date: Wed, 27 Aug 2025 01:15:34 -0700
 X-Google-Appengine-App-Id: s~syzkaller
 X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <68aebbe4.a70a0220.3cafd4.0011.GAE@google.com>
-Subject: [syzbot ci] Re: fs: rework inode reference counting
-From: syzbot ci <syzbot+ci0d448b9d8cb534fd@syzkaller.appspotmail.com>
-To: amir73il@gmail.com, brauner@kernel.org, josef@toxicpanda.com, 
-	kernel-team@fb.com, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	viro@zeniv.linux.org.uk
-Cc: syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
+Message-ID: <68aebea6.a70a0220.3cafd4.0015.GAE@google.com>
+Subject: [syzbot] Monthly xfs report (Aug 2025)
+From: syzbot <syzbot+listf1f846890378c60ccd2e@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
 Content-Type: text/plain; charset="UTF-8"
 
-syzbot ci has tested the following series
+Hello xfs maintainers/developers,
 
-[v2] fs: rework inode reference counting
-https://lore.kernel.org/all/cover.1756222464.git.josef@toxicpanda.com
-* [PATCH v2 01/54] fs: make the i_state flags an enum
-* [PATCH v2 02/54] fs: add an icount_read helper
-* [PATCH v2 03/54] fs: rework iput logic
-* [PATCH v2 04/54] fs: add an i_obj_count refcount to the inode
-* [PATCH v2 05/54] fs: hold an i_obj_count reference in wait_sb_inodes
-* [PATCH v2 06/54] fs: hold an i_obj_count reference for the i_wb_list
-* [PATCH v2 07/54] fs: hold an i_obj_count reference for the i_io_list
-* [PATCH v2 08/54] fs: hold an i_obj_count reference in writeback_sb_inodes
-* [PATCH v2 09/54] fs: hold an i_obj_count reference while on the hashtable
-* [PATCH v2 10/54] fs: hold an i_obj_count reference while on the LRU list
-* [PATCH v2 11/54] fs: hold an i_obj_count reference while on the sb inode list
-* [PATCH v2 12/54] fs: stop accessing ->i_count directly in f2fs and gfs2
-* [PATCH v2 13/54] fs: hold an i_obj_count when we have an i_count reference
-* [PATCH v2 14/54] fs: add an I_LRU flag to the inode
-* [PATCH v2 15/54] fs: maintain a list of pinned inodes
-* [PATCH v2 16/54] fs: delete the inode from the LRU list on lookup
-* [PATCH v2 17/54] fs: remove the inode from the LRU list on unlink/rmdir
-* [PATCH v2 18/54] fs: change evict_inodes to use iput instead of evict directly
-* [PATCH v2 19/54] fs: hold a full ref while the inode is on a LRU
-* [PATCH v2 20/54] fs: disallow 0 reference count inodes
-* [PATCH v2 21/54] fs: make evict_inodes add to the dispose list under the i_lock
-* [PATCH v2 22/54] fs: convert i_count to refcount_t
-* [PATCH v2 23/54] fs: use refcount_inc_not_zero in igrab
-* [PATCH v2 24/54] fs: use inode_tryget in find_inode*
-* [PATCH v2 25/54] fs: update find_inode_*rcu to check the i_count count
-* [PATCH v2 26/54] fs: use igrab in insert_inode_locked
-* [PATCH v2 27/54] fs: remove I_WILL_FREE|I_FREEING check from __inode_add_lru
-* [PATCH v2 28/54] fs: remove I_WILL_FREE|I_FREEING check in inode_pin_lru_isolating
-* [PATCH v2 29/54] fs: use inode_tryget in evict_inodes
-* [PATCH v2 30/54] fs: change evict_dentries_for_decrypted_inodes to use refcount
-* [PATCH v2 31/54] block: use igrab in sync_bdevs
-* [PATCH v2 32/54] bcachefs: use the refcount instead of I_WILL_FREE|I_FREEING
-* [PATCH v2 33/54] btrfs: don't check I_WILL_FREE|I_FREEING
-* [PATCH v2 34/54] fs: use igrab in drop_pagecache_sb
-* [PATCH v2 35/54] fs: stop checking I_FREEING in d_find_alias_rcu
-* [PATCH v2 36/54] ext4: stop checking I_WILL_FREE|IFREEING in ext4_check_map_extents_env
-* [PATCH v2 37/54] fs: remove I_WILL_FREE|I_FREEING from fs-writeback.c
-* [PATCH v2 38/54] gfs2: remove I_WILL_FREE|I_FREEING usage
-* [PATCH v2 39/54] fs: remove I_WILL_FREE|I_FREEING check from dquot.c
-* [PATCH v2 40/54] notify: remove I_WILL_FREE|I_FREEING checks in fsnotify_unmount_inodes
-* [PATCH v2 41/54] xfs: remove I_FREEING check
-* [PATCH v2 42/54] landlock: remove I_FREEING|I_WILL_FREE check
-* [PATCH v2 43/54] fs: change inode_is_dirtytime_only to use refcount
-* [PATCH v2 44/54] btrfs: remove references to I_FREEING
-* [PATCH v2 45/54] ext4: remove reference to I_FREEING in inode.c
-* [PATCH v2 46/54] ext4: remove reference to I_FREEING in orphan.c
-* [PATCH v2 47/54] pnfs: use i_count refcount to determine if the inode is going away
-* [PATCH v2 48/54] fs: remove some spurious I_FREEING references in inode.c
-* [PATCH v2 49/54] xfs: remove reference to I_FREEING|I_WILL_FREE
-* [PATCH v2 50/54] ocfs2: do not set I_WILL_FREE
-* [PATCH v2 51/54] fs: remove I_FREEING|I_WILL_FREE
-* [PATCH v2 52/54] fs: remove I_REFERENCED
-* [PATCH v2 53/54] fs: remove I_LRU_ISOLATING flag
-* [PATCH v2 54/54] fs: add documentation explaining the reference count rules for inodes
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
-and found the following issue:
-kernel build error
+During the period, 4 new issues were detected and 0 were fixed.
+In total, 14 issues are still open and 27 have already been fixed.
 
-Full report is available here:
-https://ci.syzbot.org/series/ccd4eafa-7a13-48d6-93b6-f40c03262bea
+Some of the still happening issues:
 
-***
-
-kernel build error
-
-tree:      torvalds
-URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/torvalds/linux
-base:      fab1beda7597fac1cecc01707d55eadb6bbe773c
-arch:      amd64
-compiler:  Debian clang version 20.1.7 (++20250616065708+6146a88f6049-1~exp1~20250616065826.132), Debian LLD 20.1.7
-config:    https://ci.syzbot.org/builds/162c03ae-2d30-4085-ab1e-a2dd1c8403eb/config
-
-fs/bcachefs/fs.c:350:20: error: incompatible pointer types passing 'struct bch_inode_info *' to parameter of type 'const struct inode *' [-Werror,-Wincompatible-pointer-types]
-
-***
-
-If these findings have caused you to resend the series or submit a
-separate fix, please add the following tag to your commit message:
-  Tested-by: syzbot@syzkaller.appspotmail.com
+Ref Crashes Repro Title
+<1> 2624    Yes   INFO: task hung in sync_inodes_sb (5)
+                  https://syzkaller.appspot.com/bug?extid=30476ec1b6dc84471133
+<2> 271     Yes   BUG: Bad page state in iomap_write_begin
+                  https://syzkaller.appspot.com/bug?extid=c317c107c68f8bc257d9
+<3> 215     Yes   KASAN: slab-use-after-free Read in xfs_inode_item_push
+                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
+<4> 29      Yes   INFO: task hung in vfs_setxattr (7)
+                  https://syzkaller.appspot.com/bug?extid=3d0a18cd22695979a7c6
+<5> 2       Yes   KASAN: slab-use-after-free Read in xlog_cil_push_work
+                  https://syzkaller.appspot.com/bug?extid=95170b2e7d9e80b8a7d7
 
 ---
 This report is generated by a bot. It may contain errors.
-syzbot ci engineers can be reached at syzkaller@googlegroups.com.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
