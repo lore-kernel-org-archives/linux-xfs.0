@@ -1,73 +1,73 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8DC027979F
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 15:16:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9013D279DDF
+	for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 15:16:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756307764; cv=none; b=DzhXfggcSed+VRiddOqMwtAmAj39I0TiPfeRuAz5Xsg5tRNL/C0pQd4gvCsheA8PznOrQAGBJ9oUoj7lFYl0qA9fSDHVi183bkRNx8xX35Ew3oCBNyCScYrDGLVDNRg9JYZOx1JZ9i7d8zWzZ+uAUxmihoesDY1cuwrWW2vVLXM=
+	t=1756307766; cv=none; b=iwVQ9MYIbPumQosMTvgTVuOYZufx+H5MWN3kYhj39Ztj5rzn1lgTfX+y3TWbjJFuVZCwdxP2MWP4vkqkdAktif1/H6digy3L4iaHgBpzSy3O+OT5FEqYdxiwuHKoCbvThm+4bXjjYd7aC8sraVPeAgD3AkZSc++a6955sVnv9Xg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756307764; c=relaxed/simple;
-	bh=rzC+AAKCUl6vzJu+zwRiqngc9S4GXWBpQ7VnSGeen5s=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:
-	 In-Reply-To:To:Cc; b=A5D3RmMjTKP+WA1RSO+0fO54ywBSKOSEIXeQHsPWuwKgGIuefxmJ4KMbs/s3UmJLGb3oQknpDrs6eZspeme+6HfiWA2jw222/o+ikuT1nS2wRCb9qsejHYzmRY36cEDA3vgKyKAocgXqkaBNDCdefJ359z3efDXt3rqWQPzSCoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QdO2d/7q; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1756307766; c=relaxed/simple;
+	bh=wtFeY5+m4A+61YbGhxwwIdklSPo7wPl2GHVzsV2UpzE=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=XwZunjVGPqF9FTrHe5ROziqW4PADyTRsj3kknJnEZDVqaq69D+7D45CHwl2gqXaywvG3DSzq/Eyk1ccmVPawHCV1UYc9dCyEexSRoKmZlh+627fkcVkf1i/LC5p0p8m6U7c9QLrSC8Aq9TGi3p0mSQT8b9gMc/vzPB1HLgIMwNc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HirjhDDw; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QdO2d/7q"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HirjhDDw"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756307761;
+	s=mimecast20190719; t=1756307763;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:  in-reply-to:in-reply-to;
-	bh=B9Y3x/GHndHIs7kj57pNCjaMryyI+bnoj8pwk8ELUPU=;
-	b=QdO2d/7qJQof0QsvUgU+k5lirvk7enfBIgnPL7YNqCkQJf86PB/+18QQfM8mqyYbkM148L
-	ne3PBP9dfLm2Xkt7ZU03S++dX8Fi5V2J0LfkiqgzcFoo4CQqXG3vZfHGyaU4AF5o/mmhLM
-	R4zDBAwK3kPNsj4ahLAtoABIRoR7RKs=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=oDMIKtbOykVluzD/aE4/YCekuWTf+/4NRT5j4Geyt2U=;
+	b=HirjhDDwIrt8nWOoYnMNuBqhcYS2RtltGI5ydOr42/Ikit+t8HagZKCoI8ObIGBodmUqGB
+	ZyKQxN8KDPmCGGNQ8omadEXd9tnxcHpK02MMS+W+nN0xoujNkJt8FT1JbUl/quDCKTx/2l
+	258h/LBFgFOp5/PJTpnwdfuhCD5dCD0=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-619-c77NXm5DOvC6FKG9Mup0RA-1; Wed, 27 Aug 2025 11:15:59 -0400
-X-MC-Unique: c77NXm5DOvC6FKG9Mup0RA-1
-X-Mimecast-MFC-AGG-ID: c77NXm5DOvC6FKG9Mup0RA_1756307758
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-45a1b0ccb6cso34361655e9.3
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 08:15:59 -0700 (PDT)
+ us-mta-121-RzM0MT5WP8-CfKXicV3STQ-1; Wed, 27 Aug 2025 11:16:01 -0400
+X-MC-Unique: RzM0MT5WP8-CfKXicV3STQ-1
+X-Mimecast-MFC-AGG-ID: RzM0MT5WP8-CfKXicV3STQ_1756307760
+Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-45b74ec7cd0so2042675e9.2
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 08:16:01 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756307757; x=1756912557;
-        h=cc:to:in-reply-to:content-transfer-encoding:mime-version:message-id
-         :date:subject:from:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=B9Y3x/GHndHIs7kj57pNCjaMryyI+bnoj8pwk8ELUPU=;
-        b=k8b0Xt28fz0U54vGZz/YckkOdihWp/MFs+5wIO13eWSxwPNaQIjIEkphFVwKKB9k4i
-         LN8eoRpTsiO43Wt2hQqMQxSWxGSLbfa6H61ixyPhUyZsHqBIXXJ1yCf37aa6EW+iJbxm
-         AM1BtzUYMeTzu4ogUaYW0DSsYqfzXxMKutu58tDjJh5ZRqVnRpylAn5KttNZRJWxD7x9
-         SoZ83FtCJJEtC2U8WpVErMHQLaRArgD8+y94NsXqqnNhnKOjHa153WnH/D1FQmRwNkTD
-         443RVUtzKZ6xQFhEubFzBW2w+l3kDV0bM4/6EN6BTPoP6wN1tq/aAE69TfB7arDaRJ/e
-         jK+g==
-X-Forwarded-Encrypted: i=1; AJvYcCVdE9QvGl2BN2X+c8PnR2FMtoyzCT4yMYrX9WFVsL/XzPz5/FsVFkORWwr3gX/SINQB9/DUou35vAY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzbSoYg1En4yeariDqLmH0rh2rek6DM0MfF0Eb9eOKNiIYbJ46/
-	UQyXBN3Er7Ozbv7fDsZ/LcWUIz2Sm4prXsxxbvcG4XGUGYwQx7PpovqDR2Hk8L+MgUcLmqwdv5H
-	mtlE4jRpwxdu7hA1iWxIszhYnEGMYgUHfqhlGHWVRUX4QtqHxiCupgz2KvvOtpxs08LZ2
-X-Gm-Gg: ASbGncscYEeG+cMABcJqNq1svMi3aidlRgBZ8nHPH/qhZev18O1X2NSFolDsKmqbfub
-	YLBrWbpa+KZuK0DSaNaLmvm+WGCw/49Z3M/7X3I8Te5tf/llrdqVe8gdW/TT3diizxz+A1ZX//A
-	AtyZe0dLfbJbdaDizgqmmieK7RcYt8Ch2MOemUUT6ttTWvQc75ivN3KT4T34jnNTd3ZqweuSBLq
-	SxJhW0LJXcUiZez/6bo3UB88UEpW0KGSH3JoulvQF0mGFi1toP5yWhgxYT94DQTslhWoj7fEGwR
-	BGqWTKeDxkEp/pT0Iw==
-X-Received: by 2002:a05:600c:1c9d:b0:45b:6684:9e07 with SMTP id 5b1f17b1804b1-45b685d740emr46789875e9.32.1756307757591;
-        Wed, 27 Aug 2025 08:15:57 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHA5DHIbOsOGXO44yhdKhdwSRpScKdRyBp/ZCADkVRLFJ3dOz/cnKoO7Mh+/XAjwkYYvzpbIQ==
-X-Received: by 2002:a05:600c:1c9d:b0:45b:6684:9e07 with SMTP id 5b1f17b1804b1-45b685d740emr46789705e9.32.1756307757221;
-        Wed, 27 Aug 2025 08:15:57 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1756307760; x=1756912560;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=oDMIKtbOykVluzD/aE4/YCekuWTf+/4NRT5j4Geyt2U=;
+        b=T0S+VTfCnu8deHBQvoRltJVMRQQWPi43x0q4AEufpZxssFU0h/R2fpOiUIRPQNwgXF
+         RUpVg7UeRb7YEqMWuddLQR3vNwBG4LeyQWhgBplvHdz2bAsYGxdPKayn3eRBJx4xozDc
+         IxKR8pRtyx+gfjEaCoxSEgchyFOJFi7JtBrn7kZ2CglmYdBjF0mTqlt09bc0CgJcxHy3
+         5Wq+L+V1RpNF0C5vyKrDPnjxqoIeSqL9fGf4R1mSlhmCMq/T2zx8kgOsSlaLqrqKnKHu
+         nmOqAgaTiq6/2S2OLoloq5XdmWdCbO8HN72SETX9qKmVYZ7rlVdiGF/i1KHdyqCUENir
+         UU0Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUH85rhSQeMR3FHwAFbK57Kg+3c+sTO11j2ca85xN99l+1JkktluoPsglGtZsmxXf2ybCRL0W8GzfA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy4cLGsJfie3W5OTNDudjigoJAnGXPlC7lodf0/KFqBR4aJb3De
+	ahRxHc9zKZuHbqUlfRxjRw4qRK+heS8OA/JGR4ytM+DQiw/Ttwxfovbto7/bBQLlWW4BfiIn8yA
+	q+h6RZ3erdl1NWRZXZ/7ovj6+RcsaCxx3C4u+gP2Tw0f2bC2JraXU9Clrf1px
+X-Gm-Gg: ASbGncuD0gyKXryRzc7baQsQAEJonAITzROD+zCEk6L8NK9wmwliZTC/yzbVSFJrGI/
+	HskD0hqY/zXHJ+y7IMfWH6KOU9r55jcFBJ/kODL6NbS5fKkNp1CrEqhVEsU9fUGHhXoLKltZGSn
+	tQiSbiviH231lX4uVQFYZf0RxTnstwaCALRzSKMMiJSY11tAyZ25qh9aK8nznppi6WiXrRue3/k
+	rnYetXhQzQ6wtnj8v0m3jCoICqxfxiJeUzBK4YFy1lxPFDBTbQWMHJqQfKJO8SyFEaz/aulBBwq
+	K0IJHor32anZGwgXyw==
+X-Received: by 2002:a05:600c:1c0f:b0:45b:6365:7957 with SMTP id 5b1f17b1804b1-45b68bc7a0bmr50802305e9.33.1756307760146;
+        Wed, 27 Aug 2025 08:16:00 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFtuRd+d3UhE79MObqvIzCmZnP33waVaDWJvRQ/TUBBFyIonxFBOsPGdIMBTTV2HKAf5Aal7Q==
+X-Received: by 2002:a05:600c:1c0f:b0:45b:6365:7957 with SMTP id 5b1f17b1804b1-45b68bc7a0bmr50802055e9.33.1756307759687;
+        Wed, 27 Aug 2025 08:15:59 -0700 (PDT)
 Received: from [127.0.0.2] ([91.245.205.131])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45b6f0e27b2sm33896285e9.10.2025.08.27.08.15.56
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45b6f0e27b2sm33896285e9.10.2025.08.27.08.15.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Aug 2025 08:15:56 -0700 (PDT)
+        Wed, 27 Aug 2025 08:15:59 -0700 (PDT)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Subject: [PATCH v2 0/4] xfsprogs: utilize file_getattr() and file_setattr()
-Date: Wed, 27 Aug 2025 17:15:52 +0200
-Message-Id: <20250827-xattrat-syscall-v2-0-82a2d2d5865b@kernel.org>
+Date: Wed, 27 Aug 2025 17:15:55 +0200
+Subject: [PATCH v2 3/4] xfs_io: make ls/chattr work with special files
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -76,61 +76,282 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIACghr2gC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyjHQUlJIzE
- vPSU3UzU4B8JSMDI1MDY0Nz3YrEkpKixBLd4sri5MScHF0LY8u0JKOkJINkM2MloK6CotS0zAq
- widGxtbUAPLGh/2EAAAA=
-X-Change-ID: 20250317-xattrat-syscall-839fb2bb0c63
-In-Reply-To: <dvht4j3ipg74c2inz33n6azo65sebhhag5odh7535hfssamxfa@6wr2m4niilye>
+Message-Id: <20250827-xattrat-syscall-v2-3-82a2d2d5865b@kernel.org>
+References: <20250827-xattrat-syscall-v2-0-82a2d2d5865b@kernel.org>
+In-Reply-To: <20250827-xattrat-syscall-v2-0-82a2d2d5865b@kernel.org>
 To: aalbersh@kernel.org, linux-fsdevel@vger.kernel.org, 
  linux-xfs@vger.kernel.org
 Cc: Andrey Albershteyn <aalbersh@redhat.com>
 X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1469; i=aalbersh@kernel.org;
- h=from:subject:message-id; bh=rzC+AAKCUl6vzJu+zwRiqngc9S4GXWBpQ7VnSGeen5s=;
- b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIYMtYr6lSs46iU9nG/3X3TYLbZcgXWJ1e0TgaJbObY8
- Cz0wfR/JY87SlkYxLgYZMUUWdZJa01NKpLKP2JQIw8zh5UJZAgDF6cATOSDCsM/A8uJnOUa+y33
- x+XaiNRrnWM8ZbJ2Su2thcli+56KPvsox/BXdopp7L/3rL6ZLJ0bl254ufWynKr2+q0yT9euv/7
- kTfESFgCu7Ug1
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6852; i=aalbersh@kernel.org;
+ h=from:subject:message-id; bh=D7O/aWbNBBWY0zRzun4IWAktRpxmJKVMoUsO3qTWmLs=;
+ b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIYMtYr6jjp8ImoqpdcW+dj3755a76f3uOD9/P2fOe2r
+ Gfmvt70tLyjlIVBjItBVkyRZZ201tSkIqn8IwY18jBzWJlAhjBwcQrARD6nMTLcuhXYNp3xaLtU
+ Sm5h+6Y7Wwp7Z5rO29lfvO9DobGf3cJ0hn/a1mVq67W+eGV4V36WbpbZ/cB4weyulaK1RW6RvCV
+ mvSwAJzFEjA==
 X-Developer-Key: i=aalbersh@kernel.org; a=openpgp;
  fpr=AE1B2A9562721A6FC4307C1F46A7EA18AC33E108
 
-Hi all,
+From: Andrey Albershteyn <aalbersh@redhat.com>
 
-This patchset updates libfrog, xfs_db, xfs_quota to use recently
-introduced syscalls file_getattr()/file_setattr().
+With new file_getattr/file_setattr syscalls we can now list/change file
+attributes on special files instead for ignoring them.
 
-I haven't replaced all the calls to ioctls() with a syscalls, just a few
-places where syscalls are necessary. If there's more places it would be
-suitable to update, let me know.
-
-Cc: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-
+Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
-Andrey Albershteyn (4):
-      libfrog: add wrappers for file_getattr/file_setattr syscalls
-      xfs_quota: utilize file_setattr to set prjid on special files
-      xfs_io: make ls/chattr work with special files
-      xfs_db: use file_setattr to copy attributes on special files with rdump
+ io/attr.c | 138 +++++++++++++++++++++++++++++++++++++-------------------------
+ io/io.h   |   2 +-
+ io/stat.c |   2 +-
+ 3 files changed, 84 insertions(+), 58 deletions(-)
 
- configure.ac          |   1 +
- db/rdump.c            |  20 ++++++-
- include/builddefs.in  |   5 ++
- include/linux.h       |  20 +++++++
- io/attr.c             | 138 ++++++++++++++++++++++++++++--------------------
- io/io.h               |   2 +-
- io/stat.c             |   2 +-
- libfrog/Makefile      |   2 +
- libfrog/file_attr.c   | 122 +++++++++++++++++++++++++++++++++++++++++++
- libfrog/file_attr.h   |  35 +++++++++++++
- m4/package_libcdev.m4 |  19 +++++++
- quota/project.c       | 142 ++++++++++++++++++++++++++------------------------
- 12 files changed, 381 insertions(+), 127 deletions(-)
----
-base-commit: 1d287f3d958ebc425275d6a08ad6977e13e52fac
-change-id: 20250317-xattrat-syscall-839fb2bb0c63
+diff --git a/io/attr.c b/io/attr.c
+index fd82a2e73801..1005450ac9f9 100644
+--- a/io/attr.c
++++ b/io/attr.c
+@@ -8,6 +8,7 @@
+ #include "input.h"
+ #include "init.h"
+ #include "io.h"
++#include "libfrog/file_attr.h"
+ 
+ static cmdinfo_t chattr_cmd;
+ static cmdinfo_t lsattr_cmd;
+@@ -113,7 +114,7 @@ chattr_help(void)
+ }
+ 
+ void
+-printxattr(
++print_xflags(
+ 	uint		flags,
+ 	int		verbose,
+ 	int		dofname,
+@@ -156,36 +157,36 @@ lsattr_callback(
+ 	int			status,
+ 	struct FTW		*data)
+ {
+-	struct fsxattr		fsx;
+-	int			fd;
++	struct file_attr	fa;
++	int			error;
+ 
+ 	if (recurse_dir && !S_ISDIR(stat->st_mode))
+ 		return 0;
+ 
+-	if ((fd = open(path, O_RDONLY)) == -1) {
+-		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+-			progname, path, strerror(errno));
+-		exitcode = 1;
+-	} else if ((xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
++        error = xfrog_file_getattr(AT_FDCWD, path, stat, &fa,
++				   AT_SYMLINK_NOFOLLOW);
++        if (error) {
+ 		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+ 			progname, path, strerror(errno));
+ 		exitcode = 1;
+-	} else
+-		printxattr(fsx.fsx_xflags, 0, 1, path, 0, 1);
++		return 0;
++	}
++
++	print_xflags(fa.fa_xflags, 0, 1, path, 0, 1);
+ 
+-	if (fd != -1)
+-		close(fd);
+ 	return 0;
+ }
+ 
+ static int
+ lsattr_f(
+-	int		argc,
+-	char		**argv)
++	int			argc,
++	char			**argv)
+ {
+-	struct fsxattr	fsx;
+-	char		*name = file->name;
+-	int		c, aflag = 0, vflag = 0;
++	struct file_attr	fa;
++	char			*name = file->name;
++	int			c, aflag = 0, vflag = 0;
++	struct stat		st;
++	int			error;
+ 
+ 	recurse_all = recurse_dir = 0;
+ 	while ((c = getopt(argc, argv, "DRav")) != EOF) {
+@@ -211,17 +212,28 @@ lsattr_f(
+ 	if (recurse_all || recurse_dir) {
+ 		nftw(name, lsattr_callback,
+ 			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+-	} else if ((xfsctl(name, file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
++		return 0;
++	}
++
++	error = stat(name, &st);
++	if (error)
++		return error;
++
++	error = xfrog_file_getattr(AT_FDCWD, name, &st, &fa,
++				   AT_SYMLINK_NOFOLLOW);
++	if (error) {
+ 		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+ 			progname, name, strerror(errno));
+ 		exitcode = 1;
+-	} else {
+-		printxattr(fsx.fsx_xflags, vflag, !aflag, name, vflag, !aflag);
+-		if (aflag) {
+-			fputs("/", stdout);
+-			printxattr(-1, 0, 1, name, 0, 1);
+-		}
++		return 0;
+ 	}
++
++	print_xflags(fa.fa_xflags, vflag, !aflag, name, vflag, !aflag);
++	if (aflag) {
++		fputs("/", stdout);
++		print_xflags(-1, 0, 1, name, 0, 1);
++	}
++
+ 	return 0;
+ }
+ 
+@@ -232,44 +244,45 @@ chattr_callback(
+ 	int			status,
+ 	struct FTW		*data)
+ {
+-	struct fsxattr		attr;
+-	int			fd;
++	struct file_attr	attr;
++	int			error;
+ 
+ 	if (recurse_dir && !S_ISDIR(stat->st_mode))
+ 		return 0;
+ 
+-	if ((fd = open(path, O_RDONLY)) == -1) {
+-		fprintf(stderr, _("%s: cannot open %s: %s\n"),
+-			progname, path, strerror(errno));
+-		exitcode = 1;
+-	} else if (xfsctl(path, fd, FS_IOC_FSGETXATTR, &attr) < 0) {
++        error = xfrog_file_getattr(AT_FDCWD, path, stat, &attr,
++                                   AT_SYMLINK_NOFOLLOW);
++        if (error) {
+ 		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+ 			progname, path, strerror(errno));
+ 		exitcode = 1;
+-	} else {
+-		attr.fsx_xflags |= orflags;
+-		attr.fsx_xflags &= ~andflags;
+-		if (xfsctl(path, fd, FS_IOC_FSSETXATTR, &attr) < 0) {
+-			fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
+-				progname, path, strerror(errno));
+-			exitcode = 1;
+-		}
++		return 0;
++	}
++
++	attr.fa_xflags |= orflags;
++	attr.fa_xflags &= ~andflags;
++	error = xfrog_file_setattr(AT_FDCWD, path, stat, &attr,
++				   AT_SYMLINK_NOFOLLOW);
++	if (error) {
++		fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
++			progname, path, strerror(errno));
++		exitcode = 1;
+ 	}
+ 
+-	if (fd != -1)
+-		close(fd);
+ 	return 0;
+ }
+ 
+ static int
+ chattr_f(
+-	int		argc,
+-	char		**argv)
++	int			argc,
++	char			**argv)
+ {
+-	struct fsxattr	attr;
+-	struct xflags	*p;
+-	unsigned int	i = 0;
+-	char		*c, *name = file->name;
++	struct file_attr	attr;
++	struct xflags		*p;
++	unsigned int		i = 0;
++	char			*c, *name = file->name;
++	struct stat		st;
++	int			error;
+ 
+ 	orflags = andflags = 0;
+ 	recurse_all = recurse_dir = 0;
+@@ -326,19 +339,32 @@ chattr_f(
+ 	if (recurse_all || recurse_dir) {
+ 		nftw(name, chattr_callback,
+ 			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+-	} else if (xfsctl(name, file->fd, FS_IOC_FSGETXATTR, &attr) < 0) {
++		return 0;
++	}
++
++	error = stat(name, &st);
++	if (error)
++		return error;
++
++	error = xfrog_file_getattr(AT_FDCWD, name, &st, &attr,
++				   AT_SYMLINK_NOFOLLOW);
++	if (error) {
+ 		fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+ 			progname, name, strerror(errno));
+ 		exitcode = 1;
+-	} else {
+-		attr.fsx_xflags |= orflags;
+-		attr.fsx_xflags &= ~andflags;
+-		if (xfsctl(name, file->fd, FS_IOC_FSSETXATTR, &attr) < 0) {
+-			fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
+-				progname, name, strerror(errno));
+-			exitcode = 1;
+-		}
++		return 0;
+ 	}
++
++	attr.fa_xflags |= orflags;
++	attr.fa_xflags &= ~andflags;
++	error = xfrog_file_setattr(AT_FDCWD, name, &st, &attr,
++				   AT_SYMLINK_NOFOLLOW);
++	if (error) {
++		fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
++			progname, name, strerror(errno));
++		exitcode = 1;
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/io/io.h b/io/io.h
+index 259c034931b8..35fb8339eeb5 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -78,7 +78,7 @@ extern int		openfile(char *, struct xfs_fsop_geom *, int, mode_t,
+ extern int		addfile(char *, int , struct xfs_fsop_geom *, int,
+ 				struct fs_path *);
+ extern int		closefile(void);
+-extern void		printxattr(uint, int, int, const char *, int, int);
++extern void		print_xflags(uint, int, int, const char *, int, int);
+ 
+ extern unsigned int	recurse_all;
+ extern unsigned int	recurse_dir;
+diff --git a/io/stat.c b/io/stat.c
+index c257037aa8ee..c1085f14eade 100644
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -112,7 +112,7 @@ print_extended_info(int verbose)
+ 	}
+ 
+ 	printf(_("fsxattr.xflags = 0x%x "), fsx.fsx_xflags);
+-	printxattr(fsx.fsx_xflags, verbose, 0, file->name, 1, 1);
++	print_xflags(fsx.fsx_xflags, verbose, 0, file->name, 1, 1);
+ 	printf(_("fsxattr.projid = %u\n"), fsx.fsx_projid);
+ 	printf(_("fsxattr.extsize = %u\n"), fsx.fsx_extsize);
+ 	printf(_("fsxattr.cowextsize = %u\n"), fsx.fsx_cowextsize);
 
-Best regards,
 -- 
-Andrey Albershteyn <aalbersh@kernel.org>
+2.49.0
 
