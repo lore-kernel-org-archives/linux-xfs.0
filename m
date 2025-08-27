@@ -1,402 +1,190 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DC713375A2
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 15:16:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BD8427FD5D;
+	Wed, 27 Aug 2025 15:16:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756307793; cv=none; b=R8DYYIFQuR0B9h1eT++dS1UuUCjH7a38c5mmTFoi0KREenA+SqyUWX6m5ssXIJwqzyHHV4wMqmTwDam5r1wxutRNC43rZFwy7UcrGD2JAvu6+LBzmDyxq6wUxc2KexgEjS4IJeNoWoslnCtxDp+2LZRK4G1+4OZl3y4WDyBX5Mo=
+	t=1756307812; cv=none; b=EmNdd/xyGVhV+YZV7WBocUJRO5SDSX1NPvYA0ngBgEXJawRFcp+5JbdLl+VfDofG8EYf7P53azZg2n+LvGxVPeBtV2oJ+FtLUSKQXXI+/rtyPOYtMJAvFCz3jRMVP5535mbpQWBnSpWIQ0EgcKtiXY2ZCfqOtpY1kg2pVQCXKIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756307793; c=relaxed/simple;
-	bh=kZjF0sSqx+5FmDXvAoC983U2XPglvCp39phKC5ZNRKw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To; b=eyFAjEXWrqfvdslz9P8CtM2hYhTrjIVw7wZvnXFH+4r1SGxu4OmLXZI0EvciBfzaEI92ryPiUxoOjPtwteKSUhF9lO+vnFsQamd60ne9a7nu0D+V23IgXac3TVP6pB0pd77414idMj6lI20ag1oxpIUP4AWbMHQwvZSODzRQnto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IN3EY1et; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1756307812; c=relaxed/simple;
+	bh=mOV+nWXhghC+6OaXr13EUm4ZGN4mHYeKxrBdFRkt1RM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sFkHQBoeT9SUJ9yVHDsx32ym9hd3CFvg+g3dgONiwWQcGveEcQ4bsGeFYaBWN1DqUiTrmbQXuUuz4h5VwoP05KVoV2e5qNv51N/4UwM9GjCHy6CZwwRnwa7kLVYTNI92Ce6XQVPvZV90bUYzBIdlYoYF3yoPrKftVswAm3ifOQA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=tQrILEOn; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IN3EY1et"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756307782;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mv4tjVeEmkg4u5d++BVU3AE8UvzEzsRk+7y9ta7YFmA=;
-	b=IN3EY1et7KCElEkSgG6JY5PkeF6jEbg+8JXd5Ip7CAlXpQbhYkuoHjpcFGpO7qZG0dKNQ3
-	qMCUtdlrAxfV3f9rBCUN3QZX9BcnBLRYyXDczvFv/mtgPUMLNkhZWM8jIaV20GLJM0GfGG
-	FNZkYSmfy4R8Gfznvzf7mNrEutjKKM4=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-127-FuALfbjGMDu7LhsbWDZT0w-1; Wed, 27 Aug 2025 11:16:04 -0400
-X-MC-Unique: FuALfbjGMDu7LhsbWDZT0w-1
-X-Mimecast-MFC-AGG-ID: FuALfbjGMDu7LhsbWDZT0w_1756307759
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-45a1b0b14daso34834535e9.2
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 08:16:01 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756307758; x=1756912558;
-        h=to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=mv4tjVeEmkg4u5d++BVU3AE8UvzEzsRk+7y9ta7YFmA=;
-        b=tj071v3KnDqOnN/44ezR9Fco/Ic9JxMqb6slTOkjsGXdbOJ/tI8xQjp5O7FwNzXXI2
-         g8ogbSzxl+AS2IlxaSbo0A/9RCERKOOoqWtI4hEAc78q1yAlb1hLKgjFIDpvq401mSJI
-         YxSJsymSNCc1TN97mMSpmuxah69Ce2tawrtf8WOGTEJ0YFm8K62sxdY12y2KcT8mrWgN
-         lHFC5NRZPgGlKcD34ayIFu3rEhHSQ80qkQNEqZ7HrPK4Qa4Rs2eSbLQh4lqtA/sXI7vf
-         0shWi8mWR6tuIXH4VELhnrahbPCJCMa0pdihsGWm1ey1mGD7GLMchj5juYBDsCWU6pwQ
-         so9w==
-X-Forwarded-Encrypted: i=1; AJvYcCXwh5RVgD7Cu2NZQ1eKDU7w6s1L5MNsEhymBtMR3pl6Gt1w7maT7VCVPHFWex+VcOnm3uhN9PWwrgc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyG0rPHrpSljqu2xZU8qEeplN8GstQPcfI9ZPQnG4NdXLEFClnZ
-	ECsJYLu5SqrgSHftJNBfAHlCClFXGsmCKg5J9vA5XVwXfn42OFbt0Ee6OBNFW6XMvvrfkMsEJLD
-	aCAnYNSC3guweaal68MUhnUTYSJPdxhvCXCG5S8cAbLZOVGCtscH7S9Fq4UM4hOenaKEupkjciQ
-	5Qa1ooX9yTp9AC3h4dZF7fJfIgutrUDYzP7K56a/EKnSl4
-X-Gm-Gg: ASbGncvVqsSDy6v791d51Zeuq3LiG1idBIV+Kp9cXVKvI4yqY2n7MFqxDhvVzizQNTf
-	mdS3xOrbuHNiPxXfbpf+mQuWYeeFtKAMWn1QuqNk4MBfpBXmdC78N+4JzNv5mMBJ2snbUIvjhw5
-	Q5CJKqjWIcU2O5fZH+0HyP9yj+rdDlQd7e378WsWXM2Nb0WejxErw7a9Qpnk7X8aLvvEcD/aCCk
-	yi3tafG+PVbJ++2Nk1JySKlvKnDG+iDLn1zMnQdMQA8egJFtSOoM57AdsxslO0qdEy8o7X+udYT
-	GguOpupDG5LzRuehbQ==
-X-Received: by 2002:a05:600c:1ca0:b0:458:be44:357b with SMTP id 5b1f17b1804b1-45b517ad7bdmr157463865e9.15.1756307758462;
-        Wed, 27 Aug 2025 08:15:58 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHOnaickknvHXVF+nKbTKRjH9nbHWer2PHunwMtOjVcHCZfO2UhJlk/zAIYWX/D1CW9vZUOcg==
-X-Received: by 2002:a05:600c:1ca0:b0:458:be44:357b with SMTP id 5b1f17b1804b1-45b517ad7bdmr157463535e9.15.1756307757882;
-        Wed, 27 Aug 2025 08:15:57 -0700 (PDT)
-Received: from [127.0.0.2] ([91.245.205.131])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45b6f0e27b2sm33896285e9.10.2025.08.27.08.15.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Aug 2025 08:15:57 -0700 (PDT)
-From: Andrey Albershteyn <aalbersh@redhat.com>
-X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Wed, 27 Aug 2025 17:15:53 +0200
-Subject: [PATCH v2 1/4] libfrog: add wrappers for file_getattr/file_setattr
- syscalls
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="tQrILEOn"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57R7wpnL011849;
+	Wed, 27 Aug 2025 15:16:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=SPyx11geBrvCeW8/DE+b27cLGdioY2
+	twq7XbikpR9hU=; b=tQrILEOnkv2ygrRG3IyrCMGcoKLVm+C7kU+2PbwLRdD9xc
+	k+zwwxhG3qr4s/HFsObRELXYawLhEKRj3ltaBYe1cHFLEoud0wzvNM+r0Wzk5hMk
+	e3NPwuIZ+E/lA3yqqvf2hJ8jc9KW05gfWA4++ZKt3CvGFrrxQ2iF7Kjvck70i+sY
+	zyoS6OJZ3FGu20LMFB3teNdc3yHh7kYS6KsjCdOurGRGRu46e9ixLnd/QAsDsVWT
+	KnMmdrU37hV8/uSUj5Qx3tKQ5Uej02bM7nO1/VznvitGD+95vCDkFsBbFBWpNe7A
+	+ximIn47kMLCHslR5Wa1+gjIKGf2YVxilLBZZRrg==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48q5584tyh-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 27 Aug 2025 15:16:42 +0000 (GMT)
+Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 57RFGgVX001288;
+	Wed, 27 Aug 2025 15:16:42 GMT
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48q5584tyc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 27 Aug 2025 15:16:42 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 57RCPxFe002473;
+	Wed, 27 Aug 2025 15:16:41 GMT
+Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 48qt6mgahc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 27 Aug 2025 15:16:41 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 57RFGdWA38666592
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 27 Aug 2025 15:16:39 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2463D2004E;
+	Wed, 27 Aug 2025 15:16:39 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id DD3D120040;
+	Wed, 27 Aug 2025 15:16:36 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.23.211])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Wed, 27 Aug 2025 15:16:36 +0000 (GMT)
+Date: Wed, 27 Aug 2025 20:46:34 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
+        djwong@kernel.org, john.g.garry@oracle.com, tytso@mit.edu,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v5 02/12] common/rc: Add _require_fio_version helper
+Message-ID: <aK8hUqdee-JFcFHn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <cover.1755849134.git.ojaswin@linux.ibm.com>
+ <955d47b2534d9236adbd2bbd13598bbd1da8fc04.1755849134.git.ojaswin@linux.ibm.com>
+ <20250825160801.ffktqauw2o6l5ql3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250827-xattrat-syscall-v2-1-82a2d2d5865b@kernel.org>
-References: <20250827-xattrat-syscall-v2-0-82a2d2d5865b@kernel.org>
-In-Reply-To: <20250827-xattrat-syscall-v2-0-82a2d2d5865b@kernel.org>
-To: aalbersh@kernel.org, linux-fsdevel@vger.kernel.org, 
- linux-xfs@vger.kernel.org
-X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7473; i=aalbersh@kernel.org;
- h=from:subject:message-id; bh=kZjF0sSqx+5FmDXvAoC983U2XPglvCp39phKC5ZNRKw=;
- b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIYMtYr6pgwH386y7r2izp76anUk7Y1N4xXenptW7fu2
- /eounbjnyIdpSwMYlwMsmKKLOuktaYmFUnlHzGokYeZw8oEMoSBi1MAJqK3g5Fh/6TiOKHM8vdx
- bgxm0RZ88ZGpDTG/zq18uNnUWMCwfp8DI8Pbud1njx9xPx5jkt/r/ez2Sl69H7cPnDXJexVx9Va
- b2EYGAMDXRzw=
-X-Developer-Key: i=aalbersh@kernel.org; a=openpgp;
- fpr=AE1B2A9562721A6FC4307C1F46A7EA18AC33E108
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250825160801.ffktqauw2o6l5ql3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: d02U5Q3hom6xqs3PZk50E5KMp5ujhhzo
+X-Proofpoint-ORIG-GUID: 00srl8NFDJ-SUUPFIpEZKfq2C8CLAwNd
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODIzMDAyMSBTYWx0ZWRfXzU/FxPxWV0P6
+ 2hwQiSOLB/vjx4nk+bTJyGT8MGii3+ZjEOZnyJb01w/UJ1S/AKOgcG67CH1ulmF67o9kQK4K1Xc
+ Lol2JdhQEvv7wSeJHOUVsBdNRPJ0MGixviP01yc5FUUzdXdP0YIiOFTwl5L1MOovEg3UjwMHpRz
+ 5yDgylgLQ4BDRud4OhT9wDKC+YY954F6+8k1zrxZFSX9vcP7kRh4VGEFrCEYuYhBoqU0GlcqWH1
+ DpspFAEpy4fhrvOhc+C3lzISvQDwmlHTIIg3NyaDlzPJzuyhHtYUjhtsa0noqsbrjA0EhTHrw/K
+ ijcGDxOHO6oHVEShn9YXo++MlbfHZs5GvbSoufzQ0uBkuNyjoV2gA2g3pMAEjdUvyvbhEfariqm
+ QMsf9fYf
+X-Authority-Analysis: v=2.4 cv=A8ZsP7WG c=1 sm=1 tr=0 ts=68af215a cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=kj9zAlcOel0A:10 a=2OwXVqhp2XgA:10 a=VnNF1IyMAAAA:8 a=eC5F5FB79jDbC9rVOvkA:9
+ a=CjuIK1q_8ugA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-27_03,2025-08-26_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 adultscore=0 priorityscore=1501 suspectscore=0 clxscore=1015
+ spamscore=0 impostorscore=0 malwarescore=0 bulkscore=0 classifier=typeunknown
+ authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2507300000 definitions=main-2508230021
 
-Add wrappers for new file_getattr/file_setattr inode syscalls which will
-be used by xfs_quota and xfs_io.
+On Tue, Aug 26, 2025 at 12:08:01AM +0800, Zorro Lang wrote:
+> On Fri, Aug 22, 2025 at 01:32:01PM +0530, Ojaswin Mujoo wrote:
+> > The main motivation of adding this function on top of _require_fio is
+> > that there has been a case in fio where atomic= option was added but
+> > later it was changed to noop since kernel didn't yet have support for
+> > atomic writes. It was then again utilized to do atomic writes in a later
+> > version, once kernel got the support. Due to this there is a point in
+> > fio where _require_fio w/ atomic=1 will succeed even though it would
+> > not be doing atomic writes.
+> > 
+> > Hence, add an explicit helper to ensure tests to require specific
+> > versions of fio to work past such issues.
+> 
+> Actually I'm wondering if fstests really needs to care about this. This's
+> just a temporary issue of fio, not kernel or any fs usespace program. Do
+> we need to add a seperated helper only for a temporary fio issue? If fio
+> doesn't break fstests running, let it run. Just the testers install proper
+> fio (maybe latest) they need. What do you and others think?
+> 
+> Thanks,
+> Zorro
 
-Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
----
- configure.ac          |   1 +
- include/builddefs.in  |   5 +++
- include/linux.h       |  20 +++++++++
- libfrog/Makefile      |   2 +
- libfrog/file_attr.c   | 122 ++++++++++++++++++++++++++++++++++++++++++++++++++
- libfrog/file_attr.h   |  35 +++++++++++++++
- m4/package_libcdev.m4 |  19 ++++++++
- 7 files changed, 204 insertions(+)
+Hey Zorro,
 
-diff --git a/configure.ac b/configure.ac
-index 195ee6dddf61..a3206d53e7e0 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -156,6 +156,7 @@ AC_PACKAGE_NEED_RCU_INIT
- AC_HAVE_PWRITEV2
- AC_HAVE_COPY_FILE_RANGE
- AC_HAVE_CACHESTAT
-+AC_HAVE_FILE_ATTR
- AC_NEED_INTERNAL_FSXATTR
- AC_NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG
- AC_NEED_INTERNAL_FSCRYPT_POLICY_V2
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 04b4e0880a84..d727b55b854f 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -97,6 +97,7 @@ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
- HAVE_PWRITEV2 = @have_pwritev2@
- HAVE_COPY_FILE_RANGE = @have_copy_file_range@
- HAVE_CACHESTAT = @have_cachestat@
-+HAVE_FILE_ATTR = @have_file_attr@
- NEED_INTERNAL_FSXATTR = @need_internal_fsxattr@
- NEED_INTERNAL_FSCRYPT_ADD_KEY_ARG = @need_internal_fscrypt_add_key_arg@
- NEED_INTERNAL_FSCRYPT_POLICY_V2 = @need_internal_fscrypt_policy_v2@
-@@ -169,6 +170,10 @@ ifeq ($(ENABLE_GETTEXT),yes)
- GCFLAGS += -DENABLE_GETTEXT
- endif
- 
-+ifeq ($(HAVE_FILE_ATTR),yes)
-+LCFLAGS += -DHAVE_FILE_ATTR
-+endif
-+
- # Override these if C++ needs other options
- SANITIZER_CXXFLAGS = $(SANITIZER_CFLAGS)
- GCXXFLAGS = $(GCFLAGS)
-diff --git a/include/linux.h b/include/linux.h
-index 6e83e073aa2e..993789f01b3a 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -16,6 +16,7 @@
- #include <sys/param.h>
- #include <sys/sysmacros.h>
- #include <sys/stat.h>
-+#include <sys/syscall.h>
- #include <inttypes.h>
- #include <malloc.h>
- #include <getopt.h>
-@@ -202,6 +203,25 @@ struct fsxattr {
- };
- #endif
- 
-+/*
-+ * Use FILE_ATTR_SIZE_VER0 (linux/fs.h) instead of build system HAVE_FILE_ATTR
-+ * as this header could be included in other places where HAVE_FILE_ATTR is not
-+ * defined (e.g. xfstests's conftest.c in ./configure)
-+ */
-+#ifndef FILE_ATTR_SIZE_VER0
-+/*
-+ * We need to define file_attr if it's missing to know how to convert it to
-+ * fsxattr
-+ */
-+struct file_attr {
-+	__u32		fa_xflags;
-+	__u32		fa_extsize;
-+	__u32		fa_nextents;
-+	__u32		fa_projid;
-+	__u32		fa_cowextsize;
-+};
-+#endif
-+
- #ifndef FS_IOC_FSGETXATTR
- /*
-  * Flags for the fsx_xflags field
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 560bad417ee4..268fa26638d7 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -24,6 +24,7 @@ fsproperties.c \
- fsprops.c \
- getparents.c \
- histogram.c \
-+file_attr.c \
- list_sort.c \
- linux.c \
- logging.c \
-@@ -55,6 +56,7 @@ fsprops.h \
- getparents.h \
- handle_priv.h \
- histogram.h \
-+file_attr.h \
- logging.h \
- paths.h \
- projects.h \
-diff --git a/libfrog/file_attr.c b/libfrog/file_attr.c
-new file mode 100644
-index 000000000000..1d42895477ae
---- /dev/null
-+++ b/libfrog/file_attr.c
-@@ -0,0 +1,122 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2024 Red Hat, Inc.
-+ * All Rights Reserved.
-+ */
-+
-+#include "file_attr.h"
-+#include <stdio.h>
-+#include <errno.h>
-+#include <string.h>
-+#include <sys/syscall.h>
-+#include <asm/types.h>
-+#include <fcntl.h>
-+
-+static void
-+file_attr_to_fsxattr(
-+	const struct file_attr	*fa,
-+	struct fsxattr		*fsxa)
-+{
-+     memset(fsxa, 0, sizeof(struct fsxattr));
-+
-+     fsxa->fsx_xflags = fa->fa_xflags;
-+     fsxa->fsx_extsize = fa->fa_extsize;
-+     fsxa->fsx_nextents = fa->fa_nextents;
-+     fsxa->fsx_projid = fa->fa_projid;
-+     fsxa->fsx_cowextsize = fa->fa_cowextsize;
-+
-+}
-+
-+static void
-+fsxattr_to_file_attr(
-+	const struct fsxattr	*fsxa,
-+	struct file_attr	*fa)
-+{
-+     memset(fa, 0, sizeof(struct file_attr));
-+
-+     fa->fa_xflags = fsxa->fsx_xflags;
-+     fa->fa_extsize = fsxa->fsx_extsize;
-+     fa->fa_nextents = fsxa->fsx_nextents;
-+     fa->fa_projid = fsxa->fsx_projid;
-+     fa->fa_cowextsize = fsxa->fsx_cowextsize;
-+}
-+
-+int
-+xfrog_file_getattr(
-+	const int		dfd,
-+	const char		*path,
-+	const struct stat	*stat,
-+	struct file_attr	*fa,
-+	const unsigned int	at_flags)
-+{
-+	int			error;
-+	int			fd;
-+	struct fsxattr		fsxa;
-+
-+#ifdef HAVE_FILE_ATTR
-+        error = syscall(__NR_file_getattr, dfd, path, fa,
-+                        sizeof(struct file_attr), at_flags);
-+	if (error && errno != ENOSYS)
-+		return error;
-+
-+	if (!error)
-+		return error;
-+#endif
-+
-+	if (SPECIAL_FILE(stat->st_mode)) {
-+		errno = EOPNOTSUPP;
-+		return -1;
-+	}
-+
-+	fd = open(path, O_RDONLY|O_NOCTTY);
-+	if (fd == -1)
-+		return fd;
-+
-+	error = ioctl(fd, FS_IOC_FSGETXATTR, &fsxa);
-+	close(fd);
-+	if (error)
-+		return error;
-+
-+	fsxattr_to_file_attr(&fsxa, fa);
-+
-+	return error;
-+}
-+
-+int
-+xfrog_file_setattr(
-+	const int		dfd,
-+	const char		*path,
-+	const struct stat	*stat,
-+	struct file_attr	*fa,
-+	const unsigned int	at_flags)
-+{
-+	int			error;
-+	int			fd;
-+	struct fsxattr		fsxa;
-+
-+#ifdef HAVE_FILE_ATTR
-+	error = syscall(__NR_file_setattr, dfd, path, fa,
-+			sizeof(struct file_attr), at_flags);
-+	if (error && errno != ENOSYS)
-+		return error;
-+
-+	if (!error)
-+		return error;
-+#endif
-+
-+	if (SPECIAL_FILE(stat->st_mode)) {
-+		errno = EOPNOTSUPP;
-+		return -1;
-+	}
-+
-+	fd = open(path, O_RDONLY|O_NOCTTY);
-+	if (fd == -1)
-+		return fd;
-+
-+	file_attr_to_fsxattr(fa, &fsxa);
-+
-+	error = ioctl(fd, FS_IOC_FSSETXATTR, fa);
-+	close(fd);
-+
-+	return error;
-+}
-diff --git a/libfrog/file_attr.h b/libfrog/file_attr.h
-new file mode 100644
-index 000000000000..ad33241bbffa
---- /dev/null
-+++ b/libfrog/file_attr.h
-@@ -0,0 +1,35 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2024 Red Hat, Inc.
-+ * All Rights Reserved.
-+ */
-+#ifndef __LIBFROG_FILE_ATTR_H__
-+#define __LIBFROG_FILE_ATTR_H__
-+
-+#include "linux.h"
-+#include <sys/stat.h>
-+
-+#define SPECIAL_FILE(x) \
-+	   (S_ISCHR((x)) \
-+	|| S_ISBLK((x)) \
-+	|| S_ISFIFO((x)) \
-+	|| S_ISLNK((x)) \
-+	|| S_ISSOCK((x)))
-+
-+int
-+xfrog_file_getattr(
-+	const int		dfd,
-+	const char		*path,
-+	const struct stat	*stat,
-+	struct file_attr	*fa,
-+	const unsigned int	at_flags);
-+
-+int
-+xfrog_file_setattr(
-+	const int		dfd,
-+	const char		*path,
-+	const struct stat	*stat,
-+	struct file_attr	*fa,
-+	const unsigned int	at_flags);
-+
-+#endif /* __LIBFROG_FILE_ATTR_H__ */
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index b77ac1a7580a..6a267dab7ab7 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -274,3 +274,22 @@ AC_DEFUN([AC_PACKAGE_CHECK_LTO],
-     AC_SUBST(lto_cflags)
-     AC_SUBST(lto_ldflags)
-   ])
-+
-+#
-+# Check if we have a file_getattr/file_setattr system call (Linux)
-+#
-+AC_DEFUN([AC_HAVE_FILE_ATTR],
-+  [ AC_MSG_CHECKING([for file_getattr/file_setattr syscalls])
-+    AC_LINK_IFELSE(
-+    [	AC_LANG_PROGRAM([[
-+#define _GNU_SOURCE
-+#include <sys/syscall.h>
-+#include <unistd.h>
-+	]], [[
-+syscall(__NR_file_getattr, 0, 0, 0, 0, 0);
-+	]])
-+    ], have_file_attr=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_file_attr)
-+  ])
+Sure I'm okay with not keeping the helper and letting the user make sure
+the fio version is correct.
 
--- 
-2.49.0
+@John, does that sound okay?
 
+Regards,
+ojaswin
+> 
+> > 
+> > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> > ---
+> >  common/rc | 32 ++++++++++++++++++++++++++++++++
+> >  1 file changed, 32 insertions(+)
+> > 
+> > diff --git a/common/rc b/common/rc
+> > index 35a1c835..f45b9a38 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -5997,6 +5997,38 @@ _max() {
+> >  	echo $ret
+> >  }
+> >  
+> > +# Check the required fio version. Examples:
+> > +#   _require_fio_version 3.38 (matches 3.38 only)
+> > +#   _require_fio_version 3.38+ (matches 3.38 and above)
+> > +#   _require_fio_version 3.38- (matches 3.38 and below)
+> > +_require_fio_version() {
+> > +	local req_ver="$1"
+> > +	local fio_ver
+> > +
+> > +	_require_fio
+> > +	_require_math
+> > +
+> > +	fio_ver=$(fio -v | cut -d"-" -f2)
+> > +
+> > +	case "$req_ver" in
+> > +	*+)
+> > +		req_ver=${req_ver%+}
+> > +		test $(_math "$fio_ver >= $req_ver") -eq 1 || \
+> > +			_notrun "need fio >= $req_ver (found $fio_ver)"
+> > +		;;
+> > +	*-)
+> > +		req_ver=${req_ver%-}
+> > +		test $(_math "$fio_ver <= $req_ver") -eq 1 || \
+> > +			_notrun "need fio <= $req_ver (found $fio_ver)"
+> > +		;;
+> > +	*)
+> > +		req_ver=${req_ver%-}
+> > +		test $(_math "$fio_ver == $req_ver") -eq 1 || \
+> > +			_notrun "need fio = $req_ver (found $fio_ver)"
+> > +		;;
+> > +	esac
+> > +}
+> > +
+> >  ################################################################################
+> >  # make sure this script returns success
+> >  /bin/true
+> > -- 
+> > 2.49.0
+> > 
+> 
