@@ -1,74 +1,73 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B49D9278E75
-	for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 15:16:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65DB427FD5D
+	for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 15:16:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756307787; cv=none; b=sxfTUcFVQqAHALZuupvw+0XbhSGSwtyuR/9ZeZJXjxj06FHAn+jOkcH20jbuMmsTShd/JCiD5AC2gvw87HVp12sYJBc7FCRGgC9FquxoKiRDCNjn2hAQMatVBTKx2OatHLcLwxjYTmwk+OalYn12QHCCCqO4Ed/A/VJ8bHwt2pM=
+	t=1756307788; cv=none; b=R+l+JK+JngAuHAq2BTSa5cC9i6eiLrDZu47CC8oUoH3wB25diPo5Zhv9kYe5W0MMaQckvLKuj57VjcReIRJgfwReLsMF4ElRyGRTDuYbhjDMipOcfHskCzUCojhupOCtboxR1gDwsToEuwRJtUKZrjjVCbGumx+G5usByFTHnjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756307787; c=relaxed/simple;
-	bh=EKtLHze8So6WUwBeCGYvWIDThXsFt85olQKCz11qkBs=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=m0SVC3MtHcXs8BqZREbz2Ug/ADQmw30rxwFeH7Z6TdWjB7nWFvdYur04gs7fmk3sT9TdMNTeH91L5alalIdAMqLRrJOyw0Esdc26Kd1Rx/st1bWupnPy3cjrNH1G7kJAG40F5X2o6i5bNmiKdiyIUNcekTb+BQx/be6K3Clm9fg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EPyWREx+; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1756307788; c=relaxed/simple;
+	bh=PPr77puRvCeAT40UGuOX5WZ1/o6gVvC8AT6qc5GzuQg=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 In-Reply-To:To:Cc; b=XyJvtFZmpp04eFzDs6LfnU/+J2J1JlzCM/TY8zLZ+FIheMSmrNmXvvvivMgpcPCYdYj0rfJk7ASEhvukkU/XutBpivbUEd5HRUKHStlbTSzm5KhP2xE7lnEeZIUpxdhSQW3U4d0XSOOrFNiA3ol4fm/BYsvG+tWZwmk82CuLlsM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gzQFWnoc; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EPyWREx+"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gzQFWnoc"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756307784;
+	s=mimecast20190719; t=1756307785;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BV+p7m0Dv5f14C4RYwZJ2/Ia3hKRo6NVSiFGkyaqpBQ=;
-	b=EPyWREx+ph9fOkUVvJueh0Bu3/S47zh+Ots7ky37whBpbYw5KDIfSR533FOo98d/0r1VsT
-	E5qK9VzKLYKeiocpHlnbksCmoKdO6DUD06iWEuaMKXhe2flC5mckI7FuSQu9RVn6DODt/7
-	zS5pdIE63Xb/zPxvvDvQeVSR+qf7FIE=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	 content-transfer-encoding:content-transfer-encoding:  in-reply-to:in-reply-to;
+	bh=GoGNdT1TeINSx3pJcevvIE4J9/n+UyYLAaBs2NvW64U=;
+	b=gzQFWnoc4CbY7dNgYiDE4jN4ayKXq7RiS0sxm1Jh1s4/IEbveIikjWrTR8IlzkJydk4ZhB
+	2viWgsUrY06+vO3tgRrlhH0u3OLNY6HL7TNFPJYMd7rGMOOUhpSwnJj3uTmiMW0MFk99OW
+	TaXHLyMHrfk7LVwKFVUgHCHy+/FCiQs=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-458-Z66WKZtNMW60hcTRFLZ4Vw-1; Wed, 27 Aug 2025 11:16:23 -0400
-X-MC-Unique: Z66WKZtNMW60hcTRFLZ4Vw-1
-X-Mimecast-MFC-AGG-ID: Z66WKZtNMW60hcTRFLZ4Vw_1756307782
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-45a1b0caae1so35676765e9.3
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 08:16:23 -0700 (PDT)
+ us-mta-589-tZQY_Mm0N8GMrzJ-tzqM-A-1; Wed, 27 Aug 2025 11:16:23 -0400
+X-MC-Unique: tZQY_Mm0N8GMrzJ-tzqM-A-1
+X-Mimecast-MFC-AGG-ID: tZQY_Mm0N8GMrzJ-tzqM-A_1756307780
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-45b629ed73bso20732775e9.2
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 08:16:20 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756307782; x=1756912582;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=BV+p7m0Dv5f14C4RYwZJ2/Ia3hKRo6NVSiFGkyaqpBQ=;
-        b=WWarHIm5TK9PoIt4Z9TyRjrgAjvoRjG31VwQfIJdSAuzFhxmIir7qGYhCpFBx55LBP
-         rZL2DOhHCm6ieEPQpZbsfGjmMFAE4RWnDEnw8Goyld3fkiJjuMVxZ3GBdnD6zt94T8e2
-         ucOCEEFARJm1XEV/CLvM430n+/bhqFcyIUu+hPMvZyso6kD44kmXPoE5i49Z7iB5eGUq
-         x7RpK9FAq2kfJAhJDDffooKSPD0N4dHhb+Z8qLqWBfrqxxa6AC1BrtSU1FRFvOY30nhW
-         7aZUpcKpbzfZZH6lZ1WSz/xRPr0KUj8h6sWmOrxP0wR0n/46nii1+jYV51sgQtSklOZB
-         c0Wg==
-X-Forwarded-Encrypted: i=1; AJvYcCWNw5Z/pqCG+70EWiROSRArkTwy6lJraD9GSnWXwjyNE7onWzfbEAqacjaJrjoG+ju3rJ62bXqE2OU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzupiEbYzK5su4NHEF8xWKC9+dmLOOz4xK2UaDS6702yWNmq38l
-	L3yxUc1Dpa6mzCxUEmB8VMD6rq0enKrJcQTTI89GcPFfxHKjV8pvUqZNNvRCiCYvZKpbRwVev7D
-	mHTQVF0sbjdiE/uKRrYT6/+xfAD+y0g6bb3h3G9uG0BMKDc3z0ovF5EVV7+JuagSB3Gns
-X-Gm-Gg: ASbGnctbdBmU3yvSyBhnjVGalss1GZ6eRxMkHy53VPI3tiuAWEQAO/WvRlRF4ft2c9L
-	KYPdVWCqyFRlYDb3TfrBWro/9rXw6770T9hIqceOZk5aQhdkOFGIL12GpaVIBf+FjLJ3mhXpfj1
-	wxau4zF/wm6gldDXs8jWFPhjCnXEPbGBfFAdjGMSr1OfC2wlJep7uUNYbGeM6Qq/7xurFFDfMHh
-	Es1fqJHtZ9CmOSwNNURWgbZvsHg1BEWTTH3sqUiH/PFY+lDBQWPCV8y8sXJ+GMAFTUr6d50k1u5
-	v6GX/QkZUcfY/Zcx+g==
-X-Received: by 2002:a05:600c:198f:b0:458:7005:2ac3 with SMTP id 5b1f17b1804b1-45b5f8479f3mr92185165e9.21.1756307781790;
-        Wed, 27 Aug 2025 08:16:21 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IELU4+6F1S678j95SdMA6OY3/DfDJZhH5js7Av/EdAUN7bwmtPlPDIWnqwHtzHSRy9qbral0g==
-X-Received: by 2002:a05:600c:198f:b0:458:7005:2ac3 with SMTP id 5b1f17b1804b1-45b5f8479f3mr92184895e9.21.1756307781351;
-        Wed, 27 Aug 2025 08:16:21 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1756307779; x=1756912579;
+        h=cc:to:in-reply-to:content-transfer-encoding:mime-version:message-id
+         :date:subject:from:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GoGNdT1TeINSx3pJcevvIE4J9/n+UyYLAaBs2NvW64U=;
+        b=h03yHuq59zPv+vfE9o+wCBBVsCvaR/UI9raJiUFSjRzfZCoDu71+9LOuxSVQuNi97l
+         xVLxKe3i7taaiFaTNIxyQY9LAtlxOJ2kJxI+2v/rENoz77Xtk5T3v+Xaw4lDLtmlmeNE
+         YufA+iMvRWc9RcdOU16v1GcMhECcIdrFL/u9Nhj5nWLq+P2pUzaroBeJstm11ym3jqdF
+         0BZKd3/zTPdZ6Zfuvn6Zgp+U7uVDQk23+oLLf5gjjy5uJv2Ns9ymRtSVkVQK9g9TwRCC
+         l3HfI3krc6YDP1/l97FqU5EnaRqqdk8I0XwNIXQm50RTWzpdNHYHddYby824g2pSHKbr
+         GS+A==
+X-Forwarded-Encrypted: i=1; AJvYcCWAb2r4FefU3WSl/E3L77he+43LgtdxgdmST6k5KKRLcTOeGQb3ZIfnO08woss3kbMo0I4XyDou02Q=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxCfAhbHX4TkJv0kYK/A5za6oD9fPVxq6nL2KS91sGDvm34ZGiE
+	Ewm/2iIhgf7anTWdA7WeLSf7jHvGXZVKXNeIgSqCnyZ4TJ/odUAlDg9yY60LTPt3900UPIof/H8
+	i4RYH2iCT+d+DFyOllQNMy8qS+/5Sh+hO72qrpBW4BTbz+5MhOqTxSeaFgKCd
+X-Gm-Gg: ASbGncsghYF/gyQspqnH+6XzjYzL9ZeJds0CUI1DxbBHCF58fz1eDu/kFVNXdOglKsy
+	y+zvOV7dXkEIdeoDeGv1CiFDZjDAxYIjU/lPPql/3VsKBhn0cdYqi0eBQ7g/KgDqI24ZpvutkqV
+	z8j1BwU881LR7d5ICqUsYyK+yy+/oGdSJ7aLm2HUhGK4OqKCp6syI3PC1Xtdn9THQUPXeOrvo18
+	jrDNMmANfRG44Hk1QVVcRwkc2T2i+deD35jkp0wbuQ+XxvJ8ATfqXeKp/Fm5Fw8tDoBLvDIyiLw
+	NAlngrBsqaPFBaconQ==
+X-Received: by 2002:a05:600c:1f83:b0:456:1c4a:82b2 with SMTP id 5b1f17b1804b1-45b517ad803mr174421015e9.10.1756307779461;
+        Wed, 27 Aug 2025 08:16:19 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGSshh7UA0Q1tQ+3feB1Bg+Sb2OMUJ7cAMX5l3HHqsQhNcKfVCBQkB/C/cHAyfVwt7bELFVww==
+X-Received: by 2002:a05:600c:1f83:b0:456:1c4a:82b2 with SMTP id 5b1f17b1804b1-45b517ad803mr174420705e9.10.1756307778992;
+        Wed, 27 Aug 2025 08:16:18 -0700 (PDT)
 Received: from [127.0.0.2] ([91.245.205.131])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45b6f0c6dc1sm35019145e9.1.2025.08.27.08.16.19
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45b6f0c6dc1sm35019145e9.1.2025.08.27.08.16.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Aug 2025 08:16:20 -0700 (PDT)
+        Wed, 27 Aug 2025 08:16:18 -0700 (PDT)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
-Date: Wed, 27 Aug 2025 17:16:16 +0200
-Subject: [PATCH v2 2/3] generic: introduce test to test
- file_getattr/file_setattr syscalls
+Subject: [PATCH v2 0/3] Test file_getattr and file_setattr syscalls
+Date: Wed, 27 Aug 2025 17:16:14 +0200
+Message-Id: <20250827-xattrat-syscall-v2-0-ba489b5bc17a@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -77,191 +76,71 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250827-xattrat-syscall-v2-2-ba489b5bc17a@kernel.org>
-References: <20250827-xattrat-syscall-v2-0-ba489b5bc17a@kernel.org>
-In-Reply-To: <20250827-xattrat-syscall-v2-0-ba489b5bc17a@kernel.org>
+X-B4-Tracking: v=1; b=H4sIAD4hr2gC/2WNwQ6DIBAFf8XsuTSAVWlP/Y/GA8FFSYmahRCN4
+ d9L7bHHmeTNOyAgOQzwqA4gTC64ZS4gLxWYSc8jMjcUBsllw2vRsU3HSDqysAejvWeIyjYohxa
+ FgrJaCa3bzuKrLzy5EBfaz4MkvvbXUlz9tZJgnLWa383N1p0V/PlGmtFfFxqhzzl/AAsF82evA
+ AAA
+X-Change-ID: 20250317-xattrat-syscall-ee8f5e2d6e18
+In-Reply-To: <dvht4j3ipg74c2inz33n6azo65sebhhag5odh7535hfssamxfa@6wr2m4niilye>
 To: fstests@vger.kernel.org
 Cc: zlang@redhat.com, linux-fsdevel@vger.kernel.org, 
- linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
+ linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>, 
+ Andrey Albershteyn <aalbersh@redhat.com>
 X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5281; i=aalbersh@kernel.org;
- h=from:subject:message-id; bh=EKtLHze8So6WUwBeCGYvWIDThXsFt85olQKCz11qkBs=;
- b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIYMtYrOv2v26zkU6zCd9vJXuv+S+4n2zbEb5nyy1M4I
- K71s/WlB4odpSwMYlwMsmKKLOuktaYmFUnlHzGokYeZw8oEMoSBi1MAJjKRn+F//IK9VQxCh6VX
- /LSzjmy3UkyZce/qtr5tluGpG61n92hsZ/ifPePIJ42qn60PXkXEzJDY80trWm7A5A256csYfm2
- YueksCwA3BknC
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1760; i=aalbersh@kernel.org;
+ h=from:subject:message-id; bh=PPr77puRvCeAT40UGuOX5WZ1/o6gVvC8AT6qc5GzuQg=;
+ b=owJ4nJvAy8zAJea2/JXEGuOHHIyn1ZIYMtYrOp7b0lEhvrvvh/Ljp3xCofUxbawCiksZlq6t6
+ F7dKTvl08GOUhYGMS4GWTFFlnXSWlOTiqTyjxjUyMPMYWUCGcLAxSkAE9nZyfC/oP2OrKljSqlD
+ 8+duHbN0q8zLWV7s6+Xr0q6q7cuya1vEyPB2RfflhKaFmt1265S3mz++HfBg4T7veRJH1sp85Qy
+ 1ns8KAJ2MRdE=
 X-Developer-Key: i=aalbersh@kernel.org; a=openpgp;
  fpr=AE1B2A9562721A6FC4307C1F46A7EA18AC33E108
 
-Add a test to test basic functionality of file_getattr() and
-file_setattr() syscalls. Most of the work is done in file_attr
-utility.
+Add a test to check basic functionallity of file_getattr() and
+file_setattr() syscalls. These syscalls are used to get/set filesystem
+inode attributes (think of FS_IOC_SETFSXATTR ioctl()). The difference
+from ioctl() is that these syscalls use *at() semantics and can be
+called on any file without opening it, including special ones.
+
+For XFS, with the use of these syscalls, xfs_quota now can
+manipulate quota on special files such as sockets. Add a test to
+check that special files are counted, which wasn't true before.
+
+To: fstests@vger.kernel.org
+Cc: zlang@redhat.com
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- tests/generic/2000     | 109 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/2000.out |  37 +++++++++++++++++
- 2 files changed, 146 insertions(+)
+Changes in v2:
+- Improve help message for file_attr
+- Refactor file_attr.c
+- Drop _wants_*_commit
+- Link to v1: https://lore.kernel.org/r/20250808-xattrat-syscall-v1-0-6a09c4f37f10@kernel.org
 
-diff --git a/tests/generic/2000 b/tests/generic/2000
-new file mode 100755
-index 000000000000..b03e9697bb14
---- /dev/null
-+++ b/tests/generic/2000
-@@ -0,0 +1,109 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2025 Red Hat Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 2000
-+#
-+# Test file_getattr/file_setattr syscalls
-+#
-+. ./common/preamble
-+_begin_fstest auto
-+
-+. ./common/filter
-+
-+# Modify as appropriate.
-+_require_scratch
-+_require_test_program "af_unix"
-+_require_test_program "file_attr"
-+_require_symlinks
-+_require_mknod
-+
-+_scratch_mkfs >>$seqres.full 2>&1
-+_scratch_mount
-+
-+file_attr () {
-+	$here/src/file_attr $*
-+}
-+
-+create_af_unix () {
-+	$here/src/af_unix $* || echo af_unix failed
-+}
-+
-+projectdir=$SCRATCH_MNT/prj
-+
-+# Create normal files and special files
-+mkdir $projectdir
-+mkfifo $projectdir/fifo
-+mknod $projectdir/chardev c 1 1
-+mknod $projectdir/blockdev b 1 1
-+create_af_unix $projectdir/socket
-+touch $projectdir/foo
-+ln -s $projectdir/foo $projectdir/symlink
-+touch $projectdir/bar
-+ln -s $projectdir/bar $projectdir/broken-symlink
-+rm -f $projectdir/bar
-+
-+echo "Error codes"
-+# wrong AT_ flags
-+file_attr --get --invalid-at $projectdir ./foo
-+file_attr --set --invalid-at $projectdir ./foo
-+# wrong fsxattr size (too big, too small)
-+file_attr --get --too-big-arg $projectdir ./foo
-+file_attr --get --too-small-arg $projectdir ./foo
-+file_attr --set --too-big-arg $projectdir ./foo
-+file_attr --set --too-small-arg $projectdir ./foo
-+# out of fsx_xflags mask
-+file_attr --set --new-fsx-flag $projectdir ./foo
-+
-+echo "Initial attributes state"
-+file_attr --get $projectdir | _filter_scratch
-+file_attr --get $projectdir ./fifo
-+file_attr --get $projectdir ./chardev
-+file_attr --get $projectdir ./blockdev
-+file_attr --get $projectdir ./socket
-+file_attr --get $projectdir ./foo
-+file_attr --get $projectdir ./symlink
-+
-+echo "Set FS_XFLAG_NODUMP (d)"
-+file_attr --set --set-nodump $projectdir
-+file_attr --set --set-nodump $projectdir ./fifo
-+file_attr --set --set-nodump $projectdir ./chardev
-+file_attr --set --set-nodump $projectdir ./blockdev
-+file_attr --set --set-nodump $projectdir ./socket
-+file_attr --set --set-nodump $projectdir ./foo
-+file_attr --set --set-nodump $projectdir ./symlink
-+
-+echo "Read attributes"
-+file_attr --get $projectdir | _filter_scratch
-+file_attr --get $projectdir ./fifo
-+file_attr --get $projectdir ./chardev
-+file_attr --get $projectdir ./blockdev
-+file_attr --get $projectdir ./socket
-+file_attr --get $projectdir ./foo
-+file_attr --get $projectdir ./symlink
-+
-+echo "Set attribute on broken link with AT_SYMLINK_NOFOLLOW"
-+file_attr --set --set-nodump $projectdir ./broken-symlink
-+file_attr --get $projectdir ./broken-symlink
-+
-+file_attr --set --no-follow --set-nodump $projectdir ./broken-symlink
-+file_attr --get --no-follow $projectdir ./broken-symlink
-+
-+cd $SCRATCH_MNT
-+touch ./foo2
-+echo "Initial state of foo2"
-+file_attr --get --at-cwd ./foo2
-+echo "Set attribute relative to AT_FDCWD"
-+file_attr --set --at-cwd --set-nodump ./foo2
-+file_attr --get --at-cwd ./foo2
-+
-+echo "Set attribute on AT_FDCWD"
-+mkdir ./bar
-+file_attr --get --at-cwd ./bar
-+cd ./bar
-+file_attr --set --at-cwd --set-nodump ""
-+file_attr --get --at-cwd .
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/2000.out b/tests/generic/2000.out
-new file mode 100644
-index 000000000000..11b1fcbb630b
---- /dev/null
-+++ b/tests/generic/2000.out
-@@ -0,0 +1,37 @@
-+QA output created by 2000
-+Error codes
-+Can not get fsxattr on ./foo: Invalid argument
-+Can not get fsxattr on ./foo: Invalid argument
-+Can not get fsxattr on ./foo: Argument list too long
-+Can not get fsxattr on ./foo: Invalid argument
-+Can not get fsxattr on ./foo: Argument list too long
-+Can not get fsxattr on ./foo: Invalid argument
-+Can not set fsxattr on ./foo: Invalid argument
-+Initial attributes state
-+----------------- SCRATCH_MNT/prj 
-+----------------- ./fifo 
-+----------------- ./chardev 
-+----------------- ./blockdev 
-+----------------- ./socket 
-+----------------- ./foo 
-+----------------- ./symlink 
-+Set FS_XFLAG_NODUMP (d)
-+Read attributes
-+------d---------- SCRATCH_MNT/prj 
-+------d---------- ./fifo 
-+------d---------- ./chardev 
-+------d---------- ./blockdev 
-+------d---------- ./socket 
-+------d---------- ./foo 
-+------d---------- ./symlink 
-+Set attribute on broken link with AT_SYMLINK_NOFOLLOW
-+Can not get fsxattr on ./broken-symlink: No such file or directory
-+Can not get fsxattr on ./broken-symlink: No such file or directory
-+------d---------- ./broken-symlink 
-+Initial state of foo2
-+----------------- ./foo2 
-+Set attribute relative to AT_FDCWD
-+------d---------- ./foo2 
-+Set attribute on AT_FDCWD
-+----------------- ./bar 
-+------d---------- . 
+---
+Andrey Albershteyn (3):
+      file_attr: introduce program to set/get fsxattr
+      generic: introduce test to test file_getattr/file_setattr syscalls
+      xfs: test quota's project ID on special files
 
+ .gitignore             |   1 +
+ configure.ac           |   1 +
+ include/builddefs.in   |   1 +
+ m4/package_libcdev.m4  |  16 +++
+ src/Makefile           |   5 +
+ src/file_attr.c        | 268 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/2000     | 109 ++++++++++++++++++++
+ tests/generic/2000.out |  37 +++++++
+ tests/xfs/2000         |  73 ++++++++++++++
+ tests/xfs/2000.out     |  15 +++
+ 10 files changed, 526 insertions(+)
+---
+base-commit: 3d57f543ae0c149eb460574dcfb8d688aeadbfff
+change-id: 20250317-xattrat-syscall-ee8f5e2d6e18
+
+Best regards,
 -- 
-2.49.0
+Andrey Albershteyn <aalbersh@kernel.org>
 
