@@ -1,40 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF9CF3126C7;
-	Thu, 28 Aug 2025 14:54:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EF751F1932;
+	Thu, 28 Aug 2025 15:09:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756392844; cv=none; b=sGSpbGwbBUxxb3boSjHhI5oza7ehm+JU27eSI3Fdy6Mtc1N5k3Ig2wVb4dnVsXv1rk7Nq4t0lfJvXCQ+5zMAvZ58IfXeaTtQWHzm4JEPb45IkWErkAlqAxkmfEcdZG4ajhDFWWFSrD8GDxlruio9HHY96SqfRoNn+pijcF0NTjc=
+	t=1756393746; cv=none; b=QaxTl7LK4sGMAEfXsXdU78lyykrV2FIImSKP2l8fmle95De1I1YDLrORQRPBl/9dNIxHNCIOuAX1UkhNhOdyj2jYoE7X9l3+9fAdRX/Junb1KRneGvZJv55+9AUfVVSxnULrwDckJ01okqTN8+c6Qd4fgTyyR9WKIYOERnJkE4A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756392844; c=relaxed/simple;
-	bh=m7DbKa5nL0/l/h4kStB22h0PHHL/c9TtGgkpRT1CwFk=;
+	s=arc-20240116; t=1756393746; c=relaxed/simple;
+	bh=QEhPD3tD6vGrwgq2uVTV2AuL5VvNwkicFuwxTV3BCGc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=narecj7uA3yMVwAuSW+dAZ29hqr+o8x8elgTuUu1c7O1ywMl81fOxKoWszRvwHFtikL2u3HZUkrMCEYYkDDy1BCyJHxcayRkDY2nOhtbzF2z7tjBbGictxnjfU5Vv9OM4vO3sSWIBQP40HL5mgWY/yMPCUKqnpSzBFS+iipNhVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U3/dMkL2; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=dqeeiTq8UyG9c8rV8SzvUym8L4fu8SDkV6Cy2YTy5iHaP3r26/VQ34nGfJPfCnR3rKnOewx66R5vduHTOGZOy74hQnqf+VbMEY5jjNkT5whKtLgZSHNX4NlyUC4GkBLStVDz9wNQlmg3VYgUf3rEmf1ZifipgdYhxawkgNHE0H8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WERgi3vV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U3/dMkL2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BE16C4CEEB;
-	Thu, 28 Aug 2025 14:54:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WERgi3vV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAB0EC4CEEB;
+	Thu, 28 Aug 2025 15:09:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756392841;
-	bh=m7DbKa5nL0/l/h4kStB22h0PHHL/c9TtGgkpRT1CwFk=;
+	s=k20201202; t=1756393745;
+	bh=QEhPD3tD6vGrwgq2uVTV2AuL5VvNwkicFuwxTV3BCGc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=U3/dMkL2cuy5yroFBqYyQ61iRC8Tauq4yidehrDsfj6WVwgQbMSYv8ZXKUX7z4/qL
-	 AmyASZXoT+ejQ42z0edgv3o9ecNh5ZygL6zJZdaGI69WL66tkchTqb9GeU02hWPEh/
-	 KkXir5k3p2hI3gVzEIECg7En3TONYSRGB377PiMSSXQFL8qZoog7aYhzPd720uQ5XB
-	 owQ5l4zlELlxI+byPMAwljWd5nZ4lc/pHoy5u/wee/Kq4EQO/5dGEv5HNmthrYij06
-	 KqLJDrd6/ErMCRBVkU5JDyf5uxFaEJJbcWR83n+cmcRLlyofjZ9uY8vfHLuX9Havjs
-	 44drH1fMRJQSQ==
-Date: Thu, 28 Aug 2025 07:54:00 -0700
+	b=WERgi3vVXd6KrtqqApFxR/6rIbIBAQV9x0UP1MfDhrwrSKrjOsoDiBYrpVAdu24sk
+	 SAyo0r7WvTgO2z6fTUleWEkNZwfluPadR3eOdPDHhWWBKe69A/Rzlp0/FedS2oyXhS
+	 OK/IQiPMn1MUL92vrtUUeWc44fJt8s1vCsYmxZUxIkpIBQyLDC5vyaR3cMC/jF5RU6
+	 u/R2zzWKbqmb/G3jEl3PIT6vnIGxZRhDdmeUIwtnP37lW3XFzUz0kZDO3TL2oo5Lh5
+	 EpJ6H2XWsADYzzdnW83NoFvlHVqMzWEJtD8/L1nqYFbVq5T7yWjLT3iA9sNrKFicWE
+	 8xCA2wrFRVRLA==
+Date: Thu, 28 Aug 2025 08:09:05 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Marcelo Moreira <marcelomoreira1905@gmail.com>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	skhan@linuxfoundation.org,
-	linux-kernel-mentees@lists.linuxfoundation.org
-Subject: Re: [PATCH v3] xfs: Replace strncpy with memcpy
-Message-ID: <20250828145400.GH8096@frogsfrogsfrogs>
-References: <20250827221830.23032-1-marcelomoreira1905@gmail.com>
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
+	Ritesh Harjani <ritesh.list@gmail.com>, john.g.garry@oracle.com,
+	tytso@mit.edu, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v5 02/12] common/rc: Add _require_fio_version helper
+Message-ID: <20250828150905.GB8092@frogsfrogsfrogs>
+References: <cover.1755849134.git.ojaswin@linux.ibm.com>
+ <955d47b2534d9236adbd2bbd13598bbd1da8fc04.1755849134.git.ojaswin@linux.ibm.com>
+ <20250825160801.ffktqauw2o6l5ql3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <aK8hUqdee-JFcFHn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,49 +47,100 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250827221830.23032-1-marcelomoreira1905@gmail.com>
+In-Reply-To: <aK8hUqdee-JFcFHn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
 
-On Wed, Aug 27, 2025 at 07:17:07PM -0300, Marcelo Moreira wrote:
-> The changes modernizes the code by aligning it with current kernel best
-> practices. It improves code clarity and consistency, as strncpy is deprecated
-> as explained in Documentation/process/deprecated.rst. This change does
-> not alter the functionality or introduce any behavioral changes.
-> 
-> Suggested-by: Dave Chinner <david@fromorbit.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> Signed-off-by: Marcelo Moreira <marcelomoreira1905@gmail.com>
+On Wed, Aug 27, 2025 at 08:46:34PM +0530, Ojaswin Mujoo wrote:
+> On Tue, Aug 26, 2025 at 12:08:01AM +0800, Zorro Lang wrote:
+> > On Fri, Aug 22, 2025 at 01:32:01PM +0530, Ojaswin Mujoo wrote:
+> > > The main motivation of adding this function on top of _require_fio is
+> > > that there has been a case in fio where atomic= option was added but
+> > > later it was changed to noop since kernel didn't yet have support for
+> > > atomic writes. It was then again utilized to do atomic writes in a later
+> > > version, once kernel got the support. Due to this there is a point in
+> > > fio where _require_fio w/ atomic=1 will succeed even though it would
+> > > not be doing atomic writes.
+> > > 
+> > > Hence, add an explicit helper to ensure tests to require specific
+> > > versions of fio to work past such issues.
+> > 
+> > Actually I'm wondering if fstests really needs to care about this. This's
+> > just a temporary issue of fio, not kernel or any fs usespace program. Do
+> > we need to add a seperated helper only for a temporary fio issue? If fio
+> > doesn't break fstests running, let it run. Just the testers install proper
+> > fio (maybe latest) they need. What do you and others think?
 
-memcpy is fine, the repair code determines the new target length via
-strnlen(bufsize) later on so we'll continue to fix the "non-null
-characters after the zero terminator" case.
-
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Are there obvious failures if you try to run these new atomic write
+tests on a system with the weird versions of fio that have the no-op
+atomic= functionality?  I'm concerned that some QA person is going to do
+that unwittingly and report that everything is ok when in reality they
+didn't actually test anything.
 
 --D
 
-> ---
-> Changes since v2:
-> - Fixing some errors in the commit message.
-> Link to v2: https://lore.kernel.org/linux-kernel-mentees/CAPZ3m_iNj2zwpAovv3BTz8gNp5XzdxSRHBFonM9sJvaSjYVBeg@mail.gmail.com/T/#t
+> > Thanks,
+> > Zorro
 > 
->  fs/xfs/scrub/symlink_repair.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Hey Zorro,
 > 
-> diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
-> index 953ce7be78dc..5902398185a8 100644
-> --- a/fs/xfs/scrub/symlink_repair.c
-> +++ b/fs/xfs/scrub/symlink_repair.c
-> @@ -185,7 +185,7 @@ xrep_symlink_salvage_inline(
->  		return 0;
->  
->  	nr = min(XFS_SYMLINK_MAXLEN, xfs_inode_data_fork_size(ip));
-> -	strncpy(target_buf, ifp->if_data, nr);
-> +	memcpy(target_buf, ifp->if_data, nr);
->  	return nr;
->  }
->  
-> -- 
-> 2.50.1
+> Sure I'm okay with not keeping the helper and letting the user make sure
+> the fio version is correct.
 > 
+> @John, does that sound okay?
+> 
+> Regards,
+> ojaswin
+> > 
+> > > 
+> > > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> > > ---
+> > >  common/rc | 32 ++++++++++++++++++++++++++++++++
+> > >  1 file changed, 32 insertions(+)
+> > > 
+> > > diff --git a/common/rc b/common/rc
+> > > index 35a1c835..f45b9a38 100644
+> > > --- a/common/rc
+> > > +++ b/common/rc
+> > > @@ -5997,6 +5997,38 @@ _max() {
+> > >  	echo $ret
+> > >  }
+> > >  
+> > > +# Check the required fio version. Examples:
+> > > +#   _require_fio_version 3.38 (matches 3.38 only)
+> > > +#   _require_fio_version 3.38+ (matches 3.38 and above)
+> > > +#   _require_fio_version 3.38- (matches 3.38 and below)
+> > > +_require_fio_version() {
+> > > +	local req_ver="$1"
+> > > +	local fio_ver
+> > > +
+> > > +	_require_fio
+> > > +	_require_math
+> > > +
+> > > +	fio_ver=$(fio -v | cut -d"-" -f2)
+> > > +
+> > > +	case "$req_ver" in
+> > > +	*+)
+> > > +		req_ver=${req_ver%+}
+> > > +		test $(_math "$fio_ver >= $req_ver") -eq 1 || \
+> > > +			_notrun "need fio >= $req_ver (found $fio_ver)"
+> > > +		;;
+> > > +	*-)
+> > > +		req_ver=${req_ver%-}
+> > > +		test $(_math "$fio_ver <= $req_ver") -eq 1 || \
+> > > +			_notrun "need fio <= $req_ver (found $fio_ver)"
+> > > +		;;
+> > > +	*)
+> > > +		req_ver=${req_ver%-}
+> > > +		test $(_math "$fio_ver == $req_ver") -eq 1 || \
+> > > +			_notrun "need fio = $req_ver (found $fio_ver)"
+> > > +		;;
+> > > +	esac
+> > > +}
+> > > +
+> > >  ################################################################################
+> > >  # make sure this script returns success
+> > >  /bin/true
+> > > -- 
+> > > 2.49.0
+> > > 
+> > 
 > 
