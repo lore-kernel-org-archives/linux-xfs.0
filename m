@@ -1,42 +1,35 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 064CC1373;
-	Thu, 28 Aug 2025 09:06:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0854B1373
+	for <linux-xfs@vger.kernel.org>; Thu, 28 Aug 2025 09:11:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=140.211.166.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756372002; cv=none; b=fpaDJoZvWq5AIu+ZMaQzYzINUsdfufPBpF8JUjlye+rOf+e7hU9P+b1JaLj/2K1ZNoszSfFB3Pr30dI4sEMzdRbf5TiAC8VXAPZNZVwdoubTXErTFo53c426XlWkeKDm+XBwCi5Z0RyrJJz7U3nouFQiImCnKZ6nWcWAIjDmxlY=
+	t=1756372291; cv=none; b=KIgEeidFnvNDuI/dzIMtTA22X4uggDOIAYvSZCRHrDygXPepvJnwfRBjuO/NFtt+C0XU+ZMO834I9EpOGips6BRucNs3FfJ4BSbq2lGpW0YF+ohN19utKnydcKe86l3bP/oVspnoNqSA2MB3LXYJ8m+nsU7AL09l+qbI5jGEomg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756372002; c=relaxed/simple;
-	bh=xoFXf4tek4F79Myol8+sLgN5auxVB9US628LUrqjCD8=;
+	s=arc-20240116; t=1756372291; c=relaxed/simple;
+	bh=wzsKs1Y2i1lU9kP367njU9Ckckne3CyOWo+z6O5i3A4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iygS4gWfoOfjSute1cXQ4V/LE3oIqaBc7aYeaJxNXTXOxAjBxJeUW0KdFdmI28XLHHtESP+3867haGif56YI76YlU5ehCakeixK/jS2Kic1EIVnvIAnrQpIVCKCV6QZDbG3285UoSTtEKUtu14vOcqejA/vbQy0iiUL6DL/yzt8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R8qbavQx; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R8qbavQx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFCBCC4CEEB;
-	Thu, 28 Aug 2025 09:06:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756372001;
-	bh=xoFXf4tek4F79Myol8+sLgN5auxVB9US628LUrqjCD8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=R8qbavQxhqSOB3/VphrPYPTDmOC/lYN7t4Qvu2qUfmSb+/plfN8NzgZXG36DaD3zr
-	 ETjl4SddpLQxiAyCzgmMKewusfjRzP23D0VAPeOdkdIEa7n/G0Wf/jLZjthi3XAABO
-	 CKayhBAtBHt8MIIpvpg4aGMt+OB99MExAF18l875nzpRIWsfq9XRwFiUWLa+FnSI9Y
-	 R43lbaxzJXVaxqkC1inLM4cWWG6J+fsEp8S949HlotQbrP0d5/EJIt9XulQaj4MDh4
-	 2uvugmEIXA8sJBbiK+fceSIEVVd3dxkeTPzTevO3AmxcH5bAlFu78pdP1SOXku3fzl
-	 dlVT3HhxZ5tDg==
-Date: Thu, 28 Aug 2025 11:06:37 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-	kernel-team@fb.com, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	viro@zeniv.linux.org.uk, amir73il@gmail.com
-Subject: Re: [PATCH v2 17/54] fs: remove the inode from the LRU list on
- unlink/rmdir
-Message-ID: <20250828-leiden-getan-25237f019cf1@brauner>
-References: <cover.1756222464.git.josef@toxicpanda.com>
- <3552943716349efa4ff107bb590ac6b980183735.1756222465.git.josef@toxicpanda.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=LlgGwwx6TfoBoWvwbjJN/Be4CBkmF5utBCF4S2wopgCrT5QmYSXHOwHdlAxRaHpolJFnARpvpGJV5hrdeiX/OBqdrpTtfshfJ26tieDgGsLaZ7P5Bxm/aCmAzqtKm9aXmYzAAeJNG6Az7iyTo2Gp4/ds31+U+1yviQuBDbt5HAQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org; spf=pass smtp.mailfrom=gentoo.org; arc=none smtp.client-ip=140.211.166.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gentoo.org
+Received: from arkam (ip-213-220-240-96.bb.vodafone.cz [213.220.240.96])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: arkamar)
+	by smtp.gentoo.org (Postfix) with ESMTPSA id DF829340CD7;
+	Thu, 28 Aug 2025 09:11:27 +0000 (UTC)
+Date: Thu, 28 Aug 2025 11:11:22 +0200
+From: Petr =?utf-8?B?VmFuxJtr?= <arkamar@gentoo.org>
+To: Johannes Nixdorf <johannes@nixdorf.dev>
+Cc: XFS Development Team <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 1/2] configure: Base NEED_INTERNAL_STATX on libc headers
+ first
+Message-ID: <202582891122-aLAdOl_jIkYixlPu-arkamar@gentoo.org>
+References: <20250809-musl-fixes-v1-0-d0958fffb1af@nixdorf.dev>
+ <20250809-musl-fixes-v1-1-d0958fffb1af@nixdorf.dev>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,109 +38,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <3552943716349efa4ff107bb590ac6b980183735.1756222465.git.josef@toxicpanda.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250809-musl-fixes-v1-1-d0958fffb1af@nixdorf.dev>
 
-On Tue, Aug 26, 2025 at 11:39:17AM -0400, Josef Bacik wrote:
-> We can end up with an inode on the LRU list or the cached list, then at
-> some point in the future go to unlink that inode and then still have an
-> elevated i_count reference for that inode because it is on one of these
-> lists.
+On Sat, Aug 09, 2025 at 07:13:07PM +0200, Johannes Nixdorf wrote:
+> At compile time the libc headers are preferred, and linux/stat.h is
+> only included if the libc headers don't provide a definition for statx
+> and its types (tested on STATX_TYPE). The configure test should be
+> based on the same logic.
 > 
-> The more common case is the cached list. We open a file, write to it,
-> truncate some of it which triggers the inode_add_lru code in the
-> pagecache, adding it to the cached LRU.  Then we unlink this inode, and
-> it exists until writeback or reclaim kicks in and removes the inode.
+> This fixes one cause for failing to compile against musl libc.
 > 
-> To handle this case, delete the inode from the LRU list when it is
-> unlinked, so we have the best case scenario for immediately freeing the
-> inode.
-> 
-> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
-> ---
->  fs/namei.c | 30 +++++++++++++++++++++++++-----
->  1 file changed, 25 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/namei.c b/fs/namei.c
-> index 138a693c2346..e56dcb5747e4 100644
-> --- a/fs/namei.c
-> +++ b/fs/namei.c
-> @@ -4438,6 +4438,7 @@ SYSCALL_DEFINE2(mkdir, const char __user *, pathname, umode_t, mode)
->  int vfs_rmdir(struct mnt_idmap *idmap, struct inode *dir,
->  		     struct dentry *dentry)
->  {
-> +	struct inode *inode = dentry->d_inode;
->  	int error = may_delete(idmap, dir, dentry, 1);
->  
->  	if (error)
-> @@ -4447,11 +4448,11 @@ int vfs_rmdir(struct mnt_idmap *idmap, struct inode *dir,
->  		return -EPERM;
->  
->  	dget(dentry);
-> -	inode_lock(dentry->d_inode);
-> +	inode_lock(inode);
->  
->  	error = -EBUSY;
->  	if (is_local_mountpoint(dentry) ||
-> -	    (dentry->d_inode->i_flags & S_KERNEL_FILE))
-> +	    (inode->i_flags & S_KERNEL_FILE))
->  		goto out;
->  
->  	error = security_inode_rmdir(dir, dentry);
-> @@ -4463,12 +4464,21 @@ int vfs_rmdir(struct mnt_idmap *idmap, struct inode *dir,
->  		goto out;
->  
->  	shrink_dcache_parent(dentry);
-> -	dentry->d_inode->i_flags |= S_DEAD;
-> +	inode->i_flags |= S_DEAD;
->  	dont_mount(dentry);
->  	detach_mounts(dentry);
->  
->  out:
-> -	inode_unlock(dentry->d_inode);
-> +	/*
-> +	 * The inode may be on the LRU list, so delete it from the LRU at this
-> +	 * point in order to make sure that the inode is freed as soon as
-> +	 * possible.
-> +	 */
-> +	spin_lock(&inode->i_lock);
-> +	inode_lru_list_del(inode);
-> +	spin_unlock(&inode->i_lock);
-> +
-> +	inode_unlock(inode);
->  	dput(dentry);
->  	if (!error)
->  		d_delete_notify(dir, dentry);
-> @@ -4653,8 +4663,18 @@ int do_unlinkat(int dfd, struct filename *name)
->  		dput(dentry);
+> Signed-off-by: Johannes Nixdorf <johannes@nixdorf.dev>
 
-Why are you doing that in do_unlinkat() instead of vfs_unlink() (as
-you're doing it in vfs_rmdir() and not do_rmdir())?
+Looks good, it solves the issue for us.
 
-Doing it in do_unlinkat() means any stacking filesystem such as
-overlayfs will end up skipping the LRU list removal as they use
-vfs_unlink() directly.
-
-And does btrfs subvolume/snapshot deletion special treatment as well for
-this as it's semantically equivalent to an rmdir?
-
->  	}
->  	inode_unlock(path.dentry->d_inode);
-> -	if (inode)
-> +	if (inode) {
-> +		/*
-> +		 * The LRU may be holding a reference, remove the inode from the
-> +		 * LRU here before dropping our hopefully final reference on the
-> +		 * inode.
-> +		 */
-> +		spin_lock(&inode->i_lock);
-> +		inode_lru_list_del(inode);
-> +		spin_unlock(&inode->i_lock);
-> +
->  		iput(inode);	/* truncate the inode here */
-> +	}
->  	inode = NULL;
->  	if (delegated_inode) {
->  		error = break_deleg_wait(&delegated_inode);
-> -- 
-> 2.49.0
-> 
+Reviewed-by: Petr Vaněk <arkamar@gentoo.org>
