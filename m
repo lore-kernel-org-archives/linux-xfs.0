@@ -1,168 +1,121 @@
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C89D52E63C
-	for <linux-xfs@vger.kernel.org>; Thu, 28 Aug 2025 00:26:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAE7B849C;
+	Thu, 28 Aug 2025 08:24:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756340815; cv=none; b=PD09UV/qgRtCCnkUjQ18f+oq94cBqZZ6mVrMC6dWUyhI46N1vSeBSj69jMv4vuCXxL1Di2GywRFoD0wheqGnEDVtsdQRExagDJytKjrymRqdNJwvLp/lOYLGigOeJFT0KsBkAyNQy/gDbBtNfaSD38EjD1gaYcImCM3tkE7i+/I=
+	t=1756369448; cv=none; b=kepfNMqSbvlE+JiVXnFkG8jMV85Q4zXCotixFJlZ1uK3mrtn9zS17LxJ6Wl4NcrkNcBW37oubjohNLWpWDeb8mL4wKtnybx0/kILZgjtj4PR1MJUHD8c1k+vFbhyC1I8m4ifOMi/mH4qGnIbFYnwRN/DXbUWq4U1PJw+5Qa0Zo0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756340815; c=relaxed/simple;
-	bh=CiHY/rsMO1JgljnmcpPdzbXavktzcXH6n5jFCBNd7kc=;
+	s=arc-20240116; t=1756369448; c=relaxed/simple;
+	bh=RwBgH5v8YJpYJqLz1ozvOeDtoOvRSy9/swn9P5xY8rA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Uu6aHmtIo/lBBL++VPMVOaVwlDcPnGJK6fqCTzQAkneWLJNhU9xTgnVG4e4u90ek78uN2ayPV/+vBUKX/vTpzhwOxoml/pojRdDyaIlTNxlrDgo2P036oaCO59q/Q8gOAt/MRlPn269fXqsxZ0UNOK31Ykjld293pacJebrNLqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=UAfrB0jn; arc=none smtp.client-ip=209.85.215.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=TE4Qc9D8QWLgI24Jc7G+uSk2vbB495iGAABuIXTiS6+W/G5GFalLxOb3feH5SS7uV2NXbvGOlnACYujRLvhNLMslMxPRT0aW0MZk6QlIPlQnYeoUVHpX7Hn22P6sJTipss290INPjWAdV5rZMUXAU7jf0HCE5E3m/NT1xHXDpbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E+agvb9x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="UAfrB0jn"
-Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-b49cfd967b9so271934a12.3
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 17:26:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1756340813; x=1756945613; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=AIbrank/pOEZcuqN2pISiixQG0KXR6H+Lj8n+OUb0e8=;
-        b=UAfrB0jnykPMfT5vDgDLf+UhS86I0vX7npGjSpoMLC24bKY+GPsuC785SfrJIg3zHn
-         vAAnz2KlnMybJ8OfV3k5uMo3CUG5mhfAOTWpUXN4ZvaVd8MjVn0z1RHN0UyJOazODxtG
-         z0sH1460cEygNXwgqS/k7qRzJiU15tnTybJuhT4drX5AojwMoTPXMFxJj429Jx/LS6Z1
-         o4ualYIadwaYWFjL/pqv00zZLJtROf1KN8vndiPsv4i0sUvnoUUnOTSMRzOcF5sDXzgb
-         2sVFV+r1v98KPquB2H2jiLZY1A8/bpmChBTdQcAJCN5UScVPBkfP8g2TWfAIbhL/uBj6
-         D9Hg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756340813; x=1756945613;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=AIbrank/pOEZcuqN2pISiixQG0KXR6H+Lj8n+OUb0e8=;
-        b=lm02jkw7LoYhNwJMbSJ2mzV1ueX2iqjoJWH8ECtCwsAk3vJ+ggMADKMuehX6FVjfWd
-         So+vAx2D5QG51rfJB0oxDuJN0yAwJy9c/8sbcc05KjqG8UJ6I4+obJayDudcV+05Ifss
-         RgrUjlmpXjJ7ZT8mMva9qNvPJmGlWo5E1/Ef3pu+AuE4LXmCeBQ5EDFJEyutdONQDtdL
-         x4yatNkr7Mh5Q4FOhpaHTMCt1adg0lH99dJdbd6o2HxJgcmL2gGs7/T0q+9d3ILLQLbp
-         DCkKRXdE95sCsSL1hiTpHt9HQal2gV934mgDpGoubZWSYu8EgEFYj+JnQgfk0o0UM7U4
-         huWA==
-X-Forwarded-Encrypted: i=1; AJvYcCVRrxU+zRGkvtWTi+2PpymjkeIuOmtT9UEhWuDkxgRgv+Q406gEcheobez3Q2qhfzS036x4f6jKGCw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzKSma4kwEGOMgatCeUGASJ43hqAtPFncKt7SbZ/xBgT8b1Rsz2
-	e0Hyff+PnMlUUxZ/AiL3Q+KJPypA5dpKaY+CATPJJzLCgOtXnh1H3zSmRcIXFINJ0xI=
-X-Gm-Gg: ASbGnctYK2ZMbAM2QJQDU8fT6nyRZaB4toS2f/Wd1UhPhZPh0YawAGA6Jko4uCnKuTR
-	XJ7YOKhg+9swd6qo3KuCKav7S5sYMyM39t3QSPA6qqbhNtBt/iqKIgA5TRy86E6mD6Mx3x9FfG6
-	dZ4VsbL7jLi0QI99D6og/W7pUpptgc7FKXi06TpBr36+ILJpB58iqt5q+yS1DsrMYU0T0jj1gdA
-	zRAzohQ6ganYt765bKE1Aa4LQ02sfQbOGaGdleKz5cyIsNeYTbPysuuphKsDN4x21jK5nLbhhOD
-	geCOOW75vLgaqZej0NXI9qmZgwj3KNqHwweqLFbvuZgltH0RU6R8IcyQ8M5Q0eHWfHYgBjpNvtT
-	cCyMh009nGiC79dc6t/jCyM2f+UuOx64+G8QdaSWvI2diXhkDX6NPRRin29+9D5Rh86+naHfpau
-	/7rCvxkcOV
-X-Google-Smtp-Source: AGHT+IFK5hxc7bYLtaOFxGe9ricq7ACFEmb4qM2KiH4E4yFcbUWB7uOpNMCQ2mvzULlcuE6v1Dn+5Q==
-X-Received: by 2002:a17:903:acc:b0:248:b8e0:5e1d with SMTP id d9443c01a7336-248b8e06116mr39556925ad.49.1756340813131;
-        Wed, 27 Aug 2025 17:26:53 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-24875471811sm49697605ad.37.2025.08.27.17.26.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Aug 2025 17:26:52 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1urQTa-0000000ByQW-0gL8;
-	Thu, 28 Aug 2025 10:26:50 +1000
-Date: Thu, 28 Aug 2025 10:26:50 +1000
-From: Dave Chinner <david@fromorbit.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E+agvb9x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A975C4CEEB;
+	Thu, 28 Aug 2025 08:24:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756369448;
+	bh=RwBgH5v8YJpYJqLz1ozvOeDtoOvRSy9/swn9P5xY8rA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=E+agvb9xMMS/KKbuwl4cTD/dWT1EFAzP6plhYf24nKmZds2z75NT+ZFe6gsczanFR
+	 j2ny30OJGiybUrPBrZj2jGDvw8Iwu2Pz4j9sVrUavQJID0ddJlsPMVBfTvyimayPSV
+	 kxmRFpmGvs4b8R/BXx26GrpXT2T1SbnzAuRfjO8Ygk+BhJkaSoZWtzVSnHH+KY1PBC
+	 O+EDQTDWoqID5DXtyqCFcHCeEcHaC/e+5Dns/Ob0A+mbred93Iyucu6IOD+tP1/bv9
+	 Z1AGJQrf9yBJweJ3IN3b1y4mkedBDrAK1Wyz4mbgNu0tKSEfdbQ/Q0nB2uNBWd0n3L
+	 PQ4F+oSTwhuUA==
+Date: Thu, 28 Aug 2025 10:24:03 +0200
+From: Christian Brauner <brauner@kernel.org>
 To: Josef Bacik <josef@toxicpanda.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	kernel-team@fb.com, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, brauner@kernel.org,
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	kernel-team@fb.com, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	viro@zeniv.linux.org.uk, amir73il@gmail.com
-Subject: Re: [PATCH v2 53/54] fs: remove I_LRU_ISOLATING flag
-Message-ID: <aK-iSiXtuaDj_fyW@dread.disaster.area>
+Subject: Re: [PATCH v2 15/54] fs: maintain a list of pinned inodes
+Message-ID: <20250828-chorkonzert-forschen-0203eae65f7f@brauner>
 References: <cover.1756222464.git.josef@toxicpanda.com>
- <3b1965d56a463604b5a0a003d32fe6983bc297ba.1756222465.git.josef@toxicpanda.com>
+ <35dc849a851470e2a31375ecdfdf70424844c871.1756222465.git.josef@toxicpanda.com>
+ <20250827-gelandet-heizt-1f250f77bfc8@brauner>
+ <20250827160756.GA2272053@perftesting>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <3b1965d56a463604b5a0a003d32fe6983bc297ba.1756222465.git.josef@toxicpanda.com>
+In-Reply-To: <20250827160756.GA2272053@perftesting>
 
-On Tue, Aug 26, 2025 at 11:39:53AM -0400, Josef Bacik wrote:
-> If the inode is on the LRU it has a full reference and thus no longer
-> needs to be pinned while it is being isolated.
+On Wed, Aug 27, 2025 at 12:07:56PM -0400, Josef Bacik wrote:
+> On Wed, Aug 27, 2025 at 05:20:17PM +0200, Christian Brauner wrote:
+> > On Tue, Aug 26, 2025 at 11:39:15AM -0400, Josef Bacik wrote:
+> > > Currently we have relied on dirty inodes and inodes with cache on them
+> > > to simply be left hanging around on the system outside of an LRU. The
+> > > only way to make sure these inodes are eventually reclaimed is because
+> > > dirty writeback will grab a reference on the inode and then iput it when
+> > > it's done, potentially getting it on the LRU. For the cached case the
+> > > page cache deletion path will call inode_add_lru when the inode no
+> > > longer has cached pages in order to make sure the inode object can be
+> > > freed eventually.  In the unmount case we walk all inodes and free them
+> > > so this all works out fine.
+> > > 
+> > > But we want to eliminate 0 i_count objects as a concept, so we need a
+> > > mechanism to hold a reference on these pinned inodes. To that end, add a
+> > > list to the super block that contains any inodes that are cached for one
+> > > reason or another.
+> > > 
+> > > When we call inode_add_lru(), if the inode falls into one of these
+> > > categories, we will add it to the cached inode list and hold an
+> > > i_obj_count reference.  If the inode does not fall into one of these
+> > > categories it will be moved to the normal LRU, which is already holds an
+> > > i_obj_count reference.
+> > > 
+> > > The dirty case we will delete it from the LRU if it is on one, and then
+> > > the iput after the writeout will make sure it's placed onto the correct
+> > > list at that point.
+> > > 
+> > > The page cache case will migrate it when it calls inode_add_lru() when
+> > > deleting pages from the page cache.
+> > > 
+> > > Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+> > > ---
+> > 
+> > Ok, I'm trying to wrap my head around the justification for this new
+> > list. Currently we have inodes with a zero reference counts that aren't
+> > on any LRU. They just appear on sb->i_sb_list and are e.g., dealt with
+> > during umount (sync_filesystem() followed by evict_inodes()).
+> > 
+> > So they're either dealt with by writeback or by the page cache and are
+> > eventually put on the regular LRU or the filesystem shuts down before
+> > that happens.
+> > 
+> > They're easy to handle and recognize because their inode->i_count is
+> > zero.
+> > 
+> > Now you make the LRUs hold a full reference so it can be grabbed from
+> > the LRU again avoiding the zombie resurrection from zero. So to
+> > recognize inodes that are pinned internally due to being dirty or having
+> > pagecache pages attached to it you need to track them in a new list
+> > otherwise you can't really differentiate them and when to move them onto
+> > the LRU after writeback and pagecache is done with them.
+> > 
 > 
-> Remove the I_LRU_ISOLATING flag and associated helper functions
-> (inode_pin_lru_isolating, inode_unpin_lru_isolating, and
-> inode_wait_for_lru_isolating) as they are no longer needed.
+> Exactly. We need to put them somewhere so we can account for their reference.
 > 
-> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+> We could technically just use a flag and not have a list for this, and just use
+> the flag to indicate that the inode is pinned and the flag has a full reference
+> associated with it.
+> 
+> I did it this way because if I had a nickel for every time I needed to figure
+> out where a zombie inode was and had to do the most grotesque drgn magic to find
+> it, I'd have like 15 cents, which isn't a lot but weird that it's happened 3
+> times. Having a list makes it easier from a debugging perspective.
+> 
+> But again, we have ->s_inodes, and I can just scan that list and look for
+> I_LRU_CACHED. We'd still need to hold a full reference for that, but it would
+> eliminate the need for another list if that's more preferable?  Thanks,
 
-....
-> @@ -745,34 +742,32 @@ is_uncached_acl(struct posix_acl *acl)
->   * I_CACHED_LRU		Inode is cached because it is dirty or isn't shrinkable,
->   *			and thus is on the s_cached_inode_lru list.
->   *
-> - * __I_{SYNC,NEW,LRU_ISOLATING} are used to derive unique addresses to wait
-> - * upon. There's one free address left.
-> + * __I_{SYNC,NEW} are used to derive unique addresses to wait upon. There are
-> + * two free address left.
->   */
->  
->  enum inode_state_bits {
->  	__I_NEW			= 0U,
-> -	__I_SYNC		= 1U,
-> -	__I_LRU_ISOLATING	= 2U
-> +	__I_SYNC		= 1U
->  };
->  
->  enum inode_state_flags_t {
->  	I_NEW			= (1U << __I_NEW),
->  	I_SYNC			= (1U << __I_SYNC),
-> -	I_LRU_ISOLATING         = (1U << __I_LRU_ISOLATING),
-> -	I_DIRTY_SYNC		= (1U << 3),
-> -	I_DIRTY_DATASYNC	= (1U << 4),
-> -	I_DIRTY_PAGES		= (1U << 5),
-> -	I_CLEAR			= (1U << 6),
-> -	I_LINKABLE		= (1U << 7),
-> -	I_DIRTY_TIME		= (1U << 8),
-> -	I_WB_SWITCH		= (1U << 9),
-> -	I_OVL_INUSE		= (1U << 10),
-> -	I_CREATING		= (1U << 11),
-> -	I_DONTCACHE		= (1U << 12),
-> -	I_SYNC_QUEUED		= (1U << 13),
-> -	I_PINNING_NETFS_WB	= (1U << 14),
-> -	I_LRU			= (1U << 15),
-> -	I_CACHED_LRU		= (1U << 16)
-> +	I_DIRTY_SYNC		= (1U << 2),
-> +	I_DIRTY_DATASYNC	= (1U << 3),
-> +	I_DIRTY_PAGES		= (1U << 4),
-> +	I_CLEAR			= (1U << 5),
-> +	I_LINKABLE		= (1U << 6),
-> +	I_DIRTY_TIME		= (1U << 7),
-> +	I_WB_SWITCH		= (1U << 8),
-> +	I_OVL_INUSE		= (1U << 9),
-> +	I_CREATING		= (1U << 10),
-> +	I_DONTCACHE		= (1U << 11),
-> +	I_SYNC_QUEUED		= (1U << 12),
-> +	I_PINNING_NETFS_WB	= (1U << 13),
-> +	I_LRU			= (1U << 14),
-> +	I_CACHED_LRU		= (1U << 15)
->  };
-
-This is a bit of a mess - we should reserve the first 4 bits for the
-waitable inode_state_bits right from the start and not renumber the
-other flag bits into that range. i.e. start the first non-waitable
-bit at bit 4. That way every time we add/remove a waitable bit, we
-don't have to rewrite the entire set of flags. i.e: something like:
-
-enum inode_state_flags_t {
-	I_NEW			= (1U << __I_NEW),
-	I_SYNC			= (1U << __I_SYNC),
-	// waitable bit 2 unused
-	// waitable bit 3 unused
-	I_DIRTY_SYNC		= (1U << 4),
-....
-
-This will be much more blame friendly if we do it this way from the
-start of this patch set.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I don't mind the additional list and the sb struct is not very size
+sensitive anyway.
