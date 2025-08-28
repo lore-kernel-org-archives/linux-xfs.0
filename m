@@ -1,108 +1,168 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A6FE27935C;
-	Wed, 27 Aug 2025 22:18:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C89D52E63C
+	for <linux-xfs@vger.kernel.org>; Thu, 28 Aug 2025 00:26:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756333125; cv=none; b=dpHrbCl/EYQ/It/fmx+8m2Vsy2+g2faYGiid+F/N26DB4deBU6YYfRtX/mG6C/T6oZmIeOAK5w+HjoF2oNwChL7o8oDsqVF/la3G1Nt43NNiFp1jBePKegPCRgRB8/WZ/0D6ID+CS5HGXbwog1dlU0DSdyWJCX6dJ1NMe0afOBo=
+	t=1756340815; cv=none; b=PD09UV/qgRtCCnkUjQ18f+oq94cBqZZ6mVrMC6dWUyhI46N1vSeBSj69jMv4vuCXxL1Di2GywRFoD0wheqGnEDVtsdQRExagDJytKjrymRqdNJwvLp/lOYLGigOeJFT0KsBkAyNQy/gDbBtNfaSD38EjD1gaYcImCM3tkE7i+/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756333125; c=relaxed/simple;
-	bh=yKEOzvSZkzMKgqF/7rWC+AeAsHM5EazimO28ln893wg=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=lMejqmgPcs9oW6KK4k+B03bFR3BXC8cPJuxrZRkmfSmvjIZT0iXUu0+/Sb4YwV1nbNrcqtjZHC+T4gkzovSj89FgvhkaBW5jGjqfvykPbtWzHiYY64pDNXKdStpHlJe7JCbEzHZFPPoRdeBwOMOzE1Y5TJYCTUO1Xdt6Fg2rK48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jjQYlzEd; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1756340815; c=relaxed/simple;
+	bh=CiHY/rsMO1JgljnmcpPdzbXavktzcXH6n5jFCBNd7kc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Uu6aHmtIo/lBBL++VPMVOaVwlDcPnGJK6fqCTzQAkneWLJNhU9xTgnVG4e4u90ek78uN2ayPV/+vBUKX/vTpzhwOxoml/pojRdDyaIlTNxlrDgo2P036oaCO59q/Q8gOAt/MRlPn269fXqsxZ0UNOK31Ykjld293pacJebrNLqY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=UAfrB0jn; arc=none smtp.client-ip=209.85.215.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jjQYlzEd"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2445806e03cso3670445ad.1;
-        Wed, 27 Aug 2025 15:18:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="UAfrB0jn"
+Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-b49cfd967b9so271934a12.3
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Aug 2025 17:26:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756333123; x=1756937923; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=fnKCQ7KlE8GdkQRPdMNE8B421OcFBFXbPzdlUFE9jn4=;
-        b=jjQYlzEd6Rpol6TGm3h4TTaNKsIWabi2Nz6qPJUjTJfWdMkv32ksLd43m94JWtOkAo
-         0+BG5D1MUu0UnRj4NNIzPVVxDrHmcRQghAKYkk8W5WcIRJcRGjI1fecqOX2ibj9LIssK
-         kAs5LnhLslIRzdeCS6pFYv56DBRe1DfmLF/rEmwwQfKKMWzIfmN+RyFqC1I5nz/GoSk3
-         XNdCX0nMc5VkGDvPAQo6x/za1odqti7xMVfggDrNHcMvK3A739qzI+TV/FB6BymjoKL7
-         +vCepdvkKmV6tUD3ICNPzSNlHKeNyvLkNsvnWAouvzON7KnU0DStSt3OTHCgi3HzIenm
-         EMEQ==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1756340813; x=1756945613; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=AIbrank/pOEZcuqN2pISiixQG0KXR6H+Lj8n+OUb0e8=;
+        b=UAfrB0jnykPMfT5vDgDLf+UhS86I0vX7npGjSpoMLC24bKY+GPsuC785SfrJIg3zHn
+         vAAnz2KlnMybJ8OfV3k5uMo3CUG5mhfAOTWpUXN4ZvaVd8MjVn0z1RHN0UyJOazODxtG
+         z0sH1460cEygNXwgqS/k7qRzJiU15tnTybJuhT4drX5AojwMoTPXMFxJj429Jx/LS6Z1
+         o4ualYIadwaYWFjL/pqv00zZLJtROf1KN8vndiPsv4i0sUvnoUUnOTSMRzOcF5sDXzgb
+         2sVFV+r1v98KPquB2H2jiLZY1A8/bpmChBTdQcAJCN5UScVPBkfP8g2TWfAIbhL/uBj6
+         D9Hg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756333123; x=1756937923;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fnKCQ7KlE8GdkQRPdMNE8B421OcFBFXbPzdlUFE9jn4=;
-        b=uVQ7aEZt7xTB2KkgLPGvrZCC+p2wD+8BO7mImswxkXTOGDyBr3oL3hbpBavIe52g//
-         zqkvgrB7old/EcJuLztGWxFcRoyuOOvZRaXqGNR1us5dt2ze98kuZlyqDlwReR9D9C5x
-         P9yyTNfWnLniGBlEuqK5oitSMh88kP/CPTy2SB3q47V1vDJd3vN8sNqgIJeQd1W/XRYZ
-         Hm+sY7v+R28PxvSKTlICX07ETnh423bwxf8w8yzP0ukf6fFKx2y441peAdWYbpSgd314
-         bjUv4FcQI/2Z9fK1FP9M327xI9hceLYIeX1NoepU2LTmaR3mly0ofVRfMNEkq6VvPH3i
-         jTCA==
-X-Forwarded-Encrypted: i=1; AJvYcCUfVZ8YBsgpnVfI3R6mv+zZKIP/pt5jNxicOiF4wH1No6gmVfxE8uV5KC8ujUNJB9TzBmxOiSQ7apcS@vger.kernel.org, AJvYcCWzUkEKXJys6DEw1/11mERfDi47NeRE6q6hZSaX7FebbQ5do7c6LMS4O9Nf0VQtZRVNvcOZoPnKS/+tCXw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwnWmawQq1fqvwClWuzIWttO2hL9rFywlqEtBGzj6WDTv4pUu7J
-	b98LDUysEDq+SsKLroYt0/jUFa9zGnx4+D+MjMIdI4Xec4ApRhUmxZRa
-X-Gm-Gg: ASbGncuGkuuJyao2qh68wEWoXXnHhE1YNHah3YsjXhnZB3GX55PbQ9Mh34RD13h0PsE
-	y4vuiaCq2vNq2IzzOn7qb6wobjKH0JEP0dZiX4v2dyyDMgF+uarEd0ruMyX6IJeCBVsu7ixAFxz
-	BwKg1uSZly/LK/3IxY4JBv8ViBj7Tps+anMnOyxFKq6EN3DgQQYPyZibhVbcE1vEQsPvHMnZIsm
-	itLN9DtdKlmUNrhLJ19FYp9/g73SoTo6kZ8cqevM+Ngc99n+U/zoRRRIicNq4L0Ya95psXnV+WZ
-	UjVdb+JifstoSVJ+kpbVM45uKIYXIzhDMQXT209Z3WPwlTgPej4Cll3Q85lrLddtxUoKEwkWeDw
-	9J/mBYf9uMQxbXhRmGCM=
-X-Google-Smtp-Source: AGHT+IHGV6KTJjO6YOxBOSnA3bu2gMF+DC1x7BOk7w/9r1S8JPMjnHhC+6uDDjwViwSp+DqWZK5QRg==
-X-Received: by 2002:a17:903:288:b0:248:9677:5f33 with SMTP id d9443c01a7336-248967763b3mr56989255ad.3.1756333123181;
-        Wed, 27 Aug 2025 15:18:43 -0700 (PDT)
-Received: from fedora ([2804:14c:64:af90::1001])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2466877b67bsm130771905ad.4.2025.08.27.15.18.41
+        d=1e100.net; s=20230601; t=1756340813; x=1756945613;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=AIbrank/pOEZcuqN2pISiixQG0KXR6H+Lj8n+OUb0e8=;
+        b=lm02jkw7LoYhNwJMbSJ2mzV1ueX2iqjoJWH8ECtCwsAk3vJ+ggMADKMuehX6FVjfWd
+         So+vAx2D5QG51rfJB0oxDuJN0yAwJy9c/8sbcc05KjqG8UJ6I4+obJayDudcV+05Ifss
+         RgrUjlmpXjJ7ZT8mMva9qNvPJmGlWo5E1/Ef3pu+AuE4LXmCeBQ5EDFJEyutdONQDtdL
+         x4yatNkr7Mh5Q4FOhpaHTMCt1adg0lH99dJdbd6o2HxJgcmL2gGs7/T0q+9d3ILLQLbp
+         DCkKRXdE95sCsSL1hiTpHt9HQal2gV934mgDpGoubZWSYu8EgEFYj+JnQgfk0o0UM7U4
+         huWA==
+X-Forwarded-Encrypted: i=1; AJvYcCVRrxU+zRGkvtWTi+2PpymjkeIuOmtT9UEhWuDkxgRgv+Q406gEcheobez3Q2qhfzS036x4f6jKGCw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzKSma4kwEGOMgatCeUGASJ43hqAtPFncKt7SbZ/xBgT8b1Rsz2
+	e0Hyff+PnMlUUxZ/AiL3Q+KJPypA5dpKaY+CATPJJzLCgOtXnh1H3zSmRcIXFINJ0xI=
+X-Gm-Gg: ASbGnctYK2ZMbAM2QJQDU8fT6nyRZaB4toS2f/Wd1UhPhZPh0YawAGA6Jko4uCnKuTR
+	XJ7YOKhg+9swd6qo3KuCKav7S5sYMyM39t3QSPA6qqbhNtBt/iqKIgA5TRy86E6mD6Mx3x9FfG6
+	dZ4VsbL7jLi0QI99D6og/W7pUpptgc7FKXi06TpBr36+ILJpB58iqt5q+yS1DsrMYU0T0jj1gdA
+	zRAzohQ6ganYt765bKE1Aa4LQ02sfQbOGaGdleKz5cyIsNeYTbPysuuphKsDN4x21jK5nLbhhOD
+	geCOOW75vLgaqZej0NXI9qmZgwj3KNqHwweqLFbvuZgltH0RU6R8IcyQ8M5Q0eHWfHYgBjpNvtT
+	cCyMh009nGiC79dc6t/jCyM2f+UuOx64+G8QdaSWvI2diXhkDX6NPRRin29+9D5Rh86+naHfpau
+	/7rCvxkcOV
+X-Google-Smtp-Source: AGHT+IFK5hxc7bYLtaOFxGe9ricq7ACFEmb4qM2KiH4E4yFcbUWB7uOpNMCQ2mvzULlcuE6v1Dn+5Q==
+X-Received: by 2002:a17:903:acc:b0:248:b8e0:5e1d with SMTP id d9443c01a7336-248b8e06116mr39556925ad.49.1756340813131;
+        Wed, 27 Aug 2025 17:26:53 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-24875471811sm49697605ad.37.2025.08.27.17.26.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Aug 2025 15:18:42 -0700 (PDT)
-From: Marcelo Moreira <marcelomoreira1905@gmail.com>
-To: cem@kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	skhan@linuxfoundation.org,
-	linux-kernel-mentees@lists.linuxfoundation.org
-Subject: [PATCH v3] xfs: Replace strncpy with memcpy
-Date: Wed, 27 Aug 2025 19:17:07 -0300
-Message-ID: <20250827221830.23032-1-marcelomoreira1905@gmail.com>
-X-Mailer: git-send-email 2.50.1
+        Wed, 27 Aug 2025 17:26:52 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1urQTa-0000000ByQW-0gL8;
+	Thu, 28 Aug 2025 10:26:50 +1000
+Date: Thu, 28 Aug 2025 10:26:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	kernel-team@fb.com, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, brauner@kernel.org,
+	viro@zeniv.linux.org.uk, amir73il@gmail.com
+Subject: Re: [PATCH v2 53/54] fs: remove I_LRU_ISOLATING flag
+Message-ID: <aK-iSiXtuaDj_fyW@dread.disaster.area>
+References: <cover.1756222464.git.josef@toxicpanda.com>
+ <3b1965d56a463604b5a0a003d32fe6983bc297ba.1756222465.git.josef@toxicpanda.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3b1965d56a463604b5a0a003d32fe6983bc297ba.1756222465.git.josef@toxicpanda.com>
 
-The changes modernizes the code by aligning it with current kernel best
-practices. It improves code clarity and consistency, as strncpy is deprecated
-as explained in Documentation/process/deprecated.rst. This change does
-not alter the functionality or introduce any behavioral changes.
+On Tue, Aug 26, 2025 at 11:39:53AM -0400, Josef Bacik wrote:
+> If the inode is on the LRU it has a full reference and thus no longer
+> needs to be pinned while it is being isolated.
+> 
+> Remove the I_LRU_ISOLATING flag and associated helper functions
+> (inode_pin_lru_isolating, inode_unpin_lru_isolating, and
+> inode_wait_for_lru_isolating) as they are no longer needed.
+> 
+> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
 
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Signed-off-by: Marcelo Moreira <marcelomoreira1905@gmail.com>
----
-Changes since v2:
-- Fixing some errors in the commit message.
-Link to v2: https://lore.kernel.org/linux-kernel-mentees/CAPZ3m_iNj2zwpAovv3BTz8gNp5XzdxSRHBFonM9sJvaSjYVBeg@mail.gmail.com/T/#t
+....
+> @@ -745,34 +742,32 @@ is_uncached_acl(struct posix_acl *acl)
+>   * I_CACHED_LRU		Inode is cached because it is dirty or isn't shrinkable,
+>   *			and thus is on the s_cached_inode_lru list.
+>   *
+> - * __I_{SYNC,NEW,LRU_ISOLATING} are used to derive unique addresses to wait
+> - * upon. There's one free address left.
+> + * __I_{SYNC,NEW} are used to derive unique addresses to wait upon. There are
+> + * two free address left.
+>   */
+>  
+>  enum inode_state_bits {
+>  	__I_NEW			= 0U,
+> -	__I_SYNC		= 1U,
+> -	__I_LRU_ISOLATING	= 2U
+> +	__I_SYNC		= 1U
+>  };
+>  
+>  enum inode_state_flags_t {
+>  	I_NEW			= (1U << __I_NEW),
+>  	I_SYNC			= (1U << __I_SYNC),
+> -	I_LRU_ISOLATING         = (1U << __I_LRU_ISOLATING),
+> -	I_DIRTY_SYNC		= (1U << 3),
+> -	I_DIRTY_DATASYNC	= (1U << 4),
+> -	I_DIRTY_PAGES		= (1U << 5),
+> -	I_CLEAR			= (1U << 6),
+> -	I_LINKABLE		= (1U << 7),
+> -	I_DIRTY_TIME		= (1U << 8),
+> -	I_WB_SWITCH		= (1U << 9),
+> -	I_OVL_INUSE		= (1U << 10),
+> -	I_CREATING		= (1U << 11),
+> -	I_DONTCACHE		= (1U << 12),
+> -	I_SYNC_QUEUED		= (1U << 13),
+> -	I_PINNING_NETFS_WB	= (1U << 14),
+> -	I_LRU			= (1U << 15),
+> -	I_CACHED_LRU		= (1U << 16)
+> +	I_DIRTY_SYNC		= (1U << 2),
+> +	I_DIRTY_DATASYNC	= (1U << 3),
+> +	I_DIRTY_PAGES		= (1U << 4),
+> +	I_CLEAR			= (1U << 5),
+> +	I_LINKABLE		= (1U << 6),
+> +	I_DIRTY_TIME		= (1U << 7),
+> +	I_WB_SWITCH		= (1U << 8),
+> +	I_OVL_INUSE		= (1U << 9),
+> +	I_CREATING		= (1U << 10),
+> +	I_DONTCACHE		= (1U << 11),
+> +	I_SYNC_QUEUED		= (1U << 12),
+> +	I_PINNING_NETFS_WB	= (1U << 13),
+> +	I_LRU			= (1U << 14),
+> +	I_CACHED_LRU		= (1U << 15)
+>  };
 
- fs/xfs/scrub/symlink_repair.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is a bit of a mess - we should reserve the first 4 bits for the
+waitable inode_state_bits right from the start and not renumber the
+other flag bits into that range. i.e. start the first non-waitable
+bit at bit 4. That way every time we add/remove a waitable bit, we
+don't have to rewrite the entire set of flags. i.e: something like:
 
-diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
-index 953ce7be78dc..5902398185a8 100644
---- a/fs/xfs/scrub/symlink_repair.c
-+++ b/fs/xfs/scrub/symlink_repair.c
-@@ -185,7 +185,7 @@ xrep_symlink_salvage_inline(
- 		return 0;
- 
- 	nr = min(XFS_SYMLINK_MAXLEN, xfs_inode_data_fork_size(ip));
--	strncpy(target_buf, ifp->if_data, nr);
-+	memcpy(target_buf, ifp->if_data, nr);
- 	return nr;
- }
- 
+enum inode_state_flags_t {
+	I_NEW			= (1U << __I_NEW),
+	I_SYNC			= (1U << __I_SYNC),
+	// waitable bit 2 unused
+	// waitable bit 3 unused
+	I_DIRTY_SYNC		= (1U << 4),
+....
+
+This will be much more blame friendly if we do it this way from the
+start of this patch set.
+
+-Dave.
 -- 
-2.50.1
-
+Dave Chinner
+david@fromorbit.com
