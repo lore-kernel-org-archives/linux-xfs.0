@@ -1,76 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA5DD27F73A
-	for <linux-xfs@vger.kernel.org>; Thu, 28 Aug 2025 12:22:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08D2130F547;
+	Thu, 28 Aug 2025 12:25:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756383741; cv=none; b=kS2x97lfwyI3jSVhfIKMf0jJzminT24aSGMDMHznaB7TCBpS0nw31tYa6DTPW09DPwEDpelSMOyO0Joe/pUZ+X88vOsL/os/v9w4DYS96NksijnMIFigukSvbDSA2Fo9ztoa3n2z80facrLK30pnKI6CVNF0clxRWAKz2232DxU=
+	t=1756383926; cv=none; b=YERphEOWy0ZKDiKTl71dl491hTZ0Yr5C+C1QKb7DHBApIDYHQSMIPIAS/iG6E+O2+SCylEilkwZamg5hy/wGhmmTuCQfHgN09Vask8CNlo6eM9pFLKp+9UL6uFYTzL5ZXgkhKpD2WzrGQS0JsY5IRUsH+B2BTy8lt9JTuyVrnqQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756383741; c=relaxed/simple;
-	bh=ZCh4TP7NRMrVelhROF9faPlokX3vvEbMimBZNAE9nHQ=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=sae1WE2S7x9grY+M2py2flMak3I/WdOd+7DB1CfE8pJUHbdqEDM7UYJ6putuMfxNxVYZS/+J4i0y74MauH9y359fO++9xaM5+9X5/AG0uxG9lf92UeJXts0KxsazOt/EfI3uedm0YYGq0xMvrV4V7LWDqWUeuDktMFWIadGgcnM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fvdctsxz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1756383926; c=relaxed/simple;
+	bh=sxFZXDa8jERLCRJzbvawXkWWrfTFVr2v+vC5TylGwyA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZftlNQKNnI7yND9IdZsb8nZDPapuZaVMuVws5CqyfDs8qlTEkFNT6mYgBRDYpD0x/4fhynYIQTVL6+VE3ngbdVz2uRB8NPG6Bb4b1x81xMqk7y3bQQ2Cwo4CWwOO0gi66iWbtfIlKiPggKoeOfWcwEZWiXvWT1o1M99WYub/Cq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jpGbjg2X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fvdctsxz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA111C4CEEB
-	for <linux-xfs@vger.kernel.org>; Thu, 28 Aug 2025 12:22:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jpGbjg2X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 993A1C4CEEB;
+	Thu, 28 Aug 2025 12:25:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756383740;
-	bh=ZCh4TP7NRMrVelhROF9faPlokX3vvEbMimBZNAE9nHQ=;
-	h=Date:From:To:Subject:From;
-	b=FvdctsxzscznOx7GBue65ZZCFA7ca+bd23noDf7q13l0LhAxWICJ2+951bXqcI0sw
-	 rFmr9Nqz1j60uRdQ1Lut/RDK5o3hsampwpA5hXa7KrUd1CBR7rMr/xjOSeKS6T+SRc
-	 /Z6rZFznEtaoPmCXtXaycaSNxY81Bd4SnAHuPikizNzQ/S7qc1tAkkvmCg/ylCsMI1
-	 5QfARp/xjLSH4x6VJOSDw4p6aL40UyBy+6vhYkDlrAmi07uuELA8t6Dl0Ql7MnZdcy
-	 ldolGHpjaM5PqX0Z9Bb7S+AcgRWsx5V/uywu86MaCDEQ1hUwxjIxSXNo3ZFoqG0YKo
-	 9vyfQtkY1oJCg==
-Date: Thu, 28 Aug 2025 14:22:14 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 851c4c96db00
-Message-ID: <eaejrzb6qmdm3gjghmemn2l7rnc573bjub46ctcnn3buxcjmn5@qytvlpfvmvun>
+	s=k20201202; t=1756383925;
+	bh=sxFZXDa8jERLCRJzbvawXkWWrfTFVr2v+vC5TylGwyA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=jpGbjg2XugK08UMPFIYdy5M/1AoseXOgOOD2lSbdT/C0HkE/WB52jjVXvn/XilyeR
+	 S0dt/PQVYIOaq1tkbU8Mfj4UFtPtvTe06yWgwJVi0vJxTDBMMQL4IyXMSvtnfeyCWj
+	 s8YRApThaUQnMXdHt1vq/pUYS1SQt3a5crpgAgL685veiSiI3zDRzr2388axm5G8GV
+	 MiGy9Af1GU62rr8XlD2dGZT0D69VFXKSzD/CjQi2oOvwJSlIYIIcRGhuKPgZy64dgJ
+	 bo9AiQcZyAtWcdslgJG6m6KTPrTUr4EHAeb9UxvjCUXOrnVbSn9w2a1x4PoSJhiylQ
+	 ni/Kv+15ltC1A==
+Date: Thu, 28 Aug 2025 14:25:21 +0200
+From: Christian Brauner <brauner@kernel.org>
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	kernel-team@fb.com, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	viro@zeniv.linux.org.uk, amir73il@gmail.com
+Subject: Re: [PATCH v2 30/54] fs: change evict_dentries_for_decrypted_inodes
+ to use refcount
+Message-ID: <20250828-risse-negieren-f9a3d1526782@brauner>
+References: <cover.1756222464.git.josef@toxicpanda.com>
+ <283eebefe938d9a1dd4a3a162820058f3550505c.1756222465.git.josef@toxicpanda.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+In-Reply-To: <283eebefe938d9a1dd4a3a162820058f3550505c.1756222465.git.josef@toxicpanda.com>
 
+On Tue, Aug 26, 2025 at 11:39:30AM -0400, Josef Bacik wrote:
+> Instead of checking for I_WILL_FREE|I_FREEING simply use the refcount to
+> make sure we have a live inode.
+> 
+> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+> ---
 
-Hi folks,
+I have no idea how the lifetime of such decrypted inodes are managed.
+I suppose they don't carry a separate reference but are still somehow
+safe to be accessed based on the mk_decrypted_inodes list. In any case
+something must hold an i_obj_count if we want to use igrab() since I
+don't see any relevant rcu protection here.
 
-The for-next branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-851c4c96db00 xfs: implement XFS_IOC_DIOINFO in terms of vfs_getattr
-
-4 new commits:
-
-Andrey Albershteyn (3):
-      [8d2f9f5c64f1] xfs: allow renames of project-less inodes
-      [8a221004fe52] xfs: add .fileattr_set and fileattr_get callbacks for symlinks
-      [0239bd9fa445] xfs: allow setting file attributes on special files
-
-Christoph Hellwig (1):
-      [851c4c96db00] xfs: implement XFS_IOC_DIOINFO in terms of vfs_getattr
-
-Code Diffstat:
-
- fs/xfs/xfs_inode.c | 64 +++++++++++++++++++++++++++++-------------------------
- fs/xfs/xfs_ioctl.c | 24 ++++++++------------
- fs/xfs/xfs_iops.c  |  2 ++
- 3 files changed, 45 insertions(+), 45 deletions(-)
+>  fs/crypto/keyring.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/crypto/keyring.c b/fs/crypto/keyring.c
+> index 7557f6a88b8f..969db498149a 100644
+> --- a/fs/crypto/keyring.c
+> +++ b/fs/crypto/keyring.c
+> @@ -956,13 +956,16 @@ static void evict_dentries_for_decrypted_inodes(struct fscrypt_master_key *mk)
+>  
+>  	list_for_each_entry(ci, &mk->mk_decrypted_inodes, ci_master_key_link) {
+>  		inode = ci->ci_inode;
+> +
+>  		spin_lock(&inode->i_lock);
+> -		if (inode->i_state & (I_FREEING | I_WILL_FREE | I_NEW)) {
+> +		if (inode->i_state & I_NEW) {
+>  			spin_unlock(&inode->i_lock);
+>  			continue;
+>  		}
+> -		__iget(inode);
+>  		spin_unlock(&inode->i_lock);
+> +
+> +		if (!igrab(inode))
+> +			continue;
+>  		spin_unlock(&mk->mk_decrypted_inodes_lock);
+>  
+>  		shrink_dcache_inode(inode);
+> -- 
+> 2.49.0
+> 
