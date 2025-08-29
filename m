@@ -1,77 +1,102 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A0A227815D;
-	Fri, 29 Aug 2025 07:38:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83649304BA0
+	for <linux-xfs@vger.kernel.org>; Fri, 29 Aug 2025 12:01:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756453123; cv=none; b=mNKQuGHLp5x8bavaFWcwIaK6tJB0cCYfNAvacR+5eVcgY+qBY4pfpcTKaT63DEOMviusVL/H1ygDCcTBNC0nXyVMxCwDkClaNZyEJSIHHTj1TGj6IuRTiv5HVfbGMiLOFcleeRkprtyZqXYNTt1jjOP1mhmh70SPSL6SD+PXkgE=
+	t=1756468898; cv=none; b=aS2CCSFZB+bJq3Jvogeuhfyl8CyOPPaiao3lu01KmMeqwBrZGbard8YkXnYanX+PWgFAh3+iZuQrJ8D6C0WOMnGAj7PPUcCN0fwvOkRE11OzXS+sxcVm7IIGY5e1FO/3zSpdAJMU4eTHyJj+BjpEh+4Yfw6ZaBctGaXKqFJBx2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756453123; c=relaxed/simple;
-	bh=Uei2tSjIXQ9PDVNco+qbvaNxdNtpvYhd0d6ZNpGnp78=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Yo5wbmeF8RVJpyv65B/+NgfBu3uMk8NuOPuKrCOKu/avzFu9B9bBiL/YooG6yZmSoVPeLvkr0bhUWtnJVv3/hBBNWLTkLLNN7HmVJRTXIC58S7tU6h7KMDfNfDEIc5YzWKwujMjgE2wF/lyQfYeR9UtWxnoaibbyfyQXJmeR0CU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=axHoGPko; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1756468898; c=relaxed/simple;
+	bh=AV1frDcub3KRt3hiUffhGg8P5t2iqMILw+Rxcat4PBM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=mw/qkTMBoUIA7ot8li8nOy6E/RTMyiLibiG6E141L/P2tO9IX6G2AViDqn7kSkwk/704zZfhD1k7O1noXiW1M4AuTLGIN3ctKpY//7JazwLEb4ND2xxjAJhrDbcmThIiHnYOF8FQsE2oIPhVLVqXxUbEtmvvaeDDzdjQC73awcQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RFLqNrvD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="axHoGPko"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9995C4CEF0;
-	Fri, 29 Aug 2025 07:38:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RFLqNrvD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45BFBC4CEF0;
+	Fri, 29 Aug 2025 12:01:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756453123;
-	bh=Uei2tSjIXQ9PDVNco+qbvaNxdNtpvYhd0d6ZNpGnp78=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=axHoGPkohSuq1woVfcfhWJQMJWbhQ61oRlr1f7RE0fzQ0DMjZa7IIPE3AYzPz6N5v
-	 MfswV40PI8Od1I83M3QV5PiSwepRvV0UJJEkiq3xyyLS1UYDGbjjqXESWqfGeYV3go
-	 HPsoWBtPqABotQqflg1XOjE7iAkf7hp4pNgXrlcQngQi4SMW3GkoHfME6tLZrVNc2+
-	 zDDB7WDFTXvgnFZo2tK8usuKSCGQQB3b7u30saz91m64ks0hlaDh1mXt4JSVSrhzrx
-	 zRmDaXuYeJaQo8o9ZqqT2M8vF+d5T/A8lS/wEsifGyXvTyn7OTZLaFfo5JJ3FT2BtT
-	 Un8EsxBTxzBKA==
-Date: Fri, 29 Aug 2025 09:38:38 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: Josef Bacik <josef@toxicpanda.com>, linux-fsdevel@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, kernel-team@fb.com, linux-ext4@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, viro@zeniv.linux.org.uk, amir73il@gmail.com
-Subject: Re: [PATCH v2 30/54] fs: change evict_dentries_for_decrypted_inodes
- to use refcount
-Message-ID: <20250829-chancenreich-urwald-00b8a5df1966@brauner>
-References: <cover.1756222464.git.josef@toxicpanda.com>
- <283eebefe938d9a1dd4a3a162820058f3550505c.1756222465.git.josef@toxicpanda.com>
- <20250828-risse-negieren-f9a3d1526782@brauner>
- <20250828222610.GB2077538@google.com>
+	s=k20201202; t=1756468898;
+	bh=AV1frDcub3KRt3hiUffhGg8P5t2iqMILw+Rxcat4PBM=;
+	h=Date:From:To:Cc:Subject:From;
+	b=RFLqNrvD1xgbbAuV2AG8b6BS6hIXQ30d1pCPkskfoCspjmpmPeR+M/wYgEUlSqiGa
+	 RYbmMw8JcmgX6vS21C1VH0+YlsI3/Uo1AlN4qBFvOqcQOXAZn52KE4OORTj9oCZyeV
+	 b7/JKuE9+sFM8QFivVV1E7VdWi0YGEzIZ5WiwPgebLd5uZ3DSMXobEjJdgJqWRpX3x
+	 YZmlBHYKW7Kn3e8gEJ1Ns85om8D1zOThFP40z++kzaWQWhu9L/29JBivaw8xmShDIf
+	 P2QpuNjzzifu4JfwQoINnYI2Tvvx7Vp1iJY0EZynQ81uaYW7mwplyV12gKq2KBUHMb
+	 gYwGfJq6EvLTw==
+Date: Fri, 29 Aug 2025 14:01:34 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [GIT PULL] XFS fixes for v6.17-rc4
+Message-ID: <3uiirotnharj7uo3zjqlubc47cenqkzd5nqynoe37o3jkvodj5@dfezum2m7jr7>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250828222610.GB2077538@google.com>
 
-On Thu, Aug 28, 2025 at 10:26:10PM +0000, Eric Biggers wrote:
-> On Thu, Aug 28, 2025 at 02:25:21PM +0200, Christian Brauner wrote:
-> > On Tue, Aug 26, 2025 at 11:39:30AM -0400, Josef Bacik wrote:
-> > > Instead of checking for I_WILL_FREE|I_FREEING simply use the refcount to
-> > > make sure we have a live inode.
-> > > 
-> > > Signed-off-by: Josef Bacik <josef@toxicpanda.com>
-> > > ---
-> > I have no idea how the lifetime of such decrypted inodes are managed.
-> > I suppose they don't carry a separate reference but are still somehow
-> > safe to be accessed based on the mk_decrypted_inodes list. In any case
-> > something must hold an i_obj_count if we want to use igrab() since I
-> > don't see any relevant rcu protection here.
-> > 
-> 
-> inodes are placed on mk_decrypted_inodes by the filesystem while it's
-> holding an i_count reference, and they're removed from the list by
-> ->evict_inode shortly after i_count reaches zero.  So the corresponding
-> i_obj_count reference is just the one associated with i_count.
-> 
-> This patch looks correct: we do igrab() while holding
-> mk_decrypted_inodes_lock.  So either i_count is nonzero and we get a
-> temporary i_count reference, or it's zero and we skip the inode since it
-> cannot have dentries (and ->evict_inode is coming very soon as well).
+Hello Linus,
 
-Thanks for the explanation, Eric! That was exactly what I was looking for.
+Could you please pull patches included in the tag below?
+
+An attempt merge against your current TOT has been successful.
+
+The highlight I'd like to point here is related to the XFS_RT
+Kconfig, which has been updated to be enabled by default now if
+CONFIG_BLK_DEV_ZONED is enabled.
+There is no feature change here, so I took the liberty to assume
+updating this Kconfig is fine outside of a merge window.
+If you are not ok with it please let me know and I'll submit a new
+pull without this patch.
+
+This pull also contains a few fixes for zoned devices support in XFS,
+specially related to swapon requests in inodes belonging to the zoned FS.
+A null-ptr dereference fix in the xattr data, due to a mishandling of
+medium errors generated by block devices is also included.
+
+Thanks,
+Carlos
+
+The following changes since commit f76823e3b284aae30797fded988a807eab2da246:
+
+  xfs: split xfs_zone_record_blocks (2025-08-11 14:04:20 +0200)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-6.17-rc4
+
+for you to fetch changes up to ae668cd567a6a7622bc813ee0bb61c42bed61ba7:
+
+  xfs: do not propagate ENODATA disk errors into xattr code (2025-08-26 11:00:33 +0200)
+
+----------------------------------------------------------------
+xfs: Fixes for v6.17-rc4
+
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+
+----------------------------------------------------------------
+Christoph Hellwig (3):
+      xfs: remove xfs_last_used_zone
+      xfs: kick off inodegc when failing to reserve zoned blocks
+      xfs: reject swapon for inodes on a zoned file system earlier
+
+Damien Le Moal (1):
+      xfs: Default XFS_RT to Y if CONFIG_BLK_DEV_ZONED is enabled
+
+Eric Sandeen (1):
+      xfs: do not propagate ENODATA disk errors into xattr code
+
+ fs/xfs/Kconfig                  |  1 +
+ fs/xfs/libxfs/xfs_attr_remote.c |  7 +++++++
+ fs/xfs/libxfs/xfs_da_btree.c    |  6 ++++++
+ fs/xfs/xfs_aops.c               |  3 +++
+ fs/xfs/xfs_zone_alloc.c         | 45 ++---------------------------------------
+ fs/xfs/xfs_zone_space_resv.c    |  6 ++++++
+ 6 files changed, 25 insertions(+), 43 deletions(-)
+
