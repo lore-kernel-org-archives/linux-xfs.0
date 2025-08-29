@@ -1,335 +1,146 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f44.google.com (mail-oa1-f44.google.com [209.85.160.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49E3C8635B
-	for <linux-xfs@vger.kernel.org>; Fri, 29 Aug 2025 04:25:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF78E1DED40
+	for <linux-xfs@vger.kernel.org>; Fri, 29 Aug 2025 04:26:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756441503; cv=none; b=FXBBNR79aIGISWfIQsYDcybh+0LpGF/+8/Muks84NTHzrJP9zBxZpSz4m48kLokz7Ix7VFVGnashOXNQn/Wn37tD6jQluEWLSE8ZvLetsK2qK2pudpAg/0WmVKC3xHhw70jWxW7i+m5NJPLnfY6GC9jZqBa3q0gldKD2G8GWb7I=
+	t=1756441606; cv=none; b=WesrH4tEOFiN98z9f7AkXXK/zSVd68YF2VHwIll94JoSxK6rSJ2bCKyWLmaPGfmJreANtzZ44KbEiiQUAeu7hi1BILsUB5XT89DEYbabIMXGUOn7xBS9VY2esug3jW91E9ggKfz8UsP8pQsIHEfZTKEQLNBqUx3rn4VDFKmWsQc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756441503; c=relaxed/simple;
-	bh=FtTDPacfmoD9HK6zLQlLf2BlSfxN97cbyEKVlgjs2gQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DoT0onUKJ/upa7JCqa7vmtSXXUiFxA4oHAkXI3EuM21L3EFqqsw86jRgfuZslukqMCmhq821rd1mfjIZg+5BjWEHoGkwhqv6iwSumjBzv+hSmMk0vFYpYqXW6qaw/igQHjcqjq6pxVKpTdaEYcNjaCH3fRWY/VtUm+V3ZhDj81U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QtzRTAR+; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1756441606; c=relaxed/simple;
+	bh=EkoqvOV7dM9ZRk2hSBU1HXFUVM807mm71e5eGg2wvoo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=R+hffH6io1VX62ERdvNBq231pZ2ViqK5KJ+NxBOhLh+tW2VEL6bPx1TDuMC5XredvbJc519KJOZ9qApdUJOiTi9yAwrAKUb3JKqpNYcXjOJq7NY3TkCJbyuoSMlQvXPysQUFX3ca8v/OVaww7DQggQMThSpALm6UO+Y1PLQWR+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=OZ5TIwwd; arc=none smtp.client-ip=209.85.160.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QtzRTAR+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756441500;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=dp4BXne68o6Cg8PN64vuhM1+ukqTn/tTVKXRMnVGrrY=;
-	b=QtzRTAR+R3qJzfSuzMKWGsAiG4CGiHD+msSgs9A2nZ3UUN4fp7mZHMYU8i8uI+4IV/xESa
-	AWvyBMoM9Qn/O/g07+Gvoub3l/lm60Zshyh24Ijm0QjwKKpNy1f/fy70pFaj+cVYSZUED1
-	ou3b879zTExewqaTuh7rl4m1486LncQ=
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
- [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-19-VJ3GT0p7P3-6hzk4sFlxPQ-1; Fri, 29 Aug 2025 00:24:55 -0400
-X-MC-Unique: VJ3GT0p7P3-6hzk4sFlxPQ-1
-X-Mimecast-MFC-AGG-ID: VJ3GT0p7P3-6hzk4sFlxPQ_1756441495
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-324e4c3af5fso1801911a91.3
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Aug 2025 21:24:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="OZ5TIwwd"
+Received: by mail-oa1-f44.google.com with SMTP id 586e51a60fabf-30cce5da315so602738fac.0
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Aug 2025 21:26:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1756441604; x=1757046404; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=l4MHI2CvzdDIWL3MJRQiUQ6XLwUHQ6bTI5Rtl+9YzQg=;
+        b=OZ5TIwwde2XCSgywHqXxL9EyplG/SdEgMoVpwcIdVyD/4Wdph/5NuCtnxRrjaPMCNC
+         RmwEC1rVx3DVbjjKlbYJAJd4ANU3L0hVooRUunJC6LIzYOkIF8nEyBUSNRp4jcrdAiwv
+         3zO6rNjjvFgm3DQlY951+5xjpup9rbV10PtCBWFOHLZcIlMf82MDq0oDlJz7/ikKVamW
+         2Lhc/CH4IcjyyekJKmnAoMnd8pG91Pu3VYcAUgBY11K0G/QfaT+aggHcyD0xUt/pAauu
+         +Je751c74gOcKlXOTzUi0nwYS79194W8Rn07HCfAKs+q72iYtNZSIvnsRild/0yX1B7b
+         N/6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756441494; x=1757046294;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=dp4BXne68o6Cg8PN64vuhM1+ukqTn/tTVKXRMnVGrrY=;
-        b=bpvnJXcLyHUDc84GeW6ZsOG97MnwksQJMPIY0jOWyDC/D44un3Nlqg6XCx9HFtuE50
-         Dy25jM/sStG2jOcWkI8N4Y/hCLMq/FK+JyRBSsN3UgZrRDmNmUomXgNUYaSsFdiumPUc
-         HawxWOTI/1e1yUKyBelqOnuvG6IiCjW5m5g6DJjtH9/WTWzvckcP0VgD8R8RcN5lw7Mt
-         TO5p7K+CfmX4jwsMdNpbtKWDKc8LjavqqTAfTlEepQQxJun+WZD1gIgFpLuKtWu7UGP4
-         OONSdYyiL4EUihZGpV+Ov1fm1M8TEgbBxhM9OZ/ATNWQ1RFZv3SftUU4diAHF1+I9dbS
-         Zfpg==
-X-Gm-Message-State: AOJu0Yw4aIQqajF503Xf9Upbk5FqWjfNk/KYEbk+2Llv5xYXBj8DrWcb
-	ALSnvZ62rsC+2/KA7AHDEfDoHjN46KGupP2Xl52hX03byvJLzhZtzp/waCDsL7PufcwItqDQlPk
-	WgZkBkL4eFpLx3D7BpreGDEazA+tSkSP3Z0LNWecqTplHt9ixcGW7CXCaar5EQaV1V6AX4XSsTh
-	ZUYl4pzWPo/52MnrJRNHTHUIooYd/tpWgbFj3lCG/6egVHpQ==
-X-Gm-Gg: ASbGncurZ46BpDrEKnBJkDOteu3Py9aSBUe/zYAFAYIjkmpK/odePzVw1JZsQR0YL0E
-	Msvhu33aXzB1k7At3jgopXBGvYwpgeH1DiukjLO2pOFbzuSMlFRRZCQ2e0FKlX1PbaUicA8UvO6
-	th9yQXAj8dItUZP7Afre+upqwkbNuG9CXGGxGjEIF0hB1xNt46jv3E1hedgLNVHLAHlnDBzdwBv
-	H/jNIvmRKLFhWRlBogeUXnKn/A8GBoMZvMxQamnV19PM3Z+DqbVzJh80WjBmDhHC6qzQkVlp4p+
-	hmiVmsqwo5eQwZfWSY/6Ge4knLih1yXVEZpTFYMKnQgTyI+G2gI=
-X-Received: by 2002:a17:90b:580f:b0:327:7220:f579 with SMTP id 98e67ed59e1d1-3277220fafdmr10345533a91.1.1756441494213;
-        Thu, 28 Aug 2025 21:24:54 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IG/u5ws/USceBHJevRCpT7Lh7kUQ6FIrgDU1lsl7emU4vp5r70e2phEKMYAfd1q8UcPKg6QoA==
-X-Received: by 2002:a17:90b:580f:b0:327:7220:f579 with SMTP id 98e67ed59e1d1-3277220fafdmr10345498a91.1.1756441493553;
-        Thu, 28 Aug 2025 21:24:53 -0700 (PDT)
-Received: from anathem.redhat.com ([2001:8003:4a36:e700:8cd:5151:364a:2095])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b4cd28ad188sm919668a12.26.2025.08.28.21.24.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Aug 2025 21:24:53 -0700 (PDT)
-From: Donald Douwsma <ddouwsma@redhat.com>
-To: linux-xfs@vger.kernel.org,
-	fstests@vger.kernel.org
-Cc: Eric Sandeen <sandeen@sandeen.net>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	Donald Douwsma <ddouwsma@redhat.com>
-Subject: [PATCH v2] xfs: test case for handling io errors when reading extended attributes
-Date: Fri, 29 Aug 2025 14:24:19 +1000
-Message-ID: <20250829042419.1084367-1-ddouwsma@redhat.com>
-X-Mailer: git-send-email 2.47.3
+        d=1e100.net; s=20230601; t=1756441604; x=1757046404;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=l4MHI2CvzdDIWL3MJRQiUQ6XLwUHQ6bTI5Rtl+9YzQg=;
+        b=Vqea0WmJf0MWQ7bJO5MTSZf6WgvrlVfHRRAvXFXoDZa3SxtnW0+7o12v6oUMcHVXoD
+         y1HbytuFjEnYAsBy8gcRFKT+RjmXjr+Bok6NHqAhifmxDDoXKppPzyfFCRsub9i9m63L
+         h9j483pmqIdIKgv/jSx2AQkJz+GiiTq8dNaXuAtkp39QVZnrcsxNSTBEwnTFUvELCV5U
+         kJc2fKEHyIM2daIlAyaW9T/9hkSH43bFsciLCT62aUitsGf+1ab0TQKOww3xuhe0qvrf
+         QmCDvZdVQRxutmX572v/8ZKlI8QVPW51qbtOKbsn2vaK1GhkICIKnYMnHlSWkdUZM8EY
+         gOrg==
+X-Forwarded-Encrypted: i=1; AJvYcCUbKdIHn+QiEtRzWAVx3gil6z2eyGDqhn6vHWZND6KjGz5PZVPIXV/ylFFGvBlH9valglejWxrXnFw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyhaawy5YaHYIdhCs6Gj//z43MabxjB2l8B6OLCzVS2pzshx1jX
+	lMxVEmdYuOdf2sv+71rXldFHCvcAKP9ozt48YxLHC1jF4qxYFEPlYpwUk7C3cYder046IqdLPVX
+	Nx5zujhpxN4/t6jOXskOwi3JunwXlEqVBQX6kOAKm7A==
+X-Gm-Gg: ASbGncuyuy++kp3sxtOoIkjSLPEOfSzpp9is67b2HTtHrFASQ0T6/jMz6RKUhd7gO1n
+	9TKqMbcaquESgJf/8andvWucNBrf3i0+u6RfvNBmFIA9HkNlwUwwhY869INzI+pR372VnlM2jf9
+	5nYFi+89DmPvHBFn1Dcujwzl50ucDnsks0HDw+gFIL2+1rTKWqiurGWrwErZ93FbMz3/ga/pvOg
+	MFfcz8KfGRsR9rBjJUo
+X-Google-Smtp-Source: AGHT+IFf4FjrlA+yJNoGwfHCxy5AzxXYoQmbOwMzox76J9uWS3VmXyQrRB8vf/VsxwQIM47CtDWnG0sD/EIc57wMe1I=
+X-Received: by 2002:a05:6808:640b:b0:437:e919:7c69 with SMTP id
+ 5614622812f47-437e9198366mr694154b6e.28.1756441598826; Thu, 28 Aug 2025
+ 21:26:38 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20250822082606.66375-1-changfengnan@bytedance.com>
+ <20250822150550.GP7942@frogsfrogsfrogs> <aKiP966iRv5gEBwm@casper.infradead.org>
+ <877byv9w6z.fsf@gmail.com> <aKif_644529sRXhN@casper.infradead.org>
+ <874ityad1d.fsf@gmail.com> <CAPFOzZufTPCT_56-7LCc6oGHYiaPixix30yFNEsiFfN1s9ySMQ@mail.gmail.com>
+ <aKwq_QoiEvtK89vY@infradead.org> <CAPFOzZvBvHWHUwNLnH+Ss90OMdu91oZsSD0D7_ncjVh0pF29rQ@mail.gmail.com>
+ <878qj6qb2m.fsf@gmail.com>
+In-Reply-To: <878qj6qb2m.fsf@gmail.com>
+From: Fengnan Chang <changfengnan@bytedance.com>
+Date: Fri, 29 Aug 2025 12:26:27 +0800
+X-Gm-Features: Ac12FXzlKhRKFlcX7iMwV0JQwPE6st56qbCxyRHYK6cyh9oqTXOg70UqWcq9vqw
+Message-ID: <CAPFOzZuLQK-2fKHsy79MyeKeUSNRU2YR-o48w4Qj1rfLAMcR4A@mail.gmail.com>
+Subject: Re: [External] Re: [PATCH] iomap: allow iomap using the per-cpu bio cache
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: Matthew Wilcox <willy@infradead.org>, "Darrick J. Wong" <djwong@kernel.org>, brauner@kernel.org, 
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, 
+	Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-We've seen reports from the field panicing in xfs_trans_brelse after
-an io error for an attribute block.
+Sorry, Need to wait a few more days for this, too busy recently.
 
-sd 0:0:23:0: [sdx] tag#271 CDB: Read(16) 88 00 00 00 00 00 9b df 5e 78 00 00 00 08 00 00
-critical medium error, dev sdx, sector 2615107192 op 0x0:(READ) flags 0x1000 phys_seg 1 prio class 2
-XFS (sdx1): metadata I/O error in "xfs_da_read_buf+0xe1/0x140 [xfs]" at daddr 0x9bdf5678 len 8 error 61
-BUG: kernel NULL pointer dereference, address: 00000000000000e0
-...
-RIP: 0010:xfs_trans_brelse+0xb/0xe0 [xfs]
-...
-Call Trace:
- <TASK>
- ...
- ? xfs_trans_brelse+0xb/0xe0 [xfs]
- xfs_attr_leaf_get+0xb6/0xc0 [xfs]
- xfs_attr_get+0xa0/0xd0 [xfs]
- xfs_xattr_get+0x75/0xb0 [xfs]
- __vfs_getxattr+0x53/0x70
- inode_doinit_use_xattr+0x63/0x180
- inode_doinit_with_dentry+0x196/0x510
- security_d_instantiate+0x2f/0x50
- d_splice_alias+0x46/0x2b0
- xfs_vn_lookup+0x8b/0xb0 [xfs]
- __lookup_slow+0x84/0x130
- walk_component+0x158/0x1d0
- path_lookupat+0x6e/0x1c0
- filename_lookup+0xcf/0x1d0
- vfs_statx+0x8d/0x170
- vfs_fstatat+0x54/0x70
- __do_sys_newfstatat+0x26/0x60
-
-As this is specific to ENODATA test using scsi_debug instead of dmerror
-which returns EIO.
-
-Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
----
- tests/xfs/999     | 193 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/999.out |   2 +
- 2 files changed, 195 insertions(+)
- create mode 100755 tests/xfs/999
- create mode 100644 tests/xfs/999.out
-
-diff --git a/tests/xfs/999 b/tests/xfs/999
-new file mode 100755
-index 00000000..2a45eb7c
---- /dev/null
-+++ b/tests/xfs/999
-@@ -0,0 +1,193 @@
-+#!/bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2025 Red Hat Inc.  All Rights Reserved.
-+#
-+# FS QA Test 999
-+#
-+# Regression test for panic following IO error when reading extended attribute blocks
-+#
-+#   XFS (sda): metadata I/O error in "xfs_da_read_buf+0xe1/0x140 [xfs]" at daddr 0x78 len 8 error 61
-+#   BUG: kernel NULL pointer dereference, address: 00000000000000e0
-+#   ...
-+#   RIP: 0010:xfs_trans_brelse+0xb/0xe0 [xfs]
-+#
-+#   [53887.310123] Call Trace:
-+#    <TASK>
-+#    ? show_trace_log_lvl+0x1c4/0x2df
-+#    ? show_trace_log_lvl+0x1c4/0x2df
-+#    ? xfs_attr_leaf_get+0xb6/0xc0 [xfs]
-+#    ? __die_body.cold+0x8/0xd
-+#    ? page_fault_oops+0x134/0x170
-+#    ? xfs_trans_read_buf_map+0x133/0x300 [xfs]
-+#    ? exc_page_fault+0x62/0x150
-+#    ? asm_exc_page_fault+0x22/0x30
-+#    ? xfs_trans_brelse+0xb/0xe0 [xfs]
-+#    xfs_attr_leaf_get+0xb6/0xc0 [xfs]
-+#    xfs_attr_get+0xa0/0xd0 [xfs]
-+#    xfs_xattr_get+0x88/0xd0 [xfs]
-+#    __vfs_getxattr+0x7b/0xb0
-+#    inode_doinit_use_xattr+0x63/0x180
-+#    inode_doinit_with_dentry+0x196/0x510
-+#    security_d_instantiate+0x3a/0xb0
-+#    d_splice_alias+0x46/0x2b0
-+#    xfs_vn_lookup+0x8b/0xb0 [xfs]
-+#    __lookup_slow+0x81/0x130
-+#    walk_component+0x158/0x1d0
-+#    ? path_init+0x2c5/0x3f0
-+#    path_lookupat+0x6e/0x1c0
-+#    filename_lookup+0xcf/0x1d0
-+#    ? tlb_finish_mmu+0x65/0x150
-+#    vfs_statx+0x82/0x160
-+#    vfs_fstatat+0x54/0x70
-+#    __do_sys_newfstatat+0x26/0x60
-+#    do_syscall_64+0x5c/0xe0
-+#
-+# For SELinux enabled filesystems the attribute security.selinux will be
-+# created before any additional attributes are added. Any attempt to open the
-+# file will read this entry, leading to the panic being triggered as above, via
-+# security_d_instantiate, rather than fgetxattr(2), to test via fgetxattr mount
-+# with a fixed context=
-+#
-+# Kernels prior to v4.16 don't have medium_error_start, and only return errors
-+# for a specific location, making scsi_debug unsuitable for checking old kernels.
-+# See d9da891a892a scsi: scsi_debug: Add two new parameters to scsi_debug driver
-+#
-+
-+. ./common/preamble
-+_begin_fstest auto
-+
-+_fixed_by_kernel_commit ae668cd567a6 "xfs: do not propagate ENODATA disk errors into xattr code"
-+
-+# Override the default cleanup function.
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	_unmount $SCRATCH_MNT
-+	_put_scsi_debug_dev
-+}
-+
-+# Import common functions.
-+. ./common/scsi_debug
-+
-+_require_scsi_debug
-+modinfo scsi_debug | grep -wq medium_error_start || _notrun "test requires scsi_debug medium_error_start"
-+scsi_debug_dev=$(_get_scsi_debug_dev)
-+test -b $scsi_debug_dev || _notrun "Failed to initialize scsi debug device"
-+echo "SCSI debug device $scsi_debug_dev" >>$seqres.full
-+
-+_mkfs_dev $scsi_debug_dev  >> $seqres.full
-+_mount $scsi_debug_dev $SCRATCH_MNT  >> $seqres.full
-+
-+blocksize=$(_get_block_size $SCRATCH_MNT) >> $seqres.full
-+echo Blocksize $blocksize >> $seqres.full
-+
-+# Use dry_run=1 when verifying the test to avoid panicking.
-+enable_error=1
-+[ ${dry_run:-0} -eq 1 ] && enable_error=0
-+
-+test_attr()
-+{
-+	test=$1
-+	testfile=$SCRATCH_MNT/$test
-+	attr_size=$2 # bytes
-+	error_at_block=${3:-0}
-+	shift 3
-+
-+	value_size=$attr_size
-+
-+	echo 0 > /sys/module/scsi_debug/parameters/opts
-+
-+	echo -e "\nTesting : $test" >> $seqres.full
-+	echo -e "attr size: $attr_size" >> $seqres.full
-+	echo -e "error at block: $error_at_block\n" >> $seqres.full
-+
-+	touch $testfile
-+
-+	inode=$(ls -i $testfile|awk '{print $1}')
-+	printf "inode: %d Testfile: %s\n" $inode $testfile >> $seqres.full
-+	setfattr -n user.test_attr -v $(printf "%0*d" $value_size $value_size) $testfile
-+
-+	$XFS_IO_PROG -c "bmap -al" $testfile >> $seqres.full
-+	start_blocks=($($XFS_IO_PROG -c "bmap -al" $testfile | awk 'match($3, /[0-9]+/, a) {print a[0]}'))
-+	echo "Attribute fork extent(s) start at ${attrblocks[*]}" >> $seqres.full
-+
-+	_unmount $SCRATCH_MNT >>$seqres.full 2>&1
-+
-+	echo "Dump inode $inode details with xfs_db" >> $seqres.full
-+	$XFS_DB_PROG -c "inode $inode" -c "print core.aformat core.naextents a" $scsi_debug_dev >> $seqres.full
-+	inode_daddr=$($XFS_DB_PROG -c "inode $inode" -c "daddr" $scsi_debug_dev | awk '{print $4}')
-+	echo inode daddr $inode_daddr >> $seqres.full
-+
-+
-+	_mount $scsi_debug_dev $SCRATCH_MNT  >> $seqres.full
-+
-+        if [[ start_blocks[0] -ne 0 ]]; then
-+                # Choose the block to error, currently only works with a single extent.
-+                error_daddr=$((start_blocks[0] + error_at_block*blocksize/512))
-+        else
-+                # Default to the inode daddr when no extents were found.
-+                # Fails reading the inode during stat, so arguably useless
-+                # even for testing the upper layers of getfattr.
-+                error_daddr=$inode_daddr
-+        fi
-+
-+	echo "Setup scsi_debug to error when reading attributes from block" \
-+	     "$error_at_block at daddr $error_daddr" >> $seqres.full
-+	echo $error_daddr > /sys/module/scsi_debug/parameters/medium_error_start
-+	echo $(($blocksize/512)) > /sys/module/scsi_debug/parameters/medium_error_count
-+
-+	if [ $enable_error -eq 1 ]; then
-+		echo Enabling error >> $seqres.full
-+        	echo 2 > /sys/module/scsi_debug/parameters/opts
-+	fi
-+
-+	grep ^ /sys/module/scsi_debug/parameters/{medium_error_start,medium_error_count,opts} >> $seqres.full
-+
-+	echo "Re-read the extended attribute on $testfile, panics on IO errors" >> $seqres.full
-+	sync # Let folk see where we failed in the results.
-+	getfattr -d -m - $testfile >> $seqres.full 2>&1 # Panic here on failure
-+}
-+
-+
-+# TODO: Avoid assumptions about inode size using _xfs_get_inode_size and
-+#       _xfs_get_inode_core_bytes, currently assuming 512 byte inodes.
-+
-+# aformat shortform
-+# Include shortform for completeness, we can only inject errors for attributes
-+# stored outside of the inode.
-+test_attr "attr_local" 1 0
-+
-+# aformat extents
-+# Single leaf block, known to panic
-+test_attr "attr_extent_one_block" 512 0
-+
-+# Other tests to exercise multi block extents and multi extent attribute forks.
-+# Before the panic was understood it seemed possible that failing on the second
-+# block of a multi block attribute fork was involved. Seems like it may be
-+# worth testing in the future.
-+
-+test_attr "attr_extent_two_blocks_1" 5000 0
-+test_attr "attr_extent_two_blocks_2" 5000 1
-+# test_attr "attr_extent_many_blocks" 16000 4
-+#
-+# When using a single name=value pair to fill the space these tend to push out
-+# to multiple extents, rather than a single long extent, so don't yet test
-+# failing subsequent blocks within the first extent.
-+#
-+# i.e.
-+# xfs_bmap -va $testfile
-+# /mnt/test/testfile:
-+# EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-+#   0: [0..7]:          96..103           0 (96..103)            8
-+#   1: [8..23]:         80..95            0 (80..95)            16
-+
-+# aformat btree
-+# test_attr "attr_extents" 50000 0
-+# test_attr "attr_extents" 50000 $blocksize
-+# test_attr "attr_extents" 50000 $((blocksize+1))
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-new file mode 100644
-index 00000000..3b276ca8
---- /dev/null
-+++ b/tests/xfs/999.out
-@@ -0,0 +1,2 @@
-+QA output created by 999
-+Silence is golden
--- 
-2.47.3
-
+Ritesh Harjani <ritesh.list@gmail.com> =E4=BA=8E2025=E5=B9=B48=E6=9C=8827=
+=E6=97=A5=E5=91=A8=E4=B8=89 01:26=E5=86=99=E9=81=93=EF=BC=9A
+>
+> Fengnan Chang <changfengnan@bytedance.com> writes:
+>
+> > Christoph Hellwig <hch@infradead.org> =E4=BA=8E2025=E5=B9=B48=E6=9C=882=
+5=E6=97=A5=E5=91=A8=E4=B8=80 17:21=E5=86=99=E9=81=93=EF=BC=9A
+> >>
+> >> On Mon, Aug 25, 2025 at 04:51:27PM +0800, Fengnan Chang wrote:
+> >> > No restrictions for now, I think we can enable this by default.
+> >> > Maybe better solution is modify in bio.c?  Let me do some test first=
+.
+>
+> If there are other implications to consider, for using per-cpu bio cache
+> by default, then maybe we can first get the optimizations for iomap in
+> for at least REQ_ALLOC_CACHE users and later work on to see if this
+> can be enabled by default for other users too.
+> Unless someone else thinks otherwise.
+>
+> Why I am thinking this is - due to limited per-cpu bio cache if everyone
+> uses it for their bio submission, we may not get the best performance
+> where needed. So that might require us to come up with a different
+> approach.
+>
+> >>
+> >> Any kind of numbers you see where this makes a different, including
+> >> the workloads would also be very valuable here.
+> > I'm test random direct read performance on  io_uring+ext4, and try
+> > compare to io_uring+ raw blkdev,  io_uring+ext4 is quite poor, I'm try =
+to
+> > improve this, I found ext4 is quite different with blkdev when run
+> > bio_alloc_bioset. It's beacuse blkdev ext4  use percpu bio cache, but e=
+xt4
+> > path not. So I make this modify.
+>
+> I am assuming you meant to say - DIO with iouring+raw_blkdev uses
+> per-cpu bio cache where as iouring+(ext4/xfs) does not use it.
+> Hence you added this patch which will enable the use of it - which
+> should also improve the performance of iouring+(ext4/xfs).
+>
+> That make sense to me.
+>
+> > My test command is:
+> > /fio/t/io_uring -p0 -d128 -b4096 -s1 -c1 -F1 -B1 -R1 -X1 -n1 -P1 -t0
+> > /data01/testfile
+> > Without this patch:
+> > BW is 1950MB
+> > with this patch
+> > BW is 2001MB.
+>
+> Ok. That's around 2.6% improvement.. Is that what you were expecting to
+> see too? Is that because you were testing with -p0 (non-polled I/O)?
+>
+> Looking at the numbers here [1] & [2], I was hoping this could give
+> maybe around 5-6% improvement ;)
+>
+> [1]: https://lore.kernel.org/io-uring/cover.1666347703.git.asml.silence@g=
+mail.com/
+> [2]: https://lore.kernel.org/all/20220806152004.382170-3-axboe@kernel.dk/
+>
+>
+> -ritesh
