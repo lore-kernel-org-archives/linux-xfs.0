@@ -1,284 +1,335 @@
-Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 655D714B950;
-	Fri, 29 Aug 2025 03:40:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49E3C8635B
+	for <linux-xfs@vger.kernel.org>; Fri, 29 Aug 2025 04:25:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756438858; cv=none; b=tWnlI33m1FuZ+4NbJ8Im5RWnFxC/XW4H/DItZaZ8LDyutn391765Wsx54ECF2Gvx/Jg8XLGsAVArUuEOvlhAzPChRYAtFWMQdcC+DAW+DqP/tngEhv3Qbpq3ep1+czCiYobYsOwHSlzvD1pNQOjWA7Y+XY7bIyBAODryjlvmuGQ=
+	t=1756441503; cv=none; b=FXBBNR79aIGISWfIQsYDcybh+0LpGF/+8/Muks84NTHzrJP9zBxZpSz4m48kLokz7Ix7VFVGnashOXNQn/Wn37tD6jQluEWLSE8ZvLetsK2qK2pudpAg/0WmVKC3xHhw70jWxW7i+m5NJPLnfY6GC9jZqBa3q0gldKD2G8GWb7I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756438858; c=relaxed/simple;
-	bh=HL94/RsYpfErAps6eTEGXeJUgnGdftRMudR84530hlQ=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=auHQId6C4CgywUclOgJ4NjM8MtLyOeGPEOWTr79fc6VRMGaj4EZsHCWOnz5YCSdd0rgTGA9PJYkivjSi8ufA3lBNMW33ILZnKCNyflGMRN3vlqzISclQgSs/9iUSJ03IKVHo7wlLgd4g8PSJbZ2X+fGsZrEXex9KK+fnOPTC8Uw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ox2jY90A; arc=none smtp.client-ip=209.85.215.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1756441503; c=relaxed/simple;
+	bh=FtTDPacfmoD9HK6zLQlLf2BlSfxN97cbyEKVlgjs2gQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DoT0onUKJ/upa7JCqa7vmtSXXUiFxA4oHAkXI3EuM21L3EFqqsw86jRgfuZslukqMCmhq821rd1mfjIZg+5BjWEHoGkwhqv6iwSumjBzv+hSmMk0vFYpYqXW6qaw/igQHjcqjq6pxVKpTdaEYcNjaCH3fRWY/VtUm+V3ZhDj81U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QtzRTAR+; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ox2jY90A"
-Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-b49cf21320aso1864529a12.1;
-        Thu, 28 Aug 2025 20:40:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756438856; x=1757043656; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=en0FtuLbpSkfsZBRvwj+MVzEjDhjumfZ8xUGHaQ27Mc=;
-        b=Ox2jY90AxBzEjvthKDr2qg4mMmYZHAKR0hLwFx3INSzFPZRTUz99RxKAi2lGSyxOtG
-         9NWBaaomIvzm3QCaJwHb2eWCxfd11O9E46cuK4K6la3MyX5E1mLOAgJQjt2Z3QotP9qH
-         He7wUgV516fv29AR3TD6A5/4LZzbg0/Aj9RFsjp1NFkjRn1cbhbR1d1MPUHysK4+CBBn
-         34OD6dd0IgAsTf8xH/tMHU45pWB6n3dg/X1WZjC3gse7f4ZSXbecndCsT/9aapalGHbS
-         oAA2q8ugMLtABZA+P4/BCiEQEEyZRik/YZiAMmDBEKcykTUgu75kXkbELxjY7MkG2IzY
-         XQfw==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QtzRTAR+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1756441500;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=dp4BXne68o6Cg8PN64vuhM1+ukqTn/tTVKXRMnVGrrY=;
+	b=QtzRTAR+R3qJzfSuzMKWGsAiG4CGiHD+msSgs9A2nZ3UUN4fp7mZHMYU8i8uI+4IV/xESa
+	AWvyBMoM9Qn/O/g07+Gvoub3l/lm60Zshyh24Ijm0QjwKKpNy1f/fy70pFaj+cVYSZUED1
+	ou3b879zTExewqaTuh7rl4m1486LncQ=
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
+ [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-19-VJ3GT0p7P3-6hzk4sFlxPQ-1; Fri, 29 Aug 2025 00:24:55 -0400
+X-MC-Unique: VJ3GT0p7P3-6hzk4sFlxPQ-1
+X-Mimecast-MFC-AGG-ID: VJ3GT0p7P3-6hzk4sFlxPQ_1756441495
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-324e4c3af5fso1801911a91.3
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Aug 2025 21:24:55 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756438856; x=1757043656;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=en0FtuLbpSkfsZBRvwj+MVzEjDhjumfZ8xUGHaQ27Mc=;
-        b=Po/P2PF7FaeS5P3tE+EASYIX9j4uWQaSRErPZsYGSLj7dnYGc9Q8ttTStMQkYpSCEO
-         yQCqEiHMz2fDbXsi2jVmW/uFqaX7gYgkWve7vKScY08ll7/j/FC8i9btuIgMfZJ8DGrp
-         b0EbpyStA9SteI5Upw+sxaSS5DcgT398PfQiYRKN9QjQAdMlwB0JaCfewx4Lfr4G/WMo
-         XVWy9mK1b8EDMeTuh2H3qnlExlV3LQ7cioNqBPCnpLZE8JM0evlRuOxPQt80LFPv7O4g
-         5zHp3c22FqEgVVOAoa4yuz0p2SxBnDr5c+Ba5bQs0KqGMbVtK/khwXUlrN1OO77GgpYE
-         fzZw==
-X-Forwarded-Encrypted: i=1; AJvYcCUqu/Q/ejN1+66ht6Ei7k90yxy+KO8HWoMG0sT2E2xm6R3OaZaJAqZmh0anDgEzxg+/NhAkcEOtJiA4cStmKw==@vger.kernel.org, AJvYcCXCT9JGnLqi9lwlTj4BtGC6P8QcO9fZPBpWQ5673Uf2nmoJf2ar0MJBOoXT5yh8A6u3ii5P2yAopmXBhw==@vger.kernel.org, AJvYcCXGTbWJvUvVRJeZxLIjaRcTuRJVyQdxNnUwC5TDK4vxINygo6j2R2KQsHyy2Cyd+Rc/CvGw6pa//Yqv@vger.kernel.org, AJvYcCXsRtxHSghLYVp9fqYHR5SJCdonUdEaFVh2Exe7pqxW61r3GbGYJBO32q8oSShxsnOPR+4dPNMERZWVeQ==@vger.kernel.org, AJvYcCXwFm7mgn33VVUySwZO4AjkQig2CYHL/tOzqBo3zD4iS6gip4YbVzONjrtozns+jLgnZ7BMrarC6JcKhjAb@vger.kernel.org
-X-Gm-Message-State: AOJu0YxpQ8Bp4WglHdPHTs4HwiKSov3D6+WKMVKQLtXBeVzi29Avo1Iv
-	SOMC+/B7MoI/47TIifw1er1+5pi/uFtiPzyc+dnNPQzlYFB2IicPbv9w
-X-Gm-Gg: ASbGncvsfRff70B/pqhhzRx4PnUUofyucqpF/FU8R9zRkvbLVyh8h18QqcKwbJ/v4ep
-	2VlEjAM5mhkBqs9nWExp8d/uUHrrsk5c59n1//MZjt8FUPqXKMlhbJ9bbnTAevdw1X8/PXlRNjh
-	3YF6rbEU+N6/srdcgUJEpRLU+6JqMjj/pngABjTOyipfFTBB1kJC5XDW2Ukt03N/SsixMVqWhsU
-	PUQvhiqw+akGdEsqKuC06VvqJaSMWDLUlHeKc9zcwfYJ1sy7362rIRvmQarK8pvhoAmnhYnYOEe
-	SfJke9eH1XeQtvvu0wSV3bjVbcmHZDCstn1mFh3eAkC5Tfg3KVYq8fbx28FWv0HXheQ2BRsYrTD
-	isJp5uBjeBdyuduj44wQLIRg3XQ==
-X-Google-Smtp-Source: AGHT+IHMtAOg2MhaA/X/A/11IDxmp+zSkIboCNf3+rVXJ+/rgIXFXRYq7sAfSwoIMV75zidhVJbDjQ==
-X-Received: by 2002:a17:903:4b48:b0:246:2afa:4cc with SMTP id d9443c01a7336-2462ef67771mr362027945ad.42.1756438855554;
-        Thu, 28 Aug 2025 20:40:55 -0700 (PDT)
-Received: from dw-tp ([171.76.86.139])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-24906390e6bsm10115655ad.96.2025.08.28.20.40.49
+        d=1e100.net; s=20230601; t=1756441494; x=1757046294;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=dp4BXne68o6Cg8PN64vuhM1+ukqTn/tTVKXRMnVGrrY=;
+        b=bpvnJXcLyHUDc84GeW6ZsOG97MnwksQJMPIY0jOWyDC/D44un3Nlqg6XCx9HFtuE50
+         Dy25jM/sStG2jOcWkI8N4Y/hCLMq/FK+JyRBSsN3UgZrRDmNmUomXgNUYaSsFdiumPUc
+         HawxWOTI/1e1yUKyBelqOnuvG6IiCjW5m5g6DJjtH9/WTWzvckcP0VgD8R8RcN5lw7Mt
+         TO5p7K+CfmX4jwsMdNpbtKWDKc8LjavqqTAfTlEepQQxJun+WZD1gIgFpLuKtWu7UGP4
+         OONSdYyiL4EUihZGpV+Ov1fm1M8TEgbBxhM9OZ/ATNWQ1RFZv3SftUU4diAHF1+I9dbS
+         Zfpg==
+X-Gm-Message-State: AOJu0Yw4aIQqajF503Xf9Upbk5FqWjfNk/KYEbk+2Llv5xYXBj8DrWcb
+	ALSnvZ62rsC+2/KA7AHDEfDoHjN46KGupP2Xl52hX03byvJLzhZtzp/waCDsL7PufcwItqDQlPk
+	WgZkBkL4eFpLx3D7BpreGDEazA+tSkSP3Z0LNWecqTplHt9ixcGW7CXCaar5EQaV1V6AX4XSsTh
+	ZUYl4pzWPo/52MnrJRNHTHUIooYd/tpWgbFj3lCG/6egVHpQ==
+X-Gm-Gg: ASbGncurZ46BpDrEKnBJkDOteu3Py9aSBUe/zYAFAYIjkmpK/odePzVw1JZsQR0YL0E
+	Msvhu33aXzB1k7At3jgopXBGvYwpgeH1DiukjLO2pOFbzuSMlFRRZCQ2e0FKlX1PbaUicA8UvO6
+	th9yQXAj8dItUZP7Afre+upqwkbNuG9CXGGxGjEIF0hB1xNt46jv3E1hedgLNVHLAHlnDBzdwBv
+	H/jNIvmRKLFhWRlBogeUXnKn/A8GBoMZvMxQamnV19PM3Z+DqbVzJh80WjBmDhHC6qzQkVlp4p+
+	hmiVmsqwo5eQwZfWSY/6Ge4knLih1yXVEZpTFYMKnQgTyI+G2gI=
+X-Received: by 2002:a17:90b:580f:b0:327:7220:f579 with SMTP id 98e67ed59e1d1-3277220fafdmr10345533a91.1.1756441494213;
+        Thu, 28 Aug 2025 21:24:54 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IG/u5ws/USceBHJevRCpT7Lh7kUQ6FIrgDU1lsl7emU4vp5r70e2phEKMYAfd1q8UcPKg6QoA==
+X-Received: by 2002:a17:90b:580f:b0:327:7220:f579 with SMTP id 98e67ed59e1d1-3277220fafdmr10345498a91.1.1756441493553;
+        Thu, 28 Aug 2025 21:24:53 -0700 (PDT)
+Received: from anathem.redhat.com ([2001:8003:4a36:e700:8cd:5151:364a:2095])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b4cd28ad188sm919668a12.26.2025.08.28.21.24.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Aug 2025 20:40:54 -0700 (PDT)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: Jan Kara <jack@suse.cz>
-Cc: Keith Busch <kbusch@kernel.org>, Jan Kara <jack@suse.cz>, Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, snitzer@kernel.org, axboe@kernel.dk, dw@davidwei.uk, brauner@kernel.org, hch@lst.de, martin.petersen@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org, viro@zeniv.linux.org.uk, Jan Kara <jack@suse.com>, Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCHv3 0/8] direct-io: even more flexible io vectors
-In-Reply-To: <87bjnyg9me.fsf@gmail.com>
-Date: Fri, 29 Aug 2025 08:49:02 +0530
-Message-ID: <878qj2g6hl.fsf@gmail.com>
-References: <20250819164922.640964-1-kbusch@meta.com> <87a53ra3mb.fsf@gmail.com> <g35u5ugmyldqao7evqfeb3hfcbn3xddvpssawttqzljpigy7u4@k3hehh3grecq> <aKx485EMthHfBWef@kbusch-mbp> <87cy8ir835.fsf@gmail.com> <ua7ib34kk5s6yfthqkgy3m2pnbk33a34g7prezmwl7hfwv6lwq@fljhjaogd6gq> <87bjnyg9me.fsf@gmail.com>
+        Thu, 28 Aug 2025 21:24:53 -0700 (PDT)
+From: Donald Douwsma <ddouwsma@redhat.com>
+To: linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Cc: Eric Sandeen <sandeen@sandeen.net>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Donald Douwsma <ddouwsma@redhat.com>
+Subject: [PATCH v2] xfs: test case for handling io errors when reading extended attributes
+Date: Fri, 29 Aug 2025 14:24:19 +1000
+Message-ID: <20250829042419.1084367-1-ddouwsma@redhat.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Ritesh Harjani (IBM) <ritesh.list@gmail.com> writes:
+We've seen reports from the field panicing in xfs_trans_brelse after
+an io error for an attribute block.
 
-> Jan Kara <jack@suse.cz> writes:
->
->> On Tue 26-08-25 10:29:58, Ritesh Harjani wrote:
->>> Keith Busch <kbusch@kernel.org> writes:
->>> 
->>> > On Mon, Aug 25, 2025 at 02:07:15PM +0200, Jan Kara wrote:
->>> >> On Fri 22-08-25 18:57:08, Ritesh Harjani wrote:
->>> >> > Keith Busch <kbusch@meta.com> writes:
->>> >> > >
->>> >> > >   - EXT4 falls back to buffered io for writes but not for reads.
->>> >> > 
->>> >> > ++linux-ext4 to get any historical context behind why the difference of
->>> >> > behaviour in reads v/s writes for EXT4 DIO. 
->>> >> 
->>> >> Hum, how did you test? Because in the basic testing I did (with vanilla
->>> >> kernel) I get EINVAL when doing unaligned DIO write in ext4... We should be
->>> >> falling back to buffered IO only if the underlying file itself does not
->>> >> support any kind of direct IO.
->>> >
->>> > Simple test case (dio-offset-test.c) below.
->>> >
->>> > I also ran this on vanilla kernel and got these results:
->>> >
->>> >   # mkfs.ext4 /dev/vda
->>> >   # mount /dev/vda /mnt/ext4/
->>> >   # make dio-offset-test
->>> >   # ./dio-offset-test /mnt/ext4/foobar
->>> >   write: Success
->>> >   read: Invalid argument
->>> >
->>> > I tracked the "write: Success" down to ext4's handling for the "special"
->>> > -ENOTBLK error after ext4_want_directio_fallback() returns "true".
->>> >
->>> 
->>> Right. Ext4 has fallback only for dio writes but not for DIO reads... 
->>> 
->>> buffered
->>> static inline bool ext4_want_directio_fallback(unsigned flags, ssize_t written)
->>> {
->>> 	/* must be a directio to fall back to buffered */
->>> 	if ((flags & (IOMAP_WRITE | IOMAP_DIRECT)) !=
->>> 		    (IOMAP_WRITE | IOMAP_DIRECT))
->>> 		return false;
->>> 
->>>     ...
->>> }
->>> 
->>> So basically the path is ext4_file_[read|write]_iter() -> iomap_dio_rw
->>>     -> iomap_dio_bio_iter() -> return -EINVAL. i.e. from...
->>> 
->>> 
->>> 	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1) ||
->>> 	    !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
->>> 		return -EINVAL;
->>> 
->>> EXT4 then fallsback to buffered-io only for writes, but not for reads. 
->>
->> Right. And the fallback for writes was actually inadvertedly "added" by
->> commit bc264fea0f6f "iomap: support incremental iomap_iter advances". That
->> changed the error handling logic. Previously if iomap_dio_bio_iter()
->> returned EINVAL, it got propagated to userspace regardless of what
->> ->iomap_end() returned. After this commit if ->iomap_end() returns error
->> (which is ENOTBLK in ext4 case), it gets propagated to userspace instead of
->> the error returned by iomap_dio_bio_iter().
->>
->> Now both the old and new behavior make some sense so I won't argue that the
->> new iomap_iter() behavior is wrong. But I think we should change ext4 back
->> to the old behavior of failing unaligned dio writes instead of them falling
->> back to buffered IO. I think something like the attached patch should do
->> the trick - it makes unaligned dio writes fail again while writes to holes
->> of indirect-block mapped files still correctly fall back to buffered IO.
->> Once fstests run completes, I'll do a proper submission...
->>
->
-> Aah, right. So it wasn't EXT4 which had this behaviour of falling back
-> to buffered I/O for unaligned writes. Earlier EXT4 was assuming an error
-> code will be detected by iomap and will be passed to it as "written" in
-> ext4_iomap_end() for such unaligned writes. But I guess that logic
-> silently got changed with that commit. Thanks for analyzing that. 
-> I missed looking underneath iomap behaviour change :). 
->
->
->>
->> 								Honza
->> -- 
->> Jan Kara <jack@suse.com>
->> SUSE Labs, CR
->> From ce6da00a09647a03013c3f420c2e7ef7489c3de8 Mon Sep 17 00:00:00 2001
->> From: Jan Kara <jack@suse.cz>
->> Date: Wed, 27 Aug 2025 14:55:19 +0200
->> Subject: [PATCH] ext4: Fail unaligned direct IO write with EINVAL
->>
->> Commit bc264fea0f6f ("iomap: support incremental iomap_iter advances")
->> changed the error handling logic in iomap_iter(). Previously any error
->> from iomap_dio_bio_iter() got propagated to userspace, after this commit
->> if ->iomap_end returns error, it gets propagated to userspace instead of
->> an error from iomap_dio_bio_iter(). This results in unaligned writes to
->> ext4 to silently fallback to buffered IO instead of erroring out.
->>
->> Now returning ENOTBLK for DIO writes from ext4_iomap_end() seems
->> unnecessary these days. It is enough to return ENOTBLK from
->> ext4_iomap_begin() when we don't support DIO write for that particular
->> file offset (due to hole).
->
-> Right. This mainly only happens if we have holes in non-extent (indirect
-> blocks) case.
->
+sd 0:0:23:0: [sdx] tag#271 CDB: Read(16) 88 00 00 00 00 00 9b df 5e 78 00 00 00 08 00 00
+critical medium error, dev sdx, sector 2615107192 op 0x0:(READ) flags 0x1000 phys_seg 1 prio class 2
+XFS (sdx1): metadata I/O error in "xfs_da_read_buf+0xe1/0x140 [xfs]" at daddr 0x9bdf5678 len 8 error 61
+BUG: kernel NULL pointer dereference, address: 00000000000000e0
+...
+RIP: 0010:xfs_trans_brelse+0xb/0xe0 [xfs]
+...
+Call Trace:
+ <TASK>
+ ...
+ ? xfs_trans_brelse+0xb/0xe0 [xfs]
+ xfs_attr_leaf_get+0xb6/0xc0 [xfs]
+ xfs_attr_get+0xa0/0xd0 [xfs]
+ xfs_xattr_get+0x75/0xb0 [xfs]
+ __vfs_getxattr+0x53/0x70
+ inode_doinit_use_xattr+0x63/0x180
+ inode_doinit_with_dentry+0x196/0x510
+ security_d_instantiate+0x2f/0x50
+ d_splice_alias+0x46/0x2b0
+ xfs_vn_lookup+0x8b/0xb0 [xfs]
+ __lookup_slow+0x84/0x130
+ walk_component+0x158/0x1d0
+ path_lookupat+0x6e/0x1c0
+ filename_lookup+0xcf/0x1d0
+ vfs_statx+0x8d/0x170
+ vfs_fstatat+0x54/0x70
+ __do_sys_newfstatat+0x26/0x60
 
-Thinking more on this case. Do we really want a fallback to buffered-io
-for unaligned writes in this case (indirect block case)?
+As this is specific to ENODATA test using scsi_debug instead of dmerror
+which returns EIO.
 
-I don't think we care much here, right? And anyways the unaligned writes
-should have the same behaviour for extents v/s non-extents case right?
+Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+---
+ tests/xfs/999     | 193 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/999.out |   2 +
+ 2 files changed, 195 insertions(+)
+ create mode 100755 tests/xfs/999
+ create mode 100644 tests/xfs/999.out
 
-I guess the problem is, iomap alignment check happens in
-iomap_dio_bio_iter() where it has a valid bdev (populated by filesystem
-during ->iomap_begin() call) to check the alignment against. But in this
-indirect block case we return -ENOTBLK much earlier from ->iomap_begin()
-call itself.
+diff --git a/tests/xfs/999 b/tests/xfs/999
+new file mode 100755
+index 00000000..2a45eb7c
+--- /dev/null
++++ b/tests/xfs/999
+@@ -0,0 +1,193 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2025 Red Hat Inc.  All Rights Reserved.
++#
++# FS QA Test 999
++#
++# Regression test for panic following IO error when reading extended attribute blocks
++#
++#   XFS (sda): metadata I/O error in "xfs_da_read_buf+0xe1/0x140 [xfs]" at daddr 0x78 len 8 error 61
++#   BUG: kernel NULL pointer dereference, address: 00000000000000e0
++#   ...
++#   RIP: 0010:xfs_trans_brelse+0xb/0xe0 [xfs]
++#
++#   [53887.310123] Call Trace:
++#    <TASK>
++#    ? show_trace_log_lvl+0x1c4/0x2df
++#    ? show_trace_log_lvl+0x1c4/0x2df
++#    ? xfs_attr_leaf_get+0xb6/0xc0 [xfs]
++#    ? __die_body.cold+0x8/0xd
++#    ? page_fault_oops+0x134/0x170
++#    ? xfs_trans_read_buf_map+0x133/0x300 [xfs]
++#    ? exc_page_fault+0x62/0x150
++#    ? asm_exc_page_fault+0x22/0x30
++#    ? xfs_trans_brelse+0xb/0xe0 [xfs]
++#    xfs_attr_leaf_get+0xb6/0xc0 [xfs]
++#    xfs_attr_get+0xa0/0xd0 [xfs]
++#    xfs_xattr_get+0x88/0xd0 [xfs]
++#    __vfs_getxattr+0x7b/0xb0
++#    inode_doinit_use_xattr+0x63/0x180
++#    inode_doinit_with_dentry+0x196/0x510
++#    security_d_instantiate+0x3a/0xb0
++#    d_splice_alias+0x46/0x2b0
++#    xfs_vn_lookup+0x8b/0xb0 [xfs]
++#    __lookup_slow+0x81/0x130
++#    walk_component+0x158/0x1d0
++#    ? path_init+0x2c5/0x3f0
++#    path_lookupat+0x6e/0x1c0
++#    filename_lookup+0xcf/0x1d0
++#    ? tlb_finish_mmu+0x65/0x150
++#    vfs_statx+0x82/0x160
++#    vfs_fstatat+0x54/0x70
++#    __do_sys_newfstatat+0x26/0x60
++#    do_syscall_64+0x5c/0xe0
++#
++# For SELinux enabled filesystems the attribute security.selinux will be
++# created before any additional attributes are added. Any attempt to open the
++# file will read this entry, leading to the panic being triggered as above, via
++# security_d_instantiate, rather than fgetxattr(2), to test via fgetxattr mount
++# with a fixed context=
++#
++# Kernels prior to v4.16 don't have medium_error_start, and only return errors
++# for a specific location, making scsi_debug unsuitable for checking old kernels.
++# See d9da891a892a scsi: scsi_debug: Add two new parameters to scsi_debug driver
++#
++
++. ./common/preamble
++_begin_fstest auto
++
++_fixed_by_kernel_commit ae668cd567a6 "xfs: do not propagate ENODATA disk errors into xattr code"
++
++# Override the default cleanup function.
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	_unmount $SCRATCH_MNT
++	_put_scsi_debug_dev
++}
++
++# Import common functions.
++. ./common/scsi_debug
++
++_require_scsi_debug
++modinfo scsi_debug | grep -wq medium_error_start || _notrun "test requires scsi_debug medium_error_start"
++scsi_debug_dev=$(_get_scsi_debug_dev)
++test -b $scsi_debug_dev || _notrun "Failed to initialize scsi debug device"
++echo "SCSI debug device $scsi_debug_dev" >>$seqres.full
++
++_mkfs_dev $scsi_debug_dev  >> $seqres.full
++_mount $scsi_debug_dev $SCRATCH_MNT  >> $seqres.full
++
++blocksize=$(_get_block_size $SCRATCH_MNT) >> $seqres.full
++echo Blocksize $blocksize >> $seqres.full
++
++# Use dry_run=1 when verifying the test to avoid panicking.
++enable_error=1
++[ ${dry_run:-0} -eq 1 ] && enable_error=0
++
++test_attr()
++{
++	test=$1
++	testfile=$SCRATCH_MNT/$test
++	attr_size=$2 # bytes
++	error_at_block=${3:-0}
++	shift 3
++
++	value_size=$attr_size
++
++	echo 0 > /sys/module/scsi_debug/parameters/opts
++
++	echo -e "\nTesting : $test" >> $seqres.full
++	echo -e "attr size: $attr_size" >> $seqres.full
++	echo -e "error at block: $error_at_block\n" >> $seqres.full
++
++	touch $testfile
++
++	inode=$(ls -i $testfile|awk '{print $1}')
++	printf "inode: %d Testfile: %s\n" $inode $testfile >> $seqres.full
++	setfattr -n user.test_attr -v $(printf "%0*d" $value_size $value_size) $testfile
++
++	$XFS_IO_PROG -c "bmap -al" $testfile >> $seqres.full
++	start_blocks=($($XFS_IO_PROG -c "bmap -al" $testfile | awk 'match($3, /[0-9]+/, a) {print a[0]}'))
++	echo "Attribute fork extent(s) start at ${attrblocks[*]}" >> $seqres.full
++
++	_unmount $SCRATCH_MNT >>$seqres.full 2>&1
++
++	echo "Dump inode $inode details with xfs_db" >> $seqres.full
++	$XFS_DB_PROG -c "inode $inode" -c "print core.aformat core.naextents a" $scsi_debug_dev >> $seqres.full
++	inode_daddr=$($XFS_DB_PROG -c "inode $inode" -c "daddr" $scsi_debug_dev | awk '{print $4}')
++	echo inode daddr $inode_daddr >> $seqres.full
++
++
++	_mount $scsi_debug_dev $SCRATCH_MNT  >> $seqres.full
++
++        if [[ start_blocks[0] -ne 0 ]]; then
++                # Choose the block to error, currently only works with a single extent.
++                error_daddr=$((start_blocks[0] + error_at_block*blocksize/512))
++        else
++                # Default to the inode daddr when no extents were found.
++                # Fails reading the inode during stat, so arguably useless
++                # even for testing the upper layers of getfattr.
++                error_daddr=$inode_daddr
++        fi
++
++	echo "Setup scsi_debug to error when reading attributes from block" \
++	     "$error_at_block at daddr $error_daddr" >> $seqres.full
++	echo $error_daddr > /sys/module/scsi_debug/parameters/medium_error_start
++	echo $(($blocksize/512)) > /sys/module/scsi_debug/parameters/medium_error_count
++
++	if [ $enable_error -eq 1 ]; then
++		echo Enabling error >> $seqres.full
++        	echo 2 > /sys/module/scsi_debug/parameters/opts
++	fi
++
++	grep ^ /sys/module/scsi_debug/parameters/{medium_error_start,medium_error_count,opts} >> $seqres.full
++
++	echo "Re-read the extended attribute on $testfile, panics on IO errors" >> $seqres.full
++	sync # Let folk see where we failed in the results.
++	getfattr -d -m - $testfile >> $seqres.full 2>&1 # Panic here on failure
++}
++
++
++# TODO: Avoid assumptions about inode size using _xfs_get_inode_size and
++#       _xfs_get_inode_core_bytes, currently assuming 512 byte inodes.
++
++# aformat shortform
++# Include shortform for completeness, we can only inject errors for attributes
++# stored outside of the inode.
++test_attr "attr_local" 1 0
++
++# aformat extents
++# Single leaf block, known to panic
++test_attr "attr_extent_one_block" 512 0
++
++# Other tests to exercise multi block extents and multi extent attribute forks.
++# Before the panic was understood it seemed possible that failing on the second
++# block of a multi block attribute fork was involved. Seems like it may be
++# worth testing in the future.
++
++test_attr "attr_extent_two_blocks_1" 5000 0
++test_attr "attr_extent_two_blocks_2" 5000 1
++# test_attr "attr_extent_many_blocks" 16000 4
++#
++# When using a single name=value pair to fill the space these tend to push out
++# to multiple extents, rather than a single long extent, so don't yet test
++# failing subsequent blocks within the first extent.
++#
++# i.e.
++# xfs_bmap -va $testfile
++# /mnt/test/testfile:
++# EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
++#   0: [0..7]:          96..103           0 (96..103)            8
++#   1: [8..23]:         80..95            0 (80..95)            16
++
++# aformat btree
++# test_attr "attr_extents" 50000 0
++# test_attr "attr_extents" 50000 $blocksize
++# test_attr "attr_extents" 50000 $((blocksize+1))
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+new file mode 100644
+index 00000000..3b276ca8
+--- /dev/null
++++ b/tests/xfs/999.out
+@@ -0,0 +1,2 @@
++QA output created by 999
++Silence is golden
+-- 
+2.47.3
 
-
--ritesh
-
-
-
-> Also, as I see ext4 always just fallsback to buffered-io for no or
-> partial writes (unless iomap returned any error code). So, I was just
-> wondering if that could ever happen for DIO atomic write case. It's good
-> that we have a WARN_ON_ONCE() check in there to catch it. But I was
-> wondering if this needs an explicit handling in ext4_dio_write_iter() to
-> not fallback to buffered-writes for atomic DIO requests?
->
-> -ritesh
->
->
->
->>
->> Fixes: bc264fea0f6f ("iomap: support incremental iomap_iter advances")
->> Signed-off-by: Jan Kara <jack@suse.cz>
->> ---
->>  fs/ext4/file.c  |  2 --
->>  fs/ext4/inode.c | 35 -----------------------------------
->>  2 files changed, 37 deletions(-)
->>
->> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
->> index 93240e35ee36..cf39f57d21e9 100644
->> --- a/fs/ext4/file.c
->> +++ b/fs/ext4/file.c
->> @@ -579,8 +579,6 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
->>  		iomap_ops = &ext4_iomap_overwrite_ops;
->>  	ret = iomap_dio_rw(iocb, from, iomap_ops, &ext4_dio_write_ops,
->>  			   dio_flags, NULL, 0);
->> -	if (ret == -ENOTBLK)
->> -		ret = 0;
->>  	if (extend) {
->>  		/*
->>  		 * We always perform extending DIO write synchronously so by
->> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
->> index 5b7a15db4953..c3b23c90fd11 100644
->> --- a/fs/ext4/inode.c
->> +++ b/fs/ext4/inode.c
->> @@ -3872,47 +3872,12 @@ static int ext4_iomap_overwrite_begin(struct inode *inode, loff_t offset,
->>  	return ret;
->>  }
->>  
->> -static inline bool ext4_want_directio_fallback(unsigned flags, ssize_t written)
->> -{
->> -	/* must be a directio to fall back to buffered */
->> -	if ((flags & (IOMAP_WRITE | IOMAP_DIRECT)) !=
->> -		    (IOMAP_WRITE | IOMAP_DIRECT))
->> -		return false;
->> -
->> -	/* atomic writes are all-or-nothing */
->> -	if (flags & IOMAP_ATOMIC)
->> -		return false;
->> -
->> -	/* can only try again if we wrote nothing */
->> -	return written == 0;
->> -}
->> -
->> -static int ext4_iomap_end(struct inode *inode, loff_t offset, loff_t length,
->> -			  ssize_t written, unsigned flags, struct iomap *iomap)
->> -{
->> -	/*
->> -	 * Check to see whether an error occurred while writing out the data to
->> -	 * the allocated blocks. If so, return the magic error code for
->> -	 * non-atomic write so that we fallback to buffered I/O and attempt to
->> -	 * complete the remainder of the I/O.
->> -	 * For non-atomic writes, any blocks that may have been
->> -	 * allocated in preparation for the direct I/O will be reused during
->> -	 * buffered I/O. For atomic write, we never fallback to buffered-io.
->> -	 */
->> -	if (ext4_want_directio_fallback(flags, written))
->> -		return -ENOTBLK;
->> -
->> -	return 0;
->> -}
->> -
->>  const struct iomap_ops ext4_iomap_ops = {
->>  	.iomap_begin		= ext4_iomap_begin,
->> -	.iomap_end		= ext4_iomap_end,
->>  };
->>  
->>  const struct iomap_ops ext4_iomap_overwrite_ops = {
->>  	.iomap_begin		= ext4_iomap_overwrite_begin,
->> -	.iomap_end		= ext4_iomap_end,
->>  };
->>  
->>  static int ext4_iomap_begin_report(struct inode *inode, loff_t offset,
->> -- 
->> 2.43.0
