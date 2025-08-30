@@ -1,121 +1,136 @@
-Received: from mail-il1-f205.google.com (mail-il1-f205.google.com [209.85.166.205])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9E1425487C
-	for <linux-xfs@vger.kernel.org>; Sat, 30 Aug 2025 18:03:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.205
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDBCB20B1F5
+	for <linux-xfs@vger.kernel.org>; Sat, 30 Aug 2025 18:10:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756577015; cv=none; b=iteUlQux/2sWPRkZjdCa83Non/MZiaGQePOA3v7E32CZFWRW3OcKLOsQIoXQgzQ2hmoOCrjTflIDsooUEbk8wHijYLx47kLAhC8vGQTSszgI7ucjPh9iA0Tp/V7j76RBMJqU/pclx2o6iFAW61Hlsr22jq+ubXscKJOKdy3aX64=
+	t=1756577421; cv=none; b=GAYP9fHLgwwPZ+zVeIPSLFvUJQPoAmO7XPobAxBPnZyEAVxsTD9RLbvswh3DZbvFdZ0Usa3fcDeAgHAfs5jjiXN7Xr1BCdhK73FojxVocvrRxhKc+EqCPbpVJF1qdW9WKNZHOBmoNn044YVEZlj8RU+PGo0Gr7GvZ6l2k/zp/Gs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756577015; c=relaxed/simple;
-	bh=hdj9CuNvUL2qLsfWQqzcQGBGGcXsEsqeJOYPfSil7BQ=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=TzC/5cpB6rM1qM9CbylS38HkcIl0B22BTS3OpqKT4hCfbLmxQ3tiP7hCdmiX2T8N8bfLDCQZotC2HapeAJzZpV6LAf+xYVY0Jq+xDiKtLMRerTCCMKfWNYoMseRPsfhyIjw+G/bGonHZs2s+jiER9HtLDnEqzXvFWM0BVzeDRrY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.205
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f205.google.com with SMTP id e9e14a558f8ab-3e6649d783bso68833575ab.3
-        for <linux-xfs@vger.kernel.org>; Sat, 30 Aug 2025 11:03:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756577013; x=1757181813;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Y0EmFDrtnTB27c9P1CgT1xWyHibY7Jm3IDK1ySTEc4U=;
-        b=qxhXW5njFXU7Rr8IvUw91yy9VoKl5H2Y6hiDYf3h8fX4nmt6DIlgZMyXTYKQDetOe6
-         eW+3ccroTcaVyBfMXbIRIfK7MNGAYqQeOZtADC11JRthhy0ydct6UCVByIBMUy9+QTLA
-         uXJwRv7gkra6kBodmlZOstHC02scM1tOotLrYuSdsQDmPm+wMemQeLuW/W7N3rCKAOob
-         dnQYHnba+ff4Cb3d/iBnciDVzNGvfw0JhgC2JHbwNY15Qp6Y7QQA6Hb0V/9fiwTBEi50
-         2vwPDtZTiBQMhDf4dtDb7RQ4Toet5uAHnfbWBluchWWa9VCvy4EKYN6FpRp6VtJwEJUt
-         i3zg==
-X-Forwarded-Encrypted: i=1; AJvYcCUKpj/H2I3KjRdnW8pTMk47d7RRmX5yIdVyyYlSjlnf4EcDCnBq/+diQ0wPjRh35+r9uPf1L9vrnoM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw33eLakwGEg0dB+Uy2vyh3UUxmUlaBtCbjUeaQfAUy8SRVTWem
-	jEXZsaaA7oj1JZ055eWOgdoOQgozrAAZYqIWTfaA6nx/5PqyOoupNfHWArv7Y3Y5MC1MmGihmM3
-	5Z2s6R02MHaSjeyL7dU8k0ZO2sAFNiZdLupGEcOsnvyWzhNUZ29CaCAafCbI=
-X-Google-Smtp-Source: AGHT+IG32OKZdP/wR5LsTpXnN7zPnfxInIheNy/NLRAyHRxnx4lf1Ppw0rVZprhjee1dorUQDzs2sKZopzbmRoTgayJB7NX6CAfu
+	s=arc-20240116; t=1756577421; c=relaxed/simple;
+	bh=e8LICi0cXz51O6R/UzunjggaSQC5v9PpGCl8YSUf3pY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=lmLRe7/V2aABsSxLOHnKvvrnzNLGGfkglxMmGSnm+g294QTIntYiMJtCKlpLj5YMhxIEI8pYNSnr5eEA4blzec65lD3b1hMzuu7JwpT/7WwbxdFNQzsewYE8jhoOSHn3U8uNKYs03T7geEtPJ7jsoN2W+KGgWA9rcesuntv4U70=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=adamthiede.com; spf=pass smtp.mailfrom=adamthiede.com; dkim=pass (2048-bit key) header.d=adamthiede.com header.i=@adamthiede.com header.b=h7LQv1Lf; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=adamthiede.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=adamthiede.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=adamthiede.com header.i=@adamthiede.com header.b="h7LQv1Lf"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4cDjpn56szz9scY;
+	Sat, 30 Aug 2025 20:10:09 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=adamthiede.com;
+	s=MBO0001; t=1756577409;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=XUHkduUtQbNiOZF/UN8y1qgMHVow7pTUGqnFD4YDeX4=;
+	b=h7LQv1Lf62ft4Tex3omau2122G4mbtqFtsrexSkHqSrD+gZTguZsz8Ml8wn7EJtu9i3we3
+	N81G64OdZ3uYuSKCk4f7Uymu+aWGjkMCNquFPOezl6DJVrec9P+RURyJyg6Ib7F8m2N+x9
+	Sx7Kj8qBPVGJPC7Po0nd494XFhOQUOXX1aCztolCcaGamWVN7a66PL8011CBG6V9Vu9X2z
+	CAV8EnS4tQdH+e5nWxMhVE8PXQMHtqFGLOGIBW9Zo9SRr0YX5rRLSkAY0ERZwy2AZEAfvA
+	VgCVkc3EsXemU6ZQG7N5P/LZaNwCxkTGwWNGfPOqGHH92+cKN62ur0ha6hUFpw==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=none;
+	spf=pass (outgoing_mbo_mout: domain of me@adamthiede.com designates 2001:67c:2050:b231:465::1 as permitted sender) smtp.mailfrom=me@adamthiede.com
+Message-ID: <1ad4a974-b18f-4bca-99df-5e7b93e5d852@adamthiede.com>
+Date: Sat, 30 Aug 2025 13:10:06 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:2189:b0:3f3:42ba:5a9 with SMTP id
- e9e14a558f8ab-3f4027b88cemr54329045ab.31.1756577012922; Sat, 30 Aug 2025
- 11:03:32 -0700 (PDT)
-Date: Sat, 30 Aug 2025 11:03:32 -0700
-In-Reply-To: <68a28720.050a0220.e29e5.0080.GAE@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <68b33cf4.a00a0220.1337b0.0025.GAE@google.com>
-Subject: Re: [syzbot] [xfs?] WARNING in xfs_trans_alloc
-From: syzbot <syzbot+ab02e4744b96de7d3499@syzkaller.appspotmail.com>
-To: cem@kernel.org, hch@infradead.org, linux-kernel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: xfsdump musl patch questions
+To: =?UTF-8?Q?Holger_Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>,
+ linux-xfs@vger.kernel.org
+References: <ba4261b0-d2a2-4688-933f-359a8cc6b75e@adamthiede.com>
+ <81fc13da-9db8-3cf2-2a17-30961e0543d5@applied-asynchrony.com>
+Content-Language: en-US
+From: Adam Thiede <me@adamthiede.com>
+Autocrypt: addr=me@adamthiede.com; keydata=
+ xsBNBF+n+90BCAC2ZRLVcvdXDgfY7EppN05eNor3U7/eeiNCCEIWZkYLhikUEP1ReLGBkXpK
+ Pc70hfnKAKkCoth3IwhDty9WXMNU+iLNei4ieb2luW+UqluR6xIUIA+txahMU9YcjVaQTKf/
+ yZWO4yl6pfBPCxC2UdPZKBAdGoi5NnE0ABFNbhBETQhhBic533lZn33ByupfI3acECnQdjgQ
+ llCUpDbw4I+S/N1iFiEHcbMXH7ZB00e3IYNorZ1E9v7p++5rDY1fQ9gXpieg1vFKwSq1NJWo
+ 9xx336YjaTUbX0EwrdKd9l8AktA3yRjckaK5TAcwSQaDtHvhpbl4ebvPhtwHh699MroXABEB
+ AAHNH0FkYW0gVGhpZWRlIDxtZUBhZGFtdGhpZWRlLmNvbT7CwI4EEwEIADgCGwMFCwkIBwIG
+ FQoJCAsCBBYCAwECHgECF4AWIQQtG9pGQ7sz3tf8M/kC7fV9o/vRzgUCZL1HxQAKCRAC7fV9
+ o/vRzgyRB/wLqRCvvWhQCMgvzeKvru9wcXquhb77K8H/ByLbfiT8YBuP3lZFVh0IQhgO9Ylk
+ fIoOJE4V+jjxyOnO2d9xjGbvAmmR6yT0gfLzSVWqrC4k+V9MWLv43nrNzxt41dvo5j824FAl
+ X+zaiRZCdO8Jtxg5Elpiop2SKLi1utX1Z8i6YZh+ccJZlchUBAGUTk+D4UjK7vUcjLWT96ya
+ CtdtTfXyw36CvGOPEWfc6++Kkl/5sgej1i7biPYzu/r0vssaQYTXKSrv6Cfa3Maa89ASiTtv
+ q4qmhLnJeCrPxWlRAf6LEizeBEkOasYni2u8sp4wBezEq45Ozu45sfPkqLpPolG7zsBNBF+n
+ +90BCADBRt+vrToRBEG580n77S99qSEkbKD+oJtCVyovnjMNkg0K9UG68LIeCX/ezngiV1M8
+ JISvw5iFOuUFqGX/1hLl9wgt/YpuIrgWOp8XxkotavTCloLDvQmufJPO1L8bnnA+WgP2YgVZ
+ 5MJTj/t4DI+yQgysEjsH8aurHO2uuqgJE+xK+2dy6Cl/wskuGxObksSPmmFH5PH0Joziwrtl
+ 61ouLE2XwKbkMgIGEKkbFgbfwz3/QuLZGBni+OOtLzXeZ9wNTW/AHUPy6S9U4F+5z6/09fVT
+ tTH0cvrgAGjbASlYx2VqGONXAsxCfjulq6ryJBFlPLp949c/JTTgOojukCSbABEBAAHCwHYE
+ GAEIACACGwwWIQQtG9pGQ7sz3tf8M/kC7fV9o/vRzgUCZL1H0gAKCRAC7fV9o/vRzlamCACs
+ vHw+0heTm+BfC3S8DUST6889gidIIwdqBep1ByzetCph7Bq8Y8BlT5YTX0u/bSKkxCzFgeTm
+ vC341Q09ST2XjLAl1ZTdzGhH9gcgYyOw34pr5fPQRJLB392mPzD8YReRzciNbhWzj+DLgeVe
+ ouyfGajd6jDjkf4FEq+trQLGZhpfsKn3JnDbzBUs945D50l/vz9q/QN3qZO+H4F6g8ZeMnqo
+ FOEFN26xVtdEDr+0DNFsbgKmEzs675kdAY78ZZdbEetX/FSknxJ+FK1ZW3J7Yswwulj34AXP
+ LB49Mk8Ot7fo6mdt0DkV11JS9LmKxKvpY+KTlrKG+i7pVCSZvVUx
+In-Reply-To: <81fc13da-9db8-3cf2-2a17-30961e0543d5@applied-asynchrony.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4cDjpn56szz9scY
 
-syzbot has found a reproducer for the following issue on:
+On 8/30/25 12:46, Holger Hoffstätte wrote:
+> On 2025-08-30 13:23, Adam Thiede wrote:
+>> Hello - I'm interested in packaging xfsdump for alpine linux.
+>> However, alpine uses musl libc and I had to change a lot of things to
+>> get xfsdump to build. Mostly it was changing types that are specific
+>> to glibc (i.e. stat64 -> stat). I'm not much of a c programmer myself
+>> so I am likely misunderstanding some things, but changing these types
+>> allows xfsdump to compile and function on musl libc. xfsdump still
+>> compiles on Debian with this patch too.
+> 
+> You might want to double-check with Gentoo's Musl porting notes:
+> https://wiki.gentoo.org/wiki/Musl_porting_notes
+> esp. 2.6: "error: LFS64 interfaces".
+> 
+> We currently still take the "workaround" route:
+> https://gitweb.gentoo.org/repo/gentoo.git/commit/sys-fs/xfsdump/ 
+> xfsdump-3.1.12.ebuild?id=33791d44f8bbe7a8d1566a218a76050d9f51c33d
+> 
+> ..but fixing this for real is certainly a good idea!
+> 
+> cheers
+> Holger
 
-HEAD commit:    8f5ae30d69d7 Linux 6.17-rc1
-git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
-console output: https://syzkaller.appspot.com/x/log.txt?x=15474242580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=8c5ac3d8b8abfcb
-dashboard link: https://syzkaller.appspot.com/bug?extid=ab02e4744b96de7d3499
-compiler:       Debian clang version 20.1.7 (++20250616065708+6146a88f6049-1~exp1~20250616065826.132), Debian LLD 20.1.7
-userspace arch: arm64
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=10891a62580000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14a32a62580000
+Thanks - using -D_LARGEFILE64_SOURCE also fixes the issue without the 
+enormous patch. However the following small patch is necessary since 
+alpine builds with -Wimplicit-function-declaration
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/18a2e4bd0c4a/disk-8f5ae30d.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/3b5395881b25/vmlinux-8f5ae30d.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/e875f4e3b7ff/Image-8f5ae30d.gz.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/f4f2ae1e66f9/mount_3.gz
-  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=12458e34580000)
+diff --git a/invutil/invidx.c b/invutil/invidx.c
+index 5874e8d..9506172 100644
+--- a/invutil/invidx.c
++++ b/invutil/invidx.c
+@@ -28,6 +28,7 @@
+  #include <sys/stat.h>
+  #include <string.h>
+  #include <uuid/uuid.h>
++#include <libgen.h>
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+ab02e4744b96de7d3499@syzkaller.appspotmail.com
+  #include "types.h"
+  #include "mlog.h"
+diff --git a/common/main.c b/common/main.c
+index 6141ffb..f5e959f 100644
+--- a/common/main.c
++++ b/common/main.c
+@@ -38,6 +38,7 @@
+  #include <string.h>
+  #include <uuid/uuid.h>
+  #include <locale.h>
++#include <libgen.h>
 
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 24 at fs/xfs/xfs_trans.c:256 xfs_trans_alloc+0x3e4/0x898 fs/xfs/xfs_trans.c:256
-Modules linked in:
-CPU: 1 UID: 0 PID: 24 Comm: kworker/1:0 Not tainted 6.17.0-rc1-syzkaller-g8f5ae30d69d7 #0 PREEMPT 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 06/30/2025
-Workqueue: xfs-inodegc/loop0 xfs_inodegc_worker
-pstate: 83400005 (Nzcv daif +PAN -UAO +TCO +DIT -SSBS BTYPE=--)
-pc : xfs_trans_alloc+0x3e4/0x898 fs/xfs/xfs_trans.c:256
-lr : xfs_trans_alloc+0x3e4/0x898 fs/xfs/xfs_trans.c:256
-sp : ffff800097ce77e0
-x29: ffff800097ce7860 x28: ffff0000c2490130 x27: 0000000000000000
-x26: ffff0000c2490000 x25: dfff800000000000 x24: 1ffff00012f9cf18
-x23: dfff800000000000 x22: ffff0000c249043c x21: ffff0000c2490440
-x20: ffff0000c2490438 x19: 0000000000000004 x18: 1fffe000337a0688
-x17: ffff800093507000 x16: ffff80008b007230 x15: 0000000000000001
-x14: 1fffe0001e61bbb5 x13: 0000000000000000 x12: 0000000000000000
-x11: ffff60001e61bbb6 x10: 0000000000ff0100 x9 : 0000000000000000
-x8 : ffff0000c1ae8000 x7 : ffff800081e80e40 x6 : 0000000000000000
-x5 : ffff800097ce78e0 x4 : 0000000000000000 x3 : 0000000000000000
-x2 : 0000000000000000 x1 : 0000000000000004 x0 : 0000000000000004
-Call trace:
- xfs_trans_alloc+0x3e4/0x898 fs/xfs/xfs_trans.c:256 (P)
- xfs_attr_inactive+0xec/0x2b0 fs/xfs/xfs_attr_inactive.c:343
- xfs_inactive+0x7ac/0xb74 fs/xfs/xfs_inode.c:1464
- xfs_inodegc_inactivate fs/xfs/xfs_icache.c:1944 [inline]
- xfs_inodegc_worker+0x320/0x83c fs/xfs/xfs_icache.c:1990
- process_one_work+0x7e8/0x155c kernel/workqueue.c:3236
- process_scheduled_works kernel/workqueue.c:3319 [inline]
- worker_thread+0x958/0xed8 kernel/workqueue.c:3400
- kthread+0x5fc/0x75c kernel/kthread.c:463
- ret_from_fork+0x10/0x20 arch/arm64/kernel/entry.S:844
-irq event stamp: 1049032
-hardirqs last  enabled at (1049031): [<ffff80008b028e88>] __raw_spin_unlock_irq include/linux/spinlock_api_smp.h:159 [inline]
-hardirqs last  enabled at (1049031): [<ffff80008b028e88>] _raw_spin_unlock_irq+0x30/0x80 kernel/locking/spinlock.c:202
-hardirqs last disabled at (1049032): [<ffff80008b001bfc>] el1_brk64+0x1c/0x48 arch/arm64/kernel/entry-common.c:574
-softirqs last  enabled at (1048974): [<ffff8000803d88a0>] softirq_handle_end kernel/softirq.c:425 [inline]
-softirqs last  enabled at (1048974): [<ffff8000803d88a0>] handle_softirqs+0xaf8/0xc88 kernel/softirq.c:607
-softirqs last disabled at (1048959): [<ffff800080022028>] __do_softirq+0x14/0x20 kernel/softirq.c:613
----[ end trace 0000000000000000 ]---
+  #include "config.h"
 
 
----
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+I think this one would be good to include at the very least.
