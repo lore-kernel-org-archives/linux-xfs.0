@@ -1,91 +1,286 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FAE717A300
-	for <linux-xfs@vger.kernel.org>; Sat, 30 Aug 2025 11:23:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ADE722A817;
+	Sat, 30 Aug 2025 15:54:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756553027; cv=none; b=su74uhpYfKuWlhQ4+6y+aZ0Xrjv+Rd2maqDenoA8oDpL2vWOVYHyEkoABIncQKPHZ8FOEb1p0DBic6KxcJu3syCzwYWGW68B2JYpjSgGvvGRB5EjrrPLPvpi2s8qetEPlWzmh7PYFL3XkZyeXf6C/GfNUEopXxiH46fan31tLFM=
+	t=1756569291; cv=none; b=Gr8ibDSP4j3rnP/5riWwfMClhPfMkGDrq/zSRs4Ih76Cgyhs21LZzBEYRxwBJPC6bqI4vP8lDYmSm9vz5jqfShe0+duFAWj8AsK9PkWAx8dR6M9MldcvgYYDVakBKSzauPBp2kuCEZAqBsnISlji4BoXd4ZA3vF37vJ2ZQZS3v8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756553027; c=relaxed/simple;
-	bh=GNsD/sldOrm/7lP8znq5fG2v3Cf20GyoKMhx7qCACyI=;
-	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=Ug/n6A7rpYewswixGztEvjtL19XCI8+2yFs+szuCWDeplNHsUXROb0JHY/wlPtXQOH9dAfcrBBajd+fRBckztw3liFvh8JShf69i/aTL5Lcp17SiWSm5LuhV5XUEJHaR/HuliyclnyQNwBMrTnqgSYdv8gPTdfD0LH6oNJ6OGn4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=adamthiede.com; spf=pass smtp.mailfrom=adamthiede.com; dkim=pass (2048-bit key) header.d=adamthiede.com header.i=@adamthiede.com header.b=HD7hXtPN; arc=none smtp.client-ip=80.241.56.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=adamthiede.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=adamthiede.com
+	s=arc-20240116; t=1756569291; c=relaxed/simple;
+	bh=GVVHVXs4UCPiQnVcR2u/7qQBtlpWdwz3nn6Jlfw7yCw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=nVx87DDYmyJM8Vx2cfA8jkGlhRQ6HSxbeM0bLdbLp7PcNLd8cH9zVQlwWsDmXOgfP8akU270qTU72Z9G3D8TZ7WpYDCIokaa6uct1dCZu39PrtDttQfmimOSljpJNU5zxke8vwHKr2aHr+znMxGkuP4VJ3bWpG40CTkfh4GpWQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kZxJv6Fg; arc=none smtp.client-ip=209.85.218.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=adamthiede.com header.i=@adamthiede.com header.b="HD7hXtPN"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4cDXnm6Psrz9srd
-	for <linux-xfs@vger.kernel.org>; Sat, 30 Aug 2025 13:23:40 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=adamthiede.com;
-	s=MBO0001; t=1756553020;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:autocrypt:autocrypt;
-	bh=sif0e7yEsZ/lXBepEYt0VZB1EcPYUHzId1f98whRc0Y=;
-	b=HD7hXtPNWSSQFlbvVpQ28DLZSMzLGs6tcDcAyaOD0+8pBi07xk4VgX12OGeETjGEOftWe/
-	mdQSCiNjC25e6Xq5swdj5ivkSGjM3CtguQaGbIDGEtkVKvasbkKoCb63giHeg7TcO5lpn5
-	bGcaiO154DQnyV5lFGxo94olKqg0fu/4ze3mXIF/r+ncq1QoLQNZRXJGuJfn3LqkaBQngr
-	VyQS2xZvPiIi4r9nBKR1KLC2y6n813xLLtsldgnPRUJCkTALHYH/b5WKbKya5tHsSY7FwM
-	JNz5lJv6AstOf50hgag8pIaG4J7DdbzATL6Bd//xnFvf/DmGbOcd+bUKIeKfiA==
-Message-ID: <ba4261b0-d2a2-4688-933f-359a8cc6b75e@adamthiede.com>
-Date: Sat, 30 Aug 2025 06:23:36 -0500
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kZxJv6Fg"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-aff0775410eso211014566b.0;
+        Sat, 30 Aug 2025 08:54:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1756569288; x=1757174088; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=JKnJgrbmUOh2oDMSjOOuFdf8pubpSvEuvnnxtiEFkJg=;
+        b=kZxJv6FgYfp20p56z282eMsD5h5aFhsexDEwKvBCx5Td18ScqSqiY5CvPPlAFUKYP2
+         jbXqTpw/pqQ0vDDLmDsKGeiLmtgJBTpdmLkn0t0a8FUAETVmPZX+v5ct9OAwkipIe4qQ
+         InRnmaXNXHiyK3Yo9+51jzvwmf5QiqkctV2zN4m4hIhPJCZ/EQ+0aqP+KfJYbFhgYizV
+         1p9OAjrjtsp6EfVq8wPGybelEeZhZiqL4ZNycT31KFAzgcaYvXcmLyCM5pmFCtzqMucA
+         Kxkyhi7rxzImb9Xu/b5YNuxQbMRUTz/Jvl7+Hf3BPKMNXwlhqeEhHEFKYIwmNNHusIGp
+         14jw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1756569288; x=1757174088;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=JKnJgrbmUOh2oDMSjOOuFdf8pubpSvEuvnnxtiEFkJg=;
+        b=mwG6ZBr9HiqAyLeciW+CYl7UE4bIYMbNb44kmyKew0ntbDgTfw3q7IXo8JRTuQKmLd
+         eUz1klYy4CrpKfRFeTSB7vOoNcjo4fjoCQBCkHOKcjM3VSr1uXryA43Lf2nQgUO9o8wV
+         Ua5TbvjFN8mj9+VedMK+Jhyjc6Kc+OmGTTWMkUFueDBt635a49zBqJsoJqa3DEwQFpke
+         ZqRhQTNzL6wJ2ij1r4cz+yPT7fI7qMfFU12H6QrgaPkgn9LvJqc8UoSw/Mubyb1KOzw2
+         V4TMl+IE8z3ioABDiCPIQisqAYFg61nUMT7FWd/MTPo3roPaEVtyYGYemFORkhO1pHi/
+         c25w==
+X-Forwarded-Encrypted: i=1; AJvYcCV2oZrw8/SueE4U7LYXpW3PK9vbJyOcNnezrTH5b8WJi4nmi5L3PNGYuxFMfPnohreHoQqI5e56GIRu8g==@vger.kernel.org, AJvYcCVi22YkWU9zmd7GLTBHxo+NPs5Dh3MdJubGEDKotCVIBFmqDhOIin6BnXg5DLOk5KnMTUO+81tOil91C9SL@vger.kernel.org, AJvYcCWUYClshOFhaHExST5SZ/vWImAQJpNnNWwa+SlEuoII0R0U8xnY6tbCQcZQ+jriiKe1xNkM3VOoedCpxA==@vger.kernel.org, AJvYcCXkOXcUYQUNOUjhWJ464HArW/f9VjyNaROp/ICRlNQwEHNeYtjynMqQhcAL0UnxjD824mJ0z9yrUv+t@vger.kernel.org, AJvYcCXov/6DBJ40RMwTVOX/eaua8OOPamK5qMn3HFUercKxPMdSFD6ygpnTEsYNSPB2I/ilXpCChjHQTCJh3TVxcg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyqFYRJEVPc3AoojHPL6tRf418w6fu4otXG409XuZTx1+DZAMrA
+	j6SFTDnTZX7ZwYyFf/l2jckSJwumIdsAjGFv3UaRHc67P1jltMHAS+7w0fBIs8kjJL3vlW95D7C
+	6Wttjb1tl4J7pi/brJBJx8HaCgnl8RYw=
+X-Gm-Gg: ASbGncuQGHuJEMxurp4dJi+cSPET4Po4L3GomjNwy2xdAuPrMHPshHqEJwqs6enM22E
+	x/5HuIzNV/rrhtJwbhmPG6sIi43llMOqnApEh9D/uNJmNHpQbVkecFLPiE/rglTdO0zyMnWea73
+	nztSlc0f4lD5XtvckG5k8G3EvO3eE0R1tUECY0ZKhXBPswRBJaDm6zCriiEai8GZ3Ra5oEBt+SB
+	7EUjffpLaySSpRnNw==
+X-Google-Smtp-Source: AGHT+IElC6UnQKbYiLEokii4c0QnJGyNmpiKRwOAH3fYC7dsMe19ke8+l5PIvp3HUmB7xvmH/nqLeMEzovT7pA11oF8=
+X-Received: by 2002:a17:907:60cb:b0:afe:834e:ac6c with SMTP id
+ a640c23a62f3a-b00f67e0f14mr269568466b.7.1756569287634; Sat, 30 Aug 2025
+ 08:54:47 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Language: en-US
-To: linux-xfs@vger.kernel.org
-From: Adam Thiede <me@adamthiede.com>
-Subject: xfsdump musl patch questions
-Autocrypt: addr=me@adamthiede.com; keydata=
- xsBNBF+n+90BCAC2ZRLVcvdXDgfY7EppN05eNor3U7/eeiNCCEIWZkYLhikUEP1ReLGBkXpK
- Pc70hfnKAKkCoth3IwhDty9WXMNU+iLNei4ieb2luW+UqluR6xIUIA+txahMU9YcjVaQTKf/
- yZWO4yl6pfBPCxC2UdPZKBAdGoi5NnE0ABFNbhBETQhhBic533lZn33ByupfI3acECnQdjgQ
- llCUpDbw4I+S/N1iFiEHcbMXH7ZB00e3IYNorZ1E9v7p++5rDY1fQ9gXpieg1vFKwSq1NJWo
- 9xx336YjaTUbX0EwrdKd9l8AktA3yRjckaK5TAcwSQaDtHvhpbl4ebvPhtwHh699MroXABEB
- AAHNH0FkYW0gVGhpZWRlIDxtZUBhZGFtdGhpZWRlLmNvbT7CwI4EEwEIADgCGwMFCwkIBwIG
- FQoJCAsCBBYCAwECHgECF4AWIQQtG9pGQ7sz3tf8M/kC7fV9o/vRzgUCZL1HxQAKCRAC7fV9
- o/vRzgyRB/wLqRCvvWhQCMgvzeKvru9wcXquhb77K8H/ByLbfiT8YBuP3lZFVh0IQhgO9Ylk
- fIoOJE4V+jjxyOnO2d9xjGbvAmmR6yT0gfLzSVWqrC4k+V9MWLv43nrNzxt41dvo5j824FAl
- X+zaiRZCdO8Jtxg5Elpiop2SKLi1utX1Z8i6YZh+ccJZlchUBAGUTk+D4UjK7vUcjLWT96ya
- CtdtTfXyw36CvGOPEWfc6++Kkl/5sgej1i7biPYzu/r0vssaQYTXKSrv6Cfa3Maa89ASiTtv
- q4qmhLnJeCrPxWlRAf6LEizeBEkOasYni2u8sp4wBezEq45Ozu45sfPkqLpPolG7zsBNBF+n
- +90BCADBRt+vrToRBEG580n77S99qSEkbKD+oJtCVyovnjMNkg0K9UG68LIeCX/ezngiV1M8
- JISvw5iFOuUFqGX/1hLl9wgt/YpuIrgWOp8XxkotavTCloLDvQmufJPO1L8bnnA+WgP2YgVZ
- 5MJTj/t4DI+yQgysEjsH8aurHO2uuqgJE+xK+2dy6Cl/wskuGxObksSPmmFH5PH0Joziwrtl
- 61ouLE2XwKbkMgIGEKkbFgbfwz3/QuLZGBni+OOtLzXeZ9wNTW/AHUPy6S9U4F+5z6/09fVT
- tTH0cvrgAGjbASlYx2VqGONXAsxCfjulq6ryJBFlPLp949c/JTTgOojukCSbABEBAAHCwHYE
- GAEIACACGwwWIQQtG9pGQ7sz3tf8M/kC7fV9o/vRzgUCZL1H0gAKCRAC7fV9o/vRzlamCACs
- vHw+0heTm+BfC3S8DUST6889gidIIwdqBep1ByzetCph7Bq8Y8BlT5YTX0u/bSKkxCzFgeTm
- vC341Q09ST2XjLAl1ZTdzGhH9gcgYyOw34pr5fPQRJLB392mPzD8YReRzciNbhWzj+DLgeVe
- ouyfGajd6jDjkf4FEq+trQLGZhpfsKn3JnDbzBUs945D50l/vz9q/QN3qZO+H4F6g8ZeMnqo
- FOEFN26xVtdEDr+0DNFsbgKmEzs675kdAY78ZZdbEetX/FSknxJ+FK1ZW3J7Yswwulj34AXP
- LB49Mk8Ot7fo6mdt0DkV11JS9LmKxKvpY+KTlrKG+i7pVCSZvVUx
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20250827-kraut-anekdote-35789fddbb0b@brauner> <20250827162410.4110657-1-mjguzik@gmail.com>
+In-Reply-To: <20250827162410.4110657-1-mjguzik@gmail.com>
+From: Mateusz Guzik <mjguzik@gmail.com>
+Date: Sat, 30 Aug 2025 17:54:35 +0200
+X-Gm-Features: Ac12FXxw_rI44Vo3uX6aJ6E7RnW-AezM7w6oV9lBe-qseTZJvVTh6oLpdGUdJuE
+Message-ID: <CAGudoHE5UmqcbZD1apLsc7G=YmUsDQ=-i=ZQHSD=4qAtsYa3yA@mail.gmail.com>
+Subject: Re: [PATCH] fs: revamp iput()
+To: brauner@kernel.org
+Cc: viro@zeniv.linux.org.uk, jack@suse.cz, linux-kernel@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, josef@toxicpanda.com, kernel-team@fb.com, 
+	amir73il@gmail.com, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello - I'm interested in packaging xfsdump for alpine linux. However, 
-alpine uses musl libc and I had to change a lot of things to get xfsdump 
-to build. Mostly it was changing types that are specific to glibc (i.e. 
-stat64 -> stat). I'm not much of a c programmer myself so I am likely 
-misunderstanding some things, but changing these types allows xfsdump to 
-compile and function on musl libc. xfsdump still compiles on Debian with 
-this patch too.
+I'm writing a long response to this series, in the meantime I noticed
+this bit landed in
+https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/commit/?h=3Dvfs=
+-6.18.inode.refcount.preliminaries&id=3D3cba19f6a00675fbc2af0987dfc90e216e6=
+cfb74
+but with some whitespace issues in comments -- they are indented with
+spaces instead of tabs after the opening line.
 
-Would the maintainers of xfsdump be interested in this patch? It's >4000 
-lines so I'm not sure of the right way to send it. It's available in the 
-following merge request, and linked directly.
+I verified the mail I sent does not have it, so I'm guessing this was
+copy-pasted?
 
-https://gitlab.alpinelinux.org/alpine/aports/-/merge_requests/88452
-https://gitlab.alpinelinux.org/alpine/aports/-/raw/f042233eff197591777663751848ff504210002e/testing/xfsdump/musl.patch
+Tabing them by hand does the trick, below is my copy-paste as proof,
+please indent by hand in your editor ;)
 
-Thanks for your time,
+diff --git a/fs/inode.c b/fs/inode.c
+index 2db680a37235..fe4868e2a954 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -1915,10 +1915,10 @@ void iput(struct inode *inode)
+        lockdep_assert_not_held(&inode->i_lock);
+        VFS_BUG_ON_INODE(inode->i_state & I_CLEAR, inode);
+        /*
+-        * Note this assert is technically racy as if the count is bogusly
+-        * equal to one, then two CPUs racing to further drop it can both
+-        * conclude it's fine.
+-        */
++        * Note this assert is technically racy as if the count is bogusly
++        * equal to one, then two CPUs racing to further drop it can both
++        * conclude it's fine.
++        */
+        VFS_BUG_ON_INODE(atomic_read(&inode->i_count) < 1, inode);
 
-- Adam Thiede
+        if (atomic_add_unless(&inode->i_count, -1, 1))
+@@ -1942,9 +1942,9 @@ void iput(struct inode *inode)
+        }
+
+        /*
+-        * iput_final() drops ->i_lock, we can't assert on it as the inode =
+may
+-        * be deallocated by the time the call returns.
+-        */
++        * iput_final() drops ->i_lock, we can't assert on it as the inode =
+may
++        * be deallocated by the time the call returns.
++        */
+        iput_final(inode);
+ }
+ EXPORT_SYMBOL(iput);
+
+While here, vim told me about spaces instead of tabs in 2 more spots
+in the file. Again to show the lines:
+
+diff --git a/fs/inode.c b/fs/inode.c
+index 2db680a37235..833de5457a06 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -550,11 +550,11 @@ static void __inode_add_lru(struct inode *inode,
+bool rotate)
+ struct wait_queue_head *inode_bit_waitqueue(struct wait_bit_queue_entry *w=
+qe,
+                                            struct inode *inode, u32 bit)
+ {
+-        void *bit_address;
++       void *bit_address;
+
+-        bit_address =3D inode_state_wait_address(inode, bit);
+-        init_wait_var_entry(wqe, bit_address, 0);
+-        return __var_waitqueue(bit_address);
++       bit_address =3D inode_state_wait_address(inode, bit);
++       init_wait_var_entry(wqe, bit_address, 0);
++       return __var_waitqueue(bit_address);
+ }
+ EXPORT_SYMBOL(inode_bit_waitqueue);
+@@ -2938,7 +2938,7 @@ EXPORT_SYMBOL(mode_strip_sgid);
+  */
+ void dump_inode(struct inode *inode, const char *reason)
+ {
+-       pr_warn("%s encountered for inode %px", reason, inode);
++       pr_warn("%s encountered for inode %px", reason, inode);
+ }
+
+ EXPORT_SYMBOL(dump_inode);
+
+Christian, I think it would be the most expedient if you just made
+changes on your own with whatever commit message you see fit. No need
+to mention I brought this up. If you insist I can send a patch.
+
+On Wed, Aug 27, 2025 at 6:24=E2=80=AFPM Mateusz Guzik <mjguzik@gmail.com> w=
+rote:
+>
+> The material change is I_DIRTY_TIME handling without a spurious ref
+> acquire/release cycle.
+>
+> While here a bunch of smaller changes:
+> 1. predict there is an inode -- bpftrace suggests one is passed vast
+>    majority of the time
+> 2. convert BUG_ON into VFS_BUG_ON_INODE
+> 3. assert on ->i_count
+> 4. assert ->i_lock is not held
+> 5. flip the order of I_DIRTY_TIME and nlink count checks as the former
+>    is less likely to be true
+>
+> I verified atomic_read(&inode->i_count) does not show up in asm if
+> debug is disabled.
+>
+> Signed-off-by: Mateusz Guzik <mjguzik@gmail.com>
+> ---
+>
+> The routine kept annoying me, so here is a further revised variant.
+>
+> I verified this compiles, but I still cannot runtime test. I'm sorry for
+> that.  My signed-off is conditional on a good samaritan making sure it
+> works :)
+>
+> diff compared to the thing I sent "informally":
+> - if (unlikely(!inode))
+> - asserts
+> - slightly reworded iput_final commentary
+> - unlikely() on the second I_DIRTY_TIME check
+>
+> Given the revamp I think it makes sense to attribute the change to me,
+> hence a "proper" mail.
+>
+> The thing surviving from the submission by Josef is:
+> +       if (atomic_add_unless(&inode->i_count, -1, 1))
+> +               return;
+>
+> And of course he is the one who brought up the spurious refcount trip in
+> the first place.
+>
+> I'm happy with Reported-by, Co-developed-by or whatever other credit
+> as you guys see fit.
+>
+> That aside I think it would be nice if NULL inodes passed to iput
+> became illegal, but that's a different story for another day.
+>
+>  fs/inode.c | 46 +++++++++++++++++++++++++++++++++++-----------
+>  1 file changed, 35 insertions(+), 11 deletions(-)
+>
+> diff --git a/fs/inode.c b/fs/inode.c
+> index 01ebdc40021e..01a554e11279 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -1908,20 +1908,44 @@ static void iput_final(struct inode *inode)
+>   */
+>  void iput(struct inode *inode)
+>  {
+> -       if (!inode)
+> +       if (unlikely(!inode))
+>                 return;
+> -       BUG_ON(inode->i_state & I_CLEAR);
+> +
+>  retry:
+> -       if (atomic_dec_and_lock(&inode->i_count, &inode->i_lock)) {
+> -               if (inode->i_nlink && (inode->i_state & I_DIRTY_TIME)) {
+> -                       atomic_inc(&inode->i_count);
+> -                       spin_unlock(&inode->i_lock);
+> -                       trace_writeback_lazytime_iput(inode);
+> -                       mark_inode_dirty_sync(inode);
+> -                       goto retry;
+> -               }
+> -               iput_final(inode);
+> +       lockdep_assert_not_held(&inode->i_lock);
+> +       VFS_BUG_ON_INODE(inode->i_state & I_CLEAR, inode);
+> +       /*
+> +        * Note this assert is technically racy as if the count is bogusl=
+y
+> +        * equal to one, then two CPUs racing to further drop it can both
+> +        * conclude it's fine.
+> +        */
+> +       VFS_BUG_ON_INODE(atomic_read(&inode->i_count) < 1, inode);
+> +
+> +       if (atomic_add_unless(&inode->i_count, -1, 1))
+> +               return;
+> +
+> +       if ((inode->i_state & I_DIRTY_TIME) && inode->i_nlink) {
+> +               trace_writeback_lazytime_iput(inode);
+> +               mark_inode_dirty_sync(inode);
+> +               goto retry;
+>         }
+> +
+> +       spin_lock(&inode->i_lock);
+> +       if (unlikely((inode->i_state & I_DIRTY_TIME) && inode->i_nlink)) =
+{
+> +               spin_unlock(&inode->i_lock);
+> +               goto retry;
+> +       }
+> +
+> +       if (!atomic_dec_and_test(&inode->i_count)) {
+> +               spin_unlock(&inode->i_lock);
+> +               return;
+> +       }
+> +
+> +       /*
+> +        * iput_final() drops ->i_lock, we can't assert on it as the inod=
+e may
+> +        * be deallocated by the time the call returns.
+> +        */
+> +       iput_final(inode);
+>  }
+>  EXPORT_SYMBOL(iput);
+>
+> --
+> 2.43.0
+>
+
+
+--=20
+Mateusz Guzik <mjguzik gmail.com>
