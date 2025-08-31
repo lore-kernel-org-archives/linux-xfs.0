@@ -1,71 +1,72 @@
-Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0322186E2E
-	for <linux-xfs@vger.kernel.org>; Sun, 31 Aug 2025 20:25:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE7BE21CC5B
+	for <linux-xfs@vger.kernel.org>; Sun, 31 Aug 2025 20:37:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756671961; cv=none; b=i3h7BLgCFVNP7DCX4EgmxjqNG5vQzmCE12DxLmV0YZRst8kidhBPclkPCg0HSJcH3HcmIB+GzxtRc+0RWJAz5DGz4hu3STbUqE1vFTAw7Ca0wvuVj6DAlTfN9omXaPPFT6IFirSv0c7zGEeVrzCs3PrgMJsY0Z5dInbVyGQ6/PI=
+	t=1756672625; cv=none; b=a8kwPuSTwgg/E0bvokanamSgUrXxVoyNzJnhvIQLF0arTA1mTTGEtOXdyh++h8xENcfx2DBgRRh829fN6F7c3LWJ7E+lU82OFMwkGXz7ZcCqumquwos2I4Y/1rOSd3uPwMFE7iUVEJ8hUyTPGZTs1fAXVhNgQyCNyarpI/ioJzo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756671961; c=relaxed/simple;
-	bh=o6djq53XBSaJt9RnlTL0mlVvSPyj9WheRZXvyi/L02I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mQlLldnU+d4S6S2h0lnIlRcjNqiKTUscIte0St6ba90DK3QCZQbEn4fQxY7PJFFwCcC3z0AQPe9XFBqutPmAHOQTzsZWVb1ntnm8I3h8icTCqWChYK2y87a5rydKl0Ru86evyY9xDTK9HZB2kIhOsTFulRW8M3VXJXXGRDlEqEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=tukqong+; arc=none smtp.client-ip=82.195.75.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
+	s=arc-20240116; t=1756672625; c=relaxed/simple;
+	bh=VWDrXiTlKGMBCZ+wHyeZ2+uhZ+zg5cxhBHdlcROooZA=;
+	h=Content-Disposition:MIME-Version:Content-Type:From:To:CC:Subject:
+	 Message-ID:References:Date; b=TLjsWNXRdyCFGkHDUd/ELlzK9wyvqBI07Mg8Spov8bg5cmGrb6kyQtbcVF6OoZBHiQwLiFRDNQq3qA9XcAJxiyCH7391SE4YuoUKJsbJGkAMcejM91kFkJMz43PKM0lLdbyU4bUNGv898ftk7UzAllRl//f5sJmcjxmmqQDNvh4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org; spf=none smtp.mailfrom=buxtehude.debian.org; dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b=s/wXJncN; arc=none smtp.client-ip=209.87.16.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="tukqong+"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.stravinsky; h=X-Debian-User:Content-Transfer-Encoding:MIME-Version
-	:Message-ID:Date:Subject:Cc:To:From:Reply-To:Content-Type:Content-ID:
-	Content-Description:In-Reply-To:References;
-	bh=CWtoccsXwfuDTCCzGRPvGSPgRfy/7s3PXifW1K/fwmQ=; b=tukqong+5YopzBZLIQqlyZ1lMx
-	T0bF42SKO2K+WzKLQXUvP/kALVoEbD+BsyX1n56fGrG8E82TOjPt5Rnwh778yI2rz5cQx7fjQxLrD
-	LptgBOHoxBlRF7NHd5+jpprJaWggmWbc+TWEbS3DEws72Z5gMChaJOveo28WyT6IJoQciD7SeyhlT
-	edfvhEcoQkuwKblrgMHMNl2r3MSjC6/pl4vUQ9YtgrvICLhiCy4TBfNDXJVkuNA0czJZiBbqGq5q1
-	J/f6AJjE8mBvdekQ11MjdtC4r+nfdvK7tjUtE/d/E/rdCGqTmdfpuMej5vGh174LhQr1KT7a4vdHI
-	pwy8H9wA==;
-Received: from authenticated user
-	by stravinsky.debian.org with utf8esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.94.2)
-	(envelope-from <bage@debian.org>)
-	id 1usocZ-000Hxb-EZ; Sun, 31 Aug 2025 20:25:51 +0000
-From: Bastian Germann <bage@debian.org>
-To: linux-xfs@vger.kernel.org
-Cc: Bastian Germann <bage@debian.org>
-Subject: [PATCH] xfs_scrub_all: Replace deprecated datetime.utcnow
-Date: Sun, 31 Aug 2025 22:25:15 +0200
-Message-ID: <20250831202547.2407-1-bage@debian.org>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b="s/wXJncN"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
+	:CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
+	Content-ID:Content-Description:In-Reply-To;
+	bh=VWDrXiTlKGMBCZ+wHyeZ2+uhZ+zg5cxhBHdlcROooZA=; b=s/wXJncNGRCPhsbyyiid83aF/H
+	KBgPRl0FKyFD6q97ZqE38nv3IzWekoIcCLL4FB64LfCS6MbyiyyinzfnI4us8YXyE+yeRABHCusVs
+	hmOUzAE4qSjKb3Rm/tHuOXZLgZFc04lBn2Kqxvb1ah7leYHmrCwetOgNbGRYHgqDc0RcpQsM494P9
+	7CnEfrNqsNxCNLMIc2nCGQwPgDcJsRwYlm4K9bwOvajWPsDVJ9rU5uf1OoL/Np2SoRS4KzgV4z3PY
+	EPsqopqT2HITrt3URL206EVjLh/0xLT7yMHnDVTWsS8CNKW401eMlGlWiFZ+WCoyD5H1tWhgdD6Qt
+	pljLzZLg==;
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.96)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1usonO-00A4vx-2B;
+	Sun, 31 Aug 2025 20:37:02 +0000
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Debian-User: bage
+X-Mailer: MIME-tools 5.510 (Entity 5.510)
+Content-Type: text/plain; charset=utf-8
+From: "Debian Bug Tracking System" <owner@bugs.debian.org>
+To: Bastian Germann <bage@debian.org>
+CC: linux-xfs@vger.kernel.org, debian-bugs-forwarded@lists.debian.org
+Subject: Processed: Re: DeprecationWarning: datetime.datetime.utcnow() is
+ deprecated
+Message-ID: <handler.s.B1112588.17566725082401155.transcript@bugs.debian.org>
+References: <feb251c6-3ea1-4ca6-841f-70ce6216a22f@debian.org>
+ <175662646685.178172.185590202459851084.reportbug@turing.verdier.eu>
+X-Debian-PR-Package: xfsprogs
+X-Debian-PR-Source: xfsprogs
+X-Debian-PR-Message: transcript
+X-Loop: owner@bugs.debian.org
+Date: Sun, 31 Aug 2025 20:37:02 +0000
 
-Python 3.12 has deprecated datetime.datetime.utcnow. Replace it with
-datetime.datetime.now with timezone object.
+Processing control commands:
 
-Closes: #1112588
-Signed-off-by: Bastian Germann <bage@debian.org>
----
- scrub/xfs_scrub_all.py.in | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+> forwarded -1 https://marc.info/?l=3Dlinux-xfs&m=3D175667185613391&w=3D2
+Bug #1112588 [xfsprogs] DeprecationWarning: datetime.datetime.utcnow() is d=
+eprecated
+Set Bug forwarded-to-address to 'https://marc.info/?l=3Dlinux-xfs&m=3D17566=
+7185613391&w=3D2'.
+> tags -1 patch
+Bug #1112588 [xfsprogs] DeprecationWarning: datetime.datetime.utcnow() is d=
+eprecated
+Added tag(s) patch.
 
-diff --git a/scrub/xfs_scrub_all.py.in b/scrub/xfs_scrub_all.py.in
-index 515cc144..a94b1b71 100644
---- a/scrub/xfs_scrub_all.py.in
-+++ b/scrub/xfs_scrub_all.py.in
-@@ -496,8 +496,7 @@ def scan_interval(string):
- def utcnow():
- 	'''Create a representation of the time right now, in UTC.'''
- 
--	dt = datetime.utcnow()
--	return dt.replace(tzinfo = timezone.utc)
-+	return datetime.now(timezone.utc)
- 
- def enable_automatic_media_scan(args):
- 	'''Decide if we enable media scanning automatically.'''
+--=20
+1112588: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1112588
+Debian Bug Tracking System
+Contact owner@bugs.debian.org with problems
