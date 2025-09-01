@@ -1,210 +1,190 @@
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CE16310640;
-	Mon,  1 Sep 2025 10:52:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=68.232.141.245
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756723938; cv=fail; b=Lbay0h8lOfyGVBwK8rcocuW1yr6k2XXN6lfiGxZe1ITI2Rz6uT5/oEMzmX2mv6YUOtsxszepuj9GQlFlp0Z2GfRrQ8ASFCFSvhey4jDzHBMO5t7h+JSmUbBs02CSwRzG5LlxcOVyb8QstMN2vOsvfMx1/T3CkG/vB826v5hGcGY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756723938; c=relaxed/simple;
-	bh=cPmwuUdgGFVCJW/I457b9OS3mh7DDnPmMWZWvHymkFI=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=CT3RkY3ZIEEGmp3r9xrDivmGTWfthvE0oz9Zwp4om44a+XUGb3+HzO7WjII0HZsHuOo9BoH7XmtQKfyNUmEy4DFqro0Zgb5FPpfB2ASizn9ViqOPp/cXi11YdIYcDZ2pLvooapeyyHYEaCyz6YJccC74+Al4xhWtX/4EqE/TTJM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=Xyfh2HPS; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=LlPUnfmU; arc=fail smtp.client-ip=68.232.141.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84112313E1D;
+	Mon,  1 Sep 2025 11:40:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1756726820; cv=none; b=mtyIMQ5fjEcaKTjhnOTSEG75dEkEMNyGWkTnAOca/Uv0Q9JFizRwKkeP0VHg4ex3oyYw/mjsQYtN085BJT+D/jFuycEa1yCcr9hdJBbQPWEwDdVgKfvpVrVOU30AouFuliUOuHQG/F2WWAC1JfDeAdSQU9UFGwMlx1CTO0KMbv4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1756726820; c=relaxed/simple;
+	bh=6QQ7yvHUr29Mmw45xnYQHNiFS5i+CymQw2R3o36VIVQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YZJd6OHYPt6Xg7nKJ9LyYub7dEkM/eTagcopMcC9csgztZ5D2LsJq19HrClIBPI+BIebBN5K8CCFyyH/7Ghct8em9G/bOiMq7rg6qFUvsGORMtd3gzJ9xTlc+Uc/oRLe9hUi0QmbbABIU7fpw/FRhu+5xYhKua4mUiREjyuV7sc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=U/z6vuSG; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Xyfh2HPS";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="LlPUnfmU"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1756723936; x=1788259936;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=cPmwuUdgGFVCJW/I457b9OS3mh7DDnPmMWZWvHymkFI=;
-  b=Xyfh2HPSga+WJO5oeKGhtCp06muyI62koy+FpQH1bqIzsWGQQQFaDZJv
-   6fLlR8MXmoGkknixCvqmttyuVYl6lLN9fIJMEJTSrT3nVrvnh0decvXXp
-   FqcE+wRns6zYGavqsexTmbNSEZUodZ9kg/q3mjek0GInp5BtAAh9YzZP7
-   78yyOSMyJ0OyrJcQB2FOWl8uBOUDBiJ47p2faMfeCvStYqRYvksKs8qJA
-   gs/MvX3oro3gn3fgTS0SLoPg/irvGd8rTqX0ezw6ysdNmqPp0AP4gG2pQ
-   s1yF+oK6o6s0y1yxK8Ehm+AQSI4+CVOETCOuv4fD/RnfsgiGSUlSN/A93
-   w==;
-X-CSE-ConnectionGUID: x5OXXJsqSFG6Yw3QHgOT2g==
-X-CSE-MsgGUID: 82gr+ZhGR4mMbL/eBliMrw==
-X-IronPort-AV: E=Sophos;i="6.18,225,1751212800"; 
-   d="scan'208";a="106132141"
-Received: from mail-dm6nam12on2062.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([40.107.243.62])
-  by ob1.hgst.iphmx.com with ESMTP; 01 Sep 2025 18:52:07 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=LcQcznXtWHEvG3vwC4cdW4Y+mI+GT4D8/1mnbh6E7zIxE2JrYPeuJgN6MbMgBOHjitQdHZupqUHLsaso3IwwpTrFFbmuslM78Yf1m2SrIBfgXuMn1WYaDTT+1AhSQgMUPqA16nkksrtPT3NtM1XQyFsPPs6ZmJBMJtPmPPpUPH8ZeteBIlt9sh2vztaa7+LK32dFBMY9HzP5RBCZEaNTmE23IMJ5nzJ0OCJ1KCYYM+gp3zajxvMTVbc2oJXRrjXuThLHThsKutpllooQZHdt1WBR4awjAmpNh3RueIzwQROKLO1enwMMFw3Fkmf4cjLMN+1eCFfxgA0JA4cUryH/EQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=hHmzfDrDzhSahtxDEp13wnwu5TALeynHg38c3gcMK1c=;
- b=nTT+fvTdkDv5gOhYw/HPev8ABZlWmmQLkffxN8QXqWJEuY29sUXHHi2E5kbhYzcvh79sMPJkTv/xvkvFsbKkUuVu3n7OzgYUw7vf0nVSWx158z3tSs6sBzS9RlGFbCC2sOatGhV8fzDO9hIPkDrafB8NXc8ESaydLpmi1K7G5FkF1bUWJhFumei1UyY7xC9RkFZjGn85yvq36MNfhtLpQwNWzpKDb20iBISKGfVeoSKZUAZyTkd1H1RuyK0FkqwwR9W385r70L4mUVuMljtw57CirYeZji6fV9IFwE0eas99EV9nveeI9UPPIMT5wJQAS8hafWj2niXvpcDcBeah3A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hHmzfDrDzhSahtxDEp13wnwu5TALeynHg38c3gcMK1c=;
- b=LlPUnfmU0DWMs2sPXaCJhfh9ua6TZxdTOLl9kJqEkQvYgUpO/zDl7L8n13nwCKDGudjv0HGynbrJG5v0xujuSSvrytY3UkxGAd4WY9K0Amxu8VxC5ixzBeLdbObQfFJnCYzRoNk2JvKfvmaczRMHtPgw4aIfH/72kxrsurLLHKw=
-Received: from PH7PR04MB8755.namprd04.prod.outlook.com (2603:10b6:510:236::8)
- by DS1PR04MB9234.namprd04.prod.outlook.com (2603:10b6:8:1e9::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9073.27; Mon, 1 Sep
- 2025 10:52:06 +0000
-Received: from PH7PR04MB8755.namprd04.prod.outlook.com
- ([fe80::4372:e8cb:5341:9a9b]) by PH7PR04MB8755.namprd04.prod.outlook.com
- ([fe80::4372:e8cb:5341:9a9b%5]) with mapi id 15.20.9073.026; Mon, 1 Sep 2025
- 10:52:05 +0000
-From: Hans Holmberg <Hans.Holmberg@wdc.com>
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-CC: Carlos Maiolino <cem@kernel.org>, Dave Chinner <david@fromorbit.com>,
-	"Darrick J . Wong" <djwong@kernel.org>, hch <hch@lst.de>,
-	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hans Holmberg
-	<Hans.Holmberg@wdc.com>
-Subject: [PATCH 3/3] xfs: adjust the hint based zone allocation policy
-Thread-Topic: [PATCH 3/3] xfs: adjust the hint based zone allocation policy
-Thread-Index: AQHcGy50V674h8hUJUil2jxW6ZCJAg==
-Date: Mon, 1 Sep 2025 10:52:05 +0000
-Message-ID: <20250901105128.14987-4-hans.holmberg@wdc.com>
-References: <20250901105128.14987-1-hans.holmberg@wdc.com>
-In-Reply-To: <20250901105128.14987-1-hans.holmberg@wdc.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-mailer: git-send-email 2.51.0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PH7PR04MB8755:EE_|DS1PR04MB9234:EE_
-x-ms-office365-filtering-correlation-id: 8ed8dff7-2749-47d7-c6b9-08dde9459775
-x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|376014|1800799024|366016|19092799006|38070700018;
-x-microsoft-antispam-message-info:
- =?iso-8859-1?Q?zRhn59Ssfq+dhLuEVU4eUVrsVXXZ88YQdWpVUZMKn6cO4euy9fNT9NH4Mv?=
- =?iso-8859-1?Q?2QgiFBsVOmG/SW9hYtXEsceFlp0wgvMYQwbCwMM7DaXOFgAbZCjzuMXkLV?=
- =?iso-8859-1?Q?bRKVvAuy9FgpN6xCdrItyq9qiIkZ0wtv9XPMo/HZfzo/uL5tnS7tRBRnhA?=
- =?iso-8859-1?Q?63guRFMugNWtnC/NZIkrYzPHXWfHz5aIhUFxYnSGLwoBq/CKosjOa8mtHV?=
- =?iso-8859-1?Q?WONkwX0PL+0yMzDNwCBRVq+wr+AtmdNRoFpCxEe69OMfWY+NQg4TVdYtAQ?=
- =?iso-8859-1?Q?KvwUMbfBCAvJbrsHCQ6YP8x8J4+1i0Fqy5orcAneZhlePUvKi3Nw7VHDPq?=
- =?iso-8859-1?Q?BbQKIn+d34/9cO5VlS+HxHV3NoDvUbJ+8v2HFKSaZpMrKOqeqwn30KRPQO?=
- =?iso-8859-1?Q?Dqfq5svEOqhm3bQAPzsIaAvRaffRkq+yO3m85m6ZGrB76XGJ/ubnQE8vkO?=
- =?iso-8859-1?Q?Wvl8cjWPy7bOcBjUC0MfmSqgNcJut/SYH/paikAEqhn5WEO5fyAPsezy0B?=
- =?iso-8859-1?Q?dQhQZG2O8vrxs+gauSxRpCfvIDmpQcRCqakN0mjvSeB1Xz9VrVx0SrX644?=
- =?iso-8859-1?Q?1m3kqEIrHSOo+9XwhlTnGQ9+PrxDMLBh2hQc4z4KTXilb6O5TUDOUNzyVp?=
- =?iso-8859-1?Q?wieIQYyiSS42id4rgcbu74BztOjgjYGXexTWMySThLi10BjjOEud4eyhNX?=
- =?iso-8859-1?Q?BjWCv+I+fSIrynSRZU5nZVZHEp5Q8zKoj/BkDpzIzegyxrWad5npOmgVOa?=
- =?iso-8859-1?Q?w4Pt9mFnGk2He4l/Tgg0R8mO76CLVY8EfD1OgrLbLaKSFWEu46Ivw4xX4y?=
- =?iso-8859-1?Q?3NhRqSQJ2kSr16jOqdXq87+JJmB/WrVuSMF+3iPuN5LIxIyy6s11V/CaBG?=
- =?iso-8859-1?Q?MByfooIBbmEczvWxiK7FtqhtWqud5F1FdOEkX9ig2mDWF3xA6bzJpJlpDQ?=
- =?iso-8859-1?Q?UDOKx0xGoRQuyU4jo6i1XiX6NdVPulqcR/n9LC6PsPDx9bZFm4AQTZfEUL?=
- =?iso-8859-1?Q?j6Z4D7TXADaiJcN8y8fz452BZNt2IpuR6Z9kuIDFhwzwQbQf1h5fUhhx5i?=
- =?iso-8859-1?Q?/0FbV2SCOnPnACWH3YKCgXk744ld/16Krc9+2Bhp5je2u8gSuK/7hGOo/G?=
- =?iso-8859-1?Q?3r2p+GaVOr9CWeMLXLmD08r6TMYquAX87tAu15YBMaUULv5Aj0kZzX9IUp?=
- =?iso-8859-1?Q?KN5wyZ0BwT5UUDeJudQxDzB7kJhW4SYfNDDVkMPncsOFCdJd4QNhVySu56?=
- =?iso-8859-1?Q?pxG7MzYuN+BUa9u04KVaWaoviM7+oYAiXhBUTXgrNwjF3Eyo5i3sal9DJ1?=
- =?iso-8859-1?Q?wU2HdWkPNtlhAOvBPh41Ns17a6GZzKhkYiWng4Bg1XFqXRnRvUwEBnImXm?=
- =?iso-8859-1?Q?NlAEmNPtkaiMACc8kEIYhXGCItdaskiGKrWCgYyPwblOJGvQw+Qx8+zxLp?=
- =?iso-8859-1?Q?FOsjPBny2g0voz2i/hZjOEttVNVCj1thNpG/bcAx/MvdS7kHYDzWgp5K4O?=
- =?iso-8859-1?Q?ynfkNBoTepjaAeRpMyKNeK/q+N3Uwx4OM3qmIpRwVyCg=3D=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR04MB8755.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(19092799006)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?qNQkx0C2152+hnv2JwuzBVALrhR5kVBnAUknbUAjP9i+XpQs7FDaanjj5v?=
- =?iso-8859-1?Q?QwFHTxn046KR3/7Qi9iipZ54cFvjdCixI7MeEJ7opyC3u33JhxPNLng6jP?=
- =?iso-8859-1?Q?SkmVS882tMyw1EkHGdYSThX7UB8NaU91pgnOlHD0u48ELbFQ1XT0Dj8Z+s?=
- =?iso-8859-1?Q?j83Jh+LEcBOnSooc7zm3wAwVaLTLBf9uRHLIUrCfm4kOZxFQ6S+U4H0ayU?=
- =?iso-8859-1?Q?WqPgQBaxr8sq78DFpBHtXwCsX5eRdoRJNOVm+oZ/dCEV13Sfnhaj9M3kXv?=
- =?iso-8859-1?Q?s3J0Rea13HjhD1UunOX0wSGUVhySK2zVmfI7NIzKszdkn93YgUbQTgwnrf?=
- =?iso-8859-1?Q?QSl4OrS4hb4LWHf2AFeic4yWR5IHp3/8A05wghf2cPU8HGpb3bcMH++Ynl?=
- =?iso-8859-1?Q?oP7EzuwxYE9Uk2QpElv6lIvYatRx0Lo/5NthO+CfDPS5i6pdcrCp+fDNcR?=
- =?iso-8859-1?Q?Ro9vlsvDGwAWu0MjC6jzHiuQBbaPMDZaen7Zw2yUnsr4RVtZYIuqxmUvAx?=
- =?iso-8859-1?Q?UIq2ONPk7if4dJiWE5jFEkO/mzesHDb7pabFztb/YYtbC9qVmQNmb38pCM?=
- =?iso-8859-1?Q?21LeeunEOMAxqXD3b2HhyKs1Pvr35Sm+/1GdejqRLPDeovlDaH6b8mthKC?=
- =?iso-8859-1?Q?Wl/KaHA4zgrV10Nj93ZuQPdAD2OD60Vqc48EMh+SLuIzhMW2YOxyyeJx+2?=
- =?iso-8859-1?Q?gvCvMHpCsZhoG8qWWo89rGHV3z6v9VT+Tf/cD5Eru55W+0Wwlo6j+CMWuN?=
- =?iso-8859-1?Q?sq+Gsjr8gwH2Mut5u4mTQyaUbX6nY7u+XinktLbdZz8mbKkQZxFlD6GSqs?=
- =?iso-8859-1?Q?nQjBRtBqUYvnz7hetNubVV726IgoA1/oF3ZgSNwBXft3Ml+S5kkTfKleSH?=
- =?iso-8859-1?Q?UPmd7QbTzhex1np0FneocYwM1PnKWEZFQWJrrY2uB0ImWY0EruEdHivgUK?=
- =?iso-8859-1?Q?DjfI7GxOhvOdBePchKQ9gftJHgQSxNWOScDA+xWeddK+gfncCXO3nFFf9P?=
- =?iso-8859-1?Q?F2djlsyF/pployMAZz37AcwtOGwcpm/99OG6m45oV5SxHtKFiNsrqTW3Z8?=
- =?iso-8859-1?Q?AXVSwV/LXqKt68pqckPaudE8E/Bj6r6Ip5grPUa4OQvTWpZ9YXaqxUWHJi?=
- =?iso-8859-1?Q?7elazUJFTqSFAAIDUqdAvevsZQI1O5XIneedmFfGUUcTSMZMaXHqFwZJWu?=
- =?iso-8859-1?Q?D+ez78jCkYT6PHXSuJ3oYKc07slgRuq+/DLN8wny+kksNCQncW/oiA7VQM?=
- =?iso-8859-1?Q?4MMGqXOzSN+4Z0o/IYDX5kfYTHwb3xtjwpLBnsCXXhw1qFzFjFFU7xICTL?=
- =?iso-8859-1?Q?+JrbtqAVk/zI5UDRO9Ua1P660OaRkd9FrASfcr8ppAHjrSdVRW/zcK7ro9?=
- =?iso-8859-1?Q?kNoZoa090TTUrc0MnR+7yvn8zpifT8t+t2urv/8vSVUeG0yD2RAZiyweNM?=
- =?iso-8859-1?Q?jzQL99pmpDlwRh7qSW/VtXG6oXYSoPgdtZCDvFilL8zPbrE20q36sYOZq0?=
- =?iso-8859-1?Q?FYCO9YJMszPj2rHV9LUMOxmBdHWsAT/LSmlnL1fGxzleq3klBQ98bEQd9g?=
- =?iso-8859-1?Q?SQZu5cN9iFaSCMa5kA2YMTRCa84zSJVKPT0pP1q5ECPewlvfeL9+BNujKA?=
- =?iso-8859-1?Q?eQL7/Qe9qMUsI/MAXdYu8fRXP1cHOQhCrfYEQUiP1zVcorMrQAp7/xHw?=
- =?iso-8859-1?Q?=3D=3D?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="U/z6vuSG"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5819N0XL028857;
+	Mon, 1 Sep 2025 11:40:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=7SG8YQsJdVCHctuBxHbMpBDzL9Z54Y
+	j0p7wbxhGOKnM=; b=U/z6vuSGOgHby4ZjLGDIbYXbpDS1s/CI6amVLWVwDoV6MQ
+	qYFaPdUqFE+jq+etdUYkjgW7lV8Qa5Bvgytr1v9ik1f9MJVOVmTnzyk67T9fkAsY
+	gND1Y8Pqm9lwWfFeFDzlIyqKO+g0Cstu6mBfIwiT2ozkUPNtOiZiOXdziclS+Fd4
+	/kfTkwbkaBlaywXSgrgdFypKxwXU4Eq+GLbqGOY6BpikqMhCncZmzRfFv9lv0C9F
+	q5AC4DV7EAkuRTF/BIZRaLNnWnIwGAfF3W42tN9ZpnFwjoL/0a/eOp9RbnAGjGhu
+	ZK5/Dzr/J/PIIEpbSAGVycSk3IRv5xj4uazNf8lQ==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48usuqrr21-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 01 Sep 2025 11:40:09 +0000 (GMT)
+Received: from m0356517.ppops.net (m0356517.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 581BSsc6011397;
+	Mon, 1 Sep 2025 11:40:09 GMT
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 48usuqrr1w-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 01 Sep 2025 11:40:08 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 581AFdAf009015;
+	Mon, 1 Sep 2025 11:40:08 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 48vdum5gwr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 01 Sep 2025 11:40:07 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 581Be6YT60031432
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 1 Sep 2025 11:40:06 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 3954E20043;
+	Mon,  1 Sep 2025 11:40:06 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id D3F2B20040;
+	Mon,  1 Sep 2025 11:40:03 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.124.217.235])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Mon,  1 Sep 2025 11:40:03 +0000 (GMT)
+Date: Mon, 1 Sep 2025 17:10:01 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org,
+        Ritesh Harjani <ritesh.list@gmail.com>, john.g.garry@oracle.com,
+        tytso@mit.edu, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v5 02/12] common/rc: Add _require_fio_version helper
+Message-ID: <aLWGEVZTPT4e7FAh@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <cover.1755849134.git.ojaswin@linux.ibm.com>
+ <955d47b2534d9236adbd2bbd13598bbd1da8fc04.1755849134.git.ojaswin@linux.ibm.com>
+ <20250825160801.ffktqauw2o6l5ql3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <aK8hUqdee-JFcFHn@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <20250828150905.GB8092@frogsfrogsfrogs>
+ <aLHcgyWtwqMTX-Mz@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <20250830170907.htlqcmafntjwkjf4@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	kAs/T0si67ee5ARCy0dQpLXaKDbSK3A/l4EpyIA6sDd/6HtfVoVrU0TCRbRN8IEjWK8/ZKuC+i1FhQ6YsyqicUcyIPYPOWnxpZslnRY7MnOpe8tOkQLAyNWw9sOpXXiPyxTfMNDvlEXf5ahx0gTPfFek4bTE4DhYNjZZy3BCQ8D2AEvO+vnNvQ9ZM/Os32zv1Hog9A02n5qSHvO2r4MYNoWSF/iaYjKXp75Q+eNjbecczIhnVs11hKowvtp4r7Vtdn3fOHroL72BLXr3DTIN5NQ09dLfkfPvf3oNwqcdfzQapER5KofE3ngvpaIJm3cUzzEa3oYe0IdKCryNKYXwQYNmbZ9GYAIwwsFAVvop6KM4BWQtKbtCdFB98UaisKiAHXgtplbN3cQVL/tn0bVPtobUZ4/QwPiHY1/KFAiLx5ruiygg0sDi7jWZpWve4XacoYCoBsmwNPTxOzLCyjhpKOf23rZcEOAICuPZIND4mzml6T3kyR08axS6dy9jzCmC8vrImeNhZznQiHDcOULX8lfM9ToSHxF9h6GSeNAK4FuGs3dL1C1pYpJOhbirYjgDI54gzU6CshPSROW7waufnl0bNcOpjQaPx/OjzjZB0WoPa1qiXTrjCIeyi5U5QVmw
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH7PR04MB8755.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8ed8dff7-2749-47d7-c6b9-08dde9459775
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Sep 2025 10:52:05.9210
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: XP76wQcQIA1C2ajvxsX8/SpLE9cl0iXvx+o2UQDHRAsol8dFtDJ3WORLb8ZCcyX2FD/IM43gVLMdbWX/Qj451A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS1PR04MB9234
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250830170907.htlqcmafntjwkjf4@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODMwMDAzMCBTYWx0ZWRfXxvgDPjUE8X2p
+ P30MSbKl1tMyVaZXJlhdDmLClGV46dxLPPaMrmy5INEkBCqnC07K5B1ep1/5wRDv6xZCnIFPEEt
+ urBpclxZevLxMFYH+QtGA3C1p7XE2ki6FtSvjA+TWZ6eu1x6SaTK5Ap/7UAi/h7pbahoSGv79DF
+ zH4N2nzGy85uDFooUF6ZtCiY3fBrLwhdhzu1gmPdq9xgbDo+jxgpD+2twEP9oumPKSqAt6Yx9t9
+ YGbZZHX6eVwRrUXSSRWijHICWaEtgnwv6fvPBkKIT2170EY1reYP/YXFpZ1nllLxx57fW1gwxd5
+ GLPU6mSy/JdwRIBI+PKbFYI11XKuL9q3Mo8wpb5JtoPM2TT+qICQXVBerKEqW9QNG9clieAsaES
+ UdroYlh+
+X-Proofpoint-GUID: qHVhoSIPHlXlYHtqrZI_nWEOO7SLmxPW
+X-Proofpoint-ORIG-GUID: MZR2MfkCTcQgrh9298faLRzAZgtkiwt4
+X-Authority-Analysis: v=2.4 cv=Ao/u3P9P c=1 sm=1 tr=0 ts=68b58619 cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=kj9zAlcOel0A:10 a=yJojWOMRYYMA:10 a=IA3YRga8fJDV80yC77oA:9
+ a=CjuIK1q_8ugA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-01_05,2025-08-28_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 phishscore=0 impostorscore=0 priorityscore=1501 spamscore=0
+ suspectscore=0 bulkscore=0 adultscore=0 malwarescore=0 classifier=typeunknown
+ authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2507300000 definitions=main-2508300030
 
-As we really can't make any general assumptions about files that don't
-have any life time hint set or are set to "NONE", adjust the allocation
-policy to avoid co-locating data from those files with files with a set
-life time.
+On Sun, Aug 31, 2025 at 01:09:07AM +0800, Zorro Lang wrote:
+> On Fri, Aug 29, 2025 at 10:29:47PM +0530, Ojaswin Mujoo wrote:
+> > On Thu, Aug 28, 2025 at 08:09:05AM -0700, Darrick J. Wong wrote:
+> > > On Wed, Aug 27, 2025 at 08:46:34PM +0530, Ojaswin Mujoo wrote:
+> > > > On Tue, Aug 26, 2025 at 12:08:01AM +0800, Zorro Lang wrote:
+> > > > > On Fri, Aug 22, 2025 at 01:32:01PM +0530, Ojaswin Mujoo wrote:
+> > > > > > The main motivation of adding this function on top of _require_fio is
+> > > > > > that there has been a case in fio where atomic= option was added but
+> > > > > > later it was changed to noop since kernel didn't yet have support for
+> > > > > > atomic writes. It was then again utilized to do atomic writes in a later
+> > > > > > version, once kernel got the support. Due to this there is a point in
+> > > > > > fio where _require_fio w/ atomic=1 will succeed even though it would
+> > > > > > not be doing atomic writes.
+> > > > > > 
+> > > > > > Hence, add an explicit helper to ensure tests to require specific
+> > > > > > versions of fio to work past such issues.
+> > > > > 
+> > > > > Actually I'm wondering if fstests really needs to care about this. This's
+> > > > > just a temporary issue of fio, not kernel or any fs usespace program. Do
+> > > > > we need to add a seperated helper only for a temporary fio issue? If fio
+> > > > > doesn't break fstests running, let it run. Just the testers install proper
+> > > > > fio (maybe latest) they need. What do you and others think?
+> > > 
+> > > Are there obvious failures if you try to run these new atomic write
+> > > tests on a system with the weird versions of fio that have the no-op
+> > > atomic= functionality?  I'm concerned that some QA person is going to do
+> > > that unwittingly and report that everything is ok when in reality they
+> > > didn't actually test anything.
+> > 
+> > I think John has a bit more background but afaict, RWF_ATOMIC support
+> > was added (fio commit: d01612f3ae25) but then removed (commit:
+> > a25ba6c64fe1) since the feature didn't make it to kernel in time.
+> > However the option seemed to be kept in place. Later, commit 40f1fc11d
+> > added the support back in a later version of fio. 
+> > 
+> > So yes, I think there are some version where fio will accept atomic=1
+> > but not act upon it and the tests may start failing with no apparent
+> > reason.
+> 
+> The concern from Darrick might be a problem. May I ask which fio commit
+> brought in this issue, and which fio commit fixed it? If this issue be
+> brought in and fixed within a fio release, it might be better. But if it
+> crosses fio release, that might be bad, then we might be better to have
+> this helper.
 
-Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
----
- fs/xfs/xfs_zone_alloc.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+Hi Zorro, yes it does seem to cross version boundaries. The
+functionality was removed in fio v3.33 and added back in v3.38.  I
+confirmed this by running generic/1226 with both (for v3.33 run i
+commented out a few fio options that were added later but kept
+atomic=1):
 
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index ff24769b8870..23a027387933 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -512,17 +512,11 @@ static const unsigned int
- xfs_zoned_hint_score[WRITE_LIFE_HINT_NR][WRITE_LIFE_HINT_NR] =3D {
- 	[WRITE_LIFE_NOT_SET]	=3D {
- 		[WRITE_LIFE_NOT_SET]	=3D XFS_ZONE_ALLOC_OK,
--		[WRITE_LIFE_NONE]	=3D XFS_ZONE_ALLOC_OK,
--		[WRITE_LIFE_SHORT]	=3D XFS_ZONE_ALLOC_OK,
- 	},
- 	[WRITE_LIFE_NONE]	=3D {
--		[WRITE_LIFE_NOT_SET]	=3D XFS_ZONE_ALLOC_OK,
--		[WRITE_LIFE_NONE]	=3D XFS_ZONE_ALLOC_GOOD,
--		[WRITE_LIFE_SHORT]	=3D XFS_ZONE_ALLOC_GOOD,
-+		[WRITE_LIFE_NONE]	=3D XFS_ZONE_ALLOC_OK,
- 	},
- 	[WRITE_LIFE_SHORT]	=3D {
--		[WRITE_LIFE_NOT_SET]	=3D XFS_ZONE_ALLOC_GOOD,
--		[WRITE_LIFE_NONE]	=3D XFS_ZONE_ALLOC_GOOD,
- 		[WRITE_LIFE_SHORT]	=3D XFS_ZONE_ALLOC_GOOD,
- 	},
- 	[WRITE_LIFE_MEDIUM]	=3D {
---=20
-2.34.1
+Command: sudo perf record -e iomap:iomap_dio_rw_begin ./check generic/1226
+
+perf script sample with fio v3.33:
+
+fio    6626 [000]   777.668017: iomap:iomap_dio_rw_begin: <.sniip.> flags DIRECT|WRITE|AIO_RW dio_flags  aio 1
+
+perf script sample with fio v3.39:
+
+fio    9830 [000]   895.042747: iomap:iomap_dio_rw_begin: <.snip> flags ATOMIC|DIRECT|WRITE|AIO_RW dio_flags  aio 1
+
+So as we can see, even though the test passes with atomic=1, fio is not
+sending the RWF_ATOMIC flag in the older version.
+
+In which case I believe it should be okay to keep the helper, right?
+
+Thanks,
+Ojaswin
+
+> 
+> Thanks,
+> Zorro
+> 
+> > 
+> > Regards,
+> > ojaswin
+> > > 
+> > > --D
+> > > 
+> > > > > Thanks,
+> > > > > Zorro
