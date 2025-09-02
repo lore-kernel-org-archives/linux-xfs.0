@@ -1,173 +1,174 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1936984039
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Sep 2025 02:14:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8D3921C17D
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Sep 2025 04:08:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756779286; cv=none; b=U3U9/nRX3JZddgglaChp65Mx2exXxz9IJugcxbuVOmIQZQPxeys0k54s1HGZG2OTv4P7or12EsMTfqyaII5pbJYko8HX6SSUhapIiBZAuYN5aHYTi5gldEhohIYvPZZH+P85WJOlnE5pGzcmn47SkBqbaBcrvLe3yqKUnVDk+YI=
+	t=1756786084; cv=none; b=fetc8OxoYD/pk7Ijl0dElZ9LJtKQ5jAWHKEWHyDR9inwNe2rpVcr0vWY/lZ52IZOm0ydkEa4oH5ujIQIScSaTAbXGlz9xRhK+seobo3pp0ZMd7goerCt/qTeYkA9/62AgoKW1ePVB5MEc4zGRLSmfl4hIQa09ycD1EbU0BXLs6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756779286; c=relaxed/simple;
-	bh=DNOwVSe4Kd0cbn/yf07PqXd6IvWQVI3DgAcaVtOkrR8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=YqNYlU24e7PB2Jw/ans6m5LnQFpkWNQJbpK0MKeBkxRn7pFCmRTqTZyuFiak/t87L7qHQFLr5IZ/3jQ12pOhaEenQTNgQVJhUMuUsEP2D0W4+u4WCNKJk61qWJqUPMzLqkQuvQaS4WM0aeEvLx3dxcw/LFVBHaK41G6a8h76ARU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AX10Ivg9; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1756786084; c=relaxed/simple;
+	bh=PWNB5atbUEOuqCWpXCHiRuAa8huc06HyOsum8ht+p4k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pHhAWS72DdCjfI4YQ5VkgcRt6XhCm3wQWHTF2/eoBg9a+TP8o9+JuytsAePuyBQ4Y9dA1iNv55c/l6RQFjkH1Y9fzL/76RSGvpyl5INqFSzM7vujzsTMSHBqrqf33CReskOrtZSaOV2AqAhNXfBA+O6SVwe/l66euXi30OHss20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=QBRAITGE; arc=none smtp.client-ip=209.85.216.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AX10Ivg9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756779284;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7k4llIX95IzyN3/ZS1And/av2kS6p21Fv0gumj0Ycvk=;
-	b=AX10Ivg9j7J8hGbLnxaA99+bEW8sqgJ6zdK9xe/NkFgBlK54YDzrJnpYb9X7A02Bj7hXY4
-	exbOTVmEdaH+Qs9MuK7Sau8qgrQgES63M5u/u6w8Gnnf5ApKOqb9GhBm0alzcm6oelbhMQ
-	05jfFyKYPjnMiZyxoKGUQzH/YD727oc=
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
- [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-645-iuaKGCvqN-6FReZveplXkg-1; Mon, 01 Sep 2025 22:14:40 -0400
-X-MC-Unique: iuaKGCvqN-6FReZveplXkg-1
-X-Mimecast-MFC-AGG-ID: iuaKGCvqN-6FReZveplXkg_1756779279
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-24458345f5dso54705435ad.3
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Sep 2025 19:14:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="QBRAITGE"
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-327d47a0e3eso3314288a91.3
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Sep 2025 21:08:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1756786082; x=1757390882; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=2koyHV7vuEyseT1MwkXtGDYmtqrlLkXDUc1MXluszg0=;
+        b=QBRAITGEOjhMRkhNX3qiac+tZhAw8ZcB77z31AC1HEdaVzyA65kIAUeF0DmAm8Igyt
+         wDuUybjJj0CoMtmoNr1sgtOt63zbJeVppZzkEwOtPfJeOaICF6Q2CgaaC1fG+T5R3jPD
+         VX5t4asCNrI0TTpvUIb1hUHp2gaBSeXykNA7UwqU59Fdq5/K1Qq2rZDMDxj+C+cDHsk9
+         ZmFRtZfgkk0LOYDQdIoi3xv9HA4sXQINfvHBHXxC8pJRS5BVhU0g9L5GyGYg6rC/DjAD
+         3p6aeyE3qe2psLLq9JEn1E61sOr+A3QlE87N1iPa506ImNCeOyu57Un3jYaLbqKG3rfO
+         cmFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756779279; x=1757384079;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=7k4llIX95IzyN3/ZS1And/av2kS6p21Fv0gumj0Ycvk=;
-        b=qAU/G1wi/ZWnPC9MWVZWKgf638GLkj2FwTBV41Zhz0tdqrUoHUTSt7ouIHurvIV6zE
-         m1E3382zgTDCiQsh4GQmKff8dSPWjm5JHiaRf7vqx9QjZnCu0S85RrWBoU0QPwXvNiC/
-         xXji3z+xGOxqcZm69rvijCviBHjE+ZgBKkGhaEdSDmKtSYzAooIwRloISD7udQdI9yts
-         gPJKPeEiQMEQdDhcROpPyX3Olf4AeX1K+LMwb3BLwcqn/z67YYmED7rENPq83hGTSvnE
-         50VwtNzouozm8yQ7Ye94s7ZvJQresBzQXluz/CTncZZiqn/2bM9J/sHk8ThZwq6XVY85
-         b4rw==
-X-Forwarded-Encrypted: i=1; AJvYcCX/unUvR0SzamaYdpiS22v95N/RCAj6LA3w5dAQSXiR1S1yQCh+bKnWwaWUvRdCiaynsDtSwlW9GBg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxUWJ76E5gqdFYa2uoPoo62DCFLPaDYn4zx1sUAZNgnEUI3Cfj4
-	xkGxm9ZF1P6mJ/xF43mHd0MdsI95+GBvu/nUQtt1A/Y6RWJ8ZCrspyWYC08a7Jm3CUZCAOnO0IB
-	GBmjTvP7nZX9GkA4o9Mjh2hFTbLRk1dQ4XI+zIvEyLxm3m1kPyHOW2ZAan8uFag==
-X-Gm-Gg: ASbGncsstDkf/E1nqN51Qy8D7r1wuD+5nqXmnoHPQKHFdQpnlAf2pBOF05VIcenegS/
-	3B2yV9d8Ak5ZfAGaHYLKJXwZSsGNR8mpVBNeCad2X2fifxOOjWWF3hsfhnsKUd3utssu9A7iMJz
-	MCctIj1r9/mtSmKPAt0mhypyscGB+AoENPxs/8WGWHshARh+8v6wHc1J4hDKV3B6MGgzfpcpduJ
-	/iPYjCrwc6AdBe/oKdtJ0v3RBR+DE3XV1VQFV9VgfRXpHJ3V240cH5LZkls3aLlWQ5xiItMdRtd
-	VIx+n9GPrRoBcxOMhNhOnW+gPljGVSt/ADz++sHoGZJz27mzEBreS0cZy7tfTFgWZpaRw4XTj2u
-	kRXUeA1Bqc5g=
-X-Received: by 2002:a17:903:32d2:b0:242:a1ee:6c3f with SMTP id d9443c01a7336-24944871fa4mr104762165ad.4.1756779279493;
-        Mon, 01 Sep 2025 19:14:39 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFAYKDy8eMO1EwsQRF8xxBKIeEdp2zzol6O8UKNKKXragwjc0dT5Wee+K5iWDBv1V74HPjl2g==
-X-Received: by 2002:a17:903:32d2:b0:242:a1ee:6c3f with SMTP id d9443c01a7336-24944871fa4mr104762075ad.4.1756779279079;
-        Mon, 01 Sep 2025 19:14:39 -0700 (PDT)
-Received: from ?IPV6:2001:8003:4a36:e700:8cd:5151:364a:2095? ([2001:8003:4a36:e700:8cd:5151:364a:2095])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-24b1589e4b7sm3408495ad.43.2025.09.01.19.14.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 01 Sep 2025 19:14:38 -0700 (PDT)
-Message-ID: <081af947-f8d1-4eaa-a8b4-6db43f3cf4cc@redhat.com>
-Date: Tue, 2 Sep 2025 12:14:35 +1000
+        d=1e100.net; s=20230601; t=1756786082; x=1757390882;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2koyHV7vuEyseT1MwkXtGDYmtqrlLkXDUc1MXluszg0=;
+        b=s2Tez5cJ4K0VGZ1yJacBl1gFozd4hKqG1Bs8DCIu0mcgCtXM7fOh2i28xJbMy/Co8z
+         LqP27uqYkfK60zwBUiFqAgwIHGQ9QqcLeKKdWNnzI2MB8k5x52oCYRSpKOF0y968Yuf2
+         g7E13a869sHEcYUBPZSFhXR+WUAueuBfW7Ph9/ggcficNJTSJ/KpXxVAP4bWDoH8CfxY
+         J1zo2RpWwTsBq7RZENrZosdDxCvbmiB6d2Hw3Pp6mDeIdzC9vNbHmwk/Ud+XlNrLfLB2
+         9sD4u9s3CQPTxFYgbsuUAelOl3qD1pv6ADAk7csWsjctG/jNptxAff4t+UgT9N6oq9nZ
+         5txg==
+X-Forwarded-Encrypted: i=1; AJvYcCXjzgtJcCPg2Us90/b0dxmnIIhgAQz3j0QRuxu4APv9UlE0lGFvzcPzsXiJYtAsk6isdrLwK3g8nXg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzDgV0JDiQFkFl8j3pxN/98vrP/21bry88YyJ1+Dnk2EjoFradp
+	U4zBmCXXPBk+bdyh9ygiC8KAqsZjAO/9aiJw6wtoqKOZ89M/uC/X8sK/IjT46i1Sp64=
+X-Gm-Gg: ASbGncumn4eTie1fSzjk8wbN7AkdwoBHiEJHxEzyInqVjhWudNy7eyRUR9twsYZp43q
+	kA9S+eB6U8L8lOBkY2w3vzAM++SeBaEiiGT07vVzey7Ke2mYICI0mp1/wSBjPwIwOvhWLZJZCTB
+	XIAsjIrRGth8+TsSHSeHJK/ywe+rpyHIQQ+LGfqjDR3VIxmFrhthYG4LbsPJPWD7Z3UxpB5mfg7
+	bQFs3JQh1QOVoKxxjdmVyzophb05B25uHcZD5zAsIq2eIdtaYxlRJD4UF9qNZVRWrZkTCqClgvV
+	Pct3F+udbhVOq09B7dmeGOUkwel9nBDp6sLvb4NN+tX+IzxSEw/8FS5hOwETGfkdxcHuxN/JaQS
+	dN74vPhQzNwBfGb4P4Q93mkl6JuNcRvte21+Uv6scY0BaHanm1RbsxwYiBVhjocKsHHk7CL94F6
+	zVFHugajH4
+X-Google-Smtp-Source: AGHT+IH3u+Jo/a1rSnMJ8O+xKMx2AU7d0v7dIKdjvmcmWczT9CnuxrOhb6LnW4yHVz2TGH9EN1CbSA==
+X-Received: by 2002:a17:90b:1d03:b0:328:a89:71b8 with SMTP id 98e67ed59e1d1-328156e1238mr13146811a91.30.1756786081968;
+        Mon, 01 Sep 2025 21:08:01 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b4cd006c340sm10931232a12.1.2025.09.01.21.08.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 01 Sep 2025 21:08:01 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1utIJK-0000000E9YF-1kgq;
+	Tue, 02 Sep 2025 14:07:58 +1000
+Date: Tue, 2 Sep 2025 14:07:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	kernel-team@fb.com, linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org, brauner@kernel.org,
+	viro@zeniv.linux.org.uk, amir73il@gmail.com
+Subject: Re: [PATCH v2 16/54] fs: delete the inode from the LRU list on lookup
+Message-ID: <aLZtnqTXEpEBpb7z@dread.disaster.area>
+References: <cover.1756222464.git.josef@toxicpanda.com>
+ <646d132baae6e5633064645e677dada101681850.1756222465.git.josef@toxicpanda.com>
+ <aK980KTSlSViOWXW@dread.disaster.area>
+ <20250828114225.GA2848932@perftesting>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: xfsdump musl patch questions
-To: =?UTF-8?Q?Holger_Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>,
- Adam Thiede <me@adamthiede.com>, linux-xfs@vger.kernel.org
-References: <ba4261b0-d2a2-4688-933f-359a8cc6b75e@adamthiede.com>
- <81fc13da-9db8-3cf2-2a17-30961e0543d5@applied-asynchrony.com>
- <1ad4a974-b18f-4bca-99df-5e7b93e5d852@adamthiede.com>
- <222e77f3-7e15-cda3-3818-d5125c41a77b@applied-asynchrony.com>
-Content-Language: en-US
-From: Donald Douwsma <ddouwsma@redhat.com>
-In-Reply-To: <222e77f3-7e15-cda3-3818-d5125c41a77b@applied-asynchrony.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250828114225.GA2848932@perftesting>
 
-
-
-On 31/8/25 04:39, Holger Hoffstätte wrote:
-> On 2025-08-30 20:10, Adam Thiede wrote:
+On Thu, Aug 28, 2025 at 07:42:25AM -0400, Josef Bacik wrote:
+> On Thu, Aug 28, 2025 at 07:46:56AM +1000, Dave Chinner wrote:
+> > On Tue, Aug 26, 2025 at 11:39:16AM -0400, Josef Bacik wrote:
+> > > When we move to holding a full reference on the inode when it is on an
+> > > LRU list we need to have a mechanism to re-run the LRU add logic. The
+> > > use case for this is btrfs's snapshot delete, we will lookup all the
+> > > inodes and try to drop them, but if they're on the LRU we will not call
+> > > ->drop_inode() because their refcount will be elevated, so we won't know
+> > > that we need to drop the inode.
+> > > 
+> > > Fix this by simply removing the inode from it's respective LRU list when
+> > > we grab a reference to it in a way that we have active users.  This will
+> > > ensure that the logic to add the inode to the LRU or drop the inode will
+> > > be run on the final iput from the user.
+> > > 
+> > > Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+> > 
+> > Have you benchmarked this for scalability?
+> > 
+> > The whole point of lazy LRU removal was to remove LRU lock
+> > contention from the hot lookup path. I suspect that putting the LRU
+> > locks back inside the lookup path is going to cause performance
+> > regressions...
+> > 
+> > FWIW, why do we even need the inode LRU anymore?
+> > 
+> > We certainly don't need it anymore to keep the working set in memory
+> > because that's what the dentry cache LRU does (i.e. by pinning a
+> > reference to the inode whilst the dentry is active).
+> > 
+> > And with the introduction of the cached inode list, we don't need
+> > the inode LRU to track  unreferenced dirty inodes around whilst
+> > they hang out on writeback lists. The inodes on the writeback lists
+> > are now referenced and tracked on the cached inode list, so they
+> > don't need special hooks in the mm/ code to handle the special
+> > transition from "unreferenced writeback" to "unreferenced LRU"
+> > anymore, they can just be dropped from the cached inode list....
+> > 
+> > So rather than jumping through hoops to maintain an LRU we likely
+> > don't actually need and is likely to re-introduce old scalability
+> > issues, why not remove it completely?
 > 
->> Thanks - using -D_LARGEFILE64_SOURCE also fixes the issue without the 
->> enormous patch. However the following small patch is necessary since 
->> alpine builds with -Wimplicit-function-declaration
->>
->> diff --git a/invutil/invidx.c b/invutil/invidx.c
->> index 5874e8d..9506172 100644
->> --- a/invutil/invidx.c
->> +++ b/invutil/invidx.c
->> @@ -28,6 +28,7 @@
->>   #include <sys/stat.h>
->>   #include <string.h>
->>   #include <uuid/uuid.h>
->> +#include <libgen.h>
->>
->>   #include "types.h"
->>   #include "mlog.h"
->> diff --git a/common/main.c b/common/main.c
->> index 6141ffb..f5e959f 100644
->> --- a/common/main.c
->> +++ b/common/main.c
->> @@ -38,6 +38,7 @@
->>   #include <string.h>
->>   #include <uuid/uuid.h>
->>   #include <locale.h>
->> +#include <libgen.h>
->>
->>   #include "config.h"
+> That's next on the list, but we're already at 54 patches.  This won't be a hot
+> path, we're not going to consistently find inodes on the LRU to remove.
+
+IME, there are some workloads that hit the inode cache hard
+(typically anything that has a large set of working inodes and
+memory pressure is causing reclaim to run all the time).  In these
+cases, we are finding inodes on the inode cache it's because we've
+missed the dentry cache (due to reclaim) and so the inode we hit is
+unreferenced and on the LRU. i.e. if we don't have lazy LRU removal,
+when we hit the inode cache we'll also typically hit the LRU....
+
+> My rough plans are
 > 
-> aargh..basename again!
-> 
-> We fix it like this:
-> https://gitweb.gentoo.org/repo/gentoo.git/tree/sys-fs/xfsdump/files/xfsdump-3.1.12-mimic-basename-for-nonglibc.patch
-> 
-> It's trickier than it looks since you need to actually audit the
-> call sites, else you might get crashes at runtime.
+> 1. Get this series merged.
+> 2. Let it bake and see if any issues arise.
+> 3. Remove the inode LRU completely.
+> 4. Remove the i_hash and use an xarray for inode lookups.
+>
+> The inode LRU removal is going to be a big change,
 
-My initial feeling is to just include libgen.h in include/config.h.in as
+When I last looked at it, it wasn't a particularly big code change
+at all. It was just that mm/ depended on the LRU existing that
+prevented it from being easily removable. You've addressed that
+dependency by adding the cached inode list for inodes with populated
+address spaces....
 
-#if !defined(__GLIBC__)
-#include <libgen.h>
-#endif
+> and I want it to be separate
+> from this work from the LRU work in case we find that we do really need the LRU.
+> If that turns out to be the case then we can revisit if this is a scalability
+> issue.  Thanks,
 
-Its less targeted than your patch which only touches files using
-basename, but xfsprogs resolved this by including libgen.h in
-platform_defs.in unconditionally somewhere after string.h
+Understood, but I would prefer to do that the other way around.
 
->> I think this one would be good to include at the very least.
-> 
-> The thing is that your longer patch is conceptually the better way
-> forward, just a bit incomplete as it is. We just discussed this on
-> IRC and I can quote what our resident toolchain guru Sam had to say,
-> which provides some background as well:
-> 
-> [19:52:50] <sam_> the patch is wrong as it is, at least without some 
-> rationale & checking that AC_SYS_LARGEFILE is used (to guarantee off_t 
-> is 64-bit on 32-bit glibc systems)
-> [19:53:05] <sam_> in general, the stat64, off64_t, etc types should go 
-> away (they're transitional)
-> [19:53:12] <sam_> the issue is when getting rid of them, people often 
-> get it wrong
-> [19:53:25] <sam_> the types were added into glibc to allow people to 
-> have dual ABIs in their headers
-> [19:53:26] <sam_> it never took off
-> [19:53:45] <sam_> you can look at the thread where I ported xfsprogs itself
-> 
-> The thread he's referring to starts here:
-> https://lore.kernel.org/linux-xfs/20240205232343.2162947-1-sam@gentoo.org/
+i.e. rather than add complexity and potential scalability issues to
+the LRU management on the way to removing the LRU at a later date,
+we remove the LRU at the earliest possible opportunity.
 
-Thanks for the context, I noticed the comment about _LARGEFILE64_SOURCE
-in the release notes you mentioned earlier
-https://musl.libc.org/releases.html
+If we have any sort of perf regression caused by the LRU removal, we
+can address those cases via temporary residence on the new cached
+inode list...
 
-In general xfsdump should follow how xfsprogs builds.
-
-Ill also look over the other changes made to the xfsprogs build and
-see if there's anything else that's been missed.
-
-Don
-
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
