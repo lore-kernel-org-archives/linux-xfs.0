@@ -1,96 +1,454 @@
-Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
+Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E81432E06ED
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Sep 2025 09:22:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71C921A288;
+	Tue,  2 Sep 2025 10:06:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756804925; cv=none; b=Akio6byfrsM5buaLNry5Ig6LDVpkgeL6WTCQgPuk8o6JIITYcbpdOyV5hh6INr6FIJgui00pKtGxlunXWNojFUiiPr1Np1ZVzKiBY0xLjWzZT+pGml2ssJY+L2ezly8wEcwQARjrCiFkEmZlf9Dt41MDQMm11PJjjNrbL6RDGZA=
+	t=1756807573; cv=none; b=PhEX1WXAUHX/vJwgI9AZbXwaOL1tYCYbU7ztUhkEy5eebLlB9hF+6uSj8pYVJLy3J9+UPTJPnFbBDHPoqGNOdh0VzkcQIForGVf0Jc76U54SF3WFZH0NUfj+X1r7JedUSVoR2gFKPH3EX5FRYC30L0FZTqtNcIn/dAjkiflZX18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756804925; c=relaxed/simple;
-	bh=oZ/oMsImSwXy0iurVEV8OYWOj1EK5Ol1S2elCURr6o8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=UEh2/nZt3L5EgXUrqJAswZ86MkHYRoZS8fHhHX2VfVRXxjaM1AZUPt6SqxQ/+ulalzkoNRSCrF6IlgrB1YKWJy99WcgJd25VQ7g1V55TAibhCZ/SpoPHPycFMUGVMdxDbY0x9gDo6gc03FD5B8wjc7K60f12A4iuhRcAUHsrUR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=pPMk8ro8; arc=none smtp.client-ip=209.85.160.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=szeredi.hu
+	s=arc-20240116; t=1756807573; c=relaxed/simple;
+	bh=4ZwCZcB3H9/EAZcwOnyyLm/22kWdpyCID4brz3yCwt0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=P/yQR1aBSxHBrBdvO9ROM1bBrkfTDgOXyxizfXzh0DwqTASlDK/iHUh15IcIn9Jf9s0y18e5tThum8SKmlQAg/poXVqGpRBl8h/8Y8ceEawtvCdmoqZI459sCLScHYda6XGy2BCqbDeYYijzFDhRJlYakvetcPIyjUpDSP4aIHo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RoqOgy7W; arc=none smtp.client-ip=209.85.208.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="pPMk8ro8"
-Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-4b32c1fdcb4so25302811cf.1
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Sep 2025 02:22:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RoqOgy7W"
+Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-61cbfa1d820so10166326a12.3;
+        Tue, 02 Sep 2025 03:06:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google; t=1756804922; x=1757409722; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=KlEqu4WxUDiABf2a30g8zFkM2TpzDalMOcCpeUi3kyM=;
-        b=pPMk8ro8+Yj2e5GcMg+nnrdCbWMa8u1B2AHCvpmpG4WYnwkCAtHfQf/mPrDcLvVJzI
-         vfoKD8hrHyXIyTaeXOhT1Iyo2KSngHpPf6d+8aO/AmL8zWLxIItynXCxDE9ZcClhxjmK
-         LGk4n+XYjMdT7QESQ4oENa+2wZK2c6zlQnh8w=
+        d=gmail.com; s=20230601; t=1756807570; x=1757412370; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=siTzYjW4j7rDBL9TbnkWzSVGKCRwUvO+dr86GAkHj8w=;
+        b=RoqOgy7WUiV9qh4NIMi84GiJahtquvYalK2jzeIKUAQWapU2CW3lrrjnovPOzpGIhV
+         kmBoYZ9UgxLi1MXfviMvP99rWYaqpTq75rypRha8j1qQOjh6QNzbjvgRzp1uu+rjPHcF
+         mfrKiHXK00QO9iBbwYjQby+nPdHKaOyfndKTRat1R5OCaVnak8XjadE+8uNtwzBqQivJ
+         /Yco8cdjSVk8AMLGBfwp76qPbh5NhQwWM+UuiwTsPxymWNQBH76+Zata/cPeVztoGcXR
+         M+EBFn3dFIYZg70q9F6K5lBsDLXtKH1gudhflwrVAs/emYRjQBUPQHFf6/9qphulUaZo
+         jRPw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756804922; x=1757409722;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=KlEqu4WxUDiABf2a30g8zFkM2TpzDalMOcCpeUi3kyM=;
-        b=gVNmz0hnwBRMgP4z8NBg31lAUtDRc017SnqMyvQBJvMfhwtitHF/Td2jPPX93aSx7W
-         vB7fiw81dersUmmHGk4ZOJMZqimJXqUUv1YVk0RmapWNDes6ctP0A0FN5iLk3c8wpMb2
-         090V/h7peYUoCFWytFwSit6f6SNLznsGaht9CQ4a7AarE4MAMmVdgJuQOiLiUtgOeqqU
-         rtMsiVM3CfZmFay6VE7wHDFrniI59mLEo1EfXh2QwS33Am5CJlv9f6j+SRa3/lamhHMC
-         cgeL6YMug4gC37cNNWS1SnDuZfTqBw69Y9A7B0S1DXjjiLPwhIjWS/HWcLPR+ar+oy1t
-         gI+A==
-X-Forwarded-Encrypted: i=1; AJvYcCUTLcfOWqClA7LI8ozsht2uiXEZyoeccDo5YvLAhS2KQTzW8DS5OvLVkBt7E/HEQ5xQxV1UgFc0JMc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwhsvzFKTzEGdim6lnjg4A6zFP96xrCcHIzWuB42jB9tjQ9Sdrk
-	96Pir2kkCCZSR1rq4UKmPSFq1sBO/iCG63Kn+G2bgifgp4D1ha5veZsArL+1Sw6wSr1Z4ySJxSO
-	Z6O/EAVYfHsR9JYZ0WE9zjjcxKaMF64aL+FLzAEdLNQ==
-X-Gm-Gg: ASbGncs6MtfHaaBeVICNklYZnDbG+aZwojI73MBh//rGcLofSvyqNcSl3A+7Bf496h0
-	5n295S1sQaqf1/x8PW8IlQP+uFDc82/CNDs3Xhl0sBTNV20ugBsM/lm4oosVPr66pc4lQzFsy4W
-	UojOVJDaCnolF8Sp0oCUbwJFo25NAKAwoMft46PyHfCon1Y5RFjExp545yfSxqemA9uvTrlakXu
-	BDCXpHUjQ==
-X-Google-Smtp-Source: AGHT+IHGEIqkQ7T/iYNa57/nLq67pz6kDXn62sDrEEuPOwlRvgJBGGtL0MCc4sflnVaHrwo9btUA3j959kBW+PZAoRU=
-X-Received: by 2002:a05:622a:1448:b0:4b1:103b:b67a with SMTP id
- d75a77b69052e-4b31b9c3777mr140959691cf.32.1756804921620; Tue, 02 Sep 2025
- 02:22:01 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1756807570; x=1757412370;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=siTzYjW4j7rDBL9TbnkWzSVGKCRwUvO+dr86GAkHj8w=;
+        b=Z7iTYTbkxeY2cujzqHx5geErkqwcx6cCBxWStBDK0hOtat0mjs3cXM5GjAxGjHTZ7u
+         YApcX5YqnBSInBqiP1IXGEPL70Lsq/X4DdGma73NySFXo3/yIht7DBa2WQd1xvvWs0kh
+         xJKCh2jU3yugYhGi9S5lb4EOpP3+z8MV7GkerZCejPLGBAZp1y0FY/qiQ9TzAjaotUhk
+         3m+sXMB3ZuTZxPV75GoSzizDzgNo5as06hEZcQScaDtYZoTlsjVeOUn1geVlwDjJI9FF
+         JFWoUKwgE5ixSMG8Th9QSGkTO1pXPH2Dd495hmVwLTQS3Jhn7t6kbA1HNAX3wyl1Adl4
+         GK6g==
+X-Forwarded-Encrypted: i=1; AJvYcCUM8+uRqQlHTF1EN/4VTAwe2FCSBYn7o78+Z1Xk8J6DhlKfMCll8Y/g+RgRZdVue5kJ2D7dDxZ7ApYocg==@vger.kernel.org, AJvYcCV0hv81BF5OfWnaG9fmJf5R0sOduz5w72ueAOi6BfHnOxv1ly//Xh5Pj6TeLkSQQkkpLCBjlhWK5GSrAQ==@vger.kernel.org, AJvYcCX3TTPvuKHkIylweam7rnBQls3TWj37v17XCmIxTkYW/iN3XYxEtl2fI6Yx3rbvQdPsQ0/Uo7apeJrE@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywbn0rIcE2DtB1YL6yMXBNadhPKu6JXvwuMPxhE5VOZSmcKaE6p
+	+w1WSc3SDMsw/jXYKbbZeYl/f2zMaKhkeosdVW8LK38cXUZdQpZp+2BP
+X-Gm-Gg: ASbGncsbfIAEaRmLROZ+0mgTq+XT/c7T9MC2fpVLLpNkLwZkoqShNAPbJyJws9195uJ
+	uQCgFx5j0BWL9R97wN56sU6p5c0n7LSTjuT3eYwZlhlb++zCd6AY+QRHuXUY6fEu8Ixy9ZZGWgo
+	lNS7xpBGzNz5J5bWr1og2IpfuCOMegJ9H/smkNZitiQRbPsG30YlegyscsKbarSLW4Mm6mVsEOF
+	3IwnMZJ5kMGtuoVtkzSsYR8J3/zUrdyI3bqjzqc3XNumcCtydPxFVJ9KfXYtMbwy3KdabeEjiV2
+	hrjU/lt9S/5Ohbp1PPU3HRwAHpZWrjAz2rlhSGxR9f0zQU7uEF4NtR9q1ZzrbfkTy5nSf4KPMUx
+	wy73BqUrIkSsqwxMnXCRXPWkrGK9o2sBGRHGqkhAQ8/FI37WZV8tIQNCI1zo=
+X-Google-Smtp-Source: AGHT+IGezeXZx3evPrLjRfX+DQoebh2dWuvFnYc9mwbK1QVxUJUG9GD/c/jOhKnh4pduYekrENLU3Q==
+X-Received: by 2002:a05:6402:5108:b0:61c:fb8e:ab61 with SMTP id 4fb4d7f45d1cf-61d26eb420emr10228646a12.28.1756807569185;
+        Tue, 02 Sep 2025 03:06:09 -0700 (PDT)
+Received: from f (cst-prg-84-152.cust.vodafone.cz. [46.135.84.152])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-61cfc214ec8sm9018669a12.17.2025.09.02.03.06.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Sep 2025 03:06:08 -0700 (PDT)
+Date: Tue, 2 Sep 2025 12:06:01 +0200
+From: Mateusz Guzik <mjguzik@gmail.com>
+To: Josef Bacik <josef@toxicpanda.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	kernel-team@fb.com, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	brauner@kernel.org, viro@zeniv.linux.org.uk, amir73il@gmail.com
+Subject: Re: [PATCH v2 00/54] fs: rework inode reference counting
+Message-ID: <eeu47pjcaxkfol2o2bltigfjvrz6eecdjwtilnmnprqh7dhdn7@rqi35ya5ilmv>
+References: <cover.1756222464.git.josef@toxicpanda.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250829235627.4053234-1-joannelkoong@gmail.com> <20250829235627.4053234-17-joannelkoong@gmail.com>
-In-Reply-To: <20250829235627.4053234-17-joannelkoong@gmail.com>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Tue, 2 Sep 2025 11:21:50 +0200
-X-Gm-Features: Ac12FXymFicVPinwbFSWp8veqgoTeVOVPPlBCbz_Zbd4N-bMcdXkFmiPs4wTQ0w
-Message-ID: <CAJfpegvjaNZSJcyNWxyz0gQk-_9AXqcPuX71m7yoT2s0cd53iw@mail.gmail.com>
-Subject: Re: [PATCH v1 16/16] fuse: remove fuse_readpages_end() null mapping check
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: brauner@kernel.org, hch@infradead.org, djwong@kernel.org, 
-	linux-fsdevel@vger.kernel.org, kernel-team@meta.com, 
-	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <cover.1756222464.git.josef@toxicpanda.com>
 
-On Sat, 30 Aug 2025 at 01:58, Joanne Koong <joannelkoong@gmail.com> wrote:
->
-> Remove extra logic in fuse_readpages_end() that checks against null
-> folio mappings. This was added in commit ce534fb05292 ("fuse: allow
-> splice to move pages"):
->
-> "Since the remove_from_page_cache() + add_to_page_cache_locked()
-> are non-atomic it is possible that the page cache is repopulated in
-> between the two and add_to_page_cache_locked() will fail.  This
-> could be fixed by creating a new atomic replace_page_cache_page()
-> function.
->
-> fuse_readpages_end() needed to be reworked so it works even if
-> page->mapping is NULL for some or all pages which can happen if the
-> add_to_page_cache_locked() failed."
->
-> Commit ef6a3c63112e ("mm: add replace_page_cache_page() function") added
-> atomic page cache replacement, which means the check against null
-> mappings can be removed.
+On Tue, Aug 26, 2025 at 11:39:00AM -0400, Josef Bacik wrote:
 
-If I understand correctly this is independent of the patchset and can
-be applied without it.
+Hi Josef,
 
-Thanks,
-Miklos
+I read through the entire patchset and I think I got the hang of it.
+
+Bottom line is I disagree with the core idea of the patchset and
+majority of the justification raised in the cover letter. :)
+
+I'll be very to the point, trying to be as clear as possible and
+consequently lacking in soft-speak. Based on your name I presume you are
+also of Slavic descent, hopefully making it fine ;-)
+
+I don't have a vote per se so this is not really a NAK. Instead I'm
+making a case to you and VFS maintaienrs to not include this.
+
+ACHTUNG: this is *really* long and I probably forgot to mention
+something.
+
+Frankly the patchset seems to be a way to help btrfs by providing a new
+refcount (but not in a generic-friendly manner) while taking issue with
+refcount 0 having a "the inode is good to go if need be" meaning. I
+provide detailed reasoning below.
+
+It warrants noting there is a lot of plain crap in the VFS layer.
+Between the wtf flags, bad docs for them, poor assert coverage,
+open-coded & repeated access to stuff (including internal state), I have
+to say someone(tm) needs to take a hammer to it.
+
+However, as far as I can tell, modulo the quality of how things are
+expressed in the code (so to speak), the crux of what the layer is doing
+in terms of inode management follows idiomatic behavior I would expect
+to see, I just needs to be done better.
+
+While there are perfectly legitimate reasons to introduce a "hold"
+reference counter, I pose the patchset at hand does not justify its
+introduction. If anything I will argue it would be a regression to do it
+the way it is proposed here, even if some variant of the new counter
+will find a use case.
+
+> This series is the first part of a larger body of work geared towards solving a
+> variety of scalability issues in the VFS.
+> 
+
+Elsewhere in the thread it is mentioned that there is a plan to remove
+the inode LRU and replace the inode hash with xarray after these changes.
+
+I don't understand how this patchset paves the way for either of those
+things.
+
+If anything, per notes from other people, it would probably be best if
+the inode LRU got removed first and this patchset got rebased on it (if
+it is to land at all).
+
+For the inode hash the real difficulty is not really in terms of
+implementing something, but evaluating available options. Even if the
+statically-allocated hash should go (it probably should), the hashing
+function is not doing a good job (read: the hash is artificially
+underperforming) and merely replacing it with something else might not
+give an accurate picture whether the new pick for the data structure is
+genuinely the right choice (due to skewed comparison as the hash is
+gimped, both in terms of hashing func and global locking).
+
+The minor technical problem which is there in the stock kernel and which
+remains unaddressed by your patchset is the need to take ->i_lock. Some
+of later commentary in this cover letter claims this is sorted out,
+but that's only true if someone already has a ref (as in the lock is
+only optionally ommitted).
+
+In particular, if one was to implement fine-grained locking for the hash
+with bitlocks, I'm told the resulting ordering of bitlock -> spinlock
+would be problematic on RT kernels as the former type is a hack which
+literally only spins and does not support any form of preemption. The
+ordering can be swapped around to spinlock -> bitlock thanks to RCU
+(e.g., for deletion from the hash you would find the inode using RCU
+traversal, lock it, lock the chain and only then delete etc.).
+
+Since your patchset keeps the lock in place, the kernel is in the same
+boat in both cases (also if the new thing only uses spinlocks).
+
+As far as I know the other non-fs specific bottlenecks for inode
+handling are the super block list and dentry LRU, neither of which
+benefit from the patchset either.
+
+So again I don't see how scalability work is facilitated by this patchset.
+
+> We have historically had a variety of foot-guns related to inode freeing.  We
+> have I_WILL_FREE and I_FREEING flags that indicated when the inode was in the
+> different stages of being reclaimed.  This lead to confusion, and bugs in cases
+> where one was checked but the other wasn't.  Additionally, it's frankly
+> confusing to have both of these flags and to deal with them in practice.
+> 
+
+Per my opening remark I agree this situation is very poorly handled in
+the current code.
+
+If my grep is right the only real consumer of I_WILL_FREE is ocfs2. In
+your patchset your just remove the usage. Given that other filesystems
+manage without it, I suspect the real solution is to change its
+->drop_inode to generic_delete_inode() and handle the write in
+->evict_inode.
+
+The doc for the flag is most unhelpful, documenting how the flag is used
+but not explaining what for.
+
+If I understood things correctly the flag is only there to prevent
+->i_count acquire by other threads while the spin lock is dropped during
+inode write out.
+
+Whether your ocfs patch lands or this bit gets reworked as described
+above, the flag is gone and we are only left with I_FREEING.
+
+Hiding this behind a proper accessor (letting you know what's up with
+the inode) should cover your concern (again see bottom of the e-mail for
+a longer explanation).
+
+> However, this exists because we have an odd behavior with inodes, we allow them
+> to have a 0 reference count and still be usable. This again is a pretty unfun
+> footgun, because generally speaking we want reference counts to be meaningful.
+> 
+
+This is not an odd behavior. This in fact the idiomatic handling of
+objects which remain cached if there are no active users. I don't know
+about the entirety of the Linux kernel, but dentries are also handled
+the same way.
+
+I come from the BSD land but I had also seen my share of Solaris and I
+can tell you all of these also follow this core idea in places I looked.
+
+If anything deviating from this should raise eyebrows.
+
+I can however agree that the current magic flags + refcount do make for
+a buggy combination, but that's not an inherent property of using this
+method.
+
+> The problem with the way we reference inodes is the final iput(). The majority
+> of file systems do their final truncate of a unlinked inode in their
+> ->evict_inode() callback, which happens when the inode is actually being
+> evicted. This can be a long process for large inodes, and thus isn't safe to
+> happen in a variety of contexts. Btrfs, for example, has an entire delayed iput
+> infrastructure to make sure that we do not do the final iput() in a dangerous
+> context. We cannot expand the use of this reference count to all the places the
+> inode is used, because there are cases where we would need to iput() in an IRQ
+> context  (end folio writeback) or other unsafe context, which is not allowed.
+> 
+
+I don't believe ->i_obj_count is needed to facilitate this.
+
+Suppose iput() needs to become callable from any context, just like
+fput().
+
+What it can do is atomically drop the ref it is not the last one or punt
+all of it to task_work/a dedicated task queue.
+
+Basically same thing as fput(), except the ref is expected to be dropped
+by the code doing deferred processing if ->i_count == 1.
+
+Note that with your patchset iput() still takes spinlocks, which
+prevents it from being callable from IRQs at least.
+
+But suppose ->i_obj_count makes sense to add. Below I explain why I
+disagree with the way it is done.
+
+> To that end, resolve this by introducing a new i_obj_count reference count. This
+> will be used to control when we can actually free the inode. We then can use
+> this reference count in all the places where we may reference the inode. This
+> removes another huge footgun, having ways to access the inode itself without
+> having an actual reference to it. The writeback code is one of the main places
+> where we see this. Inodes end up on all sorts of lists here without a proper
+> reference count. This allows us to protect the inode from being freed by giving
+> this an other code mechanisms to protect their access to the inode.
+> 
+
+I read through writeback vs iput() handling and it is very oddly
+written, indeed looking fishy.  I don't know the history here, given the
+state of the code I 300% believe there were bugs in terms of lifetime
+management/racing against iput().
+
+But the crux of what the code is doing is perfectly sane and in fact
+what I would expect to happen unless there is a good reason not to.
+
+The crucial point here is setting up the inode for teardown (and thus
+preventing new refs from showing up) and stalling it as long as there
+are pending consumers. That way they can still safely access everything
+they need.
+
+For this work the code needs a proper handshake (if you will), which
+*is* arranged with locking -- writeback (or other code with similar
+needs) either wins against teardown and does the write or loses and
+pretends the inode is not there (or fails to see it). If writeback wins,
+teardown waits. This only needs readable helpers to not pose a problem,
+which is not hard to implement.
+
+Note your patchset does not remove the need to do this, it merely
+possibly simplifies clean up after (but see below).
+
+This brings me to the problem with how ->i_obj_count is proposed. In
+this patchset it merely gates the actual free of the inode, allowing all
+other teardown to progress.
+
+Suppose one was to use ->i_obj_count in writeback to guarantee inode
+liveness -- worst case iobj_put() from writeback ends up freeing the
+inode.
+
+As mentioned above, the first side of the problem is still there with
+your patchset: you still need to synchronize against writeback starting
+to work on the inode.
+
+But let's assume the other side -- just the freeing -- is now sorted out
+with the count.
+
+The problem with it is the writeback code historically was able to
+access the entire of the inode. With teardown progressing in parallel
+this is no longer true an what is no longer accessible depends entirely
+on timing. If there are "bad" accesses, you are going to find the hard
+way.
+
+In order to feel safe here one would need to audit the entire of
+writeback code to make sure it does not do anything wrong here and
+probably do quite a bit of fuzzing with KMSAN et al.
+
+Furthermore, imagine some time in the future one would need to add
+something which needs to remain valid for the duration of writeback in
+progress. Then you are back to the current state vs waiting on writeback
+or you need to move more things around after i_obj_count drops to 0.
+
+Or you can make sure iput() can safely wait for a wakeup from writeback
+and not worry about a thorough audit of all inode accessess nor any
+future work adding more. This is the current approach.
+
+General note is that a hold count merely gating the actual free invites
+misuse where consumers race against teardown thinking something is still
+accessible and only crapping out when they get unlucky.
+
+The ->i_obj_count refs/puts around hash and super block list
+manipulation only serve as overhead. Suppose they are not there. With
+the rest of your proposal it is an invariant that i_obj_count is at
+least 1 when iput() is being called. Meaning whatever refs are present
+or not on super block or the hash literally play no role. In fact, if
+they are there, it is an invariant they are not the last refs to drop.
+
+Even in the btrfs case you are just trying to defer actual free of the
+inode, which is not necessarily all that safe in the long run given the
+remarks above.
+
+But suppose for whatever reason you really want to punt ->evict_inodes()
+processing.
+
+My suggestion would be the following:
+
+The hooks for ->evict_inodes() can start returning -EAGAIN. Then if you
+conclude you can't do the work in context you got called from, evict()
+can defer you elsewhere and then you get called from a spot where you
+CAN do it, after which the rest of evict() is progressing.
+
+Something like:
+
+the_rest_of_evict() {
+        if (S_ISCHR(inode->i_mode) && inode->i_cdev)
+                cd_forget(inode);
+
+        remove_inode_hash(inode);
+	....
+}
+
+/* runs from task_work, some task queue or whatever applicable */
+evict_deferred() {
+	ret = op->evict_inode(inode);
+	BUG_ON(ret == -EAGAIN);
+	the_rest_of_evict(inode);
+}
+
+evict() {
+	....
+        if (op->evict_inode) {
+                ret = op->evict_inode(inode);
+		if (ret == -EAGAIN) {
+			evict_defer(inode);
+			return;
+		}
+        } else {
+                truncate_inode_pages_final(&inode->i_data);
+                clear_inode(inode);
+        }
+	
+	the_rest_of_evict(inode);
+}
+
+Optionally ->evict_inodes() func can get gain an argument denoting who
+is doing the call (evict() or evict_deferred()).
+
+> With this we can separate the concept of the inode being usable, and the inode
+> being freed. 
+[snip]
+> With not allowing inodes to hit a refcount of 0, we can take advantage of that
+> common pattern of using refcount_inc_not_zero() in all of the lockless places
+> where we do inode lookup in cache.  From there we can change all the users who
+> check I_WILL_FREE or I_FREEING to simply check the i_count. If it is 0 then they
+> aren't allowed to do their work, othrwise they can proceed as normal.
+
+But this is already doable, just avoidably open-coded.
+
+In your patchset this is open-coded with icount_read() == 0, which is
+also leaking state it should not.
+
+You could hide this behind can_you_grab_a_ref().
+
+On the current kernel the new helper would check the count + flags
+instead.
+
+Your consumers which no longer openly do it in this patchset would look
+the same.
+
+So here is an outline of what I suggest. First I'm going to talk about
+sorting out ->i_state and then about inode transition tracking.
+
+Accesses to ->i_state are open-coded everywhere, some places use
+READ_ONCE/WRITE_ONCE while others use plain loads/stores. None of this
+validates whether ->i_lock is held and for cases where the caller is
+fine with unstable flags, there is no way to validate this is what they
+are signing up for (for example maybe the place assumes ->i_lock is in
+fact held?).
+
+As an absolute minimum this should hide behind 3 accessors:
+
+1. istate_store, asserting the lock is held. WRITE_ONCE
+2. istate_load, asserting the lock is held. READ_ONCE or plain load
+3. istate_load_unlocked, no asserts. the consumer explicitly spells out
+they understand the value can change from under them. another READ_ONCE
+to prevent the compiler from fucking with reloads.
+
+Maybe hide the field behind a struct so that spelled out i_state access
+fails to compile (similarly to how atomics are handled).
+
+Suppose the I_WILL_FREE flag got sorted out.
+
+Then the kernel is left with I_NEW, I_CLEAR, I_FREEING and maybe
+something extra.
+
+I think this is much more manageable but still primitive.
+
+An equivalent can be done with enums in a way which imo is much more
+handy.
+
+Then various spots all over the VFS layer can validate they got a state
+which can be legally observed for their usage. Note mere refcount being
+0 or not does not provide that granularity as a collection of flags or
+an enum.
+
+For illustrative purposes, suppose:
+DEAD -- either hanging out after rcu freed or never used to begin with
+UNDER_CONSTRUCTION -- handed out by the allocator, still being created.
+invalid (equivalent to I_NEW?)
+CONSTRUCTED -- all done (equivalent to no flags?)
+DESTROYING -- equivalent to I_FREEING?
+
+With this in place it is handy to validate that for example you are
+transitionting from CONSTRUCTED to DESTROYING, but not from CONSTRUCTED
+to DEAD.
+
+You can also assert no UNDER_CONSTRUCTION inode escaped into the wild
+(this would happen in various vfs primitives, e.g., prior to taking the
+inode rwsem)
+
+This is all equivalent to the flag manipulation, except imo clearer.
+
+Suppose the flags are to stay. They can definitely hide behind helpers,
+there is no good reason for anyone outside of fs.h or inode.c to know
+about their meaning.
+
+I claim the enums *can* escape as they can be easily reasoned about.
+
+So... I don't offer to do any of this, I hope I made a convincing case
+against the patchset at least.
+
+Cheers.
