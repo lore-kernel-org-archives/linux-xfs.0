@@ -1,107 +1,88 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8802335BC6;
-	Tue,  2 Sep 2025 16:12:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 822A732BF49
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Sep 2025 16:48:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756829566; cv=none; b=TOdA3dvE7t88f2BIYgTfSa1g9jGpB4ifNmchc1JNnzVfIdKBYeRuRq8zR6Nk2+6fScYh+xD1AOz8dj8IS4uooJuB4ZUQbnz7zIqvGiN9tJuDI7teMZQih/22a9E2NnV3yv3H6a01p/79Qt2TiwhxYNTiMZ1hJgWK+OM5Vxo79d4=
+	t=1756831727; cv=none; b=DUPus4XjGAz8dml5aYAxEfigYgpdUSlJBAp8ST/VTz7HYjfAwsA+BD0uW4sCFVA+y4pYOUb7t+ev5djd1ztltft0XWd4Knk4Ih44VIIjjPwBNGeVnRn9gJYth6jrHIOd8cvMCQ7TXLDQMJ8DGGRIAzG7208Db8dO0z7xneCUR+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756829566; c=relaxed/simple;
-	bh=5avgvEP3XxLW1FEb1wh9OlMrNkakvRKUU3W73a6ZmMY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=j4alweKLKwvIVhPUYCxw/72hWLQVFethWwx8hgFNui9p+4B8Whl+T2CGQi67XePk0wcZjlP2jf0+SnGAfkWGAlrmPM3TBRBL6QkSkuEF8U2p2omHyPK5TlhVhX20nzB/DdvSDC4e9vEbkD2Wg0pdHui00qcMBg44EvVzS3F7XZg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=lQARut9W; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1756831727; c=relaxed/simple;
+	bh=69dcZwO17cLA6EgoAUe5VYDABRbY7UrrT3nqvJ+Z/lA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Dvmj6+QcAQNn0v/uo2Wgtk/ef8IVPXxU/YVujkWhsJUferBfIA7DWiLDRovyKw33i5iyV5l319+h7/GPJrh6TdmQPv7uP7JVzVuq9QzWxje1FT+JhFUIXaXGd9rho6JfPlNIji8/Svstir4CZPixj1R5/m8G/AQbJysdYSAjYVQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=EoFaclLf; arc=none smtp.client-ip=18.9.28.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="lQARut9W"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cGW3p20KkzlfnCV;
-	Tue,  2 Sep 2025 16:12:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1756829553; x=1759421554; bh=zLHsMuSoN87Y/kpFANGBnIy5
-	780AiDprbMGpVpen4tY=; b=lQARut9W9c51D4XL1oAzxysF19Y+3QHFc2F9OEsR
-	h39y+s3ur/7jYldadPxTguxvg3Ycn4O+XY4uYMd/f+kwVcAUZs1ZzkcqRoGARq9R
-	NbtFh6U+SPyJPHERkPA0uPX320V9WBts1iezGyFVV2OhHlXgrDQGIVVQv/Fn8UuA
-	CaC3TsjTBNF94zl0UjVE0FsDOO32SUj7DyIhLu01o4HTpY2Wt+EFmShrs+CEsp72
-	V2OT8gYsBrPQKf8DcUV73C0Bjmq37uZRwJC7xbHn8Nq8SU1PjQ6wrF5EK41HjzJf
-	e46v73JhJWXdm7z+PEdpDYzaBHZtvDeloofoWLyPdqVFfg==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 4d38XxLOeDyA; Tue,  2 Sep 2025 16:12:33 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cGW3Z3Rqyzlh3sc;
-	Tue,  2 Sep 2025 16:12:25 +0000 (UTC)
-Message-ID: <e844fe01-7cfa-4aff-b21e-d0ad04399829@acm.org>
-Date: Tue, 2 Sep 2025 09:12:24 -0700
+	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="EoFaclLf"
+Received: from trampoline.thunk.org (pool-173-48-82-217.bstnma.fios.verizon.net [173.48.82.217])
+	(authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 582GmWYr029864
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 2 Sep 2025 12:48:33 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+	t=1756831714; bh=TAAfaCs8utlzc2OUMwuLfN9TPE1SG2Y1TpCqENYMIGM=;
+	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+	b=EoFaclLfQ7Az1EbjsAWulUTEsGywZW92UMkr7cnQZ/gcPAQNJIAD/lKk+8+zW5ii2
+	 QvnzMaAKuhfXjx4DmP/Du4DEACMnvcM+GFzv4qsHB6Ebrgp+D+XL6b6pITtzYnCghq
+	 k/dRfex+J8V6v23BKUFXRceZ71xzHpgMbK854qL5nlVUdctnSE0Q5kuDRpaw5+nfSL
+	 619xXjzh1ovOx14qXikrGUVdBorLAY93S7cMyTh4Bb3en9J2JGkeJwraNk/iOF6dGQ
+	 WqUSG/hIBdMAVgEYu0VIfSxEBrSkBItw0XSjEgZmOMGoLHvMPVad0+8xObinyADzIG
+	 Eu4tl85p0QvcQ==
+Received: by trampoline.thunk.org (Postfix, from userid 15806)
+	id C6E462E00D6; Tue, 02 Sep 2025 12:48:32 -0400 (EDT)
+Date: Tue, 2 Sep 2025 12:48:32 -0400
+From: "Theodore Ts'o" <tytso@mit.edu>
+To: Qu Wenruo <quwenruo.btrfs@gmx.com>
+Cc: "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: Golden output mismatch from generic/228, fs independent
+Message-ID: <20250902164832.GA2598713@mit.edu>
+References: <60b73970-9cb6-49b1-ad5f-51ab02ef2c98@gmx.com>
+ <20250902120932.GA2564374@mit.edu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] fs: add an enum for number of life time hints
-To: hch <hch@lst.de>, Hans Holmberg <Hans.Holmberg@wdc.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- Carlos Maiolino <cem@kernel.org>, Dave Chinner <david@fromorbit.com>,
- "Darrick J . Wong" <djwong@kernel.org>,
- "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- axboe@kernel.dk
-References: <20250901105128.14987-1-hans.holmberg@wdc.com>
- <20250901105128.14987-2-hans.holmberg@wdc.com>
- <20250902054108.GA11431@lst.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250902054108.GA11431@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250902120932.GA2564374@mit.edu>
 
-On 9/1/25 10:41 PM, hch wrote:
-> Looks good, but you probably want to add a few more folks that
-> created this constant and the header to the Cc list.
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> On Mon, Sep 01, 2025 at 10:52:04AM +0000, Hans Holmberg wrote:
->> Add WRITE_LIFE_HINT_NR into the rw_hint enum to define the number of
->> values write life time hints can be set to. This is useful for e.g.
->> file systems which may want to map these values to allocation groups.
->>
->> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
->> ---
->>   include/linux/rw_hint.h | 1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/include/linux/rw_hint.h b/include/linux/rw_hint.h
->> index 309ca72f2dfb..adcc43042c90 100644
->> --- a/include/linux/rw_hint.h
->> +++ b/include/linux/rw_hint.h
->> @@ -14,6 +14,7 @@ enum rw_hint {
->>   	WRITE_LIFE_MEDIUM	= RWH_WRITE_LIFE_MEDIUM,
->>   	WRITE_LIFE_LONG		= RWH_WRITE_LIFE_LONG,
->>   	WRITE_LIFE_EXTREME	= RWH_WRITE_LIFE_EXTREME,
->> +	WRITE_LIFE_HINT_NR,
->>   } __packed;
->>   
->>   /* Sparse ignores __packed annotations on enums, hence the #ifndef below. */
->> -- 
->> 2.34.1
-> ---end quoted text---
+On Tue, Sep 02, 2025 at 08:09:32AM -0400, Theodore Ts'o wrote:
+> I haven't updated my arm64 image in a bit (this was from dated July 20th).
+> I can try doing an arm64 rebuild and see if a newer version still
+> works on arm64, but here's a data point....
 
-Thanks Christoph for having Cc-ed me. I'm not a big fan of this type of
-change because it makes it harder to write switch-statements without
-'default:' clause. From a quick look I haven't found any such
-switch-statements on 'enum rw_hint' so I'm fine with this change.
+And here's an update with the latest xfstests for-next branch, and
+6.16 xfsprogs, etc.  Still no problems for me....
 
-Bart.
+						- Ted
+
+KERNEL:    kernel       6.17.0-rc3-xfstests #1 SMP Tue Sep  2 07:57:28 EDT 2025 aarch64
+CMDLINE:   --arm64 -c ext4/4k generic/228
+CPUS:      2
+MEM:       1977.09
+
+ext4/4k: 1 tests, 5 seconds
+  generic/228  Pass     2s
+Totals: 1 tests, 0 skipped, 0 failures, 0 errors, 2s
+
+FSTESTVER: blktests     8ac6c4f (Sun, 31 Aug 2025 18:34:41 +0900)
+FSTESTVER: fio          fio-3.40 (Tue, 20 May 2025 12:23:01 -0600)
+FSTESTVER: fsverity     v1.6-2-gee7d74d (Mon, 17 Feb 2025 11:41:58 -0800)
+FSTESTVER: ima-evm-utils        v1.5 (Mon, 6 Mar 2023 07:40:07 -0500)
+FSTESTVER: libaio       libaio-0.3.108-82-gb8eadc9 (Thu, 2 Jun 2022 13:33:11 +0200)
+FSTESTVER: ltp          20250530-178-g9691c4b2b (Mon, 1 Sep 2025 12:01:57 +0200)
+FSTESTVER: quota                v4.05-77-g22ff3d9 (Tue, 2 Sep 2025 08:12:02 -0400)
+FSTESTVER: util-linux   v2.41.1 (Tue, 24 Jun 2025 09:55:28 +0200)
+FSTESTVER: xfsprogs     v6.16.0 (Tue, 26 Aug 2025 20:27:25 +0200)
+FSTESTVER: xfstests     v2025.08.17-10-g057be3ead-dirty (Mon, 25 Aug 2025 11:59:43 -0400)
+FSTESTVER: xfstests-bld gce-xfstests-202504292206-22-ge10dc029-dirty (Mon, 25 Aug 2025 12:33:01 -0400)
+FSTESTVER: zz_build-distro      trixie
+FSTESTCFG: ext4/4k
+FSTESTSET: generic/228
+FSTESTOPT: aex
