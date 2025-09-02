@@ -1,46 +1,52 @@
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58B033090C6
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Sep 2025 12:09:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B622821255E;
+	Tue,  2 Sep 2025 14:39:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756814990; cv=none; b=i9HgugkSa1qruIHjcrqqV2sqGpFKxZCHBjzKy/h+2UiEaIaItl1ntXICufOpQ0l3bZ30CXn67NLeBNSmxJNjnn63EH+E2uJnYavGY4+SyVGp/L9JCb7wS67BEOabW+Q/qVA++AbL04l5UrKeNEvsAkA6YEzR/EN9RY+9DXDG76U=
+	t=1756823948; cv=none; b=KPV3JkuTa+khgWb4jId6yfZV5VIPBmP+q7SLW7HP1KGtmd11E22UpqWnX1YrGYrvlXJmT9DJi3Bfncpu/U0p5PkRsxi6Ptmai6d8qtx59PcNjJ7bcR6M3OiklkyVvWSxT7uvpBCctByW0zfic5wSv0r9VlfPYO36g0M+9iU7SDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756814990; c=relaxed/simple;
-	bh=umubb5ja5btA3FbvGDpT5snjrja/6XWb0oS/xFx1UIs=;
+	s=arc-20240116; t=1756823948; c=relaxed/simple;
+	bh=7olc+ixJY7yRJvVbu1KUegrla3LHsjblyKnh7iAz4QA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IYVCZJLr3NrHR1Sa8Xs03o046q+uCDgxWjj3gYxP00GMcR6uHdSMLgky45PWoenSfMTFWwUTqdyYuJKpMeG2awViMhAq6b5+s7sRTndWX7KeEE1iU6yeGXlpNIejjTt+nCYsmOrsWC85A4XAQvS4HGagOl73nh8uRTSQlbYRpUk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=PPkL9AVq; arc=none smtp.client-ip=18.9.28.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
+	 Content-Type:Content-Disposition:In-Reply-To; b=WQdcPtfYGmKkva8Fy2YZN8hYZeOPi1dqKVIAwsM9ifo1orNiRMGdIXWai2oFC7z7HS2sgxrdgW74Fy1+B49ZM0T41EgAVtAxAeuDy2cTkvuUJ5CZeeajED7bDirFjP8ZV9qrHTBMQ1z3P/n0W++e09el9uggeGhQE5wGbbm5nd0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lo/1SL+q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="PPkL9AVq"
-Received: from trampoline.thunk.org (pool-173-48-82-217.bstnma.fios.verizon.net [173.48.82.217])
-	(authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 582C9W11030330
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 2 Sep 2025 08:09:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-	t=1756814974; bh=3hW8MI6wgp2erDa+pJ+0tZiB1LWGKb5iv9yqhJYhwrw=;
-	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
-	b=PPkL9AVqYZIPNZypDXFeUkzC+MEPjbfdo6d2hcFndA6O3PzjFhRcyhsh0WOczMSAw
-	 /zw7509uJjhGPQnqh1PeFQUOcB6L7DbwHwfa1pAjkP+uSYa65up6193429f4oYNn5o
-	 z9nVWOamCfN8JyylBpGwdPSKHbhb8pNhjYavHiTdxwWpm0Mcxp3JMNrBywFghuChJf
-	 jHmIM3jysoBx1OIiZXPFIy9/34mKqAZlwSXgNfZ9+VT90+awOqpMnMslx+p4imkhj6
-	 HUrM4ZDZGGdP7aEUc7ncNLwu+nv4eESo6XKkU2OdmJaTXjnqgpcmx5KAHps2rSNpvq
-	 oP8epkAWd5z2g==
-Received: by trampoline.thunk.org (Postfix, from userid 15806)
-	id 82E452E00D6; Tue, 02 Sep 2025 08:09:32 -0400 (EDT)
-Date: Tue, 2 Sep 2025 08:09:32 -0400
-From: "Theodore Ts'o" <tytso@mit.edu>
-To: Qu Wenruo <quwenruo.btrfs@gmx.com>
-Cc: "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: Golden output mismatch from generic/228, fs independent
-Message-ID: <20250902120932.GA2564374@mit.edu>
-References: <60b73970-9cb6-49b1-ad5f-51ab02ef2c98@gmx.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lo/1SL+q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14537C4CEED;
+	Tue,  2 Sep 2025 14:39:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756823948;
+	bh=7olc+ixJY7yRJvVbu1KUegrla3LHsjblyKnh7iAz4QA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=lo/1SL+qpwGqKqzEBfooY5BRf6NW9saWYqq5am5cfAOVdZQsfbbFuX/rjlE1U6aS+
+	 iYh7x0D6qoJMv7LstQ1hOpt02jS32ahAVeabeJ+rlXYhAvr3FdA1sFgbbAN3+lUgQD
+	 oqy23AcpQaHT4QD2Mz2H2zRN1eqCkA40ws48BAex7GW6cgFcvG/iE6uq8oVa0ZJREf
+	 4EG9O7fzmB6fPvPgLH1MPYmEYHeCwDOaoqI+yg0Nf8qoyvM8WFWRb/GVJomIcGd0xn
+	 lz8HkQ6aNO0ub3mzEjyjt1eA/pzMSQQxdhP73lf2UDkdRbWn5sbpoczVkDN9l2C3F7
+	 82/V2j6iD+ayQ==
+Date: Tue, 2 Sep 2025 10:39:06 -0400
+From: Mike Snitzer <snitzer@kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, Keith Busch <kbusch@kernel.org>,
+	Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, axboe@kernel.dk, dw@davidwei.uk,
+	brauner@kernel.org, hch@lst.de, martin.petersen@oracle.com,
+	djwong@kernel.org, linux-xfs@vger.kernel.org,
+	viro@zeniv.linux.org.uk, Jan Kara <jack@suse.com>,
+	Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCHv3 0/8] direct-io: even more flexible io vectors
+Message-ID: <aLcBivUrXs0YZ-pq@kernel.org>
+References: <20250819164922.640964-1-kbusch@meta.com>
+ <87a53ra3mb.fsf@gmail.com>
+ <g35u5ugmyldqao7evqfeb3hfcbn3xddvpssawttqzljpigy7u4@k3hehh3grecq>
+ <aKx485EMthHfBWef@kbusch-mbp>
+ <87cy8ir835.fsf@gmail.com>
+ <ua7ib34kk5s6yfthqkgy3m2pnbk33a34g7prezmwl7hfwv6lwq@fljhjaogd6gq>
+ <aK8tuTnuHbD8VOyo@kernel.org>
+ <pcmvk3tb3cre3dao2suskdxjrkk6q5z2olkgbkyqoaxujelokg@34hc5pudk3lt>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,57 +55,149 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <60b73970-9cb6-49b1-ad5f-51ab02ef2c98@gmx.com>
+In-Reply-To: <pcmvk3tb3cre3dao2suskdxjrkk6q5z2olkgbkyqoaxujelokg@34hc5pudk3lt>
 
-On Tue, Sep 02, 2025 at 08:00:32PM +0930, Qu Wenruo wrote:
-> Hi,
+On Mon, Sep 01, 2025 at 09:55:20AM +0200, Jan Kara wrote:
+> Hi Mike!
 > 
-> Recently I updated my arm64 VM, and now several test cases are failing due
-> to golden output mismatch.
+> On Wed 27-08-25 12:09:29, Mike Snitzer wrote:
+> > On Wed, Aug 27, 2025 at 05:20:53PM +0200, Jan Kara wrote:
+> > > On Tue 26-08-25 10:29:58, Ritesh Harjani wrote:
+> > > > Keith Busch <kbusch@kernel.org> writes:
+> > > > 
+> > > > > On Mon, Aug 25, 2025 at 02:07:15PM +0200, Jan Kara wrote:
+> > > > >> On Fri 22-08-25 18:57:08, Ritesh Harjani wrote:
+> > > > >> > Keith Busch <kbusch@meta.com> writes:
+> > > > >> > >
+> > > > >> > >   - EXT4 falls back to buffered io for writes but not for reads.
+> > > > >> > 
+> > > > >> > ++linux-ext4 to get any historical context behind why the difference of
+> > > > >> > behaviour in reads v/s writes for EXT4 DIO. 
+> > > > >> 
+> > > > >> Hum, how did you test? Because in the basic testing I did (with vanilla
+> > > > >> kernel) I get EINVAL when doing unaligned DIO write in ext4... We should be
+> > > > >> falling back to buffered IO only if the underlying file itself does not
+> > > > >> support any kind of direct IO.
+> > > > >
+> > > > > Simple test case (dio-offset-test.c) below.
+> > > > >
+> > > > > I also ran this on vanilla kernel and got these results:
+> > > > >
+> > > > >   # mkfs.ext4 /dev/vda
+> > > > >   # mount /dev/vda /mnt/ext4/
+> > > > >   # make dio-offset-test
+> > > > >   # ./dio-offset-test /mnt/ext4/foobar
+> > > > >   write: Success
+> > > > >   read: Invalid argument
+> > > > >
+> > > > > I tracked the "write: Success" down to ext4's handling for the "special"
+> > > > > -ENOTBLK error after ext4_want_directio_fallback() returns "true".
+> > > > >
+> > > > 
+> > > > Right. Ext4 has fallback only for dio writes but not for DIO reads... 
+> > > > 
+> > > > buffered
+> > > > static inline bool ext4_want_directio_fallback(unsigned flags, ssize_t written)
+> > > > {
+> > > > 	/* must be a directio to fall back to buffered */
+> > > > 	if ((flags & (IOMAP_WRITE | IOMAP_DIRECT)) !=
+> > > > 		    (IOMAP_WRITE | IOMAP_DIRECT))
+> > > > 		return false;
+> > > > 
+> > > >     ...
+> > > > }
+> > > > 
+> > > > So basically the path is ext4_file_[read|write]_iter() -> iomap_dio_rw
+> > > >     -> iomap_dio_bio_iter() -> return -EINVAL. i.e. from...
+> > > > 
+> > > > 
+> > > > 	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1) ||
+> > > > 	    !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
+> > > > 		return -EINVAL;
+> > > > 
+> > > > EXT4 then fallsback to buffered-io only for writes, but not for reads. 
+> > > 
+> > > Right. And the fallback for writes was actually inadvertedly "added" by
+> > > commit bc264fea0f6f "iomap: support incremental iomap_iter advances". That
+> > > changed the error handling logic. Previously if iomap_dio_bio_iter()
+> > > returned EINVAL, it got propagated to userspace regardless of what
+> > > ->iomap_end() returned. After this commit if ->iomap_end() returns error
+> > > (which is ENOTBLK in ext4 case), it gets propagated to userspace instead of
+> > > the error returned by iomap_dio_bio_iter().
+> > > 
+> > > Now both the old and new behavior make some sense so I won't argue that the
+> > > new iomap_iter() behavior is wrong. But I think we should change ext4 back
+> > > to the old behavior of failing unaligned dio writes instead of them falling
+> > > back to buffered IO. I think something like the attached patch should do
+> > > the trick - it makes unaligned dio writes fail again while writes to holes
+> > > of indirect-block mapped files still correctly fall back to buffered IO.
+> > > Once fstests run completes, I'll do a proper submission...
+> > > 
+> > > 
+> > > 								Honza
+> > > -- 
+> > > Jan Kara <jack@suse.com>
+> > > SUSE Labs, CR
+> > 
+> > > From ce6da00a09647a03013c3f420c2e7ef7489c3de8 Mon Sep 17 00:00:00 2001
+> > > From: Jan Kara <jack@suse.cz>
+> > > Date: Wed, 27 Aug 2025 14:55:19 +0200
+> > > Subject: [PATCH] ext4: Fail unaligned direct IO write with EINVAL
+> > > 
+> > > Commit bc264fea0f6f ("iomap: support incremental iomap_iter advances")
+> > > changed the error handling logic in iomap_iter(). Previously any error
+> > > from iomap_dio_bio_iter() got propagated to userspace, after this commit
+> > > if ->iomap_end returns error, it gets propagated to userspace instead of
+> > > an error from iomap_dio_bio_iter(). This results in unaligned writes to
+> > > ext4 to silently fallback to buffered IO instead of erroring out.
+> > > 
+> > > Now returning ENOTBLK for DIO writes from ext4_iomap_end() seems
+> > > unnecessary these days. It is enough to return ENOTBLK from
+> > > ext4_iomap_begin() when we don't support DIO write for that particular
+> > > file offset (due to hole).
+> > 
+> > Any particular reason for ext4 still returning -ENOTBLK for unaligned
+> > DIO?
 > 
-> This time it's fs independent, and I haven't yet updated fstests itself, so
-> it looks like some updates in my environment is breaking the test.
+> No, that is actually the bug I'm speaking about - ext4 should be returning
+> EINVAL for unaligned DIO as other filesystems do but after recent iomap
+> changes it started to return ENOTBLK.
 > 
-> E.g, generic/228 on ext4 (the same on btrfs)
+> > In my experience XFS returns -EINVAL when failing unaligned DIO (but
+> > maybe there are edge cases where that isn't always the case?)
+> > 
+> > Would be nice to have consistency across filesystems for what is
+> > returned when failing unaligned DIO.
 > 
-> I checked my log, bash/xfsprogs and a lot of other packages are all updated,
-> and unfortunately my distro doesn't provide older packages for me to
-> bisect...
+> Agreed although there are various corner cases like files which never
+> support direct IO - e.g. with data journalling - and thus fallback to
+> buffered IO happens before any alignment checks. 
+> 
+> > The iomap code returns -ENOTBLK as "the magic error code to fall back
+> > to buffered I/O".  But that seems only for page cache invalidation
+> > failure, _not_ for unaligned DIO.
+> > 
+> > (Anyway, __iomap_dio_rw's WRITE handling can return -ENOTBLK if page
+> > cache invalidation fails during DIO write. So it seems higher-level
+> > code, like I've added to NFS/NFSD to check for unaligned DIO failure,
+> > should check for both -EINVAL and -ENOTBLK).
+> 
+> I think the idea here is that if page cache invalidation fails we want to
+> fallback to buffered IO so that we don't cause cache coherency issues and
+> that's why ENOTBLK is returned.
+> 
+> > ps. ENOTBLK is actually much less easily confused with other random
+> > uses of EINVAL (EINVAL use is generally way too overloaded, rendering
+> > it a pretty unhelpful error).  But switching XFS to use ENOTBLK
+> > instead of EINVAL seems like disruptive interface breakage (I suppose
+> > same could be said for ext4 if it were to now return EINVAL for
+> > unaligned DIO, but ext4 flip-flopping on how it handles unaligned DIO
+> > prompted me to ask these questions now)
+> 
+> Definitely. In this particular case EINVAL for unaligned DIO is there for
+> ages and there likely is some userspace program somewhere that depends on
+> it.
 
-I don't know if this helps, but here's a kvm-xfstests using Debian
-Trixie and certain updated critical packages (fio, quota, xfsprogs,
-util-linux, etc.) overriden.  How does that differ from your distro
-package versions?
+Thanks for your reply, that all makes sense.
 
-I haven't updated my arm64 image in a bit (this was from dated July 20th).
-I can try doing an arm64 rebuild and see if a newer version still
-works on arm64, but here's a data point....
-
-						- TEd
-
-
-KERNEL:    kernel       6.17.0-rc3-xfstests #1 SMP Tue Sep  2 07:57:28 EDT 2025 aarch64
-CMDLINE:   --arm64 -c ext4/4k generic/228
-CPUS:      2
-MEM:       1977.09
-
-ext4/4k: 1 tests, 5 seconds
-  generic/228  Pass     2s
-Totals: 1 tests, 0 skipped, 0 failures, 0 errors, 2s
-
-FSTESTVER: blktests     401420a (Fri, 6 Jun 2025 22:12:43 +0900)
-FSTESTVER: fio          fio-3.40 (Tue, 20 May 2025 12:23:01 -0600)
-FSTESTVER: fsverity     v1.6-2-gee7d74d (Mon, 17 Feb 2025 11:41:58 -0800)
-FSTESTVER: ima-evm-utils        v1.5 (Mon, 6 Mar 2023 07:40:07 -0500)
-FSTESTVER: libaio       libaio-0.3.108-82-gb8eadc9 (Thu, 2 Jun 2022 13:33:11 +0200)
-FSTESTVER: ltp          20250130-280-g60656cbbb (Wed, 28 May 2025 15:04:44 +0200)
-FSTESTVER: quota                v4.05-71-g4cd93fc (Sun, 27 Apr 2025 08:24:24 -0400)
-FSTESTVER: util-linux   v2.41-40-g22b91501d (Mon, 26 May 2025 11:27:31 +0200)
-FSTESTVER: xfsprogs     v6.15.0 (Mon, 23 Jun 2025 13:56:41 +0200)
-FSTESTVER: xfstests     v2025.07.13-12-gef63d1368 (Sat, 19 Jul 2025 18:14:29 -0400)
-FSTESTVER: xfstests-bld gce-xfstests-202504292206-20-g905451c1 (Sun, 20 Jul 2025 03:04:27 +0000)
-FSTESTVER: zz_build-distro      trixie
-FSTESTCFG: ext4/4k
-FSTESTSET: generic/228
-FSTESTOPT: aex
-Truncating test artifacts in /results to 31k
+Mike
