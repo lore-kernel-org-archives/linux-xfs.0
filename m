@@ -1,47 +1,29 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 720441DE3DC;
-	Wed,  3 Sep 2025 04:47:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF8A34501A
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Sep 2025 06:02:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756874823; cv=none; b=DaXy03vcbIeJB2Yq/9GpVWRYrC2XySuI5LzhXbVEqZSIMEo1wfCDf9GRoycXDMke2WOHC9t4R8KPd9PaPxWeiRBMjzmgMv1ZufIQ2KbP1FqycTFHZPYNy59cO+VX4G0xAFyQTPbK9WJDjZFuH0Jj29NZaGI8PY3N4SUCwoZ8fV8=
+	t=1756879382; cv=none; b=ZvofIFOEXtx05Peg0EJiLBGMx5TCWXes9+ooGkGH66L8MXUhz0J9UUP3HFxz2BJwi6o6hsDiA8A6uOstTKbO7eAwz1ww5a5q3TMjWwgRL9W2U8mNXsE0h+9ZPEHa+tmIxwva1Wgq9qDnjiv7lSRjxogGpAYUoqYgVuSNFiBvbwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756874823; c=relaxed/simple;
-	bh=Q6sLYZfbTF2EVDK67+GnWbAGy3UzZVGmyT0OpcGqbnE=;
+	s=arc-20240116; t=1756879382; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N5wYMf9KWmF6IKF2EPqmWfYdafYyYJ5neCBrHqF5mAASsxknQTaovfIoWNWMajp1Qs8GpFtqrdtyvNDbah8TITaS9ymAtJpg5QywpSNg/bgWhgZXCCx5/UtFXV8LVlSy//nqBq/wbLgsmNVdz4M7P1Hvcw/0RjBq6Peo3ncDSmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vUc474dY; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vUc474dY"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Oz+na+DDB0qci4Krf6kgl2+d1IC1NsN0QPDO6XJVDfE=; b=vUc474dYrwmNySav+vM3lsDLpH
-	jUDoLv4Fjw+3UWTx5CY25Gp9VHD3c3B7zWcYUJE5f+Xl/Xdyr3H/nRhHkEm8Xx91s23QorubXifzO
-	quLUCCP1bu/C8aowpigJqm4Osuc/AQARO+wxtacoM3s1CwJJJOtc/NoL8aANB6mzmPl847jEz9rwK
-	oMmrG2de/ya8NMX1cvDVJz7lys6UI9X8DcQGpwta6Nvl8LAP5Hg1brF6K8sc2sBxvY6GWKsPa8G+4
-	rmeWD6DnTon2c1/o7+wAnVbdy81TpUo97qq52No0BO2IOrr0zcm8PN2ncOxmbHLVRHnpXOsOSLTve
-	oKYbJCdA==;
-Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1utfOa-0000000FGiY-0yoh;
-	Wed, 03 Sep 2025 04:46:56 +0000
-Date: Wed, 3 Sep 2025 05:46:55 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: Ranganath V N <vnranganath.20@gmail.com>
-Cc: rdunlap@infradead.org, brauner@kernel.org, conor+dt@kernel.org,
-	corbet@lwn.net, devicetree@vger.kernel.org, djwong@kernel.org,
-	krzk+dt@kernel.org, krzk@kernel.org, kvm@vger.kernel.org,
-	laurent.pinchart@ideasonboard.com, linux-doc@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, pbonzini@redhat.com, robh@kernel.org
-Subject: Re: [PATCH] Documentation: Fix spelling mistakes
-Message-ID: <aLfIP0nXp06l6xcd@casper.infradead.org>
-References: <A33D792E-4773-458B-ACF4-5E66B1FCB5AC@infradead.org>
- <20250903040043.19398-1-vnranganath.20@gmail.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=QnoIYLcqWyQayB6i5sPh9qTMF6W9n2zdXJ9YKw3IuuDg9U5rwseRcUdjXaqqPu7+f/aW3xThhSN38sNxH63zs8d1ytW8egCPT8Uoe+lYdyFdzrEbecm/GBKVituLxBBVeOrEn+ypr7qE9Z9usHu1eBiNK4Wr9vSFW2dL7xv+u+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 1ED7868C4E; Wed,  3 Sep 2025 08:02:48 +0200 (CEST)
+Date: Wed, 3 Sep 2025 08:02:47 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: cem@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/9] xfs: compute data device CoW staging extent reap
+ limits dynamically
+Message-ID: <20250903060247.GA10069@lst.de>
+References: <175639126389.761138.3915752172201973808.stgit@frogsfrogsfrogs> <175639126543.761138.12043696058302651120.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,10 +32,10 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250903040043.19398-1-vnranganath.20@gmail.com>
+In-Reply-To: <175639126543.761138.12043696058302651120.stgit@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Sep 03, 2025 at 09:30:43AM +0530, Ranganath V N wrote:
-> Thanks for the response. Do you want me to resend the patch by ignoring this?
-> particular "serie".
+Looks good:
 
-No.  "serie" is obsolete and was clearly a typo.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
