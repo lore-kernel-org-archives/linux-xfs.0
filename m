@@ -1,214 +1,207 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D348B264FB5
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Sep 2025 18:07:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBDFE1624C0;
+	Wed,  3 Sep 2025 18:31:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756922853; cv=none; b=MWeF0HpxeMCNw4jnAsRjlLGK6X+TFgzuNeaY+lUhWCH0CXYPXeJT1Tiaa6Ktg6ClBxrWwtfHXAkdas1d8SQ8jWqz8lT4p1uQNXYJQGZQwZUd4G1Hp24yy1klIzfUK+IkWwQv5GMWBNN05kS48NRT09tgFBLPFGoyLv/AEN5pisQ=
+	t=1756924280; cv=none; b=YdjaA5BYLJ5jj6NJ10JMmZw6/h8MBKHR2enq6G1NF6uJK5WeCrEYnom69TqZO4FVlAb71C4BBPQnrloVgAyI57XAFKzbsfiI61O9mzd8lYRaB+O5ORuvrl/mZq1iLEsqcavRGXxveA8aF79RfheaW4pncyMkrXHX9dTEAJieu7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756922853; c=relaxed/simple;
-	bh=upQMfC7hNHjJFJbDRgHo7N11cTPV0+/D7F1x6c0YR/Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bjYzXKAehVm8tHlP0Cm//pBa2UzyzlsG0NaHyrkezAfAzW7bt+wsZCbtgpLEeYNO0HW3XemdLMyf02pxcFAMi77wNXNMkd05YlkiEUWIZo8cBAiKmaeI8jGDlun2TyJYDLwm+fvdVZ/PQdawsO1xNzmWEAft970/PI72q0NbFiY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=V0SIoPzg; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=N2KMcL7/; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=V0SIoPzg; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=N2KMcL7/; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1756924280; c=relaxed/simple;
+	bh=Oebq/suGCC5fmC4qcEo+dhhN9f9dKTJa8nVy/6KezsM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Sc4rH86mlE8Aqg2eJSF3nHLkajE5Kiuum0JEhpbsl6t8IWBYpNjRT99t2IHaEPUkQ8mqNsfYgnMWEpnmLnErezNnBB+kdynSNVgUnc6u0NU8J7SDI14vU8TYk89cNRMruWnrN4+JT+mEAGx7Xq+DN6I0KNTAG++hu1f3KUPGA9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lHPkXy9f; arc=none smtp.client-ip=209.85.222.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="V0SIoPzg";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="N2KMcL7/";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="V0SIoPzg";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="N2KMcL7/"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 062791F38A;
-	Wed,  3 Sep 2025 18:07:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1756922850; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=K0SNTACYNeenCLdEDaEEX8EwxyvHt0mmXaw7faobCgU=;
-	b=V0SIoPzg389i5USRAQXwTNhd7PHscbV4SZcAjyZd53BQFW8OU5IGlwSccCBq44x5qbH80T
-	NULxT7lg7nsil0iBWuXJJOJDnwZFsyqrHahZymHw0oq2KJzPUD1LvrIVPJUZx1ohYzfAh3
-	NNcU0aJQ+5VjmTpEbu9tJk0fnWECn4M=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1756922850;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=K0SNTACYNeenCLdEDaEEX8EwxyvHt0mmXaw7faobCgU=;
-	b=N2KMcL7/R/wao4vRRDLZ93xsPnvP8rzEy+d5MeEepecU5SqMxtdlzcvQ7WFA4MMjxxqDNU
-	vTdYmuKCxFmdZNBw==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1756922850; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=K0SNTACYNeenCLdEDaEEX8EwxyvHt0mmXaw7faobCgU=;
-	b=V0SIoPzg389i5USRAQXwTNhd7PHscbV4SZcAjyZd53BQFW8OU5IGlwSccCBq44x5qbH80T
-	NULxT7lg7nsil0iBWuXJJOJDnwZFsyqrHahZymHw0oq2KJzPUD1LvrIVPJUZx1ohYzfAh3
-	NNcU0aJQ+5VjmTpEbu9tJk0fnWECn4M=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1756922850;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=K0SNTACYNeenCLdEDaEEX8EwxyvHt0mmXaw7faobCgU=;
-	b=N2KMcL7/R/wao4vRRDLZ93xsPnvP8rzEy+d5MeEepecU5SqMxtdlzcvQ7WFA4MMjxxqDNU
-	vTdYmuKCxFmdZNBw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id F040613A31;
-	Wed,  3 Sep 2025 18:07:29 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id HzM/OuGDuGhNGAAAD6G6ig
-	(envelope-from <vbabka@suse.cz>); Wed, 03 Sep 2025 18:07:29 +0000
-Message-ID: <0b88c35a-9616-4ad9-9dec-978902f0e901@suse.cz>
-Date: Wed, 3 Sep 2025 20:07:29 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lHPkXy9f"
+Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-805a1931a15so25683585a.1;
+        Wed, 03 Sep 2025 11:31:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1756924278; x=1757529078; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5qSvo2uZgovlgx0FfJJeK9qSwaaMzcgiCqTuZCwC6B4=;
+        b=lHPkXy9f09j30m4+RuGsYhZzPUR3o+0o6I1E6/gXFvkO7cUqyLXY+kHMPke0U/uHaa
+         WbiQznWEaDEuDswWZc+JjTDiykBDsUP3cPH0T+LUIHY+TCgl4plf5B+qcO7IyclsNjUY
+         hOciFJLg3tMuio1USX2GC5jZN8TLXHbUKHpMwYsLXl2wvbMMljx9DOGueowMUb+ObRL6
+         X8QKxOl1gs4tuC+AWfFp1Ru+E5JatnTxCA9cAnDAgZJ3X86FSKB9FLTpzrQTF17bo7V5
+         Rsj9DKG3nMLdypUUg5NfvIu99QjOS+Y5sruCMXyQgZIAESOi7NcsKz4ZwNC4Au6netxN
+         tUzA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1756924278; x=1757529078;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=5qSvo2uZgovlgx0FfJJeK9qSwaaMzcgiCqTuZCwC6B4=;
+        b=BNeVwvUbAB3fcQQklUMaEVYSemzTZK6Os9/RibfbZDcFmRj2udPbZIQkSQ+f15Gl6f
+         eftDHaWrpitRP82vdpAnL6uUA2Ku5uvBiaUhJkvr9jtpBw3lm28EzdywhUGCvwLSEPeH
+         94ckRBkF139SUd5ZHdJ2+eehlj7M7NutlJwhv8STHxXRu6+QPmIT7DJ9jRoudiITbuiw
+         Svfd3gxP/4YFEedwKVxZxVrsCtH27oHTxlRIRA20FO4xz7s1x9t3vajOAZYhP4cWm8G9
+         Y6UYjq8YJSQB8FS9rjKbz98OZUKKRJPwUMxA0pjUvRbQMa9VlpUjAvrqhOm74ZIDsoey
+         mwFQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUWzGoCBvxJ+D2uLT6jD159SMJFMn6zPtfVYX3a/NpP7oT89jejj4XixzstAtWCGW6Nc53uo65RanMy@vger.kernel.org, AJvYcCXE9DgjnbyFOQj3MFXeAQ5jLpOMP2tTPvGXQ08UpOA42z95g5eI2sq0t7HFToOR4O6c72BTjV13kkaj@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy83Ps/HhNG4GSYxpJN9FeXE8ROKdbTdlHseVEhfwkqw5dluYvQ
+	1WZEkE+/0vSBWAypmM5jym9Ben+MRCyKCQpLFx8UJyRr6HTljQecpYGKTFlrCg4x5E6/gcj8Bb1
+	BJleoIJ6ESqie/UgCHkwQJv9yAB3FKs0=
+X-Gm-Gg: ASbGnctawBngBpM9EmoRpV0dBO/m3Jcq49lzn2O+qoVfGQIBiToTbNOUs08YFtnr5eI
+	LVgwniI2XLauNEW3ViKLpxhxQxFJSWlEMbCPjf1+7OLmyvVKQYmv4WLsclT6aqRCjQYJJxMGgHL
+	lfgQjLn/5OanLjvfDbBPFTdqv3wuQFGA0fT5sycVJbBcHRAWq2gycFNus3pWzPpqI3kfXnsk6aE
+	shC2FjVK3h7zpPkbCc=
+X-Google-Smtp-Source: AGHT+IE3XOodSa4+Yym/aMpYxbb8gIvknV1OOwtdLdTWe73FoscR9Bhnt7It4WMH/rYILUqX6BpVE5Zi5HZv3XGlSPc=
+X-Received: by 2002:a05:620a:178b:b0:7de:fa4b:773f with SMTP id
+ af79cd13be357-7ff26eaad4dmr1984699485a.17.1756924277350; Wed, 03 Sep 2025
+ 11:31:17 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/4] xfs: enable online fsck by default in Kconfig
-Content-Language: en-US
-To: "Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-References: <175691147603.1206750.9285060179974032092.stgit@frogsfrogsfrogs>
- <175691147712.1206750.10415065465026735526.stgit@frogsfrogsfrogs>
-From: Vlastimil Babka <vbabka@suse.cz>
-Autocrypt: addr=vbabka@suse.cz; keydata=
- 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
- m6M14QORSWTLRg==
-In-Reply-To: <175691147712.1206750.10415065465026735526.stgit@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.998];
-	MIME_GOOD(-0.10)[text/plain];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_THREE(0.00)[3];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:mid]
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Spam-Score: -4.30
+References: <20250902150755.289469-1-bfoster@redhat.com> <20250902150755.289469-3-bfoster@redhat.com>
+ <CAJnrk1bmjCB=8o-YOkPScftoXMrgpBKU3vtkMOViEfFQ9LXLfg@mail.gmail.com> <aLgyELz3TH_TCZRw@bfoster>
+In-Reply-To: <aLgyELz3TH_TCZRw@bfoster>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Wed, 3 Sep 2025 11:31:05 -0700
+X-Gm-Features: Ac12FXzXhB4BODApWtar5e62UMm9uHMNorJoBb-ra_x0jxdFtiu9ViWdjWqt9nU
+Message-ID: <CAJnrk1bwDun7EtQJsvMYi_0ODcduRLGaT+sJdXhzjNP3+Ynbeg@mail.gmail.com>
+Subject: Re: [PATCH RFC 2/2] iomap: revert the iomap_iter pos on ->iomap_end() error
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, jack@suse.cz, djwong@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 9/3/25 17:00, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Online fsck has been a part of upstream for over a year now without any
-> serious problems.  Turn it on by default in time for the 2025 LTS
-> kernel.
-> 
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  fs/xfs/Kconfig |    8 ++------
->  1 file changed, 2 insertions(+), 6 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> index ecebd3ebab1342..dc55bbf295208d 100644
-> --- a/fs/xfs/Kconfig
-> +++ b/fs/xfs/Kconfig
-> @@ -137,7 +137,7 @@ config XFS_BTREE_IN_MEM
->  
->  config XFS_ONLINE_SCRUB
->  	bool "XFS online metadata check support"
-> -	default n
-> +	default y
->  	depends on XFS_FS
->  	depends on TMPFS && SHMEM
->  	select XFS_LIVE_HOOKS
-> @@ -150,8 +150,6 @@ config XFS_ONLINE_SCRUB
->  	  advantage here is to look for problems proactively so that
->  	  they can be dealt with in a controlled manner.
->  
-> -	  This feature is considered EXPERIMENTAL.  Use with caution!
-> -
->  	  See the xfs_scrub man page in section 8 for additional information.
->  
->  	  If unsure, say N.
+On Wed, Sep 3, 2025 at 5:14=E2=80=AFAM Brian Foster <bfoster@redhat.com> wr=
+ote:
+>
+> On Tue, Sep 02, 2025 at 02:11:35PM -0700, Joanne Koong wrote:
+> > On Tue, Sep 2, 2025 at 8:04=E2=80=AFAM Brian Foster <bfoster@redhat.com=
+> wrote:
+> > >
+> > > An iomap op iteration should not be considered successful if
+> > > ->iomap_end() fails. Most ->iomap_end() callbacks do not return
+> > > errors, and for those that do we return the error to the caller, but
+> > > this is still not sufficient in some corner cases.
+> > >
+> > > For example, if a DAX write to a shared iomap fails at ->iomap_end()
+> > > on XFS, this means the remap of shared blocks from the COW fork to
+> > > the data fork has possibly failed. In turn this means that just
+> > > written data may not be accessible in the file. dax_iomap_rw()
+> > > returns partial success over a returned error code and the operation
+> > > has already advanced iter.pos by the time ->iomap_end() is called.
+> > > This means that dax_iomap_rw() can return more bytes processed than
+> > > have been completed successfully, including partial success instead
+> > > of an error code if the first iteration happens to fail.
+> > >
+> > > To address this problem, first tweak the ->iomap_end() error
+> > > handling logic to run regardless of whether the current iteration
+> > > advanced the iter. Next, revert pos in the error handling path. Add
+> > > a new helper to undo the changes from iomap_iter_advance(). It is
+> > > static to start since the only initial user is in iomap_iter.c.
+> > >
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > >  fs/iomap/iter.c | 20 +++++++++++++++++++-
+> > >  1 file changed, 19 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
+> > > index 7cc4599b9c9b..69c993fe51fa 100644
+> > > --- a/fs/iomap/iter.c
+> > > +++ b/fs/iomap/iter.c
+> > > @@ -27,6 +27,22 @@ int iomap_iter_advance(struct iomap_iter *iter, u6=
+4 *count)
+> > >         return 0;
+> > >  }
+> > >
+> > > +/**
+> > > + * iomap_iter_revert - revert the iterator position
+> > > + * @iter: iteration structure
+> > > + * @count: number of bytes to revert
+> > > + *
+> > > + * Revert the iterator position by the specified number of bytes, un=
+doing
+> > > + * the effect of a previous iomap_iter_advance() call. The count mus=
+t not
+> > > + * exceed the amount previously advanced in the current iter.
+> > > + */
+> > > +static void iomap_iter_revert(struct iomap_iter *iter, u64 count)
+> > > +{
+> > > +       count =3D min_t(u64, iter->pos - iter->iter_start_pos, count)=
+;
+> > > +       iter->pos -=3D count;
+> > > +       iter->len +=3D count;
+> > > +}
+> > > +
+> > >  static inline void iomap_iter_done(struct iomap_iter *iter)
+> > >  {
+> > >         WARN_ON_ONCE(iter->iomap.offset > iter->pos);
+> > > @@ -80,8 +96,10 @@ int iomap_iter(struct iomap_iter *iter, const stru=
+ct iomap_ops *ops)
+> > >                                 iomap_length_trim(iter, iter->iter_st=
+art_pos,
+> > >                                                   olen),
+> > >                                 advanced, iter->flags, &iter->iomap);
+> > > -               if (ret < 0 && !advanced && !iter->status)
+> > > +               if (ret < 0 && !iter->status) {
+> > > +                       iomap_iter_revert(iter, advanced);
+> > >                         return ret;
+> > > +               }
+> >
+> > Should iomap_iter_revert() also be called in the "if (iter->status <
+> > 0)" case a few lines below? I think otherwise, that leads to the same
+> > problem in dax_iomap_rw() you pointed out in the commit message.
+> >
+>
+> My thinking was that I wanted to try for the invariant that the
+> operation/iteration is responsible to set the iter appropriately in the
+> event that it returns an error in iter.status. I.e., either not advance
+> or revert if appropriate.
+>
+> This is more consistent with how the iter is advanced and I suspect will
+> help prevent potential whack a mole issues with inconsistent
+> expectations for error handling at the iomap_iter() level. I actually
+> had iomap_iter_revert() non-static originally, but changed it since I
+> didn't spot anywhere it needed to be called as of yet. I could have
+> certainly missed something though. Did you have a particular sequence in
+> mind, or were just thinking in general?
 
-Should it still say that with default y?
+Thanks for explaining your thought process. That reasoning makes sense to m=
+e.
 
-> @@ -175,7 +173,7 @@ config XFS_ONLINE_SCRUB_STATS
->  
->  config XFS_ONLINE_REPAIR
->  	bool "XFS online metadata repair support"
-> -	default n
-> +	default y
->  	depends on XFS_FS && XFS_ONLINE_SCRUB
->  	select XFS_BTREE_IN_MEM
->  	help
-> @@ -186,8 +184,6 @@ config XFS_ONLINE_REPAIR
->  	  formatted with secondary metadata, such as reverse mappings and inode
->  	  parent pointers.
->  
-> -	  This feature is considered EXPERIMENTAL.  Use with caution!
-> -
->  	  See the xfs_scrub man page in section 8 for additional information.
->  
->  	  If unsure, say N.
+Originally I thought the dax_iomap_rw() sequence needed a
+iomap_iter_revert() but looking at it again, I'm realizing now that
+that function is intended to return successfully even if the writes in
+further iterations fail.
 
-Ditto
+Thanks,
+Joanne
+
+>
+> FWIW, I suspect there's a reasonable argument for doing the same for
+> ->iomap_end() and make the callback responsible for reverting if
+> necessary. I went the way in this patch just because it seemed more
+> simple given the limited scope, but that may not always be the case
+> and/or may just be cleaner. I can take a closer look at that if there
+> are stronger opinions..? Thanks for the feedback.
+> > > returns partial success over a returned error code and the operation
+> > > has already advanced iter.pos by the time ->iomap_end() is called.
+> > > This means that dax_iomap_rw() can return more bytes processed than
+> > > have been completed successfully, including partial success instead
+> > > of an error code if the first iteration happens to fail.
+>
+> Brian
+>
+> > Thanks,
+> > Joanne
+> > >         }
+> > >
+> > >         /* detect old return semantics where this would advance */
+> > > --
+> > > 2.51.0
+> > >
+> > >
+> >
+>
