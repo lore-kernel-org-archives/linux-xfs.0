@@ -1,149 +1,177 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60E192D595D;
-	Wed,  3 Sep 2025 09:52:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52EF22F3C18
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Sep 2025 11:04:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756893162; cv=none; b=rqf0f8xI3zW61pk84toJqd0tF6E8G4VhghgQCD1yB3+fqvI2lEvK5Cah/PDS2w/mCJke7pmvrrJ5xCbdrgC/JFtk7VQpI+cgyvDbpcdhdI++bm3dt6KHr2q4OXUbtCH8Wrdt54ObZ31zNJKnh0i3G6dvO47SAttuUeqh8l+Yz14=
+	t=1756897464; cv=none; b=mZSU/jDciqwepp/LCoNZlhq9kw4T+EHosxj/SqHbklRvMlahfCPjAflKh7qfGnUfVBCSHhIzIvZVbgwTLg5ukJpisuMUOMorEHQNitFY68ygm+5Yb0n9IylC3TuGKFoLDx5QFCjAPqRTyCWOmkC/GQviSScUUyqsLP50aq3eThM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756893162; c=relaxed/simple;
-	bh=DRHRhDYbpmHzpfFsIrEuhLJe2BcDsU7tEMe0VoXil2I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dDecmhM3/fJ8fnktqOYNImC0URfVYGrGUlNBtaNEMq6VnXQHme/fGcORoByfIxj8Bd6XjhlXo1FzYIqHwDWPmtyy1pvQMwdMYLq5ykN5epyXKu2596LRfNxmYqv5GmoR+jAvoB8an9wlNK8nJ6LjBZixpBjum0SiGGgn2RGZhEs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kcF926pt; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1756897464; c=relaxed/simple;
+	bh=fZ8AP/bIDgxJgoa+C3tfuZxRU5wild3eBN7crAa9Cas=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AEKm7W3/Mo/vPwvigBgf0tjz2jo11/9XESxG9T4Y+rCqyE6Vtz5/WaSIl3a2c/GMQqsFl0sLVaTTnodT/ojarR93eDV6kD2yEquo23T6kXkDXSRzyX+Z/RmZprqvtDTJ5dIQ1w0t9EcTKGYgabjvcnY8/wtGx9vEaLBQC737aU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=JAmKM1kb; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=rSUK1wDv; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=JAmKM1kb; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=rSUK1wDv; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kcF926pt"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-45b8b8d45b3so29414055e9.1;
-        Wed, 03 Sep 2025 02:52:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756893159; x=1757497959; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=m51P/mqA6vihj9WJ5mZRAm+FhXTOdtX2l73PkgmXgs8=;
-        b=kcF926ptivm32cuoXcVj8WKO0wo0TyA4N64qxhIVuHngWWIPTodbiOjehVw2yQS+WA
-         z6QwtO30GSCX73wdHI6LvOr9yvhp44yemBlLuangCG8ETrgjsvOO0LSyemIaeIRkxIPf
-         DbWwKRA8g3B8oIrDfcDxOA5WBzSc0J6iXIOkgTHSJnH2URt6Iz7tyVUiRL+F4TrtLwNu
-         tsQ0QgsWdqbM1auCIoYO1pg1kgz94eIzQMk3aOgUabK3svCPujUGeCGv14C4qDITtF7Q
-         b342Q77FZF5DNIL6Xg9zID6o3VzZlAr7LgviTTd26vIzHzHjKKJHyYgSKgxxaAzZKD3w
-         LBvA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756893159; x=1757497959;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=m51P/mqA6vihj9WJ5mZRAm+FhXTOdtX2l73PkgmXgs8=;
-        b=CkO7Rof6jcL0AUmn07Oz36mh07iMm6F9NCOpjyRw/KEM1C4XodWPJd6+nZvYqohh6r
-         5+h4vvWgchRj8fKBySICmRca36SuHcqNjF+szE5qXGLm9s+mAZZ4Z9nFfThk8i6fdUE5
-         Ic4df72Xo6FKI5ryBPud8adVnKJGuNC7WTNRMegqAAHVMN6MhW9MIa5zoB/5IUyUsWKG
-         yfn81j7WEiiAYQcEGgW74ZPqZi/vrsHqWcMeLGl9qb3ZHyw6WC90RGD9sWzGvFBa87+6
-         TGPE1J5Q9qAxFpPgC6BXnOBGmuzLkececdWyxlD3WNg6QVea7hHCCvH5K6fUXjY0hYae
-         MHqA==
-X-Forwarded-Encrypted: i=1; AJvYcCUJKVRIuegyiJabkIuZ03bOoh6ZwvxufgIEOBqHq/m3QEXPILrX7732vRRTRUJwpxhvjhcR2nrc5dIj3a1lgg==@vger.kernel.org, AJvYcCW/PZtghYteSVcb95Gx/eaZw5jfDNbT+mU0xdqzpt/PZhTOjZykR9qIfkCVMQKV4v2wgu27pSpn1YgiwA==@vger.kernel.org, AJvYcCXGDYwaJHTM5j2RY5mDiG4X5o9Ofb6CMrGkaUzWniB2iJ/6aj7S+2l4yTvyUHTeqIjCCKFQ/HUIzMDQ@vger.kernel.org
-X-Gm-Message-State: AOJu0YyHnsJOQOpUtmNt7w9QZctRmimousHmTpVmqRGmECPMEzcFszvO
-	MqB042287m09u7qVCgLL9BLGinRu183rYNfHL/XbDHx4qdLVv9KLcH3S
-X-Gm-Gg: ASbGncvnx25caK81ZE9Itxv0N7SiFJLod60JhxVu6+MLdDaoosK7y3b6B7+NryHET0j
-	aFR+EmTHT7bp1+z7rRasK6hMKkP869uBH3i36sqJPGmduyfy3WuxpqeToom8pSB9o486wXbmweC
-	CBAdQI4idUefuLePdKtZFYDcjndd81tFqOlbW5jnevJUL4yWFNHJgKoR8AdM2i23J9Ua7Yy7oDV
-	IG1QjTPLxuyDx8rZMz51MGwQmzWrCjJEL4shrIdibqqBION6WlFbzgUSwokUtMuvbtXvUI00Gof
-	naKN2/3qJM515ngyadOKyhBP6I6APyJumFTHQAV4bhjiXd5aPFocMJOUc9h0Iww+VNElyrFSs+a
-	CtfQRC/LmZzWNfFsNZIeVJ2qxS8fgQBIxPPZKdkxMHikpNT2BkqAaMPLXNEjIhVysVQ==
-X-Google-Smtp-Source: AGHT+IGibCHhw4opsq0msOZTNUGtFpdoyj60pXb9z9tNXwCehNkks3wS9+oy1yII1iFWVzY0Fyj8Fg==
-X-Received: by 2002:a05:600c:a45:b0:458:bf0a:6061 with SMTP id 5b1f17b1804b1-45b85598614mr140589115e9.24.1756893158409;
-        Wed, 03 Sep 2025 02:52:38 -0700 (PDT)
-Received: from ?IPV6:2620:10d:c096:325:77fd:1068:74c8:af87? ([2620:10d:c092:600::1:92eb])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3cf33fb9dbfsm22934776f8f.43.2025.09.03.02.52.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Sep 2025 02:52:37 -0700 (PDT)
-Message-ID: <c4bc7c33-b1e1-47d1-9d22-b189c86c6c7d@gmail.com>
-Date: Wed, 3 Sep 2025 10:53:49 +0100
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="JAmKM1kb";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="rSUK1wDv";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="JAmKM1kb";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="rSUK1wDv"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 79DE01F453;
+	Wed,  3 Sep 2025 11:04:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1756897461; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=42UAPVcSApsZe1j7ADJ0rBBXxxQZOSxwLxvKqo+L584=;
+	b=JAmKM1kbfW4ZUsXPwFwv6Kwj/NHBsMS1v+wFoXVifCmOmdbxngxfGwJoXPZgA0+tKCC5Ov
+	N/ojQVtnjPsXhEdqlHAQiNnz01r/MJEg+Rgii/tEQBpoanQk2HaWqvGwEweIrky3KoYZRk
+	o2Yx9mlOIfLJBV6SMaF7t4PewvnOi8g=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1756897461;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=42UAPVcSApsZe1j7ADJ0rBBXxxQZOSxwLxvKqo+L584=;
+	b=rSUK1wDvD2/5MdpEUzSubJ422COzhsVihCgmCEURuHjwo0YvlhvSxNlJ0yALk2KBLG0nHA
+	LVKRKWD+AJ7Zu9CA==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=JAmKM1kb;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=rSUK1wDv
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1756897461; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=42UAPVcSApsZe1j7ADJ0rBBXxxQZOSxwLxvKqo+L584=;
+	b=JAmKM1kbfW4ZUsXPwFwv6Kwj/NHBsMS1v+wFoXVifCmOmdbxngxfGwJoXPZgA0+tKCC5Ov
+	N/ojQVtnjPsXhEdqlHAQiNnz01r/MJEg+Rgii/tEQBpoanQk2HaWqvGwEweIrky3KoYZRk
+	o2Yx9mlOIfLJBV6SMaF7t4PewvnOi8g=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1756897461;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=42UAPVcSApsZe1j7ADJ0rBBXxxQZOSxwLxvKqo+L584=;
+	b=rSUK1wDvD2/5MdpEUzSubJ422COzhsVihCgmCEURuHjwo0YvlhvSxNlJ0yALk2KBLG0nHA
+	LVKRKWD+AJ7Zu9CA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7028113888;
+	Wed,  3 Sep 2025 11:04:21 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id /CNcG7UguGgrEgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Wed, 03 Sep 2025 11:04:21 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 23E8DA0809; Wed,  3 Sep 2025 13:04:21 +0200 (CEST)
+Date: Wed, 3 Sep 2025 13:04:21 +0200
+From: Jan Kara <jack@suse.cz>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, jack@suse.cz, djwong@kernel.org
+Subject: Re: [PATCH RFC 1/2] iomap: prioritize iter.status error over
+ ->iomap_end()
+Message-ID: <6loqwledskxhpmzjahgnvwqh3fncr3xbxny454zp7ya6iazccz@ls3p5367ghyi>
+References: <20250902150755.289469-1-bfoster@redhat.com>
+ <20250902150755.289469-2-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] iomap: allow iomap using the per-cpu bio cache
-To: "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
- Matthew Wilcox <willy@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
- Fengnan Chang <changfengnan@bytedance.com>, brauner@kernel.org,
- linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org
-References: <20250822082606.66375-1-changfengnan@bytedance.com>
- <20250822150550.GP7942@frogsfrogsfrogs>
- <aKiP966iRv5gEBwm@casper.infradead.org> <877byv9w6z.fsf@gmail.com>
- <aKif_644529sRXhN@casper.infradead.org> <874ityad1d.fsf@gmail.com>
-Content-Language: en-US
-From: Pavel Begunkov <asml.silence@gmail.com>
-In-Reply-To: <874ityad1d.fsf@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250902150755.289469-2-bfoster@redhat.com>
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.cz:email,suse.cz:dkim];
+	RCVD_COUNT_THREE(0.00)[3];
+	RCPT_COUNT_FIVE(0.00)[6];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.cz:+]
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Rspamd-Queue-Id: 79DE01F453
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -4.01
 
-On 8/23/25 05:15, Ritesh Harjani (IBM) wrote:
-> Matthew Wilcox <willy@infradead.org> writes:
+On Tue 02-09-25 11:07:54, Brian Foster wrote:
+> Jan Kara reports that commit bc264fea0f6f subtly changed error
+> handling behavior in iomap_iter() in the case where both iter.status
+> and ->iomap_end() return error codes. Previously, iter.status had
+> priority and would return to the caller regardless of the
+> ->iomap_end() result. After the change, an ->iomap_end() error
+> returns immediately.
 > 
->> On Fri, Aug 22, 2025 at 09:37:32PM +0530, Ritesh Harjani wrote:
->>> Matthew Wilcox <willy@infradead.org> writes:
->>>> On Fri, Aug 22, 2025 at 08:05:50AM -0700, Darrick J. Wong wrote:
->>>>> Is there a reason /not/ to use the per-cpu bio cache unconditionally?
->>>>
->>>> AIUI it's not safe because completions might happen on a different CPU
->>>> from the submission.
->>>
->>> At max the bio de-queued from cpu X can be returned to cpu Y cache, this
->>> shouldn't be unsafe right? e.g. bio_put_percpu_cache().
->>> Not optimal for performance though.
->>>
->>> Also even for io-uring the IRQ completions (non-polling requests) can
->>> get routed to a different cpu then the submitting cpu, correct?
->>> Then the completions (bio completion processing) are handled via IPIs on
->>> the submtting cpu or based on the cache topology, right?
->>>
->>>> At least, there's nowhere that sets REQ_ALLOC_CACHE unconditionally.
->>>>
->>>> This could do with some better documentation ..
->>>
->>> Agreed. Looking at the history this got added for polling mode first but
->>> later got enabled for even irq driven io-uring rw requests [1]. So it
->>> make sense to understand if this can be added unconditionally for DIO
->>> requests or not.
->>
->> So why does the flag now exist at all?  Why not use the cache
->> unconditionally?
+> This had the unexpected side effect of enabling a DIO fallback to
+> buffered write on ext4 because ->iomap_end() could return -ENOTBLK
+> and overload an -EINVAL error from the core iomap direct I/O code.
 > 
-> I am hoping the author of this patch or folks with io-uring expertise
-> (which added the per-cpu bio cache in the first place) could answer
-> this better. i.e.
-
-CC'ing would help :)
-
-> Now that per-cpu bio cache is being used by io-uring rw requests for
-> both polled and non-polled I/O. Does that mean, we can kill
-> IOCB_ALLOC_CACHE check from iomap dio path completely and use per-cpu
-> bio cache unconditionally by passing REQ_ALLOC_CACHE flag?  That means
-> all DIO requests via iomap can now use this per-cpu bio cache and not
-> just the one initiated via io-uring path.
+> This has been fixed independently in ext4, but nonetheless the
+> change in iomap was unintentional. Since other filesystems may use
+> this in similar ways, restore long standing behavior and always
+> return the value of iter.status if it happens to contain an error
+> code.
 > 
-> Or are there still restrictions in using this per-cpu bio cache, which
-> limits it to be only used via io-uring path? If yes, what are they? And
-> can this be documented somewhere?
+> Fixes: bc264fea0f6f ("iomap: support incremental iomap_iter advances")
+> Diagnosed-by: Jan Kara <jack@suse.cz>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-It should be safe to use for task context allocations (struct
-bio_alloc_cache::free_list is [soft]irq unsafe)
+Looks good. Feel free to add:
 
-IOCB_ALLOC_CACHE shouldn't be needed, but IIRC I played it
-conservatively to not impact paths I didn't specifically benchmark.
-FWIW, I couldn't measure any negative impact with io_uring at the
-time for requests completed on a different CPU (same NUMA), but if
-it's a problem, to offset the effect we can probably add a CPU
-check => bio_free and/or try batch de-allocate when the cache is
-full.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
+								Honza
+
+> ---
+>  fs/iomap/iter.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
+> index cef77ca0c20b..7cc4599b9c9b 100644
+> --- a/fs/iomap/iter.c
+> +++ b/fs/iomap/iter.c
+> @@ -80,7 +80,7 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
+>  				iomap_length_trim(iter, iter->iter_start_pos,
+>  						  olen),
+>  				advanced, iter->flags, &iter->iomap);
+> -		if (ret < 0 && !advanced)
+> +		if (ret < 0 && !advanced && !iter->status)
+>  			return ret;
+>  	}
+>  
+> -- 
+> 2.51.0
+> 
 -- 
-Pavel Begunkov
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
