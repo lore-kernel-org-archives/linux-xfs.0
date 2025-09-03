@@ -1,53 +1,60 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5EB92D7398;
-	Wed,  3 Sep 2025 06:04:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 399662D77FE
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Sep 2025 06:04:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756879452; cv=none; b=e2GlixjbJwKCvdChADPAeQQAAinfQCj0T01Goi5bTxAHNKSoi/bC3zlMqjqZBaAlHR6ycU56sNiwGy4xZJlAmmdKNLMli8KrM9AuUJwDpi7rXV0to0sCmCeOc3NsqmJGIkCtqIbdCVKbuXd7/Lo6qzPL1yGWrkUuW7CLJDvXDBQ=
+	t=1756879455; cv=none; b=jgURFSiDxOeNm88dDe/Z5ORlR4gdEttmcHpY6TCfKyCAtwjDW2mZiY2BLcPaiplDu4mGffAeJhTk7pa34m/SbyKkPETD4jwK4hCAaVxKY9mZMxvQiiXLKixLGaN4yQHcT0ucp0ZVZG257FnSRQb1j/QuTYlBCrDRz19motO57Do=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756879452; c=relaxed/simple;
-	bh=IRo7a+nxcjuvrsKtxlNoqN9R/9Jaa9ywStnefdyYtEo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PmhUO7U+ztpRUvjhfMnADF07YsBF0OC29cTUdlNo25Aoo4G+5l9wTYnt+4LDzhIdxS5bhdhq1aMFxZjrjE5ewXBOJry3T/Qh2ynmOBbYORyN/kDWv2lld7Jc6mQG0W55CEiSJ62CyaJ96nGIMLLr3N/fo0JNHGag3mxcfsieohg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0IhduU68; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0IhduU68"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=IRo7a+nxcjuvrsKtxlNoqN9R/9Jaa9ywStnefdyYtEo=; b=0IhduU68+VwEZSkpU29K9RJcPF
-	gg/3ZnneuJOuEctugEC+hrdr9Oiql/voPkBLXaRasIoOiRL3U0i71G/+ApmqbrEoOFO5GqHr4iGV9
-	TDGuMthvfvn4E9WyJBYocyd9r4PzKgMoX5INDcl13KCQQbq+EJQav2hmBqXG2SebOLWJj6heVoXnE
-	nq3cCIOR/JyjNOB6EZTFD4gptzv5MJfZS1gI38ipoJiC9F5UgfFXqeDHodA1icKw0vsX34g+zir/m
-	0XAQjYttmMY3IWrWVlPWDvC2ofYtJ4VOZtKcQhNamXNtviDxCLiF7LS6dGAh8LFKXjFeqB7Y01F5o
-	Ji6Cl1Ew==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1utgbK-00000004Rjf-01kI;
-	Wed, 03 Sep 2025 06:04:10 +0000
-Date: Tue, 2 Sep 2025 23:04:09 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: syzbot <syzbot+ab02e4744b96de7d3499@syzkaller.appspotmail.com>
-Cc: cem@kernel.org, hch@infradead.org, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [xfs?] WARNING in xfs_trans_alloc
-Message-ID: <aLfaWUYaqDk1d85i@infradead.org>
-References: <68a28720.050a0220.e29e5.0080.GAE@google.com>
- <68b33cf4.a00a0220.1337b0.0025.GAE@google.com>
+	s=arc-20240116; t=1756879455; c=relaxed/simple;
+	bh=pwP5ewIrHo3p9vhx09GxG9320nyXHCTGwSq1UycDJEY=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
+	 Content-Type; b=a8lc0qZinmpjIghe0XGixhnm33eOaUFsVQrqyscc0bDdUPDGkbpaYjRqZZb88DKwg0d8gboBK8KWn7T4CGT4mqIj/0HCMDJ7cDJq64+K7pDHX1uviKdRHkVIkxfhHQYD54w5X/bCL/GbG5mNsu/WIgyhqc5QfGlwFpF9xQug5hQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-3f4ebcbf96dso34746195ab.1
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Sep 2025 23:04:13 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1756879453; x=1757484253;
+        h=cc:to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=pwP5ewIrHo3p9vhx09GxG9320nyXHCTGwSq1UycDJEY=;
+        b=MRk+Pjh70EnFD61F96O6cHscWchtRD/SaN/nLqUmlQycawmAridWbFixiJ+rEelZfx
+         tuLfOwvki/mJBAwJOH8RbSJ40kpjm0xwv1mzm54VkJvHK9FyXa3wTiniRr01yWVEHHcS
+         DDYrIgw3o/C++GQtXqrZCe4PiJ6tgrRZK584H9Awz6XSUCnrIDZV3MM5ksbh16KtMhr4
+         RqwM4oCFEMyao0i2uSJVahQPbRkEc0Sli+llWV4YRPq4b7cZ/oyQ9rRt93yV1nTcpal9
+         If+uCfXj3rXnEZ5KCAdZrU+WIoFgmLhhjhbybb+iAslVeZ1FU33ixDyxaAQaRdZraYwQ
+         5e/Q==
+X-Forwarded-Encrypted: i=1; AJvYcCViJkbOLDibq0qVZs3Ta2SrMrZyo3ZgPFEuue9MeEltMnTL4flLglTqkOnkxcQI9mqKQcXXH2nNcVg=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy32U91Xf62zp9Qm3tt8E59TaiOYL4P/Kxn7cj626Y86vCkYyFX
+	PcORuU9nltbjJUDE7QfQVPGsc5JvD+Uo4fgNA+X4VkoVI/TDM0usnyCfsa+tPFbbB6nM5mN3YhC
+	A2FF3PbfGK0poVLdItS97WqGGeBXjsmS3f9jgCmoYBzhAuKwFoZbhWUogqug=
+X-Google-Smtp-Source: AGHT+IEt6ZqiWWXxUWxDmlgK0/HVBVIHLncOIb0H6+F+B6N+xFAkygcb5Aaby3CE0mrnU2dZfc/kxoUv4gE8ixOJmMChKqZoxTS2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <68b33cf4.a00a0220.1337b0.0025.GAE@google.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-Received: by 2002:a05:6e02:2504:b0:3eb:f2eb:6037 with SMTP id
+ e9e14a558f8ab-3f400286788mr250289885ab.12.1756879453388; Tue, 02 Sep 2025
+ 23:04:13 -0700 (PDT)
+Date: Tue, 02 Sep 2025 23:04:13 -0700
+In-Reply-To: <aLfaWUYaqDk1d85i@infradead.org>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <68b7da5d.050a0220.3db4df.01e7.GAE@google.com>
+Subject: Re: [syzbot] [xfs?] WARNING in xfs_trans_alloc
+From: syzbot <syzbot+ab02e4744b96de7d3499@syzkaller.appspotmail.com>
+To: hch@infradead.org
+Cc: cem@kernel.org, hch@infradead.org, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-#syz test v6.17-rc4
+> #syz test v6.17-rc4
 
+want either no args or 2 args (repo, branch), got 1
+
+>
