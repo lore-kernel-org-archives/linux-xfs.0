@@ -1,73 +1,64 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.bizonom.pl (mail.bizonom.pl [141.95.53.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63C942561AE
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Sep 2025 06:27:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 117782E9EC6
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Sep 2025 08:14:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.95.53.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756880866; cv=none; b=aiyyclWozQccQ/UZ61LG/pkLhmRJDDj6zSgvTVtJUVwS+rgMqT/zFHzmCZjQEjqIWxTnA2qb858TwbymAOUmd+Keu/mI5w7nLCGGfdpZnz3V9RdgtSVRswNogGHvZ9On2cNB3SJed68k0VGgEG0fQ1ptcj3N8AMjFJhXvFKC/60=
+	t=1756887287; cv=none; b=mflsBlc6bGJpwnG50zxC7wpNYoKLWsCo0Y3SLBmwNc1PIv7f9jKwSLv2qW2xHa/qDA7b5pfE1IJ7oBphBkpFLfVTVBs66iuxzbtBUkN0IAQ0k2F/Q4xNHpTaEJG8QGh7PZZ3PBZvArICXdiprFX8Dslj+MZQOprIZMgFPUSxOn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756880866; c=relaxed/simple;
-	bh=HMcbSTCmLbYEc4YPVDPAcKF5GH7LVi02UPKhIwiTpcs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HoMd6bp0+mRRHImeXlMxfCYcpbOKctMPd0M2fD2Was9G6NmfcZJ8eHYWU0NMN5eWSmcjVObEd2wzX9+dQnVqvNkwkNsVqZTEeIneaHQjCqac4Y6uCLsqsqfj4c8cKQwpFpPnSBNcLloBh8K00wCxrkgRzhw6RWLsctJRj+Lh9pI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ToXzl2Fp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1756887287; c=relaxed/simple;
+	bh=r6vLzzEedJN4/ZJ3K5DjXsV2QPNdCnY7K6b6sQatnUg=;
+	h=Message-ID:Date:From:To:Subject:MIME-Version:Content-Type; b=QotKwrJOJtdgyUGOw+87xIvjX2NOBQurC4HFoq/RhFoy1jOypJn5b+OgePXloxO+2sOdg6BApBO8RL+dMLOz8vKW2u36UTgEvM+2MLNkqUKsgOQrPzRT+gLcQMqVXJxOYI6fX7fLHOvEKQDVXTgRZmF2EFRV3u6pcxJXzsckOgA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bizonom.pl; spf=pass smtp.mailfrom=bizonom.pl; dkim=pass (2048-bit key) header.d=bizonom.pl header.i=@bizonom.pl header.b=VrF/HWP+; arc=none smtp.client-ip=141.95.53.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bizonom.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bizonom.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ToXzl2Fp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0F32C4CEF1;
-	Wed,  3 Sep 2025 06:27:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756880866;
-	bh=HMcbSTCmLbYEc4YPVDPAcKF5GH7LVi02UPKhIwiTpcs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ToXzl2Fp7zl0sCIdV+GD/UUvYKmusJIPUUFi7aPxKtVwEdRVgglAChwhPW+ix0Odt
-	 bMaK5J/DxNMvZ4UT2H2lWxWPLk9oC0UvE8EeqTw/VpK/Ub/X0bzSnqyIJ2tl5fNRMQ
-	 bBByomWIJDVjGF+KZicnxu95Y1N188KBlllf6zjQhTLr6f5bRedtvcZoD1eJsMa7fb
-	 zDwOaVmT7JnkADKH0QAtRb2/L+hI5w9rxtZR93cd8FMD/TQgF8ptqdFD2ncRqY5ApQ
-	 4kbo85RpRfKEHUFoMueYh0q72wQ59JqRCnHaRc38uwhLuKkvusT+I/MV5w+j+qpJD2
-	 sVczWKXEczEvw==
-Date: Tue, 2 Sep 2025 23:27:45 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/9] xfs: remove static reap limits
-Message-ID: <20250903062745.GJ8117@frogsfrogsfrogs>
-References: <175639126389.761138.3915752172201973808.stgit@frogsfrogsfrogs>
- <175639126605.761138.1788578695179861070.stgit@frogsfrogsfrogs>
- <20250902062829.GG12229@lst.de>
- <20250902223203.GJ8096@frogsfrogsfrogs>
- <20250903060311.GB10069@lst.de>
+	dkim=pass (2048-bit key) header.d=bizonom.pl header.i=@bizonom.pl header.b="VrF/HWP+"
+Received: by mail.bizonom.pl (Postfix, from userid 1002)
+	id 8AC2CA8893; Wed,  3 Sep 2025 10:02:27 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=bizonom.pl; s=mail;
+	t=1756886674; bh=r6vLzzEedJN4/ZJ3K5DjXsV2QPNdCnY7K6b6sQatnUg=;
+	h=Date:From:To:Subject:From;
+	b=VrF/HWP+j6zvvAS1I6rqugepQAYdTwWG7bjN23wUwJimiVxvXa8pfnQXGXMLJrdEs
+	 cXGM7O8ksZahiZ1+3QaZNLgskEElA3GYp5zbOk4c+vMTpt3VXWDKY+pD058MgQjoVB
+	 50aaCjkgfg1jDW2ZFXrYuh++I/QAd/OUWbA6SlqI9OELAsLU4qiqS3/LQC4AcIBZP3
+	 Yf8mEtsqe/Dz371JBukv06rqc6LiXJwVdizMb60VSKio8wc88+MAnu6NoO58vEJ8KI
+	 ZDNmYbm7Py5jGvFU2US6JL8l63MZR0PfRvAuAPUTIpEg0Q9LDC6za7mkv7mSfePAOI
+	 XdxE97dvsH6iA==
+Received: by mail.bizonom.pl for <linux-xfs@vger.kernel.org>; Wed,  3 Sep 2025 08:00:54 GMT
+Message-ID: <20250903084501-0.1.nj.1qdz7.0.2bsh44s21w@bizonom.pl>
+Date: Wed,  3 Sep 2025 08:00:54 GMT
+From: "Filip Laskowski" <filip.laskowski@bizonom.pl>
+To: <linux-xfs@vger.kernel.org>
+Subject: Pozycjonowanie - informacja
+X-Mailer: mail.bizonom.pl
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250903060311.GB10069@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Sep 03, 2025 at 08:03:11AM +0200, Christoph Hellwig wrote:
-> On Tue, Sep 02, 2025 at 03:32:03PM -0700, Darrick J. Wong wrote:
-> > It's only needed in newbt.c.  What if I change the commit message to:
-> > 
-> > "xfs: remove static reap limits from repair.h
-> > 
-> > "Delete XREAP_MAX_BINVAL and XREAP_MAX_DEFER_CHAIN because the reap code
-> > now calculates those limits dynamically, so they're no longer needed.
-> > 
-> > "Move the third limit (XREP_MAX_ITRUNCATE_EFIS) to the one file that
-> > uses it.  Note that the btree rebuilding code should reserve exactly the
-> > number of blocks needed to rebuild a btree, so it is rare that the newbt
-> > code will need to add any EFIs to the commit transaction.  That's why
-> > that static limit remains."
-> > 
-> > Would that make it clearer?
-> 
-> Yes. With that:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Dzie=C5=84 dobry,=20
 
-Cool, thank you!
+jaki=C5=9B czas temu zg=C5=82osi=C5=82a si=C4=99 do nas firma, kt=C3=B3re=
+j strona internetowa nie pozycjonowa=C5=82a si=C4=99 wysoko w wyszukiwarc=
+e Google.=20
 
---D
+Na podstawie wykonanego przez nas audytu SEO zoptymalizowali=C5=9Bmy tre=C5=
+=9Bci na stronie pod k=C4=85tem wcze=C5=9Bniej opracowanych s=C5=82=C3=B3=
+w kluczowych. Nasz wewn=C4=99trzny system codziennie analizuje prawid=C5=82=
+owe dzia=C5=82anie witryny.  Dzi=C4=99ki indywidualnej strategii, firma z=
+dobywa coraz wi=C4=99cej Klient=C3=B3w. =20
+
+Czy chcieliby Pa=C5=84stwo zwi=C4=99kszy=C4=87 liczb=C4=99 os=C3=B3b odwi=
+edzaj=C4=85cych stron=C4=99 internetow=C4=85 firmy?=20
+
+M=C3=B3g=C5=82bym przedstawi=C4=87 ofert=C4=99?=20
+
+
+Pozdrawiam
+Filip Laskowski
