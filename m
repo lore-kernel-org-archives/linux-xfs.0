@@ -1,44 +1,42 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FB6A257851;
-	Wed,  3 Sep 2025 06:09:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63C942561AE
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Sep 2025 06:27:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756879793; cv=none; b=jGA2d3ULWgqOdSutqeoW42fv/CvmuAF2M/fuho78Pn0+8+hc5IJ1iSX75QnUyixLEgs29xQa6r95FrjgpnL79SWv5F4uUsYs1UxJCXskNs9YYoKEBN7c9FjxeZLll3Io9J629tF/v/k2DH6FrHBbk2FruiB5D9nZjYyos367TmU=
+	t=1756880866; cv=none; b=aiyyclWozQccQ/UZ61LG/pkLhmRJDDj6zSgvTVtJUVwS+rgMqT/zFHzmCZjQEjqIWxTnA2qb858TwbymAOUmd+Keu/mI5w7nLCGGfdpZnz3V9RdgtSVRswNogGHvZ9On2cNB3SJed68k0VGgEG0fQ1ptcj3N8AMjFJhXvFKC/60=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756879793; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1756880866; c=relaxed/simple;
+	bh=HMcbSTCmLbYEc4YPVDPAcKF5GH7LVi02UPKhIwiTpcs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=i90Wg+1LS+GkyFZb4i4dG/HSEoFNh9m3Jq6kPUYVeRPyW4ZJBA70aCwRZtLXon7GQGX+zeqmLSNfPqMlR4no1QvYKULP73O3azf+8JaOZcEz2oSiRSnEf4zQmsix1JM4aUvW6ITHdqPml7IW2l8txlRqtxXqxmr8hzOWT3ErzdY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PgV22Q2B; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=HoMd6bp0+mRRHImeXlMxfCYcpbOKctMPd0M2fD2Was9G6NmfcZJ8eHYWU0NMN5eWSmcjVObEd2wzX9+dQnVqvNkwkNsVqZTEeIneaHQjCqac4Y6uCLsqsqfj4c8cKQwpFpPnSBNcLloBh8K00wCxrkgRzhw6RWLsctJRj+Lh9pI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ToXzl2Fp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PgV22Q2B"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=PgV22Q2BqEmUv1vindbLd4nOxq
-	NLfanvGuRBr38AXF8k9N/6GD7N/eRhr+EUYvFaWepzQkU4y8Y+wtU+Wo3WGlUEZGSfozM6fFXBhcG
-	0L/+D1Y1lBvuPKp2gHRhG8xg5ggJu3RIqc7Qn0R0oCQylV3P/raqX27TTVLUBEvrvJXqOkgWTDZC6
-	khzPh+muKFpRTEFS4DSmYRl59AWIitwrT/+GW5SCx/KrWsXtTZoCkabYmRo2wTjfgrj6T8tq2OqDd
-	0K8Y8sdkb3Jn1MuQDuFVT6SZGPl7LsdUViZL/+ykMZxcffQd1IRck+LxnNTCOabPVX5pjVKXbpmSe
-	Vh2xD/Wg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1utggp-00000004U4c-1JVX;
-	Wed, 03 Sep 2025 06:09:51 +0000
-Date: Tue, 2 Sep 2025 23:09:51 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org, jack@suse.cz, djwong@kernel.org
-Subject: Re: [PATCH RFC 1/2] iomap: prioritize iter.status error over
- ->iomap_end()
-Message-ID: <aLfbr-LpArXGuNS5@infradead.org>
-References: <20250902150755.289469-1-bfoster@redhat.com>
- <20250902150755.289469-2-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ToXzl2Fp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0F32C4CEF1;
+	Wed,  3 Sep 2025 06:27:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756880866;
+	bh=HMcbSTCmLbYEc4YPVDPAcKF5GH7LVi02UPKhIwiTpcs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ToXzl2Fp7zl0sCIdV+GD/UUvYKmusJIPUUFi7aPxKtVwEdRVgglAChwhPW+ix0Odt
+	 bMaK5J/DxNMvZ4UT2H2lWxWPLk9oC0UvE8EeqTw/VpK/Ub/X0bzSnqyIJ2tl5fNRMQ
+	 bBByomWIJDVjGF+KZicnxu95Y1N188KBlllf6zjQhTLr6f5bRedtvcZoD1eJsMa7fb
+	 zDwOaVmT7JnkADKH0QAtRb2/L+hI5w9rxtZR93cd8FMD/TQgF8ptqdFD2ncRqY5ApQ
+	 4kbo85RpRfKEHUFoMueYh0q72wQ59JqRCnHaRc38uwhLuKkvusT+I/MV5w+j+qpJD2
+	 sVczWKXEczEvw==
+Date: Tue, 2 Sep 2025 23:27:45 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 8/9] xfs: remove static reap limits
+Message-ID: <20250903062745.GJ8117@frogsfrogsfrogs>
+References: <175639126389.761138.3915752172201973808.stgit@frogsfrogsfrogs>
+ <175639126605.761138.1788578695179861070.stgit@frogsfrogsfrogs>
+ <20250902062829.GG12229@lst.de>
+ <20250902223203.GJ8096@frogsfrogsfrogs>
+ <20250903060311.GB10069@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,10 +45,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250902150755.289469-2-bfoster@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250903060311.GB10069@lst.de>
 
-Looks good:
+On Wed, Sep 03, 2025 at 08:03:11AM +0200, Christoph Hellwig wrote:
+> On Tue, Sep 02, 2025 at 03:32:03PM -0700, Darrick J. Wong wrote:
+> > It's only needed in newbt.c.  What if I change the commit message to:
+> > 
+> > "xfs: remove static reap limits from repair.h
+> > 
+> > "Delete XREAP_MAX_BINVAL and XREAP_MAX_DEFER_CHAIN because the reap code
+> > now calculates those limits dynamically, so they're no longer needed.
+> > 
+> > "Move the third limit (XREP_MAX_ITRUNCATE_EFIS) to the one file that
+> > uses it.  Note that the btree rebuilding code should reserve exactly the
+> > number of blocks needed to rebuild a btree, so it is rare that the newbt
+> > code will need to add any EFIs to the commit transaction.  That's why
+> > that static limit remains."
+> > 
+> > Would that make it clearer?
+> 
+> Yes. With that:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cool, thank you!
 
+--D
