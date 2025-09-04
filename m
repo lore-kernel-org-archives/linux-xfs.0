@@ -1,59 +1,59 @@
-Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
+Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41E8F2C3272;
-	Thu,  4 Sep 2025 21:44:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44B2E2E6CA1;
+	Thu,  4 Sep 2025 22:07:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757022262; cv=none; b=XeumRAfiG+vSOXIjIK//DPmlO+qs4JyhP9zrfgXYwVe+u7APMyCvYErYHS+uOHOKyH6LARA7AQT4YPB93HaRvRFeiwxyWLaV48gdYsL8Igknzluo4BXjbn9ShLZ+RKozlnCW/HgJhjd34cIHIIwnkSbtOsxMQ6YotUj+vjh51YM=
+	t=1757023626; cv=none; b=X1lKll+rx5h+yntXOJXx5QPFoAdpeXSNvXaJO1rXp6XTBi2y3hcAPAXDoBXF5IRYGqTT07TV7xydzWKIHVGPIwmbeqsUGDNcq6Btpb41BGkmxXJ/RYUJdl50GYdtjLVh6lo+kZsgBBwWCDLa2IoM5rTuqLN3LLQljctrH5IVv+A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757022262; c=relaxed/simple;
-	bh=VtBZqDnqzRyEXInZIX0W9OMjUr1uNLiNsrfUI3TbKZc=;
+	s=arc-20240116; t=1757023626; c=relaxed/simple;
+	bh=cmUIM7pCpqeBWtzvFhDZqMBwneE4TTCqud36a3HePd4=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Erwiqr3XufWZ75mhsb4JvyTfBIsBQprrvk3oVJ9rzpmm9Jjem10uk1c/hnDj8dseJCahR39Dy1sLDhmk0jOms+voMt9dFvtyABXdBiRYSGbGYzkuT62tDl5pu7gBSDD3HGnPyaLDE8BTWHF52G2d6TKTMtYN0RUaCMvRYglLlhI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TyqIhBBz; arc=none smtp.client-ip=209.85.160.182
+	 To:Cc:Content-Type; b=iW2lMzxhIRHt1uUUEMDpHwYEMO1ptAgceMY/eZdW+qIItnQiNWkW4zkmgVX/pPRmldICbNC+gf0CDOQnvUKm3cs95FsMXlsNXYEkVq7i7DU16clKPLSpguxTByVbI6jU/hUfcQwG0Uu+OX1zpTZ9R9vdfJ2IfWQChZYbr0d1ito=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Hp5TB0PR; arc=none smtp.client-ip=209.85.160.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TyqIhBBz"
-Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-4b34066b52eso16873181cf.0;
-        Thu, 04 Sep 2025 14:44:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hp5TB0PR"
+Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-4b30d09da3aso17360141cf.3;
+        Thu, 04 Sep 2025 15:07:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757022260; x=1757627060; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1757023624; x=1757628424; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=+Aq+FCth5X33OctbBduq8oWXb7JMDm1ZB0ToBXGmXqo=;
-        b=TyqIhBBzHqehrNDnEElpq1K54fKJ70hEhFDWsdceE7kdwi9TCs6SjkBOytSjP/hy3R
-         +/TLdCFMMILiwKlcNa6pu7/OqyrZnTahXKBsBfN/HgB2jvnBXIgk2/CSwqtsMv32ulku
-         X4C7TqKsbEsRQJl9d+KQfRQGSwGGXHYJi1mCIvM83LHGJP54XPV3yjRvsqQmmqNDmo5X
-         TVLYigVGaS2H73k9HQyfUbw4xpXtqXxCYCnkyUBsoi6szyzMUzj8ypq0RTG+dK78OhMN
-         LSWBGp+LFTApoBbbZd7VYfq3HWWxSWKr6ef4Aaie4FWDmjW+DjKVZ/68KleNUouYbHbX
-         0+uA==
+        bh=qr2i0EDeenwl7qwpZXz/40ibeng6dEMSFVDO7LDo1Zs=;
+        b=Hp5TB0PRQwojnu56DBgdwj7MTz78YTj1McaiaNd88mNaHzWjZ33mdlYC6Y3RL3UJ0F
+         SdBe/Npj7Zt2ONmFe7uMYF8+pFOPyzG4O/9j6ZhUdv93qpQAPxcLj/uqicIbvIUPc9sy
+         qWtMlMJS1XaYffKnNQTcc4P+UJyYIey6QztZ1XbKNMhB6gER7kjWidSkcHcrnw6NaS5j
+         SN/uu5+UtX0tYJIosqGMZXs1zSIlwA20lVoJ0DraGHKZF5EXcm2jyXSzdrttOvL+jSKI
+         +vdJBmsn6MmIS5qkwC3e/vwqXBLrBywOHba16lNoLvlTwbHBcn+N/l9D1sw3C573Y3Lh
+         00Zg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757022260; x=1757627060;
+        d=1e100.net; s=20230601; t=1757023624; x=1757628424;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=+Aq+FCth5X33OctbBduq8oWXb7JMDm1ZB0ToBXGmXqo=;
-        b=JFq7c3TdvUNpdfF61l6Yy+D6TdhBO2oA/BVZfeNGPKoN0qyFmVMB9vL4jFVivTMLz7
-         vzI4CAzJZZ9YN4JpHcxd8FJkeyVk3LjHeRoyLY32R3CjhUP2EHJ7DjSM28LSwBgtTXMY
-         GNHFdeIlvoKPCXokQUhfABRUsukZqqBQNhiCIM/y3s8/YP9cgMi8bNvkrMPa4XHogOYb
-         MyWKDZxfBqikYB8y1oUuv2+0RzHOxpHZ5ZUi1XEZcBz0cc98QRt/wsKN88RYtj0jl+AX
-         uekzDxqBtM85KmZaro6wH01wwvWTfjEqTif+/AW98EkiCHVMZpL4HGTtotE3tpnYN7KA
-         xrmQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUYsg+1Mt+eWYZ7IZMkdMkOjEZicwohDsWmVuKS7fvniU2Rfl0li07cJ6pFMOI2ew7l34COokll02A=@vger.kernel.org, AJvYcCVXfSS5Dt+EWpZTLeqh2QJOwcW5r0W4tdZYq3pGczgF2hUXFanjwE17zPuEZuRgrfc87ErDJOum/cmX@vger.kernel.org, AJvYcCWVcpHdh72nGVhxKoK0tM5fp7qisohxRfIoWprM/RE25FI2JbM2J56LjChmWGGDpHG5zqVq3nXZFQFR4aNkBg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxawRIsiOle9QiUHw2KRUt02dVU8V/s7VXIJzozvaFnF1u8ZJjr
-	z6hxKemc1riIj5jW1pWlT5ADDcMfwNjmtExURywIYg0/uMucZHb8Q1jZgOegiclA9A7oanTZK9t
-	y9NveT5xcOqdtrii0vZbsncDsp+Ex5Hd4EPMC
-X-Gm-Gg: ASbGnctn6MZ44bCPylpn/kXYNO2H3Gvbnm7KMvn11OFBdykXdZoN8Y+jBOsPvaCzNND
-	GNuBqsQXAlOhJcbPeysMKXs9BKxj3TpH75C4sBkpRgsdk2THgfzdGiTWCgtsyfUP6CXAIRuuU8E
-	aHU6uuJq1XVFUAdL7xKtaoSFtD5EPP+9GhSxzrp1WOzLGmD1ZyIdOpJuusIZKp33uXVOXOXyaWj
-	vrW7zg/
-X-Google-Smtp-Source: AGHT+IESOH+/gV89VbLDBJSmKKqP2tlJG71ot1JexhlyiP2R8bMDQXsq+or5DmkINHJPn5sMZROFmKQyKcSC7ZXnzdI=
-X-Received: by 2002:a05:622a:40e:b0:4b5:d932:15d2 with SMTP id
- d75a77b69052e-4b5d9323589mr46900421cf.23.1757022260119; Thu, 04 Sep 2025
- 14:44:20 -0700 (PDT)
+        bh=qr2i0EDeenwl7qwpZXz/40ibeng6dEMSFVDO7LDo1Zs=;
+        b=diijEv9JzwaEg/RiMtI/wMYf9PlIZKU1gMBt0Ro/7tfUgySKViq24tSL/Bd1IrpB+I
+         Ijni06UU70H0DKr/kpAvAL6t8/IuOKfACEuTKOT1/QVd/Ua7jJmdF/ip9OATIwchUuqb
+         ca+KJJShlovNvKN/h2AKBa59Kxv1Vb4L3ZtfCGry16Dm17POfRNclbVcJ+FbwRqe0Fjc
+         6FeanBO8oR0+C3bvq1BddBsYDk9sJ97P0ALCj+RLCWMnpN/oTogwJcLINnVfqodim0JN
+         tqg7W66LYM7JnsXabAW6S4SvSihykinK/j95Wv3t4j0sBdctrmzkg/HRHy5T17UPjm9m
+         UJcg==
+X-Forwarded-Encrypted: i=1; AJvYcCVImYW5L+NVy0WlFZvwD1WGHQjWBno44zGNp99VWAx9v0SzHSsdFeSmZg4HFcSRqKaH/J6Isaoe09c=@vger.kernel.org, AJvYcCW9IwfADQDXv1ZzKaTQag92E0gqntljmzSQtl1jn0gIU7GEwCAqoMP0JNI48ZVRzx6zS5mT3ERU09WYyxp+/g==@vger.kernel.org, AJvYcCWUWwNssGgjrz/HcUzqFhgBzX4L3Pr4qqfdWbIbJt533fa4GLhokX0MALZUWlip4fezadvP4WC8OI+S@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw0se3ZcznrppAwLHbyJMt1uMYvrAzSaaWL+iidRyeDU+t3Eziy
+	zHBaNzi0PCTNCs8iBw+MFMlYxGXV+6ZZLJxHxvM0xMau4+LJAzhxm62PdnP3Y8Jt7yWfMzKsyyt
+	CfSaoycO9BV8urL9H1Y+36STfRADJvKs=
+X-Gm-Gg: ASbGncsZ5O34QXM9j3Vyr4wSeDP5z6aF+WWItbr2tJx2poqJxha+V4UBQTrJRjpln1l
+	bgeiYklKz2XjhLW/Yy36AI/gBiIXUbBvENyAwLK6uZd2dmRdB4RyNhiR7y6kKx5FfMt6gvb3zVH
+	zRVLzP8m7AvDgYThNcaB7Bgj41wrxvbp1AQ7rvKNkJyzYXXf8Rzs0YtxHmoBt/b90kxlqNQ3O3d
+	fO/H3ns/qXgbsVpuvE=
+X-Google-Smtp-Source: AGHT+IFBlx3X5hlUFXtvs+ZQUGSgM4SWZgYUjgrw3wrd4qs0EaZ6PcfqLcKq5B359vcWigIg10JbbQnlog5F62FqhFg=
+X-Received: by 2002:ac8:7f52:0:b0:4b3:d22:6532 with SMTP id
+ d75a77b69052e-4b31dcecfa9mr228908521cf.69.1757023623981; Thu, 04 Sep 2025
+ 15:07:03 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -61,14 +61,14 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20250829235627.4053234-1-joannelkoong@gmail.com>
- <20250829235627.4053234-2-joannelkoong@gmail.com> <20250903201659.GK1587915@frogsfrogsfrogs>
- <aLkrB7CcPsaEkaA-@infradead.org>
-In-Reply-To: <aLkrB7CcPsaEkaA-@infradead.org>
+ <20250829235627.4053234-3-joannelkoong@gmail.com> <20250903202637.GL1587915@frogsfrogsfrogs>
+ <aLkryaC0K58_wXRy@infradead.org>
+In-Reply-To: <aLkryaC0K58_wXRy@infradead.org>
 From: Joanne Koong <joannelkoong@gmail.com>
-Date: Thu, 4 Sep 2025 14:44:09 -0700
-X-Gm-Features: Ac12FXyJXe7KuCGyUuJZoluxWmDaiI4V6ycAPDLKi4m3rXlYV_s9UdlVjip7VmA
-Message-ID: <CAJnrk1a0f4L0etiR6D3ToMtKy6y7Vc+=ok1=3wtug2XvY2FUKg@mail.gmail.com>
-Subject: Re: [PATCH v1 01/16] iomap: move async bio read logic into helper function
+Date: Thu, 4 Sep 2025 15:06:52 -0700
+X-Gm-Features: Ac12FXyFfSGKkBz5jFs9eCyI7TffwdIJ-lIvcbly65E9pS4ZMBsyucMvYLwC4R8
+Message-ID: <CAJnrk1bkDSwgZ0s9jToEETtu-nvE4FQdG7iPbbH_w+gW1AA2xQ@mail.gmail.com>
+Subject: Re: [PATCH v1 02/16] iomap: rename cur_folio_in_bio to folio_unlockedOM
 To: Christoph Hellwig <hch@infradead.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>, brauner@kernel.org, miklos@szeredi.hu, 
 	linux-fsdevel@vger.kernel.org, kernel-team@meta.com, 
@@ -76,41 +76,48 @@ Cc: "Darrick J. Wong" <djwong@kernel.org>, brauner@kernel.org, miklos@szeredi.hu
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Sep 3, 2025 at 11:00=E2=80=AFPM Christoph Hellwig <hch@infradead.or=
+On Wed, Sep 3, 2025 at 11:03=E2=80=AFPM Christoph Hellwig <hch@infradead.or=
 g> wrote:
 >
-> On Wed, Sep 03, 2025 at 01:16:59PM -0700, Darrick J. Wong wrote:
-> > On Fri, Aug 29, 2025 at 04:56:12PM -0700, Joanne Koong wrote:
-> > > Move the iomap_readpage_iter() async bio read logic into a separate
-> > > helper function. This is needed to make iomap read/readahead more
-> > > generically usable, especially for filesystems that do not require
-> > > CONFIG_BLOCK.
-> > >
-> > > Rename iomap_read_folio_range() to iomap_read_folio_range_sync() to
-> > > diferentiate between the synchronous and asynchronous bio folio read
-> > > calls.
+> On Wed, Sep 03, 2025 at 01:26:37PM -0700, Darrick J. Wong wrote:
+> > On Fri, Aug 29, 2025 at 04:56:13PM -0700, Joanne Koong wrote:
+> > > The purpose of struct iomap_readpage_ctx's cur_folio_in_bio is to tra=
+ck
+> > > if the folio needs to be unlocked or not. Rename this to folio_unlock=
+ed
+> > > to make the purpose more clear and so that when iomap read/readahead
+> > > logic is made generic, the name also makes sense for filesystems that
+> > > don't use bios.
 > >
-> > Hrmm.  Readahead is asynchronous, whereas reading in data as part of an
-> > unaligned write to a file must be synchronous.  How about naming it
-> > iomap_readahead_folio_range() ?
-> >
-> > Oh wait, iomap_read_folio also calls iomap_readpage_iter, which uses th=
+> > Hrmmm.  The problem is, "cur_folio_in_bio" captures the meaning that th=
 e
-> > readahead paths to fill out a folio, but then waits for the folio lock
-> > to drop, which effectively makes it ... a synchronous user of
-> > asynchronous code.
+> > (locked) folio is attached to the bio, so the bio_io_end function has t=
+o
+> > unlock the folio.  The readahead context is basically borrowing the
+> > folio and cannot unlock the folio itelf.
 > >
-> > Bleh, naming is hard.  Though the code splitting seems fine...
+> > The name folio_unlocked doesn't capture the change in ownership, it jus=
+t
+> > fixates on the lock state which (imo) is a side effect of the folio loc=
+k
+> > ownership.
 >
-> Maybe we can look at it from a different angle - the code split out
-> isn't really about async vs sync, but about actually using a bio
-> to read data from a block device.  Which is also kinda important
-> for what Joanne is trying to do.  So I'd encode that in the name,
-> e.g. iomap_read_folio_range_bio to mimici the naming used for
-> iomap_dio_bio_iter in the direct I/O code.
+> Agreed.  Not sure what a good name is in a world where the folio can be
+> in something else than the bio.  Maybe just replace bio with ctx or
+> similar? cur_folio_in_ctx?  cur_folio_locked_by_ctx?
+
+I find the ctx naming to be more confusing, the "ctx" imo is too
+easily confused with the iomap_readfolio_ctx struct.
+
+What about "cur_folio_owned" or "cur_folio_handled"? Or keeping it as
+"cur_folio_unlocked" and adding a comment to explain the change in
+ownership?
+
 >
-I think the issue is that the iomap_read_folio_range() function used
-for buffered writes also uses a bio, so there still needs to be some
-way to differentiate between the two. Maybe making the async one the
-default "iomap_read_folio_range" and then the synchronous one
-"iomap_read_folio_range_sync"?
+> > > +   bool                    folio_unlocked;
+> >
+> > Maybe this ought to be called cur_folio_borrowed?
+>
+> I don't think 'borrow' makes much sense here.  It's not like we're
+> borrowing it, we transfer the lock context to the bio (or whatever else
+> Joanne is going to use for fuse, I haven't read down to that yet).
