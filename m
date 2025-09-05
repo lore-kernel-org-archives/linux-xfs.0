@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5CE31D743
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Sep 2025 15:56:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E02431D75A
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Sep 2025 15:57:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757087816; cv=none; b=OaBtP1f+p6N7/JEViy2mXtP+H4z7PQj1MCXRCTBIU1mhAhjSx+RNaaaxoAJ2E60ONneRTxM6W+rnvnt14hREl8toQgsDbhG+lwqNpXOb3rrnkZQuB0n2uC9t+BT4HMEgCzUdlK/E4p+6PNeCPmKKaTvCTKiGrAXVteN4z1wjOoQ=
+	t=1757087832; cv=none; b=Z8T04x3KvbraKs7MxLxhr5+18PcsuZ4TwKo1tylUsIEOc+mjuTC1irZ2CXHnspHnkSKbOqJyPqwLMT/RrAjb99pYYRij1eTe+vyhmpU7kGh3BhvJQbEE0tocgtQk5+5rHP/2cPgsd5q1POaEME7P/s54OXXIGNwcbl6JpzdvJ6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757087816; c=relaxed/simple;
-	bh=EDNth6H+dWeml8E+ckXmzkhN9z7akBqP7MafvpSOSgE=;
+	s=arc-20240116; t=1757087832; c=relaxed/simple;
+	bh=+jGAEud6g2S77ASI2h1ZNgSZc6o6AuZYMgpfC42/2Rw=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iMUxqBNzBDJgj6SKD7Y9FRFto1Twu66ToP+8N178tWXdilHkYvJCRlh4G+AMV9lYqxGG835Z8XAteba1iSPSs+g1Mj5Q4Q+5xfwn0Ei2SdF6BNmlXadDWlsFua7HJ1CFIcZOM7GPkA5efJXPr5yDKkVDxwc5FVtHtrOs3wteYC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c4j1OpGH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=IquLtqltk8ne808FqGzcV3j0m94L+nbMmvEP9R8RSvwRJu7ifUchLR+OZ1Jk5QshPqe5PvUp+45XbgQ3SoenzPrIiXPLztsUcSlXHo1lgf7MvMFBNNb9FZLexGVdr5q3943PLM+0orWXwomRrcJAZ4q2vcQE7RCkGI61+DV3CHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NoQNtMWi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c4j1OpGH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54232C4CEF1;
-	Fri,  5 Sep 2025 15:56:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NoQNtMWi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDFF7C4CEF1;
+	Fri,  5 Sep 2025 15:57:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757087816;
-	bh=EDNth6H+dWeml8E+ckXmzkhN9z7akBqP7MafvpSOSgE=;
+	s=k20201202; t=1757087832;
+	bh=+jGAEud6g2S77ASI2h1ZNgSZc6o6AuZYMgpfC42/2Rw=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=c4j1OpGHmUH51U16G1kmrQRi77KZwKKGIks9RYXNY5ByX3Xa5p+IQZOEHloQP6N+r
-	 156ROmWaFpQJapEG6uet6JKDVdYlIe6RpTf+A91/Mm4hgdnXoxGE2H3xJb+eR876en
-	 wh1xF3R55oGFnR8LvVYHwp45Npy/D+ghCOmEOV54y0Z8LqndO8Sc6gzk9EXtMwLbwV
-	 iiz9PqlJh0sEeLvs+5t+kpoo9TK7/F8WD+C4NGiD/3/+m+mXDToYvGlhJL4beUbvcE
-	 Vnj01YOxxxVOPfUZfWMIoUiquAPjU3cqDNV9+v0uo0Mbq4yp1bhh0zCaYMuoD1j1XI
-	 ShCGCQJcLmD9Q==
-Date: Fri, 05 Sep 2025 08:56:55 -0700
-Subject: [PATCH 6/9] xfs: compute realtime device CoW staging extent reap
- limits dynamically
+	b=NoQNtMWiPY/hCBOZlsenw8a6PfyH3Z42RGjPezQSNbp5haoKD9WtOsH/Vqx3BPCjq
+	 sAt+EFfqI88j4eaK5NSsTs4nXj+5lpWCY83gXBwhjzqUryBIFc9St3b6QqLH01eaDj
+	 RB+NFFmwUAOEeWP3ie1itIdJweCT5KhF2BJICgtG2BJQidTO7c8+a+DcY2f7uOHdrK
+	 hULdVCaKmeeUnumWEWpx26TtmnvwOTgAXsSoKqPgUvIfsUhhltzMf4njTuX5CrLjot
+	 mjL5PDc7U4bUFk0w/MCQ83V2d14DeDEH21UR45rBB5IlH6wJfDqS72BPQabdfxX3FA
+	 KMOvXs8BGV3lA==
+Date: Fri, 05 Sep 2025 08:57:11 -0700
+Subject: [PATCH 7/9] xfs: compute file mapping reap limits dynamically
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <175708765184.3402543.16314130156903695696.stgit@frogsfrogsfrogs>
+Message-ID: <175708765205.3402543.11595481635649131468.stgit@frogsfrogsfrogs>
 In-Reply-To: <175708765008.3402543.1267087240583066803.stgit@frogsfrogsfrogs>
 References: <175708765008.3402543.1267087240583066803.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,70 +45,122 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Calculate the maximum number of CoW staging extents that can be reaped
-in a single transaction chain.  The rough calculation here is:
+Reaping file fork mappings is a little different -- log recovery can
+free the blocks for us, so we only try to process a single mapping at a
+time.  Therefore, we only need to figure out the maximum number of
+blocks that we can invalidate in a single transaction.
+
+The rough calculation here is:
 
 nr_extents = (logres - reservation used by any one step) /
-		(space used by intents per extent)
+		(space used per binval)
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/trace.h |    1 +
- fs/xfs/scrub/reap.c  |   71 +++++++++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 68 insertions(+), 4 deletions(-)
+ fs/xfs/scrub/trace.h |    1 
+ fs/xfs/scrub/reap.c  |  109 ++++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 105 insertions(+), 5 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index a9da22f50534cb..1a994d339c42cf 100644
+index 1a994d339c42cf..39ea651cbb7510 100644
 --- a/fs/xfs/scrub/trace.h
 +++ b/fs/xfs/scrub/trace.h
-@@ -2042,6 +2042,7 @@ DEFINE_EVENT(xrep_reap_limits_class, name, \
- 	TP_ARGS(tp, per_binval, max_binval, step_size, per_intent, max_deferred))
+@@ -2043,6 +2043,7 @@ DEFINE_EVENT(xrep_reap_limits_class, name, \
  DEFINE_REPAIR_REAP_LIMITS_EVENT(xreap_agextent_limits);
  DEFINE_REPAIR_REAP_LIMITS_EVENT(xreap_agcow_limits);
-+DEFINE_REPAIR_REAP_LIMITS_EVENT(xreap_rgcow_limits);
+ DEFINE_REPAIR_REAP_LIMITS_EVENT(xreap_rgcow_limits);
++DEFINE_REPAIR_REAP_LIMITS_EVENT(xreap_bmapi_limits);
  
  DECLARE_EVENT_CLASS(xrep_reap_find_class,
  	TP_PROTO(const struct xfs_group *xg, xfs_agblock_t agbno,
 diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
-index aaef7e6771a045..b2f089e2c49daa 100644
+index b2f089e2c49daa..d58fd57aaebb43 100644
 --- a/fs/xfs/scrub/reap.c
 +++ b/fs/xfs/scrub/reap.c
-@@ -984,7 +984,7 @@ xreap_rgextent_iter(
- 	rtbno = xfs_rgbno_to_rtb(sc->sr.rtg, rgbno);
+@@ -542,7 +542,7 @@ xreap_configure_limits(
+ 		return;
+ 	}
+ 
+-	rs->max_deferred = res / variable_overhead;
++	rs->max_deferred = per_intent ? res / variable_overhead : 0;
+ 	res -= rs->max_deferred * per_intent;
+ 	rs->max_binval = per_binval ? res / per_binval : 0;
+ }
+@@ -1446,7 +1446,7 @@ xrep_reap_bmapi_iter(
+ 				imap->br_blockcount);
+ 
+ 		/*
+-		 * Schedule removal of the mapping from the fork.  We use
++		 * t0: Schedule removal of the mapping from the fork.  We use
+ 		 * deferred log intents in this function to control the exact
+ 		 * sequence of metadata updates.
+ 		 */
+@@ -1479,8 +1479,8 @@ xrep_reap_bmapi_iter(
+ 		return error;
  
  	/*
--	 * If there are other rmappings, this block is cross linked and must
-+	 * t1: There are other rmappings; this block is cross linked and must
- 	 * not be freed.  Remove the forward and reverse mapping and move on.
+-	 * Schedule removal of the mapping from the fork.  We use deferred log
+-	 * intents in this function to control the exact sequence of metadata
++	 * t1: Schedule removal of the mapping from the fork.  We use deferred
++	 * work in this function to control the exact sequence of metadata
+ 	 * updates.
  	 */
- 	if (crosslinked) {
-@@ -999,7 +999,7 @@ xreap_rgextent_iter(
- 	trace_xreap_dispose_free_extent(rtg_group(sc->sr.rtg), rgbno, *rglenp);
- 
- 	/*
--	 * The CoW staging extent is not crosslinked.  Use deferred work items
-+	 * t2: The CoW staging extent is not crosslinked.  Use deferred work
- 	 * to remove the refcountbt records (which removes the rmap records)
- 	 * and free the extent.  We're not worried about the system going down
- 	 * here because log recovery walks the refcount btree to clean out the
-@@ -1017,6 +1017,69 @@ xreap_rgextent_iter(
- 	return 0;
+ 	xfs_bmap_unmap_extent(sc->tp, rs->ip, rs->whichfork, imap);
+@@ -1491,6 +1491,105 @@ xrep_reap_bmapi_iter(
+ 			XFS_FREE_EXTENT_SKIP_DISCARD);
  }
  
++/* Compute the maximum mapcount of a file buffer. */
++static unsigned int
++xreap_bmapi_binval_mapcount(
++	struct xfs_scrub	*sc)
++{
++	/* directory blocks can span multiple fsblocks and be discontiguous */
++	if (sc->sm->sm_type == XFS_SCRUB_TYPE_DIR)
++		return sc->mp->m_dir_geo->fsbcount;
++
++	/* all other file xattr/symlink blocks must be contiguous */
++	return 1;
++}
++
++/* Compute the maximum block size of a file buffer. */
++static unsigned int
++xreap_bmapi_binval_blocksize(
++	struct xfs_scrub	*sc)
++{
++	switch (sc->sm->sm_type) {
++	case XFS_SCRUB_TYPE_DIR:
++		return sc->mp->m_dir_geo->blksize;
++	case XFS_SCRUB_TYPE_XATTR:
++	case XFS_SCRUB_TYPE_PARENT:
++		/*
++		 * The xattr structure itself consists of single fsblocks, but
++		 * there could be remote xattr blocks to invalidate.
++		 */
++		return XFS_XATTR_SIZE_MAX;
++	}
++
++	/* everything else is a single block */
++	return sc->mp->m_sb.sb_blocksize;
++}
++
 +/*
-+ * Compute the maximum number of intent items that reaping can attach to the
-+ * scrub transaction given the worst case log overhead of the intent items
-+ * needed to reap a single CoW staging extent.  This is not for freeing
-+ * metadata blocks.
++ * Compute the maximum number of buffer invalidations that we can do while
++ * reaping a single extent from a file fork.
 + */
 +STATIC void
-+xreap_configure_rgcow_limits(
++xreap_configure_bmapi_limits(
 +	struct xreap_state	*rs)
 +{
 +	struct xfs_scrub	*sc = rs->sc;
 +	struct xfs_mount	*mp = sc->mp;
++
++	/* overhead of invalidating a buffer */
++	const unsigned int	per_binval =
++		xfs_buf_inval_log_space(xreap_bmapi_binval_mapcount(sc),
++					    xreap_bmapi_binval_blocksize(sc));
 +
 +	/*
 +	 * In the worst case, relogging an intent item causes both an intent
@@ -120,25 +171,19 @@ index aaef7e6771a045..b2f089e2c49daa 100644
 +				      xfs_efd_log_space(1);
 +	const unsigned int	rui = xfs_rui_log_space(1) +
 +				      xfs_rud_log_space();
-+	const unsigned int	cui = xfs_cui_log_space(1) +
-+				      xfs_cud_log_space();
++	const unsigned int	bui = xfs_bui_log_space(1) +
++				      xfs_bud_log_space();
 +
 +	/*
-+	 * Various things can happen when reaping non-CoW metadata blocks:
++	 * t1: Unmapping crosslinked file data blocks: one bmap deletion,
++	 * possibly an EFI for underfilled bmbt blocks, and an rmap deletion.
 +	 *
-+	 * t1: Unmapping crosslinked CoW blocks: deferred removal of refcount
-+	 * record, which defers removal of rmap record
-+	 *
-+	 * t2: Freeing CoW blocks: deferred removal of refcount record, which
-+	 * defers removal of rmap record; and deferred removal of the space
-+	 *
-+	 * For simplicity, we'll use the worst-case intents size to determine
-+	 * the maximum number of deferred extents before we have to finish the
-+	 * whole chain.  If we're trying to reap a btree larger than this size,
-+	 * a crash midway through reaping can result in leaked blocks.
++	 * t2: Freeing freeing file data blocks: one bmap deletion, possibly an
++	 * EFI for underfilled bmbt blocks, and another EFI for the space
++	 * itself.
 +	 */
-+	const unsigned int	t1 = cui + rui;
-+	const unsigned int	t2 = cui + rui + efi;
++	const unsigned int	t1 = (bui + efi) + rui;
++	const unsigned int	t2 = (bui + efi) + efi;
 +	const unsigned int	per_intent = max(t1, t2);
 +
 +	/*
@@ -146,39 +191,43 @@ index aaef7e6771a045..b2f089e2c49daa 100644
 +	 * step in the defer item chain, which should only consist of CUI, EFI,
 +	 * or RUI items.
 +	 */
-+	const unsigned int	f1 = xfs_calc_finish_rt_efi_reservation(mp, 1);
-+	const unsigned int	f2 = xfs_calc_finish_rt_rui_reservation(mp, 1);
-+	const unsigned int	f3 = xfs_calc_finish_rt_cui_reservation(mp, 1);
++	const unsigned int	f1 = xfs_calc_finish_efi_reservation(mp, 1);
++	const unsigned int	f2 = xfs_calc_finish_rui_reservation(mp, 1);
++	const unsigned int	f3 = xfs_calc_finish_bui_reservation(mp, 1);
 +	const unsigned int	step_size = max3(f1, f2, f3);
 +
 +	/*
-+	 * The only buffer for the rt device is the rtgroup super, so we don't
-+	 * need to save space for buffer invalidations.
++	 * Each call to xreap_ifork_extent starts with a clean transaction and
++	 * operates on a single mapping by creating a chain of log intent items
++	 * for that mapping.  We need to leave enough reservation in the
++	 * transaction to log btree buffer and inode updates for each step in
++	 * the chain, and to relog the log intents.
 +	 */
-+	xreap_configure_limits(rs, step_size, per_intent, per_intent, 0);
++	const unsigned int	per_extent_res = per_intent + step_size;
 +
-+	trace_xreap_rgcow_limits(sc->tp, 0, 0, step_size, per_intent,
-+			rs->max_deferred);
++	xreap_configure_limits(rs, per_extent_res, per_binval, 0, per_binval);
++
++	trace_xreap_bmapi_limits(sc->tp, per_binval, rs->max_binval,
++			step_size, per_intent, 1);
 +}
 +
- #define XREAP_RTGLOCK_ALL	(XFS_RTGLOCK_BITMAP | \
- 				 XFS_RTGLOCK_RMAP | \
- 				 XFS_RTGLOCK_REFCOUNT)
-@@ -1100,14 +1163,14 @@ xrep_reap_rtblocks(
- 		.sc			= sc,
- 		.oinfo			= oinfo,
- 		.resv			= XFS_AG_RESV_NONE,
--		.max_binval		= XREAP_MAX_BINVAL,
--		.max_deferred		= XREAP_MAX_DEFER_CHAIN,
+ /*
+  * Dispose of as much of this file extent as we can.  Upon successful return,
+  * the imap will reflect the mapping that was removed from the fork.
+@@ -1554,7 +1653,6 @@ xrep_reap_ifork(
+ 		.sc		= sc,
+ 		.ip		= ip,
+ 		.whichfork	= whichfork,
+-		.max_binval	= XREAP_MAX_BINVAL,
  	};
- 	int				error;
+ 	xfs_fileoff_t		off = 0;
+ 	int			bmap_flags = xfs_bmapi_aflag(whichfork);
+@@ -1564,6 +1662,7 @@ xrep_reap_ifork(
+ 	ASSERT(ip == sc->ip || ip == sc->tempip);
+ 	ASSERT(whichfork == XFS_ATTR_FORK || !XFS_IS_REALTIME_INODE(ip));
  
- 	ASSERT(xfs_has_rmapbt(sc->mp));
- 	ASSERT(sc->ip != NULL);
-+	ASSERT(oinfo == &XFS_RMAP_OINFO_COW);
- 
-+	xreap_configure_rgcow_limits(&rs);
- 	error = xrtb_bitmap_walk(bitmap, xreap_rtmeta_extent, &rs);
- 	if (error)
- 		return error;
++	xreap_configure_bmapi_limits(&rs);
+ 	while (off < XFS_MAX_FILEOFF) {
+ 		struct xfs_bmbt_irec	imap;
+ 		int			nimaps = 1;
 
