@@ -1,39 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B53831D750
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Sep 2025 15:58:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90E371096F;
+	Fri,  5 Sep 2025 15:59:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757087926; cv=none; b=b9zudVFGQMJwMZbdx03cUrINuclSpmGlb798uHa58GAfRE1uNm+72fCKnVofm+JK94QFSSqdRuPJFMwImV9/MmX9WvfeoIE4XpixYhT5g6LalAgTilcVjRDYuCCYkhinvUCqFJo2Wwo5ydyoV3M4FnU/SClr7jaZiLeya5zPA38=
+	t=1757087941; cv=none; b=ST4D+CWtzjce6Hpc8FX2hc6ImuVnR3D3VMQAIhpZiihpL+ihYqyoqxOFIhCi4X3Dt6oN0Ew69s1Vq/isYdASzIhUa8CJ3vkUemJyTr2BnOA8PpmoAjIFe63Ys+RE8Liy4hCfrZIdRjKpaBa/F478bYF+ggIn9mTLUYEQCmd1G68=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757087926; c=relaxed/simple;
-	bh=JMm+96Oo2GuyPG6kRXlwWZndkonbQMdAoZyG5TPuBnE=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fdj64eoIODd9YoYWTjh8z3jz/MA3N2nug4ZhuXBJxiPBDJ0mJTg7wnXITExXDZXm+8c7PjIceJuggk+DzrUARQX/JJi2NUFW/7+R40rynS+nnslSlZPlNZPg8nkFq9IAI9xZz1E3Boi8tJN2gRPjN4gvluGoLvzChEZqAI/0Ry0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MRpscEuh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757087941; c=relaxed/simple;
+	bh=hIAotabxJDFefPkdBzhwJSfIdRyc+dj/8HFRNGKHQTE=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=sdPpp7h3AisLkfrGqxZDmCHFfEzsq6A5H2XYMaJguPMt3PL2KhnS+14cRsLZZMRtMd5u9UhZeLm5eQqeqh7ywqLWrJg29UIjZMSPYa1gnZCJf5XmSvr1wF+77BC6iSwrP2b0YfMzkgcdDjbs4nTd/qdAtlNR7/LTK1pNe4Ylh8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k9br9pwA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MRpscEuh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9014C4CEF1;
-	Fri,  5 Sep 2025 15:58:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k9br9pwA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62E70C4CEF4;
+	Fri,  5 Sep 2025 15:59:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757087925;
-	bh=JMm+96Oo2GuyPG6kRXlwWZndkonbQMdAoZyG5TPuBnE=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=MRpscEuh48uRJzk+xs4cON/ijRSWOSlryHrf6TdVHDsupid+qgWBr730q7OUDxSn6
-	 JDjhksHpu0VX/kaHijxpUs8j/rh+/sKPaGTp3Etvj7m8tKe89YaMSIlgsd/5juA6fn
-	 zxEpp/bswr+Zs20RiOgNfxYQfqFA/EOLhvsJvJB+bOptKz1sgaRpRq2wCqnnYD0URI
-	 r3+ST0H8I9QxzOvCq+qEeewHKeB8yJe0P78zl2OR+EoU2B9P1xSkbbw8rqAjdcMcDZ
-	 0iISRcHRvWyHucb8CffTaYc6wHyK4sNyyZ1Sj2kg0m5qSx3Q991foZVVHumkbluREw
-	 wzkZy9+1DILhQ==
-Date: Fri, 05 Sep 2025 08:58:45 -0700
-Subject: [PATCH 4/4] xfs: enable online fsck by default in Kconfig
+	s=k20201202; t=1757087941;
+	bh=hIAotabxJDFefPkdBzhwJSfIdRyc+dj/8HFRNGKHQTE=;
+	h=Date:Subject:From:To:Cc:From;
+	b=k9br9pwAHdI6gX2HyQ2ggbI0OciK88gtZSt+3G8NoXUqNOFZ2fsbPkaumwkWtLENS
+	 B2sfCMQdJA+YrBTzu7dFM/XeMB9U67JqSBpPG0VVr+8Kqmpug+YUl8udeSXtHLTKQy
+	 JxWgY68g7Td1S8KO4ejhjfE/q3X6z6IddNLg5tTaM4NAjfqoxxHcNDZQaIFeXaZh/z
+	 yxNHDY/HHhq97L0kjV9OTle29vH6uDWuBITjQoscWJaOEx0c2OiykY75M4LYcC/c6R
+	 ocU8O8PLqOjOg/17m6hIqYBJyLoBmZYswIjCFvqt+lz1uKt6wQdyFY9shrCEXCKys/
+	 +Oiq44EldohFA==
+Date: Fri, 05 Sep 2025 08:59:00 -0700
+Subject: [GIT PULL 6.18 1/2] xfs: improve online repair reap calculations
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, cem@kernel.org
-Cc: cmaiolino@redhat.com, linux-xfs@vger.kernel.org
-Message-ID: <175708765570.3402932.7845496331843344570.stgit@frogsfrogsfrogs>
-In-Reply-To: <175708765462.3402932.11803651576398863761.stgit@frogsfrogsfrogs>
-References: <175708765462.3402932.11803651576398863761.stgit@frogsfrogsfrogs>
+To: cem@kernel.org, djwong@kernel.org
+Cc: hch@lst.de, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+Message-ID: <175708766712.3403120.15088787175440332819.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,70 +40,74 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi Carlos,
 
-Online fsck has been a part of upstream for over a year now without any
-serious problems.  Turn it on by default in time for the 2025 LTS
-kernel, and get rid of the "say N if unsure" messages for the default Y
-options.
+Please pull this branch with changes for xfs.
+
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
+
+--D
+
+The following changes since commit b320789d6883cc00ac78ce83bccbfe7ed58afcf0:
+
+Linux 6.17-rc4 (2025-08-31 15:33:07 -0700)
+
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/fix-scrub-reap-calculations_2025-09-05
+
+for you to fetch changes up to 07c34f8cef69cb8eeef69c18d6cf0c04fbee3cb3:
+
+xfs: use deferred reaping for data device cow extents (2025-09-05 08:48:23 -0700)
+
+----------------------------------------------------------------
+xfs: improve online repair reap calculations [6.18 v2 1/2]
+
+A few months ago, the multi-fsblock untorn writes patchset added a bunch
+of log intent item helper functions to estimate the number of intent
+items that could be added to a particular transaction.  Those helpers
+enabled us to compute a safe upper bound on the number of blocks that
+could be written in an untorn fashion with filesystem-provided out of
+place writes.
+
+Currently, the online fsck code employs static limits on the number of
+intent items that it's willing to accrue to a single transaction when
+it's trying to reap what it thinks are the old blocks from a corrupt
+structure.  There have been no problems reported with this approach
+after years of testing, but static limits are scary and gross because
+overestimating the intent item limit could result in transaction
+overflows and dead filesystems; and underestimating causes unnecessary
+overhead.
+
+This series uses the new log intent item size helpers to estimate the
+limits dynamically based on worst-case per-block repair work vs. the
+size of the scrub transaction.  After several months of testing this,
+there don't seem to be any problems here either.
+
+v2: rearrange patches, add review tags
+
+This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/Kconfig |   14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
 
+----------------------------------------------------------------
+Darrick J. Wong (9):
+xfs: use deferred intent items for reaping crosslinked blocks
+xfs: prepare reaping code for dynamic limits
+xfs: convert the ifork reap code to use xreap_state
+xfs: compute per-AG extent reap limits dynamically
+xfs: compute data device CoW staging extent reap limits dynamically
+xfs: compute realtime device CoW staging extent reap limits dynamically
+xfs: compute file mapping reap limits dynamically
+xfs: remove static reap limits from repair.h
+xfs: use deferred reaping for data device cow extents
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index ecebd3ebab1342..8930d5254e1da6 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -137,7 +137,7 @@ config XFS_BTREE_IN_MEM
- 
- config XFS_ONLINE_SCRUB
- 	bool "XFS online metadata check support"
--	default n
-+	default y
- 	depends on XFS_FS
- 	depends on TMPFS && SHMEM
- 	select XFS_LIVE_HOOKS
-@@ -150,12 +150,8 @@ config XFS_ONLINE_SCRUB
- 	  advantage here is to look for problems proactively so that
- 	  they can be dealt with in a controlled manner.
- 
--	  This feature is considered EXPERIMENTAL.  Use with caution!
--
- 	  See the xfs_scrub man page in section 8 for additional information.
- 
--	  If unsure, say N.
--
- config XFS_ONLINE_SCRUB_STATS
- 	bool "XFS online metadata check usage data collection"
- 	default y
-@@ -171,11 +167,9 @@ config XFS_ONLINE_SCRUB_STATS
- 
- 	  Usage data are collected in /sys/kernel/debug/xfs/scrub.
- 
--	  If unsure, say N.
--
- config XFS_ONLINE_REPAIR
- 	bool "XFS online metadata repair support"
--	default n
-+	default y
- 	depends on XFS_FS && XFS_ONLINE_SCRUB
- 	select XFS_BTREE_IN_MEM
- 	help
-@@ -186,12 +180,8 @@ config XFS_ONLINE_REPAIR
- 	  formatted with secondary metadata, such as reverse mappings and inode
- 	  parent pointers.
- 
--	  This feature is considered EXPERIMENTAL.  Use with caution!
--
- 	  See the xfs_scrub man page in section 8 for additional information.
- 
--	  If unsure, say N.
--
- config XFS_WARN
- 	bool "XFS Verbose Warnings"
- 	depends on XFS_FS && !XFS_DEBUG
+fs/xfs/scrub/repair.h |   8 -
+fs/xfs/scrub/trace.h  |  45 ++++
+fs/xfs/scrub/newbt.c  |   9 +
+fs/xfs/scrub/reap.c   | 622 ++++++++++++++++++++++++++++++++++++++++----------
+fs/xfs/scrub/trace.c  |   1 +
+5 files changed, 554 insertions(+), 131 deletions(-)
 
