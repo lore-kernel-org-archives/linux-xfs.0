@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A03F31D744
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Sep 2025 15:55:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E79E131D743
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Sep 2025 15:56:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757087754; cv=none; b=fDZosh5lV0qAsoKdzwJ45sostVrDvnmSMXyNQEBiHKYZkmQqT4iAfqhTq4ZELTjzJlTUGweOF5hQL3jN6wesNEXICtdF1EBCXXKMbcXiSKGFlL4WR2mkAe5NoW/iauGNQA6/U5y6cXPjOlIoASS2usFnIw13acYdkK22QkTITl0=
+	t=1757087770; cv=none; b=Mx8XyUW2R0ElUk4lXzgiu9THOpp2VyxzEiLv7IcQmnxL6rCCm2GKR4wslSSGHJ+UodBykK/o7J1TNg9x11onF2l2aldq+g+EsnG+qsARHJL+Ke0AFonSCcIJeXxzxv0gIAEKEzL0oBcPldOOHDgEcpYK6/xQJpq2ry80w5hE8Zg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757087754; c=relaxed/simple;
-	bh=qpQyfc9AweE66QVipAlp6IAM5TMTGL0bYyhn8ussYng=;
+	s=arc-20240116; t=1757087770; c=relaxed/simple;
+	bh=uh72VuR5gqphjOzhBlThul08bdvrjrf4d2qD1l61X18=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bGuS69vpywEKeWpuHm5Dyt0J/juwaaBxginPxlMA5aCk82ZYQWGj2RsgxETw274KVC95GZectN6WaLksdrNKAWi2lvlOwXVeKE5bTa6/gSG5eF5euJDPyP001SfGXffh24jYPXn0VjYcedDbAuj02MDn4K1KyaDplbIwN2i9Kbo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EOSyfeOr; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=kxN7HdPanwpXFLw1BCx3rplScNhsSyzeez0fd+yKlwWRTqc3iczTK4FMvs9yDr3Yw/k6Nk3Gl0cKfiBG9hVJGtrGPS9uCM9cANawjC7kWS+fu1xjWN7lENQmpiNgbFTo8mMSwo6nReGzh3fxEj43SA57ehtEHuYRmm5CO8xT7is=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kJCzSZmX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EOSyfeOr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE290C4CEF4;
-	Fri,  5 Sep 2025 15:55:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kJCzSZmX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A292C4CEF1;
+	Fri,  5 Sep 2025 15:56:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757087753;
-	bh=qpQyfc9AweE66QVipAlp6IAM5TMTGL0bYyhn8ussYng=;
+	s=k20201202; t=1757087769;
+	bh=uh72VuR5gqphjOzhBlThul08bdvrjrf4d2qD1l61X18=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=EOSyfeOr4H2ENwQ549BPW4LQZIhn+MzRLZL+af3vO9sQ9oS3yREo6E1GW+CBKu18K
-	 V90OnV2J5/7yW4RGJ9VDh5b9ByASgyW5s79XFNmE3zMo9QySOi/P6P44kEdxklNSdM
-	 tX3PnxIGwcyBHjyU9hJ6zrCkE8eeaeC443jRBFMpWOTpfjbJGD3p6gphOPaYEcEiqG
-	 7jLq8ZHrpw8Cyuxo06vZHmh3sW17EmsjDVJcdMaARXmPs+aVhoKIW1Yl7vhuWTwSnx
-	 MEGmv76bdQsPkZc5w1ilHeJsMfSCUZ8PL+4ZfkRDFvpEfSHTxArlVu70jVtSTytt3Z
-	 C4jfXRS0GuRLg==
-Date: Fri, 05 Sep 2025 08:55:53 -0700
-Subject: [PATCH 2/9] xfs: prepare reaping code for dynamic limits
+	b=kJCzSZmXo3OBx3ISf/dHRJqGav1wEKvw8CmIFYszFo6TILuL00oOZ+dIwi2SjjrWq
+	 m8JgEFECkQOv8fy4axUJJ1xM+HUzm6AWNTjuyQkiXtVIfdNXOGtE9o0i93DwnZ+djP
+	 hN2nzXDE0phhC773usetgyd0ECSilf/L3zp1FBVi/Un5/Ml8gsPA/brDtb/TB5KxI0
+	 dcFJEt+JwL0AuQjsZeKogLOOuDLS44Z+sxpP/f61CEAdUqt9Ih7Jf5lcoiJblkrQfA
+	 1t14jBFSqNXAsY1swiIYYlRCQl1qnCm0pmrb5OPHMqBS0KTt0PABYwZNLF6HFR9B+7
+	 lqAugAkTLPHPg==
+Date: Fri, 05 Sep 2025 08:56:08 -0700
+Subject: [PATCH 3/9] xfs: convert the ifork reap code to use xreap_state
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: hch@lst.de, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <175708765100.3402543.13898332720222963125.stgit@frogsfrogsfrogs>
+Message-ID: <175708765121.3402543.13720086290657517049.stgit@frogsfrogsfrogs>
 In-Reply-To: <175708765008.3402543.1267087240583066803.stgit@frogsfrogsfrogs>
 References: <175708765008.3402543.1267087240583066803.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,383 +45,234 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The online repair block reaping code employs static limits to decide if
-it's time to roll the transaction or finish the deferred item chains to
-avoid overflowing the scrub transaction's reservation.  However, the
-use of static limits aren't great -- btree blocks are assumed to be
-scattered around the AG and the buffers need to be invalidated, whereas
-COW staging extents are usually contiguous and do not have buffers.  We
-would like to configure the limits dynamically.
-
-To get ready for this, reorganize struct xreap_state to store dynamic
-limits, and add helpers to hide some of the details of how the limits
-are enforced.  Also rename the "xreap roll" functions to include the
-word "binval" because they only exist to decide when we should roll the
-transaction to deal with buffer invalidations.
-
-No functional changes intended here.
+Convert the file fork reaping code to use struct xreap_state so that we
+can reuse the dynamic state tracking code.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/reap.c |  151 +++++++++++++++++++++++++++------------------------
- 1 file changed, 80 insertions(+), 71 deletions(-)
+ fs/xfs/scrub/reap.c |   78 ++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 46 insertions(+), 32 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
-index 86d3d104b8d950..16bd298330a4cc 100644
+index 16bd298330a4cc..33272729249f64 100644
 --- a/fs/xfs/scrub/reap.c
 +++ b/fs/xfs/scrub/reap.c
-@@ -95,17 +95,17 @@ struct xreap_state {
- 	const struct xfs_owner_info	*oinfo;
- 	enum xfs_ag_resv_type		resv;
+@@ -91,9 +91,21 @@
+ struct xreap_state {
+ 	struct xfs_scrub		*sc;
  
--	/* If true, roll the transaction before reaping the next extent. */
--	bool				force_roll;
--
--	/* Number of deferred reaps attached to the current transaction. */
--	unsigned int			deferred;
--
+-	/* Reverse mapping owner and metadata reservation type. */
+-	const struct xfs_owner_info	*oinfo;
+-	enum xfs_ag_resv_type		resv;
++	union {
++		struct {
++			/*
++			 * For AG blocks, this is reverse mapping owner and
++			 * metadata reservation type.
++			 */
++			const struct xfs_owner_info	*oinfo;
++			enum xfs_ag_resv_type		resv;
++		};
++		struct {
++			/* For file blocks, this is the inode and fork. */
++			struct xfs_inode		*ip;
++			int				whichfork;
++		};
++	};
+ 
  	/* Number of invalidated buffers logged to the current transaction. */
--	unsigned int			invalidated;
-+	unsigned int			nr_binval;
- 
--	/* Number of deferred reaps queued during the whole reap sequence. */
--	unsigned long long		total_deferred;
-+	/* Maximum number of buffers we can invalidate in a single tx. */
-+	unsigned int			max_binval;
-+
-+	/* Number of deferred reaps attached to the current transaction. */
-+	unsigned int			nr_deferred;
-+
-+	/* Maximum number of intents we can reap in a single transaction. */
-+	unsigned int			max_deferred;
- };
- 
- /* Put a block back on the AGFL. */
-@@ -148,44 +148,36 @@ xreap_put_freelist(
- }
- 
- /* Are there any uncommitted reap operations? */
--static inline bool xreap_dirty(const struct xreap_state *rs)
-+static inline bool xreap_is_dirty(const struct xreap_state *rs)
- {
--	if (rs->force_roll)
--		return true;
--	if (rs->deferred)
--		return true;
--	if (rs->invalidated)
--		return true;
--	if (rs->total_deferred)
--		return true;
--	return false;
-+	return rs->nr_binval > 0 || rs->nr_deferred > 0;
- }
- 
- #define XREAP_MAX_BINVAL	(2048)
- 
- /*
-- * Decide if we want to roll the transaction after reaping an extent.  We don't
-- * want to overrun the transaction reservation, so we prohibit more than
-- * 128 EFIs per transaction.  For the same reason, we limit the number
-- * of buffer invalidations to 2048.
-+ * Decide if we need to roll the transaction to clear out the the log
-+ * reservation that we allocated to buffer invalidations.
+ 	unsigned int			nr_binval;
+@@ -965,13 +977,12 @@ xrep_reap_metadir_fsblocks(
   */
--static inline bool xreap_want_roll(const struct xreap_state *rs)
-+static inline bool xreap_want_binval_roll(const struct xreap_state *rs)
+ STATIC int
+ xreap_bmapi_select(
+-	struct xfs_scrub	*sc,
+-	struct xfs_inode	*ip,
+-	int			whichfork,
++	struct xreap_state	*rs,
+ 	struct xfs_bmbt_irec	*imap,
+ 	bool			*crosslinked)
  {
--	if (rs->force_roll)
--		return true;
--	if (rs->deferred > XREP_MAX_ITRUNCATE_EFIS)
--		return true;
--	if (rs->invalidated > XREAP_MAX_BINVAL)
--		return true;
--	return false;
-+	return rs->nr_binval >= rs->max_binval;
- }
+ 	struct xfs_owner_info	oinfo;
++	struct xfs_scrub	*sc = rs->sc;
+ 	struct xfs_btree_cur	*cur;
+ 	xfs_filblks_t		len = 1;
+ 	xfs_agblock_t		bno;
+@@ -985,7 +996,8 @@ xreap_bmapi_select(
+ 	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, sc->sa.agf_bp,
+ 			sc->sa.pag);
  
--static inline void xreap_reset(struct xreap_state *rs)
-+/* Reset the buffer invalidation count after rolling. */
-+static inline void xreap_binval_reset(struct xreap_state *rs)
- {
--	rs->total_deferred += rs->deferred;
--	rs->deferred = 0;
--	rs->invalidated = 0;
--	rs->force_roll = false;
-+	rs->nr_binval = 0;
-+}
-+
-+/*
-+ * Bump the number of invalidated buffers, and return true if we can continue,
-+ * or false if we need to roll the transaction.
-+ */
-+static inline bool xreap_inc_binval(struct xreap_state *rs)
-+{
-+	rs->nr_binval++;
-+	return rs->nr_binval < rs->max_binval;
- }
- 
- #define XREAP_MAX_DEFER_CHAIN		(2048)
-@@ -194,25 +186,36 @@ static inline void xreap_reset(struct xreap_state *rs)
-  * Decide if we want to finish the deferred ops that are attached to the scrub
-  * transaction.  We don't want to queue huge chains of deferred ops because
-  * that can consume a lot of log space and kernel memory.  Hence we trigger a
-- * xfs_defer_finish if there are more than 2048 deferred reap operations or the
-- * caller did some real work.
-+ * xfs_defer_finish if there are too many deferred reap operations or we've run
-+ * out of space for invalidations.
+-	xfs_rmap_ino_owner(&oinfo, ip->i_ino, whichfork, imap->br_startoff);
++	xfs_rmap_ino_owner(&oinfo, rs->ip->i_ino, rs->whichfork,
++			imap->br_startoff);
+ 	error = xfs_rmap_has_other_keys(cur, agbno, 1, &oinfo, crosslinked);
+ 	if (error)
+ 		goto out_cur;
+@@ -1048,21 +1060,19 @@ xreap_buf_loggable(
   */
--static inline bool
--xreap_want_defer_finish(const struct xreap_state *rs)
-+static inline bool xreap_want_defer_finish(const struct xreap_state *rs)
+ STATIC int
+ xreap_bmapi_binval(
+-	struct xfs_scrub	*sc,
+-	struct xfs_inode	*ip,
+-	int			whichfork,
++	struct xreap_state	*rs,
+ 	struct xfs_bmbt_irec	*imap)
  {
--	if (rs->force_roll)
--		return true;
--	if (rs->total_deferred > XREAP_MAX_DEFER_CHAIN)
--		return true;
--	return false;
-+	return rs->nr_deferred >= rs->max_deferred;
- }
++	struct xfs_scrub	*sc = rs->sc;
+ 	struct xfs_mount	*mp = sc->mp;
+ 	struct xfs_perag	*pag = sc->sa.pag;
+-	int			bmap_flags = xfs_bmapi_aflag(whichfork);
++	int			bmap_flags = xfs_bmapi_aflag(rs->whichfork);
+ 	xfs_fileoff_t		off;
+ 	xfs_fileoff_t		max_off;
+ 	xfs_extlen_t		scan_blocks;
+ 	xfs_agblock_t		bno;
+ 	xfs_agblock_t		agbno;
+ 	xfs_agblock_t		agbno_next;
+-	unsigned int		invalidated = 0;
+ 	int			error;
  
-+/*
-+ * Reset the defer chain length and buffer invalidation count after finishing
-+ * items.
-+ */
- static inline void xreap_defer_finish_reset(struct xreap_state *rs)
- {
--	rs->total_deferred = 0;
--	rs->deferred = 0;
--	rs->invalidated = 0;
--	rs->force_roll = false;
-+	rs->nr_deferred = 0;
-+	rs->nr_binval = 0;
-+}
-+
-+/*
-+ * Bump the number of deferred extent reaps.
-+ */
-+static inline void xreap_inc_defer(struct xreap_state *rs)
-+{
-+	rs->nr_deferred++;
-+}
-+
-+/* Force the caller to finish a deferred item chain. */
-+static inline void xreap_force_defer_finish(struct xreap_state *rs)
-+{
-+	rs->nr_deferred = rs->max_deferred;
- }
+ 	/*
+@@ -1089,7 +1099,7 @@ xreap_bmapi_binval(
+ 		struct xfs_bmbt_irec	hmap;
+ 		int			nhmaps = 1;
  
- /*
-@@ -297,14 +300,13 @@ xreap_agextent_binval(
- 		while ((bp = xrep_bufscan_advance(mp, &scan)) != NULL) {
- 			xfs_trans_bjoin(sc->tp, bp);
- 			xfs_trans_binval(sc->tp, bp);
--			rs->invalidated++;
+-		error = xfs_bmapi_read(ip, off, max_off - off, &hmap,
++		error = xfs_bmapi_read(rs->ip, off, max_off - off, &hmap,
+ 				&nhmaps, bmap_flags);
+ 		if (error)
+ 			return error;
+@@ -1130,14 +1140,13 @@ xreap_bmapi_binval(
+ 				xfs_buf_stale(bp);
+ 				xfs_buf_relse(bp);
+ 			}
+-			invalidated++;
  
  			/*
  			 * Stop invalidating if we've hit the limit; we should
  			 * still have enough reservation left to free however
- 			 * far we've gotten.
+-			 * much of the mapping we've seen so far.
++			 * far we've gotten.
  			 */
--			if (rs->invalidated > XREAP_MAX_BINVAL) {
+-			if (invalidated > XREAP_MAX_BINVAL) {
 +			if (!xreap_inc_binval(rs)) {
- 				*aglenp -= agbno_next - bno;
+ 				imap->br_blockcount = agbno_next - bno;
  				goto out;
  			}
-@@ -424,13 +426,13 @@ xreap_agextent_iter(
- 			 */
- 			xfs_refcount_free_cow_extent(sc->tp, false, fsbno,
- 					*aglenp);
--			rs->force_roll = true;
-+			xreap_force_defer_finish(rs);
- 			return 0;
- 		}
+@@ -1159,12 +1168,11 @@ xreap_bmapi_binval(
+  */
+ STATIC int
+ xrep_reap_bmapi_iter(
+-	struct xfs_scrub		*sc,
+-	struct xfs_inode		*ip,
+-	int				whichfork,
++	struct xreap_state		*rs,
+ 	struct xfs_bmbt_irec		*imap,
+ 	bool				crosslinked)
+ {
++	struct xfs_scrub		*sc = rs->sc;
+ 	int				error;
  
- 		xfs_rmap_free_extent(sc->tp, false, fsbno, *aglenp,
- 				rs->oinfo->oi_owner);
--		rs->deferred++;
-+		xreap_inc_defer(rs);
+ 	if (crosslinked) {
+@@ -1185,10 +1193,10 @@ xrep_reap_bmapi_iter(
+ 		 * deferred log intents in this function to control the exact
+ 		 * sequence of metadata updates.
+ 		 */
+-		xfs_bmap_unmap_extent(sc->tp, ip, whichfork, imap);
+-		xfs_trans_mod_dquot_byino(sc->tp, ip, XFS_TRANS_DQ_BCOUNT,
++		xfs_bmap_unmap_extent(sc->tp, rs->ip, rs->whichfork, imap);
++		xfs_trans_mod_dquot_byino(sc->tp, rs->ip, XFS_TRANS_DQ_BCOUNT,
+ 				-(int64_t)imap->br_blockcount);
+-		xfs_rmap_unmap_extent(sc->tp, ip, whichfork, imap);
++		xfs_rmap_unmap_extent(sc->tp, rs->ip, rs->whichfork, imap);
  		return 0;
  	}
  
-@@ -444,7 +446,7 @@ xreap_agextent_iter(
+@@ -1209,7 +1217,7 @@ xrep_reap_bmapi_iter(
+ 	 * transaction is full of logged buffer invalidations, so we need to
+ 	 * return early so that we can roll and retry.
  	 */
- 	xreap_agextent_binval(rs, agbno, aglenp);
- 	if (*aglenp == 0) {
--		ASSERT(xreap_want_roll(rs));
-+		ASSERT(xreap_want_binval_roll(rs));
- 		return 0;
- 	}
- 
-@@ -464,7 +466,7 @@ xreap_agextent_iter(
- 		if (error)
- 			return error;
- 
--		rs->force_roll = true;
-+		xreap_force_defer_finish(rs);
- 		return 0;
- 	}
- 
-@@ -475,7 +477,7 @@ xreap_agextent_iter(
- 		if (error)
- 			return error;
- 
--		rs->force_roll = true;
-+		xreap_force_defer_finish(rs);
- 		return 0;
- 	}
- 
-@@ -490,8 +492,8 @@ xreap_agextent_iter(
- 	if (error)
+-	error = xreap_bmapi_binval(sc, ip, whichfork, imap);
++	error = xreap_bmapi_binval(rs, imap);
+ 	if (error || imap->br_blockcount == 0)
  		return error;
  
--	rs->deferred++;
--	if (rs->deferred % 2 == 0)
-+	xreap_inc_defer(rs);
-+	if (rs->nr_deferred % 2 == 0)
- 		xfs_defer_add_barrier(sc->tp);
- 	return 0;
- }
-@@ -532,11 +534,11 @@ xreap_agmeta_extent(
+@@ -1218,8 +1226,8 @@ xrep_reap_bmapi_iter(
+ 	 * intents in this function to control the exact sequence of metadata
+ 	 * updates.
+ 	 */
+-	xfs_bmap_unmap_extent(sc->tp, ip, whichfork, imap);
+-	xfs_trans_mod_dquot_byino(sc->tp, ip, XFS_TRANS_DQ_BCOUNT,
++	xfs_bmap_unmap_extent(sc->tp, rs->ip, rs->whichfork, imap);
++	xfs_trans_mod_dquot_byino(sc->tp, rs->ip, XFS_TRANS_DQ_BCOUNT,
+ 			-(int64_t)imap->br_blockcount);
+ 	return xfs_free_extent_later(sc->tp, imap->br_startblock,
+ 			imap->br_blockcount, NULL, XFS_AG_RESV_NONE,
+@@ -1232,18 +1240,17 @@ xrep_reap_bmapi_iter(
+  */
+ STATIC int
+ xreap_ifork_extent(
+-	struct xfs_scrub		*sc,
+-	struct xfs_inode		*ip,
+-	int				whichfork,
++	struct xreap_state		*rs,
+ 	struct xfs_bmbt_irec		*imap)
+ {
++	struct xfs_scrub		*sc = rs->sc;
+ 	xfs_agnumber_t			agno;
+ 	bool				crosslinked;
+ 	int				error;
+ 
+ 	ASSERT(sc->sa.pag == NULL);
+ 
+-	trace_xreap_ifork_extent(sc, ip, whichfork, imap);
++	trace_xreap_ifork_extent(sc, rs->ip, rs->whichfork, imap);
+ 
+ 	agno = XFS_FSB_TO_AGNO(sc->mp, imap->br_startblock);
+ 	sc->sa.pag = xfs_perag_get(sc->mp, agno);
+@@ -1258,11 +1265,11 @@ xreap_ifork_extent(
+ 	 * Decide the fate of the blocks at the beginning of the mapping, then
+ 	 * update the mapping to use it with the unmap calls.
+ 	 */
+-	error = xreap_bmapi_select(sc, ip, whichfork, imap, &crosslinked);
++	error = xreap_bmapi_select(rs, imap, &crosslinked);
+ 	if (error)
+ 		goto out_agf;
+ 
+-	error = xrep_reap_bmapi_iter(sc, ip, whichfork, imap, crosslinked);
++	error = xrep_reap_bmapi_iter(rs, imap, crosslinked);
+ 	if (error)
+ 		goto out_agf;
+ 
+@@ -1286,6 +1293,12 @@ xrep_reap_ifork(
+ 	struct xfs_inode	*ip,
+ 	int			whichfork)
+ {
++	struct xreap_state	rs = {
++		.sc		= sc,
++		.ip		= ip,
++		.whichfork	= whichfork,
++		.max_binval	= XREAP_MAX_BINVAL,
++	};
+ 	xfs_fileoff_t		off = 0;
+ 	int			bmap_flags = xfs_bmapi_aflag(whichfork);
+ 	int			error;
+@@ -1313,13 +1326,14 @@ xrep_reap_ifork(
+ 		 * can in a single transaction.
+ 		 */
+ 		if (xfs_bmap_is_real_extent(&imap)) {
+-			error = xreap_ifork_extent(sc, ip, whichfork, &imap);
++			error = xreap_ifork_extent(&rs, &imap);
  			if (error)
  				return error;
- 			xreap_defer_finish_reset(rs);
--		} else if (xreap_want_roll(rs)) {
-+		} else if (xreap_want_binval_roll(rs)) {
- 			error = xrep_roll_ag_trans(sc);
+ 
+ 			error = xfs_defer_finish(&sc->tp);
  			if (error)
  				return error;
--			xreap_reset(rs);
-+			xreap_binval_reset(rs);
++			xreap_defer_finish_reset(&rs);
  		}
  
- 		agbno += aglen;
-@@ -557,6 +559,8 @@ xrep_reap_agblocks(
- 		.sc			= sc,
- 		.oinfo			= oinfo,
- 		.resv			= type,
-+		.max_binval		= XREAP_MAX_BINVAL,
-+		.max_deferred		= XREAP_MAX_DEFER_CHAIN,
- 	};
- 	int				error;
- 
-@@ -567,7 +571,7 @@ xrep_reap_agblocks(
- 	if (error)
- 		return error;
- 
--	if (xreap_dirty(&rs))
-+	if (xreap_is_dirty(&rs))
- 		return xrep_defer_finish(sc);
- 
- 	return 0;
-@@ -629,7 +633,7 @@ xreap_fsmeta_extent(
- 			if (error)
- 				goto out_agf;
- 			xreap_defer_finish_reset(rs);
--		} else if (xreap_want_roll(rs)) {
-+		} else if (xreap_want_binval_roll(rs)) {
- 			/*
- 			 * Hold the AGF buffer across the transaction roll so
- 			 * that we don't have to reattach it to the scrub
-@@ -640,7 +644,7 @@ xreap_fsmeta_extent(
- 			xfs_trans_bjoin(sc->tp, sc->sa.agf_bp);
- 			if (error)
- 				goto out_agf;
--			xreap_reset(rs);
-+			xreap_binval_reset(rs);
- 		}
- 
- 		agbno += aglen;
-@@ -669,6 +673,8 @@ xrep_reap_fsblocks(
- 		.sc			= sc,
- 		.oinfo			= oinfo,
- 		.resv			= XFS_AG_RESV_NONE,
-+		.max_binval		= XREAP_MAX_BINVAL,
-+		.max_deferred		= XREAP_MAX_DEFER_CHAIN,
- 	};
- 	int				error;
- 
-@@ -679,7 +685,7 @@ xrep_reap_fsblocks(
- 	if (error)
- 		return error;
- 
--	if (xreap_dirty(&rs))
-+	if (xreap_is_dirty(&rs))
- 		return xrep_defer_finish(sc);
- 
- 	return 0;
-@@ -779,7 +785,7 @@ xreap_rgextent_iter(
- 				*rglenp);
- 
- 		xfs_refcount_free_cow_extent(sc->tp, true, rtbno, *rglenp);
--		rs->deferred++;
-+		xreap_inc_defer(rs);
- 		return 0;
- 	}
- 
-@@ -800,7 +806,7 @@ xreap_rgextent_iter(
- 	if (error)
- 		return error;
- 
--	rs->deferred++;
-+	xreap_inc_defer(rs);
- 	return 0;
- }
- 
-@@ -856,11 +862,11 @@ xreap_rtmeta_extent(
- 			if (error)
- 				goto out_unlock;
- 			xreap_defer_finish_reset(rs);
--		} else if (xreap_want_roll(rs)) {
-+		} else if (xreap_want_binval_roll(rs)) {
- 			error = xfs_trans_roll_inode(&sc->tp, sc->ip);
- 			if (error)
- 				goto out_unlock;
--			xreap_reset(rs);
-+			xreap_binval_reset(rs);
- 		}
- 
- 		rgbno += rglen;
-@@ -887,6 +893,8 @@ xrep_reap_rtblocks(
- 		.sc			= sc,
- 		.oinfo			= oinfo,
- 		.resv			= XFS_AG_RESV_NONE,
-+		.max_binval		= XREAP_MAX_BINVAL,
-+		.max_deferred		= XREAP_MAX_DEFER_CHAIN,
- 	};
- 	int				error;
- 
-@@ -897,7 +905,7 @@ xrep_reap_rtblocks(
- 	if (error)
- 		return error;
- 
--	if (xreap_dirty(&rs))
-+	if (xreap_is_dirty(&rs))
- 		return xrep_defer_finish(sc);
- 
- 	return 0;
-@@ -923,6 +931,8 @@ xrep_reap_metadir_fsblocks(
- 		.sc			= sc,
- 		.oinfo			= &oinfo,
- 		.resv			= XFS_AG_RESV_NONE,
-+		.max_binval		= XREAP_MAX_BINVAL,
-+		.max_deferred		= XREAP_MAX_DEFER_CHAIN,
- 	};
- 	int				error;
- 
-@@ -931,12 +941,11 @@ xrep_reap_metadir_fsblocks(
- 	ASSERT(xfs_is_metadir_inode(sc->ip));
- 
- 	xfs_rmap_ino_bmbt_owner(&oinfo, sc->ip->i_ino, XFS_DATA_FORK);
--
- 	error = xfsb_bitmap_walk(bitmap, xreap_fsmeta_extent, &rs);
- 	if (error)
- 		return error;
- 
--	if (xreap_dirty(&rs)) {
-+	if (xreap_is_dirty(&rs)) {
- 		error = xrep_defer_finish(sc);
- 		if (error)
- 			return error;
+ 		off = imap.br_startoff + imap.br_blockcount;
 
