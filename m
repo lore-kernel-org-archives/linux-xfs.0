@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48B5E2FB082;
-	Fri,  5 Sep 2025 15:55:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2AFF31D74B
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Sep 2025 15:55:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757087727; cv=none; b=Y/nrGMYVHKHhLIyZjck9/Ix4N/B1plAajLYCxT204kKfGeYO6z9JMFH9uJUrwbQ5vodc4wSJg8NgQ5/ETMUCXuXWyrs7CcQ0aquxz3HxhXfn+obLk0zuKaj3dNVDW76fJGYTEAuMnpNJLFqRFFJaOuDXjvgHNxs8Skr8JUhRi0g=
+	t=1757087732; cv=none; b=qt+I/95ubG1LggNvbQs+9VaukEbm7qj6bozjWslLz5xJJ53vjYKJNbxwF4ZZ0Hrwo6mTpeu679D/eOcPYEygEKdDZk2S1v3vGt2EccjYRIuSKFP4ahvGInbKUlcAJPbHA8BeXuTy9iZ/akxmEsrYtV6PU77FENtWhuIBu3RKOOM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757087727; c=relaxed/simple;
-	bh=bXt53vYMcymSfkfG7HrHTHkntjakZSVQaTHX0ZThmUo=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=HE0kWEQjzAzT5oWThSaoc9OkaIc3WjOjyWmJXeBmDjicP9sP/vukxfUKtQFYgwrupJptEy+ABIY6D6l6Ybob60UqN4X4vW3TNdGqnBsb+zORMbLiCP1E7Er1CM4NweBc5lPqAef6COwl7reJ7dLiJtCxItD5axOCdB1FbHKA7lI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KRzpaQ7t; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757087732; c=relaxed/simple;
+	bh=kabeK1kX5yDYfHH0tdtp9vVqU5y1p62RiLMcKGDYgAA=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=ifRVzokzOA+7ZOlMWINJcC/kK0d0ZCRQMHQkQdNTPgBJoRVLOIklmPknTNgZfiEUXS/P+b4OyAxVxo3U0TkC8y5qHKm1AlwqVUt08CoxB0NuiP0oLIVGGYjoMAXHZkKm8/X+Rc+N2uRvh7LtlQp+kDQGskiiF9GN6DQZQxR5Wbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qecz/VWC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KRzpaQ7t"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C64B7C4CEF1;
-	Fri,  5 Sep 2025 15:55:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qecz/VWC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69A36C4CEF1;
+	Fri,  5 Sep 2025 15:55:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757087726;
-	bh=bXt53vYMcymSfkfG7HrHTHkntjakZSVQaTHX0ZThmUo=;
+	s=k20201202; t=1757087732;
+	bh=kabeK1kX5yDYfHH0tdtp9vVqU5y1p62RiLMcKGDYgAA=;
 	h=Date:Subject:From:To:Cc:From;
-	b=KRzpaQ7tBHPe6QiThGVwnMeUWrrNJI6FS/QKLFllemN7mv/cyLVLrNslK5G1HZ8/y
-	 oUGVp+DSA8694LFqqtTX7fHxR2hbxQ9NvipUr/TbvCq2bfiwazPikJndcFI6rHXrv7
-	 /DVUiPROJ2LvcpidVHG9ltdgGonY4ianjWRYgcub3CMw2XxzIZAGIenCpcWAKDWUQG
-	 yDVhlJOAXH9hqdQrkEfAbW8gG6XbdanW9c6j8OR4nfcG48NDB7wP2j5M75n16AfbEF
-	 tZyIqJxBzDNa297dmD53/UHJNiYRRW+0V1ajVay9ZGUmsxh9xYCb+VI8j2u4+Aaa2j
-	 CXc1L0ygDosyg==
-Date: Fri, 05 Sep 2025 08:55:26 -0700
-Subject: [PATCHSET 6.18 v2 1/2] xfs: improve online repair reap calculations
+	b=Qecz/VWCQevdwpcTd8JW38o1m5KqknGhVgf93JrWVUxG5cgVoU5nXllBsoXgbWoHr
+	 PrCdyTu8FMctsq5vCCv+zO74RwmK/9BtqISUMyvfQk6UqDLmIeyjo/YVnZo7G7pCNV
+	 XlC0DNBWrUiZEqmpx8PD98ncW5bTipxMHI2lkoifGocbIu88l4OdMKRTHNFE0ED9tQ
+	 XwKPZbqh212cVlsJu85ouKZ42gmLLUIuLmUJdX3M5Pc/rUdwPhscYmcUgNbcmgxtuS
+	 1OnHzSMzSKKckkG04YGliLM9JkgEWm4wtMFEXX1X6PeAPGpJBwtGR0+oMXRTt0uWbZ
+	 UL1Q9v6uDAqkw==
+Date: Fri, 05 Sep 2025 08:55:31 -0700
+Subject: [PATCHSET 6.18 v2 2/2] xfs: kconfig and feature changes for 2025 LTS
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: stable@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <175708765008.3402543.1267087240583066803.stgit@frogsfrogsfrogs>
+Cc: cmaiolino@redhat.com, preichl@redhat.com, linux-xfs@vger.kernel.org
+Message-ID: <175708765462.3402932.11803651576398863761.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,55 +42,45 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-A few months ago, the multi-fsblock untorn writes patchset added a bunch
-of log intent item helper functions to estimate the number of intent
-items that could be added to a particular transaction.  Those helpers
-enabled us to compute a safe upper bound on the number of blocks that
-could be written in an untorn fashion with filesystem-provided out of
-place writes.
+Ahead of the 2025 LTS kernel, disable by default the two features that
+we promised to turn off in September 2025: V4 filesystems, and the
+long-broken ASCII case insensitive directories.
 
-Currently, the online fsck code employs static limits on the number of
-intent items that it's willing to accrue to a single transaction when
-it's trying to reap what it thinks are the old blocks from a corrupt
-structure.  There have been no problems reported with this approach
-after years of testing, but static limits are scary and gross because
-overestimating the intent item limit could result in transaction
-overflows and dead filesystems; and underestimating causes unnecessary
-overhead.
-
-This series uses the new log intent item size helpers to estimate the
-limits dynamically based on worst-case per-block repair work vs. the
-size of the scrub transaction.  After several months of testing this,
-there don't seem to be any problems here either.
-
-v2: rearrange patches, add review tags
+Since online fsck has not had any major issues in the 16 months since it
+was merged upstream, let's also turn that on by default.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
 
-This has been running on the djcloud for months with no problems.  Enjoy!
+With a bit of luck, this should all go splendidly.
 Comments and questions are, as always, welcome.
 
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=fix-scrub-reap-calculations
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=kconfig-2025-changes
 ---
 Commits in this patchset:
- * xfs: use deferred intent items for reaping crosslinked blocks
- * xfs: prepare reaping code for dynamic limits
- * xfs: convert the ifork reap code to use xreap_state
- * xfs: compute per-AG extent reap limits dynamically
- * xfs: compute data device CoW staging extent reap limits dynamically
- * xfs: compute realtime device CoW staging extent reap limits dynamically
- * xfs: compute file mapping reap limits dynamically
- * xfs: remove static reap limits from repair.h
- * xfs: use deferred reaping for data device cow extents
+ * xfs: disable deprecated features by default in Kconfig
+ * xfs: remove deprecated mount options
+ * xfs: remove deprecated sysctl knobs
+ * xfs: enable online fsck by default in Kconfig
 ---
- fs/xfs/scrub/repair.h |    8 -
- fs/xfs/scrub/trace.h  |   45 ++++
- fs/xfs/scrub/newbt.c  |    9 +
- fs/xfs/scrub/reap.c   |  622 +++++++++++++++++++++++++++++++++++++++----------
- fs/xfs/scrub/trace.c  |    1 
- 5 files changed, 554 insertions(+), 131 deletions(-)
+ fs/xfs/xfs_linux.h                |    2 -
+ fs/xfs/xfs_mount.h                |   12 ++++---
+ fs/xfs/xfs_sysctl.h               |    3 --
+ Documentation/admin-guide/xfs.rst |   57 +++++------------------------------
+ fs/xfs/Kconfig                    |   22 ++++----------
+ fs/xfs/libxfs/xfs_attr_leaf.c     |   23 +++-----------
+ fs/xfs/libxfs/xfs_bmap.c          |   14 ++-------
+ fs/xfs/libxfs/xfs_ialloc.c        |    4 +-
+ fs/xfs/libxfs/xfs_inode_util.c    |   11 -------
+ fs/xfs/libxfs/xfs_sb.c            |    9 ++----
+ fs/xfs/xfs_globals.c              |    2 -
+ fs/xfs/xfs_icache.c               |    6 +---
+ fs/xfs/xfs_iops.c                 |   12 +++----
+ fs/xfs/xfs_mount.c                |   13 --------
+ fs/xfs/xfs_super.c                |   60 +------------------------------------
+ fs/xfs/xfs_sysctl.c               |   29 +-----------------
+ 16 files changed, 43 insertions(+), 236 deletions(-)
 
