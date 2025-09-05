@@ -1,69 +1,62 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E444D22B8CB
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Sep 2025 09:17:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFD9A1D79BE;
+	Fri,  5 Sep 2025 14:03:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757063825; cv=none; b=g/N2CCIcilf9j6GlFrB5O79W5WX8xGaqlf0lz/hkIswNhR5gG0BatYdAIRJf2gxF5wVNVk/XF0jsKCjWOq0Xh2FO1v7Un7VXS2uIfCpdYxKFGu2hj3ySpbGbrWTQBAEIgctDTY5rG9Q1N64CzuWBsKsf2WW/qLaJ6/4+YtLydn0=
+	t=1757081036; cv=none; b=TQd8kl83R//fIjDzdHLc9/FjQxWwvbu70wQPEA7BHncXCIXcQTbQDNKQ/jWB65nZUO8oXHyxreTR0RLDJxdr6B7/DWz4kUaBO0wyp5dBEvE5zJGEUN77Y/4+01C8Kdqj6EHdWI13lGXJaHYwpgVN8k72CSN9UyIMmGmqPg0qd5o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757063825; c=relaxed/simple;
-	bh=Iu+YzqGsKIGbr6+sK2Woon7ESsbDsGJIUKc7ZIn+gH0=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=DL7RI5JPggGn0yGznRpsotbqguqSlPe3kPvAdAZi7tcJi9esQL6qVADpuPhGw+8Y4mQg6PTgABrrRTxQBj4fS2oNBU4xeDyf7HGUpmW+IL1ZvG5z91Vps7we0VVsdIlIx4Y9yYkYuBgxX/3LxtxXtFLEzSRe0izBO4Snq2XcIiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jI6UeqRU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757081036; c=relaxed/simple;
+	bh=xeb7vbPEHD/KqCw1Cd79remZ0YLf8hLpw04PN3rMOVQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=F3bAdG+gyCxq6bXuyxj5k6UnbvqF+ACflxQhPE4HgigSUTY1pRtnPp7hs8pehGZHF56oYFiHjdIDKuiNHK5Tybfw6n4w6BIjpJ5oZx+REbNSmZS65p8tZKG0ymW+CtCeKTnpYAxdAjR8APzlwDhDEZLkRnGi1HTJ8YyemlCI254=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BuGD5/md; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jI6UeqRU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7D84C4CEF1
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Sep 2025 09:17:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BuGD5/md"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14F0FC4CEF1;
+	Fri,  5 Sep 2025 14:03:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757063824;
-	bh=Iu+YzqGsKIGbr6+sK2Woon7ESsbDsGJIUKc7ZIn+gH0=;
-	h=Date:From:To:Subject:From;
-	b=jI6UeqRUspcT61+QxLb4pNeCrt5nJYa//h0mr7yCk7bvvVWJFkmxCsm29TACaKCJ6
-	 D9DKUt3tKRLHR5YIHn+uI2DjCM7YhVnUxZc0vDMxThuzXM9PLvSLtm5b2YxvVWYOt6
-	 h0a+9VQ9xNa8QrblKsPFX3LPbworAiyzKxmSehc2rLV5SMtCQ27i9P6gobw2/FFMfC
-	 Cf/KMAlEQS//MK0xi9fRDEFilvblKtGolBsuWKvYXfzy3p3YoHNyjrAYKhp5jfrVLT
-	 id7kAFPQoBPBhtiEQPhGX1RUjMJHSInH9zNMR5YZNNv/aFXjx6t5Qnxm0uSysCMhvW
-	 b1hlSmHtTldqw==
-Date: Fri, 5 Sep 2025 11:17:01 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 33ddc796ecbd
-Message-ID: <je5rsfydotcevargjmvo2iy7xzrxhujvhvwz3mqvjc65nc3stu@opcp23gzn2oy>
+	s=k20201202; t=1757081035;
+	bh=xeb7vbPEHD/KqCw1Cd79remZ0YLf8hLpw04PN3rMOVQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=BuGD5/mdYyQqT/gUsJySeJt/nHR4lDVAt9EnQ2J96sLRvK2xea3+7HsymdF77PcJ9
+	 S+R1NWHu0de2kMWua/5IGb0LuUJJPRL4cMxSrSnh4NGNG6ugLcWmxe4apXcJHtBs27
+	 t7CEBqDfUbC7hlaqD4ZI7B7zVTtany8aS5K36jo6MmWfwQcblz8gmjudZK4NJdR6MY
+	 psheDX4GuK/I7YMrQlRWr7okTvFBSOvaGRUpvScLpIhFHv3/+7D6HKwV5jnv5r8XgP
+	 AS4SetsBInWyQFKLDnzBX6TYLiq2WvBCAPEt3igtuyNUH8YpKfj7RMlsmWd8jIboYn
+	 V0NQ7I8PdNwaA==
+Date: Fri, 5 Sep 2025 16:03:51 +0200
+From: Christian Brauner <brauner@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Hans Holmberg <Hans.Holmberg@wdc.com>, 
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, 
+	"Darrick J . Wong" <djwong@kernel.org>, hch <hch@lst.de>, 
+	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/3] fs: add an enum for number of life time hints
+Message-ID: <20250905-posaunen-lenken-e81db0559def@brauner>
+References: <20250901105128.14987-1-hans.holmberg@wdc.com>
+ <kcwEWPeEOk9wQLfYFJ-h2ttYjtf0Wq-SjdLpIAqoJzT3jysu_U4uhYJj1RZys6tWgxVKxq833URcLKj-5faenA==@protonmail.internalid>
+ <20250901105128.14987-2-hans.holmberg@wdc.com>
+ <gzj54cob33ecyfdabfbvci7nj7gl5sc2cbujpkg6qax7vgoph2@3ubnb4d2dfim>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+In-Reply-To: <gzj54cob33ecyfdabfbvci7nj7gl5sc2cbujpkg6qax7vgoph2@3ubnb4d2dfim>
 
+On Fri, Sep 05, 2025 at 10:17:51AM +0200, Carlos Maiolino wrote:
+> On Mon, Sep 01, 2025 at 10:52:04AM +0000, Hans Holmberg wrote:
+> > Add WRITE_LIFE_HINT_NR into the rw_hint enum to define the number of
+> > values write life time hints can be set to. This is useful for e.g.
+> > file systems which may want to map these values to allocation groups.
+> > 
+> > Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+> 
+> Cc'ing Chris Brauner here, as I think he is who will be picking this up.
 
-Hi folks,
-
-The for-next branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-33ddc796ecbd xfs: Replace strncpy with memcpy
-
-1 new commit:
-
-Marcelo Moreira (1):
-      [33ddc796ecbd] xfs: Replace strncpy with memcpy
-
-Code Diffstat:
-
- fs/xfs/scrub/symlink_repair.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is so trivial, just take it through xfs, please.
