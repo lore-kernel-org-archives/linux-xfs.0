@@ -1,64 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23FC026B2A5;
-	Fri,  5 Sep 2025 09:16:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E444D22B8CB
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Sep 2025 09:17:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757063779; cv=none; b=jKQmRgtktuSaNgqGuSHOZql6XKz3+NzMx077/rK9RFSV9rxHSv/s3iwNKw9LHolnSIL5oR+yTaDK5llQIj9eDMkeTWLBPDIsm1VjEP3YU3lR5Rwvd8JcN4wFdQLY2z/HQVj0Flcy6/bPV1twZhrwP9X/Km936Xn5icphGxBlMUg=
+	t=1757063825; cv=none; b=g/N2CCIcilf9j6GlFrB5O79W5WX8xGaqlf0lz/hkIswNhR5gG0BatYdAIRJf2gxF5wVNVk/XF0jsKCjWOq0Xh2FO1v7Un7VXS2uIfCpdYxKFGu2hj3ySpbGbrWTQBAEIgctDTY5rG9Q1N64CzuWBsKsf2WW/qLaJ6/4+YtLydn0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757063779; c=relaxed/simple;
-	bh=T5HJJYUKQJ9hO7AMse5j6cs8VcPegOThWM/YU5kdugY=;
-	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=V/n8b/uWuo4Y7nNiPB3n5GgreEFjiLNx0LH8Qw1IUJUAo4Spc0VmulzDYQgraMEgSOOI9LMVZsvTi8ORglPRWOYDL5Xgnki43tc9kNLTHox8gMe7oWBHV/cFMNGzA4Q6lBF3LicHsCXo5GgVQgDMZZHJ5dcSJRxQStlX1X48OJI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=azFKGk2X; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757063825; c=relaxed/simple;
+	bh=Iu+YzqGsKIGbr6+sK2Woon7ESsbDsGJIUKc7ZIn+gH0=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=DL7RI5JPggGn0yGznRpsotbqguqSlPe3kPvAdAZi7tcJi9esQL6qVADpuPhGw+8Y4mQg6PTgABrrRTxQBj4fS2oNBU4xeDyf7HGUpmW+IL1ZvG5z91Vps7we0VVsdIlIx4Y9yYkYuBgxX/3LxtxXtFLEzSRe0izBO4Snq2XcIiI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jI6UeqRU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="azFKGk2X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 606E4C4CEF1;
-	Fri,  5 Sep 2025 09:16:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jI6UeqRU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7D84C4CEF1
+	for <linux-xfs@vger.kernel.org>; Fri,  5 Sep 2025 09:17:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757063778;
-	bh=T5HJJYUKQJ9hO7AMse5j6cs8VcPegOThWM/YU5kdugY=;
-	h=From:To:In-Reply-To:References:Subject:Date:From;
-	b=azFKGk2XclM3SuFP1j+Bp9SiMWrQeHF5cZHsG0OXoIZtgbVsajk3mzq6YjIvO8pTl
-	 AkkpeUYHTiRnBenDQhRywb953uUdupgngWQur8LOK9tQNlGyC4ofywvfTl79PG/j6u
-	 rS7XCuVjU6OfpIXozrEeXHeOiRAkP+f7PPwNnReJObwS6dcEwEFBJH1nysmsEqOTap
-	 5NZxQOAZijYY15qJt9vgkN+CIxINqAEeN48+f9PmPIO39q4P59Fa/IZK+XrdZaMjst
-	 VuUtvVEjjaDrt9KSVHbRDls0MFHSue9etSgHcmK/sHiMuSQ1OZXDi2DXReysD/Zwu7
-	 lFF4IVFsXK6fg==
+	s=k20201202; t=1757063824;
+	bh=Iu+YzqGsKIGbr6+sK2Woon7ESsbDsGJIUKc7ZIn+gH0=;
+	h=Date:From:To:Subject:From;
+	b=jI6UeqRUspcT61+QxLb4pNeCrt5nJYa//h0mr7yCk7bvvVWJFkmxCsm29TACaKCJ6
+	 D9DKUt3tKRLHR5YIHn+uI2DjCM7YhVnUxZc0vDMxThuzXM9PLvSLtm5b2YxvVWYOt6
+	 h0a+9VQ9xNa8QrblKsPFX3LPbworAiyzKxmSehc2rLV5SMtCQ27i9P6gobw2/FFMfC
+	 Cf/KMAlEQS//MK0xi9fRDEFilvblKtGolBsuWKvYXfzy3p3YoHNyjrAYKhp5jfrVLT
+	 id7kAFPQoBPBhtiEQPhGX1RUjMJHSInH9zNMR5YZNNv/aFXjx6t5Qnxm0uSysCMhvW
+	 b1hlSmHtTldqw==
+Date: Fri, 5 Sep 2025 11:17:01 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
- skhan@linuxfoundation.org, linux-kernel-mentees@lists.linuxfoundation.org, 
- Marcelo Moreira <marcelomoreira1905@gmail.com>
-In-Reply-To: <20250827221830.23032-1-marcelomoreira1905@gmail.com>
-References: <20250827221830.23032-1-marcelomoreira1905@gmail.com>
-Subject: Re: [PATCH v3] xfs: Replace strncpy with memcpy
-Message-Id: <175706377702.443134.17306614735589034340.b4-ty@kernel.org>
-Date: Fri, 05 Sep 2025 11:16:17 +0200
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 33ddc796ecbd
+Message-ID: <je5rsfydotcevargjmvo2iy7xzrxhujvhvwz3mqvjc65nc3stu@opcp23gzn2oy>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Wed, 27 Aug 2025 19:17:07 -0300, Marcelo Moreira wrote:
-> The changes modernizes the code by aligning it with current kernel best
-> practices. It improves code clarity and consistency, as strncpy is deprecated
-> as explained in Documentation/process/deprecated.rst. This change does
-> not alter the functionality or introduce any behavioral changes.
-> 
-> 
 
-Applied to for-next, thanks!
+Hi folks,
 
-[1/1] xfs: Replace strncpy with memcpy
-      commit: 33ddc796ecbd50cd6211aa9e9eddbf4567038b49
+The for-next branch of the xfs-linux repository at:
 
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+33ddc796ecbd xfs: Replace strncpy with memcpy
+
+1 new commit:
+
+Marcelo Moreira (1):
+      [33ddc796ecbd] xfs: Replace strncpy with memcpy
+
+Code Diffstat:
+
+ fs/xfs/scrub/symlink_repair.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
