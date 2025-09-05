@@ -1,40 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B07DB1D79BE;
-	Fri,  5 Sep 2025 14:07:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E7A631326F;
+	Fri,  5 Sep 2025 15:03:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757081279; cv=none; b=IlOOOb7mMY1AtkXLgGeAjXSo1KZtd+hNKnmjVqLNISrzDw9sFlWqdV5yC8wBkhQX47+8lIProw0nsG332tassNFrTGtoumToJYN8BqDx9GCnROZFTFByxlk7BpvR2oDOoZY6sU2unj1j12+ANrdMdNQ8ZNxGC5mTIKbLCMKq6Dw=
+	t=1757084585; cv=none; b=hbZH5I8eMNoq1Nv5NBnc7JleSkonNfGSMUrLMAPU7c58sHI6mIGRqe9WpLkcCqFCorBXuVjcHRna1D+XuE5UreqnHPTlqJqeyqQPauqoKL8vr6qGh3zDSJ6LanH31r4DZv9p3RdOeadFOGG9aDBCGopK4QSla0C17DTVstUmd/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757081279; c=relaxed/simple;
-	bh=D7ilWtLEL/M8Lnilo8+XiVASUwlDJivUteumgIELcp8=;
+	s=arc-20240116; t=1757084585; c=relaxed/simple;
+	bh=Q6tmO3O0s0yu285/kvDm5ptCmigvCQ9v86PVCcQoubo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kR2AzYU+Wo47qWVUoDqwpRuWCMdTwT1AF2MEBiUvic9XjgS5nwqBWwjCgldA8OK2NwynGKirOfgf1YXw5zOttLJhVpKs7w6CRl+7cLh+0Khj5VAQassd4JFHrdqnFfFme9YnOfqz31nNWg6LIdB1eV8cN6jliN5YxzmhXhrDjF4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dac1A/TQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=WAVameC83I92y6kwD2jwMAd4PV1L6K72vLG8GtT/jDxrF7fvFllZwf3CprRhn+xhypOn18GdL+WQrdR+eLPnzsUhCfm1wkh1qSroAeCO4QCr5Kg/r9lYL6A1x8ungSsScrcVBD5y+S7W1rxGrIbby7I5RZxsCuT5eyAI79ootHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tcc70QhE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dac1A/TQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98653C4CEF1;
-	Fri,  5 Sep 2025 14:07:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tcc70QhE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D7B5C4CEF1;
+	Fri,  5 Sep 2025 15:03:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757081279;
-	bh=D7ilWtLEL/M8Lnilo8+XiVASUwlDJivUteumgIELcp8=;
+	s=k20201202; t=1757084585;
+	bh=Q6tmO3O0s0yu285/kvDm5ptCmigvCQ9v86PVCcQoubo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dac1A/TQgJlddaHi2gJ+rrhAuU80FHe55XD4QfoZ15+ClY3eFPbaAyU2t7ByT8JkR
-	 o/daTTD0TNQxvvaLJ7IJYtC8e50o4QhZjpkixx4gEgi5oqs2w5CxSNcYhkwd2hyHve
-	 6n6ekWRvVpukPKJLVYusFjGby5MUx+2xtxrn0n6wMmtLYbQeXFYJtCVB9n4irE4T8K
-	 ny1MjcZm4jfRKPYzLsWb3lxUbmV528sQIRQJ57uRYPkIeYadn2o5hBgq95reM4nZGf
-	 /fL2pAFgI+4ezpDnvv1xH1SBle3rNM5CqeEuoU+SjNpYJglpzlo14M0PNujWb0dXyV
-	 8h9IxMjCLtBeQ==
-Date: Fri, 5 Sep 2025 16:07:54 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Mateusz Guzik <mjguzik@gmail.com>
-Cc: viro@zeniv.linux.org.uk, jack@suse.cz, linux-kernel@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, josef@toxicpanda.com, kernel-team@fb.com, amir73il@gmail.com, 
-	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [WIP RFC PATCH] fs: retire I_WILL_FREE
-Message-ID: <20250905-frohe-anbinden-0af1a85f11ab@brauner>
-References: <20250902145428.456510-1-mjguzik@gmail.com>
+	b=Tcc70QhEScVWQpGLCylBCNkk9g7PhquhVD6bc3uvr43/zDIRBuQsfTzb9EBG+Aa0E
+	 vYpFSAiHxksJzaQmx/QjdDq7QGtnyWi7NO7B6XFV6BC4/jmomhFM11ZMcOynCggbfi
+	 c8aTJD7ddHz+NEqoUftv6LWXMZ2zIYFNgxu3DuR8hIEsIyhRQyrFCtmWsYIomcUs+p
+	 Bqn778SrW4iGXrSmK6r5tXnj68iJW7XVZ8DIL/VsTBUq+3xncoiWo7zEjiXO4/AbaL
+	 MJ2dUWhu6Q8/0fVxaSalcr4LW9Q7wbudrfyadt4I9/ChFINaq2KQYhyS3n/AWAhDNw
+	 XZqICuhp8HvjQ==
+Date: Fri, 5 Sep 2025 08:03:04 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, brauner@kernel.org,
+	miklos@szeredi.hu, linux-fsdevel@vger.kernel.org,
+	kernel-team@meta.com, linux-xfs@vger.kernel.org,
+	linux-doc@vger.kernel.org
+Subject: Re: [PATCH v1 02/16] iomap: rename cur_folio_in_bio to
+ folio_unlockedOM
+Message-ID: <20250905150304.GD1587915@frogsfrogsfrogs>
+References: <20250829235627.4053234-1-joannelkoong@gmail.com>
+ <20250829235627.4053234-3-joannelkoong@gmail.com>
+ <20250903202637.GL1587915@frogsfrogsfrogs>
+ <aLkryaC0K58_wXRy@infradead.org>
+ <CAJnrk1bkDSwgZ0s9jToEETtu-nvE4FQdG7iPbbH_w+gW1AA2xQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,10 +49,61 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20250902145428.456510-1-mjguzik@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJnrk1bkDSwgZ0s9jToEETtu-nvE4FQdG7iPbbH_w+gW1AA2xQ@mail.gmail.com>
 
-> For the life of me I could not figure out if write_inode_now() is legal
-> to call in ->evict_inode later and have no means to test, so I devised a
+On Thu, Sep 04, 2025 at 03:06:52PM -0700, Joanne Koong wrote:
+> On Wed, Sep 3, 2025 at 11:03 PM Christoph Hellwig <hch@infradead.org> wrote:
+> >
+> > On Wed, Sep 03, 2025 at 01:26:37PM -0700, Darrick J. Wong wrote:
+> > > On Fri, Aug 29, 2025 at 04:56:13PM -0700, Joanne Koong wrote:
+> > > > The purpose of struct iomap_readpage_ctx's cur_folio_in_bio is to track
+> > > > if the folio needs to be unlocked or not. Rename this to folio_unlocked
+> > > > to make the purpose more clear and so that when iomap read/readahead
+> > > > logic is made generic, the name also makes sense for filesystems that
+> > > > don't use bios.
+> > >
+> > > Hrmmm.  The problem is, "cur_folio_in_bio" captures the meaning that the
+> > > (locked) folio is attached to the bio, so the bio_io_end function has to
+> > > unlock the folio.  The readahead context is basically borrowing the
+> > > folio and cannot unlock the folio itelf.
+> > >
+> > > The name folio_unlocked doesn't capture the change in ownership, it just
+> > > fixates on the lock state which (imo) is a side effect of the folio lock
+> > > ownership.
+> >
+> > Agreed.  Not sure what a good name is in a world where the folio can be
+> > in something else than the bio.  Maybe just replace bio with ctx or
+> > similar? cur_folio_in_ctx?  cur_folio_locked_by_ctx?
+> 
+> I find the ctx naming to be more confusing, the "ctx" imo is too
+> easily confused with the iomap_readfolio_ctx struct.
+> 
+> What about "cur_folio_owned" or "cur_folio_handled"? Or keeping it as
+> "cur_folio_unlocked" and adding a comment to explain the change in
+> ownership?
 
-Welcome to our meticulously documented and simultaneously
-self-explanatory codebase.
+folio_owned_by_ctx?
+or maybe just folio_owned?
+
+Leaving a comment would solve most of my confusion, I think.  Something
+like this?
+
+	/*
+	 * Is the folio owned by this readpage context, or by some
+	 * external IO helper?  Either way, the owner of the folio is
+	 * responsible for unlocking it when the read completes.
+	 */
+	bool folio_owned;
+
+--D
+
+> >
+> > > > +   bool                    folio_unlocked;
+> > >
+> > > Maybe this ought to be called cur_folio_borrowed?
+> >
+> > I don't think 'borrow' makes much sense here.  It's not like we're
+> > borrowing it, we transfer the lock context to the bio (or whatever else
+> > Joanne is going to use for fuse, I haven't read down to that yet).
+> 
