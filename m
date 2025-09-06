@@ -1,80 +1,118 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 309F8315D2F
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Sep 2025 19:02:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B326D25CC70;
+	Sat,  6 Sep 2025 04:25:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757098972; cv=none; b=NmdTWA3qjz1YvwKGULTTCHXUpwIMHsM3+rFLgbbtYdr7Ni0jc3hA3TKaMw/BdWctld0gPV4j+plS2tlXEZQ0P98Rj97DgS5CBahJGZ3uknV4vfopdzBWoAbEpNXMrsIyKhabmi3eP/FS5nQh83u+YlVERgVRpfpxwve61neT1cY=
+	t=1757132706; cv=none; b=h+QL3aa/85WStwny2gyPSWl/ym9kIPkHR859Wg5DqSg3frXSA8LYVoHiW5i6F1NW+aO30MJHkM9lStz071Xp4nhxz0UJGufb3/npmR5hMUtnjsYixSF2STEMiGglABlH/zMOuNZ6dlHcxpnX1MBQD8uCUrdP3yUz8Gr5qAWYnDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757098972; c=relaxed/simple;
-	bh=2u7x47aPkuagqOtkUFKr6SPD+L5Yjo6AJGrCdajEzo8=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=Fq9KW+bf39F70/43m/LnmCX9NUtsohzyruYnZE0yxlARt+blnp/Gr//+e634Nyr6JoGzX3B2VBtqy4RZ1PSidW+fbZGhnlO6lVALcUfdxiwcRzRdTZ4ag0NH1lxOefFBjggeoxWbGjhu4kAwYWMK5P+PdGbfkBrg/zdP0Eb/S44=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uKqTAXg/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757132706; c=relaxed/simple;
+	bh=YhsUb27WIzOKdihnuSLHCUNUhjMrtFA7DwyR95YFpWY=;
+	h=Message-ID:From:To:Cc:Subject:In-Reply-To:Date:References; b=DZhrAy69UPrhiJPopuNdls7WzhN7L/Zz9e3Sa+m0B5zJKTPH00G6OxXJpokrvAUemEDplVOLbFCZql4GTotxG2rdqZIwIvl4vQZpiIG2pViRIfpi5gyN11gW5Qt351rgRg/7mTpdduupOfRerhEb1frC8IrR6PIx+AXzlsZJc+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=C6M4uuFt; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uKqTAXg/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 078BCC4CEF1
-	for <linux-xfs@vger.kernel.org>; Fri,  5 Sep 2025 19:02:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757098971;
-	bh=2u7x47aPkuagqOtkUFKr6SPD+L5Yjo6AJGrCdajEzo8=;
-	h=Date:From:To:Subject:From;
-	b=uKqTAXg/WRJsN47n4Qc1rzd6uVCRhH32LsiWw88M1SR7FOaeqfUCbhtg4y+rTP9AD
-	 wcoMDBm7ia7j7NJRlp6KcaNXmxn05mUZ4yepV5NdrlmVPufDyuRSOjqfBpyhg+qGdW
-	 +caYre3oOXi+Z8T0OeJjrV8VDay4/WjFUc1Wy5lH4vNM2CcauA+/FKM9fAr6cV8whR
-	 /8/NFvwZ5TLtev2E4/YAVzQZSmfvMVcyyIqgWJ3HCQnxYtBoG3RgwhAOfeIlViJB/E
-	 qLqxWmKItluvX/54GggpdE9J4KFvf73jlfD3hYpNx52kq4Dc74cE1S1j0UwkMyYdG6
-	 Yg+PXdrDDBbhg==
-Date: Fri, 5 Sep 2025 21:02:47 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to e90dcba0a350
-Message-ID: <tlssviszjkgyji4fdobpjzzlh47so5xaxalzhbz7sdbjjuwwfc@m553xai7qqtq>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C6M4uuFt"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2445805aa2eso27539095ad.1;
+        Fri, 05 Sep 2025 21:25:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1757132704; x=1757737504; darn=vger.kernel.org;
+        h=references:date:in-reply-to:subject:cc:to:from:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=QElD8wXiacOLfhe3S6yPmyccncw7eb/dDH716ro3Mek=;
+        b=C6M4uuFt/Cdhv3PW7ofcQGdRo1eQf0L6RYMjWBMALWnLzAEo3V+5ptmY7s1VLvxf60
+         qROpBja/EWbrf96BdvYIDLgO8rScXPXr6cAV2ZbfNTfLe4gkPf4mupbq0jYe7KMHQ90Y
+         5GQwqAtwkmqScWYl86bkh2Gbsu2qtwzG3sp6k21k4an4PBzQ7jSxFzGFGJDo+QKak7tz
+         1A1Nyq6uWInIHCYf4Ty8MGt0oMfJdfJrL7TXTREIvrab/ABQUnosvxM43XTYdmVlujDY
+         iagl619gZi54sxU6uvT3uOdWLWAusASoTniIKWpzHOyuyi6DMStNw0l3O+q7f7+xVeJB
+         Ssgg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757132704; x=1757737504;
+        h=references:date:in-reply-to:subject:cc:to:from:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QElD8wXiacOLfhe3S6yPmyccncw7eb/dDH716ro3Mek=;
+        b=dF+ctMsBp7sCYnCudynFOKDP+cV+BEfXHJWs6tm6vOcPtJY0d9dUsR7NQr7hbB3FgO
+         pWmI6NhBYn+60+y+xvZlOyHaXVEFWfIh1KrufM8dVlDN+9wtMKk0Ap8EGIbk2swxPHc6
+         BQ3d46eqY1QOAL3VhTeT8Y9PSaz6z9cPUfOvnM6bn+wpMXN2sDWY5zoEnloR3qzO6oTn
+         0MoJLTc0WjzNgwttneytFuQn/T6szSsz1EqVOdGqH4+eWNhdZZx8VJQB8WlRzePpcdiL
+         Mek+RRPjM4PnKWCZDgTTjbk00iW+S3k7vtewvGa2U4iD9mtg0dNBPMcxOBC0N57VBTYw
+         jdXg==
+X-Forwarded-Encrypted: i=1; AJvYcCU5wcX6/k3aIhVktMg9lkspReonifwSSyqyccrREkupbBfJAgCgkOgeBk5gADMBPzsGZIhBhichE13Q@vger.kernel.org, AJvYcCWK2za02Ut5Ye2IBJNyQ0tjlTiCqDxFiiocJvbE2jhssa7nKQjq1rR3HiIcJoI4C2ELqimk7QRxl7NvziIcLw==@vger.kernel.org, AJvYcCXNxiaeUB3leGsH+GO3NFw5OkL7HITAUJ4Eh6nHUvTHNiwJnobFJZc7v9Z3OmGfQMdQN9jhBO7Mtom2@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz+d33LHekmOK5Kj1qHndSQ4JoDNOOenvrMtphqhXG1iBWMvyBH
+	8Y1YVOlhQJJ2qUxSeZSCkdFftsoQMZA/Ve2VXy1cLsIjID037oAl8buyzlp56lES
+X-Gm-Gg: ASbGncv68Z+/FgxRXVk+GvNqd/tUO0KTMKeEJyTheJNdftUm182iT3vQ+YsNoONQ8ob
+	GltKOk/cZ/K5nxtFvlJBpU5BnzqTme8OuGlYm3TxFsyB4KcMO0YWcBFTtyrbcHzD/Q06PBJvMK1
+	Aj91bIYKkUwEBMpT+iatWVSJLGcMURDBzz11EGR7jRiSoZZ0UEgdFmzKzuj/Y5pCWOZsFXnGGtB
+	/kluX5vI0eS7Hx1YWcifTQxxKLSce+8SDn8oWY9QEL4OlLh3/4BAu3Jf1BF4tgO3nPlwYurYkOR
+	Ev/iNdnUWP83MIBfCmn16jHI+2z1/Y127oVrS+sk0BgFSy85zCQk4hLmJ26XWCspU8+RPHC7WeZ
+	mdtFUgHooO6M9QfVQ9rKebA9sdQ==
+X-Google-Smtp-Source: AGHT+IGzuQD3i0DP0tvOfpvMv3rWVNh4vgySwQb8oqq/FvWMYWrqPd02bnwMpUdY86Qzqt12vR5KEA==
+X-Received: by 2002:a17:902:d482:b0:248:e3fb:4dc8 with SMTP id d9443c01a7336-25173118fb5mr12235285ad.39.1757132703982;
+        Fri, 05 Sep 2025 21:25:03 -0700 (PDT)
+Received: from dw-tp ([171.76.82.161])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-24ccc79a345sm53894025ad.132.2025.09.05.21.25.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Sep 2025 21:25:03 -0700 (PDT)
+Message-ID: <68bbb79f.170a0220.1880ae.2f12@mx.google.com>
+X-Google-Original-Message-ID: <87plc4i4z1.fsf@ritesh.list@gmail.com>
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Brian Foster <bfoster@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: jack@suse.cz, djwong@kernel.org
+Subject: Re: [PATCH RFC 1/2] iomap: prioritize iter.status error over ->iomap_end()
+In-Reply-To: <20250902150755.289469-2-bfoster@redhat.com>
+Date: Sat, 06 Sep 2025 09:53:46 +0530
+References: <20250902150755.289469-1-bfoster@redhat.com> <20250902150755.289469-2-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+
+Brian Foster <bfoster@redhat.com> writes:
+
+> Jan Kara reports that commit bc264fea0f6f subtly changed error
+> handling behavior in iomap_iter() in the case where both iter.status
+> and ->iomap_end() return error codes. Previously, iter.status had
+> priority and would return to the caller regardless of the
+> ->iomap_end() result. After the change, an ->iomap_end() error
+> returns immediately.
+>
+> This had the unexpected side effect of enabling a DIO fallback to
+> buffered write on ext4 because ->iomap_end() could return -ENOTBLK
+> and overload an -EINVAL error from the core iomap direct I/O code.
+>
+> This has been fixed independently in ext4, but nonetheless the
+> change in iomap was unintentional. Since other filesystems may use
+> this in similar ways, restore long standing behavior and always
+> return the value of iter.status if it happens to contain an error
+> code.
+>
+> Fixes: bc264fea0f6f ("iomap: support incremental iomap_iter advances")
+> Diagnosed-by: Jan Kara <jack@suse.cz>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
 
 
-Hi folks,
+Looks good to me. Please feel free to add:
+Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 
-The for-next branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-e90dcba0a350 Merge tag 'kconfig-2025-changes_2025-09-05' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.18-merge
-
-15 new commits:
-
-Carlos Maiolino (2):
-      [482c57805c72] Merge tag 'fix-scrub-reap-calculations_2025-09-05' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.18-merge
-      [e90dcba0a350] Merge tag 'kconfig-2025-changes_2025-09-05' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.18-merge
-
-Darrick J. Wong (13):
-      [cd32a0c0dcdf] xfs: use deferred intent items for reaping crosslinked blocks
-      [82e374405e85] xfs: prepare reaping code for dynamic limits
-      [ef930cc371f0] xfs: convert the ifork reap code to use xreap_state
-      [b2311ec6778f] xfs: compute per-AG extent reap limits dynamically
-      [442bc127d460] xfs: compute data device CoW staging extent reap limits dynamically
-      [74fc66ee17fc] xfs: compute realtime device CoW staging extent reap limits dynamically
-      [e4c7eece7676] xfs: compute file mapping reap limits dynamically
-      [f69260511c69] xfs: disable deprecated features by default in Kconfig
-      [b9a176e54162] xfs: remove deprecated mount options
-      [d5b157e088c9] xfs: remove static reap limits from repair.h
-      [21d59d00221e] xfs: remove deprecated sysctl knobs
-      [07c34f8cef69] xfs: use deferred reaping for data device cow extents
-      [0ff51a1fd786] xfs: enable online fsck by default in Kconfig
+>  fs/iomap/iter.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
+> index cef77ca0c20b..7cc4599b9c9b 100644
+> --- a/fs/iomap/iter.c
+> +++ b/fs/iomap/iter.c
+> @@ -80,7 +80,7 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
+>  				iomap_length_trim(iter, iter->iter_start_pos,
+>  						  olen),
+>  				advanced, iter->flags, &iter->iomap);
+> -		if (ret < 0 && !advanced)
+> +		if (ret < 0 && !advanced && !iter->status)
+>  			return ret;
+>  	}
+>  
+> -- 
+> 2.51.0
