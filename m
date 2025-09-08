@@ -1,101 +1,97 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EA2B1DA4E;
-	Mon,  8 Sep 2025 08:04:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B662FF679
+	for <linux-xfs@vger.kernel.org>; Mon,  8 Sep 2025 12:57:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757318650; cv=none; b=t8zLH2EF6dBmjDWTWqCi287Zkb1KX1us9fv0AL3DCH6XjPbTnl2gzijxygDWawNvfHaT8G+C+w73BVsqZ6dp7lIryitwDzljmmKAI8gccjJ+NpaMN1/htl6FdXm3Z0kFpRt+N6xOV4HOHebCnl+MgHLtm8AsoXbVzv0CEpNImEs=
+	t=1757336226; cv=none; b=psnmo9efw+PK7HrnCI4mc8doZxTCOeWrEst6C7GujUOu8YhzAg5bY1/5CZdXgYB42I6FRF++5915fKc8uhr4sXz6gGaaWdPISqsFL6lwRk3Jas2hQ9Lv2tesOiUkxROpENofhAS59+sdYa9PqFeuJLJEMdr0z8HbTjWFjH0Q82Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757318650; c=relaxed/simple;
-	bh=8I8BEQe22FQhmPZwjcLEncsTKcA07/HbEAELpGAikv8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=l05ek3uD5feRFwOLi/7oCqAgMcuGYVEpi/7z4/W2MzhEQY4IYqt5BEYVNmpEa0lLwEbGry8p1QBvPAuiI29/f8wnw4RSanFusvgb/0nOTBQs16J7UXyWZT9Rviuiat84lBzfVt6XiKH9EQkge8gJJ8l9iJgUY8drmDp5BxxJ7iY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=Lcd1NydD; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
+	s=arc-20240116; t=1757336226; c=relaxed/simple;
+	bh=E3gsleOXnXA3suE0igHg9JzS4476PLjtVmwdlRH4xpk=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=DMPrQmQYi83PmfA6ENtvNnAk6kv34bJxmIQCDj1o9NXdqqJQOTClz8laFC8pdLMozGz5RWw2af/FCPjoNfeuF/fX3/sTctAXx39VOjlOPS5vzQ3GTDRRN8NZb0eTKtuL1ROS6zlPMeK80Yxawcmn/p0SSRpJxCV6Jl3iQEPZws0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=F7Sh9yMA; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="Lcd1NydD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
-	s=202503; t=1757318647;
-	bh=gilcZW3LQ5UHWEK7e4mcAIbr3gAjNGWqMMZJyVdnPcc=;
-	h=Date:From:To:Cc:Subject:From;
-	b=Lcd1NydDOV4V8x2Se9LLSLdn7zTNYvywCHqEH8TLRxgIUulVJ2FaRe3lKiS8v01F2
-	 OelbXlqEWcpIoGqGXHuw61nhktxBaZCPq8aYvUt/KvsL29ZEhjSLmZ+MQnzy3sgiXa
-	 8YbwBb0tH9BA06S8+P3IrkxmBA2dyiZNBCHTBYVxcJtCV6LGp/HDKq4CKRyCAyRzng
-	 HojYA0K6Ysvw0X+bzCC8nY7jLxnwoqoqb6fJ36Q8Rls+8GVSM+a0TOjWjJa9Z66EEZ
-	 wLVR766rsUGwOgwyAd4cqC4U8+TWgYMPgIkmxa9u+Fa+S0d68OXtaCpr1GOIqLo5Ca
-	 xuKsM0K34DZzQ==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F7Sh9yMA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1757336223;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=vKMwsBStQu+Kw1KvPxsPWcF5rUYSs5h6ZCmutbu606k=;
+	b=F7Sh9yMAYKYAQNE+FHUQC5FMhmGuq6FhsvnhSiv1xZwAMSg4LgTFn2jxIe+ZCQQs+QgNip
+	CmZJkZ5NQzjrBr8ygVDFYHHES7ZhtCtpflc9EAt37uQ7KLKtrZpzwaG7RTpihRaJTgsNS6
+	DEXIFIiy9ftuTD53X9NpzFSmvB45Azo=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-86-0I1gYvyRO_GL2i0Yo9CgFQ-1; Mon,
+ 08 Sep 2025 08:57:00 -0400
+X-MC-Unique: 0I1gYvyRO_GL2i0Yo9CgFQ-1
+X-Mimecast-MFC-AGG-ID: 0I1gYvyRO_GL2i0Yo9CgFQ_1757336219
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4cKzxM1h1kz4wBC;
-	Mon,  8 Sep 2025 18:04:07 +1000 (AEST)
-Date: Mon, 8 Sep 2025 18:04:06 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: David Chinner <david@fromorbit.com>, Carlos Maiolino <cem@kernel.org>,
- <linux-xfs@vger.kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List
- <linux-kernel@vger.kernel.org>, Linux Next Mailing List
- <linux-next@vger.kernel.org>
-Subject: linux-next: build warning after merge of the xfs tree
-Message-ID: <20250908180406.32124fb7@canb.auug.org.au>
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B29531800562;
+	Mon,  8 Sep 2025 12:56:59 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.44.33.64])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id DF70119540EE;
+	Mon,  8 Sep 2025 12:56:57 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH 0/2] iomap: ->iomap_end() error handling fixes
+Date: Mon,  8 Sep 2025 09:01:00 -0400
+Message-ID: <20250908130102.101790-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/y/fgxec43_fxxxkFyJV6tTB";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-
---Sig_/y/fgxec43_fxxxkFyJV6tTB
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
 Hi all,
 
-After merging the xfs tree, today's linux-next build (htmldocs) produced
-this warning:
+This is a couple small error handling fixes for ->iomap_end() errors
+(via iomap_iter()). The immediate problem here was that the
+->iomap_end() error return started overriding an iter.status error code,
+which on ext4 happened to trigger dio fallback to buffered I/O in some
+cases. Jan has actually fixed that separately in ext4 [1], but I wanted
+to take an independent look at iomap to see if it is worth fixing as
+well.
 
-Documentation/admin-guide/xfs.rst:365: ERROR: Malformed table.
-Text in column margin in table line 8.
+The more I poked around the more it seemed like it's more appropriate to
+return the initial error code in iter.status if one is pending. I also
+eventually noticed the DAX vs. reflink case documented in patch 2, which
+further tweaks the error handling and supports the former reasoning.
 
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D   =3D=3D=3D=3D=3D=3D=3D
-  Name                          Removed
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D   =3D=3D=3D=3D=3D=3D=3D
-  fs.xfs.xfsbufd_centisec       v4.0
-  fs.xfs.age_buffer_centisecs   v4.0
-  fs.xfs.irix_symlink_mode      v6.18
-  fs.xfs.irix_sgid_inherit      v6.18
-  fs.xfs.speculative_cow_prealloc_lifetime      v6.18
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D   =3D=3D=3D=3D=3D=3D=3D [docutils]
+These are separate patches because they are separate issues. This has
+survived my testing since the RFC was posted and some Reviewed-by's have
+trickled in, so there are no real changes for v1 other than adding those
+tags. Thoughts, reviews, flames appreciated.
 
-Introduced by commit
+Brian
 
-  21d59d00221e ("xfs: remove deprecated sysctl knobs")
+[1] https://lore.kernel.org/linux-ext4/20250901112739.32484-2-jack@suse.cz/
 
---=20
-Cheers,
-Stephen Rothwell
+v1:
+- Added R-b tags.
+rfc: https://lore.kernel.org/linux-fsdevel/20250902150755.289469-1-bfoster@redhat.com/
 
---Sig_/y/fgxec43_fxxxkFyJV6tTB
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+Brian Foster (2):
+  iomap: prioritize iter.status error over ->iomap_end()
+  iomap: revert the iomap_iter pos on ->iomap_end() error
 
------BEGIN PGP SIGNATURE-----
+ fs/iomap/iter.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmi+jfYACgkQAVBC80lX
-0GzlHggAmHts8c7Mcip8lDbsxhfapjyWMqBpxaQWuvUgZJViW5iZ24pi1A0excyv
-oxB9Kin2ga9Dk8VJQ18q4kbFk269rZytpO9nN5/uL1AcFslAJJZXE/NpR+o9viEt
-/7pKP4lZvO5wrS2HwgVU7zuGyRqX3fAyJKSJrr4BHC2IGfVM/uk1b8hR+jcYYmv9
-zlEipAWUna1g4uXUIwelN6agmJcZzWHjuH4Gn/KEbek0xmLfKZjktd2ymHgSmmI3
-wTZOKo15dsOomQA9BrwWj201bIWqRGS1Kz3TGvvyiuXXSBYyUCB9CTTpau1gbPtt
-/moEcYPpudmYgvHc1SfAyJ/qqodjRw==
-=wpKr
------END PGP SIGNATURE-----
+-- 
+2.51.0
 
---Sig_/y/fgxec43_fxxxkFyJV6tTB--
