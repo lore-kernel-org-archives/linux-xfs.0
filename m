@@ -1,144 +1,277 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 025E91DDA15
-	for <linux-xfs@vger.kernel.org>; Sun,  7 Sep 2025 05:29:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01D9715ADB4;
+	Mon,  8 Sep 2025 06:56:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.119
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757222994; cv=none; b=HZLvGreCZkq5RQ/MHkUcDcXl+L25dda2ejZIfXJ2xwcRLeqlROfT249ld6mXCfweGiIDMmVkM/8z1p4yDOR3iKnQNSPZ8tz7fOina4Ph8fQ7ZIDVw39P84p5bjaKZUvgp9OsOWdbPdniMJxijgYnyXjiLCehnpl35EmiLEqkeEA=
+	t=1757314597; cv=none; b=TndO+gvFbcc7n0t9dXcqYtqzzjyuxCoP+a19Nsl8GdrraUCIbNAb13CqR9xEKTaHJe3ueBYzmveP9ol5/H6QKKi/89aXRhpGWAhmErl01LMx8SY53EK2X3ir/4IDpeGryksHTezJ9IepeFHt4iaSBsNJoYyGdriWTAR6C8CABLw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757222994; c=relaxed/simple;
-	bh=caTPKCkAvkuQGw3fUn3P6ZaPL/8hegzI2j/493ESBVk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OHi2LvofNcxpSS643rqwn5GF1UgVfhzleoLvhIZ4fSxvb93pwgnClMGK3MwRmhT3rLHjsZu1EA0LxylLW3jsA/WstOQxY/cd9cy31GvG67p1Wd/9WU+aEHL8s+Mqn7jGZsPqipsjmtpoTpVGtU04yJ9frykVDt0z7JHeXoTl14I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RrOPIF9F; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1757314597; c=relaxed/simple;
+	bh=IHHgWpB7XcU7hYXbGGKm76CMAvv1L16rOpYVAS1UiRw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nCeoJD7XjBHUumjZNhrmjIZGrj+qmWU6jzpsMFRTcVtBg0VOyGr9mt8hg6Vo6S9TA2JHKEoKTHXjaqgFOzEQEZR+MnWn4qz55SXv2hTyvD9UGxwf9vBKqszK++7A+3SHL0P+7bicoPwML69zwcx4S93OfLNTBTitjM7xuaI4X8E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=O+4tICuy; arc=none smtp.client-ip=115.124.30.119
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RrOPIF9F"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1757222992;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NDSHjXOUY0OzHHbNYkSfv2EmWxAIktBkwdxNx3m1wgU=;
-	b=RrOPIF9FT8TKjNfjnICyF9vVIE1d5J0AkYImR56vZtcrq8enmGkZv62gy3PpG92q/SJ8vU
-	FA7i8vnHE1DTSCGebcYNK49/I5KW5YvXX49W7h2ESnF5OO94e4fnIHQPlEjbT9nD4wfLPy
-	909haERKoVb832+pCTow8CUcJadBGFw=
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
- [209.85.210.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-618-e9gCcarENsewdmN10jPBEw-1; Sun, 07 Sep 2025 01:29:50 -0400
-X-MC-Unique: e9gCcarENsewdmN10jPBEw-1
-X-Mimecast-MFC-AGG-ID: e9gCcarENsewdmN10jPBEw_1757222989
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-772642f9fa3so4281536b3a.1
-        for <linux-xfs@vger.kernel.org>; Sat, 06 Sep 2025 22:29:50 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757222989; x=1757827789;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=NDSHjXOUY0OzHHbNYkSfv2EmWxAIktBkwdxNx3m1wgU=;
-        b=AtAjb2cDrf2O1LBygOxn5ATdx/LpAojvn+GUMa0v/x7JTFEbvjh+lkgENLjUwbD2hj
-         VgpyDVWbOZbZAeV2/5lKjhGunL+uzNs0f1SyEVA/u+nXtjLrNnmP/FD3vfGDirY7yJ1n
-         T0Qugw1Ur0b7d5ifFj2UuQavWKjzBWHLfnJlo+CRhUw4CuSAauveADYe2KeJONOCF/PH
-         eRBI2wZj6Nfdu9Gzid0UVB9TpR8oD/jM3Lp05alw7J5Pz0wBZ9ar4CjqyB5LX4Zp0Pnl
-         4Vucr9UXLEqWUBGQZSI3tfW9N/q4ZcXGuwepDnBk4C6bU1aSlEuiYopN3Szvr33GJWeX
-         LB0A==
-X-Forwarded-Encrypted: i=1; AJvYcCWWQ6IngSHUa2jqFBtOp70jt8t2nmgKXQ0cfrYOBzxT5oRcsVecekeJ/dVRhcx6gY8mjRT0fK7dH9w=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzw07hvXUjfNTN/6jxFdG5aF8PDxId0zvQDyC/GHN8HLW9sV/bW
-	oEcgwC/2FQuChNqE5DNOUd8ow1B7RFaCE4qZ3yC6/EeZFZJLRGaarrTfNLjkVEljFXci9++WONd
-	LwUCDXMHaIj+B/cO1HFQNcp9IKjfUpf37WtWXTVJT12Q4TSRa19zKGeHKsiZW1A==
-X-Gm-Gg: ASbGncvZpH1rpD6xTZPrXKrn6B2JXGyZFjis/aqofKWIfGWCInwuO3IrhZtpjIkmuKO
-	1QSp7CKsserg+yVWvI4iQXRgNhAVYwuA2oZPfoPQ/QWrM5KwCWMC4Mp8VRwGsVrKBvOuAesHbI+
-	BRhpUB2dwjQqQXTYsFqW3qUtYW/Yoyf+XDvFlHJDfGf+vfVG4Ku08izdff73/slTKT+N9kMpym3
-	U6KCFClDYwfs9gordkv5nto82R53GaZwH1HimGaqVRgc1cUPQC0dkEKE0mNGPg0ktsDDdrtgPYf
-	xcfRZaiWC0s8zEcNAkMzhsJY2TuC045HH16mFyEOTezSuOaGa3K8ASdxONuZrSePMsjYTstLQOP
-	Dc5Fx
-X-Received: by 2002:a05:6a20:4303:b0:245:fc8e:ef5b with SMTP id adf61e73a8af0-24e7cc230b9mr12289006637.5.1757222989273;
-        Sat, 06 Sep 2025 22:29:49 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHvhkV+C/ngmYr5b9L+PxjVes3H9Tvgst7PxAuC8Mh5uWsBWo7Hp8B67gRI5Mjyth4C7Hk8+Q==
-X-Received: by 2002:a05:6a20:4303:b0:245:fc8e:ef5b with SMTP id adf61e73a8af0-24e7cc230b9mr12288987637.5.1757222988895;
-        Sat, 06 Sep 2025 22:29:48 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b520eaf013esm5307355a12.52.2025.09.06.22.29.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 06 Sep 2025 22:29:48 -0700 (PDT)
-Date: Sun, 7 Sep 2025 13:29:43 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, fstests@vger.kernel.org,
-	Ritesh Harjani <ritesh.list@gmail.com>, djwong@kernel.org,
-	tytso@mit.edu, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v5 02/12] common/rc: Add _require_fio_version helper
-Message-ID: <20250907052943.4r3eod6bdb2up63p@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <cover.1755849134.git.ojaswin@linux.ibm.com>
- <955d47b2534d9236adbd2bbd13598bbd1da8fc04.1755849134.git.ojaswin@linux.ibm.com>
- <1b12c0d9-b564-4e57-b1a5-359e2e538e9c@oracle.com>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="O+4tICuy"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1757314584; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=qRfhMOU1jwt6QQs/bLEA+T15CSW+jtTj6s7+A3xD1P0=;
+	b=O+4tICuyc4u09eQyXJ7YSCdiessZnqfiqoqyj9BLk+agre+muiGU0UXBwW+/ezIZLAw108CUSix/fTrudajUJDVpOPSzegyvTtwsmZRgp2RhGWqAb2T7+ZbG7Zf4boDokHl4Y/ywo/3bJdw/9+b2UDzMGcsPLeO/uR6KjUI6lkI=
+Received: from 30.221.130.235(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0WnT.E8Y_1757314582 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Mon, 08 Sep 2025 14:56:23 +0800
+Message-ID: <2c51b7dd-4eb8-4af3-b554-1044fa493388@linux.alibaba.com>
+Date: Mon, 8 Sep 2025 14:56:22 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1b12c0d9-b564-4e57-b1a5-359e2e538e9c@oracle.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 13/16] iomap: add a private arg for read and readahead
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Joanne Koong <joannelkoong@gmail.com>, brauner@kernel.org,
+ miklos@szeredi.hu, hch@infradead.org, linux-fsdevel@vger.kernel.org,
+ kernel-team@meta.com, linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
+References: <20250829235627.4053234-1-joannelkoong@gmail.com>
+ <20250829235627.4053234-14-joannelkoong@gmail.com> <aLJZv5L6q0FH5F8a@debian>
+ <CAJnrk1af4-FG==X=4LzoBRaxL9N-hnh1i-zx89immQZMLKSzyQ@mail.gmail.com>
+ <a44fd64d-e0b1-4131-9d71-2d36151c90f4@linux.alibaba.com>
+ <CAJnrk1bBmA+VK6UK1n6DRnuLvX8UOMp-VgQGnn2rUrq0=mCyqA@mail.gmail.com>
+ <d631c71f-9d0d-405f-862d-b881767b1945@linux.alibaba.com>
+ <20250905152118.GE1587915@frogsfrogsfrogs>
+From: Gao Xiang <hsiangkao@linux.alibaba.com>
+In-Reply-To: <20250905152118.GE1587915@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Tue, Sep 02, 2025 at 03:50:10PM +0100, John Garry wrote:
-> On 22/08/2025 09:02, Ojaswin Mujoo wrote:
-> > The main motivation of adding this function on top of _require_fio is
-> > that there has been a case in fio where atomic= option was added but
-> > later it was changed to noop since kernel didn't yet have support for
-> > atomic writes. It was then again utilized to do atomic writes in a later
-> > version, once kernel got the support. Due to this there is a point in
-> > fio where _require_fio w/ atomic=1 will succeed even though it would
-> > not be doing atomic writes.
-> > 
-> > Hence, add an explicit helper to ensure tests to require specific
-> > versions of fio to work past such issues.
-> > 
-> > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> > ---
-> >   common/rc | 32 ++++++++++++++++++++++++++++++++
-> >   1 file changed, 32 insertions(+)
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index 35a1c835..f45b9a38 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -5997,6 +5997,38 @@ _max() {
-> >   	echo $ret
-> >   }
-> > +# Check the required fio version. Examples:
-> > +#   _require_fio_version 3.38 (matches 3.38 only)
-> > +#   _require_fio_version 3.38+ (matches 3.38 and above)
-> > +#   _require_fio_version 3.38- (matches 3.38 and below)
+
+
+On 2025/9/5 23:21, Darrick J. Wong wrote:
+> On Fri, Sep 05, 2025 at 10:21:19AM +0800, Gao Xiang wrote:
+>>
+>>
+>> On 2025/9/5 07:29, Joanne Koong wrote:
+>>> On Tue, Sep 2, 2025 at 6:55 PM Gao Xiang <hsiangkao@linux.alibaba.com> wrote:
+>>>>
+>>
+>> ...
+>>
+>>
+>>>>>>
+>>>>>>>     int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops,
+>>>>>>> -             const struct iomap_read_ops *read_ops)
+>>>>>>> +             const struct iomap_read_ops *read_ops, void *private)
+>>>>>>>     {
+>>>>>>>          struct iomap_iter iter = {
+>>>>>>>                  .inode          = folio->mapping->host,
+>>>>>>>                  .pos            = folio_pos(folio),
+>>>>>>>                  .len            = folio_size(folio),
+>>>>>>> +             .private        = private,
+>>>>>>>          };
+>>>>>>
+>>>>>> Will this whole work be landed for v6.18?
+>>>>>>
+>>>>>> If not, may I ask if this patch can be shifted advance in this
+>>>>>> patchset for applying separately (I tried but no luck).
+>>>>>>
+>>>>>> Because I also need some similar approach for EROFS iomap page
+>>>>>> cache sharing feature since EROFS uncompressed I/Os go through
+>>>>>> iomap and extra information needs a proper way to pass down to
+>>>>>> iomap_{begin,end} with extra pointer `.private` too.
+>>>>>
+>>>>> Hi Gao,
+>>>>>
+>>>>> I'm not sure whether this will be landed for v6.18 but I'm happy to
+>>>>> shift this patch to the beginning of the patchset for applying
+>>>>> separately.
+>>>>
+>>>> Yeah, thanks.  At least this common patch can be potentially applied
+>>>> easily (e.g. form a common commit id for both features if really
+>>>> needed) since other iomap/FUSE patches are not dependency of our new
+>>>> feature and shouldn't be coupled with our development branch later.
+>>>>
+>>>
+>>> Hi Gao,
+>>>
+>>> I'll be dropping this patch in v2 since all the iomap read stuff is
+>>> going to go through a struct ctx arg instead of through iter->private.
+>>> Sorry this won't help your use case, but looking forward to seeing your patches.
+>>
+>> Hi Joanne,
+>>
+>> Thanks for your reminder.  Okay, I will check your v2 to know how
+>> you change then.
+>>
+>> Also, one thing I really think it's helpful for our use cases is
+>> converting .iomap_begin() at least to pass struct iomap_iter *
+>> directly rather than (inode, pos, len, flags, iomap, srcmap)
+>> since:
+>>    - .iomap_{begin,end}() are introduced before iomap_iter()
+>>      and struct iomap_iter but those callbacks are basically
+>>      now passed down some fields of `struct iomap_iter` now;
+>>
+>>    - struct iomap_iter->private then can contain a per-request
+>>      context so that .iomap_begin() can leverage too;
+>>
+>>    - There are already too many arguments for .iomap_begin(),
+>>      pass down struct iomap_iter directly could avoid adding
+>>      another `private` argument to .iomap_begin()..
+>>
+>> Therefore, I do wonder if this change (.iomap_begin() passes
+>> struct iomap_iter *) is a good idea for the iomap folks, in
+>> addition that filesystems can specify `struct iomap_iter->private`
+>> as in this patch.  Since this change is necessary to make our
+>> page cache sharing feature efficient, I will continue working on
+>> this soon.
 > 
-> This requires the user to know the version which corresponds to the feature.
-> Is that how things are done for other such utilities and their versions vs
-> features?
+>  From a source code perspective, I like the idea of cleaning up the
+> function signature to pass fewer things to ->iomap_begin.  I suspect
+> that we could simplify it to:
 > 
-> I was going to suggest exporting something like
-> _require_fio_atomic_writes(), and _require_fio_atomic_writes() calls
-> _require_fio_version() to check the version.
+> 	int (*iomap_begin)(const struct iomap_iter *iter,
+> 			   struct iomap *iomap,
+> 			   struct iomap *srcmap);
 
-(Sorry, I made a half reply in my last email)
+Hi Darrick,
 
-This looks better than only using _require_fio_version. But the nature is still
-checking fio version. If we don't have a better idea to check if fio really
-support atomic writes, the _require_fio_version is still needed.
-Or we rename it to "__require_fio_version" (one more "_"), to mark it's
-not recommended using directly. But that looks a bit like a trick :-D
+Thanks for your reply and sorry for my late reply due to another
+internal stuff.
+
+It sounds better to me since `const` annonation may have some more
+aggressive compiler optimization.
+
+> 
+> That way we preserve the notion that the ->iomap_begin functions aren't
+> allowed to change the iterator contents except for the two iomaps.
+> 
+> That said, the nice thing about passing so many parameters is that it
+> probably leads to less pointer chasing in the implementation functions.
+> I wonder if that makes any difference because extent mapping lookups
+> likely involve a lot more pointer chasing anyway.  Another benefit is
+> that since the parameters aren't const, each implementation can (re)use
+> those variables if they need to.
+
+Ok, but I'm not sure, in principle, even without `const` annotation,
+users can make local variables in their callbacks to avoid extra pointer
+chasing.
+
+But anyway, that is not what's my own original intention: we need
+another `->private` ctx to pass among all-iomap_begin() because it
+holds extra information, I think passing in `const struct iomap_iter *`
+is cleaner than adding a new argument.
+
+I will post this after the whole new feature work is finished.
+
+> 
+> I think you could simplify iomap_end too:
+> 
+> 	int (*iomap_end)(const struct iomap_iter *iter,
+> 			 loff_t pos, u64 length,
+> 			 size_t written);
+> 
+> and make ->iomap_end implementations extract iter->flags and iter->iomap
+> themselves if they want to.  I don't like how xfs_iomap.c abuses
+> container_of to extract the iter from the iomap pointer.
+
+Yeah, make sense.
+
+> 
+> (But not enough to have written patches fixing any of this. :P)
+> 
+>> Another thing I want to discuss (but it's less important for our
+>> recent features) is the whole callback hook model of iomap.
+>>
+>> Basically the current model does mean if any filesystem doesn't
+>> fulfill the iomap standard flow, it has to add some customized
+>> callback hook somewhere to modify the code flow then (or introduce
+>> a new special flag and move their specific logic into iomap/
+>> itself even other fses may not need this), but the hook way will
+>> cause increased indirect calls for them, currently we have
+>> `struct iomap_ops`, `struct iomap_writeback_ops` and
+>> `struct iomap_dio_ops`, if some another filesystem (when converting
+>> buffer I/Os for example or adding {pre,post}-processing ) have
+>> specified timing, it needs to add new hooks then.
+>>
+>> I do wonder if it's possible to convert iomap to get rid of the
+>> indirect-call model by just providing helper kAPIs instead,
+>> take .read_folio / .fiemap for example e.g.
+>>
+>>     xxxfs_read_folio:
+>>        loop iomap_iter
+>>          xxxfs_iomap_begin();
+>> 	iomap_readpage_bio_advance(); [ or if a fs is non-bio
+>>               based, spliting more low-level helpers for them. ]
+>>          xxxfs_iomap_end();
+>>
+>>     xxxfs_fiemap():
+>>        iomap_fiemap_begin
+>>        loop iomap_iter
+>>          xxxfs_iomap_begin();
+>>          iomap_readpage_fiemap_advance()
+>>          xxxfs_iomap_end();
+>>        iomap_fiemap_end
+>> So that each fs can use those helpers flexibly instead of diging
+>> into adding various new indirect call hooks or moving customized
+>> logic into iomap/ itself.
+> 
+> Yes, it's quite possible to push the iomap iteration control down into
+> the filesystems to avoid the indirect calls.  That might make things
+> faster, though I have no idea what sort of performance impact that will
+> have.
+
+It's not from the performance impact perspective, but for the
+flexibility.  Adding new hooks everywhere doesn't smell good
+at least on my side (because iomap tends to cover the whole I/O
+lifetime, which is by design different from page cache callbacks
+for example).
+
+> 
+>> I don't have a specific example  because currently we don't have
+>> direct issue against standard iomap flow on our uncompressed
+>> path, but after a quick glance of other potential users who try
+>> to convert their buffer I/Os to iomap, I had such impression in
+>> my head for a while.
+> 
+> OTOH making it easier for non-disk filesystems to use iomap but supply
+> their own IO mechanism (transformed bios, memcpy, etc) makes a far more
+> compelling argument for doing this painful(?) treewide change IMO.
+
+Yeah, I can see it's rather a painful treewide change, but if more
+hooks are added, it will be more painful than now.
+
+Anyway, it's just my random thought but it doesn't have real impact
+to our work and much less important to me.
 
 Thanks,
-Zorro
+Gao Xiang
 
-
 > 
-> Thanks,
-> John
+> --D
 > 
-> 
+>> Thanks,
+>> Gao Xiang
+>>
+>>>
+>>>
+>>> Thanks,
+>>> Joanne
+>>>
+>>>> Thanks,
+>>>> Gao Xiang
+>>>>
+>>>>>
+>>>>> Thanks,
+>>>>> Joanne
+>>>>>>
+>>>>>> Thanks,
+>>>>>> Gao Xiang
+>>>>
+>>
+>>
 
