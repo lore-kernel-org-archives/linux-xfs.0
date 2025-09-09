@@ -1,178 +1,116 @@
-Received: from mail-qk1-f182.google.com (mail-qk1-f182.google.com [209.85.222.182])
+Received: from mail-io1-f45.google.com (mail-io1-f45.google.com [209.85.166.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B223352096;
-	Tue,  9 Sep 2025 15:34:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 205FF2192EE
+	for <linux-xfs@vger.kernel.org>; Tue,  9 Sep 2025 16:27:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757432046; cv=none; b=A3w5oixoAOHy1f6qkt/tdv9jfVctKWKGY6crCnOrv0hqiwk17ew3CeM7usUcexzvSN0l5WXWM/ik4wAm89F4jW7aSTaeITZ21GJWWkOGDhZCNMhJP4kVVOC12bZkPOK+YfPLOarq1b0qpNML7t5tQC+sk9k1BmuU8BCiqmV0r0M=
+	t=1757435246; cv=none; b=H0/4fgkuZlKPXH6S4I890lsd6qSFMxmLgHMql81oCYHPcmyfowk5O80+mVN/2aO1mV8EUINBIr2ViE5ULHduyeDaovvh9VZYq/yWowjtKWDdruxjc/Vfe2/YQKStY/eqKg+ng4Bx13qhhyGuqJJkEpyymD44/KRHjUeZ+EUDWXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757432046; c=relaxed/simple;
-	bh=6JlSmRBzOwfJDw81Wdqg0lZlZvfb9SVf6c+eUyxm70k=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=bL6gjbJSZDDDxqCvGM+9VjEq3EEZAgR1mdDZqo9IDqlDxCe/C6oU0oCAva2c+hozmP1Cd8kKHvuCpWZp7yFKlQdgiHmjXJQjKiFYPUwoL/Z39uuXHHIUVnk9AgJFBU41joWwGsle7yWpS1Sw/GPP95Zc3gK/8Fl08hCOzwsBLJI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZPx4wJh5; arc=none smtp.client-ip=209.85.222.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1757435246; c=relaxed/simple;
+	bh=iGkK0GZV0QqwpOYApQ22IsNCF1IiazNEA6d4iqI+BXk=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=ZkznYKB661PyItoUlEy8aUc5NkNieAIEq+uyUoYwWVKDmeO0GEl31cCnK6wxGqOsOeMWnd4A2+/2D/izehRgnabBkpoi8mHzSrjHl7neer1PALA8Wip/KhdUrO+9r5LX2w4I7L5H88NJJt3beyQVzHt4slZksyevEoYk9DXJeOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=LMOUVrwI; arc=none smtp.client-ip=209.85.166.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZPx4wJh5"
-Received: by mail-qk1-f182.google.com with SMTP id af79cd13be357-811b06efefdso478281185a.1;
-        Tue, 09 Sep 2025 08:34:04 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="LMOUVrwI"
+Received: by mail-io1-f45.google.com with SMTP id ca18e2360f4ac-887764c2834so262710939f.1
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Sep 2025 09:27:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757432044; x=1758036844; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1757435243; x=1758040043; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=nm019m6Jpg9WlE0fDkKmwk8SZTc8G6zXBvzps0igUOY=;
-        b=ZPx4wJh5uUKkqSmwWiYmqg0N8R6oYbrYCFlzuTJb/W0dCuLMkxRQAmyB1SqaTROcOM
-         DERr4CHMz1+hd1Vb+YUQAg9z4m0J+7YUgBZM+oiVtblkoMq7LynPU+bkOIcRA9NnhKx2
-         xBkOk278NMzm0MfK6GE52RTit+Sr3KB6MiYOTfzftLr9t3CHupbNWyqnRh8VgGXoDSMW
-         LMllWgG5xKw7OKTc5+TQ48PVQYL3MKIoojRRTXzqOu6E1SRJykpRrVVovYNeJUkmjnbj
-         RqNqKEU3wXKKhAh2V6nTRuEUjNwiTcyAhVeQAclTg+2bCroHvnPVj3f+AtTfifxkUa4z
-         j4SQ==
+        bh=tU5+1dfVb+0Q/QuEy8gW99WTOyajIvbAEwb6qaOWAkg=;
+        b=LMOUVrwIKMmIZiL8VlEZdfg0wkzl8kehGhgg1JrkVkMcBfRwYnOyzgUBLBK+upWnYa
+         30TKuHXeEn8OEeC7r+0cK6BhWWZIRv1fFEsrWCCQ6FepkfGkqnBu7zZdjBNj7VTDfEkd
+         Epm0AlGkPbevVyL7ZChfIIRVpoTRZuR3xZS+g+/jU5whtvGaBReO894upp0jCpaBstV5
+         vsqlI9UjH9FiBRhvBdrm6hJ/DaewVEXsx5CHRbMtU4bXCXIotuZnzweu9Ud0N1y2aGdC
+         g878RgQUp2fddiJ6DpUYq/O29J95y6vXFKQiJszOg0/HneBPVcRVbBSBhgmi5iEKCUpA
+         Fpzw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757432044; x=1758036844;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1757435243; x=1758040043;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=nm019m6Jpg9WlE0fDkKmwk8SZTc8G6zXBvzps0igUOY=;
-        b=oc6/i1iYgrrVkPobM56JSexEU5ZJzsd2wVM7qzR8EoSOk1a/0PQGC1i84+6OICptGm
-         YK3Uzk9NanGCovzNqWpZ8J7UgW4G1fjI1gNBEZ3gILdX28WhjT3xhPozCaWN2BeX20dS
-         8a43k/iT3Ca/39L5iyof7PvMv7XACoIAPaRfg7x/eMEDQt5NEbIz+xZIDuJs9Zr5rPek
-         meNsoJ5Zwx7PJ9ALR6SKqOaWSAjrHLBpo21NqjhwGs+FBTXup5fUhne2gcN92PfF8hA/
-         mFmB4vYc0LpnVVC2oqnV9SM2caUHpOrNU4OWyPiCG/c9NvHWniGnUek8ErgwnnmIHC+3
-         5T4A==
-X-Forwarded-Encrypted: i=1; AJvYcCU3dxp6m5KKR8XcH717aLzA2dY4Web/pJBB+vklp72HjIYG6HLgFA3yMy4xtisFyKwkKx3NYaReKuo6Y6T6MQ==@vger.kernel.org, AJvYcCUM+tEUSSW3mxCgX49ALAovbxFBSLJ0GDXKdccOQzxG7ZdFuT8laP74Tm1NBkx9JXCpHfe1HX05Ennd@vger.kernel.org, AJvYcCUOKqBo72W0p/qiZZHEoHJ9AAtqP6XQtMPN+k1ZOrnWZAA0akRov0MLdftRWhYHHEbuCfGyipbCogwX0g==@vger.kernel.org, AJvYcCVhhS4bq2/l92d/x8vvPeQOkbM1yGTdyeR1FHQV79kYiM8ukFgXFtew9i2Hxjj+kmiItkvW4EJBtkzF@vger.kernel.org
-X-Gm-Message-State: AOJu0YyWCexEv0PSijopCGsvO2vJRrQLilEyDcf46IhN27PgU98snRIf
-	MO2OupZk2NNlnGbZ0i3B+OV4S5F0gvuD6hiZTcaRD3u8QM5DdmLnzKKzIk1xRjOCNepl1Hg1DZa
-	qdCckazhJDG3Ls5P4Y84jPuhio0dc4Cs=
-X-Gm-Gg: ASbGncvQE6Edvp9/72c3HjsYf+Oiyvmi3hJztPgxakf4xTjbcciky/l+llSd76KLKCk
-	Iv4Jy40b/bBQcb3huRJAhGS4f4Ig3Ik3UTO0zdTv9iSzmFvXM1Oylrf0IPzHbYJCOyVUoIpzcnD
-	ptoa1H5kzBJpqL5MPSN4zvdcchlBBL2NsNxaMmO6HCZ/6cmqKZDvhsJoinFLiyYHgzfUwZ4gNPq
-	O7TBc57hxlg7FVDG58BDS8=
-X-Google-Smtp-Source: AGHT+IHsvKQIqY1eKcTSpIDfewB71Vz1SzsjVHsBfXSv4SayZ8R1VsL4otO2UwFpXNAm9zonHXLetqA++OARoiEstzA=
-X-Received: by 2002:a05:620a:a207:b0:814:ac72:cb53 with SMTP id
- af79cd13be357-814ac72ce37mr1348060785a.39.1757432042924; Tue, 09 Sep 2025
- 08:34:02 -0700 (PDT)
+        bh=tU5+1dfVb+0Q/QuEy8gW99WTOyajIvbAEwb6qaOWAkg=;
+        b=Z77aeoUXtWuV4k+qvQuIOOSbgxlLgSj9BUmgnX01BTMTSIrUHWfYqXD1EK2xBBm7uo
+         WDMRoxVKzQYUKHNdI0v2nWDYhh3no+MquT+cPWNQJnl2/M5BqYFmSZxntMBja8R4iji9
+         rOIRvVIBSRm97oufLP8DLe6C5Ip4Vs1HPNo16dBt67+Z3MrsYspr5iJ2Cfkh32hhepnA
+         N9e+Sz25S1wne8jmQrSr0/3Air6PmafPcAsrjLEGM/QlWBneaPqWwRE78OhQI0REfYip
+         sVnmNSEQEYvuCgzPh1PyD5ASpytskc3d3287Oki9QC5Z0Q10/+kgHd8OqCfYvh1AEPsH
+         ZCyw==
+X-Gm-Message-State: AOJu0YyNzBYTvJg923jfKn6bSKx1BnH2YgUMXeNDmMELQhqoUqDUPEKN
+	qxplTk7YHYrjrVG6GiE78hZ32OCUyp749iUUM0rAzEqQCBlXPSVQCtLrKnOqCaHDCqw=
+X-Gm-Gg: ASbGncvt+K/cTcBrJGH3fOtzcJoiAd3fch71Dt2MiY+VcCYRAGL0fIEgAigteEOtR6P
+	Kk2lNbQb3UvEm9JqPml6ExELpeeFW7TyvuioyNkMxcE4ZgMsP2lS00PogUk6HLf1A67s9/ti2jo
+	AeS78ODBiaaVyBp08L1vWMtg1BCc5dWiQSz12h7bq1dtr8vhRjSezgSJQ1LkOmqkqK/bsBac5Qg
+	zW19+1mo2RJ51rAfxRl2aCQ3tZrSKIpLgv/RQxGrcOEeE7z1F3blMtrEqJ2C7iAbpLt31ktKZSC
+	mpSos25L7vVBuowyMs6L7avnma8qyBSAhylVoHly3OJVJTGcCAeO7kWAxES7AITD+MkEGBhnAvT
+	h1jV8W4ZkWYorVw==
+X-Google-Smtp-Source: AGHT+IGYb7REoxLIudhiD+LK09+Jxda+ni01YckmiZbSg941A5eJBO8ul/BNPsA8WuRBKs9N3iVw+A==
+X-Received: by 2002:a05:6602:2cc1:b0:887:5799:7ab0 with SMTP id ca18e2360f4ac-887776aff72mr1950935739f.16.1757435243017;
+        Tue, 09 Sep 2025 09:27:23 -0700 (PDT)
+Received: from [127.0.0.1] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-50d8f31c66asm9636034173.44.2025.09.09.09.27.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Sep 2025 09:27:22 -0700 (PDT)
+From: Jens Axboe <axboe@kernel.dk>
+To: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+ Keith Busch <kbusch@meta.com>
+Cc: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, hch@lst.de, 
+ Keith Busch <kbusch@kernel.org>
+In-Reply-To: <20250827141258.63501-1-kbusch@meta.com>
+References: <20250827141258.63501-1-kbusch@meta.com>
+Subject: Re: [PATCHv4 0/8]
+Message-Id: <175743524234.117585.13836043498265714409.b4-ty@kernel.dk>
+Date: Tue, 09 Sep 2025 10:27:22 -0600
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250908185122.3199171-1-joannelkoong@gmail.com>
- <20250908185122.3199171-14-joannelkoong@gmail.com> <a1529c0f-1f1a-477a-aeeb-a4f108aab26b@linux.alibaba.com>
-In-Reply-To: <a1529c0f-1f1a-477a-aeeb-a4f108aab26b@linux.alibaba.com>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Tue, 9 Sep 2025 11:33:49 -0400
-X-Gm-Features: Ac12FXxmaTYFDfytENNUUKz7GREv8kkuFk-74PyqDa4R1bwoLlwwHTGCX5N6tT0
-Message-ID: <CAJnrk1aCCqoOAgcPUpr+Z09DhJ5BAYoSho5dveGQKB9zincYSQ@mail.gmail.com>
-Subject: Re: [PATCH v2 13/16] iomap: move read/readahead logic out of
- CONFIG_BLOCK guard
-To: Gao Xiang <hsiangkao@linux.alibaba.com>
-Cc: brauner@kernel.org, miklos@szeredi.hu, hch@infradead.org, 
-	djwong@kernel.org, linux-block@vger.kernel.org, gfs2@lists.linux.dev, 
-	linux-fsdevel@vger.kernel.org, kernel-team@meta.com, 
-	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3-dev-2ce6c
 
-On Mon, Sep 8, 2025 at 10:14=E2=80=AFPM Gao Xiang <hsiangkao@linux.alibaba.=
-com> wrote:
->
-> On 2025/9/9 02:51, Joanne Koong wrote:
-> > There is no longer a dependency on CONFIG_BLOCK in the iomap read and
-> > readahead logic. Move this logic out of the CONFIG_BLOCK guard. This
-> > allows non-block-based filesystems to use iomap for reads/readahead.
-> >
-> > Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> > ---
-> >   fs/iomap/buffered-io.c | 151 +++++++++++++++++++++-------------------=
--
-> >   1 file changed, 76 insertions(+), 75 deletions(-)
-> >
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index f673e03f4ffb..c424e8c157dd 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -358,81 +358,6 @@ void iomap_finish_folio_read(struct folio *folio, =
-size_t off, size_t len,
-> >   }
-> > +
-> > +/**
-> > + * Read in a folio range asynchronously through bios.
-> > + *
-> > + * This should only be used for read/readahead, not for buffered write=
-s.
-> > + * Buffered writes must read in the folio synchronously.
-> > + */
-> > +static int iomap_read_folio_range_bio_async(const struct iomap_iter *i=
-ter,
-> > +             struct iomap_read_folio_ctx *ctx, loff_t pos, size_t plen=
-)
-> > +{
-> > +     struct folio *folio =3D ctx->cur_folio;
-> > +     const struct iomap *iomap =3D &iter->iomap;
-> > +     size_t poff =3D offset_in_folio(folio, pos);
-> > +     loff_t length =3D iomap_length(iter);
-> > +     sector_t sector;
-> > +     struct bio *bio =3D ctx->private;
-> > +
-> > +     iomap_start_folio_read(folio, plen);
-> > +
-> > +     sector =3D iomap_sector(iomap, pos);
-> > +     if (!bio || bio_end_sector(bio) !=3D sector ||
-> > +         !bio_add_folio(bio, folio, plen, poff)) {
-> > +             gfp_t gfp =3D mapping_gfp_constraint(folio->mapping, GFP_=
-KERNEL);
-> > +             gfp_t orig_gfp =3D gfp;
-> > +             unsigned int nr_vecs =3D DIV_ROUND_UP(length, PAGE_SIZE);
-> > +
-> > +             if (bio)
-> > +                     submit_bio(bio);
-> > +
-> > +             if (ctx->rac) /* same as readahead_gfp_mask */
-> > +                     gfp |=3D __GFP_NORETRY | __GFP_NOWARN;
-> > +             bio =3D bio_alloc(iomap->bdev, bio_max_segs(nr_vecs),
-> > +                                  REQ_OP_READ, gfp);
-> > +             /*
-> > +              * If the bio_alloc fails, try it again for a single page=
- to
-> > +              * avoid having to deal with partial page reads.  This em=
-ulates
-> > +              * what do_mpage_read_folio does.
-> > +              */
-> > +             if (!bio)
-> > +                     bio =3D bio_alloc(iomap->bdev, 1, REQ_OP_READ, or=
-ig_gfp);
-> > +             if (ctx->rac)
-> > +                     bio->bi_opf |=3D REQ_RAHEAD;
-> > +             bio->bi_iter.bi_sector =3D sector;
-> > +             bio->bi_end_io =3D iomap_read_end_io;
-> > +             bio_add_folio_nofail(bio, folio, plen, poff);
-> > +             ctx->private =3D bio;
->
-> Yes, I understand some way is needed to isolate bio from non-bio
-> based filesystems, and I also agree `bio` shouldn't be stashed
-> into `iter->private` since it's just an abuse usage as mentioned
-> in:
-> https://lore.kernel.org/r/20250903203031.GM1587915@frogsfrogsfrogs
-> https://lore.kernel.org/r/aLkskcgl3Z91oIVB@infradead.org
->
-> However, the naming of `(struct iomap_read_folio_ctx)->private`
-> really makes me feel confused because the `private` name in
-> `read_folio_ctx` is much like a filesystem read context instead
-> of just be used as `bio` internally in iomap for block-based
-> filesystems.
->
-> also the existing of `iter->private` makes the naming of
-> `ctx->private` more confusing at least in my view.
 
-Do you think "ctx->data" would be better? Or is there something else
-you had in mind?
+On Wed, 27 Aug 2025 07:12:50 -0700, Keith Busch wrote:
+> Previous version:
+> 
+>   https://lore.kernel.org/linux-block/20250819164922.640964-1-kbusch@meta.com/
+> 
+> This series removes the direct io requirement that io vector lengths
+> align to the logical block size. There are two primary benefits from
+> doing this:
+> 
+> [...]
 
-Thanks,
-Joanne
->
-> Thanks,
-> Gao Xiang
+Applied, thanks!
+
+[1/8] block: check for valid bio while splitting
+      commit: fec2e705729dc93de5399d8b139e4746805c3d81
+[2/8] block: add size alignment to bio_iov_iter_get_pages
+      commit: 743bf2e0c49c835cb7c4e4ac7d5a2610587047be
+[3/8] block: align the bio after building it
+      commit: 20a0e6276edba4318c13486df02c31e5f3c09431
+[4/8] block: simplify direct io validity check
+      commit: 5ff3f74e145adc79b49668adb8de276446acf6be
+[5/8] iomap: simplify direct io validity check
+      commit: 7eac331869575d81eaa2dd68b19e7468f8fa93cb
+[6/8] block: remove bdev_iter_is_aligned
+      commit: 9eab1d4e0d15b633adc170c458c51e8be3b1c553
+[7/8] blk-integrity: use simpler alignment check
+      commit: 69d7ed5b9ef661230264bfa0db4c96fa25b8efa4
+[8/8] iov_iter: remove iov_iter_is_aligned
+      commit: b475272f03ca5d0c437c8f899ff229b21010ec83
+
+Best regards,
+-- 
+Jens Axboe
+
+
+
