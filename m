@@ -1,171 +1,147 @@
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EC8031E0E2;
-	Mon,  8 Sep 2025 18:52:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17E5E4D8CE;
+	Tue,  9 Sep 2025 00:04:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757357563; cv=none; b=XZIwyGzmFnXMYs/fENxxpBFdc6+g1chnmKmwX5RvtikeAgIbjwjjZdTTbow/j+SVeD392ZuJYsTdDuTCj/A2gIURtFg/hwMBmwra9qNKFrmS8xY+ccdB1ejEMRvOx7R2n5Ph9LCwVfwsc8BLrJEmIjALFBEGlUFHcL2L1SUJ9vs=
+	t=1757376292; cv=none; b=CP/CYcHo6CPOdruBgpvNBLKIY9Ff1rD143R+uzf12tUpoHCAGl/5TO+7d+WuD5/12G7bJGqdahszMI5wItn3OrV0R3H6Z/GwpvXuN3SEY5Vjz/vEjOSMwOHkXUDgrNQzFSZ1X/aZDV0XGb6IYlT9xwDjrS5ZwW1tySRn502Kfy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757357563; c=relaxed/simple;
-	bh=+CTN5B7SeqTNFS9JipDKq8pNDlO61mP9PFkpU1qk1bU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sIGDjZ+WOBU8GNHnQxG3WKjniY99NAyOeeI+Wa6RortyhjsJbPFoF+Lx9I9NfeyfDlQahC5gWxjdG9nI02Vt7ZY7VqOFNohCMY8SqdjAfav63e08VZ4aZhLbFp0ndcN+LDCXxKLWYGTlSaVlie05HnvVqMYo4XNUXptEP4FOwb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GFu6T21v; arc=none smtp.client-ip=209.85.215.172
+	s=arc-20240116; t=1757376292; c=relaxed/simple;
+	bh=WdGf+7GX1oqYLGIVMKnGCpfDd9nBgG9QqXGjKOfeczQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KzdTqJehxwo1oGwL6zVmM1xWLRzLXUj8LrS4CseUoi7YeqOrTr7Lcz/Hoo/HggrnnjpbpdI7DbhsKClpzHf3o0Z824OgVtBg7Z4PTMy8vpZd9COXyj1LQolCHSebI2ucGpkKkk8MOYtE8ShcnKp0dVBBjJHolfXIwk7yUGWwfDc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eoUyexKM; arc=none smtp.client-ip=209.85.214.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GFu6T21v"
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-b4cb3367d87so3154943a12.3;
-        Mon, 08 Sep 2025 11:52:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eoUyexKM"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-24c8ef94e5dso40989015ad.1;
+        Mon, 08 Sep 2025 17:04:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757357561; x=1757962361; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=J114gh6ByMwTjUeA+rsO/Z2owIHbEpPQYJvbk/lVNzo=;
-        b=GFu6T21vHr4bLz6tsYTiNY5VhU7c0M9dYqMdAT8IuJOOTRwkV22f+abxmESH0KrRrv
-         cwPzxTVt9eBg6fvuOMjjyJw1gqUb5VApE9+5lEagIG7NSHxQ7Vvtzk+0UJjIumHjJgKZ
-         KIWb3VWPVjWDQ4NWRvfZCL/e19oAgXvIJcfUop1ncX4655805VbP01v0G6KfyYZCPubR
-         XSAlRbAOnnh1JNzhQCUHQjDvP0x1gbXDAnvn5OPqXxCCGa5ISfl85StS3d7xRTKj3VYa
-         Ts5ylmMheICyC+k0/XUfUnnFT7dw/QDzlcbUftnyEpXJ5I3hUAAxtnBzO+XfB+wUjCID
-         QBVQ==
+        d=gmail.com; s=20230601; t=1757376289; x=1757981089; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=qOD5ei9uBXe9lzh0xmikmMLL8kCT/tmChQ9kbfXheCY=;
+        b=eoUyexKMqVLHag+hBj77XzF4FiA11iElVbgz5F4r+i1vzj2naqsynoLokRphLL4bKg
+         BPgp1yEBTP6iL6YPLllQtoeCIb83Liqmty+qDMEkDiOTJGME2CT1hWLRRPfsHrjWnDTh
+         5bx/45ZDg1/kv3JcAzkpI0KBM2pZjk+TEw6e4HqcT5pfo1VhVwe3nEe2NikU8vx1X8bd
+         vDOSBMd9PlBg3AVVwPZ8gZpxY58qG8QbH+eD8QOknOFO4+B7g4TY1aLptdp+OwlIrcb8
+         cyvh0Zbtcp/NNpeDCTbB6wfTQauDue6eo3dtAZ6dWCrKlDf8Pwn4fvYPKGD5ldN1uEa9
+         jMfA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757357561; x=1757962361;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=J114gh6ByMwTjUeA+rsO/Z2owIHbEpPQYJvbk/lVNzo=;
-        b=EaBKxAzJ0QAe/3zZQuWTxx/WGGiHplhs1lVs34Iqi91HsJsbrPIG4L6xppeGYAazeq
-         TLFMOk27Or2yC+XN/R8aiPzM8kXeQba2fPoCI2KIv2dEhXTRSTOE9Rs2aYbj+EQtGjxh
-         uMkx3krit3gu0OYrqqYQSNtCGTXQn0qDeI2vFpWln8EgazQBLWmD94hort22ktEukTVn
-         IAbnrn0TSOScM+EEMctXuqYa2wXLU0WtIBFI0y6j0re6kCp17Y1pve9R/zwffVp/LJjP
-         H1gyi+hMkRmYdk9nxRiPZyGr+fixoRvFKGIi8PqRmYRMN59bBc4VNmjMz5syyEqLrN0o
-         lFnQ==
-X-Forwarded-Encrypted: i=1; AJvYcCULRnGZRWXfocoSvwxkLueB+CXJnJgtiTjEh2DVZuroz6zZEztqRlsjvVchIMIWd1hg0fICLf9Ntbq++g==@vger.kernel.org, AJvYcCVL69ykzfIsYuvpMZ7PEYFpSOZlsFRsiZQs6qOefpDqCBRyPUqjTb7vRc9V9AQJXuRU6XLVT/aXv0s4@vger.kernel.org, AJvYcCVTJCBLJ+IgIgZaIkKeNuexXqIHW8B5K8xFBVg4bZVOfjj/iDzdWB3ETaU1gW9NHo8GrAcu7dHaXwbq@vger.kernel.org, AJvYcCWfpRGoeX24/e4q1mTq2G+aD3HDv0+o5vnDOMRxrhMZ8a0gJy8mhSB8x3kPFItHHHJhnN3HEGvkgLJR5A5dGQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5fjCh2zyznZbi2f2PT49SLmgC3kE8cTjXt/B+X1fI34SmlvS2
-	68TLv0C1psD9UPoHezLT1haK9m4kYox/FQxcyhGGAo0vBIrQZ+p5gfWP
-X-Gm-Gg: ASbGncutAFg/M7EKJRSfZRZaa4DIntRVBa84WZNxaV65jeU5DKRxCLTlSZ8xozcI4sX
-	O5Wqhf6cehgoKJUqkF2wM+kIlrFM02LeJtJtOOxjRU3KFnNUVWwL/oyhtuLIfSP5DNgOK1m0+FG
-	rd/lg5bpByIGqI6Wvex/IuFplZMquLEB7F41lyJr87M43Z+yBokK7tToAbih2ZJBv8Zn0hPGwWa
-	BtkqEnrMLHWBaUmKVGyLQeGyqr/LpfzSI4RB9VkziY0PXhFeX5nLMQPyIHOx/Dt+9Z+KURsjr0l
-	ivjlRdjdmRtS2QswJ5hr3/pr4iho8ZCRdBYI2WQgtelXwiapCiQhlYQEsNtas1e/m2P8Fd97hgN
-	9UIsvWhGNUt4GpPEzMA==
-X-Google-Smtp-Source: AGHT+IGaGjLS6C/cbQh6aP5wsaX1LuBLHs6U4eYzV2mo/KlHw7FqzzxriJd7OMiRK7ZMZmkSYnVxwg==
-X-Received: by 2002:a17:902:db07:b0:24c:e372:9de4 with SMTP id d9443c01a7336-2516dfcb6acmr132026735ad.18.1757357561355;
-        Mon, 08 Sep 2025 11:52:41 -0700 (PDT)
-Received: from localhost ([2a03:2880:ff:56::])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-24c9a46bcf1sm148251415ad.3.2025.09.08.11.52.40
+        d=1e100.net; s=20230601; t=1757376289; x=1757981089;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=qOD5ei9uBXe9lzh0xmikmMLL8kCT/tmChQ9kbfXheCY=;
+        b=DH9INoFO8KvkvbGsPh3b7Oc+oWp8nDxMhJXK0ahkGNLtieJy8LLK7rhT0hqRdS/gkt
+         cIt6mIpD//Gq+UjblYvoWOsbUaW3EKA7KpifeiSRflpcIPzI5pZn1inLRpDHkWCN0EHA
+         SmXoBr5fTVHgaShMynZvCGPAkmIMyn002J1mAVgpMH3/XV9/TBA3aVVEXaDUlLuqJoMw
+         1mwH8hjZ1fUHOtVQeke3/U7tTupoEAkrxIbxr0/ILrxzH64vUPNfWjklra38+NHjPUpD
+         Q3sXCo0z7CiANjQWSNvmUUxr+cC1lR0m77MniAr9cBagZZ7qCjLGgTk1qOiiJuVzZvOk
+         0T4g==
+X-Forwarded-Encrypted: i=1; AJvYcCWSPULcxzKWxT8sAspaG3TjeO0FlPtEzOKmVYkypGZ52TC8MoUZanLlrhg0U6ICR7G1V7DbpPKFZws=@vger.kernel.org, AJvYcCXy8ZYI+SIEXrw1u1kSXbgJ+YHwuLeGMlIj1OaUNuu1hRlDIyYCige3knqGkoCGTV4I6RyZLnaWFFzT@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywml+MFBaIfxbmRJVNPp3TooW8aRgcl2jmUDAiL6iu6DBieQ+fR
+	9+GXhQ52vxwJrjlWRS6Ysm2qr3fnBba+7iT290ReEewzHd6frFWi/Kwx
+X-Gm-Gg: ASbGncu9s17D6LftA9pJ8OF99eo84ZuT68E6ywDufp6pIqUu6eLgFBGG1oqAKbI+PH0
+	lFlWUwrDAE/BNlmfSDwB5fUKiOw+PvCoP5+N15C27/3C8hPI3ce44VUVIK1W7R+giOXbyP6YIMv
+	R6GE12cpwGBtXHFgFxaPyt1+ghvZfXvn0+5kNFPQR07AN0KMpWQYSxBOY/GI5hJzVxX1t0M+MmS
+	z2IqkvthMxwLc5mkkfqnYnrRALxLHJJiQnqNtHmBODbq1Ji5/JRv91a86fUOBM2PMMhT2lhbPZC
+	jtTOtsVGdON/sfbn32zZgciQUU/96da3/Il2j2BpVV189KI1j1Jhe7nv+5vGB47O0cBWF39XYIW
+	5qWsNy9KBuePdmo3gAaF3s/yblg==
+X-Google-Smtp-Source: AGHT+IElPRkCKmy3yKD496KWEtWkJi3Nd4zSMZCMWnuyJTlcKTI5S5vbRjGGUWeBjcC+1sK0M4iAKQ==
+X-Received: by 2002:a17:902:e804:b0:249:37b2:8630 with SMTP id d9443c01a7336-24cedc3973dmr209377695ad.5.1757376289188;
+        Mon, 08 Sep 2025 17:04:49 -0700 (PDT)
+Received: from archie.me ([103.124.138.155])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-774660e5572sm142142b3a.14.2025.09.08.17.04.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Sep 2025 11:52:41 -0700 (PDT)
-From: Joanne Koong <joannelkoong@gmail.com>
-To: brauner@kernel.org,
-	miklos@szeredi.hu
-Cc: hch@infradead.org,
-	djwong@kernel.org,
-	hsiangkao@linux.alibaba.com,
-	linux-block@vger.kernel.org,
-	gfs2@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org,
-	kernel-team@meta.com,
-	linux-xfs@vger.kernel.org,
-	linux-doc@vger.kernel.org
-Subject: [PATCH v2 16/16] fuse: remove fc->blkbits workaround for partial writes
-Date: Mon,  8 Sep 2025 11:51:22 -0700
-Message-ID: <20250908185122.3199171-17-joannelkoong@gmail.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20250908185122.3199171-1-joannelkoong@gmail.com>
-References: <20250908185122.3199171-1-joannelkoong@gmail.com>
+        Mon, 08 Sep 2025 17:04:48 -0700 (PDT)
+Received: by archie.me (Postfix, from userid 1000)
+	id AB2D84206923; Tue, 09 Sep 2025 07:04:45 +0700 (WIB)
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Documentation <linux-doc@vger.kernel.org>,
+	Linux XFS <linux-xfs@vger.kernel.org>
+Cc: David Chinner <david@fromorbit.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Charles Han <hanchunchao@inspur.com>,
+	Bagas Sanjaya <bagasdotme@gmail.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: [PATCH] xfs: extend removed sysctls table
+Date: Tue,  9 Sep 2025 07:04:31 +0700
+Message-ID: <20250909000431.7474-1-bagasdotme@gmail.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2446; i=bagasdotme@gmail.com; h=from:subject; bh=WdGf+7GX1oqYLGIVMKnGCpfDd9nBgG9QqXGjKOfeczQ=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDBn780rZjUPe8MSfrzpy54O25vyTy+awG7zYol9pnnZaf mql42y2jlIWBjEuBlkxRZZJiXxNp3cZiVxoX+sIM4eVCWQIAxenAExkvwojw0Wzk0GtbEJFUUsS cw799ptq9TJE0lSlSrAt5WL7UrHtRYwM0494u08wK68J3bP99uGddVdbdoV/KN7QafluQY6wqOh CLgA=
+X-Developer-Key: i=bagasdotme@gmail.com; a=openpgp; fpr=701B806FDCA5D3A58FFB8F7D7C276C64A5E44A1D
 Content-Transfer-Encoding: 8bit
 
-Now that fuse is integrated with iomap for read/readahead, we can remove
-the workaround that was added in commit bd24d2108e9c ("fuse: fix fuseblk
-i_blkbits for iomap partial writes"), which was previously needed to
-avoid a race condition where an iomap partial write may be overwritten
-by a read if blocksize < PAGE_SIZE. Now that fuse does iomap
-read/readahead, this is protected against since there is granular
-uptodate tracking of blocks, which means this workaround can be removed.
+Commit 21d59d00221e4e ("xfs: remove deprecated sysctl knobs") moves
+recently-removed sysctls to the removed sysctls table but fails to
+extend the table, hence triggering Sphinx warning:
 
-Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
+Documentation/admin-guide/xfs.rst:365: ERROR: Malformed table.
+Text in column margin in table line 8.
+
+=============================   =======
+  Name                          Removed
+=============================   =======
+  fs.xfs.xfsbufd_centisec       v4.0
+  fs.xfs.age_buffer_centisecs   v4.0
+  fs.xfs.irix_symlink_mode      v6.18
+  fs.xfs.irix_sgid_inherit      v6.18
+  fs.xfs.speculative_cow_prealloc_lifetime      v6.18
+=============================   ======= [docutils]
+
+Extend "Name" column of the table to fit the now-longest sysctl, which
+is fs.xfs.speculative_cow_prealloc_lifetime.
+
+Fixes: 21d59d00221e ("xfs: remove deprecated sysctl knobs")
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Closes: https://lore.kernel.org/linux-next/20250908180406.32124fb7@canb.auug.org.au/
+Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
 ---
- fs/fuse/dir.c    |  2 +-
- fs/fuse/fuse_i.h |  8 --------
- fs/fuse/inode.c  | 13 +------------
- 3 files changed, 2 insertions(+), 21 deletions(-)
+ Documentation/admin-guide/xfs.rst | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
-index 5c569c3cb53f..ebee7e0b1cd3 100644
---- a/fs/fuse/dir.c
-+++ b/fs/fuse/dir.c
-@@ -1199,7 +1199,7 @@ static void fuse_fillattr(struct mnt_idmap *idmap, struct inode *inode,
- 	if (attr->blksize != 0)
- 		blkbits = ilog2(attr->blksize);
- 	else
--		blkbits = fc->blkbits;
-+		blkbits = inode->i_sb->s_blocksize_bits;
+diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+index d6f531f2c0e694..c85cd327af284d 100644
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -355,15 +355,15 @@ None currently.
+ Removed Sysctls
+ ===============
  
- 	stat->blksize = 1 << blkbits;
- }
-diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
-index cc428d04be3e..1647eb7ca6fa 100644
---- a/fs/fuse/fuse_i.h
-+++ b/fs/fuse/fuse_i.h
-@@ -975,14 +975,6 @@ struct fuse_conn {
- 		/* Request timeout (in jiffies). 0 = no timeout */
- 		unsigned int req_timeout;
- 	} timeout;
--
--	/*
--	 * This is a workaround until fuse uses iomap for reads.
--	 * For fuseblk servers, this represents the blocksize passed in at
--	 * mount time and for regular fuse servers, this is equivalent to
--	 * inode->i_blkbits.
--	 */
--	u8 blkbits;
- };
+-=============================	=======
+-  Name				Removed
+-=============================	=======
+-  fs.xfs.xfsbufd_centisec	v4.0
+-  fs.xfs.age_buffer_centisecs	v4.0
+-  fs.xfs.irix_symlink_mode      v6.18
+-  fs.xfs.irix_sgid_inherit      v6.18
+-  fs.xfs.speculative_cow_prealloc_lifetime      v6.18
+-=============================	=======
++==========================================   =======
++  Name                                       Removed
++==========================================   =======
++  fs.xfs.xfsbufd_centisec                    v4.0
++  fs.xfs.age_buffer_centisecs                v4.0
++  fs.xfs.irix_symlink_mode                   v6.18
++  fs.xfs.irix_sgid_inherit                   v6.18
++  fs.xfs.speculative_cow_prealloc_lifetime   v6.18
++==========================================   =======
  
- /*
-diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
-index 7ddfd2b3cc9c..3bfd83469d9f 100644
---- a/fs/fuse/inode.c
-+++ b/fs/fuse/inode.c
-@@ -292,7 +292,7 @@ void fuse_change_attributes_common(struct inode *inode, struct fuse_attr *attr,
- 	if (attr->blksize)
- 		fi->cached_i_blkbits = ilog2(attr->blksize);
- 	else
--		fi->cached_i_blkbits = fc->blkbits;
-+		fi->cached_i_blkbits = inode->i_sb->s_blocksize_bits;
- 
- 	/*
- 	 * Don't set the sticky bit in i_mode, unless we want the VFS
-@@ -1810,21 +1810,10 @@ int fuse_fill_super_common(struct super_block *sb, struct fuse_fs_context *ctx)
- 		err = -EINVAL;
- 		if (!sb_set_blocksize(sb, ctx->blksize))
- 			goto err;
--		/*
--		 * This is a workaround until fuse hooks into iomap for reads.
--		 * Use PAGE_SIZE for the blocksize else if the writeback cache
--		 * is enabled, buffered writes go through iomap and a read may
--		 * overwrite partially written data if blocksize < PAGE_SIZE
--		 */
--		fc->blkbits = sb->s_blocksize_bits;
--		if (ctx->blksize != PAGE_SIZE &&
--		    !sb_set_blocksize(sb, PAGE_SIZE))
--			goto err;
- #endif
- 	} else {
- 		sb->s_blocksize = PAGE_SIZE;
- 		sb->s_blocksize_bits = PAGE_SHIFT;
--		fc->blkbits = sb->s_blocksize_bits;
- 	}
- 
- 	sb->s_subtype = ctx->subtype;
+ Error handling
+ ==============
+
+base-commit: e90dcba0a350836a5e1a1ac0f65f9e74644d7d3b
 -- 
-2.47.3
+An old man doll... just what I always wanted! - Clara
 
