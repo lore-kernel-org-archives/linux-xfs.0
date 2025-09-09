@@ -1,236 +1,219 @@
-Received: from out199-11.us.a.mail.aliyun.com (out199-11.us.a.mail.aliyun.com [47.90.199.11])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AB2D15A848;
-	Tue,  9 Sep 2025 02:14:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=47.90.199.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9674E303A24;
+	Tue,  9 Sep 2025 06:44:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757384100; cv=none; b=ngSWIKmy1tZyTvE9zu6jeDxBgKB3Vs6wuN+mK777UQy7KFOXN/t92JE0mASn07e7xbXFIsbFaPut/pzeeJXdGLkXLNYgaoBbJnNzJcRqFn+sRpgx0ZSMdgwUFEI2TpZGJyFve4Y12j+fSNb6nBlreIpHB5B3JceuKpA1rTUf6Ho=
+	t=1757400291; cv=none; b=qIBQoPUarSY3pn8L+BaABpDDWRt30SRpfGqYWXTTXTdZzzzU9xzZrxpTwMg4vFKv09uAc6jVjD1ficUmlZDepdZgKraeKxp794Dnv8q82YbcL/XkXOejEljGktYgb2+HGj8F60+jg+bMj4QL0ur7hTyrgOXsioQI/D5EyxoD+DQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757384100; c=relaxed/simple;
-	bh=Wps+OyxWaCXOFIIUN8fH/RJaPXux108yrkDeCKzXcLs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tUraf1NkOgzXNb6z43y6qYTHNiORJEaBamqnnBiO6vTEfD4L1jxil8qlQLoaDLv73fzVppWVoi8BzUPF2NMEfPbQSV8vAxVAp6bPBmdYglnP63FaN9PkYCWxdSaPxa6N+Ps0EWpOV2s9QrofBLfMk49kZgxS0u0paVxJtVCo2RE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=nTJlb2v7; arc=none smtp.client-ip=47.90.199.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1757400291; c=relaxed/simple;
+	bh=BDKycTUwTBeKQKRluCkT3DPIymY/FMY43y7sb2PDs88=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rdIQfUORBcISiuQg26bMicC/CwqL8g9z7wpnFToMyfmiE1VqYh2q6ebf0fMi6jE8OJir917xytt0ZC4dOdeFiFDRz5F6PydNzghHkF3eUa+7P7m0Apc2hqNL4/MGY+FCdCwYjE69P0dNns5zfOMezHtui4CR/Ylv5KbUTrNKyVE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ayS5u/WY; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="nTJlb2v7"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1757384088; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=v43zf9nWVT3sBkS/OER5LVhm/vl5yYsnxYjb37stWRA=;
-	b=nTJlb2v7nbOAU0oaKcJ6TytcnMoTV8E4A03xSOuZAjUpBuajgzuy+p4tZzpN9cotbz5IsYzc9vLl4R4Z6HGY7BDZqtAyaybDuiIZEw/NIaDn9CECK8PjWzM31CjuV4O9CSG5ETqdWdVW932vVtEksPp0s519RDMhGBzIeELzaMc=
-Received: from 30.221.131.27(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0WnbpmUx_1757384086 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 09 Sep 2025 10:14:47 +0800
-Message-ID: <a1529c0f-1f1a-477a-aeeb-a4f108aab26b@linux.alibaba.com>
-Date: Tue, 9 Sep 2025 10:14:46 +0800
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ayS5u/WY"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5894WgNp018625;
+	Tue, 9 Sep 2025 06:44:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=uBLjCOwnHU964fvJBI7vvKbJb0b/nT
+	LHEbtejXkxQzk=; b=ayS5u/WYEiqpPCx+4e4Wv7QzcKztqXyS0dm8jZfMLx3RVs
+	4mDp2hXul02JCk4baAa6E9yhekPJeziWb+K1A5cOJgNXH265oxpAnLJiWWrKzn+5
+	ngc0gPIWJl2DmgvZvjDTksRfI8oS8ruCtUqbfpiHprFcaYJ/A4ZcIzmCoY6PLPbk
+	3apq9wAxB2G1JFmaPAQoe2HB3G/ETmMBfIrGot37KAFo4avDbFdHEGMGcV8SaBP+
+	dzj7MU4g8VzYl6tE/ObZJU/hKzngL8B2niKDegNhV6p6GcQ5sXmaUI3vGRywdz+w
+	Jx3g86Aih5QN4/uDRRhna+Oa2Bja6pBFiXcLtxhA==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 490acqwvy2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 09 Sep 2025 06:44:41 +0000 (GMT)
+Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 5896hWE0020389;
+	Tue, 9 Sep 2025 06:44:41 GMT
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 490acqwvxy-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 09 Sep 2025 06:44:40 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 5895FeT5011447;
+	Tue, 9 Sep 2025 06:44:40 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 490y9u9x8f-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 09 Sep 2025 06:44:40 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 5896ic5d20906318
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 9 Sep 2025 06:44:38 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 55EC72004B;
+	Tue,  9 Sep 2025 06:44:38 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id C22DE20043;
+	Tue,  9 Sep 2025 06:44:35 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.109.219.158])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Tue,  9 Sep 2025 06:44:35 +0000 (GMT)
+Date: Tue, 9 Sep 2025 12:14:33 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
+        Ritesh Harjani <ritesh.list@gmail.com>, djwong@kernel.org,
+        tytso@mit.edu, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v5 09/12] generic: Add sudden shutdown tests for multi
+ block atomic writes
+Message-ID: <aL_M0X9Ca8LgTIR1@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <cover.1755849134.git.ojaswin@linux.ibm.com>
+ <2b523de842ada3ac7759cedae80485ae201d7e5d.1755849134.git.ojaswin@linux.ibm.com>
+ <12281f45-c42f-4d1e-bcff-f14be46483a8@oracle.com>
+ <aLsYj1tqEbH5RpAu@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <674aa21b-4c47-4586-abdc-5198840fcea5@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 13/16] iomap: move read/readahead logic out of
- CONFIG_BLOCK guard
-To: Joanne Koong <joannelkoong@gmail.com>, brauner@kernel.org,
- miklos@szeredi.hu
-Cc: hch@infradead.org, djwong@kernel.org, linux-block@vger.kernel.org,
- gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org, kernel-team@meta.com,
- linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
-References: <20250908185122.3199171-1-joannelkoong@gmail.com>
- <20250908185122.3199171-14-joannelkoong@gmail.com>
-From: Gao Xiang <hsiangkao@linux.alibaba.com>
-In-Reply-To: <20250908185122.3199171-14-joannelkoong@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <674aa21b-4c47-4586-abdc-5198840fcea5@oracle.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: hlJNVGE8zaucDNy5To4XIVb1Ahby6_-n
+X-Authority-Analysis: v=2.4 cv=Mp1S63ae c=1 sm=1 tr=0 ts=68bfccd9 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=kj9zAlcOel0A:10 a=yJojWOMRYYMA:10 a=PEgcr33_ple8PDClfvMA:9
+ a=CjuIK1q_8ugA:10
+X-Proofpoint-ORIG-GUID: ze8yp7tACzv9G3BeG3yV5h3TO4P0_Pb0
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA2MDAwMCBTYWx0ZWRfX52wRCosIwHJV
+ nlxFtNoqq7hN2gOo5dmtR/Slkf0BzYr1fqmcT3VZWCXT3URjafd14iGDp+NMDZFie0CAnmWr4ZH
+ i0aN41d3veSfBMmFHb2yIIcps7LMgIEN+RfFVGX7Lhg+iDtFUqZHn/Um4I6M7R9ZrxttOMLsXo4
+ qX6X8z1GeJXmvTuvALrhnksSb2YSFfKiFfrBIxV1RryY/Am8Zv6fwdzUREVJKQ9H6EFWi2peXWW
+ dqqzW3HZDsNNKYK7UUoQvRmJ98dzvioWXfhVUl5hX2eWP/ThsdtPJ4yOMrXqZSkU9/uEilBpL0N
+ SY+UG4YO/xNGxzfImakGN7QAWfTg0fEG09MXXYiafe32atDr4ILTvusaLCWcwKSLvEWmtEOptKf
+ SidT8eaX
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-08_06,2025-09-08_02,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 malwarescore=0 clxscore=1015 phishscore=0 spamscore=0
+ adultscore=0 priorityscore=1501 bulkscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509060000
 
+On Mon, Sep 08, 2025 at 03:27:57PM +0100, John Garry wrote:
+> On 05/09/2025 18:06, Ojaswin Mujoo wrote:
+> > On Tue, Sep 02, 2025 at 04:49:26PM +0100, John Garry wrote:
+> > > On 22/08/2025 09:02, Ojaswin Mujoo wrote:
+> > > > ---
+> > > >    tests/generic/1230     | 397 +++++++++++++++++++++++++++++++++++++++++
+> > > >    tests/generic/1230.out |   2 +
+> > > >    2 files changed, 399 insertions(+)
+> > > >    create mode 100755 tests/generic/1230
+> > > >    create mode 100644 tests/generic/1230.out
+> > > > 
 
+<...>
 
-On 2025/9/9 02:51, Joanne Koong wrote:
-> There is no longer a dependency on CONFIG_BLOCK in the iomap read and
-> readahead logic. Move this logic out of the CONFIG_BLOCK guard. This
-> allows non-block-based filesystems to use iomap for reads/readahead.
+> > > > +
+> > > > +	bytes_written=$(tail -n 1 $tmp.aw | cut -d" " -f4)
+> > > > +	echo "# Bytes written in 0.2s: $bytes_written" >> $seqres.full
+> > > > +
+> > > > +	filesize=$((bytes_written * 3))
+> > > > +	echo "# Setting \$filesize=$filesize" >> $seqres.full
+> > > > +
+> > > > +	rm $tmp.aw
+> > > > +	sleep 0.5
+> > > > +
+> > > > +	_scratch_cycle_mount
+> > > > +
+> > > > +}
+> > > > +
+> > > > +create_mixed_mappings() {
+> > > 
+> > > Is this same as patch 08/12?
+> > 
+> > I believe you mean the [D]SYNC tests, yes it is the same.
 > 
-> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> ---
->   fs/iomap/buffered-io.c | 151 +++++++++++++++++++++--------------------
->   1 file changed, 76 insertions(+), 75 deletions(-)
+> then maybe factor out the test, if possible. I assume that this sort of
+> approach is taken for xfstests.
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index f673e03f4ffb..c424e8c157dd 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -358,81 +358,6 @@ void iomap_finish_folio_read(struct folio *folio, size_t off, size_t len,
->   }
->   EXPORT_SYMBOL_GPL(iomap_finish_folio_read);
->   
-> -#ifdef CONFIG_BLOCK
-> -static void iomap_read_end_io(struct bio *bio)
-> -{
-> -	int error = blk_status_to_errno(bio->bi_status);
-> -	struct folio_iter fi;
-> -
-> -	bio_for_each_folio_all(fi, bio)
-> -		iomap_finish_folio_read(fi.folio, fi.offset, fi.length, error);
-> -	bio_put(bio);
-> -}
-> -
-> -static int iomap_submit_read_bio(struct iomap_read_folio_ctx *ctx)
-> -{
-> -	struct bio *bio = ctx->private;
-> -
-> -	if (bio)
-> -		submit_bio(bio);
-> -
-> -	return 0;
-> -}
-> -
-> -/**
-> - * Read in a folio range asynchronously through bios.
-> - *
-> - * This should only be used for read/readahead, not for buffered writes.
-> - * Buffered writes must read in the folio synchronously.
-> - */
-> -static int iomap_read_folio_range_bio_async(const struct iomap_iter *iter,
-> -		struct iomap_read_folio_ctx *ctx, loff_t pos, size_t plen)
-> -{
-> -	struct folio *folio = ctx->cur_folio;
-> -	const struct iomap *iomap = &iter->iomap;
-> -	size_t poff = offset_in_folio(folio, pos);
-> -	loff_t length = iomap_length(iter);
-> -	sector_t sector;
-> -	struct bio *bio = ctx->private;
-> -
-> -	iomap_start_folio_read(folio, plen);
-> -
-> -	sector = iomap_sector(iomap, pos);
-> -	if (!bio || bio_end_sector(bio) != sector ||
-> -	    !bio_add_folio(bio, folio, plen, poff)) {
-> -		gfp_t gfp = mapping_gfp_constraint(folio->mapping, GFP_KERNEL);
-> -		gfp_t orig_gfp = gfp;
-> -		unsigned int nr_vecs = DIV_ROUND_UP(length, PAGE_SIZE);
-> -
-> -		iomap_submit_read_bio(ctx);
-> -
-> -		if (ctx->rac) /* same as readahead_gfp_mask */
-> -			gfp |= __GFP_NORETRY | __GFP_NOWARN;
-> -		bio = bio_alloc(iomap->bdev, bio_max_segs(nr_vecs),
-> -				     REQ_OP_READ, gfp);
-> -		/*
-> -		 * If the bio_alloc fails, try it again for a single page to
-> -		 * avoid having to deal with partial page reads.  This emulates
-> -		 * what do_mpage_read_folio does.
-> -		 */
-> -		if (!bio)
-> -			bio = bio_alloc(iomap->bdev, 1, REQ_OP_READ, orig_gfp);
-> -		if (ctx->rac)
-> -			bio->bi_opf |= REQ_RAHEAD;
-> -		bio->bi_iter.bi_sector = sector;
-> -		bio->bi_end_io = iomap_read_end_io;
-> -		bio_add_folio_nofail(bio, folio, plen, poff);
-> -		ctx->private = bio;
-> -	}
-> -	return 0;
-> -}
-> -
-> -const struct iomap_read_ops iomap_read_bios_ops = {
-> -	.read_folio_range = iomap_read_folio_range_bio_async,
-> -	.read_submit = iomap_submit_read_bio,
-> -};
-> -EXPORT_SYMBOL_GPL(iomap_read_bios_ops);
-> -
->   static int iomap_read_folio_iter(struct iomap_iter *iter,
->   		struct iomap_read_folio_ctx *ctx, bool *cur_folio_owned)
->   {
-> @@ -601,6 +526,82 @@ void iomap_readahead(const struct iomap_ops *ops,
->   }
->   EXPORT_SYMBOL_GPL(iomap_readahead);
->   
-> +#ifdef CONFIG_BLOCK
-> +static void iomap_read_end_io(struct bio *bio)
-> +{
-> +	int error = blk_status_to_errno(bio->bi_status);
-> +	struct folio_iter fi;
-> +
-> +	bio_for_each_folio_all(fi, bio)
-> +		iomap_finish_folio_read(fi.folio, fi.offset, fi.length, error);
-> +	bio_put(bio);
-> +}
-> +
-> +static int iomap_submit_read_bio(struct iomap_read_folio_ctx *ctx)
-> +{
-> +	struct bio *bio = ctx->private;
-> +
-> +	if (bio)
-> +		submit_bio(bio);
-> +
-> +	return 0;
-> +}
-> +
-> +/**
-> + * Read in a folio range asynchronously through bios.
-> + *
-> + * This should only be used for read/readahead, not for buffered writes.
-> + * Buffered writes must read in the folio synchronously.
-> + */
-> +static int iomap_read_folio_range_bio_async(const struct iomap_iter *iter,
-> +		struct iomap_read_folio_ctx *ctx, loff_t pos, size_t plen)
-> +{
-> +	struct folio *folio = ctx->cur_folio;
-> +	const struct iomap *iomap = &iter->iomap;
-> +	size_t poff = offset_in_folio(folio, pos);
-> +	loff_t length = iomap_length(iter);
-> +	sector_t sector;
-> +	struct bio *bio = ctx->private;
-> +
-> +	iomap_start_folio_read(folio, plen);
-> +
-> +	sector = iomap_sector(iomap, pos);
-> +	if (!bio || bio_end_sector(bio) != sector ||
-> +	    !bio_add_folio(bio, folio, plen, poff)) {
-> +		gfp_t gfp = mapping_gfp_constraint(folio->mapping, GFP_KERNEL);
-> +		gfp_t orig_gfp = gfp;
-> +		unsigned int nr_vecs = DIV_ROUND_UP(length, PAGE_SIZE);
-> +
-> +		if (bio)
-> +			submit_bio(bio);
-> +
-> +		if (ctx->rac) /* same as readahead_gfp_mask */
-> +			gfp |= __GFP_NORETRY | __GFP_NOWARN;
-> +		bio = bio_alloc(iomap->bdev, bio_max_segs(nr_vecs),
-> +				     REQ_OP_READ, gfp);
-> +		/*
-> +		 * If the bio_alloc fails, try it again for a single page to
-> +		 * avoid having to deal with partial page reads.  This emulates
-> +		 * what do_mpage_read_folio does.
-> +		 */
-> +		if (!bio)
-> +			bio = bio_alloc(iomap->bdev, 1, REQ_OP_READ, orig_gfp);
-> +		if (ctx->rac)
-> +			bio->bi_opf |= REQ_RAHEAD;
-> +		bio->bi_iter.bi_sector = sector;
-> +		bio->bi_end_io = iomap_read_end_io;
-> +		bio_add_folio_nofail(bio, folio, plen, poff);
-> +		ctx->private = bio;
 
-Yes, I understand some way is needed to isolate bio from non-bio
-based filesystems, and I also agree `bio` shouldn't be stashed
-into `iter->private` since it's just an abuse usage as mentioned
-in:
-https://lore.kernel.org/r/20250903203031.GM1587915@frogsfrogsfrogs
-https://lore.kernel.org/r/aLkskcgl3Z91oIVB@infradead.org
+I'm not sure what you mean by factor out the *test*. We are testing
+different things there and the only thing common in the tests is
+creation of mixed mapping files and the check to ensure we didn't tear
+data.
 
-However, the naming of `(struct iomap_read_folio_ctx)->private`
-really makes me feel confused because the `private` name in
-`read_folio_ctx` is much like a filesystem read context instead
-of just be used as `bio` internally in iomap for block-based
-filesystems.
+In case you mean to factor out the create_mixed_mappings() helper into
+common/rc, sure I can do that but I'm unsure if at this point it would
+be very useful for other tests.
 
-also the existing of `iter->private` makes the naming of
-`ctx->private` more confusing at least in my view.
+> > 
+> > > 
+> > > > +	local file=$1
+> > > > +	local size_bytes=$2
+> > > > +
+> > > > +	echo "# Filling file $file with alternate mappings till size $size_bytes" >> $seqres.full
+> > > > +	#Fill the file with alternate written and unwritten blocks
+> > > > +	local off=0
+> > > > +	local operations=("W" "U")
+> > > > +
+> > > > +	for ((i=0; i<$((size_bytes / blksz )); i++)); do
+> > > > +		index=$(($i % ${#operations[@]}))
+> > > > +		map="${operations[$index]}"
+> > > > +
 
-Thanks,
-Gao Xiang
+<...>
+
+> > > > +# Loop 20 times to shake out any races due to shutdown
+> > > > +for ((iter=0; iter<20; iter++))
+> > > > +do
+> > > > +	echo >> $seqres.full
+> > > > +	echo "------ Iteration $iter ------" >> $seqres.full
+> > > > +
+> > > > +	echo >> $seqres.full
+> > > > +	echo "# Starting data integrity test for atomic writes over mixed mapping" >> $seqres.full
+> > > > +	test_data_integrity_mixed
+> > > > +
+> > > > +	echo >> $seqres.full
+> > > > +	echo "# Starting data integrity test for atomic writes over fully written mapping" >> $seqres.full
+> > > > +	test_data_integrity_writ
+> > > > +
+> > > > +	echo >> $seqres.full
+> > > > +	echo "# Starting data integrity test for atomic writes over fully unwritten mapping" >> $seqres.full
+> > > > +	test_data_integrity_unwrit
+> > > > +
+> > > > +	echo >> $seqres.full
+> > > > +	echo "# Starting data integrity test for atomic writes over holes" >> $seqres.full
+> > > > +	test_data_integrity_hole
+> > > > +
+> > > > +	echo >> $seqres.full
+> > > > +	echo "# Starting filesize integrity test for atomic writes" >> $seqres.full
+> > > 
+> > > what does "Starting filesize integrity test" mean?
+> > 
+> > Basically other tests already truncate the file to a higher value and
+> > then perform the shut down test. Here we actually do append atomic
+> > writes since we want to also stress the i_size update paths during
+> > shutdown to ensure that doesn't cause any tearing with atomic writes.
+> > 
+> > I can maybe rename it to:
+> > 
+> > 
+> > echo "# Starting data integrity test for atomic append writes" >> $seqres.full
+> > 
+> > Thanks for the review!
+> > 
+> 
+> It's just the name "integrity" that throws me a bit..
+
+So I mean integrity as in writes are not tearing after the shutdown.
+That's how we have worded the other sub-tests above.
+
+Regards,
+ojaswin
