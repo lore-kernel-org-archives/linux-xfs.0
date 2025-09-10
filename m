@@ -1,261 +1,111 @@
-Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51E2328A73A
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Sep 2025 17:41:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC81E30F7E9
+	for <linux-xfs@vger.kernel.org>; Wed, 10 Sep 2025 21:19:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757526102; cv=none; b=UKjFL65iIUdvhaObPePfvMo5FYQUol2DX8srkhQhg+NAA10FBZ7fuD1idJXgmksKIJy86XeJD9f4C6vh7Xf/ErlIOwpJU3RD8OuXok/E4no5zFlFppfWZ/XNsoXYvVxHB4GwgEhXZjQ6AEx9C+cBVkscQr9yUzqD5hLnbLHD720=
+	t=1757539185; cv=none; b=r4USmMhRbCGBuCSathM5ue7ZKjl2vx6Kun6aQfYpqH+hGq1fXe9tG5qnsYbWp6a4j/Mf2nW9o2QW7mzCthHpetArH8v75VnU7ydmdAymWNMePGuNVQmxjUOtHHplBrt7v891Mlycqic32PitW/2BSOWXc7iksfkIDMK6WxMSzrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757526102; c=relaxed/simple;
-	bh=ya3nCeHXX4cIOcVB3zT+qGwqtNq6bvInaVnCb1Wx2VE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=eWdgUUP9pyBd7Vns7Kozr1r0OFfx2AW0B0pMGFuD0iszgr7L3WOl7Gn7YO91juRCEU/5kl3DGEWdm0KwwbdXdwqxzZkHEqX7D76AOtaZMr/SzDthJKd1OQbnKWMMcyTk7Qn4L3Lxtjz72O7fIqRaSdBop+92arIHbdNf8Uza87Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ESkeav3L; arc=none smtp.client-ip=209.85.160.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1757539185; c=relaxed/simple;
+	bh=LZ6N28lJoqpdb+Wn8DdRBooagZvVyHpQGBAMKqBiRHA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BIYK5PIHSb2Egf6zQThsiEjBVFubUVzFRFVNcLUPfRdsuO81Jk5Ce6NVG6Y5quAMrZ0PTm8HRe4/KGyT9juZwf+C95WMjBu1QQZnxaGLZeRifWUj+H5c+A2SeFHwm1t85WPydoRMhjSHzHRyy/J0iuZkUjeaQot5fNadWUwUkf8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=bd/Avetp; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ESkeav3L"
-Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-4b5eee40cc0so55719551cf.0
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Sep 2025 10:41:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="bd/Avetp"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2518a38e7e4so14196365ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Sep 2025 14:19:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757526099; x=1758130899; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qHT+u2S9m3RVDHyPVmpZb2IEdtnx3gNXVCQQWQ1AuyM=;
-        b=ESkeav3L1JysDAQu8Z3qVss0OcDtwx/8+xGNo7tA6jAl5WtvBeNZ2PFPmetQKo8gdW
-         WKmVgT/Mw3VUSuwX8FKdgCH18t8zs3IR8wSMXzj+wRJnzId51LIca5ArJ+Ge5CCTr3Hr
-         W7hvwTimN3YbCFyo3nnGahUakdOPSQTSOkrBl8XW6VCkru6Zlh9wpesSU4cDcIWJmPkE
-         IZi3Qy3nE5eMKg2KLPssYRXY2RtWMF640hkYA0c3+50ndWVzKdzTCEWavaEIgwNGX1gu
-         Pe6wMZ5nreXtx/eJ7Go71KLSCN8vuTHOhSeaIZtpOX6u5bLf+B1DN3Dpm7rzx0C7gST5
-         E+eA==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1757539183; x=1758143983; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=OvEuUZLzmW4C5aJ2WQ6JY0uejkTJQilGmiZJ65xM0KY=;
+        b=bd/Avetpop1ncpDopJZthxrKL3ljbSjDyLgeWvzPKmuwT6jNvyFH8Fh54HlddgE+ZS
+         EAOy37KJowLEDUiW5FBBAEWnZN+E6+o8UBSZTBj0o6oTR94FXN/4tsdt1Lhme/LZUeQC
+         qYAw+JelA2GnA1PIFJK2R/GTKudYRlv/v6oyMwqm9PDv8kFkGXK0bMGlRAd09oWHwx2e
+         PwfIwzXyZNtEMpxZsWLDjYWtY1GZXzBhzehBK8Ns0FrQUMwUfdSVK+IE8na4rgOjNr+G
+         q655dmuclLilWHW8VpdAQjCMPT1kiLLHJCRqFbuHNHzbsHVLNaz92c8MWCXmbncncHCN
+         w6Iw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757526099; x=1758130899;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=qHT+u2S9m3RVDHyPVmpZb2IEdtnx3gNXVCQQWQ1AuyM=;
-        b=ogZQtIL1y1oVeqBgvPJELAnBeh5v6e8PC5DAJZbzRlZ0sjhUwKE+f+PtzhlTSfkKnm
-         G6TFM72N5uofIvf1PP+MQUin5lJp4I8gZhGz4C0VPH/Tw5jw1fZ4CqNM5owSZ8q7xVir
-         FaA+xDFrXpoXkzf727puaPGfLdrhCwyuOcr+myZgqqNvcDdRWKG+Kivlso72X6Mu9MXG
-         bOuhDBQjVLr1Gifx5kHBpQE4UDmjjms+0/tciTeZgBhSdGy7SUjown2bvYOSxI7mXaQk
-         9+avZS7vsIx/ILyWGO3jd4Zccoew7OsopVFm8icgZfOMpF+9qAt+JlqeEyE4pdSH/JM4
-         +RVg==
-X-Forwarded-Encrypted: i=1; AJvYcCX1UUx/Vgf1nTQPDbi/PL/klqm61CD7d9f/xYJmr4bXdq96ormWOorP14LVO1B3xW2dqHtIRjYq9qg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy5SF59lUMM1MD3ee7/gePZ/1TqC3ktO+PbQVCSKJKHOiDYLa74
-	8aqsRlxPDhwC7gZlSutkYZ4RlZfMfKTYEa/nAqJYAL23M6w9yGPBWwohuA0duWbzEt2ygqxJuwR
-	EpyJfhBW3vE82WMF9MPVjkfU0g1KHw3Y6ow==
-X-Gm-Gg: ASbGncsm2wRmS6hgx8z+rWtXoYPAn7QJp5DTHji+kETJC2YxZOpJsVVNz7iFer1iT/u
-	XWUyk+HQmP/3c7+uTOCv01vIueeeEx5t2AuhtISlCtypYbolje3fL2iNlqTmYQfOeurWLLg/QxV
-	2IQKbrv3AEwJNQVGasagNHrafFNLEiy7e/yrkgbpwtlfLsnq/lzw7kj2El9gvBwm03Vte2HNnmi
-	ibe3DYlDv33CzBN5wXKN+tsfdVWvDGRQw==
-X-Google-Smtp-Source: AGHT+IGM4v8CCbZik1kELSMXAYG/GKBchBBFALBliyv/onlKWZFY2W1P7n4z7sWDqXgSFcqrmLLSXIe+ROn9OwqKnI0=
-X-Received: by 2002:ac8:5f14:0:b0:4b3:50b0:d7f with SMTP id
- d75a77b69052e-4b5f8464d8amr161064711cf.61.1757526099174; Wed, 10 Sep 2025
- 10:41:39 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1757539183; x=1758143983;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=OvEuUZLzmW4C5aJ2WQ6JY0uejkTJQilGmiZJ65xM0KY=;
+        b=luFoR+x3gOIC/EQ/mohe0SLQdlp1HcGLvIQEmOHik1lzVxwh+FsrdXr8pn1TnhgCIb
+         v1/4k5J/5Bqfw3ZYO97uk5HOigPiEcz8kkCb4hdMOYxnelDwTvhuH+jcMb4XXINbFWTr
+         91jSbLJf705uB0V1ZxqvOwVwivJUFv7HX5nkv/ll5rA+hKKhhEz1+fVaMVBs377whUkw
+         4z/Oqii8PQxOebvolPbtiMyds2FpcJe0zYJQIDJL87WRwvpOXM7xlZQnGnIXsFsC4di/
+         PMEM57WYm5rn5ltixV0g1ow1P74sQe4JrIMZRRo0O3unMMoodkBRoaw7MHMiWANRVNIa
+         7mQg==
+X-Gm-Message-State: AOJu0YwddrgsdQLi/WZEeKLocIqKQlVVFQV2xrTFd6IufnmccCD4eyuX
+	EI6RSr7/5ncCfDSLiZj3yZXke/PATzGQcJbMc++q4ftQ8eUG2bYDeLhhMhU8r6zvLmzPQPDBrQY
+	5cITa
+X-Gm-Gg: ASbGncu3BJjLP6Z/nLkakHaPT2s7+YHagtreAXyAGeuB+ADQr/UUVa/nILikXxWZ+u5
+	Nm2AXH0sgI9xnh5Kzyv2/ev+Qow3TRQc45BpQSq4B213gx+wbyCjL1HL8ffEfX10Rya/MUPehJm
+	rz5KgUzLQm/Gqd1CGRHZgW3X2/V/7adA6G0Gilh0vMAtp+khRwGJyENQcC8kzUOgJfehpeMFq+6
+	e0KQnn1UAwE9zS95+o5qA+Yoj/vsqJW7hpYYRsnJu/CQj8rAF49fbV+MoHoDUfExlH4LhzNW9hP
+	/MBYxdEgSj2tRnVk0lGaQk1yeTeekRGXv6Bi76gR3ZRKLVXsSatPA5n7g6HFoCi1nkhp0yfgDNl
+	dMKyYZZ0o5jyIEJHzy5ZVMtsJ+cT48vWTc6rvuJKrpegWD39gErHGSlM62bBnrBTxXYcVSmfRVw
+	==
+X-Google-Smtp-Source: AGHT+IEfqCipG+kiM5S2Vd11YJuG9qk/B/bqW/MdTaH+qrUljL9IiBgp6H8ah3LkDYk5frNNOgAxDQ==
+X-Received: by 2002:a17:903:2bce:b0:248:ac4d:239a with SMTP id d9443c01a7336-25bad27fa51mr12031685ad.18.1757539183168;
+        Wed, 10 Sep 2025 14:19:43 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-25a27422e30sm37082015ad.23.2025.09.10.14.19.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 10 Sep 2025 14:19:42 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1uwSE7-00000000Grb-3vKF;
+	Thu, 11 Sep 2025 07:19:39 +1000
+Date: Thu, 11 Sep 2025 07:19:39 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Mateusz Guzik <mjguzik@gmail.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: clearing of I_LINKABLE in xfs_rename without ->I_lock held
+Message-ID: <aMHra0oELOSN3AxP@dread.disaster.area>
+References: <CAGudoHEi05JGkTQ9PbM20D98S9fv0hTqpWRd5fWjEwkExSiVSw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250908185122.3199171-1-joannelkoong@gmail.com>
- <20250908185122.3199171-12-joannelkoong@gmail.com> <aL9xb5Jw8tvIRMcQ@debian>
- <CAJnrk1YPpNs811dwWo+ts1xwFi-57OgWvSO4_8WLL_3fJgzrFw@mail.gmail.com> <488d246b-13c7-4e36-9510-8ae2de450647@linux.alibaba.com>
-In-Reply-To: <488d246b-13c7-4e36-9510-8ae2de450647@linux.alibaba.com>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Wed, 10 Sep 2025 13:41:25 -0400
-X-Gm-Features: Ac12FXx3f2gw2O3qOKT1Xmh_ecXNa2Ke7YGwp9bTrR6B-OHcqgL5c7RB1qg35NQ
-Message-ID: <CAJnrk1a5af-BMPUM3HfGwKZ=zoN4bcmbViLBWMtLao1KfK2gww@mail.gmail.com>
-Subject: Re: [PATCH v2 11/16] iomap: add caller-provided callbacks for read
- and readahead
-To: Gao Xiang <hsiangkao@linux.alibaba.com>
-Cc: djwong@kernel.org, hch@infradead.org, brauner@kernel.org, 
-	miklos@szeredi.hu, linux-block@vger.kernel.org, gfs2@lists.linux.dev, 
-	linux-fsdevel@vger.kernel.org, kernel-team@meta.com, 
-	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAGudoHEi05JGkTQ9PbM20D98S9fv0hTqpWRd5fWjEwkExSiVSw@mail.gmail.com>
 
-On Tue, Sep 9, 2025 at 7:21=E2=80=AFPM Gao Xiang <hsiangkao@linux.alibaba.c=
-om> wrote:
->
-> Hi Joanne,
->
-> On 2025/9/9 23:24, Joanne Koong wrote:
-> > On Mon, Sep 8, 2025 at 8:14=E2=80=AFPM Gao Xiang <xiang@kernel.org> wro=
-te:
-> >>
-> >> Hi Joanne,
-> >>
-> >> On Mon, Sep 08, 2025 at 11:51:17AM -0700, Joanne Koong wrote:
-> >>> Add caller-provided callbacks for read and readahead so that it can b=
-e
-> >>> used generically, especially by filesystems that are not block-based.
-> >>>
-> >>> In particular, this:
-> >>> * Modifies the read and readahead interface to take in a
-> >>>    struct iomap_read_folio_ctx that is publicly defined as:
-> >>>
-> >>>    struct iomap_read_folio_ctx {
-> >>>        const struct iomap_read_ops *ops;
-> >>>        struct folio *cur_folio;
-> >>>        struct readahead_control *rac;
-> >>>        void *private;
-> >>>    };
-> >>>
-> >>>    where struct iomap_read_ops is defined as:
-> >>>
-> >>>    struct iomap_read_ops {
-> >>>        int (*read_folio_range)(const struct iomap_iter *iter,
-> >>>                               struct iomap_read_folio_ctx *ctx,
-> >>>                               loff_t pos, size_t len);
-> >>>        int (*read_submit)(struct iomap_read_folio_ctx *ctx);
-> >>>    };
-> >>>
-> >>
-> >> No, I don't think `struct iomap_read_folio_ctx` has another
-> >> `.private` makes any sense, because:
-> >>
-> >>   - `struct iomap_iter *iter` already has `.private` and I think
-> >>     it's mainly used for per-request usage; and your new
-> >>     `.read_folio_range` already passes
-> >>      `const struct iomap_iter *iter` which has `.private`
-> >>     I don't think some read-specific `.private` is useful in any
-> >>     case, also below.
-> >>
-> >>   - `struct iomap_read_folio_ctx` cannot be accessed by previous
-> >>     .iomap_{begin,end} helpers, which means `struct iomap_read_ops`
-> >>     is only useful for FUSE read iter/submit logic.
-> >>
-> >> Also after my change, the prototype will be:
-> >>
-> >> int iomap_read_folio(const struct iomap_ops *ops,
-> >>                       struct iomap_read_folio_ctx *ctx, void *private2=
-);
-> >> void iomap_readahead(const struct iomap_ops *ops,
-> >>                       struct iomap_read_folio_ctx *ctx, void *private2=
-);
-> >>
-> >> Is it pretty weird due to `.iomap_{begin,end}` in principle can
-> >> only use `struct iomap_iter *` but have no way to access
-> >> ` struct iomap_read_folio_ctx` to get more enough content for
-> >> read requests.
-> >
-> > Hi Gao,
-> >
-> > imo I don't think it makes sense to, if I'm understanding what you're
-> > proposing correctly, have one shared data pointer between iomap
-> > read/readahead and the iomap_{begin,end} helpers because
->
-> My main concern is two `private` naming here: I would like to add
-> `private` to iomap_read/readahead() much like __iomap_dio_rw() at
-> least to make our new feature work efficiently.
->
-> >
-> > a) I don't think it's guaranteed that the data needed by
-> > read/readahead and iomap_{begin,end} is the same.  I guess we could
-> > combine the data each needs altogether into one struct, but it seems
-> > simpler and cleaner to me to just have the two be separate.
-> >
-> > b) I'm not sure about the erofs use case, but at least for what I'm
-> > seeing for fuse and the block-based filesystems currently using iomap,
-> > the data needed by iomap read/readahead (eg bios, the fuse
-> > fuse_fill_read_data) is irrelevant for iomap_{begin/end} and it seems
-> > unclean to expose that extraneous info. (btw I don't think it's true
-> > that iomap_iter is mainly used for per-request usage - for readahead
-> > for example, iomap_{begin,end} is called before and after we service
-> > the entire readahead, not called per request, whereas
-> > .read_folio_range() is called per request).
->
-> I said `per-request` meant a single sync read or readahead request,
-> which is triggered by vfs or mm for example.
->
-> >
-> > c) imo iomap_{begin,end} is meant to be a more generic interface and I
-> > don't think it makes sense to tie read-specific data to it. For
-> > example, some filesystems (eg gfs2) use the same iomap_ops across
-> > different file operations (eg buffered writes, direct io, reads, bmap,
-> > etc).
->
-> Previously `.iomap_{begin,end}` participates in buffer read and write
-> I/O paths (except for page writeback of course) as you said, in
-> principle users only need to care about fields in `struct iomap_iter`.
->
-> `struct iomap_readpage_ctx` is currently used as an internal structure
-> which is completely invisible to filesystems (IOWs, filesystems don't
-> need to care or specify any of that).
->
-> After your proposal, new renamed `struct iomap_read_folio_ctx` will be
-> exposed to individual filesystems too, but that makes two external
-> context structures for the buffer I/O reads (`struct iomap_iter` and
-> `struct iomap_read_folio_ctx`) instead of one.
->
-> I'm not saying your proposal doesn't work, but:
->
->   - which is unlike `struct iomap_writepage_ctx` because writeback path
->     doesn't have `struct iomap_iter` involved, and it has only that
->     exact one `struct iomap_writepage_ctx` context and all callbacks
->     use that only;
->
->   - take a look at `iomap_dio_rw` and `iomap_dio_ops`, I think it's
->     somewhat similiar to the new `struct iomap_read_ops` in some
->     extent, but dio currently also exposes the exact one context
->     (`struct iomap_iter`) to users.
->
->   - take a look at `iomap_write_ops`, it also exposes
->     `struct iomap_iter` only. you may say `folio`, `pos`, `len` can be
->     wrapped as another `struct iomap_write_ctx` if needed, but that is
->     not designed to be exposed to be specfied by write_iter (e.g.
->     fuse_cache_write_iter)
->
-> In short, traditionally the buffered read/write external context is
-> the only unique one `struct iomap_iter` (`struct iomap_readpage_ctx`
-> is only for iomap internal use), after your proposal there will be
-> two external contexts specified by users (.read_folio and .readahead)
-> but `.iomap_{begin,end}` is unable to get one of them, which is
-> unlike the current writeback and direct i/o paths (they uses one
-> external context too.)
->
-> Seperate into two contexts works for your use case, but it may
-> cause issues since future developers have to decide where to
-> place those new context fields for buffer I/O paths (
-> `struct iomap_iter` or `struct iomap_read_folio_ctx`), it's still
-> possible but may cause further churn on the codebase perspective.
->
-> That is my minor concern, but my main concern is still `private`
-> naming.
+On Wed, Sep 10, 2025 at 11:40:59AM +0200, Mateusz Guzik wrote:
+> Normally all changes to ->i_state requires the ->i_lock spinlock held.
+> 
+> The flag initially shows up in xfs_rename_alloc_whiteout, where I
+> presume the inode is not visible to anyone else yet.
+> 
+> It gets removed later in xfs_rename.
+> 
+> I can't tell whether there is anyone else at that point who can mess
+> with ->i_state.
 
-Hi Gao,
+No-one else can find it because the directory the whiteout was added
+to is still locked. Hence any readdir or lookup operation that might
+expose the new whiteout inode to users will block on the directory
+lock until after the rename transaction commits.
 
-In my mind, the big question is whether or not the data the
-filesystems pass in is logically shared by both iomap_begin/end and
-buffered reads/writes/dio callbacks, or whether the data needed by
-both are basically separate entities but have to be frankensteined
-together so that it can be passed in through iter->private. My sense
-of the read/readahead code is that the data needed by iomap begin/end
-vs buffered reads are basically logically separate entities. I see
-your point about how the existing code for buffered writes and dio in
-iomap have them combined into one, but imo, if the iomap_iter data is
-a separate entity from the data needed in the callbacks, then those
-pointers should be separate.
+We really don't care if the inode->i_lock is needed or not. We can
+add it if necessary, but it's pure overhead for no actual gain.
 
-But I also am happy to change this back to having it the way it was
-for v1 where everything just went through iter->private. I don't feel
-strongly about this decision, I'm happy with whichever way we go with.
+> The context is that I'm writing a patchset which hides all ->i_state
+> accesses behind helpers. Part of the functionality is to assert that
+> the lock is held for changes of the sort.
 
-Thanks,
-Joanne
+Yup, the version I looked at yesterday was .... too ugly to
+consider. If I've got time, I'll comment there...
 
->
-> Thanks,
-> Gao Xiang
->
-> > Thanks,
-> > Joanne
-> >
-> >>
-> >> Thanks,
-> >> Gao Xiang
->
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
