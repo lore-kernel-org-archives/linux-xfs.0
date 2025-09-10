@@ -1,61 +1,63 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E438425A350;
-	Wed, 10 Sep 2025 21:46:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 063ED2DF3D1;
+	Wed, 10 Sep 2025 21:47:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757540781; cv=none; b=AzEcQD0oqceMvxdyZsWH6j4d6uKAabVjLRb2otgdjgV7ThP3vJD8liyjtwc3YxKAXtc1cmCgRUWFMNMVJXBDjw7QPU+Anc7UR5RKxWELOBUsUFp7fnTUR67cRutZqAxiXiDfqo+5KDLbIgXqO8MdZPdDUGE6fMKn4UTAxIY+9MI=
+	t=1757540879; cv=none; b=n7tQn9g7vsmEaJUWoRPHz0sliMFF4tUgPDRAKcAIM8ALTObnck9IAzh6dzuXdl1rZnVflkfgawOWwkJ0awlEJOLtwZW9+cPm0cdBnQya8Lu/BpVk5KO2qewgzkI8jfb9mWDTYHHAlg6sq7cC0RTLdUx3Ez2hKWd5F06LxpJLCxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757540781; c=relaxed/simple;
-	bh=qEPx7HAoIVqxUArLb7byNF6xzaLgP3XmTw+GmgWpgac=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sUfOE/ggOFM/u2zlM0DpUD2xxqlmdI4q6hHwtRvE59MFBdUmDeUB3E/rQM2oQQ0vGMmO03G5wwO7BrForP22ltpW44k0AP03BCXoBXFPmOrvKsJPACu4uxavODEadnHW/evSvjUZ7zzhBCiScVkag0kqd6lC6ypv4GXGfteM27k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bxVRNbUj; arc=none smtp.client-ip=209.85.210.179
+	s=arc-20240116; t=1757540879; c=relaxed/simple;
+	bh=HM0ofVrxSHq1Bz92Sj1jWe36kTRP0dpeO4I7Bv4bg30=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=TRP8yGscJfQ1/XGI1y+XdXg2JHornWNSM3YXecJbv206eJkoruVNCBxFc1qe5CW7EiV4sjeaRl1NcuOBGzzzRTYGG5ZDs3QyG1dOhu5sZ0NGbKVEa0Ik4I4ovf2MB+ilQqZOHEbC4uaJfnY/bSKZG8xOjkSFel3V5NKzN6lEgCg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FLxZmxBw; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bxVRNbUj"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-76e4fc419a9so74526b3a.0;
-        Wed, 10 Sep 2025 14:46:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FLxZmxBw"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-7725147ec88so72823b3a.0;
+        Wed, 10 Sep 2025 14:47:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757540778; x=1758145578; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=DEg1ki19kRldKZrSMUtRB9eXrCIGMi4KX9/Z6BU973Q=;
-        b=bxVRNbUj8u3rALQa1hFLsqkduNA1yWWChQBcNlzga08HR1PcHpHvxg9N7Yng26rd+K
-         q8os+rL+FRs8WarGsPYg2lwSq3PWN1jqm/2efFkoZGjzvsR5JdEqwybl/A6xKWVdXtFs
-         yLkzhR3U2BZC/3L4CEJ2C3bq7bHzm5/2rLilb3dtIhNN5efAkW0CMnzSfJ+xYjLy+TH5
-         VGXPmUehoCPrzXu05nWRx/GKA9XNjThFKJD/zwGZlgjQKoQw5zdSyvipnT88NtUJ3rbl
-         FJW1leOg5xV75YupzQAeyaBeSXgeuWpaneh5ndi3po/TXr9nVXXHWr20cVniTv1iHQ8Q
-         Ka/A==
+        d=gmail.com; s=20230601; t=1757540877; x=1758145677; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=06oifnEAGFR4Ltgc4TOaz5pGi14RXdWh8ksBdzGLZrI=;
+        b=FLxZmxBwhJy6dITtG68tu089kywD9OZgH3JfB0V7ZWncEcT1NugnepueEfXxWzs3vZ
+         0uFmB4Ye/ZjugQF1q89425wOohnl6tPafTD/5izrsbIvvhglw5b7sAID7QjxuN9ZU3Jr
+         JJNxOdDtBAbyBlSWpngf8qx3VrWvf8597ZsdDFfEiXwmtjbzN4h2aLwkThZJoSdPZn+j
+         cH86qooR75UU00HscOYKD6SNaPfj9BffrJVtW1vr9qDG7dJ2G8hELHTSeEDD8uuwwnsY
+         zSMo3AQnxyVnm8O2jNCss2fY7NGJ3f0dC2wvgn5k3QCp18psBPnON3h8qeVqdZR6KLVg
+         Ey4A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757540778; x=1758145578;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=DEg1ki19kRldKZrSMUtRB9eXrCIGMi4KX9/Z6BU973Q=;
-        b=f0M+U+0YKjWgfQRvMzjKoUWIbjAL3+ByjgG9EwMz1M9GcwWlXSxTzlyNoQu+joAGDe
-         akZ+ZCN7QF7R7dxxqatIDIY/pWANvwhZskbyFsjGL9BNS8t9ASgoyvbcgBAI+6MtegvA
-         E6kFvwJ3HROQu9Jt5ryfZDGcBaYdqzRnKY5TwJEIofpvHvlnwKEbQI4m1oiPqAQjELFl
-         0XuAl/ipVTR8MINFa4BFi7S+Z87c+iDn2qlNTbdordfyHzZrEXUe375qhOVtSeb/KI4/
-         zuYOGeyq600EcvEh/HC+UnxfR2B4utknuqW3Iw67ugeW1m1ZnFj1bAFR37Mc8XhcZnIc
-         3YIw==
-X-Forwarded-Encrypted: i=1; AJvYcCUd+q6g2pe1/N8L0CzK7meyq6PusZy7vD7Ug8ZhNHTBXEO68c0nELWA8MjXTA3J9pdL7GpOpsNVpYWU@vger.kernel.org, AJvYcCVbzMVBhxhZu2fAPPxQe48sC3mTU3fzGfAtvUVNoL61GJ98tGLisPht+Z8voYYwjxZFwMwZsKQ2hAfr@vger.kernel.org, AJvYcCWc+iMd/ZqBA8ZXewaIGQqrSyAydAAtx7heqATLSF8kwrLQS2sdlFdcCGG5kht66jjSybyp0tPmdnIvXv84@vger.kernel.org
-X-Gm-Message-State: AOJu0YxYj7vRrSKUGwAf2DVSLoVTx2a+mjj7uUyCt6o9w59AeefrIKr5
-	ZfsCE7ZN8IJWCJa2U6mLsnd6gK81c/AVipz5kEv7cSvjRmhjQF1TVQE6pXoqtkfH
-X-Gm-Gg: ASbGncsyyDsW53ZCsZKrStTTc2jRfTLxQJrPStXCqtdCLhfQ8Qmcw5UMtVJUaVIa+A7
-	2e8OqiawmOb9ze1QoaeNv1kr3UETaupGIzkSV0cm92UPvC6LaHJvjzM3WF8awZlHMSM60ThdDp7
-	I4HPYLFQwDtuCmD30vEtM+KYwziNXm3oGEDgqSpl/PZZZDdZGStQeP24UAcHJrjzpTnmF2X7bnm
-	ew6uLpOJrOcXNrv1xpb1I/wWwQ/eCr6iwJpp0MjJhzJEGrTF4QLBRqmOytZqaxMMhI03loKttZ1
-	+DgGt/zpz80FKBdy9cFm1ykXhWbZW+5wKFs1z1DT1QYe44FzUSDjIZlC1fcsql582X45QLGvVal
-	iwp4M8DWHD8VzjuCPuURw1Hi77UQKBgGVXChy
-X-Google-Smtp-Source: AGHT+IEWMAt2EvrHuYaNHgZ9JLPgQrDkZIZNfmGfyJ8/NwZtAmfWU7QJSWyZrMZs6yzxQ7mh3Pmsgg==
-X-Received: by 2002:a05:6a20:12c7:b0:251:9f29:4556 with SMTP id adf61e73a8af0-2533e950082mr25079587637.4.1757540778287;
-        Wed, 10 Sep 2025 14:46:18 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1757540877; x=1758145677;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=06oifnEAGFR4Ltgc4TOaz5pGi14RXdWh8ksBdzGLZrI=;
+        b=Qpl9nTBczse0GwLYKVtL9Qt34xbcQpH1s9F4ug1YNPeldr6OfVIl0XmYx8Yd9L50Gl
+         YlM5sTketSCOSY6ajQY3aC41GRtPGFsLLYGWoA1DGaOXBdFZdWSCNkpIEh7lf9Ad3CuF
+         UnYsWESFr30MNNe6wvwPkpfg1TtGyGMrOr0MzJ/zBdPOcFpb8D+IiCw9vQjS4CgqvOj8
+         HJ7BcFWXHiLHPDDO4x0LFusFnYS4kMcMRqWFUhNqyrn2mDmnrhfqp2QdUS6NxQG/3cfk
+         5iWXquhaDUBi/ThtpK+W2p04Dkhn9N3rgCSz05N60Mk3O/v8TJoRjQuMY7Pr7K2RtRp7
+         e5fw==
+X-Forwarded-Encrypted: i=1; AJvYcCUpTSE89FsEfLoW3L0e8P0hOX8hObZqf0tuEULmf3td2jPuV2VVa74JBgFYzlF0cyTsGjZ3k1rzUpRe@vger.kernel.org, AJvYcCVJUA6bK6alRChfyQcUtq1nGc7wRgtRoH8c69B5EtLT3T6eQ8g4DpdKVerprbkdno3a0p+WU/5UFhVe@vger.kernel.org, AJvYcCWP8hlxeDwYf35+f55ZRFGdRBPHIBkxQY0wMZUC9iNCQxfi8C54mavXAVVaUbdYjUciFYU04TWBbds6q009@vger.kernel.org
+X-Gm-Message-State: AOJu0YzpiuGwJkLSMMmhgNGNfxf9kVDBYKwM57fBXGBmglLPkGVB+bqX
+	hpujIqVkfB7MlDE9Osx507MAnKWX7WWLtii5XEdbSfK1mqYr9T5cIFwn//EdGYM8
+X-Gm-Gg: ASbGncuLlGVE5DZNQ2rA7QSZ2LG58gdxx+x8om3cY5+eKjsxHNCooGVEAgkBgJdkx7u
+	Hpvt05GufLr/W+NMIJ+FngXi2IfO0fA6AiO4mfXYCZ8gZ83SaaXNl8K2ETujAqINJ4Z7aELVPz8
+	7IQqESQ5Syyz+rTEUP4vVngVoEpdRCMlMlNAM4CaXnt9mnBntNwJUycSQcrWwbHTkl+Q4wydLVM
+	wmpgk26fe2bUba1YHeAh06eKALb8pJaqRKllw37CyeDroUyoGFzwhpzNdRjr9rN6Jjmyt0+TKXx
+	LtKtkFjrq8qvl8upZRWiKYdbVxj/T5Ovo0muk8WVewUvgz7sbs+Zu7fRpaHSU3ubcp505TQ5pns
+	4B18Ldi98t23f6h+ZlYa1eHLj/Zypg7nvL3sH
+X-Google-Smtp-Source: AGHT+IGinHS6aq16w9b7HGbBpLflNnAoUm+yBwVktzHXKIvCYcxOtzobQyggEUkzUVtXz8kKC87MiQ==
+X-Received: by 2002:a05:6a00:3e0e:b0:772:7b9b:b1b6 with SMTP id d2e1a72fcca58-77603240aa0mr1106988b3a.9.1757540877117;
+        Wed, 10 Sep 2025 14:47:57 -0700 (PDT)
 Received: from jicarita ([65.144.169.45])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-775fbbc3251sm2422516b3a.103.2025.09.10.14.46.16
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-775fbbc3251sm2422516b3a.103.2025.09.10.14.47.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Sep 2025 14:46:17 -0700 (PDT)
+        Wed, 10 Sep 2025 14:47:56 -0700 (PDT)
 From: Thomas Bertschinger <tahbertschinger@gmail.com>
 To: io-uring@vger.kernel.org,
 	axboe@kernel.dk,
@@ -65,13 +67,13 @@ To: io-uring@vger.kernel.org,
 	linux-nfs@vger.kernel.org
 Cc: Thomas Bertschinger <tahbertschinger@gmail.com>,
 	linux-xfs@vger.kernel.org,
-	cem@kernel.org,
-	chuck.lever@oracle.com,
-	jlayton@kernel.org
-Subject: [PATCHSET RFC v2 00/10] add support for name_to, open_by_handle_at() to io_uring
-Date: Wed, 10 Sep 2025 15:49:17 -0600
-Message-ID: <20250910214927.480316-1-tahbertschinger@gmail.com>
+	cem@kernel.org
+Subject: [PATCH 10/10] xfs: add support for non-blocking fh_to_dentry()
+Date: Wed, 10 Sep 2025 15:49:27 -0600
+Message-ID: <20250910214927.480316-11-tahbertschinger@gmail.com>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20250910214927.480316-1-tahbertschinger@gmail.com>
+References: <20250910214927.480316-1-tahbertschinger@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -80,79 +82,145 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series adds support for name_to_handle_at() and open_by_handle_at()
-to io_uring. The idea is for these opcodes to be useful for userspace
-NFS servers that want to use io_uring.
+This is to support using open_by_handle_at(2) via io_uring. It is useful
+for io_uring to request that opening a file via handle be completed
+using only cached data, or fail with -EAGAIN if that is not possible.
 
-The biggest change since [v1] is that this adds support for attempting
-non-blocking open_by_handle_at(). When io_uring calls handle_to_path(),
-it will set a flag to request that the call return -EAGAIN if it cannot
-complete using cached data.
+The signature of xfs_nfs_get_inode() is extended with a new flags
+argument that allows callers to specify XFS_IGET_INCORE.
 
-The same holds for the call to do_filp_path_open().
+That flag is set when the VFS passes the FILEID_CACHED flag via the
+fileid_type argument.
 
-Supporting this for handle_to_path() requires a way to communicate to
-the filesystem that it should not block in its fh_to_dentry()
-implementation. This is done with a new flag FILEID_CACHED which is set
-in the file handle by the VFS. If a filesystem supports this new flag,
-it will indicate that with a new flag EXPORT_OP_NONBLOCK so that the VFS
-knows not to call into a filesystem with the FILEID_CACHED flag, when
-the FS does not know about that flag.
+Signed-off-by: Thomas Bertschinger <tahbertschinger@gmail.com>
+---
+ fs/xfs/xfs_export.c | 32 ++++++++++++++++++++++++++------
+ fs/xfs/xfs_export.h |  3 ++-
+ fs/xfs/xfs_handle.c |  2 +-
+ 3 files changed, 29 insertions(+), 8 deletions(-)
 
-Support for the new FILEID_CACHED flag is added for xfs.
-
-Thanks to Amir Goldstein for the review comments and suggesting this
-approach on v1.
-
-Testing
-=======
-
-As in v1, a liburing branch with a test is available at
-https://github.com/bertschingert/liburing/tree/open_by_handle_at
-
-and is run with
-
-$ ./test/open_by_handle_at.t
-
-v1 -> v2:
-- rename some new helper functions:
-	- do_name_to_handle_at() -> do_sys_name_to_handle_at()
-	- __do_handle_open() -> do_filp_path_open()
-- create a union member name_to_handle_flags in struct io_uring_sqe
-- add new FILEID_CACHED and EXPORT_OP_NONBLOCK flags
-- attempt non-blocking open_by_handle_at() in io_uring first, rather
-  than always giving up and running in async context
-- add support for FILEID_CACHED in xfs
-
-[v1] https://lore.kernel.org/linux-fsdevel/20250814235431.995876-1-tahbertschinger@gmail.com/
-
-Thomas Bertschinger (10):
-  fhandle: create helper for name_to_handle_at(2)
-  io_uring: add support for IORING_OP_NAME_TO_HANDLE_AT
-  fhandle: helper for allocating, reading struct file_handle
-  fhandle: create do_filp_path_open() helper
-  fhandle: make do_filp_path_open() take struct open_flags
-  exportfs: allow VFS flags in struct file_handle
-  exportfs: new FILEID_CACHED flag for non-blocking fh lookup
-  io_uring: add __io_open_prep() helper
-  io_uring: add support for IORING_OP_OPEN_BY_HANDLE_AT
-  xfs: add support for non-blocking fh_to_dentry()
-
- fs/exportfs/expfs.c           |  15 ++-
- fs/fhandle.c                  | 156 ++++++++++++++++-----------
- fs/internal.h                 |  13 +++
- fs/xfs/xfs_export.c           |  32 ++++--
- fs/xfs/xfs_export.h           |   3 +-
- fs/xfs/xfs_handle.c           |   2 +-
- include/linux/exportfs.h      |  34 +++++-
- include/uapi/linux/io_uring.h |   3 +
- io_uring/opdef.c              |  26 +++++
- io_uring/openclose.c          | 191 ++++++++++++++++++++++++++++++++--
- io_uring/openclose.h          |  13 +++
- 11 files changed, 405 insertions(+), 83 deletions(-)
-
-
-base-commit: 76eeb9b8de9880ca38696b2fb56ac45ac0a25c6c
+diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
+index 201489d3de08..ca2a9ed0eb16 100644
+--- a/fs/xfs/xfs_export.c
++++ b/fs/xfs/xfs_export.c
+@@ -106,7 +106,8 @@ struct inode *
+ xfs_nfs_get_inode(
+ 	struct super_block	*sb,
+ 	u64			ino,
+-	u32			generation)
++	u32			generation,
++	uint			flags)
+ {
+  	xfs_mount_t		*mp = XFS_M(sb);
+ 	xfs_inode_t		*ip;
+@@ -123,7 +124,9 @@ xfs_nfs_get_inode(
+ 	 * fine and not an indication of a corrupted filesystem as clients can
+ 	 * send invalid file handles and we have to handle it gracefully..
+ 	 */
+-	error = xfs_iget(mp, NULL, ino, XFS_IGET_UNTRUSTED, 0, &ip);
++	flags |= XFS_IGET_UNTRUSTED;
++
++	error = xfs_iget(mp, NULL, ino, flags, 0, &ip);
+ 	if (error) {
+ 
+ 		/*
+@@ -140,6 +143,10 @@ xfs_nfs_get_inode(
+ 		case -EFSCORRUPTED:
+ 			error = -ESTALE;
+ 			break;
++		case -ENODATA:
++			if (flags & XFS_IGET_INCORE)
++				error = -EAGAIN;
++			break;
+ 		default:
+ 			break;
+ 		}
+@@ -174,6 +181,12 @@ xfs_fs_fh_to_dentry(struct super_block *sb, struct fid *fid,
+ {
+ 	struct xfs_fid64	*fid64 = (struct xfs_fid64 *)fid;
+ 	struct inode		*inode = NULL;
++	uint			flags = 0;
++
++	if (fileid_type & FILEID_CACHED)
++		flags = XFS_IGET_INCORE;
++
++	fileid_type = FILEID_TYPE(fileid_type);
+ 
+ 	if (fh_len < xfs_fileid_length(fileid_type))
+ 		return NULL;
+@@ -181,11 +194,11 @@ xfs_fs_fh_to_dentry(struct super_block *sb, struct fid *fid,
+ 	switch (fileid_type) {
+ 	case FILEID_INO32_GEN_PARENT:
+ 	case FILEID_INO32_GEN:
+-		inode = xfs_nfs_get_inode(sb, fid->i32.ino, fid->i32.gen);
++		inode = xfs_nfs_get_inode(sb, fid->i32.ino, fid->i32.gen, flags);
+ 		break;
+ 	case FILEID_INO32_GEN_PARENT | XFS_FILEID_TYPE_64FLAG:
+ 	case FILEID_INO32_GEN | XFS_FILEID_TYPE_64FLAG:
+-		inode = xfs_nfs_get_inode(sb, fid64->ino, fid64->gen);
++		inode = xfs_nfs_get_inode(sb, fid64->ino, fid64->gen, flags);
+ 		break;
+ 	}
+ 
+@@ -198,6 +211,12 @@ xfs_fs_fh_to_parent(struct super_block *sb, struct fid *fid,
+ {
+ 	struct xfs_fid64	*fid64 = (struct xfs_fid64 *)fid;
+ 	struct inode		*inode = NULL;
++	uint			flags = 0;
++
++	if (fileid_type & FILEID_CACHED)
++		flags = XFS_IGET_INCORE;
++
++	fileid_type = FILEID_TYPE(fileid_type);
+ 
+ 	if (fh_len < xfs_fileid_length(fileid_type))
+ 		return NULL;
+@@ -205,11 +224,11 @@ xfs_fs_fh_to_parent(struct super_block *sb, struct fid *fid,
+ 	switch (fileid_type) {
+ 	case FILEID_INO32_GEN_PARENT:
+ 		inode = xfs_nfs_get_inode(sb, fid->i32.parent_ino,
+-					      fid->i32.parent_gen);
++					      fid->i32.parent_gen, flags);
+ 		break;
+ 	case FILEID_INO32_GEN_PARENT | XFS_FILEID_TYPE_64FLAG:
+ 		inode = xfs_nfs_get_inode(sb, fid64->parent_ino,
+-					      fid64->parent_gen);
++					      fid64->parent_gen, flags);
+ 		break;
+ 	}
+ 
+@@ -248,4 +267,5 @@ const struct export_operations xfs_export_operations = {
+ 	.map_blocks		= xfs_fs_map_blocks,
+ 	.commit_blocks		= xfs_fs_commit_blocks,
+ #endif
++	.flags			= EXPORT_OP_NONBLOCK,
+ };
+diff --git a/fs/xfs/xfs_export.h b/fs/xfs/xfs_export.h
+index 3cd85e8901a5..9addfcd5b1e1 100644
+--- a/fs/xfs/xfs_export.h
++++ b/fs/xfs/xfs_export.h
+@@ -57,6 +57,7 @@ struct xfs_fid64 {
+ /* This flag goes on the wire.  Don't play with it. */
+ #define XFS_FILEID_TYPE_64FLAG	0x80	/* NFS fileid has 64bit inodes */
+ 
+-struct inode *xfs_nfs_get_inode(struct super_block *sb, u64 ino, u32 gen);
++struct inode *xfs_nfs_get_inode(struct super_block *sb, u64 ino, u32 gen,
++				uint flags);
+ 
+ #endif	/* __XFS_EXPORT_H__ */
+diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
+index f19fce557354..7d877ff504d6 100644
+--- a/fs/xfs/xfs_handle.c
++++ b/fs/xfs/xfs_handle.c
+@@ -193,7 +193,7 @@ xfs_khandle_to_inode(
+ 		return ERR_PTR(-EINVAL);
+ 
+ 	inode = xfs_nfs_get_inode(mp->m_super, handle->ha_fid.fid_ino,
+-			handle->ha_fid.fid_gen);
++			handle->ha_fid.fid_gen, 0);
+ 	if (IS_ERR(inode))
+ 		return ERR_CAST(inode);
+ 
 -- 
 2.51.0
 
