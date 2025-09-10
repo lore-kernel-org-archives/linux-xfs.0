@@ -1,84 +1,142 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 626A12BE7B1
-	for <linux-xfs@vger.kernel.org>; Wed, 10 Sep 2025 09:41:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DFD0214813;
+	Wed, 10 Sep 2025 10:16:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757497275; cv=none; b=jhh5GLnMFuKBq9lb0jpRchT0xejMjMbFpngd8n9KocjplrWy6w8QrycCB1h2h8A0zA9vtydEfiOGUMnkT4W7Q1Tmj0hUxHdjawHOF/R5gYIZKbpQ9V7wuDWRev9KxdUte2/b5Eb5p3foCsvCyeWlVKEvKc5Qss+BVMxFgnEQkdE=
+	t=1757499400; cv=none; b=lNrhJnShwAvZt39Jh6aLhI6EZfYzkyXzxIvKzU78wV7mODyAdbLUvvldZsqJn9T1STpOEH5e8z3yew9/1cDIVBxrZQMdIYadtMfgxTv7ufveQIfsnRyCuRPkuHabDDv+krOcD0+n679WstfUfYctIIIIVSY0epmBUbkb8+Yjg5Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757497275; c=relaxed/simple;
-	bh=Tf41vV8zRfirwyuU1nQNa2lBQWfzvhkFCVJXIeakHKQ=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=eVRKw/NrGF7w+4G+X3xH3L84nmB2DLuFG+sVUFeT2SnZSdR9aC0WaipZihMpHQWAtiFGimYoIHBQcFN26YzqjhBhCtdVdaLhMekxshvXaBOhdWc7IyWn769pmyUNNH1GGZHKCRYd55v3gb554kzYVzL9zZ7VLuA1HZnECFl4jgs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QrRz2rY+; arc=none smtp.client-ip=209.85.218.41
+	s=arc-20240116; t=1757499400; c=relaxed/simple;
+	bh=5WsgoPr0lo5Uw7hXAvjxByjhveCqbww9xMVYrqCn8eE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ummuceoLJiNuUPbm5JOByO4ZC6c6x+Grv7C0nfpz20wWOEYIpbVL2qzR8PAuIRsc+nCkBtKs/9Ur5WfgOodmVrF6XzNGY3d4IBSiZKxCfK4wI3qn+RXG8G8ObCigjztuRt8ZvVkc2clUXjgzCOcQ+Bp+9FC2jxgeKTGsgS5ioIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lnR/9MSC; arc=none smtp.client-ip=209.85.208.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QrRz2rY+"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-b047f28a83dso1129860166b.2
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Sep 2025 02:41:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lnR/9MSC"
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-6188b5ad4f0so9389617a12.0;
+        Wed, 10 Sep 2025 03:16:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757497272; x=1758102072; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=OA6/wMtVwYnCpFqHgoNVrw9oTr+hymfr3c9vK9x9Db0=;
-        b=QrRz2rY+CmXkSPMFPFlekU2xllgR24BmyEWR7ypcbtVVA30ApfCeeD70CINGUaYxww
-         XfyaOa3VCVfhWCaFSwO9E9uuJru2tRVAF00r+i52+4fJCwhsh7vulJGb7V7sKrTKvUdr
-         6piBjNqC4UtBQiZ9pNRQUlWQakcaWwOdIEi2HyWhj5ujXF3wWoufMpC2NR/jx0lwHBge
-         MKCcDp4VlGOtVWUlBf5aGXb//TNX5NrKoobNvNeNKIh+uXTLJ1GIeM9Sx6ebn+NUzIJW
-         eb/LPGlFr77r6xyihBXB3PQXPHMpVCBHjZB12QiKYOEqlkdVieODd9p1/0l08ytXKuuI
-         p6mg==
+        d=gmail.com; s=20230601; t=1757499397; x=1758104197; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=qRSKGpmEYN0/srwW2TqbHPJvdZQo8vau4eyQfT3Zgnw=;
+        b=lnR/9MSCsEbC7QbgnU49zsRt3OT5dAVh1U1gP7IaO/tMgqOuR/Lf3tT02dqN6kkeQG
+         NWtrELkXYbOqQX7VmhM2ji/SEYZTTXaKCw6uEMNh8xoVTMVdHSpQUeSKFry72MwpCOj6
+         J2xsd2KmlL6LdmomUP933AwnB5VR9aJJb3xy0uEF0+4rK6Cn+JmdOlmbmE1hHLv+Z8DE
+         IM3KMCNc0DyYZpxVSI0khzsXTh2kk66kaMP5iA2E/WP7wyJgPREo84JUIMawz/8ucZB3
+         Yck/6I1/yPreGIPJpkImm/FAB2pBPbDcUhYG+HR/qoagGO0DQFnYGKXZkL+LgkG26L8i
+         GlCA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757497272; x=1758102072;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=OA6/wMtVwYnCpFqHgoNVrw9oTr+hymfr3c9vK9x9Db0=;
-        b=WOKaRsd4zAsw6j3kvfVrh0tA9KvvaV8lahUa1nvTM+H4lJGNNQrVqUc86woTqmN+Jn
-         rGA6wL2nF1DUrVGuzmQy74BszgxKa6mNthc1ebrYqysROAyKJNw6MUq5B+hMv13olVHA
-         3mhHnHo4pRfY5RFA6RmksTuF1BdTIWtVm7n9lnO7dT+l8r2mgYQ2YNXOgdSJ3KIs4bMU
-         lyRWDaC2RQeQniEdmHELgMqT5n8eMAZKkaELGYDY+KtrrHqo3GGTkHJww3EDHuXy5/55
-         8eTxKzTR+jlxh8tSL3/NDheM7Mh+muaqtYSm3OmZZyuqnqVzelG+I0eretrl10soxigN
-         7FkQ==
-X-Gm-Message-State: AOJu0Yz/ZR91dLO6e4KcssgY9mAxbb+ZjPXPZ5peKwt5Qgqp6SC3ah4N
-	Idk9rUGpG3/S/bTRjGPPN6YqHOsQX8cAmlRNMul7/EfVOPq77ZMWx+78/iesoZK763OrSQ7errz
-	yqOaZCKAY2+d8NYsN6BD9xz/+0uwWrF4MN+49
-X-Gm-Gg: ASbGnctU6cgL1yx2Veug6L0CM/Hm4EpCRxwBrJEp0Gme0WvtAHrxs6OS7zfX3rCPKbl
-	jDg36XoA+/HXteqIKlLleesMvvUQO7KBlGU73px1EFTiZ0YqQDtjWuPxJZ/iMUPqoxEPoZLWzvM
-	qGX9FbrJYHj/PVSQt4kh65b3hrS2D8IfG4e5zyMd+8RNC+lmcaKUbsW/PoC9RP0RYHNqP5zHPtp
-	y+mbgfAx1i+ZF86+w==
-X-Google-Smtp-Source: AGHT+IEQPe45jsHjLs9e0gid2Iq0VyT9evDVB8Q/2lIHPn3VFaiWtw2j/AI8/Gpa3QoyhGWYai2dTKwtMYWhbsPdvns=
-X-Received: by 2002:a17:906:6a0e:b0:b07:8972:2122 with SMTP id
- a640c23a62f3a-b078972216dmr163987866b.18.1757497271414; Wed, 10 Sep 2025
- 02:41:11 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1757499397; x=1758104197;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=qRSKGpmEYN0/srwW2TqbHPJvdZQo8vau4eyQfT3Zgnw=;
+        b=WnVqHj5ISVybSttahBvcZrZb0W4s1Rq14X9gm5rv0PpAZw64XsrUwUPVKI7rJzQybG
+         vivd13w8IxD/2K/wN4v36bJ0VRqXceIE1jLotzN06EJ90mrLfWS+bca05T1sTol7erwX
+         7RDmHFTSZAQemPtTtq5GtQV+r/MpunwdHyvAPihxYe79hGPIHLajK0g6hOq/YkBn9CD+
+         +1fAxvnhlx8Yd0gDeXJETCL8PExrii12s/mlFlBfxveW7Ri0NYtt617Gm4CfeOU2FbbM
+         Zng94k9dmdylQb+e9sKMcP+/HbokpADX7rCArUkExVRIbvs1geg0kXXF2Tc3EcMN0NhI
+         3yIQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUhOm5V4HQb7Uxgotyiwv5K3JHugWmnCgKQ/kTxN9BusLddpqT75Kcp/kw1yd3UxS/zW24q4/8i@vger.kernel.org, AJvYcCXkxPio8aWy7CSOEiqsjWKqZvFq6Ub7uMpzVOBN+r4icG6mlS7DQi01sA7VnVAj25eOGF+k5VLqbkg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyKj4tZqAomlacgq4GnsF5pkWs4KDavM/PY4rTZgB+nxGH9KozV
+	fbb+56ImxzsOTvQtuScQWgYTDWMfN0vE74HrRNpKtJEwFxKrRYvvsQBR
+X-Gm-Gg: ASbGncu5hTes0R+2H9PP7P3qPQQoVcBX0iJNpuVGG/tWquDCbqA6X7IvbMQDJXkas9B
+	i0FOwS/ykgteJFdE8S7x9ArMY3UAgLGtBsIUJ1jAOTxTTJRMxhE0khtI3MTo56MBoGhnJiUyr6t
+	jtrBB+Y152mUISp02v+e1+GLSJKEmTZVAjHjzydr80KDALTehw5PMntkv8702dxo5kuFC2WHTcr
+	pzrIQofqNfDgp0hQvl+llVQYXMdwiLyrb8rLFeMpkcZdFp7KCX/nY9PUvD/e40LU3spg/9GD00q
+	OvVfYMZKlxM63ScRxBdDtjwfF2oninxCRB+ZhQy/ZArD8X4xuKimVAZbjeSykWf6RW3J4EGjhFU
+	KT1UX84i7HK6K8KbYHDL5UtRI9l7fGRmxnaEWQJjihK/gJMB8Y+/wSprOAvyzTUHS3wZpe8RvGJ
+	8YEELIcI9DHWDxBfh+ErKC/FY=
+X-Google-Smtp-Source: AGHT+IETz6aYbUrg7xHdL0EENiwLIIjsRcj8whMW8ha58M9dft6Hjh22MfrHDC/KjHwDc+SdJx0Q8w==
+X-Received: by 2002:a05:6402:2347:b0:628:7d38:9ff with SMTP id 4fb4d7f45d1cf-6287d380cf7mr9161856a12.37.1757499397039;
+        Wed, 10 Sep 2025 03:16:37 -0700 (PDT)
+Received: from amir-ThinkPad-T480.ctera.local (92-109-99-123.cable.dynamic.v4.ziggo.nl. [92.109.99.123])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-62bff34919dsm2872569a12.23.2025.09.10.03.16.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 10 Sep 2025 03:16:36 -0700 (PDT)
+From: Amir Goldstein <amir73il@gmail.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Leah Rumancik <leah.rumancik@gmail.com>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	stable@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	Eric Sandeen <sandeen@redhat.com>,
+	Chandan Babu R <chandanbabu@kernel.org>
+Subject: [PATCH 5.15] xfs: short circuit xfs_growfs_data_private() if delta is zero
+Date: Wed, 10 Sep 2025 12:16:21 +0200
+Message-ID: <20250910101622.1967077-1-amir73il@gmail.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Mateusz Guzik <mjguzik@gmail.com>
-Date: Wed, 10 Sep 2025 11:40:59 +0200
-X-Gm-Features: AS18NWBrTUNAHF1d30rBMxi4d1i5znr-g9G67n9HlCCUUzIpGIhHDtw_jH4QnNY
-Message-ID: <CAGudoHEi05JGkTQ9PbM20D98S9fv0hTqpWRd5fWjEwkExSiVSw@mail.gmail.com>
-Subject: clearing of I_LINKABLE in xfs_rename without ->I_lock held
-To: linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Normally all changes to ->i_state requires the ->i_lock spinlock held.
+From: Eric Sandeen <sandeen@redhat.com>
 
-The flag initially shows up in xfs_rename_alloc_whiteout, where I
-presume the inode is not visible to anyone else yet.
+[ Upstream commit 84712492e6dab803bf595fb8494d11098b74a652 ]
 
-It gets removed later in xfs_rename.
+Although xfs_growfs_data() doesn't call xfs_growfs_data_private()
+if in->newblocks == mp->m_sb.sb_dblocks, xfs_growfs_data_private()
+further massages the new block count so that we don't i.e. try
+to create a too-small new AG.
 
-I can't tell whether there is anyone else at that point who can mess
-with ->i_state.
+This may lead to a delta of "0" in xfs_growfs_data_private(), so
+we end up in the shrink case and emit the EXPERIMENTAL warning
+even if we're not changing anything at all.
 
-The context is that I'm writing a patchset which hides all ->i_state
-accesses behind helpers. Part of the functionality is to assert that
-the lock is held for changes of the sort.
+Fix this by returning straightaway if the block delta is zero.
 
-If this legitimately does not need the lock in your case I'll add some
-provisions to keep it that way.
+(nb: in older kernels, the result of entering the shrink case
+with delta == 0 may actually let an -ENOSPC escape to userspace,
+which is confusing for users.)
+
+Fixes: fb2fc1720185 ("xfs: support shrinking unused space in the last AG")
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+
+Greg,
+
+This fixes fstests failure in xfs/606.
+
+The upstream fix applies cleanly to 5.15.y and was already backported
+to 6.6.y and 6.1.y by Leah:
+https://lore.kernel.org/linux-xfs/20240501184112.3799035-24-leah.rumancik@gmail.com/
+
+Wasn't sure if you'd prefer to keep Leah's SOB and Darrick's ACK from
+the 6.1.y backport, so did not keep them.
+
+This is tested and running on our production 5.15 kernel for a while.
+
+Thanks,
+Amir.
+
+ fs/xfs/xfs_fsops.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 5b5b68affe66..2d7467be2a48 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -126,6 +126,10 @@ xfs_growfs_data_private(
+ 	if (delta < 0 && nagcount < 2)
+ 		return -EINVAL;
+ 
++	/* No work to do */
++	if (delta == 0)
++		return 0;
++
+ 	oagcount = mp->m_sb.sb_agcount;
+ 
+ 	/* allocate the new per-ag structures */
 -- 
-Mateusz Guzik <mjguzik gmail.com>
+2.47.1
+
