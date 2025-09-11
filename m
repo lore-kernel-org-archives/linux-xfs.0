@@ -1,69 +1,68 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23C152517AC
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Sep 2025 05:54:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF56D25B687
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Sep 2025 06:53:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757570087; cv=none; b=vAH0kU5nzhUjfZFnIH4nsaXR9X6xCXuzPHnn2B+pSO4qvX+jWYr6/RsVqGNgcX0DTJvsMHbPQsuZh6A7tnkoj7hAHO5sDFIKdgcfZOKmpivGV+Pd85hb7SCzeAhskYk4pgfi1ABuXMaByKXSVOT1hYRW+yuFXNmNhV+Qq5H31zU=
+	t=1757573584; cv=none; b=Hx/cWJk4vA6qO6oHlATRLWKhvrPqv3oxERsvbh72H2wuP8S6178/3kQ77rFwQV6HmsXbp4+8DmciU0SHjFYtE45zJrw7BfZWjGwUwd79X4WF4JfQ9mlEbVPMgxf5wRuZPxzdaSueIfi5M6QK5VIsIJoJU3tkoDEYnV9DvYZ24e8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757570087; c=relaxed/simple;
-	bh=JLVGfMwisW3Y4JGot2IV80m6V+FOPM2PsbTbCgXGcNQ=;
+	s=arc-20240116; t=1757573584; c=relaxed/simple;
+	bh=MosfAOPXggOaMXmK1NE1OB2KAznkuBaD9gE8puz8LQo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HJZzSwURgiD6Dqol1uUC61WtJv4bzr03vN4S3hT5aDzhBzT7B1+IEu1dTqqr1S46VAsBe+ALzJdVYfKpklEKBBjcxOgdWM0hRUncju0aZ+/kLy6bXQKxysQM4Yvb2X6uZPmnaCiqwQcMizMMD+I2PfNEaXL+4cMpzQ3GmbXBz8c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=U7lkqRrV; arc=none smtp.client-ip=209.85.214.182
+	 Content-Type:Content-Disposition:In-Reply-To; b=sNjxngR8VLHdgFgGJlvCrxsF84TdyJL0MeUIrSqlk1GwYQ1XycSdMSJvvpLukCEnQwgA3sqU5xFD5vbShwHa+hs7AMEWqliUYT1KWld++k9oQgXJjzGTRiPUzkHt7gk5IsFlKBMRGl4dH5XcpbSeXCKnIxVNoIGXACb4i5c0+VQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=liA0bLaX; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="U7lkqRrV"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-24b13313b1bso2212295ad.2
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Sep 2025 22:54:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="liA0bLaX"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-77460a64848so266690b3a.1
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Sep 2025 23:53:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1757570085; x=1758174885; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1757573581; x=1758178381; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=7U/qSpu3brb3YBeOIJTTylaUCIcvX4SeZCWNyYbixqI=;
-        b=U7lkqRrVbCuJAFHEae+IPf77lWdCcl9IPLjkxHPq1hDp6w/xxREPaRlIYLQqdQqPjf
-         eqmGbQRw/LOz+9HugJNnu9uwdm0d9qdNlAoB/mONG6pFTLG4T6iV+t8YM07yPAKcvDjy
-         kJlLiEAVfTIYJE7Unm+MX8kaEz8b9CHfJwPQsVymf94xxwz/ftSwODDzotlgD7nN+lk5
-         TvRaCZ/7RKt7JLWuQsi9OC+RMhL6mAG0CfbhYlXWTwnOeVJERmAeGLHu8HO10Tv/DTAU
-         ZUrvqrWCDllvAoQY8ZI3TuI7XbsHmZKPTpDuA7OrZqIsGHI6itChFo5s8yeJHYrWqfYt
-         wYwg==
+        bh=GmZdHMjW2ierOJlMW2a8YzsyJfuW1roryoxn9+9Fw3c=;
+        b=liA0bLaX+joYazF+rBZL5B5lAGkvvl6Flwzx7mbFtKhxg4nhURdpf9BXcSj72R2fDH
+         EG7cCWYeuHH7xp2s4XEwqPF+ol+Npt+llfkGNBN2OW6dqMxN2Ei8DbTj+dKJg3pVmo1q
+         SxWOSGK6wgVJhPwjDELYH2WZ9EBV+JO9GUIedMSKs4FmmQx+csm3dB6BcIA3C4ehYiKt
+         ynTmysU3oVBh9ITHWs31RgRocOAn9BdN61hht8XwMMdp7QEArWp8pAq/oHbT50HAIJOQ
+         cILKNzanuM7rMoX6T1VcLOfosUPwjPCsRtlrTb0sylGxi/i26xnomE3tpR85MYmi46Lo
+         /Klw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757570085; x=1758174885;
+        d=1e100.net; s=20230601; t=1757573581; x=1758178381;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=7U/qSpu3brb3YBeOIJTTylaUCIcvX4SeZCWNyYbixqI=;
-        b=pPmr5HR0QcJrkMwkVnqf8M4POQwJwFOMoiE+FZJbnLijyKgPfBOr4o8l6mdQ33hWht
-         L0DHN6R3IwGz0CeK0b4X9dUG/m3oO5t1kHyMMeQ71Bh+JiCpRgH2z59HRD95csPVIbTZ
-         X1HtcTrmERgBs4UpIWBth+AobmO1z/o5TscW+NlVRNq+j5GtS+wdpNVgjH1xvrEcIBae
-         sG1/9AxP4ineMmkhLnowf1hnXeNS/gC5m3N74R6TRrFjM0t2XwEO4run0DX7G/hGYH1X
-         WSjnuJCKDY+lfpDs59f9IgSbMqAvDYdrtonFpXDjmSGrJm53vvM6vfeDtDqSi8gUAxS2
-         WFtw==
-X-Forwarded-Encrypted: i=1; AJvYcCXICNXVYJuQEUQtxv7OFNZ6mPQR+jH7epWaEDmA7hTG5qq20OISVaFfgoUZyLePVnAEc64zcz//2JY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyDcZtadp87+Tk09eCKzNg56pcoFxVlIZ3YR0qqZUCX6moaGD15
-	y30HyBGrXJYCOwiptn/2JyUeQG98b6z99RhmLsjuMKiahotPsw3TRMfByjgIGfdkIaWBgKu2wyb
-	PiLSd
-X-Gm-Gg: ASbGncs1RoD6LosDW8R0+0EWA0q7z9bPl1eTbZ/+0eZTUbYfLcF4Yt+ADRo577nwprp
-	9sKHbXUypPVNukWLq00tFTRIuuNOuJRaHBGI+aAuJ3xEelrRSv5NB0Keh3p7b/JKBIxnBWTAfKM
-	oKaR14kg+ihhENJEsVJxAmgVItOO45/UK6P+cKNu6XCMqD3hsZ0Hc+WOL85YUsRNKleAx3tVf0M
-	gH8k9N0fBPgsrWs3Wb4TftnsvYch57i3qUtoThJ/71sUsg0oWZAVbiJ6b0qiX+I5lYCvDm72DDp
-	cjDcgBsLw+lJHr0pN11s4I8Kp9A4OFYOHJN2npffXZ9muIvA70xEl+ZbaJ1xFg54PMNPQXie+QM
-	vgQEDuj/XZgOQ8ISSuGBmj+EElyAyXfutUbw2Q11jOAu4ynYxQsdrkJhBGVgIpVMU19/GhPy+rF
-	7AnMWlIUpJ
-X-Google-Smtp-Source: AGHT+IEJ8EWH4EX2E0dT8s/g+9UDN2nb1wl7crNvle8QYhSW73RtvbWKXJWPfnOBHU1es1wXSTrLow==
-X-Received: by 2002:a17:902:c946:b0:25c:5a14:5012 with SMTP id d9443c01a7336-25c5a1457bemr5452105ad.1.1757570084813;
-        Wed, 10 Sep 2025 22:54:44 -0700 (PDT)
+        bh=GmZdHMjW2ierOJlMW2a8YzsyJfuW1roryoxn9+9Fw3c=;
+        b=thOD7B0auGIh0HopkunbWwW7XjfmCJ8yrqWu/L4OyPOvH7bXygRyMbBTRR7n10muXU
+         OFT/UPg4d/FST/EHZtLviMywbfuSf16vSQMphCGL1ps+gzpCH/akXHxLHqHND8+AgGUs
+         kyIYTkPN2LYyIib/ViHgTOiBoZohzBHIAAA4Re8gBytb2quZ/2XHoUMl+MDQNQZC3jAi
+         eb2bUIgJKYD9BOwTKeO4xfOlXYsTXD9oHghuo5WvV28+l6yS7AjCvyUekuWm9GG8ozUa
+         T1/NF/2DBXZtKy/wJsslIyxv2CGouC2M+s2CER6HcwHZQnS+2z9o/K9BqX77muNeeGtN
+         tcqw==
+X-Forwarded-Encrypted: i=1; AJvYcCWw686apNrcWTRhLSAg4/YURHMsaDAv/CbJBYn9IZ8vmnPHOpZn6OufjhAUKEhX+6aWp17FYwRNcaA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz0PjYAERawg46e1XZVyrEJUN7JERTg2Cmc5cwaObVyR4pVfD9+
+	Y0xoueNyiK/yPZIHWclgLJzeW662jygm33F+Ew+OMnmBmhQs9KeR/5RWOSQvVoQ8e7Q=
+X-Gm-Gg: ASbGncsff2aOHWg7dOaJxd/9xJz1a0munqFbELBy8WvRLPZnst9jnHVrs60Sk5mTkQ4
+	8lmEiFW67aDcGnX9BrJaz0qYYnsOppXCknNZrqn+d6nKVHcqggUZMa6gv5hWJGzjTElGhmVPaGH
+	jMf54tKZJ/wM/3OonAL/UoIQjfFcCE/2aK6I8PoAt2SmPGROA2AjuyBC6Rrqt5VvsD0L2+ajZw+
+	WHY+n9OIcl0/rM/JNyXgdgfQZQbNKkOIfUHYpxHtTmx3pSKMENt0O8rsuFIJJ+DVZqoPH77stfR
+	l++xGsbcOx08Yajj0xp9+7WzUTslrNIE8Phu8u3MdEOlV6VLT4LJ7wD4ATGkRKnhB/icjnJOL/f
+	8NdZaFhiOyEPatZq1Hh1lZ+3286xmYC9wqX+FVUqAwKUSW1hPb15pU4UAKjOei8K7hdP9yMJVTr
+	3nGmojAVVw
+X-Google-Smtp-Source: AGHT+IGasaLzOYam5A1QsgyXdSjCVIvWR7XOAwof9JLu91tc4jZXAZZcaQdzlfPlVrkI/CXhO/i++w==
+X-Received: by 2002:a05:6a21:6d9f:b0:248:4d59:93dd with SMTP id adf61e73a8af0-2534640cda7mr22645053637.52.1757573581062;
+        Wed, 10 Sep 2025 23:53:01 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-25c36cc6c59sm6905715ad.12.2025.09.10.22.54.43
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b54a387b5c5sm835488a12.34.2025.09.10.23.53.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Sep 2025 22:54:44 -0700 (PDT)
+        Wed, 10 Sep 2025 23:53:00 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.98.2)
 	(envelope-from <david@fromorbit.com>)
-	id 1uwaGX-00000000QEt-1mcY;
-	Thu, 11 Sep 2025 15:54:41 +1000
-Date: Thu, 11 Sep 2025 15:54:41 +1000
+	id 1uwbAv-00000000RJK-3hpp;
+	Thu, 11 Sep 2025 16:52:57 +1000
+Date: Thu, 11 Sep 2025 16:52:57 +1000
 From: Dave Chinner <david@fromorbit.com>
 To: Mateusz Guzik <mjguzik@gmail.com>
 Cc: brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
@@ -71,10 +70,10 @@ Cc: brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
 	josef@toxicpanda.com, kernel-team@fb.com, amir73il@gmail.com,
 	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
 	linux-xfs@vger.kernel.org, ocfs2-devel@lists.linux.dev
-Subject: Re: [PATCH v3 1/4] fs: expand dump_inode()
-Message-ID: <aMJkIbDwuzJkH53b@dread.disaster.area>
+Subject: Re: [PATCH v3 2/4] fs: hide ->i_state handling behind accessors
+Message-ID: <aMJxydmz_azN7Kce@dread.disaster.area>
 References: <20250911045557.1552002-1-mjguzik@gmail.com>
- <20250911045557.1552002-2-mjguzik@gmail.com>
+ <20250911045557.1552002-3-mjguzik@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -83,34 +82,157 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250911045557.1552002-2-mjguzik@gmail.com>
+In-Reply-To: <20250911045557.1552002-3-mjguzik@gmail.com>
 
-On Thu, Sep 11, 2025 at 06:55:54AM +0200, Mateusz Guzik wrote:
-> This adds fs name and few fields from struct inode: i_mode, i_opflags,
-> i_flags and i_state.
+On Thu, Sep 11, 2025 at 06:55:55AM +0200, Mateusz Guzik wrote:
+> Signed-off-by: Mateusz Guzik <mjguzik@gmail.com>
+
+So why did you choose these specific wrapper functions?
+
+Some commentary on why you choose this specific API would be very
+useful here.
+
+> ---
+>  block/bdev.c                     |   4 +-
+>  drivers/dax/super.c              |   2 +-
+>  fs/buffer.c                      |   4 +-
+>  fs/crypto/keyring.c              |   2 +-
+>  fs/crypto/keysetup.c             |   2 +-
+>  fs/dcache.c                      |   8 +-
+>  fs/drop_caches.c                 |   2 +-
+>  fs/fs-writeback.c                | 123 ++++++++++++++++---------------
+>  fs/inode.c                       | 103 +++++++++++++-------------
+>  fs/libfs.c                       |   6 +-
+>  fs/namei.c                       |   8 +-
+>  fs/notify/fsnotify.c             |   2 +-
+>  fs/pipe.c                        |   2 +-
+>  fs/quota/dquot.c                 |   2 +-
+>  fs/sync.c                        |   2 +-
+>  include/linux/backing-dev.h      |   5 +-
+>  include/linux/fs.h               |  55 +++++++++++++-
+>  include/linux/writeback.h        |   4 +-
+>  include/trace/events/writeback.h |   8 +-
+>  mm/backing-dev.c                 |   2 +-
+>  security/landlock/fs.c           |   2 +-
+>  21 files changed, 198 insertions(+), 150 deletions(-)
 > 
-> All values printed raw, no attempt to pretty-print anything.
+> diff --git a/block/bdev.c b/block/bdev.c
+> index b77ddd12dc06..77f04042ac67 100644
+> --- a/block/bdev.c
+> +++ b/block/bdev.c
+> @@ -67,7 +67,7 @@ static void bdev_write_inode(struct block_device *bdev)
+>  	int ret;
+>  
+>  	spin_lock(&inode->i_lock);
+> -	while (inode->i_state & I_DIRTY) {
+> +	while (inode_state_read(inode) & I_DIRTY) {
+>  		spin_unlock(&inode->i_lock);
+>  		ret = write_inode_now(inode, true);
+>  		if (ret)
 
-Please use '0x' prefixes for hexadecimal output.....
+This isn't an improvement.
 
-> 
-> Compile tested on for i386 and runtime tested on amd64.
-> 
-> Sample output:
-> [   31.450263] VFS_WARN_ON_INODE("crap") encountered for inode ffff9b10837a3240
->                fs sockfs mode 140777 opflags c flags 0 state 100
+It makes the code harder to read, and now I have to go look at the
+implementation of a set of helper functions to determine if that's
+the right helper to use for the context the code is operating in.
 
-.... because reading this I have no idea if "state 100" means a
-value of one hundred, 0x100 (i.e. 256 decimal), or something else
-entirely. I have to go look at the code to work it out, then I have
-to remember that every time I look at one of these lines of output.
+What would be an improvement is making all the state flags disappear
+behind the same flag APIs as other high level objects that
+filesystems interface with. e.g. folio flags use
+folio_test.../folio_set.../folio_clear...
 
-When I'm looking through gigabytes of debug output, it's little
-things like this make a big difference to how quickly I can read the
-important information in the output...
+Looking wider, at least XFS, ext4 and btrfs use these same
+set/test/clear flag APIs for feature and mount option flags. XFS
+also uses them for oeprational state in mount, journal and per-ag
+structures, etc. It's a pretty common pattern.
 
-Otherwise it's ok, though I would have added the reference count
-for the inode as well...
+Using it for the inode state flags would lead to code like this:
+
+	spin_lock(&inode->i_lock);
+	while (inode_test_dirty(inode)) {
+	.....
+
+That's far cleaner and easier to understand and use than an API that
+explicitly encodes the locking context of the specific access being
+made in the helper names.
+
+IOWs, the above I_DIRTY flag ends up with a set of wrappers that
+look like:
+
+bool inode_test_dirty_unlocked(struct inode *inode)
+{
+	return inode->i_state & I_DIRTY;
+}
+
+bool inode_test_dirty(struct inode *inode)
+{
+	lockdep_assert_held(&inode->i_lock);
+	return inode_test_dirty_unlocked(inode);
+}
+
+void inode_set_dirty(struct inode *inode)
+{
+	lockdep_assert_held(&inode->i_lock);
+	inode->i_state |= I_DIRTY;
+}
+
+void inode_clear_dirty(struct inode *inode)
+{
+	lockdep_assert_held(&inode->i_lock);
+	inode->i_state &= ~I_DIRTY;
+}
+
+With this, almost no callers need to know about the I_DIRTY flag -
+direct use of it is a red flag and/or an exceptional case.  It's
+self documenting that it is an exceptional case, and it better have
+a comment explaining why it is safe....
+
+This also gives us the necessary lockdep checks to ensure the right
+locks are held when modifications are being made.
+
+And best of all, the wrappers can be generated by macros; they don't
+need to be directly coded and maintained.
+
+Yes, we have compound state checks, but like page-flags.h we can
+manually implement those few special cases such as this one:
+
+> @@ -1265,7 +1265,7 @@ void sync_bdevs(bool wait)
+>  		struct block_device *bdev;
+>  
+>  		spin_lock(&inode->i_lock);
+> -		if (inode->i_state & (I_FREEING|I_WILL_FREE|I_NEW) ||
+> +		if (inode_state_read(inode) & (I_FREEING|I_WILL_FREE|I_NEW) ||
+
+-		if (inode->i_state & (I_FREEING|I_WILL_FREE|I_NEW) ||
++		if (inode_test_new_or_freeing(inode)) ||
+
+bool inode_test_new_or_freeing(struct inode *inode)
+{
+	lockdep_assert_held(&inode->i_lock);
+	return inode->i_state & (I_FREEING | I_WILL_FREE | I_NEW);
+}
+
+Or if we want to avoid directly using flags in these wrappers,
+we write them like this:
+
+bool inode_test_new_or_freeing(struct inode *inode)
+{
+	return inode_test_freeing(inode) ||
+		inode_test_will_free(inode) ||
+		inode_test_new(inode);
+}
+
+Writing the compound wrappers this way then allows future
+improvements such as changing the state flags to atomic bitops so
+we can remove all the dependencies on holding inode->i_lock to
+manipulate state flags safely.
+
+Hence I think moving the state flags behind an API similar to folio
+state flags makes the code easier to read and use correctly, whilst
+also providing the checking that the correct locks are held at the
+correct times. It also makes it  easier to further improve the
+implementation in future because all the users of the API are
+completely isolated from the implmentation....
 
 -Dave.
 -- 
