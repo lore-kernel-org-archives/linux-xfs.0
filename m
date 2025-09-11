@@ -1,46 +1,50 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AB101D5146;
-	Thu, 11 Sep 2025 11:31:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24E55334367;
+	Thu, 11 Sep 2025 11:37:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757590304; cv=none; b=VaUtgBiBTZSDdkXLd3rADyYO2wWfi5MtlDjB3I23YSf96tCU7JDkIjL8d9I4fehfHDxvhcR3sdi43oxvjdEPnRFgeL9ZvAdbk9ErgMvkjoGpuTlQMaIcuI74Jkg9GHKWtS3TRMYMce8bg5OjGejDvdiLevXGoD+OjAzB3CMJ2ZY=
+	t=1757590678; cv=none; b=D/5xZqlhHu2l+byzpcpXjlV4xPoj3GGRnBSZa5T1UNn6JMyjxa83ScqDcg16/qhrJwWvX02CrA3XAYKZCR2EAJ7reQ2w50A7XiklLCYZpToVsCzvUKrTmRb6qNcN9OeZo8rbXghXk5Dcif0w1mAtIk5O69WRT1yrLjy1FOsB7Is=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757590304; c=relaxed/simple;
-	bh=VGY4c47OStnjNxEC2Vtq1r6zfHhoJtjbPl5vb2ePaCA=;
+	s=arc-20240116; t=1757590678; c=relaxed/simple;
+	bh=rnp8EsaMc9fWMrqdqXN4/XgyJX6op1Hcet7eQl/Xfbs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q19sO/wSzuiCUmNUF9ZSgZUkosE3PAeLt+YRnACl3SAoMhzkLFtL4Vj3mIWrLvi/iKCxJQo2oqSsW5CkYFm5w9Gq2uZW8toW/5ogiaQlzZjSjEnamflJ+5QFP11nSQu6ISpr7RP9ObJRs/0PLF+xoVx3AkqODJTzTpc7hGMw8Wc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4FWAQ1k8; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=hjRUK8lLf44wBLok+6CJ4ItQC86vjoCi9kEergdw+TKrrYwc2WyQGyPGRmmEFV4JcJMtPoihKmcvy1mboxl77yLBHUkpUmjwvxLu7BdG7LDJrbPCAA0H9yXwd3t67ovz0M7K0QtZl0Pp5iLFwOqqVm8d2JdYZaNJCZLM8uRgnto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UzOLmEC0; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4FWAQ1k8"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UzOLmEC0"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=kNyYbrIdpRFt22L+V/yJhMpR58AQ5SBq5iv/ar/dp3k=; b=4FWAQ1k8RVPeslnf+JK4mhfuM/
-	TmDrREkCHkY/bOFpEGcoP/idpeXRTojC1/hgJ26vIj9eAt4hB3CAAVU9VAaXn35OdPuxeusk8azsx
-	Tutr7mtpI1RZkCMkzeREHcjHVRfS1cmtUaTZSaWiz6J5mtZnkC7wbEXVLuNS5EXJinllEnwrDdPSW
-	F0k6aSCoew/XbVxaz98YBc6OkI714hiOWXFNNd7q1DfzVq42VjIFxl5CmCOxP6PzsfQkoQ3lOU5kT
-	hz1ufUAyyJ4ab9Th5qdEwnAs6pnLRoy1lkl1tfvoyouUNAJa9/zD14uiR806RAQ1N3rsli7GDyRpz
-	gY9UVu1w==;
+	bh=Y8JcLR6V6lTUkf/L1dN4cS7VInD8rNcP4lWlHUTCHcc=; b=UzOLmEC0OxawPpj5/Q0LlYCNhQ
+	tqfL/EZf3cpCdOcXJO46I+ieEgX3c8LiYPTUpE2YtoK8TJ68jH5mdpySRwCCf6Nt+7ZSTSIEN0BNH
+	n4o6OtSJOFUY74TKbcQJYSUxAnGd34M4N8mqNzEt4ErBo8Mo8fa0fOHJnqHvzc8rqx5F7+Yzhp/Iz
+	Rq8aRWD6MemS4RPDyfnHYPxAuFKQWBz0ZPGiOGOh+hfMBEAgVjPWLivnLvC9V8Fjwhr3a6sLxAtxn
+	U74x4j6KjnwagkqgBbiHdO038Xu5lL7Gj7EBJY+LC6ugoGKCQLtyqWG9V8LgMETZfRZINdNiSVoc5
+	7LkYKxNw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uwfWd-00000002gtU-3Rkn;
-	Thu, 11 Sep 2025 11:31:39 +0000
-Date: Thu, 11 Sep 2025 04:31:39 -0700
+	id 1uwfci-00000002jXy-14Tz;
+	Thu, 11 Sep 2025 11:37:56 +0000
+Date: Thu, 11 Sep 2025 04:37:56 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: brauner@kernel.org, miklos@szeredi.hu, hch@infradead.org,
-	djwong@kernel.org, hsiangkao@linux.alibaba.com,
+To: Gao Xiang <hsiangkao@linux.alibaba.com>
+Cc: Joanne Koong <joannelkoong@gmail.com>, brauner@kernel.org,
+	miklos@szeredi.hu, hch@infradead.org, djwong@kernel.org,
 	linux-block@vger.kernel.org, gfs2@lists.linux.dev,
 	linux-fsdevel@vger.kernel.org, kernel-team@meta.com,
 	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH v2 12/16] iomap: add bias for async read requests
-Message-ID: <aMKzG3NUGsQijvEg@infradead.org>
+Subject: Re: [PATCH v2 13/16] iomap: move read/readahead logic out of
+ CONFIG_BLOCK guard
+Message-ID: <aMK0lC5iwM0GWKHq@infradead.org>
 References: <20250908185122.3199171-1-joannelkoong@gmail.com>
- <20250908185122.3199171-13-joannelkoong@gmail.com>
+ <20250908185122.3199171-14-joannelkoong@gmail.com>
+ <a1529c0f-1f1a-477a-aeeb-a4f108aab26b@linux.alibaba.com>
+ <CAJnrk1aCCqoOAgcPUpr+Z09DhJ5BAYoSho5dveGQKB9zincYSQ@mail.gmail.com>
+ <0b33ab17-2fc0-438f-95aa-56a1d20edb38@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,31 +53,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250908185122.3199171-13-joannelkoong@gmail.com>
+In-Reply-To: <0b33ab17-2fc0-438f-95aa-56a1d20edb38@linux.alibaba.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-> +static void __iomap_finish_folio_read(struct folio *folio, size_t off,
-> +		size_t len, int error, bool update_bitmap)
->  {
->  	struct iomap_folio_state *ifs = folio->private;
->  	bool uptodate = !error;
-> @@ -340,7 +340,7 @@ void iomap_finish_folio_read(struct folio *folio, size_t off, size_t len,
->  		unsigned long flags;
->  
->  		spin_lock_irqsave(&ifs->state_lock, flags);
-> -		if (!error)
-> +		if (!error && update_bitmap)
->  			uptodate = ifs_set_range_uptodate(folio, ifs, off, len);
+On Wed, Sep 10, 2025 at 12:59:41PM +0800, Gao Xiang wrote:
+> At least it sounds better on my side, but anyway it's just
+> my own overall thought.  If other folks have different idea,
+> I don't have strong opinion, I just need something for my own
+> as previous said.
 
-This code sharing keeps confusing me a bit.  I think it's technically
-perfectly fine, but not helpful for readability.  We'd solve that by
-open coding the !update_bitmap case in iomap_read_folio_iter.  Which
-would also allow to use spin_lock_irq instead of spin_lock_irqsave there
-as a nice little micro-optimization.  If we'd then also get rid of the
-error return from ->read_folio_range and always do asynchronous error
-returns it would be even simpler.
-
-Or maybe I just need to live with the magic bitmap update, but the
-fact that "len" sometimes is an actual length, and sometimes just a
-counter for read_bytes_pending keeps confusing me
+I already dropped my two suggestions on the earlier patch.  Not totally
+happy about either my suggestions or data, but in full agreement that
+it should be something else than private.
 
