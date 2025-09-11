@@ -1,226 +1,353 @@
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 063ED2DF3D1;
-	Wed, 10 Sep 2025 21:47:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD6B717D2
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Sep 2025 00:59:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757540879; cv=none; b=n7tQn9g7vsmEaJUWoRPHz0sliMFF4tUgPDRAKcAIM8ALTObnck9IAzh6dzuXdl1rZnVflkfgawOWwkJ0awlEJOLtwZW9+cPm0cdBnQya8Lu/BpVk5KO2qewgzkI8jfb9mWDTYHHAlg6sq7cC0RTLdUx3Ez2hKWd5F06LxpJLCxI=
+	t=1757552362; cv=none; b=qmpHaOGHU1WX1VXLbn9vcAgqZaHyaq2rLRVvsG6E7np4cN0b1bFU0+smspHKaHeFuI+PwoGXT4Zpqm7O1oBgSkbYhtTZgSvH2WeJbac00EMkbqkGybeJuawtW374lTQg9/p829iiKNdl6I3gFRoOf8gEWQkgJhVSf86kt7iJGCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757540879; c=relaxed/simple;
-	bh=HM0ofVrxSHq1Bz92Sj1jWe36kTRP0dpeO4I7Bv4bg30=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TRP8yGscJfQ1/XGI1y+XdXg2JHornWNSM3YXecJbv206eJkoruVNCBxFc1qe5CW7EiV4sjeaRl1NcuOBGzzzRTYGG5ZDs3QyG1dOhu5sZ0NGbKVEa0Ik4I4ovf2MB+ilQqZOHEbC4uaJfnY/bSKZG8xOjkSFel3V5NKzN6lEgCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FLxZmxBw; arc=none smtp.client-ip=209.85.210.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1757552362; c=relaxed/simple;
+	bh=s7V/Ndd9JEkogJhSgXCH5WrXLvnFHmEOetzW1nKSCTs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=taeFePXhS2pp81c2K2klLCeRRd04uVhmdjCP37f4gcgskHEjJp+LDc5vehc7yDrgG3Tpc7RhOS+sx6QeTXHR/HgvB9aBnHXPPJljcuv6bowImX+wYt8je5KQMF7U0RoONUxN/8crVKmVPgcDVsu+v/mUt75Mb9SXlMymkDRd9Gg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=k8KgN/SD; arc=none smtp.client-ip=209.85.210.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FLxZmxBw"
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-7725147ec88so72823b3a.0;
-        Wed, 10 Sep 2025 14:47:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="k8KgN/SD"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-76e6cbb991aso149406b3a.1
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Sep 2025 17:59:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757540877; x=1758145677; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=06oifnEAGFR4Ltgc4TOaz5pGi14RXdWh8ksBdzGLZrI=;
-        b=FLxZmxBwhJy6dITtG68tu089kywD9OZgH3JfB0V7ZWncEcT1NugnepueEfXxWzs3vZ
-         0uFmB4Ye/ZjugQF1q89425wOohnl6tPafTD/5izrsbIvvhglw5b7sAID7QjxuN9ZU3Jr
-         JJNxOdDtBAbyBlSWpngf8qx3VrWvf8597ZsdDFfEiXwmtjbzN4h2aLwkThZJoSdPZn+j
-         cH86qooR75UU00HscOYKD6SNaPfj9BffrJVtW1vr9qDG7dJ2G8hELHTSeEDD8uuwwnsY
-         zSMo3AQnxyVnm8O2jNCss2fY7NGJ3f0dC2wvgn5k3QCp18psBPnON3h8qeVqdZR6KLVg
-         Ey4A==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1757552360; x=1758157160; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=+Li7OVKTPUH5SJ4NHl9m6L7IHLPQ6VED1ieFfNuMvt8=;
+        b=k8KgN/SDbKN1NSK5srRvAgLLz+dKKxqbzMdPkA8DzW3UFNwKnoGLUWGezeeVLh6YP6
+         YtYRJ0cUS0k7BNPQGKqRWL1xko7HPIwo0hPeby/vRIU6biGUoAWn4G+R6veVsZozsBWF
+         D+qGjZNQWkmdL2DOb++XLRN8zFtxHWlVImIuJViY+zvG/87JK6FyNijStbjoOlma/lS6
+         r30Dx30TUYT7ErRvqpNZ5Jv8TUDwlb1wodoIOzA2ZiUSAksx0H5WacgA4ZUu5hv80vMZ
+         OOIR5QAwN7dSn6TwdOhTDm2Su9/5OPgooFjinbO0LI2LWSZl2u4ozSAgPMVr2vtXJOE0
+         U+8g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757540877; x=1758145677;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=06oifnEAGFR4Ltgc4TOaz5pGi14RXdWh8ksBdzGLZrI=;
-        b=Qpl9nTBczse0GwLYKVtL9Qt34xbcQpH1s9F4ug1YNPeldr6OfVIl0XmYx8Yd9L50Gl
-         YlM5sTketSCOSY6ajQY3aC41GRtPGFsLLYGWoA1DGaOXBdFZdWSCNkpIEh7lf9Ad3CuF
-         UnYsWESFr30MNNe6wvwPkpfg1TtGyGMrOr0MzJ/zBdPOcFpb8D+IiCw9vQjS4CgqvOj8
-         HJ7BcFWXHiLHPDDO4x0LFusFnYS4kMcMRqWFUhNqyrn2mDmnrhfqp2QdUS6NxQG/3cfk
-         5iWXquhaDUBi/ThtpK+W2p04Dkhn9N3rgCSz05N60Mk3O/v8TJoRjQuMY7Pr7K2RtRp7
-         e5fw==
-X-Forwarded-Encrypted: i=1; AJvYcCUpTSE89FsEfLoW3L0e8P0hOX8hObZqf0tuEULmf3td2jPuV2VVa74JBgFYzlF0cyTsGjZ3k1rzUpRe@vger.kernel.org, AJvYcCVJUA6bK6alRChfyQcUtq1nGc7wRgtRoH8c69B5EtLT3T6eQ8g4DpdKVerprbkdno3a0p+WU/5UFhVe@vger.kernel.org, AJvYcCWP8hlxeDwYf35+f55ZRFGdRBPHIBkxQY0wMZUC9iNCQxfi8C54mavXAVVaUbdYjUciFYU04TWBbds6q009@vger.kernel.org
-X-Gm-Message-State: AOJu0YzpiuGwJkLSMMmhgNGNfxf9kVDBYKwM57fBXGBmglLPkGVB+bqX
-	hpujIqVkfB7MlDE9Osx507MAnKWX7WWLtii5XEdbSfK1mqYr9T5cIFwn//EdGYM8
-X-Gm-Gg: ASbGncuLlGVE5DZNQ2rA7QSZ2LG58gdxx+x8om3cY5+eKjsxHNCooGVEAgkBgJdkx7u
-	Hpvt05GufLr/W+NMIJ+FngXi2IfO0fA6AiO4mfXYCZ8gZ83SaaXNl8K2ETujAqINJ4Z7aELVPz8
-	7IQqESQ5Syyz+rTEUP4vVngVoEpdRCMlMlNAM4CaXnt9mnBntNwJUycSQcrWwbHTkl+Q4wydLVM
-	wmpgk26fe2bUba1YHeAh06eKALb8pJaqRKllw37CyeDroUyoGFzwhpzNdRjr9rN6Jjmyt0+TKXx
-	LtKtkFjrq8qvl8upZRWiKYdbVxj/T5Ovo0muk8WVewUvgz7sbs+Zu7fRpaHSU3ubcp505TQ5pns
-	4B18Ldi98t23f6h+ZlYa1eHLj/Zypg7nvL3sH
-X-Google-Smtp-Source: AGHT+IGinHS6aq16w9b7HGbBpLflNnAoUm+yBwVktzHXKIvCYcxOtzobQyggEUkzUVtXz8kKC87MiQ==
-X-Received: by 2002:a05:6a00:3e0e:b0:772:7b9b:b1b6 with SMTP id d2e1a72fcca58-77603240aa0mr1106988b3a.9.1757540877117;
-        Wed, 10 Sep 2025 14:47:57 -0700 (PDT)
-Received: from jicarita ([65.144.169.45])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-775fbbc3251sm2422516b3a.103.2025.09.10.14.47.55
+        d=1e100.net; s=20230601; t=1757552360; x=1758157160;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+Li7OVKTPUH5SJ4NHl9m6L7IHLPQ6VED1ieFfNuMvt8=;
+        b=W3rdhZLJBFGX/ZLTIHEkx1Fux5M5CnelGiVDupviUM6FK97DHM9mBy6ue/QiAWTLGk
+         /nvac/yzmsMybPzhoqqFqtKQ/yL+5QzhcntxaNeYiKFjP/nI34xAEsCHoyNLmHNHXZZd
+         Kr5LtVrtMwgWuWrtBuwerR/LZtejMvNGB5EMA6aVrrOg1KYQmtUrfOFezpu2K6MmZBko
+         wib7uvfMqgKoMB2TJO/L7J5VMrsQSvDXXLVNEcKq2afJnPLiBIWZ89yzTzfAxg5jTyUK
+         WviWv+5QkvqhM6xo1sNRKNnkd1VJt3CXZyoyZyLzQyMrGT8ePkQtDfnjrKAviGTDIYeA
+         Ytyw==
+X-Gm-Message-State: AOJu0YxQziQGl1J3MaHzP4s6R19x20nYwQgm9CU46L8ANYx/lnLS4uhn
+	ZKXIo/W2NTW8cxaPsgL6GWgF1DqUq6v+ii+NekuPyQj7KcjN12fyat8uuIjP/VWk28w=
+X-Gm-Gg: ASbGncujhby2WFbU9xqtHInPRhAFCRbkOB9OviYe+5yMmArDx1tOIKHFycZpayJOdP1
+	rXQ5y7PgWpAJZ59ppVr/LeXDElexCl+aeJfER3Oxb7ltYCOh8fhTpPAqwTLWi3/s4poBrGhDX3F
+	UYYWqyZ+unkIMF7yHIAwwM1RDuESllb1AwIr75/04EChc+i7gcqywzCX6cqw4YVmsnbSzmmEdcO
+	wLKrVSmA1ESs61csknj6urlZxF9UHUCBlkajHSko2TJdvy0hZUMJCn9WxVN2f9HEMV4ajSqj8W5
+	+RfXlUyqmibRZdAJW6mo90WnwtsT05xKJmApqxku1HjtrgiPVytHqr7oq7XWFpPdcRPgUn2wY4w
+	TtOy3K96zlxP4uarNEwkMkwF+CshARPdwO4ekmAq82YkUuwac9ppOdkqK8o0kGkzZ72Xm8jv0jn
+	tcqeU4XQNqXt/wDCEOYNA=
+X-Google-Smtp-Source: AGHT+IFkUYiGJQHEujscCIJGdcr5DPCjiBGA4KInQE+eV3zbZzt6fp9WdLt0lMcF1GpDO3C6bvAJYg==
+X-Received: by 2002:a05:6a00:92a7:b0:771:e451:4ee3 with SMTP id d2e1a72fcca58-7742dd543d9mr22919216b3a.12.1757552359958;
+        Wed, 10 Sep 2025 17:59:19 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-77607c471dcsm119667b3a.96.2025.09.10.17.59.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Sep 2025 14:47:56 -0700 (PDT)
-From: Thomas Bertschinger <tahbertschinger@gmail.com>
-To: io-uring@vger.kernel.org,
-	axboe@kernel.dk,
-	linux-fsdevel@vger.kernel.org,
-	viro@zeniv.linux.org.uk,
-	brauner@kernel.org,
-	linux-nfs@vger.kernel.org
-Cc: Thomas Bertschinger <tahbertschinger@gmail.com>,
-	linux-xfs@vger.kernel.org,
-	cem@kernel.org
-Subject: [PATCH 10/10] xfs: add support for non-blocking fh_to_dentry()
-Date: Wed, 10 Sep 2025 15:49:27 -0600
-Message-ID: <20250910214927.480316-11-tahbertschinger@gmail.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20250910214927.480316-1-tahbertschinger@gmail.com>
-References: <20250910214927.480316-1-tahbertschinger@gmail.com>
+        Wed, 10 Sep 2025 17:59:19 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1uwVed-00000000L2i-3Kt7;
+	Thu, 11 Sep 2025 10:59:15 +1000
+Date: Thu, 11 Sep 2025 10:59:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH RFC] xfs: Don't hold XFS_ILOCK_SHARED over log force
+ during fsync
+Message-ID: <aMIe43ZYUtcQ9cZv@dread.disaster.area>
+References: <20250908151248.1290-2-jack@suse.cz>
+ <aL9yc4WJLdqtCFOK@dread.disaster.area>
+ <hzjznua7gqp32yc36b5uef6acy4nssfdy42jtlpaxcdzfi5ddy@kcveowwcwltb>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <hzjznua7gqp32yc36b5uef6acy4nssfdy42jtlpaxcdzfi5ddy@kcveowwcwltb>
 
-This is to support using open_by_handle_at(2) via io_uring. It is useful
-for io_uring to request that opening a file via handle be completed
-using only cached data, or fail with -EAGAIN if that is not possible.
+On Wed, Sep 10, 2025 at 11:05:18AM +0200, Jan Kara wrote:
+> On Tue 09-09-25 10:18:59, Dave Chinner wrote:
+> > On Mon, Sep 08, 2025 at 05:12:49PM +0200, Jan Kara wrote:
+> > > Holding XFS_ILOCK_SHARED over log force in xfs_fsync_flush_log()
+> > > significantly increases contention on ILOCK for O_DSYNC | O_DIRECT
+> > > writes to file preallocated with fallocate (thus DIO happens to
+> > > unwritten extents and we need ILOCK in exclusive mode for timestamp
+> > > modifications and extent conversions). But holding ILOCK over the log
+> > > force doesn't seem strictly necessary for correctness.
+> > 
+> > That was introduced a long while back in 2015 when the
+> > ili_fsync_fields flags were introduced to optimise O_DSYNC to avoid
+> > timestamp updates from causing log forces. That was commit
+> > fc0561cefc04 ("xfs: optimise away log forces on timestamp updates for
+> > fdatasync").
+.....
+> > > +		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> > >  		error = xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC,
+> > >  					  log_flushed);
+> > > -
+> > >  		spin_lock(&ip->i_itemp->ili_lock);
+> > > -		ip->i_itemp->ili_fsync_fields = 0;
+> > > +		ip->i_itemp->ili_fsync_flushing_fields = 0;
+> > >  		spin_unlock(&ip->i_itemp->ili_lock);
+> > > +	} else {
+> > > +		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> > >  	}
+> > > -	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> > >  	return error;
+> > >  }
+> > 
+> > Hence it seems better to reintegrate xfs_fsync_seq() because it
+> > cleans up the locking and logic. I'd also call it
+> > "ili_last_fsync_fields" to match the naming that the inode flushing
+> > code uses (i.e. ili_last_fields):
+> > 
+> > 	struct xfs_inode_log_item *iip = ip->i_itemp;
+> > 	unsigned int		sync_fields;
+> > 	xfs_csn_t		seq = 0;
+> > 
+> > 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+> > 	if (!xfs_ipincount(ip)) {
+> > 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> > 		return 0;
+> > 	}
+> > 
+> > 	spin_lock(&iip->ili_lock);
+> > 	sync_fields = iip->ili_fsync_fields | iip->ili_last_fsync_fields;
+> > 
+> > 	/*
+> > 	 * Don't force the log for O_DSYNC operations on inodes that
+> > 	 * only have dirty timestamps. Timestamps are not necessary
+> > 	 * for data integrity so we can skip them in this case.
+> > 	 */
+> > 	if (!datasync || (sync_fields & ~XFS_ILOG_TIMESTAMP))
+> > 		seq = iip->ili_commit_seq;
+> > 		iip->ili_last_fsync_fields |= iip->ili_fsync_fields;
+> > 		iip->ili_fsync_fields = 0;
+> > 	}
+> > 	spin_unlock(&iip->ili_lock);
+> > 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> > 
+> > 	if (!seq)
+> > 		return 0;
+> > 
+> > 	error = xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC,
+> > 				  log_flushed);
+> > 	spin_lock(&iip->ili_lock);
+> > 	iip->ili_last_fsync_fields = 0;
+> > 	spin_unlock(&iip->ili_lock);
+> > 
+> > 	return error;
+> 
+> After some thinking... But isn't this still racy in a different way? Like:
+> 
+> t0			t1			t2
+> 
+> fsync = ILOG_CORE
+> last_fsync = ILOG_CORE
+> fsync = 0
+> <log force lsn1>
+> 			modifies file - this is now possible because we
+> 			  don't hold ILOCK anymore
+> 			calls fsync
+> 			so:
+> 			fsync = ILOG_CORE
+> 			last_fsync = ILOG_CORE
+> 			fsync = 0
+> 			<log force lsn2>
+> ......
+> <log force lsn1 completes>
+> last_fsync = 0
+> 						fsync
+> 						fsync == 0 && last_fsync == 0 =>
+> 						  <skips fsync>
+> 
+> Hence t2 didn't wait until log force of lsn2 completed which looks like a
+> bug.
 
-The signature of xfs_nfs_get_inode() is extended with a new flags
-argument that allows callers to specify XFS_IGET_INCORE.
+Yes, you are right. I didn't think about that case...
 
-That flag is set when the VFS passes the FILEID_CACHED flag via the
-fileid_type argument.
+> The problem is last_fsync was cleared too early. We'd need to clear it only
+> once the latest log force for the inode has finished (which presumably
+> doable by remembering the latest forced seq in xfs_inode_log_item).
+> 
+> But I'm wondering whether we aren't overcomplicating this. Cannot we just
+> instead of ili_fsync_fields maintain the latest seq when the inode has been
+> modified in a way relevant for fdatasync?
 
-Signed-off-by: Thomas Bertschinger <tahbertschinger@gmail.com>
----
- fs/xfs/xfs_export.c | 32 ++++++++++++++++++++++++++------
- fs/xfs/xfs_export.h |  3 ++-
- fs/xfs/xfs_handle.c |  2 +-
- 3 files changed, 29 insertions(+), 8 deletions(-)
+Trying to work out the implications of not pushing the latest
+sequence when a datasync operation is asked for is making my head
+hurt. I -think- it will work, but....
 
-diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
-index 201489d3de08..ca2a9ed0eb16 100644
---- a/fs/xfs/xfs_export.c
-+++ b/fs/xfs/xfs_export.c
-@@ -106,7 +106,8 @@ struct inode *
- xfs_nfs_get_inode(
- 	struct super_block	*sb,
- 	u64			ino,
--	u32			generation)
-+	u32			generation,
-+	uint			flags)
- {
-  	xfs_mount_t		*mp = XFS_M(sb);
- 	xfs_inode_t		*ip;
-@@ -123,7 +124,9 @@ xfs_nfs_get_inode(
- 	 * fine and not an indication of a corrupted filesystem as clients can
- 	 * send invalid file handles and we have to handle it gracefully..
- 	 */
--	error = xfs_iget(mp, NULL, ino, XFS_IGET_UNTRUSTED, 0, &ip);
-+	flags |= XFS_IGET_UNTRUSTED;
-+
-+	error = xfs_iget(mp, NULL, ino, flags, 0, &ip);
- 	if (error) {
- 
- 		/*
-@@ -140,6 +143,10 @@ xfs_nfs_get_inode(
- 		case -EFSCORRUPTED:
- 			error = -ESTALE;
- 			break;
-+		case -ENODATA:
-+			if (flags & XFS_IGET_INCORE)
-+				error = -EAGAIN;
-+			break;
- 		default:
- 			break;
- 		}
-@@ -174,6 +181,12 @@ xfs_fs_fh_to_dentry(struct super_block *sb, struct fid *fid,
- {
- 	struct xfs_fid64	*fid64 = (struct xfs_fid64 *)fid;
- 	struct inode		*inode = NULL;
-+	uint			flags = 0;
-+
-+	if (fileid_type & FILEID_CACHED)
-+		flags = XFS_IGET_INCORE;
-+
-+	fileid_type = FILEID_TYPE(fileid_type);
- 
- 	if (fh_len < xfs_fileid_length(fileid_type))
- 		return NULL;
-@@ -181,11 +194,11 @@ xfs_fs_fh_to_dentry(struct super_block *sb, struct fid *fid,
- 	switch (fileid_type) {
- 	case FILEID_INO32_GEN_PARENT:
- 	case FILEID_INO32_GEN:
--		inode = xfs_nfs_get_inode(sb, fid->i32.ino, fid->i32.gen);
-+		inode = xfs_nfs_get_inode(sb, fid->i32.ino, fid->i32.gen, flags);
- 		break;
- 	case FILEID_INO32_GEN_PARENT | XFS_FILEID_TYPE_64FLAG:
- 	case FILEID_INO32_GEN | XFS_FILEID_TYPE_64FLAG:
--		inode = xfs_nfs_get_inode(sb, fid64->ino, fid64->gen);
-+		inode = xfs_nfs_get_inode(sb, fid64->ino, fid64->gen, flags);
- 		break;
- 	}
- 
-@@ -198,6 +211,12 @@ xfs_fs_fh_to_parent(struct super_block *sb, struct fid *fid,
- {
- 	struct xfs_fid64	*fid64 = (struct xfs_fid64 *)fid;
- 	struct inode		*inode = NULL;
-+	uint			flags = 0;
-+
-+	if (fileid_type & FILEID_CACHED)
-+		flags = XFS_IGET_INCORE;
-+
-+	fileid_type = FILEID_TYPE(fileid_type);
- 
- 	if (fh_len < xfs_fileid_length(fileid_type))
- 		return NULL;
-@@ -205,11 +224,11 @@ xfs_fs_fh_to_parent(struct super_block *sb, struct fid *fid,
- 	switch (fileid_type) {
- 	case FILEID_INO32_GEN_PARENT:
- 		inode = xfs_nfs_get_inode(sb, fid->i32.parent_ino,
--					      fid->i32.parent_gen);
-+					      fid->i32.parent_gen, flags);
- 		break;
- 	case FILEID_INO32_GEN_PARENT | XFS_FILEID_TYPE_64FLAG:
- 		inode = xfs_nfs_get_inode(sb, fid64->parent_ino,
--					      fid64->parent_gen);
-+					      fid64->parent_gen, flags);
- 		break;
- 	}
- 
-@@ -248,4 +267,5 @@ const struct export_operations xfs_export_operations = {
- 	.map_blocks		= xfs_fs_map_blocks,
- 	.commit_blocks		= xfs_fs_commit_blocks,
- #endif
-+	.flags			= EXPORT_OP_NONBLOCK,
- };
-diff --git a/fs/xfs/xfs_export.h b/fs/xfs/xfs_export.h
-index 3cd85e8901a5..9addfcd5b1e1 100644
---- a/fs/xfs/xfs_export.h
-+++ b/fs/xfs/xfs_export.h
-@@ -57,6 +57,7 @@ struct xfs_fid64 {
- /* This flag goes on the wire.  Don't play with it. */
- #define XFS_FILEID_TYPE_64FLAG	0x80	/* NFS fileid has 64bit inodes */
- 
--struct inode *xfs_nfs_get_inode(struct super_block *sb, u64 ino, u32 gen);
-+struct inode *xfs_nfs_get_inode(struct super_block *sb, u64 ino, u32 gen,
-+				uint flags);
- 
- #endif	/* __XFS_EXPORT_H__ */
-diff --git a/fs/xfs/xfs_handle.c b/fs/xfs/xfs_handle.c
-index f19fce557354..7d877ff504d6 100644
---- a/fs/xfs/xfs_handle.c
-+++ b/fs/xfs/xfs_handle.c
-@@ -193,7 +193,7 @@ xfs_khandle_to_inode(
- 		return ERR_PTR(-EINVAL);
- 
- 	inode = xfs_nfs_get_inode(mp->m_super, handle->ha_fid.fid_ino,
--			handle->ha_fid.fid_gen);
-+			handle->ha_fid.fid_gen, 0);
- 	if (IS_ERR(inode))
- 		return ERR_CAST(inode);
- 
+> Let's call that
+> ili_datasync_commit_seq. Then in case of datasync we'll call
+> xfs_log_force_seq() for ili_datasync_commit_seq and in case of fsync for
+> ili_commit_seq. No need for complex clearing of ili_fsync_fields... The
+> only thing I'm not sure about is how to best handle the ili_fsync_fields
+> check in xfs_bmbt_to_iomap() - I haven't found a function to check whether a
+> particular seq has been already committed or not.
+
+.... this is problematic. It would need to look something like
+xlog_item_in_current_chkpt(). That checks the log item is dirty in
+the current checkpoint, but doesn't check against all the
+checkpoints that are currently in flight.
+
+To do that, we would have to walk the cil->xc_committing list to
+check against all the seqeunce numbers outstanding checkpoints that
+are in flight. However, we -really- don't want to be iterating that
+list on every IO; that would make the cil->xc_push_lock a very hot
+lock. That's going to cause performance regressions, not improve
+things.
+
+Something different needs to be done here...
+
+> Tentative patch attached.
+
+....
+
+>  static  int
+>  xfs_fsync_flush_log(
+> @@ -106,21 +86,25 @@ xfs_fsync_flush_log(
+>  	bool			datasync,
+>  	int			*log_flushed)
+>  {
+> -	int			error = 0;
+> +	struct xfs_inode_log_item *iip = ip->i_itemp;
+>  	xfs_csn_t		seq;
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_SHARED);
+> -	seq = xfs_fsync_seq(ip, datasync);
+> -	if (seq) {
+> -		error = xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC,
+> -					  log_flushed);
+> -
+> -		spin_lock(&ip->i_itemp->ili_lock);
+> -		ip->i_itemp->ili_fsync_fields = 0;
+> -		spin_unlock(&ip->i_itemp->ili_lock);
+> +	if (!xfs_ipincount(ip)) {
+> +		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> +		return 0;
+>  	}
+> +
+> +	if (datasync)
+> +		seq = iip->ili_datasync_commit_seq;
+> +	else
+> +		seq = iip->ili_commit_seq;
+>  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+
+> -	return error;
+> +
+> +	if (!seq)
+> +		return 0;
+> +
+> +	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC, log_flushed);
+
+OK, so why do we still need the ILOCK and pin count check here?
+If we don't check xfs_ipincount() and simply pass the relevant
+sequence number to xfs_log_force_seq(), then it will check if the
+sequence has already been committed and skip it if it has already
+been done.
+
+Yes, this has the same cil->xc_push_lock contention issue as
+xfs_bmbt_to_iomap() would have, but we can mostly avoid this with a
+further modification to the sequence number behaviour.
+
+i.e. if we clear the commit sequences on last unpin (i.e. in
+xfs_inode_item_unpin) then an item that is not in the CIL (and so
+doesn't have dirty metadata) will have no associated commit
+sequence number set.
+
+Hence if ili_datasync_commit_seq is non-zero, then by definition the
+inode must be pinned and has been dirtied for datasync purposes.
+That means we can simply query ili_datasync_commit_seq in
+xfs_bmbt_to_iomap() to set IOMAP_F_DIRTY.
+
+I suspect that the above fsync code can then become:
+
+	spin_lock(&iip->ili_lock);
+	if (datasync)
+		seq = iip->ili_datasync_commit_seq;
+	else
+		seq = iip->ili_commit_seq;
+	spin_unlock(&iip->ili_lock);
+
+	if (!seq)
+		return 0;
+	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC, log_flushed);
+
+For the same reason. i.e. a non-zero sequence number implies the
+inode log item is dirty in the CIL and pinned.
+
+At this point, we really don't care about races with transaction
+commits. f(data)sync should only wait for modifications that have
+been fully completed. If they haven't set the commit sequence in the
+log item, they haven't fully completed. If the commit sequence is
+already set, the the CIL push will co-ordinate appropriately with
+commits to ensure correct data integrity behaviour occurs.
+
+Hence I think that if we tie the sequence number clearing to the
+inode being removed from the CIL (i.e. last unpin) we can drop all
+the pin checks and use the commit sequence numbers directly to
+determine what the correct behaviour should be...
+
+
+> @@ -863,7 +866,11 @@ xfs_inode_item_committing(
+>  	struct xfs_log_item	*lip,
+>  	xfs_csn_t		seq)
+>  {
+> -	INODE_ITEM(lip)->ili_commit_seq = seq;
+> +	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+> +
+> +	iip->ili_commit_seq = seq;
+> +	if (iip->ili_datasync_tx)
+> +		iip->ili_datasync_commit_seq = seq;
+>  	return xfs_inode_item_release(lip);
+
+I think I'd prefer that this be based on iip->ili_dirty_flags.
+
+i.e. we currently clear that field at the end of
+inode_item_precommit, but if we leave it intact until the committing
+callback we can look directly at those flags and then zero them
+unconditionally.
+
+i.e.
+
+	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+
+	spin_lock(&iip->ili_lock);
+	iip->ili_commit_seq = seq;
+	if (iip->ili_dirty_flags & ~(XFS_ILOG_IVERSION|XFS_ILOG_TIMESTAMP))
+		iip->ili_datasync_commit_seq = seq;
+	spin_unlock(&iip->ili_lock);
+
+	/*
+	 * Clear all the transaction specific dirty state and
+	 * release the log item reference now we are done commiting
+	 * the transaction.
+	 */
+	iip->ili_dirty_flags = 0;
+	return xfs_inode_item_release(lip);
+
+This way we don't need an extra field in the inode log item just to
+hold a temporary state between ->precommit and ->committing
+callbacks.
+
+-Dave.
 -- 
-2.51.0
-
+Dave Chinner
+david@fromorbit.com
