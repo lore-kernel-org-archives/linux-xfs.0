@@ -1,264 +1,210 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f172.google.com (mail-qk1-f172.google.com [209.85.222.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96F4A362069;
-	Thu, 11 Sep 2025 17:14:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2CBF242927
+	for <linux-xfs@vger.kernel.org>; Thu, 11 Sep 2025 19:45:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757610892; cv=none; b=h66XKA9AK5SnuN6fzrv1w6nos+09y/+ZLYAJUdMxs6boFUYjhNSiOLO7gjWtsNjyDH45+RqGr1RP+VEbaTFZferzfn3jDib/YzYT/zMABgDbTTDcrGNt8B40nzl04qEejZ3t/j1jIhX5nbibU2SiVvPn+56mVA6KNNaenaqWqJE=
+	t=1757619944; cv=none; b=hmd0e3zV/R6jmR/Or2PWY/skuszh/UwlocnTHez1231kdGRddLd9PiGq+X2t1X5AxkuQJAhHcgDnhRks3+kW2QMSnRD65DrER7VtL1PcVwNJhpBiQaASSek1h8a+LoVP86k45yGNtzi5pYhBJtnQaWgldEJiv0xJ3i6ubXovkiI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757610892; c=relaxed/simple;
-	bh=/23TnMcmUpdflLUBR/TKi4uqya8y8NfSo8bYiPAZYPk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kZyRMZ7+Ug7tSqLClvwxtPnKgQ5oaeq9+ebEyKtVNE7W0QpAfqpMliMIYR1jW76cRRWAMeWzO95pC2xKkhaj5PIMJup7+PFtBksgLVkFPmqbmXYj4zGXyiM2wXkJD+xXxr4D+t9N0dzwMkXmuWtCHx7WEQgrLwP5v2Ut+Uo0E9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=g7oFKh65; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1757619944; c=relaxed/simple;
+	bh=UQ+azyfBJLEVgkFhkxQAX5mILv2bK5F4BrYoZ1qtVXw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=g5LT2Q5e2x/OQ+B9dqmv5XK1jfUUEhud6VIzPQjq54NjVx4X/RCvNrGBL4bAnxh6MksIO0kwZ75oFzxoHv9qrcar+5KM5zsumuXB4aL4OYKOUt7jXujWYeBqJqD+kpAomaE+hhTpaR9c1taz97L9oVr7XksWrPm7iwgN7Tusv6c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YLBcoqgU; arc=none smtp.client-ip=209.85.222.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="g7oFKh65"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58B9GCIN001309;
-	Thu, 11 Sep 2025 17:14:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=pp1; bh=vRTNUGKdoq8A+YlHn
-	I5gzyY7Rjkkw4gAzlowW/XKnQg=; b=g7oFKh65f706tQETRS7T4gleRsUAX2pNz
-	3OFuS66GSxg0hXXYohBQE57Zemucju8UwN7S35d+1NYkVEyc0Mkyv80PCy5yoVQa
-	U/eUBbjJS3b3NMV51C72uD4VRZZ2pieiq8rofJNquE/t3gbA5vCifPryZLR/xjuR
-	LQzChNtnR+xrrV5GoL6OyElEsCNBKVVUwwuDZJxqrCH6FUe0ziBU9L2lfYRMKllD
-	Y7PA1TkG3s7RL/RmrdMOfsFnRQbz30CI47wUYPeiLI4cHD6hnSph+mFhareNdoeX
-	//TQG7OariD2tih8rdiL/xupvZqPgbo/hjnxUYxuDmDqcgfBp8o1g==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 490acrdgj6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 11 Sep 2025 17:14:39 +0000 (GMT)
-Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 58BH5MaS018264;
-	Thu, 11 Sep 2025 17:14:38 GMT
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 490acrdgj4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 11 Sep 2025 17:14:38 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 58BFsZWT011447;
-	Thu, 11 Sep 2025 17:14:37 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 490y9uq553-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 11 Sep 2025 17:14:37 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 58BHEajE32113302
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 11 Sep 2025 17:14:36 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 3706C2004B;
-	Thu, 11 Sep 2025 17:14:36 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id D329520043;
-	Thu, 11 Sep 2025 17:14:32 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.17.37])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 11 Sep 2025 17:14:32 +0000 (GMT)
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org
-Cc: Ritesh Harjani <ritesh.list@gmail.com>, djwong@kernel.org,
-        john.g.garry@oracle.com, tytso@mit.edu, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
-Subject: [PATCH v6 12/12] ext4: Atomic write test for extent split across leaf nodes
-Date: Thu, 11 Sep 2025 22:43:43 +0530
-Message-ID: <4ac353bfdf94c896345fdd308467a9666cb3d6f3.1757610403.git.ojaswin@linux.ibm.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <cover.1757610403.git.ojaswin@linux.ibm.com>
-References: <cover.1757610403.git.ojaswin@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YLBcoqgU"
+Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-7f04816589bso108593885a.3
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Sep 2025 12:45:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1757619942; x=1758224742; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9P8qpgTT4CD1z1EW5R7hzuqr8lbCC0uLuzD1yVLy364=;
+        b=YLBcoqgU97MjY4GRNc4p/EuGAC+N80AaYgJr+GJfZLPc509VrC1VeR8HsvfR35k/cz
+         qutlvx+nqrTq52jml39wKxv/4H/RUi1rxsDFpt3F6ylRJzMNuqRn48mCjui6gcUkgyhR
+         RCNOmF0pICwgFXQf6LZiAv890abcvcWFts0ttbuEa1iPw/6nAFmzSrf9nUXk1MRxjLxv
+         1OOoWdXOncvmYRWUBIEWxhy9wx2BzYwjJ5i44HV/A6Xi3N4/bX+STLHybAc6q+RJHjWD
+         N1CCWApIhgeGyBVezzrrOyBCE/DnR5IJ0pAN/bgxkcVv8a98e65s35+U8t3eTYYts5XX
+         afXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757619942; x=1758224742;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=9P8qpgTT4CD1z1EW5R7hzuqr8lbCC0uLuzD1yVLy364=;
+        b=YEOKq5F3YM8NZzPcBjPbhwWyWXur7JjI9+T5/5UKm91VpA5Kz7Uk//sFtNZtO8iHKy
+         CtzLEsgQ5D84kFj3y7iUg7j0FQUFlueDswoADM92+0XqZn4sWqkuBlFcuLQjBqcFm3oh
+         E4VYLeA17UkysykXInX8cKMk3zlc0ozqFCpkS+r7sl1DIZ5Oqod8BfVo5vWrf2x76D5d
+         DErjTIKHFdfRqqEFK1/LkfArwiNCDRUkr8T4GYdJjmEytUn3Tm6tOQVyLutEKMcuFm7S
+         f2XkUzzOndZLWU65vFIG8d4meVtCsReSEM5rYfsbQhMi2OOv5mk4Ci/4BuQho+h3FYBM
+         AwDg==
+X-Forwarded-Encrypted: i=1; AJvYcCWuQE26o54Cgv4CAo+MCZCaO0J9PYrKRIt/J1dXsGOJT5/zIYDqeLuAOi4XYMuK5ebPgu5wIiGjwGQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz+5TKSYoGaQFOj1jzoiC0sRNqVlLF7NCI3hjni3rBsMPp4kuV1
+	+i7ZokYkLkpemes1UKNdqDKohxDsxULjYI8L5yyqluCpyH5iA4j1BF7nn+xdziNG4r7ygbUMRF9
+	SiW01a5tvnFu31pmqNEsH1qyMrNU55OA=
+X-Gm-Gg: ASbGncvGYe04ApggP/yfQidIzDOKUmIuGgz2vIZtXhXs0+6sdDGVHiXqdDUfhU/Y6dX
+	5fdTfLoWGF2GgtQ/ByGwqNHPPEJBVBrylgQS3GPLpoPbfphx40EwY9gYpoLeoIit/Z3bzyGLeJA
+	8puoniYpN3z9qK9PdYhIvNQK0DT3j8ew6RW2vx5MkS20LgksxX70JF+u49m6SFpF8EOBwJVrDcH
+	Ro7MGtekk+5uO9gracGz74hb7VsrkqJZbqxJ+nO+s3R
+X-Google-Smtp-Source: AGHT+IHtAw0lVlpGGJ06gAtOTDihqoXPOrWbMz80FfAkP5uWz95A2L7X1pd/xRQ1MQFSLXu83sUO6jrrXMjhd4e0uMw=
+X-Received: by 2002:a05:620a:d88:b0:807:87a9:89a1 with SMTP id
+ af79cd13be357-823fd41926bmr100960385a.37.1757619941606; Thu, 11 Sep 2025
+ 12:45:41 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: A2SUQ2zU8gdMPIWg3z9EEzhwjt9p9N6w
-X-Authority-Analysis: v=2.4 cv=Mp1S63ae c=1 sm=1 tr=0 ts=68c3037f cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8 a=BtNrGSYHu5IGmLxdGZgA:9
-X-Proofpoint-ORIG-GUID: B9xwJd3nktRtiesckJVwiPCfb9yu33wk
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA2MDAwMCBTYWx0ZWRfXxz0Gk4ElXfeB
- WNK84P68+k0tITlGE2QA+SSEvLGCnIhjFyrBVU/+GhkH214lPjhxZUCLrd2EDs0HxEMRTdm7Xx4
- sAbFl5JyWshz1Kf1ivPuRYjrg7VVaniHS9041ciTJsjzAZdU8frFKFUFMmfpdlo44DvnO6hRFyR
- 47mxaoapJEYO1goT6ksIrSboNJVIF0ttNh0OiuLG7+JAFAusDLxwd+5n84WBbcb6iesGiPdu4hb
- NoerEo15LcWXvBD1hJTI2wE2JPgnJjNYYA59yIb4YenSrlXCzAw7kKhLXaI0j19mIEXFsU0q5ZF
- 6zbGtI4GeI0eP5fJQ3SBhwHhkb1hKZaTg9N9GbdXrd/F8ivFsV4GmeRWzWppNoJUZg/loE0YGdA
- 7pLENdrE
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-11_02,2025-09-11_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 malwarescore=0 clxscore=1015 phishscore=0 spamscore=0
- adultscore=0 priorityscore=1501 bulkscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509060000
+References: <20250908185122.3199171-1-joannelkoong@gmail.com>
+ <20250908185122.3199171-14-joannelkoong@gmail.com> <a1529c0f-1f1a-477a-aeeb-a4f108aab26b@linux.alibaba.com>
+ <CAJnrk1aCCqoOAgcPUpr+Z09DhJ5BAYoSho5dveGQKB9zincYSQ@mail.gmail.com>
+ <0b33ab17-2fc0-438f-95aa-56a1d20edb38@linux.alibaba.com> <aMK0lC5iwM0GWKHq@infradead.org>
+ <9c104881-f09e-4594-9e41-0b6f75a5308c@linux.alibaba.com>
+In-Reply-To: <9c104881-f09e-4594-9e41-0b6f75a5308c@linux.alibaba.com>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Thu, 11 Sep 2025 15:45:28 -0400
+X-Gm-Features: Ac12FXwgTb8F5lYaNAIGfAVGCddROzFscVCRkbUHIIucMvNsiS1K_faJqDoLwX4
+Message-ID: <CAJnrk1b2_XGfMuK-UAej31TtCAAg5Aq8PFS_36yyGg8NerA97g@mail.gmail.com>
+Subject: Re: [PATCH v2 13/16] iomap: move read/readahead logic out of
+ CONFIG_BLOCK guard
+To: Gao Xiang <hsiangkao@linux.alibaba.com>
+Cc: Christoph Hellwig <hch@infradead.org>, brauner@kernel.org, miklos@szeredi.hu, 
+	djwong@kernel.org, linux-block@vger.kernel.org, gfs2@lists.linux.dev, 
+	linux-fsdevel@vger.kernel.org, kernel-team@meta.com, 
+	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-In ext4, even if an allocated range is physically and logically
-contiguous, it can still be split into 2 extents. This is because ext4
-does not merge extents across leaf nodes. This is an issue for atomic
-writes since even for a continuous extent the map block could (in rare
-cases) return a shorter map, hence tearning the write. This test creates
-such a file and ensures that the atomic write handles this case
-correctly
+On Thu, Sep 11, 2025 at 8:29=E2=80=AFAM Gao Xiang <hsiangkao@linux.alibaba.=
+com> wrote:
+>
+> Hi Christoph,
+>
+> On 2025/9/11 19:37, Christoph Hellwig wrote:
+> > On Wed, Sep 10, 2025 at 12:59:41PM +0800, Gao Xiang wrote:
+> >> At least it sounds better on my side, but anyway it's just
+> >> my own overall thought.  If other folks have different idea,
+> >> I don't have strong opinion, I just need something for my own
+> >> as previous said.
+> >
+> > I already dropped my two suggestions on the earlier patch.  Not totally
+> > happy about either my suggestions or data, but in full agreement that
+> > it should be something else than private.
+>
+> To just quote your previous comment and try to discuss here:
+>
+> ```
+> On Wed, Sep 10, 2025 at 01:41:25PM -0400, Joanne Koong wrote:
+> > In my mind, the big question is whether or not the data the
+> > filesystems pass in is logically shared by both iomap_begin/end and
+> > buffered reads/writes/dio callbacks, or whether the data needed by
+> > both are basically separate entities
+>
+> They are separate entities.
+> ```
+>
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
----
- tests/ext4/063     | 129 +++++++++++++++++++++++++++++++++++++++++++++
- tests/ext4/063.out |   2 +
- 2 files changed, 131 insertions(+)
- create mode 100755 tests/ext4/063
- create mode 100644 tests/ext4/063.out
+Hi Gao,
 
-diff --git a/tests/ext4/063 b/tests/ext4/063
-new file mode 100755
-index 00000000..9d6265a8
---- /dev/null
-+++ b/tests/ext4/063
-@@ -0,0 +1,129 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2025 IBM Corporation. All Rights Reserved.
-+#
-+# In ext4, even if an allocated range is physically and logically contiguous,
-+# it can still be split into 2 or more extents. This is because ext4 does not
-+# merge extents across leaf nodes. This is an issue for atomic writes since
-+# even for a continuous extent the map block could (in rare cases) return a
-+# shorter map, hence tearing the write. This test creates such a file and
-+# ensures that the atomic write handles this case correctly
-+#
-+. ./common/preamble
-+. ./common/atomicwrites
-+_begin_fstest auto atomicwrites
-+
-+_require_scratch_write_atomic_multi_fsblock
-+_require_atomic_write_test_commands
-+_require_command "$DEBUGFS_PROG" debugfs
-+
-+prep() {
-+	local bs=`_get_block_size $SCRATCH_MNT`
-+	local ex_hdr_bytes=12
-+	local ex_entry_bytes=12
-+	local entries_per_blk=$(( (bs - ex_hdr_bytes) / ex_entry_bytes ))
-+
-+	# fill the extent tree leaf with bs len extents at alternate offsets.
-+	# The tree should look as follows
-+	#
-+	#                    +---------+---------+
-+	#                    | index 1 | index 2 |
-+	#                    +-----+---+-----+---+
-+	#                   +------+         +-----------+
-+	#                   |                            |
-+	#      +-------+-------+---+---------+     +-----+----+
-+	#      | ex 1  | ex 2  |   |  ex n   |     |  ex n+1  |
-+	#      | off:0 | off:2 |...| off:678 |     |  off:680 |
-+	#      | len:1 | len:1 |   |  len:1  |     |   len:1  |
-+	#      +-------+-------+---+---------+     +----------+
-+	#
-+	for i in $(seq 0 $entries_per_blk)
-+	do
-+		$XFS_IO_PROG -fc "pwrite -b $bs $((i * 2 * bs)) $bs" $testfile > /dev/null
-+	done
-+	sync $testfile
-+
-+	echo >> $seqres.full
-+	echo "Create file with extents spanning 2 leaves. Extents:">> $seqres.full
-+	echo "...">> $seqres.full
-+	$DEBUGFS_PROG -R "ex `basename $testfile`" $SCRATCH_DEV |& tail >> $seqres.full
-+
-+	# Now try to insert a new extent ex(new) between ex(n) and ex(n+1).
-+	# Since this is a new FS the allocator would find continuous blocks
-+	# such that ex(n) ex(new) ex(n+1) are physically(and logically)
-+	# contiguous. However, since we don't merge extents across leaf we will
-+	# end up with a tree as:
-+	#
-+	#                    +---------+---------+
-+	#                    | index 1 | index 2 |
-+	#                    +-----+---+-----+---+
-+	#                   +------+         +------------+
-+	#                   |                             |
-+	#      +-------+-------+---+---------+     +------+-----------+
-+	#      | ex 1  | ex 2  |   |  ex n   |     |  ex n+1 (merged) |
-+	#      | off:0 | off:2 |...| off:678 |     |      off:679     |
-+	#      | len:1 | len:1 |   |  len:1  |     |      len:2       |
-+	#      +-------+-------+---+---------+     +------------------+
-+	#
-+	echo >> $seqres.full
-+	torn_ex_offset=$((((entries_per_blk * 2) - 1) * bs))
-+	$XFS_IO_PROG -c "pwrite $torn_ex_offset $bs" $testfile >> /dev/null
-+	sync $testfile
-+
-+	echo >> $seqres.full
-+	echo "Perform 1 block write at $torn_ex_offset to create torn extent. Extents:">> $seqres.full
-+	echo "...">> $seqres.full
-+	$DEBUGFS_PROG -R "ex `basename $testfile`" $SCRATCH_DEV |& tail >> $seqres.full
-+
-+	_scratch_cycle_mount
-+}
-+
-+_scratch_mkfs >> $seqres.full
-+_scratch_mount >> $seqres.full
-+
-+testfile=$SCRATCH_MNT/testfile
-+touch $testfile
-+awu_max=$(_get_atomic_write_unit_max $testfile)
-+
-+echo >> $seqres.full
-+echo "# Prepping the file" >> $seqres.full
-+prep
-+
-+torn_aw_offset=$((torn_ex_offset - (torn_ex_offset % awu_max)))
-+
-+echo >> $seqres.full
-+echo "# Performing atomic IO on the torn extent range. Command: " >> $seqres.full
-+echo $XFS_IO_PROG -c "open -fsd $testfile" -c "pwrite -S 0x61 -DA -V1 -b $awu_max $torn_aw_offset $awu_max" >> $seqres.full
-+$XFS_IO_PROG -c "open -fsd $testfile" -c "pwrite -S 0x61 -DA -V1 -b $awu_max $torn_aw_offset $awu_max" >> $seqres.full
-+
-+echo >> $seqres.full
-+echo "Extent state after atomic write:">> $seqres.full
-+echo "...">> $seqres.full
-+$DEBUGFS_PROG -R "ex `basename $testfile`" $SCRATCH_DEV |& tail >> $seqres.full
-+
-+echo >> $seqres.full
-+echo "# Checking data integrity" >> $seqres.full
-+
-+# create a dummy file with expected data
-+$XFS_IO_PROG -fc "pwrite -S 0x61 -b $awu_max 0 $awu_max" $testfile.exp >> /dev/null
-+expected_data=$(od -An -t x1 -j 0 -N $awu_max $testfile.exp)
-+
-+# We ensure that the data after atomic writes should match the expected data
-+actual_data=$(od -An -t x1 -j $torn_aw_offset -N $awu_max $testfile)
-+if [[ "$actual_data" != "$expected_data" ]]
-+then
-+	echo "Checksum match failed at off: $torn_aw_offset size: $awu_max"
-+	echo
-+	echo "Expected: "
-+	echo "$expected_data"
-+	echo
-+	echo "Actual contents: "
-+	echo "$actual_data"
-+
-+	_fail
-+fi
-+
-+echo -n "Data verification at offset $torn_aw_offset succeeded!" >> $seqres.full
-+echo "Silence is golden"
-+status=0
-+exit
-diff --git a/tests/ext4/063.out b/tests/ext4/063.out
-new file mode 100644
-index 00000000..de35fc52
---- /dev/null
-+++ b/tests/ext4/063.out
-@@ -0,0 +1,2 @@
-+QA output created by 063
-+Silence is golden
--- 
-2.49.0
+> I try to push this again because I'm still not quite sure it's
+> a good idea, let's take this FUSE iomap-read proposal (but sorry
+> honestly I not fully look into the whole series.)
+>
+> ```
+>   struct fuse_fill_read_data {
+>         struct file *file;
+> +
+> +       /*
+> +        * Fields below are used if sending the read request
+> +        * asynchronously.
+> +        */
+> +       struct fuse_conn *fc;
+> +       struct fuse_io_args *ia;
+> +       unsigned int nr_bytes;
+>   };
+> ```
+>
+> which is just a new FUSE-only-specific context for
+> `struct iomap_read_folio_ctx`, it's not used by .iomap_{begin,end}
+> is that basically FUSE _currently_ doesn't have logical-to-physical
+> mapping requirement (except for another fuse_iomap_begin in dax.c):
 
+I don't think this is true. The other filesystems in the kernel using
+iomap that do need logical to physical mappings also do not have their
+context for `struct iomap_read_folio_ctx` (the struct bio) used by
+.iomap_{begin, end} either. As I see it, the purpose of the `struct
+iomap_read_folio_ctx` context is for processing/issuing the reads and
+the context for .iomap_{begin,end} is for doing all the mapping /
+general metadata tracking stuff - even for the filesystems that have
+the logical to physical mapping requirements, their usage of the
+context is for processing/submitting the bio read requests, which imo
+the more high-level iomap_{begin,end} is a layer above.
+
+> ```
+> static int fuse_iomap_begin(struct inode *inode, loff_t offset, loff_t le=
+ngth,
+>                              unsigned int flags, struct iomap *iomap,
+>                              struct iomap *srcmap)
+> {
+>          iomap->type =3D IOMAP_MAPPED;
+>          iomap->length =3D length;
+>          iomap->offset =3D offset;
+>          return 0;
+> }
+> ```
+>
+> But if FUSE or some other fs later needs to request L2P information
+> in their .iomap_begin() and need to send L2P requests to userspace
+> daemon to confirm where to get the physical data (maybe somewhat
+> like Darrick's work but I don't have extra time to dig into that
+> either) rather than just something totally bypass iomap-L2P logic
+> as above, then I'm not sure the current `iomap_iter->private` is
+> quite seperate to `struct iomap_read_folio_ctx->private`, it seems
+
+If in the future this case arises, the L2P mapping info is accessible
+by the read callback in the current design. `.read_folio_range()`
+passes the iomap iter to the filesystem and they can access
+iter->private to get the L2P mapping data they need.
+
+> both needs fs-specific extra contexts for the same I/O flow.
+>
+> I think the reason why `struct iomap_read_folio_ctx->private` is
+> introduced is basically previous iomap filesystems are all
+> bio-based, and they shares `bio` concept in common but
+> `iter->private` was not designed for this usage.
+>
+> But fuse `struct iomap_read_folio_ctx` and
+> `struct fuse_fill_read_data` are too FUSE-specific, I cannot
+> see it could be shared by other filesystems in the near future,
+> which is much like a single-filesystem specific concept, and
+> unlike to `bio` at all.
+
+Currently fuse is the only non-block-based filesystem using iomap but
+I don't see why there wouldn't be more in the future. For example,
+while looking at some of the netfs code, a lot of the core
+functionality looks the same between that and iomap and I think it
+might be a good idea to have netfs in the future use iomap's interface
+so that it can get the large folio dirty/uptodate tracking stuff and
+any other large folio stuff like more granular writeback stats
+accounting for free.
+
+
+Thanks,
+Joanne
+
+>
+> I've already racked my brains on this but I have no better
+> idea on the current callback-hook model (so I don't want to argue
+> more). Anyway, I really think it should be carefully designed
+> (because the current FUSE .iomap_{begin,end} are just like no-op
+> but that is just fuse-specific).  If folks really think Joanne's
+> work is already best or we can live with that, I'm totally fine.
+>
+> Thanks,
+> Gao Xiang
+>
