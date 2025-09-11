@@ -1,51 +1,47 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C03D3126B2;
-	Thu, 11 Sep 2025 11:19:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F34FC3126D8;
+	Thu, 11 Sep 2025 11:26:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757589597; cv=none; b=ftW/DLPlNuNikfHNVj5ljmuTLRUhQRclHXrqCfek0Ib1szuKwN/c3aorjegwnIe4uuib+RxpUCW9PHSS5D7Lpt9/GpMvWSX/pQp19V/KMNL9l1YY1Yzmd4VVLVVQtHQQcueTE7goYsN2uF+s47gdx8aekHi4qPQi6j5pweSkxFQ=
+	t=1757589985; cv=none; b=i288IZ8MSnv5+f9pz8MzavnxPj6CkCLVIpjLuEM9eiUY8H9TOnWBd/niF7Qx2VMCJmXPa2VXTJFvacKu0yPv/sRLN/Y2LmXbDOclFqBg/fpHy7PhodIlcAmxg7cgC922nj5iKxmYPV1RZkrHUWcNR0EUankMKVQwgjK+xDiJ+aw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757589597; c=relaxed/simple;
-	bh=fFjzlO2qMeCZOSWPie7y08l7b+6z2Y+5h60TkzVzcdk=;
+	s=arc-20240116; t=1757589985; c=relaxed/simple;
+	bh=kyoHfJv60MgSqNk04GS7WfHja/+6HA97+PJVBuaOH2A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WFoNbfg0kaUR7BQ59KTiwoho2hNaFX2o44P477i8SUTifRqznQJJRnEoyZmCPmV9fw4rK6wpgelgIjd8WC53WbdTRNjNZ6xp+ppjwmzN5C2MeeBXWUPo/0/6gL3G+UUMjLiVpr9zbfmJWTzw0BBS9aEcJCW/PkxZr0CtOHlrTjY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jEEZLS33; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=fnplrY6bWnxPtkFwn9ZGhu4QYSMztUrst0CenEDTOCFv5Y2d/1apjkKEH2RIXN1Pl1ORMIeOyFSiwno5zMcNFdfOHVQtW50uQyVYvpn2wNedRPN9QCbfly4W1wl8leQSk++lXDzQGlv5QWpOmQ+w2CpXnoQZhNfPRDG8Lkzwlqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=03hldyOf; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jEEZLS33"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="03hldyOf"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=fFjzlO2qMeCZOSWPie7y08l7b+6z2Y+5h60TkzVzcdk=; b=jEEZLS33l4YnaKIiqnVSWD4/0o
-	pzZEG+4cfuyf664Ky3AI5z7HXuyOGUisAuU6+ylSOqtMj9npT9oFGpM2jM4iL5Thzgay+A0F/6qvp
-	zpIV2qOuWF4YxZazzfgbFZRtP+qq6vtvYom6Ai9K3Yz9vx5WTtq8+6t3nID4DbzXFOU3blBPA/L2z
-	ULEnkV8hvp+lehJex9TI5oUVDzE2LbI2LhsL8moODFbisQeG3C5m9RsVinLSlT8n95ghjevH73KZK
-	2mhnM6KrBpNTKbJy7X7osTJ1brdI31XWqV4Rb6+22cWXbzYxwHIIMWxLuRCfcbA9IrRIeNkJoJxDX
-	Uod0mAJQ==;
+	bh=R3I2U2ZPXeYWsTjQsRQwT9QFt6JCj85R8freTEb2xdk=; b=03hldyOfqwTX5tGVw+UNG4O55I
+	eLU1dvx3u+B7LazpSakaQOHnVCbneaxPSovOJiiJ9czUkntDb2xmzJnjsR+tTURxNoiVbP8EtpHCN
+	2RKeAMH/18w0vX7nw72z22pNFltM1GvOuY9t+vKGOwIyZPZ3MJpI8tiMmodyd3GpMkNp6IxZeWXa3
+	Lhd98Hj/8VNp0TSELcPV5OB035zjeLCQDBLYunaQDB/hgKNbxmef2Z4UhQwrxJRg3qgdfZEU0vxDb
+	UScB/2fO1f0I4v1wO9i3lQgnf+/dzPdYB+5Zf8o3yTVKNfvHu+Ryy9SSzK5Pd5Q91t13MVvnbchUq
+	Rg6Aq4UQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uwfLG-00000002d6O-37O3;
-	Thu, 11 Sep 2025 11:19:54 +0000
-Date: Thu, 11 Sep 2025 04:19:54 -0700
+	id 1uwfRT-00000002fOG-1wmq;
+	Thu, 11 Sep 2025 11:26:19 +0000
+Date: Thu, 11 Sep 2025 04:26:19 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: Joanne Koong <joannelkoong@gmail.com>
-Cc: Gao Xiang <hsiangkao@linux.alibaba.com>, djwong@kernel.org,
-	hch@infradead.org, brauner@kernel.org, miklos@szeredi.hu,
+Cc: brauner@kernel.org, miklos@szeredi.hu, hch@infradead.org,
+	djwong@kernel.org, hsiangkao@linux.alibaba.com,
 	linux-block@vger.kernel.org, gfs2@lists.linux.dev,
 	linux-fsdevel@vger.kernel.org, kernel-team@meta.com,
 	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
 Subject: Re: [PATCH v2 11/16] iomap: add caller-provided callbacks for read
  and readahead
-Message-ID: <aMKwWqhvYYhba_Vf@infradead.org>
+Message-ID: <aMKx23I3oh5fN-F8@infradead.org>
 References: <20250908185122.3199171-1-joannelkoong@gmail.com>
  <20250908185122.3199171-12-joannelkoong@gmail.com>
- <aL9xb5Jw8tvIRMcQ@debian>
- <CAJnrk1YPpNs811dwWo+ts1xwFi-57OgWvSO4_8WLL_3fJgzrFw@mail.gmail.com>
- <488d246b-13c7-4e36-9510-8ae2de450647@linux.alibaba.com>
- <CAJnrk1a5af-BMPUM3HfGwKZ=zoN4bcmbViLBWMtLao1KfK2gww@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,14 +50,52 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJnrk1a5af-BMPUM3HfGwKZ=zoN4bcmbViLBWMtLao1KfK2gww@mail.gmail.com>
+In-Reply-To: <20250908185122.3199171-12-joannelkoong@gmail.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Sep 10, 2025 at 01:41:25PM -0400, Joanne Koong wrote:
-> In my mind, the big question is whether or not the data the
-> filesystems pass in is logically shared by both iomap_begin/end and
-> buffered reads/writes/dio callbacks, or whether the data needed by
-> both are basically separate entities
+On Mon, Sep 08, 2025 at 11:51:17AM -0700, Joanne Koong wrote:
+> +  - ``read_folio_range``: Called to read in the range (read can be done
+> +    synchronously or asynchronously). This must be provided by the caller.
 
-They are separate entities.
+As far as I can tell, the interface is always based on an asynchronous
+operation, but doesn't preclude completing it right away.  So the above
+is a little misleading.
+
+> +	struct iomap_read_folio_ctx ctx = {
+> +		.ops = &iomap_read_bios_ops,
+> +		.cur_folio = folio,
+> +	};
+>
+> +	return iomap_read_folio(&blkdev_iomap_ops, &ctx);
+
+> +	struct iomap_read_folio_ctx ctx = {
+> +		.ops = &iomap_read_bios_ops,
+> +		.rac = rac,
+> +	};
+> +
+> +	iomap_readahead(&blkdev_iomap_ops, &ctx);
+
+Can you add iomap_bio_read_folio and iomap_bio_readahead inline helpers
+to reduce this boilerplate code duplicated in various file systems?
+
+> -static void iomap_submit_read_bio(struct iomap_read_folio_ctx *ctx)
+> +static int iomap_submit_read_bio(struct iomap_read_folio_ctx *ctx)
+>  {
+>  	struct bio *bio = ctx->private;
+>  
+>  	if (bio)
+>  		submit_bio(bio);
+> +
+> +	return 0;
+
+Submission interfaces that can return errors both synchronously and
+asynchronously are extremely error probe. I'd be much happier if this
+interface could not return errors.
+
+> +const struct iomap_read_ops iomap_read_bios_ops = {
+> +	.read_folio_range = iomap_read_folio_range_bio_async,
+> +	.read_submit = iomap_submit_read_bio,
+> +};
+
+Please use tabs to align struct initializers before the '='.
 
