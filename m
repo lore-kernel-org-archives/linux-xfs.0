@@ -1,124 +1,227 @@
-Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3EEC34A322
-	for <linux-xfs@vger.kernel.org>; Thu, 11 Sep 2025 15:16:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D19CD35FC31;
+	Thu, 11 Sep 2025 17:13:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757603789; cv=none; b=FM0MpH8utrpvNLSydw0QZA4B6Bmw+y1Tq2BPgBC3seQGUY3q9nU2Wa0FLCdJ1R9CqMVrL8pxx/1pA6RxzgY4G6LZhexv2ix1iLd2LRooa0tnFFe0j8PXnXTdmXHdcx4axUhRTrCgLvEoIJ2NEWDEdFA8BVss5/fcudVPBfayg7o=
+	t=1757610841; cv=none; b=JWAzIgzK5pXbRtkxIQ6x5Wobr/jEvr3qJXQSKsm684PM7VJsZLaLNDZJkd3xeSkL86WdnPVrfI5jdQkcAhgeffC9aK8D5a+o2M3q8fYpai+9/1iofnENkeNXgpjiKImXLriOJRH4qWkHgfbJ+MmPeXHxJ6XgKgIxFLgpQlhWJOs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757603789; c=relaxed/simple;
-	bh=a4bwTTm8DDy1QIkTCmgQZy35/P1OSicCOauHAgByEfw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YCx8GXW3FhgROZ8SiYbqlKP0Ovpr/yDs5GnF26aJxOvYi76xR46MpUe9w6pucL+18N52PpggIpgOoxEz1E7pXJ+kNBcSmDOKMNL//ijSMw8DXuUCCHE/kJneV9o3F+zmI6c18C4MKpV+iyRteNt5WnPiKz7N8fZwRT6mnxnKGak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AAcirdMh; arc=none smtp.client-ip=209.85.208.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1757610841; c=relaxed/simple;
+	bh=BDNsQNrPBpe6rfThQpsBF4iMqAFLVxJBmag/eQC9jYM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=r/+LaJAUuS5sK54ciDJGBmJ9xOY19IuGcLBbOfhKyNFfccugTv9MjCTXW9F1jHKA4G3GLZ1Qa3OoHxd5aISy/eFzUaDuqEax/Ge3Wuvma3x/Wqxf9uyQVeoqtD7TDTltCsQP0a7r8vj9M9umvZ4mVNwBVCobAuUXmcOluzq8z8E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=aKh+U673; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AAcirdMh"
-Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-625e1dfc43dso1520680a12.1
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Sep 2025 08:16:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757603786; x=1758208586; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=6wBo822YD+jvyd1+EsiFuVc9oA9ouix4aflKx2NsrPs=;
-        b=AAcirdMh/paP8CvnwYN0WRwP/4NlghsmNdDHjiHYsSZrehyr7phxTUNvfxxxMzGgNh
-         W/pumbX+m+DF3IUpX0y/CqFw8GzXNkN+mU45BXcxzFJAV1suGvKT9+Av2wIHMte4Fbqr
-         fkyM++zQwG/21hMqVPKLgWVzQ1HdXnkxr/zRmqI+NbWV8s4QJiZjLS7OMY/kA9xkpYfh
-         UoUFs26Jf4sZOmDuqhLPLzsjU9dwg2Bs3JhZP6pXEKSmsbzufxuIa7AlZCL/ROjutUu4
-         YzhnAYHFzLSqSNDlFVAyYxvnjjses8MKw2zW5So/2vpnsSi+ogfx0J2Ukr5fUaQqA0MU
-         xbsA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757603786; x=1758208586;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=6wBo822YD+jvyd1+EsiFuVc9oA9ouix4aflKx2NsrPs=;
-        b=VlXPog9XYbDrEz/e8feZfE1qZGByYQVsiAJXC6iHSwpyiKVhrAFLA7Rm4p1BvN0FsB
-         ZTrt6rx01TqbnDKxWYLvlsMpxMIMGQ1s8fZQibyItjBcRvrkHUz1KDb5+Aca+c3N93v2
-         t94pifXCvtscD+gqJvTNyvDg4jSRzQSUKLgcZEFsIeG8E8xrv/cQ+vAVFyZrA1eLX5pE
-         CseOPDaQ25DVEkz5uizKHcBSKKo9xDOHtUtZ9s4KQvnQLNVC/+UgQrzNasY0gXVgbm9Y
-         ro2vkNbF/DZ9viwUNi0WjXIcoDMCe0L6b50JhZSsLkkotJShrpRaJEvd++P7N8wSFpUa
-         EbzA==
-X-Forwarded-Encrypted: i=1; AJvYcCWeGo+6AR78E90vXPWJiyMiiyBzZvgLpJkyjqvbWgcZo48fO2+IvCqdD4RCf7jiuZvGulh5Zk79eas=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx/4myqWJNs42Qhi3vDoQwWbUTFVmd+t/0DlBTIAzstj8SXzANY
-	eagfIZDbltRsOB6EdtUyTwxNTRqwsQXQlxea5v9D7zbAnEk+csDWsHCrkFb/NcD1eDyzbC3NEYg
-	B9g1V/g2NiikZb8+dCbGUZWMD0JtMcIQ=
-X-Gm-Gg: ASbGnctMUoyWOGbJCh8ILNcTm0NhxHAcBAszEAIZrx1lThmdNuUOUgzXzP2hGCF68kw
-	fj7aPlHntqfmsPHy6Af/BAZ9FCx5Kti8cdH8IzDe8GqhX3C+/O6XtFGDLS5Kg5ZlUR5ZOJU8QjC
-	SnA/MoD2IID2KAdvLYyewVIAV8lNp9WL1FbJJTvd/4G0hRQBaNty4+G588/+OWdcQfrc92XuplE
-	F0gGDexvnQvf1MSPQ==
-X-Google-Smtp-Source: AGHT+IEWJHProfqe9MkMrApe0nu8Lni7uWBd5hMokDX8mM8AOlkDsbauNr0xucI3RgQ39BL1u0WyoFXJ+HknrvtHBLw=
-X-Received: by 2002:a05:6402:2343:b0:61e:ca25:3502 with SMTP id
- 4fb4d7f45d1cf-623771096b8mr18353367a12.17.1757603785655; Thu, 11 Sep 2025
- 08:16:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="aKh+U673"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58BFvYQN012236;
+	Thu, 11 Sep 2025 17:13:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=pp1; bh=dIErtpctXFxEtC9xE8yUjQnLMrRNq72psn2XMdQ3t
+	6E=; b=aKh+U673jfe1z9GJ8VkREVdGg61mpK0nYUqpjYc570KhpYIHEN2mtzGXl
+	5zl7RGmjXR3mf+p9kqf/yZwQqP19jH9i94UqsvRZ25BTLLYZ+12tBYBHZwhIXbbT
+	la5JlSuuUAoTLvyDDKvH5oiJ9RWYLcowOoqh29z+rm2ai+7kFDZMz1DhpmJ2nrTn
+	5uyDNu/aXa1ZUA9Jh08zpcFgBqhpuocGOSJS5+NH7OFRQSRDlk963wUaBOdkZiba
+	FEqypt21vUtXR4cm1N0ZSb1rCTtERWHpbT1w+xt1dBG65juMEIHLgwtKSQ53yqZg
+	H6Fqqtt+X/S5XTyxazqTE4bAytK3g==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 490cmx66dk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 11 Sep 2025 17:13:51 +0000 (GMT)
+Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 58BH6M2L030605;
+	Thu, 11 Sep 2025 17:13:51 GMT
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 490cmx66de-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 11 Sep 2025 17:13:51 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 58BGVI6W020495;
+	Thu, 11 Sep 2025 17:13:49 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 490yp171t4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 11 Sep 2025 17:13:49 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 58BHDl6Q32637440
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 11 Sep 2025 17:13:48 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id CC7572004F;
+	Thu, 11 Sep 2025 17:13:47 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id A1D6920040;
+	Thu, 11 Sep 2025 17:13:44 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.39.17.37])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 11 Sep 2025 17:13:44 +0000 (GMT)
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, djwong@kernel.org,
+        john.g.garry@oracle.com, tytso@mit.edu, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: [PATCH v6 00/11] Add more tests for multi fs block atomic writes
+Date: Thu, 11 Sep 2025 22:43:31 +0530
+Message-ID: <cover.1757610403.git.ojaswin@linux.ibm.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250910214927.480316-1-tahbertschinger@gmail.com>
- <20250910214927.480316-11-tahbertschinger@gmail.com> <aMLAkwL42TGw0-n6@infradead.org>
- <CAOQ4uxiKXq-YHfYy_LPt31KBVwWXc62+2CNqepBxhWrHcYxgnQ@mail.gmail.com> <DCQ2J75IZ9GN.29DY2W9SV3JPU@gmail.com>
-In-Reply-To: <DCQ2J75IZ9GN.29DY2W9SV3JPU@gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 11 Sep 2025 17:16:14 +0200
-X-Gm-Features: Ac12FXwWObOdteDLG_KWCcYb5SJCTz6npELP39lbmWonT28sMQmBU7w0_t-zMqY
-Message-ID: <CAOQ4uxiQL9m2fBW6HhRkcsw=uBcU_YZT6Bs1KWw+Zppokar66Q@mail.gmail.com>
-Subject: Re: [PATCH 10/10] xfs: add support for non-blocking fh_to_dentry()
-To: Thomas Bertschinger <tahbertschinger@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, io-uring@vger.kernel.org, axboe@kernel.dk, 
-	linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org, 
-	linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org, cem@kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: lNGX7BwFNhIo7Mdjm_f9f7m4N1elrfqv
+X-Proofpoint-ORIG-GUID: aRGL50xYY8qATjYKgMym6s2uv-Bko6C2
+X-Authority-Analysis: v=2.4 cv=J52q7BnS c=1 sm=1 tr=0 ts=68c3034f cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8 a=VnNF1IyMAAAA:8
+ a=RhRxWBKHx9l-Qd8VlncA:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA2MDAyNSBTYWx0ZWRfX8bvEQpOLDLzC
+ 8dfugEwjzt661d9bwfzce56c+BzUFcFzXrRCV058idPqLKDBrJqcXEcqILtVLAAfExXRc4jval1
+ EKMnAtchWpy+cUyF3BgovTuCoxWOw9ACnYC4cgqmpNaKQoWljhJabKnA0y+IbEXpxNZd7dBDAy9
+ Vbdze1UWb1wVZIUJsfxvJMQ0a1gCypd6Mty94P+wqXtbcslNTND+JKTX/bvnVUIyaBJYxlH7R8R
+ Qd+VGhWDdJUCrd0uzFERW+6CV9jon3Id6TH2ctpjCpVPghFC4PbUe8LnHL0RjsnzYatotHT7b1x
+ 2AiySlhkZ6DMCiB+pqXqHdEf3LxuxNUXxj/NWi6kUKSOJmeAHdHEVldbyBUAayvM1z4KtXuTDmP
+ Rxfw8D+8
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-11_02,2025-09-11_02,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 clxscore=1015 suspectscore=0 spamscore=0 phishscore=0
+ bulkscore=0 adultscore=0 malwarescore=0 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509060025
 
-On Thu, Sep 11, 2025 at 5:10=E2=80=AFPM Thomas Bertschinger
-<tahbertschinger@gmail.com> wrote:
->
-> On Thu Sep 11, 2025 at 6:39 AM MDT, Amir Goldstein wrote:
-> > On Thu, Sep 11, 2025 at 2:29=E2=80=AFPM Christoph Hellwig <hch@infradea=
-d.org> wrote:
-> >>
-> >> On Wed, Sep 10, 2025 at 03:49:27PM -0600, Thomas Bertschinger wrote:
-> >> > This is to support using open_by_handle_at(2) via io_uring. It is us=
-eful
-> >> > for io_uring to request that opening a file via handle be completed
-> >> > using only cached data, or fail with -EAGAIN if that is not possible=
-.
-> >> >
-> >> > The signature of xfs_nfs_get_inode() is extended with a new flags
-> >> > argument that allows callers to specify XFS_IGET_INCORE.
-> >> >
-> >> > That flag is set when the VFS passes the FILEID_CACHED flag via the
-> >> > fileid_type argument.
-> >>
-> >> Please post the entire series to all list.  No one has any idea what y=
-our
-> >> magic new flag does without seeing all the patches.
-> >>
-> >
-> > Might as well re-post your entire v2 patches with v2 subjects and
-> > cc xfs list.
-> >
-> > Thanks,
-> > Amir.
->
->
-> Thanks for the advice, sorry for messing up the procedure...
->
-> Since there are a few quick fixups I can make, I may go straight to
-> sending v3 with the correct subject and cc. Any reason for me to not do
-> that -- is it preferable to resend v2 right away with no changes?
+Changes in v6:
+- Picked up reviews from Darrick, Zorro and John! (Thanks)
+- Added _require_fio_atomic_writes helper in patch 3 as a wrapper arounc
+  __require_fio_version
+- minor spelling and refactors
 
-No worries. v3 is fine.
-But maybe give it a day or two for other people to comment on v2
-before posting v3. Some people may even be mid review of v2
-and that can be a bit annoying to get v3 while in the middle of review of v=
-2.
+Changes in v5: (Thanks to John & Darrick for reviews)
+- commor/rc: Add a _require_fio_version helper
+- fsx: Switch atomic writes off if direct IO (-Z) not passed
+- fio tests: better commit messages to explain what we are testing
+- ext4/06{1..2}: Refactor code, also test only a few combinations of bs
+  clustersize rather than every single
 
-Thanks,
-Amir.
+Changes in v4: (Thanks to Darrick, John and Zorro for the reviews) [4]
+
+- g/1226,1227: Modify fio threads to not issue overlapping atomic writes
+- g/1228: Use xfs_io -c "shutdown" instead of _scratch_shutdown to avoid
+          bash overhead
+- g/1229: Remove FSX_AVOID handling for bigalloc from common/rc. It is
+          part of the specific test now
+- ext4/063: add more clearer extent diagram
+- ext4/064: Drop the test for now as im taking sometime to understand
+            the behavior better.
+- Removed test numbers from commit message
+- For tests with significant changes I've removed the RVBs
+
+[4] https://lore.kernel.org/fstests/0eb2703b-a862-4a40-b271-6b8bb27b4ad4@oracle.com/T/#mef34a8c13cbee466bfc162db637d6e1cf0a8b06d
+
+Changes in v3 [3]:
+
+- (2/13) use dumpe2fs to figure out if FS is bigalloc
+- (9/13) generic/1230: Detect device speeds for more accurate testing. ALso
+  speeds up the test
+- fio tests - switch to write followed by verify approach to avoid false
+  failures due to fio verify reads splitting and racing with atomic
+  writes. Discussion thread:
+
+  https://lore.kernel.org/fstests/0430bd73-e6c2-4ce9-af24-67b1e1fa9b5b@oracle.com/
+
+  [3] https://lore.kernel.org/fstests/cover.1752329098.git.ojaswin@linux.ibm.com/
+
+Changes in v2 [1]:
+
+- (1/13) new patch with _min and _max helpers
+- (2/13) remove setup_fs_options and add fsx specific helper
+- (4/13) skip atomic write instead of falling back to normal write (fsx)
+- (4/13) make atomic write default on instead of default off (fsx)
+- (5,6/13) refactor and cleanup fio tests
+- (7/13) refactored common code
+- (8/13) dont ignore mmap writes for fsx with atomic writes
+- (9/13) use od instead of xxd. handle cleanup of bg threads in _cleanup()
+- (10-13/13) minor refactors
+- change all tests use _fail for better consistency
+- use higher tests numbers for easier merging
+
+ [1] https://lore.kernel.org/fstests/cover.1750924903.git.ojaswin@linux.ibm.com/
+
+* Original cover [2] *
+
+These are the tests we were using to verify that filesystems are not
+tearing multi fs block atomic writes. Infact some of the tests like
+generic/772 (now: g/1230) actually helped us catch and fix issues in
+ext4's early implementations of multi fs block atomic writes and hence
+we feel these tests are useful to have in xfstests.
+
+We have tested these with scsi debug as well as a real nvme device
+supporting multi fs block atomic writes.
+
+Thoughts and suggestions are welcome!
+
+[2] rfc: https://lore.kernel.org/fstests/cover.1749629233.git.ojaswin@linux.ibm.com/
+
+
+Ojaswin Mujoo (10):
+  common/rc: Add _min() and _max() helpers
+  common/rc: Add fio atomic write helpers
+  common/rc: Add a helper to run fsx on a given file
+  ltp/fsx.c: Add atomic writes support to fsx
+  generic: Add atomic write test using fio crc check verifier
+  generic: Add atomic write test using fio verify on file mixed mappings
+  generic: Add atomic write multi-fsblock O_[D]SYNC tests
+  generic: Stress fsx with atomic writes enabled
+  generic: Add sudden shutdown tests for multi block atomic writes
+  ext4: Atomic write test for extent split across leaf nodes
+
+Ritesh Harjani (IBM) (2):
+  ext4: Test atomic write and ioend codepaths with bigalloc
+  ext4: Test atomic writes allocation and write codepaths with bigalloc
+
+ common/rc              |  88 +++++++++-
+ ltp/fsx.c              | 115 ++++++++++++-
+ tests/ext4/061         | 155 +++++++++++++++++
+ tests/ext4/061.out     |   2 +
+ tests/ext4/062         | 203 +++++++++++++++++++++++
+ tests/ext4/062.out     |   2 +
+ tests/ext4/063         | 129 +++++++++++++++
+ tests/ext4/063.out     |   2 +
+ tests/generic/1226     | 108 ++++++++++++
+ tests/generic/1226.out |   2 +
+ tests/generic/1227     | 132 +++++++++++++++
+ tests/generic/1227.out |   2 +
+ tests/generic/1228     | 139 ++++++++++++++++
+ tests/generic/1228.out |   2 +
+ tests/generic/1229     |  68 ++++++++
+ tests/generic/1229.out |   2 +
+ tests/generic/1230     | 368 +++++++++++++++++++++++++++++++++++++++++
+ tests/generic/1230.out |   2 +
+ 18 files changed, 1513 insertions(+), 8 deletions(-)
+ create mode 100755 tests/ext4/061
+ create mode 100644 tests/ext4/061.out
+ create mode 100755 tests/ext4/062
+ create mode 100644 tests/ext4/062.out
+ create mode 100755 tests/ext4/063
+ create mode 100644 tests/ext4/063.out
+ create mode 100755 tests/generic/1226
+ create mode 100644 tests/generic/1226.out
+ create mode 100755 tests/generic/1227
+ create mode 100644 tests/generic/1227.out
+ create mode 100755 tests/generic/1228
+ create mode 100644 tests/generic/1228.out
+ create mode 100755 tests/generic/1229
+ create mode 100644 tests/generic/1229.out
+ create mode 100755 tests/generic/1230
+ create mode 100644 tests/generic/1230.out
+
+-- 
+2.49.0
+
