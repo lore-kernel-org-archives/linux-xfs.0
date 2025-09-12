@@ -1,61 +1,63 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 465F941C69
-	for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 15:27:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09B94155A4E
+	for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 15:27:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757690824; cv=none; b=tEhEPCy6/UNfRzV6Jh0/re3t6d9bLBeHKcWDw4+hatk0H8uYABc7tVIqwJIk1EVY4AJG2XoloGIHQUaSjfMHZqe+DVIyTDf4Gy94Uuy6iLfccyCt7XLbqMNzefTBdwA3HojVeRgzG76DsdxJoyxtrxbrFeu4Igh3hZjgEKF5p9I=
+	t=1757690843; cv=none; b=cFSxRPiMZFJ1O2YjCDmsuQdQqhxBsBZbrs6Yb2yHZx4wFcCjZ57s4kRlCEM4e62uMG5xmZLaPSqGYSwCRPH0ax/UjFDUqheqRu8L+MUVymXkHFxS3Avs2jolvYX6mYVRp5IIeUClpeEBs9O7IQix52kifZhBw+xzX+8DcWulQ+c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757690824; c=relaxed/simple;
-	bh=UXb6oiZ1a08xukqMWGzQmWMh6jz5S2O37oTIMSab7EM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XGrqswUD4VWO5YBKBlJKUwitY5mwwUxNlX36lArNi0YwwqJPO4u5ftL1Pw1INKMV2L8ChpWvUnUxeTsi5q/pTtei8KBVo6n7I93BwUcEif0CBfY+8xFzehqwNqxZ/dcnhB5kE84p9wTpsMAFXPB2TBdZRtrXQfznARc9dBVF158=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=b7L+iUge; arc=none smtp.client-ip=209.85.210.175
+	s=arc-20240116; t=1757690843; c=relaxed/simple;
+	bh=07LPQc3ZerGkSIXkghCbTp1td4/RY5pn1siD0cOwh/U=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ZEIR3VyFHuF2uu00b6J1KSjLnxHcPMnXxMIJQcxz7m9AuUf+3ZwQoTEhwz4gdu/Gv82o0KsEH41+0+HlV+m2YuTgFEC9O8iFIKAh4tRNzM+GIBTqNjd3kHc8tMV+WKD1COffEuO2wsOtINyeA22WaaHKtVpcRv8q48J5JRHZPWE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CAsCrcOT; arc=none smtp.client-ip=209.85.210.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b7L+iUge"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-77616dce48cso542631b3a.0
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 08:27:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CAsCrcOT"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-76e4f2e4c40so1856729b3a.2
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 08:27:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757690820; x=1758295620; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=xrD09NwNNaCCc36kTZDK/vKByj38vuDQyaEDdfXfDJU=;
-        b=b7L+iUge4aytQjBq4HgJkLPgCqGydals+8HXZasSFisCsDY3Co81nrXf1I5AA7Pn5q
-         6Syc1etDQw+j5O7mAwTR/T+zjpgnRou+nizOfm/u4q0m8Rfgkpcl30eQXnaWO+EXUECZ
-         qOuUsJT6Z66MXugQn139UwNPYmBDn0KhCVVXJufy15aSG++QAiUhovWJB3y6gY7lveoC
-         1X+JNRVI2KakKoHMevrdZcF/T57+QCk39CS1atfzy3tWJAQrAcFXyEbUGPf9l1qjVlGe
-         zRAr0/kUBN/tT/R9lXzJSWq90HzW9drgKZuAlQTEP46T+FZVzOzecbYseyD3QnBRcMEE
-         BYxw==
+        d=gmail.com; s=20230601; t=1757690841; x=1758295641; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mOV1e62HSpWbhz5w905oMR3LjLD2VgAcPj9wueKbUQA=;
+        b=CAsCrcOTLYRmekOvWo/VGGbSwH3F4bf27WnabbZhLPeC5ZtPyQU9lkBHWFMjjRaHFT
+         0VcCMBd+LSdnis+hEZ5YLvdYY8g9izyj41EVhJna0AebJFq0ZJRcSB+VYxZUJTLXQUeD
+         EAbpOXAXW53i2y1TJFHH7Sn1MfZset46TRQSS6MbWe9apDEoTPUicP124YFzRdo1r0rV
+         lv079+8+H3g82sSBdDfmT5x6uauvv6BFBl/KgFainry9tnD/vkilPPvOXLzoRkHb7WaG
+         VwIMwH7VbOgMWIx+Q/UgwOf1qxUslqOOt7R2Jmj3kKx67W4gn/P6ieF2KpCTmSYsMVPR
+         IdsQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757690820; x=1758295620;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=xrD09NwNNaCCc36kTZDK/vKByj38vuDQyaEDdfXfDJU=;
-        b=FucmI2NNR3TPE6Zt8HfukZuvTEM5J37kss/+ba8fKvmCJpRvZDMIsrHFBuZ3F3CMHA
-         zTXQTvrJD6v9jeQzLeG5HLpn13uukcKk++R7F7/xr8BPqD0Eb6SAfnbti6prZWyxtK64
-         zamE6a7JH9b+SR5v0ypnFp2FDPnjsmAKYuBnK4avtQdArcxt8BjNH0y6d0oU5mlpsiQr
-         /InZV/Taynky+Ycls9dXoiKYbI7InMA7ZKeCGZcLuUjLj/es9l+/ilJZpaAs+gCufCzs
-         RrtpFZIFkpkZJE13LFvjUncuyszgttWtefYO8s3V7Xx5/iWKptE9BSNpjphfQYy4c3KF
-         HrzA==
-X-Forwarded-Encrypted: i=1; AJvYcCXMBXpLh0SX/SVuOGdUJP1yG9+5HJId1440V62iHoKUf/6PwJjDvGP9v/YbqNYNy+erz6YpwJ9eXyk=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyo21pgz1vx5ye1Fwow97FGkcjhtJrtHBfLI0WfVWAwR0aGFLCs
-	K0i+LY/0tJu2mhBm1J3SQUMsLM0w+QuHvW7my02mGc0oDZCI2yxnxTOc0qvG+ube
-X-Gm-Gg: ASbGnctpf7ZLeqm5BkpwTi1XdcBXkTjoFNozZq/llrb/cjIFKVa+/klSCu/OJcr/2cf
-	d1KGg9RrSRRKCh8EE5MBPY3KPczRFFJq/fDbeGYVnIeEkxn3m48Zormf0hCByQ96tBrfKqrg+fi
-	g8ViFO+qIvmVC0uZ3SbmZjzWuEzRPVm9fyUnu6SpR7He34qGSAN2d6FZep1WRqlqHYF1cC374Ie
-	ukX6OKJ21Z/jiFIOqvCbd5FQfWQtZ4SzNkBdK56ZhbGPQXxEW26sNi+TnCIyOHl7VCtASPIwCGD
-	kk1C5ZNNf9vyRCq9eUW1W23FWYo+qrVzo2U+0slBPNwF5mi8V7hgs3f+XOJ3ebr8XEFttA1zW37
-	coA487NzgVfrku565xysbMv03ZNXwH2eSiEvc
-X-Google-Smtp-Source: AGHT+IGUo0K4zIFMUfzF4WpP86EMKMNSUkcTVtq3VjmtoSg0kTDxGd/EyfD7RbMVVOytbEOUNyiPxQ==
-X-Received: by 2002:a05:6a20:2583:b0:24d:56d5:369e with SMTP id adf61e73a8af0-2602a593376mr4421336637.3.1757690820222;
-        Fri, 12 Sep 2025 08:27:00 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1757690841; x=1758295641;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=mOV1e62HSpWbhz5w905oMR3LjLD2VgAcPj9wueKbUQA=;
+        b=w5jdfyBNILLvSaYWlYdwbMYGIPozbZbZDhB24/OTzIpVwlS0bHmqRUrdWrm8ffXF2+
+         d9MCQE7brO/CO6kpDg0bzfMd/EtTZj+bkenOjG1B+xJAvs0Fqhh9bwmwqyt8Bn5JXfsn
+         55Z+N/BHBvYDEddMTmD7Yig29Yf+owJ7+1mvT6z3/h67VUaghUTqs+GlHXk5egFaFRNz
+         kSJ5QHks2lWDz7A2lJvrpjGhLW+LaPHjPR/+QSnPwMMCAzs1qlGsrfdJK/BQjl+a95B6
+         +FdwTbSOas+eWcHyItqW9+iIdmnhAvW2RM5yCArech2ZdRqwCyvmmr+5eLr+Nl0Yb0hH
+         pvcg==
+X-Forwarded-Encrypted: i=1; AJvYcCWO1K+uIUgIY6ofY2y6N/xkrdvhleWZe63HqtlelpfTIlDn6HNtBn26jeyofvG1eAXPsnyioOzWpTA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzxMbq2UYc1h5QygO9ht56ThvO3nVnwXUuP3x05wWOsJ9Ac3Fq2
+	Yk9wWN3Fh7MtWvgdkYaX2KNIIg/OjlA1qWhYZgOu6X8TslWbXjgTwepmTDo9QxUn
+X-Gm-Gg: ASbGnctqJvnnFEfRIsSQoSRp5YqPtVcrFlqdPLnoRJCPwoDQKMMhp3hOG4dgPegl1//
+	3+MT9X+SJf91Ula7GMVlerpZtYvpS1DQ2vx1fvhnISH/V54VLSSanJtFXvkqPZNn5S9n43Tbwjx
+	qXFQle3yxjPsmorqSo0r6DRGmh91RgcfgI8twt4WiMS8OyvdlC7QC+qJsviRLynrmvbz2qCrgHb
+	fUI5UF6McRdmhbgd3gteuar4MzHmmu2FYRTR/qPcaWanhyJSTazzrgt45aj9EqzH1BQK763ljRV
+	FOYbKZbzRgLTICFPfcqzbQPfr4yw7TD/6PnXOUmRVZu5AOW6qEXchwIyT6RFDUGAUgrV8C6WDPp
+	RVpLmGRVBKI8jDfNw3fjLMkotBef35qr8v6Dj
+X-Google-Smtp-Source: AGHT+IEX2VJwLZXnTTSkoj8cz8rXva/C6SB7iBmi3sPS3P5Hn1aEvI2/0J9AwFeaSLucx/ni/rcJFg==
+X-Received: by 2002:a05:6a00:ac8:b0:772:80d3:b684 with SMTP id d2e1a72fcca58-776121a79a6mr4229957b3a.22.1757690839051;
+        Fri, 12 Sep 2025 08:27:19 -0700 (PDT)
 Received: from jicarita ([65.144.169.45])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7760944a9a9sm5436846b3a.78.2025.09.12.08.26.58
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7760944a9a9sm5436846b3a.78.2025.09.12.08.27.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Sep 2025 08:26:59 -0700 (PDT)
+        Fri, 12 Sep 2025 08:27:18 -0700 (PDT)
 From: Thomas Bertschinger <tahbertschinger@gmail.com>
 To: io-uring@vger.kernel.org,
 	axboe@kernel.dk,
@@ -69,10 +71,12 @@ To: io-uring@vger.kernel.org,
 	jlayton@kernel.org,
 	amir73il@gmail.com
 Cc: Thomas Bertschinger <tahbertschinger@gmail.com>
-Subject: [PATCH v3 00/10] add support for name_to, open_by_handle_at() to io_uring
-Date: Fri, 12 Sep 2025 09:28:45 -0600
-Message-ID: <20250912152855.689917-1-tahbertschinger@gmail.com>
+Subject: [PATCH v3 01/10] fhandle: create helper for name_to_handle_at(2)
+Date: Fri, 12 Sep 2025 09:28:46 -0600
+Message-ID: <20250912152855.689917-2-tahbertschinger@gmail.com>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20250912152855.689917-1-tahbertschinger@gmail.com>
+References: <20250912152855.689917-1-tahbertschinger@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -81,66 +85,141 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series adds support for name_to_handle_at() and open_by_handle_at()
-to io_uring. The idea is for these opcodes to be useful for userspace
-NFS servers that want to use io_uring.
+Create a helper do_sys_name_to_handle_at() that takes an additional
+argument, lookup_flags, beyond the syscall arguments.
 
-For both syscalls, io_uring will initially attempt to complete the
-operation only using cached data, and will fall back to running in async
-context when that is not possible.
+Because name_to_handle_at(2) doesn't take any lookup flags, it always
+passes 0 for this argument.
 
-Supporting this for open_by_handle_at() requires a way to communicate to
-the filesystem that it should not block in its fh_to_dentry()
-implementation. This is done with a new flag FILEID_CACHED which is set
-in the file handle by the VFS. If a filesystem supports this new flag,
-it will indicate that with a new flag EXPORT_OP_NONBLOCK so that the VFS
-knows not to call into a filesystem with the FILEID_CACHED flag, when
-the FS does not know about that flag.
+Future callers like io_uring may pass LOOKUP_CACHED in order to request
+a non-blocking lookup.
 
-Support for the new FILEID_CACHED flag is added for xfs.
+This helper's name is confusingly similar to do_sys_name_to_handle()
+which takes care of returning the file handle, once the filename has
+been turned into a struct path. To distinguish the names more clearly,
+rename the latter to do_path_to_handle().
 
-v3 is mostly the same as [v2], with minor changes.
+Signed-off-by: Thomas Bertschinger <tahbertschinger@gmail.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/fhandle.c  | 61 ++++++++++++++++++++++++++++-----------------------
+ fs/internal.h |  9 ++++++++
+ 2 files changed, 43 insertions(+), 27 deletions(-)
 
-v2 -> v3:
-- rename do_filp_path_open -> do_file_handle_open()
-- rename the parameter fileid_type in xfs_fs_fh_to_{dentry,parent}() to
-  fileid_type_flags
-- a few minor style fixups reported by checkpatch.pl
-- fix incorrect use of '&' instead of '&&' in exportfs_decode_fh_raw()
-- add docs for EXPORT_OP_NONBLOCK in Documentation/filesystems/nfs/exporting.rst
-
-[v2] https://lore.kernel.org/linux-fsdevel/20250910214927.480316-1-tahbertschinger@gmail.com/
-[v1] https://lore.kernel.org/linux-fsdevel/20250814235431.995876-1-tahbertschinger@gmail.com/
-
-
-Thomas Bertschinger (10):
-  fhandle: create helper for name_to_handle_at(2)
-  io_uring: add support for IORING_OP_NAME_TO_HANDLE_AT
-  fhandle: helper for allocating, reading struct file_handle
-  fhandle: create do_file_handle_open() helper
-  fhandle: make do_file_handle_open() take struct open_flags
-  exportfs: allow VFS flags in struct file_handle
-  exportfs: new FILEID_CACHED flag for non-blocking fh lookup
-  io_uring: add __io_open_prep() helper
-  io_uring: add support for IORING_OP_OPEN_BY_HANDLE_AT
-  xfs: add support for non-blocking fh_to_dentry()
-
- Documentation/filesystems/nfs/exporting.rst |   6 +
- fs/exportfs/expfs.c                         |  14 +-
- fs/fhandle.c                                | 155 +++++++++-------
- fs/internal.h                               |  13 ++
- fs/xfs/xfs_export.c                         |  34 +++-
- fs/xfs/xfs_export.h                         |   3 +-
- fs/xfs/xfs_handle.c                         |   2 +-
- include/linux/exportfs.h                    |  34 +++-
- include/uapi/linux/io_uring.h               |   3 +
- io_uring/opdef.c                            |  26 +++
- io_uring/openclose.c                        | 191 +++++++++++++++++++-
- io_uring/openclose.h                        |  13 ++
- 12 files changed, 409 insertions(+), 85 deletions(-)
-
-
-base-commit: 76eeb9b8de9880ca38696b2fb56ac45ac0a25c6c
+diff --git a/fs/fhandle.c b/fs/fhandle.c
+index 68a7d2861c58..605ad8e7d93d 100644
+--- a/fs/fhandle.c
++++ b/fs/fhandle.c
+@@ -14,10 +14,10 @@
+ #include "internal.h"
+ #include "mount.h"
+ 
+-static long do_sys_name_to_handle(const struct path *path,
+-				  struct file_handle __user *ufh,
+-				  void __user *mnt_id, bool unique_mntid,
+-				  int fh_flags)
++static long do_path_to_handle(const struct path *path,
++			      struct file_handle __user *ufh,
++			      void __user *mnt_id, bool unique_mntid,
++			      int fh_flags)
+ {
+ 	long retval;
+ 	struct file_handle f_handle;
+@@ -111,27 +111,11 @@ static long do_sys_name_to_handle(const struct path *path,
+ 	return retval;
+ }
+ 
+-/**
+- * sys_name_to_handle_at: convert name to handle
+- * @dfd: directory relative to which name is interpreted if not absolute
+- * @name: name that should be converted to handle.
+- * @handle: resulting file handle
+- * @mnt_id: mount id of the file system containing the file
+- *          (u64 if AT_HANDLE_MNT_ID_UNIQUE, otherwise int)
+- * @flag: flag value to indicate whether to follow symlink or not
+- *        and whether a decodable file handle is required.
+- *
+- * @handle->handle_size indicate the space available to store the
+- * variable part of the file handle in bytes. If there is not
+- * enough space, the field is updated to return the minimum
+- * value required.
+- */
+-SYSCALL_DEFINE5(name_to_handle_at, int, dfd, const char __user *, name,
+-		struct file_handle __user *, handle, void __user *, mnt_id,
+-		int, flag)
++long do_sys_name_to_handle_at(int dfd, const char __user *name,
++			      struct file_handle __user *handle,
++			      void __user *mnt_id, int flag, int lookup_flags)
+ {
+ 	struct path path;
+-	int lookup_flags;
+ 	int fh_flags = 0;
+ 	int err;
+ 
+@@ -155,19 +139,42 @@ SYSCALL_DEFINE5(name_to_handle_at, int, dfd, const char __user *, name,
+ 	else if (flag & AT_HANDLE_CONNECTABLE)
+ 		fh_flags |= EXPORT_FH_CONNECTABLE;
+ 
+-	lookup_flags = (flag & AT_SYMLINK_FOLLOW) ? LOOKUP_FOLLOW : 0;
++	if (flag & AT_SYMLINK_FOLLOW)
++		lookup_flags |= LOOKUP_FOLLOW;
+ 	if (flag & AT_EMPTY_PATH)
+ 		lookup_flags |= LOOKUP_EMPTY;
+ 	err = user_path_at(dfd, name, lookup_flags, &path);
+ 	if (!err) {
+-		err = do_sys_name_to_handle(&path, handle, mnt_id,
+-					    flag & AT_HANDLE_MNT_ID_UNIQUE,
+-					    fh_flags);
++		err = do_path_to_handle(&path, handle, mnt_id,
++					flag & AT_HANDLE_MNT_ID_UNIQUE,
++					fh_flags);
+ 		path_put(&path);
+ 	}
+ 	return err;
+ }
+ 
++/**
++ * sys_name_to_handle_at: convert name to handle
++ * @dfd: directory relative to which name is interpreted if not absolute
++ * @name: name that should be converted to handle.
++ * @handle: resulting file handle
++ * @mnt_id: mount id of the file system containing the file
++ *          (u64 if AT_HANDLE_MNT_ID_UNIQUE, otherwise int)
++ * @flag: flag value to indicate whether to follow symlink or not
++ *        and whether a decodable file handle is required.
++ *
++ * @handle->handle_size indicate the space available to store the
++ * variable part of the file handle in bytes. If there is not
++ * enough space, the field is updated to return the minimum
++ * value required.
++ */
++SYSCALL_DEFINE5(name_to_handle_at, int, dfd, const char __user *, name,
++		struct file_handle __user *, handle, void __user *, mnt_id,
++		int, flag)
++{
++	return do_sys_name_to_handle_at(dfd, name, handle, mnt_id, flag, 0);
++}
++
+ static int get_path_anchor(int fd, struct path *root)
+ {
+ 	if (fd >= 0) {
+diff --git a/fs/internal.h b/fs/internal.h
+index 38e8aab27bbd..c972f8ade52d 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -355,3 +355,12 @@ int anon_inode_getattr(struct mnt_idmap *idmap, const struct path *path,
+ int anon_inode_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+ 		       struct iattr *attr);
+ void pidfs_get_root(struct path *path);
++
++/*
++ * fs/fhandle.c
++ */
++#ifdef CONFIG_FHANDLE
++long do_sys_name_to_handle_at(int dfd, const char __user *name,
++			      struct file_handle __user *handle,
++			      void __user *mnt_id, int flag, int lookup_flags);
++#endif /* CONFIG_FHANDLE */
 -- 
 2.51.0
 
