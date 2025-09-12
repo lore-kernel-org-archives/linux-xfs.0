@@ -1,63 +1,63 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7FF621A421
-	for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 15:28:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ADA130EF65
+	for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 15:28:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757690887; cv=none; b=I2lOH19VDHZkaY6h4Vmy98JNUa8BkhSqRW4eS1hV1rHSvs1owX7QJbZCA+SZ2uH9O7nnkQBZa6vVM6H8ndNy7E7UOF7SnheOCjN3pAwm3eupAga8qxnnexYt7H9Q29p710N5XVsvXiU0f6ygWbW3wqFd4Iwf8xLERvCpns/s9N4=
+	t=1757690891; cv=none; b=Q6UqrRFUuSrqokrrnqcdd1QoDLm2mGQF51hHn/YAqiVet3dX74maon5TEF1p5+zvX3SLHB8R4YFpc5lrzqUIhiwJa3orJ4HHxfXXoo9NJICMrJKuXcEsKqiltAJkatzIXqd1bCqTOc9pb1XfuS2JFE4btxIeMNQgyM1N4Y6+Pz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757690887; c=relaxed/simple;
-	bh=GhbGsRZIFWwACCchhCI1wpT+Z6yk4SfcgM3GpwKm+3k=;
+	s=arc-20240116; t=1757690891; c=relaxed/simple;
+	bh=K07NRUo9zqY4nN5kRcvIAFfqMj5VZl1mhqG/F4Xn2WE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=a+vxwy/saElPR8+KUmHJjaNVGPsbaZiAkMXEBol3EEo5+abc5tXuPyOr+umzkstlrKBWoc/13Cmg/f2N0SYErRrVnH3yqHyGWlOhb52m4a17lw/pa+Doln/6d+p8aSHOsEsMlCZ+51uxLD/51sdtHSLXw7j1vrzOlRSKsF2Thi8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=U9g06hcM; arc=none smtp.client-ip=209.85.210.174
+	 MIME-Version; b=TjUgwjc3EOMm8LGQDnjdfl0OSx3wjWHXUD3olQU1Xi+E/4WuONWYahr2zfXzd/4pTSg7VglsxmxbSALJXkgxh505b0rBgLSXpZtcLNTTyBen3s3v6Bk3lQ1R21lvpTuCQXnd0eCrym63mVXZsQ98bUfY3Oqfpi4z9aHD213mDRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fyynvr90; arc=none smtp.client-ip=209.85.210.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U9g06hcM"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-772843b6057so1890290b3a.3
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 08:28:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fyynvr90"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-7726c7ff7e5so1944882b3a.3
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 08:28:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757690885; x=1758295685; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1757690889; x=1758295689; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=epfohba7lLb94CzZQeNzguTuJKCwE90c2JR8b9B+3/Q=;
-        b=U9g06hcMQS1SmAvit1EorYFhcCwBB3xIfBrHCGEfem88UATljbTNLdYoW6DOsBucMO
-         1bClKhf9q2dfK7sQOUI9IKhq8BniuG1QuIh9uOumJw4CbR1C3t5mk7yRHaXmuUlTU+jh
-         Lqr0QZ5TnjRAS6XgxE1JDl9CT+4AA3aYTX4fCC++vbq4VBuHdTJBh9NdCSDuAKCDEdYQ
-         Yt54WcfDVkb9EkphV7gd8VmL4Xl0JN6IhPzlfT3EUEvfqnULG3svwYdAox6nj8xh1XkY
-         ZjOInDctYBZ9JsdwD6daO83prFf3XLsmBG3VtTkvs51x1V1/KI1hkPRFvHo56Jk6qpO3
-         WKIQ==
+        bh=GrAwY5JfDrvJYw4ViEeSxknJLuWu6wVTQX+QkSjS5Eg=;
+        b=fyynvr90e5Y2BHQUMi9j9P2nol+bLdRSVREpQHg8BSONbBAlX2PV8lyNqiPMXKGRz5
+         0VDp34EkhztUVpFdjVdXY578O9kzzKAs2s0yee8gkUbd5aWHbyi+gJ9A7MC6yhm80Rw2
+         gcNLDMhAKG8T+r33yehhvvxtyw1uq9gm7TDEDlwgXOphlcZtjnfZX1FgGrcmiqu1NJ8h
+         yzMPK1LBGzQf7jhd/QdXtSzIVZDbA16CipFnSh7oXZRT4kroYtnS2/UWlcmTZxBlomn8
+         w6PXPZ6TxBNMS3I09p+nq+3f+B/tVm+Zdyow7UdF5WOH9/csJmY9KhM4gBxeSP5O2KuJ
+         cRlw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757690885; x=1758295685;
+        d=1e100.net; s=20230601; t=1757690889; x=1758295689;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=epfohba7lLb94CzZQeNzguTuJKCwE90c2JR8b9B+3/Q=;
-        b=if7NSDguCbQlLbxwvm5KYoPkqj+3MXslQDTPI6pc8tXWvX7D019q55FZo1MPwyJrcX
-         J5xBYkABZaTfbX1D6MLYSlkEUmjBsqGG9qUqn2Q/OoxjI/fzKdQNJXRz/qKeZ3ZgVOAu
-         X7xQRolXIaC58xn75ZVPPS3S8N6Mim22d5EdB88wXpXUfe2fdFSG7s7jECyovaxXg1ei
-         N3c+aksa5ryfhlgaMHyaHJIOMD5QIQi0h7JO3gR46Vn+TGYE7rYZQmtsI23UKi9ZtY7q
-         tHQVuiTOssALJRSf6MtvYI8nRXD7hg4zbWIuax1JcB8frgwrmeBPsk/dJmaHPJqU5imv
-         fPyQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUJ6JYrRrrnuj7RKMyDgy5t4fD0zgQfSbBhYQAKWemXeG8bwSZX24YNXEQ1W5oYFB4EOedKGRz2OK0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx3ZdwH8i9n2sNl7FStwOG5zgYQlvmSEZsFj1rB3W/2GwnV+TqL
-	qeLSptOZFo42o/ldGCl0Ho1CoxEBNa9rmAx32RMyL3DeCUrq4/0/CuWC
-X-Gm-Gg: ASbGncsG7kR1hasnfo4HqmHa3uPggyUIkkIY9yMzLl1Y92pwxRHtq24p2a+Ti+EEXEv
-	7JThKfWEngY8yj2ocr8aYNEmlz8f5eJxWP5hJ6Lu0MwdHNplQn1zip4+RlBEw6dSu7QmLMp7nNR
-	lkGEYwa8885ToYjO4xc6L1jIpiPicrHZWcuklDWMkZQdf1Sz/EFtbjYT0UXaeEhfCDLuPwld6BP
-	gulHKiA+ayKkOe64c/ow7I1j0tRRGUAe2OXl9tGOoQH6t2F9HVHLEnsssrzVpQRvGdUidt4P1Jd
-	D4yZxqiACn+UfD4+Ela5W6C1jIzHiJh4ulZHs/qTlhfCNi3Gdjr/qluJI9wIyngFOkHa7rzQLw9
-	YO6VMS1e0QlQ61iidSv0amtT1aVO9AbST9gPf
-X-Google-Smtp-Source: AGHT+IGNpJNOsvFiulBAn14rvV+gNw6x7YaxgnaL0p3o0QovIgtsHJ2X+893Wi/o+WL5lAWsrHnGBQ==
-X-Received: by 2002:a05:6a21:6d85:b0:245:4181:e1fb with SMTP id adf61e73a8af0-2602aa83d47mr4372165637.27.1757690884773;
-        Fri, 12 Sep 2025 08:28:04 -0700 (PDT)
+        bh=GrAwY5JfDrvJYw4ViEeSxknJLuWu6wVTQX+QkSjS5Eg=;
+        b=aDeLeL2uvd/pA8GUYwu0m2tPm4rJC4EhIGS8zNBXYNr6LXjC69OZbidfL3aGkUB8mq
+         gsRQK7MkrzBoiYINnyd0wiB6mboddHQOtQ0QVDGYjq4c/VnwRiFQAykTl0uoSHLP208d
+         vCnHV70M9D1U+M5ZNWs0GrXkeCdrw8ipId5gpwGP1+T0L6e7sJFdwj7G7+ezpQn1kk5C
+         eeq8mt/2fV1Kik5vu/Z/JQbSGtKF9s84WpomvFfEmfuUL3+pTyvClpwj0WKJ1uTKQxUW
+         FV/ccKGBHUxspeJwmxojmHhzJxR9ICdVqd46UAlY+yVI+rOhgHCaXMnxx8Te8Ajvn2lx
+         dZJg==
+X-Forwarded-Encrypted: i=1; AJvYcCUjbyvSIDAiFBPz7ywZEOU7vKjfUTz5C9Z4uRCBJ4qMzuYelwraNrD7cYh4tRyIt8CSPxpBN1WC8K0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyMTCIyg36vRSG5AJPsYcrm+XMDgkLGOvBumh8u3+tYHbb0V4A1
+	p6IvMc+0Xv48F551D8fuoavbMUaRnd2GGARO4pKgk5g05C9sJ9UuCjqW
+X-Gm-Gg: ASbGncuCCWF4//gYvf3ozCBmAyWErV3N3jEO/hfQCB/crt3kFS/bik1zjBJPcGFvW3m
+	qwLjJyoOpIGovsv7WOYp2ARNi2hyuypG0vj5KMn5a4Q7zYR/3COcelemSSCrq1dfIbKwCIKg5ad
+	gaYwKZ8SNIPmJ6BlE01lZ8NruUy/l+HS5elAgJknINp1vHgL3dQnCYBF1LVl/5Q28m7mX4Q7XTa
+	4EXpzWwb5VjUuvqjx2grjKU5VHTTWEpYGyearxpe8+kHi7OWhHDGkd+UMn+6fVS78jXjKdaF3Bp
+	UmQffxAhGT2plYNCyLocU190eXAf93yqUsKvFYYoTkLNaftJhMbBvN/xRA4qxtyHzuZZ/QpU9Fi
+	58vyWF1H6TMzgCPXfSYYs1jx5JWjqK884BHTf
+X-Google-Smtp-Source: AGHT+IHXjF/YrVBz4mMGetnwhko7i25Vp3SjUA9r6o22PANiDSx6Iqp70TZfGVsCdF/6nIvuJ2zKUw==
+X-Received: by 2002:a05:6a00:1883:b0:736:3ea8:4805 with SMTP id d2e1a72fcca58-77612060bc4mr4061361b3a.7.1757690889383;
+        Fri, 12 Sep 2025 08:28:09 -0700 (PDT)
 Received: from jicarita ([65.144.169.45])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7760944a9a9sm5436846b3a.78.2025.09.12.08.28.03
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7760944a9a9sm5436846b3a.78.2025.09.12.08.28.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Sep 2025 08:28:04 -0700 (PDT)
+        Fri, 12 Sep 2025 08:28:08 -0700 (PDT)
 From: Thomas Bertschinger <tahbertschinger@gmail.com>
 To: io-uring@vger.kernel.org,
 	axboe@kernel.dk,
@@ -71,9 +71,9 @@ To: io-uring@vger.kernel.org,
 	jlayton@kernel.org,
 	amir73il@gmail.com
 Cc: Thomas Bertschinger <tahbertschinger@gmail.com>
-Subject: [PATCH v3 08/10] io_uring: add __io_open_prep() helper
-Date: Fri, 12 Sep 2025 09:28:53 -0600
-Message-ID: <20250912152855.689917-9-tahbertschinger@gmail.com>
+Subject: [PATCH v3 09/10] io_uring: add support for IORING_OP_OPEN_BY_HANDLE_AT
+Date: Fri, 12 Sep 2025 09:28:54 -0600
+Message-ID: <20250912152855.689917-10-tahbertschinger@gmail.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20250912152855.689917-1-tahbertschinger@gmail.com>
 References: <20250912152855.689917-1-tahbertschinger@gmail.com>
@@ -85,80 +85,216 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This adds a helper, __io_open_prep(), which does the part of preparing
-for an open that is shared between openat*() and open_by_handle_at().
+This adds support for open_by_handle_at(2) to io_uring.
 
-It excludes reading in the user path or file handle--this will be done
-by functions specific to the kind of open().
+First an attempt to do a non-blocking open by handle is made. If that
+fails, for example, because the target inode is not cached, a blocking
+attempt is made.
 
 Signed-off-by: Thomas Bertschinger <tahbertschinger@gmail.com>
 ---
- io_uring/openclose.c | 35 +++++++++++++++++++++++++----------
- 1 file changed, 25 insertions(+), 10 deletions(-)
+ include/uapi/linux/io_uring.h |   1 +
+ io_uring/opdef.c              |  15 +++++
+ io_uring/openclose.c          | 111 ++++++++++++++++++++++++++++++++++
+ io_uring/openclose.h          |   8 +++
+ 4 files changed, 135 insertions(+)
 
+diff --git a/include/uapi/linux/io_uring.h b/include/uapi/linux/io_uring.h
+index a4aa83ad9527..c571929e7807 100644
+--- a/include/uapi/linux/io_uring.h
++++ b/include/uapi/linux/io_uring.h
+@@ -291,6 +291,7 @@ enum io_uring_op {
+ 	IORING_OP_WRITEV_FIXED,
+ 	IORING_OP_PIPE,
+ 	IORING_OP_NAME_TO_HANDLE_AT,
++	IORING_OP_OPEN_BY_HANDLE_AT,
+ 
+ 	/* this goes last, obviously */
+ 	IORING_OP_LAST,
+diff --git a/io_uring/opdef.c b/io_uring/opdef.c
+index 76306c9e0ecd..1aa36f3f30de 100644
+--- a/io_uring/opdef.c
++++ b/io_uring/opdef.c
+@@ -580,6 +580,15 @@ const struct io_issue_def io_issue_defs[] = {
+ 		.issue			= io_name_to_handle_at,
+ #else
+ 		.prep			= io_eopnotsupp_prep,
++#endif
++	},
++	[IORING_OP_OPEN_BY_HANDLE_AT] = {
++#if defined(CONFIG_FHANDLE)
++		.prep			= io_open_by_handle_at_prep,
++		.issue			= io_open_by_handle_at,
++		.async_size		= sizeof(struct io_open_handle_async),
++#else
++		.prep			= io_eopnotsupp_prep,
+ #endif
+ 	},
+ };
+@@ -835,6 +844,12 @@ const struct io_cold_def io_cold_defs[] = {
+ 	[IORING_OP_NAME_TO_HANDLE_AT] = {
+ 		.name			= "NAME_TO_HANDLE_AT",
+ 	},
++	[IORING_OP_OPEN_BY_HANDLE_AT] = {
++		.name			= "OPEN_BY_HANDLE_AT",
++#if defined(CONFIG_FHANDLE)
++		.cleanup		= io_open_by_handle_cleanup,
++#endif
++	}
+ };
+ 
+ const char *io_uring_get_opcode(u8 opcode)
 diff --git a/io_uring/openclose.c b/io_uring/openclose.c
-index 884a66e56643..4da2afdb9773 100644
+index 4da2afdb9773..289d61373567 100644
 --- a/io_uring/openclose.c
 +++ b/io_uring/openclose.c
-@@ -58,11 +58,10 @@ static bool io_openat_force_async(struct io_open *open)
- 	return open->how.flags & (O_TRUNC | O_CREAT | __O_TMPFILE);
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0
+ #include <linux/kernel.h>
+ #include <linux/errno.h>
++#include <linux/exportfs.h>
+ #include <linux/fs.h>
+ #include <linux/file.h>
+ #include <linux/fdtable.h>
+@@ -245,6 +246,116 @@ int io_name_to_handle_at(struct io_kiocb *req, unsigned int issue_flags)
+ 	io_req_set_res(req, ret, 0);
+ 	return IOU_COMPLETE;
  }
- 
--static int __io_openat_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe)
-+/* Prep for open that is common to both openat*() and open_by_handle_at() */
-+static int __io_open_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe)
- {
- 	struct io_open *open = io_kiocb_to_cmd(req, struct io_open);
--	const char __user *fname;
--	int ret;
- 
- 	if (unlikely(sqe->buf_index))
- 		return -EINVAL;
-@@ -74,6 +73,29 @@ static int __io_openat_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe
- 		open->how.flags |= O_LARGEFILE;
- 
- 	open->dfd = READ_ONCE(sqe->fd);
 +
-+	open->file_slot = READ_ONCE(sqe->file_index);
-+	if (open->file_slot && (open->how.flags & O_CLOEXEC))
-+		return -EINVAL;
-+
-+	open->nofile = rlimit(RLIMIT_NOFILE);
-+
-+	if (io_openat_force_async(open))
-+		req->flags |= REQ_F_FORCE_ASYNC;
-+
-+	return 0;
-+}
-+
-+static int __io_openat_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe)
++int io_open_by_handle_at_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe)
 +{
 +	struct io_open *open = io_kiocb_to_cmd(req, struct io_open);
-+	const char __user *fname;
++	struct io_open_handle_async *ah;
++	u64 flags;
 +	int ret;
++
++	flags = READ_ONCE(sqe->open_flags);
++	open->how = build_open_how(flags, 0);
 +
 +	ret = __io_open_prep(req, sqe);
 +	if (ret)
 +		return ret;
 +
- 	fname = u64_to_user_ptr(READ_ONCE(sqe->addr));
- 	open->filename = getname(fname);
- 	if (IS_ERR(open->filename)) {
-@@ -82,14 +104,7 @@ static int __io_openat_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe
- 		return ret;
- 	}
++	ah = io_uring_alloc_async_data(NULL, req);
++	if (!ah)
++		return -ENOMEM;
++	memset(&ah->path, 0, sizeof(ah->path));
++	ah->handle = get_user_handle(u64_to_user_ptr(READ_ONCE(sqe->addr)));
++	if (IS_ERR(ah->handle))
++		return PTR_ERR(ah->handle);
++
++	req->flags |= REQ_F_NEED_CLEANUP;
++
++	return 0;
++}
++
++int io_open_by_handle_at(struct io_kiocb *req, unsigned int issue_flags)
++{
++	struct io_open *open = io_kiocb_to_cmd(req, struct io_open);
++	struct io_open_handle_async *ah = req->async_data;
++	bool nonblock_set = open->how.flags & O_NONBLOCK;
++	bool fixed = !!open->file_slot;
++	struct file *file;
++	struct open_flags op;
++	int ret;
++
++	ret = build_open_flags(&open->how, &op);
++	if (ret)
++		goto err;
++
++	if (issue_flags & IO_URING_F_NONBLOCK)
++		ah->handle->handle_type |= FILEID_CACHED;
++	else
++		ah->handle->handle_type &= ~FILEID_CACHED;
++
++	if (!ah->path.dentry) {
++		/*
++		 * Handle has not yet been converted to path, either because
++		 * this is our first try, or because we tried previously with
++		 * IO_URING_F_NONBLOCK set, and failed.
++		 */
++		ret = handle_to_path(open->dfd, ah->handle, &ah->path, op.open_flag);
++		if (ret == -EAGAIN && (issue_flags & IO_URING_F_NONBLOCK))
++			return -EAGAIN;
++
++		if (ret)
++			goto err;
++	}
++
++	if (!fixed) {
++		ret = __get_unused_fd_flags(open->how.flags, open->nofile);
++		if (ret < 0)
++			goto err;
++	}
++
++	if (issue_flags & IO_URING_F_NONBLOCK) {
++		WARN_ON_ONCE(io_openat_force_async(open));
++		op.lookup_flags |= LOOKUP_CACHED;
++		op.open_flag |= O_NONBLOCK;
++	}
++	file = do_file_handle_open(&ah->path, &op);
++
++	if (IS_ERR(file)) {
++		if (!fixed)
++			put_unused_fd(ret);
++		ret = PTR_ERR(file);
++		if (ret == -EAGAIN && (issue_flags & IO_URING_F_NONBLOCK))
++			return -EAGAIN;
++		goto err;
++	}
++
++	if ((issue_flags & IO_URING_F_NONBLOCK) && !nonblock_set)
++		file->f_flags &= ~O_NONBLOCK;
++
++	if (!fixed)
++		fd_install(ret, file);
++	else
++		ret = io_fixed_fd_install(req, issue_flags, file,
++					  open->file_slot);
++
++err:
++	io_open_by_handle_cleanup(req);
++	req->flags &= ~REQ_F_NEED_CLEANUP;
++	if (ret < 0)
++		req_set_fail(req);
++	io_req_set_res(req, ret, 0);
++	return IOU_COMPLETE;
++}
++
++void io_open_by_handle_cleanup(struct io_kiocb *req)
++{
++	struct io_open_handle_async *ah = req->async_data;
++
++	if (ah->path.dentry)
++		path_put(&ah->path);
++
++	kfree(ah->handle);
++}
+ #endif /* CONFIG_FHANDLE */
  
--	open->file_slot = READ_ONCE(sqe->file_index);
--	if (open->file_slot && (open->how.flags & O_CLOEXEC))
--		return -EINVAL;
--
--	open->nofile = rlimit(RLIMIT_NOFILE);
- 	req->flags |= REQ_F_NEED_CLEANUP;
--	if (io_openat_force_async(open))
--		req->flags |= REQ_F_FORCE_ASYNC;
- 	return 0;
- }
+ int __io_close_fixed(struct io_ring_ctx *ctx, unsigned int issue_flags,
+diff --git a/io_uring/openclose.h b/io_uring/openclose.h
+index 2fc1c8d35d0b..f966859a8a92 100644
+--- a/io_uring/openclose.h
++++ b/io_uring/openclose.h
+@@ -10,9 +10,17 @@ void io_open_cleanup(struct io_kiocb *req);
+ int io_openat2_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe);
+ int io_openat2(struct io_kiocb *req, unsigned int issue_flags);
  
++struct io_open_handle_async {
++	struct file_handle		*handle;
++	struct path			path;
++};
++
+ #if defined(CONFIG_FHANDLE)
+ int io_name_to_handle_at_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe);
+ int io_name_to_handle_at(struct io_kiocb *req, unsigned int issue_flags);
++int io_open_by_handle_at_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe);
++int io_open_by_handle_at(struct io_kiocb *req, unsigned int issue_flags);
++void io_open_by_handle_cleanup(struct io_kiocb *req);
+ #endif /* CONFIG_FHANDLE */
+ 
+ int io_close_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe);
 -- 
 2.51.0
 
