@@ -1,130 +1,115 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 831982BE62D;
-	Fri, 12 Sep 2025 07:22:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1A762FE585
+	for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 11:56:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757661737; cv=none; b=KyLAZqv7/iLCB5X7lcPFDzyXtHQ4zhlNDHdO4JAWG/9jPPllWSBuB8+bFYtT9Yfl7EMSccPAKzs0AdpQYNkRRe6UZO7eaUIo4x9DnJJjxJ8np0eF2lLovGroA+J7T7WN9346EtwTssCCQDAnWrNJ7+NixhUv3yEZmTIT0bUhby8=
+	t=1757678213; cv=none; b=TABHBBfLjZsRqELqllKG09xTYdm5eN+hDwjOqg+hqz7Jty7rFyMgSydIQjYSdIACMdyx4dz5U31NjjIpe1mctDSVyV8GSKy5TebMVtgGz9JCKvBc22a/Qc7xuc6Cf1JDXZpNJ58/G220MyGr+/bYzjj9rBbYdAfGGdMA62/MOCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757661737; c=relaxed/simple;
-	bh=7N8j92UF1rmeEeMIiK9A/lZjg3S0qoHyuNm6kSJjeD4=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=ZoHC3JpdbxIP8NKm49QlFA+fb2pVBo3weCsCznAK/FReBb6MLctLcGEuRu2a8HB5qhcjqmb0cEVyXdgZ94NlWpcxWpZ3+OnL/nlzudYoZEOf7F/WKTWy1jR3ArBZdIdYrKYHYHcwHI+4B6WCC3OCrhPbNUae/8zc/dFrY9w4HOA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=flO1iKZ1; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1757678213; c=relaxed/simple;
+	bh=+mNtg5JQLMkrEOEyHPRCbKpHStXXOyD5XtUgf68Si4Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cZFkI6CvICbFlq2taSnX++uGm4VDBbyz8yuJ7GyOo2UGnT9suoFd497LfAThSKB7L9ukZdT5sol5T+UwvorinDPHI587D7CIfRTEWwJIwPFZ0bkiEbABuFJcC21jd1nppweF+bFPZG/Mm65ikK/5Wt93hGwS8cCnTy5dpd/7zNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HLcNqfnZ; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="flO1iKZ1"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58BMBPqt026821;
-	Fri, 12 Sep 2025 07:22:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=7N8j92
-	UF1rmeEeMIiK9A/lZjg3S0qoHyuNm6kSJjeD4=; b=flO1iKZ1NObM3bAjoluDKi
-	r840Bk0ASzcAGEyhoQiQHLlJ7Ft+jP6aEFN8ygl67RTR6/t2+z387deHtexSTIrG
-	y/Hhzc6YRvWV395ksfKkcaue2N2tqw/m8G33vI2vKFdOTG2Q8n8Ts3+jFvtaPLK0
-	brrwPNPabfFAiEN7n7t8Aa0ViG0NCK52r39Jt+ucrv4R2JiD5fJu5cjB6CiM/fqE
-	ziaMFpl4lzQ7RVu23tMxb3BiK1XRsEUDZJ1JPDA280yeISqu/aA5E9MyOi4Y2c8Z
-	IoNQNxGtkf1aK83jjVqQtucDtTaov3f1ihN780KJ6T6RLh8hxxmecr3G146BylAQ
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 490bct8pm1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 12 Sep 2025 07:22:04 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 58C5BHBf011457;
-	Fri, 12 Sep 2025 07:22:03 GMT
-Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 490y9ut181-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 12 Sep 2025 07:22:03 +0000
-Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
-	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 58C7M2cM29754062
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 12 Sep 2025 07:22:02 GMT
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id AC9435805D;
-	Fri, 12 Sep 2025 07:22:02 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 5EA2A58059;
-	Fri, 12 Sep 2025 07:21:58 +0000 (GMT)
-Received: from smtpclient.apple (unknown [9.61.244.60])
-	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTPS;
-	Fri, 12 Sep 2025 07:21:58 +0000 (GMT)
-Content-Type: text/plain;
-	charset=utf-8
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HLcNqfnZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1757678210;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z+6E05kBbROZjYHlECJ6pM3n90elFfaGg1KIjniWKd0=;
+	b=HLcNqfnZtQIRRIrw/Pu50WCO0gl5DJMDQ27rYBob+wMyoWgD/2WNaS0RObKULVNJQJr0ds
+	7XK5SzLjCVhN+LbZWspqnXGxVS0xhD98R66+G9UQrI//V99BoztWBPTu/A0L7hH64Jy0pe
+	tQUH7lWkcT39ALBrE144BQFvWom8Myg=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-630-VQduj30-PXKdn0MR13HK-Q-1; Fri, 12 Sep 2025 07:56:49 -0400
+X-MC-Unique: VQduj30-PXKdn0MR13HK-Q-1
+X-Mimecast-MFC-AGG-ID: VQduj30-PXKdn0MR13HK-Q_1757678208
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-45dcfc6558cso13785425e9.1
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 04:56:49 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757678208; x=1758283008;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Z+6E05kBbROZjYHlECJ6pM3n90elFfaGg1KIjniWKd0=;
+        b=IWK+UOMnywFjEcKJmw0SdD2VqgGPGX4cpskObAfsjsZhKncZdXfOnJAKDsG/P3YO3l
+         JA1f0rv93HKAA3SLrJ+Y1Y+rgDSBPjSTbHc3EUVmCbHmzqccLksOUh3YVKhB61FhDUop
+         emKZQ98tijCwVSHjPtvJIWrE/KchB8ID+uURoz7BVS3g2PJU1k0qQURAcNGHCqyZZhV8
+         n4b+so+OId/80ZklhdWWVmGU3BsBt6vbg+wOjt86MS6EdATEHXhf5lwxu3PzoTOC8ZVc
+         2eXhF3Uo9AohaGvQEawR/Sxog2kjTBP9rHFoQPITP4fberDo9k6iloVwJuFZcdD83Ee3
+         tmcA==
+X-Forwarded-Encrypted: i=1; AJvYcCUb9RgSEtIV7Ul4Ur5XHfUDSxOH05ZdTyOyAznDE9V5iNvsLJGaGQ1GLICycHUnrqenZlJshwqpln4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxwUHm943AtO730OH+GCX2km0EE9Nia2YfQ6BpRFz16/wNJqhWM
+	TRb9TyzEJ50MCBSxARRjThBPCSDOTofSzU3ZsZO2u53CkKFkjS1GXstTFCu+XqS9qeScYxu1+d9
+	SYZ6xZ4aAWcYtfeB8iDw0Kojn3za1+64Qzg7Zt7YKNI/8Qm2kGskBM0ysYLSJ
+X-Gm-Gg: ASbGncskBf5K5mcsu+s3GtIgU23YrKRu5cGzblcZl8B4B7FYEI8sttMgSuVcANU+PwW
+	FhdeDHAd7110ea9HqyZjQkdFywsisWcevrMShXw+wpV3ZEL5wMDfP291X6kwoJKJ0X9jwIRqdu+
+	IMRZZ+5282DZ9EoGqNfS7DiQgjTcVu3zuIp3bylO/UJJoEtXpgQid+1nbTpxsl+u+GcZTjxSWIP
+	lG4O9zt1wh5XwhnotI43404EQ+LhmfWBA0SwV3TSWp2ulegE/AI9OjDUM/YUD1CEd+O1vJ/Hb/E
+	sGgKM38rCKKpiG/0oSEr6EQRBICV13i5
+X-Received: by 2002:a05:600c:46d3:b0:45e:598:90b0 with SMTP id 5b1f17b1804b1-45f211d4640mr28993435e9.9.1757678207817;
+        Fri, 12 Sep 2025 04:56:47 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFa3w2WIx7VIKrKrQtNbmGIs6VxkTekeX4oKYegwFajbDtX1Br0uRbrYVR+ymTQ7e9/hErz+g==
+X-Received: by 2002:a05:600c:46d3:b0:45e:598:90b0 with SMTP id 5b1f17b1804b1-45f211d4640mr28993125e9.9.1757678207364;
+        Fri, 12 Sep 2025 04:56:47 -0700 (PDT)
+Received: from thinky ([91.245.205.131])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45e037d741asm58941035e9.23.2025.09.12.04.56.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Sep 2025 04:56:47 -0700 (PDT)
+Date: Fri, 12 Sep 2025 13:56:45 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, fsverity@lists.linux.dev, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com, 
+	ebiggers@kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH RFC 02/29] iomap: introduce iomap_read/write_region
+ interface
+Message-ID: <khoyx76se2x2z2ktzelsklcqnbjl4budasczm2mjknkgvlsbph@gckk675qmqkj>
+References: <20250728-fsverity-v1-0-9e5443af0e34@kernel.org>
+ <20250728-fsverity-v1-2-9e5443af0e34@kernel.org>
+ <20250729222252.GJ2672049@frogsfrogsfrogs>
+ <20250811114337.GA8850@lst.de>
+ <pz7g2o6lo6ef5onkgrn7zsdyo2o3ir5lpvo6d6p2ao5egq33tw@dg7vjdsyu5mh>
+ <20250912071859.GB13505@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3774.600.62\))
-Subject: Re: [linux-next20250911]Kernel OOPs while running generic/256 on Pmem
- device
-From: Venkat <venkat88@linux.ibm.com>
-In-Reply-To: <aMPIwdleUCUMFPh2@infradead.org>
-Date: Fri, 12 Sep 2025 12:51:44 +0530
-Cc: linux-fsdevel@vger.kernel.org, riteshh@linux.ibm.com,
-        ojaswin@linux.ibm.com, linux-xfs@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>,
-        Madhavan Srinivasan <maddy@linux.ibm.com>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>,
-        linux-mm@vger.kernel.org, cgroups@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <96AA28C4-24DD-4638-B944-CC2E2E7FC4C0@linux.ibm.com>
-References: <8957c526-d05c-4c0d-bfed-0eb6e6d2476c@linux.ibm.com>
- <aMPIwdleUCUMFPh2@infradead.org>
-To: Christoph Hellwig <hch@infradead.org>
-X-Mailer: Apple Mail (2.3774.600.62)
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA2MDAxMCBTYWx0ZWRfX694bk+5dV0QP
- vwkrmWpJdqg0KMSFaHJMTLh0yb6j5fa0y1iPDNVi4pdil47n+vvxxr4pLL3ub/OdAaQj1q8Esnz
- vPvFbCZk0F35dt0vp/JvFz8GNb4vgPCQUrc2FIDO/3nd8dFS6bm4+qJeyNWVze+9W+lO8DKaGw5
- jyfUiC+o6z7bke/wjJyQZSLiXz9DnmO9SHDxKCLNc/Il7HOwAzIL36Lr5h+uGafQsLsS5AHXftK
- wD2K8JqZWwHbs1esDqsRI5/KdAkXg00ohc2JCYIudWZM2fBctB78NvGFPtbRADdyfcXRxahP8Wu
- 9fCoJg8hQnfCpGtfJqsLYVHeT9UKw9sxKwDYdCa8oaSxRruSx1Gf/aovLAUBWLK8b4B7vN/ddgr
- hzJNLVW7
-X-Authority-Analysis: v=2.4 cv=SKNCVPvH c=1 sm=1 tr=0 ts=68c3ca1c cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=JfrnYn6hAAAA:8 a=wOK_BrywWAtTNq7yZiUA:9
- a=QEXdDO2ut3YA:10 a=1CNFftbPRP8L7MoqJWF3:22
-X-Proofpoint-GUID: 62UQL51jW9jaTqixgBdQ7gy0k8zYkkMo
-X-Proofpoint-ORIG-GUID: 62UQL51jW9jaTqixgBdQ7gy0k8zYkkMo
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-12_02,2025-09-11_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1011 spamscore=0 priorityscore=1501 bulkscore=0 malwarescore=0
- adultscore=0 suspectscore=0 impostorscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509060010
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250912071859.GB13505@lst.de>
 
+On 2025-09-12 09:18:59, Christoph Hellwig wrote:
+> On Tue, Sep 09, 2025 at 02:30:14PM +0200, Andrey Albershteyn wrote:
+> > > Same thoughts here.  It seems like we should just have a beyond-EOF or
+> > > fsverity flag for ->read_iter / ->write_iter and consolidate all this
+> > > code.  That'll also go along nicely with the flag in the writepage_ctx
+> > > suggested by Joanne.
+> > > 
+> > 
+> > In addition to being bound by the isize the fiemap_read() copies
+> > data to the iov_iter, which is not really needed for fsverity.
+> 
+> Aka, you want an O_DIRECT read into a ITER_BVEC buffer for the data?
+> 
 
+hmm, but we want fsverity merkle tree to be in page cache to use the
+"verified page" flag. As far as I understand iter_bvec will need a
+page attached anyway, so this is the same. Or am I missing
+something?
 
-> On 12 Sep 2025, at 12:46=E2=80=AFPM, Christoph Hellwig =
-<hch@infradead.org> wrote:
->=20
-> On Fri, Sep 12, 2025 at 10:51:18AM +0530, Venkat Rao Bagalkote wrote:
->> Greetings!!!
->>=20
->>=20
->> IBM CI has reported a kernel crash, while running generic/256 test =
-case on
->> pmem device from xfstests suite on linux-next20250911 kernel.
->=20
-> Given that this in memcg code you probably want to send this to =
-linux-mm
-> and the cgroups list.
+And with direct io there's no readahead then, and we don't get any
+benefit going through vfs instead of directly calling to iomap.
 
-Thanks for advice.
-
-Adding mm and croups mailing list.
-
-Regards,
-Venkat.
-
-
+-- 
+- Andrey
 
