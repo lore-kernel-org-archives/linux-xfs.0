@@ -1,326 +1,277 @@
-Received: from mail-yx1-f44.google.com (mail-yx1-f44.google.com [74.125.224.44])
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 670151C6FEC
-	for <linux-xfs@vger.kernel.org>; Sat, 13 Sep 2025 02:48:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C4A52AE68
+	for <linux-xfs@vger.kernel.org>; Sat, 13 Sep 2025 03:05:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757731707; cv=none; b=g9GWOp/3KLlWOBUsYSVE3D6TCgqe9hr7W55SY4BULiFTKlTJ8KEWuXOMY6sQZuwr3houS3YYZW+AqBBKLQ83JZCbZdzyagP3F6bKFrzjldrds87qoFZheY2IBdNxZ+/Y6an1vhoy1I2kwQ7x/WrFylH0gnE2bAIu/cniMaNueKw=
+	t=1757732750; cv=none; b=cibaCXX3l2nU+oC167OtU2mQjnI0vFFW28MT5p1aR3mJ3qVP0q6J6ZpSCjj6zm62igtbk+y4DLDA7BNqrY4E3ks/ByndPRgTgjtdY15w3Ovh2O3RLMnimagNNV8H4x/R0hdocJaub8bgG9TZpRlLD3hRq6GyWoJRP55pHcSNwMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757731707; c=relaxed/simple;
-	bh=ZgDzLUPuZXuQEWnXyNiXs6bEELAKGlfOKneMLqyun5Y=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=BkkJfLw2fmusuGt5gMt5nOSy07UidYysDXge7ObrGSjUba5GXVic2wJ7AvHKRPxoLpWspT3u6J5tz7/VxaJGC6vbZ/05QcnZ0HtbcONWuQ6zV8UoJBrLAZYQBsygCZMNnb4LqQ7gKjsZtrdlnNwalM2QlOvuOqB2rpGOZVmU6cg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=K+QLVMqx; arc=none smtp.client-ip=74.125.224.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1757732750; c=relaxed/simple;
+	bh=pUq/ET/7OoC/d6z0t4nVT64sAN6OjWKADFi/hqIiqag=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rOrbuOClYF7NLJCgqiIYDhIy0hNs1PDW+g8/2ukXkwN3PMV1gKpJTZQyBJ3epPxz9sf4YTjD7wH67KDjZFtykPPZij3j5/QYsGA73sYIXOzBIzP+C51+3Lc9RxMDWj8Nd0493PgoGrNaJPU0it5iHshAvbZGsN3wSbYNFKdsoTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XuIzph8/; arc=none smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="K+QLVMqx"
-Received: by mail-yx1-f44.google.com with SMTP id 956f58d0204a3-6296f6ce5ddso511769d50.3
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 19:48:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XuIzph8/"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-62ee43b5e5bso2234764a12.1
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 20:05:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1757731703; x=1758336503; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=dkY2yS7RSwh45nVEv3otHU3VH9SAKoF62TZrQgSQhHE=;
-        b=K+QLVMqxoe/VPwG14fizIyXZJhHeo7E909SiTRkxy9MdedQ555Co7frMx1W0bGNdHu
-         J9Z6k586KkpF1nTkU24dj438IUr7kXq8Fg1+SS2FPURLAsj2BD6dEtW0cGwrFlXvQFu8
-         x9kTdCxCxgjWni+ioxLM8cJChC0i7YV98xZqOGJpj8A/Ojo1eKB7H5X5VKKT+FWlMhSh
-         KmsQMaBcaOA3fHj7nwSFh0svbYDgVVAPMLUeZYI9+MAOZu6PtR55qG9KFZggk0v0G08F
-         fA1QIp0gIyjhpFQ7Uu/pjl55pqhyGWguUNDMYbFwYnpj5B7kf9/JmkGMMikznMBPKgB5
-         lgzg==
+        d=gmail.com; s=20230601; t=1757732746; x=1758337546; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=rZNYaJHdKdym4x92LfIeJwjfVk9SQYhUdI5Z20nL+Fg=;
+        b=XuIzph8/qKdkTggwwcdUbICu9oGpWDvAsXMt9hF/ziWohMji2WrAgTXHj+IeyXWie5
+         NQGwYrqozDhNJg1h1fvgEQOP7Was7WqR4nOhYFuNOsBQ9GhYtlx7ElvVYwqu2H69yhyq
+         AXWz3HoUA4YuZBvjBZVw0h2IdluYCBSQ5lG+kmhZrkDZoGEjq8u/h/hj4sSjrPmHkPKL
+         5c0zYGFvaBH6b7l2pQvLXR82lfOG2LroOPWvqiwsTfDlIrj9HGEBEghKnNuErxTLeU7I
+         ph8T4MYoN8gOFxSmZ4qO9u/3/BwTHLYsvipz0q//aRABXmrKyWH49vwhbRZttJ3pvZjz
+         5SCw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757731703; x=1758336503;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=dkY2yS7RSwh45nVEv3otHU3VH9SAKoF62TZrQgSQhHE=;
-        b=NBgO/aQPdj2uBOwK+M0TERzyqyJCIbFBNjXatezPDEldqSsDGlIR0kMiCpv+DNCIQM
-         LYjYiw1mprwohATBm/b9rPgTryZPA2ivm1JneGlunpCPJy0FrdILsA58mUXH0Z8Xtz/P
-         1pPnrAhk1mwfsF357Yq0JUoXnbIPnYsQ9Tl/QKlkAZb0knVGd8ZZ8fjyrOxLYdue8Ybn
-         HCf9mxnqYzsrhxL7SPL0RJT+lgokMuzT63ORZIlV2XnRk5T3IIRiG9eeZPsyDt4UnmEq
-         cQ0Iz9hh/VgBYPIVnIEQNL7Z/f4kOWenFOo2pWyQKXIITxSWvtesL4c3Evg8BGuHPbUI
-         Gp/Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXC4pf+Yl1dtCIN50JPNHPy9250ECCUK/raIase+R8rmQeQWzLDo8Bzm4oWfFEWC8ixrtUM5xkf2hM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzKjlY7ghjY5C19cApLAdL2vfGPLFnb1zSc5lf8K/SuFTS2OGLq
-	wh51D8tHUB/18zZ1V36cvZpyJYxZX4arNz2ntCfjk+Rohme92OWDCJWGaNf7/CrL9LNBpl2FDb3
-	FFpGUtPqkO0XWoUpNjHLRjEx4Pa467XsIkqj7hF1Mtw==
-X-Gm-Gg: ASbGnctInTYxgzkCoEUN8v1To3W4sGFzYuoKYn99KPDdxPUWDhnYzeoTFFkvR5MVH7W
-	DlHm1BrCJT7CDxOhLxI3uExhbz3lk1gdl5qnlC+dVZV4bNNWAbdESPh1LVkeqH7I/DcClkQSvrM
-	4ugLfy/NVuh4nHmkp6cuXTWlIZxFvdTytNu9qi+499sHO3X4VZdH5ifTMBX8atGtNw0aYopo6Fa
-	Vu0Y1AFzL4x1qM=
-X-Google-Smtp-Source: AGHT+IGiKD+4jzf4TGq8bTBu8gsWjwWmWFiXXnkLbYhS2Yr6yBghdtRZuNxqqC+KU1Yu03Hdf+Hg2fEWLC9p8tq8dhA=
-X-Received: by 2002:a53:e712:0:b0:5fe:91c3:f0fb with SMTP id
- 956f58d0204a3-627234f4904mr3827458d50.32.1757731703206; Fri, 12 Sep 2025
- 19:48:23 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1757732746; x=1758337546;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=rZNYaJHdKdym4x92LfIeJwjfVk9SQYhUdI5Z20nL+Fg=;
+        b=v47b0/mNp2kMeCduoc8+BMNieoVhRy4/AsqYRZSHhYuguvkNSmLy2kQ372JlVxl8nK
+         6jfl90CpeVKtrz+gD/eTqv4UQF8BJrIOKUbaSitLJgkmknOdTlaNvvzhetyQ9iewmiYC
+         ys7U4VI2uL3oRfhdUmquY2sV/jGpAuUZP8+XZlZVPFjnryEMxcil0cVFIBiHPD5U853X
+         0vkvGHrIgpJCOpkzptcAplpHVAehrvEoO8f+AlI6mfotqjIqNNL4mfNDTlhjDfEWnTFa
+         kDrSzlZu+vtN39a6yg5e9KSi1o9TR6npp4f6Foh02KTWS8uNQGzjAZsFPmvDrepfpTaK
+         z/Nw==
+X-Forwarded-Encrypted: i=1; AJvYcCVJkPIP9iyPAueLHJQeDa+sy2w8ORE+QDQEbZLa1hv73N/rYo26q8QThHBDdQbJhjQtw37QqOH/HYE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy5r9ORtgMCsGFd/BIeeiMq7nrr+JS670Y+xghQMRIicfhy7BwC
+	aDaPar85FaewWq2+MQ2C7ICjimLavnM7XEsCjm+dPQvM6VmbVbJ4WKHI
+X-Gm-Gg: ASbGncu1wLGuX+nZs03tajngxa4FJOEiDM1Eo6ONAh7/rrtUoRTalubLxRWyDRk1OWx
+	xhtRyjRxz0fzBKC4LLoTgaejhprBivK6l1diU0kwgOig+NaloKypxThMPYmpiTuTe7DJc9q4wi+
+	2yoINzqUVS+uS+y4s9PSM3OijzEYD+EB851i2mU5dC4JDl3YEES124Idzce0vdsC8GgSzJSBFR9
+	DlygqgScYyr9QnX6087LUs2mr5TiKPIygTYggi0sTTESamSZfMMov2T2PQj3oV3O20HKZOXbTr6
+	rlg9srgiZh0Nn+cnD0tTQWWIMWE1mZruUp+VnGMy/ssFSUAJ8qjcydTQwSnuH3lUw749/twKSlF
+	DgrdbiYL7u6cj01qe+QfOHXvHPh9bXAPJYIH+OP2tk+nbi5/ZMmvedaBMqt7dvYLaLkkkUvXQh4
+	f8oh4OEH68XggxxoAQunSPXhw=
+X-Google-Smtp-Source: AGHT+IFJnL+20g9iD9lSRPr+IlLcwoT2ifmvpzpD+xXQ3ygMnVts5REQ89+wyWeEA+IGXwhfUP9MMg==
+X-Received: by 2002:a17:907:8687:b0:b04:38f2:9059 with SMTP id a640c23a62f3a-b07c381bc58mr485935066b.42.1757732746127;
+        Fri, 12 Sep 2025 20:05:46 -0700 (PDT)
+Received: from amir-ThinkPad-T480.ctera.local (92-109-99-123.cable.dynamic.v4.ziggo.nl. [92.109.99.123])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b07b32dd5bfsm477698466b.63.2025.09.12.20.05.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Sep 2025 20:05:45 -0700 (PDT)
+From: Amir Goldstein <amir73il@gmail.com>
+To: Christoph Hellwig <hch@lst.de>,
+	Catherine Hoang <catherine.hoang@oracle.com>,
+	Leah Rumancik <leah.rumancik@gmail.com>
+Cc: "Darrick J . Wong" <djwong@kernel.org>,
+	Allison Henderson <allison.henderson@oracle.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH CANDIDATE 5.15, 6.1, 6.6] xfs: Increase XFS_QM_TRANS_MAXDQS to 5
+Date: Sat, 13 Sep 2025 05:05:02 +0200
+Message-ID: <20250913030503.433914-1-amir73il@gmail.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <8957c526-d05c-4c0d-bfed-0eb6e6d2476c@linux.ibm.com> <BAEAC2F7-7D7F-49E4-AB21-10FC0E4BF5F3@linux.ibm.com>
-In-Reply-To: <BAEAC2F7-7D7F-49E4-AB21-10FC0E4BF5F3@linux.ibm.com>
-From: Julian Sun <sunjunchao@bytedance.com>
-Date: Sat, 13 Sep 2025 10:48:12 +0800
-X-Gm-Features: Ac12FXxyQ3rupesgBRE_rBBovmGPVj00T36Qe6boIv2jYp-KBN6pOz85tL_EOvs
-Message-ID: <CAHSKhteHC26yXVFtjgdanfM7+vsOVZ+HHWnBYD01A4eiRHibVQ@mail.gmail.com>
-Subject: Re: [External] Re: [linux-next20250911]Kernel OOPs while running
- generic/256 on Pmem device
-To: Venkat <venkat88@linux.ibm.com>
-Cc: tj@kernel.org, akpm@linux-foundation.org, stable@vger.kernel.org, 
-	songmuchun@bytedance.com, shakeelb@google.com, hannes@cmpxchg.org, 
-	roman.gushchin@linux.dev, mhocko@suse.com, 
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, riteshh@linux.ibm.com, 
-	ojaswin@linux.ibm.com, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Linux Next Mailing List <linux-next@vger.kernel.org>, 
-	cgroups@vger.kernel.org, linux-mm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi,
+From: Allison Henderson <allison.henderson@oracle.com>
 
-Does this fix make sense to you?
+[ Upstream  commit f103df763563ad6849307ed5985d1513acc586dd ]
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d0dfaa0ccaba..ed24dcece56a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3945,9 +3945,10 @@ static void mem_cgroup_css_free(struct
-cgroup_subsys_state *css)
-                 * Not necessary to wait for wb completion which might
-cause task hung,
-                 * only used to free resources. See
-memcg_cgwb_waitq_callback_fn().
-                 */
--               __add_wait_queue_entry_tail(wait->done.waitq, &wait->wq_ent=
-ry);
-                if (atomic_dec_and_test(&wait->done.cnt))
--                       wake_up_all(wait->done.waitq);
-+                       kfree(wait);
-+               else
-+                       __add_wait_queue_entry_tail(wait->done.waitq,
-&wait->wq_entry);;
-        }
- #endif
-        if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_noso=
-cket)
+With parent pointers enabled, a rename operation can update up to 5
+inodes: src_dp, target_dp, src_ip, target_ip and wip.  This causes
+their dquots to a be attached to the transaction chain, so we need
+to increase XFS_QM_TRANS_MAXDQS.  This patch also add a helper
+function xfs_dqlockn to lock an arbitrary number of dquots.
 
-On Fri, Sep 12, 2025 at 8:33=E2=80=AFPM Venkat <venkat88@linux.ibm.com> wro=
-te:
->
->
->
-> > On 12 Sep 2025, at 10:51=E2=80=AFAM, Venkat Rao Bagalkote <venkat88@lin=
-ux.ibm.com> wrote:
-> >
-> > Greetings!!!
-> >
-> >
-> > IBM CI has reported a kernel crash, while running generic/256 test case=
- on pmem device from xfstests suite on linux-next20250911 kernel.
-> >
-> >
-> > xfstests: git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-> >
-> > local.config:
-> >
-> > [xfs_dax]
-> > export RECREATE_TEST_DEV=3Dtrue
-> > export TEST_DEV=3D/dev/pmem0
-> > export TEST_DIR=3D/mnt/test_pmem
-> > export SCRATCH_DEV=3D/dev/pmem0.1
-> > export SCRATCH_MNT=3D/mnt/scratch_pmem
-> > export MKFS_OPTIONS=3D"-m reflink=3D0 -b size=3D65536 -s size=3D512"
-> > export FSTYP=3Dxfs
-> > export MOUNT_OPTIONS=3D"-o dax"
-> >
-> >
-> > Test case: generic/256
-> >
-> >
-> > Traces:
-> >
-> >
-> > [  163.371929] ------------[ cut here ]------------
-> > [  163.371936] kernel BUG at lib/list_debug.c:29!
-> > [  163.371946] Oops: Exception in kernel mode, sig: 5 [#1]
-> > [  163.371954] LE PAGE_SIZE=3D64K MMU=3DRadix  SMP NR_CPUS=3D8192 NUMA =
-pSeries
-> > [  163.371965] Modules linked in: xfs nft_fib_inet nft_fib_ipv4 nft_fib=
-_ipv6 nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_=
-ct nft_chain_nat nf_nat nf_conntrack bonding tls nf_defrag_ipv6 nf_defrag_i=
-pv4 rfkill ip_set nf_tables nfnetlink sunrpc pseries_rng vmx_crypto dax_pme=
-m fuse ext4 crc16 mbcache jbd2 nd_pmem papr_scm sd_mod libnvdimm sg ibmvscs=
-i ibmveth scsi_transport_srp pseries_wdt
-> > [  163.372127] CPU: 22 UID: 0 PID: 130 Comm: kworker/22:0 Kdump: loaded=
- Not tainted 6.17.0-rc5-next-20250911 #1 VOLUNTARY
-> > [  163.372142] Hardware name: IBM,9080-HEX Power11 (architected) 0x8202=
-00 0xf000007 of:IBM,FW1110.01 (NH1110_069) hv:phyp pSeries
-> > [  163.372155] Workqueue: cgroup_free css_free_rwork_fn
-> > [  163.372169] NIP:  c000000000d051d4 LR: c000000000d051d0 CTR: 0000000=
-000000000
-> > [  163.372176] REGS: c00000000ba079b0 TRAP: 0700   Not tainted (6.17.0-=
-rc5-next-20250911)
-> > [  163.372183] MSR:  800000000282b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE>=
-  CR: 28000000  XER: 00000006
-> > [  163.372214] CFAR: c0000000002bae9c IRQMASK: 0
-> > [  163.372214] GPR00: c000000000d051d0 c00000000ba07c50 c00000000230a60=
-0 0000000000000075
-> > [  163.372214] GPR04: 0000000000000004 0000000000000001 c000000000507e2=
-c 0000000000000001
-> > [  163.372214] GPR08: c000000d0cb87d13 0000000000000000 000000000000000=
-0 a80e000000000000
-> > [  163.372214] GPR12: c00e0001a1970fa2 c000000d0ddec700 c000000000208e5=
-8 c000000107b5e190
-> > [  163.372214] GPR16: c00000000d3e5d08 c00000000b71cf78 c00000000d3e5d0=
-5 c00000000b71cf30
-> > [  163.372214] GPR20: c00000000b71cf08 c00000000b71cf10 c000000019f5858=
-8 c000000004704bc8
-> > [  163.372214] GPR24: c000000107b5e100 c000000004704bd0 000000000000000=
-3 c000000004704bd0
-> > [  163.372214] GPR28: c000000004704bc8 c000000019f585a8 c000000019f53da=
-8 c000000004704bc8
-> > [  163.372315] NIP [c000000000d051d4] __list_add_valid_or_report+0x124/=
-0x188
-> > [  163.372326] LR [c000000000d051d0] __list_add_valid_or_report+0x120/0=
-x188
-> > [  163.372335] Call Trace:
-> > [  163.372339] [c00000000ba07c50] [c000000000d051d0] __list_add_valid_o=
-r_report+0x120/0x188 (unreliable)
-> > [  163.372352] [c00000000ba07ce0] [c000000000834280] mem_cgroup_css_fre=
-e+0xa0/0x27c
-> > [  163.372363] [c00000000ba07d50] [c0000000003ba198] css_free_rwork_fn+=
-0xd0/0x59c
-> > [  163.372374] [c00000000ba07da0] [c0000000001f5d60] process_one_work+0=
-x41c/0x89c
-> > [  163.372385] [c00000000ba07eb0] [c0000000001f76c0] worker_thread+0x55=
-8/0x848
-> > [  163.372394] [c00000000ba07f80] [c000000000209038] kthread+0x1e8/0x23=
-0
-> > [  163.372406] [c00000000ba07fe0] [c00000000000ded8] start_kernel_threa=
-d+0x14/0x18
-> > [  163.372416] Code: 4b9b1099 60000000 7f63db78 4bae8245 60000000 e8bf0=
-008 3c62ff88 7fe6fb78 7fc4f378 38637d40 4b5b5c89 60000000 <0fe00000> 600000=
-00 60000000 7f83e378
-> > [  163.372453] ---[ end trace 0000000000000000 ]---
-> > [  163.380581] pstore: backend (nvram) writing error (-1)
-> > [  163.380593]
-> >
-> >
-> > If you happen to fix this issue, please add below tag.
-> >
-> >
-> > Reported-by: Venkat Rao Bagalkote <venkat88@linux.ibm.com>
-> >
-> >
-> >
-> > Regards,
-> >
-> > Venkat.
-> >
-> >
->
-> After reverting the below commit, issue is not seen.
->
-> commit 61bbf51e75df1a94cf6736e311cb96aeb79826a8
-> Author: Julian Sun <sunjunchao@bytedance.com>
-> Date:   Thu Aug 28 04:45:57 2025 +0800
->
->     memcg: don't wait writeback completion when release memcg
->          Recently, we encountered the following hung task:
->          INFO: task kworker/4:1:1334558 blocked for more than 1720 second=
-s.
->     [Wed Jul 30 17:47:45 2025] Workqueue: cgroup_destroy css_free_rwork_f=
-n
->     [Wed Jul 30 17:47:45 2025] Call Trace:
->     [Wed Jul 30 17:47:45 2025]  __schedule+0x934/0xe10
->     [Wed Jul 30 17:47:45 2025]  ? complete+0x3b/0x50
->     [Wed Jul 30 17:47:45 2025]  ? _cond_resched+0x15/0x30
->     [Wed Jul 30 17:47:45 2025]  schedule+0x40/0xb0
->     [Wed Jul 30 17:47:45 2025]  wb_wait_for_completion+0x52/0x80
->     [Wed Jul 30 17:47:45 2025]  ? finish_wait+0x80/0x80
->     [Wed Jul 30 17:47:45 2025]  mem_cgroup_css_free+0x22/0x1b0
->     [Wed Jul 30 17:47:45 2025]  css_free_rwork_fn+0x42/0x380
->     [Wed Jul 30 17:47:45 2025]  process_one_work+0x1a2/0x360
->     [Wed Jul 30 17:47:45 2025]  worker_thread+0x30/0x390
->     [Wed Jul 30 17:47:45 2025]  ? create_worker+0x1a0/0x1a0
->     [Wed Jul 30 17:47:45 2025]  kthread+0x110/0x130
->     [Wed Jul 30 17:47:45 2025]  ? __kthread_cancel_work+0x40/0x40
->     [Wed Jul 30 17:47:45 2025]  ret_from_fork+0x1f/0x30
->          The direct cause is that memcg spends a long time waiting for di=
-rty page
->     writeback of foreign memcgs during release.
->          The root causes are:
->         a. The wb may have multiple writeback tasks, containing millions
->            of dirty pages, as shown below:
->          >>> for work in list_for_each_entry("struct wb_writeback_work", =
-\
->                                         wb.work_list.address_of_(), "list=
-"):
->     ...     print(work.nr_pages, work.reason, hex(work))
->     ...
->     900628  WB_REASON_FOREIGN_FLUSH 0xffff969e8d956b40
->     1116521 WB_REASON_FOREIGN_FLUSH 0xffff9698332a9540
->     1275228 WB_REASON_FOREIGN_FLUSH 0xffff969d9b444bc0
->     1099673 WB_REASON_FOREIGN_FLUSH 0xffff969f0954d6c0
->     1351522 WB_REASON_FOREIGN_FLUSH 0xffff969e76713340
->     2567437 WB_REASON_FOREIGN_FLUSH 0xffff9694ae208400
->     2954033 WB_REASON_FOREIGN_FLUSH 0xffff96a22d62cbc0
->     3008860 WB_REASON_FOREIGN_FLUSH 0xffff969eee8ce3c0
->     3337932 WB_REASON_FOREIGN_FLUSH 0xffff9695b45156c0
->     3348916 WB_REASON_FOREIGN_FLUSH 0xffff96a22c7a4f40
->     3345363 WB_REASON_FOREIGN_FLUSH 0xffff969e5d872800
->     3333581 WB_REASON_FOREIGN_FLUSH 0xffff969efd0f4600
->     3382225 WB_REASON_FOREIGN_FLUSH 0xffff969e770edcc0
->     3418770 WB_REASON_FOREIGN_FLUSH 0xffff96a252ceea40
->     3387648 WB_REASON_FOREIGN_FLUSH 0xffff96a3bda86340
->     3385420 WB_REASON_FOREIGN_FLUSH 0xffff969efc6eb280
->     3418730 WB_REASON_FOREIGN_FLUSH 0xffff96a348ab1040
->     3426155 WB_REASON_FOREIGN_FLUSH 0xffff969d90beac00
->     3397995 WB_REASON_FOREIGN_FLUSH 0xffff96a2d7288800
->     3293095 WB_REASON_FOREIGN_FLUSH 0xffff969dab423240
->     3293595 WB_REASON_FOREIGN_FLUSH 0xffff969c765ff400
->     3199511 WB_REASON_FOREIGN_FLUSH 0xffff969a72d5e680
->     3085016 WB_REASON_FOREIGN_FLUSH 0xffff969f0455e000
->     3035712 WB_REASON_FOREIGN_FLUSH 0xffff969d9bbf4b00
->              b. The writeback might severely throttled by wbt, with a spe=
-ed
->            possibly less than 100kb/s, leading to a very long writeback t=
-ime.
->          >>> wb.write_bandwidth
->     (unsigned long)24
->     >>> wb.write_bandwidth
->     (unsigned long)13
->          The wb_wait_for_completion() here is probably only used to preve=
-nt
->     use-after-free.  Therefore, we manage 'done' separately and automatic=
-ally
->     free it.
->          This allows us to remove wb_wait_for_completion() while preventi=
-ng the
->     use-after-free issue.
->      com
->     Fixes: 97b27821b485 ("writeback, memcg: Implement foreign dirty flush=
-ing")
->     Signed-off-by: Julian Sun <sunjunchao@bytedance.com>
->     Acked-by: Tejun Heo <tj@kernel.org>
->     Cc: Michal Hocko <mhocko@suse.com>
->     Cc: Roman Gushchin <roman.gushchin@linux.dev>
->     Cc: Johannes Weiner <hannes@cmpxchg.org>
->     Cc: Shakeel Butt <shakeelb@google.com>
->     Cc: Muchun Song <songmuchun@bytedance.com>
->     Cc: <stable@vger.kernel.org>
->     Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
->
-> Regards,
-> Venkat.
->
-> >
->
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
+[amir: backport to kernels prior to parent pointers to fix an old bug]
 
---=20
-Julian Sun <sunjunchao@bytedance.com>
+A rename operation of a directory (i.e. mv A/C/ B/) may end up changing
+three different dquot accounts under the following conditions:
+1. user (or group) quotas are enabled
+2. A/ B/ and C/ have different owner uids (or gids)
+3. A/ blocks shrinks after remove of entry C/
+4. B/ blocks grows before adding of entry C/
+5. A/ ino <= XFS_DIR2_MAX_SHORT_INUM
+6. B/ ino > XFS_DIR2_MAX_SHORT_INUM
+7. C/ is converted from sf to block format, because its parent entry
+   needs to be stored as 8 bytes (see xfs_dir2_sf_replace_needblock)
+
+When all conditions are met (observed in the wild) we get this assertion:
+
+XFS: Assertion failed: qtrx, file: fs/xfs/xfs_trans_dquot.c, line: 207
+
+The upstream commit fixed this bug as a side effect, so decided to apply
+it as is rather than changing XFS_QM_TRANS_MAXDQS to 3 in stable kernels.
+
+The Fixes commit below is NOT the commit that introduced the bug, but
+for some reason, which is not explained in the commit message, it fixes
+the comment to state that highest number of dquots of one type is 3 and
+not 2 (which leads to the assertion), without actually fixing it.
+
+The change of wording from "usr, grp OR prj" to "usr, grp and prj"
+suggests that there may have been a confusion between "the number of
+dquote of one type" and "the number of dquot types" (which is also 3),
+so the comment change was only accidentally correct.
+
+Fixes: 10f73d27c8e9 ("xfs: fix the comment explaining xfs_trans_dqlockedjoin")
+Cc: stable@vger.kernel.org
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+
+Christoph,
+
+This is a cognitive challenge. can you say what you where thinking in
+2013 when making the comment change in the Fixes commit?
+Is my speculation above correct?
+
+Catherine and Leah,
+
+I decided that cherry-pick this upstream commit as is with a commit
+message addendum was the best stable tree strategy.
+The commit applies cleanly to 5.15.y, so I assume it does for 6.6 and
+6.1 as well. I ran my tests on 5.15.y and nothing fell out, but did not
+try to reproduce these complex assertion in a test.
+
+Could you take this candidate backport patch to a spin on your test
+branch?
+
+What do you all think about this?
+
+Thanks,
+Amir.
+
+ fs/xfs/xfs_dquot.c       | 41 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_dquot.h       |  1 +
+ fs/xfs/xfs_qm.h          |  2 +-
+ fs/xfs/xfs_trans_dquot.c | 15 ++++++++++-----
+ 4 files changed, 53 insertions(+), 6 deletions(-)
+
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index c15d61d47a06..6b05d47aa19b 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -1360,6 +1360,47 @@ xfs_dqlock2(
+ 	}
+ }
+ 
++static int
++xfs_dqtrx_cmp(
++	const void		*a,
++	const void		*b)
++{
++	const struct xfs_dqtrx	*qa = a;
++	const struct xfs_dqtrx	*qb = b;
++
++	if (qa->qt_dquot->q_id > qb->qt_dquot->q_id)
++		return 1;
++	if (qa->qt_dquot->q_id < qb->qt_dquot->q_id)
++		return -1;
++	return 0;
++}
++
++void
++xfs_dqlockn(
++	struct xfs_dqtrx	*q)
++{
++	unsigned int		i;
++
++	BUILD_BUG_ON(XFS_QM_TRANS_MAXDQS > MAX_LOCKDEP_SUBCLASSES);
++
++	/* Sort in order of dquot id, do not allow duplicates */
++	for (i = 0; i < XFS_QM_TRANS_MAXDQS && q[i].qt_dquot != NULL; i++) {
++		unsigned int	j;
++
++		for (j = 0; j < i; j++)
++			ASSERT(q[i].qt_dquot != q[j].qt_dquot);
++	}
++	if (i == 0)
++		return;
++
++	sort(q, i, sizeof(struct xfs_dqtrx), xfs_dqtrx_cmp, NULL);
++
++	mutex_lock(&q[0].qt_dquot->q_qlock);
++	for (i = 1; i < XFS_QM_TRANS_MAXDQS && q[i].qt_dquot != NULL; i++)
++		mutex_lock_nested(&q[i].qt_dquot->q_qlock,
++				XFS_QLOCK_NESTED + i - 1);
++}
++
+ int __init
+ xfs_qm_init(void)
+ {
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index 6b5e3cf40c8b..0e954f88811f 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -231,6 +231,7 @@ int		xfs_qm_dqget_uncached(struct xfs_mount *mp,
+ void		xfs_qm_dqput(struct xfs_dquot *dqp);
+ 
+ void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
++void		xfs_dqlockn(struct xfs_dqtrx *q);
+ 
+ void		xfs_dquot_set_prealloc_limits(struct xfs_dquot *);
+ 
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 442a0f97a9d4..f75c12c4c6a0 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -121,7 +121,7 @@ enum {
+ 	XFS_QM_TRANS_PRJ,
+ 	XFS_QM_TRANS_DQTYPES
+ };
+-#define XFS_QM_TRANS_MAXDQS		2
++#define XFS_QM_TRANS_MAXDQS		5
+ struct xfs_dquot_acct {
+ 	struct xfs_dqtrx	dqs[XFS_QM_TRANS_DQTYPES][XFS_QM_TRANS_MAXDQS];
+ };
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index 955c457e585a..99a03acd4488 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -268,24 +268,29 @@ xfs_trans_mod_dquot(
+ 
+ /*
+  * Given an array of dqtrx structures, lock all the dquots associated and join
+- * them to the transaction, provided they have been modified.  We know that the
+- * highest number of dquots of one type - usr, grp and prj - involved in a
+- * transaction is 3 so we don't need to make this very generic.
++ * them to the transaction, provided they have been modified.
+  */
+ STATIC void
+ xfs_trans_dqlockedjoin(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_dqtrx	*q)
+ {
++	unsigned int		i;
+ 	ASSERT(q[0].qt_dquot != NULL);
+ 	if (q[1].qt_dquot == NULL) {
+ 		xfs_dqlock(q[0].qt_dquot);
+ 		xfs_trans_dqjoin(tp, q[0].qt_dquot);
+-	} else {
+-		ASSERT(XFS_QM_TRANS_MAXDQS == 2);
++	} else if (q[2].qt_dquot == NULL) {
+ 		xfs_dqlock2(q[0].qt_dquot, q[1].qt_dquot);
+ 		xfs_trans_dqjoin(tp, q[0].qt_dquot);
+ 		xfs_trans_dqjoin(tp, q[1].qt_dquot);
++	} else {
++		xfs_dqlockn(q);
++		for (i = 0; i < XFS_QM_TRANS_MAXDQS; i++) {
++			if (q[i].qt_dquot == NULL)
++				break;
++			xfs_trans_dqjoin(tp, q[i].qt_dquot);
++		}
+ 	}
+ }
+ 
+-- 
+2.47.1
+
