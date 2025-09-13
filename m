@@ -1,75 +1,75 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C4A52AE68
-	for <linux-xfs@vger.kernel.org>; Sat, 13 Sep 2025 03:05:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CE5AA935
+	for <linux-xfs@vger.kernel.org>; Sat, 13 Sep 2025 03:37:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757732750; cv=none; b=cibaCXX3l2nU+oC167OtU2mQjnI0vFFW28MT5p1aR3mJ3qVP0q6J6ZpSCjj6zm62igtbk+y4DLDA7BNqrY4E3ks/ByndPRgTgjtdY15w3Ovh2O3RLMnimagNNV8H4x/R0hdocJaub8bgG9TZpRlLD3hRq6GyWoJRP55pHcSNwMM=
+	t=1757734649; cv=none; b=Cs/DtPX48zRjbYXPz74viKV5XTyfdjOzRHGs5nJFpbCB2PYgXDxjXAvb3HhWeSPLtBSNnjfpp3pjYchUKgFJA1Fe8InHftd9HrVv4qlV+FM+DKfNm8pGTyJTkNYi5A/CYt4UEHxOHMLr9cVEedt/QHfHB45g/gSr2/RpGKFiKKw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757732750; c=relaxed/simple;
-	bh=pUq/ET/7OoC/d6z0t4nVT64sAN6OjWKADFi/hqIiqag=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rOrbuOClYF7NLJCgqiIYDhIy0hNs1PDW+g8/2ukXkwN3PMV1gKpJTZQyBJ3epPxz9sf4YTjD7wH67KDjZFtykPPZij3j5/QYsGA73sYIXOzBIzP+C51+3Lc9RxMDWj8Nd0493PgoGrNaJPU0it5iHshAvbZGsN3wSbYNFKdsoTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XuIzph8/; arc=none smtp.client-ip=209.85.208.42
+	s=arc-20240116; t=1757734649; c=relaxed/simple;
+	bh=S9RgEf0sKLoUujoXKzI5jyp7RRc7a0WMvLCahxrVDpE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EpyeZgPD2PxLXOV+NgDyNIil2tcrn6jv0mQ7lVUTTQs9QlKCFznthsb8dC3JtugiNGgMTW4oirndDxuQTccHUsP3JigzC7m/vKcwLNAfByHBmzekg27Gn2KY5Yqo63w97aFR6qcsJRAcaCNXP+MN+zZD1SgFgcN4jvYgUxcKscA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IunoaQ7d; arc=none smtp.client-ip=209.85.216.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XuIzph8/"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-62ee43b5e5bso2234764a12.1
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 20:05:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IunoaQ7d"
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-32ddfe3c8ccso2506674a91.3
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Sep 2025 20:37:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757732746; x=1758337546; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1757734648; x=1758339448; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=rZNYaJHdKdym4x92LfIeJwjfVk9SQYhUdI5Z20nL+Fg=;
-        b=XuIzph8/qKdkTggwwcdUbICu9oGpWDvAsXMt9hF/ziWohMji2WrAgTXHj+IeyXWie5
-         NQGwYrqozDhNJg1h1fvgEQOP7Was7WqR4nOhYFuNOsBQ9GhYtlx7ElvVYwqu2H69yhyq
-         AXWz3HoUA4YuZBvjBZVw0h2IdluYCBSQ5lG+kmhZrkDZoGEjq8u/h/hj4sSjrPmHkPKL
-         5c0zYGFvaBH6b7l2pQvLXR82lfOG2LroOPWvqiwsTfDlIrj9HGEBEghKnNuErxTLeU7I
-         ph8T4MYoN8gOFxSmZ4qO9u/3/BwTHLYsvipz0q//aRABXmrKyWH49vwhbRZttJ3pvZjz
-         5SCw==
+        bh=K4uUqLHm1wv3jT3tEGcJTrI2K+259prtijoUXxYVBhQ=;
+        b=IunoaQ7dcbaWAqtC+oSt9VEMhBLJnUdDbD/bDWOD87mf0pDoH7E7DKuyr70tzldnVd
+         z+aq/DloV4IXdyQXGXjJdoc5in/TVUEB0bzILsWpACyXwg1WS+fWkgvlZuSdszWxxuQb
+         WKLfDxDztr3hvAOanUXMc08ySQvShxdTHRTvMOGpv9TeZTXzRh+DvYwXqnMnH4s1Vvwo
+         S2q9YNRB7kLrgY2WTsk8cL2778Wc0x7zuFTC8b0CcU60F5u6+MvEowdC8n2nZK4xWmm/
+         X6XOe05CbqjWPGjCyj26ZakuC3QvcTh/2HWtmreOFv9N2ZvJSz3V/0pK5Drdz1Q61w3e
+         EKSg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757732746; x=1758337546;
+        d=1e100.net; s=20230601; t=1757734648; x=1758339448;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=rZNYaJHdKdym4x92LfIeJwjfVk9SQYhUdI5Z20nL+Fg=;
-        b=v47b0/mNp2kMeCduoc8+BMNieoVhRy4/AsqYRZSHhYuguvkNSmLy2kQ372JlVxl8nK
-         6jfl90CpeVKtrz+gD/eTqv4UQF8BJrIOKUbaSitLJgkmknOdTlaNvvzhetyQ9iewmiYC
-         ys7U4VI2uL3oRfhdUmquY2sV/jGpAuUZP8+XZlZVPFjnryEMxcil0cVFIBiHPD5U853X
-         0vkvGHrIgpJCOpkzptcAplpHVAehrvEoO8f+AlI6mfotqjIqNNL4mfNDTlhjDfEWnTFa
-         kDrSzlZu+vtN39a6yg5e9KSi1o9TR6npp4f6Foh02KTWS8uNQGzjAZsFPmvDrepfpTaK
-         z/Nw==
-X-Forwarded-Encrypted: i=1; AJvYcCVJkPIP9iyPAueLHJQeDa+sy2w8ORE+QDQEbZLa1hv73N/rYo26q8QThHBDdQbJhjQtw37QqOH/HYE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy5r9ORtgMCsGFd/BIeeiMq7nrr+JS670Y+xghQMRIicfhy7BwC
-	aDaPar85FaewWq2+MQ2C7ICjimLavnM7XEsCjm+dPQvM6VmbVbJ4WKHI
-X-Gm-Gg: ASbGncu1wLGuX+nZs03tajngxa4FJOEiDM1Eo6ONAh7/rrtUoRTalubLxRWyDRk1OWx
-	xhtRyjRxz0fzBKC4LLoTgaejhprBivK6l1diU0kwgOig+NaloKypxThMPYmpiTuTe7DJc9q4wi+
-	2yoINzqUVS+uS+y4s9PSM3OijzEYD+EB851i2mU5dC4JDl3YEES124Idzce0vdsC8GgSzJSBFR9
-	DlygqgScYyr9QnX6087LUs2mr5TiKPIygTYggi0sTTESamSZfMMov2T2PQj3oV3O20HKZOXbTr6
-	rlg9srgiZh0Nn+cnD0tTQWWIMWE1mZruUp+VnGMy/ssFSUAJ8qjcydTQwSnuH3lUw749/twKSlF
-	DgrdbiYL7u6cj01qe+QfOHXvHPh9bXAPJYIH+OP2tk+nbi5/ZMmvedaBMqt7dvYLaLkkkUvXQh4
-	f8oh4OEH68XggxxoAQunSPXhw=
-X-Google-Smtp-Source: AGHT+IFJnL+20g9iD9lSRPr+IlLcwoT2ifmvpzpD+xXQ3ygMnVts5REQ89+wyWeEA+IGXwhfUP9MMg==
-X-Received: by 2002:a17:907:8687:b0:b04:38f2:9059 with SMTP id a640c23a62f3a-b07c381bc58mr485935066b.42.1757732746127;
-        Fri, 12 Sep 2025 20:05:46 -0700 (PDT)
-Received: from amir-ThinkPad-T480.ctera.local (92-109-99-123.cable.dynamic.v4.ziggo.nl. [92.109.99.123])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b07b32dd5bfsm477698466b.63.2025.09.12.20.05.45
+        bh=K4uUqLHm1wv3jT3tEGcJTrI2K+259prtijoUXxYVBhQ=;
+        b=LoEHcQgTihkqyHmj08IHYdJpk4wha6ojSuCBhpgnZbisPam8bosnWLHjQl/Qb/1u2U
+         ZFNHuPuyIrbNqB8YTo5telSMV58MDPoCiI/YktwUppdCvjBeqZxmcn9i3wjSztjTA2oZ
+         KQF5yPXaSt3uphN7waF1jmBtmLv8wURhQ3fyoigi8NoWC9juCkxF5mxevhaYCJpDODih
+         FEawDivntFl8ktUs3ctY6nVyFp2El3G/jUHuTos2I1qvXhIgtj6DrHcXyQn4tmTobIfw
+         CQMJzUX1+/nbBKsyRE0cTjYipG3WmC+POI+MeSejH/pUoS4ED5RVnvfeLiIoGKNJq+Oc
+         o4OA==
+X-Forwarded-Encrypted: i=1; AJvYcCU5WJupk+N7EgERIvzL1+w8Iv1ls76ggIr6nFHLd3w1cMJo68X4DrrchsMBHg9CjCiq7YaOe6rJc90=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyWzYIjMsapPUqH2iGObq+UJDVAlrMgLQJDtr6BxYk4Ojcw4EpF
+	kw3zOhOC28ZPgzw5am1KrIaBekyDGSQGfY2SszvAolMuloyOdQE+7O2GKwhDTY1K
+X-Gm-Gg: ASbGncvGj59d+j66a01QtjocDLOLUNayX5o+ClBSK9t2QVxn6YSnLQWxM68pt3WgaNT
+	OAGSZs19ruXg2xRtzlkMCeDVvJeGzjHG1DMediOgRP7mnexCIghICp96bKPthXOKjkuaaVyClot
+	bWD+fRBFlRPYa0YU/9C4+UUKmLuYJ2zvNNaatubB5KBSdsf53vKM5oaiiHEPHp0XTHcAWXfjvPe
+	FOpqzJp8wUBXSWJI9kWN57/SBPdctiihuoTj3tC9Z3//a+9ghBbr60H5OJQ+CBGuAmVzw2CzVU0
+	ShsNIv3Hwws2rHzbNjIIGNY4WxE+fFDMu8KLYZZM2hFT1HVwvzXLt4rVc/Ef5iVJePd4JBDSUBF
+	YojuBo9OQN7Tb2G5I/1+yLsIOCoA4GDX9dA==
+X-Google-Smtp-Source: AGHT+IHs2Rsk72hJiBcf1dG1IHcVl6K6BhYFOSeWdIg9w0otcC2YgzWP62rCvvQj7XJcIaLvM51cww==
+X-Received: by 2002:a17:90b:1d0d:b0:32d:f4cb:7486 with SMTP id 98e67ed59e1d1-32df4cb757cmr3628309a91.19.1757734647593;
+        Fri, 12 Sep 2025 20:37:27 -0700 (PDT)
+Received: from VM-16-24-fedora.. ([43.153.32.141])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-32dd98b439asm7150770a91.15.2025.09.12.20.37.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Sep 2025 20:05:45 -0700 (PDT)
-From: Amir Goldstein <amir73il@gmail.com>
-To: Christoph Hellwig <hch@lst.de>,
-	Catherine Hoang <catherine.hoang@oracle.com>,
-	Leah Rumancik <leah.rumancik@gmail.com>
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	Allison Henderson <allison.henderson@oracle.com>,
-	Carlos Maiolino <cem@kernel.org>,
+        Fri, 12 Sep 2025 20:37:27 -0700 (PDT)
+From: alexjlzheng@gmail.com
+X-Google-Original-From: alexjlzheng@tencent.com
+To: hch@infradead.org,
+	brauner@kernel.org
+Cc: djwong@kernel.org,
+	yi.zhang@huawei.com,
 	linux-xfs@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH CANDIDATE 5.15, 6.1, 6.6] xfs: Increase XFS_QM_TRANS_MAXDQS to 5
-Date: Sat, 13 Sep 2025 05:05:02 +0200
-Message-ID: <20250913030503.433914-1-amir73il@gmail.com>
-X-Mailer: git-send-email 2.50.1
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jinliang Zheng <alexjlzheng@tencent.com>
+Subject: [PATCH v4 0/4] allow partial folio write with iomap_folio_state
+Date: Sat, 13 Sep 2025 11:37:14 +0800
+Message-ID: <20250913033718.2800561-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,200 +78,88 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Allison Henderson <allison.henderson@oracle.com>
+From: Jinliang Zheng <alexjlzheng@tencent.com>
 
-[ Upstream  commit f103df763563ad6849307ed5985d1513acc586dd ]
+Currently, if a partial write occurs in a buffer write, the entire write will
+be discarded. While this is an uncommon case, it's still a bit wasteful and
+we can do better.
 
-With parent pointers enabled, a rename operation can update up to 5
-inodes: src_dp, target_dp, src_ip, target_ip and wip.  This causes
-their dquots to a be attached to the transaction chain, so we need
-to increase XFS_QM_TRANS_MAXDQS.  This patch also add a helper
-function xfs_dqlockn to lock an arbitrary number of dquots.
+With iomap_folio_state, we can identify uptodate states at the block
+level, and a read_folio reading can correctly handle partially
+uptodate folios.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Therefore, when a partial write occurs, accept the block-aligned
+partial write instead of rejecting the entire write.
 
-[amir: backport to kernels prior to parent pointers to fix an old bug]
+For example, suppose a folio is 2MB, blocksize is 4kB, and the copied
+bytes are 2MB-3kB.
 
-A rename operation of a directory (i.e. mv A/C/ B/) may end up changing
-three different dquot accounts under the following conditions:
-1. user (or group) quotas are enabled
-2. A/ B/ and C/ have different owner uids (or gids)
-3. A/ blocks shrinks after remove of entry C/
-4. B/ blocks grows before adding of entry C/
-5. A/ ino <= XFS_DIR2_MAX_SHORT_INUM
-6. B/ ino > XFS_DIR2_MAX_SHORT_INUM
-7. C/ is converted from sf to block format, because its parent entry
-   needs to be stored as 8 bytes (see xfs_dir2_sf_replace_needblock)
+Without this patchset, we'd need to recopy from the beginning of the
+folio in the next iteration, which means 2MB-3kB of bytes is copy
+duplicately.
 
-When all conditions are met (observed in the wild) we get this assertion:
+ |<-------------------- 2MB -------------------->|
+ +-------+-------+-------+-------+-------+-------+
+ | block |  ...  | block | block |  ...  | block | folio
+ +-------+-------+-------+-------+-------+-------+
+ |<-4kB->|
 
-XFS: Assertion failed: qtrx, file: fs/xfs/xfs_trans_dquot.c, line: 207
+ |<--------------- copied 2MB-3kB --------->|       first time copied
+ |<-------- 1MB -------->|                          next time we need copy (chunk /= 2)
+                         |<-------- 1MB -------->|  next next time we need copy.
 
-The upstream commit fixed this bug as a side effect, so decided to apply
-it as is rather than changing XFS_QM_TRANS_MAXDQS to 3 in stable kernels.
+ |<------ 2MB-3kB bytes duplicate copy ---->|
 
-The Fixes commit below is NOT the commit that introduced the bug, but
-for some reason, which is not explained in the commit message, it fixes
-the comment to state that highest number of dquots of one type is 3 and
-not 2 (which leads to the assertion), without actually fixing it.
+With this patchset, we can accept 2MB-4kB of bytes, which is block-aligned.
+This means we only need to process the remaining 4kB in the next iteration,
+which means there's only 1kB we need to copy duplicately.
 
-The change of wording from "usr, grp OR prj" to "usr, grp and prj"
-suggests that there may have been a confusion between "the number of
-dquote of one type" and "the number of dquot types" (which is also 3),
-so the comment change was only accidentally correct.
+ |<-------------------- 2MB -------------------->|
+ +-------+-------+-------+-------+-------+-------+
+ | block |  ...  | block | block |  ...  | block | folio
+ +-------+-------+-------+-------+-------+-------+
+ |<-4kB->|
 
-Fixes: 10f73d27c8e9 ("xfs: fix the comment explaining xfs_trans_dqlockedjoin")
-Cc: stable@vger.kernel.org
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
+ |<--------------- copied 2MB-3kB --------->|       first time copied
+                                         |<-4kB->|  next time we need copy
 
-Christoph,
+                                         |<>|
+                              only 1kB bytes duplicate copy
 
-This is a cognitive challenge. can you say what you where thinking in
-2013 when making the comment change in the Fixes commit?
-Is my speculation above correct?
+Although partial writes are inherently a relatively unusual situation and do
+not account for a large proportion of performance testing, the optimization
+here still makes sense in large-scale data centers.
 
-Catherine and Leah,
+This patchset has been tested by xfstests' generic and xfs group, and
+there's no new failed cases compared to the lastest upstream version kernel.
 
-I decided that cherry-pick this upstream commit as is with a commit
-message addendum was the best stable tree strategy.
-The commit applies cleanly to 5.15.y, so I assume it does for 6.6 and
-6.1 as well. I ran my tests on 5.15.y and nothing fell out, but did not
-try to reproduce these complex assertion in a test.
+Changelog:
 
-Could you take this candidate backport patch to a spin on your test
-branch?
+V4: path[4]: better documentation in code, and add motivation to the cover letter
 
-What do you all think about this?
+V3: https://lore.kernel.org/linux-xfs/aMPIDGq7pVuURg1t@infradead.org/
+    patch[1]: use WARN_ON() instead of BUG_ON()
+    patch[2]: make commit message clear
+    patch[3]: -
+    patch[4]: make commit message clear
 
-Thanks,
-Amir.
+V2: https://lore.kernel.org/linux-fsdevel/20250810101554.257060-1-alexjlzheng@tencent.com/ 
+    use & instead of % for 64 bit variable on m68k/xtensa, try to make them happy:
+       m68k-linux-ld: fs/iomap/buffered-io.o: in function `iomap_adjust_read_range':
+    >> buffered-io.c:(.text+0xa8a): undefined reference to `__moddi3'
+    >> m68k-linux-ld: buffered-io.c:(.text+0xaa8): undefined reference to `__moddi3'
 
- fs/xfs/xfs_dquot.c       | 41 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dquot.h       |  1 +
- fs/xfs/xfs_qm.h          |  2 +-
- fs/xfs/xfs_trans_dquot.c | 15 ++++++++++-----
- 4 files changed, 53 insertions(+), 6 deletions(-)
+V1: https://lore.kernel.org/linux-fsdevel/20250810044806.3433783-1-alexjlzheng@tencent.com/
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index c15d61d47a06..6b05d47aa19b 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1360,6 +1360,47 @@ xfs_dqlock2(
- 	}
- }
- 
-+static int
-+xfs_dqtrx_cmp(
-+	const void		*a,
-+	const void		*b)
-+{
-+	const struct xfs_dqtrx	*qa = a;
-+	const struct xfs_dqtrx	*qb = b;
-+
-+	if (qa->qt_dquot->q_id > qb->qt_dquot->q_id)
-+		return 1;
-+	if (qa->qt_dquot->q_id < qb->qt_dquot->q_id)
-+		return -1;
-+	return 0;
-+}
-+
-+void
-+xfs_dqlockn(
-+	struct xfs_dqtrx	*q)
-+{
-+	unsigned int		i;
-+
-+	BUILD_BUG_ON(XFS_QM_TRANS_MAXDQS > MAX_LOCKDEP_SUBCLASSES);
-+
-+	/* Sort in order of dquot id, do not allow duplicates */
-+	for (i = 0; i < XFS_QM_TRANS_MAXDQS && q[i].qt_dquot != NULL; i++) {
-+		unsigned int	j;
-+
-+		for (j = 0; j < i; j++)
-+			ASSERT(q[i].qt_dquot != q[j].qt_dquot);
-+	}
-+	if (i == 0)
-+		return;
-+
-+	sort(q, i, sizeof(struct xfs_dqtrx), xfs_dqtrx_cmp, NULL);
-+
-+	mutex_lock(&q[0].qt_dquot->q_qlock);
-+	for (i = 1; i < XFS_QM_TRANS_MAXDQS && q[i].qt_dquot != NULL; i++)
-+		mutex_lock_nested(&q[i].qt_dquot->q_qlock,
-+				XFS_QLOCK_NESTED + i - 1);
-+}
-+
- int __init
- xfs_qm_init(void)
- {
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index 6b5e3cf40c8b..0e954f88811f 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -231,6 +231,7 @@ int		xfs_qm_dqget_uncached(struct xfs_mount *mp,
- void		xfs_qm_dqput(struct xfs_dquot *dqp);
- 
- void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
-+void		xfs_dqlockn(struct xfs_dqtrx *q);
- 
- void		xfs_dquot_set_prealloc_limits(struct xfs_dquot *);
- 
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index 442a0f97a9d4..f75c12c4c6a0 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -121,7 +121,7 @@ enum {
- 	XFS_QM_TRANS_PRJ,
- 	XFS_QM_TRANS_DQTYPES
- };
--#define XFS_QM_TRANS_MAXDQS		2
-+#define XFS_QM_TRANS_MAXDQS		5
- struct xfs_dquot_acct {
- 	struct xfs_dqtrx	dqs[XFS_QM_TRANS_DQTYPES][XFS_QM_TRANS_MAXDQS];
- };
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 955c457e585a..99a03acd4488 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -268,24 +268,29 @@ xfs_trans_mod_dquot(
- 
- /*
-  * Given an array of dqtrx structures, lock all the dquots associated and join
-- * them to the transaction, provided they have been modified.  We know that the
-- * highest number of dquots of one type - usr, grp and prj - involved in a
-- * transaction is 3 so we don't need to make this very generic.
-+ * them to the transaction, provided they have been modified.
-  */
- STATIC void
- xfs_trans_dqlockedjoin(
- 	struct xfs_trans	*tp,
- 	struct xfs_dqtrx	*q)
- {
-+	unsigned int		i;
- 	ASSERT(q[0].qt_dquot != NULL);
- 	if (q[1].qt_dquot == NULL) {
- 		xfs_dqlock(q[0].qt_dquot);
- 		xfs_trans_dqjoin(tp, q[0].qt_dquot);
--	} else {
--		ASSERT(XFS_QM_TRANS_MAXDQS == 2);
-+	} else if (q[2].qt_dquot == NULL) {
- 		xfs_dqlock2(q[0].qt_dquot, q[1].qt_dquot);
- 		xfs_trans_dqjoin(tp, q[0].qt_dquot);
- 		xfs_trans_dqjoin(tp, q[1].qt_dquot);
-+	} else {
-+		xfs_dqlockn(q);
-+		for (i = 0; i < XFS_QM_TRANS_MAXDQS; i++) {
-+			if (q[i].qt_dquot == NULL)
-+				break;
-+			xfs_trans_dqjoin(tp, q[i].qt_dquot);
-+		}
- 	}
- }
- 
+Jinliang Zheng (4):
+  iomap: make sure iomap_adjust_read_range() are aligned with block_size
+  iomap: move iter revert case out of the unwritten branch
+  iomap: make iomap_write_end() return the number of written length again
+  iomap: don't abandon the whole copy when we have iomap_folio_state
+
+ fs/iomap/buffered-io.c | 80 +++++++++++++++++++++++++++++-------------
+ 1 file changed, 55 insertions(+), 25 deletions(-)
+
 -- 
-2.47.1
+2.49.0
 
