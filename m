@@ -1,117 +1,126 @@
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD58B2F4A1B
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 11:12:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F8BB2309B2;
+	Mon, 15 Sep 2025 11:19:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757934752; cv=none; b=MVU8qtYAQ7+/ejKFWvmtLTukhFxcO8ToWPCDbJQGbRM9G3CDYkOKu5LqUC/avSGCLSUzh/pYGkysN4jsauv3kW7aAtJljglwPoi7p14bOZkjANYmWzDWHF3LXcB0iTG1H2t0C6uB7kKNxjNhaGbApwkkjKhyR+f/6W8Q8w9RimQ=
+	t=1757935196; cv=none; b=pIba6taMNIRS3MbqlqAabLwVOEkj6lLvaluQcVs1Qcihq05Fn/u+jjKWyHQrxxVdGLiQly81aL/jEWYqkn43jQKKdX6PhkiVvGlz7QB7Ynjoj7cBw7+68HXmlecVJL8VxA8kxCMDKrBjjX2OXHU+x66QT206+TR0aWgq04DaBWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757934752; c=relaxed/simple;
-	bh=VY3zkdhTGgC126uMIeS5gV6qogT1HLoj1i2dxU+5eik=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qvxt880JK8kPWliR0+6mhG3jErYNszW6qaFYAAAmmEFEYKT6OpapJiHOudYYlrrK7rzxk/sBVP0dyW0ELuCS3afmF8XVXNc2LJut5Z6IyQUG2PCqt0cV/G0eg7XwvEdDP+hFF20YSFJckYyBH3UIuQmNhvjaDrnJ6v04O6iWqHw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JP7plFNw; arc=none smtp.client-ip=209.85.215.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1757935196; c=relaxed/simple;
+	bh=uYTGOhsbXa0ucAORTyXGNU1yOdgccqwDw4jKSydkw4s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uW8GIgjwAeYXh/9pYGI1ilT2k5QiQOEDxzabPMaqR9sJIU7c6nfv2fUGZ6tqy99Q4/MXKRAKUxBLeNPnLgFbyVWMvTDVdwUxx2TkSiQS2EHENNPfKyd7e79lykjgySk1YSK6OmiVxprbIx2ft53UXvIgH7wxOr7rsed5igyPvTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=d48efdLi; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JP7plFNw"
-Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-b54b2428fafso2362486a12.3
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 04:12:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757934750; x=1758539550; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4p12IzWrRO+GuzSOQKOoYoCmZLULC1GsuqYzZhikEms=;
-        b=JP7plFNwh89sv86Cw8BHKTbfdRv709peLp0C+HGfWw1C2dzLaKCdUtqGhpBwHl071U
-         0Kj3hH81bMd77qHnpLyC9pjnHFeEqivHqmU/CkdNLHSobUk7wTzPe/DbP2r/lumuxo9F
-         3GzQcZz9xAnb8wL8E/RzUCoGGTb97dqWX8k61itKUMPIctsIFT53Xi6kkXruqA7tcXAN
-         SXhEeVbX72Yw700IdW+2feK0Net0oN6LBOgFabC747IRusGp5O542r0GzgGOp1d7O/7L
-         /wYy/HWGu81w9vCkaz/Z01PvBmixkjtWhaDTDqp4IDIJ1ded4CWth9GmKT1BpIVB8IoG
-         b2xA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757934750; x=1758539550;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=4p12IzWrRO+GuzSOQKOoYoCmZLULC1GsuqYzZhikEms=;
-        b=IWaaxB3mBltWWczvc5mQF+xViFHTP7/KhpMikWZ7fC1/IfF5AV8TVnerzEF7hu1T0S
-         tX9bv0PpcbSrvQxqne+iBotMrVXqlggtbZrsb2iLeW+zT4wYkTMfpeWVJK/zon26bdIN
-         b8CrcbtUxIM5dkAnv/DiGJPlAbp+HNA2PZYQ/YsbG1nwPd5lkizwbC9aRcXcoudNgYq5
-         OikMleeOhjqcov7Y/VPAqt0HgOBMkJkC8gRopV1PbmzV992Rv7b44BPE4jTWyqgdMHBH
-         mudFAjj4NJodsHzAcrGwdFK77j6niySmMQXDprkTdiTJ+x3y7colYUJ+aYzUKOpIlFsq
-         E4Ag==
-X-Forwarded-Encrypted: i=1; AJvYcCXDmimYrpmv7qvP4voNgVyUiNoUrox57O9FX/z3rQ0q4AP9B1VAqgaZo5/pkgYpcar+eKL9vdyK9iM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwNkEnqQWEOENiGo6zLVmAIlyZC6yb0+Y9t+HsKk0HDby+uXxN3
-	XyCD1wu+wyDvf4/wJT7rSrp5THuyWreqsO+sF7OdQ/mXVGjYCurUMucE
-X-Gm-Gg: ASbGnctlqiKL/jBZhhOxiCHnOK8bup+OyF4yJiVsdy0HcgBkLqEVl8fayuNowPXAymT
-	KoDO9idlkvk9HNRsrm54fYe8HDKnh+PDy4m/EbuUvkQz/em7sRETp5b3VYlh+C95UuN/pY22hvJ
-	Qv54FS02Yg9G/NKC3HtwoNHYgzeh1ly9UwKEkT1ToG9XCteSJzjcaMUt1EflBE8K0H/kW6hMyUb
-	ttoOFefqgoNRiGeOV40CCSzzBzYa71G0p2lsnxDf+aCJ+zv2/rFzjxy8eoBa+dA7eet69zxCGNE
-	9ZF+U6UGaIKvEL1wLwc7jK+ZQMZ+PGHypXTuiBKSDFhhhWc+uUFHze76ItU8/RPu/afidsXSD9L
-	+B4Qz9IYmPyLjoW78XLVPACFXjj1ZNgnrtg==
-X-Google-Smtp-Source: AGHT+IExDJoPLFyVEh3wqMlZXAiX0+tZkyl11B1SwSybUi3y+vj4NaoaTvhTCkhJAG90Odm2ARIFaQ==
-X-Received: by 2002:a17:903:1746:b0:264:70da:7a3b with SMTP id d9443c01a7336-26470da7d17mr63606755ad.49.1757934749994;
-        Mon, 15 Sep 2025 04:12:29 -0700 (PDT)
-Received: from VM-16-24-fedora.. ([43.153.32.141])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-264ab88689fsm41411705ad.27.2025.09.15.04.12.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Sep 2025 04:12:29 -0700 (PDT)
-From: Jinliang Zheng <alexjlzheng@gmail.com>
-X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
-To: kernel@pankajraghav.com
-Cc: alexjlzheng@gmail.com,
-	alexjlzheng@tencent.com,
-	brauner@kernel.org,
-	djwong@kernel.org,
-	hch@infradead.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	yi.zhang@huawei.com
-Subject: Re: [PATCH 4/4] iomap: don't abandon the whole copy when we have iomap_folio_state
-Date: Mon, 15 Sep 2025 19:12:28 +0800
-Message-ID: <20250915111228.4142222-1-alexjlzheng@tencent.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <dhjvmhfpmyf5ncbutlev6mmtgxatnuorfiv7i4q55wpzl7jrvn@asxbr2hv3xfv>
-References: <dhjvmhfpmyf5ncbutlev6mmtgxatnuorfiv7i4q55wpzl7jrvn@asxbr2hv3xfv>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="d48efdLi"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58F0aHfK021403;
+	Mon, 15 Sep 2025 11:19:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=RzaO4b3jqUKV+R1jZy05KPKafZ2dFe
+	rEnB2JNj90Jws=; b=d48efdLivBSU1F1HWhPeikxxDsHywuTXUJsDSfi3FoLKl3
+	s09S3Mwxlo4kCAYwJi8Zq+bIJOOZiIYd9EUM8AIrHSe9A61aWRqMXBC+yIIhUWtO
+	bTpWPE9U/od52slWEH2Mju7zh1OIyNljzQJFAm1dY02R464SORTo8hKD2EmQXvW0
+	5afF81w7y2GPOQkRP7Z84yNI2EBR1O69CMDNJzYa4mLHJMbTJuYdz4OVwraEPqy9
+	9Y5HQC3h4R5/iB17uf/oeFc0T83LDPAh7NC7xUUG3X0OtjX33rNbSosb9oPMCSjs
+	s57FUZSSVHRbxlyUD2FCwWEmrNJGGpMjLimmH3iA==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 494y1x1pas-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 15 Sep 2025 11:19:46 +0000 (GMT)
+Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 58FBJjYr000418;
+	Mon, 15 Sep 2025 11:19:45 GMT
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 494y1x1paq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 15 Sep 2025 11:19:45 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 58FBFTXY022384;
+	Mon, 15 Sep 2025 11:19:45 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 495kxpe3v0-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 15 Sep 2025 11:19:45 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 58FBJh8O55837166
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 15 Sep 2025 11:19:43 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 33EAB20040;
+	Mon, 15 Sep 2025 11:19:43 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 7EB382004B;
+	Mon, 15 Sep 2025 11:19:40 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.109.219.158])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Mon, 15 Sep 2025 11:19:40 +0000 (GMT)
+Date: Mon, 15 Sep 2025 16:49:37 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
+        Ritesh Harjani <ritesh.list@gmail.com>, djwong@kernel.org,
+        tytso@mit.edu, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v6 01/12] common/rc: Add _min() and _max() helpers
+Message-ID: <aMf2SUh0gLeQO7rw@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <cover.1757610403.git.ojaswin@linux.ibm.com>
+ <9475f8da726b894dd152b54b1416823181052c2a.1757610403.git.ojaswin@linux.ibm.com>
+ <5a22a799-a6b9-43d3-9226-d1d554d170e4@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5a22a799-a6b9-43d3-9226-d1d554d170e4@oracle.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTEzMDAxMCBTYWx0ZWRfX4PEjCcHcDazi
+ ChJnYqEgF0f7QzeDdSRFGeGGKahaA1HZZmyIglhD0XOKju3ma5fiI9fiGJXwiEIH9NSIAwXMjMx
+ 5z+5NzBv7xoCRdewcAOmyI4J9K+k2TDYcM7wGWnkVj9MucYc2w6qOS7q6r6b0buy6DQoFFlnUGO
+ NyqVKcN4j2TKGue06hlMsorE+qRmqUMZI1IVZABVomqE4I83stG9UnHM2S2mKuOFNxGOq3tJDFV
+ dU1VM1yhtk5X5XC8BnM54JMGSG/sRyO6AgzmWyrfFX28EeCrdgYcK7xHFafp4EAMjFF2UDX2TpB
+ Rs41/s2S2sa2E2NW4/q2cTWLRnKlivdUQWbIl/8Suw7ETUqFMv2d64Eqrl4HofRr0JD7apsb/5y
+ Wpv1NrpG
+X-Proofpoint-ORIG-GUID: _ARQOro69MyPk80WuckITckUz4zPTBcj
+X-Authority-Analysis: v=2.4 cv=euPfzppX c=1 sm=1 tr=0 ts=68c7f652 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=kj9zAlcOel0A:10 a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
+ a=yPCof4ZbAAAA:8 a=8tsh_XVOevaKpRn8MqUA:9 a=CjuIK1q_8ugA:10 a=zgiPjhLxNE0A:10
+X-Proofpoint-GUID: A2FXZeoIDjSsugnX2y3qRDJhBVmKB57_
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-15_04,2025-09-12_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 malwarescore=0 phishscore=0 suspectscore=0 spamscore=0
+ bulkscore=0 impostorscore=0 priorityscore=1501 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509130010
 
-On Mon, 15 Sep 2025 12:50:54 +0200, kernel@pankajraghav.com wrote:
-> > +static int iomap_trim_tail_partial(struct inode *inode, loff_t pos,
-> > +		size_t copied, struct folio *folio)
-> > +{
-> > +	struct iomap_folio_state *ifs = folio->private;
-> > +	unsigned block_size, last_blk, last_blk_bytes;
-> > +
-> > +	if (!ifs || !copied)
-> > +		return 0;
-> > +
-> > +	block_size = 1 << inode->i_blkbits;
-> > +	last_blk = offset_in_folio(folio, pos + copied - 1) >> inode->i_blkbits;
-> > +	last_blk_bytes = (pos + copied) & (block_size - 1);
-> > +
-> > +	if (!ifs_block_is_uptodate(ifs, last_blk))
-> > +		copied -= min(copied, last_blk_bytes);
+On Fri, Sep 12, 2025 at 05:53:47PM +0100, John Garry wrote:
+> On 11/09/2025 18:13, Ojaswin Mujoo wrote:
+> > Many programs open code these functionalities so add it as a generic helper
+> > in common/rc
+> > 
+> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
 > 
-> If pos is aligned to block_size, is there a scenario where 
-> copied < last_blk_bytes?
-
-I believe there is no other scenario. The min() here is specifically to handle cases where
-pos is not aligned to block_size. But please note that the pos here is unrelated to the pos
-in iomap_adjust_read_range().
-
-thanks,
-Jinliang Zheng. :)
-
+> Reviewed-by: John Garry <john.g.gary@oracle.com>
 > 
-> Trying to understand why you are using a min() here.
-> --
-> Pankaj
+> I just sent a patch for something similar for blktests to linux-block. I
+> wonder how much commonality there is for such helpers...
+> 
+> BTW, let me know if I should attribute some credit there. cheers
+
+Thanks for the review John!
+
+I think the helpers are simple enough so credit is not needed :) 
+
+Thanks,
+Ojaswin
