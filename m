@@ -1,76 +1,52 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F8BB2309B2;
-	Mon, 15 Sep 2025 11:19:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B987D2FE582;
+	Mon, 15 Sep 2025 11:29:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757935196; cv=none; b=pIba6taMNIRS3MbqlqAabLwVOEkj6lLvaluQcVs1Qcihq05Fn/u+jjKWyHQrxxVdGLiQly81aL/jEWYqkn43jQKKdX6PhkiVvGlz7QB7Ynjoj7cBw7+68HXmlecVJL8VxA8kxCMDKrBjjX2OXHU+x66QT206+TR0aWgq04DaBWI=
+	t=1757935760; cv=none; b=HYhlgmui/+7p6qdxehJFAILdkRbLQweUkaZnNsQUzTZmWj9PkQrq4G3sOA4f5Tgv7TO9yZuVB3WVWQu1AFTG+ZEBG1YO8NUGT9W0c+sTsOfDj7PzQYyreQXQ9wyGnbTRfOIgj4w1TeXwABSq8ZKbtAr5svxK1KEmZzfO5C/1IrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757935196; c=relaxed/simple;
-	bh=uYTGOhsbXa0ucAORTyXGNU1yOdgccqwDw4jKSydkw4s=;
+	s=arc-20240116; t=1757935760; c=relaxed/simple;
+	bh=h8N5DQsluw63hpDiIfAsSv/f5j7+RX3YTW3a5dH8PwY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uW8GIgjwAeYXh/9pYGI1ilT2k5QiQOEDxzabPMaqR9sJIU7c6nfv2fUGZ6tqy99Q4/MXKRAKUxBLeNPnLgFbyVWMvTDVdwUxx2TkSiQS2EHENNPfKyd7e79lykjgySk1YSK6OmiVxprbIx2ft53UXvIgH7wxOr7rsed5igyPvTA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=d48efdLi; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=bex0K9Te01Sxc0nDbog1og4mBOy3ltFLfl42v6aktnkXaS1WXYu92KHv+P6Y49ZOsrWSDRB+qVpiFJEieEy3Np2XTYErDmw/5zinkuBwZQhs0zGv9yrF+tiw6CdEkApJbG8OzPjBB9p8Ef/oXRRPfvklj4Z4vaA0WCUTWEQXH3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=JYqVNs3f; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="d48efdLi"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58F0aHfK021403;
-	Mon, 15 Sep 2025 11:19:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=RzaO4b3jqUKV+R1jZy05KPKafZ2dFe
-	rEnB2JNj90Jws=; b=d48efdLivBSU1F1HWhPeikxxDsHywuTXUJsDSfi3FoLKl3
-	s09S3Mwxlo4kCAYwJi8Zq+bIJOOZiIYd9EUM8AIrHSe9A61aWRqMXBC+yIIhUWtO
-	bTpWPE9U/od52slWEH2Mju7zh1OIyNljzQJFAm1dY02R464SORTo8hKD2EmQXvW0
-	5afF81w7y2GPOQkRP7Z84yNI2EBR1O69CMDNJzYa4mLHJMbTJuYdz4OVwraEPqy9
-	9Y5HQC3h4R5/iB17uf/oeFc0T83LDPAh7NC7xUUG3X0OtjX33rNbSosb9oPMCSjs
-	s57FUZSSVHRbxlyUD2FCwWEmrNJGGpMjLimmH3iA==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 494y1x1pas-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 15 Sep 2025 11:19:46 +0000 (GMT)
-Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 58FBJjYr000418;
-	Mon, 15 Sep 2025 11:19:45 GMT
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 494y1x1paq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 15 Sep 2025 11:19:45 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 58FBFTXY022384;
-	Mon, 15 Sep 2025 11:19:45 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 495kxpe3v0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 15 Sep 2025 11:19:45 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 58FBJh8O55837166
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 15 Sep 2025 11:19:43 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 33EAB20040;
-	Mon, 15 Sep 2025 11:19:43 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 7EB382004B;
-	Mon, 15 Sep 2025 11:19:40 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.109.219.158])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Mon, 15 Sep 2025 11:19:40 +0000 (GMT)
-Date: Mon, 15 Sep 2025 16:49:37 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
-        Ritesh Harjani <ritesh.list@gmail.com>, djwong@kernel.org,
-        tytso@mit.edu, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v6 01/12] common/rc: Add _min() and _max() helpers
-Message-ID: <aMf2SUh0gLeQO7rw@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <cover.1757610403.git.ojaswin@linux.ibm.com>
- <9475f8da726b894dd152b54b1416823181052c2a.1757610403.git.ojaswin@linux.ibm.com>
- <5a22a799-a6b9-43d3-9226-d1d554d170e4@oracle.com>
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="JYqVNs3f"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4cQN8p06m9z9t7F;
+	Mon, 15 Sep 2025 13:29:14 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1757935754;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=MMB0PHuT4LD/TWJpWthgb5izCIfvxrdwUnTvG4F0jxQ=;
+	b=JYqVNs3f0b/OOzvel1zfP5WBNuWsQJoLEbKXhsbzi+slKha16x86iG6q7jJc/HkOmzjZV/
+	sUYEm82nIs6JtJDvsI2kgP6sGir8UYkKKVozLfoBE/A5HipOpCm8RwFU7MAdjbzv+tPsui
+	yo/r6yKFWbo/ZBL89QtqmxrYkEwaSJKt9ics1dcAPdh5qvZ5v6pKwZbkKIyoOJkEvs82F9
+	dTCmerOb4LMKJlHT8rQ7UJmJ0rIQTYE7qgHne6wAUE1XVcz4GjAqldw2wRzJwrkqis5yjv
+	BDtaNPlOT+iYpimjVD4Zj4Jw7Bb0oiPDrF9d8Z8kaNGIEOXLSxlDEm75rOyIdw==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=none;
+	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::202 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
+Date: Mon, 15 Sep 2025 13:29:10 +0200
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Jinliang Zheng <alexjlzheng@gmail.com>
+Cc: alexjlzheng@tencent.com, brauner@kernel.org, djwong@kernel.org, 
+	hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, yi.zhang@huawei.com
+Subject: Re: [PATCH 4/4] iomap: don't abandon the whole copy when we have
+ iomap_folio_state
+Message-ID: <tcaz35lk5kwkmj74sv4fbf52fliha4uc2yv5fjee2qxsjamqr2@jkxk3vitf7lp>
+References: <dhjvmhfpmyf5ncbutlev6mmtgxatnuorfiv7i4q55wpzl7jrvn@asxbr2hv3xfv>
+ <20250915111228.4142222-1-alexjlzheng@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,48 +55,36 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5a22a799-a6b9-43d3-9226-d1d554d170e4@oracle.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTEzMDAxMCBTYWx0ZWRfX4PEjCcHcDazi
- ChJnYqEgF0f7QzeDdSRFGeGGKahaA1HZZmyIglhD0XOKju3ma5fiI9fiGJXwiEIH9NSIAwXMjMx
- 5z+5NzBv7xoCRdewcAOmyI4J9K+k2TDYcM7wGWnkVj9MucYc2w6qOS7q6r6b0buy6DQoFFlnUGO
- NyqVKcN4j2TKGue06hlMsorE+qRmqUMZI1IVZABVomqE4I83stG9UnHM2S2mKuOFNxGOq3tJDFV
- dU1VM1yhtk5X5XC8BnM54JMGSG/sRyO6AgzmWyrfFX28EeCrdgYcK7xHFafp4EAMjFF2UDX2TpB
- Rs41/s2S2sa2E2NW4/q2cTWLRnKlivdUQWbIl/8Suw7ETUqFMv2d64Eqrl4HofRr0JD7apsb/5y
- Wpv1NrpG
-X-Proofpoint-ORIG-GUID: _ARQOro69MyPk80WuckITckUz4zPTBcj
-X-Authority-Analysis: v=2.4 cv=euPfzppX c=1 sm=1 tr=0 ts=68c7f652 cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=kj9zAlcOel0A:10 a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=yPCof4ZbAAAA:8 a=8tsh_XVOevaKpRn8MqUA:9 a=CjuIK1q_8ugA:10 a=zgiPjhLxNE0A:10
-X-Proofpoint-GUID: A2FXZeoIDjSsugnX2y3qRDJhBVmKB57_
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-15_04,2025-09-12_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 malwarescore=0 phishscore=0 suspectscore=0 spamscore=0
- bulkscore=0 impostorscore=0 priorityscore=1501 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509130010
+In-Reply-To: <20250915111228.4142222-1-alexjlzheng@tencent.com>
+X-Rspamd-Queue-Id: 4cQN8p06m9z9t7F
 
-On Fri, Sep 12, 2025 at 05:53:47PM +0100, John Garry wrote:
-> On 11/09/2025 18:13, Ojaswin Mujoo wrote:
-> > Many programs open code these functionalities so add it as a generic helper
-> > in common/rc
+On Mon, Sep 15, 2025 at 07:12:28PM +0800, Jinliang Zheng wrote:
+> On Mon, 15 Sep 2025 12:50:54 +0200, kernel@pankajraghav.com wrote:
+> > > +static int iomap_trim_tail_partial(struct inode *inode, loff_t pos,
+> > > +		size_t copied, struct folio *folio)
+> > > +{
+> > > +	struct iomap_folio_state *ifs = folio->private;
+> > > +	unsigned block_size, last_blk, last_blk_bytes;
+> > > +
+> > > +	if (!ifs || !copied)
+> > > +		return 0;
+> > > +
+> > > +	block_size = 1 << inode->i_blkbits;
+> > > +	last_blk = offset_in_folio(folio, pos + copied - 1) >> inode->i_blkbits;
+> > > +	last_blk_bytes = (pos + copied) & (block_size - 1);
+> > > +
+> > > +	if (!ifs_block_is_uptodate(ifs, last_blk))
+> > > +		copied -= min(copied, last_blk_bytes);
 > > 
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> > If pos is aligned to block_size, is there a scenario where 
+> > copied < last_blk_bytes?
 > 
-> Reviewed-by: John Garry <john.g.gary@oracle.com>
-> 
-> I just sent a patch for something similar for blktests to linux-block. I
-> wonder how much commonality there is for such helpers...
-> 
-> BTW, let me know if I should attribute some credit there. cheers
+> I believe there is no other scenario. The min() here is specifically to handle cases where
+> pos is not aligned to block_size. But please note that the pos here is unrelated to the pos
+> in iomap_adjust_read_range().
 
-Thanks for the review John!
+Ah, you are right. This is about write and not read. I got a bit
+confused after reading both the patches back to back.
 
-I think the helpers are simple enough so credit is not needed :) 
-
-Thanks,
-Ojaswin
+--
+Pankaj
