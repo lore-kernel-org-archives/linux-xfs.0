@@ -1,207 +1,187 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFE89280325
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 19:11:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9411F27E058
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 20:20:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757963476; cv=none; b=ok7PmPYdA99MoMnz4BXoiiBQHY3WjqXaJA2ffuBOvbtj3Qk9p5iK3XsnKrNsIfoqF1mW26KtpKqLffWIvjv+gN+0/QmywwERacmRLBFD6R2ooh3FM/jbxrzFggnd9VDBOv35/6SsoMYjtWA/oMftId7+gBrWxiLHjXGNYdn9xtk=
+	t=1757967655; cv=none; b=V35QUR1PvTDXE2OPZp4hqZkY+EZiYnXiKZL7EoplRm+XH3VYq3OS8GHy6jaResnvvafs0lQbEpwv83qh94hC3F5SngkiQdfEC0QNNfT0veQrZNgbMasP+VZc3ELLh1XfE7v8IugkQiv3IFRg4VteMNuobeX6zQt7bPaRWWN//oo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757963476; c=relaxed/simple;
-	bh=MxSoAJFCtZ3eNvS+6E+y1SsHJYELc/B15Qzg5C1yKQY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bb6Hj2CQ99XohJd9009oRsjNnQS3ngCSHgN4rlb+TSSPqwZn2TzJR7SpCH5QME49yk31CXcc77Hxmpm1jULVvCBEZwp/3VmIxsUa6jOWI2kiup4OUilG7VCo8oqB/aRpExqYSv5+ZJY566kdhz9uX43I3CSjgWL/MP7Xkokkk/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QDkTQeW6; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757967655; c=relaxed/simple;
+	bh=+SLUOZGs/qS2cXaKoug7x+JwelyJoUiOaA7pbJGRa9I=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=NvHDa2FgaUToKviESTunteQsNEuyW5j+BYVVuPeLIHe9b1TB3lyMf2y4TWae30YCLqx8//U3MyFt4M+BSCHoZ58ARv9vda54uTgr5WjkdMv0TvYof5dfvbT9jY7r+Ikmta3praoxH2a5+4N+0VBCZbf281mMbqCkiqV4XR+Hy08=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ba4SaV62; arc=none smtp.client-ip=209.85.208.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QDkTQeW6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53EDEC4CEFB;
-	Mon, 15 Sep 2025 19:11:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757963476;
-	bh=MxSoAJFCtZ3eNvS+6E+y1SsHJYELc/B15Qzg5C1yKQY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QDkTQeW64A+TVnWFmTCC552/BZ8JspgDboyaLSvhCQjEPPKKTolRIiTwikKB2whNx
-	 d1IitfvAXkelNsJ7fmiG5xBaN3iqbtWWTDvRcFT5n/ifp5Y84ljm5rIx0YVitqBf2C
-	 a4eMdtmxmmJa4kolx5cCEui6y/MJQrMzfOhelg0zUNTBFFUzJ+9MsT9tEFiaF8nwAY
-	 i1BM+gLALtdpyJVY9li4g/LTpFM4nl5L2HYimwpqsDugmEPP2ZMh1H6QlvfloM42c3
-	 No+NV3mYeh/G9GzmPyAZH1YHAMcVgmxFdmnSrejpZHYFN/bOd60auG6K6V3KVCVBSN
-	 v3BYG8BoSK0IQ==
-Date: Mon, 15 Sep 2025 12:11:15 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs_io: use the XFS_ERRTAG macro to generate
- injection targets
-Message-ID: <20250915191115.GZ8096@frogsfrogsfrogs>
-References: <20250915133336.161352-1-hch@lst.de>
- <20250915133336.161352-3-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ba4SaV62"
+Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-61cc281171cso7947911a12.0
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 13:20:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1757967652; x=1758572452; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=jcV4wf+5WuOoeJKKBkai9T7otnt8wOzWs/vg6TVn+7A=;
+        b=Ba4SaV62pTWNr6EEoguOsWNxRtcAxj66/6IkQPAaxblECwqwQIEzPqOBHreyIxYjRV
+         8wkJQMzRvcwO6+qlGv/EzWRcnUpHL0ltzyXAEG7X3VkvGB5AzfR3isK4PfiKRBsTTPEJ
+         LbXpPBRuUGddATX8pHy/x2hrNLgYs3vkXvPdHY2UkbnMHWWVxQMMF/2t6drCSVzlEiRe
+         0NhRVopH2BbbZnrVQr1IfUOHwvU5Z3bPjJklHVxsFOwEcfMG5Rq9cSZpzvZRrMzQH724
+         THHo3f+1/KroN8Mqkgy5ex8o+as22hjJHLAMYVM4gRLS7bnSEX0JXxQTPwuHXwpRWYl+
+         GkXg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757967652; x=1758572452;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=jcV4wf+5WuOoeJKKBkai9T7otnt8wOzWs/vg6TVn+7A=;
+        b=CPHqkIoSrK7BQuCh+SttNg+E29eXM7vSGdrckbfzSOLrOY8BscoUKLxo4er4zClg3G
+         65FbZn7BT8KGrq98t+i3NnusFLEHMzGISLzcW8a33FI/+eln5wJFkYhOktA6Fk172FDy
+         Kr9MOMsiNTnIAquKPyFcJ6czmiS1+CKM6ZhByDlNRnTn21IF158xmJM+yJXywyTFwi1N
+         5TO05nCDiVCHQlrY5qmeDlRaud5z92MCLmedQo1yqDuCcsdaN087X2hN1BUdCDlskPZu
+         G+RWnwXbgVIlhoa3H2myG31YAI9Vv80OSWan51wDUTVKjVOaA/dLQinkH850o552+pFJ
+         5/2A==
+X-Forwarded-Encrypted: i=1; AJvYcCWtjqJWbI07ijQL/Af9+XispFMZzdWE3JuHOyRCFCA55u1MqshNpgOlOMYf7MXAAnS2YG3eP4NnRQo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzhPwGjR43zn0RgKz8NLiclHr8tkgjxiNWQn0yyZ5KbVB5DSWNL
+	eOLnAKP3x03bB8TsdDdQTAxz7In/rNYumPm09ByJj8lQaYrmF7UI3mOIRQOiOqXrixm6FwXi5B3
+	ws+WAFm1EGqVkxDO6QUkVsgkEoWTsag8=
+X-Gm-Gg: ASbGnctrRcjLpTNW+ONIvWhcjmujB0YUgJr7iZyoJBtnl78X9yMTJbeEaigSaebmInR
+	wdUXOEuhj/r01QS3yOpb4ebgGYo7jL+7wHNF0rmOY7lQ9G9Bpl3PfmFg3pPE0wIB7G1GVwPmjAc
+	kW8m3krKT9ZE9hzQf0fxEcw/bFHkZUf9TZQAwJmA8nJWNnIMMMRMbzvMGwUjeLBT0Oye71nNsDd
+	YNFdw24ppZShqlKrlB0lVyr0FTYJ/HD3u4O0SRpMXtnCdLOzu3i
+X-Google-Smtp-Source: AGHT+IGYABGg7Uj58FeWOIrBs5TeeS8JiH8hNIJ+ma9m4krolqPGMWxATE1E0UGWN02bDuIslGoQuD0eAuM4rI8wTxU=
+X-Received: by 2002:a05:6402:524e:b0:62f:4f1b:891d with SMTP id
+ 4fb4d7f45d1cf-62f4f1b9917mr2408740a12.2.1757967651735; Mon, 15 Sep 2025
+ 13:20:51 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250915133336.161352-3-hch@lst.de>
+References: <20250913030503.433914-1-amir73il@gmail.com> <20250915182056.GO8096@frogsfrogsfrogs>
+In-Reply-To: <20250915182056.GO8096@frogsfrogsfrogs>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 15 Sep 2025 22:20:40 +0200
+X-Gm-Features: AS18NWAt3QLFx-SVagIXEf_zp-tZNYESWbPWrYnKJUdNAFCyHFTA7DKGZO2-Wjs
+Message-ID: <CAOQ4uxg4eBMS-FQADVYLGVh66QfMO+tHDAv3TUSpKqXn==XdKw@mail.gmail.com>
+Subject: Re: [PATCH CANDIDATE 5.15, 6.1, 6.6] xfs: Increase
+ XFS_QM_TRANS_MAXDQS to 5
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Catherine Hoang <catherine.hoang@oracle.com>, 
+	Leah Rumancik <leah.rumancik@gmail.com>, Allison Henderson <allison.henderson@oracle.com>, 
+	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Sep 15, 2025 at 06:33:17AM -0700, Christoph Hellwig wrote:
-> Use the new magic macro table provided by libxfs to autogenerate
-> the list of valid error injection targets.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Sep 15, 2025 at 8:20=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> On Sat, Sep 13, 2025 at 05:05:02AM +0200, Amir Goldstein wrote:
+> > From: Allison Henderson <allison.henderson@oracle.com>
+> >
+> > [ Upstream  commit f103df763563ad6849307ed5985d1513acc586dd ]
+> >
+> > With parent pointers enabled, a rename operation can update up to 5
+> > inodes: src_dp, target_dp, src_ip, target_ip and wip.  This causes
+> > their dquots to a be attached to the transaction chain, so we need
+> > to increase XFS_QM_TRANS_MAXDQS.  This patch also add a helper
+> > function xfs_dqlockn to lock an arbitrary number of dquots.
+> >
+> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> >
+> > [amir: backport to kernels prior to parent pointers to fix an old bug]
+> >
+> > A rename operation of a directory (i.e. mv A/C/ B/) may end up changing
+> > three different dquot accounts under the following conditions:
+> > 1. user (or group) quotas are enabled
+> > 2. A/ B/ and C/ have different owner uids (or gids)
+> > 3. A/ blocks shrinks after remove of entry C/
+> > 4. B/ blocks grows before adding of entry C/
+> > 5. A/ ino <=3D XFS_DIR2_MAX_SHORT_INUM
+> > 6. B/ ino > XFS_DIR2_MAX_SHORT_INUM
+> > 7. C/ is converted from sf to block format, because its parent entry
+> >    needs to be stored as 8 bytes (see xfs_dir2_sf_replace_needblock)
+> >
+> > When all conditions are met (observed in the wild) we get this assertio=
+n:
+> >
+> > XFS: Assertion failed: qtrx, file: fs/xfs/xfs_trans_dquot.c, line: 207
+> >
+> > The upstream commit fixed this bug as a side effect, so decided to appl=
+y
+> > it as is rather than changing XFS_QM_TRANS_MAXDQS to 3 in stable kernel=
+s.
+>
+> Heh.  Indeed, you only need MAXDQS=3D=3D5 for filesystems that support
+> parent pointers, because only on those filesystems can you end up
+> needing to allocate a xattr block either to the new whiteout file or
+> free one from the file being unlinked.
+>
+> > The Fixes commit below is NOT the commit that introduced the bug, but
+> > for some reason, which is not explained in the commit message, it fixes
+> > the comment to state that highest number of dquots of one type is 3 and
+> > not 2 (which leads to the assertion), without actually fixing it.
+>
+> Agree.
+>
+> > The change of wording from "usr, grp OR prj" to "usr, grp and prj"
+> > suggests that there may have been a confusion between "the number of
+> > dquote of one type" and "the number of dquot types" (which is also 3),
+> > so the comment change was only accidentally correct.
+>
+> I interpret the "OR" -> "and" change to reflect the V4 -> V5 transition
+> where you actually can have all three dquot types because group/project
+> quota are no longer mutually exclusive.
+>
+> The "...involved in a transaction is 3" part I think is separate, and
+> strange that XFS_QM_TRANS_MAXDQS wasn't updated.
+>
+> > Fixes: 10f73d27c8e9 ("xfs: fix the comment explaining xfs_trans_dqlocke=
+djoin")
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> > ---
+> >
+> > Christoph,
+> >
+> > This is a cognitive challenge. can you say what you where thinking in
+> > 2013 when making the comment change in the Fixes commit?
+> > Is my speculation above correct?
+> >
+> > Catherine and Leah,
+> >
+> > I decided that cherry-pick this upstream commit as is with a commit
+> > message addendum was the best stable tree strategy.
+> > The commit applies cleanly to 5.15.y, so I assume it does for 6.6 and
+> > 6.1 as well. I ran my tests on 5.15.y and nothing fell out, but did not
+> > try to reproduce these complex assertion in a test.
+> >
+> > Could you take this candidate backport patch to a spin on your test
+> > branch?
+> >
+> > What do you all think about this?
+>
+> I only think you need MAXDQS=3D=3D5 for 6.12 to handle parent pointers.
+>
 
-With this applied we no longer have to manually update inject.c every
-time we do a libxfs port too, right?
+Yes, of course. I just preferred to keep the 5 to avoid deviating from
+the upstream commit if there is no good reason to do so.
 
-If yes, then
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> The older kernels could have it set to 3 instead.  struct xfs_dqtrx on a
+> 6.17-rc6 kernel is 88 bytes.  Stuffing 9 of them into struct
+> xfs_dquot_acct instead of 15 means that the _acct struct is only 792
+> bytes instead of 1392, which means we can use the 1k slab instead of the
+> 2k slab.
 
---D
+Huh? there is only one xfs_dquot_acct per transaction.
+Does it really matter if it's 1k or 2k??
 
-> ---
->  io/inject.c | 108 +++++++++++++++++-----------------------------------
->  1 file changed, 35 insertions(+), 73 deletions(-)
-> 
-> diff --git a/io/inject.c b/io/inject.c
-> index 7b9a76406cc5..99186c081230 100644
-> --- a/io/inject.c
-> +++ b/io/inject.c
-> @@ -12,89 +12,49 @@
->  
->  static cmdinfo_t inject_cmd;
->  
-> +#define ARRAY_SIZE(x)		(sizeof(x) / sizeof((x)[0]))
-> +#define __stringify_1(x...)	#x
-> +#define __stringify(x...)	__stringify_1(x)
-> +
-> +#define XFS_ERRTAG(_tag, _name, _default) \
-> +        [XFS_ERRTAG_##_tag]	=  __stringify(_name),
-> +#include "xfs_errortag.h"
-> +static const char *tag_names[] = { XFS_ERRTAGS };
-> +#undef XFS_ERRTAG
-> +
-> +/* Search for a name */
->  static int
-> -error_tag(char *name)
-> +error_tag(
-> +	char		*name)
->  {
-> -	static struct {
-> -		int	tag;
-> -		char	*name;
-> -	} *e, eflags[] = {
-> -		{ XFS_ERRTAG_NOERROR,			"noerror" },
-> -		{ XFS_ERRTAG_IFLUSH_1,			"iflush1" },
-> -		{ XFS_ERRTAG_IFLUSH_2,			"iflush2" },
-> -		{ XFS_ERRTAG_IFLUSH_3,			"iflush3" },
-> -		{ XFS_ERRTAG_IFLUSH_4,			"iflush4" },
-> -		{ XFS_ERRTAG_IFLUSH_5,			"iflush5" },
-> -		{ XFS_ERRTAG_IFLUSH_6,			"iflush6" },
-> -		{ XFS_ERRTAG_DA_READ_BUF,		"dareadbuf" },
-> -		{ XFS_ERRTAG_BTREE_CHECK_LBLOCK,	"btree_chk_lblk" },
-> -		{ XFS_ERRTAG_BTREE_CHECK_SBLOCK,	"btree_chk_sblk" },
-> -		{ XFS_ERRTAG_ALLOC_READ_AGF,		"readagf" },
-> -		{ XFS_ERRTAG_IALLOC_READ_AGI,		"readagi" },
-> -		{ XFS_ERRTAG_ITOBP_INOTOBP,		"itobp" },
-> -		{ XFS_ERRTAG_IUNLINK,			"iunlink" },
-> -		{ XFS_ERRTAG_IUNLINK_REMOVE,		"iunlinkrm" },
-> -		{ XFS_ERRTAG_DIR_INO_VALIDATE,		"dirinovalid" },
-> -		{ XFS_ERRTAG_BULKSTAT_READ_CHUNK,	"bulkstat" },
-> -		{ XFS_ERRTAG_IODONE_IOERR,		"logiodone" },
-> -		{ XFS_ERRTAG_STRATREAD_IOERR,		"stratread" },
-> -		{ XFS_ERRTAG_STRATCMPL_IOERR,		"stratcmpl" },
-> -		{ XFS_ERRTAG_DIOWRITE_IOERR,		"diowrite" },
-> -		{ XFS_ERRTAG_BMAPIFORMAT,		"bmapifmt" },
-> -		{ XFS_ERRTAG_FREE_EXTENT,		"free_extent" },
-> -		{ XFS_ERRTAG_RMAP_FINISH_ONE,		"rmap_finish_one" },
-> -		{ XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE,	"refcount_continue_update" },
-> -		{ XFS_ERRTAG_REFCOUNT_FINISH_ONE,	"refcount_finish_one" },
-> -		{ XFS_ERRTAG_BMAP_FINISH_ONE,		"bmap_finish_one" },
-> -		{ XFS_ERRTAG_AG_RESV_CRITICAL,		"ag_resv_critical" },
-> -		{ XFS_ERRTAG_DROP_WRITES,		"drop_writes" },
-> -		{ XFS_ERRTAG_LOG_BAD_CRC,		"log_bad_crc" },
-> -		{ XFS_ERRTAG_LOG_ITEM_PIN,		"log_item_pin" },
-> -		{ XFS_ERRTAG_BUF_LRU_REF,		"buf_lru_ref" },
-> -		{ XFS_ERRTAG_FORCE_SCRUB_REPAIR,	"force_repair" },
-> -		{ XFS_ERRTAG_FORCE_SUMMARY_RECALC,	"bad_summary" },
-> -		{ XFS_ERRTAG_IUNLINK_FALLBACK,		"iunlink_fallback" },
-> -		{ XFS_ERRTAG_BUF_IOERROR,		"buf_ioerror" },
-> -		{ XFS_ERRTAG_REDUCE_MAX_IEXTENTS,	"reduce_max_iextents" },
-> -		{ XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT,	"bmap_alloc_minlen_extent" },
-> -		{ XFS_ERRTAG_AG_RESV_FAIL,		"ag_resv_fail" },
-> -		{ XFS_ERRTAG_LARP,			"larp" },
-> -		{ XFS_ERRTAG_DA_LEAF_SPLIT,		"da_leaf_split" },
-> -		{ XFS_ERRTAG_ATTR_LEAF_TO_NODE,		"attr_leaf_to_node" },
-> -		{ XFS_ERRTAG_WB_DELAY_MS,		"wb_delay_ms" },
-> -		{ XFS_ERRTAG_WRITE_DELAY_MS,		"write_delay_ms" },
-> -		{ XFS_ERRTAG_EXCHMAPS_FINISH_ONE,	"exchmaps_finish_one" },
-> -		{ XFS_ERRTAG_METAFILE_RESV_CRITICAL,	"metafile_resv_crit" },
-> -		{ XFS_ERRTAG_MAX,			NULL }
-> -	};
-> -	int	count;
-> +	unsigned int	i;
->  
-> -	/*
-> -	 * If this fails make sure every tag is defined in the array above,
-> -	 * see xfs_errortag_attrs in kernelspace.
-> -	 */
-> -	BUILD_BUG_ON(sizeof(eflags) != (XFS_ERRTAG_MAX + 1) * sizeof(*e));
-> +	for (i = 0; i < ARRAY_SIZE(tag_names); i++)
-> +		if (tag_names[i] && strcmp(name, tag_names[i]) == 0)
-> +			return i;
-> +	return -1;
-> +}
->  
-> -	/* Search for a name */
-> -	if (name) {
-> -		for (e = eflags; e->name; e++)
-> -			if (strcmp(name, e->name) == 0)
-> -				return e->tag;
-> -		return -1;
-> -	}
-> +/* Dump all the names */
-> +static void
-> +list_tags(void)
-> +{
-> +	unsigned int	count = 0, i;
->  
-> -	/* Dump all the names */
->  	fputs("tags: [ ", stdout);
-> -	for (count = 0, e = eflags; e->name; e++, count++) {
-> -		if (count) {
-> +	for (i = 0; i < ARRAY_SIZE(tag_names); i++) {
-> +		if (count > 0) {
->  			fputs(", ", stdout);
->  			if (!(count % 5))
->  				fputs("\n\t", stdout);
->  		}
-> -		fputs(e->name, stdout);
-> +		if (tag_names[i]) {
-> +			fputs(tag_names[i], stdout);
-> +			count++;
-> +		}
-> +
->  	}
->  	fputs(" ]\n", stdout);
-> -	return 0;
->  }
->  
->  static void
-> @@ -121,8 +81,10 @@ inject_f(
->  	xfs_error_injection_t	error;
->  	int			command = XFS_IOC_ERROR_INJECTION;
->  
-> -	if (argc == 1)
-> -		return error_tag(NULL);
-> +	if (argc == 1) {
-> +		list_tags();
-> +		return 0;
-> +	}
->  
->  	while (--argc > 0) {
->  		error.fd = file->fd;
-> -- 
-> 2.47.2
-> 
-> 
+Am I missing something?
+
+Thanks,
+Amir.
