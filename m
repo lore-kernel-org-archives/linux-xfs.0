@@ -1,113 +1,236 @@
-Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C62A42BE7B3
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 18:21:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38F7127E7EE
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 18:25:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757960471; cv=none; b=tRx5v7rYMre3o/WopFATK6H/kuusK4oM/rYkgWq6VZGktz02NAA6SdLkvPjhwM01H4L+iR2JaXIqbdpX79u/3A7PbXL4X06Ks5ueFw8QzjeVQAy8oR0yRKIvh2DNmKhicviUcsMv/JqQHPM+CU6cW4em3ARVw6YrSY+eiosNVO4=
+	t=1757960714; cv=none; b=NmCH6GOqcpD27EXhl90xjCYgIH86k3Wnb3BMp+2Cok0XFiZqYdBW6Tp3n6XLKSKlzju1rEfIK0sj2AaE0B/PY3twIJnT1vPcqlbJGCqTrhBcCorOn4zWYlG4zNhKAtWd/Oqgb7w6mL89ItAlBTPrmyIpU6e0sRxAKfxT5z1S4Ik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757960471; c=relaxed/simple;
-	bh=0aDdECbcFnvzK6gvTk++iDWF1gYYmeS5TIpHZBB7Yb4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=WtHXyFVNP76v91t3+Y6eiiI/yNGWFSaoaAacmGlzuoIpOWjkiO8WsVq2WDNGZDXeNdM3Uia71SUapePG8p2Wi3Ejz/SmNxz3FtjD6O1RXahVTZbtq7kUptUdyMbF7a5K9f2jTfhtHJui425GnWkVX2JdFVKAWiEtOAewbiQSdOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=VyAopmCP; arc=none smtp.client-ip=209.85.128.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1757960714; c=relaxed/simple;
+	bh=PMyvH6B+L4RDLmTYLhlpzv1o+O8fiD0g2oJx4or+KHc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YRDHOgwDuJDqu/sA+SIyVNV14OCRQDq8JjfNX94+g3UhRvTttDo71w0rnqjcujeIwYrFTa8QX2XBFPfR98FqEHHoCztkE1WdcGADxbvRKBrMnZuj/pzI6mLhOMgVXo6t4O3mSZqsTHwokZmgvdKS5n1F2y9p3vKOJFGjlCQJhgI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BQkudXr2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="VyAopmCP"
-Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-72267c05111so34665927b3.2
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 11:21:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1757960469; x=1758565269; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=D+GliT1Pd8d53HWEdMQBU1YHyq1rnSI3P+2j/fil2q0=;
-        b=VyAopmCPFu7azUOHo0iM0H7C1iay8VW3m34YkV5/b7mkIrzNgdYj5gIB3MfbOgXNdw
-         An1WLWvxpwHETRBOl6tExv14asHr/pcrwj+azTUyrRbWDdskINTs5rsmOapntNqNXL95
-         t81vuvAhPUOVXnTPbrGYMDEg5e3GgK/d72EbDKkpXRHbEahmQtKj5f/MPk/JGqiHY7Pq
-         En+4QRjrwFfGtSEBIVtYCHLnbd1yI+elNGt3Lf9l0fJMxlbjMhQIfYtIIsyzRsBAdvNH
-         TG6/v5FypG6rdlO1ex/QEMEoZhYXH47Yn/9WI67xG2S1GDFt4p3nCwKGtO8N1hyud4OA
-         XhBg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757960469; x=1758565269;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=D+GliT1Pd8d53HWEdMQBU1YHyq1rnSI3P+2j/fil2q0=;
-        b=vs7NL2SfzqQ+p7rMSOzzUlB13MgwL38GgsWP/pzhLOLfpOdSAuLge1RJ9YRpw7dT2j
-         2dA1IWMk/v504dKzCxh1J1Pu+DxMeJEbUKIRUjQVI8X0UTQC0VZ7sphsC4qQQk66G1jI
-         4vaN79f3V25N1CQz0PZeE11ZeJJcHyQrvso/D5QxWlVPnT0OhIQP9QTuR6TQvFp9Pykc
-         UK5yDarY6oxUE4ho0Ud5j0mYmGeeWkoy5Ck8dHp56siLoUcpn8c+wDoOGdMmVCEi4anD
-         WCVDNQgS9DzQDTKcX2Yv5MuWDJjrfxM7qaxqdt3rowgOeX6SBKB5VXHABBg9mlXeibCt
-         am4Q==
-X-Forwarded-Encrypted: i=1; AJvYcCWeib7YEWsDDF/ZVep5E8cC0NPxwp8Y2+jVIugSYT00cVV2HF82gFjZFASUL4VZB/sSZGo5lBkikW4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwKGJOF9OaQH9RECeND7chVowKtXpgBbVDSN8kGyJR1G+1vbIjE
-	COmpB4M7xpdI8zrLPwDxG8GFNGc+YESgeCVXRuPnJbDEvifGpOG1ipQx5cUrpD5PyKhj5Ujuy0q
-	MyVzD825bWbwF6UVm1C6gEiYnoxdBT44OXeWJf0EwQg==
-X-Gm-Gg: ASbGncsPi84fjFuaU0VOngn6CfdoDLT8iiZtnfjM/X5hQ4XONKEx9bIbOQo0SQqg495
-	kRCB/M2t6QenDN4RM5u4VztTLrx/mxxcT35kwxUmOI5irmi7XiLDR+a9tdT27+Eo0xyVAFJKMoY
-	JdILbEF/yFqoLeQuQyMimb+ZUDr0ONWLZYRq9j1G/4FbN7qQJK6BsYOdfYDDcTC2RGDYdDzk47M
-	j7CaUMyibGchiU=
-X-Google-Smtp-Source: AGHT+IEDp5ZYxkbjon4yCrRZanz3ywO+1Dqvmg43vzDGc4l+oL6FL33NrpAa1korZr0/WJwLYzGBFv1kfMtD4v4LVjo=
-X-Received: by 2002:a05:690c:9c0c:b0:71c:1a46:48d5 with SMTP id
- 00721157ae682-73063480b69mr133022797b3.21.1757960468639; Mon, 15 Sep 2025
- 11:21:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BQkudXr2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B1CCC4CEF1;
+	Mon, 15 Sep 2025 18:25:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1757960714;
+	bh=PMyvH6B+L4RDLmTYLhlpzv1o+O8fiD0g2oJx4or+KHc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=BQkudXr2zCgGBwQ2JcWcWU8QtTfkBH4IXlP50pUHP8pSAhrJMxdWx+S/xOFMZZC3o
+	 HEwCFAQB1PVWiuCdpr16uXjHwA5paTalqVF9qcBGjyNQr7vuYl8m60aoIXCr1L08AH
+	 LSspyTtwT43nRLL9OLo2uERreZooIMyZn9vudyDS6SBQRAfJAPs2bfxE7JaTCO9jnz
+	 EQX1LG1Ui+bUX9rFYyLZeh/EXchNcE4rQbVJngRrfldUdUKEVnDSVbHYwSTu9gr6Gv
+	 Y0ghTddZUeuaNX9lk9vhQzlMlpMsrb16TvkamAMD+nTnw/K2WAURV2fe1gITMhLhbm
+	 p0roumubn2HUg==
+Date: Mon, 15 Sep 2025 11:25:13 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: fix log CRC mismatches between i386 and other
+ architectures
+Message-ID: <20250915182513.GP8096@frogsfrogsfrogs>
+References: <20250915132047.159473-1-hch@lst.de>
+ <20250915132047.159473-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <8957c526-d05c-4c0d-bfed-0eb6e6d2476c@linux.ibm.com>
- <BAEAC2F7-7D7F-49E4-AB21-10FC0E4BF5F3@linux.ibm.com> <CAHSKhteHC26yXVFtjgdanfM7+vsOVZ+HHWnBYD01A4eiRHibVQ@mail.gmail.com>
- <240A7968-D530-4135-856A-CE90D269D5E6@linux.ibm.com> <20250915142612.1412769A80-agordeev@linux.ibm.com>
-In-Reply-To: <20250915142612.1412769A80-agordeev@linux.ibm.com>
-From: Julian Sun <sunjunchao@bytedance.com>
-Date: Tue, 16 Sep 2025 02:20:55 +0800
-X-Gm-Features: Ac12FXz4gtGN6Jqt9p3sI4NDKpM8RKfj3WgCz5dLwYdzbiuc_wRBtKzbSNJCafg
-Message-ID: <CAHSKhtc-514tQoyCSukK1sLbDbc+Ne_TnwEks-h+gQWv8ZKHOA@mail.gmail.com>
-Subject: Re: [External] Re: [linux-next20250911]Kernel OOPs while running
- generic/256 on Pmem device
-To: Alexander Gordeev <agordeev@linux.ibm.com>
-Cc: Venkat <venkat88@linux.ibm.com>, tj@kernel.org, akpm@linux-foundation.org, 
-	stable@vger.kernel.org, songmuchun@bytedance.com, shakeelb@google.com, 
-	hannes@cmpxchg.org, roman.gushchin@linux.dev, mhocko@suse.com, 
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, riteshh@linux.ibm.com, 
-	ojaswin@linux.ibm.com, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Linux Next Mailing List <linux-next@vger.kernel.org>, 
-	cgroups@vger.kernel.org, linux-mm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250915132047.159473-3-hch@lst.de>
 
-Hi,
+On Mon, Sep 15, 2025 at 06:20:30AM -0700, Christoph Hellwig wrote:
+> When mounting file systems with a log that was dirtied on i386 on
+> other architectures or vice versa, log recovery is unhappy:
+> 
+> [   11.068052] XFS (vdb): Torn write (CRC failure) detected at log block 0x2. Truncating head block from 0xc.
+> 
+> This is because the CRCs generated by i386 and other architectures
+> always diff.  The reason for that is that sizeof(struct xlog_rec_header)
+> returns different values for i386 vs the rest (324 vs 328), because the
+> struct is not sizeof(uint64_t) aligned, and i386 has odd struct size
+> alignment rules.
 
-On Mon, Sep 15, 2025 at 10:26=E2=80=AFPM Alexander Gordeev
-<agordeev@linux.ibm.com> wrote:
->
-> On Mon, Sep 15, 2025 at 07:49:26PM +0530, Venkat wrote:
-> > Hello,
-> >
-> > Thanks for the fix. This is fixing the reported issue.
-> >
-> > While sending out the patch please add below tag as well.
-> >
-> > Tested-by: Venkat Rao Bagalkote <venkat88@linux.ibm.com>
->
-> And Reported-by as well, if I may add ;)
->
+...and let me guess, the checksum function samples data all the way out
+to byte 324/328 too?
 
-I'd like to but I will resend the whole patch which is used to address
-another issue.  Thanks a lot for reporting anyway =E2=80=94 it=E2=80=99s ve=
-ry helpful!
-> > Regards,
-> > Venkat.
->
-> Thanks!
+> This issue goes back to commit 13cdc853c519 ("Add log versioning, and new
+> super block field for the log stripe") in the xfs-import tree, which
+> adds log v2 support and the h_size field that causes the unaligned size.
+> At that time it only mattered for the crude debug only log header
+> checksum, but with commit 0e446be44806 ("xfs: add CRC checks to the log")
+> it became a real issue for v5 file system, because now there is a proper
+> CRC, and regular builds actually expect it match.
+> 
+> Fix this by allowing checksums with and without the padding.
+> 
+> Fixes: 0e446be44806 ("xfs: add CRC checks to the log")
 
+Cc: <stable@vger.kernel.org> # v3.8
 
-Thanks,
---=20
-Julian Sun <sunjunchao@bytedance.com>
+Perhaps?  This seems like a serious tripping point for old kernels.
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_log_format.h | 30 +++++++++++++++++++++++++++++-
+>  fs/xfs/libxfs/xfs_ondisk.h     |  2 ++
+>  fs/xfs/xfs_log.c               |  8 ++++----
+>  fs/xfs/xfs_log_priv.h          |  4 ++--
+>  fs/xfs/xfs_log_recover.c       | 19 +++++++++++++++++--
+>  5 files changed, 54 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> index 0d637c276db0..942c490f23e4 100644
+> --- a/fs/xfs/libxfs/xfs_log_format.h
+> +++ b/fs/xfs/libxfs/xfs_log_format.h
+> @@ -174,12 +174,40 @@ typedef struct xlog_rec_header {
+>  	__be32	  h_prev_block; /* block number to previous LR		:  4 */
+>  	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
+>  	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
+> -	/* new fields */
+> +
+> +	/* fields added by the Linux port: */
+>  	__be32    h_fmt;        /* format of log record                 :  4 */
+>  	uuid_t	  h_fs_uuid;    /* uuid of FS                           : 16 */
+> +
+> +	/* fields added for log v2: */
+>  	__be32	  h_size;	/* iclog size				:  4 */
+> +
+> +	/*
+> +	 * When h_size added for log v2 support, it caused structure to have
+> +	 * a different size on i386 vs all other architectures because the
+> +	 * sum of the size ofthe  member is not aligned by that of the largest
+> +	 * __be64-sized member, and i386 has really odd struct alignment rules.
+> +	 *
+> +	 * Due to the way the log headers are placed out on-disk that alone is
+> +	 * not a problem becaue the xlog_rec_header always sits alone in a
+> +	 * BBSIZEs area, and the rest of that area is padded with zeroes.
+> +	 * But xlog_cksum used to calculate the checksum based on the structure
+> +	 * size, and thus gives different checksums for i386 vs the rest.
+> +	 * We now do two checksum validation passes for both sizes to allow
+> +	 * moving v5 file systems with unclean logs between i386 and other
+> +	 * (little-endian) architectures.
+
+Is this a problem on other 32-bit platforms?  Or just i386?
+
+> +	 */
+> +	__u32	  h_pad0;
+>  } xlog_rec_header_t;
+>  
+> +#ifdef __i386__
+> +#define XLOG_REC_SIZE		offsetofend(struct xlog_rec_header, h_size)
+> +#define XLOG_REC_SIZE_OTHER	sizeof(struct xlog_rec_header)
+> +#else
+> +#define XLOG_REC_SIZE		sizeof(struct xlog_rec_header)
+> +#define XLOG_REC_SIZE_OTHER	offsetofend(struct xlog_rec_header, h_size)
+> +#endif /* __i386__ */
+> +
+>  typedef struct xlog_rec_ext_header {
+>  	__be32	  xh_cycle;	/* write cycle of log			: 4 */
+>  	__be32	  xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE]; /*	: 256 */
+> diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
+> index 5ed44fdf7491..7bfa3242e2c5 100644
+> --- a/fs/xfs/libxfs/xfs_ondisk.h
+> +++ b/fs/xfs/libxfs/xfs_ondisk.h
+> @@ -174,6 +174,8 @@ xfs_check_ondisk_structs(void)
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_rud_log_format,	16);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_map_extent,		32);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_phys_extent,		16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xlog_rec_header,		328);
+> +	XFS_CHECK_STRUCT_SIZE(struct xlog_rec_ext_header,	260);
+
+I guess we'll find out from the build bots. ;)
+
+The code changes looks ok modulo my various questions.
+
+--D
+
+>  
+>  	XFS_CHECK_OFFSET(struct xfs_bui_log_format, bui_extents,	16);
+>  	XFS_CHECK_OFFSET(struct xfs_cui_log_format, cui_extents,	16);
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index c8a57e21a1d3..69703dc3ef94 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1568,13 +1568,13 @@ xlog_cksum(
+>  	struct xlog		*log,
+>  	struct xlog_rec_header	*rhead,
+>  	char			*dp,
+> -	int			size)
+> +	unsigned int		hdrsize,
+> +	unsigned int		size)
+>  {
+>  	uint32_t		crc;
+>  
+>  	/* first generate the crc for the record header ... */
+> -	crc = xfs_start_cksum_update((char *)rhead,
+> -			      sizeof(struct xlog_rec_header),
+> +	crc = xfs_start_cksum_update((char *)rhead, hdrsize,
+>  			      offsetof(struct xlog_rec_header, h_crc));
+>  
+>  	/* ... then for additional cycle data for v2 logs ... */
+> @@ -1818,7 +1818,7 @@ xlog_sync(
+>  
+>  	/* calculcate the checksum */
+>  	iclog->ic_header.h_crc = xlog_cksum(log, &iclog->ic_header,
+> -					    iclog->ic_datap, size);
+> +			iclog->ic_datap, XLOG_REC_SIZE, size);
+>  	/*
+>  	 * Intentionally corrupt the log record CRC based on the error injection
+>  	 * frequency, if defined. This facilitates testing log recovery in the
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index a9a7a271c15b..0cfc654d8e87 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -499,8 +499,8 @@ xlog_recover_finish(
+>  extern void
+>  xlog_recover_cancel(struct xlog *);
+>  
+> -extern __le32	 xlog_cksum(struct xlog *log, struct xlog_rec_header *rhead,
+> -			    char *dp, int size);
+> +__le32	 xlog_cksum(struct xlog *log, struct xlog_rec_header *rhead,
+> +		char *dp, unsigned int hdrsize, unsigned int size);
+>  
+>  extern struct kmem_cache *xfs_log_ticket_cache;
+>  struct xlog_ticket *xlog_ticket_alloc(struct xlog *log, int unit_bytes,
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 0a4db8efd903..549d60959aee 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -2894,9 +2894,24 @@ xlog_recover_process(
+>  	int			pass,
+>  	struct list_head	*buffer_list)
+>  {
+> -	__le32			expected_crc = rhead->h_crc, crc;
+> +	__le32			expected_crc = rhead->h_crc, crc, other_crc;
+>  
+> -	crc = xlog_cksum(log, rhead, dp, be32_to_cpu(rhead->h_len));
+> +	crc = xlog_cksum(log, rhead, dp, XLOG_REC_SIZE,
+> +			be32_to_cpu(rhead->h_len));
+> +
+> +	/*
+> +	 * Look at the end of the struct xlog_rec_header definition in
+> +	 * xfs_log_format.h for the glory details.
+> +	 */
+> +	if (expected_crc && crc != expected_crc) {
+> +		other_crc = xlog_cksum(log, rhead, dp, XLOG_REC_SIZE_OTHER,
+> +				be32_to_cpu(rhead->h_len));
+> +		if (other_crc == expected_crc) {
+> +			xfs_notice_once(log->l_mp,
+> +	"Fixing up incorrect CRC due to padding.");
+> +			crc = other_crc;
+> +		}
+> +	}
+>  
+>  	/*
+>  	 * Nothing else to do if this is a CRC verification pass. Just return
+> -- 
+> 2.47.2
+> 
+> 
