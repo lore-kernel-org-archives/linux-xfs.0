@@ -1,41 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4879830DEAE
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 13:31:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1F6B30DD06
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 13:31:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757943067; cv=none; b=epMkL9SXmzdwY7BIJQMDHwfkR2PALzyKLhEGuSffHDPWcskk15UKHzDhQgwzVac7mznW5bEH4zQTKl9gYpYdraBZFpliFpaNe8ajUbQadR7d9C3lapU2bFJSfshBZY0Ftb8362OL/8D4ts4ZW0nnop7gLSYHiHI1MjbGd12US88=
+	t=1757943068; cv=none; b=Rkniqn05iJGq3Wmsqc6L/ZE9yO2gZ1NyozMv84pmj/AJTQiIRkZ/6Dx2tUD7ZgqDo0LbhuzXWRcUnUDVPXB87K+4e3WehC5900JoRKDAJEu7TZpYPZiIIJiI5HSN9sKUrUgiXXHyDSz6C4ilIc6V3sJQGR4kopBDc9WtUtoDc3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757943067; c=relaxed/simple;
-	bh=PZYi9KGZHvD9UsM3iS/IwHGov/PHUfk1tT1NGCuC9So=;
+	s=arc-20240116; t=1757943068; c=relaxed/simple;
+	bh=P+80t4ixVisyhv2kh0YM82grZi7uJZU5Jix55+7DFw4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lc3SxKml3TO1ANxqrDO/tNxPuITdeW+HFS7L+pxYvg6XLXBLn/I8U36lnAoB6NRBnIYghmuiM63ox/HlM6SUlvrkzoIpdEAozXxeV1HHlsLsdW1Scr5/2xS3Pr8/jEqbDZhOXUlhmiYa+y0vjwDNcIZ0Qmzkgh5ppbK/OXMlR5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CuHssb4x; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=Hl0YAcfl6rbgLXX04vzF0fkHzjFS8XXNeNBqe2LHsfNNjTnp83MGxrwWITc1e7VHTPUcT58a5/3YxjaVtngJUP3FAG4TsFosleG7VRDrK9do6QDBjVt/tC91tbwtUIsqsiv/lTYDfkb0xJWTrLwelYLjAq4FhN5YdaOj0fRoS2Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=VOpoWiz5; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CuHssb4x"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VOpoWiz5"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=vUcZNT+mjC0XDACN3+6/Au3t7ncY+8/wO3IwP6Oayqo=; b=CuHssb4xOanGx97bvGc6IT1V5C
-	ZzxmmbGZd4ZZDf40lkkbLVjoL1VW++bMxOtkL3064+Tft8OGi+vnLrit1fV6kvzW4U93Atx+n9g7P
-	Kaea22wfxI8Y4YkZktSyfH+1NygWy8T0AIlyaBULq+iYBL2N//Aatvp/7iocwC9OZhvZNx2Q7yg0h
-	ZDf5ciavFeB3tC6hdXg7UOFJIMszgNo2yT7CajxSWqTims0l+oXPyZFS5decFko6Y4vbV5D78vAJb
-	Ko1aCuZQ/ALzyULTr3vNnFHt3LRyG209Cnwo+lDLdPzz2EC1pOVUHx96xrMlsFCINXgaqiHBnpkz+
-	7shC8Rug==;
+	bh=M2JA1ARLmR24b7njwHGiMN0cHnaqGt+veuqCL5lVnNk=; b=VOpoWiz5VD42IJpyY8zz6FAnC0
+	JVXu+ibC8jfaMxbeAUw0H8vbAIpZ6tJiQe7hHur8D7tXqwpGJWzTzoEAEnRmLMAf67KCjQlooOxpN
+	9hCSMB4sucq3Tr0CRcpoYS4WWB/ZqdE6L00+iJ20MBuV2h6sYznXkHbKuyqGtoZCtatN2YOH0lMEk
+	V5ahjnaPSJRR8JjNu5u/LbXoWXKdreFPPzrf6tEdTKUxPuJVV8nw+jRToIsP7ddQZ1QxvmchwY27a
+	rznO7c6Bo0ToxNCnBi8XNhb5RbqfcEJTKzpARZExUsfWk4B5STyO871QNfx411tUB91XgSISfvCp6
+	RMZY3NJg==;
 Received: from [4.28.11.157] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uy9IQ-00000004KUl-04oP;
-	Mon, 15 Sep 2025 13:31:06 +0000
+	id 1uy9IP-00000004KUV-2bZi;
+	Mon, 15 Sep 2025 13:31:05 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 5/6] xfs: centralize error tag definitions
-Date: Mon, 15 Sep 2025 06:30:41 -0700
-Message-ID: <20250915133104.161037-6-hch@lst.de>
+Subject: [PATCH 3/6] xfs: remove the expr argument to XFS_TEST_ERROR
+Date: Mon, 15 Sep 2025 06:30:39 -0700
+Message-ID: <20250915133104.161037-4-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
 In-Reply-To: <20250915133104.161037-1-hch@lst.de>
 References: <20250915133104.161037-1-hch@lst.de>
@@ -48,325 +48,605 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Right now 5 places in the kernel and one in xfsprogs need to be updated
-for each new error tag.  Add a bit of macro magic so that only the
-error tag definition and a single table, which reside next to each
-other, need to be updated.
+Don't pass expr to XFS_TEST_ERROR.  Most calls pass a constant false,
+and the places that do pass an expression become cleaner by moving it
+out.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_errortag.h |  94 ++++++++++----------
- fs/xfs/xfs_error.c           | 166 +++++------------------------------
- 2 files changed, 69 insertions(+), 191 deletions(-)
+ fs/xfs/libxfs/xfs_ag_resv.c    |  7 +++----
+ fs/xfs/libxfs/xfs_alloc.c      |  5 ++---
+ fs/xfs/libxfs/xfs_attr_leaf.c  |  2 +-
+ fs/xfs/libxfs/xfs_bmap.c       | 17 ++++++++---------
+ fs/xfs/libxfs/xfs_btree.c      |  2 +-
+ fs/xfs/libxfs/xfs_da_btree.c   |  2 +-
+ fs/xfs/libxfs/xfs_dir2.c       |  2 +-
+ fs/xfs/libxfs/xfs_exchmaps.c   |  4 ++--
+ fs/xfs/libxfs/xfs_ialloc.c     |  2 +-
+ fs/xfs/libxfs/xfs_inode_buf.c  |  4 ++--
+ fs/xfs/libxfs/xfs_inode_fork.c |  3 +--
+ fs/xfs/libxfs/xfs_metafile.c   |  2 +-
+ fs/xfs/libxfs/xfs_refcount.c   |  7 +++----
+ fs/xfs/libxfs/xfs_rmap.c       |  2 +-
+ fs/xfs/libxfs/xfs_rtbitmap.c   |  2 +-
+ fs/xfs/scrub/cow_repair.c      |  4 ++--
+ fs/xfs/scrub/repair.c          |  2 +-
+ fs/xfs/xfs_attr_item.c         |  2 +-
+ fs/xfs/xfs_buf.c               |  4 ++--
+ fs/xfs/xfs_error.c             |  5 ++---
+ fs/xfs/xfs_error.h             | 10 +++++-----
+ fs/xfs/xfs_inode.c             | 28 +++++++++++++---------------
+ fs/xfs/xfs_iomap.c             |  4 ++--
+ fs/xfs/xfs_log.c               |  8 ++++----
+ fs/xfs/xfs_trans_ail.c         |  2 +-
+ 25 files changed, 62 insertions(+), 70 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index a53c5d40e084..115b556f2238 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -4,7 +4,7 @@
-  * Copyright (C) 2017 Oracle.
-  * All Rights Reserved.
-  */
--#ifndef __XFS_ERRORTAG_H_
-+#if !defined(__XFS_ERRORTAG_H_) || defined(XFS_ERRTAG)
- #define __XFS_ERRORTAG_H_
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index fb79215a509d..8ac8230c3d3c 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -92,9 +92,8 @@ xfs_ag_resv_critical(
+ 	trace_xfs_ag_resv_critical(pag, type, avail);
+ 
+ 	/* Critically low if less than 10% or max btree height remains. */
+-	return XFS_TEST_ERROR(avail < orig / 10 ||
+-			      avail < mp->m_agbtree_maxlevels,
+-			mp, XFS_ERRTAG_AG_RESV_CRITICAL);
++	return avail < orig / 10 || avail < mp->m_agbtree_maxlevels ||
++		XFS_TEST_ERROR(mp, XFS_ERRTAG_AG_RESV_CRITICAL);
+ }
  
  /*
-@@ -71,49 +71,53 @@
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-  */
- #define XFS_RANDOM_DEFAULT				100
--#define XFS_RANDOM_IFLUSH_1				XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_IFLUSH_2				XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_IFLUSH_3				XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_IFLUSH_4				XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_IFLUSH_5				XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_IFLUSH_6				XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_DA_READ_BUF				XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_BTREE_CHECK_LBLOCK			(XFS_RANDOM_DEFAULT/4)
--#define XFS_RANDOM_BTREE_CHECK_SBLOCK			XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_ALLOC_READ_AGF			XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_IALLOC_READ_AGI			XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_ITOBP_INOTOBP			XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_IUNLINK				XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_IUNLINK_REMOVE			XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_DIR_INO_VALIDATE			XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_BULKSTAT_READ_CHUNK			XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_IODONE_IOERR				(XFS_RANDOM_DEFAULT/10)
--#define XFS_RANDOM_STRATREAD_IOERR			(XFS_RANDOM_DEFAULT/10)
--#define XFS_RANDOM_STRATCMPL_IOERR			(XFS_RANDOM_DEFAULT/10)
--#define XFS_RANDOM_DIOWRITE_IOERR			(XFS_RANDOM_DEFAULT/10)
--#define XFS_RANDOM_BMAPIFORMAT				XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_FREE_EXTENT				1
--#define XFS_RANDOM_RMAP_FINISH_ONE			1
--#define XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE		1
--#define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
--#define XFS_RANDOM_BMAP_FINISH_ONE			1
--#define XFS_RANDOM_AG_RESV_CRITICAL			4
--#define XFS_RANDOM_LOG_BAD_CRC				1
--#define XFS_RANDOM_LOG_ITEM_PIN				1
--#define XFS_RANDOM_BUF_LRU_REF				2
--#define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
--#define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
--#define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
--#define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
--#define XFS_RANDOM_REDUCE_MAX_IEXTENTS			1
--#define XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT		1
--#define XFS_RANDOM_AG_RESV_FAIL				1
--#define XFS_RANDOM_LARP					1
--#define XFS_RANDOM_DA_LEAF_SPLIT			1
--#define XFS_RANDOM_ATTR_LEAF_TO_NODE			1
--#define XFS_RANDOM_WB_DELAY_MS				3000
--#define XFS_RANDOM_WRITE_DELAY_MS			3000
--#define XFS_RANDOM_EXCHMAPS_FINISH_ONE			1
--#define XFS_RANDOM_METAFILE_RESV_CRITICAL		4
-+
-+#define XFS_ERRTAGS \
-+XFS_ERRTAG(NOERROR,		noerror,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(IFLUSH_1,		iflush1,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(IFLUSH_2,		iflush2,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(IFLUSH_3,		iflush3,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(IFLUSH_4,		iflush4,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(IFLUSH_5,		iflush5,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(IFLUSH_6,		iflush6,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(DA_READ_BUF,		dareadbuf,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(BTREE_CHECK_LBLOCK,	btree_chk_lblk,		XFS_RANDOM_DEFAULT/4) \
-+XFS_ERRTAG(BTREE_CHECK_SBLOCK,	btree_chk_sblk,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(ALLOC_READ_AGF,	readagf,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(IALLOC_READ_AGI,	readagi,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(ITOBP_INOTOBP,	itobp,			XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(IUNLINK,		iunlink,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(IUNLINK_REMOVE,	iunlinkrm,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(DIR_INO_VALIDATE,	dirinovalid,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(BULKSTAT_READ_CHUNK,	bulkstat,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(IODONE_IOERR,	logiodone,		XFS_RANDOM_DEFAULT/10) \
-+XFS_ERRTAG(STRATREAD_IOERR,	stratread,		XFS_RANDOM_DEFAULT/10) \
-+XFS_ERRTAG(STRATCMPL_IOERR,	stratcmpl,		XFS_RANDOM_DEFAULT/10) \
-+XFS_ERRTAG(DIOWRITE_IOERR,	diowrite,		XFS_RANDOM_DEFAULT/10) \
-+XFS_ERRTAG(BMAPIFORMAT,		bmapifmt,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(FREE_EXTENT,		free_extent,		1) \
-+XFS_ERRTAG(RMAP_FINISH_ONE,	rmap_finish_one,	1) \
-+XFS_ERRTAG(REFCOUNT_CONTINUE_UPDATE, \
-+				refcount_continue_update, 1) \
-+XFS_ERRTAG(REFCOUNT_FINISH_ONE,	refcount_finish_one,	1) \
-+XFS_ERRTAG(BMAP_FINISH_ONE,	bmap_finish_one,	1) \
-+XFS_ERRTAG(AG_RESV_CRITICAL,	ag_resv_critical,	4) \
-+XFS_ERRTAG(LOG_BAD_CRC,		log_bad_crc,		1) \
-+XFS_ERRTAG(LOG_ITEM_PIN,	log_item_pin,		1) \
-+XFS_ERRTAG(BUF_LRU_REF,		buf_lru_ref,		2) \
-+XFS_ERRTAG(FORCE_SCRUB_REPAIR,	force_repair,		1) \
-+XFS_ERRTAG(FORCE_SUMMARY_RECALC, bad_summary,		1) \
-+XFS_ERRTAG(IUNLINK_FALLBACK,	iunlink_fallback,	XFS_RANDOM_DEFAULT/10) \
-+XFS_ERRTAG(BUF_IOERROR,		buf_ioerror,		XFS_RANDOM_DEFAULT) \
-+XFS_ERRTAG(REDUCE_MAX_IEXTENTS,	reduce_max_iextents,	1) \
-+XFS_ERRTAG(BMAP_ALLOC_MINLEN_EXTENT, bmap_alloc_minlen_extent, 1) \
-+XFS_ERRTAG(AG_RESV_FAIL,	ag_resv_fail,		1) \
-+XFS_ERRTAG(LARP,		larp,			1) \
-+XFS_ERRTAG(DA_LEAF_SPLIT,	da_leaf_split,		1) \
-+XFS_ERRTAG(ATTR_LEAF_TO_NODE,	attr_leaf_to_node,	1) \
-+XFS_ERRTAG(WB_DELAY_MS,		wb_delay_ms,		3000) \
-+XFS_ERRTAG(WRITE_DELAY_MS,	write_delay_ms,		3000) \
-+XFS_ERRTAG(EXCHMAPS_FINISH_ONE,	exchmaps_finish_one,	1) \
-+XFS_ERRTAG(METAFILE_RESV_CRITICAL, metafile_resv_crit,	4) \
+@@ -203,7 +202,7 @@ __xfs_ag_resv_init(
+ 		return -EINVAL;
+ 	}
  
- #endif /* __XFS_ERRORTAG_H_ */
+-	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_AG_RESV_FAIL))
++	if (XFS_TEST_ERROR(mp, XFS_ERRTAG_AG_RESV_FAIL))
+ 		error = -ENOSPC;
+ 	else
+ 		error = xfs_dec_fdblocks(mp, hidden_space, true);
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 000cc7f4a3ce..ad381c73abc4 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -3321,7 +3321,7 @@ xfs_agf_read_verify(
+ 		xfs_verifier_error(bp, -EFSBADCRC, __this_address);
+ 	else {
+ 		fa = xfs_agf_verify(bp);
+-		if (XFS_TEST_ERROR(fa, mp, XFS_ERRTAG_ALLOC_READ_AGF))
++		if (fa || XFS_TEST_ERROR(mp, XFS_ERRTAG_ALLOC_READ_AGF))
+ 			xfs_verifier_error(bp, -EFSCORRUPTED, fa);
+ 	}
+ }
+@@ -4019,8 +4019,7 @@ __xfs_free_extent(
+ 	ASSERT(len != 0);
+ 	ASSERT(type != XFS_AG_RESV_AGFL);
+ 
+-	if (XFS_TEST_ERROR(false, mp,
+-			XFS_ERRTAG_FREE_EXTENT))
++	if (XFS_TEST_ERROR(mp, XFS_ERRTAG_FREE_EXTENT))
+ 		return -EIO;
+ 
+ 	error = xfs_free_extent_fix_freelist(tp, pag, &agbp);
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index fddb55605e0c..8508c845b27e 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -1225,7 +1225,7 @@ xfs_attr3_leaf_to_node(
+ 
+ 	trace_xfs_attr_leaf_to_node(args);
+ 
+-	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_ATTR_LEAF_TO_NODE)) {
++	if (XFS_TEST_ERROR(mp, XFS_ERRTAG_ATTR_LEAF_TO_NODE)) {
+ 		error = -EIO;
+ 		goto out;
+ 	}
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index d954f9b8071f..17edc24d4bb0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3662,8 +3662,7 @@ xfs_bmap_btalloc(
+ 	/* Trim the allocation back to the maximum an AG can fit. */
+ 	args.maxlen = min(ap->length, mp->m_ag_max_usable);
+ 
+-	if (unlikely(XFS_TEST_ERROR(false, mp,
+-			XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT)))
++	if (unlikely(XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT)))
+ 		error = xfs_bmap_exact_minlen_extent_alloc(ap, &args);
+ 	else if ((ap->datatype & XFS_ALLOC_USERDATA) &&
+ 			xfs_inode_is_filestream(ap->ip))
+@@ -3849,7 +3848,7 @@ xfs_bmapi_read(
+ 	}
+ 
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
+-	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
++	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
+ 		xfs_bmap_mark_sick(ip, whichfork);
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -4200,7 +4199,7 @@ xfs_bmapi_write(
+ 			(XFS_BMAPI_PREALLOC | XFS_BMAPI_ZERO));
+ 
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
+-	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
++	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
+ 		xfs_bmap_mark_sick(ip, whichfork);
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -4545,7 +4544,7 @@ xfs_bmapi_remap(
+ 			(XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC));
+ 
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
+-	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
++	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
+ 		xfs_bmap_mark_sick(ip, whichfork);
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -5679,7 +5678,7 @@ xfs_bmap_collapse_extents(
+ 	int			logflags = 0;
+ 
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
+-	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
++	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
+ 		xfs_bmap_mark_sick(ip, whichfork);
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -5795,7 +5794,7 @@ xfs_bmap_insert_extents(
+ 	int			logflags = 0;
+ 
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
+-	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
++	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
+ 		xfs_bmap_mark_sick(ip, whichfork);
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -5900,7 +5899,7 @@ xfs_bmap_split_extent(
+ 	int				i = 0;
+ 
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
+-	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
++	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
+ 		xfs_bmap_mark_sick(ip, whichfork);
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -6065,7 +6064,7 @@ xfs_bmap_finish_one(
+ 
+ 	trace_xfs_bmap_deferred(bi);
+ 
+-	if (XFS_TEST_ERROR(false, tp->t_mountp, XFS_ERRTAG_BMAP_FINISH_ONE))
++	if (XFS_TEST_ERROR(tp->t_mountp, XFS_ERRTAG_BMAP_FINISH_ONE))
+ 		return -EIO;
+ 
+ 	switch (bi->bi_type) {
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index a61211d253f1..dbe9df8c3300 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -306,7 +306,7 @@ xfs_btree_check_block(
+ 
+ 	fa = __xfs_btree_check_block(cur, block, level, bp);
+ 	if (XFS_IS_CORRUPT(mp, fa != NULL) ||
+-	    XFS_TEST_ERROR(false, mp, xfs_btree_block_errtag(cur))) {
++	    XFS_TEST_ERROR(mp, xfs_btree_block_errtag(cur))) {
+ 		if (bp)
+ 			trace_xfs_btree_corrupt(bp, _RET_IP_);
+ 		xfs_btree_mark_sick(cur);
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 723a0643b838..90f7fc219fcc 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -565,7 +565,7 @@ xfs_da3_split(
+ 
+ 	trace_xfs_da_split(state->args);
+ 
+-	if (XFS_TEST_ERROR(false, state->mp, XFS_ERRTAG_DA_LEAF_SPLIT))
++	if (XFS_TEST_ERROR(state->mp, XFS_ERRTAG_DA_LEAF_SPLIT))
+ 		return -EIO;
+ 
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 1775abcfa04d..82a338458a51 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -223,7 +223,7 @@ xfs_dir_ino_validate(
+ 	bool		ino_ok = xfs_verify_dir_ino(mp, ino);
+ 
+ 	if (XFS_IS_CORRUPT(mp, !ino_ok) ||
+-	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_DIR_INO_VALIDATE)) {
++	    XFS_TEST_ERROR(mp, XFS_ERRTAG_DIR_INO_VALIDATE)) {
+ 		xfs_warn(mp, "Invalid inode number 0x%Lx",
+ 				(unsigned long long) ino);
+ 		return -EFSCORRUPTED;
+diff --git a/fs/xfs/libxfs/xfs_exchmaps.c b/fs/xfs/libxfs/xfs_exchmaps.c
+index 3f1d6a98c118..932ee4619e9e 100644
+--- a/fs/xfs/libxfs/xfs_exchmaps.c
++++ b/fs/xfs/libxfs/xfs_exchmaps.c
+@@ -616,7 +616,7 @@ xfs_exchmaps_finish_one(
+ 			return error;
+ 	}
+ 
+-	if (XFS_TEST_ERROR(false, tp->t_mountp, XFS_ERRTAG_EXCHMAPS_FINISH_ONE))
++	if (XFS_TEST_ERROR(tp->t_mountp, XFS_ERRTAG_EXCHMAPS_FINISH_ONE))
+ 		return -EIO;
+ 
+ 	/* If we still have work to do, ask for a new transaction. */
+@@ -882,7 +882,7 @@ xmi_ensure_delta_nextents(
+ 				&new_nextents))
+ 		return -EFBIG;
+ 
+-	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_REDUCE_MAX_IEXTENTS) &&
++	if (XFS_TEST_ERROR(mp, XFS_ERRTAG_REDUCE_MAX_IEXTENTS) &&
+ 	    new_nextents > 10)
+ 		return -EFBIG;
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 750111634d9f..ca57a4e5ced9 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2706,7 +2706,7 @@ xfs_agi_read_verify(
+ 		xfs_verifier_error(bp, -EFSBADCRC, __this_address);
+ 	else {
+ 		fa = xfs_agi_verify(bp);
+-		if (XFS_TEST_ERROR(fa, mp, XFS_ERRTAG_IALLOC_READ_AGI))
++		if (fa || XFS_TEST_ERROR(mp, XFS_ERRTAG_IALLOC_READ_AGI))
+ 			xfs_verifier_error(bp, -EFSCORRUPTED, fa);
+ 	}
+ }
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index aa13fc00afd7..b1812b2c3cce 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -61,8 +61,8 @@ xfs_inode_buf_verify(
+ 		di_ok = xfs_verify_magic16(bp, dip->di_magic) &&
+ 			xfs_dinode_good_version(mp, dip->di_version) &&
+ 			xfs_verify_agino_or_null(bp->b_pag, unlinked_ino);
+-		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+-						XFS_ERRTAG_ITOBP_INOTOBP))) {
++		if (unlikely(!di_ok ||
++				XFS_TEST_ERROR(mp, XFS_ERRTAG_ITOBP_INOTOBP))) {
+ 			if (readahead) {
+ 				bp->b_flags &= ~XBF_DONE;
+ 				xfs_buf_ioerror(bp, -EIO);
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 4f99b90add55..1772d82f2d68 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -756,8 +756,7 @@ xfs_iext_count_extend(
+ 	if (nr_exts < ifp->if_nextents)
+ 		return -EFBIG;
+ 
+-	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_REDUCE_MAX_IEXTENTS) &&
+-	    nr_exts > 10)
++	if (XFS_TEST_ERROR(mp, XFS_ERRTAG_REDUCE_MAX_IEXTENTS) && nr_exts > 10)
+ 		return -EFBIG;
+ 
+ 	if (nr_exts > xfs_iext_max_nextents(has_large, whichfork)) {
+diff --git a/fs/xfs/libxfs/xfs_metafile.c b/fs/xfs/libxfs/xfs_metafile.c
+index 225923e463c4..b02e3d6c0868 100644
+--- a/fs/xfs/libxfs/xfs_metafile.c
++++ b/fs/xfs/libxfs/xfs_metafile.c
+@@ -121,7 +121,7 @@ xfs_metafile_resv_critical(
+ 			div_u64(mp->m_metafile_resv_target, 10)))
+ 		return true;
+ 
+-	return XFS_TEST_ERROR(false, mp, XFS_ERRTAG_METAFILE_RESV_CRITICAL);
++	return XFS_TEST_ERROR(mp, XFS_ERRTAG_METAFILE_RESV_CRITICAL);
+ }
+ 
+ /* Allocate a block from the metadata file's reservation. */
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 897784037483..2484dc9f6d7e 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1113,8 +1113,7 @@ xfs_refcount_still_have_space(
+ 	 * refcount continue update "error" has been injected.
+ 	 */
+ 	if (cur->bc_refc.nr_ops > 2 &&
+-	    XFS_TEST_ERROR(false, cur->bc_mp,
+-			XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE))
++	    XFS_TEST_ERROR(cur->bc_mp, XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE))
+ 		return false;
+ 
+ 	if (cur->bc_refc.nr_ops == 0)
+@@ -1398,7 +1397,7 @@ xfs_refcount_finish_one(
+ 
+ 	trace_xfs_refcount_deferred(mp, ri);
+ 
+-	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_REFCOUNT_FINISH_ONE))
++	if (XFS_TEST_ERROR(mp, XFS_ERRTAG_REFCOUNT_FINISH_ONE))
+ 		return -EIO;
+ 
+ 	/*
+@@ -1511,7 +1510,7 @@ xfs_rtrefcount_finish_one(
+ 
+ 	trace_xfs_refcount_deferred(mp, ri);
+ 
+-	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_REFCOUNT_FINISH_ONE))
++	if (XFS_TEST_ERROR(mp, XFS_ERRTAG_REFCOUNT_FINISH_ONE))
+ 		return -EIO;
+ 
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 3cdf50563fec..83e0488ff773 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2690,7 +2690,7 @@ xfs_rmap_finish_one(
+ 
+ 	trace_xfs_rmap_deferred(mp, ri);
+ 
+-	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_RMAP_FINISH_ONE))
++	if (XFS_TEST_ERROR(mp, XFS_ERRTAG_RMAP_FINISH_ONE))
+ 		return -EIO;
+ 
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index 5057536e586c..618061d898d4 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -1067,7 +1067,7 @@ xfs_rtfree_extent(
+ 	ASSERT(rbmip->i_itemp != NULL);
+ 	xfs_assert_ilocked(rbmip, XFS_ILOCK_EXCL);
+ 
+-	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FREE_EXTENT))
++	if (XFS_TEST_ERROR(mp, XFS_ERRTAG_FREE_EXTENT))
+ 		return -EIO;
+ 
+ 	error = xfs_rtcheck_alloc_range(&args, start, len);
+diff --git a/fs/xfs/scrub/cow_repair.c b/fs/xfs/scrub/cow_repair.c
+index 38a246b8bf11..b2a83801412e 100644
+--- a/fs/xfs/scrub/cow_repair.c
++++ b/fs/xfs/scrub/cow_repair.c
+@@ -300,7 +300,7 @@ xrep_cow_find_bad(
+ 	 * on the debugging knob, replace everything in the CoW fork.
+ 	 */
+ 	if ((sc->sm->sm_flags & XFS_SCRUB_IFLAG_FORCE_REBUILD) ||
+-	    XFS_TEST_ERROR(false, sc->mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR)) {
++	    XFS_TEST_ERROR(sc->mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR)) {
+ 		error = xrep_cow_mark_file_range(xc, xc->irec.br_startblock,
+ 				xc->irec.br_blockcount);
+ 		if (error)
+@@ -385,7 +385,7 @@ xrep_cow_find_bad_rt(
+ 	 * CoW fork and then scan for staging extents in the refcountbt.
+ 	 */
+ 	if ((sc->sm->sm_flags & XFS_SCRUB_IFLAG_FORCE_REBUILD) ||
+-	    XFS_TEST_ERROR(false, sc->mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR)) {
++	    XFS_TEST_ERROR(sc->mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR)) {
+ 		error = xrep_cow_mark_file_range(xc, xc->irec.br_startblock,
+ 				xc->irec.br_blockcount);
+ 		if (error)
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index d00c18954a26..efd5a7ccdf62 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -1110,7 +1110,7 @@ xrep_will_attempt(
+ 		return true;
+ 
+ 	/* Let debug users force us into the repair routines. */
+-	if (XFS_TEST_ERROR(false, sc->mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
++	if (XFS_TEST_ERROR(sc->mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
+ 		return true;
+ 
+ 	/* Metadata is corrupt or failed cross-referencing. */
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 5eef3bc30bda..c3a593319bee 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -491,7 +491,7 @@ xfs_attr_finish_item(
+ 	/* Reset trans after EAGAIN cycle since the transaction is new */
+ 	args->trans = tp;
+ 
+-	if (XFS_TEST_ERROR(false, args->dp->i_mount, XFS_ERRTAG_LARP)) {
++	if (XFS_TEST_ERROR(args->dp->i_mount, XFS_ERRTAG_LARP)) {
+ 		error = -EIO;
+ 		goto out;
+ 	}
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index f9ef3b2a332a..8360e77b3215 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1299,7 +1299,7 @@ xfs_buf_bio_end_io(
+ 	if (bio->bi_status)
+ 		xfs_buf_ioerror(bp, blk_status_to_errno(bio->bi_status));
+ 	else if ((bp->b_flags & XBF_WRITE) && (bp->b_flags & XBF_ASYNC) &&
+-		 XFS_TEST_ERROR(false, bp->b_mount, XFS_ERRTAG_BUF_IOERROR))
++		 XFS_TEST_ERROR(bp->b_mount, XFS_ERRTAG_BUF_IOERROR))
+ 		xfs_buf_ioerror(bp, -EIO);
+ 
+ 	if (bp->b_flags & XBF_ASYNC) {
+@@ -2084,7 +2084,7 @@ void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
+ 	 * This allows userspace to disrupt buffer caching for debug/testing
+ 	 * purposes.
+ 	 */
+-	if (XFS_TEST_ERROR(false, bp->b_mount, XFS_ERRTAG_BUF_LRU_REF))
++	if (XFS_TEST_ERROR(bp->b_mount, XFS_ERRTAG_BUF_LRU_REF))
+ 		lru_ref = 0;
+ 
+ 	atomic_set(&bp->b_lru_ref, lru_ref);
 diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 44dd8aba0097..ac895cd2bc0a 100644
+index fac35ff3da65..44dd8aba0097 100644
 --- a/fs/xfs/xfs_error.c
 +++ b/fs/xfs/xfs_error.c
-@@ -10,61 +10,17 @@
- #include "xfs_log_format.h"
- #include "xfs_trans_resv.h"
- #include "xfs_mount.h"
--#include "xfs_errortag.h"
- #include "xfs_error.h"
- #include "xfs_sysfs.h"
- #include "xfs_inode.h"
+@@ -291,7 +291,6 @@ xfs_errortag_enabled(
+ bool
+ xfs_errortag_test(
+ 	struct xfs_mount	*mp,
+-	const char		*expression,
+ 	const char		*file,
+ 	int			line,
+ 	unsigned int		error_tag)
+@@ -317,8 +316,8 @@ xfs_errortag_test(
+ 		return false;
  
+ 	xfs_warn_ratelimited(mp,
+-"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
+-			expression, file, line, mp->m_super->s_id);
++"Injecting error at file %s, line %d, on filesystem \"%s\"",
++			file, line, mp->m_super->s_id);
+ 	return true;
+ }
+ 
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index fd60a008f9d2..8429c1ee86e7 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -41,10 +41,10 @@ extern void xfs_inode_verifier_error(struct xfs_inode *ip, int error,
  #ifdef DEBUG
+ extern int xfs_errortag_init(struct xfs_mount *mp);
+ extern void xfs_errortag_del(struct xfs_mount *mp);
+-extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
+-		const char *file, int line, unsigned int error_tag);
+-#define XFS_TEST_ERROR(expr, mp, tag)		\
+-	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
++bool xfs_errortag_test(struct xfs_mount *mp, const char *file, int line,
++		unsigned int error_tag);
++#define XFS_TEST_ERROR(mp, tag)		\
++	xfs_errortag_test((mp), __FILE__, __LINE__, (tag))
+ bool xfs_errortag_enabled(struct xfs_mount *mp, unsigned int tag);
+ #define XFS_ERRORTAG_DELAY(mp, tag)		\
+ 	do { \
+@@ -63,7 +63,7 @@ extern int xfs_errortag_clearall(struct xfs_mount *mp);
+ #else
+ #define xfs_errortag_init(mp)			(0)
+ #define xfs_errortag_del(mp)
+-#define XFS_TEST_ERROR(expr, mp, tag)		(expr)
++#define XFS_TEST_ERROR(mp, tag)			(false)
+ #define XFS_ERRORTAG_DELAY(mp, tag)		((void)0)
+ #define xfs_errortag_add(mp, tag)		(ENOSYS)
+ #define xfs_errortag_clearall(mp)		(ENOSYS)
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 9c39251961a3..5940faefe522 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2377,8 +2377,8 @@ xfs_iflush(
+ 	 * error handling as the caller will shutdown and fail the buffer.
+ 	 */
+ 	error = -EFSCORRUPTED;
+-	if (XFS_TEST_ERROR(dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC),
+-			       mp, XFS_ERRTAG_IFLUSH_1)) {
++	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC) ||
++	    XFS_TEST_ERROR(mp, XFS_ERRTAG_IFLUSH_1)) {
+ 		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+ 			"%s: Bad inode %llu magic number 0x%x, ptr "PTR_FMT,
+ 			__func__, ip->i_ino, be16_to_cpu(dip->di_magic), dip);
+@@ -2394,29 +2394,27 @@ xfs_iflush(
+ 			goto flush_out;
+ 		}
+ 	} else if (S_ISREG(VFS_I(ip)->i_mode)) {
+-		if (XFS_TEST_ERROR(
+-		    ip->i_df.if_format != XFS_DINODE_FMT_EXTENTS &&
+-		    ip->i_df.if_format != XFS_DINODE_FMT_BTREE,
+-		    mp, XFS_ERRTAG_IFLUSH_3)) {
++		if ((ip->i_df.if_format != XFS_DINODE_FMT_EXTENTS &&
++		     ip->i_df.if_format != XFS_DINODE_FMT_BTREE) ||
++		    XFS_TEST_ERROR(mp, XFS_ERRTAG_IFLUSH_3)) {
+ 			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+ 				"%s: Bad regular inode %llu, ptr "PTR_FMT,
+ 				__func__, ip->i_ino, ip);
+ 			goto flush_out;
+ 		}
+ 	} else if (S_ISDIR(VFS_I(ip)->i_mode)) {
+-		if (XFS_TEST_ERROR(
+-		    ip->i_df.if_format != XFS_DINODE_FMT_EXTENTS &&
+-		    ip->i_df.if_format != XFS_DINODE_FMT_BTREE &&
+-		    ip->i_df.if_format != XFS_DINODE_FMT_LOCAL,
+-		    mp, XFS_ERRTAG_IFLUSH_4)) {
++		if ((ip->i_df.if_format != XFS_DINODE_FMT_EXTENTS &&
++		     ip->i_df.if_format != XFS_DINODE_FMT_BTREE &&
++		     ip->i_df.if_format != XFS_DINODE_FMT_LOCAL) ||
++		    XFS_TEST_ERROR(mp, XFS_ERRTAG_IFLUSH_4)) {
+ 			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+ 				"%s: Bad directory inode %llu, ptr "PTR_FMT,
+ 				__func__, ip->i_ino, ip);
+ 			goto flush_out;
+ 		}
+ 	}
+-	if (XFS_TEST_ERROR(ip->i_df.if_nextents + xfs_ifork_nextents(&ip->i_af) >
+-				ip->i_nblocks, mp, XFS_ERRTAG_IFLUSH_5)) {
++	if (ip->i_df.if_nextents + xfs_ifork_nextents(&ip->i_af) >
++	    ip->i_nblocks || XFS_TEST_ERROR(mp, XFS_ERRTAG_IFLUSH_5)) {
+ 		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+ 			"%s: detected corrupt incore inode %llu, "
+ 			"total extents = %llu nblocks = %lld, ptr "PTR_FMT,
+@@ -2425,8 +2423,8 @@ xfs_iflush(
+ 			ip->i_nblocks, ip);
+ 		goto flush_out;
+ 	}
+-	if (XFS_TEST_ERROR(ip->i_forkoff > mp->m_sb.sb_inodesize,
+-				mp, XFS_ERRTAG_IFLUSH_6)) {
++	if (ip->i_forkoff > mp->m_sb.sb_inodesize ||
++	    XFS_TEST_ERROR(mp, XFS_ERRTAG_IFLUSH_6)) {
+ 		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+ 			"%s: bad inode %llu, forkoff 0x%x, ptr "PTR_FMT,
+ 			__func__, ip->i_ino, ip->i_forkoff, ip);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 2a74f2957341..2570d0a66047 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1554,7 +1554,7 @@ xfs_zoned_buffered_write_iomap_begin(
+ 		return error;
  
--static unsigned int xfs_errortag_random_default[] = {
--	XFS_RANDOM_DEFAULT,
--	XFS_RANDOM_IFLUSH_1,
--	XFS_RANDOM_IFLUSH_2,
--	XFS_RANDOM_IFLUSH_3,
--	XFS_RANDOM_IFLUSH_4,
--	XFS_RANDOM_IFLUSH_5,
--	XFS_RANDOM_IFLUSH_6,
--	XFS_RANDOM_DA_READ_BUF,
--	XFS_RANDOM_BTREE_CHECK_LBLOCK,
--	XFS_RANDOM_BTREE_CHECK_SBLOCK,
--	XFS_RANDOM_ALLOC_READ_AGF,
--	XFS_RANDOM_IALLOC_READ_AGI,
--	XFS_RANDOM_ITOBP_INOTOBP,
--	XFS_RANDOM_IUNLINK,
--	XFS_RANDOM_IUNLINK_REMOVE,
--	XFS_RANDOM_DIR_INO_VALIDATE,
--	XFS_RANDOM_BULKSTAT_READ_CHUNK,
--	XFS_RANDOM_IODONE_IOERR,
--	XFS_RANDOM_STRATREAD_IOERR,
--	XFS_RANDOM_STRATCMPL_IOERR,
--	XFS_RANDOM_DIOWRITE_IOERR,
--	XFS_RANDOM_BMAPIFORMAT,
--	XFS_RANDOM_FREE_EXTENT,
--	XFS_RANDOM_RMAP_FINISH_ONE,
--	XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE,
--	XFS_RANDOM_REFCOUNT_FINISH_ONE,
--	XFS_RANDOM_BMAP_FINISH_ONE,
--	XFS_RANDOM_AG_RESV_CRITICAL,
--	0, /* XFS_RANDOM_DROP_WRITES has been removed */
--	XFS_RANDOM_LOG_BAD_CRC,
--	XFS_RANDOM_LOG_ITEM_PIN,
--	XFS_RANDOM_BUF_LRU_REF,
--	XFS_RANDOM_FORCE_SCRUB_REPAIR,
--	XFS_RANDOM_FORCE_SUMMARY_RECALC,
--	XFS_RANDOM_IUNLINK_FALLBACK,
--	XFS_RANDOM_BUF_IOERROR,
--	XFS_RANDOM_REDUCE_MAX_IEXTENTS,
--	XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT,
--	XFS_RANDOM_AG_RESV_FAIL,
--	XFS_RANDOM_LARP,
--	XFS_RANDOM_DA_LEAF_SPLIT,
--	XFS_RANDOM_ATTR_LEAF_TO_NODE,
--	XFS_RANDOM_WB_DELAY_MS,
--	XFS_RANDOM_WRITE_DELAY_MS,
--	XFS_RANDOM_EXCHMAPS_FINISH_ONE,
--	XFS_RANDOM_METAFILE_RESV_CRITICAL,
--};
-+#define XFS_ERRTAG(_tag, _name, _default) \
-+	[XFS_ERRTAG_##_tag]	= (_default),
-+#include "xfs_errortag.h"
-+static unsigned int xfs_errortag_random_default[] = { XFS_ERRTAGS };
-+#undef XFS_ERRTAG
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
+-	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
++	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
+ 		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
+ 		error = -EFSCORRUPTED;
+ 		goto out_unlock;
+@@ -1728,7 +1728,7 @@ xfs_buffered_write_iomap_begin(
+ 		return error;
  
- struct xfs_errortag_attr {
- 	struct attribute	attr;
-@@ -125,110 +81,28 @@ static const struct sysfs_ops xfs_errortag_sysfs_ops = {
- 	.store = xfs_errortag_attr_store,
- };
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
+-	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
++	    XFS_TEST_ERROR(mp, XFS_ERRTAG_BMAPIFORMAT)) {
+ 		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
+ 		error = -EFSCORRUPTED;
+ 		goto out_unlock;
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index c8a57e21a1d3..6e6442b0543c 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -969,8 +969,8 @@ xfs_log_unmount_write(
+ 	 * counters will be recalculated.  Refer to xlog_check_unmount_rec for
+ 	 * more details.
+ 	 */
+-	if (XFS_TEST_ERROR(xfs_fs_has_sickness(mp, XFS_SICK_FS_COUNTERS), mp,
+-			XFS_ERRTAG_FORCE_SUMMARY_RECALC)) {
++	if (xfs_fs_has_sickness(mp, XFS_SICK_FS_COUNTERS) ||
++	    XFS_TEST_ERROR(mp, XFS_ERRTAG_FORCE_SUMMARY_RECALC)) {
+ 		xfs_alert(mp, "%s: will fix summary counters at next mount",
+ 				__func__);
+ 		return;
+@@ -1240,7 +1240,7 @@ xlog_ioend_work(
+ 	/*
+ 	 * Race to shutdown the filesystem if we see an error.
+ 	 */
+-	if (XFS_TEST_ERROR(error, log->l_mp, XFS_ERRTAG_IODONE_IOERR)) {
++	if (error || XFS_TEST_ERROR(log->l_mp, XFS_ERRTAG_IODONE_IOERR)) {
+ 		xfs_alert(log->l_mp, "log I/O error %d", error);
+ 		xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+ 	}
+@@ -1827,7 +1827,7 @@ xlog_sync(
+ 	 * detects the bad CRC and attempts to recover.
+ 	 */
+ #ifdef DEBUG
+-	if (XFS_TEST_ERROR(false, log->l_mp, XFS_ERRTAG_LOG_BAD_CRC)) {
++	if (XFS_TEST_ERROR(log->l_mp, XFS_ERRTAG_LOG_BAD_CRC)) {
+ 		iclog->ic_header.h_crc &= cpu_to_le32(0xAAAAAAAA);
+ 		iclog->ic_fail_crc = true;
+ 		xfs_warn(log->l_mp,
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 67c328d23e4a..38983c6777df 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -374,7 +374,7 @@ xfsaild_push_item(
+ 	 * If log item pinning is enabled, skip the push and track the item as
+ 	 * pinned. This can help induce head-behind-tail conditions.
+ 	 */
+-	if (XFS_TEST_ERROR(false, ailp->ail_log->l_mp, XFS_ERRTAG_LOG_ITEM_PIN))
++	if (XFS_TEST_ERROR(ailp->ail_log->l_mp, XFS_ERRTAG_LOG_ITEM_PIN))
+ 		return XFS_ITEM_PINNED;
  
--#define XFS_ERRORTAG_ATTR_RW(_name, _tag) \
-+#define XFS_ERRTAG(_tag, _name, _default)				\
- static struct xfs_errortag_attr xfs_errortag_attr_##_name = {		\
- 	.attr = {.name = __stringify(_name),				\
- 		 .mode = VERIFY_OCTAL_PERMISSIONS(S_IWUSR | S_IRUGO) },	\
--	.tag	= (_tag),						\
--}
--
--#define XFS_ERRORTAG_ATTR_LIST(_name) &xfs_errortag_attr_##_name.attr
--
--XFS_ERRORTAG_ATTR_RW(noerror,		XFS_ERRTAG_NOERROR);
--XFS_ERRORTAG_ATTR_RW(iflush1,		XFS_ERRTAG_IFLUSH_1);
--XFS_ERRORTAG_ATTR_RW(iflush2,		XFS_ERRTAG_IFLUSH_2);
--XFS_ERRORTAG_ATTR_RW(iflush3,		XFS_ERRTAG_IFLUSH_3);
--XFS_ERRORTAG_ATTR_RW(iflush4,		XFS_ERRTAG_IFLUSH_4);
--XFS_ERRORTAG_ATTR_RW(iflush5,		XFS_ERRTAG_IFLUSH_5);
--XFS_ERRORTAG_ATTR_RW(iflush6,		XFS_ERRTAG_IFLUSH_6);
--XFS_ERRORTAG_ATTR_RW(dareadbuf,		XFS_ERRTAG_DA_READ_BUF);
--XFS_ERRORTAG_ATTR_RW(btree_chk_lblk,	XFS_ERRTAG_BTREE_CHECK_LBLOCK);
--XFS_ERRORTAG_ATTR_RW(btree_chk_sblk,	XFS_ERRTAG_BTREE_CHECK_SBLOCK);
--XFS_ERRORTAG_ATTR_RW(readagf,		XFS_ERRTAG_ALLOC_READ_AGF);
--XFS_ERRORTAG_ATTR_RW(readagi,		XFS_ERRTAG_IALLOC_READ_AGI);
--XFS_ERRORTAG_ATTR_RW(itobp,		XFS_ERRTAG_ITOBP_INOTOBP);
--XFS_ERRORTAG_ATTR_RW(iunlink,		XFS_ERRTAG_IUNLINK);
--XFS_ERRORTAG_ATTR_RW(iunlinkrm,		XFS_ERRTAG_IUNLINK_REMOVE);
--XFS_ERRORTAG_ATTR_RW(dirinovalid,	XFS_ERRTAG_DIR_INO_VALIDATE);
--XFS_ERRORTAG_ATTR_RW(bulkstat,		XFS_ERRTAG_BULKSTAT_READ_CHUNK);
--XFS_ERRORTAG_ATTR_RW(logiodone,		XFS_ERRTAG_IODONE_IOERR);
--XFS_ERRORTAG_ATTR_RW(stratread,		XFS_ERRTAG_STRATREAD_IOERR);
--XFS_ERRORTAG_ATTR_RW(stratcmpl,		XFS_ERRTAG_STRATCMPL_IOERR);
--XFS_ERRORTAG_ATTR_RW(diowrite,		XFS_ERRTAG_DIOWRITE_IOERR);
--XFS_ERRORTAG_ATTR_RW(bmapifmt,		XFS_ERRTAG_BMAPIFORMAT);
--XFS_ERRORTAG_ATTR_RW(free_extent,	XFS_ERRTAG_FREE_EXTENT);
--XFS_ERRORTAG_ATTR_RW(rmap_finish_one,	XFS_ERRTAG_RMAP_FINISH_ONE);
--XFS_ERRORTAG_ATTR_RW(refcount_continue_update,	XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE);
--XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
--XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
--XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
--XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
--XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
--XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
--XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
--XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
--XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
--XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
--XFS_ERRORTAG_ATTR_RW(reduce_max_iextents,	XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
--XFS_ERRORTAG_ATTR_RW(bmap_alloc_minlen_extent,	XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT);
--XFS_ERRORTAG_ATTR_RW(ag_resv_fail, XFS_ERRTAG_AG_RESV_FAIL);
--XFS_ERRORTAG_ATTR_RW(larp,		XFS_ERRTAG_LARP);
--XFS_ERRORTAG_ATTR_RW(da_leaf_split,	XFS_ERRTAG_DA_LEAF_SPLIT);
--XFS_ERRORTAG_ATTR_RW(attr_leaf_to_node,	XFS_ERRTAG_ATTR_LEAF_TO_NODE);
--XFS_ERRORTAG_ATTR_RW(wb_delay_ms,	XFS_ERRTAG_WB_DELAY_MS);
--XFS_ERRORTAG_ATTR_RW(write_delay_ms,	XFS_ERRTAG_WRITE_DELAY_MS);
--XFS_ERRORTAG_ATTR_RW(exchmaps_finish_one, XFS_ERRTAG_EXCHMAPS_FINISH_ONE);
--XFS_ERRORTAG_ATTR_RW(metafile_resv_crit, XFS_ERRTAG_METAFILE_RESV_CRITICAL);
-+	.tag	= XFS_ERRTAG_##_tag,					\
-+};
-+#include "xfs_errortag.h"
-+XFS_ERRTAGS
-+#undef XFS_ERRTAG
- 
-+#define XFS_ERRTAG(_tag, _name, _default) \
-+	&xfs_errortag_attr_##_name.attr,
-+#include "xfs_errortag.h"
- static struct attribute *xfs_errortag_attrs[] = {
--	XFS_ERRORTAG_ATTR_LIST(noerror),
--	XFS_ERRORTAG_ATTR_LIST(iflush1),
--	XFS_ERRORTAG_ATTR_LIST(iflush2),
--	XFS_ERRORTAG_ATTR_LIST(iflush3),
--	XFS_ERRORTAG_ATTR_LIST(iflush4),
--	XFS_ERRORTAG_ATTR_LIST(iflush5),
--	XFS_ERRORTAG_ATTR_LIST(iflush6),
--	XFS_ERRORTAG_ATTR_LIST(dareadbuf),
--	XFS_ERRORTAG_ATTR_LIST(btree_chk_lblk),
--	XFS_ERRORTAG_ATTR_LIST(btree_chk_sblk),
--	XFS_ERRORTAG_ATTR_LIST(readagf),
--	XFS_ERRORTAG_ATTR_LIST(readagi),
--	XFS_ERRORTAG_ATTR_LIST(itobp),
--	XFS_ERRORTAG_ATTR_LIST(iunlink),
--	XFS_ERRORTAG_ATTR_LIST(iunlinkrm),
--	XFS_ERRORTAG_ATTR_LIST(dirinovalid),
--	XFS_ERRORTAG_ATTR_LIST(bulkstat),
--	XFS_ERRORTAG_ATTR_LIST(logiodone),
--	XFS_ERRORTAG_ATTR_LIST(stratread),
--	XFS_ERRORTAG_ATTR_LIST(stratcmpl),
--	XFS_ERRORTAG_ATTR_LIST(diowrite),
--	XFS_ERRORTAG_ATTR_LIST(bmapifmt),
--	XFS_ERRORTAG_ATTR_LIST(free_extent),
--	XFS_ERRORTAG_ATTR_LIST(rmap_finish_one),
--	XFS_ERRORTAG_ATTR_LIST(refcount_continue_update),
--	XFS_ERRORTAG_ATTR_LIST(refcount_finish_one),
--	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
--	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
--	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
--	XFS_ERRORTAG_ATTR_LIST(log_item_pin),
--	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
--	XFS_ERRORTAG_ATTR_LIST(force_repair),
--	XFS_ERRORTAG_ATTR_LIST(bad_summary),
--	XFS_ERRORTAG_ATTR_LIST(iunlink_fallback),
--	XFS_ERRORTAG_ATTR_LIST(buf_ioerror),
--	XFS_ERRORTAG_ATTR_LIST(reduce_max_iextents),
--	XFS_ERRORTAG_ATTR_LIST(bmap_alloc_minlen_extent),
--	XFS_ERRORTAG_ATTR_LIST(ag_resv_fail),
--	XFS_ERRORTAG_ATTR_LIST(larp),
--	XFS_ERRORTAG_ATTR_LIST(da_leaf_split),
--	XFS_ERRORTAG_ATTR_LIST(attr_leaf_to_node),
--	XFS_ERRORTAG_ATTR_LIST(wb_delay_ms),
--	XFS_ERRORTAG_ATTR_LIST(write_delay_ms),
--	XFS_ERRORTAG_ATTR_LIST(exchmaps_finish_one),
--	XFS_ERRORTAG_ATTR_LIST(metafile_resv_crit),
--	NULL,
-+	XFS_ERRTAGS
-+	NULL
- };
- ATTRIBUTE_GROUPS(xfs_errortag);
-+#undef XFS_ERRTAG
-+
-+/* -1 because XFS_ERRTAG_DROP_WRITES got removed, + 1 for NULL termination */
-+static_assert(ARRAY_SIZE(xfs_errortag_attrs) == XFS_ERRTAG_MAX);
- 
- static const struct kobj_type xfs_errortag_ktype = {
- 	.release = xfs_sysfs_release,
+ 	/*
 -- 
 2.47.2
 
