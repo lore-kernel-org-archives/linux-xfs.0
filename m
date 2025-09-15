@@ -1,40 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EF532E11B7
-	for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 18:25:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D723A2E8896
+	for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 18:27:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757960737; cv=none; b=gB0H0Ro7rts+53xmx8zWNGmQ9zOOuWt71acKGkC0HbhLtbzzUL71j6sNGEuLGiuGiAdC9iAZ3ZzuCLYpthM+vVaTGTqqVbNvahGwLLT9gY+FesAthvA38iJHWL5Fxcy0vyskUaWLtf9k+qqhJIlkoWX8BQaUnOO7S0++Nv3x+8o=
+	t=1757960852; cv=none; b=nO8QheAVp/PQLJsaDhrGhl9AKGfgUDo92+lhf9nQp4SWWzFKT3B3JYhG6uDW5iS9dHbFeqXkI9IiIecqCCKX0yfuoZpUqFA+oljgvD3zajnlM390AgT42YiBdwvQfM9fmEmGC5Xpta6oIRhxF7TNM1IL6klShNxN5Vwt76Cwozk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757960737; c=relaxed/simple;
-	bh=80GPD0Ql7mQsw+Er3ohLI3CnQPOxvFCmqgF+thEbFHM=;
+	s=arc-20240116; t=1757960852; c=relaxed/simple;
+	bh=NM6spyGOFsd27S7uLVoTClUkKao8+ScfJ4m062ugIW0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OvGZjVzHNx2EEVxwrPiNEZsjd0T5cjTZyqpaDEuYaublSVdP2QS+Mu+ULbWn89FwR3+k2Z5op81Fa+Mp22sDGiFMBdQZdfgnVLvVLv+iIsnTAB1pgoSVSqMuFVZjKtFs3slHX/HhhtXt6jWYorW09a24+waBkH42SNEb18h804I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VzjYJkZY; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=cXaIM7MKO47EcU8s7SJjuIXWTPuks6zrpKctgDSt9nGPidOUORkNtZ/gY36KTtKpRwStCkwREkCEla9dKV02d6D08H8rSO8MdK4jdT5cdp7UHsD+d6Lb3ARie9p1272JHt5t3mML999c/vZoo3Cs+8bpW2D5d35cSP4riEl+8SA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tswdfq6W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VzjYJkZY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AF26C4CEF7;
-	Mon, 15 Sep 2025 18:25:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tswdfq6W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B188BC4CEF1;
+	Mon, 15 Sep 2025 18:27:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757960737;
-	bh=80GPD0Ql7mQsw+Er3ohLI3CnQPOxvFCmqgF+thEbFHM=;
+	s=k20201202; t=1757960852;
+	bh=NM6spyGOFsd27S7uLVoTClUkKao8+ScfJ4m062ugIW0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VzjYJkZYP+bSw3nrIs3UG+PUgNTEGmUbjQayUmfq2+5Ff9ptoDpDMK85Ys1D3+BGb
-	 hkbTsIfm8sOy6CTetoyLixZmOt7dfyW/iwwaeJrHIAQHOrQ0YPAn8acmAEtjGFj9Lm
-	 Nv1EmLQb3L8iQQldINeywOxJiZsGDVT6drq1IWPzVgNBJZ0TyPirXVWxce1oj2w8VQ
-	 ZmCds3rHrI1HVsNTaFMwZ4J3WvtM1LvySXcSekfDALGvrTU5LIWB5XVF6gjdZ9CTGh
-	 XzpKGAJR29NpldZJY1o8s7LhkvyVGDWJXY4DAsZSalBx48hPa8LTvxnMZJ3diMQCY6
-	 YR4g0QzyRpRxA==
-Date: Mon, 15 Sep 2025 11:25:36 -0700
+	b=tswdfq6Wgkh/tWs4WiOVgNcp1DW6QVah+8SkvNEBEw+GGk7WtDnIazSKxI2ta+0QR
+	 Vww/yfOjL3uWZasQAxeelxYnSlY0NT6oNaqNhnShRSvAA7HVDU4QiRZqr9PtEDwuOz
+	 +/Xg4UlkNg68+Q9h4bqLIYyxE5LIjWZKrw+akwmvC1W4UlxxKMoYX1V7mJ3aTcner7
+	 Metu0TxNFUF0yAWKpwjGg+kzcNHT/0lN15kvbMytlpfD/WvqiA5dIPObj+aIkhN9vO
+	 bXEy76dYmfclMotugImUqqdQ1sY+slQlETnb9T3jHmAXlYjuDpr3MdrPqgF+mEtiJm
+	 a63GGv2q6bFEw==
+Date: Mon, 15 Sep 2025 11:27:32 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: rename the old_crc variable in
- xlog_recover_process
-Message-ID: <20250915182536.GQ8096@frogsfrogsfrogs>
-References: <20250915132047.159473-1-hch@lst.de>
- <20250915132047.159473-2-hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: move the XLOG_REG_ constants out of xfs_log_format.h
+Message-ID: <20250915182732.GR8096@frogsfrogsfrogs>
+References: <20250915132413.159877-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,68 +41,121 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250915132047.159473-2-hch@lst.de>
+In-Reply-To: <20250915132413.159877-1-hch@lst.de>
 
-On Mon, Sep 15, 2025 at 06:20:29AM -0700, Christoph Hellwig wrote:
-> old_crc is a very misleading name.  Rename it to expected_crc as that
-> described the usage much better.
+On Mon, Sep 15, 2025 at 06:24:13AM -0700, Christoph Hellwig wrote:
+> These are purely in-memory values and not used at all in xfsprogs.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Pretty straightforward so
+Looks ok, but why not move struct xfs_log_iovec as well?  It's also not
+part of the ondisk log format.
+
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_log_recover.c | 17 ++++++++---------
->  1 file changed, 8 insertions(+), 9 deletions(-)
+>  fs/xfs/libxfs/xfs_log_format.h | 37 ----------------------------------
+>  fs/xfs/xfs_log.h               | 37 ++++++++++++++++++++++++++++++++++
+>  2 files changed, 37 insertions(+), 37 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index e6ed9e09c027..0a4db8efd903 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2894,20 +2894,19 @@ xlog_recover_process(
->  	int			pass,
->  	struct list_head	*buffer_list)
->  {
-> -	__le32			old_crc = rhead->h_crc;
-> -	__le32			crc;
-> +	__le32			expected_crc = rhead->h_crc, crc;
+> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> index 942c490f23e4..890646b5c87a 100644
+> --- a/fs/xfs/libxfs/xfs_log_format.h
+> +++ b/fs/xfs/libxfs/xfs_log_format.h
+> @@ -86,43 +86,6 @@ struct xfs_unmount_log_format {
+>  	uint32_t	pad2;	/* may as well make it 64 bits */
+>  };
 >  
->  	crc = xlog_cksum(log, rhead, dp, be32_to_cpu(rhead->h_len));
+> -/* Region types for iovec's i_type */
+> -#define XLOG_REG_TYPE_BFORMAT		1
+> -#define XLOG_REG_TYPE_BCHUNK		2
+> -#define XLOG_REG_TYPE_EFI_FORMAT	3
+> -#define XLOG_REG_TYPE_EFD_FORMAT	4
+> -#define XLOG_REG_TYPE_IFORMAT		5
+> -#define XLOG_REG_TYPE_ICORE		6
+> -#define XLOG_REG_TYPE_IEXT		7
+> -#define XLOG_REG_TYPE_IBROOT		8
+> -#define XLOG_REG_TYPE_ILOCAL		9
+> -#define XLOG_REG_TYPE_IATTR_EXT		10
+> -#define XLOG_REG_TYPE_IATTR_BROOT	11
+> -#define XLOG_REG_TYPE_IATTR_LOCAL	12
+> -#define XLOG_REG_TYPE_QFORMAT		13
+> -#define XLOG_REG_TYPE_DQUOT		14
+> -#define XLOG_REG_TYPE_QUOTAOFF		15
+> -#define XLOG_REG_TYPE_LRHEADER		16
+> -#define XLOG_REG_TYPE_UNMOUNT		17
+> -#define XLOG_REG_TYPE_COMMIT		18
+> -#define XLOG_REG_TYPE_TRANSHDR		19
+> -#define XLOG_REG_TYPE_ICREATE		20
+> -#define XLOG_REG_TYPE_RUI_FORMAT	21
+> -#define XLOG_REG_TYPE_RUD_FORMAT	22
+> -#define XLOG_REG_TYPE_CUI_FORMAT	23
+> -#define XLOG_REG_TYPE_CUD_FORMAT	24
+> -#define XLOG_REG_TYPE_BUI_FORMAT	25
+> -#define XLOG_REG_TYPE_BUD_FORMAT	26
+> -#define XLOG_REG_TYPE_ATTRI_FORMAT	27
+> -#define XLOG_REG_TYPE_ATTRD_FORMAT	28
+> -#define XLOG_REG_TYPE_ATTR_NAME		29
+> -#define XLOG_REG_TYPE_ATTR_VALUE	30
+> -#define XLOG_REG_TYPE_XMI_FORMAT	31
+> -#define XLOG_REG_TYPE_XMD_FORMAT	32
+> -#define XLOG_REG_TYPE_ATTR_NEWNAME	33
+> -#define XLOG_REG_TYPE_ATTR_NEWVALUE	34
+> -#define XLOG_REG_TYPE_MAX		34
+> -
+>  /*
+>   * Flags to log operation header
+>   *
+> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+> index af6daf4f6792..dcc1f44ed68f 100644
+> --- a/fs/xfs/xfs_log.h
+> +++ b/fs/xfs/xfs_log.h
+> @@ -20,6 +20,43 @@ struct xfs_log_vec {
+>  	int			lv_alloc_size;	/* size of allocated lv */
+>  };
 >  
->  	/*
->  	 * Nothing else to do if this is a CRC verification pass. Just return
->  	 * if this a record with a non-zero crc. Unfortunately, mkfs always
-> -	 * sets old_crc to 0 so we must consider this valid even on v5 supers.
-> -	 * Otherwise, return EFSBADCRC on failure so the callers up the stack
-> -	 * know precisely what failed.
-> +	 * sets expected_crc to 0 so we must consider this valid even on v5
-> +	 * supers.  Otherwise, return EFSBADCRC on failure so the callers up the
-> +	 * stack know precisely what failed.
->  	 */
->  	if (pass == XLOG_RECOVER_CRCPASS) {
-> -		if (old_crc && crc != old_crc)
-> +		if (expected_crc && crc != expected_crc)
->  			return -EFSBADCRC;
->  		return 0;
->  	}
-> @@ -2918,11 +2917,11 @@ xlog_recover_process(
->  	 * zero CRC check prevents warnings from being emitted when upgrading
->  	 * the kernel from one that does not add CRCs by default.
->  	 */
-> -	if (crc != old_crc) {
-> -		if (old_crc || xfs_has_crc(log->l_mp)) {
-> +	if (crc != expected_crc) {
-> +		if (expected_crc || xfs_has_crc(log->l_mp)) {
->  			xfs_alert(log->l_mp,
->  		"log record CRC mismatch: found 0x%x, expected 0x%x.",
-> -					le32_to_cpu(old_crc),
-> +					le32_to_cpu(expected_crc),
->  					le32_to_cpu(crc));
->  			xfs_hex_dump(dp, 32);
->  		}
+> +/* Region types for iovec's i_type */
+> +#define XLOG_REG_TYPE_BFORMAT		1
+> +#define XLOG_REG_TYPE_BCHUNK		2
+> +#define XLOG_REG_TYPE_EFI_FORMAT	3
+> +#define XLOG_REG_TYPE_EFD_FORMAT	4
+> +#define XLOG_REG_TYPE_IFORMAT		5
+> +#define XLOG_REG_TYPE_ICORE		6
+> +#define XLOG_REG_TYPE_IEXT		7
+> +#define XLOG_REG_TYPE_IBROOT		8
+> +#define XLOG_REG_TYPE_ILOCAL		9
+> +#define XLOG_REG_TYPE_IATTR_EXT		10
+> +#define XLOG_REG_TYPE_IATTR_BROOT	11
+> +#define XLOG_REG_TYPE_IATTR_LOCAL	12
+> +#define XLOG_REG_TYPE_QFORMAT		13
+> +#define XLOG_REG_TYPE_DQUOT		14
+> +#define XLOG_REG_TYPE_QUOTAOFF		15
+> +#define XLOG_REG_TYPE_LRHEADER		16
+> +#define XLOG_REG_TYPE_UNMOUNT		17
+> +#define XLOG_REG_TYPE_COMMIT		18
+> +#define XLOG_REG_TYPE_TRANSHDR		19
+> +#define XLOG_REG_TYPE_ICREATE		20
+> +#define XLOG_REG_TYPE_RUI_FORMAT	21
+> +#define XLOG_REG_TYPE_RUD_FORMAT	22
+> +#define XLOG_REG_TYPE_CUI_FORMAT	23
+> +#define XLOG_REG_TYPE_CUD_FORMAT	24
+> +#define XLOG_REG_TYPE_BUI_FORMAT	25
+> +#define XLOG_REG_TYPE_BUD_FORMAT	26
+> +#define XLOG_REG_TYPE_ATTRI_FORMAT	27
+> +#define XLOG_REG_TYPE_ATTRD_FORMAT	28
+> +#define XLOG_REG_TYPE_ATTR_NAME		29
+> +#define XLOG_REG_TYPE_ATTR_VALUE	30
+> +#define XLOG_REG_TYPE_XMI_FORMAT	31
+> +#define XLOG_REG_TYPE_XMD_FORMAT	32
+> +#define XLOG_REG_TYPE_ATTR_NEWNAME	33
+> +#define XLOG_REG_TYPE_ATTR_NEWVALUE	34
+> +#define XLOG_REG_TYPE_MAX		34
+> +
+>  #define XFS_LOG_VEC_ORDERED	(-1)
+>  
+>  /*
 > -- 
 > 2.47.2
 > 
