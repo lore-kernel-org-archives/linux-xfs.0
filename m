@@ -1,70 +1,195 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B8C53218A7
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Sep 2025 14:42:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7942F350D58;
+	Tue, 16 Sep 2025 14:48:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758033737; cv=none; b=F3JajOEu5Oyxvfod1hZ0rNJkivCBn23o7O+tz45rmQzMXqGICEntyLKyiztGNUhd94AlBdkinE2vc89yjtArE8IEfI5vwqDsmc5D0Qf1Tl+dkPZNyr7NII6CezLn2kQXfQhquaC6TqrNDKwDSd6E7EADTpT2QxiL9AUDO9Dfg2U=
+	t=1758034138; cv=none; b=TB48zWwU6Ea+hYW/VTc4rliMfLo0aZRWix9x+/A5mPBJtre3adjfmLN+fvJdRRWfe66fkQRi/NHkl+9X9UHIY4NCwMrcJ7VlNlWqdCNLthfogRrnNCHuvis09CaMnWJAlSn9QF6Li93qznEw3NmnpaM+fKmY9vgF0EXgQbZlDmc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758033737; c=relaxed/simple;
-	bh=l7RBO1SWZVwfHUmhLInwXkziDuuCt/lYwoJsfI9yN44=;
+	s=arc-20240116; t=1758034138; c=relaxed/simple;
+	bh=TRr/2UXPDRkUkqFcLmPRWONMEbtMrFxBh6CLCV3ubBM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MzV1KYpx/rQ+csYxwbWrDUS+3wRSQneRAdGrBW3onct+4QW4uuqiBWYPqrMfN2pYP74Tsdvi24UGaT6oEo0eAC1rwMoLxMmjlQZg6L61yEVbBKBB2B5egpw2EjaL0A7Sfrt4pojS8j3LG//SHgiUbxaGwNAAYPRGQQscDJBhovI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sII8rrmx; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=tT5uoaJyQKdElG2cGE0rQv2KEqPcjc69niQk4JT/kHKW8rleBF8EUjLX9sqE7i8hCx6VPAdmZEzMGIS28dlNFHhy+NyZrdMdXlZ7EpZwORKWJRb2JE38+kRd/uSoAxjxzPsPVnTj4Xsimsn4Prc1dgFk4FwRx4NIHIHFq5NPaf0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=caFORS3g; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sII8rrmx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8D43C4CEEB;
-	Tue, 16 Sep 2025 14:42:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="caFORS3g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17363C4CEEB;
+	Tue, 16 Sep 2025 14:48:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758033736;
-	bh=l7RBO1SWZVwfHUmhLInwXkziDuuCt/lYwoJsfI9yN44=;
+	s=k20201202; t=1758034138;
+	bh=TRr/2UXPDRkUkqFcLmPRWONMEbtMrFxBh6CLCV3ubBM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sII8rrmx771BmLRY/qEEq+JBADI+zLCMaF9cvkBYJH+EghGioPiwUPIJKp45mOogg
-	 u669+KSCaHwmgHeBNb/ep1ux4LXIJdIphwfPMEQMCohk1cDD31ClsWsiRH5zC89ZTD
-	 G6vkMMY+wsqv5wHT80APKdpr7FK5GEfDUVu1inpQjZ7GqBPR9NBf42Z7ZWb6MBTtsN
-	 KnSAqY0Cl/B2Fng6psfwctPuy7LGfy9sa0Ja8MOwnwlu0Kv6CYS6otB1WVy3X2BkLL
-	 XdsSWVxZY653YOdcR7vUIOJROp3OSnRT1QvZGDMdqpnr1V3UDSpv9kH2t/4kewZliq
-	 Vw/kWaHFu9g6g==
-Date: Tue, 16 Sep 2025 07:42:16 -0700
+	b=caFORS3gP8vJppuURuzCF0XEIYePvaHjEWiZeXc2l0MdNx0Yr+g7wavauUYeocCjb
+	 bdD/9V6+4Ny2mcTzY7DgGFKLa195k3SVKgKOXIAbq6qXMoJn+4c5q0+IW1WR853wsp
+	 d8QYC87SbmuPQy4rWTXmI8r8abG89pcUATDgCsVL7pfVLZF5eVJY8nH8IwIkw+vkEC
+	 mVZ//3azFzM4xBvxZvZr5iHMV06JM7VnEhcqb0IwUZ8Y4jCWjDUYGfGdsjGrZJ+Q37
+	 7xybHcAi9K+EKa4OVALVcNWiSY5ci7XECx0aglZLDwMFRwt54tizx/QhyPql//a+fx
+	 u9eKXCX3dabcg==
+Date: Tue, 16 Sep 2025 07:48:57 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: move the XLOG_REG_ constants out of xfs_log_format.h
-Message-ID: <20250916144216.GC8096@frogsfrogsfrogs>
-References: <20250915132413.159877-1-hch@lst.de>
- <20250915182732.GR8096@frogsfrogsfrogs>
- <20250915204835.GA5650@lst.de>
- <20250916140109.GA919@lst.de>
+To: Chen Linxuan <me@black-desk.cn>
+Cc: miklos@szeredi.hu, bernd@bsbernd.com, linux-xfs@vger.kernel.org,
+	John@groves.net, linux-fsdevel@vger.kernel.org, neal@gompa.dev,
+	joannelkoong@gmail.com
+Subject: Re: [PATCH 7/8] fuse: propagate default and file acls on creation
+Message-ID: <20250916144857.GD8096@frogsfrogsfrogs>
+References: <175798149979.381990.14913079500562122255.stgit@frogsfrogsfrogs>
+ <175798150177.381990.5457916685867195048.stgit@frogsfrogsfrogs>
+ <CAC1kPDOv4sy3NPexFtdoROFi18b98W+PbP+9t8y4Jd5fQqCxCg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20250916140109.GA919@lst.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAC1kPDOv4sy3NPexFtdoROFi18b98W+PbP+9t8y4Jd5fQqCxCg@mail.gmail.com>
 
-On Tue, Sep 16, 2025 at 04:01:09PM +0200, Christoph Hellwig wrote:
-> On Mon, Sep 15, 2025 at 10:48:35PM +0200, Christoph Hellwig wrote:
-> > On Mon, Sep 15, 2025 at 11:27:32AM -0700, Darrick J. Wong wrote:
-> > > On Mon, Sep 15, 2025 at 06:24:13AM -0700, Christoph Hellwig wrote:
-> > > > These are purely in-memory values and not used at all in xfsprogs.
-> > > > 
-> > > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > 
-> > > Looks ok, but why not move struct xfs_log_iovec as well?  It's also not
-> > > part of the ondisk log format.
-> > 
-> > I have a separate series that includes the move, but I might as well
-> > send that now.
+On Tue, Sep 16, 2025 at 02:41:30PM +0800, Chen Linxuan wrote:
+> On Tue, Sep 16, 2025 at 8:26 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > From: Darrick J. Wong <djwong@kernel.org>
+> >
+> > For local filesystems, propagate the default and file access ACLs to new
+> > children when creating them, just like the other in-kernel local
+> > filesystems.
+> >
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  fs/fuse/fuse_i.h |    4 ++
+> >  fs/fuse/acl.c    |   65 ++++++++++++++++++++++++++++++++++++++
+> >  fs/fuse/dir.c    |   92 +++++++++++++++++++++++++++++++++++++++++-------------
+> >  3 files changed, 138 insertions(+), 23 deletions(-)
+> >
+> >
+<snip>
+> > diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
+> > index a7f47e43692f1c..b116e42431ee12 100644
+> > --- a/fs/fuse/dir.c
+> > +++ b/fs/fuse/dir.c
+> > @@ -877,10 +905,13 @@ static int fuse_mknod(struct mnt_idmap *idmap, struct inode *dir,
+> >  {
+> >         struct fuse_mknod_in inarg;
+> >         struct fuse_mount *fm = get_fuse_mount(dir);
+> > +       struct posix_acl *default_acl, *acl;
+> >         FUSE_ARGS(args);
+> > +       int err;
+> >
+> > -       if (!fm->fc->dont_mask)
+> > -               mode &= ~current_umask();
+> > +       err = fuse_acl_create(dir, &mode, &default_acl, &acl);
 > 
-> I just looked into that: with my log formatting clean series,
-> xfs_log_iovec can and should move to xfs_log_priv.h, while right now
-> we could only move it to xfs_log.h.  So I'd rather not move it twice
-> and wait a bit.
+> Please excuse me if this is a dumb question.
+> In this function (including fuse_mkdir and fuse_symlink),
+> why can't we pair fuse_acl_create and posix_acl_release together
+> within the same function,
+> just like in fuse_create_open?
 
-Ok.
+It seemed cleaner to have create_new_{entry,nondir} consume the two acl
+arguments rather than have to change every callsite:
+
+	fuse_acl_create(...., &default_acl, &acl);
+
+	...
+
+	ret = create_new_nondir(..., default_acl, acl);
+	posix_acl_release(default_acl);
+	posix_acl_release(acl);
+	return ret;
+
+since create_new_entry is really the bottom half of mknod, mkdir,
+symlink, and link.
 
 --D
+
+> Thanks,
+> Chen Linxuan
+> 
+> > +       if (err)
+> > +               return err;
+> >
+> >         memset(&inarg, 0, sizeof(inarg));
+> >         inarg.mode = mode;
+> > @@ -892,7 +923,8 @@ static int fuse_mknod(struct mnt_idmap *idmap, struct inode *dir,
+> >         args.in_args[0].value = &inarg;
+> >         args.in_args[1].size = entry->d_name.len + 1;
+> >         args.in_args[1].value = entry->d_name.name;
+> > -       return create_new_nondir(idmap, fm, &args, dir, entry, mode);
+> > +       return create_new_nondir(idmap, fm, &args, dir, entry, mode,
+> > +                                default_acl, acl);
+> >  }
+> >
+> >  static int fuse_create(struct mnt_idmap *idmap, struct inode *dir,
+> > @@ -924,13 +956,17 @@ static struct dentry *fuse_mkdir(struct mnt_idmap *idmap, struct inode *dir,
+> >  {
+> >         struct fuse_mkdir_in inarg;
+> >         struct fuse_mount *fm = get_fuse_mount(dir);
+> > +       struct posix_acl *default_acl, *acl;
+> >         FUSE_ARGS(args);
+> > +       int err;
+> >
+> > -       if (!fm->fc->dont_mask)
+> > -               mode &= ~current_umask();
+> > +       mode |= S_IFDIR;        /* vfs doesn't set S_IFDIR for us */
+> > +       err = fuse_acl_create(dir, &mode, &default_acl, &acl);
+> > +       if (err)
+> > +               return ERR_PTR(err);
+> >
+> >         memset(&inarg, 0, sizeof(inarg));
+> > -       inarg.mode = mode;
+> > +       inarg.mode = mode & ~S_IFDIR;
+> >         inarg.umask = current_umask();
+> >         args.opcode = FUSE_MKDIR;
+> >         args.in_numargs = 2;
+> > @@ -938,7 +974,8 @@ static struct dentry *fuse_mkdir(struct mnt_idmap *idmap, struct inode *dir,
+> >         args.in_args[0].value = &inarg;
+> >         args.in_args[1].size = entry->d_name.len + 1;
+> >         args.in_args[1].value = entry->d_name.name;
+> > -       return create_new_entry(idmap, fm, &args, dir, entry, S_IFDIR);
+> > +       return create_new_entry(idmap, fm, &args, dir, entry, S_IFDIR,
+> > +                               default_acl, acl);
+> >  }
+> >
+> >  static int fuse_symlink(struct mnt_idmap *idmap, struct inode *dir,
+> > @@ -946,7 +983,14 @@ static int fuse_symlink(struct mnt_idmap *idmap, struct inode *dir,
+> >  {
+> >         struct fuse_mount *fm = get_fuse_mount(dir);
+> >         unsigned len = strlen(link) + 1;
+> > +       struct posix_acl *default_acl, *acl;
+> > +       umode_t mode = S_IFLNK | 0777;
+> >         FUSE_ARGS(args);
+> > +       int err;
+> > +
+> > +       err = fuse_acl_create(dir, &mode, &default_acl, &acl);
+> > +       if (err)
+> > +               return err;
+> >
+> >         args.opcode = FUSE_SYMLINK;
+> >         args.in_numargs = 3;
+> > @@ -955,7 +999,8 @@ static int fuse_symlink(struct mnt_idmap *idmap, struct inode *dir,
+> >         args.in_args[1].value = entry->d_name.name;
+> >         args.in_args[2].size = len;
+> >         args.in_args[2].value = link;
+> > -       return create_new_nondir(idmap, fm, &args, dir, entry, S_IFLNK);
+> > +       return create_new_nondir(idmap, fm, &args, dir, entry, S_IFLNK,
+> > +                                default_acl, acl);
+> >  }
+> >
+> >  void fuse_flush_time_update(struct inode *inode)
+> > @@ -1155,7 +1200,8 @@ static int fuse_link(struct dentry *entry, struct inode *newdir,
+> >         args.in_args[0].value = &inarg;
+> >         args.in_args[1].size = newent->d_name.len + 1;
+> >         args.in_args[1].value = newent->d_name.name;
+> > -       err = create_new_nondir(&invalid_mnt_idmap, fm, &args, newdir, newent, inode->i_mode);
+> > +       err = create_new_nondir(&invalid_mnt_idmap, fm, &args, newdir, newent,
+> > +                               inode->i_mode, NULL, NULL);
+> >         if (!err)
+> >                 fuse_update_ctime_in_cache(inode);
+> >         else if (err == -EINTR)
+> >
+> >
+> >
+> 
