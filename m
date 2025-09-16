@@ -1,41 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B118032856B
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Sep 2025 16:28:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91BAF1A9FB8
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Sep 2025 16:28:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758040129; cv=none; b=GWwGlewa3gJy6ECka1bEomdv0qmkH2l3NwH5uV8jixjN/HJHhdX0CymTOQzKXqC//E36J/EaGgFOU8cGf8RoMPuUNozULGUyyZ3rWwJDpFH9beL0sjiHiQtvMvloDELF6SQDl5B13BCKK4776tMuAhpxCSRHu2u9WwONipGVS+c=
+	t=1758040130; cv=none; b=MNL0cLezFPN/59sOXCWPi0OeLxxIsqNIiTa6q9+M4FsnssT7T4ugfqw/CT6bYjEGmlzQlhq0Bl8xL/sva5zuHVLgI2wAtG0x37dg9H7xvEEHknhuFP4xmDOTn9Rk0CiakBG1IxFWCEI0xu3zEv3AlcRaqnt3ZpF6ZdgKzRvJExk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758040129; c=relaxed/simple;
-	bh=V4rX2F34uFGptDU9ZkimGjoMWfc2HQLDhE3y1AwvpXI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=K9jjJAeF+nTJAPnGJUooEIz7tyO94szZL0OM6gzUbLNRy7kBltyUhkHXW9ImtKF9ldPp8k28PCwjtMwXH3XCKMuFMEYVgzCF/4rhGbt8p8j+ORq1f5JDRCxkutdQ90kI7J3sGxz9/WV+HLpbVJromlJyvqLCppEiGB6YFjCzJjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=J4RR1ddU; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1758040130; c=relaxed/simple;
+	bh=op6mvmwdAXxyTSvmcToJVAbphIb2ycpMSMQx+g6q0Vc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=hwsBtQLgtItb/R6LKjQP55P2YDTFrGUWrqA4P8j9XzGLW3Q4V80C5yAmxeEo7S0N5iZh7DzDW0ut4N2WOgq4KNL+C+LtMzT59kdiToTtuBpAnlL/nDEphC9bzDA2r7rN0Rlmi01cpSD7A4GPJqyiXCxgKAobYoZQm/snQUlzTcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mHzoXhac; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="J4RR1ddU"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mHzoXhac"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=dTcY1GF6SmMxHk2XYuBbn81v/8/Z7whl9zgMLwQ8QZg=; b=J4RR1ddUCo8j5ITGChhWXVTGui
-	3ApQFYQj4u+IyzHsG+baVWvAoQi5QzRfdrkWEADv+ze6CVqcWTf2wniQOjJBtwzn/7WN9Xg2BG2TJ
-	2nWYS/QHcqSvqtAKZPGO+vgwToJ2C3Gs7Q74WxUNfgsfZ9jIOFgO+eAmzJVGSVVp1TA6Wn4fH7lRs
-	5N6E6NEuESVvwXPXqm/VTyIDrdh2/SVti9mQt2p5K0WJzFt/UN11O+Nhcg5Ib7KgyFwF8m1q/xpBm
-	KPpKr/SjhOwq7aeMTV2p/AUjDas+2eC5X0sQBqcbw6e0LFYOgKf1ZzNJBmRjAXfnpW4/5HsWL3BnY
-	kG7yXIQQ==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=+jX7qbLYHMipzEPAcA0qmCSrcnZpYfl9fALE+uItK+U=; b=mHzoXhacmWl54lSKdGr9Oji1mb
+	ebTnTAupMXMt60Oc84/Bu+zNaByo7btoFOJ+e1mkn/MLhwpbFzuPE9IjQ4DXc8hP8iD5OMLv5iiOX
+	mPzjVoWGWJo79jDOJayxfvYMCmzFVE0raPdPx6uHmFc8NL8SHik8zhcQRBJEebi7LXEHzt9SyyETF
+	z2F/7E2h2wv+1NGq9J2iLoHUA35XFaCxBSIHwM6gRatpsCr3xsFHBEnox+yP34hnMpRGrjJfDKx6R
+	ZoSkE/4QQOIB9lDv/+ReH76EBXOxIKRit4amKeWqdq8rvSRbcMPrJ4FjfAvFoCj7gS/nTsGUGhgTr
+	eDkwN42A==;
 Received: from [206.0.71.8] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uyYXv-00000008T2j-0k6U;
-	Tue, 16 Sep 2025 16:28:47 +0000
+	id 1uyYXx-00000008T2n-04yL;
+	Tue, 16 Sep 2025 16:28:49 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: cleanup error tags v2
-Date: Tue, 16 Sep 2025 09:28:13 -0700
-Message-ID: <20250916162843.258959-1-hch@lst.de>
+Cc: linux-xfs@vger.kernel.org,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH 1/6] xfs: remove xfs_errortag_get
+Date: Tue, 16 Sep 2025 09:28:14 -0700
+Message-ID: <20250916162843.258959-2-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
+In-Reply-To: <20250916162843.258959-1-hch@lst.de>
+References: <20250916162843.258959-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,41 +49,64 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+xfs_errortag_get is only called by xfs_errortag_attr_show, which does not
+need to validate the error tag, because it can only be called on valid
+error tags that had a sysfs attribute registered.
 
-while adding error injection to new code I'm writing I got really annoyed
-with all the places error tags had to be added.  This series cleans the
-error tags so that only the definition and one table have to be updated.
-I've also cleaned up a lot of the surroundings while at it.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/xfs/xfs_error.c | 16 ++--------------
+ fs/xfs/xfs_error.h |  1 -
+ 2 files changed, 2 insertions(+), 15 deletions(-)
 
-Changes since v1:
- - add a big fat comment and a idef/undef pair for the ERRTAGS magic
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index dbd87e137694..45a43e47ce92 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -118,10 +118,9 @@ xfs_errortag_attr_show(
+ 	char			*buf)
+ {
+ 	struct xfs_mount	*mp = to_mp(kobject);
+-	struct xfs_errortag_attr *xfs_attr = to_attr(attr);
++	unsigned int		error_tag = to_attr(attr)->tag;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%u\n",
+-			xfs_errortag_get(mp, xfs_attr->tag));
++	return snprintf(buf, PAGE_SIZE, "%u\n", mp->m_errortag[error_tag]);
+ }
+ 
+ static const struct sysfs_ops xfs_errortag_sysfs_ops = {
+@@ -326,17 +325,6 @@ xfs_errortag_test(
+ 	return true;
+ }
+ 
+-int
+-xfs_errortag_get(
+-	struct xfs_mount	*mp,
+-	unsigned int		error_tag)
+-{
+-	if (!xfs_errortag_valid(error_tag))
+-		return -EINVAL;
+-
+-	return mp->m_errortag[error_tag];
+-}
+-
+ int
+ xfs_errortag_set(
+ 	struct xfs_mount	*mp,
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 0b9c5ba8a598..3aeb03001acf 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -58,7 +58,6 @@ bool xfs_errortag_enabled(struct xfs_mount *mp, unsigned int tag);
+ 		mdelay((mp)->m_errortag[(tag)]); \
+ 	} while (0)
+ 
+-extern int xfs_errortag_get(struct xfs_mount *mp, unsigned int error_tag);
+ extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
+ 		unsigned int tag_value);
+ extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
+-- 
+2.47.2
 
-Diffstat:
- libxfs/xfs_ag_resv.c    |    7 -
- libxfs/xfs_alloc.c      |    5 -
- libxfs/xfs_attr_leaf.c  |    2 
- libxfs/xfs_bmap.c       |   17 +--
- libxfs/xfs_btree.c      |    2 
- libxfs/xfs_da_btree.c   |    2 
- libxfs/xfs_dir2.c       |    2 
- libxfs/xfs_errortag.h   |  106 +++++++++++++----------
- libxfs/xfs_exchmaps.c   |    4 
- libxfs/xfs_ialloc.c     |    2 
- libxfs/xfs_inode_buf.c  |    4 
- libxfs/xfs_inode_fork.c |    3 
- libxfs/xfs_metafile.c   |    2 
- libxfs/xfs_refcount.c   |    7 -
- libxfs/xfs_rmap.c       |    2 
- libxfs/xfs_rtbitmap.c   |    2 
- scrub/cow_repair.c      |    4 
- scrub/repair.c          |    2 
- xfs_attr_item.c         |    2 
- xfs_buf.c               |    4 
- xfs_error.c             |  216 ++++++------------------------------------------
- xfs_error.h             |   47 ++++------
- xfs_inode.c             |   28 ++----
- xfs_iomap.c             |    4 
- xfs_log.c               |    8 -
- xfs_trans_ail.c         |    2 
- 26 files changed, 165 insertions(+), 321 deletions(-)
