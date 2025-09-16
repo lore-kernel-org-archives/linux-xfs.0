@@ -1,562 +1,274 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EA42287504
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Sep 2025 06:15:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E479E223DF6
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Sep 2025 06:38:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758003339; cv=none; b=NzE3nK6ZIu3isHKS/8VaRVsz1gAsxo2TYNIC+yqavER/lovYz3pfVgMDPfGubN4yCHBaLJdPzRTo3H/ncc117xx891f8mhTmERErimH1uUvfxr6eGpdSywiBEMxRcsN8lD1i4/7pge8p8A7g1J9G9hzzmb7oBjHjsNTrruZWgY4=
+	t=1758004690; cv=none; b=LVFV0FepuXjvmvOXFwu58I6eiBB8I0swdyjVlTIZv3ZjS30iWwhue/WMdIguuGHt0LqZ+nuDdxiDpslaINwUKBbPGkc60TG47D5tG6hvr9ktKBVj9ICG/Qul/iDaKbvBblBm26jEfwk6kZH2E8I/tlE2sTbZpZRSHNsqLz4xZsE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758003339; c=relaxed/simple;
-	bh=oJLSNoVdXYw124Rgp+7FSMk28GSHomgLMessgvIUXhk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lfBtCSvMp7H0gHhTQuSTpEpyuHRV8UYyF+l4GrZqfSq0qc3RjWT8F+tns0a+9V7ltnV7p84gf1byO+i419YUdTHQdPdFyvlj4wE8ap3BuMp9os3q1qsqAfAl1+04Q2UCtEyur7+YhEZw7eRuYUzhELEh8Q122PF+ZDftaiJlB2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=J5D7NYT2; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1758004690; c=relaxed/simple;
+	bh=UlB06k3fabYJVeuwagIuYZbusArRJV8PYAWb8HnCM7w=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=RnHWWV6+tomzmAOdAziQwBpXiJAPulPUGxiYhSXbn6lGyETWbxRTOvbIxutKNm2A/F55U1xKRoYlP9+9OD0QtQD3z9rDHG86WylDIeu8TqGoOtjyOIOb8EYTRzkqDQnwbFdzjYiq2R2wg0QdJkIDVSnnQKSgmoDPjp30WJavXps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PsiUKty1; arc=none smtp.client-ip=209.85.208.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="J5D7NYT2"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-264417f3a26so16523375ad.0
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 23:15:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PsiUKty1"
+Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-62ee43b5e5bso6698759a12.1
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 23:38:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1758003337; x=1758608137; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=PGmdh6KaP9CK9lvIVPdPbb9VoGyxG63pl9icT57oEdk=;
-        b=J5D7NYT2JZMwOAqhiBthcLbMM0dReLhnvVIGL8ooVAYskT1xQkrLyBcSpN6TCTqCNe
-         DwxlGTarmOy4KlzXbQTsbwQI+nEUMkvITZa6EXeeoOvcsy/htEjJCuJPpnbCQgK26wai
-         jb93MxDvZ/EYYYSEoN8vBU9ASz+4NNU+iroSzFPpYEoirnhvexXynlyk2ifW8QioD/p+
-         lDY+8J+o5NtFjz0u6mQ+fa8fdLlwDCVbMlpKL4/FqO/53CkppeuoLJd1KehSbVR2JwaW
-         GZqJ4X8RcOAd87YVkGXskXDGid72RMskVfy/WH62rrKi47bMRvF/oE6hJ7byhQVTxbpw
-         L6vg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758003337; x=1758608137;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1758004687; x=1758609487; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=PGmdh6KaP9CK9lvIVPdPbb9VoGyxG63pl9icT57oEdk=;
-        b=pz4RS/SYO+ZAwDtUXqFtEOqUkNnEA5ZBVRsM7an1vAxua8cDgJ9FDZly0H6lqOU7bs
-         o/XgxEuu89i8Dtw5P0BDNaIafSijFcpRdjfhT0nFL0U5KsGEKIW+iENvUJOCzV603kRc
-         0i8+H9Wkd2/WuNAhve6b/t+f47D54xveJblMJisjLmEemOuIhkZfWpScpbvfbyB31IlN
-         PcbS+AZS3vTMty1YaR1dpM8YfQQ2ZJvNvGaPfleKJ9OoTZfUO3YavnQrVbNGpWPeLN8B
-         DtWUXThoSBpLQNtaEP7Gl8LSXI5v95+bSfitVX0yWkE7KJJcbKbfEoDD1BBxjz8UJuQi
-         XUMQ==
-X-Gm-Message-State: AOJu0Yy6MS4YCXvMi3GiUpI24OBfhLyxjYSnrWZlU+uViLXQI/pGLk6J
-	+0FlHcew6DG/tdIFjhj73z+ODVVKsbkx6AyHH2IBhAZx/cDfklTZ1f9flwtt21ym+sL3U0JGlc2
-	BJnDr
-X-Gm-Gg: ASbGncvfa8qM/UJF9ioqGBikPxWU0mXtmmG6FNxPjc1kH1yuNtpLiXWGNkl1/KeKm18
-	Hz+tdezB+h71DXI+w4e5e7O7G3+l3aeXfqxQOlL+WlM80HD4SNuaaRnXGk+fcPbTdghleQOW/kX
-	Q8a9c4ierD6yu48x+FQLiDgyF1xJc/6JkRQktWPEiCR7gq+7WXgbgQMR/jl7j1UeQQ+gciLTfao
-	TSRYXYXKRYqPAwxXvA/sFUovcsOg9XP6ALqxO1x9Ipy4ATgPOM/aVavluMAMDwILCHeF/QnGE8d
-	g537EU1dAqM5KHAH2LP2h6rREFkCFGqkAW5JaukN5UyRbthV2612cf04Qc7E92AaUIIOaNm6MlD
-	Stzcn0O8hinmRtuVxjcy7WD4MQbSaiCytvuAN1j1mWwZHTUow6+bjkcLQ7EGzHWPKySLMPzsQ4T
-	c1VbDgtSZg
-X-Google-Smtp-Source: AGHT+IEsO9rFNw2t5o8VcQU3rh+lYwbqBHJXRUV76hFpZ7UqSEY3g/Q2v+fRu3lHIRsAXak7ID9FVw==
-X-Received: by 2002:a17:903:3c4d:b0:24c:cc2c:9da9 with SMTP id d9443c01a7336-25d24bb3201mr171403485ad.14.1758003336486;
-        Mon, 15 Sep 2025 23:15:36 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-263741745d5sm74240525ad.94.2025.09.15.23.15.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Sep 2025 23:15:35 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1uyOyS-00000002ZOu-0gyn;
-	Tue, 16 Sep 2025 16:15:32 +1000
-Date: Tue, 16 Sep 2025 16:15:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: Jan Kara <jack@suse.cz>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFC] xfs: Don't hold XFS_ILOCK_SHARED over log force
- during fsync
-Message-ID: <aMkAhMrKO8bE8Eba@dread.disaster.area>
-References: <20250908151248.1290-2-jack@suse.cz>
- <aL9yc4WJLdqtCFOK@dread.disaster.area>
- <hzjznua7gqp32yc36b5uef6acy4nssfdy42jtlpaxcdzfi5ddy@kcveowwcwltb>
- <aMIe43ZYUtcQ9cZv@dread.disaster.area>
+        bh=Cc7WNX8qWIF/5rBWrjguwjC9B2870jwiQMPwsz1WD7s=;
+        b=PsiUKty1B98lWgRqrbCDHt0hkAHaIW4HuFmjEArGfYu69O5UrKAfY2wOpg8ZzGuZZ7
+         6AJ9MLKwi+6RHa9l5FUVFY39k9VOsQrI0Dz7ok/4S/60De4v/dIB19HtDzfh5YnCnrVW
+         Uz5iJJAexi11ZzSK8jtGxn8l8YcJPcE5IgnI99JZpYrDqGxUCOPkKCudO9DTItfz/dAt
+         tyGyoFxWd9HJErEupzWMUR8BXwce2c5nYs/wvmz1bRVCmoRibFaF7+1dUIIhUISXJC9S
+         vktHA547rxc8V4ujPrSQD9H+ojnctzfy+I3USpl07v/7+y/6SG70kQKRm/ESqyDUKoUJ
+         ysNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758004687; x=1758609487;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Cc7WNX8qWIF/5rBWrjguwjC9B2870jwiQMPwsz1WD7s=;
+        b=GU239nSNynnZ27Gt+rnK23pEA1SN9ZjHlkrXL7hUrapwGwLMdyhQ9uS604g+5uxGlJ
+         8q++CBg6027nROitzMV+/VpaKZbGdbbkWRN9lkZehqFLhkT8A/6jx1FVtRzjjrUcWQfF
+         T1bg3XvBwwhmb6asunDmeGleU1H86DUGK+P9m5sWFEMM77iIyCI+wYksFguMLvmEMMca
+         Ui94HxOf2MW+0uYcqEyZH4l/PKq3/qZyUx2XLbRfgOJUfibdG8hHpaNsHc0z9p2E93bU
+         G38r8qRUiOSrPu+k3rl56QQjxuzda4KfhbgllmlFbypfvMU+p8NlW/XQuo5sM6GDXsSw
+         Nh4Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXze2jalXKKSXFcnPY/UwfViV6MWRixVPjBuJro3htKkCq3PqQTvtpk7FFEMsu0M/jbR8phJd/jVMk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzXuYPVHXHO0I42m4nCJN8rQ4ZCdskduVo18nKSbfmjVQeRuUH1
+	2jKzWy6Zmjv+WdsosvwhSlDgFkJCauuQogvhK4DNAguzBb4xjc2s0ldwBGTCZ1xSl9ojnN912SN
+	BEMvV0TCPOTNUn6QMoNg2KQLEDjHEr4U=
+X-Gm-Gg: ASbGncugg5nSkIlqXX9mDN6HJQ2ASAO9HtIVMtSoe6eOCjUORxlwxz+dkxflQSQZbxl
+	SwVVzj+0DvLosmEXYeB8r3UlbPXFoOIRx23WK7ob4sCCbgdi6iDDHzaJVO4lr/8uQGxphxP5cNe
+	TStqtueT/eqYlFnq0qhH0WOZUEkdkPOwFYxjJBpjYZRef4eSm5sahbetwHDSen3EyrXKhpVTMLz
+	zCFxBD4rpK9/8V+MCSbMWgbLF4ms5Pj6X7kcBUWXw==
+X-Google-Smtp-Source: AGHT+IEappBHI1UrvMjtLUDln5FT0zMJjv0rXy1s/F3AnYYR3eWGfQGcNmj9FYjanF5LXOZTAGbS3nKFLn4NHTrsf7Y=
+X-Received: by 2002:a05:6402:21c9:b0:628:e8e3:ada with SMTP id
+ 4fb4d7f45d1cf-62ed82f1777mr15910586a12.27.1758004687031; Mon, 15 Sep 2025
+ 23:38:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aMIe43ZYUtcQ9cZv@dread.disaster.area>
+References: <20250913030503.433914-1-amir73il@gmail.com> <20250915182056.GO8096@frogsfrogsfrogs>
+ <CAOQ4uxg4eBMS-FQADVYLGVh66QfMO+tHDAv3TUSpKqXn==XdKw@mail.gmail.com> <20250915234032.GB8096@frogsfrogsfrogs>
+In-Reply-To: <20250915234032.GB8096@frogsfrogsfrogs>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 16 Sep 2025 08:37:54 +0200
+X-Gm-Features: AS18NWCgfg5Hw8iQqX8b7xRdqkWHU35zVtNeheSZPySuvChBeuzUdAY9rTPwdtM
+Message-ID: <CAOQ4uxh00vdYLs24aMTonCNJ0wnmudwysxaJQa95-iq7zziD4Q@mail.gmail.com>
+Subject: Re: [PATCH CANDIDATE 5.15, 6.1, 6.6] xfs: Increase
+ XFS_QM_TRANS_MAXDQS to 5
+To: "Darrick J. Wong" <djwong@kernel.org>, Greg KH <gregkh@linuxfoundation.org>
+Cc: Christoph Hellwig <hch@lst.de>, Catherine Hoang <catherine.hoang@oracle.com>, 
+	Leah Rumancik <leah.rumancik@gmail.com>, Allison Henderson <allison.henderson@oracle.com>, 
+	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Sep 11, 2025 at 10:59:15AM +1000, Dave Chinner wrote:
-> i.e. if we clear the commit sequences on last unpin (i.e. in
-> xfs_inode_item_unpin) then an item that is not in the CIL (and so
-> doesn't have dirty metadata) will have no associated commit
-> sequence number set.
-> 
-> Hence if ili_datasync_commit_seq is non-zero, then by definition the
-> inode must be pinned and has been dirtied for datasync purposes.
-> That means we can simply query ili_datasync_commit_seq in
-> xfs_bmbt_to_iomap() to set IOMAP_F_DIRTY.
-> 
-> I suspect that the above fsync code can then become:
-> 
-> 	spin_lock(&iip->ili_lock);
-> 	if (datasync)
-> 		seq = iip->ili_datasync_commit_seq;
-> 	else
-> 		seq = iip->ili_commit_seq;
-> 	spin_unlock(&iip->ili_lock);
-> 
-> 	if (!seq)
-> 		return 0;
-> 	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC, log_flushed);
-> 
-> For the same reason. i.e. a non-zero sequence number implies the
-> inode log item is dirty in the CIL and pinned.
-> 
-> At this point, we really don't care about races with transaction
-> commits. f(data)sync should only wait for modifications that have
-> been fully completed. If they haven't set the commit sequence in the
-> log item, they haven't fully completed. If the commit sequence is
-> already set, the the CIL push will co-ordinate appropriately with
-> commits to ensure correct data integrity behaviour occurs.
-> 
-> Hence I think that if we tie the sequence number clearing to the
-> inode being removed from the CIL (i.e. last unpin) we can drop all
-> the pin checks and use the commit sequence numbers directly to
-> determine what the correct behaviour should be...
+On Tue, Sep 16, 2025 at 1:40=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> On Mon, Sep 15, 2025 at 10:20:40PM +0200, Amir Goldstein wrote:
+> > On Mon, Sep 15, 2025 at 8:20=E2=80=AFPM Darrick J. Wong <djwong@kernel.=
+org> wrote:
+> > >
+> > > On Sat, Sep 13, 2025 at 05:05:02AM +0200, Amir Goldstein wrote:
+> > > > From: Allison Henderson <allison.henderson@oracle.com>
+> > > >
+> > > > [ Upstream  commit f103df763563ad6849307ed5985d1513acc586dd ]
+> > > >
+> > > > With parent pointers enabled, a rename operation can update up to 5
+> > > > inodes: src_dp, target_dp, src_ip, target_ip and wip.  This causes
+> > > > their dquots to a be attached to the transaction chain, so we need
+> > > > to increase XFS_QM_TRANS_MAXDQS.  This patch also add a helper
+> > > > function xfs_dqlockn to lock an arbitrary number of dquots.
+> > > >
+> > > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > >
+> > > > [amir: backport to kernels prior to parent pointers to fix an old b=
+ug]
+> > > >
+> > > > A rename operation of a directory (i.e. mv A/C/ B/) may end up chan=
+ging
+> > > > three different dquot accounts under the following conditions:
+> > > > 1. user (or group) quotas are enabled
+> > > > 2. A/ B/ and C/ have different owner uids (or gids)
+> > > > 3. A/ blocks shrinks after remove of entry C/
+> > > > 4. B/ blocks grows before adding of entry C/
+> > > > 5. A/ ino <=3D XFS_DIR2_MAX_SHORT_INUM
+> > > > 6. B/ ino > XFS_DIR2_MAX_SHORT_INUM
+> > > > 7. C/ is converted from sf to block format, because its parent entr=
+y
+> > > >    needs to be stored as 8 bytes (see xfs_dir2_sf_replace_needblock=
+)
+> > > >
+> > > > When all conditions are met (observed in the wild) we get this asse=
+rtion:
+> > > >
+> > > > XFS: Assertion failed: qtrx, file: fs/xfs/xfs_trans_dquot.c, line: =
+207
+> > > >
+> > > > The upstream commit fixed this bug as a side effect, so decided to =
+apply
+> > > > it as is rather than changing XFS_QM_TRANS_MAXDQS to 3 in stable ke=
+rnels.
+> > >
+> > > Heh.  Indeed, you only need MAXDQS=3D=3D5 for filesystems that suppor=
+t
+> > > parent pointers, because only on those filesystems can you end up
+> > > needing to allocate a xattr block either to the new whiteout file or
+> > > free one from the file being unlinked.
+> > >
+> > > > The Fixes commit below is NOT the commit that introduced the bug, b=
+ut
+> > > > for some reason, which is not explained in the commit message, it f=
+ixes
+> > > > the comment to state that highest number of dquots of one type is 3=
+ and
+> > > > not 2 (which leads to the assertion), without actually fixing it.
+> > >
+> > > Agree.
+> > >
+> > > > The change of wording from "usr, grp OR prj" to "usr, grp and prj"
+> > > > suggests that there may have been a confusion between "the number o=
+f
+> > > > dquote of one type" and "the number of dquot types" (which is also =
+3),
+> > > > so the comment change was only accidentally correct.
+> > >
+> > > I interpret the "OR" -> "and" change to reflect the V4 -> V5 transiti=
+on
+> > > where you actually can have all three dquot types because group/proje=
+ct
+> > > quota are no longer mutually exclusive.
+> > >
+> > > The "...involved in a transaction is 3" part I think is separate, and
+> > > strange that XFS_QM_TRANS_MAXDQS wasn't updated.
+> > >
+> > > > Fixes: 10f73d27c8e9 ("xfs: fix the comment explaining xfs_trans_dql=
+ockedjoin")
+> > > > Cc: stable@vger.kernel.org
+> > > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> > > > ---
+> > > >
+> > > > Christoph,
+> > > >
+> > > > This is a cognitive challenge. can you say what you where thinking =
+in
+> > > > 2013 when making the comment change in the Fixes commit?
+> > > > Is my speculation above correct?
+> > > >
+> > > > Catherine and Leah,
+> > > >
+> > > > I decided that cherry-pick this upstream commit as is with a commit
+> > > > message addendum was the best stable tree strategy.
+> > > > The commit applies cleanly to 5.15.y, so I assume it does for 6.6 a=
+nd
+> > > > 6.1 as well. I ran my tests on 5.15.y and nothing fell out, but did=
+ not
+> > > > try to reproduce these complex assertion in a test.
+> > > >
+> > > > Could you take this candidate backport patch to a spin on your test
+> > > > branch?
+> > > >
+> > > > What do you all think about this?
+> > >
+> > > I only think you need MAXDQS=3D=3D5 for 6.12 to handle parent pointer=
+s.
+> > >
+> >
+> > Yes, of course. I just preferred to keep the 5 to avoid deviating from
+> > the upstream commit if there is no good reason to do so.
+>
+> <shrug> What do Greg and Sasha think about this?  If they don't mind
+> this then I guess I don't either. ;)
+>
 
-Here's a patch that implements this. It appears to pass fstests
-without any regressions on my test VMs. Can you test it and check
-that it retains the expected performance improvement for
-O_DSYNC+DIO on fallocate()d space?
+Ok let's see.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Greg,
 
-xfs: rework datasync tracking and execution
+In kernels < 6.10 the size of the 'dqs' array per transaction was too small
+(XFS_QM_TRANS_MAXDQS is 2 instead of 3) which can, as explained
+in my commit, cause an assertion and crash the kernel.
 
-From: Dave Chinner <dchinner@redhat.com>
+This bug exists for a long time, it may have low probability for the entire
+"world", but under specific conditions (e.g. a specific workload that is fu=
+lly
+controlled by unpriv user) it happens for us every other week on kernel 5.1=
+5.y
+and with more effort, an upriv user can trigger it much more frequently.
 
-Jan Kara reported that the shared ILOCK held across the journal
-flush during fdatasync operations slows down O_DSYNC DIO on
-unwritten extents significantly. The underlying issue is that
-unwritten extent conversion needs the ILOCK exclusive, whilst the
-datasync operation after the extent conversion holds it shared.
+In kernel 6.10, XFS_QM_TRANS_MAXDQS was increased to 5 to
+cover a use case for a new feature (parent pointer).
+That means that upstream no longer has the bug.
 
-Hence we cannot be flushing the journal for one IO completion whilst
-at the same time doing unwritten extent conversion on another IO
-completion on the same inode. THis means that IO completions
-lock-step, and IO performance is dependent on the journal flush
-latency.
+I opted for applying this upstream commit to fix the stable kernel bug
+although raising the max to 5 is an overkill.
 
-Jan demostrated that reducing the ifdatasync lock hold time can
-improve O_DSYNC DIO to unwritten extents performance by 2.5x.
-Discussion on that patch found issues with the method, and we
-came to the conclusion that seperately tracking datasync flush
-seqeunces was the best approach to solving the problem.
+This has a slight impact on memory footprint, but I think it is negligible
+and in any case, same exact memory footprint as upstream code.
 
-The fsync code uses the ILOCK to serialise against concurrent
-modifications in the transaction commit phase. In a transaction
-commit, there are several disjoint updates to inode log item state
-that need to be considered atomically by the fsync code. These
-operations are allo done under ILOCK_EXCL context:
+What do you prefer? Applying the commit as is with increase to 5
+or apply a customized commit for kernels < 6.10 which raises the
+max to 3 without mentioning the upstream commit?
 
-1. ili_fsync_flags is updated in ->iop_precommit
-2. i_pincount is updated in ->iop_pin before it is added to the CIL
-3. ili_commit_seq is updated in ->iop_committing, after it has been
-   added to the CIL
+If you agree with my choice, please advise regarding my choice of
+formatting of the commit message - original commit message followed
+by stable specific bug fix commit message which explains the above.
 
-In fsync, we need to:
 
-1. check that the inode is dirty in the journal (ipincount)
-2. check that ili_fsync_flags is set
-3. grab the ili_commit_seq if a journal flush is needed
-4. clear the ili_fsync_flags to ensure that new modifications that
-require fsync are tracked in ->iop_precommit correctly
+> > > The older kernels could have it set to 3 instead.  struct xfs_dqtrx o=
+n a
+> > > 6.17-rc6 kernel is 88 bytes.  Stuffing 9 of them into struct
+> > > xfs_dquot_acct instead of 15 means that the _acct struct is only 792
+> > > bytes instead of 1392, which means we can use the 1k slab instead of =
+the
+> > > 2k slab.
+> >
+> > Huh? there is only one xfs_dquot_acct per transaction.
+>
+> Yes, but there can be a lot of transactions in flight.
+>
+> > Does it really matter if it's 1k or 2k??
+> >
+> > Am I missing something?
+>
+> It seems silly to waste so much memory on a scenario that can't happen
+> just so we can say that we hammered in a less appropriate solution.
+>
 
-The serialisation of ipincount/ili_commit_seq is needed
-to ensure that we don't try to unnecessarily flush the journal.
+Yeh, I do not like waste, but do not like to over complicate and micro
+optimize either.
 
-The serialisation of ili_fsync_flags being set in
-->iop_precommit and cleared in fsync post journal flush is
-required for correctness.
+Talking about waste, in current upstream xfs_dquot_acct is bloated
+as you described for the majority of users that enable quotas, who
+do not enable parent pointers.
 
-Hence holding the ILOCK_SHARED in xfs_file_fsync() performs all this
-serialisation for us.  Ideally, we want to remove the need to hold
-the ILOCK_SHARED in xfs_file_fsync() for best performance.
+So if we consider this memory waste to be a bug, I prefer that stable
+and upstream will be bug compatible.
 
-We start with the observation that fsync/fdatasync() only need to
-wait for operations that have been completed. Hence operations that
-are still being committed have not completed and datasync operations
-do not need to wait for them.
+If we fix that waste in upstream, we could add:
+Fixes: f103df763563a ("xfs: Increase XFS_QM_TRANS_MAXDQS to 5")
 
-This means we can use a single point in time in the commit process
-to signal "this modification is complete". This is what
-->iop_committing is supposed to provide - it is the point at which
-the object is unlocked after the modification has been recorded in
-the CIL. Hence we could use ili_commit_seq to determine if we should
-flush the journal.
+Which would then be flagged for picking to stable kernels
+that have this commit applied.
 
-In theory, we can already do this. However, in practice this will
-expose an internal global CIL lock to the IO path. The ipincount()
-checks optimise away the need to take this lock - if the inode is
-not pinned, then it is not in the CIL and we don't need to check if
-a journal flush at ili_commit_seq needs to be performed.
+So? WDYT?
 
-The reason this is needed is that the ili_commit_seq is never
-cleared. Once it is set, it remains set even once the journal has
-been committed and the object has been unpinned. Hence we have to
-look that journal internal commit sequence state to determine if
-ili_commit_seq needs to be acted on or not.
-
-We can solve this by clearing ili_commit_seq when the inode is
-unpinned. If we clear it atomically with the last unpin going away,
-then we are guaranteed that new modifications will order correctly
-as they add a new pin counts and we won't clear a sequence number
-for an active modification in the CIL.
-
-Further, we can then allow the per-transaction flag state to
-propagate into ->iop_committing (instead of clearing it in
-->iop_precommit) and that will allow us to determine if the
-modification needs a full fsync or just a datasync, and so we can
-record a separate datasync sequence number (Jan's idea!) and then
-use that in the fdatasync path instead of the full fsync sequence
-number.
-
-With this infrastructure in place, we no longer need the
-ILOCK_SHARED in the fsync path. All serialisation is done against
-the commit sequence numbers - if the sequence number is set, then we
-have to flush the journal. If it is not set, then we have nothing to
-do. This greatly simplifies the fsync implementation....
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_file.c       | 75 ++++++++++++++++++++++---------------------------
- fs/xfs/xfs_inode.c      | 25 +++++++++++------
- fs/xfs/xfs_inode_item.c | 58 ++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_inode_item.h | 10 ++++++-
- fs/xfs/xfs_iomap.c      | 15 ++++++++--
- 5 files changed, 119 insertions(+), 64 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f96fbf5c54c9..2702fef2c90c 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -75,52 +75,47 @@ xfs_dir_fsync(
- 	return xfs_log_force_inode(ip);
- }
- 
--static xfs_csn_t
--xfs_fsync_seq(
--	struct xfs_inode	*ip,
--	bool			datasync)
--{
--	if (!xfs_ipincount(ip))
--		return 0;
--	if (datasync && !(ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
--		return 0;
--	return ip->i_itemp->ili_commit_seq;
--}
--
- /*
-- * All metadata updates are logged, which means that we just have to flush the
-- * log up to the latest LSN that touched the inode.
-+ * All metadata updates are logged, which means that we just have to push the
-+ * journal to the required sequence number than holds the updates. We track
-+ * datasync commits separately to full sync commits, and hence only need to
-+ * select the correct sequence number for the log force here.
-  *
-- * If we have concurrent fsync/fdatasync() calls, we need them to all block on
-- * the log force before we clear the ili_fsync_fields field. This ensures that
-- * we don't get a racing sync operation that does not wait for the metadata to
-- * hit the journal before returning.  If we race with clearing ili_fsync_fields,
-- * then all that will happen is the log force will do nothing as the lsn will
-- * already be on disk.  We can't race with setting ili_fsync_fields because that
-- * is done under XFS_ILOCK_EXCL, and that can't happen because we hold the lock
-- * shared until after the ili_fsync_fields is cleared.
-+ * We don't have to serialise against concurrent modifications, as we do not
-+ * have to wait for modifications that have not yet completed. We define a
-+ * transaction commit as completing when the commit sequence number is updated,
-+ * hence if the sequence number has not updated, the sync operation has been
-+ * run before the commit completed and we don't have to wait for it.
-+ *
-+ * If we have concurrent fsync/fdatasync() calls, the sequence numbers remain
-+ * set on the log item until - at least - the journal flush completes. In
-+ * reality, they are only cleared when the inode is fully unpinned (i.e.
-+ * persistent in the journal and not dirty in the CIL), and so we rely on
-+ * xfs_log_force_seq() either skipping sequences that have been persisted or
-+ * waiting on sequences that are still in flight to correctly order concurrent
-+ * sync operations.
-  */
--static  int
-+static int
- xfs_fsync_flush_log(
- 	struct xfs_inode	*ip,
- 	bool			datasync,
- 	int			*log_flushed)
- {
--	int			error = 0;
--	xfs_csn_t		seq;
-+	struct xfs_inode_log_item *iip = ip->i_itemp;
-+	xfs_csn_t		seq = 0;
- 
--	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	seq = xfs_fsync_seq(ip, datasync);
--	if (seq) {
--		error = xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC,
-+	spin_lock(&iip->ili_lock);
-+	if (datasync)
-+		seq = iip->ili_datasync_seq;
-+	else
-+		seq = iip->ili_commit_seq;
-+	spin_unlock(&iip->ili_lock);
-+
-+	if (!seq)
-+		return 0;
-+
-+	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC,
- 					  log_flushed);
--
--		spin_lock(&ip->i_itemp->ili_lock);
--		ip->i_itemp->ili_fsync_fields = 0;
--		spin_unlock(&ip->i_itemp->ili_lock);
--	}
--	xfs_iunlock(ip, XFS_ILOCK_SHARED);
--	return error;
- }
- 
- STATIC int
-@@ -158,12 +153,10 @@ xfs_file_fsync(
- 		error = blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
- 
- 	/*
--	 * Any inode that has dirty modifications in the log is pinned.  The
--	 * racy check here for a pinned inode will not catch modifications
--	 * that happen concurrently to the fsync call, but fsync semantics
--	 * only require to sync previously completed I/O.
-+	 * If the inode has a inode log item attached, it may need the journal
-+	 * flushed to persist any changes the log item might be tracking.
- 	 */
--	if (xfs_ipincount(ip)) {
-+	if (ip->i_itemp) {
- 		err2 = xfs_fsync_flush_log(ip, datasync, &log_flushed);
- 		if (err2 && !error)
- 			error = err2;
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 0ddb9ce0f5e3..b5619ed5667b 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1667,7 +1667,6 @@ xfs_ifree_mark_inode_stale(
- 	spin_lock(&iip->ili_lock);
- 	iip->ili_last_fields = iip->ili_fields;
- 	iip->ili_fields = 0;
--	iip->ili_fsync_fields = 0;
- 	spin_unlock(&iip->ili_lock);
- 	ASSERT(iip->ili_last_fields);
- 
-@@ -1832,12 +1831,20 @@ static void
- xfs_iunpin(
- 	struct xfs_inode	*ip)
- {
--	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED);
-+	struct xfs_inode_log_item *iip = ip->i_itemp;
-+	xfs_csn_t		seq = 0;
- 
- 	trace_xfs_inode_unpin_nowait(ip, _RET_IP_);
-+	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED);
-+
-+	spin_lock(&iip->ili_lock);
-+	seq = iip->ili_commit_seq;
-+	spin_unlock(&iip->ili_lock);
-+	if (!seq)
-+		return;
- 
- 	/* Give the log a push to start the unpinning I/O */
--	xfs_log_force_seq(ip->i_mount, ip->i_itemp->ili_commit_seq, 0, NULL);
-+	xfs_log_force_seq(ip->i_mount, seq, 0, NULL);
- 
- }
- 
-@@ -2506,7 +2513,6 @@ xfs_iflush(
- 	spin_lock(&iip->ili_lock);
- 	iip->ili_last_fields = iip->ili_fields;
- 	iip->ili_fields = 0;
--	iip->ili_fsync_fields = 0;
- 	set_bit(XFS_LI_FLUSHING, &iip->ili_item.li_flags);
- 	spin_unlock(&iip->ili_lock);
- 
-@@ -2665,12 +2671,15 @@ int
- xfs_log_force_inode(
- 	struct xfs_inode	*ip)
- {
-+	struct xfs_inode_log_item *iip = ip->i_itemp;
- 	xfs_csn_t		seq = 0;
- 
--	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	if (xfs_ipincount(ip))
--		seq = ip->i_itemp->ili_commit_seq;
--	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+	if (!iip)
-+		return 0;
-+
-+	spin_lock(&iip->ili_lock);
-+	seq = iip->ili_commit_seq;
-+	spin_unlock(&iip->ili_lock);
- 
- 	if (!seq)
- 		return 0;
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index afb6cadf7793..83b94b437696 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -153,7 +153,6 @@ xfs_inode_item_precommit(
- 	 * (ili_fields) correctly tracks that the version has changed.
- 	 */
- 	spin_lock(&iip->ili_lock);
--	iip->ili_fsync_fields |= (flags & ~XFS_ILOG_IVERSION);
- 	if (flags & XFS_ILOG_IVERSION)
- 		flags = ((flags & ~XFS_ILOG_IVERSION) | XFS_ILOG_CORE);
- 
-@@ -214,12 +213,6 @@ xfs_inode_item_precommit(
- 	spin_unlock(&iip->ili_lock);
- 
- 	xfs_inode_item_precommit_check(ip);
--
--	/*
--	 * We are done with the log item transaction dirty state, so clear it so
--	 * that it doesn't pollute future transactions.
--	 */
--	iip->ili_dirty_flags = 0;
- 	return 0;
- }
- 
-@@ -729,13 +722,24 @@ xfs_inode_item_unpin(
- 	struct xfs_log_item	*lip,
- 	int			remove)
- {
--	struct xfs_inode	*ip = INODE_ITEM(lip)->ili_inode;
-+	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
-+	struct xfs_inode	*ip = iip->ili_inode;
- 
- 	trace_xfs_inode_unpin(ip, _RET_IP_);
- 	ASSERT(lip->li_buf || xfs_iflags_test(ip, XFS_ISTALE));
- 	ASSERT(atomic_read(&ip->i_pincount) > 0);
--	if (atomic_dec_and_test(&ip->i_pincount))
-+
-+	/*
-+	 * If this is the last unpin, then the inode no longer needs a journal
-+	 * flush to persist it. Hence we can clear the commit sequence numbers
-+	 * as a fsync/fdatasync operation on the inode at this point is a no-op.
-+	 */
-+	if (atomic_dec_and_lock(&ip->i_pincount, &iip->ili_lock)) {
-+		iip->ili_commit_seq = 0;
-+		iip->ili_datasync_seq = 0;
-+		spin_unlock(&iip->ili_lock);
- 		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
-+	}
- }
- 
- STATIC uint
-@@ -863,12 +867,45 @@ xfs_inode_item_committed(
- 	return lsn;
- }
- 
-+/*
-+ * The modification is now complete, so before we unlock the inode we need to
-+ * update the commit sequence numbers for data integrity journal flushes. We
-+ * always record the commit sequence number (ili_commit_seq) so that anything
-+ * that needs a full journal sync will capture all of this modification.
-+ *
-+ * We then
-+ * check if the changes will impact a datasync (O_DSYNC) journal flush. If the
-+ * changes will require a datasync flush, then we also record the sequence in
-+ * ili_datasync_seq.
-+ *
-+ * These commit sequence numbers will get cleared atomically with the inode being
-+ * unpinned (i.e. pin count goes to zero), and so it will only be set when the
-+ * inode is dirty in the journal. This removes the need for checking if the
-+ * inode is pinned to determine if a journal flush is necessary, and hence
-+ * removes the need for holding the ILOCK_SHARED in xfs_file_fsync() to
-+ * serialise pin counts against commit sequence number updates.
-+ *
-+ */
- STATIC void
- xfs_inode_item_committing(
- 	struct xfs_log_item	*lip,
- 	xfs_csn_t		seq)
- {
--	INODE_ITEM(lip)->ili_commit_seq = seq;
-+	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
-+
-+	spin_lock(&iip->ili_lock);
-+	iip->ili_commit_seq = seq;
-+	if (iip->ili_dirty_flags & ~(XFS_ILOG_IVERSION | XFS_ILOG_TIMESTAMP))
-+		iip->ili_datasync_seq = seq;
-+	spin_unlock(&iip->ili_lock);
-+
-+	/*
-+	 * Clear the per-transaction dirty flags now that we have finished
-+	 * recording the transaction's inode modifications in the CIL and are
-+	 * about to release and (maybe) unlock the inode.
-+	 */
-+	iip->ili_dirty_flags = 0;
-+
- 	return xfs_inode_item_release(lip);
- }
- 
-@@ -1060,7 +1097,6 @@ xfs_iflush_abort_clean(
- {
- 	iip->ili_last_fields = 0;
- 	iip->ili_fields = 0;
--	iip->ili_fsync_fields = 0;
- 	iip->ili_flush_lsn = 0;
- 	iip->ili_item.li_buf = NULL;
- 	list_del_init(&iip->ili_item.li_bio_list);
-diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-index ba92ce11a011..2ddcca41714f 100644
---- a/fs/xfs/xfs_inode_item.h
-+++ b/fs/xfs/xfs_inode_item.h
-@@ -32,9 +32,17 @@ struct xfs_inode_log_item {
- 	spinlock_t		ili_lock;	   /* flush state lock */
- 	unsigned int		ili_last_fields;   /* fields when flushed */
- 	unsigned int		ili_fields;	   /* fields to be logged */
--	unsigned int		ili_fsync_fields;  /* logged since last fsync */
- 	xfs_lsn_t		ili_flush_lsn;	   /* lsn at last flush */
-+
-+	/*
-+	 * We record the sequence number for every inode modification, as
-+	 * well as those that only require fdatasync operations for data
-+	 * integrity. This allows optimisation of the O_DSYNC/fdatasync path
-+	 * without needing to track what modifications the journal is currently
-+	 * carrying for the inode. These are protected by the above ili_lock.
-+	 */
- 	xfs_csn_t		ili_commit_seq;	   /* last transaction commit */
-+	xfs_csn_t		ili_datasync_seq;  /* for datasync optimisation */
- };
- 
- static inline int xfs_inode_clean(struct xfs_inode *ip)
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 2a74f2957341..f8c925220005 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -149,9 +149,18 @@ xfs_bmbt_to_iomap(
- 		iomap->bdev = target->bt_bdev;
- 	iomap->flags = iomap_flags;
- 
--	if (xfs_ipincount(ip) &&
--	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
--		iomap->flags |= IOMAP_F_DIRTY;
-+	/*
-+	 * If the inode is dirty for datasync purposes, let iomap know so it
-+	 * doesn't elide the IO completion journal flushes on O_DSYNC IO.
-+	 */
-+	if (ip->i_itemp) {
-+		struct xfs_inode_log_item *iip = ip->i_itemp;
-+
-+		spin_lock(&iip->ili_lock);
-+		if (iip->ili_datasync_seq)
-+			iomap->flags |= IOMAP_F_DIRTY;
-+		spin_unlock(&iip->ili_lock);
-+	}
- 
- 	iomap->validity_cookie = sequence_cookie;
- 	return 0;
+Thanks,
+Amir.
