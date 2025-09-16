@@ -1,274 +1,471 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
+Received: from mail-yb1-f176.google.com (mail-yb1-f176.google.com [209.85.219.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E479E223DF6
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Sep 2025 06:38:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62A652DF149
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Sep 2025 06:41:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758004690; cv=none; b=LVFV0FepuXjvmvOXFwu58I6eiBB8I0swdyjVlTIZv3ZjS30iWwhue/WMdIguuGHt0LqZ+nuDdxiDpslaINwUKBbPGkc60TG47D5tG6hvr9ktKBVj9ICG/Qul/iDaKbvBblBm26jEfwk6kZH2E8I/tlE2sTbZpZRSHNsqLz4xZsE=
+	t=1758004907; cv=none; b=ILKcVWFqaTQLq03t9079r7trQt2o5rGMA7fkFgDjqWiCoXZhiAA7gE0MtR6UmB/6DmQRC2XScplSsb3n0RJAnBJrfzGN6uP3756QSHLsk7LmOh9J2pyymIyZV0k32yBGK40il9/M/qv/5YHmnFU737XbKSjAAg2+Z2YUPwb8KeA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758004690; c=relaxed/simple;
-	bh=UlB06k3fabYJVeuwagIuYZbusArRJV8PYAWb8HnCM7w=;
+	s=arc-20240116; t=1758004907; c=relaxed/simple;
+	bh=aOqdtF6vKv2N4buSArHUuoQOds/my4Xf2GebP68+mPA=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RnHWWV6+tomzmAOdAziQwBpXiJAPulPUGxiYhSXbn6lGyETWbxRTOvbIxutKNm2A/F55U1xKRoYlP9+9OD0QtQD3z9rDHG86WylDIeu8TqGoOtjyOIOb8EYTRzkqDQnwbFdzjYiq2R2wg0QdJkIDVSnnQKSgmoDPjp30WJavXps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PsiUKty1; arc=none smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+	 To:Cc:Content-Type; b=O/sFlUf0xznJeF6w1nbPOKyloq88FBzxUfNui0wajxLZ5nUz8pWTap7W1chrlXvdPDjESzuiauoUZZrlUB3DZzyWD5fJUPtzCPeGDb36KOWVktY/H1I/et9Zo7A+Oud6QybniV2l0py3yDqh9MgD9ksGAY9Q9OACmpbL95LsxTE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=black-desk.cn; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.219.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=black-desk.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PsiUKty1"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-62ee43b5e5bso6698759a12.1
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 23:38:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758004687; x=1758609487; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Cc7WNX8qWIF/5rBWrjguwjC9B2870jwiQMPwsz1WD7s=;
-        b=PsiUKty1B98lWgRqrbCDHt0hkAHaIW4HuFmjEArGfYu69O5UrKAfY2wOpg8ZzGuZZ7
-         6AJ9MLKwi+6RHa9l5FUVFY39k9VOsQrI0Dz7ok/4S/60De4v/dIB19HtDzfh5YnCnrVW
-         Uz5iJJAexi11ZzSK8jtGxn8l8YcJPcE5IgnI99JZpYrDqGxUCOPkKCudO9DTItfz/dAt
-         tyGyoFxWd9HJErEupzWMUR8BXwce2c5nYs/wvmz1bRVCmoRibFaF7+1dUIIhUISXJC9S
-         vktHA547rxc8V4ujPrSQD9H+ojnctzfy+I3USpl07v/7+y/6SG70kQKRm/ESqyDUKoUJ
-         ysNQ==
+Received: by mail-yb1-f176.google.com with SMTP id 3f1490d57ef6-ea3dbcc5410so2450112276.2
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 23:41:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758004687; x=1758609487;
+        d=1e100.net; s=20230601; t=1758004903; x=1758609703;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Cc7WNX8qWIF/5rBWrjguwjC9B2870jwiQMPwsz1WD7s=;
-        b=GU239nSNynnZ27Gt+rnK23pEA1SN9ZjHlkrXL7hUrapwGwLMdyhQ9uS604g+5uxGlJ
-         8q++CBg6027nROitzMV+/VpaKZbGdbbkWRN9lkZehqFLhkT8A/6jx1FVtRzjjrUcWQfF
-         T1bg3XvBwwhmb6asunDmeGleU1H86DUGK+P9m5sWFEMM77iIyCI+wYksFguMLvmEMMca
-         Ui94HxOf2MW+0uYcqEyZH4l/PKq3/qZyUx2XLbRfgOJUfibdG8hHpaNsHc0z9p2E93bU
-         G38r8qRUiOSrPu+k3rl56QQjxuzda4KfhbgllmlFbypfvMU+p8NlW/XQuo5sM6GDXsSw
-         Nh4Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXze2jalXKKSXFcnPY/UwfViV6MWRixVPjBuJro3htKkCq3PqQTvtpk7FFEMsu0M/jbR8phJd/jVMk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzXuYPVHXHO0I42m4nCJN8rQ4ZCdskduVo18nKSbfmjVQeRuUH1
-	2jKzWy6Zmjv+WdsosvwhSlDgFkJCauuQogvhK4DNAguzBb4xjc2s0ldwBGTCZ1xSl9ojnN912SN
-	BEMvV0TCPOTNUn6QMoNg2KQLEDjHEr4U=
-X-Gm-Gg: ASbGncugg5nSkIlqXX9mDN6HJQ2ASAO9HtIVMtSoe6eOCjUORxlwxz+dkxflQSQZbxl
-	SwVVzj+0DvLosmEXYeB8r3UlbPXFoOIRx23WK7ob4sCCbgdi6iDDHzaJVO4lr/8uQGxphxP5cNe
-	TStqtueT/eqYlFnq0qhH0WOZUEkdkPOwFYxjJBpjYZRef4eSm5sahbetwHDSen3EyrXKhpVTMLz
-	zCFxBD4rpK9/8V+MCSbMWgbLF4ms5Pj6X7kcBUWXw==
-X-Google-Smtp-Source: AGHT+IEappBHI1UrvMjtLUDln5FT0zMJjv0rXy1s/F3AnYYR3eWGfQGcNmj9FYjanF5LXOZTAGbS3nKFLn4NHTrsf7Y=
-X-Received: by 2002:a05:6402:21c9:b0:628:e8e3:ada with SMTP id
- 4fb4d7f45d1cf-62ed82f1777mr15910586a12.27.1758004687031; Mon, 15 Sep 2025
- 23:38:07 -0700 (PDT)
+        bh=DUtKMNKxtvgWRZoirTPKx9vVVwcjpbmiSQpSjnBdNlQ=;
+        b=e6hHZKEamHZUS2LMYkWl3IUasKo3FVIx27K3W3AICvDeK0h0HG8KCxuoWlFDlB/J22
+         UnlUUO5DPZ1oQbwhFALMDNdOi8jZer0MTkrxuVU8gKqxjQRGdQKbOVIojfMNgpP54kZm
+         C4W5lQzI1kAM6Phy6L8zeD1gFwh2RkdP3D3MykZwDBWIownq6cAK9NdZirNKZ5Z/9aWL
+         l+eOTbCT75TBFXciCEZ5Do8NW4HRH3KuJ0cQadA0x/RNAikbjrUIi7CprEfTXnY9icMS
+         C2KQjXdISlYOmkr5riisG74zsVwjCI0xKWV3Cd0UXe9TrqmJZFGX6x46KeiT01sDw5us
+         vQDw==
+X-Forwarded-Encrypted: i=1; AJvYcCUofNIjH1+8F/yzNFH0NQt0iqeeRCrd/9gHyzImhnmh0YF/N8gEZNSV5P5M89oa4jmde50r13Opevo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzU2NfWo/M/LEM1e04ugO9g/sfcLjQmBtPBTmDObLIli+b0S5XU
+	UJHlRudRWdOgSXsRxnDL0vXmgfq62u4QMLmWxd76h2UceCYBOYzhR4tz53VxUgkeAa0=
+X-Gm-Gg: ASbGncujN0lDAWu1EA+H52S6h4+kgeEr/bMc8O0PmDDAR498CNbTaBeNAcz7VDahiQk
+	gbvDCOlTyAZ5iGt3aJJcT9NjBNhtb2Q98lMjr3RRpLAtXdr2CeGx4qmbMUF8Fzij38EUzkoQIlY
+	IBXuS2S+hGNp2/PX2vkqdTfarOWPk+jHwABMxJz3MCfSbC5x0V4CTqF72AR4FzYuOLKJ9XeeuYP
+	JbWpHTaYdHC89x5fVH7ymQXWEqC4IWYfn10rBHF+PwPVtSGzjziYL1RFUBGMJ8JTm22JOKm0dHj
+	f2N25Ro5LjMjkQPQFUDRpvNnvVXV2SmEf0zhOcu6TYj3DS+hvXO5N4VI4qXnD1XISR+iuORQ8C+
+	uYPkFkL9rbqYLSJuuLfG/9EayQSgBWhLPMBwK7FbWYP44xa3hDhM2JNSLnNrMBgcmZ9hjD9ymf5
+	FdmYjTCVoXv8mV+OE=
+X-Google-Smtp-Source: AGHT+IHIbwLD0kdG9Vtda3m+QcKZKQm9enUN+fO4XWrovv/REcpt0oapxBfPQeTa1oOG/q5pkhrGcQ==
+X-Received: by 2002:a05:6902:2b85:b0:ea4:14a2:839a with SMTP id 3f1490d57ef6-ea414a29509mr4133794276.9.1758004902842;
+        Mon, 15 Sep 2025 23:41:42 -0700 (PDT)
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com. [209.85.128.171])
+        by smtp.gmail.com with ESMTPSA id 3f1490d57ef6-ea5460639c9sm616794276.11.2025.09.15.23.41.42
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 15 Sep 2025 23:41:42 -0700 (PDT)
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-71d605c6501so34611427b3.3
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Sep 2025 23:41:42 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCVFKs+PhH3kZAOiJpntiUk7PAA8RKM/AnjXmuL59owQY4CJbaU4nUunOtMhRAg7GsOQ7+OPQhXGoWU=@vger.kernel.org
+X-Received: by 2002:a05:690c:23c1:b0:720:bb3:ec14 with SMTP id
+ 00721157ae682-73064b08dfcmr139630637b3.25.1758004901891; Mon, 15 Sep 2025
+ 23:41:41 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250913030503.433914-1-amir73il@gmail.com> <20250915182056.GO8096@frogsfrogsfrogs>
- <CAOQ4uxg4eBMS-FQADVYLGVh66QfMO+tHDAv3TUSpKqXn==XdKw@mail.gmail.com> <20250915234032.GB8096@frogsfrogsfrogs>
-In-Reply-To: <20250915234032.GB8096@frogsfrogsfrogs>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 16 Sep 2025 08:37:54 +0200
-X-Gm-Features: AS18NWCgfg5Hw8iQqX8b7xRdqkWHU35zVtNeheSZPySuvChBeuzUdAY9rTPwdtM
-Message-ID: <CAOQ4uxh00vdYLs24aMTonCNJ0wnmudwysxaJQa95-iq7zziD4Q@mail.gmail.com>
-Subject: Re: [PATCH CANDIDATE 5.15, 6.1, 6.6] xfs: Increase
- XFS_QM_TRANS_MAXDQS to 5
-To: "Darrick J. Wong" <djwong@kernel.org>, Greg KH <gregkh@linuxfoundation.org>
-Cc: Christoph Hellwig <hch@lst.de>, Catherine Hoang <catherine.hoang@oracle.com>, 
-	Leah Rumancik <leah.rumancik@gmail.com>, Allison Henderson <allison.henderson@oracle.com>, 
-	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+References: <175798149979.381990.14913079500562122255.stgit@frogsfrogsfrogs> <175798150177.381990.5457916685867195048.stgit@frogsfrogsfrogs>
+In-Reply-To: <175798150177.381990.5457916685867195048.stgit@frogsfrogsfrogs>
+From: Chen Linxuan <me@black-desk.cn>
+Date: Tue, 16 Sep 2025 14:41:30 +0800
+X-Gmail-Original-Message-ID: <CAC1kPDOv4sy3NPexFtdoROFi18b98W+PbP+9t8y4Jd5fQqCxCg@mail.gmail.com>
+X-Gm-Features: Ac12FXzMunJk0T_4Jany0brcbouJMZaEvkm2CjAIMoFEj2ft7BYULOQkF-5rzVw
+Message-ID: <CAC1kPDOv4sy3NPexFtdoROFi18b98W+PbP+9t8y4Jd5fQqCxCg@mail.gmail.com>
+Subject: Re: [PATCH 7/8] fuse: propagate default and file acls on creation
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: miklos@szeredi.hu, bernd@bsbernd.com, linux-xfs@vger.kernel.org, 
+	John@groves.net, linux-fsdevel@vger.kernel.org, neal@gompa.dev, 
+	joannelkoong@gmail.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 16, 2025 at 1:40=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
+On Tue, Sep 16, 2025 at 8:26=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
  wrote:
 >
-> On Mon, Sep 15, 2025 at 10:20:40PM +0200, Amir Goldstein wrote:
-> > On Mon, Sep 15, 2025 at 8:20=E2=80=AFPM Darrick J. Wong <djwong@kernel.=
-org> wrote:
-> > >
-> > > On Sat, Sep 13, 2025 at 05:05:02AM +0200, Amir Goldstein wrote:
-> > > > From: Allison Henderson <allison.henderson@oracle.com>
-> > > >
-> > > > [ Upstream  commit f103df763563ad6849307ed5985d1513acc586dd ]
-> > > >
-> > > > With parent pointers enabled, a rename operation can update up to 5
-> > > > inodes: src_dp, target_dp, src_ip, target_ip and wip.  This causes
-> > > > their dquots to a be attached to the transaction chain, so we need
-> > > > to increase XFS_QM_TRANS_MAXDQS.  This patch also add a helper
-> > > > function xfs_dqlockn to lock an arbitrary number of dquots.
-> > > >
-> > > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > >
-> > > > [amir: backport to kernels prior to parent pointers to fix an old b=
-ug]
-> > > >
-> > > > A rename operation of a directory (i.e. mv A/C/ B/) may end up chan=
-ging
-> > > > three different dquot accounts under the following conditions:
-> > > > 1. user (or group) quotas are enabled
-> > > > 2. A/ B/ and C/ have different owner uids (or gids)
-> > > > 3. A/ blocks shrinks after remove of entry C/
-> > > > 4. B/ blocks grows before adding of entry C/
-> > > > 5. A/ ino <=3D XFS_DIR2_MAX_SHORT_INUM
-> > > > 6. B/ ino > XFS_DIR2_MAX_SHORT_INUM
-> > > > 7. C/ is converted from sf to block format, because its parent entr=
-y
-> > > >    needs to be stored as 8 bytes (see xfs_dir2_sf_replace_needblock=
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> For local filesystems, propagate the default and file access ACLs to new
+> children when creating them, just like the other in-kernel local
+> filesystems.
+>
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  fs/fuse/fuse_i.h |    4 ++
+>  fs/fuse/acl.c    |   65 ++++++++++++++++++++++++++++++++++++++
+>  fs/fuse/dir.c    |   92 +++++++++++++++++++++++++++++++++++++++++-------=
+------
+>  3 files changed, 138 insertions(+), 23 deletions(-)
+>
+>
+> diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
+> index 52776b77efc0e4..b9306678dcda0d 100644
+> --- a/fs/fuse/fuse_i.h
+> +++ b/fs/fuse/fuse_i.h
+> @@ -1507,6 +1507,10 @@ struct posix_acl *fuse_get_acl(struct mnt_idmap *i=
+dmap,
+>                                struct dentry *dentry, int type);
+>  int fuse_set_acl(struct mnt_idmap *, struct dentry *dentry,
+>                  struct posix_acl *acl, int type);
+> +int fuse_acl_create(struct inode *dir, umode_t *mode,
+> +                   struct posix_acl **default_acl, struct posix_acl **ac=
+l);
+> +int fuse_init_acls(struct inode *inode, const struct posix_acl *default_=
+acl,
+> +                  const struct posix_acl *acl);
+>
+>  /* readdir.c */
+>  int fuse_readdir(struct file *file, struct dir_context *ctx);
+> diff --git a/fs/fuse/acl.c b/fs/fuse/acl.c
+> index 4997827ee83c6d..4faee72f1365a5 100644
+> --- a/fs/fuse/acl.c
+> +++ b/fs/fuse/acl.c
+> @@ -203,3 +203,68 @@ int fuse_set_acl(struct mnt_idmap *idmap, struct den=
+try *dentry,
+>
+>         return ret;
+>  }
+> +
+> +int fuse_acl_create(struct inode *dir, umode_t *mode,
+> +                   struct posix_acl **default_acl, struct posix_acl **ac=
+l)
+> +{
+> +       struct fuse_conn *fc =3D get_fuse_conn(dir);
+> +
+> +       if (fuse_is_bad(dir))
+> +               return -EIO;
+> +
+> +       if (IS_POSIXACL(dir) && fuse_has_local_acls(fc))
+> +               return posix_acl_create(dir, mode, default_acl, acl);
+> +
+> +       if (!fc->dont_mask)
+> +               *mode &=3D ~current_umask();
+> +
+> +       *default_acl =3D NULL;
+> +       *acl =3D NULL;
+> +       return 0;
+> +}
+> +
+> +static int __fuse_set_acl(struct inode *inode, const char *name,
+> +                         const struct posix_acl *acl)
+> +{
+> +       struct fuse_conn *fc =3D get_fuse_conn(inode);
+> +       size_t size =3D posix_acl_xattr_size(acl->a_count);
+> +       void *value;
+> +       int ret;
+> +
+> +       if (size > PAGE_SIZE)
+> +               return -E2BIG;
+> +
+> +       value =3D kmalloc(size, GFP_KERNEL);
+> +       if (!value)
+> +               return -ENOMEM;
+> +
+> +       ret =3D posix_acl_to_xattr(fc->user_ns, acl, value, size);
+> +       if (ret < 0)
+> +               goto out_value;
+> +
+> +       ret =3D fuse_setxattr(inode, name, value, size, 0, 0);
+> +out_value:
+> +       kfree(value);
+> +       return ret;
+> +}
+> +
+> +int fuse_init_acls(struct inode *inode, const struct posix_acl *default_=
+acl,
+> +                  const struct posix_acl *acl)
+> +{
+> +       int ret;
+> +
+> +       if (default_acl) {
+> +               ret =3D __fuse_set_acl(inode, XATTR_NAME_POSIX_ACL_DEFAUL=
+T,
+> +                                    default_acl);
+> +               if (ret)
+> +                       return ret;
+> +       }
+> +
+> +       if (acl) {
+> +               ret =3D __fuse_set_acl(inode, XATTR_NAME_POSIX_ACL_ACCESS=
+, acl);
+> +               if (ret)
+> +                       return ret;
+> +       }
+> +
+> +       return 0;
+> +}
+> diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
+> index a7f47e43692f1c..b116e42431ee12 100644
+> --- a/fs/fuse/dir.c
+> +++ b/fs/fuse/dir.c
+> @@ -628,26 +628,28 @@ static int fuse_create_open(struct mnt_idmap *idmap=
+, struct inode *dir,
+>         struct fuse_entry_out outentry;
+>         struct fuse_inode *fi;
+>         struct fuse_file *ff;
+> +       struct posix_acl *default_acl =3D NULL, *acl =3D NULL;
+>         int epoch, err;
+>         bool trunc =3D flags & O_TRUNC;
+>
+>         /* Userspace expects S_IFREG in create mode */
+>         BUG_ON((mode & S_IFMT) !=3D S_IFREG);
+>
+> +       err =3D fuse_acl_create(dir, &mode, &default_acl, &acl);
+> +       if (err)
+> +               return err;
+> +
+>         epoch =3D atomic_read(&fm->fc->epoch);
+>         forget =3D fuse_alloc_forget();
+>         err =3D -ENOMEM;
+>         if (!forget)
+> -               goto out_err;
+> +               goto out_acl_release;
+>
+>         err =3D -ENOMEM;
+>         ff =3D fuse_file_alloc(fm, true);
+>         if (!ff)
+>                 goto out_put_forget_req;
+>
+> -       if (!fm->fc->dont_mask)
+> -               mode &=3D ~current_umask();
+> -
+>         flags &=3D ~O_NOCTTY;
+>         memset(&inarg, 0, sizeof(inarg));
+>         memset(&outentry, 0, sizeof(outentry));
+> @@ -699,12 +701,16 @@ static int fuse_create_open(struct mnt_idmap *idmap=
+, struct inode *dir,
+>                 fuse_sync_release(NULL, ff, flags);
+>                 fuse_queue_forget(fm->fc, forget, outentry.nodeid, 1);
+>                 err =3D -ENOMEM;
+> -               goto out_err;
+> +               goto out_acl_release;
+>         }
+>         kfree(forget);
+>         d_instantiate(entry, inode);
+>         entry->d_time =3D epoch;
+>         fuse_change_entry_timeout(entry, &outentry);
+> +
+> +       err =3D fuse_init_acls(inode, default_acl, acl);
+> +       if (err)
+> +               goto out_acl_release;
+>         fuse_dir_changed(dir);
+>         err =3D generic_file_open(inode, file);
+>         if (!err) {
+> @@ -726,7 +732,9 @@ static int fuse_create_open(struct mnt_idmap *idmap, =
+struct inode *dir,
+>         fuse_file_free(ff);
+>  out_put_forget_req:
+>         kfree(forget);
+> -out_err:
+> +out_acl_release:
+> +       posix_acl_release(default_acl);
+> +       posix_acl_release(acl);
+>         return err;
+>  }
+>
+> @@ -785,7 +793,9 @@ static int fuse_atomic_open(struct inode *dir, struct=
+ dentry *entry,
+>   */
+>  static struct dentry *create_new_entry(struct mnt_idmap *idmap, struct f=
+use_mount *fm,
+>                                        struct fuse_args *args, struct ino=
+de *dir,
+> -                                      struct dentry *entry, umode_t mode=
 )
-> > > >
-> > > > When all conditions are met (observed in the wild) we get this asse=
-rtion:
-> > > >
-> > > > XFS: Assertion failed: qtrx, file: fs/xfs/xfs_trans_dquot.c, line: =
-207
-> > > >
-> > > > The upstream commit fixed this bug as a side effect, so decided to =
-apply
-> > > > it as is rather than changing XFS_QM_TRANS_MAXDQS to 3 in stable ke=
-rnels.
-> > >
-> > > Heh.  Indeed, you only need MAXDQS=3D=3D5 for filesystems that suppor=
-t
-> > > parent pointers, because only on those filesystems can you end up
-> > > needing to allocate a xattr block either to the new whiteout file or
-> > > free one from the file being unlinked.
-> > >
-> > > > The Fixes commit below is NOT the commit that introduced the bug, b=
-ut
-> > > > for some reason, which is not explained in the commit message, it f=
-ixes
-> > > > the comment to state that highest number of dquots of one type is 3=
- and
-> > > > not 2 (which leads to the assertion), without actually fixing it.
-> > >
-> > > Agree.
-> > >
-> > > > The change of wording from "usr, grp OR prj" to "usr, grp and prj"
-> > > > suggests that there may have been a confusion between "the number o=
-f
-> > > > dquote of one type" and "the number of dquot types" (which is also =
-3),
-> > > > so the comment change was only accidentally correct.
-> > >
-> > > I interpret the "OR" -> "and" change to reflect the V4 -> V5 transiti=
-on
-> > > where you actually can have all three dquot types because group/proje=
-ct
-> > > quota are no longer mutually exclusive.
-> > >
-> > > The "...involved in a transaction is 3" part I think is separate, and
-> > > strange that XFS_QM_TRANS_MAXDQS wasn't updated.
-> > >
-> > > > Fixes: 10f73d27c8e9 ("xfs: fix the comment explaining xfs_trans_dql=
-ockedjoin")
-> > > > Cc: stable@vger.kernel.org
-> > > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > > > ---
-> > > >
-> > > > Christoph,
-> > > >
-> > > > This is a cognitive challenge. can you say what you where thinking =
-in
-> > > > 2013 when making the comment change in the Fixes commit?
-> > > > Is my speculation above correct?
-> > > >
-> > > > Catherine and Leah,
-> > > >
-> > > > I decided that cherry-pick this upstream commit as is with a commit
-> > > > message addendum was the best stable tree strategy.
-> > > > The commit applies cleanly to 5.15.y, so I assume it does for 6.6 a=
-nd
-> > > > 6.1 as well. I ran my tests on 5.15.y and nothing fell out, but did=
- not
-> > > > try to reproduce these complex assertion in a test.
-> > > >
-> > > > Could you take this candidate backport patch to a spin on your test
-> > > > branch?
-> > > >
-> > > > What do you all think about this?
-> > >
-> > > I only think you need MAXDQS=3D=3D5 for 6.12 to handle parent pointer=
-s.
-> > >
-> >
-> > Yes, of course. I just preferred to keep the 5 to avoid deviating from
-> > the upstream commit if there is no good reason to do so.
+> +                                      struct dentry *entry, umode_t mode=
+,
+> +                                      struct posix_acl *default_acl,
+> +                                      struct posix_acl *acl)
+>  {
+>         struct fuse_entry_out outarg;
+>         struct inode *inode;
+> @@ -793,14 +803,18 @@ static struct dentry *create_new_entry(struct mnt_i=
+dmap *idmap, struct fuse_moun
+>         struct fuse_forget_link *forget;
+>         int epoch, err;
 >
-> <shrug> What do Greg and Sasha think about this?  If they don't mind
-> this then I guess I don't either. ;)
+> -       if (fuse_is_bad(dir))
+> -               return ERR_PTR(-EIO);
+> +       if (fuse_is_bad(dir)) {
+> +               err =3D -EIO;
+> +               goto out_acl_release;
+> +       }
 >
-
-Ok let's see.
-
-Greg,
-
-In kernels < 6.10 the size of the 'dqs' array per transaction was too small
-(XFS_QM_TRANS_MAXDQS is 2 instead of 3) which can, as explained
-in my commit, cause an assertion and crash the kernel.
-
-This bug exists for a long time, it may have low probability for the entire
-"world", but under specific conditions (e.g. a specific workload that is fu=
-lly
-controlled by unpriv user) it happens for us every other week on kernel 5.1=
-5.y
-and with more effort, an upriv user can trigger it much more frequently.
-
-In kernel 6.10, XFS_QM_TRANS_MAXDQS was increased to 5 to
-cover a use case for a new feature (parent pointer).
-That means that upstream no longer has the bug.
-
-I opted for applying this upstream commit to fix the stable kernel bug
-although raising the max to 5 is an overkill.
-
-This has a slight impact on memory footprint, but I think it is negligible
-and in any case, same exact memory footprint as upstream code.
-
-What do you prefer? Applying the commit as is with increase to 5
-or apply a customized commit for kernels < 6.10 which raises the
-max to 3 without mentioning the upstream commit?
-
-If you agree with my choice, please advise regarding my choice of
-formatting of the commit message - original commit message followed
-by stable specific bug fix commit message which explains the above.
-
-
-> > > The older kernels could have it set to 3 instead.  struct xfs_dqtrx o=
-n a
-> > > 6.17-rc6 kernel is 88 bytes.  Stuffing 9 of them into struct
-> > > xfs_dquot_acct instead of 15 means that the _acct struct is only 792
-> > > bytes instead of 1392, which means we can use the 1k slab instead of =
-the
-> > > 2k slab.
-> >
-> > Huh? there is only one xfs_dquot_acct per transaction.
+>         epoch =3D atomic_read(&fm->fc->epoch);
 >
-> Yes, but there can be a lot of transactions in flight.
+>         forget =3D fuse_alloc_forget();
+> -       if (!forget)
+> -               return ERR_PTR(-ENOMEM);
+> +       if (!forget) {
+> +               err =3D -ENOMEM;
+> +               goto out_acl_release;
+> +       }
 >
-> > Does it really matter if it's 1k or 2k??
-> >
-> > Am I missing something?
+>         memset(&outarg, 0, sizeof(outarg));
+>         args->nodeid =3D get_node_id(dir);
+> @@ -830,7 +844,8 @@ static struct dentry *create_new_entry(struct mnt_idm=
+ap *idmap, struct fuse_moun
+>                           &outarg.attr, ATTR_TIMEOUT(&outarg), 0, 0);
+>         if (!inode) {
+>                 fuse_queue_forget(fm->fc, forget, outarg.nodeid, 1);
+> -               return ERR_PTR(-ENOMEM);
+> +               err =3D -ENOMEM;
+> +               goto out_acl_release;
+>         }
+>         kfree(forget);
 >
-> It seems silly to waste so much memory on a scenario that can't happen
-> just so we can say that we hammered in a less appropriate solution.
+> @@ -846,19 +861,31 @@ static struct dentry *create_new_entry(struct mnt_i=
+dmap *idmap, struct fuse_moun
+>                 entry->d_time =3D epoch;
+>                 fuse_change_entry_timeout(entry, &outarg);
+>         }
+> +
+> +       err =3D fuse_init_acls(inode, default_acl, acl);
+> +       if (err)
+> +               goto out_acl_release;
+>         fuse_dir_changed(dir);
+> +
+> +       posix_acl_release(default_acl);
+> +       posix_acl_release(acl);
+>         return d;
 >
+>   out_put_forget_req:
+>         if (err =3D=3D -EEXIST)
+>                 fuse_invalidate_entry(entry);
+>         kfree(forget);
+> + out_acl_release:
+> +       posix_acl_release(default_acl);
+> +       posix_acl_release(acl);
+>         return ERR_PTR(err);
+>  }
+>
+>  static int create_new_nondir(struct mnt_idmap *idmap, struct fuse_mount =
+*fm,
+>                              struct fuse_args *args, struct inode *dir,
+> -                            struct dentry *entry, umode_t mode)
+> +                            struct dentry *entry, umode_t mode,
+> +                            struct posix_acl *default_acl,
+> +                            struct posix_acl *acl)
+>  {
+>         /*
+>          * Note that when creating anything other than a directory we
+> @@ -869,7 +896,8 @@ static int create_new_nondir(struct mnt_idmap *idmap,=
+ struct fuse_mount *fm,
+>          */
+>         WARN_ON_ONCE(S_ISDIR(mode));
+>
+> -       return PTR_ERR(create_new_entry(idmap, fm, args, dir, entry, mode=
+));
+> +       return PTR_ERR(create_new_entry(idmap, fm, args, dir, entry, mode=
+,
+> +                                       default_acl, acl));
+>  }
+>
+>  static int fuse_mknod(struct mnt_idmap *idmap, struct inode *dir,
+> @@ -877,10 +905,13 @@ static int fuse_mknod(struct mnt_idmap *idmap, stru=
+ct inode *dir,
+>  {
+>         struct fuse_mknod_in inarg;
+>         struct fuse_mount *fm =3D get_fuse_mount(dir);
+> +       struct posix_acl *default_acl, *acl;
+>         FUSE_ARGS(args);
+> +       int err;
+>
+> -       if (!fm->fc->dont_mask)
+> -               mode &=3D ~current_umask();
+> +       err =3D fuse_acl_create(dir, &mode, &default_acl, &acl);
 
-Yeh, I do not like waste, but do not like to over complicate and micro
-optimize either.
-
-Talking about waste, in current upstream xfs_dquot_acct is bloated
-as you described for the majority of users that enable quotas, who
-do not enable parent pointers.
-
-So if we consider this memory waste to be a bug, I prefer that stable
-and upstream will be bug compatible.
-
-If we fix that waste in upstream, we could add:
-Fixes: f103df763563a ("xfs: Increase XFS_QM_TRANS_MAXDQS to 5")
-
-Which would then be flagged for picking to stable kernels
-that have this commit applied.
-
-So? WDYT?
+Please excuse me if this is a dumb question.
+In this function (including fuse_mkdir and fuse_symlink),
+why can't we pair fuse_acl_create and posix_acl_release together
+within the same function,
+just like in fuse_create_open?
 
 Thanks,
-Amir.
+Chen Linxuan
+
+> +       if (err)
+> +               return err;
+>
+>         memset(&inarg, 0, sizeof(inarg));
+>         inarg.mode =3D mode;
+> @@ -892,7 +923,8 @@ static int fuse_mknod(struct mnt_idmap *idmap, struct=
+ inode *dir,
+>         args.in_args[0].value =3D &inarg;
+>         args.in_args[1].size =3D entry->d_name.len + 1;
+>         args.in_args[1].value =3D entry->d_name.name;
+> -       return create_new_nondir(idmap, fm, &args, dir, entry, mode);
+> +       return create_new_nondir(idmap, fm, &args, dir, entry, mode,
+> +                                default_acl, acl);
+>  }
+>
+>  static int fuse_create(struct mnt_idmap *idmap, struct inode *dir,
+> @@ -924,13 +956,17 @@ static struct dentry *fuse_mkdir(struct mnt_idmap *=
+idmap, struct inode *dir,
+>  {
+>         struct fuse_mkdir_in inarg;
+>         struct fuse_mount *fm =3D get_fuse_mount(dir);
+> +       struct posix_acl *default_acl, *acl;
+>         FUSE_ARGS(args);
+> +       int err;
+>
+> -       if (!fm->fc->dont_mask)
+> -               mode &=3D ~current_umask();
+> +       mode |=3D S_IFDIR;        /* vfs doesn't set S_IFDIR for us */
+> +       err =3D fuse_acl_create(dir, &mode, &default_acl, &acl);
+> +       if (err)
+> +               return ERR_PTR(err);
+>
+>         memset(&inarg, 0, sizeof(inarg));
+> -       inarg.mode =3D mode;
+> +       inarg.mode =3D mode & ~S_IFDIR;
+>         inarg.umask =3D current_umask();
+>         args.opcode =3D FUSE_MKDIR;
+>         args.in_numargs =3D 2;
+> @@ -938,7 +974,8 @@ static struct dentry *fuse_mkdir(struct mnt_idmap *id=
+map, struct inode *dir,
+>         args.in_args[0].value =3D &inarg;
+>         args.in_args[1].size =3D entry->d_name.len + 1;
+>         args.in_args[1].value =3D entry->d_name.name;
+> -       return create_new_entry(idmap, fm, &args, dir, entry, S_IFDIR);
+> +       return create_new_entry(idmap, fm, &args, dir, entry, S_IFDIR,
+> +                               default_acl, acl);
+>  }
+>
+>  static int fuse_symlink(struct mnt_idmap *idmap, struct inode *dir,
+> @@ -946,7 +983,14 @@ static int fuse_symlink(struct mnt_idmap *idmap, str=
+uct inode *dir,
+>  {
+>         struct fuse_mount *fm =3D get_fuse_mount(dir);
+>         unsigned len =3D strlen(link) + 1;
+> +       struct posix_acl *default_acl, *acl;
+> +       umode_t mode =3D S_IFLNK | 0777;
+>         FUSE_ARGS(args);
+> +       int err;
+> +
+> +       err =3D fuse_acl_create(dir, &mode, &default_acl, &acl);
+> +       if (err)
+> +               return err;
+>
+>         args.opcode =3D FUSE_SYMLINK;
+>         args.in_numargs =3D 3;
+> @@ -955,7 +999,8 @@ static int fuse_symlink(struct mnt_idmap *idmap, stru=
+ct inode *dir,
+>         args.in_args[1].value =3D entry->d_name.name;
+>         args.in_args[2].size =3D len;
+>         args.in_args[2].value =3D link;
+> -       return create_new_nondir(idmap, fm, &args, dir, entry, S_IFLNK);
+> +       return create_new_nondir(idmap, fm, &args, dir, entry, S_IFLNK,
+> +                                default_acl, acl);
+>  }
+>
+>  void fuse_flush_time_update(struct inode *inode)
+> @@ -1155,7 +1200,8 @@ static int fuse_link(struct dentry *entry, struct i=
+node *newdir,
+>         args.in_args[0].value =3D &inarg;
+>         args.in_args[1].size =3D newent->d_name.len + 1;
+>         args.in_args[1].value =3D newent->d_name.name;
+> -       err =3D create_new_nondir(&invalid_mnt_idmap, fm, &args, newdir, =
+newent, inode->i_mode);
+> +       err =3D create_new_nondir(&invalid_mnt_idmap, fm, &args, newdir, =
+newent,
+> +                               inode->i_mode, NULL, NULL);
+>         if (!err)
+>                 fuse_update_ctime_in_cache(inode);
+>         else if (err =3D=3D -EINTR)
+>
+>
+>
