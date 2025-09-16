@@ -1,41 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CCDA31D730
-	for <linux-xfs@vger.kernel.org>; Tue, 16 Sep 2025 13:52:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 749BB31D731
+	for <linux-xfs@vger.kernel.org>; Tue, 16 Sep 2025 13:52:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758030757; cv=none; b=eQ1/aX8HmeA3r20f1MuQpSXVB+nmUy/8cDrOlzI2gEhtcQCfFsDcfHtNtDyzQAX0AaiW0PRCqPcuRBd6OFXrQw4obL9UZYdWlpTC8LiEVgODwVxM4WwREnGU8o6S9m5vn+EVsQfwk+iqxE/lnze8TC8xMT4K99/v0lGS+PI8jZo=
+	t=1758030757; cv=none; b=jj5OHWIKlAQOAmZJ/V7hVF+hu7MIOk/VoVWo0ZWqwS6Yc5bKWVFam2k+vYD30PcoI4zQG0NQtFw6s7ZegRBCIClnLgfu1vIGkaWTgDEoJZfaqnlkdmzgaOh/jgTFEUlpaDLfyvrH287gGHQGk/EiA9fzOYkNLF09vWwI/HsS4Xs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1758030757; c=relaxed/simple;
-	bh=ev0vHlWiAV+bv+81ZZutO9YjewQCDTVz4zpwx3pzsak=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uBMWkWH8LxDs9ZhOcwDR4tw5trFte1T/JOjB/TqulDVqWrtJIdu4Dbt3+GicqHW8TBc0YnpSc/9APx8ea8+mK78vldWJWMymxldGcctS1283Zibl49eBvaZLJmbn1039FitADOfPac/Djpv2/S2li8cCXHENip0P3e1FEJOGF/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=oshQqEmd; arc=none smtp.client-ip=198.137.202.133
+	bh=mXa1ae3S48kCHLt9IjEMEdZfxnWt2IKncmPYrkAnfL0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=htw67grNWUhPHFw5BpjVWMXjB1nOAWqpNHDH0MhRfz5yiQc0+299Ub7yKTfs2epkdKZa2nqFbVGCDlwuSINoT7Kn8Zj4iRnY7necwZSl5v8KJClKmvdMysC9dhuBN9XOLYj9aoKhGM4TiEiRFmNziG0TWJ+nLdhPdnKycUo3Ut0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZEVly9E2; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oshQqEmd"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZEVly9E2"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=5maVcgrmmn/MJTiNwtLEZ7qZgSjx+qGX3/ZwU5NCMYc=; b=oshQqEmdp3tLlUg0jhLDXA/JzW
-	VyAGho8gPNxVFaxEYGZaFMnvMq2h4uefPL+FPH8jBu////ce/B5cX3+shc8VcN8OMiTHDa8f4tica
-	J7Go+3ybVml+Lq4cG0P56Y+l+hljB9Btd2ipdNp3nTAI+wFA7I6ysN4iSUji5FHXxSDkqLQ4nFiwD
-	bDUcPbOxxYsgsELcaQbZUBK8WfhMLi+3nznzrzb+yWyxQi7s3JudGdOm5sdgFGl07Y/hic0PK3BrF
-	+t23CCqTobA09uhJSLY304yoZru8zX1xV0ge1QRkrJPqJ9c8KzgI9IqDpDzwO/cYUnTZ+Rqnnra6l
-	bjRtYA3A==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=JQP5BTsATzgxmeImquEtvNKiKchpssqkG9QPkfUp6bQ=; b=ZEVly9E2Gj516N8zjfHIsS00h9
+	SWjbIc2N7ZgBUTWn252sXQGCtDnvS6dNJS3Egl/ZOiUYq32HzYbiXhtmCxHu3Sb5T+UjMwltf8Gt+
+	i8JZ9Ifs/D3e5EfydwdxBLY4bnD/pLbcW7TpgK0IQJLjeKHKq9Og1daYndVy8xiFZjH7Tt8qyIdP3
+	h2jho2YQgxAIQmHRUEVMaIN6UZ99IEKsuq5ZSbmNk3PG8c6TOKxDcQcwtZBuvH59I813gz28M6fN0
+	hc7dRouM4sIM6Flhy4mHxwBZJbJRPlHoipExjEoynkg9a+r8k0FjEjLM5qRdvXBT/codbRGph4DUV
+	Q/dLW+Bw==;
 Received: from [4.28.11.157] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uyW6l-00000007zf3-2uhE;
-	Tue, 16 Sep 2025 13:52:35 +0000
+	id 1uyW6m-00000007zfF-0QRx;
+	Tue, 16 Sep 2025 13:52:36 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: store the buftarg size in the buftarg v3
-Date: Tue, 16 Sep 2025 06:52:30 -0700
-Message-ID: <20250916135235.218084-1-hch@lst.de>
+Cc: linux-xfs@vger.kernel.org,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH 2/2] xfs: use bt_nr_blocks in xfs_dax_translate_range
+Date: Tue, 16 Sep 2025 06:52:32 -0700
+Message-ID: <20250916135235.218084-3-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
+In-Reply-To: <20250916135235.218084-1-hch@lst.de>
+References: <20250916135235.218084-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,32 +49,29 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+Only ranges inside the file system can be translated, and the file system
+can be smaller than the containing device.
 
-when playing around with new code that stores more than the current
-superblock in block zero of the RT device I ran into the assert in
-xfs_buf_map_verify that checks that a buffer is withing sb_dblocks.
+Fixes: f4ed93037966 ("xfs: don't shut down the filesystem for media failures beyond end of log")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/xfs/xfs_notify_failure.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-That check is obviously incorrect for targets that are not the main data
-device, but unlike to hit in practice as the log buftarg doesn't store
-any cached buffers, the RT device currently only one for block 0, and
-the in-memory buftargs better don't grow larger than the data device.
+diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+index fbeddcac4792..3726caa38375 100644
+--- a/fs/xfs/xfs_notify_failure.c
++++ b/fs/xfs/xfs_notify_failure.c
+@@ -165,7 +165,7 @@ xfs_dax_translate_range(
+ 	uint64_t		*bblen)
+ {
+ 	u64			dev_start = btp->bt_dax_part_off;
+-	u64			dev_len = bdev_nr_bytes(btp->bt_bdev);
++	u64			dev_len = BBTOB(btp->bt_nr_blocks);
+ 	u64			dev_end = dev_start + dev_len - 1;
+ 
+ 	/* Notify failure on the whole device. */
+-- 
+2.47.2
 
-It's probably better to fix it anyway before running into real issues
-on day, and storing the value also removes the need for the notify
-failure code to poke into the block device.
-
-Changes since v1:
- - grow the correct buftarg when replying a primary sb update
-
-Changes since v1:
- - grow the correct buftarg when applying the growfs deltas
-
-Diffstat:
- xfs_buf.c              |   38 +++++++++++++++++++++-----------------
- xfs_buf.h              |    4 +++-
- xfs_buf_item_recover.c |    7 +++++++
- xfs_notify_failure.c   |    2 +-
- xfs_super.c            |    7 ++++---
- xfs_trans.c            |   21 ++++++++++-----------
- 6 files changed, 46 insertions(+), 33 deletions(-)
