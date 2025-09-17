@@ -1,121 +1,196 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 996222BDC33;
-	Wed, 17 Sep 2025 21:41:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6763DA55
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Sep 2025 22:24:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758145286; cv=none; b=ucqgt3Con/TN2wH5aNYoELYazM7hn0yKAS0plPojXLEFO8R8X1U3/4Z2PKFLKQplIKDO4kCYOeu+WWNg7PXLubI1VxSC3YkMmkYBD9riSc1zx5T9g2bxcgPXSK3Zcbia4oZu3d/DA3fYBA/zYbdOycN36gi6OS7nTFYiKi5XhpU=
+	t=1758147895; cv=none; b=Mq3pDy+hl6PP4H2re/xFz2cNTuLvYgtPfaYx+4/VK8+PsG+p6p5DUJX1uoAA5gLkrLEBHMak9XNCLHuUzKP4FygMMwMnrKoC02UwsM7Cfb2fohTkPiPW33r1KUKj/5qCZ4V7E8MW8nUSN7iYBVGPlFs9YiyBq1HpGsDu83JnTG8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758145286; c=relaxed/simple;
-	bh=LFfVCJuauYXP84lOUN45XcIK3FpxUQkSFwCjspvozzM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=elhQBRVriEifu+rvrwK2cQdUEDyILH+2fBYkbVR3cs8WT2J9df4BPIIXH5A8O5bW1d0jNdLF1E2EZT+UaPBtpPpogj2++KLznRQICrzBO7HgIMojlLK5nqVBTbrej+bqT8kqqrU7U2QMsXX/g8D7bk0DWqzv4RGUh13QZA1BJ+M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=M3EM8y5L; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1758147895; c=relaxed/simple;
+	bh=R+NOQyyWKO1CNYcH7NKw4Ws3ydIhRoRaj9BgGJCkTPo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=HuhnYbyO4ufU5exg+1xBYM44X8j83KYJ00KZ6w4sYuybUdGist/peg8Vp0UKqeHWSpTFXz53sYLYKFbtYKRKm+yU3cu53gv4tbNLZx8VJ7bNKdHBT06gWiAf9/+up99bnr8c1bpKvR495zc9UwZcfHahAlFzs0WHvDb9Zje3ueg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=yEn0xoyp; arc=none smtp.client-ip=209.85.215.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="M3EM8y5L"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1758145285; x=1789681285;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=LFfVCJuauYXP84lOUN45XcIK3FpxUQkSFwCjspvozzM=;
-  b=M3EM8y5LwuXMrJhJcPmVb4pNwZtzgXCf6FimY554COa85vYcl+qsfRtE
-   BhHrbzJkbVF4/erBfNhGUUczecVn3eXLGiL9fTOZN/VQT5+0Sxn2Ymgnn
-   lQJ/OUew8m8KxT0t0ZRxm/MO67zBnU7Ffo24hMCfk6vbzyjzFGuTg8J3o
-   eZYpwukWq4OXR7Y/NZ1nAyo1kL/jQEh1kPvicqWp9q7f6wH20D3QCSP8C
-   mv0Vk5HowRX+AI5vKLpn5JR1RHew27uMudkXG17KVoobrsoV+yjToY1FU
-   kHOx3qO/VYcQOkneXbhekR693jsALLlPzuPmFzzv7pceRGzYhq+DEgpAh
-   A==;
-X-CSE-ConnectionGUID: 9eSqf2NLQi6c2Vm2zH5TSQ==
-X-CSE-MsgGUID: 95k95iexRSanKUlcwIXo/Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="64268266"
-X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
-   d="scan'208";a="64268266"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Sep 2025 14:41:25 -0700
-X-CSE-ConnectionGUID: lSanHIgkQaaxnWD72A5IPg==
-X-CSE-MsgGUID: 2DE8UQ91TFq3DAlmDMeSVw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.18,273,1751266800"; 
-   d="scan'208";a="206146643"
-Received: from lkp-server01.sh.intel.com (HELO 84a20bd60769) ([10.239.97.150])
-  by orviesa002.jf.intel.com with ESMTP; 17 Sep 2025 14:41:20 -0700
-Received: from kbuild by 84a20bd60769 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1uyztu-0002Tf-2Z;
-	Wed, 17 Sep 2025 21:41:18 +0000
-Date: Thu, 18 Sep 2025 05:40:53 +0800
-From: kernel test robot <lkp@intel.com>
-To: Joanne Koong <joannelkoong@gmail.com>, brauner@kernel.org,
-	miklos@szeredi.hu
-Cc: oe-kbuild-all@lists.linux.dev, hch@infradead.org, djwong@kernel.org,
-	hsiangkao@linux.alibaba.com, linux-block@vger.kernel.org,
-	gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	kernel-team@meta.com, linux-xfs@vger.kernel.org,
-	linux-doc@vger.kernel.org
-Subject: Re: [PATCH v3 11/15] iomap: move buffered io bio logic into new file
-Message-ID: <202509180515.Cc8A1Wu9-lkp@intel.com>
-References: <20250916234425.1274735-12-joannelkoong@gmail.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="yEn0xoyp"
+Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-b54b0434101so238792a12.2
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Sep 2025 15:24:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1758147893; x=1758752693; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TODd7bUg2ZmMGAGLmAZ9qFpucIb34zAYJ/C+je4cMxU=;
+        b=yEn0xoypeKMwg5TU+b3Ok3aYj8ARYTYkmPDEUBSdxKOK11N0bokvou/ZRLvqQdN3Ar
+         usmDm/6q+1IVKocabA28JJVcDLa2ntwi2PyC2Hu3lRtDXmhjOqyPj6MbzLYg+QM6XTl4
+         tT5snLL41cuBPpbU3SBZliyuNPWUHm5ZVFvw5UL7r8p8It4z5ZMPihpVCGy/3V0Vyyll
+         Jjxv9KdRVrRQxs54oiEB+JGU+YIZR4bLU1Uf7M1SrWIuVTJNC6R407eOjxA4+z2Vu2k+
+         q0XlxVJLw25dlBmE+wut3U6ld/Qm+iVeOFtDm2tGyHSCGhA0XquVoXVFo7/FaiUdtYnU
+         c6YA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758147893; x=1758752693;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=TODd7bUg2ZmMGAGLmAZ9qFpucIb34zAYJ/C+je4cMxU=;
+        b=PRCqqX0BI5jXgXmLrWg3bLYsZMWnjHQHWGU+5jRlibpZWNxnzfMwIvDqWbYMktslk3
+         KaDEHRo0FN8ka8zWF69HYeGg0kR0ZYO5ga+N2B7hk5XDHEbWX0V3YZ9ZAzf/j/RZqyLs
+         j0KHFHnEbKs8+2zIodjo4DD1cKlnB4W1rNaWwFIFC0A21JtKkFPHPjsbF1H7u31ZQ7gk
+         9acDKlqIfTwIM7xHM5DXTIyP2dm5QCsqdvhi1cPWVndDghoY7HDTZzQQXe2eKm1ANEDV
+         dL3Xl66WWcsBVDdvPnpWgeKdqkGRICJHQkoYAAQ4kg90xT6QXL3DUIy+OoZ+ajleOGmi
+         pjIw==
+X-Gm-Message-State: AOJu0YwIhwNNCOLXPjED/A13QzjmVTK7/aZ9YiK8lpJ5dfMS4asOCbKr
+	J9sxFEuFLyk/ZBdE735Z/Qxh0uW7PSFBWj52g7+EiYYv/ikv3YAzFMIkjCiKBc5N09+W9anR/OH
+	9dPE0
+X-Gm-Gg: ASbGncs5U/gH0zfXjzOP6IolIJfMFNJXgzISpea7i1ly7w3Z0Drzo9IsvMrQjKYhPKF
+	aOpANbONbRw9tz6ktVfM0q/TMDl/tMrrZhxxHYYQs2e9BwfNnBkPEI6l+/DAl20d7OJ5UwIIkM9
+	+dNRHWnwWt8ogjMA0TRS5m21Mt+poShtaghQTXZ5Ewl0leM6DR7+BbOZeZXPtrJjM5KGxntaZiF
+	cPFDrxnvH3WHG1FLhO7H2ezYo0Qh08vjkwwpvow50IN5/kRiaFnaHpAUqTY/eKuCFw3KtxJVZ20
+	RuRIQVJ2OH6pvwFffLDefEJU2Rc1fN4savKJOIjUOJYL6Nv/po214qestd2SX/GAWNyQhYvlcTV
+	Sl3HvGT9qWgjfTYd7/mobAVn1/WVcwBwETzFmsZnRdFMbir+IZXZ541ginUoV+pcSV5bZPXQR6j
+	6ib1K913XdLLFWF1A=
+X-Google-Smtp-Source: AGHT+IEMNl7xJoJqqtb+jUA8jS4s55pbvbFjUdS9wndY5SxJeFkR9GpzcWrUTtGsPOlvOFukuLQKJw==
+X-Received: by 2002:a17:903:1ace:b0:268:500:5ec7 with SMTP id d9443c01a7336-268118b4286mr52192695ad.2.1758147892712;
+        Wed, 17 Sep 2025 15:24:52 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2698033a3e5sm5629555ad.126.2025.09.17.15.24.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Sep 2025 15:24:52 -0700 (PDT)
+Received: from devoid.disaster.area ([192.168.253.111])
+	by dread.disaster.area with esmtp (Exim 4.98.2)
+	(envelope-from <dave@fromorbit.com>)
+	id 1uz0a1-00000003I2Z-404I;
+	Thu, 18 Sep 2025 08:24:49 +1000
+Received: from dave by devoid.disaster.area with local (Exim 4.98.2)
+	(envelope-from <dave@devoid.disaster.area>)
+	id 1uz0a1-00000005a9D-3R9i;
+	Thu, 18 Sep 2025 08:24:49 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
+Cc: jack@suse.cz,
+	lherbolt@redhat.com
+Subject: [PATCH 1/2] xfs: rearrange code in xfs_inode_item_precommit
+Date: Thu, 18 Sep 2025 08:12:53 +1000
+Message-ID: <20250917222446.1329304-2-david@fromorbit.com>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20250917222446.1329304-1-david@fromorbit.com>
+References: <20250917222446.1329304-1-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250916234425.1274735-12-joannelkoong@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-Hi Joanne,
+From: Dave Chinner <dchinner@redhat.com>
 
-kernel test robot noticed the following build warnings:
+There are similar extsize checks and updates done inside and outside
+the inode item lock, which could all be done under a single top
+level logic branch outside the ili_lock. The COW extsize fixup can
+potentially miss updating the XFS_ILOG_CORE in ili_fsync_fields, so
+moving this code up above the ili_fsync_fields update could also be
+considered a fix.
 
-[auto build test WARNING on brauner-vfs/vfs.all]
-[also build test WARNING on mszeredi-fuse/for-next axboe-block/for-next xiang-erofs/dev-test xiang-erofs/dev xiang-erofs/fixes gfs2/for-next xfs-linux/for-next linus/master v6.17-rc6 next-20250917]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Further, to make the next change a bit cleaner, move where we
+calculate the on-disk flag mask to after we attach the cluster
+buffer to the the inode log item.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Joanne-Koong/iomap-move-bio-read-logic-into-helper-function/20250917-075255
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git vfs.all
-patch link:    https://lore.kernel.org/r/20250916234425.1274735-12-joannelkoong%40gmail.com
-patch subject: [PATCH v3 11/15] iomap: move buffered io bio logic into new file
-config: x86_64-randconfig-071-20250918 (https://download.01.org/0day-ci/archive/20250918/202509180515.Cc8A1Wu9-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250918/202509180515.Cc8A1Wu9-lkp@intel.com/reproduce)
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_inode_item.c | 65 ++++++++++++++++++-----------------------
+ 1 file changed, 29 insertions(+), 36 deletions(-)
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202509180515.Cc8A1Wu9-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   In file included from fs/iomap/buffered-io.c:11:
->> fs/iomap/internal.h:13:5: warning: no previous prototype for 'iomap_bio_read_folio_range_sync' [-Wmissing-prototypes]
-      13 | int iomap_bio_read_folio_range_sync(const struct iomap_iter *iter,
-         |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-vim +/iomap_bio_read_folio_range_sync +13 fs/iomap/internal.h
-
-     8	
-     9	#ifdef CONFIG_BLOCK
-    10	int iomap_bio_read_folio_range_sync(const struct iomap_iter *iter,
-    11			struct folio *folio, loff_t pos, size_t len);
-    12	#else
-  > 13	int iomap_bio_read_folio_range_sync(const struct iomap_iter *iter,
-    14			struct folio *folio, loff_t pos, size_t len)
-    15	{
-    16		WARN_ON_ONCE(1);
-    17		return -EIO;
-    18	}
-    19	#endif /* CONFIG_BLOCK */
-    20	
-
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index afb6cadf7793..318e7c68ec72 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -131,46 +131,28 @@ xfs_inode_item_precommit(
+ 	}
+ 
+ 	/*
+-	 * Inode verifiers do not check that the extent size hint is an integer
+-	 * multiple of the rt extent size on a directory with both rtinherit
+-	 * and extszinherit flags set.  If we're logging a directory that is
+-	 * misconfigured in this way, clear the hint.
++	 * Inode verifiers do not check that the extent size hints are an
++	 * integer multiple of the rt extent size on a directory with
++	 * rtinherit flags set.  If we're logging a directory that is
++	 * misconfigured in this way, clear the bad hints.
+ 	 */
+-	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
+-	    (ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
+-	    xfs_extlen_to_rtxmod(ip->i_mount, ip->i_extsize) > 0) {
+-		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
+-				   XFS_DIFLAG_EXTSZINHERIT);
+-		ip->i_extsize = 0;
+-		flags |= XFS_ILOG_CORE;
++	if (ip->i_diflags & XFS_DIFLAG_RTINHERIT) {
++		if ((ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
++		    xfs_extlen_to_rtxmod(ip->i_mount, ip->i_extsize) > 0) {
++			ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
++					   XFS_DIFLAG_EXTSZINHERIT);
++			ip->i_extsize = 0;
++			flags |= XFS_ILOG_CORE;
++		}
++		if ((ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) &&
++		    xfs_extlen_to_rtxmod(ip->i_mount, ip->i_cowextsize) > 0) {
++			ip->i_diflags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
++			ip->i_cowextsize = 0;
++			flags |= XFS_ILOG_CORE;
++		}
+ 	}
+ 
+-	/*
+-	 * Record the specific change for fdatasync optimisation. This allows
+-	 * fdatasync to skip log forces for inodes that are only timestamp
+-	 * dirty. Once we've processed the XFS_ILOG_IVERSION flag, convert it
+-	 * to XFS_ILOG_CORE so that the actual on-disk dirty tracking
+-	 * (ili_fields) correctly tracks that the version has changed.
+-	 */
+ 	spin_lock(&iip->ili_lock);
+-	iip->ili_fsync_fields |= (flags & ~XFS_ILOG_IVERSION);
+-	if (flags & XFS_ILOG_IVERSION)
+-		flags = ((flags & ~XFS_ILOG_IVERSION) | XFS_ILOG_CORE);
+-
+-	/*
+-	 * Inode verifiers do not check that the CoW extent size hint is an
+-	 * integer multiple of the rt extent size on a directory with both
+-	 * rtinherit and cowextsize flags set.  If we're logging a directory
+-	 * that is misconfigured in this way, clear the hint.
+-	 */
+-	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
+-	    (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) &&
+-	    xfs_extlen_to_rtxmod(ip->i_mount, ip->i_cowextsize) > 0) {
+-		ip->i_diflags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
+-		ip->i_cowextsize = 0;
+-		flags |= XFS_ILOG_CORE;
+-	}
+-
+ 	if (!iip->ili_item.li_buf) {
+ 		struct xfs_buf	*bp;
+ 		int		error;
+@@ -204,6 +186,17 @@ xfs_inode_item_precommit(
+ 		xfs_trans_brelse(tp, bp);
+ 	}
+ 
++	/*
++	 * Record the specific change for fdatasync optimisation. This allows
++	 * fdatasync to skip log forces for inodes that are only timestamp
++	 * dirty. Once we've processed the XFS_ILOG_IVERSION flag, convert it
++	 * to XFS_ILOG_CORE so that the actual on-disk dirty tracking
++	 * (ili_fields) correctly tracks that the version has changed.
++	 */
++	iip->ili_fsync_fields |= (flags & ~XFS_ILOG_IVERSION);
++	if (flags & XFS_ILOG_IVERSION)
++		flags = ((flags & ~XFS_ILOG_IVERSION) | XFS_ILOG_CORE);
++
+ 	/*
+ 	 * Always OR in the bits from the ili_last_fields field.  This is to
+ 	 * coordinate with the xfs_iflush() and xfs_buf_inode_iodone() routines
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.50.1
+
