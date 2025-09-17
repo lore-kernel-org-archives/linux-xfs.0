@@ -1,319 +1,294 @@
-Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8EC027935F
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Sep 2025 08:30:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1026309EE4
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Sep 2025 10:07:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758097857; cv=none; b=LLNkkpe6QVsQNrYaCQpsa84CpG5ls/LUuffN6p9D8IP1R4Q8s1wihrrqOKWciPS2c+yc9IusK+Jhx2DyCYdwHerCNWYJ9QVtQPkbUgTESy3NzoClS51d+4mBfhEuMnyis4gSavZ7LoEIU/l/v+yl+N9VpNaoFBMfLKBSQzWjD24=
+	t=1758103633; cv=none; b=fEAckf8MkGbO5cjILJ7w1GhsGoRsutfFThZmMs920edFHEHqGbXgxhBExmLiO+qhl5nNCQP8xyFYjPYZEBjMmH3P+zHgkmKngLL3QUNiBXRSagyUTD4o0jnAaY4X/Q4qLp/ezqJypMn/3Ql/+DPmgL7udiW+M6gZI/+juS4TqPI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758097857; c=relaxed/simple;
-	bh=6AjWjKDKHP31jvovChTUYAq3p5SXpFp3nW3W4CkOup8=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
-	 Content-Type; b=REC+1Hgvg44W/lajdulU0oPpvzsuCmRjOaIc1WelwyrS+rYL6comkelDoPy0E3lZvMHWEOIpK80T3SZFqxtK4rOzAijnIhLFC51JrbdGTWffCd7n+IdwLrXbz/shp7fLmxzLswEEd83T5tiBI6dEqb7UTIv+YoWlRMe6Fhf1KWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f200.google.com with SMTP id e9e14a558f8ab-42403886eacso45535935ab.2
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Sep 2025 01:30:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758097854; x=1758702654;
-        h=cc:to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Zdmiy5gkEAe6ErqXFJJ6VLMJb+lc1vqF7uUO5qKC344=;
-        b=dWb+MId0bECC17o5VBzND7++BMdFvhKhn1UROpv8MIRSOMMOA9Ia3+cywim6lHXjIq
-         n1PiK9ITBB6V0/Em6o9gUfZiy6LXfhuXd9pNlXkRfG0/b5Ly14dU8Sx3/J5o8zcOVtnv
-         8W2nFgQvj2q/70ef07wYrNCEqvfVm5YC7SozMNdzu2+RlrzLMVSB7PXy3qAt58tK3QVZ
-         f2wBa69jL/hvOYKAs50DNUyTRylJDcdTNJ6udnqGXP7rhYKGOhtsLIPFdxDRqGePfbsG
-         9AKwiwvTGMl/+yQtp3WAX7TXs+WYKIFOtc3w390AfbQE7Rdl9LhCuPStDd/5GZlA7lpJ
-         p7uw==
-X-Forwarded-Encrypted: i=1; AJvYcCU3Wjlxq48KsgvWIkp7Ve9tRDZdpnJZq/NgFyTAhUbcc42IeZYiOz7pficDL2FmUVKwQBfr0bNIae0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzayRqlogRepJ0X9yshLrkTTEE8PLVSaHSu62VkhnTqD3ufZY22
-	zl2wafMWrwPC+Y2VJXctqW1EUaTsVADnM0uubHULCYlgbnCyBPON8EcH9bKCV9rhcUAoNZinmSw
-	WO25zYtN16VbLID/rvkpXIaH5f8gQpa31VM4GrhrQUYBUmhX8kQNW0qZb1fs=
-X-Google-Smtp-Source: AGHT+IFPgxPgZg/2M8goxra8gmfI00vPQ86tMj20E/Zx9GXmsDyzLmakEjM0VQS323BU1Psx1AGfoPjVzvIVpMU5TceFqkAYG/P8
+	s=arc-20240116; t=1758103633; c=relaxed/simple;
+	bh=VOIJ8M+WidB79X/5d200y3GYQtLOmxlfJMo6mXDTsro=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ghtDnr7KnWBKmRu76QT62t4Iy1l0zvNeV9469kOZKkqbrScGb5oe3aRiMM6bvaiPvZRE/3A8ndel5YBQID4cTuRKown93qDhcqXa2SzqlJZCW9725NqErkRn9uvAwheE8lGGamJ6nOPxs6G672Ol2f0x1+Ne7G8M6WIr6dyfyoA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=tT7x79PB; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=u9nnGkzQ; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=tT7x79PB; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=u9nnGkzQ; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="tT7x79PB";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="u9nnGkzQ";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="tT7x79PB";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="u9nnGkzQ"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 9CCFE21F6F;
+	Wed, 17 Sep 2025 10:07:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1758103628; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OHGW8iPZSys01m+dFizRlLNChxQUaumyNGlnXdLeaFw=;
+	b=tT7x79PBCImgfyuLAbKHvRMjdKVPPmBWRzbpvNvhXhIAF0th/ugnKr3+UH7JWdfzfwU+qw
+	FwolOmzOr1xp/kOCnVDVbXuPqphDlBVPSnFVR0LRBBzFFpHwwdmazq+tnWvh/zHq8PqpEq
+	lSorcrk4+BCNro2DmEXbVQ/3v4QCM6o=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1758103628;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OHGW8iPZSys01m+dFizRlLNChxQUaumyNGlnXdLeaFw=;
+	b=u9nnGkzQQD/J7MJtUH1Nf3tclwm/ZjlzaEku5W5iWc9R5LOePLs+DkLHMyqdy5lZGPGNNY
+	Otd1mecFA42UoiAA==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=tT7x79PB;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=u9nnGkzQ
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1758103628; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OHGW8iPZSys01m+dFizRlLNChxQUaumyNGlnXdLeaFw=;
+	b=tT7x79PBCImgfyuLAbKHvRMjdKVPPmBWRzbpvNvhXhIAF0th/ugnKr3+UH7JWdfzfwU+qw
+	FwolOmzOr1xp/kOCnVDVbXuPqphDlBVPSnFVR0LRBBzFFpHwwdmazq+tnWvh/zHq8PqpEq
+	lSorcrk4+BCNro2DmEXbVQ/3v4QCM6o=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1758103628;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OHGW8iPZSys01m+dFizRlLNChxQUaumyNGlnXdLeaFw=;
+	b=u9nnGkzQQD/J7MJtUH1Nf3tclwm/ZjlzaEku5W5iWc9R5LOePLs+DkLHMyqdy5lZGPGNNY
+	Otd1mecFA42UoiAA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8EB33137C3;
+	Wed, 17 Sep 2025 10:07:08 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id oyHRIkyIymgOLgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Wed, 17 Sep 2025 10:07:08 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 49296A0A94; Wed, 17 Sep 2025 12:07:08 +0200 (CEST)
+Date: Wed, 17 Sep 2025 12:07:08 +0200
+From: Jan Kara <jack@suse.cz>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH RFC] xfs: Don't hold XFS_ILOCK_SHARED over log force
+ during fsync
+Message-ID: <hgk4f5iatzmdmrueuqww56nzc6cdev2mjbkcxxcytkaukzby34@5cwqi3j7pdie>
+References: <20250908151248.1290-2-jack@suse.cz>
+ <aL9yc4WJLdqtCFOK@dread.disaster.area>
+ <hzjznua7gqp32yc36b5uef6acy4nssfdy42jtlpaxcdzfi5ddy@kcveowwcwltb>
+ <aMIe43ZYUtcQ9cZv@dread.disaster.area>
+ <aMkAhMrKO8bE8Eba@dread.disaster.area>
+ <vpsyvzbupclvb76axyzytms5rh5yzubcyj5l5h2iwpk3d7xf6a@dw6pemmdfcka>
+ <aMnXW_sEk_wTPnvB@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1feb:b0:423:fea3:51e2 with SMTP id
- e9e14a558f8ab-4241a52885fmr11714555ab.21.1758097853913; Wed, 17 Sep 2025
- 01:30:53 -0700 (PDT)
-Date: Wed, 17 Sep 2025 01:30:53 -0700
-In-Reply-To: <20250916234425.1274735-1-joannelkoong@gmail.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <68ca71bd.050a0220.2ff435.04fc.GAE@google.com>
-Subject: [syzbot ci] Re: fuse: use iomap for buffered reads + readahead
-From: syzbot ci <syzbot+ci9b5a486340e6bcdf@syzkaller.appspotmail.com>
-To: brauner@kernel.org, djwong@kernel.org, gfs2@lists.linux.dev, 
-	hch@infradead.org, hch@lst.de, hsiangkao@linux.alibaba.com, 
-	joannelkoong@gmail.com, kernel-team@meta.com, linux-block@vger.kernel.org, 
-	linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, miklos@szeredi.hu
-Cc: syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aMnXW_sEk_wTPnvB@dread.disaster.area>
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.com:email];
+	RCPT_COUNT_THREE(0.00)[3];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.cz:+]
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Rspamd-Queue-Id: 9CCFE21F6F
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -4.01
 
-syzbot ci has tested the following series
+On Wed 17-09-25 07:32:11, Dave Chinner wrote:
+> On Tue, Sep 16, 2025 at 03:32:42PM +0200, Jan Kara wrote:
+> > On Tue 16-09-25 16:15:32, Dave Chinner wrote:
+> > > On Thu, Sep 11, 2025 at 10:59:15AM +1000, Dave Chinner wrote:
+> > > > i.e. if we clear the commit sequences on last unpin (i.e. in
+> > > > xfs_inode_item_unpin) then an item that is not in the CIL (and so
+> > > > doesn't have dirty metadata) will have no associated commit
+> > > > sequence number set.
+> > > > 
+> > > > Hence if ili_datasync_commit_seq is non-zero, then by definition the
+> > > > inode must be pinned and has been dirtied for datasync purposes.
+> > > > That means we can simply query ili_datasync_commit_seq in
+> > > > xfs_bmbt_to_iomap() to set IOMAP_F_DIRTY.
+> > > > 
+> > > > I suspect that the above fsync code can then become:
+> > > > 
+> > > > 	spin_lock(&iip->ili_lock);
+> > > > 	if (datasync)
+> > > > 		seq = iip->ili_datasync_commit_seq;
+> > > > 	else
+> > > > 		seq = iip->ili_commit_seq;
+> > > > 	spin_unlock(&iip->ili_lock);
+> > > > 
+> > > > 	if (!seq)
+> > > > 		return 0;
+> > > > 	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC, log_flushed);
+> > > > 
+> > > > For the same reason. i.e. a non-zero sequence number implies the
+> > > > inode log item is dirty in the CIL and pinned.
+> > > > 
+> > > > At this point, we really don't care about races with transaction
+> > > > commits. f(data)sync should only wait for modifications that have
+> > > > been fully completed. If they haven't set the commit sequence in the
+> > > > log item, they haven't fully completed. If the commit sequence is
+> > > > already set, the the CIL push will co-ordinate appropriately with
+> > > > commits to ensure correct data integrity behaviour occurs.
+> > > > 
+> > > > Hence I think that if we tie the sequence number clearing to the
+> > > > inode being removed from the CIL (i.e. last unpin) we can drop all
+> > > > the pin checks and use the commit sequence numbers directly to
+> > > > determine what the correct behaviour should be...
+> > > 
+> > > Here's a patch that implements this. It appears to pass fstests
+> > > without any regressions on my test VMs. Can you test it and check
+> > > that it retains the expected performance improvement for
+> > > O_DSYNC+DIO on fallocate()d space?
+> > 
+> > Heh, I just wanted to send my version of the patch after all the tests
+> > passed :). Anyway, I've given your patch a spin with the test I have and
+> > its performance looks good. So feel free to add:
+> > 
+> > Tested-by: Jan Kara <jack@suse.cz>
+> 
+> Thanks!
+> 
+> > BTW I don't have customer setup with DB2 available where the huge
+> > difference is visible (I'll send them backport of the patch to their SUSE
+> > kernel once we settle on it) but I have written a tool that replays the
+> > same set of pwrites from same set of threads I've captured from syscall
+> > trace. It reproduces only about 20% difference between good & bad kernels
+> > on my test machine but it was good enough for the bisection and analysis
+> > and the customer confirmed that the revert of what I've bisected to
+> > actually fixes their issue (rwsem reader lockstealing logic).
+> 
+> It was also recently bisected on RHEL 8.x to the introduction of
+> rwsem spin-on-owner changes from back in 2019. Might be the same
+> commit you are talking about, but either way it's an indication of
+> rwsem lock contention rather than a problem with the rwsems
+> themselves.
 
-[v3] fuse: use iomap for buffered reads + readahead
-https://lore.kernel.org/all/20250916234425.1274735-1-joannelkoong@gmail.com
-* [PATCH v3 01/15] iomap: move bio read logic into helper function
-* [PATCH v3 02/15] iomap: move read/readahead bio submission logic into helper function
-* [PATCH v3 03/15] iomap: store read/readahead bio generically
-* [PATCH v3 04/15] iomap: iterate over entire folio in iomap_readpage_iter()
-* [PATCH v3 05/15] iomap: rename iomap_readpage_iter() to iomap_read_folio_iter()
-* [PATCH v3 06/15] iomap: rename iomap_readpage_ctx struct to iomap_read_folio_ctx
-* [PATCH v3 07/15] iomap: track read/readahead folio ownership internally
-* [PATCH v3 08/15] iomap: add public start/finish folio read helpers
-* [PATCH v3 09/15] iomap: add caller-provided callbacks for read and readahead
-* [PATCH v3 10/15] iomap: add bias for async read requests
-* [PATCH v3 11/15] iomap: move buffered io bio logic into new file
-* [PATCH v3 12/15] iomap: make iomap_read_folio() a void return
-* [PATCH v3 13/15] fuse: use iomap for read_folio
-* [PATCH v3 14/15] fuse: use iomap for readahead
-* [PATCH v3 15/15] fuse: remove fc->blkbits workaround for partial writes
+Right. I've also come to a conclusion that the real problem is the too
+heavy use of ILOCK and not the rwsem behavior itself. Hence this patch :).
 
-and found the following issues:
-* WARNING in iomap_iter_advance
-* WARNING in iomap_readahead
-* kernel BUG in folio_end_read
+> > So I'm
+> > reasonably confident I'm really reproducing their issue.
+> 
+> Ok, that's good to know. I was thinking that maybe a fio recipe
+> might show it up, too, but I'm not sure about that nor do I have the
+> time to investigate it...
 
-Full report is available here:
-https://ci.syzbot.org/series/6845596a-1ec9-4396-b9c4-48bddc606bef
+I was actually trying hard to come up with a fio recipe to reproduce this
+but I've failed. As you are noting in your changelog, this workload is
+bound by log throughput and one of the obvious differences between fast and
+slow kernels is that fast kernels do less larger log forces while slow
+kernels do many tiny log forces (with obvious consequences for throughput,
+in particular because we tend to relog the same blocks over and over again
+- the slow kernels end up logging about 3x as much data in total).  Now
+with fio the jobs were always managing to cram enough changes in one log
+force for the difference to not be visible. Somehow the distribution of
+writes among threads (and possibly their location determining how the btree
+gets fragmented and which blocks get logged) DB2 creates is pretty peculiar
+so that it makes such a big difference.
 
-***
+> > So I just wanted to suggest that as a possible optimization (my patch
+> > attached for reference). But regardless of whether you do the change or not
+> > I think the patch is good to go.
+> 
+> I was on the fence about using READ_ONCE/WRITE_ONCE.
+> 
+> However, xfs_csn_t is 64 bit and READ_ONCE/WRITE_ONCE doesn't
+> prevent torn reads of 64 bit variables on 32 bit platforms. A torn
+> read of a commit sequence number will result in a transient data
+> integrity guarantee failure, and so I decided to err on the side of
+> caution....
 
-WARNING in iomap_iter_advance
+Hum, right. I didn't think of 32-bits.
 
-tree:      torvalds
-URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/torvalds/linux
-base:      f83ec76bf285bea5727f478a68b894f5543ca76e
-arch:      amd64
-compiler:  Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
-config:    https://ci.syzbot.org/builds/4ec82322-3509-4b63-9881-f639f1b61f20/config
-C repro:   https://ci.syzbot.org/findings/73807f10-d659-4291-84af-f982be7cabad/c_repro
-syz repro: https://ci.syzbot.org/findings/73807f10-d659-4291-84af-f982be7cabad/syz_repro
+> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> > index 829675700fcd..2a90e156b072 100644
+> > --- a/fs/xfs/xfs_inode_item.c
+> > +++ b/fs/xfs/xfs_inode_item.c
+> > @@ -145,18 +145,7 @@ xfs_inode_item_precommit(
+> >  		flags |= XFS_ILOG_CORE;
+> >  	}
+> >  
+> > -	/*
+> > -	 * Record the specific change for fdatasync optimisation. This allows
+> > -	 * fdatasync to skip log forces for inodes that are only timestamp
+> > -	 * dirty. Once we've processed the XFS_ILOG_IVERSION flag, convert it
+> > -	 * to XFS_ILOG_CORE so that the actual on-disk dirty tracking
+> > -	 * (ili_fields) correctly tracks that the version has changed.
+> > -	 */
+> >  	spin_lock(&iip->ili_lock);
+> > -	iip->ili_fsync_fields |= (flags & ~XFS_ILOG_IVERSION);
+> > -	if (flags & XFS_ILOG_IVERSION)
+> > -		flags = ((flags & ~XFS_ILOG_IVERSION) | XFS_ILOG_CORE);
+> > -
+> >  	/*
+> >  	 * Inode verifiers do not check that the CoW extent size hint is an
+> >  	 * integer multiple of the rt extent size on a directory with both
+> > @@ -204,6 +193,23 @@ xfs_inode_item_precommit(
+> >  		xfs_trans_brelse(tp, bp);
+> >  	}
+> >  
+> > +	/*
+> > +	 * Set the transaction dirty state we've created back in inode item
+> > +	 * before mangling flags for storing on disk. We use the value later in
+> > +	 * xfs_inode_item_committing() to determine whether the transaction is
+> > +	 * relevant for fdatasync or not. ili_dirty_flags gets cleared in
+> > +	 * xfs_trans_ijoin() before adding inode to the next transaction.
+> > +	 */
+> > +	iip->ili_dirty_flags = flags;
+> > +
+> > +	/*
+> > +	 * Now convert XFS_ILOG_IVERSION flag to XFS_ILOG_CORE so that the
+> > +	 * actual on-disk dirty tracking (ili_fields) correctly tracks that the
+> > +	 * version has changed.
+> > +	 */
+> > +	if (flags & XFS_ILOG_IVERSION)
+> > +		flags = ((flags & ~XFS_ILOG_IVERSION) | XFS_ILOG_CORE);
+> > +
+> 
+> OK, I think I might have missed this. I'll check/fix it, and send an
+> updated version for inclusion.
 
-loop0: detected capacity change from 0 to 16
-erofs (device loop0): mounted with root inode @ nid 36.
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 5996 at fs/iomap/iter.c:22 iomap_iter_advance+0x2c1/0x2f0 fs/iomap/iter.c:22
-Modules linked in:
-CPU: 1 UID: 0 PID: 5996 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-RIP: 0010:iomap_iter_advance+0x2c1/0x2f0 fs/iomap/iter.c:22
-Code: 74 08 4c 89 ef e8 2f f1 ce ff 49 89 5d 00 31 c0 48 83 c4 50 5b 41 5c 41 5d 41 5e 41 5f 5d e9 46 0c 29 09 cc e8 80 7d 6b ff 90 <0f> 0b 90 b8 fb ff ff ff eb dc 44 89 f9 80 e1 07 fe c1 38 c1 0f 8c
-RSP: 0018:ffffc90002a6f118 EFLAGS: 00010293
-RAX: ffffffff82543fe0 RBX: 0000000000001000 RCX: ffff88801ec80000
-RDX: 0000000000000000 RSI: 0000000000000f8c RDI: 0000000000001000
-RBP: 0000000000000074 R08: ffffea00043daf87 R09: 1ffffd400087b5f0
-R10: dffffc0000000000 R11: fffff9400087b5f1 R12: 0000000000001000
-R13: 0000000000000f8c R14: ffffc90002a6f340 R15: 0000000000000f8c
-FS:  000055556dfe9500(0000) GS:ffff8881a3c15000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000001b31563fff CR3: 00000000262da000 CR4: 00000000000006f0
-Call Trace:
- <TASK>
- iomap_read_folio_iter+0x614/0xb70 fs/iomap/buffered-io.c:424
- iomap_read_folio+0x2e7/0x570 fs/iomap/buffered-io.c:472
- iomap_bio_read_folio include/linux/iomap.h:589 [inline]
- erofs_read_folio+0x13c/0x2e0 fs/erofs/data.c:374
- filemap_read_folio+0x117/0x380 mm/filemap.c:2413
- do_read_cache_folio+0x350/0x590 mm/filemap.c:3957
- read_mapping_folio include/linux/pagemap.h:991 [inline]
- erofs_bread+0x46f/0x7f0 fs/erofs/data.c:40
- erofs_find_target_block fs/erofs/namei.c:103 [inline]
- erofs_namei+0x36b/0x1030 fs/erofs/namei.c:177
- erofs_lookup+0x148/0x340 fs/erofs/namei.c:206
- lookup_open fs/namei.c:3686 [inline]
- open_last_lookups fs/namei.c:3807 [inline]
- path_openat+0x1101/0x3830 fs/namei.c:4043
- do_filp_open+0x1fa/0x410 fs/namei.c:4073
- do_sys_openat2+0x121/0x1c0 fs/open.c:1435
- do_sys_open fs/open.c:1450 [inline]
- __do_sys_openat fs/open.c:1466 [inline]
- __se_sys_openat fs/open.c:1461 [inline]
- __x64_sys_openat+0x138/0x170 fs/open.c:1461
- do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
- do_syscall_64+0xfa/0x3b0 arch/x86/entry/syscall_64.c:94
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f86ddb8eba9
-Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fff12610128 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
-RAX: ffffffffffffffda RBX: 00007f86dddd5fa0 RCX: 00007f86ddb8eba9
-RDX: 0000000000043142 RSI: 0000200000000040 RDI: ffffffffffffff9c
-RBP: 00007f86ddc11e19 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007f86dddd5fa0 R14: 00007f86dddd5fa0 R15: 0000000000000004
- </TASK>
+Yeah, your version may miss we've set XFS_ILOG_CORE in flags in
+xfs_inode_item_precommit(). Frankly, I wasn't sure whether fdatasync() not
+flushing the log in these cases it fine or not so I've just preserved the
+existing behavior in my patch.
 
+								Honza
 
-***
-
-WARNING in iomap_readahead
-
-tree:      torvalds
-URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/torvalds/linux
-base:      f83ec76bf285bea5727f478a68b894f5543ca76e
-arch:      amd64
-compiler:  Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
-config:    https://ci.syzbot.org/builds/4ec82322-3509-4b63-9881-f639f1b61f20/config
-C repro:   https://ci.syzbot.org/findings/6ee3f719-e6ab-468c-92dc-e197c12d8171/c_repro
-syz repro: https://ci.syzbot.org/findings/6ee3f719-e6ab-468c-92dc-e197c12d8171/syz_repro
-
-XFS: noikeep mount option is deprecated.
-XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
-XFS (loop0): Ending clean mount
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 5993 at fs/iomap/buffered-io.c:497 iomap_readahead_iter fs/iomap/buffered-io.c:497 [inline]
-WARNING: CPU: 1 PID: 5993 at fs/iomap/buffered-io.c:497 iomap_readahead+0x5ed/0xa40 fs/iomap/buffered-io.c:541
-Modules linked in:
-CPU: 1 UID: 0 PID: 5993 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-RIP: 0010:iomap_readahead_iter fs/iomap/buffered-io.c:497 [inline]
-RIP: 0010:iomap_readahead+0x5ed/0xa40 fs/iomap/buffered-io.c:541
-Code: a5 ff eb 35 e8 14 55 6b ff 48 8b 5c 24 20 48 8b 44 24 28 42 80 3c 28 00 74 08 48 89 df e8 8b c8 ce ff 48 c7 03 00 00 00 00 90 <0f> 0b 90 bb ea ff ff ff eb 53 e8 e4 54 6b ff 48 8b 44 24 28 42 80
-RSP: 0018:ffffc90003096260 EFLAGS: 00010246
-RAX: 1ffff92000612c8d RBX: ffffc90003096468 RCX: ffff888024038000
-RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000001
-RBP: ffffc90003096430 R08: ffffffff8fa3a637 R09: 1ffffffff1f474c6
-R10: dffffc0000000000 R11: fffffbfff1f474c7 R12: 0000000000000001
-R13: dffffc0000000000 R14: 0000000000000001 R15: 0000000000000001
-FS:  00005555761de500(0000) GS:ffff8881a3c15000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000001b30f63fff CR3: 000000010defc000 CR4: 00000000000006f0
-Call Trace:
- <TASK>
- iomap_bio_readahead include/linux/iomap.h:600 [inline]
- xfs_vm_readahead+0x9f/0xe0 fs/xfs/xfs_aops.c:753
- read_pages+0x17a/0x580 mm/readahead.c:160
- page_cache_ra_order+0x8ca/0xd40 mm/readahead.c:512
- filemap_get_pages+0x43c/0x1ea0 mm/filemap.c:2603
- filemap_read+0x3f6/0x11a0 mm/filemap.c:2712
- xfs_file_buffered_read+0x1a2/0x350 fs/xfs/xfs_file.c:292
- xfs_file_read_iter+0x280/0x510 fs/xfs/xfs_file.c:317
- __kernel_read+0x4cf/0x960 fs/read_write.c:530
- integrity_kernel_read+0x89/0xd0 security/integrity/iint.c:28
- ima_calc_file_hash_tfm security/integrity/ima/ima_crypto.c:480 [inline]
- ima_calc_file_shash security/integrity/ima/ima_crypto.c:511 [inline]
- ima_calc_file_hash+0x85e/0x16f0 security/integrity/ima/ima_crypto.c:568
- ima_collect_measurement+0x428/0x8e0 security/integrity/ima/ima_api.c:293
- process_measurement+0x1121/0x1a40 security/integrity/ima/ima_main.c:405
- ima_file_check+0xd7/0x120 security/integrity/ima/ima_main.c:633
- security_file_post_open+0xbb/0x290 security/security.c:3160
- do_open fs/namei.c:3889 [inline]
- path_openat+0x2f26/0x3830 fs/namei.c:4046
- do_filp_open+0x1fa/0x410 fs/namei.c:4073
- do_sys_openat2+0x121/0x1c0 fs/open.c:1435
- do_sys_open fs/open.c:1450 [inline]
- __do_sys_openat fs/open.c:1466 [inline]
- __se_sys_openat fs/open.c:1461 [inline]
- __x64_sys_openat+0x138/0x170 fs/open.c:1461
- do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
- do_syscall_64+0xfa/0x3b0 arch/x86/entry/syscall_64.c:94
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7fe33b38eba9
-Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fff93f3bee8 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
-RAX: ffffffffffffffda RBX: 00007fe33b5d5fa0 RCX: 00007fe33b38eba9
-RDX: 0000000000183042 RSI: 0000200000000740 RDI: ffffffffffffff9c
-RBP: 00007fe33b411e19 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000015 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007fe33b5d5fa0 R14: 00007fe33b5d5fa0 R15: 0000000000000004
- </TASK>
-
-
-***
-
-kernel BUG in folio_end_read
-
-tree:      torvalds
-URL:       https://kernel.googlesource.com/pub/scm/linux/kernel/git/torvalds/linux
-base:      f83ec76bf285bea5727f478a68b894f5543ca76e
-arch:      amd64
-compiler:  Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
-config:    https://ci.syzbot.org/builds/4ec82322-3509-4b63-9881-f639f1b61f20/config
-C repro:   https://ci.syzbot.org/findings/caca928c-4ba3-49fe-b564-cbb9aeab1706/c_repro
-syz repro: https://ci.syzbot.org/findings/caca928c-4ba3-49fe-b564-cbb9aeab1706/syz_repro
-
- handle_mm_fault+0x40a/0x8e0 mm/memory.c:6364
- do_user_addr_fault+0x764/0x1390 arch/x86/mm/fault.c:1387
- handle_page_fault arch/x86/mm/fault.c:1476 [inline]
- exc_page_fault+0x76/0xf0 arch/x86/mm/fault.c:1532
- asm_exc_page_fault+0x26/0x30 arch/x86/include/asm/idtentry.h:623
-------------[ cut here ]------------
-kernel BUG at mm/filemap.c:1525!
-Oops: invalid opcode: 0000 [#1] SMP KASAN PTI
-CPU: 0 UID: 0 PID: 5995 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-RIP: 0010:folio_end_read+0x22e/0x230 mm/filemap.c:1525
-Code: 24 c9 ff 48 89 df 48 c7 c6 20 3e 94 8b e8 5a 63 31 ff 90 0f 0b e8 62 24 c9 ff 48 89 df 48 c7 c6 80 36 94 8b e8 43 63 31 ff 90 <0f> 0b 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 f3 0f 1e fa
-RSP: 0018:ffffc9000336eec8 EFLAGS: 00010246
-RAX: 3b63e53e8591b500 RBX: ffffea0000c47280 RCX: 0000000000000000
-RDX: 0000000000000007 RSI: ffffffff8d9ba482 RDI: 00000000ffffffff
-RBP: 0000000000000001 R08: ffffffff8fa3a637 R09: 1ffffffff1f474c6
-R10: dffffc0000000000 R11: fffffbfff1f474c7 R12: 1ffffd4000188e51
-R13: 1ffffd4000188e50 R14: ffffea0000c47288 R15: 0000000000000008
-FS:  00005555827bc500(0000) GS:ffff8880b8615000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000001b30d63fff CR3: 0000000027336000 CR4: 00000000000006f0
-Call Trace:
- <TASK>
- iomap_read_remove_bias fs/iomap/buffered-io.c:383 [inline]
- iomap_read_folio_iter+0x9af/0xb70 fs/iomap/buffered-io.c:448
- iomap_readahead_iter fs/iomap/buffered-io.c:500 [inline]
- iomap_readahead+0x632/0xa40 fs/iomap/buffered-io.c:541
- iomap_bio_readahead include/linux/iomap.h:600 [inline]
- xfs_vm_readahead+0x9f/0xe0 fs/xfs/xfs_aops.c:753
- read_pages+0x17a/0x580 mm/readahead.c:160
- page_cache_ra_order+0x8ca/0xd40 mm/readahead.c:512
- filemap_readahead mm/filemap.c:2572 [inline]
- filemap_get_pages+0xb22/0x1ea0 mm/filemap.c:2617
- filemap_splice_read+0x581/0xc60 mm/filemap.c:2991
- xfs_file_splice_read+0x2c4/0x600 fs/xfs/xfs_file.c:345
- do_splice_read fs/splice.c:982 [inline]
- splice_direct_to_actor+0x4a9/0xcc0 fs/splice.c:1086
- do_splice_direct_actor fs/splice.c:1204 [inline]
- do_splice_direct+0x181/0x270 fs/splice.c:1230
- do_sendfile+0x4da/0x7e0 fs/read_write.c:1370
- __do_sys_sendfile64 fs/read_write.c:1431 [inline]
- __se_sys_sendfile64+0x13e/0x190 fs/read_write.c:1417
- do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
- do_syscall_64+0xfa/0x3b0 arch/x86/entry/syscall_64.c:94
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f897438eba9
-Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007ffec28881f8 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
-RAX: ffffffffffffffda RBX: 00007f89745d5fa0 RCX: 00007f897438eba9
-RDX: 0000000000000000 RSI: 0000000000000005 RDI: 0000000000000005
-RBP: 00007f8974411e19 R08: 0000000000000000 R09: 0000000000000000
-R10: 00000000e0000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007f89745d5fa0 R14: 00007f89745d5fa0 R15: 0000000000000004
- </TASK>
-Modules linked in:
----[ end trace 0000000000000000 ]---
-RIP: 0010:folio_end_read+0x22e/0x230 mm/filemap.c:1525
-Code: 24 c9 ff 48 89 df 48 c7 c6 20 3e 94 8b e8 5a 63 31 ff 90 0f 0b e8 62 24 c9 ff 48 89 df 48 c7 c6 80 36 94 8b e8 43 63 31 ff 90 <0f> 0b 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 f3 0f 1e fa
-RSP: 0018:ffffc9000336eec8 EFLAGS: 00010246
-RAX: 3b63e53e8591b500 RBX: ffffea0000c47280 RCX: 0000000000000000
-RDX: 0000000000000007 RSI: ffffffff8d9ba482 RDI: 00000000ffffffff
-RBP: 0000000000000001 R08: ffffffff8fa3a637 R09: 1ffffffff1f474c6
-R10: dffffc0000000000 R11: fffffbfff1f474c7 R12: 1ffffd4000188e51
-R13: 1ffffd4000188e50 R14: ffffea0000c47288 R15: 0000000000000008
-FS:  00005555827bc500(0000) GS:ffff8880b8615000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000001b30d63fff CR3: 0000000027336000 CR4: 00000000000006f0
-
-
-***
-
-If these findings have caused you to resend the series or submit a
-separate fix, please add the following tag to your commit message:
-  Tested-by: syzbot@syzkaller.appspotmail.com
-
----
-This report is generated by a bot. It may contain errors.
-syzbot ci engineers can be reached at syzkaller@googlegroups.com.
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
