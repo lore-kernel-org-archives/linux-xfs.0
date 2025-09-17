@@ -1,124 +1,133 @@
-Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
+Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A701327CB35
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Sep 2025 19:59:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D99F3309EFD
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Sep 2025 21:26:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758139179; cv=none; b=qRSy7MFKmCptUUHtCW/0bTEPct2g9ep9zIvEByx7qHALMeIZo7giXMyPnPjb/gNcZ9W7tgqYaKbr/DCcZoFUYYBM+Spl83QGp8lh/aE/Htpz5ipxbJ+AuNKyAfwLmN6GlHG4MYRyNJy9RzP3s6iqh+bWEU0GiC9wH1rpT7pJlos=
+	t=1758144407; cv=none; b=j8qIAfOcWWd/1IXBaa4ctOGybVTKzVPuhmdb+U24x/jp+hmkyDf4oOPolyLdi1A878RKr3d1hdMQL8eayufX31tnifpcYZLg+OkdA00faem09/UvQqkUyYcoDFZ7GdxW9IAK7O/h4bTDQjNWvdFfIfGsCrXjxSNsJ0jfV4kaZMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758139179; c=relaxed/simple;
-	bh=lT+6fz4hGzB3x5TxZKL3rSaWn/F8+CECdWOTuWodsnQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fcGF3ef2ddDC0JCZZ7q4+1Cqwx4ijkvD2RVHADlyNwXr7oe0NsBsIW/81Brr15Swmei9tvQtrXZBarVVcr8Fd8kdm0i0ifjCtmFeJqEqY21YOWuh9ItsIvHLxD/JT33ZpXS6IQtUM+dCA0qgDURtS08YugM30aEmOIthfWjdf20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PmON3y9l; arc=none smtp.client-ip=209.85.160.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1758144407; c=relaxed/simple;
+	bh=yk73yX/a7Y2h8MrObuSjXs15pvAKl+bQDqYK10y3drg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ubHBI4OQ9nPbA+GuTvNRuI51Iw86Sgb4yEs3y9w8rmU1W5mlPH6v4TUdmNnGgCsyEBOexERfBy7Fol9adXnVx905rY3Qo6H3UY1PPI9vJ1s4x8nyvpkYp1bLwKiSzzRKwHgsD/Ef35cowPfo3HJU4pY8yBixEIDaF3OWjg3rpvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=OgAtEQO/; arc=none smtp.client-ip=209.85.215.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PmON3y9l"
-Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-4b34a3a6f64so2147101cf.3
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Sep 2025 12:59:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="OgAtEQO/"
+Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-b54fa17a9c0so158469a12.2
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Sep 2025 14:26:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758139176; x=1758743976; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lT+6fz4hGzB3x5TxZKL3rSaWn/F8+CECdWOTuWodsnQ=;
-        b=PmON3y9lLR3IbvqiAGHM4q/5lWUHJKbpECsPIUixVzjXkHGdjeK89v3LpHxNXAbHPp
-         oaoMXkinM/h5K/dKp0+JLY65AY70YxGcGURRXPF3FWtn2oTQi6xketvulDqE2oZRoxU9
-         wNVq6aa4nRaIycM3l0inE/tyyHIGpecHe7vo9LGinL9JNmjT2iBR1HQNMfzRFyzkQUQh
-         l3DQAeSrVDiyQadqCxV+RFsZWKM38/q9VAWedo1FlgytlQbeEOatAgFglsUMhCOCvabf
-         gZ6FjR9Vb8RvIIs1tCQwVhYyO1hgGmD1NfZA6NBddCa1lpTFS20/y+iLc8VM5iTvP1+O
-         77ww==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1758144405; x=1758749205; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=kQq0gKzKzQdViY3BQEU/Fgvb3s2Z4O6ZhxzE9SPZUd0=;
+        b=OgAtEQO/k41Y8o5dthjTIAQDwzm4qFp7q96BBMkVdYr3M7hMWXARugamKaGaWyI8Ll
+         MM8lGK7/Olna61S9pTHtXN/t1g1Qhrj3LxZC1vrp3X7IJWlHMF8ORZ0XqhgmSYNATSXo
+         cgC957ux4c3SIr7oRdua8YN0W82gTevfvf6/Uq6sTmZMh51garSLxqd5Ig70osqCTDoO
+         lb/l3fg19V3hoiu12Ix9qKg/M1fJkC9aFzBCilTbhe2TTfRdCBbpX6XUAOlsTkPzTVLf
+         lJpbR5hSWv4SXxfreXWfc1s/Er0L2exVSZvhF6GTJ/J19gSy/njLmiJ01ixHFE/e73ni
+         dp2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758139176; x=1758743976;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=lT+6fz4hGzB3x5TxZKL3rSaWn/F8+CECdWOTuWodsnQ=;
-        b=KUUfAeGPAyM2YanUd45XNsKbNj85d3AcSMLAGpmQmgBSUhvcY8Na2u0/puD4rXIcJn
-         r+2NjiyKTJU+tBTo7RKDJGKOK7epUA21HfBIXT7e/gn6Yxd5effw4WvIwPjekwmru9IJ
-         y03dH63/IbGFR7ZzhlWchLi+TtJHjMc6f1pvAz1Pe0nBI9RFa01/qTOX2NovZ74YdO4I
-         NbVFkLhjyXm59Ty8Y28gP4uEIdGayygr2h4J1Xs2F0KjZ33x+n4McyQ3tBQTW/nUoJcn
-         aXXDQ8P31A/Ly8RZ1qZy5/tgSiyl7Imm5XkD6jDwdJFUCJbZll9J/QPzVRuiF/RqV1j7
-         2R/Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVGkP6VASuACfb9FNU3AekFAq8eVrVTkR/8D3fxc0ubRHE8rEizvU21hRhARIghV7cDpYtNbAbFMcw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxqpGeOPkU9wIOA5kv4OwPwcrpt9fuoFHbDJ9MZaNju19bZ0z2r
-	vJHG3hL7/77y4u8rBLwLqMu9hwmkq0ixLLshvVV+Ssl++m4CfpneJpGgISdNPsOuteEJykVA3Yu
-	zcBgmmAQ7q2/RqeUNVzzrDeyzhMTY8Kk=
-X-Gm-Gg: ASbGnctnro4nn8BQXzczYRl7V1+u8sR4yhTPG4g4btD+aHrrhenVEy9Z/V0yINoBKI9
-	fZvO0Kood1wJJpUp1jYapnq7pJxbGp2dUDsNNdRP15WReE0TlhOAWDiaorHQ2ypiHoSuyeHx/hL
-	ZnQHjunJzijFFnZjy2Cy9OMY8D0aIsR+tuv6lsHVNX/GbTTsHlksveMWCH1M/YbW6qqAM7McQus
-	zErn6/uEJWzNScUIyoj4KT5N2m1hP5z05cIRs903M7KqDksjCgUfL1dUz8=
-X-Google-Smtp-Source: AGHT+IGMvsb9hFrlxwdIt/gNCY+ZXtdov7G+eqQ0YehxgnuYGPrrjhUsF8j6K/mIV15UQttqUMf4NVIbg9l0zFWT/EU=
-X-Received: by 2002:ac8:5a03:0:b0:4b3:10f0:15ba with SMTP id
- d75a77b69052e-4ba6a20181amr52761081cf.39.1758139176357; Wed, 17 Sep 2025
- 12:59:36 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1758144405; x=1758749205;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=kQq0gKzKzQdViY3BQEU/Fgvb3s2Z4O6ZhxzE9SPZUd0=;
+        b=kMOO8XU3Lgxku5K6mh7UcK0pP5qf67k0igQiCs+SVUuBcC6X39vPBKjj39+SePKtZU
+         vVD6sNIHM6cYh9LfBCDqhNMpBrbIzO080f2hBT5EemKf1ygMWEMN18FcU1AzjWP4aQ14
+         3+M3tGP/3ASjllOxlIfVz4Al1wyod5yoWXt7Ub4c9egbQ9R2Q6/g9HfibjLbN1f0e100
+         xphlZsEYInL0HmEtT9vwMduHWk2qXyp14cnoDDl2EERz5yS3AJDFSSDsgtDOSBg4FbWo
+         yxdfvR/9MZa3982H26nAvxUzbbGpseTyZD3xvhXf6D8mWxWDzb/VmxldQuhSt34jQqiW
+         llqQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWhrB8pqVdPTCTgcW0EfYCHjY/iz7AmtAn6S+OifAHpVVuMuns+WZ7XH2iddkFIDnEyk12+hkEjqmk=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyu9hdNxWH4UQXxu/gEdq4gfDn5qASHT3yH63aAMtzngdF5eUPS
+	xlBLVwy+VRV2jYMeiwQhN9FwpEwyJ+huK7YsTpgczGGWM3jKScfTbQxSHOMFYmYAKEc=
+X-Gm-Gg: ASbGncu/tnvzdClNdf4RjYFMFAc0sNRY4quJ4iRRx9stQR5xU7/RmD9R/rhBQA38Yqw
+	W9nMqqFAXw/F9apMYE9zuv8Kub2tXfbC0lZZSt6JydFUV/mRiwutgBV/ezcFHsBfYyP8TSIylZt
+	2lehJ71qxDvXkfBdHHljlZQeU9/1sodCmr4ipOkkLc2a6931Fz6aA0rgD6Fv0cBOvMcX5A70dyu
+	p6mR9ZY/4wWqb0WlVIA6zfxxAxSjfEHgqk2axQ88iCDV2X2WA2lTQVjKi2X+r3eicp1jsV5LqLg
+	PaS07cV0Kl7Cf/OxFMJxpyovdB+bYOcXB9F8rh66hSXJEn7naziS+N5HAtV9YSm3QdMoZnPVrX0
+	u+ba/azhpzzr49EO4HPUyodHZSHiosHtEL8hvSdDWy9c4OqBKxMOdpdfz0PJja+wKBKG7bX/J+z
+	J9Z//f2o8JsVxYhJKi
+X-Google-Smtp-Source: AGHT+IERXS5smfi2R8HtQuK9X1h1drI0C18Dr6IjlWMi2WY3nBsE4xsSnAqq6yNtgVbiwenTdFm8Sw==
+X-Received: by 2002:a17:902:e882:b0:269:7079:b56 with SMTP id d9443c01a7336-26970790d20mr25462325ad.38.1758144405199;
+        Wed, 17 Sep 2025 14:26:45 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-32ed26857a0sm3395408a91.2.2025.09.17.14.26.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Sep 2025 14:26:44 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1uyzfl-00000003H9E-3EQo;
+	Thu, 18 Sep 2025 07:26:41 +1000
+Date: Thu, 18 Sep 2025 07:26:41 +1000
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: track the number of blocks in each buftarg
+Message-ID: <aMsnkZwrMTDJdfEc@dread.disaster.area>
+References: <20250916135235.218084-1-hch@lst.de>
+ <20250916135235.218084-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250916234425.1274735-1-joannelkoong@gmail.com> <68ca71bd.050a0220.2ff435.04fc.GAE@google.com>
-In-Reply-To: <68ca71bd.050a0220.2ff435.04fc.GAE@google.com>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Wed, 17 Sep 2025 12:59:25 -0700
-X-Gm-Features: AS18NWC14gUDKzQcBj3qPbZdYHs2cE9cQhtC5cBOuvB6NHeNGl3mJTY7LRXGD5w
-Message-ID: <CAJnrk1YKPWkaBXe7D2mftN2DMEBqFow80reUGE=2_U8oVFc1tQ@mail.gmail.com>
-Subject: Re: [syzbot ci] Re: fuse: use iomap for buffered reads + readahead
-To: syzbot ci <syzbot+ci9b5a486340e6bcdf@syzkaller.appspotmail.com>, 
-	syzbot <syzkaller@googlegroups.com>
-Cc: brauner@kernel.org, djwong@kernel.org, gfs2@lists.linux.dev, 
-	hch@infradead.org, hch@lst.de, hsiangkao@linux.alibaba.com, 
-	kernel-team@meta.com, linux-block@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, miklos@szeredi.hu, 
-	syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250916135235.218084-2-hch@lst.de>
 
-On Wed, Sep 17, 2025 at 1:37=E2=80=AFAM syzbot ci
-<syzbot+ci9b5a486340e6bcdf@syzkaller.appspotmail.com> wrote:
->
-> syzbot ci has tested the following series
->
-> [v3] fuse: use iomap for buffered reads + readahead
-> https://lore.kernel.org/all/20250916234425.1274735-1-joannelkoong@gmail.c=
-om
-> * [PATCH v3 01/15] iomap: move bio read logic into helper function
-> * [PATCH v3 02/15] iomap: move read/readahead bio submission logic into h=
-elper function
-> * [PATCH v3 03/15] iomap: store read/readahead bio generically
-> * [PATCH v3 04/15] iomap: iterate over entire folio in iomap_readpage_ite=
-r()
-> * [PATCH v3 05/15] iomap: rename iomap_readpage_iter() to iomap_read_foli=
-o_iter()
-> * [PATCH v3 06/15] iomap: rename iomap_readpage_ctx struct to iomap_read_=
-folio_ctx
-> * [PATCH v3 07/15] iomap: track read/readahead folio ownership internally
-> * [PATCH v3 08/15] iomap: add public start/finish folio read helpers
-> * [PATCH v3 09/15] iomap: add caller-provided callbacks for read and read=
-ahead
-> * [PATCH v3 10/15] iomap: add bias for async read requests
-> * [PATCH v3 11/15] iomap: move buffered io bio logic into new file
-> * [PATCH v3 12/15] iomap: make iomap_read_folio() a void return
-> * [PATCH v3 13/15] fuse: use iomap for read_folio
-> * [PATCH v3 14/15] fuse: use iomap for readahead
-> * [PATCH v3 15/15] fuse: remove fc->blkbits workaround for partial writes
->
-> and found the following issues:
-> * WARNING in iomap_iter_advance
-> * WARNING in iomap_readahead
-> * kernel BUG in folio_end_read
->
-> Full report is available here:
-> https://ci.syzbot.org/series/6845596a-1ec9-4396-b9c4-48bddc606bef
->
-> ***
->
-Thanks. Do you get run on every patchset that is sent upstream or is
-it random? Trying to figure out if this means v2 is right and i just
-messed up v3 or if you just didn't run on v2.
+On Tue, Sep 16, 2025 at 06:52:31AM -0700, Christoph Hellwig wrote:
+> Add a bt_nr_blocks to track the number of blocks in each buftarg, and
+> replace the check that hard codes sb_dblock in xfs_buf_map_verify with
+> this new value so that it is correct for non-ddev buftargs.  The
+> RT buftarg only has a superblock in the first block, so it is unlikely
+> to trigger this, or are we likely to ever have enough blocks in the
+> in-memory buftargs, but we might as well get the check right.
+> 
+> Fixes: 10616b806d1d ("xfs: fix _xfs_buf_find oops on blocks beyond the filesystem end")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_buf.c              | 38 +++++++++++++++++++----------------
+>  fs/xfs/xfs_buf.h              |  4 +++-
+>  fs/xfs/xfs_buf_item_recover.c |  7 +++++++
+>  fs/xfs/xfs_super.c            |  7 ++++---
+>  fs/xfs/xfs_trans.c            | 21 +++++++++----------
+>  5 files changed, 45 insertions(+), 32 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index f9ef3b2a332a..b9b89f1243a0 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -397,7 +397,7 @@ xfs_buf_map_verify(
+>  	 * Corrupted block numbers can get through to here, unfortunately, so we
+>  	 * have to check that the buffer falls within the filesystem bounds.
+>  	 */
+> -	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
+> +	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_nr_blocks);
 
-Thanks,
-Joanne
+Why store the number of blocks in filesystem block units? The
+buffer cache/buftarg uses daddr addressing, and this is the only
+place in the whole buffer cache where we've needed to do filesystem
+block to daddr unit conversion.
+
+IMO it should be stored in daddr units to be consistent with all
+other buffer cache addresses and length, with the conversion to
+daddr units being done by the xfs_configure_buftarg() caller. This
+gets rid of this unit conversion in the lookup fast path in addition
+to removing to pointer chase through the mount to the superblock.
+
+This means the only remaining fast path references to the xfs_mount
+in the lookup path is the stats update code.  If the stats then got
+moved to the buftarg, then we don't access the xfs_mount at all in
+the buffer cache lookup path except when an error occurs...
+
+Other than that, the code looks fine.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
