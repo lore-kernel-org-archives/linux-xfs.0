@@ -1,130 +1,124 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57FF02FF64B
-	for <linux-xfs@vger.kernel.org>; Wed, 17 Sep 2025 17:56:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A701327CB35
+	for <linux-xfs@vger.kernel.org>; Wed, 17 Sep 2025 19:59:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758131773; cv=none; b=XynVwZ7iShvLHObZVAB4UT94DRoO0vxZLPhFi+ih6i6Ci/6TGS9ScP0l7PS/ENpxNWio2QMmxPpZMxL2e/gZ8qbW+/6CM7AL5mcCvLtvDlpGxDNhi1vWIIvq6/mZE5ELawJCR2EVUU+l9nyxjgKgktIxGj56ZqRGOJdRkHlrOdw=
+	t=1758139179; cv=none; b=qRSy7MFKmCptUUHtCW/0bTEPct2g9ep9zIvEByx7qHALMeIZo7giXMyPnPjb/gNcZ9W7tgqYaKbr/DCcZoFUYYBM+Spl83QGp8lh/aE/Htpz5ipxbJ+AuNKyAfwLmN6GlHG4MYRyNJy9RzP3s6iqh+bWEU0GiC9wH1rpT7pJlos=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758131773; c=relaxed/simple;
-	bh=QB0+xT5W+FgZj3/TibpzVjXdFkOwXEdw58TkjILn+LM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QwSztiyS5KUHllE+4LA6QuzIb4HRxFOkopipAMixBTJ0MRy1/i382ksGJKivgqn5lGLBIER9U0kT/VRZLt3fGOWxHZZ4nrsuWTkCXzbC5Jxy+DtnjcfFjwD4VRoiKBGz3pe42kXzOK6j4mot7gYP+fyNQeKOZXydR0ueGQmfHmk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=E78kYVN4; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1758139179; c=relaxed/simple;
+	bh=lT+6fz4hGzB3x5TxZKL3rSaWn/F8+CECdWOTuWodsnQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fcGF3ef2ddDC0JCZZ7q4+1Cqwx4ijkvD2RVHADlyNwXr7oe0NsBsIW/81Brr15Swmei9tvQtrXZBarVVcr8Fd8kdm0i0ifjCtmFeJqEqY21YOWuh9ItsIvHLxD/JT33ZpXS6IQtUM+dCA0qgDURtS08YugM30aEmOIthfWjdf20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PmON3y9l; arc=none smtp.client-ip=209.85.160.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E78kYVN4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1758131770;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gBbhNro+EWZBD+kQ9pa6vL5w+XwALepwcdtZmJDa+Do=;
-	b=E78kYVN4sS0OC1mOD/1ejeTWOsKHBHY5bQ6BtBpS/AbXUbFNF0uPOUG4BHcnN4xAmwRAWM
-	UoseA4/1e19rzQxdi94GbXlLl7Uzhx/1SRtpV/U2dhqm+zO1DqdPq6EXjdAH/dAi8QZ0Zg
-	Cj3mK5N5WrOURIW4WKFZoXsHa1TfW8w=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-17-cokWAq9_M6S_YB1b7twy9Q-1; Wed,
- 17 Sep 2025 13:56:08 -0400
-X-MC-Unique: cokWAq9_M6S_YB1b7twy9Q-1
-X-Mimecast-MFC-AGG-ID: cokWAq9_M6S_YB1b7twy9Q_1758131767
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 993571800599;
-	Wed, 17 Sep 2025 17:56:07 +0000 (UTC)
-Received: from bfoster (unknown [10.22.64.134])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D437619560B1;
-	Wed, 17 Sep 2025 17:56:06 +0000 (UTC)
-Date: Wed, 17 Sep 2025 14:00:11 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs: remove l_iclog_heads
-Message-ID: <aMr3K1gW2IqvhpKr@bfoster>
-References: <20250916135646.218644-1-hch@lst.de>
- <20250916135646.218644-8-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PmON3y9l"
+Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-4b34a3a6f64so2147101cf.3
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Sep 2025 12:59:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1758139176; x=1758743976; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=lT+6fz4hGzB3x5TxZKL3rSaWn/F8+CECdWOTuWodsnQ=;
+        b=PmON3y9lLR3IbvqiAGHM4q/5lWUHJKbpECsPIUixVzjXkHGdjeK89v3LpHxNXAbHPp
+         oaoMXkinM/h5K/dKp0+JLY65AY70YxGcGURRXPF3FWtn2oTQi6xketvulDqE2oZRoxU9
+         wNVq6aa4nRaIycM3l0inE/tyyHIGpecHe7vo9LGinL9JNmjT2iBR1HQNMfzRFyzkQUQh
+         l3DQAeSrVDiyQadqCxV+RFsZWKM38/q9VAWedo1FlgytlQbeEOatAgFglsUMhCOCvabf
+         gZ6FjR9Vb8RvIIs1tCQwVhYyO1hgGmD1NfZA6NBddCa1lpTFS20/y+iLc8VM5iTvP1+O
+         77ww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758139176; x=1758743976;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=lT+6fz4hGzB3x5TxZKL3rSaWn/F8+CECdWOTuWodsnQ=;
+        b=KUUfAeGPAyM2YanUd45XNsKbNj85d3AcSMLAGpmQmgBSUhvcY8Na2u0/puD4rXIcJn
+         r+2NjiyKTJU+tBTo7RKDJGKOK7epUA21HfBIXT7e/gn6Yxd5effw4WvIwPjekwmru9IJ
+         y03dH63/IbGFR7ZzhlWchLi+TtJHjMc6f1pvAz1Pe0nBI9RFa01/qTOX2NovZ74YdO4I
+         NbVFkLhjyXm59Ty8Y28gP4uEIdGayygr2h4J1Xs2F0KjZ33x+n4McyQ3tBQTW/nUoJcn
+         aXXDQ8P31A/Ly8RZ1qZy5/tgSiyl7Imm5XkD6jDwdJFUCJbZll9J/QPzVRuiF/RqV1j7
+         2R/Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVGkP6VASuACfb9FNU3AekFAq8eVrVTkR/8D3fxc0ubRHE8rEizvU21hRhARIghV7cDpYtNbAbFMcw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxqpGeOPkU9wIOA5kv4OwPwcrpt9fuoFHbDJ9MZaNju19bZ0z2r
+	vJHG3hL7/77y4u8rBLwLqMu9hwmkq0ixLLshvVV+Ssl++m4CfpneJpGgISdNPsOuteEJykVA3Yu
+	zcBgmmAQ7q2/RqeUNVzzrDeyzhMTY8Kk=
+X-Gm-Gg: ASbGnctnro4nn8BQXzczYRl7V1+u8sR4yhTPG4g4btD+aHrrhenVEy9Z/V0yINoBKI9
+	fZvO0Kood1wJJpUp1jYapnq7pJxbGp2dUDsNNdRP15WReE0TlhOAWDiaorHQ2ypiHoSuyeHx/hL
+	ZnQHjunJzijFFnZjy2Cy9OMY8D0aIsR+tuv6lsHVNX/GbTTsHlksveMWCH1M/YbW6qqAM7McQus
+	zErn6/uEJWzNScUIyoj4KT5N2m1hP5z05cIRs903M7KqDksjCgUfL1dUz8=
+X-Google-Smtp-Source: AGHT+IGMvsb9hFrlxwdIt/gNCY+ZXtdov7G+eqQ0YehxgnuYGPrrjhUsF8j6K/mIV15UQttqUMf4NVIbg9l0zFWT/EU=
+X-Received: by 2002:ac8:5a03:0:b0:4b3:10f0:15ba with SMTP id
+ d75a77b69052e-4ba6a20181amr52761081cf.39.1758139176357; Wed, 17 Sep 2025
+ 12:59:36 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250916135646.218644-8-hch@lst.de>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+References: <20250916234425.1274735-1-joannelkoong@gmail.com> <68ca71bd.050a0220.2ff435.04fc.GAE@google.com>
+In-Reply-To: <68ca71bd.050a0220.2ff435.04fc.GAE@google.com>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Wed, 17 Sep 2025 12:59:25 -0700
+X-Gm-Features: AS18NWC14gUDKzQcBj3qPbZdYHs2cE9cQhtC5cBOuvB6NHeNGl3mJTY7LRXGD5w
+Message-ID: <CAJnrk1YKPWkaBXe7D2mftN2DMEBqFow80reUGE=2_U8oVFc1tQ@mail.gmail.com>
+Subject: Re: [syzbot ci] Re: fuse: use iomap for buffered reads + readahead
+To: syzbot ci <syzbot+ci9b5a486340e6bcdf@syzkaller.appspotmail.com>, 
+	syzbot <syzkaller@googlegroups.com>
+Cc: brauner@kernel.org, djwong@kernel.org, gfs2@lists.linux.dev, 
+	hch@infradead.org, hch@lst.de, hsiangkao@linux.alibaba.com, 
+	kernel-team@meta.com, linux-block@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, miklos@szeredi.hu, 
+	syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 16, 2025 at 06:56:31AM -0700, Christoph Hellwig wrote:
-> l_iclog_heads is only used in one place and can be trivially derived
-> from l_iclog_hsize by a single shift operation.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_log.c      | 11 +++--------
->  fs/xfs/xfs_log_priv.h |  1 -
->  2 files changed, 3 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index a8e2539defbf..ca46cdef4ea4 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1277,13 +1277,8 @@ xlog_get_iclog_buffer_size(
->  
->  	log->l_iclog_bufs = mp->m_logbufs;
->  	log->l_iclog_size = mp->m_logbsize;
-> -
-> -	/*
-> -	 * # headers = size / 32k - one header holds cycles from 32k of data.
-> -	 */
-> -	log->l_iclog_heads =
-> -		DIV_ROUND_UP(mp->m_logbsize, XLOG_HEADER_CYCLE_SIZE);
-> -	log->l_iclog_hsize = log->l_iclog_heads << BBSHIFT;
-> +	/* combined size of the log record headers: */
-> +	log->l_iclog_hsize = DIV_ROUND_UP(mp->m_logbsize, XLOG_CYCLE_DATA_SIZE);
+On Wed, Sep 17, 2025 at 1:37=E2=80=AFAM syzbot ci
+<syzbot+ci9b5a486340e6bcdf@syzkaller.appspotmail.com> wrote:
+>
+> syzbot ci has tested the following series
+>
+> [v3] fuse: use iomap for buffered reads + readahead
+> https://lore.kernel.org/all/20250916234425.1274735-1-joannelkoong@gmail.c=
+om
+> * [PATCH v3 01/15] iomap: move bio read logic into helper function
+> * [PATCH v3 02/15] iomap: move read/readahead bio submission logic into h=
+elper function
+> * [PATCH v3 03/15] iomap: store read/readahead bio generically
+> * [PATCH v3 04/15] iomap: iterate over entire folio in iomap_readpage_ite=
+r()
+> * [PATCH v3 05/15] iomap: rename iomap_readpage_iter() to iomap_read_foli=
+o_iter()
+> * [PATCH v3 06/15] iomap: rename iomap_readpage_ctx struct to iomap_read_=
+folio_ctx
+> * [PATCH v3 07/15] iomap: track read/readahead folio ownership internally
+> * [PATCH v3 08/15] iomap: add public start/finish folio read helpers
+> * [PATCH v3 09/15] iomap: add caller-provided callbacks for read and read=
+ahead
+> * [PATCH v3 10/15] iomap: add bias for async read requests
+> * [PATCH v3 11/15] iomap: move buffered io bio logic into new file
+> * [PATCH v3 12/15] iomap: make iomap_read_folio() a void return
+> * [PATCH v3 13/15] fuse: use iomap for read_folio
+> * [PATCH v3 14/15] fuse: use iomap for readahead
+> * [PATCH v3 15/15] fuse: remove fc->blkbits workaround for partial writes
+>
+> and found the following issues:
+> * WARNING in iomap_iter_advance
+> * WARNING in iomap_readahead
+> * kernel BUG in folio_end_read
+>
+> Full report is available here:
+> https://ci.syzbot.org/series/6845596a-1ec9-4396-b9c4-48bddc606bef
+>
+> ***
+>
+Thanks. Do you get run on every patchset that is sent upstream or is
+it random? Trying to figure out if this means v2 is right and i just
+messed up v3 or if you just didn't run on v2.
 
-I haven't grokked the full series but this looked suspicious at first
-glance because it rounds a byte unit field (logbsize) to a sector unit
-value. After some rubber ducking with AI, it suggests this might be
-problematic for log buf sizes < 32k (i.e. 16kb is the min supported).
-I've since closed the window and lost the output, but I think it
-suggested open coding the original calculation:
-
-	hsize = DIV_ROUND_UP(m_logbsize, XLOG_HEADER_CYCLE_SIZE) << BBSHIFT;
-
-Brian
-
->  }
->  
->  void
-> @@ -1534,7 +1529,7 @@ xlog_pack_data(
->  		dp += BBSIZE;
->  	}
->  
-> -	for (i = 0; i < log->l_iclog_heads - 1; i++)
-> +	for (i = 0; i < (log->l_iclog_hsize >> BBSHIFT) - 1; i++)
->  		rhead->h_ext[i].xh_cycle = cycle_lsn;
->  }
->  
-> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index ac98ac71152d..17733ba7f251 100644
-> --- a/fs/xfs/xfs_log_priv.h
-> +++ b/fs/xfs/xfs_log_priv.h
-> @@ -406,7 +406,6 @@ struct xlog {
->  	struct list_head	*l_buf_cancel_table;
->  	struct list_head	r_dfops;	/* recovered log intent items */
->  	int			l_iclog_hsize;  /* size of iclog header */
-> -	int			l_iclog_heads;  /* # of iclog header sectors */
->  	uint			l_sectBBsize;   /* sector size in BBs (2^n) */
->  	int			l_iclog_size;	/* size of log in bytes */
->  	int			l_iclog_bufs;	/* number of iclog buffers */
-> -- 
-> 2.47.2
-> 
-> 
-
+Thanks,
+Joanne
