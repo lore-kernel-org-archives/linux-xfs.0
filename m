@@ -1,84 +1,117 @@
-Received: from aurora.sharp.fm (aurora.sharp.fm [159.69.230.166])
+Received: from forward103a.mail.yandex.net (forward103a.mail.yandex.net [178.154.239.86])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 977E422F74D
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 10:16:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.230.166
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C2C622FE0E
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 11:15:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.86
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758190596; cv=none; b=gyDt5VWRTwEVUTokly0s2BJi6BDWUYNqsgJDvBDx7ye/MeLEMb9V81eeXoHeaVISYXDgzqSSA9BaXIoxOOKkBye/56kleChnLDDI3ZeiC+5Vd+3qUd6lXrRL8iFAZmAuRSEU0GW7dqo9pUWQxAsf2HddUpvkJZw/Mqg4lJXijPc=
+	t=1758194138; cv=none; b=MGHuyTPdaVquUE5V6DBRm/7Vqoy6Ynzpxl/twpvZhsCmMtsaFDqDTwi3kUKbAslvoozwha0ptlfJS1IjINCbFZnm+23bAsZrJKtkY6g104pu0PMmWzrlMwaCjcXjiAtKx4e1R2sMYByvd7WTGNXmLgvw0IVrpw5k1EIdzrWD1ZU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758190596; c=relaxed/simple;
-	bh=lpGohGMsg3CekeTSm8DoxnSjawC9J3+rxDCtf8ExlGg=;
-	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:To; b=WijorO6tfqzU1DA7S9zb1LvSUEwOYFo5FlpgItJ+kUV45jeh+mgv3J2JGoBsW22CSwySNmlHAismP3TWlszK+q/39E/UzoIQPF9LW59LLGehQTXiSbQZCiLkI2f4CP3Lt6ivMhcdbMTjWC6Sqq1OzZbSiLabKvZtK3wmW96dTZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sharp.fm; spf=pass smtp.mailfrom=sharp.fm; dkim=pass (1024-bit key) header.d=sharp.fm header.i=@sharp.fm header.b=hloyD2fY; arc=none smtp.client-ip=159.69.230.166
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=sharp.fm
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sharp.fm
+	s=arc-20240116; t=1758194138; c=relaxed/simple;
+	bh=D8ri1bfPuDeMCk20HUESzNQ7xg+fqQ5wF54Uf/08xlw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tpQg7CA4jlViEyhs4DBur+s0mTlXTM6K3nMvcNYOmeMWOjbUxHgDH3MtoLU3foW8FINAFUmc74r/bu6TWkhuC60SpCJtSlMNnHn0Hhq+R6e7mWU1e+IuJcEMytSVT78xMUZ5+WnmPrbCgh+Dnofvdephn3JNnnuSTe9YSYQutWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=nlCV3Hox; arc=none smtp.client-ip=178.154.239.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=sharp.fm header.i=@sharp.fm header.b="hloyD2fY"
-Received: from aurora.sharp.fm (localhost [IPv6:::1])
-	by aurora.sharp.fm (Postfix) with ESMTP id AD26A6038F29
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 11:16:30 +0100 (BST)
-DMARC-Filter: OpenDMARC Filter v1.4.2 aurora.sharp.fm AD26A6038F29
-Authentication-Results: aurora.sharp.fm; dmarc=pass (p=reject dis=none) header.from=sharp.fm
-Authentication-Results: aurora.sharp.fm; spf=pass smtp.mailfrom=sharp.fm
-DKIM-Filter: OpenDKIM Filter v2.11.0 aurora.sharp.fm AD26A6038F29
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sharp.fm; s=default;
-	t=1758190591; bh=ev3V4zAf/LEPcEA1AljHZs0KfT/N9zAF6yZhzw65Qsg=;
-	h=From:Subject:Date:To:From;
-	b=hloyD2fYbwB4xEGVmiEJk2v2/bFRR1l7vPNzaS+0XW63e+1wQDJfxX3ZNmGBiWBkL
-	 gndSslc/s0aVuD/co60kuESAQbDAgWUO+Odp4TY1Ynn+L/uIgkkp06ckC3zefPSwtz
-	 GQisyZEh/Q6SGmffkoeStcCKsxMjILpd5M6bWjGo=
-Received: from smtpclient.apple ([2a07:244:44:3b01:acdb:7895:92e3:3cb])
-	by aurora.sharp.fm with ESMTPSA
-	id OTXqEP7by2iTmQkA8QRZbw
-	(envelope-from <minfrin@sharp.fm>)
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 11:16:30 +0100
-From: Graham Leggett <minfrin@sharp.fm>
-Content-Type: text/plain;
-	charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="nlCV3Hox"
+Received: from mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net [IPv6:2a02:6b8:c18:43a9:0:640:86ff:0])
+	by forward103a.mail.yandex.net (Yandex) with ESMTPS id 0C61D807BF;
+	Thu, 18 Sep 2025 14:15:28 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id QFQB5WOLuqM0-9Q62vtrW;
+	Thu, 18 Sep 2025 14:15:27 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1758194127; bh=GRRIUl2GcbhdFOJULvfFhhesBwmszQKvoqR/n6Qywm0=;
+	h=Message-ID:Date:Cc:Subject:To:From;
+	b=nlCV3Hoxtwsceuv4s3emEERhFjqu0CY+YIOpriZmzs5NRdRdVKzoS3lJ+XEB1vvOu
+	 SrmWnWYPdUYF0SpvWQ1rKMeLVZk+d3es+E5a4Qx72vZh8jaiaPaIhY4xWYEM2hkG/1
+	 +egGl26H2KXQBCMxVAWN9cjKHQ6i+jiXuaqzerC8=
+Authentication-Results: mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: Dmitry Antipov <dmantipov@yandex.ru>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: "Darrick J . Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH] xfs: scrub: use kstrdup_const() for metapath scan setups
+Date: Thu, 18 Sep 2025 14:14:03 +0300
+Message-ID: <20250918111403.1169904-1-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
-Subject: Crash in xfs_repair while repairing corrupted disk
-Message-Id: <BF6155D3-0065-418F-905D-948B74C4434A@sharp.fm>
-Date: Thu, 18 Sep 2025 11:16:29 +0100
-To: linux-xfs@vger.kernel.org
-X-Mailer: Apple Mail (2.3826.700.81)
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Hi all,
+Except 'xchk_setup_metapath_rtginode()' case, 'path' argument of
+'xchk_setup_metapath_scan()' is a compile-time constant. So it may
+be reasonable to use 'kstrdup_const()' / 'kree_const()' to manage
+'path' field of 'struct xchk_metapath' in attempt to reuse .rodata
+instance rather than making a copy. Compile tested only.
 
-I just encountered a crash while repairing a damaged disk. The disk has =
-been in a machine with a failing power supply, which caused the drive to =
-power down at random intervals. Power supply replaced, disk repair =
-attempted, leading to this crash:
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+---
+ fs/xfs/scrub/metapath.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Core was generated by `xfs_repair -l /dev/vde /dev/vdd'.
-Program terminated with signal SIGSEGV, Segmentation fault.
-#0  get_inode_parent (irec=3D0x7f40ae1cdaf0, offset=3D50) at =
-/usr/src/debug/xfsprogs-6.4.0-5.el9.x86_64/repair/incore_ino.c:713
-713 if (ptbl->pmask & (1ULL << offset))  {
-[Current thread is 1 (LWP 2644)]
-(gdb) print ptbl
-$1 =3D (parent_list_t *) 0x0
-(gdb)=20
-
-In essence the variable ptbl is assumed to be non NULL but is.
-
-This was the second attempt to repair the file system, the first attempt =
-to repair exited with the following error:
-
-fatal error -- couldn't map inode 1261234229, err =3D 117
-
-This is an older version of xfsprogs as shipped with EL9, just verifying =
-this has been fixed.
-
-Regards,
-Graham
---
-
-
+diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
+index 14939d7de349..378ec7c8d38e 100644
+--- a/fs/xfs/scrub/metapath.c
++++ b/fs/xfs/scrub/metapath.c
+@@ -79,7 +79,7 @@ xchk_metapath_cleanup(
+ 
+ 	if (mpath->dp_ilock_flags)
+ 		xfs_iunlock(mpath->dp, mpath->dp_ilock_flags);
+-	kfree(mpath->path);
++	kfree_const(mpath->path);
+ }
+ 
+ /* Set up a metadir path scan.  @path must be dynamically allocated. */
+@@ -98,13 +98,13 @@ xchk_setup_metapath_scan(
+ 
+ 	error = xchk_install_live_inode(sc, ip);
+ 	if (error) {
+-		kfree(path);
++		kfree_const(path);
+ 		return error;
+ 	}
+ 
+ 	mpath = kzalloc(sizeof(struct xchk_metapath), XCHK_GFP_FLAGS);
+ 	if (!mpath) {
+-		kfree(path);
++		kfree_const(path);
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -132,7 +132,7 @@ xchk_setup_metapath_rtdir(
+ 		return -ENOENT;
+ 
+ 	return xchk_setup_metapath_scan(sc, sc->mp->m_metadirip,
+-			kasprintf(GFP_KERNEL, "rtgroups"), sc->mp->m_rtdirip);
++			kstrdup_const("rtgroups", GFP_KERNEL), sc->mp->m_rtdirip);
+ }
+ 
+ /* Scan a rtgroup inode under the /rtgroups directory. */
+@@ -179,7 +179,7 @@ xchk_setup_metapath_quotadir(
+ 		return -ENOENT;
+ 
+ 	return xchk_setup_metapath_scan(sc, sc->mp->m_metadirip,
+-			kstrdup("quota", GFP_KERNEL), qi->qi_dirip);
++			kstrdup_const("quota", GFP_KERNEL), qi->qi_dirip);
+ }
+ 
+ /* Scan a quota inode under the /quota directory. */
+@@ -212,7 +212,7 @@ xchk_setup_metapath_dqinode(
+ 		return -ENOENT;
+ 
+ 	return xchk_setup_metapath_scan(sc, qi->qi_dirip,
+-			kstrdup(xfs_dqinode_path(type), GFP_KERNEL), ip);
++			kstrdup_const(xfs_dqinode_path(type), GFP_KERNEL), ip);
+ }
+ #else
+ # define xchk_setup_metapath_quotadir(...)	(-ENOENT)
+-- 
+2.51.0
 
