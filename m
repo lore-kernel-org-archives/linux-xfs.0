@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB53A2356A4
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 11:29:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EAF927B328
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 11:29:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758194954; cv=none; b=sqfPZpJrUVsmBlI4eXxqZMphtN0+Y+9UTSanNbt2FvK0EsnPkZdPpkC1kfCq7asObg7rSfopR33fL0Gt/ON2EmOdfirLezVq2vdH1hDh3dvGnHj0qxsZJSm9rZVK2Ma+iKDoksNE/Og+ewxLaQZDH28oNeEgHVZBFvbCtbN5lqw=
+	t=1758194989; cv=none; b=AUILDNJQ7t0F5f8v+8COUg/KdmpE2vmEpRNKXUIeS0bxjOkdpwitx3K9IeVF+exoT+NqlddYjU5ricdGCncUwTcquY6cgfHtInUhXTraD2X3aQgEAODihOzYtcsnlwFtR0nfgLZFwjaHIN0AI3eY7Hp3nepLWtN+nhtdMa5VBJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758194954; c=relaxed/simple;
-	bh=LpUYOIi9iEXmNfYlzzzRobS5mVRricu/AZ+1YWLSXg8=;
+	s=arc-20240116; t=1758194989; c=relaxed/simple;
+	bh=HU4xlMwYvql9qjxkr4IeIqfYmtTBeAe2aB+0t8bdgdE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GUOL2/Kne1cqBy0hphsSujk99MwvGbZWIwPGfMd9b5LHa9PSwe6C9roZAgnaH7Lx9UwcDFsM0Hjq7zZwV9G8WTYpZxST36ioiwCBWliL8xuknrB5FGnpSBXvpeu7eNhyzvSHn+ze9xpmeUS31LxJkwCF2VeX8IZCTwpAPaSdl3s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HTei3QbZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=XuUAucDeZJU8cQDlkvXxxRP8nhvCJaLhIZ/W+uFXbSqNq1RCxLJ4C8BPEnxIsWlvFCN3/8YNe7iCHj1NnOjCTWXYGuyqp85OSGtEEtZUckNSBD8ErRX5oQKB2mNDaFhHob6+C9pM3A5rxqX/PSpwqW5b6pIwbY2O5+3SPqUbBBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E8bcQKGy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HTei3QbZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43E1CC4CEE7;
-	Thu, 18 Sep 2025 11:29:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E8bcQKGy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5687C4CEE7;
+	Thu, 18 Sep 2025 11:29:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758194954;
-	bh=LpUYOIi9iEXmNfYlzzzRobS5mVRricu/AZ+1YWLSXg8=;
+	s=k20201202; t=1758194988;
+	bh=HU4xlMwYvql9qjxkr4IeIqfYmtTBeAe2aB+0t8bdgdE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HTei3QbZirlcQoRL7MVoT+bKv1DoMVX1YJ+SJCUxBCl++CqbUpoS94LNl6COanvl3
-	 mcuifuS2JlrR5klkMPGoeitOOnJWgsKV7uszH8iPrTRplSj0bnPtOtm+Qe+YPZOS0k
-	 +G8pDTQTeyrwVZlsQGyib/aKi9TYwfaEWe9/ImV6xr129WhSPsTojEETFLEz4hqr55
-	 UJJuajUMoHADpVv/q9MTleK4OwACNDkRiIZvWf2IdJ4COfUg4G6x8pHqKB0Tv/MsgX
-	 KXZlmWnkkDcV2BKjbCVhbk54GIMwUpEwcJYZbjodDj1PBsuaqcKLWSxsSuVNUeWI11
-	 ACvEt2WA1it0Q==
-Date: Thu, 18 Sep 2025 13:29:09 +0200
+	b=E8bcQKGyB36jX2DZvSZkY3zmFwq6kvflNrrpJCYxS/FdUxb0DTBDoJDUllq596+d/
+	 CMYgm+Gsi7KOsAd0JWEinVz7npA7iI82mnhqRD2bus4GMfXvYGtvfcddBhMHOee/uF
+	 Aus3o1XqT/R5mlWdBFEngDq8IIX3BHADBAZBc/jH8d0jXc2gLLzY8qHn6olHyxs6ch
+	 nGv0s4gTWZ/CW4MzcBna26ywH6PMZD+xhSR6EJs/HClzGbRzsmt74qBsmlWdcq/dhH
+	 Ys7pEcQ2FRERI0KBxmahIk2gTXdawqKXsR35y05vOgYSeir1hCUhG/egpmiZhC/i+q
+	 ueON7ueYsKgmg==
+Date: Thu, 18 Sep 2025 13:29:44 +0200
 From: Carlos Maiolino <cem@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/2] xfs: Improve default maximum number of open zones
-Message-ID: <2m3osmuu4if44l2abrzt5cnts4og73xfkmjoc4pak32urx7mzs@nl7grwmztfa5>
+Subject: Re: [PATCH 1/2] xfs: Improve zone statistics message
+Message-ID: <3fkjo7uvrqceppgwhqpr3uupjcts4gl6ofgf5e2jlqkzqbsncl@x3pjlfd76tai>
 References: <20250917124802.281686-1-dlemoal@kernel.org>
- <vHqFUYqmELdFlRi_fo6KVxFQ0QVsPbaQqg2vWBs7F3bYvfh1qFWGzHJLM3npupWIB2EFMb76zt6Rp0aNxVt0FQ==@protonmail.internalid>
- <20250917124802.281686-3-dlemoal@kernel.org>
+ <WES6aKbrxt_XF4K2kEvvAM_duCnIp7NL80XLpkI95kiuGuyCxuD1LAhYawZ57_bjh0PEqKn_vVy4stCwLWYNrw==@protonmail.internalid>
+ <20250917124802.281686-2-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,98 +43,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250917124802.281686-3-dlemoal@kernel.org>
+In-Reply-To: <20250917124802.281686-2-dlemoal@kernel.org>
 
-On Wed, Sep 17, 2025 at 09:48:02PM +0900, Damien Le Moal wrote:
-> For regular block devices using the zoned allocator, the default
-> maximum number of open zones is set to 1/4 of the number of realtime
-> groups. For a large capacity device, this leads to a very large limit.
-> E.g. with a 26 TB HDD:
-> 
-> mount /dev/sdb /mnt
-> ...
-> XFS (sdb): 95836 zones of 65536 blocks size (23959 max open)
-> 
-> In turn such large limit on the number of open zones can lead, depending
-> on the workload, on a very large number of concurrent write streams
-> which devices generally do not handle well, leading to poor performance.
-> 
-> Introduce the default limit XFS_DEFAULT_MAX_OPEN_ZONES, defined as 128
-> to match the hardware limit of most SMR HDDs available today, and use
-> this limit to set mp->m_max_open_zones in xfs_calc_open_zones() instead
-> of calling xfs_max_open_zones(), when the user did not specify a limit
-> with the max_open_zones mount option.
-> 
-> For the 26 TB HDD example, we now get:
-> 
-> mount /dev/sdb /mnt
-> ...
-> XFS (sdb): 95836 zones of 65536 blocks (128 max open zones)
-> 
-> This change does not prevent the user from specifying a lareger number
-> for the open zones limit. E.g.
-> 
-> mount -o max_open_zones=4096 /dev/sdb /mnt
-> ...
-> XFS (sdb): 95836 zones of 65536 blocks (4096 max open zones)
-> 
-> Finally, since xfs_calc_open_zones() checks and caps the
-> mp->m_max_open_zones limit against the value calculated by
-> xfs_max_open_zones() for any type of device, this new default limit does
-> not increase m_max_open_zones for small capacity devices.
+On Wed, Sep 17, 2025 at 09:48:01PM +0900, Damien Le Moal wrote:
+> Reword the information message displayed in xfs_mount_zones()
+> indicating the total zone count and maximum number of open zones.
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->  fs/xfs/libxfs/xfs_zones.h | 7 +++++++
->  fs/xfs/xfs_zone_alloc.c   | 2 +-
->  2 files changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_zones.h b/fs/xfs/libxfs/xfs_zones.h
-> index c4f1367b2cca..6005f5412363 100644
-> --- a/fs/xfs/libxfs/xfs_zones.h
-> +++ b/fs/xfs/libxfs/xfs_zones.h
-> @@ -29,6 +29,13 @@ struct xfs_rtgroup;
->  #define XFS_OPEN_GC_ZONES	1U
->  #define XFS_MIN_OPEN_ZONES	(XFS_OPEN_GC_ZONES + 1U)
-> 
-> +/*
-> + * For zoned device that do not have a limit on the number of open zones, and
-	'For a zoned device' perhaps?
-> + * for reguilar devices using the zoned allocator, use this value as the default
-
-	regular
-
-> + * limit on the number of open zones.
-
-Perhaps it's also worth to mention you picked 128 for being the most
-common limit on available SMR HDDs today, otherwise it would look as a
-randomly chosen magic number (unless somebody bothers to check the git
-log).
-
-> + */
-> +#define XFS_DEFAULT_MAX_OPEN_ZONES	128
-> +
->  bool xfs_zone_validate(struct blk_zone *zone, struct xfs_rtgroup *rtg,
->  	xfs_rgblock_t *write_pointer);
+>  fs/xfs/xfs_zone_alloc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-> index f152b2182004..1147bacb2da8 100644
+> index 23a027387933..f152b2182004 100644
 > --- a/fs/xfs/xfs_zone_alloc.c
 > +++ b/fs/xfs/xfs_zone_alloc.c
-> @@ -1131,7 +1131,7 @@ xfs_calc_open_zones(
->  		if (bdev_open_zones)
->  			mp->m_max_open_zones = bdev_open_zones;
->  		else
-> -			mp->m_max_open_zones = xfs_max_open_zones(mp);
-> +			mp->m_max_open_zones = XFS_DEFAULT_MAX_OPEN_ZONES;
->  	}
+> @@ -1244,7 +1244,7 @@ xfs_mount_zones(
+>  	if (!mp->m_zone_info)
+>  		return -ENOMEM;
 > 
->  	if (mp->m_max_open_zones < XFS_MIN_OPEN_ZONES) {
-
-Other than the nitpicks above, you can add:
+> -	xfs_info(mp, "%u zones of %u blocks size (%u max open)",
+> +	xfs_info(mp, "%u zones of %u blocks (%u max open zones)",
+>  		 mp->m_sb.sb_rgcount, mp->m_groups[XG_TYPE_RTG].blocks,
+>  		 mp->m_max_open_zones);
+>  	trace_xfs_zones_mount(mp);
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
 
 > --
 > 2.51.0
