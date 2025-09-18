@@ -1,39 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14379262FDD
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 16:27:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50B80248F57;
+	Thu, 18 Sep 2025 16:52:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758212865; cv=none; b=F/dWUv83zsL/+K0fQecgM3zrf+k3RLt9UDUxxGcfZD87Vlzasve4ccmHXYct0PYZC74gcQ416cfgZCoIf5WRnUqj6IsNe9UvKiShYWgKbh2c+/9CPV3tTv2jd4MnSbdirlx8az3NZ+tuqtpSb6R/5PyBtApZQPYYWsBmnddzI44=
+	t=1758214349; cv=none; b=hB3Q+8rjJpFDmH+9yWQufUBCKlXMHYHno5kiaMh5gFfTerOuORX15InfKF5/3DmrRjHtKghqG4icAq1wwWnTM8FPtwmiF7GS0Vlo3EjktYjuvLbybcFjUTYhfF11opfKfDeTNa4H21RQ7oJmZzVooLQHOVXJrMOmAV6MK8o8vwg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758212865; c=relaxed/simple;
-	bh=fWI9l1wBoITawk8z+S7Yy4S5K0QiKsEqPjgcYVNl30E=;
+	s=arc-20240116; t=1758214349; c=relaxed/simple;
+	bh=9fORnitY7ZI2TjH9uFpqE0qNhXm/u+HoTqtDe5oKrio=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dn3NLHStan2kr5YJadWcZfoOLoKLZxGJ7f4KCXeqPmM1BllgNsGnbxWHi7NYMReYWfUAIyqar/RFCKCSqhetv2z66Ndzkd+SUYtKji1PnQ5ef2S9UX6s9XU7YZXIEcTmAFzomJ8bsF+fpBPgyU2YhNOhxj3F7TNUrMdSzfPQ7n0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KemAheOb; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rYpz7tZ/w8cZa5dtdhUNB+HfBXy9LVpGfjtRueaxndRUemwik8YhtcS+SIBwwgXwB03vNmQ8pyFsGzT0ImAgHNqRRiJBIQIjMQ/6VYEaPhWajIXv+KpMBZOacmZGrE94idI7X5xnyPHKZoL5z8Z9gyYCRaFsmssejpKIW/4H2MQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DQmjGM5Y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KemAheOb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBE4AC4CEFB;
-	Thu, 18 Sep 2025 16:27:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DQmjGM5Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3066C4CEE7;
+	Thu, 18 Sep 2025 16:52:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758212864;
-	bh=fWI9l1wBoITawk8z+S7Yy4S5K0QiKsEqPjgcYVNl30E=;
+	s=k20201202; t=1758214347;
+	bh=9fORnitY7ZI2TjH9uFpqE0qNhXm/u+HoTqtDe5oKrio=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KemAheOb3pttLxMkU0xU97XzVwjsqwxhf9BLqQq/FR3davmUgsd41D9NDCMr9TbwU
-	 izO/xKdf3wtlZh8KSNYsfquGYMkTUq0oZRd4UjuFZnX4o/HbCsIxYjeyVkhASPQwe6
-	 rbgtkYU/JBjN9f0Obp2QGPOVstDLxcAXmuL7VQnVKu5NLJlMERuStvIm/jeDhDzrWz
-	 7rVTGTiCk+D5FsFptnVM0yEetyuPzeBDNDThSifJT5EOJEcjzqnI4qJwGkfOAd/sbj
-	 tUtQcPlxS3wBiZdmq50IKwSlvS6jWPj9elchzm3uu/hWliG6hoQcWLWKHOZUkga0hG
-	 OplRM7YT6DyGA==
-Date: Thu, 18 Sep 2025 09:27:44 -0700
+	b=DQmjGM5Yx8vLRkzLo8vqYPMoUDt93nt/XjJHRjo8sRMQq0F2iu6Kaz0HaJ4OqkFZy
+	 jMxt5tcgxsJI5pq88E5F4PPAQm13gNPJEgDyFEOiWxQOhkbHoH4y+iTidPKCDHFk3M
+	 wnDiL08av25tAKRfJ5nDemTd/sDltwwYMFusxrkKR3Wf5ca0gSdwZ/3dWv7+2hWk+h
+	 hGlcUuvfQcTnSKWgzUXx/3SkE+xNKrsfnQN1BBvu1MVN/CPhYapYIuxneaz4xEDVPr
+	 QLQfZdk0uXMcvWQuJpVJCip4U36ylE3VYxzGGpNPyYn2WEU6p645sPrQpm44OooPZB
+	 nf+8Eul0dcquQ==
+Date: Thu, 18 Sep 2025 09:52:27 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: "A. Wilcox" <AWilcox@wilcox-tech.com>
-Cc: linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@redhat.com>
-Subject: Re: [PATCH v2] xfs_scrub: Use POSIX-conformant strerror_r
-Message-ID: <20250918162744.GI8096@frogsfrogsfrogs>
-References: <20250906081222.64798-1-AWilcox@Wilcox-Tech.com>
- <20250912150044.GN8096@frogsfrogsfrogs>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: miklos@szeredi.hu, bernd@bsbernd.com, linux-xfs@vger.kernel.org,
+	John@groves.net, linux-fsdevel@vger.kernel.org, neal@gompa.dev
+Subject: Re: [PATCH 4/8] fuse: signal that a fuse filesystem should exhibit
+ local fs behaviors
+Message-ID: <20250918165227.GX8117@frogsfrogsfrogs>
+References: <175798149979.381990.14913079500562122255.stgit@frogsfrogsfrogs>
+ <175798150113.381990.4002893785000461185.stgit@frogsfrogsfrogs>
+ <CAJnrk1YWtEJ2O90Z0+YH346c3FigVJz4e=H6qwRYv7xLdVg1PA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,58 +46,81 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250912150044.GN8096@frogsfrogsfrogs>
+In-Reply-To: <CAJnrk1YWtEJ2O90Z0+YH346c3FigVJz4e=H6qwRYv7xLdVg1PA@mail.gmail.com>
 
-On Fri, Sep 12, 2025 at 08:00:44AM -0700, Darrick J. Wong wrote:
-> On Sat, Sep 06, 2025 at 03:12:07AM -0500, A. Wilcox wrote:
-> > When building xfsprogs with musl libc, strerror_r returns int as
-> > specified in POSIX.  This differs from the glibc extension that returns
-> > char*.  Successful calls will return 0, which will be dereferenced as a
-> > NULL pointer by (v)fprintf.
-> > 
-> > Signed-off-by: A. Wilcox <AWilcox@Wilcox-Tech.com>
+On Wed, Sep 17, 2025 at 10:18:40AM -0700, Joanne Koong wrote:
+> On Mon, Sep 15, 2025 at 5:25 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > From: Darrick J. Wong <djwong@kernel.org>
+> >
+> > Create a new fuse context flag that indicates that the kernel should
+> > implement various local filesystem behaviors instead of passing vfs
+> > commands straight through to the fuse server and expecting the server to
+> > do all the work.  For example, this means that we'll use the kernel to
+> > transform some ACL updates into mode changes, and later to do
+> > enforcement of the immutable and append iflags.
+> >
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  fs/fuse/fuse_i.h |    4 ++++
+> >  fs/fuse/inode.c  |    2 ++
+> >  2 files changed, 6 insertions(+)
+> >
+> > diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
+> > index e93a3c3f11d901..e13e8270f4f58d 100644
+> > --- a/fs/fuse/fuse_i.h
+> > +++ b/fs/fuse/fuse_i.h
+> > @@ -603,6 +603,7 @@ struct fuse_fs_context {
+> >         bool no_control:1;
+> >         bool no_force_umount:1;
+> >         bool legacy_opts_show:1;
+> > +       bool local_fs:1;
+> >         enum fuse_dax_mode dax_mode;
+> >         unsigned int max_read;
+> >         unsigned int blksize;
+> > @@ -901,6 +902,9 @@ struct fuse_conn {
+> >         /* Is link not implemented by fs? */
+> >         unsigned int no_link:1;
+> >
+> > +       /* Should this filesystem behave like a local filesystem? */
+> > +       unsigned int local_fs:1;
+> > +
+> >         /* Use io_uring for communication */
+> >         unsigned int io_uring;
+> >
+> > diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
+> > index c94aba627a6f11..c8dd0bcb7e6f9f 100644
+> > --- a/fs/fuse/inode.c
+> > +++ b/fs/fuse/inode.c
+> > @@ -1862,6 +1862,7 @@ int fuse_fill_super_common(struct super_block *sb, struct fuse_fs_context *ctx)
+> >         fc->destroy = ctx->destroy;
+> >         fc->no_control = ctx->no_control;
+> >         fc->no_force_umount = ctx->no_force_umount;
+> > +       fc->local_fs = ctx->local_fs;
+> >
 > 
-> Isn't C fun?
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> If I'm understanding it correctly, fc->local_fs is set to true if it's
+> a fuseblk device? Why do we need a new "ctx->local_fs" instead of
+> reusing ctx->is_bdev?
 
-Ohh yes it is, this patch broke the build for me:
+Eventually, enabling iomap will also set local_fs=1, as Miklos and I
+sort of touched on a couple weeks ago:
 
-common.c: In function ‘__str_out’:
-common.c:129:17: error: ignoring return value of ‘strerror_r’ declared with attribute ‘warn_unused_result’ [-Werror=unused-result]
-  129 |                 strerror_r(error, buf, DESCR_BUFSZ);
-      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-<sigh> xfsprogs can't get the XSI version because it defines GNU_SOURCE,
-and you can't shut up gcc by casting the whole expression to void.
-
-Do you folks remove the -D_GNU_SOURCE from builddefs.in when building
-against musl?  Or do you leave the definition alone, taking advantage of
-the fact that #define'ing a symbol is not a guarantee of functionality?
+https://lore.kernel.org/linux-fsdevel/CAJfpegvmXnZc=nC4UGw5Gya2cAr-kR0s=WNecnMhdTM_mGyuUg@mail.gmail.com/
 
 --D
 
-> --D
+> Thanks,
+> Joanne
 > 
-> > ---
-> >  scrub/common.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/scrub/common.c b/scrub/common.c
-> > index 14cd677b..9437d0ab 100644
-> > --- a/scrub/common.c
-> > +++ b/scrub/common.c
-> > @@ -126,7 +126,8 @@ __str_out(
-> >  	fprintf(stream, "%s%s: %s: ", stream_start(stream),
-> >  			_(err_levels[level].string), descr);
-> >  	if (error) {
-> > -		fprintf(stream, _("%s."), strerror_r(error, buf, DESCR_BUFSZ));
-> > +		strerror_r(error, buf, DESCR_BUFSZ);
-> > +		fprintf(stream, _("%s."), buf);
-> >  	} else {
-> >  		va_start(args, format);
-> >  		vfprintf(stream, format, args);
-> > -- 
-> > 2.49.0
-> > 
-> > 
-> 
+> >         err = -ENOMEM;
+> >         root = fuse_get_root_inode(sb, ctx->rootmode);
+> > @@ -2029,6 +2030,7 @@ static int fuse_init_fs_context(struct fs_context *fsc)
+> >         if (fsc->fs_type == &fuseblk_fs_type) {
+> >                 ctx->is_bdev = true;
+> >                 ctx->destroy = true;
+> > +               ctx->local_fs = true;
+> >         }
+> >  #endif
+> >
+> >
