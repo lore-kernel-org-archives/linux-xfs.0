@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F1752C11DF
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 19:12:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F3CC17E0
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 19:48:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758222753; cv=none; b=Tms/GD/1iOfSAdrOsLRObAgvE0RBJBONBFvuODcVbq2o4bTI+Mm2aVXWV2asp5Yl3BcEy9tMsrgWM3Mr71ZL0W2tX/Ais4jd8A4kTU22+LxLTrsHIea3j8U3rJgWMeVNWJr6BCHL0zAa3eozfzFPwqOz72Ny/lcU0KCchp84kBA=
+	t=1758224918; cv=none; b=FEsNFWHpG6pVGH6PEZ1F2rgn9yuYt4XRytxyd+Le3mQnDPNDfQWqc3nucAQJxMV/4mWcUan2e6oLc8j+Y+xBG6bIPjBkzv2TSVIB6fHg+j7cHvV5loDRT9P/3zG+hiRQ0ZuoYsElIoi7WOAd5yMeRjGlJ4BAN+SXTMpBSBDb8D8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758222753; c=relaxed/simple;
-	bh=GgouXcSNBO1NGQ+h9v7VZ91ePEevFwcOTLCT00eSFD4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BeEBwivwVSPfTKZn2nYnNDx0cXGn9wXfpfhLmD2wzf2Sdtyr4h920/bOXUok6u0RQMl4ElmNFRPjrHx/nJRRSWIzE34vhi2b45hNPtROQEJLETUF3vRiEAw724wXftSVWlsNV9bJcLKJwFfpqal/MoHBl5PV08eHgxXulurlS0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cYxYCONr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758224918; c=relaxed/simple;
+	bh=Q8y8EcpCbScouZu5NKPwN9Qle0DM0TWqg2OpymrTukw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=hEXouSSB/HDcuTCe28z4fnnbwLmUDc6SVRp1tl/pAB39h028LwWkcszlq1AYSlKPfAUf0N0IvrAuj6vx+NMr1gCS4JtrMnW95KbqjIl6pNfTJW7W1nLSKD/XguHNV5MoGOgpiV5qdyY2/YneGe67iqLmflFcYS5vKV+X+a+C2Ng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LT1rMoM+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cYxYCONr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 166B3C4CEE7;
-	Thu, 18 Sep 2025 19:12:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LT1rMoM+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76C62C4CEE7;
+	Thu, 18 Sep 2025 19:48:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758222753;
-	bh=GgouXcSNBO1NGQ+h9v7VZ91ePEevFwcOTLCT00eSFD4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cYxYCONryiKoS+D491U7PtYEMlC5Ln/0eCOxWrQxJOr3GbvE+B8w7KIdy/LdNweaF
-	 oDNFUxtZjSm3q4PBzER5UCxC+aUhzJpB0YMN3FZyW+HZE84HcgNLM50u610Wd4wnuB
-	 FB6ONarHC/1YYvBN7uvNZ83OQD8PeFBxRh0MOHIa5bm9N+1AxLgPTJnGelX1bX5xaD
-	 +ysx+OMJzFtiDDv7jODq1YDHElDiS5ulcEaIauawi105m3DqYOHUh1JG1Xmx6dY95E
-	 2shmg8WD33F6/pQXXnQ6wV7qP2hfoQi/Gt39tdn+giNavMB0/NSIq5QsozLkKFs9CA
-	 Sfa/LiSRJUiFA==
-Date: Thu, 18 Sep 2025 12:12:32 -0700
+	s=k20201202; t=1758224917;
+	bh=Q8y8EcpCbScouZu5NKPwN9Qle0DM0TWqg2OpymrTukw=;
+	h=Date:From:To:Cc:Subject:From;
+	b=LT1rMoM+gQ6PvImY9zORsrNW111Oyh0c4aAkuBbdN5i9RoFB1/Jxj6/q7Gg4XOGLe
+	 3J13GlmUjngXSREYHLEulZJ9McdwlFgM2eRhk9DoOUita01R5I5OfKtNYp5qaQikfn
+	 7NgUjNN87XKOM5bpiNKjUZGXEaT1G9cZz5CIqdFUqjz45DC2wOWsk+ImWFDBgQqHnS
+	 /n65o/mgxbxFdIZz/JhUqRfNTdRdlMjm9ZH8KK5Ccj3rRn69Wy/Q5JlvFeml5GukjG
+	 h4D13T1cJI0G89BA6hbjVZQuArkNCdQhGWXSkCP73tGFucJWCFJyVHt0WZ6XbkwVXt
+	 spCRxI9kOQBlw==
+Date: Thu, 18 Sep 2025 12:48:36 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dmitry Antipov <dmantipov@yandex.ru>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: scrub: use kstrdup_const() for metapath scan setups
-Message-ID: <20250918191232.GJ8096@frogsfrogsfrogs>
-References: <20250918111403.1169904-1-dmantipov@yandex.ru>
+To: "A. Wilcox" <AWilcox@wilcox-tech.com>,
+	Andrey Albershteyn <aalbersh@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs_scrub: fix strerror_r usage yet again
+Message-ID: <20250918194836.GK8096@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,83 +41,62 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250918111403.1169904-1-dmantipov@yandex.ru>
 
-On Thu, Sep 18, 2025 at 02:14:03PM +0300, Dmitry Antipov wrote:
-> Except 'xchk_setup_metapath_rtginode()' case, 'path' argument of
-> 'xchk_setup_metapath_scan()' is a compile-time constant. So it may
-> be reasonable to use 'kstrdup_const()' / 'kree_const()' to manage
-> 'path' field of 'struct xchk_metapath' in attempt to reuse .rodata
-> instance rather than making a copy. Compile tested only.
-> 
-> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+From: Darrick J. Wong <djwong@kernel.org>
 
-I guess that works...
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+In commit 75faf2bc907584, someone tried to fix scrub to use the POSIX
+version of strerror_r so that the build would work with musl.
+Unfortunately, neither the author nor myself remembered that GNU libc
+imposes its own version any time _GNU_SOURCE is defined, which
+builddefs.in always does.  Regrettably, the POSIX and GNU versions have
+different return types and the glibc version can return any random
+pointer and ignore the buffer, so now this code is broken on glibc.
 
---D
+"Fix" this standards body own goal by casting the return value to
+intptr_t and employing some gross heuristics to guess at the location of
+the actual error string.
 
-> ---
->  fs/xfs/scrub/metapath.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
-> index 14939d7de349..378ec7c8d38e 100644
-> --- a/fs/xfs/scrub/metapath.c
-> +++ b/fs/xfs/scrub/metapath.c
-> @@ -79,7 +79,7 @@ xchk_metapath_cleanup(
->  
->  	if (mpath->dp_ilock_flags)
->  		xfs_iunlock(mpath->dp, mpath->dp_ilock_flags);
-> -	kfree(mpath->path);
-> +	kfree_const(mpath->path);
->  }
->  
->  /* Set up a metadir path scan.  @path must be dynamically allocated. */
-> @@ -98,13 +98,13 @@ xchk_setup_metapath_scan(
->  
->  	error = xchk_install_live_inode(sc, ip);
->  	if (error) {
-> -		kfree(path);
-> +		kfree_const(path);
->  		return error;
->  	}
->  
->  	mpath = kzalloc(sizeof(struct xchk_metapath), XCHK_GFP_FLAGS);
->  	if (!mpath) {
-> -		kfree(path);
-> +		kfree_const(path);
->  		return -ENOMEM;
->  	}
->  
-> @@ -132,7 +132,7 @@ xchk_setup_metapath_rtdir(
->  		return -ENOENT;
->  
->  	return xchk_setup_metapath_scan(sc, sc->mp->m_metadirip,
-> -			kasprintf(GFP_KERNEL, "rtgroups"), sc->mp->m_rtdirip);
-> +			kstrdup_const("rtgroups", GFP_KERNEL), sc->mp->m_rtdirip);
->  }
->  
->  /* Scan a rtgroup inode under the /rtgroups directory. */
-> @@ -179,7 +179,7 @@ xchk_setup_metapath_quotadir(
->  		return -ENOENT;
->  
->  	return xchk_setup_metapath_scan(sc, sc->mp->m_metadirip,
-> -			kstrdup("quota", GFP_KERNEL), qi->qi_dirip);
-> +			kstrdup_const("quota", GFP_KERNEL), qi->qi_dirip);
->  }
->  
->  /* Scan a quota inode under the /quota directory. */
-> @@ -212,7 +212,7 @@ xchk_setup_metapath_dqinode(
->  		return -ENOENT;
->  
->  	return xchk_setup_metapath_scan(sc, qi->qi_dirip,
-> -			kstrdup(xfs_dqinode_path(type), GFP_KERNEL), ip);
-> +			kstrdup_const(xfs_dqinode_path(type), GFP_KERNEL), ip);
->  }
->  #else
->  # define xchk_setup_metapath_quotadir(...)	(-ENOENT)
-> -- 
-> 2.51.0
-> 
-> 
+Fixes: 75faf2bc907584 ("xfs_scrub: Use POSIX-conformant strerror_r")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ scrub/common.c |   27 +++++++++++++++++++++++++--
+ 1 file changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/scrub/common.c b/scrub/common.c
+index 0a5970f9c066f7..030beadb1767fb 100644
+--- a/scrub/common.c
++++ b/scrub/common.c
+@@ -126,8 +126,31 @@ __str_out(
+ 	fprintf(stream, "%s%s: %s: ", stream_start(stream),
+ 			_(err_levels[level].string), descr);
+ 	if (error) {
+-		strerror_r(error, buf, DESCR_BUFSZ);
+-		fprintf(stream, _("%s."), buf);
++		intptr_t res;
++
++		/*
++		 * GNU strerror_r returns a pointer to a string on success, but
++		 * the returned pointer might point to a static buffer and not
++		 * buf.  XSI strerror_r returns 0 on success, -1 on error.
++		 * Magic #defines influence which variant you might get.
++		 *
++		 * The build system #defines _GNU_SOURCE unconditionally, so
++		 * when compiling against glibc we get the GNU version.
++		 * However, when compiling against musl, the _GNU_SOURCE
++		 * definition does nothing and we get the XSI version anyway.
++		 *
++		 * To handle all this, we set buf to an empty string, and if
++		 * the function returns zero but buf now contains a non-empty
++		 * string, we assume the XSI version and print buf.  If the
++		 * function returns a positive value, we assume that's a
++		 * pointer to a string and print whatever the return value is.
++		 */
++		buf[0] = 0;
++		res = (intptr_t)strerror_r(error, buf, DESCR_BUFSZ);
++		if (res == 0 && strlen(buf) > 0)
++			fprintf(stream, _("%s."), buf);
++		else if (res > 0)
++			fprintf(stream, _("%s."), (char *)res);
+ 	} else {
+ 		va_start(args, format);
+ 		vfprintf(stream, format, args);
