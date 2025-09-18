@@ -1,38 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB1E53081C3
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 13:04:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F7172F83DC
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 13:04:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758200652; cv=none; b=tO07CzMhzz4mCaNPTyu29aJI2D12KRFsbvkgzB7bHYODybk8YU6B2mFUPvYCaTv5joK+HHw+QdrFUOyKa6F0UNyGHnsTcRhlm2hXEh9Lz4j+q9ukY9UqmjQ9WLvLy73DLFXWVDqrQHO0W7BM89sO1lvMpe7e4cLjnlLyTWEeA6c=
+	t=1758200653; cv=none; b=H56OjjTb5JQIddCmhDoTrMbtyvIx04hqp9LgRi0IQNGokVRiW4qdHZ5XHmJW21xaS7hDEBaGcTdTz99cVee1OJj7YU0sSsMghEdCjxxC8lXuPBoyAd/N4I3ovMdMK6yLqUB0IVuwb5k/5XRVfn97TCUemgwobEsfuTl5kg7gW9I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758200652; c=relaxed/simple;
-	bh=Yh0Q2QABSpOPz0+oxo4T6HSnHEWUkm+0qxWBILZEE2Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VSoSHI16x1jT2nG8QetL+0FwU9wmQYfQYCu2RFmy5VORtfgKOsDtORFpw8BxxB36hgfSJl1KiPuvDm3h+nTTvy/LnIv+U+0UdzElSVQ+3oG+iHQQOHP2ggqTLqjo0qunmEFviZGfMC/G6ntOK9T6mDvNeoGojeu0SzvogGUaO/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KVz/JTw9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758200653; c=relaxed/simple;
+	bh=PsQdFFTRfTfU0UWzgkb+LGlvXfQmEuNUOyP9Yrcw2t0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=uDQbeH3LQLZu7ROlbeH+x3UmFKEsHz7W7DU+rIs8zW057CacBTw7QAHX6K/Sg4NFL3EjLy8nAMBer3HptdAIS2vL43eS6pi5g1+3ErqD1/0RkPbqD9jgbs23Vg2gTad2+961X1f3ndfIEPExxLJblVusio/uwF5BCzc4qGFnzqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qecrD09w; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KVz/JTw9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 089C4C4CEE7;
-	Thu, 18 Sep 2025 13:04:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qecrD09w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC471C4CEFA;
+	Thu, 18 Sep 2025 13:04:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758200652;
-	bh=Yh0Q2QABSpOPz0+oxo4T6HSnHEWUkm+0qxWBILZEE2Y=;
-	h=From:To:Cc:Subject:Date:From;
-	b=KVz/JTw9Mk6VRVjPTHmBak5EpQx+qt1S3tLE9lRa51KXu3p/yQAtwGRvmsWFQXq70
-	 19Or1ceBIhADRq16FoJOhJJ+Q5mIiN+MG/4I2hW2hfNzvkEui+WjHC1nsbbVgpQjYA
-	 BcPjvPUtTC8NvVW+KypZLlkqAIsR5d2L1HD708Nk3nkxuB6+n/8EdNJjKmyJPdxPFZ
-	 0H7YW7zHSWpKEEBj089bdHw8wqiaU4ZMtuEfAX2yVxEEYP/KKcqk2i+ypuduMdpq3D
-	 A9zzNsfyZpKJR39iOClU6t7fpiLlBB8gNs6aHm14X253vGrJEAf8e0Tlt2F/UA8BwC
-	 Sbih/edrFsEMQ==
+	s=k20201202; t=1758200653;
+	bh=PsQdFFTRfTfU0UWzgkb+LGlvXfQmEuNUOyP9Yrcw2t0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=qecrD09wiELExZL9v+8VkaDbmcZ83SPYn79FrpuPBlOZupcy9GfnOt7vgZCvmND57
+	 359POKN6tNp2Fc/E7NPx2mRh//lzpxLyr/iUBYGuLB5Q+MnL7F6WLf+ah2pWvFXfH3
+	 QTRA3DUhYp7QPhj6+A17AEgZ2AdG2nurf4VmnG3gIIuGQc6fXAxdrkqojCjv5aob6p
+	 pgSWk9/pVrbpqiLoeN1i1u0gA9qBZpg28BvpZAfvIS/wXHxHLLwTSe4wIOYsovh9ZG
+	 zgmBK0PPT9G85X0jk8eksTg+vrit0nKBqjtafux5hpwYWbpFVi86M/YDzEi5N0G6CC
+	 4u5AXutB/7XYQ==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Carlos Maiolino <cem@kernel.org>,
 	linux-xfs@vger.kernel.org
 Cc: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 0/2] Some minor improvements for zoned mode
-Date: Thu, 18 Sep 2025 22:01:09 +0900
-Message-ID: <20250918130111.324323-1-dlemoal@kernel.org>
+Subject: [PATCH v2 1/2] xfs: improve zone statistics message
+Date: Thu, 18 Sep 2025 22:01:10 +0900
+Message-ID: <20250918130111.324323-2-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20250918130111.324323-1-dlemoal@kernel.org>
+References: <20250918130111.324323-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,23 +44,29 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A couple of patches to improve a mount meaasge and to improve (reduce)
-the default maximum number of open zones for large capacity regular
-devices using the zoned allocatror.
+Reword the information message displayed in xfs_mount_zones()
+indicating the total zone count and maximum number of open zones.
 
-Changes from v1:
- - Improved XFS_DEFAULT_MAX_OPEN_ZONES description comment.
- - Removed capitalization from commit titles 
- - Added review tags
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_zone_alloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Damien Le Moal (2):
-  xfs: improve zone statistics message
-  xfs: improve default maximum number of open zones
-
- fs/xfs/libxfs/xfs_zones.h | 7 +++++++
- fs/xfs/xfs_zone_alloc.c   | 4 ++--
- 2 files changed, 9 insertions(+), 2 deletions(-)
-
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index 23a027387933..f152b2182004 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -1244,7 +1244,7 @@ xfs_mount_zones(
+ 	if (!mp->m_zone_info)
+ 		return -ENOMEM;
+ 
+-	xfs_info(mp, "%u zones of %u blocks size (%u max open)",
++	xfs_info(mp, "%u zones of %u blocks (%u max open zones)",
+ 		 mp->m_sb.sb_rgcount, mp->m_groups[XG_TYPE_RTG].blocks,
+ 		 mp->m_max_open_zones);
+ 	trace_xfs_zones_mount(mp);
 -- 
 2.51.0
 
