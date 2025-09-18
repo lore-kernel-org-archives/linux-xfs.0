@@ -1,44 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41A478BEE;
-	Thu, 18 Sep 2025 22:35:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E65961FBEB9
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 22:49:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758234942; cv=none; b=ukyEcPPwyCjg4OmeDxnBVXLAYfW3ZDI4Bv3Q6fTV8e9xfPjUXdwuceqvVByuBkzPr3Y6U7aE1uXJYyhWULYSxSzrRajYWeyHM2cPOFrdkH4nNpS1/EQyRLi+/0ucfwVKDkozE3hV3E1ogxVU45qJa/1f66wGyosQ6CdxhAWCj1E=
+	t=1758235748; cv=none; b=NwUxH2V721vOp4fUtUnI0N0qmSMabJbUuazc9mkgRvMnCOdaU/+mqykQbAU0Hb8CPYQmRQ2GisZuIJe+a7KPIIcU3NIi1ipyV84tL38/ej5JaIEcCsKwo1KIZbSAotTta+Qp64CnUnJk9a0PJzfc3RIm2F4X/IkC1PV9PHZm5RY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758234942; c=relaxed/simple;
-	bh=e/b85KMA9IEr5mWBMqN3kAA+ZPj41wquStIM9LSDZk4=;
+	s=arc-20240116; t=1758235748; c=relaxed/simple;
+	bh=oKrwTna3/87II0uzwYN7KYICf+oloCMlPnU/JX9C/Ds=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AsqQT08Zq/ZPGHtUvzr5Uh3sh64kccdQCUd3w10B+rn2Op+3Xkonc82vsZ9sF7h5HgbEkNXhlNLyzayeSuk0qJZkMv2lhNHf8p+53ZNRl9/BgPnrEzL44rC1wmCoo5KcurNxoT+dJli5YQHuSK2gdXNdKABqZmNDtEdz8vLPtkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bbK03NQI; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fGuWioBYeFkCL0sknQ2+Rr2qTY7LVLel8iqOuPBT/Y++pQxleIKfqpmN8JxWL/NFrwQWqm4wInH5OXR63F1eJUYvXwoMsAL/mfGOAZScYvhlkR+e8Mi9Fl3kixURbuRC35Cl8a91acEeQKTPoZ27f9Rf1um1iJurN5ylbdZcOzQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TCtnuy5o; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bbK03NQI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFD28C4CEE7;
-	Thu, 18 Sep 2025 22:35:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TCtnuy5o"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DF00C4CEE7;
+	Thu, 18 Sep 2025 22:49:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758234941;
-	bh=e/b85KMA9IEr5mWBMqN3kAA+ZPj41wquStIM9LSDZk4=;
+	s=k20201202; t=1758235747;
+	bh=oKrwTna3/87II0uzwYN7KYICf+oloCMlPnU/JX9C/Ds=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=bbK03NQIk5j0WPXeFpQwmfse0lHyNOUvTVl8vzwkscCIwSc8d+irM0Tx6iDcwC5sN
-	 mBLHQF4xx12FhEHR78Ia/HlzqIFKeqOnMF6UXX75LwLxFp1H0xFGrK80HQoMVKHKZ6
-	 1wSNdHdrn/1EOLDksVNooCWTj1XoWuCkR4meISrfZr3dvJrmAiqtK/d4aQEnX19Lef
-	 UBFHCC8mrytjxEI+yFHeJ/49CxVbHneOXCBdtwFD9c96d8KoyRtRKpTpjCgZMIgWIl
-	 +EDSOi/fLUkrtXWIkeho2jda9VKAbmbYuta1l413/6g3uWfKe3RB8W338CJipXML4U
-	 K/5EsuPpbyERg==
-Date: Thu, 18 Sep 2025 15:35:41 -0700
+	b=TCtnuy5opKUynJg+Zmw3hQAyA0Screo6V8QU7XuqhCi3PVsNwsdCw5Ffe+nxwnqs8
+	 z4gxaAElqlpXyk+Ym4Y0Dn23xZsK5QLv+/8FqXNnPbp6nHS4QZPoT5ws7j0831aR+K
+	 MtBgTXkDCRZ/7QZpH+gDHLomtZyQOn56/0V47CpOzG1ac0wX7hnugpanJfoBV78yoA
+	 aURA+xZgDSfqanq02aVyqOYQGfPF5Ib4dTP/O4OyZitWG4NPFTOQwKgngtF3vclgqQ
+	 laEhqa4pz217jiAKBY/C9eYgFOc/6lR5TunzxTPlixn4FJzsyJJA57WsDFzHYKZ6Y2
+	 dDXzQ8n7TH50A==
+Date: Thu, 18 Sep 2025 15:49:06 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: brauner@kernel.org, miklos@szeredi.hu, hch@infradead.org,
-	hsiangkao@linux.alibaba.com, linux-block@vger.kernel.org,
-	gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	kernel-team@meta.com, linux-xfs@vger.kernel.org,
-	linux-doc@vger.kernel.org
-Subject: Re: [PATCH v3 15/15] fuse: remove fc->blkbits workaround for partial
- writes
-Message-ID: <20250918223541.GB1587915@frogsfrogsfrogs>
-References: <20250916234425.1274735-1-joannelkoong@gmail.com>
- <20250916234425.1274735-16-joannelkoong@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, jack@suse.cz, lherbolt@redhat.com
+Subject: Re: [PATCH 1/2] xfs: rearrange code in xfs_inode_item_precommit
+Message-ID: <20250918224906.GL8096@frogsfrogsfrogs>
+References: <20250917222446.1329304-1-david@fromorbit.com>
+ <20250917222446.1329304-2-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,98 +42,126 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250916234425.1274735-16-joannelkoong@gmail.com>
+In-Reply-To: <20250917222446.1329304-2-david@fromorbit.com>
 
-On Tue, Sep 16, 2025 at 04:44:25PM -0700, Joanne Koong wrote:
-> Now that fuse is integrated with iomap for read/readahead, we can remove
-> the workaround that was added in commit bd24d2108e9c ("fuse: fix fuseblk
-> i_blkbits for iomap partial writes"), which was previously needed to
-> avoid a race condition where an iomap partial write may be overwritten
-> by a read if blocksize < PAGE_SIZE. Now that fuse does iomap
-> read/readahead, this is protected against since there is granular
-> uptodate tracking of blocks, which means this workaround can be removed.
+On Thu, Sep 18, 2025 at 08:12:53AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
+> There are similar extsize checks and updates done inside and outside
+> the inode item lock, which could all be done under a single top
+> level logic branch outside the ili_lock. The COW extsize fixup can
+> potentially miss updating the XFS_ILOG_CORE in ili_fsync_fields, so
+> moving this code up above the ili_fsync_fields update could also be
+> considered a fix.
+> 
+> Further, to make the next change a bit cleaner, move where we
+> calculate the on-disk flag mask to after we attach the cluster
+> buffer to the the inode log item.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_inode_item.c | 65 ++++++++++++++++++-----------------------
+>  1 file changed, 29 insertions(+), 36 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index afb6cadf7793..318e7c68ec72 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -131,46 +131,28 @@ xfs_inode_item_precommit(
+>  	}
+>  
+>  	/*
+> -	 * Inode verifiers do not check that the extent size hint is an integer
+> -	 * multiple of the rt extent size on a directory with both rtinherit
+> -	 * and extszinherit flags set.  If we're logging a directory that is
+> -	 * misconfigured in this way, clear the hint.
+> +	 * Inode verifiers do not check that the extent size hints are an
+> +	 * integer multiple of the rt extent size on a directory with
+> +	 * rtinherit flags set.  If we're logging a directory that is
+> +	 * misconfigured in this way, clear the bad hints.
+>  	 */
+> -	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
+> -	    (ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
+> -	    xfs_extlen_to_rtxmod(ip->i_mount, ip->i_extsize) > 0) {
+> -		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
+> -				   XFS_DIFLAG_EXTSZINHERIT);
+> -		ip->i_extsize = 0;
+> -		flags |= XFS_ILOG_CORE;
+> +	if (ip->i_diflags & XFS_DIFLAG_RTINHERIT) {
+> +		if ((ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
+> +		    xfs_extlen_to_rtxmod(ip->i_mount, ip->i_extsize) > 0) {
+> +			ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
+> +					   XFS_DIFLAG_EXTSZINHERIT);
+> +			ip->i_extsize = 0;
+> +			flags |= XFS_ILOG_CORE;
+> +		}
+> +		if ((ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) &&
+> +		    xfs_extlen_to_rtxmod(ip->i_mount, ip->i_cowextsize) > 0) {
+> +			ip->i_diflags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
+> +			ip->i_cowextsize = 0;
+> +			flags |= XFS_ILOG_CORE;
+> +		}
+>  	}
 
-Oh goody!
+Hrm, yeah, that cowextsize fixing code looks like it was merged in the
+wrong place or something.  In theory it's a bug fix, but since we never
+merged support for rtreflink and rtextsize > 1fsb this will never happen
+in practice since rtextsize cannot change when reflink is enabled.
+
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> ---
->  fs/fuse/dir.c    |  2 +-
->  fs/fuse/fuse_i.h |  8 --------
->  fs/fuse/inode.c  | 13 +------------
->  3 files changed, 2 insertions(+), 21 deletions(-)
-> 
-> diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
-> index 5c569c3cb53f..ebee7e0b1cd3 100644
-> --- a/fs/fuse/dir.c
-> +++ b/fs/fuse/dir.c
-> @@ -1199,7 +1199,7 @@ static void fuse_fillattr(struct mnt_idmap *idmap, struct inode *inode,
->  	if (attr->blksize != 0)
->  		blkbits = ilog2(attr->blksize);
->  	else
-> -		blkbits = fc->blkbits;
-> +		blkbits = inode->i_sb->s_blocksize_bits;
+
 >  
->  	stat->blksize = 1 << blkbits;
->  }
-> diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
-> index cc428d04be3e..1647eb7ca6fa 100644
-> --- a/fs/fuse/fuse_i.h
-> +++ b/fs/fuse/fuse_i.h
-> @@ -975,14 +975,6 @@ struct fuse_conn {
->  		/* Request timeout (in jiffies). 0 = no timeout */
->  		unsigned int req_timeout;
->  	} timeout;
+> -	/*
+> -	 * Record the specific change for fdatasync optimisation. This allows
+> -	 * fdatasync to skip log forces for inodes that are only timestamp
+> -	 * dirty. Once we've processed the XFS_ILOG_IVERSION flag, convert it
+> -	 * to XFS_ILOG_CORE so that the actual on-disk dirty tracking
+> -	 * (ili_fields) correctly tracks that the version has changed.
+> -	 */
+>  	spin_lock(&iip->ili_lock);
+> -	iip->ili_fsync_fields |= (flags & ~XFS_ILOG_IVERSION);
+> -	if (flags & XFS_ILOG_IVERSION)
+> -		flags = ((flags & ~XFS_ILOG_IVERSION) | XFS_ILOG_CORE);
 > -
 > -	/*
-> -	 * This is a workaround until fuse uses iomap for reads.
-> -	 * For fuseblk servers, this represents the blocksize passed in at
-> -	 * mount time and for regular fuse servers, this is equivalent to
-> -	 * inode->i_blkbits.
+> -	 * Inode verifiers do not check that the CoW extent size hint is an
+> -	 * integer multiple of the rt extent size on a directory with both
+> -	 * rtinherit and cowextsize flags set.  If we're logging a directory
+> -	 * that is misconfigured in this way, clear the hint.
 > -	 */
-> -	u8 blkbits;
->  };
->  
->  /*
-> diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
-> index fdecd5a90dee..5899a47faaef 100644
-> --- a/fs/fuse/inode.c
-> +++ b/fs/fuse/inode.c
-> @@ -292,7 +292,7 @@ void fuse_change_attributes_common(struct inode *inode, struct fuse_attr *attr,
->  	if (attr->blksize)
->  		fi->cached_i_blkbits = ilog2(attr->blksize);
->  	else
-> -		fi->cached_i_blkbits = fc->blkbits;
-> +		fi->cached_i_blkbits = inode->i_sb->s_blocksize_bits;
->  
->  	/*
->  	 * Don't set the sticky bit in i_mode, unless we want the VFS
-> @@ -1810,21 +1810,10 @@ int fuse_fill_super_common(struct super_block *sb, struct fuse_fs_context *ctx)
->  		err = -EINVAL;
->  		if (!sb_set_blocksize(sb, ctx->blksize))
->  			goto err;
-> -		/*
-> -		 * This is a workaround until fuse hooks into iomap for reads.
-> -		 * Use PAGE_SIZE for the blocksize else if the writeback cache
-> -		 * is enabled, buffered writes go through iomap and a read may
-> -		 * overwrite partially written data if blocksize < PAGE_SIZE
-> -		 */
-> -		fc->blkbits = sb->s_blocksize_bits;
-> -		if (ctx->blksize != PAGE_SIZE &&
-> -		    !sb_set_blocksize(sb, PAGE_SIZE))
-> -			goto err;
->  #endif
->  	} else {
->  		sb->s_blocksize = PAGE_SIZE;
->  		sb->s_blocksize_bits = PAGE_SHIFT;
-> -		fc->blkbits = sb->s_blocksize_bits;
+> -	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
+> -	    (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) &&
+> -	    xfs_extlen_to_rtxmod(ip->i_mount, ip->i_cowextsize) > 0) {
+> -		ip->i_diflags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
+> -		ip->i_cowextsize = 0;
+> -		flags |= XFS_ILOG_CORE;
+> -	}
+> -
+>  	if (!iip->ili_item.li_buf) {
+>  		struct xfs_buf	*bp;
+>  		int		error;
+> @@ -204,6 +186,17 @@ xfs_inode_item_precommit(
+>  		xfs_trans_brelse(tp, bp);
 >  	}
 >  
->  	sb->s_subtype = ctx->subtype;
+> +	/*
+> +	 * Record the specific change for fdatasync optimisation. This allows
+> +	 * fdatasync to skip log forces for inodes that are only timestamp
+> +	 * dirty. Once we've processed the XFS_ILOG_IVERSION flag, convert it
+> +	 * to XFS_ILOG_CORE so that the actual on-disk dirty tracking
+> +	 * (ili_fields) correctly tracks that the version has changed.
+> +	 */
+> +	iip->ili_fsync_fields |= (flags & ~XFS_ILOG_IVERSION);
+> +	if (flags & XFS_ILOG_IVERSION)
+> +		flags = ((flags & ~XFS_ILOG_IVERSION) | XFS_ILOG_CORE);
+> +
+>  	/*
+>  	 * Always OR in the bits from the ili_last_fields field.  This is to
+>  	 * coordinate with the xfs_iflush() and xfs_buf_inode_iodone() routines
 > -- 
-> 2.47.3
+> 2.50.1
 > 
 > 
