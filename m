@@ -1,117 +1,141 @@
-Received: from forward103a.mail.yandex.net (forward103a.mail.yandex.net [178.154.239.86])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C2C622FE0E
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 11:15:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.86
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB53A2356A4
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 11:29:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758194138; cv=none; b=MGHuyTPdaVquUE5V6DBRm/7Vqoy6Ynzpxl/twpvZhsCmMtsaFDqDTwi3kUKbAslvoozwha0ptlfJS1IjINCbFZnm+23bAsZrJKtkY6g104pu0PMmWzrlMwaCjcXjiAtKx4e1R2sMYByvd7WTGNXmLgvw0IVrpw5k1EIdzrWD1ZU=
+	t=1758194954; cv=none; b=sqfPZpJrUVsmBlI4eXxqZMphtN0+Y+9UTSanNbt2FvK0EsnPkZdPpkC1kfCq7asObg7rSfopR33fL0Gt/ON2EmOdfirLezVq2vdH1hDh3dvGnHj0qxsZJSm9rZVK2Ma+iKDoksNE/Og+ewxLaQZDH28oNeEgHVZBFvbCtbN5lqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758194138; c=relaxed/simple;
-	bh=D8ri1bfPuDeMCk20HUESzNQ7xg+fqQ5wF54Uf/08xlw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tpQg7CA4jlViEyhs4DBur+s0mTlXTM6K3nMvcNYOmeMWOjbUxHgDH3MtoLU3foW8FINAFUmc74r/bu6TWkhuC60SpCJtSlMNnHn0Hhq+R6e7mWU1e+IuJcEMytSVT78xMUZ5+WnmPrbCgh+Dnofvdephn3JNnnuSTe9YSYQutWk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=nlCV3Hox; arc=none smtp.client-ip=178.154.239.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+	s=arc-20240116; t=1758194954; c=relaxed/simple;
+	bh=LpUYOIi9iEXmNfYlzzzRobS5mVRricu/AZ+1YWLSXg8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GUOL2/Kne1cqBy0hphsSujk99MwvGbZWIwPGfMd9b5LHa9PSwe6C9roZAgnaH7Lx9UwcDFsM0Hjq7zZwV9G8WTYpZxST36ioiwCBWliL8xuknrB5FGnpSBXvpeu7eNhyzvSHn+ze9xpmeUS31LxJkwCF2VeX8IZCTwpAPaSdl3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HTei3QbZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="nlCV3Hox"
-Received: from mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net [IPv6:2a02:6b8:c18:43a9:0:640:86ff:0])
-	by forward103a.mail.yandex.net (Yandex) with ESMTPS id 0C61D807BF;
-	Thu, 18 Sep 2025 14:15:28 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id QFQB5WOLuqM0-9Q62vtrW;
-	Thu, 18 Sep 2025 14:15:27 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1758194127; bh=GRRIUl2GcbhdFOJULvfFhhesBwmszQKvoqR/n6Qywm0=;
-	h=Message-ID:Date:Cc:Subject:To:From;
-	b=nlCV3Hoxtwsceuv4s3emEERhFjqu0CY+YIOpriZmzs5NRdRdVKzoS3lJ+XEB1vvOu
-	 SrmWnWYPdUYF0SpvWQ1rKMeLVZk+d3es+E5a4Qx72vZh8jaiaPaIhY4xWYEM2hkG/1
-	 +egGl26H2KXQBCMxVAWN9cjKHQ6i+jiXuaqzerC8=
-Authentication-Results: mail-nwsmtp-smtp-production-main-95.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From: Dmitry Antipov <dmantipov@yandex.ru>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH] xfs: scrub: use kstrdup_const() for metapath scan setups
-Date: Thu, 18 Sep 2025 14:14:03 +0300
-Message-ID: <20250918111403.1169904-1-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HTei3QbZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43E1CC4CEE7;
+	Thu, 18 Sep 2025 11:29:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1758194954;
+	bh=LpUYOIi9iEXmNfYlzzzRobS5mVRricu/AZ+1YWLSXg8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=HTei3QbZirlcQoRL7MVoT+bKv1DoMVX1YJ+SJCUxBCl++CqbUpoS94LNl6COanvl3
+	 mcuifuS2JlrR5klkMPGoeitOOnJWgsKV7uszH8iPrTRplSj0bnPtOtm+Qe+YPZOS0k
+	 +G8pDTQTeyrwVZlsQGyib/aKi9TYwfaEWe9/ImV6xr129WhSPsTojEETFLEz4hqr55
+	 UJJuajUMoHADpVv/q9MTleK4OwACNDkRiIZvWf2IdJ4COfUg4G6x8pHqKB0Tv/MsgX
+	 KXZlmWnkkDcV2BKjbCVhbk54GIMwUpEwcJYZbjodDj1PBsuaqcKLWSxsSuVNUeWI11
+	 ACvEt2WA1it0Q==
+Date: Thu, 18 Sep 2025 13:29:09 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/2] xfs: Improve default maximum number of open zones
+Message-ID: <2m3osmuu4if44l2abrzt5cnts4og73xfkmjoc4pak32urx7mzs@nl7grwmztfa5>
+References: <20250917124802.281686-1-dlemoal@kernel.org>
+ <vHqFUYqmELdFlRi_fo6KVxFQ0QVsPbaQqg2vWBs7F3bYvfh1qFWGzHJLM3npupWIB2EFMb76zt6Rp0aNxVt0FQ==@protonmail.internalid>
+ <20250917124802.281686-3-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250917124802.281686-3-dlemoal@kernel.org>
 
-Except 'xchk_setup_metapath_rtginode()' case, 'path' argument of
-'xchk_setup_metapath_scan()' is a compile-time constant. So it may
-be reasonable to use 'kstrdup_const()' / 'kree_const()' to manage
-'path' field of 'struct xchk_metapath' in attempt to reuse .rodata
-instance rather than making a copy. Compile tested only.
+On Wed, Sep 17, 2025 at 09:48:02PM +0900, Damien Le Moal wrote:
+> For regular block devices using the zoned allocator, the default
+> maximum number of open zones is set to 1/4 of the number of realtime
+> groups. For a large capacity device, this leads to a very large limit.
+> E.g. with a 26 TB HDD:
+> 
+> mount /dev/sdb /mnt
+> ...
+> XFS (sdb): 95836 zones of 65536 blocks size (23959 max open)
+> 
+> In turn such large limit on the number of open zones can lead, depending
+> on the workload, on a very large number of concurrent write streams
+> which devices generally do not handle well, leading to poor performance.
+> 
+> Introduce the default limit XFS_DEFAULT_MAX_OPEN_ZONES, defined as 128
+> to match the hardware limit of most SMR HDDs available today, and use
+> this limit to set mp->m_max_open_zones in xfs_calc_open_zones() instead
+> of calling xfs_max_open_zones(), when the user did not specify a limit
+> with the max_open_zones mount option.
+> 
+> For the 26 TB HDD example, we now get:
+> 
+> mount /dev/sdb /mnt
+> ...
+> XFS (sdb): 95836 zones of 65536 blocks (128 max open zones)
+> 
+> This change does not prevent the user from specifying a lareger number
+> for the open zones limit. E.g.
+> 
+> mount -o max_open_zones=4096 /dev/sdb /mnt
+> ...
+> XFS (sdb): 95836 zones of 65536 blocks (4096 max open zones)
+> 
+> Finally, since xfs_calc_open_zones() checks and caps the
+> mp->m_max_open_zones limit against the value calculated by
+> xfs_max_open_zones() for any type of device, this new default limit does
+> not increase m_max_open_zones for small capacity devices.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_zones.h | 7 +++++++
+>  fs/xfs/xfs_zone_alloc.c   | 2 +-
+>  2 files changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_zones.h b/fs/xfs/libxfs/xfs_zones.h
+> index c4f1367b2cca..6005f5412363 100644
+> --- a/fs/xfs/libxfs/xfs_zones.h
+> +++ b/fs/xfs/libxfs/xfs_zones.h
+> @@ -29,6 +29,13 @@ struct xfs_rtgroup;
+>  #define XFS_OPEN_GC_ZONES	1U
+>  #define XFS_MIN_OPEN_ZONES	(XFS_OPEN_GC_ZONES + 1U)
+> 
+> +/*
+> + * For zoned device that do not have a limit on the number of open zones, and
+	'For a zoned device' perhaps?
+> + * for reguilar devices using the zoned allocator, use this value as the default
 
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
----
- fs/xfs/scrub/metapath.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+	regular
 
-diff --git a/fs/xfs/scrub/metapath.c b/fs/xfs/scrub/metapath.c
-index 14939d7de349..378ec7c8d38e 100644
---- a/fs/xfs/scrub/metapath.c
-+++ b/fs/xfs/scrub/metapath.c
-@@ -79,7 +79,7 @@ xchk_metapath_cleanup(
- 
- 	if (mpath->dp_ilock_flags)
- 		xfs_iunlock(mpath->dp, mpath->dp_ilock_flags);
--	kfree(mpath->path);
-+	kfree_const(mpath->path);
- }
- 
- /* Set up a metadir path scan.  @path must be dynamically allocated. */
-@@ -98,13 +98,13 @@ xchk_setup_metapath_scan(
- 
- 	error = xchk_install_live_inode(sc, ip);
- 	if (error) {
--		kfree(path);
-+		kfree_const(path);
- 		return error;
- 	}
- 
- 	mpath = kzalloc(sizeof(struct xchk_metapath), XCHK_GFP_FLAGS);
- 	if (!mpath) {
--		kfree(path);
-+		kfree_const(path);
- 		return -ENOMEM;
- 	}
- 
-@@ -132,7 +132,7 @@ xchk_setup_metapath_rtdir(
- 		return -ENOENT;
- 
- 	return xchk_setup_metapath_scan(sc, sc->mp->m_metadirip,
--			kasprintf(GFP_KERNEL, "rtgroups"), sc->mp->m_rtdirip);
-+			kstrdup_const("rtgroups", GFP_KERNEL), sc->mp->m_rtdirip);
- }
- 
- /* Scan a rtgroup inode under the /rtgroups directory. */
-@@ -179,7 +179,7 @@ xchk_setup_metapath_quotadir(
- 		return -ENOENT;
- 
- 	return xchk_setup_metapath_scan(sc, sc->mp->m_metadirip,
--			kstrdup("quota", GFP_KERNEL), qi->qi_dirip);
-+			kstrdup_const("quota", GFP_KERNEL), qi->qi_dirip);
- }
- 
- /* Scan a quota inode under the /quota directory. */
-@@ -212,7 +212,7 @@ xchk_setup_metapath_dqinode(
- 		return -ENOENT;
- 
- 	return xchk_setup_metapath_scan(sc, qi->qi_dirip,
--			kstrdup(xfs_dqinode_path(type), GFP_KERNEL), ip);
-+			kstrdup_const(xfs_dqinode_path(type), GFP_KERNEL), ip);
- }
- #else
- # define xchk_setup_metapath_quotadir(...)	(-ENOENT)
--- 
-2.51.0
+> + * limit on the number of open zones.
 
+Perhaps it's also worth to mention you picked 128 for being the most
+common limit on available SMR HDDs today, otherwise it would look as a
+randomly chosen magic number (unless somebody bothers to check the git
+log).
+
+> + */
+> +#define XFS_DEFAULT_MAX_OPEN_ZONES	128
+> +
+>  bool xfs_zone_validate(struct blk_zone *zone, struct xfs_rtgroup *rtg,
+>  	xfs_rgblock_t *write_pointer);
+> 
+> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+> index f152b2182004..1147bacb2da8 100644
+> --- a/fs/xfs/xfs_zone_alloc.c
+> +++ b/fs/xfs/xfs_zone_alloc.c
+> @@ -1131,7 +1131,7 @@ xfs_calc_open_zones(
+>  		if (bdev_open_zones)
+>  			mp->m_max_open_zones = bdev_open_zones;
+>  		else
+> -			mp->m_max_open_zones = xfs_max_open_zones(mp);
+> +			mp->m_max_open_zones = XFS_DEFAULT_MAX_OPEN_ZONES;
+>  	}
+> 
+>  	if (mp->m_max_open_zones < XFS_MIN_OPEN_ZONES) {
+
+Other than the nitpicks above, you can add:
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+
+> --
+> 2.51.0
+> 
