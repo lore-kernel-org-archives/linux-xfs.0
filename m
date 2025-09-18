@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 612592BEFFE
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 15:10:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C642224AF0
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 15:28:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758208207; cv=none; b=KW4GHxxX5T4UktXDXq2RZSF5QWxBJzNKwiXX9bihmVgngU8uRu9Za6gVZAAoX/X1d7cAumItGg6pNU9w4liVAQdpVs5kTD1LPklY1Xf+qdJO9NZ+4KdJq6Rf0XNamAOEDtFGu+ofND/EFS3oAQS5Lk5oovm+OYwszPrZ8dDSU8U=
+	t=1758209338; cv=none; b=HhCSBE8l20VI7DtuRqVNmWC86Ywgm1vxjmnmCvY8exsW66USe0DSw+RzaHnIJrrg/6mllwxkdP4QjhHUZt/zdU6JceEWpn6Op0btmlas30+mcx2IjQbLEqjX3/krrQeycVZr6ve4J6t1QmELlUBekbM2o/8Y/sug/aZPEjb8QDk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758208207; c=relaxed/simple;
-	bh=/bW4u0Lu2Wad/5N7Gec1Xu1AeQ8tQRIEE+tkxCHHQ8o=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=KIKkfzNuatTRtmrqYSdJkkOOFlM4r2gvnGTFNJ1wSk8D4swD9rP6vgeiFKjXbyALoocaV1Q31b+rFZhcH18ZKHQ7Mvvd9c+RcjsiC8mOpgvhvvYg+DGsgZhA76d5wRLlQNG+6PjBrWU19lYajdcL7iLdBPalCL5OO1gS7SoYRuc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hTOM0/E0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758209338; c=relaxed/simple;
+	bh=0M2dMHIHd91EeY9Z9Dz9BvhytnQWc7QSWYa1zbdFhbg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tS6nbap6R/5O0jV8w2oFmv/pIttlWgj0uj1/3UcbZUWfIsOHQYxQcw0m5vaSPYN7wCCRYOjON+Qjsd/l/sTbndNJisPbeB+6rm031v+DyMzBsa4cqdaK+OyKYSJkCi9uOaMDWXRhtPMp49YYkhlTOvaCmlvSJ/hr0MznzQb8XHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iuG1DJVe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hTOM0/E0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33FFCC4CEE7;
-	Thu, 18 Sep 2025 15:10:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iuG1DJVe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC8C6C4CEE7;
+	Thu, 18 Sep 2025 15:28:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758208207;
-	bh=/bW4u0Lu2Wad/5N7Gec1Xu1AeQ8tQRIEE+tkxCHHQ8o=;
-	h=Date:From:To:Cc:Subject:From;
-	b=hTOM0/E0SYz+e1MnrSatzvs9nmSCA2qmE/+GyFBnLz3CN+KnlNBzOPKpXl0TR8tRh
-	 bnCj6AjElb19aMWwS7CN1gc0eYXtkIh9Mjwnj5RkgjgfGKzydgtpTnDPS3mv+rBe3O
-	 xlrsysFs2Jk5qY+PB+VKRMqxLzi5Tr4rM9f5E/8a4Qh2xVy5FESGfuJfcJv2u6HKn4
-	 S88otv3AbYkSm3aDwUT1X/rx+QPS6H03kl2iPdGLwdD7w9uypAyyB7PPI6DzTy+x2u
-	 3QvFXNRcS29ZXG7r3vJvLb3H8wa+f7VzxUJCZco/NMsLVhi47reiapZpjPVns6tIbt
-	 By1iLnoDSHmZg==
-Date: Thu, 18 Sep 2025 17:10:01 +0200
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: AWilcox@wilcox-tech.com, aalbersh@kernel.org, aalbersh@redhat.com, 
-	arkamar@gentoo.org, cmaiolino@redhat.com, djwong@kernel.org, hch@lst.de, 
-	johannes@nixdorf.dev, lists@nerdbynature.de, luca.dimaio1@gmail.com, 
-	yi.zhang@huawei.com
-Subject: [ANNOUNCE] xfsprogs: for-next updated to 75faf2bc9075
-Message-ID: <efozymij7cwizwc5brkd3owm4dcm7vyxrurwm7k7kmmc2ut7fs@2e5hveznynjf>
+	s=k20201202; t=1758209337;
+	bh=0M2dMHIHd91EeY9Z9Dz9BvhytnQWc7QSWYa1zbdFhbg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iuG1DJVeSvEiwa4jznHnGSbc7Kxtcm/DzU9ZwNs40ULBN4LtmS+yfvnrA/x0yJoLE
+	 ywZlxBGqpQC/f1c7nL8x5VEewz2vPOxvL9HEMPxuZ1cPSODM4BMA7uP+J2thoPSl+Q
+	 m5ux+cO1fnRzGC8noLgBDwgqNcZtvlj8+xyDIQuYtftQ/bQC0yMOyGkjzKLf3Di3sY
+	 4xHPmfVdobbaP38lJOSLEPNoECBu7/iitECbfvV5hZ2N/BCfByIAUEuoSQhrdUm8lD
+	 UcccguDjo+aF4bR4yfZEzkqOkO78+Lly9hydqE0plefX0Ehkx1A1Hx5jTHri1tFUIp
+	 hMIGPlV6w6MeA==
+Date: Thu, 18 Sep 2025 08:28:57 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 0/2] Some minor improvements for zoned mode
+Message-ID: <20250918152857.GH8096@frogsfrogsfrogs>
+References: <20250918130111.324323-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,75 +42,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20250918130111.324323-1-dlemoal@kernel.org>
 
-Hi folks,
+On Thu, Sep 18, 2025 at 10:01:09PM +0900, Damien Le Moal wrote:
+> A couple of patches to improve a mount meaasge and to improve (reduce)
+> the default maximum number of open zones for large capacity regular
+> devices using the zoned allocatror.
 
-The xfsprogs for-next branch in repository at:
+That all looks fine to me,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+--D
 
-has just been updated.
-
-Patches often get missed, so if your outstanding patches are properly reviewed
-on the list and not included in this update, please let me know.
-
-The for-next branch has also been updated to match the state of master.
-
-The new head of the for-next branch is commit:
-
-75faf2bc907584acc879accae60a59bd655b6b6a
-
-New commits:
-
-A. Wilcox (1):
-      [75faf2bc9075] xfs_scrub: Use POSIX-conformant strerror_r
-
-Andrey Albershteyn (4):
-      [56af42ac219b] libfrog: add wrappers for file_getattr/file_setattr syscalls
-      [961e42e0265c] xfs_quota: utilize file_setattr to set prjid on special files
-      [7c850f317ef8] xfs_io: make ls/chattr work with special files
-      [128ac4dadbd6] xfs_db: use file_setattr to copy attributes on special files with rdump
-
-Carlos Maiolino (1):
-      [9bd2142c5e35] Improve information about logbsize valid values
-
-Christian Kujau (1):
-      [9c83bdfeef71] xfsprogs: fix utcnow deprecation warning in xfs_scrub_all.py
-
-Johannes Nixdorf (2):
-      [6cfae337a101] configure: Base NEED_INTERNAL_STATX on libc headers first
-      [07956672b784] libfrog: Define STATX__RESERVED if not provided by the system
-
-Luca Di Maio (1):
-      [8a4ea7272493] proto: add ability to populate a filesystem from a directory
-
-Zhang Yi (1):
-      [7b65201af8a7] xfs_io: add FALLOC_FL_WRITE_ZEROES support
-
-Code Diffstat:
-
- configure.ac              |   1 +
- db/rdump.c                |  20 +-
- include/builddefs.in      |   5 +
- include/linux.h           |  20 ++
- io/attr.c                 | 138 +++++----
- io/io.h                   |   2 +-
- io/prealloc.c             |  36 +++
- io/stat.c                 |   2 +-
- libfrog/Makefile          |   2 +
- libfrog/file_attr.c       | 121 ++++++++
- libfrog/file_attr.h       |  35 +++
- libfrog/statx.h           |   5 +-
- m4/package_libcdev.m4     |  29 +-
- man/man5/xfs.5            |  12 +-
- man/man8/mkfs.xfs.8.in    |  38 ++-
- man/man8/xfs_io.8         |   6 +
- mkfs/proto.c              | 771 +++++++++++++++++++++++++++++++++++++++++++++-
- mkfs/proto.h              |  18 +-
- mkfs/xfs_mkfs.c           |  23 +-
- quota/project.c           | 142 +++++----
- scrub/common.c            |   3 +-
- scrub/xfs_scrub_all.py.in |   8 +-
- 22 files changed, 1262 insertions(+), 175 deletions(-)
- create mode 100644 libfrog/file_attr.c
- create mode 100644 libfrog/file_attr.h
+> 
+> Changes from v1:
+>  - Improved XFS_DEFAULT_MAX_OPEN_ZONES description comment.
+>  - Removed capitalization from commit titles 
+>  - Added review tags
+> 
+> Damien Le Moal (2):
+>   xfs: improve zone statistics message
+>   xfs: improve default maximum number of open zones
+> 
+>  fs/xfs/libxfs/xfs_zones.h | 7 +++++++
+>  fs/xfs/xfs_zone_alloc.c   | 4 ++--
+>  2 files changed, 9 insertions(+), 2 deletions(-)
+> 
+> -- 
+> 2.51.0
+> 
+> 
