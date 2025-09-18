@@ -1,147 +1,100 @@
-Received: from mail-oo1-f46.google.com (mail-oo1-f46.google.com [209.85.161.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C52C22D7B5
-	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 15:48:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14379262FDD
+	for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 16:27:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758210522; cv=none; b=gacrIYznBXsdePpTbuzUrvXBp1fmqq9RxBqVupooqYAFryW20HXxX7/irGUwoVLIctj7uUir2yAwD43XjAOHuUieqLpi4GrrWk1ZbIRWZOlvXXk8ojP5t9QdSkMDfMoLGhwqX8lIKH/D3wq5isSDjbRpJGVzaBjD7qs/3B70gao=
+	t=1758212865; cv=none; b=F/dWUv83zsL/+K0fQecgM3zrf+k3RLt9UDUxxGcfZD87Vlzasve4ccmHXYct0PYZC74gcQ416cfgZCoIf5WRnUqj6IsNe9UvKiShYWgKbh2c+/9CPV3tTv2jd4MnSbdirlx8az3NZ+tuqtpSb6R/5PyBtApZQPYYWsBmnddzI44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758210522; c=relaxed/simple;
-	bh=3fuPAHF2wqUzCF+Ih+V96s2Pa8BfHBVrf909ozzJYxs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=iXe0IaSVURIvi4B17lGVddLRKKebGqp5YdfZblnJTdoTn1Chh5PxiKs7hG/9iBXWsu5FgltetAAuPd8kgN9gwx5ua3kFz77d4xSxBAiZYjqtOZs9Uhe0HNP1gTtjOdHKg/M67Zb4DehyDgsQTIVD2CJABQkslyiJt9Rt/c0zwKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=eAOavc2C; arc=none smtp.client-ip=209.85.161.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1758212865; c=relaxed/simple;
+	bh=fWI9l1wBoITawk8z+S7Yy4S5K0QiKsEqPjgcYVNl30E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dn3NLHStan2kr5YJadWcZfoOLoKLZxGJ7f4KCXeqPmM1BllgNsGnbxWHi7NYMReYWfUAIyqar/RFCKCSqhetv2z66Ndzkd+SUYtKji1PnQ5ef2S9UX6s9XU7YZXIEcTmAFzomJ8bsF+fpBPgyU2YhNOhxj3F7TNUrMdSzfPQ7n0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KemAheOb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="eAOavc2C"
-Received: by mail-oo1-f46.google.com with SMTP id 006d021491bc7-62347d880feso682864eaf.3
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Sep 2025 08:48:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1758210520; x=1758815320; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3fuPAHF2wqUzCF+Ih+V96s2Pa8BfHBVrf909ozzJYxs=;
-        b=eAOavc2CN3hKS95ih6fHrGk7HQYI14S9OGRboWaVhlIeSO+Siqxx6vtu4Fl75VShUA
-         LFUlJB0hQTDvqMb+/ypW9RfbOVQcZ7S+pncqwJ2jtRXaSJOq4a2SIf5XLmgBS2y8+6Kk
-         dxiFvkxUZt2A+13w0SonMvcT3N653WVBTXiCV/FHeN4/5ZrKJpSMujE7gFlWJVS3Xxy+
-         qOvEnthHP6wMEhDH9I1y2nXWSnFvZb0rlGAE8VBoDEjch1ROO0nbPsNP+dIN5F/86Jox
-         lfV2dgUthYT4i3k2/kSAQ338iJ0Lq+E7ZO+ysx+GVp+mALPXS/0U0YhCDCbeJDc7N1UE
-         +6/Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758210520; x=1758815320;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=3fuPAHF2wqUzCF+Ih+V96s2Pa8BfHBVrf909ozzJYxs=;
-        b=LZAY7P5QB/hUgPb6lGK1asmJfJ4Vo3vxvlnJiHBeD/YWC6Ib/eoB/YRohQRDAQYvp6
-         knwLPsxB7Z8SpKkGZ/vOS8huMXCKpVsNkp1h8oGsMoeL6I/8idCsMAxhI4zn0VsmOhj3
-         ihD7BacEjGeoWDmOBfxZ8J6NJcCcEk7mFawvV0m5zUpFhM5+6lQBs7TXepbFTrVH/I5V
-         GZ73/5/X6ye+Gnxb2Rze7/Z6rKgZCxxxpYvITBWtu6olyCww2IMp37Nb93+DsQY0PyWT
-         gobVdt71cWtvtxel0GAoVqwB507sbwIb34SrgdVUst7UNJg396BeJpnpNz4EccgZLRZO
-         EI3A==
-X-Forwarded-Encrypted: i=1; AJvYcCVFE950feBV36ZdasinES1GZORO0HLXtBQ7tAViTZSsuVsdf9aVlVBVOGNy4z7wZ4YVjoPNxQdASyA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzP3h/oAmiTIWmmLncJ17zIXI3lVN+QvB331KZppSuBJ8ty82TR
-	kQv47/loyr+Z+J+0o4fTAr0ywTOaq7elxneeuvhPXFaWkxDfO1L5BqoNS/+EmVvaoo6V/SD1vVd
-	o+1b93Ghb/XxZu01kNnDCYWUnf9esgjqQIY2+RQwX
-X-Gm-Gg: ASbGncvbpvWAFF6fX9ZxJxOcLpLD8yvqiVeZdUplkmXEluElBp16AenTWLcRbnmIZQl
-	5WyO9wBngG+D7TUTg7d6PO1fxu/f+Ow51RyWt0mZoIxlSk1bWY6XeBC9hzCm76iJhbDoCTmP1UY
-	m3t4akGt3eqRzZ8WJ6sJHlveWrEbVShmj9fpUFgeaASby19WRXTKJYLGY4m7iyPEmGJ7hBxaZqg
-	tSLlvxYcg1FQFbBqoohfiCRlLbaUbMNhCBS+7i85BbN6cPyiT55wSLu568oDjo=
-X-Google-Smtp-Source: AGHT+IGZQIGtkvyQ7wUbXbPktQnaEGHmteV66ZUVON5NljKX83ZF9JtYWo+pN7TerpN49zbUut8goBymhFyWExBBTaQ=
-X-Received: by 2002:a05:6820:c006:b0:624:abae:b650 with SMTP id
- 006d021491bc7-624abaeb894mr2040726eaf.0.1758210519920; Thu, 18 Sep 2025
- 08:48:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KemAheOb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBE4AC4CEFB;
+	Thu, 18 Sep 2025 16:27:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1758212864;
+	bh=fWI9l1wBoITawk8z+S7Yy4S5K0QiKsEqPjgcYVNl30E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=KemAheOb3pttLxMkU0xU97XzVwjsqwxhf9BLqQq/FR3davmUgsd41D9NDCMr9TbwU
+	 izO/xKdf3wtlZh8KSNYsfquGYMkTUq0oZRd4UjuFZnX4o/HbCsIxYjeyVkhASPQwe6
+	 rbgtkYU/JBjN9f0Obp2QGPOVstDLxcAXmuL7VQnVKu5NLJlMERuStvIm/jeDhDzrWz
+	 7rVTGTiCk+D5FsFptnVM0yEetyuPzeBDNDThSifJT5EOJEcjzqnI4qJwGkfOAd/sbj
+	 tUtQcPlxS3wBiZdmq50IKwSlvS6jWPj9elchzm3uu/hWliG6hoQcWLWKHOZUkga0hG
+	 OplRM7YT6DyGA==
+Date: Thu, 18 Sep 2025 09:27:44 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: "A. Wilcox" <AWilcox@wilcox-tech.com>
+Cc: linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@redhat.com>
+Subject: Re: [PATCH v2] xfs_scrub: Use POSIX-conformant strerror_r
+Message-ID: <20250918162744.GI8096@frogsfrogsfrogs>
+References: <20250906081222.64798-1-AWilcox@Wilcox-Tech.com>
+ <20250912150044.GN8096@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250916234425.1274735-1-joannelkoong@gmail.com>
- <68ca71bd.050a0220.2ff435.04fc.GAE@google.com> <CAJnrk1YKPWkaBXe7D2mftN2DMEBqFow80reUGE=2_U8oVFc1tQ@mail.gmail.com>
-In-Reply-To: <CAJnrk1YKPWkaBXe7D2mftN2DMEBqFow80reUGE=2_U8oVFc1tQ@mail.gmail.com>
-From: Aleksandr Nogikh <nogikh@google.com>
-Date: Thu, 18 Sep 2025 17:48:28 +0200
-X-Gm-Features: AS18NWAU9uKKLdv_CQUnITI5tezk67S_wzRhWyVluYMjy37dGuE_05c1-3Y9NYc
-Message-ID: <CANp29Y5Y8iO+UbKHtDEc=0d+76WxbWJK1asLaux++_n+Pr+d5g@mail.gmail.com>
-Subject: Re: [syzbot ci] Re: fuse: use iomap for buffered reads + readahead
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: syzbot ci <syzbot+ci9b5a486340e6bcdf@syzkaller.appspotmail.com>, 
-	syzbot <syzkaller@googlegroups.com>, brauner@kernel.org, djwong@kernel.org, 
-	gfs2@lists.linux.dev, hch@infradead.org, hch@lst.de, 
-	hsiangkao@linux.alibaba.com, kernel-team@meta.com, 
-	linux-block@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, miklos@szeredi.hu, 
-	syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250912150044.GN8096@frogsfrogsfrogs>
 
-Hi Joanne,
+On Fri, Sep 12, 2025 at 08:00:44AM -0700, Darrick J. Wong wrote:
+> On Sat, Sep 06, 2025 at 03:12:07AM -0500, A. Wilcox wrote:
+> > When building xfsprogs with musl libc, strerror_r returns int as
+> > specified in POSIX.  This differs from the glibc extension that returns
+> > char*.  Successful calls will return 0, which will be dereferenced as a
+> > NULL pointer by (v)fprintf.
+> > 
+> > Signed-off-by: A. Wilcox <AWilcox@Wilcox-Tech.com>
+> 
+> Isn't C fun?
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-On Wed, Sep 17, 2025 at 9:59=E2=80=AFPM Joanne Koong <joannelkoong@gmail.co=
-m> wrote:
->
-> On Wed, Sep 17, 2025 at 1:37=E2=80=AFAM syzbot ci
-> <syzbot+ci9b5a486340e6bcdf@syzkaller.appspotmail.com> wrote:
-> >
-> > syzbot ci has tested the following series
-> >
-> > [v3] fuse: use iomap for buffered reads + readahead
-> > https://lore.kernel.org/all/20250916234425.1274735-1-joannelkoong@gmail=
-.com
-> > * [PATCH v3 01/15] iomap: move bio read logic into helper function
-> > * [PATCH v3 02/15] iomap: move read/readahead bio submission logic into=
- helper function
-> > * [PATCH v3 03/15] iomap: store read/readahead bio generically
-> > * [PATCH v3 04/15] iomap: iterate over entire folio in iomap_readpage_i=
-ter()
-> > * [PATCH v3 05/15] iomap: rename iomap_readpage_iter() to iomap_read_fo=
-lio_iter()
-> > * [PATCH v3 06/15] iomap: rename iomap_readpage_ctx struct to iomap_rea=
-d_folio_ctx
-> > * [PATCH v3 07/15] iomap: track read/readahead folio ownership internal=
-ly
-> > * [PATCH v3 08/15] iomap: add public start/finish folio read helpers
-> > * [PATCH v3 09/15] iomap: add caller-provided callbacks for read and re=
-adahead
-> > * [PATCH v3 10/15] iomap: add bias for async read requests
-> > * [PATCH v3 11/15] iomap: move buffered io bio logic into new file
-> > * [PATCH v3 12/15] iomap: make iomap_read_folio() a void return
-> > * [PATCH v3 13/15] fuse: use iomap for read_folio
-> > * [PATCH v3 14/15] fuse: use iomap for readahead
-> > * [PATCH v3 15/15] fuse: remove fc->blkbits workaround for partial writ=
-es
-> >
-> > and found the following issues:
-> > * WARNING in iomap_iter_advance
-> > * WARNING in iomap_readahead
-> > * kernel BUG in folio_end_read
-> >
-> > Full report is available here:
-> > https://ci.syzbot.org/series/6845596a-1ec9-4396-b9c4-48bddc606bef
-> >
-> > ***
-> >
-> Thanks. Do you get run on every patchset that is sent upstream or is
-> it random? Trying to figure out if this means v2 is right and i just
-> messed up v3 or if you just didn't run on v2.
+Ohh yes it is, this patch broke the build for me:
 
-The intent is to run on every patchset, but since the system is
-currently still in the experimental state, some of the series are
-skipped due to various reasons. E.g. syzbot tried to process v2, but
-failed to find the kernel tree to which the series applies without
-problems: https://ci.syzbot.org/series/7085b21e-ae1e-4bf9-b486-24a82ea9b37d
+common.c: In function ‘__str_out’:
+common.c:129:17: error: ignoring return value of ‘strerror_r’ declared with attribute ‘warn_unused_result’ [-Werror=unused-result]
+  129 |                 strerror_r(error, buf, DESCR_BUFSZ);
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the original email, there are links to the C reproducers, so these
-can be used locally to determine if v1/v2 were affected.
+<sigh> xfsprogs can't get the XSI version because it defines GNU_SOURCE,
+and you can't shut up gcc by casting the whole expression to void.
 
---=20
-Aleksandr
+Do you folks remove the -D_GNU_SOURCE from builddefs.in when building
+against musl?  Or do you leave the definition alone, taking advantage of
+the fact that #define'ing a symbol is not a guarantee of functionality?
 
->
-> Thanks,
-> Joanne
->
+--D
+
+> --D
+> 
+> > ---
+> >  scrub/common.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/scrub/common.c b/scrub/common.c
+> > index 14cd677b..9437d0ab 100644
+> > --- a/scrub/common.c
+> > +++ b/scrub/common.c
+> > @@ -126,7 +126,8 @@ __str_out(
+> >  	fprintf(stream, "%s%s: %s: ", stream_start(stream),
+> >  			_(err_levels[level].string), descr);
+> >  	if (error) {
+> > -		fprintf(stream, _("%s."), strerror_r(error, buf, DESCR_BUFSZ));
+> > +		strerror_r(error, buf, DESCR_BUFSZ);
+> > +		fprintf(stream, _("%s."), buf);
+> >  	} else {
+> >  		va_start(args, format);
+> >  		vfprintf(stream, format, args);
+> > -- 
+> > 2.49.0
+> > 
+> > 
+> 
