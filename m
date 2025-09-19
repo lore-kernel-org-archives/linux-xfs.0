@@ -1,153 +1,328 @@
-Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
+Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98204211A28
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 18:34:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B4B02BE05A
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 22:37:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758306858; cv=none; b=Zf+4yBfWSZUkWI8cNSlBNEUXV8KCwmL0ltoHbGEUyRsXYsfITaA8f7V3w9GMRwSnHsAwMg/ze9BRxmNbdJvwdbPB4uevZ5ZH1gQ0zzlHe5bJDuzA+qzPTHvvO/Cgbdj9W1Of6B1YTk2rfFrMVTgG2TZqyxKd6ReawqdbwNOO8iY=
+	t=1758321425; cv=none; b=bJ/jHQDRDxCMnszIXiKb50d6K/O6XRnCMK5ZkCaSoj1KiDWRVofwdiI1QEOr95NSOeUBWSS3F8nQdMUM0c3LV+Nb+mqze1hMelqHX1gsTCSy+v3pDgQd9lddVeZ2XI9Dkl+bDf6B50FkA9UVzVupZ4pKlX1FhGo8MVK4c0Lhxjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758306858; c=relaxed/simple;
-	bh=7uX0BeiPsvWw8q8A4083nVg+t12ANac5Jycw2LTy1oc=;
+	s=arc-20240116; t=1758321425; c=relaxed/simple;
+	bh=uJ8m2NZX6JXnQKKA+zdGmOxS3OC4Ea4bmMr8x5ucnxc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=MwaBHzWzTtay5+PubL7rUR9/QGRPZI2UrduS6zVnT6fALJsab45NSyHPQTTXwi1VpFfw3UVp27uvraB8TBvBbHSD7ER1mzZUK9QnYSC7APmmqXfl8e4EZzmHmaLTp/CO1+O4TpOnl+eQwnxsfGMdWk6k1bpVD49TmYCpGylqOHY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GLRv59a/; arc=none smtp.client-ip=209.85.160.169
+	 To:Cc:Content-Type; b=obQknuUC9Pmr05R0UELhvTDM2JBkrEFthrWqZH/8h3UiY0ip0jC64BqiprIX5OlmvP26WI55oV9lZom+pGpDnAcURN/tUUOOSiWcSyyYITUZ27WAlaiq9+DDqYUYaVDGAWw4qirqZUJ3XbAUnQAqDWQ++H6EhhHy3pVzoUtPOJI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ics6AhMx; arc=none smtp.client-ip=209.85.160.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GLRv59a/"
-Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-4b7a967a990so27761461cf.2
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 11:34:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ics6AhMx"
+Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-4b7a8ceaad3so23510441cf.2
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 15:37:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758306854; x=1758911654; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1758321423; x=1758926223; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=rhRHN77jwmvAE0x3y6aKKQENztc6fTFsJqlfUz+6jDw=;
-        b=GLRv59a/rTvS4bvW43r7Ii6vk7K8DBPLFhRNBMr9CAnlo2Q0gEijjt9U8vukfU3RgC
-         eQ6/eKyLGpzGLkQHTzdSRIJOzVw0M4elOd06F0zGmVuyRp+ia5SXD1WyQz4GL5oRiLsX
-         opBj/+dM8b49MQTJcGS4mx4Eck+3mesnqmgjnxR4kHntly+mwyOwcD6Ezrlo+OPnlArT
-         uYaVU8T1kwtf7sb6l9Ocsz5rCGf3+udu8r7I4RRAfLZxncnE53WAdPY9ULAnVC8ZkvDU
-         nun7+8TvubmV71s+Iqe8p+qQ/iUBNwXXEWBLRt43hMkyi6/c+PI73KzfmiZtXkLIZt31
-         +Q9Q==
+        bh=d3O3+fGeiCoT/6/FJPjx7pd6Eokbtom126s5Fn+C9FQ=;
+        b=Ics6AhMxw56RwzKD8hl98CcXt9LdyoVnQrdaAO8JEReiJMX6oqF8jgW+MKxIcAFOwv
+         EQprWxdxZFXIThjI25S9INdHKk5loJCSC9icfDpExbA2UFImOgYxyKNG3dxgRZhjejPQ
+         7lpTI56RyI/g43oFbzLet6VIdRGoeXXwrpLpVCYtJfqMo5884iUGkF83vcn8DHnkyPEF
+         TTBkExQVaKwhoJoKK9J6lylaI5D+NgpWM0YGTBbcQxQq6WUgHiQGdbuVxb0X43rmlzt8
+         qH6LccjEl3ClRWrk7ltVtN/g113LIwQ6RH4nj3Ssca+8cXOBrsy/1i4he2klRqgjpZXt
+         VScQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758306854; x=1758911654;
+        d=1e100.net; s=20230601; t=1758321423; x=1758926223;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=rhRHN77jwmvAE0x3y6aKKQENztc6fTFsJqlfUz+6jDw=;
-        b=N3KSycq05gzxnm6X/NxV6+px/e01iqUHv8TYr0VyptxRXkjsSCHX1ITQ7e7GL0E1Sx
-         /q/jU3EmiokG5UoOwrM19uAhcnQ7sWU5B6GY72Pp6vkn8oiUUlRr/WIveO0ceN2I9lCu
-         qnkyz0OjhG+gLfL5u8oNS1A9n92nbvkZz7R5ErZg2RbWqAx4aUAmc/raZChfaGjh9t4b
-         l/oK/L4uw89ObV3VLNCWiQA2Z3GLsnzurGuYQYd0+1Kc0AKom+Cv0r2IH2c7Gsoj0pMk
-         T1+2RGoV57HKt2AXdeWXnvdfgUiqMkbeUoUnjUEpbOW2kJdFtYwzVqME3p9o9DFk0xG+
-         HkBw==
-X-Forwarded-Encrypted: i=1; AJvYcCWA9g7oeuVk/cuh8qPCHo8ExuuVU1ppROBLj3NQ1IHB6nj3pYwarL4tZHmCb6Zn/weQdAKQC/DWb+g=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCKdNbe936xvHk9nONKk4/YOUppdIq6XCSFn53MSpjtbSi1Gaa
-	gMQpU2tA1Z/ocfJqA2Y9g01Y6cpqq2tjsW3AuwKm0llWeQ9/sK/k8BYfn7SPa8C2vuNhvI4iXNZ
-	afDe5eoD4jfvf65eT/Sqqh1E0y3vllgc=
-X-Gm-Gg: ASbGncuWqwOYP3HvbXPFTFZv1X/q+/58KMytnrkLYMzjx/DJ41V61XQy9PRl/0OUNVs
-	1PqDjPwfmNIQ4vJ5BM7rbSOV7vN5awuiLB5eMbi+/WvNeJYe6ZQZtDnWFBnQOtAAxD/AqGsUE+t
-	MlF9Kq7OOl5/1UsjnE7Esi2ORw0LrcalWD8JqdTPkU3fHqudHBPxH4XG1HOXXkjc0tP0He+CNyc
-	MHmxYeb9QQch0V8dgRDqeIPiXJDCgdXG/rkWSuV
-X-Google-Smtp-Source: AGHT+IEl3EPErf3c09yltPELq1CrtgsMWd+b8acWGVirSfI9XbkQbByyu5P2kwwv0Ytvm0XcDlRHkOfSCgIJVsMlx8s=
-X-Received: by 2002:a05:622a:1826:b0:4b0:7cb2:cec3 with SMTP id
- d75a77b69052e-4c07238f39dmr58025631cf.38.1758306854308; Fri, 19 Sep 2025
- 11:34:14 -0700 (PDT)
+        bh=d3O3+fGeiCoT/6/FJPjx7pd6Eokbtom126s5Fn+C9FQ=;
+        b=ufJ+ejOLdL4HbGymTfl+tOfpJueZsqXwvLrKdeIj4NmoTPbP6SIl/U4MAWJvAE9LgW
+         WW5oEFUVbmHgF3Z1YQsBJmAXqk9/JkknMY0OMd+cj2mljEiSehP58DL/T4tjOqn7hiG6
+         fqzofjcgLG1lTOUSDPQyvyN7qjU/k0peyWCwxPXFIl1/AlM4bWyRVoyBZtmB56eJO/Xl
+         IKfYntpil2wxmgaqVQzI0wCyb6DEIGMTYe1u/MFBSrtGJyXcHHdHsfSsdi3pea5kpYvS
+         GJQ7eEnECQSdQ/rrS1WgXte+JTOhuMsjlpi5Sx4hSk9hDm0CT5KC+BNs5TtmLQjf83FC
+         kQ/Q==
+X-Forwarded-Encrypted: i=1; AJvYcCWID0IUJBz6ai58rMoZk97M9e20hiFgP91gL6f36wrZSjCiijO5fqwLIxuZKj9duOWiFmGXTYETVG4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw56SQrgRmbTCcGX7d5mSyAVc7ApaMrz4H/inEiXtltFeGrhIx/
+	DR2mMWktJe/4r++E3LqbpXWa27cajyDhN+sSqVzEV8R7cnIkWD89zKGSjHA1eWHpM+JIuEK89/s
+	2A24ZXgGDD+T+RLgxRxFKfeuJItOcJEQ=
+X-Gm-Gg: ASbGncvXCJI7Sbjy8+4UgRtVJCbiS5cQuXaSlUiScOSGnWVANHs9OqZLwhA4kTQXbYi
+	Fpfe9EKGbK27N+JH4gVGE73tVjca4paDbQyN7Per4PgnCyx4GiMtTGWPGgv78O/mMdKMZv9mUqT
+	n+rhcGyY2Q6Qccm+wDWwdRi7LFRwaRcEXtBhZgEXkJpRIvL15T7Uc7jmKlXQM3Y6tzaJJyw4yIE
+	uAmTDto7dsulsO6vXuFZglxfBrj1dmeNdNyAuPO
+X-Google-Smtp-Source: AGHT+IHWQvxkAk9J4PgdqySQm/TRIxJdbaJkIs2XbDQx5JYH/WsCKYtGeQrei4+rJpAYXXWVlZS2x1/ooQEaV6zafXQ=
+X-Received: by 2002:a05:622a:5507:b0:4b5:e8e0:4f93 with SMTP id
+ d75a77b69052e-4c0718f6543mr55734631cf.54.1758321422899; Fri, 19 Sep 2025
+ 15:37:02 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250916234425.1274735-1-joannelkoong@gmail.com>
- <20250916234425.1274735-11-joannelkoong@gmail.com> <20250918223018.GY1587915@frogsfrogsfrogs>
-In-Reply-To: <20250918223018.GY1587915@frogsfrogsfrogs>
+References: <175798151087.382724.2707973706304359333.stgit@frogsfrogsfrogs> <175798151288.382724.14189484118371001092.stgit@frogsfrogsfrogs>
+In-Reply-To: <175798151288.382724.14189484118371001092.stgit@frogsfrogsfrogs>
 From: Joanne Koong <joannelkoong@gmail.com>
-Date: Fri, 19 Sep 2025 11:34:03 -0700
-X-Gm-Features: AS18NWA5eATCQro2K3o3en9fIfjv9ya2PYZQVPmIDN-TkbTJuiFMxPoK5v0Ka7I
-Message-ID: <CAJnrk1bB+=J5g5h+asx12SYMogiKSn9SpEvRg11-_N_xWodvSA@mail.gmail.com>
-Subject: Re: [PATCH v3 10/15] iomap: add bias for async read requests
+Date: Fri, 19 Sep 2025 15:36:52 -0700
+X-Gm-Features: AS18NWCO71nVFhYakayYK0yIAhj-E3b2dx_XnAizS9jPLGzxwTNx6Ok68GwG8No
+Message-ID: <CAJnrk1YtGcWj_0MOxS6atL_vrUjk09MzQhFt40yf32Rq12k0qw@mail.gmail.com>
+Subject: Re: [PATCH 01/28] fuse: implement the basic iomap mechanisms
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: brauner@kernel.org, miklos@szeredi.hu, hch@infradead.org, 
-	hsiangkao@linux.alibaba.com, linux-block@vger.kernel.org, 
-	gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org, kernel-team@meta.com, 
-	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
+Cc: miklos@szeredi.hu, bernd@bsbernd.com, linux-xfs@vger.kernel.org, 
+	John@groves.net, linux-fsdevel@vger.kernel.org, neal@gompa.dev
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Sep 18, 2025 at 3:30=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
+On Mon, Sep 15, 2025 at 5:28=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
  wrote:
 >
-> On Tue, Sep 16, 2025 at 04:44:20PM -0700, Joanne Koong wrote:
-> > Non-block-based filesystems will be using iomap read/readahead. If they
-> > handle reading in ranges asynchronously and fulfill those read requests
-> > on an ongoing basis (instead of all together at the end), then there is
-> > the possibility that the read on the folio may be prematurely ended if
-> > earlier async requests complete before the later ones have been issued.
-> >
-> > For example if there is a large folio and a readahead request for 16
-> > pages in that folio, if doing readahead on those 16 pages is split into
-> > 4 async requests and the first request is sent off and then completed
-> > before we have sent off the second request, then when the first request
-> > calls iomap_finish_folio_read(), ifs->read_bytes_pending would be 0,
-> > which would end the read and unlock the folio prematurely.
-> >
-> > To mitigate this, a "bias" is added to ifs->read_bytes_pending before
-> > the first range is forwarded to the caller and removed after the last
-> > range has been forwarded.
-> >
-> > iomap writeback does this with their async requests as well to prevent
-> > prematurely ending writeback.
-> >
-> > Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> > ---
-> >  fs/iomap/buffered-io.c | 55 ++++++++++++++++++++++++++++++++++++------
-> >  1 file changed, 47 insertions(+), 8 deletions(-)
-> >
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index 561378f2b9bb..667a49cb5ae5 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -420,6 +420,38 @@ const struct iomap_read_ops iomap_bio_read_ops =3D=
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> Implement functions to enable upcalling of iomap_begin and iomap_end to
+> userspace fuse servers.
+>
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  fs/fuse/fuse_i.h          |   35 ++++
+>  fs/fuse/iomap_priv.h      |   36 ++++
+>  include/uapi/linux/fuse.h |   90 +++++++++
+>  fs/fuse/Kconfig           |   32 +++
+>  fs/fuse/Makefile          |    1
+>  fs/fuse/file_iomap.c      |  434 +++++++++++++++++++++++++++++++++++++++=
+++++++
+>  fs/fuse/inode.c           |    9 +
+>  7 files changed, 636 insertions(+), 1 deletion(-)
+>  create mode 100644 fs/fuse/iomap_priv.h
+>  create mode 100644 fs/fuse/file_iomap.c
+>
+>
+> diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
+> index 4560687d619d76..f0d408a6e12c32 100644
+> --- a/fs/fuse/fuse_i.h
+> +++ b/fs/fuse/fuse_i.h
+> @@ -923,6 +923,9 @@ struct fuse_conn {
+>         /* Is synchronous FUSE_INIT allowed? */
+>         unsigned int sync_init:1;
+>
+> +       /* Enable fs/iomap for file operations */
+> +       unsigned int iomap:1;
+> +
+>         /* Use io_uring for communication */
+>         unsigned int io_uring;
+>
+> @@ -1047,6 +1050,11 @@ static inline struct fuse_mount *get_fuse_mount_su=
+per(struct super_block *sb)
+>         return sb->s_fs_info;
+>  }
+>
+> +static inline const struct fuse_mount *get_fuse_mount_super_c(const stru=
+ct super_block *sb)
+> +{
+> +       return sb->s_fs_info;
+> +}
+> +
+>  static inline struct fuse_conn *get_fuse_conn_super(struct super_block *=
+sb)
+>  {
+>         return get_fuse_mount_super(sb)->fc;
+> @@ -1057,16 +1065,31 @@ static inline struct fuse_mount *get_fuse_mount(s=
+truct inode *inode)
+>         return get_fuse_mount_super(inode->i_sb);
+>  }
+>
+> +static inline const struct fuse_mount *get_fuse_mount_c(const struct ino=
+de *inode)
+> +{
+> +       return get_fuse_mount_super_c(inode->i_sb);
+> +}
+> +
+>  static inline struct fuse_conn *get_fuse_conn(struct inode *inode)
+>  {
+>         return get_fuse_mount_super(inode->i_sb)->fc;
+>  }
+>
+> +static inline const struct fuse_conn *get_fuse_conn_c(const struct inode=
+ *inode)
+> +{
+> +       return get_fuse_mount_super_c(inode->i_sb)->fc;
+> +}
+> +
+>  static inline struct fuse_inode *get_fuse_inode(struct inode *inode)
+>  {
+>         return container_of(inode, struct fuse_inode, inode);
+>  }
+>
+> +static inline const struct fuse_inode *get_fuse_inode_c(const struct ino=
+de *inode)
+> +{
+> +       return container_of(inode, struct fuse_inode, inode);
+> +}
+
+Do we need these new set of helpers? AFAICT it does two things: a)
+guarantee constness of the arg passed in b) guarantee constness of the
+pointer returned
+
+But it seems like for a) we could get that by modifying the existing
+functions to take in a const arg, eg
+
+-static inline struct fuse_inode *get_fuse_inode(struct inode *inode)
++static inline struct fuse_inode *get_fuse_inode(const struct inode *inode)
  {
-> >  };
-> >  EXPORT_SYMBOL_GPL(iomap_bio_read_ops);
-> >
-> > +/*
-> > + * Add a bias to ifs->read_bytes_pending to prevent the read on the fo=
-lio from
-> > + * being ended prematurely.
-> > + *
-> > + * Otherwise, if the ranges are read asynchronously and read requests =
-are
-> > + * fulfilled on an ongoing basis, there is the possibility that the re=
-ad on the
-> > + * folio may be prematurely ended if earlier async requests complete b=
-efore the
-> > + * later ones have been issued.
-> > + */
-> > +static void iomap_read_add_bias(struct folio *folio)
-> > +{
-> > +     iomap_start_folio_read(folio, 1);
->
-> I wonder, could you achieve the same effect by elevating
-> read_bytes_pending by the number of bytes that we think we have to read,
-> and subtracting from it as the completions come in or we decide that no
-> read is necessary?
->
+      return container_of(inode, struct fuse_inode, inode);
+ }
 
-This is an interesting idea and I think it works (eg we set
-read_bytes_pending to the folio size, keep track of how many
-non-uptodate bytes are read in, then at the end subtract
-read_bytes_pending by folio_size - bytes_read_in). Personally I find
-this bias incrementing/decrementing by 1 approach simplest and easier
-to read and reason about, but maybe I'm just biased (pun intended, I
-guess :P). I don't feel strongly about this so if you do, I'm happy to
-change this.
+and for b) it seems to me like the caller enforces the constness of
+the pointer returned whether the actual function returns a const
+pointer or not,
 
+eg
+const struct fuse_inode *fi =3D get_fuse_inode{_c}(inode);
 
-> (That might just be overthinking the plumbing though)
+Maybe I'm missing something here but it seems to me like we don't need
+these new helpers?
+
+> +
+> diff --git a/fs/fuse/iomap_priv.h b/fs/fuse/iomap_priv.h
+
+btw, i think the general convention is to use "_i.h" suffixing for
+private internal files, eg fuse_i.h, fuse_dev_i.h, dev_uring_i.h
+
+> new file mode 100644
+> index 00000000000000..243d92cb625095
+> --- /dev/null
+> +++ b/fs/fuse/iomap_priv.h
+> @@ -0,0 +1,36 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (C) 2025 Oracle.  All Rights Reserved.
+> + * Author: Darrick J. Wong <djwong@kernel.org>
+> + */
+> +#ifndef _FS_FUSE_IOMAP_PRIV_H
+> +#define _FS_FUSE_IOMAP_PRIV_H
+> +
+...
+> diff --git a/include/uapi/linux/fuse.h b/include/uapi/linux/fuse.h
+> index 31b80f93211b81..3634cbe602cd9c 100644
+> --- a/include/uapi/linux/fuse.h
+> +++ b/include/uapi/linux/fuse.h
+> @@ -235,6 +235,9 @@
+>   *
+>   *  7.44
+>   *  - add FUSE_NOTIFY_INC_EPOCH
+> + *
+> + *  7.99
+
+Just curious, where did you get the .99 from?
+
+> + *  - add FUSE_IOMAP and iomap_{begin,end,ioend} for regular file operat=
+ions
+>   */
 >
-> --D
+>  #ifndef _LINUX_FUSE_H
+> @@ -270,7 +273,7 @@
+>  #define FUSE_KERNEL_VERSION 7
+> diff --git a/fs/fuse/Kconfig b/fs/fuse/Kconfig
+> index 9563fa5387a241..67dfe300bf2e07 100644
+> --- a/fs/fuse/Kconfig
+> +++ b/fs/fuse/Kconfig
+> @@ -69,6 +69,38 @@ config FUSE_PASSTHROUGH
+> +config FUSE_IOMAP_DEBUG
+> +       bool "Debug FUSE file IO over iomap"
+> +       default n
+> +       depends on FUSE_IOMAP
+> +       help
+> +         Enable debugging assertions for the fuse iomap code paths and l=
+ogging
+> +         of bad iomap file mapping data being sent to the kernel.
+> +
+
+I wonder if we should have a general FUSE_DEBUG that this would fall
+under instead of creating one that's iomap_debug specific
+
+>  config FUSE_IO_URING
+>         bool "FUSE communication over io-uring"
+>         default y
+> diff --git a/fs/fuse/Makefile b/fs/fuse/Makefile
+> index 46041228e5be2c..27be39317701d6 100644
+> --- a/fs/fuse/Makefile
+> +++ b/fs/fuse/Makefile
+> @@ -18,5 +18,6 @@ fuse-$(CONFIG_FUSE_PASSTHROUGH) +=3D passthrough.o
+>  fuse-$(CONFIG_FUSE_BACKING) +=3D backing.o
+>  fuse-$(CONFIG_SYSCTL) +=3D sysctl.o
+>  fuse-$(CONFIG_FUSE_IO_URING) +=3D dev_uring.o
+> +fuse-$(CONFIG_FUSE_IOMAP) +=3D file_iomap.o
+>
+>  virtiofs-y :=3D virtio_fs.o
+> diff --git a/fs/fuse/file_iomap.c b/fs/fuse/file_iomap.c
+> new file mode 100644
+> index 00000000000000..dda757768d3ea6
+> --- /dev/null
+> +++ b/fs/fuse/file_iomap.c
+> @@ -0,0 +1,434 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (C) 2025 Oracle.  All Rights Reserved.
+> + * Author: Darrick J. Wong <djwong@kernel.org>
+> + */
+> +#include <linux/iomap.h>
+> +#include "fuse_i.h"
+> +#include "fuse_trace.h"
+> +#include "iomap_priv.h"
+> +
+> +/* Validate FUSE_IOMAP_TYPE_* */
+> +static inline bool fuse_iomap_check_type(uint16_t fuse_type)
+> +{
+> +       switch (fuse_type) {
+> +       case FUSE_IOMAP_TYPE_HOLE:
+> +       case FUSE_IOMAP_TYPE_DELALLOC:
+> +       case FUSE_IOMAP_TYPE_MAPPED:
+> +       case FUSE_IOMAP_TYPE_UNWRITTEN:
+> +       case FUSE_IOMAP_TYPE_INLINE:
+> +       case FUSE_IOMAP_TYPE_PURE_OVERWRITE:
+> +               return true;
+> +       }
+> +
+> +       return false;
+> +}
+
+Maybe faster to check by using a bitmask instead?
+
+
+> +
+> diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
+> index 1e7298b2b89b58..32f4b7c9a20a8a 100644
+> --- a/fs/fuse/inode.c
+> +++ b/fs/fuse/inode.c
+> @@ -1448,6 +1448,13 @@ static void process_init_reply(struct fuse_mount *=
+fm, struct fuse_args *args,
+>
+>                         if (flags & FUSE_REQUEST_TIMEOUT)
+>                                 timeout =3D arg->request_timeout;
+> +
+> +                       if ((flags & FUSE_IOMAP) && fuse_iomap_enabled())=
+ {
+> +                               fc->local_fs =3D 1;
+> +                               fc->iomap =3D 1;
+> +                               printk(KERN_WARNING
+> + "fuse: EXPERIMENTAL iomap feature enabled.  Use at your own risk!");
+> +                       }
+
+pr_warn() seems to be the convention elsewhere in the fuse code
+
+
+Thanks,
+Joanne
+>                 } else {
+>                         ra_pages =3D fc->max_read / PAGE_SIZE;
+>                         fc->no_lock =3D 1;
+> @@ -1516,6 +1523,8 @@ static struct fuse_init_args *fuse_new_init(struct =
+fuse_mount *fm)
+>          */
+>         if (fuse_uring_enabled())
+>                 flags |=3D FUSE_OVER_IO_URING;
+> +       if (fuse_iomap_enabled())
+> +               flags |=3D FUSE_IOMAP;
+>
+>         ia->in.flags =3D flags;
+>         ia->in.flags2 =3D flags >> 32;
 >
