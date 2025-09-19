@@ -1,132 +1,147 @@
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10F2814286
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 09:54:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8147224DD17
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 10:52:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758275694; cv=none; b=nHOakzKULidB5bWysa/p6qSxw7CEU2hS/pgiUCQJpnb0Xa8wOt8QuZqjCAhVT0kyJxHskrc13gCwCjpLsT4wOPvWvywYtj62uTBHTnchQmgUq+CxcSZgUpgsg2FAtafDa3lTHUZvZQLs8mFpUsQPxK/rtVwri56DkPMq80RvTHc=
+	t=1758279174; cv=none; b=In7h5N8gMunrsSP1cPx3jooGxnH/WmXOdBrCAw4vaBhwqc9UOtUxdo531kUmtZ1qusP73+A80s3d3Z3+gE1hzont6iLccsC4KvvTxAZXtfW6MCSC6VXtzEKwS02xSO3xCYbm4X4Bb+82xUCrXMWJAoUOnioJuUD0tsEGGSz5feE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758275694; c=relaxed/simple;
-	bh=dgtFOm38P9aI6/915v1yVDS2kMb9u/O/desqpxSnf0Y=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ExmiJxoO2hfidz+bYphlVHmvo77D3854LN5UZ+3RlDVPYWFZj20RwEX0TDM5jH+eDadwnDmZXV/2k6TZEGOGhRJpwkGNEASFItnebhza0pxwcN/llLSPc0PcZxQ5nGXQYDQdTIJoukYP/IubwIeI08rEaRyB5NR12pjBRgRN4uI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=D0ww+35H; arc=none smtp.client-ip=209.85.208.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1758279174; c=relaxed/simple;
+	bh=zms+CFHDnD6DyokMYcNj2GculdXkbrTnZW9327SbaCA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GRVI6xy9Y+UJmT9RVatFGkY6vzGoesMxrtLLZhxe8NjWevE9clw4HMVfOpwa+Zbg0pv9d7vKxhp/42mdgTXQcM5i04TJI/SJsKAuC+3nu5Tb19bTFY7h0vgHAwOLG0RebNmhnreJs3PyqZbYTkyS3gDAFyLruB2jaev2wwkJhrE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=b4Mg1GTN; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D0ww+35H"
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-62fbfeb097eso1098629a12.2
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 02:54:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758275691; x=1758880491; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=D1fKK2VeIGcuA6sZx7T8OVafrUk30/MIz6Mtn0eRk4A=;
-        b=D0ww+35HPYDgbX+WJHvGWzEHxGXOKMQF80wYpwCHYLX/o8mh/QwYse62u6Pl8WvlpB
-         G9vy9O/fn4jSzD9BGizMNga1kdo5J1wAlD5SgH+qdhdhgQrmL1YyYGim3d0lSt1aRY9z
-         g+y2DXGoGOZXWBXTf9xOn5N5j4cc/N3oFG0ah/chZJGQmGQQCMuDAEqijyjxWWZ3xDdO
-         587G7hg0BJlaf6n4/aTdbz31VLrx3a6iABwmyJlhC+AfOyqQWblHEPPdMY2pFRODzSlQ
-         zJYMkLZtsEZMxBDdoGdIVcNpH2sD2fzpwNjnEmDPPb9IAnMzc4tVVa7IFUogZPXR08g9
-         N7uQ==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="b4Mg1GTN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1758279171;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=QV/w/WQb29TZE7UDB95MLx1Ocda6W5c63foGwvA5ObQ=;
+	b=b4Mg1GTNYRPP7+jCQM2OzvjQi4Qwrjkz2sk3JgyunaQVKUUomNSJfjLmAe8ZjTPnSMQxRn
+	0tPd+O/DynATIdZwJhSXlAdohPr+G3RC8JdoJO9Akk+sjmO0kYtqzmwlT3Z/bj4ib64nC+
+	6ZO6V+dIAtnHdN0ahF+yaFCAzmNJ1yw=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-267-DYb0whWmPl6ImB2sz1_5Ow-1; Fri, 19 Sep 2025 06:52:50 -0400
+X-MC-Unique: DYb0whWmPl6ImB2sz1_5Ow-1
+X-Mimecast-MFC-AGG-ID: DYb0whWmPl6ImB2sz1_5Ow_1758279169
+Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-3efa77de998so278704f8f.0
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 03:52:50 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758275691; x=1758880491;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=D1fKK2VeIGcuA6sZx7T8OVafrUk30/MIz6Mtn0eRk4A=;
-        b=ViVQo8aYO6oaej/zHQqziZKTDyyTWFeBWItcB1K1dUDK5Z8SMVc/FCo0YFpSqAWOJZ
-         pqRGigVtvl63loKe0Ng2t/evcIbbIQHL0GEubtrVWhjlBUcw9ZGZzmkV7EaLqFl8F+LR
-         YdE345EASJl3ZWvEtetObUzmD9TWWMsSdnb5WPYyerzFIL41f+l9dfT+lRrVokqnWFti
-         LURlfbyjpwb18P28E1Z9YzQWCTBCf263kvKDtJkY1qWrndvvaWNgG/0zF3ib69k6dzGT
-         694k5lHUcpJ8RsBm0jyaVQez4eZTX7jE8ncIYmvrI/uj6NW+cBsbSApUydd073ndfctw
-         R/Tg==
-X-Forwarded-Encrypted: i=1; AJvYcCUTwFUQt51+NLLDehIKy8wbCAHmLBWC7OOqRPHwpf1TH6sWoToVvw18VOTPYfvrLHPO4Cg8jXRedE8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YycfpLu7akQA1UzKzP64zk2ONXi/Pf9YXUOjSXBEY/v3+DVG69W
-	cCtLQGTa3KAMPHtzf2wHZM4/ECSoOWCnR06Mt7k2TMFlabaGUxSDGMegkRfMOCNXk0SWPRe1O/N
-	hQsqF762X0meAlhK84st8GrKGE3BHExQ=
-X-Gm-Gg: ASbGnctdVkucu0ECeAjz2bmSWgRH74/O6Kb15fSbcHMVhOq8HEHcuom89M/2AyTCIbP
-	trHshRfbiy9zFYvzW79+5k3N00JKaHUZ2C+3ZsrlpSVsQGqSrsHV8qH63yS3exH51c0vURYqhC9
-	NhkcaCfwyNP2v9o0PyJZ/20HaTvtua2ioQj+Ih5IuFwcRuzGQKTPuPLFHz000sLcjBrUBVbZF5m
-	wpGQxKUxHYUET6nJSdOdaVd/lwvFc2wwhORoIRLkS1hxIg=
-X-Google-Smtp-Source: AGHT+IE5oiKuJw8bSM5pCB6RKkNUQyiqR7jU1bNaTBtzzRRL/3JjPFaCojPjFSXwo6+sUUPKTUkwNzO7kN2G6awGZQk=
-X-Received: by 2002:a05:6402:21c6:b0:62f:50b9:2881 with SMTP id
- 4fb4d7f45d1cf-62fc0a7b232mr2468458a12.19.1758275691061; Fri, 19 Sep 2025
- 02:54:51 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1758279169; x=1758883969;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QV/w/WQb29TZE7UDB95MLx1Ocda6W5c63foGwvA5ObQ=;
+        b=gKPgOhWHlsIIB3kxoS+rQtKI46SvJoFPOyO71iRyRXmO/bXFVHjLmi7eNVub0qgCAj
+         Ihmq3A3tHfjRuj97/kClU0mcjIFwICZNWsoqRHpFYRG/oWTDTmnGPto8J28aYHrfdkVx
+         LLZM+HGTxBbWVv7Yn7MVtvRfzISyzOuCXhp65qbigNjKWVMtFZ7JjqqbxUx/A75zD7ID
+         igD8ibLhXaqjzvSf5gsW9SAnC4jdGYfbAfWV2Q6AJX4za7MxvresjSaVq1tcuORZyhUm
+         1rjlcqhJqiieHmL22FolNZHeuK6R20+EXnW1ZQpAH/w500mVVIrPhoeK0wF0/ZuEbZOS
+         jNYw==
+X-Forwarded-Encrypted: i=1; AJvYcCWFH9AqY2I6tpoHdtsCsS8EBtJnu7s2We7Uttv0GludZHsOcw5QxCZFLtVVQl0sODrS8oVuioSJugk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzVhvyrHzplDM1YstmQNogdFkA8QTqt7naryuzPHGZlyQjhp2NY
+	YmfHhNO8dLZCcKrpG+mqoX/X0sY0ktsdGoAJNWf2gAuwg8NaXp9lAKon01V0QQoQaAnB5KOIgWa
+	EisDsheLn6wnFWwkwcMKa5BrR0X+vwWB1EupazT/ERBLx2FFTVzLvopxwKl9fHNvmIA8q31w=
+X-Gm-Gg: ASbGnctOsH7S7awpHeI3Oq9eC1hm5G7FXoanKe9wrqojVa8gjajwYymaBlSPJmh9K/z
+	z007HFByWEfsEo2OdHxLX59o5+EoqOg+M8FAZZp849w30dUHgKqqXXzmcZCEAyzFeP9Yjnav450
+	3r1NwbuZc3WeKEs5rlWYvdXX1WmHWX75VoIxEMupWDkaVgifkxxUzEASBHJdjyy4DHljPi4Jc2U
+	xnSOezJ+XF6GlA+wlbMayZ/3qMYsO3PJiMI7i3SMq5Po359MEcbZrpMa+fF9AvqC16lw4AmrHD+
+	XBuaO6rPtc+GNs9k63XrmON7/cU4SQHZ
+X-Received: by 2002:a05:6000:40da:b0:3e4:64b0:a75d with SMTP id ffacd0b85a97d-3ee83d9ff66mr1617826f8f.30.1758279168576;
+        Fri, 19 Sep 2025 03:52:48 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEsaQIecdmQMsOMwbLlwsXlnvV6tejv00DrUiaP/wWcAdkNdHwLnoXF2ZAgi633KuYkPwjLJw==
+X-Received: by 2002:a05:6000:40da:b0:3e4:64b0:a75d with SMTP id ffacd0b85a97d-3ee83d9ff66mr1617776f8f.30.1758279168024;
+        Fri, 19 Sep 2025 03:52:48 -0700 (PDT)
+Received: from thinky ([91.245.205.131])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3ee0fbc7188sm7635129f8f.37.2025.09.19.03.52.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 Sep 2025 03:52:47 -0700 (PDT)
+Date: Fri, 19 Sep 2025 12:52:46 +0200
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: "A. Wilcox" <AWilcox@wilcox-tech.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs_scrub: Use POSIX-conformant strerror_r
+Message-ID: <sgkgqvif3vdcmgd357pvupw7uqiyirtpp55gq6t2adb2csbltm@5tbqs6ilgmvn>
+References: <20250906081222.64798-1-AWilcox@Wilcox-Tech.com>
+ <20250912150044.GN8096@frogsfrogsfrogs>
+ <20250918162744.GI8096@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <175798151087.382724.2707973706304359333.stgit@frogsfrogsfrogs>
- <175798151352.382724.799745519035147130.stgit@frogsfrogsfrogs>
- <CAOQ4uxibHLq7YVpjtXdrHk74rXrOLSc7sAW7s=RADc7OYN2ndA@mail.gmail.com>
- <20250918181703.GR1587915@frogsfrogsfrogs> <CAOQ4uxiH1d3fV0kgiO3-JjqGH4DKboXdtEpe=Z=gKooPgz7B8g@mail.gmail.com>
- <CAJfpegsrBN9uSmKzYbrbdbP2mKxFTGkMS_0Hx4094e4PtiAXHg@mail.gmail.com>
-In-Reply-To: <CAJfpegsrBN9uSmKzYbrbdbP2mKxFTGkMS_0Hx4094e4PtiAXHg@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 19 Sep 2025 11:54:39 +0200
-X-Gm-Features: AS18NWA621z2KRPPWOGIYUM6iJJ0YvzsnlUffsLmeJBzhEVFirihKN7gNrA_jS0
-Message-ID: <CAOQ4uxgvzrJVErnbHW5ow1t-++PE8Y3uN-Fc8Vv+Q02RgDHA=Q@mail.gmail.com>
-Subject: Re: [PATCH 04/28] fuse: adapt FUSE_DEV_IOC_BACKING_{OPEN,CLOSE} to
- add new iomap devices
-To: Miklos Szeredi <miklos@szeredi.hu>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, bernd@bsbernd.com, linux-xfs@vger.kernel.org, 
-	John@groves.net, linux-fsdevel@vger.kernel.org, neal@gompa.dev, 
-	joannelkoong@gmail.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250918162744.GI8096@frogsfrogsfrogs>
 
-On Fri, Sep 19, 2025 at 9:14=E2=80=AFAM Miklos Szeredi <miklos@szeredi.hu> =
-wrote:
->
-> On Thu, 18 Sept 2025 at 20:42, Amir Goldstein <amir73il@gmail.com> wrote:
-> >
-> > On Thu, Sep 18, 2025 at 8:17=E2=80=AFPM Darrick J. Wong <djwong@kernel.=
-org> wrote:
->
-> > > How about restricting the backing ids to RLIMIT_NOFILE?  The @end par=
-am
-> > > to idr_alloc_cyclic constrains them in exactly that way.
-> >
-> > IDK. My impression was that Miklos didn't like having a large number
-> > of unaccounted files, but it's up to him.
->
-> There's no 1:1 mapping between a fuse instance and a "fuse server
-> process", so the question is whose RLIMIT_NOFILE?  Accounting to the
-> process that registered the fd would be good, but implementing it
-> looks exceedingly complex.  Just taking RLIMIT_NOFILE value from the
-> process that is doing the fd registering should work, I guess.
->
-> There's still the question of unhiding these files.  Latest discussion
-> ended with lets create a proper directory tree for open files in proc.
-> I.e. /proc/PID/fdtree/FD/hidden/...
->
+On 2025-09-18 09:27:44, Darrick J. Wong wrote:
+> On Fri, Sep 12, 2025 at 08:00:44AM -0700, Darrick J. Wong wrote:
+> > On Sat, Sep 06, 2025 at 03:12:07AM -0500, A. Wilcox wrote:
+> > > When building xfsprogs with musl libc, strerror_r returns int as
+> > > specified in POSIX.  This differs from the glibc extension that returns
+> > > char*.  Successful calls will return 0, which will be dereferenced as a
+> > > NULL pointer by (v)fprintf.
+> > > 
+> > > Signed-off-by: A. Wilcox <AWilcox@Wilcox-Tech.com>
+> > 
+> > Isn't C fun?
+> > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> 
+> Ohh yes it is, this patch broke the build for me:
 
-Yes, well, fuse_backing_open() says:
-/* TODO: relax CAP_SYS_ADMIN once backing files are visible to lsof */
-So that's the reason I was saying there is no justification to
-relax this for FUSE_IOMAP as long as this issue is not resolved.
+do you build gcc + musl?
 
-As Darrick writes, fuse4fs needs only 1 backing blockdev
-and other iomap fuse fs are unlikely to need more than a few
-backing blockdevs.
+- Andrey
 
-So maybe, similar to max_stack_depth, we require the server to
-negotiate the max_backing_id at FUSE_INIT time.
+> 
+> common.c: In function ‘__str_out’:
+> common.c:129:17: error: ignoring return value of ‘strerror_r’ declared with attribute ‘warn_unused_result’ [-Werror=unused-result]
+>   129 |                 strerror_r(error, buf, DESCR_BUFSZ);
+>       |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> 
+> <sigh> xfsprogs can't get the XSI version because it defines GNU_SOURCE,
+> and you can't shut up gcc by casting the whole expression to void.
+> 
+> Do you folks remove the -D_GNU_SOURCE from builddefs.in when building
+> against musl?  Or do you leave the definition alone, taking advantage of
+> the fact that #define'ing a symbol is not a guarantee of functionality?
+> 
+> --D
+> 
+> > --D
+> > 
+> > > ---
+> > >  scrub/common.c | 3 ++-
+> > >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/scrub/common.c b/scrub/common.c
+> > > index 14cd677b..9437d0ab 100644
+> > > --- a/scrub/common.c
+> > > +++ b/scrub/common.c
+> > > @@ -126,7 +126,8 @@ __str_out(
+> > >  	fprintf(stream, "%s%s: %s: ", stream_start(stream),
+> > >  			_(err_levels[level].string), descr);
+> > >  	if (error) {
+> > > -		fprintf(stream, _("%s."), strerror_r(error, buf, DESCR_BUFSZ));
+> > > +		strerror_r(error, buf, DESCR_BUFSZ);
+> > > +		fprintf(stream, _("%s."), buf);
+> > >  	} else {
+> > >  		va_start(args, format);
+> > >  		vfprintf(stream, format, args);
+> > > -- 
+> > > 2.49.0
+> > > 
+> > > 
+> > 
+> 
 
-We could allow any "reasonable" number without any capabilities
-and regardless of RLIMIT_NOFILE or we can account max_backing_id
-in advance for the user setting up the connection.
-
-For backward compat (or for privileged servers) zero max_backing_id
-means unlimited (within the int32 range) and that requires
-CAP_SYS_ADMIN for fuse_backing_open() regardless of which
-type of backing file it is.
-
-WDYT?
-
-Thanks,
-Amir.
