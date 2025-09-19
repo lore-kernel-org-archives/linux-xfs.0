@@ -1,100 +1,93 @@
-Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+Received: from mail-qk1-f174.google.com (mail-qk1-f174.google.com [209.85.222.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 730C52BF012
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 07:14:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ACDD2C0270
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 07:34:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758266047; cv=none; b=YOHq4mtl3g7JEBbcYYv4Lb0ydtcrsMpS8Kg9h6Fy3M1y2iDJ0ZuJUK/Mrr57PXQouQQpKGJhFvdMCh+ibbucJbTG8A3k1MtEP8/EEDp9EteIAD4uNrScQWYxWOV0+k0GU4P6fAsmXuifnC5NTjQRks9PfUfjUl9nxp7Y8B5v67Y=
+	t=1758267260; cv=none; b=px/FxJ+/ztf+qj9IU++f1z2ORiPiG6gdUfCEuq2EGrRRvEer+wevOHn848OrpWS6gPUMNy0ain6TYj0/uoYSqUvz+GNarsIMT/XdozH9v94kvcG167op58Y9yW9ix8YiqS6i6IlcC6KsqrH0+s6NiccOkDVoj63/rrZylxwsvbg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758266047; c=relaxed/simple;
-	bh=HWdLkZOt1eo65Hw9C2VJLQGvyauAaqfW7dH7XTRry48=;
+	s=arc-20240116; t=1758267260; c=relaxed/simple;
+	bh=UDbgq5I7/fiN9GyHTHOeYNojRIjPFBceV29A28/FmKM=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=loEtQfkivmPFAZBxDfHtoxgngIvLwjoOAk8ZMAjz+ryCQvVd+QCbuqzk3WyYbVVCs0WfxmmUdJthBjvz2IxrbyEt65L1RJwLI9bOYV+DmqEtaDrBnHd+r9LE2pffAoGMh5OHTAE+kn7MuRVKEqGwdcqgjSr9rJaYZjVTpjXwU0E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=JVQrOxNB; arc=none smtp.client-ip=209.85.160.178
+	 To:Cc:Content-Type; b=ObH6yq0V1NAyyo4yj63+HkOQtTDCYzrS8Vuj6CiwgB0EGTyzZ+qGLce6FhLQWyGKGt6aPpy7b0dW0a/G8+Ybg12wEiPntvq1jWWj4YivxMvlfVE1tOSkW8HvK5b09gHW1QeZFovUb/bOLbpLrnaUZeFk+c5zhdZNTzlIScWdT5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=IVyHIPov; arc=none smtp.client-ip=209.85.222.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=szeredi.hu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="JVQrOxNB"
-Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-4b5e88d9994so20514861cf.1
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 00:14:05 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="IVyHIPov"
+Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-826fe3b3e2bso190464685a.0
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 00:34:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google; t=1758266044; x=1758870844; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=5FwZbH6t8CGqEFqmrm0ZFV29P2Rt2NmMLrFnZUIngW4=;
-        b=JVQrOxNB9aklAqUCsbrzaBhSVhLRu1ViPAdrmaaCv+00+KH7K8IDB2fqaT0xPhCk/F
-         GwhtwHi2DsiJO4ar4JKuAOymywdrOGeH8AHCnoiiD3jn/WceRCJIRe9mxJM3WtTmQxkV
-         sVz5y7Z5KjFHcuUXUkcDHOj2mO/QidX/CrOPo=
+        d=szeredi.hu; s=google; t=1758267257; x=1758872057; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=1RChfYMo6l3NlpB1CtytFiCPlXnFT8/eeYYewFlQyV0=;
+        b=IVyHIPovg6fIybeWuYJk3D6SVydMvkoKvdKP2HGgSJbeuqsLPHKEHK1zaxocvpapHD
+         LH4/tLRdB7jOOkOs35t21z/rss58mqp8vXqemb/bHZqnmmdkT/rKssfDWRj4ToCAgQqV
+         hQZbSI/HO4zq9Z86UU8aIuokWmbqo9VBDKBCQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758266044; x=1758870844;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=5FwZbH6t8CGqEFqmrm0ZFV29P2Rt2NmMLrFnZUIngW4=;
-        b=ChFvNzrKP/4E1gZ+d4ynPngS5RoJ7GmZc5u4O4m165+dZn1/TxJq+6F2II2xj4uwel
-         la7OLYk9UAtes/6PiXwpE4Fa1iVXxzy6S9AF6lxO3qzMPDu/ainKde6khdK8+S1hUrhr
-         nRUDzdnvDePovVRr6H2V+mJV8p167rTCX9LIV7axfs8mUDJGruEE9E5LaFQmticuzMIk
-         6vb3BI4FykrBG2B6wVP+YVvlghmMhB0kq+VYgEnxBhHvmm1umTAfcM40qH4FzDfbZCrc
-         cTmfP4CxRqO3FR9lat61OzttEx/JzwDRCROPY224P5ULPxaNm2sc/Y/zgrS5I6/wvL41
-         tNrw==
-X-Forwarded-Encrypted: i=1; AJvYcCXt38DPye6lxguDs71Wz4IGq3U3dwD6um2Fc1rOMFehZoauPMXtPQ5/2dwC+8+Vg01tV44VxPXElbg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzuRAVtQekRHZeDH71+dh5AJnBerlKCy4RclT3OIZ5U6UUTNND/
-	zCLSTPImjIH/5XMf7Fb5JbmaeIS0RSp8crAn2v0ytslNDurHQ+OLtQ7AQnejf5LZ18xUDdB3LWj
-	ZTL/f6PW+zwaiX5oXLlTWJu7Rn+S7qxnlG42dFfGVPg==
-X-Gm-Gg: ASbGncsRLczRNat6ZsMCwEjoQRT34F1WJBlWbGy8YudAr5eh0BM8iPw789zLckC3zGc
-	Xaa5iMyc7PCzvodyahJ1XBaYJOGoBaZaiUwObzW6LNuPv+s0I3Wn4xpjoB/F7gHx6UUn2dMXjCG
-	fu1SCK8tm3Fhrzki+QTrdbZz84513PskOyUQtyIGsmqoyKBpq7DWhTpOlMFErNtfQpRayykGTvn
-	TBvT4ELr3KEkU4+alRslSObghsRkzxV+J71K92IhyqWeFpjow==
-X-Google-Smtp-Source: AGHT+IHgJSRV8ByiNY7ouVWHU1k4CdL9EQdnatTgwryNMr4/Omqqdm3U+SYbq5QYyRAZT3wSH4j4TBKjh1SPN/pjHcw=
-X-Received: by 2002:ac8:5754:0:b0:4b7:a885:9659 with SMTP id
- d75a77b69052e-4c0720ad96fmr24093771cf.41.1758266044383; Fri, 19 Sep 2025
- 00:14:04 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1758267257; x=1758872057;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=1RChfYMo6l3NlpB1CtytFiCPlXnFT8/eeYYewFlQyV0=;
+        b=A88phvdHper3mLCcTma1g7uitculMJBkvgbOyNqbjkDt0mzPQB/nkcQmtIIzjqZsPZ
+         8nHX0BfxYMHricQPmulTAlaT8DCRJrDa8sHRl72tfXTFLgB/NR8m0aujRbNp1gIBwgoO
+         WklGe78T1pNAAeoaZXLXOdH/TTw5wCAhFgCKtcWQcCW+W4NgoCXRfWW7scW7kmxAe9US
+         tMuxt5zB+qXM72bQsVZl7Mr/TQ9gGj5vnN5/jQfxEwWHQSTKpwa79lVv+daTcrTplIda
+         bOuxhrx6+KfhlbusZt0OwbU475SgkOwlZwFqdmr5DkAX+1wpEdC1CIpG4isIip8u3Ayv
+         xVFQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXKgQIX06pAcxn/DobNo05j9MrJ8ElE4JV9Y2n7sRVodDE8QqYLu4/slsu7i/UKkrRme0hDTf4JnLE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy2o4w1kVraI1uLlXwOCjdISJ5GrZF/y7FXHrplsJNmQtG424DC
+	p9npjrMokJRu4b6Y1z36BhNLkKdpUTDXMPVJKGvWtLW4ZzPXv0p8sfUSnx9WIpm+oKDUEoKjnAi
+	m8ircxF9Q0bPLRVSlhLn8yj2eQtARDgaMsjMeylB/nw==
+X-Gm-Gg: ASbGncvDnPPkg66+5OBr7Wh6A+yUy01WbPmRqToICr6mi5AYcpA6iWaUbLP4pLzL+Xs
+	b3T9SfL9tCZm/Yi+Awkt81bjfJDNq8HTJ2ziDGBJBy3i/niVt4Vg9YS2ZXENyWFKsR14vvK6CLN
+	ET+2zbi0emw3E/8HOj0f/33WDI84KTFV2nt/GuRIAkrX4dy90u9FqmmB/x+uq4x+mB6pEZ0iofq
+	VKJYrJyhBhBzJhmGtP9+EIlS9U3ZlM7DX7plgzaglI9dOqLiQ==
+X-Google-Smtp-Source: AGHT+IFH6/yIRQX6FHwVT74Oelgtb0ePNHcn9mX2qFQVBfBdaPpXLeRzP/soCW4TNqD+cygmZmF7/8DbipcgqrdjYnY=
+X-Received: by 2002:a05:620a:4b48:b0:817:d6c5:41ea with SMTP id
+ af79cd13be357-83babfe7d1amr196695285a.51.1758267257515; Fri, 19 Sep 2025
+ 00:34:17 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <175798151087.382724.2707973706304359333.stgit@frogsfrogsfrogs>
- <175798151352.382724.799745519035147130.stgit@frogsfrogsfrogs>
- <CAOQ4uxibHLq7YVpjtXdrHk74rXrOLSc7sAW7s=RADc7OYN2ndA@mail.gmail.com>
- <20250918181703.GR1587915@frogsfrogsfrogs> <CAOQ4uxiH1d3fV0kgiO3-JjqGH4DKboXdtEpe=Z=gKooPgz7B8g@mail.gmail.com>
-In-Reply-To: <CAOQ4uxiH1d3fV0kgiO3-JjqGH4DKboXdtEpe=Z=gKooPgz7B8g@mail.gmail.com>
+References: <175798150680.382479.9087542564560468560.stgit@frogsfrogsfrogs>
+ <175798150773.382479.13993075040890328659.stgit@frogsfrogsfrogs>
+ <CAOQ4uxigBL4pCDXjRYX0ftCMyQibRPuRJP7+KhC7Jr=yEM=DUw@mail.gmail.com> <20250918180226.GZ8117@frogsfrogsfrogs>
+In-Reply-To: <20250918180226.GZ8117@frogsfrogsfrogs>
 From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Fri, 19 Sep 2025 09:13:53 +0200
-X-Gm-Features: AS18NWD11PNB3svk5L_DyA4P7FLTVC_7xWPTnVo1mAtDh-XBIofxbbIK0S55ieo
-Message-ID: <CAJfpegsrBN9uSmKzYbrbdbP2mKxFTGkMS_0Hx4094e4PtiAXHg@mail.gmail.com>
-Subject: Re: [PATCH 04/28] fuse: adapt FUSE_DEV_IOC_BACKING_{OPEN,CLOSE} to
- add new iomap devices
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, bernd@bsbernd.com, linux-xfs@vger.kernel.org, 
+Date: Fri, 19 Sep 2025 09:34:06 +0200
+X-Gm-Features: AS18NWDnMUFDnNKztB29fevuAtOKBB3TGWjBAViz5bbTsRot9HiaHDnPQnmtPns
+Message-ID: <CAJfpegsN32gJohjiqdqKqLqwnu7BOchfqrjJEKVo33M1gMgmgg@mail.gmail.com>
+Subject: Re: [PATCH 3/5] fuse: move the passthrough-specific code back to passthrough.c
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Amir Goldstein <amir73il@gmail.com>, bernd@bsbernd.com, linux-xfs@vger.kernel.org, 
 	John@groves.net, linux-fsdevel@vger.kernel.org, neal@gompa.dev, 
 	joannelkoong@gmail.com
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, 18 Sept 2025 at 20:42, Amir Goldstein <amir73il@gmail.com> wrote:
+On Thu, 18 Sept 2025 at 20:02, Darrick J. Wong <djwong@kernel.org> wrote:
 >
-> On Thu, Sep 18, 2025 at 8:17=E2=80=AFPM Darrick J. Wong <djwong@kernel.or=
-g> wrote:
+> On Wed, Sep 17, 2025 at 04:47:19AM +0200, Amir Goldstein wrote:
 
-> > How about restricting the backing ids to RLIMIT_NOFILE?  The @end param
-> > to idr_alloc_cyclic constrains them in exactly that way.
+> > I think at this point in time FUSE_PASSTHROUGH and
+> > FUSE_IOMAP should be mutually exclusive and
+> > fuse_backing_ops could be set at fc level.
+> > If we want to move them for per fuse_backing later
+> > we can always do that when the use cases and tests arrive.
 >
-> IDK. My impression was that Miklos didn't like having a large number
-> of unaccounted files, but it's up to him.
+> With Miklos' ok I'll constrain fuse not to allow passthrough and iomap
+> files on the same filesystem, but as it is now there's no technical
+> reason to make it so that they can't coexist.
 
-There's no 1:1 mapping between a fuse instance and a "fuse server
-process", so the question is whose RLIMIT_NOFILE?  Accounting to the
-process that registered the fd would be good, but implementing it
-looks exceedingly complex.  Just taking RLIMIT_NOFILE value from the
-process that is doing the fd registering should work, I guess.
-
-There's still the question of unhiding these files.  Latest discussion
-ended with lets create a proper directory tree for open files in proc.
-I.e. /proc/PID/fdtree/FD/hidden/...
+Is there a good reason to add the restriction?   If restricting it
+doesn't simplify anything or even makes it more complex, then I'd opt
+for leaving it more general, even if it doesn't seem to make sense.
 
 Thanks,
 Miklos
