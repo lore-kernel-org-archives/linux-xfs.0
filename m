@@ -1,108 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98F3E2652A2
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 16:16:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 522F3223DE7
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 16:25:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758298581; cv=none; b=pXJn5mQ5KnrqnNvh/Qw1FTCW+s3/FnMDZI2jPs//VfRdYFRwOvEcvRL/U/6eXs430bNGIwa10NTI4kKtNYWqFU2PrVc9cQzPK2FXBx+WTr5FkiWvmDs1JpuJQrKjdecI6aAeQCZjgAiq3CsQDNUrNPmiA3MtYdJW1wmmHalpz/g=
+	t=1758299106; cv=none; b=NgwFRpukmsmkpZfEmn0UF3PPeuHZXZRVOGgQclae8yLftaR6t031GdpSlVZsbgO5uNWKrLteXu0rOzjGXNPzYBeyOrkj5u7F959SMw2UJ6HcV2h7ZwKZaz/WPSx/Jw7tWTIfaZjXgLX3cNatRnf0b/gOVcWhtNWO+20yEi8EpFM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758298581; c=relaxed/simple;
-	bh=KwOzIaBlSEDN8uVKkk6yCOebuuVHp9UGEdZK9nGJShs=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=bgzGuS6Tk13hDZMMPIIN8UKCVCWy4v4uWnJvJmSWEisuKT9TFD5KeUbbcw0NCCI1JTk9lEg3qBcAYLLz/J/pmhH5BGKvOMcjsdEGCy2ULWfDC1PT2JbTAye4EbH/VVBx+wy/0KfpLTjk++BNy7mrd40Fjr78gBOzoGDmMvZ9V9E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RnDZbkI7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758299106; c=relaxed/simple;
+	bh=09V0g4NLoeb1DFmo++HYddAzMfpP8gAmuJFVHu43qcw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YjytGiMnXqtd8V5w47Ip1hWAHQSg9ZObtHNjEqu6Xb1qYKZeCsgc7euIg3lfIVQwAMOIeaz5rnJ0imLn/XcCZfc+f/dwW7xwjw794qN1F7/Pr/wpJ2FV2m3lLaxTX4V6TBGhCNu6PNcQ+UZ401BGw7ZPcogiChtsauYlavt4XFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XSWGIBpU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RnDZbkI7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C40FC4CEF0
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 16:16:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XSWGIBpU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D02F3C4CEF0;
+	Fri, 19 Sep 2025 16:25:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758298581;
-	bh=KwOzIaBlSEDN8uVKkk6yCOebuuVHp9UGEdZK9nGJShs=;
-	h=Date:From:To:Subject:From;
-	b=RnDZbkI7d5YHwxtsTHsB18IQUPcyE2DqBk9TFH3BIDZNMO4mB0cjdPc0pM4K38YE6
-	 HF7MTMxCO20op2+d/MZDl5WElCr6ZiEhIQz6eYmvJX1MDuTKuTG2KBSfz4h5Stbw8i
-	 HtRrMPmuRiFlxyD1ulIEmmTI58B8A+2JyJRAkIpbD0yuZZ6hElDrfBuxFRxx4hkwrq
-	 Wd1zI5UGxKevj5q8FUere9SFRttWFcSH80vTe185pP2bVzjp1mD1zalQqP6ltxAywK
-	 pI+ePzqU0Unxg+YQDYP94vWrvTYThVBFM+HdnLcBcanDuXuzPSA+AYpcKnhgHh1JKW
-	 aC0JdGEi5tDSA==
-Date: Fri, 19 Sep 2025 18:16:17 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 3c54e6027f14
-Message-ID: <dxfj6ldpbjmymga7ozm6jbzlmczefjumdp77hcs6p5uchf2ojv@jkusq6kjsv7j>
+	s=k20201202; t=1758299105;
+	bh=09V0g4NLoeb1DFmo++HYddAzMfpP8gAmuJFVHu43qcw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XSWGIBpUnQJictfKuijNtFxEl64OI9PGwV4XLdIzm1t4+W8/dfy3nFo+FfW73y91Y
+	 7/dkqvDZ12BLfjpxyIPLjZONr+OlG94kHZ9ezciMEXZ9b1Z+2Ze82/i6g1cmNSAzue
+	 p5Oda+Vxd0AnOzM5mgU88WmBZrhaANOseUIhtaWJKxFOKttlynhkAkmPFKVcbgKcpv
+	 /kDagF2+b2d04WIw9zUDFG1SJdiJd75+xnABvgfKpVYJeAZbfDgt01aYY1izUgI8/u
+	 C4apboF9ueZKZqAUey0oohtRb1ISXH4CcYd9/91byP4B0RNlP/ArJTevwmFj455BSr
+	 0yp7kZDY2gI9w==
+Date: Fri, 19 Sep 2025 09:25:05 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: "A. Wilcox" <AWilcox@wilcox-tech.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs_scrub: Use POSIX-conformant strerror_r
+Message-ID: <20250919162505.GP8096@frogsfrogsfrogs>
+References: <20250906081222.64798-1-AWilcox@Wilcox-Tech.com>
+ <20250912150044.GN8096@frogsfrogsfrogs>
+ <20250918162744.GI8096@frogsfrogsfrogs>
+ <sgkgqvif3vdcmgd357pvupw7uqiyirtpp55gq6t2adb2csbltm@5tbqs6ilgmvn>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <sgkgqvif3vdcmgd357pvupw7uqiyirtpp55gq6t2adb2csbltm@5tbqs6ilgmvn>
 
+On Fri, Sep 19, 2025 at 12:52:46PM +0200, Andrey Albershteyn wrote:
+> On 2025-09-18 09:27:44, Darrick J. Wong wrote:
+> > On Fri, Sep 12, 2025 at 08:00:44AM -0700, Darrick J. Wong wrote:
+> > > On Sat, Sep 06, 2025 at 03:12:07AM -0500, A. Wilcox wrote:
+> > > > When building xfsprogs with musl libc, strerror_r returns int as
+> > > > specified in POSIX.  This differs from the glibc extension that returns
+> > > > char*.  Successful calls will return 0, which will be dereferenced as a
+> > > > NULL pointer by (v)fprintf.
+> > > > 
+> > > > Signed-off-by: A. Wilcox <AWilcox@Wilcox-Tech.com>
+> > > 
+> > > Isn't C fun?
+> > > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> > 
+> > Ohh yes it is, this patch broke the build for me:
+> 
+> do you build gcc + musl?
 
-Hi folks,
+I don't even know /how/ to do that, even on Debian.
 
-The for-next branch of the xfs-linux repository at:
+--D
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-3c54e6027f14 xfs: constify xfs_errortag_random_default
-
-9 new commits:
-
-Christoph Hellwig (7):
-      [42c21838708c] xfs: move the XLOG_REG_ constants out of xfs_log_format.h
-      [d5409ebf46bb] xfs: remove xfs_errortag_get
-      [991dcadaddcc] xfs: remove xfs_errortag_set
-      [807df3227d76] xfs: remove the expr argument to XFS_TEST_ERROR
-      [b55dd7279811] xfs: remove pointless externs in xfs_error.h
-      [71fa062196ae] xfs: centralize error tag definitions
-      [3c54e6027f14] xfs: constify xfs_errortag_random_default
-
-Damien Le Moal (2):
-      [8e1cfa51320d] xfs: improve zone statistics message
-      [ff3d90903f8f] xfs: improve default maximum number of open zones
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_ag_resv.c    |   7 +-
- fs/xfs/libxfs/xfs_alloc.c      |   5 +-
- fs/xfs/libxfs/xfs_attr_leaf.c  |   2 +-
- fs/xfs/libxfs/xfs_bmap.c       |  17 ++--
- fs/xfs/libxfs/xfs_btree.c      |   2 +-
- fs/xfs/libxfs/xfs_da_btree.c   |   2 +-
- fs/xfs/libxfs/xfs_dir2.c       |   2 +-
- fs/xfs/libxfs/xfs_errortag.h   | 114 +++++++++++++---------
- fs/xfs/libxfs/xfs_exchmaps.c   |   4 +-
- fs/xfs/libxfs/xfs_ialloc.c     |   2 +-
- fs/xfs/libxfs/xfs_inode_buf.c  |   4 +-
- fs/xfs/libxfs/xfs_inode_fork.c |   3 +-
- fs/xfs/libxfs/xfs_log_format.h |  37 -------
- fs/xfs/libxfs/xfs_metafile.c   |   2 +-
- fs/xfs/libxfs/xfs_refcount.c   |   7 +-
- fs/xfs/libxfs/xfs_rmap.c       |   2 +-
- fs/xfs/libxfs/xfs_rtbitmap.c   |   2 +-
- fs/xfs/libxfs/xfs_zones.h      |   7 ++
- fs/xfs/scrub/cow_repair.c      |   4 +-
- fs/xfs/scrub/repair.c          |   2 +-
- fs/xfs/xfs_attr_item.c         |   2 +-
- fs/xfs/xfs_buf.c               |   4 +-
- fs/xfs/xfs_error.c             | 216 ++++++-----------------------------------
- fs/xfs/xfs_error.h             |  47 ++++-----
- fs/xfs/xfs_inode.c             |  28 +++---
- fs/xfs/xfs_iomap.c             |   4 +-
- fs/xfs/xfs_log.c               |   8 +-
- fs/xfs/xfs_log.h               |  37 +++++++
- fs/xfs/xfs_trans_ail.c         |   2 +-
- fs/xfs/xfs_zone_alloc.c        |   4 +-
- 30 files changed, 217 insertions(+), 362 deletions(-)
+> - Andrey
+> 
+> > 
+> > common.c: In function ‘__str_out’:
+> > common.c:129:17: error: ignoring return value of ‘strerror_r’ declared with attribute ‘warn_unused_result’ [-Werror=unused-result]
+> >   129 |                 strerror_r(error, buf, DESCR_BUFSZ);
+> >       |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> > 
+> > <sigh> xfsprogs can't get the XSI version because it defines GNU_SOURCE,
+> > and you can't shut up gcc by casting the whole expression to void.
+> > 
+> > Do you folks remove the -D_GNU_SOURCE from builddefs.in when building
+> > against musl?  Or do you leave the definition alone, taking advantage of
+> > the fact that #define'ing a symbol is not a guarantee of functionality?
+> > 
+> > --D
+> > 
+> > > --D
+> > > 
+> > > > ---
+> > > >  scrub/common.c | 3 ++-
+> > > >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/scrub/common.c b/scrub/common.c
+> > > > index 14cd677b..9437d0ab 100644
+> > > > --- a/scrub/common.c
+> > > > +++ b/scrub/common.c
+> > > > @@ -126,7 +126,8 @@ __str_out(
+> > > >  	fprintf(stream, "%s%s: %s: ", stream_start(stream),
+> > > >  			_(err_levels[level].string), descr);
+> > > >  	if (error) {
+> > > > -		fprintf(stream, _("%s."), strerror_r(error, buf, DESCR_BUFSZ));
+> > > > +		strerror_r(error, buf, DESCR_BUFSZ);
+> > > > +		fprintf(stream, _("%s."), buf);
+> > > >  	} else {
+> > > >  		va_start(args, format);
+> > > >  		vfprintf(stream, format, args);
+> > > > -- 
+> > > > 2.49.0
+> > > > 
+> > > > 
+> > > 
+> > 
+> 
+> 
