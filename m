@@ -1,96 +1,77 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7363F23ABBF
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 13:09:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 408092AD16
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 13:12:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758287372; cv=none; b=O2bJBV7MMG1DWrXOehbALlXEF0OM15FrgApgqp8zwhC9Fv/zUPYAm0U/u7n98bTPrn6BeEvc1to9/nnN7CMyjIbcA11wcRcLRmtdywZODLDWBfRpK1ZJ+RlL5Si39ICrmKWvtFHVYSFFlfWszCkk5qmL3QEIFzS1FnCpTOQEHrU=
+	t=1758287546; cv=none; b=DY1CPJOH1aP9Diq3O6U5VxJ5/TefB78I1VzwebfHuotCsVbi3mO5OcFEJR/y3GoDlgIotUPUUJAq8r9oiJEY1Eh6WaDbdiDlzaWOzjUqPId5XNcJp3cKcFz0WsZAhVfMMIkzSs8OvE1cwk3IJeaBIV6o6iV/BFGKzqEcX4FBcbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758287372; c=relaxed/simple;
-	bh=H2nghK4bl/H+DNUfQhtZLwYHG07QNLlFwkEd9mrXbhQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Q+m3G31YQTckIkNrMaD3O6FFEFlzy4ewvk74BPUHj3CZKWX/JOcM5nQer3cCvuEKUWh1/usBnhG1/KwMQZw9Khh+/cUbOhsZPdlZmq1bkDlPtu/T9CyHUZsHSzCey8/DkZNZn/o1pePFewSZ4zgQVoMikMNblj/Fv6msurV2c70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BQIPISGy; arc=none smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1758287546; c=relaxed/simple;
+	bh=e2jFyOSaJ02UgToH27qJ9P4XpMl820XYBBGYA0EWlv8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=mcDgfS+MMXMccTE4+76EYUIvFytlfHDsjS3sthiYCDK5Nn9T5ExP+JX8ltmGTcZ3LqDE3LU2eZ8uzJvPd7VSmbi6NC9VDIWjW39/bkN0TumLaOIh/z2j/gQRtSeqj89EG8W3UTiNKhJbEMFh/NxgFWmjSgO3fdvWj925jH5wns8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=lzFeSJdz; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BQIPISGy"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-6228de280a4so3290743a12.2
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 06:09:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758287369; x=1758892169; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=H2nghK4bl/H+DNUfQhtZLwYHG07QNLlFwkEd9mrXbhQ=;
-        b=BQIPISGyaL9K2DiFORwYXbLp0t2u4Qq7Wi9F4RNLMuSVpyK66tSAoNsyEIYswqWV26
-         iNyNMFsvPDMLcyCx5Brope1KQRqcyBHMz4yssiys1snjyeR3l1GIcRFDsIjglAi9HvWj
-         IlBVLk4wEYQGTNNyUT7TeWjslzh1k5HuAp+0Qpsn5AsZ2NW8Y5UyHSzN70Zer329AMnZ
-         n996bHOKl75/nauI8STW5nkufGGR6s1xIt3boi1DFvvYhV32fAvcCtgJqEW1NhPtORuX
-         wm9IS6roqrijLmO1HE8RXHPiymNGhW+W2wOGR4/VZPeKOGA6ByVNxAJRMbvc1aw+r+Xm
-         q8TA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758287369; x=1758892169;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=H2nghK4bl/H+DNUfQhtZLwYHG07QNLlFwkEd9mrXbhQ=;
-        b=e0I24SgrtmwIqMDQH2OzE/t7KSLiaOAomQC7D4rUbNugqvg+wEnVm5uF3kHRzbMWI3
-         EVfns6pd2jIr9k4kjZ4N4FeUHM33TW/veML6WXRC4orUZqNf1ZpbSYfzQGpgF79bbutI
-         DeimaWnqEhSMsVQj7rxsnzUp3c2j0GzM/d6i6SoiO2LQSsRGuM+1vTZ34lqi99zrXEQp
-         IToVplVlZFph+RHmOvYy6LesE5Q7rbO+LU0HCchPU/FOADtfd5mhL8LjRN0xRw6EWfcx
-         KHuErkOwTXNfVAxbezIvqnQ7b5SgulTTVHD8yVW5zhBza4B84r+vcB0HtwlTXVffWzDS
-         LUww==
-X-Forwarded-Encrypted: i=1; AJvYcCWs+Q3geZlQmevOpiei6JqnZhO2vLYH4ORLpkslAe0uzC5foR/jR9ezRXKdH7iaQ3wzfU6nOdF+re0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzLFbmAAj0/BigL9TA5uO0djgm8k6DXn1S84PFVGQESAJcfFbIa
-	z+6mJc8GAwx03Lq97TBTQEpVx6r45Ty4BFXxVlswKK5xTBLiMQiBRBOjOWnMvlqBLaKiuffsPht
-	n/oxTXFylntLTps/OiCjSbcF2Qhg+AJ8=
-X-Gm-Gg: ASbGncvXBLrPkfFnTxqcKxYOib0tkJnBPDK6nF4uUMRzoG9CMgxECEHYSK9jtSBivmK
-	zNJuTUJqx/Hm+qtlRFIL7kDR0/gjGSolIUega6YAGoYKey+MDD67Ghe5IlDKBiZuD888cSKDgHv
-	2TCu6ijt8QH48BFCvqjqecwQ7TR+x4P5czLt30p0R4fB3U0h03I3q0HQvU0pIW34Opt4IQrSfcq
-	nG7Dghn3ov722Z/akhpn9GTfnU1qewKRWv9AUI=
-X-Google-Smtp-Source: AGHT+IFApfhAHEjMUI5U299k57YwKnPsMN/Ik0b5HX6lVlpdtHbeIxsd1Q0r+GQz5I22vbwNy4Ut9U4zuDgZ7sOE0qo=
-X-Received: by 2002:a05:6402:5343:10b0:62b:2899:5b31 with SMTP id
- 4fb4d7f45d1cf-62fc08d40ecmr2418056a12.5.1758287368510; Fri, 19 Sep 2025
- 06:09:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lzFeSJdz"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=K4mgcDS2q9WdRaXv2zsdGjB/tHT8QQ2jQoVNOEv/s50=; b=lzFeSJdzzf3MFOgWjPzgcu/hOU
+	yhjZuyKclcIV/WEfcbDbmniA+GE0+VL19blpHy2gX0o7oHBPRikYZhj8aWrsTrvrXcPyhB2APyspN
+	v+XOvgywz0EQ0F2dAJxpjmX6Nva9MAdFaIaX1r1jO65bYuNWzEy2RTzGz2cDvqt8tP4qOfYErJ/6Q
+	vKx8OAh+6lKlB0mwGv2U/EsbDeTaYNWjdO93t08/+aMP+vdIB7ZsTV20DGJrrrJaCFfeX19czca4q
+	m83C9CDdE2DgkwQZ1FTYy8VxXUuZASApqdfgZgu2jHXmJBJxqCwRz3LJbOWuuqelg4X+M8hWxP6dq
+	AaitUGqw==;
+Received: from [4.28.11.157] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uzauV-00000002x1B-3wpX;
+	Fri, 19 Sep 2025 13:12:23 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH 2/2] xfs: use bt_nr_sectors in xfs_dax_translate_range
+Date: Fri, 19 Sep 2025 06:12:09 -0700
+Message-ID: <20250919131222.802840-3-hch@lst.de>
+X-Mailer: git-send-email 2.47.2
+In-Reply-To: <20250919131222.802840-1-hch@lst.de>
+References: <20250919131222.802840-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250916135900.2170346-1-mjguzik@gmail.com> <20250919-unmotiviert-dankt-40775a34d7a7@brauner>
-In-Reply-To: <20250919-unmotiviert-dankt-40775a34d7a7@brauner>
-From: Mateusz Guzik <mjguzik@gmail.com>
-Date: Fri, 19 Sep 2025 15:09:16 +0200
-X-Gm-Features: AS18NWD5Om8yGekTULVtEvApOLHSTiZijG74rmoXqBK7CgJeOnhoxL1KEl8c09g
-Message-ID: <CAGudoHFgf3pCAOfp7cXc4Y6pmrVRjG9R79Ak16kcMUq+uQyUfw@mail.gmail.com>
-Subject: Re: [PATCH v4 00/12] hide ->i_state behind accessors
-To: Christian Brauner <brauner@kernel.org>
-Cc: viro@zeniv.linux.org.uk, jack@suse.cz, linux-kernel@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, josef@toxicpanda.com, kernel-team@fb.com, 
-	amir73il@gmail.com, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org, 
-	linux-unionfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Sep 19, 2025 at 2:19=E2=80=AFPM Christian Brauner <brauner@kernel.o=
-rg> wrote:
->
-> On Tue, Sep 16, 2025 at 03:58:48PM +0200, Mateusz Guzik wrote:
-> > This is generated against:
-> > https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/commit/?h=
-=3Dvfs-6.18.inode.refcount.preliminaries
->
-> Given how late in the cycle it is I'm going to push this into the v6.19
-> merge window. You don't need to resend. We might get by with applying
-> and rebasing given that it's fairly mechanincal overall. Objections
-> Mateusz?
+Only ranges inside the file system can be translated, and the file system
+can be smaller than the containing device.
 
-First a nit: if the prelim branch is going in, you may want to adjust
-the dump_inode commit to use icount_read instead of
-atomic_read(&inode->i_count));
+Fixes: f4ed93037966 ("xfs: don't shut down the filesystem for media failures beyond end of log")
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ fs/xfs/xfs_notify_failure.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Getting this in *now* is indeed not worth it, so I support the idea.
+diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+index fbeddcac4792..b17672889942 100644
+--- a/fs/xfs/xfs_notify_failure.c
++++ b/fs/xfs/xfs_notify_failure.c
+@@ -165,7 +165,7 @@ xfs_dax_translate_range(
+ 	uint64_t		*bblen)
+ {
+ 	u64			dev_start = btp->bt_dax_part_off;
+-	u64			dev_len = bdev_nr_bytes(btp->bt_bdev);
++	u64			dev_len = BBTOB(btp->bt_nr_sectors);
+ 	u64			dev_end = dev_start + dev_len - 1;
+ 
+ 	/* Notify failure on the whole device. */
+-- 
+2.47.2
+
