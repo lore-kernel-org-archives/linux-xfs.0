@@ -1,93 +1,120 @@
-Received: from mail-qk1-f174.google.com (mail-qk1-f174.google.com [209.85.222.174])
+Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ACDD2C0270
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 07:34:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CCAC2E3B00
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 09:24:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758267260; cv=none; b=px/FxJ+/ztf+qj9IU++f1z2ORiPiG6gdUfCEuq2EGrRRvEer+wevOHn848OrpWS6gPUMNy0ain6TYj0/uoYSqUvz+GNarsIMT/XdozH9v94kvcG167op58Y9yW9ix8YiqS6i6IlcC6KsqrH0+s6NiccOkDVoj63/rrZylxwsvbg=
+	t=1758273865; cv=none; b=Q+ehh4Pq99XgKUnNIqjU2ITfsHsMq/FKQI3g07Ip5rQVoEZ7umPx3iyBY6YKLQOF6BYhmNRzWbQW4YMd5y7weqQHPBUjTj0Ekwp3iH/GvRd9oHrBSpJR8FCXpFcQZMiqAo87gkLa6DuB2tlO+VNJ+wSyaYM7JRCXKJtV2k2d5hc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758267260; c=relaxed/simple;
-	bh=UDbgq5I7/fiN9GyHTHOeYNojRIjPFBceV29A28/FmKM=;
+	s=arc-20240116; t=1758273865; c=relaxed/simple;
+	bh=KQiTAQdiwN+GJ50j+5K2WRjp/AryOxnjKJ+Cu9OgotA=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ObH6yq0V1NAyyo4yj63+HkOQtTDCYzrS8Vuj6CiwgB0EGTyzZ+qGLce6FhLQWyGKGt6aPpy7b0dW0a/G8+Ybg12wEiPntvq1jWWj4YivxMvlfVE1tOSkW8HvK5b09gHW1QeZFovUb/bOLbpLrnaUZeFk+c5zhdZNTzlIScWdT5I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=IVyHIPov; arc=none smtp.client-ip=209.85.222.174
+	 To:Cc:Content-Type; b=IFOjJgHLj0ctmn81pfvEvA0E3XGZB0nGFdv7tUplkdTaqcsR3AOFCAstqNZkEeS97NhfH/LZveticw/7hx7EFu0qwJSq7BAXa+EuoyV20twYq4jwq5c7RFvi7sviBEbY5HzjZfUrpFcORwJ8c3IYrxw/4jOLFdG9K5Rxhf+NRdY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=gO3EkDqm; arc=none smtp.client-ip=209.85.160.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=szeredi.hu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="IVyHIPov"
-Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-826fe3b3e2bso190464685a.0
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 00:34:18 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="gO3EkDqm"
+Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-4b58b1b17d7so19859761cf.1
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 02:24:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google; t=1758267257; x=1758872057; darn=vger.kernel.org;
+        d=szeredi.hu; s=google; t=1758273861; x=1758878661; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=1RChfYMo6l3NlpB1CtytFiCPlXnFT8/eeYYewFlQyV0=;
-        b=IVyHIPovg6fIybeWuYJk3D6SVydMvkoKvdKP2HGgSJbeuqsLPHKEHK1zaxocvpapHD
-         LH4/tLRdB7jOOkOs35t21z/rss58mqp8vXqemb/bHZqnmmdkT/rKssfDWRj4ToCAgQqV
-         hQZbSI/HO4zq9Z86UU8aIuokWmbqo9VBDKBCQ=
+        bh=LGK83wgkCsEHYgUlZnWfhWk+fS3ibzSHWue8+kKX8SI=;
+        b=gO3EkDqmrvD38Lo3LtI4ZknKbm3H+aJ2QpJZi/GZ37rNjVp3KjG6S3PWXtmLqtt+qB
+         PkPI0s5HJWzQOLQvWYc3Q4x69DxmfIK5ynoF5XFt0ZchFuKy2AXHCWPTvGeTARE6viwc
+         IR09W8Tzq4Avp1oc+VzA105UDmRBunA/H8IJQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758267257; x=1758872057;
+        d=1e100.net; s=20230601; t=1758273861; x=1758878661;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=1RChfYMo6l3NlpB1CtytFiCPlXnFT8/eeYYewFlQyV0=;
-        b=A88phvdHper3mLCcTma1g7uitculMJBkvgbOyNqbjkDt0mzPQB/nkcQmtIIzjqZsPZ
-         8nHX0BfxYMHricQPmulTAlaT8DCRJrDa8sHRl72tfXTFLgB/NR8m0aujRbNp1gIBwgoO
-         WklGe78T1pNAAeoaZXLXOdH/TTw5wCAhFgCKtcWQcCW+W4NgoCXRfWW7scW7kmxAe9US
-         tMuxt5zB+qXM72bQsVZl7Mr/TQ9gGj5vnN5/jQfxEwWHQSTKpwa79lVv+daTcrTplIda
-         bOuxhrx6+KfhlbusZt0OwbU475SgkOwlZwFqdmr5DkAX+1wpEdC1CIpG4isIip8u3Ayv
-         xVFQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXKgQIX06pAcxn/DobNo05j9MrJ8ElE4JV9Y2n7sRVodDE8QqYLu4/slsu7i/UKkrRme0hDTf4JnLE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy2o4w1kVraI1uLlXwOCjdISJ5GrZF/y7FXHrplsJNmQtG424DC
-	p9npjrMokJRu4b6Y1z36BhNLkKdpUTDXMPVJKGvWtLW4ZzPXv0p8sfUSnx9WIpm+oKDUEoKjnAi
-	m8ircxF9Q0bPLRVSlhLn8yj2eQtARDgaMsjMeylB/nw==
-X-Gm-Gg: ASbGncvDnPPkg66+5OBr7Wh6A+yUy01WbPmRqToICr6mi5AYcpA6iWaUbLP4pLzL+Xs
-	b3T9SfL9tCZm/Yi+Awkt81bjfJDNq8HTJ2ziDGBJBy3i/niVt4Vg9YS2ZXENyWFKsR14vvK6CLN
-	ET+2zbi0emw3E/8HOj0f/33WDI84KTFV2nt/GuRIAkrX4dy90u9FqmmB/x+uq4x+mB6pEZ0iofq
-	VKJYrJyhBhBzJhmGtP9+EIlS9U3ZlM7DX7plgzaglI9dOqLiQ==
-X-Google-Smtp-Source: AGHT+IFH6/yIRQX6FHwVT74Oelgtb0ePNHcn9mX2qFQVBfBdaPpXLeRzP/soCW4TNqD+cygmZmF7/8DbipcgqrdjYnY=
-X-Received: by 2002:a05:620a:4b48:b0:817:d6c5:41ea with SMTP id
- af79cd13be357-83babfe7d1amr196695285a.51.1758267257515; Fri, 19 Sep 2025
- 00:34:17 -0700 (PDT)
+        bh=LGK83wgkCsEHYgUlZnWfhWk+fS3ibzSHWue8+kKX8SI=;
+        b=nfI//YGIpW719lWXoTmoyGxE2MKLE8NwJ/pLWiHQXPAxl+CzSBIREXf5f2GtY9Nscy
+         WjGJzDMK5yHjGYf4ZYSCcN/mSz8PDmyHUrhriiyoKsTG03n3vfThjR9p7DHG8aJroevM
+         s5s05w9yxMqAWmJh2b6V4rBEkOWc/9H7YosOucI8WCyu6+xXk/U9ARzy0aJkJ5tXbMKX
+         XEilxdQEu+KTm1Sdg77Mt9MkcVlqRohK450ZLVG8xHPiDNrHqzmnQ/Jy0QPI13R9sMK7
+         Dp2BEYn2w00jIarJeHttErkI0rQxQMX/Zn8+ikS1UUpn6VbqKmA2TA10GOuxJbnM+JNN
+         rFng==
+X-Forwarded-Encrypted: i=1; AJvYcCUCMqAy3HC7mpg+UEHocEW625MhaOhO4Gh+PtfZrH5/KGBuO/ekFYRX4hChIDKUWCgrcJy1ftlOel8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywunyns8Y6nT54BN7LU1jukp9P1ffkgcIkm+zhLKWLFsqPjqdmg
+	J9cSW72Um8l18EA0n9ckSbv/VgqtD5EoKo6M4xSJNnor9FfMkYF2MeZnFEZFb0fvVBJ2cCb0rx7
+	nMNiSPRuMSZfUZ4rgJZII86TaqwfO4XclDM8zzrC/c8vj4f2BUJpb
+X-Gm-Gg: ASbGncvupV1Bgm8aYgXLWfBrt7Z99gaycJlhTvAcBgQ47d6PYu9uOZhjRU8E6gsZkHn
+	UQ3Seo6pgnNHvrp0FwLIHDhlK+Hi+llMu3awKg9OCuZCWN0mLNvldP++05dMKX5UQwQIMccqZbN
+	aeQy9r2/NzfZVSJ75V+tpQgGX1HYNvkaIp02xFFUoyd+/+lTT2s8bXPIiNKvVuhJilLE2MRMG9X
+	KY47pLFgw4hStEEj2Hd0AvMnVaIkgW0Ja6NFBE=
+X-Google-Smtp-Source: AGHT+IFVKeGNA8iwunayOdCnDn5gUFohC0mpxMLUoxxNAtrXMYz0aKJkUCwQzwld8NOhocQEH/GMZcFPKFcgY7oqbys=
+X-Received: by 2002:a05:622a:349:b0:4b7:ad20:9393 with SMTP id
+ d75a77b69052e-4c03c19445bmr33624631cf.4.1758273860883; Fri, 19 Sep 2025
+ 02:24:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <175798150680.382479.9087542564560468560.stgit@frogsfrogsfrogs>
- <175798150773.382479.13993075040890328659.stgit@frogsfrogsfrogs>
- <CAOQ4uxigBL4pCDXjRYX0ftCMyQibRPuRJP7+KhC7Jr=yEM=DUw@mail.gmail.com> <20250918180226.GZ8117@frogsfrogsfrogs>
-In-Reply-To: <20250918180226.GZ8117@frogsfrogsfrogs>
+References: <175798149979.381990.14913079500562122255.stgit@frogsfrogsfrogs>
+ <175798150113.381990.4002893785000461185.stgit@frogsfrogsfrogs>
+ <CAJnrk1YWtEJ2O90Z0+YH346c3FigVJz4e=H6qwRYv7xLdVg1PA@mail.gmail.com> <20250918165227.GX8117@frogsfrogsfrogs>
+In-Reply-To: <20250918165227.GX8117@frogsfrogsfrogs>
 From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Fri, 19 Sep 2025 09:34:06 +0200
-X-Gm-Features: AS18NWDnMUFDnNKztB29fevuAtOKBB3TGWjBAViz5bbTsRot9HiaHDnPQnmtPns
-Message-ID: <CAJfpegsN32gJohjiqdqKqLqwnu7BOchfqrjJEKVo33M1gMgmgg@mail.gmail.com>
-Subject: Re: [PATCH 3/5] fuse: move the passthrough-specific code back to passthrough.c
+Date: Fri, 19 Sep 2025 11:24:09 +0200
+X-Gm-Features: AS18NWCjc_3E0iwkIgU5uLF3JTSa4tc2BBRJoi7PMNgtkSa_UrI5XoMgEJYheE8
+Message-ID: <CAJfpegt6YzTSKBWSO8Va6bvf2-BA_9+Yo8g-X=fncZfZEbBZWw@mail.gmail.com>
+Subject: Re: [PATCH 4/8] fuse: signal that a fuse filesystem should exhibit
+ local fs behaviors
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Amir Goldstein <amir73il@gmail.com>, bernd@bsbernd.com, linux-xfs@vger.kernel.org, 
-	John@groves.net, linux-fsdevel@vger.kernel.org, neal@gompa.dev, 
-	joannelkoong@gmail.com
+Cc: Joanne Koong <joannelkoong@gmail.com>, bernd@bsbernd.com, linux-xfs@vger.kernel.org, 
+	John@groves.net, linux-fsdevel@vger.kernel.org, neal@gompa.dev
 Content-Type: text/plain; charset="UTF-8"
 
-On Thu, 18 Sept 2025 at 20:02, Darrick J. Wong <djwong@kernel.org> wrote:
+On Thu, 18 Sept 2025 at 18:52, Darrick J. Wong <djwong@kernel.org> wrote:
 >
-> On Wed, Sep 17, 2025 at 04:47:19AM +0200, Amir Goldstein wrote:
+> On Wed, Sep 17, 2025 at 10:18:40AM -0700, Joanne Koong wrote:
 
-> > I think at this point in time FUSE_PASSTHROUGH and
-> > FUSE_IOMAP should be mutually exclusive and
-> > fuse_backing_ops could be set at fc level.
-> > If we want to move them for per fuse_backing later
-> > we can always do that when the use cases and tests arrive.
+> > If I'm understanding it correctly, fc->local_fs is set to true if it's
+> > a fuseblk device? Why do we need a new "ctx->local_fs" instead of
+> > reusing ctx->is_bdev?
 >
-> With Miklos' ok I'll constrain fuse not to allow passthrough and iomap
-> files on the same filesystem, but as it is now there's no technical
-> reason to make it so that they can't coexist.
+> Eventually, enabling iomap will also set local_fs=1, as Miklos and I
+> sort of touched on a couple weeks ago:
+>
+> https://lore.kernel.org/linux-fsdevel/CAJfpegvmXnZc=nC4UGw5Gya2cAr-kR0s=WNecnMhdTM_mGyuUg@mail.gmail.com/
 
-Is there a good reason to add the restriction?   If restricting it
-doesn't simplify anything or even makes it more complex, then I'd opt
-for leaving it more general, even if it doesn't seem to make sense.
+I think it might be worth making this property per-inode.   I.e. a
+distributed filesystem could allow one inode to be completely "owned"
+by one client.  This would be similar to NFSv4 delegations and could
+be refined to read-only (shared) and read-write (exclusive) ownership.
+A local filesystem would have all inodes excusively owned.
+
+This's been long on my todo list and also have some prior experiments,
+so it's a good opportunity to start working on it again:)
 
 Thanks,
 Miklos
+
+
+
+
+
+
+>
+> --D
+>
+> > Thanks,
+> > Joanne
+> >
+> > >         err = -ENOMEM;
+> > >         root = fuse_get_root_inode(sb, ctx->rootmode);
+> > > @@ -2029,6 +2030,7 @@ static int fuse_init_fs_context(struct fs_context *fsc)
+> > >         if (fsc->fs_type == &fuseblk_fs_type) {
+> > >                 ctx->is_bdev = true;
+> > >                 ctx->destroy = true;
+> > > +               ctx->local_fs = true;
+> > >         }
+> > >  #endif
+> > >
+> > >
