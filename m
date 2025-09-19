@@ -1,49 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1190313E30;
-	Fri, 19 Sep 2025 15:04:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3FA730F80C
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 15:19:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758294259; cv=none; b=HbJJN1e4FAWDVuPVGmtsjHeBKze2uc38mQEZjDdULlKvcg27QIWgSFyDmNLc9wE8xG+9B5vqIABHmApgpb0L79GPilybwax/I3pgiZMCV6uyyJrCAYiBTwfhgzzQ2nuUgS2QOfDdCZggbLFPQTW6AhUOmVYlw1HJughU9z18zCg=
+	t=1758295194; cv=none; b=TP7v0J1NXNcCeCC1Nmyt0/yUg+PzEy4rCITKWbDAUSxzOfCUOAGVhcUjLkpsYmGX3PJHR1JgL0v5aipvojCTVCfrDGxE/lNvlfr+0bzPccXVNwiVuALWTyLw41owbna/ocX9RvSlr69+5uydUbA++W1eKvb5Um7VHIcvTDnK9aw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758294259; c=relaxed/simple;
-	bh=42isF/WZsmBh5ZmpcnOp7XXD2OgHyQsMKCD1TyuRvOQ=;
+	s=arc-20240116; t=1758295194; c=relaxed/simple;
+	bh=ZM/Ov72lIKEh/uhdBbR3gRi9z9tgmHK2sUFNrJ6NAL4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VN2/+oin6ofIldrpAiYtGYcPdcwVv17KAAB1x9vKXxfMye6NXwdieJg23jCYoGhvt0lD9Sirnj5DDZDw4gtU0llwVAizZwKIkPrYwKSTJj0XqcMMJ/ocvfcwSf0i920n+lLALAQP2hR/XEmWIQ8WiHxVkfiUOjWiEsA48U9z650=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xE58bSsG; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=auukx1Nd/QW1WLqqCCNWASedfrCcUNx2QYMP5dqKZh/lo5zQI+muR3dEDVE6kc0lp9QZtVOAfvt1jn0dbd38mFCNritRqC9rZ03A6HsOZ848AnVs7Su+reSBAHuj26GEU+8b0S683+xzxOlV6GRMW1hq3+aocGnwR6QgztJp97w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=viCK5AbP; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xE58bSsG"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="viCK5AbP"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Ci6GUzt/zBUPg8YgjcIKFzIGceTJiYQmoDw0F7XTobs=; b=xE58bSsGEbJk8MPAMD2lNBwyCj
-	6iZDmXZHma806PABiz8+4MZk6xBVmBkKSUKOwwfbK0ZW9i6LG426urRxZlRNnhY10U3rOXkAcNtDi
-	AnQslLXWyOblSLTibCbCBDIdT843nD8KmiyaqkmSbCSkHfIf+NtOCQcuLSf20gUL/5vCE1TNo8qqS
-	Mj0jufB8Upbl+JOjMcvKD8I0RT+1Mve9xDgfwXEIhde+lBkSDWYFu676ISkAOFj0DAPZZJ1SMZHxh
-	nZ4qTK4qwLekk3aqpg4TqBAkSM9X8M4W8dJhuIGyhg+dNTAstEzapteJc9jV5iGN2VjgpqYY51pwx
-	O/l+KiBg==;
+	bh=J2SRjoHFj/afgA4NQhfL1ypeD9V3pCadCb+ZvkGvQ1o=; b=viCK5AbPIhbbbasgytmz2Pxbhp
+	+9IUsuB3VSPAPERpMd9ultFGpGHhwZyebPcIAE7M2yYd1NoJzlBw8IulBkdlEArRvdgZo4BrVsRwK
+	28kxvRW87dmLv3/G1Z19hE6JcmZQDOYM/n2FxHLpV6ePGjSb55vnHyMvbq62tfh/8CPY5o/6kJ9fV
+	g1AgQ/+HVD7KFdF1fp43BeaJitx6RAcq7rGVCvxjcVCDzEGqfO0Ch1+QYQdISmXX/QM9W5Fn+28OQ
+	utLEqmh6Khj240T6jNjGbQHLm1iQup3BW1VhwE1u+oII4iej6zSRE9peLmegxvFleGWBgmyvaskwo
+	QY2x2c0g==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uzcel-00000003G5z-2STi;
-	Fri, 19 Sep 2025 15:04:15 +0000
-Date: Fri, 19 Sep 2025 08:04:15 -0700
+	id 1uzcts-00000003JD6-18DC;
+	Fri, 19 Sep 2025 15:19:52 +0000
+Date: Fri, 19 Sep 2025 08:19:52 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, brauner@kernel.org,
-	miklos@szeredi.hu, djwong@kernel.org, hsiangkao@linux.alibaba.com,
-	linux-block@vger.kernel.org, gfs2@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org, kernel-team@meta.com,
-	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH v2 12/16] iomap: add bias for async read requests
-Message-ID: <aM1w77aJZrQPq8Hw@infradead.org>
-References: <20250908185122.3199171-1-joannelkoong@gmail.com>
- <20250908185122.3199171-13-joannelkoong@gmail.com>
- <aMKzG3NUGsQijvEg@infradead.org>
- <CAJnrk1Z2JwUKKoaqExh2gPDxtjRbzSPxzHi3YdBWXKvygGuGFA@mail.gmail.com>
- <CAJnrk1YmxMbT-z9SLxrnrEwagLeyT=bDMzaONYAO6VgQyFHJOQ@mail.gmail.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, jack@suse.cz, lherbolt@redhat.com
+Subject: Re: [PATCH 1/2] xfs: rearrange code in xfs_inode_item_precommit
+Message-ID: <aM10mF6U4qSb1eTp@infradead.org>
+References: <20250917222446.1329304-1-david@fromorbit.com>
+ <20250917222446.1329304-2-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,38 +45,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJnrk1YmxMbT-z9SLxrnrEwagLeyT=bDMzaONYAO6VgQyFHJOQ@mail.gmail.com>
+In-Reply-To: <20250917222446.1329304-2-david@fromorbit.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Sep 16, 2025 at 12:14:05PM -0700, Joanne Koong wrote:
-> > I think you're right, this is probably clearer without trying to share
-> > the function.
-> >
-> > I think maybe we can make this even simpler. Right now we mark the
-> > bitmap uptodate every time a range is read in but I think instead we
-> > can just do one bitmap uptodate operation for the entire folio when
-> > the read has completely finished.  If we do this, then we can make
-> > "ifs->read_bytes_pending" back to an atomic_t since we don't save one
-> > atomic operation from doing it through a spinlock anymore (eg what
-> > commit f45b494e2a "iomap: protect read_bytes_pending with the
-> > state_lock" optimized). And then this bias thing can just become:
-> >
-> > if (ifs) {
-> >     if (atomic_dec_and_test(&ifs->read_bytes_pending))
-> >         folio_end_read(folio, !ret);
-> >     *cur_folio_owned = true;
-> > }
-> >
+On Thu, Sep 18, 2025 at 08:12:53AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> This idea doesn't work unfortunately because reading in a range might fail.
+> There are similar extsize checks and updates done inside and outside
+> the inode item lock, which could all be done under a single top
+> level logic branch outside the ili_lock. The COW extsize fixup can
+> potentially miss updating the XFS_ILOG_CORE in ili_fsync_fields, so
+> moving this code up above the ili_fsync_fields update could also be
+> considered a fix.
+> 
+> Further, to make the next change a bit cleaner, move where we
+> calculate the on-disk flag mask to after we attach the cluster
+> buffer to the the inode log item.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_inode_item.c | 65 ++++++++++++++++++-----------------------
+>  1 file changed, 29 insertions(+), 36 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index afb6cadf7793..318e7c68ec72 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -131,46 +131,28 @@ xfs_inode_item_precommit(
+>  	}
+>  
+>  	/*
+> +	 * Inode verifiers do not check that the extent size hints are an
+> +	 * integer multiple of the rt extent size on a directory with
+> +	 * rtinherit flags set.  If we're logging a directory that is
+> +	 * misconfigured in this way, clear the bad hints.
+>  	 */
 
-As in the asynchronous read generats an error, but finishes faster
-than the submitting context calling the atomic_dec_and_test here?
+Not directly related to this patch, but why are we not checking for
+that in the inode verifier?  Even if we can't reject that value,
+it seems like we should fix that up when reading an inode into memory
+instead of in a pre-commit hook?
 
-Yes, that is possible, although rare.  But having a way to pass
-that information on somehow.  PG_uptodate/folio uptodate would make
-sense for that, but right now we expect folio_end_read to set that.
-And I fail to understand the logic folio_end_read - it should clear
-the locked bit and add the updatodate one, but I have no idea how
-it makes that happen.
+The patch itself looks good:
 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
