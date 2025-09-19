@@ -1,116 +1,133 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 522F3223DE7
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 16:25:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 019AB23C8AA;
+	Fri, 19 Sep 2025 16:27:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758299106; cv=none; b=NgwFRpukmsmkpZfEmn0UF3PPeuHZXZRVOGgQclae8yLftaR6t031GdpSlVZsbgO5uNWKrLteXu0rOzjGXNPzYBeyOrkj5u7F959SMw2UJ6HcV2h7ZwKZaz/WPSx/Jw7tWTIfaZjXgLX3cNatRnf0b/gOVcWhtNWO+20yEi8EpFM=
+	t=1758299238; cv=none; b=bPyNULTNqqeVCbnsMZa6qhO+m6iVrSzikooSu41yIqSP8oauHhRTzpMRbNLJWztEDaJMo9ivlPs1U7oT+R+v2NGDpAB0PrROX3/1ck6Z+TEhEBMuFT2j6h5RRj04bjDD4HZTA63IQqBCG/HxHTiHdslVbbLqpy41JUqI4yddaf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758299106; c=relaxed/simple;
-	bh=09V0g4NLoeb1DFmo++HYddAzMfpP8gAmuJFVHu43qcw=;
+	s=arc-20240116; t=1758299238; c=relaxed/simple;
+	bh=cBEaJX7qa93PnH2/ea/ZMHgYNNOQHAPjJldATLirvXY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YjytGiMnXqtd8V5w47Ip1hWAHQSg9ZObtHNjEqu6Xb1qYKZeCsgc7euIg3lfIVQwAMOIeaz5rnJ0imLn/XcCZfc+f/dwW7xwjw794qN1F7/Pr/wpJ2FV2m3lLaxTX4V6TBGhCNu6PNcQ+UZ401BGw7ZPcogiChtsauYlavt4XFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XSWGIBpU; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=t+pOrdru/DU/qu7ozk9ufIFgjjPioa51JHIFphO8soevvXMBOKpyfdm15KhYjVaPqEtws/GE7QyBSHPtj9FVCiqbFE+53FkuLIpyrZhGMfZCYIAKqqKS/Kpwa3sdyI/saEreaOlIvE6LGDinHG0btLnRSQMEZPVEdFAejmxAKw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BzUR9hbl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XSWGIBpU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D02F3C4CEF0;
-	Fri, 19 Sep 2025 16:25:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BzUR9hbl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F55DC4CEF0;
+	Fri, 19 Sep 2025 16:27:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758299105;
-	bh=09V0g4NLoeb1DFmo++HYddAzMfpP8gAmuJFVHu43qcw=;
+	s=k20201202; t=1758299237;
+	bh=cBEaJX7qa93PnH2/ea/ZMHgYNNOQHAPjJldATLirvXY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XSWGIBpUnQJictfKuijNtFxEl64OI9PGwV4XLdIzm1t4+W8/dfy3nFo+FfW73y91Y
-	 7/dkqvDZ12BLfjpxyIPLjZONr+OlG94kHZ9ezciMEXZ9b1Z+2Ze82/i6g1cmNSAzue
-	 p5Oda+Vxd0AnOzM5mgU88WmBZrhaANOseUIhtaWJKxFOKttlynhkAkmPFKVcbgKcpv
-	 /kDagF2+b2d04WIw9zUDFG1SJdiJd75+xnABvgfKpVYJeAZbfDgt01aYY1izUgI8/u
-	 C4apboF9ueZKZqAUey0oohtRb1ISXH4CcYd9/91byP4B0RNlP/ArJTevwmFj455BSr
-	 0yp7kZDY2gI9w==
-Date: Fri, 19 Sep 2025 09:25:05 -0700
+	b=BzUR9hblYskOYkVVEZDWBnjfxJKIRri9lPo6qDq63juOd93u4+iL/dF/J9yQOqBTq
+	 +c8+VZUo4oZJQuOWCYJgbQfdLBb1P1zL6Ueo/KRjpUM7+SZlNMBPQVOZo3RA1pV3wa
+	 AOOILk9ET3DVwzIck2rbPVeCEM68+iR1z7ITeznyF6LlxAFKYrC7kdeVN79FJqgVnq
+	 WRf+rh91cKVMEUoShkeP+xiOsGYFEIoIzl56BForsEmSrm2pg+3LLAujOpS5ecJPag
+	 F/FO56TxqudPkuSVPlDW9BSp7YD6KqwNehknb0xvau9u+PhVYytHjLUuyHxMAS7Wk+
+	 /SoRWGwC9OHDw==
+Date: Fri, 19 Sep 2025 09:27:16 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: "A. Wilcox" <AWilcox@wilcox-tech.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs_scrub: Use POSIX-conformant strerror_r
-Message-ID: <20250919162505.GP8096@frogsfrogsfrogs>
-References: <20250906081222.64798-1-AWilcox@Wilcox-Tech.com>
- <20250912150044.GN8096@frogsfrogsfrogs>
- <20250918162744.GI8096@frogsfrogsfrogs>
- <sgkgqvif3vdcmgd357pvupw7uqiyirtpp55gq6t2adb2csbltm@5tbqs6ilgmvn>
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
+	Ritesh Harjani <ritesh.list@gmail.com>, john.g.garry@oracle.com,
+	tytso@mit.edu, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v7 02/12] common/rc: Add fio atomic write helpers
+Message-ID: <20250919162716.GD8117@frogsfrogsfrogs>
+References: <cover.1758264169.git.ojaswin@linux.ibm.com>
+ <8e87c6c800f6ca53f0c89af554b85197c7e397f1.1758264169.git.ojaswin@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <sgkgqvif3vdcmgd357pvupw7uqiyirtpp55gq6t2adb2csbltm@5tbqs6ilgmvn>
+In-Reply-To: <8e87c6c800f6ca53f0c89af554b85197c7e397f1.1758264169.git.ojaswin@linux.ibm.com>
 
-On Fri, Sep 19, 2025 at 12:52:46PM +0200, Andrey Albershteyn wrote:
-> On 2025-09-18 09:27:44, Darrick J. Wong wrote:
-> > On Fri, Sep 12, 2025 at 08:00:44AM -0700, Darrick J. Wong wrote:
-> > > On Sat, Sep 06, 2025 at 03:12:07AM -0500, A. Wilcox wrote:
-> > > > When building xfsprogs with musl libc, strerror_r returns int as
-> > > > specified in POSIX.  This differs from the glibc extension that returns
-> > > > char*.  Successful calls will return 0, which will be dereferenced as a
-> > > > NULL pointer by (v)fprintf.
-> > > > 
-> > > > Signed-off-by: A. Wilcox <AWilcox@Wilcox-Tech.com>
-> > > 
-> > > Isn't C fun?
-> > > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> > 
-> > Ohh yes it is, this patch broke the build for me:
+On Fri, Sep 19, 2025 at 12:17:55PM +0530, Ojaswin Mujoo wrote:
+> The main motivation of adding this function on top of _require_fio is
+> that there has been a case in fio where atomic= option was added but
+> later it was changed to noop since kernel didn't yet have support for
+> atomic writes. It was then again utilized to do atomic writes in a later
+> version, once kernel got the support. Due to this there is a point in
+> fio where _require_fio w/ atomic=1 will succeed even though it would
+> not be doing atomic writes.
 > 
-> do you build gcc + musl?
+> Hence, add an internal helper __require_fio_version to require specific
+> versions of fio to work past such issues. Further, add the high level
+> _require_fio_atomic_writes helper which tests can use to ensure fio
+> has the right version for atomic writes.
+> 
+> Reviewed-by: Zorro Lang <zlang@redhat.com>
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
+> Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
 
-I don't even know /how/ to do that, even on Debian.
+Looks ok to me,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> - Andrey
+> ---
+>  common/rc | 43 +++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 43 insertions(+)
 > 
-> > 
-> > common.c: In function ‘__str_out’:
-> > common.c:129:17: error: ignoring return value of ‘strerror_r’ declared with attribute ‘warn_unused_result’ [-Werror=unused-result]
-> >   129 |                 strerror_r(error, buf, DESCR_BUFSZ);
-> >       |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> > 
-> > <sigh> xfsprogs can't get the XSI version because it defines GNU_SOURCE,
-> > and you can't shut up gcc by casting the whole expression to void.
-> > 
-> > Do you folks remove the -D_GNU_SOURCE from builddefs.in when building
-> > against musl?  Or do you leave the definition alone, taking advantage of
-> > the fact that #define'ing a symbol is not a guarantee of functionality?
-> > 
-> > --D
-> > 
-> > > --D
-> > > 
-> > > > ---
-> > > >  scrub/common.c | 3 ++-
-> > > >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/scrub/common.c b/scrub/common.c
-> > > > index 14cd677b..9437d0ab 100644
-> > > > --- a/scrub/common.c
-> > > > +++ b/scrub/common.c
-> > > > @@ -126,7 +126,8 @@ __str_out(
-> > > >  	fprintf(stream, "%s%s: %s: ", stream_start(stream),
-> > > >  			_(err_levels[level].string), descr);
-> > > >  	if (error) {
-> > > > -		fprintf(stream, _("%s."), strerror_r(error, buf, DESCR_BUFSZ));
-> > > > +		strerror_r(error, buf, DESCR_BUFSZ);
-> > > > +		fprintf(stream, _("%s."), buf);
-> > > >  	} else {
-> > > >  		va_start(args, format);
-> > > >  		vfprintf(stream, format, args);
-> > > > -- 
-> > > > 2.49.0
-> > > > 
-> > > > 
-> > > 
-> > 
-> 
+> diff --git a/common/rc b/common/rc
+> index 28fbbcbb..8a023b9d 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -6000,6 +6000,49 @@ _max() {
+>  	echo $ret
+>  }
+>  
+> +# Due to reasons explained in fio commit 40f1fc11d, fio version between
+> +# v3.33 and v3.38 have atomic= feature but it is a no-op and doesn't do
+> +# RWF_ATOMIC write. Hence, use this helper to ensure fio has the
+> +# required support. Currently, the simplest way we have is to ensure
+> +# the version.
+> +_require_fio_atomic_writes() {
+> +	__require_fio_version "3.38+"
+> +}
+> +
+> +# Check the required fio version. Examples:
+> +#   __require_fio_version 3.38 (matches 3.38 only)
+> +#   __require_fio_version 3.38+ (matches 3.38 and above)
+> +#   __require_fio_version 3.38- (matches 3.38 and below)
+> +#
+> +# Internal helper, avoid using directly in tests.
+> +__require_fio_version() {
+> +	local req_ver="$1"
+> +	local fio_ver
+> +
+> +	_require_fio
+> +	_require_math
+> +
+> +	fio_ver=$(fio -v | cut -d"-" -f2)
+> +
+> +	case "$req_ver" in
+> +	*+)
+> +		req_ver=${req_ver%+}
+> +		test $(_math "$fio_ver >= $req_ver") -eq 1 || \
+> +			_notrun "need fio >= $req_ver (found $fio_ver)"
+> +		;;
+> +	*-)
+> +		req_ver=${req_ver%-}
+> +		test $(_math "$fio_ver <= $req_ver") -eq 1 || \
+> +			_notrun "need fio <= $req_ver (found $fio_ver)"
+> +		;;
+> +	*)
+> +		req_ver=${req_ver%-}
+> +		test $(_math "$fio_ver == $req_ver") -eq 1 || \
+> +			_notrun "need fio = $req_ver (found $fio_ver)"
+> +		;;
+> +	esac
+> +}
+> +
+>  ################################################################################
+>  # make sure this script returns success
+>  /bin/true
+> -- 
+> 2.49.0
 > 
