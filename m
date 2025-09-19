@@ -1,42 +1,46 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F5013176FA
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 15:30:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D03FC23182D;
+	Fri, 19 Sep 2025 15:32:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758295841; cv=none; b=PjEm3sB8dNlKgnTnJbHfhYFci2pLMQj2cQMG0bU8C61QpmUpAde/rIfEWF1zTNZoyPHMY783u7SXUyvPWmr9iYzdJFAVk8vrUsNpPCyWrpF/zXpqFUFbIW8MfzTHL3pbM7aYFf+opawqXU+Llz3YSnS6/Cz1wqLMzjOUoK22JYw=
+	t=1758295963; cv=none; b=f94a1qaCQEt35Oc7IkqUgeI922ykHWrZRi5DRjtzVgpF16ugLWU+hWYRG4CNEKcycVK3O3L8kA5WYhDv1zuUAMVg71cyLVPrtWHYORrO+kQYTao8YzjSG/Bmbb4UPNpzh2kamK0qI4UlwlbPcs3HVR91imbL+sgEB0yuw5lZDx4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758295841; c=relaxed/simple;
-	bh=0+OZz0+68+94Qv9YpeOJNDKov6wKwBQzL9Rbxdp1KGc=;
+	s=arc-20240116; t=1758295963; c=relaxed/simple;
+	bh=C99O4ls4PTPo4vxHxEMUXdtACbgH4cFrME1yQYWKheo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qEFJHcFPSWlVa5YxF3Ryf0XabWkAF3FcCs1xJzfbHzTkVV3m2QNxrKRnnu7Hp5xbUv4s2ElLpPoznJnFZmqogsDzVQ1nZwk6mcFLuj61FPYgiuBG7/aBspCvu6tepUAwuaCDge7pUxM7oZYEGbRhEDenMTiBMl/YDKEDfNqlHzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=MtHmjTSu; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=LSZtVdHKXB5tovCcz9U8rvo4yUvSyIF1vFyS4b9qUPF8eIl+khfnKBIWodTrb9HJtFOOEVPOuaRcvHUPlkLBSKe4OHU4vqkMt8woRmp99E1Ia9GyjCNoo+5h7hLu/VlIDgX7R6y9o3na1a8X8TAKcahWCS/h/0HaLBmjrmEF+2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nFgQA8nL; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MtHmjTSu"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nFgQA8nL"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=nN7CjETO0Ek7IIZJG2ZHiq1NeqmU/XG7eTjSYfE39YE=; b=MtHmjTSuc8QMfK2c3jIZsgykJw
-	l31SgGvpDc1RQIYk5a68fvoONw/nsXJaqtX63nH0UVXX+hsWuiL9iPo7cOqbcw4PufDTBJlaX7+yQ
-	6rk0ZoWmBOdP5ZwE2oDebiFucqccxFi4ZreB4t2ALiETFVZVCuRnlAw+s597+fQSyZ1j3I51fxRw7
-	wmqDS8AQ/afFnbusCzSuD5OpquA8UArWDwR/WtBIzH5kumtPsrIBCjcTHAhCc+lJElX1Uv0IPAq8z
-	zEHR8b4GZWrMFPSLw3g9jrO8goyTn7ZEu3r2p1rqA9onx8Tajqq6XbmkFxDmMZCBLpiGHMr/rIHQ6
-	dmuFrDfg==;
+	bh=HHdwDSnD5PcX9xrb6CZ8x3E5Svav04VAhr3uk49K4dk=; b=nFgQA8nLHeqdXRoQ24h+OvZczK
+	kNx7ahX/75NRuAGG6OgfoK++HN2z9hLcXWkXydmDdI7quyxysEdGEwbUJHZCg6kty7kX8tjZ/V8YR
+	ZCpwNLd6v8Z2nve/ulcn2i4SNeMpYMuvnYPi8aBW4FRLu0bgGHZztmtHwg83YeQCdCcaRjwWBAmDX
+	iHABrAJ25tQAdpp0OJtA0TWoZIJGq3D2EmPhWOMosFM6qn3nwk6tu5suwPa/8A2J660W3o/hxRnir
+	9doSG+iwx9W95QPYzvjJvkLEWQtXIK66Ou6lvqk6P52mj9ICyX4wfyVW9O1z+ai5Cn28yTvxapEOn
+	oLcj8r9g==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uzd4J-00000003L94-31el;
-	Fri, 19 Sep 2025 15:30:39 +0000
-Date: Fri, 19 Sep 2025 08:30:39 -0700
+	id 1uzd6H-00000003LZn-07Qa;
+	Fri, 19 Sep 2025 15:32:41 +0000
+Date: Fri, 19 Sep 2025 08:32:41 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, jack@suse.cz, lherbolt@redhat.com
-Subject: Re: [PATCH 2/2] xfs: rework datasync tracking and execution
-Message-ID: <aM13H6P-lMYjR-9k@infradead.org>
-References: <20250917222446.1329304-1-david@fromorbit.com>
- <20250917222446.1329304-3-david@fromorbit.com>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: brauner@kernel.org, miklos@szeredi.hu, hch@infradead.org,
+	djwong@kernel.org, hsiangkao@linux.alibaba.com,
+	linux-block@vger.kernel.org, gfs2@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org, kernel-team@meta.com,
+	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: Re: [PATCH v3 11/15] iomap: move buffered io bio logic into new file
+Message-ID: <aM13mbqfJQ6FNda5@infradead.org>
+References: <20250916234425.1274735-1-joannelkoong@gmail.com>
+ <20250916234425.1274735-12-joannelkoong@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,68 +49,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250917222446.1329304-3-david@fromorbit.com>
+In-Reply-To: <20250916234425.1274735-12-joannelkoong@gmail.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Sep 18, 2025 at 08:12:54AM +1000, Dave Chinner wrote:
-> Jan demostrated that reducing the ifdatasync lock hold time can
+On Tue, Sep 16, 2025 at 04:44:21PM -0700, Joanne Koong wrote:
+> Move bio logic in the buffered io code into its own file and remove
+> CONFIG_BLOCK gating for iomap read/readahead.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
 
-s/demostrated/demonstrated/
+If you want to add my signoff as the first one it also needs me as
+the From: line.  I don't really care either way, we just need to be
+consistent.
 
-> came to the conclusion that seperately tracking datasync flush
-
-s/seperately/separately/
-
-> seqeunces was the best approach to solving the problem.
- 
-s/seqeunces/sequences/g
-
-> operations are allo done under ILOCK_EXCL context:
-
-s/allo/all/
-
->  xfs_fsync_flush_log(
->  	struct xfs_inode	*ip,
->  	bool			datasync,
->  	int			*log_flushed)
->  {
-> +	struct xfs_inode_log_item *iip = ip->i_itemp;
-> +	xfs_csn_t		seq = 0;
->  
-> +	spin_lock(&iip->ili_lock);
-> +	if (datasync)
-> +		seq = iip->ili_datasync_seq;
-> +	else
-> +		seq = iip->ili_commit_seq;
-> +	spin_unlock(&iip->ili_lock);
-
-If we care about the additional speedup of the READ_ONCE done
-in Jan's patch we could make that configurable on CONFIG_64BIT
-here.  There's precedence for that in i_size_read for that in the
-VFS.  If we have a helper like:
-
-static inline bool
-xfs_inode_sync_csn(
-	struct xfs_inode	*ip,
- 	bool			datasync,
-	xfs_csn_t		*seq)
- {
-	struct xfs_inode_log_item *iip = ip->i_itemp;
-
-	if (!iip)
-		return false;
-
-	spin_lock(&iip->ili_lock);
-	if (datasync)
-		*seq = iip->ili_datasync_seq;
-	else
-		*seq = iip->ili_commit_seq;
-	spin_unlock(&iip->ili_lock);
-	return true;
-}
-
-we could isolate that to one single place as well.
-
-But even without that, the patch looks fine:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
