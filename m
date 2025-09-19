@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C97A623C8AA
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 16:15:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1929320397
+	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 16:15:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758298554; cv=none; b=bv/Xltwd7G1qv0tzOtvA0UUhP9eOTQwJvsq0rOewKnb/nXacCEaaItnCmmuUPgGrkkbmdjHZMDFRoUBzmCOvEy2ftp6F26yC0vnb11ukduNL1wbXZ3ZLZeSbw5IDcK08KWwfyYNehTiVRSclPJCUqzYrmEv+YSKCSMiyYZ2sWQY=
+	t=1758298556; cv=none; b=gB1sPeoSbbCzr/1D15LMqzSgAIm4BiRkvYF9pmRT2Q8Pc4IswHYWZI63mQV9moJL7OeUYfPaMVVR+yKPQj5ntOM4yC2BI4TkAmuPOrhgWscNRmCng4cqO/dFKforVspOkvnP6/0fQNI0RmNNJ3B4HE+Vk0VAmfVbgmzfvirB48Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758298554; c=relaxed/simple;
-	bh=UbyzzNLEu5vgS6d0t615GGiSFcFbfxe0X08OnHD7NVk=;
+	s=arc-20240116; t=1758298556; c=relaxed/simple;
+	bh=cdlTjZ8S1TI2YHcEAp5BGadDHiD9VnH3GOKjGwYIz2s=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=uD7DGGri3ub1a6rb4s/27BSWw80p0Pmfg0G6mnzDQWMqFlelgcprLGaJLTsh8bQKy1h/JfeM7isNH7jkRhukyqIzdJbzWQGoP3iR5n0gMATks1TnxoIzHnPKLwscEWcKjGLQpZjWYI6vn7gF1qswlWZaI/gK7bk9tufVuVaRLxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DM+qAneF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=IhIiAujWBLxxfkJhFHONxffvdeUHoWsGCyB++RbIxHC4Qwl+UfbijevGPvkBckNqKyFOMMZcNqVz6/BSnPGfc6AkksnrPnb7m/EQga1yLnUiWG4uS5PjAosaVnvGkbaObA6pZiKKL3SSZrd/Zaf3qNwraHGIh87OvwDtobvK43w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K6SfDEn0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DM+qAneF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B643C4CEF0;
-	Fri, 19 Sep 2025 16:15:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K6SfDEn0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E47CFC4CEF1;
+	Fri, 19 Sep 2025 16:15:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758298554;
-	bh=UbyzzNLEu5vgS6d0t615GGiSFcFbfxe0X08OnHD7NVk=;
+	s=k20201202; t=1758298555;
+	bh=cdlTjZ8S1TI2YHcEAp5BGadDHiD9VnH3GOKjGwYIz2s=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=DM+qAneFDEyPAdYH5qCaYNpOuJLVCxJJy8V3b3XdS702G81h6FBGjbblb87ZEJTGM
-	 sC27V0cVsPNIc8iyc5eMkoz67gs24isKIzTv/LrwDS5em1F2ImOXXd8bLE8cb2GuY8
-	 Lb4HoZdmQ2CfNlHBbxOuT0/GRL7V2JcrNOcApWJ8d+AosUcsvFVvrtsjp3al6T+yiz
-	 nAnYIvw6CjOLQN7RmSlM5CbD7ywjb89Ww4j3pcqTIoiXQvabcRzVJEJaUd4DKWhRoq
-	 XvG78nI87U3Jyfv5A6SlOm6oddtFhJTXAXtDPb1Ckvex8TnpQvE2+fRFi26V8YcCew
-	 kRWBofXwQPxgA==
+	b=K6SfDEn0yebNXlEy04EUxY63NHeAlZVonOMOSyE5ZqxlZKamvy10NGXZhHLmmSjPd
+	 oYbR0WqfWl2pXtqRpOySXduOhSFHii5MALvyaSFTJqg0KaYN9VJiJSPd2Hylvlxv0i
+	 3UBel1rgkGYVIikUBtUluj2+F25iQgNirZnWZWosC6U4ay9q3s8VrdvcFOWZB6WUDM
+	 N0qOAErx+Y4Gn+793TTIOopdtkVwSwwGvrHdnuB+jhSLO00FGHu/Ht2YPvwJ7Kgo6l
+	 CNQYgoyOkFglaf3KH2ZZq4u4m4GyYC57bngFv38UIBZWflg1KTmwQQFiqkZxdZyc1t
+	 r95KT2X+jldFQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: djwong@kernel.org, Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
-In-Reply-To: <20250915132413.159877-1-hch@lst.de>
-References: <20250915132413.159877-1-hch@lst.de>
-Subject: Re: [PATCH] xfs: move the XLOG_REG_ constants out of
- xfs_log_format.h
-Message-Id: <175829855321.1207654.9507440220968910154.b4-ty@kernel.org>
-Date: Fri, 19 Sep 2025 18:15:53 +0200
+In-Reply-To: <20250918143454.447290-1-hch@lst.de>
+References: <20250918143454.447290-1-hch@lst.de>
+Subject: Re: cleanup error tags v3
+Message-Id: <175829855464.1207654.11248308313339579475.b4-ty@kernel.org>
+Date: Fri, 19 Sep 2025 18:15:54 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,15 +44,32 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Mon, 15 Sep 2025 06:24:13 -0700, Christoph Hellwig wrote:
-> These are purely in-memory values and not used at all in xfsprogs.
+On Thu, 18 Sep 2025 07:34:32 -0700, Christoph Hellwig wrote:
+> while adding error injection to new code I'm writing I got really annoyed
+> with all the places error tags had to be added.  This series cleans the
+> error tags so that only the definition and one table have to be updated.
+> I've also cleaned up a lot of the surroundings while at it.
 > 
+> Changes since v2:
+>  - improve comments in xfs_errortag.h, mostly based on text supplied
+>    by Darrick
+> Changes since v1:
+>  - add a big fat comment and a idef/undef pair for the ERRTAGS magic
 > 
+> [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: move the XLOG_REG_ constants out of xfs_log_format.h
-      commit: 42c21838708c20dd8ba605e4099bf6a7156c3362
+[1/5] xfs: remove xfs_errortag_get
+      commit: d5409ebf46bb0735ba26c64d7a9c80dde3f94eb6
+[2/5] xfs: remove xfs_errortag_set
+      commit: 991dcadaddcced38c5d2da656862d94a1fc9e6e5
+[3/5] xfs: remove the expr argument to XFS_TEST_ERROR
+      commit: 807df3227d7674d7957c576551d552acf15bb96f
+[4/5] xfs: remove pointless externs in xfs_error.h
+      commit: b55dd72798115015908f4a17a1f8d70e8e974ab4
+[5/5] xfs: centralize error tag definitions
+      commit: 71fa062196ae3abab790c91f1bdf09dcdc6fb1fe
 
 Best regards,
 -- 
