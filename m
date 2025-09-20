@@ -1,126 +1,211 @@
-Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.wilcox-tech.com (mail.wilcox-tech.com [45.32.83.9])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 748537081A
-	for <linux-xfs@vger.kernel.org>; Sat, 20 Sep 2025 05:48:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCEFA2236E1
+	for <linux-xfs@vger.kernel.org>; Sat, 20 Sep 2025 11:29:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.32.83.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758347283; cv=none; b=Cz4prKr4cySuilpl5BB+K2hR4QiwSx6SQJDV3MW2cSCbHIMny83NVzV31F6hzvx3W8Y3rKKCvelty+hp1E+6RVPclk1YOa/2hAEChxBmepMEBqKZEEKy/e7bJrUE3IJSFjZMDHhG2m1M4caXtuTztsms5vdYJ+yDRbzAdhcrHDg=
+	t=1758367775; cv=none; b=Mr0JIQoyuXx4QhWIoxl5ebf3Ki6QV4/36ada6/2v4qktdOqOGTGoPgTbg3jvCRDYC8/7/ankvSjk+W6WPEBvrvg1O8c3hX/8AXhon+gY/MqPtrSXD/BhLphGfGR967jPghWt1iDLaMD0yJxEYbpMZsEvY/Lg7S058trOdhFZdpc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758347283; c=relaxed/simple;
-	bh=o437aCkcf1xCxm+rv0mPwnGQtCoz+9QjMvmAbd5CG3k=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=jsIF7sXnC6FETL2g8z29+vnEEVF/6RwQxElBRjjlMuPIzewgWusbINMMQussUydzx2HP0rEw+cN9Ng9KZcXL7JWNmR37OYmq0DMKFlPz5azbToDQNVZFhIhho1ZCxzmT7hcJz33uIoySUfHWQPlP6ni0JzGoAnxv4s1kDLpnKS8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jvFQtz/e; arc=none smtp.client-ip=209.85.208.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jvFQtz/e"
-Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-62ecd3c21d3so4199557a12.0
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 22:48:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758347279; x=1758952079; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=fyN9RcfnRhBee1hQgE+lsezNr/j9kdfLGgOBZcxycjE=;
-        b=jvFQtz/eYM+NLGU5wKQz8AH8+J1N6i7yiK70ybgHeyj1Nqt3MpUnt0ptB0V5rqNNdx
-         y9FCHiVC4NzIj4m/dqvUSDf5Ay7MA6YPbem+VbXf2aZ0NWpkzKgfjdRZZx0qc+lJjsEw
-         KAvK+Pum6jWrqeQMgjhX+xnQz8SaKlMj3bdzaQ4YFGLqThdG8cQMiriMz9AX/WwdePxH
-         VSIt6PWxgmFAwad3XxwSL0FMZB4cr8xZ/cdU8oBWLpOix39fJYgBXTFjH1sNNnLsowm1
-         lNDp+A1teDRrWiE+un0tv30D/PKCul57wt6iJ+dl+oycDfEYGKivtfb8s8kpAJb7b/vY
-         vowg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758347279; x=1758952079;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=fyN9RcfnRhBee1hQgE+lsezNr/j9kdfLGgOBZcxycjE=;
-        b=uMQnLE9FAbV9C4lActkssVcTV5OMaQONMOlKK5rTlLov37ylXqrty2ZJol0gv/L+0F
-         V1/JbYGKsHPWuuaxymvY8TPKaH8FRE/7pEobr7wtgqmVpPlBQ3xLlviysEvDSwEkSIkx
-         UBxUz9FIxeIWGXXy0mr5lK41Y2Lce9+RrRVOpxreFCX2FzsDYReYNUNLrBiJGy1cIEBH
-         0fyI0LnTYdq47kND60V/Uz/K3itwHu71J9sWx+3NkWnZbnGoP0/ZA0s7/exLhrAAFsUe
-         BldqOqoBhZzi+o9bvdo3oWvmIlU881d3lHJhmUP5LVK4mg6+eweQlwGlXLcQksOS/sBa
-         GwSA==
-X-Forwarded-Encrypted: i=1; AJvYcCV7hOztZ7tSSweBo6nkmmyTlz42qhgbgjSQXV8MKfzaKSt5cQdSJI3YiATeO1lsWlkoGV7SlFZ7LRk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyRLBQao2yPx+1CDFP9/bYTyJAP5/h0VvxrJl1CF7UTaTzdXbEx
-	CDRDql8CA51t2toyaqMC03gkIGWPZ5s/uEMu+oRsiEpAf4ScCCsoNVDtHrq+CN6fRnBtO8F/HCb
-	8oGDeyO/fm1wnTIVmc4WmF3uLoEiGrV4=
-X-Gm-Gg: ASbGncszCfpEP+/fU+hIIvUMA+4I63hrMwYNBaTT1GDoW/VmDn2ogJ1RedduMNyn2w/
-	2MCUQwPzn248o0s8XUgLFXsBMTzdf3es9UXEkoColz0UzUABE0/BkzQz+IrzybmcfEGU2ZMALbW
-	eo/oko34ZA53XAqLl9+P1LptAmSksZxmX0iIJh6ASgyETjMEAmnBY9jVzwOclgZ39gtHOtAunK0
-	e3NHO//LE4DG7giaeroCw9bcs54An720KuCW5Q=
-X-Google-Smtp-Source: AGHT+IGXjKiqqwRe65Vudg38Ap/YqUkQCp5A7+RF7b7HLmhZNE/B/g21D2F70GxNir3tx2mYIaHz6z79YrnZKfqUJP8=
-X-Received: by 2002:a05:6402:23d2:b0:62f:9cfb:7d76 with SMTP id
- 4fb4d7f45d1cf-62fc0a8376bmr4633977a12.37.1758347278669; Fri, 19 Sep 2025
- 22:47:58 -0700 (PDT)
+	s=arc-20240116; t=1758367775; c=relaxed/simple;
+	bh=l5BsDUq6V0QVM30CNZd36t8Alxd06wFvVOwXmP8Hii0=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=azmYy372KQ5EMprS5AsuC8tSwtHsoW+hw3MSFWHHH9teLPfeTd3fy//zxFsCGYVXBlM8RkDJH6j+rrfJ4iORE6foIwWi4sPnRJE16flxT+EuPx4+Nu9tTUrXNc+BMc5SrYptWtQLrMPKh0JJaRQq3pUGsVXl4FDzgjPO7Ig86Wo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=Wilcox-Tech.com; spf=pass smtp.mailfrom=Wilcox-Tech.com; arc=none smtp.client-ip=45.32.83.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=Wilcox-Tech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=Wilcox-Tech.com
+Received: (qmail 12056 invoked from network); 20 Sep 2025 11:20:55 -0000
+Received: from 23.sub-75-224-99.myvzw.com (HELO smtpclient.apple) (AWilcox@Wilcox-Tech.com@75.224.99.23)
+  by mail.wilcox-tech.com with ESMTPA; 20 Sep 2025 11:20:55 -0000
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20250919154905.2592318-1-mjguzik@gmail.com> <73885a08-f255-4638-8a53-f136537f4b4c@gmail.com>
-In-Reply-To: <73885a08-f255-4638-8a53-f136537f4b4c@gmail.com>
-From: Mateusz Guzik <mjguzik@gmail.com>
-Date: Sat, 20 Sep 2025 07:47:46 +0200
-X-Gm-Features: AS18NWCzvbrmV0HH3sAfFvM4WSZtLcuzJvUuWZCgEFT-KVn1SkU22A6rQ1aMITw
-Message-ID: <CAGudoHHnhej-jxkSBG5im+QXh5GZfp1KsO40EV=PPDxuGbco8Q@mail.gmail.com>
-Subject: Re: [PATCH v5 0/4] hide ->i_state behind accessors
-To: Russell Haley <yumpusamongus@gmail.com>
-Cc: brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz, 
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	josef@toxicpanda.com, kernel-team@fb.com, amir73il@gmail.com, 
-	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org, 
-	linux-unionfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.400.131.1.6\))
+Subject: Re: [PATCH v2] xfs_scrub: fix strerror_r usage yet again
+From: "A. Wilcox" <AWilcox@Wilcox-Tech.com>
+In-Reply-To: <20250919161400.GO8096@frogsfrogsfrogs>
+Date: Sat, 20 Sep 2025 06:21:59 -0500
+Cc: Andrey Albershteyn <aalbersh@redhat.com>,
+ Christoph Hellwig <hch@infradead.org>,
+ linux-xfs@vger.kernel.org
 Content-Transfer-Encoding: quoted-printable
+Message-Id: <BD23D489-C187-4100-89D4-D8159B23A385@Wilcox-Tech.com>
+References: <20250919161400.GO8096@frogsfrogsfrogs>
+To: "Darrick J. Wong" <djwong@kernel.org>
+X-Mailer: Apple Mail (2.3826.400.131.1.6)
 
-On Sat, Sep 20, 2025 at 6:31=E2=80=AFAM Russell Haley <yumpusamongus@gmail.=
-com> wrote:
->
-> On 9/19/25 10:49 AM, Mateusz Guzik wrote:
-> > This is generated against:
-> > https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/commit/?h=
-=3Dvfs-6.18.inode.refcount.preliminaries
-> >
-> > First commit message quoted verbatim with rationable + API:
-> >
-> > [quote]
-> > Open-coded accesses prevent asserting they are done correctly. One
-> > obvious aspect is locking, but significantly more can checked. For
-> > example it can be detected when the code is clearing flags which are
-> > already missing, or is setting flags when it is illegal (e.g., I_FREEIN=
-G
-> > when ->i_count > 0).
-> >
-> > Given the late stage of the release cycle this patchset only aims to
-> > hide access, it does not provide any of the checks.
-> >
-> > Consumers can be trivially converted. Suppose flags I_A and I_B are to
-> > be handled, then:
-> >
-> > state =3D inode->i_state        =3D> state =3D inode_state_read(inode)
-> > inode->i_state |=3D (I_A | I_B)         =3D> inode_state_add(inode, I_A=
- | I_B)
-> > inode->i_state &=3D ~(I_A | I_B)        =3D> inode_state_del(inode, I_A=
- | I_B)
-> > inode->i_state =3D I_A | I_B    =3D> inode_state_set(inode, I_A | I_B)
-> > [/quote]
->
-> Drive-by bikeshedding: s/set/replace/g
->
-> "replace" removes ambiguity with the concept of setting a bit ( |=3D ). A=
-n
-> alternative would be "set_only".
->
+> On Sep 19, 2025, at 11:14, Darrick J. Wong <djwong@kernel.org> wrote:
+>=20
+> From: Darrick J. Wong <djwong@kernel.org>
+>=20
+> In commit 75faf2bc907584, someone tried to fix scrub to use the POSIX
+> version of strerror_r so that the build would work with musl.
+> Unfortunately, neither the author nor myself remembered that GNU libc
+> imposes its own version any time _GNU_SOURCE is defined, which
+> builddefs.in always does.  Regrettably, the POSIX and GNU versions =
+have
+> different return types and the GNU version can return any random
+> pointer, so now this code is broken on glibc.
+>=20
+> "Fix" this standards body own goal by casting the return value to
+> intptr_t and employing some gross heuristics to guess at the location =
+of
+> the actual error string.
+>=20
+> Fixes: 75faf2bc907584 ("xfs_scrub: Use POSIX-conformant strerror_r")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+> v2: go the autoconf route
+> ---
+> configure.ac          |    1 +
+> include/builddefs.in  |    1 +
+> m4/package_libcdev.m4 |   46 =
+++++++++++++++++++++++++++++++++++++++++++++++
+> scrub/Makefile        |    4 ++++
+> scrub/common.c        |    8 ++++++--
+> 5 files changed, 58 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/configure.ac b/configure.ac
+> index d2407cb5de5af2..df19379b02ba55 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -183,6 +183,7 @@ AC_CONFIG_CROND_DIR
+> AC_CONFIG_UDEV_RULE_DIR
+> AC_HAVE_BLKID_TOPO
+> AC_HAVE_TRIVIAL_AUTO_VAR_INIT
+> +AC_STRERROR_R_RETURNS_STRING
+>=20
+> if test "$enable_ubsan" =3D "yes" || test "$enable_ubsan" =3D "probe"; =
+then
+>         AC_PACKAGE_CHECK_UBSAN
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index 93b5c75155c0f4..5aa5742bb31b9e 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -241,6 +241,7 @@ CROND_DIR =3D @crond_dir@
+> HAVE_UDEV =3D @have_udev@
+> UDEV_RULE_DIR =3D @udev_rule_dir@
+> HAVE_LIBURCU_ATOMIC64 =3D @have_liburcu_atomic64@
+> +STRERROR_R_RETURNS_STRING =3D @strerror_r_returns_string@
+>=20
+> GCCFLAGS =3D -funsigned-char -fno-strict-aliasing -Wall -Werror =
+-Wextra -Wno-unused-parameter
+> #   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+> index ce1ba47264659c..c5538c30d2518a 100644
+> --- a/m4/package_libcdev.m4
+> +++ b/m4/package_libcdev.m4
+> @@ -301,3 +301,49 @@ syscall(__NR_file_getattr, 0, 0, 0, 0, 0);
+>        AC_MSG_RESULT(no))
+>     AC_SUBST(have_file_getattr)
+>   ])
+> +
+> +#
+> +# Check if strerror_r returns an int, as opposed to a char *, because =
+there are
+> +# two versions of this function, with differences that are hard to =
+detect.
+> +#
+> +# GNU strerror_r returns a pointer to a string on success, but the =
+returned
+> +# pointer might point to a static buffer and not buf, so you have to =
+use the
+> +# return value.  The declaration has the __warn_unused_result__ =
+attribute to
+> +# enforce this.
+> +#
+> +# XSI strerror_r always writes to buf and returns 0 on success, -1 on =
+error.
+> +#
+> +# How do you select a particular version?  By defining macros, of =
+course!
+> +# _GNU_SOURCE always gets you the GNU version, and _POSIX_C_SOURCE >=3D=
+ 200112L
+> +# gets you the XSI version but only if _GNU_SOURCE isn't defined.
+> +#
+> +# The build system #defines _GNU_SOURCE unconditionally, so when =
+compiling
+> +# against glibc we get the GNU version.  However, when compiling =
+against musl,
+> +# the _GNU_SOURCE definition does nothing and we get the XSI version =
+anyway.
+> +# Not definining _GNU_SOURCE breaks the build in many areas, so we'll =
+create
+> +# yet another #define for just this weird quirk so that we can patch =
+around it
+> +# in the one place we need it.
+> +#
+> +# Note that we have to force erroring out on the int conversion =
+warnings
+> +# because C doesn't consider it a hard error to cast a char pointer =
+to an int
+> +# even when CFLAGS contains -std=3Dgnu11.
+> +AC_DEFUN([AC_STRERROR_R_RETURNS_STRING],
+> +  [AC_MSG_CHECKING([if strerror_r returns char *])
+> +    OLD_CFLAGS=3D"$CFLAGS"
+> +    CFLAGS=3D"$CFLAGS -Wall -Werror"
+> +    AC_LINK_IFELSE(
+> +    [AC_LANG_PROGRAM([[
+> +#define _GNU_SOURCE
+> +#include <stdio.h>
+> +#include <string.h>
+> +  ]], [[
+> +char buf[1024];
+> +puts(strerror_r(0, buf, sizeof(buf)));
+> +  ]])
+> +    ],
+> +       strerror_r_returns_string=3Dyes
+> +       AC_MSG_RESULT(yes),
+> +       AC_MSG_RESULT(no))
+> +    CFLAGS=3D"$OLD_CFLAGS"
+> +    AC_SUBST(strerror_r_returns_string)
+> +  ])
+> diff --git a/scrub/Makefile b/scrub/Makefile
+> index 3636a47942e98e..6375d77a291bcb 100644
+> --- a/scrub/Makefile
+> +++ b/scrub/Makefile
+> @@ -105,6 +105,10 @@ CFILES +=3D unicrash.c
+> LCFLAGS +=3D -DHAVE_LIBICU $(LIBICU_CFLAGS)
+> endif
+>=20
+> +ifeq ($(STRERROR_R_RETURNS_STRING),yes)
+> +LCFLAGS +=3D -DSTRERROR_R_RETURNS_STRING
+> +endif
+> +
+> # Automatically trigger a media scan once per month
+> XFS_SCRUB_ALL_AUTO_MEDIA_SCAN_INTERVAL=3D1mo
+>=20
+> diff --git a/scrub/common.c b/scrub/common.c
+> index 9437d0abb8698b..9a33e2a9d54ed4 100644
+> --- a/scrub/common.c
+> +++ b/scrub/common.c
+> @@ -126,8 +126,12 @@ __str_out(
+> fprintf(stream, "%s%s: %s: ", stream_start(stream),
+> _(err_levels[level].string), descr);
+> if (error) {
+> - strerror_r(error, buf, DESCR_BUFSZ);
+> - fprintf(stream, _("%s."), buf);
+> +#ifdef STRERROR_R_RETURNS_STRING
+> + fprintf(stream, _("%s."), strerror_r(error, buf, DESCR_BUFSZ));
+> +#else
+> + if (strerror_r(error, buf, DESCR_BUFSZ) =3D=3D 0)
+> + fprintf(stream, _("%s."), buf);
+> +#endif
+> } else {
+> va_start(args, format);
+> vfprintf(stream, format, args);
 
-I agree _set may be ambiguous here. I was considering something like
-_assign or _set_value instead.
+I did check *build* on glibc, but I don=E2=80=99t think mine had =
+warn_unused_result yet.
+(It=E2=80=99s an older version.)
 
-I'm not that fond of _replace but I'm not going to really going to
-argue about any particular variant.
+Thanks for fixing this, looks good to me.
 
-The good news is that whatever the naming, sed indeed can be used to
-adjust the patchset. :)
+The commit message isn=E2=80=99t accurate any more though.
+
+Reviewed-by: A. Wilcox <AWilcox@Wilcox-Tech.com>
+
