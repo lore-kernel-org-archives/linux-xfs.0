@@ -1,113 +1,126 @@
-Received: from mail-il1-f171.google.com (mail-il1-f171.google.com [209.85.166.171])
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22DE62AD24
-	for <linux-xfs@vger.kernel.org>; Sat, 20 Sep 2025 04:31:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 748537081A
+	for <linux-xfs@vger.kernel.org>; Sat, 20 Sep 2025 05:48:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758342690; cv=none; b=IOH3pBKWwKPnwdwC26SOX7swLAUET9GUdwlgUvxK0e0dwEQeqhGzb7roYjonGjTECh8jXjma9L7OxEcl5rfmVh/uO24mQW5Rf0ABVK/nO6EEup+K+iFG+3VvDwgNBWzzvRkuspx6ojBqqxjaRnZ35bWsxz6PZsSn2IcZ5n/9ZOY=
+	t=1758347283; cv=none; b=Cz4prKr4cySuilpl5BB+K2hR4QiwSx6SQJDV3MW2cSCbHIMny83NVzV31F6hzvx3W8Y3rKKCvelty+hp1E+6RVPclk1YOa/2hAEChxBmepMEBqKZEEKy/e7bJrUE3IJSFjZMDHhG2m1M4caXtuTztsms5vdYJ+yDRbzAdhcrHDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758342690; c=relaxed/simple;
-	bh=kAny4aRymFDIo+7FPT/ml2qL4nKq50MkuxSYtUo1xdk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=eCBVnMBwK9PlQOFwbuTHtQjNxQpOJJ6aaoffMKYOscfVTBTkGsa1yD4PdjZWqokIR3Isn3gPBpg8C3+YpJ4QwgDbAxcWyAykSUT3D87/tNF9ldkQ0xXsV8vON7RvupDMzRKj790p4kR/yLP0EyJ9jlHJlk8B5OZNvn5l6aYDhMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fLuGppCK; arc=none smtp.client-ip=209.85.166.171
+	s=arc-20240116; t=1758347283; c=relaxed/simple;
+	bh=o437aCkcf1xCxm+rv0mPwnGQtCoz+9QjMvmAbd5CG3k=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=jsIF7sXnC6FETL2g8z29+vnEEVF/6RwQxElBRjjlMuPIzewgWusbINMMQussUydzx2HP0rEw+cN9Ng9KZcXL7JWNmR37OYmq0DMKFlPz5azbToDQNVZFhIhho1ZCxzmT7hcJz33uIoySUfHWQPlP6ni0JzGoAnxv4s1kDLpnKS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jvFQtz/e; arc=none smtp.client-ip=209.85.208.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fLuGppCK"
-Received: by mail-il1-f171.google.com with SMTP id e9e14a558f8ab-42485372dc6so9459005ab.0
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 21:31:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jvFQtz/e"
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-62ecd3c21d3so4199557a12.0
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 22:48:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758342686; x=1758947486; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=mAMf/yo/OOBBY5X1PTbs08x/sucOGtYlA3nCLcNTs+g=;
-        b=fLuGppCK4DAjqW2augM3XZ8Si1RMcFrTAkhTtUvRhH0k/DXAIsFNsnQe33qYOjkDng
-         nNwrfJWpcAk++ei1tdRu0b/xa/dqgXyvawOXT8SsK/3ZzsRHv1grK/yp2oAR8fVcAXwR
-         aPLMAYcsE04tGb7zBj/O6Qr417zM0P4kI/UM02G3avJZ5HQDfbHVXmexAcnnqoce6IS2
-         9FBhY/pEVVjVVg5xdbQ9mKV3F8F4pQOU6bNtMts9IsOZfNrtNgB2MR2fO9OUWzHlSwGv
-         rXbKeVem2CeEgaM0ME0xcM9hP7hYEEqA6iIC8ZpUfEdjXSYAS+7rUZe5/gatEBHDMS+Y
-         mUaw==
+        d=gmail.com; s=20230601; t=1758347279; x=1758952079; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=fyN9RcfnRhBee1hQgE+lsezNr/j9kdfLGgOBZcxycjE=;
+        b=jvFQtz/eYM+NLGU5wKQz8AH8+J1N6i7yiK70ybgHeyj1Nqt3MpUnt0ptB0V5rqNNdx
+         y9FCHiVC4NzIj4m/dqvUSDf5Ay7MA6YPbem+VbXf2aZ0NWpkzKgfjdRZZx0qc+lJjsEw
+         KAvK+Pum6jWrqeQMgjhX+xnQz8SaKlMj3bdzaQ4YFGLqThdG8cQMiriMz9AX/WwdePxH
+         VSIt6PWxgmFAwad3XxwSL0FMZB4cr8xZ/cdU8oBWLpOix39fJYgBXTFjH1sNNnLsowm1
+         lNDp+A1teDRrWiE+un0tv30D/PKCul57wt6iJ+dl+oycDfEYGKivtfb8s8kpAJb7b/vY
+         vowg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758342686; x=1758947486;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=mAMf/yo/OOBBY5X1PTbs08x/sucOGtYlA3nCLcNTs+g=;
-        b=Hu347QkEs4rkeSzgB++/LElHxf6tM2QLpldmZwzg1xrpS+vmFs9CQf8+cxtTks/a2y
-         5mul+ObsD9QrkNMKtAKOItiJk5guTshcK9DgdrRQCIAfMTYVezqgljiSQmoPoaw3O+Di
-         FdzCJBteZD9c08/UH0B0p4q4jJmeAbXIyUEx7YHeIeBeRqgkAYBTqRoszH3qnR0pGb0G
-         mu9/NRmhd2ztC8k9QtV+SLrHcm6KbAzkfjoV3om0UrIqogjg4nnjSucsUrHEAYu5a24e
-         RnHGirYHyzmlXufJbGhWAVmF1LNV+t1dfa+f1BHuto4qXiw3hDw8fmd5Nq31lRzyvpwR
-         iHHw==
-X-Forwarded-Encrypted: i=1; AJvYcCV+V9Iv1ibPRiluSA0k+a0pndIcp2udhEfaQmFTpgIIvO2hgEW8s0wtSuafIAKuLYXsE5sn7CKWJbo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwxfWuGESRXqZZr2W3nr74To/GgC+W9IgN9p90DMP6E7yMdKhYN
-	0W5egp+j+JzwPjqbCVPCCmFE9NtPUNzQYJElXR0Aut3gCfkXLyGxNaDU
-X-Gm-Gg: ASbGncscZBBRnzruG+HC12UwTLhwB6Y4yMMTlxUziAaFmVU7DeekPIGIz+d80mlS9F9
-	X3c2ydQOGlXt+y+1EuBpmFiOkcNQMGA3myuFNMbleHak0JLRn9kRGZInAfiPNaWkLhKxshwO3Vs
-	L01u4+AcCoGQgQQuiz23V2A8aUY1d8P/uzfreXnbwb+rEsxlIMZESb5BYS+ilusMAtr/bBaBgTn
-	kllH1jkCnX+4v295R8O302YeCTrzUtVqyYeGR1vihWRZhhDOJbWjj9fZFX7e5Lpm64fM8phX9km
-	joIKZOShNWJd4Ks8Iois/mDkamcfpe6Lih3rL+DzNI295/9GUPEmUws6Tsw/YIycvkNHunpk9z0
-	ZTG9itvHq26ScmMvBv1iWDxa8jPzNtfvPKbqmzA==
-X-Google-Smtp-Source: AGHT+IFcG4QqJ4nlgO3oq0I1YnwOZ/K7SIrMHUnkDcvBmlrkEhfFU8B8mZqzq5hu5cnZ8bWVDrbaVA==
-X-Received: by 2002:a05:6e02:156b:b0:424:30f:8e7c with SMTP id e9e14a558f8ab-42481909f5emr98881625ab.10.1758342686244;
-        Fri, 19 Sep 2025 21:31:26 -0700 (PDT)
-Received: from ?IPV6:2600:6c56:7d00:582f::64e? ([2600:6c56:7d00:582f::64e])
-        by smtp.googlemail.com with ESMTPSA id 8926c6da1cb9f-53d56e429f3sm2997444173.74.2025.09.19.21.31.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Sep 2025 21:31:24 -0700 (PDT)
-Message-ID: <73885a08-f255-4638-8a53-f136537f4b4c@gmail.com>
-Date: Fri, 19 Sep 2025 23:31:22 -0500
+        d=1e100.net; s=20230601; t=1758347279; x=1758952079;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=fyN9RcfnRhBee1hQgE+lsezNr/j9kdfLGgOBZcxycjE=;
+        b=uMQnLE9FAbV9C4lActkssVcTV5OMaQONMOlKK5rTlLov37ylXqrty2ZJol0gv/L+0F
+         V1/JbYGKsHPWuuaxymvY8TPKaH8FRE/7pEobr7wtgqmVpPlBQ3xLlviysEvDSwEkSIkx
+         UBxUz9FIxeIWGXXy0mr5lK41Y2Lce9+RrRVOpxreFCX2FzsDYReYNUNLrBiJGy1cIEBH
+         0fyI0LnTYdq47kND60V/Uz/K3itwHu71J9sWx+3NkWnZbnGoP0/ZA0s7/exLhrAAFsUe
+         BldqOqoBhZzi+o9bvdo3oWvmIlU881d3lHJhmUP5LVK4mg6+eweQlwGlXLcQksOS/sBa
+         GwSA==
+X-Forwarded-Encrypted: i=1; AJvYcCV7hOztZ7tSSweBo6nkmmyTlz42qhgbgjSQXV8MKfzaKSt5cQdSJI3YiATeO1lsWlkoGV7SlFZ7LRk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyRLBQao2yPx+1CDFP9/bYTyJAP5/h0VvxrJl1CF7UTaTzdXbEx
+	CDRDql8CA51t2toyaqMC03gkIGWPZ5s/uEMu+oRsiEpAf4ScCCsoNVDtHrq+CN6fRnBtO8F/HCb
+	8oGDeyO/fm1wnTIVmc4WmF3uLoEiGrV4=
+X-Gm-Gg: ASbGncszCfpEP+/fU+hIIvUMA+4I63hrMwYNBaTT1GDoW/VmDn2ogJ1RedduMNyn2w/
+	2MCUQwPzn248o0s8XUgLFXsBMTzdf3es9UXEkoColz0UzUABE0/BkzQz+IrzybmcfEGU2ZMALbW
+	eo/oko34ZA53XAqLl9+P1LptAmSksZxmX0iIJh6ASgyETjMEAmnBY9jVzwOclgZ39gtHOtAunK0
+	e3NHO//LE4DG7giaeroCw9bcs54An720KuCW5Q=
+X-Google-Smtp-Source: AGHT+IGXjKiqqwRe65Vudg38Ap/YqUkQCp5A7+RF7b7HLmhZNE/B/g21D2F70GxNir3tx2mYIaHz6z79YrnZKfqUJP8=
+X-Received: by 2002:a05:6402:23d2:b0:62f:9cfb:7d76 with SMTP id
+ 4fb4d7f45d1cf-62fc0a8376bmr4633977a12.37.1758347278669; Fri, 19 Sep 2025
+ 22:47:58 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+References: <20250919154905.2592318-1-mjguzik@gmail.com> <73885a08-f255-4638-8a53-f136537f4b4c@gmail.com>
+In-Reply-To: <73885a08-f255-4638-8a53-f136537f4b4c@gmail.com>
+From: Mateusz Guzik <mjguzik@gmail.com>
+Date: Sat, 20 Sep 2025 07:47:46 +0200
+X-Gm-Features: AS18NWCzvbrmV0HH3sAfFvM4WSZtLcuzJvUuWZCgEFT-KVn1SkU22A6rQ1aMITw
+Message-ID: <CAGudoHHnhej-jxkSBG5im+QXh5GZfp1KsO40EV=PPDxuGbco8Q@mail.gmail.com>
 Subject: Re: [PATCH v5 0/4] hide ->i_state behind accessors
-To: Mateusz Guzik <mjguzik@gmail.com>, brauner@kernel.org
-Cc: viro@zeniv.linux.org.uk, jack@suse.cz, linux-kernel@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, josef@toxicpanda.com, kernel-team@fb.com,
- amir73il@gmail.com, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org,
- linux-unionfs@vger.kernel.org
-References: <20250919154905.2592318-1-mjguzik@gmail.com>
-Content-Language: en-US
-From: Russell Haley <yumpusamongus@gmail.com>
-In-Reply-To: <20250919154905.2592318-1-mjguzik@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To: Russell Haley <yumpusamongus@gmail.com>
+Cc: brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz, 
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	josef@toxicpanda.com, kernel-team@fb.com, amir73il@gmail.com, 
+	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org, 
+	linux-unionfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 9/19/25 10:49 AM, Mateusz Guzik wrote:
-> This is generated against:
-> https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/commit/?h=vfs-6.18.inode.refcount.preliminaries
-> 
-> First commit message quoted verbatim with rationable + API:
-> 
-> [quote]
-> Open-coded accesses prevent asserting they are done correctly. One
-> obvious aspect is locking, but significantly more can checked. For
-> example it can be detected when the code is clearing flags which are
-> already missing, or is setting flags when it is illegal (e.g., I_FREEING
-> when ->i_count > 0).
-> 
-> Given the late stage of the release cycle this patchset only aims to
-> hide access, it does not provide any of the checks.
-> 
-> Consumers can be trivially converted. Suppose flags I_A and I_B are to
-> be handled, then:
-> 
-> state = inode->i_state  	=> state = inode_state_read(inode)
-> inode->i_state |= (I_A | I_B) 	=> inode_state_add(inode, I_A | I_B)
-> inode->i_state &= ~(I_A | I_B) 	=> inode_state_del(inode, I_A | I_B)
-> inode->i_state = I_A | I_B	=> inode_state_set(inode, I_A | I_B)
-> [/quote]
+On Sat, Sep 20, 2025 at 6:31=E2=80=AFAM Russell Haley <yumpusamongus@gmail.=
+com> wrote:
+>
+> On 9/19/25 10:49 AM, Mateusz Guzik wrote:
+> > This is generated against:
+> > https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/commit/?h=
+=3Dvfs-6.18.inode.refcount.preliminaries
+> >
+> > First commit message quoted verbatim with rationable + API:
+> >
+> > [quote]
+> > Open-coded accesses prevent asserting they are done correctly. One
+> > obvious aspect is locking, but significantly more can checked. For
+> > example it can be detected when the code is clearing flags which are
+> > already missing, or is setting flags when it is illegal (e.g., I_FREEIN=
+G
+> > when ->i_count > 0).
+> >
+> > Given the late stage of the release cycle this patchset only aims to
+> > hide access, it does not provide any of the checks.
+> >
+> > Consumers can be trivially converted. Suppose flags I_A and I_B are to
+> > be handled, then:
+> >
+> > state =3D inode->i_state        =3D> state =3D inode_state_read(inode)
+> > inode->i_state |=3D (I_A | I_B)         =3D> inode_state_add(inode, I_A=
+ | I_B)
+> > inode->i_state &=3D ~(I_A | I_B)        =3D> inode_state_del(inode, I_A=
+ | I_B)
+> > inode->i_state =3D I_A | I_B    =3D> inode_state_set(inode, I_A | I_B)
+> > [/quote]
+>
+> Drive-by bikeshedding: s/set/replace/g
+>
+> "replace" removes ambiguity with the concept of setting a bit ( |=3D ). A=
+n
+> alternative would be "set_only".
+>
 
-Drive-by bikeshedding: s/set/replace/g
+I agree _set may be ambiguous here. I was considering something like
+_assign or _set_value instead.
 
-"replace" removes ambiguity with the concept of setting a bit ( |= ). An
-alternative would be "set_only".
+I'm not that fond of _replace but I'm not going to really going to
+argue about any particular variant.
 
+The good news is that whatever the naming, sed indeed can be used to
+adjust the patchset. :)
