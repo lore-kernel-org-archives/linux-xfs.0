@@ -1,328 +1,113 @@
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
+Received: from mail-il1-f171.google.com (mail-il1-f171.google.com [209.85.166.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B4B02BE05A
-	for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 22:37:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22DE62AD24
+	for <linux-xfs@vger.kernel.org>; Sat, 20 Sep 2025 04:31:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758321425; cv=none; b=bJ/jHQDRDxCMnszIXiKb50d6K/O6XRnCMK5ZkCaSoj1KiDWRVofwdiI1QEOr95NSOeUBWSS3F8nQdMUM0c3LV+Nb+mqze1hMelqHX1gsTCSy+v3pDgQd9lddVeZ2XI9Dkl+bDf6B50FkA9UVzVupZ4pKlX1FhGo8MVK4c0Lhxjk=
+	t=1758342690; cv=none; b=IOH3pBKWwKPnwdwC26SOX7swLAUET9GUdwlgUvxK0e0dwEQeqhGzb7roYjonGjTECh8jXjma9L7OxEcl5rfmVh/uO24mQW5Rf0ABVK/nO6EEup+K+iFG+3VvDwgNBWzzvRkuspx6ojBqqxjaRnZ35bWsxz6PZsSn2IcZ5n/9ZOY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758321425; c=relaxed/simple;
-	bh=uJ8m2NZX6JXnQKKA+zdGmOxS3OC4Ea4bmMr8x5ucnxc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=obQknuUC9Pmr05R0UELhvTDM2JBkrEFthrWqZH/8h3UiY0ip0jC64BqiprIX5OlmvP26WI55oV9lZom+pGpDnAcURN/tUUOOSiWcSyyYITUZ27WAlaiq9+DDqYUYaVDGAWw4qirqZUJ3XbAUnQAqDWQ++H6EhhHy3pVzoUtPOJI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ics6AhMx; arc=none smtp.client-ip=209.85.160.172
+	s=arc-20240116; t=1758342690; c=relaxed/simple;
+	bh=kAny4aRymFDIo+7FPT/ml2qL4nKq50MkuxSYtUo1xdk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=eCBVnMBwK9PlQOFwbuTHtQjNxQpOJJ6aaoffMKYOscfVTBTkGsa1yD4PdjZWqokIR3Isn3gPBpg8C3+YpJ4QwgDbAxcWyAykSUT3D87/tNF9ldkQ0xXsV8vON7RvupDMzRKj790p4kR/yLP0EyJ9jlHJlk8B5OZNvn5l6aYDhMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fLuGppCK; arc=none smtp.client-ip=209.85.166.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ics6AhMx"
-Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-4b7a8ceaad3so23510441cf.2
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 15:37:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fLuGppCK"
+Received: by mail-il1-f171.google.com with SMTP id e9e14a558f8ab-42485372dc6so9459005ab.0
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Sep 2025 21:31:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758321423; x=1758926223; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=d3O3+fGeiCoT/6/FJPjx7pd6Eokbtom126s5Fn+C9FQ=;
-        b=Ics6AhMxw56RwzKD8hl98CcXt9LdyoVnQrdaAO8JEReiJMX6oqF8jgW+MKxIcAFOwv
-         EQprWxdxZFXIThjI25S9INdHKk5loJCSC9icfDpExbA2UFImOgYxyKNG3dxgRZhjejPQ
-         7lpTI56RyI/g43oFbzLet6VIdRGoeXXwrpLpVCYtJfqMo5884iUGkF83vcn8DHnkyPEF
-         TTBkExQVaKwhoJoKK9J6lylaI5D+NgpWM0YGTBbcQxQq6WUgHiQGdbuVxb0X43rmlzt8
-         qH6LccjEl3ClRWrk7ltVtN/g113LIwQ6RH4nj3Ssca+8cXOBrsy/1i4he2klRqgjpZXt
-         VScQ==
+        d=gmail.com; s=20230601; t=1758342686; x=1758947486; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=mAMf/yo/OOBBY5X1PTbs08x/sucOGtYlA3nCLcNTs+g=;
+        b=fLuGppCK4DAjqW2augM3XZ8Si1RMcFrTAkhTtUvRhH0k/DXAIsFNsnQe33qYOjkDng
+         nNwrfJWpcAk++ei1tdRu0b/xa/dqgXyvawOXT8SsK/3ZzsRHv1grK/yp2oAR8fVcAXwR
+         aPLMAYcsE04tGb7zBj/O6Qr417zM0P4kI/UM02G3avJZ5HQDfbHVXmexAcnnqoce6IS2
+         9FBhY/pEVVjVVg5xdbQ9mKV3F8F4pQOU6bNtMts9IsOZfNrtNgB2MR2fO9OUWzHlSwGv
+         rXbKeVem2CeEgaM0ME0xcM9hP7hYEEqA6iIC8ZpUfEdjXSYAS+7rUZe5/gatEBHDMS+Y
+         mUaw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758321423; x=1758926223;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=d3O3+fGeiCoT/6/FJPjx7pd6Eokbtom126s5Fn+C9FQ=;
-        b=ufJ+ejOLdL4HbGymTfl+tOfpJueZsqXwvLrKdeIj4NmoTPbP6SIl/U4MAWJvAE9LgW
-         WW5oEFUVbmHgF3Z1YQsBJmAXqk9/JkknMY0OMd+cj2mljEiSehP58DL/T4tjOqn7hiG6
-         fqzofjcgLG1lTOUSDPQyvyN7qjU/k0peyWCwxPXFIl1/AlM4bWyRVoyBZtmB56eJO/Xl
-         IKfYntpil2wxmgaqVQzI0wCyb6DEIGMTYe1u/MFBSrtGJyXcHHdHsfSsdi3pea5kpYvS
-         GJQ7eEnECQSdQ/rrS1WgXte+JTOhuMsjlpi5Sx4hSk9hDm0CT5KC+BNs5TtmLQjf83FC
-         kQ/Q==
-X-Forwarded-Encrypted: i=1; AJvYcCWID0IUJBz6ai58rMoZk97M9e20hiFgP91gL6f36wrZSjCiijO5fqwLIxuZKj9duOWiFmGXTYETVG4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw56SQrgRmbTCcGX7d5mSyAVc7ApaMrz4H/inEiXtltFeGrhIx/
-	DR2mMWktJe/4r++E3LqbpXWa27cajyDhN+sSqVzEV8R7cnIkWD89zKGSjHA1eWHpM+JIuEK89/s
-	2A24ZXgGDD+T+RLgxRxFKfeuJItOcJEQ=
-X-Gm-Gg: ASbGncvXCJI7Sbjy8+4UgRtVJCbiS5cQuXaSlUiScOSGnWVANHs9OqZLwhA4kTQXbYi
-	Fpfe9EKGbK27N+JH4gVGE73tVjca4paDbQyN7Per4PgnCyx4GiMtTGWPGgv78O/mMdKMZv9mUqT
-	n+rhcGyY2Q6Qccm+wDWwdRi7LFRwaRcEXtBhZgEXkJpRIvL15T7Uc7jmKlXQM3Y6tzaJJyw4yIE
-	uAmTDto7dsulsO6vXuFZglxfBrj1dmeNdNyAuPO
-X-Google-Smtp-Source: AGHT+IHWQvxkAk9J4PgdqySQm/TRIxJdbaJkIs2XbDQx5JYH/WsCKYtGeQrei4+rJpAYXXWVlZS2x1/ooQEaV6zafXQ=
-X-Received: by 2002:a05:622a:5507:b0:4b5:e8e0:4f93 with SMTP id
- d75a77b69052e-4c0718f6543mr55734631cf.54.1758321422899; Fri, 19 Sep 2025
- 15:37:02 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1758342686; x=1758947486;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=mAMf/yo/OOBBY5X1PTbs08x/sucOGtYlA3nCLcNTs+g=;
+        b=Hu347QkEs4rkeSzgB++/LElHxf6tM2QLpldmZwzg1xrpS+vmFs9CQf8+cxtTks/a2y
+         5mul+ObsD9QrkNMKtAKOItiJk5guTshcK9DgdrRQCIAfMTYVezqgljiSQmoPoaw3O+Di
+         FdzCJBteZD9c08/UH0B0p4q4jJmeAbXIyUEx7YHeIeBeRqgkAYBTqRoszH3qnR0pGb0G
+         mu9/NRmhd2ztC8k9QtV+SLrHcm6KbAzkfjoV3om0UrIqogjg4nnjSucsUrHEAYu5a24e
+         RnHGirYHyzmlXufJbGhWAVmF1LNV+t1dfa+f1BHuto4qXiw3hDw8fmd5Nq31lRzyvpwR
+         iHHw==
+X-Forwarded-Encrypted: i=1; AJvYcCV+V9Iv1ibPRiluSA0k+a0pndIcp2udhEfaQmFTpgIIvO2hgEW8s0wtSuafIAKuLYXsE5sn7CKWJbo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwxfWuGESRXqZZr2W3nr74To/GgC+W9IgN9p90DMP6E7yMdKhYN
+	0W5egp+j+JzwPjqbCVPCCmFE9NtPUNzQYJElXR0Aut3gCfkXLyGxNaDU
+X-Gm-Gg: ASbGncscZBBRnzruG+HC12UwTLhwB6Y4yMMTlxUziAaFmVU7DeekPIGIz+d80mlS9F9
+	X3c2ydQOGlXt+y+1EuBpmFiOkcNQMGA3myuFNMbleHak0JLRn9kRGZInAfiPNaWkLhKxshwO3Vs
+	L01u4+AcCoGQgQQuiz23V2A8aUY1d8P/uzfreXnbwb+rEsxlIMZESb5BYS+ilusMAtr/bBaBgTn
+	kllH1jkCnX+4v295R8O302YeCTrzUtVqyYeGR1vihWRZhhDOJbWjj9fZFX7e5Lpm64fM8phX9km
+	joIKZOShNWJd4Ks8Iois/mDkamcfpe6Lih3rL+DzNI295/9GUPEmUws6Tsw/YIycvkNHunpk9z0
+	ZTG9itvHq26ScmMvBv1iWDxa8jPzNtfvPKbqmzA==
+X-Google-Smtp-Source: AGHT+IFcG4QqJ4nlgO3oq0I1YnwOZ/K7SIrMHUnkDcvBmlrkEhfFU8B8mZqzq5hu5cnZ8bWVDrbaVA==
+X-Received: by 2002:a05:6e02:156b:b0:424:30f:8e7c with SMTP id e9e14a558f8ab-42481909f5emr98881625ab.10.1758342686244;
+        Fri, 19 Sep 2025 21:31:26 -0700 (PDT)
+Received: from ?IPV6:2600:6c56:7d00:582f::64e? ([2600:6c56:7d00:582f::64e])
+        by smtp.googlemail.com with ESMTPSA id 8926c6da1cb9f-53d56e429f3sm2997444173.74.2025.09.19.21.31.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 19 Sep 2025 21:31:24 -0700 (PDT)
+Message-ID: <73885a08-f255-4638-8a53-f136537f4b4c@gmail.com>
+Date: Fri, 19 Sep 2025 23:31:22 -0500
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <175798151087.382724.2707973706304359333.stgit@frogsfrogsfrogs> <175798151288.382724.14189484118371001092.stgit@frogsfrogsfrogs>
-In-Reply-To: <175798151288.382724.14189484118371001092.stgit@frogsfrogsfrogs>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Fri, 19 Sep 2025 15:36:52 -0700
-X-Gm-Features: AS18NWCO71nVFhYakayYK0yIAhj-E3b2dx_XnAizS9jPLGzxwTNx6Ok68GwG8No
-Message-ID: <CAJnrk1YtGcWj_0MOxS6atL_vrUjk09MzQhFt40yf32Rq12k0qw@mail.gmail.com>
-Subject: Re: [PATCH 01/28] fuse: implement the basic iomap mechanisms
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: miklos@szeredi.hu, bernd@bsbernd.com, linux-xfs@vger.kernel.org, 
-	John@groves.net, linux-fsdevel@vger.kernel.org, neal@gompa.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 0/4] hide ->i_state behind accessors
+To: Mateusz Guzik <mjguzik@gmail.com>, brauner@kernel.org
+Cc: viro@zeniv.linux.org.uk, jack@suse.cz, linux-kernel@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, josef@toxicpanda.com, kernel-team@fb.com,
+ amir73il@gmail.com, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+ linux-unionfs@vger.kernel.org
+References: <20250919154905.2592318-1-mjguzik@gmail.com>
+Content-Language: en-US
+From: Russell Haley <yumpusamongus@gmail.com>
+In-Reply-To: <20250919154905.2592318-1-mjguzik@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Sep 15, 2025 at 5:28=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
- wrote:
->
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> Implement functions to enable upcalling of iomap_begin and iomap_end to
-> userspace fuse servers.
->
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
->  fs/fuse/fuse_i.h          |   35 ++++
->  fs/fuse/iomap_priv.h      |   36 ++++
->  include/uapi/linux/fuse.h |   90 +++++++++
->  fs/fuse/Kconfig           |   32 +++
->  fs/fuse/Makefile          |    1
->  fs/fuse/file_iomap.c      |  434 +++++++++++++++++++++++++++++++++++++++=
-++++++
->  fs/fuse/inode.c           |    9 +
->  7 files changed, 636 insertions(+), 1 deletion(-)
->  create mode 100644 fs/fuse/iomap_priv.h
->  create mode 100644 fs/fuse/file_iomap.c
->
->
-> diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
-> index 4560687d619d76..f0d408a6e12c32 100644
-> --- a/fs/fuse/fuse_i.h
-> +++ b/fs/fuse/fuse_i.h
-> @@ -923,6 +923,9 @@ struct fuse_conn {
->         /* Is synchronous FUSE_INIT allowed? */
->         unsigned int sync_init:1;
->
-> +       /* Enable fs/iomap for file operations */
-> +       unsigned int iomap:1;
-> +
->         /* Use io_uring for communication */
->         unsigned int io_uring;
->
-> @@ -1047,6 +1050,11 @@ static inline struct fuse_mount *get_fuse_mount_su=
-per(struct super_block *sb)
->         return sb->s_fs_info;
->  }
->
-> +static inline const struct fuse_mount *get_fuse_mount_super_c(const stru=
-ct super_block *sb)
-> +{
-> +       return sb->s_fs_info;
-> +}
-> +
->  static inline struct fuse_conn *get_fuse_conn_super(struct super_block *=
-sb)
->  {
->         return get_fuse_mount_super(sb)->fc;
-> @@ -1057,16 +1065,31 @@ static inline struct fuse_mount *get_fuse_mount(s=
-truct inode *inode)
->         return get_fuse_mount_super(inode->i_sb);
->  }
->
-> +static inline const struct fuse_mount *get_fuse_mount_c(const struct ino=
-de *inode)
-> +{
-> +       return get_fuse_mount_super_c(inode->i_sb);
-> +}
-> +
->  static inline struct fuse_conn *get_fuse_conn(struct inode *inode)
->  {
->         return get_fuse_mount_super(inode->i_sb)->fc;
->  }
->
-> +static inline const struct fuse_conn *get_fuse_conn_c(const struct inode=
- *inode)
-> +{
-> +       return get_fuse_mount_super_c(inode->i_sb)->fc;
-> +}
-> +
->  static inline struct fuse_inode *get_fuse_inode(struct inode *inode)
->  {
->         return container_of(inode, struct fuse_inode, inode);
->  }
->
-> +static inline const struct fuse_inode *get_fuse_inode_c(const struct ino=
-de *inode)
-> +{
-> +       return container_of(inode, struct fuse_inode, inode);
-> +}
+On 9/19/25 10:49 AM, Mateusz Guzik wrote:
+> This is generated against:
+> https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/commit/?h=vfs-6.18.inode.refcount.preliminaries
+> 
+> First commit message quoted verbatim with rationable + API:
+> 
+> [quote]
+> Open-coded accesses prevent asserting they are done correctly. One
+> obvious aspect is locking, but significantly more can checked. For
+> example it can be detected when the code is clearing flags which are
+> already missing, or is setting flags when it is illegal (e.g., I_FREEING
+> when ->i_count > 0).
+> 
+> Given the late stage of the release cycle this patchset only aims to
+> hide access, it does not provide any of the checks.
+> 
+> Consumers can be trivially converted. Suppose flags I_A and I_B are to
+> be handled, then:
+> 
+> state = inode->i_state  	=> state = inode_state_read(inode)
+> inode->i_state |= (I_A | I_B) 	=> inode_state_add(inode, I_A | I_B)
+> inode->i_state &= ~(I_A | I_B) 	=> inode_state_del(inode, I_A | I_B)
+> inode->i_state = I_A | I_B	=> inode_state_set(inode, I_A | I_B)
+> [/quote]
 
-Do we need these new set of helpers? AFAICT it does two things: a)
-guarantee constness of the arg passed in b) guarantee constness of the
-pointer returned
+Drive-by bikeshedding: s/set/replace/g
 
-But it seems like for a) we could get that by modifying the existing
-functions to take in a const arg, eg
+"replace" removes ambiguity with the concept of setting a bit ( |= ). An
+alternative would be "set_only".
 
--static inline struct fuse_inode *get_fuse_inode(struct inode *inode)
-+static inline struct fuse_inode *get_fuse_inode(const struct inode *inode)
- {
-      return container_of(inode, struct fuse_inode, inode);
- }
-
-and for b) it seems to me like the caller enforces the constness of
-the pointer returned whether the actual function returns a const
-pointer or not,
-
-eg
-const struct fuse_inode *fi =3D get_fuse_inode{_c}(inode);
-
-Maybe I'm missing something here but it seems to me like we don't need
-these new helpers?
-
-> +
-> diff --git a/fs/fuse/iomap_priv.h b/fs/fuse/iomap_priv.h
-
-btw, i think the general convention is to use "_i.h" suffixing for
-private internal files, eg fuse_i.h, fuse_dev_i.h, dev_uring_i.h
-
-> new file mode 100644
-> index 00000000000000..243d92cb625095
-> --- /dev/null
-> +++ b/fs/fuse/iomap_priv.h
-> @@ -0,0 +1,36 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (C) 2025 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <djwong@kernel.org>
-> + */
-> +#ifndef _FS_FUSE_IOMAP_PRIV_H
-> +#define _FS_FUSE_IOMAP_PRIV_H
-> +
-...
-> diff --git a/include/uapi/linux/fuse.h b/include/uapi/linux/fuse.h
-> index 31b80f93211b81..3634cbe602cd9c 100644
-> --- a/include/uapi/linux/fuse.h
-> +++ b/include/uapi/linux/fuse.h
-> @@ -235,6 +235,9 @@
->   *
->   *  7.44
->   *  - add FUSE_NOTIFY_INC_EPOCH
-> + *
-> + *  7.99
-
-Just curious, where did you get the .99 from?
-
-> + *  - add FUSE_IOMAP and iomap_{begin,end,ioend} for regular file operat=
-ions
->   */
->
->  #ifndef _LINUX_FUSE_H
-> @@ -270,7 +273,7 @@
->  #define FUSE_KERNEL_VERSION 7
-> diff --git a/fs/fuse/Kconfig b/fs/fuse/Kconfig
-> index 9563fa5387a241..67dfe300bf2e07 100644
-> --- a/fs/fuse/Kconfig
-> +++ b/fs/fuse/Kconfig
-> @@ -69,6 +69,38 @@ config FUSE_PASSTHROUGH
-> +config FUSE_IOMAP_DEBUG
-> +       bool "Debug FUSE file IO over iomap"
-> +       default n
-> +       depends on FUSE_IOMAP
-> +       help
-> +         Enable debugging assertions for the fuse iomap code paths and l=
-ogging
-> +         of bad iomap file mapping data being sent to the kernel.
-> +
-
-I wonder if we should have a general FUSE_DEBUG that this would fall
-under instead of creating one that's iomap_debug specific
-
->  config FUSE_IO_URING
->         bool "FUSE communication over io-uring"
->         default y
-> diff --git a/fs/fuse/Makefile b/fs/fuse/Makefile
-> index 46041228e5be2c..27be39317701d6 100644
-> --- a/fs/fuse/Makefile
-> +++ b/fs/fuse/Makefile
-> @@ -18,5 +18,6 @@ fuse-$(CONFIG_FUSE_PASSTHROUGH) +=3D passthrough.o
->  fuse-$(CONFIG_FUSE_BACKING) +=3D backing.o
->  fuse-$(CONFIG_SYSCTL) +=3D sysctl.o
->  fuse-$(CONFIG_FUSE_IO_URING) +=3D dev_uring.o
-> +fuse-$(CONFIG_FUSE_IOMAP) +=3D file_iomap.o
->
->  virtiofs-y :=3D virtio_fs.o
-> diff --git a/fs/fuse/file_iomap.c b/fs/fuse/file_iomap.c
-> new file mode 100644
-> index 00000000000000..dda757768d3ea6
-> --- /dev/null
-> +++ b/fs/fuse/file_iomap.c
-> @@ -0,0 +1,434 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (C) 2025 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <djwong@kernel.org>
-> + */
-> +#include <linux/iomap.h>
-> +#include "fuse_i.h"
-> +#include "fuse_trace.h"
-> +#include "iomap_priv.h"
-> +
-> +/* Validate FUSE_IOMAP_TYPE_* */
-> +static inline bool fuse_iomap_check_type(uint16_t fuse_type)
-> +{
-> +       switch (fuse_type) {
-> +       case FUSE_IOMAP_TYPE_HOLE:
-> +       case FUSE_IOMAP_TYPE_DELALLOC:
-> +       case FUSE_IOMAP_TYPE_MAPPED:
-> +       case FUSE_IOMAP_TYPE_UNWRITTEN:
-> +       case FUSE_IOMAP_TYPE_INLINE:
-> +       case FUSE_IOMAP_TYPE_PURE_OVERWRITE:
-> +               return true;
-> +       }
-> +
-> +       return false;
-> +}
-
-Maybe faster to check by using a bitmask instead?
-
-
-> +
-> diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
-> index 1e7298b2b89b58..32f4b7c9a20a8a 100644
-> --- a/fs/fuse/inode.c
-> +++ b/fs/fuse/inode.c
-> @@ -1448,6 +1448,13 @@ static void process_init_reply(struct fuse_mount *=
-fm, struct fuse_args *args,
->
->                         if (flags & FUSE_REQUEST_TIMEOUT)
->                                 timeout =3D arg->request_timeout;
-> +
-> +                       if ((flags & FUSE_IOMAP) && fuse_iomap_enabled())=
- {
-> +                               fc->local_fs =3D 1;
-> +                               fc->iomap =3D 1;
-> +                               printk(KERN_WARNING
-> + "fuse: EXPERIMENTAL iomap feature enabled.  Use at your own risk!");
-> +                       }
-
-pr_warn() seems to be the convention elsewhere in the fuse code
-
-
-Thanks,
-Joanne
->                 } else {
->                         ra_pages =3D fc->max_read / PAGE_SIZE;
->                         fc->no_lock =3D 1;
-> @@ -1516,6 +1523,8 @@ static struct fuse_init_args *fuse_new_init(struct =
-fuse_mount *fm)
->          */
->         if (fuse_uring_enabled())
->                 flags |=3D FUSE_OVER_IO_URING;
-> +       if (fuse_iomap_enabled())
-> +               flags |=3D FUSE_IOMAP;
->
->         ia->in.flags =3D flags;
->         ia->in.flags2 =3D flags >> 32;
->
