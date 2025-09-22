@@ -1,188 +1,177 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F7AE155C82;
-	Sun, 21 Sep 2025 17:16:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76BB030594F
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Sep 2025 11:31:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758474988; cv=none; b=djPJhgn/Ve4usCzcdl7lYM0GpT62E9ObL1rMRJr4743sJOC/ejvlj+0sHuwqIx8SATbqnplhOE2sxR5DCMbH4fP6j7NEn0dyLZmYbINekkm3316sVw8mgp9Xrjffkylm0zHij1dLWEoeNuWZwW5Nr/P/jL7P0yA2AqaIdjQlusw=
+	t=1758540688; cv=none; b=YbagnSjmyBHINNCxSpnxLj56ALzl5Ak02vj+UuMZwqCQNMNE829iThFgNKGXjJmg+Z6RxRZCnonLgUUTLm371XjNQytUc6Kq4qr2HgcGgzVGHYHWSGsCObfqkPXnt6DH5XJkDftHMfWE67iEoSHczywRN03xsK9x03w0WtTfSn0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758474988; c=relaxed/simple;
-	bh=UPXswAUSrZIxzSDUJryHz5yqoPHslofeNlXxxCUxl8I=;
+	s=arc-20240116; t=1758540688; c=relaxed/simple;
+	bh=reYfWOi918Ulg2cuhqR/zeKkhW2tpcQpYWtD59+SRjA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W6gP363ytr9t0IrXbHFzbz3Sb4NeVp0NEa2PbNeij02XHqF1V7wbneKGjJmchozE3s+nsG0le/Kx8duMwwLoN2aF9lhVfk2hhthjsYdJduN+vYlpTRqccurNXHUtksS6UeCE8IWi+yfvo/KgIQ5fa/5fz62Oms1LAcxmcDl5CzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=nhL+rBVI; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=c/0RvuoWhrViKfZSrD5494QcxVDdhNfkNjdhMk/5Pc9Dan1Bkznp6DYtIW70Zpr/SP0DRklN6KXYlIFH5cF8H9tndZj4xiaGRbt006PA2DKxqjXKsGnp7u87tT/alMnQHbeiTKVkLVvCFmvBhlCVaOOO5w/vqMrcrXOKhoyaI14=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=RxR8QPeJ; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=tp9CHrZS; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=RxR8QPeJ; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=tp9CHrZS; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="nhL+rBVI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 494BBC4CEE7;
-	Sun, 21 Sep 2025 17:16:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1758474987;
-	bh=UPXswAUSrZIxzSDUJryHz5yqoPHslofeNlXxxCUxl8I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=nhL+rBVIPWaz6ZayE5ZqlDam9e/8JD2px7feqUcX90E1l+iaCXOMdlIEMIHZZdLdt
-	 mkCXktvqBAlUW+5YUcyUGBVxbWMFMjQ55FnM8wp6A3xs1MWplmTNsTy6A1ZmIXBkJh
-	 rFH8aGSLvTqmf7Eld+DQLeY81jdDu5nDKw+YIu7E=
-Date: Sun, 21 Sep 2025 19:16:25 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Catherine Hoang <catherine.hoang@oracle.com>,
-	Leah Rumancik <leah.rumancik@gmail.com>,
-	Allison Henderson <allison.henderson@oracle.com>,
-	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH CANDIDATE 5.15, 6.1, 6.6] xfs: Increase
- XFS_QM_TRANS_MAXDQS to 5
-Message-ID: <2025092158-marine-whoops-230b@gregkh>
-References: <20250913030503.433914-1-amir73il@gmail.com>
- <20250915182056.GO8096@frogsfrogsfrogs>
- <CAOQ4uxg4eBMS-FQADVYLGVh66QfMO+tHDAv3TUSpKqXn==XdKw@mail.gmail.com>
- <20250915234032.GB8096@frogsfrogsfrogs>
- <CAOQ4uxh00vdYLs24aMTonCNJ0wnmudwysxaJQa95-iq7zziD4Q@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="RxR8QPeJ";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="tp9CHrZS";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="RxR8QPeJ";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="tp9CHrZS"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 1B66F211EA;
+	Mon, 22 Sep 2025 11:31:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1758540684; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=M0WtXU1txr+PudB85nWSdZWaXTLDKrsojYDBAhwl6do=;
+	b=RxR8QPeJhVIxQivbpihvOVQjcFhAUNQK4/NGyXgyoKBVUxqzsR/wCn4nEVuO855ROjSlQm
+	znLbrkIF7uIODcO09pmQ46kW+7Kjmfp+Yl94r5nAFAeL+bKmVxr3Dyps9NZWeZlB7hwqR/
+	iuIwYD7uPT0h18XnnKsSHSJZX7B6kLY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1758540684;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=M0WtXU1txr+PudB85nWSdZWaXTLDKrsojYDBAhwl6do=;
+	b=tp9CHrZSq2rYbHd/6HmiFXRo1FHoFuVJfr2xr/zUul+EmLNB24sXyOILl+oAyYCjELDkuT
+	ejFL12khUrdIx3AQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=RxR8QPeJ;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=tp9CHrZS
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1758540684; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=M0WtXU1txr+PudB85nWSdZWaXTLDKrsojYDBAhwl6do=;
+	b=RxR8QPeJhVIxQivbpihvOVQjcFhAUNQK4/NGyXgyoKBVUxqzsR/wCn4nEVuO855ROjSlQm
+	znLbrkIF7uIODcO09pmQ46kW+7Kjmfp+Yl94r5nAFAeL+bKmVxr3Dyps9NZWeZlB7hwqR/
+	iuIwYD7uPT0h18XnnKsSHSJZX7B6kLY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1758540684;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=M0WtXU1txr+PudB85nWSdZWaXTLDKrsojYDBAhwl6do=;
+	b=tp9CHrZSq2rYbHd/6HmiFXRo1FHoFuVJfr2xr/zUul+EmLNB24sXyOILl+oAyYCjELDkuT
+	ejFL12khUrdIx3AQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0F34E1388C;
+	Mon, 22 Sep 2025 11:31:24 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id NbexA4wz0WhYUgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Mon, 22 Sep 2025 11:31:24 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id BBCD2A07C4; Mon, 22 Sep 2025 13:31:23 +0200 (CEST)
+Date: Mon, 22 Sep 2025 13:31:23 +0200
+From: Jan Kara <jack@suse.cz>
+To: Mateusz Guzik <mjguzik@gmail.com>
+Cc: brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz, 
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, josef@toxicpanda.com, 
+	kernel-team@fb.com, amir73il@gmail.com, linux-btrfs@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org, 
+	linux-unionfs@vger.kernel.org
+Subject: Re: [PATCH v5 3/4] Manual conversion of ->i_state uses
+Message-ID: <ayjwe2moaswosrvcv6mhd2wztwvexfjgy6dfnxxegnhppca7ac@75h6kmoj32e6>
+References: <20250919154905.2592318-1-mjguzik@gmail.com>
+ <20250919154905.2592318-4-mjguzik@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxh00vdYLs24aMTonCNJ0wnmudwysxaJQa95-iq7zziD4Q@mail.gmail.com>
+In-Reply-To: <20250919154905.2592318-4-mjguzik@gmail.com>
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_COUNT_THREE(0.00)[3];
+	FREEMAIL_TO(0.00)[gmail.com];
+	ARC_NA(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCPT_COUNT_TWELVE(0.00)[14];
+	MIME_TRACE(0.00)[0:+];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	MISSING_XM_UA(0.00)[];
+	FREEMAIL_CC(0.00)[kernel.org,zeniv.linux.org.uk,suse.cz,vger.kernel.org,toxicpanda.com,fb.com,gmail.com];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.com:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Rspamd-Queue-Id: 1B66F211EA
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -4.01
 
-On Tue, Sep 16, 2025 at 08:37:54AM +0200, Amir Goldstein wrote:
-> On Tue, Sep 16, 2025 at 1:40 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Mon, Sep 15, 2025 at 10:20:40PM +0200, Amir Goldstein wrote:
-> > > On Mon, Sep 15, 2025 at 8:20 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> > > >
-> > > > On Sat, Sep 13, 2025 at 05:05:02AM +0200, Amir Goldstein wrote:
-> > > > > From: Allison Henderson <allison.henderson@oracle.com>
-> > > > >
-> > > > > [ Upstream  commit f103df763563ad6849307ed5985d1513acc586dd ]
-> > > > >
-> > > > > With parent pointers enabled, a rename operation can update up to 5
-> > > > > inodes: src_dp, target_dp, src_ip, target_ip and wip.  This causes
-> > > > > their dquots to a be attached to the transaction chain, so we need
-> > > > > to increase XFS_QM_TRANS_MAXDQS.  This patch also add a helper
-> > > > > function xfs_dqlockn to lock an arbitrary number of dquots.
-> > > > >
-> > > > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > > >
-> > > > > [amir: backport to kernels prior to parent pointers to fix an old bug]
-> > > > >
-> > > > > A rename operation of a directory (i.e. mv A/C/ B/) may end up changing
-> > > > > three different dquot accounts under the following conditions:
-> > > > > 1. user (or group) quotas are enabled
-> > > > > 2. A/ B/ and C/ have different owner uids (or gids)
-> > > > > 3. A/ blocks shrinks after remove of entry C/
-> > > > > 4. B/ blocks grows before adding of entry C/
-> > > > > 5. A/ ino <= XFS_DIR2_MAX_SHORT_INUM
-> > > > > 6. B/ ino > XFS_DIR2_MAX_SHORT_INUM
-> > > > > 7. C/ is converted from sf to block format, because its parent entry
-> > > > >    needs to be stored as 8 bytes (see xfs_dir2_sf_replace_needblock)
-> > > > >
-> > > > > When all conditions are met (observed in the wild) we get this assertion:
-> > > > >
-> > > > > XFS: Assertion failed: qtrx, file: fs/xfs/xfs_trans_dquot.c, line: 207
-> > > > >
-> > > > > The upstream commit fixed this bug as a side effect, so decided to apply
-> > > > > it as is rather than changing XFS_QM_TRANS_MAXDQS to 3 in stable kernels.
-> > > >
-> > > > Heh.  Indeed, you only need MAXDQS==5 for filesystems that support
-> > > > parent pointers, because only on those filesystems can you end up
-> > > > needing to allocate a xattr block either to the new whiteout file or
-> > > > free one from the file being unlinked.
-> > > >
-> > > > > The Fixes commit below is NOT the commit that introduced the bug, but
-> > > > > for some reason, which is not explained in the commit message, it fixes
-> > > > > the comment to state that highest number of dquots of one type is 3 and
-> > > > > not 2 (which leads to the assertion), without actually fixing it.
-> > > >
-> > > > Agree.
-> > > >
-> > > > > The change of wording from "usr, grp OR prj" to "usr, grp and prj"
-> > > > > suggests that there may have been a confusion between "the number of
-> > > > > dquote of one type" and "the number of dquot types" (which is also 3),
-> > > > > so the comment change was only accidentally correct.
-> > > >
-> > > > I interpret the "OR" -> "and" change to reflect the V4 -> V5 transition
-> > > > where you actually can have all three dquot types because group/project
-> > > > quota are no longer mutually exclusive.
-> > > >
-> > > > The "...involved in a transaction is 3" part I think is separate, and
-> > > > strange that XFS_QM_TRANS_MAXDQS wasn't updated.
-> > > >
-> > > > > Fixes: 10f73d27c8e9 ("xfs: fix the comment explaining xfs_trans_dqlockedjoin")
-> > > > > Cc: stable@vger.kernel.org
-> > > > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > > > > ---
-> > > > >
-> > > > > Christoph,
-> > > > >
-> > > > > This is a cognitive challenge. can you say what you where thinking in
-> > > > > 2013 when making the comment change in the Fixes commit?
-> > > > > Is my speculation above correct?
-> > > > >
-> > > > > Catherine and Leah,
-> > > > >
-> > > > > I decided that cherry-pick this upstream commit as is with a commit
-> > > > > message addendum was the best stable tree strategy.
-> > > > > The commit applies cleanly to 5.15.y, so I assume it does for 6.6 and
-> > > > > 6.1 as well. I ran my tests on 5.15.y and nothing fell out, but did not
-> > > > > try to reproduce these complex assertion in a test.
-> > > > >
-> > > > > Could you take this candidate backport patch to a spin on your test
-> > > > > branch?
-> > > > >
-> > > > > What do you all think about this?
-> > > >
-> > > > I only think you need MAXDQS==5 for 6.12 to handle parent pointers.
-> > > >
-> > >
-> > > Yes, of course. I just preferred to keep the 5 to avoid deviating from
-> > > the upstream commit if there is no good reason to do so.
-> >
-> > <shrug> What do Greg and Sasha think about this?  If they don't mind
-> > this then I guess I don't either. ;)
-> >
+On Fri 19-09-25 17:49:03, Mateusz Guzik wrote:
+> Takes care of spots not converted by coccinelle.
 > 
-> Ok let's see.
+> Nothing to look at with one exception: smp_store_release and
+> smp_load_acquire pair replaced with a manual store/load +
+> smb_wmb()/smp_rmb(), see I_WB_SWITCH.
 > 
-> Greg,
-> 
-> In kernels < 6.10 the size of the 'dqs' array per transaction was too small
-> (XFS_QM_TRANS_MAXDQS is 2 instead of 3) which can, as explained
-> in my commit, cause an assertion and crash the kernel.
-> 
-> This bug exists for a long time, it may have low probability for the entire
-> "world", but under specific conditions (e.g. a specific workload that is fully
-> controlled by unpriv user) it happens for us every other week on kernel 5.15.y
-> and with more effort, an upriv user can trigger it much more frequently.
-> 
-> In kernel 6.10, XFS_QM_TRANS_MAXDQS was increased to 5 to
-> cover a use case for a new feature (parent pointer).
-> That means that upstream no longer has the bug.
-> 
-> I opted for applying this upstream commit to fix the stable kernel bug
-> although raising the max to 5 is an overkill.
-> 
-> This has a slight impact on memory footprint, but I think it is negligible
-> and in any case, same exact memory footprint as upstream code.
-> 
-> What do you prefer? Applying the commit as is with increase to 5
-> or apply a customized commit for kernels < 6.10 which raises the
-> max to 3 without mentioning the upstream commit?
-> 
-> If you agree with my choice, please advise regarding my choice of
-> formatting of the commit message - original commit message followed
-> by stable specific bug fix commit message which explains the above.
+> Signed-off-by: Mateusz Guzik <mjguzik@gmail.com>
 
-Original message followed by stable specific bugfix seems to make sense
-to me, thanks!
+...
 
-greg k-h
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index 0e9e96f10dd4..745df148baaa 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -478,8 +478,8 @@ static bool inode_do_switch_wbs(struct inode *inode,
+>  	 * Paired with load_acquire in unlocked_inode_to_wb_begin() and
+>  	 * ensures that the new wb is visible if they see !I_WB_SWITCH.
+>  	 */
+> -	smp_store_release(&inode->i_state,
+> -			  inode_state_read(inode) & ~I_WB_SWITCH);
+> +	smp_wmb();
+> +	inode_state_del(inode, I_WB_SWITCH);
+>  
+>  	xa_unlock_irq(&mapping->i_pages);
+>  	spin_unlock(&inode->i_lock);
+
+Comments need updating here and in backing-dev.h...
+
+> diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+> index e721148c95d0..720e5f8ad782 100644
+> --- a/include/linux/backing-dev.h
+> +++ b/include/linux/backing-dev.h
+> @@ -292,7 +292,8 @@ unlocked_inode_to_wb_begin(struct inode *inode, struct wb_lock_cookie *cookie)
+>  	 * Paired with store_release in inode_switch_wbs_work_fn() and
+>  	 * ensures that we see the new wb if we see cleared I_WB_SWITCH.
+>  	 */
+> -	cookie->locked = smp_load_acquire(&inode->i_state) & I_WB_SWITCH;
+> +	cookie->locked = inode_state_read(inode) & I_WB_SWITCH;
+> +	smp_rmb();
+>  
+>  	if (unlikely(cookie->locked))
+>  		xa_lock_irqsave(&inode->i_mapping->i_pages, cookie->flags);
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
