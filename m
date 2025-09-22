@@ -1,66 +1,79 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6620F238C07
-	for <linux-xfs@vger.kernel.org>; Mon, 22 Sep 2025 12:42:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B01642D9797
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Sep 2025 12:42:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758544921; cv=none; b=IgrDwFZxOSGw3G1OT0ANGz1oc2PulR6ttWGVzQHU8Tw6w6jDtRLIqgljeyFhl+Fc4QarEMQF+bbqGJrcW1bAvIQUU6SQvF4GpbNOwtFWhJ200Eg1Ww5iYJPKlTL9SqLsFWY+b2pla3eC/JIILnQjBDTKe9RhL5DdV51JRAtfH90=
+	t=1758544962; cv=none; b=LipralswREf1SkE0ODGfu4+DYlBj+nw+/+wzOk74PXtFfjlQcVowgUeLaeqmfUtCTlbgwWao4Myaib3QUTY3gZVANRClJZoz4r/Sz/mhXbUsnz0+NoM/yPVsiM5f5EUHwXG7PicgOfmmO1OrEHkf2RBAQoNlt0+R0tQvxnEbpTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758544921; c=relaxed/simple;
-	bh=MA5VgEqGKHCUzIvmVKW9ad4KSeunYGb6c2bchjDO9B4=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=tmKAqFPk3MJ1z/vaKke5G0kpnA4LmSDKBEF518lSjwLur2+K8O9byxRFKfBe6F5/r+zzOXR3zr7F2t6wdkCifgzeWSlk7gDrHB8L3Cf4p65muHhRH/LMJZroV2xqCUIaYgTPzllscuIF2lKnm6w8FmucBDOMw66e3j7iVa3BnJ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BnQOGq/x; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758544962; c=relaxed/simple;
+	bh=YNIc/2kuSnLMIuinU9KcM+JJLIZgWJEQvFzP9vfdlOA=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=D4X7f9sxg2ybQIvHH3w+lfu4vBDir6YCXG77qgGXPO4idQ1L5cZVP6kREeAqZvTenhpBacaILk8OlNh8CFIDudo1XycN/HPSgq4S2eNbegjNAoAHnqzy1bNvQgSwfRg/kQDgOLwy3nFz+Tj7QmJFeruz0twAHDAfzeWBZ2SfpSs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u5uVw0bE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BnQOGq/x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D67E3C4CEF0;
-	Mon, 22 Sep 2025 12:41:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u5uVw0bE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63B0FC4CEF0
+	for <linux-xfs@vger.kernel.org>; Mon, 22 Sep 2025 12:42:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758544921;
-	bh=MA5VgEqGKHCUzIvmVKW9ad4KSeunYGb6c2bchjDO9B4=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=BnQOGq/xR4I6D70cZLrWjjVdSO/ssu8MknX1SScklmsbGS//yDvFioq37L5kc8nPx
-	 pKrH6HOj2wHtPNZ7hGW2jcva402gWqwSoP8Bug/VTialiKOHzz2m+4jWVA30kyyipe
-	 9I/PCtm/tDDctuVbUf0abx3510zRQtCtGh58mgeReTBPBJ8HVNhEZUB05KKlinfi7p
-	 PbIeOPIcGLBdO+7Sv58H7M8HH08YRyS1V9pE7V3I3U8XZs7LgWwEoJzXPRzvytm3uu
-	 fm5Pefuq42Hxrq4CdHXE+4ocU7L0D6Zrvh14yrWHNCqUp6peBtFsJQpnil6AdldtdM
-	 gHeF8je9GkqUw==
+	s=k20201202; t=1758544962;
+	bh=YNIc/2kuSnLMIuinU9KcM+JJLIZgWJEQvFzP9vfdlOA=;
+	h=Date:From:To:Subject:From;
+	b=u5uVw0bEcdzRUKMZO1v9rEwRab2c+3k00n6x6lERoCHJs4iyEklOCxoT/Xls0vSEM
+	 dyWRZmHKmvAGdGnpKaR6+TZ1jlEF83bspYog+dmBCYgByNaICTzWN5lQpbMOdPLlhw
+	 /udkLhSHWeeT3QTR2kEnfOBiSDsq04BPsmm8CMicO0rtiihpxkVVOR0s4muSxo9EV6
+	 VzHu+GBGRTm4grDhOxIzdUYJ9keBbx6HqdmnqxBR5UONJiAPRBqnUKhORNoXvDIukM
+	 tpEzpuIBETRT9DkPz28TlZUAJpgs5SwnbcleaQVwiuJ4lZ6nTG8+J6IEm7QAc1YMAN
+	 DHKyafHFQEHUg==
+Date: Mon, 22 Sep 2025 14:42:37 +0200
 From: Carlos Maiolino <cem@kernel.org>
-To: Dmitry Antipov <dmantipov@yandex.ru>
-Cc: "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-In-Reply-To: <20250918111403.1169904-1-dmantipov@yandex.ru>
-References: <20250918111403.1169904-1-dmantipov@yandex.ru>
-Subject: Re: [PATCH] xfs: scrub: use kstrdup_const() for metapath scan
- setups
-Message-Id: <175854491953.13267.12296994550691267039.b4-ty@kernel.org>
-Date: Mon, 22 Sep 2025 14:41:59 +0200
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to fc0d192303bd
+Message-ID: <7y5ykxcr675bnehecf6nu2wsvypfk6laqjjaeffopw32cmt7vr@j5cxkgzpwv4d>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Thu, 18 Sep 2025 14:14:03 +0300, Dmitry Antipov wrote:
-> Except 'xchk_setup_metapath_rtginode()' case, 'path' argument of
-> 'xchk_setup_metapath_scan()' is a compile-time constant. So it may
-> be reasonable to use 'kstrdup_const()' / 'kree_const()' to manage
-> 'path' field of 'struct xchk_metapath' in attempt to reuse .rodata
-> instance rather than making a copy. Compile tested only.
-> 
-> 
-> [...]
 
-Applied to for-next, thanks!
+Hi folks,
 
-[1/1] xfs: scrub: use kstrdup_const() for metapath scan setups
-      commit: fc0d192303bd385ac24dc52eb31ceb6ca7e027d0
+The for-next branch of the xfs-linux repository at:
 
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+fc0d192303bd xfs: scrub: use kstrdup_const() for metapath scan setups
+
+3 new commits:
+
+Christoph Hellwig (2):
+      [42852fe57c6d] xfs: track the number of blocks in each buftarg
+      [6ef2175fce30] xfs: use bt_nr_sectors in xfs_dax_translate_range
+
+Dmitry Antipov (1):
+      [fc0d192303bd] xfs: scrub: use kstrdup_const() for metapath scan setups
+
+Code Diffstat:
+
+ fs/xfs/scrub/metapath.c       | 12 ++++++------
+ fs/xfs/xfs_buf.c              | 42 +++++++++++++++++++++++-------------------
+ fs/xfs/xfs_buf.h              |  4 +++-
+ fs/xfs/xfs_buf_item_recover.c | 10 ++++++++++
+ fs/xfs/xfs_notify_failure.c   |  2 +-
+ fs/xfs/xfs_super.c            |  7 ++++---
+ fs/xfs/xfs_trans.c            | 23 ++++++++++++-----------
+ 7 files changed, 59 insertions(+), 41 deletions(-)
