@@ -1,81 +1,75 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62A993A1B5
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Sep 2025 00:34:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1365274B3A
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Sep 2025 04:22:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758587655; cv=none; b=mM1mrKjzZiliEXrNfCnUtGILrQ4nt4rHHc73fU75493yQ/45yP5yEypcQ5En0vlpjY2/aAi4SrL6iaYCT60hEmMC/i9df15hBMXuytm0jQctG/ebTOPMG06QjPHdcVfoR9PdKIlFHqeRatZd7WAHkQOdZPsjWpngT0p0sgGZAzI=
+	t=1758601324; cv=none; b=s1EvND0HJ4RTaWjiIA0jVsOepZ+k6G0urkQ9VH63Ys9WatpEd1CtD0DbBbZWv46gzNSvxXzKNARCHDr/BOPs5uWRsp3Uj3id15UrSO7tCw6YvDGAKACL/yPSPf4dzGUXSARF76Wsa+Gal7YbeBKNwarJmDNLIlxPg7Q1h5klf7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758587655; c=relaxed/simple;
-	bh=douu/OH3JOBJbcNCPjglBlefsScRwWQQRJejY8Y8034=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hs59mm0+lfRUtbYEaBVZT6wuJCjzccfswIQHYku99xyJ1i+SXnTGSx2E/Ob/pcGxek9Ma7j/Wc0R3KrM6XfLog+UNBoI9jiiSMyiTKFrAFJT/BPcXV1XmdEwx1/rkxeA3onp4PZMWEpu7wji/8HhWcYS8EHBHtW3aMrphje5Fyg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SQlovg/r; arc=none smtp.client-ip=209.85.210.171
+	s=arc-20240116; t=1758601324; c=relaxed/simple;
+	bh=+QlMXBX3fIO2WsSlIyfqccXfJ3O6cuDiaAdLlHzXzPY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Qz23dlBbKzLLu9uY4wZ0zTS8lXcLEtub7OSDOo0Hic/4MTTnRSReme+6HtbYPspHNuyCy90DLosvEqj652ekdfTsqQOi8QIvoKoH6gH+cMpK5Z51N+E9AVZk4irGM1e3NuVYq2wUdO+S490O8l0SSEX3xhJSKR4VpSNYsYWZA7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dRyJteT+; arc=none smtp.client-ip=209.85.210.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SQlovg/r"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-77f429ea4d5so1282883b3a.0
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Sep 2025 17:34:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dRyJteT+"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-76e2ea933b7so4643410b3a.1
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Sep 2025 21:22:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758587653; x=1759192453; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4mZBfvjKH+a+qnWQMQA8rEgrcPJHuMhz3ff1QpWHtCw=;
-        b=SQlovg/rcaEBCMd6b5kpyoALSaLV6Rj0SpvOhKaIy/vqPMghUBp5T+5qR4uIZpWtLg
-         eBnbONzMvKK6iv5SP2sIDN63pTrHpq3TEqxMpEYdcuxOWmxSpDhTyNLguMNWqAflWMKd
-         zDYhu6iR48doja8KxnMK/uHuyecWYvAA+ibPPPHxZS8AOFFKes+w5opVjxiDduj5Qsdy
-         AqrNaZxtkfrRpYVy9p6N7EmEbwtiwkZlg0vc/2/XrvrcMVpPMq5yu5Um5QK6L1ra91Xt
-         IxHPZpcCV1duuHvrXIEcL8iZs3vo7MqHAW2d4LRxV5JHDj+zwgYtwIF1tm/L+5/NPr7z
-         o1iQ==
+        d=gmail.com; s=20230601; t=1758601322; x=1759206122; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=fgtSPBN4qoSsBifl7HF2PLKbfZ3YMsx958plJG8wRIM=;
+        b=dRyJteT+f6HjQ/KobfU6hmjRCXKruCQn405O+rf3M5sDOGWM+q2Pudeg/yzeTvWArw
+         SMS/4n7T+vXppHi+3dwMhjQUxCpDjcgygRjQU8FbcPAaWc/SKCiSUCMleRvvSy6fc/Zy
+         uYSF2RNOU0dVVT65eeuCa0Uo4CAQfyVHW49ktgZgnGfLr6uCU2B5CP2o4ahlhkE9bkDp
+         RLxf37sonEHc1jx02vpgxmgbVPkSy9v+eWr4U3xZDDj2sgoR1TtqxjFISaCcAaid1vwy
+         xdr/7SsYkMn9BL2UT4KDXXYLMv8Zb98uBJMtHNNHscd6EMhPJ5akfndDNKEeMFnCdOcG
+         ISuA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758587653; x=1759192453;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=4mZBfvjKH+a+qnWQMQA8rEgrcPJHuMhz3ff1QpWHtCw=;
-        b=pvXjI9fUXbPxAVtap9wFqubX0LwvlS4fnytWs9a6zM/KXnChHuCVkmG+DFE1MI4ZqY
-         d70PkycfE98XMI0iBbEYlpvCOs3Uuq3A4cvFQqatQwgD5B+/tXYBAuRpj56skZ3fStH2
-         gYWfW4QuYPnDyIcWCVo/EKrdGUBZK+r1bpfRPNuZNlmLx6nfhWhBAXjDN2oHGhEfZh61
-         SDYPoXIdJeA6ytwXgTshoDdGTn8D945kpdRWtbItrO5BjruRBoVX4iONYOwFchHt/CCn
-         6dxLx9WQstycwtIrwUixqNOsTApONeXn8zc3RpgefZ82D9soYN94AwCh2aAkUC3SqHLh
-         WyZw==
-X-Forwarded-Encrypted: i=1; AJvYcCWVj3SxUjdM4tGi4Oq/s0FsxDvymP6J9veTGxXdCFYnipkg3k2B2d+nSuocFjFgjJwH7G4DhJfth6c=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwwAHJCBQoJreiX3tzsCStyG2lJ8K8qd9vNPhX1tihLrkp1gABU
-	y4MXPOC8Ihxw+tgcANQUUsIN5fQ+tIiKY+IIpzd9Y6rlh0ZR0HRRyHBl
-X-Gm-Gg: ASbGncsZkw63uUJKPEMLUmqaqV9VkljiJCtMv8lgw3yEfPKSu2u4gnpNlUKBSBDKyQW
-	6kyKXtfQHFguD+5vP6tp8RLprfHjC2Oe4FTRzFriBnGotEHyX/sSbOZTMTZi18snMrMYPhDtC2m
-	192kpq1wVjtbxvjpp6KF1034cLoIzD7mXWsn16rpLeeYVIYc1k1xoXcvBAhhx97Ig+i2xqntvXw
-	C0HBnRXA/TbctCupseo8lwvmctuf3ND3dfa8UVzLGcYlRe4JeqajY4Cg9qTBfLVt2UbaHlJZ4QA
-	mL97MV+JRz84SEfu+CAOXfy6PeBDyvjvYMJuFerL09BBx3e3xJ1mauFsI5V5wCLmVsnkb64oFS8
-	GgxLpkxksHIguH0ISEJbctxhrjh975R60PErRuKqnhzs2hwmujg==
-X-Google-Smtp-Source: AGHT+IEWMO1uEK4B7K/pZLGH+dB9Etd+KJEgWU9E0E30eLXih5la102pjColw3CwPrUCACkIv7xPGw==
-X-Received: by 2002:a17:902:ea11:b0:260:3c5d:9c2 with SMTP id d9443c01a7336-27cc61b8b3emr7635835ad.48.1758587653500;
-        Mon, 22 Sep 2025 17:34:13 -0700 (PDT)
-Received: from localhost ([2a03:2880:ff:40::])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-26980339e89sm141416405ad.130.2025.09.22.17.34.13
+        d=1e100.net; s=20230601; t=1758601322; x=1759206122;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=fgtSPBN4qoSsBifl7HF2PLKbfZ3YMsx958plJG8wRIM=;
+        b=C6lzY6TAlGYEmjJ47eCdMKH0G+Y3+MmhK6qhEUqP9/EUH7fc2RFpNK5YOHBALNhQ78
+         8ub0uU28KSafWKAnwQtayvhsUDVlynR6+0pN9nMQ80ZiF/5FRuXo7SD+Iqt+bNvkLWhV
+         fb1TeT87MONguhKLl2IBhNYdYvI6YgWDUjTS55g1yzLumfWxgnpSIzVNXUpXoHsQGISZ
+         LX48UAIUL6nWzPYDRy0VI73imAT95jDgvGCIXN4UVmimVGpNJIi2W9Ai7/ttypQrhyDx
+         sTRGCI+mD/hvvZD271u+fFt70I1OPNoRASOW/Lh9s1ckvfykbHuEJaxtk/0fovvtYwGe
+         +x9A==
+X-Gm-Message-State: AOJu0YyEUdNCRI50Vwme49dncz4YMhRR7ztPp4aMymDO9XBEJP2+1p+o
+	TGGqE1AZTkbdplvmpfn0wTuinHRQkuhq/cMKn5++W0g4JPhOsLgThjFBU09xTA==
+X-Gm-Gg: ASbGnctpT6db0w0Jj3A0WaL/mc3vYA3xnI4jZLteo0dcoRimvbJF+Bj0Y1elKF9Gxbe
+	NLmOr0t/78cjnSGpW7HzRZg47UXfSd4PF/LurX0UbR6OsmHXEPHH7s3u/zDqHzIK2k0HaK7fpdl
+	OD35PJ7FiFMsmFz7w3hMAMMm8+uYgcfzRiPPbAlfSewFyv/MtTp8piDEe1pvRYL4w9S3vIyLqqL
+	Ufgn6LzGMxiSz9/41YxSu8Ihm1M3/aLml5YhneOsN370jq45aUt6hf8Nq2KOx/qAciw6FApidPT
+	+CWAtVM1pK8ip8KIZ0pDFbzh6vcvQw1Vxch+aBLcHnfF/Zo4dwRtLbEMo3NeBeK9mkk1IQt8oLg
+	tIUWYFPZo8W+56mk+cihMA3wMIRV3uou/7g==
+X-Google-Smtp-Source: AGHT+IEI6I2Ch27KIHx7rue7mtAXNkIvBUrcrNNPpGcyDYBvbhGNyE2n2O4SQBbgRfem9JRoLD9FtA==
+X-Received: by 2002:a05:6a00:1706:b0:77e:76df:2705 with SMTP id d2e1a72fcca58-77f54866800mr1124514b3a.7.1758601322099;
+        Mon, 22 Sep 2025 21:22:02 -0700 (PDT)
+Received: from VM-16-24-fedora.. ([43.153.32.141])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-77d8c3adfd4sm13316513b3a.82.2025.09.22.21.22.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Sep 2025 17:34:13 -0700 (PDT)
-From: Joanne Koong <joannelkoong@gmail.com>
+        Mon, 22 Sep 2025 21:22:01 -0700 (PDT)
+From: alexjlzheng@gmail.com
+X-Google-Original-From: alexjlzheng@tencent.com
 To: brauner@kernel.org,
-	miklos@szeredi.hu
-Cc: djwong@kernel.org,
+	djwong@kernel.org,
 	hch@infradead.org,
-	linux-block@vger.kernel.org,
-	gfs2@lists.linux.dev,
+	kernel@pankajraghav.com
+Cc: linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	hsiangkao@linux.alibaba.com,
-	kernel-team@meta.com
-Subject: [PATCH v4 15/15] fuse: remove fc->blkbits workaround for partial writes
-Date: Mon, 22 Sep 2025 17:23:53 -0700
-Message-ID: <20250923002353.2961514-16-joannelkoong@gmail.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20250923002353.2961514-1-joannelkoong@gmail.com>
-References: <20250923002353.2961514-1-joannelkoong@gmail.com>
+	linux-kernel@vger.kernel.org,
+	yi.zhang@huawei.com,
+	Jinliang Zheng <alexjlzheng@tencent.com>
+Subject: [PATCH v5 0/4] allow partial folio write with iomap_folio_state
+Date: Tue, 23 Sep 2025 12:21:54 +0800
+Message-ID: <20250923042158.1196568-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -84,89 +78,91 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Now that fuse is integrated with iomap for read/readahead, we can remove
-the workaround that was added in commit bd24d2108e9c ("fuse: fix fuseblk
-i_blkbits for iomap partial writes"), which was previously needed to
-avoid a race condition where an iomap partial write may be overwritten
-by a read if blocksize < PAGE_SIZE. Now that fuse does iomap
-read/readahead, this is protected against since there is granular
-uptodate tracking of blocks, which means this workaround can be removed.
+From: Jinliang Zheng <alexjlzheng@tencent.com>
 
-Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/fuse/dir.c    |  2 +-
- fs/fuse/fuse_i.h |  8 --------
- fs/fuse/inode.c  | 13 +------------
- 3 files changed, 2 insertions(+), 21 deletions(-)
+Currently, if a partial write occurs in a buffer write, the entire write will
+be discarded. While this is an uncommon case, it's still a bit wasteful and
+we can do better.
 
-diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
-index 5c569c3cb53f..ebee7e0b1cd3 100644
---- a/fs/fuse/dir.c
-+++ b/fs/fuse/dir.c
-@@ -1199,7 +1199,7 @@ static void fuse_fillattr(struct mnt_idmap *idmap, struct inode *inode,
- 	if (attr->blksize != 0)
- 		blkbits = ilog2(attr->blksize);
- 	else
--		blkbits = fc->blkbits;
-+		blkbits = inode->i_sb->s_blocksize_bits;
- 
- 	stat->blksize = 1 << blkbits;
- }
-diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
-index cc428d04be3e..1647eb7ca6fa 100644
---- a/fs/fuse/fuse_i.h
-+++ b/fs/fuse/fuse_i.h
-@@ -975,14 +975,6 @@ struct fuse_conn {
- 		/* Request timeout (in jiffies). 0 = no timeout */
- 		unsigned int req_timeout;
- 	} timeout;
--
--	/*
--	 * This is a workaround until fuse uses iomap for reads.
--	 * For fuseblk servers, this represents the blocksize passed in at
--	 * mount time and for regular fuse servers, this is equivalent to
--	 * inode->i_blkbits.
--	 */
--	u8 blkbits;
- };
- 
- /*
-diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
-index 7485a41af892..a1b9e8587155 100644
---- a/fs/fuse/inode.c
-+++ b/fs/fuse/inode.c
-@@ -292,7 +292,7 @@ void fuse_change_attributes_common(struct inode *inode, struct fuse_attr *attr,
- 	if (attr->blksize)
- 		fi->cached_i_blkbits = ilog2(attr->blksize);
- 	else
--		fi->cached_i_blkbits = fc->blkbits;
-+		fi->cached_i_blkbits = inode->i_sb->s_blocksize_bits;
- 
- 	/*
- 	 * Don't set the sticky bit in i_mode, unless we want the VFS
-@@ -1810,21 +1810,10 @@ int fuse_fill_super_common(struct super_block *sb, struct fuse_fs_context *ctx)
- 		err = -EINVAL;
- 		if (!sb_set_blocksize(sb, ctx->blksize))
- 			goto err;
--		/*
--		 * This is a workaround until fuse hooks into iomap for reads.
--		 * Use PAGE_SIZE for the blocksize else if the writeback cache
--		 * is enabled, buffered writes go through iomap and a read may
--		 * overwrite partially written data if blocksize < PAGE_SIZE
--		 */
--		fc->blkbits = sb->s_blocksize_bits;
--		if (ctx->blksize != PAGE_SIZE &&
--		    !sb_set_blocksize(sb, PAGE_SIZE))
--			goto err;
- #endif
- 	} else {
- 		sb->s_blocksize = PAGE_SIZE;
- 		sb->s_blocksize_bits = PAGE_SHIFT;
--		fc->blkbits = sb->s_blocksize_bits;
- 	}
- 
- 	sb->s_subtype = ctx->subtype;
+With iomap_folio_state, we can identify uptodate states at the block
+level, and a read_folio reading can correctly handle partially
+uptodate folios.
+
+Therefore, when a partial write occurs, accept the block-aligned
+partial write instead of rejecting the entire write.
+
+For example, suppose a folio is 2MB, blocksize is 4kB, and the copied
+bytes are 2MB-3kB.
+
+Without this patchset, we'd need to recopy from the beginning of the
+folio in the next iteration, which means 2MB-3kB of bytes is copy
+duplicately.
+
+ |<-------------------- 2MB -------------------->|
+ +-------+-------+-------+-------+-------+-------+
+ | block |  ...  | block | block |  ...  | block | folio
+ +-------+-------+-------+-------+-------+-------+
+ |<-4kB->|
+
+ |<--------------- copied 2MB-3kB --------->|       first time copied
+ |<-------- 1MB -------->|                          next time we need copy (chunk /= 2)
+                         |<-------- 1MB -------->|  next next time we need copy.
+
+ |<------ 2MB-3kB bytes duplicate copy ---->|
+
+With this patchset, we can accept 2MB-4kB of bytes, which is block-aligned.
+This means we only need to process the remaining 4kB in the next iteration,
+which means there's only 1kB we need to copy duplicately.
+
+ |<-------------------- 2MB -------------------->|
+ +-------+-------+-------+-------+-------+-------+
+ | block |  ...  | block | block |  ...  | block | folio
+ +-------+-------+-------+-------+-------+-------+
+ |<-4kB->|
+
+ |<--------------- copied 2MB-3kB --------->|       first time copied
+                                         |<-4kB->|  next time we need copy
+
+                                         |<>|
+                              only 1kB bytes duplicate copy
+
+Although partial writes are inherently a relatively unusual situation and do
+not account for a large proportion of performance testing, the optimization
+here still makes sense in large-scale data centers.
+
+This patchset has been tested by xfstests' generic and xfs group, and
+there's no new failed cases compared to the lastest upstream version kernel.
+
+Changelog:
+
+V5: patch[1]: use WARN_ON_ONCE() instead of WARN_ON(), suggested by Pankaj Raghav (Samsung)
+
+V4: https://lore.kernel.org/linux-fsdevel/eyyshgzsxupyen6ms3izkh45ydh3ekxycpk5p4dbets6mpyhch@q4db2ayr4g3r/
+    patch[4]: better documentation in code, and add motivation to the cover letter
+
+V3: https://lore.kernel.org/linux-xfs/aMPIDGq7pVuURg1t@infradead.org/
+    patch[1]: use WARN_ON() instead of BUG_ON()
+    patch[2]: make commit message clear
+    patch[3]: -
+    patch[4]: make commit message clear
+
+V2: https://lore.kernel.org/linux-fsdevel/20250810101554.257060-1-alexjlzheng@tencent.com/ 
+    use & instead of % for 64 bit variable on m68k/xtensa, try to make them happy:
+       m68k-linux-ld: fs/iomap/buffered-io.o: in function `iomap_adjust_read_range':
+    >> buffered-io.c:(.text+0xa8a): undefined reference to `__moddi3'
+    >> m68k-linux-ld: buffered-io.c:(.text+0xaa8): undefined reference to `__moddi3'
+
+V1: https://lore.kernel.org/linux-fsdevel/20250810044806.3433783-1-alexjlzheng@tencent.com/
+
+Jinliang Zheng (4):
+  iomap: make sure iomap_adjust_read_range() are aligned with block_size
+  iomap: move iter revert case out of the unwritten branch
+  iomap: make iomap_write_end() return the number of written length again
+  iomap: don't abandon the whole copy when we have iomap_folio_state
+
+ fs/iomap/buffered-io.c | 80 +++++++++++++++++++++++++++++-------------
+ 1 file changed, 55 insertions(+), 25 deletions(-)
+
 -- 
-2.47.3
+2.49.0
 
