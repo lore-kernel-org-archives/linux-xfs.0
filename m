@@ -1,63 +1,63 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DDE81EBFF7
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Sep 2025 00:34:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A27FA158DAC
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Sep 2025 00:34:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758587649; cv=none; b=j7O0Ho3H3aMfvhW3jRzY5BfnDxQQyCa+JjaigmIvuzU7yXEPJJYGSarDkdcnIXAgja0d/41jYE6nqWSoUz5/a7pOOhrZKK9whIMVFgL75P+ZySGRPFDJfLhnlLFyTNz611PZHBdt9228eVYTm1jf2p6ul3DJmxrJRxSwAHwCEcw=
+	t=1758587650; cv=none; b=OrX4p1bIF3ZAnqzkBciBVeyVi+lvBQSc4ETMpp5H5nfT0Rix5QbaslvMvqkMXpM1/hFnZHUbzKl7aKDKjd9BuByJ1STvqWuqPBhi3VIlKc3OmnJp+RMEPI+obiFH7Xx4dYYb2tocqcfDajbJkFNgLiG1NYxT3jHONlqASNaFnro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758587649; c=relaxed/simple;
-	bh=yLj6g5WJ4PjAjFCvmn5JiB1GDCM8kZxAtJld1CzxfWA=;
+	s=arc-20240116; t=1758587650; c=relaxed/simple;
+	bh=OmlJpwMjQnBUQlUFUCENW3a1N2DuoYNDBia6gKxNY/8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bE5HfURgtLje843OZFSzy+tVsC1TY2Jd4u2SiWkKJKEAEM9U84MqCCrScqVf5y3d28Lk8etL92r3T5dO+YHdvOmtu6ZLHv573U9FFTBKy1fJneUG/cj349zcfAt8o0oYxHcoKAZd/aKwVAbtjlztw/PASHE8+AuQm30TJMPWLBU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lAuFk/xk; arc=none smtp.client-ip=209.85.214.176
+	 MIME-Version; b=NPDuOLZ/3EY4DLOdYYJtv66Pw/jAz6OS5+y0C6+vMpOGCvYc5KX8Z67O6tRwdZzYW5uDNWbEFLaZek3w0Y+G8zYUfPLTXXbamFXbcbRTUPRBKxjvOhMJtQ7qu/Uc2V82N395KBRqAS9dsG4lQ4ZNJmg3INgpltO0PekIBE6Bwkk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=maMfBFCF; arc=none smtp.client-ip=209.85.214.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lAuFk/xk"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-279e2554b6fso11704595ad.2
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Sep 2025 17:34:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="maMfBFCF"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-27a6c3f482dso10640415ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Sep 2025 17:34:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758587646; x=1759192446; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1758587648; x=1759192448; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ntuDtvvcxXIwL9deTSqYzeD3zNqVLETNsiY99SSIRBw=;
-        b=lAuFk/xkwmV/OfnNXgGzaP/4AdVxRMN5itT/Kp6SrTshXpvhWas+CzsIdXBBQLiBXS
-         1rubIRGBSC6t1Jz1RUCWoRNzE+Ic0Wxwplt43D+tYRdheAyFNdl1bv+6Ohd/CJJpS/PM
-         ubpp9sQMZr+Vu/l4C33Zj3wa22IrhsGjeBeUSvFzj+5DkI7v48KKiP+5KEYjHveAvyi9
-         sruzeCTcJVoFNqsPfSUbbSX6RvSR8nUNr4IOD4y+KOwYveMtmC73wI0goYRSXPeYiBZ1
-         swJ6QS3yL1IxH8K3d3vwJoJYnrJvbUJ+I76i3LD1Clj8TVyPLaqzhoHDrUerJLThH5C4
-         K3nQ==
+        bh=7zjJXLBoj+YcBLbbFZQaQL40cbl9fNsvtoy5dmImeRY=;
+        b=maMfBFCFkBE2Nvf7N1a+Y+SPs4kU3OejXCECQaYfzyv9l98kP+2CERK3//JBlf6HcV
+         eeYdnjQ8Lis9RcB/ioYDxDUTbj4rOMY17wF4fx7lu6cN5UQtC9oa7i3lz64MHQc4FxuZ
+         Cnnjha9Q1mi4AH0Kp1PAO1jl9oe9BvHAN6Oq2OaFukyfOQtt3NgChc0qQJ6Q/ZPG+xZq
+         jqtoGsqPoMlIijk/wrghwr6fSJ6zD0uRhDzVFasSzGDDMLqz+JIK0mZA0HIlEMT1vKNd
+         FoxZREsut772OvTp3yc8+WCyKK4iKgEaFsKhSjtQuuhRlLb9aZPQR0LPg2i2mzCDKDDu
+         yXnA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758587646; x=1759192446;
+        d=1e100.net; s=20230601; t=1758587648; x=1759192448;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ntuDtvvcxXIwL9deTSqYzeD3zNqVLETNsiY99SSIRBw=;
-        b=F7PyQHVVS9Hk5y1s67/8Ipyjcg3PA56uDWW+CH79wrOyIZBXrc3fZPYINuq7EHDP+Z
-         083N34MRfJ4hmqvuYfO1TzSp4gDtseAiL6gFLum6Krt4FbYxsXWKKzn5hF9EmFZKE4vk
-         zU/6YjxT9tpQy2SSRXaUmI731KjjG6JgiiJuZAwGRLLFrpzAF61gDXAUR6LLgdhXerLJ
-         HE7E4chbJtnh8Mlh1BFgKoSImhizDpD1naWQdXawhQwkWcJ1M6YN8qANJ80HxuxUoa0V
-         feyGNKGqhwmWVMCVnkvcMvgVEr6Uqe5JO0aNgcfMFH3p3/LQTNTaRwNAKnhjVsrRgoyS
-         7gjA==
-X-Forwarded-Encrypted: i=1; AJvYcCXMZHEZ46v66fzJhoQbSo3COMGjAgl0vdXG5AcVf4TNpsV7PIHloYBwcQReDHIfJCUyvFynoWLGPtw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyqXBL5PcVEIP4DT0fMhopXVhTOcxVbaGPsXpxi+Sp4EobIsuDQ
-	FeCVT1RAVrydR8EoPwjca7nt+xNkKkct+ExFWOU2rWBXSAOktvS1k+Ea
-X-Gm-Gg: ASbGnctHuOVEPistk7JgQNJz2xzM75I2iHuJYr54MKpZ9Pa4Cc+gA3XPtVZkxAKqeOd
-	CsXUzEHg9EWmjbHaBO41jTAPG9qGWYPM5vyr/QQlkSbGx/CR5I4aU+53gsuzFZfTph7ybaISySm
-	kw4iQp2j6lw/UxoMrUo+QNpsVeKg08lURhf746tLvOQqNPVu+IcFkhNDX2WIs7q7bn5Lc0kojNz
-	rpmtzEHVcTOb0+h12Icsq5KfqZRuT2mnuxjrOa+owxSMDzgx5brZsIFh+GWTh/HKNKpBsjZtKAE
-	IOFGRu6f8rwOUGjS5Y08M38Kyho3HBDuLaZwo78XNfhFeqQYPVvVpvv1xVqFck+cNHrMZZW2shy
-	BhMpv+y6HQPE7KBs8DvmZMFyfTlYuQ7HvELQc+IL1hbyTNaRmx4O36ZhNjoHD
-X-Google-Smtp-Source: AGHT+IEhTnBUYl+j3KLiqlpxHUCI/vnvNAMZQ6XSvAN+3hktfXKpSSHFQfOmtaK7JIZM3c79iCAhNw==
-X-Received: by 2002:a17:902:ccd1:b0:269:74b6:8735 with SMTP id d9443c01a7336-27cc24e4231mr8951755ad.24.1758587646479;
-        Mon, 22 Sep 2025 17:34:06 -0700 (PDT)
-Received: from localhost ([2a03:2880:ff:41::])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-26980053c88sm145125515ad.19.2025.09.22.17.34.06
+        bh=7zjJXLBoj+YcBLbbFZQaQL40cbl9fNsvtoy5dmImeRY=;
+        b=XNyhnkYa2Qqoctx1C1OyYhyKYuat5NfgfFV5irzG/JPmWrpL+kgBeeYvhhQuI5KJvw
+         kEjxDyu1GOlXZ7WhI//DVmjc+EG3nnvS2Lm9orci4hy0dV5CCPs8W3drEfu0TWS3dyUW
+         LNuFitnMAEOsy/H3iBHNVaYbVbOB4/xA8XZrFeJikJuohQzgUZcaTf8IoTtBYtLyxdyS
+         N1TXUetLJOGet7yT/fcL7q74EDhUF7XYNLBgcXm4xU/m7dg2v5hSu8jOKkEEZNfpaTBY
+         +iDTeTY7EZu6Lp1UHXkB3QZXNluxKcymz1oLFfZgmRIQXQOfD1j8ZVijBFYKyUxRvYCV
+         OqTw==
+X-Forwarded-Encrypted: i=1; AJvYcCUyIdVJB/djvHn5QnIcpM/0sVNXHTBi3H21F0wYZ4DPFXYpT7jzn8jGsQL84zB1p1PI4EHR0fjpKRA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw9/jv+OsFT/Ox0URfElD15FApG8DjXuWJ5V2OwlSLtYgbIMeFw
+	zZ89iLUCI+OaYBYBPn3fX3yMOyFrV9KXG2H0+WAYksLo/nK5tc42EXlR
+X-Gm-Gg: ASbGncvdtFZqNBo57YBTQUcic81i2cweKPvDMzF830qh43lfXjn20mML7e6pkg1XCaz
+	vjbEpqUM5YhvY6o9B3thbz9LPV855eBq5hBZkBprHyTiBcuTk0prS2hwqmjX7YZJfSa+dn2gclO
+	hYqw8RjsO+/idNbyvDlgJiSEqSkpaiJ9/3LYzUeU3M0YLUcjF6Y5ozENUFNZb+ckT4vq/S4xATQ
+	3ujC4ZvpqalMfwBtI9B7Dth7/OJPEfNtWmzj9MwUAbCQDMnMxQcKgT9MxW4NOup5GBtIiarkSDB
+	bTqd/ijTHugI7mrla69ERn8b9FMXWX13JpvOlif3haz7v5YgjF/EgcacGs/ATMoYp1k7gvSbIrz
+	XTrG3wTkw0yZ/SG9ZIkkcT9c9oF8L7gXYPjpUxoDiklUblE9b
+X-Google-Smtp-Source: AGHT+IHXT/3r4DzJZNk1pxFZqWoFUVW2Kcr9cAm7IMsradJq4pbE6QtordIx63ZBIuIspd8rIYAobw==
+X-Received: by 2002:a17:903:1904:b0:27a:6c30:49c with SMTP id d9443c01a7336-27cc2d8f60fmr7680945ad.27.1758587647879;
+        Mon, 22 Sep 2025 17:34:07 -0700 (PDT)
+Received: from localhost ([2a03:2880:ff:1::])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2698019665esm144780975ad.62.2025.09.22.17.34.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Sep 2025 17:34:06 -0700 (PDT)
+        Mon, 22 Sep 2025 17:34:07 -0700 (PDT)
 From: Joanne Koong <joannelkoong@gmail.com>
 To: brauner@kernel.org,
 	miklos@szeredi.hu
@@ -70,9 +70,9 @@ Cc: djwong@kernel.org,
 	linux-doc@vger.kernel.org,
 	hsiangkao@linux.alibaba.com,
 	kernel-team@meta.com
-Subject: [PATCH v4 10/15] iomap: add bias for async read requests
-Date: Mon, 22 Sep 2025 17:23:48 -0700
-Message-ID: <20250923002353.2961514-11-joannelkoong@gmail.com>
+Subject: [PATCH v4 11/15] iomap: move buffered io bio logic into new file
+Date: Mon, 22 Sep 2025 17:23:49 -0700
+Message-ID: <20250923002353.2961514-12-joannelkoong@gmail.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20250923002353.2961514-1-joannelkoong@gmail.com>
 References: <20250923002353.2961514-1-joannelkoong@gmail.com>
@@ -84,132 +84,268 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Non-block-based filesystems will be using iomap read/readahead. If they
-handle reading in ranges asynchronously and fulfill those read requests
-on an ongoing basis (instead of all together at the end), then there is
-the possibility that the read on the folio may be prematurely ended if
-earlier async requests complete before the later ones have been issued.
+From: Christoph Hellwig <hch@lst.de> [1]
 
-For example if there is a large folio and a readahead request for 16
-pages in that folio, if doing readahead on those 16 pages is split into
-4 async requests and the first request is sent off and then completed
-before we have sent off the second request, then when the first request
-calls iomap_finish_folio_read(), ifs->read_bytes_pending would be 0,
-which would end the read and unlock the folio prematurely.
+Move bio logic in the buffered io code into its own file and remove
+CONFIG_BLOCK gating for iomap read/readahead.
 
-To mitigate this, a "bias" is added to ifs->read_bytes_pending before
-the first range is forwarded to the caller and removed after the last
-range has been forwarded.
+[1] https://lore.kernel.org/linux-fsdevel/aMK2GuumUf93ep99@infradead.org/
 
-iomap writeback does this with their async requests as well to prevent
-prematurely ending writeback.
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/iomap/buffered-io.c | 48 ++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 44 insertions(+), 4 deletions(-)
+ fs/iomap/Makefile      |  3 +-
+ fs/iomap/bio.c         | 90 ++++++++++++++++++++++++++++++++++++++++++
+ fs/iomap/buffered-io.c | 90 +-----------------------------------------
+ fs/iomap/internal.h    | 12 ++++++
+ 4 files changed, 105 insertions(+), 90 deletions(-)
+ create mode 100644 fs/iomap/bio.c
 
+diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
+index f7e1c8534c46..a572b8808524 100644
+--- a/fs/iomap/Makefile
++++ b/fs/iomap/Makefile
+@@ -14,5 +14,6 @@ iomap-y				+= trace.o \
+ iomap-$(CONFIG_BLOCK)		+= direct-io.o \
+ 				   ioend.o \
+ 				   fiemap.o \
+-				   seek.o
++				   seek.o \
++				   bio.o
+ iomap-$(CONFIG_SWAP)		+= swapfile.o
+diff --git a/fs/iomap/bio.c b/fs/iomap/bio.c
+new file mode 100644
+index 000000000000..8a51c9d70268
+--- /dev/null
++++ b/fs/iomap/bio.c
+@@ -0,0 +1,90 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (C) 2010 Red Hat, Inc.
++ * Copyright (C) 2016-2023 Christoph Hellwig.
++ */
++#include <linux/iomap.h>
++#include <linux/pagemap.h>
++#include "internal.h"
++#include "trace.h"
++
++static void iomap_read_end_io(struct bio *bio)
++{
++	int error = blk_status_to_errno(bio->bi_status);
++	struct folio_iter fi;
++
++	bio_for_each_folio_all(fi, bio)
++		iomap_finish_folio_read(fi.folio, fi.offset, fi.length, error);
++	bio_put(bio);
++}
++
++static void iomap_bio_submit_read(struct iomap_read_folio_ctx *ctx)
++{
++	struct bio *bio = ctx->read_ctx;
++
++	if (bio)
++		submit_bio(bio);
++}
++
++static int iomap_bio_read_folio_range(const struct iomap_iter *iter,
++		struct iomap_read_folio_ctx *ctx, size_t plen)
++{
++	struct folio *folio = ctx->cur_folio;
++	const struct iomap *iomap = &iter->iomap;
++	loff_t pos = iter->pos;
++	size_t poff = offset_in_folio(folio, pos);
++	loff_t length = iomap_length(iter);
++	sector_t sector;
++	struct bio *bio = ctx->read_ctx;
++
++	iomap_start_folio_read(folio, plen);
++
++	sector = iomap_sector(iomap, pos);
++	if (!bio || bio_end_sector(bio) != sector ||
++	    !bio_add_folio(bio, folio, plen, poff)) {
++		gfp_t gfp = mapping_gfp_constraint(folio->mapping, GFP_KERNEL);
++		gfp_t orig_gfp = gfp;
++		unsigned int nr_vecs = DIV_ROUND_UP(length, PAGE_SIZE);
++
++		if (bio)
++			submit_bio(bio);
++
++		if (ctx->rac) /* same as readahead_gfp_mask */
++			gfp |= __GFP_NORETRY | __GFP_NOWARN;
++		bio = bio_alloc(iomap->bdev, bio_max_segs(nr_vecs), REQ_OP_READ,
++				     gfp);
++		/*
++		 * If the bio_alloc fails, try it again for a single page to
++		 * avoid having to deal with partial page reads.  This emulates
++		 * what do_mpage_read_folio does.
++		 */
++		if (!bio)
++			bio = bio_alloc(iomap->bdev, 1, REQ_OP_READ, orig_gfp);
++		if (ctx->rac)
++			bio->bi_opf |= REQ_RAHEAD;
++		bio->bi_iter.bi_sector = sector;
++		bio->bi_end_io = iomap_read_end_io;
++		bio_add_folio_nofail(bio, folio, plen, poff);
++		ctx->read_ctx = bio;
++	}
++	return 0;
++}
++
++const struct iomap_read_ops iomap_bio_read_ops = {
++	.read_folio_range = iomap_bio_read_folio_range,
++	.submit_read = iomap_bio_submit_read,
++};
++EXPORT_SYMBOL_GPL(iomap_bio_read_ops);
++
++int iomap_bio_read_folio_range_sync(const struct iomap_iter *iter,
++		struct folio *folio, loff_t pos, size_t len)
++{
++	const struct iomap *srcmap = iomap_iter_srcmap(iter);
++	struct bio_vec bvec;
++	struct bio bio;
++
++	bio_init(&bio, srcmap->bdev, &bvec, 1, REQ_OP_READ);
++	bio.bi_iter.bi_sector = iomap_sector(srcmap, pos);
++	bio_add_folio_nofail(&bio, folio, len, offset_in_folio(folio, pos));
++	return submit_bio_wait(&bio);
++}
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 81ba0cc7705a..354819facfac 100644
+index 354819facfac..ed2acbcb81b8 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -430,6 +430,38 @@ const struct iomap_read_ops iomap_bio_read_ops = {
- };
- EXPORT_SYMBOL_GPL(iomap_bio_read_ops);
+@@ -8,6 +8,7 @@
+ #include <linux/writeback.h>
+ #include <linux/swap.h>
+ #include <linux/migrate.h>
++#include "internal.h"
+ #include "trace.h"
  
-+/*
-+ * Add a bias to ifs->read_bytes_pending to prevent the read on the folio from
-+ * being ended prematurely.
-+ *
-+ * Otherwise, if the ranges are read asynchronously and read requests are
-+ * fulfilled on an ongoing basis, there is the possibility that the read on the
-+ * folio may be prematurely ended if earlier async requests complete before the
-+ * later ones have been issued.
-+ */
-+static void iomap_read_add_bias(struct iomap_iter *iter, struct folio *folio)
-+{
-+	ifs_alloc(iter->inode, folio, iter->flags);
-+	iomap_start_folio_read(folio, 1);
-+}
-+
-+static void iomap_read_remove_bias(struct folio *folio, bool folio_owned)
-+{
-+	struct iomap_folio_state *ifs = folio->private;
-+	bool end_read, uptodate;
-+
-+	if (ifs) {
-+		spin_lock_irq(&ifs->state_lock);
-+		ifs->read_bytes_pending--;
-+		end_read = !ifs->read_bytes_pending && folio_owned;
-+		if (end_read)
-+			uptodate = ifs_is_fully_uptodate(folio, ifs);
-+		spin_unlock_irq(&ifs->state_lock);
-+		if (end_read)
-+			folio_end_read(folio, uptodate);
-+	}
-+}
-+
- static int iomap_read_folio_iter(struct iomap_iter *iter,
- 		struct iomap_read_folio_ctx *ctx, bool *folio_owned)
- {
-@@ -448,8 +480,6 @@ static int iomap_read_folio_iter(struct iomap_iter *iter,
- 		return iomap_iter_advance(iter, length);
- 	}
+ #include "../internal.h"
+@@ -362,74 +363,6 @@ void iomap_finish_folio_read(struct folio *folio, size_t off, size_t len,
+ }
+ EXPORT_SYMBOL_GPL(iomap_finish_folio_read);
  
--	ifs_alloc(iter->inode, folio, iter->flags);
+-#ifdef CONFIG_BLOCK
+-static void iomap_read_end_io(struct bio *bio)
+-{
+-	int error = blk_status_to_errno(bio->bi_status);
+-	struct folio_iter fi;
 -
- 	length = min_t(loff_t, length,
- 			folio_size(folio) - offset_in_folio(folio, pos));
- 	while (length) {
-@@ -505,6 +535,8 @@ int iomap_read_folio(const struct iomap_ops *ops,
- 
- 	trace_iomap_readpage(iter.inode, 1);
- 
-+	iomap_read_add_bias(&iter, folio);
-+
- 	while ((ret = iomap_iter(&iter, ops)) > 0)
- 		iter.status = iomap_read_folio_iter(&iter, ctx,
- 				&folio_owned);
-@@ -512,6 +544,8 @@ int iomap_read_folio(const struct iomap_ops *ops,
- 	if (ctx->ops->submit_read)
- 		ctx->ops->submit_read(ctx);
- 
-+	iomap_read_remove_bias(folio, folio_owned);
-+
- 	if (!folio_owned)
- 		folio_unlock(folio);
- 
-@@ -533,6 +567,8 @@ static int iomap_readahead_iter(struct iomap_iter *iter,
- 	while (iomap_length(iter)) {
- 		if (ctx->cur_folio &&
- 		    offset_in_folio(ctx->cur_folio, iter->pos) == 0) {
-+			iomap_read_remove_bias(ctx->cur_folio,
-+					*cur_folio_owned);
- 			if (!*cur_folio_owned)
- 				folio_unlock(ctx->cur_folio);
- 			ctx->cur_folio = NULL;
-@@ -541,6 +577,7 @@ static int iomap_readahead_iter(struct iomap_iter *iter,
- 			ctx->cur_folio = readahead_folio(ctx->rac);
- 			if (WARN_ON_ONCE(!ctx->cur_folio))
- 				return -EINVAL;
-+			iomap_read_add_bias(iter, ctx->cur_folio);
- 			*cur_folio_owned = false;
- 		}
- 		ret = iomap_read_folio_iter(iter, ctx, cur_folio_owned);
-@@ -590,8 +627,11 @@ void iomap_readahead(const struct iomap_ops *ops,
- 	if (ctx->ops->submit_read)
- 		ctx->ops->submit_read(ctx);
- 
--	if (ctx->cur_folio && !cur_folio_owned)
--		folio_unlock(ctx->cur_folio);
-+	if (ctx->cur_folio) {
-+		iomap_read_remove_bias(ctx->cur_folio, cur_folio_owned);
-+		if (!cur_folio_owned)
-+			folio_unlock(ctx->cur_folio);
-+	}
+-	bio_for_each_folio_all(fi, bio)
+-		iomap_finish_folio_read(fi.folio, fi.offset, fi.length, error);
+-	bio_put(bio);
+-}
+-
+-static void iomap_bio_submit_read(struct iomap_read_folio_ctx *ctx)
+-{
+-	struct bio *bio = ctx->read_ctx;
+-
+-	if (bio)
+-		submit_bio(bio);
+-}
+-
+-static int iomap_bio_read_folio_range(const struct iomap_iter *iter,
+-		struct iomap_read_folio_ctx *ctx, size_t plen)
+-{
+-	struct folio *folio = ctx->cur_folio;
+-	const struct iomap *iomap = &iter->iomap;
+-	loff_t pos = iter->pos;
+-	size_t poff = offset_in_folio(folio, pos);
+-	loff_t length = iomap_length(iter);
+-	sector_t sector;
+-	struct bio *bio = ctx->read_ctx;
+-
+-	iomap_start_folio_read(folio, plen);
+-
+-	sector = iomap_sector(iomap, pos);
+-	if (!bio || bio_end_sector(bio) != sector ||
+-	    !bio_add_folio(bio, folio, plen, poff)) {
+-		gfp_t gfp = mapping_gfp_constraint(folio->mapping, GFP_KERNEL);
+-		gfp_t orig_gfp = gfp;
+-		unsigned int nr_vecs = DIV_ROUND_UP(length, PAGE_SIZE);
+-
+-		iomap_bio_submit_read(ctx);
+-
+-		if (ctx->rac) /* same as readahead_gfp_mask */
+-			gfp |= __GFP_NORETRY | __GFP_NOWARN;
+-		bio = bio_alloc(iomap->bdev, bio_max_segs(nr_vecs), REQ_OP_READ,
+-				     gfp);
+-		/*
+-		 * If the bio_alloc fails, try it again for a single page to
+-		 * avoid having to deal with partial page reads.  This emulates
+-		 * what do_mpage_read_folio does.
+-		 */
+-		if (!bio)
+-			bio = bio_alloc(iomap->bdev, 1, REQ_OP_READ, orig_gfp);
+-		if (ctx->rac)
+-			bio->bi_opf |= REQ_RAHEAD;
+-		bio->bi_iter.bi_sector = sector;
+-		bio->bi_end_io = iomap_read_end_io;
+-		bio_add_folio_nofail(bio, folio, plen, poff);
+-		ctx->read_ctx = bio;
+-	}
+-	return 0;
+-}
+-
+-const struct iomap_read_ops iomap_bio_read_ops = {
+-	.read_folio_range	= iomap_bio_read_folio_range,
+-	.submit_read		= iomap_bio_submit_read,
+-};
+-EXPORT_SYMBOL_GPL(iomap_bio_read_ops);
+-
+ /*
+  * Add a bias to ifs->read_bytes_pending to prevent the read on the folio from
+  * being ended prematurely.
+@@ -635,27 +568,6 @@ void iomap_readahead(const struct iomap_ops *ops,
  }
  EXPORT_SYMBOL_GPL(iomap_readahead);
  
+-static int iomap_bio_read_folio_range_sync(const struct iomap_iter *iter,
+-		struct folio *folio, loff_t pos, size_t len)
+-{
+-	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+-	struct bio_vec bvec;
+-	struct bio bio;
+-
+-	bio_init(&bio, srcmap->bdev, &bvec, 1, REQ_OP_READ);
+-	bio.bi_iter.bi_sector = iomap_sector(srcmap, pos);
+-	bio_add_folio_nofail(&bio, folio, len, offset_in_folio(folio, pos));
+-	return submit_bio_wait(&bio);
+-}
+-#else
+-static int iomap_bio_read_folio_range_sync(const struct iomap_iter *iter,
+-		struct folio *folio, loff_t pos, size_t len)
+-{
+-	WARN_ON_ONCE(1);
+-	return -EIO;
+-}
+-#endif /* CONFIG_BLOCK */
+-
+ /*
+  * iomap_is_partially_uptodate checks whether blocks within a folio are
+  * uptodate or not.
+diff --git a/fs/iomap/internal.h b/fs/iomap/internal.h
+index d05cb3aed96e..3a4e4aad2bd1 100644
+--- a/fs/iomap/internal.h
++++ b/fs/iomap/internal.h
+@@ -6,4 +6,16 @@
+ 
+ u32 iomap_finish_ioend_direct(struct iomap_ioend *ioend);
+ 
++#ifdef CONFIG_BLOCK
++int iomap_bio_read_folio_range_sync(const struct iomap_iter *iter,
++		struct folio *folio, loff_t pos, size_t len);
++#else
++static inline int iomap_bio_read_folio_range_sync(const struct iomap_iter *iter,
++		struct folio *folio, loff_t pos, size_t len)
++{
++	WARN_ON_ONCE(1);
++	return -EIO;
++}
++#endif /* CONFIG_BLOCK */
++
+ #endif /* _IOMAP_INTERNAL_H */
 -- 
 2.47.3
 
