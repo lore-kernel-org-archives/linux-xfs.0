@@ -1,77 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44A8F1FF1B4
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Sep 2025 13:51:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D3D91DF994;
+	Tue, 23 Sep 2025 14:54:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758635511; cv=none; b=e2z9jSzAjIPqVTV93Ss01AmyiaDXRZwWyPqcn6okbxPn8RhKtBSUHAlsNp+e3CW5vFx2rCM4yIO755pKibD6A83gaImoeszN/B3OglY0C3o49DyXIW3DxNNhYAcdbtSG9NYuRYCRN3sLXguF3pEI/eeUHc7RQ4pI+eBi7QqGF1M=
+	t=1758639257; cv=none; b=O17uGVsE2zcYcxFI09x3aR+OOu/YzqyMiUmAsmawMRwr7Y2I2l7oMBoxykrplq1Epoh2YKmtxzW9ggDNrIZoCqwREf+sPEvmY8CAy6kdpSB+fwEmmh4929WZl94IIrGv0PaK2iTNXZnK90AjIm68DkK2HF7lB0yaQh7WsM6eck0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758635511; c=relaxed/simple;
-	bh=z+TjVg1Lok/mIJub0r1sz+WQYBQbe06hSW6LAxhf0GI=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Qo4li4tTcriRKS/1o8jJ5whlDL6tNwaqUaj3bWXuCJuxzQXjR7v/HWLBkK2BoNGxHiQqUuMw7d3LErdJU6b6G65LTFGNaN09AE3crJuSrCTDiZx0EXO6F3IPT/bn74hZNInkTtnA9J4HZdiL9ubRFWlS7hM2wMUnukIAn9bvpDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UR03+NO4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758639257; c=relaxed/simple;
+	bh=Q+q/KMy8jASqHkieY8zNx1dSC2KdYN3tgLx54rwnG2g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EafwL6f8bQCQst3ftiDRvTvsafvuIgwAkW+HyjjiT412paT4GFJJuLbomHBrdhMzSai1pMsJgNFH4JaZ3ajTtbbTb4JYO4uzCsHOQ/QjG062zxB7QSfazkSy4PhtwQxwCbfht5yyR0hy7pdd2ejoW9VL8BMHKY2XkfDpBh57tSA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c0AxnyUR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UR03+NO4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D27EDC113CF;
-	Tue, 23 Sep 2025 13:51:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c0AxnyUR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCF17C4CEF5;
+	Tue, 23 Sep 2025 14:54:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758635510;
-	bh=z+TjVg1Lok/mIJub0r1sz+WQYBQbe06hSW6LAxhf0GI=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=UR03+NO4YyrAp20QdJ7A++yRBig5ogbEIYzS7LLT4QlfEPvxKyCmma1OSRwbAhLDE
-	 TOoN6ZlJ3iatSy6l2hgINgtymYaoHh3MgCAF4o5cEkxte9ZmBs+ZaoXIo1V7lkTau8
-	 DtLehUZgUPc5MzhUm2y6p4FuSPbMMNXO+44E3RJwhtfOD6LNFH7pWDYUQvwDZh+dXf
-	 OoXROGxZM3le7o1pYYezobmy6pEFbNGeet8nsIleWq5RPmuIjayRzIIbKHXxycLaJy
-	 XTyV3/ErPwloBTxwnQsxnz66ZoKN+T09RacG3Ojs0adNyaCFvwqZLb3vbhsZkUi8sY
-	 CjkbLMqeTF1bg==
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
-Cc: jack@suse.cz, lherbolt@redhat.com
-In-Reply-To: <20250917222446.1329304-1-david@fromorbit.com>
-References: <20250917222446.1329304-1-david@fromorbit.com>
-Subject: Re: [PATCH 0/2] xfs: reduce ILOCK contention on O_DSYNC DIO
-Message-Id: <175863550953.58540.16793449440330359951.b4-ty@kernel.org>
-Date: Tue, 23 Sep 2025 15:51:49 +0200
+	s=k20201202; t=1758639253;
+	bh=Q+q/KMy8jASqHkieY8zNx1dSC2KdYN3tgLx54rwnG2g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=c0AxnyUREi1rp+dfFiB0QXwcWfBZJ2RunCDtBOqWcBTI9g5f2u3iL95mtLPCe0xHb
+	 4BnDEeYbtXJq2kFtf8wYLcMTU077KMgVopK3t98hWVBUNnDJCIzAhbHErhblMsSGr3
+	 PRMSX0XhvSUn6sKd13rCWsgxNAX0pYeDNbHbHFYB96iWz/XGNa37MTqH4/6khpbP/k
+	 t5D5Sm7OAwZewNHfmHSiGdsOmbYSBWgcUiPbIWh+CkcAkPWkPZT35h7XphCaqWwZMY
+	 KZL25kobDVBI1EYjq7uk6KvQh4qO5LGOkgW+FuWfHN0RNMnxJojGV1vBkFo+NwJ6WT
+	 iQ1EyELPMWeQg==
+Date: Tue, 23 Sep 2025 07:54:13 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: bernd@bsbernd.com, linux-xfs@vger.kernel.org, John@groves.net,
+	linux-fsdevel@vger.kernel.org, neal@gompa.dev,
+	joannelkoong@gmail.com
+Subject: Re: [PATCH 2/8] fuse: flush pending fuse events before aborting the
+ connection
+Message-ID: <20250923145413.GH8117@frogsfrogsfrogs>
+References: <175798149979.381990.14913079500562122255.stgit@frogsfrogsfrogs>
+ <175798150070.381990.9068347413538134501.stgit@frogsfrogsfrogs>
+ <CAJfpegtW++UjUioZA3XqU3pXBs29ewoUOVys732jsusMo2GBDA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJfpegtW++UjUioZA3XqU3pXBs29ewoUOVys732jsusMo2GBDA@mail.gmail.com>
 
-On Thu, 18 Sep 2025 08:12:52 +1000, Dave Chinner wrote:
-> This is the changes I came up with in the course of the discussion
-> with Jan about the fallocate+DIO+O_DSYNC performance improvement
-> thread here:
+On Tue, Sep 23, 2025 at 01:11:39PM +0200, Miklos Szeredi wrote:
+> On Tue, 16 Sept 2025 at 02:24, Darrick J. Wong <djwong@kernel.org> wrote:
 > 
-> https://lore.kernel.org/linux-xfs/CAM4Jq_71gxMcnOdgqWhKEa53sr9r57Qpi0hc5bs3NgtnNOGwtg@mail.gmail.com/T/#
+> > +       /*
+> > +        * Wait for all the events to complete or abort.  Touch the watchdog
+> > +        * once per second so that we don't trip the hangcheck timer while
+> > +        * waiting for the fuse server.
+> > +        */
+> > +       smp_mb();
+> > +       while (wait_event_timeout(fc->blocked_waitq,
+> > +                       !fc->connected || atomic_read(&fc->num_waiting) == 0,
+> > +                       HZ) == 0)
 > 
-> The first patch is moves a little bit of code around to ensure
-> that xfs_inode_item_precommit() always calculates all the changes
-> before it starts manipulating the dirty and fsync flags on the inode
-> log item. Whilst technically it could be considered a bug fix, the
-> bug it fixes requires an inconsistency in the on disk format to
-> exist first, so it likely won't ever be an issue in normal
-> production systems. It also requires an application to run a
-> fdatasync and then have a system crash just after the
-> inconsistency is addressed to expose it. So the likelihood of it
-> ever being triggered as a data integrity issue is -extremely- tiny.
-> 
-> [...]
+> I applied this patch, but then realized that I don't understand what's
+> going on here.
 
-Applied to for-next, thanks!
+We go around this tight loop until either 1 second goes by, the fuse
+connection drops, or the number of fuse commands hits zero.  Non-timeout
+Wakeups are stimulated by the wake_up_all(&fc->blocked_waitq) in
+fuse_drop_waiting() after the request is completed or aborted.
 
-[1/2] xfs: rearrange code in xfs_inode_item_precommit
-      commit: bc7d684fea18cc48c3630d2b7f1789000ff2df5b
-[2/2] xfs: rework datasync tracking and execution
-      commit: c91d38b57f2c4784d885c874b2a1234a01361afd
+The loop body touches the soft lockup watchdog so that we don't get hung
+task warnings while waiting for a possibly large number of RELEASE
+requests (or whatever's queued up at that point) to be processed by the
+server.  I didn't use wait_event_killable_timeout because I don't know
+how to clean up an in-progress unmount midway through.
 
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
+> Why is this site special?  Should the other waits for server response
+> be treated like this?
 
+I'm not sure what you're referring to by "special" -- are you asking
+about why I added the touch_softlockup_watchdog() call here but not in
+fuse_wait_aborted()?  I think it could use that treatment too, but once
+you abort all the pending requests they tend to go away very quickly.
+It might be the case that nobody's gotten a warning simply because the
+aborted requests all go away in under 30 seconds.
+
+--D
+
+> Thanks,
+> Miklos
