@@ -1,63 +1,63 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D4111922DD
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Sep 2025 00:34:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88F5A1E98E6
+	for <linux-xfs@vger.kernel.org>; Tue, 23 Sep 2025 00:34:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758587644; cv=none; b=kOg9Ps42nkIWemYMIhtLZoEkR4EI7EVBIzy0Oja7W6C+h+6MrIMF51f2l3++z9O2Uky9WD4FuhCXMvyrZnDFIRbbrF3n98jxqF3vw5/Vni2+Ndx4Avvr0B4EE5t/1pozbFKzl2XL7FetHUToS3tYlcr7LoNUdv2hTJyEGN5Vc40=
+	t=1758587646; cv=none; b=aB/Q7PbasoRipeJ5KJnc0Cjgfim60cxsJDgHoHqar380g1JirGZ0LfYjSmPqiih+P1kPo4D9xuoGJx92SO4B5/UVYHGVO8GfLuFSJlwwJNzEkdV6S3XdIiy91YSgQrVsECsVt4ro8OStKxQXsgSrj+CsvEfxCJYbEA9eQOduAdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758587644; c=relaxed/simple;
-	bh=EYt7dCnbv1WdNsWBo8OON9ZEzcHLtnoEPgeM+z1gNyY=;
+	s=arc-20240116; t=1758587646; c=relaxed/simple;
+	bh=wL9lZimimYPepUkw6uokO76yAdo/rrFpXRGxdT20nX8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RuuYrUvxaxNsXqWjO65ZIZXiBUPrpNBwz0d0JvtNp2vy6g3ZSMKT9ByGuxZlCbOVm5FiPMpHUx9TirbY1elWF62bBcnBNZe7WBe03sELCPPPekrj7xeHCOYvTHwQXtbhRCDR7w0AEHkN05ck+9Y6Q/3wwqsPJ2F27f+/miii44c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z3rIMnxy; arc=none smtp.client-ip=209.85.214.179
+	 MIME-Version; b=GOYUTn39e3Wl1OKOsZcjiaiJQUJ9iznA/ZyAhrkfs1uKojAu4oL+fmQ4ySNrf+yYKxAVa0KNNpcHCR1owLpqsYMoSs9ZBWWk+/gSf0m3Tvaw4aScwCImnl24k2UPswIYkf2VceNvq5LhMPj8rK92qka9rWLGLPRxrtZfBKZTw8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aCcGPBPf; arc=none smtp.client-ip=209.85.215.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z3rIMnxy"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-24457f581aeso49776215ad.0
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Sep 2025 17:34:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aCcGPBPf"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-b49c1c130c9so3361851a12.0
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Sep 2025 17:34:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758587642; x=1759192442; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1758587644; x=1759192444; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=U11mrEsklOyGoG+ah0Y0223e+PC7aMyCc8N4lhMP5fo=;
-        b=Z3rIMnxya4iKX7Z+/h712th52teXNlvdERcFMuhf9pMoO7NjLoWuBY1VhuhRG+6Kwj
-         HU+FB4Vpdbs25kscDmaawZjP5UV9arx3qFIOhekZ9X/Xu06Kol8GsHW8sA9F/jB+mnXa
-         YUOz9VvEqfXDSLeWJ3EyUQqptSGYfXG9pKVJDyrqPKJAl/EiQtZJv3OiYujaBhJREqhG
-         Tgslf4NQ0BqoDdOu7bsEzGQpqiALpoSxHeH7EcKUkxZnNuEClE2z1zbUHn9gD2eX52k8
-         xJDcr3iYv+D9vng/ynW49l2a1HwCqz0de/yAd53ORa2dwez86NXqY6okNi74ZCbV2OKa
-         JDdA==
+        bh=K5LoytNdOZjWYJW/+eSct1yfmQv94J0ZLKj78CJDynY=;
+        b=aCcGPBPfMr2uG6WKESyUGdPsgiiIahPLQgBbCQOS7q9zHQsyIDd9McjV8lgKSENFq/
+         7OdYCJglsYyXBIjxndB+wk/mlX7PBguZB7P5WmklHea0OB1rdk+nVb+Dgw6AaEIS6esh
+         7g/COTeCpOdU8UeGgYtRj43Kl5PDdaGtyzJ91fTVbxLdBhyJmE7H9/Ah5+j9O5n/hNDY
+         I8L93nQieGJ+FacpgRM0pbgPFkthIQGUSeRljqtautCI++B4VAZPNPSKTagylzjAsZOs
+         WPPqnZUKSYsl/p7cbFPuEKXoAfJtqtemmYkwpm805L8Ajk0S9ycxEWnhWnePtM8eSSMP
+         KpYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758587642; x=1759192442;
+        d=1e100.net; s=20230601; t=1758587644; x=1759192444;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=U11mrEsklOyGoG+ah0Y0223e+PC7aMyCc8N4lhMP5fo=;
-        b=tjAf54ip6ZiGAL8TfB8lOqrB4Vh6+cMK3L9UKdhNAiWk03T1pl3kjwzPfWysWLsjlN
-         Ht0axvatf4DCEqWVGOJkoKek8Fe/YYtEql11lqoLOWflq+UMwr7ojSGFe+xLo6mh0MYp
-         4m8eqTIT04pY0si9gg8gZi7GJuAMkp1BDbjNXnr8qegLYv497be9SiFByb+M9Tzgp6O3
-         ZWpLMjIVb3mDAfKssCSJQbySPeFiaw93V1Nd8S7D3JHHE9UiAySw/n1A8RSPyPQZy5IQ
-         HFbc8Tn51arev+Ehf4II9rKr/mNGj5bpiZ/zh6B6WYUf5sxIoYLG0cJJhaBApogDno27
-         PUcw==
-X-Forwarded-Encrypted: i=1; AJvYcCUL+hGf+e+XQyiYpRGGuSLz6PLfp5AxXFmNQUTis6vWGG2IEBFnJ9XCSjbyS8HntN2EytvEgqI0Zqk=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywx7d+ZiH9gKfCirOFc0ylAbD5Ss8z9dYxbStgtwqc99XX7jcJM
-	voMhkG9lzKnfLOEGeRRldV6++tx1O+RXbpfbxVqKYxUu8DKRLKT+iL+D
-X-Gm-Gg: ASbGnctVHA4m5h6MMcsfIojKHsxbxRkrIZh5MBgF8xEdiBFTxOZvLV9OmGFK/ixkRJ3
-	aQxniZm2kJoxn3aP60D+dDn4bwddxk3A9kUeuyGlNmJqz2Z2o2hXbijc5I0I1juqOCDAK71bwtt
-	3KbG8QVeWuTX3S6uSdhBt9FOOV/BcXc3xQUXCECyCRWeadokdZqZlgvNd6sGdTzhCO660KgRBkE
-	M4BtcvGgSNmPW8zrT/39+4LtHFxGVdcJ16Gmtd89eEymOB0FPawAVMuYL9sbZU8PgDpLlUrJ6PK
-	qThHZ1eLJ/tuvZWh1rq/mzEv2RKYBlY1SqWlHznop8GFV7d+Qcpbjk8PAVRIwLAxe6APjYsHA1+
-	+VPiOCq4sjTDLj+ujmghw3+hSDTRGG8qjELLBH4Yz7laESIyWCl3l/jGFno0=
-X-Google-Smtp-Source: AGHT+IGMA0cPE2R/eep3lFhZE4wE7iE8qhOhR6c724oiDvW6uLYQwIWJa0jSbnPosxnhtfnxB7mH6g==
-X-Received: by 2002:a17:903:1904:b0:27a:6c30:49c with SMTP id d9443c01a7336-27cc2d8f60fmr7678505ad.27.1758587642453;
-        Mon, 22 Sep 2025 17:34:02 -0700 (PDT)
-Received: from localhost ([2a03:2880:ff:6::])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2698016c076sm145590885ad.42.2025.09.22.17.34.02
+        bh=K5LoytNdOZjWYJW/+eSct1yfmQv94J0ZLKj78CJDynY=;
+        b=F18BDUnEp+MH2zoIFGTOO+bG2bGZwqRwqDpAPBFJNfZJyBLHL/w1+x9NhJo4TEoUEq
+         DXUNXAnJOKPzUSWShXOTGjj/vvd2F/ZXF323xaAqsS+kHAFJOvWU4xmnDzaUOSh1UFZO
+         XwKbb0MxthNCC0gI82lfqB+YTnkzEXSXZxvA5YnBjPga44u6jVS5UDaovd1Xn5UXw0tz
+         xUkWUI1vPF4zpmw8BtUMJhyn66LTZEQztcNcDSurusw4O8t9tGZtaruRIbEcUPPIBMvF
+         JJC3f2Fo5tQoQf/4+90xRALGxhQ7/GrUeFKLnoI0aorPqgx8SUCVVZ6+jSDybU/13+6E
+         fbzg==
+X-Forwarded-Encrypted: i=1; AJvYcCUnr0FnI78I4d/s7kuwJDyFPO3qYkKO1uKFGhVvg8wAhMHmDwpH5MscJqRTDtEqms+KBzp8dVZ3jVE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzcU1XJvsYPgy3Pnpra7O4OvsfcIL0oJC+Vw7ZIzviksGt6kPxV
+	KZGjojKHCABpJY+kU9GzlHS6V0oHFPku/NR7In1kVOOOob9OBwtfZDeX
+X-Gm-Gg: ASbGnct13jk1P2Z4a6EKKLZAELqTkvq28T1yZMmUwH6cH1CllaDIIkpziSVSSIzPIex
+	z2RGVblSck070RGfCRZYnKkOE8m7m3wDEa+s5MONjdv2tkbwpDWIsSDqcWJGEtpIiC5thgVFINA
+	nywQWvybyarZpIKmOJ9bP8+hE3o9nu3U9Kude1RWv/fXHR9Paa/MmGo03eDfgwypgqsei9iz5Gr
+	zobaKCOtttVSBi5s0pVEHN7LU8jGvsQcKsphwEjspMDDNZOLVzLGl4vCxQ2bC2sXVK9KEgUjMNo
+	2ZMQIJ3pdzzlTGe558EtOwFaO+71nT8Q0tBi6NbNy20zJVc9Ne3PeDXwxfNPCipD/OiEHH8/waZ
+	nRcDHTS8aVyctVxfkfuTfZLNYZhuQ5SQLrup+T20vU4AgS+UmpQ==
+X-Google-Smtp-Source: AGHT+IE2rDd9Yyv5lah4zvV6w6qJu6a1A3PLSQl9h6wVx4RGpLkLw8rukfKuDkaefPlT+C3jXqTA3w==
+X-Received: by 2002:a17:903:2ac5:b0:264:ee2:c3f5 with SMTP id d9443c01a7336-27cc22efd33mr7650465ad.19.1758587643804;
+        Mon, 22 Sep 2025 17:34:03 -0700 (PDT)
+Received: from localhost ([2a03:2880:ff:41::])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2698030ee20sm145121615ad.109.2025.09.22.17.34.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Sep 2025 17:34:02 -0700 (PDT)
+        Mon, 22 Sep 2025 17:34:03 -0700 (PDT)
 From: Joanne Koong <joannelkoong@gmail.com>
 To: brauner@kernel.org,
 	miklos@szeredi.hu
@@ -69,10 +69,11 @@ Cc: djwong@kernel.org,
 	linux-xfs@vger.kernel.org,
 	linux-doc@vger.kernel.org,
 	hsiangkao@linux.alibaba.com,
-	kernel-team@meta.com
-Subject: [PATCH v4 07/15] iomap: track read/readahead folio ownership internally
-Date: Mon, 22 Sep 2025 17:23:45 -0700
-Message-ID: <20250923002353.2961514-8-joannelkoong@gmail.com>
+	kernel-team@meta.com,
+	Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v4 08/15] iomap: add public start/finish folio read helpers
+Date: Mon, 22 Sep 2025 17:23:46 -0700
+Message-ID: <20250923002353.2961514-9-joannelkoong@gmail.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20250923002353.2961514-1-joannelkoong@gmail.com>
 References: <20250923002353.2961514-1-joannelkoong@gmail.com>
@@ -84,138 +85,95 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The purpose of "struct iomap_read_folio_ctx->cur_folio_in_bio" is to
-track folio ownership to know who is responsible for unlocking it.
-Rename "cur_folio_in_bio" to "cur_folio_owned" to better reflect this
-purpose and so that this can be generically used later on by filesystems
-that are not block-based.
+Move ifs read_bytes_pending increment logic into a separate helper,
+iomap_start_folio_read(), which will be needed later on by
+caller-provided read callbacks (added in a later commit) for
+read/readahead. This is the counterpart to the currently existing
+iomap_finish_folio_read().
 
-Since "struct iomap_read_folio_ctx" will be made a public interface
-later on when read/readahead takes in caller-provided callbacks, track
-the folio ownership state internally instead of exposing it in "struct
-iomap_read_folio_ctx" to make the interface simpler for end users.
+Make iomap_start_folio_read() and iomap_finish_folio_read() publicly
+accessible. These need to be accessible in order for caller-provided
+read callbacks to use.
 
 Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 34 +++++++++++++++++++++++-----------
- 1 file changed, 23 insertions(+), 11 deletions(-)
+ fs/iomap/buffered-io.c | 26 +++++++++++++++++---------
+ include/linux/iomap.h  |  3 +++
+ 2 files changed, 20 insertions(+), 9 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 09e65771a947..34df1cddf65c 100644
+index 34df1cddf65c..469079524208 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -362,7 +362,6 @@ static void iomap_read_end_io(struct bio *bio)
+@@ -327,9 +327,20 @@ static int iomap_read_inline_data(const struct iomap_iter *iter,
+ 	return 0;
+ }
  
- struct iomap_read_folio_ctx {
- 	struct folio		*cur_folio;
--	bool			cur_folio_in_bio;
- 	void			*read_ctx;
- 	struct readahead_control *rac;
- };
-@@ -386,7 +385,6 @@ static void iomap_bio_read_folio_range(const struct iomap_iter *iter,
+-#ifdef CONFIG_BLOCK
+-static void iomap_finish_folio_read(struct folio *folio, size_t off,
+-		size_t len, int error)
++void iomap_start_folio_read(struct folio *folio, size_t len)
++{
++	struct iomap_folio_state *ifs = folio->private;
++
++	if (ifs) {
++		spin_lock_irq(&ifs->state_lock);
++		ifs->read_bytes_pending += len;
++		spin_unlock_irq(&ifs->state_lock);
++	}
++}
++EXPORT_SYMBOL_GPL(iomap_start_folio_read);
++
++void iomap_finish_folio_read(struct folio *folio, size_t off, size_t len,
++		int error)
+ {
+ 	struct iomap_folio_state *ifs = folio->private;
+ 	bool uptodate = !error;
+@@ -349,7 +360,9 @@ static void iomap_finish_folio_read(struct folio *folio, size_t off,
+ 	if (finished)
+ 		folio_end_read(folio, uptodate);
+ }
++EXPORT_SYMBOL_GPL(iomap_finish_folio_read);
+ 
++#ifdef CONFIG_BLOCK
+ static void iomap_read_end_io(struct bio *bio)
+ {
+ 	int error = blk_status_to_errno(bio->bi_status);
+@@ -379,17 +392,12 @@ static void iomap_bio_read_folio_range(const struct iomap_iter *iter,
+ {
+ 	struct folio *folio = ctx->cur_folio;
+ 	const struct iomap *iomap = &iter->iomap;
+-	struct iomap_folio_state *ifs = folio->private;
+ 	size_t poff = offset_in_folio(folio, pos);
+ 	loff_t length = iomap_length(iter);
  	sector_t sector;
  	struct bio *bio = ctx->read_ctx;
  
--	ctx->cur_folio_in_bio = true;
- 	if (ifs) {
- 		spin_lock_irq(&ifs->state_lock);
- 		ifs->read_bytes_pending += plen;
-@@ -423,7 +421,7 @@ static void iomap_bio_read_folio_range(const struct iomap_iter *iter,
- }
+-	if (ifs) {
+-		spin_lock_irq(&ifs->state_lock);
+-		ifs->read_bytes_pending += plen;
+-		spin_unlock_irq(&ifs->state_lock);
+-	}
++	iomap_start_folio_read(folio, plen);
  
- static int iomap_read_folio_iter(struct iomap_iter *iter,
--		struct iomap_read_folio_ctx *ctx)
-+		struct iomap_read_folio_ctx *ctx, bool *folio_owned)
- {
- 	const struct iomap *iomap = &iter->iomap;
- 	loff_t pos = iter->pos;
-@@ -460,6 +458,7 @@ static int iomap_read_folio_iter(struct iomap_iter *iter,
- 			folio_zero_range(folio, poff, plen);
- 			iomap_set_range_uptodate(folio, poff, plen);
- 		} else {
-+			*folio_owned = true;
- 			iomap_bio_read_folio_range(iter, ctx, pos, plen);
- 		}
+ 	sector = iomap_sector(iomap, pos);
+ 	if (!bio || bio_end_sector(bio) != sector ||
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 4469b2318b08..edc7b3682903 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -465,6 +465,9 @@ ssize_t iomap_add_to_ioend(struct iomap_writepage_ctx *wpc, struct folio *folio,
+ 		loff_t pos, loff_t end_pos, unsigned int dirty_len);
+ int iomap_ioend_writeback_submit(struct iomap_writepage_ctx *wpc, int error);
  
-@@ -482,16 +481,22 @@ int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops)
- 	struct iomap_read_folio_ctx ctx = {
- 		.cur_folio	= folio,
- 	};
-+	/*
-+	 * If an IO helper takes ownership of the folio, it is responsible for
-+	 * unlocking it when the read completes.
-+	 */
-+	bool folio_owned = false;
- 	int ret;
- 
- 	trace_iomap_readpage(iter.inode, 1);
- 
- 	while ((ret = iomap_iter(&iter, ops)) > 0)
--		iter.status = iomap_read_folio_iter(&iter, &ctx);
-+		iter.status = iomap_read_folio_iter(&iter, &ctx,
-+				&folio_owned);
- 
- 	iomap_bio_submit_read(&ctx);
- 
--	if (!ctx.cur_folio_in_bio)
-+	if (!folio_owned)
- 		folio_unlock(folio);
- 
- 	/*
-@@ -504,14 +509,15 @@ int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops)
- EXPORT_SYMBOL_GPL(iomap_read_folio);
- 
- static int iomap_readahead_iter(struct iomap_iter *iter,
--		struct iomap_read_folio_ctx *ctx)
-+		struct iomap_read_folio_ctx *ctx,
-+		bool *cur_folio_owned)
- {
- 	int ret;
- 
- 	while (iomap_length(iter)) {
- 		if (ctx->cur_folio &&
- 		    offset_in_folio(ctx->cur_folio, iter->pos) == 0) {
--			if (!ctx->cur_folio_in_bio)
-+			if (!*cur_folio_owned)
- 				folio_unlock(ctx->cur_folio);
- 			ctx->cur_folio = NULL;
- 		}
-@@ -519,9 +525,9 @@ static int iomap_readahead_iter(struct iomap_iter *iter,
- 			ctx->cur_folio = readahead_folio(ctx->rac);
- 			if (WARN_ON_ONCE(!ctx->cur_folio))
- 				return -EINVAL;
--			ctx->cur_folio_in_bio = false;
-+			*cur_folio_owned = false;
- 		}
--		ret = iomap_read_folio_iter(iter, ctx);
-+		ret = iomap_read_folio_iter(iter, ctx, cur_folio_owned);
- 		if (ret)
- 			return ret;
- 	}
-@@ -554,15 +560,21 @@ void iomap_readahead(struct readahead_control *rac, const struct iomap_ops *ops)
- 	struct iomap_read_folio_ctx ctx = {
- 		.rac	= rac,
- 	};
-+	/*
-+	 * If an IO helper takes ownership of the folio, it is responsible for
-+	 * unlocking it when the read completes.
-+	 */
-+	bool cur_folio_owned = false;
- 
- 	trace_iomap_readahead(rac->mapping->host, readahead_count(rac));
- 
- 	while (iomap_iter(&iter, ops) > 0)
--		iter.status = iomap_readahead_iter(&iter, &ctx);
-+		iter.status = iomap_readahead_iter(&iter, &ctx,
-+					&cur_folio_owned);
- 
- 	iomap_bio_submit_read(&ctx);
- 
--	if (ctx.cur_folio && !ctx.cur_folio_in_bio)
-+	if (ctx.cur_folio && !cur_folio_owned)
- 		folio_unlock(ctx.cur_folio);
- }
- EXPORT_SYMBOL_GPL(iomap_readahead);
++void iomap_start_folio_read(struct folio *folio, size_t len);
++void iomap_finish_folio_read(struct folio *folio, size_t off, size_t len,
++		int error);
+ void iomap_start_folio_write(struct inode *inode, struct folio *folio,
+ 		size_t len);
+ void iomap_finish_folio_write(struct inode *inode, struct folio *folio,
 -- 
 2.47.3
 
