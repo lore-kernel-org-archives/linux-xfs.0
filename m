@@ -1,89 +1,331 @@
-Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E84D2E03F3
-	for <linux-xfs@vger.kernel.org>; Tue, 23 Sep 2025 18:56:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA41634BA3A;
+	Tue, 23 Sep 2025 20:32:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758653821; cv=none; b=Yo+ETeUeis10JrFo6bdObYCkBUtoU7u/rOZ1FvJ5d+rAD1WFgMYiUBt3skijLSEQuSlHhmAGlnH2dHwHRcGvqGKYrMaQQaQ5diLx5kSM0gVDxB4vLOx5x7BH8UK5pvfOvF5i6MBphVX+59tS/2dFkV79En+BrcN1uExdffUYZbI=
+	t=1758659568; cv=none; b=V8TCGm5KMR1Zd+qQp1UeZuJU13PZOFxlr0LL9VF0utR0EwaLnQQhLfK7YoRzmEZJ/0TYFCvWZMkiIf33TKYroSRke1LP0HO2r0wA84y4DYJoUo4ynJ1Keptk+RTDyKZtzQ3ZbR+dyx3Mhk7cfaixMMV7Us/8fw9HsT5iYxqsMnY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758653821; c=relaxed/simple;
-	bh=uDFx+7Tt6m0KBD1tdrc8SFB3Uot3XLva9qb9ajxaWY0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=kGlpRHHbJSM7wUdelYRMqm6BLJGUynwcIqZIuMvxVqJqI9ay7EHJ9a8gA6P0Ge3YHIQzlKqlaMPjHN5iudSpmEdbiPJ+ScERWZdPjIlje7Ii+ty1oDoJ0R13apswRRFYTfYQGuZLGIl8munpFyvZiKPsahISIube1OIsIqNOh9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=qqdKydAn; arc=none smtp.client-ip=209.85.160.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=szeredi.hu
+	s=arc-20240116; t=1758659568; c=relaxed/simple;
+	bh=cUq2cQ5+m633VRCAL01UwlejVemUBn8hd6jvhWwLlEE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ma1IknS27LgPakSixRc5/9Jen/068cHI76pF0o5aJue5O7jUZDZYoDzWvor9xrOLgNkloWBRxJQdYbmBMobNh5OeU5IrMYHt7vaf5qrZfR8r6hebjVqPSv11ONuAvk1ha48kE5w2IfyaKlGgS8y7+A0KBy6S2zmldQSx415V7UE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U84uTNtA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="qqdKydAn"
-Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-4d16cd01907so22292261cf.3
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Sep 2025 11:56:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google; t=1758653818; x=1759258618; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZxNM9Mb37dbb/SiJhSt7Vl3jHZka75Af9EkUQVZtb5E=;
-        b=qqdKydAnMRVCRWfWb7n1QWfudBaKit59wlqDyzIM3Tpp9Vvpk01hnlfS7Xp6ezGkx0
-         Gw9iNwSR1cNxu/0KpJyR2wiWn6Pi4xY77FT+Qrx5QATIghAmuT5/scgsDqRQFprZzlTG
-         jngePpRzTE8M5rK3mwYwrkLg8BhtnEHV7ozes=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758653818; x=1759258618;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ZxNM9Mb37dbb/SiJhSt7Vl3jHZka75Af9EkUQVZtb5E=;
-        b=UoUJq+Jngncy3sM9DWHTxBPqnqGv14iHePgtxHSKvmGFJYRR/Aw9xWFkituPqYJrQj
-         Rkbo90Tq+EeytLYCnvCYnIH6Hjo0iEib1BtAQdL5Tb8OrPOcyWAJkNDNxvWXK7ff4IYY
-         Y/Jg5XPplaJZCfJ7BVNDg03IZmlOk9NV9mfNxwC26bFgtKbH1epoTcC20b/fzb8GDbBX
-         HaHtp1BZNQSCGeD8gvteOs4aiHbCpE0AzcGhsic3u8eTU9f/34i0mNJDac/bWrU5WTVf
-         F2C1pnGAdkfOg52R+XerrHvspcG5ZLZS4dowDpN16d+aj4aBYnBAGrvwwxHOqR8k06B9
-         ic1Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVaJxMdXHd2WhwifrQc58Edh/ypiABzJAF01hNAobv5o/ritRV6TsPmgEgiyGv0cEqij9HcbeZsklM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwM5jcrmj2iosUXhd41cnFaFeDtMXV+orH9mWhRohGUTIctHWRq
-	lwdUJY+z1edplxK9xUruH3Kyb00KAZJmB3bNqsfqsSdBwU0SJiZ8K8ejXLOoQqpQaTWhTIaNyyN
-	6vU3wSk8CzVpIYBZncXHJr6fhuFccUI1sPkYrYF17ng==
-X-Gm-Gg: ASbGnct7JWrT/2Qfv5AccYd3h776hThehmhJNqtAXcrkrQJDViBIEg5r+1wfdBDjshi
-	/KauD1FBzcQUnI4AnFNOyfw2ECv2EnNw+VDLn6whY5uE/DqbWpSVVXy8ZLVMkX+Wo14f5A1f9lb
-	za5uzW7BtzLicT7dH4Y5saeZexElzJSTcD4t7p36Mxvsb5J46XA5F76bz8yM7JNhqHBjrf2c67h
-	jIC83xW5+/5Gw98RFMbA539M111IZC/9LVWdDc=
-X-Google-Smtp-Source: AGHT+IEUrKLzK566Rl7e78yFY4lfe2DvcLd+aWPgi3Hp92l/GkUmLofyjJvSU8SdP+RLcBfxgYPP7otw8OxaaoPIFgE=
-X-Received: by 2002:a05:622a:1442:b0:4d3:55f7:ddcd with SMTP id
- d75a77b69052e-4d36fdef829mr46153821cf.59.1758653818451; Tue, 23 Sep 2025
- 11:56:58 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U84uTNtA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F5F9C4CEF5;
+	Tue, 23 Sep 2025 20:32:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1758659567;
+	bh=cUq2cQ5+m633VRCAL01UwlejVemUBn8hd6jvhWwLlEE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=U84uTNtAINGu8jQ48fBoj4ynJ47ol+fhTIqfy2jx6vzF6KSEsFw1VWlLFIe5ai4+J
+	 SDnjhxmPC37asmH1KmLYw2jpvMq7AcK0vPSGy12Ws4EeJG+QnK+Ffya+efopIYVDvL
+	 3RlpnrDPvBhsK0Vumc+DVP7vX8CXVRF0R/R3yWNJlm0sfYMALnXClW0dM+dAXqcDRe
+	 YIKJH1Gg8ztURhmEGSrBDaW8mpik96ThfQ1RgRZgKtsoev9hXLmBrp7bED7kOmXzMG
+	 u+M07RcCN6FA7DbU/Ml+vkbf3Ffy3LZNISmQxXSl51lBmd9WuPueCfZpI2fzEOnVOx
+	 ZvoLyJDqrvyWw==
+Date: Tue, 23 Sep 2025 13:32:46 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: miklos@szeredi.hu, bernd@bsbernd.com, linux-xfs@vger.kernel.org,
+	John@groves.net, linux-fsdevel@vger.kernel.org, neal@gompa.dev
+Subject: Re: [PATCH 01/28] fuse: implement the basic iomap mechanisms
+Message-ID: <20250923203246.GG1587915@frogsfrogsfrogs>
+References: <175798151087.382724.2707973706304359333.stgit@frogsfrogsfrogs>
+ <175798151288.382724.14189484118371001092.stgit@frogsfrogsfrogs>
+ <CAJnrk1YtGcWj_0MOxS6atL_vrUjk09MzQhFt40yf32Rq12k0qw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <175798149979.381990.14913079500562122255.stgit@frogsfrogsfrogs>
- <175798150070.381990.9068347413538134501.stgit@frogsfrogsfrogs>
- <CAJfpegtW++UjUioZA3XqU3pXBs29ewoUOVys732jsusMo2GBDA@mail.gmail.com> <20250923145413.GH8117@frogsfrogsfrogs>
-In-Reply-To: <20250923145413.GH8117@frogsfrogsfrogs>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Tue, 23 Sep 2025 20:56:47 +0200
-X-Gm-Features: AS18NWA3QczMUqhEwXlbmi3D0vK9ucUWZNSA6Kn3Mm_71aK-n6sNLwsJ3-6KZcg
-Message-ID: <CAJfpegsytZbeQdO3aL+AScJa1Yr8b+_cWxZFqCuJBrV3yaoqNw@mail.gmail.com>
-Subject: Re: [PATCH 2/8] fuse: flush pending fuse events before aborting the connection
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: bernd@bsbernd.com, linux-xfs@vger.kernel.org, John@groves.net, 
-	linux-fsdevel@vger.kernel.org, neal@gompa.dev, joannelkoong@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJnrk1YtGcWj_0MOxS6atL_vrUjk09MzQhFt40yf32Rq12k0qw@mail.gmail.com>
 
-On Tue, 23 Sept 2025 at 16:54, Darrick J. Wong <djwong@kernel.org> wrote:
+On Fri, Sep 19, 2025 at 03:36:52PM -0700, Joanne Koong wrote:
+> On Mon, Sep 15, 2025 at 5:28 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > From: Darrick J. Wong <djwong@kernel.org>
+> >
+> > Implement functions to enable upcalling of iomap_begin and iomap_end to
+> > userspace fuse servers.
+> >
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  fs/fuse/fuse_i.h          |   35 ++++
+> >  fs/fuse/iomap_priv.h      |   36 ++++
+> >  include/uapi/linux/fuse.h |   90 +++++++++
+> >  fs/fuse/Kconfig           |   32 +++
+> >  fs/fuse/Makefile          |    1
+> >  fs/fuse/file_iomap.c      |  434 +++++++++++++++++++++++++++++++++++++++++++++
+> >  fs/fuse/inode.c           |    9 +
+> >  7 files changed, 636 insertions(+), 1 deletion(-)
+> >  create mode 100644 fs/fuse/iomap_priv.h
+> >  create mode 100644 fs/fuse/file_iomap.c
+> >
+> >
+> > diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
+> > index 4560687d619d76..f0d408a6e12c32 100644
+> > --- a/fs/fuse/fuse_i.h
+> > +++ b/fs/fuse/fuse_i.h
+> > @@ -923,6 +923,9 @@ struct fuse_conn {
+> >         /* Is synchronous FUSE_INIT allowed? */
+> >         unsigned int sync_init:1;
+> >
+> > +       /* Enable fs/iomap for file operations */
+> > +       unsigned int iomap:1;
+> > +
+> >         /* Use io_uring for communication */
+> >         unsigned int io_uring;
+> >
+> > @@ -1047,6 +1050,11 @@ static inline struct fuse_mount *get_fuse_mount_super(struct super_block *sb)
+> >         return sb->s_fs_info;
+> >  }
+> >
+> > +static inline const struct fuse_mount *get_fuse_mount_super_c(const struct super_block *sb)
+> > +{
+> > +       return sb->s_fs_info;
+> > +}
+> > +
+> >  static inline struct fuse_conn *get_fuse_conn_super(struct super_block *sb)
+> >  {
+> >         return get_fuse_mount_super(sb)->fc;
+> > @@ -1057,16 +1065,31 @@ static inline struct fuse_mount *get_fuse_mount(struct inode *inode)
+> >         return get_fuse_mount_super(inode->i_sb);
+> >  }
+> >
+> > +static inline const struct fuse_mount *get_fuse_mount_c(const struct inode *inode)
+> > +{
+> > +       return get_fuse_mount_super_c(inode->i_sb);
+> > +}
+> > +
+> >  static inline struct fuse_conn *get_fuse_conn(struct inode *inode)
+> >  {
+> >         return get_fuse_mount_super(inode->i_sb)->fc;
+> >  }
+> >
+> > +static inline const struct fuse_conn *get_fuse_conn_c(const struct inode *inode)
+> > +{
+> > +       return get_fuse_mount_super_c(inode->i_sb)->fc;
+> > +}
+> > +
+> >  static inline struct fuse_inode *get_fuse_inode(struct inode *inode)
+> >  {
+> >         return container_of(inode, struct fuse_inode, inode);
+> >  }
+> >
+> > +static inline const struct fuse_inode *get_fuse_inode_c(const struct inode *inode)
+> > +{
+> > +       return container_of(inode, struct fuse_inode, inode);
+> > +}
+> 
+> Do we need these new set of helpers? AFAICT it does two things: a)
+> guarantee constness of the arg passed in b) guarantee constness of the
+> pointer returned
+> 
+> But it seems like for a) we could get that by modifying the existing
+> functions to take in a const arg, eg
+> 
+> -static inline struct fuse_inode *get_fuse_inode(struct inode *inode)
+> +static inline struct fuse_inode *get_fuse_inode(const struct inode *inode)
+>  {
+>       return container_of(inode, struct fuse_inode, inode);
+>  }
+> 
+> and for b) it seems to me like the caller enforces the constness of
+> the pointer returned whether the actual function returns a const
+> pointer or not,
+> 
+> eg
+> const struct fuse_inode *fi = get_fuse_inode{_c}(inode);
+> 
+> Maybe I'm missing something here but it seems to me like we don't need
+> these new helpers?
 
-> I'm not sure what you're referring to by "special" -- are you asking
-> about why I added the touch_softlockup_watchdog() call here but not in
-> fuse_wait_aborted()?  I think it could use that treatment too, but once
-> you abort all the pending requests they tend to go away very quickly.
-> It might be the case that nobody's gotten a warning simply because the
-> aborted requests all go away in under 30 seconds.
+Heh.  I had mistakenly thought that one cannot cast a const struct
+pointer to a mutable const struct pointer, but I just tried your
+suggestion and it seemed to work fine.  So I guess we don't need
+get_fuse_mount_c either.
 
-Maybe I'm not understanding how the softlockup detector works.  I
-thought that it triggers if task is spinning in a tight loop.  That
-precludes any timeouts, since that means that the task went to sleep.
+Yay C, all it's doing is taking a number pointing to something that
+can't be changed, subtracting from it, and thus returning a different
+number.  Perhaps Rust has polluted my brain.
 
-So what's happening here?
+> > +
+> > diff --git a/fs/fuse/iomap_priv.h b/fs/fuse/iomap_priv.h
+> 
+> btw, i think the general convention is to use "_i.h" suffixing for
+> private internal files, eg fuse_i.h, fuse_dev_i.h, dev_uring_i.h
 
-Thanks,
-Miklos
+Noted, thank you.
+
+> > new file mode 100644
+> > index 00000000000000..243d92cb625095
+> > --- /dev/null
+> > +++ b/fs/fuse/iomap_priv.h
+> > @@ -0,0 +1,36 @@
+> > +// SPDX-License-Identifier: GPL-2.0
+> > +/*
+> > + * Copyright (C) 2025 Oracle.  All Rights Reserved.
+> > + * Author: Darrick J. Wong <djwong@kernel.org>
+> > + */
+> > +#ifndef _FS_FUSE_IOMAP_PRIV_H
+> > +#define _FS_FUSE_IOMAP_PRIV_H
+> > +
+> ...
+> > diff --git a/include/uapi/linux/fuse.h b/include/uapi/linux/fuse.h
+> > index 31b80f93211b81..3634cbe602cd9c 100644
+> > --- a/include/uapi/linux/fuse.h
+> > +++ b/include/uapi/linux/fuse.h
+> > @@ -235,6 +235,9 @@
+> >   *
+> >   *  7.44
+> >   *  - add FUSE_NOTIFY_INC_EPOCH
+> > + *
+> > + *  7.99
+> 
+> Just curious, where did you get the .99 from?
+
+Any time I go adding to a versioned ABI, I try to use high numbers (and
+high bits for flags) so that it's really obvious that the new flags are
+in use when I poke through crash/gdb/etc.
+
+For permanent artifacts like an ondisk format, it's convenient to cache
+fs images for fuzz testing, etc.  Using a high bit/number reduces the
+chance that someone else's new feature will get merged and cause
+conflicts, which force me to regenerate all cached images.
+
+Obviously at merge time I change these values to use lower bit positions
+or version numbers to fit the merge target so it doesn't completely
+eliminate the caching problems.
+
+> > + *  - add FUSE_IOMAP and iomap_{begin,end,ioend} for regular file operations
+> >   */
+> >
+> >  #ifndef _LINUX_FUSE_H
+> > @@ -270,7 +273,7 @@
+> >  #define FUSE_KERNEL_VERSION 7
+> > diff --git a/fs/fuse/Kconfig b/fs/fuse/Kconfig
+> > index 9563fa5387a241..67dfe300bf2e07 100644
+> > --- a/fs/fuse/Kconfig
+> > +++ b/fs/fuse/Kconfig
+> > @@ -69,6 +69,38 @@ config FUSE_PASSTHROUGH
+> > +config FUSE_IOMAP_DEBUG
+> > +       bool "Debug FUSE file IO over iomap"
+> > +       default n
+> > +       depends on FUSE_IOMAP
+> > +       help
+> > +         Enable debugging assertions for the fuse iomap code paths and logging
+> > +         of bad iomap file mapping data being sent to the kernel.
+> > +
+> 
+> I wonder if we should have a general FUSE_DEBUG that this would fall
+> under instead of creating one that's iomap_debug specific
+
+Probably, but I was also trying to keep this as localized to iomap as
+possible.  If Miklos would rather I extend it to all of fuse (which is
+probably a good idea!) then I'm happy to do so.
+
+> >  config FUSE_IO_URING
+> >         bool "FUSE communication over io-uring"
+> >         default y
+> > diff --git a/fs/fuse/Makefile b/fs/fuse/Makefile
+> > index 46041228e5be2c..27be39317701d6 100644
+> > --- a/fs/fuse/Makefile
+> > +++ b/fs/fuse/Makefile
+> > @@ -18,5 +18,6 @@ fuse-$(CONFIG_FUSE_PASSTHROUGH) += passthrough.o
+> >  fuse-$(CONFIG_FUSE_BACKING) += backing.o
+> >  fuse-$(CONFIG_SYSCTL) += sysctl.o
+> >  fuse-$(CONFIG_FUSE_IO_URING) += dev_uring.o
+> > +fuse-$(CONFIG_FUSE_IOMAP) += file_iomap.o
+> >
+> >  virtiofs-y := virtio_fs.o
+> > diff --git a/fs/fuse/file_iomap.c b/fs/fuse/file_iomap.c
+> > new file mode 100644
+> > index 00000000000000..dda757768d3ea6
+> > --- /dev/null
+> > +++ b/fs/fuse/file_iomap.c
+> > @@ -0,0 +1,434 @@
+> > +// SPDX-License-Identifier: GPL-2.0
+> > +/*
+> > + * Copyright (C) 2025 Oracle.  All Rights Reserved.
+> > + * Author: Darrick J. Wong <djwong@kernel.org>
+> > + */
+> > +#include <linux/iomap.h>
+> > +#include "fuse_i.h"
+> > +#include "fuse_trace.h"
+> > +#include "iomap_priv.h"
+> > +
+> > +/* Validate FUSE_IOMAP_TYPE_* */
+> > +static inline bool fuse_iomap_check_type(uint16_t fuse_type)
+> > +{
+> > +       switch (fuse_type) {
+> > +       case FUSE_IOMAP_TYPE_HOLE:
+> > +       case FUSE_IOMAP_TYPE_DELALLOC:
+> > +       case FUSE_IOMAP_TYPE_MAPPED:
+> > +       case FUSE_IOMAP_TYPE_UNWRITTEN:
+> > +       case FUSE_IOMAP_TYPE_INLINE:
+> > +       case FUSE_IOMAP_TYPE_PURE_OVERWRITE:
+> > +               return true;
+> > +       }
+> > +
+> > +       return false;
+> > +}
+> 
+> Maybe faster to check by using a bitmask instead?
+
+They're consecutive; one could #define a FUSE_IOMAP_TYPE_MAX to alias
+PURE_OVERWRITE and collapse the whole check to:
+
+	return fuse_type <= FUSE_IOMAP_TYPE_MAX;
+
+> > +
+> > diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
+> > index 1e7298b2b89b58..32f4b7c9a20a8a 100644
+> > --- a/fs/fuse/inode.c
+> > +++ b/fs/fuse/inode.c
+> > @@ -1448,6 +1448,13 @@ static void process_init_reply(struct fuse_mount *fm, struct fuse_args *args,
+> >
+> >                         if (flags & FUSE_REQUEST_TIMEOUT)
+> >                                 timeout = arg->request_timeout;
+> > +
+> > +                       if ((flags & FUSE_IOMAP) && fuse_iomap_enabled()) {
+> > +                               fc->local_fs = 1;
+> > +                               fc->iomap = 1;
+> > +                               printk(KERN_WARNING
+> > + "fuse: EXPERIMENTAL iomap feature enabled.  Use at your own risk!");
+> > +                       }
+> 
+> pr_warn() seems to be the convention elsewhere in the fuse code
+
+Ah, thanks.  Do you know why fuse calls pr_warn("fuse: XXX") instead of
+the usual sequence of
+
+#define pr_fmt(fmt) "fuse: " fmt
+
+so that "fuse: " gets included automatically?
+
+--D
+
+> 
+> Thanks,
+> Joanne
+> >                 } else {
+> >                         ra_pages = fc->max_read / PAGE_SIZE;
+> >                         fc->no_lock = 1;
+> > @@ -1516,6 +1523,8 @@ static struct fuse_init_args *fuse_new_init(struct fuse_mount *fm)
+> >          */
+> >         if (fuse_uring_enabled())
+> >                 flags |= FUSE_OVER_IO_URING;
+> > +       if (fuse_iomap_enabled())
+> > +               flags |= FUSE_IOMAP;
+> >
+> >         ia->in.flags = flags;
+> >         ia->in.flags2 = flags >> 32;
+> >
+> 
