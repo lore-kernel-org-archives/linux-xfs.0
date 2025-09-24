@@ -1,119 +1,239 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 273F722068B;
-	Wed, 24 Sep 2025 17:50:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAEBB3148C4;
+	Wed, 24 Sep 2025 18:06:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758736257; cv=none; b=q5KR5iIoJNL8547kYTQRz27N9IXHcbGW1U3tW+kYSm6b/KPPeYonEhJ9w2EC+RuY5xehPD6Gnd6+OfN4DyO3XXkJEUQgkGn1e/10qUBru5yACLU5rBAU/paaRBh+8KDBsmTdx21zBrNOU7MSp+5/FoUP6nmmPchrWWXcCVJQ+Z4=
+	t=1758737175; cv=none; b=Bipv9n6rvPg+jgCyFdp88gYnsaScd9xBFxRloFcaNZ6dquAnaaPnjbHE2TSt054e9Ceif45lMifrC7rEVpgMUOb+Oqa+xhvOQDfX5FXXAMzC7Jjm/UPEM/thFP7TD2X/bx/rg+xz399eAwM/XhaWPz59D6Bgd/cudDZkSAjZucg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758736257; c=relaxed/simple;
-	bh=mPI30sfIxB4Z9YJf25cmnacoN5+604ymyUksz+i0HLo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lxPp6YsSUrkTLQT6z/Leu4aBozBg3YvgX6hKk9pJ/FtWVJmtMt9FAWqFeGauuycjKWhy/qwKz+tH33VSisFKdY8mrAosNj0BJdhtxW60dwu2K7K+fUp5SMFPVLWrXUGIMyjFz3yHQ5BsYOgYfrI3QT4OQ/U5s3NdE+dQlxsVa6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fsC/9rht; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758737175; c=relaxed/simple;
+	bh=+7/S4meIPGSN/YstETcBmWXU5FN9nSZr2kIW0JWrlqU=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=CgbePikAO+EbfPA8eGAc8URN6+3Ba3kJ3meALduYUbDRUla/HINDGD5b+a4cx+8eH1XtXiOYguGQPfjZSeY/exqch6TQZSNEkJXpl6kqxQlylbsfAfhLZg6K92xCXVKOXhVmqKF5fbH3PfCPjkqp5ZLu/KUBokRcvm+iRu4M080=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BUkMjecr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fsC/9rht"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9909C4CEE7;
-	Wed, 24 Sep 2025 17:50:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BUkMjecr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07640C4CEE7;
+	Wed, 24 Sep 2025 18:06:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758736256;
-	bh=mPI30sfIxB4Z9YJf25cmnacoN5+604ymyUksz+i0HLo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fsC/9rht9rwkphL5ebFbJoKhX9nbh/W8C2NtcoZBtVkyipWwtz/IYhY8KnsPDF0/a
-	 OoVbkvKSgY/YJJxUVIAmlaldRf/42bWheXhtUdxRxCAUDRvchNidZ6B6HhbezZVAjf
-	 kyGU/zf+ZDOhJfzdUD24s3HYyL16JF93/g4sPFPa0FihdkENhhYaT2waFPwtyvStxi
-	 dGhSnYax0NtqPjACOZyEgE+aIiB/W9xUV2VK1VyPtOiEVPc5mK1rBnvhXUvhPI7KX4
-	 qRSrFBU53jfsWR35/hTLNX0XdSHUFdmgRXbPWgiDMKetig0MN2AkAZ3jy+pB1IcPLJ
-	 JB8HIZJY5BUGA==
-Date: Wed, 24 Sep 2025 10:50:56 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Miklos Szeredi <miklos@szeredi.hu>
-Cc: bernd@bsbernd.com, linux-xfs@vger.kernel.org, John@groves.net,
-	linux-fsdevel@vger.kernel.org, neal@gompa.dev,
-	joannelkoong@gmail.com
-Subject: Re: [PATCH 2/8] fuse: flush pending fuse events before aborting the
- connection
-Message-ID: <20250924175056.GO8117@frogsfrogsfrogs>
-References: <175798149979.381990.14913079500562122255.stgit@frogsfrogsfrogs>
- <175798150070.381990.9068347413538134501.stgit@frogsfrogsfrogs>
- <CAJfpegtW++UjUioZA3XqU3pXBs29ewoUOVys732jsusMo2GBDA@mail.gmail.com>
- <20250923145413.GH8117@frogsfrogsfrogs>
- <CAJfpegsytZbeQdO3aL+AScJa1Yr8b+_cWxZFqCuJBrV3yaoqNw@mail.gmail.com>
- <20250923205936.GI1587915@frogsfrogsfrogs>
- <20250923223447.GJ1587915@frogsfrogsfrogs>
- <CAJfpegthiP32O=O5O8eAEjYbY2sAJ1SFA0nS8NGjM85YvWBNuA@mail.gmail.com>
+	s=k20201202; t=1758737174;
+	bh=+7/S4meIPGSN/YstETcBmWXU5FN9nSZr2kIW0JWrlqU=;
+	h=From:Subject:Date:To:Cc:From;
+	b=BUkMjecrWMRPmJhKglDkxz8GHmbaIabTZ/do3YWRlVpCz93gOGGdvV0teaUGMCOoy
+	 CLZjUwQB9mJeERwIQF7UbhUpy+dz4V010I9xZmMxyflxBN6m7OPYVIE0MKwPXgeAda
+	 rzcKVIXKrISdWR5AioJs4Vnv1N5MsKVVv1A8CgpEhbO7BzH3Q4yW94FovcU8m/Xedf
+	 Tq94Zg15GzXnPc/Qoe8lUh/wQtlbd7t27P5zzbkccbbErHj+slGCnc6T45zh5qU92B
+	 buErnYYuwbskoelbawTY7Zgv1P2lqlQX2wxEppMRNh7lutzSwK5VOg4tgs3L9uOhkJ
+	 HogvFYBKmA/sw==
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH v3 00/38] vfs, nfsd: implement directory delegations
+Date: Wed, 24 Sep 2025 14:05:46 -0400
+Message-Id: <20250924-dir-deleg-v3-0-9f3af8bc5c40@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJfpegthiP32O=O5O8eAEjYbY2sAJ1SFA0nS8NGjM85YvWBNuA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAPsy1GgC/1WMQQ6CMBBFr0K6tmY6QLGuvIdxUe0IEw2YqWk0h
+ LtbMCayfD//vVFFEqao9sWohBJHHvoM5aZQl873LWkOmRUCVoCm1oFFB7pTqwkNooGzd6FS+f8
+ QuvJraR1PmTuOz0HeSzqZef1WylUlGQ3am2ARnC9tXR1uJD3dt4O0as4k/Kk1WMB/FWe1ccY1A
+ IF2dqVO0/QByyIBLd4AAAA=
+X-Change-ID: 20240215-dir-deleg-e212210ba9d4
+To: Alexander Viro <viro@zeniv.linux.org.uk>, 
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+ Chuck Lever <chuck.lever@oracle.com>, 
+ Alexander Aring <alex.aring@gmail.com>, 
+ Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, 
+ Steve French <sfrench@samba.org>, 
+ Ronnie Sahlberg <ronniesahlberg@gmail.com>, 
+ Shyam Prasad N <sprasad@microsoft.com>, Tom Talpey <tom@talpey.com>, 
+ Bharath SM <bharathsm@microsoft.com>, NeilBrown <neil@brown.name>, 
+ Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
+ Jonathan Corbet <corbet@lwn.net>, Amir Goldstein <amir73il@gmail.com>, 
+ Miklos Szeredi <miklos@szeredi.hu>, Paulo Alcantara <pc@manguebit.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
+ David Howells <dhowells@redhat.com>, Tyler Hicks <code@tyhicks.com>, 
+ Namjae Jeon <linkinjeon@kernel.org>, Steve French <smfrench@gmail.com>, 
+ Sergey Senozhatsky <senozhatsky@chromium.org>, 
+ Carlos Maiolino <cem@kernel.org>, Steven Rostedt <rostedt@goodmis.org>, 
+ Masami Hiramatsu <mhiramat@kernel.org>, 
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, 
+ Paulo Alcantara <pc@manguebit.org>
+Cc: Rick Macklem <rick.macklem@gmail.com>, linux-fsdevel@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
+ linux-cifs@vger.kernel.org, samba-technical@lists.samba.org, 
+ linux-doc@vger.kernel.org, netfs@lists.linux.dev, ecryptfs@vger.kernel.org, 
+ linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, 
+ linux-trace-kernel@vger.kernel.org, Jeff Layton <jlayton@kernel.org>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7598; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=+7/S4meIPGSN/YstETcBmWXU5FN9nSZr2kIW0JWrlqU=;
+ b=owEBbQKS/ZANAwAKAQAOaEEZVoIVAcsmYgBo1DMF8jPUq07hC+JXFyB+aFMKgJT0u4y2TqDFD
+ JQrspyIcFuJAjMEAAEKAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCaNQzBQAKCRAADmhBGVaC
+ FWo5D/9g7HyeH/C2KXyHiUgrSV/2XxABdNtqJhcUO86MYtRpMnX7Z74nptP1jIykAkuPNHT8NgA
+ Gs3TBooOpGdAXKq55n3tLCl0X+Tb5xX/2oKIbjzK4js+y1Suqq4YQCjXcQUEmnNh2piXku+x7/A
+ kWOrIit4ByIsR5jhoVX7RmM/fNj4xXC4pU3z8v6DJRDgO2DZGVIgje1kQPdS+DLUKvd7vy4xF6c
+ X7KB7lOzMjdsptBG7rgdcTDj8QVI1JiHVAc8ujq9yvnCQwYIboKyz/YZX9csqqfsGfAyaZMMJzW
+ bXRwZ8A+vrTOuTHGIbt0Nz71fdsCiTAFHP4XUAUZS+YGaxD+aZJLoAl9MNgn4Gh2DfM5ntPy8cy
+ 7kN/I3dsW85dmNT3NKFNFbifd8JKb7twKV6iTZfur14UJ0DIhgK6dHSn+dQROogO4u0FQ5uPjoh
+ K8gl/q3RG43y+gjYTEhjT2n1FBh8ZURqeurkW+1GdoXThu0uycXrLTomos49EQged3/jiY8MgOt
+ sKB8JUy8fHTUmTmAX9etqbt6XEH8My/ieWuHlwDdVy+TzaL+Fbj1T/wW3iFKN3AJIbsD3/eijaQ
+ zOHYDL/cmS4FaEsDfhF6LYSgGff9CuPmlQpkfJxmb9HaSA0rzzJm1xRWE5q20HqNzixb99liFGq
+ sJigsBqJ83fHk5A==
+X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
+ fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 
-On Wed, Sep 24, 2025 at 02:04:20PM +0200, Miklos Szeredi wrote:
-> On Wed, 24 Sept 2025 at 00:34, Darrick J. Wong <djwong@kernel.org> wrote:
-> 
-> > Conclusion: The loop is necessary to avoid softlockup warnings while the
-> > fuse requests are processed by the server, but it is not necessary to
-> > touch the watchdog in the loop body.
-> 
-> I'm still confused.
-> 
-> What is the kernel message you get?
-> 
-> "watchdog: BUG: soft lockup - CPU#X stuck for NNs!"
-> 
-> or
-> 
-> "INFO: task PROC blocked for more than NN seconds."
+This patchset is an update to a patchset that I posted in early June
+this year [1]. This version should be basically feature-complete, with a
+few caveats.
 
-Oh!  The second:
+NFSv4.1 adds a GET_DIR_DELEGATION operation, to allow clients
+to request a delegation on a directory. If the client holds a directory
+delegation, then it knows that nothing will change the dentries in it
+until it has been recalled (modulo the case where the client requests
+notifications of directory changes).
 
-INFO: task umount:1279 blocked for more than 20 seconds.
-      Not tainted 6.17.0-rc7-xfsx #rc7
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this messag.
-task:umount          state:D stack:11984 pid:1279  tgid:1279  ppid:10690
-Call Trace:
- <TASK>
- __schedule+0x4cb/0x1a70
- ? vprintk_emit+0x10e/0x330
- schedule+0x2a/0xe0
- fuse_flush_requests_and_wait+0xe5/0x110 [fuse 810ab4024704e943aea18e16]
- ? cpuacct_css_alloc+0xa0/0xa0
- fuse_iomap_unmount+0x15/0x30 [fuse 810ab4024704e943aea18e1670e01b473ed]
- fuse_conn_destroy+0xdb/0xe0 [fuse 810ab4024704e943aea18e1670e01b473ed1]
- fuse_kill_sb_anon+0xb7/0xc0 [fuse 810ab4024704e943aea18e1670e01b473ed1]
- deactivate_locked_super+0x29/0xa0
- cleanup_mnt+0xbd/0x150
- task_work_run+0x55/0x90
- exit_to_user_mode_loop+0xa0/0xb0
- do_syscall_64+0x16b/0x1a0
- entry_SYSCALL_64_after_hwframe+0x4b/0x53
-RIP: 0033:0x7f24c342ab77
-RSP: 002b:00007ffd683ce5e8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a6
-RAX: 0000000000000000 RBX: 00005648fc1208a8 RCX: 00007f24c342ab77
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 00005648fc1209c0
-RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000073
-R10: 0000000000000000 R11: 0000000000000246 R12: 00007f24c3566264
-R13: 00005648fc1209c0 R14: 0000000000000000 R15: 00005648fc120790
- </TASK>
+In 2023, Rick Macklem gave a talk at the NFS Bakeathon on his
+implementation of directory delegations for FreeBSD [2], and showed that
+it can greatly improve LOOKUP-heavy workloads. There is also some
+earlier work by CITI [3] that showed similar results. The SMB protocol
+also has a similar sort of construct, and they have also seen large
+performance improvements on certain workloads.
 
-Apologies for my imprecise description of what I was trying to avoid; I
-should have paid closer attention.
+This version also starts with support for trivial directory delegations
+that support no notifications.  From there it adds VFS support for
+ignoring certain break_lease() events in directories. It then adds
+support for basic CB_NOTIFY calls (with names only). Next, support for
+sending attributes in the notifications is added.
 
-The wait_event_timeout() loop causes the process to schedule at least
-once per second, which avoids the "blocked for more than..." warning.
-Since the process actually does go to sleep, it's not necessary to touch
-the softlockup watchdog because we're not preventing another process
-from being scheduled on a CPU.
+I think that this version should be getting close to merge ready. Anna
+has graciously agreed to work on the client-side pieces for this. I've
+mostly been testing using pynfs tests (which I will submit soon).
 
-I can copy the above into the commit message if that resolves the
-confusion.
+The main limitation at this point is that callback requests are
+currently limited to a single page, so we can't send very many in a
+single CB_NOTIFY call. This will make it easy to "get into the weeds" if
+you're changing a directory quickly. The server will just recall the
+delegation in that case, so it's harmless even though it's not ideal.
 
---D
+If this approach looks acceptable I'll see if we can increase that
+limitation (it seems doable).
 
-> Thanks,
-> Miklos
+If anyone wishes to try this out, it's in the "dir-deleg" branch in my
+tree at kernel.org [4].
+
+[1]: https://lore.kernel.org/linux-nfs/20250602-dir-deleg-v2-0-a7919700de86@kernel.org/
+[2]: https://www.youtube.com/watch?v=DdFyH3BN5pI
+[3]: https://linux-nfs.org/wiki/index.php/CITI_Experience_with_Directory_Delegations
+[4]: https://git.kernel.org/pub/scm/linux/kernel/git/jlayton/linux.git/
+
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
+---
+Changes in v3:
+- Rework to do minimal work in fsnotify callbacks
+- Add support for sending attributes in CB_NOTIFY calls
+- Add support for dir attr change notifications
+- Link to v2: https://lore.kernel.org/r/20250602-dir-deleg-v2-0-a7919700de86@kernel.org
+
+Changes in v2:
+- add support for ignoring certain break_lease() events
+- basic support for CB_NOTIFY
+- Link to v1: https://lore.kernel.org/r/20240315-dir-deleg-v1-0-a1d6209a3654@kernel.org
+
+---
+Jeff Layton (38):
+      filelock: push the S_ISREG check down to ->setlease handlers
+      filelock: add a lm_may_setlease lease_manager callback
+      vfs: add try_break_deleg calls for parents to vfs_{link,rename,unlink}
+      vfs: allow mkdir to wait for delegation break on parent
+      vfs: allow rmdir to wait for delegation break on parent
+      vfs: break parent dir delegations in open(..., O_CREAT) codepath
+      vfs: make vfs_create break delegations on parent directory
+      vfs: make vfs_mknod break delegations on parent directory
+      filelock: lift the ban on directory leases in generic_setlease
+      nfsd: allow filecache to hold S_IFDIR files
+      nfsd: allow DELEGRETURN on directories
+      nfsd: check for delegation conflicts vs. the same client
+      nfsd: wire up GET_DIR_DELEGATION handling
+      filelock: rework the __break_lease API to use flags
+      filelock: add struct delegated_inode
+      filelock: add support for ignoring deleg breaks for dir change events
+      filelock: add a tracepoint to start of break_lease()
+      filelock: add an inode_lease_ignore_mask helper
+      nfsd: add protocol support for CB_NOTIFY
+      nfs_common: add new NOTIFY4_* flags proposed in RFC8881bis
+      nfsd: allow nfsd to get a dir lease with an ignore mask
+      vfs: add fsnotify_modify_mark_mask()
+      nfsd: update the fsnotify mark when setting or removing a dir delegation
+      nfsd: make nfsd4_callback_ops->prepare operation bool return
+      nfsd: add callback encoding and decoding linkages for CB_NOTIFY
+      nfsd: add data structures for handling CB_NOTIFY to directory delegation
+      nfsd: add notification handlers for dir events
+      nfsd: add tracepoint to dir_event handler
+      nfsd: apply the notify mask to the delegation when requested
+      nfsd: add helper to marshal a fattr4 from completed args
+      nfsd: allow nfsd4_encode_fattr4_change() to work with no export
+      nfsd: send basic file attributes in CB_NOTIFY
+      nfsd: allow encoding a filehandle into fattr4 without a svc_fh
+      nfsd: add a fi_connectable flag to struct nfs4_file
+      nfsd: add the filehandle to returned attributes in CB_NOTIFY
+      nfsd: properly track requested child attributes
+      nfsd: track requested dir attributes
+      nfsd: add support to CB_NOTIFY for dir attribute changes
+
+ Documentation/sunrpc/xdr/nfs4_1.x    | 267 +++++++++++++++++-
+ drivers/base/devtmpfs.c              |   2 +-
+ fs/attr.c                            |   4 +-
+ fs/cachefiles/namei.c                |   2 +-
+ fs/ecryptfs/inode.c                  |   2 +-
+ fs/fuse/dir.c                        |   1 +
+ fs/init.c                            |   2 +-
+ fs/locks.c                           | 122 ++++++--
+ fs/namei.c                           | 253 +++++++++++------
+ fs/nfs/nfs4file.c                    |   2 +
+ fs/nfsd/filecache.c                  | 101 +++++--
+ fs/nfsd/filecache.h                  |   2 +
+ fs/nfsd/nfs4callback.c               |  60 +++-
+ fs/nfsd/nfs4layouts.c                |   3 +-
+ fs/nfsd/nfs4proc.c                   |  36 ++-
+ fs/nfsd/nfs4recover.c                |   2 +-
+ fs/nfsd/nfs4state.c                  | 531 +++++++++++++++++++++++++++++++++--
+ fs/nfsd/nfs4xdr.c                    | 298 +++++++++++++++++---
+ fs/nfsd/nfs4xdr_gen.c                | 506 ++++++++++++++++++++++++++++++++-
+ fs/nfsd/nfs4xdr_gen.h                |  20 +-
+ fs/nfsd/state.h                      |  73 ++++-
+ fs/nfsd/trace.h                      |  21 ++
+ fs/nfsd/vfs.c                        |   7 +-
+ fs/nfsd/vfs.h                        |   2 +-
+ fs/nfsd/xdr4.h                       |   3 +
+ fs/nfsd/xdr4cb.h                     |  12 +
+ fs/notify/mark.c                     |  29 ++
+ fs/open.c                            |   8 +-
+ fs/overlayfs/overlayfs.h             |   2 +-
+ fs/posix_acl.c                       |  12 +-
+ fs/smb/client/cifsfs.c               |   3 +
+ fs/smb/server/vfs.c                  |   2 +-
+ fs/utimes.c                          |   4 +-
+ fs/xattr.c                           |  16 +-
+ fs/xfs/scrub/orphanage.c             |   2 +-
+ include/linux/filelock.h             | 143 +++++++---
+ include/linux/fs.h                   |  11 +-
+ include/linux/fsnotify_backend.h     |   1 +
+ include/linux/nfs4.h                 | 127 ---------
+ include/linux/sunrpc/xdrgen/nfs4_1.h | 304 +++++++++++++++++++-
+ include/linux/xattr.h                |   4 +-
+ include/trace/events/filelock.h      |  38 ++-
+ include/uapi/linux/nfs4.h            |   2 -
+ 43 files changed, 2636 insertions(+), 406 deletions(-)
+---
+base-commit: 36c204d169319562eed170f266c58460d5dad635
+change-id: 20240215-dir-deleg-e212210ba9d4
+
+Best regards,
+-- 
+Jeff Layton <jlayton@kernel.org>
+
