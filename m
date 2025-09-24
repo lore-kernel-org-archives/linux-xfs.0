@@ -1,43 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AA4D23AD;
-	Wed, 24 Sep 2025 00:28:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5BC852F99
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Sep 2025 00:53:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758673713; cv=none; b=iobPGVYJXSS0K8mnk1IYTqHlGsJVb3GjuBD+WOeodjpf5JG+3gHA3zRQNHZMYr51DTCiM4TpXJpssPdSGNxuOohmUISF+pqOwcjR3BKDa5hFv3L6eQijmel5BXZCtP7bM3KeHGogrTyGfnReRSucAOAMyyxP7dpdyxXBMixdCGA=
+	t=1758675235; cv=none; b=pqHU0nYqwgWI/hVUxkl3Y0asYsz2n54kzVPn9oNyv2v/AouvRb56zFeZnqjCjjfpbIW0MaLNrQp0pjPenNtfPCLZIHdOXX2dFtS21SOVbx+2HivnIQmFK8P/2wDQzyatAY+GYpBUQ++0JbyzF5g8aNbkIK6/fbbh2QFs+ACZl+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758673713; c=relaxed/simple;
-	bh=NvXiOkoBMOhyoludx8D3RhL/BwY5aAuKdR/v5OmXcB4=;
+	s=arc-20240116; t=1758675235; c=relaxed/simple;
+	bh=Wg4O6CNMZoHlviaiO2bZ6Vbi9Bea5eKInpn+wXdxP80=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JtQOcoDbc466ta+NcnONNgsHOZ9K405qjNr4zzOxuQOJ7nB/PCu3VYRHjmk86WF91aRRYA3iOteuX1e0Qih1G2nMmHdyXhoEBfEf50exE4YR92gdZBoWInke6EXZ/IHci9tAyWTaGUI3O/+GHtm/C+1d/nPKCa71zqD4pZ9wIC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fAoNdRWc; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=O1YWSO3ot6tLMnt7WF/TA3CfYKEvvVxwhZCRY2E7gvrhuWn+3eHOeJoet4V/wCeL0S4YFmJuorfnYyBxnB1O7CmEs6f3PW4n28hNamtNloXW3rNZS4vj2wBJ37xf060dkCvmVVHz3n5VXNgaI2Xh9l4NjXnZzIa/q55ny03PIK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XB8Q7Bsx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fAoNdRWc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA469C4CEF5;
-	Wed, 24 Sep 2025 00:28:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XB8Q7Bsx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D26EC4CEF5;
+	Wed, 24 Sep 2025 00:53:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758673712;
-	bh=NvXiOkoBMOhyoludx8D3RhL/BwY5aAuKdR/v5OmXcB4=;
+	s=k20201202; t=1758675234;
+	bh=Wg4O6CNMZoHlviaiO2bZ6Vbi9Bea5eKInpn+wXdxP80=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fAoNdRWc2C5qRe8n0tG0oB227VzG9fVOTXlwuzlHtcAJNqO9OPmvn+sQAvMMIzvqU
-	 F2uf5zH8UlyrZxBrDQiP2swPbAh5nlG9exTUf7xCm31qmwRk6nPnGF3Xm0RChk6Ul2
-	 CjQ9DYHem52rayxxiox+BsDt9cwpGp68jdBDMQBZ3KYG/VCPUGm0dzGfWf5wfFTBl3
-	 NFD2KBtfNydqlzNwfWF6yTzs/whO6QKvQiQrBiUheXAMpfJEG44xisroYKOY3UwcD7
-	 tE+EcykXK0fg6n5WHwhP7t2ZSBBA1nakuq1VeVbp2Mj91z7mfy89aAgd9DfDuBycpN
-	 ilmtIEAhFj8Lw==
-Date: Tue, 23 Sep 2025 17:28:32 -0700
+	b=XB8Q7BsxGP7LCD2oFvm1hEFC0Wb5Xal8VOiRp3xttftH6XZq11nHmdLxJbybfSckw
+	 mM9xq0Ns5U5IQtdAoJJBEMoC4ZN1HHZrdqRvTPJ2nwV7r85KMkl/aOMNe0BASdjDsc
+	 rXv+U9CaYyN5xiOzdjbu2rHoIAOgquzIqlAOsDJ9eDTDoyKU/G1EuJsEgJZgXdXyjC
+	 pC32rrtN1s90mwmVtIqpRlP1JhV5AYzGVugHfhTQy8SloPmiosYeIETaHLEEEhEmTU
+	 hI26XvmTn4h2QbRePpO3qPT2A4zmhlrq4F3MdrGmgi1dbgB4jgFAcMgMkk2AlfDzQ7
+	 iRJIBdmgXXIPQ==
+Date: Tue, 23 Sep 2025 17:53:53 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: brauner@kernel.org, miklos@szeredi.hu, hch@infradead.org,
-	linux-block@vger.kernel.org, gfs2@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-doc@vger.kernel.org, hsiangkao@linux.alibaba.com,
-	kernel-team@meta.com
-Subject: Re: [PATCH v4 10/15] iomap: add bias for async read requests
-Message-ID: <20250924002832.GN1587915@frogsfrogsfrogs>
-References: <20250923002353.2961514-1-joannelkoong@gmail.com>
- <20250923002353.2961514-11-joannelkoong@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>,
+	"A. Wilcox" <AWilcox@wilcox-tech.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs_scrub: fix strerror_r usage yet again
+Message-ID: <20250924005353.GW8096@frogsfrogsfrogs>
+References: <20250919161400.GO8096@frogsfrogsfrogs>
+ <aNGA3WV3vO5PXhOH@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,141 +43,19 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250923002353.2961514-11-joannelkoong@gmail.com>
+In-Reply-To: <aNGA3WV3vO5PXhOH@infradead.org>
 
-On Mon, Sep 22, 2025 at 05:23:48PM -0700, Joanne Koong wrote:
-> Non-block-based filesystems will be using iomap read/readahead. If they
-> handle reading in ranges asynchronously and fulfill those read requests
-> on an ongoing basis (instead of all together at the end), then there is
-> the possibility that the read on the folio may be prematurely ended if
-> earlier async requests complete before the later ones have been issued.
+On Mon, Sep 22, 2025 at 10:01:17AM -0700, Christoph Hellwig wrote:
+> The autoconf maigc looks good (as good as autoconf can look anyway),
+> but why is this code using strerror_r to start with?  AFAIK on Linux
+> strerror is using thread local storage since the damn of time, so
+> just doing this as:
 > 
-> For example if there is a large folio and a readahead request for 16
-> pages in that folio, if doing readahead on those 16 pages is split into
-> 4 async requests and the first request is sent off and then completed
-> before we have sent off the second request, then when the first request
-> calls iomap_finish_folio_read(), ifs->read_bytes_pending would be 0,
-> which would end the read and unlock the folio prematurely.
+> 	fprintf(stream, _("%s."), strerror(error));
 > 
-> To mitigate this, a "bias" is added to ifs->read_bytes_pending before
-> the first range is forwarded to the caller and removed after the last
-> range has been forwarded.
-> 
-> iomap writeback does this with their async requests as well to prevent
-> prematurely ending writeback.
+> should be perfectly fine, while also simpler and more portable.
 
-I'm still waiting for responses to the old draft of this patch in the v3
-thread.
+But there's no guarantee that the implementation does this, is there?
+The manpage doesn't say anything like that.
 
 --D
-
-> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> ---
->  fs/iomap/buffered-io.c | 48 ++++++++++++++++++++++++++++++++++++++----
->  1 file changed, 44 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 81ba0cc7705a..354819facfac 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -430,6 +430,38 @@ const struct iomap_read_ops iomap_bio_read_ops = {
->  };
->  EXPORT_SYMBOL_GPL(iomap_bio_read_ops);
->  
-> +/*
-> + * Add a bias to ifs->read_bytes_pending to prevent the read on the folio from
-> + * being ended prematurely.
-> + *
-> + * Otherwise, if the ranges are read asynchronously and read requests are
-> + * fulfilled on an ongoing basis, there is the possibility that the read on the
-> + * folio may be prematurely ended if earlier async requests complete before the
-> + * later ones have been issued.
-> + */
-> +static void iomap_read_add_bias(struct iomap_iter *iter, struct folio *folio)
-> +{
-> +	ifs_alloc(iter->inode, folio, iter->flags);
-> +	iomap_start_folio_read(folio, 1);
-> +}
-> +
-> +static void iomap_read_remove_bias(struct folio *folio, bool folio_owned)
-> +{
-> +	struct iomap_folio_state *ifs = folio->private;
-> +	bool end_read, uptodate;
-> +
-> +	if (ifs) {
-> +		spin_lock_irq(&ifs->state_lock);
-> +		ifs->read_bytes_pending--;
-> +		end_read = !ifs->read_bytes_pending && folio_owned;
-> +		if (end_read)
-> +			uptodate = ifs_is_fully_uptodate(folio, ifs);
-> +		spin_unlock_irq(&ifs->state_lock);
-> +		if (end_read)
-> +			folio_end_read(folio, uptodate);
-> +	}
-> +}
-> +
->  static int iomap_read_folio_iter(struct iomap_iter *iter,
->  		struct iomap_read_folio_ctx *ctx, bool *folio_owned)
->  {
-> @@ -448,8 +480,6 @@ static int iomap_read_folio_iter(struct iomap_iter *iter,
->  		return iomap_iter_advance(iter, length);
->  	}
->  
-> -	ifs_alloc(iter->inode, folio, iter->flags);
-> -
->  	length = min_t(loff_t, length,
->  			folio_size(folio) - offset_in_folio(folio, pos));
->  	while (length) {
-> @@ -505,6 +535,8 @@ int iomap_read_folio(const struct iomap_ops *ops,
->  
->  	trace_iomap_readpage(iter.inode, 1);
->  
-> +	iomap_read_add_bias(&iter, folio);
-> +
->  	while ((ret = iomap_iter(&iter, ops)) > 0)
->  		iter.status = iomap_read_folio_iter(&iter, ctx,
->  				&folio_owned);
-> @@ -512,6 +544,8 @@ int iomap_read_folio(const struct iomap_ops *ops,
->  	if (ctx->ops->submit_read)
->  		ctx->ops->submit_read(ctx);
->  
-> +	iomap_read_remove_bias(folio, folio_owned);
-> +
->  	if (!folio_owned)
->  		folio_unlock(folio);
->  
-> @@ -533,6 +567,8 @@ static int iomap_readahead_iter(struct iomap_iter *iter,
->  	while (iomap_length(iter)) {
->  		if (ctx->cur_folio &&
->  		    offset_in_folio(ctx->cur_folio, iter->pos) == 0) {
-> +			iomap_read_remove_bias(ctx->cur_folio,
-> +					*cur_folio_owned);
->  			if (!*cur_folio_owned)
->  				folio_unlock(ctx->cur_folio);
->  			ctx->cur_folio = NULL;
-> @@ -541,6 +577,7 @@ static int iomap_readahead_iter(struct iomap_iter *iter,
->  			ctx->cur_folio = readahead_folio(ctx->rac);
->  			if (WARN_ON_ONCE(!ctx->cur_folio))
->  				return -EINVAL;
-> +			iomap_read_add_bias(iter, ctx->cur_folio);
->  			*cur_folio_owned = false;
->  		}
->  		ret = iomap_read_folio_iter(iter, ctx, cur_folio_owned);
-> @@ -590,8 +627,11 @@ void iomap_readahead(const struct iomap_ops *ops,
->  	if (ctx->ops->submit_read)
->  		ctx->ops->submit_read(ctx);
->  
-> -	if (ctx->cur_folio && !cur_folio_owned)
-> -		folio_unlock(ctx->cur_folio);
-> +	if (ctx->cur_folio) {
-> +		iomap_read_remove_bias(ctx->cur_folio, cur_folio_owned);
-> +		if (!cur_folio_owned)
-> +			folio_unlock(ctx->cur_folio);
-> +	}
->  }
->  EXPORT_SYMBOL_GPL(iomap_readahead);
->  
-> -- 
-> 2.47.3
-> 
-> 
