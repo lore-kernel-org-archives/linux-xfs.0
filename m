@@ -1,199 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f178.google.com (mail-qk1-f178.google.com [209.85.222.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D11228980A
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Sep 2025 21:52:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A94CE27FD7C
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Sep 2025 22:56:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758750734; cv=none; b=n3i5pgA1AVrc/Ks65CxIC1Rl8IHJXqJsBGpr99TDd/AYlAlRGLioz6EmIlMKFU16s/6ZkaSXPORUI/qNWTkB0ArrugbpnynIwWMq+XU0NqtPn+4LnFIJZYsgzdQUUcogLEpZ9RO6nv7zhB8h8Uy6DWm31ANb86K0FGgZcmnqqnY=
+	t=1758754596; cv=none; b=KTuC3xEDgj6Sn082hmFkpEKLekhDtyQ04Jt4+RRUB5hPnX/9EV1vYoiGb6IpgcNUM8y4LNjBPLlsDAtmA7wn28CEEs1zUQBypc+aeq61rzt517o/mZzMhfcobkCPseLjqS69FrzDFFOxN99zGIqfyuvN1QfKXLDSYk69nw+gXWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758750734; c=relaxed/simple;
-	bh=WghDEzWnL1rFqX/AdI+GykB0kU2lXe9BXvfqOVS5a0M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=t+xaE9/GijJ9kP9fneG+eD8riYPRaPIpeQu0/R1CqJLjs9OFJ/qWbw+wYhsAYfZWLI3xOra0q8s1sR9QxUktI+HWz09w5wqarjPMWVh29ey9+JpH/GT2sJD1cxQJRy871sgL8ny5OdkNxeZ9/AYSGzJu0UqDkrJzILKmNONuXdE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SvQBqwAs; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758754596; c=relaxed/simple;
+	bh=Op6DNkPC6eHPtYfufa74RLj648Tv43squgVRXyUVfnc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=LhvJbCdzQ8cnDI2WOyNkC+aXjHH6L2wEvn3jVCaxDxI33hvI6ScpjmUgezWVPcnuffcYU5KbtL2ogX0lppq20Bj22KrkV9A5WH3jlr8tTighYbnZx4iN4HCAgqsaY5p7uh03Zwq/cdlIEzWhbIkbZGhAwpxkpc57y/EGvXtQiBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DwoJgO5e; arc=none smtp.client-ip=209.85.222.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SvQBqwAs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91663C4CEF8;
-	Wed, 24 Sep 2025 21:52:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758750733;
-	bh=WghDEzWnL1rFqX/AdI+GykB0kU2lXe9BXvfqOVS5a0M=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SvQBqwAsExoFuPiaxB1E6dc062kzxvcYIHRQ3V05ZcScwkwixvQ0ftHCktf9+fMOe
-	 5yePB/B9fs5iMXbpl1TTp7GW34+5w2rhQ9ndCGIKX0f9c0FG+VoKQs7nEvb5OpQp56
-	 TyPGq2X8joaABohfUTW0LbtwIi5AhL+zwaNJURYKV0cPUkbhMhlwDV7rCsqi2Ja7NA
-	 gNaTOOjhrlJPNFcDKbL9Ixm1eep6SFQy2BkIgtQ90pWlRP1ZP4GqCA/ChU5M0uFo53
-	 COxkXEcfJTs5jCXZW7zMaL1/1y4runzk1m0hTWewJmLtMt02+xs9lwpuJChzFKWjKx
-	 4RVdHMV9Sv/lA==
-Date: Wed, 24 Sep 2025 14:52:13 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 2/2] libfrog: pass mode to xfrog_file_setattr
-Message-ID: <20250924215213.GX8096@frogsfrogsfrogs>
-References: <20250923170857.GS8096@frogsfrogsfrogs>
- <20250923171027.GU8096@frogsfrogsfrogs>
- <zzigcp3ew5h2yyngalxt7dpahsl2z2zdhpqxytc36os7ou257i@2nbwj2qghase>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DwoJgO5e"
+Received: by mail-qk1-f178.google.com with SMTP id af79cd13be357-856328df6e1so42292985a.0
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Sep 2025 15:56:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1758754593; x=1759359393; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5B+Zh9yFHo6Xolwu3opD/Diih25AjkCAs1FmMFIzwVU=;
+        b=DwoJgO5e+q5F7FSQnVw9LAiWfS+IXaWOsio72wK7KbLl4ISRKjUKWy07k+nXoumPzQ
+         XwUR1iAMvEtLk9bXe93Z0nYUkHLmCeDwoL7XZz7cbG9D1N+pIlemQb9QtmMtB1nt5u77
+         Mh+V1jxeFH6GolL4b2keHNi6ezr5sqDw8BzVnAQOvzOc/T3F7rIXDoLGlnOx/nsEQi1z
+         Etu0CMs2UtkLIf/vkt10+TVLDSuApGXSQOLfQyFUjfSTEfuDW10lmLYhJQQ9kAZYeecH
+         LZeaUgCX4+dWu8NOJEdOJRge+zg4VTTPusdvjvQNo8tmcc3V53XSbytmrpulQML49EBs
+         ENGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758754593; x=1759359393;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=5B+Zh9yFHo6Xolwu3opD/Diih25AjkCAs1FmMFIzwVU=;
+        b=wDrMU6GGN3PRxtzhToWA6KzbahDSVoiLj+oT+fZPdLPY8yYL5RgMMDMmzjaf38AU0f
+         pbzsDYASGJh+QnDHV3rjnFz8w0MvOuuX44hSKsa2HrdgIQh6xIOuicyg0kU4oyNC4dys
+         r0+ok0pzzzkIf97IMjOkO0G1V8VjSoN4vwSbr5azNcc7DmShlRPCwpjUq1gykw6U2v0C
+         poJUiRDghZ2JAIVaW133tuWGIn6t5Tci0ReK6Z5wTTougEqkkqRMwd8aawidRIaiW8xt
+         zX5fq+jF5Ro6jBxPG2GQZ1doOQaS1YkeEXV7nO36+zbbP4CuFuOtaJj3Dv1J/30T9A5m
+         rUug==
+X-Forwarded-Encrypted: i=1; AJvYcCVvA0ZX8m/NpVEZWHDZV6oc62MhI/Zjoir3rdTM6iGSmNgOabCJxcvVOvPx6QPA4stc9ia9i7TKLkU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxIXgzZvIDlZOvYlc/86uE86Ntt7Y3e+OD0WH9H9EbxBxrfv7eZ
+	gmxZSXzaYzoZwjovuR8rlhttZqD4VF1eu1yumAE9A3Uwo+dfCf+ijEiqn8yxU7Xf+AXwgDBssrN
+	9s3q+pFbUpymVPXDoZom0lqtU+xc0dFA=
+X-Gm-Gg: ASbGncvVJk+BoOY62/6DmR5GFQlryyaWe00DoQUIVE9ZCi4NZd8Gevhfkusmb4c8BjF
+	9cajh2Y2BJ4UYJepmv0TespZ9tvvErKGehYD5Qp3jjk6FT7RhKe970BECeg57j44e9VhlQykMYB
+	MJ7ZMLwL6RaH3wWnPaaWre9OsEy4tqR3rtUPLG8TrU/IKEHCEod64zmIfNZpo0340xCkUZS3UvT
+	b9oYNo6QYrQH4kHn6INQL+lJQ6nYu8of5E40Dqh
+X-Google-Smtp-Source: AGHT+IGzPzKs0y65h3LIZE6940gB4vV72Qyi3WZ6TBql4rL2B63TcdhnpA6Y4/6LPYw9/CuHLQab903G3U6TadwRTxg=
+X-Received: by 2002:a05:620a:394f:b0:82a:5c45:c625 with SMTP id
+ af79cd13be357-85adec4234emr191180885a.12.1758754593415; Wed, 24 Sep 2025
+ 15:56:33 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <zzigcp3ew5h2yyngalxt7dpahsl2z2zdhpqxytc36os7ou257i@2nbwj2qghase>
+References: <20250916234425.1274735-1-joannelkoong@gmail.com>
+ <20250916234425.1274735-11-joannelkoong@gmail.com> <20250918223018.GY1587915@frogsfrogsfrogs>
+ <aNGWkujhJ7I4SJoT@infradead.org> <aNG3fnlbJhv1cenS@casper.infradead.org>
+In-Reply-To: <aNG3fnlbJhv1cenS@casper.infradead.org>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Wed, 24 Sep 2025 15:56:21 -0700
+X-Gm-Features: AS18NWAkh7IUvbVhGBD_bsGuTPZgO9EW5ULTCeoQsEee5-TykTnYOZdbSiLkTe8
+Message-ID: <CAJnrk1ZoZqnX8YOBJBnNpr65FpMO_wNJBg42NCAiB1_c+Zr-ww@mail.gmail.com>
+Subject: Re: [PATCH v3 10/15] iomap: add bias for async read requests
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@kernel.org>, brauner@kernel.org, 
+	miklos@szeredi.hu, hsiangkao@linux.alibaba.com, linux-block@vger.kernel.org, 
+	gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org, kernel-team@meta.com, 
+	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, 
+	Ritesh Harjani <ritesh.list@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Sep 24, 2025 at 03:18:15PM +0200, Andrey Albershteyn wrote:
-> On 2025-09-23 10:10:27, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > xfs/633 crashes rdump_fileattrs_path passes a NULL struct stat pointer
-> > and then the fallback code dereferences it to get the file mode.
-> 
-> Oh is it latest xfsprogs with older kernel (without file_[g]etattr)?
-> 
-> (I see this on 6.16)
+On Mon, Sep 22, 2025 at 1:54=E2=80=AFPM Matthew Wilcox <willy@infradead.org=
+> wrote:
+>
+> On Mon, Sep 22, 2025 at 11:33:54AM -0700, Christoph Hellwig wrote:
+> > On Thu, Sep 18, 2025 at 03:30:18PM -0700, Darrick J. Wong wrote:
+> > > > + iomap_start_folio_read(folio, 1);
+> > >
+> > > I wonder, could you achieve the same effect by elevating
+> > > read_bytes_pending by the number of bytes that we think we have to re=
+ad,
+> > > and subtracting from it as the completions come in or we decide that =
+no
+> > > read is necessary?
+> >
+> > Weren't we going to look into something like that anyway to stop
+> > the read code from building bios larger than the map to support the
+> > extN boundary conditions?  I'm trying to find the details of that,
 
-Yes, the crash happens on 6.16-rc7 where there is no file_setattr call,
-and does not happen on for-next where file_setattr does exist.
+Doesn't the iomap code already currently do this when it uses the
+trimmed iomap length (eg "loff_t length =3D iomap_length(iter)") in
+iomap_readpage_iter() for how much to read in?
 
-> > Instead, let's just pass the stat mode directly to it, because that's
-> > the only piece of information that it needs.
-> > 
-> > Fixes: 128ac4dadbd633 ("xfs_db: use file_setattr to copy attributes on special files with rdump")
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > ---
-> >  libfrog/file_attr.h |    9 ++-------
-> >  db/rdump.c          |    4 ++--
-> >  io/attr.c           |    4 ++--
-> >  libfrog/file_attr.c |    4 ++--
-> >  quota/project.c     |    6 ++++--
-> >  5 files changed, 12 insertions(+), 15 deletions(-)
-> > 
-> > diff --git a/libfrog/file_attr.h b/libfrog/file_attr.h
-> > index df9b6181d52cf9..2a1c0d42d0a771 100644
-> > --- a/libfrog/file_attr.h
-> > +++ b/libfrog/file_attr.h
-> > @@ -24,12 +24,7 @@ xfrog_file_getattr(
-> >  	struct file_attr	*fa,
-> >  	const unsigned int	at_flags);
-> >  
-> > -int
-> > -xfrog_file_setattr(
-> > -	const int		dfd,
-> > -	const char		*path,
-> > -	const struct stat	*stat,
-> > -	struct file_attr	*fa,
-> > -	const unsigned int	at_flags);
-> > +int xfrog_file_setattr(const int dfd, const char *path, const mode_t mode,
-> > +		struct file_attr *fa, const unsigned int at_flags);
-> 
-> Is this formatting change intentional? (maybe then the
-> xfrog_file_getattr also)
+> > IIRC willy suggested it.  Because once we touch this area for
+> > non-trivial changes it might be a good idea to get that done, or at
+> > least do the prep work.
+>
+> Yes, I did suggest it.  Basically, we would initialise read_bytes_pending
+> to folio_size(), then subtract from it either when a request comes in
+> or we decide to memset a hole.  When it reaches zero, we have decided
+> on the fate of every byte in the folio.
+>
+> It's fewer atomics for folios which contain no holes, which is the case
+> we should be optimising for anyway.
 
-Yes, compressed is the usual style for function declarations.
-It's only the definition that gets the expanded format.
+I think we can even skip subtracting when we encounter a hole and just
+tally it all up at the end if we just keep track of how many bytes the
+caller asynchronously reads in, and then just do read_bytes_pending -=3D
+folio_size() - bytes_read_in to offset it. Actually, looking at this
+more, I think it must be done this way otherwise handling errors gets
+tricky.
 
-(I didn't hassle you about it when you submitted the original patch
-because I'm trying to stop doing that to people ;))
+I had missed that this approach leads to fewer atomics since now this
+gets rid of the caller having to increment it for every range read in.
+This approach does seem better. I'll make this change for v5. We
+should probably do the same thing for writeback.
 
-> otherwise lgtm
-> Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
-
-Thanks!
-
---D
-
-> >  
-> >  #endif /* __LIBFROG_FILE_ATTR_H__ */
-> > diff --git a/db/rdump.c b/db/rdump.c
-> > index 84ca3156d60598..26f9babad62be1 100644
-> > --- a/db/rdump.c
-> > +++ b/db/rdump.c
-> > @@ -188,8 +188,8 @@ rdump_fileattrs_path(
-> >  			return 1;
-> >  	}
-> >  
-> > -	ret = xfrog_file_setattr(destdir->fd, pbuf->path, NULL, &fa,
-> > -			AT_SYMLINK_NOFOLLOW);
-> > +	ret = xfrog_file_setattr(destdir->fd, pbuf->path, VFS_I(ip)->i_mode,
-> > +			&fa, AT_SYMLINK_NOFOLLOW);
-> >  	if (ret) {
-> >  		if (errno == EOPNOTSUPP || errno == EPERM || errno == ENOTTY)
-> >  			lost_mask |= LOST_FSXATTR;
-> > diff --git a/io/attr.c b/io/attr.c
-> > index 022ca5f1df1b7c..9563ff74e44777 100644
-> > --- a/io/attr.c
-> > +++ b/io/attr.c
-> > @@ -261,7 +261,7 @@ chattr_callback(
-> >  
-> >  	attr.fa_xflags |= orflags;
-> >  	attr.fa_xflags &= ~andflags;
-> > -	error = xfrog_file_setattr(AT_FDCWD, path, stat, &attr,
-> > +	error = xfrog_file_setattr(AT_FDCWD, path, stat->st_mode, &attr,
-> >  				   AT_SYMLINK_NOFOLLOW);
-> >  	if (error) {
-> >  		fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
-> > @@ -357,7 +357,7 @@ chattr_f(
-> >  
-> >  	attr.fa_xflags |= orflags;
-> >  	attr.fa_xflags &= ~andflags;
-> > -	error = xfrog_file_setattr(AT_FDCWD, name, &st, &attr,
-> > +	error = xfrog_file_setattr(AT_FDCWD, name, st.st_mode, &attr,
-> >  				   AT_SYMLINK_NOFOLLOW);
-> >  	if (error) {
-> >  		fprintf(stderr, _("%s: cannot set flags on %s: %s\n"),
-> > diff --git a/libfrog/file_attr.c b/libfrog/file_attr.c
-> > index bb51ac6eb2ef95..c2cbcb4e14659c 100644
-> > --- a/libfrog/file_attr.c
-> > +++ b/libfrog/file_attr.c
-> > @@ -85,7 +85,7 @@ int
-> >  xfrog_file_setattr(
-> >  	const int		dfd,
-> >  	const char		*path,
-> > -	const struct stat	*stat,
-> > +	const mode_t		mode,
-> >  	struct file_attr	*fa,
-> >  	const unsigned int	at_flags)
-> >  {
-> > @@ -103,7 +103,7 @@ xfrog_file_setattr(
-> >  		return error;
-> >  #endif
-> >  
-> > -	if (SPECIAL_FILE(stat->st_mode)) {
-> > +	if (SPECIAL_FILE(mode)) {
-> >  		errno = EOPNOTSUPP;
-> >  		return -1;
-> >  	}
-> > diff --git a/quota/project.c b/quota/project.c
-> > index 5832e1474e2549..33449e01ef4dbb 100644
-> > --- a/quota/project.c
-> > +++ b/quota/project.c
-> > @@ -157,7 +157,8 @@ clear_project(
-> >  	fa.fa_projid = 0;
-> >  	fa.fa_xflags &= ~FS_XFLAG_PROJINHERIT;
-> >  
-> > -	error = xfrog_file_setattr(dfd, path, stat, &fa, AT_SYMLINK_NOFOLLOW);
-> > +	error = xfrog_file_setattr(dfd, path, stat->st_mode, &fa,
-> > +			AT_SYMLINK_NOFOLLOW);
-> >  	if (error) {
-> >  		fprintf(stderr, _("%s: cannot clear project on %s: %s\n"),
-> >  			progname, path, strerror(errno));
-> > @@ -205,7 +206,8 @@ setup_project(
-> >  	if (S_ISDIR(stat->st_mode))
-> >  		fa.fa_xflags |= FS_XFLAG_PROJINHERIT;
-> >  
-> > -	error = xfrog_file_setattr(dfd, path, stat, &fa, AT_SYMLINK_NOFOLLOW);
-> > +	error = xfrog_file_setattr(dfd, path, stat->st_mode, &fa,
-> > +			AT_SYMLINK_NOFOLLOW);
-> >  	if (error) {
-> >  		fprintf(stderr, _("%s: cannot set project on %s: %s\n"),
-> >  			progname, path, strerror(errno));
-> > 
-> 
-> -- 
-> - Andrey
-> 
-> 
+Thanks,
+Joanne
