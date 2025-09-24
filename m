@@ -1,115 +1,92 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A25BE2848B2
-	for <linux-xfs@vger.kernel.org>; Wed, 24 Sep 2025 09:04:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33CB32FF175
+	for <linux-xfs@vger.kernel.org>; Wed, 24 Sep 2025 12:04:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758704645; cv=none; b=Ph+yFl6N/xw5nQbdLW9GPSTbBfBuuxdquDagmw8Qot6yIP9RPRCmKWzy/N9cIwkYsNeeivsgq7PdssqHsZ5eMAvcY4Iw6UEVecTfEtr2fEQbVk74So9nWZRrsH2BOJn1QxWzkHCGr8ptZoE481QaijdXzwtg8MQPGc+XYpYwZZo=
+	t=1758715475; cv=none; b=SiZpn5aCEY1ND9UetWX4gyuuYRQJV5JdBL4Jou4IIo/dkabnXwK8iKJSCvwHUqe31GCCRDU69BnmYQjQVVR/TzJpn3DONuwammOxO0VsUuCXkSFcwSyLBDXn7Prg3XNBsiaSt2Kj5WJwUsM3hPa70cY1L/wb6LN+iryuIGfIxBA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758704645; c=relaxed/simple;
-	bh=mnN8gXhjgxvoijuGOQ9B9tZi8LXOAyJu5Ni+HzLpAoo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZavMw92SStNLjWGAt+FNtYCxnvjPTzL9k6QNF3Qf0uVpXrOHp9o9saafugT4e7NaUBxtRlsbw1oxlUOrU4fC+TFN4L6E3Z6G2zDz8Zo14fRq6KGegX+xhW9Q/z54UqhAFR7U8+HIbDqfHcoUnCqYnEMtZrjoqq+odOUhSMZMKGk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=W4PhQ5Rq; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1758715475; c=relaxed/simple;
+	bh=9ibOWPuNdaOplH+FBy5QoeKpS1t7hE49sJQ9OEcLq4o=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Lvvoc2zJMP8OsscMGGnsiqY8klXTdAkqVpcpejyaRtoC1On9/tWtUIvY97VHTnitYf3/RYWeCNloe3iQZc9U2zNSYj6/aBHX80Z35venI0940o3tGg/GzwMkT3eQHDSEWiCwftKA3/2iPVkdCvSeh+ukiqASe82E03BRQxMeqp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=gI88R5Kb; arc=none smtp.client-ip=209.85.160.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=szeredi.hu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W4PhQ5Rq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1758704642;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0pp3iJDBP0Ik0M/jpTm28KpP1qXGJABlURXTEDHCCS8=;
-	b=W4PhQ5Rq07A+u0+jk5tttnmGxESVj1ygzTJItRR5EcZVwNXVftCjI68FbPE/ct6Yf6O2sz
-	nxLQSbmM1Pt+DiSEImAaCSaVo1j7xrHTVMyJVcBL5oBB8LN+6vnHDZ2ms3nyfe0DBiB1Zt
-	P+hlMlSsKU0g8GJebwBNlZOCuRgfaQY=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-253-8WgURr1jO8O-ywC8As5LeA-1; Wed, 24 Sep 2025 05:04:00 -0400
-X-MC-Unique: 8WgURr1jO8O-ywC8As5LeA-1
-X-Mimecast-MFC-AGG-ID: 8WgURr1jO8O-ywC8As5LeA_1758704640
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-3ee888281c3so3580357f8f.3
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Sep 2025 02:04:00 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="gI88R5Kb"
+Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-4d2686300f6so21519741cf.2
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Sep 2025 05:04:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=szeredi.hu; s=google; t=1758715472; x=1759320272; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=9ibOWPuNdaOplH+FBy5QoeKpS1t7hE49sJQ9OEcLq4o=;
+        b=gI88R5KbwQep8XLJLqQ1ZJmLlTtTsZwRDdSdybaTdAofHOz79bHjwLnG0svWikFepS
+         rYiXi19QelDa73KcZqFTVdRTD40ZuKEBg45FS/Qt5+9jOgn/VsW5uwccvH7B2N7UqdG/
+         X0iTiTf5N6GX8E0hp2xH/yh2KLir+BG8g0yfY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758704639; x=1759309439;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0pp3iJDBP0Ik0M/jpTm28KpP1qXGJABlURXTEDHCCS8=;
-        b=SozGWlpPavplVklSVJz+jrSPQQRQ47G1Zswlg5vVHjgsmJtmVGDVb5XX6WrqLvzhWU
-         je5MQjdU1ErEO6Aye+mPBUtysiiT2q+SaC9iDjD2DOgnFGiGK7y89LkYKuOE9yEE4qF0
-         rAMO8tzmj0Zc5weOOSNu30It/BRKmBe35f5eiIegx8gaZuEau3yOPlcoMLtxJJN3nxGQ
-         WyAFcKL9RaFUProPXBRqeoGx8jEIC0iyjOhyyXAAhFmkoEUQ7js78xH2M+T/tVgxANIy
-         +4SJJYToYK59vW6lCVQFPjV/tC89yh+NjpMGdI6Smp4DCtLrnxOhgJiq2XItF48WjaWb
-         PWDg==
-X-Gm-Message-State: AOJu0Yw2Grzkqz9OEAnou16Wixry8GYYa8iA90+5eyN/gpPPTkLVNbYH
-	oH5gnciOmdUp+CqqkIIn9SLtHbfMdS6cmYdmHI9KYNMZQZ3A0QPRoJ8+0r4cOyE0Z1HaI7qO9r2
-	dtGDaiIuN99oo23fRkH98+PBgiLyLKPxiwAZwgOtK3XtfP5Cg/HZGWEsIfIlfmyrHTP0fFKE=
-X-Gm-Gg: ASbGncug32HXf1Iyg2vTZGyhHqzWgW6wIYkpBouJl0CMVVMAbiU/igHh32+bDxAUKOh
-	iEbU539+X/zv7yz1c80K1rqful/xDzrc+4rl0Vyni4z2OJiJy+X7LWIRjB4MXR76OUrooyWDzWN
-	6u1gjuzO5rK6CYyZ8dH237YV4YcnRzq5R8QeLJVmDKBjDX0k1q7Y/W4ZcZklEdGx+Vx4+SVjdCm
-	voFwy4A5TlbXeNf9xlilLZTsnesGMa7XaXYc+C7LoGVbF2BfxIhEyZaSpKAFZnKiKGAudZzbFfL
-	nvoLNoE9GJ6Mr0PCooMkGhZc5Y78XCKx
-X-Received: by 2002:a5d:5d0b:0:b0:3ee:1125:fb61 with SMTP id ffacd0b85a97d-405c551a33amr4113991f8f.7.1758704639268;
-        Wed, 24 Sep 2025 02:03:59 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEyVxvi9ntpVJOXLi9Dwp9K/deIWukD7g9+mFv7lhN0yp8r7dPeepHBEAnGyLGOxJhHJNvUlw==
-X-Received: by 2002:a5d:5d0b:0:b0:3ee:1125:fb61 with SMTP id ffacd0b85a97d-405c551a33amr4113965f8f.7.1758704638769;
-        Wed, 24 Sep 2025 02:03:58 -0700 (PDT)
-Received: from thinky ([91.245.205.131])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3ee0fbefd5csm29240500f8f.51.2025.09.24.02.03.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 Sep 2025 02:03:58 -0700 (PDT)
-Date: Wed, 24 Sep 2025 11:03:57 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 1/2] mkfs: fix libxfs_iget return value sign inversion
-Message-ID: <bmg2hatfktqltu4cx5tblg6m2l2ktn7qunlfalmifpdivzx5o7@flygswvzbxro>
-References: <20250923170857.GS8096@frogsfrogsfrogs>
+        d=1e100.net; s=20230601; t=1758715472; x=1759320272;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=9ibOWPuNdaOplH+FBy5QoeKpS1t7hE49sJQ9OEcLq4o=;
+        b=RBUTeFbCpR4zHFtCuzwpdqmsdvlmaDjhMhGT5tFG70U1Bss8JLWTq6Ss0d1+0aaHTl
+         C/BTADesVSu/52JL1eYa9kxHzWTEpsNf4Zr4sSrRXkPWbbTuuK19vDjEEN+AlDCGYBAk
+         pLY8XgKwTNR5v73ZdtYEi25ucpY7WqXM7SS3rbKbj/XPQruerO0jBHbpEq0Ib0X0NLqy
+         rY4PquJ7tspsHZzy3ArXDnW7R1ZlUnicFWRNdY+CGQrdXLq3aNLgWEY4gtyInAkHdgmS
+         j0+innlM2sHE93G7mgYChA92bEhtOWZrfB5xfJsGASogOFC8y2uYLYPpdK4S1IpmqR8i
+         OdXA==
+X-Forwarded-Encrypted: i=1; AJvYcCWR8nY4MeEUYHbKpTJh0/6mMVIFORbxdaYJkCMxAbviH/6xJ0Z+bOxIUug0H+bOOSN+P9d0nf1hh1s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxhOBwZ1ug3r5mMxAoQXC5N82ggeXk+yBHUdW6ZusFafjzDKUAv
+	gl+ICen+4/apVcR/1zyAZxs+C45amJfSFcHf3Vfqbp/i207VQC2f8404Ls46LdoTtmcFG08LLB3
+	Agb89d0F6BTufEGR15gMFn7S79WVfZUh/rqdPlFq5og==
+X-Gm-Gg: ASbGnctCu26oqOceW9LOxgmBWHVHrA5nnhsYpRjVGSXU2MwfP0rELGb1lyAeHpy65Qn
+	X30NT8Fm1zEJ2lO2TTEzv0e5k1rAWrhP9KFrwj5v8iW4Ok+iLVQ2GnOvlyRLsOr135oB5jjTTyL
+	3c5D+StqBf+Q11bNl3IuVJFLL6ljNHyyYgY3sH3twxyA7S172Uv58h60mjDhar+3UYgNeijF0Ni
+	qEyjd5r3LlAVZ5q20nk03rprwp5vixGAiNtUURPh+gZ9GzEqA==
+X-Google-Smtp-Source: AGHT+IFzX+IW76Y9GPEZbQ1y6EX1pULnJsvnodAmkX3ktuNW0oM3kKJxbWcPTYg+rr2jPsvmhkcmNpkPJ/6Wb9P1WbQ=
+X-Received: by 2002:a05:622a:1442:b0:4d3:55f7:ddcd with SMTP id
+ d75a77b69052e-4d36fdef829mr76582171cf.59.1758715472064; Wed, 24 Sep 2025
+ 05:04:32 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250923170857.GS8096@frogsfrogsfrogs>
+References: <175798149979.381990.14913079500562122255.stgit@frogsfrogsfrogs>
+ <175798150070.381990.9068347413538134501.stgit@frogsfrogsfrogs>
+ <CAJfpegtW++UjUioZA3XqU3pXBs29ewoUOVys732jsusMo2GBDA@mail.gmail.com>
+ <20250923145413.GH8117@frogsfrogsfrogs> <CAJfpegsytZbeQdO3aL+AScJa1Yr8b+_cWxZFqCuJBrV3yaoqNw@mail.gmail.com>
+ <20250923205936.GI1587915@frogsfrogsfrogs> <20250923223447.GJ1587915@frogsfrogsfrogs>
+In-Reply-To: <20250923223447.GJ1587915@frogsfrogsfrogs>
+From: Miklos Szeredi <miklos@szeredi.hu>
+Date: Wed, 24 Sep 2025 14:04:20 +0200
+X-Gm-Features: AS18NWDcnShhwKGclrcwGUaZj51GkpVzLGQIL0hjgTsrUfuhKR0cDZo_FZLUM_g
+Message-ID: <CAJfpegthiP32O=O5O8eAEjYbY2sAJ1SFA0nS8NGjM85YvWBNuA@mail.gmail.com>
+Subject: Re: [PATCH 2/8] fuse: flush pending fuse events before aborting the connection
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: bernd@bsbernd.com, linux-xfs@vger.kernel.org, John@groves.net, 
+	linux-fsdevel@vger.kernel.org, neal@gompa.dev, joannelkoong@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 2025-09-23 10:08:57, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> libxfs functions return negative errno, so utilities must invert the
-> return values from such functions.  Caught by xfs/437.
-> 
-> Fixes: 8a4ea72724930c ("proto: add ability to populate a filesystem from a directory")
-> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+On Wed, 24 Sept 2025 at 00:34, Darrick J. Wong <djwong@kernel.org> wrote:
 
-lgtm
-Reviewed-by: Andrey Albershteyn <aalbersh@kernel.org>
+> Conclusion: The loop is necessary to avoid softlockup warnings while the
+> fuse requests are processed by the server, but it is not necessary to
+> touch the watchdog in the loop body.
 
-> ---
->  mkfs/proto.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mkfs/proto.c b/mkfs/proto.c
-> index bfeeb5ac638185..2b29240db95f74 100644
-> --- a/mkfs/proto.c
-> +++ b/mkfs/proto.c
-> @@ -1425,7 +1425,7 @@ handle_hardlink(
->  	if (dst_ino == 0)
->  		return false;
->  
-> -	error = libxfs_iget(mp, NULL, dst_ino, 0, &ip);
-> +	error = -libxfs_iget(mp, NULL, dst_ino, 0, &ip);
->  	if (error)
->  		fail(_("failed to get inode"), error);
->  
-> 
+I'm still confused.
 
--- 
-- Andrey
+What is the kernel message you get?
 
+"watchdog: BUG: soft lockup - CPU#X stuck for NNs!"
+
+or
+
+"INFO: task PROC blocked for more than NN seconds."
+
+Thanks,
+Miklos
