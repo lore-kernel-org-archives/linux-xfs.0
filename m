@@ -1,283 +1,194 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C66B130C617;
-	Tue, 23 Sep 2025 23:08:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7730E1FB1;
+	Wed, 24 Sep 2025 00:13:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758668894; cv=none; b=sc+2pYUmjmfp+8OAkWIV+1XCbi/XX7HRKCrvpyuf1DDhdR607bRf4LC0bV3KcPtXAKh9fqHmJxgGWqW18e96/Mm9DaZr8LiSoXIjYA+/Or2S9rnZyOFmFSPW2tq47UyTNuaQLXSD2qVdJZZsm5ftRBJR0OvWOXvFAE+kMhE0s+Y=
+	t=1758672816; cv=none; b=GBT3qPRBtZsQ98UUaP07GKj/VOKF4BipzPuOpGeJyAW/PU7zqTsgKcqYyaweDUd+pLG1BLlNdUc+4IWTUsSWzVG23yAaS+nB1e0WQmwGLbiaRK+WeINZPs2ZHcaHq8Rod/CiQbbD7n07JYSaIud4MRqyYB/AQE4wSQqDDVvz9GA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758668894; c=relaxed/simple;
-	bh=IcIGUzxtIiGr7VNVUX7or6KfaHceHh4DBPDlxu41I7E=;
+	s=arc-20240116; t=1758672816; c=relaxed/simple;
+	bh=XY0QCw5F75YlXeKBpjwCvQa2FkFZ1g/792l5DMfMKY0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ivMX4RIqunLHj5Ea2n+ijCj4JSgSYTrV7SPXNzu09Gwk+NadcYJ8xbfxg7fj88VYZpt3/MEnNjS3ha5DW4F9sBqBFE8RG3LPunlk9dl+S82WyMIXO69D0nREOj6C4F5B6XvLYLR/k6Y6zLipAO4oqdKFsxyJ2T/TSVc78vbH7ms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NznQwDoV; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=thIrW1ohEHeSLq+tmYGBklgdOdrljATfR4lS1XeMnsRUQEzSVf6hXL2g8emJoWprBO+D03330vzuORa1GBA2kytLjX2WuZ7qhk2njbjZQbmRGOawevdwCZGR+Hge0LsY/K0r9sAUqNeM/Dk0gY2sbSHwgnih0WGyKo74HQt3l3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ARx5MTrN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NznQwDoV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A54CC4CEF5;
-	Tue, 23 Sep 2025 23:08:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ARx5MTrN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF0ADC4CEF5;
+	Wed, 24 Sep 2025 00:13:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758668894;
-	bh=IcIGUzxtIiGr7VNVUX7or6KfaHceHh4DBPDlxu41I7E=;
+	s=k20201202; t=1758672815;
+	bh=XY0QCw5F75YlXeKBpjwCvQa2FkFZ1g/792l5DMfMKY0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NznQwDoVyW4jXVSschSsmCoqdiwrqXWxf3Fyu4jTWjiJIbM/g7bTeQ6hQT2Rco6G3
-	 i6XVS647DB2fqccO0+J/C2Ds4d9k46Tpxsi+DqRpzAaoWHL2M4BoLA4fQu6/dohbBg
-	 UdF8JhzaBYrci6xd2WH8ecn1WgPcEFfs/EBHOY+bfogo6yND/iQVRilStlvrtHXmOG
-	 3/8VYKCdBPtuf2AIePnz6ROgZdbDjXX74Ig2KlSxG+6G8A5AIE1G/23x6Z+pl6I82s
-	 XeLFMF2A2A89FDUisdUKCtwp3sQz8fNHO8ecMT3aac3nOBEdfSRxEL0GELCE8InED/
-	 zkztGgHhiD9dw==
-Date: Tue, 23 Sep 2025 16:08:13 -0700
+	b=ARx5MTrNCc4yiI+cLaco4c9yNoTNEwVRIBu1k+9EMun7L7nTQUU46Pq2agG25uOPR
+	 QJO2RRk+lSafqwR5sEjG+Lv7Yvo3kJwk2gpLCuadyld3p3MAdtEku1qAZb1Rm+WB8c
+	 xjksU0r2PkOenxjTmqhCFvIIaZ0y4EcT2gDdsCZnMLrPHxUGnBaV2+jz70zENNq9cC
+	 t9AeibzKp2Potx6XtNzMILO64LNzp6oJZof1MMBBLNdTubMT6ILzu6ycEYcJ+bx2du
+	 ht+HEFlkFa3/M6gS6v8rpEjvIJYb0zi1u9gMhwSaf747IMQ5jdGcWp2r4N/nMa40C7
+	 AH447rUpeUV4Q==
+Date: Tue, 23 Sep 2025 17:13:35 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Joanne Koong <joannelkoong@gmail.com>
-Cc: miklos@szeredi.hu, bernd@bsbernd.com, linux-xfs@vger.kernel.org,
-	John@groves.net, linux-fsdevel@vger.kernel.org, neal@gompa.dev
-Subject: Re: [PATCH 01/28] fuse: implement the basic iomap mechanisms
-Message-ID: <20250923230813.GK1587915@frogsfrogsfrogs>
-References: <175798151087.382724.2707973706304359333.stgit@frogsfrogsfrogs>
- <175798151288.382724.14189484118371001092.stgit@frogsfrogsfrogs>
- <CAJnrk1YtGcWj_0MOxS6atL_vrUjk09MzQhFt40yf32Rq12k0qw@mail.gmail.com>
- <20250923203246.GG1587915@frogsfrogsfrogs>
- <CAJnrk1aFEASvZmKftGpvR-P-KWMDLFYzjBCj4OF=EwteWmpECw@mail.gmail.com>
- <20250923221014.GI8117@frogsfrogsfrogs>
+Cc: brauner@kernel.org, miklos@szeredi.hu, hch@infradead.org,
+	linux-block@vger.kernel.org, gfs2@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-doc@vger.kernel.org, hsiangkao@linux.alibaba.com,
+	kernel-team@meta.com
+Subject: Re: [PATCH v4 07/15] iomap: track read/readahead folio ownership
+ internally
+Message-ID: <20250924001335.GL1587915@frogsfrogsfrogs>
+References: <20250923002353.2961514-1-joannelkoong@gmail.com>
+ <20250923002353.2961514-8-joannelkoong@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250923221014.GI8117@frogsfrogsfrogs>
+In-Reply-To: <20250923002353.2961514-8-joannelkoong@gmail.com>
 
-On Tue, Sep 23, 2025 at 03:10:14PM -0700, Darrick J. Wong wrote:
-> On Tue, Sep 23, 2025 at 02:24:21PM -0700, Joanne Koong wrote:
-> > On Tue, Sep 23, 2025 at 1:32 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> > >
-> > > On Fri, Sep 19, 2025 at 03:36:52PM -0700, Joanne Koong wrote:
-> > > > On Mon, Sep 15, 2025 at 5:28 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> > > > >
-> > > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > >
-> > > > > Implement functions to enable upcalling of iomap_begin and iomap_end to
-> > > > > userspace fuse servers.
-> > > > >
-> > > > > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > > > > ---
-> > > > >  fs/fuse/fuse_i.h          |   35 ++++
-> > > > >  fs/fuse/iomap_priv.h      |   36 ++++
-> > > > >  include/uapi/linux/fuse.h |   90 +++++++++
-> > > > >  fs/fuse/Kconfig           |   32 +++
-> > > > >  fs/fuse/Makefile          |    1
-> > > > >  fs/fuse/file_iomap.c      |  434 +++++++++++++++++++++++++++++++++++++++++++++
-> > > > >  fs/fuse/inode.c           |    9 +
-> > > > >  7 files changed, 636 insertions(+), 1 deletion(-)
-> > > > >  create mode 100644 fs/fuse/iomap_priv.h
-> > > > >  create mode 100644 fs/fuse/file_iomap.c
-> > > > >
-> > > > > new file mode 100644
-> > > > > index 00000000000000..243d92cb625095
-> > > > > --- /dev/null
-> > > > > +++ b/fs/fuse/iomap_priv.h
-> > > > > @@ -0,0 +1,36 @@
-> > > > > +// SPDX-License-Identifier: GPL-2.0
-> > > > > +/*
-> > > > > + * Copyright (C) 2025 Oracle.  All Rights Reserved.
-> > > > > + * Author: Darrick J. Wong <djwong@kernel.org>
-> > > > > + */
-> > > > > +#ifndef _FS_FUSE_IOMAP_PRIV_H
-> > > > > +#define _FS_FUSE_IOMAP_PRIV_H
-> > > > > +
-> > > > ...
-> > > > > diff --git a/include/uapi/linux/fuse.h b/include/uapi/linux/fuse.h
-> > > > > index 31b80f93211b81..3634cbe602cd9c 100644
-> > > > > --- a/include/uapi/linux/fuse.h
-> > > > > +++ b/include/uapi/linux/fuse.h
-> > > > > @@ -235,6 +235,9 @@
-> > > > >   *
-> > > > >   *  7.44
-> > > > >   *  - add FUSE_NOTIFY_INC_EPOCH
-> > > > > + *
-> > > > > + *  7.99
-> > > >
-> > > > Just curious, where did you get the .99 from?
-> > >
-> > > Any time I go adding to a versioned ABI, I try to use high numbers (and
-> > > high bits for flags) so that it's really obvious that the new flags are
-> > > in use when I poke through crash/gdb/etc.
-> > >
-> > > For permanent artifacts like an ondisk format, it's convenient to cache
-> > > fs images for fuzz testing, etc.  Using a high bit/number reduces the
-> > > chance that someone else's new feature will get merged and cause
-> > > conflicts, which force me to regenerate all cached images.
-> > >
-> > > Obviously at merge time I change these values to use lower bit positions
-> > > or version numbers to fit the merge target so it doesn't completely
-> > > eliminate the caching problems.
-> > 
-> > Ahh okay I see, thanks for the explanation!
-> > 
-> > >
-> > > > > + *  - add FUSE_IOMAP and iomap_{begin,end,ioend} for regular file operations
-> > > > >   */
-> > > > >
-> > > > >  #ifndef _LINUX_FUSE_H
-> > > > > @@ -270,7 +273,7 @@
-> > > > >  #define FUSE_KERNEL_VERSION 7
-> > > > > diff --git a/fs/fuse/Kconfig b/fs/fuse/Kconfig
-> > > > > index 9563fa5387a241..67dfe300bf2e07 100644
-> > > > > --- a/fs/fuse/Kconfig
-> > > > > +++ b/fs/fuse/Kconfig
-> > > > > @@ -69,6 +69,38 @@ config FUSE_PASSTHROUGH
-> > > > > +config FUSE_IOMAP_DEBUG
-> > > > > +       bool "Debug FUSE file IO over iomap"
-> > > > > +       default n
-> > > > > +       depends on FUSE_IOMAP
-> > > > > +       help
-> > > > > +         Enable debugging assertions for the fuse iomap code paths and logging
-> > > > > +         of bad iomap file mapping data being sent to the kernel.
-> > > > > +
-> > > >
-> > > > I wonder if we should have a general FUSE_DEBUG that this would fall
-> > > > under instead of creating one that's iomap_debug specific
-> > >
-> > > Probably, but I was also trying to keep this as localized to iomap as
-> > > possible.  If Miklos would rather I extend it to all of fuse (which is
-> > > probably a good idea!) then I'm happy to do so.
-> > >
-> > > > >  config FUSE_IO_URING
-> > > > >         bool "FUSE communication over io-uring"
-> > > > >         default y
-> > > > > diff --git a/fs/fuse/Makefile b/fs/fuse/Makefile
-> > > > > index 46041228e5be2c..27be39317701d6 100644
-> > > > > --- a/fs/fuse/Makefile
-> > > > > +++ b/fs/fuse/Makefile
-> > > > > @@ -18,5 +18,6 @@ fuse-$(CONFIG_FUSE_PASSTHROUGH) += passthrough.o
-> > > > >  fuse-$(CONFIG_FUSE_BACKING) += backing.o
-> > > > >  fuse-$(CONFIG_SYSCTL) += sysctl.o
-> > > > >  fuse-$(CONFIG_FUSE_IO_URING) += dev_uring.o
-> > > > > +fuse-$(CONFIG_FUSE_IOMAP) += file_iomap.o
-> > > > >
-> > > > >  virtiofs-y := virtio_fs.o
-> > > > > diff --git a/fs/fuse/file_iomap.c b/fs/fuse/file_iomap.c
-> > > > > new file mode 100644
-> > > > > index 00000000000000..dda757768d3ea6
-> > > > > --- /dev/null
-> > > > > +++ b/fs/fuse/file_iomap.c
-> > > > > @@ -0,0 +1,434 @@
-> > > > > +// SPDX-License-Identifier: GPL-2.0
-> > > > > +/*
-> > > > > + * Copyright (C) 2025 Oracle.  All Rights Reserved.
-> > > > > + * Author: Darrick J. Wong <djwong@kernel.org>
-> > > > > + */
-> > > > > +#include <linux/iomap.h>
-> > > > > +#include "fuse_i.h"
-> > > > > +#include "fuse_trace.h"
-> > > > > +#include "iomap_priv.h"
-> > > > > +
-> > > > > +/* Validate FUSE_IOMAP_TYPE_* */
-> > > > > +static inline bool fuse_iomap_check_type(uint16_t fuse_type)
-> > > > > +{
-> > > > > +       switch (fuse_type) {
-> > > > > +       case FUSE_IOMAP_TYPE_HOLE:
-> > > > > +       case FUSE_IOMAP_TYPE_DELALLOC:
-> > > > > +       case FUSE_IOMAP_TYPE_MAPPED:
-> > > > > +       case FUSE_IOMAP_TYPE_UNWRITTEN:
-> > > > > +       case FUSE_IOMAP_TYPE_INLINE:
-> > > > > +       case FUSE_IOMAP_TYPE_PURE_OVERWRITE:
-> > > > > +               return true;
-> > > > > +       }
-> > > > > +
-> > > > > +       return false;
-> > > > > +}
-> > > >
-> > > > Maybe faster to check by using a bitmask instead?
-> > >
-> > > They're consecutive; one could #define a FUSE_IOMAP_TYPE_MAX to alias
-> > > PURE_OVERWRITE and collapse the whole check to:
-> > >
-> > >         return fuse_type <= FUSE_IOMAP_TYPE_MAX;
+On Mon, Sep 22, 2025 at 05:23:45PM -0700, Joanne Koong wrote:
+> The purpose of "struct iomap_read_folio_ctx->cur_folio_in_bio" is to
+> track folio ownership to know who is responsible for unlocking it.
+> Rename "cur_folio_in_bio" to "cur_folio_owned" to better reflect this
+> purpose and so that this can be generically used later on by filesystems
+> that are not block-based.
+> 
+> Since "struct iomap_read_folio_ctx" will be made a public interface
+> later on when read/readahead takes in caller-provided callbacks, track
+> the folio ownership state internally instead of exposing it in "struct
+> iomap_read_folio_ctx" to make the interface simpler for end users.
+> 
+> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
 
-I godbolted this with gcc -O0, and got (arm64):
-
-        sub     sp, sp, #16
-        strh    w0, [sp, 14]
-        ldrh    w0, [sp, 14]	/* load first arg in w0 */
-        cmp     w0, 4
-        bgt     .L2		/* goto L2 if arg > _INLINE */
-        cmp     w0, 0
-        bge     .L3		/* goto L3 if _HOLE <= arg <= _INLINE */
-        b       .L4		/* goto L4 if arg < _HOLE */
-.L2:
-        cmp     w0, 255		/* goto L4 if arg != _PURE_OVERWRITE */
-        bne     .L4
-.L3:
-        mov     w0, 1		/* input was good */
-        b       .L5
-.L4:
-        mov     w0, 0		/* input was bad */
-.L5:				/* return result in w0 */
-        add     sp, sp, 16
-        ret
-
-The compiler is apparently smart enough to recognize the adjacent case
-statements and merge them into the appropriate integer comparisons.
+Looks good to me now,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> > >
-> > > > > +
-> > > > > diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
-> > > > > index 1e7298b2b89b58..32f4b7c9a20a8a 100644
-> > > > > --- a/fs/fuse/inode.c
-> > > > > +++ b/fs/fuse/inode.c
-> > > > > @@ -1448,6 +1448,13 @@ static void process_init_reply(struct fuse_mount *fm, struct fuse_args *args,
-> > > > >
-> > > > >                         if (flags & FUSE_REQUEST_TIMEOUT)
-> > > > >                                 timeout = arg->request_timeout;
-> > > > > +
-> > > > > +                       if ((flags & FUSE_IOMAP) && fuse_iomap_enabled()) {
-> > > > > +                               fc->local_fs = 1;
-> > > > > +                               fc->iomap = 1;
-> > > > > +                               printk(KERN_WARNING
-> > > > > + "fuse: EXPERIMENTAL iomap feature enabled.  Use at your own risk!");
-> > > > > +                       }
-> > > >
-> > > > pr_warn() seems to be the convention elsewhere in the fuse code
-> > >
-> > > Ah, thanks.  Do you know why fuse calls pr_warn("fuse: XXX") instead of
-> > > the usual sequence of
-> > >
-> > > #define pr_fmt(fmt) "fuse: " fmt
-> > >
-> > > so that "fuse: " gets included automatically?
-> > 
-> > I think it does do this, or at least that's what I see in fuse_i.h :D
+> ---
+>  fs/iomap/buffered-io.c | 34 +++++++++++++++++++++++-----------
+>  1 file changed, 23 insertions(+), 11 deletions(-)
 > 
-> Whoooops, sorry for the noise :)
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 09e65771a947..34df1cddf65c 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -362,7 +362,6 @@ static void iomap_read_end_io(struct bio *bio)
+>  
+>  struct iomap_read_folio_ctx {
+>  	struct folio		*cur_folio;
+> -	bool			cur_folio_in_bio;
+>  	void			*read_ctx;
+>  	struct readahead_control *rac;
+>  };
+> @@ -386,7 +385,6 @@ static void iomap_bio_read_folio_range(const struct iomap_iter *iter,
+>  	sector_t sector;
+>  	struct bio *bio = ctx->read_ctx;
+>  
+> -	ctx->cur_folio_in_bio = true;
+>  	if (ifs) {
+>  		spin_lock_irq(&ifs->state_lock);
+>  		ifs->read_bytes_pending += plen;
+> @@ -423,7 +421,7 @@ static void iomap_bio_read_folio_range(const struct iomap_iter *iter,
+>  }
+>  
+>  static int iomap_read_folio_iter(struct iomap_iter *iter,
+> -		struct iomap_read_folio_ctx *ctx)
+> +		struct iomap_read_folio_ctx *ctx, bool *folio_owned)
+>  {
+>  	const struct iomap *iomap = &iter->iomap;
+>  	loff_t pos = iter->pos;
+> @@ -460,6 +458,7 @@ static int iomap_read_folio_iter(struct iomap_iter *iter,
+>  			folio_zero_range(folio, poff, plen);
+>  			iomap_set_range_uptodate(folio, poff, plen);
+>  		} else {
+> +			*folio_owned = true;
+>  			iomap_bio_read_folio_range(iter, ctx, pos, plen);
+>  		}
+>  
+> @@ -482,16 +481,22 @@ int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops)
+>  	struct iomap_read_folio_ctx ctx = {
+>  		.cur_folio	= folio,
+>  	};
+> +	/*
+> +	 * If an IO helper takes ownership of the folio, it is responsible for
+> +	 * unlocking it when the read completes.
+> +	 */
+> +	bool folio_owned = false;
+>  	int ret;
+>  
+>  	trace_iomap_readpage(iter.inode, 1);
+>  
+>  	while ((ret = iomap_iter(&iter, ops)) > 0)
+> -		iter.status = iomap_read_folio_iter(&iter, &ctx);
+> +		iter.status = iomap_read_folio_iter(&iter, &ctx,
+> +				&folio_owned);
+>  
+>  	iomap_bio_submit_read(&ctx);
+>  
+> -	if (!ctx.cur_folio_in_bio)
+> +	if (!folio_owned)
+>  		folio_unlock(folio);
+>  
+>  	/*
+> @@ -504,14 +509,15 @@ int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops)
+>  EXPORT_SYMBOL_GPL(iomap_read_folio);
+>  
+>  static int iomap_readahead_iter(struct iomap_iter *iter,
+> -		struct iomap_read_folio_ctx *ctx)
+> +		struct iomap_read_folio_ctx *ctx,
+> +		bool *cur_folio_owned)
+>  {
+>  	int ret;
+>  
+>  	while (iomap_length(iter)) {
+>  		if (ctx->cur_folio &&
+>  		    offset_in_folio(ctx->cur_folio, iter->pos) == 0) {
+> -			if (!ctx->cur_folio_in_bio)
+> +			if (!*cur_folio_owned)
+>  				folio_unlock(ctx->cur_folio);
+>  			ctx->cur_folio = NULL;
+>  		}
+> @@ -519,9 +525,9 @@ static int iomap_readahead_iter(struct iomap_iter *iter,
+>  			ctx->cur_folio = readahead_folio(ctx->rac);
+>  			if (WARN_ON_ONCE(!ctx->cur_folio))
+>  				return -EINVAL;
+> -			ctx->cur_folio_in_bio = false;
+> +			*cur_folio_owned = false;
+>  		}
+> -		ret = iomap_read_folio_iter(iter, ctx);
+> +		ret = iomap_read_folio_iter(iter, ctx, cur_folio_owned);
+>  		if (ret)
+>  			return ret;
+>  	}
+> @@ -554,15 +560,21 @@ void iomap_readahead(struct readahead_control *rac, const struct iomap_ops *ops)
+>  	struct iomap_read_folio_ctx ctx = {
+>  		.rac	= rac,
+>  	};
+> +	/*
+> +	 * If an IO helper takes ownership of the folio, it is responsible for
+> +	 * unlocking it when the read completes.
+> +	 */
+> +	bool cur_folio_owned = false;
+>  
+>  	trace_iomap_readahead(rac->mapping->host, readahead_count(rac));
+>  
+>  	while (iomap_iter(&iter, ops) > 0)
+> -		iter.status = iomap_readahead_iter(&iter, &ctx);
+> +		iter.status = iomap_readahead_iter(&iter, &ctx,
+> +					&cur_folio_owned);
+>  
+>  	iomap_bio_submit_read(&ctx);
+>  
+> -	if (ctx.cur_folio && !ctx.cur_folio_in_bio)
+> +	if (ctx.cur_folio && !cur_folio_owned)
+>  		folio_unlock(ctx.cur_folio);
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_readahead);
+> -- 
+> 2.47.3
 > 
-> --D
-> 
-> > Thanks,
-> > Joanne
-> > >
-> > > --D
-> > >
-> > > >
-> > > > Thanks,
-> > > > Joanne
-> > > > >                 } else {
-> > > > >                         ra_pages = fc->max_read / PAGE_SIZE;
-> > > > >                         fc->no_lock = 1;
-> > > > > @@ -1516,6 +1523,8 @@ static struct fuse_init_args *fuse_new_init(struct fuse_mount *fm)
-> > > > >          */
-> > > > >         if (fuse_uring_enabled())
-> > > > >                 flags |= FUSE_OVER_IO_URING;
-> > > > > +       if (fuse_iomap_enabled())
-> > > > > +               flags |= FUSE_IOMAP;
-> > > > >
-> > > > >         ia->in.flags = flags;
-> > > > >         ia->in.flags2 = flags >> 32;
-> > > > >
-> > > >
 > 
