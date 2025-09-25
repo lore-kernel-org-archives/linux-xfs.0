@@ -1,78 +1,79 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 446332BB13
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Sep 2025 07:23:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D887C2D7DD1;
+	Thu, 25 Sep 2025 09:30:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758785035; cv=none; b=XeOJvnQu4EMmGWVWJV+j9+EWWW2iPbCyoIfCJ3bpKEoJM60vWN28ib/yQY65gWRgeGgwVVPE2/tZ7wG8KnPnGBD++WsPRuvfH+QwTF3BpR1oUOyRTbFHc75j/LuxP+eKYn3NAi8k97+u6SdpGM8TkRv4YkDqMiEJQYzGYejxq50=
+	t=1758792629; cv=none; b=eD5rbgalDk1YvCOLxHUm0fUdz9kaGCrm890qkHBUVlgI5db6BBT3cH5rxNwkM54rffP8Rz9dAvrrusGc4W6dkIg1i6KIFkseHVKmgB3+Ba3y8RGa0gIC7sh2CtB3QvAmBgUt1kqfq9ilFZ7uTpx2oxGkpx+VOmaHIvXDv0YFBME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758785035; c=relaxed/simple;
-	bh=7L77JVPVv9S6EfIasBey715YJbSyOi5x3oazU7GBROk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RkEMEKeXxXUv/aNq/FbmPMG3vMpgfVlga+qZ2MsiSKM7BkDrj2pJZQCBhDGlSA8CURJYspqIVAK77A5sBD0JYBg3ZY5xJVTK0dYp1meCh5ntyVfX3grqJ6XbQlZZgOYGv/vzAPYjZ6LBQHJh5C8pUNRcj3Hb9YCq1Bw/SfFgvj0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=g6t7Z4go; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1758792629; c=relaxed/simple;
+	bh=njZcZyoZSiE+Hn3EZ5XKFPr+ZwSzdkZ8LZWiPmLMBY8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NdnRvIqVMy3SIYOEN4icLzc7H+Nh5ZCf6gdzmLsPdtqW1OPe/M0fnX2cAc3VgPbBPWPZdPOvFM/PHzM8zQRBIrFMlnbRw2oDBH0x8km3Dje1Pi8Zw5YnbtjuTY7Imv7Q0GzeVpeBqZDmNNggi6dtXFhdBBEaH7qI/PZjX7e/Sc0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dJfCwd9j; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="g6t7Z4go"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Rx1gSxD5gleu9sSApweQU6azlkLIZgnGYoZippdUne0=; b=g6t7Z4gowZHpR7Uf4t1WRiWHPL
-	0G8EHw5GLv0vu3giC6IU0MWnqb6UcvAFBcfOsex3n/6Vf/kcIob7eD1s5SDVUVANaVzbQtrwOjXV9
-	iFlqVPtVZqkSM7b/1nHVTYe8DjCnqhmt6H6qh4rWvRIyoiNOYnsP9yTRVVYzopQ6XuuMBVjgFDnhO
-	zb8So1/Hj72FkRy5GA8Hv3DER1ATRCSVo370SkRipYPwGRAqaW/Xs9NT6T6i3U8TAONzj1AI1xnyD
-	ePZQ4EVP2fW/Tw4/DolVw5CDeMakfjuHfBCJDKpK6V9x1HsXpKAQ/wssGTtGPWRb224+xeOJRejwS
-	Gg3Yv6Yw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v1gKS-00000006gEs-18J4;
-	Thu, 25 Sep 2025 07:23:48 +0000
-Date: Thu, 25 Sep 2025 00:23:48 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Andrey Albershteyn <aalbersh@redhat.com>,
-	"A. Wilcox" <AWilcox@wilcox-tech.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs_scrub: fix strerror_r usage yet again
-Message-ID: <aNTuBDBU4q42J03E@infradead.org>
-References: <20250919161400.GO8096@frogsfrogsfrogs>
- <aNGA3WV3vO5PXhOH@infradead.org>
- <20250924005353.GW8096@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dJfCwd9j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18600C4CEF0;
+	Thu, 25 Sep 2025 09:30:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1758792629;
+	bh=njZcZyoZSiE+Hn3EZ5XKFPr+ZwSzdkZ8LZWiPmLMBY8=;
+	h=From:To:Cc:Subject:Date:From;
+	b=dJfCwd9jaaRg96T3eLENn+FguuUcySmWA7UpJlvZboj6Rf/4ALkKZOLAdjBYfKQ7c
+	 PKzp6fvYfr6L1A37yjKTnxN8+wwmREuT1GBu2MyDiOTJVKK3oOpGpWu9cRrSQVJaFL
+	 wdu85DHUGgbToivarwwUZEI/OSgY52c+rLmDF6i8jf8SM/ZKToZosYS1dhHh0Bz7BE
+	 y7y5OgXpM6NaundZgqfWLA9l6zP14hXzhZCeAKt1ZdLGPSlOSxWfxYJ2AyYLystnlt
+	 EncJ39fmiO00Za5s3MqIb28TOq2zF0iu5HCuNWii1Qs6Kff+wnkTqLEbImvQNc7XTP
+	 jo0b33PngnAvA==
+From: cem@kernel.org
+To: zlang@redhat.com
+Cc: djwong@kernel.org,
+	linux-xfs@vger.kernel.org,
+	fstests@vger.kernel.org
+Subject: [PATCH 0/3] Update to account for attr2 and ikeep removal
+Date: Thu, 25 Sep 2025 11:29:23 +0200
+Message-ID: <20250925093005.198090-1-cem@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250924005353.GW8096@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 
-On Tue, Sep 23, 2025 at 05:53:53PM -0700, Darrick J. Wong wrote:
-> On Mon, Sep 22, 2025 at 10:01:17AM -0700, Christoph Hellwig wrote:
-> > The autoconf maigc looks good (as good as autoconf can look anyway),
-> > but why is this code using strerror_r to start with?  AFAIK on Linux
-> > strerror is using thread local storage since the damn of time, so
-> > just doing this as:
-> > 
-> > 	fprintf(stream, _("%s."), strerror(error));
-> > 
-> > should be perfectly fine, while also simpler and more portable.
-> 
-> But there's no guarantee that the implementation does this, is there?
-> The manpage doesn't say anything like that.
+From: Carlos Maiolino <cem@kernel.org>
 
-To me this pretty clear reads that the return string is stable until
-the next call to strerror as long as you only use it in the calling
-thread:
+Linux 6.17 removes attr2 and ikeep mount options, which have been
+deprecated for a long time.
 
-"The strerror() function returns a pointer to a string that describes
-the error code passed in the argument errnum,  ...
-This string must not be modified by the application, and the returned
-pointer will be invalidated on a subsequent call to strerror() or
-strerror_l(), or if the thread that obtained the string exits.  No
-other library function, including perror(3), will modify this string."
+There are 3 specific tests that fails now due to the abscence of such
+mount options:
+
+Both xfs/513 and xfs/613 tests several mount options, so this series
+only update both tests.
+
+xfs/539 on the other hand has been written specifically for such
+options, so it is pointless to keep this for 6.17 and above.
+
+
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+Carlos Maiolino (3):
+  xfs/513: remove attr2 and ikeep tests
+  xfs/613: remove attr2 tests
+  xfs/539: Remove test for good
+
+ tests/xfs/513     | 11 --------
+ tests/xfs/513.out |  7 -----
+ tests/xfs/539     | 72 -----------------------------------------------
+ tests/xfs/539.out |  2 --
+ tests/xfs/613     |  6 ----
+ tests/xfs/613.out |  4 ---
+ 6 files changed, 102 deletions(-)
+ delete mode 100755 tests/xfs/539
+ delete mode 100644 tests/xfs/539.out
+
+-- 
+2.51.0
 
