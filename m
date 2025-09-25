@@ -1,50 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D2022367D2;
-	Thu, 25 Sep 2025 19:17:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6AE31E10F
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Sep 2025 20:04:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758827853; cv=none; b=FwOBtri4CSfa7CrAoBCKavDXucC0d0OFbngOYDsYagSKyZrr4fejC3LviXH1X0b1BgK6DodW2GdkE1AldGvxgV9zOU5ZGxjNwkuk4VxE010aZaF3BQbaX1IpEcQuiPqvFzqpzYB7OFkZbanIvqNkTaVx7nwEiKqeitaQYy7DfOE=
+	t=1758830647; cv=none; b=Lt99J6a3FlyBgewbfRUrqQKh2weZurnHhA4FlKV5UeJ6Z86MaeSFhB79CbjDoziHffu83iAgkljpYo/wcWkRnfFUO7xDtS/U6lgJ2D450IJiuP9xI/oNagA1TV2/e5J0c3IP4QAO+6onhrf8WdzZz7Q8w1t3x7+338LyaTBhYt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758827853; c=relaxed/simple;
-	bh=qYmTRlf2w+gXgULOx0tRCwzsF7coFT9V078i5CXXgpA=;
+	s=arc-20240116; t=1758830647; c=relaxed/simple;
+	bh=yBFbmp+m+3VM/2TE+NfPJphtZbqIj+R7kaVUQCpkjhQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IBNR35142ybor7gkHPQFyd+N4g1hONJrWpX4959l4uE2oQaKHlzjKEBtllg73awAnc+7iLIlJbRqnaLfbMatXe8trwJzGPNGCZ82hjSkiASaQyy45XcHmTFjiuIx6kVTK2YPyDpGdhrd51M873k+SMudXfDqJnZUriSUUuJ4gN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ck+3DGWu; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=SPLQI4qsOT/7PHraqEFi1CDoQhoCtqOA+AEOsyfcpa0T5sAmBILfC427D0N1SOi7lgX29MMY3ZnSsqQgHue41QDHwHiCpQbZg1FnujwQzmXWcNP1j6fAxAYz4OPcKbCR1F2fhEIB+hwg3mMs4ISeJECWJlHAo6GKbPgudAttajU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NBhOQ3Hc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ck+3DGWu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD7E8C4CEF0;
-	Thu, 25 Sep 2025 19:17:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NBhOQ3Hc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26A0BC4CEF7;
+	Thu, 25 Sep 2025 20:04:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758827852;
-	bh=qYmTRlf2w+gXgULOx0tRCwzsF7coFT9V078i5CXXgpA=;
+	s=k20201202; t=1758830647;
+	bh=yBFbmp+m+3VM/2TE+NfPJphtZbqIj+R7kaVUQCpkjhQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ck+3DGWu/o6kz0M3FW3fduAkwUs1EZLytBadi6UqqQuFbVQ/6xUOLPulIst2Ow5z6
-	 z1Aj9vM3ewN0VFDXCsPHPaJA28UGH1gXoFOiCjI98md1pmuxzUfPTwgdDT65huZPI8
-	 CXT9BEmbqDzVsVnUvrzIqKBpP0BsCMhAJ+U39cezfbJ3PlagxkXqQje+P9Vu35+zfA
-	 KXc5zAlng8R6Wb61bcEp9vILFmv8sFEZsHU96WwXQIJxQTu3yQwXHkcED3DavHNOpA
-	 uWPymHlMCSIL0jsQYHZW8Ahx5FdTB3VuDXqyOylZjduZXxyMGFDnlsL114AHmyPK7k
-	 VTnVPqVadFmcg==
-Date: Thu, 25 Sep 2025 12:17:32 -0700
+	b=NBhOQ3HcPz8kTWKcMjPLLfdyzKyBcmlDq1RSE2B7xzjsU8S7A1K8sszSxP6aKdI31
+	 Frtm/omb9mO5fSbEga0Q/jadTruJ9BX6nOM1/tonJJAfRG5QucJsKyzHQnnfpk+qrg
+	 VfY6h0YkExdCCR4fjFuaRatXVME0IamKtC57SzvPmdZAiCfduMERs/LHn9nm8RoBik
+	 nmK03CTxtyLSuLDLdC7sxv4e7cOtRrqATh5D86bdxrfq5wXQZhMEc4fYDGE4f9H1DG
+	 sfti/ZONR0IlspE8iw0v1C+vqBth+P+kD2sV4uy/m4G16t3AMP1mSKqEJnVnTRJMGQ
+	 xuXFoJt+nbBIQ==
+Date: Thu, 25 Sep 2025 13:04:06 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Miklos Szeredi <miklos@szeredi.hu>
-Cc: Joanne Koong <joannelkoong@gmail.com>, bernd@bsbernd.com,
-	linux-xfs@vger.kernel.org, John@groves.net,
-	linux-fsdevel@vger.kernel.org, neal@gompa.dev
-Subject: Re: [PATCH 4/8] fuse: signal that a fuse filesystem should exhibit
- local fs behaviors
-Message-ID: <20250925191732.GY8096@frogsfrogsfrogs>
-References: <175798149979.381990.14913079500562122255.stgit@frogsfrogsfrogs>
- <175798150113.381990.4002893785000461185.stgit@frogsfrogsfrogs>
- <CAJnrk1YWtEJ2O90Z0+YH346c3FigVJz4e=H6qwRYv7xLdVg1PA@mail.gmail.com>
- <20250918165227.GX8117@frogsfrogsfrogs>
- <CAJfpegt6YzTSKBWSO8Va6bvf2-BA_9+Yo8g-X=fncZfZEbBZWw@mail.gmail.com>
- <20250919175011.GG8117@frogsfrogsfrogs>
- <CAJfpegu3+rDDxEtre-5cFc2n=eQOYbO8sTi1+7UyTYhhyJJ4Zw@mail.gmail.com>
- <20250923205143.GH1587915@frogsfrogsfrogs>
- <CAJfpeguq-kyMVoc2-zxHhwbxAB0g84CbOKM-MX3geukp3YeYuQ@mail.gmail.com>
- <20250924173136.GN8117@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>,
+	"A. Wilcox" <AWilcox@wilcox-tech.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs_scrub: fix strerror_r usage yet again
+Message-ID: <20250925200406.GZ8096@frogsfrogsfrogs>
+References: <20250919161400.GO8096@frogsfrogsfrogs>
+ <aNGA3WV3vO5PXhOH@infradead.org>
+ <20250924005353.GW8096@frogsfrogsfrogs>
+ <aNTuBDBU4q42J03E@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -53,52 +45,64 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250924173136.GN8117@frogsfrogsfrogs>
+In-Reply-To: <aNTuBDBU4q42J03E@infradead.org>
 
-On Wed, Sep 24, 2025 at 10:31:36AM -0700, Darrick J. Wong wrote:
-> On Wed, Sep 24, 2025 at 03:55:48PM +0200, Miklos Szeredi wrote:
-> > On Tue, 23 Sept 2025 at 22:51, Darrick J. Wong <djwong@kernel.org> wrote:
+On Thu, Sep 25, 2025 at 12:23:48AM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 23, 2025 at 05:53:53PM -0700, Darrick J. Wong wrote:
+> > On Mon, Sep 22, 2025 at 10:01:17AM -0700, Christoph Hellwig wrote:
+> > > The autoconf maigc looks good (as good as autoconf can look anyway),
+> > > but why is this code using strerror_r to start with?  AFAIK on Linux
+> > > strerror is using thread local storage since the damn of time, so
+> > > just doing this as:
+> > > 
+> > > 	fprintf(stream, _("%s."), strerror(error));
+> > > 
+> > > should be perfectly fine, while also simpler and more portable.
 > > 
-> > > Oh, ok.  I can do that.  Just to be clear about what I need to do for
-> > > v6:
-> > >
-> > > * fuse_conn::is_local goes away
-> > > * FUSE_I_* gains a new FUSE_I_EXCLUSIVE flag
-> > > * "local" operations check for FUSE_I_EXCLUSIVE instead of local_fs
-> > > * fuseblk filesystems always set FUSE_I_EXCLUSIVE
-> > 
-> > Not sure if we want to touch fuseblk, as that carries a risk of regressions.
+> > But there's no guarantee that the implementation does this, is there?
+> > The manpage doesn't say anything like that.
 > 
-> Hrm.  As it stands today, setting FUSE_I_EXCLUSIVE in fuseblk mode
-> solves various mode/acl failures in fstests.
+> To me this pretty clear reads that the return string is stable until
+> the next call to strerror as long as you only use it in the calling
+> thread:
 > 
-> On the other hand, mounting with fuseblk requires fsname to point to a
-> block device that the mount()ing process can open, and if you're working
-> with a local filesystem on a block device, why wouldn't you use iomap
-> mode?
-> 
-> Add to that Ted's reluctance to merge the fuseblk support patches into
-> fuse2fs, and perhaps I should take that as a sign to abandon fuseblk
-> work entirely.  It'd get rid of an entire test configuration, since I'd
-> only have to check fuse4fs-iomap on a bdev; and classic fuse4fs on a
-> regular file.  Even in that second case, fuse4fs could losetup to take
-> advantage of iomap mode.
-> 
-> Yeah ok I've persuaded myself to drop the fuseblk stuff entirely.  If
-> anyone /really/ wants me to keep it, holler in the next couple of hours.
+> "The strerror() function returns a pointer to a string that describes
+> the error code passed in the argument errnum,  ...
+> This string must not be modified by the application, and the returned
+> pointer will be invalidated on a subsequent call to strerror() or
+> strerror_l(), or if the thread that obtained the string exits.  No
+> other library function, including perror(3), will modify this string."
 
-Ted agrees with this, so I'm dropping fuseblk support for fuse[24]fs.
+Huh, I don't see "...or if the thread that obtained the string exits" in
+my version of the strerror(3) manpage on Debian 12.  For that matter, it
+still lists strerror() as MT-Unsafe.
+
+Looking through the manpages git repo, I see that strerror actually does
+get changed to MT-Safe in commit 01576f703f820e54602:
+
+    strerror.3: Change strerror() reference from MT-Unsafe to MT-Safe
+
+    The information in this patch was obtained from a glibc upstream patch,
+    commit 28aff047818eb1726394296d27b9c7885340bead ("string: Implement
+    strerror in terms of strerror_l").
+
+    According to the patch above, for glibc versions >=2.32, strerror() is
+    MT-Safe.
+
+    Signed-off-by: Shani Leviim <sleviim@redhat.com>
+
+Then looking through the glibc repository, that 28aff047818e commit
+comes from:
+
+https://sourceware.org/git/?p=glibc.git;a=commitdiff;h=28aff047818eb1726394296d27b9c7885340bead;hp=9deec7c8bab24659e78172dd850f4ca37c57940c
+
+which turns strerror into strerror_l.  This commit only appears in glibc
+2.32, which appeared in August 2020.  That version first appears in
+Debian 12 and RHEL 9, which are still fairly new.  musl apparently has
+had strerror call strerror_l since at least 2011.
+
+Has strerror() been designated as thread-safe at a POSIX level, or is
+this just an implementation quirk of these two C libraries?  strerror
+definitely wasn't thread-safe on glibc when I wrote this program.
 
 --D
-
-> > > * iomap filesystems (when they arrive) always set FUSE_I_EXCLUSIVE
-> > 
-> > Yes.
-> 
-> Ok, thanks for the quick responses! :)
-> 
-> --D
-> 
-> > Thanks,
-> > Miklos
-> 
