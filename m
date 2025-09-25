@@ -1,86 +1,83 @@
-Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
+Received: from mail-qk1-f179.google.com (mail-qk1-f179.google.com [209.85.222.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E01EC28642E
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Sep 2025 14:11:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32EDD14A4F9
+	for <linux-xfs@vger.kernel.org>; Thu, 25 Sep 2025 14:26:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758809495; cv=none; b=A1kym4VwPv2veKO08nF3d3gG3o0OLryENWpH75JjbQTM0GrPRrbpH6QCE+T4AEhB0PkZUWZm3YXXOCVaI9PYTzENVTdBI+bDm2ZlMWVZo1HxaI8zD5NUsJFqP5RYRurMMUBRYKsz5f8lVi7JhuJzOPQkIEroqYyz6JipBA3R3uU=
+	t=1758810366; cv=none; b=pNly7f/IoBgRvQicsduHZk0I79U27KIfwRpHi8TPDaFsL8q/iaXa8YXWulR2wSqCZ33xs0QgQomypTmOUio6Bo1Vyl/cBjLF/zs131oeKv/3ZEoPxXo68EZ+iGvvGHOTmqknCFGSxLMx4pjT7LlLV1lmpWyvH39ezGolaaDrXRw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758809495; c=relaxed/simple;
-	bh=UWpobgG7AYD6hqiWmnB0mqamozgaQ8uj3AzemTe7asc=;
+	s=arc-20240116; t=1758810366; c=relaxed/simple;
+	bh=kLQwKT7CQRm1aVedVomGiHl4RkD5BxvZ6Uz8ZXvBO+8=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FNkX8bOLPRNmVnwCzdatYYo1L+hmRRrW4Z1PJYVNHFviJGs2Qmmrua5qslgvDVpfXpeFbwqSVBwmSTPPtkjs+7uOVFdsK2XbrLKfDCYeRQSLnoe80AfIInps4zCOuQnysuZv6DiVEKaIHJhltq5kBfS1PDtEUUV5TFLCJIhjen0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=Fpcco5+F; arc=none smtp.client-ip=209.85.160.170
+	 To:Cc:Content-Type; b=RPWT04cfXtiSjYtBGSewilgcuOxTqenM/3DqAo0LEyOe6wVFyMxr/EqjQ2m6f2XNbV7wWhOqzGF2+ViiBbcbWrCon6gt7IqHzl/sGGHy0TIqqo62pUd1x1Qhm2HKmhyuSe5eUBrEAKzg+PiMGF+F09kgGKbyIaJwBe2wAR4KGy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=oNUXayj8; arc=none smtp.client-ip=209.85.222.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=szeredi.hu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="Fpcco5+F"
-Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-4cf068ffe4dso8045241cf.1
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Sep 2025 07:11:32 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="oNUXayj8"
+Received: by mail-qk1-f179.google.com with SMTP id af79cd13be357-85c66a8a462so88110785a.0
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Sep 2025 07:26:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google; t=1758809491; x=1759414291; darn=vger.kernel.org;
+        d=szeredi.hu; s=google; t=1758810364; x=1759415164; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=I/427OD6W7pLU9IsyNgBLHy3+mHgHSmXy3JA0vIM0rw=;
-        b=Fpcco5+FgBeRXCE+FP1vA3EcLguU66YWq2sA+3Sjwwzhgf4hr4WUd2H/FhkZZeOZ+X
-         naXU4k8EEiE9eHdBiN+0O9/0k4tydH30C7+g5+QZ5WYV+yltls5a5yhOWk2jpww25plU
-         Vi4Ji1jll2dw5D1y2IBuZFjKLp1IywMSzPSH0=
+        bh=kLQwKT7CQRm1aVedVomGiHl4RkD5BxvZ6Uz8ZXvBO+8=;
+        b=oNUXayj8uQ0Ru8NGu4sOa/i1394BtdWtFSc9k+alixlkvKpEDQ4G9bGuzZcLuKNw1c
+         GvmfACcOJkAumhIau0F9EXurczmvrEuyy9odWt4nW4oIvGIli/xOhNg2n/6z3dQQhX1L
+         /CZ38rMGo6lBNrZNgCaQ9UeZTgjYcopgjnTjM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758809491; x=1759414291;
+        d=1e100.net; s=20230601; t=1758810364; x=1759415164;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=I/427OD6W7pLU9IsyNgBLHy3+mHgHSmXy3JA0vIM0rw=;
-        b=ZFXR71ZhBIUMMpgPE0utPsN1d+2O8Yrei0k2RW9Ix6+nInVkWF9WanCOq/GUwQkmLn
-         GH01FaUKXYGdsdm4Qn2/hnuIwaNBjJThE0D+9i8XlGNBI5SXVqrlq4rrO0XTPPDN1k6o
-         R6cy+qnIhSmFC6B/RpisDN1yyayIafNbpy4E1id45v4W05FEuyQP/n9/yeweIt5YyTPE
-         Z4+RPIWpYj+/szfuBY5iJzzwv77Cvnx2ZLiyhrYDzVpG/m9HxBSRom6EF2a+W6OVlX/g
-         kz8P4bMJD6YKCBwzHvKetddTZ60fLSNhyTOVXTzT12yI0Bi8QL76b5BCSHp7EFUxx6Cu
-         GbpA==
-X-Forwarded-Encrypted: i=1; AJvYcCX03zds53+f0DDKPAvhiBNoN8b5G4zyrPMVucEg/hUPJOxJVLGqxX2C196mvKy2RIICHM0lcgV63Ls=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyGtURpLWdxgI5/itUEAx1G8LozRALNrs4m+58nK74Li9RO1GVo
-	pIYJbGa01Ojo21jamkY0R8lv75UphQalOjuwE8y0pmOtSWGcjKvxuwpLT3+6o/ODwCKv5uSGqlS
-	5A71K+BnSUja9wcQrbp1lrKwPPme9E9GkkOpZzuzpcA==
-X-Gm-Gg: ASbGncvthMCfSt78oj6S/4hlcm8ONsj///9+xf/WomPZCixgqXds9iUrFFaDraGGHjo
-	VWUJFvmi38/xYKoZVvv9ssh3LEVfjXz5JUtFb1o4e24RJmYaH2NuM0nnNFAKwH2Ww8Chg6zSOjO
-	IwTVlLEtwzphpVQvPDb+G8Do7EiAWGyle+q2ALx/IGl+nFKa8XZGpTlwalJgS5QOdLgN0tCtjRc
-	JgH0gDQeZMYChEh2wjMJIUZxLVJun+uO/KMj8Y=
-X-Google-Smtp-Source: AGHT+IFhfosi5V3Lpsu7k3dFcUbA4i0T5Z6jiPcQqhRUf6vnqPoz0t+a4rROD+26tZnIGA1reTjuZXid96Lf4t28HXw=
-X-Received: by 2002:ac8:5802:0:b0:4b7:983b:b70c with SMTP id
- d75a77b69052e-4da4d503cfdmr38924161cf.67.1758809491232; Thu, 25 Sep 2025
- 07:11:31 -0700 (PDT)
+        bh=kLQwKT7CQRm1aVedVomGiHl4RkD5BxvZ6Uz8ZXvBO+8=;
+        b=qCoJvnzb0IHOGnrMTNXIRi6gXhztne5PhNJgs2pxL7bda7coHQKWpXA0ZxizR3Tx2i
+         JGvwyjz6vMJAooOOW5IHqq+Djr2L00I04C2BdOkTzTf89lyVzwgW1yhxbZuc5by4mZw6
+         Ap2rs+XeOuhIv0DsjyPJuWu9E97NHiu1AqU1qZuq02nMd7N7Pp3fNspFbCQhQ25OqGol
+         Ce9OlyrgS8Zx0a4Oqp1/TXovnPDG9tG4mu7RBiX0pM48ClBc2zBpOAENX+C/h0bChDDn
+         CE8sRK4FyUxVl8Zr+0Nub7qxz3CZCybXhDoej+gT9Hbo2w37O2+4JD8sTUiAzAITIhhW
+         jZTA==
+X-Forwarded-Encrypted: i=1; AJvYcCWTPZ6OcsGveMt46Rhe2+Ez19JXH0crZx67yAuYc24LeoqegVl4zQ/FEIhc5Hd1417RHY+oCu5jkM4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxIsUuUO6xrhGZs94wWh9YQxrT4xDzfqXyOGBRtJBXPXOFBUHJ7
+	ke3aNvc3RyckotmBBbGS4jlPRRwk7FtupQnVDMbC/ptuj5xi1YoAeiGNoQ2SDl/yGNMlMELI/tz
+	uEET+lm2yScTX6N+qoQ28fGj8DU7mtsvo3RX1MFl4azeIIhN7V++u
+X-Gm-Gg: ASbGnctvDvCMUFxPGnRu7BApYaDDrEicrnV5Qa/PtgQG88Wp04If6lFJweBDyfeB8U5
+	eyoqKnaBANkCDR2JfIDx5Wy3PDJAYZbli5fBM1o20FCXoWFVd3CLtC6sUIt2OXeiydgKRjXO1Uk
+	nOlk4ZuM88/jXuYFvhsxusXaMhyWF1Q6ZSk5befJ0uMkABzsgO+nVD9epMO1OFlBNqSYngXON+D
+	oKhvHgmnLsd7NDGp4uBqRu+/kkdVQwlRzHSgs4=
+X-Google-Smtp-Source: AGHT+IEWEZUeqguxX1KmPZKfkWXxC/ABE/OYX1wAAb5sent2at3dsouQvLb+RIkaiW+zn60aorSoDGZZkURvGlr7neU=
+X-Received: by 2002:a05:620a:3902:b0:855:24d7:5525 with SMTP id
+ af79cd13be357-85ad85abd13mr455953285a.0.1758810364013; Thu, 25 Sep 2025
+ 07:26:04 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <175798150680.382479.9087542564560468560.stgit@frogsfrogsfrogs> <175798150753.382479.16281159359397027377.stgit@frogsfrogsfrogs>
-In-Reply-To: <175798150753.382479.16281159359397027377.stgit@frogsfrogsfrogs>
+References: <175798150680.382479.9087542564560468560.stgit@frogsfrogsfrogs> <175798150817.382479.14480676596668508285.stgit@frogsfrogsfrogs>
+In-Reply-To: <175798150817.382479.14480676596668508285.stgit@frogsfrogsfrogs>
 From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Thu, 25 Sep 2025 16:11:19 +0200
-X-Gm-Features: AS18NWCGKknJWI0OJGH_hfKtcByhpGdDRX_5eBsqXozD3JQr_kkA_sCThsBDjJU
-Message-ID: <CAJfpegsr5rOu9n=smii33E4KugyTSqSmQzcSzi2A+5Qi-es0TA@mail.gmail.com>
-Subject: Re: [PATCH 2/5] fuse: move the backing file idr and code into a new
- source file
+Date: Thu, 25 Sep 2025 16:25:52 +0200
+X-Gm-Features: AS18NWBFMThGopHRbA-o-UBQbTeBlGy3BGU5JkoxwQuiBz9uVdcGsyESsqGmqaI
+Message-ID: <CAJfpegvLLOOwzgxbGgRMQrv2m+HhA=TPhKgA9v9QXJjCe1kS7A@mail.gmail.com>
+Subject: Re: [PATCH 5/5] fuse: move CREATE_TRACE_POINTS to a separate file
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: amir73il@gmail.com, bernd@bsbernd.com, linux-xfs@vger.kernel.org, 
-	John@groves.net, linux-fsdevel@vger.kernel.org, neal@gompa.dev, 
-	joannelkoong@gmail.com
+Cc: bernd@bsbernd.com, linux-xfs@vger.kernel.org, John@groves.net, 
+	linux-fsdevel@vger.kernel.org, neal@gompa.dev, joannelkoong@gmail.com
 Content-Type: text/plain; charset="UTF-8"
 
 On Tue, 16 Sept 2025 at 02:27, Darrick J. Wong <djwong@kernel.org> wrote:
 >
 > From: Darrick J. Wong <djwong@kernel.org>
 >
-> iomap support for fuse is also going to want the ability to attach
-> backing files to a fuse filesystem.  Move the fuse_backing code into a
-> separate file so that both can use it.
+> Before we start adding new tracepoints for fuse+iomap, move the
+> tracepoint creation itself to a separate source file so that we don't
+> have to start pulling iomap dependencies into dev.c just for the iomap
+> structures.
 >
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
 Applied, thanks.
-
 Miklos
