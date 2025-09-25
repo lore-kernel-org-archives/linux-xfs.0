@@ -1,58 +1,50 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EBE831B12D
-	for <linux-xfs@vger.kernel.org>; Thu, 25 Sep 2025 18:57:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D2022367D2;
+	Thu, 25 Sep 2025 19:17:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758826656; cv=none; b=IxWh9qbLJevmGiqRDS4TDSi/WCJphtZTmTvX3unH0V4Y6zzMg+ML2VU3bv8+bHhDVrX6k826k6pdmORtg+IBh9cmWHCchhNXk6DsgSroF+IozKhHARmKw54VkozolJ0cPvh2NwBwdGyhLXxI8cC2hGxwiGhf7lYLoHjDq0bDVOw=
+	t=1758827853; cv=none; b=FwOBtri4CSfa7CrAoBCKavDXucC0d0OFbngOYDsYagSKyZrr4fejC3LviXH1X0b1BgK6DodW2GdkE1AldGvxgV9zOU5ZGxjNwkuk4VxE010aZaF3BQbaX1IpEcQuiPqvFzqpzYB7OFkZbanIvqNkTaVx7nwEiKqeitaQYy7DfOE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758826656; c=relaxed/simple;
-	bh=j5gkSv/3UaxKbaNRZmLoYcyk0+yVwcOA5OeU8sjTjKA=;
+	s=arc-20240116; t=1758827853; c=relaxed/simple;
+	bh=qYmTRlf2w+gXgULOx0tRCwzsF7coFT9V078i5CXXgpA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RVFlRcCw15ZuGbOsWJMJil/lLzuRVp5+9UBXNvxAsAlIrM29caDLgevN/t5XLPKFKS2QwkW4kSnIjv6xsY4/C0l7+Tc9N3Mh1H7fR8IowV/0ye5COcX5XTLBe1wKczFrJsRx/EfsoL3U9W38hEV2xtWvmdEtTEkF4+WO04rYxz0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JxuP2M9R; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=IBNR35142ybor7gkHPQFyd+N4g1hONJrWpX4959l4uE2oQaKHlzjKEBtllg73awAnc+7iLIlJbRqnaLfbMatXe8trwJzGPNGCZ82hjSkiASaQyy45XcHmTFjiuIx6kVTK2YPyDpGdhrd51M873k+SMudXfDqJnZUriSUUuJ4gN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ck+3DGWu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JxuP2M9R"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1758826652;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=xDIYoUk2aYSVEyb/ZokojK1Od3xlyMIfNybo+1mukeM=;
-	b=JxuP2M9RfnytWQRl7ZoxnfPoM0/t8RmZ84zThO5p0UxZywYpcyCTlFxDVIOGnG7wYRP4ZM
-	vJ4OVn3Ra7wYd/v1ZbZTbOJhRtfGCdN5hlPvLqR0ynzjnt5sYKPTpfiLp3eTfP3efuYk+x
-	A2m9Pw8C9Ef9kfF08oqaKzma25P+qLk=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-563-Jl37rhTYO5y7Vs-CMSSc-A-1; Thu,
- 25 Sep 2025 14:57:26 -0400
-X-MC-Unique: Jl37rhTYO5y7Vs-CMSSc-A-1
-X-Mimecast-MFC-AGG-ID: Jl37rhTYO5y7Vs-CMSSc-A_1758826645
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2CA5C19560B5;
-	Thu, 25 Sep 2025 18:57:25 +0000 (UTC)
-Received: from bfoster (unknown [10.22.64.134])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 61553300021A;
-	Thu, 25 Sep 2025 18:57:23 +0000 (UTC)
-Date: Thu, 25 Sep 2025 15:01:33 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: alexjlzheng@gmail.com
-Cc: brauner@kernel.org, djwong@kernel.org, hch@infradead.org,
-	kernel@pankajraghav.com, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	yi.zhang@huawei.com, Jinliang Zheng <alexjlzheng@tencent.com>
-Subject: Re: [PATCH v5 4/4] iomap: don't abandon the whole copy when we have
- iomap_folio_state
-Message-ID: <aNWRjekDBHRelmbS@bfoster>
-References: <20250923042158.1196568-1-alexjlzheng@tencent.com>
- <20250923042158.1196568-5-alexjlzheng@tencent.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ck+3DGWu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD7E8C4CEF0;
+	Thu, 25 Sep 2025 19:17:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1758827852;
+	bh=qYmTRlf2w+gXgULOx0tRCwzsF7coFT9V078i5CXXgpA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ck+3DGWu/o6kz0M3FW3fduAkwUs1EZLytBadi6UqqQuFbVQ/6xUOLPulIst2Ow5z6
+	 z1Aj9vM3ewN0VFDXCsPHPaJA28UGH1gXoFOiCjI98md1pmuxzUfPTwgdDT65huZPI8
+	 CXT9BEmbqDzVsVnUvrzIqKBpP0BsCMhAJ+U39cezfbJ3PlagxkXqQje+P9Vu35+zfA
+	 KXc5zAlng8R6Wb61bcEp9vILFmv8sFEZsHU96WwXQIJxQTu3yQwXHkcED3DavHNOpA
+	 uWPymHlMCSIL0jsQYHZW8Ahx5FdTB3VuDXqyOylZjduZXxyMGFDnlsL114AHmyPK7k
+	 VTnVPqVadFmcg==
+Date: Thu, 25 Sep 2025 12:17:32 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: Joanne Koong <joannelkoong@gmail.com>, bernd@bsbernd.com,
+	linux-xfs@vger.kernel.org, John@groves.net,
+	linux-fsdevel@vger.kernel.org, neal@gompa.dev
+Subject: Re: [PATCH 4/8] fuse: signal that a fuse filesystem should exhibit
+ local fs behaviors
+Message-ID: <20250925191732.GY8096@frogsfrogsfrogs>
+References: <175798149979.381990.14913079500562122255.stgit@frogsfrogsfrogs>
+ <175798150113.381990.4002893785000461185.stgit@frogsfrogsfrogs>
+ <CAJnrk1YWtEJ2O90Z0+YH346c3FigVJz4e=H6qwRYv7xLdVg1PA@mail.gmail.com>
+ <20250918165227.GX8117@frogsfrogsfrogs>
+ <CAJfpegt6YzTSKBWSO8Va6bvf2-BA_9+Yo8g-X=fncZfZEbBZWw@mail.gmail.com>
+ <20250919175011.GG8117@frogsfrogsfrogs>
+ <CAJfpegu3+rDDxEtre-5cFc2n=eQOYbO8sTi1+7UyTYhhyJJ4Zw@mail.gmail.com>
+ <20250923205143.GH1587915@frogsfrogsfrogs>
+ <CAJfpeguq-kyMVoc2-zxHhwbxAB0g84CbOKM-MX3geukp3YeYuQ@mail.gmail.com>
+ <20250924173136.GN8117@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -61,175 +53,52 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250923042158.1196568-5-alexjlzheng@tencent.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+In-Reply-To: <20250924173136.GN8117@frogsfrogsfrogs>
 
-On Tue, Sep 23, 2025 at 12:21:58PM +0800, alexjlzheng@gmail.com wrote:
-> From: Jinliang Zheng <alexjlzheng@tencent.com>
+On Wed, Sep 24, 2025 at 10:31:36AM -0700, Darrick J. Wong wrote:
+> On Wed, Sep 24, 2025 at 03:55:48PM +0200, Miklos Szeredi wrote:
+> > On Tue, 23 Sept 2025 at 22:51, Darrick J. Wong <djwong@kernel.org> wrote:
+> > 
+> > > Oh, ok.  I can do that.  Just to be clear about what I need to do for
+> > > v6:
+> > >
+> > > * fuse_conn::is_local goes away
+> > > * FUSE_I_* gains a new FUSE_I_EXCLUSIVE flag
+> > > * "local" operations check for FUSE_I_EXCLUSIVE instead of local_fs
+> > > * fuseblk filesystems always set FUSE_I_EXCLUSIVE
+> > 
+> > Not sure if we want to touch fuseblk, as that carries a risk of regressions.
 > 
-> Currently, if a partial write occurs in a buffer write, the entire write will
-> be discarded. While this is an uncommon case, it's still a bit wasteful and
-> we can do better.
+> Hrm.  As it stands today, setting FUSE_I_EXCLUSIVE in fuseblk mode
+> solves various mode/acl failures in fstests.
 > 
-> With iomap_folio_state, we can identify uptodate states at the block
-> level, and a read_folio reading can correctly handle partially
-> uptodate folios.
+> On the other hand, mounting with fuseblk requires fsname to point to a
+> block device that the mount()ing process can open, and if you're working
+> with a local filesystem on a block device, why wouldn't you use iomap
+> mode?
 > 
-> Therefore, when a partial write occurs, accept the block-aligned
-> partial write instead of rejecting the entire write.
+> Add to that Ted's reluctance to merge the fuseblk support patches into
+> fuse2fs, and perhaps I should take that as a sign to abandon fuseblk
+> work entirely.  It'd get rid of an entire test configuration, since I'd
+> only have to check fuse4fs-iomap on a bdev; and classic fuse4fs on a
+> regular file.  Even in that second case, fuse4fs could losetup to take
+> advantage of iomap mode.
 > 
-> For example, suppose a folio is 2MB, blocksize is 4kB, and the copied
-> bytes are 2MB-3kB.
-> 
-> Without this patchset, we'd need to recopy from the beginning of the
-> folio in the next iteration, which means 2MB-3kB of bytes is copy
-> duplicately.
-> 
->  |<-------------------- 2MB -------------------->|
->  +-------+-------+-------+-------+-------+-------+
->  | block |  ...  | block | block |  ...  | block | folio
->  +-------+-------+-------+-------+-------+-------+
->  |<-4kB->|
-> 
->  |<--------------- copied 2MB-3kB --------->|       first time copied
->  |<-------- 1MB -------->|                          next time we need copy (chunk /= 2)
->                          |<-------- 1MB -------->|  next next time we need copy.
-> 
->  |<------ 2MB-3kB bytes duplicate copy ---->|
-> 
-> With this patchset, we can accept 2MB-4kB of bytes, which is block-aligned.
-> This means we only need to process the remaining 4kB in the next iteration,
-> which means there's only 1kB we need to copy duplicately.
-> 
->  |<-------------------- 2MB -------------------->|
->  +-------+-------+-------+-------+-------+-------+
->  | block |  ...  | block | block |  ...  | block | folio
->  +-------+-------+-------+-------+-------+-------+
->  |<-4kB->|
-> 
->  |<--------------- copied 2MB-3kB --------->|       first time copied
->                                          |<-4kB->|  next time we need copy
-> 
->                                          |<>|
->                               only 1kB bytes duplicate copy
-> 
-> Although partial writes are inherently a relatively unusual situation and do
-> not account for a large proportion of performance testing, the optimization
-> here still makes sense in large-scale data centers.
-> 
+> Yeah ok I've persuaded myself to drop the fuseblk stuff entirely.  If
+> anyone /really/ wants me to keep it, holler in the next couple of hours.
 
-Thanks for the nice writeup and diagrams.
+Ted agrees with this, so I'm dropping fuseblk support for fuse[24]fs.
 
-> Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
-> ---
->  fs/iomap/buffered-io.c | 44 +++++++++++++++++++++++++++++++++---------
->  1 file changed, 35 insertions(+), 9 deletions(-)
+--D
+
+> > > * iomap filesystems (when they arrive) always set FUSE_I_EXCLUSIVE
+> > 
+> > Yes.
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 6e516c7d9f04..3304028ce64f 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -873,6 +873,25 @@ static int iomap_write_begin(struct iomap_iter *iter,
->  	return status;
->  }
->  
-> +static int iomap_trim_tail_partial(struct inode *inode, loff_t pos,
-> +		size_t copied, struct folio *folio)
-> +{
-> +	struct iomap_folio_state *ifs = folio->private;
-> +	unsigned block_size, last_blk, last_blk_bytes;
-> +
-> +	if (!ifs || !copied)
-> +		return 0;
-> +
-> +	block_size = 1 << inode->i_blkbits;
-
-I'd move this assignment to declaration time.
-
-> +	last_blk = offset_in_folio(folio, pos + copied - 1) >> inode->i_blkbits;
-> +	last_blk_bytes = (pos + copied) & (block_size - 1);
-> +
-> +	if (!ifs_block_is_uptodate(ifs, last_blk))
-> +		copied -= min(copied, last_blk_bytes);
-
-So I think I follow the idea here and it seems reasonable at first
-glance. IIUC, the high level issue is that for certain writes we don't
-read blocks up front if the write is expected to fully overwrite
-blocks/folios, as we can just mark things uptodate on write completion.
-If the write is short however, we now have a partial write to a
-!uptodate block, so have to toss the write.
-
-A few initial thoughts..
-
-1. I don't really love the function name here. Maybe something like
-iomap_write_end_short() or something would be more clear, but maybe
-there are other opinions.
-
-2. It might be helpful to move some of the comment below up to around
-here where we actually trim the copied value.
-
-3. I see that in __iomap_write_begin() we don't necessarily always
-attach ifs if a write is expected to fully overwrite the entire folio.
-It looks like that is handled with the !ifs check above, but it also
-makes me wonder how effective this change is.
-
-For example, the example in the commit log description appears to be a
-short write of an attempted overwrite of a 2MB folio, right? Would we
-expect to have ifs in that situation?
-
-I don't really object to having the logic even if it is a real corner
-case, but it would be good to have some test coverage to verify
-behavior. Do you have a test case or anything (even if contrived) along
-those lines? Perhaps we could play some games with badly formed
-syscalls. A quick test to call pwritev() with a bad iov_base pointer
-seems to produce a short write, but I haven't confirmed that's
-sufficient for testing here..
-
-Brian
-
-> +
-> +	return copied;
-> +}
-> +
->  static int __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
->  		size_t copied, struct folio *folio)
->  {
-> @@ -881,17 +900,24 @@ static int __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
->  	/*
->  	 * The blocks that were entirely written will now be uptodate, so we
->  	 * don't have to worry about a read_folio reading them and overwriting a
-> -	 * partial write.  However, if we've encountered a short write and only
-> -	 * partially written into a block, it will not be marked uptodate, so a
-> -	 * read_folio might come in and destroy our partial write.
-> +	 * partial write.
->  	 *
-> -	 * Do the simplest thing and just treat any short write to a
-> -	 * non-uptodate page as a zero-length write, and force the caller to
-> -	 * redo the whole thing.
-> +	 * However, if we've encountered a short write and only partially
-> +	 * written into a block, we must discard the short-written _tail_ block
-> +	 * and not mark it uptodate in the ifs, to ensure a read_folio reading
-> +	 * can handle it correctly via iomap_adjust_read_range(). It's safe to
-> +	 * keep the non-tail block writes because we know that for a non-tail
-> +	 * block:
-> +	 * - is either fully written, since copy_from_user() is sequential
-> +	 * - or is a partially written head block that has already been read in
-> +	 *   and marked uptodate in the ifs by iomap_write_begin().
->  	 */
-> -	if (unlikely(copied < len && !folio_test_uptodate(folio)))
-> -		return 0;
-> -	iomap_set_range_uptodate(folio, offset_in_folio(folio, pos), len);
-> +	if (unlikely(copied < len && !folio_test_uptodate(folio))) {
-> +		copied = iomap_trim_tail_partial(inode, pos, copied, folio);
-> +		if (!copied)
-> +			return 0;
-> +	}
-> +	iomap_set_range_uptodate(folio, offset_in_folio(folio, pos), copied);
->  	iomap_set_range_dirty(folio, offset_in_folio(folio, pos), copied);
->  	filemap_dirty_folio(inode->i_mapping, folio);
->  	return copied;
-> -- 
-> 2.49.0
+> Ok, thanks for the quick responses! :)
 > 
+> --D
 > 
-
+> > Thanks,
+> > Miklos
+> 
