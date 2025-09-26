@@ -1,48 +1,104 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 796C210E3
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Sep 2025 13:45:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6244A216E1B
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Sep 2025 15:22:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758894324; cv=none; b=d4pjODXDH4pzZOn47QwHy2d4Gqhe4aFboHQb7u3t66xLKKMTVkORasIaLEtlljlFl2DljgUucSMO1TCDL3oOeGnAiLaP0etrzMKTmPsmfnFb0GgpJQ5VpI2tdIzGaabqNKfgqN2/58/zr2Kayzbnvm2T6beWsyT/wnda7i7OI5k=
+	t=1758900128; cv=none; b=eqHJH45XTMFA3bo8mJSyizSAtd5iS7M+U7PEzPM1QEu6EF2jjRnncwY7Y//v003jnng3G5uRXGiTP4s2AnQwPt++JEzKFVhVLib1cMxdY2yNWRoLrjSiCf5tTnOr6XTThK+GXKnZ9e/+zb564YJCI6QVu2obZtNdGeK5Y3DJnUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758894324; c=relaxed/simple;
-	bh=A3qaEJQkSuXsmXAYkB9oUz2Id5oqwrYjawxbp1qdRWc=;
+	s=arc-20240116; t=1758900128; c=relaxed/simple;
+	bh=ZqNMdSg92Q43iVc6GYR+vFrV5HRNb/gprh+Bc8qnBSU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CViBRFBLSBKx+luNSB95da0FzdlOkGp/FXoN1OtXMoSv5+EVFMW0npaTMqDacrjWiEp30jnHVvkIs0bFxKcVZgMnEMCe7aPHz5QcWTTVk/7izPtAYN2XW4mlaWEB61+zxPUgmOIcFYnZD45bAjTOhhR+700ilr7c6Fg6X5tEEHA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X7L1RjO2; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=RMqDhM9qW2nDFGckt3LV0bC3wl2Hm/AZRQflVP+mLnTuFaHsnT61muz7BB53M1ewclsw8dng1oOahppLkMUT5xOFWU5YbmLTJ5vy7TZ4FCDpl1b1BezH0s72IUMLxBgiHqWFvo/UXEK4W+6t4ipA7WjOpIiM4z2O7Jpk0nWUseQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=peMzWo9m; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=+W+ecXus; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=peMzWo9m; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=+W+ecXus; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X7L1RjO2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13863C4CEF4;
-	Fri, 26 Sep 2025 13:45:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758894324;
-	bh=A3qaEJQkSuXsmXAYkB9oUz2Id5oqwrYjawxbp1qdRWc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=X7L1RjO2x7EPQvgNNcbkSYkA6/Y6uIoymkIoc98gGVlDnyoaaf901+mo9WPqjTfRm
-	 yL6QlxBox+2kG6gM+tJElHMKFpdYnqJWj5uwlaJskQ1UGO5DqEFeQf42p7zjZstOCZ
-	 WNeBySR7FJ5trE4gmdPwL7fOFw2PN9UPYwXz9jLPZWStTRnPSF39Ic5T3j3wohHIJw
-	 i6GB1Mlbtsrm/+IHdRBPfH3kolQT32BdX5oXMSdNlEyy6+jxbNEoaRfFXoCHHFsBZ5
-	 RiK/hdjJ17Hsb4baFO/InYTtZ8QBliHhZuVn0m9DiD0KnInO6XvCo4Qxjg402Sp8K2
-	 f5yotDrUA5Diw==
-Date: Fri, 26 Sep 2025 15:45:17 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: "hubert ." <hubjin657@outlook.com>, 
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: xfs_metadump segmentation fault on large fs - xfsprogs 6.1
-Message-ID: <ip6g2acleif3cyslm65uzdxd47dgzfum57xxgpmk73r4223poy@shhld7q7ls7i>
-References: <CH3PR05MB10392E816C6A1051847D214A2FA59A@CH3PR05MB10392.namprd05.prod.outlook.com>
- <6tqlc3mcf3ovkbzf4345m7oztoeagevfycpdnxizrtdbhq53p2@mrlmjhs6n7gy>
- <LV3PR05MB104071E0D6E7CAD06C7728DACFA26A@LV3PR05MB10407.namprd05.prod.outlook.com>
- <kZ0Ndjz5Uh9rHFbs-iYYoEFNVWoxMtkvK-3nrx6mrlxpglTxelNWuY_lqxKmfrItAPWl4M4ng-BzenCqcFiOaA==@protonmail.internalid>
- <IA0PR05MB99750EB3605E36DEF8874BACFA31A@IA0PR05MB9975.namprd05.prod.outlook.com>
- <gjogpxo65cozoccj4fps6e4fzeu4ncibeofymhkyzys4hsclzy@vvrl2kndu7k6>
- <IA0PR05MB9975ADAF48C73797473737BEFA38A@IA0PR05MB9975.namprd05.prod.outlook.com>
- <IA0PR05MB99755ED06F9965745B20D9DAFA1EA@IA0PR05MB9975.namprd05.prod.outlook.com>
- <7qd0IjCTUj1UpKLm2g6sPrhFI8HEoYrqIQ23o_ANTShTu58S7x7bgoMYTvXfR_fpqPdB85XxZoz16xrnllDcvA==@protonmail.internalid>
- <aNZfRuIVgIOiP6Qp@dread.disaster.area>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="peMzWo9m";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="+W+ecXus";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="peMzWo9m";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="+W+ecXus"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 3CAB022132;
+	Fri, 26 Sep 2025 15:22:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1758900123; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3iYmdnwJUFP5zwtZs6WEPYNQrwZHjasFtnMnsic4KPA=;
+	b=peMzWo9m+tnTxP/Tp7YB9ZgrZjkKp8r52HwiynhGzsLIBga6V5QNqFztCsRWM9tDKzNtys
+	AA79qUSJ37lvz+WSR9b59t4cuONAbApJvPbopQHia2gy9Zmc5A7tgG9WoJAM05NJPqBH18
+	pz3Fis2q+koxAwkI/SENzsXJP0zmXgU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1758900123;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3iYmdnwJUFP5zwtZs6WEPYNQrwZHjasFtnMnsic4KPA=;
+	b=+W+ecXus5herC6N6WvdTLoN+OfYoZ0K4CBU3nZ1DQkgNQ6lNO62OhpnJckwv2tL7Rsbiyf
+	mdGfmIr8MBCrv4AA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1758900123; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3iYmdnwJUFP5zwtZs6WEPYNQrwZHjasFtnMnsic4KPA=;
+	b=peMzWo9m+tnTxP/Tp7YB9ZgrZjkKp8r52HwiynhGzsLIBga6V5QNqFztCsRWM9tDKzNtys
+	AA79qUSJ37lvz+WSR9b59t4cuONAbApJvPbopQHia2gy9Zmc5A7tgG9WoJAM05NJPqBH18
+	pz3Fis2q+koxAwkI/SENzsXJP0zmXgU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1758900123;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3iYmdnwJUFP5zwtZs6WEPYNQrwZHjasFtnMnsic4KPA=;
+	b=+W+ecXus5herC6N6WvdTLoN+OfYoZ0K4CBU3nZ1DQkgNQ6lNO62OhpnJckwv2tL7Rsbiyf
+	mdGfmIr8MBCrv4AA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 210CE1386E;
+	Fri, 26 Sep 2025 15:22:03 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id OjwwCJuv1mhYfgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Fri, 26 Sep 2025 15:22:03 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id C260CA0AA0; Fri, 26 Sep 2025 17:21:54 +0200 (CEST)
+Date: Fri, 26 Sep 2025 17:21:54 +0200
+From: Jan Kara <jack@suse.cz>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Chuck Lever <chuck.lever@oracle.com>, 
+	Alexander Aring <alex.aring@gmail.com>, Trond Myklebust <trondmy@kernel.org>, 
+	Anna Schumaker <anna@kernel.org>, Steve French <sfrench@samba.org>, 
+	Ronnie Sahlberg <ronniesahlberg@gmail.com>, Shyam Prasad N <sprasad@microsoft.com>, 
+	Tom Talpey <tom@talpey.com>, Bharath SM <bharathsm@microsoft.com>, 
+	NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, 
+	Dai Ngo <Dai.Ngo@oracle.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Amir Goldstein <amir73il@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, 
+	Paulo Alcantara <pc@manguebit.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
+	David Howells <dhowells@redhat.com>, Tyler Hicks <code@tyhicks.com>, 
+	Namjae Jeon <linkinjeon@kernel.org>, Steve French <smfrench@gmail.com>, 
+	Sergey Senozhatsky <senozhatsky@chromium.org>, Carlos Maiolino <cem@kernel.org>, 
+	Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, 
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Rick Macklem <rick.macklem@gmail.com>, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
+	linux-cifs@vger.kernel.org, samba-technical@lists.samba.org, linux-doc@vger.kernel.org, 
+	netfs@lists.linux.dev, ecryptfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-trace-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 07/38] vfs: make vfs_create break delegations on
+ parent directory
+Message-ID: <k4iyqydv6i45nke27ie5likvn5r5famnehzrmdso42mb6w6lah@yuiy3ksfgeus>
+References: <20250924-dir-deleg-v3-0-9f3af8bc5c40@kernel.org>
+ <20250924-dir-deleg-v3-7-9f3af8bc5c40@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,149 +107,156 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aNZfRuIVgIOiP6Qp@dread.disaster.area>
+In-Reply-To: <20250924-dir-deleg-v3-7-9f3af8bc5c40@kernel.org>
+X-Spamd-Result: default: False [-2.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_SOME(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[44];
+	TAGGED_RCPT(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	R_RATELIMIT(0.00)[to_ip_from(RL63fqwwx8ot6gmekemcs76f9d)];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[zeniv.linux.org.uk,kernel.org,suse.cz,oracle.com,gmail.com,samba.org,microsoft.com,talpey.com,brown.name,redhat.com,lwn.net,szeredi.hu,manguebit.org,linuxfoundation.org,tyhicks.com,chromium.org,goodmis.org,efficios.com,vger.kernel.org,lists.samba.org,lists.linux.dev];
+	RCVD_COUNT_THREE(0.00)[3];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Spam-Score: -2.30
 
-On Fri, Sep 26, 2025 at 07:39:18PM +1000, Dave Chinner wrote:
-> On Fri, Sep 26, 2025 at 09:04:12AM +0000, hubert . wrote:
-> > >> Regarding the xfs_metadump segfault, yes, a core might be useful to
-> > >> investigate where the segfault is triggered, but you'll need to be
-> > >> running xfsprogs from the upstream tree (preferentially latest code), so
-> > >> we can actually match the core information the code.
-> > >
-> > > I figured it was not all the needed info, thanks for clarifying.
-> > >
-> > > Right now we had to put away the original hdds, as we cannot afford
-> > > another failed drive and time is pressing, and are dd'ing the image to a
-> > > real partition to try xfs_repair on it directly (takes days, of course,
-> > > but we're lucky we got the storage).
-> > > I will try the metadump and do further debugging if it segfaults again.
-> >
-> > So I'm back now with a real partition.
-> > First, I ran "xfs_repair -vn" and it did complete, reporting - as expected - a
-> > bunch of entries to junk, skipping the last phases with "Inode allocation
-> > btrees are too corrupted, skipping phases 6 and 7".
-> > It created a 270MB log, I can upload it somewhere if it could be of interest.
+On Wed 24-09-25 14:05:53, Jeff Layton wrote:
+> In order to add directory delegation support, we need to break
+> delegations on the parent whenever there is going to be a change in the
+> directory.
 > 
-> No need, but thanks for the offer.
+> Rename vfs_create as __vfs_create, make it static, and add a new
+> delegated_inode parameter. Fix do_mknodat to call __vfs_create and wait
+> for a delegation break if there is one. Add a new exported vfs_create
+> wrapper that passes in NULL for delegated_inode.
 > 
-> > Core was generated by `/usr/sbin/xfs_db -i -p xfs_metadump -c metadump /dev/sda1'.
-> > Program terminated with signal SIGSEGV, Segmentation fault.
-> > #0  libxfs_bmbt_disk_get_all (rec=0x55c47aec3eb0, irec=<synthetic pointer>) at ../include/libxfs.h:226
-> >
-> > warning: 226	../include/libxfs.h: No such file or directory
-> > (gdb) bt full
-> > #0  libxfs_bmbt_disk_get_all (rec=0x55c47aec3eb0, irec=<synthetic pointer>) at ../include/libxfs.h:226
-> >         l0 = <optimized out>
-> >         l1 = <optimized out>
-> >         l0 = <optimized out>
-> >         l1 = <optimized out>
-> 
-> Ok, so it's faulted when trying to read a BMBT record from an
-> in-memory buffer...
-> 
-> Remember the addr of the rec (0x55c47aec3eb0) now....
-> 
-> > #1  convert_extent (rp=0x55c47aec3eb0, op=<synthetic pointer>, sp=<synthetic pointer>, cp=<synthetic pointer>, fp=<synthetic pointer>) at /build/reproducible-path/xfsprogs-6.16.0/db/bmap.c:320
-> >         irec = <optimized out>
-> >         irec = <optimized out>
-> > #2  process_bmbt_reclist (dip=dip@entry=0x55c37aec3e00, whichfork=whichfork@entry=0, rp=0x55c37aec3eb0, numrecs=numrecs@entry=268435457) at /build/reproducible-path/xfsprogs-6.16.0/db/metadump.c:2181
-> 
-> Smoking gun:
-> 
-> numrecs=numrecs@entry=268435457
-> 
-> 268435457 = 2^28 + 1
-> 
-> >         is_meta = false
-> >         btype = <optimized out>
-> >         i = <optimized out>
-> >         o = <optimized out>
-> >         op = <optimized out>
-> >         s = <optimized out>
-> >         c = <optimized out>
-> >         cp = <optimized out>
-> >         f = <optimized out>
-> >         last = <optimized out>
-> >         agno = <optimized out>
-> >         agbno = <optimized out>
-> >         rval = <optimized out>
-> > #3  0x000055c36404e042 in process_exinode (dip=0x55c37aec3e00, whichfork=0) at /build/reproducible-path/xfsprogs-6.16.0/db/metadump.c:2421
-> >         max_nex = <optimized out>
-> >         nex = 268435457
-> 
-> Yup, that's the problem.
-> 
-> The inode is in extent format, which means the extent records are in
-> the inode data fork area, which is about 300 bytes max for a 512
-> byte inode. IOWs, it can hold about 12 BMBT records. The BMBT
-> records are in the on-disk inode buffer, as is the disk inode @dip.
-> 
-> Look at the address of dip:  0x55c37aec3e00
-> The address of the BMBT rec: 0x55c47aec3eb0
-> 
-> Now lok at what BMBT record convert_extent() is trying to access:
-> 
-> process_bmbt_reclist()
-> {
-> .....
-> 	convert_extent(&rp[numrecs - 1], &o, &s, &c, &f);
-> .....
-> 
-> Yeah, that inode buffer isn't 268 million bmbt recrods long....
-> 
-> So there must be a bounds checking bug in process_exinode():
-> 
-> static int
-> process_exinode(
->         struct xfs_dinode       *dip,
->         int                     whichfork)
-> {
->         xfs_extnum_t            max_nex = xfs_iext_max_nextents(
->                         xfs_dinode_has_large_extent_counts(dip), whichfork);
->         xfs_extnum_t            nex = xfs_dfork_nextents(dip, whichfork);
->         int                     used = nex * sizeof(struct xfs_bmbt_rec);
-> 
->         if (nex > max_nex || used > XFS_DFORK_SIZE(dip, mp, whichfork)) {
->                 if (metadump.show_warnings)
->                         print_warning("bad number of extents %llu in inode %lld",
->                                 (unsigned long long)nex,
->                                 (long long)metadump.cur_ino);
->                 return 1;
->         }
-> 
-> Can you spot it?
-> 
-> Hint: ((2^28 + 1) * 2^4) - 1 as an int is?
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
 
-Perhaps the patch below will suffice?
+Looks good. Feel free to add:
 
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-diff --git a/db/metadump.c b/db/metadump.c
-index 34f2d61700fe..1dd38ab84ade 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -2395,7 +2395,7 @@ process_btinode(
- 
- static int
- process_exinode(
--	struct xfs_dinode 	*dip,
-+	struct xfs_dinode	*dip,
- 	int			whichfork)
- {
- 	xfs_extnum_t		max_nex = xfs_iext_max_nextents(
-@@ -2403,7 +2403,13 @@ process_exinode(
- 	xfs_extnum_t		nex = xfs_dfork_nextents(dip, whichfork);
- 	int			used = nex * sizeof(struct xfs_bmbt_rec);
- 
--	if (nex > max_nex || used > XFS_DFORK_SIZE(dip, mp, whichfork)) {
-+	/*
-+	 * We need to check for overflow of used counter.
-+	 * If the inode extent count is corrupted, we risk having a
-+	 * big enough number of extents to overflow it.
-+	 */
-+	if (used < nex || nex > max_nex ||
-+	    used > XFS_DFORK_SIZE(dip, mp, whichfork)) {
- 		if (metadump.show_warnings)
- 			print_warning("bad number of extents %llu in inode %lld",
- 				(unsigned long long)nex,
+								Honza
 
+> ---
+>  fs/namei.c | 55 ++++++++++++++++++++++++++++++++++++-------------------
+>  1 file changed, 36 insertions(+), 19 deletions(-)
+> 
+> diff --git a/fs/namei.c b/fs/namei.c
+> index 903b70a82530938a0fdf10508529a1b7cc38136d..d4b8330a3eb97e205dc2e71766fed1e45503323b 100644
+> --- a/fs/namei.c
+> +++ b/fs/namei.c
+> @@ -3370,6 +3370,32 @@ static inline umode_t vfs_prepare_mode(struct mnt_idmap *idmap,
+>  	return mode;
+>  }
+>  
+> +static int __vfs_create(struct mnt_idmap *idmap, struct inode *dir,
+> +			struct dentry *dentry, umode_t mode, bool want_excl,
+> +			struct inode **delegated_inode)
+> +{
+> +	int error;
+> +
+> +	error = may_create(idmap, dir, dentry);
+> +	if (error)
+> +		return error;
+> +
+> +	if (!dir->i_op->create)
+> +		return -EACCES;	/* shouldn't it be ENOSYS? */
+> +
+> +	mode = vfs_prepare_mode(idmap, dir, mode, S_IALLUGO, S_IFREG);
+> +	error = security_inode_create(dir, dentry, mode);
+> +	if (error)
+> +		return error;
+> +	error = try_break_deleg(dir, delegated_inode);
+> +	if (error)
+> +		return error;
+> +	error = dir->i_op->create(idmap, dir, dentry, mode, want_excl);
+> +	if (!error)
+> +		fsnotify_create(dir, dentry);
+> +	return error;
+> +}
+> +
+>  /**
+>   * vfs_create - create new file
+>   * @idmap:	idmap of the mount the inode was found from
+> @@ -3389,23 +3415,7 @@ static inline umode_t vfs_prepare_mode(struct mnt_idmap *idmap,
+>  int vfs_create(struct mnt_idmap *idmap, struct inode *dir,
+>  	       struct dentry *dentry, umode_t mode, bool want_excl)
+>  {
+> -	int error;
+> -
+> -	error = may_create(idmap, dir, dentry);
+> -	if (error)
+> -		return error;
+> -
+> -	if (!dir->i_op->create)
+> -		return -EACCES;	/* shouldn't it be ENOSYS? */
+> -
+> -	mode = vfs_prepare_mode(idmap, dir, mode, S_IALLUGO, S_IFREG);
+> -	error = security_inode_create(dir, dentry, mode);
+> -	if (error)
+> -		return error;
+> -	error = dir->i_op->create(idmap, dir, dentry, mode, want_excl);
+> -	if (!error)
+> -		fsnotify_create(dir, dentry);
+> -	return error;
+> +	return __vfs_create(idmap, dir, dentry, mode, want_excl, NULL);
+>  }
+>  EXPORT_SYMBOL(vfs_create);
+>  
+> @@ -4278,6 +4288,7 @@ static int do_mknodat(int dfd, struct filename *name, umode_t mode,
+>  	struct path path;
+>  	int error;
+>  	unsigned int lookup_flags = 0;
+> +	struct inode *delegated_inode = NULL;
+>  
+>  	error = may_mknod(mode);
+>  	if (error)
+> @@ -4296,8 +4307,9 @@ static int do_mknodat(int dfd, struct filename *name, umode_t mode,
+>  	idmap = mnt_idmap(path.mnt);
+>  	switch (mode & S_IFMT) {
+>  		case 0: case S_IFREG:
+> -			error = vfs_create(idmap, path.dentry->d_inode,
+> -					   dentry, mode, true);
+> +			error = __vfs_create(idmap, path.dentry->d_inode,
+> +					     dentry, mode, true,
+> +					     &delegated_inode);
+>  			if (!error)
+>  				security_path_post_mknod(idmap, dentry);
+>  			break;
+> @@ -4312,6 +4324,11 @@ static int do_mknodat(int dfd, struct filename *name, umode_t mode,
+>  	}
+>  out2:
+>  	done_path_create(&path, dentry);
+> +	if (delegated_inode) {
+> +		error = break_deleg_wait(&delegated_inode);
+> +		if (!error)
+> +			goto retry;
+> +	}
+>  	if (retry_estale(error, lookup_flags)) {
+>  		lookup_flags |= LOOKUP_REVAL;
+>  		goto retry;
+> 
+> -- 
+> 2.51.0
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
