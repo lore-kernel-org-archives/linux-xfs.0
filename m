@@ -1,109 +1,199 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6210CCA4B
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Sep 2025 12:46:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 796C210E3
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Sep 2025 13:45:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758890795; cv=none; b=BvNX+Qo6C7Mwh81CKDD3DBXMKk9LDUrGE7t2YvdsoOP4zutaAqtRf2WT5BW3GTR8Zi/lxLA3h3mMWnKXjfFV0ZhoYU0hNAhYDlhq9fXASmyTDOo8JDxS6Kk3+2tiL/WF+ZFQX797hbFz/666edt3E8y3VixI9qZ2LRm2XAYQ2Wk=
+	t=1758894324; cv=none; b=d4pjODXDH4pzZOn47QwHy2d4Gqhe4aFboHQb7u3t66xLKKMTVkORasIaLEtlljlFl2DljgUucSMO1TCDL3oOeGnAiLaP0etrzMKTmPsmfnFb0GgpJQ5VpI2tdIzGaabqNKfgqN2/58/zr2Kayzbnvm2T6beWsyT/wnda7i7OI5k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758890795; c=relaxed/simple;
-	bh=GOD96euFbaRMVOb/hya+/7gGysF7JttbDh1zPTDJEDU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Q6miHPEwAHJAknNivdly44CoWFuS69atqlxUT1SDkhj83BCNQHjPeZhpRKqg+RIntNpGzfKRlN4KwPbDQamCRwwPoHU3rNWF6pfC9d0wxnyNkantddHaO076bZczrrGCSMG6GRp6j9af/cSkriZF/xlwxlp9tB8t74joq2OEbVk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id A4B2C180F2D8;
-	Fri, 26 Sep 2025 14:39:13 +0200 (CEST)
-Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
-	by mx0.herbolt.com with ESMTPSA
-	id UWx/JXGJ1mi68xQAKEJqOA
-	(envelope-from <lukas@herbolt.com>); Fri, 26 Sep 2025 14:39:13 +0200
-From: Lukas Herbolt <lukas@herbolt.com>
-To: aalbersh@redhat.com,
-	djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH] mkfs.xfs fix sunit size on 512e and 4kN disks.
-Date: Fri, 26 Sep 2025 14:38:30 +0200
-Message-ID: <20250926123829.2101207-2-lukas@herbolt.com>
-X-Mailer: git-send-email 2.51.0
+	s=arc-20240116; t=1758894324; c=relaxed/simple;
+	bh=A3qaEJQkSuXsmXAYkB9oUz2Id5oqwrYjawxbp1qdRWc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CViBRFBLSBKx+luNSB95da0FzdlOkGp/FXoN1OtXMoSv5+EVFMW0npaTMqDacrjWiEp30jnHVvkIs0bFxKcVZgMnEMCe7aPHz5QcWTTVk/7izPtAYN2XW4mlaWEB61+zxPUgmOIcFYnZD45bAjTOhhR+700ilr7c6Fg6X5tEEHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X7L1RjO2; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X7L1RjO2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13863C4CEF4;
+	Fri, 26 Sep 2025 13:45:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1758894324;
+	bh=A3qaEJQkSuXsmXAYkB9oUz2Id5oqwrYjawxbp1qdRWc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=X7L1RjO2x7EPQvgNNcbkSYkA6/Y6uIoymkIoc98gGVlDnyoaaf901+mo9WPqjTfRm
+	 yL6QlxBox+2kG6gM+tJElHMKFpdYnqJWj5uwlaJskQ1UGO5DqEFeQf42p7zjZstOCZ
+	 WNeBySR7FJ5trE4gmdPwL7fOFw2PN9UPYwXz9jLPZWStTRnPSF39Ic5T3j3wohHIJw
+	 i6GB1Mlbtsrm/+IHdRBPfH3kolQT32BdX5oXMSdNlEyy6+jxbNEoaRfFXoCHHFsBZ5
+	 RiK/hdjJ17Hsb4baFO/InYTtZ8QBliHhZuVn0m9DiD0KnInO6XvCo4Qxjg402Sp8K2
+	 f5yotDrUA5Diw==
+Date: Fri, 26 Sep 2025 15:45:17 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "hubert ." <hubjin657@outlook.com>, 
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: xfs_metadump segmentation fault on large fs - xfsprogs 6.1
+Message-ID: <ip6g2acleif3cyslm65uzdxd47dgzfum57xxgpmk73r4223poy@shhld7q7ls7i>
+References: <CH3PR05MB10392E816C6A1051847D214A2FA59A@CH3PR05MB10392.namprd05.prod.outlook.com>
+ <6tqlc3mcf3ovkbzf4345m7oztoeagevfycpdnxizrtdbhq53p2@mrlmjhs6n7gy>
+ <LV3PR05MB104071E0D6E7CAD06C7728DACFA26A@LV3PR05MB10407.namprd05.prod.outlook.com>
+ <kZ0Ndjz5Uh9rHFbs-iYYoEFNVWoxMtkvK-3nrx6mrlxpglTxelNWuY_lqxKmfrItAPWl4M4ng-BzenCqcFiOaA==@protonmail.internalid>
+ <IA0PR05MB99750EB3605E36DEF8874BACFA31A@IA0PR05MB9975.namprd05.prod.outlook.com>
+ <gjogpxo65cozoccj4fps6e4fzeu4ncibeofymhkyzys4hsclzy@vvrl2kndu7k6>
+ <IA0PR05MB9975ADAF48C73797473737BEFA38A@IA0PR05MB9975.namprd05.prod.outlook.com>
+ <IA0PR05MB99755ED06F9965745B20D9DAFA1EA@IA0PR05MB9975.namprd05.prod.outlook.com>
+ <7qd0IjCTUj1UpKLm2g6sPrhFI8HEoYrqIQ23o_ANTShTu58S7x7bgoMYTvXfR_fpqPdB85XxZoz16xrnllDcvA==@protonmail.internalid>
+ <aNZfRuIVgIOiP6Qp@dread.disaster.area>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aNZfRuIVgIOiP6Qp@dread.disaster.area>
 
-Creating of XFS on 4kN or 512e disk result in suboptimal LSU/LSUNIT.
-As of now we check if the sectorsize is bigger than XLOG_HEADER_SIZE
-and so we set lsu to blocksize. But we do not check the the size if
-lsunit can be bigger to fit the disk geometry.
+On Fri, Sep 26, 2025 at 07:39:18PM +1000, Dave Chinner wrote:
+> On Fri, Sep 26, 2025 at 09:04:12AM +0000, hubert . wrote:
+> > >> Regarding the xfs_metadump segfault, yes, a core might be useful to
+> > >> investigate where the segfault is triggered, but you'll need to be
+> > >> running xfsprogs from the upstream tree (preferentially latest code), so
+> > >> we can actually match the core information the code.
+> > >
+> > > I figured it was not all the needed info, thanks for clarifying.
+> > >
+> > > Right now we had to put away the original hdds, as we cannot afford
+> > > another failed drive and time is pressing, and are dd'ing the image to a
+> > > real partition to try xfs_repair on it directly (takes days, of course,
+> > > but we're lucky we got the storage).
+> > > I will try the metadump and do further debugging if it segfaults again.
+> >
+> > So I'm back now with a real partition.
+> > First, I ran "xfs_repair -vn" and it did complete, reporting - as expected - a
+> > bunch of entries to junk, skipping the last phases with "Inode allocation
+> > btrees are too corrupted, skipping phases 6 and 7".
+> > It created a 270MB log, I can upload it somewhere if it could be of interest.
+> 
+> No need, but thanks for the offer.
+> 
+> > Core was generated by `/usr/sbin/xfs_db -i -p xfs_metadump -c metadump /dev/sda1'.
+> > Program terminated with signal SIGSEGV, Segmentation fault.
+> > #0  libxfs_bmbt_disk_get_all (rec=0x55c47aec3eb0, irec=<synthetic pointer>) at ../include/libxfs.h:226
+> >
+> > warning: 226	../include/libxfs.h: No such file or directory
+> > (gdb) bt full
+> > #0  libxfs_bmbt_disk_get_all (rec=0x55c47aec3eb0, irec=<synthetic pointer>) at ../include/libxfs.h:226
+> >         l0 = <optimized out>
+> >         l1 = <optimized out>
+> >         l0 = <optimized out>
+> >         l1 = <optimized out>
+> 
+> Ok, so it's faulted when trying to read a BMBT record from an
+> in-memory buffer...
+> 
+> Remember the addr of the rec (0x55c47aec3eb0) now....
+> 
+> > #1  convert_extent (rp=0x55c47aec3eb0, op=<synthetic pointer>, sp=<synthetic pointer>, cp=<synthetic pointer>, fp=<synthetic pointer>) at /build/reproducible-path/xfsprogs-6.16.0/db/bmap.c:320
+> >         irec = <optimized out>
+> >         irec = <optimized out>
+> > #2  process_bmbt_reclist (dip=dip@entry=0x55c37aec3e00, whichfork=whichfork@entry=0, rp=0x55c37aec3eb0, numrecs=numrecs@entry=268435457) at /build/reproducible-path/xfsprogs-6.16.0/db/metadump.c:2181
+> 
+> Smoking gun:
+> 
+> numrecs=numrecs@entry=268435457
+> 
+> 268435457 = 2^28 + 1
+> 
+> >         is_meta = false
+> >         btype = <optimized out>
+> >         i = <optimized out>
+> >         o = <optimized out>
+> >         op = <optimized out>
+> >         s = <optimized out>
+> >         c = <optimized out>
+> >         cp = <optimized out>
+> >         f = <optimized out>
+> >         last = <optimized out>
+> >         agno = <optimized out>
+> >         agbno = <optimized out>
+> >         rval = <optimized out>
+> > #3  0x000055c36404e042 in process_exinode (dip=0x55c37aec3e00, whichfork=0) at /build/reproducible-path/xfsprogs-6.16.0/db/metadump.c:2421
+> >         max_nex = <optimized out>
+> >         nex = 268435457
+> 
+> Yup, that's the problem.
+> 
+> The inode is in extent format, which means the extent records are in
+> the inode data fork area, which is about 300 bytes max for a 512
+> byte inode. IOWs, it can hold about 12 BMBT records. The BMBT
+> records are in the on-disk inode buffer, as is the disk inode @dip.
+> 
+> Look at the address of dip:  0x55c37aec3e00
+> The address of the BMBT rec: 0x55c47aec3eb0
+> 
+> Now lok at what BMBT record convert_extent() is trying to access:
+> 
+> process_bmbt_reclist()
+> {
+> .....
+> 	convert_extent(&rp[numrecs - 1], &o, &s, &c, &f);
+> .....
+> 
+> Yeah, that inode buffer isn't 268 million bmbt recrods long....
+> 
+> So there must be a bounds checking bug in process_exinode():
+> 
+> static int
+> process_exinode(
+>         struct xfs_dinode       *dip,
+>         int                     whichfork)
+> {
+>         xfs_extnum_t            max_nex = xfs_iext_max_nextents(
+>                         xfs_dinode_has_large_extent_counts(dip), whichfork);
+>         xfs_extnum_t            nex = xfs_dfork_nextents(dip, whichfork);
+>         int                     used = nex * sizeof(struct xfs_bmbt_rec);
+> 
+>         if (nex > max_nex || used > XFS_DFORK_SIZE(dip, mp, whichfork)) {
+>                 if (metadump.show_warnings)
+>                         print_warning("bad number of extents %llu in inode %lld",
+>                                 (unsigned long long)nex,
+>                                 (long long)metadump.cur_ino);
+>                 return 1;
+>         }
+> 
+> Can you spot it?
+> 
+> Hint: ((2^28 + 1) * 2^4) - 1 as an int is?
 
-Before:
-modprobe scsi_debug inq_vendor=XFS_TEST physblk_exp=3 sector_size=512 \
-opt_xferlen_exp=9 opt_blks=512 dev_size_mb=100 virtual_gb=1000; \
-lsblk -tQ 'VENDOR == "XFS_TEST"'; \
-mkfs.xfs -f $(lsblk -Q 'VENDOR == "XFS_TEST"' -no path) 2>/dev/null; sleep 1; \
-modprobe -r scsi_debug
-NAME ALIGNMENT MIN-IO OPT-IO PHY-SEC LOG-SEC ROTA SCHED RQ-SIZE  RA WSAME
-sda          0 262144 262144    4096     512    0 bfq       256 512    0B
-meta-data=/dev/sda               isize=512    agcount=32, agsize=8192000 blks
-         =                       sectsz=4096  attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-         =                       exchange=0
-data     =                       bsize=4096   blocks=262144000, imaxpct=25
-         =                       sunit=64     swidth=64 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
-log      =internal log           bsize=4096   blocks=128000, version=2
-         =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+Perhaps the patch below will suffice?
 
-After:
-modprobe scsi_debug inq_vendor=XFS_TEST physblk_exp=3 sector_size=512 \
-opt_xferlen_exp=9 opt_blks=512 dev_size_mb=100 virtual_gb=1000; \
-lsblk -tQ 'VENDOR == "XFS_TEST"'; \
-mkfs.xfs -f $(lsblk -Q 'VENDOR == "XFS_TEST"' -no path) 2>/dev/null; sleep 1; \
-modprobe -r scsi_debug
-NAME ALIGNMENT MIN-IO OPT-IO PHY-SEC LOG-SEC ROTA SCHED RQ-SIZE  RA WSAME
-sda          0 262144 262144    4096     512    0 bfq       256 512    0B
-meta-data=/dev/sda               isize=512    agcount=32, agsize=8192000 blks
-         =                       sectsz=4096  attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
-         =                       exchange=0   metadir=0
-data     =                       bsize=4096   blocks=262144000, imaxpct=25
-         =                       sunit=64     swidth=64 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
-log      =internal log           bsize=4096   blocks=128000, version=2
-         =                       sectsz=4096  sunit=64 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-         =                       rgcount=0    rgsize=0 extents
-         =                       zoned=0      start=0 reserved=0
 
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
----
- mkfs/xfs_mkfs.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 8cd4ccd7..05268cd9 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3643,6 +3643,10 @@ check_lsunit:
- 		lsu = getnum(cli->lsu, &lopts, L_SU);
- 	else if (cfg->lsectorsize > XLOG_HEADER_SIZE)
- 		lsu = cfg->blocksize; /* lsunit matches filesystem block size */
-+		if (cfg->dsunit){
-+			cfg->lsunit = cfg->dsunit;
-+			lsu = 0;
-+		}
+diff --git a/db/metadump.c b/db/metadump.c
+index 34f2d61700fe..1dd38ab84ade 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -2395,7 +2395,7 @@ process_btinode(
  
- 	if (lsu) {
- 		/* verify if lsu is a multiple block size */
--- 
-2.51.0
+ static int
+ process_exinode(
+-	struct xfs_dinode 	*dip,
++	struct xfs_dinode	*dip,
+ 	int			whichfork)
+ {
+ 	xfs_extnum_t		max_nex = xfs_iext_max_nextents(
+@@ -2403,7 +2403,13 @@ process_exinode(
+ 	xfs_extnum_t		nex = xfs_dfork_nextents(dip, whichfork);
+ 	int			used = nex * sizeof(struct xfs_bmbt_rec);
+ 
+-	if (nex > max_nex || used > XFS_DFORK_SIZE(dip, mp, whichfork)) {
++	/*
++	 * We need to check for overflow of used counter.
++	 * If the inode extent count is corrupted, we risk having a
++	 * big enough number of extents to overflow it.
++	 */
++	if (used < nex || nex > max_nex ||
++	    used > XFS_DFORK_SIZE(dip, mp, whichfork)) {
+ 		if (metadump.show_warnings)
+ 			print_warning("bad number of extents %llu in inode %lld",
+ 				(unsigned long long)nex,
 
