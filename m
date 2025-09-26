@@ -1,106 +1,77 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2A5A22370A
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Sep 2025 15:33:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EC4C19FA93
+	for <linux-xfs@vger.kernel.org>; Fri, 26 Sep 2025 15:35:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758900803; cv=none; b=Zf/McZjEaImghVPujDzrGZuLr9Tg6VWLn9Tx+bTSMOEhfEaHt1uGryePqsisUirxcgVzrXRPYY0fH22tsNB26oI5TCmI2B60GnbEeIlADN/syBgnUWm7PazmrnaHEGIlG75OguGUeHh+I6Y2EQdx7aXcSZ9WfncQtQ+8+Bz4n40=
+	t=1758900951; cv=none; b=XpFN7vJYqYoR9IOL+nwckkks3061o5TTn+NHbuXt9IvFScUthzijXDPrx3YUTIHLcZzg52mFlHL2/DtVz6qh86WrSIz526+mA4zkWNsa38MfibK99qB7glgW/ZG6+/b15yhB2pgAl7BZWbcPp/MM64c80IF+wTzELfJ+Is7wV5o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758900803; c=relaxed/simple;
-	bh=kd7bEABZ+uROS4oY4S3a/bjeGAoTAcj6vtm7z/gmab4=;
+	s=arc-20240116; t=1758900951; c=relaxed/simple;
+	bh=DIY1/K7PAISZ3lY0wenUqREBig6mZBSOUoa1uwmn2vo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EYIyTmUVtVCP+7ip3Jn907zS3WYYFrkYqTQ4Cf27s3Luww+p7dJAIFnG18+Boq0NrtX8jj+o2IBBu5LyzfOmt6+lCy+z9aEMw0dNTVa+J4qGxH7+M5A4hASKsidTM8xf6LN3tvJdOswmREb8ItZuy2eIqDXymcNaDpYau6En16I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=hPN1Q/Z2; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=qvsmI3WJ; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=hPN1Q/Z2; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=qvsmI3WJ; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=gIz4baTKIY6OgNyBS1tS2aCu+oWAKISJwdlp/H2UsRqd7Hyu16WX+NBACMP9I6Z9uexrOUXQNhh7jxmqQdmoqNmtGl5p23TfJtPocg3JPEXmKEHpqdDUpiM71tOca6VmTp44lVB79DR7sQJY95B9xVMRLbaXPoRh7NBKDgbOD5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fSvlQLTg; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="hPN1Q/Z2";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="qvsmI3WJ";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="hPN1Q/Z2";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="qvsmI3WJ"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 1F8DD1F84F;
-	Fri, 26 Sep 2025 15:33:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1758900800; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fSvlQLTg"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1758900949;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=glSyxRB6Xj36ASiIjA+TJGgbXUZyzaV6dbkxB9p11to=;
-	b=hPN1Q/Z2I0LleaVvFRVk+yXLW6mKv8nxGbCL4ruk19wSvq+3uPTxnoPMPL2ZdNeXu68zEE
-	ZHfIFjmXeybYmlsuTT/gGyP5+++DS0qkKLPB1nUbM6a2ZIIau/UlRX0DENJipCwjcahyG7
-	kcnHCmHP8mfbc/flUmB1bDEzR5g62Ls=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1758900800;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=glSyxRB6Xj36ASiIjA+TJGgbXUZyzaV6dbkxB9p11to=;
-	b=qvsmI3WJwdxotgPOWL64XgiQ7XQul3VTfRbYUxHg3hVGT+gxhleujtTOPyvGFODFYUjNhk
-	Ub5wEs52eNFsq7BQ==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b="hPN1Q/Z2";
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=qvsmI3WJ
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1758900800; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=glSyxRB6Xj36ASiIjA+TJGgbXUZyzaV6dbkxB9p11to=;
-	b=hPN1Q/Z2I0LleaVvFRVk+yXLW6mKv8nxGbCL4ruk19wSvq+3uPTxnoPMPL2ZdNeXu68zEE
-	ZHfIFjmXeybYmlsuTT/gGyP5+++DS0qkKLPB1nUbM6a2ZIIau/UlRX0DENJipCwjcahyG7
-	kcnHCmHP8mfbc/flUmB1bDEzR5g62Ls=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1758900800;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=glSyxRB6Xj36ASiIjA+TJGgbXUZyzaV6dbkxB9p11to=;
-	b=qvsmI3WJwdxotgPOWL64XgiQ7XQul3VTfRbYUxHg3hVGT+gxhleujtTOPyvGFODFYUjNhk
-	Ub5wEs52eNFsq7BQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0CA6E1386E;
-	Fri, 26 Sep 2025 15:33:20 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Wk0VA0Cy1mj4AgAAD6G6ig
-	(envelope-from <jack@suse.cz>); Fri, 26 Sep 2025 15:33:20 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id B7903A0AA0; Fri, 26 Sep 2025 17:33:19 +0200 (CEST)
-Date: Fri, 26 Sep 2025 17:33:19 +0200
-From: Jan Kara <jack@suse.cz>
-To: Jeff Layton <jlayton@kernel.org>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Chuck Lever <chuck.lever@oracle.com>, 
-	Alexander Aring <alex.aring@gmail.com>, Trond Myklebust <trondmy@kernel.org>, 
-	Anna Schumaker <anna@kernel.org>, Steve French <sfrench@samba.org>, 
-	Ronnie Sahlberg <ronniesahlberg@gmail.com>, Shyam Prasad N <sprasad@microsoft.com>, 
-	Tom Talpey <tom@talpey.com>, Bharath SM <bharathsm@microsoft.com>, 
-	NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, 
-	Dai Ngo <Dai.Ngo@oracle.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Amir Goldstein <amir73il@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, 
-	Paulo Alcantara <pc@manguebit.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
-	David Howells <dhowells@redhat.com>, Tyler Hicks <code@tyhicks.com>, 
-	Namjae Jeon <linkinjeon@kernel.org>, Steve French <smfrench@gmail.com>, 
-	Sergey Senozhatsky <senozhatsky@chromium.org>, Carlos Maiolino <cem@kernel.org>, 
-	Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, 
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Rick Macklem <rick.macklem@gmail.com>, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
-	linux-cifs@vger.kernel.org, samba-technical@lists.samba.org, linux-doc@vger.kernel.org, 
-	netfs@lists.linux.dev, ecryptfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, linux-trace-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 07/38] vfs: make vfs_create break delegations on
- parent directory
-Message-ID: <jshbhldhrbr2vbzfvuary3qowbfavcgkjznbgnjwhnxvmudvhw@c2uam4vtghcw>
-References: <20250924-dir-deleg-v3-0-9f3af8bc5c40@kernel.org>
- <20250924-dir-deleg-v3-7-9f3af8bc5c40@kernel.org>
- <otguskcvjqwcojy6tsw7yimvshsgtj4vl7ciwksxazx7z5s2ko@vjyf5plolvvf>
+	bh=UMnZJwNq/Qh9pPuQIYwq9bT1GHx7kd5Vb/OSc2d1dpI=;
+	b=fSvlQLTgdbHzKQPP2CM91FCq8m7MfxsFvowcSUKqUKy6e6q9aZCWo0JASH3XFWe3T9kLIC
+	+y+rIDbepJZwVaThL2M8Qk354mNWd/1vZ0Led3+zs9Jt9/8yKyFc9Fw391a+5z2H5jXDiB
+	eeNnEI0Ak8A3P13RL8FR86OLTYfV3u0=
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com
+ [209.85.210.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-283-lUqzNEDPPnOzyzwdwjfibA-1; Fri, 26 Sep 2025 11:35:47 -0400
+X-MC-Unique: lUqzNEDPPnOzyzwdwjfibA-1
+X-Mimecast-MFC-AGG-ID: lUqzNEDPPnOzyzwdwjfibA_1758900946
+Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-780f914b5a4so2437424b3a.1
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Sep 2025 08:35:47 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758900946; x=1759505746;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UMnZJwNq/Qh9pPuQIYwq9bT1GHx7kd5Vb/OSc2d1dpI=;
+        b=sRP2XBXxfpMkEz6We0KKqOkuCKU1v+HrHGQotpb4zXHaXXCFb9OeYpwjdv7iFZ80Wd
+         H7yXAHVjmOSgCe9yultn/JkXEGsKFyucvmhQunJJ4AGlUGnp280418JBV5J6GySq7T2Y
+         KdCutiEhRJKeBecopJrS62e1KEAY8Jx/re4tDZO2wmfNeHjpMDmYcJ2km7Q0p/npG1t4
+         SCcBwaJligarTZD8RzDykWdI7OnEyzMpu5/p6/7lOsPmkvT+AynmKRrHo6csjnrGF+iq
+         LPA9pa6eba1Jp8fuKgSst7l7JL1Y4e4Z1gBBjT3OXrTd1eNH2VHFdubgGMCu1v1r11rk
+         7s0A==
+X-Forwarded-Encrypted: i=1; AJvYcCX3Xgsd10AwU1E+0hCLOLDHB37p2835yhnWeVSuqDdiVvzXsKq/kh9j3L7FEtlcf7pWLDdnO/BTga8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwX+j/rcQjSq34VTOALuKArkPL0hPb7mjrTxUffu0p3KLnyBZFa
+	4EyMeiuoSO6LY2wTsJm2rn0a0KIB48hVbxufe3lSoiuICIzO8vRzktIVHehSdiCf8RimQXueOM9
+	RS2g1/CAZsm0nzE0SJZfKwo/ICQAN+FJnIQQlA9nJ1xBAcOQV7vJagDl63VVPCA==
+X-Gm-Gg: ASbGncv6VOsdkH+rr7fQ1ryWvSKJJ7k86y/rt8X9h36SxYexbu19icF3k2VuloHOaGE
+	IlsPoYFNIncJesqU1f9UFGnXOpoGbJDnAhabaAeKOaEx78AplxEQltQJlhRpwAUH9+GCvTaYNMw
+	WbagymXNaftP+9VWTRyHJy3M2Ijk3T9NhLERChBECaK0bU+UcA9xC+yigTty2rWwb8d5hDPfHFZ
+	AJ+0c6tlspgMW/pI3R37rVtcloZoOIun35O1m4poeQacpwHvhvlEFqRgGyKbanf7x+vXgjUmnHi
+	qGqKRHw4voQguhldjDPN3ekivEu3Z6nwDsVIgR7p1grfKbD93IDMLdjNXxvd9A0LK8nKsZJIlLc
+	+6Z2E
+X-Received: by 2002:a05:6a21:a8a:b0:2fa:52a0:e838 with SMTP id adf61e73a8af0-2fa52a0e86bmr1863145637.36.1758900946178;
+        Fri, 26 Sep 2025 08:35:46 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEcI6P0UwKryoSs2/8FpENei96l+FfS1D9JGd5pXUeSXa5ves2yT85gWQSP1/Q9ATYqMG6Hnw==
+X-Received: by 2002:a05:6a21:a8a:b0:2fa:52a0:e838 with SMTP id adf61e73a8af0-2fa52a0e86bmr1863110637.36.1758900945648;
+        Fri, 26 Sep 2025 08:35:45 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7810238cdd1sm4667586b3a.3.2025.09.26.08.35.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 26 Sep 2025 08:35:45 -0700 (PDT)
+Date: Fri, 26 Sep 2025 23:35:41 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: cem@kernel.org
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs/613: remove attr2 tests
+Message-ID: <20250926153541.zemxeuidyugeh3v2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20250925093005.198090-1-cem@kernel.org>
+ <20250925093005.198090-3-cem@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -109,171 +80,62 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <otguskcvjqwcojy6tsw7yimvshsgtj4vl7ciwksxazx7z5s2ko@vjyf5plolvvf>
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 1F8DD1F84F
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-2.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCPT_COUNT_TWELVE(0.00)[44];
-	RCVD_TLS_LAST(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_THREE(0.00)[3];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	FREEMAIL_CC(0.00)[zeniv.linux.org.uk,kernel.org,suse.cz,oracle.com,gmail.com,samba.org,microsoft.com,talpey.com,brown.name,redhat.com,lwn.net,szeredi.hu,manguebit.org,linuxfoundation.org,tyhicks.com,chromium.org,goodmis.org,efficios.com,vger.kernel.org,lists.samba.org,lists.linux.dev];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	R_RATELIMIT(0.00)[to_ip_from(RLpnapcpkwxdkc5mopt1ezhhna)];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.com:email,suse.cz:dkim,suse.cz:email]
-X-Spam-Score: -2.51
+In-Reply-To: <20250925093005.198090-3-cem@kernel.org>
 
-On Fri 26-09-25 17:23:41, Jan Kara wrote:
-> On Wed 24-09-25 14:05:53, Jeff Layton wrote:
-> > In order to add directory delegation support, we need to break
-> > delegations on the parent whenever there is going to be a change in the
-> > directory.
-> > 
-> > Rename vfs_create as __vfs_create, make it static, and add a new
-> > delegated_inode parameter. Fix do_mknodat to call __vfs_create and wait
-> > for a delegation break if there is one. Add a new exported vfs_create
-> > wrapper that passes in NULL for delegated_inode.
-> > 
-> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
+On Thu, Sep 25, 2025 at 11:29:25AM +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
 > 
-> Looks good. Feel free to add:
+> Linux kernel commit b9a176e54162 removes several deprecated options
+> from XFS, causing this test to fail.
 > 
-> Reviewed-by: Jan Kara <jack@suse.cz>
+> Giving the options have been removed from Linux for good, just stop
+> testing these options here.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+>  tests/xfs/613     | 6 ------
+>  tests/xfs/613.out | 4 ----
+>  2 files changed, 10 deletions(-)
+> 
+> diff --git a/tests/xfs/613 b/tests/xfs/613
+> index 9b27a7c1f2c2..c26a4424f486 100755
+> --- a/tests/xfs/613
+> +++ b/tests/xfs/613
+> @@ -163,12 +163,6 @@ do_test()
+>  }
+>  
+>  echo "** start xfs mount testing ..."
+> -# Test attr2
+> -do_mkfs -m crc=0
 
-Sorry, I've sent this twise by mistake.
+OK, as attr2 option is removed earlier than V4 xfs, so the _require_xfs_nocrc
+is helpless for this case. Thanks for fixing this,
 
-								Honza
+Reviewed-by: Zorro Lang <zlang@redhat.com>
 
-> > ---
-> >  fs/namei.c | 55 ++++++++++++++++++++++++++++++++++++-------------------
-> >  1 file changed, 36 insertions(+), 19 deletions(-)
-> > 
-> > diff --git a/fs/namei.c b/fs/namei.c
-> > index 903b70a82530938a0fdf10508529a1b7cc38136d..d4b8330a3eb97e205dc2e71766fed1e45503323b 100644
-> > --- a/fs/namei.c
-> > +++ b/fs/namei.c
-> > @@ -3370,6 +3370,32 @@ static inline umode_t vfs_prepare_mode(struct mnt_idmap *idmap,
-> >  	return mode;
-> >  }
-> >  
-> > +static int __vfs_create(struct mnt_idmap *idmap, struct inode *dir,
-> > +			struct dentry *dentry, umode_t mode, bool want_excl,
-> > +			struct inode **delegated_inode)
-> > +{
-> > +	int error;
-> > +
-> > +	error = may_create(idmap, dir, dentry);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	if (!dir->i_op->create)
-> > +		return -EACCES;	/* shouldn't it be ENOSYS? */
-> > +
-> > +	mode = vfs_prepare_mode(idmap, dir, mode, S_IALLUGO, S_IFREG);
-> > +	error = security_inode_create(dir, dentry, mode);
-> > +	if (error)
-> > +		return error;
-> > +	error = try_break_deleg(dir, delegated_inode);
-> > +	if (error)
-> > +		return error;
-> > +	error = dir->i_op->create(idmap, dir, dentry, mode, want_excl);
-> > +	if (!error)
-> > +		fsnotify_create(dir, dentry);
-> > +	return error;
-> > +}
-> > +
-> >  /**
-> >   * vfs_create - create new file
-> >   * @idmap:	idmap of the mount the inode was found from
-> > @@ -3389,23 +3415,7 @@ static inline umode_t vfs_prepare_mode(struct mnt_idmap *idmap,
-> >  int vfs_create(struct mnt_idmap *idmap, struct inode *dir,
-> >  	       struct dentry *dentry, umode_t mode, bool want_excl)
-> >  {
-> > -	int error;
-> > -
-> > -	error = may_create(idmap, dir, dentry);
-> > -	if (error)
-> > -		return error;
-> > -
-> > -	if (!dir->i_op->create)
-> > -		return -EACCES;	/* shouldn't it be ENOSYS? */
-> > -
-> > -	mode = vfs_prepare_mode(idmap, dir, mode, S_IALLUGO, S_IFREG);
-> > -	error = security_inode_create(dir, dentry, mode);
-> > -	if (error)
-> > -		return error;
-> > -	error = dir->i_op->create(idmap, dir, dentry, mode, want_excl);
-> > -	if (!error)
-> > -		fsnotify_create(dir, dentry);
-> > -	return error;
-> > +	return __vfs_create(idmap, dir, dentry, mode, want_excl, NULL);
-> >  }
-> >  EXPORT_SYMBOL(vfs_create);
-> >  
-> > @@ -4278,6 +4288,7 @@ static int do_mknodat(int dfd, struct filename *name, umode_t mode,
-> >  	struct path path;
-> >  	int error;
-> >  	unsigned int lookup_flags = 0;
-> > +	struct inode *delegated_inode = NULL;
-> >  
-> >  	error = may_mknod(mode);
-> >  	if (error)
-> > @@ -4296,8 +4307,9 @@ static int do_mknodat(int dfd, struct filename *name, umode_t mode,
-> >  	idmap = mnt_idmap(path.mnt);
-> >  	switch (mode & S_IFMT) {
-> >  		case 0: case S_IFREG:
-> > -			error = vfs_create(idmap, path.dentry->d_inode,
-> > -					   dentry, mode, true);
-> > +			error = __vfs_create(idmap, path.dentry->d_inode,
-> > +					     dentry, mode, true,
-> > +					     &delegated_inode);
-> >  			if (!error)
-> >  				security_path_post_mknod(idmap, dentry);
-> >  			break;
-> > @@ -4312,6 +4324,11 @@ static int do_mknodat(int dfd, struct filename *name, umode_t mode,
-> >  	}
-> >  out2:
-> >  	done_path_create(&path, dentry);
-> > +	if (delegated_inode) {
-> > +		error = break_deleg_wait(&delegated_inode);
-> > +		if (!error)
-> > +			goto retry;
-> > +	}
-> >  	if (retry_estale(error, lookup_flags)) {
-> >  		lookup_flags |= LOOKUP_REVAL;
-> >  		goto retry;
-> > 
-> > -- 
-> > 2.51.0
-> > 
+> -do_test "" pass "attr2" "true"
+> -do_test "-o attr2" pass "attr2" "true"
+> -do_test "-o noattr2" pass "attr2" "false"
+> -
+>  # Test logbsize=value.
+>  do_mkfs -m crc=0 -l version=1
+>  # New kernel (refer to 4f62282a3696 xfs: cleanup xlog_get_iclog_buffer_size)
+> diff --git a/tests/xfs/613.out b/tests/xfs/613.out
+> index 2a693c53c584..add534bd63a9 100644
+> --- a/tests/xfs/613.out
+> +++ b/tests/xfs/613.out
+> @@ -2,10 +2,6 @@ QA output created by 613
+>  ** create loop device
+>  ** create loop mount point
+>  ** start xfs mount testing ...
+> -FORMAT: -m crc=0
+> -TEST: "" "pass" "attr2" "true"
+> -TEST: "-o attr2" "pass" "attr2" "true"
+> -TEST: "-o noattr2" "pass" "attr2" "false"
+>  FORMAT: -m crc=0 -l version=1
+>  TEST: "-o logbsize=16384" "pass" "logbsize=16k" "true"
+>  TEST: "-o logbsize=16k" "pass" "logbsize=16k" "true"
 > -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> 2.51.0
+> 
+
