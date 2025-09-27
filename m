@@ -1,73 +1,137 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9109026C3BD
-	for <linux-xfs@vger.kernel.org>; Fri, 26 Sep 2025 16:27:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 501372BD5B4;
+	Sat, 27 Sep 2025 07:29:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758904037; cv=none; b=TGeBI9i713qTFCfd/nXaJoIkjuvIVCkmGJjvb2eRV3Ud1W3eFAdggN/tF6vn6BevM7LKHc3DK+i8EakBssdaUcKW2GfR/FrSqwmQDIqjuS08liR0m9iwo6GmqQukSSoFIeJ8XKOQsxaWuD+BHebmvgMsNYz+4cV7ruuMZldEIrI=
+	t=1758958195; cv=none; b=Q+AF15oDSeuccLfKd8bJZBLZeq/Yt2/Wi02h3O5nCDqniRex4LXvbAPX8ar+hUxeKAQjVgtA7A+BBlW0f8Gj0r/xEdTzk/H9DDJcQhpG1nWdcJMierJCWUePI6Oh1QuEohRu/u7joOSmU3QYs0dYH11/UWTvVa/IxzCk/uVB8NQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758904037; c=relaxed/simple;
-	bh=X2/P6qRoSiDvcmEzPnGkRqJRuVDQMHNMkugOshU3ogo=;
+	s=arc-20240116; t=1758958195; c=relaxed/simple;
+	bh=i5j9A6ESg8DfRnWdVB3iU78jwZichx9L7FZuCUl1jvQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bgCuzu3FCeHjdBbq4qQv/B0R9DyX4IVdP9n9p2o1fr5rYGmy4ZpSyApla2aGA3/RWGG1y8Mv5keFQhMbzOsy4dtUW2zYWSkFWxd3sWFSjVgyzVDJ6DvntT+PpS3DjdOgZ/7I3LL7yurnx2h817B0S8Oy46sTFw+s5FnRDHcU8pI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rAkDlNIT; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ep0Rr4g8QxbLz5Q7rPXIKPs1/s3LfZgyGikLsdXHnwgc+P2q20E9iICVvYu93WIEjp3mMQpKNIn3Xh5DLdz35Ty7uNO+lPubnoB3XJ9+9VFUmrQDn7vp3RiLxBfVObnwJPzPkkH97MV3Cy7Uhb050CaQNU8inHnZVcLLy0kfG0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=apYzxSbs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rAkDlNIT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 094F8C4CEF4;
-	Fri, 26 Sep 2025 16:27:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="apYzxSbs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94C38C4CEE7;
+	Sat, 27 Sep 2025 07:29:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758904037;
-	bh=X2/P6qRoSiDvcmEzPnGkRqJRuVDQMHNMkugOshU3ogo=;
+	s=k20201202; t=1758958194;
+	bh=i5j9A6ESg8DfRnWdVB3iU78jwZichx9L7FZuCUl1jvQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rAkDlNITxZozxyMACwzSwWXg8oRopJxNGKt1WWZOvQU88HzMjUafnptCNsC9D9yU9
-	 xuv2QRib3Z8EOM3jYNNaEHCW6qMpU6+m9BBuEjfk2FTPJLoVQd0J/5bWUpky+L5CSz
-	 957TEqhyLmF9i+qJnF84HB+FGo6S0/czZsixMpQExE4wajNevQvOg403QjXfolgw7L
-	 ak4dW/Fuy0YudyilFEThpv1qqvi7eejY9+qmJp5vl0VvxJq/01J8IWqTS/EjvYd14A
-	 FuMSn+7A9yvcWTzVDIsCOiw/pr77h0lSPl84+venHJOjKwhtBK4DUF9Qihmnqk6drU
-	 hNZG8xW2ytIYw==
-Date: Fri, 26 Sep 2025 09:27:16 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Andrey Albershteyn <aalbersh@redhat.com>,
-	"A. Wilcox" <AWilcox@wilcox-tech.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs_scrub: fix strerror_r usage yet again
-Message-ID: <20250926162716.GA8096@frogsfrogsfrogs>
-References: <20250919161400.GO8096@frogsfrogsfrogs>
- <aNGA3WV3vO5PXhOH@infradead.org>
- <20250924005353.GW8096@frogsfrogsfrogs>
- <aNTuBDBU4q42J03E@infradead.org>
- <20250925200406.GZ8096@frogsfrogsfrogs>
- <64881075-46f0-ec0a-f747-dbea46fc5caf@applied-asynchrony.com>
+	b=apYzxSbsn9h3n5fLfTFxTtxCWavDhH66GQghHGt2OMBeHnbVZzbXTESAnxzazXKbV
+	 0t2pDB/gvUK9hYjZEa8cCyUfEzbe7X8VFFalsy7pS06ZSOVcvHpcLbz3AtSUpHo7Q8
+	 RUk9sMpYSh4Falzb8G6TrusN9BtAssIQYyElMZBuoRQZvyMzabVMUQfL9lhgNmCRhs
+	 J0uyXH1S1nrwhSyPTMo7gyenQB6a/xbnNw50k51j2kGKWo8Fx7FLEXuYnierPQSvh9
+	 uk5hz9tqrlQLFFv928aWS9uzWtfvPRTfhbveeRs6w3zXivBq1+4Tv/xkoOKHO9/Nhc
+	 B7HiVGI+pDxzA==
+Date: Sat, 27 Sep 2025 09:29:50 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs/513: remove attr2 and ikeep tests
+Message-ID: <apyibmyaeixj7my7c36ljib3sqkmjvttnpfyderar6erhq6qhx@xdox3y22d4pr>
+References: <20250925093005.198090-1-cem@kernel.org>
+ <20250925093005.198090-2-cem@kernel.org>
+ <U0YSQNAPJPxdjhRuMKtVrn5xeRxslOHWmqaK5CBJVb8e4kouZQJMwV5DuEzY7FXc_H284GanCX6ODMEH3OKxdg==@protonmail.internalid>
+ <20250926153237.ahnp3bgdffsvz7qg@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <64881075-46f0-ec0a-f747-dbea46fc5caf@applied-asynchrony.com>
+In-Reply-To: <20250926153237.ahnp3bgdffsvz7qg@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Thu, Sep 25, 2025 at 10:58:38PM +0200, Holger Hoffstätte wrote:
-> On 2025-09-25 22:04, Darrick J. Wong wrote:
-> > Has strerror() been designated as thread-safe at a POSIX level, or is
-> > this just an implementation quirk of these two C libraries?  strerror
-> > definitely wasn't thread-safe on glibc when I wrote this program.
+On Fri, Sep 26, 2025 at 11:32:37PM +0800, Zorro Lang wrote:
+> On Thu, Sep 25, 2025 at 11:29:24AM +0200, cem@kernel.org wrote:
+> > From: Carlos Maiolino <cem@kernel.org>
+> >
+> > Linux kernel commit b9a176e54162 removes several deprecated options
+>                       ^^^^^^^^^^^^
 > 
-> It still is not:
-> https://pubs.opengroup.org/onlinepubs/9799919799/functions/strerror.html
+> I think this's a commit id of xfs-linux, not mainline linux. Anyway,
+> this patch makes sense to me.
+
+Yes, because these patches are not in Linus's tree yet, I'll send them
+on 6.18 merge window. I just thought it would make sense to send them to
+fstests ASAP.
+
+
 > 
-> Pretty safe to say that this particular train has sailed.
-
-Sailed off the end of the pier, yeah. ;)
-
-Andrey: could you pick this one up, please?
-
---D
-
-> cheers
-> Holger
+> Reviewed-by: Zorro Lang <zlang@redhat.com>
+> 
+> 
+> 
+> > from XFS, causing this test to fail.
+> >
+> > Giving the options have been removed from Linux for good, just stop
+> > testing these options here.
+> >
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> >  tests/xfs/513     | 11 -----------
+> >  tests/xfs/513.out |  7 -------
+> >  2 files changed, 18 deletions(-)
+> >
+> > diff --git a/tests/xfs/513 b/tests/xfs/513
+> > index d3be3ced68a1..7dbd2626d9e2 100755
+> > --- a/tests/xfs/513
+> > +++ b/tests/xfs/513
+> > @@ -182,12 +182,6 @@ do_test "-o allocsize=1048576k" pass "allocsize=1048576k" "true"
+> >  do_test "-o allocsize=$((dbsize / 2))" fail
+> >  do_test "-o allocsize=2g" fail
+> >
+> > -# Test attr2
+> > -do_mkfs -m crc=1
+> > -do_test "" pass "attr2" "true"
+> > -do_test "-o attr2" pass "attr2" "true"
+> > -do_test "-o noattr2" fail
+> > -
+> >  # Test discard
+> >  do_mkfs
+> >  do_test "" pass "discard" "false"
+> > @@ -205,11 +199,6 @@ do_test "-o sysvgroups" pass "grpid" "false"
+> >  do_test "" pass "filestreams" "false"
+> >  do_test "-o filestreams" pass "filestreams" "true"
+> >
+> > -# Test ikeep
+> > -do_test "" pass "ikeep" "false"
+> > -do_test "-o ikeep" pass "ikeep" "true"
+> > -do_test "-o noikeep" pass "ikeep" "false"
+> > -
+> >  # Test inode32|inode64
+> >  do_test "" pass "inode64" "true"
+> >  do_test "-o inode32" pass "inode32" "true"
+> > diff --git a/tests/xfs/513.out b/tests/xfs/513.out
+> > index 39945907140b..127f1681f979 100644
+> > --- a/tests/xfs/513.out
+> > +++ b/tests/xfs/513.out
+> > @@ -9,10 +9,6 @@ TEST: "-o allocsize=PAGESIZE" "pass" "allocsize=PAGESIZE" "true"
+> >  TEST: "-o allocsize=1048576k" "pass" "allocsize=1048576k" "true"
+> >  TEST: "-o allocsize=2048" "fail"
+> >  TEST: "-o allocsize=2g" "fail"
+> > -FORMAT: -m crc=1
+> > -TEST: "" "pass" "attr2" "true"
+> > -TEST: "-o attr2" "pass" "attr2" "true"
+> > -TEST: "-o noattr2" "fail"
+> >  FORMAT:
+> >  TEST: "" "pass" "discard" "false"
+> >  TEST: "-o discard" "pass" "discard" "true"
+> > @@ -24,9 +20,6 @@ TEST: "-o nogrpid" "pass" "grpid" "false"
+> >  TEST: "-o sysvgroups" "pass" "grpid" "false"
+> >  TEST: "" "pass" "filestreams" "false"
+> >  TEST: "-o filestreams" "pass" "filestreams" "true"
+> > -TEST: "" "pass" "ikeep" "false"
+> > -TEST: "-o ikeep" "pass" "ikeep" "true"
+> > -TEST: "-o noikeep" "pass" "ikeep" "false"
+> >  TEST: "" "pass" "inode64" "true"
+> >  TEST: "-o inode32" "pass" "inode32" "true"
+> >  TEST: "-o inode64" "pass" "inode64" "true"
+> > --
+> > 2.51.0
+> >
 > 
