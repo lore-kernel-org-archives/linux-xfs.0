@@ -1,71 +1,89 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F5302BE636
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Sep 2025 06:42:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56E1824E4A8
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Sep 2025 06:54:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759128125; cv=none; b=DIgcE0wPFBbBH/486rJNbaw6tCac9T/L/jadMSRz0luuwWNQNH/B6JaibRlKG83EFLyWwddh/MQnZNb51Ck1KO8jHFjxQaZ0JOY/2GXJw1rgSrxyGwIWyyMkTHRz1ckVqdPiO4XNpHX+rnuq+/2116Wf4APzzN3pEmwrQ6vTpx0=
+	t=1759128870; cv=none; b=UIAG3662156LDUdL29ZtHgAts49zxb9U0d/66B8RXMiZWQ37ehAjrvYAf+UzK5TEPAH8NaPqSWdgf0cMX8niC0mZ2zTwk4QhT7VQNA/DpaAwe5eQvdCieJB/TR06wI3yndibdjTJLBOHq3dju9bTGSiZ97a0lVLNTU4B2Jr5Qy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759128125; c=relaxed/simple;
-	bh=AhWAtIM4keYZ2G+tEYfvF3hHWsOoDFlvMOEEndA7xlo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DynFJUs83DW+WSJmhQHW4HlZdNtvkUJ3C5kiDanyFrGvP/+KsH2xEN92hmeLV8ycCQNyeh5SQlkcHMWAUpjrfF7kbNem6HbGXkurbi7x082SFJSq/R6jWxShKIVt8tGd2MiYlEpkrCe96fzPOyGAZ4igSG2gMqFDSTCIPxXqPsU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qkZbo6eX; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+	s=arc-20240116; t=1759128870; c=relaxed/simple;
+	bh=lQqNM2q5lIGSaAE6uw/vjOfwS3SI9GA12Jod9RwgdAM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZiryM7/mdzuqPGTzaJIjC0RVaA0X9bCOoooo6TLIGOhqF1/21wJh0wtOh0dEydg1tzZDB8UYLvfXf3kEUlHMD1bYgnwW7nfbfu+K+JGozS1FV1nazqhicQDVUsvISp39rT6M7fDVu7ZFov7LUF6S+yz2+M7uMqDD1J28lBCKeUY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Q96Cxbib; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qkZbo6eX"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Q96Cxbib"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=fpmoGIdd+NVSC5QPJuwOfGRPO90V0GYhLv3xI7kDohA=; b=qkZbo6eXtyCkdBtzpeS4iwEBVu
-	Mr+eTexKMXJiibpdnGJo66b18yWoO2qDQkfMrW7pZQhB9M5aWcyd2lQJq7mEVn2K/azuHB6wHMhVE
-	KbdlUKnNHEJsUoM5g9uqY4lzbMMXkarCSzQ9B8OC86gzrbc29kZ5Zw5ryByEuKo6C8/0tzUX03BjO
-	v9pgXmz1nyT+SeA0i57nppphvvZPw/CEB84i811lEAQNkyBz8QU+EnLmtcDY3lQm7Niu4Y8kGYP8y
-	l89IM6dakdEKikmlPqxbpuJphj8Al0vNreg/LJVP82ZeVT459T/7tps8qvVMpyNUwzxE/7SZR6Zxx
-	NqVIEzTw==;
-Received: from 85-127-106-42.dsl.dynamic.surfer.at ([85.127.106.42] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v37aE-00000001VcX-2jqw;
-	Mon, 29 Sep 2025 06:42:03 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: cem@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: don't use __GFP_NOFAIL in xfs_init_fs_context
-Date: Mon, 29 Sep 2025 08:41:54 +0200
-Message-ID: <20250929064154.2239442-1-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=6Ht5FAe7cMm2NibQtgFMVRyk/N+LdVsBNbV06qP7bYg=; b=Q96CxbibvwmmUmIbMRDKTIAZFo
+	ILjxSBOWu+XqJoC+7asM3mlr+gm7Vj9wZl/PeHC6WURHaFT4mVb75eIlyQX2suH6hyciE3pp2C4zu
+	Cxn2uggC2vimhUzgvNRsN5t7nR3Ghb9FprhOu0751Q0705AoPBBLU23xMZ+/fLFQhL0SJO539WsV+
+	IpjIFfCzRPxVSULDLD+8EXoc26HB2DHvQIJAWhw5Q/a1cXqOMh8Nlfc561GcbYlUPhkFSGZcEtIZQ
+	u/ARqFoJbG1biM64NtdW4n+OLmw7HhTUhyQbAmDUiLYmxrxXPHaR5dlaPA30igXMFP3EMYED/cm4V
+	SxUETcNg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1v37mF-00000001XmW-1J5b;
+	Mon, 29 Sep 2025 06:54:27 +0000
+Date: Sun, 28 Sep 2025 23:54:27 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Lukas Herbolt <lukas@herbolt.com>
+Cc: aalbersh@redhat.com, djwong@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] mkfs.xfs fix sunit size on 512e and 4kN disks.
+Message-ID: <aNotI3z54Om5MmE1@infradead.org>
+References: <20250926123829.2101207-2-lukas@herbolt.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250926123829.2101207-2-lukas@herbolt.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-xfs_init_fs_context is early in the mount process, and if we really
-are out of memory there we'd better give up ASAP.
+On Fri, Sep 26, 2025 at 02:38:30PM +0200, Lukas Herbolt wrote:
+> Creating of XFS on 4kN or 512e disk result in suboptimal LSU/LSUNIT.
+> As of now we check if the sectorsize is bigger than XLOG_HEADER_SIZE
+> and so we set lsu to blocksize. But we do not check the the size if
+> lsunit can be bigger to fit the disk geometry.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+As I had to walk the code to understand (again for the nth time :))
+what the lsunit actually does:  it pads every log write up to that
+size.  I.e. if you set a log stripe unit, that effectively becomes the
+minimum I/O size for the log.  So yes, setting it to the minimum I/O
+size of the device makes sense.  But maybe the commit log should be
+a bit more clear about that?  (and of course our terminology should
+be as well, ast least outside the user interface that we can't touch).
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index bb0a82635a77..a8fe8b042331 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -2275,7 +2275,7 @@ xfs_init_fs_context(
- 	struct xfs_mount	*mp;
- 	int			i;
- 
--	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL | __GFP_NOFAIL);
-+	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL);
- 	if (!mp)
- 		return -ENOMEM;
- 
--- 
-2.47.3
+> Before:
 
+You Before/after also contain changes for metadir/zoned, looks like you
+upgraded to a new xfsprogs for your patch, but not the baseline.
+
+> index 8cd4ccd7..05268cd9 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3643,6 +3643,10 @@ check_lsunit:
+>  		lsu = getnum(cli->lsu, &lopts, L_SU);
+>  	else if (cfg->lsectorsize > XLOG_HEADER_SIZE)
+>  		lsu = cfg->blocksize; /* lsunit matches filesystem block size */
+> +		if (cfg->dsunit){
+> +			cfg->lsunit = cfg->dsunit;
+> +			lsu = 0;
+> +		}
+
+I don't think just picking the data stripe unit is correct here, given
+that the log can also be external and on a separate device.  Instead
+we'll need to duplicate the calculation based on ft.log, preferably by
+factoring it into a helper.
+
+The lsu = 0 also drop the multiple of block size check.  If that is not
+a hard requirement (and I'd have to do some research where it is coming
+from) we should relax the check instead of silently disabling it like
+this.
