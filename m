@@ -1,121 +1,95 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AB961A262D
-	for <linux-xfs@vger.kernel.org>; Mon, 29 Sep 2025 08:59:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 449472857DE;
+	Mon, 29 Sep 2025 09:30:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759136380; cv=none; b=ZVIi5Oh33YhOvWEjj7KF3zLBG3KJU8AyUMX27w0xdN4s5kk3QB5Fd5cNwEINN7akDiTFLmOZon7IfkvVqZdRnxgaI6En9DhTmGpGS7yA22Vpzd/oWd4OuHMNLkZo7Nvj7vhTSReI7NKcTj/1mBqF2gJxdqR5jBU8/H+U/VUytqw=
+	t=1759138227; cv=none; b=srEbxrArybjW32WmAG+eCXbYe38+v8IhwJK2Q9o/oc/LhUhmeloE9FP4d7l0e/iIh2QQHqBPzC6OXb7ULhBhZ/nkDmI5/XIsqpdRfFN1+dgsmNkNj5IpZQptrYit/+ZcE84TYz74eiUdURq2GktuXGmO7kt1Su0gxwANTSn4/rQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759136380; c=relaxed/simple;
-	bh=DxpIRk0ZHqpQTmAyWlUIqkE7PKFIpvRpFA5kFTCwPE4=;
-	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
-	 Message-ID:Content-Type; b=p1hUZVirBakh39Ijts7gM83YdrL3+yOzZMHUKnvgrVm+vHUJHKRd12dszpGALPA3m6ytP86XyjvKZn8ydeEGDcH+cROVBT0ZIrYWpmFmYE+a7lUCzn55LHKf14+d3zgWRrxopFGTTHLMj16C7+25yqfOdQqe5dx+Wz+8GkGTsuM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id 8A74C180FCC3;
-	Mon, 29 Sep 2025 10:59:24 +0200 (CEST)
-Received: from mail.herbolt.com ([172.168.31.10])
-	by mx0.herbolt.com with ESMTPSA
-	id VdszGGxK2mjB0wEAKEJqOA
-	(envelope-from <lukas@herbolt.com>); Mon, 29 Sep 2025 10:59:24 +0200
+	s=arc-20240116; t=1759138227; c=relaxed/simple;
+	bh=Xt+H00FTwMgNX3FYouX/B0DyHS064YKeIo3w5xZa1CM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=WLuL33Ye07+Fn7HGCEgWu9t8OgKQF8rZAo3pQASJQYQnTVD+6Xht5PxHikAr37u2hZu87c5g25WD49wXzL+2cBaywCW0hGFtD3nzq6WZymFROUMQEJQkjJOnb/MaMnc9uC0HCelRs/CIh5ygCkJ1TIqozrk4g1YufYv6F8cG2q4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uhqAqq8z; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uhqAqq8z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4277C4CEF4;
+	Mon, 29 Sep 2025 09:30:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1759138226;
+	bh=Xt+H00FTwMgNX3FYouX/B0DyHS064YKeIo3w5xZa1CM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=uhqAqq8zY56VNaNn7XJMxLgA0BQhSL4pZ+0ry3mEDg3zt5W0rO/j78IQzJo5c+ZWM
+	 /vInMRN1VI6KhEnBPdyshEe7Cga1YyQ4YQZbRN8fCG5Pm3gJl6tn+YxECxu8G6FJR9
+	 lBz+v1bjpkWv3Omy4DirbyRGKviSXKAnJDXDHvW+SLHwyXi7aOlI6m1r8vXU3lca+V
+	 lnSx6VrVKnaFVJCT0GEi9/mVt0O19yBRXlxQtIUYRext/rX2zTExmuMG+j+pqyWqhs
+	 M2hjPTlbLXq/3xSEINOvx4lbYJnU8zhm+Co/dka6V9xZpxXoP/Zp74DZqGt1Xyh1SS
+	 HO4J0eV0iHkDA==
+From: Christian Brauner <brauner@kernel.org>
+To: Mateusz Guzik <mjguzik@gmail.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	viro@zeniv.linux.org.uk,
+	jack@suse.cz,
+	linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	josef@toxicpanda.com,
+	kernel-team@fb.com,
+	amir73il@gmail.com,
+	linux-btrfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	ceph-devel@vger.kernel.org,
+	linux-unionfs@vger.kernel.org
+Subject: Re: [PATCH v6 0/4] hide ->i_state behind accessors
+Date: Mon, 29 Sep 2025 11:30:17 +0200
+Message-ID: <20250929-samstag-unkenntlich-623abeff6085@brauner>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20250923104710.2973493-1-mjguzik@gmail.com>
+References: <20250923104710.2973493-1-mjguzik@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Mon, 29 Sep 2025 10:59:24 +0200
-From: lukas@herbolt.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] mkfs.xfs fix sunit size on 512e and 4kN disks.
-In-Reply-To: <aNotI3z54Om5MmE1@infradead.org>
-References: <20250926123829.2101207-2-lukas@herbolt.com>
- <aNotI3z54Om5MmE1@infradead.org>
-Message-ID: <80069d04a7bcbbfbb8daad7191c83fb2@herbolt.com>
-X-Sender: lukas@herbolt.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1536; i=brauner@kernel.org; h=from:subject:message-id; bh=Xt+H00FTwMgNX3FYouX/B0DyHS064YKeIo3w5xZa1CM=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWTcClyT3LTLJ3nizG/bpjn01Su9D9eJyliz15U3esO6R uFEjtjLHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpADdZmuG/+/fNU37Ep5o4VrTn Xs8QNxL9qu7C+SMiasej7JjOMxrTGP77d/tIL30g93KOe8uORyZP/t3aIPije1VW8qfW9nmxKWf 5AA==
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On 2025-09-29 08:54, Christoph Hellwig wrote:
-> On Fri, Sep 26, 2025 at 02:38:30PM +0200, Lukas Herbolt wrote:
->> Creating of XFS on 4kN or 512e disk result in suboptimal LSU/LSUNIT.
->> As of now we check if the sectorsize is bigger than XLOG_HEADER_SIZE
->> and so we set lsu to blocksize. But we do not check the the size if
->> lsunit can be bigger to fit the disk geometry.
+On Tue, 23 Sep 2025 12:47:06 +0200, Mateusz Guzik wrote:
+> First commit message quoted verbatim with rationable + API:
 > 
-> As I had to walk the code to understand (again for the nth time :))
-> what the lsunit actually does:  it pads every log write up to that
-> size.  I.e. if you set a log stripe unit, that effectively becomes the
-> minimum I/O size for the log.  So yes, setting it to the minimum I/O
-> size of the device makes sense.  But maybe the commit log should be
-> a bit more clear about that?  (and of course our terminology should
-> be as well, ast least outside the user interface that we can't touch).
+> [quote]
+> Open-coded accesses prevent asserting they are done correctly. One
+> obvious aspect is locking, but significantly more can checked. For
+> example it can be detected when the code is clearing flags which are
+> already missing, or is setting flags when it is illegal (e.g., I_FREEING
+> when ->i_count > 0).
 > 
->> Before:
-> 
-> You Before/after also contain changes for metadir/zoned, looks like you
-> upgraded to a new xfsprogs for your patch, but not the baseline.
-> 
-Yeah it was fedora rawhide, 6.12, did not notice the metadir/zoned.
+> [...]
 
->> index 8cd4ccd7..05268cd9 100644
->> --- a/mkfs/xfs_mkfs.c
->> +++ b/mkfs/xfs_mkfs.c
->> @@ -3643,6 +3643,10 @@ check_lsunit:
->>  		lsu = getnum(cli->lsu, &lopts, L_SU);
->>  	else if (cfg->lsectorsize > XLOG_HEADER_SIZE)
->>  		lsu = cfg->blocksize; /* lsunit matches filesystem block size */
->> +		if (cfg->dsunit){
->> +			cfg->lsunit = cfg->dsunit;
->> +			lsu = 0;
->> +		}
-> 
-> I don't think just picking the data stripe unit is correct here, given
-> that the log can also be external and on a separate device.  Instead
-> we'll need to duplicate the calculation based on ft.log, preferably by
-> factoring it into a helper.
-Hmmm, aren't all the <data|rt|log>.sunit" set by blkid_get_topology()?
-So as log is internal lsunit should be equal to dsunit and it can only
-differ if the log is external?
+Applied to the vfs-6.19.inode branch of the vfs/vfs.git tree.
+Patches in the vfs-6.19.inode branch should appear in linux-next soon.
 
-Based on comment:
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-     /*
-      * check that log sunit is modulo fsblksize; default it to dsunit 
-for
-      * an internal log; or the log device stripe unit if it's external.
-      */
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
-> The lsu = 0 also drop the multiple of block size check.  If that is not
-> a hard requirement (and I'd have to do some research where it is coming
-> from) we should relax the check instead of silently disabling it like
-> this.
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
 
-My understanding was the LSU check is there mostly if cli->lsu is set.
-Actually if that's assumption is correct it can be done just like this.
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs-6.19.inode
 
----
-  mkfs/xfs_mkfs.c | 2 +-
-  1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 8cd4ccd7..3aecacd3 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3644,7 +3644,7 @@ check_lsunit:
-  	else if (cfg->lsectorsize > XLOG_HEADER_SIZE)
-  		lsu = cfg->blocksize; /* lsunit matches filesystem block size */
-
--	if (lsu) {
-+	if (cli->lsu) {
-  		/* verify if lsu is a multiple block size */
-  		if (lsu % cfg->blocksize != 0) {
-  			fprintf(stderr,
--- 
-2.51.0
-
+[1/4] fs: provide accessors for ->i_state
+      https://git.kernel.org/vfs/vfs/c/e9d1a9abd054
+[2/4] Convert the kernel to use ->i_state accessors
+      https://git.kernel.org/vfs/vfs/c/67d2f3e3d033
+[3/4] Manual conversion of ->i_state uses
+      https://git.kernel.org/vfs/vfs/c/b8173a2f1a0a
+[4/4] fs: make plain ->i_state access fail to compile
+      https://git.kernel.org/vfs/vfs/c/3c2b8d921da8
