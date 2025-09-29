@@ -1,68 +1,71 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F26A239E63;
-	Mon, 29 Sep 2025 06:40:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F5302BE636
+	for <linux-xfs@vger.kernel.org>; Mon, 29 Sep 2025 06:42:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759128043; cv=none; b=Al/Xruw/JYsXFw+GnjfEhOi4mdmCJ9M1DAQX9h8zxGrxb/REyxaXh8kQJAZ/Iu7jBCQTFKQcOUYmm5GqS4B+vdCllsF8As9zgX8N3+qG+ygWTe2ObVatibBdMLcqEIBHLzaO0JTcuIu2MbzqZy9U9G/AkbyN3dx6XAiKFv2oJao=
+	t=1759128125; cv=none; b=DIgcE0wPFBbBH/486rJNbaw6tCac9T/L/jadMSRz0luuwWNQNH/B6JaibRlKG83EFLyWwddh/MQnZNb51Ck1KO8jHFjxQaZ0JOY/2GXJw1rgSrxyGwIWyyMkTHRz1ckVqdPiO4XNpHX+rnuq+/2116Wf4APzzN3pEmwrQ6vTpx0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759128043; c=relaxed/simple;
-	bh=YacQbj1YmkiJVhrtk3+KVfBFzhjCzjCVTO6GT84rzec=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QaMQdJHoXJzvEy3qBG7zJEAmjZrZzU8RF9JBJO8cDVyhaa1emDOBJciCFR36JnQFqNpStdkqKc2VJWrNoEWZ8HROaMFVAob262MPMscc2AVgfb4VEfNED9pDMalA/stjG+HQSrB5UH8ldAkpkLZvvMY0Dn8bo7RNyPok3Or+c1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=b4e8nJQX; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+	s=arc-20240116; t=1759128125; c=relaxed/simple;
+	bh=AhWAtIM4keYZ2G+tEYfvF3hHWsOoDFlvMOEEndA7xlo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DynFJUs83DW+WSJmhQHW4HlZdNtvkUJ3C5kiDanyFrGvP/+KsH2xEN92hmeLV8ycCQNyeh5SQlkcHMWAUpjrfF7kbNem6HbGXkurbi7x082SFJSq/R6jWxShKIVt8tGd2MiYlEpkrCe96fzPOyGAZ4igSG2gMqFDSTCIPxXqPsU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qkZbo6eX; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="b4e8nJQX"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qkZbo6eX"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=YacQbj1YmkiJVhrtk3+KVfBFzhjCzjCVTO6GT84rzec=; b=b4e8nJQXOeW+6CokvZQpUpX5YN
-	v1Xa/jLEtCpGBcZrEmKuTYpfa+RbISQjDEfwwqwBYXMIMkBKLLrt1iRfrbd5pCYHSEOUqa2YLpSFN
-	Hxf+spZ0GkJ2MGJmyjpaiaLmdwHGDRd8QdE0Rqv5h25j26GBq4yl8OkbTtsCxhuUhDzZUbZFNwZyS
-	/3c/ZVOfu/u1Kl2L4Mpr2s+HqR9Y47zTpV7V5WAnNRjenrA89Pa/WHgimhsqwF6WRCq8pXQex6DUA
-	dsm9aZFA0BFVAYTSx3MokPjZjAGRjDmi0ZW9b6Q+Unt7n0vh24/+DqS/3Mnt3Xd+VgKzzPLvWnBoe
-	A+ndfkZA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v37Yn-00000001VVX-0STq;
-	Mon, 29 Sep 2025 06:40:33 +0000
-Date: Sun, 28 Sep 2025 23:40:33 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: syzbot <syzbot+359a67b608de1ef72f65@syzkaller.appspotmail.com>
-Cc: akpm@linux-foundation.org, apopple@nvidia.com, baohua@kernel.org,
-	byungchul@sk.com, cem@kernel.org, david@fromorbit.com,
-	david@redhat.com, gourry@gourry.net, harry.yoo@oracle.com,
-	joshua.hahnjy@gmail.com, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-	matthew.brost@intel.com, mhocko@suse.com,
-	penguin-kernel@i-love.sakura.ne.jp, rakie.kim@sk.com,
-	syzkaller-bugs@googlegroups.com, vbabka@suse.cz,
-	willy@infradead.org, ying.huang@linux.alibaba.com, ziy@nvidia.com
-Subject: Re: [syzbot] [mm?] WARNING in xfs_init_fs_context
-Message-ID: <aNop4ZBrfuqrX40Y@infradead.org>
-References: <6861c281.a70a0220.3b7e22.0ab8.GAE@google.com>
- <68d973fc.a00a0220.102ee.002b.GAE@google.com>
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=fpmoGIdd+NVSC5QPJuwOfGRPO90V0GYhLv3xI7kDohA=; b=qkZbo6eXtyCkdBtzpeS4iwEBVu
+	Mr+eTexKMXJiibpdnGJo66b18yWoO2qDQkfMrW7pZQhB9M5aWcyd2lQJq7mEVn2K/azuHB6wHMhVE
+	KbdlUKnNHEJsUoM5g9uqY4lzbMMXkarCSzQ9B8OC86gzrbc29kZ5Zw5ryByEuKo6C8/0tzUX03BjO
+	v9pgXmz1nyT+SeA0i57nppphvvZPw/CEB84i811lEAQNkyBz8QU+EnLmtcDY3lQm7Niu4Y8kGYP8y
+	l89IM6dakdEKikmlPqxbpuJphj8Al0vNreg/LJVP82ZeVT459T/7tps8qvVMpyNUwzxE/7SZR6Zxx
+	NqVIEzTw==;
+Received: from 85-127-106-42.dsl.dynamic.surfer.at ([85.127.106.42] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1v37aE-00000001VcX-2jqw;
+	Mon, 29 Sep 2025 06:42:03 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: don't use __GFP_NOFAIL in xfs_init_fs_context
+Date: Mon, 29 Sep 2025 08:41:54 +0200
+Message-ID: <20250929064154.2239442-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <68d973fc.a00a0220.102ee.002b.GAE@google.com>
+Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-This looks like slub turning a < PAGE_SIZE allocation into a order > 0
-folio allocation, which the page allocator then complains about.
+xfs_init_fs_context is early in the mount process, and if we really
+are out of memory there we'd better give up ASAP.
 
-We'll either need to make slab not propagate < PAGE_SIZE allocations
-to order > 0 page allocation, or make the page allocator handle the
-latter.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_super.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-And XFS shouldn't need the NOFAIL allocation here, but this will break
-things elsewhere as well.
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index bb0a82635a77..a8fe8b042331 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -2275,7 +2275,7 @@ xfs_init_fs_context(
+ 	struct xfs_mount	*mp;
+ 	int			i;
+ 
+-	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL | __GFP_NOFAIL);
++	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL);
+ 	if (!mp)
+ 		return -ENOMEM;
+ 
+-- 
+2.47.3
 
