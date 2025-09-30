@@ -1,104 +1,114 @@
-Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60D2A221F0A
-	for <linux-xfs@vger.kernel.org>; Tue, 30 Sep 2025 10:29:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB9C31C860F;
+	Tue, 30 Sep 2025 17:56:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759228185; cv=none; b=HbTZa/ZVYyRicdKlMWtZFZlT63vNt8jlKrOV9StkVCzDZxcyf4S3MALTYwbZjU1+toqayY8iFKsbF1dYKYVDZ6xtngOWh/R+3ZDBuvkZlF78eyCtrb+hWAR+VjD3xO/n6LhjVW2CqyNqX1+TOjz4vLwUiEKhxHXN3jsEws3PTIU=
+	t=1759254994; cv=none; b=bGbOHt+I0ZZdr1TEwMuhXcMOi5QZ+r7FSvlB3+GzywDPQRXTH2Tb4o/a3mgAIWYoJUABRSA2FHDwoddU9vAIJKnqRsYB5ejtsnEP4zAv6NX76kHmeGcYBJPvxQ7Knq3tFljNHxD6n3ML9nCYCSkf8J0PV9R5qJ2zjAB83X0kP4U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759228185; c=relaxed/simple;
-	bh=kEkp6++hhMsukQ7Co43d2hva1/jaPJAiRZVOch3dZnU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Y75jaksfEnfCUOXYWf5/M9gaIph6QXKb0WrpAEhUHAeavi7oMb2l5jtyUcCn2lehH4gvylEBAmeM1Fvz7Q7lz6eDV7OPbM7Jv+LD5hpRFVBeFZSoIEG4hfgTzcKCRq6p6t9gnJeszIAwBIvBC34ODpk9HB3PxO39kLK5YIj078E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=lxGFj5wu; arc=none smtp.client-ip=209.85.160.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=szeredi.hu
+	s=arc-20240116; t=1759254994; c=relaxed/simple;
+	bh=rpAqBN6DoV7Aez42y6SIifZ7vtMitRdhOyUJO2U6BtY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DLcX6/MQz2pwcNmuCpyzpRfT9pjVbGZKyRRebqZemK94mzzwZnPCEh6g2weRPToglxZgPT6tJXNG4SBYZay1tpFMKz21GF1of2FQbXcZFF0JAcpV6yf7nMlBy69eEM+Dbh6TmUXpCddFeIFxyszSeGBMIp5koh1sRjLA/qG7rOA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tqkiA8q+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="lxGFj5wu"
-Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-4df81016e59so29508491cf.3
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Sep 2025 03:29:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google; t=1759228182; x=1759832982; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=bTfqprXJfvkg3sEJpNRj208d4FU4g7NixV9zMkm9LDg=;
-        b=lxGFj5wu3IQ/hPnFhdpXXG9HvZxnGvWsumzK5UmyynlX1WDm/TvPvTH0cnU3QyVeGg
-         QLeTMirmeAubbo87yOZWUmqXB2QGScFV311GNTpsdwI0ZtXL/mqp1WkG+HZmfsN3Gd8k
-         vB47OXr327zFuR7kVp8MLeBoErMK6htBHPikw=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759228182; x=1759832982;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=bTfqprXJfvkg3sEJpNRj208d4FU4g7NixV9zMkm9LDg=;
-        b=Z2PYI8xlnzg+On4aHebjeu7W7wUISIonGYjrI5kk19eLtVIODqhOas0BHHwJ+Q1UaL
-         VZgqctoJnP3XnYIOgP+cm+irLmGuGjeOPJDpl0BOvboc6UCYPTq3qZacNuWvp9HxUMH3
-         +wAM8WgRRSrgSQr4OUaLNC0p79OAPFaOT3xbsI/JdHbIqWbb1xbuTT+XZEgXoDXqroII
-         1wII2lNMwKwSdVxaOqgwVhoSdAJdAKhVE6Y/1wUM84hvTQ9TMlvmjuJKcl2dsyl3kO+4
-         Mt/FwyywWPEQ3BwZUUQjFS+jM+jI6QnxMk931+yT8u/Xam9KgF7uS4jm/l0UMObrq5Gt
-         ZpvA==
-X-Forwarded-Encrypted: i=1; AJvYcCU+0DYFnSIHbKUBH0IP4U/42nW6DVz9X1Py0HYjjOnm/8hcSlSKPXB78/7GEPLiRC3RbE7qSvgNVnM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx0+vC6Dfbc+YDaUgXzgbCFCOGzIpjfpLokZ2T7CDn8ywBW0XZw
-	8jSLOenEsl2540kx23OHdZOFDdiJOEzHH1oKF+HuRBdPloG3l5u1aSbyqa7FgE04E02Q36MVy7T
-	w0KjFGhp7yecq02Lm5hiAhp4gK/Alsx9lapgMGKthsA==
-X-Gm-Gg: ASbGncu/cgVQnMW/513POTLhpyjXvfNVPEc+unVykNf8kgPLaQNaxUNB1Z0bRtCcAak
-	AlxgVGUZHWiRfNLw319e2NvRbujP+ah0bwvEcTe/0GXt9jdrYjaGEe4QzeRI17vbhuo6u/+gCbm
-	nTfeD94hxkojcytlq3gTbYdnl0mDeX88waXuhbZvwGl06BKoVMAouwA/QqDKK9+CtbXzxp0kPUa
-	9zqEwJBdVJpdaWvddlZlStkMj04eRchWN5QiTmsY09x+unGqN3YZR+zDUgBrn5KEzText8TQA==
-X-Google-Smtp-Source: AGHT+IGzuMgWcMC8J1gmVuG1jhDodNPDypimmkHMqGMXQSg4mN5gSWlDIvVy/uGasgivb6Qzz8zJvmXNNDc31Qw/A2U=
-X-Received: by 2002:ac8:5fd3:0:b0:4b3:4d98:cb39 with SMTP id
- d75a77b69052e-4da481d9806mr253690471cf.9.1759228182235; Tue, 30 Sep 2025
- 03:29:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tqkiA8q+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31226C4CEF0;
+	Tue, 30 Sep 2025 17:56:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1759254994;
+	bh=rpAqBN6DoV7Aez42y6SIifZ7vtMitRdhOyUJO2U6BtY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=tqkiA8q+LPr4e8LwLaeqOSom8wUeitG454sg9Y43pYLxCL4CmPpvX5DE/u0UHC/c0
+	 c+6GpFk+GhzZ/o3VAuN9eFMzT5bNk30kUMep2n+paX5n2yqQ894ptu1ZIbnC5+lOTd
+	 PUaHzSUOCEp37Tn/FUTImYxo8vzuAUCCGectlGGx3TCIz/WTjuthmEt1hWcCde6U3q
+	 UgpqCc8WIj0vQPgUPSwhffE2ZSoSeWb9ytu4HpFE7C9E70zNPYmJFUYmpUfyi0p7Wr
+	 s+2YZ5/+ST+lPoLsc/huwd238hx6etnuG4Ncld7OrIk1/dvHak1MhYtGUQJ4CYlpfE
+	 elmFNbJ4MA5qQ==
+Date: Tue, 30 Sep 2025 10:56:33 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: bernd@bsbernd.com, linux-xfs@vger.kernel.org, John@groves.net,
+	linux-fsdevel@vger.kernel.org, neal@gompa.dev,
+	joannelkoong@gmail.com
+Subject: Re: [PATCH 2/8] fuse: flush pending fuse events before aborting the
+ connection
+Message-ID: <20250930175633.GQ8117@frogsfrogsfrogs>
+References: <CAJfpegtW++UjUioZA3XqU3pXBs29ewoUOVys732jsusMo2GBDA@mail.gmail.com>
+ <20250923145413.GH8117@frogsfrogsfrogs>
+ <CAJfpegsytZbeQdO3aL+AScJa1Yr8b+_cWxZFqCuJBrV3yaoqNw@mail.gmail.com>
+ <20250923205936.GI1587915@frogsfrogsfrogs>
+ <20250923223447.GJ1587915@frogsfrogsfrogs>
+ <CAJfpegthiP32O=O5O8eAEjYbY2sAJ1SFA0nS8NGjM85YvWBNuA@mail.gmail.com>
+ <20250924175056.GO8117@frogsfrogsfrogs>
+ <CAJfpegsCBnwXY8BcnJkSj0oVjd-gHUAoJFssNjrd3RL_3Dr3Xw@mail.gmail.com>
+ <20250924205426.GO1587915@frogsfrogsfrogs>
+ <CAJfpegshs37-R9HZEba=sPi=YT2bph4WxMDZB3gd9P8sUpTq0w@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <175798149979.381990.14913079500562122255.stgit@frogsfrogsfrogs>
- <175798150070.381990.9068347413538134501.stgit@frogsfrogsfrogs>
- <CAJfpegtW++UjUioZA3XqU3pXBs29ewoUOVys732jsusMo2GBDA@mail.gmail.com>
- <20250923145413.GH8117@frogsfrogsfrogs> <CAJfpegsytZbeQdO3aL+AScJa1Yr8b+_cWxZFqCuJBrV3yaoqNw@mail.gmail.com>
- <20250923205936.GI1587915@frogsfrogsfrogs> <20250923223447.GJ1587915@frogsfrogsfrogs>
- <CAJfpegthiP32O=O5O8eAEjYbY2sAJ1SFA0nS8NGjM85YvWBNuA@mail.gmail.com>
- <20250924175056.GO8117@frogsfrogsfrogs> <CAJfpegsCBnwXY8BcnJkSj0oVjd-gHUAoJFssNjrd3RL_3Dr3Xw@mail.gmail.com>
- <20250924205426.GO1587915@frogsfrogsfrogs>
-In-Reply-To: <20250924205426.GO1587915@frogsfrogsfrogs>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Tue, 30 Sep 2025 12:29:30 +0200
-X-Gm-Features: AS18NWD7FH2ECHsqy--ansfHcFvhFuJl9zxXuoH-_wb_I9ayFnO6DQxvIV2et2o
-Message-ID: <CAJfpegshs37-R9HZEba=sPi=YT2bph4WxMDZB3gd9P8sUpTq0w@mail.gmail.com>
-Subject: Re: [PATCH 2/8] fuse: flush pending fuse events before aborting the connection
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: bernd@bsbernd.com, linux-xfs@vger.kernel.org, John@groves.net, 
-	linux-fsdevel@vger.kernel.org, neal@gompa.dev, joannelkoong@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJfpegshs37-R9HZEba=sPi=YT2bph4WxMDZB3gd9P8sUpTq0w@mail.gmail.com>
 
-On Wed, 24 Sept 2025 at 22:54, Darrick J. Wong <djwong@kernel.org> wrote:
+On Tue, Sep 30, 2025 at 12:29:30PM +0200, Miklos Szeredi wrote:
+> On Wed, 24 Sept 2025 at 22:54, Darrick J. Wong <djwong@kernel.org> wrote:
+> 
+> > I think we don't want stuck task warnings because the "stuck" task
+> > (umount) is not the task that is actually doing the work.
+> 
+> Agreed.
+> 
+> I do wonder why this isn't happening during normal operation.  There
+> could be multiple explanations:
+> 
+>  - release is async, so this particular case would not trigger the hang warning
 
-> I think we don't want stuck task warnings because the "stuck" task
-> (umount) is not the task that is actually doing the work.
+<nod> I confirm that a normal release takes place asynchronously, so
+nothing in the kernel gets hung up if ->release takes a long time.
 
-Agreed.
+It's only my new code that causes the hang warnings, and only because
+it's using the non-interruptible wait_event variant to flush the
+requests.
 
-I do wonder why this isn't happening during normal operation.  There
-could be multiple explanations:
+(I /could/ solve the problem differently by calling
+wait_event_interruptible in a loop and ignoring the EINTR, but that
+seems like a misuse of APIs.)
 
- - release is async, so this particular case would not trigger the hang warning
+>  - some other op could be taking a long time to complete (fsync?), but
+> request_wait_answer() starts with interruptible sleep and falls back
+> to uninterruptible sleep after a signal is received.  So unless
+> there's a signal, even a very slow request would fail to trigger the
+> hang warning.
 
- - some other op could be taking a long time to complete (fsync?), but
-request_wait_answer() starts with interruptible sleep and falls back
-to uninterruptible sleep after a signal is received.  So unless
-there's a signal, even a very slow request would fail to trigger the
-hang warning.
+Yes, that's what happens if I inject a "stall" into, say, fallocate by
+adding a gdb breakpoint on the fallocate handler in fuse4fs.  The xfs_io
+process calling fallocate() then just blocks in interruptible sleep
+and I see no complaints from the hangcheck timer.  But it's fallocate(),
+which is quite interruptible.
 
-A more generic solution would be to introduce a mechanism that would
-tell the kernel that while the request is taking long, it's not
-stalled (e.g. periodic progress reports).
+Unmount is different -- the kernel has already torn down some of the
+mount state, so we can't back out after some sort of interruption.
 
-But I also get the feeling that this is not very urgent and possibly
-more of a test checkbox than a real life issue.
+> A more generic solution would be to introduce a mechanism that would
+> tell the kernel that while the request is taking long, it's not
+> stalled (e.g. periodic progress reports).
+> 
+> But I also get the feeling that this is not very urgent and possibly
+> more of a test checkbox than a real life issue.
 
-Thanks,
-Miklos
+It's probably not an issue for 99% of filesystems and use cases, but
+unprivileged userspace can set up the conditions for a stall warning.
+Some customers file bug reports for /any/ kernel backtrace, even if it's
+a stall warning caused by slow IO, so I'd prefer not to create a new
+opening for this to happen.
+
+--D
+
+> 
+> Thanks,
+> Miklos
