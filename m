@@ -1,183 +1,100 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E4673101B5
-	for <linux-xfs@vger.kernel.org>; Thu,  2 Oct 2025 12:28:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A43ED7D07D
+	for <linux-xfs@vger.kernel.org>; Thu,  2 Oct 2025 17:16:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759408137; cv=none; b=Pb5YFCrycMqBdn6wYkZEPEj6NMenn7Y7rCz/p3tjDY197FvvMyMc99dIrCLTIMUmieIgjamdbB+/Bo6DVVyGSMoWuCFOiUn6s4IYBXZgFvqmUg1ymKeC55rBwasM1OgIM5slJIdnl/HWN1ce0hE68qP2sc9kUYV+hqXxEDpinqM=
+	t=1759425395; cv=none; b=rNKqHtg0dYIvlNeG+BAPxyaqc/AG7bcY8Ucz7FDnv2EdrcLcHC932PEWhCdVpqs3IdJXHIP5+NcJLbHLwineWhG8JbBPTFxHYB44GA0fCNB2d1Ppm+0uNvbPmHvu4avOvkgRxnJF3cIhAZGqxl002+qYFyCLNI1exp10t+n5/3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759408137; c=relaxed/simple;
-	bh=6YOAl+dUkgqHJsDQ90ZQorWFIGKEA/tEAhMjHocT8JI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jAF9s4ubf4OjuP0qF57kAlz5GlWz9yL8NhRZnkEob24x7f+7d5VcH+nr+aPZ8uGBkYv8QIhs7gKL5AdbJBUbVnhlaByTK6st53oUYb0arLLTOxMIT8Zomy/5MGvL8ouqm7KqYnL46CWW+4BpJs3FxGHr//JqSwCw6OZSy/2iyXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id 5F3C3180FCC3;
-	Thu, 02 Oct 2025 14:28:42 +0200 (CEST)
-Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
-	by mx0.herbolt.com with ESMTPSA
-	id WVC0CPpv3mjlOgUAKEJqOA
-	(envelope-from <lukas@herbolt.com>); Thu, 02 Oct 2025 14:28:42 +0200
-From: Lukas Herbolt <lukas@herbolt.com>
-To: linux-xfs@vger.kernel.org
-Cc: Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH RFC] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Date: Thu,  2 Oct 2025 14:28:24 +0200
-Message-ID: <20251002122823.1875398-2-lukas@herbolt.com>
-X-Mailer: git-send-email 2.51.0
+	s=arc-20240116; t=1759425395; c=relaxed/simple;
+	bh=eqDn2n47zBXwEfzuao5AJpDGCY3+38EubDDycidAmqk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=NcCttyKOpPLQi/kyjMBB1UV9rDSm4Z1LShrOzd22Tiu9622QD44KmnJHi/eGli2LoStTQUcjwVgIASSIAMUg0mvxZWw+Y2SCm4SM5oq2lyCxAis2ri7m1tRQOvR6GUIhD8dVa/5vQJbAL2WEXTMF1CV7Awd31yYY4rD+P9qhbIM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QrbAAgaI; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QrbAAgaI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1759425391;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=uBZAPpBoJYcjxeUO1B1GGGCJTdS2JFaHba0BJbJEY5U=;
+	b=QrbAAgaIF7NPC6+4LJizCkoVTm7fpQaui/O06njUs4wEus6f70PV+X4ymEJHBc14UyfiYi
+	oqEDhXkwBpaZexuHOpUUAT2mM/QIF5Z5B6NQxDmnduTYBciEGvydakrZN1PReIutd9m78P
+	Y5D/3QNQqmubyQrHwF7TF649o7GZ9NU=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-78-K6v6lvvkPIK3OrG1_kg0pA-1; Thu,
+ 02 Oct 2025 13:16:30 -0400
+X-MC-Unique: K6v6lvvkPIK3OrG1_kg0pA-1
+X-Mimecast-MFC-AGG-ID: K6v6lvvkPIK3OrG1_kg0pA_1759425388
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D8EB01956050;
+	Thu,  2 Oct 2025 17:16:27 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.64.54])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E4D2D1800452;
+	Thu,  2 Oct 2025 17:16:26 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Cc: Christian Brauner <brauner@kernel.org>
+Subject: [PATCH v2 0/2] iomap: ->iomap_end() error handling fixes
+Date: Thu,  2 Oct 2025 13:20:36 -0400
+Message-ID: <20251002172038.477207-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
-the unmap write zeroes operation.
+Hi all,
 
-Inspired by the Ext4 implementation of the FALLOC_FL_WRITE_ZEROES. It
-can speed up some patterns on specific hardware.
+This is a couple small error handling fixes for ->iomap_end() errors
+(via iomap_iter()). The immediate problem here was that the
+->iomap_end() error return started overriding an iter.status error code,
+which on ext4 happened to trigger dio fallback to buffered I/O in some
+cases. Jan has actually fixed that separately in ext4 [1], but I wanted
+to take an independent look at iomap to see if it is worth fixing as
+well.
 
-time ( ./fallocate -l 360M /mnt/test.file; dd if=/dev/zero of=/mnt/test.file \
-bs=1M count=360 conv=notrunc,nocreat oflag=direct,dsync)
+The more I poked around the more it seemed like it's more appropriate to
+return the initial error code in iter.status if one is pending. I also
+eventually noticed the DAX vs. reflink case documented in patch 2, which
+further tweaks the error handling and supports the former reasoning.
 
-360+0 records in
-360+0 records out
-377487360 bytes (377 MB, 360 MiB) copied, 22.0027 s, 17.2 MB/s
+These are separate patches because they are separate issues. This has
+survived my testing since the RFC was posted and some Reviewed-by's have
+trickled in, so there are no real changes for v1 other than adding those
+tags. Thoughts, reviews, flames appreciated.
 
-real	0m22.114s
-user	0m0.006s
-sys		0m3.085s
+Brian
 
-time (./fallocate -wl 360M /mnt/test.file; dd if=/dev/zero of=/mnt/test.file \
-bs=1M count=360 conv=notrunc,nocreat oflag=direct,dsync );
-360+0 records in
-360+0 records out
-377487360 bytes (377 MB, 360 MiB) copied, 2.02512 s, 186 MB/s
+[1] https://lore.kernel.org/linux-ext4/20250901112739.32484-2-jack@suse.cz/
 
-real	0m6.384s
-user	0m0.002s
-sys		0m5.823s
+v2:
+- Added more R-b tags.
+v1: https://lore.kernel.org/linux-fsdevel/20250908130102.101790-1-bfoster@redhat.com/
+- Added R-b tags.
+rfc: https://lore.kernel.org/linux-fsdevel/20250902150755.289469-1-bfoster@redhat.com/
 
+Brian Foster (2):
+  iomap: prioritize iter.status error over ->iomap_end()
+  iomap: revert the iomap_iter pos on ->iomap_end() error
 
+ fs/iomap/iter.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
----
- fs/xfs/xfs_bmap_util.c |  5 +++--
- fs/xfs/xfs_bmap_util.h |  4 ++--
- fs/xfs/xfs_file.c      | 23 ++++++++++++++++++-----
- 3 files changed, 23 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 06ca11731e430..a91596a280ba5 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -645,6 +645,7 @@ xfs_free_eofblocks(
- int
- xfs_alloc_file_space(
- 	struct xfs_inode	*ip,
-+    uint32_t        flags,      /* XFS_BMAPI_... */
- 	xfs_off_t		offset,
- 	xfs_off_t		len)
- {
-@@ -748,8 +749,8 @@ xfs_alloc_file_space(
- 		 * will eventually reach the requested range.
- 		 */
- 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
--				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
--				&nimaps);
-+				allocatesize_fsb, flags, 0, imapp, &nimaps);
-+
- 		if (error) {
- 			if (error != -ENOSR)
- 				goto error;
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index c477b33616304..67770830eb245 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -55,8 +55,8 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- 			     int *is_empty);
- 
- /* preallocation and hole punch interface */
--int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
--		xfs_off_t len);
-+int	xfs_alloc_file_space(struct xfs_inode *ip, uint32_t flags,
-+		xfs_off_t offset, xfs_off_t len);
- int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
- int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f96fbf5c54c99..48559a011e9b4 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1255,7 +1255,7 @@ xfs_falloc_insert_range(
- static int
- xfs_falloc_zero_range(
- 	struct file		*file,
--	int			mode,
-+	int				mode,
- 	loff_t			offset,
- 	loff_t			len,
- 	struct xfs_zone_alloc_ctx *ac)
-@@ -1277,7 +1277,16 @@ xfs_falloc_zero_range(
- 
- 	len = round_up(offset + len, blksize) - round_down(offset, blksize);
- 	offset = round_down(offset, blksize);
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	if (mode & FALLOC_FL_WRITE_ZEROES) {
-+		if (!bdev_write_zeroes_unmap_sectors(inode->i_sb->s_bdev))
-+	        return -EOPNOTSUPP;
-+		error = xfs_alloc_file_space(XFS_I(inode), XFS_BMAPI_ZERO,
-+				offset, len);
-+	}
-+	else
-+		error = xfs_alloc_file_space(XFS_I(inode), XFS_BMAPI_PREALLOC,
-+				offset, len);
-+
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1302,7 +1311,8 @@ xfs_falloc_unshare_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_alloc_file_space(XFS_I(inode), XFS_BMAPI_PREALLOC,
-+			offset, len);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1330,7 +1340,9 @@ xfs_falloc_allocate_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_alloc_file_space(XFS_I(inode), XFS_BMAPI_PREALLOC,
-+			offset, len);
-+
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1340,7 +1352,7 @@ xfs_falloc_allocate_range(
- 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
- 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
- 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
--		 FALLOC_FL_UNSHARE_RANGE)
-+		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES )
- 
- STATIC long
- __xfs_file_fallocate(
-@@ -1383,6 +1395,7 @@ __xfs_file_fallocate(
- 	case FALLOC_FL_INSERT_RANGE:
- 		error = xfs_falloc_insert_range(file, offset, len);
- 		break;
-+	case FALLOC_FL_WRITE_ZEROES:
- 	case FALLOC_FL_ZERO_RANGE:
- 		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
- 		break;
 -- 
 2.51.0
 
