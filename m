@@ -1,104 +1,163 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 181582B9B9
-	for <linux-xfs@vger.kernel.org>; Fri,  3 Oct 2025 13:38:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34C9B1E5206
+	for <linux-xfs@vger.kernel.org>; Fri,  3 Oct 2025 13:42:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759498722; cv=none; b=q9F1As1Nv2NiGUgQLBjxBpp2ZyO+cuLwVdykccKlWmPhpvHZcYmvWFHrnfsrtKjphhHyag43jSsjb59WWhK5oUY9lu40DuPLWiBIuCulkemnvhfZtNBZS8g4ZsVv/JrWrmQdTQLOnCmw/8JNtKc/hLKS3zTv/jfXlYNYOvyyFLk=
+	t=1759498961; cv=none; b=tQWSOgg/NKRDd+rqANLje4/YaJ1T9ULv1uJ9nqSMhrsovPAMnlAn6qlIPsJrOxKEB2cehjkmJw8Tgr6ia2BnqLQo2V9A9lQilFq8jkjcwuPFWuP5ERgQVtMf1c0rlJ+FmavyYtlXTLjQquPxdPbRGs3zqmvLl0dMDrt2FFRqpJ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759498722; c=relaxed/simple;
-	bh=HchU8f4EgzCIclHzMtEp4ytQk6iEU1OkJuge3NDZgkw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qK+RHz3olVeADc/B4vPr74BePgUOdRkVL4UJBjk2pr9qbsI4FJCLdTc17aIOoeFdZ4Gtjvzl0t7nLjzJ1d787pqzjNjnJ5j2umGZRUPWhQ/v76+OxaenwytYQLsDrCQCeVdtFwf4mYRhka2Jh5pJu60NpZd8kbZdwsNzej4SqkQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kkgF/PRP; arc=none smtp.client-ip=209.85.128.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1759498961; c=relaxed/simple;
+	bh=9K/pcAJIAmNaWqCWy4cG3ZYxLZ/lu/7uNK022qUCius=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=N3bNDc8r/0l9iLAZSaoo3MfgmGU2oppjWN7NzAj/xsQFLNNGBCgJhI9NyVhTuYX7BZGzn5kanog7XRqSmMlFhdbNwYWz0ZgxrWUkMQxYb5l0WavpLdCX8NlIsdju9VvhU1drdmovkrNuXGuDLe8X0vQ+W7Ue+NAxc2NM3U7SuPk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SM8ztUie; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kkgF/PRP"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-46e34bd8eb2so25625675e9.3
-        for <linux-xfs@vger.kernel.org>; Fri, 03 Oct 2025 06:38:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1759498719; x=1760103519; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=zjd42OOVf+WajS57RrAMPmwuVCYgfRwVOtOJ5YCKMLU=;
-        b=kkgF/PRP3WSisCuM7qr1b+G/qaDJIg1Il7bNMY1zINAfSZN+gbRXJMcVir5ZJDXrog
-         4t77zDxR0oH5L9z/5Iw5rOn3w4U5qziu3u9FHr1kt1mOtviEOIr8PRUUA6hc6oDRLqNu
-         gp+xEDLycpzqD2ELyb1wGekV7PM3b/20mhL7m4wXFvEGUWXcMsJqLd0cEM/O0r6Hhin2
-         HrCRwpm0GX9MlTYiFYFfj5z7BsVA7ofJZdlkXZ2F/JuEnuPT7OIhuPzx+ucYmxvoc576
-         OlGrsYRPVaWjW2cit/sK8IYaaue3Zc2L5xzqXLe11LIM3JSpL0CXeAnXCYN3+0lKqAR2
-         E6hQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759498719; x=1760103519;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=zjd42OOVf+WajS57RrAMPmwuVCYgfRwVOtOJ5YCKMLU=;
-        b=U7mDqJBDsKTK95TTO0F7dy2fWPxeCIEzd5NAtAZ8Z8NbvwfNX7szdcBMGv6zr256II
-         hkY+zkZ1XF7evVju5ybl548uQVPE59wI7I3pfCWOUGEAi97xICnrBO3nC4DIjEsGHhk7
-         HJaVfiggdJ7NxAK6ao16JMAxIPVe+t7Vbj21RACMRxQgAo/37b+DNNQ/LkYReXebFsmA
-         3jK9U3/uSggGEJWIB2Fvw/KTx/t5qFNdks2fwZDEXZQ8QwboSIg0sR+vmANJQswMzU/U
-         eNtukTvcRfFd9PkBr+GcL49tN8CYTje6CvzfeqJtA2YEdiQHb7/qIPr1G7tg2Q9cc5mF
-         Oudg==
-X-Forwarded-Encrypted: i=1; AJvYcCV8V3RoKDYk563c9Nll+5+Ya5wBHhWStnpve9YptarQyejjAZcRZjXmrBE/7nsUDjNUgAHLY2uoAug=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwAQvxMsFW5HJQ9O+rtxn6G28pF43RoTnXWPBkTYWN5spaHfaDf
-	Ls+Wg6uAX5pWIDecF/k47SO1kockqMXxzs/HgoRCWtksRPZgQzzF7fSN
-X-Gm-Gg: ASbGncu4VBZ6G2hL0AlAPdDsL5kxYz2QmqPuBz1HcrGUGU6gy0+ldPQKiK7HYU8SbPd
-	v+UPoMCn5BHwl+U7fz5rL2lht4OSy/nH2tOkQZ5pfh6MgQYZrPV8I1/ogL4CQyj/uSTRJI2h0HV
-	Nar0Gle8eOoKDaf8qoO/NCRc+gry0wHC5LLeGQBDVZby6Z3mJnw0wG75DGMjy9fXyeGvkHTcMkB
-	Cv2yehRTZxj1q9SxMB+fEfzjSsXRBspMrHowQC5EAoVruZWKbz7ljg3HihPnz9PindL3Cv9d4Nh
-	+yIShBi+1itg7MP2CDHmzZ4iWzRQGh3+/nVZyQ2sIfwWrKADyyf2cMW43WNfvDVGZ0fV6F7UHIc
-	ANWsAFvLsTJn4V/kRR39KO83IxoOGlbHlUbsL1+F/GZ9yEmee/mEKsT7Qj3zIwSDAoSkbMGhUJQ
-	wEC8nLXsy7YdRKsa9o
-X-Google-Smtp-Source: AGHT+IE2d2+VTZ/oWXOczMKDIO72TpVL76DePnGYNZ6TZ9XC7xNSiQbSXq1QW7v89ZQFfAk81Twbfw==
-X-Received: by 2002:a05:600c:1f8d:b0:46e:436c:2191 with SMTP id 5b1f17b1804b1-46e71145d77mr24764275e9.25.1759498719134;
-        Fri, 03 Oct 2025 06:38:39 -0700 (PDT)
-Received: from f (cst-prg-21-74.cust.vodafone.cz. [46.135.21.74])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-46e61a020a3sm130655105e9.10.2025.10.03.06.38.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Oct 2025 06:38:38 -0700 (PDT)
-Date: Fri, 3 Oct 2025 15:38:28 +0200
-From: Mateusz Guzik <mjguzik@gmail.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: kernel test robot <oliver.sang@intel.com>, 
-	Dave Chinner <dchinner@redhat.com>, oe-lkp@lists.linux.dev, lkp@intel.com, 
-	linux-kernel@vger.kernel.org, Carlos Maiolino <cem@kernel.org>, Jan Kara <jack@suse.cz>, 
-	linux-xfs@vger.kernel.org
-Subject: Re: [linus:master] [xfs]  c91d38b57f:  stress-ng.chown.ops_per_sec
- 70.2% improvement
-Message-ID: <nfqwkcdbd5xawykrtb5nrhvmpfimtry6qyuig5p7qmlehc7itl@utic4l437gwn>
-References: <202510020917.2ead7cfe-lkp@intel.com>
- <20251003075615.GA13238@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SM8ztUie"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1759498957;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=xfXtIfWkcf4xqLvnSN5itUWF/K16TMTPz0JBNVG+WgY=;
+	b=SM8ztUieaFjRupq9VrY3Mr+q0evnkNbYFXjL5MVf00zn1r+29krI8X4EjYDNik7MYtNg6c
+	WQ3yDLNd++HzRJCgd1F8CJuJsQ2CN4pVJztf8rEFVu3iTHPK8fMGf/x8gGNvRmx1yDUJto
+	/sw7sqJj00tZ4Q/7puH0Hje3dwZ9mYw=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-634-6BpUaV_fOEO8LMYSqWcAgw-1; Fri,
+ 03 Oct 2025 09:42:34 -0400
+X-MC-Unique: 6BpUaV_fOEO8LMYSqWcAgw-1
+X-Mimecast-MFC-AGG-ID: 6BpUaV_fOEO8LMYSqWcAgw_1759498953
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 971C819560B0;
+	Fri,  3 Oct 2025 13:42:32 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.64.54])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E0B7C19560B8;
+	Fri,  3 Oct 2025 13:42:30 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org,
+	hch@infradead.org,
+	djwong@kernel.org,
+	willy@infradead.org,
+	brauner@kernel.org
+Subject: [PATCH v5 0/7] iomap: zero range folio batch support
+Date: Fri,  3 Oct 2025 09:46:34 -0400
+Message-ID: <20251003134642.604736-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20251003075615.GA13238@lst.de>
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On Fri, Oct 03, 2025 at 09:56:15AM +0200, Christoph Hellwig wrote:
-> On Thu, Oct 02, 2025 at 04:11:29PM +0800, kernel test robot wrote:
-> > 
-> > 
-> > Hello,
-> > 
-> > kernel test robot noticed a 70.2% improvement of stress-ng.chown.ops_per_sec on:
-> 
-> I wonder what stress-ng shown is doing, because unless it is mixing fsync
-> and ilock-heavy operations on the same node this would be highly
-> unexpected.
-> 
+Hi all,
 
-According to my strace there is no fsync, instead all of the worker
-threads are issuing chown, lchown and fchown on the same inode.
+Only minor changes in v5 to the XFS errortag patch. I've kept the R-b
+tags because the fundamental logic is the same, but the errortag
+mechanism has been reworked and so that one needed a rebase (which turns
+out much simpler). A second look certainly couldn't hurt, but otherwise
+the associated fstest still works as expected.
 
-As far as *benchmarking* goes this is useless.
+Note that the force zeroing fstests test has since been merged as
+xfs/131. Otherwise I still have some followup patches to this work re:
+the ext4 on iomap work, but it would be nice to move this along before
+getting too far ahead with that.
 
-Note stress-ng does not claim to be a benchmarking suite, but a stress
-test suite which can also report ops/s for whatever it did.
+Brian
 
-This bit does not look particularly useful for stress testing either tbh.
+--- Original cover letter ---
+
+Hi all,
+
+Here's a first real v1 of folio batch support for iomap. This initially
+only targets zero range, the use case being zeroing of dirty folios over
+unwritten mappings. There is potential to support other operations in
+the future: iomap seek data/hole has similar raciness issues as zero
+range, the prospect of using this for buffered write has been raised for
+granular locking purposes, etc.
+
+The one major caveat with this zero range implementation is that it
+doesn't look at iomap_folio_state to determine whether to zero a
+sub-folio portion of the folio. Instead it just relies on whether the
+folio was dirty or not. This means that spurious zeroing of unwritten
+ranges is possible if a folio is dirty but the target range includes a
+subrange that is not.
+
+The reasoning is that this is essentially a complexity tradeoff. The
+current use cases for iomap_zero_range() are limited mostly to partial
+block zeroing scenarios. It's relatively harmless to zero an unwritten
+block (i.e. not a correctness issue), and this is something that
+filesystems have done in the past without much notice or issue. The
+advantage is less code and this makes it a little easier to use a
+filemap lookup function for the batch rather than open coding more logic
+in iomap. That said, this can probably be enhanced to look at ifs in the
+future if the use case expands and/or other operations justify it.
+
+WRT testing, I've tested with and without a local hack to redirect
+fallocate zero range calls to iomap_zero_range() in XFS. This helps test
+beyond the partial block/folio use case, i.e. to cover boundary
+conditions like full folio batch handling, etc. I recently added patch 7
+in spirit of that, which turns this logic into an XFS errortag. Further
+comments on that are inline with patch 7.
+
+Thoughts, reviews, flames appreciated.
+
+Brian
+
+v5:
+- Rebased across XFS errortag mechanism rework.
+v4: https://lore.kernel.org/linux-fsdevel/20250807144711.564137-1-bfoster@redhat.com/
+- Update commit log description in patch 3.
+- Added remaining R-b tags.
+v3: https://lore.kernel.org/linux-fsdevel/20250714204122.349582-1-bfoster@redhat.com/
+- Update commit log description in patch 2.
+- Improve comments in patch 7.
+v2: https://lore.kernel.org/linux-fsdevel/20250714132059.288129-1-bfoster@redhat.com/
+- Move filemap patch to top. Add some comments and drop export.
+- Drop unnecessary BUG_ON()s from iomap_write_begin() instead of moving.
+- Added folio mapping check to batch codepath, improved comments.
+v1: https://lore.kernel.org/linux-fsdevel/20250605173357.579720-1-bfoster@redhat.com/
+- Dropped most prep patches from previous version (merged separately).
+- Reworked dirty folio lookup to use find_get_entry() loop (new patch
+  for filemap helper).
+- Misc. bug fixes, code cleanups, comments, etc.
+- Added (RFC) prospective patch for wider zero range test coverage.
+RFCv2: https://lore.kernel.org/linux-fsdevel/20241213150528.1003662-1-bfoster@redhat.com/
+- Port onto incremental advance, drop patch 1 from RFCv1.
+- Moved batch into iomap_iter, dynamically allocate and drop flag.
+- Tweak XFS patch to always trim zero range on EOF boundary.
+RFCv1: https://lore.kernel.org/linux-fsdevel/20241119154656.774395-1-bfoster@redhat.com/
+
+Brian Foster (7):
+  filemap: add helper to look up dirty folios in a range
+  iomap: remove pos+len BUG_ON() to after folio lookup
+  iomap: optional zero range dirty folio processing
+  xfs: always trim mapping to requested range for zero range
+  xfs: fill dirty folios on zero range of unwritten mappings
+  iomap: remove old partial eof zeroing optimization
+  xfs: error tag to force zeroing on debug kernels
+
+ fs/iomap/buffered-io.c       | 117 +++++++++++++++++++++++++----------
+ fs/iomap/iter.c              |   6 ++
+ fs/xfs/libxfs/xfs_errortag.h |   6 +-
+ fs/xfs/xfs_file.c            |  29 ++++++---
+ fs/xfs/xfs_iomap.c           |  38 +++++++++---
+ include/linux/iomap.h        |   4 ++
+ include/linux/pagemap.h      |   2 +
+ mm/filemap.c                 |  58 +++++++++++++++++
+ 8 files changed, 210 insertions(+), 50 deletions(-)
+
+-- 
+2.51.0
+
