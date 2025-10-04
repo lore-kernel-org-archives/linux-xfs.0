@@ -1,44 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A0DE23CB
-	for <linux-xfs@vger.kernel.org>; Sat,  4 Oct 2025 04:16:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78BF1C2E0;
+	Sat,  4 Oct 2025 04:26:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759551420; cv=none; b=WQ83dRm7s1LeKWYv8/xf+Ds5QSl1w1HT4H61zbhgAxbB98FZoyRa8wHi2PBAORtR05cHpKNrJdAcDBXoQSis1t9cVvYuveyVBJ8po+JDcuC1ZT1NsIcQhFdTDKC7mv6vdXx4ZrEdvsIZiNWdYn4/cm3TYsg1+djToJjEUOi8q2k=
+	t=1759552013; cv=none; b=EvPfTuUv2iZ24SpK7Pc9nuTj7Gce2nF0qzBrHPjzcYcw/kXebSsO1z4382iY13A4RL877ySX/IEY0Ri+1H7UjyU/lMZ7ibtKAH3nanax8SUroKAXioCABuzHRh8pDJDo3dAN6erKXCSv5bouHaQ+GDZ+vGzNQCXDPxGeZ2RF+qQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759551420; c=relaxed/simple;
-	bh=nVi3Twgq+4t+J6J1osJEsZSSSzbC6y5n1obipQ1ZTSg=;
+	s=arc-20240116; t=1759552013; c=relaxed/simple;
+	bh=uILPRqJhMy7fWt3OsCdb6ZPe6JPwhZZa5v2gQXhmWiY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ux7unGfM1DCmET2TUsaBYlX0zZGx3w7xMp4i7OBPQMK6CnJd2vZ5X5cihqmN5sJMj21AYex9KE131bts6fGw2H35oVs69dGbkqAp7VwqKUMfknVv7eQKs9usN0EOhkbgGN6dL1ih/2R8eCAhBAtQS4zcmLC1JrP3nICRswQXP4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=uG8Dx4ew; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=hamC/ayb5X99MChVJmzGOt+5fXwaLX74IJLhNoNyfffp71YXL/TdjyHxHvrL05xNogODViRsBM2WPPfQFVtf2StLJls0lP0u9T77hYgHA+vLHlIkgY4W1Attt93xr9dHR/VaDK+Wkr2uaSY9f3DC5HOX0EnrPE/0DxHFxFAM0ag=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=V6Fhv3/P; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uG8Dx4ew"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="V6Fhv3/P"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=F7lpap4RpAkXbzGHD+2C3qLer0ZxETPtmwD07I6Mf/M=; b=uG8Dx4ewBlIRTpN2fVmw4WbAQe
-	ENWsnn7nIQZG3xtuKsT5GND5HkvPzrkHAfhguozHdqlTy4fyDGeycMgjvldaWuPt3iRUb4ces2sZd
-	HBkbx9Xf9BrI7x9P9ISUnUFucTMwERxHFvyeXHqVvehszN69+ngY/3qSyEdZG2ARwkz0aDQP41a2l
-	j3NTy7W+7XHxVvupEDa9opr3bY401QDuxUNuIXibyeMi2NxOS8ifl3idfiIIKBJfVnQZ8yEjONwWW
-	+/2WcFPNUAh0PPuIdfcPgcSfVT9ON3c/LCJGzd3rg3oOfsADTVdy7fVeyabBqy6hnr44yor9Oyznc
-	Q++xhGOA==;
+	bh=h5jDZRPaN/sMtBt59YwcIKCH/2rUKbVLwKIWK3iryyw=; b=V6Fhv3/P8wMUzY3hBwpGNRmtw4
+	SZuF3Dw6a6l2mBnGXKOqVoviIyYeCMuhMpbmbDrbVEly6K9LJK880SQjE7iZhrMD1pjfF4zh9tNSx
+	APx41E+Joei4c7WFyeMB/RClpx7CW8fchT/rS55JwVGej0FQMmU33z0vcLGfohg3alnC337wF7Y8l
+	XzxiBYg4sae3VAC8L9CD3gA9oMz2/4Jx/I7Ed0NYYNF9NiHPRE8YW9rY5X84nWstmle+vMBZLaC44
+	CNeh2BVV9xctbuKHTzqIHHOLIDc6rHukiULDvjGtcjSZ3I9Fzi59SX+097lYlgo3WOPzI8Kj+iI0A
+	kbw9McNg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v4tha-0000000DRZz-2EYY;
-	Sat, 04 Oct 2025 04:16:58 +0000
-Date: Fri, 3 Oct 2025 21:16:58 -0700
+	id 1v4tr8-0000000DRu3-3PVu;
+	Sat, 04 Oct 2025 04:26:50 +0000
+Date: Fri, 3 Oct 2025 21:26:50 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Lukas Herbolt <lukas@herbolt.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFC] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Message-ID: <aOCfus7PgLl812qf@infradead.org>
-References: <20251002122823.1875398-2-lukas@herbolt.com>
- <aN-Aac7J7xjMb_9l@infradead.org>
- <20251004040020.GC8096@frogsfrogsfrogs>
+To: Pavel Emelyanov <xemul@scylladb.com>
+Cc: linux-fsdevel@vger.kernel.org,
+	"Raphael S . Carvalho" <raphaelsc@scylladb.com>,
+	linux-api@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] fs: Propagate FMODE_NOCMTIME flag to user-facing
+ O_NOCMTIME
+Message-ID: <aOCiCkFUOBWV_1yY@infradead.org>
+References: <20251003093213.52624-1-xemul@scylladb.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,20 +47,35 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251004040020.GC8096@frogsfrogsfrogs>
+In-Reply-To: <20251003093213.52624-1-xemul@scylladb.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Oct 03, 2025 at 09:00:20PM -0700, Darrick J. Wong wrote:
-> > > -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-> > > +	if (mode & FALLOC_FL_WRITE_ZEROES) {
-> > > +		if (!bdev_write_zeroes_unmap_sectors(inode->i_sb->s_bdev))
-> 
->      		                         not correct ^^^^^^^^^^^^^^^^^^^
-> 
-> You need to find the block device associated with the file because XFS
-> is a multi-device filesystem.
+On Fri, Oct 03, 2025 at 12:32:13PM +0300, Pavel Emelyanov wrote:
+> The FMODE_NOCMTIME flag tells that ctime and mtime stamps are not
+> updated on IO. The flag was introduced long ago by 4d4be482a4 ([XFS]
+> add a FMODE flag to make XFS invisible I/O less hacky. Back then it
+> was suggested that this flag is propagated to a O_NOCMTIME one.
 
-Indeed. xfs_inode_buftarg will do the work, but we'll need to ensure
-the RT bit doesn't get flipped, i.e. it needs to hold a lock between
-that check and allocation the blocks if there were none yet.
+skipping c/mtime is dangerous.  The XFS handle code allows it to
+support HSM where data is migrated out to tape, and requires
+CAP_SYS_ADMIN.  Allowing it for any file owner would expand the scope
+for too much as now everyone could skip timestamp updates.
+
+> It can be used by workloads that want to write a file but don't care
+> much about the preciese timestamp on it and can update it later with
+> utimens() call.
+
+The workload might not care, the rest of the system does.  ctime can't
+bet set to arbitrary values, so it is important for backups and as
+an audit trail.
+
+> There's another reason for having this patch. When performing AIO write,
+> the file_modified_flags() function checks whether or not to update inode
+> times. In case update is needed and iocb carries the RWF_NOWAIT flag,
+> the check return EINTR error that quickly propagates into cb completion
+> without doing any IO. This restriction effectively prevents doing AIO
+> writes with nowait flag, as file modifications really imply time update.
+
+Well, we'll need to look into that, including maybe non-blockin
+timestamp updates.
 
