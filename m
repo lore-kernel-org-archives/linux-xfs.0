@@ -1,68 +1,68 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F2E4136E37
-	for <linux-xfs@vger.kernel.org>; Sun,  5 Oct 2025 22:06:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89CEB39ACF
+	for <linux-xfs@vger.kernel.org>; Sun,  5 Oct 2025 23:38:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759702006; cv=none; b=ZAywimZtMJKyslipKbrKSTfSC4SakpTwOPuQyYuMhdMjQlFGLfB2jMsOMQXL1N/Wi4QFUqApP5hvZOHE2acRSLTMxvnfke17/TMY78Qu6gk9ZbI0/2dwsweXvfSPzYU/IBXNQj4GQjXOsZKmn7VKdW1sVQ4fbsdebK/orA3dRSY=
+	t=1759707506; cv=none; b=sSURAj25z/nv3vO0pxFK6b6Y5WjZY/rxkUuZX0uFixlthmr8Mou3Z/v1qn0oC73mfZf67+PrHVkAcsyqlT4P6ndXAh7bA+QImoQOUtSdegXwBW+scbPWyiVUJyd2IMQMdBSmMCk0fWXJaRz0AezgY7cwBWX3wGbbWbblx1SxHqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759702006; c=relaxed/simple;
-	bh=ghK5/Akxyskde6VGn6Ahjhb7SpOkpwGVxVDkbDa5JHI=;
+	s=arc-20240116; t=1759707506; c=relaxed/simple;
+	bh=ZeL8g3+NIGghkoED2HmChwuHilgupZ9KQh+zbVphGW4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Cb9s1aRQHkyGL2DXGRPx9qTCg20gZB3Br127ozRm+t0AO4d2OjpyD6GKNBQWjxnq6VRCLmo20KM4RJdsyzoDrffx1vOGIr+d3FiVsri8Gvu0OuEbXX8mSogpQagHPdeCS9WyarW0d97Gf/y9p0A+g0fcqZ/xtFLAgmb1R7EU2SY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=wZBCwzMP; arc=none smtp.client-ip=209.85.215.177
+	 Content-Type:Content-Disposition:In-Reply-To; b=fiCUHThzxYzQIH9UWuUxqqLeqcBj+6CUPSE8tD9mk/uCJ9iPAQFYnZGdHHLqy41vn/YjUhuhvW4dOc7QQUGU+inqxRj8JjcNLTpFGGbj1wUwsQgaTsDLgQp4+xpTr/QjSRdlUL2HG8hJnKBO1xiEE6zyliCFrslg3MeW2YvGJJs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=f0YxxFUi; arc=none smtp.client-ip=209.85.210.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="wZBCwzMP"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-b4ee87cc81eso3846721a12.1
-        for <linux-xfs@vger.kernel.org>; Sun, 05 Oct 2025 15:06:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="f0YxxFUi"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-7800ff158d5so3594360b3a.1
+        for <linux-xfs@vger.kernel.org>; Sun, 05 Oct 2025 16:38:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1759702004; x=1760306804; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1759707504; x=1760312304; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=EfB79PgOGfvIs0AN5btrRu7ltzbFZlxj1NUbJbf87SE=;
-        b=wZBCwzMPOFZBmauIC3yw6qRd3Sykz5c41p4OyQrG7RW1fqeUVQVk4+mfyM1AevAKc1
-         X3CNKtkrVkVwGxHS4GSCfu3viAmYXxbexjaDViFry9rBARBCcEv7pAqnB30zvTurTMSo
-         ySylK2bcuJtlFWgHiUImDjfDfksXzOAzufpJHwfBsyZPBePY489kw9DUfFfOAUuC4Z2u
-         nrSD3sltjbgbhrvL9Ru6C9W+9NuMNXwg27vo9iJ9iNMlyGyoxLOfHvcmS7YZ1vUz6vNg
-         tVFSaRWyR3S4PzXDIKUy1sfNMftKsb077+bSXLRau2LyPrSCH/F4tw8ItMuGH4GDxKtZ
-         MQpQ==
+        bh=wYZUqfHCkY9qWTGMyfXAR/EXot/02oxeQhh+iKW+hV4=;
+        b=f0YxxFUizS+cjK9jC4Js5RK/Xohje1aPyaKmEKmM0Z87/e75/2C4exmGVIbzXACCbT
+         GbzOuDsRPmq1w5RL8GcvmIehgtsR12PW61g4mxzrI28atyQSC/+eU2qctJUehTFqL5Eo
+         hEfFHtvWk7ORUjMAnJKHZc+Uq9hZJ7OA1pJRqxz5VwGmdp69dhqoXeT9nH7hSe1HxyI5
+         G7mi2m+W6WKK+GZk/VXzfUQ0rydyWmiwFLdF0MiHpWP1SH6hA2zldNOCAZccoiJqw143
+         LG8nhZG7wVCJjD8h2sHAB2fOvjUGz2lOFaopEFVThHyFRm8AbnJK3P/x8ZK9oEc9BpDD
+         I4gA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759702004; x=1760306804;
+        d=1e100.net; s=20230601; t=1759707504; x=1760312304;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=EfB79PgOGfvIs0AN5btrRu7ltzbFZlxj1NUbJbf87SE=;
-        b=LWU1bcgR/9cZz29SU7ygDtl7zKa3qN3Q5+fJnZppPq7b1VUOuv37c+6Xp5NFM6Ziyo
-         9tZKn3yf79HncrSlsP0kQD0IHZGCAvWupUasT4o9/A5ctR+hQBuhkaij5CIYv/J5mP9+
-         DHLLzcUYRxlX38aOxbrMkjLXqEW9vr7iW70EDdEJQEvzt0wfwULjD9fZ33mI1UbHjzcs
-         O01Sgw6YeChQNRIuHL4DkJ1uk1TemDcCUm7J0OpUDo6A8cay0U+xfcznUTmdJPLOGeYF
-         kbtUvw7lU5d3uHOAc1WJ3IRPOguGp+36ZnPuHPrwvi6sHvZce5GzByIXGpJnci2ttWEE
-         x4fg==
-X-Forwarded-Encrypted: i=1; AJvYcCU7+DhC6cQ97YCWPI9St0aDl7E1tjNgT4AgDyQdHwHAnGJoHwkHi8R/opdjCp+2PSvB0HgCGWcCUpk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxR8XCgvj5oxZg/b+7Wi1n0ohht9r/WzhlarXPe0GZbtWNLAAQS
-	g2YedqyRr6qJkDbgaK1MwusSFugEGnPtibs7LQLWWBeAIutuO6g5th2GtHi6SF4Py6k=
-X-Gm-Gg: ASbGncub0FIsCimRvPRvZmzp5MsKI6cVNENKlbgxXmLr69uMeGweCZ7yt8+UwsOtrnk
-	bAdQ1vL3yhqAW/+9/Vccak5Vl471RVnq82AxKtcYeNfgBMuZ49GGsISjsZCq6Pi4kETCZdPelrd
-	VZO8vhOi176zJMs8M5F/S0+XnP8IAGfyiwwIjX0Ww1UrYd9CA3GI8fERC7X7lalpTigy6gBUMBn
-	WSYohy/o0DNbtkgI63q1Cm7IX28EMXRPZ1EKwy2DADkNqpkevrTQx7kDzhfZWYt16iWdzdn7ew6
-	lv7Z4TMUaZMcAEe/sJmm1Ah27+wuxJYl+I/fBy4uYvG2h4ExTwvLIAIoMQHY3HnXmamm2zjnnCr
-	ex3RI+MwpRE4wig6BkAHyeV4SMELHw6HrIrYpbjl9GByrf0onO7CusTH919vor1qWxli+GOQpIx
-	i6G6PuSKGwzCvDcPi9HE8HN0Y4Wo1SJ9VE
-X-Google-Smtp-Source: AGHT+IENWyTXPDADMQ43Q+qUkEcxH8/Cfr1KV4BDn/buPYFW/8tWf4Jvv5Qv2AAxqHLtTLmLsOKCaA==
-X-Received: by 2002:a17:903:3c48:b0:269:805c:9447 with SMTP id d9443c01a7336-28e9a5bd2c0mr110553955ad.4.1759702004172;
-        Sun, 05 Oct 2025 15:06:44 -0700 (PDT)
+        bh=wYZUqfHCkY9qWTGMyfXAR/EXot/02oxeQhh+iKW+hV4=;
+        b=ORD6mgrS+c2oW6ylh0oc+nKje/n6HMeSAxddcVV1/a40hmWUCFK5IQXRzQLpmGvvJc
+         gwWN7S9aIka3ATQo27TYKErsb9+2EfMMXS2ED7DBlSRwQS1jw+sz2/oTiAYBV749J7Zy
+         acoEnTdpR2/hqPmQ/3YbukDjzqCfCkEBp9JcDZbVrrU+Jk3AVEVAi6y8gw7gN1EYLnOs
+         WZyBkjODnWGB8Cpw1gJEEWed2mrWPqmEDU9lh8zuNM3v/61hM11RIK/bmoGb99RXfRVr
+         or1YRZfUaNcyRENOmNg5e9pSyS1H75hhJATis+VdTxJ2Psp3p3ENyz+4YxMTsDJ51LgL
+         Glug==
+X-Forwarded-Encrypted: i=1; AJvYcCXNuKFX8lSHUMYUbmmOHb7dqpiUhL1DGyt/A5U2QYyQA0jsSmorOVwnDo3dUvI0MsDeT68Eq0z0CFs=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxfIdU3pGfh/komNAgT3ibvsfMqQj22/xmiCS3Juow64uM3sB9j
+	cJ5XY+q1drxXmr2JsrC0TRXHATHoELnctPmPcR5DoBdsotlAtt6x9jiw//3qmp5rErE=
+X-Gm-Gg: ASbGncuptuEsr3vSvQvT3HDtGW7j0PdnlR3t0R9BgptjWGjDonC7euOatxTBGYsR8jv
+	wWgZxtFFD6YOaLOF3iZXLU/8ZKu3VjIB6C86b9eSXJDcuUltmspKUBFPhMlqu+IbgBtvIeZdfps
+	Sj7DRqvd89PIh4RadhT5d7ZIAEBYz+VnMJHWaIHdKXyfQZ0zLmffUKT3f9Q5ys2Ur8ElS5w+YMt
+	TJvova10iPSCD/rKBvWn5FtEWlWZ6pPYI9M06eiNd9SAqcIyQ/9/BmwMJouLXRdk6esnygpQSG+
+	FfLuaedTgrrd3YVa+kTOyfCcGpppmwu6CUd9S+ZIWZrRhXdkI1eZIBkZv3+Q/RzHpzbO9qt13CR
+	3tsyCQC3bKI6rdT3ZzlVYlnDZ+oCuiNlnRJc+DBAdkqt+7RM+spS8sz2F9ZSTyEwhqf8yk9LA5M
+	gd1yshod2MQI6xwpLvBnOi5w==
+X-Google-Smtp-Source: AGHT+IHsY0pPmwLcFhMINPZMciPWEOHQAe8XZcWIZ+42Ncu6X7pq8uNjulttyDUGl4xm8ixxs91eVA==
+X-Received: by 2002:a05:6a00:39a6:b0:77f:11bd:749a with SMTP id d2e1a72fcca58-78c98cb7834mr10735744b3a.20.1759707503195;
+        Sun, 05 Oct 2025 16:38:23 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-28e8d1269b8sm111302175ad.50.2025.10.05.15.06.43
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-78b020537e0sm10861937b3a.56.2025.10.05.16.38.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 05 Oct 2025 15:06:43 -0700 (PDT)
+        Sun, 05 Oct 2025 16:38:22 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.98.2)
 	(envelope-from <david@fromorbit.com>)
-	id 1v5WsK-0000000B0Wz-40rk;
-	Mon, 06 Oct 2025 09:06:40 +1100
-Date: Mon, 6 Oct 2025 09:06:40 +1100
+	id 1v5YJ2-0000000B2DA-1HKV;
+	Mon, 06 Oct 2025 10:38:20 +1100
+Date: Mon, 6 Oct 2025 10:38:20 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Pavel Emelyanov <xemul@scylladb.com>, linux-fsdevel@vger.kernel.org,
@@ -70,7 +70,7 @@ Cc: Pavel Emelyanov <xemul@scylladb.com>, linux-fsdevel@vger.kernel.org,
 	linux-api@vger.kernel.org, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH] fs: Propagate FMODE_NOCMTIME flag to user-facing
  O_NOCMTIME
-Message-ID: <aOLr8M6s1W2qC5-Q@dread.disaster.area>
+Message-ID: <aOMBbKUlvv2uYLzD@dread.disaster.area>
 References: <20251003093213.52624-1-xemul@scylladb.com>
  <aOCiCkFUOBWV_1yY@infradead.org>
 Precedence: bulk
@@ -94,24 +94,29 @@ On Fri, Oct 03, 2025 at 09:26:50PM -0700, Christoph Hellwig wrote:
 > support HSM where data is migrated out to tape, and requires
 > CAP_SYS_ADMIN.  Allowing it for any file owner would expand the scope
 > for too much as now everyone could skip timestamp updates.
-> 
+
+We have already provided a safe method for minimising the overhead
+of c/mtime updates in the IO path - it's called lazytime.  The
+lazytime mount option provides eventual consistency for c/mtime
+updates for IO operations instead of immediate consistency.
+
+Timestamps are still updated to have the correct values, but the
+latency/performance of the timestamp updates is greatly improved by
+holding them purely in memory until some other trigger forces them
+to be persisted to disk.
+
 > > It can be used by workloads that want to write a file but don't care
 > > much about the preciese timestamp on it and can update it later with
 > > utimens() call.
-
-If you don't care about accurate c/mtime, then mount the filesystem
-with '-o lazytime' to degrade c/mtime updates to "eventual
-consistency" behaviour for IO operations. If inode metadata is
-otherwise modified (e.g. block allocation during IO) or the
-application then calls utimens(), it will update the recorded
-in-memory timestamps in a persistent manner immediately.
-
+> 
 > The workload might not care, the rest of the system does.  ctime can't
 > bet set to arbitrary values, so it is important for backups and as
 > an audit trail.
 
-But we can (and do) delay the persistence of IO-based timestamp
-updates with the lazytime option.
+Lazytime works for this use case; a call to utimens() will cause a
+persistent update of the timestamps. As will any other inode
+modification that has persistence requirements (e.g.  block
+allocation during IO or other syscalls that modify inode metadata).
 
 > > There's another reason for having this patch. When performing AIO write,
 > > the file_modified_flags() function checks whether or not to update inode
@@ -123,13 +128,13 @@ updates with the lazytime option.
 > Well, we'll need to look into that, including maybe non-blockin
 > timestamp updates.
 
-Lazytime updates can generally be done in a non-blocking manner
-right now (someone raised that in the context of io-uring on #xfs
-about a month ago), but the NOWAIT behaviour for timestamp updates
-is done at a higher level in the VFS and does not take into account
-filesystem specific non-blocking lazytime updates at all.  If we
-push the NOWAIT checking behaviour down to the filesystem, we can do
-this.
+This came up recently on #xfs w.r.t. lazytime behaviour - we need to
+pass the NOWAIT decision semnatics down to the filesystem to allow
+lazytime to be truly non-blocking.  At the moment the high level VFS
+NOWAIT checks (via inode_needs_update_time()) have no visibility of
+this filesystem specific functionality, so even if we can do the
+lazy timestamp update without blocking we still give an -EAGAIN if
+IOCB_NOWAIT is set.
 
 -Dave.
 -- 
