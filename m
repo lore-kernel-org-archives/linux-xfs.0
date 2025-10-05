@@ -1,138 +1,195 @@
-Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B850CA5E
-	for <linux-xfs@vger.kernel.org>; Sat,  4 Oct 2025 16:08:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F415C23815D
+	for <linux-xfs@vger.kernel.org>; Sun,  5 Oct 2025 10:37:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759594100; cv=none; b=d/gah2w7uKdXKNeHZTMfb+SUTBzyQaCoO+/vXvDdU+V/U3HMfyyS8QyHXCe6LwdY86juhmIjedWuEJ2MCOXONx8oP61/TYAwdxBIp54e/pkOI/RsspqtPiR8akYjntjX6lYomNhpDRSESYjQD5JBKOkXMhM19jkfz9vvzK2EwEA=
+	t=1759660627; cv=none; b=ZcrwZBZrdZZ2fohCk0oLx04okWMflTNGVrBV7MKZfGKHnzEw+GNn/j1C6Psbk5PTbi3f6DJG3uYvloC+CvU5eQu3elXc8nOVAKmTc6tVOZxbz469mO+UhKnxvbFXCBbjW5Wh8efgbCXimDUotQx0I5N7WU6XNCbhGRkIVH/C9Xo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759594100; c=relaxed/simple;
-	bh=aDCrityIRTDTsNoHl3WYViJal3NAWy31CHFcAH4dMjs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=k7H4w1Vrdm5uJEQFbUwzm0/edhWOIa8rX4hq9HopIgfv3PehKytXr3Yh+DRF27ZC4d1v5Obj55MteCeSfVRxvkdEIqCL8qBeSGboyD/aEAleegMxCqI3O1LeP0ZBXbhvEMs822bOO0kkgDWhov07823hZSp/Ody9+PWAHSpLdfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=amacapital.net; spf=pass smtp.mailfrom=amacapital.net; dkim=pass (2048-bit key) header.d=amacapital-net.20230601.gappssmtp.com header.i=@amacapital-net.20230601.gappssmtp.com header.b=BxG6Pd3Y; arc=none smtp.client-ip=209.85.167.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=amacapital.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amacapital.net
+	s=arc-20240116; t=1759660627; c=relaxed/simple;
+	bh=6LIHPOQPLDWrr6EbSN7wwdKPe2nDjZ08h3rW+KOWZrw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RgOC05PVvbX1kjccRwV96tAL9/ICCnXpit56KEpZlge5/DnfVmscu8iN5kZO7zoO8IMjc3SgMGKcwVBmM/xpCnwKMenTxUt4yIH/QF+xyUvS8NvCrGoJLrGKFsADEA3pS7fD1XbCRTS8oLqRoyrisMqNRNZYswmiO33B7hffWpk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gUN9Anrr; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amacapital-net.20230601.gappssmtp.com header.i=@amacapital-net.20230601.gappssmtp.com header.b="BxG6Pd3Y"
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-57b8fc6097fso4617531e87.1
-        for <linux-xfs@vger.kernel.org>; Sat, 04 Oct 2025 09:08:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=amacapital-net.20230601.gappssmtp.com; s=20230601; t=1759594097; x=1760198897; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=NPv5+yIlETZdIyZrh1UyMYBPpswTX6QZU3krtJBLrPM=;
-        b=BxG6Pd3Yj+KYxtOOfHjmqz5hyBn/IgShyvItnps7hZIKJYNrTvFuttKi8cmBN9tww6
-         4wqIYCf6bk+xDtCxv/QfYelqcD7NPYexzH1upGwVvnBDFynJPvZu0RyDzxAUx56F+659
-         WB8yyE4ogWi1Piz86n/lUU9NcxDsoRIe/DKYIxKQq9M4t265sGKq8vuWXmbPHtaX9kMQ
-         TdjXQFjoKNDQ4BxPZ0GvVelCRdWSnvug77ti7UqsABiv7MJnr2ZIAgfpbVZ0b78o4LAJ
-         GU4N5EazvijT02f/Qm1ZB/PLwdS0obbdrrktz4s4THPTkkIFETPG4zQuwMUWW7x2LZXt
-         McXg==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gUN9Anrr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1759660624;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cXE+Do4eiYEQpRMZRWtP81SSjx9Cj+R+tBIOazUtRqs=;
+	b=gUN9Anrr0iQVvomA4xAn4cpGcv3Kh/0Y/0KXb5L2D47t9JroSbVzWxpC6u+gxd1rOdJaUQ
+	0UH7c50Paxe9zSmPYyv3vxX6lQFGeXS8si1wI8uUtaE+z0mu4dB60EafILqPLtptc07goc
+	wWfT60ILpIXaTiokwSL3p4PYC/hjV90=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-94-ktlcY23fOSG6av9xm_JDog-1; Sun, 05 Oct 2025 06:37:03 -0400
+X-MC-Unique: ktlcY23fOSG6av9xm_JDog-1
+X-Mimecast-MFC-AGG-ID: ktlcY23fOSG6av9xm_JDog_1759660622
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-334b0876195so3984293a91.1
+        for <linux-xfs@vger.kernel.org>; Sun, 05 Oct 2025 03:37:02 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759594097; x=1760198897;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=NPv5+yIlETZdIyZrh1UyMYBPpswTX6QZU3krtJBLrPM=;
-        b=iOQnAReFBJIV/En6W4Lsu2KBTmVIo1ViSP9ufY/3CjvOy7WQbR6STJi2LuMT3c78Mu
-         dtAqYKFa6MK7rwaP999Oi3NdK0i9RPdXk6OBzHGk3zETNV0EC2SaqJuWnHIb355dBeUu
-         47t9pgQiTDSJPURBFHSjTQcgsk7+JA5rFirJhpbrvzd2Udw5rpJY4BysOcbL41VmpGdi
-         AjYXa8wzBdCHUM2GyPhnjA04KHv0E+dTD7UVfSRy4EkXuANO+GpcDVXIsBKQWkQBHTNc
-         EtsmxzogWOukjG1snKXFRDFAaEW9HEe9PePH8IQIKo3wM7UvDv7dnuSa5im8tNWkwDQ1
-         2DyA==
-X-Forwarded-Encrypted: i=1; AJvYcCUBdN4uYplGA7EC2VHlbMSt+rLkB0IjnEU/P5Dzyf+iDP9zqr8CCanWg+xyK3atzTeUiSZyhfA7L2I=@vger.kernel.org
-X-Gm-Message-State: AOJu0YySNRj+7uklgmympNhm5SccoLVpPOafSDFVJsiNkY7s5Z8UsjqK
-	QHlVOIrQ1SGu/7IlJ7iphiD7gUf6xwijTsCtTCdXGtvI7AAqUq99xN4NALoBH/DCPO6vTd79Ail
-	9q5biSEUlGXnaEQflfNs8+MQ3PL+eP13XjDR+3snn
-X-Gm-Gg: ASbGncvhWQ7acfYWEU+KkwsE1+VSpW04TwPU1JqyAvEKE/1FzIkisdJ69jDaVXSV+Yc
-	DhCju9ZtuBeEe4lAMSzkKKydjcpzvwStthowcLCkZfmtnTf2skVKxqz9HNNfH5nkV9umaCfmj07
-	79+9judfQtsDG5lqAm7lmifGiNUgQCpX1h5md69mn0qlkwwTK78WSpvTDxMB/Nbo59EYTEJ5zve
-	JslIZSIdg6p0pPAj3kBWdcQvw1/uw==
-X-Google-Smtp-Source: AGHT+IGywq3KGIlNKacCQ8JbyizpfyQvK1emwelk/96UFTAVvMbGyC8JTad2QnZqrGZIDwMlhQvVIiYjX9pd5ox8iFE=
-X-Received: by 2002:a05:6512:3e1b:b0:55f:44b8:1ecf with SMTP id
- 2adb3069b0e04-58cb96629bdmr2016577e87.9.1759594096459; Sat, 04 Oct 2025
- 09:08:16 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1759660622; x=1760265422;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=cXE+Do4eiYEQpRMZRWtP81SSjx9Cj+R+tBIOazUtRqs=;
+        b=YErTW2XAEL+cunKnMIXBUb+lbhfCD0NAu2bkIdODsq4Tlmq4idQyofgIDIBP78tjIw
+         W734uncaJEKHbm+xCDgnmEvzXE4ehNdxl1NORQzN2lA3V7amvDHUNd0u+/Kaa5G2BR2Q
+         NoZmn8hhJYB9NoVAYrMlxj5CT3yWddUVthARycx9ZRsbxegZyExQWjX/NCqlStXzEeNh
+         wkdCjNE2OFRsJBvs3i1ETDft6iFohmhlAEv0WEkhYpJn0gWkf9EceBGR+E1nws7u8Qe0
+         nod8u8D3+t/QZraKBJA0m63RhXoWUDvkOJyz+3SMLwiESVZe5B9mWcASWjFsJkw2JFuA
+         UFdg==
+X-Forwarded-Encrypted: i=1; AJvYcCV7d4nHGR/6uVsog5iA3Pg9xmXO7pgEL653FTa48z75ge6XyWqIop6mX9Xx2vyMaaptPmyIaA0PSe0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyAccIE7hpsvtye+2H3wQGxL+bDPWRhtpAaal9KFVnudeEOSbkl
+	RC9FQ3MGYvDP5/+QxuAWfBeK2wK6Xp4WZBGNMOak+X/Y9XvNEwSlv7r5d/xVYt39Hc0EOdHp6Xy
+	sxb57wb1Gxr/2/17Htvh83EI492nidofCLFiH+2M25KOSZsJpoeJrDKdMOmPI3Q==
+X-Gm-Gg: ASbGncu2KA2/bKNpw+WhItaEQvN581l4wf9J3lbg5wy9sUkIURtkTDOtFPLF8h7i09y
+	QaHe3SAaJNIcRi/7VCxtAHrydlTxEbnNg8IJKg3sLwQoDOSZTwbvwjioGSNKVy3a0Xnpa1lL8B6
+	mej91/AVG9vpObHS0TEal0ODphxvxAF42NFduTi7Gjs0rKVQpyFmBZ6clwQuktixSBcyKzTDHnj
+	OgUpCifI3r2S8bxXpyn0tDN7yL1PklVRYnyslvaKKkJSsSqU4O8MBhqS8nHLfZUmtRKi0iblJUP
+	MrTedtOBHP/VmRGwq8Zmj4Q7jR24FSAkIH4X5LePbvJK7kJzme6u/jpdDl8MILBSp1HaaAB4kmW
+	7wN21/QIuVw==
+X-Received: by 2002:a17:90b:1b48:b0:327:ba77:a47 with SMTP id 98e67ed59e1d1-339c2782afbmr12219255a91.15.1759660621780;
+        Sun, 05 Oct 2025 03:37:01 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFm83AyjS7X4hJtAl1cFaaDJwlNM/NB1MMUPpV8cEk9b8Sb3eLjy4T+3C65MTyp4EHmOdh1hA==
+X-Received: by 2002:a17:90b:1b48:b0:327:ba77:a47 with SMTP id 98e67ed59e1d1-339c2782afbmr12219225a91.15.1759660621290;
+        Sun, 05 Oct 2025 03:37:01 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b6099d4d324sm9665636a12.27.2025.10.05.03.36.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 05 Oct 2025 03:37:00 -0700 (PDT)
+Date: Sun, 5 Oct 2025 18:36:56 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH v4 1/3] file_attr: introduce program to set/get fsxattr
+Message-ID: <20251005103656.5qu3lmjvlcjkwjx4@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20251003-xattrat-syscall-v4-0-1cfe6411c05f@kernel.org>
+ <20251003-xattrat-syscall-v4-1-1cfe6411c05f@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251003093213.52624-1-xemul@scylladb.com> <aOCiCkFUOBWV_1yY@infradead.org>
-In-Reply-To: <aOCiCkFUOBWV_1yY@infradead.org>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Sat, 4 Oct 2025 09:08:05 -0700
-X-Gm-Features: AS18NWDrqxLuc9P3rGhxlQcFOsj5EYH3mdmKe5a0v88_ynW-8nVGsUXgkNOcJfc
-Message-ID: <CALCETrVsD6Z42gO7S-oAbweN5OwV1OLqxztBkB58goSzccSZKw@mail.gmail.com>
-Subject: Re: [PATCH] fs: Propagate FMODE_NOCMTIME flag to user-facing O_NOCMTIME
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Pavel Emelyanov <xemul@scylladb.com>, linux-fsdevel@vger.kernel.org, 
-	"Raphael S . Carvalho" <raphaelsc@scylladb.com>, linux-api@vger.kernel.org, 
-	linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251003-xattrat-syscall-v4-1-1cfe6411c05f@kernel.org>
 
-On Fri, Oct 3, 2025 at 9:26=E2=80=AFPM Christoph Hellwig <hch@infradead.org=
-> wrote:
->
-> On Fri, Oct 03, 2025 at 12:32:13PM +0300, Pavel Emelyanov wrote:
-> > The FMODE_NOCMTIME flag tells that ctime and mtime stamps are not
-> > updated on IO. The flag was introduced long ago by 4d4be482a4 ([XFS]
-> > add a FMODE flag to make XFS invisible I/O less hacky. Back then it
-> > was suggested that this flag is propagated to a O_NOCMTIME one.
->
-> skipping c/mtime is dangerous.  The XFS handle code allows it to
-> support HSM where data is migrated out to tape, and requires
-> CAP_SYS_ADMIN.  Allowing it for any file owner would expand the scope
-> for too much as now everyone could skip timestamp updates.
->
-> > It can be used by workloads that want to write a file but don't care
-> > much about the preciese timestamp on it and can update it later with
-> > utimens() call.
->
-> The workload might not care, the rest of the system does.  ctime can't
-> bet set to arbitrary values, so it is important for backups and as
-> an audit trail.
->
-> > There's another reason for having this patch. When performing AIO write=
-,
-> > the file_modified_flags() function checks whether or not to update inod=
-e
-> > times. In case update is needed and iocb carries the RWF_NOWAIT flag,
-> > the check return EINTR error that quickly propagates into cb completion
-> > without doing any IO. This restriction effectively prevents doing AIO
-> > writes with nowait flag, as file modifications really imply time update=
-.
->
-> Well, we'll need to look into that, including maybe non-blockin
-> timestamp updates.
->
+On Fri, Oct 03, 2025 at 11:32:44AM +0200, Andrey Albershteyn wrote:
+> This programs uses newly introduced file_getattr and file_setattr
+> syscalls. This program is partially a test of invalid options. This will
+> be used further in the test.
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> ---
 
-It's been 12 years (!), but maybe it's time to reconsider this:
+[snap]
 
-https://lore.kernel.org/all/cover.1377193658.git.luto@amacapital.net/
+> +	if (!path1 && optind < argc)
+> +		path1 = argv[optind++];
+> +	if (!path2 && optind < argc)
+> +		path2 = argv[optind++];
+> +
+> +	if (at_fdcwd) {
+> +		fd = AT_FDCWD;
+> +		path = path1;
+> +	} else if (!path2) {
+> +		error = stat(path1, &status);
+> +		if (error) {
+> +			fprintf(stderr,
+> +"Can not get file status of %s: %s\n", path1, strerror(errno));
+> +			return error;
+> +		}
+> +
+> +		if (SPECIAL_FILE(status.st_mode)) {
+> +			fprintf(stderr,
+> +"Can not open special file %s without parent dir: %s\n", path1, strerror(errno));
+> +			return errno;
+> +		}
+> +
+> +		fd = open(path1, O_RDONLY);
+> +		if (fd == -1) {
+> +			fprintf(stderr, "Can not open %s: %s\n", path1,
+> +					strerror(errno));
+> +			return errno;
+> +		}
+> +	} else {
+> +		fd = open(path1, O_RDONLY);
+> +		if (fd == -1) {
+> +			fprintf(stderr, "Can not open %s: %s\n", path1,
+> +					strerror(errno));
+> +			return errno;
+> +		}
+> +		path = path2;
+> +	}
+> +
+> +	if (!path)
+> +		at_flags |= AT_EMPTY_PATH;
+> +
+> +	error = file_getattr(fd, path, &fsx, fa_size,
+> +			at_flags);
+> +	if (error) {
+> +		fprintf(stderr, "Can not get fsxattr on %s: %s\n", path,
+> +				strerror(errno));
+> +		return error;
+> +	}
 
-Nothing has fundamentally changed since then, but I bet enough little
-things (folios!) have changed around this series that it won't apply
-without considerably massaging.  I stopped working on it personally
-because I moved the workload in question onto fast, fancy SSDs
-resulting in my having bigger fish to fry.  I don't think I'll have
-the bandwidth to pick it up any time soon, but maybe one of you folks
-is interested :)  I never looked into the AIO path (I was interested
-in the page_mkwrite path), but my series made it at least conceptually
-possible to unconditionally mark the file as needing a cmtime update
-when presently dirty data is written back, and I imagine that AIO
-could use that too to avoid ever needing to bail out because an mtime
-update would block.
+We should have a _require_* helper to _notrun your generic and xfs test cases,
+when system doesn't support the file_getattr/setattr feature. Or we always hit
+something test errors like below on old system:
 
-To the extent that ctime is "important for backups", it's been *wrong*
-for backups approximately forever -- one can read ctime, then read the
-contents of a file, and get a new ctime and an old copy of the data
-that preceeds the modification that logically triggered the ctime
-value that was read.
+  +Can not get fsxattr on ./fifo: Operation not supported
 
---Andy
-Andy Lutomirski
-AMA Capital Management, LLC
+Maybe check if the errno is "Operation not supported", or any better idea?
+
+
+Thanks,
+Zorro
+
+> +	if (action) {
+> +		fsx.fa_xflags |= (fa_xflags | unknwon_fa_flag);
+> +
+> +		error = file_setattr(fd, path, &fsx, fa_size,
+> +				at_flags);
+> +		if (error) {
+> +			fprintf(stderr, "Can not set fsxattr on %s: %s\n", path,
+> +					strerror(errno));
+> +			return error;
+> +		}
+> +	} else {
+> +		if (path2)
+> +			print_xflags(fsx.fa_xflags, 0, 1, path, 0, 1);
+> +		else
+> +			print_xflags(fsx.fa_xflags, 0, 1, path1, 0, 1);
+> +	}
+> +
+> +	return error;
+> +
+> +usage:
+> +	printf("Usage: %s [options]\n", argv[0]);
+> +	printf("Options:\n");
+> +	printf("\t--get, -g\t\tget filesystem inode attributes\n");
+> +	printf("\t--set, -s\t\tset filesystem inode attributes\n");
+> +	printf("\t--at-cwd, -a\t\topen file at current working directory\n");
+> +	printf("\t--no-follow, -n\t\tdon't follow symlinks\n");
+> +	printf("\t--set-nodump, -d\t\tset FS_XFLAG_NODUMP on an inode\n");
+> +	printf("\t--invalid-at, -i\t\tUse invalid AT_* flag\n");
+> +	printf("\t--too-big-arg, -b\t\tSet fsxattr size bigger than PAGE_SIZE\n");
+> +	printf("\t--too-small-arg, -m\t\tSet fsxattr size to 19 bytes\n");
+> +	printf("\t--new-fsx-flag, -x\t\tUse unknown fa_flags flag\n");
+> +
+> +	return 1;
+> +}
+> 
+> -- 
+> 2.50.1
+> 
+
