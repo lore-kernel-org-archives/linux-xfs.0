@@ -1,78 +1,80 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F415C23815D
-	for <linux-xfs@vger.kernel.org>; Sun,  5 Oct 2025 10:37:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4826263899
+	for <linux-xfs@vger.kernel.org>; Sun,  5 Oct 2025 11:55:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759660627; cv=none; b=ZcrwZBZrdZZ2fohCk0oLx04okWMflTNGVrBV7MKZfGKHnzEw+GNn/j1C6Psbk5PTbi3f6DJG3uYvloC+CvU5eQu3elXc8nOVAKmTc6tVOZxbz469mO+UhKnxvbFXCBbjW5Wh8efgbCXimDUotQx0I5N7WU6XNCbhGRkIVH/C9Xo=
+	t=1759665304; cv=none; b=sHdRk3Ik/SJK1gcLuOHmplDcn8TKaDNLPhY7tMrUWnqTAGO3EKRMbzYzp5yXQZTQZdnYp8UMcyCPU7W//oWXde7ET6Fwk87Sww2tEHOoI/2U3yAwUSw2SgHpNrJrT23Ua3Kw8zPy5Omxa2//F8D0eaHfIAoip7WxRwgz/EeZPRA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759660627; c=relaxed/simple;
-	bh=6LIHPOQPLDWrr6EbSN7wwdKPe2nDjZ08h3rW+KOWZrw=;
+	s=arc-20240116; t=1759665304; c=relaxed/simple;
+	bh=Wtyt1KzFariMlIeI+zEEMW0g/K5OklBCf8gbMrkr97g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RgOC05PVvbX1kjccRwV96tAL9/ICCnXpit56KEpZlge5/DnfVmscu8iN5kZO7zoO8IMjc3SgMGKcwVBmM/xpCnwKMenTxUt4yIH/QF+xyUvS8NvCrGoJLrGKFsADEA3pS7fD1XbCRTS8oLqRoyrisMqNRNZYswmiO33B7hffWpk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gUN9Anrr; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=TJJhx87aah+1xZ1b1E9E0gpkXz/qHfnF08eGBIC4JC8S0o+tqGOp48xvEZjcwbooHr2Tr8kfyC5raoqO3a5cijq6GgcAz6KaiE6r/F0jMGB3N0njpeOEFdsWBXc73fYCCuZYzeuuX3fy4QVbnRoGrAPgr/9bjyYpw7G7uk5h3JA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=aO/Izd9C; arc=none smtp.client-ip=209.85.210.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gUN9Anrr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1759660624;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cXE+Do4eiYEQpRMZRWtP81SSjx9Cj+R+tBIOazUtRqs=;
-	b=gUN9Anrr0iQVvomA4xAn4cpGcv3Kh/0Y/0KXb5L2D47t9JroSbVzWxpC6u+gxd1rOdJaUQ
-	0UH7c50Paxe9zSmPYyv3vxX6lQFGeXS8si1wI8uUtaE+z0mu4dB60EafILqPLtptc07goc
-	wWfT60ILpIXaTiokwSL3p4PYC/hjV90=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-94-ktlcY23fOSG6av9xm_JDog-1; Sun, 05 Oct 2025 06:37:03 -0400
-X-MC-Unique: ktlcY23fOSG6av9xm_JDog-1
-X-Mimecast-MFC-AGG-ID: ktlcY23fOSG6av9xm_JDog_1759660622
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-334b0876195so3984293a91.1
-        for <linux-xfs@vger.kernel.org>; Sun, 05 Oct 2025 03:37:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="aO/Izd9C"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-76e6cbb991aso3192336b3a.1
+        for <linux-xfs@vger.kernel.org>; Sun, 05 Oct 2025 04:55:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1759665302; x=1760270102; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=er8GqX660tZxnm8yI7a7bHZtQ/sKKbb/5edfsYblxJI=;
+        b=aO/Izd9Cm/ZGC3X5xOU5tFTzId9Re6hJdwHBU4kgov4ZX6NkMa9qOr9z6sMAHMfIER
+         3ap5RnUWFJuGdMvpNJg5yhUp8bA3Ol9+Nu42RCW5GEZPGm6ixfQN9qjao/dhZmQm1uQz
+         DXvOunQpJrwctf0sO7AWGIbaFYPKuuDa7z9gAKlkSWqaDdMRYianEdqV1AybyILglAI1
+         HsrAerPxfDXiM1PU7rJduP1eDQnYGIb5DByef98c+l76Sidpw8iiM/bOh2cHV9xJXqIq
+         BTJa+6OjVvQAwscodgddkB/wVEa0uKJrKg7YOZpP3f+AIckB8S+dWurzP3wsKsWCahyX
+         aH/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759660622; x=1760265422;
+        d=1e100.net; s=20230601; t=1759665302; x=1760270102;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=cXE+Do4eiYEQpRMZRWtP81SSjx9Cj+R+tBIOazUtRqs=;
-        b=YErTW2XAEL+cunKnMIXBUb+lbhfCD0NAu2bkIdODsq4Tlmq4idQyofgIDIBP78tjIw
-         W734uncaJEKHbm+xCDgnmEvzXE4ehNdxl1NORQzN2lA3V7amvDHUNd0u+/Kaa5G2BR2Q
-         NoZmn8hhJYB9NoVAYrMlxj5CT3yWddUVthARycx9ZRsbxegZyExQWjX/NCqlStXzEeNh
-         wkdCjNE2OFRsJBvs3i1ETDft6iFohmhlAEv0WEkhYpJn0gWkf9EceBGR+E1nws7u8Qe0
-         nod8u8D3+t/QZraKBJA0m63RhXoWUDvkOJyz+3SMLwiESVZe5B9mWcASWjFsJkw2JFuA
-         UFdg==
-X-Forwarded-Encrypted: i=1; AJvYcCV7d4nHGR/6uVsog5iA3Pg9xmXO7pgEL653FTa48z75ge6XyWqIop6mX9Xx2vyMaaptPmyIaA0PSe0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyAccIE7hpsvtye+2H3wQGxL+bDPWRhtpAaal9KFVnudeEOSbkl
-	RC9FQ3MGYvDP5/+QxuAWfBeK2wK6Xp4WZBGNMOak+X/Y9XvNEwSlv7r5d/xVYt39Hc0EOdHp6Xy
-	sxb57wb1Gxr/2/17Htvh83EI492nidofCLFiH+2M25KOSZsJpoeJrDKdMOmPI3Q==
-X-Gm-Gg: ASbGncu2KA2/bKNpw+WhItaEQvN581l4wf9J3lbg5wy9sUkIURtkTDOtFPLF8h7i09y
-	QaHe3SAaJNIcRi/7VCxtAHrydlTxEbnNg8IJKg3sLwQoDOSZTwbvwjioGSNKVy3a0Xnpa1lL8B6
-	mej91/AVG9vpObHS0TEal0ODphxvxAF42NFduTi7Gjs0rKVQpyFmBZ6clwQuktixSBcyKzTDHnj
-	OgUpCifI3r2S8bxXpyn0tDN7yL1PklVRYnyslvaKKkJSsSqU4O8MBhqS8nHLfZUmtRKi0iblJUP
-	MrTedtOBHP/VmRGwq8Zmj4Q7jR24FSAkIH4X5LePbvJK7kJzme6u/jpdDl8MILBSp1HaaAB4kmW
-	7wN21/QIuVw==
-X-Received: by 2002:a17:90b:1b48:b0:327:ba77:a47 with SMTP id 98e67ed59e1d1-339c2782afbmr12219255a91.15.1759660621780;
-        Sun, 05 Oct 2025 03:37:01 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFm83AyjS7X4hJtAl1cFaaDJwlNM/NB1MMUPpV8cEk9b8Sb3eLjy4T+3C65MTyp4EHmOdh1hA==
-X-Received: by 2002:a17:90b:1b48:b0:327:ba77:a47 with SMTP id 98e67ed59e1d1-339c2782afbmr12219225a91.15.1759660621290;
-        Sun, 05 Oct 2025 03:37:01 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b6099d4d324sm9665636a12.27.2025.10.05.03.36.58
+        bh=er8GqX660tZxnm8yI7a7bHZtQ/sKKbb/5edfsYblxJI=;
+        b=aZ0fcDqiEKx6UH6SNyvDCPCppYczN9Mh1Jiit4tL6w38p9h1Yyhp+UTNZhhLt7gsb/
+         6BjVzdS3pnqX6/vqWYGnhDRvpnMTcO0en+O9LGfQudSz6mVkDGj+bOshaiz7grTPqX0o
+         2AgIE5TqML5hvBCv+g+959Hw2gxSVHR1o7zeXR/fGLwoZYAtF6DZv2JJxVZhqiDC01PS
+         DX0LcmxCvT9FLSf4ciyumPb6OfiPTdYnKCjMBAMRHcgpdW3FdpMS+Oc6zPuKqimRWlzj
+         SSbknPKbJhr6iyL7qO2MjaLx6Hs37eG9G9HZC4FQtxZNGweaxeUXEBRhAR6IYUea8Y++
+         K69A==
+X-Forwarded-Encrypted: i=1; AJvYcCXVwDB7yKEhSV5z4Y1pDyMvhpMebsapTF+mImUlefTYC0Mm7xPzhau0hHCzc/TNebP4g7E5NuYdBM4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyenAliIBx7JfdPixX9OWJcQO9rmZMSQiedX6zF0IGojsQ785k0
+	iHhTx080P8b8FBBmxtHuzjaVbw3Ly2TeVCgFokmQ3+tmrJoOTvFiNKj4b8/4aL5k0UI=
+X-Gm-Gg: ASbGncutcXezgF/PSCZRRI+yboDs82NljPpJwVTVruRf+0Rjluu7cOI6VWLNupVfzEL
+	MqWUvm8/dtFKdyJJi/yyCGhFsHHeoQrpKJ07BeJYnC9r1SrWMjc9YP2DXh3Ptx6ZfhofxENsq5i
+	DOjL3hgDqtgDU4K65Ti61cVUCL1og0ULAY4rkDxcSWIhMR8k2orRYnrXVILFnBBnZDE/KzBcVbR
+	Ghimyp0l9/Els4pgvTcBhRDBN5AaJh9MwOlyJKxy0k3H5HUyhirCpNHcIl0YJTuvNx9q9CQE1HQ
+	CcQLFVgNWYT8veiY6paFUHsTLujh18w+/80aWYdB+llYYDzn7hBhS4zeaOrf6i0uZ/HFzWV7foX
+	9LpBpZLNDHGzuwRaVBA1atfMSsatbm+BQT9cjWbpUds/BU/z9pqEjJ2+ikyCmmvS8/urOq7lfLR
+	EjD8vSCJpeMx5l3Ay+Vhb81w==
+X-Google-Smtp-Source: AGHT+IFJenQ6xCL2kkGn0U9jKhBNcjWIfEAKLRN1RcMC27u89D+ljxfEAw22GmeKD+TuSCTAFauMxA==
+X-Received: by 2002:a05:6a00:2e04:b0:77f:1ef8:8acb with SMTP id d2e1a72fcca58-78c98d45544mr11521737b3a.13.1759665301391;
+        Sun, 05 Oct 2025 04:55:01 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-78b02053a3asm9874688b3a.48.2025.10.05.04.55.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 05 Oct 2025 03:37:00 -0700 (PDT)
-Date: Sun, 5 Oct 2025 18:36:56 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
-Subject: Re: [PATCH v4 1/3] file_attr: introduce program to set/get fsxattr
-Message-ID: <20251005103656.5qu3lmjvlcjkwjx4@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20251003-xattrat-syscall-v4-0-1cfe6411c05f@kernel.org>
- <20251003-xattrat-syscall-v4-1-1cfe6411c05f@kernel.org>
+        Sun, 05 Oct 2025 04:55:00 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1v5NKL-0000000Aote-3xSr;
+	Sun, 05 Oct 2025 22:54:57 +1100
+Date: Sun, 5 Oct 2025 22:54:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: kernel test robot <oliver.sang@intel.com>,
+	Dave Chinner <dchinner@redhat.com>, oe-lkp@lists.linux.dev,
+	lkp@intel.com, linux-kernel@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>, Jan Kara <jack@suse.cz>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [linus:master] [xfs]  c91d38b57f:  stress-ng.chown.ops_per_sec
+ 70.2% improvement
+Message-ID: <aOJckY5NnB2MaOqj@dread.disaster.area>
+References: <202510020917.2ead7cfe-lkp@intel.com>
+ <20251003075615.GA13238@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -81,115 +83,67 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251003-xattrat-syscall-v4-1-1cfe6411c05f@kernel.org>
+In-Reply-To: <20251003075615.GA13238@lst.de>
 
-On Fri, Oct 03, 2025 at 11:32:44AM +0200, Andrey Albershteyn wrote:
-> This programs uses newly introduced file_getattr and file_setattr
-> syscalls. This program is partially a test of invalid options. This will
-> be used further in the test.
+On Fri, Oct 03, 2025 at 09:56:15AM +0200, Christoph Hellwig wrote:
+> On Thu, Oct 02, 2025 at 04:11:29PM +0800, kernel test robot wrote:
+> > 
+> > 
+> > Hello,
+> > 
+> > kernel test robot noticed a 70.2% improvement of stress-ng.chown.ops_per_sec on:
 > 
-> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> ---
+> I wonder what stress-ng shown is doing, because unless it is mixing fsync
+> and ilock-heavy operations on the same node this would be highly
+> unexpected.
 
-[snap]
+stress-ng puts a fsync() at the end of every ops loop:
 
-> +	if (!path1 && optind < argc)
-> +		path1 = argv[optind++];
-> +	if (!path2 && optind < argc)
-> +		path2 = argv[optind++];
-> +
-> +	if (at_fdcwd) {
-> +		fd = AT_FDCWD;
-> +		path = path1;
-> +	} else if (!path2) {
-> +		error = stat(path1, &status);
-> +		if (error) {
-> +			fprintf(stderr,
-> +"Can not get file status of %s: %s\n", path1, strerror(errno));
-> +			return error;
-> +		}
-> +
-> +		if (SPECIAL_FILE(status.st_mode)) {
-> +			fprintf(stderr,
-> +"Can not open special file %s without parent dir: %s\n", path1, strerror(errno));
-> +			return errno;
-> +		}
-> +
-> +		fd = open(path1, O_RDONLY);
-> +		if (fd == -1) {
-> +			fprintf(stderr, "Can not open %s: %s\n", path1,
-> +					strerror(errno));
-> +			return errno;
-> +		}
-> +	} else {
-> +		fd = open(path1, O_RDONLY);
-> +		if (fd == -1) {
-> +			fprintf(stderr, "Can not open %s: %s\n", path1,
-> +					strerror(errno));
-> +			return errno;
-> +		}
-> +		path = path2;
-> +	}
-> +
-> +	if (!path)
-> +		at_flags |= AT_EMPTY_PATH;
-> +
-> +	error = file_getattr(fd, path, &fsx, fa_size,
-> +			at_flags);
-> +	if (error) {
-> +		fprintf(stderr, "Can not get fsxattr on %s: %s\n", path,
-> +				strerror(errno));
-> +		return error;
-> +	}
+	do {
+		int ret;
 
-We should have a _require_* helper to _notrun your generic and xfs test cases,
-when system doesn't support the file_getattr/setattr feature. Or we always hit
-something test errors like below on old system:
+		ret = do_fchown(fd, bad_fd, cap_chown, uid, gid);
+		if ((ret < 0) && (ret != -EPERM)) {
+			pr_fail("%s: fchown failed, errno=%d (%s)%s\n",
+				args->name, errno, strerror(errno),
+				stress_get_fs_type(filename));
+			rc = EXIT_FAILURE;
+			break;
+		}
 
-  +Can not get fsxattr on ./fifo: Operation not supported
+		ret = do_chown(chown, filename, cap_chown, uid, gid);
+		if ((ret < 0) && (ret != -EPERM)) {
+			pr_fail("%s: chown %s failed, errno=%d (%s)%s\n",
+				args->name, filename, errno, strerror(errno),
+				stress_get_fs_type(filename));
+			rc = EXIT_FAILURE;
+			break;
+		}
+		ret = do_chown(lchown, filename, cap_chown, uid, gid);
+		if ((ret < 0) && (ret != -EPERM)) {
+			pr_fail("%s: lchown %s failed, errno=%d (%s)%s\n",
+				args->name, filename, errno, strerror(errno),
+				stress_get_fs_type(filename));
+			rc = EXIT_FAILURE;
+			break;
+		}
+>>>>>>>>	(void)shim_fsync(fd);
+		stress_bogo_inc(args);
+	} while (stress_continue(args));
 
-Maybe check if the errno is "Operation not supported", or any better idea?
+It's also triggering a change in rwsem contention behaviour on the
+inode->i_rwsem in chown_common(), from sleeping to spinning, because
+fsync() no longer causes ILOCK_EXCL lock contention and causes the
+task currently doing a chown operation to wait on the ILOCK_EXCL
+whilst holding the inode->i_rwsem.
 
+Hence all the chown() operations now trigger the spin-on-waiter
+heuristic on the inode->i_rwsem as the lock holder never releases
+the CPU during the modification. That explains why the CPU usage
+increase (from ~2 CPUs to ~50 CPUs) is way out of proportion with
+the actual increase in performance.
 
-Thanks,
-Zorro
-
-> +	if (action) {
-> +		fsx.fa_xflags |= (fa_xflags | unknwon_fa_flag);
-> +
-> +		error = file_setattr(fd, path, &fsx, fa_size,
-> +				at_flags);
-> +		if (error) {
-> +			fprintf(stderr, "Can not set fsxattr on %s: %s\n", path,
-> +					strerror(errno));
-> +			return error;
-> +		}
-> +	} else {
-> +		if (path2)
-> +			print_xflags(fsx.fa_xflags, 0, 1, path, 0, 1);
-> +		else
-> +			print_xflags(fsx.fa_xflags, 0, 1, path1, 0, 1);
-> +	}
-> +
-> +	return error;
-> +
-> +usage:
-> +	printf("Usage: %s [options]\n", argv[0]);
-> +	printf("Options:\n");
-> +	printf("\t--get, -g\t\tget filesystem inode attributes\n");
-> +	printf("\t--set, -s\t\tset filesystem inode attributes\n");
-> +	printf("\t--at-cwd, -a\t\topen file at current working directory\n");
-> +	printf("\t--no-follow, -n\t\tdon't follow symlinks\n");
-> +	printf("\t--set-nodump, -d\t\tset FS_XFLAG_NODUMP on an inode\n");
-> +	printf("\t--invalid-at, -i\t\tUse invalid AT_* flag\n");
-> +	printf("\t--too-big-arg, -b\t\tSet fsxattr size bigger than PAGE_SIZE\n");
-> +	printf("\t--too-small-arg, -m\t\tSet fsxattr size to 19 bytes\n");
-> +	printf("\t--new-fsx-flag, -x\t\tUse unknown fa_flags flag\n");
-> +
-> +	return 1;
-> +}
-> 
-> -- 
-> 2.50.1
-> 
-
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
