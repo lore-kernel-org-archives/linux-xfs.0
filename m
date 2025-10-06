@@ -1,152 +1,169 @@
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C45542D0C64;
-	Mon,  6 Oct 2025 13:26:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.143.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 442232D738B
+	for <linux-xfs@vger.kernel.org>; Mon,  6 Oct 2025 15:39:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759757182; cv=none; b=jnx7+fcwIRXAUiScwqUvMNG+FKPjvnQdKFN8xvcRnFZRjPXwy81w1HRNVuOaszm8kh3M7h2OCZEcjlFxjsM1CYBgaYRc2qVinzc1EWWM0hJyXhyhynVXN8r5xP2QMC4Z7Pe1qQuv+HLj91OAV/Uu7MUul4WUL3m1HwgYUgXw3sU=
+	t=1759765194; cv=none; b=deucGasNBGvG7840BFNkX5FzCjZ1QavC0YGPIBInBG423bR50CmMvMZ5J3SvJDo3DI7vWYgLgwhJ1co9RFVkJd/hbOhz7WZLrMQ7jX2r+iKxV6R4nINjguAV43UcdrT6gUk879qDB4Lb/iQ48zfu2LIxlP2kXdxIX4HmdaRs8tM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759757182; c=relaxed/simple;
-	bh=0dFHISE/jOjIkneju0DdqyWKU1iFBYh0kHcEhn2/0FM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jhDjhWWeZhGWOttO1RyxrbJSAcrqMZpiFhHz7wR5spCDl1X1G0RsnD1pjRN1MEyh4pg0XricWs/EKlClMxEON/DiJCBCSaAKf7yAENUARwHkUch6v2o0TwgykO5yhG8y9AUMEBhxW5ucf+Ca+9lFaicrWsRainD9bIJMgcRmwYY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=cM/8bIEJ; arc=none smtp.client-ip=68.232.143.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1759765194; c=relaxed/simple;
+	bh=ama3Wf+FzOOqL29SQs0q73QNhx/M/49ONwjiktce0FM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mZwSm5u5gvGx5Mx6iFcAUVCSLiAYLCm+G45wzyiXBq86ZmI1h5e8J5jCBTF1mA2UcYx+kVcT8bpaZM9E3u6ob+hQ4UYIrWIhWg/XXxFyJ0DN9h4TwzAuSuQqADfoRyZZdMAnju5PCLLp1ChiJlM3bEgO8vhb0+0tn96bBYSDqJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=j5sZlXBu; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=ofk75a3B; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=j5sZlXBu; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=ofk75a3B; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="cM/8bIEJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1759757180; x=1791293180;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=0dFHISE/jOjIkneju0DdqyWKU1iFBYh0kHcEhn2/0FM=;
-  b=cM/8bIEJOdc1jdb6uVsTcd2XNa5LPkZTLmR/So0UEAOEoPPfEMAQ/aVD
-   X0MMEO9gbY/OHrBEr+B+D1Iqb9GMUuNDAOY5eWmEjxFsuzjReaCPBtc0Y
-   E77OP94vZi95RfFCxyY+410ejvy+4Wq0pEa95F7DybLHP1YDa4jCve4Rg
-   3msjJcBFFsqqTIlMuPIjNoSO7mLo5jWZi/AwRLBTQKAvzFDnQLo8Md3AV
-   6VKl8RQnGId57ZHuzR378Wsgw6XHGB6Pse0W9oWHeWFZJQivOPwAZvPPJ
-   e+Y90UmJ78OG4vj/QZXfLGATNGykoEqzEh5NYDh4INjGsPuH16HKuLWu0
-   g==;
-X-CSE-ConnectionGUID: ZQAFEqkrTdOT6xFEOgX0Ag==
-X-CSE-MsgGUID: kAaJa3/IT9iWYf2x5ffC0w==
-X-IronPort-AV: E=Sophos;i="6.18,319,1751212800"; 
-   d="scan'208";a="133893178"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep03.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 06 Oct 2025 21:25:06 +0800
-IronPort-SDR: 68e3c332_q7arA5RdkL7uhUwl6rWE83MsLvtdFhJt8MCd3A5I7Sgn7IS
- x+F/XlLh5mI1WzRaMRFBCLLjrBPVMSw/bXFLesw==
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 06 Oct 2025 06:25:06 -0700
-WDCIronportException: Internal
-Received: from unknown (HELO neo.wdc.com) ([10.224.183.246])
-  by uls-op-cesaip01.wdc.com with ESMTP; 06 Oct 2025 06:25:04 -0700
-From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-To: Zorro Lang <zlang@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Naohiro Aota <naohiro.aota@wdc.com>,
-	linux-btrfs@vger.kernel.org,
-	Hans Holmberg <hans.holmberg@wdc.com>,
-	fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH] generic: basic smoke for filesystems on zoned block devices
-Date: Mon,  6 Oct 2025 15:24:55 +0200
-Message-ID: <20251006132455.140149-3-johannes.thumshirn@wdc.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20251006132455.140149-1-johannes.thumshirn@wdc.com>
-References: <20251006132455.140149-1-johannes.thumshirn@wdc.com>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="j5sZlXBu";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="ofk75a3B";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="j5sZlXBu";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="ofk75a3B"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 8B08D33685;
+	Mon,  6 Oct 2025 15:39:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1759765191; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=V5cMrfe4Mswv5iwXTNR0nUU42XbqIMSeF700oVgdzRc=;
+	b=j5sZlXBuD6ENssugkER28jdA3cQMT/Eei5cvymv1Yj92NcY6u7ZIzPLPO27eDrePR9smTr
+	ePHuOVfMhhkPFmRjv+ruIXQBup4bQKmoJS9/U6mUN8aWHXHNcqPRSDtPo2fRKU0iJ1qWSq
+	s+dFB6JBO5DjU7kNQLuwq6d7sx63Y4w=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1759765191;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=V5cMrfe4Mswv5iwXTNR0nUU42XbqIMSeF700oVgdzRc=;
+	b=ofk75a3BSTxpC0Uc3RKJT56aKe7FVin4gtK9DyKLxxi/Euw+xAkPV83GgZdZq7nkHA7t5x
+	H2XcbDgY9KOIdTBA==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1759765191; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=V5cMrfe4Mswv5iwXTNR0nUU42XbqIMSeF700oVgdzRc=;
+	b=j5sZlXBuD6ENssugkER28jdA3cQMT/Eei5cvymv1Yj92NcY6u7ZIzPLPO27eDrePR9smTr
+	ePHuOVfMhhkPFmRjv+ruIXQBup4bQKmoJS9/U6mUN8aWHXHNcqPRSDtPo2fRKU0iJ1qWSq
+	s+dFB6JBO5DjU7kNQLuwq6d7sx63Y4w=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1759765191;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=V5cMrfe4Mswv5iwXTNR0nUU42XbqIMSeF700oVgdzRc=;
+	b=ofk75a3BSTxpC0Uc3RKJT56aKe7FVin4gtK9DyKLxxi/Euw+xAkPV83GgZdZq7nkHA7t5x
+	H2XcbDgY9KOIdTBA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 73B5113700;
+	Mon,  6 Oct 2025 15:39:51 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Cl08HMfi42h2MgAAD6G6ig
+	(envelope-from <jack@suse.cz>); Mon, 06 Oct 2025 15:39:51 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 03E7EA0ABF; Mon,  6 Oct 2025 17:39:46 +0200 (CEST)
+Date: Mon, 6 Oct 2025 17:39:46 +0200
+From: Jan Kara <jack@suse.cz>
+To: Jiri Slaby <jirislaby@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>, 
+	Amir Goldstein <amir73il@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
+	Casey Schaufler <casey@schaufler-ca.com>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Paul Moore <paul@paul-moore.com>, linux-api@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	selinux@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH v6 4/6] fs: make vfs_fileattr_[get|set] return -EOPNOSUPP
+Message-ID: <jp3vopwtpik7bj77aejuknaziecuml6x2l2dr3oe2xoats6tls@yskzvehakmkv>
+References: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
+ <20250630-xattrat-syscall-v6-4-c4e3bc35227b@kernel.org>
+ <a622643f-1585-40b0-9441-cf7ece176e83@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a622643f-1585-40b0-9441-cf7ece176e83@kernel.org>
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCPT_COUNT_TWELVE(0.00)[15];
+	URIBL_BLOCKED(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	TO_DN_SOME(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[redhat.com,gmail.com,arndb.de,schaufler-ca.com,kernel.org,suse.cz,paul-moore.com,vger.kernel.org];
+	RCVD_COUNT_THREE(0.00)[3];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email]
+X-Spam-Flag: NO
+X-Spam-Score: -3.80
 
-Add a basic smoke test for filesystems that support running on zoned
-block devices.
+On Mon 06-10-25 13:09:05, Jiri Slaby wrote:
+> On 30. 06. 25, 18:20, Andrey Albershteyn wrote:
+> > Future patches will add new syscalls which use these functions. As
+> > this interface won't be used for ioctls only, the EOPNOSUPP is more
+> > appropriate return code.
+> > 
+> > This patch converts return code from ENOIOCTLCMD to EOPNOSUPP for
+> > vfs_fileattr_get and vfs_fileattr_set. To save old behavior translate
+> > EOPNOSUPP back for current users - overlayfs, encryptfs and fs/ioctl.c.
+> > 
+> > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> ...
+> > @@ -292,6 +294,8 @@ int ioctl_setflags(struct file *file, unsigned int __user *argp)
+> >   			fileattr_fill_flags(&fa, flags);
+> >   			err = vfs_fileattr_set(idmap, dentry, &fa);
+> >   			mnt_drop_write_file(file);
+> > +			if (err == -EOPNOTSUPP)
+> > +				err = -ENOIOCTLCMD;
+> 
+> This breaks borg code (unit tests already) as it expects EOPNOTSUPP, not
+> ENOIOCTLCMD/ENOTTY:
+> https://github.com/borgbackup/borg/blob/1c6ef7a200c7f72f8d1204d727fea32168616ceb/src/borg/platform/linux.pyx#L147
+> 
+> I.e. setflags now returns ENOIOCTLCMD/ENOTTY for cases where 6.16 used to
+> return EOPNOTSUPP.
+> 
+> This minimal testcase program doing ioctl(fd2, FS_IOC_SETFLAGS,
+> &FS_NODUMP_FL):
+> https://github.com/jirislaby/collected_sources/tree/master/ioctl_setflags
+> 
+> dumps in 6.16:
+> sf: ioctl: Operation not supported
+> 
+> with the above patch:
+> sf: ioctl: Inappropriate ioctl for device
+> 
+> Is this expected?
 
-It creates a zloop device with 2 sequential and 62 sequential zones,
-mounts it and then runs fsx on it.
+No, that's a bug and a clear userspace regression so we need to fix it. I
+think we need to revert this commit and instead convert ENOIOCTLCMD from
+vfs_fileattr_get/set() to EOPNOTSUPP in appropriate places. Andrey?
 
-Currently this tests supports BTRFS, F2FS and XFS.
-
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- tests/generic/772     | 52 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/772.out |  2 ++
- 2 files changed, 54 insertions(+)
- create mode 100755 tests/generic/772
- create mode 100644 tests/generic/772.out
-
-diff --git a/tests/generic/772 b/tests/generic/772
-new file mode 100755
-index 00000000..412fd024
---- /dev/null
-+++ b/tests/generic/772
-@@ -0,0 +1,52 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2025 Wesgtern Digital Corporation.  All Rights Reserved.
-+#
-+# FS QA Test 772
-+#
-+# Smoke test for FSes with ZBD support on zloop
-+#
-+. ./common/preamble
-+_begin_fstest auto zone quick
-+
-+_cleanup()
-+{
-+	if test -b /dev/zloop$ID; then
-+		echo "remove id=$ID" > /dev/zloop-control
-+	fi
-+}
-+
-+. ./common/zoned
-+
-+# Modify as appropriate.
-+_require_scratch
-+_require_scratch_size $((16 * 1024 * 1024)) #kB
-+_require_zloop
-+
-+_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount
-+
-+last_id=$(ls /dev/zloop* 2> /dev/null | grep -E "zloop[0-9]+" | wc -l)
-+ID=$((last_id + 1))
-+
-+mnt="$SCRATCH_MNT/mnt"
-+zloopdir="$SCRATCH_MNT/zloop"
-+
-+zloop_args="add id=$ID,zone_size_mb=256,conv_zones=2,base_dir=$zloopdir"
-+
-+mkdir -p "$zloopdir/$ID"
-+mkdir -p $mnt
-+echo "$zloop_args" > /dev/zloop-control
-+zloop="/dev/zloop$ID"
-+
-+_try_mkfs_dev $zloop 2>&1 >> $seqres.full ||\
-+	_notrun "cannot mkfs zoned filesystem"
-+_mount $zloop $mnt
-+
-+$FSX_PROG -q -N 20000 $FSX_AVOID "$mnt/fsx" >> $seqres.full
-+
-+umount $mnt
-+
-+echo Silence is golden
-+# success, all done
-+_exit 0
-diff --git a/tests/generic/772.out b/tests/generic/772.out
-new file mode 100644
-index 00000000..98c13968
---- /dev/null
-+++ b/tests/generic/772.out
-@@ -0,0 +1,2 @@
-+QA output created by 772
-+Silence is golden
+								Honza
 -- 
-2.51.0
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
