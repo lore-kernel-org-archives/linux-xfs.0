@@ -1,303 +1,140 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F057215198
-	for <linux-xfs@vger.kernel.org>; Mon,  6 Oct 2025 09:56:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56989170A11;
+	Mon,  6 Oct 2025 11:09:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759744571; cv=none; b=YWWNONnnsheVq2pXSxVlojjsFVxkMZiU+BT9qPF8G7g1d0e3LfB08J4QDaGltn5nxTsOHvfaOtCUrxYVZ3urSQrJjb2FbYhoF3SNwxaJm5g25htRB837IOANciq9RWT0Aqa6snCm/H/r1i0WkBPMUmKQQ7U6iDJN3kbLfxk4Orw=
+	t=1759748951; cv=none; b=MqweA50IP+7yhxauo5E1FBLDrcykLJvhG4MJKZaTMl0Zllr6cgQA7Adnx7lwPG29v6E4nOHy+AjQ4twJnCNoDk8pxwQXvRACm13M1fGi2e79vbctlEIx2AoaEJRLAqyGJp7IsqRvrSn7wI/RhNvqwzoCnmVcRHAn1CpH7I4zBqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759744571; c=relaxed/simple;
-	bh=NahU/+V4n1+IDk7/jTnSOYcbHuz1ozZre0J4OPBcXvA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DggkwGl2WtadYZfGQCItyMJfflDYBRwuUqUenRNoNnUVMdDWUarsP1KZka/6dbbPGNby/+O7bRfuYKMorYQvzoms2tIWXVinMh1isU841dMwJv1z1fLAiD1fXGQAdFVOxGhEOg9edYX0OK9/m8pNFCt5qzzY0RA/lHyfM1GQbY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=co9k+qrD; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1759748951; c=relaxed/simple;
+	bh=iAUttCGRO/dduZhfc2/39dETHCE1Y3M+f3KADtcy2rk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pTsORPUarDvHIUk5Pq84xkCbHniQPmlpbTFdvxWOVvuJVBbxGiQHH831GnLgPNRPDa2vPJ97LFuIADlglsqCMJLLBLME1JWpjmKZVBiGMr2a441VMke7VKVKuN4JZo//sMEEi+uRZiklrKRvCVP2D3o655GFdCAPzCZ3Qmiup3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AwWOeaFQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="co9k+qrD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1759744568;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/TtWqsB+vL29f+WqHIVh0uOt8o6InBJTuTjqBkW5psw=;
-	b=co9k+qrDFkMYhMi1R6ODQ0nSkRuE2aPbFJAwqRzqzSPvgkOcCoh8O93hyNiyw5Od+ZxD4G
-	Weh4jwPOTrPUy5gbNDxBpFcgB23zzLYZZwgFUJkSJ7bLQFRy0di/O54KxvxBbv2RWvyg2A
-	hGghMcyftqU/qFAOTERqeivwOvahZLo=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-569-TFFQ2WmLML2D5kYhzeZMeA-1; Mon, 06 Oct 2025 05:56:06 -0400
-X-MC-Unique: TFFQ2WmLML2D5kYhzeZMeA-1
-X-Mimecast-MFC-AGG-ID: TFFQ2WmLML2D5kYhzeZMeA_1759744566
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-3f42b54d159so3769986f8f.2
-        for <linux-xfs@vger.kernel.org>; Mon, 06 Oct 2025 02:56:06 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759744565; x=1760349365;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/TtWqsB+vL29f+WqHIVh0uOt8o6InBJTuTjqBkW5psw=;
-        b=gd0x8yQKTb+ND+kknGXJseotq8v8mWmm8zQmVdOP3Q/JgaIcA6TE/brwV9vzYfGH59
-         HO0WOVZ7Bj+9UWpJ3HQ+YJAIMsXcY2ylanIyW4+TmLvO2rovdFTfpmB5GzkMsl6ur8IQ
-         kaD8ACbZtSNscRSDVi/bsEf5Nuw6/Um8eg1iQbiDkQ6WrpDPkGOWQJ+R+AV2ptPwbuLd
-         eBbm2fmjMWOLmMo6rOekPxtsFtQO4k+NhVKLNh8weNvdmhNZqtEQWbXF3l0OU6/jRlZ4
-         6Sm8QYVPTTyDKl+gYbkHjTBTzwq3LI8HuQb03jjBsdWMtaIpGsXLq3Lxk0tBOkcbGQ4x
-         dniw==
-X-Forwarded-Encrypted: i=1; AJvYcCVWIZHwPqXUJatTALv+OdsWhCTN1Zqy/1LpR5V2+20iE/7jZZp0DJxyE2rQx54emVjIrPGb1r6Uyis=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw/JtABd8aH+U5pwj9q2Yp6HptxtLK/BPGebTvc6zFt2M7ZpAvh
-	SiD0zc3v89c7pF9QLUm3h6I9um5yBO1u162/Rt3GdSqf8Y1LrJfgMrYLCTQlBP3KDD8bbTYcGwu
-	oPmNk8q78KFVQROyKs7vazTkTroW6d2YaFxiC83j2iVJUY5PUeB+xZCral2Z4
-X-Gm-Gg: ASbGncsZ+b57CW5hUnFMlhAXQogDCu3dx9S/tsNParZq3kThiTqckGPuR7JlkSQDj+J
-	qPcox8XtTWEawzUTIds0Nz8/B5B/or6e70PX2OOUlR+mZfeMITEYKQp/a0KyPBFAUCBO8kcU7RT
-	ExYOH4JstiBj1FlLGe+qNRZgYs034WRigw8zFSxuDE6kWrBpyb5o548rUOgmRZV8V5hGCkFGx6T
-	6nLUos2MMng4wF0bAJHiKrK3xlOkbTf/xzaQyD05/Sm4rsBfY9hfZz0z1p88WhnYvmkOsnTJa42
-	GXkgK1FHECPJxsx1XRs63GHs3LYUi6MnFw5ptcV1g95D/DTd/yJxnBh7PmFMdaNPMA==
-X-Received: by 2002:a05:6000:2890:b0:3ee:1279:6e68 with SMTP id ffacd0b85a97d-425671ab32fmr8219361f8f.47.1759744565087;
-        Mon, 06 Oct 2025 02:56:05 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IESIFH0nsmLTuTfpAn77LYDu6eTjChPZl8GGpx/iU11/r7ZbfgkcR1RO/Syy2wrlHG4ldNS8Q==
-X-Received: by 2002:a05:6000:2890:b0:3ee:1279:6e68 with SMTP id ffacd0b85a97d-425671ab32fmr8219344f8f.47.1759744564452;
-        Mon, 06 Oct 2025 02:56:04 -0700 (PDT)
-Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4255d8a6c49sm20213119f8f.3.2025.10.06.02.56.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Oct 2025 02:56:04 -0700 (PDT)
-Date: Mon, 6 Oct 2025 11:55:33 +0200
-From: Andrey Albershteyn <aalbersh@redhat.com>
-To: fstests@vger.kernel.org
-Cc: zlang@redhat.com, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>, 
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v4 2/3] generic: introduce test to test
- file_getattr/file_setattr syscalls
-Message-ID: <zg4q7gnriwp64i7elakbvfxcukva7neq5qqcg7lyzglmmdduxm@6texsbefmit6>
-References: <20251003-xattrat-syscall-v4-0-1cfe6411c05f@kernel.org>
- <20251003-xattrat-syscall-v4-2-1cfe6411c05f@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AwWOeaFQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21758C4CEF5;
+	Mon,  6 Oct 2025 11:09:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1759748950;
+	bh=iAUttCGRO/dduZhfc2/39dETHCE1Y3M+f3KADtcy2rk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=AwWOeaFQJ/VjsW+sWbulhEi3dU6wn+mmOthy+vla6dh6I6Ump1Be3uY0Yg0vesKZ+
+	 BOf6YGEptbFfwZFjmCtvseMZKBHlpDouEcU0SB58tAui9E7fZ2WLyhD+2JYqvVuydw
+	 ugDEytqinuL1khRuKkPTYmbkrLzj1NZDISFvkjm9LwzJgDUTFA+2YxtHmCfKczPQgv
+	 3y4GYAHV7uvVKJME+IyEMVPsFnaDpCMqWKJ6wD78fe8U4YH96v5DjfY1fBibXvLfac
+	 08QMhHHyAcLjKBt8U5nsp5kRAgedeeMJdHuYlIEdTv1NSh4lWts7r0QBVDD7lQbUGT
+	 GfHqhPPKXhE5Q==
+Message-ID: <a622643f-1585-40b0-9441-cf7ece176e83@kernel.org>
+Date: Mon, 6 Oct 2025 13:09:05 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251003-xattrat-syscall-v4-2-1cfe6411c05f@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 4/6] fs: make vfs_fileattr_[get|set] return -EOPNOSUPP
+To: Andrey Albershteyn <aalbersh@redhat.com>,
+ Amir Goldstein <amir73il@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+ Casey Schaufler <casey@schaufler-ca.com>,
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+ =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>,
+ Paul Moore <paul@paul-moore.com>
+Cc: linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ selinux@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
+References: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
+ <20250630-xattrat-syscall-v6-4-c4e3bc35227b@kernel.org>
+Content-Language: en-US
+From: Jiri Slaby <jirislaby@kernel.org>
+Autocrypt: addr=jirislaby@kernel.org; keydata=
+ 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
+In-Reply-To: <20250630-xattrat-syscall-v6-4-c4e3bc35227b@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 2025-10-03 11:32:45, Andrey Albershteyn wrote:
-> Add a test to test basic functionality of file_getattr() and
-> file_setattr() syscalls. Most of the work is done in file_attr
-> utility.
+On 30. 06. 25, 18:20, Andrey Albershteyn wrote:
+> Future patches will add new syscalls which use these functions. As
+> this interface won't be used for ioctls only, the EOPNOSUPP is more
+> appropriate return code.
+> 
+> This patch converts return code from ENOIOCTLCMD to EOPNOSUPP for
+> vfs_fileattr_get and vfs_fileattr_set. To save old behavior translate
+> EOPNOSUPP back for current users - overlayfs, encryptfs and fs/ioctl.c.
 > 
 > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+...
+> @@ -292,6 +294,8 @@ int ioctl_setflags(struct file *file, unsigned int __user *argp)
+>   			fileattr_fill_flags(&fa, flags);
+>   			err = vfs_fileattr_set(idmap, dentry, &fa);
+>   			mnt_drop_write_file(file);
+> +			if (err == -EOPNOTSUPP)
+> +				err = -ENOIOCTLCMD;
 
-ops, Darrick, I forgot to drop your rvb tag as I changed this a bit,
-let me know if you have any comments or if I need to resend without
-it
+This breaks borg code (unit tests already) as it expects EOPNOTSUPP, not 
+ENOIOCTLCMD/ENOTTY:
+https://github.com/borgbackup/borg/blob/1c6ef7a200c7f72f8d1204d727fea32168616ceb/src/borg/platform/linux.pyx#L147
 
-> ---
->  common/filter          |  15 +++++++
->  tests/generic/2000     | 109 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/2000.out |  37 +++++++++++++++++
->  3 files changed, 161 insertions(+)
-> 
-> diff --git a/common/filter b/common/filter
-> index bbe13f4c8a8d..b330b27827d0 100644
-> --- a/common/filter
-> +++ b/common/filter
-> @@ -683,5 +683,20 @@ _filter_sysfs_error()
->  	sed 's/.*: \(.*\)$/\1/'
->  }
->  
-> +# Filter file attributes (aka lsattr/chattr)
-> +# To filter X:
-> +# 	... | _filter_file_attributes X
-> +# Or to filter all except X
-> +# 	... | _filter_file_attributes ~X
-> +_filter_file_attributes()
-> +{
-> +	if [[ $1 == ~* ]]; then
-> +		regex=$(echo "[aAcCdDeEFijmNPsStTuxVX]" | tr -d "$1")
-> +	else
-> +		regex="$1"
-> +	fi
-> +	awk "{ printf \"%s \", gensub(\"$regex\", \"-\", \"g\", \$1) } {print \$2}"
-> +}
-> +
+I.e. setflags now returns ENOIOCTLCMD/ENOTTY for cases where 6.16 used 
+to return EOPNOTSUPP.
 
-this is new
+This minimal testcase program doing ioctl(fd2, FS_IOC_SETFLAGS, 
+&FS_NODUMP_FL):
+https://github.com/jirislaby/collected_sources/tree/master/ioctl_setflags
 
->  # make sure this script returns success
->  /bin/true
-> diff --git a/tests/generic/2000 b/tests/generic/2000
-> new file mode 100755
-> index 000000000000..16045829031a
-> --- /dev/null
-> +++ b/tests/generic/2000
-> @@ -0,0 +1,109 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2025 Red Hat Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 2000
-> +#
-> +# Test file_getattr/file_setattr syscalls
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto
-> +
-> +. ./common/filter
-> +
-> +# Modify as appropriate.
-> +_require_scratch
-> +_require_test_program "af_unix"
-> +_require_test_program "file_attr"
-> +_require_symlinks
-> +_require_mknod
-> +
-> +_scratch_mkfs >>$seqres.full 2>&1
-> +_scratch_mount
-> +
-> +file_attr () {
-> +	$here/src/file_attr $*
-> +}
-> +
-> +create_af_unix () {
-> +	$here/src/af_unix $* || echo af_unix failed
-> +}
-> +
-> +projectdir=$SCRATCH_MNT/prj
-> +
-> +# Create normal files and special files
-> +mkdir $projectdir
-> +mkfifo $projectdir/fifo
-> +mknod $projectdir/chardev c 1 1
-> +mknod $projectdir/blockdev b 1 1
-> +create_af_unix $projectdir/socket
-> +touch $projectdir/foo
-> +ln -s $projectdir/foo $projectdir/symlink
-> +touch $projectdir/bar
-> +ln -s $projectdir/bar $projectdir/broken-symlink
-> +rm -f $projectdir/bar
-> +
-> +echo "Error codes"
-> +# wrong AT_ flags
-> +file_attr --get --invalid-at $projectdir ./foo
-> +file_attr --set --invalid-at $projectdir ./foo
-> +# wrong fsxattr size (too big, too small)
-> +file_attr --get --too-big-arg $projectdir ./foo
-> +file_attr --get --too-small-arg $projectdir ./foo
-> +file_attr --set --too-big-arg $projectdir ./foo
-> +file_attr --set --too-small-arg $projectdir ./foo
-> +# out of fsx_xflags mask
-> +file_attr --set --new-fsx-flag $projectdir ./foo
-> +
-> +echo "Initial attributes state"
-> +file_attr --get $projectdir | _filter_scratch | _filter_file_attributes ~d
+dumps in 6.16:
+sf: ioctl: Operation not supported
 
-						 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-						 this filter is new
-						 in the test
+with the above patch:
+sf: ioctl: Inappropriate ioctl for device
 
+
+Is this expected?
+
+thanks,
 -- 
-- Andrey
-
-> +file_attr --get $projectdir ./fifo | _filter_file_attributes ~d
-> +file_attr --get $projectdir ./chardev | _filter_file_attributes ~d
-> +file_attr --get $projectdir ./blockdev | _filter_file_attributes ~d
-> +file_attr --get $projectdir ./socket | _filter_file_attributes ~d
-> +file_attr --get $projectdir ./foo | _filter_file_attributes ~d
-> +file_attr --get $projectdir ./symlink | _filter_file_attributes ~d
-> +
-> +echo "Set FS_XFLAG_NODUMP (d)"
-> +file_attr --set --set-nodump $projectdir
-> +file_attr --set --set-nodump $projectdir ./fifo
-> +file_attr --set --set-nodump $projectdir ./chardev
-> +file_attr --set --set-nodump $projectdir ./blockdev
-> +file_attr --set --set-nodump $projectdir ./socket
-> +file_attr --set --set-nodump $projectdir ./foo
-> +file_attr --set --set-nodump $projectdir ./symlink
-> +
-> +echo "Read attributes"
-> +file_attr --get $projectdir | _filter_scratch | _filter_file_attributes ~d
-> +file_attr --get $projectdir ./fifo | _filter_file_attributes ~d
-> +file_attr --get $projectdir ./chardev | _filter_file_attributes ~d
-> +file_attr --get $projectdir ./blockdev | _filter_file_attributes ~d
-> +file_attr --get $projectdir ./socket | _filter_file_attributes ~d
-> +file_attr --get $projectdir ./foo | _filter_file_attributes ~d
-> +file_attr --get $projectdir ./symlink | _filter_file_attributes ~d
-> +
-> +echo "Set attribute on broken link with AT_SYMLINK_NOFOLLOW"
-> +file_attr --set --set-nodump $projectdir ./broken-symlink
-> +file_attr --get $projectdir ./broken-symlink
-> +
-> +file_attr --set --no-follow --set-nodump $projectdir ./broken-symlink
-> +file_attr --get --no-follow $projectdir ./broken-symlink | _filter_file_attributes ~d
-> +
-> +cd $SCRATCH_MNT
-> +touch ./foo2
-> +echo "Initial state of foo2"
-> +file_attr --get --at-cwd ./foo2 | _filter_file_attributes ~d
-> +echo "Set attribute relative to AT_FDCWD"
-> +file_attr --set --at-cwd --set-nodump ./foo2
-> +file_attr --get --at-cwd ./foo2 | _filter_file_attributes ~d
-> +
-> +echo "Set attribute on AT_FDCWD"
-> +mkdir ./bar
-> +file_attr --get --at-cwd ./bar | _filter_file_attributes ~d
-> +cd ./bar
-> +file_attr --set --at-cwd --set-nodump ""
-> +file_attr --get --at-cwd . | _filter_file_attributes ~d
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/2000.out b/tests/generic/2000.out
-> new file mode 100644
-> index 000000000000..e6fc7381709b
-> --- /dev/null
-> +++ b/tests/generic/2000.out
-> @@ -0,0 +1,37 @@
-> +QA output created by 2000
-> +Error codes
-> +Can not get fsxattr on ./foo: Invalid argument
-> +Can not get fsxattr on ./foo: Invalid argument
-> +Can not get fsxattr on ./foo: Argument list too long
-> +Can not get fsxattr on ./foo: Invalid argument
-> +Can not get fsxattr on ./foo: Argument list too long
-> +Can not get fsxattr on ./foo: Invalid argument
-> +Can not set fsxattr on ./foo: Invalid argument
-> +Initial attributes state
-> +----------------- SCRATCH_MNT/prj
-> +----------------- ./fifo
-> +----------------- ./chardev
-> +----------------- ./blockdev
-> +----------------- ./socket
-> +----------------- ./foo
-> +----------------- ./symlink
-> +Set FS_XFLAG_NODUMP (d)
-> +Read attributes
-> +------d---------- SCRATCH_MNT/prj
-> +------d---------- ./fifo
-> +------d---------- ./chardev
-> +------d---------- ./blockdev
-> +------d---------- ./socket
-> +------d---------- ./foo
-> +------d---------- ./symlink
-> +Set attribute on broken link with AT_SYMLINK_NOFOLLOW
-> +Can not get fsxattr on ./broken-symlink: No such file or directory
-> +Can not get fsxattr on ./broken-symlink: No such file or directory
-> +------d---------- ./broken-symlink
-> +Initial state of foo2
-> +----------------- ./foo2
-> +Set attribute relative to AT_FDCWD
-> +------d---------- ./foo2
-> +Set attribute on AT_FDCWD
-> +----------------- ./bar
-> +------d---------- .
-> 
-> -- 
-> 2.50.1
-> 
+js
+suse labs
 
