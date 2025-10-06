@@ -1,90 +1,42 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 442232D738B
-	for <linux-xfs@vger.kernel.org>; Mon,  6 Oct 2025 15:39:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 268E621C179;
+	Mon,  6 Oct 2025 18:06:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759765194; cv=none; b=deucGasNBGvG7840BFNkX5FzCjZ1QavC0YGPIBInBG423bR50CmMvMZ5J3SvJDo3DI7vWYgLgwhJ1co9RFVkJd/hbOhz7WZLrMQ7jX2r+iKxV6R4nINjguAV43UcdrT6gUk879qDB4Lb/iQ48zfu2LIxlP2kXdxIX4HmdaRs8tM=
+	t=1759773975; cv=none; b=rqjCgaTxIxgkrV+w2gdvfrtC5GQ9nsEdhaX0TmlkC9stePTEJkApGMhGZO519cTOOvG0JDDkoTYUmci49IBZ5IeVmded7cNjukqOTq04iA1c8xbPmXfb41K/xPywKW+l3OM6vrzbl7CAyFB8enuXw1jX6MQf+7uBOHBIkG3P7EE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759765194; c=relaxed/simple;
-	bh=ama3Wf+FzOOqL29SQs0q73QNhx/M/49ONwjiktce0FM=;
+	s=arc-20240116; t=1759773975; c=relaxed/simple;
+	bh=Pxv3iZg49m0IC+hcCN9x6Z5V/0hHaFtPIcUF5Wk6WA8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mZwSm5u5gvGx5Mx6iFcAUVCSLiAYLCm+G45wzyiXBq86ZmI1h5e8J5jCBTF1mA2UcYx+kVcT8bpaZM9E3u6ob+hQ4UYIrWIhWg/XXxFyJ0DN9h4TwzAuSuQqADfoRyZZdMAnju5PCLLp1ChiJlM3bEgO8vhb0+0tn96bBYSDqJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=j5sZlXBu; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=ofk75a3B; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=j5sZlXBu; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=ofk75a3B; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=b3ZzUqp7vk10aoDOt2dQ7cp2jCj2B14/6d201t2p48cAAWn4jM0Orx/sOI4Zc4w6uXeW2XpIo1hNoqTytvUFMWBLp5O+Bu0w4nLQRR9Rm7AO2rAJBY5jOIfSKPUi2rVBNRL5rEQJPQqvJAr25pthrwMwzYxcW4Q2z7FhcfKWKdw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IQ7IbBb4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="j5sZlXBu";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="ofk75a3B";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="j5sZlXBu";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="ofk75a3B"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 8B08D33685;
-	Mon,  6 Oct 2025 15:39:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1759765191; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V5cMrfe4Mswv5iwXTNR0nUU42XbqIMSeF700oVgdzRc=;
-	b=j5sZlXBuD6ENssugkER28jdA3cQMT/Eei5cvymv1Yj92NcY6u7ZIzPLPO27eDrePR9smTr
-	ePHuOVfMhhkPFmRjv+ruIXQBup4bQKmoJS9/U6mUN8aWHXHNcqPRSDtPo2fRKU0iJ1qWSq
-	s+dFB6JBO5DjU7kNQLuwq6d7sx63Y4w=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1759765191;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V5cMrfe4Mswv5iwXTNR0nUU42XbqIMSeF700oVgdzRc=;
-	b=ofk75a3BSTxpC0Uc3RKJT56aKe7FVin4gtK9DyKLxxi/Euw+xAkPV83GgZdZq7nkHA7t5x
-	H2XcbDgY9KOIdTBA==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1759765191; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V5cMrfe4Mswv5iwXTNR0nUU42XbqIMSeF700oVgdzRc=;
-	b=j5sZlXBuD6ENssugkER28jdA3cQMT/Eei5cvymv1Yj92NcY6u7ZIzPLPO27eDrePR9smTr
-	ePHuOVfMhhkPFmRjv+ruIXQBup4bQKmoJS9/U6mUN8aWHXHNcqPRSDtPo2fRKU0iJ1qWSq
-	s+dFB6JBO5DjU7kNQLuwq6d7sx63Y4w=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1759765191;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V5cMrfe4Mswv5iwXTNR0nUU42XbqIMSeF700oVgdzRc=;
-	b=ofk75a3BSTxpC0Uc3RKJT56aKe7FVin4gtK9DyKLxxi/Euw+xAkPV83GgZdZq7nkHA7t5x
-	H2XcbDgY9KOIdTBA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 73B5113700;
-	Mon,  6 Oct 2025 15:39:51 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Cl08HMfi42h2MgAAD6G6ig
-	(envelope-from <jack@suse.cz>); Mon, 06 Oct 2025 15:39:51 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 03E7EA0ABF; Mon,  6 Oct 2025 17:39:46 +0200 (CEST)
-Date: Mon, 6 Oct 2025 17:39:46 +0200
-From: Jan Kara <jack@suse.cz>
-To: Jiri Slaby <jirislaby@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>, 
-	Amir Goldstein <amir73il@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Casey Schaufler <casey@schaufler-ca.com>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, Paul Moore <paul@paul-moore.com>, linux-api@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	selinux@vger.kernel.org, Andrey Albershteyn <aalbersh@kernel.org>
-Subject: Re: [PATCH v6 4/6] fs: make vfs_fileattr_[get|set] return -EOPNOSUPP
-Message-ID: <jp3vopwtpik7bj77aejuknaziecuml6x2l2dr3oe2xoats6tls@yskzvehakmkv>
-References: <20250630-xattrat-syscall-v6-0-c4e3bc35227b@kernel.org>
- <20250630-xattrat-syscall-v6-4-c4e3bc35227b@kernel.org>
- <a622643f-1585-40b0-9441-cf7ece176e83@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IQ7IbBb4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D444C4CEF7;
+	Mon,  6 Oct 2025 18:06:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1759773973;
+	bh=Pxv3iZg49m0IC+hcCN9x6Z5V/0hHaFtPIcUF5Wk6WA8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=IQ7IbBb4fV9/3GPIWQac34pPZleSKk9WcchuNsmRamxgcAfUieojCKXcTI5dHXU6V
+	 EkCgfDnACEqwq3hzxMj0d7cwnz3+8yxhPJDLkq1M0TGdcmq88JCC3dzg1zXimO2JVW
+	 dygcSjrfWsQW1ZioURaBZk81vi1ZY9IBwN5ue6vKBoKOo7uQyyIk/020dwjDmlA94B
+	 pozbEpy/6irsfj8OJwe+ffOaL9MsQrye49BRcYeePQfZ49QpYV5lz1LuLePkHNjewZ
+	 ldbwPVVehOTq8ohoaD2e7w2uWq3nEiwy2LOWPxW7GYLA6lZ33wmYYr+XNN+aGw+d16
+	 5Fye7AV13x8RQ==
+Date: Mon, 6 Oct 2025 20:06:08 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc: Zorro Lang <zlang@redhat.com>, Christoph Hellwig <hch@lst.de>, 
+	Naohiro Aota <naohiro.aota@wdc.com>, linux-btrfs@vger.kernel.org, 
+	Hans Holmberg <hans.holmberg@wdc.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] common/zoned: add _require_zloop
+Message-ID: <j2eh6uops3wcmt54howb7rgfhc24qcrmjgjsxqiikxdlpiyrms@jemtwvwtffls>
+References: <20251006132455.140149-1-johannes.thumshirn@wdc.com>
+ <osIv2hvb5W6z_q7Pa3R_LBcRb1NGees4OgVMZtTL2oHkHIGdnf9ymZLAqex_Buy_EBJAqwzK14EoCZAq0HkS-w==@protonmail.internalid>
+ <20251006132455.140149-2-johannes.thumshirn@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -93,77 +45,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a622643f-1585-40b0-9441-cf7ece176e83@kernel.org>
-X-Spam-Level: 
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCPT_COUNT_TWELVE(0.00)[15];
-	URIBL_BLOCKED(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_DN_SOME(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[redhat.com,gmail.com,arndb.de,schaufler-ca.com,kernel.org,suse.cz,paul-moore.com,vger.kernel.org];
-	RCVD_COUNT_THREE(0.00)[3];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email]
-X-Spam-Flag: NO
-X-Spam-Score: -3.80
+In-Reply-To: <20251006132455.140149-2-johannes.thumshirn@wdc.com>
 
-On Mon 06-10-25 13:09:05, Jiri Slaby wrote:
-> On 30. 06. 25, 18:20, Andrey Albershteyn wrote:
-> > Future patches will add new syscalls which use these functions. As
-> > this interface won't be used for ioctls only, the EOPNOSUPP is more
-> > appropriate return code.
-> > 
-> > This patch converts return code from ENOIOCTLCMD to EOPNOSUPP for
-> > vfs_fileattr_get and vfs_fileattr_set. To save old behavior translate
-> > EOPNOSUPP back for current users - overlayfs, encryptfs and fs/ioctl.c.
-> > 
-> > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
-> ...
-> > @@ -292,6 +294,8 @@ int ioctl_setflags(struct file *file, unsigned int __user *argp)
-> >   			fileattr_fill_flags(&fa, flags);
-> >   			err = vfs_fileattr_set(idmap, dentry, &fa);
-> >   			mnt_drop_write_file(file);
-> > +			if (err == -EOPNOTSUPP)
-> > +				err = -ENOIOCTLCMD;
+On Mon, Oct 06, 2025 at 03:24:54PM +0200, Johannes Thumshirn wrote:
+> Add _require_zloop() function used by tests that require support for the
+> zoned loopback block device.
 > 
-> This breaks borg code (unit tests already) as it expects EOPNOTSUPP, not
-> ENOIOCTLCMD/ENOTTY:
-> https://github.com/borgbackup/borg/blob/1c6ef7a200c7f72f8d1204d727fea32168616ceb/src/borg/platform/linux.pyx#L147
+> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> ---
+>  common/zoned | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> I.e. setflags now returns ENOIOCTLCMD/ENOTTY for cases where 6.16 used to
-> return EOPNOTSUPP.
-> 
-> This minimal testcase program doing ioctl(fd2, FS_IOC_SETFLAGS,
-> &FS_NODUMP_FL):
-> https://github.com/jirislaby/collected_sources/tree/master/ioctl_setflags
-> 
-> dumps in 6.16:
-> sf: ioctl: Operation not supported
-> 
-> with the above patch:
-> sf: ioctl: Inappropriate ioctl for device
-> 
-> Is this expected?
+> diff --git a/common/zoned b/common/zoned
+> index eed0082a..41697b08 100644
+> --- a/common/zoned
+> +++ b/common/zoned
+> @@ -37,3 +37,11 @@ _zone_capacity() {
+>  	       grep -Po "cap 0x[[:xdigit:]]+" | cut -d ' ' -f 2)
+>      echo $((size << 9))
+>  }
+> +
+> +_require_zloop()
+> +{
+> +    modprobe zloop >/dev/null 2>&1
+> +    if [ ! -c "/dev/zloop-control" ]; then
+> +	    _notrun "This test requires zoned loopback device support"
+> +    fi
+> +}
 
-No, that's a bug and a clear userspace regression so we need to fix it. I
-think we need to revert this commit and instead convert ENOIOCTLCMD from
-vfs_fileattr_get/set() to EOPNOTSUPP in appropriate places. Andrey?
+Looks good.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> --
+> 2.51.0
+> 
+> 
