@@ -1,47 +1,68 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D6A122D4F6;
-	Tue,  7 Oct 2025 06:45:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0784FF9D6
+	for <linux-xfs@vger.kernel.org>; Tue,  7 Oct 2025 07:16:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759819512; cv=none; b=a4M8DnMuvuYd4iCALt9OpCgsCR71VNJQhQntVCoHTQAG/m+cWjzVPiJcyJBH7nGNxVsxzqcqCAxDC0xfe/DXWV9FDtCu6b/+dF+tsDBcM4x72nDEleXc3fBqoVjWnqiOum5FzVVJNYaGKHROjCaaRQb5VKkqfVYD7R85rPgs/XM=
+	t=1759821394; cv=none; b=an8lAVfbq3efpslF5u0QvZM4Qrdx9uQVkRCri86qVVYaj6VT1aqsyj9xNrOzSmdg4LAxCi+JBYS5V/PrqgMuWFs9C+xbcUcFDuX7AAqJLYzY1CmN22ZVB07siL4FQ2UIS/eRv3qyqg+FNtwKgXOolhppR+PjHcuiJVJtGngSWaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759819512; c=relaxed/simple;
-	bh=Dg+fDc//iqXx6roS8o/mrUIgVewGTijV6CKFwUoWnnc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=obbkC56YqM/rvuA4KsHqaTmn/Z1Z1NnFHD3JKKjRUKV8gDdQpvlPEzn14gY5jIu8Ea5NprzbLvT2iI50pCcZe/Dj2aNs42EEUQiAaFv14JSAVQ+/FLsiHsObpJMxkDx1oNyCJNii3Un+ARNjBUhShe0jWR7d+zDwUiknCHHKFqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 1D75C67373; Tue,  7 Oct 2025 08:44:59 +0200 (CEST)
-Date: Tue, 7 Oct 2025 08:44:58 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-	kernel test robot <oliver.sang@intel.com>,
-	Dave Chinner <dchinner@redhat.com>, oe-lkp@lists.linux.dev,
-	lkp@intel.com, linux-kernel@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>, Jan Kara <jack@suse.cz>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [linus:master] [xfs]  c91d38b57f:  stress-ng.chown.ops_per_sec
- 70.2% improvement
-Message-ID: <20251007064458.GA19763@lst.de>
-References: <202510020917.2ead7cfe-lkp@intel.com> <20251003075615.GA13238@lst.de> <aOJckY5NnB2MaOqj@dread.disaster.area>
+	s=arc-20240116; t=1759821394; c=relaxed/simple;
+	bh=5/G0OaLijYnRg4rK4mEwmV0MNHghme9dGJZQGO2+4eg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=uM/jpmr5AtxoDour0yNg9YjbwRwglsMHlNygXCU4rDyWTv2sBCGx3C9B4W5GI7+pO0J+ZeR+llqjRHlwmePFrMuPAuGr89gLmejDjMtU5CoEfNpZuSxwvnlvFqGZYtbDziADrUZjIH/QmFDTVV9LkYSCygW5orrHY06zTWo0Bi8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
+Received: from mx0.herbolt.com (localhost [127.0.0.1])
+	by mx0.herbolt.com (Postfix) with ESMTP id C79E3180F2C9;
+	Tue, 07 Oct 2025 09:16:19 +0200 (CEST)
+Received: from trufa.intra.herbolt.com.herbolt.com ([172.168.31.30])
+	by mx0.herbolt.com with ESMTPSA
+	id FLEsKkO+5GgkeAoAKEJqOA
+	(envelope-from <lukas@herbolt.com>); Tue, 07 Oct 2025 09:16:19 +0200
+From: Lukas Herbolt <lukas@herbolt.com>
+To: djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	Lukas Herbolt <lukas@herbolt.com>
+Subject: [PATCH v2] mkfs.xfs fix sunit size on 512e and 4kN disks.
+Date: Tue,  7 Oct 2025 09:13:00 +0200
+Message-ID: <20251007071259.51015-2-lukas@herbolt.com>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <aN9_ZfFEdDCuSTJW@infradead.org>
+References: <aN9_ZfFEdDCuSTJW@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aOJckY5NnB2MaOqj@dread.disaster.area>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 
-On Sun, Oct 05, 2025 at 10:54:57PM +1100, Dave Chinner wrote:
-> stress-ng puts a fsync() at the end of every ops loop:
+>> and should be done in a prep patch
+Not sure if I got it right, but sending v2
 
-Ok, with that the numbers make sense.  Thanks for digging into it.
+Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+---
+v2: rework check lsu only if LSU comes from CLI
+
+---
+ mkfs/xfs_mkfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 8cd4ccd7..3aecacd3 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3644,7 +3644,7 @@ check_lsunit:
+ 	else if (cfg->lsectorsize > XLOG_HEADER_SIZE)
+ 		lsu = cfg->blocksize; /* lsunit matches filesystem block size */
+ 
+-	if (lsu) {
++	if (cli->lsu) {
+ 		/* verify if lsu is a multiple block size */
+ 		if (lsu % cfg->blocksize != 0) {
+ 			fprintf(stderr,
+-- 
+2.51.0
 
