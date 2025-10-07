@@ -1,64 +1,97 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CB08165F16;
-	Tue,  7 Oct 2025 11:07:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40DE4192D68;
+	Tue,  7 Oct 2025 11:12:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759835277; cv=none; b=oW+3NWw6VGlfqHFDwocwJoJCeuFYppOhRr8987sxFSAjUxErI3UHNEUaSwD/3ERxtZwc0PNU2oMFmFVY+oH6VOZa+3i+XKOA8FMKt/2YmU6kDLu9b5qZ1sVHSZgEY19dTkMjaenrgN6xVF1+IgAIffhZmDUsDRQqcsI1bJh2tPA=
+	t=1759835529; cv=none; b=kGF+oJovlePZWHZBNNkzZ75WYy0/xleHbyS7PcPaGICgkbB2u2metTUETT0Vv08Taio7gSJuIAE4KSSaYuQ+foSkdv8q9HhiHuIDJ+Ed+xMBVSNZZA3sIbmpEukdUlpsF+jm60T8jlAq6ixeB8NCWCHCjlxF3m9IeTSFS0aQtxg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759835277; c=relaxed/simple;
-	bh=eC6s5Z4dbum2VX6t+mnZh8hkQrlFQpqrsujSHhwkOTc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mbaCO2qVxFBXUNqjcetnLnv7RPokQutGFbouZ1dkGZu9idfSUyNicbM0owyp5rIklKDtTHIOwq1kIbeb9QQQMff7m1K42gWn1auFpSFtE0sowlkqwTc5Vyd3u19SFXXNxiOzmTSt6MH8UegOIm/PYdfKvSrogMY7e+btpoc9Uhw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qPI2eury; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1759835529; c=relaxed/simple;
+	bh=y59Hzrx70QzGvjpVw8oWwWW4S1dfEWaSGLjaUnb+Nyo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=EPELsox+HdzAuln5VBVsEPoaNgfY9J/rdqRk5nEcxZclMLilJS9XpJrQClNnEVbZdbhpQdq/uEamZLAB08wTMb/ZvYtqH3IIDPml+FfwP+Qy99BctgEdnuxPdVxFnHYZbtoJbKXwlFMiMuAu6eK5NX/sXQLbL64sLWRRs/ZOkgg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ANmC41sp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qPI2eury"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1DF8C4CEF1;
-	Tue,  7 Oct 2025 11:07:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ANmC41sp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD0B6C4CEF1;
+	Tue,  7 Oct 2025 11:12:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759835276;
-	bh=eC6s5Z4dbum2VX6t+mnZh8hkQrlFQpqrsujSHhwkOTc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qPI2euryOCDC/73P1JU2bmweSbpUlA/XB1kB7ZiI+jAn40y0iHOH1AOAXHz1alUBu
-	 eV79zL6t2+Ea6eRP0P+b7QOGJkP6SwKm88EChzNXIcOnco+XbOyeE4RPu9IQOsaBKf
-	 ASQfNsRW6UiXzKrvcoDfe3wk5+FpVMuRkxlSJiOb6u2ErNzjAtQjVaoWsJcaVw0HSx
-	 iZrK2w8Ar13PM267BjS3NWkbUZfXhQbqZkLrtHEZTfMVZMcOILUlduWfMMRtuanPjZ
-	 zw9g8tMfEqldOocIsNLSaHLxAwhsJQWBHpPCMVmvPEJEapU8jtwdIFtozxr4sjmgmc
-	 FJK2XGGysXIGA==
-Date: Tue, 7 Oct 2025 13:07:51 +0200
+	s=k20201202; t=1759835527;
+	bh=y59Hzrx70QzGvjpVw8oWwWW4S1dfEWaSGLjaUnb+Nyo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=ANmC41spX4gmn7wUij7P7tZD8nz7BBusmjGjVsPhQ8aJZLEVU6IBVDcTcDgFVNy8S
+	 pOjZcm4W9qNA/xg4s8fJUu6yn8mVeNPdnvEUoA5BSuUSSkNJYsBQ8UUo9+EtToTBlG
+	 7Xsytbw+3jMbftALxVs+2oTOqSG0/me62L7pB+ZwVuzaP9bOV6iRL04z0kdiJHfwnO
+	 qJ+92aDjvIJ5dxmJIchmixRypEFLW0ECI9K8xUIthRQ4pEomVRmRGiHa54yDJ/8pMH
+	 hwtiu4TNGdo9saqnfCoirkyn9MjqA8hQ5ACaVPafYaq8NYfjfdorsXSnx78qCJxsBV
+	 0ar/opAtlzdbQ==
 From: Christian Brauner <brauner@kernel.org>
-To: Mateusz Guzik <mjguzik@gmail.com>
-Cc: viro@zeniv.linux.org.uk, jack@suse.cz, linux-kernel@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, josef@toxicpanda.com, kernel-team@fb.com, amir73il@gmail.com, 
-	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	ceph-devel@vger.kernel.org, linux-unionfs@vger.kernel.org
-Subject: Re: [PATCH v6 0/4] hide ->i_state behind accessors
-Message-ID: <20251007-warnt-abrutschen-7a6363ce6c54@brauner>
-References: <20250923104710.2973493-1-mjguzik@gmail.com>
- <20250929-samstag-unkenntlich-623abeff6085@brauner>
- <CAGudoHFm9_-AuRh52-KRCADQ8suqUMmYUUsg126kmA+N8Ah+6g@mail.gmail.com>
- <20251006-kernlos-etablieren-25b07b5ea9b3@brauner>
- <CAGudoHGZreXKHGBvkEPOkf=tL69rJD0sTYAV0NJRVS2aA+B5_g@mail.gmail.com>
+To: linux-fsdevel@vger.kernel.org,
+	Brian Foster <bfoster@redhat.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org,
+	hch@infradead.org,
+	djwong@kernel.org,
+	willy@infradead.org
+Subject: Re: [PATCH v5 0/7] iomap: zero range folio batch support
+Date: Tue,  7 Oct 2025 13:12:01 +0200
+Message-ID: <20251007-kittel-tiefbau-c3cc06b09439@brauner>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20251003134642.604736-1-bfoster@redhat.com>
+References: <20251003134642.604736-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2134; i=brauner@kernel.org; h=from:subject:message-id; bh=y59Hzrx70QzGvjpVw8oWwWW4S1dfEWaSGLjaUnb+Nyo=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ8+do0r+3ezLAz+Qk3JpoH9Kstu7uDVcopNOHMwR77l X9ljjHc6ShlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZhIhhUjwxGLhLev9fW37E9q Z7mx6/vSBV8+tE/zi7u+ZN4fpYyITCZGhjmHZN1y/hu02Us9Edi9v0/azHgBw4N13+dIKyQuN+e s4gcA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAGudoHGZreXKHGBvkEPOkf=tL69rJD0sTYAV0NJRVS2aA+B5_g@mail.gmail.com>
 
-> I rebased the patchset on top of vfs-6.19.inode and got a build failure:
+On Fri, 03 Oct 2025 09:46:34 -0400, Brian Foster wrote:
+> Only minor changes in v5 to the XFS errortag patch. I've kept the R-b
+> tags because the fundamental logic is the same, but the errortag
+> mechanism has been reworked and so that one needed a rebase (which turns
+> out much simpler). A second look certainly couldn't hurt, but otherwise
+> the associated fstest still works as expected.
 > 
-> fs/ocfs2/super.c:132:27: error: ‘inode_just_drop’ undeclared here (not
-> in a function)
->   132 |         .drop_inode     = inode_just_drop,
->       |                           ^~~~~~~~~~~~~~~
+> Note that the force zeroing fstests test has since been merged as
+> xfs/131. Otherwise I still have some followup patches to this work re:
+> the ext4 on iomap work, but it would be nice to move this along before
+> getting too far ahead with that.
 > 
-> and sure enough the commit renaming that helper is missing. Can you
-> please rebase the branch?
+> [...]
 
-Done. Thanks!
+Applied to the vfs-6.19.iomap branch of the vfs/vfs.git tree.
+Patches in the vfs-6.19.iomap branch should appear in linux-next soon.
+
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
+
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs-6.19.iomap
+
+[1/7] filemap: add helper to look up dirty folios in a range
+      https://git.kernel.org/vfs/vfs/c/757f5ca76903
+[2/7] iomap: remove pos+len BUG_ON() to after folio lookup
+      https://git.kernel.org/vfs/vfs/c/e027b6ecb710
+[3/7] iomap: optional zero range dirty folio processing
+      https://git.kernel.org/vfs/vfs/c/5a9a21cb7706
+[4/7] xfs: always trim mapping to requested range for zero range
+      https://git.kernel.org/vfs/vfs/c/50dc360fa097
+[5/7] xfs: fill dirty folios on zero range of unwritten mappings
+      https://git.kernel.org/vfs/vfs/c/492258e4508a
+[6/7] iomap: remove old partial eof zeroing optimization
+      https://git.kernel.org/vfs/vfs/c/47520b756355
+[7/7] xfs: error tag to force zeroing on debug kernels
+      https://git.kernel.org/vfs/vfs/c/87a5ca9f6c56
