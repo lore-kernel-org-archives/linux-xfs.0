@@ -1,68 +1,94 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0784FF9D6
-	for <linux-xfs@vger.kernel.org>; Tue,  7 Oct 2025 07:16:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B66F253B42;
+	Tue,  7 Oct 2025 07:54:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759821394; cv=none; b=an8lAVfbq3efpslF5u0QvZM4Qrdx9uQVkRCri86qVVYaj6VT1aqsyj9xNrOzSmdg4LAxCi+JBYS5V/PrqgMuWFs9C+xbcUcFDuX7AAqJLYzY1CmN22ZVB07siL4FQ2UIS/eRv3qyqg+FNtwKgXOolhppR+PjHcuiJVJtGngSWaE=
+	t=1759823699; cv=none; b=P4+v0u2kCENH8hGYHAxfttWz/yWf2TTcTmzdICFMbaKPPIRY/lnIxJaDUaaFSAiMYU5WvssVQn8qTvdbfSHJwMmp56VYpczEH9gl1Og0X1G9QsZxnyH+ZHSRAgH2q0jU74aYOBAQ84JOfz1hCqt4RB7kGCOzU8mr4dV2R/TIWNc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759821394; c=relaxed/simple;
-	bh=5/G0OaLijYnRg4rK4mEwmV0MNHghme9dGJZQGO2+4eg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uM/jpmr5AtxoDour0yNg9YjbwRwglsMHlNygXCU4rDyWTv2sBCGx3C9B4W5GI7+pO0J+ZeR+llqjRHlwmePFrMuPAuGr89gLmejDjMtU5CoEfNpZuSxwvnlvFqGZYtbDziADrUZjIH/QmFDTVV9LkYSCygW5orrHY06zTWo0Bi8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id C79E3180F2C9;
-	Tue, 07 Oct 2025 09:16:19 +0200 (CEST)
-Received: from trufa.intra.herbolt.com.herbolt.com ([172.168.31.30])
-	by mx0.herbolt.com with ESMTPSA
-	id FLEsKkO+5GgkeAoAKEJqOA
-	(envelope-from <lukas@herbolt.com>); Tue, 07 Oct 2025 09:16:19 +0200
-From: Lukas Herbolt <lukas@herbolt.com>
-To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH v2] mkfs.xfs fix sunit size on 512e and 4kN disks.
-Date: Tue,  7 Oct 2025 09:13:00 +0200
-Message-ID: <20251007071259.51015-2-lukas@herbolt.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <aN9_ZfFEdDCuSTJW@infradead.org>
-References: <aN9_ZfFEdDCuSTJW@infradead.org>
+	s=arc-20240116; t=1759823699; c=relaxed/simple;
+	bh=/Pbn7A+9ytijygVRfmY/5/2+Y6t6ujnH219ws8HfL2I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uBe0XQ1W7GXp3CNtDpNlervFOX7U4fKEGGVqoUNoRA1pRgGO0CNckcIB8MXYWVZF+lWrEuUJA/XBFzmmf75FUbLeBrEoK0CWocLdWOvP+rRx6Di0u8PkuZf2uuMtPkAvowi841g724XUVQLgZCOsg3Zk4z6xU89BzYF59EDDXSk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sSGEGxr3; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sSGEGxr3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F33C7C4CEF1;
+	Tue,  7 Oct 2025 07:54:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1759823699;
+	bh=/Pbn7A+9ytijygVRfmY/5/2+Y6t6ujnH219ws8HfL2I=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=sSGEGxr37CiaTJPpX/SRpZjOiGDPm3pwV1dkeFSaXnCiwsQJ4HpLizrWlUJRFsHoK
+	 /rF4+CNRtkwqO41jdps66Y16gU7w7T2/9wVkNg3PuByuj7GH4WZiyV4vCT18F5uVya
+	 wZKGWdoq3rUDgriecV3/09pzgdGil4ll4XsdsDyWFb0nFvwOjS8Rm0pru2lU+yfOpG
+	 jnkDkAtwTbcmtpkUGQdFDcZAtlO7MPGFbsJDUvEOlqkFEo3XbF2JHRkjap+H4D+oAr
+	 0CpRL7YmwfQc0s4RDJ5RkXjmzjoOKnyGcKTGt3EmDnx6NezUnCehWHI/Vt4G8vYY3d
+	 v8glk8gZMMLzw==
+Date: Tue, 7 Oct 2025 09:54:53 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc: Zorro Lang <zlang@redhat.com>, hch <hch@lst.de>, 
+	Naohiro Aota <Naohiro.Aota@wdc.com>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, 
+	Hans Holmberg <Hans.Holmberg@wdc.com>, "fstests@vger.kernel.org" <fstests@vger.kernel.org>, 
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] generic: basic smoke for filesystems on zoned block
+ devices
+Message-ID: <n64zgha736wog4njyvyaxatx752gi4bz6f72ndvopufmkjrcbg@koomim4nc5we>
+References: <20251006132455.140149-1-johannes.thumshirn@wdc.com>
+ <OtglCyTJgl3RCnletH8ai3IsE0wk2nR5CISvt5ZfvYPj85MMxGBFHEw9UmPSHvpve5QOIFQCXD9LFB1DpsNuAQ==@protonmail.internalid>
+ <20251006132455.140149-3-johannes.thumshirn@wdc.com>
+ <iqwkuhobfvpeiktvk6pba6ahirgzngltj3ilrifcfgaugme67s@r54pl6d6foys>
+ <HrmrQh5_tyYRG7-S4mXfT51r0I3fEYRRn_bmQrtFUEC4pzDysiMvmPFKOt8LljOoC4M9aqBl6h-UkXVmuPfNCw==@protonmail.internalid>
+ <78e121bd-8f6c-4b79-808c-9f5f75c90d8c@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <78e121bd-8f6c-4b79-808c-9f5f75c90d8c@wdc.com>
 
->> and should be done in a prep patch
-Not sure if I got it right, but sending v2
+On Tue, Oct 07, 2025 at 06:20:42AM +0000, Johannes Thumshirn wrote:
+> On 10/6/25 8:40 PM, Carlos Maiolino wrote:
+> > On Mon, Oct 06, 2025 at 03:24:55PM +0200, Johannes Thumshirn wrote:
+> >> Add a basic smoke test for filesystems that support running on zoned
+> >> block devices.
+> >>
+> >> It creates a zloop device with 2 sequential and 62 sequential zones,
+> > This seems wrong? Don't you mean 2 conventional zones?
+> > Also, won't the arguments used to create the zone dev end up creating 64
+> > sequential zones? I might be very wrong here, so my apologies in advance
+> > but looking into the zloop code this seems that 256MiB zone size will end
+> > up creating 64 sequential zones instead of 62?
+> 
+> 2 conventional zones and 62 sequential zones, my mistake:
 
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
----
-v2: rework check lsu only if LSU comes from CLI
+Ah, 64 is the total zone number not sequential only.
 
----
- mkfs/xfs_mkfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Other than the nitpick on the description, this looks fine then:
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 8cd4ccd7..3aecacd3 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3644,7 +3644,7 @@ check_lsunit:
- 	else if (cfg->lsectorsize > XLOG_HEADER_SIZE)
- 		lsu = cfg->blocksize; /* lsunit matches filesystem block size */
- 
--	if (lsu) {
-+	if (cli->lsu) {
- 		/* verify if lsu is a multiple block size */
- 		if (lsu % cfg->blocksize != 0) {
- 			fprintf(stderr,
--- 
-2.51.0
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
+
+> 
+> root@virtme-ng:/mnt# echo "$zloop_args" > /dev/zloop-control
+> [   75.986238] zloop: Added device 0: 64 zones of 256 MB, 4096 B block size
+> root@virtme-ng:/mnt# ls $zloopdir/0
+> cnv-000000  seq-000011  seq-000022  seq-000033  seq-000044 seq-000055
+> cnv-000001  seq-000012  seq-000023  seq-000034  seq-000045 seq-000056
+> seq-000002  seq-000013  seq-000024  seq-000035  seq-000046 seq-000057
+> seq-000003  seq-000014  seq-000025  seq-000036  seq-000047 seq-000058
+> seq-000004  seq-000015  seq-000026  seq-000037  seq-000048 seq-000059
+> seq-000005  seq-000016  seq-000027  seq-000038  seq-000049 seq-000060
+> seq-000006  seq-000017  seq-000028  seq-000039  seq-000050 seq-000061
+> seq-000007  seq-000018  seq-000029  seq-000040  seq-000051 seq-000062
+> seq-000008  seq-000019  seq-000030  seq-000041  seq-000052 seq-000063
+> seq-000009  seq-000020  seq-000031  seq-000042  seq-000053
+> seq-000010  seq-000021  seq-000032  seq-000043  seq-000054
+> 
+> 
