@@ -1,94 +1,70 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B66F253B42;
-	Tue,  7 Oct 2025 07:54:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92D407483;
+	Tue,  7 Oct 2025 09:56:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759823699; cv=none; b=P4+v0u2kCENH8hGYHAxfttWz/yWf2TTcTmzdICFMbaKPPIRY/lnIxJaDUaaFSAiMYU5WvssVQn8qTvdbfSHJwMmp56VYpczEH9gl1Og0X1G9QsZxnyH+ZHSRAgH2q0jU74aYOBAQ84JOfz1hCqt4RB7kGCOzU8mr4dV2R/TIWNc=
+	t=1759831007; cv=none; b=hz7z+DBUa85lFyoiiNH82yG+G5CpYi305KMvjDyeKQhbKUjf2HFMbtHEhr+VqyJJ69WSoUTZngbHSc807ShLw0C4w637+rNSv1n2PLsXtjJ4sgtlFwtZhAd7fMwT0C41y0LhTGtRMmaEl6H/Q+KDIW5N66dlu7GEW+95xjqc8h4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759823699; c=relaxed/simple;
-	bh=/Pbn7A+9ytijygVRfmY/5/2+Y6t6ujnH219ws8HfL2I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uBe0XQ1W7GXp3CNtDpNlervFOX7U4fKEGGVqoUNoRA1pRgGO0CNckcIB8MXYWVZF+lWrEuUJA/XBFzmmf75FUbLeBrEoK0CWocLdWOvP+rRx6Di0u8PkuZf2uuMtPkAvowi841g724XUVQLgZCOsg3Zk4z6xU89BzYF59EDDXSk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sSGEGxr3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1759831007; c=relaxed/simple;
+	bh=G+DxoUxu8+GmNziTwmIUe3by9an3Dygxv/SIx3/3X3o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=F7+LdUiXlF0YbpZZbXs5syqNpFA7wGJoAluAtHEtD0zad1rxq8xvfzh7lRHg5lKv3nLSeA1jMt+5K0xRXbsUVTjqQ5jc+pdnCUR2QPZSmFap7ovLEiUpPaMYxarHXrkH7Z8mflUKQohqeOcqKGdStqedfmlDqh/8r0ck1QcnX1Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=CAv37Md6; arc=none smtp.client-ip=80.241.56.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sSGEGxr3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F33C7C4CEF1;
-	Tue,  7 Oct 2025 07:54:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759823699;
-	bh=/Pbn7A+9ytijygVRfmY/5/2+Y6t6ujnH219ws8HfL2I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sSGEGxr37CiaTJPpX/SRpZjOiGDPm3pwV1dkeFSaXnCiwsQJ4HpLizrWlUJRFsHoK
-	 /rF4+CNRtkwqO41jdps66Y16gU7w7T2/9wVkNg3PuByuj7GH4WZiyV4vCT18F5uVya
-	 wZKGWdoq3rUDgriecV3/09pzgdGil4ll4XsdsDyWFb0nFvwOjS8Rm0pru2lU+yfOpG
-	 jnkDkAtwTbcmtpkUGQdFDcZAtlO7MPGFbsJDUvEOlqkFEo3XbF2JHRkjap+H4D+oAr
-	 0CpRL7YmwfQc0s4RDJ5RkXjmzjoOKnyGcKTGt3EmDnx6NezUnCehWHI/Vt4G8vYY3d
-	 v8glk8gZMMLzw==
-Date: Tue, 7 Oct 2025 09:54:53 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc: Zorro Lang <zlang@redhat.com>, hch <hch@lst.de>, 
-	Naohiro Aota <Naohiro.Aota@wdc.com>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, 
-	Hans Holmberg <Hans.Holmberg@wdc.com>, "fstests@vger.kernel.org" <fstests@vger.kernel.org>, 
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] generic: basic smoke for filesystems on zoned block
- devices
-Message-ID: <n64zgha736wog4njyvyaxatx752gi4bz6f72ndvopufmkjrcbg@koomim4nc5we>
-References: <20251006132455.140149-1-johannes.thumshirn@wdc.com>
- <OtglCyTJgl3RCnletH8ai3IsE0wk2nR5CISvt5ZfvYPj85MMxGBFHEw9UmPSHvpve5QOIFQCXD9LFB1DpsNuAQ==@protonmail.internalid>
- <20251006132455.140149-3-johannes.thumshirn@wdc.com>
- <iqwkuhobfvpeiktvk6pba6ahirgzngltj3ilrifcfgaugme67s@r54pl6d6foys>
- <HrmrQh5_tyYRG7-S4mXfT51r0I3fEYRRn_bmQrtFUEC4pzDysiMvmPFKOt8LljOoC4M9aqBl6h-UkXVmuPfNCw==@protonmail.internalid>
- <78e121bd-8f6c-4b79-808c-9f5f75c90d8c@wdc.com>
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="CAv37Md6"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4cgs3s37vVz9t21;
+	Tue,  7 Oct 2025 11:56:41 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1759831001;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZtIjDefiwflyhrEznLkEY1HOvumLtvPZW9x2sGlBhf8=;
+	b=CAv37Md64AUcXuXeqMhCQ9HMX68A2Ah1AbMVTpZRmJA9c7jcBOEQt+u+Eg3xdlfTu9Zydy
+	XGDfsHKVEmHgHAg4ZVP52/vsw1sRwo78RqWWRXiKPn4VpqRyu3aqDcBJOyh7yKv38ZzkjT
+	KDcucgBmQHVZTDH0e2v0oC3/j+W4VB66yk2wvC4Kr3faFdgoS2GnxyYb5w7W4MClhlGrvq
+	8YwkCg58Z93GUrv8lUNOhG24Xx6vMO+/1BZzQIgMWlZsc9FPZXy0bITr0UqbxAja9Hm+st
+	Clbfzlq/6zCaAncdRVbnG07EVcw9avVb9rIpsUWDqHAxnWh+7nyEjrZq7nVPaw==
+Message-ID: <46ce76f8-479f-4023-9d0f-05c749b1fdf7@pankajraghav.com>
+Date: Tue, 7 Oct 2025 11:56:36 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <78e121bd-8f6c-4b79-808c-9f5f75c90d8c@wdc.com>
+Subject: Re: [PATCH] iomap: use largest_zero_folio() in iomap_dio_zero()
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ mcgrof@kernel.org, gost.dev@samsung.com, linux-xfs@vger.kernel.org,
+ Pankaj Raghav <p.raghav@samsung.com>, "Darrick J . Wong" <djwong@kernel.org>
+References: <20250814142137.45469-1-kernel@pankajraghav.com>
+Content-Language: en-US
+From: Pankaj Raghav <kernel@pankajraghav.com>
+In-Reply-To: <20250814142137.45469-1-kernel@pankajraghav.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Oct 07, 2025 at 06:20:42AM +0000, Johannes Thumshirn wrote:
-> On 10/6/25 8:40 PM, Carlos Maiolino wrote:
-> > On Mon, Oct 06, 2025 at 03:24:55PM +0200, Johannes Thumshirn wrote:
-> >> Add a basic smoke test for filesystems that support running on zoned
-> >> block devices.
-> >>
-> >> It creates a zloop device with 2 sequential and 62 sequential zones,
-> > This seems wrong? Don't you mean 2 conventional zones?
-> > Also, won't the arguments used to create the zone dev end up creating 64
-> > sequential zones? I might be very wrong here, so my apologies in advance
-> > but looking into the zloop code this seems that 256MiB zone size will end
-> > up creating 64 sequential zones instead of 62?
-> 
-> 2 conventional zones and 62 sequential zones, my mistake:
+Hi Christian,
 
-Ah, 64 is the total zone number not sequential only.
+   I think this patch was dropped from both the trees due to some confusion.
 
-Other than the nitpick on the description, this looks fine then:
+Could you requeue this patch given that the base patches for largest_zero_folio() are already in
+linus's tree[1]?
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+It applies cleanly on the current master branch.
 
 
-> 
-> root@virtme-ng:/mnt# echo "$zloop_args" > /dev/zloop-control
-> [   75.986238] zloop: Added device 0: 64 zones of 256 MB, 4096 B block size
-> root@virtme-ng:/mnt# ls $zloopdir/0
-> cnv-000000  seq-000011  seq-000022  seq-000033  seq-000044 seq-000055
-> cnv-000001  seq-000012  seq-000023  seq-000034  seq-000045 seq-000056
-> seq-000002  seq-000013  seq-000024  seq-000035  seq-000046 seq-000057
-> seq-000003  seq-000014  seq-000025  seq-000036  seq-000047 seq-000058
-> seq-000004  seq-000015  seq-000026  seq-000037  seq-000048 seq-000059
-> seq-000005  seq-000016  seq-000027  seq-000038  seq-000049 seq-000060
-> seq-000006  seq-000017  seq-000028  seq-000039  seq-000050 seq-000061
-> seq-000007  seq-000018  seq-000029  seq-000040  seq-000051 seq-000062
-> seq-000008  seq-000019  seq-000030  seq-000041  seq-000052 seq-000063
-> seq-000009  seq-000020  seq-000031  seq-000042  seq-000053
-> seq-000010  seq-000021  seq-000032  seq-000043  seq-000054
-> 
-> 
+[1] https://github.com/torvalds/linux/commit/2d8bd8049e89efe42a5397de4effd899e8dd2249
+--
+Pankaj
+
