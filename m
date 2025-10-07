@@ -1,84 +1,90 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ED202D9794;
-	Tue,  7 Oct 2025 11:20:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 950542DFA21;
+	Tue,  7 Oct 2025 12:58:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759836007; cv=none; b=G5/7gXIV03qcFc0UBJ0tdvwxkh11E6DfxzMAvGKFc2urhzBRi6tImv1q4QE7qbnmvUIiS91hzlOR4H0w52QobqWmQ3lZ1ATVGAFZkF8+G8j2K8EmDVzM7Byh2ZWoVkFBBC6k/dYOXCduSzARXsC215pNN4y+lqoiAwa0+Hyrgp8=
+	t=1759841890; cv=none; b=eHOhfQwV8jULSCUVWRWR4JJR06SBRjHbfUzZwZcwOJf+06Gb69SQMUDXYnpW633np4/15P50nEkyLjWFwyo9c418bcYj3bLrSghjb1CIRWkGzP/t0NITSix3HwyRxsGh2WPaIWJMjzegClaNItpynX7qqzm+amCZwp4dgHeOJvk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759836007; c=relaxed/simple;
-	bh=9x5Qye3a1SDhG/+WChzXzWwg1LdXhGu8ktiPeGnzj8g=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qVg/p1EZdN2tDYqDxKxv0n6zddwffgW+AJNK2txo7st9TmQS185grsAQw7w957Bhw8U/fczRPrzyAh3CH2hBAmeecrj3rkS46EZaJ2V42X2Nw6ZLtFNAyrFlZ/Kh3MFey+5UMdb8KHRHBK5i9iraGFEg81roxk1H4V62s5faUXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ughDgvLz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1759841890; c=relaxed/simple;
+	bh=bPAkmy4CZ7P8vGb6ZqOQ1RQIYe2VPFhJGhaoMcBCR74=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dioRIgmTD1oWb8lm0dhs9cZAsnEoc1NVQ8kTHoongbxD/eduYfUWUOtqWANgSJE+h+RuBy2YN2UxpnrwQ0DXzpCDoMptfaQbvArt/ypAdfLhvgCR1P4PUWA0/7EphpG7k4oscK6yip2CnapYdk3vs71G5XybkGNK6ygHURMErPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=jWQS0WFN; arc=none smtp.client-ip=216.71.153.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ughDgvLz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14487C4CEF1;
-	Tue,  7 Oct 2025 11:20:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759836005;
-	bh=9x5Qye3a1SDhG/+WChzXzWwg1LdXhGu8ktiPeGnzj8g=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ughDgvLzk8zp6lJ4rLzLw4qRjWD9fny/NHjRb5ZHsbh4n25PHWfV0EQaQ0Ror1RCv
-	 Y4+elYdLICAR1apJ/Elb5IMR9sXZCIKUMBO9gVOI7RaXErqO+jgKiEBViL7dRpAWWo
-	 Ig2zHcnO8w3Mogzb9xjL4Y0BT5ZsjAYMu2w8we2VMxSK6ZXAs2yO1FxnZDRP9EnVZD
-	 jXWF+UPO1OsDmR9mPT/uHqeaEXx2EZcLnPpyLuyr0dDUces6SeP/xiKrciuEc+rXf6
-	 6LmA3PRhY3RxvIwlIovBHAYyIab/5BHjdOop6cR7mULKNuF14n2FBqhEvkhsDtKW+N
-	 NPGu6pkD/jiWw==
-From: Christian Brauner <brauner@kernel.org>
-To: "Darrick J . Wong" <djwong@kernel.org>,
-	"Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	mcgrof@kernel.org,
-	gost.dev@samsung.com,
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="jWQS0WFN"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1759841888; x=1791377888;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=bPAkmy4CZ7P8vGb6ZqOQ1RQIYe2VPFhJGhaoMcBCR74=;
+  b=jWQS0WFN1/jeVqqF9+kzICfXo0CKtZEj/DX9R/daW1JMo8Y60HESQoN0
+   gJL1ArH3J2DpOtzj6uCmPc58lQ1ZkVHD2jfDs/6x7l30EVrZ91V3qOesm
+   Q2u91EJHSzZAIPVq7rGF4hreF8EpGOpy6fqlUr908PfkgreSQv4PSmTzb
+   laIHSJOcZ47JZ9kHhjqXAmroP35EQYndc9kU2s1KwzHzndnTeZ+dXzczp
+   1nxtwYp1h8KiUAptYkc8XFJuskWLI778mnbj1vPVuIjUnaSbh6qNOrsyH
+   D3QYA5RACTwkMakh5SLP3tYuJhNCqzx6nIzi7ZjWAV30TXAOvz/K8WqAI
+   Q==;
+X-CSE-ConnectionGUID: cEowS2JjQMiq3GgjvzdYkg==
+X-CSE-MsgGUID: dnLEV6fyTu2VjF1sotXygg==
+X-IronPort-AV: E=Sophos;i="6.18,321,1751212800"; 
+   d="scan'208";a="132746695"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep03.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 07 Oct 2025 20:58:07 +0800
+IronPort-SDR: 68e50e5f_/VKi5uW20mWkIAVpgmlzkxpGeCZZ5Wh/nG1JBKMY1d6U6i+
+ IM61i8s3g+94ZrMqe9JbR1CGiZPzmH3VDfIWU7g==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Oct 2025 05:58:08 -0700
+WDCIronportException: Internal
+Received: from unknown (HELO neo.fritz.box) ([10.224.183.247])
+  by uls-op-cesaip02.wdc.com with ESMTP; 07 Oct 2025 05:58:06 -0700
+From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	linux-btrfs@vger.kernel.org,
+	Hans Holmberg <hans.holmberg@wdc.com>,
+	fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
-	Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH] iomap: use largest_zero_folio() in iomap_dio_zero()
-Date: Tue,  7 Oct 2025 13:19:59 +0200
-Message-ID: <20251007-rentier-armbrust-cec5f47fffb0@brauner>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20250814142137.45469-1-kernel@pankajraghav.com>
-References: <20250814142137.45469-1-kernel@pankajraghav.com>
+	Carlos Maiolino <cem@kernel.org>,
+	Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH v2 0/3] fstests: basic smoke test on zoned loop device
+Date: Tue,  7 Oct 2025 14:58:00 +0200
+Message-ID: <20251007125803.55797-1-johannes.thumshirn@wdc.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1353; i=brauner@kernel.org; h=from:subject:message-id; bh=9x5Qye3a1SDhG/+WChzXzWwg1LdXhGu8ktiPeGnzj8g=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQ8+Z7w129ugNXRSYkvUpccd1I+Zbzsav8hq1+ZFtH/v 1xoVd7e3lHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCRp7yMDFO3z3i081uKe+K3 23WBHrtiLtrLv4pzsNU5arls496A46aMDHcm60WIht92/nv0u8SJTdd8XizsN5Z7+PiESXXR9tw Dj9kB
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-On Thu, 14 Aug 2025 16:21:37 +0200, Pankaj Raghav (Samsung) wrote:
-> iomap_dio_zero() uses a custom allocated memory of zeroes for padding
-> zeroes. This was a temporary solution until there was a way to request a
-> zero folio that was greater than the PAGE_SIZE.
-> 
-> Use largest_zero_folio() function instead of using the custom allocated
-> memory of zeroes. There is no guarantee from largest_zero_folio()
-> function that it will always return a PMD sized folio. Adapt the code so
-> that it can also work if largest_zero_folio() returns a ZERO_PAGE.
-> 
-> [...]
+Add a very basic smoke test on a zoned loopback device to check that noone is
+accidentially breaking support for zoned block devices in filesystems that
+support these.
 
-Applied to the vfs-6.19.misc branch of the vfs/vfs.git tree.
-Patches in the vfs-6.19.misc branch should appear in linux-next soon.
+Currently this includes btrfs, f2fs and xfs.
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+Changes to v1:
+- Add patch 2/3 factoring out creation of a zloop device
+- Fix commit description for patch 3/3
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+Johannes Thumshirn (3):
+  common/zoned: add _require_zloop
+  common/zoned: add _create_zloop
+  generic: basic smoke for filesystems on zoned block devices
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
+ common/zoned          | 31 +++++++++++++++++++++++++++
+ tests/generic/772     | 50 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/772.out |  2 ++
+ 3 files changed, 83 insertions(+)
+ create mode 100755 tests/generic/772
+ create mode 100644 tests/generic/772.out
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-6.19.misc
+-- 
+2.51.0
 
-[1/1] iomap: use largest_zero_folio() in iomap_dio_zero()
-      https://git.kernel.org/vfs/vfs/c/5a5809e3ac58
