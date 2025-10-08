@@ -1,27 +1,26 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 512BD17A2E0
-	for <linux-xfs@vger.kernel.org>; Wed,  8 Oct 2025 16:56:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 359042EC0A6
+	for <linux-xfs@vger.kernel.org>; Wed,  8 Oct 2025 16:56:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759942598; cv=none; b=FydmuOFtQcQyS4SKfYx/SrUYlsisPtDAV6j0fo3hay/IrSo9/PnyZF/Yuhqp5sd4NURz4+Js/KOsQvy08ktw7iW/l7FgvteN/zxlzHhWAn8SyNFzONhwga9gc0IrsIVXQS0tzlWNrUbNiD5eidH3fJ8521l4aLQ8IsVisc0WaEA=
+	t=1759942612; cv=none; b=AyHFLqhGu3FxJBWLWRDVh/atpCo6XjWx7+OeR4wv9Tv4JDLo1tGyH9ymvQdHwgdU9wkGke7i2iAttEXwN/MDKtrqp3QVK608YElVQUgfxNMvLvoMnKy6W+kNgcNnTW28wHaWtL8a4gBEiLSwSo8Jq211QHGSgIYiMmuZi/lnyeI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759942598; c=relaxed/simple;
-	bh=fYgWUOeTBR8v8NhwroHEfLeivYm2tktB35tQ5QVkW80=;
+	s=arc-20240116; t=1759942612; c=relaxed/simple;
+	bh=B3mguV1N2CoPmB7dsC6sNRG/h3xg92cfg4ymHYbxgz4=;
 	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jLmo8PtJK5Rs46RiwFHNKgJ3+M2IWlIqD5aOu8bCpX2Iz/K0hqcfIKoJZobxXMWqvofyQ2h72divrR87afO1jIdGDTXhavv1IbOGF6bmPT7eaJ3Exc3E2gNOHbEx5LWUe4yiwn1rxLDg/sMNd4PyxH55MuK+3CVR96b8nuKlHaY=
+	 Content-Type:Content-Disposition:In-Reply-To; b=RVUPQ6xYPfQQ3ZCA9hSnZDwCINtxjpLUiKDOaBREqxyC4LH+ZoqqAIHwoHRt+DRQd3jY3OS+o3rRR0BlRkrsgnKBYIatl5B2c3BA67JIs56E/HaVX2WquRUZsBNnycN9AQFrSgHNcJfiCCakxhthAyseDihqOAKoab5PzuQECkM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 151ECC4CEE7;
-	Wed,  8 Oct 2025 16:56:35 +0000 (UTC)
-Date: Wed, 8 Oct 2025 18:56:33 +0200
-From: Christoph Hellwig <hch@lst.de>
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4097C4CEE7;
+	Wed,  8 Oct 2025 16:56:49 +0000 (UTC)
+Date: Wed, 8 Oct 2025 18:56:47 +0200
+From: Pranav Tyagi <pranav.tyagi03@gmail.com>
 To: linux-xfs@vger.kernel.org, aalbersh@kernel.org, cem@kernel.org, 
 	cmaiolino@redhat.com, djwong@kernel.org, hch@lst.de, pchelkin@ispras.ru, 
 	pranav.tyagi03@gmail.com, sandeen@redhat.com
-Subject: [PATCH 8/11] [PATCH] xfs: improve the xg_active_ref check in
- xfs_group_free
-Message-ID: <ip55didmvyhl5eu32rvy47med2pjxmadllrnrhfx47zo2uezcr@ac4n7u6ffpzq>
+Subject: [PATCH 9/11] [PATCH] fs/xfs: replace strncpy with memtostr_pad()
+Message-ID: <p5364j3qrivtddri7frc234op7rxehirovdt6f3xnitb5yfpfl@gx67re25nhgv>
 References: <cover.1759941416.patch-series@thinky>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -33,35 +32,62 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <cover.1759941416.patch-series@thinky>
 
-Source kernel commit: 59655147ec34fb72cc090ca4ee688ece05ffac56
+Source kernel commit: f4a3f01e8e451fb3cb444a95a59964f4bc746902
 
-Split up the XFS_IS_CORRUPT statement so that it immediately shows
-if the reference counter overflowed or underflowed.
+Replace the deprecated strncpy() with memtostr_pad(). This also avoids
+the need for separate zeroing using memset(). Mark sb_fname buffer with
+__nonstring as its size is XFSLABEL_MAX and so no terminating NULL for
+sb_fname.
 
-I ran into this quite a bit when developing the zoned allocator, and had
-to reapply the patch for some work recently.  We might as well just apply
-it upstream given that freeing group is far removed from performance
-critical code.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- libxfs/xfs_group.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ db/metadump.c           | 2 +-
+ include/platform_defs.h | 6 ++++++
+ libxfs/xfs_format.h     | 2 +-
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/libxfs/xfs_group.c b/libxfs/xfs_group.c
-index b7ac9dbd8e..03c508242d 100644
---- a/libxfs/xfs_group.c
-+++ b/libxfs/xfs_group.c
-@@ -170,7 +170,8 @@
+diff --git a/db/metadump.c b/db/metadump.c
+index 34f2d61700..24eb99da17 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -2989,7 +2989,7 @@
+ 		if (metadump.obfuscate) {
+ 			struct xfs_sb *sb = iocur_top->data;
+ 			memset(sb->sb_fname, 'L',
+-			       min(strlen(sb->sb_fname), sizeof(sb->sb_fname)));
++			       strnlen(sb->sb_fname, sizeof(sb->sb_fname)));
+ 			iocur_top->need_crc = 1;
+ 		}
+ 		if (write_buf(iocur_top))
+diff --git a/include/platform_defs.h b/include/platform_defs.h
+index fa66551d99..7b4a1a6255 100644
+--- a/include/platform_defs.h
++++ b/include/platform_defs.h
+@@ -296,4 +296,10 @@
  
- 	/* drop the mount's active reference */
- 	xfs_group_rele(xg);
--	XFS_IS_CORRUPT(mp, atomic_read(&xg->xg_active_ref) != 0);
-+	XFS_IS_CORRUPT(mp, atomic_read(&xg->xg_active_ref) > 0);
-+	XFS_IS_CORRUPT(mp, atomic_read(&xg->xg_active_ref) < 0);
- 	kfree_rcu_mightsleep(xg);
- }
+ #define cmp_int(l, r)		((l > r) - (l < r))
  
++#if __has_attribute(__nonstring__)
++# define __nonstring                    __attribute__((__nonstring__))
++#else
++# define __nonstring
++#endif
++
+ #endif	/* __XFS_PLATFORM_DEFS_H__ */
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 9566a76233..779dac59b1 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -112,7 +112,7 @@
+ 	uint16_t	sb_sectsize;	/* volume sector size, bytes */
+ 	uint16_t	sb_inodesize;	/* inode size, bytes */
+ 	uint16_t	sb_inopblock;	/* inodes per block */
+-	char		sb_fname[XFSLABEL_MAX]; /* file system name */
++	char		sb_fname[XFSLABEL_MAX] __nonstring; /* file system name */
+ 	uint8_t		sb_blocklog;	/* log2 of sb_blocksize */
+ 	uint8_t		sb_sectlog;	/* log2 of sb_sectsize */
+ 	uint8_t		sb_inodelog;	/* log2 of sb_inodesize */
