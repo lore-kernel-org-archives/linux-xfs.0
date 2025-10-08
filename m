@@ -1,27 +1,27 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39E7B29E0E8
-	for <linux-xfs@vger.kernel.org>; Wed,  8 Oct 2025 16:55:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31DA62BDC14
+	for <linux-xfs@vger.kernel.org>; Wed,  8 Oct 2025 16:55:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759942542; cv=none; b=WHUFI93d88niTpLPLIJz76Bl1Pv4WQf9bU5ftO+k6l4YV/cebQ0Mj9f6kM5o7cA1ol/XEvvLQPmAJGtsJdLJ5PJLxmihr8PLCY2LFsxhjbzOFANMsQOkAOU2Y1UD/r4iNI7PiQoDX9MDqCbIrsqwOlEd1WUXWoJVJcczNzfidrw=
+	t=1759942553; cv=none; b=BYvuKnC+AtRt7qfGcJVplGJ2S3AQJ4IDSve28qIhNOcvobQpcTHMkZmah64Mb86hm2d1+niI5TdXxBeNS0+k3aqD6mntEwT0CWTwnlLxuZPePmJ93Ho5TcYVLYVUEtk8m7PVVkenE+oS2qe+1/0mg2HKVjhMkpn7mhPkVYE+AGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759942542; c=relaxed/simple;
-	bh=6XgRC2kxeAUc/E+oCurB3e5orxOCTs/vHSMpKz7J11Y=;
+	s=arc-20240116; t=1759942553; c=relaxed/simple;
+	bh=eslX8DJ3zuROXDDTRFygztmpAnpwEatC+dTXSaOsKno=;
 	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L5Kj1bSJ7j0Lp5q193ihwvRDpwS4PK2kmzn4R1aUGk7supMOZ+BGCJxnD7EjyeGHPC+Ez+oLBmNokmH+USh8oCGAkB4YcRiwUpitfC/wAp4ZAO9yzBQirhwnI16cKkLoBp5Kc7OPV39EeE6DfliNT+34NTqOWN36q70dXFefrPU=
+	 Content-Type:Content-Disposition:In-Reply-To; b=N648wKmbQ1RiXEQgN8pYx2Sk+z2UB8vfekTNVlXNWKDZPC3zwv/yYVlqMuZlyL2ZDBH7T4wond3pKe8nv9QRDt3EQnYfiRSYkcA+wbPXBlq85zSJ5/IzdnBk2x2HCDz6wnRbdULFONnYE6MaCiUih8zreueuuafJIAMXIWwsah0=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98BC7C4CEE7;
-	Wed,  8 Oct 2025 16:55:39 +0000 (UTC)
-Date: Wed, 8 Oct 2025 18:55:37 +0200
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7E8DC4CEE7;
+	Wed,  8 Oct 2025 16:55:50 +0000 (UTC)
+Date: Wed, 8 Oct 2025 18:55:48 +0200
 From: Fedor Pchelkin <pchelkin@ispras.ru>
 To: linux-xfs@vger.kernel.org, aalbersh@kernel.org, cem@kernel.org, 
 	cmaiolino@redhat.com, djwong@kernel.org, hch@lst.de, pchelkin@ispras.ru, 
 	pranav.tyagi03@gmail.com, sandeen@redhat.com
-Subject: [PATCH 5/11] [PATCH] xfs: use a proper variable name and type for
- storing a comparison result
-Message-ID: <gc5eiz3y6ymejva2fnsz2rumzs6ak6lby3lw2sb6ollp2w2mqh@64mxegsjzujy>
+Subject: [PATCH 6/11] [PATCH] xfs: refactor xfs_btree_diff_two_ptrs() to take
+ advantage of cmp_int()
+Message-ID: <rkk3uohh6dcd5tb4mnavzoucqio7y2bpm7ht3baeakynumt4iy@25ousn6udohw>
 References: <cover.1759941416.patch-series@thinky>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -33,16 +33,11 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <cover.1759941416.patch-series@thinky>
 
-Source kernel commit: 2717eb35185581988799bb0d5179409978f36a90
+Source kernel commit: ce6cce46aff79423f47680ee65e8f12191a50605
 
-Perhaps that's just my silly imagination but 'diff' doesn't look good for
-the name of a variable to hold a result of a three-way-comparison
-(-1, 0, 1) which is what ->cmp_key_with_cur() does. It implies to contain
-an actual difference between the two integer variables but that's not true
-anymore after recent refactoring.
-
-Declaring it as int64_t is also misleading now. Plain integer type is
-more than enough.
+Use cmp_int() to yield the result of a three-way-comparison instead of
+performing subtractions with extra casts. Thus also rename the function
+to make its name clearer in purpose.
 
 Found by Linux Verification Center (linuxtesting.org).
 
@@ -51,91 +46,48 @@ Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- libxfs/xfs_btree.c | 23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+ libxfs/xfs_btree.c | 8 ++++----
+ libxfs/xfs_btree.h | 6 +++---
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 15846f0ff6..facc35401f 100644
+index facc35401f..8576611994 100644
 --- a/libxfs/xfs_btree.c
 +++ b/libxfs/xfs_btree.c
-@@ -1982,7 +1982,7 @@
- 	int			*stat)	/* success/failure */
+@@ -5350,15 +5350,15 @@
+ }
+ 
+ /* Compare two btree pointers. */
+-int64_t
+-xfs_btree_diff_two_ptrs(
++int
++xfs_btree_cmp_two_ptrs(
+ 	struct xfs_btree_cur		*cur,
+ 	const union xfs_btree_ptr	*a,
+ 	const union xfs_btree_ptr	*b)
  {
- 	struct xfs_btree_block	*block;	/* current btree block */
--	int64_t			diff;	/* difference for the current key */
-+	int			cmp_r;	/* current key comparison result */
- 	int			error;	/* error return value */
- 	int			keyno;	/* current key number */
- 	int			level;	/* level in the btree */
-@@ -2010,13 +2010,13 @@
- 	 * on the lookup record, then follow the corresponding block
- 	 * pointer down to the next level.
- 	 */
--	for (level = cur->bc_nlevels - 1, diff = 1; level >= 0; level--) {
-+	for (level = cur->bc_nlevels - 1, cmp_r = 1; level >= 0; level--) {
- 		/* Get the block we need to do the lookup on. */
- 		error = xfs_btree_lookup_get_block(cur, level, pp, &block);
- 		if (error)
- 			goto error0;
+ 	if (cur->bc_ops->ptr_len == XFS_BTREE_LONG_PTR_LEN)
+-		return (int64_t)be64_to_cpu(a->l) - be64_to_cpu(b->l);
+-	return (int64_t)be32_to_cpu(a->s) - be32_to_cpu(b->s);
++		return cmp_int(be64_to_cpu(a->l), be64_to_cpu(b->l));
++	return cmp_int(be32_to_cpu(a->s), be32_to_cpu(b->s));
+ }
  
--		if (diff == 0) {
-+		if (cmp_r == 0) {
- 			/*
- 			 * If we already had a key match at a higher level, we
- 			 * know we need to use the first entry in this block.
-@@ -2062,15 +2062,16 @@
- 						keyno, block, &key);
- 
- 				/*
--				 * Compute difference to get next direction:
-+				 * Compute comparison result to get next
-+				 * direction:
- 				 *  - less than, move right
- 				 *  - greater than, move left
- 				 *  - equal, we're done
- 				 */
--				diff = cur->bc_ops->cmp_key_with_cur(cur, kp);
--				if (diff < 0)
-+				cmp_r = cur->bc_ops->cmp_key_with_cur(cur, kp);
-+				if (cmp_r < 0)
- 					low = keyno + 1;
--				else if (diff > 0)
-+				else if (cmp_r > 0)
- 					high = keyno - 1;
- 				else
- 					break;
-@@ -2086,7 +2087,7 @@
- 			 * If we moved left, need the previous key number,
- 			 * unless there isn't one.
- 			 */
--			if (diff > 0 && --keyno < 1)
-+			if (cmp_r > 0 && --keyno < 1)
- 				keyno = 1;
- 			pp = xfs_btree_ptr_addr(cur, keyno, block);
- 
-@@ -2099,7 +2100,7 @@
- 	}
- 
- 	/* Done with the search. See if we need to adjust the results. */
--	if (dir != XFS_LOOKUP_LE && diff < 0) {
-+	if (dir != XFS_LOOKUP_LE && cmp_r < 0) {
- 		keyno++;
- 		/*
- 		 * If ge search and we went off the end of the block, but it's
-@@ -2122,14 +2123,14 @@
- 			*stat = 1;
- 			return 0;
- 		}
--	} else if (dir == XFS_LOOKUP_LE && diff > 0)
-+	} else if (dir == XFS_LOOKUP_LE && cmp_r > 0)
- 		keyno--;
- 	cur->bc_levels[0].ptr = keyno;
- 
- 	/* Return if we succeeded or not. */
- 	if (keyno == 0 || keyno > xfs_btree_get_numrecs(block))
- 		*stat = 0;
--	else if (dir != XFS_LOOKUP_EQ || diff == 0)
-+	else if (dir != XFS_LOOKUP_EQ || cmp_r == 0)
- 		*stat = 1;
- 	else
- 		*stat = 0;
+ struct xfs_btree_has_records {
+diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+index 1bf20d509a..60e78572e7 100644
+--- a/libxfs/xfs_btree.h
++++ b/libxfs/xfs_btree.h
+@@ -519,9 +519,9 @@
+ 		int level, struct xfs_buf **bpp);
+ bool xfs_btree_ptr_is_null(struct xfs_btree_cur *cur,
+ 		const union xfs_btree_ptr *ptr);
+-int64_t xfs_btree_diff_two_ptrs(struct xfs_btree_cur *cur,
+-				const union xfs_btree_ptr *a,
+-				const union xfs_btree_ptr *b);
++int xfs_btree_cmp_two_ptrs(struct xfs_btree_cur *cur,
++			   const union xfs_btree_ptr *a,
++			   const union xfs_btree_ptr *b);
+ void xfs_btree_get_sibling(struct xfs_btree_cur *cur,
+ 			   struct xfs_btree_block *block,
+ 			   union xfs_btree_ptr *ptr, int lr);
