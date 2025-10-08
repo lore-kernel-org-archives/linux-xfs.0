@@ -1,191 +1,175 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73666247280
-	for <linux-xfs@vger.kernel.org>; Wed,  8 Oct 2025 21:27:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17E7F25DB1D
+	for <linux-xfs@vger.kernel.org>; Wed,  8 Oct 2025 21:51:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759958871; cv=none; b=pZ1/Fpov213og8LPfeAa60R5MmyxX3Xv9iqqj2DOPhvg5Z7UfMRTW4NPMzz8YYADo5tBTzSpzGDf3sPS0GZAmsoan05Nex8CvFvH1wCuhgErHzcSlS1nhBlq0LqhRTAEHHKhqhxPCwHrRiEeW3BE+c8nlDCrqiYueRZo9kbzY3M=
+	t=1759960292; cv=none; b=Z8kl0yXic1g7rlMEGrwVRelcHOvLFYYJgWYekZfzaU4D0t+Hg3IXFMMx+ZC6XvuJyfF1AprR6CLVI86/e3hM+0/ILgHQcmTmcVEoNmlXP1gw/rqtoEPXG5TSpmfTznAiNltrLv9vWQ/IvYcrTbI3vt3F/dgAugckkKxlIG0CxiM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759958871; c=relaxed/simple;
-	bh=khnmQSv1KqdW2r1s66Ycxw+/H26YBZCl3lZorIz5s0s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fdS4KLjQBWr8pveQuGZO/fjpOCB0z88ZigolmDxSNY0uwcoHftXVm2Bq4AN5Xfqr6M6UvrXWSwBcHIqA/f60fQMNGqkeLyHPffhSFdeD8a/coOFK8uaKgSlS+nncTIeHyjatG4C9f/CYfLlFBsVnvldNkAxpaxEapjSaQxduH+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=pnEIjpPG; arc=none smtp.client-ip=209.85.210.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1759960292; c=relaxed/simple;
+	bh=YeSJV0cgcfmVCZvTRZDCbdnFcadUzWJbFbg45MrXN/U=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=KhDufsMGq+530h2k+riIogB/DagJXCYZfdLZeSstDvm44kWBz5Haf+9F5lC+In7JF3KPHzDfSWtUJKSiGlff5EClThDoA+cNevSyc87OcS0o1B3nkQhijwMe4AienqMIC+Pr/p9A4VBUubpb72enVM/thwmEWEyNFsmHL16s8OQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=amacapital.net; spf=pass smtp.mailfrom=amacapital.net; dkim=pass (2048-bit key) header.d=amacapital-net.20230601.gappssmtp.com header.i=@amacapital-net.20230601.gappssmtp.com header.b=Q47k7pVW; arc=none smtp.client-ip=209.85.167.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=amacapital.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amacapital.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="pnEIjpPG"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-794f11334adso253184b3a.3
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Oct 2025 14:27:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=amacapital-net.20230601.gappssmtp.com header.i=@amacapital-net.20230601.gappssmtp.com header.b="Q47k7pVW"
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5818de29d15so380675e87.2
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Oct 2025 14:51:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1759958869; x=1760563669; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=F00rRgwaPiAVSa8UIE87R3vA0HR5XgbIb0LOT0xwQT0=;
-        b=pnEIjpPGrACrpjb5FWtln3riGDDCJM/DGhpITgTXw2H2q+c9orup9wyh+7itYJ5d0w
-         bwNdJg8IFQMe3dUY/L+EmcWZ1thxehZyHziByoIq+U2sKVCIBcW3rNz+UNihh0rXnuil
-         Q3nXcN2yxBXrZQsa94g34pSa4i8MvOTHCANpQwGqL7Em9rqhoGUtdXL6GSDGkjtNzIIn
-         ZAFlD5cbnyXts+Yzd5yDXTeo6eVUPE9XbZP8/NC5Qa1faEBHJUpsNXiM/ERW90WmD6sG
-         NWzxmpiQOnMsCThpjr+Yl1FzYdcpn8Y2HUsU/PQ3HEN2aIkO3/FATnKlr4nn2YGZJzgH
-         rFKg==
+        d=amacapital-net.20230601.gappssmtp.com; s=20230601; t=1759960288; x=1760565088; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UODmqZKtdL3EMBNUY6ATgtpUWaz8jDceHaQiabSgito=;
+        b=Q47k7pVWZ/15oEIi65DrlF2qic/CccxVX9rfn/up0AtXoZURXigbdr6rOKkNOBuSuM
+         8Nw6UhUB/7UpexjTeyK2AQplSUrhxLsILF/TFGEaqUms2LdiqcPssg5UdSKnOQpmoOuS
+         /jNy3jytXKeGSWOTdNv8I8/FMXcD/pcdrtxDnJYG0xNo9UG4xFfDvQFcJ56G8wj3BLFh
+         8AgWB+flnhL6sbblN2EBv/TtGe9Yz5/bElQh5MQ2JtLCiCGZOzO+7YEOyMR3YtCjl16C
+         OwhV/kZZVEpJu5ZBwDXCWshB8FmLQ9uAVQZ5ir+Cv8gn5pcsW00QiAYU5LxWlXaANDFC
+         i2Hg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759958869; x=1760563669;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=F00rRgwaPiAVSa8UIE87R3vA0HR5XgbIb0LOT0xwQT0=;
-        b=qh8tqnatysTB3Si+O5bHIcxDrNora3COhBhLimHCHXNw9XH3iaUtJoxbXRnE9WhpEb
-         q/JVG6/gGi+MmLBHItX5AQKKPHKa4kG7eptiKggPZ8PFalDVWFZhTpF9ablKWcOCjiCS
-         uzBC7PFHCxJkvKLGwUs84wRwzF81IduWR4kBBOhaZsZwVNlf+c6XsFVjdrfYUriAd47o
-         SxkNEL99VEXrrnKVgMulxn95UmyD3PEP0S9gEzsyXkWd35kuwjquFQOpy3/VJ4drQFmG
-         YFQUl2cdLnOkjFOnK+LK87FJ2RZAIQGJ0g8dzRdBQNbKY1I7rhYR6DEaXPb4c0Kx+ioH
-         9/qQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVIGVzFhAIu5amn5W2GFFPjWvsTSHahQhIOjQE8BACTA7bIG8EZO75geCXx67i/lYs2rtBSLQPFigc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YySQkD+/hlkVIJzvlM0abzesWKObdymt5c27X2ssW6Zp53u7Tng
-	9b+tMX1sqVmWg5aoXZOx1RVuh2rIVoT7ema7IUOiWeR8wzZ/WXVaOsK9Ajvy+J+SrIsNDm50a7J
-	2+Fvf
-X-Gm-Gg: ASbGncsTY5NDvdUboQVVwRAGF/pJrpAky2IbDzGT0Ak5/rd7FjsOKx3LN2JG0qeoLlH
-	aLa97c1ZdCUUTjk3kCTRNvl4QwLOeYyVCEj9G9fP6sNhKhdO0/1HIbT9HNznoApM/sJJOjukZAC
-	5lcnCJN2JCGatFq1eeLNMBLVA724d8QBC2KzGvX3TViltCpmfslQtg4TGLtWOt6/Lb1hWXPiSEw
-	whd9XiHnKQof2XG7WcomeyhvUATv1ScN2fQgk4SM6CHc0btDJKdFNxG+QOyKSaSVp0lL7bh4rwQ
-	zH47RjzRpMyjUSkBucAqlrPJgJhBCi9PitluFQsCgrSBFKsA8yTzF8Ng1+WgYdv68b+0qFGms8h
-	+VcGwg3gh+PbpooQrFKKlo3Txt6Pj3IRPcPJ3urIrqR90qZ64H8uhKqtyQXOyIAnkPxi7Bt9fen
-	cqKxuj/sfsBoG5EP1mHbRQww==
-X-Google-Smtp-Source: AGHT+IGEH5qrmAdErlm6CTYS93R5ybz8YDjTDbT7/9fw+48rtORlz2GGxNRLcpfwAHVvft7SzrjEGg==
-X-Received: by 2002:a05:6a00:4fd0:b0:783:7de9:d3ca with SMTP id d2e1a72fcca58-79387c1a74bmr6026276b3a.31.1759958868450;
-        Wed, 08 Oct 2025 14:27:48 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-794d4b39400sm720004b3a.15.2025.10.08.14.27.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Oct 2025 14:27:47 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1v6bhI-0000000CI7U-3Tda;
-	Thu, 09 Oct 2025 08:27:44 +1100
-Date: Thu, 9 Oct 2025 08:27:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Pavel Emelyanov <xemul@scylladb.com>, linux-fsdevel@vger.kernel.org,
-	"Raphael S . Carvalho" <raphaelsc@scylladb.com>,
-	linux-api@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] fs: Propagate FMODE_NOCMTIME flag to user-facing
- O_NOCMTIME
-Message-ID: <aObXUBCtp4p83QzS@dread.disaster.area>
-References: <20251003093213.52624-1-xemul@scylladb.com>
- <aOCiCkFUOBWV_1yY@infradead.org>
- <CALCETrVsD6Z42gO7S-oAbweN5OwV1OLqxztBkB58goSzccSZKw@mail.gmail.com>
- <aOSgXXzvuq5YDj7q@infradead.org>
- <CALCETrW3iQWQTdMbB52R4=GztfuFYvN_8p52H1fopdS8uExQWg@mail.gmail.com>
+        d=1e100.net; s=20230601; t=1759960288; x=1760565088;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=UODmqZKtdL3EMBNUY6ATgtpUWaz8jDceHaQiabSgito=;
+        b=LNMbxUrM16wEup9lmCLuycBFMsjet/5+/8LpK4h50iGBd85kkc3AAzVv8TNNPeoF5v
+         bOx38AqFVAV8QC2kSe2AI6rnNWtGc37rd6YLspH6ZWFKK/5iecZ4ECCfmwnagKhvTPDJ
+         9OVA17R96X5RThBoZ7Xjq1bZsyt0EOa8kHCzDvngc4eTk6eQCI12ABvkL+hXdjz80gto
+         d65npE2yN12ub0P+X+gmIy96Mk+XN5I+O+k6oywbLZxhE4gXxHGhzJKHwbPlgIG/0wkt
+         Xemck82EUlYyj4L21dImap5ackt4LlRj1qC7ac6WOZ5rqwhy8ujj3v1t8HzyNpKUovTw
+         JpSA==
+X-Forwarded-Encrypted: i=1; AJvYcCVuq8vqV6C167CEAjn0TJD1YX1xBaWLTFMH22l/qKmAyRe70QtBBDCyYdKpHnTPgWvAjTN+oAOymnY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx7zaM3Vo+wL5CaPPsoz8Fnp+JQc9xkWoUqp9RpNfRfXV+dMHgp
+	K0iyuxuWKGq1Jf9vj35Tx5F8pA1tfp5Pc9dGC9kZLZQ8r3KuZje55/4dbWGL8FpO6yB6k2iC8Xk
+	QO2rUJB/ZrHX835PpgqKoTzH0eMvOUO5WdqYHm/ka
+X-Gm-Gg: ASbGncvf0zwE2bW0vjhAnu7QItqWBSqHDaoyaahXAPFa0TmsHQuH4mmWLzItPE2sI8w
+	+Gsy3sH1xrXQtu/ADaJySThL1jbvU1QFMAFNk9g+MXILRIerdKBwb6Rb5adpxyCvSQ/BRs5/9LW
+	6sZmzIstZkDN3WcVG3TbMK+2MR0BKlCBczbqJQT8+Ko7NB3dMBhHG3dT00mgdtTso7StAKAKBQM
+	On08RFMN6CvKL5IF84iosazbzLevg==
+X-Google-Smtp-Source: AGHT+IE04F6FHlysgOP0ikswtIrH8NUBw+D+tzXQPxcJCD1TnnlVxuJvk8AHLWSGYH7XWYJI32umqtC0L689azMpm/8=
+X-Received: by 2002:a05:6512:b10:b0:577:9ee:7d57 with SMTP id
+ 2adb3069b0e04-5906de88ee4mr1339839e87.46.1759960287865; Wed, 08 Oct 2025
+ 14:51:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CALCETrW3iQWQTdMbB52R4=GztfuFYvN_8p52H1fopdS8uExQWg@mail.gmail.com>
+References: <20251003093213.52624-1-xemul@scylladb.com> <aOCiCkFUOBWV_1yY@infradead.org>
+ <CALCETrVsD6Z42gO7S-oAbweN5OwV1OLqxztBkB58goSzccSZKw@mail.gmail.com>
+ <aOSgXXzvuq5YDj7q@infradead.org> <CALCETrW3iQWQTdMbB52R4=GztfuFYvN_8p52H1fopdS8uExQWg@mail.gmail.com>
+ <aObXUBCtp4p83QzS@dread.disaster.area>
+In-Reply-To: <aObXUBCtp4p83QzS@dread.disaster.area>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Wed, 8 Oct 2025 14:51:14 -0700
+X-Gm-Features: AS18NWCCZIvRbnEEZ_rcIrJP-lPqVtVRjM0R9vfOD1pzOtMxDgMCVY5rfRLuDmg
+Message-ID: <CALCETrX-cs5MH3k369q2Fk5Q-pYQfEV6CW3va-4E9vD1CoCaGA@mail.gmail.com>
+Subject: Re: [PATCH] fs: Propagate FMODE_NOCMTIME flag to user-facing O_NOCMTIME
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Pavel Emelyanov <xemul@scylladb.com>, linux-fsdevel@vger.kernel.org, 
+	"Raphael S . Carvalho" <raphaelsc@scylladb.com>, linux-api@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 08, 2025 at 08:22:35AM -0700, Andy Lutomirski wrote:
-> On Mon, Oct 6, 2025 at 10:08 PM Christoph Hellwig <hch@infradead.org> wrote:
-> >
-> > On Sat, Oct 04, 2025 at 09:08:05AM -0700, Andy Lutomirski wrote:
-> > > > Well, we'll need to look into that, including maybe non-blockin
-> > > > timestamp updates.
-> > > >
+On Wed, Oct 8, 2025 at 2:27=E2=80=AFPM Dave Chinner <david@fromorbit.com> w=
+rote:
+>
+> On Wed, Oct 08, 2025 at 08:22:35AM -0700, Andy Lutomirski wrote:
+> > On Mon, Oct 6, 2025 at 10:08=E2=80=AFPM Christoph Hellwig <hch@infradea=
+d.org> wrote:
 > > >
-> > > It's been 12 years (!), but maybe it's time to reconsider this:
-> > >
-> > > https://lore.kernel.org/all/cover.1377193658.git.luto@amacapital.net/
+> > > On Sat, Oct 04, 2025 at 09:08:05AM -0700, Andy Lutomirski wrote:
+
+>
+> You are conflating "synchronous update" with "blocking".
+>
+> Avoiding the need for synchronous timestamp updates is exactly what
+> the lazytime mount option provides. i.e. lazytime degrades immediate
+> consistency requirements to eventual consistency similar to how the
+> default relatime behaviour defers atime updates for eventual
+> writeback.
+>
+> IOWs, we've already largely addressed the synchronous c/mtime update
+> problem but what we haven't done is made timestamp updates
+> fully support non-blocking caller semantics. That's a separate
+> problem...
+
+I'm probably missing something, but is this really different?  Either
+the mtime update can block or it can't block.  I haven't dug all the
+way into exactly what happens in __mark_inode_dirty(), but there is a
+lot going on in there even in the I_DIRTY_TIME path.  And Pavel is
+saying that AIO and mtime updates don't play along well.
+
+>
+> > and it does so before updating the file contents
+> > (although the window during which the timestamp is updated and the
+> > contents are not is not as absurdly long as it is in the mmap case).
 > >
-> > I don't see how that is relevant here.  Also writes through shared
-> > mmaps are problematic for so many reasons that I'm not sure we want
-> > to encourage people to use that more.
-> >
-> 
-> Because the same exact issue exists in the normal non-mmap write path,
-> and I can even quote you upthread :)
-> 
-> > Well, we'll need to look into that, including maybe non-blockin
-> timestamp updates.
-> 
-> I assume the code path that inspired this thread in the first place is:
-> 
-> ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
-> {
->         struct file *file = iocb->ki_filp;
->         struct address_space *mapping = file->f_mapping;
->         struct inode *inode = mapping->host;
->         ssize_t ret;
-> 
->         ret = file_remove_privs(file);
->         if (ret)
->                 return ret;
-> 
->         ret = file_update_time(file);
-> 
-> and this has *exactly* the same problem as the shared-mmap write path:
-> it synchronously updates the time (well, synchronously enough that it
-> sometimes blocks),
+> > Now my series does not change any of this, but I'm thinking more of
+> > the concept: instead of doing file/inode_update_time when a file is
+> > logically written (in write_iter, page_mkwrite, etc), set a flag so
+> > that the writeback code knows that the timestamp needs updating.
+>
+> This is exactly what lazytime implements with the I_DIRTY_FLAG.
+>
+> During writeback, if the filesystem has to modify other metadata in
+> the inode (e.g. block allocation), the filesystem will piggyback the
+> persistent update of the dirty timestamps on that modification and
+> clear the I_DIRTY_TIME flag.
+>
+> However, if the writeback operation is a pure overwrite, then there
+> is no metadata modifiction occuring and so we leave the inode
+> I_DIRTY_TIME dirty for a future metadata persistence operation to
+> clean them.
+>
+> IOWs, with lazytime, writeback already persists timestamp updates
+> when appropriate for best performance.
 
-You are conflating "synchronous update" with "blocking".
+I'm probably doing a bad job explaining myself.
 
-Avoiding the need for synchronous timestamp updates is exactly what
-the lazytime mount option provides. i.e. lazytime degrades immediate
-consistency requirements to eventual consistency similar to how the
-default relatime behaviour defers atime updates for eventual
-writeback.
+In my series, I move (for page_mkwrite only) the mtime update,
+*including dirtying the inode* to the writeback path, which makes it
+fully non-blocking / asynchronous / whatever you want to call it at
+the time that page_mkwrite is called.  More concretely, my suggestion
+is to be a bit lazier than current lazytime and not dirty the inode
+*at all* in write_iter, or at least not dirty it for the purpose of
+timestamp updates.  Instead set a flag somewhere that it cannot be
+forgotten about -- in my series, it's this patch:
 
-IOWs, we've already largely addressed the synchronous c/mtime update
-problem but what we haven't done is made timestamp updates
-fully support non-blocking caller semantics. That's a separate
-problem...
+https://lore.kernel.org/all/f2ac22142b4634b55ff6858d159b45dac96f81b6.137719=
+3658.git.luto@amacapital.net/
 
-> and it does so before updating the file contents
-> (although the window during which the timestamp is updated and the
-> contents are not is not as absurdly long as it is in the mmap case).
-> 
-> Now my series does not change any of this, but I'm thinking more of
-> the concept: instead of doing file/inode_update_time when a file is
-> logically written (in write_iter, page_mkwrite, etc), set a flag so
-> that the writeback code knows that the timestamp needs updating.
+and it's a single atomic bit in struct address_space.  The idea is
+that there is approximately no additional overhead at the time that
+the page cache is dirtied for cmtime-related inode dirtying and that
+all such overhead is deferred to the writeback path when it's as
+asynchronous as possible from the perspective of whatever user code
+dirtied the page cache.  My page_set_cmtime() is completely lockless.
 
-This is exactly what lazytime implements with the I_DIRTY_FLAG.
+My series is far from perfect, but I did test it with real workloads
+12-ish years ago, on overworked HDDs, with latencytop, and it worked.
+Performance was vastly improved (using mmap, not write(), obviously).
 
-During writeback, if the filesystem has to modify other metadata in
-the inode (e.g. block allocation), the filesystem will piggyback the
-persistent update of the dirty timestamps on that modification and
-clear the I_DIRTY_TIME flag.
+>
+> > Thinking out loud, to handle both write_iter and mmap, there might
+> > need to be two bits: one saying "the timestamp needs to be updated"
+> > and another saying "the timestamp has been updated in the in-memory
+> > inode, but the inode hasn't been dirtied yet".
+>
+> The flag that implements the latter is called I_DIRTY_TIME. We have
+> not implemented the former as that's a userspace visible change of
+> behaviour.
 
-However, if the writeback operation is a pure overwrite, then there
-is no metadata modifiction occuring and so we leave the inode
-I_DIRTY_TIME dirty for a future metadata persistence operation to
-clean them.
-
-IOWs, with lazytime, writeback already persists timestamp updates
-when appropriate for best performance.
-
-> Thinking out loud, to handle both write_iter and mmap, there might
-> need to be two bits: one saying "the timestamp needs to be updated"
-> and another saying "the timestamp has been updated in the in-memory
-> inode, but the inode hasn't been dirtied yet".
-
-The flag that implements the latter is called I_DIRTY_TIME. We have
-not implemented the former as that's a userspace visible change of
-behaviour.
-
-> And maybe the latter
-> is doable entirely within fs-specific code without any help from the
-> generic code, but it might still be nice to keep generic_update_time
-> usable for filesystems that want to do this.
-
-generic_update_time() already supports I_DIRTY_TIME semantics.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Maybe that change should be done?  Or not -- it wouldn't be terribly
+hard to have a pair of atomic timestamps in struct inode indicating
+what timestamps we want to write the next time we get around to it.
+(Concretely, page_set_cmtime() would get some new parameters to
+specify actual times, and atomic compare exchange would be used to
+update the underlying data structure, so it would remain lock-free but
+not be wait-free.)
