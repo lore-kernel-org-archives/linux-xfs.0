@@ -1,77 +1,76 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 797C92D0C90
-	for <linux-xfs@vger.kernel.org>; Thu,  9 Oct 2025 12:10:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDFEB15CD74
+	for <linux-xfs@vger.kernel.org>; Thu,  9 Oct 2025 12:10:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760011809; cv=none; b=poViWbrMLI2WHrM+M+hROn2COws0VxpJ0A/kuVAVcxs4YBgqizsD7JkW8QGlmTuvJxIqqQIuVukCJuKfVm+F4Q6wl/rwKPHMjhaUIiX9963FrTSUNo4AJy8ToqnMboJprZkidPd5RE+5sWVB9UiBby2g4eoZArGFB/9DDGezeOE=
+	t=1760011817; cv=none; b=aqWc1es5DncUah1P/AqVhhLQ794ImxnWRqEkorFJG6h6orrub3dRI1WgzRKKBQOShXbmmMWAnFpEMRPqRKLASXDjor8WUktmv3MlOEVE2F0KBRsp9YAt0woJDu+jJzvfEUlSkCO/vDui1q7NC1W2wpaZLOEC8KujB0PmAtMDLaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760011809; c=relaxed/simple;
-	bh=LKOkiNhJHBadzbsEcYIj+ZC1o23tAOG08XAgkIVV20k=;
+	s=arc-20240116; t=1760011817; c=relaxed/simple;
+	bh=yx7g7/W9Lf5JnZwQYWcEEVEDgcQBzE4NbBC6GYPGV2I=;
 	h=From:Date:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gjrdMD8ejjVjavxP4FpAwkIgCFXR2sPqWhGelNYRUNakMWh2ljQnrcf6MkkKYog0O+QUp5aUgul9d+OyvauF1jF9PYYLxk9ysjQJa1FBBTu/bo1poYWuZy6vik640emsTURkw+X1RjlfiWfpRoLFVJpb8e8uJnowuyD12gz3lKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BLjcS3Yt; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=TLQcJkCw+lC+s/fCg7W5WQyvCeju+EOLJmd7Px1xH4tF/S8nN5GqaspejRZAUuYMW53tyiNcDFEu39VNCRvoMdqk22EAqXr+n4CdKT0KEgWu7G3Ggwex05dt9AJCnfpUkSHvz8MX7oUiDEEbbmQ7Ge6v4PruV1jspnS83wSKuj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YPk3sutd; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BLjcS3Yt"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YPk3sutd"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1760011804;
+	s=mimecast20190719; t=1760011814;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=x2BkDIwmuF/9NxXQ31lparW4KvPe9am//1RBh5rIjbY=;
-	b=BLjcS3Yt4De0xl0nbBKdEbCg8XW5MBE2ed+QQ9XyFvwGL35M8MTivGypBnh4XikVynVdAQ
-	PAHE8+zMS042QVcBv/Frj7smrZ3ADyRFG03M+ciICrTgzyIYbsVv8AT43ixCQLG9L3AEN/
-	5yn3DceWDNFrJ7yR6typF0fnk7nwxow=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=mAYQIc1TWplmsDz5f8tb14Cs1Pa97KHsoASQjLVr/P0=;
+	b=YPk3sutd8NG2ZzVwiLGecn/MidK4kb9lZf0vamRTgEfLY/52UGmCxbpWbRaaZC/3L1XLv4
+	M0sRm1eYw//uPrHBBHnEr9m5QECsX0zEa/yZZpCcNIz9vTtiZIIts2dfxl0QPGYg6RNdza
+	SP4DCSLnk8JQ2GLXDqn+dH09FUqHNtE=
+Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
+ [209.85.208.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-306-6sbFVp1_NE2nX8G9CCQyJg-1; Thu, 09 Oct 2025 08:10:03 -0400
-X-MC-Unique: 6sbFVp1_NE2nX8G9CCQyJg-1
-X-Mimecast-MFC-AGG-ID: 6sbFVp1_NE2nX8G9CCQyJg_1760011803
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-856c1aa079bso340402285a.0
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Oct 2025 05:10:03 -0700 (PDT)
+ us-mta-94-cwfK7huTOnGFWtU6yizIvQ-1; Thu, 09 Oct 2025 08:10:13 -0400
+X-MC-Unique: cwfK7huTOnGFWtU6yizIvQ-1
+X-Mimecast-MFC-AGG-ID: cwfK7huTOnGFWtU6yizIvQ_1760011812
+Received: by mail-lj1-f197.google.com with SMTP id 38308e7fff4ca-36b57abe6d0so4884831fa.3
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Oct 2025 05:10:13 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760011802; x=1760616602;
+        d=1e100.net; s=20230601; t=1760011812; x=1760616612;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:to:date:from:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=x2BkDIwmuF/9NxXQ31lparW4KvPe9am//1RBh5rIjbY=;
-        b=VkmK/XSRyDZbt5vJstOsMZR1GQ58L9GEB8o3Qk3xhcb8znO8x5AIA/OkjtRaxn/pll
-         celH9b1VeucYwIkHiJUBJpt8NG8X2FAuHIus/5If/IQMgVNDWMbU3oj1xQGiDpBUX3z9
-         lUg0Q95S3ddp3oQkHi1RrDWkjCny2kuiI7fSjFtJ59FU4qNAsXRV5ipszn2vRztHO/Cu
-         XlmeFFOYJdXdnl1c03EwHZl3JCPKtjiWQNWXdcuRQdRF6l4+21McZLEoJgLN/Iq61cWL
-         kiYWENwIP9yr6pbNK9d1G13USzkmWwtjBNMMxI2QNirze9JcgorrpzXD8WUQQilvAqRw
-         URog==
-X-Gm-Message-State: AOJu0YxvgceLwQwtM02cUOgEXZhRb+wv5OnVpW9IMHfiyAHF4krbGwo/
-	HZ82v7qnNE/4pLAQYLqAWUZ5djpxxI1DPz2FVbfdfFeHljTDF4Qcftzqz0LQV45gi+mIUr8W8bQ
-	MrYz6gGSstUb+E3dqllP65srkx24bHOuM2Rj1xBSKSU26g8yrJ0IO4KrM1qpCc5tr/pGrTiMn3/
-	33gzMgdDb8EEFBHY4My4DBBkd7pKiAje+Jp3Se9c614HFd
-X-Gm-Gg: ASbGncsc+4TEvYsLf3CFKAx1a6XHw4tmkFyaazOCJoi1JLkbp3UgqIcyV6j5PJ1m4dw
-	hUd5Yz+wy+smQf6I0dEJvg8pZO8/5sxkLpXdlPkKJ/Yx2vI28k5NJV63oLQsPwzao8u6cKMiyBl
-	o7ltA0fpKsze3+BE7WbwHmuHfp9MrroWL7jGETekNtjwlmT1PdNmuZQAJ7jARTOUlDs31eWgx0X
-	3+u1D4HAFxJIDoqNoxpbUWfq0rxjBcIH7VPRGCySwvBIqSV4Z3+m9rGmP2o4WZYZ1s8S8PjKf/D
-	IZKGqXzgtufRZb+kjaE4NcHzVvPHLyMYI3nB5W8NfxVDDXf1qqmM8g==
-X-Received: by 2002:a05:620a:2547:b0:852:b230:220e with SMTP id af79cd13be357-8836d7429femr947120885a.2.1760011802006;
-        Thu, 09 Oct 2025 05:10:02 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFT+k4TbtAmyF0ebXSv5ub+FNqt3tdKyhrrxMG12hnUSycEXYSF6UM6VPO5QzqTe7xGLL7NJA==
-X-Received: by 2002:a05:620a:2547:b0:852:b230:220e with SMTP id af79cd13be357-8836d7429femr947110485a.2.1760011801230;
-        Thu, 09 Oct 2025 05:10:01 -0700 (PDT)
+        bh=mAYQIc1TWplmsDz5f8tb14Cs1Pa97KHsoASQjLVr/P0=;
+        b=JtqMhKFqpfIYGnBXJFjkFl98YFX43lkzoytylcHMGRLS98zDUQ8CPavs8cLlzGUm82
+         +YLytodRPiIHAwfMJXRq0RwppOy6ZazGekrP3My+B6PsDWkE3CN9CIcf6EJ532lCqua4
+         rFpu4qgMKBrBgVxSyJH3cwlK1NlJuOLK8VoWmcFu7DovPx0DZMRZlmF/6qcEozVBQANc
+         PXzEJDcZdF2vGeldDOQ31oKGkkWQ5H8aLGycGacq1obdauC1I9wWmSEbQphE6s8jSIbf
+         OwBGyHQDXx/M81QyFztk8e8x/3CzuSw4SkkdGxXxBRBFWe6x6ZznQdF+B9LOlGjb7MK5
+         sWGA==
+X-Gm-Message-State: AOJu0YxZoOPCc6fKaqiyqHADi89ajE+X+EGxx9o4miBN+dzroekMrh+S
+	nrmWLyPqSkeqlEOGalaFaGi4/1/mIEyCH/Jzrm28pqyR1hluc3c7GQBEW6pZbZlw0MijyK9JjVA
+	77d62faeiSypmwQshjV4Ue13aY6bKMt4/llwoicWswyBctSXn2tEO7h5xmgOptcgOS5MnHcWM0/
+	N1Q05vSQ1k0o/qB0L9JnB8HIIU7t/4dXO3N9mULmVa6GZT
+X-Gm-Gg: ASbGncsfTC2OG2BnCrDkftt8dtnL1elrUGzZfDNCcO2KO5xafGaqO2aCa0oT3tC6jhC
+	UXakZCzUBIA/zWkd9VFT8BcKUab4rFhlWE/qLPsNj6swswqI0qjQDTJvrvgEmj9vDsgsJkfXlr2
+	Vl4I1ZpzYraie0d8QXtEqWAtPOIBfEz6Dep+Vc4202RQ71Xw5iVpr7gtkEV1/axy5GdFjmGi6aw
+	f1o/k4lMgnyxHCbs3Y54JDWhEw96lSCG8ogmwDzXN3fyj8VQbLTk3Yrucq6UHLwA7YZsK9sRTSj
+	93SpXTJyZxPTow/RcrmpJF+NcgH6pe2fRHwRBylz+NJOxbeqw7lwDL3KTstMdrZu2juEwXMw
+X-Received: by 2002:a05:6512:1329:b0:57c:2474:3722 with SMTP id 2adb3069b0e04-5906dd6bd22mr1887656e87.40.1760011811712;
+        Thu, 09 Oct 2025 05:10:11 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IF/ACroz1QdKXMesn6c6kvamoRrhcvhy72zzlN5UViQPck3VrEYKLFr6vg2rPGq9R9QZcoCvw==
+X-Received: by 2002:a05:6512:1329:b0:57c:2474:3722 with SMTP id 2adb3069b0e04-5906dd6bd22mr1887639e87.40.1760011811177;
+        Thu, 09 Oct 2025 05:10:11 -0700 (PDT)
 Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-884a1ca2f1bsm181328885a.33.2025.10.09.05.09.59
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5907adb2829sm982219e87.99.2025.10.09.05.10.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Oct 2025 05:10:00 -0700 (PDT)
-From: Christoph Hellwig <aalbersh@redhat.com>
-X-Google-Original-From: Christoph Hellwig <hch@lst.de>
-Date: Thu, 9 Oct 2025 14:09:56 +0200
+        Thu, 09 Oct 2025 05:10:10 -0700 (PDT)
+From: Pranav Tyagi <aalbersh@redhat.com>
+X-Google-Original-From: Pranav Tyagi <pranav.tyagi03@gmail.com>
+Date: Thu, 9 Oct 2025 14:10:09 +0200
 To: linux-xfs@vger.kernel.org, aalbersh@kernel.org, cem@kernel.org, 
 	cmaiolino@redhat.com, djwong@kernel.org, hch@lst.de, pchelkin@ispras.ru, 
 	pranav.tyagi03@gmail.com, sandeen@redhat.com
-Subject: [PATCH v2 8/11] xfs: improve the xg_active_ref check in
- xfs_group_free
-Message-ID: <5gged6sn5nogfoxdm4lvzmw2gvo4q52lkaqsfidkbcaqk6shrv@xijsb34677ly>
+Subject: [PATCH v2 9/11] fs/xfs: replace strncpy with memtostr_pad()
+Message-ID: <g2fe3ykh2zmvf6c2yf6ulqsvebe3ctfjahydeg5zpurrmkv4wz@tvvqurwmbiop>
 References: <cover.1760011614.patch-series@thinky>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -83,39 +82,66 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <cover.1760011614.patch-series@thinky>
 
-Source kernel commit: 59655147ec34fb72cc090ca4ee688ece05ffac56
+Source kernel commit: f4a3f01e8e451fb3cb444a95a59964f4bc746902
 
-Split up the XFS_IS_CORRUPT statement so that it immediately shows
-if the reference counter overflowed or underflowed.
+Replace the deprecated strncpy() with memtostr_pad(). This also avoids
+the need for separate zeroing using memset(). Mark sb_fname buffer with
+__nonstring as its size is XFSLABEL_MAX and so no terminating NULL for
+sb_fname.
 
-I ran into this quite a bit when developing the zoned allocator, and had
-to reapply the patch for some work recently.  We might as well just apply
-it upstream given that freeing group is far removed from performance
-critical code.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Carlos Maiolino <cem@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- libxfs/xfs_group.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ db/metadump.c           | 2 +-
+ include/platform_defs.h | 6 ++++++
+ libxfs/xfs_format.h     | 2 +-
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/libxfs/xfs_group.c b/libxfs/xfs_group.c
-index b7ac9dbd8e..03c508242d 100644
---- a/libxfs/xfs_group.c
-+++ b/libxfs/xfs_group.c
-@@ -170,7 +170,8 @@
+diff --git a/db/metadump.c b/db/metadump.c
+index 34f2d61700..24eb99da17 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -2989,7 +2989,7 @@
+ 		if (metadump.obfuscate) {
+ 			struct xfs_sb *sb = iocur_top->data;
+ 			memset(sb->sb_fname, 'L',
+-			       min(strlen(sb->sb_fname), sizeof(sb->sb_fname)));
++			       strnlen(sb->sb_fname, sizeof(sb->sb_fname)));
+ 			iocur_top->need_crc = 1;
+ 		}
+ 		if (write_buf(iocur_top))
+diff --git a/include/platform_defs.h b/include/platform_defs.h
+index fa66551d99..7b4a1a6255 100644
+--- a/include/platform_defs.h
++++ b/include/platform_defs.h
+@@ -296,4 +296,10 @@
  
- 	/* drop the mount's active reference */
- 	xfs_group_rele(xg);
--	XFS_IS_CORRUPT(mp, atomic_read(&xg->xg_active_ref) != 0);
-+	XFS_IS_CORRUPT(mp, atomic_read(&xg->xg_active_ref) > 0);
-+	XFS_IS_CORRUPT(mp, atomic_read(&xg->xg_active_ref) < 0);
- 	kfree_rcu_mightsleep(xg);
- }
+ #define cmp_int(l, r)		((l > r) - (l < r))
  
++#if __has_attribute(__nonstring__)
++# define __nonstring                    __attribute__((__nonstring__))
++#else
++# define __nonstring
++#endif
++
+ #endif	/* __XFS_PLATFORM_DEFS_H__ */
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 9566a76233..779dac59b1 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -112,7 +112,7 @@
+ 	uint16_t	sb_sectsize;	/* volume sector size, bytes */
+ 	uint16_t	sb_inodesize;	/* inode size, bytes */
+ 	uint16_t	sb_inopblock;	/* inodes per block */
+-	char		sb_fname[XFSLABEL_MAX]; /* file system name */
++	char		sb_fname[XFSLABEL_MAX] __nonstring; /* file system name */
+ 	uint8_t		sb_blocklog;	/* log2 of sb_blocksize */
+ 	uint8_t		sb_sectlog;	/* log2 of sb_sectsize */
+ 	uint8_t		sb_inodelog;	/* log2 of sb_inodesize */
 
 -- 
 - Andrey
