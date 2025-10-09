@@ -1,36 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D83B635
-	for <linux-xfs@vger.kernel.org>; Thu,  9 Oct 2025 17:18:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 086841397;
+	Thu,  9 Oct 2025 17:20:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760030324; cv=none; b=lPbgKLS5tN0HUvHc5gkEYPwRYk7tjH9ssnxdARjd0lj8+k34wpOFuxW9RXwI39D6nVou9TYvd5aLtbAiAefve/lvPGhGvF1ogK5Wb2b00GCSrbySCRMXxfF7uazDAwYbu1eCZae1HmJdpy54uUjLrizZ2+sohfB3ViuIyrQpMoQ=
+	t=1760030443; cv=none; b=hFbNdhh9o0QmoT039U1PT+ngwQtb37abhGQA7eXY6AgKCL4NlJmXwXiqt+fl9QsPx3/dOUjnhXEKjUrHEXleQaU2BWu+gzt10yUGtL3h8VV/5iE4Tuqp1nbwLsxU/LUmR1s9jloBYFCPJhiVvm3QiY3xMkOIj2iDAoPPC/eQ3NA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760030324; c=relaxed/simple;
-	bh=igkrnluKpbos0B06Xrzh9j5bEEtMH4MBJYmc10OOsMM=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=IVGn65B2InL+WunoMgkkREnVnGRIKyjhAZQPb/Rz1mchCneO1rA1nuugC6JlDdV454dwZeXQF8qPqH6m1dw6s2Wapu/Yy8wUYNDzMcx9RAkuYxE6BCv+il4OBAYq1lkiTLTy2SoqAjdFIaz4KtKv69TweOpIMEHi7TR9wQlWEzI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GxjfDhnZ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760030443; c=relaxed/simple;
+	bh=LGpuHVtlJHOtOzyhHJiq0Xwe/InnzAHPK+F4MPKq0bY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=I8Nr7fVaCkBb8eY/B0/KDqpDRlOSvQ+3bv9w1cl5HFfm/6OUsSyCRNXbW9PixbxBNAqfLyFXIP72vmS7dmQCr7f38BHMYQxk9FlWXBwIQHQROjfbf21GqDgC5eSlicM44fwq8upq37teH7OEOsnY2tr1wGWe6OHMkHOmYcP5xGo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=alKIHtB9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GxjfDhnZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DFF0C4CEE7
-	for <linux-xfs@vger.kernel.org>; Thu,  9 Oct 2025 17:18:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="alKIHtB9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7715AC4CEF8;
+	Thu,  9 Oct 2025 17:20:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760030323;
-	bh=igkrnluKpbos0B06Xrzh9j5bEEtMH4MBJYmc10OOsMM=;
-	h=Date:From:To:Subject:From;
-	b=GxjfDhnZR0h6TtO6wTt5J13OMhiqILlkEivYjCFkJ5VhJI/iS2adXrUSgIGERWe+W
-	 6O2bhVuxRHTDUW2SKGO27DBfnbwDVPMzhtcB/usTkrnkss+b+uO+my+6eZ627pEsEy
-	 kEPVFHQ3U7irAKu8drD1G+kd+l1enpS4WAmNueD0TWHY7j7X2l2YbHjD6Zh/cOcM1M
-	 XU7y90AZgRbcY3c1mfmCw/92O/iIAoNTojvcPpk3uGVsTQfR9GIN05PMZOCYntPxc8
-	 tDkr9/1/j1dm8YtqF7l4Egy0d0Z7K8GruKbAsZdAUh14RtzZjLk585rRtKdjOVZuNK
-	 BeJ7TjkUYw1sQ==
-Date: Thu, 9 Oct 2025 19:18:39 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [cem@kernel.org: [GIT PULL] XFS: New code for for v6.18]
-Message-ID: <atuzyrtozsauk6aggcsaab6usfw3rceyejv6doqmmxgsaxc5y2@c5jlmh2bhxxx>
+	s=k20201202; t=1760030442;
+	bh=LGpuHVtlJHOtOzyhHJiq0Xwe/InnzAHPK+F4MPKq0bY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=alKIHtB9futz0Wsw4qAadtGnBfvCh2AGA8AsUCWpiNxAjp9hjTdt0UX/JRBAol4OP
+	 DXpx/JH5EnHcfP1qe13xuCgFY4aT5RpyOFpP07ZzMCkZlTviztpF+FAlf4LmZK0mWg
+	 KGciAxsoLY4JLrweY2fbwIIJvW6Vbg53CnCknL/+WRmYmc153WXBkqULmGKuu0FWyE
+	 Ffs90pF63b84qERcEYrD1A5Ggx/yN9W0uD2ovNZ6AIg7OR5cWxWJ5X/TwEwM3KhnJZ
+	 48whl2PHToFhcf8nb4fuYnd/84h6v5PCRvXYT5lyQTFFuLJpiJV3QIdMwkt9e4yg4j
+	 eLhiDRNclujVw==
+Date: Thu, 9 Oct 2025 10:20:41 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Jan Kara <jack@suse.cz>, Jiri Slaby <jirislaby@kernel.org>,
+	Christian Brauner <brauner@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH 2/2] fs: return EOPNOTSUPP from file_setattr/file_getattr
+ syscalls
+Message-ID: <20251009172041.GA6174@frogsfrogsfrogs>
+References: <20251008-eopnosupp-fix-v1-0-5990de009c9f@kernel.org>
+ <20251008-eopnosupp-fix-v1-2-5990de009c9f@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,196 +48,68 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20251008-eopnosupp-fix-v1-2-5990de009c9f@kernel.org>
 
-Sorry, I sent it to Linus late night (or early morning :) and I forgot
-to Cc linux-xfs. Just forwarding it to log it to the list.
+On Wed, Oct 08, 2025 at 02:44:18PM +0200, Andrey Albershteyn wrote:
+> These syscalls call to vfs_fileattr_get/set functions which return
+> ENOIOCTLCMD if filesystem doesn't support setting file attribute on an
+> inode. For syscalls EOPNOTSUPP would be more appropriate return error.
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> ---
+>  fs/file_attr.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/fs/file_attr.c b/fs/file_attr.c
+> index 460b2dd21a85..5e3e2aba97b5 100644
+> --- a/fs/file_attr.c
+> +++ b/fs/file_attr.c
+> @@ -416,6 +416,8 @@ SYSCALL_DEFINE5(file_getattr, int, dfd, const char __user *, filename,
+>  	}
+>  
+>  	error = vfs_fileattr_get(filepath.dentry, &fa);
+> +	if (error == -ENOIOCTLCMD)
 
------ Forwarded message from Carlos Maiolino <cem@kernel.org> -----
+Hrm.  Back in 6.17, XFS would return ENOTTY if you called ->fileattr_get
+on a special file:
 
-Date: Mon, 29 Sep 2025 04:50:11 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: torvalds@linux-foundation.org
-Subject: [GIT PULL] XFS: New code for for v6.18
-Message-ID: <zp7b3u7pg47hejezipnxmmqn3zgwg6vrwmobgs64h3r3mrgdcg@wz4in7iov4eg>
+int
+xfs_fileattr_get(
+	struct dentry		*dentry,
+	struct file_kattr	*fa)
+{
+	struct xfs_inode	*ip = XFS_I(d_inode(dentry));
 
-Hello Linus,
+	if (d_is_special(dentry))
+		return -ENOTTY;
+	...
+}
 
-Could you please pull patches included in the tag below?
+Given that there are other fileattr_[gs]et implementations out there
+that might return ENOTTY (e.g. fuse servers and other externally
+maintained filesystems), I think both syscall functions need to check
+for that as well:
 
-An attempt merge against your current TOT has been successful and the
-diffstat is at the end.
+	if (error == -ENOIOCTLCMD || error == -ENOTTY)
+		return -EOPNOTSUPP;
 
-For this merge window, there are really no new features, but there are a
-few things worth to emphasize:
+--D
 
-- Deprecated for years already, the (no)attr2 and (no)ikeep mount
-  options have been removed for good.
-- Several cleanups (specially from typedefs) and bug fixes.
-- Improvements made in the online repair reap calculations
-- online fsck is now enabled by default.
-
-Thanks,
-Carlos
-
-The following changes since commit b320789d6883cc00ac78ce83bccbfe7ed58afcf0:
-
-  Linux 6.17-rc4 (2025-08-31 15:33:07 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-merge-6.18
-
-for you to fetch changes up to c91d38b57f2c4784d885c874b2a1234a01361afd:
-
-  xfs: rework datasync tracking and execution (2025-09-23 15:12:43 +0200)
-
-----------------------------------------------------------------
-xfs: new code for 6.18
-
-Signed-off-by: Carlos Maiolino <cem@kernel.org>
-
-----------------------------------------------------------------
-Andrey Albershteyn (3):
-      xfs: allow renames of project-less inodes
-      xfs: add .fileattr_set and fileattr_get callbacks for symlinks
-      xfs: allow setting file attributes on special files
-
-Bagas Sanjaya (1):
-      xfs: extend removed sysctls table
-
-Carlos Maiolino (2):
-      Merge tag 'fix-scrub-reap-calculations_2025-09-05' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.18-merge
-      Merge tag 'kconfig-2025-changes_2025-09-05' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.18-merge
-
-Christoph Hellwig (27):
-      xfs: implement XFS_IOC_DIOINFO in terms of vfs_getattr
-      xfs: remove the xlog_op_header_t typedef
-      xfs: remove the xfs_trans_header_t typedef
-      xfs: remove the xfs_extent_t typedef
-      xfs: remove the xfs_extent32_t typedef
-      xfs: remove the xfs_extent64_t typedef
-      xfs: remove the xfs_efi_log_format_t typedef
-      xfs: remove the xfs_efi_log_format_32_t typedef
-      xfs: remove the xfs_efi_log_format_64_t typedef
-      xfs: remove the xfs_efd_log_format_t typedef
-      xfs: remove the unused xfs_efd_log_format_32_t typedef
-      xfs: remove the unused xfs_efd_log_format_64_t typedef
-      xfs: remove the unused xfs_buf_log_format_t typedef
-      xfs: remove the unused xfs_dq_logformat_t typedef
-      xfs: remove the unused xfs_qoff_logformat_t typedef
-      xfs: remove the unused xfs_log_iovec_t typedef
-      xfs: rename the old_crc variable in xlog_recover_process
-      xfs: fix log CRC mismatches between i386 and other architectures
-      xfs: move the XLOG_REG_ constants out of xfs_log_format.h
-      xfs: remove xfs_errortag_get
-      xfs: remove xfs_errortag_set
-      xfs: remove the expr argument to XFS_TEST_ERROR
-      xfs: remove pointless externs in xfs_error.h
-      xfs: centralize error tag definitions
-      xfs: constify xfs_errortag_random_default
-      xfs: track the number of blocks in each buftarg
-      xfs: use bt_nr_sectors in xfs_dax_translate_range
-
-Damien Le Moal (2):
-      xfs: improve zone statistics message
-      xfs: improve default maximum number of open zones
-
-Darrick J. Wong (13):
-      xfs: use deferred intent items for reaping crosslinked blocks
-      xfs: prepare reaping code for dynamic limits
-      xfs: convert the ifork reap code to use xreap_state
-      xfs: compute per-AG extent reap limits dynamically
-      xfs: compute data device CoW staging extent reap limits dynamically
-      xfs: compute realtime device CoW staging extent reap limits dynamically
-      xfs: compute file mapping reap limits dynamically
-      xfs: disable deprecated features by default in Kconfig
-      xfs: remove deprecated mount options
-      xfs: remove static reap limits from repair.h
-      xfs: remove deprecated sysctl knobs
-      xfs: use deferred reaping for data device cow extents
-      xfs: enable online fsck by default in Kconfig
-
-Dave Chinner (2):
-      xfs: rearrange code in xfs_inode_item_precommit
-      xfs: rework datasync tracking and execution
-
-Dmitry Antipov (1):
-      xfs: scrub: use kstrdup_const() for metapath scan setups
-
-Hans Holmberg (3):
-      fs: add an enum for number of life time hints
-      xfs: refactor hint based zone allocation
-      xfs: adjust the hint based zone allocation policy
-
-Marcelo Moreira (1):
-      xfs: Replace strncpy with memcpy
-
- Documentation/admin-guide/xfs.rst |  69 +----
- fs/xfs/Kconfig                    |  22 +-
- fs/xfs/libxfs/xfs_ag_resv.c       |   7 +-
- fs/xfs/libxfs/xfs_alloc.c         |   5 +-
- fs/xfs/libxfs/xfs_attr_leaf.c     |  25 +-
- fs/xfs/libxfs/xfs_bmap.c          |  31 +-
- fs/xfs/libxfs/xfs_btree.c         |   2 +-
- fs/xfs/libxfs/xfs_da_btree.c      |   2 +-
- fs/xfs/libxfs/xfs_dir2.c          |   2 +-
- fs/xfs/libxfs/xfs_errortag.h      | 114 ++++---
- fs/xfs/libxfs/xfs_exchmaps.c      |   4 +-
- fs/xfs/libxfs/xfs_ialloc.c        |   6 +-
- fs/xfs/libxfs/xfs_inode_buf.c     |   4 +-
- fs/xfs/libxfs/xfs_inode_fork.c    |   3 +-
- fs/xfs/libxfs/xfs_inode_util.c    |  11 -
- fs/xfs/libxfs/xfs_log_format.h    | 150 +++++----
- fs/xfs/libxfs/xfs_log_recover.h   |   2 +-
- fs/xfs/libxfs/xfs_metafile.c      |   2 +-
- fs/xfs/libxfs/xfs_ondisk.h        |   2 +
- fs/xfs/libxfs/xfs_refcount.c      |   7 +-
- fs/xfs/libxfs/xfs_rmap.c          |   2 +-
- fs/xfs/libxfs/xfs_rtbitmap.c      |   2 +-
- fs/xfs/libxfs/xfs_sb.c            |   9 +-
- fs/xfs/libxfs/xfs_zones.h         |   7 +
- fs/xfs/scrub/cow_repair.c         |   4 +-
- fs/xfs/scrub/metapath.c           |  12 +-
- fs/xfs/scrub/newbt.c              |   9 +
- fs/xfs/scrub/reap.c               | 620 ++++++++++++++++++++++++++++++--------
- fs/xfs/scrub/repair.c             |   2 +-
- fs/xfs/scrub/repair.h             |   8 -
- fs/xfs/scrub/symlink_repair.c     |   2 +-
- fs/xfs/scrub/trace.c              |   1 +
- fs/xfs/scrub/trace.h              |  45 +++
- fs/xfs/xfs_attr_item.c            |   2 +-
- fs/xfs/xfs_buf.c                  |  46 +--
- fs/xfs/xfs_buf.h                  |   4 +-
- fs/xfs/xfs_buf_item_recover.c     |  10 +
- fs/xfs/xfs_error.c                | 216 ++-----------
- fs/xfs/xfs_error.h                |  47 ++-
- fs/xfs/xfs_extfree_item.c         |   4 +-
- fs/xfs/xfs_extfree_item.h         |   4 +-
- fs/xfs/xfs_file.c                 |  75 +++--
- fs/xfs/xfs_globals.c              |   2 -
- fs/xfs/xfs_icache.c               |   6 +-
- fs/xfs/xfs_inode.c                | 117 +++----
- fs/xfs/xfs_inode_item.c           | 125 +++++---
- fs/xfs/xfs_inode_item.h           |  10 +-
- fs/xfs/xfs_ioctl.c                |  24 +-
- fs/xfs/xfs_iomap.c                |  19 +-
- fs/xfs/xfs_iops.c                 |  14 +-
- fs/xfs/xfs_linux.h                |   2 -
- fs/xfs/xfs_log.c                  |  35 +--
- fs/xfs/xfs_log.h                  |  37 +++
- fs/xfs/xfs_log_priv.h             |   4 +-
- fs/xfs/xfs_log_recover.c          |  34 ++-
- fs/xfs/xfs_mount.c                |  13 -
- fs/xfs/xfs_mount.h                |  12 +-
- fs/xfs/xfs_notify_failure.c       |   2 +-
- fs/xfs/xfs_super.c                |  67 +---
- fs/xfs/xfs_sysctl.c               |  29 +-
- fs/xfs/xfs_sysctl.h               |   3 -
- fs/xfs/xfs_trans.c                |  23 +-
- fs/xfs/xfs_trans_ail.c            |   2 +-
- fs/xfs/xfs_zone_alloc.c           | 120 ++++----
- include/linux/rw_hint.h           |   1 +
- 65 files changed, 1249 insertions(+), 1053 deletions(-)
-
-
------ End forwarded message -----
+> +		error = -EOPNOTSUPP;
+>  	if (error)
+>  		return error;
+>  
+> @@ -483,6 +485,8 @@ SYSCALL_DEFINE5(file_setattr, int, dfd, const char __user *, filename,
+>  	if (!error) {
+>  		error = vfs_fileattr_set(mnt_idmap(filepath.mnt),
+>  					 filepath.dentry, &fa);
+> +		if (error == -ENOIOCTLCMD)
+> +			error = -EOPNOTSUPP;
+>  		mnt_drop_write(filepath.mnt);
+>  	}
+>  
+> 
+> -- 
+> 2.51.0
+> 
+> 
