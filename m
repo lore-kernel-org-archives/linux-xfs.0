@@ -1,64 +1,64 @@
-Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
+Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 732372D12F3
-	for <linux-xfs@vger.kernel.org>; Thu,  9 Oct 2025 07:59:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2D872D661A
+	for <linux-xfs@vger.kernel.org>; Thu,  9 Oct 2025 07:59:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759996789; cv=none; b=DsdCstVDl1l37j8RV07q1N9MSnIKfrKCIxYRhSMfsYXh9hGZcUDgSwaBHORTB5Kin4ZDdP1vm0kH+m6kzHYdMVSaRPqkEV/HbYy+1y1aR47hdARHu17b/X6vPWpOZymMCV27T67Xd2lzfaLZu1um0w9qo1eflcjCCjh3p4+gh4Y=
+	t=1759996795; cv=none; b=UAyVUkorOpUXgLl0gpf9bfFUSpSSfizypHGvU3WZr7z2KPdkAazEEJhKcUhuZ2cUGHA8F64bZpv0s6uskybnrmgOnG/758Xg6wzq8D7xctmZOsu7X4F7oG3ZNHN7S5ZSrivVdYu2liWJPsHy1FeaWDFjZcAmIaTbihDAkM85IFU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759996789; c=relaxed/simple;
-	bh=JAU4oetIKsiFFQoxD4BOLbL092tRs1Y5zrd0wB8hP3E=;
+	s=arc-20240116; t=1759996795; c=relaxed/simple;
+	bh=7xUHKKmfPguOYbqCkSOh/XEzW5J6tLa2ubAsl4Vcfj8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IcMHTIlzmT9+OD+NyQ1Dg5t1z7/+2iprwNICOzhcvkFpv1AUze//2jIU29OSfNcxEyog07gyV3FR5+xVlQ1h9U5r2UaKnYQTv0EJJWUeMcDzJgiHD1qy1FcW9ckc1FUYw+OYVxs4jsj1KA1QRRECn/v66V9pE8mL33UM7vOFpbM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E55vTmMQ; arc=none smtp.client-ip=209.85.208.48
+	 MIME-Version; b=N3PwMaMWTTobUZgBGQYDT1PHYvxkgIB0vqWrozbWgutyBbtiMgF7TwL2AfpKR16d3JtoUlAsVBo8kuA0qqQWD7aw43u9pBSFCKzt1Fy0WiFzJ/1/scsBbuEArbUvwhXP+ZFUjemeKH/7DjK4sCTUm90VwWAhm23gVg+vT4LLHd8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ndcKtsZO; arc=none smtp.client-ip=209.85.218.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E55vTmMQ"
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-639102bba31so1208544a12.2
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Oct 2025 00:59:46 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ndcKtsZO"
+Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-b3d196b7eeeso101447366b.0
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Oct 2025 00:59:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1759996785; x=1760601585; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1759996788; x=1760601588; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=BImMKCDjo8UcgLF4QMJ2SKqY3V/e7t3G8DgvFQjtsv4=;
-        b=E55vTmMQPuIsBWpR+wSLdHpUA7OJu+0uKgWLiQNF7rZ53zbtjoDnxV2lDTzB98VXPs
-         PmpMv1T+jJCUb0JKHj88embadcVYrbbICu5CdZWG/sa7KKeeHGTw8i5qx1j0JVeq2w2k
-         qP76iVEv3J5a8CzP1VQJzd7AoIHyt+hCzYdmXhyAIi9fkjVhuzdUm8qap8UGoiCY0YD/
-         cMZk0Joo8VFVz1XRUEgMZaFVWsIf7+6olS82P7R8EsbLGiqrnfLbK4RYvy0ceXHBlOhv
-         a5XRmPQcERwzNZ5AZTbprOCXLAa31uQhgT96YekXlD0932f7tL+XC7IQ/wLfR2ovJqyI
-         8veg==
+        bh=h86yzQGyqDxtRbYEe7hZoxXaqK6U2loB60w3ZTrgBuw=;
+        b=ndcKtsZODzhUBcZcOMj77B6X9nUieRjAB4YYVPC6grTRDZhCE6odTSRSzMFVQiow2+
+         Ru4x4gcxVUPuUoOTLijHst+IAu3fGYEwcG2ibkoYpUqNEFBgDU0mGkAHlM/zTZbg4Roj
+         qiFkkYivhMYYjSQ+hMWjCWfyeyVoR5awlkCONOEdIAeTvQXIWiW5VSibxSXCHyIkRRtP
+         swaxnvmvVGX13ZuO8jS4BU9JYChwVgKm/z1wzPzZ1P82tN0Rfl54buscSt8U6ewA/i/n
+         /n4sjC7QJsq2x+RFOSuQZ3KXPsJ7ymoPpQhmlwvCH3migjhgsrM9f9TTf8r/oNN2DNG9
+         f0/Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759996785; x=1760601585;
+        d=1e100.net; s=20230601; t=1759996788; x=1760601588;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=BImMKCDjo8UcgLF4QMJ2SKqY3V/e7t3G8DgvFQjtsv4=;
-        b=UxwaKoDVtXdwcJVTW2GRrMrvwIugRt1snMwH5GwW9o1qMvT/+x6dzccxkPT/rZHB2V
-         nZKFzyzWMKo7F7Ivk0s0QaI1thFV1060jYr0cyCS6DDOxcYRxKAnGgXpAX3ime3BAtJc
-         bwU9SNBgZsA0JPnPYs4wVnAsW7pwwWOKCUmYWXmSnCKTdL1fFJCSbm5PdV3Vh9sgqHHO
-         38O4ZBSjlgH3wATOOqxfFaOsFtJawk2A+BvDWtLqSTskaVgAWTxShT7vSZxWQMwYIsX8
-         vEcgGSoZkBnHCd8dEdy/UZuhiUzGe5OMz16R+wWD80MUf5Z2q2nIShJPN2iRU35hC27u
-         ZjlQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX6JzASos6L9zrUwfTk/bc/hOJypc0W46RP3q0Z2fQYmB1cSeivLf9DUhVmblcgTnK6cp/pyBlOjZ8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx+9muVFw3h/l6bMEdjAwHkv7LibcUY+Aqxe1j1fkDS8HlN1oOd
-	PZnOYjr8gK0iRkPkiGVsA8wf4SlykVzhFb8xotymNs4QaklIhWYMef2q
-X-Gm-Gg: ASbGnctE8JAnjW7g5LnkIkGY/vy2Nve2LMz65OZrUgQMubuYDoTRrv5dYgLdptIszBi
-	sI8tRj71vl4KQmUumq/I85eFvnNknlUiPwetQTadcF6PJ1kLXl2ZlNLsS2dZiCh1ufiXEjrWvz6
-	wQ2/LhNdZvaX9btZP6Ak9gD3pZoaz7f4dmzu6LYY8QABdHclJf772cea/cxC1xT18TOxAIzpC20
-	sOTZOgX9UDUb2IFCeUa/BgLMI1wjT/Ce6tX0+YpkFiMCQrKghgV+x6ECKTn64XMn2TTIxLqW2+C
-	Wrg5CX+MTcjnxKDAbY4A5GtrY6YSgvoG16ZSzyn8lYPLoOgR7rjBTzzYjy09FreBH1tkvrD1qmm
-	VxPcSwacWRMrqhnTW0W1IOVtsV5YUF9eFf7d2r3r5/tXePddU620RQqjHtOyqcoXBOhs+s8LAWF
-	I++LXCYVvXOXIEn4nH25nI6A==
-X-Google-Smtp-Source: AGHT+IENbCwcvaxD9DGquoigQ8tdDndKKU4pj4q2EF42sPm/388Ywdvf1nQR/63uusvC/5TSS5tPxg==
-X-Received: by 2002:a17:907:3daa:b0:b46:31be:e8f0 with SMTP id a640c23a62f3a-b50a9c5b3c8mr785496066b.3.1759996784546;
-        Thu, 09 Oct 2025 00:59:44 -0700 (PDT)
+        bh=h86yzQGyqDxtRbYEe7hZoxXaqK6U2loB60w3ZTrgBuw=;
+        b=l2+IqdQgbwTnE38/K3mhWdRrn02iP1xHWxCy91GyOURzjGZPVw3rwJw69gZ1Vjd0IP
+         n+2WLQvdYMEqyZtod7/SnXONebV9HHRSGxzq5VkQB8Qi8vOIyWBimp+aytMBgN3BHXvT
+         o0qmjr2+caQ541rsLuFV6FbUKsm87u59UG5LJG+0kqeCKnKIixT4RBmfex53DwLBgI5u
+         UhS9xky4NuA+Iw/fEhoNySA164lZsLT58rtgAbPw7hUfU2g7lIwaI0eUPb4+TUz1CGJR
+         nEUKCbBJ19BbIrQdma/JqkwY+mtXvJvnEQesdZRvM92VkE7JSiPlV/8E8EhtfS4rNi1H
+         PUvw==
+X-Forwarded-Encrypted: i=1; AJvYcCW8yei69dEdQ45/4kGoFuhb5ri/MgtrjxjHJxgt8RX9haWCJ7QrhT8rGP81LKOUMJ7yCOR+/Z2xXT8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwldZj1hsC8JiXRHGjItPxadg7nq28x3augozI6VOg5JG+qMevj
+	ah+inOYOpoYp3rPsjUquI+53ZovS2gznt3hgGY5r5RMNs62pp3puAreS
+X-Gm-Gg: ASbGncvkv2PfLEkAGpFyAuz+VojgcRldwSxew9CzkQiWqIN2PUBVpgrjCCycgcZpTBE
+	1D9FnWhpybkIX3UObz/vQ1qIV2pQeEagCSHdc4cPzat5nirSmq/T/CAIXs6k53SeEr3Y2EX5+Ks
+	7QRsJfrZ7hmXf3M/oVQQk9UwFZKUnlNuoDY1U2UBB0nbMi0b3uusJR2Gh+bla5usUnrkC2Wk/vW
+	CFtT/5aYbMq6Ax+3ogtJCr25mkcAME1lOMSMmQoSs/ZRGTy5HfaPym/0EryQlQGeneDC9vc5NdW
+	OO3ibgeb1uZzhUqq7hI2HDc9jW7+sbCJ7wIMfMBxoiA1qYtEyVvjet9WBug2avGOHGim6FoSaCO
+	cL3SikU35GaJzgXrNj7eYKsE9+TGALAf2qvh4AA/onoMcLV7BY+c91e7iPp86mfs8ZUfRBsNL4T
+	GrABpKkdTQ5Xv/aGvaPTay+A==
+X-Google-Smtp-Source: AGHT+IEMoGFLpjykXHBKsokLO0dfoJW2SHYyf9tjQ+WYZKEAvvMAzQ8XfJrGfhly0MkTgczBqDnw7Q==
+X-Received: by 2002:a17:907:9486:b0:b2d:a873:38d with SMTP id a640c23a62f3a-b50abed1b44mr757779566b.43.1759996788159;
+        Thu, 09 Oct 2025 00:59:48 -0700 (PDT)
 Received: from f.. (cst-prg-66-155.cust.vodafone.cz. [46.135.66.155])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b5007639379sm553509366b.48.2025.10.09.00.59.43
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b5007639379sm553509366b.48.2025.10.09.00.59.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Oct 2025 00:59:43 -0700 (PDT)
+        Thu, 09 Oct 2025 00:59:47 -0700 (PDT)
 From: Mateusz Guzik <mjguzik@gmail.com>
 To: brauner@kernel.org
 Cc: viro@zeniv.linux.org.uk,
@@ -74,9 +74,9 @@ Cc: viro@zeniv.linux.org.uk,
 	ceph-devel@vger.kernel.org,
 	linux-unionfs@vger.kernel.org,
 	Mateusz Guzik <mjguzik@gmail.com>
-Subject: [PATCH v7 03/14] fs: provide accessors for ->i_state
-Date: Thu,  9 Oct 2025 09:59:17 +0200
-Message-ID: <20251009075929.1203950-4-mjguzik@gmail.com>
+Subject: [PATCH v7 05/14] Manual conversion to use ->i_state accessors of all places not covered by coccinelle
+Date: Thu,  9 Oct 2025 09:59:19 +0200
+Message-ID: <20251009075929.1203950-6-mjguzik@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20251009075929.1203950-1-mjguzik@gmail.com>
 References: <20251009075929.1203950-1-mjguzik@gmail.com>
@@ -88,156 +88,265 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Open-coded accesses prevent asserting they are done correctly. One
-obvious aspect is locking, but significantly more can checked. For
-example it can be detected when the code is clearing flags which are
-already missing, or is setting flags when it is illegal (e.g., I_FREEING
-when ->i_count > 0).
-
-In order to keep things manageable this patchset merely gets the thing
-off the ground with only lockdep checks baked in.
-
-Current consumers can be trivially converted.
-
-Suppose flags I_A and I_B are to be handled.
-
-If ->i_lock is held, then:
-
-state = inode->i_state  	=> state = inode_state_read(inode)
-inode->i_state |= (I_A | I_B) 	=> inode_state_set(inode, I_A | I_B)
-inode->i_state &= ~(I_A | I_B) 	=> inode_state_clear(inode, I_A | I_B)
-inode->i_state = I_A | I_B	=> inode_state_assign(inode, I_A | I_B)
-
-If ->i_lock is not held or only held conditionally:
-
-state = inode->i_state  	=> state = inode_state_read_once(inode)
-inode->i_state |= (I_A | I_B) 	=> inode_state_set_raw(inode, I_A | I_B)
-inode->i_state &= ~(I_A | I_B) 	=> inode_state_clear_raw(inode, I_A | I_B)
-inode->i_state = I_A | I_B	=> inode_state_assign_raw(inode, I_A | I_B)
-
-The "_once" vs "_raw" discrepancy stems from the read variant differing
-by READ_ONCE as opposed to just lockdep checks.
-
-Finally, if you want to atomically clear flags and set new ones, the
-following:
-
-state = inode->i_state;
-state &= ~I_A;
-state |= I_B;
-inode->i_state = state;
-
-turns into:
-
-inode_state_replace(inode, I_A, I_B);
+Nothing to look at apart from iput_final().
 
 Signed-off-by: Mateusz Guzik <mjguzik@gmail.com>
 ---
- include/linux/fs.h | 78 ++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 76 insertions(+), 2 deletions(-)
+ Documentation/filesystems/porting.rst |  2 +-
+ fs/afs/inode.c                        |  2 +-
+ fs/ext4/inode.c                       | 10 +++++-----
+ fs/ext4/orphan.c                      |  4 ++--
+ fs/inode.c                            | 18 ++++++++----------
+ include/linux/backing-dev.h           |  2 +-
+ include/linux/fs.h                    |  6 +++---
+ include/linux/writeback.h             |  2 +-
+ include/trace/events/writeback.h      |  8 ++++----
+ 9 files changed, 26 insertions(+), 28 deletions(-)
 
+diff --git a/Documentation/filesystems/porting.rst b/Documentation/filesystems/porting.rst
+index 7233b04668fc..35f027981b21 100644
+--- a/Documentation/filesystems/porting.rst
++++ b/Documentation/filesystems/porting.rst
+@@ -211,7 +211,7 @@ test and set for you.
+ e.g.::
+ 
+ 	inode = iget_locked(sb, ino);
+-	if (inode->i_state & I_NEW) {
++	if (inode_state_read_once(inode) & I_NEW) {
+ 		err = read_inode_from_disk(inode);
+ 		if (err < 0) {
+ 			iget_failed(inode);
+diff --git a/fs/afs/inode.c b/fs/afs/inode.c
+index 2fe2ccf59c7a..dde1857fcabb 100644
+--- a/fs/afs/inode.c
++++ b/fs/afs/inode.c
+@@ -427,7 +427,7 @@ static void afs_fetch_status_success(struct afs_operation *op)
+ 	struct afs_vnode *vnode = vp->vnode;
+ 	int ret;
+ 
+-	if (vnode->netfs.inode.i_state & I_NEW) {
++	if (inode_state_read_once(&vnode->netfs.inode) & I_NEW) {
+ 		ret = afs_inode_init_from_status(op, vp, vnode);
+ 		afs_op_set_error(op, ret);
+ 		if (ret == 0)
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index f9e4ac87211e..b864e9645f85 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -425,7 +425,7 @@ void ext4_check_map_extents_env(struct inode *inode)
+ 	if (!S_ISREG(inode->i_mode) ||
+ 	    IS_NOQUOTA(inode) || IS_VERITY(inode) ||
+ 	    is_special_ino(inode->i_sb, inode->i_ino) ||
+-	    (inode->i_state & (I_FREEING | I_WILL_FREE | I_NEW)) ||
++	    (inode_state_read_once(inode) & (I_FREEING | I_WILL_FREE | I_NEW)) ||
+ 	    ext4_test_inode_flag(inode, EXT4_INODE_EA_INODE) ||
+ 	    ext4_verity_in_progress(inode))
+ 		return;
+@@ -3473,7 +3473,7 @@ static bool ext4_inode_datasync_dirty(struct inode *inode)
+ 	/* Any metadata buffers to write? */
+ 	if (!list_empty(&inode->i_mapping->i_private_list))
+ 		return true;
+-	return inode->i_state & I_DIRTY_DATASYNC;
++	return inode_state_read_once(inode) & I_DIRTY_DATASYNC;
+ }
+ 
+ static void ext4_set_iomap(struct inode *inode, struct iomap *iomap,
+@@ -4552,7 +4552,7 @@ int ext4_truncate(struct inode *inode)
+ 	 * or it's a completely new inode. In those cases we might not
+ 	 * have i_rwsem locked because it's not necessary.
+ 	 */
+-	if (!(inode->i_state & (I_NEW|I_FREEING)))
++	if (!(inode_state_read_once(inode) & (I_NEW | I_FREEING)))
+ 		WARN_ON(!inode_is_locked(inode));
+ 	trace_ext4_truncate_enter(inode);
+ 
+@@ -5210,7 +5210,7 @@ struct inode *__ext4_iget(struct super_block *sb, unsigned long ino,
+ 	inode = iget_locked(sb, ino);
+ 	if (!inode)
+ 		return ERR_PTR(-ENOMEM);
+-	if (!(inode->i_state & I_NEW)) {
++	if (!(inode_state_read_once(inode) & I_NEW)) {
+ 		ret = check_igot_inode(inode, flags, function, line);
+ 		if (ret) {
+ 			iput(inode);
+@@ -5541,7 +5541,7 @@ static void __ext4_update_other_inode_time(struct super_block *sb,
+ 	if (inode_is_dirtytime_only(inode)) {
+ 		struct ext4_inode_info	*ei = EXT4_I(inode);
+ 
+-		inode->i_state &= ~I_DIRTY_TIME;
++		inode_state_clear(inode, I_DIRTY_TIME);
+ 		spin_unlock(&inode->i_lock);
+ 
+ 		spin_lock(&ei->i_raw_lock);
+diff --git a/fs/ext4/orphan.c b/fs/ext4/orphan.c
+index 33c3a89396b1..c4903d98ff81 100644
+--- a/fs/ext4/orphan.c
++++ b/fs/ext4/orphan.c
+@@ -107,7 +107,7 @@ int ext4_orphan_add(handle_t *handle, struct inode *inode)
+ 	if (!sbi->s_journal || is_bad_inode(inode))
+ 		return 0;
+ 
+-	WARN_ON_ONCE(!(inode->i_state & (I_NEW | I_FREEING)) &&
++	WARN_ON_ONCE(!(inode_state_read_once(inode) & (I_NEW | I_FREEING)) &&
+ 		     !inode_is_locked(inode));
+ 	if (ext4_inode_orphan_tracked(inode))
+ 		return 0;
+@@ -232,7 +232,7 @@ int ext4_orphan_del(handle_t *handle, struct inode *inode)
+ 	if (!sbi->s_journal && !(sbi->s_mount_state & EXT4_ORPHAN_FS))
+ 		return 0;
+ 
+-	WARN_ON_ONCE(!(inode->i_state & (I_NEW | I_FREEING)) &&
++	WARN_ON_ONCE(!(inode_state_read_once(inode) & (I_NEW | I_FREEING)) &&
+ 		     !inode_is_locked(inode));
+ 	if (ext4_test_inode_state(inode, EXT4_STATE_ORPHAN_FILE))
+ 		return ext4_orphan_file_del(handle, inode);
+diff --git a/fs/inode.c b/fs/inode.c
+index f094ed3e6f30..3153d725859c 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -829,7 +829,7 @@ static void evict(struct inode *inode)
+ 	 * This also means we don't need any fences for the call below.
+ 	 */
+ 	inode_wake_up_bit(inode, __I_NEW);
+-	BUG_ON(inode->i_state != (I_FREEING | I_CLEAR));
++	BUG_ON(inode_state_read_once(inode) != (I_FREEING | I_CLEAR));
+ 
+ 	destroy_inode(inode);
+ }
+@@ -1883,7 +1883,6 @@ static void iput_final(struct inode *inode)
+ {
+ 	struct super_block *sb = inode->i_sb;
+ 	const struct super_operations *op = inode->i_sb->s_op;
+-	unsigned long state;
+ 	int drop;
+ 
+ 	WARN_ON(inode_state_read(inode) & I_NEW);
+@@ -1908,20 +1907,19 @@ static void iput_final(struct inode *inode)
+ 	 */
+ 	VFS_BUG_ON_INODE(atomic_read(&inode->i_count) != 0, inode);
+ 
+-	state = inode_state_read(inode);
+-	if (!drop) {
+-		WRITE_ONCE(inode->i_state, state | I_WILL_FREE);
++	if (drop) {
++		inode_state_set(inode, I_FREEING);
++	} else {
++		inode_state_set(inode, I_WILL_FREE);
+ 		spin_unlock(&inode->i_lock);
+ 
+ 		write_inode_now(inode, 1);
+ 
+ 		spin_lock(&inode->i_lock);
+-		state = inode_state_read(inode);
+-		WARN_ON(state & I_NEW);
+-		state &= ~I_WILL_FREE;
++		WARN_ON(inode_state_read(inode) & I_NEW);
++		inode_state_replace(inode, I_WILL_FREE, I_FREEING);
+ 	}
+ 
+-	WRITE_ONCE(inode->i_state, state | I_FREEING);
+ 	if (!list_empty(&inode->i_lru))
+ 		inode_lru_list_del(inode);
+ 	spin_unlock(&inode->i_lock);
+@@ -2985,7 +2983,7 @@ void dump_inode(struct inode *inode, const char *reason)
+ 	pr_warn("%s encountered for inode %px\n"
+ 		"fs %s mode %ho opflags 0x%hx flags 0x%x state 0x%x count %d\n",
+ 		reason, inode, sb->s_type->name, inode->i_mode, inode->i_opflags,
+-		inode->i_flags, inode->i_state, atomic_read(&inode->i_count));
++		inode->i_flags, inode_state_read_once(inode), atomic_read(&inode->i_count));
+ }
+ 
+ EXPORT_SYMBOL(dump_inode);
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 065cba5dc111..0c8342747cab 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -280,7 +280,7 @@ unlocked_inode_to_wb_begin(struct inode *inode, struct wb_lock_cookie *cookie)
+ 	 * Paired with a release fence in inode_do_switch_wbs() and
+ 	 * ensures that we see the new wb if we see cleared I_WB_SWITCH.
+ 	 */
+-	cookie->locked = inode->i_state & I_WB_SWITCH;
++	cookie->locked = inode_state_read_once(inode) & I_WB_SWITCH;
+ 	smp_rmb();
+ 
+ 	if (unlikely(cookie->locked))
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index b35014ba681b..909eb1e68637 100644
+index 909eb1e68637..77b6486dcae7 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -759,7 +759,7 @@ enum inode_state_bits {
- 	/* reserved wait address bit 3 */
- };
- 
--enum inode_state_flags_t {
-+enum inode_state_flags_enum {
- 	I_NEW			= (1U << __I_NEW),
- 	I_SYNC			= (1U << __I_SYNC),
- 	I_LRU_ISOLATING         = (1U << __I_LRU_ISOLATING),
-@@ -843,7 +843,7 @@ struct inode {
- #endif
- 
- 	/* Misc */
--	enum inode_state_flags_t	i_state;
-+	enum inode_state_flags_enum i_state;
- 	/* 32-bit hole */
- 	struct rw_semaphore	i_rwsem;
- 
-@@ -902,6 +902,80 @@ struct inode {
- 	void			*i_private; /* fs or device private pointer */
- } __randomize_layout;
- 
-+/*
-+ * i_state handling
-+ *
-+ * We hide all of it behind helpers so that we can validate consumers.
-+ */
-+static inline enum inode_state_flags_enum inode_state_read_once(struct inode *inode)
-+{
-+	return READ_ONCE(inode->i_state);
-+}
-+
-+static inline enum inode_state_flags_enum inode_state_read(struct inode *inode)
-+{
-+	lockdep_assert_held(&inode->i_lock);
-+	return inode->i_state;
-+}
-+
-+static inline void inode_state_set_raw(struct inode *inode,
-+				       enum inode_state_flags_enum flags)
-+{
-+	WRITE_ONCE(inode->i_state, inode->i_state | flags);
-+}
-+
-+static inline void inode_state_set(struct inode *inode,
-+				   enum inode_state_flags_enum flags)
-+{
-+	lockdep_assert_held(&inode->i_lock);
-+	inode_state_set_raw(inode, flags);
-+}
-+
-+static inline void inode_state_clear_raw(struct inode *inode,
-+					 enum inode_state_flags_enum flags)
-+{
-+	WRITE_ONCE(inode->i_state, inode->i_state & ~flags);
-+}
-+
-+static inline void inode_state_clear(struct inode *inode,
-+				     enum inode_state_flags_enum flags)
-+{
-+	lockdep_assert_held(&inode->i_lock);
-+	inode_state_clear_raw(inode, flags);
-+}
-+
-+static inline void inode_state_assign_raw(struct inode *inode,
-+					  enum inode_state_flags_enum flags)
-+{
-+	WRITE_ONCE(inode->i_state, flags);
-+}
-+
-+static inline void inode_state_assign(struct inode *inode,
-+				      enum inode_state_flags_enum flags)
-+{
-+	lockdep_assert_held(&inode->i_lock);
-+	inode_state_assign_raw(inode, flags);
-+}
-+
-+static inline void inode_state_replace_raw(struct inode *inode,
-+					   enum inode_state_flags_enum clearflags,
-+					   enum inode_state_flags_enum setflags)
-+{
-+	enum inode_state_flags_enum flags;
-+	flags = inode->i_state;
-+	flags &= ~clearflags;
-+	flags |= setflags;
-+	inode_state_assign_raw(inode, flags);
-+}
-+
-+static inline void inode_state_replace(struct inode *inode,
-+				       enum inode_state_flags_enum clearflags,
-+				       enum inode_state_flags_enum setflags)
-+{
-+	lockdep_assert_held(&inode->i_lock);
-+	inode_state_replace_raw(inode, clearflags, setflags);
-+}
-+
- static inline void inode_set_cached_link(struct inode *inode, char *link, int linklen)
+@@ -1026,7 +1026,7 @@ static inline void inode_fake_hash(struct inode *inode)
+ static inline void wait_on_inode(struct inode *inode)
  {
- 	VFS_WARN_ON_INODE(strlen(link) != linklen, inode);
+ 	wait_var_event(inode_state_wait_address(inode, __I_NEW),
+-		       !(READ_ONCE(inode->i_state) & I_NEW));
++		       !(inode_state_read_once(inode) & I_NEW));
+ 	/*
+ 	 * Pairs with routines clearing I_NEW.
+ 	 */
+@@ -2719,8 +2719,8 @@ static inline int icount_read(const struct inode *inode)
+  */
+ static inline bool inode_is_dirtytime_only(struct inode *inode)
+ {
+-	return (inode->i_state & (I_DIRTY_TIME | I_NEW |
+-				  I_FREEING | I_WILL_FREE)) == I_DIRTY_TIME;
++	return (inode_state_read_once(inode) &
++	       (I_DIRTY_TIME | I_NEW | I_FREEING | I_WILL_FREE)) == I_DIRTY_TIME;
+ }
+ 
+ extern void inc_nlink(struct inode *inode);
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index 06195c2a535b..102071ffedcb 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -227,7 +227,7 @@ static inline void inode_attach_wb(struct inode *inode, struct folio *folio)
+ static inline void inode_detach_wb(struct inode *inode)
+ {
+ 	if (inode->i_wb) {
+-		WARN_ON_ONCE(!(inode->i_state & I_CLEAR));
++		WARN_ON_ONCE(!(inode_state_read_once(inode) & I_CLEAR));
+ 		wb_put(inode->i_wb);
+ 		inode->i_wb = NULL;
+ 	}
+diff --git a/include/trace/events/writeback.h b/include/trace/events/writeback.h
+index c08aff044e80..311a341e6fe4 100644
+--- a/include/trace/events/writeback.h
++++ b/include/trace/events/writeback.h
+@@ -120,7 +120,7 @@ DECLARE_EVENT_CLASS(writeback_dirty_inode_template,
+ 		/* may be called for files on pseudo FSes w/ unregistered bdi */
+ 		strscpy_pad(__entry->name, bdi_dev_name(bdi), 32);
+ 		__entry->ino		= inode->i_ino;
+-		__entry->state		= inode->i_state;
++		__entry->state		= inode_state_read_once(inode);
+ 		__entry->flags		= flags;
+ 	),
+ 
+@@ -748,7 +748,7 @@ TRACE_EVENT(writeback_sb_inodes_requeue,
+ 		strscpy_pad(__entry->name,
+ 			    bdi_dev_name(inode_to_bdi(inode)), 32);
+ 		__entry->ino		= inode->i_ino;
+-		__entry->state		= inode->i_state;
++		__entry->state		= inode_state_read_once(inode);
+ 		__entry->dirtied_when	= inode->dirtied_when;
+ 		__entry->cgroup_ino	= __trace_wb_assign_cgroup(inode_to_wb(inode));
+ 	),
+@@ -787,7 +787,7 @@ DECLARE_EVENT_CLASS(writeback_single_inode_template,
+ 		strscpy_pad(__entry->name,
+ 			    bdi_dev_name(inode_to_bdi(inode)), 32);
+ 		__entry->ino		= inode->i_ino;
+-		__entry->state		= inode->i_state;
++		__entry->state		= inode_state_read_once(inode);
+ 		__entry->dirtied_when	= inode->dirtied_when;
+ 		__entry->writeback_index = inode->i_mapping->writeback_index;
+ 		__entry->nr_to_write	= nr_to_write;
+@@ -839,7 +839,7 @@ DECLARE_EVENT_CLASS(writeback_inode_template,
+ 	TP_fast_assign(
+ 		__entry->dev	= inode->i_sb->s_dev;
+ 		__entry->ino	= inode->i_ino;
+-		__entry->state	= inode->i_state;
++		__entry->state	= inode_state_read_once(inode);
+ 		__entry->mode	= inode->i_mode;
+ 		__entry->dirtied_when = inode->dirtied_when;
+ 	),
 -- 
 2.34.1
 
