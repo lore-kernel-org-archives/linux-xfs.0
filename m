@@ -1,76 +1,76 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D033B2D7DF8
-	for <linux-xfs@vger.kernel.org>; Thu,  9 Oct 2025 12:08:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 562302D0C90
+	for <linux-xfs@vger.kernel.org>; Thu,  9 Oct 2025 12:08:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760011722; cv=none; b=js5TArowdv1BDh5bpe7gyRQ+oPt84nJWzHdb6Sbu36Ny7CX8Q8by2TUiMAW2PT4vLl7lVbiP4fHRgHpE8VglnYY6w8qhfP64Yaf61YJiEmuISzMrldKiFHow+X9gXxVX0t+FABYIi4MKM2LfxWgEhfrFPXgO/eFx2fEW9JXAGTI=
+	t=1760011730; cv=none; b=GtxqgONKS0xZIJO5DhCIKicpiytUXO1fUazAQ/l7a2ZX/+2WH+oJwshTYJpcCinge24vUuFOTeBVoU2JM5rrWtCJ3TZjispW+JnjoeXBIIJYCKB2u5vzYWIYXyEgLnG3TIeogPxL6eKf+TMIBNHqd518E0xldkn2b3+TBfajScs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760011722; c=relaxed/simple;
-	bh=6QfvR/1x2++zO2nwyaYUuQQ29p0quuYdphwpnqxT4DU=;
+	s=arc-20240116; t=1760011730; c=relaxed/simple;
+	bh=+gw6rmzj5Or2BkurGszar9GQ4ZRzhkKsecbPO6gGKJs=;
 	h=From:Date:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tNdkeXUse8ZVUl1bc1kvEL+NynpeuUylJgIZgJbG28ichJhm96vh/o6Zyf5yF5m0Ogyj42SWoVXu1hivjRaY3uzSttEzIlTiDLJ8yFwVqFIZTLA39NwfVRRGYE3sF2wnJuD4eiHMoUYES8Xi45j5Si9qZ9j1M5vwRkerzJrFzx8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=artfXaq6; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=Bl8uEYKM30o9ayTK6G48TFbSGWBG25cHHdlNjLqP+rYcH15WJPgW9Mq2rK1r7DMGTv6I9GSb0TLhGB6hVqWB489WSSYq+8q5vCzolKvMTDaw8cig7C699bcgueaH5y/NLr9Q8hkF3hw1EjdMZoexqHerTcmP1zwxFS/xW5o5pK4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UT2vJggF; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="artfXaq6"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UT2vJggF"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1760011719;
+	s=mimecast20190719; t=1760011727;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=AQfFS6QlFH1UkykIz1/cUfifIgEfM6RIMn9U76OPlAI=;
-	b=artfXaq6tl+ctHU9jMR9tAv7sT9rVNkZHF52w/96fx0uaasQW8e417Y0vH/0ReUmh9TMBe
-	iobrGuLbIPA3hQK9+3174uGceLnwetnwz3QCjjQLw6ftCavXn2jIvHJAD4/Ev+WLY+8sXn
-	W7AkTnHrAdPVXZaCXkuI0Ome9PvDzKQ=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=Ted5tJtKG5QTLyZkAhu4TF20Yg5g1czPl59nwTFdejI=;
+	b=UT2vJggFbGMDi0xGAE6uO7tuvj0CGtosBzvz08Rs5TiB2FUkRM+Ez77io8+f2M7PmhcjWU
+	EB+QzpdazjRSlTHfPxavFo1aY651e5SHiV/9KPeUH0XtiOlSbqCnUoDknDRWOO4GJWkHsR
+	gePWRbqIsv/o1OC6rO989X66GCfFuig=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-489-0vnNddh5N7-YYAAXPr3U4Q-1; Thu, 09 Oct 2025 08:08:38 -0400
-X-MC-Unique: 0vnNddh5N7-YYAAXPr3U4Q-1
-X-Mimecast-MFC-AGG-ID: 0vnNddh5N7-YYAAXPr3U4Q_1760011717
-Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-4256fae4b46so646629f8f.0
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Oct 2025 05:08:37 -0700 (PDT)
+ us-mta-130-dqdmhOiLNYScUvANvmvOag-1; Thu, 09 Oct 2025 08:08:46 -0400
+X-MC-Unique: dqdmhOiLNYScUvANvmvOag-1
+X-Mimecast-MFC-AGG-ID: dqdmhOiLNYScUvANvmvOag_1760011725
+Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-3ee888281c3so1029195f8f.3
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Oct 2025 05:08:46 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760011716; x=1760616516;
+        d=1e100.net; s=20230601; t=1760011725; x=1760616525;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:to:date:from:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=AQfFS6QlFH1UkykIz1/cUfifIgEfM6RIMn9U76OPlAI=;
-        b=ZUCc6C4Ud90sEG+EPCJCvSDtRCdGtxWvBmWw+u56DvKas07wVH49/hyo1ZVxhN//sl
-         upRdpAcgXFMX96PZ/VMxbEO9xo5ZrbgvcNiNJKKwyIWgyl3UY9mjgvYhWqzDPo+QrB3G
-         Mj0cny0obraVmr4pz2Xn9SNhKpBcfXMEbvHeT6GTFUqsvHgx4s2ZuNRgoLiZoyqsw8P6
-         ue1rCEik+2Mu9xaqU931K/ilbDXEpHMr2JO9ACNlTLCMq3YoewpStWcK2ShEyElnUJpQ
-         MwBtHwT+lzNaj9IoAikEkHECQxriDb602VKGfMhdOG5Zt3an4EwylRGmkROboeyJm/WW
-         S8aw==
-X-Gm-Message-State: AOJu0YwFwFKzONYeity3jfxp7qudiYpykmj7eemg22kT5EajeLG2M8pG
-	JBs5vk3YdMU7DbkacvoctBv3ThXVLLxb2xHT2XyDbdIcH+1eeH7llOnWOMSmVrCXXNTglwVD3Mm
-	m20DB8leZokiOyg/lFX7GIUjq/9CMheT6iEh+J5uq+gpJBuiycMR62k+UCnCuVSAhLkd9xtzl9b
-	p7RvfCCohWja3mHXFbUvw1QVPNa+RYEctKnpXlw1C2W76i
-X-Gm-Gg: ASbGnct/awd/K682ZfBTWPt0T07L2xPtxQZys8FNPCTMYdpH8s68/+08T6I2rvpi7yA
-	IynbX6e1ac/i6nBhDLFBu0hlSOdinzovK7WDSV9dHiOZqIF/qWtfqiwX/Tj79Tk5y0MrWk6Jvef
-	y9An+GKtujdww8pkywOc4mdxatWHZtuqBiHfe952Mjb0R8scWBf+D/dtYoT/Gfy+6UuVXgXYbK7
-	gcmLMXIVpyri5+XBlErjA86hMUD40mcQOvttv0GyNuiUPI7ug2M6dMqi04j92b1zLPikwRmq4Qx
-	WojNpjRl+tXtwKcKrmcXcXjVuI2ZIvayF3d0g+PlOC6WW7iQPaHt/fYVmBeo2lfp
-X-Received: by 2002:a05:6000:310b:b0:3e7:45c7:828e with SMTP id ffacd0b85a97d-4266e7e1843mr4378447f8f.33.1760011716095;
-        Thu, 09 Oct 2025 05:08:36 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEOw5vs6Ma78UpI2Hl1HR7QEROs0AMYrOokhW3ChlnjRjk05JCVdXdWcpvHify8bfVpS8/QOA==
-X-Received: by 2002:a05:6000:310b:b0:3e7:45c7:828e with SMTP id ffacd0b85a97d-4266e7e1843mr4378411f8f.33.1760011715237;
-        Thu, 09 Oct 2025 05:08:35 -0700 (PDT)
+        bh=Ted5tJtKG5QTLyZkAhu4TF20Yg5g1czPl59nwTFdejI=;
+        b=fd4hNKuuzJd/U81H6xrap+1PWaTn6uszYaiMNL6QE0ipVixvSUJC+VXZNpHyrXkk/X
+         4Kn6lviMCdj2z/m9ESV7Ld8nl5Gkq18j4bisazqsgqPralKIYokHBZZPwniMJJpEbO+F
+         inL7LOcGLw4TdXsTz9jxwukhc9qrBVIaSRROjMAWPmhA1VfuQA6qEAJGIVKGANPrkyNx
+         Z9T2eThs/3rFnwwyxm/H1fRXowstMs9g2MgppwuCh1MWzP0jkANxdxDyc4a+JRgB/mYq
+         TdzP3tAulo8MXlvPVTWeAKWvyBJqZUpMOdM2Ez8cmYzkBpqbRfg0jZhodXbgMVXOUqQD
+         YKfw==
+X-Gm-Message-State: AOJu0YwFut/RvMrMiT19q8NSuR0xqZjbA9xGD9E1a8z7XwSjKY+ZlTM+
+	/xSLt0eR7umgrfpwh8hXo79A113ksQoh4GC8adQY7PgR3sldHnNfSIRFKzjPjQMs7zWXsdnV4Eg
+	ghNidQeJlLRVad+QU5EvOb9qIu741lSkb0xBV/O/1R0ztvQaqw8MgGiWUoXT4a6r15PK2nIgbT1
+	4V/3CW10lRk2V6nTKjs6v6aJVKpbsYLZNvBYL+RAcCHJ9C
+X-Gm-Gg: ASbGncvDbAxHmTKG5183mOYpZRP1IhW9E8rr6hACwO9+hlxwHeyN1pCULQeD7Uv7LUs
+	pNp/ZYW4bDzo8oF9H2EbuLH2oV3OeGo7jovNT8URucpWIWpgxUU135FEiR+UmbXNhvVVsiQxGWG
+	j3apQ82oWFtRPvKf94Sj0Mc0PyRBHm090gneGXleg1znc74U7OCYjysli9IDTIz0GEpSs8WXj2d
+	sw8vxmk7fcYGnRBm5cjCqN0FwUTQwcLo+b/Up6SetAetO/3VwpGZRDfNzDHDXlgeiS8MYIlZSst
+	zLan+auWFltMzlhAYH+F+WnCdY4SElbaRGUc3hQ7SbmWRsDL/9o3eJXYL7QMd2VU
+X-Received: by 2002:a05:6000:1445:b0:3f1:ee44:8c00 with SMTP id ffacd0b85a97d-42666ab9597mr4839457f8f.10.1760011724362;
+        Thu, 09 Oct 2025 05:08:44 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IH8NJp9EixzoLi4jS2OnWunmvSnCUIR28fmfE4MSalHh+Gk1VUKLQpHKThonGVMPaQNHi0Eyg==
+X-Received: by 2002:a05:6000:1445:b0:3f1:ee44:8c00 with SMTP id ffacd0b85a97d-42666ab9597mr4839422f8f.10.1760011723617;
+        Thu, 09 Oct 2025 05:08:43 -0700 (PDT)
 Received: from thinky (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4255d8f0846sm35197463f8f.45.2025.10.09.05.08.34
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-46faf112fdbsm45534675e9.8.2025.10.09.05.08.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Oct 2025 05:08:34 -0700 (PDT)
+        Thu, 09 Oct 2025 05:08:43 -0700 (PDT)
 From: Fedor Pchelkin <aalbersh@redhat.com>
 X-Google-Original-From: Fedor Pchelkin <pchelkin@ispras.ru>
-Date: Thu, 9 Oct 2025 14:08:34 +0200
+Date: Thu, 9 Oct 2025 14:08:42 +0200
 To: linux-xfs@vger.kernel.org, aalbersh@kernel.org, cem@kernel.org, 
 	cmaiolino@redhat.com, djwong@kernel.org, hch@lst.de, pchelkin@ispras.ru, 
 	pranav.tyagi03@gmail.com, sandeen@redhat.com
-Subject: [PATCH v2 1/11] xfs: rename diff_two_keys routines
-Message-ID: <aoknayw2agk6iqtep74g2dqsmn5hafyvbrslxqjgez3qwwi7am@hdfafyw2gicr>
+Subject: [PATCH v2 2/11] xfs: rename key_diff routines
+Message-ID: <rx7m7nfzpmqwhhgl6j2eyccfxc6bymq4cvnw4xl3yzibvqpqnh@ldjontznpth3>
 References: <cover.1760011614.patch-series@thinky>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -82,12 +82,10 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <cover.1760011614.patch-series@thinky>
 
-Source kernel commit: edce172444b4f489715a3df2e5d50893e74ce3da
+Source kernel commit: 82b63ee160016096436aa026a27c8d85d40f3fb1
 
-One may think that diff_two_keys routines are used to compute the actual
-difference between the arguments but they return a result of a
-three-way-comparison of the passed operands. So it looks more appropriate
-to denote them as cmp_two_keys.
+key_diff routines compare a key value with a cursor value. Make the naming
+to be a bit more self-descriptive.
 
 Found by Linux Verification Center (linuxtesting.org).
 
@@ -97,325 +95,272 @@ Signed-off-by: Carlos Maiolino <cem@kernel.org>
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- libxfs/xfs_alloc_btree.c      |  8 ++++----
- libxfs/xfs_bmap_btree.c       |  4 ++--
- libxfs/xfs_btree.c            |  2 +-
- libxfs/xfs_btree.h            | 26 +++++++++++++-------------
- libxfs/xfs_ialloc_btree.c     |  6 +++---
- libxfs/xfs_refcount_btree.c   |  4 ++--
- libxfs/xfs_rmap_btree.c       |  6 +++---
- libxfs/xfs_rtrefcount_btree.c |  4 ++--
- libxfs/xfs_rtrmap_btree.c     |  6 +++---
- repair/rcbag_btree.c          |  4 ++--
- 10 files changed, 35 insertions(+), 35 deletions(-)
+ libxfs/xfs_alloc_btree.c      | 8 ++++----
+ libxfs/xfs_bmap_btree.c       | 4 ++--
+ libxfs/xfs_btree.c            | 2 +-
+ libxfs/xfs_btree.h            | 9 ++++++---
+ libxfs/xfs_ialloc_btree.c     | 6 +++---
+ libxfs/xfs_refcount_btree.c   | 4 ++--
+ libxfs/xfs_rmap_btree.c       | 6 +++---
+ libxfs/xfs_rtrefcount_btree.c | 4 ++--
+ libxfs/xfs_rtrmap_btree.c     | 6 +++---
+ repair/rcbag_btree.c          | 4 ++--
+ 10 files changed, 28 insertions(+), 25 deletions(-)
 
 diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
-index 63b8db4ed0..85ce9f728f 100644
+index 85ce9f728f..6e7af0020b 100644
 --- a/libxfs/xfs_alloc_btree.c
 +++ b/libxfs/xfs_alloc_btree.c
-@@ -212,7 +212,7 @@
+@@ -185,7 +185,7 @@
  }
  
  STATIC int64_t
--xfs_bnobt_diff_two_keys(
-+xfs_bnobt_cmp_two_keys(
+-xfs_bnobt_key_diff(
++xfs_bnobt_cmp_key_with_cur(
  	struct xfs_btree_cur		*cur,
- 	const union xfs_btree_key	*k1,
- 	const union xfs_btree_key	*k2,
-@@ -225,7 +225,7 @@
+ 	const union xfs_btree_key	*key)
+ {
+@@ -196,7 +196,7 @@
  }
  
  STATIC int64_t
--xfs_cntbt_diff_two_keys(
-+xfs_cntbt_cmp_two_keys(
+-xfs_cntbt_key_diff(
++xfs_cntbt_cmp_key_with_cur(
  	struct xfs_btree_cur		*cur,
- 	const union xfs_btree_key	*k1,
- 	const union xfs_btree_key	*k2,
-@@ -438,7 +438,7 @@
+ 	const union xfs_btree_key	*key)
+ {
+@@ -436,7 +436,7 @@
+ 	.init_high_key_from_rec	= xfs_bnobt_init_high_key_from_rec,
+ 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
  	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
- 	.key_diff		= xfs_bnobt_key_diff,
+-	.key_diff		= xfs_bnobt_key_diff,
++	.cmp_key_with_cur	= xfs_bnobt_cmp_key_with_cur,
  	.buf_ops		= &xfs_bnobt_buf_ops,
--	.diff_two_keys		= xfs_bnobt_diff_two_keys,
-+	.cmp_two_keys		= xfs_bnobt_cmp_two_keys,
+ 	.cmp_two_keys		= xfs_bnobt_cmp_two_keys,
  	.keys_inorder		= xfs_bnobt_keys_inorder,
- 	.recs_inorder		= xfs_bnobt_recs_inorder,
- 	.keys_contiguous	= xfs_allocbt_keys_contiguous,
-@@ -468,7 +468,7 @@
+@@ -466,7 +466,7 @@
+ 	.init_high_key_from_rec	= xfs_cntbt_init_high_key_from_rec,
+ 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
  	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
- 	.key_diff		= xfs_cntbt_key_diff,
+-	.key_diff		= xfs_cntbt_key_diff,
++	.cmp_key_with_cur	= xfs_cntbt_cmp_key_with_cur,
  	.buf_ops		= &xfs_cntbt_buf_ops,
--	.diff_two_keys		= xfs_cntbt_diff_two_keys,
-+	.cmp_two_keys		= xfs_cntbt_cmp_two_keys,
+ 	.cmp_two_keys		= xfs_cntbt_cmp_two_keys,
  	.keys_inorder		= xfs_cntbt_keys_inorder,
- 	.recs_inorder		= xfs_cntbt_recs_inorder,
- 	.keys_contiguous	= NULL, /* not needed right now */
 diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 40e0cb3016..eb3e5d70de 100644
+index eb3e5d70de..3fc23444f3 100644
 --- a/libxfs/xfs_bmap_btree.c
 +++ b/libxfs/xfs_bmap_btree.c
-@@ -378,7 +378,7 @@
+@@ -369,7 +369,7 @@
  }
  
  STATIC int64_t
--xfs_bmbt_diff_two_keys(
-+xfs_bmbt_cmp_two_keys(
+-xfs_bmbt_key_diff(
++xfs_bmbt_cmp_key_with_cur(
  	struct xfs_btree_cur		*cur,
- 	const union xfs_btree_key	*k1,
- 	const union xfs_btree_key	*k2,
-@@ -647,7 +647,7 @@
+ 	const union xfs_btree_key	*key)
+ {
+@@ -646,7 +646,7 @@
+ 	.init_key_from_rec	= xfs_bmbt_init_key_from_rec,
  	.init_high_key_from_rec	= xfs_bmbt_init_high_key_from_rec,
  	.init_rec_from_cur	= xfs_bmbt_init_rec_from_cur,
- 	.key_diff		= xfs_bmbt_key_diff,
--	.diff_two_keys		= xfs_bmbt_diff_two_keys,
-+	.cmp_two_keys		= xfs_bmbt_cmp_two_keys,
+-	.key_diff		= xfs_bmbt_key_diff,
++	.cmp_key_with_cur	= xfs_bmbt_cmp_key_with_cur,
+ 	.cmp_two_keys		= xfs_bmbt_cmp_two_keys,
  	.buf_ops		= &xfs_bmbt_buf_ops,
  	.keys_inorder		= xfs_bmbt_keys_inorder,
- 	.recs_inorder		= xfs_bmbt_recs_inorder,
 diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index fce215f924..78cc31f61e 100644
+index 78cc31f61e..15846f0ff6 100644
 --- a/libxfs/xfs_btree.c
 +++ b/libxfs/xfs_btree.c
-@@ -5055,7 +5055,7 @@
- 	int				error;
- 
- 	ASSERT(cur->bc_ops->init_high_key_from_rec);
--	ASSERT(cur->bc_ops->diff_two_keys);
-+	ASSERT(cur->bc_ops->cmp_two_keys);
- 
- 	/*
- 	 * Find the leftmost record.  The btree cursor must be set
+@@ -2067,7 +2067,7 @@
+ 				 *  - greater than, move left
+ 				 *  - equal, we're done
+ 				 */
+-				diff = cur->bc_ops->key_diff(cur, kp);
++				diff = cur->bc_ops->cmp_key_with_cur(cur, kp);
+ 				if (diff < 0)
+ 					low = keyno + 1;
+ 				else if (diff > 0)
 diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index 355b304696..1046bbf383 100644
+index 1046bbf383..e72a10ba7e 100644
 --- a/libxfs/xfs_btree.h
 +++ b/libxfs/xfs_btree.h
-@@ -176,15 +176,15 @@
- 			    const union xfs_btree_key *key);
+@@ -171,9 +171,12 @@
+ 	void	(*init_high_key_from_rec)(union xfs_btree_key *key,
+ 					  const union xfs_btree_rec *rec);
+ 
+-	/* difference between key value and cursor value */
+-	int64_t (*key_diff)(struct xfs_btree_cur *cur,
+-			    const union xfs_btree_key *key);
++	/*
++	 * Compare key value and cursor value -- positive if key > cur,
++	 * negative if key < cur, and zero if equal.
++	 */
++	int64_t (*cmp_key_with_cur)(struct xfs_btree_cur *cur,
++				    const union xfs_btree_key *key);
  
  	/*
--	 * Difference between key2 and key1 -- positive if key1 > key2,
--	 * negative if key1 < key2, and zero if equal.  If the @mask parameter
--	 * is non NULL, each key field to be used in the comparison must
--	 * contain a nonzero value.
-+	 * Compare key1 and key2 -- positive if key1 > key2, negative if
-+	 * key1 < key2, and zero if equal.  If the @mask parameter is non NULL,
-+	 * each key field to be used in the comparison must contain a nonzero
-+	 * value.
- 	 */
--	int64_t (*diff_two_keys)(struct xfs_btree_cur *cur,
--				 const union xfs_btree_key *key1,
--				 const union xfs_btree_key *key2,
--				 const union xfs_btree_key *mask);
-+	int64_t (*cmp_two_keys)(struct xfs_btree_cur *cur,
-+				const union xfs_btree_key *key1,
-+				const union xfs_btree_key *key2,
-+				const union xfs_btree_key *mask);
- 
- 	const struct xfs_buf_ops	*buf_ops;
- 
-@@ -546,7 +546,7 @@
- 	const union xfs_btree_key	*key1,
- 	const union xfs_btree_key	*key2)
- {
--	return cur->bc_ops->diff_two_keys(cur, key1, key2, NULL) < 0;
-+	return cur->bc_ops->cmp_two_keys(cur, key1, key2, NULL) < 0;
- }
- 
- static inline bool
-@@ -555,7 +555,7 @@
- 	const union xfs_btree_key	*key1,
- 	const union xfs_btree_key	*key2)
- {
--	return cur->bc_ops->diff_two_keys(cur, key1, key2, NULL) > 0;
-+	return cur->bc_ops->cmp_two_keys(cur, key1, key2, NULL) > 0;
- }
- 
- static inline bool
-@@ -564,7 +564,7 @@
- 	const union xfs_btree_key	*key1,
- 	const union xfs_btree_key	*key2)
- {
--	return cur->bc_ops->diff_two_keys(cur, key1, key2, NULL) == 0;
-+	return cur->bc_ops->cmp_two_keys(cur, key1, key2, NULL) == 0;
- }
- 
- static inline bool
-@@ -602,7 +602,7 @@
- 	const union xfs_btree_key	*key2,
- 	const union xfs_btree_key	*mask)
- {
--	return cur->bc_ops->diff_two_keys(cur, key1, key2, mask) < 0;
-+	return cur->bc_ops->cmp_two_keys(cur, key1, key2, mask) < 0;
- }
- 
- static inline bool
-@@ -612,7 +612,7 @@
- 	const union xfs_btree_key	*key2,
- 	const union xfs_btree_key	*mask)
- {
--	return cur->bc_ops->diff_two_keys(cur, key1, key2, mask) > 0;
-+	return cur->bc_ops->cmp_two_keys(cur, key1, key2, mask) > 0;
- }
- 
- static inline bool
+ 	 * Compare key1 and key2 -- positive if key1 > key2, negative if
 diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index 4cccac145d..d5f55f7466 100644
+index d5f55f7466..d56876c5be 100644
 --- a/libxfs/xfs_ialloc_btree.c
 +++ b/libxfs/xfs_ialloc_btree.c
-@@ -274,7 +274,7 @@
+@@ -265,7 +265,7 @@
  }
  
  STATIC int64_t
--xfs_inobt_diff_two_keys(
-+xfs_inobt_cmp_two_keys(
+-xfs_inobt_key_diff(
++xfs_inobt_cmp_key_with_cur(
  	struct xfs_btree_cur		*cur,
- 	const union xfs_btree_key	*k1,
- 	const union xfs_btree_key	*k2,
-@@ -431,7 +431,7 @@
+ 	const union xfs_btree_key	*key)
+ {
+@@ -429,7 +429,7 @@
+ 	.init_high_key_from_rec	= xfs_inobt_init_high_key_from_rec,
+ 	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
  	.init_ptr_from_cur	= xfs_inobt_init_ptr_from_cur,
- 	.key_diff		= xfs_inobt_key_diff,
+-	.key_diff		= xfs_inobt_key_diff,
++	.cmp_key_with_cur	= xfs_inobt_cmp_key_with_cur,
  	.buf_ops		= &xfs_inobt_buf_ops,
--	.diff_two_keys		= xfs_inobt_diff_two_keys,
-+	.cmp_two_keys		= xfs_inobt_cmp_two_keys,
+ 	.cmp_two_keys		= xfs_inobt_cmp_two_keys,
  	.keys_inorder		= xfs_inobt_keys_inorder,
- 	.recs_inorder		= xfs_inobt_recs_inorder,
- 	.keys_contiguous	= xfs_inobt_keys_contiguous,
-@@ -461,7 +461,7 @@
+@@ -459,7 +459,7 @@
+ 	.init_high_key_from_rec	= xfs_inobt_init_high_key_from_rec,
+ 	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
  	.init_ptr_from_cur	= xfs_finobt_init_ptr_from_cur,
- 	.key_diff		= xfs_inobt_key_diff,
+-	.key_diff		= xfs_inobt_key_diff,
++	.cmp_key_with_cur	= xfs_inobt_cmp_key_with_cur,
  	.buf_ops		= &xfs_finobt_buf_ops,
--	.diff_two_keys		= xfs_inobt_diff_two_keys,
-+	.cmp_two_keys		= xfs_inobt_cmp_two_keys,
+ 	.cmp_two_keys		= xfs_inobt_cmp_two_keys,
  	.keys_inorder		= xfs_inobt_keys_inorder,
- 	.recs_inorder		= xfs_inobt_recs_inorder,
- 	.keys_contiguous	= xfs_inobt_keys_contiguous,
 diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
-index efb9af710f..63417b873c 100644
+index 63417b873c..0924ab7eb7 100644
 --- a/libxfs/xfs_refcount_btree.c
 +++ b/libxfs/xfs_refcount_btree.c
-@@ -188,7 +188,7 @@
+@@ -174,7 +174,7 @@
  }
  
  STATIC int64_t
--xfs_refcountbt_diff_two_keys(
-+xfs_refcountbt_cmp_two_keys(
+-xfs_refcountbt_key_diff(
++xfs_refcountbt_cmp_key_with_cur(
  	struct xfs_btree_cur		*cur,
- 	const union xfs_btree_key	*k1,
- 	const union xfs_btree_key	*k2,
-@@ -340,7 +340,7 @@
+ 	const union xfs_btree_key	*key)
+ {
+@@ -338,7 +338,7 @@
+ 	.init_high_key_from_rec	= xfs_refcountbt_init_high_key_from_rec,
+ 	.init_rec_from_cur	= xfs_refcountbt_init_rec_from_cur,
  	.init_ptr_from_cur	= xfs_refcountbt_init_ptr_from_cur,
- 	.key_diff		= xfs_refcountbt_key_diff,
+-	.key_diff		= xfs_refcountbt_key_diff,
++	.cmp_key_with_cur	= xfs_refcountbt_cmp_key_with_cur,
  	.buf_ops		= &xfs_refcountbt_buf_ops,
--	.diff_two_keys		= xfs_refcountbt_diff_two_keys,
-+	.cmp_two_keys		= xfs_refcountbt_cmp_two_keys,
+ 	.cmp_two_keys		= xfs_refcountbt_cmp_two_keys,
  	.keys_inorder		= xfs_refcountbt_keys_inorder,
- 	.recs_inorder		= xfs_refcountbt_recs_inorder,
- 	.keys_contiguous	= xfs_refcountbt_keys_contiguous,
 diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
-index f4da35050d..0481850e46 100644
+index 0481850e46..ea946616bf 100644
 --- a/libxfs/xfs_rmap_btree.c
 +++ b/libxfs/xfs_rmap_btree.c
-@@ -273,7 +273,7 @@
+@@ -243,7 +243,7 @@
  }
  
  STATIC int64_t
--xfs_rmapbt_diff_two_keys(
-+xfs_rmapbt_cmp_two_keys(
+-xfs_rmapbt_key_diff(
++xfs_rmapbt_cmp_key_with_cur(
  	struct xfs_btree_cur		*cur,
- 	const union xfs_btree_key	*k1,
- 	const union xfs_btree_key	*k2,
-@@ -516,7 +516,7 @@
+ 	const union xfs_btree_key	*key)
+ {
+@@ -514,7 +514,7 @@
+ 	.init_high_key_from_rec	= xfs_rmapbt_init_high_key_from_rec,
+ 	.init_rec_from_cur	= xfs_rmapbt_init_rec_from_cur,
  	.init_ptr_from_cur	= xfs_rmapbt_init_ptr_from_cur,
- 	.key_diff		= xfs_rmapbt_key_diff,
+-	.key_diff		= xfs_rmapbt_key_diff,
++	.cmp_key_with_cur	= xfs_rmapbt_cmp_key_with_cur,
  	.buf_ops		= &xfs_rmapbt_buf_ops,
--	.diff_two_keys		= xfs_rmapbt_diff_two_keys,
-+	.cmp_two_keys		= xfs_rmapbt_cmp_two_keys,
+ 	.cmp_two_keys		= xfs_rmapbt_cmp_two_keys,
  	.keys_inorder		= xfs_rmapbt_keys_inorder,
- 	.recs_inorder		= xfs_rmapbt_recs_inorder,
- 	.keys_contiguous	= xfs_rmapbt_keys_contiguous,
-@@ -633,7 +633,7 @@
+@@ -631,7 +631,7 @@
+ 	.init_high_key_from_rec	= xfs_rmapbt_init_high_key_from_rec,
+ 	.init_rec_from_cur	= xfs_rmapbt_init_rec_from_cur,
  	.init_ptr_from_cur	= xfbtree_init_ptr_from_cur,
- 	.key_diff		= xfs_rmapbt_key_diff,
+-	.key_diff		= xfs_rmapbt_key_diff,
++	.cmp_key_with_cur	= xfs_rmapbt_cmp_key_with_cur,
  	.buf_ops		= &xfs_rmapbt_mem_buf_ops,
--	.diff_two_keys		= xfs_rmapbt_diff_two_keys,
-+	.cmp_two_keys		= xfs_rmapbt_cmp_two_keys,
+ 	.cmp_two_keys		= xfs_rmapbt_cmp_two_keys,
  	.keys_inorder		= xfs_rmapbt_keys_inorder,
- 	.recs_inorder		= xfs_rmapbt_recs_inorder,
- 	.keys_contiguous	= xfs_rmapbt_keys_contiguous,
 diff --git a/libxfs/xfs_rtrefcount_btree.c b/libxfs/xfs_rtrefcount_btree.c
-index a532476407..1f563a724c 100644
+index 1f563a724c..7a4eec49ca 100644
 --- a/libxfs/xfs_rtrefcount_btree.c
 +++ b/libxfs/xfs_rtrefcount_btree.c
-@@ -169,7 +169,7 @@
+@@ -155,7 +155,7 @@
  }
  
  STATIC int64_t
--xfs_rtrefcountbt_diff_two_keys(
-+xfs_rtrefcountbt_cmp_two_keys(
+-xfs_rtrefcountbt_key_diff(
++xfs_rtrefcountbt_cmp_key_with_cur(
  	struct xfs_btree_cur		*cur,
- 	const union xfs_btree_key	*k1,
- 	const union xfs_btree_key	*k2,
-@@ -387,7 +387,7 @@
+ 	const union xfs_btree_key	*key)
+ {
+@@ -385,7 +385,7 @@
+ 	.init_high_key_from_rec	= xfs_rtrefcountbt_init_high_key_from_rec,
+ 	.init_rec_from_cur	= xfs_rtrefcountbt_init_rec_from_cur,
  	.init_ptr_from_cur	= xfs_rtrefcountbt_init_ptr_from_cur,
- 	.key_diff		= xfs_rtrefcountbt_key_diff,
+-	.key_diff		= xfs_rtrefcountbt_key_diff,
++	.cmp_key_with_cur	= xfs_rtrefcountbt_cmp_key_with_cur,
  	.buf_ops		= &xfs_rtrefcountbt_buf_ops,
--	.diff_two_keys		= xfs_rtrefcountbt_diff_two_keys,
-+	.cmp_two_keys		= xfs_rtrefcountbt_cmp_two_keys,
+ 	.cmp_two_keys		= xfs_rtrefcountbt_cmp_two_keys,
  	.keys_inorder		= xfs_rtrefcountbt_keys_inorder,
- 	.recs_inorder		= xfs_rtrefcountbt_recs_inorder,
- 	.keys_contiguous	= xfs_rtrefcountbt_keys_contiguous,
 diff --git a/libxfs/xfs_rtrmap_btree.c b/libxfs/xfs_rtrmap_btree.c
-index d46fb67bb5..5b3836fccc 100644
+index 5b3836fccc..59a99bb42c 100644
 --- a/libxfs/xfs_rtrmap_btree.c
 +++ b/libxfs/xfs_rtrmap_btree.c
-@@ -215,7 +215,7 @@
+@@ -185,7 +185,7 @@
  }
  
  STATIC int64_t
--xfs_rtrmapbt_diff_two_keys(
-+xfs_rtrmapbt_cmp_two_keys(
+-xfs_rtrmapbt_key_diff(
++xfs_rtrmapbt_cmp_key_with_cur(
  	struct xfs_btree_cur		*cur,
- 	const union xfs_btree_key	*k1,
- 	const union xfs_btree_key	*k2,
-@@ -512,7 +512,7 @@
+ 	const union xfs_btree_key	*key)
+ {
+@@ -510,7 +510,7 @@
+ 	.init_high_key_from_rec	= xfs_rtrmapbt_init_high_key_from_rec,
+ 	.init_rec_from_cur	= xfs_rtrmapbt_init_rec_from_cur,
  	.init_ptr_from_cur	= xfs_rtrmapbt_init_ptr_from_cur,
- 	.key_diff		= xfs_rtrmapbt_key_diff,
+-	.key_diff		= xfs_rtrmapbt_key_diff,
++	.cmp_key_with_cur	= xfs_rtrmapbt_cmp_key_with_cur,
  	.buf_ops		= &xfs_rtrmapbt_buf_ops,
--	.diff_two_keys		= xfs_rtrmapbt_diff_two_keys,
-+	.cmp_two_keys		= xfs_rtrmapbt_cmp_two_keys,
+ 	.cmp_two_keys		= xfs_rtrmapbt_cmp_two_keys,
  	.keys_inorder		= xfs_rtrmapbt_keys_inorder,
- 	.recs_inorder		= xfs_rtrmapbt_recs_inorder,
- 	.keys_contiguous	= xfs_rtrmapbt_keys_contiguous,
-@@ -621,7 +621,7 @@
+@@ -619,7 +619,7 @@
+ 	.init_high_key_from_rec	= xfs_rtrmapbt_init_high_key_from_rec,
+ 	.init_rec_from_cur	= xfs_rtrmapbt_init_rec_from_cur,
  	.init_ptr_from_cur	= xfbtree_init_ptr_from_cur,
- 	.key_diff		= xfs_rtrmapbt_key_diff,
+-	.key_diff		= xfs_rtrmapbt_key_diff,
++	.cmp_key_with_cur	= xfs_rtrmapbt_cmp_key_with_cur,
  	.buf_ops		= &xfs_rtrmapbt_mem_buf_ops,
--	.diff_two_keys		= xfs_rtrmapbt_diff_two_keys,
-+	.cmp_two_keys		= xfs_rtrmapbt_cmp_two_keys,
+ 	.cmp_two_keys		= xfs_rtrmapbt_cmp_two_keys,
  	.keys_inorder		= xfs_rtrmapbt_keys_inorder,
- 	.recs_inorder		= xfs_rtrmapbt_recs_inorder,
- 	.keys_contiguous	= xfs_rtrmapbt_keys_contiguous,
 diff --git a/repair/rcbag_btree.c b/repair/rcbag_btree.c
-index bed7c7a8f6..404b509f64 100644
+index 404b509f64..704e66e9fb 100644
 --- a/repair/rcbag_btree.c
 +++ b/repair/rcbag_btree.c
-@@ -73,7 +73,7 @@
+@@ -47,7 +47,7 @@
  }
  
  STATIC int64_t
--rcbagbt_diff_two_keys(
-+rcbagbt_cmp_two_keys(
+-rcbagbt_key_diff(
++rcbagbt_cmp_key_with_cur(
  	struct xfs_btree_cur		*cur,
- 	const union xfs_btree_key	*k1,
- 	const union xfs_btree_key	*k2,
-@@ -222,7 +222,7 @@
+ 	const union xfs_btree_key	*key)
+ {
+@@ -220,7 +220,7 @@
+ 	.init_key_from_rec	= rcbagbt_init_key_from_rec,
+ 	.init_rec_from_cur	= rcbagbt_init_rec_from_cur,
  	.init_ptr_from_cur	= xfbtree_init_ptr_from_cur,
- 	.key_diff		= rcbagbt_key_diff,
+-	.key_diff		= rcbagbt_key_diff,
++	.cmp_key_with_cur	= rcbagbt_cmp_key_with_cur,
  	.buf_ops		= &rcbagbt_mem_buf_ops,
--	.diff_two_keys		= rcbagbt_diff_two_keys,
-+	.cmp_two_keys		= rcbagbt_cmp_two_keys,
+ 	.cmp_two_keys		= rcbagbt_cmp_two_keys,
  	.keys_inorder		= rcbagbt_keys_inorder,
- 	.recs_inorder		= rcbagbt_recs_inorder,
- };
 
 -- 
 - Andrey
