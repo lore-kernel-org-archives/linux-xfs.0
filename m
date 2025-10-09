@@ -1,85 +1,73 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBA382E8E0E
-	for <linux-xfs@vger.kernel.org>; Thu,  9 Oct 2025 08:00:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D09B42D7DE5
+	for <linux-xfs@vger.kernel.org>; Thu,  9 Oct 2025 09:08:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759996813; cv=none; b=thIdcox92IJytT2Dg3789mag80O+tRoWtJXaulGxndA0LvxYfgXhkGNu9gam+SBL7qQIm0OMdJCYlAZiLc+By9tFIf2AHyM30BCNsGkUDdX2h9TbBYBktrQe+v3pXd7LBkqJMpRsmuy94tpe6pqkONylY0ykaQqC76Ohgn7KAN8=
+	t=1760000937; cv=none; b=uc6mdSCpYbGTqa1erJaT02QD/gIsRNUOoQxmc7s+FxWnAh3EDNVUdkXlke65CVfp7XXCK+v9/IqDNGpRV5u89vStouF6ntmeQYByK4LVfUpL3p+BQSXSJeAlBbH8OY26QaCHQg4MMfpRZWgrfR+pknNFSJozyfURr4vjA1O5O3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759996813; c=relaxed/simple;
-	bh=xlG7nR5Wpn4toAnFh4yZG5U7bqMO2Ibqli2pgrWdpe4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nCvVSyBCuxi4gi9GGB2bJKWfBuCSR1yvmoqHiRrTVW2vmtB1rmfUvmEbdStEPg7l+ME5hMtCTJSwS+PuKVJ3zWnO1f0TMZuASk8jgBTNwsBe7BiriYaDhueVYUqLA4QgA1sKcGRJa4iBhshR9hPw5qB0G8iWKJoZocz+M7AY00A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SbvDejU9; arc=none smtp.client-ip=209.85.218.48
+	s=arc-20240116; t=1760000937; c=relaxed/simple;
+	bh=KcXa7KpDaur+uFmqn054xcHb7hsTcb+0GQs4M5FBSr4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=erKL0KD8cjQ+AHb6zNYtudCEQlCAUNPuySnEmMDIPfbKb+Deq8tVWKtmgCzVa2dmMDQ6lW9nSApSY5FX8mCjR/8KqLznMvjXBqkobkw7wlOrCeX2KqKvHP2q4FSKQ1ZDYMdO78HTaIOE43qXEjj/VVQ1E3gA16191pxbTVAQ0hU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UQaa6tDj; arc=none smtp.client-ip=209.85.210.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SbvDejU9"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-b4f323cf89bso117646266b.2
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Oct 2025 01:00:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UQaa6tDj"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-7811fa91774so630626b3a.0
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Oct 2025 02:08:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1759996809; x=1760601609; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/5cEv8KCvxqRx2Vo792Uxij3yHT/Pkk8+e6W56mfmGo=;
-        b=SbvDejU9ggXuvwZcyBQN7Wh/w7QFoavPE+9gM8uuiuVmO1ELw5sKW93FFpq0UEpTkq
-         Ryj/7rO/SHMvr+NwtFE5QTSf5WS341LygOQn3KW7t0vLGZCQTLjHrjRyobIyOLnCITUf
-         tzlzCFocGJ4GpNMGGc8xHvX9bSHUppgKd1qcC+NjyZxY8Z7hp+K3ixktQxfiZtv7ESnw
-         xndW9hExYjaGy3CHpa5bkadYCG5PWfhGVNiCZT9uLlc+c8hEjNrRTCQ82+h6MLHDdNu/
-         WvQgPk7LktcDwjsfXh7eYvK/3q2818LaXoD+P0Hwqy+j8s9Z8YVRBE6t9qPBrNSb0JHf
-         54fw==
+        d=gmail.com; s=20230601; t=1760000935; x=1760605735; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=C+uXX49aJSWydq7w+IBivpuqIIen5cjqVetpqZ6Ubl0=;
+        b=UQaa6tDjDv/PU9cLO2WgehElAHghQMqjZ9PeqA+Hwq1E9B9mnvws8epQsJD0ivaohQ
+         oWmEvqphVshRl2TYU7vAgn+sfF5L59OKGV3uD3w4STeBzccoWu5TjTogQOhy9WPuVimN
+         vjnVU88DnP5OBBZc2GC7vbcDKZITHmhUnwBtoEs8tdOGjnTqG/Q/3DOUi9sxaGb1F91l
+         emeZl/skxe0ZZMGeM9j0sLvHmxo4hJmsUCEnRCxLiuhqkz5Y9Q9mjSQdvDk4qD0/uN72
+         DDu+VmWk/JWia2mrp/VOrnNBt0SmR1bV7mQ71c9gv8iwpIiYKgaVVnBF19Yqi9DcijPD
+         6xQQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759996809; x=1760601609;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=/5cEv8KCvxqRx2Vo792Uxij3yHT/Pkk8+e6W56mfmGo=;
-        b=oNFTDrxq/JmLE/9UwnMdvBJuIePYtsv+1aul0+eLH0gT/JxCUE9GM0UrGIqQAHaRFP
-         V6pcMfFiFzGHJ06SL/qpmEGpJQrfu2DuLBQW31gVoPiDWicr2hRMHEd0bvi8h3VEEEMO
-         tO6st4/JZYETmaOcFnJHgtaUp63jAwpo3pkgDhFshMWsFPtJ6/UxiKHFke02VxsGfz/i
-         68a88XmQ9R9MHcXnbcL2j7t2A3BfWrW3oBRVN3FIFEN8jPaPGiG/7HOpSsfa3OR03QnN
-         gB+ASETjvpYWVwhcVEzxPniniNi7POs7Q7XVIK9BXPKYBJFgHinxL1rrjkfhUQhDS45p
-         0FAQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWIsyMNH6RkMIBk8NXZjkaseebPcMkfjw4LOiD7UnOSwwHBxS9+M5aMJlJxHergd/KTkgwP+aG6SbU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxqyjBQcU0v9Zoejikr+p5lKvLzWYR99ohb0ilpvVghW5f/zZy3
-	oZT5BluU+DHzLEuha8uAYzZyADcs6RsIkdI+5/AwHK9CRr4iaA8HwQAp
-X-Gm-Gg: ASbGncsdPKnHtOC3m+RglSl+bpW5zz6T0ABefAiY3vHbRzrBdiDkaE4jUCweAlCWiv8
-	Keg2f90YSA2J7WWFh10qK9IrYrS+M9KQjO4dyEXxQJTfOCCCRtswl0da0QDENv2fwjRxsy9Vs40
-	+SVP0jbbMVD+5C6YWBzXJ55vFDNHlHJu74LC97Vvi/VdCQoLMYHCPSnXrs6n39rqmoL/RHgEQxB
-	vwoMOtBVQqRuHotFUpWN1yDO6tBaZpFxRhg6cpNwf/wJQVhncUHfduw7me6CsNVqNID4wCy9QZR
-	0kkUWI8pScpsqhgVbQz2uUZQhUEmoFA67vKwaop1TLjIAiuahQeiwmV3fF0l039M2FlKuKYhxwz
-	iPW5GF3Ck5SyZ2+8IuYdXHZ0zlaYFneoMUjFzcH1OfXj61nAXOnd+v681mzrz4WWOLzBzgKTEYF
-	prOQdaRpK4Gu28CQKY8hapvGx4Iumwjr9u
-X-Google-Smtp-Source: AGHT+IHLM13r5LQMnt/OJInRecUisomAa2MvrC2cG1/52NjvwtuMZLiyrwCa048XZprJyFm6wajB2w==
-X-Received: by 2002:a17:907:3daa:b0:b40:5dac:ed3f with SMTP id a640c23a62f3a-b50a9d59a8cmr718516366b.7.1759996806312;
-        Thu, 09 Oct 2025 01:00:06 -0700 (PDT)
-Received: from f.. (cst-prg-66-155.cust.vodafone.cz. [46.135.66.155])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b5007639379sm553509366b.48.2025.10.09.01.00.03
+        d=1e100.net; s=20230601; t=1760000935; x=1760605735;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=C+uXX49aJSWydq7w+IBivpuqIIen5cjqVetpqZ6Ubl0=;
+        b=U9GF6+kgv21SlDB9tGexNs/XqMFQibMkGQvHOrBb+TvcNL7sMNBrNrOkvTf4PuoTml
+         UBTv0364H4dw3Ue5gYgu10+5e7u14l54oCQec0eVdw4ZZuwziy0RtnoHGN5aCP87FbNy
+         So2St0vKRt8Z8LdME7yl3qlV/S+uu3lq3HIZDZK5qtOmML3kj06tF81IWLJbkZipicOB
+         kyqISMf6Qoz7m8xONdqZgeqBeN+hgYVtcsZ3SxvMMdA/fxzPkpEuz7TOWfAyM5ift3XG
+         /HFEU6bmjEaEewEOvy5JBRq0HuKOi9H+f59MwvW7fOpw6S0Dum1ohsAHjitZnttJ2RRq
+         RdLA==
+X-Gm-Message-State: AOJu0Yz+4c4SE0ZnplNd15umllictVxwj+GX/JNpHXxffieteBLe6Mhc
+	V5DlGH69xpACe+jcWAo8npC8f0YGBr5uYnDQpH8fcvWiUb7hSPJ6Kz9F
+X-Gm-Gg: ASbGncvJHHXByzNbBoxRcL5tC6pPUgEB8qWpvCQtlMRBWEyKbd8MwIuA0hhSYa4ksrf
+	rY6yka8GtxBk/gyRRXhoD51xlxkNJjEZLWpm/9Q+uejRw1TwrL1kxJR+JyrcP5X9GhmFF4nQWnY
+	GIoknpSnDMKDtpxiOJFgwY2ZM6M81AMktaJappJ/Ghh1k7m0EPBxrKU9+yAhCpoIUetMN1YqBQY
+	sPAEK0SZxViDiN9ARlpRY55/Gpp7dsrNtpu6JawsltYTAmRqWzpKr7atBN47mjHqWZpuHR/+hrP
+	VGfMk+CcbgCpl+RTgtpKUbEesCevzaNCtYGBziLNI+9pU+Blh8WfcrucCRIOotROtcthUtXn8HM
+	bwYoR6Bb8IecGiPSfvLiubRT5atTAQAYJ7nsPrRBwszw8MLzk5erS9qc3V2eOVdPeeYzY
+X-Google-Smtp-Source: AGHT+IFGt4O/r0xFNJrXeC/igV78+a3q45ov1VJNkdOtbNUnCJ+CIdkFX31aFA1MGzKQAcgaH9fqOA==
+X-Received: by 2002:a05:6a21:3285:b0:2b9:b64:5aae with SMTP id adf61e73a8af0-32da8462febmr8919546637.29.1760000935143;
+        Thu, 09 Oct 2025 02:08:55 -0700 (PDT)
+Received: from VM-16-24-fedora.. ([43.153.32.141])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b6099f58ac2sm20209182a12.35.2025.10.09.02.08.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Oct 2025 01:00:05 -0700 (PDT)
-From: Mateusz Guzik <mjguzik@gmail.com>
-To: brauner@kernel.org
-Cc: viro@zeniv.linux.org.uk,
-	jack@suse.cz,
-	linux-kernel@vger.kernel.org,
+        Thu, 09 Oct 2025 02:08:54 -0700 (PDT)
+From: alexjlzheng@gmail.com
+X-Google-Original-From: alexjlzheng@tencent.com
+To: djwong@kernel.org,
+	brauner@kernel.org
+Cc: linux-xfs@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
-	josef@toxicpanda.com,
-	kernel-team@fb.com,
-	amir73il@gmail.com,
-	linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	ceph-devel@vger.kernel.org,
-	linux-unionfs@vger.kernel.org,
-	Mateusz Guzik <mjguzik@gmail.com>
-Subject: [PATCH v7 14/14] fs: make plain ->i_state access fail to compile
-Date: Thu,  9 Oct 2025 09:59:28 +0200
-Message-ID: <20251009075929.1203950-15-mjguzik@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20251009075929.1203950-1-mjguzik@gmail.com>
-References: <20251009075929.1203950-1-mjguzik@gmail.com>
+	linux-kernel@vger.kernel.org,
+	dave.hansen@linux.intel.com,
+	Jinliang Zheng <alexjlzheng@tencent.com>
+Subject: [PATCH] iomap: move prefaulting out of hot write path
+Date: Thu,  9 Oct 2025 17:08:51 +0800
+Message-ID: <20251009090851.2811395-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -88,104 +76,77 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-... to make sure all accesses are properly validated.
+From: Jinliang Zheng <alexjlzheng@tencent.com>
 
-Merely renaming the var to __i_state still lets the compiler make the
-following suggestion:
-error: 'struct inode' has no member named 'i_state'; did you mean '__i_state'?
+Prefaulting the write source buffer incurs an extra userspace access
+in the common fast path. Make iomap_write_iter() consistent with
+generic_perform_write(): only touch userspace an extra time when
+copy_folio_from_iter_atomic() has failed to make progress.
 
-Unfortunately some people will add the __'s and call it a day.
+This patch is inspired by commit 665575cff098 ("filemap: move
+prefaulting out of hot write path").
 
-In order to make it harder to mess up in this way, hide it behind a
-struct. The resulting error message should be convincing in terms of
-checking what to do:
-error: invalid operands to binary & (have 'struct inode_state_flags' and 'int')
-
-Of course people determined to do a plain access can still do it, but
-nothing can be done for that case.
-
-Signed-off-by: Mateusz Guzik <mjguzik@gmail.com>
+Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
 ---
- include/linux/fs.h | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+ fs/iomap/buffered-io.c | 31 ++++++++++++++++---------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 77b6486dcae7..21c73df3ce75 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -785,6 +785,13 @@ enum inode_state_flags_enum {
- #define I_DIRTY (I_DIRTY_INODE | I_DIRTY_PAGES)
- #define I_DIRTY_ALL (I_DIRTY | I_DIRTY_TIME)
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 8b847a1e27f1..6e6573fce78a 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -972,21 +972,6 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i,
+ 		if (bytes > iomap_length(iter))
+ 			bytes = iomap_length(iter);
  
-+/*
-+ * Use inode_state_read() & friends to access.
-+ */
-+struct inode_state_flags {
-+	enum inode_state_flags_enum __state;
-+};
+-		/*
+-		 * Bring in the user page that we'll copy from _first_.
+-		 * Otherwise there's a nasty deadlock on copying from the
+-		 * same page as we're writing to, without it being marked
+-		 * up-to-date.
+-		 *
+-		 * For async buffered writes the assumption is that the user
+-		 * page has already been faulted in. This can be optimized by
+-		 * faulting the user page.
+-		 */
+-		if (unlikely(fault_in_iov_iter_readable(i, bytes) == bytes)) {
+-			status = -EFAULT;
+-			break;
+-		}
+-
+ 		status = iomap_write_begin(iter, write_ops, &folio, &offset,
+ 				&bytes);
+ 		if (unlikely(status)) {
+@@ -1001,6 +986,12 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i,
+ 		if (mapping_writably_mapped(mapping))
+ 			flush_dcache_folio(folio);
+ 
++		/*
++		 * Faults here on mmap()s can recurse into arbitrary
++		 * filesystem code. Lots of locks are held that can
++		 * deadlock. Use an atomic copy to avoid deadlocking
++		 * in page fault handling.
++		 */
+ 		copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
+ 		written = iomap_write_end(iter, bytes, copied, folio) ?
+ 			  copied : 0;
+@@ -1039,6 +1030,16 @@ static int iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i,
+ 				bytes = copied;
+ 				goto retry;
+ 			}
 +
- /*
-  * Keep mostly read-only and often accessed (especially for
-  * the RCU path lookup and 'stat' data) fields at the beginning
-@@ -843,7 +850,7 @@ struct inode {
- #endif
- 
- 	/* Misc */
--	enum inode_state_flags_enum i_state;
-+	struct inode_state_flags i_state;
- 	/* 32-bit hole */
- 	struct rw_semaphore	i_rwsem;
- 
-@@ -909,19 +916,19 @@ struct inode {
-  */
- static inline enum inode_state_flags_enum inode_state_read_once(struct inode *inode)
- {
--	return READ_ONCE(inode->i_state);
-+	return READ_ONCE(inode->i_state.__state);
- }
- 
- static inline enum inode_state_flags_enum inode_state_read(struct inode *inode)
- {
- 	lockdep_assert_held(&inode->i_lock);
--	return inode->i_state;
-+	return inode->i_state.__state;
- }
- 
- static inline void inode_state_set_raw(struct inode *inode,
- 				       enum inode_state_flags_enum flags)
- {
--	WRITE_ONCE(inode->i_state, inode->i_state | flags);
-+	WRITE_ONCE(inode->i_state.__state, inode->i_state.__state | flags);
- }
- 
- static inline void inode_state_set(struct inode *inode,
-@@ -934,7 +941,7 @@ static inline void inode_state_set(struct inode *inode,
- static inline void inode_state_clear_raw(struct inode *inode,
- 					 enum inode_state_flags_enum flags)
- {
--	WRITE_ONCE(inode->i_state, inode->i_state & ~flags);
-+	WRITE_ONCE(inode->i_state.__state, inode->i_state.__state & ~flags);
- }
- 
- static inline void inode_state_clear(struct inode *inode,
-@@ -947,7 +954,7 @@ static inline void inode_state_clear(struct inode *inode,
- static inline void inode_state_assign_raw(struct inode *inode,
- 					  enum inode_state_flags_enum flags)
- {
--	WRITE_ONCE(inode->i_state, flags);
-+	WRITE_ONCE(inode->i_state.__state, flags);
- }
- 
- static inline void inode_state_assign(struct inode *inode,
-@@ -962,7 +969,7 @@ static inline void inode_state_replace_raw(struct inode *inode,
- 					   enum inode_state_flags_enum setflags)
- {
- 	enum inode_state_flags_enum flags;
--	flags = inode->i_state;
-+	flags = inode->i_state.__state;
- 	flags &= ~clearflags;
- 	flags |= setflags;
- 	inode_state_assign_raw(inode, flags);
++			/*
++			 * 'folio' is now unlocked and faults on it can be
++			 * handled. Ensure forward progress by trying to
++			 * fault it in now.
++			 */
++			if (fault_in_iov_iter_readable(i, bytes) == bytes) {
++				status = -EFAULT;
++				break;
++			}
+ 		} else {
+ 			total_written += written;
+ 			iomap_iter_advance(iter, &written);
 -- 
-2.34.1
+2.49.0
 
