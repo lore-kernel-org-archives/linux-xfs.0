@@ -1,89 +1,83 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D634E2F1FE9
-	for <linux-xfs@vger.kernel.org>; Fri, 10 Oct 2025 14:44:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E01B2F9DA1
+	for <linux-xfs@vger.kernel.org>; Fri, 10 Oct 2025 15:30:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760107465; cv=none; b=eLyzxUfqjwgLJwhXJOXUJMX6EDr8U9w5nMIwgAFaN9X1151FiizdbEIVNU6ZNEW7fNuHpNE+ow9vFeDZ5MFfl1WzpBfnPPI2/OEZgkYulEDnIxf2ApniAi71w3tKsQqF9ug0LvlCQ/e7SkNO5YYzduqH2n97VNE+r1AE9ZZ6Oos=
+	t=1760110260; cv=none; b=iYAz9KpqxQKHO4tZ5SrL4nr6WlUOpKyNSeP+Qk8RlWifhtHGd9Z//qKhxEJ4uBJUUBtZgaDW3iRRsPZkEw4GIyPGz4Yxnyf41XApFucHwpkqDgST34QKak8AIf8AbRok4Y/vS9MjIk6a9Q+v8pIOId5pOun2N1VgSy2XxWjnBJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760107465; c=relaxed/simple;
-	bh=otewvy1SKQKUiBbtFLMLxCv1J0smN2v/CXcupri8NvE=;
+	s=arc-20240116; t=1760110260; c=relaxed/simple;
+	bh=/03Pw5upvDM5utHp0VziZGnocQcEhzmDgUxgcESsugw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OMlJA7d1a0cqfRgu2ZVtnTEwaUH6tPcHwE9szk8fTkO7Q+5SzKoym7kkKHM9F5vlWnrYUpKKob6xgwM+7xR8G9HVc40/a+fDezWCzauq8Zz1mqKpWcOhS47zinaywgYIKAFVSSGZt+OfQKKVDHRS7BsiFzQURus55tkludKR8qY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=rEOGc2QG; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=k8Bd1OmN; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=rEOGc2QG; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=k8Bd1OmN; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=gyP+vZqIG4rUqXXYL7JSK6txxz3FGoT3CaCnb5sfQeg5PeNxSpdXrrBILsJ+n8e1ieJgax+LPOhCLZo8a6hXpJjA6r7vOaDwbSu5PZbxGnm9dBJAp8RbwsnGcW43DAwle8UUDW+IztHpmI5Nb3z7UiGkjLXvxje5zT+DkN/3b5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Za+WjAO5; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="rEOGc2QG";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="k8Bd1OmN";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="rEOGc2QG";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="k8Bd1OmN"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id E81071F393;
-	Fri, 10 Oct 2025 14:44:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1760107462; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Za+WjAO5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1760110257;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=iAAwqaAerezpxf2CYgSSWjLVyuTqzxcgxlzpFnSX2vA=;
-	b=rEOGc2QGAu8Cnqx+FyIAN0gYX3YCn0MNtWLodXfkX3kCH3qcnvTAHgDNDv1qBtc9OpJ0WB
-	zb2JAO2kLcGb7oaTYpSkXmWFMBVVqm8MVPSQmY1Ea5m+D0Sw/wZawDsz4XpRKq24Ud6t2J
-	lAwwtKPM33aTYAH9YXYs5ToIe8agogY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1760107462;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iAAwqaAerezpxf2CYgSSWjLVyuTqzxcgxlzpFnSX2vA=;
-	b=k8Bd1OmNTb4kY+4JisnsrWtZOGzKYbMNyNv5rnmMAsSliimeSASBiRr8vPAorbNOwBnvDr
-	SxecT5fpZYMaoyAw==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=rEOGc2QG;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=k8Bd1OmN
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1760107462; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iAAwqaAerezpxf2CYgSSWjLVyuTqzxcgxlzpFnSX2vA=;
-	b=rEOGc2QGAu8Cnqx+FyIAN0gYX3YCn0MNtWLodXfkX3kCH3qcnvTAHgDNDv1qBtc9OpJ0WB
-	zb2JAO2kLcGb7oaTYpSkXmWFMBVVqm8MVPSQmY1Ea5m+D0Sw/wZawDsz4XpRKq24Ud6t2J
-	lAwwtKPM33aTYAH9YXYs5ToIe8agogY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1760107462;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iAAwqaAerezpxf2CYgSSWjLVyuTqzxcgxlzpFnSX2vA=;
-	b=k8Bd1OmNTb4kY+4JisnsrWtZOGzKYbMNyNv5rnmMAsSliimeSASBiRr8vPAorbNOwBnvDr
-	SxecT5fpZYMaoyAw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B5FC813A40;
-	Fri, 10 Oct 2025 14:44:21 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Yq5qLMUb6WjvJQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Fri, 10 Oct 2025 14:44:21 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 02876A0A58; Fri, 10 Oct 2025 16:44:19 +0200 (CEST)
-Date: Fri, 10 Oct 2025 16:44:19 +0200
-From: Jan Kara <jack@suse.cz>
-To: Mateusz Guzik <mjguzik@gmail.com>
-Cc: brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz, 
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, josef@toxicpanda.com, 
-	kernel-team@fb.com, amir73il@gmail.com, linux-btrfs@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org, 
-	linux-unionfs@vger.kernel.org
-Subject: Re: [PATCH v7 03/14] fs: provide accessors for ->i_state
-Message-ID: <h2etb4acmmlmcvvfyh2zbwgy7bd4xeuqqyciqjw6k5zd3thmzq@vwhxpsoauli7>
-References: <20251009075929.1203950-1-mjguzik@gmail.com>
- <20251009075929.1203950-4-mjguzik@gmail.com>
+	bh=toyaPl0BwPmMTea5F2bVNCmB2GMR7wLyTYNGYyEE7m0=;
+	b=Za+WjAO5/3I1jFKVzDGaYr0rAhrhsArTGse2ZH0CUT1LCdXQ5/dRUklpcG9WyTsC2FMO0B
+	P9mI4Lge075/+3MnJVxryzolYuVzqW/35kzs0St0FQor4UJvWUnXWeDSlktrn8OXox7SKW
+	GIAclg90Gi4728MdeE+1hqS789Ja8ZU=
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
+ [209.85.215.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-28-v1Q1_uL8MeS71IxbWUI-vA-1; Fri, 10 Oct 2025 11:30:56 -0400
+X-MC-Unique: v1Q1_uL8MeS71IxbWUI-vA-1
+X-Mimecast-MFC-AGG-ID: v1Q1_uL8MeS71IxbWUI-vA_1760110254
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-b63038a6350so4693144a12.0
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Oct 2025 08:30:55 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1760110254; x=1760715054;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=toyaPl0BwPmMTea5F2bVNCmB2GMR7wLyTYNGYyEE7m0=;
+        b=DrLxto7n4Trj36WSwdjR9KKZ0iQwz/IbT2AXyt405N+JQhdEuYNyG2UJktuYJhNeYS
+         UD/3dWPZmajRalC+EUoRmhzhZ9Fx/7VPej8XhRRWHvzPxflQERoaOuy7d243bqdBChmd
+         7YlXZuksoaGVDkhIhVidxTNpA4LUU1Buh653N5IG89n1f0aIGf5cbEvDf/PgmRp6Y/xf
+         KuZ2O/PvU5HxeLzbXAH6CR9+qirQkjBgjaqNqZhMSQLubIkeEQ6lVR3ZzqmN7r8EtzCw
+         kTBfYnJ4dfJriSlbmujipBsp1tR1RUWedSG7XJjnJBxWmxhlX1udVgD9+4LrPgYu2i9+
+         f9IA==
+X-Forwarded-Encrypted: i=1; AJvYcCXi5nZZDXrvdMy66aIDe2G6sVx0gO91gR4LLWe/M0M96Q9i86ZniB8H5aFGa5mJ4DCjXWuNgtplmq4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwqDvW1GEMhhQ78UEFQ4S+sDm7ylGkw5q88t1gq+jWDA3agiuIi
+	uKnvFL+NiGhp3XZkyFYtFAVApScPz/uRChkXOyvruJJ1T/iYXKi6E1zM1hMxWWZ1/SZS9vD/Fqe
+	WE5BIJ43LrVLJWye4iBUfoH/G0sx0Bb+LQWMMKAyBMIPGudxCvZTKSztVD/eIpw==
+X-Gm-Gg: ASbGncuJG7j8BkosbP31FpP72hhqApzF6uP0cw0lqbXGmMSGdHbSUM6xg7N462+y1je
+	qRUjCk8uyvZbsO3hU4Xfpl/icKyI1gjRIEhudx4ISgZLOzg9szM96AoEEuOZIf2a6eYOrmhpfGl
+	YdUOk71kyvRjmgRV1WBVMyDz5I1YuHey/fEUu0I9vXLb3xWmn0zFEeEC3Ni4gGwptiConx5qLiq
+	7FZiD5ch0cDxmPaBkHEBgBUkAWmsM7aHPsfoLBVypmjx/N7mYkK4jNmv55k04G3TL5ODhI0By+B
+	w8JObhKz2+TdkPYtBV6JA54DazKcklN0UC7tj/0Ah/pRVhdgOnbO3i7+hJyVQdtg+NsNcYg4TGi
+	r389f
+X-Received: by 2002:a17:90b:1a8b:b0:32e:2fa7:fe6b with SMTP id 98e67ed59e1d1-33b5171dc4bmr17090587a91.14.1760110253884;
+        Fri, 10 Oct 2025 08:30:53 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IE1f0AGOsJEpmCcJ38D9CxFjhHy8Xot8TOmTMK+pphk9BVjIZONuSrczqBgiHp9KjaWoWWqJg==
+X-Received: by 2002:a17:90b:1a8b:b0:32e:2fa7:fe6b with SMTP id 98e67ed59e1d1-33b5171dc4bmr17090474a91.14.1760110253113;
+        Fri, 10 Oct 2025 08:30:53 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-33b52a5656dsm4025456a91.11.2025.10.10.08.30.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Oct 2025 08:30:52 -0700 (PDT)
+Date: Fri, 10 Oct 2025 23:30:47 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Andrey Albershteyn <aalbersh@kernel.org>
+Subject: Re: [PATCH v4 1/3] file_attr: introduce program to set/get fsxattr
+Message-ID: <20251010153047.2abso45wwnkfeykz@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20251003-xattrat-syscall-v4-0-1cfe6411c05f@kernel.org>
+ <20251003-xattrat-syscall-v4-1-1cfe6411c05f@kernel.org>
+ <20251005103656.5qu3lmjvlcjkwjx4@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <7mytyiatnhgwplgda3cmiqq3hb7z6ulwgvwbkueb5dm2sdxwlg@ijti4d7vgrck>
+ <20251009185630.GA6178@frogsfrogsfrogs>
+ <g25qhhy73arfepcubtsvrhfc3e3e2dktoludzpfwqxvkcphkxf@4n5s4jpvxmpr>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -92,111 +86,192 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251009075929.1203950-4-mjguzik@gmail.com>
-X-Rspamd-Queue-Id: E81071F393
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[14];
-	MIME_TRACE(0.00)[0:+];
-	FREEMAIL_TO(0.00)[gmail.com];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[kernel.org,zeniv.linux.org.uk,suse.cz,vger.kernel.org,toxicpanda.com,fb.com,gmail.com];
-	RCVD_COUNT_THREE(0.00)[3];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.cz:dkim,suse.com:email];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.cz:+]
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spam-Score: -4.01
-X-Spam-Level: 
+In-Reply-To: <g25qhhy73arfepcubtsvrhfc3e3e2dktoludzpfwqxvkcphkxf@4n5s4jpvxmpr>
 
-On Thu 09-10-25 09:59:17, Mateusz Guzik wrote:
-> +static inline void inode_state_set_raw(struct inode *inode,
-> +				       enum inode_state_flags_enum flags)
-> +{
-> +	WRITE_ONCE(inode->i_state, inode->i_state | flags);
-> +}
+On Fri, Oct 10, 2025 at 11:30:30AM +0200, Andrey Albershteyn wrote:
+> On 2025-10-09 11:56:30, Darrick J. Wong wrote:
+> > On Mon, Oct 06, 2025 at 11:37:53AM +0200, Andrey Albershteyn wrote:
+> > > On 2025-10-05 18:36:56, Zorro Lang wrote:
+> > > > On Fri, Oct 03, 2025 at 11:32:44AM +0200, Andrey Albershteyn wrote:
+> > > > > This programs uses newly introduced file_getattr and file_setattr
+> > > > > syscalls. This program is partially a test of invalid options. This will
+> > > > > be used further in the test.
+> > > > > 
+> > > > > Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
+> > > > > ---
+> > > > 
+> > > > [snap]
+> > > > 
+> > > > > +	if (!path1 && optind < argc)
+> > > > > +		path1 = argv[optind++];
+> > > > > +	if (!path2 && optind < argc)
+> > > > > +		path2 = argv[optind++];
+> > > > > +
+> > > > > +	if (at_fdcwd) {
+> > > > > +		fd = AT_FDCWD;
+> > > > > +		path = path1;
+> > > > > +	} else if (!path2) {
+> > > > > +		error = stat(path1, &status);
+> > > > > +		if (error) {
+> > > > > +			fprintf(stderr,
+> > > > > +"Can not get file status of %s: %s\n", path1, strerror(errno));
+> > > > > +			return error;
+> > > > > +		}
+> > > > > +
+> > > > > +		if (SPECIAL_FILE(status.st_mode)) {
+> > > > > +			fprintf(stderr,
+> > > > > +"Can not open special file %s without parent dir: %s\n", path1, strerror(errno));
+> > > > > +			return errno;
+> > > > > +		}
+> > > > > +
+> > > > > +		fd = open(path1, O_RDONLY);
+> > > > > +		if (fd == -1) {
+> > > > > +			fprintf(stderr, "Can not open %s: %s\n", path1,
+> > > > > +					strerror(errno));
+> > > > > +			return errno;
+> > > > > +		}
+> > > > > +	} else {
+> > > > > +		fd = open(path1, O_RDONLY);
+> > > > > +		if (fd == -1) {
+> > > > > +			fprintf(stderr, "Can not open %s: %s\n", path1,
+> > > > > +					strerror(errno));
+> > > > > +			return errno;
+> > > > > +		}
+> > > > > +		path = path2;
+> > > > > +	}
+> > > > > +
+> > > > > +	if (!path)
+> > > > > +		at_flags |= AT_EMPTY_PATH;
+> > > > > +
+> > > > > +	error = file_getattr(fd, path, &fsx, fa_size,
+> > > > > +			at_flags);
+> > > > > +	if (error) {
+> > > > > +		fprintf(stderr, "Can not get fsxattr on %s: %s\n", path,
+> > > > > +				strerror(errno));
+> > > > > +		return error;
+> > > > > +	}
+> > > > 
+> > > > We should have a _require_* helper to _notrun your generic and xfs test cases,
+> > > > when system doesn't support the file_getattr/setattr feature. Or we always hit
+> > > > something test errors like below on old system:
+> > > > 
+> > > >   +Can not get fsxattr on ./fifo: Operation not supported
+> > > > 
+> > > > Maybe check if the errno is "Operation not supported", or any better idea?
+> > > 
+> > > There's build system check for file_getattr/setattr syscalls, so if
+> > > they aren't in the kernel file_attr will not compile.
+> > > 
+> > > Then there's _require_test_program "file_attr" in the tests, so
+> > > these will not run if kernel doesn't have these syscalls.
+> > > 
+> > > However, for XFS for example, there's [1] and [2] which are
+> > > necessary for these tests to pass. 
+> > > 
+> > > So, there a few v6.17 kernels which would still run these tests but
+> > > fail for XFS (and still fails as these commits are in for-next now).
+> > > 
+> > > For other filesystems generic/ will also fail on newer kernels as it
+> > > requires similar modifications as in XFS to support changing file
+> > > attributes on special files.
+> > > 
+> > > I suppose it make sense for this test to fail for other fs which
+> > > don't implement changing file attributes on special files.
+> > > Otherwise, this test could be split into generic/ (file_get/setattr
+> > > on regular files) and xfs/ (file_get/setattr on special files).
+> > > 
+> > > What do you think?
+> > 
+> > generic/772 (and xfs/648) probably each ought to be split into two
+> > pieces -- one for testing file_[gs]etattr on regular/directory files;
+> > and a second one for the special files.  All four of them ought to
+> > _notrun if the kernel doesn't support the intended target.
+> 
+> I see, yeah that's what I thought of, I will split them and send new
+> patchset soon
 
-I think this shouldn't really exist as it is dangerous to use and if we
-deal with XFS, nobody will actually need this function.
+This patchset has been merged, as the feature has been merged, so let's
+have the coverage at first. Please feel free to change the cases base on
+the newest for-next branch.
 
-> +static inline void inode_state_set(struct inode *inode,
-> +				   enum inode_state_flags_enum flags)
-> +{
-> +	lockdep_assert_held(&inode->i_lock);
-> +	inode_state_set_raw(inode, flags);
-> +}
-> +
-> +static inline void inode_state_clear_raw(struct inode *inode,
-> +					 enum inode_state_flags_enum flags)
-> +{
-> +	WRITE_ONCE(inode->i_state, inode->i_state & ~flags);
-> +}
+> 
+> > 
+> > Right now I have injected into both:
+> > 
+> > mkfifo $projectdir/fifo
+> > 
+> > $here/src/file_attr --get $projectdir ./fifo &>/dev/null || \
+> > 	_notrun "file_getattr not supported on $FSTYP"
+> 
+> Thanks! Looks like a good check to use
 
-Ditto here.
+Yes, use you src/file_attr program in the _require_ helper, refer to
+_require_idmapped_mounts or _require_seek_data_hole or others.
 
-> +static inline void inode_state_clear(struct inode *inode,
-> +				     enum inode_state_flags_enum flags)
-> +{
-> +	lockdep_assert_held(&inode->i_lock);
-> +	inode_state_clear_raw(inode, flags);
-> +}
-> +
-> +static inline void inode_state_assign_raw(struct inode *inode,
-> +					  enum inode_state_flags_enum flags)
-> +{
-> +	WRITE_ONCE(inode->i_state, flags);
-> +}
-> +
-> +static inline void inode_state_assign(struct inode *inode,
-> +				      enum inode_state_flags_enum flags)
-> +{
-> +	lockdep_assert_held(&inode->i_lock);
-> +	inode_state_assign_raw(inode, flags);
-> +}
-> +
-> +static inline void inode_state_replace_raw(struct inode *inode,
-> +					   enum inode_state_flags_enum clearflags,
-> +					   enum inode_state_flags_enum setflags)
-> +{
-> +	enum inode_state_flags_enum flags;
-> +	flags = inode->i_state;
-> +	flags &= ~clearflags;
-> +	flags |= setflags;
-> +	inode_state_assign_raw(inode, flags);
-> +}
+Thanks,
+Zorro
 
-Nobody needs this so I'd just provide inode_state_replace().
+> 
+> > 
+> > to make the failures go away on 6.17.
+> > 
+> > --D
+> > 
+> > > [1]: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/commit/?h=for-next&id=8a221004fe5288b66503699a329a6b623be13f91
+> > > [2]: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/commit/?h=for-next&id=0239bd9fa445a21def88f7e76fe6e0414b2a4da0
+> > > 
+> > > > 
+> > > > 
+> > > > Thanks,
+> > > > Zorro
+> > > > 
+> > > > > +	if (action) {
+> > > > > +		fsx.fa_xflags |= (fa_xflags | unknwon_fa_flag);
+> > > > > +
+> > > > > +		error = file_setattr(fd, path, &fsx, fa_size,
+> > > > > +				at_flags);
+> > > > > +		if (error) {
+> > > > > +			fprintf(stderr, "Can not set fsxattr on %s: %s\n", path,
+> > > > > +					strerror(errno));
+> > > > > +			return error;
+> > > > > +		}
+> > > > > +	} else {
+> > > > > +		if (path2)
+> > > > > +			print_xflags(fsx.fa_xflags, 0, 1, path, 0, 1);
+> > > > > +		else
+> > > > > +			print_xflags(fsx.fa_xflags, 0, 1, path1, 0, 1);
+> > > > > +	}
+> > > > > +
+> > > > > +	return error;
+> > > > > +
+> > > > > +usage:
+> > > > > +	printf("Usage: %s [options]\n", argv[0]);
+> > > > > +	printf("Options:\n");
+> > > > > +	printf("\t--get, -g\t\tget filesystem inode attributes\n");
+> > > > > +	printf("\t--set, -s\t\tset filesystem inode attributes\n");
+> > > > > +	printf("\t--at-cwd, -a\t\topen file at current working directory\n");
+> > > > > +	printf("\t--no-follow, -n\t\tdon't follow symlinks\n");
+> > > > > +	printf("\t--set-nodump, -d\t\tset FS_XFLAG_NODUMP on an inode\n");
+> > > > > +	printf("\t--invalid-at, -i\t\tUse invalid AT_* flag\n");
+> > > > > +	printf("\t--too-big-arg, -b\t\tSet fsxattr size bigger than PAGE_SIZE\n");
+> > > > > +	printf("\t--too-small-arg, -m\t\tSet fsxattr size to 19 bytes\n");
+> > > > > +	printf("\t--new-fsx-flag, -x\t\tUse unknown fa_flags flag\n");
+> > > > > +
+> > > > > +	return 1;
+> > > > > +}
+> > > > > 
+> > > > > -- 
+> > > > > 2.50.1
+> > > > > 
+> > > > 
+> > > 
+> > > -- 
+> > > - Andrey
+> > > 
+> > > 
+> > 
+> 
+> -- 
+> - Andrey
+> 
 
-> +static inline void inode_state_replace(struct inode *inode,
-> +				       enum inode_state_flags_enum clearflags,
-> +				       enum inode_state_flags_enum setflags)
-> +{
-> +	lockdep_assert_held(&inode->i_lock);
-> +	inode_state_replace_raw(inode, clearflags, setflags);
-> +}
-> +
->  static inline void inode_set_cached_link(struct inode *inode, char *link, int linklen)
->  {
->  	VFS_WARN_ON_INODE(strlen(link) != linklen, inode);
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
