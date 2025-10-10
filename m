@@ -1,165 +1,113 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+Received: from mail-lj1-f174.google.com (mail-lj1-f174.google.com [209.85.208.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E618262FE7
-	for <linux-xfs@vger.kernel.org>; Fri, 10 Oct 2025 15:51:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6C0072614
+	for <linux-xfs@vger.kernel.org>; Fri, 10 Oct 2025 17:35:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760111483; cv=none; b=gPUF6Vb8UDQjZMVBXtUxYYWqhcAdxheGccAnENo2BZ6UnH8Rc3ti1jZWzHK5ilg2e63bzdIiCzDMiA8Rh6qHJy7s8Gbije6TjgxPD4lfF4/+1TtR8qYpqJGBYbC8/VUcunvIYHGbYn1YdIoXoTPMQ6w1Rg+YYXbjdbqsGvoyEyo=
+	t=1760117755; cv=none; b=Orx0zOMfX/DLHv9wyd9CGc/ycrb6sYsv6ZLVypapTs1JZVt1U8DmLpNZByWecBjbyP68pDO7+qbgkx6+5yA9ex6FyUV6xIlTxURTxPNWifguLIU3FxPXO1U+FTupiHmU8RPDK8qu8K88jghv4WVb0PnMyfoRFj9sDGKIHekfrs4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760111483; c=relaxed/simple;
-	bh=TfNKgAwty2Qn00bV61R/qulEyPoJyzCS7e1xQ1v/Tp0=;
+	s=arc-20240116; t=1760117755; c=relaxed/simple;
+	bh=IggglKYr/mYXyJC0Xtb77bCR7NPMqzz+1XJexnGAlKI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YcH/EHHezdJ+DhP+2QdVCT4sm5nYbvep79rEzBqB2XV+hZdGoBEB5uwos1echYmQ3u+2e3eB9vYPOiv0ohBydMTqe3KCPqDK7E4PxbgOswpOrTL12IE6+4iUREP8WV8NLkSkKoLOa+pjek5oT3UjFtkcEBIBi0PPzc3dGRwMNH8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lCdjm0MC; arc=none smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 To:Cc:Content-Type; b=D1sSk5Z0R2RHIG0PpL+I85lX7HbBSdktmGX3WrHVvap87p+bzel40TfQswLX2yau48pww4IGf9RAS7EGGuo2/mnoVrGYzZH2w1cjoKhnYnYga6GkzwSI+e+D4z2UTfU5CLFlRyyjhShlef0ZLR50gLUXCuvRZL7pt3fF8oTa4ic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=amacapital.net; spf=pass smtp.mailfrom=amacapital.net; dkim=pass (2048-bit key) header.d=amacapital-net.20230601.gappssmtp.com header.i=@amacapital-net.20230601.gappssmtp.com header.b=YhBjrtSf; arc=none smtp.client-ip=209.85.208.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=amacapital.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amacapital.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lCdjm0MC"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-b3e44f22f15so323079366b.2
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Oct 2025 08:51:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=amacapital-net.20230601.gappssmtp.com header.i=@amacapital-net.20230601.gappssmtp.com header.b="YhBjrtSf"
+Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-3682ac7f33fso27151561fa.0
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Oct 2025 10:35:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1760111479; x=1760716279; darn=vger.kernel.org;
+        d=amacapital-net.20230601.gappssmtp.com; s=20230601; t=1760117752; x=1760722552; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=UhH9vWsw8gK9Ns25kQJ5DC4FK/KR5dBSJxG+yxQ1Djk=;
-        b=lCdjm0MCSicT5ohXLnU+1eU4uosnNbe3+T930M/f4sRMs2RHwMBqyjq3JzzRNMWFR1
-         YHE3JeLz3P9jHjdJDIFZLsiScLvsce9q/63KnWKHkCfk7q5TIcB+/L0eJj3rk/gImSbx
-         pKFVSaAyaCSCADkovW4YdjlSMjy22Tt0ZL2XfXyVSOY4PrbXsWupmRfq2Eoqvwnm5AEq
-         AVEISQm1IMYjazjS3gaooCgRRgSqUcG5PV3Ou2x4Y4oDa6jJz6vjRyY22WGBLbUnZpvO
-         4SH17Y/s+f7LQ9a066xc0BoGU/eYBsxJGnRWscpcBKcpH/kLcPftsFMSZ2trN3dHjKzi
-         oPvA==
+        bh=WaJha/RTsiGsaafyilWUj58SigVqroEjGwJdfzbg+mo=;
+        b=YhBjrtSfFIlndoPYWOsFp+0K5W9+lhszy5jBkHHzwMqs8geondC4Zn9mT8GGrFJFyG
+         sTmfuLzn4xBXtWjMJw8D56dl/qyuXW09Swxs+1WDhLP7UcfOHr2/vigGr7kWy5l7WsIn
+         lpYVjTwhFTH5Bmt5ElPpT9YlnFECjR2fXeeFGRMptdiO1b0xt6FE3J7Xs1O4zXze7RPR
+         lb/s1mgGJbrr5LPaNMZ+CHM0LRrs7NNbjdHV7LNG1v0aVmW4kinIzYOuYG9c8R6uMeJB
+         rf0h0jOTG4WJGwl/r99s6dWmZkedeKkj0mhVDYDMW27B9FnA4m2syfqalXRsShC0LosZ
+         fvHw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760111479; x=1760716279;
+        d=1e100.net; s=20230601; t=1760117752; x=1760722552;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=UhH9vWsw8gK9Ns25kQJ5DC4FK/KR5dBSJxG+yxQ1Djk=;
-        b=BryF9VJ7kQXeRsEVVXrM0GLlOCX3eJSxjUY6VtY1qeixYoWwFpOxkljG6UgpOI8NYH
-         QMPv5F1v2q7XRTrbmf794SFco6iav9UkC+i8XJj9+kCeNZB3YX9Jj1v7+de+ew+Ledbd
-         xpQL1au8ZsOf59U8n6baCoXN3D9zTDE/l3MYDGFhosIV1sOZqqhjXa7P7mOVmC6Ug5ut
-         VXX92arJdffiYQI3a+lIoQWzedAa3hC11zCWYLB4uafUbcYBExDxtRY9usfbYQsiQTFT
-         VeJKhvbdRFuP8AEe0IW4eUjVcxOcRQC5u8vu/vIKai9ypTX/4qHlEVGuTd/P/zU/smK6
-         K5pg==
-X-Forwarded-Encrypted: i=1; AJvYcCWIpc79FaGyh0x15S0zS/tsVpB1UegE874x806ZjFVOP3gvwPI8zwZppQcwSKQccP5Pt7a5MQ2Zntk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxqlFRDds+qE6PUayNtBfjEE155GDzcbCHayB6V6H9uaWGgm1c8
-	yKGyDmWAkww0RPzlirdK7BE1a7g7GUJvKKpnhLHfpJRAoLgaP+N0cHiTMVXRwUibCnvHJhUH//g
-	Fv8doNuE69giO5GyvZAfH057tGldWAUE=
-X-Gm-Gg: ASbGncuhCT0BXiplDXuwAmaU2Vn/j4NbXcnepE3qxQDFPmvmx9hxebY9IurR1Wb/Otf
-	DOv2jP4JskoxDwJwnyu3nejoxuohGJRQpBAnGsKUgowUwGHcjvaffd46z4lcUmh+19mMyiZpfRR
-	7bBdJnTY+m4gdBT5FJHZKL/vvgbVnvDZN4OuoRZPQC6HgO4CP34dYlzk8nmCrQoaygqsJZTKpmY
-	TkfyY6uFE+3Xg6kdz4O1WffTH1kn7rijMqzCG3BITq7UANJz0uWIAtO25LbZTXI6964
-X-Google-Smtp-Source: AGHT+IE+fpwB+bY36jZhuFvtAiR+1ExrpMDWYUETjZUPwkwAWYTKotWAPrtOsHK68GTsCIaCtcLyUWD8+YiMIbEIYPI=
-X-Received: by 2002:a17:907:3daa:b0:b4a:d0cf:8748 with SMTP id
- a640c23a62f3a-b50a9a6d769mr1349543366b.13.1760111478957; Fri, 10 Oct 2025
- 08:51:18 -0700 (PDT)
+        bh=WaJha/RTsiGsaafyilWUj58SigVqroEjGwJdfzbg+mo=;
+        b=GKbYPk5LNJ2bafLusXw2dSUSi0spJE1BaOQ4UZqXtQi89+CRSsOwffzSel0k2S6KAv
+         nw0f7+SbTZ45fQ+kWyCup2IaSJe+bCCCsntoTaJmU1ek3R4HYWJdxDoXAJDmwpN3iHzZ
+         +m6lsnFglW5FDVuiykscUGE0PuLWNeCvDG8gbp2EvhPZhbUS46vQWrdgwZmK/EreU7jl
+         WKmA2oqDbXGsWzdJoGenOkhQs8pB38kt4Xg2/GpHZnXsW0eKk3V72CGSc6HYwTHFF2jC
+         66tMxa3MzjMeqQjjaUengU8Zueji+O8//WJMdw8JU1hjyk/aABIkhaODi/+TbKJV/lCN
+         VgrA==
+X-Forwarded-Encrypted: i=1; AJvYcCVd1dlTLmcoru7JWiUd13FeUL4o/9YVmI/7r9danb9vblDPRvxCTIVQORNOcTYCNRVUIG/MYhxTOhk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwKqvIzmPUdrzpbZd7nzqMmbRxKopa4ivWCyaTHS17NFwPtN4s3
+	3xeOdXxtlu5vRzMsMIaxBlIqahkZ/+p2jD8wZP0dV40yqObnDwSy9JuVUanTaUn4kPV4TQ0Wui0
+	wUmubwCvCNIMcrFiTmz9sE9DekTR1CVgCrsKwx4sE
+X-Gm-Gg: ASbGncuvgQOF/Lo7CAOcq5Ui/L4Q4OtrKqjnG7qD3d16xiD11mFkXlPZtodlfioNeyn
+	8Bnqfdd7ukAVTYteKl931ex5BopyGpU+1LGMz9/jMYw3G8u6QdVrirmt/bLKv0Vnx0QC3BXYHvk
+	Q8+29HPhfai1CeIaJp9CvxESg/jx+7V0hLfSpKhNkDGdxmuaGaSl9PoulRg7vLzrtjR2m3vATEA
+	6/Lu+PYp4WPeywCXpYlYkGx
+X-Google-Smtp-Source: AGHT+IEg7U2mRo/sCuEaMBZi05IWQuozDnPwTLA4K00+QiyXbv0V6gmyV4WkX+TMmnnBajijbS/MI1qHRlcuMRqTE5k=
+X-Received: by 2002:a05:651c:1543:b0:372:8cb2:c061 with SMTP id
+ 38308e7fff4ca-375f50e0c56mr40792551fa.8.1760117751464; Fri, 10 Oct 2025
+ 10:35:51 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251009075929.1203950-1-mjguzik@gmail.com> <20251009075929.1203950-4-mjguzik@gmail.com>
- <h2etb4acmmlmcvvfyh2zbwgy7bd4xeuqqyciqjw6k5zd3thmzq@vwhxpsoauli7>
-In-Reply-To: <h2etb4acmmlmcvvfyh2zbwgy7bd4xeuqqyciqjw6k5zd3thmzq@vwhxpsoauli7>
-From: Mateusz Guzik <mjguzik@gmail.com>
-Date: Fri, 10 Oct 2025 17:51:06 +0200
-X-Gm-Features: AS18NWAdR8mn7h75Ldgul-s1iHW_YrjMNEOV1VnI-B-ScP1aM5_q24GjzqXvcko
-Message-ID: <CAGudoHFJxFOj=cbxcjmMtkzXCagg4vgfmexTG1e_Fo1M=QXt-g@mail.gmail.com>
-Subject: Re: [PATCH v7 03/14] fs: provide accessors for ->i_state
-To: Jan Kara <jack@suse.cz>
-Cc: brauner@kernel.org, viro@zeniv.linux.org.uk, linux-kernel@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, josef@toxicpanda.com, kernel-team@fb.com, 
-	amir73il@gmail.com, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org, 
-	linux-unionfs@vger.kernel.org
+References: <20251003093213.52624-1-xemul@scylladb.com> <aOCiCkFUOBWV_1yY@infradead.org>
+ <CALCETrVsD6Z42gO7S-oAbweN5OwV1OLqxztBkB58goSzccSZKw@mail.gmail.com>
+ <aOSgXXzvuq5YDj7q@infradead.org> <CALCETrW3iQWQTdMbB52R4=GztfuFYvN_8p52H1fopdS8uExQWg@mail.gmail.com>
+ <aOiZX9iqZnf9jUdQ@infradead.org>
+In-Reply-To: <aOiZX9iqZnf9jUdQ@infradead.org>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Fri, 10 Oct 2025 10:35:39 -0700
+X-Gm-Features: AS18NWBX3sP91gIkaFjkVoWU_yHoCZUlMOojFvFO4ylrXOUPmoyQCz0m51oXW2k
+Message-ID: <CALCETrXLu_iarb7TWC_6kP8c2Yyh-PweRsKhiHxS=takbG_Kqw@mail.gmail.com>
+Subject: Re: [PATCH] fs: Propagate FMODE_NOCMTIME flag to user-facing O_NOCMTIME
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Pavel Emelyanov <xemul@scylladb.com>, linux-fsdevel@vger.kernel.org, 
+	"Raphael S . Carvalho" <raphaelsc@scylladb.com>, linux-api@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Oct 10, 2025 at 4:44=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
+On Thu, Oct 9, 2025 at 10:27=E2=80=AFPM Christoph Hellwig <hch@infradead.or=
+g> wrote:
 >
-> On Thu 09-10-25 09:59:17, Mateusz Guzik wrote:
-> > +static inline void inode_state_set_raw(struct inode *inode,
-> > +                                    enum inode_state_flags_enum flags)
-> > +{
-> > +     WRITE_ONCE(inode->i_state, inode->i_state | flags);
-> > +}
+> On Wed, Oct 08, 2025 at 08:22:35AM -0700, Andy Lutomirski wrote:
+> > On Mon, Oct 6, 2025 at 10:08=E2=80=AFPM Christoph Hellwig <hch@infradea=
+d.org> wrote:
+> > >
+> > > On Sat, Oct 04, 2025 at 09:08:05AM -0700, Andy Lutomirski wrote:
+> > > > > Well, we'll need to look into that, including maybe non-blockin
+> > > > > timestamp updates.
+> > > > >
+> > > >
+> > > > It's been 12 years (!), but maybe it's time to reconsider this:
+> > > >
+> > > > https://lore.kernel.org/all/cover.1377193658.git.luto@amacapital.ne=
+t/
+> > >
+> > > I don't see how that is relevant here.  Also writes through shared
+> > > mmaps are problematic for so many reasons that I'm not sure we want
+> > > to encourage people to use that more.
+> > >
+> >
+> > Because the same exact issue exists in the normal non-mmap write path,
+> > and I can even quote you upthread :)
 >
-> I think this shouldn't really exist as it is dangerous to use and if we
-> deal with XFS, nobody will actually need this function.
->
+> The thread that started this is about io_uring nonblock writes, aka
+> O_DIRECT.  So there isn't any writeback to defer to.
 
-That's not strictly true, unless you mean code outside of fs/inode.c
+I haven't followed all the internal details, but RWF_DONTCACHE is
+looking pretty good these days, and it does go through the writeback
+path.  I wonder if it's getting good enough that most or all O_DIRECT
+users could switch to using it.
 
-First, something is still needed to clear out the state in
-inode_init_always_gfp().
-
-Afterwards there are few spots which further modify it without the
-spinlock held (for example see insert_inode_locked4()).
-
-My take on the situation is that the current I_NEW et al handling is
-crap and the inode hash api is also crap.
-
-For starters freshly allocated inodes should not be starting with 0,
-but with I_NEW.
-
-I can agree after the dust settles there should be no _raw thing for
-filesystems to use, but getting there is beyond the scope of this
-patchset.
-
-> > +static inline void inode_state_set(struct inode *inode,
-> > +                                enum inode_state_flags_enum flags)
-> > +{
-> > +     lockdep_assert_held(&inode->i_lock);
-> > +     inode_state_set_raw(inode, flags);
-> > +}
-> > +
-> > +static inline void inode_state_clear_raw(struct inode *inode,
-> > +                                      enum inode_state_flags_enum flag=
-s)
-> > +{
-> > +     WRITE_ONCE(inode->i_state, inode->i_state & ~flags);
-> > +}
->
-> Ditto here.
->
-> > +static inline void inode_state_clear(struct inode *inode,
-> > +                                  enum inode_state_flags_enum flags)
-> > +{
-> > +     lockdep_assert_held(&inode->i_lock);
-> > +     inode_state_clear_raw(inode, flags);
-> > +}
-> > +
-> > +static inline void inode_state_assign_raw(struct inode *inode,
-> > +                                       enum inode_state_flags_enum fla=
-gs)
-> > +{
-> > +     WRITE_ONCE(inode->i_state, flags);
-> > +}
-> > +
-> > +static inline void inode_state_assign(struct inode *inode,
-> > +                                   enum inode_state_flags_enum flags)
-> > +{
-> > +     lockdep_assert_held(&inode->i_lock);
-> > +     inode_state_assign_raw(inode, flags);
-> > +}
-> > +
-> > +static inline void inode_state_replace_raw(struct inode *inode,
-> > +                                        enum inode_state_flags_enum cl=
-earflags,
-> > +                                        enum inode_state_flags_enum se=
-tflags)
-> > +{
-> > +     enum inode_state_flags_enum flags;
-> > +     flags =3D inode->i_state;
-> > +     flags &=3D ~clearflags;
-> > +     flags |=3D setflags;
-> > +     inode_state_assign_raw(inode, flags);
-> > +}
->
-> Nobody needs this so I'd just provide inode_state_replace().
->
-
-The unused _raw variants are provided for consistency for the time
-being. I do expect some of them to die later.
+--Andy
