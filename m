@@ -1,248 +1,214 @@
-Received: from mail-vs1-f47.google.com (mail-vs1-f47.google.com [209.85.217.47])
+Received: from mail-lf1-f41.google.com (mail-lf1-f41.google.com [209.85.167.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10713135A53
-	for <linux-xfs@vger.kernel.org>; Sat, 11 Oct 2025 01:44:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26C08B663
+	for <linux-xfs@vger.kernel.org>; Sat, 11 Oct 2025 04:04:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760147046; cv=none; b=hHp4rHE5OO03o9p8wucs6+6ZOpOGrFsvjvB8MNfbwJLYmX0G8cRKbuGcyRC1eY07qFkUd1SdfQJBxXda9Gf6fXfCnOTqqrL62tl/tPI2yw8M2K8rXkCDrqwChhncc31qmkCZn0Wrb3a3aq4EyqnVKNrrXkyXmVW15jxTGayd1Co=
+	t=1760155469; cv=none; b=iB+glYf7pf5F45QtA1mbGZd4SiITtWQygQBuvhpKwdkNXkPf4Try3HcUc3S+IFjToBzk9K/bqF/2n6V48VB97KmvnFRNPQBrBAKE0r5Nne7Q9GEyC5tMLU/dqzB5KB2iA6v+EDWmV4r50J7ousLnLYa9wcXqTkn/bj4lZn4C+N0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760147046; c=relaxed/simple;
-	bh=T+IdLzRTTxOQ0Z7SCLa56SnM6nhwUwKs07m9AmkVVyE=;
+	s=arc-20240116; t=1760155469; c=relaxed/simple;
+	bh=aWOHv5sIMa96Q5/sU0zDoEGYdX0W0fCCXNPW/LilCIY=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=tENW0E9dz0k8dVLSLmJnpdgRSxCREVRTOCLuhpL/lvP5Jf9bwxtrS43vRGG7PUYRssAecLtKynGUT9NX9I3+hytIeEoOPaKl32vNCAbUp6B/K7svk/Mp6aqSsOAiQbtFKnVCTzdWEkKJGdIXqZ4I+ES36cwWzSQJdp7SgYnOIDE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J7Vq8n/8; arc=none smtp.client-ip=209.85.217.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 To:Cc:Content-Type; b=ivS023tLiPbwmESGFaF86SHy6EQlNY3CdAccIUuLp6waS35B/xRTdOAeXH5jB2F48PMCvVROgR9o+NOg/vnbWEchFVZol5z/J7w9zOi91XmIEUZdYuo9lFDusVKfd2OlTU1sFxhch+91iJEZfQcUbQdb8Ruxf9tZvSEVbjaShjQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=amacapital.net; spf=pass smtp.mailfrom=amacapital.net; dkim=pass (2048-bit key) header.d=amacapital-net.20230601.gappssmtp.com header.i=@amacapital-net.20230601.gappssmtp.com header.b=VqF+MD+x; arc=none smtp.client-ip=209.85.167.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=amacapital.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amacapital.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J7Vq8n/8"
-Received: by mail-vs1-f47.google.com with SMTP id ada2fe7eead31-55784771e9dso1248278137.1
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Oct 2025 18:44:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=amacapital-net.20230601.gappssmtp.com header.i=@amacapital-net.20230601.gappssmtp.com header.b="VqF+MD+x"
+Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-57b8fc6097fso3161963e87.1
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Oct 2025 21:04:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1760147042; x=1760751842; darn=vger.kernel.org;
+        d=amacapital-net.20230601.gappssmtp.com; s=20230601; t=1760155465; x=1760760265; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=lZhc66zsxEtV1w8Yg5Xh9+RLE7pB3ih7eNk7XgCUWWk=;
-        b=J7Vq8n/8XeoyYAq6UM7v4iusmsqiPV3dCbTwxuZw7EXzoIcuILlPXwCC+KlCQZ5uLA
-         RrPq/PfJzICjcTOM7U15uj/kqrVbmGvV+ZZ0S8BAAaSCEblz4QFq+Mo8r1cf8HUwamwf
-         Pdom9uwpmo5vTEYs/90loRY1KGL1f+WJFWHv8pk5GSAgW5CLPKc7LiI2XcIFC4W5dDER
-         opbcR008ve17+P/H7s2h16+MZd3iKSf+QlEnK7eP+JVRMUNBV4wEKBjbv85SocJa1UVa
-         t1whWnojqaNG0oUQ9cb2TlRJ0gBoVGnt8u+/JpD31c1K6jfgRxTz9vpBTEqFvAfOEyvc
-         IQWw==
+        bh=wxrYhYASPW7hNkv0I+/dkIwogDxR5uy/leBbcueqFmk=;
+        b=VqF+MD+xgMTgr7lXkfXMbbXY7wkhB30iVLMvIIxxCfW82nr18QYeo3OaxUBzW2Qlto
+         CVm6S0OrCWMCLingwuP6EdHIbUC0nWIg7kl5GzT7WNDytoA+WQptmaD7xk9LLAEXQhs2
+         jQzyMBUOtNl6r5PBU+G2aYwmvquNTCxhlSzL4oljzSpopuQZHPZ+9jM5hgcLcwYTfHng
+         HBU0Vwu63l2ockEh643GDSBPdsoPx9YTHA05cQllOSsMq5Ixev2LbQQgZUDHVWhqKKcl
+         GUxR3FDnYn9nowwKVrkUFPDFoV0wF7jaIIPW03kAPLk6Cf49m3xUVCMaV5T+SWISjs9L
+         lcJg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760147042; x=1760751842;
+        d=1e100.net; s=20230601; t=1760155465; x=1760760265;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=lZhc66zsxEtV1w8Yg5Xh9+RLE7pB3ih7eNk7XgCUWWk=;
-        b=qE6ifpCArHIM3HT/v7XAUxDzNRd/gmvdfmTiNGX63uNfc0XiYM9KOh2xFRklFRrtrF
-         Ei/fOjfTuMrZu3zG87nk0ew3T+ekDZ2/EJcMKgp1BCtOw0PVIyoq2m2/nNGYhPZ5EeiJ
-         CViLLRu/DTtYAeU4zMlSx7CBq15HZxAaJz3jWZyc+aGTCc/TDLOBrOb+UL4wAW6zybj5
-         Yn3pw+l3j/KzcdR3xyN/mWhh80mXHMONo57uICpKgcZ1JL6hWA1IAvOu5czvLOfWdPj9
-         ZeL5Msw/asoC3PBrusJ6w8q7trR4YoFQFhbUaI8vfM0BSfeKf8eob2E8u//0eYxcfhCk
-         uwyQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXtsP1KsZ04YeCz3rQ67Jrg8FRI7UB7O89v1cXSmpishCaD6KSfdENB8zOQXosKYew3nZEn1wuj4C0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzV5bOOZTB+MtHzRKgaICPf+tspFjJdmpqKa+WtdmdJm6JSs/cq
-	YN2H6LnIcF0LOuHg7c0UNN72gHF4QwjMzLe1CzZU7eIN5eZ96xI2kFH0hMOPi0SiVhb1hC3e2JL
-	qoScg2Abdjoaprm0MaHgP49eDrei+L1I=
-X-Gm-Gg: ASbGncsErOElAqPmrL0Nn83nQgb5uzpJRHWiFNEfLDFYWcdlj56KHsC3me6TESHdjye
-	1zM0uhJY3kLsXJPwuoKPsEIh01IAqLdGSHxLdrr+tUhvAdFrhNCjFgDOeKRmiOoSctNIye4INGI
-	lQ+xF6Jc/KbW+KNxBXvn86z1tsiiPsmbvDVnU9OmAaKVFznu4qAwN2U3LOQoUYO0IqpBQeVZk+N
-	H7n2xFxUelt91hdT29WDlaD/Jlzsu7Y
-X-Google-Smtp-Source: AGHT+IE7mG3LNkxY+CyodDwm/x4ptJOMQVJ+H4EmrH8p/RVIObpZc3vVfG1SaOV6rlrj3vGwgT1jiZxnhaAD3dJIuBQ=
-X-Received: by 2002:a05:6102:6cf:b0:524:b344:748d with SMTP id
- ada2fe7eead31-5d5e23474fcmr5780092137.17.1760147041875; Fri, 10 Oct 2025
- 18:44:01 -0700 (PDT)
+        bh=wxrYhYASPW7hNkv0I+/dkIwogDxR5uy/leBbcueqFmk=;
+        b=EqaNvJkBJo90hCcAYMErU4yH1ZYVOP/pqj8T52xNehpybYK91sHYfGFAz6LlnFvXIN
+         Jri7EyYWSOxZMZ5e2+ZOKoDjlxcHt4OUPbvbKXKS3lPM7eQkQlAK7vg70KWooNYqQpLl
+         v85Ii0X0G6gSGCuRs991Mw6762f/PRhXATHyu6zUqRMzOoljK5IH/RECW0grtRtnV4PU
+         aHE75tJukJhl6kEc/nUXDsZHXhNYNhyIBReHBZglt5KdAJquQSkbH/J/u+c9TpbzMbu1
+         XzZYM8ubRFsTNkVvLQErO4n3iHQJq+we+A/panEvww3sp8Sf1UMmRm0QMPqWoBTnI9HZ
+         jttw==
+X-Forwarded-Encrypted: i=1; AJvYcCUvBlJZsuB9MLs9feLTMu4G7WyUEB7HymPAi6qjemeYU/koTEO9DzLIm1tISAxfrdQWgPNdlksBz1w=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzdEjakV2tblN4FYxJUjIqtp+yoV3e1iHF/Au239F4/+r3P3LdO
+	aHW+HGW0y0BEhmD6POZnwfNf/ywJgKlRhAORPOQUfIaVfLI6UoW6pMSAq2Px0W7Y1w0lSWu3yF3
+	c91kJteBV5m40n10soVmWwxTmYeE6KEJjvwFf0KzG
+X-Gm-Gg: ASbGncsrEH+YanFMz6icA8qIF4H+tsfTnBq3nwdIuk7ov5l2HDdlYIMCOqN07Xf7g0q
+	a9BuM/lq5NAEBaCnhNgdfs1RtoVmNP+Q8VQzjciO3//EK/Ile3OyoyulYAAqH06LdYU9UK/bBo6
+	ycT7Fs6bMdGQHKEL7uz85a+53b+PsIctNPn0U9mG9BOcxwjf+82/e76eXdIJJD3JdsXWaBmMKVI
+	frZP321uFlAhC26j0IjfQoH
+X-Google-Smtp-Source: AGHT+IERWkZjkwJeaANefd5QQVPUh0Tn17+zj0nbldzP+dMe/pRxkwxO+dBwZOKYhTBehxYzcRf98nJx4rDx7SgsRAM=
+X-Received: by 2002:a05:6512:3c9c:b0:577:494e:ca61 with SMTP id
+ 2adb3069b0e04-5906dd53f00mr4476671e87.31.1760155465047; Fri, 10 Oct 2025
+ 21:04:25 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251011013312.20698-1-changfengnan@bytedance.com> <CALWNXx-gGbAFCNywLZZUNmenTHQGFuapvNe-7irRGnRFJuNUcA@mail.gmail.com>
-In-Reply-To: <CALWNXx-gGbAFCNywLZZUNmenTHQGFuapvNe-7irRGnRFJuNUcA@mail.gmail.com>
-From: fengnan chang <fengnanchang@gmail.com>
-Date: Sat, 11 Oct 2025 09:43:51 +0800
-X-Gm-Features: AS18NWCBO3jy7FdLyGcQVogGXlatyQB1qaqtXtY1KzxOp2alt1gh71U3rIH7rWo
-Message-ID: <CALWNXx_Lt1CLTaxh+xcd24_nTp-DOaOezUkQ=Vv_Snq3vx2MuA@mail.gmail.com>
-Subject: Re: [PATCH] block: enable per-cpu bio cache by default
-To: Fengnan Chang <changfengnan@bytedance.com>, linux-block@vger.kernel.org
-Cc: axboe@kernel.dk, viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz, 
-	asml.silence@gmail.com, willy@infradead.org, djwong@kernel.org, 
-	hch@infradead.org, ritesh.list@gmail.com, linux-fsdevel@vger.kernel.org, 
-	io-uring@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20251003093213.52624-1-xemul@scylladb.com> <aOCiCkFUOBWV_1yY@infradead.org>
+ <CALCETrVsD6Z42gO7S-oAbweN5OwV1OLqxztBkB58goSzccSZKw@mail.gmail.com>
+ <aOSgXXzvuq5YDj7q@infradead.org> <CALCETrW3iQWQTdMbB52R4=GztfuFYvN_8p52H1fopdS8uExQWg@mail.gmail.com>
+ <aObXUBCtp4p83QzS@dread.disaster.area> <CALCETrX-cs5MH3k369q2Fk5Q-pYQfEV6CW3va-4E9vD1CoCaGA@mail.gmail.com>
+ <aOm0WCB_woFgnv0v@dread.disaster.area>
+In-Reply-To: <aOm0WCB_woFgnv0v@dread.disaster.area>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Fri, 10 Oct 2025 21:04:13 -0700
+X-Gm-Features: AS18NWApra4q9AvFnZo6mqAkIEnBar0j0AX5L00uLKlUP_lGMQeMi0q_KHg1Mfg
+Message-ID: <CALCETrWoXb40d=CJLkPy+NaAGOmdULPw6xcrXgQVhcwv49hBiA@mail.gmail.com>
+Subject: Re: [PATCH] fs: Propagate FMODE_NOCMTIME flag to user-facing O_NOCMTIME
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Pavel Emelyanov <xemul@scylladb.com>, linux-fsdevel@vger.kernel.org, 
+	"Raphael S . Carvalho" <raphaelsc@scylladb.com>, linux-api@vger.kernel.org, 
+	linux-xfs@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-cc more maillist
+On Fri, Oct 10, 2025 at 6:35=E2=80=AFPM Dave Chinner <david@fromorbit.com> =
+wrote:
+>
+> On Wed, Oct 08, 2025 at 02:51:14PM -0700, Andy Lutomirski wrote:
+> > On Wed, Oct 8, 2025 at 2:27=E2=80=AFPM Dave Chinner <david@fromorbit.co=
+m> wrote:
+> > >
+> > > On Wed, Oct 08, 2025 at 08:22:35AM -0700, Andy Lutomirski wrote:
+> > > > On Mon, Oct 6, 2025 at 10:08=E2=80=AFPM Christoph Hellwig <hch@infr=
+adead.org> wrote:
+> > > > >
+> > > > > On Sat, Oct 04, 2025 at 09:08:05AM -0700, Andy Lutomirski wrote:
+> >
+> > >
+> > > You are conflating "synchronous update" with "blocking".
+> > >
+> > > Avoiding the need for synchronous timestamp updates is exactly what
+> > > the lazytime mount option provides. i.e. lazytime degrades immediate
+> > > consistency requirements to eventual consistency similar to how the
+> > > default relatime behaviour defers atime updates for eventual
+> > > writeback.
+> > >
+> > > IOWs, we've already largely addressed the synchronous c/mtime update
+> > > problem but what we haven't done is made timestamp updates
+> > > fully support non-blocking caller semantics. That's a separate
+> > > problem...
+> >
+> > I'm probably missing something, but is this really different?
+>
+> Yes, and yes.
+>
+> > Either the mtime update can block or it can't block.
+>
+> Sure, but that's not the issue we have to deal with.
+>
+> In many filesystems and fs operations, we have to know if an
+> operation is going to block -before- we start the operation. e.g.
+> transactional changes cannot be rolled back once we've started the
+> modification if they need to block to make progress (e.g. read in
+> on-disk metadata).
+>
+> This foresight, in many cases, is -unknowable-. Even though the
+> operation /likely/ won't block, we cannot *guarantee* ahead of time
+> that any given instance of the operation will /not/ block.  Hence
+> the reliable non-blocking operation that users are asking for is not
+> possible with unknowable implementation characteristics like this.
+>
+> IOWs, a timestamp update implementation can be synchronous and
+> reliably non-blocking if it always knows when blocking will occur
+> and can return -EAGAIN instead of blocking to complete the
+> operation.
+>
+> If it can't know when/if blocking will occur, then lazytime allows
+> us to defer the (potentially) blocking update operation to another
+> context that can block. Queuing for async processing can easily be
+> made non-blocking, and __mark_inode_dirty(I_DIRTY_TIME) does this
+> for us.
+>
+> So, yeah, it should be pretty obvious at this point that non-blocking
+> implementation is completely independent of whether the operation is
+> performed synchronously or asynchronously. It's easier to make async
+> operations non-blocking, but that doesn't mean "non_blocking" and
+> "asynchronous execution" are interchangable terms or behaviours.
+>
+> > I haven't dug all the
+> > way into exactly what happens in __mark_inode_dirty(), but there is a
+> > lot going on in there even in the I_DIRTY_TIME path.
+>
+> It's pretty simple, really.  __mark_inode_dirty(I_DIRTY_TIME) is
+> non-blocking and queues the inode on the wb->i_dirty_time queue
+> for later processing.
+>
 
-On Sat, Oct 11, 2025 at 9:36=E2=80=AFAM fengnan chang <fengnanchang@gmail.c=
-om> wrote:
->
-> The attachment is result of fio test ext4/xfs with
-> libaio/sync/io_uring on null_blk and
->  nvme.
->
-> On Sat, Oct 11, 2025 at 9:33=E2=80=AFAM Fengnan Chang
-> <changfengnan@bytedance.com> wrote:
-> >
-> > Per cpu bio cache was only used in the io_uring + raw block device,
-> > after commit 12e4e8c7ab59 ("io_uring/rw: enable bio caches for IRQ
-> > rw"),  bio_put is safe for task and irq context, bio_alloc_bioset is
-> > safe for task context and no one calls in irq context, so we can enable
-> > per cpu bio cache by default.
-> >
-> > Benchmarked with t/io_uring and ext4+nvme:
-> > taskset -c 6 /root/fio/t/io_uring  -p0 -d128 -b4096 -s1 -c1 -F1 -B1 -R1
-> > -X1 -n1 -P1  /mnt/testfile
-> > base IOPS is 562K, patch IOPS is 574K. The CPU usage of bio_alloc_biose=
-t
-> > decrease from 1.42% to 1.22%.
-> >
-> > The worst case is allocate bio in CPU A but free in CPU B, still use
-> > t/io_uring and ext4+nvme:
-> > base IOPS is 648K, patch IOPS is 647K.
-> >
-> > Also use fio test ext4/xfs with libaio/sync/io_uring on null_blk and
-> > nvme, no obvious performance regression.
-> >
-> > Signed-off-by: Fengnan Chang <changfengnan@bytedance.com>
-> > ---
-> >  block/bio.c        | 26 ++++++++++++--------------
-> >  block/blk-map.c    |  4 ++++
-> >  block/fops.c       |  4 ----
-> >  include/linux/fs.h |  3 ---
-> >  io_uring/rw.c      |  1 -
-> >  5 files changed, 16 insertions(+), 22 deletions(-)
-> >
-> > diff --git a/block/bio.c b/block/bio.c
-> > index 3b371a5da159..16b20c10cab7 100644
-> > --- a/block/bio.c
-> > +++ b/block/bio.c
-> > @@ -513,20 +513,18 @@ struct bio *bio_alloc_bioset(struct block_device =
-*bdev, unsigned short nr_vecs,
-> >         if (WARN_ON_ONCE(!mempool_initialized(&bs->bvec_pool) && nr_vec=
-s > 0))
-> >                 return NULL;
-> >
-> > -       if (opf & REQ_ALLOC_CACHE) {
-> > -               if (bs->cache && nr_vecs <=3D BIO_INLINE_VECS) {
-> > -                       bio =3D bio_alloc_percpu_cache(bdev, nr_vecs, o=
-pf,
-> > -                                                    gfp_mask, bs);
-> > -                       if (bio)
-> > -                               return bio;
-> > -                       /*
-> > -                        * No cached bio available, bio returned below =
-marked with
-> > -                        * REQ_ALLOC_CACHE to particpate in per-cpu all=
-oc cache.
-> > -                        */
-> > -               } else {
-> > -                       opf &=3D ~REQ_ALLOC_CACHE;
-> > -               }
-> > -       }
-> > +       opf |=3D REQ_ALLOC_CACHE;
-> > +       if (bs->cache && nr_vecs <=3D BIO_INLINE_VECS) {
-> > +               bio =3D bio_alloc_percpu_cache(bdev, nr_vecs, opf,
-> > +                                            gfp_mask, bs);
-> > +               if (bio)
-> > +                       return bio;
-> > +               /*
-> > +                * No cached bio available, bio returned below marked w=
-ith
-> > +                * REQ_ALLOC_CACHE to participate in per-cpu alloc cach=
-e.
-> > +                */
-> > +       } else
-> > +               opf &=3D ~REQ_ALLOC_CACHE;
-> >
-> >         /*
-> >          * submit_bio_noacct() converts recursion to iteration; this me=
-ans if
-> > diff --git a/block/blk-map.c b/block/blk-map.c
-> > index 23e5d5ebe59e..570a7ca6edd1 100644
-> > --- a/block/blk-map.c
-> > +++ b/block/blk-map.c
-> > @@ -255,6 +255,10 @@ static struct bio *blk_rq_map_bio_alloc(struct req=
-uest *rq,
-> >  {
-> >         struct bio *bio;
-> >
-> > +       /*
-> > +        * Even REQ_ALLOC_CACHE is enabled by default, we still need th=
-is to
-> > +        * mark bio is allocated by bio_alloc_bioset.
-> > +        */
-> >         if (rq->cmd_flags & REQ_ALLOC_CACHE && (nr_vecs <=3D BIO_INLINE=
-_VECS)) {
-> >                 bio =3D bio_alloc_bioset(NULL, nr_vecs, rq->cmd_flags, =
-gfp_mask,
-> >                                         &fs_bio_set);
-> > diff --git a/block/fops.c b/block/fops.c
-> > index ddbc69c0922b..090562a91b4c 100644
-> > --- a/block/fops.c
-> > +++ b/block/fops.c
-> > @@ -177,8 +177,6 @@ static ssize_t __blkdev_direct_IO(struct kiocb *ioc=
-b, struct iov_iter *iter,
-> >         loff_t pos =3D iocb->ki_pos;
-> >         int ret =3D 0;
-> >
-> > -       if (iocb->ki_flags & IOCB_ALLOC_CACHE)
-> > -               opf |=3D REQ_ALLOC_CACHE;
-> >         bio =3D bio_alloc_bioset(bdev, nr_pages, opf, GFP_KERNEL,
-> >                                &blkdev_dio_pool);
-> >         dio =3D container_of(bio, struct blkdev_dio, bio);
-> > @@ -326,8 +324,6 @@ static ssize_t __blkdev_direct_IO_async(struct kioc=
-b *iocb,
-> >         loff_t pos =3D iocb->ki_pos;
-> >         int ret =3D 0;
-> >
-> > -       if (iocb->ki_flags & IOCB_ALLOC_CACHE)
-> > -               opf |=3D REQ_ALLOC_CACHE;
-> >         bio =3D bio_alloc_bioset(bdev, nr_pages, opf, GFP_KERNEL,
-> >                                &blkdev_dio_pool);
-> >         dio =3D container_of(bio, struct blkdev_dio, bio);
-> > diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > index 601d036a6c78..18ec41732186 100644
-> > --- a/include/linux/fs.h
-> > +++ b/include/linux/fs.h
-> > @@ -365,8 +365,6 @@ struct readahead_control;
-> >  /* iocb->ki_waitq is valid */
-> >  #define IOCB_WAITQ             (1 << 19)
-> >  #define IOCB_NOIO              (1 << 20)
-> > -/* can use bio alloc cache */
-> > -#define IOCB_ALLOC_CACHE       (1 << 21)
-> >  /*
-> >   * IOCB_DIO_CALLER_COMP can be set by the iocb owner, to indicate that=
- the
-> >   * iocb completion can be passed back to the owner for execution from =
-a safe
-> > @@ -399,7 +397,6 @@ struct readahead_control;
-> >         { IOCB_WRITE,           "WRITE" }, \
-> >         { IOCB_WAITQ,           "WAITQ" }, \
-> >         { IOCB_NOIO,            "NOIO" }, \
-> > -       { IOCB_ALLOC_CACHE,     "ALLOC_CACHE" }, \
-> >         { IOCB_DIO_CALLER_COMP, "CALLER_COMP" }, \
-> >         { IOCB_AIO_RW,          "AIO_RW" }, \
-> >         { IOCB_HAS_METADATA,    "AIO_HAS_METADATA" }
-> > diff --git a/io_uring/rw.c b/io_uring/rw.c
-> > index af5a54b5db12..fa7655ab9097 100644
-> > --- a/io_uring/rw.c
-> > +++ b/io_uring/rw.c
-> > @@ -856,7 +856,6 @@ static int io_rw_init_file(struct io_kiocb *req, fm=
-ode_t mode, int rw_type)
-> >         ret =3D kiocb_set_rw_flags(kiocb, rw->flags, rw_type);
-> >         if (unlikely(ret))
-> >                 return ret;
-> > -       kiocb->ki_flags |=3D IOCB_ALLOC_CACHE;
-> >
-> >         /*
-> >          * If the file is marked O_NONBLOCK, still allow retry for it i=
-f it
-> > --
-> > 2.39.5 (Apple Git-154)
-> >
-> >
+First, I apologize if I'm off base here.
+
+Second, I don't think I'm entirely nuts, and I'm moderately confident
+that, ten-ish years ago, I tested lazytime in the hopes that it would
+solve my old problem, and IIRC it didn't help.  I was running a
+production workload on ext4 on regrettably slow spinning rust backed
+by a truly atrocious HPE controller.  And I was running latencytop to
+generate little traces when my task got blocked, and there was no form
+of AIO involved.  (And I don't really understand how AIO is wired up
+internally...  And yes, in retrospect I should not have been using
+shared-writable mmaps or even file-backed things at all for what I was
+doing, but I had unrealistic expectations of how mmap worked when I
+wrote that code more like 20 years ago, and I wasn't even using Linux
+at the time I wrote it.)
+
+I'm looking at the code now, and I see what you're talking about, and
+__mark_inode_dirty(inode, I_DIRTY_TIME) looks fairly polite and like
+it won't block.  But the relevant code seems to be:
+
+int generic_update_time(struct inode *inode, int flags)
+{
+        int updated =3D inode_update_timestamps(inode, flags);
+        int dirty_flags =3D 0;
+
+        if (updated & (S_ATIME|S_MTIME|S_CTIME))
+                dirty_flags =3D inode->i_sb->s_flags & SB_LAZYTIME ?
+I_DIRTY_TIME : I_DIRTY_SYNC;
+        if (updated & S_VERSION)
+                dirty_flags |=3D I_DIRTY_SYNC;
+        __mark_inode_dirty(inode, dirty_flags);
+        ...
+
+inode_update_timestamps does this, where updated !=3D 0 if the timestamp
+actually changed (which is subject to some complex coarse-graining
+logic so it may only happen some of the time):
+
+                if (IS_I_VERSION(inode) &&
+inode_maybe_inc_iversion(inode, updated))
+                        updated |=3D S_VERSION;
+
+IS_I_VERSION seems to be unconditionally true on ext4.
+inode_maybe_inc_iversion always returns true if updated is set, so
+generic_update_time has a decent chance of doing
+__mark_inode_dirty(inode, I_DIRTY_SYNC), which calls
+s_op->dirty_inode, which calls ext4_journal_start, which, from my
+recollection a decade ago, could easily block for a good second or so
+on my delightful, now retired, HP/HPE system.
+
+In my case, I think this is the path that was blocking for me in lots
+of do_wp_page calls that would otherwise not have blocked.  I also
+don't see any kiocb passed around or any mechanism by which this code
+could know that it's supposed to be nonblocking, although I have
+approximately no understanding of Linux AIO and I don't really know
+what I should be looking for.
+
+I could try to instrument the code a bit and test to see if I've
+analyzed it right in a few days.
+
+--Andy
+Andy Lutomirski
+AMA Capital Management, LLC
