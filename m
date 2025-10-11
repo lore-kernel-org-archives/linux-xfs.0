@@ -1,214 +1,193 @@
-Received: from mail-lf1-f41.google.com (mail-lf1-f41.google.com [209.85.167.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26C08B663
-	for <linux-xfs@vger.kernel.org>; Sat, 11 Oct 2025 04:04:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09AC432C8B
+	for <linux-xfs@vger.kernel.org>; Sat, 11 Oct 2025 07:29:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760155469; cv=none; b=iB+glYf7pf5F45QtA1mbGZd4SiITtWQygQBuvhpKwdkNXkPf4Try3HcUc3S+IFjToBzk9K/bqF/2n6V48VB97KmvnFRNPQBrBAKE0r5Nne7Q9GEyC5tMLU/dqzB5KB2iA6v+EDWmV4r50J7ousLnLYa9wcXqTkn/bj4lZn4C+N0=
+	t=1760167762; cv=none; b=NbNiE0/80vnghbR7+2gZpoQ3+6OZT79ceBUyHSlS4/KL1jNaPA/CN+RhQDSudHR6d5vT4lkjvfrVSy8r+bF+Y5O25IS0ovTRuNsF/r40kQXnVDFiM3vdqqY/VuMXA5WVk5epdNzoKU4DQHlfNsTDcdoaCMh9JxTwsulP/MEBGUs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760155469; c=relaxed/simple;
-	bh=aWOHv5sIMa96Q5/sU0zDoEGYdX0W0fCCXNPW/LilCIY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ivS023tLiPbwmESGFaF86SHy6EQlNY3CdAccIUuLp6waS35B/xRTdOAeXH5jB2F48PMCvVROgR9o+NOg/vnbWEchFVZol5z/J7w9zOi91XmIEUZdYuo9lFDusVKfd2OlTU1sFxhch+91iJEZfQcUbQdb8Ruxf9tZvSEVbjaShjQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=amacapital.net; spf=pass smtp.mailfrom=amacapital.net; dkim=pass (2048-bit key) header.d=amacapital-net.20230601.gappssmtp.com header.i=@amacapital-net.20230601.gappssmtp.com header.b=VqF+MD+x; arc=none smtp.client-ip=209.85.167.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=amacapital.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amacapital.net
+	s=arc-20240116; t=1760167762; c=relaxed/simple;
+	bh=qWL/9XtVeCyDX+lRVusvj6u9AqpQi1xAs486I1o3tXA=;
+	h=Message-ID:Date:MIME-Version:From:To:Subject:Content-Type; b=eeD6Weg2Psc+tlnvdAMFt+q2VK63dB+yV9Dxmx6KOoybYsV2yEwwsUef57MLZE+bPm3B0V7Jbbzz3OB/dDO53tApGvpU3BdFM1wsVTiEJsK/v6gRtksQmGEq8c0PR2IG+ouelqyDu7PEPR07EDUxXqafzin+j58iNODXDc64Dbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.net; spf=pass smtp.mailfrom=gmx.net; dkim=pass (2048-bit key) header.d=gmx.net header.i=torsten.rupp@gmx.net header.b=spIBUJlX; arc=none smtp.client-ip=212.227.15.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amacapital-net.20230601.gappssmtp.com header.i=@amacapital-net.20230601.gappssmtp.com header.b="VqF+MD+x"
-Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-57b8fc6097fso3161963e87.1
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Oct 2025 21:04:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=amacapital-net.20230601.gappssmtp.com; s=20230601; t=1760155465; x=1760760265; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wxrYhYASPW7hNkv0I+/dkIwogDxR5uy/leBbcueqFmk=;
-        b=VqF+MD+xgMTgr7lXkfXMbbXY7wkhB30iVLMvIIxxCfW82nr18QYeo3OaxUBzW2Qlto
-         CVm6S0OrCWMCLingwuP6EdHIbUC0nWIg7kl5GzT7WNDytoA+WQptmaD7xk9LLAEXQhs2
-         jQzyMBUOtNl6r5PBU+G2aYwmvquNTCxhlSzL4oljzSpopuQZHPZ+9jM5hgcLcwYTfHng
-         HBU0Vwu63l2ockEh643GDSBPdsoPx9YTHA05cQllOSsMq5Ixev2LbQQgZUDHVWhqKKcl
-         GUxR3FDnYn9nowwKVrkUFPDFoV0wF7jaIIPW03kAPLk6Cf49m3xUVCMaV5T+SWISjs9L
-         lcJg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760155465; x=1760760265;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=wxrYhYASPW7hNkv0I+/dkIwogDxR5uy/leBbcueqFmk=;
-        b=EqaNvJkBJo90hCcAYMErU4yH1ZYVOP/pqj8T52xNehpybYK91sHYfGFAz6LlnFvXIN
-         Jri7EyYWSOxZMZ5e2+ZOKoDjlxcHt4OUPbvbKXKS3lPM7eQkQlAK7vg70KWooNYqQpLl
-         v85Ii0X0G6gSGCuRs991Mw6762f/PRhXATHyu6zUqRMzOoljK5IH/RECW0grtRtnV4PU
-         aHE75tJukJhl6kEc/nUXDsZHXhNYNhyIBReHBZglt5KdAJquQSkbH/J/u+c9TpbzMbu1
-         XzZYM8ubRFsTNkVvLQErO4n3iHQJq+we+A/panEvww3sp8Sf1UMmRm0QMPqWoBTnI9HZ
-         jttw==
-X-Forwarded-Encrypted: i=1; AJvYcCUvBlJZsuB9MLs9feLTMu4G7WyUEB7HymPAi6qjemeYU/koTEO9DzLIm1tISAxfrdQWgPNdlksBz1w=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzdEjakV2tblN4FYxJUjIqtp+yoV3e1iHF/Au239F4/+r3P3LdO
-	aHW+HGW0y0BEhmD6POZnwfNf/ywJgKlRhAORPOQUfIaVfLI6UoW6pMSAq2Px0W7Y1w0lSWu3yF3
-	c91kJteBV5m40n10soVmWwxTmYeE6KEJjvwFf0KzG
-X-Gm-Gg: ASbGncsrEH+YanFMz6icA8qIF4H+tsfTnBq3nwdIuk7ov5l2HDdlYIMCOqN07Xf7g0q
-	a9BuM/lq5NAEBaCnhNgdfs1RtoVmNP+Q8VQzjciO3//EK/Ile3OyoyulYAAqH06LdYU9UK/bBo6
-	ycT7Fs6bMdGQHKEL7uz85a+53b+PsIctNPn0U9mG9BOcxwjf+82/e76eXdIJJD3JdsXWaBmMKVI
-	frZP321uFlAhC26j0IjfQoH
-X-Google-Smtp-Source: AGHT+IERWkZjkwJeaANefd5QQVPUh0Tn17+zj0nbldzP+dMe/pRxkwxO+dBwZOKYhTBehxYzcRf98nJx4rDx7SgsRAM=
-X-Received: by 2002:a05:6512:3c9c:b0:577:494e:ca61 with SMTP id
- 2adb3069b0e04-5906dd53f00mr4476671e87.31.1760155465047; Fri, 10 Oct 2025
- 21:04:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmx.net header.i=torsten.rupp@gmx.net header.b="spIBUJlX"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.net;
+	s=s31663417; t=1760167758; x=1760772558; i=torsten.rupp@gmx.net;
+	bh=6cZns1h5Ei3reXWFn6XhynkyMgJN3lEIhbdzuxsqQLk=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:From:To:Subject:
+	 Content-Type:Content-Transfer-Encoding:cc:
+	 content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=spIBUJlXYFaoiytJ1Si6yWGCrDRJ329B0+Qdv6ySH4e8zLcUYx+0DGr+1ImIyJCj
+	 X24ALgqrV/ocbs675jEBzw2VQXYHqnYoFbe3gmnulli19WtuXtM3QvXXyd7Ccp169
+	 elOLYsxV3oKSUi8XFliyxzG/85vtFSzuIFgoAPCuUsgAyWWB8DGTJf42ObzXiI87N
+	 QnwzGN+cJZ6RUIzdGswt7owkXvrqpynGOgxxtIVWTCk6vXA6VUpapLt1vWY2h2rCf
+	 s7BJRjZVd4muOZaP8jrJctRmfe8FALWJAGTV2o8WUn7NS73AnuQYHA0Nk3sZtnEUo
+	 YuB6a5oGG/o4AqPrVQ==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from [192.168.22.10] ([77.3.250.132]) by mail.gmx.net (mrgmx004
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1M1poA-1v5IBC05Oa-007fgx for
+ <linux-xfs@vger.kernel.org>; Sat, 11 Oct 2025 09:29:18 +0200
+Message-ID: <91c6a2ac-783e-4718-a705-32ccdf678376@gmx.net>
+Date: Sat, 11 Oct 2025 09:29:04 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251003093213.52624-1-xemul@scylladb.com> <aOCiCkFUOBWV_1yY@infradead.org>
- <CALCETrVsD6Z42gO7S-oAbweN5OwV1OLqxztBkB58goSzccSZKw@mail.gmail.com>
- <aOSgXXzvuq5YDj7q@infradead.org> <CALCETrW3iQWQTdMbB52R4=GztfuFYvN_8p52H1fopdS8uExQWg@mail.gmail.com>
- <aObXUBCtp4p83QzS@dread.disaster.area> <CALCETrX-cs5MH3k369q2Fk5Q-pYQfEV6CW3va-4E9vD1CoCaGA@mail.gmail.com>
- <aOm0WCB_woFgnv0v@dread.disaster.area>
-In-Reply-To: <aOm0WCB_woFgnv0v@dread.disaster.area>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Fri, 10 Oct 2025 21:04:13 -0700
-X-Gm-Features: AS18NWApra4q9AvFnZo6mqAkIEnBar0j0AX5L00uLKlUP_lGMQeMi0q_KHg1Mfg
-Message-ID: <CALCETrWoXb40d=CJLkPy+NaAGOmdULPw6xcrXgQVhcwv49hBiA@mail.gmail.com>
-Subject: Re: [PATCH] fs: Propagate FMODE_NOCMTIME flag to user-facing O_NOCMTIME
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Pavel Emelyanov <xemul@scylladb.com>, linux-fsdevel@vger.kernel.org, 
-	"Raphael S . Carvalho" <raphaelsc@scylladb.com>, linux-api@vger.kernel.org, 
-	linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+From: Torsten Rupp <torsten.rupp@gmx.net>
+Content-Language: de-DE
+To: linux-xfs@vger.kernel.org
+Subject: SegFault in cache code
+Autocrypt: addr=torsten.rupp@gmx.net; keydata=
+ xsDiBEO+wNARBAC9bu5L3kkV9iIY94Eihu5wccSTZ8p49M9FnJtgPu6rUvD+szor8e0yyreD
+ TiBgf5ZRpWvNZ2zFdpj1+fwKNz/GTZJ7N88F9XfhuvPixFxK7GqfKzgPZT1gQ8FRimUF9eVj
+ giELFdTVsAa0ipiAmYZLLZoAF6baJR3plcaE88GEzwCgpH+yfxAQx94gVLM1kDncbPTuUwcD
+ /2uoevvNqQWyaoEbczevNDAyZtqj5rc0QmViopJX0mgQCMaDH2W1suVoBA+/jMWDOqsl/Aw+
+ 34Q/n45LXBsLglV0oKj3lT/UzT5yH3Yp9G1fnRMgKT2EH7d21CYmHKfGUKWmbmYJL9U3bknF
+ XwcRwKpj6V8G0+JVODuolsWx6YQwBAC3ovtun+ZlbFeL58/M5qG/uKEejS69cUvpDHUjSNqZ
+ yEO0fF7xxFKvX04KWyzUfzV44v1V3o3LYGU78FwMU0pdD8+XHvtDo3w6/POtvEU0H61QuDBC
+ NnSJXoQe48dAi9K64HF6T7JYAuOBiEV30LXnTyYto0Op8DB4Z/XF5vJ9t80jVG9yc3RlbiBS
+ dXBwIDx0b3JzdGVuLnJ1cHBAZ214Lm5ldD7CWwQTEQIAGwUCQ77A0AYLCQgHAwIDFQIDAxYC
+ AQIeAQIXgAAKCRDWdxCwuabC6WlwAJ94+eEN8Gm59F4gZjmvzGUgPqtBRgCdEYK76JO/Dg2b
+ SZXqtTqhHt2TAQDOwU0EQ77A6hAIANtZKko/D0jj707/6IqdhFLTBGmD3R6q+aWbciJlVmpX
+ I3qXtvUWBaGVegAPUmxecJyIgOfSthWA2KA2KYfkJnmhCEMSbFccqKU/t0qpWbyR9G8tayWb
+ W7dFhLrahneln0879jYPmg1+b1SoECCJdx1iUXktXB9WxpSztEmamkZy10S6EGt17HQRFQof
+ ysk+8vfhYEv6CIUMQjpjrKEl5hQgdl61aXOYKJdJKgdJbs0XxvVDQ4IuoJrMOb7zKRswKsH+
+ 0tnzInx5tqvTbLeHlUZqKKTdMdURWQhNw8il+uc4CoqhbUx5Bny3UYVZMX5SU6Ulm0WJzFUU
+ tKVX4FiLVOcAAwUH/iP6G63zA03VqweGUZKGgNkscrV9jaDJU1dQrZBkxWSyoBwxHq16lpGL
+ XT9ieCevXkT8IqZ/7rXmpBEmI3HrQxN2muRVNV+Pt7CJ0t5317WZfC/YnQGEBGHI/n0gn0Cn
+ icClYEciJow9zD5XF4auk48T8aD2qWxcHksON9L0enz8Ku/rz/pio/PSODTDwMtTJcq0Bjn2
+ bboCGMDAlZPMfMNulusQFqnXhJI8L8AxZjmX9Xq+wi5TdpZYkQlTCzj+pLizvLWKBC+7OC04
+ 67YUiT1MekENsWUcdCOVwh4Gq6soCgOu3QHz3jez4R82KxuPbYEbMMGvcwQaMsxYbo2RoY3C
+ RgQYEQIABgUCQ77A6gAKCRDWdxCwuabC6UbDAJ9RcXpuMPKWxGVOV8zDpiwV6v26GgCdFU22
+ bk1TC0UY69vY5e/YkBX12pM=
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:IryhdFThb6qH2z6VdGtrcou5BujtNuI5bkyDmG14YZ+mzFLKGXn
+ ynYaHnvj27lJGQssyIajDHvESeovA0aKPbk8qvQzQ2EwLhaqoyOohVmRwNKfHc6tbM23JfX
+ eZo8T3wLxhy520ooOVGd4wANp7DW/X73EsgChSecNjtMay1hh/6esme8+uijXPUzI2qg1Vd
+ Hv1B85BlORlHBHoFgZhfA==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:HTIxf4cAfS4=;f6mBTxi3LHLcgFInmsHEaq45SXA
+ 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
 
-On Fri, Oct 10, 2025 at 6:35=E2=80=AFPM Dave Chinner <david@fromorbit.com> =
-wrote:
->
-> On Wed, Oct 08, 2025 at 02:51:14PM -0700, Andy Lutomirski wrote:
-> > On Wed, Oct 8, 2025 at 2:27=E2=80=AFPM Dave Chinner <david@fromorbit.co=
-m> wrote:
-> > >
-> > > On Wed, Oct 08, 2025 at 08:22:35AM -0700, Andy Lutomirski wrote:
-> > > > On Mon, Oct 6, 2025 at 10:08=E2=80=AFPM Christoph Hellwig <hch@infr=
-adead.org> wrote:
-> > > > >
-> > > > > On Sat, Oct 04, 2025 at 09:08:05AM -0700, Andy Lutomirski wrote:
-> >
-> > >
-> > > You are conflating "synchronous update" with "blocking".
-> > >
-> > > Avoiding the need for synchronous timestamp updates is exactly what
-> > > the lazytime mount option provides. i.e. lazytime degrades immediate
-> > > consistency requirements to eventual consistency similar to how the
-> > > default relatime behaviour defers atime updates for eventual
-> > > writeback.
-> > >
-> > > IOWs, we've already largely addressed the synchronous c/mtime update
-> > > problem but what we haven't done is made timestamp updates
-> > > fully support non-blocking caller semantics. That's a separate
-> > > problem...
-> >
-> > I'm probably missing something, but is this really different?
->
-> Yes, and yes.
->
-> > Either the mtime update can block or it can't block.
->
-> Sure, but that's not the issue we have to deal with.
->
-> In many filesystems and fs operations, we have to know if an
-> operation is going to block -before- we start the operation. e.g.
-> transactional changes cannot be rolled back once we've started the
-> modification if they need to block to make progress (e.g. read in
-> on-disk metadata).
->
-> This foresight, in many cases, is -unknowable-. Even though the
-> operation /likely/ won't block, we cannot *guarantee* ahead of time
-> that any given instance of the operation will /not/ block.  Hence
-> the reliable non-blocking operation that users are asking for is not
-> possible with unknowable implementation characteristics like this.
->
-> IOWs, a timestamp update implementation can be synchronous and
-> reliably non-blocking if it always knows when blocking will occur
-> and can return -EAGAIN instead of blocking to complete the
-> operation.
->
-> If it can't know when/if blocking will occur, then lazytime allows
-> us to defer the (potentially) blocking update operation to another
-> context that can block. Queuing for async processing can easily be
-> made non-blocking, and __mark_inode_dirty(I_DIRTY_TIME) does this
-> for us.
->
-> So, yeah, it should be pretty obvious at this point that non-blocking
-> implementation is completely independent of whether the operation is
-> performed synchronously or asynchronously. It's easier to make async
-> operations non-blocking, but that doesn't mean "non_blocking" and
-> "asynchronous execution" are interchangable terms or behaviours.
->
-> > I haven't dug all the
-> > way into exactly what happens in __mark_inode_dirty(), but there is a
-> > lot going on in there even in the I_DIRTY_TIME path.
->
-> It's pretty simple, really.  __mark_inode_dirty(I_DIRTY_TIME) is
-> non-blocking and queues the inode on the wb->i_dirty_time queue
-> for later processing.
->
+Dear XFS developers,
 
-First, I apologize if I'm off base here.
+I use the libxfs library from xfsprogs 6.16.0. With the following short=20
+program I see a segmentation fault when I set the environment variable
+LIBXFS_LEAK_CHECK, e. g.
 
-Second, I don't think I'm entirely nuts, and I'm moderately confident
-that, ten-ish years ago, I tested lazytime in the hopes that it would
-solve my old problem, and IIRC it didn't help.  I was running a
-production workload on ext4 on regrettably slow spinning rust backed
-by a truly atrocious HPE controller.  And I was running latencytop to
-generate little traces when my task got blocked, and there was no form
-of AIO involved.  (And I don't really understand how AIO is wired up
-internally...  And yes, in retrospect I should not have been using
-shared-writable mmaps or even file-backed things at all for what I was
-doing, but I had unrealistic expectations of how mmap worked when I
-wrote that code more like 20 years ago, and I wasn't even using Linux
-at the time I wrote it.)
+gcc init_destroy_test.c -I../include -L../lib -lxfs -lfrog -lurcu -luuid
+LIBXFS_LEAK_CHECK=3D1 ./a.out
 
-I'm looking at the code now, and I see what you're talking about, and
-__mark_inode_dirty(inode, I_DIRTY_TIME) looks fairly polite and like
-it won't block.  But the relevant code seems to be:
+=2D--cut---
+#include <stdlib.h>
+#include <stdio.h>
 
-int generic_update_time(struct inode *inode, int flags)
+#include <xfs/libxfs.h>
+
+
+int main(int argc, const char *argv[])
 {
-        int updated =3D inode_update_timestamps(inode, flags);
-        int dirty_flags =3D 0;
+   struct libxfs_init libXFSInit;
+   memset(&libXFSInit,0,sizeof(libXFSInit));
+   libxfs_init(&libXFSInit);
+   libxfs_destroy(&libXFSInit);
 
-        if (updated & (S_ATIME|S_MTIME|S_CTIME))
-                dirty_flags =3D inode->i_sb->s_flags & SB_LAZYTIME ?
-I_DIRTY_TIME : I_DIRTY_SYNC;
-        if (updated & S_VERSION)
-                dirty_flags |=3D I_DIRTY_SYNC;
-        __mark_inode_dirty(inode, dirty_flags);
-        ...
+   return 0;
+}
+=2D--cut---
 
-inode_update_timestamps does this, where updated !=3D 0 if the timestamp
-actually changed (which is subject to some complex coarse-graining
-logic so it may only happen some of the time):
+I'm not sure if this behaviour is known and intented.
 
-                if (IS_I_VERSION(inode) &&
-inode_maybe_inc_iversion(inode, updated))
-                        updated |=3D S_VERSION;
+A fix may be a NULL-pointer check in destroy_caches(). E. g. the gdb=20
+stack trace says:
 
-IS_I_VERSION seems to be unconditionally true on ext4.
-inode_maybe_inc_iversion always returns true if updated is set, so
-generic_update_time has a decent chance of doing
-__mark_inode_dirty(inode, I_DIRTY_SYNC), which calls
-s_op->dirty_inode, which calls ext4_journal_start, which, from my
-recollection a decade ago, could easily block for a good second or so
-on my delightful, now retired, HP/HPE system.
+Program received signal SIGSEGV, Segmentation fault.
+0x000055555555c130 in kmem_cache_destroy (cache=3D0x0) at kmem.c:35
+35              if (getenv("LIBXFS_LEAK_CHECK") && cache->allocated) {
+(gdb) bt
+#0  0x000055555555c130 in kmem_cache_destroy (cache=3D0x0) at kmem.c:35
+#1  0x000055555555bab9 in destroy_caches () at init.c:239
+#2  libxfs_destroy (li=3D<optimized out>) at init.c:1059
+#3  0x0000555555559d2b in main ()
 
-In my case, I think this is the path that was blocking for me in lots
-of do_wp_page calls that would otherwise not have blocked.  I also
-don't see any kiocb passed around or any mechanism by which this code
-could know that it's supposed to be nonblocking, although I have
-approximately no understanding of Linux AIO and I don't really know
-what I should be looking for.
+Best regards,
 
-I could try to instrument the code a bit and test to see if I've
-analyzed it right in a few days.
+Torsten Rupp
 
---Andy
-Andy Lutomirski
-AMA Capital Management, LLC
