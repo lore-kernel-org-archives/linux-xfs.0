@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B24B742A96
-	for <linux-xfs@vger.kernel.org>; Sat, 11 Oct 2025 18:34:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3113342050
+	for <linux-xfs@vger.kernel.org>; Sat, 11 Oct 2025 18:36:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760207645; cv=none; b=SipC+v10R2M9b6ZXHLqc4r+db5q0rsWp5xoTimeHNfEkU3cxQoVvM6+5vzPixmT7hINYpp4fWHrDyyjqdb68hsBQYRo2081l2TQ684FS9S2mG2bCAgvdjMn/wybGCeJNzDjoe4R0Vx5wnmk613nxvdkJNMyWzdQ+iinaNu3QDbM=
+	t=1760207797; cv=none; b=RWknkEKzTxMaqgmqcAsIQ6hZaAdIzOQv94SZi3bwF5ftsAJ5bZg8mrMtspmT+qodFpgq2Z9MALnlZlufAp422p1iSOOnS6x3C81H/765+e1IgPGScfzJ9LYRzKWwmXSp623BnAvLNjoJfD56Dv0cfRhkvimeifTmzlU1zyu8VEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760207645; c=relaxed/simple;
-	bh=yMxzHIPKIMGZwwfjWIB3Qj1/dscCJFUM5bVUeHMvQrA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=EcZKmkjXNjBsHk5T1/9hktLiewjflVn0WcWkA97gdSi5PLupHN0zD4pi58jMO9ls8BG1E3u9v5xRwfG4LD6gSrDsIMV/1PTAAJe+zHOS4Iq6kXh3/zPUlWt1rI34ZynPGjiua6kaBkBKVPIbMHOTe9fzwFIrIHBp6EnkbQsr2Mc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=quHG8CyT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760207797; c=relaxed/simple;
+	bh=lZvjMAX4bA2BuXFUop6z3wRkIPRlfoQNDzCTz6rxuhE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gSMeQeSogT5dNzYZEq/hgrHXznau1iRUZ23KMwJUeWzgfNn2/vM1x7rJyHPOP38Z1CtlSUSSIkbBSw1nkpY4nm9GlooYlRgNsiDnxGITJ6a3eTnhbBpgcF0/ZQwmsrCG8RjjQA2sqCMj3A3NKhxEREcnzhFI/oobnjbjOJyh28E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oGJkrkne; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="quHG8CyT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 126FEC4CEF4;
-	Sat, 11 Oct 2025 18:34:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oGJkrkne"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE0E0C4CEF4;
+	Sat, 11 Oct 2025 18:36:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760207645;
-	bh=yMxzHIPKIMGZwwfjWIB3Qj1/dscCJFUM5bVUeHMvQrA=;
-	h=Date:From:To:Cc:Subject:From;
-	b=quHG8CyTzou0uf414LZigrXBdhR13FopJTCKanvHyZc6MuD3VnO75Z0XAWVmt5SDM
-	 7Cgc7lz3Iqt7cn1aMv8hHqcGxg/nEafueaanYqBWfCxb0jgNdKgeMDDYicWnDDcuOP
-	 iMNKgibnc84mA1QSuOjKog+qENa95qYxf0L5SKKU9jsRbQOwqStuTFtFvpZI0LirE1
-	 922Mi3JdXJzGcf6rQf/xL6KbjGUqCs+trAMbkZeu4DNccLHDm5DSYkjamsWCkwx4In
-	 JyBxxKkFln84oFg3AbbiBXfPO/1Q5EUkEL3MSKCpuoji/oOzcVmc6pQu48e+2UAjZP
-	 /EYYYgII43pcQ==
-Date: Sat, 11 Oct 2025 11:34:04 -0700
+	s=k20201202; t=1760207796;
+	bh=lZvjMAX4bA2BuXFUop6z3wRkIPRlfoQNDzCTz6rxuhE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=oGJkrknenxVaqG+A6ACr1NIDn4JJ0p/R3KdW6H8ZLBNr00WhAUDp3La7fU9wiNSuc
+	 YHb08ruSEYW8vptKOd5Yj4dMxhd3ryU6P6C6uEAv2R+zeIYetAoWDChc0XkQ8tA9OI
+	 T/l3Vj/aMdG1Iw+XJnzH0+kGdqDEoiNFhIxPcozrwXvKQry6/WTq+TJZa/yaxhFv+f
+	 KHb/XlXtQf+4c1umrAjUhz+4wzJGYLB7PWWjNovuwGamLsL00TqnBiRTsIBqG/+M25
+	 EvLEzH7YFlELci1IDKlRLLQCxTOiDKA5f5L/Tjs9il2JX1hKGbm+YbDOrMMsdxd61/
+	 f2Wkcumrjw17g==
+Date: Sat, 11 Oct 2025 11:36:36 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] mkfs: fix copy-paste error in calculate_rtgroup_geometry
-Message-ID: <20251011183404.GG6188@frogsfrogsfrogs>
+To: Torsten Rupp <torsten.rupp@gmx.net>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: SegFault in cache code 2
+Message-ID: <20251011183636.GH6188@frogsfrogsfrogs>
+References: <12998a08-acf3-4d18-9204-ecfdc37a70e5@gmx.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,30 +41,47 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <12998a08-acf3-4d18-9204-ecfdc37a70e5@gmx.net>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Sat, Oct 11, 2025 at 10:39:24AM +0200, Torsten Rupp wrote:
+> Dear XFS developers,
+> 
+> it seems the fix for the segmentation fault in xfsprogs 6.16.0 in the
+> initialization of the cache is caused by a double initialization and free of
+> "xfs_extfree_item_cache" in init.c:init_caches() resp.
+> init.c:destroy_caches. This is already done in xfs_alloc.c as also valgrind
+> showed me.
+> 
+> This patch remove the double initialization and free. The segmentation fault
+> disappear with this patch and valgrind is also happy:
+> 
+> --- xfsprogs-6.16.0.org/libxfs/init.c   2025-06-23 13:48:41.000000000 +0200
+> +++ xfsprogs-6.16.0/libxfs/init.c       2025-10-11 10:17:27.101472681 +0200
+> @@ -214,9 +214,6 @@
+>                 fprintf(stderr, "Could not allocate btree cursor
+> caches.\n");
+>                 abort();
+>         }
+> -       xfs_extfree_item_cache = kmem_cache_init(
+> -                       sizeof(struct xfs_extent_free_item),
+> -                       "xfs_extfree_item");
+>         xfs_trans_cache = kmem_cache_init(
+>                         sizeof(struct xfs_trans), "xfs_trans");
+>         xfs_parent_args_cache = kmem_cache_init(
+> @@ -236,7 +233,6 @@
+>         leaked += kmem_cache_destroy(xfs_da_state_cache);
+>         xfs_defer_destroy_item_caches();
+>         xfs_btree_destroy_cur_caches();
+> -       leaked += kmem_cache_destroy(xfs_extfree_item_cache);
 
-Fix this copy-paste error -- we should calculate the rt volume
-concurrency either if the user gave us an explicit option, or if they
-didn't but the rt volume is an SSD.
+Oh, yeah, that is redundant.  Can you add a Signed-off-by tag so that we
+can review/include this?
 
-Cc: <linux-xfs@vger.kernel.org> # v6.13.0
-Fixes: 34738ff0ee80de ("mkfs: allow sizing realtime allocation groups for concurrency")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- mkfs/xfs_mkfs.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--D
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 0511f1745c47c1..bc6a28b63c24b2 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -4506,7 +4506,7 @@ _("rgsize (%s) not a multiple of fs blk size (%d)\n"),
- 		cfg->rgsize = cfg->rtblocks;
- 		cfg->rgcount = 0;
- 	} else if (cli->rtvol_concurrency > 0 ||
--		   (cli->data_concurrency == -1 && rtdev_is_solidstate(xi))) {
-+		   (cli->rtvol_concurrency == -1 && rtdev_is_solidstate(xi))) {
- 		calc_concurrency_rtgroup_geometry(cfg, cli, xi);
- 	} else if (is_power_of_2(cfg->rtextblocks)) {
- 		cfg->rgsize = calc_rgsize_extsize_power(cfg);
+>         leaked += kmem_cache_destroy(xfs_trans_cache);
+>         leaked += kmem_cache_destroy(xfs_parent_args_cache);
+> 
+> Best regards, Torsten
+> 
+> 
