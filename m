@@ -1,224 +1,204 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D1763AC1C
-	for <linux-xfs@vger.kernel.org>; Sat, 11 Oct 2025 01:33:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06BC23AC1C
+	for <linux-xfs@vger.kernel.org>; Sat, 11 Oct 2025 01:35:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760146410; cv=none; b=uJV+0Q6lt7CBMjmdAgw6qM11/6oQ14OZpVSJHZcQ0GSS6VhBrjt75drsFyC7RtsTX/Hn72KW0JXOkfayy5U8jnk1+2YeNv8qgsaxxrIJ49f160bPBC2TSRlFrE643haXl95SiIt7GI5UqeLP+9paYGTt1Map5yHGzTXFGjUkYHk=
+	t=1760146526; cv=none; b=Nmh9KdhOzvVyCWB5DvFtjjJXkgvukvxUfjPO3Q/IQ4G76ZG/zlF9THM7G7S0TPRptVbQmTpcf+tbtw2i1ywjrBHrX5yPveEgZ6THNfsSmmFfK54gYksB9UVfvNel2fQFZKlU1UgPsJ9EfubPPIcc3ZUMo45DI9Go2rxnuXcrQXo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760146410; c=relaxed/simple;
-	bh=FMRXqxPu0WQ5Ax5nNw0lt7BC+iqQTQtavFODzaAsDT8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=miKtYk5j+DGc0uV0q1Cgz/1uVCNBPG59AZJKSxPEMOrhsq3H5G8+7Ar7bTKZejRl+0ysx522OYSvbRXTFErvRv1Gp19Fk4Pu4L6kqLyZ+glCL0EVPE8Tr0wSRWGYQ3bIQajW9gQW4czyeBPpFNCUFo/1wNT0SEOVDBq/fl5rM6o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=QeATIuYO; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1760146526; c=relaxed/simple;
+	bh=xR0IE0cavrFuHS+sWvEAb/mnV0iT2JipQXIDw9PxCmI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=beLJLiGSafp4Q/2p7ZlpTcPoTbEAiSCievcPJ9ta3r3m/8s+c5NmzqQ22/TzzLx1kIttGk6IkaOyPW1kGnLDVYR3H6KxE4VANeEGuvTjHRQnZG7OLJUGmkQwCYMEn69zAeHnSTGUrNZXPuZFNzbdnl/OFs5Uwi+V+esd0oOnQr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=NuwnfwSi; arc=none smtp.client-ip=209.85.210.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="QeATIuYO"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-26c209802c0so26032595ad.0
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Oct 2025 18:33:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="NuwnfwSi"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-7811a02316bso1894481b3a.3
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Oct 2025 18:35:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1760146408; x=1760751208; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=d/dbVKML6jyfDJLg2rXlA//5YED8oSUDfIzTUJyF0qc=;
-        b=QeATIuYOcV0Ubn5NJlFEQDCHZ0h28DOmhcI+7yCi3dTo2PHhSkNAMKrV4rHFhJVa3Q
-         hRGRX4Dg5/FIGNviJ5G8oEgQGL12pWHXmMg4qZygXcKEA6yHqCENVu+3atCXPrv/RnXr
-         w5/4sGoiCCQDhUzRDdY91lCQZ0hnDuY7v1e64/9vpk8XmCQz9/TgDeO2vk6dEyveCSJt
-         xVP2wf1XwEEXlxeZWVousAUDWJeNSKpf9/zuB7YcW/YAUBgk1/N7yCTIFZs0o7qPbak0
-         BPb0ujZjAqJJEYVCm8b8W1c4A7iF2OuBdSdwUNK2EWst1hQAggSA0MzrARvvLXvPneyd
-         zVqg==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1760146524; x=1760751324; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=XvBfLEx++WE1Un1u5T1nsAJnVIwWMs7QzpD2aMmgPU8=;
+        b=NuwnfwSior1Z8jfrkAegV7FJKah7cY6lTZlyqFY057aw/K3HK+X+TK4NPPNYQAdGbS
+         xQBM+Sq+LK4hMS2GKxmKc4X07PPlRprITGaThcvUhsmiou7eqL52ip9ciBx3W2h3GHy5
+         5VC1Ug284Y3yHE7ehfHS+UfODeXb4wPjl4MjD+M6iEU8rlpYjJtm3dYmAGKEFtp+f+mP
+         +HJ6qS1rRaDSRArxm6Vo3Cog7DrWm+dUpPefXsYBuEskw+KKAw7esFh6DOHAdDbIeCcn
+         ebx8P9VwLU/SU1Qik5ZRjl7p3HYcSwYMpw82tFitsKjHgYG7PNYyy0OPKOh+zjxEoho0
+         GSoA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760146408; x=1760751208;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=d/dbVKML6jyfDJLg2rXlA//5YED8oSUDfIzTUJyF0qc=;
-        b=wJhO5XKf9GgCxJ+tySsiOJh7NttqoeWj38f1fKYi7YqB/F0d6DgCfjnYD/iin/Ko+w
-         q0B0STErmTLKYM+ERbBx35UIlzSLvxP1pEoHM9JQu/4qkmze1b2epP1z9f7LxkYk1078
-         41e7eXPuMJIJuaYlq0SwItY0+kSDInt2SuqYcJzddTvSbGF+pgcvxiWKiWXpDJ8PiSUI
-         AQBO5tnoICrzweI05HHGJqAgf6FsU8+LS8IYKnHxkvMlWhNlfFsI1RZyOyArgDgC247r
-         NMvauibnVcSlzzEXuaJkioAJEAFRyLc58UB9z9YoFa947ntsOlSDykWHm053h2Cvf0Y3
-         D/nQ==
-X-Forwarded-Encrypted: i=1; AJvYcCULu9QMOErdFjliIvYUMCHlsdZ2ayVxeK+/eMUPIDolnv2/PT3AdSZ4cZergou6L4hR3MglKIHKHfg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzXhjsOtSYgpaY99r3vbNRimZr6+AkoP/pesLJZ5avMhww3lUsT
-	e999mBk9qCYXSLCw2pGz2Y2I4Ip4cHYSyO4S96bPu4WnqKOSssyia+gMMhkgTMxxDWc=
-X-Gm-Gg: ASbGncu5LgE1RjtluHsRz1vBuOxKnfaEWg8Z4qnV7xTBzOFTcNMgL+/2QMHCN7xjKAU
-	4gZ143pJ6d8j/dtdP6EALLMo9dqxxVQLTb7TpJl4HUG9KaL7d2lDs2kkfnZKGQKLXH5Q0Xh64CM
-	FhiMCrqt4lxJt7ZFNRScB06j5G2OniElXmRqp0FYFokJhUKQQaIJwuUDEkdzvC6lIF6csywHhQQ
-	Tw13zI5IUQQeZr0G832bpTYZZu35azNeqPCdi4xTXxdYFgv19nJyakCFDsirP2v7txgK8qUDTEm
-	xupxzfdLVSfbNv84xqQd/d3McMYphfEwbiXXDABQ6ueMBIgC/RyIcDNdquZpaN1s7VkhKbmyvWm
-	Y8r9AFp4K3cWRKAxkoa2sdv40yjCRp6EM48CHIos+TQlU4iZpbjfTE6yOUaAgIKqZvS/lszRwGq
-	b3ER1XhA==
-X-Google-Smtp-Source: AGHT+IH2ZLFZnAX+DFQkY9v0s+2anWfLJ5/4tgkkHlg3OcqGLJ41YRx4qbgQD3SYi5SqmtyxL/sNpg==
-X-Received: by 2002:a17:902:da8e:b0:26a:589b:cf11 with SMTP id d9443c01a7336-29027402d24mr204107925ad.43.1760146407559;
-        Fri, 10 Oct 2025 18:33:27 -0700 (PDT)
-Received: from localhost.localdomain ([139.177.225.239])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b678ddc9f8esm3533310a12.10.2025.10.10.18.33.21
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Fri, 10 Oct 2025 18:33:27 -0700 (PDT)
-From: Fengnan Chang <changfengnan@bytedance.com>
-To: axboe@kernel.dk,
-	viro@zeniv.linux.org.uk,
-	brauner@kernel.org,
-	jack@suse.cz,
-	asml.silence@gmail.com,
-	willy@infradead.org,
-	djwong@kernel.org,
-	hch@infradead.org,
-	ritesh.list@gmail.com,
-	linux-fsdevel@vger.kernel.org,
-	io-uring@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org
-Cc: Fengnan Chang <changfengnan@bytedance.com>
-Subject: [PATCH] block: enable per-cpu bio cache by default
-Date: Sat, 11 Oct 2025 09:33:12 +0800
-Message-Id: <20251011013312.20698-1-changfengnan@bytedance.com>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+        d=1e100.net; s=20230601; t=1760146524; x=1760751324;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=XvBfLEx++WE1Un1u5T1nsAJnVIwWMs7QzpD2aMmgPU8=;
+        b=GNevcAsppHuEPJX96xcyc879GRLLDBXg2Rn6ixHiOIeEenx+S/eHigLeLKdOshGVfn
+         FXVFwkINB4QX1S0XvUsSkRw18jvLzX0en4Yq3RT5idK+5LS8EICnhHW8ToXaI8KJ4S3Y
+         2InZ2Gd88u8kFkaG2jShQUzEr9/SsvtKAueK/eBnewEmeoSaPR7NWBnWXO6juEf6O2MJ
+         280ZTr8ncbdQMAaIbClfOPSsPPrkeU6H7vpWKuEm5QKU4IAIptwyrsFqsWRUqli03/of
+         FGwQHdTcJps6eL3PXMPCvM+9HjaSIM6gq/8z3V8sBhemGqLyU6LbcgY6TWji/C7t6R8w
+         bI6g==
+X-Forwarded-Encrypted: i=1; AJvYcCVUNj5qz9DLiubE0AbJ/GgQqYr86RYHHAKcAAwzH9KZWbF6Y8I1/XIei+55ZnstmmdUIcfRwNSB6gM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxG9/iZcCVDj1KhV7sjwCTVcur6ds9v+i0aKcfWHC2keyoi0hfs
+	O2D1zpf1R6dNKM+sIBW+9Gg03ZlT6GexxL+WAvgjAbwQKbmg9gvs02QMP0mqLDtgc1M=
+X-Gm-Gg: ASbGncs1vV6CLQCK8qaQRrpZFD2M7ayNZ0nlwf330xNQ7wVZoNyQM8qHoqRPSBRfvyk
+	DiaIgCF12m5gWmM06uC+v3trEuk4K40GYfoNzznFlkXrJk2R6LRn4Uy/5t+o60EBut8K8cxmrD4
+	5ezE/iqOxx6LXsPLh3Y6wI0GpKsOXXEgo7HtJk22qgUsjiY95K+JX7vTGEdQfqO2FwnxKB/44sb
+	4sFDxvIppeRivNZE0LwKg+GQg5bqYRNo+zwhs0ouc1C1WQzc7GbuVE4uyy1EJBb46/RjNXlPKDl
+	WKT7QU1cJEnhZo2GOSL+/fI4VNV5saQ3QUlzxl9cGexUZpiFoCZjb9RqrUt+h7nbAVkiX6uH1IH
+	Yiu7Qbk583UGuvu1s+A7c3zuPbtJ6CV1n2wZBbzucR7iyDuPzAqUO2fTpkkIJljLkKErvbp62nE
+	bRWmdLGAE5LV5ti/4a
+X-Google-Smtp-Source: AGHT+IEniEi9MIGgRunuUrN+JFg+dx6vAM1Vi/J7MDf0PCiszN+aXqLXt9e6v1B48WCt7nSz67SjpA==
+X-Received: by 2002:a05:6a00:3c8e:b0:781:17fb:d3d0 with SMTP id d2e1a72fcca58-79385ce7d83mr17895097b3a.8.1760146523720;
+        Fri, 10 Oct 2025 18:35:23 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7992b733abdsm4353443b3a.25.2025.10.10.18.35.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Oct 2025 18:35:23 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1v7OW0-0000000DEDr-1EsT;
+	Sat, 11 Oct 2025 12:35:20 +1100
+Date: Sat, 11 Oct 2025 12:35:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Pavel Emelyanov <xemul@scylladb.com>, linux-fsdevel@vger.kernel.org,
+	"Raphael S . Carvalho" <raphaelsc@scylladb.com>,
+	linux-api@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] fs: Propagate FMODE_NOCMTIME flag to user-facing
+ O_NOCMTIME
+Message-ID: <aOm0WCB_woFgnv0v@dread.disaster.area>
+References: <20251003093213.52624-1-xemul@scylladb.com>
+ <aOCiCkFUOBWV_1yY@infradead.org>
+ <CALCETrVsD6Z42gO7S-oAbweN5OwV1OLqxztBkB58goSzccSZKw@mail.gmail.com>
+ <aOSgXXzvuq5YDj7q@infradead.org>
+ <CALCETrW3iQWQTdMbB52R4=GztfuFYvN_8p52H1fopdS8uExQWg@mail.gmail.com>
+ <aObXUBCtp4p83QzS@dread.disaster.area>
+ <CALCETrX-cs5MH3k369q2Fk5Q-pYQfEV6CW3va-4E9vD1CoCaGA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CALCETrX-cs5MH3k369q2Fk5Q-pYQfEV6CW3va-4E9vD1CoCaGA@mail.gmail.com>
 
-Per cpu bio cache was only used in the io_uring + raw block device,
-after commit 12e4e8c7ab59 ("io_uring/rw: enable bio caches for IRQ
-rw"),  bio_put is safe for task and irq context, bio_alloc_bioset is
-safe for task context and no one calls in irq context, so we can enable
-per cpu bio cache by default.
+On Wed, Oct 08, 2025 at 02:51:14PM -0700, Andy Lutomirski wrote:
+> On Wed, Oct 8, 2025 at 2:27 PM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Wed, Oct 08, 2025 at 08:22:35AM -0700, Andy Lutomirski wrote:
+> > > On Mon, Oct 6, 2025 at 10:08 PM Christoph Hellwig <hch@infradead.org> wrote:
+> > > >
+> > > > On Sat, Oct 04, 2025 at 09:08:05AM -0700, Andy Lutomirski wrote:
+> 
+> >
+> > You are conflating "synchronous update" with "blocking".
+> >
+> > Avoiding the need for synchronous timestamp updates is exactly what
+> > the lazytime mount option provides. i.e. lazytime degrades immediate
+> > consistency requirements to eventual consistency similar to how the
+> > default relatime behaviour defers atime updates for eventual
+> > writeback.
+> >
+> > IOWs, we've already largely addressed the synchronous c/mtime update
+> > problem but what we haven't done is made timestamp updates
+> > fully support non-blocking caller semantics. That's a separate
+> > problem...
+> 
+> I'm probably missing something, but is this really different?
 
-Benchmarked with t/io_uring and ext4+nvme:
-taskset -c 6 /root/fio/t/io_uring  -p0 -d128 -b4096 -s1 -c1 -F1 -B1 -R1
--X1 -n1 -P1  /mnt/testfile
-base IOPS is 562K, patch IOPS is 574K. The CPU usage of bio_alloc_bioset
-decrease from 1.42% to 1.22%.
+Yes, and yes.
 
-The worst case is allocate bio in CPU A but free in CPU B, still use
-t/io_uring and ext4+nvme:
-base IOPS is 648K, patch IOPS is 647K.
+> Either the mtime update can block or it can't block.
 
-Also use fio test ext4/xfs with libaio/sync/io_uring on null_blk and
-nvme, no obvious performance regression.
+Sure, but that's not the issue we have to deal with.
 
-Signed-off-by: Fengnan Chang <changfengnan@bytedance.com>
----
- block/bio.c        | 26 ++++++++++++--------------
- block/blk-map.c    |  4 ++++
- block/fops.c       |  4 ----
- include/linux/fs.h |  3 ---
- io_uring/rw.c      |  1 -
- 5 files changed, 16 insertions(+), 22 deletions(-)
+In many filesystems and fs operations, we have to know if an
+operation is going to block -before- we start the operation. e.g.
+transactional changes cannot be rolled back once we've started the
+modification if they need to block to make progress (e.g. read in
+on-disk metadata).
 
-diff --git a/block/bio.c b/block/bio.c
-index 3b371a5da159..16b20c10cab7 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -513,20 +513,18 @@ struct bio *bio_alloc_bioset(struct block_device *bdev, unsigned short nr_vecs,
- 	if (WARN_ON_ONCE(!mempool_initialized(&bs->bvec_pool) && nr_vecs > 0))
- 		return NULL;
- 
--	if (opf & REQ_ALLOC_CACHE) {
--		if (bs->cache && nr_vecs <= BIO_INLINE_VECS) {
--			bio = bio_alloc_percpu_cache(bdev, nr_vecs, opf,
--						     gfp_mask, bs);
--			if (bio)
--				return bio;
--			/*
--			 * No cached bio available, bio returned below marked with
--			 * REQ_ALLOC_CACHE to particpate in per-cpu alloc cache.
--			 */
--		} else {
--			opf &= ~REQ_ALLOC_CACHE;
--		}
--	}
-+	opf |= REQ_ALLOC_CACHE;
-+	if (bs->cache && nr_vecs <= BIO_INLINE_VECS) {
-+		bio = bio_alloc_percpu_cache(bdev, nr_vecs, opf,
-+					     gfp_mask, bs);
-+		if (bio)
-+			return bio;
-+		/*
-+		 * No cached bio available, bio returned below marked with
-+		 * REQ_ALLOC_CACHE to participate in per-cpu alloc cache.
-+		 */
-+	} else
-+		opf &= ~REQ_ALLOC_CACHE;
- 
- 	/*
- 	 * submit_bio_noacct() converts recursion to iteration; this means if
-diff --git a/block/blk-map.c b/block/blk-map.c
-index 23e5d5ebe59e..570a7ca6edd1 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -255,6 +255,10 @@ static struct bio *blk_rq_map_bio_alloc(struct request *rq,
- {
- 	struct bio *bio;
- 
-+	/*
-+	 * Even REQ_ALLOC_CACHE is enabled by default, we still need this to
-+	 * mark bio is allocated by bio_alloc_bioset.
-+	 */
- 	if (rq->cmd_flags & REQ_ALLOC_CACHE && (nr_vecs <= BIO_INLINE_VECS)) {
- 		bio = bio_alloc_bioset(NULL, nr_vecs, rq->cmd_flags, gfp_mask,
- 					&fs_bio_set);
-diff --git a/block/fops.c b/block/fops.c
-index ddbc69c0922b..090562a91b4c 100644
---- a/block/fops.c
-+++ b/block/fops.c
-@@ -177,8 +177,6 @@ static ssize_t __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
- 	loff_t pos = iocb->ki_pos;
- 	int ret = 0;
- 
--	if (iocb->ki_flags & IOCB_ALLOC_CACHE)
--		opf |= REQ_ALLOC_CACHE;
- 	bio = bio_alloc_bioset(bdev, nr_pages, opf, GFP_KERNEL,
- 			       &blkdev_dio_pool);
- 	dio = container_of(bio, struct blkdev_dio, bio);
-@@ -326,8 +324,6 @@ static ssize_t __blkdev_direct_IO_async(struct kiocb *iocb,
- 	loff_t pos = iocb->ki_pos;
- 	int ret = 0;
- 
--	if (iocb->ki_flags & IOCB_ALLOC_CACHE)
--		opf |= REQ_ALLOC_CACHE;
- 	bio = bio_alloc_bioset(bdev, nr_pages, opf, GFP_KERNEL,
- 			       &blkdev_dio_pool);
- 	dio = container_of(bio, struct blkdev_dio, bio);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 601d036a6c78..18ec41732186 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -365,8 +365,6 @@ struct readahead_control;
- /* iocb->ki_waitq is valid */
- #define IOCB_WAITQ		(1 << 19)
- #define IOCB_NOIO		(1 << 20)
--/* can use bio alloc cache */
--#define IOCB_ALLOC_CACHE	(1 << 21)
- /*
-  * IOCB_DIO_CALLER_COMP can be set by the iocb owner, to indicate that the
-  * iocb completion can be passed back to the owner for execution from a safe
-@@ -399,7 +397,6 @@ struct readahead_control;
- 	{ IOCB_WRITE,		"WRITE" }, \
- 	{ IOCB_WAITQ,		"WAITQ" }, \
- 	{ IOCB_NOIO,		"NOIO" }, \
--	{ IOCB_ALLOC_CACHE,	"ALLOC_CACHE" }, \
- 	{ IOCB_DIO_CALLER_COMP,	"CALLER_COMP" }, \
- 	{ IOCB_AIO_RW,		"AIO_RW" }, \
- 	{ IOCB_HAS_METADATA,	"AIO_HAS_METADATA" }
-diff --git a/io_uring/rw.c b/io_uring/rw.c
-index af5a54b5db12..fa7655ab9097 100644
---- a/io_uring/rw.c
-+++ b/io_uring/rw.c
-@@ -856,7 +856,6 @@ static int io_rw_init_file(struct io_kiocb *req, fmode_t mode, int rw_type)
- 	ret = kiocb_set_rw_flags(kiocb, rw->flags, rw_type);
- 	if (unlikely(ret))
- 		return ret;
--	kiocb->ki_flags |= IOCB_ALLOC_CACHE;
- 
- 	/*
- 	 * If the file is marked O_NONBLOCK, still allow retry for it if it
+This foresight, in many cases, is -unknowable-. Even though the
+operation /likely/ won't block, we cannot *guarantee* ahead of time
+that any given instance of the operation will /not/ block.  Hence
+the reliable non-blocking operation that users are asking for is not
+possible with unknowable implementation characteristics like this.
+
+IOWs, a timestamp update implementation can be synchronous and
+reliably non-blocking if it always knows when blocking will occur
+and can return -EAGAIN instead of blocking to complete the
+operation.
+
+If it can't know when/if blocking will occur, then lazytime allows
+us to defer the (potentially) blocking update operation to another
+context that can block. Queuing for async processing can easily be
+made non-blocking, and __mark_inode_dirty(I_DIRTY_TIME) does this
+for us.
+
+So, yeah, it should be pretty obvious at this point that non-blocking
+implementation is completely independent of whether the operation is
+performed synchronously or asynchronously. It's easier to make async
+operations non-blocking, but that doesn't mean "non_blocking" and
+"asynchronous execution" are interchangable terms or behaviours.
+
+> I haven't dug all the
+> way into exactly what happens in __mark_inode_dirty(), but there is a
+> lot going on in there even in the I_DIRTY_TIME path.
+
+It's pretty simple, really.  __mark_inode_dirty(I_DIRTY_TIME) is
+non-blocking and queues the inode on the wb->i_dirty_time queue
+for later processing.
+
+> And Pavel is
+> saying that AIO and mtime updates don't play along well.
+
+Again: this is exactly why lazytime was added to XFS *ten years
+ago*. From 2015 (issue #3):
+
+https://lore.kernel.org/linux-xfs/CAD-J=zZh1dtJsfrW_Gwxjg+qvkZMu7ED-QOXrMMO6B-G0HY2-A@mail.gmail.com/
+
+(Oh, look, a discussion that starts from a user suggestion of
+exposing FMODE_NOCMTIME to userspace apps! Sound familiar?)
+
+> > IOWs, with lazytime, writeback already persists timestamp updates
+> > when appropriate for best performance.
+> 
+> I'm probably doing a bad job explaining myself.
+
+No, I think both Christoph and I both understand exactly what you
+are trying to describe.
+
+It seems to me that haven't yet understood that lazytime already
+does exactly what you are asking for. Hence you think we don't
+understand the "lazytime" concept you are proposing and keep trying
+to reinvent lazytime to convince us that we need "lazytime"
+functionalitying in the kernel...
+
+> > > Thinking out loud, to handle both write_iter and mmap, there might
+> > > need to be two bits: one saying "the timestamp needs to be updated"
+> > > and another saying "the timestamp has been updated in the in-memory
+> > > inode, but the inode hasn't been dirtied yet".
+> >
+> > The flag that implements the latter is called I_DIRTY_TIME. We have
+> > not implemented the former as that's a userspace visible change of
+> > behaviour.
+> 
+> Maybe that change should be done?  Or not -- it wouldn't be terribly
+> hard to have a pair of atomic timestamps in struct inode indicating
+> what timestamps we want to write the next time we get around to it.
+
+See, you just reinvented the lazytime mechanism. Again. :/
+
+-Dave.
 -- 
-2.39.5 (Apple Git-154)
-
+Dave Chinner
+david@fromorbit.com
