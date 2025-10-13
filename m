@@ -1,34 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48B031F5423;
-	Mon, 13 Oct 2025 02:58:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46BC81F5423;
+	Mon, 13 Oct 2025 02:58:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760324307; cv=none; b=ZlUPECp3HPcT6WK1nGZJRkhb9cB37NstCiYEH2et3FiSDN8vj6FTqS+A7oar3kZgo+NGz+Zvt7Snb5eTp+dtAuCSzk1gv7lP0FZYM7iq+MVpfZa2t6rVvVimURZi8KyyQsMZKfdSpHfUfyRqLVXcqJbOZqkYr5T04/J1RxNXYdA=
+	t=1760324314; cv=none; b=Ir3EbtB3eGpc9Fq4dVAdSNZIb0KujzXYJrfZ/46+Qjw+sE5w+h4DB3CfnoOWjd9Kg/xJ9E2Juudu8HpxxmDldk/YQpNmsVHmPEmZLdRqtcIy+oZoH2dvoEO7RKzYH0/NJgtRnaXueYWH8C3i7RPzbChqWhGg9rv44Ks1aGu7uQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760324307; c=relaxed/simple;
-	bh=nKxfCO4ksQH4ZpyEpbXvS197w/tkWVyYr9fszANMZqU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=s7fP+6gbQEyOUrcuNXX6XPo62x+3r+g6reDzjK2IszDC3vOEhg0Vo96om2XwumLtvXY8f/f0nSyAMSCeL0S50bsbvHB3YOu+e/vJsW6CwKyvsMsThYVMOOOxaSGsl8yzjhROdCCkyqof9cN8t2g70MKnWx7ioxnLRCTyp5QK/3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yvdjWMe1; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1760324314; c=relaxed/simple;
+	bh=QZ7Hd42Z15nuNzOT8yDt6lAQGlOAzAPTFPVL5i0G+JY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=liEOHfU4FSt/sAbIiK+q77PwAn599e7ikz57HAPWyS1ujuGH5RKc7b/TAk/MjGUld5wTZdGi8VQYPIwn2RyBXprvOudMWinXxDiNJKvSA/pxkYMHDiW2YFZ1QDdnCEmX4gHpeQkhdiOLVUlZnQ6SFsl4ooifo4bfQohf7sooaDU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pgQEnUky; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yvdjWMe1"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pgQEnUky"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=IHawD8fXUsjzdqrBUJCMerdnKe9dIKJrBNuL1oU4Go8=; b=yvdjWMe1dksG8iFjNpFAfj1aEe
-	A4MWib46wBHcELj51vFEJO1FLURpC0ChP3zWMAbP1jVF8ZtIJeMFGaZBYOfyIb3JZv9EPNHcHyllA
-	eYIMXJljTYaRflblHSUsTsymqH6ITRsIA/qMfc+J4kwlkTl+8MWSWMuqKQF/uNtPh3pLBGTwqZSok
-	iRlxAmYhIXlHBc01mgkwf4erW9kt2zjKSasJn4hFaFiEOON7+nvcIDjaSpR6Y3/O6qKbpANIlYJA1
-	0qjIoWDwM9gAzWid8AygMqkE3HXcdV4HfOjr1wWfM1JqnEXNDAb0WBnodQObMz4C9QP0qa6KSqWd6
-	x8Pmt9ew==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=Lj0S3vmb6d6s8d0aaOlI5MPqL6b+xgrnGX6hOqz1wwY=; b=pgQEnUky4Ql91uLX3wxEvBkqfg
+	Y5kAKuNYys7DA+Bdzoel/fuaJiYGe+yhJC40tdLtCmysJJmXsjU7NWrXctWPSuOKQd2KVl8e2cKNf
+	vfKkVLHEa4wyUGUZ3BwaGLIy79HIiReJSvlaIdamBqQYFc/m+FOjw4daFqRcvHHYFc/nIXvJrCsJZ
+	R5ftvFBbGFHhDVk6Z+T7I0h/7k4zlDlbVmAwuMtgIiixL8gp97UMYAnraPIxl5BBu85JDsneKe5qz
+	xqCiWkuFZudZ97TBpTgw80q4gaZ425/EZZPUU92LFfnQu6Y0AeErFsIsOrun2fhPEWl9YnV6Y1Uu2
+	A17JVs6w==;
 Received: from [220.85.59.196] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v88lL-0000000C862-27OS;
-	Mon, 13 Oct 2025 02:58:16 +0000
+	id 1v88lZ-0000000C86m-3JLa;
+	Mon, 13 Oct 2025 02:58:30 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
 	Eric Van Hensbergen <ericvh@kernel.org>,
@@ -53,10 +54,12 @@ Cc: Alexander Viro <viro@zeniv.linux.org.uk>,
 	ocfs2-devel@lists.linux.dev,
 	linux-xfs@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: filemap_* writeback interface cleanups
-Date: Mon, 13 Oct 2025 11:57:55 +0900
-Message-ID: <20251013025808.4111128-1-hch@lst.de>
+Subject: [PATCH 02/10] 9p: don't opencode filemap_fdatawrite_range in v9fs_mmap_vm_close
+Date: Mon, 13 Oct 2025 11:57:57 +0900
+Message-ID: <20251013025808.4111128-3-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20251013025808.4111128-1-hch@lst.de>
+References: <20251013025808.4111128-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -66,36 +69,47 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+Use filemap_fdatawrite_range instead of opencoding the logic using
+filemap_fdatawrite_wbc.
 
-while looking at the filemap writeback code, I think adding
-filemap_fdatawrite_wbc ended up being a mistake, as all but the original
-btrfs caller should be using better high level interfaces instead.  This
-series removes all these, switches btrfs to a more specific interfaces
-and also cleans up another too low-level interface.  With this the
-writeback_control that is passed to the writeback code is only
-initialized in three places, although there are a lot more places in
-file system code that never reach the common writeback code.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/9p/vfs_file.c | 17 ++++-------------
+ 1 file changed, 4 insertions(+), 13 deletions(-)
 
-Diffstat:
- block/bdev.c            |    2 
- fs/9p/vfs_file.c        |   17 +------
- fs/btrfs/defrag.c       |    4 -
- fs/btrfs/extent_io.c    |    3 -
- fs/btrfs/file.c         |    2 
- fs/btrfs/inode.c        |   52 +++++++---------------
- fs/btrfs/reflink.c      |    2 
- fs/btrfs/super.c        |    2 
- fs/ext4/inline.c        |    2 
- fs/ext4/inode.c         |    6 +-
- fs/fat/inode.c          |    2 
- fs/fs-writeback.c       |    6 +-
- fs/jfs/jfs_logmgr.c     |    2 
- fs/ocfs2/journal.c      |   11 ----
- fs/sync.c               |   11 ++--
- fs/xfs/xfs_file.c       |    2 
- include/linux/pagemap.h |    8 +--
- mm/fadvise.c            |    3 -
- mm/filemap.c            |  109 +++++++++++++++++++-----------------------------
- mm/khugepaged.c         |    2 
- 20 files changed, 95 insertions(+), 153 deletions(-)
+diff --git a/fs/9p/vfs_file.c b/fs/9p/vfs_file.c
+index eb0b083da269..612a230bc012 100644
+--- a/fs/9p/vfs_file.c
++++ b/fs/9p/vfs_file.c
+@@ -483,24 +483,15 @@ v9fs_vm_page_mkwrite(struct vm_fault *vmf)
+ 
+ static void v9fs_mmap_vm_close(struct vm_area_struct *vma)
+ {
+-	struct inode *inode;
+-
+-	struct writeback_control wbc = {
+-		.nr_to_write = LONG_MAX,
+-		.sync_mode = WB_SYNC_ALL,
+-		.range_start = (loff_t)vma->vm_pgoff * PAGE_SIZE,
+-		 /* absolute end, byte at end included */
+-		.range_end = (loff_t)vma->vm_pgoff * PAGE_SIZE +
+-			(vma->vm_end - vma->vm_start - 1),
+-	};
+-
+ 	if (!(vma->vm_flags & VM_SHARED))
+ 		return;
+ 
+ 	p9_debug(P9_DEBUG_VFS, "9p VMA close, %p, flushing", vma);
+ 
+-	inode = file_inode(vma->vm_file);
+-	filemap_fdatawrite_wbc(inode->i_mapping, &wbc);
++	filemap_fdatawrite_range(file_inode(vma->vm_file)->i_mapping,
++			(loff_t)vma->vm_pgoff * PAGE_SIZE,
++			(loff_t)vma->vm_pgoff * PAGE_SIZE +
++				(vma->vm_end - vma->vm_start - 1));
+ }
+ 
+ static const struct vm_operations_struct v9fs_mmap_file_vm_ops = {
+-- 
+2.47.3
+
