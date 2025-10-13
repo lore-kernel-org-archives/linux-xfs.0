@@ -1,42 +1,45 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E698D1ACEAF
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 03:19:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A325117A2FB;
+	Mon, 13 Oct 2025 03:24:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760325600; cv=none; b=jDhFpVSSMDlNeh0aModM43TF0hcMHENDrFGWoGR4LseTnY7DbqEQzWLfcQeXGx3uNssSg8kXPbj69LA4MhejqETAXCDEhclJRN81d34d5qOx07VLXV7t5zIqNHvCPtT5UB0j2+ibUcvHF/CbYiUypkZstguqmDYoUmjoqDG2zKI=
+	t=1760325898; cv=none; b=tUrwTYEbBll+kmpTlEYyzNUm0LvAWPX3kg6c3xWi1PybOaJNk9FIVj+YuNY/BX3Sx/6EqXFjsS+NT7ktssgtg5ijJqdeiEDS3bnAQnF28V4f+bOKno33XuuR3m6lN7IlU1AauFsucoHCZTxpb4k92e8tUIWhlFpANiewC9mpEIc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760325600; c=relaxed/simple;
-	bh=M0DbMuPNHY+FiAZYTR2YMhpUjxv5/GKz7lFjTd63hLA=;
+	s=arc-20240116; t=1760325898; c=relaxed/simple;
+	bh=50dS+0y+6FY2yD3kd/3EeJU4s/xR6yAIQs/bi9vgnaQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ReKsaRm8XJHVsZP940/4EVb1bMAHrXzU8idDxyIVJHp3gltk1BWTxIxVshgBvgGZFy/lvP50HSRIfrCUAGgyWfOSX0aWqMww54ZRGoA3DEzoKipcuJ0bLUo+1DBAvXxHMcCcQa6H19Jr76Kuq1d6spo/NdxrhVDLcpsxevSUJkE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UD+eZ1Mt; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=DuNORoUoyHmo9LrakEEBFDf1M9Oodbebf9r5VerilI27UGBkP/KKHcGtu4O9TjGkMOYsKeDq/nvpw6nqrdCynUnY4jynOndS1NL2mnJ2WPWO7cIhVO8aQmUpKRZFgiTYdy1k23TZoiSEfvGnm8pXcmVrokuNCPdqX2z7jZA/VIQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xKqmaYxe; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UD+eZ1Mt"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xKqmaYxe"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=TPU0dMih9kjq74FvN1ll2OiNppsqC/EgCp1eJxb3B9I=; b=UD+eZ1Mtv+gmrJHI+BO0Ioelf7
-	GQ8ImY4KjRAokTk0i6CDl9aJce6wqcxmgj2hM+qDqcsZy3gpkQUOQn2shmw/4bnkiOIHt+Zvjjwbv
-	LaTr6DF7tlqLoJ//1GcADc7T2BCGMA/L+Z/8rlmYo66bQ7TXjNI6Qav/K5dqXzfRBt7/Fz7tSnvFd
-	hjoQooBbol/WJSZU/O6kry25Mlq8uEoidOUMeH7VC8CWLwQmhmYIReMtFCUp6jeehoEX5X+A5eNgE
-	FihBzoBjaLnigbNF9KXN0IcQowT7YeQiHCHHCVUeH6NAkLDlPoKQgSQZkcaSePu7QNd/43mQKCJ8t
-	G3VWgq1A==;
+	bh=qOaNuHQTU+ztL3RFVtOr9Vvm14VlAtgrXtrwZtrsN7U=; b=xKqmaYxeNyS/sTBLsfrN0ZwnUg
+	YvvpgeqHtj8tiGblShgqzzNG3f8FN6cU/WyuQnFTQwhlCNdJRkgps/cr4LOrx/1npVCGPijMCK12S
+	smQRgQMazwXgbKypHchcgGLEHl0xVBbX8lE0nc/H0PZvNYdhV5JgWvlKPH1zbJYm0VeHa49YMJFVl
+	XWpXMgkQOyNoAuRw7NFtxN43UmcRfIBfiqS5KhkJ9r6sQoCoN8rQb4KZjoqzYnqAHyBvgxkHRPAtV
+	dfGwbD0iqkSV2txadKK7n1vxY8wU83xk/0BRwSNcBJ2LTC8R8ER+NLwKZejFSo9BZttjaVT2FCw+B
+	+vB7wJ+g==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v896M-0000000C9rP-1ae9;
-	Mon, 13 Oct 2025 03:19:58 +0000
-Date: Sun, 12 Oct 2025 20:19:58 -0700
+	id 1v89B7-0000000C9wP-37SV;
+	Mon, 13 Oct 2025 03:24:53 +0000
+Date: Sun, 12 Oct 2025 20:24:53 -0700
 From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Andrey Albershteyn <aalbersh@redhat.com>,
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] mkfs: fix copy-paste error in calculate_rtgroup_geometry
-Message-ID: <aOxv3k0AgS1qLBD9@infradead.org>
-References: <20251011183404.GG6188@frogsfrogsfrogs>
+To: Fengnan Chang <changfengnan@bytedance.com>
+Cc: axboe@kernel.dk, viro@zeniv.linux.org.uk, brauner@kernel.org,
+	jack@suse.cz, asml.silence@gmail.com, willy@infradead.org,
+	djwong@kernel.org, hch@infradead.org, ritesh.list@gmail.com,
+	linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH] block: enable per-cpu bio cache by default
+Message-ID: <aOxxBS8075_gMXgy@infradead.org>
+References: <20251011013312.20698-1-changfengnan@bytedance.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,17 +48,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251011183404.GG6188@frogsfrogsfrogs>
+In-Reply-To: <20251011013312.20698-1-changfengnan@bytedance.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Sat, Oct 11, 2025 at 11:34:04AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Fix this copy-paste error -- we should calculate the rt volume
-> concurrency either if the user gave us an explicit option, or if they
-> didn't but the rt volume is an SSD.
+On Sat, Oct 11, 2025 at 09:33:12AM +0800, Fengnan Chang wrote:
+> +	opf |= REQ_ALLOC_CACHE;
+> +	if (bs->cache && nr_vecs <= BIO_INLINE_VECS) {
+> +		bio = bio_alloc_percpu_cache(bdev, nr_vecs, opf,
+> +					     gfp_mask, bs);
+> +		if (bio)
+> +			return bio;
+> +		/*
+> +		 * No cached bio available, bio returned below marked with
+> +		 * REQ_ALLOC_CACHE to participate in per-cpu alloc cache.
+> +		 */
+> +	} else
 
-Looks good:
+> +		opf &= ~REQ_ALLOC_CACHE;
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Just set the req flag in the branch instead of unconditionally setting
+it and then clearing it.  
+
+> +	/*
+> +	 * Even REQ_ALLOC_CACHE is enabled by default, we still need this to
+> +	 * mark bio is allocated by bio_alloc_bioset.
+> +	 */
+>  	if (rq->cmd_flags & REQ_ALLOC_CACHE && (nr_vecs <= BIO_INLINE_VECS)) {
+
+I can't really parse the comment, can you explain what you mean?
 
