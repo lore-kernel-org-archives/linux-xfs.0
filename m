@@ -1,41 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59364296BD4;
-	Mon, 13 Oct 2025 23:33:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E5AE1E9B37
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 23:34:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760398386; cv=none; b=e4rtNIYi1K9mXSMaFIsfFMF/PVsgMAKP5P1jg1ERmiNJYabOduox9NALESZujWtDflBpjAWTs1R/G6ey0KDZcMQM3YtcnfFqLzvq+wdgyd9d6cO4/PGCNRD1E5pJfIZ/VF0tLTau0ZMHOhBVBs37u85yPJtX35uvLVAy8Vq1J7M=
+	t=1760398466; cv=none; b=SU+In+cAcSw1Egpdom5Y7/ou4DlViomryCmrwM7COeKomxJ0ZZD16vWI/7TcHjnfrMDGubxuPDWGVkOpbj0Hw+1C3UIEdoBJYFvjl7DxylWZCL9ip6BLDi+9fV7AOuNHsxLRUqDyx/F/e4Bp1p2sfVRvx3cyEAPgfzLY8aczBDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760398386; c=relaxed/simple;
-	bh=DcbZzNWAhYoBauHNBNG16BoCwbrXg/Z/+2Sp+H456ic=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bvfc3EB/Bibn24G54IzLaxA1a1+whr8X+0tvAabGJrs+82AGJ1mVRSRCoAFlIOG7ojbg9xty8YV//B9m+/43qImNe/yOTj/CvR05/YVIxD1EbKM1HEOBp7RD6ZyGTunV6cZGsOFZ9WWyqgJujYqLPximMmaTnOdKx6cpuMDXuo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HUYiEtpw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760398466; c=relaxed/simple;
+	bh=8p5h8ubpwH2DC6Eo2rzvAs6CsYoCfO34jLCN/ex+Nbc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=pf1cmeguY1XaJYUmf64I1eBreE1xp9Nz38xDCFgGLgG6mjozUUmfiVME3WcpqD2PsuHmiIiSXTr66oSJKNSFi0dwSuvjPpBOOw4w1mRLnTh56Dy5pBB7SDiDjUXEwyeViJ+Kiwbw/MZfY/iRd7qEHpKy8pbKYey+nSE7SylC0fk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c2HXLi+E; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HUYiEtpw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B81CBC4CEE7;
-	Mon, 13 Oct 2025 23:33:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c2HXLi+E"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A507AC4CEE7;
+	Mon, 13 Oct 2025 23:34:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760398385;
-	bh=DcbZzNWAhYoBauHNBNG16BoCwbrXg/Z/+2Sp+H456ic=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HUYiEtpwwSA8R000Ho10FCMCE+p0Gr0v+OkLwf1X7L5ATCjUZSD2K/SLnvCAHjSpC
-	 WoFDmi4WVLOOobYr+ikPqdq1zwFHX9JVudcLy4TaBIfaPsdN6zcHlbKdzNs4Rv2UBI
-	 prdMVOr+/C6GHscJGhm2ypNc1Ahh/YHaDhgwZSmqj0nDVgi2X5FpIcHQpTtGWBCE38
-	 BLF6fXKUYQ8adw3dF6lAEsPOIRDXz6uw9xuowWcl8QicMrY99/8D2QFzUSdoy/3qxI
-	 vvSU44n/szW5OAOqhA6yYwFNWoDLvB2eN6v3Kc4ZZaKZZllZ4gYcdfY2d5a8CSvxaN
-	 kG4TQGGFPkkQQ==
-Date: Mon, 13 Oct 2025 16:33:05 -0700
+	s=k20201202; t=1760398464;
+	bh=8p5h8ubpwH2DC6Eo2rzvAs6CsYoCfO34jLCN/ex+Nbc=;
+	h=Date:From:To:Cc:Subject:From;
+	b=c2HXLi+EzLjQpMqYkVjpVDid3J03fGZFnd/3GiYu7xxqj14ChCQF896Pe7ED20bLN
+	 oiyYNcH+lPq1lO+99T9lO8MmcJwVlCBTwVQekU/J6l6VGKk8Z1BFnZoQfX5ULE3eWd
+	 1255fsYXu9cFToY/uiyLrvXN84o+4bVaMuot48OSha8Fol6kuN7WNyu3HCI54NpREg
+	 ByIzi5WcQTtTQ70AxgZB3LC2tK6MjAhVo7rSgufgEeuq2IFNGmACNIFw7uSiZ7udX5
+	 pQ5EtEAQ6X5GI7J4eAhA6gXtVYy7cOkxCKTUTWGOQa/uQKe2wwuUUfQTlhq4a4LtVG
+	 OualN1dpMPFSA==
+Date: Mon, 13 Oct 2025 16:34:24 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Oleksandr Natalenko <oleksandr@natalenko.name>
-Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>, Pavel Reichl <preichl@redhat.com>,
-	Vlastimil Babka <vbabka@suse.cz>,
-	Thorsten Leemhuis <linux@leemhuis.info>
-Subject: [PATCH 2/2] xfs: always warn about deprecated mount options
-Message-ID: <20251013233305.GS6188@frogsfrogsfrogs>
-References: <20251013233229.GR6188@frogsfrogsfrogs>
+To: Andrey Albershteyn <aalbersh@redhat.com>
+Cc: 1116595@bugs.debian.org, Iustin Pop <iustin@debian.org>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs_scrub_fail: reduce security lockdowns to avoid postfix
+ problems
+Message-ID: <20251013233424.GT6188@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,55 +42,100 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251013233229.GR6188@frogsfrogsfrogs>
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The deprecation of the 'attr2' mount option in 6.18 wasn't entirely
-successful because nobody noticed that the kernel never printed a
-warning about attr2 being set in fstab if the only xfs filesystem is the
-root fs; the initramfs mounts the root fs with no mount options; and the
-init scripts only conveyed the fstab options by remounting the root fs.
+Iustin Pop reports that the xfs_scrub_fail service fails to email
+problem reports on Debian when postfix is installed.  This is apparently
+due to several factors:
 
-Fix this by making it complain all the time.
+1. postfix's sendmail wrapper calling postdrop directly,
+2. postdrop requiring the ability to write to the postdrop group,
+3. lockdown preventing the xfs_scrub_fail@ service to have postdrop in
+   the supplemental group list or the ability to run setgid programs
 
-Cc: <stable@vger.kernel.org> # v5.13
-Fixes: 92cf7d36384b99 ("xfs: Skip repetitive warnings about mount options")
+Item (3) could be solved by adding the whole service to the postdrop
+group via SupplementalGroups=, but that will fail if postfix is not
+installed and hence there is no postdrop group.
+
+It could also be solved by forcing msmtp to be installed, bind mounting
+msmtp into the service container, and injecting a config file that
+instructs msmtp to connect to port 25, but that in turn isn't compatible
+with systems not configured to allow an smtp server to listen on ::1.
+
+So we'll go with the less restrictive approach that e2scrub_fail@ does,
+which is to say that we just turn off all the sandboxing. :( :(
+
+Reported-by: iustin@debian.org
+Cc: <linux-xfs@vger.kernel.org> # v6.10.0
+Fixes: 9042fcc08eed6a ("xfs_scrub_fail: tighten up the security on the background systemd service")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_super.c |   21 ++++++++++++++++-----
- 1 file changed, 16 insertions(+), 5 deletions(-)
+ scrub/xfs_scrub_fail@.service.in |   57 ++------------------------------------
+ 1 file changed, 3 insertions(+), 54 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e1df41991fccc3..3517106159327b 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1385,12 +1385,23 @@ xfs_fs_warn_deprecated(
- 	uint64_t		flag,
- 	bool			value)
- {
--	/* Don't print the warning if reconfiguring and current mount point
--	 * already had the flag set
-+	/*
-+	 * Always warn about someone passing in a deprecated mount option.
-+	 * Previously we wouldn't print the warning if we were reconfiguring
-+	 * and current mount point already had the flag set, but that was not
-+	 * the right thing to do.
-+	 *
-+	 * Many distributions mount the root filesystem with no options in the
-+	 * initramfs and rely on mount -a to remount the root fs with the
-+	 * options in fstab.  However, the old behavior meant that there would
-+	 * never be a warning about deprecated mount options for the root fs in
-+	 * /etc/fstab.  On a single-fs system, that means no warning at all.
-+	 *
-+	 * Compounding this problem are distribution scripts that copy
-+	 * /proc/mounts to fstab, which means that we can't remove mount
-+	 * options unless we're 100% sure they have only ever been advertised
-+	 * in /proc/mounts in response to explicitly provided mount options.
- 	 */
--	if ((fc->purpose & FS_CONTEXT_FOR_RECONFIGURE) &&
--            !!(XFS_M(fc->root->d_sb)->m_features & flag) == value)
--		return;
- 	xfs_warn(fc->s_fs_info, "%s mount option is deprecated.", param->key);
- }
+diff --git a/scrub/xfs_scrub_fail@.service.in b/scrub/xfs_scrub_fail@.service.in
+index 16077888df3391..1e205768133467 100644
+--- a/scrub/xfs_scrub_fail@.service.in
++++ b/scrub/xfs_scrub_fail@.service.in
+@@ -19,57 +19,6 @@ SupplementaryGroups=systemd-journal
+ # can control resource usage.
+ Slice=system-xfs_scrub.slice
  
+-# No realtime scheduling
+-RestrictRealtime=true
+-
+-# Make the entire filesystem readonly and /home inaccessible.
+-ProtectSystem=full
+-ProtectHome=yes
+-PrivateTmp=true
+-RestrictSUIDSGID=true
+-
+-# Emailing reports requires network access, but not the ability to change the
+-# hostname.
+-ProtectHostname=true
+-
+-# Don't let the program mess with the kernel configuration at all
+-ProtectKernelLogs=true
+-ProtectKernelModules=true
+-ProtectKernelTunables=true
+-ProtectControlGroups=true
+-ProtectProc=invisible
+-RestrictNamespaces=true
+-
+-# Can't hide /proc because journalctl needs it to find various pieces of log
+-# information
+-#ProcSubset=pid
+-
+-# Only allow the default personality Linux
+-LockPersonality=true
+-
+-# No writable memory pages
+-MemoryDenyWriteExecute=true
+-
+-# Don't let our mounts leak out to the host
+-PrivateMounts=true
+-
+-# Restrict system calls to the native arch and only enough to get things going
+-SystemCallArchitectures=native
+-SystemCallFilter=@system-service
+-SystemCallFilter=~@privileged
+-SystemCallFilter=~@resources
+-SystemCallFilter=~@mount
+-
+-# xfs_scrub needs these privileges to run, and no others
+-CapabilityBoundingSet=
+-NoNewPrivileges=true
+-
+-# Failure reporting shouldn't create world-readable files
+-UMask=0077
+-
+-# Clean up any IPC objects when this unit stops
+-RemoveIPC=true
+-
+-# No access to hardware device files
+-PrivateDevices=true
+-ProtectClock=true
++# No further restrictions because some installations may have MTAs such as
++# postfix, which require the ability to run setgid programs and other
++# foolishness.
