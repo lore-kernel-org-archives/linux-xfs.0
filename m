@@ -1,143 +1,260 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B921E1DED7B
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 13:54:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BA761DED7B
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 13:55:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760363656; cv=none; b=hwD3JAUUoA+X8rtCHjrwS2APysbcddfsS+ExqNX5tq1lTztIJm3GE0ut05cX77fTKSdMyNthIqOra2M/goJGoYA23mgT5yjdWQz52f0YLfMNOCOnUaBap4h8QFC7wxEsmAciPETvKJiGqZ4y7ovVsTx8/WPTAnFNXJ5NximMNMY=
+	t=1760363728; cv=none; b=li+9DwzJt3JFj54p38b5pMfkDm3tq1HLWmweN6GUKGTv6XRL/Dd4CUuJgY4SHPgF5salBliJfW5/jZV/F6oxHikOYWBIgTu++YuaDuYIZ7s86G+Q27+uNUBY+14IXFNjioP/Z6TvXdEUMloUwnBznyo/6r8nkErOB2QZ73S1CnI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760363656; c=relaxed/simple;
-	bh=s04jhQU7TEEHuW18xm8WJIovsRXHdzd0vBkp10CuEiI=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=oVOIPYjxfXP368gj1XEaUdpcAnLiHWpkoDWDxTjcqM/20JQdO51cR1xH1dbdYsDsm5dEYBHZUMDh/vrWIegvrGj+fQGJ1ppm8qPt14sWYYKx+cAdDkVFF9+J/LsL7+chK/S7nkK+9AXUTZd0aeSUOW9ZG7h7IYa6Nk1p49P/7IE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EbphR9Up; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760363728; c=relaxed/simple;
+	bh=7uoBloRVyZ5Guy6b1V3r+FZ+UW7jjjUu+MyPFMW/Q94=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sCk+2OzjGu9EcqWsMw/FVmrkuhiLHQ2ZPJmESYE5a9YBiSvM7hk4lZ/x5lPvy1Z+jwE5p28jX7dOYxgwSohY4BD6caVFsxlaYXRuII8G0MweYW6KiUNO5Rq051Q3gzHbUGVj5DL2wJuZmBNOecj5tQRknz3Aaj/BFPYzRUZv4Ps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZmIANbpw; arc=none smtp.client-ip=209.85.210.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EbphR9Up"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8461C4CEE7;
-	Mon, 13 Oct 2025 13:54:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760363656;
-	bh=s04jhQU7TEEHuW18xm8WJIovsRXHdzd0vBkp10CuEiI=;
-	h=Date:From:To:Cc:Subject:From;
-	b=EbphR9UprEubB2JUqQLzC/wcmK/ZNxUZm7Lq66g+crJa88s0zHHm9Z/nsLK0eL0PC
-	 Gl1oJudjhbMKEKEd6Q1kzb/b+IsdeBh7li4sZ9ScirPB4dT2XJOq9eJrPaNLPw4OxQ
-	 wuUemxCZHvNNZuwp+cdlGwmzJYvHgUFY3mkQ3/0ferjFFOeQLpwHY273BRGV7owvpo
-	 WT3j/iaLJXB3m2NHVAwMWD7AaAH5GEYCSVrZxuE+LAGu0MncM+eITdgq/7r+y6aVoi
-	 Np3SuG/Id+bevwKYDD32FCOSxKIK5DeaIMFqPTt0A9v3yzJwQh+7AjxgczrRuQTiOK
-	 V37b/cZqUaUaA==
-Date: Mon, 13 Oct 2025 15:54:08 +0200
-From: Andrey Albershteyn <aalbersh@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: AWilcox@wilcox-tech.com, aalbersh@kernel.org, cem@kernel.org, 
-	cmaiolino@redhat.com, djwong@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org, 
-	pchelkin@ispras.ru, pranav.tyagi03@gmail.com, sandeen@redhat.com
-Subject: [ANNOUNCE] xfsprogs: for-next updated to 059eef174487
-Message-ID: <k3tvlqxiaeqvk4h5jognyo7zre4uhgdk5nlme34f6mqtd36sv4@snrrskkkqkhk>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZmIANbpw"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-782a77b5ec7so3740933b3a.1
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 06:55:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1760363725; x=1760968525; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=bNktDQJpwt2d0SAdhMEssU0chRq9xm2zJi9soknmR28=;
+        b=ZmIANbpwaVygFPmUeoEbSs6GgYbRPqFu4MFOCZopS+lPalDz3EJtl8EM8gqVXHx1ct
+         z/FGPvNu9WuEjPjcoVd8M8LTw4crzDbJoBNaunU10So2agAfq8SCfMlAmDmzi9cfyTFP
+         y/2ccZpluy4O/i1hHF3QMiEiHE/r7BsLAM0OsoKqc5PNdRiPWDFhTu5BBurRKdBeVjeL
+         jqFQ9JNIEyPhol8BF/Yv5hBaFQptIlwukgyFCWGdwL3IH4BTJNUxspyZuLEgihP1Czt2
+         W//1bJBi0IxF7JyZcIsmRj4umXYuLcqN+w1FGDVTExVCzS6fVMiMejlRex9rzBwpcEjf
+         FWvQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1760363725; x=1760968525;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=bNktDQJpwt2d0SAdhMEssU0chRq9xm2zJi9soknmR28=;
+        b=Xm8nzFRMJSwet8uF2NkE8CIpNTO2nQwSe/NkVOoKtLVQlSo1DujATgUdqVxIo1Kluy
+         97BQzHPhGr4c31A4wjedSKPMJTC+OAgep1skTL8FcwRhGvGZLhY8Whn4Y86+UJF7FDYv
+         hDt4DYiK6mNqHk5a3sEbSnT4hIXV0ttvuMbMx1AFFoE2WbhtA/dCZEcjlMAvLHIAPpP4
+         zHOlqxjicyCz1RA9XcTsZparqdkv3EOjCc3Snonkr78zVHd2b61ShxJDLJJQzsBVn8jG
+         PmtSk51EYDXyTXkMPojhfd1pTWq4uQe7UtpaBwNBSoDO5f83P9dfo2sByFP2VkfaKy0C
+         qo4g==
+X-Forwarded-Encrypted: i=1; AJvYcCWpzxBBpHPpJizLlROM9ZcLMtunKWRzowlqMzGwHU+MBofmSOfy4aMp1Nehpaa3Rr31eiW37xv3hMk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwY+sdcScqDFK8dtL/u2hc/iNdvVL185RPCXgrbwNI+em72+Ab+
+	MBVkC9iQF8qtWkP4WciBAdYr4H1MvOaANwXypoBxrXl5ixiNGw5N8Bie
+X-Gm-Gg: ASbGncuWOlxMNrc+7GPHwHfQA/fgmvWShfVPMBIbTyhMj/OWCoa1x8fxBw4PbmBOHrn
+	jKxLRLyodeKnwV3P1AplaqTSgYocGP6C5IqVtH5TxB1Hymp6EXPGh7CGDmFv6kRcrcedFtg3WCy
+	koSKy5cnmYzgwMjWZ9cUbE3eBZoI1TF4ZUBCDbSzsnkLcUl/U9HktnbrhqyDfsI/5A2tx7q4RbK
+	I4Y9dq4UaRfwY4EbzyhxfDPkRnsEMpjd1XXRi/Q+fr39GsSwC53wJLU4iwrqZ8MwjD9sWcll0el
+	N4YEGXHd+LtBxhQDVzhy5tJBAOiA2cEi2q/kQGn2CnkVQPBFYUzyhahCoBZo5T2MsQ8hWRSSxcW
+	I1AP80MY9yNMoYN3u9S0QQPZFnumSq4AINObEKhICAJhuhYrYQUiLr2jFmQXt63EvQvBR95Ezkm
+	khXHv7wlPOUdxH43tv/Tb2WPRl
+X-Google-Smtp-Source: AGHT+IHB5MtrJAqU3/C/wmwEIkAHtPuLEZoAmq62FNy9N8emT0ESiZaJyuOKGeU5iyFsHOJDDJj9ww==
+X-Received: by 2002:a05:6a20:9389:b0:32b:5ec7:1408 with SMTP id adf61e73a8af0-32da8516807mr26793038637.48.1760363725378;
+        Mon, 13 Oct 2025 06:55:25 -0700 (PDT)
+Received: from [192.168.50.102] ([49.245.38.171])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7992d0c349csm11780346b3a.50.2025.10.13.06.55.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 13 Oct 2025 06:55:24 -0700 (PDT)
+Message-ID: <006ae40b-b2e6-441a-b2d3-296d1e166787@gmail.com>
+Date: Mon, 13 Oct 2025 21:55:18 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 3/3] generic: basic smoke for filesystems on zoned
+ block devices
+To: Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+ Zorro Lang <zlang@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Naohiro Aota <naohiro.aota@wdc.com>,
+ linux-btrfs@vger.kernel.org, Hans Holmberg <hans.holmberg@wdc.com>,
+ fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+ Carlos Maiolino <cem@kernel.org>, "Darrick J . Wong" <djwong@kernel.org>,
+ Carlos Maiolino <cmaiolino@redhat.com>
+References: <20251013080759.295348-1-johannes.thumshirn@wdc.com>
+ <20251013080759.295348-4-johannes.thumshirn@wdc.com>
+Content-Language: en-GB
+From: Anand Jain <anajain.sg@gmail.com>
+In-Reply-To: <20251013080759.295348-4-johannes.thumshirn@wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi folks,
 
-The xfsprogs for-next branch in repository at:
+Johannes,
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+The test case is failing with XFS. For some reason, the mkfs error 
+wasn't captured in the output, so I had to modify the test slightly. 
+Errors and the diff is below.
 
-has just been updated.
+Thanks, Anand
 
-Patches often get missed, so if your outstanding patches are properly reviewed
-on the list and not included in this update, please let me know.
+-------
+SECTION       -- generic-config
+RECREATING    -- xfs on /dev/sde
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/x86_64 feddev 6.16.10-100.fc41.x86_64 #1 SMP 
+PREEMPT_DYNAMIC Thu Oct  2 18:19:14 UTC 2025
+MKFS_OPTIONS  -- -f /dev/sda
+MOUNT_OPTIONS -- /dev/sda /mnt/scratch
 
-The for-next branch has also been updated to match the state of master.
+generic/772       [not run] cannot mkfs zoned filesystem
+Ran: generic/772
+Not run: generic/772
+Passed all 1 tests
 
-The new head of the for-next branch is commit:
+SECTION       -- generic-config
+=========================
+Ran: generic/772
+Not run: generic/772
+Passed all 1 tests
+--------------
 
-059eef174487133bec609752b6deb3b9db5e64bb
+$ dmesg
 
-New commits:
+[ 2089.280926] XFS (sda): Ending clean mount
+[ 2089.786335] zloop: Added device 0: 64 zones of 256 MB, 4096 B block size
+[ 2089.848065] zloop: Zone 63: unaligned write: sect 33554176, wp 33030144
+[ 2089.848081] zloop: Zone 63: failed write sector 33554176, 256 sectors
+[ 2089.848086] I/O error, dev zloop0, sector 33554176 op 0x1:(WRITE) 
+flags 0x8800 phys_seg 32 prio class 2
+[ 2089.862921] zloop: Zone 32: unaligned write: sect 16777296, wp 16777216
+[ 2089.862934] zloop: Zone 32: failed write sector 16777296, 1024 sectors
+[ 2089.862939] I/O error, dev zloop0, sector 16777296 op 0x1:(WRITE) 
+flags 0x4000 phys_seg 128 prio class 2
 
-Christoph Hellwig (3):
-      [fc46966ce3d5] xfs: return the allocated transaction from xfs_trans_alloc_empty
-      [c6135e4201a1] xfs: improve the xg_active_ref check in xfs_group_free
-      [620910fd6440] xfs: don't use a xfs_log_iovec for ri_buf in log recovery
+-----------------
 
-Darrick J. Wong (4):
-      [add1e9d2f576] mkfs: fix libxfs_iget return value sign inversion
-      [e51aa35ec4c8] libfrog: pass mode to xfrog_file_setattr
-      [41aac2782dba] xfs_scrub: fix strerror_r usage yet again
-      [bb52ff815e54] mkfs: fix copy-paste error in calculate_rtgroup_geometry
+$ cat ./results/generic-config/generic/772.full
 
-Eric Sandeen (1):
-      [059eef174487] xfs: do not propagate ENODATA disk errors into xattr code
+echo '1' 2>&1 > /sys/fs/xfs/sda/error/fail_at_unmount
+echo '0' 2>&1 > /sys/fs/xfs/sda/error/metadata/EIO/max_retries
+echo '0' 2>&1 > /sys/fs/xfs/sda/error/metadata/EIO/retry_timeout_seconds
+mkfs.xfs: pwrite failed: Input/output error
+libxfs_bwrite: write failed on (unknown) bno 0x1ffff00/0x100, err=5
+mkfs.xfs: Releasing dirty buffer to free list!
+found dirty buffer (bulk) on free list!
+mkfs.xfs: libxfs_device_zero write failed: Input/output error
+meta-data=/dev/zloop0            isize=512    agcount=4, agsize=1048576 blks
+          =                       sectsz=4096  attr=2, projid32bit=1
+          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+          =                       reflink=1    bigtime=1 inobtcount=1 
+nrext64=1
+data     =                       bsize=4096   blocks=4194304, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=16384, version=2
+          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-Fedor Pchelkin (6):
-      [313be3605966] xfs: rename diff_two_keys routines
-      [a6b87a3a466c] xfs: rename key_diff routines
-      [4a902e04d98e] xfs: refactor cmp_two_keys routines to take advantage of cmp_int()
-      [fe6a679a9b30] xfs: refactor cmp_key_with_cur routines to take advantage of cmp_int()
-      [a9be1f9d2bae] xfs: use a proper variable name and type for storing a comparison result
-      [ff1a5239a94f] xfs: refactor xfs_btree_diff_two_ptrs() to take advantage of cmp_int()
 
-Pranav Tyagi (1):
-      [86c2579ddf30] fs/xfs: replace strncpy with memtostr_pad()
 
-Code Diffstat:
+$ git diff
+diff --git a/tests/generic/772 b/tests/generic/772
+index d9b84614da3d..54da97fdd00f 100755
+--- a/tests/generic/772
++++ b/tests/generic/772
+@@ -36,8 +36,9 @@ mkdir -p $mnt
+  _create_zloop $ID $zloopdir 256 2
+  zloop="/dev/zloop$ID"
 
- configure.ac                  |  1 +
- db/attrset.c                  |  6 +---
- db/dquot.c                    |  4 +--
- db/fsmap.c                    |  8 +-----
- db/info.c                     |  8 +-----
- db/metadump.c                 |  2 +-
- db/namei.c                    |  4 +--
- db/rdump.c                    | 11 ++-----
- include/builddefs.in          |  1 +
- include/platform_defs.h       | 13 +++++++++
- include/xfs_trans.h           |  2 +-
- io/attr.c                     |  4 +--
- libfrog/file_attr.c           |  4 +--
- libfrog/file_attr.h           |  9 ++----
- libxfs/inode.c                |  4 +--
- libxfs/trans.c                | 37 ++++++++++++++----------
- libxfs/xfs_alloc_btree.c      | 52 ++++++++++++++-------------------
- libxfs/xfs_attr_remote.c      |  7 +++++
- libxfs/xfs_bmap_btree.c       | 32 +++++++--------------
- libxfs/xfs_btree.c            | 33 ++++++++++-----------
- libxfs/xfs_btree.h            | 41 ++++++++++++++------------
- libxfs/xfs_da_btree.c         |  6 ++++
- libxfs/xfs_format.h           |  2 +-
- libxfs/xfs_group.c            |  3 +-
- libxfs/xfs_ialloc_btree.c     | 24 ++++++++--------
- libxfs/xfs_log_recover.h      |  4 +--
- libxfs/xfs_refcount.c         |  4 +--
- libxfs/xfs_refcount_btree.c   | 18 ++++++------
- libxfs/xfs_rmap_btree.c       | 67 +++++++++++++++----------------------------
- libxfs/xfs_rtrefcount_btree.c | 18 ++++++------
- libxfs/xfs_rtrmap_btree.c     | 67 +++++++++++++++----------------------------
- libxlog/xfs_log_recover.c     | 14 ++++-----
- logprint/log_print_all.c      | 59 ++++++++++++++++++-------------------
- logprint/log_redo.c           | 52 ++++++++++++++++-----------------
- m4/package_libcdev.m4         | 46 +++++++++++++++++++++++++++++
- mkfs/proto.c                  |  2 +-
- mkfs/xfs_mkfs.c               |  2 +-
- quota/project.c               |  6 ++--
- repair/phase2.c               |  6 +---
- repair/pptr.c                 |  4 +--
- repair/quotacheck.c           |  9 ++----
- repair/rcbag.c                |  8 ++----
- repair/rcbag_btree.c          | 56 ++++++++++++++----------------------
- repair/rmap.c                 |  4 +--
- repair/rt.c                   | 10 ++-----
- scrub/Makefile                |  4 +++
- scrub/common.c                |  8 ++++--
- scrub/inodes.c                |  2 --
- 48 files changed, 377 insertions(+), 411 deletions(-)
+-_try_mkfs_dev $zloop 2>&1 >> $seqres.full ||\
++if ! _try_mkfs_dev $zloop >> $seqres.full 2>&1; then
+         _notrun "cannot mkfs zoned filesystem"
++fi
+  _mount $zloop $mnt
 
--- 
-- Andrey
+  $FSX_PROG -q -N 20000 $FSX_AVOID "$mnt/fsx" >> $seqres.full
+root@feddev:/Volumes/work/ws/fstests$
+----------------------------
+
+
+
+
+On 13-Oct-25 4:07 PM, Johannes Thumshirn wrote:
+> Add a basic smoke test for filesystems that support running on zoned
+> block devices.
+> 
+> It creates a zloop device with 2 conventional and 62 sequential zones,
+> mounts it and then runs fsx on it.
+> 
+> Currently this tests supports BTRFS, F2FS and XFS.
+> 
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> ---
+>   tests/generic/772     | 49 +++++++++++++++++++++++++++++++++++++++++++
+>   tests/generic/772.out |  2 ++
+>   2 files changed, 51 insertions(+)
+>   create mode 100755 tests/generic/772
+>   create mode 100644 tests/generic/772.out
+> 
+> diff --git a/tests/generic/772 b/tests/generic/772
+> new file mode 100755
+> index 00000000..d9b84614
+> --- /dev/null
+> +++ b/tests/generic/772
+> @@ -0,0 +1,49 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2025 Wesgtern Digital Corporation.  All Rights Reserved.
+> +#
+> +# FS QA Test 772
+> +#
+> +# Smoke test for FSes with ZBD support on zloop
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto zone quick
+> +
+> +_cleanup()
+> +{
+> +	if test -b /dev/zloop$ID; then
+> +		echo "remove id=$ID" > /dev/zloop-control
+> +	fi
+> +}
+> +
+> +. ./common/zoned
+> +
+> +# Modify as appropriate.
+> +_require_scratch
+> +_require_scratch_size $((16 * 1024 * 1024)) #kB
+> +_require_zloop
+> +
+> +_scratch_mkfs > /dev/null 2>&1
+> +_scratch_mount
+> +
+> +ID=$(_find_next_zloop)
+> +
+> +mnt="$SCRATCH_MNT/mnt"
+> +zloopdir="$SCRATCH_MNT/zloop"
+> +
+> +mkdir -p "$zloopdir/$ID"
+> +mkdir -p $mnt
+> +_create_zloop $ID $zloopdir 256 2
+> +zloop="/dev/zloop$ID"
+> +
+> +_try_mkfs_dev $zloop 2>&1 >> $seqres.full ||\
+> +	_notrun "cannot mkfs zoned filesystem"
+> +_mount $zloop $mnt
+> +
+> +$FSX_PROG -q -N 20000 $FSX_AVOID "$mnt/fsx" >> $seqres.full
+> +
+> +umount $mnt
+> +
+> +echo Silence is golden
+> +# success, all done
+> +_exit 0
+> diff --git a/tests/generic/772.out b/tests/generic/772.out
+> new file mode 100644
+> index 00000000..98c13968
+> --- /dev/null
+> +++ b/tests/generic/772.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 772
+> +Silence is golden
+
