@@ -1,166 +1,143 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47138307ACF
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 13:30:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B921E1DED7B
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 13:54:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760362227; cv=none; b=IwlM1zl/GMG+cRXrM3Kf1IGV9CwPwftvZtuChoLQCDSi5HndCq967+bntlmXdJGRaUkoRx7feM0NsPls/WOau3QUZ+7Ty4pLn9IGId3k/OR2kYHQOpRq0B0qMs8wbNPicUcXn2ocKnYTl7vIqZWftIryaF8N6+PKzqhq82Kh9/A=
+	t=1760363656; cv=none; b=hwD3JAUUoA+X8rtCHjrwS2APysbcddfsS+ExqNX5tq1lTztIJm3GE0ut05cX77fTKSdMyNthIqOra2M/goJGoYA23mgT5yjdWQz52f0YLfMNOCOnUaBap4h8QFC7wxEsmAciPETvKJiGqZ4y7ovVsTx8/WPTAnFNXJ5NximMNMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760362227; c=relaxed/simple;
-	bh=pYKv/ZHAQal8b6v/icrawjp0xeugJB+Yhx7Gqtpqskc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DXL3ADuaQgBKrsplrDOI5YcObF/si5doXNAstQNPqImUqV/VT2tb0Qk1g6y5604A3w/5joRxmcWsYa/DuUSwEhXTcmemzjhzcljjj4TwwcpjYIzo5Q1Uv82t5nTo7BNqXxvGeeZFje2OlO8wEOBLVfJ0p/0KxRd7M2HcmJ98eSk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nKRLzPXZ; arc=none smtp.client-ip=209.85.128.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1760363656; c=relaxed/simple;
+	bh=s04jhQU7TEEHuW18xm8WJIovsRXHdzd0vBkp10CuEiI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=oVOIPYjxfXP368gj1XEaUdpcAnLiHWpkoDWDxTjcqM/20JQdO51cR1xH1dbdYsDsm5dEYBHZUMDh/vrWIegvrGj+fQGJ1ppm8qPt14sWYYKx+cAdDkVFF9+J/LsL7+chK/S7nkK+9AXUTZd0aeSUOW9ZG7h7IYa6Nk1p49P/7IE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EbphR9Up; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nKRLzPXZ"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-46e47cca387so42465355e9.3
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 06:30:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1760362224; x=1760967024; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=DZlmO7Er2VNfUt2lW8HD8G8xjeR52/0o/FyblKyrXi0=;
-        b=nKRLzPXZnQf9ilLT2raNaKwPMG6B8Vee1uWqwMVCnAKqSukvQpx/qcvB400LvbTRYx
-         fDZe5SHGtw9N/OmQD1fp+c20mNiIoCa7S0RTxayO7va4bk0AYZIOyHwbOj4vNB4tb9lN
-         bDY5zZQosZZ3k6ApeKSFrEUwzob5gRGlEPeWCe+hfRjO2Q4+2xbXi8K5lIkkNpIQxvYy
-         V8OGvKAJ6FdFO0bcqmacw5NecjeQUrtEPOZoUl8g/Buiy3JLKQg1IuddCiXv65nA1IlB
-         jsEr6eXzXiqQ7TnC3MZw/sBS5/L3XBvLIZRHM2jk0DCOxNJHcyWKzuTSIlA8saTZEdtO
-         vVeg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760362224; x=1760967024;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=DZlmO7Er2VNfUt2lW8HD8G8xjeR52/0o/FyblKyrXi0=;
-        b=S/TrpNVJB69wk+zGzbISJA4BZfVN8bzOao9kLkV0ouReqUGPWUxSTEOuunbV+u9gYJ
-         ktKWs9GuqJqXfM7rc5FiQhOaM234bDei95F1mpSAhu1iUXcQ4Q8M9gkE4ECoTnW+1H7Q
-         J0gKjnU7RJukeake4wOAmD4AV28VqUH7TzCvCeHF+YWhmSGC0PizY9lHLQ24IL/0HslU
-         hHW62c6MaTUfQg7J+eXeAYzjsDGRn+Vrv+Ol2Y82VKeRhBwseWFQTx71lgcuUKKy19hv
-         Jd8rdE1pe5JQrNxxXIfAAOA3RbrLYoNZrMI0kdrz2Kxa8nDBwO2RnsW+9GAcnDBifZlZ
-         QzqA==
-X-Forwarded-Encrypted: i=1; AJvYcCULgDZS50+reJBwQrAY8s6um3uZF0CYSj7PEdyEfpvsTtWA6BJsBQqLmvcUrtp963jRKW/o1YKjNGE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx4OFjyqAMTTfUebCEJXHcP9zVpVWw6QV5mMElS7CfdmkvcHWSx
-	uRrnH6o1+bZOY4b5htdR4HWAR8cXIisp88qeHGmB29/+hnTtxLIsBgpd
-X-Gm-Gg: ASbGnctvx89IEGIaXsMJwhjFp2a4kCxsVPBQkA0IwNfTKJHiGMMZIqC89iJTcyR6H3A
-	CdKU5Hteu0swRLBOOyOYNZJoakHceh+uJPJzC4kfGprNNjPe5RcCCeKSGWG8CUfPacHcRC3hHu1
-	hXeS+z1aliIoFjac2yFdBQSQ4dsvR29m3C4F76mjRKYoL/p5PvOKc9TUZYftQCavRIfscpUjSNp
-	/avU4XpB6zYUOqgtTEi4BHgFfpb7wUIqP2idAbeyrKUNgZYRPSB13tUAUrxtSEiAA1HXFXOf/67
-	4lYJZDZNsJd9/8/QPoG15qU5MaIQLJmyDgGRzjwJXdsl+/uX/Aklp+6syyDoYui+2lSS8ZjMdJZ
-	xYgaveL1BqGG4a7YN8jX5sRO2a+ypLjNVgF16Nr42Pq5MqEKxVUb1sM3GLP7lHZz4M3KW2qL5CM
-	GXi+rCAVVA
-X-Google-Smtp-Source: AGHT+IFb8vtBJitNnjBlDbVIUCm2gATTzzIuI7S2acOd2FoeBSuIxAzk1vmdrirRWyHwbC1aiC5zwg==
-X-Received: by 2002:a05:600c:6092:b0:45d:e28c:8741 with SMTP id 5b1f17b1804b1-46fa9b02e5amr148223315e9.29.1760362223296;
-        Mon, 13 Oct 2025 06:30:23 -0700 (PDT)
-Received: from ?IPV6:2620:10d:c096:325:77fd:1068:74c8:af87? ([2620:10d:c092:600::1:eb09])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-46fb49c3e49sm185108555e9.16.2025.10.13.06.30.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Oct 2025 06:30:22 -0700 (PDT)
-Message-ID: <d785cc8e-d8fd-4bee-950c-7f3f7d452efc@gmail.com>
-Date: Mon, 13 Oct 2025 14:31:32 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EbphR9Up"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8461C4CEE7;
+	Mon, 13 Oct 2025 13:54:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760363656;
+	bh=s04jhQU7TEEHuW18xm8WJIovsRXHdzd0vBkp10CuEiI=;
+	h=Date:From:To:Cc:Subject:From;
+	b=EbphR9UprEubB2JUqQLzC/wcmK/ZNxUZm7Lq66g+crJa88s0zHHm9Z/nsLK0eL0PC
+	 Gl1oJudjhbMKEKEd6Q1kzb/b+IsdeBh7li4sZ9ScirPB4dT2XJOq9eJrPaNLPw4OxQ
+	 wuUemxCZHvNNZuwp+cdlGwmzJYvHgUFY3mkQ3/0ferjFFOeQLpwHY273BRGV7owvpo
+	 WT3j/iaLJXB3m2NHVAwMWD7AaAH5GEYCSVrZxuE+LAGu0MncM+eITdgq/7r+y6aVoi
+	 Np3SuG/Id+bevwKYDD32FCOSxKIK5DeaIMFqPTt0A9v3yzJwQh+7AjxgczrRuQTiOK
+	 V37b/cZqUaUaA==
+Date: Mon, 13 Oct 2025 15:54:08 +0200
+From: Andrey Albershteyn <aalbersh@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: AWilcox@wilcox-tech.com, aalbersh@kernel.org, cem@kernel.org, 
+	cmaiolino@redhat.com, djwong@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org, 
+	pchelkin@ispras.ru, pranav.tyagi03@gmail.com, sandeen@redhat.com
+Subject: [ANNOUNCE] xfsprogs: for-next updated to 059eef174487
+Message-ID: <k3tvlqxiaeqvk4h5jognyo7zre4uhgdk5nlme34f6mqtd36sv4@snrrskkkqkhk>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [External] Re: [PATCH] block: enable per-cpu bio cache by default
-To: Fengnan Chang <changfengnan@bytedance.com>,
- Christoph Hellwig <hch@infradead.org>
-Cc: fengnan chang <fengnanchang@gmail.com>, axboe@kernel.dk,
- viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
- willy@infradead.org, djwong@kernel.org, ritesh.list@gmail.com,
- linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
-References: <20251011013312.20698-1-changfengnan@bytedance.com>
- <aOxxBS8075_gMXgy@infradead.org>
- <CALWNXx8pDOvDdNvw+v0rEyi33W8TL+OZW1YiFbF6Gns3PeWOLA@mail.gmail.com>
- <aOyb-NyCopUKridK@infradead.org>
- <CAPFOzZumoCERUj+VuegQNoAwFCoGxiaASD6R_4bE+p1TVbspUA@mail.gmail.com>
-Content-Language: en-US
-From: Pavel Begunkov <asml.silence@gmail.com>
-In-Reply-To: <CAPFOzZumoCERUj+VuegQNoAwFCoGxiaASD6R_4bE+p1TVbspUA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 10/13/25 13:58, Fengnan Chang wrote:
-> Christoph Hellwig <hch@infradead.org> 于2025年10月13日周一 14:28写道：
->>
->> On Mon, Oct 13, 2025 at 01:42:47PM +0800, fengnan chang wrote:
->>>> Just set the req flag in the branch instead of unconditionally setting
->>>> it and then clearing it.
->>>
->>> clearing this flag is necessary, because bio_alloc_clone will call this in
->>> boot stage, maybe the bs->cache of the new bio is not initialized yet.
->>
->> Given that we're using the flag by default and setting it here,
->> bio_alloc_clone should not inherit it.  In fact we should probably
->> figure out a way to remove it entirely, but if that is not possible
->> it should only be set when the cache was actually used.
-> 
-> For now bio_alloc_clone will inherit all flag of source bio, IMO if only not
-> inherit REQ_ALLOC_CACHE, it's a little strange.
-> The REQ_ALLOC_CACHE flag can not remove entirely.  maybe we can
-> modify like this:
-> 
-> if (bs->cache && nr_vecs <= BIO_INLINE_VECS) {
->      opf |= REQ_ALLOC_CACHE;
->      bio = bio_alloc_percpu_cache(bdev, nr_vecs, opf,
->      gfp_mask, bs);
->      if (bio)
->          return bio;
->      /*
->       * No cached bio available, bio returned below marked with
->       * REQ_ALLOC_CACHE to participate in per-cpu alloc cache.
->      */
-> } else
->          opf &= ~REQ_ALLOC_CACHE;
-> 
->>
->>>>> +     /*
->>>>> +      * Even REQ_ALLOC_CACHE is enabled by default, we still need this to
->>>>> +      * mark bio is allocated by bio_alloc_bioset.
->>>>> +      */
->>>>>        if (rq->cmd_flags & REQ_ALLOC_CACHE && (nr_vecs <= BIO_INLINE_VECS)) {
->>>>
->>>> I can't really parse the comment, can you explain what you mean?
->>>
->>> This is to tell others that REQ_ALLOC_CACHE can't be deleted here, and
->>> that this flag
->>> serves other purposes here.
->>
->> So what can't it be deleted?
-> 
-> blk_rq_map_bio_alloc use REQ_ALLOC_CACHE to tell whether to use
-> bio_alloc_bioset or bio_kmalloc, I considered removing the flag in
-> blk_rq_map_bio_alloc, but then there would have to be the introduction
-> of a new flag like  REQ_xx. So I keep this and comment.
+Hi folks,
 
-That can likely be made unconditional as well. Regardless of that,
-it can't be removed without additional changes because it's used to
-avoid de-allocating into the pcpu cache requests that wasn't
-allocated for it. i.e.
+The xfsprogs for-next branch in repository at:
 
-if (bio->bi_opf & REQ_ALLOC_CACHE)
-	bio_put_percpu_cache(bio);
-else
-	bio_free(bio);
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-Without it under memory pressure you can end up in a situation
-where bios are put into pcpu caches of other CPUs and can't be
-reallocated by the current CPU, effectively loosing the mempool
-forward progress guarantees. See:
+has just been updated.
 
-commit 759aa12f19155fe4e4fb4740450b4aa4233b7d9f
-Author: Pavel Begunkov <asml.silence@gmail.com>
-Date:   Wed Nov 2 15:18:20 2022 +0000
+Patches often get missed, so if your outstanding patches are properly reviewed
+on the list and not included in this update, please let me know.
 
-     bio: don't rob starving biosets of bios
+The for-next branch has also been updated to match the state of master.
+
+The new head of the for-next branch is commit:
+
+059eef174487133bec609752b6deb3b9db5e64bb
+
+New commits:
+
+Christoph Hellwig (3):
+      [fc46966ce3d5] xfs: return the allocated transaction from xfs_trans_alloc_empty
+      [c6135e4201a1] xfs: improve the xg_active_ref check in xfs_group_free
+      [620910fd6440] xfs: don't use a xfs_log_iovec for ri_buf in log recovery
+
+Darrick J. Wong (4):
+      [add1e9d2f576] mkfs: fix libxfs_iget return value sign inversion
+      [e51aa35ec4c8] libfrog: pass mode to xfrog_file_setattr
+      [41aac2782dba] xfs_scrub: fix strerror_r usage yet again
+      [bb52ff815e54] mkfs: fix copy-paste error in calculate_rtgroup_geometry
+
+Eric Sandeen (1):
+      [059eef174487] xfs: do not propagate ENODATA disk errors into xattr code
+
+Fedor Pchelkin (6):
+      [313be3605966] xfs: rename diff_two_keys routines
+      [a6b87a3a466c] xfs: rename key_diff routines
+      [4a902e04d98e] xfs: refactor cmp_two_keys routines to take advantage of cmp_int()
+      [fe6a679a9b30] xfs: refactor cmp_key_with_cur routines to take advantage of cmp_int()
+      [a9be1f9d2bae] xfs: use a proper variable name and type for storing a comparison result
+      [ff1a5239a94f] xfs: refactor xfs_btree_diff_two_ptrs() to take advantage of cmp_int()
+
+Pranav Tyagi (1):
+      [86c2579ddf30] fs/xfs: replace strncpy with memtostr_pad()
+
+Code Diffstat:
+
+ configure.ac                  |  1 +
+ db/attrset.c                  |  6 +---
+ db/dquot.c                    |  4 +--
+ db/fsmap.c                    |  8 +-----
+ db/info.c                     |  8 +-----
+ db/metadump.c                 |  2 +-
+ db/namei.c                    |  4 +--
+ db/rdump.c                    | 11 ++-----
+ include/builddefs.in          |  1 +
+ include/platform_defs.h       | 13 +++++++++
+ include/xfs_trans.h           |  2 +-
+ io/attr.c                     |  4 +--
+ libfrog/file_attr.c           |  4 +--
+ libfrog/file_attr.h           |  9 ++----
+ libxfs/inode.c                |  4 +--
+ libxfs/trans.c                | 37 ++++++++++++++----------
+ libxfs/xfs_alloc_btree.c      | 52 ++++++++++++++-------------------
+ libxfs/xfs_attr_remote.c      |  7 +++++
+ libxfs/xfs_bmap_btree.c       | 32 +++++++--------------
+ libxfs/xfs_btree.c            | 33 ++++++++++-----------
+ libxfs/xfs_btree.h            | 41 ++++++++++++++------------
+ libxfs/xfs_da_btree.c         |  6 ++++
+ libxfs/xfs_format.h           |  2 +-
+ libxfs/xfs_group.c            |  3 +-
+ libxfs/xfs_ialloc_btree.c     | 24 ++++++++--------
+ libxfs/xfs_log_recover.h      |  4 +--
+ libxfs/xfs_refcount.c         |  4 +--
+ libxfs/xfs_refcount_btree.c   | 18 ++++++------
+ libxfs/xfs_rmap_btree.c       | 67 +++++++++++++++----------------------------
+ libxfs/xfs_rtrefcount_btree.c | 18 ++++++------
+ libxfs/xfs_rtrmap_btree.c     | 67 +++++++++++++++----------------------------
+ libxlog/xfs_log_recover.c     | 14 ++++-----
+ logprint/log_print_all.c      | 59 ++++++++++++++++++-------------------
+ logprint/log_redo.c           | 52 ++++++++++++++++-----------------
+ m4/package_libcdev.m4         | 46 +++++++++++++++++++++++++++++
+ mkfs/proto.c                  |  2 +-
+ mkfs/xfs_mkfs.c               |  2 +-
+ quota/project.c               |  6 ++--
+ repair/phase2.c               |  6 +---
+ repair/pptr.c                 |  4 +--
+ repair/quotacheck.c           |  9 ++----
+ repair/rcbag.c                |  8 ++----
+ repair/rcbag_btree.c          | 56 ++++++++++++++----------------------
+ repair/rmap.c                 |  4 +--
+ repair/rt.c                   | 10 ++-----
+ scrub/Makefile                |  4 +++
+ scrub/common.c                |  8 ++++--
+ scrub/inodes.c                |  2 --
+ 48 files changed, 377 insertions(+), 411 deletions(-)
 
 -- 
-Pavel Begunkov
-
+- Andrey
