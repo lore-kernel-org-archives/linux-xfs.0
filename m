@@ -1,19 +1,56 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0AB819CCF5
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 17:42:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DD8B2C0275
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 17:51:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760377339; cv=none; b=s+vi1UBZLE27a9k/2A2f8HnUlXVL3WILKiUUl8R9SPYyZubXInfwwepJkzRHhV0L0XctV1t7ja62BH5UKkxLZRCX8qW8ewnh5E0T0KtdVBiAlxKNmMUhVNF4Fjl0exUmLf2+wnDatZotndLC8hDfcOj7aOhIaDtKffWjbQPlRfM=
+	t=1760377870; cv=none; b=kmOrEX/UWwZjy1Ods6cUgh4TSsRrDre7bkD1GnxcYqFkDFj2gDsOljw+AksgYyF5MahBUq8tSpdPii6Y8PoTnL/NCpfUEHEbVLGAxWzzrs/Y+u633NUugZeKZMOzWJmLS6zFj+1VJ7cXeXOhHXfmjkeQOBRnMeHYXWwTaCLgNH8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760377339; c=relaxed/simple;
+	s=arc-20240116; t=1760377870; c=relaxed/simple;
 	bh=GMp1nJ+GYWHugpMtuQ2nQSYV8rIMPNtCZeoPL1sfuYE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YFSA3/qavNnzXBbnK8TEIULgWBIBnNZIYKvSQ9ii0DVSNpVIMgSNq1WSy24Az7757TQ/sxGF3I9Ycv3dVnPekDRcUMTgDh0+WN+4dlNAEmEbeNSjtLOBHv4nU1vAKDq4lKmODH9b3PkG8fR/1X4tret9S154+0n9knalTIFDmIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VPDnRUma; arc=none smtp.client-ip=10.30.226.201
+	h=Subject:References:Date:From:To:Cc:Message-ID:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TZSGoyK+qoP/PJkBzn8vv1fdOHNseH02BsPDbHdKSKL0Ex/Yp/O24Mr3LySdcaF93aAJ76zkdPV48Uk9flTlc/kCLrMUdbvY58pmCCSOjCXt8KQIa5L4nJE1+t2CaXJ90hkODICLrxwKFFgCFr4OA1dWu2gS02fFgtY6vJA9S2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org; dkim=fail (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VPDnRUma reason="signature verification failed"; arc=none smtp.client-ip=209.87.16.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VPDnRUma"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VPDnRUma"
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.96)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1v8MhJ-00ABcX-2m;
+	Mon, 13 Oct 2025 17:51:01 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#1112588: Processed: Re: DeprecationWarning: datetime.datetime.utcnow() is deprecated
+Reply-To: "Darrick J. Wong" <djwong@kernel.org>, 1112588@bugs.debian.org
+Resent-From: "Darrick J. Wong" <djwong@kernel.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-CC: linux-xfs@vger.kernel.org
+X-Loop: owner@bugs.debian.org
+Resent-Date: Mon, 13 Oct 2025 17:51:01 +0000
+Resent-Message-ID: <handler.1112588.B1112588.17603777702426751@bugs.debian.org>
+X-Debian-PR-Message: followup 1112588
+X-Debian-PR-Package: xfsprogs
+X-Debian-PR-Keywords: patch
+References: <feb251c6-3ea1-4ca6-841f-70ce6216a22f@debian.org> <175662646685.178172.185590202459851084.reportbug@turing.verdier.eu> <handler.s.B1112588.17566725082401155.transcript@bugs.debian.org> <175662646685.178172.185590202459851084.reportbug@turing.verdier.eu>
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 1112588-submit@bugs.debian.org id=B1112588.17603777702426751
+          (code B ref 1112588); Mon, 13 Oct 2025 17:51:01 +0000
+Received: (at 1112588) by bugs.debian.org; 13 Oct 2025 17:49:30 +0000
+X-Spam-Level: 
+X-Spam-Bayes: score:0.0000 Tokens: new, 18; hammy, 147; neutral, 21; spammy,
+	0. spammytokens: hammytokens:0.000-+--UD:kernel.org,
+	0.000-+--H*Ad:N*Bug, 0.000-+--H*Ad:N*Tracking, 0.000-+--HTo:N*Debian,
+	0.000-+--HTo:N*Bug
+Received: from sea.source.kernel.org ([2600:3c0a:e001:78e:0:1991:8:25]:41156)
+	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.96)
+	(envelope-from <djwong@kernel.org>)
+	id 1v8Mfn-00ABHV-1J;
+	Mon, 13 Oct 2025 17:49:28 +0000
+Received: from smtp.kernel.org (transwarp.subspace.kernel.org [100.75.92.58])
+	by sea.source.kernel.org (Postfix) with ESMTP id 6C72244D13;
+	Mon, 13 Oct 2025 17:42:19 +0000 (UTC)
 Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43329C4CEE7;
 	Mon, 13 Oct 2025 17:42:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
@@ -31,12 +68,7 @@ From: "Darrick J. Wong" <djwong@kernel.org>
 To: Debian Bug Tracking System <owner@bugs.debian.org>
 Cc: Bastian Germann <bage@debian.org>, linux-xfs@vger.kernel.org,
 	debian-bugs-forwarded@lists.debian.org, 1112588@bugs.debian.org
-Subject: Re: Processed: Re: DeprecationWarning: datetime.datetime.utcnow() is
- deprecated
 Message-ID: <20251013174218.GO6188@frogsfrogsfrogs>
-References: <feb251c6-3ea1-4ca6-841f-70ce6216a22f@debian.org>
- <175662646685.178172.185590202459851084.reportbug@turing.verdier.eu>
- <handler.s.B1112588.17566725082401155.transcript@bugs.debian.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,6 +78,8 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <handler.s.B1112588.17566725082401155.transcript@bugs.debian.org>
+X-Greylist: delayed 421 seconds by postgrey-1.37 at buxtehude; Mon, 13 Oct 2025 17:49:27 UTC
+Message-ID: <20251013174218.78NYRZ46Q-G557ciMgE7zyQDQL_sauK6rzqyXf-ICmA@z>
 
 On Sun, Aug 31, 2025 at 08:37:02PM +0000, Debian Bug Tracking System wrote:
 > Processing control commands:
