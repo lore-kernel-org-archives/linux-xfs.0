@@ -1,91 +1,94 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AF4434BA46;
-	Mon, 13 Oct 2025 06:33:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 572B72848AA
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 06:48:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760337209; cv=none; b=kEkBB+xCOdjJoE5ZWlx38p5X76MNjOlWBoBt1V/h4fU9gZ2qo9nhJWbUj+K5i694iBzBZAQYkKmDQTUdVrOkUnveKjkR4eWDY3e8HHBmEG4Y+onva6JVwO8VVRbydK0tf+vFUTKDGzJleEpDO5Ztbl/Cb05PVbExhZGHGKOwOO0=
+	t=1760338121; cv=none; b=T3WgEx26+uh4nB4vaER5V4g9qxvas03M3gk7RLGXmFEEVCMD/CkRvHzhJ7IpqBZIClJ6/GkBOPyzIxcLI97kGfCZ/ldHiLdDW1epsGxrkeHx3Nc4IjGdUz7iijJFmrP+u8qeT/nHUcztn7R+Lcq0ZedWR8B4k8tyH6cfLgmuhOQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760337209; c=relaxed/simple;
-	bh=C2JMw6vRCYLpCur5CAXs/t5bssJE2SFWfnEq3ZMm2y8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=COO6Eyh5/WneyWY7XtTIPHV+7etzRu+0eCCtxq7FQxFU1Pffgefj1qzjQ14hWE28hOuSEV99N2pIcfS66O6phI7aD7VCTR3oMXPP6KxJktSKaRzMznrRjYEWwi/9us4dX2ijpMAbZLcCMgOXhmdDhkNA9J3+5ZtGZuxxIUBdNOM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fC0VpZHS; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1760338121; c=relaxed/simple;
+	bh=f46r95CykPvHOj5Z/xQ1YZzkZM2uliPEet9tHzqz7oI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mNuwd2RQDgOHO/zga+p2verjjrsIJr2omruEimjwSSgB4rsoqS6Swskmfey7p9rPHF2iq3B/T1P0sZx6e1dICAbeVhlU/E2pIpxaR/qWdY2Ht/8jetRIZoX4Ze+ABDrqGtC3BXGakt16Zpfx/bzVCJzngEMnb/S/ZBvm2NqzKJQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eIhK3JQV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fC0VpZHS"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=tpankzcijBPjD9K1TKHkqkQC3QK9Nw1+fLBwa5WqQts=; b=fC0VpZHS7JdVQ4YdtjRC31t+5p
-	ByBQzusJl7GU5wqEevoYT4+k/ir+RtHzNAPrnR9S9IqBaYdV1Hj3I9UJWdNM9YKos2yRhU61T3aIM
-	hp2gwvxmGnm2wLFCrhaxyhke8m6Z97Pb9OWg1/3hMOU6skTXDRNalO3cRIInubA+4AR5e9Y8tvoNs
-	rXz8npEG/mh6CJUwO2W5MsACelNXXyk2CeZFzKWZcX0gA4/pGrgdEBp9Hk9ruSuAJ2/Vf2puOoMmk
-	/SdhEARMwLSOcC0QRurv0AXwb/Kvxpt2StPhav4xfm7JUOLG+eX7/nRcj8Xx/DpLbTNgDWC11F3X8
-	INRfjddA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v8C7b-0000000CPEi-3rr3;
-	Mon, 13 Oct 2025 06:33:27 +0000
-Date: Sun, 12 Oct 2025 23:33:27 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Qu Wenruo <wqu@suse.com>
-Cc: linux-btrfs@vger.kernel.org, brauner@kernel.org, djwong@kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] iomap: add IOMAP_DIO_ALIGNED flag for btrfs
-Message-ID: <aOydN1rIsWiNo4m6@infradead.org>
-References: <5dbcc1d717c1f8a6ed85da4768306efb0073ff78.1760335677.git.wqu@suse.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eIhK3JQV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 305ABC4CEE7;
+	Mon, 13 Oct 2025 06:48:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760338120;
+	bh=f46r95CykPvHOj5Z/xQ1YZzkZM2uliPEet9tHzqz7oI=;
+	h=From:To:Cc:Subject:Date:From;
+	b=eIhK3JQVZIc3FxyPXXD8vZ8KVPNqjJrhosGzASwT7G+CjxtOHhLpVmR6iSHRjvkKR
+	 R/ukP28GA33Ejs6v1992bzWTs11aciac2vDvUP36cMEPMUNk/bPwUarMQ5fA8IVgZJ
+	 +HF/QrqYzpX2aU/QRj7eXaEteKocr0ngzEUkkSkP/N1IJLDdWupJgeTe7YX57IFzKt
+	 IQJjMS0B1DwY+OrdNWl07zPB+zd+f35VnJ+RC3eABrckLTbRHsZ7n8RtrdF/fx7+uc
+	 owJj+r98lKBiRuo9slOM+6qrD4OPq7LPt4UlrMt+6Wq0Pfsv8gDIeB9/Ucqybc99UP
+	 Hds8Vbjcsp4xQ==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Hans Holmberg <hans.holmberg@wdc.com>
+Subject: [PATCH] xfs: do not tight-pack write large files
+Date: Mon, 13 Oct 2025 15:45:12 +0900
+Message-ID: <20251013064512.752089-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5dbcc1d717c1f8a6ed85da4768306efb0073ff78.1760335677.git.wqu@suse.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 
-On Mon, Oct 13, 2025 at 04:38:40PM +1030, Qu Wenruo wrote:
-> For now only btrfs will utilize this flag, as btrfs needs to calculate
-> checksum for direct read.
+The tick-packing data block allocation which writes blocks of closed
+files in the same zone is very efficient at improving write performance
+on HDDs by reducing, and even suppressing, disk head seeks. However,
+such tight packing does not make sense for large files that require at
+least a full realtime block group (i.e. a zone). If tight-packing
+placement is applied for such files, the VM writeback thread switching
+between inodes result in the large file to be fragmented, thus
+increasing the garbage collection penalty later when the used realtime
+block group/zone needs to be reclaimed.
 
-Maybe reword this as: 
+This problem can be avoided with a simple heuristic: if the size of the
+inode being written back is at least equal to the realtime block group
+size, do not use tight-packing. Modify xfs_zoned_pack_tight() to always
+return false in this case.
 
-The initial user of this flag is btrfs, whichs needs to calculate
-the checksum for direct read and thus requires the biovec to be
-file system block size aligned?
+With this change, a multi-writer workload writing files of 256 MB on a
+file system backed by an SMR HDD with 256 MB zone size sees all files
+occupying exactly one zone, thus completely removing the heavy
+fragmentation observed without this change.
 
-> index 802d4dbe5b38..15aff186642d 100644
-> --- a/fs/btrfs/direct-io.c
-> +++ b/fs/btrfs/direct-io.c
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ fs/xfs/xfs_zone_alloc.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-Please split the patch to use the flag in btrfs from the one adding
-the the flag to iomap.
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index 1147bacb2da8..c51788550c7c 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -622,6 +622,17 @@ static inline enum rw_hint xfs_inode_write_hint(struct xfs_inode *ip)
+  */
+ static inline bool xfs_zoned_pack_tight(struct xfs_inode *ip)
+ {
++	struct xfs_mount *mp = ip->i_mount;
++	size_t zone_capacity =
++		XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_RTG].blocks);
++
++	/*
++	 * Do not pack tight large files that are already using a full group
++	 * (zone) to avoid fragmentation.
++	 */
++	if (i_size_read(VFS_I(ip)) >= zone_capacity)
++		return false;
++
+ 	return !inode_is_open_for_write(VFS_I(ip)) &&
+ 		!(ip->i_diflags & XFS_DIFLAG_APPEND);
+ }
+-- 
+2.51.0
 
-> +	const unsigned int alignment = (dio->flags & IOMAP_DIO_ALIGNED) ?
-> +		max(fs_block_size, bdev_logical_block_size(iomap->bdev)) :
-> +		bdev_logical_block_size(iomap->bdev);
-
-Please unwind this into an if/else to be easily readable.  Also a
-comment on why you still need the max when the flag is set would be
-useful.
-
-> +		ret = bio_iov_iter_get_pages(bio, dio->submit.iter, alignment - 1);
-
-Please avoid overly long lines in the iomap code.
-
-> +/*
-> + * Ensure each bio is aligned to fs block size.
-> + *
-> + * For filesystems which need to calculate/verify data checksum for each data bio.
-
-Another overly long line here.
-
-> + */
-> +#define IOMAP_DIO_ALIGNED		(1 << 3)
-
-Maybe call the flag IOMAP_DIO_FSBLOCK_ALIGNED to make it clear
-what alignment is implied by the flag.
