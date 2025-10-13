@@ -1,149 +1,70 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8952118C31;
-	Sun, 12 Oct 2025 00:36:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 868A9288D2
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 02:42:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760229382; cv=none; b=ikO5TYz2vllDSxUovtWd6z+9BYMU/JsjqzAXic11wWBqH23twsWl2QtoZA6jz6B6uvdxyg/ZtCv0EdzRPb1m2DYR1blqJd5E6E0cF7hjXqf2YsCRI4PKSiTxfSVVjcqeXpHkY3axwfWCrsQgjk9P0vsNADRGKNun+71j2XxO/GU=
+	t=1760323356; cv=none; b=ULhgj5K+1XupsA3ScToMrBSdEygSPp0PGj/XV1ompCwQioqCGxNcBoafN6YM/jSpprkVddIRRW/h41zLQrRucvktIZEHtxuaUx5NWUxjX+xynQOPT6GN4F1xSGBKR9lismkfxTFDg20RxYhYSzXubL9zh2dEIonnNZblsW+soME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760229382; c=relaxed/simple;
-	bh=d5IeSn7VzI5lxZXVELh6tC/WwuTU9ey1cyw4wcNRIWA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QKF3UprUH8VH12Gl3Bs1vvjW3u/J+P9C9oVKdgOwzSBJV8CRFPjK0Xfonw/BprOSGLbmIYXRw4FNBOM5ER7upMJVxyGL4UAW729FzI03Dd7fIgr7nEq3toXC5axqPibf0X5t929anPnnFSMH3AjsnKI1PCnRX93f0zpLCkRoiNI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SIbr3+TR; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760323356; c=relaxed/simple;
+	bh=OeH8GFoSG64xnFNPgRFw7bCY6MKC2k8QjCStCiGHlak=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lp+Z1HEmOOgk3RzbBSBAqsRWt5fh/uyMgcgSxQrW6YQwmVj12EdYd3WmOAWZ4/GaacVlOzCjidKAtqKU1mEN2gfjLqaKmzfJd4/ncMHNP4Ig4TnAOA6qZlz3tNSX7ofbMSm9VbH86c4OhQ8UMuRSD7Oq1MPKM2j8gpevDVYtVbc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1+KVktrR; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SIbr3+TR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EC98C4CEF4;
-	Sun, 12 Oct 2025 00:36:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760229381;
-	bh=d5IeSn7VzI5lxZXVELh6tC/WwuTU9ey1cyw4wcNRIWA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=SIbr3+TRALoto027wUlzOJ+P9ouNtZPiyRxqzXcNOYx5zire+7xIOv3dehZKxPjYb
-	 lIfclvc6Umx9C/8v/X/rvCVytoc/pBkr4kO6+NBhSiFTE6mAPb+Vtv2yAmnVLyD/gn
-	 iCHzpeoLO8LaAPoLVzKQaLdvcsweFhweuA9WlW/NKOtD8IyedxSuSU2TMfjgv4ASGk
-	 nWxs/kHXEn99u47XVqUyiViub5FAk4+IekyI7imJBZhbbp4pGlW1lByP2G3iSjG6pb
-	 Vj0krbNe3/VRgIABNrAjJ7QBsV6ysCGiNNnAnG56DW+qhWMZ9fr/iy0L+9BMvV5eHS
-	 w8wFuRHddzgMQ==
-Message-ID: <14046f78-e1e9-4188-8405-16055520513f@kernel.org>
-Date: Sun, 12 Oct 2025 09:36:18 +0900
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1+KVktrR"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=O+IkJEvVkugKZfmYN8nI3Wo3if3wkqo8X2I51n6AG6A=; b=1+KVktrRYtfBN0StFBTg7FeqL9
+	kcb+cqqIHu2K1r9X3QTrXLdKXuHRElZa+FWxFmbPvQ/ZCjdhz8QSEGJdNRdrKqX6C37p+bUc4XLdw
+	7xaO3fDgEKfMuyfIJEaDMGG01LG8wYQlKSHCnnurf6ZzDSPYSp1EJLX2tu+zK4HJaFoLJywbepcav
+	0hFc9WYP4VQ/xJmztLmmeLL1mNWIA6oUfELnJwrFh9rGJbl7akZScM/5jqSxA+WbOTfG4IL020hL9
+	3aRcd9Y+4shDBARndRdnI2jt4+jEJuoRjBpOjiTOhN6tbowt7saW2P2Zkl3SyJSYpy/uh5gJKwgos
+	YcsuU8Iw==;
+Received: from [220.85.59.196] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1v88W8-0000000C7Ey-1m92;
+	Mon, 13 Oct 2025 02:42:32 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: kill xlog_in_core_2_t v2
+Date: Mon, 13 Oct 2025 11:42:04 +0900
+Message-ID: <20251013024228.4109032-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/3] common/zoned: add _create_zloop
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
- "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>
-Cc: Zorro Lang <zlang@redhat.com>, hch <hch@lst.de>,
- Naohiro Aota <Naohiro.Aota@wdc.com>,
- "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
- Hans Holmberg <Hans.Holmberg@wdc.com>,
- "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-References: <20251007125803.55797-1-johannes.thumshirn@wdc.com>
- <VGGoqK-5ZWJTAAy5zOK2QgRfnghNzWtGFoBwL6Sw9bqE7moL7lyTr43XUUgtMM54gKwCKIpC1Jz9u5ZcnpNATg==@protonmail.internalid>
- <20251007125803.55797-3-johannes.thumshirn@wdc.com>
- <hrht5llavtcgd5bb6sgsluy3vs2m6ddzzshkhwqb4fjgujgrli@6px7vpsk7ek3>
- <20251008150806.GA6188@frogsfrogsfrogs>
- <f0713993-cebf-4e42-9c1a-26706a52be4d@wdc.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <f0713993-cebf-4e42-9c1a-26706a52be4d@wdc.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On 2025/10/11 18:34, Johannes Thumshirn wrote:
-> On 10/8/25 5:08 PM, Darrick J. Wong wrote:
->> On Wed, Oct 08, 2025 at 04:38:16PM +0200, Carlos Maiolino wrote:
->>> On Tue, Oct 07, 2025 at 02:58:02PM +0200, Johannes Thumshirn wrote:
->>>> Add _create_zloop a helper function for creating a zloop device.
->>>>
->>>> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
->>>> ---
->>>>   common/zoned | 23 +++++++++++++++++++++++
->>>>   1 file changed, 23 insertions(+)
->>>>
->>>> diff --git a/common/zoned b/common/zoned
->>>> index 41697b08..33d3543b 100644
->>>> --- a/common/zoned
->>>> +++ b/common/zoned
->>>> @@ -45,3 +45,26 @@ _require_zloop()
->>>>   	    _notrun "This test requires zoned loopback device support"
->>>>       fi
->>>>   }
->>>> +
->>>> +# Create a zloop device
->>>> +# useage: _create_zloop [id] <base_dir> <zone_size> <nr_conv_zones>
->>>> +_create_zloop()
->>>> +{
->>>> +    local id=$1
->>>> +
->>>> +    if [ -n "$2" ]; then
->>>> +        local base_dir=",base_dir=$2"
->>>> +    fi
->>>> +
->>>> +    if [ -n "$3" ]; then
->>>> +        local zone_size=",zone_size_mb=$3"
->>>> +    fi
->>>> +
->>>> +    if [ -n "$4" ]; then
->>>> +        local conv_zones=",conv_zones=$4"
->>>> +    fi
->>>> +
->>>> +    local zloop_args="add id=$id$base_dir$zone_size$conv_zones"
->>>> +
->>>> +    echo "$zloop_args" > /dev/zloop-control
->> Hmm, so the caller figures out its own /dev/zloopNNN number, passes NNN
->> into the zloop-control devices, and then maybe a new bdev is created?
->> Does NNN have to be one more than the current highest zloop device, or
->> can it be any number?
->>
->> Source code says that if NNN >= 0 then it tries to create a new
->> zloopNNN or fails with EEXIST; otherwise it gives you the lowest unused
->> id.  It'd be nice in the second case if there were a way for the driver
->> to tell you what the NNN is.
->>
->> The _create_zloop users seem to do an ls to select an NNN.  At a minimum
->> that code probably ought to get hoisted to here as a common function (or
->> maybe just put in _create_zloop itself).
->>
->> Or maybe turned into a loop like:
->>
->> 	while true; do
->> 		local id=$(_next_zloop_id)
->> 		err="$(echo "add id=$id$base_dir..." 2>&1 > /dev/zloop-control)"
->> 		if [ -z "$err" ]; then
->> 			echo "/dev/zloop$id"
->> 			return 0
->> 		fi
->> 		if echo "$err" | ! grep -q "File exists"; then
->> 			echo "$err" 1>&2
->> 			return 1;
->> 		fi
->> 	done
->>
->> That way test cases don't have to do all that setup themselves?
->>
-> Unfortunately the user has to create the zloop directory (e.g. 
-> BASE_DIR/0 for zloop0) beforehand (might be a bug though).
+Hi all,
 
-Not a bug. It is by design since the user can specify the ID of the zloop drive
-to create. And there is no fixed association between device ID and directory
-path to keep things flexible for the user/distro.
+xlog_in_core_2_t is probably one of the most confusing types in the
+kernel. Not only does it describe an on-disk format despite claiming
+to be in-core in the name, but it is also has an extremely confusing
+layout.  This series revamps our C representation of the underlying
+data structures so that they hopefully make a lot more sense while
+killing off xlog_in_core_2_t for good.
 
-> What I could do is  encapsulate the find the next zloop and mkdir -p for 
-> the user (and call in _create_zloop if no id is supplied?)
+Changes since v1:
+ - use struct_size to calculate the total header size
+ - add a patch in to kill the last remaining struct typedef in the log
+   code
 
-Yes. Do that. The zloop directory si not something that the tests should touch
-anyway, so you should just define your own id <-> dir path mapping in the helpers.
-
-
-
--- 
-Damien Le Moal
-Western Digital Research
+Diffstat:
+ libxfs/xfs_log_format.h |   38 ++++----
+ libxfs/xfs_ondisk.h     |    6 -
+ xfs_log.c               |  206 ++++++++++++++++++------------------------------
+ xfs_log_cil.c           |    6 -
+ xfs_log_priv.h          |   33 +++++--
+ xfs_log_recover.c       |   45 +++-------
+ xfs_trace.h             |    2 
+ 7 files changed, 146 insertions(+), 190 deletions(-)
