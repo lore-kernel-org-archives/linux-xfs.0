@@ -1,327 +1,204 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E8A018F2FC
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 05:46:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26B222DAFAF
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 06:09:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760334408; cv=none; b=g/eMIy4iXkYwd5DHn4eU4amM/la2QRik25SCgEIXPcuF3DnTpWRXDoHRxsygowqrVyi9g0k0fi7od3MdKGPdt+ERVPZ4W+xwj4o+WW88xmXu94vd/awAbze5Yd+5V3HvCym+lnCaOVjDvBHMgbIaNaBcrmCuucDIVNIqSPzYT5M=
+	t=1760335745; cv=none; b=rD6OLDWskiX+kX/HuT//nKhx+nsjlRmM45fLL2cVjWcdqq7JX6X5sY5ykCKpQ86OEm5whwcu+nzCpG0mWnv8GHNOKNtdr9HY2ymePdnVIIJhbmtkOKt8BAooU+qn8ziR8pkG6Lz6ddIctBeApMhUwuYMnFuaSy94/z4qOM7NdO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760334408; c=relaxed/simple;
-	bh=G2b272EGljXY+WSv8mN39LP9/c8VQJEfDGL2VolrIDg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QPNl5XGLW2xEeOsQ9hYBk5a8awf9MBMY+h4J99Thf5Wch9GddOhftg8uBdI2rbvZXHCKP5JF1HdwnXANW0Cp154rTyn/zy8x8pyh+UovWtCElYa+wfMSDiEmPdSSYLfV+8UfinnuxQ7q1zXGZXsFfzO9XcvbKu+Xqzbwy4FW/Xo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YnsiKQQ9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760335745; c=relaxed/simple;
+	bh=WNRmNFsl1avqdMV6/Tbah98S8Kpkv1EEd34Gvm9ZCp8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EkcIvrr7uCrN7Eg7rOLedj6F5SK4enQ0wMWii1e0yWwGnBCE0YQwMUU5Lvdp8fjqHBtLpZb0nK7nkNQunrhceDj1kAfAIycLBTJM1qFmUgFQ2Xo390kXbPXPAoQXbd9zAOb8MX0wMxrxw1EvYic54u4I87VIP+y0icfpuxx0ZbM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=Fd+5fy2k; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=Fd+5fy2k; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YnsiKQQ9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C242C4CEE7;
-	Mon, 13 Oct 2025 05:46:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760334408;
-	bh=G2b272EGljXY+WSv8mN39LP9/c8VQJEfDGL2VolrIDg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YnsiKQQ9POD44/gYnLcyWvEiApExon3YTwTsWG9v74wwbrLEMU5nsYue2gVuvHDbZ
-	 Zqh5N3NeZD7xIu+uyJarLB2qjW0uLA2zqeJRrMRnctzStYLJ7jq8u/GRz7gr2l0xT5
-	 c8UmA7NxIqm5d9S0LCINF1CTTt/YXtQKBKSv1NEM+g+UDeg1paFBUreGFLinvtof+O
-	 wvcf/umS4oXwcGoJqvHTuyPaTr4KeyL0qs/eRLGZ9myHgctuEN1o4B0Az/3OKqYIHd
-	 XpsC59DZdTjWsJHEG5ol4qBUOj4YVPMzYPxe8w2YdfI1dfv1XHyLFOjwFy+paoK01s
-	 r7YpqRZ3dBSvw==
-Date: Sun, 12 Oct 2025 22:46:47 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: track the number of blocks in each buftarg
-Message-ID: <20251013054647.GI6188@frogsfrogsfrogs>
-References: <20250919131222.802840-1-hch@lst.de>
- <20250919131222.802840-2-hch@lst.de>
- <20250919175246.GQ8096@frogsfrogsfrogs>
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Fd+5fy2k";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Fd+5fy2k"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 2C5391F45F;
+	Mon, 13 Oct 2025 06:09:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1760335740; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=NtbCDcfgEx4aeh/jr/2G5yFba+OLHx8IWPUAL+bTG2I=;
+	b=Fd+5fy2kyHk7izJPHQfg5dg56oUVqjMIPBYwLUdj6qpm990Za5gCbtcDVfRXGitridGZI5
+	Ry2abXxRgtg9t6B4ZU3F3+PjDAA+LZVbdLJyobZDRAKlgTcX8VGhjuKkrMsXmEWMMgHCzO
+	TjDngKNOpK22RCqZNYzYBJXDy2SWkao=
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.com header.s=susede1 header.b=Fd+5fy2k
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1760335740; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=NtbCDcfgEx4aeh/jr/2G5yFba+OLHx8IWPUAL+bTG2I=;
+	b=Fd+5fy2kyHk7izJPHQfg5dg56oUVqjMIPBYwLUdj6qpm990Za5gCbtcDVfRXGitridGZI5
+	Ry2abXxRgtg9t6B4ZU3F3+PjDAA+LZVbdLJyobZDRAKlgTcX8VGhjuKkrMsXmEWMMgHCzO
+	TjDngKNOpK22RCqZNYzYBJXDy2SWkao=
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 67B2B13874;
+	Mon, 13 Oct 2025 06:08:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id jxi5CnqX7Gh2IQAAD6G6ig
+	(envelope-from <wqu@suse.com>); Mon, 13 Oct 2025 06:08:58 +0000
+From: Qu Wenruo <wqu@suse.com>
+To: linux-btrfs@vger.kernel.org
+Cc: brauner@kernel.org,
+	djwong@kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: [PATCH] iomap: add IOMAP_DIO_ALIGNED flag for btrfs
+Date: Mon, 13 Oct 2025 16:38:40 +1030
+Message-ID: <5dbcc1d717c1f8a6ed85da4768306efb0073ff78.1760335677.git.wqu@suse.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250919175246.GQ8096@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 2C5391F45F
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-3.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.com:s=susede1];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	TO_DN_NONE(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	FROM_EQ_ENVFROM(0.00)[];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCVD_TLS_ALL(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[5];
+	DKIM_TRACE(0.00)[suse.com:+]
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spam-Score: -3.01
+X-Spam-Level: 
 
-On Fri, Sep 19, 2025 at 10:52:46AM -0700, Darrick J. Wong wrote:
-> On Fri, Sep 19, 2025 at 06:12:08AM -0700, Christoph Hellwig wrote:
-> > Add a bt_nr_sectors to track the number of sector in each buftarg, and
-> > replace the check that hard codes sb_dblock in xfs_buf_map_verify with
-> > this new value so that it is correct for non-ddev buftargs.  The
-> > RT buftarg only has a superblock in the first block, so it is unlikely
-> > to trigger this, or are we likely to ever have enough blocks in the
-> > in-memory buftargs, but we might as well get the check right.
-> > 
-> > Fixes: 10616b806d1d ("xfs: fix _xfs_buf_find oops on blocks beyond the filesystem end")
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Looks reasonable to me,
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> 
-> --D
-> 
-> > ---
-> >  fs/xfs/xfs_buf.c              | 42 +++++++++++++++++++----------------
-> >  fs/xfs/xfs_buf.h              |  4 +++-
-> >  fs/xfs/xfs_buf_item_recover.c | 10 +++++++++
-> >  fs/xfs/xfs_super.c            |  7 +++---
-> >  fs/xfs/xfs_trans.c            | 23 ++++++++++---------
-> >  5 files changed, 52 insertions(+), 34 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index f9ef3b2a332a..2037c88e604a 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -387,8 +387,6 @@ xfs_buf_map_verify(
-> >  	struct xfs_buftarg	*btp,
-> >  	struct xfs_buf_map	*map)
-> >  {
-> > -	xfs_daddr_t		eofs;
-> > -
-> >  	/* Check for IOs smaller than the sector size / not sector aligned */
-> >  	ASSERT(!(BBTOB(map->bm_len) < btp->bt_meta_sectorsize));
-> >  	ASSERT(!(BBTOB(map->bm_bn) & (xfs_off_t)btp->bt_meta_sectormask));
-> > @@ -397,11 +395,10 @@ xfs_buf_map_verify(
-> >  	 * Corrupted block numbers can get through to here, unfortunately, so we
-> >  	 * have to check that the buffer falls within the filesystem bounds.
-> >  	 */
-> > -	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
-> > -	if (map->bm_bn < 0 || map->bm_bn >= eofs) {
-> > +	if (map->bm_bn < 0 || map->bm_bn >= btp->bt_nr_sectors) {
-> >  		xfs_alert(btp->bt_mount,
-> >  			  "%s: daddr 0x%llx out of range, EOFS 0x%llx",
-> > -			  __func__, map->bm_bn, eofs);
-> > +			  __func__, map->bm_bn, btp->bt_nr_sectors);
-> >  		WARN_ON(1);
-> >  		return -EFSCORRUPTED;
-> >  	}
-> > @@ -1720,26 +1717,30 @@ xfs_configure_buftarg_atomic_writes(
-> >  int
-> >  xfs_configure_buftarg(
-> >  	struct xfs_buftarg	*btp,
-> > -	unsigned int		sectorsize)
-> > +	unsigned int		sectorsize,
-> > +	xfs_rfsblock_t		nr_blocks)
-> >  {
-> > -	int			error;
-> > +	struct xfs_mount	*mp = btp->bt_mount;
-> >  
-> > -	ASSERT(btp->bt_bdev != NULL);
-> > +	if (btp->bt_bdev) {
-> > +		int		error;
-> >  
-> > -	/* Set up metadata sector size info */
-> > -	btp->bt_meta_sectorsize = sectorsize;
-> > -	btp->bt_meta_sectormask = sectorsize - 1;
-> > +		error = bdev_validate_blocksize(btp->bt_bdev, sectorsize);
-> > +		if (error) {
-> > +			xfs_warn(mp,
-> > +				"Cannot use blocksize %u on device %pg, err %d",
-> > +				sectorsize, btp->bt_bdev, error);
-> > +			return -EINVAL;
-> > +		}
-> >  
-> > -	error = bdev_validate_blocksize(btp->bt_bdev, sectorsize);
-> > -	if (error) {
-> > -		xfs_warn(btp->bt_mount,
-> > -			"Cannot use blocksize %u on device %pg, err %d",
-> > -			sectorsize, btp->bt_bdev, error);
-> > -		return -EINVAL;
-> > +		if (bdev_can_atomic_write(btp->bt_bdev))
-> > +			xfs_configure_buftarg_atomic_writes(btp);
-> >  	}
-> >  
-> > -	if (bdev_can_atomic_write(btp->bt_bdev))
-> > -		xfs_configure_buftarg_atomic_writes(btp);
-> > +	btp->bt_meta_sectorsize = sectorsize;
-> > +	btp->bt_meta_sectormask = sectorsize - 1;
-> > +	/* m_blkbb_log is not set up yet */
-> > +	btp->bt_nr_sectors = nr_blocks << (mp->m_sb.sb_blocklog - BBSHIFT);
-> >  	return 0;
-> >  }
-> >  
-> > @@ -1749,6 +1750,9 @@ xfs_init_buftarg(
-> >  	size_t				logical_sectorsize,
-> >  	const char			*descr)
-> >  {
-> > +	/* The maximum size of the buftarg is only known once the sb is read. */
-> > +	btp->bt_nr_sectors = (xfs_daddr_t)-1;
+With the recent bs > ps support for btrfs, btrfs requires block
+alignment for all of its bios.
 
-Hey Christoph,
+However the current iomap_dio_bio_iter() calls bio_iov_iter_get_pages()
+which only ensure alignment to bdev_logical_block_size().
 
-I just pulled 6.18-rc1 and noticed that the rmapbt repair now dumps a
-bunch of warnings about daddr 0 being "beyond" EOFS in the xfbtree that
-holds the in-memory rmap data.
+In the real world it's mostly 512 or 4K, resulting some bio to be split
+at page boundary, breaking the btrfs requirement.
 
-I think the reason for this is that xfs_daddr_t is actually a s64 value,
-so the comparison in xfs_buf_map_verify
+To address this problem, introduce a new public iomap dio flag,
+IOMAP_DIO_ALIGNED.
 
-	if (map->bm_bn < 0 || map->bm_bn >= btp->bt_nr_sectors) {
+When calling __iomap_dio_rw() with that new flag, iomap_dio::flags will
+also get that new flag, and iomap_dio_bio_iter() will take fs block size
+into the calculation of the alignment, and pass it to
+bio_iov_iter_get_pages() so that the bio will always be fs block
+aligned.
 
-is actually comparing 0 against -1, so the second part of the if test is
-actually true.  I'm not sure what a good fix here would be?  Maybe
+For now only btrfs will utilize this flag, as btrfs needs to calculate
+checksum for direct read.
 
-#define XFS_DADDR_MAX	((xfs_daddr_t)S64_MAX)
+Signed-off-by: Qu Wenruo <wqu@suse.com>
+---
+ fs/btrfs/direct-io.c  | 4 ++--
+ fs/iomap/direct-io.c  | 9 +++++++--
+ include/linux/iomap.h | 7 +++++++
+ 3 files changed, 16 insertions(+), 4 deletions(-)
 
-and then
+diff --git a/fs/btrfs/direct-io.c b/fs/btrfs/direct-io.c
+index 802d4dbe5b38..15aff186642d 100644
+--- a/fs/btrfs/direct-io.c
++++ b/fs/btrfs/direct-io.c
+@@ -763,7 +763,7 @@ static ssize_t btrfs_dio_read(struct kiocb *iocb, struct iov_iter *iter,
+ 	struct btrfs_dio_data data = { 0 };
+ 
+ 	return iomap_dio_rw(iocb, iter, &btrfs_dio_iomap_ops, &btrfs_dio_ops,
+-			    IOMAP_DIO_PARTIAL, &data, done_before);
++			    IOMAP_DIO_PARTIAL | IOMAP_DIO_ALIGNED, &data, done_before);
+ }
+ 
+ static struct iomap_dio *btrfs_dio_write(struct kiocb *iocb, struct iov_iter *iter,
+@@ -772,7 +772,7 @@ static struct iomap_dio *btrfs_dio_write(struct kiocb *iocb, struct iov_iter *it
+ 	struct btrfs_dio_data data = { 0 };
+ 
+ 	return __iomap_dio_rw(iocb, iter, &btrfs_dio_iomap_ops, &btrfs_dio_ops,
+-			    IOMAP_DIO_PARTIAL, &data, done_before);
++			    IOMAP_DIO_PARTIAL | IOMAP_DIO_ALIGNED, &data, done_before);
+ }
+ 
+ static ssize_t check_direct_IO(struct btrfs_fs_info *fs_info,
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 5d5d63efbd57..154bfc4ff3c4 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -336,6 +336,9 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+ 	int nr_pages, ret = 0;
+ 	u64 copied = 0;
+ 	size_t orig_count;
++	const unsigned int alignment = (dio->flags & IOMAP_DIO_ALIGNED) ?
++		max(fs_block_size, bdev_logical_block_size(iomap->bdev)) :
++		bdev_logical_block_size(iomap->bdev);
+ 
+ 	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1))
+ 		return -EINVAL;
+@@ -433,8 +436,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+ 		bio->bi_private = dio;
+ 		bio->bi_end_io = iomap_dio_bio_end_io;
+ 
+-		ret = bio_iov_iter_get_pages(bio, dio->submit.iter,
+-				bdev_logical_block_size(iomap->bdev) - 1);
++		ret = bio_iov_iter_get_pages(bio, dio->submit.iter, alignment - 1);
+ 		if (unlikely(ret)) {
+ 			/*
+ 			 * We have to stop part way through an IO. We must fall
+@@ -639,6 +641,9 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	if (iocb->ki_flags & IOCB_NOWAIT)
+ 		iomi.flags |= IOMAP_NOWAIT;
+ 
++	if (dio_flags & IOMAP_DIO_ALIGNED)
++		dio->flags |= IOMAP_DIO_ALIGNED;
++
+ 	if (iov_iter_rw(iter) == READ) {
+ 		/* reads can always complete inline */
+ 		dio->flags |= IOMAP_DIO_INLINE_COMP;
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 73dceabc21c8..9bbd36fd69cf 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -518,6 +518,13 @@ struct iomap_dio_ops {
+  */
+ #define IOMAP_DIO_PARTIAL		(1 << 2)
+ 
++/*
++ * Ensure each bio is aligned to fs block size.
++ *
++ * For filesystems which need to calculate/verify data checksum for each data bio.
++ */
++#define IOMAP_DIO_ALIGNED		(1 << 3)
++
+ ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
+ 		unsigned int dio_flags, void *private, size_t done_before);
+-- 
+2.50.1
 
-	/* The maximum size of the buftarg is only known once the sb is read. */
-	btp->bt_nr_sectors = XFS_DADDR_MAX;
-
-Hm?
-
---D
-
-> > +
-> >  	/* Set up device logical sector size mask */
-> >  	btp->bt_logical_sectorsize = logical_sectorsize;
-> >  	btp->bt_logical_sectormask = logical_sectorsize - 1;
-> > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> > index b269e115d9ac..8fa7bdf59c91 100644
-> > --- a/fs/xfs/xfs_buf.h
-> > +++ b/fs/xfs/xfs_buf.h
-> > @@ -103,6 +103,7 @@ struct xfs_buftarg {
-> >  	size_t			bt_meta_sectormask;
-> >  	size_t			bt_logical_sectorsize;
-> >  	size_t			bt_logical_sectormask;
-> > +	xfs_daddr_t		bt_nr_sectors;
-> >  
-> >  	/* LRU control structures */
-> >  	struct shrinker		*bt_shrinker;
-> > @@ -372,7 +373,8 @@ struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *mp,
-> >  extern void xfs_free_buftarg(struct xfs_buftarg *);
-> >  extern void xfs_buftarg_wait(struct xfs_buftarg *);
-> >  extern void xfs_buftarg_drain(struct xfs_buftarg *);
-> > -int xfs_configure_buftarg(struct xfs_buftarg *btp, unsigned int sectorsize);
-> > +int xfs_configure_buftarg(struct xfs_buftarg *btp, unsigned int sectorsize,
-> > +		xfs_fsblock_t nr_blocks);
-> >  
-> >  #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
-> >  
-> > diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-> > index 5d58e2ae4972..e4c8af873632 100644
-> > --- a/fs/xfs/xfs_buf_item_recover.c
-> > +++ b/fs/xfs/xfs_buf_item_recover.c
-> > @@ -736,6 +736,16 @@ xlog_recover_do_primary_sb_buffer(
-> >  	 */
-> >  	xfs_sb_from_disk(&mp->m_sb, dsb);
-> >  
-> > +	/*
-> > +	 * Grow can change the device size.  Mirror that into the buftarg.
-> > +	 */
-> > +	mp->m_ddev_targp->bt_nr_sectors =
-> > +		XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-> > +	if (mp->m_rtdev_targp && mp->m_rtdev_targp != mp->m_ddev_targp) {
-> > +		mp->m_rtdev_targp->bt_nr_sectors =
-> > +			XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
-> > +	}
-> > +
-> >  	if (mp->m_sb.sb_agcount < orig_agcount) {
-> >  		xfs_alert(mp, "Shrinking AG count in log recovery not supported");
-> >  		return -EFSCORRUPTED;
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 77acb3e5a4ec..9e759c5b1096 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -535,7 +535,8 @@ xfs_setup_devices(
-> >  {
-> >  	int			error;
-> >  
-> > -	error = xfs_configure_buftarg(mp->m_ddev_targp, mp->m_sb.sb_sectsize);
-> > +	error = xfs_configure_buftarg(mp->m_ddev_targp, mp->m_sb.sb_sectsize,
-> > +			mp->m_sb.sb_dblocks);
-> >  	if (error)
-> >  		return error;
-> >  
-> > @@ -545,7 +546,7 @@ xfs_setup_devices(
-> >  		if (xfs_has_sector(mp))
-> >  			log_sector_size = mp->m_sb.sb_logsectsize;
-> >  		error = xfs_configure_buftarg(mp->m_logdev_targp,
-> > -					    log_sector_size);
-> > +				log_sector_size, mp->m_sb.sb_logblocks);
-> >  		if (error)
-> >  			return error;
-> >  	}
-> > @@ -559,7 +560,7 @@ xfs_setup_devices(
-> >  		mp->m_rtdev_targp = mp->m_ddev_targp;
-> >  	} else if (mp->m_rtname) {
-> >  		error = xfs_configure_buftarg(mp->m_rtdev_targp,
-> > -					    mp->m_sb.sb_sectsize);
-> > +				mp->m_sb.sb_sectsize, mp->m_sb.sb_rblocks);
-> >  		if (error)
-> >  			return error;
-> >  	}
-> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > index 575e7028f423..474f5a04ec63 100644
-> > --- a/fs/xfs/xfs_trans.c
-> > +++ b/fs/xfs/xfs_trans.c
-> > @@ -452,19 +452,17 @@ xfs_trans_mod_sb(
-> >   */
-> >  STATIC void
-> >  xfs_trans_apply_sb_deltas(
-> > -	xfs_trans_t	*tp)
-> > +	struct xfs_trans	*tp)
-> >  {
-> > -	struct xfs_dsb	*sbp;
-> > -	struct xfs_buf	*bp;
-> > -	int		whole = 0;
-> > -
-> > -	bp = xfs_trans_getsb(tp);
-> > -	sbp = bp->b_addr;
-> > +	struct xfs_mount	*mp = tp->t_mountp;
-> > +	struct xfs_buf		*bp = xfs_trans_getsb(tp);
-> > +	struct xfs_dsb		*sbp = bp->b_addr;
-> > +	int			whole = 0;
-> >  
-> >  	/*
-> >  	 * Only update the superblock counters if we are logging them
-> >  	 */
-> > -	if (!xfs_has_lazysbcount((tp->t_mountp))) {
-> > +	if (!xfs_has_lazysbcount(mp)) {
-> >  		if (tp->t_icount_delta)
-> >  			be64_add_cpu(&sbp->sb_icount, tp->t_icount_delta);
-> >  		if (tp->t_ifree_delta)
-> > @@ -491,8 +489,7 @@ xfs_trans_apply_sb_deltas(
-> >  	 * write the correct value ondisk.
-> >  	 */
-> >  	if ((tp->t_frextents_delta || tp->t_res_frextents_delta) &&
-> > -	    !xfs_has_rtgroups(tp->t_mountp)) {
-> > -		struct xfs_mount	*mp = tp->t_mountp;
-> > +	    !xfs_has_rtgroups(mp)) {
-> >  		int64_t			rtxdelta;
-> >  
-> >  		rtxdelta = tp->t_frextents_delta + tp->t_res_frextents_delta;
-> > @@ -505,6 +502,8 @@ xfs_trans_apply_sb_deltas(
-> >  
-> >  	if (tp->t_dblocks_delta) {
-> >  		be64_add_cpu(&sbp->sb_dblocks, tp->t_dblocks_delta);
-> > +		mp->m_ddev_targp->bt_nr_sectors +=
-> > +			XFS_FSB_TO_BB(mp, tp->t_dblocks_delta);
-> >  		whole = 1;
-> >  	}
-> >  	if (tp->t_agcount_delta) {
-> > @@ -524,7 +523,7 @@ xfs_trans_apply_sb_deltas(
-> >  		 * recompute the ondisk rtgroup block log.  The incore values
-> >  		 * will be recomputed in xfs_trans_unreserve_and_mod_sb.
-> >  		 */
-> > -		if (xfs_has_rtgroups(tp->t_mountp)) {
-> > +		if (xfs_has_rtgroups(mp)) {
-> >  			sbp->sb_rgblklog = xfs_compute_rgblklog(
-> >  						be32_to_cpu(sbp->sb_rgextents),
-> >  						be32_to_cpu(sbp->sb_rextsize));
-> > @@ -537,6 +536,8 @@ xfs_trans_apply_sb_deltas(
-> >  	}
-> >  	if (tp->t_rblocks_delta) {
-> >  		be64_add_cpu(&sbp->sb_rblocks, tp->t_rblocks_delta);
-> > +		mp->m_rtdev_targp->bt_nr_sectors +=
-> > +			XFS_FSB_TO_BB(mp, tp->t_rblocks_delta);
-> >  		whole = 1;
-> >  	}
-> >  	if (tp->t_rextents_delta) {
-> > -- 
-> > 2.47.2
-> > 
-> > 
-> 
