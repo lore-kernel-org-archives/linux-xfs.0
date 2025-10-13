@@ -1,75 +1,61 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97DAA1C8FBA
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 03:11:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E698D1ACEAF
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 03:19:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760325117; cv=none; b=Vfqtk31mro/k4DVqftY2anoeyQTcMOaDHXp5Jo2xSn2Ljk440NSl1je4tQexxCcecadxYPnlylY7MeEmPCtGGb08GGb/xH6Dv8Ftc/c0vm4NhT6ml46kQmJgB/BdDK2G4saVP4aGl9Dwzn21GgWppg9/DyH2lSmJw1N+9TBPvFU=
+	t=1760325600; cv=none; b=jDhFpVSSMDlNeh0aModM43TF0hcMHENDrFGWoGR4LseTnY7DbqEQzWLfcQeXGx3uNssSg8kXPbj69LA4MhejqETAXCDEhclJRN81d34d5qOx07VLXV7t5zIqNHvCPtT5UB0j2+ibUcvHF/CbYiUypkZstguqmDYoUmjoqDG2zKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760325117; c=relaxed/simple;
-	bh=Qdl2UhBv90JLBMPURmb9wureGlDEVSToD2iFAoSio8U=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=e6vcQsWi8VNjTIUD5jS1ZXOAIDAH6uyHe9blkohxDAHDds9xK3fcVURa8oidMXMRgjVeene1aEmvq/BnY0VU8xPKEIavmKHLVaWfmVw+mxiLye3kM81VcKDkchbXAwC6ntpKx4lFaJO3Ls3mUGUxFA7/flm36z6kBzxjtVR3lYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dud/xxIk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760325600; c=relaxed/simple;
+	bh=M0DbMuPNHY+FiAZYTR2YMhpUjxv5/GKz7lFjTd63hLA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ReKsaRm8XJHVsZP940/4EVb1bMAHrXzU8idDxyIVJHp3gltk1BWTxIxVshgBvgGZFy/lvP50HSRIfrCUAGgyWfOSX0aWqMww54ZRGoA3DEzoKipcuJ0bLUo+1DBAvXxHMcCcQa6H19Jr76Kuq1d6spo/NdxrhVDLcpsxevSUJkE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UD+eZ1Mt; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dud/xxIk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5FDDC4CEE7;
-	Mon, 13 Oct 2025 03:11:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760325117;
-	bh=Qdl2UhBv90JLBMPURmb9wureGlDEVSToD2iFAoSio8U=;
-	h=From:To:Subject:Date:From;
-	b=dud/xxIkSnv4fEnuk4u5EzQtGbLYLc7uK7q+ESt8yEGIQTorPwT+qFyGWAwkJR1pl
-	 VqtRU8sovL5l8YoRA6lStc/JJWml12aN6zvSXbevKVmf3Yx5/dYsaEx+m6dF0cQWf7
-	 sp94jmMDCH8hKQeyjA0U5S2HLRBrUeW2q+U5oO9b3vQkqdZypHdFQ9j8vTfdKXTawR
-	 F8rSAExm2nwlZEeNGxalHeHAupZi33xGVoHfuLLY7HYg65ccKVESRsxJqiNSgTGeSZ
-	 oodUcdw4rRrENRYp+HPYP+GkM+oCx09z4SqaDH9QP0isrt+E132RxAXkjqR19dAsze
-	 fzEkoZTxCBzUw==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>
-Subject: [PATCH] xfs: Improve CONFIG_XFS_RT Kconfig help
-Date: Mon, 13 Oct 2025 12:08:29 +0900
-Message-ID: <20251013030829.672060-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UD+eZ1Mt"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=TPU0dMih9kjq74FvN1ll2OiNppsqC/EgCp1eJxb3B9I=; b=UD+eZ1Mtv+gmrJHI+BO0Ioelf7
+	GQ8ImY4KjRAokTk0i6CDl9aJce6wqcxmgj2hM+qDqcsZy3gpkQUOQn2shmw/4bnkiOIHt+Zvjjwbv
+	LaTr6DF7tlqLoJ//1GcADc7T2BCGMA/L+Z/8rlmYo66bQ7TXjNI6Qav/K5dqXzfRBt7/Fz7tSnvFd
+	hjoQooBbol/WJSZU/O6kry25Mlq8uEoidOUMeH7VC8CWLwQmhmYIReMtFCUp6jeehoEX5X+A5eNgE
+	FihBzoBjaLnigbNF9KXN0IcQowT7YeQiHCHHCVUeH6NAkLDlPoKQgSQZkcaSePu7QNd/43mQKCJ8t
+	G3VWgq1A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1v896M-0000000C9rP-1ae9;
+	Mon, 13 Oct 2025 03:19:58 +0000
+Date: Sun, 12 Oct 2025 20:19:58 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Andrey Albershteyn <aalbersh@redhat.com>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] mkfs: fix copy-paste error in calculate_rtgroup_geometry
+Message-ID: <aOxv3k0AgS1qLBD9@infradead.org>
+References: <20251011183404.GG6188@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251011183404.GG6188@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Improve the description of the XFS_RT configuration option to document
-that this option is required for zoned block devices.
+On Sat, Oct 11, 2025 at 11:34:04AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Fix this copy-paste error -- we should calculate the rt volume
+> concurrency either if the user gave us an explicit option, or if they
+> didn't but the rt volume is an SSD.
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Looks good:
+
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/Kconfig | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index 8930d5254e1d..d66d517c99a9 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -119,6 +119,15 @@ config XFS_RT
- 
- 	  See the xfs man page in section 5 for additional information.
- 
-+	  This option is mandatory to support zoned block devices. For these
-+	  devices, the realtime subvolume must be backed by a zoned block
-+	  device and a regular block device used as the main device (for
-+	  metadata). If the zoned block device is a host-managed SMR hard-disk
-+	  containing conventional zones at the beginning of its address space,
-+	  XFS will use the disk conventional zones as the main device and the
-+	  remaining sequential write required zones as the backing storage for
-+	  the realtime subvolume.
-+
- 	  If unsure, say N.
- 
- config XFS_DRAIN_INTENTS
--- 
-2.51.0
 
