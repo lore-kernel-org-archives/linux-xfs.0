@@ -1,19 +1,56 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5C442FF148
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 22:31:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA01E2571A5
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 22:33:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760394717; cv=none; b=QwpHW223/mtrH7kZkDAXHTaE2BHc77kQRph0lUbxo7fmwb0saTr2eOS5kxy6zJq9RZyVMDYm0XxSldhLCkBElAYAVFNH3MV22rmhX6En13ezRsp3fXa6UffRNWmBWuJoZLh66Z1X2M6gYNREd5nXwFgVa474sc7T//Ms8Z/eTis=
+	t=1760394785; cv=none; b=iNNhQ4eVpOL3X7E7FmBhVGOG10I1iDN8Ob2Sb5LirO7QjME+YzdLLxusH/AvyoRojIkT1dpYealYl7VJK/wvrzqHDf53pStkaFQmR2cw1grC9WUTTEvTSp/9APMdLXFvJNs9Jeze3gcN7XNURCDw/S21IQQHPuqEl51VJavn3T4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760394717; c=relaxed/simple;
+	s=arc-20240116; t=1760394785; c=relaxed/simple;
 	bh=UesNOrdgrlOzi9/g5vqkVodH+nLDBuRuk2DDptHwvfg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CsroBpyhK3nwk7B6wXB+/CYonruNamW2D5yJdFnYsBXolZUo11BQ2tRLDrxXfZySyFOsJ3jUgInqU1t/J+4FAuWJnOtoGTZgCMj2+m9GU5qTBbhbpv7pBQ3Ehb3J8m49K+yB+PaTzYqiZchv194dlQulKFCUfnCiv7etDloiP9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K+Am9tZ9; arc=none smtp.client-ip=10.30.226.201
+	h=Subject:References:Date:From:To:Cc:Message-ID:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GVi2Ol+z0lEGfA83LCqxrMs56pfENCEh5NUerTa0nJ9h1iTP06OgmUrIKjBU83oI6N3XHCGjaeRQ97lDUwInvbi/L1gB27cZjMmobw3fKmJzsk0+n1ecvC+bJY8Ns51Gaf7w1w6SrLtOmcB00QGKnab17RV2nNzqpF66kVrYoaA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org; dkim=fail (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K+Am9tZ9 reason="signature verification failed"; arc=none smtp.client-ip=209.87.16.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K+Am9tZ9"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K+Am9tZ9"
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.96)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1v8R6D-00B7lv-1U;
+	Mon, 13 Oct 2025 22:33:01 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#1116595: Packaging issue: xfs_scrub_all_fail.service NoNewPrivileges breaks emailing reports
+Reply-To: "Darrick J. Wong" <djwong@kernel.org>, 1116595@bugs.debian.org
+Resent-From: "Darrick J. Wong" <djwong@kernel.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-CC: linux-xfs@vger.kernel.org
+X-Loop: owner@bugs.debian.org
+Resent-Date: Mon, 13 Oct 2025 22:33:01 +0000
+Resent-Message-ID: <handler.1116595.B1116595.17603947212650950@bugs.debian.org>
+X-Debian-PR-Message: followup 1116595
+X-Debian-PR-Package: xfsprogs
+X-Debian-PR-Keywords: 
+References: <aNmt9M4e9Q6wqwxH%40teal.hq.k1024.org> <20251013174106.GN6188@frogsfrogsfrogs> <aO1calELgCjY8C7o@teal.hq.k1024.org> <aNmt9M4e9Q6wqwxH@teal.hq.k1024.org>
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 1116595-submit@bugs.debian.org id=B1116595.17603947212650950
+          (code B ref 1116595); Mon, 13 Oct 2025 22:33:01 +0000
+Received: (at 1116595) by bugs.debian.org; 13 Oct 2025 22:32:01 +0000
+X-Spam-Level: 
+X-Spam-Bayes: score:0.0000 Tokens: new, 37; hammy, 150; neutral, 213; spammy,
+	0. spammytokens: hammytokens:0.000-+--trixie, 0.000-+--forky,
+	0.000-+--ccing, 0.000-+--Trixie, 0.000-+--libexec
+Received: from tor.source.kernel.org ([2600:3c04:e001:324:0:1991:8:25]:56098)
+	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.96)
+	(envelope-from <djwong@kernel.org>)
+	id 1v8R5E-00B7ck-2O
+	for 1116595@bugs.debian.org;
+	Mon, 13 Oct 2025 22:32:01 +0000
+Received: from smtp.kernel.org (transwarp.subspace.kernel.org [100.75.92.58])
+	by tor.source.kernel.org (Postfix) with ESMTP id AFA4761F60;
+	Mon, 13 Oct 2025 22:31:57 +0000 (UTC)
 Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A31CC4CEFE;
 	Mon, 13 Oct 2025 22:31:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
@@ -30,12 +67,7 @@ Date: Mon, 13 Oct 2025 15:31:56 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Iustin Pop <iustin@debian.org>, 1116595@bugs.debian.org
 Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Packaging issue: xfs_scrub_all_fail.service NoNewPrivileges
- breaks emailing reports
 Message-ID: <20251013223156.GF6215@frogsfrogsfrogs>
-References: <aNmt9M4e9Q6wqwxH%40teal.hq.k1024.org>
- <20251013174106.GN6188@frogsfrogsfrogs>
- <aO1calELgCjY8C7o@teal.hq.k1024.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,6 +77,8 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <aO1calELgCjY8C7o@teal.hq.k1024.org>
+X-Greylist: delayed 17447 seconds by postgrey-1.37 at buxtehude; Mon, 13 Oct 2025 22:32:00 UTC
+Message-ID: <20251013223156.w5LYxyGxg9sIA78HL0TTRbAgmeGGch8uLpZLvAC_Vn8@z>
 
 [directly cc the xfs list now because dealing with the debian bug
 tracker is just too hard]
