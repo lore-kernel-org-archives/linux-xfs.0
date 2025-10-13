@@ -1,158 +1,139 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f47.google.com (mail-oa1-f47.google.com [209.85.160.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69483222587
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 12:50:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 387762868AD
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 12:59:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760359834; cv=none; b=Pq3fNQu0mx0RL1Jn+5T6YH6TyU1WmU8vOIST2ROD5VdbtYXlrzTmXzi1jPuBCKIeWU19803RvtqBtSHlR1KYTOXvbMFKV4+NcBIhIHrs1+v+Ak+FrpPfg8T/MXtRFB0eXC0dHMawgyINIqooPCF9oewJagK1v5ktdn02czqM56M=
+	t=1760360349; cv=none; b=QvcD7gwCepsfNe9T7ZiiJYiF3CqF0VuMlvL2ktnqBe05O1ShWW+NNDQlCuC9L2rtnoslchtfavCVVM6zgw9mxudbGioMzLSWpZDJrgEm2Yon+aNrb8PGApniweYypQv4G9YZi8mVzhaHWWjfF4a866yznhAl99GSK21B599Glzg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760359834; c=relaxed/simple;
-	bh=/vbJN+GTFa73FryYW5KO21cm50erek3RkwQo2KmYHuE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fdvIJh4xVtyjyxfrhVw8U1/YH3k7WKEr6gDqm56HKcN1P4WS2GCrZ82jaH3w6VHC+LEkhnHl2NAhPhMmUlyCbK200OXhCRqFcnFHP+J4gP6rkLKOzaLARp4QPryRnSt64O0I8r8jlNHNLlarOGHNQaAtYAsUKDgxLo8jPoXAiY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ApjK8+TF; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1760360349; c=relaxed/simple;
+	bh=D6V3XPkrc+t2idQmAkRSOk7iDPs7p8w0xsyna0/EAms=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Edl5M/ZveY0bNR6czCsLtXDTShk5U4QhWoRwmUoLEWC0NqG9d/s8qcBZp0gKv9ntcYbG+9MhZaq3x6Hgq+XXWcI42frlGY8mUnS0dytfOba6f1DQ64b95Nq7E0gcqn6p/J3tmxe1CuzJFvUmT2p8kcH8Q1teldnRJzZf7+k/DII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=B9UyH05f; arc=none smtp.client-ip=209.85.160.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ApjK8+TF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1760359830;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=fmLpGViBdbcMLzx1bb+Kxqb3+3UtyUNscErHdno+a+c=;
-	b=ApjK8+TFmj8PXajDObDIt9yfNi3EoONxgd2NJAwnKwimYfnsS5Oir/jBFUCDgIB+kXO8Bd
-	hsEiNDymu2Eb70hbPA/2uDUyE3j1Hld+btEopoW/4UU4jt88msJmn0VS3QcDn/KIAjykAZ
-	pVUXyuQrVIsA8qlwe/Q2TGF5t5bpQPY=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-90-NTGR0wVrMWi_N2d5uJQglA-1; Mon, 13 Oct 2025 08:50:29 -0400
-X-MC-Unique: NTGR0wVrMWi_N2d5uJQglA-1
-X-Mimecast-MFC-AGG-ID: NTGR0wVrMWi_N2d5uJQglA_1760359828
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-46e3ef2dd66so27406345e9.1
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 05:50:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="B9UyH05f"
+Received: by mail-oa1-f47.google.com with SMTP id 586e51a60fabf-36ce5686d75so2849050fac.3
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 05:59:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1760360345; x=1760965145; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9Wmypoq4JusPQtINuz1Vuv55d8t7TPWrzMFDko8wjps=;
+        b=B9UyH05foBQyFo3GAqVmomH33i32hZfsbauxq2TxSOZXmKGJfh08jxhtDuYctqirTi
+         +znbj5YMDykLDsosYTPWEgW+T2R4d6Kpu26CrxcrpHuyKc5hlq7p7XABUmzfVxyE3HYo
+         YjQqvWGD9A3KL6wQKE9NuFhi9ZCiLWGbmax+NtRk0Tm7h66+iNefKK/1pCYfUljJl+yQ
+         nzCT1p1+4OVJLh+B1DSyY9lOk948JiO4EpJ5btrqqtrgc+zcetIN0DjA5BT0I8BaF99r
+         atybbxItM8SPjnbn8hiNTQVdD39QA2GOdN/PCu/Bt0M9eOZ7f0xTDW16UaqhNBGmwEdC
+         z/qw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760359828; x=1760964628;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=fmLpGViBdbcMLzx1bb+Kxqb3+3UtyUNscErHdno+a+c=;
-        b=gl3d8YSaWypFpVepVGPol5Fx21y0XxfnXZJIfQjGS1PRgiuvJfcW/RGI6XoY+7a+Uk
-         iUa3H9eypJx66TsqTL9RWq4Hay5DnaDqEX+//+ODWdGPnVC5Z/94M3qfhy4m/DZ0hIyD
-         JEKCk/cnz9DFpA8yuAaUGAdx6f1HiTqCQysv/Xs9svLEZgV79FRmxqI/NP6X3Ch8KP/i
-         9Wddd/j4+uw09rJ+qFAaMJP8QOJw5LWaQSJQeWUO4GYyhS2E13lorZdcFg9B5O+WS8kY
-         VKt0KM8WqtLx4HnSbX1am6ARDBh7KA6ZVR3J5dxvMMejK5CgzcWPVp0pssmJiaRIDpKF
-         nchQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVvFU+Jv5hOvf7v2Vp7tGP+uk8Xprnv57kFk9kXkEgy5MJCRm1D+uMNlCl6AYOg/VGBivUQmf+KoNE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YweVygln/ffRqdUGGUrEcF+Ufwho2I77h36pp9sNaXEzUMCV25F
-	dG4dObsCTaH7mQnhsCmhtHzZiPhquGAr9VWpMlziw562JGESASOBjpI2HkbFOwXedRcRa5QYDOL
-	fC9i+3bnmrviA7Tq8O20Zl31+nmtSj1pQFsWPlkR+aRm2/JPQnRQMmbb9Sjy7tQ==
-X-Gm-Gg: ASbGncvOVgBcvhpdSvs/qaR2Zh2Qexx1g9J7t9tQYNfzMyaZrwtHVuas0Rhtz4ahHXu
-	pVIpN6k+6wmwqG7jXakoAZHfOL/zSXXKjK0HUkO+dl3B8D6ACDpRwFcfAtDPHJXhMH8e/QGbWfT
-	A8HxN81TiLn7/coTdQNlULSPNNHZBodQ6XHEIVbHakB+1x6FGbzGIONf0KUJBS4NhhRdTi4LIqb
-	SLrgjqg2eBW0ApNVIg8S+sqioYLuEX2f9HtOFLdiPaKeGWJJBGw1wqJQX481knmZNP7dP/TR247
-	AcST54ZLoxJ3ajwDEAlERtRE5Lwu6XYETe8bsxiqJbhB3Af1tJ2AeppI9LmAaraEpSzmrXnvXSH
-	txrs=
-X-Received: by 2002:a05:600c:6011:b0:45c:b642:87a6 with SMTP id 5b1f17b1804b1-46fa28bbca1mr126817295e9.0.1760359828003;
-        Mon, 13 Oct 2025 05:50:28 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGMMoKs4VS2gHV3gKsNnQk9DNjQ77BVoRLFBciblN4uYmPY7ldMdNRqp+3ZL0M1o/a3ErG8+Q==
-X-Received: by 2002:a05:600c:6011:b0:45c:b642:87a6 with SMTP id 5b1f17b1804b1-46fa28bbca1mr126817005e9.0.1760359827614;
-        Mon, 13 Oct 2025 05:50:27 -0700 (PDT)
-Received: from [192.168.3.141] (tmo-083-189.customers.d1-online.com. [80.187.83.189])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-46fb49c3e49sm183435545e9.16.2025.10.13.05.50.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Oct 2025 05:50:27 -0700 (PDT)
-Message-ID: <3fdede63-0bb7-4618-af45-6605ed25b6c0@redhat.com>
-Date: Mon, 13 Oct 2025 14:50:24 +0200
+        d=1e100.net; s=20230601; t=1760360345; x=1760965145;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=9Wmypoq4JusPQtINuz1Vuv55d8t7TPWrzMFDko8wjps=;
+        b=qKyc8Tctt8hg19QNplfFtfSJFR0YDQhgDGJnCv83fjG2nocl4+Ogt4VPeeLvCtur1K
+         Jy7l7ZevgxWghRzwxHKYk+3SqDKLlcMT3Cw3oJ/EHat9Ts/6klnLPuIb5LMRDDlBhfyf
+         ZAReCj025ld94sfwLBL99QPZWY8K40pIMMdJX/jRgAGeQzPgwygV857BINcfvH4K05K3
+         kX2WHX6xObp1tuUBhANoUl92k6MTtUXiy84Q1YUZE+oEV1GS1VZgko4eeOq+8OqRy0jB
+         NszwE+jY9eJ3AGVCgJ7JMJv8C8dMbk54T6OHJkF83YNhydI0S0BwWLYqZoSLOgw1Vj2H
+         D5+A==
+X-Forwarded-Encrypted: i=1; AJvYcCVXuvZzgI0TNNahbH2ZQ9dzoDpqMntcZOMTTBYSYC0JQTDLu5YLngQb9ndd9tLEjAwJsIC0lRx14rY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy5WlaQkbloh88Og1l66sX6zkx1HxymU1NuJaQQiUaU1+juYUuT
+	eciGxoea7JdQIspof4WbJgP63k73EOBrmzY+ODLGiKIUpPXbKd/Wt5w67WewUa9JTeVrIoGZEz2
+	f4W+95ijqf6HcxiQ8J46luvSJT6rfTXIX+cSpLrMeIg==
+X-Gm-Gg: ASbGncuIqHAhyQhFQnPCV1DR3W+PgcHn6ovrPqXxSwCt3WjOSObw6wSKy2UYMDjunrT
+	ne44v6Oie1rq144keN6gmiX71t1ZOL36v3nP9BBx+bhSsseTImRViZQL84FcrWKkBT+4mjvwtti
+	5mwLGiCOGZt702owsXRQ+NZgQ55oCpcvAnDpF1RRPfVWKqN2xOraG/aYL7IT2hrEhZBr6RY5UMr
+	ne9pYuj7WoZrihf/NaCRQl/HhUCnQExHf/tNs7WbjzH5g==
+X-Google-Smtp-Source: AGHT+IFcgfB7Wf1FZ1oK1mDKCUiDJpUURtVox8EHig27s8X9dUwwKIMVBBoJvN74OlkrVqbewuUEWyvLA9j7WIpDFWo=
+X-Received: by 2002:a05:6870:5490:b0:395:11a1:2a5 with SMTP id
+ 586e51a60fabf-3c0f68f3ed7mr8576313fac.19.1760360344992; Mon, 13 Oct 2025
+ 05:59:04 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/10] mm: remove filemap_fdatawrite_wbc
-To: Christoph Hellwig <hch@lst.de>,
- "Matthew Wilcox (Oracle)" <willy@infradead.org>,
- Eric Van Hensbergen <ericvh@kernel.org>, Latchesar Ionkov
- <lucho@ionkov.net>, Dominique Martinet <asmadeus@codewreck.org>,
- Christian Schoenebeck <linux_oss@crudebyte.com>, Chris Mason <clm@fb.com>,
- David Sterba <dsterba@suse.com>, Mark Fasheh <mark@fasheh.com>,
- Joel Becker <jlbec@evilplan.org>, Joseph Qi <joseph.qi@linux.alibaba.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
- Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org, v9fs@lists.linux.dev,
- linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, jfs-discussion@lists.sourceforge.net,
- ocfs2-devel@lists.linux.dev, linux-xfs@vger.kernel.org, linux-mm@kvack.org
-References: <20251013025808.4111128-1-hch@lst.de>
- <20251013025808.4111128-9-hch@lst.de>
-From: David Hildenbrand <david@redhat.com>
-Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- qIws/H2t
-In-Reply-To: <20251013025808.4111128-9-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20251011013312.20698-1-changfengnan@bytedance.com>
+ <aOxxBS8075_gMXgy@infradead.org> <CALWNXx8pDOvDdNvw+v0rEyi33W8TL+OZW1YiFbF6Gns3PeWOLA@mail.gmail.com>
+ <aOyb-NyCopUKridK@infradead.org>
+In-Reply-To: <aOyb-NyCopUKridK@infradead.org>
+From: Fengnan Chang <changfengnan@bytedance.com>
+Date: Mon, 13 Oct 2025 20:58:54 +0800
+X-Gm-Features: AS18NWDyQf8Y1FBCeSc2-tQU2iORMO74jotl63VadojDvfzhepmbn3llIRtG9jI
+Message-ID: <CAPFOzZumoCERUj+VuegQNoAwFCoGxiaASD6R_4bE+p1TVbspUA@mail.gmail.com>
+Subject: Re: [External] Re: [PATCH] block: enable per-cpu bio cache by default
+To: Christoph Hellwig <hch@infradead.org>
+Cc: fengnan chang <fengnanchang@gmail.com>, axboe@kernel.dk, viro@zeniv.linux.org.uk, 
+	brauner@kernel.org, jack@suse.cz, asml.silence@gmail.com, willy@infradead.org, 
+	djwong@kernel.org, ritesh.list@gmail.com, linux-fsdevel@vger.kernel.org, 
+	io-uring@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 13.10.25 04:58, Christoph Hellwig wrote:
-> Replace filemap_fdatawrite_wbc, which exposes a writeback_control to the
-> callers with a __filemap_fdatawrite helper that takes all the possible
-> arguments and declares the writeback_control itself.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+Christoph Hellwig <hch@infradead.org> =E4=BA=8E2025=E5=B9=B410=E6=9C=8813=
+=E6=97=A5=E5=91=A8=E4=B8=80 14:28=E5=86=99=E9=81=93=EF=BC=9A
+>
+> On Mon, Oct 13, 2025 at 01:42:47PM +0800, fengnan chang wrote:
+> > > Just set the req flag in the branch instead of unconditionally settin=
+g
+> > > it and then clearing it.
+> >
+> > clearing this flag is necessary, because bio_alloc_clone will call this=
+ in
+> > boot stage, maybe the bs->cache of the new bio is not initialized yet.
+>
+> Given that we're using the flag by default and setting it here,
+> bio_alloc_clone should not inherit it.  In fact we should probably
+> figure out a way to remove it entirely, but if that is not possible
+> it should only be set when the cache was actually used.
 
-Reviewed-by: David Hildenbrand <david@redhat.com>
+For now bio_alloc_clone will inherit all flag of source bio, IMO if only no=
+t
+inherit REQ_ALLOC_CACHE, it's a little strange.
+The REQ_ALLOC_CACHE flag can not remove entirely.  maybe we can
+modify like this:
 
--- 
-Cheers
+if (bs->cache && nr_vecs <=3D BIO_INLINE_VECS) {
+    opf |=3D REQ_ALLOC_CACHE;
+    bio =3D bio_alloc_percpu_cache(bdev, nr_vecs, opf,
+    gfp_mask, bs);
+    if (bio)
+        return bio;
+    /*
+     * No cached bio available, bio returned below marked with
+     * REQ_ALLOC_CACHE to participate in per-cpu alloc cache.
+    */
+} else
+        opf &=3D ~REQ_ALLOC_CACHE;
 
-David / dhildenb
+>
+> > > > +     /*
+> > > > +      * Even REQ_ALLOC_CACHE is enabled by default, we still need =
+this to
+> > > > +      * mark bio is allocated by bio_alloc_bioset.
+> > > > +      */
+> > > >       if (rq->cmd_flags & REQ_ALLOC_CACHE && (nr_vecs <=3D BIO_INLI=
+NE_VECS)) {
+> > >
+> > > I can't really parse the comment, can you explain what you mean?
+> >
+> > This is to tell others that REQ_ALLOC_CACHE can't be deleted here, and
+> > that this flag
+> > serves other purposes here.
+>
+> So what can't it be deleted?
 
+blk_rq_map_bio_alloc use REQ_ALLOC_CACHE to tell whether to use
+bio_alloc_bioset or bio_kmalloc, I considered removing the flag in
+blk_rq_map_bio_alloc, but then there would have to be the introduction
+of a new flag like  REQ_xx. So I keep this and comment.
+
+>
