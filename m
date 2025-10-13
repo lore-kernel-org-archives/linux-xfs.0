@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA0E52EACF9;
-	Mon, 13 Oct 2025 21:29:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5C442FF148
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 22:31:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760390994; cv=none; b=ghQz+9mbEuY3j4I7B50HDWpQmmctCKcEXPzpc/I5ig6pkgUiEqjsL0Mv1hdKG+WkjMXwZpqvYOT8AOxVVI5PFFKbVmkcxwflPKnOFNUNa/otpbBci4LIvdtmUkoCQko8/WNZmKB9oHjVxZGoNIORvF0RE+xfUgX6R+Akygem48c=
+	t=1760394717; cv=none; b=QwpHW223/mtrH7kZkDAXHTaE2BHc77kQRph0lUbxo7fmwb0saTr2eOS5kxy6zJq9RZyVMDYm0XxSldhLCkBElAYAVFNH3MV22rmhX6En13ezRsp3fXa6UffRNWmBWuJoZLh66Z1X2M6gYNREd5nXwFgVa474sc7T//Ms8Z/eTis=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760390994; c=relaxed/simple;
-	bh=++BeBe3zqpGAMmuedQ8DfBM4v2kByC3QC54r77doVzY=;
+	s=arc-20240116; t=1760394717; c=relaxed/simple;
+	bh=UesNOrdgrlOzi9/g5vqkVodH+nLDBuRuk2DDptHwvfg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rXod5OzYfyQICZEMfGiactVKEa24O20EOHAwSqqNf26KfqOYkIMQMaBJ/o0XLv740ofRR9YFqSiyZe1JakXLX9soJvJP2ZXzDXEbuzJYTBMNv8ABerAMM39DJVbycon8SXfAvu4zxI0EIrJiHccXOyEIPF+xidNIU5Qq8Vdk//M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ts8emS7G; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=CsroBpyhK3nwk7B6wXB+/CYonruNamW2D5yJdFnYsBXolZUo11BQ2tRLDrxXfZySyFOsJ3jUgInqU1t/J+4FAuWJnOtoGTZgCMj2+m9GU5qTBbhbpv7pBQ3Ehb3J8m49K+yB+PaTzYqiZchv194dlQulKFCUfnCiv7etDloiP9s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K+Am9tZ9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ts8emS7G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B9BAC4CEE7;
-	Mon, 13 Oct 2025 21:29:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K+Am9tZ9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A31CC4CEFE;
+	Mon, 13 Oct 2025 22:31:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760390994;
-	bh=++BeBe3zqpGAMmuedQ8DfBM4v2kByC3QC54r77doVzY=;
+	s=k20201202; t=1760394717;
+	bh=UesNOrdgrlOzi9/g5vqkVodH+nLDBuRuk2DDptHwvfg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Ts8emS7G0Llfd62Ab5RP/yy7iqQwT6dEOGM6QvKU7V3KiM8tRXhvm45m2Av845XFd
-	 hCLPotuQRbY/0bHwfW11QIqJtfGQrhBTlLFGRijHyWty8m7/b/N+SW4rtn5GriGfX2
-	 J9rQWUfWsoXx3r7KWLzv0VTozq4ojFb+EGloiZuwDhktuDPGgIADOTqLbHyxdtW5Aw
-	 ykvZky6vomBEgZqiWgoKZYqTCJAGuVlOE7je8HWqFLlkxsWrDiW++eJvt4Qu3r+T0j
-	 otFGinC+bDd9t/6glcXHOoI4J/iMYsCzDU67lKLz+HflVz/K8hit90GRbHQn7o7cpd
-	 CIQYWE8Cr5xMQ==
-Date: Mon, 13 Oct 2025 14:29:53 -0700
+	b=K+Am9tZ9IfeXAQXdH/IJhAzPeRaM9YSw3wHZ5gAX99JtBl9hdjZoT6zIB48S1qBmV
+	 GcVZB9fY3YOdFXuLH7Mtr82qJCOxmKAvIac+/LQgSf5Qi4IkakD5lat3KVVer/lal+
+	 DgiGwNVbimOGMUQ5m+5+m2+mLJM6SE0USCNVPOBymwT+gd+jIenxWI91gjwsPSRM3W
+	 rKN4YDQIk5ajlEmTY/Z1R8xjBiHRZGmeC9a1Oueir3WqXTWmEEs1ci58zrDgPMDwfw
+	 GCi28FdVJehhk/B4pzeNBfckbWZI22ZJ74FQ3ek98+9xR4+wQHtVjnSqcrnm805CDl
+	 ndmM7vK/wrL6w==
+Date: Mon, 13 Oct 2025 15:31:56 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Oleksandr Natalenko <oleksandr@natalenko.name>
-Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>, Pavel Reichl <preichl@redhat.com>,
-	Vlastimil Babka <vbabka@suse.cz>,
-	Thorsten Leemhuis <linux@leemhuis.info>
-Subject: Re: XFS attr2 mount option removal may break system boot
-Message-ID: <20251013212953.GP6188@frogsfrogsfrogs>
-References: <3654080.iIbC2pHGDl@natalenko.name>
+To: Iustin Pop <iustin@debian.org>, 1116595@bugs.debian.org
+Cc: xfs <linux-xfs@vger.kernel.org>
+Subject: Re: Packaging issue: xfs_scrub_all_fail.service NoNewPrivileges
+ breaks emailing reports
+Message-ID: <20251013223156.GF6215@frogsfrogsfrogs>
+References: <aNmt9M4e9Q6wqwxH%40teal.hq.k1024.org>
+ <20251013174106.GN6188@frogsfrogsfrogs>
+ <aO1calELgCjY8C7o@teal.hq.k1024.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,76 +44,97 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3654080.iIbC2pHGDl@natalenko.name>
+In-Reply-To: <aO1calELgCjY8C7o@teal.hq.k1024.org>
 
-On Mon, Oct 13, 2025 at 09:08:38PM +0200, Oleksandr Natalenko wrote:
-> Hello.
-> 
-> In v6.18, the attr2 XFS mount option is removed. This may silently break system boot if the attr2 option is still present in /etc/fstab for rootfs.
-> 
-> Consider Arch Linux that is being set up from scratch with / being
-> formatted as XFS. The genfstab command that is used to generate
-> /etc/fstab produces something like this by default:
-> 
-> /dev/sda2 on / type xfs (rw,relatime,attr2,discard,inode64,logbufs=8,logbsize=32k,noquota)
+[directly cc the xfs list now because dealing with the debian bug
+tracker is just too hard]
 
-As in, /etc/fstab captures ALL the output of /proc/mounts, including the
-strings that reflect filesystem state even if not explicitly provided by
-whoever mounted the fs?  Is your actual fstab contents:
+On Mon, Oct 13, 2025 at 10:09:14PM +0200, Iustin Pop wrote:
+> On 2025-10-13 10:41:06, Darrick J. Wong wrote:
+> > [yay, debian bugs aren't cc'ing linux-xfs consistently]
+> 
+> They try to, but fail because the (new) bug source address is not
+> subscribed to linux-xfs, and thus there is a bounce. I haven't had time
+> to report this, sorry.
+> 
+> > > I've struggled with this for a while because all my logs were spammed by
+> > > hundreds of lines of:
+> > > 
+> > > postfix/postdrop[37291]: warning: mail_queue_enter: create file maildrop/480926.37291: Permission denied
+> > > 
+> > > And it took me a long while to dig this down to xfs_scrub reporting.
+> > > Problem setup:
+> > > 
+> > > - mailer is postfix, which uses a setgid /usr/sbin/postdrop binary to
+> > >   write to /var/lib/postfix/maildrop (mode 0730, group postdrop)
+> > > - the systemd unit for the xfs_scrub reporting,
+> > >   /usr/lib/systemd/system/xfs_scrub_all_fail.service, contains:
+> > >   
+> > >   # xfs_scrub needs these privileges to run, and no others
+> > >   CapabilityBoundingSet=
+> > >   NoNewPrivileges=true
+> > > 
+> > > Together, this means that the script
+> > > (/usr/libexec/xfsprogs/xfs_scrub_fail) composes the email, and pipes it
+> > > to "/usr/sbin/sendmail -t -i", which in turn invokes the postdrop
+> > > binary, but which can't get the sgid bit. But since it calls sendmail
+> > 
+> > IOWs, postfix is installed and postdrop needs to be able to run as
+> > setgid, right?
+> 
+> Correct.
+> 
+> > Do you only need us to change the xfs_scrub_fail@.service file to have
+> > "NoNewPrivileges=false", or do you also need it to have
+> > "CapabilityBoundingSet=CAP_SETGID" ?
+> > 
+> > The systemd documentation implies that you only need
+> > NoNewPrivileges=false to run setgid programs, but I don't know for sure.
+> > I'll try to test this and report back, but it sounds like you're in a
+> > better position to say for sure that postfix works.  (I use msmtp)
+> 
+> I don't know either, but sometimes in the next weeks I hope to get time
+> to test it. I suspect CapabilityBoundingSet=CAP_SETGID is an improvement
+> on NoNewPrivileges=False, but not required.
 
-/dev/sda2	/	relatime,attr2,discard,inode64,logbufs=8,logbsize=32k,noquota	0	0
+No, both configuration directives fail to fix the problem.  I even tried
+to selectively disable directives in the service configuration file, but
+for whatever reason it still fails even with seemingly unrelated things
+like RestrictRealtime=yes turned back on.
 
-(aka logbufs/inode64/logbsize/sunit/swidth and the ones the vfs puts in
-there on its own)
+The one thing that /does/ work consistently is to add
+SupplementalGroups=postdrop, but that makes the whole service fail if
+you don't happen to have postfix installed.
 
-That's pretty messed up, but open-parsing stringly typed data structures
-with unclear RMW semantics is always going to be a trash fire.
+Evidently postfix is *really* dependent upon postdrop being a setgid
+program and thereby being able to write to /var/spool/postfix/maildrop.
+There are some horrifying workarounds like this:
 
-> Once the system is set up and rebooted, there's no deprecation warning seen in the kernel log:
-> 
-> # cat /proc/cmdline
-> root=UUID=77b42de2-397e-47ee-a1ef-4dfd430e47e9 rootflags=discard rd.luks.options=discard quiet
-> 
-> # dmesg | grep -i xfs
-> [    2.409818] SGI XFS with ACLs, security attributes, realtime, scrub, repair, quota, no debug enabled
-> [    2.415341] XFS (sda2): Mounting V5 Filesystem 77b42de2-397e-47ee-a1ef-4dfd430e47e9
-> [    2.442546] XFS (sda2): Ending clean mount
-> 
-> Although as per the deprecation intention, it should be there.
-> 
-> Vlastimil (in Cc) suggests this is because xfs_fs_warn_deprecated() doesn't produce any warning by design if the XFS FS is set to be rootfs and gets remounted read-write during boot. This imposes two problems:
-> 
-> 1) a user doesn't see the deprecation warning; and
-> 2) with v6.18 kernel, the read-write remount fails because of unknown attr2 option rendering system unusable:
+https://github.com/cyberitsolutions/prisonpc-systemd-lockdown/blob/main/systemd/system/0-EXAMPLES/30-allow-mail-postfix-via-msmtp.conf
 
-...aaand that's the second failed deprecation in the kernel in the past
-month because someone missed a detail somewhere for years and nobody
-noticed.
+That advocate for installing msmtp, bindmounting msmtp over sendmail,
+and injecting a config file that just relays mail to the localhost MTA.
+I guess that works, but YUCK.
 
-> systemd[1]: Switching root.
-> systemd-remount-fs[225]: /usr/bin/mount for / exited with exit status 32.
-> 
-> # mount -o rw /
-> mount: /: fsconfig() failed: xfs: Unknown parameter 'attr2'.
-> 
-> Thorsten (in Cc) suggested reporting this as a user-visible regression.
-> 
-> From my PoV, although the deprecation is in place for 5 years already,
-> it may not be visible enough as the warning is not emitted for rootfs.
-> Considering the amount of systems set up with XFS on /, this may
-> impose a mass problem for users.
-> 
-> Vlastimil suggested making attr2 option a complete noop instead of removing it.
-> 
-> Please check.
-
-Heh.  Yep, that's a bug.
+I'll play around with this a little more, but maybe email reporting just
+isn't worth the trouble.
 
 --D
 
-> Thank you.
+> > > repeatedly, I get for a few days, every hour, hundreds of flagged log
+> > > entries by logcheck.
+> > 
+> > Yikes.
+> > 
+> > > Now, the Trixie kernel seems to not support scrubbing anyway, so I can
+> > > simply disable this, but it would be better to fix this and do an update
+> > > (in trixe), otherwise the log spamming is really annoying.
+> > 
+> > Indeed.  Forky (assuming it gets 6.18/6.24) should have online fsck
+> > turned on since upstream changed the kconfig default.  Not that I have
+> > any idea how one gets kconfig options changed in Debian...
 > 
-> -- 
-> Oleksandr Natalenko, MSE
-
-
+> Me neither, but I assume a new setting would just get the default. Once
+> sid kernels get to 6.18, I can test in a VM.
+> 
+> thanks!
