@@ -1,30 +1,45 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1728022D4E9
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 07:09:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A6F51C5F27;
+	Mon, 13 Oct 2025 07:11:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760339392; cv=none; b=d8c+naBJnnR7EDyZ/yCaCLPiZ09EizeSojBkQqG2tdBWKNjh2oCTrly82xVKBhjlq00QanySgcC1wsLdhfpDd4l7hIIVyBPPeKPuegqcNlkpgqXGoqML+REUq7eGgCBN7wI9epPWKOA6fdzJUiTycCsbHjwOw2L4DihfbVnBpuU=
+	t=1760339511; cv=none; b=SYUHifpPZvuTfn90hBrRltr+jXQvYOTWj9mNtX0yK4Mn/hXwbUWFmnvsBILT3yYGZGb4VMqJqkhn6NGU02mmUTuuz44I7vIzxuRp0kpK60oVmauEe64coen+eZJHZ+oNzOCPsc/veTgPQVxngYDSsQRoDB2/E+1QKh1x5PeTrq0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760339392; c=relaxed/simple;
-	bh=2Mbr8kkz7sJlrWKmWUITwNh1boJDUqTuHPpddPULtQk=;
+	s=arc-20240116; t=1760339511; c=relaxed/simple;
+	bh=Kd2zsFBiopgBm4y6P0SthcqKSiIiy6x4/ReBHnvuxc4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=olOOyriSNDE6adE6d9R6oqqQFix6iIQ+xPDxpoMm4vQYrW+jGF2V9Xo262ukO7DayfIPSTMhJFACLnGKEZadSU3OTOsRHepSK3CR8lWZzItx0i34XxNiSntr8LIpmAVSqF8v/nl3KvZ3SqUk0AHlfp6rNkeQGG/WkXSzlCv+0D0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 985EE227A87; Mon, 13 Oct 2025 09:09:45 +0200 (CEST)
-Date: Mon, 13 Oct 2025 09:09:45 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cem@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Hans Holmberg <hans.holmberg@wdc.com>
-Subject: Re: [PATCH] xfs: do not tight-pack write large files
-Message-ID: <20251013070945.GA2446@lst.de>
-References: <20251013064512.752089-1-dlemoal@kernel.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=IFzrl3JW99KMCAzJvSs+yLBY6XMDTdB0APfD865gApBoXnpx1RDuFO3K/+2X79b1NxOkO1IjDanj/K+haJ54elBQZiHd6QhMl3yqQbd09QizYwiyyonO3vH6zmL8A51l02Cpo49/Gb7av2VgoCpUgOOGL7ddjVQp8gFSuY/I318=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=a7jS8hpp; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="a7jS8hpp"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=GfTZN3uLzAsAxY3q31/7T+wpydRrewZ5jCCK6eizBsI=; b=a7jS8hpp+L8PsTb7F0w8I0uspD
+	7hVwHXv3BzhM5TQLsWk8UXpm3jwdS95OZakJAbJ+ocbzVqGd3nKlZ0exTCvjKv6/YbJaG95aGoHA+
+	0UlZ0V3RzNuAWbjhZ/c3JSlgAsVkoUuvwXd0w1SUndo5+UAZPLf6NNBAzDBXERgdNnL8WFV4RhTRk
+	Rkpn6PaVZSkQ2Q9TU0Q4VgXah4kKCEibOZrDtBamJVtRPfaCQhpgmr9SA99OiYb0krY/9zGyoZIai
+	QJmJ2DjptIdW73TZvqVsoN1RPeYeM5EQhX40nVHChWJ+NWr94V5XD8yF0iBgyJZK5tdcXkk+1HxFP
+	RJgv7JzQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1v8Cij-0000000CSq5-2pQJ;
+	Mon, 13 Oct 2025 07:11:49 +0000
+Date: Mon, 13 Oct 2025 00:11:49 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Qu Wenruo <quwenruo.btrfs@gmx.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Qu Wenruo <wqu@suse.com>,
+	linux-btrfs@vger.kernel.org, brauner@kernel.org, djwong@kernel.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH] iomap: add IOMAP_DIO_ALIGNED flag for btrfs
+Message-ID: <aOymNZtfK3NXqGyJ@infradead.org>
+References: <5dbcc1d717c1f8a6ed85da4768306efb0073ff78.1760335677.git.wqu@suse.com>
+ <aOydN1rIsWiNo4m6@infradead.org>
+ <595ea9e3-0f3a-4aa3-8915-de10e3085a8b@gmx.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,56 +48,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251013064512.752089-1-dlemoal@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <595ea9e3-0f3a-4aa3-8915-de10e3085a8b@gmx.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Oct 13, 2025 at 03:45:12PM +0900, Damien Le Moal wrote:
-> The tick-packing data block allocation which writes blocks of closed
-> files in the same zone is very efficient at improving write performance
-> on HDDs by reducing, and even suppressing, disk head seeks. However,
-> such tight packing does not make sense for large files that require at
-> least a full realtime block group (i.e. a zone). If tight-packing
-> placement is applied for such files, the VM writeback thread switching
-> between inodes result in the large file to be fragmented, thus
-> increasing the garbage collection penalty later when the used realtime
-> block group/zone needs to be reclaimed.
+On Mon, Oct 13, 2025 at 05:36:25PM +1030, Qu Wenruo wrote:
+> > Please avoid overly long lines in the iomap code.
 > 
-> This problem can be avoided with a simple heuristic: if the size of the
-> inode being written back is at least equal to the realtime block group
-> size, do not use tight-packing. Modify xfs_zoned_pack_tight() to always
-> return false in this case.
-> 
-> With this change, a multi-writer workload writing files of 256 MB on a
-> file system backed by an SMR HDD with 256 MB zone size sees all files
-> occupying exactly one zone, thus completely removing the heavy
-> fragmentation observed without this change.
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->  fs/xfs/xfs_zone_alloc.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-> index 1147bacb2da8..c51788550c7c 100644
-> --- a/fs/xfs/xfs_zone_alloc.c
-> +++ b/fs/xfs/xfs_zone_alloc.c
-> @@ -622,6 +622,17 @@ static inline enum rw_hint xfs_inode_write_hint(struct xfs_inode *ip)
->   */
->  static inline bool xfs_zoned_pack_tight(struct xfs_inode *ip)
->  {
-> +	struct xfs_mount *mp = ip->i_mount;
-> +	size_t zone_capacity =
-> +		XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_RTG].blocks);
-> +
-> +	/*
-> +	 * Do not pack tight large files that are already using a full group
+> I'm not sure if this line (83 chars) counts as long lines.
+> As the recent patchchecker will only report lines over 100 chars as long.
 
-I'm not a native speaker, but shouldn't this be ordered differently
-
-	  Do not pack large files that are already using a full group (zone)
-	  to avoid fragmentation?
-
-Also I'd say either zone or RTG. but not mix both names to avoid confusion.
-
-Otherwise this looks good to me.
+But checkpatch is as often wrong, longer than 80 is only allowed when
+it improves readability.  For iomap as for many subsystems that's only
+for long printk lines.
 
