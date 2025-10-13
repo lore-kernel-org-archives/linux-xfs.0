@@ -1,47 +1,39 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BF752E88BB;
-	Mon, 13 Oct 2025 07:27:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A997F2E8B74
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 07:28:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760340466; cv=none; b=f5Wzi6ATFf7K4h1VqdaVAsGB97uFGi9oBKdFqOd4WiOZANLA2G9UAUGOKcXzpXTaapDpmQpV5M5tAj4hvHkr5lOFIRfrev27X2D3y8+WbpbvvtyjpT0Fbt00P0Nu84nSkKmOn2IVzCG7qPxzgmVr0D4qxefQCW/4XhXelXTNR9c=
+	t=1760340525; cv=none; b=FPtVXDXl5An2nVpmhdbb3eexHvG5y4GPqLF2F9J1bDYy21mCeCDGeTGhyGcu6NHVqiIOZxePVS7PMcXL0zGSYgK9GMAfiO35oa54RYj2cPfLJuIb6HXx/AyWbNoBnUS0QAM3Vc3scjuKZbWuRSSnC1tAhbcez7QFVqEvenm4ZRM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760340466; c=relaxed/simple;
-	bh=Vf13HKK9p1N07aqi+KX9NeOegWu03lKW1PaYvnN9AEg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rpPyKLnHZaz75vcTY5uNSomZgiqe82yzq5Qv8gq/XKtsIbhRfGHSxDaN826R7JQYzu6hz00iNmt/fhEmNubAU+nYyVWX+goNxztbPMtd7UEVswFCDdNjJfuZ0K3uM5eLQFZmmubk71348fyrVY0fNPvaQwfUgl/YrJ/9B45rr7A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HieK/1Aj; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1760340525; c=relaxed/simple;
+	bh=SSMz4Pz7zEL2eaXFFkCMzbMpdMNzyq0XMOylSD4CSks=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KBamYaqF182g4FI5HerbH5koBtIr+NuDFq1vthMHJuVX45Dq6K/8Z7l8/s0LtTZiIk4sKrcEXFIACCdiZNYeq3eHrkEdWyiH8JRMXv0Ql2hi1t66RSouAIHiyEmECvP205DVuu6YS2i8M+euKx1mvrx3MuNpJaT5aQi8yhprLdY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ANFjUhfY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HieK/1Aj"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=4/i6Yo0DlavHvIyOPm6rSuHPtcfvBwYubd7udQWUQmQ=; b=HieK/1AjETnFbyPypM9vJViuqg
-	SRNPd77JSXoda8B1rp+WFEYqCrKqUmvraiWGmg4PcPq6ANQICDS/CD2hgEY1Pw6kkbOeBCb2axRAi
-	69pZZOtzAMJaebM79s6ixL5K23P4JgeKkkKKpiq/UilH56UnMPOz/jC+t7zBCcb4Njf8EiZCnPZmh
-	IbcVkFQBybIpirM19Sst24gUjjkw5agH61uB01fhnlPiTgLS+s2pQb3ldct1WkmJFtMgs8CNdj1ML
-	VZcqaGdFE+oki6oPlsIkDvO0uyah5FiT01tAvdGgx3sdMaZr51G2ghi2XMx3+z7Z86C+guaJnpcSe
-	3EIYJWyA==;
-Received: from [220.85.59.196] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v8Cy8-0000000CUF2-1DDD;
-	Mon, 13 Oct 2025 07:27:45 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: jack@suse.cz,
-	willy@infradead.org
-Cc: akpm@linux-foundation.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org,
-	dlemoal@kernel.org,
-	linux-xfs@vger.kernel.org,
-	hans.holmberg@wdc.com
-Subject: [PATCH, RFC] limit per-inode writeback size considered harmful
-Date: Mon, 13 Oct 2025 16:21:42 +0900
-Message-ID: <20251013072738.4125498-1-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ANFjUhfY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 823AEC116B1;
+	Mon, 13 Oct 2025 07:28:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760340525;
+	bh=SSMz4Pz7zEL2eaXFFkCMzbMpdMNzyq0XMOylSD4CSks=;
+	h=From:To:Cc:Subject:Date:From;
+	b=ANFjUhfYE/qSLrq4vHXAMzX4I/43kSqZ9JFvH0VzRmsDsEPqnJVfJCQ2L588LIqHG
+	 2E+aCMD9fMZyPXomYQN1mGGJ+y99wCRbbbzLeRLQLgsoV9t21a1jl5RI+ubo8od8Ep
+	 7gKXXhD9RKdvczu1kLh3N8O9PfMK6yPu4ycFU2M3pwnr4n2+LXTHnJnQRDvYd8JWZa
+	 lQRNBsIMSmBtWueOa9kvWNyUlu4c/kt79XMFDfJNsJTz70IWmSPc2OLiRruiJ820rD
+	 JKOyH+leIVx9Y4drgvg1RjLQUuxf5b/W+JFjkdTIMs3d0y37nIf65HLYH3Se1XCkG1
+	 DRUHK46McSICQ==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Hans Holmberg <hans.holmberg@wdc.com>
+Subject: [PATCH v2] xfs: do not tightly pack-write large files
+Date: Mon, 13 Oct 2025 16:25:17 +0900
+Message-ID: <20251013072517.752662-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,56 +41,72 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+When using a zoned realtime device, the case of aThe tight packing of
+file data blocks for closed files into the same realtime group (RTG) is
+very efficient at improving write performance. This is especially true
+with SMR HDDs as this can reduce, and even suppress, disk head seeks.
 
-we have a customer workload where the current core writeback behavior
-causes severe fragmentation on zoned XFS despite a friendly write pattern
-from the application.  We tracked this down to writeback_chunk_size only
-giving about 30-40MBs to each inode before switching to a new inode,
-which will cause files that are aligned to the zone size (256MB on HDD)
-to be fragmented into usually 5-7 extents spread over different zones.
-Using the hack below makes this problem go away entirely by always
-writing an inode fully up to the zone size.  Damien came up with a
-heuristic here:
+However, such tight packing does not make sense for large files that
+require at least a full RTG. If tight-packing placement is applied for
+such files, the VM writeback thread switching between inodes result in
+the large files to be fragmented, thus increasing the garbage collection
+penalty later when the RTG needs to be reclaimed.
 
-  https://lore.kernel.org/linux-xfs/20251013070945.GA2446@lst.de/T/#t
+This problem can be avoided with a simple heuristic: if the size of the
+inode being written back is at least equal to the RTG size, do not use
+tight-packing. Modify xfs_zoned_pack_tight() to always return false in
+this case.
 
-that also papers over this, but it falls apart on larger memory
-systems where we can cache more of these files in the page cache
-than we open zones.
+With this change, a multi-writer workload writing files of 256 MB on a
+file system backed by an SMR HDD with 256 MB zone size as a realtime
+device sees all files occupying exactly one RTG (i.e. one device zone),
+thus completely removing the heavy fragmentation observed without this
+change.
 
-Does anyone remember the reason for this limit writeback size?  I
-looked at git history and the code touched comes from a refactoring in
-2011, and before that it's really hard to figure out where the original
-even worse behavior came from.   At least for zoned devices based
-on a flag or something similar we'd love to avoid switching between
-inodes during writeback, as that would drastically reduce the
-potential for self-induced fragmentation.
-
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- fs/fs-writeback.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Changes from v1:
+ - Improved commit message
+ - Improved code comments
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 2b35e80037fe..9dd9c5f4d86b 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -1892,9 +1892,11 @@ static long writeback_chunk_size(struct bdi_writeback *wb,
- 	 *                   (quickly) tag currently dirty pages
- 	 *                   (maybe slowly) sync all tagged pages
- 	 */
--	if (work->sync_mode == WB_SYNC_ALL || work->tagged_writepages)
-+	if (1) { /* XXX: check flag */
-+		pages = SZ_256M; /* Don't hard code? */
-+	} else if (work->sync_mode == WB_SYNC_ALL || work->tagged_writepages) {
- 		pages = LONG_MAX;
--	else {
-+	} else {
- 		pages = min(wb->avg_write_bandwidth / 2,
- 			    global_wb_domain.dirty_limit / DIRTY_SCOPE);
- 		pages = min(pages, work->nr_pages);
+ fs/xfs/xfs_zone_alloc.c | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+index 1147bacb2da8..8b938d5a3b92 100644
+--- a/fs/xfs/xfs_zone_alloc.c
++++ b/fs/xfs/xfs_zone_alloc.c
+@@ -614,14 +614,25 @@ static inline enum rw_hint xfs_inode_write_hint(struct xfs_inode *ip)
+ }
+ 
+ /*
+- * Try to pack inodes that are written back after they were closed tight instead
+- * of trying to open new zones for them or spread them to the least recently
+- * used zone.  This optimizes the data layout for workloads that untar or copy
+- * a lot of small files.  Right now this does not separate multiple such
++ * Try to tightly pack small files that are written back after they were closed
++ * instead of trying to open new zones for them or spread them to the least
++ * recently used zone. This optimizes the data layout for workloads that untar
++ * or copy a lot of small files. Right now this does not separate multiple such
+  * streams.
+  */
+ static inline bool xfs_zoned_pack_tight(struct xfs_inode *ip)
+ {
++	struct xfs_mount *mp = ip->i_mount;
++	size_t zone_capacity =
++		XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_RTG].blocks);
++
++	/*
++	 * Do not pack write files that are already using a full group (zone)
++	 * to avoid fragmentation.
++	 */
++	if (i_size_read(VFS_I(ip)) >= zone_capacity)
++		return false;
++
+ 	return !inode_is_open_for_write(VFS_I(ip)) &&
+ 		!(ip->i_diflags & XFS_DIFLAG_APPEND);
+ }
 -- 
-2.47.3
+2.51.0
 
