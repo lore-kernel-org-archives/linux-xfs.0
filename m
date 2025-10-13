@@ -1,41 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 214D035948
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 02:49:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 444A135948
+	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 02:50:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760323800; cv=none; b=AYExQQaVpzK+Tyu74gv1NA1d3ti4P++d1vXI9+3UX6HMRCrEgGlUczGmXbtla5+nFlzXqivuBq5KDH2YeX9F37qxndaJ1NQlJZTQ4R/ovpRn7uauE6AnT+fq+HVVRnkv9uFVQnYIj4maPlSAbD51nK1N/9cXfJf8Sts5h32hebA=
+	t=1760323804; cv=none; b=igD4T4RlzHtqwQHbZzwMvoufjquFYDZMepFpGpZpCNQpHoBnR04yZ8WwSd5dvDzG0v5qZ6N0xFa6DqJ8bltd9T0sESV+Tswquyzlmdv129Zvcv6RxpZBd4qnptvIrZ42CEE2KhmbXLfBAsyWLA3LSokkn2tcLwdSY97PkhBCDvs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760323800; c=relaxed/simple;
-	bh=bkvWEx8sdOusnxUhxpvc5LsGCSPT2nQYo+NkwOX0dWI=;
+	s=arc-20240116; t=1760323804; c=relaxed/simple;
+	bh=Qhfm3MRjPhz7fnAoohXekXPEtuPdBLvzhKLE7ign77Q=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fmCEf8R/22xT4ziX+BrsYQIC9onZyQZZ7b2DKFbe6oXRbus2zGo01JiAuxkSHMOXXH7dmC3MjxsntXkZpFExKSAgmIH1F+vNnsN7scybz11ErS5oaGxHHSJAVgviW2+Bpnr3AswcCMPSDAhpjVQRBidSL2yvn82TXQtyKHIJjjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1y76xfKc; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=HGbSmD0fZOWR9Xf9+7hB+vjRN2B+3ZPM+cStBFwbLIhz/okOXmz6uZkp6Pa/W/y0XpBgo/CDkd0kzjsKwmksjHIF97VD1mCJXlEECc8dJO4d/NUPezFM5fyBPiIO/Dzy0x5a8zpN79cKriDisrNLzF9t9tOZdC4NFDQNyqrtZoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=f/o+XzKy; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1y76xfKc"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="f/o+XzKy"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=CFNSJ1vCM+L5H8f+YkZmQASbWvMxSfR5SY7RaKdLrKo=; b=1y76xfKcKNF7FvJw83JD79jxZW
-	iAMJr1o1KG/dYi6icNZTE+EUFoxIqhyIC53CbbYpUd6RwAgaNgQlEMZStydFuqJdAFdfp0mWXmYh0
-	kuWtc10qD0gHgW3jcdWaQv1zjmetBPa8hjSCNjaGACJL0EYFd/aB1vJjImII2TZkadnjJt7HFoTfF
-	g1Zo0o2X8V+Y8lGAKeKDMx09bZVZ/e97L1ScmUeYQ9wqxtpbVQSt8y/dDALAmm3dI6xwWu6LcISjC
-	i20QMbtAT8D0bkZscIisy/w0FJRKSjuqzIHYDfSKEEADpethd8rQVpSBD0f1CBFkafFGrRc370MtW
-	S1b8+50Q==;
+	bh=iWe3CZ/eRfJdOZfxKZFQP5oPwEqgxITveYDJzYmrQHs=; b=f/o+XzKyGZwTpWML+QpqX8hUbZ
+	SpKYqxYCf1YMAR77RqkuMIGcjQSLBhu9LkAcMOhL79ckqQLcabT48UO6CUC/8tZi0zUJnEGynV8Wk
+	sHptkgi6GW8rFw4akp6u6ovF+anLkIkqs6As/s/m0vNr8Y+acGIf6bsJrwe0pc2K5N5TYpUBo4Clm
+	YrPP7eHD2tsQcqZH7DwRKCpR8MhWrxx6cWnloDNo/W8mmbWy3Jq0qSO5MWK/QNVaX6UvcMiPdcX/G
+	m2BBMrLXuCiTDscQSRtt6anFi6G6D3XDIArwy7P+f93m7OSQ2QHQt2s3omxfDSIBc9wYo2y0idkb4
+	8oF5oWNQ==;
 Received: from [220.85.59.196] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v88dK-0000000C7kJ-1IMC;
-	Mon, 13 Oct 2025 02:49:58 +0000
+	id 1v88dO-0000000C7lE-0O7b;
+	Mon, 13 Oct 2025 02:50:03 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 15/17] xfs: move q_qlock acquisition into xqcheck_commit_dquot
-Date: Mon, 13 Oct 2025 11:48:16 +0900
-Message-ID: <20251013024851.4110053-16-hch@lst.de>
+Subject: [PATCH 16/17] xfs: move xfs_dquot_tree calls into xfs_qm_dqget_cache_{lookup,insert}
+Date: Mon, 13 Oct 2025 11:48:17 +0900
+Message-ID: <20251013024851.4110053-17-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251013024851.4110053-1-hch@lst.de>
 References: <20251013024851.4110053-1-hch@lst.de>
@@ -48,49 +48,102 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-This removes a pointless roundtrip because xqcheck_commit_dquot has to
-drop the lock for allocating a transaction right now.
+These are the low-level functions that needs them, so localize the
+(trivial) calculation of the radix tree root there.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/quotacheck_repair.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ fs/xfs/xfs_dquot.c | 24 +++++++++++-------------
+ 1 file changed, 11 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/scrub/quotacheck_repair.c b/fs/xfs/scrub/quotacheck_repair.c
-index de1521739ec9..942df94e1215 100644
---- a/fs/xfs/scrub/quotacheck_repair.c
-+++ b/fs/xfs/scrub/quotacheck_repair.c
-@@ -52,13 +52,11 @@ xqcheck_commit_dquot(
- 	bool			dirty = false;
- 	int			error = 0;
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 98593b380e94..29f578d66230 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -801,10 +801,11 @@ xfs_dq_get_next_id(
+ static struct xfs_dquot *
+ xfs_qm_dqget_cache_lookup(
+ 	struct xfs_mount	*mp,
+-	struct xfs_quotainfo	*qi,
+-	struct radix_tree_root	*tree,
+-	xfs_dqid_t		id)
++	xfs_dqid_t		id,
++	xfs_dqtype_t		type)
+ {
++	struct xfs_quotainfo	*qi = mp->m_quotainfo;
++	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
+ 	struct xfs_dquot	*dqp;
  
--	/* Unlock the dquot just long enough to allocate a transaction. */
--	mutex_unlock(&dq->q_qlock);
- 	error = xchk_trans_alloc(xqc->sc, 0);
--	mutex_lock(&dq->q_qlock);
+ restart:
+@@ -843,11 +844,12 @@ xfs_qm_dqget_cache_lookup(
+ static int
+ xfs_qm_dqget_cache_insert(
+ 	struct xfs_mount	*mp,
+-	struct xfs_quotainfo	*qi,
+-	struct radix_tree_root	*tree,
+ 	xfs_dqid_t		id,
++	xfs_dqtype_t		type,
+ 	struct xfs_dquot	*dqp)
+ {
++	struct xfs_quotainfo	*qi = mp->m_quotainfo;
++	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
+ 	unsigned int		nofs_flags;
+ 	int			error;
+ 
+@@ -906,8 +908,6 @@ xfs_qm_dqget(
+ 	bool			can_alloc,
+ 	struct xfs_dquot	**O_dqpp)
+ {
+-	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
+ 	struct xfs_dquot	*dqp;
+ 	int			error;
+ 
+@@ -916,7 +916,7 @@ xfs_qm_dqget(
+ 		return error;
+ 
+ restart:
+-	dqp = xfs_qm_dqget_cache_lookup(mp, qi, tree, id);
++	dqp = xfs_qm_dqget_cache_lookup(mp, id, type);
+ 	if (dqp)
+ 		goto found;
+ 
+@@ -924,7 +924,7 @@ xfs_qm_dqget(
  	if (error)
  		return error;
  
-+	mutex_lock(&dq->q_qlock);
- 	xfs_trans_dqjoin(xqc->sc->tp, dq);
+-	error = xfs_qm_dqget_cache_insert(mp, qi, tree, id, dqp);
++	error = xfs_qm_dqget_cache_insert(mp, id, type, dqp);
+ 	if (error) {
+ 		/*
+ 		 * Duplicate found. Just throw away the new dquot and start
+@@ -994,8 +994,6 @@ xfs_qm_dqget_inode(
+ 	struct xfs_dquot	**dqpp)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
+ 	struct xfs_dquot	*dqp;
+ 	xfs_dqid_t		id;
+ 	int			error;
+@@ -1014,7 +1012,7 @@ xfs_qm_dqget_inode(
+ 	id = xfs_qm_id_for_quotatype(ip, type);
  
- 	if (xchk_iscan_aborted(&xqc->iscan)) {
-@@ -150,7 +148,6 @@ xqcheck_commit_dqtype(
- 	 */
- 	xchk_dqiter_init(&cursor, sc, dqtype);
- 	while ((error = xchk_dquot_iter(&cursor, &dq)) == 1) {
--		mutex_lock(&dq->q_qlock);
- 		error = xqcheck_commit_dquot(xqc, dqtype, dq);
- 		xfs_qm_dqrele(dq);
- 		if (error)
-@@ -182,7 +179,6 @@ xqcheck_commit_dqtype(
- 		if (error)
- 			return error;
+ restart:
+-	dqp = xfs_qm_dqget_cache_lookup(mp, qi, tree, id);
++	dqp = xfs_qm_dqget_cache_lookup(mp, id, type);
+ 	if (dqp)
+ 		goto found;
  
--		mutex_lock(&dq->q_qlock);
- 		error = xqcheck_commit_dquot(xqc, dqtype, dq);
- 		xfs_qm_dqrele(dq);
- 		if (error)
+@@ -1050,7 +1048,7 @@ xfs_qm_dqget_inode(
+ 		return -ESRCH;
+ 	}
+ 
+-	error = xfs_qm_dqget_cache_insert(mp, qi, tree, id, dqp);
++	error = xfs_qm_dqget_cache_insert(mp, id, type, dqp);
+ 	if (error) {
+ 		/*
+ 		 * Duplicate found. Just throw away the new dquot and start
 -- 
 2.47.3
 
