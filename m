@@ -1,147 +1,178 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C515274B27
-	for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 14:42:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A29E6211290;
+	Mon, 13 Oct 2025 14:48:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760366532; cv=none; b=PvnW+K90HWLu7vGaW1ozslalNNNqMGX8so4eB4qhDecLiZ4FJNVVvinBnJQMaa3WLnnd9FOi6HSTODlcOebKBo8tq3DlFfj05Y6qqcdSdVuO0slEXYLNoMzTTIYnrvz3K0EoUVdZ7e3bqOL3ps/nqYeYXEWuaQxkAYFBW8a3v1w=
+	t=1760366896; cv=none; b=CSU2HVB91Qyp1U5UQpOtSLlURnIC7NTjTRSQ3YhttUEnOK/dZ5qp1uV78lRyDfmhkvhfD8uWd0pDfS+CvPrKeuWj+kNxpIDU44fk/qHNmxUfgCvWYZUSIlkew2o6ATK8u79yFZeS6t3ckC6BnKdJigwHNbCYsFZXtYZtHgglWCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760366532; c=relaxed/simple;
-	bh=lb/ofP/CUeQfaZ9tnn400g47ImV+B1Q7hSrOKnvUzIM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=R9H53ZM/BLdIjN17idpS6s3VHiEXQvPkN0Y2DPsCmuqGZEX5ybprSYqZGoUPm+/2uJOGTBX/O1wtYeLv7ZD/4eZHG3TToWwPB6WiQWio2Vo78B3ulG3Axt2nXLBUAItSBRdtLD52zWzimY17g+xx9H+qOG8yFtiINyeErvt1ZW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Fyh14f7L; arc=none smtp.client-ip=209.85.215.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1760366896; c=relaxed/simple;
+	bh=jWgRdOclHfQbfaaf9W2P4KkHZdNwhBqzpIGWPibgK3c=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=hae2wJ7NDRafYQh8LIA0b8jwu8oAFbGvk6fzN7MHeaBBcZ6mWA0a1h0kqfODEjc4eXWKKAaB9xHYrAAgbxbRxzCKJrKN2Xubd5fiWDKHF1i6xN9nUMYPP1m+yQfgX3FiYfssj/PTO5K/zIhI6pyxfYbh7KNQABhg3o8+/mmG9xM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lKGV3p7A; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Fyh14f7L"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-b5a631b9c82so2611407a12.1
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Oct 2025 07:42:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1760366530; x=1760971330; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=S1YfzWsEkP6Jpfl+QShdw4FnAJRrSitMw7SxdtKASYU=;
-        b=Fyh14f7LUvEORGNZZRG/xmO3lQApkM1tZBK1esA8T4BlIcJEd6fzFLPmvgrpwuZaVu
-         xxsJBYLL13Ae0gF3wTQQezpJEyc5bDKKEyXuYdECQ7qZG4YRF0tDOh/2lBJzBq61A9qZ
-         Wh8O16L94cF53qLqnwSwzGBVMWsaJJmIwL0VGqTKYqTzhkf3fJiMagDVUcP9fAmrDi9Q
-         SYIGG+6WceTtq55KB68wsqCuxbrBwg+lv8aqS+vzFqrJN8EiuaT6bRypad/+aUXFlYdi
-         G1/21Kr1R3oQGe6NlHNiktlHtwf2iHknKsMY/ctLc104kv7ExwF3dLoxIBwqY2X/+PVn
-         3KpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760366530; x=1760971330;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=S1YfzWsEkP6Jpfl+QShdw4FnAJRrSitMw7SxdtKASYU=;
-        b=KMod2gItxcaRY8roGeipMdGxpfqO7mkz9LRitotsIqgBbtqhCtW/c4O+dMfl0F1CRd
-         z7udIywOCUYmbipDwL4C2V06nUDZ8QzN3JYtPnaBsAqAUW7iwXYuQPyCQMwg9rWwl/qo
-         mrkXlNlOvZmTrk/4uCOqtZf5DeH4ksRmNg7CgzI8wftj+/du/8EWxnaRS+0vVgkSK5Wh
-         iscDgqcWvZV/1AwYmTOeG7jlwzPehykIDokRG+H1ZnpK9GhJslPXjZbP+2TjlG01QGWV
-         Dncr/Q8OhKpREo2n68EHqDdze0piQpDpIwzDg2ZD5R+5sQFWjXEIgYsC/f9ZcFz1Qvzw
-         1j5g==
-X-Forwarded-Encrypted: i=1; AJvYcCVrK0dGdxnOsdx/kXIZK6OomUjGlA7SRAZcek4psOmL2L3cCindgmPwnbouqo5uK5Xhkadu9jeTTjk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyTJCR1L4jscNIL5h0FQHo96B4cr+WTgSG8fhgGaruROlvqNeh3
-	rHK3EZ0K9tdrnkfFXtPe5avyDGvT66r1+PlhpJRlkdlXljcPz2vEZRhuodlecsUitaKjIg==
-X-Gm-Gg: ASbGnctBISrhauhM3PCsmIKqFziz+SLph34aq6xx5wj5rHOvImK9gTetnIRu0NwkjEL
-	TEEqMce1bkuSkj+mtXI28TFF9VyJ9vsHaxHi4ZGXu13UWid/x1KYfdwnSsbSgXtZNxUA8OzkIuv
-	G+Wh+KFWa+HsuFP7iUI/I9ohc5RKWmFWxnf8SCFDIlEdE9QMcUiPpy6siMGL1X0IF5T3VOpS1Ii
-	u3ZvQMUC95UHsasAR6JA7KbLeKUfkHxfZlNYh4p1C9hM+5tyhxvYODWxaiH6MUnlFnVdrjkUPW5
-	wOq46zOnqo6NO7I8ZZFGiVq2yP16z7cYeS1kXuIxWW9wDxuvRdxtq8BbIgdhIq25jTVEtNkYxNW
-	fzFHJJ2Iqh8FQrz8aqelIS/Pxx1muNRdkKBi7oufQRIMv/JLrFwS1pHsMvg6TN1r4kOxIcP9eLj
-	FHyYCsuhaMlrGs6Q==
-X-Google-Smtp-Source: AGHT+IG+K1vywETLzSrivhI3s/QeWt+yhGZXCHW6mRT36HHpdfHPqdLr355p9ZJAsXJ/F59gampgMg==
-X-Received: by 2002:a17:903:2409:b0:290:52aa:7291 with SMTP id d9443c01a7336-29052aa8299mr113498825ad.53.1760366529612;
-        Mon, 13 Oct 2025 07:42:09 -0700 (PDT)
-Received: from [192.168.50.102] ([49.245.38.171])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29034e1ccc4sm135799655ad.42.2025.10.13.07.42.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Oct 2025 07:42:09 -0700 (PDT)
-Message-ID: <97aece25-d146-4447-9756-f537acadace1@gmail.com>
-Date: Mon, 13 Oct 2025 22:42:03 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lKGV3p7A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB088C4CEE7;
+	Mon, 13 Oct 2025 14:48:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760366896;
+	bh=jWgRdOclHfQbfaaf9W2P4KkHZdNwhBqzpIGWPibgK3c=;
+	h=From:Subject:Date:To:Cc:From;
+	b=lKGV3p7AwvrM7OJT7hOATJJT/UQN+kJq3n5xXj6pTbNb/aPqxIKhMOTBAMtYBveMU
+	 TgVOAT3NRJ2aqglav+lGus1drXMm5aA7AevvrCajbMeOZRo73m8fEM85t6G9zOnC47
+	 bkXLvwRG4lqnGBYomaZtBBEvED6bhbRwQKQzmgMFrnyZCIApHKZO4f7D6WeL8G25Rg
+	 c78aaDpyifmo5QKKLtVuHnMGcM83XQC/oy/41mkt0StfUpPOcU04WD37SJs+QTiVDz
+	 BHIRDvjN4HiU4B7Taa7rtLbx8UC+3WZc2Bx3pqHcQkG8pBWPz6ckrC0p8kFu8F2RJB
+	 G42YDsjvFASow==
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH 00/13] vfs: recall-only directory delegations for knfsd
+Date: Mon, 13 Oct 2025 10:47:58 -0400
+Message-Id: <20251013-dir-deleg-ro-v1-0-406780a70e5e@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/3] generic: basic smoke for filesystems on zoned
- block devices
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
- Zorro Lang <zlang@redhat.com>
-Cc: hch <hch@lst.de>, Naohiro Aota <Naohiro.Aota@wdc.com>,
- "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
- Hans Holmberg <Hans.Holmberg@wdc.com>,
- "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- Carlos Maiolino <cem@kernel.org>, "Darrick J . Wong" <djwong@kernel.org>,
- Carlos Maiolino <cmaiolino@redhat.com>
-References: <20251013080759.295348-1-johannes.thumshirn@wdc.com>
- <20251013080759.295348-4-johannes.thumshirn@wdc.com>
- <006ae40b-b2e6-441a-b2d3-296d1e166787@gmail.com>
- <4eeb481f-b94d-4c2f-909e-7c29ac2440b2@wdc.com>
-Content-Language: en-GB
-From: Anand Jain <anajain.sg@gmail.com>
-In-Reply-To: <4eeb481f-b94d-4c2f-909e-7c29ac2440b2@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAB4R7WgC/x3MMQqAMAxA0atIZgNNi6BeRRzUpjUgVVIQoXh3i
+ +Mb/i+QWYUzjE0B5VuynKmC2ga2fUmRUXw1WGM7MuTQi6LngyPqid4EpqG3brUENbmUgzz/bpr
+ f9wMsflGqXgAAAA==
+X-Change-ID: 20251013-dir-deleg-ro-d0fe19823b21
+To: Miklos Szeredi <miklos@szeredi.hu>, 
+ Alexander Viro <viro@zeniv.linux.org.uk>, 
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+ Chuck Lever <chuck.lever@oracle.com>, 
+ Alexander Aring <alex.aring@gmail.com>, 
+ Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, 
+ Steve French <sfrench@samba.org>, Paulo Alcantara <pc@manguebit.org>, 
+ Ronnie Sahlberg <ronniesahlberg@gmail.com>, 
+ Shyam Prasad N <sprasad@microsoft.com>, Tom Talpey <tom@talpey.com>, 
+ Bharath SM <bharathsm@microsoft.com>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
+ David Howells <dhowells@redhat.com>, Tyler Hicks <code@tyhicks.com>, 
+ NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, 
+ Dai Ngo <Dai.Ngo@oracle.com>, Amir Goldstein <amir73il@gmail.com>, 
+ Namjae Jeon <linkinjeon@kernel.org>, Steve French <smfrench@gmail.com>, 
+ Sergey Senozhatsky <senozhatsky@chromium.org>, 
+ Carlos Maiolino <cem@kernel.org>, Kuniyuki Iwashima <kuniyu@google.com>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Simon Horman <horms@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
+ samba-technical@lists.samba.org, netfs@lists.linux.dev, 
+ ecryptfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
+ linux-xfs@vger.kernel.org, netdev@vger.kernel.org, 
+ Jeff Layton <jlayton@kernel.org>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4011; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=jWgRdOclHfQbfaaf9W2P4KkHZdNwhBqzpIGWPibgK3c=;
+ b=owEBbQKS/ZANAwAKAQAOaEEZVoIVAcsmYgBo7REpbSXN3G6FhVhF7XoUUMttobFKJ1BVSzBKY
+ aCDKYuY4e2JAjMEAAEKAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCaO0RKQAKCRAADmhBGVaC
+ FdWwEADB1fG+r8Su4S75zX1urKLYXefEdzK/4m7dqrLwtnMwVrkRljoJZTmFyjRp1sLur6cTdfm
+ BefXgRYtzswymnNoi9hw19fh/D0zWJ5o/nJetdEaseeMqb9pwOuflLudHalhJIQ+G3evmWazi1F
+ ZJJzDF9WiQchXF9Ezx56oZQTJpcxdXIdtE9VRLz//IFzRwAGlHttrOpnW8iKq7jaouBEwFQ7pLj
+ l5aF/xUAMxIKotGm0r1pOf6BFMLZd6n3e1NZJTPllLvT1bvpa/w9EW1ABO4SgzvFmPTl5Yj7OVi
+ eXYM2I9HeykVe3h9cW0z0jRIkSuJGZC5Cmvvlpg6PFHQXBJqbHuIKQb4wMMCxoebTZJVBanLuIc
+ SkSncW7lEH8Z56zqAJHNFSN7ApLT6xo8Cljcbk2ZpciKJcoWjXjCFIat62ASVUwAhpT2V1rIMZl
+ DvINrGLx1hl1stODptoSPvW8f+P4UbeRI5UAYRDYsV38WJPYwrCJlFbdXnY8SaxH+YSslvABTVh
+ xG1M9pPAgwZDe+2SN3/krfrgncKX9UujZrJBaIkuJS8YFJMG6+R4LcajTSrQvdyOSj+7+TTB+vx
+ a1jxuVEnA/cOqUmxrGC5B64PWdoG+UQEmYMFp2gg38R7C0Yls2PcT9yGsdlWTcUXohOHPoWsR8L
+ IIbHtLPojiFcNXg==
+X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
+ fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 
+At the fall NFS Bakeathon last week, the NFS client and server
+maintainers had a discussion about how to merge support for directory
+delegations. We decided to start with just merging support for simple,
+recallable-only directory delegation support, for a number of reasons:
 
+1/ RFC8881 has some gaps in coverage that we are hoping to have
+addressed in RFC8881bis. In particular, it's written such that CB_NOTIFY
+callbacks require directory position information. That will be hard to
+do properly under Linux, so we're planning to extend the spec to allow
+that information to be omitted.
 
-On 13-Oct-25 10:06 PM, Johannes Thumshirn wrote:
-> On 10/13/25 3:55 PM, Anand Jain wrote:
->> Johannes,
->>
->> The test case is failing with XFS. For some reason, the mkfs error
->> wasn't captured in the output, so I had to modify the test slightly.
->> Errors and the diff is below.
->>
->> Thanks, Anand
->>
->> -------
->> SECTION       -- generic-config
->> RECREATING    -- xfs on /dev/sde
->> FSTYP         -- xfs (non-debug)
->> PLATFORM      -- Linux/x86_64 feddev 6.16.10-100.fc41.x86_64 #1 SMP
->> PREEMPT_DYNAMIC Thu Oct  2 18:19:14 UTC 2025
->> MKFS_OPTIONS  -- -f /dev/sda
->> MOUNT_OPTIONS -- /dev/sda /mnt/scratch
->>
->> generic/772       [not run] cannot mkfs zoned filesystem
->> Ran: generic/772
->> Not run: generic/772
->> Passed all 1 tests
-> 
-> Hi Anand,
-> 
-> Looking at the output it isn't failing but skipped on your XFS config.
-> 
-> 
-> This is expected if XFS isn't build with support for the zoned realtime
-> device. I've been discussing this with Christoph, because for XFS there
-> is no feature flag in sysfs we can check if the kernel can actually
-> support a zoned RT device (unlike f2fs or btrfs which do have this in
-> sysfs).
-> 
-> Christoph's idea was to do exactly this, if no zoned RT support is
-> compiled in the kernel. Hence the _try_mkfs_dev instead of a plain
-> _mkfs_dev call.
-> 
-> So I /think/ you just validated that the skip if !CONFIG_BLK_DEV_ZONED
-> && !CONFIG_XFS_RT check works.
-> 
+2/ client-side support for CB_NOTIFY still lags a bit. The client side
+is tricky, as it involves heuristics about when to request a delegation.
 
-Ah, thanks for clarifying. Any idea if the redirect to seqres.full can 
-be fixed? It was missing the mkfs errors.
+3/ we have some early indication that simple, recallable-only
+delegations can help performance in some cases. Anna mentioned seeing a
+multi-minute speedup in xfstests runs with them enabled. This needs more
+investigation, but it's promising and seems like enough justification to
+merge support.
 
-Best, Anand
+This patchset is quite similar to the set I initially posted back in
+early 2024 [1]. We've merged some GET_DIR_DELEGATION handling patches
+since then, but the VFS layer support is basically the same.
 
+One thing that I want to make clear is that with this patchset, userspace
+can request a read lease on a directory that will be recalled on
+conflicting accesses. I saw no reason to prevent this, and I think it may
+be something useful for applications like Samba.
 
-> Thanks,
-> 
-> Johannes
-> 
+As always, users can disable leases altogether via the fs.leases-enable
+sysctl if this is an issue, but I wanted to point this out in case
+anyone sees footguns here.
+
+It would be great if we could get into linux-next soon so that it can be
+merged for v6.19. Christian, could you pick up the vfs/filelock patches,
+and Chuck pick up the nfsd patches?
+
+Thanks!
+
+[1]: https://lore.kernel.org/all/20240315-dir-deleg-v1-0-a1d6209a3654@kernel.org/
+
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
+---
+Jeff Layton (13):
+      filelock: push the S_ISREG check down to ->setlease handlers
+      filelock: add a lm_may_setlease lease_manager callback
+      vfs: add try_break_deleg calls for parents to vfs_{link,rename,unlink}
+      vfs: allow mkdir to wait for delegation break on parent
+      vfs: allow rmdir to wait for delegation break on parent
+      vfs: break parent dir delegations in open(..., O_CREAT) codepath
+      vfs: make vfs_create break delegations on parent directory
+      vfs: make vfs_mknod break delegations on parent directory
+      filelock: lift the ban on directory leases in generic_setlease
+      nfsd: allow filecache to hold S_IFDIR files
+      nfsd: allow DELEGRETURN on directories
+      nfsd: check for delegation conflicts vs. the same client
+      nfsd: wire up GET_DIR_DELEGATION handling
+
+ drivers/base/devtmpfs.c  |   6 +-
+ fs/cachefiles/namei.c    |   2 +-
+ fs/ecryptfs/inode.c      |   6 +-
+ fs/fuse/dir.c            |   1 +
+ fs/init.c                |   4 +-
+ fs/locks.c               |  17 ++++-
+ fs/namei.c               | 163 ++++++++++++++++++++++++++++++++++-------------
+ fs/nfs/nfs4file.c        |   2 +
+ fs/nfsd/filecache.c      |  50 +++++++++++----
+ fs/nfsd/filecache.h      |   2 +
+ fs/nfsd/nfs4proc.c       |  21 +++++-
+ fs/nfsd/nfs4recover.c    |   6 +-
+ fs/nfsd/nfs4state.c      | 114 ++++++++++++++++++++++++++++++++-
+ fs/nfsd/state.h          |   5 ++
+ fs/nfsd/vfs.c            |  11 ++--
+ fs/nfsd/vfs.h            |   2 +-
+ fs/overlayfs/overlayfs.h |   6 +-
+ fs/smb/client/cifsfs.c   |   3 +
+ fs/smb/server/vfs.c      |   6 +-
+ fs/xfs/scrub/orphanage.c |   2 +-
+ include/linux/filelock.h |  14 ++++
+ include/linux/fs.h       |   9 +--
+ net/unix/af_unix.c       |   2 +-
+ 23 files changed, 363 insertions(+), 91 deletions(-)
+---
+base-commit: 2c40814eb5ae104d3f898fd8b705ecad114105b5
+change-id: 20251013-dir-deleg-ro-d0fe19823b21
+
+Best regards,
+-- 
+Jeff Layton <jlayton@kernel.org>
 
