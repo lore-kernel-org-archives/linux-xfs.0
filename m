@@ -1,156 +1,163 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D01A3112A3;
-	Mon, 13 Oct 2025 15:08:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 380CF30DEA4;
+	Mon, 13 Oct 2025 15:26:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760368086; cv=none; b=tFkN+PZq4FdthlVNOFak2heQiDJ+BtsEAyTiFkUiU22fGSMTzTQXe4tjvCurijqsfwia2b+iEZ6UxejWkKboZin/yi0Oq29SuS/Qgh+Yo7kNkG9RonNrqN5xbeHtvkbItuihaRUqWunR6y+8qdZbpkAZ8vPebMG/ui6VPwgibaM=
+	t=1760369191; cv=none; b=p95bW+MzApwIsdspm5L2uCzvVPo2fwzE0tmLP6u1ihwl+njfk5b75C3Jza3a8CrWPZI0TKv8UooiQe6/iDMPFqh/HuyMYAeJwrzDm6MIb6JWPEI09UIJZpHiS4+gxHplNBs/7sEI/ttBclP+jF69pIWK42kUs21JvbevK5UgTGk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760368086; c=relaxed/simple;
-	bh=Qi9c0tGx2o49HK+ogDKWK7rwq/cNq41kXnz1Xy/Ucyo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qDk8qfZJBfdzlHQyDm5MUncfPhWQ3sh5QFRSlDMJMr5fP6kcEOJgW74w/Lr2jLyR6Zs4WxE58IeRBmrjdiTINkGz0de3ETulAtv4iO1zALOWT3dhvRAGBYG60Kb8kUF90yaKSVuKpcZhGJ4wq+nB4r0y4zoHgihqqfZ9YLcM4Vc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AI/zQxNU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760369191; c=relaxed/simple;
+	bh=qzmsCLHvn1CkR8Is3amMxqjd9S3jL+Su3MM1yXwJK78=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=GQmVHuiacZ3y0U46TNfMThLhJcxDpObeAXZn3Ok9KGDxRZOqqZJXY0XsnDJLNWTZ55DFB2WIlZQHuY3A3h09/TieO+imavMf4CmfSPXxbf+GLzfkK0ooBjfSeXvTJWi8gz6Lb+AyLq4u9YrtkMt/Wgq9MomZbbDZl6x/LgTB84c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QiXKKGQ7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AI/zQxNU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FA00C4CEE7;
-	Mon, 13 Oct 2025 15:08:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QiXKKGQ7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA24EC4CEE7;
+	Mon, 13 Oct 2025 15:26:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760368086;
-	bh=Qi9c0tGx2o49HK+ogDKWK7rwq/cNq41kXnz1Xy/Ucyo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AI/zQxNUaPkpSC8BbLpMXPbugOrt7Hd0JUNoN2RL9iudQgGuw4gPyKQ6NLY4EzpoM
-	 CwMxoMCMh1g9e1+WEHsOqCxW+faNryvlB4xCNGqqT71xxNl7uzrJ2n9DKRH67UnjeI
-	 xzKnQ2XckWzPP4rKteBH9Vq78ruXb9w4GoMj6P0ZQ8XmZ5qzu+vvQf3XXcRsybgNSI
-	 UoEO7dcZDrTr+RBqAzOs3GSO9bOiDGT0nR30QHZZySMOYXvqD6dvZFil+3Bq+H/2jD
-	 mplFsqDbEqLRbMs3r7ZQsUfjAQrxCbi4dFxGlo4RX5WwgQGTPZFWFWP624mA5WL94k
-	 SrBsbsCifNGWw==
-Date: Mon, 13 Oct 2025 08:08:05 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-	Carlos Maiolino <cem@kernel.org>, Zorro Lang <zlang@redhat.com>,
-	hch <hch@lst.de>, Naohiro Aota <Naohiro.Aota@wdc.com>,
-	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-	Hans Holmberg <Hans.Holmberg@wdc.com>,
-	"fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v2 2/3] common/zoned: add _create_zloop
-Message-ID: <20251013150805.GK6188@frogsfrogsfrogs>
-References: <20251007125803.55797-1-johannes.thumshirn@wdc.com>
- <VGGoqK-5ZWJTAAy5zOK2QgRfnghNzWtGFoBwL6Sw9bqE7moL7lyTr43XUUgtMM54gKwCKIpC1Jz9u5ZcnpNATg==@protonmail.internalid>
- <20251007125803.55797-3-johannes.thumshirn@wdc.com>
- <hrht5llavtcgd5bb6sgsluy3vs2m6ddzzshkhwqb4fjgujgrli@6px7vpsk7ek3>
- <20251008150806.GA6188@frogsfrogsfrogs>
- <f0713993-cebf-4e42-9c1a-26706a52be4d@wdc.com>
- <14046f78-e1e9-4188-8405-16055520513f@kernel.org>
+	s=k20201202; t=1760369190;
+	bh=qzmsCLHvn1CkR8Is3amMxqjd9S3jL+Su3MM1yXwJK78=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+	b=QiXKKGQ7b0mt3ydyGwtJiiW6eJ8DGV/i8ZZQhxArZWBtRDEngK49QSNoDisJez2pG
+	 pC9GXsrZBQHwFHZdZEvFcFPSseVuH1l4Qy5olxWrpi5/GVLPsaQnd7pxkHMpS0ItGq
+	 bvc9Avu87Vk6L1Inb2Q/+gNv65mY67MBZBOG5cUSXLvacxeDYp2enHeGINuHtdScuK
+	 F4CAyjA8Idu5z5xKnNvSSKIQHu0nHnhgLXKR0Dd7NfEles20HmDKiIDZeUXPC33qxf
+	 qDT8jdk70ob8XWp6UOqDEqJ4qP5ExfAn7U91RZ8gkSg9JZ98uhjOPOyB/O0X8AiwRK
+	 Afa23H3GqOHGA==
+Message-ID: <acc332bcc7ad4b6f4d901bf783a5017dd6eca1b5.camel@kernel.org>
+Subject: Re: [PATCH 00/13] vfs: recall-only directory delegations for knfsd
+From: Jeff Layton <jlayton@kernel.org>
+To: Chuck Lever <chuck.lever@oracle.com>, Miklos Szeredi
+ <miklos@szeredi.hu>,  Alexander Viro <viro@zeniv.linux.org.uk>, Christian
+ Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,  Alexander Aring
+ <alex.aring@gmail.com>, Trond Myklebust <trondmy@kernel.org>, Anna
+ Schumaker <anna@kernel.org>,  Steve French <sfrench@samba.org>, Paulo
+ Alcantara <pc@manguebit.org>, Ronnie Sahlberg	 <ronniesahlberg@gmail.com>,
+ Shyam Prasad N <sprasad@microsoft.com>, Tom Talpey	 <tom@talpey.com>,
+ Bharath SM <bharathsm@microsoft.com>, Greg Kroah-Hartman	
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Danilo Krummrich	 <dakr@kernel.org>, David Howells <dhowells@redhat.com>,
+ Tyler Hicks	 <code@tyhicks.com>, NeilBrown <neil@brown.name>, Olga
+ Kornievskaia	 <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, Amir
+ Goldstein	 <amir73il@gmail.com>, Namjae Jeon <linkinjeon@kernel.org>, Steve
+ French	 <smfrench@gmail.com>, Sergey Senozhatsky
+ <senozhatsky@chromium.org>, Carlos Maiolino <cem@kernel.org>, Kuniyuki
+ Iwashima <kuniyu@google.com>, "David S. Miller"	 <davem@davemloft.net>,
+ Eric Dumazet <edumazet@google.com>, Jakub Kicinski	 <kuba@kernel.org>,
+ Paolo Abeni <pabeni@redhat.com>, Simon Horman	 <horms@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
+	samba-technical@lists.samba.org, netfs@lists.linux.dev,
+ ecryptfs@vger.kernel.org, 	linux-unionfs@vger.kernel.org,
+ linux-xfs@vger.kernel.org, netdev@vger.kernel.org
+Date: Mon, 13 Oct 2025 11:26:26 -0400
+In-Reply-To: <846db8bf-6e5a-4a2c-90fa-3d4ffaf4c1de@oracle.com>
+References: <20251013-dir-deleg-ro-v1-0-406780a70e5e@kernel.org>
+	 <846db8bf-6e5a-4a2c-90fa-3d4ffaf4c1de@oracle.com>
+Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
+ keydata=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
+ QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <14046f78-e1e9-4188-8405-16055520513f@kernel.org>
 
-On Sun, Oct 12, 2025 at 09:36:18AM +0900, Damien Le Moal wrote:
-> On 2025/10/11 18:34, Johannes Thumshirn wrote:
-> > On 10/8/25 5:08 PM, Darrick J. Wong wrote:
-> >> On Wed, Oct 08, 2025 at 04:38:16PM +0200, Carlos Maiolino wrote:
-> >>> On Tue, Oct 07, 2025 at 02:58:02PM +0200, Johannes Thumshirn wrote:
-> >>>> Add _create_zloop a helper function for creating a zloop device.
-> >>>>
-> >>>> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> >>>> ---
-> >>>>   common/zoned | 23 +++++++++++++++++++++++
-> >>>>   1 file changed, 23 insertions(+)
-> >>>>
-> >>>> diff --git a/common/zoned b/common/zoned
-> >>>> index 41697b08..33d3543b 100644
-> >>>> --- a/common/zoned
-> >>>> +++ b/common/zoned
-> >>>> @@ -45,3 +45,26 @@ _require_zloop()
-> >>>>   	    _notrun "This test requires zoned loopback device support"
-> >>>>       fi
-> >>>>   }
-> >>>> +
-> >>>> +# Create a zloop device
-> >>>> +# useage: _create_zloop [id] <base_dir> <zone_size> <nr_conv_zones>
-> >>>> +_create_zloop()
-> >>>> +{
-> >>>> +    local id=$1
-> >>>> +
-> >>>> +    if [ -n "$2" ]; then
-> >>>> +        local base_dir=",base_dir=$2"
-> >>>> +    fi
-> >>>> +
-> >>>> +    if [ -n "$3" ]; then
-> >>>> +        local zone_size=",zone_size_mb=$3"
-> >>>> +    fi
-> >>>> +
-> >>>> +    if [ -n "$4" ]; then
-> >>>> +        local conv_zones=",conv_zones=$4"
-> >>>> +    fi
-> >>>> +
-> >>>> +    local zloop_args="add id=$id$base_dir$zone_size$conv_zones"
-> >>>> +
-> >>>> +    echo "$zloop_args" > /dev/zloop-control
-> >> Hmm, so the caller figures out its own /dev/zloopNNN number, passes NNN
-> >> into the zloop-control devices, and then maybe a new bdev is created?
-> >> Does NNN have to be one more than the current highest zloop device, or
-> >> can it be any number?
-> >>
-> >> Source code says that if NNN >= 0 then it tries to create a new
-> >> zloopNNN or fails with EEXIST; otherwise it gives you the lowest unused
-> >> id.  It'd be nice in the second case if there were a way for the driver
-> >> to tell you what the NNN is.
-> >>
-> >> The _create_zloop users seem to do an ls to select an NNN.  At a minimum
-> >> that code probably ought to get hoisted to here as a common function (or
-> >> maybe just put in _create_zloop itself).
-> >>
-> >> Or maybe turned into a loop like:
-> >>
-> >> 	while true; do
-> >> 		local id=$(_next_zloop_id)
-> >> 		err="$(echo "add id=$id$base_dir..." 2>&1 > /dev/zloop-control)"
-> >> 		if [ -z "$err" ]; then
-> >> 			echo "/dev/zloop$id"
-> >> 			return 0
-> >> 		fi
-> >> 		if echo "$err" | ! grep -q "File exists"; then
-> >> 			echo "$err" 1>&2
-> >> 			return 1;
-> >> 		fi
-> >> 	done
-> >>
-> >> That way test cases don't have to do all that setup themselves?
-> >>
-> > Unfortunately the user has to create the zloop directory (e.g. 
-> > BASE_DIR/0 for zloop0) beforehand (might be a bug though).
-> 
-> Not a bug. It is by design since the user can specify the ID of the zloop drive
-> to create. And there is no fixed association between device ID and directory
-> path to keep things flexible for the user/distro.
+On Mon, 2025-10-13 at 10:52 -0400, Chuck Lever wrote:
+> On 10/13/25 10:47 AM, Jeff Layton wrote:
+> > It would be great if we could get into linux-next soon so that it can b=
+e
+> > merged for v6.19. Christian, could you pick up the vfs/filelock patches=
+,
+> > and Chuck pick up the nfsd patches?
+>=20
+> Question about merge strategy:
+>=20
+> Seems like I would have to base nfsd-testing (and nfsd-next) on
+> Christian's tree, once the VFS changes are applied, for one or two of
+> the NFSD patches to work. Yes?
+>=20
 
-Hrmmm, each zloop device gets its own notion of the base dir, right?
+Correct. I think the usual way we've done this in the past is to have
+Christian create a branch with just the vfs layer patches that you and
+he can both pull into your -next branches.
 
-> > What I could do is  encapsulate the find the next zloop and mkdir -p for 
-> > the user (and call in _create_zloop if no id is supplied?)
-> 
-> Yes. Do that. The zloop directory si not something that the tests should touch
-> anyway, so you should just define your own id <-> dir path mapping in the helpers.
-
-That sounds fine to me...
-
---D
-
-> 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
-> 
+--=20
+Jeff Layton <jlayton@kernel.org>
