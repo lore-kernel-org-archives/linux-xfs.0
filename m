@@ -1,66 +1,61 @@
-Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B28C27F736
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 18:53:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.87.16.39
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C81302571A1;
+	Tue, 14 Oct 2025 20:35:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760467991; cv=none; b=lrhzqCwGxpPIq13pFhwyEymGfXQUST4gIYF/6UaEEZp1qQmRHJ+m5YaPrFVQUUhs0KO1lUnNAWNNY8usOB/4tWS0bgQNnTXrGDM5h4J4QZFj29Py4qtmvv6w/IiKX6IpdzQnUL62RQ1favOLiHaZFRoUx3gMCBtjmft3sArjK7Q=
+	t=1760474128; cv=none; b=E5USgDofMAaWzuWqiYM08UQWc9cbGNl4SbZ7DeR9gc6DYk8c9WGcWHRGqlyQBd6zgHt8P8y7B7YbjvgiFhuj3vjnzoWIQo1Qt3ToPOaAW5p0QcP9cKkEecRdAJomEf+OqRAbg1meB0CshkQL61pg8QwLnfc0Nsdww9lIaXo3DDo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760467991; c=relaxed/simple;
-	bh=8q5LrSMyW9xx7xxgyfvkgm7fvxRMSAG/G0p25PX1CSU=;
-	h=Content-Disposition:MIME-Version:Content-Type:From:To:CC:Subject:
-	 Message-ID:References:Date; b=io/2cDIrkUg2MwMCik9ZpNu/67FL0uZypgCYiI4jMCp2iCKV2A5ZVQRx3n0kD8sjZrKgrAZ/9ebnFD45ZmkSaM2ZFlqm3Lh7htOkULwuY9AufpgMzvaYFGoLSck4cHNF+cFeEvh2SaKenFMro5DIF10dJNCYQKxlM5UTrGUmWfY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org; spf=none smtp.mailfrom=buxtehude.debian.org; dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b=BnXrQw7s; arc=none smtp.client-ip=209.87.16.39
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bugs.debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=buxtehude.debian.org
+	s=arc-20240116; t=1760474128; c=relaxed/simple;
+	bh=9R1aucuZobRn6Ija7EjDWKLa9tcxo5yonZ+ZUmemBag=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=keu4/BvLuNu+zn0EPsSMSvV8LIQbg+7SEu8HpFwFDpMb56mhsgRE64s6pJxnAuRikAE9wypQL2lPOFnDfLVaYQUgGcNlhRMlqb/87M1orpcYGpxWgkgHq+QgN63tkmj6wDqP/EyvbBms3IUGzqfIeNoE4HtRYX471U+4IyqXSAU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VVMQF9Hu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bugs.debian.org header.i=@bugs.debian.org header.b="BnXrQw7s"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
-	:CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
-	Content-ID:Content-Description:In-Reply-To;
-	bh=8q5LrSMyW9xx7xxgyfvkgm7fvxRMSAG/G0p25PX1CSU=; b=BnXrQw7smg+2Q5JKSYE/uKNhH/
-	JW7hhgQF7UvOHPj1q6lsdiw8Ggex9rq6xEe4MZfktO37vgXGA8w2Jc4Eb8ViTvJDQ1/AO4QhT2wNJ
-	jLDlx4tso5EPxZ/K927k13A4gCn645b03BXxk+JU07kasG0WfwWcQH8hpLC4ppQQZZBLj4W2I1dw+
-	ejI+/O/aaOUzaib8VIk1bvpHP3L1jxZ35uH7stBJkLD2st33OgslFrNFXP631Ye7E619V7pHzEuwK
-	EIQtHf9/N2+gqZ+hggsn8yeWZDSUJ4zjCvNqWtCokhD5eVMMMlvMta792GU8Rt6ItImy0+CdsmEN9
-	XnJg0Fyg==;
-Received: from debbugs by buxtehude.debian.org with local (Exim 4.96)
-	(envelope-from <debbugs@buxtehude.debian.org>)
-	id 1v8k8s-00FFEY-0k;
-	Tue, 14 Oct 2025 18:53:02 +0000
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VVMQF9Hu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D045C4CEE7;
+	Tue, 14 Oct 2025 20:35:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760474128;
+	bh=9R1aucuZobRn6Ija7EjDWKLa9tcxo5yonZ+ZUmemBag=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=VVMQF9HuPGrzsdp9n/QrLo6qd7IZ1LkKXHJJRUo8sTbk9a55I9OywcTl73NaXrq3o
+	 SZVr3ev/rGCe+uw+DbHGjiDpLAfkoHTSGK1ik2Riv64DspWjRVli91ZhGAcGUzeL63
+	 cRTuLKGXno1hmvApiW6e0mM1TZuhihkpii9e7yUbZMdnpRp6PykzxB1iHlJLpLmY7o
+	 kvC9fBwWFUA4J+pJfpMkYW/fD4Kg4rPke42Q0AWmODcqhpPixFArk7j5ptzWne+DW/
+	 hO7k0cvVcivw3yveRWWcRsUqfdQgE/Tx0NIlM4QyB4HupVHRVsgcOsalAwLiTdjCSm
+	 sKbecK4aeGPQw==
+Date: Tue, 14 Oct 2025 13:35:27 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Oleksandr Natalenko <oleksandr@natalenko.name>,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>, Pavel Reichl <preichl@redhat.com>,
+	Vlastimil Babka <vbabka@suse.cz>,
+	Thorsten Leemhuis <linux@leemhuis.info>
+Subject: Re: [PATCH 2/2] xfs: always warn about deprecated mount options
+Message-ID: <20251014203527.GZ6188@frogsfrogsfrogs>
+References: <20251013233229.GR6188@frogsfrogsfrogs>
+ <20251013233305.GS6188@frogsfrogsfrogs>
+ <aO3RTDjEjz3Lpi8A@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Mailer: MIME-tools 5.510 (Entity 5.510)
-Content-Type: text/plain; charset=utf-8
-From: "Debian Bug Tracking System" <owner@bugs.debian.org>
-To: Bastian Germann <Bastian.Germann@gmx.de>
-CC: linux-xfs@vger.kernel.org
-Subject: Processed: Debian Bug#1117890: xfsprogs: warning logged to system.log
-Message-ID: <handler.s.B1117890.17604679363633116.transcript@bugs.debian.org>
-References: <trinity-5642e09b-4e08-423e-83a5-340542847944-1760467926379@trinity-msg-rest-gmx-gmx-live-654c5495b9-8h8ng> <E1v7qdR-00000002uQg-0kaS@tucano.isti.cnr.it>
-X-Debian-PR-Package: xfsprogs
-X-Debian-PR-Source: xfsprogs
-X-Debian-PR-Message: transcript
-X-Loop: owner@bugs.debian.org
-Date: Tue, 14 Oct 2025 18:53:02 +0000
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aO3RTDjEjz3Lpi8A@infradead.org>
 
-Processing control commands:
+On Mon, Oct 13, 2025 at 09:27:56PM -0700, Christoph Hellwig wrote:
+> Looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-> retitle -1 xfsprogs: Support for systemd option CPUAccounting has been re=
-moved
-Bug #1117890 [xfsprogs] xfsprogs: warning logged to system.log
-Changed Bug title to 'xfsprogs: Support for systemd option CPUAccounting ha=
-s been removed' from 'xfsprogs: warning logged to system.log'.
+Thanks for the review!
 
---=20
-1117890: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1117890
-Debian Bug Tracking System
-Contact owner@bugs.debian.org with problems
+I will also remove the now unnecessary parameters for v2.
+
+--D
