@@ -1,38 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3AED3002BD
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 17:24:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71B71279DC2
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 17:37:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760462684; cv=none; b=teOOxgD+rT36kSj4YPuUo7T6nTvuiHzSsN+UeOKG0RtzG9p6oqbHlr1H2os3iwMn8V5eP57i7H9w65dWYj0VZw9oBjwCfVcAtwtwJd7gNwduTlBVIJI1qgj9d942tXs7U4vvAQVSZVNz8ICChj3wTzhZlhv8P0XDPvechjfNg9I=
+	t=1760463432; cv=none; b=dVWsd13DXLDkabvLSAhm0SZBfyfw6fiv84kjsFbN/sTn/+oNgYOVXFvhe2ycCodxVsvYm18a/V/bCrBx9q6gKARX53z+64sYraefYjzk3FEZvXJ77ABYQ+5veAtPognZ9uC51riXEKUk1eiYdSFMY+ZOlaax0YSq7Dxs1QyY9gc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760462684; c=relaxed/simple;
-	bh=hOPAiV5GDIaAIwovQoPQsj08womC0sxIiDW0Z3R8Z8U=;
+	s=arc-20240116; t=1760463432; c=relaxed/simple;
+	bh=dY/RFrbmWlt8IeoS8JhQFRVZS62JakHON7QI05BM5Pc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JSNH5lt0g+gPyDZi6nZQe/+yV7fv2xmCVqV21IPLS6On3tYuvOWV/VbzzE1HLg8sEF8sQiP8Hg/ectbi5s7lYmtTOeIiKQ12GBhyEc6tCaLERhn9Xignal25DajSC9r5sQ4QUm5v+jcBtfqvWNPBhhvgGT3FneLkEC5UCBDLVoQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GzF/g1p/; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=cePG7T6lBqaBiJnvSjrEGJtxttLvVNLvIa4+odyymDSSpuZ8hTEouu+/1Ffh6q4fxu/zeyoZoxjezlFdyt0yXM2ucvMFPE9U+PLhVFESzGxez8sXZbNIKQJgptqpQc1AduRI+5NXHg1pHS0nAYwTsbB42rj5O0Kg7IZizMov6Ps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=yDmoKVMt; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=2WM08dl6; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=yDmoKVMt; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=2WM08dl6; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GzF/g1p/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71CFAC4CEE7;
-	Tue, 14 Oct 2025 17:24:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760462683;
-	bh=hOPAiV5GDIaAIwovQoPQsj08womC0sxIiDW0Z3R8Z8U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=GzF/g1p/n8yBk3TrKkp8E6WB4SsM6wiq3PI2CtE4HdCr5gtmz3PAL/q5knTkM8tJE
-	 9wF7chvJTnEbHGcu7ITZi3E1dPmE4nfryBBkG2abOGX9HaGBXfJE00oI1M/BGDiCfD
-	 /D9s4QE1SlttG2COGvodNfCnqy8HDdnM+XYI99BwGDXHw2TLChSqKwoK58ZOWN0Yi7
-	 lYW9XwPc8DTadK+K9GO4pXD/xlnz4FQtg/bjdOZBB7ZLarDM1g85ptDwQLwJLtZ9gU
-	 feO87RPrVF8PPPop5TDkZ4phlBypsETG4cAj0f5E2QJ7aai1QFZ3Rf8GmsTQJbXAnb
-	 W7fhgeEMVcIPg==
-Date: Tue, 14 Oct 2025 10:24:42 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Torsten Rupp <torsten.rupp@gmx.net>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: Double alloc/free of cache item
-Message-ID: <20251014172442.GV6188@frogsfrogsfrogs>
-References: <f45c9b48-eb0d-4314-aeb0-6b5e75c54a8e@gmx.net>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="yDmoKVMt";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="2WM08dl6";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="yDmoKVMt";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="2WM08dl6"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 76C2C203BB;
+	Tue, 14 Oct 2025 17:37:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1760463428;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AAlEg30Xh123ICsXxHR1i8eLACocDbvHskeA1BeozEc=;
+	b=yDmoKVMtwLRJOBlla660Ag05yHaNOU1W1IV4a81qJLQLwqxGC/tzhmPsEY7YTuWQLSSusc
+	2291jCfcaCjyFff6ysHIWs13HLYVAPOEznX0vps0yRRO4+BBD3fZAwaTxqQOW1HbUGxcjb
+	+ZEbO3Vcv2kGHiKZVUmyXj5b7OVr+N4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1760463428;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AAlEg30Xh123ICsXxHR1i8eLACocDbvHskeA1BeozEc=;
+	b=2WM08dl6lr7hfNBq0u+y+9D4Fb7mJE8UhxacJqdxQbZMxWliQxqE7oANIJuKqumg4DkUsY
+	rcpsVna643JvdGBQ==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=yDmoKVMt;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=2WM08dl6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1760463428;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AAlEg30Xh123ICsXxHR1i8eLACocDbvHskeA1BeozEc=;
+	b=yDmoKVMtwLRJOBlla660Ag05yHaNOU1W1IV4a81qJLQLwqxGC/tzhmPsEY7YTuWQLSSusc
+	2291jCfcaCjyFff6ysHIWs13HLYVAPOEznX0vps0yRRO4+BBD3fZAwaTxqQOW1HbUGxcjb
+	+ZEbO3Vcv2kGHiKZVUmyXj5b7OVr+N4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1760463428;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AAlEg30Xh123ICsXxHR1i8eLACocDbvHskeA1BeozEc=;
+	b=2WM08dl6lr7hfNBq0u+y+9D4Fb7mJE8UhxacJqdxQbZMxWliQxqE7oANIJuKqumg4DkUsY
+	rcpsVna643JvdGBQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 3BFEF139B0;
+	Tue, 14 Oct 2025 17:37:08 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 5/kaDkSK7mgpMwAAD6G6ig
+	(envelope-from <dsterba@suse.cz>); Tue, 14 Oct 2025 17:37:08 +0000
+Date: Tue, 14 Oct 2025 19:37:06 +0200
+From: David Sterba <dsterba@suse.cz>
+To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc: hch <hch@lst.de>, David Sterba <dsterba@suse.com>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Eric Van Hensbergen <ericvh@kernel.org>,
+	Latchesar Ionkov <lucho@ionkov.net>,
+	Dominique Martinet <asmadeus@codewreck.org>,
+	Christian Schoenebeck <linux_oss@crudebyte.com>,
+	Chris Mason <clm@fb.com>, Mark Fasheh <mark@fasheh.com>,
+	Joel Becker <jlbec@evilplan.org>,
+	Joseph Qi <joseph.qi@linux.alibaba.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>,
+	Josef Bacik <josef@toxicpanda.com>, Jan Kara <jack@suse.cz>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"v9fs@lists.linux.dev" <v9fs@lists.linux.dev>,
+	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+	"linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+	"jfs-discussion@lists.sourceforge.net" <jfs-discussion@lists.sourceforge.net>,
+	"ocfs2-devel@lists.linux.dev" <ocfs2-devel@lists.linux.dev>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-mm@kvack.org" <linux-mm@kvack.org>
+Subject: Re: [PATCH 04/10] btrfs: use the local tmp_inode variable in
+ start_delalloc_inodes
+Message-ID: <20251014173706.GB13776@suse.cz>
+Reply-To: dsterba@suse.cz
+References: <20251013025808.4111128-1-hch@lst.de>
+ <20251013025808.4111128-5-hch@lst.de>
+ <aae79ea0-f056-4da7-8a87-4d4fd6aea85f@wdc.com>
+ <20251014044421.GA30920@lst.de>
+ <57d7136c-b209-4f8f-bb6f-8ced354d205a@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,69 +113,56 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f45c9b48-eb0d-4314-aeb0-6b5e75c54a8e@gmx.net>
+In-Reply-To: <57d7136c-b209-4f8f-bb6f-8ced354d205a@wdc.com>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: 76C2C203BB
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.21 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	HAS_REPLYTO(0.30)[dsterba@suse.cz];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	MIME_TRACE(0.00)[0:+];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	TO_DN_SOME(0.00)[];
+	TO_DN_EQ_ADDR_SOME(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCPT_COUNT_TWELVE(0.00)[25];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	REPLYTO_ADDR_EQ_FROM(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	R_RATELIMIT(0.00)[to_ip_from(RL9qow8fch3pfgh43469ius4rs)];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	REPLYTO_DOM_NEQ_TO_DOM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -4.21
 
-On Tue, Oct 14, 2025 at 08:51:12AM +0200, Torsten Rupp wrote:
-> Dear XFS developers,
-> 
-> there is a double alloc/free of the cache item "xfs_extfree_item_cache" in
-> xfsprogs 6.16.0. If the environment variable LIBXFS_LEAK_CHECK is set this
-> also cause a segmenation fault due to a NULL pointer access (the cache item
-> is already freed). Please find attached a patch which fix this issue.
-> 
-> I discussed this issue and the fix already with Darrick.
-> 
-> Thank you for your work on xfsprogs!
-> 
-> Best regards,
-> 
-> Torsten
+On Tue, Oct 14, 2025 at 07:02:11AM +0000, Johannes Thumshirn wrote:
+> On 10/14/25 6:44 AM, hch wrote:
+> > On Mon, Oct 13, 2025 at 08:11:35AM +0000, Johannes Thumshirn wrote:
+> >> If you have to repost this for some reason, can you rename tmp_inode to
+> >> vfs_inode or sth like that?
+> >>
+> >> The name is really confusing and the commit introducing it doesn't
+> >> describe it really either.
+> > It is.  vfs_inode is kinda weird, too.  The problem is that inode
+> > is used for the btrfs_inode.  But if there's consensus on a name
+> > I'll happily change it.
+> >
+> I unfortunately don't have one :( David?
 
-> From 4c669fd1db79564d8b5240c7464dd28f3bc27bb1 Mon Sep 17 00:00:00 2001
-> From: Torsten Rupp <torsten.rupp@gmx.net>
-> Date: Sun, 12 Oct 2025 09:23:58 +0200
-> Subject: [PATCH 1/1] Fix alloc/free of cache item
-> 
-> xfs_extfree_item_cache is allocated and freed twice. Remove the
-> obsolete alloc/free.
-> 
-> Signed-off-by: Torsten Rupp <torsten.rupp@gmx.net>
-
-Usually patches are pasted inline in the message and not as attachments
-to avoid picky MTAs, but whatever, it got through lore/vger.
-
-Looks correct,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
---D
-
-> ---
->  libxfs/init.c | 4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/libxfs/init.c b/libxfs/init.c
-> index 393a9467..a5e89853 100644
-> --- a/libxfs/init.c
-> +++ b/libxfs/init.c
-> @@ -214,9 +214,6 @@ init_caches(void)
->  		fprintf(stderr, "Could not allocate btree cursor caches.\n");
->  		abort();
->  	}
-> -	xfs_extfree_item_cache = kmem_cache_init(
-> -			sizeof(struct xfs_extent_free_item),
-> -			"xfs_extfree_item");
->  	xfs_trans_cache = kmem_cache_init(
->  			sizeof(struct xfs_trans), "xfs_trans");
->  	xfs_parent_args_cache = kmem_cache_init(
-> @@ -236,7 +233,6 @@ destroy_caches(void)
->  	leaked += kmem_cache_destroy(xfs_da_state_cache);
->  	xfs_defer_destroy_item_caches();
->  	xfs_btree_destroy_cur_caches();
-> -	leaked += kmem_cache_destroy(xfs_extfree_item_cache);
->  	leaked += kmem_cache_destroy(xfs_trans_cache);
->  	leaked += kmem_cache_destroy(xfs_parent_args_cache);
->  
-> -- 
-> 2.43.0
-> 
-
+For this series it's fine to use tmp_inode as it's already there, we can
+rename it later.
