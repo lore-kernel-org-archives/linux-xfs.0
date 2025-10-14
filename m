@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA25224DCE6;
-	Tue, 14 Oct 2025 17:52:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E255B274B58
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 18:20:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760464336; cv=none; b=JxmawfY7WuuJ+fgpb0CDZcJH4sohROyKoYAtI+rP8vdzClUVP0QsHZdaDBTlvhYPMXqpIa/RQC8sea5EXPANynDNPevB4nOqkVMgfX07mMZbmZmSydKZyV3bVDPCYFbhqTqSJOexRnS8vje6lzc0zo2owoDYJZcnaQXmR3mW9hY=
+	t=1760466060; cv=none; b=gUeMiLhvZezQg9DHt+bfdCNZDxPRCLimvAq6OawJVRFmUVpGnTpNZMzmQjNewuahjKFj86ZbCcvcQwpqbiMGVc5R4q0vgWzOF1x1jiwouFiC0NyqP2hTICJQSIS2cSD39S3Y407WZcDPadATjtMPddSROoBTcFuaLIGBArSdceY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760464336; c=relaxed/simple;
-	bh=GVdXnKSzFxC1fusf6WmdE8ZRuGvCFvTlScHIB6DDkSQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=JeE6Q5eTY+oLkvNGeS2ggPOtGa24B/N9GqegHMJ3q/qTHl0Qhy6sowxLH8YYRYcJq7L3sQ67OSaONM6+eJL8i3BVMBLlJqJ9RBtX9mMzoLLl5Fe5HyJTkNzJJyghTrP6rAnM3i+szE8uvSpBrxo37uJZXTeGxZSCSLNtCHdP/FQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EX66bqz3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760466060; c=relaxed/simple;
+	bh=a3aEh0e41685j+1yEoSmrueQz1C4DMggRqVZtKrXmXs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KTH1B8RYKnftyiyc9pqqcdLQVre/KoHD+wDc/zE88wOAz6pBkpGvnLvHLsOvr3zRsOllgYCagadxPKk+x/DxcFc3VNlbUXdk5bUzfOlritzsCTmDKv+L1NcHp4Xd6Zu7heLWnphM14I4ZVRFju9v5QXkCMxZkU+3zSRIqmNUmEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nVOW1+at; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EX66bqz3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66430C4CEE7;
-	Tue, 14 Oct 2025 17:52:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nVOW1+at"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77127C4CEE7;
+	Tue, 14 Oct 2025 18:20:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760464335;
-	bh=GVdXnKSzFxC1fusf6WmdE8ZRuGvCFvTlScHIB6DDkSQ=;
-	h=Date:From:To:Cc:Subject:From;
-	b=EX66bqz3LCrk7qT3cBb1T22aApDn8VSKyFoPU70HqIhOfow7M3AMIskIcYbOfonHc
-	 AhTTn1w1QgbVAukW+n5HUfqFdtZXgHebnQBdfprpAUl/fc9VyGuQa9MHogjRV0pLJI
-	 dg+pUPCReF6yINar28kgy0SuoW8rzxdAaQa4cheIyNtHi03/GTl4XvP/BjwRG5zqQa
-	 ZXo0VenEAT86IqxhhiqOcGRefG+9NgsvhUGtdPaymhxdvQcg+3Bow+wBcung0drNnL
-	 cwaKWwB/BHafig81SxnqIAMgZmFSML42uN3R+EUdGRshV4dM27mdALAORtVhijkeRH
-	 pCFiC4XoVaGAw==
-Date: Tue, 14 Oct 2025 10:52:14 -0700
+	s=k20201202; t=1760466059;
+	bh=a3aEh0e41685j+1yEoSmrueQz1C4DMggRqVZtKrXmXs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nVOW1+atVeBVrqGdSS/05LfRMAY+y9dAibchnQFRNtfWwpJcR5wmaHpBP/+vmbSTG
+	 sEnUtE8HXQXiITdApwMVOao8bCHY8L5G9BEPxQ0bj3e9cyLyspt3Bnb1t2bnUaVXAU
+	 nACf504DoGnuYa4CUVg1DjkfUWPMyhQSOxfCG8QmpsM/x0fP1Xnxv26IDde7ns0GxR
+	 YWIpzxgGr+hKMGGjpT3lJZZeyN0rmVDNAHezX/Jgnl2FxxcKic529pGzYX7WCeIYh/
+	 8t+OIPT7CBKtUZtalnU+sFX3cdbETbkyy179T0Kj6b/Hv4ijRJ7y40LJrss1ZGKkIU
+	 fS/eiI789yr9A==
+Date: Tue, 14 Oct 2025 11:20:58 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: kirill@shutemov.name, akpm@linux-foundation.org
-Cc: linux-mm <linux-mm@kvack.org>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	xfs <linux-xfs@vger.kernel.org>,
-	Matthew Wilcox <willy@infradead.org>
-Subject: Regression in generic/749 with 8k fsblock size on 6.18-rc1
-Message-ID: <20251014175214.GW6188@frogsfrogsfrogs>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Carlos Maiolino <cem@kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: don't set bt_nr_sectors to a negative number
+Message-ID: <20251014182058.GX6188@frogsfrogsfrogs>
+References: <20251013163310.GM6188@frogsfrogsfrogs>
+ <ec2bc94bc73a42ab61019b8de5951359d383247d.camel@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,53 +43,68 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <ec2bc94bc73a42ab61019b8de5951359d383247d.camel@gmail.com>
 
-Hi there,
+On Tue, Oct 14, 2025 at 12:17:30PM +0530, Nirjhar Roy (IBM) wrote:
+> On Mon, 2025-10-13 at 09:33 -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > xfs_daddr_t is a signed type, which means that xfs_buf_map_verify is
+> > using a signed comparison.  This causes problems if bt_nr_sectors is
+> > never overridden (e.g. in the case of an xfbtree for rmap btree repairs)
+> > because even daddr 0 can't pass the verifier test in that case.
+> Okay so the check "if (map->bm_bn < 0 || map->bm_bn >= btp->bt_nr_sectors) {" will be true of the
+> default value of btp->bt_nr_sectors = -1 and the verifier will fail(incorrectly), right?
+> Why would we not want to override bt_nr_sectors? If there is device, then shouldn't it always have a
+> buffer target with a certain number of bt_nr_sectors?
 
-On 6.18-rc1, generic/749[1] running on XFS with an 8k fsblock size fails
-with the following:
-
---- /run/fstests/bin/tests/generic/749.out	2025-07-15 14:45:15.170416031 -0700
-+++ /var/tmp/fstests/generic/749.out.bad	2025-10-13 17:48:53.079872054 -0700
-@@ -1,2 +1,10 @@
- QA output created by 749
-+Expected SIGBUS when mmap() reading beyond page boundary
-+Expected SIGBUS when mmap() writing beyond page boundary
-+Expected SIGBUS when mmap() reading beyond page boundary
-+Expected SIGBUS when mmap() writing beyond page boundary
-+Expected SIGBUS when mmap() reading beyond page boundary
-+Expected SIGBUS when mmap() writing beyond page boundary
-+Expected SIGBUS when mmap() reading beyond page boundary
-+Expected SIGBUS when mmap() writing beyond page boundary
- Silence is golden
-
-This test creates small files of various sizes, maps the EOF block, and
-checks that you can read and write to the mmap'd page up to (but not
-beyond) the next page boundary.
-
-For 8k fsblock filesystems on x86, the pagecache creates a single 8k
-folio to cache the entire fsblock containing EOF.  If EOF is in the
-first 4096 bytes of that 8k fsblock, then it should be possible to do a
-mmap read/write of the first 4k, but not the second 4k.  Memory accesses
-to the second 4096 bytes should produce a SIGBUS.
-
-I think the changes introduced in the two patches:
-
- * mm/fault: Try to map the entire file folio in finish_fault()
- * mm/filemap: Map entire large folio faultaround
-
-break that SIGBUS behavior by mapping the entire 8k folio into the
-process.
-
-Reverting thes two patches on an 6.18-rc1 kernel makes the regression go
-away, but only by clumsily reverting to the 6.17 behavior where the
-pagecache touched each base page of a large folio instead of doing
-something to the whole folio at once.  I don't know what would be a good
-solution, since you only need to do page-at-a-time for the EOF page, but
-there's not really a good way to coordinate with i_size updates.
-
-Did your testing also demonstrate this regression?
+Online repair creates tmpfs files in which to stage repairs, and uses
+the xfbtree buftarg so that it can build a replacement rmapbt in a tmpfs
+file.  I guess xfbtree should be setting bt_nr_sectors to (max pagecache
+size / 512) but in practicality nobody should ever have a 16TB rmap
+btree on 32-bit or an 8EB rmap btree on 64-bit.
 
 --D
 
-[1] https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git/tree/tests/generic/749?h=for-next
+> --NR
+> > 
+> > Define an explicit max constant and set the initial bt_nr_sectors to a
+> > positive value.
+> > 
+> > Found by xfs/422.
+> > 
+> > Cc: <stable@vger.kernel.org> # v6.18-rc1
+> > Fixes: 42852fe57c6d2a ("xfs: track the number of blocks in each buftarg")
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  fs/xfs/xfs_buf.h |    1 +
+> >  fs/xfs/xfs_buf.c |    2 +-
+> >  2 files changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> > index 8fa7bdf59c9110..e25cd2a160f31c 100644
+> > --- a/fs/xfs/xfs_buf.h
+> > +++ b/fs/xfs/xfs_buf.h
+> > @@ -22,6 +22,7 @@ extern struct kmem_cache *xfs_buf_cache;
+> >   */
+> >  struct xfs_buf;
+> >  
+> > +#define XFS_BUF_DADDR_MAX	((xfs_daddr_t) S64_MAX)
+> >  #define XFS_BUF_DADDR_NULL	((xfs_daddr_t) (-1LL))
+> >  
+> >  #define XBF_READ	 (1u << 0) /* buffer intended for reading from device */
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index 773d959965dc29..47edf3041631bb 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -1751,7 +1751,7 @@ xfs_init_buftarg(
+> >  	const char			*descr)
+> >  {
+> >  	/* The maximum size of the buftarg is only known once the sb is read. */
+> > -	btp->bt_nr_sectors = (xfs_daddr_t)-1;
+> > +	btp->bt_nr_sectors = XFS_BUF_DADDR_MAX;
+> >  
+> >  	/* Set up device logical sector size mask */
+> >  	btp->bt_logical_sectorsize = logical_sectorsize;
+> 
+> 
