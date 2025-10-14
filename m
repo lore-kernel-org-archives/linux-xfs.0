@@ -1,185 +1,109 @@
-Received: from fhigh-a3-smtp.messagingengine.com (fhigh-a3-smtp.messagingengine.com [103.168.172.154])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 458D9246BDE;
-	Tue, 14 Oct 2025 15:36:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.154
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3AED3002BD
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 17:24:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760456179; cv=none; b=QhE2vKxxwHYoXohIxsVfCdOkyKUBFFZn0Wnq4JzF6uA2cv2fJTkobqNCg04czJc3qV/yVJhUse6O9YQLyVZA7DF1W41T5d3uIDbvPxxCRurnQSn3AMmZghsyBk8djEMtUVwIegJ4SXc6ejDxdf6JBzGDey6J8cOgxD91Gg9Zpws=
+	t=1760462684; cv=none; b=teOOxgD+rT36kSj4YPuUo7T6nTvuiHzSsN+UeOKG0RtzG9p6oqbHlr1H2os3iwMn8V5eP57i7H9w65dWYj0VZw9oBjwCfVcAtwtwJd7gNwduTlBVIJI1qgj9d942tXs7U4vvAQVSZVNz8ICChj3wTzhZlhv8P0XDPvechjfNg9I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760456179; c=relaxed/simple;
-	bh=1Q4B2LoqgxHjlKYvfaIrIlwosXhttBzfMwZzefNT4lQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GNSaZLthjjXUNMljWlFGCZN1/AW5sGMmwdhdw8zSCva6uaweuUvE19gvxpoY93rEIxPxRmrllhCxu3y/dHeCyLzq5JZ90DhXzL/pTMT5VhHGeHniTj28o+pq0xmx85HK354qPhDdELCR8F/8htkjKVE3EmGZYTm+abZJUo+deZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net; spf=pass smtp.mailfrom=sandeen.net; dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b=uurpsOuU; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=OoRq+oX2; arc=none smtp.client-ip=103.168.172.154
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sandeen.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandeen.net
+	s=arc-20240116; t=1760462684; c=relaxed/simple;
+	bh=hOPAiV5GDIaAIwovQoPQsj08womC0sxIiDW0Z3R8Z8U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JSNH5lt0g+gPyDZi6nZQe/+yV7fv2xmCVqV21IPLS6On3tYuvOWV/VbzzE1HLg8sEF8sQiP8Hg/ectbi5s7lYmtTOeIiKQ12GBhyEc6tCaLERhn9Xignal25DajSC9r5sQ4QUm5v+jcBtfqvWNPBhhvgGT3FneLkEC5UCBDLVoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GzF/g1p/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandeen.net header.i=@sandeen.net header.b="uurpsOuU";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="OoRq+oX2"
-Received: from phl-compute-09.internal (phl-compute-09.internal [10.202.2.49])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 4923914000F7;
-	Tue, 14 Oct 2025 11:36:16 -0400 (EDT)
-Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-09.internal (MEProxy); Tue, 14 Oct 2025 11:36:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1760456176;
-	 x=1760542576; bh=QVV7mPNppq7WyXnr2ey3xLD8yg4b6Mf/fYN2soYMBG0=; b=
-	uurpsOuU4/elzoeAQHYIajbf5MdhSIjVZmCM8SQY/gjPxONPA+Lh4WmTzcRBKmRj
-	aj8qYD/U4GrcV4xYprvgGdMKk+qy76btX1fesQEHbn+INt5xwa9rTQ8KwQf2ggQi
-	hyziFDHXUoZUONXpjolISFfl1cuxHyDrn9+xBqoiPCYttzHqpYx4RCIy4b/fm9zz
-	RXEjEBpqgO79ZdUovroUynDg7g5M8gGHiNPJr0ESUsvsoODqOOXYciEMKgarwPXG
-	UzKBI3BlXwpDHbhdbR8xnz8EyXmJoCgN+1VZr3xj9JpwQs19BJ88qUMkG7FgBMhW
-	Oy1Jtdap669ucCUnftK6Hw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1760456176; x=
-	1760542576; bh=QVV7mPNppq7WyXnr2ey3xLD8yg4b6Mf/fYN2soYMBG0=; b=O
-	oRq+oX2PNCMQJBeaXuIVAfELdqRq+JWoyNdA4HOYbRuw51pLdYG1n1g9Jzj7Y3is
-	WoQIElTgqABRU2xuOAraYGwwxnOyeQbqtho9CXZvq+hWUruK3LkFOGB2xvC5cLy1
-	5quleW7FKMvgUM6ljlGOSb2zfWMu1NXe6aNplWARWPQKnteTpBVS7QieCpmAah9I
-	h7I0Eve+0S0ENKAdQ2GN3f8XHOHvQvFqXh1gzuHYNr2qPbYBAFnkruE1WUYXb64Z
-	p6wen4pRXO2lNk52GSlC8lBe3dSd2ugAGmC4wuvDezl1vIzhgKVV5dt4hosqPJtm
-	bZpCc+Aws5+259pKw9WyA==
-X-ME-Sender: <xms:723uaEXcf_MUA3pdV6MDQ2aUSdPE8n1WNW5FQ_QCcey6WAAeb4RJ3Q>
-    <xme:723uaGbVEkyQjYavpH5xNfpWQtBCTzAoGKnsks9MbGCrGUGQfmWUhiMshRuCZBReb
-    O0nOB7Ilp41UQBY6PQQ0MMwqbBshpgW6Wb9juCtJ4HJlHVmuSoe-g>
-X-ME-Received: <xmr:723uaC22Byv9BLqOZpPruocv_6XcBeyY4qWuT45_iU-LzkwVMEfZiDQklCY5Jdui8OaODKxOTG-aV9OtsSnoqiw>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdeggdduvddtleduucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepkfffgggfuffvvehfhfgjtgfgsehtjeertddtvdejnecuhfhrohhmpefgrhhitgcu
-    ufgrnhguvggvnhcuoehsrghnuggvvghnsehsrghnuggvvghnrdhnvghtqeenucggtffrrg
-    htthgvrhhnpeevieekueetfeeujedtheeffedvgeffiedvjeejleffhfeggeejuedtjeeu
-    lefhvdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    hsrghnuggvvghnsehsrghnuggvvghnrdhnvghtpdhnsggprhgtphhtthhopeegpdhmohgu
-    vgepshhmthhpohhuthdprhgtphhtthhopegujhifohhngheskhgvrhhnvghlrdhorhhgpd
-    hrtghpthhtoheplhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgt
-    phhtthhopehfshhtvghsthhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoh
-    ephhgthhesihhnfhhrrgguvggrugdrohhrgh
-X-ME-Proxy: <xmx:723uaAhNB4ZkvXduwtrNmyw7Zwwua5nHQtVjXkQ3XlIiVA_xSqlw9w>
-    <xmx:723uaOYPnBtMnYjIQ9Vk5lE381sOAIBtc8OLC_3slDGFq5ufJD_yiQ>
-    <xmx:723uaIRP8C6tm-WNM0QqYCdyhLGuh4k9mzBokC6S21M3ZnfQV-05KA>
-    <xmx:723uaBQGhUzeKCHUWlnihsCW6-XNYZOf0RWi-NPCpc6O-hFiofYBAw>
-    <xmx:8G3uaP-X1ko-WFjG4e43ESR4irBvPY6JGdCvZRKdL2WV-U7PWtvTIjoz>
-Feedback-ID: i2b59495a:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 14 Oct 2025 11:36:15 -0400 (EDT)
-Message-ID: <f41be58e-071b-4179-a0e2-7fbbef1e534e@sandeen.net>
-Date: Tue, 14 Oct 2025 10:36:14 -0500
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GzF/g1p/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71CFAC4CEE7;
+	Tue, 14 Oct 2025 17:24:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760462683;
+	bh=hOPAiV5GDIaAIwovQoPQsj08womC0sxIiDW0Z3R8Z8U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=GzF/g1p/n8yBk3TrKkp8E6WB4SsM6wiq3PI2CtE4HdCr5gtmz3PAL/q5knTkM8tJE
+	 9wF7chvJTnEbHGcu7ITZi3E1dPmE4nfryBBkG2abOGX9HaGBXfJE00oI1M/BGDiCfD
+	 /D9s4QE1SlttG2COGvodNfCnqy8HDdnM+XYI99BwGDXHw2TLChSqKwoK58ZOWN0Yi7
+	 lYW9XwPc8DTadK+K9GO4pXD/xlnz4FQtg/bjdOZBB7ZLarDM1g85ptDwQLwJLtZ9gU
+	 feO87RPrVF8PPPop5TDkZ4phlBypsETG4cAj0f5E2QJ7aai1QFZ3Rf8GmsTQJbXAnb
+	 W7fhgeEMVcIPg==
+Date: Tue, 14 Oct 2025 10:24:42 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Torsten Rupp <torsten.rupp@gmx.net>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: Double alloc/free of cache item
+Message-ID: <20251014172442.GV6188@frogsfrogsfrogs>
+References: <f45c9b48-eb0d-4314-aeb0-6b5e75c54a8e@gmx.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: mkfs.xfs "concurrency" change concerns
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
- Christoph Hellwig <hch@infradead.org>
-References: <84c8a5e5-938d-4745-996d-4237009c9cc5@sandeen.net>
- <20251010191713.GE6188@frogsfrogsfrogs>
- <f7d5eaab-c2fe-4a11-82d5-a7c5ca563e75@sandeen.net>
- <20251014023228.GU6188@frogsfrogsfrogs>
-Content-Language: en-US
-From: Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <20251014023228.GU6188@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f45c9b48-eb0d-4314-aeb0-6b5e75c54a8e@gmx.net>
 
-On 10/13/25 9:32 PM, Darrick J. Wong wrote:
->> This was 6.17. The backing file get the nonrotational/concurrency treatment
->> but the loop device does. This probably says more about the xfsprogs test
->> (ddev_is_solidstate) than the kernel.
->>
->> ioctl(3, BLKROTATIONAL, 0x7ffd9d48f696) = -1 ENOTTY (Inappropriate ioctl for device)
->>
->> fails, so ddev_is_solidstate returns false. For the loop dev, BLKROTATIONAL
->> says rotational == 0 so we get true for solidstate.
->>
->> But TBH this might be the right answer for mkfsing a file directly, as it is
->> likely an image destined for another machine.
->>
->> Perhaps ddev_is_solidstate() should default to "not solidstate" for regular
->> files /and/ loopback devices if possible?
-> It's *possible*, but why would mkfs ignore what the kernel tells us?
+On Tue, Oct 14, 2025 at 08:51:12AM +0200, Torsten Rupp wrote:
+> Dear XFS developers,
+> 
+> there is a double alloc/free of the cache item "xfs_extfree_item_cache" in
+> xfsprogs 6.16.0. If the environment variable LIBXFS_LEAK_CHECK is set this
+> also cause a segmenation fault due to a NULL pointer access (the cache item
+> is already freed). Please find attached a patch which fix this issue.
+> 
+> I discussed this issue and the fix already with Darrick.
+> 
+> Thank you for your work on xfsprogs!
+> 
+> Best regards,
+> 
+> Torsten
 
-Because for one, it's not reliable or consistent. A loop device and its backing
-file are on the same storage, of course. We get different answers when we try to
-query one vs the other via the ioctl, currently.
+> From 4c669fd1db79564d8b5240c7464dd28f3bc27bb1 Mon Sep 17 00:00:00 2001
+> From: Torsten Rupp <torsten.rupp@gmx.net>
+> Date: Sun, 12 Oct 2025 09:23:58 +0200
+> Subject: [PATCH 1/1] Fix alloc/free of cache item
+> 
+> xfs_extfree_item_cache is allocated and freed twice. Remove the
+> obsolete alloc/free.
+> 
+> Signed-off-by: Torsten Rupp <torsten.rupp@gmx.net>
 
-And for two, the actual access patterns and behavior or writing to a loopback
-file aren't really the same as either flavor of block device any way, right?
+Usually patches are pasted inline in the message and not as attachments
+to avoid picky MTAs, but whatever, it got through lore/vger.
 
-> Suppose you're creating an image file on a filesystem sitting on a SSD
-> with the intent of deploying the image in a mostly non-rotational
-> environment.  Now those people don't get any of the SSD optimizations
-> even though the creator had an SSD
+Looks correct,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Now suppose you're creating it for deployment on rotating storage, instead.
+--D
 
-My point is if the admin is making an image file, mkfs.xfs has absolutely
-no idea where that image will be deployed. The administrator might, and 
-could explicitly set parameters as needed based on that knowledge.
+> ---
+>  libxfs/init.c | 4 ----
+>  1 file changed, 4 deletions(-)
+> 
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index 393a9467..a5e89853 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -214,9 +214,6 @@ init_caches(void)
+>  		fprintf(stderr, "Could not allocate btree cursor caches.\n");
+>  		abort();
+>  	}
+> -	xfs_extfree_item_cache = kmem_cache_init(
+> -			sizeof(struct xfs_extent_free_item),
+> -			"xfs_extfree_item");
+>  	xfs_trans_cache = kmem_cache_init(
+>  			sizeof(struct xfs_trans), "xfs_trans");
+>  	xfs_parent_args_cache = kmem_cache_init(
+> @@ -236,7 +233,6 @@ destroy_caches(void)
+>  	leaked += kmem_cache_destroy(xfs_da_state_cache);
+>  	xfs_defer_destroy_item_caches();
+>  	xfs_btree_destroy_cur_caches();
+> -	leaked += kmem_cache_destroy(xfs_extfree_item_cache);
+>  	leaked += kmem_cache_destroy(xfs_trans_cache);
+>  	leaked += kmem_cache_destroy(xfs_parent_args_cache);
+>  
+> -- 
+> 2.43.0
+> 
 
-...
-
->>> What I tell our internal customers is:
->>>
->>> 1. Defer formatting until deployment whenever possible so that mkfs can
->>> optimize the filesystem for the storage and machine it actually gets.
->>>
->>> 2. If you can't do that, then try to make the image creator machine
->>> match the deployment hardware as much as possible in terms of
->>> rotationality and CPU count.
-
->> I just don't think that's practical in real life when you're creating a
->> generic OS image for wide distribution into unknown environments.
-> Uhhh well I exist in real life too.
-
-Of course...?
-
-I read #2 as "make sure the system you run mkfs on has the same CPU count
-as any system you'll deploy that image on" and that's not possible for
-a generic image destined for wide deployment into varied environments.
-
-rotationality is pretty trivial and is almost always "not rotational" so
-that's not really my major concern. My concern is how CPU count affects
-geometry now, by default, once nonrotationality has been determined.
-
-For example if there's some fleet of machines used to produce
-an OS and its images, the images may vary depending on which build machine
-the image build task lands on unless they all have exactly the same CPU
-count. Or say you build for ppc64, aarch64, and x86_64. By default, you're
-almost guaranteed to get different fs geometry for each. I just think that's
-odd and unexpected. (I understand that it can be overridden but this is
-nothing anyone likely expects to be necessary.)
-
-I agree that it makes sense to optimize for nonrotationality more than we
-have in the past, by default, for image files. I totally get your point about
-how 4 AGs is an optimization for the old world.
-
-So I think my rambling boils down to a few things:
-
-1) mkfsing a file-backed image should be consistent whether you access
-   it through a loop device or you open the file directly. That's not
-   currently the case.
-
-2) When you are a mkfsing a file-backed image instead of a block device,
-   that's a big hint that the filesystem is destined for use on other
-   machines, about which mkfs.xfs knows nothing.
-
-3) To meet in the middle, rather than falling back to the old rotational
-   behavior of 4 AGs for image files, maybe a new image-file-specific
-   heuristic of "more AGs than before, but not scaled by local CPU count"
-   would be reasonable. This would make image file generation yield
-   consistent and repeatable geometries, by default.
-
--Eric
