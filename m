@@ -1,81 +1,39 @@
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7F1F2E7F1A
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 21:57:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CA872E7BB5
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 22:07:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760479049; cv=none; b=tJwr+AhiLEfp5uZXGJXIB4dhdhL7ZCddj7C6mz6K/7mdEwhkBMFwzWHVBIFe4IoZcZ9wGqM5irTw9XSxASIYmmJPPzVmqtoIJ0ubZ8eU0XSlYTQDVfVCrtupWDIQmbsaXooMrGT5GrOnyCuA1AhuGLy5sOyqaO05GPS8vOHhrKY=
+	t=1760479678; cv=none; b=Mqs/hwz3169a8+A5Itr07+bYGXF96p7lo+wVlGUbzEZ5w7dZ5pROS+asTyZ9IdrfRiCnmUvIsuPNsbohyucjFj8/4lxhVcyIen+JkIzMdBFJu39BzcOewMU1dWhje5Fy6bNgdaDZKagBx8rFCbl67mlMOAiWxWDokEtdNBQ/lo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760479049; c=relaxed/simple;
-	bh=lbp/svBrqIT8k+MRq3/jmjxuU8akOPgMPTESYka1epE=;
+	s=arc-20240116; t=1760479678; c=relaxed/simple;
+	bh=el4Fpo1GkcQMVhupmxZLSHknSJ/COvHU4KjBvi/XKiE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ToO18n4zAxte3f8upIs9CTUFp45ZBSffPSnznm21SXRT2SzoAKOHCmi28+tdZTegp9zqTTSbOqongf4T88iRV7VpIh5WaIgAF7MN5DLvbgJb+Z3WkL+9FSiqO8VLNBxjvMr/nRcuLCPZXmcOZ+JgtuNwcfDy5jFxFSjX1uLH3Eg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=T9FjswIc; arc=none smtp.client-ip=209.85.210.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=fxfcdD48nYX8jv/rOWMi2Kzpm2M2EEsOdrNVCItClR+KFQIKnV+H0EIYCNzHqL86ONSpB4YNmO6jU3/k1rWTfvG+XODfZn0/bwJqQIEEFwhmFUfU4yarhi6pZOGVjlJL2jaa4IJEUPJHkrHD01ippnlKeAsCy0jgZJWkHhfPLBo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cc2OurqY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="T9FjswIc"
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-78118e163e5so295559b3a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 14:57:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1760479046; x=1761083846; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=AL/bnV/py/dxrrqchUFB69kdjG2EwxKxcNMsAmNeKP0=;
-        b=T9FjswIcdHH/j2782D1jjnXNP42OV1TStmHEnhaKyPrqOsbVq9lQfvfZv3GCqPnHD8
-         FexeoNXr3/gm3oCR/0fP2A3kMQ4O8hZjZlZs5bHR6KK7D52M04Q8LLKmoNukfj521A3p
-         sx4DxPtKTjzkrOpxhir6wMCuPKzdV7iifb99ogfvN80U8/qJNKEJttNWXwOGOxyovtPt
-         1KybvFhAZBPZ7QT3cLgvrcVjxoWkmfgcEIbeRc0d7Kf044/O1eXmAKkl6zfRrqnsnBAZ
-         ZrXMMCoeBhowPB7sMJ/esusntK1LQWjp/Pc4IlmJ2IJBA4N+e8cCd1lN8kPIsP3nlgzP
-         zp9g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760479046; x=1761083846;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=AL/bnV/py/dxrrqchUFB69kdjG2EwxKxcNMsAmNeKP0=;
-        b=Y6ZnURsNbvdz3MvmwqAQBbYUyVQEne51iooh/KcXtLzBcHgiaqJkXux3PRx/TnP1Wh
-         e5YNZL9PX88upS55iO4RbdQ4oeY21O7RZztmtIu9BZquhRs0NyG2Rdi3sW+oUWHzm9Lk
-         gqdMhqoSq5FMkOpMffNR89F02k4RmIhnLqkDmwQDXSFJxgI28fbfTfnvZg+DT7AvcHRT
-         Xf73zg08ZFnmAdwWj3cgNAd9RdMoDAnkMqd5qJB0Vm55c86ySJ24LtPmdSyzKRg/anQI
-         sOKSgPWiBfrwtzeQP1D7eA+6WE35AgRQ5mstSQj65XDNSZX/i1kHbNn0q+cJUlMCrOps
-         KbTg==
-X-Forwarded-Encrypted: i=1; AJvYcCXHXNrxomaQSjmQhnoFfWzi6+aqpla2cv43+dEAHa/i5QNHXDJdBRWNP1wqy8sotMzufAlMYTjZ9RM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw/Gq+Tidk/5vmuOLyMPQjd4zfnekotQmNndFDiBFJ4l24nS5Ls
-	DRiwNBTd3yWhPSDJDHKsHS5tDZsyddlhikuiuURy2aOduy6X6MwI/UOGGx6jAiP5v38=
-X-Gm-Gg: ASbGncvrSMSZT0myOhke04NqsMyanACYnBI6TQnvcvEOkUBT4AtPQtE9sQVYqsZnzix
-	s4oNIABYAQgCUOtNN17uG/zoSbwmPQvXYogDXjhm8VMt3mkCf3kj/vW8qWNZNlcdj5JjK2F5GTf
-	PH8gxzIGvIEUg8/B+yDRpfcMWPzcJBdHK9OjUJBunInijXEwgBMA/gVgrdjIq+74JuUF0sN8XaQ
-	zzDM6JU2Ct3TYKo0fp1YSuMzOD1CrtPYJ5Cx12afTG83Qt4U5tsWiPDG8T18HX5VzKffayS03bE
-	Y/uoO3Oii0lvYU3jAa78rKhW2SnimpjoFksvDKPPQeDjPAlLepmpFJDZiCmvwcAgIiUc72KRewP
-	4f1YhK81NcsTevmWTxlZbQC8LaySnGsOkfpHPw8GCT29b0J0A2IbX9aZRHg/+XzaymRyGD7DR7o
-	zNbE7pWihfSXFBiPIRxbrpCaeuE8PQvwHUFw44zw==
-X-Google-Smtp-Source: AGHT+IFEm7YEffZsxkb8K+nehDd+qD29oTSduQqQSjJ7xgEV6CAlDHsQGWe8Y3vIo1bRLa8jllHUlA==
-X-Received: by 2002:a05:6a21:3383:b0:2ac:7445:4947 with SMTP id adf61e73a8af0-32da8f7b6b6mr32112486637.19.1760479045581;
-        Tue, 14 Oct 2025 14:57:25 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b678dcbf919sm12945398a12.9.2025.10.14.14.57.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Oct 2025 14:57:24 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1v8n1G-0000000EtZi-0ICM;
-	Wed, 15 Oct 2025 08:57:22 +1100
-Date: Wed, 15 Oct 2025 08:57:22 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Jan Kara <jack@suse.cz>
-Cc: Mateusz Guzik <mjguzik@gmail.com>, brauner@kernel.org,
-	viro@zeniv.linux.org.uk, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, josef@toxicpanda.com,
-	kernel-team@fb.com, amir73il@gmail.com, linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-	ceph-devel@vger.kernel.org, linux-unionfs@vger.kernel.org
-Subject: Re: [PATCH v7 03/14] fs: provide accessors for ->i_state
-Message-ID: <aO7HQkF8UOfjXGcd@dread.disaster.area>
-References: <20251009075929.1203950-1-mjguzik@gmail.com>
- <20251009075929.1203950-4-mjguzik@gmail.com>
- <h2etb4acmmlmcvvfyh2zbwgy7bd4xeuqqyciqjw6k5zd3thmzq@vwhxpsoauli7>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cc2OurqY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEFCAC4CEE7;
+	Tue, 14 Oct 2025 22:07:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760479677;
+	bh=el4Fpo1GkcQMVhupmxZLSHknSJ/COvHU4KjBvi/XKiE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Cc2OurqYSBIfRMGjimXaEZ1ztf7LApBm8rP+y7WBEIsjXiF5Nk6jue+wQamj68YLA
+	 2jxGTPLxdRuc+o7NAR967JjSnmfG396XxPc/lbL5s4aWea0tkZ6Dt+oFJyfwCa2NG8
+	 oYXT1V8RqWPD8Qq1yk0eQUHL168HTnRVWdUlGVUeRdG0u922VXyxKgR/pW53ug8rb/
+	 c99B1i52c5d70v4DgcGfBXddi9ZlUv/lV1Sl7XB65rUMAja+3HeP/GDNQy7tyCLbtf
+	 QB8IY7MopjAv9ijpZWbbDpvzVeSm0fySUjXn/jFy9tES3tSfrGZgX3hMNALy8DOXl/
+	 wQeHxA0pLQeQg==
+Date: Tue, 14 Oct 2025 15:07:57 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/9] xfs: remove xlog_in_core_2_t
+Message-ID: <20251014220757.GL6188@frogsfrogsfrogs>
+References: <20251013024228.4109032-1-hch@lst.de>
+ <20251013024228.4109032-7-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -84,36 +42,211 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <h2etb4acmmlmcvvfyh2zbwgy7bd4xeuqqyciqjw6k5zd3thmzq@vwhxpsoauli7>
+In-Reply-To: <20251013024228.4109032-7-hch@lst.de>
 
-On Fri, Oct 10, 2025 at 04:44:19PM +0200, Jan Kara wrote:
-> On Thu 09-10-25 09:59:17, Mateusz Guzik wrote:
-> > +static inline void inode_state_set_raw(struct inode *inode,
-> > +				       enum inode_state_flags_enum flags)
-> > +{
-> > +	WRITE_ONCE(inode->i_state, inode->i_state | flags);
-> > +}
+On Mon, Oct 13, 2025 at 11:42:10AM +0900, Christoph Hellwig wrote:
+> xlog_in_core_2_t is a really odd type, not only is it grossly
+> misnamed because it actually is an on-disk structure, but it also
+> reprents the actual on-disk structure in a rather odd way.
 > 
-> I think this shouldn't really exist as it is dangerous to use and if we
-> deal with XFS, nobody will actually need this function.
+> A v1 or small v2 log header look like:
+> 
+> 	+-----------------------+
+> 	|      xlog_record      |
+> 	+-----------------------+
+> 
+> while larger v2 log headers look like:
+> 
+> 	+-----------------------+
+> 	|      xlog_record      |
+> 	+-----------------------+
+> 	|  xlog_rec_ext_header  |
+> 	+-------------------+---+
+> 	|         .....         |
+> 	+-----------------------+
+> 	|  xlog_rec_ext_header  |
+> 	+-----------------------+
+> 
+> I.e., the ext headers are a variable sized array at the end of the
+> header.  So instead of declaring a union of xlog_rec_header,
+> xlog_rec_ext_header and padding to BBSIZE, add the proper padding to
+> struct struct xlog_rec_header and struct xlog_rec_ext_header, and
+> add a variable sized array of the latter to the former.  This also
+> exposes the somewhat unusual scope of the log checksums, which is
+> made explicitly now by adding proper padding and macro designating
+> the actual payload length.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_log_format.h | 31 +++++++++++++++----------------
+>  fs/xfs/libxfs/xfs_ondisk.h     |  6 ++++--
+>  fs/xfs/xfs_log.c               | 21 ++++++---------------
+>  fs/xfs/xfs_log_priv.h          |  3 +--
+>  4 files changed, 26 insertions(+), 35 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> index 91a841ea5bb3..4cb69bd285ca 100644
+> --- a/fs/xfs/libxfs/xfs_log_format.h
+> +++ b/fs/xfs/libxfs/xfs_log_format.h
+> @@ -126,6 +126,16 @@ struct xlog_op_header {
+>  #define XLOG_FMT XLOG_FMT_LINUX_LE
+>  #endif
+>  
+> +struct xlog_rec_ext_header {
+> +	__be32		xh_cycle;	/* write cycle of log */
+> +	__be32		xh_cycle_data[XLOG_CYCLE_DATA_SIZE];
+> +	__u8		xh_reserved[252];
 
-XFS does it's own inode caching outside the VFS, so for the moment
-it needs to have access to the same VFS inode initialisation APIs as
-the core VFS inode cache instantiation functions to maintain the
-same externally visible behaviours.
+Just out of curiosity, why do we reserve so much space at the end of the
+extended header?  Wouldn't it have been more efficient to fill all 508
+bytes with xh_cycle_data?
 
-Yes, if we change how the VFS inode caches initialise inodes, we
-have to update the XFS code, but that's always been the case. This
-isn't very hard to do....
+Oh well, water under the bridge now.
 
-Keep in mind that XFS has been caching inodes outside the VFS and
-doing external state initialisation since it was first ported to
-Linux (i.e. ~25 years ago). It's kinda strange to suddenly hear
-people claim that this sort of VFS inode state manipulation thing is
-"too dangerous" to allow anyone to use given how long we've actually
-been doing this....
+> +};
+> +
+> +/* actual ext header payload size for checksumming */
+> +#define XLOG_REC_EXT_SIZE \
+> +	offsetofend(struct xlog_rec_ext_header, xh_cycle_data)
+> +
+>  typedef struct xlog_rec_header {
+>  	__be32	  h_magicno;	/* log record (LR) identifier		:  4 */
+>  	__be32	  h_cycle;	/* write cycle of log			:  4 */
+> @@ -161,30 +171,19 @@ typedef struct xlog_rec_header {
+>  	 * (little-endian) architectures.
+>  	 */
+>  	__u32	  h_pad0;
+> +
+> +	__u8	  h_reserved[184];
+> +	struct xlog_rec_ext_header h_ext[];
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Ok, so you're explicitly padding struct xlog_rec_header and
+xlog_rec_ext_header to be 512 bytes now, and making the xlog_rec_header
+have a VLA of xlog_rec_ext_header.
+
+The log buffer crc is computed from the start of xlog_rec_header::h_crc
+to the end(ish) of the xlog_rec_header; and the first 256 bytes of each
+xlog_rec_ext_header, right?
+
+>  } xlog_rec_header_t;
+>  
+>  #ifdef __i386__
+>  #define XLOG_REC_SIZE		offsetofend(struct xlog_rec_header, h_size)
+> -#define XLOG_REC_SIZE_OTHER	sizeof(struct xlog_rec_header)
+> +#define XLOG_REC_SIZE_OTHER	offsetofend(struct xlog_rec_header, h_pad0)
+>  #else
+> -#define XLOG_REC_SIZE		sizeof(struct xlog_rec_header)
+> +#define XLOG_REC_SIZE		offsetofend(struct xlog_rec_header, h_pad0)
+>  #define XLOG_REC_SIZE_OTHER	offsetofend(struct xlog_rec_header, h_size)
+>  #endif /* __i386__ */
+>  
+> -typedef struct xlog_rec_ext_header {
+> -	__be32	  xh_cycle;	/* write cycle of log			: 4 */
+> -	__be32	  xh_cycle_data[XLOG_CYCLE_DATA_SIZE];		/*	: 256 */
+> -} xlog_rec_ext_header_t;
+> -
+> -/*
+> - * Quite misnamed, because this union lays out the actual on-disk log buffer.
+> - */
+> -typedef union xlog_in_core2 {
+> -	xlog_rec_header_t	hic_header;
+> -	xlog_rec_ext_header_t	hic_xheader;
+> -	char			hic_sector[XLOG_HEADER_SIZE];
+
+That /was/ effin' weird.
+
+> -} xlog_in_core_2_t;
+> -
+>  /* not an on-disk structure, but needed by log recovery in userspace */
+>  struct xfs_log_iovec {
+>  	void		*i_addr;	/* beginning address of region */
+> diff --git a/fs/xfs/libxfs/xfs_ondisk.h b/fs/xfs/libxfs/xfs_ondisk.h
+> index 7bfa3242e2c5..2e9715cc1641 100644
+> --- a/fs/xfs/libxfs/xfs_ondisk.h
+> +++ b/fs/xfs/libxfs/xfs_ondisk.h
+> @@ -174,9 +174,11 @@ xfs_check_ondisk_structs(void)
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_rud_log_format,	16);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_map_extent,		32);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_phys_extent,		16);
+> -	XFS_CHECK_STRUCT_SIZE(struct xlog_rec_header,		328);
+> -	XFS_CHECK_STRUCT_SIZE(struct xlog_rec_ext_header,	260);
+> +	XFS_CHECK_STRUCT_SIZE(struct xlog_rec_header,		512);
+> +	XFS_CHECK_STRUCT_SIZE(struct xlog_rec_ext_header,	512);
+>  
+> +	XFS_CHECK_OFFSET(struct xlog_rec_header, h_reserved,		328);
+> +	XFS_CHECK_OFFSET(struct xlog_rec_ext_header, xh_reserved,	260);
+>  	XFS_CHECK_OFFSET(struct xfs_bui_log_format, bui_extents,	16);
+>  	XFS_CHECK_OFFSET(struct xfs_cui_log_format, cui_extents,	16);
+>  	XFS_CHECK_OFFSET(struct xfs_rui_log_format, rui_extents,	16);
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index acddab467b77..1fe3abbd3d36 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1526,12 +1526,8 @@ xlog_pack_data(
+>  		dp += BBSIZE;
+>  	}
+>  
+> -	if (xfs_has_logv2(log->l_mp)) {
+
+Is the xfs_has_logv2 still necessary here?
+
+What happens if log->l_iclog_heads > 1 && !logv2?  Or has the kernel
+already checked for that and aborted the mount?
+
+(I /think/ the data format changes look ok, but wowee this patch
+generated questions :P)
+
+--D
+
+> -		xlog_in_core_2_t *xhdr = (xlog_in_core_2_t *)iclog->ic_header;
+> -
+> -		for (i = 1; i < log->l_iclog_heads; i++)
+> -			xhdr[i].hic_xheader.xh_cycle = cycle_lsn;
+> -	}
+> +	for (i = 0; i < log->l_iclog_heads - 1; i++)
+> +		rhead->h_ext[i].xh_cycle = cycle_lsn;
+>  }
+>  
+>  /*
+> @@ -1556,16 +1552,11 @@ xlog_cksum(
+>  
+>  	/* ... then for additional cycle data for v2 logs ... */
+>  	if (xfs_has_logv2(log->l_mp)) {
+> -		union xlog_in_core2 *xhdr = (union xlog_in_core2 *)rhead;
+> -		int		i;
+> -		int		xheads;
+> +		int		xheads, i;
+>  
+> -		xheads = DIV_ROUND_UP(size, XLOG_HEADER_CYCLE_SIZE);
+> -
+> -		for (i = 1; i < xheads; i++) {
+> -			crc = crc32c(crc, &xhdr[i].hic_xheader,
+> -				     sizeof(struct xlog_rec_ext_header));
+> -		}
+> +		xheads = DIV_ROUND_UP(size, XLOG_HEADER_CYCLE_SIZE) - 1;
+> +		for (i = 0; i < xheads; i++)
+> +			crc = crc32c(crc, &rhead->h_ext[i], XLOG_REC_EXT_SIZE);
+>  	}
+>  
+>  	/* ... and finally for the payload */
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index f1aed6e8f747..ac98ac71152d 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -716,11 +716,10 @@ xlog_item_space(
+>  static inline __be32 *xlog_cycle_data(struct xlog_rec_header *rhead, unsigned i)
+>  {
+>  	if (i >= XLOG_CYCLE_DATA_SIZE) {
+> -		xlog_in_core_2_t *xhdr = (xlog_in_core_2_t *)rhead;
+>  		unsigned	j = i / XLOG_CYCLE_DATA_SIZE;
+>  		unsigned	k = i % XLOG_CYCLE_DATA_SIZE;
+>  
+> -		return &xhdr[j].hic_xheader.xh_cycle_data[k];
+> +		return &rhead->h_ext[j - 1].xh_cycle_data[k];
+>  	}
+>  
+>  	return &rhead->h_cycle_data[i];
+> -- 
+> 2.47.3
+> 
+> 
