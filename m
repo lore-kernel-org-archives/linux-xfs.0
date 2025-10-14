@@ -1,89 +1,95 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19633299949
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 08:11:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BC651B4156;
+	Tue, 14 Oct 2025 08:46:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760429466; cv=none; b=ad7Laaf7FHpvYt1gE2548wb3Yo8pepdjLSuZ8pWBJl5cx4cjJs59UFQUlXaRTxKEKCKIRuvC7bNigkL6jqD85A2KycKAtFrsW8fJjXyezwx2422TiHx4BUDgHajkYCBTPNyRUlCdqUjdS+Bvs/yWfDPCEthPhYUF7ulsWy2KRRc=
+	t=1760431599; cv=none; b=OEdSFSwUD4WNMO+4BCRUIaUUh5cGQMfGbwv8ycpOISec0E09dGEOWbeCyYrW+nergI9K2bVpurVLaUhuagwVWo2FX2luGXcAbnYVedAxESFWfMITzPDRJ9HhpJv2HesCuYCFRzKpv2IeqrxloqEZD495wdleweV7UyHu46RC/Gc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760429466; c=relaxed/simple;
-	bh=cIUxYCg0pNE3HGytQFII5b8dMd6p7IyJjqRO9zMn5G0=;
-	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
-	 Message-ID:Content-Type; b=ctGf0Js6rY9ubbpCm6aqISqSJBP37Oj0/H3QxWOXJu2K9q2G7K+0UufpzpOFn4vPIiGcaaUUMyKhbXAc4QvYOO/nFZkySBr3bZBw+bfPwbcCTUvZ/78oAeHgL9lz7Bajsv6B12UsyySKJezDHTODj1Aed5gNIsP7n0mGQwNb1IM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id ED844180FCC2;
-	Tue, 14 Oct 2025 10:10:51 +0200 (CEST)
-Received: from mail.herbolt.com ([172.168.31.10])
-	by mx0.herbolt.com with ESMTPSA
-	id gUxTOYsF7miAPRIAKEJqOA
-	(envelope-from <lukas@herbolt.com>); Tue, 14 Oct 2025 10:10:51 +0200
+	s=arc-20240116; t=1760431599; c=relaxed/simple;
+	bh=XbFD7eihhqvlbCCr/QjSXGm095ZcFYLdmYv0mEax7oc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ICSmvY2fmtawwlsoImkMECfTvezZX+fU05EiYeE6LQOI3spNsPgEKSda3rcGEG2r8ucv5RgKg7Dk/pJzX4H16qY34czFaK21BMtSwI6ixOMIRwEFegNgZFBLqU2RG4hlir6hLwsPSo+J7Y0lYbtgO6LXSdbU0XSTj7OLkCfeEyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=X8G3GmS5; arc=none smtp.client-ip=216.71.154.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="X8G3GmS5"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1760431598; x=1791967598;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=XbFD7eihhqvlbCCr/QjSXGm095ZcFYLdmYv0mEax7oc=;
+  b=X8G3GmS5K15fnePMgG4JU52T82dgfwC2GltVI9UJUnPtSBvc8Sj0BnIa
+   uJ4cNSOIz6P1FEjNvphPUs9Y/Hvmw6ppUrrA42puZXnYDMvng8st28dDQ
+   U81YdIHiTa+Qju8TBnZaFWjXOTcdQJdeHxOKJXq1xw6MFbHQyzav8s+kr
+   N+gowMw/rcZ/WXE+TSDsQrKYIZsAW+SGQvZ97B37KLqIJNkubCOORclp7
+   hx1VFnUawjjKQ9zyJSzil50kJJlHuflxuXwynBe1qPbNAI4gTeA0dSWpP
+   l3J1vHuHDz6sem6ouoidc0ikHz39Rb/qHhGaFMyjX5rnUKKFqOlC5ziBY
+   A==;
+X-CSE-ConnectionGUID: B1i6iEEZRayVY0aB3zfwkg==
+X-CSE-MsgGUID: 8Yj7uRw+QEu9oOzVlK6lrA==
+X-IronPort-AV: E=Sophos;i="6.19,227,1754928000"; 
+   d="scan'208";a="130180107"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep03.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 14 Oct 2025 16:46:31 +0800
+IronPort-SDR: 68ee0de7_+xxAIORo/p+iegFkSfUV48ZIiijbbPzJj3APcDnl1aT8Sf2
+ pOvqLtJmCBi5ftB4DPYXf6X8UU1Dlvn4cFNiPbQ==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep03.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 14 Oct 2025 01:46:31 -0700
+WDCIronportException: Internal
+Received: from wdap-pnj1f24hc3.ad.shared (HELO neo.fritz.box) ([10.224.28.28])
+  by uls-op-cesaip02.wdc.com with ESMTP; 14 Oct 2025 01:46:29 -0700
+From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	linux-btrfs@vger.kernel.org,
+	Hans Holmberg <hans.holmberg@wdc.com>,
+	fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH v4 0/3] fstests: basic smoke test on zoned loop device
+Date: Tue, 14 Oct 2025 10:46:22 +0200
+Message-ID: <20251014084625.422974-1-johannes.thumshirn@wdc.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Tue, 14 Oct 2025 10:10:51 +0200
-From: lukas@herbolt.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFC] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-In-Reply-To: <aOCfus7PgLl812qf@infradead.org>
-References: <20251002122823.1875398-2-lukas@herbolt.com>
- <aN-Aac7J7xjMb_9l@infradead.org> <20251004040020.GC8096@frogsfrogsfrogs>
- <aOCfus7PgLl812qf@infradead.org>
-Message-ID: <dee6b75856d013f8aa6de1c17ff0f20a@herbolt.com>
-X-Sender: lukas@herbolt.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 2025-10-04 06:16, Christoph Hellwig wrote:
-> On Fri, Oct 03, 2025 at 09:00:20PM -0700, Darrick J. Wong wrote:
->> > > -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
->> > > +	if (mode & FALLOC_FL_WRITE_ZEROES) {
->> > > +		if (!bdev_write_zeroes_unmap_sectors(inode->i_sb->s_bdev))
->> 
->>      		                         not correct ^^^^^^^^^^^^^^^^^^^
->> 
->> You need to find the block device associated with the file because XFS
->> is a multi-device filesystem.
-> 
-> Indeed. xfs_inode_buftarg will do the work, but we'll need to ensure
+Add a very basic smoke test on a zoned loopback device to check that noone is
+accidentially breaking support for zoned block devices in filesystems that
+support these.
 
-Thanks for xfs_inode_buftarg pointer.
+Currently this includes btrfs, f2fs and xfs.
 
-> the RT bit doesn't get flipped, i.e. it needs to hold a lock between
-> that check and allocation the blocks if there were none yet.
+Changes to v3:
+- Don't mkdir zloop_base in test but in _create_zloop
+- Add Christoph's Reviewed-by in 1/3
 
-I am having bit of trouble with that. If I get it right we should hold
-the XFS_ILOCK_EXCL but this lock is then grabbed in the 
-xfs_trans_alloc_inode.
+Changes to v2:
+- Add Carlos' Reviewed-bys
+- Add a _find_last_zloop() helper
 
-So I would need to release before and there would be again a small 
-window
-where the RT flag can be flipped.
+Johannes Thumshirn (3):
+  common/zoned: add _require_zloop
+  common/zoned: add _create_zloop
+  generic: basic smoke for filesystems on zoned block devices
 
-Looking at the xfs_alloc_file_space, there is also check for the RT bit 
-without
-lock, so this also need an attention.
-     rt = XFS_IS_REALTIME_INODE(ip);
-     extsz = xfs_get_extsz_hint(ip);
+ common/zoned          | 43 ++++++++++++++++++++++++++++++++++++++++
+ tests/generic/772     | 46 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/772.out |  2 ++
+ 3 files changed, 91 insertions(+)
+ create mode 100755 tests/generic/772
+ create mode 100644 tests/generic/772.out
 
-Or the xfs_trans_alloc_inode would need to check if we are a;ready 
-holding the
-lock Is there a way how to check the current thread is the owner of the
-xfs_ilock rw_sem?
+--
+2.51.0
 
-Something like?
----
-static inline bool is_current_writer(struct rw_semaphore *sem)
-{
-     /* The rwsem_owner() helper can be used to get the owner */
-     return sem->owner == current;
-}
----
