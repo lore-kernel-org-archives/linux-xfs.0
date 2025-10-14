@@ -1,42 +1,48 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB70F21E0AD;
-	Tue, 14 Oct 2025 04:36:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9984519C54F;
+	Tue, 14 Oct 2025 04:44:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760416612; cv=none; b=kQiw+Fir+pmWdCne/OGe9lWKt+cGchsIkx41lh3BUjn2buP1cRX4TaesvlPQbsvUjfI8LWvKNF+poUt+FwQKoT0iYoEyLxts+v26qcO4JJb94YpWbMOaNKELGG5q4b5aioYJenm016WQXpCBEuypSD/DBPHkqZDld+6J9lqPPgE=
+	t=1760417070; cv=none; b=BjjMA+Yx3dpwHpEROdMmQArdyDkPv7q5icVxSoddCbZ1Yqt8GoZU38lJR45kVo5f4n2aW0RVwGK+p9JFhOP7444v0rUaHs3caKTfhHL475uSG4eEwm84HiY7j/3kIHZCpQ3nQ/Vlrm68s23H66tSK1q3vQcqOdGupuLVsw+Dp1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760416612; c=relaxed/simple;
-	bh=TlaRcGin2t5gVIo1Gwv/FGKJek987QTyU89u6pQlTzQ=;
+	s=arc-20240116; t=1760417070; c=relaxed/simple;
+	bh=3xzfzkbgYIg9IfR3Ir94hE3O8Ov0sXJ49fRS3a8QW2U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rf73vEg+SfRyUST7BzlQUu0S3gzkpP//8EAg8mP7uwyK2Q9rXde8WWoPGt/3jyr+x/a7xOo6X3l1E2ED2JU6NvCSK33v17bbiE9xCOPmAd2FWXoTCOvgTp/k9mAfubRlTlqjzdydLa7aSEPtk3Kvx8CLSXanByIXsGuQGc/ES9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yn1+yXRn; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yn1+yXRn"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=IMu0EiBQKuo88PicOuBaR9azVBnbX4FkUeISqr0YQqc=; b=yn1+yXRnkl5SR1liGQd492ggu0
-	eKIuIjLRS3FAihC9qF01Ss3qXC/hcZAReCEjH7BFzEehHKeTcYyoiD9n5QLKTAxn3dwThaauNcF7f
-	rMfoxA56J268eqqnUmqAXim8KXy3yVCKoupzcHp6EfWf5eNzqc7lYYMocPaDpNrZ5/YhHb8XzH3zj
-	STjNoHKx27DCTtzmSXs7FRAF1k9JuFjK7BSvyqMW9jiAaOPOfEQZqTaGq/+2ULxq8Tlj3RUubqkke
-	W8hFSoAnG51FNluHfbq9/qHc/SJNYDKxlxmSUQgXnQr/fk/QeQQCKM/ZrqR91Nl86SZUd3Dj9KPh0
-	joezxn0g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v8WmI-0000000F7VU-1jvA;
-	Tue, 14 Oct 2025 04:36:50 +0000
-Date: Mon, 13 Oct 2025 21:36:50 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Qu Wenruo <wqu@suse.com>
-Cc: linux-btrfs@vger.kernel.org, brauner@kernel.org, djwong@kernel.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2] iomap: add IOMAP_DIO_FSBLOCK_ALIGNED flag
-Message-ID: <aO3TYhXo1LDxsd5_@infradead.org>
-References: <c78d08f4e709158f30e1e88e62ab98db45dd7883.1760345826.git.wqu@suse.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZfTpAj+lcDKIucQK1ecMBf6PUYBTqHjpQoVQi04q3IqZk3Cw5oH7bG/4KzoV14jDofyEH4nTQFp5FfFmagFS47HSbxL8Znh509JxKQYAK5l0TTSfCtBaPgRrNXbDjrx3gJkM/rgJZ/8PAf1JUgZufmCEOrOufniPluF+Vi+h4vE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 26F11227A87; Tue, 14 Oct 2025 06:44:22 +0200 (CEST)
+Date: Tue, 14 Oct 2025 06:44:21 +0200
+From: hch <hch@lst.de>
+To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc: hch <hch@lst.de>, "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Eric Van Hensbergen <ericvh@kernel.org>,
+	Latchesar Ionkov <lucho@ionkov.net>,
+	Dominique Martinet <asmadeus@codewreck.org>,
+	Christian Schoenebeck <linux_oss@crudebyte.com>,
+	Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+	Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>,
+	Joseph Qi <joseph.qi@linux.alibaba.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>,
+	Josef Bacik <josef@toxicpanda.com>, Jan Kara <jack@suse.cz>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"v9fs@lists.linux.dev" <v9fs@lists.linux.dev>,
+	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+	"linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+	"jfs-discussion@lists.sourceforge.net" <jfs-discussion@lists.sourceforge.net>,
+	"ocfs2-devel@lists.linux.dev" <ocfs2-devel@lists.linux.dev>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-mm@kvack.org" <linux-mm@kvack.org>
+Subject: Re: [PATCH 04/10] btrfs: use the local tmp_inode variable in
+ start_delalloc_inodes
+Message-ID: <20251014044421.GA30920@lst.de>
+References: <20251013025808.4111128-1-hch@lst.de> <20251013025808.4111128-5-hch@lst.de> <aae79ea0-f056-4da7-8a87-4d4fd6aea85f@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,30 +51,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c78d08f4e709158f30e1e88e62ab98db45dd7883.1760345826.git.wqu@suse.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <aae79ea0-f056-4da7-8a87-4d4fd6aea85f@wdc.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Oct 13, 2025 at 07:35:16PM +1030, Qu Wenruo wrote:
-> - Remove the btrfs part that utilize the new flag
->   Now it's in the enablement patch of btrfs' bs > ps direct IO support.
+On Mon, Oct 13, 2025 at 08:11:35AM +0000, Johannes Thumshirn wrote:
+> If you have to repost this for some reason, can you rename tmp_inode to 
+> vfs_inode or sth like that?
+> 
+> The name is really confusing and the commit introducing it doesn't 
+> describe it really either.
 
-I didn't really suggest removing it, but splitting it into a separate
-patch in a two-patch series.  We could probably even move everything
-through the btrfs tree for 6.18 to get the fix in.  It's just important
-to keep infrastructure and user separate if you have to e.g. revert the
-btrfs part for some reason, but we have another user in the meantime.
-And I plan to use this for zoned XFS soon.
+It is.  vfs_inode is kinda weird, too.  The problem is that inode
+is used for the btrfs_inode.  But if there's consensus on a name
+I'll happily change it.
 
-> +	/*
-> +	 * Align to the larger one of bdev and fs block size, to meet the
-> +	 * alignment requirement of both layers.
-> +	 */
-> +	if (dio->flags & IOMAP_DIO_FSBLOCK_ALIGNED)
-> +		alignment = max(alignment, fs_block_size);
-> +
-
-This looks much nicer, and thanks for the explanation!
-
-Looks good:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
