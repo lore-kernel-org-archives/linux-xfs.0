@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 674BC2E54B0
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 22:12:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59C841E47CA
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 22:12:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760479929; cv=none; b=Vsimh1fAyWa0hkOuoB8zkiZ7uvGC2yXUYtnOnpj1sGBs3/BsHXrClvpapyE73luSdJImgLoafnhAX2tks3qAp4d1T+3LKTeX9RaKhK8+iYv3FvYFVtovbXDo54VcM+FzBZtsBjaSAj8EEEH7ohlz0eVJoL0G+0mszBANYmeeDdU=
+	t=1760479950; cv=none; b=Ur9CE2y5B3/D+k8htO7DsGTq6Jwto7j48p2Sdfr5gyaGEotq58a9RUo5tfYhvVyOBmlzR1jNyAwGhX57YgaogLvEr13OooG/conO+MGb+2UqPffXvut3wFMF/2hvYY5C6wvFd6PqW5QscuA76txCeCyJx1FS63/t/QyYXklE/6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760479929; c=relaxed/simple;
-	bh=VYJOgUTIm5qATiWe4/QRvuFI3QRKu1pcY9/0nf6QHYc=;
+	s=arc-20240116; t=1760479950; c=relaxed/simple;
+	bh=mLL9Nb5VRg4r40i/PETsxczabNRZLSTIlyJAlslShYA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AlCtWscC5yveAKV/ICychZZf+Jo3aKRkELm6doGfYwym0p+1IwlPLnk3cQ5whUUm86syW9h+PINkFQS/wzABT5HwcMP1P7V5xSdw0iXFnV8q0+tMUh/ZzNmkAlqlH8dQgjNmr7nEG6W7xaWyU57fM8CmK1OdSKgwU8hVbbOO8Bo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=te2BvMll; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=e0muJFV7DrboWgCeoQlW7xVFNccOl2kSVLrMzYLLoPIN5vqJiMduXw3uerAeN/9HZfB7lJL0xAT1ClFnyWoezY3EuK8RIRnEBYgglQGt4QYdZba3z4L6N/2oSrFEicnO5xsRR/xCTQCrs6cxjwV9/oVG1wxRFJZfXLunpSdlvSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pw/7So3V; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="te2BvMll"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEDC1C4CEE7;
-	Tue, 14 Oct 2025 22:12:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pw/7So3V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D13D9C4CEE7;
+	Tue, 14 Oct 2025 22:12:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760479927;
-	bh=VYJOgUTIm5qATiWe4/QRvuFI3QRKu1pcY9/0nf6QHYc=;
+	s=k20201202; t=1760479949;
+	bh=mLL9Nb5VRg4r40i/PETsxczabNRZLSTIlyJAlslShYA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=te2BvMllnT8+lK/bBmBpnjTOlm+RWbFX5nbUUx9fGhhUt+vi2jQKsJWr4aavA2G2g
-	 OiuJWQuLbnb5e95TA1UpqNOJCtqTNalJpSI41iC6ldl62Br2xEF/zgR+zB+qqpeIU4
-	 KD8zo+QO8OXlqV9dpBfEZhwsJi6ggxK3SH0o2iAS/0ioXpRRTPg0F09FiOEwHqEPAN
-	 om6xLEszfMI1TxwZHGGpCBPbWRkyQSU9s+H7x+czybj+W2Q17quo8Di6C1mWuO/uUk
-	 IqHSIMnQXHkycDxCxdaExZ8PNOGV65+qmM3claoMAyD3OiGTbLuOSf1cafJixWEPyX
-	 yI5G4JO4CATtg==
-Date: Tue, 14 Oct 2025 15:12:07 -0700
+	b=Pw/7So3VWDxUKo9WmZW/kefTFqj6DFlVCsMFfzCTXBcVKG4VHRGymgDaS77fU7m4t
+	 8KrKHKBUP3AhPd6mX8enX0wf4jtP3aS6SF3YKg1upfqF+dw57cZ2maMrrIVpDRamyX
+	 pMNW6v20/s268ExJHBhXLyxWxzgqb7GF1OKm+wsGO1gPVBaPbPj0eBWZbU690O3JLX
+	 Vcx4SS8xLMjlkjct0lWNbsMzq9VNIwtHxgZfDAZd1eA7g+maoiquV6PiLx7Vg2/0uS
+	 YZw1Sleo5ZIfpKRhtJnbq47berh1g8yOcNrGXdy8140KP95FB2xrSzRLmsn11qupcR
+	 ewkU2Y/qFRXEg==
+Date: Tue, 14 Oct 2025 15:12:29 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/9] xfs: remove l_iclog_heads
-Message-ID: <20251014221207.GN6188@frogsfrogsfrogs>
+Subject: Re: [PATCH 9/9] xfs: remove the xlog_in_core_t typedef
+Message-ID: <20251014221229.GO6188@frogsfrogsfrogs>
 References: <20251013024228.4109032-1-hch@lst.de>
- <20251013024228.4109032-9-hch@lst.de>
+ <20251013024228.4109032-10-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,71 +42,114 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251013024228.4109032-9-hch@lst.de>
+In-Reply-To: <20251013024228.4109032-10-hch@lst.de>
 
-On Mon, Oct 13, 2025 at 11:42:12AM +0900, Christoph Hellwig wrote:
-> l_iclog_heads is only used in one place and can be trivially derived
-> from l_iclog_hsize by a single shift operation.  Remove it, and switch
-> the initialization of l_iclog_hsize to use struct_size so that it is
-> directly derived from the on-disk format definition.
+On Mon, Oct 13, 2025 at 11:42:13AM +0900, Christoph Hellwig wrote:
+> Switch the few remaining users to use the underlying struct directly.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_log.c      | 11 ++++++-----
->  fs/xfs/xfs_log_priv.h |  1 -
->  2 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 8b3b79699596..47a8e74c8c5c 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1279,11 +1279,12 @@ xlog_get_iclog_buffer_size(
->  	log->l_iclog_size = mp->m_logbsize;
->  
->  	/*
-> -	 * # headers = size / 32k - one header holds cycles from 32k of data.
-> +	 * Combined size of the log record headers.  The first 32k cycles
-> +	 * are stored directly in the xlog_rec_header, the rest in the
-> +	 * variable number of xlog_rec_ext_headers at its end.
->  	 */
-> -	log->l_iclog_heads =
-> -		DIV_ROUND_UP(mp->m_logbsize, XLOG_HEADER_CYCLE_SIZE);
-> -	log->l_iclog_hsize = log->l_iclog_heads << BBSHIFT;
-> +	log->l_iclog_hsize = struct_size(log->l_iclog->ic_header, h_ext,
-> +		DIV_ROUND_UP(mp->m_logbsize, XLOG_HEADER_CYCLE_SIZE) - 1);
 
-Hrm.  offsetof(xlog_rec_header::h_ext) == 512 and
-sizeof(xlog_rec_ext_header) == 512, so I think this computation still
-yields the same results.
-
+Gooooody!
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
->  }
+> ---
+>  fs/xfs/xfs_log.c      | 18 +++++++++---------
+>  fs/xfs/xfs_log_priv.h |  6 +++---
+>  2 files changed, 12 insertions(+), 12 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 47a8e74c8c5c..a311385b23d8 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1368,8 +1368,8 @@ xlog_alloc_log(
+>  	int			num_bblks)
+>  {
+>  	struct xlog		*log;
+> -	xlog_in_core_t		**iclogp;
+> -	xlog_in_core_t		*iclog, *prev_iclog=NULL;
+> +	struct xlog_in_core	**iclogp;
+> +	struct xlog_in_core	*iclog, *prev_iclog = NULL;
+>  	int			i;
+>  	int			error = -ENOMEM;
+>  	uint			log2_size = 0;
+> @@ -1813,10 +1813,10 @@ xlog_sync(
+>   */
+>  STATIC void
+>  xlog_dealloc_log(
+> -	struct xlog	*log)
+> +	struct xlog		*log)
+>  {
+> -	xlog_in_core_t	*iclog, *next_iclog;
+> -	int		i;
+> +	struct xlog_in_core	*iclog, *next_iclog;
+> +	int			i;
 >  
->  void
-> @@ -1526,7 +1527,7 @@ xlog_pack_data(
->  		dp += BBSIZE;
->  	}
+>  	/*
+>  	 * Destroy the CIL after waiting for iclog IO completion because an
+> @@ -3293,7 +3293,7 @@ xlog_verify_iclog(
+>  	int			count)
+>  {
+>  	struct xlog_rec_header	*rhead = iclog->ic_header;
+> -	xlog_in_core_t		*icptr;
+> +	struct xlog_in_core	*icptr;
+>  	void			*base_ptr, *ptr;
+>  	ptrdiff_t		field_offset;
+>  	uint8_t			clientid;
+> @@ -3481,11 +3481,10 @@ xlog_force_shutdown(
 >  
-> -	for (i = 0; i < log->l_iclog_heads - 1; i++)
-> +	for (i = 0; i < (log->l_iclog_hsize >> BBSHIFT) - 1; i++)
->  		rhead->h_ext[i].xh_cycle = cycle_lsn;
+>  STATIC int
+>  xlog_iclogs_empty(
+> -	struct xlog	*log)
+> +	struct xlog		*log)
+>  {
+> -	xlog_in_core_t	*iclog;
+> +	struct xlog_in_core	*iclog = log->l_iclog;
+>  
+> -	iclog = log->l_iclog;
+>  	do {
+>  		/* endianness does not matter here, zero is zero in
+>  		 * any language.
+> @@ -3494,6 +3493,7 @@ xlog_iclogs_empty(
+>  			return 0;
+>  		iclog = iclog->ic_next;
+>  	} while (iclog != log->l_iclog);
+> +
+>  	return 1;
 >  }
 >  
 > diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index ac98ac71152d..17733ba7f251 100644
+> index 17733ba7f251..0fe59f0525aa 100644
 > --- a/fs/xfs/xfs_log_priv.h
 > +++ b/fs/xfs/xfs_log_priv.h
-> @@ -406,7 +406,6 @@ struct xlog {
->  	struct list_head	*l_buf_cancel_table;
->  	struct list_head	r_dfops;	/* recovered log intent items */
->  	int			l_iclog_hsize;  /* size of iclog header */
-> -	int			l_iclog_heads;  /* # of iclog header sectors */
->  	uint			l_sectBBsize;   /* sector size in BBs (2^n) */
->  	int			l_iclog_size;	/* size of log in bytes */
->  	int			l_iclog_bufs;	/* number of iclog buffers */
+> @@ -181,7 +181,7 @@ struct xlog_ticket {
+>   * We'll put all the read-only and l_icloglock fields in the first cacheline,
+>   * and move everything else out to subsequent cachelines.
+>   */
+> -typedef struct xlog_in_core {
+> +struct xlog_in_core {
+>  	wait_queue_head_t	ic_force_wait;
+>  	wait_queue_head_t	ic_write_wait;
+>  	struct xlog_in_core	*ic_next;
+> @@ -204,7 +204,7 @@ typedef struct xlog_in_core {
+>  	struct work_struct	ic_end_io_work;
+>  	struct bio		ic_bio;
+>  	struct bio_vec		ic_bvec[];
+> -} xlog_in_core_t;
+> +};
+>  
+>  /*
+>   * The CIL context is used to aggregate per-transaction details as well be
+> @@ -418,7 +418,7 @@ struct xlog {
+>  						/* waiting for iclog flush */
+>  	int			l_covered_state;/* state of "covering disk
+>  						 * log entries" */
+> -	xlog_in_core_t		*l_iclog;       /* head log queue	*/
+> +	struct xlog_in_core	*l_iclog;       /* head log queue	*/
+>  	spinlock_t		l_icloglock;    /* grab to change iclog state */
+>  	int			l_curr_cycle;   /* Cycle number of log writes */
+>  	int			l_prev_cycle;   /* Cycle number before last
 > -- 
 > 2.47.3
 > 
