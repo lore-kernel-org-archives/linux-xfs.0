@@ -1,115 +1,64 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B01925D1E6
-	for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 04:10:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C54312BAF9
+	for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 04:13:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760415058; cv=none; b=ErDapTGP2Rx0ihpmOi+C2RdywbI8sU1t4H0fH4pm/hnN89yBViElSl9yJIERhdpRvjYSuIHK3j6De6H/W5jPuIK2iXIji3mB2E9opkYPJO0DFDHu1PA2gfW79vU48/jTefI/N4/PXlUkMFoO5F4DINpbuqn4bl5e3OT1RghrRjM=
+	t=1760415230; cv=none; b=ouA5IizhQV4o8JY2MUTgWyJ+jDgvwFilY+jeW0VfMEVI28MmxOBcuem+REdeIQhsGYq1HDam7NQLVKxF/rKBxkpJARxkolgOtKU1FOWLw04buHMhnokd9SUqzWqCfQLSsANdwrtZF57t73abMt/2dXzLHvKIUErNiv6UlTm2x/8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760415058; c=relaxed/simple;
-	bh=DuEw9oiF5KF1ciq0EAKz4bThfjrYwB1EXSM/t8ZE9n0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=niVuUc/ufHPFxgSOkfd5FH+GCjs/t2bqQtivKFwTw/A7uwwyRnnUCyIZ9Di57Z+KccqlB1bJPFt8llmcjr9+JuRd2Lw2ztZW0woUimnuHdRbsb/3zXNSfMbtnXzhR1mOAjxwTW7PTI7FnIeBUxe5wbvmbeWDdsH3EXZaYpJGqsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XfMmR/zb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760415230; c=relaxed/simple;
+	bh=VlAa40GHArXnP5H1ZUdveVsH2Lt/b0NhenIv41ZKdTQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TkxQqJ1/ojt9b0lSWM5UrQac1r4bL10GaJUw5m3AXZm9BYpK20N2UFoRAxSSgrTD5TI217eIvKRBALX8uk8xtOAVnc9OQ/dyJud76BV55ggx59TPhAueVdSc2vzaiSaoCDfa+JGXFSFq29iPlTIqoVjw3kRtXXRRox6SW590gGs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=aRLA8L9s; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XfMmR/zb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6398C4CEE7;
-	Tue, 14 Oct 2025 04:10:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760415057;
-	bh=DuEw9oiF5KF1ciq0EAKz4bThfjrYwB1EXSM/t8ZE9n0=;
-	h=From:To:Cc:Subject:Date:From;
-	b=XfMmR/zbDuxxMtxQBWXaKQyXawvakkPNDQGYn1X2A4jaQoANYnoOmsLDicefCQ7Cq
-	 uGhKEXo25ZszqT5Jjg8bn8L3s34cLHpmDWVmjM264lGADPJSe2GMnPPZqsKvDQcYpe
-	 mN5Y3850JfFXmwjLLi1XhkOFu+8l4762wHcd2ZcbhJSi1JxgBuO53K63hgUOf37Ra5
-	 xD9gtPiUohAmz/AOQUj2e2uhAVo40nmPMM525ucjqv9fhnNSbvGaGWixXWDZinbY41
-	 mY2CN9yIFz1IKrhgWIyTe47G+exoYjJzNVMC4B/v23DrspQIKX5Fqep4Wo9AKk+ltJ
-	 GshKHl4IojZXg==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Hans Holmberg <hans.holmberg@wdc.com>
-Subject: [PATCH v3] xfs: do not tightly pack-write large files
-Date: Tue, 14 Oct 2025 13:07:29 +0900
-Message-ID: <20251014040729.759700-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aRLA8L9s"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=hHoNDWun4+lKqVtMC4htHxTx1tih+tKF+urOeSsmKp8=; b=aRLA8L9sBpPa8Lfy6ZxRx+MZz7
+	kpro6/VTBR7sX9wA8ArGwwZ0D7c4dBFZVluGvlv939+1/PJJCES80lg1fNUHJwagYzIPP3U97spBQ
+	kwFrN0T4c4q0I6ymSwxBpfKQ9eeciRoHBaPYYj9/jE63v2OyFy16Kbm8qyp1cYn1c+0zxRfHntWDG
+	MwyUaB8STjYjLtFpoy5gkLqkldubpegyPsQ6Y352DkRXexwRIj19krv5O/VgOx9S2XFWBS6x2V76E
+	6p7bqf8hyuUFkIpy+KMnvb1b+zHSX74dV4ZypNDWa9vqAgB51EFcly7rRb1mVxpNTuMvw6e5CZiTn
+	6bve9G/w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1v8WPy-0000000F5hz-14ax;
+	Tue, 14 Oct 2025 04:13:46 +0000
+Date: Mon, 13 Oct 2025 21:13:46 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Carlos Maiolino <cem@kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: don't set bt_nr_sectors to a negative number
+Message-ID: <aO3N-pndkWtbkawz@infradead.org>
+References: <20251013163310.GM6188@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251013163310.GM6188@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-When using a zoned realtime device, tightly packing of data blocks
-belonging to multiple closed files into the same realtime group (RTG)
-is very efficient at improving write performance. This is especially
-true with SMR HDDs as this can reduce, and even suppress, disk head
-seeks.
+On Mon, Oct 13, 2025 at 09:33:10AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> xfs_daddr_t is a signed type, which means that xfs_buf_map_verify is
+> using a signed comparison.  This causes problems if bt_nr_sectors is
+> never overridden (e.g. in the case of an xfbtree for rmap btree repairs)
+> because even daddr 0 can't pass the verifier test in that case.
+> 
+> Define an explicit max constant and set the initial bt_nr_sectors to a
+> positive value.
 
-However, such tight packing does not make sense for large files that
-require at least a full RTG. If tight packing placement is applied for
-such files, the VM writeback thread switching between inodes result in
-the large files to be fragmented, thus increasing the garbage collection
-penalty later when the RTG needs to be reclaimed.
+Looks good:
 
-This problem can be avoided with a simple heuristic: if the size of the
-inode being written back is at least equal to the RTG size, do not use
-tight-packing. Modify xfs_zoned_pack_tight() to always return false in
-this case.
-
-With this change, a multi-writer workload writing files of 256 MB on a
-file system backed by an SMR HDD with 256 MB zone size as a realtime
-device sees all files occupying exactly one RTG (i.e. one device zone),
-thus completely removing the heavy fragmentation observed without this
-change.
-
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
-Changes from v1:
- - Improved commit message
- - Improved code comments
-Changes from v2:
- - Fixed typos in the commit message
-
- fs/xfs/xfs_zone_alloc.c | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 1147bacb2da8..8b938d5a3b92 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -614,14 +614,25 @@ static inline enum rw_hint xfs_inode_write_hint(struct xfs_inode *ip)
- }
- 
- /*
-- * Try to pack inodes that are written back after they were closed tight instead
-- * of trying to open new zones for them or spread them to the least recently
-- * used zone.  This optimizes the data layout for workloads that untar or copy
-- * a lot of small files.  Right now this does not separate multiple such
-+ * Try to tightly pack small files that are written back after they were closed
-+ * instead of trying to open new zones for them or spread them to the least
-+ * recently used zone. This optimizes the data layout for workloads that untar
-+ * or copy a lot of small files. Right now this does not separate multiple such
-  * streams.
-  */
- static inline bool xfs_zoned_pack_tight(struct xfs_inode *ip)
- {
-+	struct xfs_mount *mp = ip->i_mount;
-+	size_t zone_capacity =
-+		XFS_FSB_TO_B(mp, mp->m_groups[XG_TYPE_RTG].blocks);
-+
-+	/*
-+	 * Do not pack write files that are already using a full group (zone)
-+	 * to avoid fragmentation.
-+	 */
-+	if (i_size_read(VFS_I(ip)) >= zone_capacity)
-+		return false;
-+
- 	return !inode_is_open_for_write(VFS_I(ip)) &&
- 		!(ip->i_diflags & XFS_DIFLAG_APPEND);
- }
--- 
-2.51.0
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
