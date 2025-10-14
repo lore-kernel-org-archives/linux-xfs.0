@@ -1,46 +1,38 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B16430B504;
-	Tue, 14 Oct 2025 04:27:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 581BF3090DC;
+	Tue, 14 Oct 2025 04:30:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760416078; cv=none; b=u8M1uSxAGAlhHfEfSfxMXGa38mEsGOqd20jBy7n4SpuFG6Ec4WrIBhY9sRaaSanld6ZChtfCCHNrasx/oVBslAnGXcWLc9NDwP+Yv2JHrAdcEoq4XMl0fXgzq4wSaMZa0DFUlmaX8TaahhZnrw2azObmf0Xx3PVAw6m5gAGIxjg=
+	t=1760416208; cv=none; b=fz5tFw9/7wexCKzgIvk1thOCVYeOK2JGf5F/S6h7L/DzaDtvKf5YvOw16KeL5sH9uVAzSKgosbIPnjh1wj3D6VdoTfuZcsbQWC6QajGYdOnVCKIEQjHaed+NMVkTSxHzDIN3c37wOJ0be7+Hw3Tgdr70TiQk2xiLI3H7CeDq7og=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760416078; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1760416208; c=relaxed/simple;
+	bh=Kdt3TcrVab/EWVFqOCiAkBoyxuRkqAiWHLfEWei8klQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=I90UUWIagBVAWG3GIpqc82qAUn+RoZbClVXK715E+ia0V222lXoXWR/3/mqm46Ll4ebXHKnLefRnxq3bQhd0VqETQtSUreda3MgbMGEdGRwVqX9QEiRGWZqZYgEvEXYZGrFYqfzLCVN8r163J3kKWZ6l57TSPiI68n3FGb+3390=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=OPaTjmmx; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OPaTjmmx"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=OPaTjmmxwJZ8wABSkJDcIzsnLW
-	QC2VPKIhdmmN1ClIayNLyDnLdV4GaZ2LJVnJewpLEweEZUETx+Ca8EFoc2Wm2BtBLdhRTXt8ntoWA
-	l8Se8Hz28AeHjtAfPwhRWF1KMWIKEE+fvVRD2KWbh4SewBlYodqr81vxJK2Ns6kSw+Sn/brxUIjOl
-	N/gU7/yYG8eXRKQ94aTqCyMKTVBwNR1Ifc2hyjLuQyZlzdfONyvMi5304vh36RKugOuVETgsk+ALT
-	J/vHlwYmvmQcrjrDTlKVA9gdyE10S3FCY+hiAlk9LLJGQtjzZYQ4H+TOHVaf8ul/8HTT54PWCuELl
-	1ODJS4BQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v8Wdg-0000000F6pT-3Wtb;
-	Tue, 14 Oct 2025 04:27:56 +0000
-Date: Mon, 13 Oct 2025 21:27:56 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Oleksandr Natalenko <oleksandr@natalenko.name>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>, Pavel Reichl <preichl@redhat.com>,
-	Vlastimil Babka <vbabka@suse.cz>,
-	Thorsten Leemhuis <linux@leemhuis.info>
-Subject: Re: [PATCH 2/2] xfs: always warn about deprecated mount options
-Message-ID: <aO3RTDjEjz3Lpi8A@infradead.org>
-References: <20251013233229.GR6188@frogsfrogsfrogs>
- <20251013233305.GS6188@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=JLVveo9cZik2ftXqKzOXqTvZbJ8oxVQIgaPipJ8yK37sjUJiwO+cUx5YV8PiCZ5vcIbQ1ry/XrtpAz/0BoFN8jLV+G6eEqS4gMOvajM5rj7A6rNPQbJQy8i0htpvdasf/ODJbH326HdstgJERRb/WuWPKvlJ3YbaIgByJqpPc7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 0B6DF227A87; Tue, 14 Oct 2025 06:30:01 +0200 (CEST)
+Date: Tue, 14 Oct 2025 06:30:00 +0200
+From: hch <hch@lst.de>
+To: Anand Jain <anajain.sg@gmail.com>
+Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+	Zorro Lang <zlang@redhat.com>, hch <hch@lst.de>,
+	Naohiro Aota <Naohiro.Aota@wdc.com>,
+	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+	Hans Holmberg <Hans.Holmberg@wdc.com>,
+	"fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v3 3/3] generic: basic smoke for filesystems on zoned
+ block devices
+Message-ID: <20251014043000.GA30741@lst.de>
+References: <20251013080759.295348-1-johannes.thumshirn@wdc.com> <20251013080759.295348-4-johannes.thumshirn@wdc.com> <006ae40b-b2e6-441a-b2d3-296d1e166787@gmail.com> <4eeb481f-b94d-4c2f-909e-7c29ac2440b2@wdc.com> <97aece25-d146-4447-9756-f537acadace1@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,10 +41,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251013233305.GS6188@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <97aece25-d146-4447-9756-f537acadace1@gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Looks good:
+On Mon, Oct 13, 2025 at 10:42:03PM +0800, Anand Jain wrote:
+>> So I /think/ you just validated that the skip if !CONFIG_BLK_DEV_ZONED
+>> && !CONFIG_XFS_RT check works.
+>>
+>
+> Ah, thanks for clarifying. Any idea if the redirect to seqres.full can be 
+> fixed? It was missing the mkfs errors.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+With "fixed" you mean not having the mkfs errors in $seqres.full?  It's
+kinda useful to have the messages there to see why the test wasn't run.
+What speaks against having the messages logged?
 
