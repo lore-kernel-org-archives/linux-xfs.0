@@ -1,36 +1,51 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1150CEEDE
-	for <linux-xfs@vger.kernel.org>; Wed, 15 Oct 2025 12:42:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AACAA21885A
+	for <linux-xfs@vger.kernel.org>; Wed, 15 Oct 2025 15:14:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760532123; cv=none; b=XrXAif6Om5YaoE3cIgCAnf4Wf8MZhcDSc0xk1fmo4QBP/USgSkmfpMw/v02NbyW4vl2nBczbmClCUM8dqGFb5dY/IyykbbLwo7hXL+ZDNF8f0tMmxmy4Z495DB0nm0tlyRpUqjG5eATfqrkOElUgE4JMI17Z2qFG9HZdddQar90=
+	t=1760541273; cv=none; b=AhBnoqSiOqHXOmLSo8AnZalRVXFgij6iylPD5DK1ToEKKRaRQgQPbN0LlAnIcKFKeLk+iCUahEDyuMFn+luYUVdQD221iRelDZ2C+NIqwKhB6oHU5rGWTozOCbpo7My+MydYuCWmWlUkVLYMnM3+exnDcAE7L59qogwAyiBx1z4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760532123; c=relaxed/simple;
-	bh=Tc8yRzsT9yxsgZq6Q6w8E79mtYuofvY+m7YG5cBJbf4=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=d0IHp4ezeRsp1NhglJUAauQxC7Yxq5iv5PUyhq6a2cFySVBAxE5QIxG6UlY31sX0A9NnQrNKAFWQNMSXTwCBQNdRrYu7wpVSKcdMJcmEg7jsxxSOvNkTsTGlw0lICI8KEUWkeHuJYk28GyvPVWb6LFEd0XeM4aR2isuJV/sTC3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j9v1E+mx; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760541273; c=relaxed/simple;
+	bh=zl7CKxPW3rGp/tzT4zjLV0AVXIMByI3wJaBb5g8f8nk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cditlAPkObgLkf5vAPsmbpIgIXeV+L+AtSWYGzFgtk0Gn43wkz5vOTZLKEuT1BaUu/lUhNbJTNDRN/xQZ/RqQMdhD0q6FBscoLPNEzO4sAXboivIiffcNgGBBJMM5BC6dGk/sOGbXlycK3AScYxAcmWaRmzAgtg6/TciG/ke6Y4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=XN7dLolz; arc=none smtp.client-ip=18.9.28.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j9v1E+mx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EEB8C4CEFE
-	for <linux-xfs@vger.kernel.org>; Wed, 15 Oct 2025 12:42:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760532122;
-	bh=Tc8yRzsT9yxsgZq6Q6w8E79mtYuofvY+m7YG5cBJbf4=;
-	h=Date:From:To:Subject:From;
-	b=j9v1E+mx731cWlkkUp15/HIEHCFi4VmNf13W7nMzk08g6Aus5OwwyFZYNoW5VjMEy
-	 1SV2kOFt7fFXC0QmqwPp7Mz2UDbPAHuB1Of7VAPQ+ty60cEL8bS8XmS92ssp92rHNs
-	 HJS8zWvVDLnG94WIi3H7Lw/mOSmiTdAKvLSnc0d3pn8WTLooS+3gOE4mIANpOC+cG7
-	 qepBkbd1kLIJfpb1AMCQa/dSj4puvxTSQJAZehAO0HkCqt0O/4E4e38CKcesFXak+F
-	 O6Dye+HAixBS9m3IeoJj5yZBxmy/qdH8SECgnhYQ3OYDMMuN1EIIRsHB2PVZo5SJzs
-	 LQOUd6QzxiXKw==
-Date: Wed, 15 Oct 2025 14:41:58 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 3a8660878839
-Message-ID: <5rxujvudle5m5vtkr4toqgnyplfosi5pxhitwdf5et5tblhesz@sqddx3wnraml>
+	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="XN7dLolz"
+Received: from trampoline.thunk.org (pool-173-48-113-184.bstnma.fios.verizon.net [173.48.113.184])
+	(authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 59FFDrk7013069
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 15 Oct 2025 11:13:54 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+	t=1760541238; bh=/8PdHQt80eigPDJZ5EBlPY1pQSNfCt+AMOYaxY9njWE=;
+	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+	b=XN7dLolzgmYMYPpg8AxvRudqr3f2lce7C+Lv57v8XFtyyzlXrX7+KqVp6ejSQE3RC
+	 ItRezbFf35T3vLyabBS1b1RnKyfAkCkctiBzJpcx7TohOH3kQW8Eo3y+47ULuV6Knu
+	 YmjH2S0GJSWQxBMu6lVG8Fx46llx0flAfVn+rL/kFu30B6RkudQELJTvTpZK6wOM4/
+	 KO0/7nE8zzghZW2boAGMIj+3WvG/wL7QI6DEGGzv847giX4dLRRnRN2gR/mOgzVG+3
+	 K3tzDOKYkPSx5IqSvFe7ajOMWyD0OB9LjZdGlju1aN2FRUCp/rR3iFJhfmWUDhsg2U
+	 nASEg5ZKrF1kg==
+Received: by trampoline.thunk.org (Postfix, from userid 15806)
+	id 97EBD2E00D9; Wed, 15 Oct 2025 11:13:53 -0400 (EDT)
+Date: Wed, 15 Oct 2025 11:13:53 -0400
+From: "Theodore Ts'o" <tytso@mit.edu>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+        Carlos Maiolino <cem@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>, willy@infradead.org,
+        dlemoal@kernel.org, hans.holmberg@wdc.com, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] writeback: allow the file system to override
+ MIN_WRITEBACK_PAGES
+Message-ID: <20251015151353.GA786497@mit.edu>
+References: <20251015062728.60104-1-hch@lst.de>
+ <20251015062728.60104-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,22 +54,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20251015062728.60104-3-hch@lst.de>
 
+On Wed, Oct 15, 2025 at 03:27:15PM +0900, Christoph Hellwig wrote:
+> The relatively low minimal writeback size of 4MiB leads means that
+> written back inodes on rotational media are switched a lot.  Besides
+> introducing additional seeks, this also can lead to extreme file
+> fragmentation on zoned devices when a lot of files are cached relative
+> to the available writeback bandwidth.
+> 
+> Add a superblock field that allows the file system to override the
+> default size.
 
+I wonder if we should bump the default; and if the concern is that
+might be problematic for super slow devices (e.g., cheap USB thumb
+drives), perhaps we can measure the time needed to complete the
+writeback, and then dynamically adjust the value based on the apparent
+write bandwidth?
 
-Hi folks,
+We could have each file system implement something like this, but
+maybe there should be a way to do this in fs generic code?
 
-The for-next branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-This just updates for-next for the 6.18 fixes cycle. No patches have
-been added to the branch.
-
-The new head of the for-next branch is commit:
-
-3a8660878839 Linux 6.18-rc1
-
-Carlos
+	      	    	      	       - Ted
