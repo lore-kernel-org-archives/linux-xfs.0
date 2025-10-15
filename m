@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27E8C274FD0;
-	Wed, 15 Oct 2025 15:37:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9362F330D41;
+	Wed, 15 Oct 2025 15:48:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760542623; cv=none; b=MpLemvEK5WPsx4iOAB4V+gltX1Q9ROLfBdqwmYlEAqTWE6/UmWHnyNTwLjh2sqLR2VESv7oUY3YZ6A6uMzX+PgJeyqUegzOLKXNmgoHzuaIFumERY+baPdj6iAIKs/tJiWz/MRpdxOMZS5NJPvYfips8wK9M2pRL8rr8bEy64a8=
+	t=1760543309; cv=none; b=O2bvYNJskQQ4lvO6qV+nV3Q+n58rkQxMFR9uvDaWKkW7m4vHiRcvcywJmlwfx0axDR706qHJTYvgzs2msjOs5OZTFuT2X70AsUqvevd6d1Llm+WB1eF2CT026EFPqECxuYu7PaW98Jb2wKfUo5wRAXD9fiBN62wQGq0BoAmjXO8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760542623; c=relaxed/simple;
-	bh=IRi/SXyb72T5Nu6jdCpqgpazAGejm/gBUEwbA7A+Euo=;
+	s=arc-20240116; t=1760543309; c=relaxed/simple;
+	bh=PcbD53IFifY51gjnE3lF1GZ9oomY08lolU7XOa7R1yY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RZ+NOZcZfZ3jMQiGC4ewT1rv6DgPxkTPZF2k6DixPanCMukdofBYjwVinJNhazQcm7shSPuB2NK6IP9V6rnu9fjHvGomOYSSjr/iOQjfPujQOhBVoBXbj7fWSD+C6HGEP5lJb6R/T25446FYJTKTCtjKPtGkHo4SGll3RJOahMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ScTYFIFs; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fLSX1PTWMUXrplq/YOaLnpO0R2Ge/8rPNG0+f8B44sF8o4vwpDOkOJaNTXfAbx3Fg3X4rHWNEZbmIJaoiSpZulu2Y/nNEX+xUsDEf+Yk2jTnShHQbYv6q/FXDKCI12w7C+6k7vHbaB4SJbY+X1F5mykoZLYbyo7qpIo7pJHrBrE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dGT/6glt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ScTYFIFs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BCE5C4CEF8;
-	Wed, 15 Oct 2025 15:37:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dGT/6glt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03EA4C4CEF9;
+	Wed, 15 Oct 2025 15:48:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760542622;
-	bh=IRi/SXyb72T5Nu6jdCpqgpazAGejm/gBUEwbA7A+Euo=;
+	s=k20201202; t=1760543309;
+	bh=PcbD53IFifY51gjnE3lF1GZ9oomY08lolU7XOa7R1yY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ScTYFIFsqSpN5CvDLERY1Dmj96xRok0knf08wbTYQgtgax4WARNlwU9RBjURGJhJ+
-	 wSfqo0PCnyo4Ugps+H8xW0fGROZg+dlLD9i51p5mehdYXdfwGMAnnm6e/M9kS42TzF
-	 hUsTnWo1kTWTApWXSwtFbXckwPrrnhwGgjfPLA2lBLacZ60q6z3sJX4dEq15GKTPxV
-	 uetC1s5U6H2pKRlN3ct6tRkFJH1pmavyDwi+/rhYy9I5tlzhPG1ABFzId4VdXkYIF/
-	 GA1HUR6bDFzYOU3uUjEO/oP/uJezUKIPkXhkdEpa53d4P5c0dCeazqca9pGV9x3wOe
-	 iJvgmxaSXbPsw==
-Date: Wed, 15 Oct 2025 08:37:02 -0700
+	b=dGT/6gltZPJO/FyYdlzCYW8E53mSDMc15Fbkhf2G1qeh1fzUiO8x41AQQ2cKyY21c
+	 J1xg5b+79/nGS295RKo7cSJ2MicE20a9wDH3GrJGN875lLkXSX23X5E8+3uaep2oKU
+	 sANESm35StR8asw4Iwjz5YJqWSLfRnmww36hIH9jjmSlrwAOKUZ79v1IB2uNo3rYN6
+	 ofMJIeLd0HfjBZyMTuBcuJgirXGj6fqZktdoYDhb0NWsnbzSwi93u5oqpQ7ejKb77u
+	 5NyRQ22RrCf7NsILcn1I0mSqX4ibvgDilMcr6kxwME3Eb4v0WlnQyt3VWNW13T3IKD
+	 X/K5vvyFlLAWA==
+Date: Wed, 15 Oct 2025 08:48:28 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	Oleksandr Natalenko <oleksandr@natalenko.name>,
-	Pavel Reichl <preichl@redhat.com>,
-	Thorsten Leemhuis <linux@leemhuis.info>
-Subject: Re: [PATCH v2 3/3] xfs: quietly ignore deprecated mount options
-Message-ID: <20251015153702.GY6188@frogsfrogsfrogs>
-References: <20251015050133.GV6188@frogsfrogsfrogs>
- <20251015050431.GX6188@frogsfrogsfrogs>
- <93c2e9a0-f374-4211-b4a0-06c716e7d950@suse.cz>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	Carlos Maiolino <cem@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>, willy@infradead.org,
+	dlemoal@kernel.org, hans.holmberg@wdc.com, linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] writeback: cleanup writeback_chunk_size
+Message-ID: <20251015154828.GZ6188@frogsfrogsfrogs>
+References: <20251015062728.60104-1-hch@lst.de>
+ <20251015062728.60104-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,79 +46,51 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <93c2e9a0-f374-4211-b4a0-06c716e7d950@suse.cz>
+In-Reply-To: <20251015062728.60104-2-hch@lst.de>
 
-On Wed, Oct 15, 2025 at 10:07:54AM +0200, Vlastimil Babka wrote:
-> On 10/15/25 07:04, Darrick J. Wong wrote:
-> >  static const struct fs_parameter_spec xfs_fs_parameters[] = {
-> > +	/*
-> > +	 * These mount options were supposed to be deprecated in September 2025
-> > +	 * but the deprecation warning was buggy, so not all users were
-> > +	 * notified.  The deprecation is now obnoxiously loud and postponed to
-> > +	 * September 2030.
-> > +	 */
+On Wed, Oct 15, 2025 at 03:27:14PM +0900, Christoph Hellwig wrote:
+> Return the pages directly when calculated instead of first assigning
+> them back to a variable, and directly return for the data integrity /
+> tagged case instead of going through an else clause.
 > 
-> FWIW, this seems at odds with the subject "quietly ignore" ;)
-> "loudly ignore"? ;)
-> "warn about but otherwise ignore"?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Ugh, yeah, I forgot to update the subject line.
-
-"xfs: loudly complain about defunct mount options", then.
-
-> Also there's maybe a difference of ignoring "attr2" because it's enabled
-> anyway, and ignoring "noattr2" because it's going to be enabled regardless.
-> AFAIK prior to b9a176e54162f8 "noattr2" still prevented the enabling? But
-> maybe it's not important. (I don't know how (no)ikeep works.)
-
-Old filesystems will be automatically upgraded to attr2 the next time
-anyone writes to an xattr structure.  After V4 is removed in 2030, xfs
-won't have to deal with attr1 structures anymore, because V5 always has
-attr2.
-
-noikeep was (and still is) the default; it means that inode blocks are
-deleted when they are no longer in use.
-
-> Hypothetically someone might complaing after taking a disk out of very old
-> system without attr2, booting it on 6.18 that will enable attr2, and not
-> being able to use it again in the old system. (Funnily enough similar issue
-> recently happened to me with btrfs from Turris 1.0 router's microSD). But
-> maybe there are other things besides attr2 that can cause it anyway.
-> 
-> Anyway I think even in 2030 it will be the best to just keep warning instead
-> of refusing to mount.
-
-I think you're right, we should keep this forever.  It's not that big of
-a deal to accumulate all the dead mount options via fsparam_dead, and
-probably a good tombstone to prevent accidental reuse in the future.
+Looks pretty simple to me,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> > +	fsparam_dead("attr2"),
-> > +	fsparam_dead("noattr2"),
-> > +	fsparam_dead("ikeep"),
-> > +	fsparam_dead("noikeep"),
-> > +
-> >  	fsparam_u32("logbufs",		Opt_logbufs),
-> >  	fsparam_string("logbsize",	Opt_logbsize),
-> >  	fsparam_string("logdev",	Opt_logdev),
-> > @@ -1417,6 +1431,9 @@ xfs_fs_parse_param(
-> >  		return opt;
-> >  
-> >  	switch (opt) {
-> > +	case Op_deprecated:
-> > +		xfs_fs_warn_deprecated(fc, param);
-> > +		return 0;
-> >  	case Opt_logbufs:
-> >  		parsing_mp->m_logbufs = result.uint_32;
-> >  		return 0;
-> > @@ -1537,7 +1554,6 @@ xfs_fs_parse_param(
-> >  		xfs_mount_set_dax_mode(parsing_mp, result.uint_32);
-> >  		return 0;
-> >  #endif
-> > -	/* Following mount options will be removed in September 2025 */
-> >  	case Opt_max_open_zones:
-> >  		parsing_mp->m_max_open_zones = result.uint_32;
-> >  		return 0;
+> ---
+>  fs/fs-writeback.c | 14 +++++---------
+>  1 file changed, 5 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index 2b35e80037fe..11fd08a0efb8 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -1893,16 +1893,12 @@ static long writeback_chunk_size(struct bdi_writeback *wb,
+>  	 *                   (maybe slowly) sync all tagged pages
+>  	 */
+>  	if (work->sync_mode == WB_SYNC_ALL || work->tagged_writepages)
+> -		pages = LONG_MAX;
+> -	else {
+> -		pages = min(wb->avg_write_bandwidth / 2,
+> -			    global_wb_domain.dirty_limit / DIRTY_SCOPE);
+> -		pages = min(pages, work->nr_pages);
+> -		pages = round_down(pages + MIN_WRITEBACK_PAGES,
+> -				   MIN_WRITEBACK_PAGES);
+> -	}
+> +		return LONG_MAX;
+>  
+> -	return pages;
+> +	pages = min(wb->avg_write_bandwidth / 2,
+> +		    global_wb_domain.dirty_limit / DIRTY_SCOPE);
+> +	pages = min(pages, work->nr_pages);
+> +	return round_down(pages + MIN_WRITEBACK_PAGES, MIN_WRITEBACK_PAGES);
+>  }
+>  
+>  /*
+> -- 
+> 2.47.3
 > 
 > 
