@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C859641C72;
-	Wed, 15 Oct 2025 05:03:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7694041C72;
+	Wed, 15 Oct 2025 05:04:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760504623; cv=none; b=kmQqoGmQF4L/WYmotIZga+ogAC5PdB5extvnCgNF//7xa++Eegtg9xS2qL9+cBEZ1iRconiLEVsXURtGunC3wM7tMaKV2Xc6eKOEjt7vSTJWSi+E24TWXdUzH24bgrDkXklNvQqDkKOc6lOMgaiet1bIyhKVRPp5cycncT7YDkc=
+	t=1760504672; cv=none; b=dalzLi4rqrEUMWSY39buHONWg0yGFlkVcKqpXrJ8x5MeJhHJutlXEiLIMcTmpx6L6a0bs5nsqv6GiqwJ/V3Ef1MCrTponcFE/rskR10L0spiAUyVolO9pPqtBPpzbTpdWmar6BdRYfcCCEWi1gUh+VFLzJwvuN91LPqIq0YvuSc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760504623; c=relaxed/simple;
-	bh=LaBvlQFWYVbJb0fHt4n4VS8ox54z/DshykGzwHUE9Ds=;
+	s=arc-20240116; t=1760504672; c=relaxed/simple;
+	bh=ROs0/aJSxf5bw4pfgvsocvKYTXYP3/TwCSPJpjDf5Dg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mrp7Zh7r7RAGje08aFv8smWDNfvvr8/QjWJCfZwMjONB4Wvcwn5/Yi4hYeEmdLJULiepKxlLTAMftr7cSqrdZ0Al5z+OQ2HKJCySIdvV0uWEkHEbK8ds72aLshCdyXghP+KQIGP6jF03puZES0k+EQ0UDxvSdQvu5EWTFNM/Gg0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sLasnQPw; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mrh91ECDP1kCrXKuh4DSYhv84vnJD5nt35mDIRqojo2Rs3sQmkR4i1PARw1kcERmGnTcqBG3PM1i8I4f1agifI5EzU6Ods/qfaR4Yghpq7gQJl5BErRQZEb6zG1rF9PucHv24dCcftuVHfLN7HOfqpK9f3Wq8nAb/X2qGNdSqp0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sp0jfe71; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sLasnQPw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38190C4CEF8;
-	Wed, 15 Oct 2025 05:03:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sp0jfe71"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7818C4CEF8;
+	Wed, 15 Oct 2025 05:04:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760504623;
-	bh=LaBvlQFWYVbJb0fHt4n4VS8ox54z/DshykGzwHUE9Ds=;
+	s=k20201202; t=1760504671;
+	bh=ROs0/aJSxf5bw4pfgvsocvKYTXYP3/TwCSPJpjDf5Dg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sLasnQPwfetLfPzTFeUO7B0qbLIRlir/3MtS2hh/+xHcdeM1uhRHvs8knbs1mvSpK
-	 6WYXAW22GlxqMq5qaSNO3iOjhl9JaCQ9bOWGKLmmk5SoKsW2CXs1qzYJ8vVdeXAobc
-	 71Eqs8qwBY/VkTov3XcLD0OPARwD2/RlLPhXCkOl9Ab84AwwJ659Xq2y0D7BcgvfhE
-	 eaOKWgycLoOO/XLDWHANZo/K30OQMIPCTjjWtqt6FZbyfEwuEMLimuVCIqJViq41St
-	 G0jhgzfCBrIp9msStEkAfqCc1q8DEa6YgwvdMzX9zeALpouv932stVjthHxhqFTBC8
-	 0Ug5EftAG+vMA==
-Date: Tue, 14 Oct 2025 22:03:42 -0700
+	b=sp0jfe7186tpxKBRrEUa538AiGg//w9/LT3qIFEyNIUAkahOzmmax+IKdgFJeeeTZ
+	 PCFfJTDrcVNMWviWH/QDPy3sTcgFZO6HsaXo0Gf00UK+rBa0Yu2j0JXXENrzWDCfpG
+	 JnF4QzdFgP5coB7+/yiWU89dWsDRzDt8SG36oU+0Wt/15mVlYoef0evHPYe4ESo+cQ
+	 g5YkGyG+VuvfKdhCXsfrXdNcLe2V4AxzMKc9QINK3Rbl7RmnXYdZpQFnkosQydk/w+
+	 DGUgRYh/XfamY5VTY21Fozs8PmABXs5HWGlgSB3nNF5blR0RZEgDMsOXW353zilAgq
+	 DWqWGwFMBS8Rw==
+Date: Tue, 14 Oct 2025 22:04:31 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
 	Oleksandr Natalenko <oleksandr@natalenko.name>,
 	Pavel Reichl <preichl@redhat.com>, Vlastimil Babka <vbabka@suse.cz>,
 	Thorsten Leemhuis <linux@leemhuis.info>
-Subject: [PATCH v2 2/3] xfs: always warn about deprecated mount options
-Message-ID: <20251015050342.GW6188@frogsfrogsfrogs>
+Subject: [PATCH v2 3/3] xfs: quietly ignore deprecated mount options
+Message-ID: <20251015050431.GX6188@frogsfrogsfrogs>
 References: <20251015050133.GV6188@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -48,57 +48,143 @@ In-Reply-To: <20251015050133.GV6188@frogsfrogsfrogs>
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The deprecation of the 'attr2' mount option in 6.18 wasn't entirely
-successful because nobody noticed that the kernel never printed a
-warning about attr2 being set in fstab if the only xfs filesystem is the
-root fs; the initramfs mounts the root fs with no mount options; and the
-init scripts only conveyed the fstab options by remounting the root fs.
+Apparently we can never deprecate mount options in this project, because
+it will invariably turn out that some foolish userspace depends on some
+behavior and break.  From Oleksandr Natalenko:
 
-Fix this by making it complain all the time.
+> In v6.18, the attr2 XFS mount option is removed. This may silently
+> break system boot if the attr2 option is still present in /etc/fstab
+> for rootfs.
+>
+> Consider Arch Linux that is being set up from scratch with / being
+> formatted as XFS. The genfstab command that is used to generate
+> /etc/fstab produces something like this by default:
+>
+> /dev/sda2 on / type xfs (rw,relatime,attr2,discard,inode64,logbufs=8,logbsize=32k,noquota)
+>
+> Once the system is set up and rebooted, there's no deprecation warning
+> seen in the kernel log:
+>
+> # cat /proc/cmdline
+> root=UUID=77b42de2-397e-47ee-a1ef-4dfd430e47e9 rootflags=discard rd.luks.options=discard quiet
+>
+> # dmesg | grep -i xfs
+> [    2.409818] SGI XFS with ACLs, security attributes, realtime, scrub, repair, quota, no debug enabled
+> [    2.415341] XFS (sda2): Mounting V5 Filesystem 77b42de2-397e-47ee-a1ef-4dfd430e47e9
+> [    2.442546] XFS (sda2): Ending clean mount
+>
+> Although as per the deprecation intention, it should be there.
+>
+> Vlastimil (in Cc) suggests this is because xfs_fs_warn_deprecated()
+> doesn't produce any warning by design if the XFS FS is set to be
+> rootfs and gets remounted read-write during boot. This imposes two
+> problems:
+>
+> 1) a user doesn't see the deprecation warning; and
+> 2) with v6.18 kernel, the read-write remount fails because of unknown
+>    attr2 option rendering system unusable:
+>
+> systemd[1]: Switching root.
+> systemd-remount-fs[225]: /usr/bin/mount for / exited with exit status 32.
+>
+> # mount -o rw /
+> mount: /: fsconfig() failed: xfs: Unknown parameter 'attr2'.
+>
+> Thorsten (in Cc) suggested reporting this as a user-visible regression.
+>
+> From my PoV, although the deprecation is in place for 5 years already,
+> it may not be visible enough as the warning is not emitted for rootfs.
+> Considering the amount of systems set up with XFS on /, this may
+> impose a mass problem for users.
+>
+> Vlastimil suggested making attr2 option a complete noop instead of
+> removing it.
 
-Cc: <stable@vger.kernel.org> # v5.13
-Fixes: 92cf7d36384b99 ("xfs: Skip repetitive warnings about mount options")
+IOWs, the initrd mounts the root fs with (I assume) no mount options,
+and mount -a remounts with whatever options are in fstab.  However,
+XFS doesn't complain about deprecated mount options during a remount, so
+technically speaking we were not warning all users in all combinations
+that they were heading for a cliff.
+
+Gotcha!!
+
+Now, how did 'attr2' get slurped up on so many systems?  The old code
+would put that in /proc/mounts if the filesystem happened to be in attr2
+mode, even if user hadn't mounted with any such option.  IOWs, this is
+because someone thought it would be a good idea to advertise system
+state via /proc/mounts.
+
+The easy way to fix this is to reintroduce the four mount options but
+map them to a no-op option that ignores them, and hope that nobody's
+depending on attr2 to appear in /proc/mounts.  (Hint: use the fsgeometry
+ioctl).  But we've learned our lesson, so complain as LOUDLY as possible
+about the deprecation.
+
+Lessons learned:
+
+ 1. Don't expose system state via /proc/mounts; the only strings that
+    ought to be there are options *explicitly* provided by the user.
+ 2. Never tidy, it's not worth the stress and irritation.
+
+Reported-by: oleksandr@natalenko.name
+Reported-by: vbabka@suse.cz
+Cc: <stable@vger.kernel.org> # v6.18-rc1
+Fixes: b9a176e54162f8 ("xfs: remove deprecated mount options")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_super.c |   25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_super.c |   20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e85a156dc17d16..ae9b17730eaf41 100644
+index ae9b17730eaf41..d8f326d8838036 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -1373,16 +1373,25 @@ suffix_kstrtoull(
- static inline void
- xfs_fs_warn_deprecated(
- 	struct fs_context	*fc,
--	struct fs_parameter	*param,
--	uint64_t		flag,
--	bool			value)
-+	struct fs_parameter	*param)
- {
--	/* Don't print the warning if reconfiguring and current mount point
--	 * already had the flag set
-+	/*
-+	 * Always warn about someone passing in a deprecated mount option.
-+	 * Previously we wouldn't print the warning if we were reconfiguring
-+	 * and current mount point already had the flag set, but that was not
-+	 * the right thing to do.
-+	 *
-+	 * Many distributions mount the root filesystem with no options in the
-+	 * initramfs and rely on mount -a to remount the root fs with the
-+	 * options in fstab.  However, the old behavior meant that there would
-+	 * never be a warning about deprecated mount options for the root fs in
-+	 * /etc/fstab.  On a single-fs system, that means no warning at all.
-+	 *
-+	 * Compounding this problem are distribution scripts that copy
-+	 * /proc/mounts to fstab, which means that we can't remove mount
-+	 * options unless we're 100% sure they have only ever been advertised
-+	 * in /proc/mounts in response to explicitly provided mount options.
- 	 */
--	if ((fc->purpose & FS_CONTEXT_FOR_RECONFIGURE) &&
--            !!(XFS_M(fc->root->d_sb)->m_features & flag) == value)
--		return;
- 	xfs_warn(fc->s_fs_info, "%s mount option is deprecated.", param->key);
- }
+@@ -102,7 +102,7 @@ static const struct constant_table dax_param_enums[] = {
+  * Table driven mount option parser.
+  */
+ enum {
+-	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev,
++	Op_deprecated, Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev,
+ 	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth, Opt_nouuid,
+ 	Opt_grpid, Opt_nogrpid, Opt_bsdgroups, Opt_sysvgroups,
+ 	Opt_allocsize, Opt_norecovery, Opt_inode64, Opt_inode32,
+@@ -114,7 +114,21 @@ enum {
+ 	Opt_lifetime, Opt_nolifetime, Opt_max_atomic_write,
+ };
  
++#define fsparam_dead(NAME) \
++	__fsparam(NULL, (NAME), Op_deprecated, fs_param_deprecated, NULL)
++
+ static const struct fs_parameter_spec xfs_fs_parameters[] = {
++	/*
++	 * These mount options were supposed to be deprecated in September 2025
++	 * but the deprecation warning was buggy, so not all users were
++	 * notified.  The deprecation is now obnoxiously loud and postponed to
++	 * September 2030.
++	 */
++	fsparam_dead("attr2"),
++	fsparam_dead("noattr2"),
++	fsparam_dead("ikeep"),
++	fsparam_dead("noikeep"),
++
+ 	fsparam_u32("logbufs",		Opt_logbufs),
+ 	fsparam_string("logbsize",	Opt_logbsize),
+ 	fsparam_string("logdev",	Opt_logdev),
+@@ -1417,6 +1431,9 @@ xfs_fs_parse_param(
+ 		return opt;
+ 
+ 	switch (opt) {
++	case Op_deprecated:
++		xfs_fs_warn_deprecated(fc, param);
++		return 0;
+ 	case Opt_logbufs:
+ 		parsing_mp->m_logbufs = result.uint_32;
+ 		return 0;
+@@ -1537,7 +1554,6 @@ xfs_fs_parse_param(
+ 		xfs_mount_set_dax_mode(parsing_mp, result.uint_32);
+ 		return 0;
+ #endif
+-	/* Following mount options will be removed in September 2025 */
+ 	case Opt_max_open_zones:
+ 		parsing_mp->m_max_open_zones = result.uint_32;
+ 		return 0;
