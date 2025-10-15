@@ -1,38 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2AC019D093;
-	Wed, 15 Oct 2025 16:38:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0A142EBBA4;
+	Wed, 15 Oct 2025 16:38:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760546281; cv=none; b=U8YQRN/GTiAaO3KVIro1nQHIch2GIb3veOPvDAxhK/hsNMvcFIoEzeh5wBT2SEbl2UMxpIWbO7FX4Riky6FEqx13hhC05vsv9uVuM7++zIBTNPqvPHBx5GoT33jE5E2cyzKU48+xLBse+WmV12ghGs8YJXvEeQ/G5lvWTlwRJJo=
+	t=1760546297; cv=none; b=BF39uTrF7nB82AjTSMnqPKzyIpDmvPnXWq81L26LB7y4G3qUkEld7ZC0yfeAH7aYessmXi1BIgQI2LIJiqubW6J4ZBFw/RMqQ1OLFWvrpfYm1ycZAGyugJxMc1DTWMgckVPyeOdcRZBDrVYrrLrwEDWbXokgXMgyuPZEuhAFa6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760546281; c=relaxed/simple;
-	bh=TYOBnG0CK9shxknh8g8hG1zLWa7O7QdISrjo6OR/Pt8=;
+	s=arc-20240116; t=1760546297; c=relaxed/simple;
+	bh=vDNJ+AASOwdSFVOeilxAJJVHodPENdm1KfaX5EXZz70=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=l/gkRA+hgB38QPDa1X1Qof7HCY61yeOS53HC65vFNNC0s8FDHnsrJv6uhOr+ycsQ5yLQ7dC6NW+wyxUiB+m7mllw0DwR5kfIluHq0/ECj0UvEHk6tvxxgFxCXQ/WvMTHNHlZp2602PWpuXSt5myshAibLjHH+iiuur+ARukJThk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DL7nLkz2; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XZGc6B33l1fwlC1C3uSPsaC9BsHa5r0RSk2+Cd6I2oPEOOJLzMSiZ6rya79DkkSc8H4CMQ4aIBP37xa/2koXyLBB/28UGEpZS2rvijg//2OlPtEzpnbhZumjw34ukSGUTf3xCAPwdz+YRgQ6XCnvb6Av2z0QcFdVc4xuHC8GO+w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BWI/xUnP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DL7nLkz2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B29DC4CEF9;
-	Wed, 15 Oct 2025 16:38:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BWI/xUnP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48CB2C4CEF8;
+	Wed, 15 Oct 2025 16:38:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760546281;
-	bh=TYOBnG0CK9shxknh8g8hG1zLWa7O7QdISrjo6OR/Pt8=;
+	s=k20201202; t=1760546297;
+	bh=vDNJ+AASOwdSFVOeilxAJJVHodPENdm1KfaX5EXZz70=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=DL7nLkz2plsXfPWFvlhiDhjBU/bsvVgE4eNUaPfHyN2mI6OpwAOfZ6p1GeRXPu/Kx
-	 wdrj0tE/Vw5fUUgVjWF+m/9SdHFZ7rUhNVbSCSY6mqG/3+UaqC2RaKRkp0kt6OXxUy
-	 EeQ26YL5PXvQIsq3MtGvBHdwkBmeR2A6nyAFsKoU+6OITshYIqPIj+ogImgEGZEb5v
-	 UA91inSpkRUIERMEzVUpXw7+lo41n2rAvijsy/JxRbb3tAgp6rLT9jbK/mOZ1RlZn8
-	 s9XLgWNcssUbRghOeIgLXoCwQnlir/S4/hWycF3b9pKEiWTft4wOxp+jHwbrIj816D
-	 f4dyLEiDmrIwQ==
-Date: Wed, 15 Oct 2025 09:38:01 -0700
-Subject: [PATCH 5/8] generic/772: actually check for file_getattr special file
- support
+	b=BWI/xUnPEbExLZreYEw46mezVBl6L0BiwoeBHqsa+Gqd1dUmQgL69JBrolrrsVo52
+	 q6HCSMGV0mzwL2i/AnLYhpKwY9lncCMfKPeeS2RduJF3/lccA/Efs6p5FztnxC+UJL
+	 1rzC1RCiaHbG+vRpxTMTitchIHn/aoWtsVbC3h2UdN4WDXnCKMQRdGz4eu0MTTJ5dt
+	 wqX7thuMkzj+fDChcviPqF7AS2cvDJFLZ29FKt0BCUmZnl/UQHcVQ14u2WmsGelhCF
+	 pyyvdhC25NKKLr7pqLEn3WbHXqdQStOrvPZeLwv7GAoMdWCq0daucX3lqa/ySL8owL
+	 nCyGFjybwgXcA==
+Date: Wed, 15 Oct 2025 09:38:16 -0700
+Subject: [PATCH 6/8] common/filter: fix _filter_file_attributes to handle xfs
+ file flags
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <176054617988.2391029.18130416327249525205.stgit@frogsfrogsfrogs>
+Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Message-ID: <176054618007.2391029.16547003793604851342.stgit@frogsfrogsfrogs>
 In-Reply-To: <176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
 References: <176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,61 +47,32 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-On XFS in 6.17, this test fails with:
+Currently, _filter_file_attributes can only filter ext4 lsattr flags.
+Update it to handle XFS lsattr flags as well.
 
- --- /run/fstests/bin/tests/generic/772.out	2025-10-06 08:27:10.834318149 -0700
- +++ /var/tmp/fstests/generic/772.out.bad	2025-10-08 18:00:34.713388178 -0700
- @@ -9,29 +9,34 @@ Can not get fsxattr on ./foo: Invalid ar
-  Can not set fsxattr on ./foo: Invalid argument
-  Initial attributes state
-  ----------------- SCRATCH_MNT/prj
- ------------------ ./fifo
- ------------------ ./chardev
- ------------------ ./blockdev
- ------------------ ./socket
- ------------------ ./foo
- ------------------ ./symlink
- +Can not get fsxattr on ./fifo: Inappropriate ioctl for device
- +Can not get fsxattr on ./chardev: Inappropriate ioctl for device
- +Can not get fsxattr on ./blockdev: Inappropriate ioctl for device
- +Can not get fsxattr on ./socket: Inappropriate ioctl for device
-
-This is a result of XFS' file_getattr implementation rejecting special
-files prior to 6.18.  Therefore, skip this new test on old kernels.
-
+Cc: <fstests@vger.kernel.org> # v2025.10.05
+Fixes: 4eb40174d77c1b ("generic: introduce test to test file_getattr/file_setattr syscalls")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/generic/772 |    3 +++
- tests/xfs/648     |    3 +++
- 2 files changed, 6 insertions(+)
+ common/filter |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/tests/generic/772 b/tests/generic/772
-index cc1a1bb5bf655c..e68a6724654450 100755
---- a/tests/generic/772
-+++ b/tests/generic/772
-@@ -43,6 +43,9 @@ touch $projectdir/bar
- ln -s $projectdir/bar $projectdir/broken-symlink
- rm -f $projectdir/bar
- 
-+file_attr --get $projectdir ./fifo &>/dev/null || \
-+	_notrun "file_getattr not supported on $FSTYP"
-+
- echo "Error codes"
- # wrong AT_ flags
- file_attr --get --invalid-at $projectdir ./foo
-diff --git a/tests/xfs/648 b/tests/xfs/648
-index 215c809887b609..e3c2fbe00b666a 100755
---- a/tests/xfs/648
-+++ b/tests/xfs/648
-@@ -47,6 +47,9 @@ touch $projectdir/bar
- ln -s $projectdir/bar $projectdir/broken-symlink
- rm -f $projectdir/bar
- 
-+$here/src/file_attr --get $projectdir ./fifo &>/dev/null || \
-+	_notrun "file_getattr not supported on $FSTYP"
-+
- $XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
- 	-c "project -sp $projectdir $id" $SCRATCH_DEV | filter_quota
- $XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+diff --git a/common/filter b/common/filter
+index b330b27827d005..c3a751dd0c398c 100644
+--- a/common/filter
++++ b/common/filter
+@@ -688,10 +688,11 @@ _filter_sysfs_error()
+ # 	... | _filter_file_attributes X
+ # Or to filter all except X
+ # 	... | _filter_file_attributes ~X
++# Be careful, we're filtering lsattr or xfs_io -c lsattr flags.
+ _filter_file_attributes()
+ {
+ 	if [[ $1 == ~* ]]; then
+-		regex=$(echo "[aAcCdDeEFijmNPsStTuxVX]" | tr -d "$1")
++		regex=$(echo "[aAcCdDeEfFijmNpPsrStTuxVX]" | tr -d "$1")
+ 	else
+ 		regex="$1"
+ 	fi
 
