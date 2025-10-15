@@ -1,49 +1,106 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from fout-b3-smtp.messagingengine.com (fout-b3-smtp.messagingengine.com [202.12.124.146])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF210314B79;
-	Wed, 15 Oct 2025 07:28:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D7D5263F4E;
+	Wed, 15 Oct 2025 07:40:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760513287; cv=none; b=o/BjW1nYvl9xX2QyiHGE7W3CW9Oiv00499RY2V2NQmqQ1VamtsYBjmWSgbJWU2Q4P2hwIFutkp/uKSkZrA7SO/iQmXgXCgqmGEpSr6uwVrp43AA4v06Q6S+ZqZHucOadmYe9Cq+4KbVPuYNIIndnt6+6mAFGS6bihgfk/AkwA68=
+	t=1760514018; cv=none; b=e0GLF3vT6z4oxasRKvFkVmhLBbW2+vFPikKl1bSI1lNtgMnAWsq5Ft5koQTLfmmWkTC/WOjJhAwxZfewzXn24TKwS9jXbW76nnhYLTv4isKNe3kydbMAqJ+GBgJuLUSHOWSTc2NmUGsc/MQfC7jH59Va6iiDEEGVUY4pVqpUZ7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760513287; c=relaxed/simple;
-	bh=hccsorJh9VrCcg3u5Ec8lYyp8crSG/qLdkP/hzDSzjA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hH9RTrI568sT36FFfnF0naYRHMthDNKEqySb9R0so1v6yVr1wbmUWwLZW+A2ff8CQFD1OfXuCGqVR24/of1q7WzxtUn++1Y2djaSYNjWPx+wDd0TM+KKoGjCxlIu3I3uTPvWMMQffJ/D3jcKNaMuZ/wDFzwaTYSNAzWNciSCOes=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id D75E5227A88; Wed, 15 Oct 2025 09:27:58 +0200 (CEST)
-Date: Wed, 15 Oct 2025 09:27:58 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
-	Jan Kara <jack@suse.cz>, Carlos Maiolino <cem@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>, willy@infradead.org,
-	hans.holmberg@wdc.com, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] writeback: allow the file system to override
- MIN_WRITEBACK_PAGES
-Message-ID: <20251015072758.GA11224@lst.de>
-References: <20251015062728.60104-1-hch@lst.de> <20251015062728.60104-3-hch@lst.de> <a1671515-4aec-46a0-aff0-75ea8540394c@kernel.org>
+	s=arc-20240116; t=1760514018; c=relaxed/simple;
+	bh=F0VKENaBvovfiSlT8xKlI6nQPaA7vokKgfJZteYn964=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=oTZBUXQ3Gt1PKSgAkmKH4lZFc1Fpv3Kg58U/AC5xJ/r/1bCopGJNn7etETxilodzxVK0Ta6qP0txopyhpZESNVMViGKpijZD6kqNu5tFtYP1wgWff20OK5BrjaBzr6wN4actfBRo2lbRJmalXh2vaT0E7XwDmCwedZy30dW1lpg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name; spf=pass smtp.mailfrom=shutemov.name; dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b=HeQj2jaf; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=uLbnibNe; arc=none smtp.client-ip=202.12.124.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shutemov.name
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b="HeQj2jaf";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="uLbnibNe"
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfout.stl.internal (Postfix) with ESMTP id 231051D001CE;
+	Wed, 15 Oct 2025 03:40:15 -0400 (EDT)
+Received: from phl-imap-10 ([10.202.2.85])
+  by phl-compute-04.internal (MEProxy); Wed, 15 Oct 2025 03:40:15 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shutemov.name;
+	 h=cc:cc:content-transfer-encoding:content-type:content-type
+	:date:date:from:from:in-reply-to:in-reply-to:message-id
+	:mime-version:references:reply-to:subject:subject:to:to; s=fm3;
+	 t=1760514014; x=1760600414; bh=mhTvKNjDWORy40SOn/DpL+Jsth7I0286
+	Q518PgEEowk=; b=HeQj2jafkF0vTfOTyfDFcbDCaAJv5ndMmHcjmcubECs792VI
+	++8nFLzWgFy+p+7YBNFfama4/+iKAfI6WQkhXGmyuOgA9U+twL1peq3rCSUtbRia
+	FzJb/y+xMV+x8wdrhwKL2BZzsaUYks2Pxy7u+VGcivpqLvX9NmKe+8bJ1KhkmoLS
+	2SwBvfdVYNyKyF3kRhONNLTI4dHAQEPC7erbdCnpbFwQ45BPO1+tHH9UL/JDU1ms
+	hqID6V6U8tGQG/2oYoBXYYRWiH1qdqRQlRx4wn4kBKK15poaKV8oupQTtxURcipJ
+	gHk5WgYPpQ4f62jTcA4w0dRwtlSsIrX0ZrZEzA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1760514014; x=
+	1760600414; bh=mhTvKNjDWORy40SOn/DpL+Jsth7I0286Q518PgEEowk=; b=u
+	LbnibNegX1nlLwH+tYItt+hl0UMp6N1A18f5ba5ndZY4AICwwm4oGq7HWaJIuaSK
+	O6DWsHeTkQ1xdsxjfLI3ge5pA015tVTAlL+M1ZdHs4cI07BXcUgAfpZTgEpbSalr
+	8zuHwp0FJnhYTjJOHbEotaKMslP2gYFe6QMApFTLxlGgVtITSa1uGVbhZKJVb72D
+	rhJYqyZDl2jTiK5AvLHROvly1M6lL+C6TlTKdHsa7LdHNOekkzvfO85bi6BLTgMK
+	5f9T8oWRTi540muNaLXeeGofgsUiA08j6T5sU+Vx1uqEgACmjX9Me7qqCGoHNFw3
+	OhmcrBBU8jjS/7G55g2Hg==
+X-ME-Sender: <xms:3k_vaOCHSszB2XjJaNKKkzyTR3AyDqAMXn5feq4-D7KHkcLEJ0aaeA>
+    <xme:3k_vaDXu3U8ADuZY4BwtSII_zcAIPgTupwyQSLfNUtGKQEyyjQ_aKqPoKcXjhtIA1
+    juEboi_JLEr4R8f4C0X38xZx3A-At5dxI34Smqkqh6EN1zRsnvnV6U>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdeggdduvddvkeefucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedfmfhirhhi
+    lhhlucetrdcuufhhuhhtvghmohhvfdcuoehkihhrihhllhesshhhuhhtvghmohhvrdhnrg
+    hmvgeqnecuggftrfgrthhtvghrnhepgfevvddtvdegheekgeegvefhleevteeghfevieej
+    hfejhefgtdehleffvdevtedvnecuffhomhgrihhnpehgihhthhhusgdrtghomhenucevlh
+    hushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehkihhrihhllhes
+    shhhuhhtvghmohhvrdhnrghmvgdpnhgspghrtghpthhtohepiedpmhhouggvpehsmhhtph
+    houhhtpdhrtghpthhtohepfihilhhlhiesihhnfhhrrgguvggrugdrohhrghdprhgtphht
+    thhopegujhifohhngheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqmh
+    hmsehkvhgrtghkrdhorhhgpdhrtghpthhtoheprghkphhmsehlihhnuhigqdhfohhunhgu
+    rghtihhonhdrohhrghdprhgtphhtthhopehlihhnuhigqdhfshguvghvvghlsehvghgvrh
+    drkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqgihfshesvhhgvghrrdhk
+    vghrnhgvlhdrohhrgh
+X-ME-Proxy: <xmx:3k_vaED22WLve9jZiRv2Gjd-J-HYJYE8ydeBbvatr8ZxNmrjNBO6KA>
+    <xmx:3k_vaBd4O_zaJtJpqgihPa4y-ceRwHSJXEjg7I1WzucCnxwVniWN-Q>
+    <xmx:3k_vaGlCc4i_kAC05bIDWeuukZyctAy3gC5hLjaeEiQrwrYbGDvTmg>
+    <xmx:3k_vaAGhV-z4d_pxOz7Zydve9MbRj-yvf0Bo_TirkVHQbzPF9tKpPA>
+    <xmx:3k_vaAysEYc9reCf7lk8Sgxq4DeVmNi9WFy9hEjZ3Vkr_YpK6yMaMLpZ>
+Feedback-ID: ie3994620:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id 53EBF2160065; Wed, 15 Oct 2025 03:40:14 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a1671515-4aec-46a0-aff0-75ea8540394c@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+X-ThreadId: APftQYjyEKps
+Date: Wed, 15 Oct 2025 08:39:53 +0100
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+To: "Darrick J. Wong" <djwong@kernel.org>, akpm@linux-foundation.org
+Cc: linux-mm <linux-mm@kvack.org>,
+ linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+ xfs <linux-xfs@vger.kernel.org>, "Matthew Wilcox" <willy@infradead.org>
+Message-Id: <d2b367ae-b339-429b-a5e7-1d179cfa0695@app.fastmail.com>
+In-Reply-To: <20251014175214.GW6188@frogsfrogsfrogs>
+References: <20251014175214.GW6188@frogsfrogsfrogs>
+Subject: Re: Regression in generic/749 with 8k fsblock size on 6.18-rc1
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-On Wed, Oct 15, 2025 at 04:09:13PM +0900, Damien Le Moal wrote:
-> > +	unsigned int		s_min_writeback_pages;
-> 
-> Given that writeback_chunk_size() returns a long type, maybe this should be a long ?
+On Tue, Oct 14, 2025, at 18:52, Darrick J. Wong wrote:
+> Did your testing also demonstrate this regression?
 
-Not that it currently matters much, but yes for consistency this should
-be a long.
+I have not reproduced the issue yet.
 
+Could you check if this patch makes a difference:
+
+https://gist.github.com/kiryl/a2c71057bec332240216cc425aca791a
+
+-- 
+Kiryl Shutsemau / Kirill A. Shutemov
