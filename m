@@ -1,103 +1,85 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A36D127144B;
-	Wed, 15 Oct 2025 16:01:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C1A3139579;
+	Wed, 15 Oct 2025 16:36:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760544121; cv=none; b=s/Bt68eOz5bsA5Cvhmir4BsFAU/cEllecRIYpv4adJQHk/KtGV0p3Q4IZ8WckLop7cTUnKJFgzvXgDQzpxbtkqikQz4HTVx1qNVriOPBN2ZZXzzmy/Ga1RcMzuOqaaINii2qa/T9vfgN8xbQLbv0hC8TClRfKzk4UouyiMNMg9g=
+	t=1760546213; cv=none; b=vACQP4iJf8oyiznr94nQPp+K6/iLCimzVRTOC0sLuKPHJ4O7rbyo+i5YM5tY0PVihlEyddwwyKFxI1bby7Zz+Mc2Z8vx+YjlHb1z8XbXeqLaf4/Kw8l0ll8KYWE6w1jfP3mqy1AZfKVXAlPIQBjg2q9xKDbOeZg1SgpxL5R9xhE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760544121; c=relaxed/simple;
-	bh=Ib8plWshjqLsG29fR6AtQ9r2xzraj9E0iv8tvd4lfz8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N7VxhYwwvp+sNsldrtr7HsushwBBfOej73TMWWx3Cevw5HoXnmUQMGe9O/gjCv135Dt7jbN2SNUJUD4WXolINGAn4G5aa7KqKqszlmpp7Bq6h0lx6Pli2KamiPM//JzOtLGoBVpSJH2Fu9vjs325+gZGmj2lql4L+bt94DqAf+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uLwXVID7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760546213; c=relaxed/simple;
+	bh=rfIFeF4rFeWLB9MxTDixDmUWQRXHW4Ts2NeB6IAAXQk=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=sXbcOwz9XhSHQH9ITiECufN6iA8wZyxy99nuQc7bDYVCSWv66DQgl1WGVi2FXu7l94TxgmgiolG98Q7FAZiL2IUPvnM+qguIjuC0qSi2hPIO4s4Qia17C7qT+snqJ44NAQPyhiJjCIqTXw2xrQiGJG6DuJveiPYvSkiGB/Nsy3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ovWU6o5W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uLwXVID7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15EC5C4CEF8;
-	Wed, 15 Oct 2025 16:01:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ovWU6o5W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26851C4CEF8;
+	Wed, 15 Oct 2025 16:36:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760544119;
-	bh=Ib8plWshjqLsG29fR6AtQ9r2xzraj9E0iv8tvd4lfz8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uLwXVID7J6t4Rv9G7dC4W2pXTpcm0X4qDwvtPeJ0mY8cQ0yP0HE4IMGRLMGWOlPuZ
-	 n6Xnc0z/SiK6bYdQgEbj/tXlFcK5sXF9cFQ8KvMuyU+2J9G27eBZYH5TuYOLXNIE2J
-	 qIzK9ICGR2xvC01O2JWBzcNR98P/Gd9fWPoosuHyDeDjQBm/Ts9WhgMSmvilDztM09
-	 BEOF7VNY8WpY7lgu2b/iJnmY753f27HjVDq4ivY/C4yFTCNnupHYOFlb+HIbpKl5iw
-	 yNYyxnIaPzZloPbTSEL5+0Nsi5ZDbTj19jYrAGXieKH58h8EBhaSFcjp3XG7P3Lwpt
-	 WQ/UoETM0hNeA==
-Date: Wed, 15 Oct 2025 09:01:58 -0700
+	s=k20201202; t=1760546213;
+	bh=rfIFeF4rFeWLB9MxTDixDmUWQRXHW4Ts2NeB6IAAXQk=;
+	h=Date:Subject:From:To:Cc:From;
+	b=ovWU6o5Wq2Kf3LsI5MnTffNHKiRNHCNGPUoTKUoTyJkdovq6/Qkx0gVG5e9n7/nn5
+	 fZGOmydDvPcSytrfsN0KglXzK4pzQLJCnfpm5+jMSXp7wjx107oXATnnYUp7GOMn/U
+	 9WIbxZOui+9LOXRaQ3d0Xwx3o2ajoQcFExgr07NnCr3KWBrJ/cRIQw/diqjCR5dEaA
+	 Ta3WJ8dUpQQOlC8e2uUks5RBOIPxyZJPIQKBB3mPrLLZTKi7eyeHo0X+Fh8eypjIdT
+	 Sqsn4fpMC/vJf7y/ocyoIgXr+LXQHAqv6+QEa5VVZH6yak6qVUFLD0Fu7urZhPLZcz
+	 PvQkZwU02Z7rQ==
+Date: Wed, 15 Oct 2025 09:36:52 -0700
+Subject: [PATCHSET] fstests: more random fixes for v2025.10.05
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	Carlos Maiolino <cem@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>, willy@infradead.org,
-	dlemoal@kernel.org, hans.holmberg@wdc.com, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: set s_min_writeback_pages for zoned file systems
-Message-ID: <20251015160158.GA6188@frogsfrogsfrogs>
-References: <20251015062728.60104-1-hch@lst.de>
- <20251015062728.60104-4-hch@lst.de>
+To: djwong@kernel.org, zlang@redhat.com
+Cc: fstests@vger.kernel.org, fstests@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Message-ID: <176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251015062728.60104-4-hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Wed, Oct 15, 2025 at 03:27:16PM +0900, Christoph Hellwig wrote:
-> Set s_min_writeback_pages to the zone size, so that writeback always
-> writes up to a full zone.  This ensures that writeback does not add
-> spurious file fragmentation when writing back a large number of
-> files that are larger than the zone size.
-> 
-> Fixes: 4e4d52075577 ("xfs: add the zoned space allocator")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_zone_alloc.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-> index 1147bacb2da8..0f4e460fd3ea 100644
-> --- a/fs/xfs/xfs_zone_alloc.c
-> +++ b/fs/xfs/xfs_zone_alloc.c
-> @@ -1215,6 +1215,7 @@ xfs_mount_zones(
->  		.mp		= mp,
->  	};
->  	struct xfs_buftarg	*bt = mp->m_rtdev_targp;
-> +	xfs_extlen_t		zone_blocks = mp->m_groups[XG_TYPE_RTG].blocks;
->  	int			error;
->  
->  	if (!bt) {
-> @@ -1245,10 +1246,12 @@ xfs_mount_zones(
->  		return -ENOMEM;
->  
->  	xfs_info(mp, "%u zones of %u blocks (%u max open zones)",
-> -		 mp->m_sb.sb_rgcount, mp->m_groups[XG_TYPE_RTG].blocks,
-> -		 mp->m_max_open_zones);
-> +		 mp->m_sb.sb_rgcount, zone_blocks, mp->m_max_open_zones);
->  	trace_xfs_zones_mount(mp);
->  
-> +	mp->m_super->s_min_writeback_pages =
-> +		XFS_FSB_TO_B(mp, zone_blocks) >> PAGE_SHIFT;
+Hi all,
 
-Hmm.  The maximum rtgroup (and hence zone) size is 2^31-1 blocks.
-That quantity is casted to int64_t by FSB_TO_B, then shifted down by
-PAGE_SHIFT.  So I think there's no chance of an overflow here,
-especially if s_min_writeback_pages becomes type long.
+Here's the usual odd fixes for fstests.
 
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
 --D
 
-> +
->  	if (bdev_is_zoned(bt->bt_bdev)) {
->  		error = blkdev_report_zones(bt->bt_bdev,
->  				XFS_FSB_TO_BB(mp, mp->m_sb.sb_rtstart),
-> -- 
-> 2.47.3
-> 
-> 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+---
+Commits in this patchset:
+ * generic/427: try to ensure there's some free space before we do the aio test
+ * common/rc: fix _require_xfs_io_shutdown
+ * generic/742: avoid infinite loop if no fiemap results
+ * generic/{482,757}: skip test if there are no FUA writes
+ * generic/772: actually check for file_getattr special file support
+ * common/filter: fix _filter_file_attributes to handle xfs file flags
+ * common/attr: fix _require_noattr2
+ * common: fix _require_xfs_io_command pwrite -A for various blocksizes
+---
+ common/attr        |    4 ++++
+ common/filter      |    3 ++-
+ common/rc          |   21 +++++++++++++++++----
+ src/fiemap-fault.c |   14 +++++++++++++-
+ tests/generic/427  |    3 +++
+ tests/generic/482  |    2 +-
+ tests/generic/757  |    2 +-
+ tests/generic/772  |    3 +++
+ tests/xfs/648      |    3 +++
+ 9 files changed, 47 insertions(+), 8 deletions(-)
+
