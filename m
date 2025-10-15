@@ -1,51 +1,44 @@
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AACAA21885A
-	for <linux-xfs@vger.kernel.org>; Wed, 15 Oct 2025 15:14:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27E8C274FD0;
+	Wed, 15 Oct 2025 15:37:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760541273; cv=none; b=AhBnoqSiOqHXOmLSo8AnZalRVXFgij6iylPD5DK1ToEKKRaRQgQPbN0LlAnIcKFKeLk+iCUahEDyuMFn+luYUVdQD221iRelDZ2C+NIqwKhB6oHU5rGWTozOCbpo7My+MydYuCWmWlUkVLYMnM3+exnDcAE7L59qogwAyiBx1z4=
+	t=1760542623; cv=none; b=MpLemvEK5WPsx4iOAB4V+gltX1Q9ROLfBdqwmYlEAqTWE6/UmWHnyNTwLjh2sqLR2VESv7oUY3YZ6A6uMzX+PgJeyqUegzOLKXNmgoHzuaIFumERY+baPdj6iAIKs/tJiWz/MRpdxOMZS5NJPvYfips8wK9M2pRL8rr8bEy64a8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760541273; c=relaxed/simple;
-	bh=zl7CKxPW3rGp/tzT4zjLV0AVXIMByI3wJaBb5g8f8nk=;
+	s=arc-20240116; t=1760542623; c=relaxed/simple;
+	bh=IRi/SXyb72T5Nu6jdCpqgpazAGejm/gBUEwbA7A+Euo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cditlAPkObgLkf5vAPsmbpIgIXeV+L+AtSWYGzFgtk0Gn43wkz5vOTZLKEuT1BaUu/lUhNbJTNDRN/xQZ/RqQMdhD0q6FBscoLPNEzO4sAXboivIiffcNgGBBJMM5BC6dGk/sOGbXlycK3AScYxAcmWaRmzAgtg6/TciG/ke6Y4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=XN7dLolz; arc=none smtp.client-ip=18.9.28.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
+	 Content-Type:Content-Disposition:In-Reply-To; b=RZ+NOZcZfZ3jMQiGC4ewT1rv6DgPxkTPZF2k6DixPanCMukdofBYjwVinJNhazQcm7shSPuB2NK6IP9V6rnu9fjHvGomOYSSjr/iOQjfPujQOhBVoBXbj7fWSD+C6HGEP5lJb6R/T25446FYJTKTCtjKPtGkHo4SGll3RJOahMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ScTYFIFs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="XN7dLolz"
-Received: from trampoline.thunk.org (pool-173-48-113-184.bstnma.fios.verizon.net [173.48.113.184])
-	(authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 59FFDrk7013069
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 15 Oct 2025 11:13:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-	t=1760541238; bh=/8PdHQt80eigPDJZ5EBlPY1pQSNfCt+AMOYaxY9njWE=;
-	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
-	b=XN7dLolzgmYMYPpg8AxvRudqr3f2lce7C+Lv57v8XFtyyzlXrX7+KqVp6ejSQE3RC
-	 ItRezbFf35T3vLyabBS1b1RnKyfAkCkctiBzJpcx7TohOH3kQW8Eo3y+47ULuV6Knu
-	 YmjH2S0GJSWQxBMu6lVG8Fx46llx0flAfVn+rL/kFu30B6RkudQELJTvTpZK6wOM4/
-	 KO0/7nE8zzghZW2boAGMIj+3WvG/wL7QI6DEGGzv847giX4dLRRnRN2gR/mOgzVG+3
-	 K3tzDOKYkPSx5IqSvFe7ajOMWyD0OB9LjZdGlju1aN2FRUCp/rR3iFJhfmWUDhsg2U
-	 nASEg5ZKrF1kg==
-Received: by trampoline.thunk.org (Postfix, from userid 15806)
-	id 97EBD2E00D9; Wed, 15 Oct 2025 11:13:53 -0400 (EDT)
-Date: Wed, 15 Oct 2025 11:13:53 -0400
-From: "Theodore Ts'o" <tytso@mit.edu>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-        Carlos Maiolino <cem@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>, willy@infradead.org,
-        dlemoal@kernel.org, hans.holmberg@wdc.com, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] writeback: allow the file system to override
- MIN_WRITEBACK_PAGES
-Message-ID: <20251015151353.GA786497@mit.edu>
-References: <20251015062728.60104-1-hch@lst.de>
- <20251015062728.60104-3-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ScTYFIFs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BCE5C4CEF8;
+	Wed, 15 Oct 2025 15:37:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760542622;
+	bh=IRi/SXyb72T5Nu6jdCpqgpazAGejm/gBUEwbA7A+Euo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ScTYFIFsqSpN5CvDLERY1Dmj96xRok0knf08wbTYQgtgax4WARNlwU9RBjURGJhJ+
+	 wSfqo0PCnyo4Ugps+H8xW0fGROZg+dlLD9i51p5mehdYXdfwGMAnnm6e/M9kS42TzF
+	 hUsTnWo1kTWTApWXSwtFbXckwPrrnhwGgjfPLA2lBLacZ60q6z3sJX4dEq15GKTPxV
+	 uetC1s5U6H2pKRlN3ct6tRkFJH1pmavyDwi+/rhYy9I5tlzhPG1ABFzId4VdXkYIF/
+	 GA1HUR6bDFzYOU3uUjEO/oP/uJezUKIPkXhkdEpa53d4P5c0dCeazqca9pGV9x3wOe
+	 iJvgmxaSXbPsw==
+Date: Wed, 15 Oct 2025 08:37:02 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	Oleksandr Natalenko <oleksandr@natalenko.name>,
+	Pavel Reichl <preichl@redhat.com>,
+	Thorsten Leemhuis <linux@leemhuis.info>
+Subject: Re: [PATCH v2 3/3] xfs: quietly ignore deprecated mount options
+Message-ID: <20251015153702.GY6188@frogsfrogsfrogs>
+References: <20251015050133.GV6188@frogsfrogsfrogs>
+ <20251015050431.GX6188@frogsfrogsfrogs>
+ <93c2e9a0-f374-4211-b4a0-06c716e7d950@suse.cz>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -54,25 +47,79 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251015062728.60104-3-hch@lst.de>
+In-Reply-To: <93c2e9a0-f374-4211-b4a0-06c716e7d950@suse.cz>
 
-On Wed, Oct 15, 2025 at 03:27:15PM +0900, Christoph Hellwig wrote:
-> The relatively low minimal writeback size of 4MiB leads means that
-> written back inodes on rotational media are switched a lot.  Besides
-> introducing additional seeks, this also can lead to extreme file
-> fragmentation on zoned devices when a lot of files are cached relative
-> to the available writeback bandwidth.
+On Wed, Oct 15, 2025 at 10:07:54AM +0200, Vlastimil Babka wrote:
+> On 10/15/25 07:04, Darrick J. Wong wrote:
+> >  static const struct fs_parameter_spec xfs_fs_parameters[] = {
+> > +	/*
+> > +	 * These mount options were supposed to be deprecated in September 2025
+> > +	 * but the deprecation warning was buggy, so not all users were
+> > +	 * notified.  The deprecation is now obnoxiously loud and postponed to
+> > +	 * September 2030.
+> > +	 */
 > 
-> Add a superblock field that allows the file system to override the
-> default size.
+> FWIW, this seems at odds with the subject "quietly ignore" ;)
+> "loudly ignore"? ;)
+> "warn about but otherwise ignore"?
 
-I wonder if we should bump the default; and if the concern is that
-might be problematic for super slow devices (e.g., cheap USB thumb
-drives), perhaps we can measure the time needed to complete the
-writeback, and then dynamically adjust the value based on the apparent
-write bandwidth?
+Ugh, yeah, I forgot to update the subject line.
 
-We could have each file system implement something like this, but
-maybe there should be a way to do this in fs generic code?
+"xfs: loudly complain about defunct mount options", then.
 
-	      	    	      	       - Ted
+> Also there's maybe a difference of ignoring "attr2" because it's enabled
+> anyway, and ignoring "noattr2" because it's going to be enabled regardless.
+> AFAIK prior to b9a176e54162f8 "noattr2" still prevented the enabling? But
+> maybe it's not important. (I don't know how (no)ikeep works.)
+
+Old filesystems will be automatically upgraded to attr2 the next time
+anyone writes to an xattr structure.  After V4 is removed in 2030, xfs
+won't have to deal with attr1 structures anymore, because V5 always has
+attr2.
+
+noikeep was (and still is) the default; it means that inode blocks are
+deleted when they are no longer in use.
+
+> Hypothetically someone might complaing after taking a disk out of very old
+> system without attr2, booting it on 6.18 that will enable attr2, and not
+> being able to use it again in the old system. (Funnily enough similar issue
+> recently happened to me with btrfs from Turris 1.0 router's microSD). But
+> maybe there are other things besides attr2 that can cause it anyway.
+> 
+> Anyway I think even in 2030 it will be the best to just keep warning instead
+> of refusing to mount.
+
+I think you're right, we should keep this forever.  It's not that big of
+a deal to accumulate all the dead mount options via fsparam_dead, and
+probably a good tombstone to prevent accidental reuse in the future.
+
+--D
+
+> > +	fsparam_dead("attr2"),
+> > +	fsparam_dead("noattr2"),
+> > +	fsparam_dead("ikeep"),
+> > +	fsparam_dead("noikeep"),
+> > +
+> >  	fsparam_u32("logbufs",		Opt_logbufs),
+> >  	fsparam_string("logbsize",	Opt_logbsize),
+> >  	fsparam_string("logdev",	Opt_logdev),
+> > @@ -1417,6 +1431,9 @@ xfs_fs_parse_param(
+> >  		return opt;
+> >  
+> >  	switch (opt) {
+> > +	case Op_deprecated:
+> > +		xfs_fs_warn_deprecated(fc, param);
+> > +		return 0;
+> >  	case Opt_logbufs:
+> >  		parsing_mp->m_logbufs = result.uint_32;
+> >  		return 0;
+> > @@ -1537,7 +1554,6 @@ xfs_fs_parse_param(
+> >  		xfs_mount_set_dax_mode(parsing_mp, result.uint_32);
+> >  		return 0;
+> >  #endif
+> > -	/* Following mount options will be removed in September 2025 */
+> >  	case Opt_max_open_zones:
+> >  		parsing_mp->m_max_open_zones = result.uint_32;
+> >  		return 0;
+> 
+> 
