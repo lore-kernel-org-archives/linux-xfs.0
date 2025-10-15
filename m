@@ -1,186 +1,153 @@
-Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 642A12FF140
-	for <linux-xfs@vger.kernel.org>; Wed, 15 Oct 2025 05:46:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF8D513C8EA
+	for <linux-xfs@vger.kernel.org>; Wed, 15 Oct 2025 06:08:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760507215; cv=none; b=gAP2Q40AT/C1xWewx5eqleDjHKiuvROVSbSur0cWeeFNjPDNNDW2DYQR9Sou7nwd5IcrLQeGyW59YLf32FMh8hqGXxa9nmg7/1RfiGXg+/53I7Bb/5+pi1DhzJA9uDCmpTy+4zg62JM5QrPy79oWQf9vDKkrnXEPvgz2RwqisRU=
+	t=1760508522; cv=none; b=gLJts6tYdhkMTX+HS1wh4hFvgsXvMNDePRWh/cAyfTbw/Lccgc8CeeNB1grCEz6St0FP1Sz3gp3VxCcJR8k1JPWAN1HXqvlqAay6nZh3GQ9PmsModDXDY9YbjvsqyGuwHcIFFJVDvTli2f4xrATu2Pvam9uSkjPjcFlcWEbInZo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760507215; c=relaxed/simple;
-	bh=L9yQzwfiK6AnAj53w+M42/OMTEMETYOV7eUVo5HxABI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=elzqGkmkQ3ih9EhJLzV8vKJ/5a46eiSGbFFvm7sf/HBkvSkScnZtlpM9nNNsBDWMAyhNW5f5izVV+26tj8Y7CCnBDCv7uNYXXTFY7guiviHQC64SptDDlgeuNcYkhOHVtNwEC6Qgq8omlSNMFu9Uz3Vg6jFtGMrKcz+9PvSkYYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Adq31IJP; arc=none smtp.client-ip=209.85.218.54
+	s=arc-20240116; t=1760508522; c=relaxed/simple;
+	bh=dIrVMYq5TN4gHEJkMBJxF0TNy0TogOgJQMSnyZoD7Ig=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Z4R6u5d4lP7rEkiRYevZ0PJz08xjPaNNFdJTMpLS6Hl9y3+nyfTC+x/iZGwssXy9X0gjYTb15YvxNHi/HIRxkG3bNiZb3pZvNcpnlLfNltTpAKinqf6LRaPVzKA9rEvO6AjTUmqkxpWNEMJCGo7vNtLGZiDfK0Q8NIl8iBWPcEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BHqb5JUY; arc=none smtp.client-ip=209.85.214.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Adq31IJP"
-Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-b4539dddd99so350344166b.1
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 22:46:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BHqb5JUY"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-27ee41e0798so97820975ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 23:08:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1760507212; x=1761112012; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YB/8HRPSkZavRfQHyIpXrXhIqH5dcxDgrAKATWLCf7Y=;
-        b=Adq31IJPv30T6zUoF2y3H73X7Rg3/pWXDTmdnh8kEFGnxj427QLrLxman9/5UI5W2U
-         /BfcMAJFP39b/qTttenN83pLLoKQgHruzLRnAyI7r33JHzbAxexU4Hz4JiFgvuSvRjJE
-         S++28Isa33yMokJkwd5NGNEH7zm9pAspIgg8tWWicxPMILY3fP7EpgtkzrPlnN9oCzqo
-         SQu04Tg9CVpi8kJtTRzyZWVdYdhZeaWchM2nnDVNUJKPESyQa0SuKLSXQM6tLXz/b52R
-         uQ3D4kBfWD7qTw59FT/+Jkb7USrhxoKZYNVLTLXfM7hILg+wbYpzLX/4KHTjP7OIQI4C
-         +66Q==
+        d=gmail.com; s=20230601; t=1760508520; x=1761113320; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=FhHWDh3MMQ/n/APNYeMvvD3s08r1n3cRjBu4QKVV7pE=;
+        b=BHqb5JUYiq4Iax9NTBDz9a7BcoLY1Hfy8Z2BgDG4nmpS+n235RUZfK5exbSXtyAsrU
+         /VYinK8mkTdQHLPkqjlJ1zCsVf1LHcSlWzAabzVb65EJP+piqCXWuGJ5TqlMsMpk0rQz
+         bb5tDEXTNrJLPzfBeSnjwz/zVeI3GZJToBsQt6Rusc6VQ6T1b40rxNcpqQ3vz0cNxUBx
+         UNdP9VuWFleu4g8yXSB+bPFx1n8s9r+cgsdZnrbL8kwtQVTAFq6IUL/RMkUoKsfF7mTg
+         IgFJVRmP9UScyOqp1Rhq3wzw1irZdcTXJiCgyuRlFLy3C+8GkEvSefk6aORz4aFqw5jO
+         pMyA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760507212; x=1761112012;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=YB/8HRPSkZavRfQHyIpXrXhIqH5dcxDgrAKATWLCf7Y=;
-        b=RVKRR8t7x785/6Gpv47m2B3BEKjvRZF6+BxKflEGtOTiz/IMKx8dKkNW7Y44T0oy9r
-         bpl1CM0XobPpKMIunOdCaRuHKFZ485HZu+tY7jBQK3qmxmCsFcatWNA+xNlCJzltVvjr
-         7jozzUrPfe79IWFIiCWPw0Ox8r3/A8GqClCqirQ30BaQWD5n7rxnHa1Uia3MCDIbM72P
-         IMpMlsqV6D3p1VFMOf4lQIF8u3bYEwjlg7PFLl9zCiMzE6e883Z1MUP3thTM5o2Hz9W2
-         rBbVTFZ6OnCuRbEtErJ0rBns7O3Vif7b4t8k0/cQkQYAk6+PGAfNURTOq/MoRNqhsqIL
-         ElpQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV2TkJ13Q8iCHxS0GL3lrA98DVWCg8bjgYgCE2W8RAtHgfgRX169+/DMtUg3AvRfHM6TJOn09W8olk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxOCDBjgNaYpXGPQwdAo0+7cHDRfguL1hetMtCV5rxHRgEpm/I7
-	Y8ukC/32E94pfBwhi0BjBbSRGvvR7wAXzoq2XBs4JR7/1yeCXyg21NzK606SzWGI/550AGVbGI0
-	H810nqu7w1R+ZEeIcJUKsdYinbzqEeu0=
-X-Gm-Gg: ASbGncu3rXIwllltb5pa6VCW2wTFe1qjvs6NZFdBVs/YhUokm4xGJz7IyrXVMMVggMP
-	iTDXY7IjUHMPLciZViHpU5os5uqREwRx5yNKBRBaAKjFA3m6w2GHGZfXtTEZXcBv2aRuzodiuO9
-	YPaaOjw7TqAlKj32h0guthaQlz2XjO3POEAYjmUlueMWKe+08K5dfIUAVFAB8BGSu+E9dAOpADF
-	+6u+I60A70wD1XkIAjwe5uEdq+P28RnuWcNStjrrOnyhJRBxTELaFH/5wRXFlARjuBz
-X-Google-Smtp-Source: AGHT+IHBOaBguuSDBJ8tBqccd4wBxjcgREccPEa2q0OFeN3z0LhFrlL5e17WKU2nQANyrLyL2KnfgEnaFifFE19VDgQ=
-X-Received: by 2002:a17:907:72c6:b0:b46:8bad:6970 with SMTP id
- a640c23a62f3a-b50abaa43b4mr3121817866b.36.1760507211571; Tue, 14 Oct 2025
- 22:46:51 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1760508520; x=1761113320;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=FhHWDh3MMQ/n/APNYeMvvD3s08r1n3cRjBu4QKVV7pE=;
+        b=SRWFOT73sy32gSAbj1RJAfT8e1riqpeUE76eFfZ/OEI+x/T/S6Wul8wceWB3BMmmTW
+         N6Iz2qyPdkSoHoGZbjKOdsuOXySo3TkYftAAzKpfjLmW5Uw+H9SI3LyGeDZbQjhlvF1J
+         3Sr1+b/19HsaC4eF/RrZf4wTzIpdMFfSS/8kRnvg6SARNQMEtmkPd0Kre3Jh5+zQQiAK
+         PHgfeWqELRV1wmT8t8u1oCMvituJPD8n4wwsop4WDsRtB7lbw8hKYOqME0LVXd+O2Lp6
+         rRMtXiqSnrkQzJWc4Ydt1CUEQHpg1pJVWnhs+HIkwz1bOOaNPi+PpQnwdw4DS4DSZ9qw
+         C67w==
+X-Forwarded-Encrypted: i=1; AJvYcCWbxc/qjVJ1Nm8gDBBwS5NW0elA1t4k0/P148wAgk2BZTy7dkSoaRO+gCTRTQAH+azexV8waXqHJxw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwVfA9n7TpD3CRi4cRe1NnJntIo49FUh6hPwgeRp92yCca38Bah
+	deQq8DUFYmXvNN/k3xSEV8oNNXJG12HbUdP1OZP9jBzEtqH/oG6M3PSbJgEn8Q==
+X-Gm-Gg: ASbGnctQeQgaFSe6O1jp6gXTJ6mHjYctavbb5RKzj0nzgMkGFB0zx3/VNj4Ka6fynZ0
+	MrGk55VWIukJtcjpqbRLCFtOAusb4ZcY9OqbAHD5shes55stsrQBj8JDV9j1lhCoMbMu1oOJ4PM
+	JLvvEG5LS9VnxfFCunHpvOVyLIVj6Xtehi5XEH8tSWTkrjDcnEXv7Vo+VdHuduJcum2Tejrc/kB
+	utqatBh7/cL7ZuWsCfICSOHdv2tfdr6+54NKZXsVOh8Yqm9AljLaEElDyU6g+yHz/k18U6uz+v9
+	cNx7d0wt4ca9o37eH2rXm+uBZu/vkvgE5aoAITXEF8YRh+MB7bwWkcEQkiTMk+5HqMpUtLpLnhJ
+	+5vE5BivhfRFYCSRHt+g9nIb2ZXbSYpCfilTnljPNxKQdK0JxYyFG/JjFQQ==
+X-Google-Smtp-Source: AGHT+IG3fZ0zy19BJmwTfAzC/dBuxFdmHNHW2pvg5TF5nPDM5kKiNeMud0I3g7VnW+G0N9yblQ260w==
+X-Received: by 2002:a17:903:3c4d:b0:267:44e6:11d3 with SMTP id d9443c01a7336-29027379986mr352436645ad.21.1760508520039;
+        Tue, 14 Oct 2025 23:08:40 -0700 (PDT)
+Received: from [9.109.246.38] ([129.41.58.6])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-33b61ac812csm17848553a91.18.2025.10.14.23.08.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Oct 2025 23:08:39 -0700 (PDT)
+Message-ID: <5be76a46-c711-45dd-b2a3-0c9e9b5f2b88@gmail.com>
+Date: Wed, 15 Oct 2025 11:38:35 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251009075929.1203950-1-mjguzik@gmail.com> <20251009075929.1203950-4-mjguzik@gmail.com>
- <h2etb4acmmlmcvvfyh2zbwgy7bd4xeuqqyciqjw6k5zd3thmzq@vwhxpsoauli7>
- <CAGudoHFJxFOj=cbxcjmMtkzXCagg4vgfmexTG1e_Fo1M=QXt-g@mail.gmail.com> <aO7NqqB41VYCw4Bh@dread.disaster.area>
-In-Reply-To: <aO7NqqB41VYCw4Bh@dread.disaster.area>
-From: Mateusz Guzik <mjguzik@gmail.com>
-Date: Wed, 15 Oct 2025 07:46:39 +0200
-X-Gm-Features: AS18NWCB_4h8LHu2yt-FYyIBzUwuIR3RlLlbdhbf0H9i_Il0fvD54KG0vSEA_Mc
-Message-ID: <CAGudoHFpoo0Qm=b4Z85tbJJmhh+vmSHuNnm3pVaLaQsmX9mURg@mail.gmail.com>
-Subject: Re: [PATCH v7 03/14] fs: provide accessors for ->i_state
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, brauner@kernel.org, viro@zeniv.linux.org.uk, 
-	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	josef@toxicpanda.com, kernel-team@fb.com, amir73il@gmail.com, 
-	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, ceph-devel@vger.kernel.org, 
-	linux-unionfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: don't set bt_nr_sectors to a negative number
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Carlos Maiolino <cem@kernel.org>,
+ xfs <linux-xfs@vger.kernel.org>
+References: <20251013163310.GM6188@frogsfrogsfrogs>
+ <ec2bc94bc73a42ab61019b8de5951359d383247d.camel@gmail.com>
+ <20251014182058.GX6188@frogsfrogsfrogs>
+Content-Language: en-US
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <20251014182058.GX6188@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Oct 15, 2025 at 12:24=E2=80=AFAM Dave Chinner <david@fromorbit.com>=
- wrote:
+
+On 10/14/25 23:50, Darrick J. Wong wrote:
+> On Tue, Oct 14, 2025 at 12:17:30PM +0530, Nirjhar Roy (IBM) wrote:
+>> On Mon, 2025-10-13 at 09:33 -0700, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <djwong@kernel.org>
+>>>
+>>> xfs_daddr_t is a signed type, which means that xfs_buf_map_verify is
+>>> using a signed comparison.  This causes problems if bt_nr_sectors is
+>>> never overridden (e.g. in the case of an xfbtree for rmap btree repairs)
+>>> because even daddr 0 can't pass the verifier test in that case.
+>> Okay so the check "if (map->bm_bn < 0 || map->bm_bn >= btp->bt_nr_sectors) {" will be true of the
+>> default value of btp->bt_nr_sectors = -1 and the verifier will fail(incorrectly), right?
+>> Why would we not want to override bt_nr_sectors? If there is device, then shouldn't it always have a
+>> buffer target with a certain number of bt_nr_sectors?
+> Online repair creates tmpfs files in which to stage repairs, and uses
+> the xfbtree buftarg so that it can build a replacement rmapbt in a tmpfs
+> file.  I guess xfbtree should be setting bt_nr_sectors to (max pagecache
+> size / 512) but in practicality nobody should ever have a 16TB rmap
+> btree on 32-bit or an 8EB rmap btree on 64-bit.
+
+Okay, that makes sense. Thank you for the explanation.
+
+--NR
+
+> --D
 >
-> On Fri, Oct 10, 2025 at 05:51:06PM +0200, Mateusz Guzik wrote:
-> > On Fri, Oct 10, 2025 at 4:44=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
-> > >
-> > > On Thu 09-10-25 09:59:17, Mateusz Guzik wrote:
-> > > > +static inline void inode_state_set_raw(struct inode *inode,
-> > > > +                                    enum inode_state_flags_enum fl=
-ags)
-> > > > +{
-> > > > +     WRITE_ONCE(inode->i_state, inode->i_state | flags);
-> > > > +}
-> > >
-> > > I think this shouldn't really exist as it is dangerous to use and if =
-we
-> > > deal with XFS, nobody will actually need this function.
-> > >
-> >
-> > That's not strictly true, unless you mean code outside of fs/inode.c
-> >
-> > First, something is still needed to clear out the state in
-> > inode_init_always_gfp().
-> >
-> > Afterwards there are few spots which further modify it without the
-> > spinlock held (for example see insert_inode_locked4()).
-> >
-> > My take on the situation is that the current I_NEW et al handling is
-> > crap and the inode hash api is also crap.
->
-> The inode hash implementation is crap, too. The historically poor
-> scalability characteristics of the VFS inode cache is the primary
-> reason we've never considered ever trying to port XFS to use it,
-> even if we ignore all the inode lifecycle issues that would have to
-> be solved first...
->
+>> --NR
+>>> Define an explicit max constant and set the initial bt_nr_sectors to a
+>>> positive value.
+>>>
+>>> Found by xfs/422.
+>>>
+>>> Cc: <stable@vger.kernel.org> # v6.18-rc1
+>>> Fixes: 42852fe57c6d2a ("xfs: track the number of blocks in each buftarg")
+>>> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+>>> ---
+>>>   fs/xfs/xfs_buf.h |    1 +
+>>>   fs/xfs/xfs_buf.c |    2 +-
+>>>   2 files changed, 2 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+>>> index 8fa7bdf59c9110..e25cd2a160f31c 100644
+>>> --- a/fs/xfs/xfs_buf.h
+>>> +++ b/fs/xfs/xfs_buf.h
+>>> @@ -22,6 +22,7 @@ extern struct kmem_cache *xfs_buf_cache;
+>>>    */
+>>>   struct xfs_buf;
+>>>   
+>>> +#define XFS_BUF_DADDR_MAX	((xfs_daddr_t) S64_MAX)
+>>>   #define XFS_BUF_DADDR_NULL	((xfs_daddr_t) (-1LL))
+>>>   
+>>>   #define XBF_READ	 (1u << 0) /* buffer intended for reading from device */
+>>> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+>>> index 773d959965dc29..47edf3041631bb 100644
+>>> --- a/fs/xfs/xfs_buf.c
+>>> +++ b/fs/xfs/xfs_buf.c
+>>> @@ -1751,7 +1751,7 @@ xfs_init_buftarg(
+>>>   	const char			*descr)
+>>>   {
+>>>   	/* The maximum size of the buftarg is only known once the sb is read. */
+>>> -	btp->bt_nr_sectors = (xfs_daddr_t)-1;
+>>> +	btp->bt_nr_sectors = XFS_BUF_DADDR_MAX;
+>>>   
+>>>   	/* Set up device logical sector size mask */
+>>>   	btp->bt_logical_sectorsize = logical_sectorsize;
+>>
+-- 
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
 
-I don't know of anyone defending the inode hash tho. The performance
-of the thing was already bashed a few times, I did not see anyone
-dunking on the API ;)
-
-> > For starters freshly allocated inodes should not be starting with 0,
-> > but with I_NEW.
->
-> Not all inodes are cached filesystem inodes. e.g. anonymous inodes
-> are initialised to inode->i_state =3D I_DIRTY.  pipe inodes also start
-> at I_DIRTY. socket inodes don't touch i_state at init, so they
-> essentially init i_state =3D 0....
->
-> IOWs, the initial inode state depends on what the inode is being
-> used for, and I_NEW is only relevant to inodes that are cached and
-> can be found before the filesystem has fully initialised the VFS
-> inode.
->
-
-Well it is true that currently the I_NEW flag is there to help out
-entities like the hash inode hash.
-
-I'm looking to change it into a generic indicator of an uninitialized
-inode. This is completely harmless for the consumers which currently
-operate on inodes which never had the flag.
-
-Here is one use: I'd like to introduce a mandatory routine to call
-when the filesystem at hand claims the inode is ready to use.
-
-Said routine would have 2 main purposes:
-- validate the state of the inode (for example that a valid mode is
-set; this would have caught some of the syzkaller bugs from the get
-go)
-- pre-compute a bunch of stuff, for example see this crapper:
-
-   static inline int do_inode_permission(struct mnt_idmap *idmap,
-                                        struct inode *inode, int mask)
-  {
-          if (unlikely(!(inode->i_opflags & IOP_FASTPERM))) {
-                  if (likely(inode->i_op->permission))
-                          return inode->i_op->permission(idmap, inode,
-mask);
-
-                  /* This gets set once for the inode lifetime */
-                  spin_lock(&inode->i_lock);
-                  inode->i_opflags |=3D IOP_FASTPERM;
-                  spin_unlock(&inode->i_lock);
-          }
-          return generic_permission(idmap, inode, mask);
-  }
-
-The IOP_FASTPERM could be computed by the new routine, so this would
-simplify to:
-  static inline int do_inode_permission(struct mnt_idmap *idmap,
-                                        struct inode *inode, int mask)
-  {
-          if (unlikely(!(inode->i_opflags & IOP_FASTPERM)))
-                  return inode->i_op->permission(idmap, inode, mask);
-          return generic_permission(idmap, inode, mask);
-  }
-
-The routine would assert the inode is I_NEW and would clear the flag,
-replacing it with something else indicating the inode is indeed ready
-to use.
-
-While technically the I_NEW change is not necessarily to get there, I
-do think it makes things cleaner.
-
-Note unlock_new_inode() and similar are not mandatory to call.
