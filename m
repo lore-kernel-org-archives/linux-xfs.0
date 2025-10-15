@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 748863375CD;
-	Wed, 15 Oct 2025 16:37:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2AC019D093;
+	Wed, 15 Oct 2025 16:38:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760546266; cv=none; b=jIFdafqmyibZ/lre7LI/6ah+KVLN5VOS4zK21Uy67626M+xDg6Nvd32ybum4vi9K6QsWJfHbiaWgzUjolOsUYcCWHsK6A7gzar70S4uWilQ0vfEdIsurKxNfULIgZuImUACwfEu9gWnFQlBax5NiAIsk49iWZ3N6r4d7K5HoLk4=
+	t=1760546281; cv=none; b=U8YQRN/GTiAaO3KVIro1nQHIch2GIb3veOPvDAxhK/hsNMvcFIoEzeh5wBT2SEbl2UMxpIWbO7FX4Riky6FEqx13hhC05vsv9uVuM7++zIBTNPqvPHBx5GoT33jE5E2cyzKU48+xLBse+WmV12ghGs8YJXvEeQ/G5lvWTlwRJJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760546266; c=relaxed/simple;
-	bh=y5sFnTAmgq4K9TabHjoGBI2qdIeeuydfLonhoiXVZ9o=;
+	s=arc-20240116; t=1760546281; c=relaxed/simple;
+	bh=TYOBnG0CK9shxknh8g8hG1zLWa7O7QdISrjo6OR/Pt8=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZfpHHvdnkUnYsFLcHcNZtFZXh7PgCPqdMpKbrMzEpRgJNkpLrKr+oVEnbs5hPKGQTTNg/ARkqLiBIIm1Uia9av0ATuxhNA6W5nQvOY7tyH1TUuevvyp7ZEpelBER/Zhl/0yEoIyDgXtzI1VqFfnWGxxbSOs+lGbTyKaI+Hri3Fg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GYlWOGcd; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=l/gkRA+hgB38QPDa1X1Qof7HCY61yeOS53HC65vFNNC0s8FDHnsrJv6uhOr+ycsQ5yLQ7dC6NW+wyxUiB+m7mllw0DwR5kfIluHq0/ECj0UvEHk6tvxxgFxCXQ/WvMTHNHlZp2602PWpuXSt5myshAibLjHH+iiuur+ARukJThk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DL7nLkz2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GYlWOGcd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED9CAC4CEF8;
-	Wed, 15 Oct 2025 16:37:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DL7nLkz2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B29DC4CEF9;
+	Wed, 15 Oct 2025 16:38:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760546266;
-	bh=y5sFnTAmgq4K9TabHjoGBI2qdIeeuydfLonhoiXVZ9o=;
+	s=k20201202; t=1760546281;
+	bh=TYOBnG0CK9shxknh8g8hG1zLWa7O7QdISrjo6OR/Pt8=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=GYlWOGcdbIRRk3qJqnXVSdWCoedRoMtYov8XylGbUij6/46Hx3elYp+r4xcPC5wMJ
-	 9UtSP7iyCwziDdeAZ6n1XJN2VtEHGtuzQ5+C46sgKKYDp9buzeu48HQNVcjQDuqvp+
-	 Gq3YLPs0mianUWeMZzdW5byzq5x4yQsPeDNa5zA9tgby+MvzyfQnnczo6vqGAugfeL
-	 XHOQK/bV1WptFLcR24vYh4ACbVwK2aADjVfSIy9ibgY5sjdLPJjgRuzfIjtmumjApX
-	 zWbF4I7ZnzvPw7aj/u4mfY7232I8x57Aka7SFhYQkRzAGRc1UkbFACl9xRUqOObw7e
-	 i1qHY4HKwWiGg==
-Date: Wed, 15 Oct 2025 09:37:45 -0700
-Subject: [PATCH 4/8] generic/{482,757}: skip test if there are no FUA writes
+	b=DL7nLkz2plsXfPWFvlhiDhjBU/bsvVgE4eNUaPfHyN2mI6OpwAOfZ6p1GeRXPu/Kx
+	 wdrj0tE/Vw5fUUgVjWF+m/9SdHFZ7rUhNVbSCSY6mqG/3+UaqC2RaKRkp0kt6OXxUy
+	 EeQ26YL5PXvQIsq3MtGvBHdwkBmeR2A6nyAFsKoU+6OITshYIqPIj+ogImgEGZEb5v
+	 UA91inSpkRUIERMEzVUpXw7+lo41n2rAvijsy/JxRbb3tAgp6rLT9jbK/mOZ1RlZn8
+	 s9XLgWNcssUbRghOeIgLXoCwQnlir/S4/hWycF3b9pKEiWTft4wOxp+jHwbrIj816D
+	 f4dyLEiDmrIwQ==
+Date: Wed, 15 Oct 2025 09:38:01 -0700
+Subject: [PATCH 5/8] generic/772: actually check for file_getattr special file
+ support
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, zlang@redhat.com
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <176054617970.2391029.13902894502531643815.stgit@frogsfrogsfrogs>
+Message-ID: <176054617988.2391029.18130416327249525205.stgit@frogsfrogsfrogs>
 In-Reply-To: <176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
 References: <176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,43 +46,61 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Both of these tests fail if the filesystem doesn't issue a FUA write to
-a device, but ... there's no requirement that filesystems actually use
-FUA at all.  For example, a fuse filesystem that writes to the block
-device's page cache and issues fsync() will not cause the block layer to
-issue FUA writes for the dirty pages.  Change that to _notrun.
+On XFS in 6.17, this test fails with:
+
+ --- /run/fstests/bin/tests/generic/772.out	2025-10-06 08:27:10.834318149 -0700
+ +++ /var/tmp/fstests/generic/772.out.bad	2025-10-08 18:00:34.713388178 -0700
+ @@ -9,29 +9,34 @@ Can not get fsxattr on ./foo: Invalid ar
+  Can not set fsxattr on ./foo: Invalid argument
+  Initial attributes state
+  ----------------- SCRATCH_MNT/prj
+ ------------------ ./fifo
+ ------------------ ./chardev
+ ------------------ ./blockdev
+ ------------------ ./socket
+ ------------------ ./foo
+ ------------------ ./symlink
+ +Can not get fsxattr on ./fifo: Inappropriate ioctl for device
+ +Can not get fsxattr on ./chardev: Inappropriate ioctl for device
+ +Can not get fsxattr on ./blockdev: Inappropriate ioctl for device
+ +Can not get fsxattr on ./socket: Inappropriate ioctl for device
+
+This is a result of XFS' file_getattr implementation rejecting special
+files prior to 6.18.  Therefore, skip this new test on old kernels.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- tests/generic/482 |    2 +-
- tests/generic/757 |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ tests/generic/772 |    3 +++
+ tests/xfs/648     |    3 +++
+ 2 files changed, 6 insertions(+)
 
 
-diff --git a/tests/generic/482 b/tests/generic/482
-index 8c114ee03058c6..25e05d7cdb1c0d 100755
---- a/tests/generic/482
-+++ b/tests/generic/482
-@@ -82,7 +82,7 @@ _log_writes_remove
- prev=$(_log_writes_mark_to_entry_number mkfs)
- [ -z "$prev" ] && _fail "failed to locate entry mark 'mkfs'"
- cur=$(_log_writes_find_next_fua $prev)
--[ -z "$cur" ] && _fail "failed to locate next FUA write"
-+[ -z "$cur" ] && _notrun "failed to locate next FUA write"
+diff --git a/tests/generic/772 b/tests/generic/772
+index cc1a1bb5bf655c..e68a6724654450 100755
+--- a/tests/generic/772
++++ b/tests/generic/772
+@@ -43,6 +43,9 @@ touch $projectdir/bar
+ ln -s $projectdir/bar $projectdir/broken-symlink
+ rm -f $projectdir/bar
  
- while [ ! -z "$cur" ]; do
- 	_log_writes_replay_log_range $cur $DMTHIN_VOL_DEV >> $seqres.full
-diff --git a/tests/generic/757 b/tests/generic/757
-index 6c13c6af41c57c..725f3a5cc6da3a 100755
---- a/tests/generic/757
-+++ b/tests/generic/757
-@@ -71,7 +71,7 @@ _log_writes_remove
- prev=$(_log_writes_mark_to_entry_number mkfs)
- [ -z "$prev" ] && _fail "failed to locate entry mark 'mkfs'"
- cur=$(_log_writes_find_next_fua $prev)
--[ -z "$cur" ] && _fail "failed to locate next FUA write"
-+[ -z "$cur" ] && _notrun "failed to locate next FUA write"
++file_attr --get $projectdir ./fifo &>/dev/null || \
++	_notrun "file_getattr not supported on $FSTYP"
++
+ echo "Error codes"
+ # wrong AT_ flags
+ file_attr --get --invalid-at $projectdir ./foo
+diff --git a/tests/xfs/648 b/tests/xfs/648
+index 215c809887b609..e3c2fbe00b666a 100755
+--- a/tests/xfs/648
++++ b/tests/xfs/648
+@@ -47,6 +47,9 @@ touch $projectdir/bar
+ ln -s $projectdir/bar $projectdir/broken-symlink
+ rm -f $projectdir/bar
  
- while _soak_loop_running $((100 * TIME_FACTOR)); do
- 	_log_writes_replay_log_range $cur $DMTHIN_VOL_DEV >> $seqres.full
++$here/src/file_attr --get $projectdir ./fifo &>/dev/null || \
++	_notrun "file_getattr not supported on $FSTYP"
++
+ $XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 	-c "project -sp $projectdir $id" $SCRATCH_DEV | filter_quota
+ $XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
 
