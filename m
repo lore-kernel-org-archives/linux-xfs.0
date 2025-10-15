@@ -1,318 +1,168 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBE4631195F
-	for <linux-xfs@vger.kernel.org>; Wed, 15 Oct 2025 06:30:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52BD8303CA4
+	for <linux-xfs@vger.kernel.org>; Wed, 15 Oct 2025 06:52:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760509840; cv=none; b=RQHVEeUgD4q35Ash6kIYBqSEK9mun5ZX8UvpktmV80tBibqrF0jJiveDve7Ue+1fd3hfmAMsujlhtOt4kK21Yn4ggf1Q/miDRZ5/iwO0ZnLfWEtMeajKXj5YiB+nPX8IlEBX4TNVBxXSCxK/tr1VUzGicYIgACj/w2ca6STE9v4=
+	t=1760511159; cv=none; b=EVpj8rL6TJUzx/4adFqzUPmsiRq95TsaZe4npwDf6ufTbLzHHDe3fCN3kSnk+VQDFZe6VY/34itT3XK9qwkYgrgVIzrlDgBue8K4wHPSKcZ1XByqMd0Isp2piswTnguhrnGqfDaW7PBvUXkL1/lBlfjaurmi/bKQQ2D+6JV8+8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760509840; c=relaxed/simple;
-	bh=Y3sgg6uy4fttvimd/QzVvBFjfkyLXZ/BLO+1Ar1DSmE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NDLW9HPglmO33vLSFdK4dQLwYRkyP8HaqrmnAgeIQVk/kAUc3HmGWzcYY7ESN77cHNjTYRcnb07EOgh2oRjXrVJzlNlNFTQ/IERjBduGPElriVsiShLXUubQcGHU7SaoJPUsvsj/gY5Xu1c5xg4nXRVnr/9LEOBVvH473dM+7tw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nAqmWG6o; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1760511159; c=relaxed/simple;
+	bh=XMpcesZ+XTitm1UG8rVvdQXz+sdpegio3GxZecVh1Rg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lQtGdd0+kGOMLnlU1WBmsUK4dXNxAaMDv7ZWLm5/eD9SzM6Stm2z0rN8FqrDB+c3SWSdl/dbY9v1gQzbsYAWvwB6C1ZsZwkAB3yUfiHg5NQVhvO9G7X0koX1GpVZF2tseVIVzwornn4TCXIceRBuzLNhngXai8KLLqkMpIULzoo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aeLdok7q; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nAqmWG6o"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=DDZyZlGw+Be0GqoCqj6Uv9Mtmsmm7DNhg6gLKroEYI8=; b=nAqmWG6omFY9jSFGbQcuMDm/Ps
-	C/OwdUkMO3UjMmg2lv/ogZrF6vucp727EPXhpvXuvU6rsjBdEXAXHHlzCHzX34JjjYATJ9caHeL+q
-	DnV1841aDVEnzYACHpj+5Y6AJ1OBQRTMyWnNvLdQUmVPaNh8j6jX1MhipR3weditwNUySFwrNCS4p
-	SgJMJVcJieAGRtptAQ6ccKegsgMlcQVfMiiEXwguCvBtM658g8KBp+SgtBiMMzPP7S/cpYIlDHPLc
-	6D11yQmsmP0g42iHVmSLXyO5d7Jb9MOxyrOWX5v7nwV+0WIQqAEVwR43gNfxZ9HP0nGT6/fjSto85
-	e6LhAyEQ==;
-Received: from [38.87.93.141] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v8v1y-00000000bZ9-0iHO;
-	Wed, 15 Oct 2025 06:30:38 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: cem@kernel.org
-Cc: hans.holmberg@wdc.com,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: cache open zone in inode->i_private
-Date: Wed, 15 Oct 2025 15:30:34 +0900
-Message-ID: <20251015063034.61067-1-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aeLdok7q"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1760511156;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=A9reHZ473caRc+edawZ+46z/1YuvAJTFIbh7qXByHsI=;
+	b=aeLdok7qnTjSWwN3TGiGo5Z/eySOB+86ewnlnnsW0TT74neaZgEq1kduLYVEzzgTMq4dnO
+	kTYSAWgvzV+rGxNQ0qlQYkzOvCRY1ntdvEW5gElwHsFgm4sertuDsVYVkjTNlMI1fcITVx
+	LrY6WfhhJg+4+Lnm6ogFIYrqh2YhovY=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-640-nQgaEJESMMumu6HQyFHvWw-1; Wed, 15 Oct 2025 02:52:34 -0400
+X-MC-Unique: nQgaEJESMMumu6HQyFHvWw-1
+X-Mimecast-MFC-AGG-ID: nQgaEJESMMumu6HQyFHvWw_1760511154
+Received: by mail-qv1-f71.google.com with SMTP id 6a1803df08f44-78ea15d3583so269466736d6.1
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Oct 2025 23:52:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1760511154; x=1761115954;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=A9reHZ473caRc+edawZ+46z/1YuvAJTFIbh7qXByHsI=;
+        b=X9hOFEqHgmKMizNjRqG3B4oZ7QqEETaQZhsFRH5LNcBk5j4w8c4cKJGA6CmIosrnjp
+         AOqN901ES4xAyCOcPx5+mDpi07m0VEu4leOdEEOyruLNYAdrmhUgCnwTnSmEuC+htlGF
+         0Mi39b5B/Td6iTtXxiKQyspYTbY8kzXV2A/OOfvEcjR2zYCmqLXfDMCtirMG8n/HZJVv
+         m9HZNWSSLRgm/Ne8wkiIEDW9v5Ieia45NCMwxwJ9Qqanuu0bkBMKeFK9CLnFAz1fDaOJ
+         aj6+iXohAH9A7anOCAZylRiZBqetnvouN4drQ3A5O38GW17oPfsdRAmOKFJ8kQgFr+c1
+         xakg==
+X-Gm-Message-State: AOJu0YzIlfqhwZVtTZ3B7mmA1smOQVvlSHqjnr5mJHzloLWC/KskZmvB
+	m7GvJSPTOZyUoaLTOZ1C+iJ+B70Z4QtKP7TEGeHG0dfr/jx1XU7hg+shvEf4Iz2wP5TJ5wqPkM+
+	Xnw/022d0Pl1VnWimyNULxhBMnLygwJSxt2Cq7YxHAGhFfWJNWn8kX68a5uZxBWz3ZQm9MA==
+X-Gm-Gg: ASbGncv1WC0eN/0xgC0djV6AZdEKJKllOx4lpKBaGLGWmp9PCdQWHLrMKfNE3OPDSNp
+	cbJtZofMaslTGSXXVy9pK4iUTFql/z4hFzpiEuPb3eTqy9JcTuGWRs00LCRIB2tprYc6O4LsE+e
+	+psnNhfYVPN7jw3HTjGHQVTy7D8ucA5CIqmegqnNL0PMXnkYPhJmgwfgK8cs6LTT6s0vRDctUhK
+	o19SUoz+aycV0zqyIYY7pIuiuCCtDmTOkOrCBGW+IkiYxOVsRV8Zyco/28jBtUTMq+88PscsN8M
+	TcwbfMn3v7sAWWEEPYyXqa917CpIRA5jwOr49pJv1WZq5txg1b9g+3riOpAPkCKMKI+Klq2JFKB
+	z4Pygm8jPHrA=
+X-Received: by 2002:ad4:5e8b:0:b0:7ef:f440:2b40 with SMTP id 6a1803df08f44-87b2ef94018mr418402746d6.53.1760511153734;
+        Tue, 14 Oct 2025 23:52:33 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGr/anVWc9Amu1ipnyGbz7zFQc3IYS+TsMGDusLUj6Lk5hoMsJFLlLS69JjIQUHALqa79K/uA==
+X-Received: by 2002:ad4:5e8b:0:b0:7ef:f440:2b40 with SMTP id 6a1803df08f44-87b2ef94018mr418402576d6.53.1760511153276;
+        Tue, 14 Oct 2025 23:52:33 -0700 (PDT)
+Received: from ?IPV6:2001:8003:4a36:e700:8cd:5151:364a:2095? ([2001:8003:4a36:e700:8cd:5151:364a:2095])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-87c012a2c6dsm13082096d6.46.2025.10.14.23.52.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Oct 2025 23:52:32 -0700 (PDT)
+Message-ID: <c7ceb034-9d65-445c-8d3c-8e63a99115db@redhat.com>
+Date: Wed, 15 Oct 2025 17:52:27 +1100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] mkfs.xfs fix sunit size on 512e and 4kN disks.
+To: Lukas Herbolt <lukas@herbolt.com>, aalbersh@redhat.com, djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org
+References: <20250926123829.2101207-2-lukas@herbolt.com>
+Content-Language: en-US
+From: Donald Douwsma <ddouwsma@redhat.com>
+In-Reply-To: <20250926123829.2101207-2-lukas@herbolt.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The MRU cache for open zones is unfortunately still not ideal, as it can
-time out pretty easily when doing heavy I/O to hard disks using up most
-or all open zones.  One option would be to just increase the timeout,
-but while looking into that I realized we're just better off caching it
-indefinitely as there is no real downside to that once we don't hold a
-reference to the cache open zone.
 
-So switch the open zone to RCU freeing, and then stash the last used
-open zone into inode->i_private.  This helps to significantly reduce
-fragmentation by keeping I/O localized to zones for workloads that
-write using many open files to HDD.
 
-Fixes: 4e4d52075577 ("xfs: add the zoned space allocator")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_mount.h      |   1 -
- fs/xfs/xfs_super.c      |   6 ++
- fs/xfs/xfs_zone_alloc.c | 134 +++++++++++++---------------------------
- fs/xfs/xfs_zone_priv.h  |   2 +
- 4 files changed, 50 insertions(+), 93 deletions(-)
+On 26/9/25 22:38, Lukas Herbolt wrote:
+> Creating of XFS on 4kN or 512e disk result in suboptimal LSU/LSUNIT.
+> As of now we check if the sectorsize is bigger than XLOG_HEADER_SIZE
+> and so we set lsu to blocksize. But we do not check the the size if
+> lsunit can be bigger to fit the disk geometry.
+> 
+> Before:
+> modprobe scsi_debug inq_vendor=XFS_TEST physblk_exp=3 sector_size=512 \
+> opt_xferlen_exp=9 opt_blks=512 dev_size_mb=100 virtual_gb=1000; \
+> lsblk -tQ 'VENDOR == "XFS_TEST"'; \
+> mkfs.xfs -f $(lsblk -Q 'VENDOR == "XFS_TEST"' -no path) 2>/dev/null; sleep 1; \
+> modprobe -r scsi_debug
+> NAME ALIGNMENT MIN-IO OPT-IO PHY-SEC LOG-SEC ROTA SCHED RQ-SIZE  RA WSAME
+> sda          0 262144 262144    4096     512    0 bfq       256 512    0B
+> meta-data=/dev/sda               isize=512    agcount=32, agsize=8192000 blks
+>           =                       sectsz=4096  attr=2, projid32bit=1
+>           =                       crc=1        finobt=1, sparse=1, rmapbt=1
+>           =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
+>           =                       exchange=0
+> data     =                       bsize=4096   blocks=262144000, imaxpct=25
+>           =                       sunit=64     swidth=64 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
+> log      =internal log           bsize=4096   blocks=128000, version=2
+>           =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> After:
+> modprobe scsi_debug inq_vendor=XFS_TEST physblk_exp=3 sector_size=512 \
+> opt_xferlen_exp=9 opt_blks=512 dev_size_mb=100 virtual_gb=1000; \
+> lsblk -tQ 'VENDOR == "XFS_TEST"'; \
+> mkfs.xfs -f $(lsblk -Q 'VENDOR == "XFS_TEST"' -no path) 2>/dev/null; sleep 1; \
+> modprobe -r scsi_debug
+> NAME ALIGNMENT MIN-IO OPT-IO PHY-SEC LOG-SEC ROTA SCHED RQ-SIZE  RA WSAME
+> sda          0 262144 262144    4096     512    0 bfq       256 512    0B
+> meta-data=/dev/sda               isize=512    agcount=32, agsize=8192000 blks
+>           =                       sectsz=4096  attr=2, projid32bit=1
+>           =                       crc=1        finobt=1, sparse=1, rmapbt=1
+>           =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
+>           =                       exchange=0   metadir=0
+> data     =                       bsize=4096   blocks=262144000, imaxpct=25
+>           =                       sunit=64     swidth=64 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
+> log      =internal log           bsize=4096   blocks=128000, version=2
+>           =                       sectsz=4096  sunit=64 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>           =                       rgcount=0    rgsize=0 extents
+>           =                       zoned=0      start=0 reserved=0
+> 
 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index f046d1215b04..b871dfde372b 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -236,7 +236,6 @@ typedef struct xfs_mount {
- 	bool			m_update_sb;	/* sb needs update in mount */
- 	unsigned int		m_max_open_zones;
- 	unsigned int		m_zonegc_low_space;
--	struct xfs_mru_cache	*m_zone_cache;  /* Inode to open zone cache */
- 
- 	/* max_atomic_write mount option value */
- 	unsigned long long	m_awu_max_bytes;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e85a156dc17d..464ae1e657d9 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -786,6 +786,12 @@ xfs_fs_evict_inode(
- 
- 	truncate_inode_pages_final(&inode->i_data);
- 	clear_inode(inode);
-+
-+	if (IS_ENABLED(CONFIG_XFS_RT) &&
-+	    S_ISREG(inode->i_mode) && inode->i_private) {
-+		xfs_open_zone_put(inode->i_private);
-+		inode->i_private = NULL;
-+	}
- }
- 
- static void
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 1147bacb2da8..07adbefae114 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -26,14 +26,22 @@
- #include "xfs_trace.h"
- #include "xfs_mru_cache.h"
- 
-+static void
-+xfs_open_zone_free_rcu(
-+	struct callback_head	*cb)
-+{
-+	struct xfs_open_zone	*oz = container_of(cb, typeof(*oz), oz_rcu);
-+
-+	xfs_rtgroup_rele(oz->oz_rtg);
-+	kfree(oz);
-+}
-+
- void
- xfs_open_zone_put(
- 	struct xfs_open_zone	*oz)
- {
--	if (atomic_dec_and_test(&oz->oz_ref)) {
--		xfs_rtgroup_rele(oz->oz_rtg);
--		kfree(oz);
--	}
-+	if (atomic_dec_and_test(&oz->oz_ref))
-+		call_rcu(&oz->oz_rcu, xfs_open_zone_free_rcu);
- }
- 
- static inline uint32_t
-@@ -745,98 +753,44 @@ xfs_mark_rtg_boundary(
- 		ioend->io_flags |= IOMAP_IOEND_BOUNDARY;
- }
- 
--/*
-- * Cache the last zone written to for an inode so that it is considered first
-- * for subsequent writes.
-- */
--struct xfs_zone_cache_item {
--	struct xfs_mru_cache_elem	mru;
--	struct xfs_open_zone		*oz;
--};
--
--static inline struct xfs_zone_cache_item *
--xfs_zone_cache_item(struct xfs_mru_cache_elem *mru)
--{
--	return container_of(mru, struct xfs_zone_cache_item, mru);
--}
--
--static void
--xfs_zone_cache_free_func(
--	void				*data,
--	struct xfs_mru_cache_elem	*mru)
--{
--	struct xfs_zone_cache_item	*item = xfs_zone_cache_item(mru);
--
--	xfs_open_zone_put(item->oz);
--	kfree(item);
--}
--
- /*
-  * Check if we have a cached last open zone available for the inode and
-  * if yes return a reference to it.
-  */
- static struct xfs_open_zone *
--xfs_cached_zone(
--	struct xfs_mount		*mp,
--	struct xfs_inode		*ip)
-+xfs_get_cached_zone(
-+	struct xfs_inode	*ip)
- {
--	struct xfs_mru_cache_elem	*mru;
--	struct xfs_open_zone		*oz;
-+	struct xfs_open_zone	*oz;
-+
-+	/*
-+	 * The caching in i_private is unbound, and the zone could have been
-+	 * reused for GC in the meantime.  Skip it in that case.
-+	 */
-+	rcu_read_lock();
-+	oz = VFS_I(ip)->i_private;
-+	if (oz && (oz->oz_is_gc || !atomic_inc_not_zero(&oz->oz_ref)))
-+		oz = NULL;
-+	rcu_read_unlock();
- 
--	mru = xfs_mru_cache_lookup(mp->m_zone_cache, ip->i_ino);
--	if (!mru)
--		return NULL;
--	oz = xfs_zone_cache_item(mru)->oz;
--	if (oz) {
--		/*
--		 * GC only steals open zones at mount time, so no GC zones
--		 * should end up in the cache.
--		 */
--		ASSERT(!oz->oz_is_gc);
--		ASSERT(atomic_read(&oz->oz_ref) > 0);
--		atomic_inc(&oz->oz_ref);
--	}
--	xfs_mru_cache_done(mp->m_zone_cache);
- 	return oz;
- }
- 
- /*
-- * Update the last used zone cache for a given inode.
-- *
-- * The caller must have a reference on the open zone.
-+ * Try to stash our zone in the inode so that it is reused for future
-+ * allocations.
-  */
- static void
--xfs_zone_cache_create_association(
--	struct xfs_inode		*ip,
--	struct xfs_open_zone		*oz)
-+xfs_set_cached_zone(
-+	struct xfs_inode	*ip,
-+	struct xfs_open_zone	*oz)
- {
--	struct xfs_mount		*mp = ip->i_mount;
--	struct xfs_zone_cache_item	*item = NULL;
--	struct xfs_mru_cache_elem	*mru;
-+	struct xfs_open_zone	*old_oz;
- 
--	ASSERT(atomic_read(&oz->oz_ref) > 0);
- 	atomic_inc(&oz->oz_ref);
--
--	mru = xfs_mru_cache_lookup(mp->m_zone_cache, ip->i_ino);
--	if (mru) {
--		/*
--		 * If we have an association already, update it to point to the
--		 * new zone.
--		 */
--		item = xfs_zone_cache_item(mru);
--		xfs_open_zone_put(item->oz);
--		item->oz = oz;
--		xfs_mru_cache_done(mp->m_zone_cache);
--		return;
--	}
--
--	item = kmalloc(sizeof(*item), GFP_KERNEL);
--	if (!item) {
--		xfs_open_zone_put(oz);
--		return;
--	}
--	item->oz = oz;
--	xfs_mru_cache_insert(mp->m_zone_cache, ip->i_ino, &item->mru);
-+	old_oz = xchg(&VFS_I(ip)->i_private, oz);
-+	if (old_oz)
-+		xfs_open_zone_put(old_oz);
- }
- 
- static void
-@@ -880,15 +834,14 @@ xfs_zone_alloc_and_submit(
- 	 * the inode is still associated with a zone and use that if so.
- 	 */
- 	if (!*oz)
--		*oz = xfs_cached_zone(mp, ip);
-+		*oz = xfs_get_cached_zone(ip);
- 
- 	if (!*oz) {
- select_zone:
- 		*oz = xfs_select_zone(mp, write_hint, pack_tight);
- 		if (!*oz)
- 			goto out_error;
--
--		xfs_zone_cache_create_association(ip, *oz);
-+		xfs_set_cached_zone(ip, *oz);
- 	}
- 
- 	alloc_len = xfs_zone_alloc_blocks(*oz, XFS_B_TO_FSB(mp, ioend->io_size),
-@@ -966,6 +919,12 @@ xfs_free_open_zones(
- 		xfs_open_zone_put(oz);
- 	}
- 	spin_unlock(&zi->zi_open_zones_lock);
-+
-+	/*
-+	 * Wait for all open zones to be freed so that they drop the group
-+	 * references:
-+	 */
-+	rcu_barrier();
- }
- 
- struct xfs_init_zones {
-@@ -1279,14 +1238,6 @@ xfs_mount_zones(
- 	error = xfs_zone_gc_mount(mp);
- 	if (error)
- 		goto out_free_zone_info;
--
--	/*
--	 * Set up a mru cache to track inode to open zone for data placement
--	 * purposes. The magic values for group count and life time is the
--	 * same as the defaults for file streams, which seems sane enough.
--	 */
--	xfs_mru_cache_create(&mp->m_zone_cache, mp,
--			5000, 10, xfs_zone_cache_free_func);
- 	return 0;
- 
- out_free_zone_info:
-@@ -1300,5 +1251,4 @@ xfs_unmount_zones(
- {
- 	xfs_zone_gc_unmount(mp);
- 	xfs_free_zone_info(mp->m_zone_info);
--	xfs_mru_cache_destroy(mp->m_zone_cache);
- }
-diff --git a/fs/xfs/xfs_zone_priv.h b/fs/xfs/xfs_zone_priv.h
-index 35e6de3d25ed..4322e26dd99a 100644
---- a/fs/xfs/xfs_zone_priv.h
-+++ b/fs/xfs/xfs_zone_priv.h
-@@ -44,6 +44,8 @@ struct xfs_open_zone {
- 	 * the life time of an open zone.
- 	 */
- 	struct xfs_rtgroup	*oz_rtg;
-+
-+	struct rcu_head		oz_rcu;
- };
- 
- /*
--- 
-2.47.3
+Has it always been like this?
+
+"2f44b1b0 mkfs: rework stripe calculations" changed a lot in this area,
+but its harder to follow the code before the change.
+
+> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+> ---
+>   mkfs/xfs_mkfs.c | 4 ++++
+>   1 file changed, 4 insertions(+)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 8cd4ccd7..05268cd9 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3643,6 +3643,10 @@ check_lsunit:
+>   		lsu = getnum(cli->lsu, &lopts, L_SU);
+>   	else if (cfg->lsectorsize > XLOG_HEADER_SIZE)
+
+Missing { ?                                           ^
+
+>   		lsu = cfg->blocksize; /* lsunit matches filesystem block size */
+> +		if (cfg->dsunit){
+> +			cfg->lsunit = cfg->dsunit;
+> +			lsu = 0;
+> +		}
+
+	}
+
+>   
+>   	if (lsu) {
+>   		/* verify if lsu is a multiple block size */
 
