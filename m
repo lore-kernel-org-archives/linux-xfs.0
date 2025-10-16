@@ -1,77 +1,54 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A30B1C69D
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Oct 2025 00:19:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F7E61F131A
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Oct 2025 04:21:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760573990; cv=none; b=GBm6QaILZCRLFey+1K2PWSQF8oU7cKb8s1lzuPKqYOhCTc7j7HNgXkQ6yvxaDqHts4rAy+4yOhjFrmtjRVsjiy0hNJ/Bw1C9PLo7rmiWt2biNr4ScDEMfiz3sN5RXgtRRqx38YkKKJd0dB+4PAW41tjlQedun/SG5qCzNLcIhcY=
+	t=1760588477; cv=none; b=WjGQJwccabJH4QW98pzfALo59+I+jsbfEy71GsAjQbGQerLwAI8iAwjyLQzDgrL0HSyduriTAEfAlrwmxo2NyLeBSldcfda1tk94F2nemiEQR7KwJbyAZEfnQaw09jfdZGxWbwpomuQhzyd7DdGBQgVdlAJskvJbLwsQKycWulg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760573990; c=relaxed/simple;
-	bh=XYa200Nf/gsEWTcUkMk6E25Nm/NBQk6GT3PDKC9HCng=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=lxE/PmUavoNBu3khdMgQHw6pxbz93jvzR8oBj/iDh/bS81Wt5h+gM0YZBBmX0DFD+ndu3TFr+TaQ3xeD3AMtlw7k30bI3q7Xl2kO7ipsmo1bDVX35cqnH9I/kqyIgp1xCplxOTZHYLsuTCxCojl+9p1JGHaScBCFy2jCfmSiqwE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a9v7Xo/r; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a9v7Xo/r"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 2BBACC116D0
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Oct 2025 00:19:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760573990;
-	bh=XYa200Nf/gsEWTcUkMk6E25Nm/NBQk6GT3PDKC9HCng=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=a9v7Xo/rzm+dgs8uMuWWWSdlfJvYaGBFjrSaetw8K1pqc4Mhdk9z0H353SUcPDOgP
-	 NWmkCbyaRfuO4pvrfspq1OmoTchnctT61Y/pKwrlt82cIGmU0NI0A3tlWIZ9Ir/OpE
-	 bEIA/uW/B/x3wFatwoCaJbzYy11Cr/NQWPVBgRhULie/0yPJ7nI8FNkIYj/PhDyB+4
-	 gZiWD0QS5EEI71kit5ydluls79JWpbkaw4WSlEnIavcftDa3XlCXzxyA6KJhCkzQmr
-	 CT+UCIKC6Rm0ef0xITkZm57EUUAXY//caExhdzFcsLYdy3mqkr0JF5H+iNgn/H0ZX4
-	 kKImblOb6wVFg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 22230C53BC5; Thu, 16 Oct 2025 00:19:50 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-xfs@vger.kernel.org
-Subject: [Bug 220669] Drive issues cause system and coredump and reboot
-Date: Thu, 16 Oct 2025 00:19:49 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: bshephar@bne-home.net
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: attachments.created
-Message-ID: <bug-220669-201763-mGn60LPGd2@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-220669-201763@https.bugzilla.kernel.org/>
-References: <bug-220669-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=arc-20240116; t=1760588477; c=relaxed/simple;
+	bh=uWEh2lfOsBQqkaQbakgZtdpAyM+MwFjJF0VeK5iV6WQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DQ5mlfc834LptrxMKhB0V8KLLKETmpFDS9rIfXs4CoklTzmk3czUB5AQ2XN/ys189B2hPAHz/V4hE2y4xlLsPkpIbsvJnjwLpe1lv6ZORhoDRkDNY+Rl44QJa4fcQhjqgtXR1lVV4zqYDYcoh6wjlpYKiuplGnbCdEWtIWnVZIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id D42B8227A87; Thu, 16 Oct 2025 06:21:04 +0200 (CEST)
+Date: Thu, 16 Oct 2025 06:21:04 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 10/17] xfs: return the dquot unlocked from xfs_qm_dqget
+Message-ID: <20251016042104.GA29822@lst.de>
+References: <20251013024851.4110053-1-hch@lst.de> <20251013024851.4110053-11-hch@lst.de> <20251015211714.GE2591640@frogsfrogsfrogs> <20251015211850.GG2591640@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251015211850.GG2591640@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D220669
+On Wed, Oct 15, 2025 at 02:18:50PM -0700, Darrick J. Wong wrote:
+> > >  		error = xqcheck_commit_dquot(xqc, dqtype, dq);
+> > >  		xfs_qm_dqrele(dq);
+> > 
+> > Hmm.  No mutex_unlock() ?
+> > 
+> > Oh, because @dq gets added to the scrub transaction and the
+> > commit/cancel and unlocks it, right?
+> > 
+> > (Maybe the mutex_lock should go in xqcheck_commit_dquot to avoid the
+> > unbalanced lock state before after the function call?)
+> 
+> Oh, you /do/ do that a few patches from now.
 
---- Comment #1 from Brendan Shephard (bshephar@bne-home.net) ---
-Created attachment 308812
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D308812&action=3Dedit
-vmcore-dmesg.txt
+Yes.  And that later patch is the one sorting out the locking bug
+you pointed out the day before as well.
 
-The generated vmcore-dmesg.txt file
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
