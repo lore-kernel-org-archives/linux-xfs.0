@@ -1,157 +1,166 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7317924679C
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Oct 2025 18:58:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F9D63BB5A
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Oct 2025 22:33:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760641134; cv=none; b=fwUykbAYUDoR7vrOSYQP7WamqzGPCzEzoa/pcsN2KqXbGK16hmQ874kf8mkFnvj1iCwp9JU5Lhs0wxvsphkJ/yQVIpdSE8rquvVaerKTHNWG4mUcW76+E4rei2KZWAaTdIsAUdCDZlq6Zp4xg5CjPJF6q5brPTNZn4Bo6fdoOPY=
+	t=1760654001; cv=none; b=KLXSAyOVKkbE4GCQuCI5DlrwkyVdQEzvGajCY7qaRydOraF8PoqgCbH3VRzo8hhMzr3mt/Wy9kRgG4fA2L1fCUA5yvvlVLNolzvYGHlaWhw6W6BXrYUUFuC+k+2aBRzG8W84GA/D4elkE2C1X+pazLOBtQTtcGtr54j7QiBdVrQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760641134; c=relaxed/simple;
-	bh=uq0H3o+AC/8XVE7Fcxjqo2TVpXinyPxCAaNsJGr53aw=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qmV9SXlTtqIIl11XSVy+67DHfPW8UHFfiScyHTR5kmJQ9ced3VxbPunTkTrjTnC5AI6OYSSd5lo9omE2QckcipCQTX5/yUoylSb+04oSJkuHJTc/VNgrMasoHRNsvi/9FvyYWBt9b2M/PDKre661+yH7iMbkCeyRjvsPeLNOidA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bYJuVQcs; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1760654001; c=relaxed/simple;
+	bh=5HeHjJKQT+heuRAfANSmHQCiXgQ0Glwl31BAOVaoUn0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pTVwt0EKm4WnT+ybJAGZvY6QT88rimttTcp/9bx5IoJ4ZWaflR2bUiZDPajY6gGWVJUpeT7SBMndX7PBYmLUYeF5A64srbaiFFKYVJJchIiC/0yxvMAcAqOG5RIJM8g7zzqnJOMvVkUl+PUo0plbiBm/TzLDQPFY8nttgwIiGUo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=ho4QRk8x; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bYJuVQcs"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1760641129;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9CJkA8HFOi/1vNjFTuTPnttPB7NDmGN7oRbCuAPDjTM=;
-	b=bYJuVQcs85zRefuQdngQGOgHkNTIIpD7pyFwcCImHkPR6FtHS9ogMY6WH7QP3ai9OHM7u1
-	+6/lZJAm2wOco/N6wvfcEDzsa/1yywOVLuYXw1NeoXXLB/+ELAh5rm7NGidkFLdehbQ9kA
-	WBOpezWTrL9kkRG04izoeRNdiIcxvXg=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-374-cbZ5ysUCN76QFM8hvJeXRg-1; Thu,
- 16 Oct 2025 14:58:46 -0400
-X-MC-Unique: cbZ5ysUCN76QFM8hvJeXRg-1
-X-Mimecast-MFC-AGG-ID: cbZ5ysUCN76QFM8hvJeXRg_1760641125
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7B068195608A;
-	Thu, 16 Oct 2025 18:58:45 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.65.116])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E9ACF1956056;
-	Thu, 16 Oct 2025 18:58:44 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-To: linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 2/6] iomap, xfs: lift zero range hole mapping flush into xfs
-Date: Thu, 16 Oct 2025 15:02:59 -0400
-Message-ID: <20251016190303.53881-3-bfoster@redhat.com>
-In-Reply-To: <20251016190303.53881-1-bfoster@redhat.com>
-References: <20251016190303.53881-1-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ho4QRk8x"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-27d3540a43fso13545875ad.3
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Oct 2025 15:33:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1760653999; x=1761258799; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=cyHszjXwr011mdavyBxcCiQ2SmN5DwUbyqKyrEqEbK8=;
+        b=ho4QRk8xqBKzQHLQCzMUjHycKPCCF0aiKDh61soOT3K487PRs0FwWllHtj8lLurwgb
+         3Pbou3uJWIB+kqqjrONe/ABPtHzC4u9oyAlZXTY5Pwe+YVkEEP4UmAZVkVn3GETxv63/
+         8VX5v6qkNUCFOKagtD0YgoCva7zTOB431RFi/9RQhBDDILaBTabwvPPbr/rguhS27uKJ
+         oZ+X8Vnxa7iLAxcAgD1ed/xMnLvMjc99Q/9w56k4gg7TgAf2uMxSmXbse6ZT3aHe9DLS
+         9PsoSDsPHA0QoWZOdsnzC8tkPTUQC4U1D112yZR7O75R0nyVRr5rABY9U8iAZfzDDlBE
+         cY/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1760653999; x=1761258799;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=cyHszjXwr011mdavyBxcCiQ2SmN5DwUbyqKyrEqEbK8=;
+        b=hY1b2gpXJlzOvI0MKDY8aqj7JP/9QYiE2+Cfhe3wf6Ru8yR6mbJ8Ns8dn3Mp1mVv28
+         LmTHfg7EC3Hk71eCSRK1rqDGwMNdzHQ+usfIzbkpxyoprB/fT7/cT/JifqEnQhGMseY4
+         9q3Kgv+m6aGOMN9N7LwVDUMW3fl1RAZcgIG3IdFwuBFOVRn05jSzeC29dqOgdfEppIwK
+         Yp+8WMa+7sISg4k5mtuLIlMlpzNWhKWIerq19MqHwcUqVWmjQ6pSrLD2gZVfOukZpKG5
+         jZLoZKZqmgGVHvxD6RSxgnJx+dkCrp4HHtkXoqtr4+h1Xzuq1eIy11uoPYAr05+CmNf2
+         7fFg==
+X-Forwarded-Encrypted: i=1; AJvYcCV9Bd7jnfN0X/qCz8rKGOUJG5rKbZlpE3CED5XMSQQQPXFUuTnIJswizTX4WriZEE1SVsI7xOk8okA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzxmnfX4ys0Sx48hZCsQpfTbF4Mm7C7s5s8Ga0bkrFRWs4dLt8r
+	+E/8697b7QA3hp8/m/MtCIBoh4RcU9Xolgre4394RpVPIv+Od3mnGKtDC6g3/tgHZaI=
+X-Gm-Gg: ASbGncuGIM4VSSFs4Kv6UuQ2zpiMrtHflf0q2462bTyfcpreeRcDbUhmhJ8mXjcelSP
+	h2QNddUbPSed1IGBbAiOICQKLNse3eHyr1wMJDweKTVJyBDsOJ0YjRrTRIFVN6VG80gxfNGg9dR
+	OflxfXXnawGjDjmrNiLtYH8C/rBrrq/dpVi7HwWuSLPJs78VJU2fIfmNmNfw3FlubBdcjkV865D
+	7KxW5nz+zbYEx9Rn6NT8U0HXQ+Cx9Dk4d1OxuGaaWneajRfJS1fhquijY8Efnl9nzXaSOKKOGfW
+	+LITXM9L6b5nQNQJZh/av4+8PpHDcTalJlf3gNx+MhsCKNcLq84vzucgQUoMkumQxH0tRlVx/te
+	SPtqEvdGt2thtKImCpOGPX5OkM6Ha6xd+gmSlMfYGnPmq2abSWdrORZeBipGdfe4K5gDxefjg8o
+	btIYZ7dg6+ex0fGUFFJnUHgGBtD1bmHIfhx055nf2xVSJKeVJSOJRowPzz03Lb8A==
+X-Google-Smtp-Source: AGHT+IHA0ri7OHJpZ/4Fd97oTXQUCyc/5am6RLXoYkFT5WMoFCFwAYWAWovMfIuEjWrsvgSaZLmzvA==
+X-Received: by 2002:a17:902:f70b:b0:267:af07:6528 with SMTP id d9443c01a7336-290caf83079mr16312385ad.35.1760653999244;
+        Thu, 16 Oct 2025 15:33:19 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-91-142.pa.nsw.optusnet.com.au. [49.180.91.142])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7992b060c4esm23661111b3a.14.2025.10.16.15.33.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Oct 2025 15:33:18 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1v9WX5-0000000FmFe-2Hry;
+	Fri, 17 Oct 2025 09:33:15 +1100
+Date: Fri, 17 Oct 2025 09:33:15 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Kiryl Shutsemau <kirill@shutemov.name>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Pankaj Raghav <p.raghav@samsung.com>, Zorro Lang <zlang@redhat.com>,
+	akpm@linux-foundation.org, linux-mm <linux-mm@kvack.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	xfs <linux-xfs@vger.kernel.org>
+Subject: Re: Regression in generic/749 with 8k fsblock size on 6.18-rc1
+Message-ID: <aPFyqwdv1prLXw5I@dread.disaster.area>
+References: <20251014175214.GW6188@frogsfrogsfrogs>
+ <rymlydtl4fo4k4okciiifsl52vnd7pqs65me6grweotgsxagln@zebgjfr3tuep>
+ <20251015175726.GC6188@frogsfrogsfrogs>
+ <bknltdsmeiapy37jknsdr2gat277a4ytm5dzj3xrcbjdf3quxm@ej2anj5kqspo>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bknltdsmeiapy37jknsdr2gat277a4ytm5dzj3xrcbjdf3quxm@ej2anj5kqspo>
 
-iomap zero range has a wart in that it also flushes dirty pagecache
-over hole mappings (rather than only unwritten mappings). This was
-included to accommodate a quirk in XFS where COW fork preallocation
-can exist over a hole in the data fork, and the associated range is
-reported as a hole. This is because the range actually is a hole,
-but XFS also has an optimization where if COW fork blocks exist for
-a range being written to, those blocks are used regardless of
-whether the data fork blocks are shared or not. For zeroing, COW
-fork blocks over a data fork hole are only relevant if the range is
-dirty in pagecache, otherwise the range is already considered
-zeroed.
+On Thu, Oct 16, 2025 at 11:22:00AM +0100, Kiryl Shutsemau wrote:
+> On Wed, Oct 15, 2025 at 10:57:26AM -0700, Darrick J. Wong wrote:
+> > On Wed, Oct 15, 2025 at 04:59:03PM +0100, Kiryl Shutsemau wrote:
+> > > On Tue, Oct 14, 2025 at 10:52:14AM -0700, Darrick J. Wong wrote:
+> > > > Hi there,
+> > > > 
+> > > > On 6.18-rc1, generic/749[1] running on XFS with an 8k fsblock size fails
+> > > > with the following:
+> > > > 
+> > > > --- /run/fstests/bin/tests/generic/749.out	2025-07-15 14:45:15.170416031 -0700
+> > > > +++ /var/tmp/fstests/generic/749.out.bad	2025-10-13 17:48:53.079872054 -0700
+> > > > @@ -1,2 +1,10 @@
+> > > >  QA output created by 749
+> > > > +Expected SIGBUS when mmap() reading beyond page boundary
+> > > > +Expected SIGBUS when mmap() writing beyond page boundary
+> > > > +Expected SIGBUS when mmap() reading beyond page boundary
+> > > > +Expected SIGBUS when mmap() writing beyond page boundary
+> > > > +Expected SIGBUS when mmap() reading beyond page boundary
+> > > > +Expected SIGBUS when mmap() writing beyond page boundary
+> > > > +Expected SIGBUS when mmap() reading beyond page boundary
+> > > > +Expected SIGBUS when mmap() writing beyond page boundary
+> > > >  Silence is golden
+> > > > 
+> > > > This test creates small files of various sizes, maps the EOF block, and
+> > > > checks that you can read and write to the mmap'd page up to (but not
+> > > > beyond) the next page boundary.
+> > > > 
+> > > > For 8k fsblock filesystems on x86, the pagecache creates a single 8k
+> > > > folio to cache the entire fsblock containing EOF.  If EOF is in the
+> > > > first 4096 bytes of that 8k fsblock, then it should be possible to do a
+> > > > mmap read/write of the first 4k, but not the second 4k.  Memory accesses
+> > > > to the second 4096 bytes should produce a SIGBUS.
+> > > 
+> > > Does anybody actually relies on this behaviour (beyond xfstests)?
+> > 
+> > Beats me, but the mmap manpage says:
+> ...
+> > POSIX 2024 says:
+> ...
+> > From both I would surmise that it's a reasonable expectation that you
+> > can't map basepages beyond EOF and have page faults on those pages
+> > succeed.
+> 
+> <Added folks form the commit that introduced generic/749>
+> 
+> Modern kernel with large folios blurs the line of what is the page.
+> 
+> I don't want play spec lawyer. Let's look at real workloads.
 
-The easiest way to deal with this corner case is to flush the
-pagecache to trigger COW remapping into the data fork, and then
-operate on the updated on-disk state. The problem is that ext4
-cannot accommodate a flush from this context due to being a
-transaction deadlock vector.
+Or, more importantly, consider the security-related implications of
+the change....
 
-Outside of the hole quirk, ext4 can avoid the flush for zero range
-by using the recently introduced folio batch lookup mechanism for
-unwritten mappings. Therefore, take the next logical step and lift
-the hole handling logic into the XFS iomap_begin handler. iomap will
-still flush on unwritten mappings without a folio batch, and XFS
-will flush and retry mapping lookups in the case where it would
-otherwise report a hole with dirty pagecache during a zero range.
+> If there's anything that actually relies on this SIGBUS corner case,
+> let's see how we can fix the kernel. But it will cost some CPU cycles.
+> 
+> If it only broke syntactic test case, I'm inclined to say WONTFIX.
+> 
+> Any opinions?
 
-Note that this is intended to be a fairly straightforward lift and
-otherwise not change behavior. Now that the flush exists within XFS,
-follow on patches can further optimize it.
+Mapping beyond EOF ranges into userspace address spaces is a
+potential security risk. If there is ever a zeroing-beyond-EOF bug
+related to large folios (history tells us we are *guaranteed* to
+screw this up somewhere in future), then allowing mapping all the
+way to the end of the large folio could expose a -lot more- stale
+kernel data to userspace than just what the tail of a PAGE_SIZE
+faulted region would expose.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/iomap/buffered-io.c |  2 +-
- fs/xfs/xfs_iomap.c     | 25 ++++++++++++++++++++++---
- 2 files changed, 23 insertions(+), 4 deletions(-)
+Hence allowing applications to successfully fault a (unpredictable)
+distance far beyond EOF because the page cache used a large folio
+spanning EOF seems, to me, to be a very undesirable behaviour to
+expose to userspace.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 05ff82c5432e..d6de689374c3 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1543,7 +1543,7 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 		     srcmap->type == IOMAP_UNWRITTEN)) {
- 			s64 status;
- 
--			if (range_dirty) {
-+			if (range_dirty && srcmap->type == IOMAP_UNWRITTEN) {
- 				range_dirty = false;
- 				status = iomap_zero_iter_flush_and_stale(&iter);
- 			} else {
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 01833aca37ac..b84c94558cc9 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1734,6 +1734,7 @@ xfs_buffered_write_iomap_begin(
- 	if (error)
- 		return error;
- 
-+restart:
- 	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
- 	if (error)
- 		return error;
-@@ -1761,9 +1762,27 @@ xfs_buffered_write_iomap_begin(
- 	if (eof)
- 		imap.br_startoff = end_fsb; /* fake hole until the end */
- 
--	/* We never need to allocate blocks for zeroing or unsharing a hole. */
--	if ((flags & (IOMAP_UNSHARE | IOMAP_ZERO)) &&
--	    imap.br_startoff > offset_fsb) {
-+	/* We never need to allocate blocks for unsharing a hole. */
-+	if ((flags & IOMAP_UNSHARE) && imap.br_startoff > offset_fsb) {
-+		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
-+		goto out_unlock;
-+	}
-+
-+	/*
-+	 * We may need to zero over a hole in the data fork if it's fronted by
-+	 * COW blocks and dirty pagecache. To make sure zeroing occurs, force
-+	 * writeback to remap pending blocks and restart the lookup.
-+	 */
-+	if ((flags & IOMAP_ZERO) && imap.br_startoff > offset_fsb) {
-+		if (filemap_range_needs_writeback(inode->i_mapping, offset,
-+						  offset + count - 1)) {
-+			xfs_iunlock(ip, lockmode);
-+			error = filemap_write_and_wait_range(inode->i_mapping,
-+						offset, offset + count - 1);
-+			if (error)
-+				return error;
-+			goto restart;
-+		}
- 		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
- 		goto out_unlock;
- 	}
+-Dave.
 -- 
-2.51.0
-
+Dave Chinner
+david@fromorbit.com
