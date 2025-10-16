@@ -1,114 +1,84 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 096F1261B60
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Oct 2025 11:10:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 080F131DD82;
+	Thu, 16 Oct 2025 12:10:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760613007; cv=none; b=A/mAE27/5Sfl3VCkhEBqM0kgibwem40P3MdyduSt8jTwBcJj5N1UYyn+nOdvDgdc+Q2vJnFvId0Ymn7BxyxqJJ3E0Hz79iug7tB0ER8I5I7f33SKksZn28d1xl6RfIty5YZRc89QMiSGtc378CJHUEx0UqcazEXeq6Gt4BSgi1M=
+	t=1760616620; cv=none; b=lEIc8tglNuwwmzLUk1RQ/rFKS4YFdDKQCD7hT0pXPEmFP97wGM+AIrW33RkGPioKUjuDVHWrFDcoB4ngxas3DZpZGDqIqlO/at5FRd3YLIzQw/b8zhAp2B+FBwYilvFOq0e0y+a7YsJ7PQR2N2cZJwl1I1ve+ansLajBe2lyCrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760613007; c=relaxed/simple;
-	bh=aJFFJqnXQPEK+ZxnaYdxjPkRZbh36+Fqus4ydD4ponI=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=PPxr2UyMnkAqCWvmt+mWG2otNN6F7SB3BmtInlGJhlM184vzZbwqfGMaemv5sior87jxvNPxdw2nMmRVX9UkdujD2IKEtIE2rLDbKLUrrROOFm7MPWLVkqdNFKpZgPP0+h1rOOVouIbeB3ka+sDAOWPQeBVnHTS8pzNRiEwr3l4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CUV21opf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760616620; c=relaxed/simple;
+	bh=4Qt/jrGVmj3vADbRLp0h2/WSd8+bNzzpsqAfrkcvno0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=B6kCV0lJbavP23ohCc11XL5VhdxeilHgFheGrOJfeWnRanp177AhemcxF6U5pmV9gMZf75rIVQDQ8OLbujdaL1tF9pB6EOGB/5l+fvCWl11wEO1AqEGl6vroOqxJptRpcYNXX5jve3dPwUIZ4rjZUNPH+Rc+0qnkkNNS6fR9SAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=w84ba/9G; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CUV21opf"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 75C51C116B1
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Oct 2025 11:10:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760613004;
-	bh=aJFFJqnXQPEK+ZxnaYdxjPkRZbh36+Fqus4ydD4ponI=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=CUV21opfSV3553fnCEyw1mC6x7bk5qP26A8VBp9bdrw6bzUii9+yFsV+oRlzEOFbs
-	 prYTzIRbVoVNQ7mHIdzQukZq+6ul57FmofEsaAmf8UW5VsReAGDeq4pwJO5iDI70be
-	 KXd5cOZWtWsddiZa0OyAZq8L5t9wq3sul0WeBGJ4fpanv64lEmbhNaGal1fiCwZDUv
-	 f3QyCn3Ukakl/BMMnV0bdS0RUQUxWAkkj24+7OtJQAmrJT8QgYWNZOfOK7ayiFRNuZ
-	 m2Up5s0QfApQr82AFB0fY2BkLyxiQTaEa11H+TPYvYkvFdrIIuTh3AyZNEgGwHbfVF
-	 q20CuD5AEaxtA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 6A6D7C53BC9; Thu, 16 Oct 2025 11:10:04 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-xfs@vger.kernel.org
-Subject: [Bug 220669] Drive issues cause system and coredump and reboot
-Date: Thu, 16 Oct 2025 11:10:04 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: bshephar@bne-home.net
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: WILL_NOT_FIX
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-220669-201763-4Lh4Vsj7JT@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-220669-201763@https.bugzilla.kernel.org/>
-References: <bug-220669-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="w84ba/9G"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4cnRbn6y0qz9tTc;
+	Thu, 16 Oct 2025 14:10:13 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1760616614;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FTBsBVcdYneguqY7H2XP4BmfLiHWNCMUbN9tOOocbPk=;
+	b=w84ba/9G+wBfuZTsDm0winUj7q7U2ke14hditeFI1v3kd6anmKHTwrzDY2otBvUD2GaaRA
+	bTf5ybwxsgKuhtbrjOoQIGkJSVxkxCTNwaNIifqMMh/lJeEM8JMbFjH4KuiPiEoV8k2MDu
+	YC9zvYRCE3SWDll03bRYXiuO1wG3NvN0VYzvXFq51QEuKZW/qic9D5sQxulZWwAOlZ7/IO
+	IZ4hbJG+tFwea34RRRNo2R2Yb/nhoi3akrpZSgZaf6mZGPYBc1joUBOs8wpZdjiNHukWga
+	5BxqvfHj4r3udrSsTbWV5OFaKHEteL0Bc2rOUBEjSznViG/n+14/y+uLHamimw==
+Date: Thu, 16 Oct 2025 14:10:05 +0200
+From: "Pankaj Raghav (Samsung)" <kernel@pankajraghav.com>
+To: Qu Wenruo <wqu@suse.com>
+Cc: linux-btrfs@vger.kernel.org, brauner@kernel.org, djwong@kernel.org, 
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v2] iomap: add IOMAP_DIO_FSBLOCK_ALIGNED flag
+Message-ID: <khcpybd4adk4y5cc2k3ovdvuesv5lxyb6foo5r7dkgoiuyb5as@voqvrezskk42>
+References: <c78d08f4e709158f30e1e88e62ab98db45dd7883.1760345826.git.wqu@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c78d08f4e709158f30e1e88e62ab98db45dd7883.1760345826.git.wqu@suse.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D220669
+On Mon, Oct 13, 2025 at 07:35:16PM +1030, Qu Wenruo wrote:
+> Btrfs requires all of its bios to be fs block aligned, normally it's
+> totally fine but with the incoming block size larger than page size
+> (bs > ps) support, the requirement is no longer met for direct IOs.
+> 
+> Because iomap_dio_bio_iter() calls bio_iov_iter_get_pages(), only
+> requiring alignment to be bdev_logical_block_size().
+> 
+> In the real world that value is either 512 or 4K, on 4K page sized
+> systems it means bio_iov_iter_get_pages() can break the bio at any page
+> boundary, breaking btrfs' requirement for bs > ps cases.
+> 
+> To address this problem, introduce a new public iomap dio flag,
+> IOMAP_DIO_FSBLOCK_ALIGNED.
+> 
+> When calling __iomap_dio_rw() with that new flag, iomap_dio::flags will
+> inherit that new flag, and iomap_dio_bio_iter() will take fs block size
+> into the calculation of the alignment, and pass the alignment to
+> bio_iov_iter_get_pages(), respecting the fs block size requirement.
+> 
+> The initial user of this flag will be btrfs, which needs to calculate the
+> checksum for direct read and thus requires the biovec to be fs block
+> aligned for the incoming bs > ps support.
+> 
+> Signed-off-by: Qu Wenruo <wqu@suse.com>
+> ---
 
---- Comment #5 from Brendan Shephard (bshephar@bne-home.net) ---
-(In reply to Dave Chinner from comment #2)
-> On Thu, Oct 16, 2025 at 12:10:43AM +0000, bugzilla-daemon@kernel.org wrot=
-e:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D220669
-> >=20
-> >             Bug ID: 220669
-> >            Summary: Drive issues cause system and coredump and reboot
-> >            Product: File System
-> >            Version: 2.5
-> >           Hardware: All
-> >                 OS: Linux
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P3
-> >          Component: XFS
-> >           Assignee: filesystem_xfs@kernel-bugs.kernel.org
-> >           Reporter: bshephar@bne-home.net
-> >         Regression: No
-> >=20
-> > We have a number of drives across our clusters that don't present as
-> failing,
-> > but seem to have read errors that cause the system to coredump and rebo=
-ot.
-> > Failing drives is obviously not the fault of XFS, but my expectation wo=
-uld
-> be
-> > that it doesn't completely cause the system to hang and need to reboot.
->=20
-> Fixed upstream a couple of months back by commit ae668cd567a6 ("xfs:
-> do not propagate ENODATA disk errors into xattr code"). You'll need
-> to raise a distro bug (Rocky Linux) to get them to back port it for
-> you.
->=20
-> Please close this bz.
->=20
-> -Dave.
-
-Legend! Thanks for the pointer to the commit. I really appreciate you takin=
-g a
-look so quickly!
-
-All the best
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Looks good.
+Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
+-- 
+Pankaj
