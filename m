@@ -1,204 +1,1282 @@
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C74D1FC110;
-	Thu, 16 Oct 2025 15:50:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=68.232.143.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760629841; cv=fail; b=n2MOoYTfDqy7XFheEu65a8xuuk8t33cmZ+qyq65qItFnwGFPhNgcaoxS5Ld03z15FbBIWN8Ag/eDU+RK5IDwlWPzpTwtfXjSZv5d5LDXbXWLHDymSbp4yc7oMm61w2WC4pBCMV8VyxY3T/gFBQw3SrS4vqAd8ACW112pqCkFtBA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760629841; c=relaxed/simple;
-	bh=gsYgJs2zYslEekqLhdNtAiUEgzrrcx/tFn1qx7sTnX8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=QuyLyI6qwu9M2nZ9HX1V65iiTW49Y6uwBQsh1vvVVfw4EGRpCqMV85jNe9tUdhhq3qd3baaiAym7hF/JLN1Kd9q7HiA5PRtZ0xqhXFRlxwgfd191rHt5nGZy1QO6jLclyqXtaC60/VJAUSi43SPg7uuzaOJLLjJavhpXETtWS7g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=DBpSvJ8U; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=MOGVECSD; arc=fail smtp.client-ip=68.232.143.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FDD11FC110
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Oct 2025 15:53:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1760630019; cv=none; b=fM1ooNzATj0XDSZa8TcI8rVfqoTKhzH+NQvVrIv3ucNy8JG0rkMk2c5Fdrt545dDln4xcPTQg52GH74b/C+HvYcYJ1n3M8hiLj62yvaCR9ZPD6BMsXeq7ZGHG1k4fQcDApCPwfXO9TY+peWVKUmhltK8FkKJe+eTwfemgY2+Ggo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1760630019; c=relaxed/simple;
+	bh=5E2skOkOfrKn58kE+FpXGkwqgoeAEcW5/w2qeom+YEM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eJFQMXteczgzTKMzIAuMQRmf0FIrZEl167x7sGPtICihYIP3gfUykT2w9d8bCY1/8SQS5N9L7nH9t+xvG+wiay+PwH4xN+8qD6VRdKIeB/D1ObJB3rc4bdsbwK7N/d8EZKKoeQA5vyVUNrYVePkXCyI7kJEfV+48wMZLBgACQeQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nCIuCxjw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="DBpSvJ8U";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="MOGVECSD"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1760629840; x=1792165840;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=gsYgJs2zYslEekqLhdNtAiUEgzrrcx/tFn1qx7sTnX8=;
-  b=DBpSvJ8UZSac7ywC09mQcrynTSE8VLN1IcQhXQpsWWN4hAtlsw70oijO
-   su6kHqQShxLmMFpFyNAh74XU78LPpAmcAXwRoYUsttgqP7ePudiKAGP/c
-   /sSMgRTxUZUl7jf68z7BcaL3V+fC07AX3GZaT4BQzYBj20+XjaGlfdQic
-   1JiS+ef7ZVwfkg0zIZEjcvoO4mNw5Pb/QkapReijfPahWXl7tbIx/+gFg
-   7jpIP4vGf//BkQyzdz/tiOT1ZTSS7E3W+OivCgwaNUuju8oxn3iy9LOgo
-   XRS+o+RVFhLDBNQ32q60AfypaWGObLBBwzxUiyRr5nHa8n64B6Tt/szaW
-   w==;
-X-CSE-ConnectionGUID: 6rWfFS9VShS3NNYqv3Pr0Q==
-X-CSE-MsgGUID: sLPZMPEGTzSafqKWezpLuw==
-X-IronPort-AV: E=Sophos;i="6.19,234,1754928000"; 
-   d="scan'208";a="134591688"
-Received: from mail-centralusazon11011067.outbound.protection.outlook.com (HELO DM5PR21CU001.outbound.protection.outlook.com) ([52.101.62.67])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Oct 2025 23:50:38 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=g4oTMo5r6uTKVGEOD1pzAsL6ZymJOZQShLKvTQFnaGFVWXIxemj2tOKuTYN+SzsFzQDqK5XgrW+6n5OSDlCpPqikk8NjI40Jnt+0yyqY+EFEY5sodr5KseF8XRg4h+oDE/FUxDBlxqCsClVXKfSNbdBgaxpCawr7/BxUg2Ee5WuYX7m6ALLFMfN74y7H9HyKc80fYdqLnhCS4C9WBYacTNijTlxZgQa6rXSJEVepRg6kSNvL9Lu+Hue/c0Sj7AvZAPSUehwKSlBJkfSjZ5brNiIs/DCb+xM8eXLdJ9sCYv+VMU19laDJjDKdMvDSh6BN8Uc3D7bqUn1mMCLtzwlCqQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=gsYgJs2zYslEekqLhdNtAiUEgzrrcx/tFn1qx7sTnX8=;
- b=VCePjfS6nMVEO+GmR1MIpn/cdHx2bVcx3ecpMXGH9GnGzsqRTzvCVDIiamPEGpP46PgjPv/4qJKS6yIMf2LBKtBtO0USRqQy3qlGHt92c2EhxQz24gu6N+VpRqtmRgGpmf0Ei2yT0gR9zoRYKOnQ35rGqAH6iXl686vHowZhqqFZ3XdYJza+lrhnUeTE1B42V3DLJt5E6HDv9DBHFG60t3PubRDziIswlf9LsGYo8YQC+dlzR5zGaJF11cARDOSBE/4xfBaQeEIl6B04vAqmD/k1nBhaK0KDGQi/+v8+VnXA5jvG+ND9QBWje8TpbfMKyn04JDlrPYNdyrdyccFeXw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gsYgJs2zYslEekqLhdNtAiUEgzrrcx/tFn1qx7sTnX8=;
- b=MOGVECSDM7TmGpD3hMTGpzz8ZRUcWf/pVslTI2xUHeC+xcpv3eRQUpgdqprkofXdbx6PIh98RBkv8zQnfrv/tdsOEVL+XTMJnBph9IRmCUfABGl/kcHS4/mZMjxqPNx7MxjyDGFMjgj6jU0Ok391f6h34tTFH57UZ6d34uqxpxk=
-Received: from SA0PR04MB7418.namprd04.prod.outlook.com (2603:10b6:806:e7::18)
- by PH0PR04MB9832.namprd04.prod.outlook.com (2603:10b6:510:379::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9228.13; Thu, 16 Oct
- 2025 15:50:36 +0000
-Received: from SA0PR04MB7418.namprd04.prod.outlook.com
- ([fe80::17f4:5aba:f655:afe9]) by SA0PR04MB7418.namprd04.prod.outlook.com
- ([fe80::17f4:5aba:f655:afe9%3]) with mapi id 15.20.9228.012; Thu, 16 Oct 2025
- 15:50:36 +0000
-From: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-CC: Zorro Lang <zlang@redhat.com>, hch <hch@lst.de>, Naohiro Aota
-	<Naohiro.Aota@wdc.com>, "linux-btrfs@vger.kernel.org"
-	<linux-btrfs@vger.kernel.org>, Hans Holmberg <Hans.Holmberg@wdc.com>,
-	"fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Carlos Maiolino
-	<cem@kernel.org>
-Subject: Re: [PATCH v5 2/3] common/zoned: add helpers for creation and
- teardown of zloop devices
-Thread-Topic: [PATCH v5 2/3] common/zoned: add helpers for creation and
- teardown of zloop devices
-Thread-Index: AQHcPrB3YMElCouJg0CK3DIndwQnD7TE60cAgAAAkQA=
-Date: Thu, 16 Oct 2025 15:50:36 +0000
-Message-ID: <05b2e86b-bdc5-4298-afb2-9ca9cf702c42@wdc.com>
-References: <20251016152032.654284-1-johannes.thumshirn@wdc.com>
- <20251016152032.654284-3-johannes.thumshirn@wdc.com>
- <20251016154834.GN2591640@frogsfrogsfrogs>
-In-Reply-To: <20251016154834.GN2591640@frogsfrogsfrogs>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-user-agent: Mozilla Thunderbird
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA0PR04MB7418:EE_|PH0PR04MB9832:EE_
-x-ms-office365-filtering-correlation-id: c1c6f7cb-fae8-4c01-9b2f-08de0ccbbf77
-x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|366016|376014|19092799006|10070799003|1800799024|38070700021;
-x-microsoft-antispam-message-info:
- =?utf-8?B?bElPakJKTTBJSVUrUFNlTzBYeEFtcEFuVFZuM3czRDZqTi8zaXJDOXhMT3p5?=
- =?utf-8?B?c25zbUN5VzdZRzV0QlhaQjVOWFZwWW5xRG82bUhtblZsZkYwUGJTUnNsNlc4?=
- =?utf-8?B?akRXdHZHMThrdWlwd3d5RUNsZGVpeUY5MUxzbFdkQ0hqUkltaVFqOEp6a3Bz?=
- =?utf-8?B?YlJLRFR6clNYSUZSN2FhbzZJMGZpZ0Z3a2JYYW41MUdtSmFSNW1vYm1CMHNt?=
- =?utf-8?B?cjAyYVJIalpsUUczd29QbmlNYnk1amJFUFEwdU55Zi93MFRGaU5UNU9OT3BX?=
- =?utf-8?B?WkthOE8rMXFrOXNmTEtUVXFYZ1prWmZ2ZWcxQ2FUelpOeTQ5N1RLVTVUZ0My?=
- =?utf-8?B?ZTNpeW41VEl3aUdTQnQyS2IvQ3NvbUcrU1AveUJhSG1YMjRLTmtGb3E0TStl?=
- =?utf-8?B?YUdqaVpmSkpDa3ZUd3lkRHUyem9YSm55Y2VFRXE4TzdINy9vbEp5alZMOGw0?=
- =?utf-8?B?SEtVMEVqeHJoREhtcGRpODhiNVIzaHh0MDVZak5pQ1NOSXRSUFhqSkdHN2pj?=
- =?utf-8?B?VXoyVytzS2tBSWVsaXQxenIzZHN1MVRDU1R6RGtRcmpLM1hpK05xd21YazZX?=
- =?utf-8?B?YTVLSTB6YktqNDNacHFMd3dkZmxTb1NGaTFPT3hwbFV6TU5rb0M1N05VWWZY?=
- =?utf-8?B?UTJPT3dZTWladWIyR3B2YmxocjBPbzEvUU5GaHVRenMrTHZrQm1uUFp2QVE1?=
- =?utf-8?B?bWNublh2SUdjUllSVU9MSFBIbkYwem56V3ZYVTBaM3BCYnJXQU5vbVpnazZv?=
- =?utf-8?B?NkRWUlBKbVo0a0UxL3k5ZmMwWmx1V2dDT3F6bWgvT2UyWkN3S2hBdHg0UTV6?=
- =?utf-8?B?RVRIYzFUYUxDdmpqQWQrd1V0bHp1QXY3dXhlc3RCdUpGRmZUeW1jZTM4OWg5?=
- =?utf-8?B?VG5nc1JLdTFDMm1tcTlLQVZGT2l6QnBGenpuVDRrc092Mm1tcjk5UzV5R2hQ?=
- =?utf-8?B?cVRIYmJGbkUwR1ZHZlZ0S3hNZnFCczRQczZpL1NkNUJ1SDRyVGRXOEJ1Sklz?=
- =?utf-8?B?dTBaejRnWm01V3lwWWVTTE5neHl5MStmUkxDS3dWOFh6NXhySXhtMEk0YlFQ?=
- =?utf-8?B?V01jNUwrYWJyTmZRUm9EeURaS3JWS2ZlWmRkOXJheWR2dnVURzZRUG05VUZW?=
- =?utf-8?B?Y0RrN0tzTnZtNWdwZkNkOU9jNXdQOHlNWFprM1Y4TThmTWVxclJoYkJuWTlG?=
- =?utf-8?B?VXhPOE51Tjl4aFBtT3RWd1QvWWFPaXgyNHZxK2UzdHhabk9uRWJiZ21HWWJ2?=
- =?utf-8?B?UVlPdHVRQkpycGhac1FIcWp2UHk2bDc0WVU1bjZjWTVtTVpIbTVMOHVyYnh6?=
- =?utf-8?B?VklOR0pjMnVCaVNtK0gzRkUyMnEyK2dCV1dTcjEwTm1xZnpSdHlkSmhweXRI?=
- =?utf-8?B?aFMzWGtMMWpuT3pUc1M5NHloMUFJc3dDYkplamtNdXJxVVlqOHdVNVhCdjBM?=
- =?utf-8?B?N01ZTHN5K05DV1NoYkEzem8zYTcydlhEL3p0L05iSTM1OCszNDRsSWRLTDdp?=
- =?utf-8?B?NVRRMWlrWjJBTjVRenUrMnlZOXNmaERXTDJUSGxjRmRzUGlZK090YWRzWWor?=
- =?utf-8?B?cG0zYzVkY1lJZ0drOHA1Q2VwekJCZmNBSzdSamhPSXVpUnYxVjRBNG5Xc1Z2?=
- =?utf-8?B?NXZYeWNQRnJlL2pHNU53WDV6K1kyRnlGWlMxano3dkVoTXUwem9GQ2tFazhV?=
- =?utf-8?B?UDUrbHdRTk8xeldCclNiUTJWVXNqMUhGNXF0NmI4djRaMytRSSs3emtCVE9F?=
- =?utf-8?B?Ykt4emkvRlBXbnZrWllpTEgwR2pvNGREbzNYOS81WjVyd1h2clNQcXVObVY1?=
- =?utf-8?B?SVF4aEV2a1FDR3lwU2xQRWY1ODZ4a0Y2MVZON1dXZUNpK0hBQlo0YjhNbVpH?=
- =?utf-8?B?WUFxbGZxdEt2TGVoc1BMaU1kQkx3dDFKSlpaQ0Yzb2diakpsR1lLWWRoejFo?=
- =?utf-8?B?MHlMUytWcnBQRTl2OWN4bmpMcS9WRExCZExuQlJPMjluN21GWFh6Z3VNU0ZP?=
- =?utf-8?B?S2s2akc5SGp1ZWlYdXFFb0tYbFMvenNERDhNbHBUZThtNS9tV2dCWklTbVNS?=
- =?utf-8?Q?BBomkA?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR04MB7418.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(19092799006)(10070799003)(1800799024)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?Qk5oVnZaVGdVd0UwQ0FtZjl3M1RBT2NYdGpQN0xpQ0syMFZuQmRaaTFFc3A2?=
- =?utf-8?B?Si9YeXNMY0R1Wlc5Mnp2RnUrakMrUWdXL1NkeWd2ZytDVW1rQ2hFcnh5T3BY?=
- =?utf-8?B?YlgwVSsrWmZXa3VjY1RNNjQ0Y3RJMWgvYi9PVzdNOEpDeEZQZmRwQnN3ckg5?=
- =?utf-8?B?UlhLaDR3ZXRlY3dqcElLWlM0SG54RUJoampLdzd2eWk0YzNwOVpWSXQ2U2hE?=
- =?utf-8?B?TWFNRUMrbmpFSm01UWNKL0w0STk2ZTVvbnZGZjdPTDlTdEJSUkFmMW5Tcm5m?=
- =?utf-8?B?UkJtZStxY2N4clkzaXE3Q2ZCaTBnN1JHVS9FbjdDdDZJelZ1RS9Va0lGbFFN?=
- =?utf-8?B?eFNZc2VIcnhjdTFQVUc4dGlFeXBTWFNZQ1R6K3VoOTkyYnpCdmxpMW13Ylls?=
- =?utf-8?B?dXY0ZjVLYS9kR1NnREhIUktiQlUzZ2xjU3krcmZJR096RXh1Nk9HUy9QYkVZ?=
- =?utf-8?B?WFJXekpvL3p0RjUzczUyMDZYQ0N1bzgzNWs2OHhsQ3h2bVdqaEdEaDdMcDkw?=
- =?utf-8?B?RElHdSsxSTlqcVBzUVUvK1YzWC85ZHRTL09jVkF0Uzh4cm5sQ291a0h5NUVU?=
- =?utf-8?B?RStaWTZ1NXR6aTRtcVoxT1ZSNzBac2FrWlBuZXRrdjlRWlFhczBkQ2ZJZjZZ?=
- =?utf-8?B?SFJTZDc3OHIvOEhiUU5IQmlzMkR5LzE3UGlmWGEwY3JiS29tcDIzMTBZZ0Vt?=
- =?utf-8?B?VktVeTlWSDRoNjlBODY0WlBIbUhJUWd2T09IeXVmbWo4L1VVaW1jMG5MSGpu?=
- =?utf-8?B?TThEV0xMejhDVnBNaFBhbnZkc3h1VUQyeWE4elFsckdsSUs1TkFNdDRhN0dZ?=
- =?utf-8?B?djNHZ2cwU0REckRVK0poUnBIVTVqNm9KeGUrMlI4dG5WMG9ROGZkdTh1L0k3?=
- =?utf-8?B?bmZWMnQ0YTQwRDh0OXVqOGhleHVSTlVJYitlMlQrd3hHRjNhUis1endRcDBi?=
- =?utf-8?B?cVBGYUl4clZ6U3BtVm1USVdXdWJoeTlMcHcwYzNJUm1RVWlpeW1vOVlTZWE0?=
- =?utf-8?B?a3hOelNuRVdnc0V2ZlcvV3hpNnROTFc5TnYrN2VIVTFkdnNHelFmdSt0Q2RC?=
- =?utf-8?B?bFBEWU1NOU9WM1NqcmVZNmpjaFp0RTIvRTR5RzNsVm9IemYyVEdxclBZTXN1?=
- =?utf-8?B?alR5TTVmOVNzYmpacXo4ay9NT2xOTnZ5aSsxcVBuRlZYTG81NFd0akd4ckRW?=
- =?utf-8?B?RVk0dlJCamRUZENoQ21CcnE1b1VHSU4wV01vUWVuSk9UcStQVVBCYlhKVmRo?=
- =?utf-8?B?M2QyMDYrVFNOQndvRkZNTkZZTGQxd2JWN0lWOWd5ZkFQcjRLVE8xNGZVdm0y?=
- =?utf-8?B?a080MXJ4R3Z6YXFrYVE4Q3pLbDZmUmg2VzE5VU1Yd3drUGNMTWROa0x1SWZ4?=
- =?utf-8?B?bHdmamdYbVJYU1hFWVVOL1dBRTkvSkgwLytuVkViZXNLbnQ5NXN0ZWNqbmVL?=
- =?utf-8?B?U0tadHZ4dzNTbFdEVkU3alpqYm81UjRJRnAyNWVKcFZteFkwZUpGYTVFMlZV?=
- =?utf-8?B?UlRzMkdRL2puSjBNc2R5WlZ1U0JZNHJ2eXIrUGRiT3ptMG9sSGxpRTZhb3hk?=
- =?utf-8?B?ZFdGdkhlMGV2WTBsTjA1SnVBc1VtVTI3dnNIcTFQMkpZV2FGczNJNTl6WU9w?=
- =?utf-8?B?VFZWdXBOQkxuOG1KVC9SRzVrcE4yUllFK2MvOWF1Z3E0Q0o2a1U4cHhLUVhu?=
- =?utf-8?B?eTNjMjhCemowRUowRFcyNW44OEl2OXJIWk5SWTVxOGdjZEFJQmtxbUMwMU4w?=
- =?utf-8?B?d25PYWJOOGt6aXppd2lnR0YxbmhicmhCM1BiUlZ3cENoUWpvbkNVY1pyRnZ5?=
- =?utf-8?B?NU5FWUROeVU4N1N1MmpFL3R1VHdDYmRVSmRTUEtWRUMveDJKdCtmUG5uamov?=
- =?utf-8?B?RkVDSThDQjdrb2ZzYzN4bDFROFE1REdhTTl0UUt2US9aT3ZVMUdnQ3pnRzVa?=
- =?utf-8?B?aFpPcjVpaWU5c2IxM2hVRUJDeHVKM3g4aks4cTd1T0lJcjBDU1BqUmdXeGV0?=
- =?utf-8?B?azJCMXJOdS90T1ZoallBOHlqZ1pqbThGeGpTT2dpR3lGT0xsdExiRnhKUnda?=
- =?utf-8?B?dUU4RlFwZUVGZjhST3dDcHZYSlNYdXo5Y1lDZGlTU3YzYUliZGd2cHlQczNs?=
- =?utf-8?B?bHpTZys1N3FzTlRmQXV5WUkzclVPdzdXeGppSERadXpwaWtPZFRmd2JpV0NK?=
- =?utf-8?B?TVRYSkVhQUxXZEt4T3QvVU1NYWdFRHJuaXF5dWxWdUgwdURYTVN2NnQzZHVr?=
- =?utf-8?B?QjZ2VEk5VWE2MGJxZFVWWURzT0RRPT0=?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <F4D72AC63D37254DA472010748A7B106@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nCIuCxjw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27588C4CEF1;
+	Thu, 16 Oct 2025 15:53:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760630019;
+	bh=5E2skOkOfrKn58kE+FpXGkwqgoeAEcW5/w2qeom+YEM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nCIuCxjw0GJ0fkivdVhoAfHqi2ZRTOBQdrpV0RimleArSQs7ylvoIjqEGQpt0TQkK
+	 tpq1JC0hlw+w2JiseVRiUdG49lu5ZKsb7/e8I9GMdx5gm1tA6oiql3xjZufw3J08ju
+	 q03Gs0TKrdNhW/nRFuchs5SXvEwlCdrCh6Kdycmq8Hy0MFRPbqGelZp6JrPY3vSuzP
+	 TuKsP+e+6Trg+t+mUapZM+HDaDQWbIUrqoUt3e2tthKQGj9LhM3p0STssLfujEBt0H
+	 /GDNMwTKlarbCyo/odlDxwjW8wNsUdZizzSpQesLb/YXYzLQ0v0h5W3weW2QgBNl1e
+	 AS0vi+5+gv/bw==
+Date: Thu, 16 Oct 2025 08:53:38 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+	bfoster@redhat.com, david@fromorbit.com,
+	hsiangkao@linux.alibaba.com
+Subject: Re: [RFC V2 3/3] xfs: Add support to shrink multiple empty AGs
+Message-ID: <20251016155338.GP2591640@frogsfrogsfrogs>
+References: <cover.1758034274.git.nirjhar.roy.lists@gmail.com>
+ <02bbf0730425b2556a049eae33f9ce7e6fc9a897.1758034274.git.nirjhar.roy.lists@gmail.com>
+ <20251014231311.GP6188@frogsfrogsfrogs>
+ <db64bbad-8dab-4a97-97f7-560b0d1e69cc@gmail.com>
+ <20251015192601.GD6188@frogsfrogsfrogs>
+ <8ad772c3-f68e-4a99-b28d-00f6b5fb3c3a@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	OVelEWrVHOMBsnChRObht12kUHZd0Nis2kZyPsxfzMQ7bpbjiXaNx6SoTeDQN+RTfhuf6QnMFURyL3O+gjfPTAl4nsoSwJNfr0FcbpKLIUHI8JHQetD81/A5xCkigV8rgt6htWPCnK19TU5sqzGEPpLMCnpEZvp9410CZMjJdj6yAp0RDLPC15cm6xwZXGHLUie9T2S9gb3yb5TV91Gw169J9+Mv0Lk/ADnf45/cND2NzlWmZxV5lZmqHF5yE0wwkGJPhvvUW6zXI5isQ0ER27i0Rl2pF1BB8SvoFIufeMgs/rzV76SyweDCcu+Mgf/qTbB2Z8WRSVwe2b16vOw8ebdQC5IJ7ehkgnzODUoo+C1SsYalI5G+jFYUfZYV9vVuvmdTE6GfGilI/GqK9+IQk2aI9ORQ6e2FKm30mNmRn2BPGM9AD3CfPuMUfaky1ApTnPkMrBV0nxKR+rL3tYr2paJnSWdRE7FVOqFya+lc502H0mwm7c3hv6bTLzUB01CqiY9IohIm2lY5CL6ax4MzFGh/deS22eaD3ZC/2t2Dcz8FyAeFbDJc01F9B+uovxCD+Jsp95KQAoVJCyezGxt1hQEtUWV7N08ioOjlp/9PMago+tIUD3KuNWxYSEgqaBq+
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA0PR04MB7418.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c1c6f7cb-fae8-4c01-9b2f-08de0ccbbf77
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Oct 2025 15:50:36.2841
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: XRi0+NYLS3vAzOVNqXUw9UXBTISCKcrh0EY48h2MmtE8OxPaAWLAsLRXdxCqpgwYKw8E0zKii4wjZqAFR+/PcBW1HIGGDP2SN6m9B/Yg6iM=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR04MB9832
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <8ad772c3-f68e-4a99-b28d-00f6b5fb3c3a@gmail.com>
 
-T24gMTAvMTYvMjUgNTo0OCBQTSwgRGFycmljayBKLiBXb25nIHdyb3RlOg0KPiBTYW1lIHF1ZXN0
-aW9uIGFzIGxhc3QgdGltZTogc2hvdWxkbid0IHdlIG9ubHkgZWNobyB0aGlzIGlmIHRoZQ0KPiB6
-bG9vcC1jb250cm9sIHdyaXRlIHN1Y2NlZWRzPw0KDQpEYW1uLCBJIHRob3VnaHQgSSd2ZSBkaWQg
-dGhhdC4NCg0K
+On Thu, Oct 16, 2025 at 02:46:08PM +0530, Nirjhar Roy (IBM) wrote:
+> 
+> On 10/16/25 00:56, Darrick J. Wong wrote:
+> > On Wed, Oct 15, 2025 at 04:32:59PM +0530, Nirjhar Roy (IBM) wrote:
+> > > On 10/15/25 04:43, Darrick J. Wong wrote:
+> > > > On Tue, Sep 16, 2025 at 08:34:09PM +0530, Nirjhar Roy (IBM) wrote:
+> > > > > This patch is based on a previous RFC[1] by Gao Xiang and various
+> > > > > ideas proposed by Dave Chinner in the RFC[1].
+> > > > > 
+> > > > > This patch adds the functionality to shrink the filesystem beyond
+> > > > > 1 AG. We can remove only empty AGs in order to prevent loss
+> > > > > of data. Before I summarize the overall steps of the shrink
+> > > > > process, I would like to introduce some of the terminologies:
+> > > > > 
+> > > > > 1. Empty AG - An AG that is completely un-used, and no block
+> > > > >      is being used/allocated for data or metadata and no
+> > > > >      log blocks are allocated here. This ensures that the
+> > > > >      removal of this AG doesn't result in any loss of data.
+> > > > This isn't quite accurate -- the AG can have blocks in use, but only for
+> > > > the root blocks of the per-AG metadata btrees.  But that's fairly minor.
+> > > Okay, yeah maybe I will re-define it to
+> > > 
+> > > Empty AG - An AG that has no user data and log data. This will ensure that
+> > >     removal of this AG doesn't result in any data loss.
+> > > 
+> > > Does the above look fine?
+> > Still no -- it can't have bmbt blocks either, which are not user data
+> > per se.  How about:
+> > 
+> > "Empty AG - An AG with no allocated space other than AG headers, empty
+> > AG btree root blocks, and AGFL reserved blocks.  Removal of this AG will
+> > not result in any data loss."
+> Yeah, this looks fine.
+> > 
+> > > > > 2. Active/Online AG - Online AG and active AG will be used
+> > > > >      interchangebly. An AG is active or online when all the regular
+> > > > >      operations can be done on it. When we mount a filesystem, all
+> > > > >      the AGs are by default online/active. In terms of implementation,
+> > > > >      an online AG will have number of active references greater than 0
+> > > > >      (default is 1 i.e, an AG by default is online/active).
+> > > > > 
+> > > > > 3. AG offlining/deactivation - AG offlining and AG deactivation will
+> > > > >      be used interchangebly. An AG is said to be offlined/deactivated
+> > > > >      when no new high level operation can be started on the AG. This is
+> > > > >      implemented with the help of active references. When the active
+> > > > >      reference count of an AG is 0, the AG is said to be deactivated.
+> > > > >      No new active reference can be taken if the present active reference
+> > > > >      count is 0. This way a barrier is formed from preventing new high
+> > > > >      level operations to get started on an already offlined AG.
+> > > > > 
+> > > > > 4. Reactivating an AG - If we try to remove an offlined AG but for some
+> > > > >      reason, we can't, then we reactivate the AG i.e, the AG will once
+> > > > >      more be in an usable state i.e, the active reference count will be
+> > > > >      set to 1. All the high level operations can now be performed on this
+> > > > >      AG. In terms of implementation, in order to activate an AG, we
+> > > > >      atomically set the active reference count to 1.
+> > > > > 
+> > > > > 5. AG removal - This means that an AG no longer exists in the filesystem.
+> > > > >      It will be reflected in the usable/total size of the device too
+> > > > >      (using tools like df).
+> > > > An offline AG can still have positive passive refcount if it's in the
+> > > > process of being removed from the filesystem, right?
+> > > Yes, that is correct.
+> > > > > 6. New tail AG - This refers to the last AG that will be formed after
+> > > > >      the removal of 1 or more AGs. For example, if there are 4 AGs, each
+> > > > >      with 32 blocks, then there are total of 4 * 32 = 128 blocks. Now,
+> > > > >      if we remove 40 blocks, AG 3(indexed at 0) will be completely
+> > > > >      removed (32 blocks) and from AG 2, we will remove 8 blocks.
+> > > > >      So AG 2 will be the new tail AG.
+> > > > > 
+> > > > > 7. Old tail AG - This is the last AG before the start of the shrink
+> > > > >      process. If the number of blocks removed is less than the AG
+> > > > >      size, then the old tail AG will be the same as the new tail
+> > > > >      AG.
+> > > > > 
+> > > > > 8. AG stabilization - This simply means that the in-memory contents
+> > > > >      are synched to the disk.
+> > > > > 
+> > > > > The overall steps for the removal of AG(s) are as follows:
+> > > > > PHASE 1: Preparing the AGs for removal
+> > > > > 1. Deactivate the AGs to be removed completely - This is done
+> > > > >      by the function xfs_shrinkfs_deactivate_ags(). The steps to deactivate
+> > > > >      an AG are as follows(function is xfs_perag_deactivate()):
+> > > > >        1.a Manually reserve/reduce from the global fdblock free counters
+> > > > >            the perag pagf_freeblks + pagf_flcount. This is done in order
+> > > > >            to prevent a race where, some AGs have been offlined but
+> > > > >            the delayed  allocator has already promised some bytes
+> > > > >            and the real extent/block allocation is failing due to the
+> > > > >            AG(s) being offline.
+> > > > >            If the overall shrink succeeds, we will again manually
+> > > > >            restore these counters just before the shrink transaction
+> > > > >            commits and let these global counters get adjusted
+> > > > >            automatically later.
+> > > > Wouldn't it be more correct to say that the shrink operation reserves to
+> > > > the shrink transaction the space to be removed from the incore fdblocks
+> > > > and either commits that change to the ondisk fdblocks (shrink succeeds)
+> > > > or gives it back (shrink fails)?
+> > > Well, during AG deactivation, we reduce the free fdblock in-core counter and
+> > > then manually again restore/add these numbers before the shrink transaction
+> > > commits so that the transaction commit can do the final adjustment to the
+> > > counters. The manual subtraction and addition/restoration is done
+> > > irrespective of whether the shrink succeeds or fails. The reason why I am
+> > > doing this manual subtraction is to prevent the race (mentioned in point
+> > > 1.a) and then manually doing the addition again - so that the subtraction of
+> > > the fdblocks isn't done twice. The manual addition/restoration is done in
+> > > the function "xfs_growfs_data_private()". Does that make sense?
+> > I know what you're describing now, but let's say the shrink process
+> > does:
+> > 
+> > 0. Fill the filesystem until there are only 400 blocks left at the end.
+> > 1. Take (say) 400 blocks from fdblocks
+> > 2. Deactivate/shrink AGs
+> > 3. Add 400 back to fdblocks
+> > 4. xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, -400)
+> > 5. Commit
+> > 
+> > What prevents another process from taking the 400 blocks in between
+> > steps 3 and 4 and causing the superblock to be written out with fdblocks
+> > set to -400?
+> Yeah, right. There is a short window between step 3 and 4 where the race can
+> still occur.
+> > 
+> > Does removing step 3 and changing step 4 to be
+> > 
+> > 4. xfs_trans_mod_sb(tp, XFS_TRANS_SB_RES_FDBLOCKS, -400)
+> > 
+> > fix this race?  We've already subtracted 400 from the incore fdblocks,
+> > so now all we need to do is subtract 400 from the ondisk fdblocks.
+> 
+> Yes, XFS_TRANS_SB_RES_FDBLOCKS does fix the issue. Thank you so much for
+> pointing our XFS_TRANS_SB_RES_FDBLOCKS. This is really helpful. I have
+> verified that this works. I have added fstests[1] that can reproduce such
+> races.
+> 
+> Btw, what does the substring "RES" signify in the constant
+> XFS_TRANS_SB_RES_FDBLOCKS?
+
+"already reserved", i.e. you already subtracted the quantity out of the
+incore fdblocks.  Most callers do that by passing dblocks > 0 in
+xfs_trans_alloc (transaction block reservation) but writeback also does
+this when converting delalloc reservations into unwritten space.
+
+> [1]
+> https://lore.kernel.org/all/cover.1758035262.git.nirjhar.roy.lists@gmail.com/
+> 
+> > 
+> > > > >        1.b Wait for the active reference to come to 0.
+> > > > >            This is done so that no other entity is racing while the removal
+> > > > >            is in progress i.e, no new high level operation can start on that
+> > > > >            AG while we are trying to remove the AG.
+> > > > >            AG deactivation will fail if the AG is non-empty at the time of
+> > > > >            deactivation.
+> > > > > 2. Once we have waited for the active references to come down to 0,
+> > > > >      we make sure that all the pending operations on that AG are completed
+> > > > >      and the in-core and on-disk structures are in synch i.e, the AG is
+> > > > >      stabilized on to the disk.
+> > > > Pending operations, as in whatever has passive refcounts (file ops,
+> > > > defer intent chains, etc)?
+> > > Yes.
+> > > > >      The steps to stablize the AG onto the disk are as follows:
+> > > > >      2.a We need to flush and empty the logs and wait for all the pending
+> > > > >          I/Os to complete - for this, perform a log force+ail push by
+> > > > >          calling xfs_ail_push_all_sync(). This also ensures that
+> > > > >          none of the future logged transactions will refer to these
+> > > > >          AGs during log recovery in case if sudden shutdown/crash
+> > > > >          happens while we are trying to remove these AGs. We also sync
+> > > > >          the superblock with the disk.
+> > > > >      2.b Wait for all the pending I/O to complete.
+> > > > (Redundant with 2a, yes?)
+> > > Yeah, right. I can remove this.
+> > > > >      2.c Wait for all the busy extents for the target AGs to be resolved
+> > > > >         (done by the function xfs_extent_busy_wait_ags())
+> > > > >      2.d Flush the xfs_discard_wq workqueue
+> > > > > 3. Once the AG is deactivated and stabilized on to the disk, we check if
+> > > > >      all the target AGs are empty, and if not, we fail the shrink process.
+> > > > >      We are not supporting partial shrink i.e, the shrink will
+> > > > >      either completely fail or completely succeed.
+> > > > > 
+> > > > > PHASE 2: Shrink new tail group, punch out totally empty groups
+> > > > > 4. Once the preparation phase is over, we start the actual removal
+> > > > >      process. This is done in the function xfs_shrinkfs_remove_ags().
+> > > > >      Here we first remove the blocks, then update the metadata of
+> > > > >      new last tail AG and then remove the  AGs (and their associated
+> > > > >      data structures) one by one (in function xfs_shrinkfs_remove_ag()).
+> > > > > 5. In the end we log the changes and commit the transaction.
+> > > > What do we commit?  I think the shrink transaction has:
+> > > > 
+> > > > 1. bnobt/cntbt changes to remove the post-tail space
+> > > > 2. AG header length updates
+> > > > 3. Superblock update to change sb_dblocks
+> > > Yeah, we also commit free data blocks(XFS_TRANS_SB_FDBLOCKS) and agcount
+> > > (XFS_TRANS_SB_AGCOUNT).
+> > Oh, right.
+> > 
+> > > > > Removal of each AG is done by the function xfs_shrinkfs_remove_ag().
+> > > > Removal of each incore AG structure?
+> > > I will update the description.
+> > > > > The steps can be outlined as follows:
+> > > > > 1. Free the per AG reservation - this will result in correct free
+> > > > >      space/used space information.
+> > > > > 2. Freeing the intents drain queue.
+> > > > > 3. Freeing busy extents list.
+> > > > > 4. Remove the perag cached buffers and then the buffer cache.
+> > > > > 5. Freeing the struct xfs_group pointer - Before this is done, we
+> > > > >      assert that all the active and passive references are down to 0.
+> > > > >      We remove all the cached buffers associated with the offlined AGs
+> > > > >      to be removed - this releases the passive references of the AGs
+> > > > >      consumed by the cached buffers.
+> > > > > 
+> > > > > [1] https://lore.kernel.org/all/20210414195240.1802221-1-hsiangkao@redhat.com/
+> > > > > 
+> > > > > Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+> > > > > Inspired-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+> > > > > Suggested-by: Dave Chinner <david@fromorbit.com>
+> > > > > ---
+> > > > >    fs/xfs/libxfs/xfs_ag.c        | 165 +++++++++++++++-
+> > > > >    fs/xfs/libxfs/xfs_ag.h        |  14 ++
+> > > > >    fs/xfs/libxfs/xfs_alloc.c     |   9 +-
+> > > > >    fs/xfs/xfs_buf.c              |  78 ++++++++
+> > > > >    fs/xfs/xfs_buf.h              |   1 +
+> > > > >    fs/xfs/xfs_buf_item_recover.c |  37 ++--
+> > > > >    fs/xfs/xfs_extent_busy.c      |  30 +++
+> > > > >    fs/xfs/xfs_extent_busy.h      |   2 +
+> > > > >    fs/xfs/xfs_fsops.c            | 343 ++++++++++++++++++++++++++++++++--
+> > > > >    fs/xfs/xfs_trans.c            |   1 -
+> > > > >    10 files changed, 641 insertions(+), 39 deletions(-)
+> > > > > 
+> > > > > diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> > > > > index f2b35d59d51e..1bdcd4c6d264 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_ag.c
+> > > > > +++ b/fs/xfs/libxfs/xfs_ag.c
+> > > > > @@ -193,20 +193,32 @@ xfs_agino_range(
+> > > > >    }
+> > > > >    /*
+> > > > > - * Update the perag of the previous tail AG if it has been changed during
+> > > > > - * recovery (i.e. recovery of a growfs).
+> > > > > + * This function does the following:
+> > > > > + * - Updates the previous perag tail if prev_agcount < current agcount i.e, the
+> > > > > + *   filesystem has grown OR
+> > > > > + * - Updates the current tail AG when prev_agcount > current agcount i.e, the
+> > > > > + *   filesystem has shrunk beyond 1 AG OR
+> > > > > + * - Updates the current tail AG when only the last AG was shrunk or grown i.e,
+> > > > > + *   prev_agcount == mp->m_sb.sb_agcount.
+> > > > >     */
+> > > > >    int
+> > > > >    xfs_update_last_ag_size(
+> > > > >    	struct xfs_mount	*mp,
+> > > > >    	xfs_agnumber_t		prev_agcount)
+> > > > >    {
+> > > > > -	struct xfs_perag	*pag = xfs_perag_grab(mp, prev_agcount - 1);
+> > > > > +	xfs_agnumber_t		agno;
+> > > > > +	struct xfs_perag	*pag;
+> > > > > +	if (prev_agcount >= mp->m_sb.sb_agcount)
+> > > > > +		agno = mp->m_sb.sb_agcount - 1;
+> > > > > +	else
+> > > > > +		agno = prev_agcount - 1;
+> > > > > +
+> > > > > +	pag = xfs_perag_grab(mp, agno);
+> > > > >    	if (!pag)
+> > > > >    		return -EFSCORRUPTED;
+> > > > > -	pag_group(pag)->xg_block_count = __xfs_ag_block_count(mp,
+> > > > > -			prev_agcount - 1, mp->m_sb.sb_agcount,
+> > > > > +	pag_group(pag)->xg_block_count = __xfs_ag_block_count(mp, agno,
+> > > > > +			mp->m_sb.sb_agcount,
+> > > > >    			mp->m_sb.sb_dblocks);
+> > > > >    	__xfs_agino_range(mp, pag_group(pag)->xg_block_count, &pag->agino_min,
+> > > > >    			&pag->agino_max);
+> > > > > @@ -290,6 +302,48 @@ xfs_initialize_perag(
+> > > > >    	return error;
+> > > > >    }
+> > > > > +void
+> > > > > +xfs_perag_activate(struct xfs_perag	*pag)
+> > > > > +{
+> > > > > +	ASSERT(!xfs_ag_is_active(pag));
+> > > > > +	init_waitqueue_head(&pag_group(pag)->xg_active_wq);
+> > > > > +	atomic_set(&pag_group(pag)->xg_active_ref, 1);
+> > > > > +	xfs_add_fdblocks(pag_mount(pag), pag->pagf_freeblks +
+> > > > > +			pag->pagf_flcount);
+> > > > > +}
+> > > > > +
+> > > > > +bool
+> > > > > +xfs_perag_deactivate(struct xfs_perag	*pag)
+> > > > > +{
+> > > > > +	int	error = 0;
+> > > > > +
+> > > > > +	ASSERT(xfs_ag_is_active(pag));
+> > > > > +	if (!xfs_ag_is_empty(pag))
+> > > > > +		return false;
+> > > > > +	/*
+> > > > > +	 * Manually reduce/reserve (pagf_freeblks + pagf_flcount) worth of
+> > > > > +	 * free datablocks from the global counters. This is necessary
+> > > > > +	 * in order to prevent a race where, some AGs have been temporarily
+> > > > > +	 * offlined but the delayed allocator has already promised some bytes
+> > > > > +	 * and later the real extent/block allocation is failing due to
+> > > > > +	 * the AG(s) being offline.
+> > > > > +	 * If the overall shrink succeeds, we will again
+> > > > > +	 * manually restore these counters just before the shrink transaction
+> > > > > +	 * commits and let these global counters get adjusted automatically
+> > > > > +	 * later.
+> > > > > +	 */
+> > > > > +	error = xfs_dec_fdblocks(pag_mount(pag),
+> > > > > +			pag->pagf_freeblks + pag->pagf_flcount, false);
+> > > > > +	if (error)
+> > > > > +		return false;
+> > > > > +	xfs_perag_rele(pag);
+> > > > > +	do {
+> > > > > +		wait_event(pag_group(pag)->xg_active_wq,
+> > > > > +			!xfs_ag_is_active(pag));
+> > > > > +	} while (xfs_ag_is_active(pag));
+> > > > wait_event_killable, so that a fatal signal can interrupt the
+> > > > deactivation process?
+> > > Oh ,okay. I thought wait_event() is killable or a spurious wake-up can take
+> > > place - that is why I put it in a loop. I will remove the loop.
+> > The loop is fine, but doesn't wait_event put the process in
+> > UNINTERRUPTIBLE state?
+> 
+> Yes, I have done that intentionally. The reason behind this is that, let's
+> say we have offlined ag3, ag2 and while the shrink process is waiting for
+> ag1 to go offline, the process is interrupted. This will put the filesystem
+> in an unusable state, since we have interrupted the shrink process and now
+> ag{3,2} are offline. Do you agree with this?
+
+Well, if you can reactivate ag[23] then I'd say that the user should be
+able to ^C the shrinkfs and have the fs go back to the way it was.  If
+not, then wait_event/uninterruptible is ok.
+
+> > 
+> > > > > +	return true;
+> > > > > +}
+> > > > > +
+> > > > >    static int
+> > > > >    xfs_get_aghdr_buf(
+> > > > >    	struct xfs_mount	*mp,
+> > > > > @@ -758,7 +812,6 @@ xfs_ag_shrink_space(
+> > > > >    	xfs_agblock_t		aglen;
+> > > > >    	int			error, err2;
+> > > > > -	ASSERT(pag_agno(pag) == mp->m_sb.sb_agcount - 1);
+> > > > >    	error = xfs_ialloc_read_agi(pag, *tpp, 0, &agibp);
+> > > > >    	if (error)
+> > > > >    		return error;
+> > > > > @@ -872,6 +925,106 @@ xfs_ag_shrink_space(
+> > > > >    	return err2;
+> > > > >    }
+> > > > > +/*
+> > > > > + * This function checks whether an AG is empty. An AG is eligible to be
+> > > > > + * removed if it is empty.
+> > > > > + */
+> > > > > +bool
+> > > > > +xfs_ag_is_empty(struct xfs_perag	*pag)
+> > > > xfs_perag_is_empty?
+> > > Noted.
+> > > > > +{
+> > > > > +	struct xfs_buf		*agfbp = NULL;
+> > > > > +	struct xfs_mount	*mp = pag_mount(pag);
+> > > > > +	bool			is_empty = false;
+> > > > > +	int			error = 0;
+> > > > > +	struct xfs_agf		*agf = NULL;
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * Read the on-disk data structures to get the correct length of the AG.
+> > > > > +	 * All the AGs have the same length except the last AG.
+> > > > > +	 */
+> > > > > +	error = xfs_alloc_read_agf(pag, NULL, 0, &agfbp);
+> > > > > +	if (!error) {
+> > > > > +		agf = agfbp->b_addr;
+> > > > > +		/*
+> > > > > +		 * We don't need to check if the log blocks belong here since
+> > > > > +		 * the log blocks are taken from the number of free blocks, and
+> > > > > +		 * if the given AG has log blocks, then those many number of
+> > > > > +		 * blocks will be consumed from the number of free blocks and
+> > > > > +		 * the AG empty condition will not hold true.
+> > > > > +		 */
+> > > > > +		if (pag->pagf_freeblks + pag->pagf_flcount +
+> > > > > +			mp->m_ag_prealloc_blocks ==
+> > > > > +			be32_to_cpu(agf->agf_length)) {
+> > > > > +			is_empty = true;
+> > > > Indenting problems...
+> > > Noted.
+> > > > > +		}
+> > > > > +		xfs_buf_relse(agfbp);
+> > > > > +	}
+> > > > > +	return is_empty;
+> > > > > +}
+> > > > > +
+> > > > > +/*
+> > > > > + * This function removes an entire empty AG. Before removing the struct
+> > > > > + * xfs_perag reference, it removes the associated data structures. Before
+> > > > > + * removing an AG, the caller must ensure that the AG has been deactivated with
+> > > > > + * no active references and it has been fully stabilized on the disk.
+> > > > > + */
+> > > > > +void
+> > > > > +xfs_shrinkfs_remove_ag(
+> > > > > +	struct xfs_mount	*mp,
+> > > > > +	xfs_agnumber_t		agno)
+> > > > > +{
+> > > > > +	struct xfs_group	*xg = NULL;
+> > > > > +	struct xfs_perag	*cur_pag = NULL;
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * Number of AGs can't be less than 2
+> > > > > +	 */
+> > > > > +	ASSERT(agno >= 2);
+> > > > > +	xg = xa_erase(&mp->m_groups[XG_TYPE_AG].xa, agno);
+> > > > > +	cur_pag = to_perag(xg);
+> > > > > +
+> > > > > +	ASSERT(!xfs_ag_is_active(cur_pag));
+> > > > > +	/*
+> > > > > +	 * Since we are freeing the AG, we should clear the perag reservations
+> > > > > +	 * for the corresponding AGs.
+> > > > > +	 */
+> > > > > +	xfs_ag_resv_free(cur_pag);
+> > > > > +	/*
+> > > > > +	 * We have already ensured in the AG preparation phase that all intents
+> > > > > +	 * for the offlined AGs have been resolved. So it safe to free it here.
+> > > > > +	 */
+> > > > > +	xfs_defer_drain_free(&xg->xg_intents_drain);
+> > > > > +	/*
+> > > > > +	 * We have already ensured in the AG preparation phase that all busy
+> > > > > +	 * extents for the offlined AGs have been resolved. So it safe to free
+> > > > > +	 * it here.
+> > > > > +	 */
+> > > > > +	kfree(xg->xg_busy_extents);
+> > > > > +	cancel_delayed_work_sync(&cur_pag->pag_blockgc_work);
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * Remove all the cached buffers for the given AG.
+> > > > > +	 */
+> > > > > +	xfs_buf_cache_invalidate(cur_pag);
+> > > > > +	/*
+> > > > > +	 * Now that the cached buffers have been released, remove the
+> > > > > +	 * cache/hashtable itself. We should not change the order of the buffer
+> > > > > +	 * removal and cache removal.
+> > > > > +	 */
+> > > > > +	xfs_buf_cache_destroy(&cur_pag->pag_bcache);
+> > > > > +	/*
+> > > > > +	 * One final assert, before we remove the xg. Since the cached buffers
+> > > > > +	 * for the offlined AGs are already removed, their passive references
+> > > > > +	 * should be 0. Also, the active references are 0 too, so no new
+> > > > > +	 * operation can start and race and get new references.
+> > > > > +	 */
+> > > > > +	XFS_IS_CORRUPT(mp, atomic_read(&pag_group(cur_pag)->xg_ref) != 0);
+> > > > > +	/*
+> > > > > +	 * Finally free the struct xfs_perag of the AG.
+> > > > > +	 */
+> > > > > +	kfree_rcu_mightsleep(xg);
+> > > > > +}
+> > > > > +
+> > > > >    void
+> > > > >    xfs_growfs_compute_deltas(
+> > > > >    	struct xfs_mount	*mp,
+> > > > > diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> > > > > index f7b56d486468..bd30421eded5 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_ag.h
+> > > > > +++ b/fs/xfs/libxfs/xfs_ag.h
+> > > > > @@ -112,6 +112,11 @@ static inline xfs_agnumber_t pag_agno(const struct xfs_perag *pag)
+> > > > >    	return pag->pag_group.xg_gno;
+> > > > >    }
+> > > > > +static inline bool xfs_ag_is_active(struct xfs_perag	*pag)
+> > > > xfs_perag_is_active
+> > > Noted.
+> > > > > +{
+> > > > > +	return atomic_read(&pag_group(pag)->xg_active_ref) > 0;
+> > > > > +}
+> > > > > +
+> > > > >    /*
+> > > > >     * Per-AG operational state. These are atomic flag bits.
+> > > > >     */
+> > > > > @@ -140,6 +145,7 @@ void xfs_free_perag_range(struct xfs_mount *mp, xfs_agnumber_t first_agno,
+> > > > >    		xfs_agnumber_t end_agno);
+> > > > >    int xfs_initialize_perag_data(struct xfs_mount *mp, xfs_agnumber_t agno);
+> > > > >    int xfs_update_last_ag_size(struct xfs_mount *mp, xfs_agnumber_t prev_agcount);
+> > > > > +bool xfs_ag_is_empty(struct xfs_perag *pag);
+> > > > >    /* Passive AG references */
+> > > > >    static inline struct xfs_perag *
+> > > > > @@ -263,6 +269,9 @@ xfs_ag_contains_log(struct xfs_mount *mp, xfs_agnumber_t agno)
+> > > > >    	       agno == XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart);
+> > > > >    }
+> > > > > +void xfs_perag_activate(struct xfs_perag *pag);
+> > > > > +bool xfs_perag_deactivate(struct xfs_perag *pag);
+> > > > > +
+> > > > >    static inline struct xfs_perag *
+> > > > >    xfs_perag_next_wrap(
+> > > > >    	struct xfs_perag	*pag,
+> > > > > @@ -290,6 +299,10 @@ xfs_perag_next_wrap(
+> > > > >    	return NULL;
+> > > > >    }
+> > > > > +#define for_each_perag_range_reverse(agno, oagcount, nagcount) \
+> > > > > +	for ((agno) = ((oagcount) - 1); (typeof(oagcount))(agno) >= \
+> > > > > +		((typeof(oagcount))(nagcount) - 1); (agno)--)
+> > > > > +
+> > > > >    /*
+> > > > >     * Iterate all AGs from start_agno through wrap_agno, then restart_agno through
+> > > > >     * (start_agno - 1).
+> > > > > @@ -331,6 +344,7 @@ struct aghdr_init_data {
+> > > > >    int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
+> > > > >    int xfs_ag_shrink_space(struct xfs_perag *pag, struct xfs_trans **tpp,
+> > > > >    			xfs_extlen_t delta);
+> > > > > +void xfs_shrinkfs_remove_ag(struct xfs_mount *mp, xfs_agnumber_t agno);
+> > > > >    void
+> > > > >    xfs_growfs_compute_deltas(struct xfs_mount *mp, xfs_rfsblock_t nb,
+> > > > >    	int64_t *deltap, xfs_agnumber_t *nagcountp);
+> > > > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > > > > index 000cc7f4a3ce..e16803214223 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > > > > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > > > > @@ -3209,11 +3209,12 @@ xfs_validate_ag_length(
+> > > > >    	if (length != mp->m_sb.sb_agblocks) {
+> > > > >    		/*
+> > > > >    		 * During growfs, the new last AG can get here before we
+> > > > > -		 * have updated the superblock. Give it a pass on the seqno
+> > > > > -		 * check.
+> > > > > +		 * have updated the superblock. During shrink, the new last AG
+> > > > > +		 * will be updated and the AGs from newag to old AG will be
+> > > > > +		 * removed. So seqno here maybe not be equal to
+> > > > > +		 * mp->m_sb.sb_agcount - 1 since the super block is not yet
+> > > > > +		 * updated globally.
+> > > > >    		 */
+> > > > > -		if (bp->b_pag && seqno != mp->m_sb.sb_agcount - 1)
+> > > > > -			return __this_address;
+> > > > Shrinking should be rare, maybe we should have a SHRINKING state flag
+> > > > that turns this off?
+> > > I couldn't follow the above suggestion entirely. Can you please shed some
+> > > more details as to what you meant by the above comment?
+> > Define an XFS_OPSTATE_SHRINKING state flag, set it before starting a
+> > shrink, and clear it before finishing/aborting the shrink.  Then this
+> > check becomes:
+> > 
+> > /* filesystem is shrinking */
+> > #define XFS_OPSTATE_SHRINKING	21
+> > __XFS_IS_OPSTATE(shrinking, SHRINKING)
+> > 
+> > 	if (!xfs_is_shrinking(mp) &&
+> > 	    bp->b_pag && seqno != mp->m_sb.sb_agcount - 1)
+> > 		return __this_address;
+> Okay, it makes sense. I can make the change suggested above.
+
+Thanks!
+
+--D
+
+> > > > >    		if (length < XFS_MIN_AG_BLOCKS)
+> > > > >    			return __this_address;
+> > > > >    		if (length > mp->m_sb.sb_agblocks)
+> > > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > > > > index f9ef3b2a332a..56be9a0afb00 100644
+> > > > > --- a/fs/xfs/xfs_buf.c
+> > > > > +++ b/fs/xfs/xfs_buf.c
+> > > > > @@ -951,6 +951,84 @@ xfs_buf_rele(
+> > > > >    		xfs_buf_rele_cached(bp);
+> > > > >    }
+> > > > > +/*
+> > > > > + * This function populates a list of all the cached buffers of the given AG
+> > > > > + * in the to_be_free list head.
+> > > > > + */
+> > > > > +static void
+> > > > > +xfs_buf_cache_grab_all(
+> > > > > +	struct xfs_perag	*pag,
+> > > > > +	struct list_head	*to_be_freed)
+> > > > > +{
+> > > > > +	struct xfs_buf		*bp;
+> > > > > +	struct rhashtable_iter	iter;
+> > > > > +
+> > > > > +	rhashtable_walk_enter(&pag->pag_bcache.bc_hash, &iter);
+> > > > > +	do {
+> > > > > +		rhashtable_walk_start(&iter);
+> > > > > +		while ((bp = rhashtable_walk_next(&iter)) && !IS_ERR(bp)) {
+> > > > > +			ASSERT(list_empty(&bp->b_list));
+> > > > > +			ASSERT(list_empty(&bp->b_li_list));
+> > > > > +			list_add_tail(&bp->b_list, to_be_freed);
+> > > > > +		}
+> > > > > +		rhashtable_walk_stop(&iter);
+> > > > > +	} while (cond_resched(), bp == ERR_PTR(-EAGAIN));
+> > > > > +	rhashtable_walk_exit(&iter);
+> > > > > +}
+> > > > > +
+> > > > > +/*
+> > > > > + * This function frees all the cached buffers (struct xfs_buf) associated with
+> > > > > + * the given offline AG. The caller must ensure that the AG which is passed
+> > > > > + * is offline and completely stabilized on the disk. Also, the caller should
+> > > > > + * ensure that all the cached buffers are not queued for any pending i/o
+> > > > > + * i.e, the b_list for all the cached buffers are empty - since we will be using
+> > > > > + * b_list to get list of all the bufs that need to be freed.
+> > > > > + */
+> > > > > +void
+> > > > > +xfs_buf_cache_invalidate(struct xfs_perag	*pag)
+> > > > > +{
+> > > > > +	/*
+> > > > > +	 * First get the list of buffers we want to free.
+> > > > > +	 * We need to populate to_be_freed list and cannot directly free
+> > > > > +	 * the buffers during the hashtable walk. rhashtable_walk_start() takes
+> > > > > +	 * an RCU and xfs_buf_rele eventually calls xfs_buf_free (for
+> > > > > +	 * cached buffers). xfs_buf_free() might sleep (depending on the
+> > > > > +	 * whether the buffer was allocated using vmalloc or kmalloc) and
+> > > > > +	 * cannot be called within an RCU context. Hence we first populate
+> > > > > +	 * the buffers within an RCU context and free them outside it.
+> > > > > +	 */
+> > > > > +	struct list_head	to_be_freed;
+> > > > > +	struct xfs_buf		*bp, *tmp;
+> > > > > +
+> > > > > +	ASSERT(!xfs_ag_is_active(pag));
+> > > > > +
+> > > > > +	INIT_LIST_HEAD(&to_be_freed);
+> > > > > +
+> > > > > +	xfs_buf_cache_grab_all(pag, &to_be_freed);
+> > > > > +	list_for_each_entry_safe(bp, tmp, &to_be_freed, b_list) {
+> > > > > +		list_del(&bp->b_list);
+> > > > > +		spin_lock(&bp->b_lock);
+> > > > > +		ASSERT(bp->b_pag == pag);
+> > > > > +		ASSERT(!xfs_buf_is_uncached(bp));
+> > > > > +		/*
+> > > > > +		 * Since we have made sure that this is being called on an
+> > > > > +		 * AG with active refcount = 0, the b_hold value of any cached
+> > > > > +		 * buffer should not exceed 1 (i.e, the default value) and hence
+> > > > > +		 * can be safely removed. Hence, it should also be in an
+> > > > > +		 * unlocked state.
+> > > > > +		 */
+> > > > > +		ASSERT(bp->b_hold == 1);
+> > > > > +		ASSERT(!xfs_buf_islocked(bp));
+> > > > > +		/*
+> > > > > +		 * We should set b_lru_ref to 0 so that it gets deleted from
+> > > > > +		 * the lru during the call to xfs_buf_rele.
+> > > > > +		 */
+> > > > > +		atomic_set(&bp->b_lru_ref, 0);
+> > > > > +		spin_unlock(&bp->b_lock);
+> > > > > +		xfs_buf_rele(bp);
+> > > > > +	}
+> > > > > +}
+> > > > > +
+> > > > >    /*
+> > > > >     *	Lock a buffer object, if it is not already locked.
+> > > > >     *
+> > > > > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> > > > > index b269e115d9ac..9b054bc8a96f 100644
+> > > > > --- a/fs/xfs/xfs_buf.h
+> > > > > +++ b/fs/xfs/xfs_buf.h
+> > > > > @@ -281,6 +281,7 @@ void xfs_buf_hold(struct xfs_buf *bp);
+> > > > >    /* Releasing Buffers */
+> > > > >    extern void xfs_buf_rele(struct xfs_buf *);
+> > > > > +void xfs_buf_cache_invalidate(struct xfs_perag	*pag);
+> > > > >    /* Locking and Unlocking Buffers */
+> > > > >    extern int xfs_buf_trylock(struct xfs_buf *);
+> > > > > diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+> > > > > index 5d58e2ae4972..5fe7fd1931f5 100644
+> > > > > --- a/fs/xfs/xfs_buf_item_recover.c
+> > > > > +++ b/fs/xfs/xfs_buf_item_recover.c
+> > > > > @@ -737,8 +737,7 @@ xlog_recover_do_primary_sb_buffer(
+> > > > >    	xfs_sb_from_disk(&mp->m_sb, dsb);
+> > > > >    	if (mp->m_sb.sb_agcount < orig_agcount) {
+> > > > > -		xfs_alert(mp, "Shrinking AG count in log recovery not supported");
+> > > > > -		return -EFSCORRUPTED;
+> > > > > +		xfs_warn_experimental(mp, XFS_EXPERIMENTAL_SHRINK);
+> > > > >    	}
+> > > > >    	if (mp->m_sb.sb_rgcount < orig_rgcount) {
+> > > > >    		xfs_warn(mp,
+> > > > > @@ -764,18 +763,28 @@ xlog_recover_do_primary_sb_buffer(
+> > > > >    		if (error)
+> > > > >    			return error;
+> > > > >    	}
+> > > > > -
+> > > > > -	/*
+> > > > > -	 * Initialize the new perags, and also update various block and inode
+> > > > > -	 * allocator setting based off the number of AGs or total blocks.
+> > > > > -	 * Because of the latter this also needs to happen if the agcount did
+> > > > > -	 * not change.
+> > > > > -	 */
+> > > > > -	error = xfs_initialize_perag(mp, orig_agcount, mp->m_sb.sb_agcount,
+> > > > > -			mp->m_sb.sb_dblocks, &mp->m_maxagi);
+> > > > > -	if (error) {
+> > > > > -		xfs_warn(mp, "Failed recovery per-ag init: %d", error);
+> > > > > -		return error;
+> > > > > +	if (orig_agcount > mp->m_sb.sb_agcount) {
+> > > > > +		/*
+> > > > > +		 * Remove the old AGs that were removed previously by a growfs
+> > > > > +		 */
+> > > > > +		xfs_free_perag_range(mp, mp->m_sb.sb_agcount, orig_agcount);
+> > > > > +		mp->m_maxagi = xfs_set_inode_alloc(mp, mp->m_sb.sb_agcount);
+> > > > > +		mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
+> > > > > +	} else {
+> > > > > +		/*
+> > > > > +		 * Initialize the new perags, and also the update various block
+> > > > > +		 * and inode allocator setting based off the number of AGs or
+> > > > > +		 * total blocks.
+> > > > > +		 * Because of the latter, this also needs to happen if the
+> > > > > +		 * agcount did not change.
+> > > > > +		 */
+> > > > > +		error = xfs_initialize_perag(mp, orig_agcount,
+> > > > > +				mp->m_sb.sb_agcount,
+> > > > > +				mp->m_sb.sb_dblocks, &mp->m_maxagi);
+> > > > > +		if (error) {
+> > > > > +			xfs_warn(mp, "Failed recovery per-ag init: %d", error);
+> > > > > +			return error;
+> > > > > +		}
+> > > > >    	}
+> > > > >    	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+> > > > > diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> > > > > index da3161572735..1dba9da27a31 100644
+> > > > > --- a/fs/xfs/xfs_extent_busy.c
+> > > > > +++ b/fs/xfs/xfs_extent_busy.c
+> > > > > @@ -676,6 +676,36 @@ xfs_extent_busy_wait_all(
+> > > > >    			xfs_extent_busy_wait_group(rtg_group(rtg));
+> > > > >    }
+> > > > > +/*
+> > > > > + * Similar to xfs_extent_busy_wait_all() - It waits for all the busy extents to
+> > > > > + * get resolved for the range of AGs provided. For now, this function is
+> > > > > + * introduced to be used in online shrink process. Unlike
+> > > > > + * xfs_extent_busy_wait_all(), this takes a passive reference, because this
+> > > > > + * function is expected to be called for the AGs whose active reference has
+> > > > > + * been reduced to 0 i.e, offline AGs.
+> > > > > + *
+> > > > > + * @mp - The xfs mount point
+> > > > > + * @first_agno - The 0 based AG index of the range of AGs from which we will
+> > > > > + *     start.
+> > > > > + * @end_agno - The 0 based AG index of the range of AGs from till which we will
+> > > > > + *     traverse.
+> > > > > + */
+> > > > > +void
+> > > > > +xfs_extent_busy_wait_ags(
+> > > > > +	struct xfs_mount	*mp,
+> > > > > +	xfs_agnumber_t		first_agno,
+> > > > > +	xfs_agnumber_t		end_agno)
+> > > > > +{
+> > > > > +	xfs_agnumber_t		agno;
+> > > > > +	struct xfs_perag	*pag = NULL;
+> > > > > +
+> > > > > +	for_each_perag_range_reverse(agno, end_agno + 1, first_agno + 1) {
+> > > > > +		pag = xfs_perag_get(mp, agno);
+> > > > > +		xfs_extent_busy_wait_group(pag_group(pag));
+> > > > > +		xfs_perag_put(pag);
+> > > > > +	}
+> > > > > +}
+> > > > > +
+> > > > >    /*
+> > > > >     * Callback for list_sort to sort busy extents by the group they reside in.
+> > > > >     */
+> > > > > diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
+> > > > > index 3e6e019b6146..6fcab714be07 100644
+> > > > > --- a/fs/xfs/xfs_extent_busy.h
+> > > > > +++ b/fs/xfs/xfs_extent_busy.h
+> > > > > @@ -57,6 +57,8 @@ bool xfs_extent_busy_trim(struct xfs_group *xg, xfs_extlen_t minlen,
+> > > > >    		unsigned *busy_gen);
+> > > > >    int xfs_extent_busy_flush(struct xfs_trans *tp, struct xfs_group *xg,
+> > > > >    		unsigned busy_gen, uint32_t alloc_flags);
+> > > > > +void xfs_extent_busy_wait_ags(struct xfs_mount *mp, xfs_agnumber_t first_agno,
+> > > > > +		xfs_agnumber_t end_agno);
+> > > > >    void xfs_extent_busy_wait_all(struct xfs_mount *mp);
+> > > > >    bool xfs_extent_busy_list_empty(struct xfs_group *xg, unsigned int *busy_gen);
+> > > > >    struct xfs_extent_busy_tree *xfs_extent_busy_alloc(void);
+> > > > > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > > > > index 8353e2f186f6..199d48403514 100644
+> > > > > --- a/fs/xfs/xfs_fsops.c
+> > > > > +++ b/fs/xfs/xfs_fsops.c
+> > > > > @@ -25,6 +25,7 @@
+> > > > >    #include "xfs_rtrmap_btree.h"
+> > > > >    #include "xfs_rtrefcount_btree.h"
+> > > > >    #include "xfs_metafile.h"
+> > > > > +#include "xfs_trans_priv.h"
+> > > > >    /*
+> > > > >     * Write new AG headers to disk. Non-transactional, but need to be
+> > > > > @@ -83,6 +84,291 @@ xfs_resizefs_init_new_ags(
+> > > > >    	return error;
+> > > > >    }
+> > > > > +static int
+> > > > > +xfs_shrinkfs_stablize_ags(
+> > > > s/stablize/stabilize/g
+> > > > 
+> > > > or maybe "quiesce" to fit with the xfs language?
+> > > Yeah, quiesce sounds better.
+> > > > > +	struct xfs_mount	*mp,
+> > > > > +	xfs_agnumber_t		oagcount,
+> > > > > +	xfs_agnumber_t		nagcount)
+> > > > > +{
+> > > > > +	int	error = 0;
+> > > > > +	int	count = 0;
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * We should wait for the log to be empty and all the pending I/Os to
+> > > > > +	 * be completed so that the AGs are completely stabilized before we
+> > > > > +	 * start tearing them down. Flushing the AIL and synching the superblock
+> > > > > +	 * here ensures that none of the future logged transactions will refer
+> > > > > +	 * to these AGs during log recovery in case if sudden shutdown/crash
+> > > > > +	 * happens while we are trying to remove these AGs.
+> > > > > +	 * The following code is similar to xfs_log_quiesce() and xfs_log_cover.
+> > > > > +	 *
+> > > > > +	 * We are doing a xfs_sync_sb_buf + AIL flush twice. The first
+> > > > > +	 * xfs_sync_sb_buf writes a checkpoint, then the first AIL flush makes
+> > > > > +	 * the first checkpoint stable. The second set of xfs_sync_sb_buf + AIL
+> > > > > +	 * flush synchs the on-disk LSN with the in-core LSN.
+> > > > > +	 * Unlike xfs_log_cover(), we don't necessarily want the background
+> > > > > +	 * filesytem activity/log activity to stop (like in case of unmount
+> > > > > +	 * or freeze).
+> > > > > +	 */
+> > > > > +	cancel_delayed_work_sync(&mp->m_log->l_work);
+> > > > > +	error = xfs_log_force(mp, XFS_LOG_SYNC);
+> > > > > +	if (error)
+> > > > > +		goto out;
+> > > > > +
+> > > > > +	error = xfs_sync_sb_buf(mp, false);
+> > > > > +	if (error)
+> > > > > +		goto out;
+> > > > > +
+> > > > > +	xfs_ail_push_all_sync(mp->m_ail);
+> > > > > +	xfs_buftarg_wait(mp->m_ddev_targp);
+> > > > > +	xfs_buf_lock(mp->m_sb_bp);
+> > > > > +	xfs_buf_unlock(mp->m_sb_bp);
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * The first xfs_sync_sb serves as a reference for the in-core tail
+> > > > > +	 * pointer and the second one updates the on-disk tail with the in-core
+> > > > > +	 * lsn. This is similar to what is being done in xfs_log_cover, however
+> > > > > +	 * here we are explicitly doing this twice in order to ensure forward
+> > > > > +	 * progress as, during shrink the filesystem is active.
+> > > > > +	 */
+> > > > > +	for (count = 0; count < 2; count++) {
+> > > > > +		error = xfs_sync_sb(mp, true);
+> > > > > +		if (error)
+> > > > > +			goto out;
+> > > > > +		xfs_ail_push_all_sync(mp->m_ail);
+> > > > > +	}
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * Wait for all the busy extents to get resolved along with pending trim
+> > > > > +	 * ops for all the offlined AGs.
+> > > > > +	 */
+> > > > > +	xfs_extent_busy_wait_ags(mp, nagcount, oagcount - 1);
+> > > > > +	flush_workqueue(xfs_discard_wq);
+> > > > > +out:
+> > > > > +	xfs_log_work_queue(mp);
+> > > > > +	return error;
+> > > > > +}
+> > > > > +
+> > > > > +/*
+> > > > > + * Get new active references for all the AGs. This might be called when
+> > > > > + * shrinkage process encounters a failure at an intermediate stage after the
+> > > > > + * active references of all/some of the target AGs have become 0.
+> > > > > + */
+> > > > > +static void
+> > > > > +xfs_shrinkfs_reactivate_ags(
+> > > > > +	struct xfs_mount	*mp,
+> > > > > +	xfs_agnumber_t		oagcount,
+> > > > > +	xfs_agnumber_t		nagcount)
+> > > > > +{
+> > > > > +	struct xfs_perag	*pag = NULL;
+> > > > > +	xfs_agnumber_t		agno;
+> > > > > +
+> > > > > +	ASSERT(nagcount < oagcount);
+> > > > > +
+> > > > > +	for_each_perag_range_reverse(agno, oagcount, nagcount + 1) {
+> > > > > +		pag = xfs_perag_get(mp, agno);
+> > > > > +		xfs_perag_activate(pag);
+> > > > > +		xfs_perag_put(pag);
+> > > > > +	}
+> > > > > +}
+> > > > > +
+> > > > > +/*
+> > > > > + * The function deactivates or puts the AGs to an offline mode. AG deactivation
+> > > > > + * or AG offlining means that no new operation can be started on that AG. The AG
+> > > > > + * still exists, however no new high level operation (like extent allocation)
+> > > > > + * can be started. In terms of implementation, an AG is taken offline or is
+> > > > > + * deactivated when xg_active_ref of the struct xfs_perag is 0 i.e, the number
+> > > > > + * of active references becomes 0.
+> > > > > + * Since active references act as a form of barrier, so once the active
+> > > > > + * reference of an AG is 0, no new entity can get an active reference and in
+> > > > > + * this way we ensure that once an AG is offline (i.e, active reference count is
+> > > > > + * 0), no one will be able to start a new operation in it unless the active
+> > > > > + * reference count is explicitly set to 1 i.e, the AG is made online/activated.
+> > > > > + */
+> > > > > +static int
+> > > > > +xfs_shrinkfs_deactivate_ags(
+> > > > > +	struct xfs_mount	*mp,
+> > > > > +	xfs_agnumber_t		oagcount,
+> > > > > +	xfs_agnumber_t		nagcount)
+> > > > > +{
+> > > > > +	int			error = 0;
+> > > > > +	struct xfs_perag	*pag = NULL;
+> > > > > +	xfs_agnumber_t		agno;
+> > > > > +
+> > > > > +	ASSERT(nagcount < oagcount);
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * If we are removing 1 or more entire AGs, we only need to take those
+> > > > > +	 * AGs offline which we are planning to remove completely. The new tail
+> > > > > +	 * AG which will be partially shrunk should not be taken offline - since
+> > > > > +	 * we will be doing an online operation on them, just like any other
+> > > > > +	 * high level operation. For complete AG removal, we need to take them
+> > > > > +	 * offline since we cannot start any new operation on them as they will
+> > > > > +	 * be removed eventually.
+> > > > > +	 *
+> > > > > +	 * However, if the number of blocks that we are trying to remove is
+> > > > > +	 * an exact multiple of the AG size (in blocks), then the new tail AG
+> > > > > +	 * will not be shrunk at all.
+> > > > > +	 */
+> > > > > +	for_each_perag_range_reverse(agno, oagcount, nagcount + 1) {
+> > > > > +		pag = xfs_perag_get(mp, agno);
+> > > > I keep seeing this for_each_perag() -> xfs_perag_get code.  The regular
+> > > > for_each_perag macros take a pag pointer and set it to an actively
+> > > > referenced perag.
+> > > > 
+> > > > I wonder if this new macro ought to behave like that too, but then I
+> > > > guess you'd need to indicate that it coughs up passive references, not
+> > > > active ones, and ... yeah.
+> > > Oh okay, so the macro should itself take the passive reference, and we don't
+> > > need to explicitly take it inside the loop. Yeah, I can make the change.
+> > I dunno if it really is a good idea to hide a passive walk behind a
+> > macro though.  Maybe just change the name to
+> > for_each_agno_range_reverse() and leave the explicit xfs_perag_get/put
+> > calls?
+> 
+> Okay.
+> 
+> --NR
+> 
+> > 
+> > > > > +		if (!xfs_perag_deactivate(pag)) {
+> > > > > +			xfs_perag_put(pag);
+> > > > > +			if (agno < oagcount - 1)
+> > > > > +				xfs_shrinkfs_reactivate_ags(mp, oagcount,
+> > > > > +					agno + 1);
+> > > > > +			return -ENOTEMPTY;
+> > > > > +		}
+> > > > > +		xfs_perag_put(pag);
+> > > > > +	}
+> > > > > +	/*
+> > > > > +	 * Now that we have deactivated/offlined the AGs, we need to make sure
+> > > > > +	 * that all the pending operations are completed and the in-core and
+> > > > > +	 * the on disk contents are completely in synch i.e, AGs are stablized
+> > > > > +	 * on to the disk.
+> > > > > +	 */
+> > > > > +	error = xfs_shrinkfs_stablize_ags(mp, oagcount, nagcount);
+> > > > > +	if (error) {
+> > > > > +		xfs_shrinkfs_reactivate_ags(mp, oagcount, nagcount);
+> > > > > +		return error;
+> > > > > +	}
+> > > > > +
+> > > > > +	return error;
+> > > > Nit: this could be return 0.
+> > > Noted.
+> > > > > +}
+> > > > > +
+> > > > > +/*
+> > > > > + * This function does 3 things:
+> > > > > + * 1. Deactivate the AGs i.e, wait for all the active references to come to 0.
+> > > > > + * 2. Checks whether all the AGs that shrink process needs to remove are empty.
+> > > > > + *    If at least one of the target AGs is non-empty, shrink fails and
+> > > > > + *    xfs_shrinkfs_reactivate_ags() is called.
+> > > > > + * 3. Calculates the total number of fdblocks (free data blocks) that will be
+> > > > > + *    removed and stores in id->nfree.
+> > > > > + * Please look into the individual functions for more details and the definition
+> > > > > + * of the terminologies.
+> > > > > + */
+> > > > > +static int
+> > > > > +xfs_shrinkfs_prepare_ags(
+> > > > > +	struct xfs_mount	*mp,
+> > > > > +	xfs_agnumber_t		oagcount,
+> > > > > +	xfs_agnumber_t		nagcount,
+> > > > > +	struct aghdr_init_data	*id)
+> > > > > +{
+> > > > > +
+> > > > > +	struct xfs_perag	*pag = NULL;
+> > > > > +	xfs_agnumber_t		agno;
+> > > > > +	int			error = 0;
+> > > > > +
+> > > > > +	ASSERT(nagcount < oagcount);
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * Deactivating/offlining the AGs i.e waiting for the active references
+> > > > > +	 * to come down to 0.
+> > > > > +	 */
+> > > > > +	error = xfs_shrinkfs_deactivate_ags(mp, oagcount, nagcount);
+> > > > > +	if (error)
+> > > > > +		return error;
+> > > > > +	/*
+> > > > > +	 * At this point the AGs have been deactivated/offlined and the in-core
+> > > > > +	 * and the on-disk are synch. So now we need to check whether all the
+> > > > > +	 * AGs that we are trying to remove/delete are empty. Since we are not
+> > > > > +	 * supporting partial shrink success (i.e, the entire requested size
+> > > > > +	 * will be removed or none), we will bail out with a failure code even
+> > > > > +	 * if 1 AG is non-empty.
+> > > > > +	 */
+> > > > > +	for_each_perag_range_reverse(agno, oagcount, nagcount + 1) {
+> > > > > +		pag = xfs_perag_get(mp, agno);
+> > > > > +		if (!xfs_ag_is_empty(pag)) {
+> > > > > +			/* Error out even if one AG is non-empty */
+> > > > > +			error = -ENOTEMPTY;
+> > > > > +			xfs_perag_put(pag);
+> > > > > +			xfs_shrinkfs_reactivate_ags(mp, oagcount, nagcount);
+> > > > > +			return error;
+> > > > return -ENOTEMPTY ?
+> > > Yeah, I can directly return -ENOTEMPTY.
+> > > > FWIW, I think this code looks mostly sane.  Pending answers to my
+> > > > questions, it might be close to ready for testing.  Apologies for the
+> > > > very long delay in getting to this.  $problems :/
+> > > Thank you so much for taking out time and reviewing the code. I have tried
+> > > to answer the questions that you have asked. Please let me know if you have
+> > > additional questions. I, too, have asked some questions about a couple of
+> > > your comments. Once I have clarity on those, I will send the next revision.
+> > > 
+> > > --NR
+> > > 
+> > > > --D
+> > > > 
+> > > > > +		}
+> > > > > +		/*
+> > > > > +		 * Since these are removed, these free blocks should also be
+> > > > > +		 * subtracted from the total list of free blocks.
+> > > > > +		 */
+> > > > > +		id->nfree += (pag->pagf_freeblks + pag->pagf_flcount);
+> > > > > +		xfs_perag_put(pag);
+> > > > > +	}
+> > > > > +	return 0;
+> > > > > +}
+> > > > > +
+> > > > > +/*
+> > > > > + * This function does the job of fully removing the blocks and empty AGs (
+> > > > > + * depending of the values of oagcount and nagcount). By removal it means,
+> > > > > + * removal of all the perag data structures, other data structures associated
+> > > > > + * with it and all the perag cached buffers (when AGs are removed). Once this
+> > > > > + * function succeeds, the AGs/blocks will no longer exist.
+> > > > > + * The overall steps are as follows (details are in the function):
+> > > > > + * - calculate the number of blocks that will be removed from the new tail AG
+> > > > > + *   i.e, the AG that will be shrunk partially.
+> > > > > + * - call xfs_shrinkfs_remove_ag() that removes the perag cached buffers,
+> > > > > + *   then frees the perag reservation, other associated datastructures and
+> > > > > + *   finally the in-memory perag group instance.
+> > > > > + */
+> > > > > +static int
+> > > > > +xfs_shrinkfs_remove_ags(
+> > > > > +	struct xfs_mount	*mp,
+> > > > > +	struct xfs_trans	**tp,
+> > > > > +	xfs_agnumber_t		oagcount,
+> > > > > +	xfs_agnumber_t		nagcount,
+> > > > > +	int64_t			delta_rem,
+> > > > > +	xfs_agnumber_t		*nagmax)
+> > > > > +{
+> > > > > +	xfs_agnumber_t		agno;
+> > > > > +	int			error = 0;
+> > > > > +	struct xfs_perag	*cur_pag = NULL;
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * This loop is calculating the number of blocks that needs to be
+> > > > > +	 * removed from the new tail AG. If delta_rem is 0 after the loop exits,
+> > > > > +	 * then it means that the number of blocks we want to remove is a
+> > > > > +	 * multiple of AG size (in blocks).
+> > > > > +	 */
+> > > > > +	for_each_perag_range_reverse(agno, oagcount, nagcount + 1) {
+> > > > > +		cur_pag = xfs_perag_get(mp, agno);
+> > > > > +		delta_rem -= xfs_ag_block_count(mp, agno);
+> > > > > +		xfs_perag_put(cur_pag);
+> > > > > +	}
+> > > > > +	/*
+> > > > > +	 * We are first removing blocks from the AG that will form the new tail
+> > > > > +	 * AG. The reason is that, if we encounter an error here, we can simply
+> > > > > +	 * reactivate the AGs (by calling xfs_shrinkfs_reactivate_ags()).
+> > > > > +	 * Removal of complete empty AGs always succeed anyway. However if we
+> > > > > +	 * remove the empty AGs first (which will succeed) and then the new
+> > > > > +	 * last AG shrink fails, then we will again have to re-initialize the
+> > > > > +	 * removed AGs. Hence the former approach seems more efficient to me.
+> > > > > +	 */
+> > > > > +	if (delta_rem) {
+> > > > > +		/*
+> > > > > +		 * Remove delta_rem blocks from the AG that will form the new
+> > > > > +		 * tail AG after the AGs are removed. If the number of blocks to
+> > > > > +		 * be removed is a multiple of AG size, then nothing is done
+> > > > > +		 * here.
+> > > > > +		 */
+> > > > > +		cur_pag = xfs_perag_get(mp, nagcount - 1);
+> > > > > +		error = xfs_ag_shrink_space(cur_pag, tp, delta_rem);
+> > > > > +		xfs_perag_put(cur_pag);
+> > > > > +		if (error) {
+> > > > > +			if (nagcount < oagcount)
+> > > > > +				xfs_shrinkfs_reactivate_ags(mp, oagcount,
+> > > > > +					nagcount);
+> > > > > +			return error;
+> > > > > +		}
+> > > > > +	}
+> > > > > +	/*
+> > > > > +	 * Now, in this final step we remove the perag instance and the
+> > > > > +	 * associated datastructures and cached buffers. This fully removes the
+> > > > > +	 * AG.
+> > > > > +	 */
+> > > > > +	for_each_perag_range_reverse(agno, oagcount, nagcount + 1)
+> > > > > +		xfs_shrinkfs_remove_ag(mp, agno);
+> > > > > +	*nagmax = xfs_set_inode_alloc(mp, nagcount);
+> > > > > +	return error;
+> > > > > +}
+> > > > > +
+> > > > >    /*
+> > > > >     * growfs operations
+> > > > >     */
+> > > > > @@ -98,10 +384,11 @@ xfs_growfs_data_private(
+> > > > >    	xfs_agnumber_t		nagcount;
+> > > > >    	xfs_agnumber_t		nagimax = 0;
+> > > > >    	int64_t			delta;
+> > > > > +	xfs_rfsblock_t		nb_div, nb_mod;
+> > > > >    	bool			lastag_extended = false;
+> > > > >    	struct xfs_trans	*tp;
+> > > > >    	struct aghdr_init_data	id = {};
+> > > > > -	struct xfs_perag	*last_pag;
+> > > > > +	struct xfs_perag	*last_pag = NULL;
+> > > > >    	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
+> > > > >    	if (error)
+> > > > > @@ -122,6 +409,13 @@ xfs_growfs_data_private(
+> > > > >    	if (error)
+> > > > >    		return error;
+> > > > >    	xfs_growfs_compute_deltas(mp, nb, &delta, &nagcount);
+> > > > > +	/*
+> > > > > +	 * Fail if the new tail AG length is < XFS_MIN_AG_BLOCKS during shrink
+> > > > > +	 */
+> > > > > +	nb_div = nb;
+> > > > > +	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
+> > > > > +	if (delta < 0 && nb_mod && nb_mod < XFS_MIN_AG_BLOCKS)
+> > > > > +		return -EINVAL;
+> > > > >    	/*
+> > > > >    	 * Reject filesystems with a single AG because they are not
+> > > > > @@ -134,15 +428,19 @@ xfs_growfs_data_private(
+> > > > >    	/* No work to do */
+> > > > >    	if (delta == 0)
+> > > > >    		return 0;
+> > > > > -
+> > > > > -	/* TODO: shrinking the entire AGs hasn't yet completed */
+> > > > > -	if (nagcount < oagcount)
+> > > > > -		return -EINVAL;
+> > > > > +	if (nagcount < oagcount) {
+> > > > > +		error = xfs_shrinkfs_prepare_ags(mp, oagcount, nagcount, &id);
+> > > > > +		if (error)
+> > > > > +			return error;
+> > > > > +	}
+> > > > >    	/* allocate the new per-ag structures */
+> > > > >    	error = xfs_initialize_perag(mp, oagcount, nagcount, nb, &nagimax);
+> > > > > -	if (error)
+> > > > > +	if (error) {
+> > > > > +		if (nagcount < oagcount)
+> > > > > +			xfs_shrinkfs_reactivate_ags(mp, oagcount, nagcount);
+> > > > >    		return error;
+> > > > > +	}
+> > > > >    	if (delta > 0)
+> > > > >    		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
+> > > > > @@ -151,32 +449,44 @@ xfs_growfs_data_private(
+> > > > >    	else
+> > > > >    		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata, -delta, 0,
+> > > > >    				0, &tp);
+> > > > > -	if (error)
+> > > > > +	if (error) {
+> > > > > +		if (nagcount < oagcount)
+> > > > > +			xfs_shrinkfs_reactivate_ags(mp, oagcount, nagcount);
+> > > > >    		goto out_free_unused_perag;
+> > > > > +	}
+> > > > > -	last_pag = xfs_perag_get(mp, oagcount - 1);
+> > > > >    	if (delta > 0) {
+> > > > > +		last_pag = xfs_perag_get(mp, oagcount - 1);
+> > > > >    		error = xfs_resizefs_init_new_ags(tp, &id, oagcount, nagcount,
+> > > > >    				delta, last_pag, &lastag_extended);
+> > > > > +		xfs_perag_put(last_pag);
+> > > > >    	} else {
+> > > > >    		xfs_warn_experimental(mp, XFS_EXPERIMENTAL_SHRINK);
+> > > > > -		error = xfs_ag_shrink_space(last_pag, &tp, -delta);
+> > > > > +		error = xfs_shrinkfs_remove_ags(mp, &tp, oagcount, nagcount,
+> > > > > +				-delta, &nagimax);
+> > > > >    	}
+> > > > > -	xfs_perag_put(last_pag);
+> > > > >    	if (error)
+> > > > >    		goto out_trans_cancel;
+> > > > > +	/*
+> > > > > +	 * Adjust the free data blocks back which we manually reduced during
+> > > > > +	 * AG deactivation.
+> > > > > +	 */
+> > > > > +	if (nagcount < oagcount)
+> > > > > +		xfs_add_fdblocks(mp, id.nfree);
+> > > > >    	/*
+> > > > >    	 * Update changed superblock fields transactionally. These are not
+> > > > >    	 * seen by the rest of the world until the transaction commit applies
+> > > > >    	 * them atomically to the superblock.
+> > > > >    	 */
+> > > > > -	if (nagcount > oagcount)
+> > > > > -		xfs_trans_mod_sb(tp, XFS_TRANS_SB_AGCOUNT, nagcount - oagcount);
+> > > > > +	if (nagcount != oagcount)
+> > > > > +		xfs_trans_mod_sb(tp, XFS_TRANS_SB_AGCOUNT,
+> > > > > +			(int64_t)nagcount - (int64_t)oagcount);
+> > > > >    	if (delta)
+> > > > >    		xfs_trans_mod_sb(tp, XFS_TRANS_SB_DBLOCKS, delta);
+> > > > >    	if (id.nfree)
+> > > > > -		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, id.nfree);
+> > > > > +		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS,
+> > > > > +			delta > 0 ? id.nfree : (int64_t)-id.nfree);
+> > > > >    	/*
+> > > > >    	 * Sync sb counters now to reflect the updated values. This is
+> > > > > @@ -188,12 +498,17 @@ xfs_growfs_data_private(
+> > > > >    	xfs_trans_set_sync(tp);
+> > > > >    	error = xfs_trans_commit(tp);
+> > > > > -	if (error)
+> > > > > +	if (error) {
+> > > > > +		if (nagcount < oagcount)
+> > > > > +			xfs_shrinkfs_reactivate_ags(mp, oagcount, nagcount);
+> > > > >    		return error;
+> > > > > +	}
+> > > > >    	/* New allocation groups fully initialized, so update mount struct */
+> > > > >    	if (nagimax)
+> > > > >    		mp->m_maxagi = nagimax;
+> > > > > +	if (nagcount < oagcount)
+> > > > > +		mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
+> > > > >    	xfs_set_low_space_thresholds(mp);
+> > > > >    	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+> > > > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > > > > index 575e7028f423..c5467f52356f 100644
+> > > > > --- a/fs/xfs/xfs_trans.c
+> > > > > +++ b/fs/xfs/xfs_trans.c
+> > > > > @@ -409,7 +409,6 @@ xfs_trans_mod_sb(
+> > > > >    		tp->t_dblocks_delta += delta;
+> > > > >    		break;
+> > > > >    	case XFS_TRANS_SB_AGCOUNT:
+> > > > > -		ASSERT(delta > 0);
+> > > > >    		tp->t_agcount_delta += delta;
+> > > > >    		break;
+> > > > >    	case XFS_TRANS_SB_IMAXPCT:
+> > > > > -- 
+> > > > > 2.43.5
+> > > > > 
+> > > > > 
+> > > -- 
+> > > Nirjhar Roy
+> > > Linux Kernel Developer
+> > > IBM, Bangalore
+> > > 
+> > > 
+> -- 
+> Nirjhar Roy
+> Linux Kernel Developer
+> IBM, Bangalore
+> 
+> 
