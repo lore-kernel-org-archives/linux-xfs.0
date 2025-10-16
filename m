@@ -1,30 +1,33 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 329D514F125
-	for <linux-xfs@vger.kernel.org>; Thu, 16 Oct 2025 04:23:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9037618872A;
+	Thu, 16 Oct 2025 04:33:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760588633; cv=none; b=Jl9v2h+rbDw/G/7wEYcOvKfOTKzamRytXgL/LYlg3XSRZdYScoIc31/fp84m3vR3okoBHIAgv4TPt8Ri2xHy/GOXlqrEhogkppDOKgHXMEaEQXc6CO58UTAQYvgEGEGun0Gn7GwnLokiDsQJBNpbGt9WzLcwYL2R1WOowTKL60Q=
+	t=1760589221; cv=none; b=J/zh9rX3xTUMq3URxDzblH5qsMtFnqFWTB7vEn6IAQA8IzpBqebr+uycAHlhGFzFt4p9haYr/j3352zSuYOKQv0xbvA5AFqo1/e3plIVZ+V0BnNDEZfgDoW6MB1UWvx0/lEoxtBzeP0sxRSo1Ji7CdGroKPD/t1dEnPe3RaTNa0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760588633; c=relaxed/simple;
-	bh=5vUsXIJQ3UBrYFxpBilDeiJzfEFI88OhXiuMDHBLe4E=;
+	s=arc-20240116; t=1760589221; c=relaxed/simple;
+	bh=m/50nW7ENKQcY+VcOm6HkD9A5idX37B4MEwyJMgsbjY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BCO2xrv3n4IbcE+y8i21l4U+C1cFAy22eF2y4DBVyIWsatI5EBE5TkNwTvZKWXxaRJGyGz9ZrMQrlFAQSiSZWitnrfX+CfuDmz7gQ1ayNAMq/EWSOV/o1HFrlWV1EHJpnq7ZwtcANuDBBrsxL6HNAIx6HIrbk/kiyQmc7zIdDl8=
+	 Content-Type:Content-Disposition:In-Reply-To; b=RvYhPUPHmAT/a57U0LFAy2XK433TnVsv/pZAhhWaeEkR6BcesbR4ZQc4DiJyvq3dLtCAq5iE4+6HnMKvqyMu/B3ZdstBxqR2Yk7KEBi1hSc1qtRPOhcO7UY/U59uzqVMuQ5MugTBDDoVaIa72VazUtTjoHq00R8T3KGIz2NJNF4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 65FF8227A87; Thu, 16 Oct 2025 06:23:48 +0200 (CEST)
-Date: Thu, 16 Oct 2025 06:23:48 +0200
+	id 4DC40227A87; Thu, 16 Oct 2025 06:33:34 +0200 (CEST)
+Date: Thu, 16 Oct 2025 06:33:33 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 17/17] xfs: reduce ilock roundtrips in
- xfs_qm_vop_dqalloc
-Message-ID: <20251016042348.GC29822@lst.de>
-References: <20251013024851.4110053-1-hch@lst.de> <20251013024851.4110053-18-hch@lst.de> <20251015212707.GM2591640@frogsfrogsfrogs>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
+	Jan Kara <jack@suse.cz>, Carlos Maiolino <cem@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>, willy@infradead.org,
+	dlemoal@kernel.org, hans.holmberg@wdc.com, linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] writeback: allow the file system to override
+ MIN_WRITEBACK_PAGES
+Message-ID: <20251016043333.GA29905@lst.de>
+References: <20251015062728.60104-1-hch@lst.de> <20251015062728.60104-3-hch@lst.de> <20251015151353.GA786497@mit.edu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,26 +36,28 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251015212707.GM2591640@frogsfrogsfrogs>
+In-Reply-To: <20251015151353.GA786497@mit.edu>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Oct 15, 2025 at 02:27:07PM -0700, Darrick J. Wong wrote:
-> On Mon, Oct 13, 2025 at 11:48:18AM +0900, Christoph Hellwig wrote:
-> > xfs_qm_vop_dqalloc only needs the (exclusive) ilock for attaching dquots
-> > to the inode if not done so yet.  All the other locks don't touch the inode
-> > and don't need the ilock - the i_rwsem / iolock protects against changes
-> > to the IDs while we are in a method, and the ilock would not help because
-> > dropping it for the dqget calls would be racy anyway.
+On Wed, Oct 15, 2025 at 11:13:53AM -0400, Theodore Ts'o wrote:
+> I wonder if we should bump the default; and if the concern is that
+> might be problematic for super slow devices (e.g., cheap USB thumb
+> drives), perhaps we can measure the time needed to complete the
+> writeback, and then dynamically adjust the value based on the apparent
+> write bandwidth?
 > 
-> ...and I guess we no longer detach dquots from live inodes now, so we
-> really only need ILOCK_EXCL to prevent multiple threads from trying to
-> allocate and attach a new xfs_dquot object to the same inode, right?
+> We could have each file system implement something like this, but
+> maybe there should be a way to do this in fs generic code?
 
-Yes.
+Right now my main concern here is zoned file systems where the switching
+directly leads to fragmentation.  Besides XFS that would in theory also
+affect f2fs and btrfs, but unlike XFS they do not do the trivial data
+separation by inode but just throw all writes into the blender with (f2fs)
+or without (btrfs) some hot cold separation applied.  But even if they did
+it finding the zone size is file system specific, so right now I don't see
+much too share.  If we end up with duplicate code I'll happily factor it
+into helpers.
 
-> Changing the i_dquot pointers (aka chown/chproj) is what's coordinated
-> under the iolock, right?
-
-Yes.  i_rwsem in the VFS to be specific, but they are the same actual
-lock.
-
+> 
+> 	      	    	      	       - Ted
+---end quoted text---
