@@ -1,154 +1,114 @@
-Received: from fhigh-a6-smtp.messagingengine.com (fhigh-a6-smtp.messagingengine.com [103.168.172.157])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FA49328601;
-	Thu, 16 Oct 2025 10:22:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 096F1261B60
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Oct 2025 11:10:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760610129; cv=none; b=XCq4QE1n5TZ8zyL/mrcv+rTx9T8x1ull02YUcO1vDmRwXZjiZI5aVbpc14NzKitJhcipxwG6GR2scS9dWH1TzeYdsDlKzg8KEOcZJszGwEnALsvJlwp8BT6uGhlfW97umgFwgftVN6ZEBrfcuzyzKs1ikIrgGBuaKSX7v6GJpis=
+	t=1760613007; cv=none; b=A/mAE27/5Sfl3VCkhEBqM0kgibwem40P3MdyduSt8jTwBcJj5N1UYyn+nOdvDgdc+Q2vJnFvId0Ymn7BxyxqJJ3E0Hz79iug7tB0ER8I5I7f33SKksZn28d1xl6RfIty5YZRc89QMiSGtc378CJHUEx0UqcazEXeq6Gt4BSgi1M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760610129; c=relaxed/simple;
-	bh=YFPu08gB2L2TzGPrnOyTzbHjOw+slzM9D6WRn0+0kUw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MpjZ2AeQuC0/kBvEopFCTVa87LR+gVPb9lOvlcQShfIrV5f3l+spIogqnc+OBh3gqOM0aH+3ghzLAxCXcmnbgBbnQpgJCPImnpxXUlYHz0ouRAtNFW/D5MNJ0d/dYLN2iYBo5vzcYYg9QcPkHu7+fiuZbKGftxM22f3AXrk3qU4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name; spf=pass smtp.mailfrom=shutemov.name; dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b=V0H7RB8k; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=P2jcDerb; arc=none smtp.client-ip=103.168.172.157
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shutemov.name
+	s=arc-20240116; t=1760613007; c=relaxed/simple;
+	bh=aJFFJqnXQPEK+ZxnaYdxjPkRZbh36+Fqus4ydD4ponI=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=PPxr2UyMnkAqCWvmt+mWG2otNN6F7SB3BmtInlGJhlM184vzZbwqfGMaemv5sior87jxvNPxdw2nMmRVX9UkdujD2IKEtIE2rLDbKLUrrROOFm7MPWLVkqdNFKpZgPP0+h1rOOVouIbeB3ka+sDAOWPQeBVnHTS8pzNRiEwr3l4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CUV21opf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b="V0H7RB8k";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="P2jcDerb"
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 608701400208;
-	Thu, 16 Oct 2025 06:22:04 -0400 (EDT)
-Received: from phl-mailfrontend-02 ([10.202.2.163])
-  by phl-compute-05.internal (MEProxy); Thu, 16 Oct 2025 06:22:04 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shutemov.name;
-	 h=cc:cc:content-type:content-type:date:date:from:from
-	:in-reply-to:in-reply-to:message-id:mime-version:references
-	:reply-to:subject:subject:to:to; s=fm1; t=1760610124; x=
-	1760696524; bh=4cgizSnh8FyjftsIcMN/5doeb/L5sYJZzPBngz1cPTs=; b=V
-	0H7RB8kX6dTe4pJfkGYa84CFGKQi7NQQwlIG5JtdXa17rPgjGU7VP1Im0x2JCx0C
-	erNolu6GR6GrwirzS9l8PkU+m7UIbkA7XvpPXC7ZFyxsPYDEIbw1RrFzpxGqkE0I
-	XSX2c5KYOu4R22qernV1tzWejdNPVpiF6l4acfHqHponV+OQwKMyBJBac6s3srED
-	hFX3UEvTtKGF2/OHDDBf5m2oNLPo9+mcCfSWNi51R4gTtStNacgN9I+rh/zOeCdI
-	bzeQI6SB+IMUgCVz7V3V15HPW5Ew/NXITdHFdAV6G//4gfIEajOAOqA9Yzk/TrTw
-	tQ6ZnYipFhCaAm0qTeNoQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
-	1760610124; x=1760696524; bh=4cgizSnh8FyjftsIcMN/5doeb/L5sYJZzPB
-	ngz1cPTs=; b=P2jcDerbD5gusICBdwO0U719/hGR3gBgsrnEyk/uej3H9tIAQJG
-	v7VgnltT3EvGvGG8+qrHW8D01JayYRv3okQbhAmUsijIbYrDIUKZ6S3S5/B9uLUr
-	sSSx+QliS0zx1jH0Gxkvh7EyhpBHhERXy7acCWQLVRCPtOoRUXrp0MEcdkW7nZjF
-	p/YgXjCydO23+cAAi/nmtPR0J1TjbTgQCUbErZT3E3/AZQlhYg8dzAaolvdkjNEN
-	dC7i/NUPFe6YIqVV+eM8q9ZRv9QGFDBjT52AcCsxFfamN6djOIogNSb9V9SX4oeH
-	phBvOoSe7RTOsP15zKrE1xGb5EaNosPQYkw==
-X-ME-Sender: <xms:S8fwaP4ttjK6p3ef3wmSGFlFfKLtlDlXeqs087EFm0bPMRMUebjRmQ>
-    <xme:S8fwaKboqjlnMreOaFW1YHCqKvbBO6P2TuqFlfh8IEkjbZQgdM9xKqtWmQfsXMwBa
-    eyyGchYRW-Yp0dAfXK-Z_Zi10RRSNQLw7RbhXPhlaNigx4QAxQo1g>
-X-ME-Received: <xmr:S8fwaOzJ7OkTL37tgtZuF7fDFCGl3u50u-MZSNoL7SAdZxEofOAvPqJ-qotFZw>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdeggdduvdeitdegucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevuffkfhggtggujgesthdtsfdttddtvdenucfhrhhomhepmfhirhihlhcu
-    ufhhuhhtshgvmhgruhcuoehkihhrihhllhesshhhuhhtvghmohhvrdhnrghmvgeqnecugg
-    ftrfgrthhtvghrnhepjeehueefuddvgfejkeeivdejvdegjefgfeeiteevfffhtddvtdel
-    udfhfeefffdunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrh
-    homhepkhhirhhilhhlsehshhhuthgvmhhovhdrnhgrmhgvpdhnsggprhgtphhtthhopedu
-    kedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepughjfihonhhgsehkvghrnhgvlh
-    drohhrghdprhgtphhtthhopeifihhllhihsehinhhfrhgruggvrggurdhorhhgpdhrtghp
-    thhtohepmhgtghhrohhfsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehprdhrrghghh
-    grvhesshgrmhhsuhhnghdrtghomhdprhgtphhtthhopeiilhgrnhhgsehrvgguhhgrthdr
-    tghomhdprhgtphhtthhopegrkhhpmheslhhinhhugidqfhhouhhnuggrthhiohhnrdhorh
-    hgpdhrtghpthhtoheplhhinhhugidqmhhmsehkvhgrtghkrdhorhhgpdhrtghpthhtohep
-    lhhinhhugidqfhhsuggvvhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtth
-    hopehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:S8fwaOPAgsDds0-ECl8Xyiqk0Z-xHO-Y5a8K0wNF6vpeVGcbwlcHDg>
-    <xmx:S8fwaE7JMiDYacnKnQrAKBYRmKVV46Zunrxozt_3-856GxaGppyfZw>
-    <xmx:S8fwaMfTCaQfJZvxTeKiGbOA4RU1D_fhU49T0yoOfv8RAIr7fuoCpQ>
-    <xmx:S8fwaFJTy47n8Wuhx5FhwgBa-ro_YtmFJybzJQGxDhY7vB3dhQVNMw>
-    <xmx:TMfwaHOsd3ep1ugD0EAPyXlN6Es_j3EWvKWJGeCH2CtZJr8affGgsJqb>
-Feedback-ID: ie3994620:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 16 Oct 2025 06:22:02 -0400 (EDT)
-Date: Thu, 16 Oct 2025 11:22:00 +0100
-From: Kiryl Shutsemau <kirill@shutemov.name>
-To: "Darrick J. Wong" <djwong@kernel.org>, 
-	Matthew Wilcox <willy@infradead.org>, Luis Chamberlain <mcgrof@kernel.org>, 
-	Pankaj Raghav <p.raghav@samsung.com>, Zorro Lang <zlang@redhat.com>
-Cc: akpm@linux-foundation.org, linux-mm <linux-mm@kvack.org>, 
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Regression in generic/749 with 8k fsblock size on 6.18-rc1
-Message-ID: <bknltdsmeiapy37jknsdr2gat277a4ytm5dzj3xrcbjdf3quxm@ej2anj5kqspo>
-References: <20251014175214.GW6188@frogsfrogsfrogs>
- <rymlydtl4fo4k4okciiifsl52vnd7pqs65me6grweotgsxagln@zebgjfr3tuep>
- <20251015175726.GC6188@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CUV21opf"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 75C51C116B1
+	for <linux-xfs@vger.kernel.org>; Thu, 16 Oct 2025 11:10:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760613004;
+	bh=aJFFJqnXQPEK+ZxnaYdxjPkRZbh36+Fqus4ydD4ponI=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=CUV21opfSV3553fnCEyw1mC6x7bk5qP26A8VBp9bdrw6bzUii9+yFsV+oRlzEOFbs
+	 prYTzIRbVoVNQ7mHIdzQukZq+6ul57FmofEsaAmf8UW5VsReAGDeq4pwJO5iDI70be
+	 KXd5cOZWtWsddiZa0OyAZq8L5t9wq3sul0WeBGJ4fpanv64lEmbhNaGal1fiCwZDUv
+	 f3QyCn3Ukakl/BMMnV0bdS0RUQUxWAkkj24+7OtJQAmrJT8QgYWNZOfOK7ayiFRNuZ
+	 m2Up5s0QfApQr82AFB0fY2BkLyxiQTaEa11H+TPYvYkvFdrIIuTh3AyZNEgGwHbfVF
+	 q20CuD5AEaxtA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 6A6D7C53BC9; Thu, 16 Oct 2025 11:10:04 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-xfs@vger.kernel.org
+Subject: [Bug 220669] Drive issues cause system and coredump and reboot
+Date: Thu, 16 Oct 2025 11:10:04 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: bshephar@bne-home.net
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: WILL_NOT_FIX
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-220669-201763-4Lh4Vsj7JT@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-220669-201763@https.bugzilla.kernel.org/>
+References: <bug-220669-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251015175726.GC6188@frogsfrogsfrogs>
 
-On Wed, Oct 15, 2025 at 10:57:26AM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 15, 2025 at 04:59:03PM +0100, Kiryl Shutsemau wrote:
-> > On Tue, Oct 14, 2025 at 10:52:14AM -0700, Darrick J. Wong wrote:
-> > > Hi there,
-> > > 
-> > > On 6.18-rc1, generic/749[1] running on XFS with an 8k fsblock size fails
-> > > with the following:
-> > > 
-> > > --- /run/fstests/bin/tests/generic/749.out	2025-07-15 14:45:15.170416031 -0700
-> > > +++ /var/tmp/fstests/generic/749.out.bad	2025-10-13 17:48:53.079872054 -0700
-> > > @@ -1,2 +1,10 @@
-> > >  QA output created by 749
-> > > +Expected SIGBUS when mmap() reading beyond page boundary
-> > > +Expected SIGBUS when mmap() writing beyond page boundary
-> > > +Expected SIGBUS when mmap() reading beyond page boundary
-> > > +Expected SIGBUS when mmap() writing beyond page boundary
-> > > +Expected SIGBUS when mmap() reading beyond page boundary
-> > > +Expected SIGBUS when mmap() writing beyond page boundary
-> > > +Expected SIGBUS when mmap() reading beyond page boundary
-> > > +Expected SIGBUS when mmap() writing beyond page boundary
-> > >  Silence is golden
-> > > 
-> > > This test creates small files of various sizes, maps the EOF block, and
-> > > checks that you can read and write to the mmap'd page up to (but not
-> > > beyond) the next page boundary.
-> > > 
-> > > For 8k fsblock filesystems on x86, the pagecache creates a single 8k
-> > > folio to cache the entire fsblock containing EOF.  If EOF is in the
-> > > first 4096 bytes of that 8k fsblock, then it should be possible to do a
-> > > mmap read/write of the first 4k, but not the second 4k.  Memory accesses
-> > > to the second 4096 bytes should produce a SIGBUS.
-> > 
-> > Does anybody actually relies on this behaviour (beyond xfstests)?
-> 
-> Beats me, but the mmap manpage says:
-...
-> POSIX 2024 says:
-...
-> From both I would surmise that it's a reasonable expectation that you
-> can't map basepages beyond EOF and have page faults on those pages
-> succeed.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D220669
 
-<Added folks form the commit that introduced generic/749>
+--- Comment #5 from Brendan Shephard (bshephar@bne-home.net) ---
+(In reply to Dave Chinner from comment #2)
+> On Thu, Oct 16, 2025 at 12:10:43AM +0000, bugzilla-daemon@kernel.org wrot=
+e:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=3D220669
+> >=20
+> >             Bug ID: 220669
+> >            Summary: Drive issues cause system and coredump and reboot
+> >            Product: File System
+> >            Version: 2.5
+> >           Hardware: All
+> >                 OS: Linux
+> >             Status: NEW
+> >           Severity: normal
+> >           Priority: P3
+> >          Component: XFS
+> >           Assignee: filesystem_xfs@kernel-bugs.kernel.org
+> >           Reporter: bshephar@bne-home.net
+> >         Regression: No
+> >=20
+> > We have a number of drives across our clusters that don't present as
+> failing,
+> > but seem to have read errors that cause the system to coredump and rebo=
+ot.
+> > Failing drives is obviously not the fault of XFS, but my expectation wo=
+uld
+> be
+> > that it doesn't completely cause the system to hang and need to reboot.
+>=20
+> Fixed upstream a couple of months back by commit ae668cd567a6 ("xfs:
+> do not propagate ENODATA disk errors into xattr code"). You'll need
+> to raise a distro bug (Rocky Linux) to get them to back port it for
+> you.
+>=20
+> Please close this bz.
+>=20
+> -Dave.
 
-Modern kernel with large folios blurs the line of what is the page.
+Legend! Thanks for the pointer to the commit. I really appreciate you takin=
+g a
+look so quickly!
 
-I don't want play spec lawyer. Let's look at real workloads.
+All the best
 
-If there's anything that actually relies on this SIGBUS corner case,
-let's see how we can fix the kernel. But it will cost some CPU cycles.
+--=20
+You may reply to this email to add a comment.
 
-If it only broke syntactic test case, I'm inclined to say WONTFIX.
-
-Any opinions?
-
--- 
-  Kiryl Shutsemau / Kirill A. Shutemov
+You are receiving this mail because:
+You are watching the assignee of the bug.=
