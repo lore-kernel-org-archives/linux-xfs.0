@@ -1,41 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11AB125393B
-	for <linux-xfs@vger.kernel.org>; Fri, 17 Oct 2025 03:52:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFD36308F26
+	for <linux-xfs@vger.kernel.org>; Fri, 17 Oct 2025 03:56:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760673137; cv=none; b=QU4mM2qt80i6k70qfBsVwXiuMRWq7YnFYZ//5CUjiEaWBE6cp4DDe4qjebvHSRPKGVylu2KHBeRTewYDO7NV9oRO+n0ozyXhx+iiTZKrbsLtJk4AS1rH+p5unz4KvdxxHbelTn8DpGQbPTD+RLsWpfgkPAPiqlPlowYg8gYNv9M=
+	t=1760673372; cv=none; b=UmcBvbUPEQSu8RdGOWjQ0adRgfXmb6b2FsrHBp8os6qT4Ru9NymlsxISpwGRj81g07zVpeTKuYnuctgieTdBRV0x0upjWSdgED5qA1s/+eKuLeGUZ2BAnYy0DXxvRv0ORoH+51fXaE6VOVKrF02bQcW2mzGdzba7+BiXCkKkxb4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760673137; c=relaxed/simple;
-	bh=NN3HJGGcynnqzMkV2YIWCH3LbyYjdrW7tcRmH8YuNd8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dFi7lzSugp6ZvL3ALZtnsOtPna05jOshwKFay1M9lfemq2RUg7I9xNHVrL7nGPK/aZ83QshxE8P3Ag8omzN+9bu0wPVUQgDl75K1Drsb8xkap1F6WLGqSqdpYRwQsdXKVLw+CVm28EHWfgK7gyyTpBJ03L6FDGkgZ18C561PWaM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CJGD1S5X; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1760673372; c=relaxed/simple;
+	bh=zZdP4RBwG843qEtCIrtBdXw+IQ4QniIMw7tX6qKrCsk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ProNXmM0aD9ziD1F0QR9cIa40USmL0C0Uk7Tyf3Cc0lVZc6dQDprKQQucVfZsByzdxaVADhecRr1ic3L+j//sAO4jIwVFqJP9ULhauWSLDxYJVBQC2qViCBlLTj6xot3HgTAsfBQClS93vetxTyCc2Z0vUEkg0YwPQ/zU93vC10=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Uee3W5p6; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CJGD1S5X"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Uee3W5p6"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
 	Content-ID:Content-Description:In-Reply-To:References;
-	bh=13VlzSEyfpuUBvUJ+/icYgg7dSmhyeTsUxx2XH/NrUs=; b=CJGD1S5XfrohBks6cJtpZ6OwKl
-	4sO32HbYTtLQlpZtVxN0QEt6bkglRc4pkXFETf03z25bySOB4tKHJ9VNww+O2kqcSIBshVRhZAQM9
-	kjyqm7b4q1BU1bhN+1tbmvkUMmEZ/LCp27ls0MsNLdZeqOmhlbKgeFpJyID9eBYtdilyldlEDXvnN
-	RnO3pi5Cv8TPBSpMIvNH3Fdi4V1PyZaFkL1loOO9oN4hlDfiOG8SJfdoMjnbjKUSBr2Ld6Co7uKCd
-	BqhsoBs5UMEtUEJHZqDryhPScq2uKfl4fvvERlbp3otaLoiqdc1ONNKkhRextRyQFtVIZhm+1L5X+
-	N2gD5Ibw==;
+	bh=4oK20SGzD95xDCzWQFr3afUhSoO1Yu2ZDwO13np9ghg=; b=Uee3W5p65lhIB9tU0pGlTJZ+79
+	awgOrWaHODa8xCBW/kUyM7vqqQshI/lL6SW7kAjxb6gZ0hh1dsftY23V9dBNzlOPGjkFKec16+bcU
+	rjTz42n64Gz4t5tM2jGnjPKiZcCSFE99Ouw+Eeo+fjeJbkLxPr16NjCfcWloIKXDANTLf0nzIFEpp
+	IaTTP3nSFPjQQT7hPHvuO2Xr/cFJSyFiE7D5W/ODc8GfbbvGFwRyXLrcdJ2/WVpMWfTfdn2K+u3EY
+	p9/ZlYn4yCrnVl0Dupyz3bukt5dMOz2NZrMd0rns82ebwXvCd24V8hbsjfYXEw2gUJkzr/kG5o064
+	/C1NLCmQ==;
 Received: from 5-226-109-134.static.ip.netia.com.pl ([5.226.109.134] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v9bVn-00000006UCZ-0uc0;
-	Fri, 17 Oct 2025 03:52:15 +0000
+	id 1v9bZa-00000006UHr-01jU;
+	Fri, 17 Oct 2025 03:56:10 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: cem@kernel.org
 Cc: hans.holmberg@wdc.com,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH v2] xfs: cache open zone in inode->i_private
-Date: Fri, 17 Oct 2025 05:51:47 +0200
-Message-ID: <20251017035212.651929-1-hch@lst.de>
+Subject: [PATCH v2] xfs: cache open zone in inode->i_private 
+Date: Fri, 17 Oct 2025 05:55:41 +0200
+Message-ID: <20251017035607.652393-1-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -63,13 +63,14 @@ Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
 
 Changes since v1:
- - keep the is_gc assert and update the comment for it
+ - keep the is_gc assert
+ - add a lot of comments explaining the caching logic
 
  fs/xfs/xfs_mount.h      |   1 -
  fs/xfs/xfs_super.c      |   6 ++
- fs/xfs/xfs_zone_alloc.c | 123 +++++++++++++---------------------------
+ fs/xfs/xfs_zone_alloc.c | 129 ++++++++++++++--------------------------
  fs/xfs/xfs_zone_priv.h  |   2 +
- 4 files changed, 46 insertions(+), 86 deletions(-)
+ 4 files changed, 53 insertions(+), 85 deletions(-)
 
 diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
 index f046d1215b04..b871dfde372b 100644
@@ -101,7 +102,7 @@ index e85a156dc17d..464ae1e657d9 100644
  
  static void
 diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index c342595acc3e..e4b2aadaf765 100644
+index c342595acc3e..e7e439918f6d 100644
 --- a/fs/xfs/xfs_zone_alloc.c
 +++ b/fs/xfs/xfs_zone_alloc.c
 @@ -26,14 +26,22 @@
@@ -131,7 +132,7 @@ index c342595acc3e..e4b2aadaf765 100644
  }
  
  static inline uint32_t
-@@ -745,98 +753,47 @@ xfs_mark_rtg_boundary(
+@@ -745,98 +753,55 @@ xfs_mark_rtg_boundary(
  		ioend->io_flags |= IOMAP_IOEND_BOUNDARY;
  }
  
@@ -201,10 +202,17 @@ index c342595acc3e..e4b2aadaf765 100644
  
  /*
 - * Update the last used zone cache for a given inode.
-- *
++ * Stash our zone in the inode so that is is reused for future allocations.
+  *
 - * The caller must have a reference on the open zone.
-+ * Try to stash our zone in the inode so that is is reused for future
-+ * allocations.
++ * The open_zone structure will be pinned until either the inode is freed or
++ * until the cached open zone is replaced with a different one because the
++ * current one was full when we tried to use it.  This means we keep any
++ * open zone around forever as long as any inode that used it for the last
++ * write is cached, which slightly increases the memory use of cached inodes
++ * that were every written to, but significantly simplifies the cached zone
++ * lookup.  Because the open_zone is clearly marked as full when all data
++ * in the underlying RTG was written, the caching is always safe.
   */
  static void
 -xfs_zone_cache_create_association(
@@ -248,7 +256,7 @@ index c342595acc3e..e4b2aadaf765 100644
  }
  
  static void
-@@ -880,15 +837,14 @@ xfs_zone_alloc_and_submit(
+@@ -880,15 +845,14 @@ xfs_zone_alloc_and_submit(
  	 * the inode is still associated with a zone and use that if so.
  	 */
  	if (!*oz)
@@ -266,7 +274,7 @@ index c342595acc3e..e4b2aadaf765 100644
  	}
  
  	alloc_len = xfs_zone_alloc_blocks(*oz, XFS_B_TO_FSB(mp, ioend->io_size),
-@@ -966,6 +922,12 @@ xfs_free_open_zones(
+@@ -966,6 +930,12 @@ xfs_free_open_zones(
  		xfs_open_zone_put(oz);
  	}
  	spin_unlock(&zi->zi_open_zones_lock);
@@ -279,7 +287,7 @@ index c342595acc3e..e4b2aadaf765 100644
  }
  
  struct xfs_init_zones {
-@@ -1303,14 +1265,6 @@ xfs_mount_zones(
+@@ -1303,14 +1273,6 @@ xfs_mount_zones(
  	error = xfs_zone_gc_mount(mp);
  	if (error)
  		goto out_free_zone_info;
@@ -294,7 +302,7 @@ index c342595acc3e..e4b2aadaf765 100644
  	return 0;
  
  out_free_zone_info:
-@@ -1324,5 +1278,4 @@ xfs_unmount_zones(
+@@ -1324,5 +1286,4 @@ xfs_unmount_zones(
  {
  	xfs_zone_gc_unmount(mp);
  	xfs_free_zone_info(mp->m_zone_info);
