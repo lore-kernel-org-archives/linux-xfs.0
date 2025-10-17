@@ -1,93 +1,80 @@
-Received: from fhigh-b4-smtp.messagingengine.com (fhigh-b4-smtp.messagingengine.com [202.12.124.155])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0D503396E9;
-	Fri, 17 Oct 2025 14:28:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.155
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 205B860DCF
+	for <linux-xfs@vger.kernel.org>; Fri, 17 Oct 2025 14:57:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760711319; cv=none; b=nPP2USRcC8ukG8gT/fCFWBWMKWuvRgf06PecnfkYiRWwy/gMD2/dJbHLtd/iSKxSmYLdJHI4UwBipzc00h3EC5VX9lghKOAETx7pc+N/0o28m3ab95qGXAujCyP9jYxxAPWrZaw2vjzuSnyDNvfb8OP61E0fIxy170PowGD7QM4=
+	t=1760713075; cv=none; b=YZShZd0f2wYxEmKn28cmAvGzoHNAexk9eHTsLxnALgFDpnFF6J9khZqWyWjuZlI06LPBAM+j7vF8tI0KDXVGm/40DjQQwdI5bZjHtrs7ODX3jEP1cpngZAhn/UJiFgOdSikry+FJtcz18AMROgE+1JmnnCiHZl2Px72gXcxy07s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760711319; c=relaxed/simple;
-	bh=cuw9SMN0A2G7BgaBy9mG+4BGZEF20KpXdyfRBfMoiBQ=;
+	s=arc-20240116; t=1760713075; c=relaxed/simple;
+	bh=L0bFPxDcqgJpPxvTaEYcFqpIamt+96UvErK7XQwmfBI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lYsMqLIN7SUf8DJ2gLteEpLvJ1xgXqDpzESRTUGtGczU4wlSDOMdokv0hP8bEQ40qjJAGEjs7gniIsgVbRSplsSHibun1U/8o6849nMqCJ4WdqOhMf24BcheFQp+VPtyuVMrzvbeWPO3OGQKCYrq7sfaStPmqcMKTbyZmHSgDh4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name; spf=pass smtp.mailfrom=shutemov.name; dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b=bjh//T5g; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=RITuW7EI; arc=none smtp.client-ip=202.12.124.155
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=shutemov.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shutemov.name
+	 Content-Type:Content-Disposition:In-Reply-To; b=GrzWERJ8s1VEyozmvCFa3WuEnBiaW77wcR1zA7mSGKJE6yjFaf6RM/OHstEUmj9bHot2dfPUUQ7rCRsWIpmLj2/kFcwNCPsyEBqwnY3WkM0abID23cFJV0Nb0dKEYGXt0QDZmFzfaoh+hUitttgXeU6AX03yQKvD7yJIth11UKk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EQj8lZem; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shutemov.name header.i=@shutemov.name header.b="bjh//T5g";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="RITuW7EI"
-Received: from phl-compute-11.internal (phl-compute-11.internal [10.202.2.51])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 5DE807A010D;
-	Fri, 17 Oct 2025 10:28:36 -0400 (EDT)
-Received: from phl-mailfrontend-02 ([10.202.2.163])
-  by phl-compute-11.internal (MEProxy); Fri, 17 Oct 2025 10:28:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shutemov.name;
-	 h=cc:cc:content-type:content-type:date:date:from:from
-	:in-reply-to:in-reply-to:message-id:mime-version:references
-	:reply-to:subject:subject:to:to; s=fm1; t=1760711316; x=
-	1760797716; bh=fOUvMhyzND8SMM+3QM7//4J9ZC4R57kXKY5ct5iBbmI=; b=b
-	jh//T5gYDmcxKURMENlhard0U76Q5lY8oEELDXAh1qIh4/u+3OARgGGXBUoNXkb5
-	lSbjKnE0BqY9k8t8vMhyPguIBImltkFnXODmIlTSqqTi2ehUT8KqwigAfsIosrmd
-	whzvydxgbdrBzaRlyqegjMpp9J+A+oagJaj4ZN0Oal1D7smHh/DKWc1cuqqdvyJ5
-	COySGiSqe3IqAiM/dLWzrUdKzsxbxmeZWtex1NHjPBT0D/tvR4gr3Aw5jUs2LA5t
-	QtsiCi/PPlVGwBuINlMSz+xPW6Ygx8Y9ovOthzs61/yMSTZ5Fhz6z8mwFQnX/6KG
-	E19UT63dbQowZszuS7eAQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
-	1760711316; x=1760797716; bh=fOUvMhyzND8SMM+3QM7//4J9ZC4R57kXKY5
-	ct5iBbmI=; b=RITuW7EIxxQVsTC7ZCYZer1u1Q7uJgoypwI6+SQMGJOFB09kT69
-	IPph0sKr2MxWAjt7Jn3xS+WbOFFn+tYL2vhEYrbx5ehky3V9xylDSN3U8AXqUhWr
-	iY+gMmnns6DHrq0m86c1ebNnVn01DeQd8+mzig583j4ebQZrbNHSyaKe1RdQm6NJ
-	qFx6y0wCZAcmCR1Du4mhqDQHy2+VD6Q2sf9wYTBNX+TZIOBcCX0hKI3fTVVL9PvU
-	vjiVKtmCsK3ItARBFBWyAkD0qfgFDGBmmTIJRWBxRrzB1Yn4LOUenptZU6DL+J7n
-	XG8xCCQn+lIY9NgU8QY4CweErdaug4MD3Kw==
-X-ME-Sender: <xms:k1LyaAj1Odqo_C2-_8Nk_hUenNkz0_p0XdBxXL5CLKmjRS8xylZn_Q>
-    <xme:k1LyaGtrRtlfKJsfOdiI4Q74A15jruqbjlBgAJQ4MIX4pQ5JgTY-0ZhKAEs2C0-rU
-    A_KQQC6GHx5GpWiiJkIDjUrYRkbrn7GsQT4taHFTGffg3crcr8WjNM>
-X-ME-Received: <xmr:k1LyaJ3IlOtN3z_O20hIRkzG9YqdnaBAyCn4Dn2H_z20K5pO5HDevjdAsZ5UNg>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdeggdduvdelgeduucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevuffkfhggtggujgesthdtsfdttddtvdenucfhrhhomhepmfhirhihlhcu
-    ufhhuhhtshgvmhgruhcuoehkihhrihhllhesshhhuhhtvghmohhvrdhnrghmvgeqnecugg
-    ftrfgrthhtvghrnhepjeehueefuddvgfejkeeivdejvdegjefgfeeiteevfffhtddvtdel
-    udfhfeefffdunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrh
-    homhepkhhirhhilhhlsehshhhuthgvmhhovhdrnhgrmhgvpdhnsggprhgtphhtthhopedv
-    tddpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepuggrvhhiugesfhhrohhmohhrsg
-    hithdrtghomhdprhgtphhtthhopegujhifohhngheskhgvrhhnvghlrdhorhhgpdhrtghp
-    thhtohepfihilhhlhiesihhnfhhrrgguvggrugdrohhrghdprhgtphhtthhopehmtghgrh
-    hofheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepphdrrhgrghhhrghvsehsrghmshhu
-    nhhgrdgtohhmpdhrtghpthhtohepiihlrghnghesrhgvughhrghtrdgtohhmpdhrtghpth
-    htoheprghkphhmsehlihhnuhigqdhfohhunhgurghtihhonhdrohhrghdprhgtphhtthho
-    pehlihhnuhigqdhmmheskhhvrggtkhdrohhrghdprhgtphhtthhopehlihhnuhigqdhfsh
-    guvghvvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:k1LyaNwxvozgb9ulil_-fdPW4iUhQhCf4cJctnltxPe6VyelIvJCYw>
-    <xmx:k1LyaEV58ky8AODoEyF2iw127ag2NWtOirtR380GUyU0fgpeYCsJMA>
-    <xmx:k1LyaPDBl0ezsw88WgTMdyg5VqCkuuauMepjqZmz7Bt6fF4R1BdfUw>
-    <xmx:k1LyaF7nKYe2UWjApQsTE3ynoxs-YbphWTvEac7w6iWLt0QWtvQ0cg>
-    <xmx:lFLyaKdRBX33i2NfuLF_QffZ2vE5ImnL07iMFCruCD3NNf4Ok2AdM9X->
-Feedback-ID: ie3994620:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 17 Oct 2025 10:28:34 -0400 (EDT)
-Date: Fri, 17 Oct 2025 15:28:32 +0100
-From: Kiryl Shutsemau <kirill@shutemov.name>
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, 
-	Matthew Wilcox <willy@infradead.org>, Luis Chamberlain <mcgrof@kernel.org>, 
-	Pankaj Raghav <p.raghav@samsung.com>, Zorro Lang <zlang@redhat.com>, akpm@linux-foundation.org, 
-	linux-mm <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, 
-	xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Regression in generic/749 with 8k fsblock size on 6.18-rc1
-Message-ID: <764hf2tqj56revschjgubi2vbqaewjjs5b6ht7v4et4if5irio@arwintd3pfaf>
-References: <20251014175214.GW6188@frogsfrogsfrogs>
- <rymlydtl4fo4k4okciiifsl52vnd7pqs65me6grweotgsxagln@zebgjfr3tuep>
- <20251015175726.GC6188@frogsfrogsfrogs>
- <bknltdsmeiapy37jknsdr2gat277a4ytm5dzj3xrcbjdf3quxm@ej2anj5kqspo>
- <aPFyqwdv1prLXw5I@dread.disaster.area>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EQj8lZem"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1760713071;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0CWIznKk8NO+pqJ/eP683zeyfH/gjzfyXn71NVQmDXo=;
+	b=EQj8lZemU1Lc9Z+Rwy/YzL0MpXaUMH7BXQs1GUycRotw/nF3h+RkJzRNe7dbDLbMkoNOiB
+	88D3dQaIUH5VYAIj1A6gZtSnKC2tuSF04dDsmyRV/V1FeSLYVma4OeA/EXHRgntbm8Gi5+
+	b6x+l59XuEGBQ98/d871M/dwvvWmko4=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-648-INfNqKzkOVG5o9GdzOTkmA-1; Fri, 17 Oct 2025 10:57:50 -0400
+X-MC-Unique: INfNqKzkOVG5o9GdzOTkmA-1
+X-Mimecast-MFC-AGG-ID: INfNqKzkOVG5o9GdzOTkmA_1760713069
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-7811a602576so2839968b3a.0
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Oct 2025 07:57:49 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1760713069; x=1761317869;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0CWIznKk8NO+pqJ/eP683zeyfH/gjzfyXn71NVQmDXo=;
+        b=aXeDEl1VxdmEpC19c6Af7nG0Qx2/9BZ4KzhS7yRzwQ6zNn4Y0G2TsWOg48m+drMWSP
+         +JN0zOgVd1hEP4us3FGz7oKx+ihUVN3Qau1lHKlIWTTPbanOHX5RjvGKstHP0tKf46QH
+         TyCGKRFke7aw7FGjE8QKlAAk0U/N6ZsBVmAx58SPwjDSYK+uklSGOvtdLAaLBHMiiK+y
+         E/p2XeDlER4yT3/7C/GiNh6wW/Z1JX4kd/vEWRzNthCILuap4x1pDryztCz7ot3t8obl
+         cmmY8w81zXDPopvC1B442iRUREIvaeu6F/c6asjFNqN24CzFtnI55VveowuXYGEqa4BD
+         Q3zQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUu3ih9NU0tNkQZqbRQBItMGPxplikShnnEIbFVkROXvxdkkR/hNBodwk8EnKzRpLBAoU3FwWzfl94=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyBiL/vQLW+/TKQ7a5+M3ay7y9kQF8avdRQjF1He+72lEVTCIcs
+	37i0X+to0R2l6Lb7t7zFCjddfI6PYsckF8I23SAqsNbz+GQJq6OEyZ/xjySOe6wVnrpCYpL7Ij6
+	ygSmhQ/tTyZ0ihPQ7HaqJ0bIz1Lo3ilrz9TXxbNBDtvmtPJ7KYX/Y8XnFSqwmZw==
+X-Gm-Gg: ASbGncvoHkRfXUjiphNtlGB+s9QLSjaBJlKsJnaOIl6SSq10hBuFPhOC2gV4IqzyJeJ
+	eY4+8DAV1ANmKHWnQvIhC3h8MqoweqJ5rJDMu0eePQB1wsAcADvfxgh4+rw6HbKa5CO4uMg5wFa
+	iGWdYYD5nR8CsF5keykPCq3KcpRxM0DEw3J9yuwy6gIzAHya/w0tmU8KNrI4S1oiPfwNuD5ukfA
+	tX943p/BXKeT4GigGyBMligb9opEYOe+MG1ce9L20Mh3DAj4hb1lDS0p0kNQ/4wGP5TDvv3BO8G
+	Q5J7gvlKz65PVAj2MFc1ULnEfJpQn+A71+mXr0pqY6uA3mPGQOfpkLfaulcbvqlF5QzCoGNb/eZ
+	ptH0oMo0uKl49LNTPyfOfP3nXMiEQSz5DFij9g0c=
+X-Received: by 2002:a05:6a20:72a2:b0:334:8002:740f with SMTP id adf61e73a8af0-334a85bacd8mr5263220637.41.1760713068698;
+        Fri, 17 Oct 2025 07:57:48 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEV8bycvyQSRyozXfQHV3RbBixEHjX0DtEj7uEL8WhTY3bj+WlE9auL1ONIzq/ZrxZgb2EPDQ==
+X-Received: by 2002:a05:6a20:72a2:b0:334:8002:740f with SMTP id adf61e73a8af0-334a85bacd8mr5263181637.41.1760713068196;
+        Fri, 17 Oct 2025 07:57:48 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b6a76b67fa4sm2528a12.33.2025.10.17.07.57.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Oct 2025 07:57:47 -0700 (PDT)
+Date: Fri, 17 Oct 2025 22:57:42 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>, Naohiro Aota <naohiro.aota@wdc.com>,
+	linux-btrfs@vger.kernel.org, Hans Holmberg <hans.holmberg@wdc.com>,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] generic: basic smoke for filesystems on zoned block
+ devices
+Message-ID: <20251017145742.thvvkyk7qafi4aju@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20251006132455.140149-1-johannes.thumshirn@wdc.com>
+ <20251006132455.140149-3-johannes.thumshirn@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -96,88 +83,119 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aPFyqwdv1prLXw5I@dread.disaster.area>
+In-Reply-To: <20251006132455.140149-3-johannes.thumshirn@wdc.com>
 
-On Fri, Oct 17, 2025 at 09:33:15AM +1100, Dave Chinner wrote:
-> On Thu, Oct 16, 2025 at 11:22:00AM +0100, Kiryl Shutsemau wrote:
-> > On Wed, Oct 15, 2025 at 10:57:26AM -0700, Darrick J. Wong wrote:
-> > > On Wed, Oct 15, 2025 at 04:59:03PM +0100, Kiryl Shutsemau wrote:
-> > > > On Tue, Oct 14, 2025 at 10:52:14AM -0700, Darrick J. Wong wrote:
-> > > > > Hi there,
-> > > > > 
-> > > > > On 6.18-rc1, generic/749[1] running on XFS with an 8k fsblock size fails
-> > > > > with the following:
-> > > > > 
-> > > > > --- /run/fstests/bin/tests/generic/749.out	2025-07-15 14:45:15.170416031 -0700
-> > > > > +++ /var/tmp/fstests/generic/749.out.bad	2025-10-13 17:48:53.079872054 -0700
-> > > > > @@ -1,2 +1,10 @@
-> > > > >  QA output created by 749
-> > > > > +Expected SIGBUS when mmap() reading beyond page boundary
-> > > > > +Expected SIGBUS when mmap() writing beyond page boundary
-> > > > > +Expected SIGBUS when mmap() reading beyond page boundary
-> > > > > +Expected SIGBUS when mmap() writing beyond page boundary
-> > > > > +Expected SIGBUS when mmap() reading beyond page boundary
-> > > > > +Expected SIGBUS when mmap() writing beyond page boundary
-> > > > > +Expected SIGBUS when mmap() reading beyond page boundary
-> > > > > +Expected SIGBUS when mmap() writing beyond page boundary
-> > > > >  Silence is golden
-> > > > > 
-> > > > > This test creates small files of various sizes, maps the EOF block, and
-> > > > > checks that you can read and write to the mmap'd page up to (but not
-> > > > > beyond) the next page boundary.
-> > > > > 
-> > > > > For 8k fsblock filesystems on x86, the pagecache creates a single 8k
-> > > > > folio to cache the entire fsblock containing EOF.  If EOF is in the
-> > > > > first 4096 bytes of that 8k fsblock, then it should be possible to do a
-> > > > > mmap read/write of the first 4k, but not the second 4k.  Memory accesses
-> > > > > to the second 4096 bytes should produce a SIGBUS.
-> > > > 
-> > > > Does anybody actually relies on this behaviour (beyond xfstests)?
-> > > 
-> > > Beats me, but the mmap manpage says:
-> > ...
-> > > POSIX 2024 says:
-> > ...
-> > > From both I would surmise that it's a reasonable expectation that you
-> > > can't map basepages beyond EOF and have page faults on those pages
-> > > succeed.
-> > 
-> > <Added folks form the commit that introduced generic/749>
-> > 
-> > Modern kernel with large folios blurs the line of what is the page.
-> > 
-> > I don't want play spec lawyer. Let's look at real workloads.
+On Mon, Oct 06, 2025 at 03:24:55PM +0200, Johannes Thumshirn wrote:
+> Add a basic smoke test for filesystems that support running on zoned
+> block devices.
 > 
-> Or, more importantly, consider the security-related implications of
-> the change....
+> It creates a zloop device with 2 sequential and 62 sequential zones,
+> mounts it and then runs fsx on it.
 > 
-> > If there's anything that actually relies on this SIGBUS corner case,
-> > let's see how we can fix the kernel. But it will cost some CPU cycles.
-> > 
-> > If it only broke syntactic test case, I'm inclined to say WONTFIX.
-> > 
-> > Any opinions?
+> Currently this tests supports BTRFS, F2FS and XFS.
 > 
-> Mapping beyond EOF ranges into userspace address spaces is a
-> potential security risk. If there is ever a zeroing-beyond-EOF bug
-> related to large folios (history tells us we are *guaranteed* to
-> screw this up somewhere in future), then allowing mapping all the
-> way to the end of the large folio could expose a -lot more- stale
-> kernel data to userspace than just what the tail of a PAGE_SIZE
-> faulted region would expose.
+> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> ---
+>  tests/generic/772     | 52 +++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/772.out |  2 ++
+>  2 files changed, 54 insertions(+)
+>  create mode 100755 tests/generic/772
+>  create mode 100644 tests/generic/772.out
+> 
+> diff --git a/tests/generic/772 b/tests/generic/772
+> new file mode 100755
+> index 00000000..412fd024
+> --- /dev/null
+> +++ b/tests/generic/772
+> @@ -0,0 +1,52 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2025 Wesgtern Digital Corporation.  All Rights Reserved.
+> +#
+> +# FS QA Test 772
+> +#
+> +# Smoke test for FSes with ZBD support on zloop
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto zone quick
+> +
+> +_cleanup()
+> +{
+> +	if test -b /dev/zloop$ID; then
+> +		echo "remove id=$ID" > /dev/zloop-control
+> +	fi
+> +}
+> +
+> +. ./common/zoned
+> +
+> +# Modify as appropriate.
+> +_require_scratch
+> +_require_scratch_size $((16 * 1024 * 1024)) #kB
 
-Could you point me to the details on a zeroing-beyond-EOF bug?
-I don't have context here.
+_require_scratch_size contains _require_scratch, so you can remove _require_scratch.
 
-But if it is, as you saying, *guaranteed* to happen again, maybe we
-should slap __GFP_ZERO on page cache allocations? It will address the
-problem at the root.
+Can you explain why we need 16GiB free space for these parameters?
 
-Although, I think you are being dramatic about "*guaranteed*"...
+> +_require_zloop
+> +
+> +_scratch_mkfs > /dev/null 2>&1
+> +_scratch_mount
+> +
 
-If we solved problem of zeroing upto PAGE_SIZE border, I don't see
-why zeroing upto folio_size() border any conceptually different.
-Might require some bug squeezing, sure.
 
--- 
-  Kiryl Shutsemau / Kirill A. Shutemov
+> +last_id=$(ls /dev/zloop* 2> /dev/null | grep -E "zloop[0-9]+" | wc -l)
+> +ID=$((last_id + 1))
+> +
+> +mnt="$SCRATCH_MNT/mnt"
+> +zloopdir="$SCRATCH_MNT/zloop"
+> +
+> +zloop_args="add id=$ID,zone_size_mb=256,conv_zones=2,base_dir=$zloopdir"
+> +
+> +mkdir -p "$zloopdir/$ID"
+> +mkdir -p $mnt
+> +echo "$zloop_args" > /dev/zloop-control
+> +zloop="/dev/zloop$ID"
+
+About this part, can we have a common helper (e.g. _create_zloop_device) which
+can get a free zloop number and create a zloop dev, then output the device name
+if it's created successfully ?
+
+> +
+> +_try_mkfs_dev $zloop 2>&1 >> $seqres.full ||\
+> +	_notrun "cannot mkfs zoned filesystem"
+
+As this's a generic test case, I'm wondering if the zloop device can be created
+on any FSTYP? For example if FSTYP is nfs or cifs or overlay or tmpfs or exfat
+and so on.
+
+> +_mount $zloop $mnt
+> +
+> +$FSX_PROG -q -N 20000 $FSX_AVOID "$mnt/fsx" >> $seqres.full
+
+Do you care about the return status of fsx? If so, you can use _run_fsx or run_fsx.
+
+> +
+> +umount $mnt
+
+Please make sure "the $mnt is unmounted" and "all zloop devices are removed"
+in _cleanup.
+
+Thanks,
+Zorro
+
+> +
+> +echo Silence is golden
+> +# success, all done
+> +_exit 0
+> diff --git a/tests/generic/772.out b/tests/generic/772.out
+> new file mode 100644
+> index 00000000..98c13968
+> --- /dev/null
+> +++ b/tests/generic/772.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 772
+> +Silence is golden
+> -- 
+> 2.51.0
+> 
+
