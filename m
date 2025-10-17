@@ -1,44 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63F8432E144;
-	Fri, 17 Oct 2025 15:45:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09B0327BF99
+	for <linux-xfs@vger.kernel.org>; Fri, 17 Oct 2025 16:01:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760715906; cv=none; b=pCqQ25QkZWJ9r7iMVxedS9fNK79u4ivKUJ560vdHj7X/L9i9A0Ik1/kmN9fHznmjd0l4/kGA6Zcuf7XfaDtNLP07+BUg7mVTPJvx4PHlZ/+38zYKSZrrztnhde3KRTlB6W1qSdSSqehpUezSmmJ4meaSobEqDfHArwP5PJ0qbH8=
+	t=1760716901; cv=none; b=qo97ByfucVEt0ZwSCMDfyC8GtEKDVCNIgBdHJf5FR4AaSsELdC3ZeEw1C8dRs/BueXjB5AopOCC15e1meMAGogByDzyWNEQy/auRubKYc9k6RmtHg97ukNucK8+SSDlYn/6IEcFYgvidU1zlqb7X2Bq3CavfDAv7EqfUV+tzeB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760715906; c=relaxed/simple;
-	bh=hsyaCroZlOpyDIPtwc0w/ZFBWjk/QkbVl30D1Hma/F8=;
+	s=arc-20240116; t=1760716901; c=relaxed/simple;
+	bh=HoeiLfIrc5U2hWrVckbtfuJXGVRkimJ+ztFECOU/pEw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uoN2+GwSYfLf6MaDvHZPH9jko4c3xOB8rTt91PZjMrpt5QxBki+oRhQdvID2MAC/UF3cksvtFREzGmEqNggDj8ICppEZ7RbMvaj06MgPqTKGbgvFe8AE7O9LDeDy8l/SrwzXhCozLLkKXM0rtfNwMILeUgNdpc9lNTDZ03uBWFo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kym3Qj/1; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bJszjlBgC3ywfT/krEd4aiatG8ep6oDYUKDC7x5pqOcXTMQK4vgtsN7vsjooODWJjIY1/AwBwV0TAn6dCuqXTP3rliF7qAT/ZBGhABx00PIB+yqoofUBOsgmGM6+JBDbjWenpkmqbvbUHeoUNcYJjFrn/I4OPPuHqhvyhPuWQDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bUNspoJ3; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kym3Qj/1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17664C4CEE7;
-	Fri, 17 Oct 2025 15:45:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760715906;
-	bh=hsyaCroZlOpyDIPtwc0w/ZFBWjk/QkbVl30D1Hma/F8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Kym3Qj/1oqjNnBDMDOACUt16lqnELIDADwAxk+3t/U1kOC8GbtA+5DL8fdqFb8mCV
-	 3OTmnKNuU/eMWWUmPt5dJXe/TpD7eBOyMFKFxMJGqSP4+ztRVP7EPp9ptY9vYagCmY
-	 qco02GBiZXkDgYVL/iMcgrlh3o+vsM6T+RcnUAi+gzkPZxidI/a3/5fDhWVcJje5YL
-	 m+XEa9bLIjdI1tNIwcFarMeMtqY6b0wUnu0UuSCnY3UY4me6QKUvLFZ+xu77BJtHBw
-	 4eGZTLs/5p+ErJLOaf0q+x/3hoa1TyhfGPFKbsRy0MIMLBGTXW2LcLPJzru4NmuZY8
-	 Q7g532pVrbEmQ==
-Date: Fri, 17 Oct 2025 08:45:05 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	Carlos Maiolino <cem@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>, willy@infradead.org,
-	dlemoal@kernel.org, hans.holmberg@wdc.com, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] writeback: allow the file system to override
- MIN_WRITEBACK_PAGES
-Message-ID: <20251017154505.GE6174@frogsfrogsfrogs>
-References: <20251017034611.651385-1-hch@lst.de>
- <20251017034611.651385-3-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bUNspoJ3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1760716898;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PIkjHtG8K2O56AwzyHsc10sFHSt5l26FlguwiupKYTA=;
+	b=bUNspoJ3zJhkAgeV0BMyg5hPclBMqxYZzcObxhec6DfnY7FCytBRPdVtE49NWS0xeOB9d5
+	QIogYOojRj64XVgYNisIFYZFScoMFdlD94Fr8hQo92FwUTowEx6i1XMlU+lOMD+5eSoCLN
+	HZK1sOPwsEAVdRc+8vSXVgmScd0awFc=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-643-FQVgc7F_Mi-o6y-MgE24oQ-1; Fri, 17 Oct 2025 12:01:31 -0400
+X-MC-Unique: FQVgc7F_Mi-o6y-MgE24oQ-1
+X-Mimecast-MFC-AGG-ID: FQVgc7F_Mi-o6y-MgE24oQ_1760716891
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-781269a9049so3325665b3a.2
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Oct 2025 09:01:31 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1760716890; x=1761321690;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PIkjHtG8K2O56AwzyHsc10sFHSt5l26FlguwiupKYTA=;
+        b=VACyExAEJ1aid+zzeRHCeSAUd/qVxQLyZe2QZB2NBp6ZnLzE4e8zBqOb2QgMk9cyDa
+         ttVfTpnRHSRo3hGS8A543sEx4clQyrD1KlVXFBCfMWx9uSF4VC5Q7aSdEFgf7266mHWQ
+         7dHpH3yTLddB2G/MdRG1QIuTc/wsaG7ZvheD3VDi+KkeKgo87ei+tArSU2ZlmF6Pe6U3
+         cTlTfeiZ2T+FhSalwE8vKN2zfUNjHVCcJAeXRD9xwCI0biaTUZ+Vl7d5a+vnilW3Uvkq
+         9Ojloo12CXcjVw0c4eMl0kaZOgsx0h8ZvQseb4lyqf2L+kKBE+xbaaFXhyF6l4QU+QVy
+         M3RQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUOVfjGNMnoXfsj9YI9bse4sJZzkI9DqKEdZcx5f5qv3U6H0DBeR/NKyX6vsgLMNpD2f2jB2WOh/TI=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz6qE1XTKPLDW0qFmmucZDnEjKucDki1uoawrEiq5N78ETV9RGa
+	5xFBoFnDIR4MNYwYYSfFCHjWWC8qF7cFSoS0Z4ExogEa13D4yHB8k7OmWLvQS/HIzwI7DVaQ4Rc
+	lglBxoJPO9tbgWOGGeKb0WYcHe2JSy311Vm0qgl6kiWkGWf/UVZVRMEa9HQ0E+A==
+X-Gm-Gg: ASbGncsFEe/6YHh7t553hnaEk34JxIqj7HzVBbkaybexslIGbU6HMJrVuNDgz6D2652
+	Qc5vjlQiNDEDM2/c0m5QwZBB38LNn0iGIYDsvkFKjnzDqihG3nKTraFProJu25f4vjJF5NZyoM4
+	DSycXkN7ElR9GePcmXhKrFWoRkserVC190X4gCn4LRQ0d95i4NIxOgNE+QLnyZnsrJo8Y2GjJCc
+	jlKFWE3uOvu5lxC1TDItnXX07gYS9EfP7nQPn2E+CRHZt0KD3W6yxPLQNt/VA7ekK1Jy9KtDFu3
+	CIoCOymtf7tkQ616g9mon7+3Y5n0Pq0DzLgLIti60YaRV7IZZSQrjGCc6lKIrkMwukSQH4pgdkS
+	0hu5ZHF8k+uUBn12Lx5dPpADHE/UrWJ7jUuyDKC0=
+X-Received: by 2002:a05:6a00:813:b0:781:2069:1eea with SMTP id d2e1a72fcca58-7a220d41244mr5674140b3a.24.1760716890217;
+        Fri, 17 Oct 2025 09:01:30 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEV+vF1WeoqYbB1sX6jUBw8yccaOQtpuaHsR9tjJiwRF9RrFequccajAP9k3CeRwHGbg0rrtw==
+X-Received: by 2002:a05:6a00:813:b0:781:2069:1eea with SMTP id d2e1a72fcca58-7a220d41244mr5674068b3a.24.1760716889494;
+        Fri, 17 Oct 2025 09:01:29 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7992b0606f0sm26765866b3a.15.2025.10.17.09.01.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Oct 2025 09:01:28 -0700 (PDT)
+Date: Sat, 18 Oct 2025 00:01:22 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
+	djwong@kernel.org, john.g.garry@oracle.com, tytso@mit.edu,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v7 04/12] ltp/fsx.c: Add atomic writes support to fsx
+Message-ID: <20251017160122.iqpowv6q2mxahlbj@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <cover.1758264169.git.ojaswin@linux.ibm.com>
+ <c3a040b249485b02b569b9269b649d02d721d995.1758264169.git.ojaswin@linux.ibm.com>
+ <20250928131924.b472fjxwir7vphsr@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <aN683ZHUzA5qPVaJ@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <20251003171932.pxzaotlafhwqsg5v@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <aOJrNHcQPD7bgnfB@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <20251005153956.zofernclbbva3xt6@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <aOPCAzx0diQy7lFN@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+ <aOTkVmyEV8i_eQx6@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,117 +90,292 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251017034611.651385-3-hch@lst.de>
+In-Reply-To: <aOTkVmyEV8i_eQx6@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
 
-On Fri, Oct 17, 2025 at 05:45:48AM +0200, Christoph Hellwig wrote:
-> The relatively low minimal writeback size of 4MiB means that written back
-> inodes on rotational media are switched a lot.  Besides introducing
-> additional seeks, this also can lead to extreme file fragmentation on
-> zoned devices when a lot of files are cached relative to the available
-> writeback bandwidth.
+On Tue, Oct 07, 2025 at 03:28:46PM +0530, Ojaswin Mujoo wrote:
+> On Mon, Oct 06, 2025 at 06:50:03PM +0530, Ojaswin Mujoo wrote:
+> > On Sun, Oct 05, 2025 at 11:39:56PM +0800, Zorro Lang wrote:
+> > > On Sun, Oct 05, 2025 at 06:27:24PM +0530, Ojaswin Mujoo wrote:
+> > > > On Sat, Oct 04, 2025 at 01:19:32AM +0800, Zorro Lang wrote:
+> > > > > On Thu, Oct 02, 2025 at 11:26:45PM +0530, Ojaswin Mujoo wrote:
+> > > > > > On Sun, Sep 28, 2025 at 09:19:24PM +0800, Zorro Lang wrote:
+> > > > > > > On Fri, Sep 19, 2025 at 12:17:57PM +0530, Ojaswin Mujoo wrote:
+> > > > > > > > Implement atomic write support to help fuzz atomic writes
+> > > > > > > > with fsx.
+> > > > > > > > 
+> > > > > > > > Suggested-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> > > > > > > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > > > > > > > Reviewed-by: John Garry <john.g.garry@oracle.com>
+> > > > > > > > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> > > > > > > > ---
+> > > > > > > 
+> > > > > > > Hmm... this patch causes more regular fsx test cases fail on old kernel,
+> > > > > > > (e.g. g/760, g/617, g/263 ...) except set "FSX_AVOID=-a". Is there a way
+> > > > > > > to disable "atomic write" automatically if it's not supported by current
+> > > > > > > system?
+> > > > > > 
+> > > > > > Hi Zorro, 
+> > > > > > Sorry for being late, I've been on vacation this week.
+> > > > > > 
+> > > > > > Yes so by design we should be automatically disabling atomic writes when
+> > > > > > they are not supported by the stack but seems like the issue is that
+> > > > > > when we do disable it we print some extra messages to stdout/err which
+> > > > > > show up in the xfstests output causing failure.
+> > > > > > 
+> > > > > > I can think of 2 ways around this:
+> > > > > > 
+> > > > > > 1. Don't print anything and just silently drop atomic writes if stack
+> > > > > > doesn't support them.
+> > > > > > 
+> > > > > > 2. Make atomic writes as a default off instead of default on feature but
+> > > > > > his loses a bit of coverage as existing tests wont get atomic write
+> > > > > > testing free of cost any more.
+> > > > > 
+> > > > > Hi Ojaswin,
+> > > > > 
+> > > > > Please have a nice vacation :)
+> > > > > 
+> > > > > It's not the "extra messages" cause failure, those "quiet" failures can be fixed
+> > > > > by:
+> > > > 
+> > > > Oh okay got it.
+> > > > 
+> > > > > 
+> > > > > diff --git a/ltp/fsx.c b/ltp/fsx.c
+> > > > > index bdb87ca90..0a035b37b 100644
+> > > > > --- a/ltp/fsx.c
+> > > > > +++ b/ltp/fsx.c
+> > > > > @@ -1847,8 +1847,9 @@ int test_atomic_writes(void) {
+> > > > >         struct statx stx;
+> > > > >  
+> > > > >         if (o_direct != O_DIRECT) {
+> > > > > -               fprintf(stderr, "main: atomic writes need O_DIRECT (-Z), "
+> > > > > -                               "disabling!\n");
+> > > > > +               if (!quiet)
+> > > > > +                       fprintf(stderr, "main: atomic writes need O_DIRECT (-Z), "
+> > > > > +                                       "disabling!\n");
+> > > > >                 return 0;
+> > > > >         }
+> > > > >  
+> > > > > @@ -1867,8 +1868,9 @@ int test_atomic_writes(void) {
+> > > > >                 return 1;
+> > > > >         }
+> > > > >  
+> > > > > -       fprintf(stderr, "main: IO Stack does not support "
+> > > > > -                       "atomic writes, disabling!\n");
+> > > > > +       if (!quiet)
+> > > > > +               fprintf(stderr, "main: IO Stack does not support "
+> > > > > +                               "atomic writes, disabling!\n");
+> > > > >         return 0;
+> > > > >  }
+> > > > 
+> > > > > 
+> > > > > But I hit more read or write failures e.g. [1], this failure can't be
+> > > > > reproduced with FSX_AVOID=-a. Is it a atomic write bug or an unexpected
+> > > > > test failure?
+> > > > > 
+> > > > > Thanks,
+> > > > > Zorro
+> > > > > 
+> > > > 
+> > > > <...>
+> > > > 
+> > > > > +244(244 mod 256): SKIPPED (no operation)
+> > > > > +245(245 mod 256): FALLOC   0x695c5 thru 0x6a2e6	(0xd21 bytes) INTERIOR
+> > > > > +246(246 mod 256): MAPWRITE 0x5ac00 thru 0x5b185	(0x586 bytes)
+> > > > > +247(247 mod 256): WRITE    0x31200 thru 0x313ff	(0x200 bytes)
+> > > > > +248(248 mod 256): SKIPPED (no operation)
+> > > > > +249(249 mod 256): TRUNCATE DOWN	from 0x78242 to 0xf200	******WWWW
+> > > > > +250(250 mod 256): FALLOC   0x65000 thru 0x66f26	(0x1f26 bytes) PAST_EOF
+> > > > > +251(251 mod 256): WRITE    0x45400 thru 0x467ff	(0x1400 bytes) HOLE	***WWWW
+> > > > > +252(252 mod 256): SKIPPED (no operation)
+> > > > > +253(253 mod 256): SKIPPED (no operation)
+> > > > > +254(254 mod 256): MAPWRITE 0x4be00 thru 0x4daee	(0x1cef bytes)
+> > > > > +255(255 mod 256): MAPREAD  0xc000 thru 0xcae9	(0xaea bytes)
+> > > > > +256(  0 mod 256): READ     0x3e000 thru 0x3efff	(0x1000 bytes)
+> > > > > +257(  1 mod 256): SKIPPED (no operation)
+> > > > > +258(  2 mod 256): INSERT 0x45000 thru 0x45fff	(0x1000 bytes)
+> > > > > +259(  3 mod 256): ZERO     0x1d7d5 thru 0x1f399	(0x1bc5 bytes)	******ZZZZ
+> > > > > +260(  4 mod 256): TRUNCATE DOWN	from 0x4eaef to 0x11200	******WWWW
+> > > > > +261(  5 mod 256): WRITE    0x43000 thru 0x43fff	(0x1000 bytes) HOLE	***WWWW
+> > > > > +262(  6 mod 256): WRITE    0x2200 thru 0x31ff	(0x1000 bytes)
+> > > > > +263(  7 mod 256): WRITE    0x15000 thru 0x15fff	(0x1000 bytes)
+> > > > > +264(  8 mod 256): WRITE    0x2e400 thru 0x2e7ff	(0x400 bytes)
+> > > > > +265(  9 mod 256): COPY 0xd000 thru 0xdfff	(0x1000 bytes) to 0x1d800 thru 0x1e7ff	******EEEE
+> > > > > +266( 10 mod 256): CLONE 0x2a000 thru 0x2afff	(0x1000 bytes) to 0x21000 thru 0x21fff
+> > > > > +267( 11 mod 256): MAPREAD  0x31000 thru 0x31d0a	(0xd0b bytes)
+> > > > > +268( 12 mod 256): SKIPPED (no operation)
+> > > > > +269( 13 mod 256): WRITE    0x25000 thru 0x25fff	(0x1000 bytes)
+> > > > > +270( 14 mod 256): SKIPPED (no operation)
+> > > > > +271( 15 mod 256): MAPREAD  0x30000 thru 0x30577	(0x578 bytes)
+> > > > > +272( 16 mod 256): PUNCH    0x1a267 thru 0x1c093	(0x1e2d bytes)
+> > > > > +273( 17 mod 256): MAPREAD  0x1f000 thru 0x1f9c9	(0x9ca bytes)
+> > > > > +274( 18 mod 256): WRITE    0x40800 thru 0x40dff	(0x600 bytes)
+> > > > > +275( 19 mod 256): SKIPPED (no operation)
+> > > > > +276( 20 mod 256): MAPWRITE 0x20600 thru 0x22115	(0x1b16 bytes)
+> > > > > +277( 21 mod 256): MAPWRITE 0x3d000 thru 0x3ee5a	(0x1e5b bytes)
+> > > > > +278( 22 mod 256): WRITE    0x2ee00 thru 0x2efff	(0x200 bytes)
+> > > > > +279( 23 mod 256): WRITE    0x76200 thru 0x769ff	(0x800 bytes) HOLE
+> > > > > +280( 24 mod 256): SKIPPED (no operation)
+> > > > > +281( 25 mod 256): SKIPPED (no operation)
+> > > > > +282( 26 mod 256): MAPREAD  0xa000 thru 0xa5e7	(0x5e8 bytes)
+> > > > > +283( 27 mod 256): SKIPPED (no operation)
+> > > > > +284( 28 mod 256): SKIPPED (no operation)
+> > > > > +285( 29 mod 256): SKIPPED (no operation)
+> > > > > +286( 30 mod 256): SKIPPED (no operation)
+> > > > > +287( 31 mod 256): COLLAPSE 0x11000 thru 0x11fff	(0x1000 bytes)
+> > > > > +288( 32 mod 256): COPY 0x5d000 thru 0x5dfff	(0x1000 bytes) to 0x4ca00 thru 0x4d9ff
+> > > > > +289( 33 mod 256): TRUNCATE DOWN	from 0x75a00 to 0x1e400
+> > > > > +290( 34 mod 256): MAPREAD  0x1c000 thru 0x1d802	(0x1803 bytes)	***RRRR***
+> > > > > +Log of operations saved to "/mnt/xfstests/test/junk.fsxops"; replay with --replay-ops
+> > > > > +Correct content saved for comparison
+> > > > > +(maybe hexdump "/mnt/xfstests/test/junk" vs "/mnt/xfstests/test/junk.fsxgood")
+> > > > > 
+> > > > > Thanks,
+> > > > > Zorro
+> > > > 
+> > > > Hi Zorro, just to confirm is this on an older kernel that doesnt support
+> > > > RWF_ATOMIC or on a kernle that does support it.
+> > > 
+> > > I tested on linux 6.16 and current latest linux v6.17+ (will be 6.18-rc1 later).
+> > > About the RWF_ATOMIC flag in my system:
+> > > 
+> > > # grep -rsn RWF_ATOMIC /usr/include/
+> > > /usr/include/bits/uio-ext.h:51:#define RWF_ATOMIC       0x00000040 /* Write is to be issued with torn-write
+> > > /usr/include/linux/fs.h:424:#define RWF_ATOMIC  ((__kernel_rwf_t)0x00000040)
+> > > /usr/include/linux/fs.h:431:                     RWF_APPEND | RWF_NOAPPEND | RWF_ATOMIC |\
+> > > /usr/include/xfs/linux.h:236:#ifndef RWF_ATOMIC
+> > > /usr/include/xfs/linux.h:237:#define RWF_ATOMIC ((__kernel_rwf_t)0x00000040)
+> > 
+> > Hi Zorro, thanks for checking this. So correct me if im wrong but I
+> > understand that you have run this test on an atomic writes enabled 
+> > kernel where the stack also supports atomic writes.
+> > 
+> > Looking at the bad data log:
+> > 
+> > 	+READ BAD DATA: offset = 0x1c000, size = 0x1803, fname = /mnt/xfstests/test/junk
+> > 	+OFFSET      GOOD    BAD     RANGE
+> > 	+0x1c000     0x0000  0xcdcd  0x0
+> > 	+operation# (mod 256) for the bad data may be 205
+> > 
+> > We see that 0x0000 was expected but we got 0xcdcd. Now the operation
+> > that caused this is indicated to be 205, but looking at that operation:
+> > 
+> > +205(205 mod 256): ZERO     0x6dbe6 thru 0x6e6aa	(0xac5 bytes)
+> > 
+> > This doesn't even overlap the range that is bad. (0x1c000 to 0x1c00f).
+> > Infact, it does seem like an unlikely coincidence that the actual data
+> > in the bad range is 0xcdcd which is something xfs_io -c "pwrite" writes
+> > to default (fsx writes random data in even offsets and operation num in
+> > odd).
+> > 
+> > I am able to replicate this but only on XFS but not on ext4 (atleast not
+> > in 20 runs).  I'm trying to better understand if this is a test issue or
+> > not. Will keep you update.
+> > 
+> > I'm not sure how this will affect the upcoming release, if you want
+> > shall I send a small patch to make the atomic writes feature default off
+> > instead of default on till we root cause this?
+> > 
+> > Regards,
+> > Ojaswin
 > 
-> Add a superblock field that allows the file system to override the
-> default size.
+> Hi Zorro,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> So I'm able to narrow down the opoerations and replicate it via the
+> following replay file:
+> 
+> # -----
+> # replay.fsxops
+> # -----
+> write_atomic 0x57000 0x1000 0x69690
+> write_atomic 0x66000 0x1000 0x4de00
+> write_atomic 0x18000 0x1000 0x2c800
+> copy_range 0x20000 0x1000 0xe00 0x70e00
+> write_atomic 0x18000 0x1000 0x70e00
+> copy_range 0x21000 0x1000 0x23000 0x74218
+> truncate 0x0 0x11200 0x4daef *
+> write_atomic 0x43000 0x1000 0x11200 *
+> write_atomic 0x15000 0x1000 0x44000
+> copy_range 0xd000 0x1000 0x1d800 0x44000
+> mapread 0x1c000 0x1803 0x1e400 *
+> 
+> 
+> Command: ./ltp/fsx -N 10000 -o 8192 -l 500000 -r 4096 -t 512 -w 512 -Z -FKuHzI --replay-ops replay.fsxops $MNT/junk
+> 
+> $MNT/junk is always opened O_TRUNC and is an on an XFS FS where the
+> disk is non-atomic so all RWF_ATOMIC writes are software emulated.
+> 
+> Here are the logs generated for this run:
+> 
+> Seed set to 1
+> main: filesystem does not support exchange range, disabling!
+> 
+> READ BAD DATA: offset = 0x1c000, size = 0x1803, fname = /mnt/test/junk
+> OFFSET      GOOD    BAD     RANGE
+> 0x1d000     0x0000  0xf322  0x0
+> operation# (mod 256) for the bad data may be 243
+> 0x1d001     0x0000  0x22f3  0x1
+> operation# (mod 256) for the bad data may be 243
+> 0x1d002     0x0000  0xf391  0x2
+> operation# (mod 256) for the bad data may be 243
+> 0x1d003     0x0000  0x91f3  0x3
+> <... a few more such lines ..>
+> 
+> LOG DUMP (11 total operations):
+> openat(AT_FDCWD, "/mnt/test/junk.fsxops", O_WRONLY|O_CREAT|O_TRUNC, 0666) = 7
+> 1(  1 mod 256): WRITE    0x57000 thru 0x57fff   (0x1000 bytes) HOLE     ***WWWW ATOMIC
+> 2(  2 mod 256): WRITE    0x66000 thru 0x66fff   (0x1000 bytes) HOLE ATOMIC
+> 3(  3 mod 256): WRITE    0x18000 thru 0x18fff   (0x1000 bytes) ATOMIC
+> 4(  4 mod 256): COPY 0x20000 thru 0x20fff       (0x1000 bytes) to 0xe00 thru 0x1dff
+> 5(  5 mod 256): WRITE    0x18000 thru 0x18fff   (0x1000 bytes) ATOMIC
+> 6(  6 mod 256): COPY 0x21000 thru 0x21fff       (0x1000 bytes) to 0x23000 thru 0x23fff
+> 7(  7 mod 256): TRUNCATE DOWN   from 0x67000 to 0x11200 ******WWWW
+> 8(  8 mod 256): WRITE    0x43000 thru 0x43fff   (0x1000 bytes) HOLE     ***WWWW ATOMIC
+> 9(  9 mod 256): WRITE    0x15000 thru 0x15fff   (0x1000 bytes) ATOMIC
+> 10( 10 mod 256): COPY 0xd000 thru 0xdfff        (0x1000 bytes) to 0x1d800 thru 0x1e7ff
+> 11( 11 mod 256): MAPREAD  0x1c000 thru 0x1d802  (0x1803 bytes)  ***RRRR***
+> Log of operations saved to "/mnt/test/junk.fsxops"; replay with --replay-ops
+> Correct content saved for comparison
+> (maybe hexdump "/mnt/test/junk" vs "/mnt/test/junk.fsxgood")
+> +++ exited with 110 +++
+> 
+> We can see that the bad data is detected in the final MAPREAD operation
+> and and bad offset is at 0x1d000. If we look at the operations dump
+> above its clear that none of the operations should be modifying the
+> 0x1d000 so we should have been reading 0s but yet we see some junk data
+> there in the file:
+> 
+> $ hexdump /mnt/test/junk -s 0x1c000 -n0x1020
+> 001c000 0000 0000 0000 0000 0000 0000 0000 0000
+> *
+> 001d000 22f3 91f3 7ff3 3af3 39f3 23f3 6df3 c2f3
+> 001d010 c5f3 f6f3 a6f3 1ef3 58f3 40f3 32f3 5ff3
+> 001d020
+> 
+> Another thing to not is that I can't reproduce the above on scsi-debug
+> device.  @Darrick, @John, could this be an issue in kernel?
 
-The comment in the next patch satisfies me sufficiently, so
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Hi Ojaswin,
 
---D
+If we can be sure this's a kernel bug, rather than a fstests (patch) issue, I think we
+can merge this patchset to expose this bug. Does this make sense to you and others?
 
-> ---
->  fs/fs-writeback.c         | 14 +++++---------
->  fs/super.c                |  1 +
->  include/linux/fs.h        |  1 +
->  include/linux/writeback.h |  5 +++++
->  4 files changed, 12 insertions(+), 9 deletions(-)
+Thanks,
+Zorro
+
 > 
-> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> index 11fd08a0efb8..6d50b02cdab6 100644
-> --- a/fs/fs-writeback.c
-> +++ b/fs/fs-writeback.c
-> @@ -31,11 +31,6 @@
->  #include <linux/memcontrol.h>
->  #include "internal.h"
->  
-> -/*
-> - * 4MB minimal write chunk size
-> - */
-> -#define MIN_WRITEBACK_PAGES	(4096UL >> (PAGE_SHIFT - 10))
-> -
->  /*
->   * Passed into wb_writeback(), essentially a subset of writeback_control
->   */
-> @@ -1874,8 +1869,8 @@ static int writeback_single_inode(struct inode *inode,
->  	return ret;
->  }
->  
-> -static long writeback_chunk_size(struct bdi_writeback *wb,
-> -				 struct wb_writeback_work *work)
-> +static long writeback_chunk_size(struct super_block *sb,
-> +		struct bdi_writeback *wb, struct wb_writeback_work *work)
->  {
->  	long pages;
->  
-> @@ -1898,7 +1893,8 @@ static long writeback_chunk_size(struct bdi_writeback *wb,
->  	pages = min(wb->avg_write_bandwidth / 2,
->  		    global_wb_domain.dirty_limit / DIRTY_SCOPE);
->  	pages = min(pages, work->nr_pages);
-> -	return round_down(pages + MIN_WRITEBACK_PAGES, MIN_WRITEBACK_PAGES);
-> +	return round_down(pages + sb->s_min_writeback_pages,
-> +			sb->s_min_writeback_pages);
->  }
->  
->  /*
-> @@ -2000,7 +1996,7 @@ static long writeback_sb_inodes(struct super_block *sb,
->  		inode->i_state |= I_SYNC;
->  		wbc_attach_and_unlock_inode(&wbc, inode);
->  
-> -		write_chunk = writeback_chunk_size(wb, work);
-> +		write_chunk = writeback_chunk_size(inode->i_sb, wb, work);
->  		wbc.nr_to_write = write_chunk;
->  		wbc.pages_skipped = 0;
->  
-> diff --git a/fs/super.c b/fs/super.c
-> index 5bab94fb7e03..599c1d2641fe 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -389,6 +389,7 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags,
->  		goto fail;
->  	if (list_lru_init_memcg(&s->s_inode_lru, s->s_shrink))
->  		goto fail;
-> +	s->s_min_writeback_pages = MIN_WRITEBACK_PAGES;
->  	return s;
->  
->  fail:
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index c895146c1444..ae6f37c6eaa4 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1583,6 +1583,7 @@ struct super_block {
->  
->  	spinlock_t		s_inode_wblist_lock;
->  	struct list_head	s_inodes_wb;	/* writeback inodes */
-> +	long			s_min_writeback_pages;
->  } __randomize_layout;
->  
->  static inline struct user_namespace *i_user_ns(const struct inode *inode)
-> diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-> index 22dd4adc5667..49e1dd96f43e 100644
-> --- a/include/linux/writeback.h
-> +++ b/include/linux/writeback.h
-> @@ -374,4 +374,9 @@ bool redirty_page_for_writepage(struct writeback_control *, struct page *);
->  void sb_mark_inode_writeback(struct inode *inode);
->  void sb_clear_inode_writeback(struct inode *inode);
->  
-> +/*
-> + * 4MB minimal write chunk size
-> + */
-> +#define MIN_WRITEBACK_PAGES	(4096UL >> (PAGE_SHIFT - 10))
-> +
->  #endif		/* WRITEBACK_H */
-> -- 
-> 2.47.3
+> Regards,
+> ojaswin
+> > 
+> > > 
+> > > Thanks,
+> > > Zorro
+> > > 
+> > > > 
+> > > > Regards,
+> > > > ojaswin
+> > > > 
+> > > 
 > 
-> 
+
