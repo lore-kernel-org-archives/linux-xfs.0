@@ -1,123 +1,60 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C5562F9DA4;
-	Fri, 17 Oct 2025 03:46:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B7C42853F8
+	for <linux-xfs@vger.kernel.org>; Fri, 17 Oct 2025 03:50:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760672797; cv=none; b=IBcI3EULfyeQaycZKTuohbASHJPFCy+/1vF33lH6FTtRHcUnst0S9tXyieIR0Yv3T81JqEZWr8J0UBk0vl/JeGVMGj7hlD+jqZTJi6HOLSVBp6laxfXErBFWzF5RRG6at6CypTIGfrKVvbDDojbsLHytbWOVkariraF3XE4o/HI=
+	t=1760673051; cv=none; b=IqxGYew1yEudKJCO3PzMqYq7UP9BD2q//w2Vj5YJMamoyM6xDkzuweP5xNo1NCp1TufRy9sd42DCLDT/TD31XjOaoLsLXoppFMJ7hR4D4AcK6ysVhO6A17aON9y/fcfC4Z+73Y15ipP+0vAPB20U6CvP7Chi/sZNabegcqdbGnE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760672797; c=relaxed/simple;
-	bh=zmzzUhCQMbc4fhRj8NTSf5G6gkLvbItyq/kuJi7D2Kg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Bmvh+eneAp3Z/quULOANKMG08S8SAMGgttmTbUIXNfQYoYx/DnLeXiCLWNAFiXx2essbK2SHloXzlzqkrVMHY0DryX8LERDyRTzOxfST6vqC1pbNSutJRJFlpQ/e5yqUbkHbOfaDVx9uATcfah+jn795L9KmkxxQ1r7MBPzSLRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=L6ZRrXUs; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="L6ZRrXUs"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=OzhIS791DbWw/BkeeiAXVxsk/8OZmh8JD9FoPLYpoC4=; b=L6ZRrXUsGgGd6cwNkJ2KANK2wb
-	ls0BUyl6KmamfjFMchiK3B0qzIvIWTHtiuoK5pUlLP9AbOHrFlSCeoB4NuNHr6eAKbTV5gLRWKOgL
-	lJrw0i+C30z61rABpx7J4iBsaDku9jsb6HGieq4SckKhm998/z41jlbDE8OlAaimIhz3sE9pIqA7n
-	y5+94uX2OECUs0PDzwSzlx0sMqhfDV6eObfKm4imcPOETfF2FWwyuNLOznDhmK1VKYi3Gv+YoDyxO
-	4AP4k/wBtb81x2AJOvIpYCe2ZBlw7rRdfD1rzm1aqp9PWpOPdTuLgnYjc9+C/EIx4v8h1TcEVCpJc
-	BpRDFYOw==;
-Received: from 5-226-109-134.static.ip.netia.com.pl ([5.226.109.134] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v9bQI-00000006U0W-2Y9j;
-	Fri, 17 Oct 2025 03:46:34 +0000
+	s=arc-20240116; t=1760673051; c=relaxed/simple;
+	bh=yZklGeBURGuIaTBsDmJmGgllPfBlgnlf9sh6kC0DWL0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=p15A9N5g8cw2jS2oRNmxYPFfFKzz7bT7il0m8fQH8wPQdkOpS1cqbKSQWWxWT787h9uRWfK9b41Od3PfDt5T+bI0z3hv287YSCKjo0b1OOfDBBWD3UBLJ4LBtP/E4O2QGlsEtS36PM3cB5Ums8laOyij1K4uJn0XR8vktF+LAeE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id CFD4E227A87; Fri, 17 Oct 2025 05:50:43 +0200 (CEST)
+Date: Fri, 17 Oct 2025 05:50:43 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: Christian Brauner <brauner@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Carlos Maiolino <cem@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	willy@infradead.org,
-	dlemoal@kernel.org,
-	hans.holmberg@wdc.com,
-	linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH 3/3] xfs: set s_min_writeback_pages for zoned file systems
-Date: Fri, 17 Oct 2025 05:45:49 +0200
-Message-ID: <20251017034611.651385-4-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251017034611.651385-1-hch@lst.de>
-References: <20251017034611.651385-1-hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 17/17] xfs: reduce ilock roundtrips in
+ xfs_qm_vop_dqalloc
+Message-ID: <20251017035043.GA29428@lst.de>
+References: <20251013024851.4110053-1-hch@lst.de> <20251013024851.4110053-18-hch@lst.de> <20251015212707.GM2591640@frogsfrogsfrogs> <20251016042348.GC29822@lst.de> <20251016155941.GA3356773@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251016155941.GA3356773@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Set s_min_writeback_pages to the zone size, so that writeback always
-writes up to a full zone.  This ensures that writeback does not add
-spurious file fragmentation when writing back a large number of
-files that are larger than the zone size.
+On Thu, Oct 16, 2025 at 08:59:41AM -0700, Darrick J. Wong wrote:
+> > > ...and I guess we no longer detach dquots from live inodes now, so we
+> > > really only need ILOCK_EXCL to prevent multiple threads from trying to
+> > > allocate and attach a new xfs_dquot object to the same inode, right?
+> > 
+> > Yes.
+> 
+> I wonder then, if there /were/ two threads racing to dqattach the same
+> inode, won't the radix_tree_insert return EEXIST, preventing us
+> from exposing two dquot for the same id because xfs_qm_dqget will just
+> loop again?
 
-Fixes: 4e4d52075577 ("xfs: add the zoned space allocator")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/xfs_zone_alloc.c | 28 ++++++++++++++++++++++++++--
- 1 file changed, 26 insertions(+), 2 deletions(-)
+I think so.
 
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 1147bacb2da8..c342595acc3e 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -1215,6 +1215,7 @@ xfs_mount_zones(
- 		.mp		= mp,
- 	};
- 	struct xfs_buftarg	*bt = mp->m_rtdev_targp;
-+	xfs_extlen_t		zone_blocks = mp->m_groups[XG_TYPE_RTG].blocks;
- 	int			error;
- 
- 	if (!bt) {
-@@ -1245,10 +1246,33 @@ xfs_mount_zones(
- 		return -ENOMEM;
- 
- 	xfs_info(mp, "%u zones of %u blocks (%u max open zones)",
--		 mp->m_sb.sb_rgcount, mp->m_groups[XG_TYPE_RTG].blocks,
--		 mp->m_max_open_zones);
-+		 mp->m_sb.sb_rgcount, zone_blocks, mp->m_max_open_zones);
- 	trace_xfs_zones_mount(mp);
- 
-+	/*
-+	 * The writeback code switches between inodes regularly to provide
-+	 * fairness.  The default lower bound is 4MiB, but for zoned file
-+	 * systems we want to increase that both to reduce seeks, but also more
-+	 * importantly so that workloads that writes files in a multiple of the
-+	 * zone size do not get fragmented and require garbage collection when
-+	 * they shouldn't.  Increase is to the zone size capped by the max
-+	 * extent len.
-+	 *
-+	 * Note that because s_min_writeback_pages is a superblock field, this
-+	 * value also get applied to non-zoned files on the data device if
-+	 * there are any.  On typical zoned setup all data is on the RT device
-+	 * because using the more efficient sequential write required zones
-+	 * is the reason for using the zone allocator, and either the RT device
-+	 * and the (meta)data device are on the same block device, or the
-+	 * (meta)data device is on a fast SSD while the data on the RT device
-+	 * is on a SMR HDD.  In any combination of the above cases enforcing
-+	 * the higher min_writeback_pages for non-RT inodes is either a noop
-+	 * or beneficial.
-+	 */
-+	mp->m_super->s_min_writeback_pages =
-+		XFS_FSB_TO_B(mp, min(zone_blocks, XFS_MAX_BMBT_EXTLEN)) >>
-+			PAGE_SHIFT;
-+
- 	if (bdev_is_zoned(bt->bt_bdev)) {
- 		error = blkdev_report_zones(bt->bt_bdev,
- 				XFS_FSB_TO_BB(mp, mp->m_sb.sb_rtstart),
--- 
-2.47.3
+> [Though looking at that xfs_qm_dqget -> xfs_qm_dqget_cache_insert ->
+> radix_tree_insert sequence, it looks like we can also restart
+> indefinitely on other errors like ENOMEM.]
+
+Yes.  I have patches fixing that as part of moving to xarrays instead
+of radix trees.  But I suspect a resizable hash table might actually
+be the better fit, so I didn't look into submitting that quite yet.
 
