@@ -1,83 +1,44 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D89930F53E
-	for <linux-xfs@vger.kernel.org>; Fri, 17 Oct 2025 18:56:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EA1A2D46B2;
+	Fri, 17 Oct 2025 22:46:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760727407; cv=none; b=BupNN2XDQXB2l6fEi0zEM15hFYfKQEephUdaXzAMz10cF5FtwVlJhKzDx6V4YGlkkZIi5io2fENLEngWTEtBUrkzNTcaSLfRN3+T6lZQMnDpjGaj5PmvBPSPEDAlQefZQaZSAVYU99zn0E6z2BqPJOFqm03NBCNlaj1zhWwOAJM=
+	t=1760741215; cv=none; b=jfvWNZMEiVnKB+WthgXhbs2SrO4K3IlgMcWc43vXxLLG296c8YjIzh/BUK9XrMXoe0b8kBLq9L5+DjMvDEkcnUfZAAxWdaY41aJyAJplU0cI+rdYjfTsBX8Ipck4Gj3oDZZZwU/Eo2JlIrjd5uCfylzFdOKeuAca/4+qcV88rVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760727407; c=relaxed/simple;
-	bh=d5EYSvZWE21MAW/5ducNnSAuwHg4mPYcU9kcJd5FPu8=;
+	s=arc-20240116; t=1760741215; c=relaxed/simple;
+	bh=YO8DzMDW26ohWy+lzK1i1ZZlv8Qwvd+okwGogpUlkHo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GW6VPYA0ELKvJIClswFoRQ1JSeW6H4MrePBP8DMnhipgcTYJhtv4gGeRQhl6aaG633LEvT0+eNdyPad7EZfioG5vCLLl//ZADsyy2tTm57J1OJsD4Ze5Z9mFq2HIGLyOfPV+otiglNwHbTP9eXYjDMBBxMby07Vey3KpHqyhiCI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZFxZeuXs; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=GhiYmoEPDeXEu+g4UKSJR0Vgy7ubHLXs54VPouC101j5N/NZA08QqnrILN50UF7Pr8NEUNuzywQvKjyVKhfORX8ZydjgLLuvE7kCmYWTTb25cYvWQFh6PxNBMuJXb8DvCERkt/FeVCGcXAU7+BcKLDciIPi99HtgvEpsCfUHPBk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pae1ZKs0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZFxZeuXs"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1760727404;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=uYprDHVp8YGKTFNY5McgCFcGhbJLnpr1suYb15I8Fy4=;
-	b=ZFxZeuXsKFo5OwrzlRTAUXic6amjGonKSWyiKI5Yuu6pSah5xR1EJL5jfyabuFKH8I42Bu
-	rRRKW62QFCr7piuSM2rMNvfMjRmsl8zyXruGXjeygtN83pXjoAdlGjHgXjGDlS30rjKhtx
-	xzhEEMGh6HgejHDZwZInSwG74gvIaGE=
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
- [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-251-G_Oa6BelMr-aQRWvVivH1g-1; Fri, 17 Oct 2025 14:56:42 -0400
-X-MC-Unique: G_Oa6BelMr-aQRWvVivH1g-1
-X-Mimecast-MFC-AGG-ID: G_Oa6BelMr-aQRWvVivH1g_1760727401
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-27ee41e062cso30639775ad.1
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Oct 2025 11:56:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760727401; x=1761332201;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=uYprDHVp8YGKTFNY5McgCFcGhbJLnpr1suYb15I8Fy4=;
-        b=K38Xgb1FsS3gfKaBWahC9/eIzI8oyU+Ka6UvHe2gL7Ug/LkXi6qVT7n9QQ23cgPbt+
-         Ghvp/uEE8s7AiRm1xkEjxoVO5xhd02+HR91Kunqc1kbHdYb1QDVhJjoNxu1LqQclEiaT
-         BYMwuLE24o28EXuWgTF+A8Glr6hzl7fteOfvIxcI63UcBYYXyHTEym9x5LJ/IWnHOHJ3
-         2xZwXwW9Nk/ptcN3n06T6QzDC8tHzdOv2p6iI8EAOmWvsAGyWBwLqHdadQ0iBlyN6TMT
-         o9cJm16di/+Bu7WM85uiHYtUFaYJ/d4Eung7QqQJzzLWjiixXjdUmQxWTe4PGV2zIf5F
-         ILQg==
-X-Forwarded-Encrypted: i=1; AJvYcCVWTuF5Dsf8y2znTMqTO4/p+SxzNdN2t0ei4DI3BzyhQtCLvicI2sMRGKayX2A1gjJAhKMzIeuaGow=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw92Q1XEidX3VTzvHr6M8fpnBzUnlHywTt+dCAUxy7rHhCKVaPA
-	z7GLtVZpSZ2jU6521pSyxNuzgp00C8WX3y+Ah0dLqU54fjBHOWS0J9Qpu7lNYsc77jGEiRzT3Ab
-	dks1aZcbgun9PkwVlscX7ec3IXPnJmYqaoAiOaLjIbWFabkcpY9iKtd8yLAQj4A==
-X-Gm-Gg: ASbGnctI08TjpIz6rZsKPVqD846CEq0Cm+wM0Ra1r7///LVvGkwjv/UtZNVDYZRR6vt
-	UQHeIMQb7gPZhbYv8n+wbh4A3rlNxm7lTWzNNzWPHM8nqv4MJy78gQSgb+CU57pjI9pNanllXS7
-	H4sF6wppTSJQDCzk41veFLNHH/A5+g8vEtXFQEIinB0mGozUsV+y7Yk8ZG134AWf2eeFKq3PPRD
-	2V1IvRwJmHSKhbEzhmC31N/hbaVoiPuB2OZpxPesyKszg4kTaJ5kTAiKt7WQikmwxVPnCpJ9REq
-	v7aHpCZCJrx9ESz0Fc3bJ9rimUxXWNA8GQk4Xb26zDSruaWIm9JGm61pjvHzsmEdznSWGPQls/0
-	z1kqkqbAvVPPzwVQKqIS8CY+n1/RjE5m1bgS8qqc=
-X-Received: by 2002:a17:903:8c6:b0:28d:18fb:bb93 with SMTP id d9443c01a7336-290c9c8968cmr56491725ad.7.1760727400545;
-        Fri, 17 Oct 2025 11:56:40 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFKCO/8OEf5q9MtiPSZhBTjjXT9lJOMBbtv23Dt9GU9oMRJ+VlU3uAZY3eoFQ0b7rxF/ekGBw==
-X-Received: by 2002:a17:903:8c6:b0:28d:18fb:bb93 with SMTP id d9443c01a7336-290c9c8968cmr56491375ad.7.1760727400090;
-        Fri, 17 Oct 2025 11:56:40 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29246ffeec3sm2531175ad.52.2025.10.17.11.56.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Oct 2025 11:56:39 -0700 (PDT)
-Date: Sat, 18 Oct 2025 02:56:33 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>, Naohiro Aota <naohiro.aota@wdc.com>,
-	linux-btrfs@vger.kernel.org, Hans Holmberg <hans.holmberg@wdc.com>,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH v5 3/3] generic: basic smoke for filesystems on zoned
- block devices
-Message-ID: <20251017185633.pvpapg5gq47s2vmm@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20251016152032.654284-1-johannes.thumshirn@wdc.com>
- <20251016152032.654284-4-johannes.thumshirn@wdc.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pae1ZKs0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B843C4CEE7;
+	Fri, 17 Oct 2025 22:46:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760741214;
+	bh=YO8DzMDW26ohWy+lzK1i1ZZlv8Qwvd+okwGogpUlkHo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=pae1ZKs0WhVqN4MGCJ8+lgbDEDnNdLt30/Tdn1LMLpbZIreeN0ZkqSBoEdNLmBCvW
+	 Jl8lWMc59LB4d2VSu8TJQcXEa9E5mcIjktwjyTC6nV4vM02Ca6Xgwowm8OftIMR/Je
+	 hURhyktZHJTGkDfqLcsrBL4ApHkcyRfZzQM44g1SJPnsI4XLNnfzYx+DOxtSViBdK1
+	 21SZLbeuZdofLS4v6ykX8STXYGSmy2M1TSEXApiQleHgj4z8soRJqcDvH0NBtD01yb
+	 LRfC+xYQdacL2zMu+af7u3nr5tSgRJLQAq2oAiXZMn/5VEMw8urSsey6OpgElQ+ZrP
+	 BnORx0xiI5o7Q==
+Date: Fri, 17 Oct 2025 15:46:52 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+	Christoph Hellwig <hch@infradead.org>
+Subject: Re: mkfs.xfs "concurrency" change concerns
+Message-ID: <20251017224652.GJ6215@frogsfrogsfrogs>
+References: <84c8a5e5-938d-4745-996d-4237009c9cc5@sandeen.net>
+ <20251010191713.GE6188@frogsfrogsfrogs>
+ <f7d5eaab-c2fe-4a11-82d5-a7c5ca563e75@sandeen.net>
+ <20251014023228.GU6188@frogsfrogsfrogs>
+ <f41be58e-071b-4179-a0e2-7fbbef1e534e@sandeen.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -86,106 +47,103 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251016152032.654284-4-johannes.thumshirn@wdc.com>
+In-Reply-To: <f41be58e-071b-4179-a0e2-7fbbef1e534e@sandeen.net>
 
-On Thu, Oct 16, 2025 at 05:20:32PM +0200, Johannes Thumshirn wrote:
-> Add a basic smoke test for filesystems that support running on zoned
-> block devices.
+On Tue, Oct 14, 2025 at 10:36:14AM -0500, Eric Sandeen wrote:
+> On 10/13/25 9:32 PM, Darrick J. Wong wrote:
+> >> This was 6.17. The backing file get the nonrotational/concurrency treatment
+> >> but the loop device does. This probably says more about the xfsprogs test
+> >> (ddev_is_solidstate) than the kernel.
+> >>
+> >> ioctl(3, BLKROTATIONAL, 0x7ffd9d48f696) = -1 ENOTTY (Inappropriate ioctl for device)
+> >>
+> >> fails, so ddev_is_solidstate returns false. For the loop dev, BLKROTATIONAL
+> >> says rotational == 0 so we get true for solidstate.
+> >>
+> >> But TBH this might be the right answer for mkfsing a file directly, as it is
+> >> likely an image destined for another machine.
+> >>
+> >> Perhaps ddev_is_solidstate() should default to "not solidstate" for regular
+> >> files /and/ loopback devices if possible?
+> > It's *possible*, but why would mkfs ignore what the kernel tells us?
 > 
-> It creates a zloop device with 2 conventional and 62 sequential zones,
-> mounts it and then runs fsx on it.
+> Because for one, it's not reliable or consistent. A loop device and its backing
+> file are on the same storage, of course. We get different answers when we try to
+> query one vs the other via the ioctl, currently.
+
+The way I see things, I've told you how to turn off the ssd
+optimizations for golden image creation.  You don't appear to like that
+solution and would prefer some sort of heuristic based on stat::st_rdev.
+I suggest you send a patch with your exact solution so that we can all
+discuss on list.
+
+--D
+
+> And for two, the actual access patterns and behavior or writing to a loopback
+> file aren't really the same as either flavor of block device any way, right?
 > 
-> Currently this tests supports BTRFS, F2FS and XFS.
+> > Suppose you're creating an image file on a filesystem sitting on a SSD
+> > with the intent of deploying the image in a mostly non-rotational
+> > environment.  Now those people don't get any of the SSD optimizations
+> > even though the creator had an SSD
 > 
-> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> ---
->  tests/generic/772     | 43 +++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/772.out |  2 ++
->  2 files changed, 45 insertions(+)
->  create mode 100755 tests/generic/772
->  create mode 100644 tests/generic/772.out
+> Now suppose you're creating it for deployment on rotating storage, instead.
 > 
-> diff --git a/tests/generic/772 b/tests/generic/772
-> new file mode 100755
-> index 00000000..10d2556b
-> --- /dev/null
-> +++ b/tests/generic/772
-> @@ -0,0 +1,43 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2025 Wesgtern Digital Corporation.  All Rights Reserved.
-> +#
-> +# FS QA Test 772
-> +#
-> +# Smoke test for FSes with ZBD support on zloop
-> +#
-> +. ./common/preamble
-> +. ./common/zoned
-> +
-> +_begin_fstest auto zone quick
-> +
-> +_cleanup()
-> +{
-> +	_destroy_zloop $zloop
-
-        cd /
-        rm -r -f $tmp.*
-
-> +}
-> +
-> +# Modify as appropriate.
-> +_require_scratch
-> +_require_scratch_size $((16 * 1024 * 1024)) #kB
-
-_require_scratch_size contains _require_scratch.
-
-> +_require_zloop
-> +
-> +_scratch_mkfs > /dev/null 2>&1
-> +_scratch_mount
-> +
-> +mnt="$SCRATCH_MNT/mnt"
-> +zloopdir="$SCRATCH_MNT/zloop"
-> +
-> +mkdir -p $mnt
-> +zloop=$(_create_zloop $zloopdir 256 2)
-> +
-> +_try_mkfs_dev $zloop >> $seqres.full 2>&1 ||\
-> +	_notrun "cannot mkfs zoned filesystem"
-
-Does this mean the current FSTYP doesn't support zoned?
-
-As this's a generic test case, the FSTYP can be any other filesystems, likes
-nfs, cifs, overlay, exfat, tmpfs and so on, can we create zloop on any of them?
-If not, how about _notrun if current FSTYP doesn't support.
-
-> +_mount $zloop $mnt
-> +
-> +$FSX_PROG -q -N 20000 $FSX_AVOID "$mnt/fsx" >> $seqres.full
-> +
-> +umount $mnt
-
-Please make sure the zloop device is unmounted and destroied in _cleanup, due
-to someone might kill the test process suddenly.
-
-Thanks
-Zorro
-
-
-> +
-> +echo Silence is golden
-> +# success, all done
-> +_exit 0
-> diff --git a/tests/generic/772.out b/tests/generic/772.out
-> new file mode 100644
-> index 00000000..98c13968
-> --- /dev/null
-> +++ b/tests/generic/772.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 772
-> +Silence is golden
-> -- 
-> 2.51.0
+> My point is if the admin is making an image file, mkfs.xfs has absolutely
+> no idea where that image will be deployed. The administrator might, and 
+> could explicitly set parameters as needed based on that knowledge.
 > 
-
+> ...
+> 
+> >>> What I tell our internal customers is:
+> >>>
+> >>> 1. Defer formatting until deployment whenever possible so that mkfs can
+> >>> optimize the filesystem for the storage and machine it actually gets.
+> >>>
+> >>> 2. If you can't do that, then try to make the image creator machine
+> >>> match the deployment hardware as much as possible in terms of
+> >>> rotationality and CPU count.
+> 
+> >> I just don't think that's practical in real life when you're creating a
+> >> generic OS image for wide distribution into unknown environments.
+> > Uhhh well I exist in real life too.
+> 
+> Of course...?
+> 
+> I read #2 as "make sure the system you run mkfs on has the same CPU count
+> as any system you'll deploy that image on" and that's not possible for
+> a generic image destined for wide deployment into varied environments.
+> 
+> rotationality is pretty trivial and is almost always "not rotational" so
+> that's not really my major concern. My concern is how CPU count affects
+> geometry now, by default, once nonrotationality has been determined.
+> 
+> For example if there's some fleet of machines used to produce
+> an OS and its images, the images may vary depending on which build machine
+> the image build task lands on unless they all have exactly the same CPU
+> count. Or say you build for ppc64, aarch64, and x86_64. By default, you're
+> almost guaranteed to get different fs geometry for each. I just think that's
+> odd and unexpected. (I understand that it can be overridden but this is
+> nothing anyone likely expects to be necessary.)
+> 
+> I agree that it makes sense to optimize for nonrotationality more than we
+> have in the past, by default, for image files. I totally get your point about
+> how 4 AGs is an optimization for the old world.
+> 
+> So I think my rambling boils down to a few things:
+> 
+> 1) mkfsing a file-backed image should be consistent whether you access
+>    it through a loop device or you open the file directly. That's not
+>    currently the case.
+> 
+> 2) When you are a mkfsing a file-backed image instead of a block device,
+>    that's a big hint that the filesystem is destined for use on other
+>    machines, about which mkfs.xfs knows nothing.
+> 
+> 3) To meet in the middle, rather than falling back to the old rotational
+>    behavior of 4 AGs for image files, maybe a new image-file-specific
+>    heuristic of "more AGs than before, but not scaled by local CPU count"
+>    would be reasonable. This would make image file generation yield
+>    consistent and repeatable geometries, by default.
+> 
+> -Eric
