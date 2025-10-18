@@ -1,183 +1,73 @@
-Received: from flow-a4-smtp.messagingengine.com (flow-a4-smtp.messagingengine.com [103.168.172.139])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 266682629F;
-	Fri, 17 Oct 2025 23:44:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.139
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D627E9443
+	for <linux-xfs@vger.kernel.org>; Sat, 18 Oct 2025 04:08:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760744682; cv=none; b=iGza4fGallriRrHqko60yzsIsNB6VFmM8Kp8wnXaY4OOWm+/pDvOUtXIYJUn2ebCRto8QwGgGry2aRudE7YizfCf8qkDZNffUbSvon1wuwYTThdtCAekq/ipyO36Ka1/2U+Cz+N8N3u0GwBM/D1WvjsZH0QD0YtwdPJ7tn0wjfo=
+	t=1760760502; cv=none; b=EyMVvMjbcbAdsQ5uEjoLyI82HdNVCoc8oUG3qkJqifTORQZblURz4C+2+p5VapEQZPpfnWn4oP7OBbHkaHv21W6Y1Jz1zbBFNFw07zjuo7ujqJorSGf56coFklPHZcPzaFUyx8kLBj+nT51vVGn6TVlOVh89OD11eiEq6odWXPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760744682; c=relaxed/simple;
-	bh=u0MZX99m7tsyAu2FbX/wO754TpewlSzO9tI9LAlI5Rg=;
-	h=Content-Type:MIME-Version:From:To:Cc:Subject:In-reply-to:
-	 References:Date:Message-id; b=AP9KAcbwU2ctK6Wy9HWLAHi+2SUARKLnJpmNeK3yov0z+NMRVzniD2RCfMOxYkN3r+0VMlpDC2AnE6JaS/6dwWO/QyClXdlodX3Mt/M8suBEWiuFdLVucP4NdqXhkFDWYQyNlvsiqAzK/TyzMpUVA//eonIxnOo9M3k+ZBn7kkE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net; spf=pass smtp.mailfrom=ownmail.net; dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b=PpCfbnCi; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=JID8YgBs; arc=none smtp.client-ip=103.168.172.139
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ownmail.net
+	s=arc-20240116; t=1760760502; c=relaxed/simple;
+	bh=Bz2sqnxKpVPi1wG3weF9g0Ox+6uz191MfbDXRdZp1UY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HH+Y/wOxh530Z2Eb6l1zyI23LxgwVIb2WCjezTXTWqghriNKsVVRmWX9xAsWhIz9Vh83upugH/SmQTpA7PNeZzEauu1f5gYcb2tqqNbnj6Sj6WWT7uih9RKsl34d/xelReqJxyW7XHvzwVEZYGJ3rdu8f4IYNBcjMYaKbddCGQU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rkg0s26X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b="PpCfbnCi";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="JID8YgBs"
-Received: from phl-compute-09.internal (phl-compute-09.internal [10.202.2.49])
-	by mailflow.phl.internal (Postfix) with ESMTP id 3FD3F1380634;
-	Fri, 17 Oct 2025 19:44:38 -0400 (EDT)
-Received: from phl-mailfrontend-02 ([10.202.2.163])
-  by phl-compute-09.internal (MEProxy); Fri, 17 Oct 2025 19:44:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ownmail.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:reply-to:subject:subject:to:to; s=fm2; t=
-	1760744678; x=1760751878; bh=fsRJNHgf5wp6dMPZl2BHgqJB2Mn3uMg+ds8
-	+N/kIR6M=; b=PpCfbnCi5m2pJlypffNagOwQ1jiOv1FqH42riPH7kB2SKsP0X2V
-	JviiDDVWBhLadufIpgRZA4P+tAAmkEsTeo2iw5bey8/quk1S/nIzAKWSl//Jtsp4
-	R3E1xHCnM5I7fPHqvY6xxYUEXnWFdcGsqnFOg0iZbW7nYad4O3m6AecmLEfa4wgm
-	053figuFB9afPvzZisE9w9ZWy5lbX+Uk1XdACK4r2jD7lufSEfaQejMOYY7HCag4
-	/kmwTf4NmJrnK3e2GrZQ4jz/u3/0aqPDdnu7qobIRo8P0z1Ge9t+sDHMSPF8/wrE
-	2qptYIed9mahk/9p0SuwjIvpgwq2Shl/jVA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1760744678; x=
-	1760751878; bh=fsRJNHgf5wp6dMPZl2BHgqJB2Mn3uMg+ds8+N/kIR6M=; b=J
-	ID8YgBsC0Zlq97uy28rnGxEniUfQ+yFOuU+ciiPl7K8wlO2e0nT3BEBmW2cl49h2
-	NVHwoyX8FgY6wxmkjhwXjEbepDeRRrrd/2KynnCpsuVJkb6n05xksyt2Xf3l0rDJ
-	zd5ryMoClAGFXxjnEvTtfNMFw6fJnOnGXBgXoIGUBsBczWbW0b5xo3c/PSoixbVd
-	Vflnp8GoiiBmQ1lmJSzWS0ndraz6I0xBTcvVrs5JN+3Mp24jmfR4zysroUEK2JjJ
-	/0j5o9flRWFIhIiCNmd2yAgkAA2DrIMqqLqIZfQi/VnGrg/hZ/EHEC5BgmjW66pn
-	JnLifN/o/tGIonbXG5hCQ==
-X-ME-Sender: <xms:5NTyaOorzpQDJMLlg9LI8TKz0YXzq0nDnVMeovAsKg6SBFO3UN3wUg>
-    <xme:5NTyaLpPfn_QQB80N2_qjcaF0vOjVu5Y_NBqzmwm73Inj29zE7g-_wUZlXG-Kyviw
-    _A2Y_hxNHVlcFb2oV9AQCjzAaIPG8LxGekke4oYziF4OhuaMIc>
-X-ME-Received: <xmr:5NTyaLelh78ONagQhOl9SGV7AW4KVMmR6XnSnOyV0_u5_PpC99rpXmUMadzBckTIuya7bDQbfLWn8qJiAezszE_hu4hrpmd1QqEZX-8_2U1g>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdeggddufedtheefucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurheptgfgggfhvfevufgjfhffkfhrsehtqhertddttdejnecuhfhrohhmpefpvghilheu
-    rhhofihnuceonhgvihhlsgesohifnhhmrghilhdrnhgvtheqnecuggftrfgrthhtvghrnh
-    epvdeuteelkeejkeevteetvedtkeegleduieeftdeftefgtddtleejgfelgfevffeinecu
-    ffhomhgrihhnpehkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpedtnecurf
-    grrhgrmhepmhgrihhlfhhrohhmpehnvghilhgssehofihnmhgrihhlrdhnvghtpdhnsggp
-    rhgtphhtthhopeegfedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepvhhirhhose
-    iivghnihhvrdhlihhnuhigrdhorhhgrdhukhdprhgtphhtthhopehnvghtuggvvhesvhhg
-    vghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdigfhhssehvghgvrh
-    drkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidquhhnihhonhhfshesvhhg
-    vghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhnfhhssehvghgvrh
-    drkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgv
-    rhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqfhhsuggvvhgvlhesvh
-    hgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdgtihhfshesvhhg
-    vghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopegvtghrhihpthhfshesvhhgvghrrd
-    hkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:5NTyaKQOygeT-WDC4EpGdB9UxeBX1x1b0QQARdMw78hJaUuGw16Bpg>
-    <xmx:5NTyaHeqAIRulsREZCjlE_C8s0Is771XsTmonG6WXx4qb74PiaFT_w>
-    <xmx:5NTyaKCO0YfW6-IqqtOcltxObTrHKpPry1oAkKr1FbLeSlCFfCsvXg>
-    <xmx:5NTyaEv_hh5zLWLwI9GLd5aEfHsL025i_s7LtxBypvsPVX3tUGd22A>
-    <xmx:5tTyaCiEjulIfLatm6Wk-Qg3CpixYcKoLl74c5ZXFD26oqjV2H5JH3BJ>
-Feedback-ID: iab3e480c:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 17 Oct 2025 19:44:25 -0400 (EDT)
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rkg0s26X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81E40C4CEF8;
+	Sat, 18 Oct 2025 04:08:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760760502;
+	bh=Bz2sqnxKpVPi1wG3weF9g0Ox+6uz191MfbDXRdZp1UY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Rkg0s26XqiYbA53dxRzzKW5mlmfDzvO6eICeL/tYZq0fMYIgYRNpXYXCfitXNiHHn
+	 C5L4k7I7GOAjjAq/Fdcq6Zdc2hjigc0DkCuVK4aRMJlv+ngHEm4Y8yZG2tzuJu3S2S
+	 gZcTdghrbEPTV/IF56fuf5MN/oeIGivu1VE0IKI4MwQf8VJUOAuAiqZ66GTBdD2ujO
+	 dyg9FtH1bW6yD8dnWUdyQjLqitMXaZB6f+PM0oNPvrxXdd3MiuNCDP2SGBWlXBrBgO
+	 0GUKVPP4b57EzAa/R1Lm1pZFmjiPFpoZ/orUaZeU+QB+dM2dbiFIvn+Ew7/u6USekT
+	 TExb34c0zpdxw==
+Message-ID: <25898d32-4270-4d8a-81ef-4304d2e60a16@kernel.org>
+Date: Sat, 18 Oct 2025 13:08:19 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: NeilBrown <neilb@ownmail.net>
-To: "Jeff Layton" <jlayton@kernel.org>
-Cc: "Miklos Szeredi" <miklos@szeredi.hu>,
- "Alexander Viro" <viro@zeniv.linux.org.uk>,
- "Christian Brauner" <brauner@kernel.org>, "Jan Kara" <jack@suse.cz>,
- "Chuck Lever" <chuck.lever@oracle.com>,
- "Alexander Aring" <alex.aring@gmail.com>,
- "Trond Myklebust" <trondmy@kernel.org>,
- "Anna Schumaker" <anna@kernel.org>, "Steve French" <sfrench@samba.org>,
- "Paulo Alcantara" <pc@manguebit.org>,
- "Ronnie Sahlberg" <ronniesahlberg@gmail.com>,
- "Shyam Prasad N" <sprasad@microsoft.com>, "Tom Talpey" <tom@talpey.com>,
- "Bharath SM" <bharathsm@microsoft.com>,
- "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- "Danilo Krummrich" <dakr@kernel.org>,
- "David Howells" <dhowells@redhat.com>, "Tyler Hicks" <code@tyhicks.com>,
- "Olga Kornievskaia" <okorniev@redhat.com>,
- "Dai Ngo" <Dai.Ngo@oracle.com>, "Amir Goldstein" <amir73il@gmail.com>,
- "Namjae Jeon" <linkinjeon@kernel.org>,
- "Steve French" <smfrench@gmail.com>,
- "Sergey Senozhatsky" <senozhatsky@chromium.org>,
- "Carlos Maiolino" <cem@kernel.org>,
- "Kuniyuki Iwashima" <kuniyu@google.com>,
- "David S. Miller" <davem@davemloft.net>,
- "Eric Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>,
- "Paolo Abeni" <pabeni@redhat.com>, "Simon Horman" <horms@kernel.org>,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org,
- samba-technical@lists.samba.org, netfs@lists.linux.dev,
- ecryptfs@vger.kernel.org, linux-unionfs@vger.kernel.org,
- linux-xfs@vger.kernel.org, netdev@vger.kernel.org,
- "Jeff Layton" <jlayton@kernel.org>
-Subject: Re: [PATCH v2 00/11] vfs: recall-only directory delegations for knfsd
-In-reply-to: <20251017-dir-deleg-ro-v2-0-8c8f6dd23c8b@kernel.org>
-References: <20251017-dir-deleg-ro-v2-0-8c8f6dd23c8b@kernel.org>
-Date: Sat, 18 Oct 2025 10:44:23 +1100
-Message-id: <176074466364.1793333.7771684363912648120@noble.neil.brown.name>
-Reply-To: NeilBrown <neil@brown.name>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] xfs: prevent gc from picking the same zone twice
+To: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>
+Cc: Hans Holmberg <hans.holmberg@wdc.com>, "Darrick J. Wong"
+ <djwong@kernel.org>, linux-xfs@vger.kernel.org
+References: <20251017060710.696868-1-hch@lst.de>
+ <20251017060710.696868-2-hch@lst.de>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20251017060710.696868-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, 17 Oct 2025, Jeff Layton wrote:
-> A smaller variation of the v1 patchset that I posted earlier this week.
-> Neil's review inspired me to get rid of the lm_may_setlease operation
-> and to do the conflict resolution internally inside of nfsd. That means
-> a smaller VFS-layer change, and an overall reduction in code.
->=20
-> This patchset adds support for directory delegations to nfsd. This
-> version only supports recallable delegations. There is no CB_NOTIFY
-> support yet. I have patches for those, but we've decided to add that
-> support in a later kernel once we get some experience with this part.
-> Anna is working on the client-side pieces.
->=20
-> It would be great if we could get into linux-next soon so that it can be
-> merged for v6.19. Christian, could you pick up the vfs/filelock patches,
-> and Chuck pick up the nfsd patches?
->=20
-> Thanks!
-> Jeff
->=20
-> [1]: https://lore.kernel.org/all/20240315-dir-deleg-v1-0-a1d6209a3654@kerne=
-l.org/
->=20
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
-> Changes in v2:
-> - handle lease conflict resolution inside of nfsd
-> - drop the lm_may_setlease lock_manager operation
-> - just add extra argument to vfs_create() instead of creating wrapper
-> - don't allocate fsnotify_mark for open directories
-> - Link to v1: https://lore.kernel.org/r/20251013-dir-deleg-ro-v1-0-406780a7=
-0e5e@kernel.org
->=20
-> ---
-> Jeff Layton (11):
->       filelock: push the S_ISREG check down to ->setlease handlers
->       vfs: add try_break_deleg calls for parents to vfs_{link,rename,unlink}
->       vfs: allow mkdir to wait for delegation break on parent
->       vfs: allow rmdir to wait for delegation break on parent
->       vfs: break parent dir delegations in open(..., O_CREAT) codepath
->       vfs: make vfs_create break delegations on parent directory
->       vfs: make vfs_mknod break delegations on parent directory
->       filelock: lift the ban on directory leases in generic_setlease
->       nfsd: allow filecache to hold S_IFDIR files
->       nfsd: allow DELEGRETURN on directories
->       nfsd: wire up GET_DIR_DELEGATION handling
+On 10/17/25 15:07, Christoph Hellwig wrote:
+> When we are picking a zone for gc it might already be in the pipeline
+> which can lead to us moving the same data twice resulting in in write
+> amplification and a very unfortunate case where keep on garbage
 
-vfs_symlink() is missing from the updated APIs.  Surely that needs to be
-able to wait for a delegation to break.
+s/keep/we keep
 
-vfs_mkobj() maybe does too, but I could easily turn a blind eye to that.
+> collecting the zone we just filled with migrated data stopping all
+> forward progress.
+> 
+> Fix this by introducing a count of on-going GC operations on a zone, so
+> and skip any zone with ongoing GC when picking a new victim.
+> 
+> Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+> Co-developed-by: Hans Holmberg <hans.holmberg@wdc.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I haven't looked properly at the last patch but all the other could have
- Reviewed-by: NeilBrown <neil@brown.name>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Tested-by: Damien Le Moal <dlemoal@kernel.org>
 
-once the vfs_symlink() omission is fixed.
-
-NeilBrown
+-- 
+Damien Le Moal
+Western Digital Research
