@@ -1,185 +1,194 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f208.google.com (mail-il1-f208.google.com [209.85.166.208])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B62E124729A
-	for <linux-xfs@vger.kernel.org>; Mon, 20 Oct 2025 19:00:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DC752E6CBE
+	for <linux-xfs@vger.kernel.org>; Mon, 20 Oct 2025 21:08:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.208
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760986858; cv=none; b=oK5gWKbpD6rRQJnb0WK8/5TAMZEJvKrwicsdcUMIl7Cp4tyBlaHKfZZhpLpVIBTN6x4iv5c4XvzAeTaPQrDaNbXI3XdL7qmhlik/lCWDP8RnlNQm0/EaNvXUXqZ3ZIpxXzq7JxareuWKqZ+2ZhvqTfa9ZJoegR0K8fWnccI9oqI=
+	t=1760994507; cv=none; b=qusiZKeoeVnC+fJ0lihphqqAApG1bPaEX6FRFfjqp57Rgotsfjpc5fgvydGO3VzQCrEHFiMVB72g9y1LAnmXzGHrxSHboSrzGaLeZVWyY79w8U8BVTqyN96RrSvistvcfbV2j+5mA26WgDSWr4E1cHkZF2yPiZpuW8wsxJp1XUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760986858; c=relaxed/simple;
-	bh=dINDdnyXF6Lg3jKRdMS4yzZeQRu34B+x194gDj4KLgw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Cjv9tNjfquAvRrmq25XZJq8wfnU+OuF270tzYgeR/eh/X9J/Jlyd94moAL+rR5sKqOQu7VUl+exZtzT+PIJzDhjiQpW+b+22MhRysisiD+z3mQvphWcorBZr30rnRieLefskHEvhizta7Y9f2Ncc8LmT6PNjIu/9ZNeFkUR7OqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bwlToA3Y; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bwlToA3Y"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1760986855;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=5wAdwIsaV2mxz61hLX4vusJU8KfwA6OJx8U1ryQWw3U=;
-	b=bwlToA3Yk7Y979RP19AeqesavZsO3x6kb6QCVM3I3xI1PZ6eKvzB0X/lthOBNlfXpGPFuD
-	NU/j7RbLTELfO2JF7BgVB8F9mhHMj6NPK4Mk3Ze/aGMTj+zYEuQrh2t8F6Xre6M0dLnj1t
-	N4SeOnodIeWj7Eeq4zYhMmrBm6uFeFw=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-265-3QhwcTaINe6QrqOiqYvTFQ-1; Mon, 20 Oct 2025 15:00:53 -0400
-X-MC-Unique: 3QhwcTaINe6QrqOiqYvTFQ-1
-X-Mimecast-MFC-AGG-ID: 3QhwcTaINe6QrqOiqYvTFQ_1760986852
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-47106a388cfso21047945e9.0
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Oct 2025 12:00:53 -0700 (PDT)
+	s=arc-20240116; t=1760994507; c=relaxed/simple;
+	bh=6M7rCIWUHwretY2dkQusuOpshxDC/gQAN5l3fsCb5yc=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=fBLZa0TT+HxbGOmfI4B9aEzvaOvEgDY2pWrKrOyJMx/tczt7sXjbCqrBqcszDwTEhbcQNEgE0NNTpMZAYDts6QdfJbxjxXdG1Mi4m9S1mN+0A65p+9+1EQgSrMHocOc4NFK7zqNi2EPS8YnUd/GZ3Dfco7J6cUZhjzlcG1c3VTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.208
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f208.google.com with SMTP id e9e14a558f8ab-430ca53080bso37700235ab.1
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Oct 2025 14:08:25 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760986852; x=1761591652;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=5wAdwIsaV2mxz61hLX4vusJU8KfwA6OJx8U1ryQWw3U=;
-        b=WyIiPQ4kk2oCvnfvF/k0vez8WEVO1IHWRV55XdzU6ytm7yGmYl6lgKmY9p6OEEaN3P
-         bmvMH+Q2uXNKNQWh6vOUa6O8/N+gjrNniGl1LyQx2S7SIsH/2XbMiLEw+MJ1C58McrHZ
-         Jlb+JMK5viMrH7HAe4GearTwasYx2Btglj/LwIelFagF4Ad4y021fjAlC8gyElrg9v56
-         gx7n1byPZtCkbVitYE7a/WX37zS/qbikzbQ4zd0ILfHC0jLyyyBeOP5nR8u2wFizJw1P
-         EGvQ2lM0uHJ3hm6toO+D2WMqW9cuotnx3uDNHWM2DmwOdSzu1yZ4KM9AG4O3wujw+BR8
-         DVFw==
-X-Forwarded-Encrypted: i=1; AJvYcCV7lH0DPLnYw0xILthBhUtEtcMNIihpoDEOluYrEAtP6cBQAaW6d4HWf9Z1RMvZ5aPhcDsdkQEaKpE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzVT87xsTWs1Z9SpvAz/bH4mzuwyrvseLjPmB4hwo3aqMdoz6jT
-	sR6i697SGgExUErMCNoNhQ1cvyn6dC+fVInsb/EwsVM1Afz2Ye57/L3gVmr9Lq1kOWN9V2YzDXL
-	DQaP9wNBkcM64WNib26gfJVrTaRcF6yN7sfwbcZKlbhL2DiHTayj3S70SLNh43A==
-X-Gm-Gg: ASbGncv7kcTlJ/JWokHZUVobUEgLnpOBMpXLgS9oGO6rG1w3210AO7LHYzIq1v2bovH
-	C1oZYXnNXLH+y7tDWtANjogAzVQi0culAhJb+LEW3zusdm6Fe1NudAmgdso9+4NuQ15vV/bt+kp
-	5Tm7DLCcvVkt3NTA0jMjWoc4f8j5eQ+8gW0+IXvnj6FOR1l2Uy17QL0oIHXjJg3uSmp3JxHpeeE
-	YH13DxNy9e6rwSFQ54cJganHIjPxi+COd3NeXgXjIEhl+T8ZQrrxtKsdsnutVMfgcBe4J5DnEDb
-	W+0zlcLj92DoReEsU8Bm2NdC5Sr/05U1RaxNrqqXt0Hgyoq/t/Rcvoga3hNfB+M7Tqmfsk9WTvV
-	/IW56nSzrdI3g0hl6z4u4PmWR9XtfCYOe9a7raeD9JhiAKRZxGrisvpmgZ9r2VbdaAjwQA3cHhW
-	Oz+b734i4rofiAsBsIZaDOQ+NySB8=
-X-Received: by 2002:a05:600c:524f:b0:46e:4c67:ff17 with SMTP id 5b1f17b1804b1-471178a6fa9mr95682425e9.14.1760986852334;
-        Mon, 20 Oct 2025 12:00:52 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGeBVtTe54kGHudQUvmPQThqNcAHiithbRT8ALDQPVgYD+ACEn42WaNaOAZe32RO2rz4EUwSQ==
-X-Received: by 2002:a05:600c:524f:b0:46e:4c67:ff17 with SMTP id 5b1f17b1804b1-471178a6fa9mr95682195e9.14.1760986851909;
-        Mon, 20 Oct 2025 12:00:51 -0700 (PDT)
-Received: from ?IPV6:2003:d8:2f0c:c200:fa4a:c4ff:1b32:21ce? (p200300d82f0cc200fa4ac4ff1b3221ce.dip0.t-ipconnect.de. [2003:d8:2f0c:c200:fa4a:c4ff:1b32:21ce])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-471144d17cdsm241227075e9.18.2025.10.20.12.00.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 20 Oct 2025 12:00:51 -0700 (PDT)
-Message-ID: <5bd1d360-bee0-4fa2-80c8-476519e98b00@redhat.com>
-Date: Mon, 20 Oct 2025 21:00:50 +0200
+        d=1e100.net; s=20230601; t=1760994504; x=1761599304;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=I0eXYf3TjrYmmJbW09ZvPArClIX2HBveW+wmmrkYZcI=;
+        b=EyB5hoX3wQ+QB6QVgJckSeBHIprsGcgG2XeSGKo+Op0lBlmsJzfobxy0IqQo664Q4V
+         jLT7XwKObzOv6Rq0CkXXT4VEW7oThjneLNFXh7b5AScNWS6p5rgBUeUCDzFd5iAFYA2t
+         UbIhtSskJVP4uJ+W6ctNsCqLNjBwvG1GqG67nJNHEg2XeCZwm/jjSOL8ck/jUTIdCyLM
+         5HE/ZZV7AHkF0JYvOStp5bd/FHvAcNpMEibUr/LGX9KvqvDMjvLK7Yn8hdS+SZfTKvCQ
+         M5WojLMvkPegcoOCNACBXUde6aky5D7XqC+JQwde8EwY+jsYGN7EuqAFnNziHWa+hHqB
+         sneg==
+X-Forwarded-Encrypted: i=1; AJvYcCX15CYSbT0zo7UTOi0/mLeHzd+yScoVEXEWLD8/mnKs/TZaM+doVu4wzBueBL24CfDPlz9mDjz47GA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyNNBDQBbr0d1Fk0RCOypsgca6A4MJWpy6jPAg6IUZLQ0qZWL6Z
+	xOLD+gRXdRrlt6ETfNXIa8wOlQyPFRcthEnJKJLwuyIGzGVtqRgIEfdVg6nPwKbnDtfNz5/9Q8R
+	ypUHzpK47U3NfnPhWU9p5NHfvs/LEz19ajZq0MLJlh43zUdVG6RpbzZ5E9+M=
+X-Google-Smtp-Source: AGHT+IHbdtDVSpXjuhxh36FgFokNZFak1pGN6vBsD5YgawEkDR+EYvTO78CPnmFZzbu5yb+piDW8LKG1ghDoW5pLH8GshetdwwH/
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: O_DIRECT vs BLK_FEAT_STABLE_WRITES, was Re: [PATCH] btrfs: never
- trust the bio from direct IO
-To: Jan Kara <jack@suse.cz>, Matthew Wilcox <willy@infradead.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Qu Wenruo <wqu@suse.com>,
- linux-btrfs@vger.kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
- linux-mm@kvack.org, martin.petersen@oracle.com, jack@suse.com
-References: <1ee861df6fbd8bf45ab42154f429a31819294352.1760951886.git.wqu@suse.com>
- <aPYIS5rDfXhNNDHP@infradead.org>
- <56o3re2wspflt32t6mrfg66dec4hneuixheroax2lmo2ilcgay@zehhm5yaupav>
- <aPYgm3ey4eiFB4_o@infradead.org>
- <mciqzktudhier5d2wvjmh4odwqdszvbtcixbthiuuwrufrw3cj@5s2ffnffu4gc>
- <aPZOO3dFv61blHBz@casper.infradead.org>
- <xc2orfhavfqaxrmxtsbf4kepglfujjodvhfzhzfawwaxlyrhlb@gammchkzoh2m>
-From: David Hildenbrand <david@redhat.com>
-Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- qIws/H2t
-In-Reply-To: <xc2orfhavfqaxrmxtsbf4kepglfujjodvhfzhzfawwaxlyrhlb@gammchkzoh2m>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a05:6e02:4417:10b0:430:d21d:7b24 with SMTP id
+ e9e14a558f8ab-430d21d7b55mr120263865ab.32.1760994504385; Mon, 20 Oct 2025
+ 14:08:24 -0700 (PDT)
+Date: Mon, 20 Oct 2025 14:08:24 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <68f6a4c8.050a0220.1be48.0012.GAE@google.com>
+Subject: [syzbot] [nilfs?] [xfs?] INFO: task hung in xfs_buf_get_map
+From: syzbot <syzbot+d74d844bdcee0902b28a@syzkaller.appspotmail.com>
+To: anna-maria@linutronix.de, cem@kernel.org, frederic@kernel.org, 
+	konishi.ryusuke@gmail.com, linux-kernel@vger.kernel.org, 
+	linux-nilfs@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com, tglx@linutronix.de
+Content-Type: text/plain; charset="UTF-8"
 
-On 20.10.25 17:58, Jan Kara wrote:
-> On Mon 20-10-25 15:59:07, Matthew Wilcox wrote:
->> On Mon, Oct 20, 2025 at 03:59:33PM +0200, Jan Kara wrote:
->>> The idea was to bounce buffer the page we are writing back in case we spot
->>> a long-term pin we cannot just wait for - hence bouncing should be rare.
->>> But in this more general setting it is challenging to not bounce buffer for
->>> every IO (in which case you'd be basically at performance of RWF_DONTCACHE
->>> IO or perhaps worse so why bother?). Essentially if you hand out the real
->>> page underlying the buffer for the IO, all other attemps to do IO to that
->>> page have to block - bouncing is no longer an option because even with
->>> bouncing the second IO we could still corrupt data of the first IO once we
->>> copy to the final buffer. And if we'd block waiting for the first IO to
->>> complete, userspace could construct deadlock cycles - like racing IO to
->>> pages A, B with IO to pages B, A. So far I'm not sure about a sane way out
->>> of this...
->>
->> There isn't one.  We might have DMA-mapped this page earlier, and so a
->> device could write to it at any time.  Even if we remove PTE write
->> permissions ...
-> 
-> True but writes through DMA to the page are guarded by holding a page pin
-> these days so we could in theory block getting another page pin or mapping
-> the page writeably until the pin is released... if we can figure out a
-> convincing story for dealing with long-term pins from RDMA and dealing with
-> possible deadlocks created by this.
+Hello,
 
-Just FYI, because it might be interesting in this context.
+syzbot found the following issue on:
 
-For anonymous memory we have this working by only writing the folio out 
-if it is completely unmapped and there are no unexpected folio 
-references/pins (see pageout()), and only allowing to write to such a 
-folio ("reuse") if SWP_STABLE_WRITES is not set (see do_swap_page()).
+HEAD commit:    93f3bab4310d Add linux-next specific files for 20251017
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=164183cd980000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=408308c229eef498
+dashboard link: https://syzkaller.appspot.com/bug?extid=d74d844bdcee0902b28a
+compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=15731492580000
 
-So once we start writeback the folio has no writable page table mappings 
-(unmapped) and no GUP pins. Consequently, when trying to write to it we 
-can just fallback to creating a page copy without causing trouble with 
-GUP pins.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/c955a9337646/disk-93f3bab4.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/843962ea5283/vmlinux-93f3bab4.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/42360a7c5734/bzImage-93f3bab4.xz
+mounted in repro #1: https://storage.googleapis.com/syzbot-assets/79eeb7cc5dde/mount_0.gz
+  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=16995de2580000)
+mounted in repro #2: https://storage.googleapis.com/syzbot-assets/9596ff3df6a7/mount_4.gz
 
--- 
-Cheers
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+d74d844bdcee0902b28a@syzkaller.appspotmail.com
 
-David / dhildenb
+INFO: task syz.2.368:9928 blocked for more than 143 seconds.
+      Not tainted syzkaller #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz.2.368       state:D stack:20840 pid:9928  tgid:9927  ppid:5959   task_flags:0x440140 flags:0x00080003
+Call Trace:
+ <TASK>
+ context_switch kernel/sched/core.c:5254 [inline]
+ __schedule+0x17c4/0x4d60 kernel/sched/core.c:6862
+ __schedule_loop kernel/sched/core.c:6944 [inline]
+ schedule+0x165/0x360 kernel/sched/core.c:6959
+ schedule_timeout+0x9a/0x270 kernel/time/sleep_timeout.c:75
+ ___down_common kernel/locking/semaphore.c:268 [inline]
+ __down_common+0x319/0x6a0 kernel/locking/semaphore.c:293
+ down+0x80/0xd0 kernel/locking/semaphore.c:100
+ xfs_buf_lock+0x15d/0x4d0 fs/xfs/xfs_buf.c:993
+ xfs_buf_find_lock+0x42/0x4c0 fs/xfs/xfs_buf.c:419
+ xfs_buf_lookup fs/xfs/xfs_buf.c:472 [inline]
+ xfs_buf_get_map+0x10cf/0x1840 fs/xfs/xfs_buf.c:594
+ xfs_buf_read_map+0x82/0xa50 fs/xfs/xfs_buf.c:699
+ xfs_trans_read_buf_map+0x1d7/0x8e0 fs/xfs/xfs_trans_buf.c:304
+ xfs_trans_read_buf fs/xfs/xfs_trans.h:210 [inline]
+ xfs_read_agf+0x281/0x5c0 fs/xfs/libxfs/xfs_alloc.c:3376
+ xfs_alloc_read_agf+0x17c/0xb70 fs/xfs/libxfs/xfs_alloc.c:3411
+ xfs_alloc_fix_freelist+0x60a/0x1300 fs/xfs/libxfs/xfs_alloc.c:2875
+ xfs_free_extent_fix_freelist+0x13e/0x240 fs/xfs/libxfs/xfs_alloc.c:3990
+ xfs_rmap_finish_init_cursor+0xae/0x210 fs/xfs/libxfs/xfs_rmap.c:2645
+ xfs_rmap_finish_one+0x2a2/0x710 fs/xfs/libxfs/xfs_rmap.c:2708
+ xfs_rmap_update_finish_item+0x25/0x40 fs/xfs/xfs_rmap_item.c:437
+ xfs_defer_finish_one+0x5c8/0xcf0 fs/xfs/libxfs/xfs_defer.c:595
+ xfs_defer_finish_noroll+0x910/0x12d0 fs/xfs/libxfs/xfs_defer.c:707
+ xfs_trans_commit+0x10b/0x1c0 fs/xfs/xfs_trans.c:921
+ xfs_attr_set+0xdc6/0x1210 fs/xfs/libxfs/xfs_attr.c:1150
+ xfs_xattr_set+0x14d/0x250 fs/xfs/xfs_xattr.c:186
+ __vfs_setxattr+0x43c/0x480 fs/xattr.c:200
+ __vfs_setxattr_noperm+0x12d/0x660 fs/xattr.c:234
+ vfs_setxattr+0x16b/0x2f0 fs/xattr.c:321
+ do_setxattr fs/xattr.c:636 [inline]
+ filename_setxattr+0x274/0x600 fs/xattr.c:665
+ path_setxattrat+0x364/0x3a0 fs/xattr.c:713
+ __do_sys_setxattr fs/xattr.c:747 [inline]
+ __se_sys_setxattr fs/xattr.c:743 [inline]
+ __x64_sys_setxattr+0xbc/0xe0 fs/xattr.c:743
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0xfa/0xfa0 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f141038efc9
+RSP: 002b:00007f1411141038 EFLAGS: 00000246 ORIG_RAX: 00000000000000bc
+RAX: ffffffffffffffda RBX: 00007f14105e5fa0 RCX: 00007f141038efc9
+RDX: 00002000000013c0 RSI: 0000200000000140 RDI: 0000200000000100
+RBP: 00007f1410411f91 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000700 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007f14105e6038 R14: 00007f14105e5fa0 R15: 00007ffeca4978b8
+ </TASK>
 
+Showing all locks held in the system:
+1 lock held by khungtaskd/31:
+ #0: ffffffff8e13d720 (rcu_read_lock){....}-{1:3}, at: rcu_lock_acquire include/linux/rcupdate.h:331 [inline]
+ #0: ffffffff8e13d720 (rcu_read_lock){....}-{1:3}, at: rcu_read_lock include/linux/rcupdate.h:867 [inline]
+ #0: ffffffff8e13d720 (rcu_read_lock){....}-{1:3}, at: debug_show_all_locks+0x2e/0x180 kernel/locking/lockdep.c:6775
+2 locks held by getty/5586:
+ #0: ffff88803370d0a0 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x25/0x70 drivers/tty/tty_ldisc.c:243
+ #1: ffffc900036bb2f0 (&ldata->atomic_read_lock){+.+.}-{4:4}, at: n_tty_read+0x43e/0x1400 drivers/tty/n_tty.c:2222
+2 locks held by udevd/5851:
+1 lock held by syz-executor/5948:
+ #0: ffffffff8e1431b8 (rcu_state.exp_mutex){+.+.}-{4:4}, at: exp_funnel_lock kernel/rcu/tree_exp.h:343 [inline]
+ #0: ffffffff8e1431b8 (rcu_state.exp_mutex){+.+.}-{4:4}, at: synchronize_rcu_expedited+0x3b9/0x730 kernel/rcu/tree_exp.h:957
+2 locks held by syz-executor/5951:
+ #0: ffff8880334640e0 (&type->s_umount_key#53){+.+.}-{4:4}, at: __super_lock fs/super.c:57 [inline]
+ #0: ffff8880334640e0 (&type->s_umount_key#53){+.+.}-{4:4}, at: __super_lock_excl fs/super.c:72 [inline]
+ #0: ffff8880334640e0 (&type->s_umount_key#53){+.+.}-{4:4}, at: deactivate_super+0xa9/0xe0 fs/super.c:505
+ #1: ffff88801cab0188 (&root->kernfs_rwsem){++++}-{4:4}, at: kernfs_remove_by_name_ns+0x3d/0x130 fs/kernfs/dir.c:1712
+5 locks held by kworker/u8:9/8967:
+4 locks held by syz.2.368/9928:
+ #0: ffff888026af0420 (sb_writers#12){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:508
+ #1: ffff8880571d8ab0 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: inode_lock include/linux/fs.h:980 [inline]
+ #1: ffff8880571d8ab0 (&sb->s_type->i_mutex_key#20){+.+.}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+ #2: ffff888026af0610 (sb_internal#2){.+.+}-{0:0}, at: xfs_trans_alloc+0xd7/0x980 fs/xfs/xfs_trans.c:256
+ #3: ffff8880571d8898 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_trans_alloc_inode+0x161/0x4a0 fs/xfs/xfs_trans.c:1082
+4 locks held by syz.2.368/9964:
+ #0: ffff888026af0420 (sb_writers#12){.+.+}-{0:0}, at: mnt_want_write+0x41/0x90 fs/namespace.c:508
+ #1: ffff88805722d5b0 (&inode->i_sb->s_type->i_mutex_dir_key){++++}-{4:4}, at: inode_lock include/linux/fs.h:980 [inline]
+ #1: ffff88805722d5b0 (&inode->i_sb->s_type->i_mutex_dir_key){++++}-{4:4}, at: vfs_setxattr+0x144/0x2f0 fs/xattr.c:320
+ #2: ffff888026af0610 (sb_internal#2){.+.+}-{0:0}, at: xfs_trans_alloc+0xd7/0x980 fs/xfs/xfs_trans.c:256
+ #3: ffff88805722d398 (&xfs_dir_ilock_class){++++}-{4:4}, at: xfs_trans_alloc_inode+0x161/0x4a0 fs/xfs/xfs_trans.c:1082
+1 lock held by syz-executor/10238:
+2 locks held by syz.3.652/13032:
+ #0: ffff888031bc20e0 (&type->s_umount_key#52/1){+.+.}-{4:4}, at: alloc_super+0x1bb/0x930 fs/super.c:344
+ #1: ffff8880b863a058 (&rq->__lock){-.-.}-{2:2}, at: raw_spin_rq_lock_nested+0x2a/0x140 kernel/sched/core.c:638
+
+=============================================
+
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
