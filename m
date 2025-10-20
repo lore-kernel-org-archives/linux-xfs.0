@@ -1,88 +1,104 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D83AB2BE032
-	for <linux-xfs@vger.kernel.org>; Mon, 20 Oct 2025 09:36:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84CB32F6191
+	for <linux-xfs@vger.kernel.org>; Mon, 20 Oct 2025 09:38:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760952967; cv=none; b=rPMWSpC+3NUtZaVAaM2afIZbccdHwKaV9NpkI2J/vhSYqrV5FnE0xQPPf54mr7us9AKqPM43/L/B9IT4+fNuha7sQS+rzgn23SLhKkYI/gS8HF2xQ3RZwZizKiH3OEOWIlVXIB12ycfk5pSJGzyP2gfh0Wv4YdOMbClJxDExuBg=
+	t=1760953105; cv=none; b=olV2Zi0msm+uX1BI0byC+Nn7LDeKmCad5mJ+t5V6UWMDwh9exjeYQfljxSMOVBo99DNEr6BHAZKWONA57cmBtNHS1xqVDHIJNBokt51I2Pnjn0sCGPwuQq4vUBxKaVghYe9stHeTCdlkyQFMRvL50VBcKPa8ZTtYE1B+h72Mpbc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760952967; c=relaxed/simple;
-	bh=pb7koSi1mdWN7GrEo23T3F/LgZ/z651FyLLayGCI31c=;
+	s=arc-20240116; t=1760953105; c=relaxed/simple;
+	bh=h6eHIKNIKxvv7MntNZ2NPluU3sYBXbkxa/iV1J5GD+E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W5w5TWkExJTEl3mnbLkJoRhcnGs0q8CPB+AEs70R4jjm1vp0o4OWSM1Ph5wB6pLJbSUX39O95ajruX5cr/d++3potYKSXKqAoN735hBH0r1Nf8mcc9vtAMf0hzsYLt4csZuNCPzqQRvxBT+LIxNs/g8NnhfwyL9pEuQ+2FfuQFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=GgWDHmOi; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=yYYNxzeN; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=xC7Vte8B; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=3phBpZ57; arc=none smtp.client-ip=195.135.223.131
+	 Content-Type:Content-Disposition:In-Reply-To; b=iP9NCPVuKapGb6T1e+gI5qd27wexajG+7s/VLvBfCToVCEf1SFWhqQlS5CPXDIA9TCxuECbqYmI/WL3/m8bPIvM+xmM7UZYHOP1bEq+wKZi/KvXHjFbrm0gvkAbku0HbCvibhBVjJOM3FeJiVdq8kak/bIiHlHAhbrhME1h+3eY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=zxouHgNg; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=5lzRlQJq; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=zxouHgNg; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=5lzRlQJq; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="GgWDHmOi";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="yYYNxzeN";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="xC7Vte8B";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="3phBpZ57"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="zxouHgNg";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="5lzRlQJq";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="zxouHgNg";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="5lzRlQJq"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id D6A101F387;
-	Mon, 20 Oct 2025 09:35:55 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id B602B21182;
+	Mon, 20 Oct 2025 09:38:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1760952960; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1760953094; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=0ZGrk75lzeUcUPY7bXGOuLVFadRTcXNXHKGPKlcJJIk=;
-	b=GgWDHmOiUNzNWIHKdVaazAdmxYnL/+OrBB0yIZxLTTBB/tZT4vigET2TkWSdwJLXjsXBw6
-	p1bCRjTG8SuSV0mxhUDwNgCqR0jSRNyy0s73aoU8ukWk+SGWxH8pV3Q9CEi8XG0DRlpaBd
-	W3fPCX9PexXBAdpWxUsiJFspQP0bVuc=
+	bh=Z3Kd6mbbrPRG0zwXHtLEs9ID63+xl85WNbtfLvd00nw=;
+	b=zxouHgNgKUzdOarvvgPHxxhBWfS94a/uSkfjawCnhR8cbzz69iJLdEIMLj+zu50BZJJba5
+	bUTYv7oaSLn8CNysGSrIzr02b4aqBS2pxKu3DHfqFRoON9pn+7ej6fZrScypIZq2azmnM9
+	x+TSTCq6IzdNyUQ8GrWILzHPDDFkhg0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1760952960;
+	s=susede2_ed25519; t=1760953094;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=0ZGrk75lzeUcUPY7bXGOuLVFadRTcXNXHKGPKlcJJIk=;
-	b=yYYNxzeNK+imXBRIhQzhMJbwBsLzZlTDL3dGHsG9mZ8cLlSpRrgpr+HOUnYzahsTrd/wDH
-	iiPhYlGGmlclZTCQ==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=xC7Vte8B;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=3phBpZ57
+	bh=Z3Kd6mbbrPRG0zwXHtLEs9ID63+xl85WNbtfLvd00nw=;
+	b=5lzRlQJqx8tIyzMXiqieG4GgqzCjJXMTESHJy83TMpTfVtscp3W2GniczNdnyGo/OW71MN
+	UX0rYu63KQ2G2IBQ==
+Authentication-Results: smtp-out1.suse.de;
+	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1760952955; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1760953094; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=0ZGrk75lzeUcUPY7bXGOuLVFadRTcXNXHKGPKlcJJIk=;
-	b=xC7Vte8BQNOemmEq2ZOO8I4JfrXVqsXBnlEYJmqD8gKlTmqcAm4Qq8uJmFKhAOSJJdUWsT
-	o2uiiUo7scqHXncEvhIdDYN9sxjxJCkUPE+UEHSHuSUWlpvLdM/flg+wkHPdwxQ4SxBby0
-	JvrsEabewyArTBDBzY71AN1xXfmrbIE=
+	bh=Z3Kd6mbbrPRG0zwXHtLEs9ID63+xl85WNbtfLvd00nw=;
+	b=zxouHgNgKUzdOarvvgPHxxhBWfS94a/uSkfjawCnhR8cbzz69iJLdEIMLj+zu50BZJJba5
+	bUTYv7oaSLn8CNysGSrIzr02b4aqBS2pxKu3DHfqFRoON9pn+7ej6fZrScypIZq2azmnM9
+	x+TSTCq6IzdNyUQ8GrWILzHPDDFkhg0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1760952955;
+	s=susede2_ed25519; t=1760953094;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=0ZGrk75lzeUcUPY7bXGOuLVFadRTcXNXHKGPKlcJJIk=;
-	b=3phBpZ57woN99UzJW/kapoO8Am51aDTiUtiu/hDu8dB2Qn1R4UY0X6o5cbjCIqt+OFNa5f
-	wXZocNlQujblr7AA==
+	bh=Z3Kd6mbbrPRG0zwXHtLEs9ID63+xl85WNbtfLvd00nw=;
+	b=5lzRlQJqx8tIyzMXiqieG4GgqzCjJXMTESHJy83TMpTfVtscp3W2GniczNdnyGo/OW71MN
+	UX0rYu63KQ2G2IBQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id CCB5313AAC;
-	Mon, 20 Oct 2025 09:35:55 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A767513AAC;
+	Mon, 20 Oct 2025 09:38:14 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Apf3MXsC9mgeDQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Mon, 20 Oct 2025 09:35:55 +0000
+	id urrbKAYD9mgtDwAAD6G6ig
+	(envelope-from <jack@suse.cz>); Mon, 20 Oct 2025 09:38:14 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 8C6A6A0856; Mon, 20 Oct 2025 11:35:51 +0200 (CEST)
-Date: Mon, 20 Oct 2025 11:35:51 +0200
+	id 55C9AA0856; Mon, 20 Oct 2025 11:38:14 +0200 (CEST)
+Date: Mon, 20 Oct 2025 11:38:14 +0200
 From: Jan Kara <jack@suse.cz>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Carlos Maiolino <cem@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, willy@infradead.org, 
-	dlemoal@kernel.org, hans.holmberg@wdc.com, linux-mm@kvack.org, 
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH 1/3] writeback: cleanup writeback_chunk_size
-Message-ID: <mf4onihgfgioim3c33d4jvcfixi6qvibqvp7ndp5wefocgwdke@vzjltwrvm47y>
-References: <20251017034611.651385-1-hch@lst.de>
- <20251017034611.651385-2-hch@lst.de>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+	Chuck Lever <chuck.lever@oracle.com>, Alexander Aring <alex.aring@gmail.com>, 
+	Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, 
+	Steve French <sfrench@samba.org>, Paulo Alcantara <pc@manguebit.org>, 
+	Ronnie Sahlberg <ronniesahlberg@gmail.com>, Shyam Prasad N <sprasad@microsoft.com>, 
+	Tom Talpey <tom@talpey.com>, Bharath SM <bharathsm@microsoft.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, David Howells <dhowells@redhat.com>, 
+	Tyler Hicks <code@tyhicks.com>, NeilBrown <neil@brown.name>, 
+	Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
+	Amir Goldstein <amir73il@gmail.com>, Namjae Jeon <linkinjeon@kernel.org>, 
+	Steve French <smfrench@gmail.com>, Sergey Senozhatsky <senozhatsky@chromium.org>, 
+	Carlos Maiolino <cem@kernel.org>, Kuniyuki Iwashima <kuniyu@google.com>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
+	linux-cifs@vger.kernel.org, samba-technical@lists.samba.org, netfs@lists.linux.dev, 
+	ecryptfs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 03/13] vfs: add try_break_deleg calls for parents to
+ vfs_{link,rename,unlink}
+Message-ID: <n5ihwvsits3u7fwvzuk42vmqdv45ap6u4gh77diegtxik42emp@whyfqmynxnl2>
+References: <20251013-dir-deleg-ro-v1-0-406780a70e5e@kernel.org>
+ <20251013-dir-deleg-ro-v1-3-406780a70e5e@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -91,85 +107,99 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251017034611.651385-2-hch@lst.de>
+In-Reply-To: <20251013-dir-deleg-ro-v1-3-406780a70e5e@kernel.org>
 X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: D6A101F387
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.01 / 50.00];
+X-Spamd-Result: default: False [-2.30 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
 	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
 	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
 	ARC_NA(0.00)[];
 	MIME_TRACE(0.00)[0:+];
-	MISSING_XM_UA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[12];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.com:email];
 	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[44];
+	TAGGED_RCPT(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	R_RATELIMIT(0.00)[to_ip_from(RL63fqwwx8ot6gmekemcs76f9d)];
 	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[szeredi.hu,zeniv.linux.org.uk,kernel.org,suse.cz,oracle.com,gmail.com,samba.org,manguebit.org,microsoft.com,talpey.com,linuxfoundation.org,redhat.com,tyhicks.com,brown.name,chromium.org,google.com,davemloft.net,vger.kernel.org,lists.samba.org,lists.linux.dev];
 	RCVD_COUNT_THREE(0.00)[3];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
 	RCVD_TLS_LAST(0.00)[];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
 	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.cz:+]
-X-Spam-Score: -4.01
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.com:email]
+X-Spam-Flag: NO
+X-Spam-Score: -2.30
 
-On Fri 17-10-25 05:45:47, Christoph Hellwig wrote:
-> Return the pages directly when calculated instead of first assigning
-> them back to a variable, and directly return for the data integrity /
-> tagged case instead of going through an else clause.
+On Mon 13-10-25 10:48:01, Jeff Layton wrote:
+> In order to add directory delegation support, we need to break
+> delegations on the parent whenever there is going to be a change in the
+> directory.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+> vfs_link, vfs_unlink, and vfs_rename all have existing delegation break
+> handling for the children in the rename. Add the necessary calls for
+> breaking delegations in the parent(s) as well.
+> 
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
 
-Looks good, feel free to add:
+Looks good. Feel free to add:
 
 Reviewed-by: Jan Kara <jack@suse.cz>
 
 								Honza
+
 > ---
->  fs/fs-writeback.c | 14 +++++---------
->  1 file changed, 5 insertions(+), 9 deletions(-)
+>  fs/namei.c | 15 ++++++++++++++-
+>  1 file changed, 14 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> index 2b35e80037fe..11fd08a0efb8 100644
-> --- a/fs/fs-writeback.c
-> +++ b/fs/fs-writeback.c
-> @@ -1893,16 +1893,12 @@ static long writeback_chunk_size(struct bdi_writeback *wb,
->  	 *                   (maybe slowly) sync all tagged pages
->  	 */
->  	if (work->sync_mode == WB_SYNC_ALL || work->tagged_writepages)
-> -		pages = LONG_MAX;
-> -	else {
-> -		pages = min(wb->avg_write_bandwidth / 2,
-> -			    global_wb_domain.dirty_limit / DIRTY_SCOPE);
-> -		pages = min(pages, work->nr_pages);
-> -		pages = round_down(pages + MIN_WRITEBACK_PAGES,
-> -				   MIN_WRITEBACK_PAGES);
-> -	}
-> +		return LONG_MAX;
->  
-> -	return pages;
-> +	pages = min(wb->avg_write_bandwidth / 2,
-> +		    global_wb_domain.dirty_limit / DIRTY_SCOPE);
-> +	pages = min(pages, work->nr_pages);
-> +	return round_down(pages + MIN_WRITEBACK_PAGES, MIN_WRITEBACK_PAGES);
->  }
->  
->  /*
+> diff --git a/fs/namei.c b/fs/namei.c
+> index 7377020a2cba02501483020e0fc93c279fb38d3e..6e61e0215b34134b1690f864e2719e3f82cf71a8 100644
+> --- a/fs/namei.c
+> +++ b/fs/namei.c
+> @@ -4667,6 +4667,9 @@ int vfs_unlink(struct mnt_idmap *idmap, struct inode *dir,
+>  	else {
+>  		error = security_inode_unlink(dir, dentry);
+>  		if (!error) {
+> +			error = try_break_deleg(dir, delegated_inode);
+> +			if (error)
+> +				goto out;
+>  			error = try_break_deleg(target, delegated_inode);
+>  			if (error)
+>  				goto out;
+> @@ -4936,7 +4939,9 @@ int vfs_link(struct dentry *old_dentry, struct mnt_idmap *idmap,
+>  	else if (max_links && inode->i_nlink >= max_links)
+>  		error = -EMLINK;
+>  	else {
+> -		error = try_break_deleg(inode, delegated_inode);
+> +		error = try_break_deleg(dir, delegated_inode);
+> +		if (!error)
+> +			error = try_break_deleg(inode, delegated_inode);
+>  		if (!error)
+>  			error = dir->i_op->link(old_dentry, dir, new_dentry);
+>  	}
+> @@ -5203,6 +5208,14 @@ int vfs_rename(struct renamedata *rd)
+>  		    old_dir->i_nlink >= max_links)
+>  			goto out;
+>  	}
+> +	error = try_break_deleg(old_dir, delegated_inode);
+> +	if (error)
+> +		goto out;
+> +	if (new_dir != old_dir) {
+> +		error = try_break_deleg(new_dir, delegated_inode);
+> +		if (error)
+> +			goto out;
+> +	}
+>  	if (!is_dir) {
+>  		error = try_break_deleg(source, delegated_inode);
+>  		if (error)
+> 
 > -- 
-> 2.47.3
+> 2.51.0
 > 
 -- 
 Jan Kara <jack@suse.com>
