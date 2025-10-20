@@ -1,46 +1,35 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E50702DBF49;
-	Mon, 20 Oct 2025 07:01:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1601E264A90;
+	Mon, 20 Oct 2025 07:28:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760943684; cv=none; b=T4vbcWkKCfK1lfhWNySVV8GNSobp/MdrjF6geh3kqZIW+FHIvXjvH3Th4tTxy5pJCgAukLuGSR6VYWSQPI2DxjGW72ARu8keaver+tWPOWRq0g8oj03dw7CSL0jSZlvp4+meyHDXIKu8ANlnVJRpWWugSU6AKI7L9SkLP5P1ATU=
+	t=1760945312; cv=none; b=uPnO6jbxFVgiaKUcXF40QG5cqB1id+IoOReVudw7bF2Z2jXwyBs7c2wm2VFnihz6Ec1vhgRY9gY4vnc04N4QPT2VAtD5NKPYbO6KBipZdNXpH2YN2i8gvj8twNmMNXSrOvC497x2SylzmjZzizZ5hkHGTK4ePzCxwX/cZ9S9L04=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760943684; c=relaxed/simple;
-	bh=g/1j01oNt6bwgLy6AnV/ZrCZYdGblbMcqisxaUHD+rM=;
+	s=arc-20240116; t=1760945312; c=relaxed/simple;
+	bh=jDjH+ohaZmejbfb9zqfXBjtq0NyX2pvNIgbid43g+OQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kK+lur5BMhz+8OjRknu6EtTBqUfw0OJHYcTuddJP81qYkbrTFgmckUZwAjNpDH/fsOvtIgarkPN9NcTrhOi2XlhACPVB5kEjzSw/OMz5jcH0b0ihul7sM3DxXtJRdLSajZJXfH5CpeQeHxxNY/NK9ORveVG3A7AE4p3wx+d5mNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fD9Lkv6m; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fD9Lkv6m"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=eWBMg/aDFwI5fXnArlCdjNcoh/AFadl2ipzbdGcQTGI=; b=fD9Lkv6mVFUASTo/bWl8UbY+w7
-	Uq2bgr8jfUNJ1obYZ+C7bS7dIKoeudnud0hxCctmWAzjbIqNh+ek4TDvJ3ZUE4hafc39vE7wBw2cP
-	6ROvYTcpLUyy1UNE6Cl3kUDqshkxQ/inCY/Cs0FMjtxjsqwP9a2100MvMMQCxtVQTThewt2Gj+if4
-	CnI9JQu55KZNIO1M+TMfUaxn76YliQr60B3uf2JFxIHBEbLNpgaYD633YRUIJMRgIRHw8bGpebVqB
-	FmuS7f0KQxxipXKuh69G4Mcjb/G0PXsi8319VmdvkSqVxsBw2wnvpMV27lomB1wO2IisHgwdkEY3H
-	fvgVI6BQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vAjtR-0000000C7u0-3ZCT;
-	Mon, 20 Oct 2025 07:01:21 +0000
-Date: Mon, 20 Oct 2025 00:01:21 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, zlang@redhat.com,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/8] common/filter: fix _filter_file_attributes to handle
- xfs file flags
-Message-ID: <aPXeQW0ISn6_aCoP@infradead.org>
-References: <176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
- <176054618007.2391029.16547003793604851342.stgit@frogsfrogsfrogs>
- <aPHE0N8JX4H8eEo6@infradead.org>
- <20251017162218.GD6178@frogsfrogsfrogs>
+	 Content-Type:Content-Disposition:In-Reply-To; b=MD6MdoFa6NbIMJeZwr2LvSlYBVfSr7sqXFtGxfp0B/aiVvWGr9VvQSibN4ECUtEbjjv7kUYNtpA7EwhD+O7q5QmtPuVBHJOUZNt8DTbS1LBusuveoNtr25Yselb366M7CwOW18rar4L7ERQpHTQEpHBWifwnOyxij8uXd03M7WI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id A30DA227A87; Mon, 20 Oct 2025 09:28:19 +0200 (CEST)
+Date: Mon, 20 Oct 2025 09:28:19 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Zorro Lang <zlang@redhat.com>
+Cc: Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+	Christoph Hellwig <hch@lst.de>, Naohiro Aota <naohiro.aota@wdc.com>,
+	linux-btrfs@vger.kernel.org, Hans Holmberg <hans.holmberg@wdc.com>,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>,
+	"Darrick J . Wong" <djwong@kernel.org>,
+	Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v5 3/3] generic: basic smoke for filesystems on zoned
+ block devices
+Message-ID: <20251020072818.GA28882@lst.de>
+References: <20251016152032.654284-1-johannes.thumshirn@wdc.com> <20251016152032.654284-4-johannes.thumshirn@wdc.com> <20251017185633.pvpapg5gq47s2vmm@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -49,36 +38,17 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251017162218.GD6178@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20251017185633.pvpapg5gq47s2vmm@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Oct 17, 2025 at 09:22:18AM -0700, Darrick J. Wong wrote:
-> > What XFS flags end up in lsattr?
+On Sat, Oct 18, 2025 at 02:56:33AM +0800, Zorro Lang wrote:
+> Does this mean the current FSTYP doesn't support zoned?
 > 
-> Assuming you're asking which XFS flags are reported by ext4 lsattr...
-> 
-> append, noatime, nodump, immutable, projinherit, fsdax
-> 
-> Unless you meant src/file_attr.c?  In which case theyr'e
+> As this's a generic test case, the FSTYP can be any other filesystems, likes
+> nfs, cifs, overlay, exfat, tmpfs and so on, can we create zloop on any of them?
+> If not, how about _notrun if current FSTYP doesn't support.
 
-I'm actually not sure.  I was just surprised about the flags showing
-up.
-
-> 
-> > Is this coordinated with the official
-> > registry in ext4?
-> 
-> Only informally by Ted and I talking on Thursdays.
-> 
-> The problem here is that _filter_file_attributes ... probably ought to
-> say which domain (ext4 lsattr or xfs_io lsattr) it's actually filtering.
-
-Oooh.  That explains my confusion.
-
-> Right now the only users of this helper are using it to filter
-> src/file_attr.c output (aka xfs_io lsattr) so I think I should change
-> the patch to document that.
-
-Yes, please.  And we really need to figure out central authoritisied
-to document the lsattr and fsxattr domain flags.
+We don't know, and it will be different based on the kernel version.
+That being sayd, we should check for a block backed file system
+probably.
 
