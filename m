@@ -1,70 +1,70 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1565B2F658A
-	for <linux-xfs@vger.kernel.org>; Mon, 20 Oct 2025 13:56:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92DE531D399
+	for <linux-xfs@vger.kernel.org>; Mon, 20 Oct 2025 13:56:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760968566; cv=none; b=cHDob0wltTqolmCjW+h3LJlkOd/PE3wFb7s3zcyYBUjYXW1nHcfjlasXZeT7JMf/tWgPx0Jxz2xd6jeV0dG5ePhK7GLhHH4jRiaTyP7lIUt3aORN6LbGJfRjkLP368w8+f961LGUPlSCysgkDcY2KUq/+4P+6QXUIciP9lVU/dc=
+	t=1760968568; cv=none; b=NbFuo5lmTWDcl4rmbpZqk1fTJx5pyxrqkEC6TyF+U6JKUdDvXW/yEktB2VEXbM3k3GVe6YcbeTDSQtOYq6qKweZu8xBl4iyK8yt9Kem3PX32U7qfF7+a8/AV64WaOjJOLI2j3oMef2niYTAedprK066/PXKKGhxXPSDRRvUo/oM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760968566; c=relaxed/simple;
-	bh=LiU1Kcnc/xXDInRfq9a5/iHVaT7mrnGXtbWirlJdHkQ=;
+	s=arc-20240116; t=1760968568; c=relaxed/simple;
+	bh=SR8wCX30+QkB0iU+zrhcQQx/iJ+D3afz0RlNOaH+QT4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YSQSQw12RW6PWiIA2DvqFSAEsauvl2LX2RMQ+SIav2o32N4X/XpWstjI3ItzlsUPsdwxd81AY3FspMCtNuNDmPreG6eaCnHwANVt2oOmPWRfZ9ddz6mY6aeYcziKI6s6+/JjjUYqUvnK0d9yBZw7LKK8akJIo9/0wNNhZk3YwZs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WCPZ8VOd; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=J4I6FL1Y5g9p9nDkemoBdzl9JMzbkrHPaisl12OVhkWX1PKrDPPmblBakN1jxrilPAVmvgA9nkC1H0jUwDZKzWInJPdL2MizpsqcqSowfObkBAP48VTtcdBNcVBuxQSQOE5YP2TZLgtRkQ6LBntHT6zOckZYqpelJVhYxPjQKCQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=L8PYHREH; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WCPZ8VOd"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L8PYHREH"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1760968564;
+	s=mimecast20190719; t=1760968565;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=WnVCSabx+0xkqqq3zNHBKS9lr9pABGnoboH7bSSoM4k=;
-	b=WCPZ8VOdXE3Nzd4QXkKuRnk6DzQZY/0o3YzfDyO2CJno92uklFwpiglyWnShf9Kz8D1usT
-	jqAigBudh6/raGRKFZICb3AgSdheAm/EqwjnzRVareuYSpQ17MEAuNuQ/FlDAh7xHOyCrh
-	Qxll0AzTQpseGwqjD3bPnOL2cEadkas=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=875p7D2Av8YvXf4a6psXikjfo7RpKmIN6rgx7UM8SmI=;
+	b=L8PYHREHvWrDRW8cJG2uDVgLS4ZNLg4Bf94JkK4TkvflU1RI/SdeYSu2NQsxgnxY0GtgGk
+	E+1m56gA2V4kqvQ76n6n4Fif2idmbN4fuWMmHNF7ZQUALpZhEdmFwpZJgji7uAGTwo322L
+	9H3bZBZloLdrWQ4sPvwJFLeeTv15+QY=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-592-CLpyd6w2NceOfgxhP2f1rA-1; Mon, 20 Oct 2025 09:56:02 -0400
-X-MC-Unique: CLpyd6w2NceOfgxhP2f1rA-1
-X-Mimecast-MFC-AGG-ID: CLpyd6w2NceOfgxhP2f1rA_1760968562
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-46e47d14dceso25991575e9.2
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Oct 2025 06:56:02 -0700 (PDT)
+ us-mta-139-fsv7cIfcN_iNaneJlYiL4w-1; Mon, 20 Oct 2025 09:56:04 -0400
+X-MC-Unique: fsv7cIfcN_iNaneJlYiL4w-1
+X-Mimecast-MFC-AGG-ID: fsv7cIfcN_iNaneJlYiL4w_1760968563
+Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-47111dc7bdbso33901405e9.0
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Oct 2025 06:56:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760968561; x=1761573361;
+        d=1e100.net; s=20230601; t=1760968562; x=1761573362;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=WnVCSabx+0xkqqq3zNHBKS9lr9pABGnoboH7bSSoM4k=;
-        b=vx+hZkD+Yv6sv30zePXHodCDMiZKFUFKOc+MhiTn2CuZYOn5mCujifwXaNO7nA2m2o
-         N5adiKk9IPsfQV8eC3UkQXjrrxWh0He98oQxUYK5oPMd2oYqfh5mikEv7YsODJrIDu0Y
-         Kh1SOybcNbNGDtZp+AcXqmy5kRrwXmPUX7BxahoJuFRSCYi/vxDWSqkSKOGFMcUJdJWR
-         MwjqSdzk/qspWmgT1uiMLquQbkt9OotQO0oS01tdz0u5uVi3k7Gtfh3rc1kKWd3YXEsR
-         G/OjbImk2yIo+/cUQGTY4uK+WcVulqTW9Zonp3fuzh7/K4tRGqh44YOfLrLtclM4rOLm
-         VRHw==
-X-Gm-Message-State: AOJu0YxBTa6yTtU7yhCHAEvOhdyG03soTYouUHuqA9uBH6qjbKvaB8hm
-	pjGPiXePI2RdyMzw1PMGKp9elsXEDjBIHVdhK+MQNEsL6ZAS+vanJMPCQzv3URYuT+/pt5gVJbU
-	G9DyIjUAFWkGu80KZagjNc423JndhTDrnjbSsOkdn32kwAPhMQPQnOvLyt2DXccW79BIf/3u0Ks
-	EAydWVerD7qfHbrnRK7Mk0vw7POWH+YhfRDYVrbD88Uw2j
-X-Gm-Gg: ASbGnctUCMzvg8pTeR6ZDRnM+qMJjdI50gRA+P5NixqrcQYkaShT5AMcMEmg4tPEUPR
-	BTvnDaCPPd31Z0quO3Hq+64qROJlsSAgR8wON3vs9LXTWufFZEvetHM2OY2wNfdgFvbYNfRMIpw
-	n7eI95y28s9bN9f92nAHcCyKuDRMEkzKy7EeklZJxuaI+ImizZap6DR10cmXAosEqf3i4WblShC
-	j3zZmLHwLgBCFU6nIdQdJFPR79JJjh/YVFlm6P652NX4IGDMiL+7rA0D8GNOmtuaVqPtPl6m+jW
-	LiMHbumuje4bD6heqF7j4243XxHxeq8hpHoMTyXVxgNAMraqvpbyCgRBVm1iJnWTPKa6xctH/3g
-	ZwAye0mBkcurSONDM8+ctkyZPEDjaWPcTGg==
-X-Received: by 2002:a05:600c:681b:b0:46e:4921:9443 with SMTP id 5b1f17b1804b1-4711792a6bemr104228365e9.37.1760968561217;
+        bh=875p7D2Av8YvXf4a6psXikjfo7RpKmIN6rgx7UM8SmI=;
+        b=m+74n2ZjvIKcxbTFcptxt/Nhx9ZQ0QBsxMzZAuYJ8XdBa6IUsQOMML9tJRmaKt0hKj
+         9GC+rOEU1XZ6ELe4H1bQ6EzEy3m4dp7TEmT8CqjGnyZ4eoVy96CQZMIYAv+Kt+iuc8AA
+         pMDqSJuF2jPfr4rbhNlMCWmuhPrWm4oyXeiB9+DziO+41HIe0J7bp4rz0XI8ymDdoZHe
+         j/hupnhRf3yh7kipWdDkSzLMV/X7AeBRsqWEPRc7X7RPBbA7YmXQFMcL3RXThga0754P
+         lE6koBI9i+N1qFqNg3SXNp7Z9ZByuKEbQWMD/BTYQVXX20bqh2AqzQZYOK+PwEI/ndMT
+         wyKw==
+X-Gm-Message-State: AOJu0YxVXQObNLBrUnMp6G6GPU7dcEZFkj2G6K2nfekJMsCkU5rnMO1S
+	EpyvP6UmVHcnRL1VV5hEiGgEl8ZpwF02BG0jjncK5YN2kbVKRVAsXhJuekQs9djklhwNd+dyQGd
+	vZ5Z70Hjl1EqNKoiJiTxhGgV+v2Ni46CzU++5yq6ZlRkrIuUvqaVrtE6A349FYn7BUfAaHVFFwA
+	AFQDSAlE77L0CTn4TSc0UPggyTQ7IupStXXNv5r+4sjCRN
+X-Gm-Gg: ASbGncv4Vsz85dtMMiJGAX5aZHY7lXVClDKKElo6pS1S7r+XFZo363jsQPUyN6PH3lM
+	MUujNCXnFdQI2YpXZaU0neS5qnTP84QsK31lU3bIbv/SRDuQrXW6BDiQelmGEF4gURBukBRl/sp
+	P+UkJJF96qFvWyFKOcTKT4upNDSqoun2VuTAH1LJHrUSHNksdQ/ZSdnpT1orVQej6+jIzJIYaNj
+	0HU24OlzTlytsQr0J+vSKRuHJfOW7rgULDQR1vzDXiG4TrvZ5xHxf9ztkFh0rOfpGw+0k7QIhg8
+	WkOwptLxqnT5A0jBKrWBPnz8rruRDBzxBZfkRk4cL0XvmbiYuT1xiqL2NHiRvtt9eukFRqygZaM
+	GDJPJaiD/NSFW20E15DZBFsD8s+ZCwxQdrA==
+X-Received: by 2002:a05:600c:1907:b0:46e:206a:78cc with SMTP id 5b1f17b1804b1-4711791c3b0mr109779575e9.28.1760968562278;
+        Mon, 20 Oct 2025 06:56:02 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGk/qhIVnAGUF8Og48owJjB6JYq3M5I50Lf8HpYpZqugR4s0ScDAGYP0s0KJX3z7TImCYbOrQ==
+X-Received: by 2002:a05:600c:1907:b0:46e:206a:78cc with SMTP id 5b1f17b1804b1-4711791c3b0mr109779165e9.28.1760968561520;
         Mon, 20 Oct 2025 06:56:01 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEWqnw97pmYKSKEGBfX2T590QI21UcBjSDyt1Nq7yFQpR4T8AIyPG4MYQImAMV81pZkhOIllw==
-X-Received: by 2002:a05:600c:681b:b0:46e:4921:9443 with SMTP id 5b1f17b1804b1-4711792a6bemr104227955e9.37.1760968560517;
-        Mon, 20 Oct 2025 06:56:00 -0700 (PDT)
 Received: from thinky.redhat.com (ip-217-030-074-039.aim-net.cz. [217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47152959b55sm151404645e9.6.2025.10.20.06.55.59
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47152959b55sm151404645e9.6.2025.10.20.06.56.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Oct 2025 06:56:00 -0700 (PDT)
+        Mon, 20 Oct 2025 06:56:01 -0700 (PDT)
 From: Andrey Albershteyn <aalbersh@redhat.com>
 X-Google-Original-From: Andrey Albershteyn <aalbersh@kernel.org>
 To: linux-xfs@vger.kernel.org,
@@ -72,9 +72,9 @@ To: linux-xfs@vger.kernel.org,
 Cc: djwong@kernel.org,
 	zlang@redhat.com,
 	Andrey Albershteyn <aalbersh@kernel.org>
-Subject: [PATCH 2/3] generic/772: require filesystem to support file_[g|s]etattr
-Date: Mon, 20 Oct 2025 15:55:29 +0200
-Message-ID: <20251020135530.1391193-3-aalbersh@kernel.org>
+Subject: [PATCH 3/3] generic/772: split this test into 772 and 773 for regular and special files
+Date: Mon, 20 Oct 2025 15:55:30 +0200
+Message-ID: <20251020135530.1391193-4-aalbersh@kernel.org>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20251020135530.1391193-1-aalbersh@kernel.org>
 References: <20251020135530.1391193-1-aalbersh@kernel.org>
@@ -86,110 +86,255 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add _require_* function to check that filesystem support these syscalls
-on regular and special files.
+Not all filesystem support setting file attributes on special files. The
+syscalls would still work for regular files. Let's split this test into
+two to make it obvious if only special files support is missing.
 
 Signed-off-by: Andrey Albershteyn <aalbersh@kernel.org>
 ---
- common/rc         | 32 ++++++++++++++++++++++++++++++++
- tests/generic/772 |  5 ++---
- tests/xfs/648     |  7 +++----
- 3 files changed, 37 insertions(+), 7 deletions(-)
+ tests/generic/772     | 38 +-------------------
+ tests/generic/772.out | 14 --------
+ tests/generic/773     | 84 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/773.out | 20 +++++++++++
+ 4 files changed, 105 insertions(+), 51 deletions(-)
+ create mode 100755 tests/generic/773
+ create mode 100644 tests/generic/773.out
 
-diff --git a/common/rc b/common/rc
-index dcae5bc33b19..78928c27da97 100644
---- a/common/rc
-+++ b/common/rc
-@@ -5994,6 +5994,38 @@ _require_inplace_writes()
- 	fi
- }
- 
-+# Require filesystem to support file_getattr()/file_setattr() syscalls on
-+# regular files
-+_require_file_attr()
-+{
-+	local test_file="$SCRATCH_MNT/foo"
-+	touch $test_file
-+
-+	$here/src/file_attr --set --set-nodump $SCRATCH_MNT ./foo &>/dev/null
-+	rc=$?
-+	rm -f "$test_file"
-+
-+	if [ $rc -ne 0 ]; then
-+		_notrun "file_getattr not supported for regular files on $FSTYP"
-+	fi
-+}
-+
-+# Require filesystem to support file_getattr()/file_setattr() syscalls on
-+# special files (chardev, fifo...)
-+_require_file_attr_special()
-+{
-+	local test_file="$SCRATCH_MNT/fifo"
-+	mkfifo $test_file
-+
-+	$here/src/file_attr --set --set-nodump $SCRATCH_MNT ./fifo &>/dev/null
-+	rc=$?
-+	rm -f "$test_file"
-+
-+	if [ $rc -ne 0 ]; then
-+		_notrun "file_getattr not supported for special files on $FSTYP"
-+	fi
-+}
-+
- ################################################################################
- # make sure this script returns success
- /bin/true
 diff --git a/tests/generic/772 b/tests/generic/772
-index e68a67246544..bdd55b10f310 100755
+index bdd55b10f310..0d5c4749b010 100755
 --- a/tests/generic/772
 +++ b/tests/generic/772
-@@ -20,6 +20,8 @@ _require_mknod
+@@ -4,7 +4,7 @@
+ #
+ # FS QA Test No. 772
+ #
+-# Test file_getattr/file_setattr syscalls
++# Test file_getattr() and file_setattr() syscalls on regular files
+ #
+ . ./common/preamble
+ _begin_fstest auto
+@@ -13,7 +13,6 @@ _begin_fstest auto
  
- _scratch_mkfs >>$seqres.full 2>&1
- _scratch_mount
-+_require_file_attr
-+_require_file_attr_special
- 
- file_attr () {
- 	$here/src/file_attr $*
-@@ -43,9 +45,6 @@ touch $projectdir/bar
- ln -s $projectdir/bar $projectdir/broken-symlink
- rm -f $projectdir/bar
- 
--file_attr --get $projectdir ./fifo &>/dev/null || \
--	_notrun "file_getattr not supported on $FSTYP"
--
- echo "Error codes"
- # wrong AT_ flags
- file_attr --get --invalid-at $projectdir ./foo
-diff --git a/tests/xfs/648 b/tests/xfs/648
-index e3c2fbe00b66..a268bfdb0e2d 100755
---- a/tests/xfs/648
-+++ b/tests/xfs/648
-@@ -20,10 +20,12 @@ _require_test_program "af_unix"
+ # Modify as appropriate.
+ _require_scratch
+-_require_test_program "af_unix"
  _require_test_program "file_attr"
  _require_symlinks
  _require_mknod
--
+@@ -21,29 +20,16 @@ _require_mknod
  _scratch_mkfs >>$seqres.full 2>&1
- _qmount_option "pquota"
  _scratch_mount
-+_require_file_attr
+ _require_file_attr
+-_require_file_attr_special
+ 
+ file_attr () {
+ 	$here/src/file_attr $*
+ }
+ 
+-create_af_unix () {
+-	$here/src/af_unix $* || echo af_unix failed
+-}
+-
+ projectdir=$SCRATCH_MNT/prj
+ 
+ # Create normal files and special files
+ mkdir $projectdir
+-mkfifo $projectdir/fifo
+-mknod $projectdir/chardev c 1 1
+-mknod $projectdir/blockdev b 1 1
+-create_af_unix $projectdir/socket
+ touch $projectdir/foo
+-ln -s $projectdir/foo $projectdir/symlink
+-touch $projectdir/bar
+-ln -s $projectdir/bar $projectdir/broken-symlink
+-rm -f $projectdir/bar
+ 
+ echo "Error codes"
+ # wrong AT_ flags
+@@ -59,37 +45,15 @@ file_attr --set --new-fsx-flag $projectdir ./foo
+ 
+ echo "Initial attributes state"
+ file_attr --get $projectdir | _filter_scratch | _filter_file_attributes ~d
+-file_attr --get $projectdir ./fifo | _filter_file_attributes ~d
+-file_attr --get $projectdir ./chardev | _filter_file_attributes ~d
+-file_attr --get $projectdir ./blockdev | _filter_file_attributes ~d
+-file_attr --get $projectdir ./socket | _filter_file_attributes ~d
+ file_attr --get $projectdir ./foo | _filter_file_attributes ~d
+-file_attr --get $projectdir ./symlink | _filter_file_attributes ~d
+ 
+ echo "Set FS_XFLAG_NODUMP (d)"
+ file_attr --set --set-nodump $projectdir
+-file_attr --set --set-nodump $projectdir ./fifo
+-file_attr --set --set-nodump $projectdir ./chardev
+-file_attr --set --set-nodump $projectdir ./blockdev
+-file_attr --set --set-nodump $projectdir ./socket
+ file_attr --set --set-nodump $projectdir ./foo
+-file_attr --set --set-nodump $projectdir ./symlink
+ 
+ echo "Read attributes"
+ file_attr --get $projectdir | _filter_scratch | _filter_file_attributes ~d
+-file_attr --get $projectdir ./fifo | _filter_file_attributes ~d
+-file_attr --get $projectdir ./chardev | _filter_file_attributes ~d
+-file_attr --get $projectdir ./blockdev | _filter_file_attributes ~d
+-file_attr --get $projectdir ./socket | _filter_file_attributes ~d
+ file_attr --get $projectdir ./foo | _filter_file_attributes ~d
+-file_attr --get $projectdir ./symlink | _filter_file_attributes ~d
+-
+-echo "Set attribute on broken link with AT_SYMLINK_NOFOLLOW"
+-file_attr --set --set-nodump $projectdir ./broken-symlink
+-file_attr --get $projectdir ./broken-symlink
+-
+-file_attr --set --no-follow --set-nodump $projectdir ./broken-symlink
+-file_attr --get --no-follow $projectdir ./broken-symlink | _filter_file_attributes ~d
+ 
+ cd $SCRATCH_MNT
+ touch ./foo2
+diff --git a/tests/generic/772.out b/tests/generic/772.out
+index f7c23d94da4a..c89dbcf5d630 100644
+--- a/tests/generic/772.out
++++ b/tests/generic/772.out
+@@ -9,25 +9,11 @@ Can not get fsxattr on ./foo: Invalid argument
+ Can not set fsxattr on ./foo: Invalid argument
+ Initial attributes state
+ ----------------- SCRATCH_MNT/prj
+------------------ ./fifo
+------------------ ./chardev
+------------------ ./blockdev
+------------------ ./socket
+ ----------------- ./foo
+------------------ ./symlink
+ Set FS_XFLAG_NODUMP (d)
+ Read attributes
+ ------d---------- SCRATCH_MNT/prj
+-------d---------- ./fifo
+-------d---------- ./chardev
+-------d---------- ./blockdev
+-------d---------- ./socket
+ ------d---------- ./foo
+-------d---------- ./symlink
+-Set attribute on broken link with AT_SYMLINK_NOFOLLOW
+-Can not get fsxattr on ./broken-symlink: No such file or directory
+-Can not get fsxattr on ./broken-symlink: No such file or directory
+-------d---------- ./broken-symlink
+ Initial state of foo2
+ ----------------- ./foo2
+ Set attribute relative to AT_FDCWD
+diff --git a/tests/generic/773 b/tests/generic/773
+new file mode 100755
+index 000000000000..f633706a1455
+--- /dev/null
++++ b/tests/generic/773
+@@ -0,0 +1,84 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2025 Red Hat.  All Rights Reserved.
++#
++# FS QA Test 773
++#
++# Test file_getattr() and file_setattr() syscalls on special files (fifo,
++# socket, chardev...)
++#
++. ./common/preamble
++_begin_fstest quick
++
++# Import common functions.
++. ./common/filter
++
++# Modify as appropriate.
++_require_scratch
++_require_test_program "af_unix"
++_require_test_program "file_attr"
++_require_symlinks
++_require_mknod
++_scratch_mkfs >>$seqres.full 2>&1
++_scratch_mount
 +_require_file_attr_special
 +
- 
- create_af_unix () {
- 	$here/src/af_unix $* || echo af_unix failed
-@@ -47,9 +49,6 @@ touch $projectdir/bar
- ln -s $projectdir/bar $projectdir/broken-symlink
- rm -f $projectdir/bar
- 
--$here/src/file_attr --get $projectdir ./fifo &>/dev/null || \
--	_notrun "file_getattr not supported on $FSTYP"
--
- $XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
- 	-c "project -sp $projectdir $id" $SCRATCH_DEV | filter_quota
- $XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
++file_attr () {
++	$here/src/file_attr $*
++}
++
++create_af_unix () {
++	$here/src/af_unix $* || echo af_unix failed
++}
++
++projectdir=$SCRATCH_MNT/prj
++
++# Create normal files and special files
++mkdir $projectdir
++mkfifo $projectdir/fifo
++mknod $projectdir/chardev c 1 1
++mknod $projectdir/blockdev b 1 1
++create_af_unix $projectdir/socket
++touch $projectdir/foo
++ln -s $projectdir/foo $projectdir/symlink
++touch $projectdir/bar
++ln -s $projectdir/bar $projectdir/broken-symlink
++rm -f $projectdir/bar
++
++echo "Initial attributes state"
++file_attr --get $projectdir | _filter_scratch | _filter_file_attributes ~d
++file_attr --get $projectdir ./fifo | _filter_file_attributes ~d
++file_attr --get $projectdir ./chardev | _filter_file_attributes ~d
++file_attr --get $projectdir ./blockdev | _filter_file_attributes ~d
++file_attr --get $projectdir ./socket | _filter_file_attributes ~d
++file_attr --get $projectdir ./symlink | _filter_file_attributes ~d
++
++echo "Set FS_XFLAG_NODUMP (d)"
++file_attr --set --set-nodump $projectdir
++file_attr --set --set-nodump $projectdir ./fifo
++file_attr --set --set-nodump $projectdir ./chardev
++file_attr --set --set-nodump $projectdir ./blockdev
++file_attr --set --set-nodump $projectdir ./socket
++file_attr --set --set-nodump $projectdir ./symlink
++
++echo "Read attributes"
++file_attr --get $projectdir | _filter_scratch | _filter_file_attributes ~d
++file_attr --get $projectdir ./fifo | _filter_file_attributes ~d
++file_attr --get $projectdir ./chardev | _filter_file_attributes ~d
++file_attr --get $projectdir ./blockdev | _filter_file_attributes ~d
++file_attr --get $projectdir ./socket | _filter_file_attributes ~d
++file_attr --get $projectdir ./symlink | _filter_file_attributes ~d
++
++echo "Set attribute on broken link with AT_SYMLINK_NOFOLLOW"
++file_attr --set --set-nodump $projectdir ./broken-symlink
++file_attr --get $projectdir ./broken-symlink
++
++file_attr --set --no-follow --set-nodump $projectdir ./broken-symlink
++file_attr --get --no-follow $projectdir ./broken-symlink | _filter_file_attributes ~d
++
++# optional stuff if your test has verbose output to help resolve problems
++#echo
++#echo "If failure, check $seqres.full (this) and $seqres.full.ok (reference)"
++
++# success, all done
++_exit 0
+diff --git a/tests/generic/773.out b/tests/generic/773.out
+new file mode 100644
+index 000000000000..46ea3baa66fd
+--- /dev/null
++++ b/tests/generic/773.out
+@@ -0,0 +1,20 @@
++QA output created by 773
++Initial attributes state
++----------------- SCRATCH_MNT/prj
++----------------- ./fifo
++----------------- ./chardev
++----------------- ./blockdev
++----------------- ./socket
++----------------- ./symlink
++Set FS_XFLAG_NODUMP (d)
++Read attributes
++------d---------- SCRATCH_MNT/prj
++------d---------- ./fifo
++------d---------- ./chardev
++------d---------- ./blockdev
++------d---------- ./socket
++------d---------- ./symlink
++Set attribute on broken link with AT_SYMLINK_NOFOLLOW
++Can not get fsxattr on ./broken-symlink: No such file or directory
++Can not get fsxattr on ./broken-symlink: No such file or directory
++------d---------- ./broken-symlink
 -- 
 2.50.1
 
