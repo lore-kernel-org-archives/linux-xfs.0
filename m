@@ -1,45 +1,92 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 994A82749D2;
-	Mon, 20 Oct 2025 15:46:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B525B279DCD
+	for <linux-xfs@vger.kernel.org>; Mon, 20 Oct 2025 15:59:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760975165; cv=none; b=qH/+6tG2xS3cJhia0qncScRqvLylYDoh6nWjYbgOYmtSrovJkLW3wDpmmOHh+Bgpb8N6hBmvD88EkKyLV8mYL58wJoOIVNRRp90TuRDWrY76ivro/XrFCPkgLv+1h6XuZlxbSZVW+IqBu8nAuFlxge4rkxswswQKoNaFlHcj99U=
+	t=1760975946; cv=none; b=AYRbwf0UOX9yMBGPDMtCeUGUGpMBLxNNykov2KiTiNLxSKNN5ViZZYHSPlhKRWhmYqAz81dSSiZYGt4+578y+yHB9xz6i7NWGJbkgRb5lksZbE9Av6LeYh+/TZ+8UI5bM5ouDAieDimneoCsbTiC5XCNuiMqClD5YZVXXeXGW6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760975165; c=relaxed/simple;
-	bh=9PHbj/50TJlL2mJs5KAkblwr3rqPCXHavZ+odHpxDqA=;
+	s=arc-20240116; t=1760975946; c=relaxed/simple;
+	bh=oPxzTs6WsuKHqebg42NTifrc63HsEvL1hy6GgDh6TXE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e7lLde5mM2NSx6bkWp19X1eX1R7srU9yo9F65OiA+eUhQhWe4TV2aIYHrhXvBqF0LF35eR1pn6exWWjIn00j1wagRGcND8POEy6Tr3dDhXYaY8KofI1XBAfL4zgWLEhPo0wzl4LX2SOFjg5FDyqHTHiiBVbd3e0DYuO8kTWDpNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lC16KZfl; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=DWjZmKf988dMyId26vQtrWJlWnGh8VeiVylOEIrTxX2T/zkZGm6TTWLMSz2oiv4aqeKbdemPn0A4bH/7Xexdt0AfwFNpcBj5tKaNHPvFMWyHg2eS19lPwOxg2b0arqJENQpyDW4wBQyR9Am1yzLWKivtkX0opLNSOnECLj9ANFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=bnhi+g3V; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=jmb7mHUP; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=eDSbH0dq; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=P5WSTFPT; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lC16KZfl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68951C4CEF9;
-	Mon, 20 Oct 2025 15:46:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760975165;
-	bh=9PHbj/50TJlL2mJs5KAkblwr3rqPCXHavZ+odHpxDqA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lC16KZfliaWyzcZ0gI9+JKtjt/tn0hy7hdoQ/kQvODKYWaGEahgsfZNRar5khjYc3
-	 xRWIDP5XHJ9R4T5L4Nu6KgbehOWDD5cTRBmB5vWwQxSUfLgIV6ChVSx/QSXEhe8tDX
-	 dys7h8h+1VtCWmQpuJYLqLC7s3kW8SFhtYy83ksmDCUNhIGn0mYzbhoxihHrtMbqVx
-	 I/YmfIejuSzM0Tsz34pw2JRa5+ju4dtuxuWQXIEwl5J/k0lTozcmFNAkrLo0da7Ywp
-	 1lyRTzYTxOiemUjp9DMaT4jxz2JIlWX78Hpc1wBe+CpetBsqwMCvFRkhsji8TrHeTh
-	 5RvxXligNsSEg==
-Date: Mon, 20 Oct 2025 08:46:04 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Cc: Zorro Lang <zlang@redhat.com>, Christoph Hellwig <hch@lst.de>,
-	fstests@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>,
-	Anand Jain <anand.jain@oracle.com>, linux-btrfs@vger.kernel.org,
-	Hans Holmberg <Hans.Holmberg@wdc.com>, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>
-Subject: Re: [PATCH v6 2/3] common/zoned: add helpers for creation and
- teardown of zloop devices
-Message-ID: <20251020154604.GJ6178@frogsfrogsfrogs>
-References: <20251017055008.672621-1-johannes.thumshirn@wdc.com>
- <20251017055008.672621-3-johannes.thumshirn@wdc.com>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="bnhi+g3V";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="jmb7mHUP";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="eDSbH0dq";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="P5WSTFPT"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id B09F8211AD;
+	Mon, 20 Oct 2025 15:58:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1760975938; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=A+T13MT5+DVqI4FOljyY2wyHe35kwNpItnKtnAfrs7U=;
+	b=bnhi+g3V4guyjrFM7W2wvNQYgft8AKwfnrmdAJfYt+OshztZCGnA1OLjpJEGZIFD2RyIeB
+	0xCUTtvLxJmDGaz2Hjk5AUzrIJZ2m42QncakyNgpWMG5GRQloTyBkPAyCYSdl47ukrkEAh
+	Pxm1sV4k/jmAPJwphJBbggz9CK0Lt8g=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1760975938;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=A+T13MT5+DVqI4FOljyY2wyHe35kwNpItnKtnAfrs7U=;
+	b=jmb7mHUPVa8eqJyOkhrTMAJqcVl0YdILYwlGdaxHrB9Bg+CkElEHgd7V5CWs/1fw2LgFxM
+	7MiFG2FTf5cyVNAg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1760975934; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=A+T13MT5+DVqI4FOljyY2wyHe35kwNpItnKtnAfrs7U=;
+	b=eDSbH0dqSfRA6WHKd9eLOdNQcxqexCI4JCFeyuSRhL4zpE3t9/I286H+RaDKonEHzKtgkm
+	s5JBwkXqBlXOmjwrbCT9ixRSjikaAiX5mfxrkXJwfZY38sixPiNF2z25ST6srKiIHUFz4Y
+	vqVvzvIQ0MkIc6GcPvVoNyvIm7A+OLk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1760975934;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=A+T13MT5+DVqI4FOljyY2wyHe35kwNpItnKtnAfrs7U=;
+	b=P5WSTFPTevE66kkbFzbp2BlR5n8P+P85VjF6E9ukLw6GquJTeMbJVLmhe4KZGa+kJD0dNh
+	hn8X7c3dF213TYCw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A1EB413AAC;
+	Mon, 20 Oct 2025 15:58:54 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id V4+DJz5c9mhJeAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Mon, 20 Oct 2025 15:58:54 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 536C2A088E; Mon, 20 Oct 2025 17:58:54 +0200 (CEST)
+Date: Mon, 20 Oct 2025 17:58:54 +0200
+From: Jan Kara <jack@suse.cz>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, 
+	Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org, djwong@kernel.org, 
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-mm@kvack.org, martin.petersen@oracle.com, jack@suse.com
+Subject: Re: O_DIRECT vs BLK_FEAT_STABLE_WRITES, was Re: [PATCH] btrfs: never
+ trust the bio from direct IO
+Message-ID: <xc2orfhavfqaxrmxtsbf4kepglfujjodvhfzhzfawwaxlyrhlb@gammchkzoh2m>
+References: <1ee861df6fbd8bf45ab42154f429a31819294352.1760951886.git.wqu@suse.com>
+ <aPYIS5rDfXhNNDHP@infradead.org>
+ <56o3re2wspflt32t6mrfg66dec4hneuixheroax2lmo2ilcgay@zehhm5yaupav>
+ <aPYgm3ey4eiFB4_o@infradead.org>
+ <mciqzktudhier5d2wvjmh4odwqdszvbtcixbthiuuwrufrw3cj@5s2ffnffu4gc>
+ <aPZOO3dFv61blHBz@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,89 +95,57 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251017055008.672621-3-johannes.thumshirn@wdc.com>
+In-Reply-To: <aPZOO3dFv61blHBz@casper.infradead.org>
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	MISSING_XM_UA(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[12];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	URIBL_BLOCKED(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_TLS_LAST(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
+X-Spam-Score: -3.80
 
-On Fri, Oct 17, 2025 at 07:50:07AM +0200, Johannes Thumshirn wrote:
-> Add _create_zloop, _destroy_zloop and _find_next_zloop helper functions
-> for creating destroying and finding the next free zloop device.
+On Mon 20-10-25 15:59:07, Matthew Wilcox wrote:
+> On Mon, Oct 20, 2025 at 03:59:33PM +0200, Jan Kara wrote:
+> > The idea was to bounce buffer the page we are writing back in case we spot
+> > a long-term pin we cannot just wait for - hence bouncing should be rare.
+> > But in this more general setting it is challenging to not bounce buffer for
+> > every IO (in which case you'd be basically at performance of RWF_DONTCACHE
+> > IO or perhaps worse so why bother?). Essentially if you hand out the real
+> > page underlying the buffer for the IO, all other attemps to do IO to that
+> > page have to block - bouncing is no longer an option because even with
+> > bouncing the second IO we could still corrupt data of the first IO once we
+> > copy to the final buffer. And if we'd block waiting for the first IO to
+> > complete, userspace could construct deadlock cycles - like racing IO to
+> > pages A, B with IO to pages B, A. So far I'm not sure about a sane way out
+> > of this...
 > 
-> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> ---
->  common/zoned | 53 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 53 insertions(+)
-> 
-> diff --git a/common/zoned b/common/zoned
-> index 41697b08..e2f5969c 100644
-> --- a/common/zoned
-> +++ b/common/zoned
-> @@ -45,3 +45,56 @@ _require_zloop()
->  	    _notrun "This test requires zoned loopback device support"
->      fi
->  }
-> +
-> +_find_next_zloop()
-> +{
-> +    id=0
+> There isn't one.  We might have DMA-mapped this page earlier, and so a
+> device could write to it at any time.  Even if we remove PTE write
+> permissions ...
 
-local id=0
+True but writes through DMA to the page are guarded by holding a page pin
+these days so we could in theory block getting another page pin or mapping
+the page writeably until the pin is released... if we can figure out a
+convincing story for dealing with long-term pins from RDMA and dealing with
+possible deadlocks created by this.
 
-(so the helper won't reassign a variable in the caller's scope)
-
-With that fixed,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-
---D
-
-> +
-> +    while true; do
-> +        if [[ ! -b "/dev/zloop$id" ]]; then
-> +            break
-> +        fi
-> +        id=$((id + 1))
-> +    done
-> +
-> +    echo "$id"
-> +}
-> +
-> +# Create a zloop device
-> +# usage: _create_zloop <base_dir> <zone_size> <nr_conv_zones>
-> +_create_zloop()
-> +{
-> +    local id="$(_find_next_zloop)"
-> +
-> +    if [ -n "$1" ]; then
-> +        local zloop_base="$1"
-> +    else
-> +        local zloop_base="/var/local/zloop"
-> +    fi
-> +
-> +    if [ -n "$2" ]; then
-> +        local zone_size=",zone_size_mb=$2"
-> +    fi
-> +
-> +    if [ -n "$3" ]; then
-> +        local conv_zones=",conv_zones=$3"
-> +    fi
-> +
-> +    mkdir -p "$zloop_base/$id"
-> +
-> +    local zloop_args="add id=$id,base_dir=$zloop_base$zone_size$conv_zones"
-> +
-> +    echo "$zloop_args" > /dev/zloop-control || \
-> +        _fail "cannot create zloop device"
-> +
-> +    echo "/dev/zloop$id"
-> +}
-> +
-> +_destroy_zloop() {
-> +    local zloop="$1"
-> +
-> +    test -b "$zloop" || return
-> +    local id=$(echo $zloop | grep -oE '[0-9]+$')
-> +
-> +    echo "remove id=$id" > /dev/zloop-control
-> +}
-> -- 
-> 2.51.0
-> 
-> 
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
