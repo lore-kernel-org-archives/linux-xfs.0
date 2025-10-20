@@ -1,42 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31F8F2877FC;
-	Mon, 20 Oct 2025 16:27:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12E5F285C88;
+	Mon, 20 Oct 2025 16:37:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760977677; cv=none; b=k9OVr0HwoyGNSQok4Fe+H2VS29VYqA5v+kTSiO8wUdO5gQtbAAp/g8cnf/Aoac/AUOoge1NyrBNCvOdzMAYEGMdGVBPHbY+174UcmgUndjNAt8lA+hspSGyseaWYOGspwPRMGRenDGGCJUTGpgVtkurRr0HiitcLJBJLq0r1BgA=
+	t=1760978235; cv=none; b=W5kmJCXpBccjV8diHDNI0nph7xQxfaJqtwCtB79xTqUqihLnedka0TNOdu1jNNBgqXf0FgwRJ0W11mIhWLp77HJyYlbOHmTCtPzTuOn15FoSA0tKbCwmaXiA2P0QlyNnfhzkMA50yA0t9cDaBbk6vcZw5qltYuP0c3/QJ/+Ly5Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760977677; c=relaxed/simple;
-	bh=Bi1cui7wKMh3Kvt1gMVlMvASzxHMYZNUcnT4JaGKEro=;
+	s=arc-20240116; t=1760978235; c=relaxed/simple;
+	bh=eYSWZik8I6UU2RQtP+3440ejPwpqE7azJO68VB2bH6g=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j1jrkYK7yXWCxcRdO6oQ5+aB7Flfc04UiGH7VIrA+Ydsbf3Y6b7W7X6I5bl0TG0zXum0o67PwEi+D+AbLc4CfT5CqUpbGMjK2ZG0UocB4HZgjglNS5NRFum/Xvo5SSBTQldD5ACqp+GcZ01NephExwoOcDrkIHhGTvtST8hX7j0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GIJGEnjB; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YNQ/6/1AQVDq4NK24dD40a6X3jfuLRtIpuvP2s4sCd6WkIzo9/HvuIfhTu6VWQi07Fcm1oBCUWVAvojTXhApoHeTfLsR7h2ueZuUxasV5s2K1vF2O+xhS/RZN1lKVUa15EhNeYqeZiUok9EmQktCl4j1NyB6i84ZzwP3Ap6emY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ep0Qu0IT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GIJGEnjB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 027F6C4CEF9;
-	Mon, 20 Oct 2025 16:27:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ep0Qu0IT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35B34C4CEF9;
+	Mon, 20 Oct 2025 16:37:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760977677;
-	bh=Bi1cui7wKMh3Kvt1gMVlMvASzxHMYZNUcnT4JaGKEro=;
+	s=k20201202; t=1760978234;
+	bh=eYSWZik8I6UU2RQtP+3440ejPwpqE7azJO68VB2bH6g=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=GIJGEnjB22vaIw+WmGrUEfYoFhsnf7iLkIxGfzZzRqdBkMc3M0HC7S85pG98GWjUL
-	 kkoMw11/KDIzP3jOboxrKd8LP3cHstb9GrZKBlDCjHJsxeIEgAMdN6lhxmgfZUu/VJ
-	 Km9oNlqmOlhyaI/5SPty1937HY/D+i09QiA4esIZQ35ayifEC1RK871x8L4Ed2GYSH
-	 xQjO+4yRHoPualRlmubQoMCfpJeR6RbJ5VO0N2/DzgFU47TyphJnAZh60tJxQ/FmcT
-	 ZlFwDjIDH+Y5m2tU/wOHQU0yS+W8Hf8jHXEAeK08rffAii9UmssKMlOKVt/30EqGDW
-	 fdcqA+k8A7ZNA==
-Date: Mon, 20 Oct 2025 09:27:56 -0700
+	b=ep0Qu0ITV5K2Su99yQfla0ByUnZb1TrDbjNbD6u5Lbju8BVkbAl/jYqsuM7zwZGYq
+	 giIdc4n64xGWIb9C0d5gKjlQ2mSMxZgFVMANAxuSy66KiOiF24SR+B3vvChiC8dddk
+	 vxx5q4XVn5ftkQW8RDPp84mzc4/z7LNG2U7jRq7HJyLa2W1b7IKtCR8EllvjA2iYWM
+	 D9xc7CjaLmscJI29vHZW+UEK4+asoG/ImWf8vOXRYRnNjP3wGRd+MWvjC2XZQCA/DQ
+	 FkM2GAT5UNmQwLt39BhcjA7VgVbpq96EKCgS5hjqzyGxYgW9SXfDxX0Dnh9p5LCkII
+	 EgMMuMenT4yoA==
+Date: Mon, 20 Oct 2025 09:37:13 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/8] common/attr: fix _require_noattr2
-Message-ID: <20251020162756.GL6178@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-ext4 <linux-ext4@vger.kernel.org>
+Subject: Re: [PATCH 6/8] common/filter: fix _filter_file_attributes to handle
+ xfs file flags
+Message-ID: <20251020163713.GM6178@frogsfrogsfrogs>
 References: <176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
- <176054618026.2391029.1336336050566653412.stgit@frogsfrogsfrogs>
- <20251017171325.b35z55fbubi3kxut@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20251017225546.GI6178@frogsfrogsfrogs>
- <20251018144318.owo63ppez7ormj5f@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <176054618007.2391029.16547003793604851342.stgit@frogsfrogsfrogs>
+ <aPHE0N8JX4H8eEo6@infradead.org>
+ <20251017162218.GD6178@frogsfrogsfrogs>
+ <aPXeQW0ISn6_aCoP@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,76 +47,68 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251018144318.owo63ppez7ormj5f@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+In-Reply-To: <aPXeQW0ISn6_aCoP@infradead.org>
 
-On Sat, Oct 18, 2025 at 10:43:18PM +0800, Zorro Lang wrote:
-> On Fri, Oct 17, 2025 at 03:55:46PM -0700, Darrick J. Wong wrote:
-> > On Sat, Oct 18, 2025 at 01:13:25AM +0800, Zorro Lang wrote:
-> > > On Wed, Oct 15, 2025 at 09:38:32AM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > attr2/noattr2 doesn't do anything anymore and aren't reported in
-> > > > /proc/mounts, so we need to check /proc/mounts and _notrun as a result.
-> > > > 
-> > > > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
-> > > > ---
-> > > >  common/attr |    4 ++++
-> > > >  1 file changed, 4 insertions(+)
-> > > > 
-> > > > 
-> > > > diff --git a/common/attr b/common/attr
-> > > > index 1c1de63e9d5465..35e0bee4e3aa53 100644
-> > > > --- a/common/attr
-> > > > +++ b/common/attr
-> > > > @@ -241,7 +241,11 @@ _require_noattr2()
-> > > >  		|| _fail "_try_scratch_mkfs_xfs failed on $SCRATCH_DEV"
-> > > >  	_try_scratch_mount -o noattr2 > /dev/null 2>&1 \
-> > > >  		|| _notrun "noattr2 mount option not supported on $SCRATCH_DEV"
-> > > > +	grep -w "$SCRATCH_MNT" /proc/mounts | awk '{print $4}' | grep -q -w noattr2
-> > > 
-> > > How about use findmnt? e.g.
-> > > 
-> > >     grep -qw noattr2 <(findmnt -rncv -M / -o OPTIONS)
-> 
-> Sorry, the "/" should be $SCRATCH_MNT.
-> 
-> > > 
-> > > > +	local res=${PIPESTATUS[2]}
-> > > 
-> > > Then the PIPESTATUS isn't needed either.
-> > > 
-> > > I can help to do this change if you agree.
+On Mon, Oct 20, 2025 at 12:01:21AM -0700, Christoph Hellwig wrote:
+> On Fri, Oct 17, 2025 at 09:22:18AM -0700, Darrick J. Wong wrote:
+> > > What XFS flags end up in lsattr?
 > > 
-> > Yes, that works!  Excellent suggestion.
+> > Assuming you're asking which XFS flags are reported by ext4 lsattr...
+> > 
+> > append, noatime, nodump, immutable, projinherit, fsdax
+> > 
+> > Unless you meant src/file_attr.c?  In which case theyr'e
 > 
-> The patch 1,2,3,5,7,8 has been acked/reviewed, do you need I merge these patches
-> in the release of this weekend at first, as this's a random fixes patchset. Or
-> I can wait your next version, then merge the whole patchset when it's all get
-> reviewed ?
+> I'm actually not sure.  I was just surprised about the flags showing
+> up.
+> 
+> > 
+> > > Is this coordinated with the official
+> > > registry in ext4?
+> > 
+> > Only informally by Ted and I talking on Thursdays.
+> > 
+> > The problem here is that _filter_file_attributes ... probably ought to
+> > say which domain (ext4 lsattr or xfs_io lsattr) it's actually filtering.
+> 
+> Oooh.  That explains my confusion.
+> 
+> > Right now the only users of this helper are using it to filter
+> > src/file_attr.c output (aka xfs_io lsattr) so I think I should change
+> > the patch to document that.
+> 
+> Yes, please.  And we really need to figure out central authoritisied
+> to document the lsattr and fsxattr domain flags.
 
-Well I guess you didn't take any of them yet, so I'll republish them in
-a little bit.
+[add tytso and linux-ext4]
+
+I think we should standardize on the VFS (aka file_getattr) flag values,
+which means the xfs version more or less wins.
+
+The only problem there of course is that file_getattr doesn't know about
+the ext-specific flags, which are:
+
+	{ EXT2_SECRM_FL, "s", "Secure_Deletion" },
+	{ EXT2_UNRM_FL, "u" , "Undelete" },
+	{ EXT2_DIRSYNC_FL, "D", "Synchronous_Directory_Updates" },
+	{ EXT2_COMPR_FL, "c", "Compression_Requested" },
+	{ EXT4_ENCRYPT_FL, "E", "Encrypted" },
+	{ EXT3_JOURNAL_DATA_FL, "j", "Journaled_Data" },
+	{ EXT2_INDEX_FL, "I", "Indexed_directory" },
+	{ EXT2_NOTAIL_FL, "t", "No_Tailmerging" },
+	{ EXT2_TOPDIR_FL, "T", "Top_of_Directory_Hierarchies" },
+	{ EXT4_EXTENTS_FL, "e", "Extents" },
+	{ FS_NOCOW_FL, "C", "No_COW" },
+	{ EXT4_CASEFOLD_FL, "F", "Casefold" },
+	{ EXT4_INLINE_DATA_FL, "N", "Inline_Data" },
+	{ EXT4_VERITY_FL, "V", "Verity" },
+	{ EXT2_NOCOMPR_FL, "m", "Dont_Compress" },
+
+Not sure what we want to do about that, since some of those flags like
+the ones related to deletion, compression, and tailmerging aren't
+implemented.
+
+Other things like extents/topdir seem too ext4-specific to put in a vfs
+interface....?
 
 --D
-
-> Thanks,
-> Zorro
-> 
-> > 
-> > --D
-> > 
-> > > Thanks,
-> > > Zorro
-> > > 
-> > > >  	_scratch_unmount
-> > > > +	test $res -eq 0 \
-> > > > +		|| _notrun "noattr2 mount option no longer functional"
-> > > >  }
-> > > >  
-> > > >  # getfattr -R returns info in readdir order which varies from fs to fs.
-> > > > 
-> > > 
-> > > 
-> > 
-> 
-> 
