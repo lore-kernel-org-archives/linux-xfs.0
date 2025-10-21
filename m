@@ -1,74 +1,67 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6682427AC28
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Oct 2025 07:57:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1268E2E2EEE
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Oct 2025 08:15:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761033436; cv=none; b=RLPYKgobPAXB0dj9GrgCvnJjrCLrXZtRkvBp1CvGL8KjVhzGBgXOpmofdU3xQiIkX4VrFm9o3knJ+l/3LshmbusPISUjftKOo5DhJA2ScInWzjqiDk+K/dF8nUbKrQhnbngFPxVyUIdbx9OxCPKwTIH5jE7zbFRPJMuFWKT8eLI=
+	t=1761034551; cv=none; b=usQENNDsc9jRek7H5AcFJpsiO4+wtbqN/z8z9PBVWSU4QgnkyA5rmR57x5RaASUgQkjWe76oXDnxI6Uxmf6t/iVIOcdz/aQs0VgQz4eYWmZJlwBPwQ1xGRo5R3nRftrWGIjmubZf30MxYyskPJWSWJ5ayt0yzTJSGghcT916ob4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761033436; c=relaxed/simple;
-	bh=kzUnodnESQPZ3hjQ+4hWlqNv0TA/x4jgslgFtQDH52Y=;
+	s=arc-20240116; t=1761034551; c=relaxed/simple;
+	bh=zVftnVBzK8rt+bdggo8IGbxD/AJcc2cHbCdfPnYtwWM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Boy4aSzwir/ee5534jPuay/A7yiLRoVQ8ZoSY79sGE3IqErMHYhckdujmKh02EotW+MGi2qiZrjdxdVuoRaFgz5Sv7q3zQPouAv+t6wzUkkZ+nx0RZFcMsSNoF4+R8oNwWus1LGpvHQqzF9Wre7U1GSpU0xsDC51pUrxFp7aeM4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dPWNP3yu; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 In-Reply-To:Content-Type; b=XaQp0t90bWD8/GJe9SQu22zP49/AqSTXIu0Xspnrs89zpEInZBcTlrAk/7A5S6JCagRGfbKdgWixpPkJTatTGEpiW1kse2Fbkf6T3VXhD1GMLsKNulAbOjYn1aYXOS9stF1GisAz6fdhfsTrkU9mL5hDkNDtW65rCuegVa0dkO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=WdMA9tFm; arc=none smtp.client-ip=209.85.221.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dPWNP3yu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1761033434;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=fUep2F5lenxxRi6fdUvVCk4rNKrfMBfN9N3PQW5oVLs=;
-	b=dPWNP3yuapa4u22fQtOzW7lAojucK8lLyTZZlAA93uFeAl8+F9TfP1MNQzjZBNlEjY8zdb
-	nUXW0FxBCtad8XKC5Cng8wIMjj1+hA/FKI1sCNPyDG2UkLo9tuRt9EfO4lCJVir5PBB8Mo
-	UVmdms5ag0OkjfRPo88fbICGhfyaWpw=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-546-LNawSZWhNlGlQkg8I5DrZg-1; Tue, 21 Oct 2025 03:57:12 -0400
-X-MC-Unique: LNawSZWhNlGlQkg8I5DrZg-1
-X-Mimecast-MFC-AGG-ID: LNawSZWhNlGlQkg8I5DrZg_1761033431
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-4278c82dce6so1997847f8f.3
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Oct 2025 00:57:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="WdMA9tFm"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-426fd62bfeaso2383695f8f.2
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Oct 2025 01:15:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1761034546; x=1761639346; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=kHcZuzFp72N7RUBqQIuIU6WTtqLSl7qFxgRoCA9ftI4=;
+        b=WdMA9tFm7VuQZIcV3jB3wZS31vjAkMWLYPFvm8ruZAE2sB0XIHJDzrHvzzuc5xiI7U
+         ddo1uRSWKe9V5ENjaQE4NlMo/oSabyhGtEDGBoD52/VWkBQIVwe5oIFTPbZD/fh/dtzp
+         Il8zFnpqYBCTZM2ZRyCtJpJg2Cupkj54towPZpFz5+HcVRVsWdWWkXZAhOuF/0p8zxsB
+         8q8lhHhaK/NkCiyOjflAdO9T89AphH/wLVZsDudzoorTIiguJsf8XkLYZrJrsQgfj3hK
+         eW52cWXWiF6ZjHKvtyWFAzzLcqRsmfeC1SQHVdW7N7Qnu+l8AwJXDriCtAii5t0Y+0cc
+         anDw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761033431; x=1761638231;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=fUep2F5lenxxRi6fdUvVCk4rNKrfMBfN9N3PQW5oVLs=;
-        b=p4WAQkylgZ/Hs1ZWHFRRF7+kTuZkE56wNaHPIA/SNkVgaDzXmd1R++8Arw4os8/DYt
-         bAtC21ayX8s46jL/bf40D8kGRQgdfN6EGXE94cOTNKZZ7qjmZ6el/K9r23SB9DbyVpQs
-         q0JgNIjP36hBG9NNe8bquwyJdFRgQI18xy+nQqbERF0dVnYskRkVkUoOm0IDdA/TaPgq
-         pUhH3F7fGAhTbsQyFHyLKArkRCNmR+9OdqLUHLDSMLmp+mGO9d5H8Vw3prwsFGi6ZSKg
-         EU6aMDLoSKplZLbJ1QsyROP2iQnnC8SJ7UkPWRN43vO1roZ2IpUUEATqsvAgIOdiT3x1
-         AUlQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXCTo3J85Uyw0ExJVSUSpa5bU4Wc7TnmxhrD3z4z4R6U6tQ7NlaDuLi3E9w8H/UtUtt2gJXWWWjfC8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzGOVbqmidqSlkfJvOLLuBUCelxM4Hq+nbbWooxCB2Jt9WAYufC
-	P1mey4XVhoqokZwO2o8nv6fNjWTniMmf5RIyZqCsNWb7IXZ9UlvXsGRakYnELBuurMOaK/D/icT
-	tiUJybbfFHZhPQVsMxM4ZtFs6qGbJ9QywjIFk6kqV9MtgkkfXRtRfZqznUNyQrw==
-X-Gm-Gg: ASbGnct8fUh5lHe2dGUVHy7gv5wRUCHU/3u8BUuwNDDZ5DUHsNRtyP023epAleMr3I+
-	Np60/eFqeUa8GYo08en7ZriUAvvDUk1bupReE/pe28Bu0SE/YHU1giH5qKUQb99PzTtcmP4z9k5
-	dBZZsjLPfgO5m14Ad71vFGh5lZU/hopKEy3Nz2V8Hf6x+lr00hDYd+6+wGKddDdgn1AaqG1pkoI
-	FRk8aC4OPSx37hrUSkQ+2OfstfzGWS96LZkdEXssVmyF3uv20MqeL+Zx26tiAcAw24kkyutmkoz
-	SQM9Ou4CwXwjgFmMNrA5dHJjhirvISVd44t6ZmkahXmkHOybNKhbtE1vVBsSuHuXJgmOPWE2nR0
-	T0rStJ+82WeWwZHX27KUIx6hvot/Z1hw78aSsKhHSnD5MRcFKziwu25b0IDCeto5Zcygz6il9Fl
-	4kf9rHoLYi9vz8PdIF6VDRJoS86wk=
-X-Received: by 2002:a05:6000:2507:b0:414:6fe6:8fa1 with SMTP id ffacd0b85a97d-42704d95645mr11202339f8f.38.1761033430887;
-        Tue, 21 Oct 2025 00:57:10 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGBqz1uZsEY1jCmnK5iipnnYUKFUGDAKuTU7UXJ/g7OrVHjIjgtlWv7fVh/TELjD+hkmZZH6Q==
-X-Received: by 2002:a05:6000:2507:b0:414:6fe6:8fa1 with SMTP id ffacd0b85a97d-42704d95645mr11202325f8f.38.1761033430520;
-        Tue, 21 Oct 2025 00:57:10 -0700 (PDT)
-Received: from ?IPV6:2003:d8:2f4e:3200:c99d:a38b:3f3a:d4b3? (p200300d82f4e3200c99da38b3f3ad4b3.dip0.t-ipconnect.de. [2003:d8:2f4e:3200:c99d:a38b:3f3a:d4b3])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-427ea5a0f7dsm18728294f8f.4.2025.10.21.00.57.09
+        d=1e100.net; s=20230601; t=1761034546; x=1761639346;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=kHcZuzFp72N7RUBqQIuIU6WTtqLSl7qFxgRoCA9ftI4=;
+        b=mXbNvQ3A4xso0Y5tI9OQ6jCXRKqJMawkDehSk5SheV54A6VRQ3+aSxtkzm0/r6PSRt
+         fWUqUcKvNHdOabB13S5glwnVhtBtz2Ge5OVD1DrN1xgxyqUqD+4FIjp1UkVDCfN9q162
+         S0mswJNmaYq5aJCW+TG0CxfS6hoR4i0anLrXyIDrswi5f7/XTV/Ohz1D2j3HlCFO7HMn
+         iC1A1RCpJLUyNW+VylIMfdzLzZuP3hyKDSWsnSI2MlKUuCuFNADMd4QSp130pYzh+Q1q
+         8QEN/c0EwjsPlecMKZTAG7lA3mG4f2qyWDW/dILuMK3JwdhJ3hSNRzaMHfrkv0Kw7ZX+
+         usBg==
+X-Forwarded-Encrypted: i=1; AJvYcCXUdqW+nqyCeR4PMQYsH1uTO8V9QomEhjfWT3JYMda7AACzieAvHuik6zrdfzll1lHHtiIbyTzofa0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwC/E+N5pfB9cHhjr6st3wWm5vXCNZMhkrWK/RJkW2mIyC2RB4d
+	zqwhGqsQr7NFMmo2qLv5yFq3f3ViMmIxR0GDy7U0leI5+TVkCJtroagCttsE1f8gFtQ=
+X-Gm-Gg: ASbGncvh2w4ywJQxFaLSYwvUJdSQdsuoh2tcLwpDnsVZT1kaJhLN3xIn4hWmFOQUqdC
+	eDRFLdhGQEPEKqWF/tLwFRfxWxwBInMm5xJ8ReGteZhIu52prTDVk692nRnKVIUQwI+zYt2GI7F
+	QJyz6EOy+vr6sDNcCXBH1VJiB3UyjrjbxifkIvDHoJVOqWjaq61IS9SwarT1wbjOYEmyzx1gCrZ
+	wx0mSI2Z2V5fo9LxXdAaQYNqbFYn+ohGc4beXNg5ZlGT4SeOlx84Jvq7UaLFyK7fG1S97DjAP/p
+	151iit0MzJHubid64EslNaib2iUgT28bAzWyprXaOOD1p8tclTgAUpgAR50UPLyh4GTvg9wtMCq
+	c0tJ0Mb1M/br24ypHBQDHsxIfoRiDPxqGQm8Z4CTphYsjEzeBVFv6afXeSEYezZ69SfFe8h8MAT
+	kfusueQpjFLhunV1buaEnRyuJNJ6h2NgXwZ5zFo6U=
+X-Google-Smtp-Source: AGHT+IFaWIBoJi3XK2l2Na+ZDX2sj+oZzA5h4ZX6OeFEPtXSgG1fCm9Tbf7ohSg/qKEJQ1ymWULiPw==
+X-Received: by 2002:a5d:5d08:0:b0:427:a34:648c with SMTP id ffacd0b85a97d-4270a34652cmr9043168f8f.58.1761034546186;
+        Tue, 21 Oct 2025 01:15:46 -0700 (PDT)
+Received: from ?IPV6:2403:580d:fda1::299? (2403-580d-fda1--299.ip6.aussiebb.net. [2403:580d:fda1::299])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7a22ff4f779sm10584512b3a.32.2025.10.21.01.15.39
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 21 Oct 2025 00:57:10 -0700 (PDT)
-Message-ID: <32a9b501-742d-4954-9207-bb7d0c08fccb@redhat.com>
-Date: Tue, 21 Oct 2025 09:57:08 +0200
+        Tue, 21 Oct 2025 01:15:45 -0700 (PDT)
+Message-ID: <4f4c468a-ac87-4f54-bc5a-d35058e42dd2@suse.com>
+Date: Tue, 21 Oct 2025 18:45:37 +1030
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,103 +71,84 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: O_DIRECT vs BLK_FEAT_STABLE_WRITES, was Re: [PATCH] btrfs: never
  trust the bio from direct IO
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, Matthew Wilcox <willy@infradead.org>,
- Qu Wenruo <wqu@suse.com>, linux-btrfs@vger.kernel.org, djwong@kernel.org,
+To: Christoph Hellwig <hch@infradead.org>, Qu Wenruo <quwenruo.btrfs@gmx.com>
+Cc: linux-btrfs@vger.kernel.org, djwong@kernel.org,
  linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
  linux-block@vger.kernel.org, linux-mm@kvack.org, martin.petersen@oracle.com,
  jack@suse.com
-References: <1ee861df6fbd8bf45ab42154f429a31819294352.1760951886.git.wqu@suse.com>
- <aPYIS5rDfXhNNDHP@infradead.org>
- <56o3re2wspflt32t6mrfg66dec4hneuixheroax2lmo2ilcgay@zehhm5yaupav>
- <aPYgm3ey4eiFB4_o@infradead.org>
- <mciqzktudhier5d2wvjmh4odwqdszvbtcixbthiuuwrufrw3cj@5s2ffnffu4gc>
- <aPZOO3dFv61blHBz@casper.infradead.org>
- <xc2orfhavfqaxrmxtsbf4kepglfujjodvhfzhzfawwaxlyrhlb@gammchkzoh2m>
- <5bd1d360-bee0-4fa2-80c8-476519e98b00@redhat.com>
- <aPc7HVRJYXA1hT8h@infradead.org>
-From: David Hildenbrand <david@redhat.com>
+References: <aPYIS5rDfXhNNDHP@infradead.org>
+ <b91eb17a-71ce-422c-99a1-c2970a015666@gmx.com>
+ <aPc6uLKJkavZ_SkM@infradead.org>
 Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- qIws/H2t
-In-Reply-To: <aPc7HVRJYXA1hT8h@infradead.org>
+From: Qu Wenruo <wqu@suse.com>
+Autocrypt: addr=wqu@suse.com; keydata=
+ xsBNBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
+ 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
+ 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
+ 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
+ gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
+ AAHNGFF1IFdlbnJ1byA8d3F1QHN1c2UuY29tPsLAlAQTAQgAPgIbAwULCQgHAgYVCAkKCwIE
+ FgIDAQIeAQIXgBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXVgBQkQ/lqxAAoJEMI9kfOh
+ Jf6o+jIH/2KhFmyOw4XWAYbnnijuYqb/obGae8HhcJO2KIGcxbsinK+KQFTSZnkFxnbsQ+VY
+ fvtWBHGt8WfHcNmfjdejmy9si2jyy8smQV2jiB60a8iqQXGmsrkuR+AM2V360oEbMF3gVvim
+ 2VSX2IiW9KERuhifjseNV1HLk0SHw5NnXiWh1THTqtvFFY+CwnLN2GqiMaSLF6gATW05/sEd
+ V17MdI1z4+WSk7D57FlLjp50F3ow2WJtXwG8yG8d6S40dytZpH9iFuk12Sbg7lrtQxPPOIEU
+ rpmZLfCNJJoZj603613w/M8EiZw6MohzikTWcFc55RLYJPBWQ+9puZtx1DopW2jOwE0EWdWB
+ rwEIAKpT62HgSzL9zwGe+WIUCMB+nOEjXAfvoUPUwk+YCEDcOdfkkM5FyBoJs8TCEuPXGXBO
+ Cl5P5B8OYYnkHkGWutAVlUTV8KESOIm/KJIA7jJA+Ss9VhMjtePfgWexw+P8itFRSRrrwyUf
+ E+0WcAevblUi45LjWWZgpg3A80tHP0iToOZ5MbdYk7YFBE29cDSleskfV80ZKxFv6koQocq0
+ vXzTfHvXNDELAuH7Ms/WJcdUzmPyBf3Oq6mKBBH8J6XZc9LjjNZwNbyvsHSrV5bgmu/THX2n
+ g/3be+iqf6OggCiy3I1NSMJ5KtR0q2H2Nx2Vqb1fYPOID8McMV9Ll6rh8S8AEQEAAcLAfAQY
+ AQgAJgIbDBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXWBBQkQ/lrSAAoJEMI9kfOhJf6o
+ cakH+QHwDszsoYvmrNq36MFGgvAHRjdlrHRBa4A1V1kzd4kOUokongcrOOgHY9yfglcvZqlJ
+ qfa4l+1oxs1BvCi29psteQTtw+memmcGruKi+YHD7793zNCMtAtYidDmQ2pWaLfqSaryjlzR
+ /3tBWMyvIeWZKURnZbBzWRREB7iWxEbZ014B3gICqZPDRwwitHpH8Om3eZr7ygZck6bBa4MU
+ o1XgbZcspyCGqu1xF/bMAY2iCDcq6ULKQceuKkbeQ8qxvt9hVxJC2W3lHq8dlK1pkHPDg9wO
+ JoAXek8MF37R8gpLoGWl41FIUb3hFiu3zhDDvslYM4BmzI18QgQTQnotJH8=
+In-Reply-To: <aPc6uLKJkavZ_SkM@infradead.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 21.10.25 09:49, Christoph Hellwig wrote:
-> On Mon, Oct 20, 2025 at 09:00:50PM +0200, David Hildenbrand wrote:
->> Just FYI, because it might be interesting in this context.
->>
->> For anonymous memory we have this working by only writing the folio out if
->> it is completely unmapped and there are no unexpected folio references/pins
->> (see pageout()), and only allowing to write to such a folio ("reuse") if
->> SWP_STABLE_WRITES is not set (see do_swap_page()).
->>
->> So once we start writeback the folio has no writable page table mappings
->> (unmapped) and no GUP pins. Consequently, when trying to write to it we can
->> just fallback to creating a page copy without causing trouble with GUP pins.
+
+
+在 2025/10/21 18:18, Christoph Hellwig 写道:
+> On Tue, Oct 21, 2025 at 01:47:03PM +1030, Qu Wenruo wrote:
+>> Off-topic a little, mind to share the performance drop with PI enabled on
+>> XFS?
 > 
-> Yeah.  But anonymous is the easy case, the pain is direct I/O to file
-> mappings.  Mapping the right answer is to just fail pinning them and fall
-> back to (dontcache) buffered I/O.
+> If the bandwith of the SSDs get close or exceeds the DRAM bandwith
+> buffered I/O can be 50% or less of the direct I/O performance.
 
-Right, I think the rules could likely be
+In my case, the DRAM is way faster than the SSD (tens of GiB/s vs less 
+than 5GiB/s).
 
-a) Don't start writeback to such devices if there may be GUP pins (o 
-writeble PTEs)
+> 
+>> With this patch I'm able to enable direct IO for inodes with checksums.
+>> I thought it would easily improve the performance, but the truth is, it's
+>> not that different from buffered IO fall back.
+> 
+> That's because you still copy data.
 
-b) Don't allow FOLL_WRITE GUP pins if there is writeback to such a device
+Enabling the extra copy for direct IO only drops around 15~20% 
+performance, but that's on no csum case.
 
-Regarding b), I would have thought that GUP would find the PTE to not be 
-writable and consequently trigger a page fault first to make it 
-writable? And I'd have thought that we cannot make such a PTE writable 
-while there is writeback to such a device going on (otherwise the CPU 
-could just cause trouble).
+So far the calculation matches your estimation, but...
 
--- 
-Cheers
+> 
+>> So I start wondering if it's the checksum itself causing the miserable
+>> performance numbers.
+> 
+> Only indirectly by touching all the cachelines.  But once you copy you
+> touch them again.  Especially if not done in small chunks.
 
-David / dhildenb
+As long as I enable checksum verification, even with the bouncing page 
+direct IO, the result is not any better than buffered IO fallback, all 
+around 10% (not by 10%, at 10%) of the direct IO speed (no matter 
+bouncing or not).
+
+Maybe I need to check if the proper hardware accelerated CRC32 is 
+utilized...
+
+Thanks,
+Qu
 
