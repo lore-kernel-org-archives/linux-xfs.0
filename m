@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A92D02E7BDD;
-	Tue, 21 Oct 2025 09:37:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10AE32E718F
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Oct 2025 09:37:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761039455; cv=none; b=CXscnrlO8UuVC5RGvrkeujDusFdRF3egHv+eAYC5wkyKd3g7nYmWQmsSAYzvdcTN1KBW0rcjLaBqre+Wv3pVr0or7g1ojrGJE/7vD2tHfX4SPcyno+5BtSwpyKh5vcO9i22c2UsfHKzn/YyqP9Zgh5ZTRpV3gNjb/SYZnB6Cs3M=
+	t=1761039457; cv=none; b=kRNNRNFRBWMQuqQ++O2HD1FaGBg8TG00WvhqGSMWpTBqMRRRAi9hC2asb8aq8EOnOLrAozg+eGSKKUoHz7uyBIeVbaOtUxZuqNu3OEUt+3/Lq9vpySh4xCbynoQmOkCdCWT+WMGA9dRlYuTSGq8Zp/QkUIYu3T6wfmJm8EmoiwY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761039455; c=relaxed/simple;
-	bh=ZsCo/EDF6FwJc+2uSEWFJl0x6Cly1yBcU94yzW2S++Y=;
+	s=arc-20240116; t=1761039457; c=relaxed/simple;
+	bh=i08MQH2Mhl7s3JtSsZbubbUEjxCW2BAmsMK6yHwBikI=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=dIJcUXqm/cco7mQR8/ZUIkp/8mlM2ASiAeVkQhwMfJfbEdeUsZIaT08bCWBsgnDjRCqdNZShCkuTCzgJlp5b2OGFY+S5yC7+2Z01Vmc7VucZOZOxlX3W1JCfEPvFyB1VvaDX8PF6lumI01Pt4GMP3EpaqMHt6/jmsHNrKF0/bsk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n+D7i9UH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=UZxnoWV1YYUkub4+2+rbOJ7cko1H7h7KZlz/YJqweszzITVdqLO+Y3imeDi+g7enGMTwN4hfOFGdbD2nPvGCPMJI+ye5CjX0tGyfpr0ucj2lC7Hg+wL1UpBla1cHpJEjeKL9uyOfzXg+zSkChZKzvLp2rQRZyT7C83250EADRZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D97kop8H; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n+D7i9UH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F733C4CEFD;
-	Tue, 21 Oct 2025 09:37:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D97kop8H"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D23CFC4CEF5;
+	Tue, 21 Oct 2025 09:37:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761039455;
-	bh=ZsCo/EDF6FwJc+2uSEWFJl0x6Cly1yBcU94yzW2S++Y=;
+	s=k20201202; t=1761039456;
+	bh=i08MQH2Mhl7s3JtSsZbubbUEjxCW2BAmsMK6yHwBikI=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=n+D7i9UHeYhsS7ZM2fOF6S8H35q0uMw4CUl2ygVmr71wTZheonUN1u7KDF2Dxh8pO
-	 8TWl65+K5SguxdBAUK6Y+iKxfZuZzQwCzqICsKN4bDX7hkYR28GrFoO2gJ+kHeeAFM
-	 +9tpVhusNh/o0bIJMxQwnl/USyc3s5xxJDayUFDjugQoxBQJC/UrvjbqSwC0T12kGl
-	 ZA6zP4hLJbu+XKB6W6SGPOGWS92Iom77Myw0Ms/tm1MrFsxkJ/oLJag542lbV917Q8
-	 YhktxCjS5pQUbuGUlXBnmjWr4CB3CyAGoEkLrYEQ6fsloyXgYRLt+ktYrPaNAiWFAn
-	 T6EwBDnwo+j5w==
+	b=D97kop8HmS39lNcb3yUpEP5630ImkzUs+H7jQcPcuGc7feXoq2VXE4DEdhK0dupOZ
+	 c53qsu2d0+h7cb+tyjhROWoZhrP9YWuamN0Qj5SISxH6iIzUl+qxCVAN1hSkN6GiAT
+	 LiT/FdUnvuWO+kARfxVZOEDWKEdhEej0wPXSI7r6LSB9CW3r5cYpkGKDFUDjNPx22E
+	 qqqd8mBbhc9CY3FyNA/dKf1UtzcbKzDoTXL8/nOR5DiV+ZiAdTLEJLsafVz6LWvu+F
+	 xFQwJfncrapmJa58v2Dxd9fqOTznLOXLKhwlUmA4IkM8sDo5cUQLiI4DxxPg9VhgFz
+	 6oID7944lhDfw==
 From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J . Wong" <djwong@kernel.org>, 
- Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <69104b397a62ea3149c932bd3a9ed6fc7e4e91a0.1760345180.git.geert@linux-m68k.org>
-References: <69104b397a62ea3149c932bd3a9ed6fc7e4e91a0.1760345180.git.geert@linux-m68k.org>
-Subject: Re: [PATCH] xfs: XFS_ONLINE_SCRUB_STATS should depend on DEBUG_FS
-Message-Id: <176103945397.16579.3795504519403612906.b4-ty@kernel.org>
-Date: Tue, 21 Oct 2025 11:37:33 +0200
+To: Christoph Hellwig <hch@lst.de>
+Cc: hans.holmberg@wdc.com, linux-xfs@vger.kernel.org
+In-Reply-To: <20251015062930.60765-1-hch@lst.de>
+References: <20251015062930.60765-1-hch@lst.de>
+Subject: Re: [PATCH] xfs: avoid busy loops in GCD
+Message-Id: <176103945549.16579.10233186565512132450.b4-ty@kernel.org>
+Date: Tue, 21 Oct 2025 11:37:35 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,23 +44,22 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Mon, 13 Oct 2025 10:48:46 +0200, Geert Uytterhoeven wrote:
-> Currently, XFS_ONLINE_SCRUB_STATS selects DEBUG_FS.  However, DEBUG_FS
-> is meant for debugging, and people may want to disable it on production
-> systems.  Since commit 0ff51a1fd786f47b ("xfs: enable online fsck by
-> default in Kconfig")), XFS_ONLINE_SCRUB_STATS is enabled by default,
-> forcing DEBUG_FS enabled too.
+On Wed, 15 Oct 2025 15:29:30 +0900, Christoph Hellwig wrote:
+> When GCD has no new work to handle, but read, write or reset commands
+> are outstanding, it currently busy loops, which is a bit suboptimal,
+> and can lead to softlockup warnings in case of stuck commands.
 > 
-> Fix this by replacing the selection of DEBUG_FS by a dependency on
-> DEBUG_FS, which is what most other options controlling the gathering and
-> exposing of statistics do.
+> Change the code so that the task state is only set to running when work
+> is performed, which looks a bit tricky due to the design of the
+> reading/writing/resetting lists that contain both in-flight and finished
+> commands.
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: XFS_ONLINE_SCRUB_STATS should depend on DEBUG_FS
-      commit: f5caeb3689ea2d8a8c0790d9eea68b63e8f15496
+[1/1] xfs: avoid busy loops in GCD
+      commit: a8c861f401b4b2f8feda282abff929fa91c1f73a
 
 Best regards,
 -- 
