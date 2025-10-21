@@ -1,39 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 716602F8BD3
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Oct 2025 09:37:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6886E31329A
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Oct 2025 09:37:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761039458; cv=none; b=t35nCDKFO4v7RmTAdb8PsYCPojpkDuyge88BuMZBg9q9+YZa3iG9f0lGvew4J7xGCOOOekngawr7KKfQ33UEApw5oAb7C6RcFt1HKmzysrH0E4jqStx5TRViXss9LaqBqGc+0uQ+VWdp/N9lZ31J+WVsEXrMa+qdDF/FZJ7XumM=
+	t=1761039460; cv=none; b=Y5zYVI2iIGKCe8rId8tMWK3CHDLlakeBhQngj6wsGIHsyJqL+rNt3A5tcA1PUdIshyj0OQFbOGnOTke01+TUoFLKwz61tITBIKjPH0JK/JqmbX5jivKUhngrFt8YWrVhF4guGbpx+YdEb3ykyI+iboZYqzBtg5orvSRVwCBfue4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761039458; c=relaxed/simple;
-	bh=80Qz7Xev7K/aM6xoRYuCnmYBRuV6GtwOU65kU3hTtBY=;
+	s=arc-20240116; t=1761039460; c=relaxed/simple;
+	bh=7WdlW9v0O8clrGARrOMHaLKZS63Jkb/TN4d5qa1QvxQ=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=MX1S/6xJw+JgvtGSnKHDXaDV+Lzg7qWuevYTKdW2ZBKu85x1cQzh4o5CCdTSLxdijl8YzJdNNUsEbw9Tzv8kOnQoSNceT79shWvLHY1HzbxUnzfLGqOwwJzmi4slDvYIneBokF2LUUhnE2nYpOm/mzdzkk5x/2E4uAMQ5m8zvPA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A9LaSyQU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=SUkh7DwsHRAdlB/wD4ml3lkgLseq9CH3hbeozlRMwoILPYIFwJoRMR73Eis7o4bAhrBM7pfnzDEKRfAK4tWMII4OCkXeWZM89fJacTjGXCaukr8LcYAKHH93W8nrSlwg2+uxPkitX89J/TggwYj2SP55XA4wySkWg2RAdjzofF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kjh31u9H; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A9LaSyQU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2ECF7C4CEFD;
-	Tue, 21 Oct 2025 09:37:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kjh31u9H"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98F10C4CEF5;
+	Tue, 21 Oct 2025 09:37:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761039458;
-	bh=80Qz7Xev7K/aM6xoRYuCnmYBRuV6GtwOU65kU3hTtBY=;
+	s=k20201202; t=1761039460;
+	bh=7WdlW9v0O8clrGARrOMHaLKZS63Jkb/TN4d5qa1QvxQ=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=A9LaSyQUHE825eBm6PT6VW4TgVJJKz1S0dm+ryhilyDq295PsAHGjEeDqaMtqKlYb
-	 a8pLue3ibooC3BkhmdMyalQrJLTBcyPKaGP/0OFRRjAJFvz43xh4WasIEYEfQbo4Ec
-	 ZJKuvK/JZcsbLxYqCYheGjvB6+4qjFJ0XZSf2+7QZpK5H9DATTP/++sOMhyepMlNzR
-	 w/WxLDA3KZPKsHROt2wL67tp9q/pgd+jo3BvOg0Hesw7ozj06qk7T7cMfdEbiSeM7l
-	 UJ69oD8bC2yJV7UisxN6cgFbb53pzw0ouSHLY5yGgdsWLFtQIL4D42XqXo6RXTcGO9
-	 PwEArDmjRKNYg==
+	b=kjh31u9H5Dh3WJgTP0ySCsYa8d/oy2v6uZmdviFi4IEdlyv2X1tuZeavJv2NG+RXG
+	 2B7NqsdE35X3VQQFGg7iTjNEXSvhDj3M6rb8HU1NzVvs77EuACe1eNDmeTIN/tatrm
+	 4fYcb52sA9uK8DyrqT2v6RgQy2uTETRxh5hEzsXko3MkcAHKQ5HLy3uXrFckAiLYkf
+	 XUvkJdrR1GtMjYKANBr+of4yO7ghV4j/nPnxoXQkcWYDhMQFDmrSlrKSpny3/bgPuW
+	 OetaR6KavEueEJ58hs45eeye1/mqefiqokR77H41jAcN2VkK8ALxaRnNUQJV+BIaGW
+	 CRgSLEfiZ+n6w==
 From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: hans.holmberg@wdc.com, linux-xfs@vger.kernel.org
-In-Reply-To: <20251017035607.652393-1-hch@lst.de>
-References: <20251017035607.652393-1-hch@lst.de>
-Subject: Re: [PATCH v2] xfs: cache open zone in inode->i_private
-Message-Id: <176103945689.16579.11207235697121713316.b4-ty@kernel.org>
-Date: Tue, 21 Oct 2025 11:37:36 +0200
+Cc: darrick.wong@oracle.com, raven@themaw.net, linux-xfs@vger.kernel.org, 
+ syzbot+359a67b608de1ef72f65@syzkaller.appspotmail.com, 
+ "Darrick J. Wong" <djwong@kernel.org>
+In-Reply-To: <20251003101307.2524661-1-hch@lst.de>
+References: <20251003101307.2524661-1-hch@lst.de>
+Subject: Re: [PATCH v2] xfs: don't use __GFP_NOFAIL in xfs_init_fs_context
+Message-Id: <176103945823.16579.13860309705802801608.b4-ty@kernel.org>
+Date: Tue, 21 Oct 2025 11:37:38 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,20 +46,20 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Fri, 17 Oct 2025 05:55:41 +0200, Christoph Hellwig wrote:
-> The MRU cache for open zones is unfortunately still not ideal, as it can
-> time out pretty easily when doing heavy I/O to hard disks using up most
-> or all open zones.  One option would be to just increase the timeout,
-> but while looking into that I realized we're just better off caching it
-> indefinitely as there is no real downside to that once we don't hold a
-> reference to the cache open zone.
+On Fri, 03 Oct 2025 12:12:48 +0200, Christoph Hellwig wrote:
+> With enough debug options enabled, struct xfs_mount is larger
+> than 4k and thus NOFAIL allocations won't work for it.
+> 
+> xfs_init_fs_context is early in the mount process, and if we really
+> are out of memory there we'd better give up ASAP anyway.
+> 
 > 
 > [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: cache open zone in inode->i_private
-      commit: ca3d643a970139f5456f90dd555a0955752d70cb
+[1/1] xfs: don't use __GFP_NOFAIL in xfs_init_fs_context
+      commit: 0f41997b1b2b769b73415512d2afaae80630e4fe
 
 Best regards,
 -- 
