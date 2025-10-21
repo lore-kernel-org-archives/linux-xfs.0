@@ -1,319 +1,187 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C979E342CBB;
-	Tue, 21 Oct 2025 15:26:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE1553451DF
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Oct 2025 15:55:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761060408; cv=none; b=J7XjfdOfmthY2S2mWK0eF7Th121cER0hdrFvdrQEZSkbDhOGT9tAXIEChASVI2uuB5RmOIInpbecbbGh8XKRd6c/U13lf3AdjfTgqU+w39JbolrA5/GTkGxb0khZH4zNC9Bq5o+WByNK26VcXkPVJKIEzaNJRslhZq433G6fpKk=
+	t=1761062115; cv=none; b=EE0/+Vkks9WldzwgKzUnKE3gkQC9723JSC7LCFasL+mZ3UpGMLP5lZutsSozl+nDU+eCsSPh2gVkzW0mUQqseXt8JW0P0SJC2y5FzgOrxt3dch/fnKAux6GF0UEF2UKp076OTaBZ9ECKGhEb3osHWXnhq7mZ8BxaKNA5q6zZSDo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761060408; c=relaxed/simple;
-	bh=WRzp2TQlTZchoT6m2ivAAefI4zmvljKPPT9tDXMZtL8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Hm1yfUWW+10GcotkF2gUzbd2bZkmoFSSu9OUEPm04jrHuPeTF9tj5+3HL6Xi1bOt36F3coMgCMpRkRe/yXMNuzaXHbsHtZKVhxOaIAjbF2zDQI+s5F8DQIQDF8MLGKcGWDYMDnwkmiOtyGwtwgpT6rmsxQSkPXepU5Z+/nQ+ZPk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n+FmqUcY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761062115; c=relaxed/simple;
+	bh=QLEetoLkCva3yuHdKCZ5FGM3BAwZ7bm9BJWbREWP5F0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HR1jzwGf00UHMUqoj4DbIlM/NYU6kJBE74+5Ga1gU7/iLYiW6AAvxk2HnHwqW6rrCowHs17ycGe6tc043RlQ8iD9AxY8Soyljgl/CZhaFNmNIFHAKy6kCa7IMW8cjQg0S3/UCG5MszuEX2lq1Mb6abKyk1qFpUoQsxUxA1+rY8Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t7adb8Sw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n+FmqUcY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 494E4C4CEF5;
-	Tue, 21 Oct 2025 15:26:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t7adb8Sw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A41B8C4CEF1;
+	Tue, 21 Oct 2025 15:55:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761060406;
-	bh=WRzp2TQlTZchoT6m2ivAAefI4zmvljKPPT9tDXMZtL8=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=n+FmqUcYAgkei075A/8cGIUiLqlWli+96Xn28UrYT3CQ2x9JIehk4i1bTWJMNM6o0
-	 FycuYs3ytk72UthUb7vw61+Zkig10GCvhJikLfvwRLURsrNbSWwji5IhaQH1rOUxFJ
-	 JQqfUYrgIvWL7HHeKLtFr10TgkIrmqyX77UIRpIfUYfnTZpeAy1o2UNEi6vUls/giS
-	 b3BhGyEla/6uuIspxu0KTcvqN2ZPAHVrlxil8IZMzUXIiCIVoymNnyb1mXU7migWWc
-	 gufjRskzI+bzjX4pD4w4ZmnUyJnUtNQNsUogaHShbpK0ytN4x77/9TDA28iI3wftPw
-	 bZ0MGWDQtHijw==
-From: Jeff Layton <jlayton@kernel.org>
-Date: Tue, 21 Oct 2025 11:25:48 -0400
-Subject: [PATCH v3 13/13] vfs: expose delegation support to userland
+	s=k20201202; t=1761062115;
+	bh=QLEetoLkCva3yuHdKCZ5FGM3BAwZ7bm9BJWbREWP5F0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=t7adb8SwlkU8Id2y3ClIuTsNr75KVQ53Fu+hTV4VkUN3OH2uSZByn3G4GDJjBSZW/
+	 5CaBf3lI5r9gckrPH7x4DhsdQmST6md5+ZmJja/3hSs0HaxBIUvzaXhs39EgjQNiPF
+	 bsqO9k34dBUZTcCSr54tiAc8aE0zhFMOUumYmykVBV870bVHS73VLnjw9sMD6RU/rR
+	 e0YTfWQ8stDqSUgyDXwHZFDwR6/BG6/N/2rh8byaKtAyYFxBI3tOauybu7BmmDbM9J
+	 cVg/MGsJQfMfAE8aY8h8W5tFNAT+8fg2hCTBlMqNR6XKtGqdJe9KVyIPEiqWUxEaN+
+	 WLuWrNtFugBBA==
+Date: Tue, 21 Oct 2025 08:55:15 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Lukas Herbolt <lukas@herbolt.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+Message-ID: <20251021155515.GL6215@frogsfrogsfrogs>
+References: <20251021141744.1375627-1-lukas@herbolt.com>
+ <20251021141744.1375627-3-lukas@herbolt.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20251021-dir-deleg-ro-v3-13-a08b1cde9f4c@kernel.org>
-References: <20251021-dir-deleg-ro-v3-0-a08b1cde9f4c@kernel.org>
-In-Reply-To: <20251021-dir-deleg-ro-v3-0-a08b1cde9f4c@kernel.org>
-To: Miklos Szeredi <miklos@szeredi.hu>, 
- Alexander Viro <viro@zeniv.linux.org.uk>, 
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
- Chuck Lever <chuck.lever@oracle.com>, 
- Alexander Aring <alex.aring@gmail.com>, 
- Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, 
- Steve French <sfrench@samba.org>, Paulo Alcantara <pc@manguebit.org>, 
- Ronnie Sahlberg <ronniesahlberg@gmail.com>, 
- Shyam Prasad N <sprasad@microsoft.com>, Tom Talpey <tom@talpey.com>, 
- Bharath SM <bharathsm@microsoft.com>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
- David Howells <dhowells@redhat.com>, Tyler Hicks <code@tyhicks.com>, 
- NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, 
- Dai Ngo <Dai.Ngo@oracle.com>, Amir Goldstein <amir73il@gmail.com>, 
- Namjae Jeon <linkinjeon@kernel.org>, Steve French <smfrench@gmail.com>, 
- Sergey Senozhatsky <senozhatsky@chromium.org>, 
- Carlos Maiolino <cem@kernel.org>, Kuniyuki Iwashima <kuniyu@google.com>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Simon Horman <horms@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
- samba-technical@lists.samba.org, netfs@lists.linux.dev, 
- ecryptfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
- linux-xfs@vger.kernel.org, netdev@vger.kernel.org, 
- Jeff Layton <jlayton@kernel.org>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7870; i=jlayton@kernel.org;
- h=from:subject:message-id; bh=WRzp2TQlTZchoT6m2ivAAefI4zmvljKPPT9tDXMZtL8=;
- b=owEBbQKS/ZANAwAKAQAOaEEZVoIVAcsmYgBo96YG+lqopk+r/W1MoUjb/aRCWEUcUM376vNc7
- uokTUn+zGmJAjMEAAEKAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCaPemBgAKCRAADmhBGVaC
- FSd9EACpg3fMTz1BEDjC8LY/SO85bg8i477SYR5KG2MrcAHKO8SUo/fZhyj8G4Nu+qBaClIlvwU
- Tq+2Hd4xxBM53VIeY/HBP5lfqDBl7MSua/mqDaekwBs4oCYwUZeVlmtq5X6nqTrxuLVCnlOstJr
- txLasYK//noELyGLZBoN1CW9UjgtHKWVPioDHi7l842TcTh1MsYT8AuwnnOlQhChhjq5+D4mSGS
- ZVOQpll1PDROw3S2/AVfqfLbvabHiUcMLW0K9e912rAvWJTIFmVyRLeFO0+psrBcT0PybZFPOnM
- +cLlwc/AVE8xt8m2bRmsY3jv5PuzY12IXO1L8N6nVTt7pYOgECHWAiO/enBlhbTZ5q8FYgizjYM
- gyliV3iKxCayC2tqKI+MTL/2tnqcaucbMbnNUONstBOZs1z0AVQJpTPPX57G/AwL0FvReZPHufz
- XqJSkPEfLZts8OslA1SOlbI8zYMVh/lNdt3Wmm1xst11oVvlN5y5RG3iXWBfPNLoIbzWO2ijFD+
- PVduCqacE96IUhreKifx5nV23dsP8Nxnl5abj+FjVx3HxEICt829mJ7C7YcgSp75wWBU84ERp7K
- 3NkXd/uSHljpHMXDiCKMrSu5ubQuYJ2gtGGEV5/XZZ5Lfl9nDPlYvqspvWHspKQp2YEOJALT/G+
- WhoDrAzmlMfpl6Q==
-X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
- fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251021141744.1375627-3-lukas@herbolt.com>
 
-Now that support for recallable directory delegations is complete,
-expose this functionality to userland with new F_SETDELEG and F_GETDELEG
-commands for fcntl(). This also allows userland to request a FL_DELEG
-type lease on files too. Userland applications that do will get
-signalled when there are metadata changes in addition to just data
-changes (which is a limitation of FL_LEASE leases).
+On Tue, Oct 21, 2025 at 04:17:44PM +0200, Lukas Herbolt wrote:
+> Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
+> the unmap write zeroes operation.
+> 
+> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+> ---
+>  fs/xfs/xfs_bmap_util.c |  6 +++---
+>  fs/xfs/xfs_bmap_util.h |  4 ++--
+>  fs/xfs/xfs_file.c      | 25 ++++++++++++++++++-------
+>  3 files changed, 23 insertions(+), 12 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 06ca11731e430..fd43c9db79a8d 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -645,6 +645,7 @@ xfs_free_eofblocks(
+>  int
+>  xfs_alloc_file_space(
+>  	struct xfs_inode	*ip,
+> +	uint32_t		flags,		/* XFS_BMAPI_... */
+>  	xfs_off_t		offset,
+>  	xfs_off_t		len)
+>  {
+> @@ -747,9 +748,8 @@ xfs_alloc_file_space(
+>  		 * startoffset_fsb so that one of the following allocations
+>  		 * will eventually reach the requested range.
+>  		 */
+> -		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+> -				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
+> -				&nimaps);
+> 		error = xfs_bmapi_write(tp, ip, startoffset_fsb, allocatesize_fsb,
+> +				flags, 0, imapp, &nimaps);
+>  		if (error) {
+>  			if (error != -ENOSR)
+>  				goto error;
+> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> index c477b33616304..67770830eb245 100644
+> --- a/fs/xfs/xfs_bmap_util.h
+> +++ b/fs/xfs/xfs_bmap_util.h
+> @@ -55,8 +55,8 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+>  			     int *is_empty);
+>  
+>  /* preallocation and hole punch interface */
+> -int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
+> -		xfs_off_t len);
+> +int	xfs_alloc_file_space(struct xfs_inode *ip, uint32_t flags,
+> +		xfs_off_t offset, xfs_off_t len);
+>  int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
+>  		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
+>  int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index f96fbf5c54c99..b7e8cda62bb73 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1255,29 +1255,37 @@ xfs_falloc_insert_range(
+>  static int
+>  xfs_falloc_zero_range(
+>  	struct file		*file,
+> -	int			mode,
+> +	int				mode,
+>  	loff_t			offset,
+>  	loff_t			len,
+>  	struct xfs_zone_alloc_ctx *ac)
+>  {
+>  	struct inode		*inode = file_inode(file);
+> +	struct xfs_inode	*ip = XFS_I(inode);
+>  	unsigned int		blksize = i_blocksize(inode);
+>  	loff_t			new_size = 0;
+>  	int			error;
+>  
+> -	trace_xfs_zero_file_space(XFS_I(inode));
+> +	trace_xfs_zero_file_space(ip);
+>  
+>  	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
+> +	error = xfs_free_file_space(ip, offset, len, ac);
+>  	if (error)
+>  		return error;
+>  
+>  	len = round_up(offset + len, blksize) - round_down(offset, blksize);
+>  	offset = round_down(offset, blksize);
+> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	if (mode & FALLOC_FL_WRITE_ZEROES) {
+> +		if (!bdev_write_zeroes_unmap_sectors(xfs_inode_buftarg(ip)->bt_bdev))
+> +			return -EOPNOTSUPP;
+> +		xfs_alloc_file_space(ip, XFS_BMAPI_ZERO, offset, len);
 
-These commands accept a new "struct delegation" argument that contains
-a flags field for future expansion.
+Don't we need to check the return value of xfs_alloc_file_space?
 
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
----
- fs/fcntl.c                 |  9 ++++++++
- fs/locks.c                 | 53 ++++++++++++++++++++++++++++++++++++----------
- include/linux/filelock.h   | 12 +++++++++++
- include/uapi/linux/fcntl.h | 10 +++++++++
- 4 files changed, 73 insertions(+), 11 deletions(-)
+--D
 
-diff --git a/fs/fcntl.c b/fs/fcntl.c
-index 72f8433d9109889eecef56b32d20a85b4e12ea44..f34f0a07f993f9f95a60f2954bb4304d3c218498 100644
---- a/fs/fcntl.c
-+++ b/fs/fcntl.c
-@@ -445,6 +445,7 @@ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
- 		struct file *filp)
- {
- 	void __user *argp = (void __user *)arg;
-+	struct delegation deleg;
- 	int argi = (int)arg;
- 	struct flock flock;
- 	long err = -EINVAL;
-@@ -550,6 +551,14 @@ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
- 	case F_SET_RW_HINT:
- 		err = fcntl_set_rw_hint(filp, arg);
- 		break;
-+	case F_GETDELEG:
-+		err = fcntl_getdeleg(filp);
-+		break;
-+	case F_SETDELEG:
-+		if (copy_from_user(&deleg, argp, sizeof(deleg)))
-+			return -EFAULT;
-+		err = fcntl_setdeleg(fd, filp, &deleg);
-+		break;
- 	default:
- 		break;
- 	}
-diff --git a/fs/locks.c b/fs/locks.c
-index b47552106769ec5a189babfe12518e34aa59c759..fda62897e371fbc8d04b8073df3d2267d2c7c430 100644
---- a/fs/locks.c
-+++ b/fs/locks.c
-@@ -585,7 +585,7 @@ static const struct lease_manager_operations lease_manager_ops = {
- /*
-  * Initialize a lease, use the default lock manager operations
-  */
--static int lease_init(struct file *filp, int type, struct file_lease *fl)
-+static int lease_init(struct file *filp, unsigned int flags, int type, struct file_lease *fl)
- {
- 	if (assign_type(&fl->c, type) != 0)
- 		return -EINVAL;
-@@ -594,13 +594,13 @@ static int lease_init(struct file *filp, int type, struct file_lease *fl)
- 	fl->c.flc_pid = current->tgid;
- 
- 	fl->c.flc_file = filp;
--	fl->c.flc_flags = FL_LEASE;
-+	fl->c.flc_flags = flags;
- 	fl->fl_lmops = &lease_manager_ops;
- 	return 0;
- }
- 
- /* Allocate a file_lock initialised to this type of lease */
--static struct file_lease *lease_alloc(struct file *filp, int type)
-+static struct file_lease *lease_alloc(struct file *filp, unsigned int flags, int type)
- {
- 	struct file_lease *fl = locks_alloc_lease();
- 	int error = -ENOMEM;
-@@ -608,7 +608,7 @@ static struct file_lease *lease_alloc(struct file *filp, int type)
- 	if (fl == NULL)
- 		return ERR_PTR(error);
- 
--	error = lease_init(filp, type, fl);
-+	error = lease_init(filp, flags, type, fl);
- 	if (error) {
- 		locks_free_lease(fl);
- 		return ERR_PTR(error);
-@@ -1548,10 +1548,9 @@ int __break_lease(struct inode *inode, unsigned int mode, unsigned int type)
- 	int want_write = (mode & O_ACCMODE) != O_RDONLY;
- 	LIST_HEAD(dispose);
- 
--	new_fl = lease_alloc(NULL, want_write ? F_WRLCK : F_RDLCK);
-+	new_fl = lease_alloc(NULL, type, want_write ? F_WRLCK : F_RDLCK);
- 	if (IS_ERR(new_fl))
- 		return PTR_ERR(new_fl);
--	new_fl->c.flc_flags = type;
- 
- 	/* typically we will check that ctx is non-NULL before calling */
- 	ctx = locks_inode_context(inode);
-@@ -1697,7 +1696,7 @@ EXPORT_SYMBOL(lease_get_mtime);
-  *	XXX: sfr & willy disagree over whether F_INPROGRESS
-  *	should be returned to userspace.
-  */
--int fcntl_getlease(struct file *filp)
-+static int __fcntl_getlease(struct file *filp, unsigned int flavor)
- {
- 	struct file_lease *fl;
- 	struct inode *inode = file_inode(filp);
-@@ -1713,7 +1712,8 @@ int fcntl_getlease(struct file *filp)
- 		list_for_each_entry(fl, &ctx->flc_lease, c.flc_list) {
- 			if (fl->c.flc_file != filp)
- 				continue;
--			type = target_leasetype(fl);
-+			if (fl->c.flc_flags & flavor)
-+				type = target_leasetype(fl);
- 			break;
- 		}
- 		spin_unlock(&ctx->flc_lock);
-@@ -1724,6 +1724,16 @@ int fcntl_getlease(struct file *filp)
- 	return type;
- }
- 
-+int fcntl_getlease(struct file *filp)
-+{
-+	return __fcntl_getlease(filp, FL_LEASE);
-+}
-+
-+int fcntl_getdeleg(struct file *filp)
-+{
-+	return __fcntl_getlease(filp, FL_DELEG);
-+}
-+
- /**
-  * check_conflicting_open - see if the given file points to an inode that has
-  *			    an existing open that would conflict with the
-@@ -2033,13 +2043,13 @@ vfs_setlease(struct file *filp, int arg, struct file_lease **lease, void **priv)
- }
- EXPORT_SYMBOL_GPL(vfs_setlease);
- 
--static int do_fcntl_add_lease(unsigned int fd, struct file *filp, int arg)
-+static int do_fcntl_add_lease(unsigned int fd, struct file *filp, unsigned int flavor, int arg)
- {
- 	struct file_lease *fl;
- 	struct fasync_struct *new;
- 	int error;
- 
--	fl = lease_alloc(filp, arg);
-+	fl = lease_alloc(filp, flavor, arg);
- 	if (IS_ERR(fl))
- 		return PTR_ERR(fl);
- 
-@@ -2075,7 +2085,28 @@ int fcntl_setlease(unsigned int fd, struct file *filp, int arg)
- 
- 	if (arg == F_UNLCK)
- 		return vfs_setlease(filp, F_UNLCK, NULL, (void **)&filp);
--	return do_fcntl_add_lease(fd, filp, arg);
-+	return do_fcntl_add_lease(fd, filp, FL_LEASE, arg);
-+}
-+
-+/**
-+ *	fcntl_setdeleg	-	sets a delegation on an open file
-+ *	@fd: open file descriptor
-+ *	@filp: file pointer
-+ *	@deleg: delegation request from userland
-+ *
-+ *	Call this fcntl to establish a delegation on the file.
-+ *	Note that you also need to call %F_SETSIG to
-+ *	receive a signal when the lease is broken.
-+ */
-+int fcntl_setdeleg(unsigned int fd, struct file *filp, struct delegation *deleg)
-+{
-+	/* For now, no flags are supported */
-+	if (deleg->d_flags != 0)
-+		return -EINVAL;
-+
-+	if (deleg->d_type == F_UNLCK)
-+		return vfs_setlease(filp, F_UNLCK, NULL, (void **)&filp);
-+	return do_fcntl_add_lease(fd, filp, FL_DELEG, deleg->d_type);
- }
- 
- /**
-diff --git a/include/linux/filelock.h b/include/linux/filelock.h
-index c2ce8ba05d068b451ecf8f513b7e532819a29944..69b8fa8dce35dab670e6c7b288e13dc4caed1bc0 100644
---- a/include/linux/filelock.h
-+++ b/include/linux/filelock.h
-@@ -159,6 +159,8 @@ int fcntl_setlk64(unsigned int, struct file *, unsigned int,
- 
- int fcntl_setlease(unsigned int fd, struct file *filp, int arg);
- int fcntl_getlease(struct file *filp);
-+int fcntl_setdeleg(unsigned int fd, struct file *filp, struct delegation *deleg);
-+int fcntl_getdeleg(struct file *filp);
- 
- static inline bool lock_is_unlock(struct file_lock *fl)
- {
-@@ -271,6 +273,16 @@ static inline int fcntl_getlease(struct file *filp)
- 	return F_UNLCK;
- }
- 
-+static inline int fcntl_setdeleg(unsigned int fd, struct file *filp, struct delegation *deleg)
-+{
-+	return -EINVAL;
-+}
-+
-+static inline int fcntl_getdeleg(struct file *filp)
-+{
-+	return F_UNLCK;
-+}
-+
- static inline bool lock_is_unlock(struct file_lock *fl)
- {
- 	return false;
-diff --git a/include/uapi/linux/fcntl.h b/include/uapi/linux/fcntl.h
-index 3741ea1b73d8500061567b6590ccf5fb4c6770f0..aae88f4b5c05205b2b28ae46b21bca9817197e04 100644
---- a/include/uapi/linux/fcntl.h
-+++ b/include/uapi/linux/fcntl.h
-@@ -79,6 +79,16 @@
-  */
- #define RWF_WRITE_LIFE_NOT_SET	RWH_WRITE_LIFE_NOT_SET
- 
-+/* Set/Get delegations */
-+#define F_GETDELEG		(F_LINUX_SPECIFIC_BASE + 15)
-+#define F_SETDELEG		(F_LINUX_SPECIFIC_BASE + 16)
-+
-+/* Argument structure for F_GETDELEG and F_SETDELEG */
-+struct delegation {
-+	short		d_type;		/* F_RDLCK, F_WRLCK, F_UNLCK */
-+	unsigned int	d_flags;
-+};
-+
- /*
-  * Types of directory notifications that may be requested.
-  */
-
--- 
-2.51.0
-
+> +	} else {
+> +		error = xfs_alloc_file_space(ip, XFS_BMAPI_PREALLOC,
+> +				offset, len);
+> +	}
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1302,7 +1310,8 @@ xfs_falloc_unshare_range(
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	error = xfs_alloc_file_space(XFS_I(inode), XFS_BMAPI_PREALLOC,
+> +			offset, len);
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1330,7 +1339,8 @@ xfs_falloc_allocate_range(
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	error = xfs_alloc_file_space(XFS_I(inode), XFS_BMAPI_PREALLOC,
+> +			offset, len);
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1340,7 +1350,7 @@ xfs_falloc_allocate_range(
+>  		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
+>  		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
+>  		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
+> -		 FALLOC_FL_UNSHARE_RANGE)
+> +		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
+>  
+>  STATIC long
+>  __xfs_file_fallocate(
+> @@ -1383,6 +1393,7 @@ __xfs_file_fallocate(
+>  	case FALLOC_FL_INSERT_RANGE:
+>  		error = xfs_falloc_insert_range(file, offset, len);
+>  		break;
+> +	case FALLOC_FL_WRITE_ZEROES:
+>  	case FALLOC_FL_ZERO_RANGE:
+>  		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
+>  		break;
+> -- 
+> 2.51.0
+> 
