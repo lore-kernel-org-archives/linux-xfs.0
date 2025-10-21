@@ -1,36 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6879934D90E;
-	Tue, 21 Oct 2025 18:39:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA30734D90E;
+	Tue, 21 Oct 2025 18:39:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761071962; cv=none; b=et2JpqnSdneYVhJk/+rsfGtZGYQOwrao34Zx6ztLH8qE8krQE1Q1ua8gZGprrC8N3mJ9Obg5crww8cH6Th0vw+9Hfl0AUxwhYci0FKOKQ/ybyMWMMqxeBPZs3fmjyQ41vR0pUIX0+1NMexXpcND6dYB06Bwfbhh1Xc/h70T992c=
+	t=1761071968; cv=none; b=o6mUspZQV9lRvTQWIg4rCnBA/wmLSfaMRcXx4DCkjVgRQ/YWV0WvIUzP145p0OCqVc/i9pyQzCset/oKiHgbgtQBUz3QSwuTd+q+kVuw66nBb11xBto/SnhxUjtoVcraNPVR83so+dxmNBLWoF0R7yo7NBBqD1yWuVgpwiNw1qY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761071962; c=relaxed/simple;
-	bh=tZCCKA8JPA4Y1lsZqZf2augjaVdHMTmy45YPqqQCiIs=;
-	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=nr8mAzAZ+e1dNiZIexSShQmRpba1DoDHRAj/7celNwbjXtdmi7+tkSRFWpcL/v883ZME10EJygBaABRF+Mte2syROUl0QFkNMVKeXtUmkkMKwDnyjB44PxWdfgxVaXUvtCg1jRoOMsr9udADrPHsnX4JTLZN6Q5L66Heah/OTKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SzdzJRaV; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761071968; c=relaxed/simple;
+	bh=gLsEmgz5dYNM/B/nKRtOMrLDJbNSibbWVz0H68qF31E=;
+	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=H6HFQ2N5UmSN+C1D/3frtFfOufB4TVfLwxw1xstA5bdrf8LG1FZ3IndlA8ZBG2pLA/aLpn/u03PRreTt0sCkekp+KCMUsk9JV0ceSDAqMsSLu2E6nXRK4PYbsHSUzE3SI5MhtrfgQBky3zJgi24KSkH1ubQQwBsifZZBPuO1RmE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t83CTRFN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SzdzJRaV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E505C4CEF1;
-	Tue, 21 Oct 2025 18:39:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t83CTRFN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28280C4CEF1;
+	Tue, 21 Oct 2025 18:39:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761071962;
-	bh=tZCCKA8JPA4Y1lsZqZf2augjaVdHMTmy45YPqqQCiIs=;
-	h=Date:Subject:From:To:Cc:From;
-	b=SzdzJRaV0oqYriicw2GPyBFuOJ/dxQJCKEFJSYAGPHAK7TcJGpMwOJeonouFsYBTZ
-	 beRILvkrqhMaPitYdonwtlK19ItVHghtcMwunpM0HXeu1rJ2nLfIHEQWeLpy5uulwX
-	 QHm3xn2QUUPs0NU968bL7+Mz8olVO22cTsPOHnsSgijTBhwcoblIYdph6VlrUTBbPp
-	 VuyzQ/S9m+/Ee45INqBjatw0dgKhZoilFFzNgi0MTXbJzYwEZ4EflotYD7xg1Af4uA
-	 0sqEZ7HRTFCgWJQ0TMgamSaSB+Wkfulnq66hsqnpoR+Bc0SpfxvOzFb9gs/zzzPWFh
-	 yE3OimJXGZncA==
-Date: Tue, 21 Oct 2025 11:39:21 -0700
-Subject: [PATCHSET 2/2] fstests: integrate with coredump capturing
+	s=k20201202; t=1761071968;
+	bh=gLsEmgz5dYNM/B/nKRtOMrLDJbNSibbWVz0H68qF31E=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=t83CTRFNVinGS0UTfhv1fxm0SmOSvpu3WwQleHpDJFbqo4kGgEaiSnVK94WkKLf4B
+	 1M+lzppSyOhd8a6sA3UqQrnRfhRz0mxGx8qBq89UBWKrinL3H8InLb6FNtDGWbl9Zu
+	 XX3GDHQjQzLQwK50vGCdgvfwqwN1+oPW+vojLyc7Z3Ta2YcZkfEpH8De1lVjsmGT+d
+	 u0USMY4E0HpPTxdSHFS5gF1h1riIb3I6wyu4DwCjYfCXQeyKJdzpNyACaBUfInF5CL
+	 s84XWCtnycizB0OzphPflrMH7monFdKlY5sI9L5wPlBBLAqRhMvULNBaFWE1t9RShq
+	 lGNuD5ah+cOCg==
+Date: Tue, 21 Oct 2025 11:39:27 -0700
+Subject: [PATCH 01/11] generic/427: try to ensure there's some free space
+ before we do the aio test
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <176107189031.4164152.8523735303635067534.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <176107188687.4163693.18089846524870076598.stgit@frogsfrogsfrogs>
+In-Reply-To: <176107188615.4163693.708102333699699249.stgit@frogsfrogsfrogs>
+References: <176107188615.4163693.708102333699699249.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,28 +44,44 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Integrate fstests with coredump capturing tools such as systemd-coredump.
+On a filesystem configured like this:
+MKFS_OPTIONS="-m metadir=1,autofsck=1,uquota,gquota,pquota -d rtinherit=1 -r zoned=1"
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
+This test fails like this:
 
-With a bit of luck, this should all go splendidly.
-Comments and questions are, as always, welcome.
+ --- a/tests/generic/427.out      2025-04-30 16:20:44.584246582 -0700
+ +++ b/tests/generic/427.out.bad        2025-07-14 10:47:07.605377287 -0700
+ @@ -1,2 +1,2 @@
+  QA output created by 427
+ -Success, all done.
+ +pwrite: No space left on device
 
---D
+The pwrite failure comes from the aio-dio-eof-race.c program because the
+filesystem ran out of space.  There are no speculative posteof
+preallocations on a zoned filesystem, so let's skip this test on those
+setups.
 
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=coredump-capture
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-Commits in this patchset:
- * fsstress: don't abort when stat(".") returns EIO
- * check: collect core dumps from systemd-coredump
----
- README         |   20 ++++++++++++++++++++
- check          |    2 ++
- common/rc      |   44 ++++++++++++++++++++++++++++++++++++++++++++
- ltp/fsstress.c |   29 ++++++++++++++++++++++++++---
- 4 files changed, 92 insertions(+), 3 deletions(-)
+ tests/generic/427 |    3 +++
+ 1 file changed, 3 insertions(+)
+
+
+diff --git a/tests/generic/427 b/tests/generic/427
+index bddfdb8714e9a7..bb20d9f44a2b5a 100755
+--- a/tests/generic/427
++++ b/tests/generic/427
+@@ -28,6 +28,9 @@ _require_no_compress
+ _scratch_mkfs_sized $((256 * 1024 * 1024)) >>$seqres.full 2>&1
+ _scratch_mount
+ 
++# Zoned filesystems don't support speculative preallocations
++_require_inplace_writes $SCRATCH_MNT
++
+ # try to write more bytes than filesystem size to fill the filesystem,
+ # then remove all these data. If we still can find these stale data in
+ # a file' eofblock, then it's a bug
 
