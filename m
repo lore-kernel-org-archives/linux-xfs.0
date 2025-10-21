@@ -1,94 +1,153 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fra-out-004.esa.eu-central-1.outbound.mail-perimeter.amazon.com (fra-out-004.esa.eu-central-1.outbound.mail-perimeter.amazon.com [3.74.81.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FD57260586;
-	Tue, 21 Oct 2025 07:02:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A18CC25A623;
+	Tue, 21 Oct 2025 07:09:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=3.74.81.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761030161; cv=none; b=e3qCz+ecUKdctdYtriANDijdQkgZa0bd2uIe5H8PDZA/MEzvNvv+3jQE43WPm1qT2HHmXsZI/Amt59TDw0JMbosVA11wYyWrTw8uxUJvpQKw7L9cEJTq3Gbrg3a/cA445GFWqUsyVVCUyip8TbiXa/b1BWNxIUDTpE/Hc/FTTkU=
+	t=1761030554; cv=none; b=StjrkF2+zizVPYASEiz7WaDfXVYhDVhYOe5v38c1HIub5nemvq8iW+Xc9H0D8tSM5swpPxlV304AEn7jOgvYe4sD8FKFHmlCZvw2sUghB7pZ8B0mhxlA5ndmBNeL5hFCSO8H7cX8ZDzKEwFySKPzuWva56QNNh4aUSll7XnGZbM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761030161; c=relaxed/simple;
-	bh=6lEWOnbf4y1y98HAP+LxVFokT9voRQdo4MPMdq5hVac=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bEELyo4GuZqRcv+FNCELEbJSrfmvd4hyNfL//SSd2ctM21/J3aTySQzrmi5qqH9fbJOmxA7JyDHs+xn+mu6w3AvN1DcTpc9/CnG16PMEBPxCqRvtg42AJMeVk2XJcxua+ufZd5mSV6sXtJ676Plo4yrs+KwGdKPqhRyyCLc1Llk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=erXKkGm/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761030554; c=relaxed/simple;
+	bh=hV+SdjKKzEi70TyGpPZCe2pK7qZK2WxjRRL1B1KcNTM=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=GieyvBiGRqXfJyvizVr3dcB54JKhpnnuNkk8OiGfPa1Z1cQh0If02pE4kAkRP8YF7M95PuJ8KJOWS9wSczzoQ6rEu0gyruQ9pHQtHMGm2ju6vCT/PMtwYJZSUHdupmZTdGFLYZGEQ5/ko80HPGBgruO4G9tq5XunfR43lKSw4j8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b=HVC87p1a; arc=none smtp.client-ip=3.74.81.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="erXKkGm/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4EE8C4CEF1;
-	Tue, 21 Oct 2025 07:02:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761030160;
-	bh=6lEWOnbf4y1y98HAP+LxVFokT9voRQdo4MPMdq5hVac=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=erXKkGm/laR+wHFojIbkxwSIaRuI9hXLjpyDKcKZW+TmUpzofZpqRzjSBAMTLIH1H
-	 XT8LBljnrDjiC0cqnRajY4uJf8O6hyvpkHqKP0/zvJNaIgXMXcFAAmQxLkGKdv0GJ+
-	 cbXoYAzDoPB5YBUYUXdlUCueOCcxvBkF8WSR1qWgj3JHJRgZwOEK0LLu6CCg2rOHpt
-	 cVp+PD7kLMWDtK3utBCD27VhpnlJmPDuO6d3ErusEKjwk2+Z/yUaGSbj7LxglSXKU2
-	 ZuWThaCUBUIG9BYp8hrrWfCRcQNiM3ylGgNDM6fvxTaGga8dbHjYPZQMnQBK4RVkKL
-	 +8Pv993bJnFnQ==
-Date: Tue, 21 Oct 2025 09:02:35 +0200
-From: Carlos Maiolino <cem@kernel.org>
-To: Kriish Sharma <kriish.sharma2006@gmail.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kernel-mentees@lists.linuxfoundation.org, skhan@linuxfoundation.org, david.hunter.linux@gmail.com
-Subject: Re: [PATCH] xfs: use kmalloc_array() instead of kmalloc() for map
- allocation
-Message-ID: <qw64zhza44fxxtoripp2nu7d4tny7wy7dyqapilhxyxmng5jsk@fxyxlisrbcls>
-References: <eeslnTm4EeKA2atDj3UKUcXAaGwgiPzioO9tR3Kf0pBEyUjxEO_9DaFIpNYIlc_9ey63h8gqdBsIt9Xjgn7AkA==@protonmail.internalid>
- <20251018194528.1871298-1-kriish.sharma2006@gmail.com>
+	dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b="HVC87p1a"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
+  t=1761030552; x=1792566552;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=4aKg8jaea9UUgjVGAZ9pvPl/2rw7Jg81FmzroUsdh8U=;
+  b=HVC87p1aBmQ4gE7O4jCj6ingqjU5/wx1ks+x6YUQxcnxcz7KPdkYbbS6
+   y0y6AgAOA1l0fSqRJzp6YLtPL3bBk+w2Lauh57SSZGBd4rfmq3XL9a9l2
+   mFPvdsmpoAARb7rBeD2K7SGt0N8t7twqpPQMCFdWr2zC86pHJ5FQtHbhT
+   cEvYGqIkY4hpeWaNIdDHpZmEx5kjzNOz4v69Hl6YtS2Gr8IoznIFZLB8J
+   Y5OZZ85SUSbuOufHNLsB7dlJ/vL+9c+mdNMYY1Ck5vPn3hCxfE3r3vAAT
+   84Dtrj753DUrD6Gc307KTN0K1q49/fN/PeWCTu3gGxIqN8yJCoNUNDtaE
+   A==;
+X-CSE-ConnectionGUID: xhZ9wZyxSpmrCzcqqePl8A==
+X-CSE-MsgGUID: 8WykqeV0SPuRFwAH0TlCVw==
+X-IronPort-AV: E=Sophos;i="6.19,244,1754956800"; 
+   d="scan'208";a="3934174"
+Received: from ip-10-6-3-216.eu-central-1.compute.internal (HELO smtpout.naws.eu-central-1.prod.farcaster.email.amazon.dev) ([10.6.3.216])
+  by internal-fra-out-004.esa.eu-central-1.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2025 07:08:59 +0000
+Received: from EX19MTAEUA002.ant.amazon.com [54.240.197.232:10631]
+ by smtpin.naws.eu-central-1.prod.farcaster.email.amazon.dev [10.0.15.22:2525] with esmtp (Farcaster)
+ id 3750a0e3-50a3-4ee5-985b-1ddb7d86a82d; Tue, 21 Oct 2025 07:08:59 +0000 (UTC)
+X-Farcaster-Flow-ID: 3750a0e3-50a3-4ee5-985b-1ddb7d86a82d
+Received: from EX19D013EUB004.ant.amazon.com (10.252.51.92) by
+ EX19MTAEUA002.ant.amazon.com (10.252.50.124) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.20;
+ Tue, 21 Oct 2025 07:08:58 +0000
+Received: from dev-dsk-mngyadam-1c-cb3f7548.eu-west-1.amazon.com
+ (10.253.107.175) by EX19D013EUB004.ant.amazon.com (10.252.51.92) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.20; Tue, 21 Oct 2025
+ 07:08:50 +0000
+From: Mahmoud Adam <mngyadam@amazon.de>
+To: <stable@vger.kernel.org>
+CC: <gregkh@linuxfoundation.org>, <nagy@khwaternagy.com>, Jens Axboe
+	<axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>, Ilya Dryomov
+	<idryomov@gmail.com>, Jeff Layton <jlayton@kernel.org>, Alexander Viro
+	<viro@zeniv.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger
+	<adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu
+	<chao@kernel.org>, Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong"
+	<djwong@kernel.org>, Trond Myklebust <trond.myklebust@hammerspace.com>, "Anna
+ Schumaker" <anna@kernel.org>, Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Andrew Morton
+	<akpm@linux-foundation.org>, Hannes Reinecke <hare@suse.de>, Damien Le Moal
+	<dlemoal@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
+	<linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<ceph-devel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	<linux-ext4@vger.kernel.org>, <linux-f2fs-devel@lists.sourceforge.net>,
+	<linux-xfs@vger.kernel.org>, <linux-nfs@vger.kernel.org>,
+	<linux-nilfs@vger.kernel.org>, <linux-mm@kvack.org>
+Subject: [PATCH 6.1 0/8] Backporting CVE-2025-38073 fix patch
+Date: Tue, 21 Oct 2025 09:03:35 +0200
+Message-ID: <20251021070353.96705-2-mngyadam@amazon.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251018194528.1871298-1-kriish.sharma2006@gmail.com>
+X-ClientProxiedBy: EX19D037UWC004.ant.amazon.com (10.13.139.254) To
+ EX19D013EUB004.ant.amazon.com (10.252.51.92)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-Hello.
+This series aims to fix the CVE-2025-38073 for 6.1 LTS. Which is fixed
+by c0e473a0d226 ("block: fix race between set_blocksize and read
+paths"). This patch is built on top multiple refactors that where
+merged on 6.6. The needed dependecies are:
 
-On Sat, Oct 18, 2025 at 07:45:28PM +0000, Kriish Sharma wrote:
-> Using kmalloc_array() better reflects the intent to allocate an array of
-> map entries, and improves consistency with similar allocations across the
-> kernel.
-> 
-> No functional change intended.
+  - e003f74afbd2 ("filemap: add a kiocb_invalidate_pages helper")
+  - c402a9a9430b ("filemap: add a kiocb_invalidate_post_direct_write
+    helper")
+  - 182c25e9c157 ("filemap: update ki_pos in generic_perform_write")
+  - 44fff0fa08ec ("fs: factor out a direct_write_fallback helper")
+  - 727cfe976758 ("block: open code __generic_file_write_iter for
+    blkdev writes")
 
-Thanks for the patch.
-Have you ran xfstests against this patch? All patches sent to xfs should
-at least pass basic testing via xfstests. I.e. ensure there is no new
-failure between an unpatched kernel and a kernel with your patch.
-
-If you did, please send me the results summary, if you did not, please
-run it, and send a V2 of this patch  including in the patch description
-the summary of the results.
-
-Any changes includes risk, and so every patch sent to xfs should be at
-least basically tested against xfstests auto group.
+Also backport follow up fixes:
+- fb881cd76045 ("nilfs2: fix deadlock warnings caused by lock
+  dependency in init_nilfs()").
+- 8287474aa5ff ("direct_write_fallback(): on error revert the ->ki_pos
+  update from buffered write")
 
 Thanks,
-Carlos
+MNAdam
 
-> 
-> Signed-off-by: Kriish Sharma <kriish.sharma2006@gmail.com>
-> ---
->  fs/xfs/xfs_qm.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 23ba84ec919a..34ec61e455ff 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -1218,7 +1218,7 @@ xfs_qm_reset_dqcounts_buf(
->  	if (qip->i_nblocks == 0)
->  		return 0;
-> 
-> -	map = kmalloc(XFS_DQITER_MAP_SIZE * sizeof(*map),
-> +	map = kmalloc_array(XFS_DQITER_MAP_SIZE, sizeof(*map),
->  			GFP_KERNEL | __GFP_NOFAIL);
-> 
->  	lblkno = 0;
-> --
-> 2.34.1
-> 
+Al Viro (1):
+  direct_write_fallback(): on error revert the ->ki_pos update from
+    buffered write
+
+Christoph Hellwig (5):
+  filemap: add a kiocb_invalidate_pages helper
+  filemap: add a kiocb_invalidate_post_direct_write helper
+  filemap: update ki_pos in generic_perform_write
+  fs: factor out a direct_write_fallback helper
+  block: open code __generic_file_write_iter for blkdev writes
+
+Darrick J. Wong (1):
+  block: fix race between set_blocksize and read paths
+
+Ryusuke Konishi (1):
+  nilfs2: fix deadlock warnings caused by lock dependency in
+    init_nilfs()
+
+ block/bdev.c            |  17 +++++
+ block/blk-zoned.c       |   5 +-
+ block/fops.c            |  61 +++++++++++++++-
+ block/ioctl.c           |   6 ++
+ fs/ceph/file.c          |   2 -
+ fs/direct-io.c          |  10 +--
+ fs/ext4/file.c          |   9 +--
+ fs/f2fs/file.c          |   1 -
+ fs/iomap/direct-io.c    |  12 +---
+ fs/libfs.c              |  42 +++++++++++
+ fs/nfs/file.c           |   1 -
+ fs/nilfs2/the_nilfs.c   |   3 -
+ include/linux/fs.h      |   7 +-
+ include/linux/pagemap.h |   2 +
+ mm/filemap.c            | 154 +++++++++++++++++-----------------------
+ 15 files changed, 205 insertions(+), 127 deletions(-)
+
+-- 
+2.47.3
+
+
+
+
+Amazon Web Services Development Center Germany GmbH
+Tamara-Danz-Str. 13
+10243 Berlin
+Geschaeftsfuehrung: Christian Schlaeger
+Eingetragen am Amtsgericht Charlottenburg unter HRB 257764 B
+Sitz: Berlin
+Ust-ID: DE 365 538 597
+
