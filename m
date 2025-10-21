@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A17934D90E;
-	Tue, 21 Oct 2025 18:40:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1934634D90E;
+	Tue, 21 Oct 2025 18:40:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761072016; cv=none; b=d0cZrzy4gCkghBsou6lMGSHQwR11L6+TOSL3UxYlkFM9ZKHCCM5CRjpX16XxzggKEM+lCiUKgT/yofS5EXjW+VCbVZc/SUBR8LBWBniALU3TfHEcQt/oP/JOyljUATufw672GRUo+VDl86ajfRrJ6xrHTiitdRPgxalfnqz1xAo=
+	t=1761072031; cv=none; b=OsKtsmwuoq+BAsuexKeM72JoBsC8wzmqu2nmed9vZneotqTLvunqdw/BD1LdwbrXgbH0LrjJuvmVWKlEVnPNxtjLSx9XHbIqQiXDGI6HSz2NrvE3cXm+5QcnqxAs0I9r3QLqpbJGFbwl4ZrhQVy4wp56CpaGBl3Rv2RYC8XmQNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761072016; c=relaxed/simple;
-	bh=NCNUdWmgAZzJ5kjtAf97xZXGMxTxwNbpMaOHYQjF/8Q=;
+	s=arc-20240116; t=1761072031; c=relaxed/simple;
+	bh=giKUnhTKO9bynREaln0qCxyy81VQo9AoMz81lc4rG5k=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=r2LLdsZJB2W5V8nzYPGhJnjMwsMVMMcmJOjESY/wxDt2BHVcJxyfQLuX9DtdUt7a21oPdssZYaUIoikgHNj5Tbs1aT+g/JKXqXhS6gAOqBii91gDaKESPmwkinU0NPF9Uz6XEGW4So37tli02gpmgQl/Wa48149IUsk11IGHsF4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LJoRdGmL; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=UkuhKTULeDNh6tMZ9Ea3slAZ2z0BRR7+zI2FyalBS4661UWNG9X6FNawPUhrELRkCyQwAWyLodXRervTEuwVf4i+uP+6jlHYvKhXoslBzVDwXv1Brqdd5PXHTJjvlMjLsMWk6lcbhJAS9ATx3TOCLBr9+QQp67O0kXAiAzZRc3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Emq6QiqK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LJoRdGmL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1292AC4CEF1;
-	Tue, 21 Oct 2025 18:40:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Emq6QiqK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7AF4C4CEF1;
+	Tue, 21 Oct 2025 18:40:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761072015;
-	bh=NCNUdWmgAZzJ5kjtAf97xZXGMxTxwNbpMaOHYQjF/8Q=;
+	s=k20201202; t=1761072031;
+	bh=giKUnhTKO9bynREaln0qCxyy81VQo9AoMz81lc4rG5k=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=LJoRdGmL5LpUOR8wFx0L4VOMJI2zAGDxIrvUPkYuHw9ZBMQXzabzbpguR4o4UCvOq
-	 yOK+ccfwzLus2RkHhfGslA3802BF2FLs5gx7po+mSJ3nU45LQhlt5WtqT8I4tEJqRS
-	 0p0yrrRYaQs7aSRutlIgjdPhv8Oa78FOy6a+5Tkj+4uhDeUnpy26HcRvAMZJZKgNTM
-	 JAJr/bGsmugf1bL+vMyneCf5ZLmYRWAFRRahuhtaKj7KD6FugqVtXF2RzAjdsMGVZh
-	 yiwjv7T/p7sxJAVcY3mtC6PeprpH8VQ92y2FOHGas+NcWPnysW+BPTWmc837Q6iIX+
-	 In67K5x+I+Qsg==
-Date: Tue, 21 Oct 2025 11:40:14 -0700
-Subject: [PATCH 04/11] generic/{482,757}: skip test if there are no FUA writes
+	b=Emq6QiqKk9KMECAmSF7+SKQK86HDlyRmFGhKxPmdgj3S6/Ghz8UA40HnYnlco/YDJ
+	 nOYmxwRahirl7KRhfN3IoYa2gj4ZNryLvv3CITgvnHqcYm6+J2QLkQL/a5iVTP7zeb
+	 L6fIPD74ZhSmbAbUhPz3lFdgnhy9nYvBMiLv9r2mTVUSSmdvt/QtebBTVapUN8/qCl
+	 cCmUvG2jtbCASDr3or/a2DyVXspLtoPd0Sc7YrMQL/WWEgZVpzaMYvA+3rlZh8abH6
+	 AQdee3cO68O55xPfxEjl3nByJ3xDjENiAdAA6im6NOiKu1ZSMfQc0Lf6bNyDs+Mkud
+	 1qKjKYZ2ebySA==
+Date: Tue, 21 Oct 2025 11:40:30 -0700
+Subject: [PATCH 05/11] generic/772: actually check for file_getattr special
+ file support
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: zlang@redhat.com, djwong@kernel.org
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <176107188743.4163693.13401813487181708360.stgit@frogsfrogsfrogs>
+Cc: hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Message-ID: <176107188760.4163693.9360276768392352557.stgit@frogsfrogsfrogs>
 In-Reply-To: <176107188615.4163693.708102333699699249.stgit@frogsfrogsfrogs>
 References: <176107188615.4163693.708102333699699249.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,43 +46,62 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Both of these tests fail if the filesystem doesn't issue a FUA write to
-a device, but ... there's no requirement that filesystems actually use
-FUA at all.  For example, a fuse filesystem that writes to the block
-device's page cache and issues fsync() will not cause the block layer to
-issue FUA writes for the dirty pages.  Change that to _notrun.
+On XFS in 6.17, this test fails with:
+
+ --- /run/fstests/bin/tests/generic/772.out	2025-10-06 08:27:10.834318149 -0700
+ +++ /var/tmp/fstests/generic/772.out.bad	2025-10-08 18:00:34.713388178 -0700
+ @@ -9,29 +9,34 @@ Can not get fsxattr on ./foo: Invalid ar
+  Can not set fsxattr on ./foo: Invalid argument
+  Initial attributes state
+  ----------------- SCRATCH_MNT/prj
+ ------------------ ./fifo
+ ------------------ ./chardev
+ ------------------ ./blockdev
+ ------------------ ./socket
+ ------------------ ./foo
+ ------------------ ./symlink
+ +Can not get fsxattr on ./fifo: Inappropriate ioctl for device
+ +Can not get fsxattr on ./chardev: Inappropriate ioctl for device
+ +Can not get fsxattr on ./blockdev: Inappropriate ioctl for device
+ +Can not get fsxattr on ./socket: Inappropriate ioctl for device
+
+This is a result of XFS' file_getattr implementation rejecting special
+files prior to 6.18.  Therefore, skip this new test on old kernels.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/generic/482 |    2 +-
- tests/generic/757 |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ tests/generic/772 |    3 +++
+ tests/xfs/648     |    3 +++
+ 2 files changed, 6 insertions(+)
 
 
-diff --git a/tests/generic/482 b/tests/generic/482
-index 8c114ee03058c6..3728112ff3f480 100755
---- a/tests/generic/482
-+++ b/tests/generic/482
-@@ -82,7 +82,7 @@ _log_writes_remove
- prev=$(_log_writes_mark_to_entry_number mkfs)
- [ -z "$prev" ] && _fail "failed to locate entry mark 'mkfs'"
- cur=$(_log_writes_find_next_fua $prev)
--[ -z "$cur" ] && _fail "failed to locate next FUA write"
-+[ -z "$cur" ] && _notrun "could not locate any FUA write"
+diff --git a/tests/generic/772 b/tests/generic/772
+index cc1a1bb5bf655c..e68a6724654450 100755
+--- a/tests/generic/772
++++ b/tests/generic/772
+@@ -43,6 +43,9 @@ touch $projectdir/bar
+ ln -s $projectdir/bar $projectdir/broken-symlink
+ rm -f $projectdir/bar
  
- while [ ! -z "$cur" ]; do
- 	_log_writes_replay_log_range $cur $DMTHIN_VOL_DEV >> $seqres.full
-diff --git a/tests/generic/757 b/tests/generic/757
-index 6c13c6af41c57c..11398d8677f72b 100755
---- a/tests/generic/757
-+++ b/tests/generic/757
-@@ -71,7 +71,7 @@ _log_writes_remove
- prev=$(_log_writes_mark_to_entry_number mkfs)
- [ -z "$prev" ] && _fail "failed to locate entry mark 'mkfs'"
- cur=$(_log_writes_find_next_fua $prev)
--[ -z "$cur" ] && _fail "failed to locate next FUA write"
-+[ -z "$cur" ] && _notrun "could not locate any FUA write"
++file_attr --get $projectdir ./fifo &>/dev/null || \
++	_notrun "file_getattr not supported on $FSTYP"
++
+ echo "Error codes"
+ # wrong AT_ flags
+ file_attr --get --invalid-at $projectdir ./foo
+diff --git a/tests/xfs/648 b/tests/xfs/648
+index 215c809887b609..e3c2fbe00b666a 100755
+--- a/tests/xfs/648
++++ b/tests/xfs/648
+@@ -47,6 +47,9 @@ touch $projectdir/bar
+ ln -s $projectdir/bar $projectdir/broken-symlink
+ rm -f $projectdir/bar
  
- while _soak_loop_running $((100 * TIME_FACTOR)); do
- 	_log_writes_replay_log_range $cur $DMTHIN_VOL_DEV >> $seqres.full
++$here/src/file_attr --get $projectdir ./fifo &>/dev/null || \
++	_notrun "file_getattr not supported on $FSTYP"
++
+ $XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 	-c "project -sp $projectdir $id" $SCRATCH_DEV | filter_quota
+ $XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
 
