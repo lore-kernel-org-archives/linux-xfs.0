@@ -1,205 +1,232 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8DF8320391
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Oct 2025 11:26:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761045983; cv=none; b=keVsiheM7mNgnuywbZ8oGxCw7BRLIlB0k8YXI3pAv0VT1mV8M773rpwXUBU7vpo88l/tZy7UJ8Aygp3Xtq0NI/fnwgPXlclO+TcKVsRM/dit7kktW6ltitOvoIDgpwDXuUwVyLEWdSCzZSLiNIv9/plF0Hv0v2scPNy4ClxHfu8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761045983; c=relaxed/simple;
-	bh=4o6GabJCs8lMZMdxN0bZMTFHmu3hyrO8WHGu9QddGZI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LbwsDBtnCFJoLymWo5H7pno8pT69D2Xkw65XpQ0n7OWNZ9j/XViSm6g3yAaPU1+oTqbzLJ5Rw5EaX+YTIgbqdLtwZr7AnSpbWZOMOu9hg7+l3XnLJxFswP/Jr/eEOgGm8ykmM4RtOqjxmZy5g8WAWBsZ8V1aHbb3YHVPtOElgGE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=E249V/It; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BEB332D0C2;
+	Tue, 21 Oct 2025 11:30:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=68.232.143.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1761046257; cv=fail; b=c4WvetPR5f4ZkLiJjO+qH8DH1JGGN2hsNlyi7/HTHeebtX4JmM1JUex0znaMm9PnwhLS2yeW5M26XFI+6VE2hEN5aqQR/cgi4Ccyl/FAf4wMVek61HUzL1ZklSxlnn8C2wCPHiJG9rrCfK39A/zJe4p9GTnbtzW5OYMRcr8kYx0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1761046257; c=relaxed/simple;
+	bh=YnegZYtqZ0uvDHbO+5L/yp5jL+q556Eb7mqV5dSowOI=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=aMkshFLUoYYxiKswnZPh8J+qnXpNFzVtqMAfVguW29dvYtQNTiz8wsLl94TeRUSIfhvq/gx85ZbxXVanLhDBwz22qHtw65ewL0RLuAkFW1h5Higt4vTh6inhXDdrWxJ1KC6sr8NfTQ2qOoz2O5g/GffAOcjF9QzzaEO7FIdXfqA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=Bvn8AEaF; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=Lq/UBX80; arc=fail smtp.client-ip=68.232.143.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E249V/It"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1761045980;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IAp9PJIXRx90mxRigYbDEFeaSrCTmH7Jl9dfYi3Qn60=;
-	b=E249V/ItFiCPqj7maToW5ze6xG4QTcdQf+QXXK5B073YgOO/oAXzM8wgwVgFT67qdcu1GI
-	qQzK7jFJkwV8It+GjjYb0FJh+6J7sqfGjyu9450sJQs2HFzLl39LCL6Kbnb/KCJg7QKQxw
-	snsVFTBaY6fww4epxAcQWhMIDNTKYrA=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-142-9qAaqctCOsCM9bHGN8WSXg-1; Tue,
- 21 Oct 2025 07:26:17 -0400
-X-MC-Unique: 9qAaqctCOsCM9bHGN8WSXg-1
-X-Mimecast-MFC-AGG-ID: 9qAaqctCOsCM9bHGN8WSXg_1761045976
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C04FA18002F7;
-	Tue, 21 Oct 2025 11:26:15 +0000 (UTC)
-Received: from bfoster (unknown [10.22.65.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2365A19560A2;
-	Tue, 21 Oct 2025 11:26:14 +0000 (UTC)
-Date: Tue, 21 Oct 2025 07:30:32 -0400
-From: Brian Foster <bfoster@redhat.com>
-To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc: John Garry <john.g.garry@oracle.com>, Zorro Lang <zlang@redhat.com>,
-	fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
-	djwong@kernel.org, tytso@mit.edu, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v7 04/12] ltp/fsx.c: Add atomic writes support to fsx
-Message-ID: <aPdu2DtLSNrI7gfp@bfoster>
-References: <cover.1758264169.git.ojaswin@linux.ibm.com>
- <c3a040b249485b02b569b9269b649d02d721d995.1758264169.git.ojaswin@linux.ibm.com>
- <20250928131924.b472fjxwir7vphsr@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <aN683ZHUzA5qPVaJ@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <20251003171932.pxzaotlafhwqsg5v@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <aOJrNHcQPD7bgnfB@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <20251005153956.zofernclbbva3xt6@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <aOPCAzx0diQy7lFN@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <66470caf-ec35-4f7d-adac-4a1c22a40a3e@oracle.com>
- <aPdgR5gdA3l3oTLQ@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Bvn8AEaF";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="Lq/UBX80"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1761046254; x=1792582254;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=YnegZYtqZ0uvDHbO+5L/yp5jL+q556Eb7mqV5dSowOI=;
+  b=Bvn8AEaFKZlI1/bdJR8m4aFxGADmb9Bs0Jbbt1bw4z8mtkrwtpILMFOf
+   xwo7JB/wnCNRNKXKWEd9jd2LypP4YEH+6ry7HEIJHiHhqoYGA6AviyH4S
+   ufn0fLe7hCaJrkpir+QV2lqPLsPuRrHHDroCSKbnNrO0f6OySrIctbZWf
+   /k+Yj3t3tJIwRUQxS4j4xK5AUNF7/mzWH83RkHwSksIw3ad9GLuOehycb
+   U5xTBLEUN3AfkJ1BgUhLl//VlI6vdaMk86asnefUjnTXIX5afCm3I45M2
+   FY4EWJIwEsd69DjmKC1ME8EFVr5yvy2XtWsB4Av4Q/A5RbGii2BbHDvnn
+   A==;
+X-CSE-ConnectionGUID: dNS4K/ZeQjOVl1mTr2Dr7g==
+X-CSE-MsgGUID: VOStqeN2RBqikvCOz+b6uA==
+X-IronPort-AV: E=Sophos;i="6.19,244,1754928000"; 
+   d="scan'208";a="134868425"
+Received: from mail-southcentralusazon11013054.outbound.protection.outlook.com (HELO SA9PR02CU001.outbound.protection.outlook.com) ([40.93.196.54])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Oct 2025 19:30:46 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=RcVlFpq6/mZ/m3txzI1PoDe/BXaxqmFq8ovL5P1xTkzYxFoag3NUgJc0nae5Lmw9ugr/MsJGc5/lZKmldd/NkgoexTlPv5Rxkb9h0HNSkbq+eS+7LOU5la9B4LhNcE6fTNOItLkKSU9pudmgPi7scltrEKzEcfHpz7JtpJobfjCN99+NHIfANs96rIDD6pxhXXXN1MS9UXIlaeJyw7n1kpYfIIPCvm1CVW/OLIeJCPoy2up72lfRozVGTq5cOLXJQRW2x8DkG2wHq/AnCUj1dQtwTQl2ba+Illi5UgypYCipLZ4D+ldllMDlfzgK90DR5XrgIh8mUUIECq76blz76Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=YnegZYtqZ0uvDHbO+5L/yp5jL+q556Eb7mqV5dSowOI=;
+ b=FJEABoxqk0W+gJ3A2KyqYuxSFK86cBGpJiFRpsYPV/wQJHra8nEmez4MRsEv+W48u4fkoieZhFNVzljkzYbqd/CgZxnEoNC5ZdWBl29ROl5AD36qlCQb46rBDOfNsKL/+yAsBt2IrpUOPuV+nnK8KqndrU/TsZFFRopQjfccOgibz7TyErXtqZGfkuZe7A3VZeq2W4Omz1IBV4AKTEcKacYQ8ERuKmpA4qfe0RrCQxOiDdzUSMbAgN2SPDo4WQIWqJuZrMA0utzzjqCgX7/uliAa5x4n4EA10hIUoE8KrNWSAfJJPP5GSBRFvA2iQQGlBjtkNq7GhLpB+0piRK40VA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YnegZYtqZ0uvDHbO+5L/yp5jL+q556Eb7mqV5dSowOI=;
+ b=Lq/UBX80Nc/H9aRLFQV08yyvcyXIBllBm1SJRjJN5xsrLSArlKHAoGMOCl82ylONGwXoWH3NIFsI8S0rhTnkF6OK1FMZrtV9pplNyoy9JcpDB1Q5AZchR05xMLMeJfjy1ow/z2jywsHl/TrnfBK5VR6tiJv41Ck5jOvIcxEhfZs=
+Received: from PH0PR04MB7416.namprd04.prod.outlook.com (2603:10b6:510:12::17)
+ by CYYPR04MB9029.namprd04.prod.outlook.com (2603:10b6:930:bd::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9228.17; Tue, 21 Oct
+ 2025 11:30:44 +0000
+Received: from PH0PR04MB7416.namprd04.prod.outlook.com
+ ([fe80::ee22:5d81:bfcf:7969]) by PH0PR04MB7416.namprd04.prod.outlook.com
+ ([fe80::ee22:5d81:bfcf:7969%5]) with mapi id 15.20.9253.011; Tue, 21 Oct 2025
+ 11:30:44 +0000
+From: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To: WenRuo Qu <wqu@suse.com>, "hch@infradead.org" <hch@infradead.org>, Qu
+ Wenruo <quwenruo.btrfs@gmx.com>
+CC: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+	"djwong@kernel.org" <djwong@kernel.org>, "linux-xfs@vger.kernel.org"
+	<linux-xfs@vger.kernel.org>, "linux-fsdevel@vger.kernel.org"
+	<linux-fsdevel@vger.kernel.org>, "linux-block@vger.kernel.org"
+	<linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>,
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jack@suse.com"
+	<jack@suse.com>
+Subject: Re: O_DIRECT vs BLK_FEAT_STABLE_WRITES, was Re: [PATCH] btrfs: never
+ trust the bio from direct IO
+Thread-Topic: O_DIRECT vs BLK_FEAT_STABLE_WRITES, was Re: [PATCH] btrfs: never
+ trust the bio from direct IO
+Thread-Index: AQHcQaLQW/VaEMy5706D8S0d134oFLTKzYWAgAEhjYCAAEu9AIAAB66AgAA2gwA=
+Date: Tue, 21 Oct 2025 11:30:44 +0000
+Message-ID: <25742d91-f82e-482e-8978-6ab2288569da@wdc.com>
+References: <aPYIS5rDfXhNNDHP@infradead.org>
+ <b91eb17a-71ce-422c-99a1-c2970a015666@gmx.com>
+ <aPc6uLKJkavZ_SkM@infradead.org>
+ <4f4c468a-ac87-4f54-bc5a-d35058e42dd2@suse.com>
+In-Reply-To: <4f4c468a-ac87-4f54-bc5a-d35058e42dd2@suse.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+user-agent: Mozilla Thunderbird
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PH0PR04MB7416:EE_|CYYPR04MB9029:EE_
+x-ms-office365-filtering-correlation-id: 8d999fc1-80ae-4d34-5183-08de1095463b
+x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|7416014|376014|19092799006|366016|1800799024|38070700021;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?SENoNVlwZUVXdXA2cll3KzhOMGd3TnViVDg3czVDQVRLaENPek1ZRnV6aWdF?=
+ =?utf-8?B?OHA0bEYycG45WW13NGZsUDQ0bzFOKzhVaEdMelE3VUNtTVZFRHJnQVBSL2dy?=
+ =?utf-8?B?eEYrM3RKRm55a3VJbEZrNCtVMFRMWXN1aEZ3TGNGejZDRW5tejlkMHJEK3gr?=
+ =?utf-8?B?OGtwYk0wNWhLSVpsL0Z5WXVkMytMSEVuYkJ6VU1iWS9jSnp3bkNZNVBpN0gx?=
+ =?utf-8?B?cHVCVFYzNWZwbWoyNFZDUkVBa0ptMGVpVzNQNjlTR0xlZ3M4SlZ4aVJWMENX?=
+ =?utf-8?B?L1dzcFR2M2RuZXB6QlM1RXpPRUpQY0pYT3ZrTjlYSEpCbmlrb3JyTEQ5MmJl?=
+ =?utf-8?B?TUlDM05LZ215NEJZVG1uVER0a0NubUtzcThIMTB1WExIc1AvendSZ3FoOGRv?=
+ =?utf-8?B?Nm1vekRtQjJ3dGlHSTJHOWtITEJyVkhtNWkxR2RscERIWDlnSlZxU0FpRkoy?=
+ =?utf-8?B?ZGFmcmtuZDJXQ24zcTVrZGU4SzhlUWhMTEVqOGExbXd2ZHQ3U0hzNEJQb092?=
+ =?utf-8?B?U0N0SklEdFhudldNM2xISW5iK3V3b3lSck45OEVtV2h1ODRNSEc1RkRjSlYz?=
+ =?utf-8?B?VEUvWmFLeDVVUUhTMTdyUnJOZVV1dnl2TU5PZUJBV0JBQTJBTkZITWN3N0cr?=
+ =?utf-8?B?ZDEwTWZ0aHJtSFdlY0doSXRjRTBNK3IyUTJiM2c2dms3eHlxak1uVXlTNC9h?=
+ =?utf-8?B?NDdTSHVHYy9jbG5CeVBobmZlUjc4MWZlT20xaVRwdzBPVTNjNXRLam4vY0xS?=
+ =?utf-8?B?WjI3U3NWQ0Q3TzIwRStPa1JqaWNWRE5PdnhRQXpEUXE1WS8yQm1icVRJU3JK?=
+ =?utf-8?B?UnFBZVBoQWpqOHpaK3lsbDRRSmFXR1g2NlVVeGZndmVDekh0QnFBUW1LSEU1?=
+ =?utf-8?B?dmdNSHM1SG8yREE2VXROTXlpaUxlYUJ0blhqQmhQN3RlMnhJc2p0b0JQRXFN?=
+ =?utf-8?B?NWhKZEF0YjFNYngrR3BaRTdyUlBLYlgvQ2NRWXpFV3YzQS9OSnEvSjlwQWM1?=
+ =?utf-8?B?U3dsSWRTdUxleDlwb3F4RXo4Vk1oa0tBNEVpVllXV0E5c3hHL3ZZdWpOeTJO?=
+ =?utf-8?B?aG9JQlZqdTVtNXh6Ynlscmt2LzNqQWdWODNHQVJiUXlRN2ZucUxoa1NOaGpE?=
+ =?utf-8?B?ZVpkZWdJM1VBeGFXS3h5WUNGektTTDZ0WTFKL3lnTTFoYmd2QTBJZ3JvR3JB?=
+ =?utf-8?B?M2FiTEhvalZTanlhSm1QMDJMZE1qZmduQUJlSkVQbCtxMzZPQmtKUnZXVzZo?=
+ =?utf-8?B?RXVzeVZhcElaYzdNTnB1bVk5bFcxYjE3OHBtZnF3a1JlNFZPZGdqTHRMZTFT?=
+ =?utf-8?B?U2orY1RDUDBVaFVocTJMRmdVSk5OMU1kNVpPT3l2SnBzZ3I0S2lXcThtWi9D?=
+ =?utf-8?B?MWFNVjdvcUlHdGZBU0ZpVVltOUtDWnc4YWVxaHhMUmxMMFJHMkp0SjE0UnIr?=
+ =?utf-8?B?eTlzY2sxSTJXa2VmOU5neHY5QUFrU0R4SUJHU29QcTFvWGlFTWlSVmRRTDBr?=
+ =?utf-8?B?UjA0QnR2SjVnZk85VXNzZFlNNXhMcjU3T3BwdkUyRkdROUcva3BTWEZBdUg4?=
+ =?utf-8?B?WmV1MVVYSHFHZTNsODgvK2xTV29kbE9DUXV2ZXNRQ3pBeTU0WW9tY3Z1V0Y2?=
+ =?utf-8?B?QzFuWjRGKzA5Y2FOZVNkMVViNUg4S1U3WURCV2NjZ25uOFNVSlJGLzJIZ3Vp?=
+ =?utf-8?B?cWNCTGFGdXcxSHhHZmlIQjVsSStOWTNGZVlEVWJnd2Y0bGpEczA0TE0xbHlV?=
+ =?utf-8?B?UHQ2ZFQ3WG5RdnovZkZLMFFKdUlucUF5L01KaVEvSlpLODVvUVVDL1dDRDZu?=
+ =?utf-8?B?bHJTRXd1dm5xQkdRQWZTMWhlckxFTU9mVXpucThhbzlibjhMZEtLWlFRTGNS?=
+ =?utf-8?B?bmR1YjcyeTJ2bkZ6Tk9hZTRod0J6SzdYZ2Z6bnRpaXBHWU5UbDJ5YmxYM1N5?=
+ =?utf-8?B?Q1hSUEJtUVdMdGdZUG80MElWbnNOblhsRWVtWTU5T0NNMkNVLzhQcmlzaHRx?=
+ =?utf-8?B?UkkveHZVd2Fkc0F0b1pJSDZQYVIwKzRpVkd3bkxETG9idzBHc2pWZ3NOald6?=
+ =?utf-8?Q?IbuU2Z?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7416.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(19092799006)(366016)(1800799024)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?cnNoclhOM1hjZW9yaUpsQ0taUnpJeGlEYXJCUFBCVE5hL0ZZYWx6UEg1RVVo?=
+ =?utf-8?B?UStmYlFvV0NKbFlXRCs3WExpYkhKa213UGEwSFlaT2NMZ1o2S1BEWUFYS0Y3?=
+ =?utf-8?B?REtOZGYrN0RFTW5ZbE1qTkZkUkp1eGxaK25HTHpBeXdzODIwU0Z0UXUrZGJC?=
+ =?utf-8?B?K0NaTU9pU2c4TjlPWW5DWmxPcDdtT3lzM3pnY0YrMmFzUTJRRHM3R1JlVW1X?=
+ =?utf-8?B?NE5jQ1B5ZVJmMjZ1L3R4RVA5YnRGQVRobitLWHpjTUtlOFJ1cDlTNHlKMmFG?=
+ =?utf-8?B?Nk1aOGdYam9zanR4THJkbU9aVXVFeHVxc01qYWtNQmJoT2dVOWNEOGpqdFcx?=
+ =?utf-8?B?cXN6YWxxRDBHd2pMenJpV29LVEdwTTJVdW13TVBpd2c0SVFSczJNNnZTTXV5?=
+ =?utf-8?B?QWVBTmNLWFFsMEdOMTd6bG5qUDNGVGxKOVZIeVFGL1pmdmNrYXYrM3kvU29D?=
+ =?utf-8?B?Vmd2aFdqamtCSUNwcVJCLy9GN1JVQUZ0SFFWVW5YcTlHbFlZM29Vc05vUHVH?=
+ =?utf-8?B?MDZUamFSN2NpN0dEMGgwYjBrUmhWRWZWLzYvQXE1UnZPR0IrdW5wOTNpZEVQ?=
+ =?utf-8?B?TjJhQWhOR1RXdldHVE9MaWhrYWc5c09hamw1VGhSS2lWVGZUS1Y4MzlxbXFk?=
+ =?utf-8?B?dEk3WU53cjk2aEtENkplQ1dpaDdJSmxmQUIxS2ppY0w0WnhjVjhtU0JqdVV2?=
+ =?utf-8?B?cHFHK21tN0QzRkJZY2JCRDU3YlVVeHpLdHZ1eU5XWUpVMGtEenc0UzRPakVY?=
+ =?utf-8?B?L0h6b2hUQjZ5VWZKbWYrdnRtYjYzd1l3L3YvYnZnb1JmVVBNc044ckpLbE1M?=
+ =?utf-8?B?NXdIL0xHR3dzRjRtd2R0K21zMERza2FUQkpyaXlDNjh4RjdsR053aDJ1UE5J?=
+ =?utf-8?B?RVhzVStzTEtvZzNFajRqUlNOSGpYT1lHZkVXWlhCdFBiU1RTOUJJb2dnWFBC?=
+ =?utf-8?B?T1FoZnRoM0JLeUlMRGx6dTNVb0pQZHBVMHRiSERYOERYVGJ5VlpCRkJhcWE4?=
+ =?utf-8?B?MXVIeGRwODJoSDhHMW8xL2FkelpReTdhSWdqL2xpMCtzWTRqeUVSRVNEQWFP?=
+ =?utf-8?B?YnRFN2k3em1OK3JkaEd5SkxMSkE3Y0VUV1EyZHlRdXRTelRYS3ZZdE5OQTJv?=
+ =?utf-8?B?OVB5MDdkcVU0MkZjeVdIUzlqdlZNbUdNTVVRTTQxa1VMSWJkeUxBWVBnQmtt?=
+ =?utf-8?B?dldhTjBzUGllZ2NucGJ4Y2xNSk9pVVFUdEo3YmxSbSt1T2VGLzJyU0tOQ1M3?=
+ =?utf-8?B?VjFiYXl4WHl1T1dGMGg1b3gxZjVNekRnbStyVC9ONkFmVTE0ZVNOYTREdDJv?=
+ =?utf-8?B?VnZPNXAwbXdrbWozM1c0RTNhMkhJZXpTWXJrck0yK3NJQjc0VHozNDZ1Y2U3?=
+ =?utf-8?B?cGk4SDBLNzhXUUlhdFRoV2xEc0U2L1A1ZFdLU1N5bElKS2FrRCt5TU5NdHRY?=
+ =?utf-8?B?a3NYbS9hT05OWjNmdnlvL2phWENKTzFHLzQ4QXVPSDhzUzduYlhtMW1QaDRa?=
+ =?utf-8?B?YXBYYXRIRWlGSTdkdkNEdVN1VWs2eWFyODF6cTI1OWhRaVY1bmpFRDIrcVRh?=
+ =?utf-8?B?QUpOZitidlhGZmVXbFFFT0l0L3F3ZHU2VVZNdjN0MzBSWTBtdUMrTURhOUUv?=
+ =?utf-8?B?UlFaNERuY0NxQjZ2SDg2RU1Rc2VPbERpNTZ3eERlVFY1UmVjME5wQ3E2QUxM?=
+ =?utf-8?B?TTBvUGF0RWl2ZEprWUNiQS9TVEZiSEwybmdib21FcXZmYUx4SDZvVXllNVh1?=
+ =?utf-8?B?MlB2QVlSOGlzV1dKVkp3Ri9BMnFFVGpVeGRQNVNMV0FmVE5TbEtaWDBleTdD?=
+ =?utf-8?B?dmtFQityR0VvRHdsVEVsWk0vdUpQWHNTdUpTVmNVVk13UTJJWW92dlYvNzVI?=
+ =?utf-8?B?UmU1RHVvRVdoZUMvNUhHYVdiS2Y3cmNKUDM2UHpRU3hiVEUxUUJtZlg3SnBU?=
+ =?utf-8?B?VGJBdGNUdThrb01ITXhYczB6VVdiTW9MYWlHMHVldGo3KzJCck1IeEtDczVR?=
+ =?utf-8?B?N09ldkJpcmkrWjZxOGJEdS9iWTRteGFKRHQ4SVJsVmRWanNRb2RleUo3MDRw?=
+ =?utf-8?B?YnUwWi8wVG9GeUNIcWNJZWxJUm5MRytrRy9NeVJyakdzSU44aFJrMlNzN3N2?=
+ =?utf-8?B?Z3hObGsvQkJFNGpaTFpzNzg2YXVwRXVzMHpMZmJaa25xdWYrSmc5MW5WNjF6?=
+ =?utf-8?B?S0E9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <C6F5D70BCEA18246A89BCAA4A52F850D@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aPdgR5gdA3l3oTLQ@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	VCP9LnPkCpQ2RQeLKuUAVS8uaQxB52YZgCKgO2tqeD7ArX76uceyHIsnfR57UFwVu6h1B/veGg1oVIk3+7NKveVdNrMrl59uCMf/+MCFFhsJy0fjytIk7T+7OsQZqP05/Dc+BET+/Gl2+GxnEKfSXdtGoFP0Zt8hC2VAkNAfTIOcxOgEgXemKOEiEhLUW3M6rQEnTP9Chv7WVBlLTqPwuU8pLp5wEQTKzMMr0tk6Nm7hnJlpCAKJdL5YxGDGsN9Ys+pLL4cbD/VzxT5DOj9iwvkjV6/gqW1nN8QlEYV3xdAEYd4iPDdl5LDU8kkfI52Zr7UVFAyTrP530lQqsILg41phps2WdT4zzmbEZwsOik3lZVJ0J+zyF0RTT7LjVM2sirDDpjNHZ5jj2iJSv3MDGKvj2+bafoFViElHYSC3JJ9woNc8VOiDRthGj6HVQL+WVf/jDH3871uksT96vexFPJeJTYmQthcXsRI6lYLfcbABIePAb3+UOm6eYFtH6vAsser7mt9CVsHkvnfxlH3bj5sIdUOFETZknaTr7e71Kr1iKfiWh+QKSjeOkBzO4bDvdhP7lDXL2QnXT95XMq+SCfC41TcaGWNpReaduzIoMaHH8BIqwKFlBsbxOKPDM7/t
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7416.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8d999fc1-80ae-4d34-5183-08de1095463b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Oct 2025 11:30:44.7037
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: n84j5vRYUwIaw2cdBXR2ctZgygWb5J+rOIVIzFf2sNq5mI79BixmhWBveO6hmOsZtxZqUrWtcPkc26rano/wT3BLyFOFXj6EiGUVWzkfE7I=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CYYPR04MB9029
 
-On Tue, Oct 21, 2025 at 03:58:23PM +0530, Ojaswin Mujoo wrote:
-> On Mon, Oct 20, 2025 at 11:33:40AM +0100, John Garry wrote:
-> > On 06/10/2025 14:20, Ojaswin Mujoo wrote:
-> > > Hi Zorro, thanks for checking this. So correct me if im wrong but I
-> > > understand that you have run this test on an atomic writes enabled
-> > > kernel where the stack also supports atomic writes.
-> > > 
-> > > Looking at the bad data log:
-> > > 
-> > > 	+READ BAD DATA: offset = 0x1c000, size = 0x1803, fname = /mnt/xfstests/test/junk
-> > > 	+OFFSET      GOOD    BAD     RANGE
-> > > 	+0x1c000     0x0000  0xcdcd  0x0
-> > > 	+operation# (mod 256) for the bad data may be 205
-> > > 
-> > > We see that 0x0000 was expected but we got 0xcdcd. Now the operation
-> > > that caused this is indicated to be 205, but looking at that operation:
-> > > 
-> > > +205(205 mod 256): ZERO     0x6dbe6 thru 0x6e6aa	(0xac5 bytes)
-> > > 
-> > > This doesn't even overlap the range that is bad. (0x1c000 to 0x1c00f).
-> > > Infact, it does seem like an unlikely coincidence that the actual data
-> > > in the bad range is 0xcdcd which is something xfs_io -c "pwrite" writes
-> > > to default (fsx writes random data in even offsets and operation num in
-> > > odd).
-> > > 
-> > > I am able to replicate this but only on XFS but not on ext4 (atleast not
-> > > in 20 runs).  I'm trying to better understand if this is a test issue or
-> > > not. Will keep you update.
-> > 
-> > 
-> > Hi Ojaswin,
-> > 
-> > Sorry for the very slow response.
-> > 
-> > Are you still checking this issue?
-> > 
-> > To replicate, should I just take latest xfs kernel and run this series on
-> > top of latest xfstests? Is it 100% reproducible?
-> > 
-> > Thanks,
-> > John
-> 
-> Hi John,
-> 
-> Yes Im looking into it but I'm now starting to run into some reflink/cow
-> based concepts that are taking time to understand. Let me share what I
-> have till now:
-> 
-> So the test.sh that I'm using can be found here [1] which just uses an
-> fsx replay file (which replays all operations) present in the same repo
-> [2]. If you see the replay file, there are a bunch of random operations
-> followed by the last 2 commented out operations:
-> 
-> # copy_range 0xd000 0x1000 0x1d800 0x44000   <--- # operations <start> <len> <dest of copy> <filesize (can be ignored)>
-> # mapread 0x1e000 0x1000 0x1e400 *
-> 
-> The copy_range here is the one which causes (or exposes) the corruption
-> at 0x1e800 (the end of copy range destination gets corrupted).
-> 
-> To have more control, I commented these 2 operations and am doing it by
-> hand in the test.sh file, with xfs_io. I'm also using a non atomic write
-> device so we only have S/W fallback.
-> 
-> Now some observations:
-> 
-> 1. The copy_range operations is actually copying from a hole to a hole,
-> so we should be reading all 0s. But What I see is the following happening:
-> 
->   vfs_copy_file_range
->    do_splice_direct
->     do_splice_direct_actor
->      do_splice_read
->        # Adds the folio at src offset to the pipe. I confirmed this is all 0x0.
->      splice_direct_to_actor
->       direct_splice_actor
->        do_splice_from
->         iter_file_splice_write
->          xfs_file_write_iter
->           xfs_file_buffered_write
->            iomap_file_buferred_write
->             iomap_iter
->              xfs_buferred_write_iomap_begin
->                # Here we correctly see that there is noting at the
->                # destination in data fork, but somehow we find a mapped
->                # extent in cow fork which is returned to iomap.
->              iomap_write_iter
->               __iomap_write_begin
->                 # Here we notice folio is not uptodate and call
->                 # iomap_read_folio_range() to read from the cow_fork
->                 # mapping we found earlier. This results in folio having
->                 # incorrect data at 0x1e800 offset.
-> 
->  So it seems like the fsx operations might be corrupting the cow fork state
->  somehow leading to stale data exposure. 
-> 
-> 2. If we disable atomic writes we dont hit the issue.
-> 
-> 3. If I do a -c pread of the destination range before doing the
-> copy_range operation then I don't see the corruption any more.
-> 
-> I'm now trying to figure out why the mapping returned is not IOMAP_HOLE
-> as it should be. I don't know the COW path in xfs so there are some gaps
-> in my understanding. Let me know if you need any other information since
-> I'm reliably able to replicate on 6.17.0-rc4.
-> 
-
-I haven't followed your issue closely, but just on this hole vs. COW
-thing, XFS has a bit of a quirk where speculative COW fork preallocation
-can expand out over holes in the data fork. If iomap lookup for buffered
-write sees COW fork blocks present, it reports those blocks as the
-primary mapping even if the data fork happens to be a hole (since
-there's no point in allocating blocks to the data fork when we can just
-remap).
-
-Again I've no idea if this relates to your issue or what you're
-referring to as a hole (i.e. data fork only?), but just pointing it out.
-The latest iomap/xfs patches I posted a few days ago kind of dance
-around this a bit, but I was somewhat hoping that maybe the cleanups
-there would trigger some thoughts on better iomap reporting in that
-regard.
-
-Brian
-
-> [1]
-> https://github.com/OjaswinM/fsx-aw-issue/tree/master
-> 
-> [2] https://github.com/OjaswinM/fsx-aw-issue/blob/master/repro.fsxops
-> 
-> regards,
-> ojaswin
-> 
-
+T24gMTAvMjEvMjUgMTA6MTUgQU0sIFF1IFdlbnJ1byB3cm90ZToNCj4NCj4g5ZyoIDIwMjUvMTAv
+MjEgMTg6MTgsIENocmlzdG9waCBIZWxsd2lnIOWGmemBkzoNCj4+IE9uIFR1ZSwgT2N0IDIxLCAy
+MDI1IGF0IDAxOjQ3OjAzUE0gKzEwMzAsIFF1IFdlbnJ1byB3cm90ZToNCj4+PiBPZmYtdG9waWMg
+YSBsaXR0bGUsIG1pbmQgdG8gc2hhcmUgdGhlIHBlcmZvcm1hbmNlIGRyb3Agd2l0aCBQSSBlbmFi
+bGVkIG9uDQo+Pj4gWEZTPw0KPj4gSWYgdGhlIGJhbmR3aXRoIG9mIHRoZSBTU0RzIGdldCBjbG9z
+ZSBvciBleGNlZWRzIHRoZSBEUkFNIGJhbmR3aXRoDQo+PiBidWZmZXJlZCBJL08gY2FuIGJlIDUw
+JSBvciBsZXNzIG9mIHRoZSBkaXJlY3QgSS9PIHBlcmZvcm1hbmNlLg0KPiBJbiBteSBjYXNlLCB0
+aGUgRFJBTSBpcyB3YXkgZmFzdGVyIHRoYW4gdGhlIFNTRCAodGVucyBvZiBHaUIvcyB2cyBsZXNz
+DQo+IHRoYW4gNUdpQi9zKS4NCj4NCj4+PiBXaXRoIHRoaXMgcGF0Y2ggSSdtIGFibGUgdG8gZW5h
+YmxlIGRpcmVjdCBJTyBmb3IgaW5vZGVzIHdpdGggY2hlY2tzdW1zLg0KPj4+IEkgdGhvdWdodCBp
+dCB3b3VsZCBlYXNpbHkgaW1wcm92ZSB0aGUgcGVyZm9ybWFuY2UsIGJ1dCB0aGUgdHJ1dGggaXMs
+IGl0J3MNCj4+PiBub3QgdGhhdCBkaWZmZXJlbnQgZnJvbSBidWZmZXJlZCBJTyBmYWxsIGJhY2su
+DQo+PiBUaGF0J3MgYmVjYXVzZSB5b3Ugc3RpbGwgY29weSBkYXRhLg0KPiBFbmFibGluZyB0aGUg
+ZXh0cmEgY29weSBmb3IgZGlyZWN0IElPIG9ubHkgZHJvcHMgYXJvdW5kIDE1fjIwJQ0KPiBwZXJm
+b3JtYW5jZSwgYnV0IHRoYXQncyBvbiBubyBjc3VtIGNhc2UuDQo+DQo+IFNvIGZhciB0aGUgY2Fs
+Y3VsYXRpb24gbWF0Y2hlcyB5b3VyIGVzdGltYXRpb24sIGJ1dC4uLg0KPg0KPj4+IFNvIEkgc3Rh
+cnQgd29uZGVyaW5nIGlmIGl0J3MgdGhlIGNoZWNrc3VtIGl0c2VsZiBjYXVzaW5nIHRoZSBtaXNl
+cmFibGUNCj4+PiBwZXJmb3JtYW5jZSBudW1iZXJzLg0KPj4gT25seSBpbmRpcmVjdGx5IGJ5IHRv
+dWNoaW5nIGFsbCB0aGUgY2FjaGVsaW5lcy4gIEJ1dCBvbmNlIHlvdSBjb3B5IHlvdQ0KPj4gdG91
+Y2ggdGhlbSBhZ2Fpbi4gIEVzcGVjaWFsbHkgaWYgbm90IGRvbmUgaW4gc21hbGwgY2h1bmtzLg0K
+PiBBcyBsb25nIGFzIEkgZW5hYmxlIGNoZWNrc3VtIHZlcmlmaWNhdGlvbiwgZXZlbiB3aXRoIHRo
+ZSBib3VuY2luZyBwYWdlDQo+IGRpcmVjdCBJTywgdGhlIHJlc3VsdCBpcyBub3QgYW55IGJldHRl
+ciB0aGFuIGJ1ZmZlcmVkIElPIGZhbGxiYWNrLCBhbGwNCj4gYXJvdW5kIDEwJSAobm90IGJ5IDEw
+JSwgYXQgMTAlKSBvZiB0aGUgZGlyZWN0IElPIHNwZWVkIChubyBtYXR0ZXINCj4gYm91bmNpbmcg
+b3Igbm90KS4NCj4NCj4gTWF5YmUgSSBuZWVkIHRvIGNoZWNrIGlmIHRoZSBwcm9wZXIgaGFyZHdh
+cmUgYWNjZWxlcmF0ZWQgQ1JDMzIgaXMNCj4gdXRpbGl6ZWQuLi4NCg0KDQpZb3UgY291bGQgYWxz
+byBoYWNrIGluIGEgTlVMTC1jc3VtIGZvciB0ZXN0aW5nLiBTb21ldGhpbmcgdGhhdCB3cml0ZXMg
+YSANCmZpeGVkIHZhbHVlIGV2ZXJ5IHRpbWUuIFRoaXMgd291bGQgdGhlbiBydWxlIG91dCBhbGwg
+dGhlIGNvc3Qgb2YgdGhlIA0KY3N1bSBnZW5lcmF0aW9uIGFuZCBvbmx5IHRlc3QgdGhlIGFmZmVj
+dGVkIElPIHBhdGhzLg0KDQo=
