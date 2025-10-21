@@ -1,39 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62FFF34D900;
-	Tue, 21 Oct 2025 18:30:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B5A834D90E;
+	Tue, 21 Oct 2025 18:39:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761071444; cv=none; b=jXT3YhycSlyM1+gBXsnHvOjBVJqWaIIEzoMM8D/VwXbRaUxjE9oLecFYJ5DLtFIxn83cKjj4874V7r5N7kpLmWDc1G3dstfWUTflRuR2o3oo4qtqoERWcN60abJ2P4Y+vvNM1q/qqpR9z0fAwa8YIGpInXg9BFZAPq9fu/AefgM=
+	t=1761071957; cv=none; b=UB+E1hi98nuv95ObZ6jbHwdf1H8Bcwlyv6EziCYJzx+wHcGcZlj7LG7rgRme4dQ4lP2X4mKWagGEo1k/uaPDwImNbRNAHphemCqcgTJ4/kQ7/g/RoRgbGWsrE/iMtChOpvMAheVCkhYxabxda8R0BpoVKiqqX2tMLbncTg1r4WE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761071444; c=relaxed/simple;
-	bh=/EIcNMBhb5dJk+caRPr1kpY9q7Ww1OV4NkrNd81Kf5U=;
-	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tAFU1O+lPklKPVauUVwEweaAVi6njA7CU6EkvmuO5kY119ZdTyiEts4gmBHiSy0fQsVIaQBxF5aB69R1Qks8rYKDUoWBR73snx9K4NB7pZdKMC9BKB0MbPnkBJpC7SD35i+znzbLHSua80tGW2C9lVoKWlYjzmajiW1INjHhOBU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iXRspHdo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761071957; c=relaxed/simple;
+	bh=4of9pK3Z+eFQK4QoqNSUABPsJYOo62l+zFpLxtYWrE4=;
+	h=Date:Subject:From:To:Cc:Message-ID:MIME-Version:Content-Type; b=pDiKueTzxDK6qQSY/KGF4i4mCK9Yu17Pqo49qJLs6kPER5ebTRrTgUM9EBdQ5Fnwtmaakb41lLqv9AtLvpn1TVu5d9Sd9xp1S4h4kuYjhqezifJ9qqdT4bI9LmUk3NXxpPo5yUsAFB0A2tKcj4d1ny8t08JgH04TCOiKAV8286s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K5YByBTy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iXRspHdo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6348C4CEF1;
-	Tue, 21 Oct 2025 18:30:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K5YByBTy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9375BC4CEF1;
+	Tue, 21 Oct 2025 18:39:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761071443;
-	bh=/EIcNMBhb5dJk+caRPr1kpY9q7Ww1OV4NkrNd81Kf5U=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=iXRspHdoEfsjtU5chFhAwW5hmlJwcD/46s4vXRRbsWy4Z1RdUtoQ/WdAtaKuHYXo+
-	 qWdfgylHknmA3hVgpb2TOpwqD5rkAwNOau7ODoghoKFOSfJc8Pd+C/aufgpNeISTpk
-	 JCQkzunmNcBt+TGzKo3rqvPStzMBoWeuVw0dBucUyAx1TV+E+rL+9ijkxCbjNj11IE
-	 yiTBrwNrNHkOXGdTBlR7uDNqi/3BI3yYYiJwL7pHvFSzTw6ijY1ug97HKMZdwBuOFK
-	 HL8iTT+/2q9BDEUeNvXkf4IZ8z2y/iI2Mqr8vXQ5h92oCmAFlXJsS16kWz+Otps6oZ
-	 5/0z2/50k7HUQ==
-Date: Tue, 21 Oct 2025 11:30:43 -0700
-Subject: [PATCH 4/4] xfs: fix locking in xchk_nlinks_collect_dir
+	s=k20201202; t=1761071956;
+	bh=4of9pK3Z+eFQK4QoqNSUABPsJYOo62l+zFpLxtYWrE4=;
+	h=Date:Subject:From:To:Cc:From;
+	b=K5YByBTyOuxXFfoa+k3lijpk/zOBszFjgfzXLHR41hEo+wlEf/K9Tsb37HVak41CM
+	 hRWpaziCXSSZcqPvWEI6jVw9nPpL3ON/xgJjHmSkQzu7D84o+trmRd+cZmWiJvq1lT
+	 COMxItJwcMcMWitft4MPylt9w/rqCRO8Tl6FPh4deYkf1O5Roz3NdYAjxB//mQ1vQx
+	 vC6AGNM8dGQY/fyWD+vv03AF9jdcx43kbFNSo0YHitZ+hIyucumJgyTPFa0OM3TdhK
+	 tHj7tP3PQ5WE+6ylUy8Gjclgs8cuTdeNefU+koIed6p8FMMJ9aiW0g1Fwlh1WhYDgJ
+	 WDZ6uiRb3oEeg==
+Date: Tue, 21 Oct 2025 11:39:16 -0700
+Subject: [PATCHSET 1/2] fstests: more random fixes for v2025.10.05
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, cem@kernel.org
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <176107134066.4152072.17161623808506836702.stgit@frogsfrogsfrogs>
-In-Reply-To: <176107133959.4152072.11526530466991879614.stgit@frogsfrogsfrogs>
-References: <176107133959.4152072.11526530466991879614.stgit@frogsfrogsfrogs>
+To: zlang@redhat.com, djwong@kernel.org
+Cc: fstests@vger.kernel.org, hch@lst.de, fstests@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Message-ID: <176107188615.4163693.708102333699699249.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,90 +41,51 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-On a filesystem with parent pointers, xchk_nlinks_collect_dir walks both
-the directory entries (data fork) and the parent pointers (attr fork) to
-determine the correct link count.  Unfortunately I forgot to update the
-lock mode logic to handle the case of a directory whose attr fork is in
-btree format and has not yet been loaded *and* whose data fork doesn't
-need loading.
+Here's the usual odd fixes for fstests.
 
-This leads to a bunch of assertions from xfs/286 in xfs_iread_extents
-because we only took ILOCK_SHARED, not ILOCK_EXCL.  You'd need the rare
-happenstance of a directory with a large number of non-pptr extended
-attributes set and enough memory pressure to cause the directory to be
-evicted and partially reloaded from disk.
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-I /think/ this only started in 6.18-rc1 because I've started seeing OOM
-errors with the maple tree slab using 70% of memory, and this didn't
-happen in 6.17.  Yay dynamic systems!
+With a bit of luck, this should all go splendidly.
+Comments and questions are, as always, welcome.
 
-Cc: <stable@vger.kernel.org> # v6.10
-Fixes: 77ede5f44b0d86 ("xfs: walk directory parent pointers to determine backref count")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
 ---
- fs/xfs/scrub/nlinks.c |   34 +++++++++++++++++++++++++++++++---
- 1 file changed, 31 insertions(+), 3 deletions(-)
-
-
-diff --git a/fs/xfs/scrub/nlinks.c b/fs/xfs/scrub/nlinks.c
-index 26721fab5cab42..091c79e432e592 100644
---- a/fs/xfs/scrub/nlinks.c
-+++ b/fs/xfs/scrub/nlinks.c
-@@ -376,6 +376,36 @@ xchk_nlinks_collect_pptr(
- 	return error;
- }
- 
-+static uint
-+xchk_nlinks_ilock_dir(
-+	struct xfs_inode	*ip)
-+{
-+	uint			lock_mode = XFS_ILOCK_SHARED;
-+
-+	/*
-+	 * We're going to scan the directory entries, so we must be ready to
-+	 * pull the data fork mappings into memory if they aren't already.
-+	 */
-+	if (xfs_need_iread_extents(&ip->i_df))
-+		lock_mode = XFS_ILOCK_EXCL;
-+
-+	/*
-+	 * We're going to scan the parent pointers, so we must be ready to
-+	 * pull the attr fork mappings into memory if they aren't already.
-+	 */
-+	if (xfs_has_parent(ip->i_mount) && xfs_inode_has_attr_fork(ip) &&
-+	    xfs_need_iread_extents(&ip->i_af))
-+		lock_mode = XFS_ILOCK_EXCL;
-+
-+	/*
-+	 * Take the IOLOCK so that other threads cannot start a directory
-+	 * update while we're scanning.
-+	 */
-+	lock_mode |= XFS_IOLOCK_SHARED;
-+	xfs_ilock(ip, lock_mode);
-+	return lock_mode;
-+}
-+
- /* Walk a directory to bump the observed link counts of the children. */
- STATIC int
- xchk_nlinks_collect_dir(
-@@ -394,8 +424,7 @@ xchk_nlinks_collect_dir(
- 		return 0;
- 
- 	/* Prevent anyone from changing this directory while we walk it. */
--	xfs_ilock(dp, XFS_IOLOCK_SHARED);
--	lock_mode = xfs_ilock_data_map_shared(dp);
-+	lock_mode = xchk_nlinks_ilock_dir(dp);
- 
- 	/*
- 	 * The dotdot entry of an unlinked directory still points to the last
-@@ -452,7 +481,6 @@ xchk_nlinks_collect_dir(
- 	xchk_iscan_abort(&xnc->collect_iscan);
- out_unlock:
- 	xfs_iunlock(dp, lock_mode);
--	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
- 	return error;
- }
- 
+Commits in this patchset:
+ * generic/427: try to ensure there's some free space before we do the aio test
+ * common/rc: fix _require_xfs_io_shutdown
+ * generic/742: avoid infinite loop if no fiemap results
+ * generic/{482,757}: skip test if there are no FUA writes
+ * generic/772: actually check for file_getattr special file support
+ * common/filter: fix _filter_file_attributes to handle src/file_attr.c file flags
+ * common/attr: fix _require_noattr2
+ * common: fix _require_xfs_io_command pwrite -A for various blocksizes
+ * generic/778: fix severe performance problems
+ * check: line up stdout columns
+ * fsx: don't print messages when atomic writes are explicitly disabled
+---
+ check              |    8 +++++++-
+ common/attr        |    4 ++++
+ common/filter      |   33 +++++++++++++++++++++++++--------
+ common/rc          |   21 +++++++++++++++++----
+ ltp/fsx.c          |    1 -
+ src/fiemap-fault.c |   14 +++++++++++++-
+ tests/generic/427  |    3 +++
+ tests/generic/482  |    2 +-
+ tests/generic/757  |    2 +-
+ tests/generic/772  |   41 ++++++++++++++++++++++-------------------
+ tests/generic/778  |   39 ++++++++++++++++++++++++++-------------
+ tests/xfs/648      |    3 +++
+ 12 files changed, 122 insertions(+), 49 deletions(-)
 
