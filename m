@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C4C2264A92;
-	Tue, 21 Oct 2025 18:30:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62FFF34D900;
+	Tue, 21 Oct 2025 18:30:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761071429; cv=none; b=dvfpUwJiXei2IfGV0uRfbXzysu8iQiLEiHW6D9Xfv+VN0b0+C49xYo5if/csb/sGQxdx0MwcPXKiVGScXD+pWcmMyh61lf74K+W3+RbZcVhguCVB/FD+0KNrzzqEAlo1ftN/TmtIunkQ4EvWCA0kSZMJ6tvbf/0LOBrfMn1hxtw=
+	t=1761071444; cv=none; b=jXT3YhycSlyM1+gBXsnHvOjBVJqWaIIEzoMM8D/VwXbRaUxjE9oLecFYJ5DLtFIxn83cKjj4874V7r5N7kpLmWDc1G3dstfWUTflRuR2o3oo4qtqoERWcN60abJ2P4Y+vvNM1q/qqpR9z0fAwa8YIGpInXg9BFZAPq9fu/AefgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761071429; c=relaxed/simple;
-	bh=RlmGRMUJOAQRCvPPOGGitJNNVKeSnPhG6/RR8KkODlM=;
+	s=arc-20240116; t=1761071444; c=relaxed/simple;
+	bh=/EIcNMBhb5dJk+caRPr1kpY9q7Ww1OV4NkrNd81Kf5U=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lWlgBcAYK0VA02gb76geNGmTAGqaX76WXhg6y4a5YLxeIDySvCouSgTt+XlY92kbV3mVZCXJLPXJlPYcJzAF5gVyREB1p6C4NntyXgfjq/LYYUx5CZUrul9DNOPy8UxQlIAW+aiDnsphny/c2UXg2SPiDBMxv9xbi0RPcKgJ5Aw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bZW+Tp43; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=tAFU1O+lPklKPVauUVwEweaAVi6njA7CU6EkvmuO5kY119ZdTyiEts4gmBHiSy0fQsVIaQBxF5aB69R1Qks8rYKDUoWBR73snx9K4NB7pZdKMC9BKB0MbPnkBJpC7SD35i+znzbLHSua80tGW2C9lVoKWlYjzmajiW1INjHhOBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iXRspHdo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bZW+Tp43"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41E22C4CEF1;
-	Tue, 21 Oct 2025 18:30:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iXRspHdo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6348C4CEF1;
+	Tue, 21 Oct 2025 18:30:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761071428;
-	bh=RlmGRMUJOAQRCvPPOGGitJNNVKeSnPhG6/RR8KkODlM=;
+	s=k20201202; t=1761071443;
+	bh=/EIcNMBhb5dJk+caRPr1kpY9q7Ww1OV4NkrNd81Kf5U=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=bZW+Tp439RhcQFhb9291fjTdkwHo/WRcH93EtvwD1lf+js+Mm+7VanyMKkF90ijRp
-	 6+IFE9/S5xqvu256f8lx2dEZpiDhTEoMLUcqT3M6uR6Ks8MMWupEmGZOXQWGWWcW92
-	 xpyZ4Cyp5JnkcXLsY2eaYQJoH4qZ9yBCeWlP1mQEdquwuKJbTMyjC+Wl/89udt/mqL
-	 D7em5IjAKwMlyKH/6P5IRP2tG95vQmWm2OaVu+lPcY3GREwiUYkojkBmOR+9u4ZTyk
-	 p2vK7xiWgXD6dQ4oXwP21fwFXvT6G8S8GcxoxuPKrZ71d9uYniPJFu6sHbuS0zQ+Mi
-	 7DeZt2tWtJntA==
-Date: Tue, 21 Oct 2025 11:30:27 -0700
-Subject: [PATCH 3/4] xfs: loudly complain about defunct mount options
+	b=iXRspHdoEfsjtU5chFhAwW5hmlJwcD/46s4vXRRbsWy4Z1RdUtoQ/WdAtaKuHYXo+
+	 qWdfgylHknmA3hVgpb2TOpwqD5rkAwNOau7ODoghoKFOSfJc8Pd+C/aufgpNeISTpk
+	 JCQkzunmNcBt+TGzKo3rqvPStzMBoWeuVw0dBucUyAx1TV+E+rL+9ijkxCbjNj11IE
+	 yiTBrwNrNHkOXGdTBlR7uDNqi/3BI3yYYiJwL7pHvFSzTw6ijY1ug97HKMZdwBuOFK
+	 HL8iTT+/2q9BDEUeNvXkf4IZ8z2y/iI2Mqr8vXQ5h92oCmAFlXJsS16kWz+Otps6oZ
+	 5/0z2/50k7HUQ==
+Date: Tue, 21 Oct 2025 11:30:43 -0700
+Subject: [PATCH 4/4] xfs: fix locking in xchk_nlinks_collect_dir
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: oleksandr@natalenko.name, stable@vger.kernel.org, vbabka@suse.cz,
- linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <176107134044.4152072.18403833729642060548.stgit@frogsfrogsfrogs>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
+Message-ID: <176107134066.4152072.17161623808506836702.stgit@frogsfrogsfrogs>
 In-Reply-To: <176107133959.4152072.11526530466991879614.stgit@frogsfrogsfrogs>
 References: <176107133959.4152072.11526530466991879614.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,145 +45,88 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Apparently we can never deprecate mount options in this project, because
-it will invariably turn out that some foolish userspace depends on some
-behavior and break.  From Oleksandr Natalenko:
+On a filesystem with parent pointers, xchk_nlinks_collect_dir walks both
+the directory entries (data fork) and the parent pointers (attr fork) to
+determine the correct link count.  Unfortunately I forgot to update the
+lock mode logic to handle the case of a directory whose attr fork is in
+btree format and has not yet been loaded *and* whose data fork doesn't
+need loading.
 
-  In v6.18, the attr2 XFS mount option is removed. This may silently
-  break system boot if the attr2 option is still present in /etc/fstab
-  for rootfs.
+This leads to a bunch of assertions from xfs/286 in xfs_iread_extents
+because we only took ILOCK_SHARED, not ILOCK_EXCL.  You'd need the rare
+happenstance of a directory with a large number of non-pptr extended
+attributes set and enough memory pressure to cause the directory to be
+evicted and partially reloaded from disk.
 
-  Consider Arch Linux that is being set up from scratch with / being
-  formatted as XFS. The genfstab command that is used to generate
-  /etc/fstab produces something like this by default:
+I /think/ this only started in 6.18-rc1 because I've started seeing OOM
+errors with the maple tree slab using 70% of memory, and this didn't
+happen in 6.17.  Yay dynamic systems!
 
-  /dev/sda2 on / type xfs (rw,relatime,attr2,discard,inode64,logbufs=8,logbsize=32k,noquota)
-
-  Once the system is set up and rebooted, there's no deprecation warning
-  seen in the kernel log:
-
-  # cat /proc/cmdline
-  root=UUID=77b42de2-397e-47ee-a1ef-4dfd430e47e9 rootflags=discard rd.luks.options=discard quiet
-
-  # dmesg | grep -i xfs
-  [    2.409818] SGI XFS with ACLs, security attributes, realtime, scrub, repair, quota, no debug enabled
-  [    2.415341] XFS (sda2): Mounting V5 Filesystem 77b42de2-397e-47ee-a1ef-4dfd430e47e9
-  [    2.442546] XFS (sda2): Ending clean mount
-
-  Although as per the deprecation intention, it should be there.
-
-  Vlastimil (in Cc) suggests this is because xfs_fs_warn_deprecated()
-  doesn't produce any warning by design if the XFS FS is set to be
-  rootfs and gets remounted read-write during boot. This imposes two
-  problems:
-
-  1) a user doesn't see the deprecation warning; and
-  2) with v6.18 kernel, the read-write remount fails because of unknown
-     attr2 option rendering system unusable:
-
-  systemd[1]: Switching root.
-  systemd-remount-fs[225]: /usr/bin/mount for / exited with exit status 32.
-
-  # mount -o rw /
-  mount: /: fsconfig() failed: xfs: Unknown parameter 'attr2'.
-
-  Thorsten (in Cc) suggested reporting this as a user-visible regression.
-
-  From my PoV, although the deprecation is in place for 5 years already,
-  it may not be visible enough as the warning is not emitted for rootfs.
-  Considering the amount of systems set up with XFS on /, this may
-  impose a mass problem for users.
-
-  Vlastimil suggested making attr2 option a complete noop instead of
-  removing it.
-
-IOWs, the initrd mounts the root fs with (I assume) no mount options,
-and mount -a remounts with whatever options are in fstab.  However,
-XFS doesn't complain about deprecated mount options during a remount, so
-technically speaking we were not warning all users in all combinations
-that they were heading for a cliff.
-
-Gotcha!!
-
-Now, how did 'attr2' get slurped up on so many systems?  The old code
-would put that in /proc/mounts if the filesystem happened to be in attr2
-mode, even if user hadn't mounted with any such option.  IOWs, this is
-because someone thought it would be a good idea to advertise system
-state via /proc/mounts.
-
-The easy way to fix this is to reintroduce the four mount options but
-map them to a no-op option that ignores them, and hope that nobody's
-depending on attr2 to appear in /proc/mounts.  (Hint: use the fsgeometry
-ioctl).  But we've learned our lesson, so complain as LOUDLY as possible
-about the deprecation.
-
-Lessons learned:
-
- 1. Don't expose system state via /proc/mounts; the only strings that
-    ought to be there are options *explicitly* provided by the user.
- 2. Never tidy, it's not worth the stress and irritation.
-
-Reported-by: Vlastimil Babka <vbabka@suse.cz>
-Reported-by: Oleksandr Natalenko <oleksandr@natalenko.name>
-Cc: <stable@vger.kernel.org> # v6.18-rc1
-Fixes: b9a176e54162f8 ("xfs: remove deprecated mount options")
+Cc: <stable@vger.kernel.org> # v6.10
+Fixes: 77ede5f44b0d86 ("xfs: walk directory parent pointers to determine backref count")
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_super.c |   20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/nlinks.c |   34 +++++++++++++++++++++++++++++++---
+ 1 file changed, 31 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index ae9b17730eaf41..d8f326d8838036 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -102,7 +102,7 @@ static const struct constant_table dax_param_enums[] = {
-  * Table driven mount option parser.
-  */
- enum {
--	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev,
-+	Op_deprecated, Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev,
- 	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth, Opt_nouuid,
- 	Opt_grpid, Opt_nogrpid, Opt_bsdgroups, Opt_sysvgroups,
- 	Opt_allocsize, Opt_norecovery, Opt_inode64, Opt_inode32,
-@@ -114,7 +114,21 @@ enum {
- 	Opt_lifetime, Opt_nolifetime, Opt_max_atomic_write,
- };
+diff --git a/fs/xfs/scrub/nlinks.c b/fs/xfs/scrub/nlinks.c
+index 26721fab5cab42..091c79e432e592 100644
+--- a/fs/xfs/scrub/nlinks.c
++++ b/fs/xfs/scrub/nlinks.c
+@@ -376,6 +376,36 @@ xchk_nlinks_collect_pptr(
+ 	return error;
+ }
  
-+#define fsparam_dead(NAME) \
-+	__fsparam(NULL, (NAME), Op_deprecated, fs_param_deprecated, NULL)
++static uint
++xchk_nlinks_ilock_dir(
++	struct xfs_inode	*ip)
++{
++	uint			lock_mode = XFS_ILOCK_SHARED;
 +
- static const struct fs_parameter_spec xfs_fs_parameters[] = {
 +	/*
-+	 * These mount options were supposed to be deprecated in September 2025
-+	 * but the deprecation warning was buggy, so not all users were
-+	 * notified.  The deprecation is now obnoxiously loud and postponed to
-+	 * September 2030.
++	 * We're going to scan the directory entries, so we must be ready to
++	 * pull the data fork mappings into memory if they aren't already.
 +	 */
-+	fsparam_dead("attr2"),
-+	fsparam_dead("noattr2"),
-+	fsparam_dead("ikeep"),
-+	fsparam_dead("noikeep"),
++	if (xfs_need_iread_extents(&ip->i_df))
++		lock_mode = XFS_ILOCK_EXCL;
 +
- 	fsparam_u32("logbufs",		Opt_logbufs),
- 	fsparam_string("logbsize",	Opt_logbsize),
- 	fsparam_string("logdev",	Opt_logdev),
-@@ -1417,6 +1431,9 @@ xfs_fs_parse_param(
- 		return opt;
++	/*
++	 * We're going to scan the parent pointers, so we must be ready to
++	 * pull the attr fork mappings into memory if they aren't already.
++	 */
++	if (xfs_has_parent(ip->i_mount) && xfs_inode_has_attr_fork(ip) &&
++	    xfs_need_iread_extents(&ip->i_af))
++		lock_mode = XFS_ILOCK_EXCL;
++
++	/*
++	 * Take the IOLOCK so that other threads cannot start a directory
++	 * update while we're scanning.
++	 */
++	lock_mode |= XFS_IOLOCK_SHARED;
++	xfs_ilock(ip, lock_mode);
++	return lock_mode;
++}
++
+ /* Walk a directory to bump the observed link counts of the children. */
+ STATIC int
+ xchk_nlinks_collect_dir(
+@@ -394,8 +424,7 @@ xchk_nlinks_collect_dir(
+ 		return 0;
  
- 	switch (opt) {
-+	case Op_deprecated:
-+		xfs_fs_warn_deprecated(fc, param);
-+		return 0;
- 	case Opt_logbufs:
- 		parsing_mp->m_logbufs = result.uint_32;
- 		return 0;
-@@ -1537,7 +1554,6 @@ xfs_fs_parse_param(
- 		xfs_mount_set_dax_mode(parsing_mp, result.uint_32);
- 		return 0;
- #endif
--	/* Following mount options will be removed in September 2025 */
- 	case Opt_max_open_zones:
- 		parsing_mp->m_max_open_zones = result.uint_32;
- 		return 0;
+ 	/* Prevent anyone from changing this directory while we walk it. */
+-	xfs_ilock(dp, XFS_IOLOCK_SHARED);
+-	lock_mode = xfs_ilock_data_map_shared(dp);
++	lock_mode = xchk_nlinks_ilock_dir(dp);
+ 
+ 	/*
+ 	 * The dotdot entry of an unlinked directory still points to the last
+@@ -452,7 +481,6 @@ xchk_nlinks_collect_dir(
+ 	xchk_iscan_abort(&xnc->collect_iscan);
+ out_unlock:
+ 	xfs_iunlock(dp, lock_mode);
+-	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
+ 	return error;
+ }
+ 
 
