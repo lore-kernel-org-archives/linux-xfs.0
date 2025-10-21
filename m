@@ -1,65 +1,71 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED129238C1F
-	for <linux-xfs@vger.kernel.org>; Tue, 21 Oct 2025 14:18:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71B0F34027C;
+	Tue, 21 Oct 2025 14:47:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761056312; cv=none; b=Mj3lPWwqJmu/sWHr+cXgOXMYKadlNLFMTeQrbeuDBSjUjnQLrTSbJRI86SuO8squfQQ0NYJ31rl0+N7P29DVzqqwBU+tRqMdQFv5gb9fOq20UvzpZV6hwIU2m3Rsza5YlRq1gSGOXNdfsRct+HCHoWWRMTtXJ+6p+ZYhqgN590U=
+	t=1761058071; cv=none; b=Gx5gVcH9gkwcySbzk79XDne0VCFb6FZlQoSUp4PQi++uo68XdQt8n3yLOibcCDJAFV+n50skhdEs74RpdSGIWpaaMMgvSoL9l0suV3NLVNUJzWKg8BFw2cDJ7npoGVPQbTS5ScN2eg9nSpEIUVwKjjybUqQ4NYwb5szuMl4HRrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761056312; c=relaxed/simple;
-	bh=3Yxm71XSwRfJ3oOGDCqCxlTnxt+ad4L76IOZ0nmQDwM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BDPcMJNvGjSJWYZBjjx1EV1X2XMa9/iFM0xg5bSLE2fa88PA0ug/5GMp7sXW3rBlL/TnqeCfOIRS0C1/+S79Um5MtXOAU1DGNDMX9Wt8xVR+PAIvANJZCxVUMh5aI/Z1JAoWL4CzHSSqdYeqKaXKfvYqOAG+ys35bR8lLqI3MPA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id 2BB1D180F2C3;
-	Tue, 21 Oct 2025 16:18:26 +0200 (CEST)
-Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
-	by mx0.herbolt.com with ESMTPSA
-	id 24M5EyKW92ioeRoAKEJqOA:T3
-	(envelope-from <lukas@herbolt.com>); Tue, 21 Oct 2025 16:18:26 +0200
-From: Lukas Herbolt <lukas@herbolt.com>
-To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH 2/2] xfs: Remove WARN_ONCE if xfs_uuid_table grows over 2x PAGE_SIZE.
-Date: Tue, 21 Oct 2025 16:17:45 +0200
-Message-ID: <20251021141744.1375627-4-lukas@herbolt.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20251021141744.1375627-1-lukas@herbolt.com>
-References: <20251021141744.1375627-1-lukas@herbolt.com>
+	s=arc-20240116; t=1761058071; c=relaxed/simple;
+	bh=wc67v7K34+1bSfnbqCK12nzHrWJDtDJXaAVFmovDbEk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cz/4Jfar50AjnUYnzbtior7DD22zBwbbJUPmsD/2PDZdmzRZWP9i0hpbJRvp1tdZwmXJzfOmoQ4txF4e2VIv+A4ghK8M6AybkUPvL3t5oo/l2JLmONICjmq5UldPrauTCYpe3uwwVonw6KdoKokgXR/JMJJN85d+YNSv7xHIYDo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pTYEiFrJ; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pTYEiFrJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAAFCC4CEF1;
+	Tue, 21 Oct 2025 14:47:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761058071;
+	bh=wc67v7K34+1bSfnbqCK12nzHrWJDtDJXaAVFmovDbEk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=pTYEiFrJr2Rlh9QBbhwjsA2qwNZMOc5+sP8n0Rc/Nkg2NdZyxb55MziGq+N8OxnYj
+	 N1mR6tpAMPMturjfa/uBnjmcIUCHezvD2xXaiAKYjKbPzWWoHqr1h0+gUYdto+rY07
+	 kZitVeztJVZUCpon/qlNMki7fgIVohEnM40qg3Xe4AUPuKlThLjR/KUNEwLJ+Sjifs
+	 tRRA4lnK0S3VyjsuEdT8uBpcimq5tZuCmcI+BMR2FYhjOg2By1WebwUzOgF4bNFD3X
+	 QNP8zu2ZllQZHYd1Ixmv3m0za7nOnJWAunRGBBfWhwm1hZSMJiZoDjr49T1U6u78wx
+	 RyEmwMyIICMxA==
+Date: Tue, 21 Oct 2025 07:47:50 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Theodore Ts'o <tytso@mit.edu>, zlang@redhat.com,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-ext4 <linux-ext4@vger.kernel.org>
+Subject: Re: [PATCH 6/8] common/filter: fix _filter_file_attributes to handle
+ xfs file flags
+Message-ID: <20251021144750.GG3356773@frogsfrogsfrogs>
+References: <176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
+ <176054618007.2391029.16547003793604851342.stgit@frogsfrogsfrogs>
+ <aPHE0N8JX4H8eEo6@infradead.org>
+ <20251017162218.GD6178@frogsfrogsfrogs>
+ <aPXeQW0ISn6_aCoP@infradead.org>
+ <20251020163713.GM6178@frogsfrogsfrogs>
+ <aPcadbSFFBj4Do4c@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aPcadbSFFBj4Do4c@infradead.org>
 
-The krealloc prints out warning if allocation is bigger than 2x PAGE_SIZE,
-lets use kvrealloc for the memory allocation.
+On Mon, Oct 20, 2025 at 10:30:29PM -0700, Christoph Hellwig wrote:
+> On Mon, Oct 20, 2025 at 09:37:13AM -0700, Darrick J. Wong wrote:
+> > [add tytso and linux-ext4]
+> > 
+> > I think we should standardize on the VFS (aka file_getattr) flag values,
+> > which means the xfs version more or less wins.
+> 
+> Ok, I'm more than confused than before.  Shouldn't we simply use
+> separate filters for FS_IOC_GETFLAGS vs FS_IOC_FSGETXATTR?
 
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
----
- fs/xfs/xfs_mount.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yeah.  I was going to just provide both versions, but then I went down
+the rabbithole of navelgazing about "Is upstream going to accept a
+helper for the ext4 lsattr flags even though there are no users?" and
+then wandered off to tackle actual useful things like mount/unmount
+races in fuse. :P
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index dc32c5e34d817..e728e61c9325a 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -89,7 +89,7 @@ xfs_uuid_mount(
- 	}
- 
- 	if (hole < 0) {
--		xfs_uuid_table = krealloc(xfs_uuid_table,
-+		xfs_uuid_table = kvrealloc(xfs_uuid_table,
- 			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
- 			GFP_KERNEL | __GFP_NOFAIL);
- 		hole = xfs_uuid_table_size++;
--- 
-2.51.0
-
+--D
