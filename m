@@ -1,80 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7860925B2E7;
-	Tue, 21 Oct 2025 13:09:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F53A4CB5B
+	for <linux-xfs@vger.kernel.org>; Tue, 21 Oct 2025 14:18:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761052191; cv=none; b=RCmdzJ9i0vWlIWheTFAqC8TvG2DZ6ZJLZJ62UfKYBbis61ViaXT8zSdU7V+34NRNC1gJq0x3qh3UpjH9LS2xSzbXb4vtI6+cHhXFci/k13Aq9JKhVm9V3mo7c0zZNtIY0BSlcT/ZMhzLUtZkj4+L9Mzhz06lERRYGHHrblykufM=
+	t=1761056308; cv=none; b=mWy6H8JcA4Fjl4euhVj2l4svhqqSSRRoUw5ImI4+hCAbR6tOcow2ahdCmrzBeCKul5tYpj9qXS3rW2tmpSpJ1lLxHdZU5Psl5Ms7jywCdlmsSzwyWeO0l9IB69A8IyXRfCmbcaFwiKuiZLDCqyfgrFxq96B0kJfPAVa8qF8G23g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761052191; c=relaxed/simple;
-	bh=H7UgwUYXbmCQ0jWM81jD1014fDBSOlu/wN7/eync+l8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=igAfYIQ9yEETzzpKO6usXA+AVF5RL1BhYJNmJFDwN6bHt48pJvnJatpBmxXTBkV2Ok9qxDyvrN8vwILPl0rTk7c5sZPNJ8+TnYZHXV17ST6CZPYLyX/lzUhpIdPujPtOoPyR8DbzXmenbwnpjUuzGgj4xJpLn4UwX9GC1Hr67Vo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D0BNN4bv; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D0BNN4bv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D69DC4CEF1;
-	Tue, 21 Oct 2025 13:09:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761052191;
-	bh=H7UgwUYXbmCQ0jWM81jD1014fDBSOlu/wN7/eync+l8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=D0BNN4bv0f2bxHTh/+Nw5MNWVpFs/tQMMePND99gLOmnI0NT3sCkhUKwGW+t4YPJH
-	 hZxzQX/M2vfwhm82SiZp/NNrc9v/0+zip5dAUoBT+IFspML+LLlpWy4SAzOAV3KQrV
-	 lH3bhwZyVYkVak5I/n29kivKEpVz9lmKMS/YEw2pv7kB004pduoQd9/OpTz4Q6s4rt
-	 RYTmObHjwfYDi9vtkBhiuZmHyQF5GHxpqhG/E9pu5FLL4iKBk4ozH8VpRO9HaiGHWb
-	 UxeJTM2Iu+UcAxf7miIVbDtU8CAnNRG21EVRX6ejjt2wb8iUy7aVLNFlCMgg4tvHQ9
-	 FuMhBhxywkORg==
-Date: Tue, 21 Oct 2025 15:09:39 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: Jeff Layton <jlayton@kernel.org>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Chuck Lever <chuck.lever@oracle.com>, 
-	Alexander Aring <alex.aring@gmail.com>, Trond Myklebust <trondmy@kernel.org>, 
-	Anna Schumaker <anna@kernel.org>, Steve French <sfrench@samba.org>, 
-	Paulo Alcantara <pc@manguebit.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, 
-	Shyam Prasad N <sprasad@microsoft.com>, Tom Talpey <tom@talpey.com>, 
-	Bharath SM <bharathsm@microsoft.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
-	David Howells <dhowells@redhat.com>, Tyler Hicks <code@tyhicks.com>, NeilBrown <neil@brown.name>, 
-	Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
-	Amir Goldstein <amir73il@gmail.com>, Namjae Jeon <linkinjeon@kernel.org>, 
-	Steve French <smfrench@gmail.com>, Sergey Senozhatsky <senozhatsky@chromium.org>, 
-	Carlos Maiolino <cem@kernel.org>, Kuniyuki Iwashima <kuniyu@google.com>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
-	linux-cifs@vger.kernel.org, samba-technical@lists.samba.org, netfs@lists.linux.dev, 
-	ecryptfs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	netdev@vger.kernel.org
-Subject: Re: [PATCH v2 00/11] vfs: recall-only directory delegations for knfsd
-Message-ID: <20251021-meditation-bahnverbindung-7c1d2aa25415@brauner>
-References: <20251017-dir-deleg-ro-v2-0-8c8f6dd23c8b@kernel.org>
+	s=arc-20240116; t=1761056308; c=relaxed/simple;
+	bh=LQUDubAxNlBpo6nL0gD99oWkAH2nSKqO92JP2fS5ziw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iW6/ykBfAr3BypyJ0Xhdvjm7Rpgr1TErrn7ZXQf6Zgqc0qOny0bkXBHS/+Ua7SDVJKgf27M7l3swMRMvjmb9uzYlzhxc5WhUMIKZomnjXc4rDV5TyIuDiYZfHu3coZ5ToaHbKFl8p/A4vtSj/cP9mlt3crD8/dN12xbmmPSaku4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
+Received: from mx0.herbolt.com (localhost [127.0.0.1])
+	by mx0.herbolt.com (Postfix) with ESMTP id 7B9C5180F2C0;
+	Tue, 21 Oct 2025 16:18:10 +0200 (CEST)
+Received: from trufa.intra.herbolt.com.com ([172.168.31.30])
+	by mx0.herbolt.com with ESMTPSA
+	id 24M5EyKW92ioeRoAKEJqOA
+	(envelope-from <lukas@herbolt.com>); Tue, 21 Oct 2025 16:18:10 +0200
+From: Lukas Herbolt <lukas@herbolt.com>
+To: djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	Lukas Herbolt <lukas@herbolt.com>
+Subject: [PATCH 0/2] Add FL_WRITE_ZEROES to XFS, fix krealloc on xfs_uuid_table
+Date: Tue, 21 Oct 2025 16:17:42 +0200
+Message-ID: <20251021141744.1375627-1-lukas@herbolt.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20251017-dir-deleg-ro-v2-0-8c8f6dd23c8b@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 17, 2025 at 07:31:52AM -0400, Jeff Layton wrote:
-> A smaller variation of the v1 patchset that I posted earlier this week.
-> Neil's review inspired me to get rid of the lm_may_setlease operation
-> and to do the conflict resolution internally inside of nfsd. That means
-> a smaller VFS-layer change, and an overall reduction in code.
-> 
-> This patchset adds support for directory delegations to nfsd. This
-> version only supports recallable delegations. There is no CB_NOTIFY
-> support yet. I have patches for those, but we've decided to add that
-> support in a later kernel once we get some experience with this part.
-> Anna is working on the client-side pieces.
-> 
-> It would be great if we could get into linux-next soon so that it can be
-> merged for v6.19. Christian, could you pick up the vfs/filelock patches,
-> and Chuck pick up the nfsd patches?
+[PATCH 1/2] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
+the unmap write zeroes operation.
 
-Happy to! Sorry, for the late reply. I was out for a few days.
+Inspired by the Ext4 implementation of the FALLOC_FL_WRITE_ZEROES. It
+can speed up some patterns on specific hardware.
+
+time ( ./fallocate -l 360M /mnt/test.file; dd if=/dev/zero of=/mnt/test \
+bs=1M count=360 conv=notrunc,nocreat oflag=direct,dsync)
+
+360+0 records in
+360+0 records out
+377487360 bytes (377 MB, 360 MiB) copied, 22.0027 s, 17.2 MB/s
+
+real    0m22.114s
+user    0m0.006s
+sys     0m3.085s
+
+time (./fallocate -wl 360M /mnt/test.file; dd if=/dev/zero of=/mnt/test \
+bs=1M count=360 conv=notrunc,nocreat oflag=direct,dsync );
+360+0 records in
+360+0 records out
+377487360 bytes (377 MB, 360 MiB) copied, 2.02512 s, 186 MB/s
+
+real    0m6.384s
+user    0m0.002s
+sys     0m5.823s
+
+v2 changes:
+use xfs_inode_buftarg to determine if the underlying device supports unmap 
+write zeroes
+v1 patch: 
+https://lore.kernel.org/linux-xfs/20251002122823.1875398-2-lukas@herbolt.com/
+
+[PATCH 2/2] xfs: Remove WARN_ONCE if xfs_uuid_table grows over 2x PAGE_SIZE.
+Currently using krealloc prints warning if the order is 2x PAGE_SIZE on 
+x86_64 it's being trigered when we mount 511 XFS. Use kvrealloc instead.
+
+Lukas Herbolt (2):
+  xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+  xfs: Remove WARN_ONCE if xfs_uuid_table grows over 2x PAGE_SIZE.
+
+ fs/xfs/xfs_bmap_util.c |  6 +++---
+ fs/xfs/xfs_bmap_util.h |  4 ++--
+ fs/xfs/xfs_file.c      | 25 ++++++++++++++++++-------
+ fs/xfs/xfs_mount.c     |  2 +-
+ 4 files changed, 24 insertions(+), 13 deletions(-)
+
+-- 
+2.51.0
+
