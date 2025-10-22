@@ -1,41 +1,56 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1C4A2D97B5
-	for <linux-xfs@vger.kernel.org>; Wed, 22 Oct 2025 05:00:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D7CE2D838C;
+	Wed, 22 Oct 2025 05:04:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761109207; cv=none; b=EkE5wa7yQCixpUu2VMwMUj+ihN5CjMtx7w0RyELcLcM1BY3GAnha8mcqoAAG2dnsTq9uO7PjPndLSIFFdEFE+CeZPOvZkhkVnIkfwY+47jXzfaUalss/USquTdq+DCH0F19iUc8ruhJz24JTn+zqBWN3R1ejpeq4jc1xJ1OPVec=
+	t=1761109489; cv=none; b=CPDiENiUkxfLDDJDP7xCR6AtLM9elgsYiZp0pXJDUqgG9o25XPnXs2whOJQdkaPHcBJa2XM+FBuzyjoZVFT7l3+7o4NBSzRsqZTERY5oqH8REKd4ypXa465aSQsdsESOF6rZ5hQA/l1UyGieXxANsPMgqPNr7rvxvW9QdxGCgJ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761109207; c=relaxed/simple;
-	bh=st4yPeHw1PUPV8tMNXuzuRRgomCItJRqm9w2dyi8LHI=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=d6s7hTrl3V47tuZjwtqJ6VcOQOcFI7yqtfU2gWUz6XV4HPPzCwIb7NMchbheUqZ55B09juDnc3Egw9HqdmMsXDhDv4LhbUKPJtG8fmY61f9IfOOOmYtFyADAEwjLtmvNxFJtp/sdFDq2kV/Bv5kWm23nmaaRJlXku8PMJnJWjJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=iLj9L9kN; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1761109489; c=relaxed/simple;
+	bh=jYV680jltiwzlWLpFXo6pbyAxsLr/Lqu0zWDBWyWXII=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AY8CrOkRKPtiB/SGGx6TsqRxveNbGubZV0woTP3hL4dmi8G8V3AnbCmcLWQx4UuVdk8uy0nILBm/ZTL9uBCRHpdr/NgG3G2KjVVmprWNOyFkpKCocKj7Jp6EZ1+Ly1XZ9d+nAIYmralaoYXuWpnzOfutikwZGVkhlu3z2kNZ73A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Hi06oMy7; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iLj9L9kN"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Hi06oMy7"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding
-	:Content-ID:Content-Description:References;
-	bh=A5fEZ5d+ews0iqfzUoX8WWQSeRkw7n53JMFf7KRM1l0=; b=iLj9L9kNTC720QUlRmPhqFMaEx
-	N2dOOemE7dJbT54QpDAF+4bQtcXD182coBrrzcuu5p+T2PH9V0e/a9hb8KIcSNnP8lodospKStiFt
-	EvEte9kipvi0F8Y+ZHLrwg7CFz+AFaWl6eGtmXtVZAPeoOaXb6JBMNcaF5jmocJqHW0Xmd9gbabQa
-	ioEfkCY8ALvgIXwTSxpdA/5a3WdkCZCmphZy9l7i7rYoFgfUvNUAUsxeA4g7AgLqp9jDXPYm3wxwF
-	+Kf4IWl0ufDYS9mbLbxZsztrZinirUoF6CYvby1yqkEtdMpzfijajm3Dwcf4cptw2iVLkweLd1C2z
-	iASxzhyw==;
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=5Smdjdq98m6eRqqjdmVHSHPPEy9QVATBpcC35WOmW1E=; b=Hi06oMy7rNYVyki85MGbBgUyFf
+	GVNYzky2kcF5e4idbC8qUqD8qT85YSNOL2o4ywQM2lXTXlUSQssCcgO1bH2GyYFBcjT/AkVZq0E0l
+	o2A84UhxOMbekDuN0BLkPnwb8xNZ2k+O7Id+Hsc7DXbznc6UraT7kmyQYBJELJhK4Fh8ASlaSHUKy
+	oy6dSItstNbocE6ziqx1wWHL8AV0tU8LHyuyNzmI9yJamEugX04+Zrx4dKHLi7a6DKtW+G8Kr29nR
+	T2Pc6nEE9MYoAyvY2Rf0xs9N5WabpMRZX8b4bGCHmmB/1s0YxyQ2xxA0WzSE5gEXBSnZQvqZn/Ud4
+	33BxRXRA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vBQxA-00000001Udx-1DDc;
-	Wed, 22 Oct 2025 05:00:04 +0000
-Date: Tue, 21 Oct 2025 22:00:04 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Lukas Herbolt <lukas@herbolt.com>
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org,
-	Zhang Yi <yi.zhang@huawei.com>
-Subject: Re: [PATCH] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Message-ID: <aPhk1O0TBOx_fl30@infradead.org>
+	id 1vBR1j-00000001UyY-0yaJ;
+	Wed, 22 Oct 2025 05:04:47 +0000
+Date: Tue, 21 Oct 2025 22:04:47 -0700
+From: "hch@infradead.org" <hch@infradead.org>
+To: Qu Wenruo <quwenruo.btrfs@gmx.com>
+Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+	WenRuo Qu <wqu@suse.com>, "hch@infradead.org" <hch@infradead.org>,
+	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+	"djwong@kernel.org" <djwong@kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-mm@kvack.org" <linux-mm@kvack.org>,
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+	"jack@suse.com" <jack@suse.com>
+Subject: Re: O_DIRECT vs BLK_FEAT_STABLE_WRITES, was Re: [PATCH] btrfs: never
+ trust the bio from direct IO
+Message-ID: <aPhl7wvyZ8b7cnLw@infradead.org>
+References: <aPYIS5rDfXhNNDHP@infradead.org>
+ <b91eb17a-71ce-422c-99a1-c2970a015666@gmx.com>
+ <aPc6uLKJkavZ_SkM@infradead.org>
+ <4f4c468a-ac87-4f54-bc5a-d35058e42dd2@suse.com>
+ <25742d91-f82e-482e-8978-6ab2288569da@wdc.com>
+ <f13c9393-1733-4f52-a879-94cdc7a724f2@gmx.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,46 +59,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251021141744.1375627-3-lukas@herbolt.com>
+In-Reply-To: <f13c9393-1733-4f52-a879-94cdc7a724f2@gmx.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Oct 21, 2025 at 04:17:44PM +0200, Lukas Herbolt wrote:
-> Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
-> -		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
-> -				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
-> -				&nimaps);
-> +		error = xfs_bmapi_write(tp, ip, startoffset_fsb, allocatesize_fsb,
-> +				flags, 0, imapp, &nimaps);
+On Wed, Oct 22, 2025 at 12:57:51PM +1030, Qu Wenruo wrote:
+> My VM is using kvm64 CPU type, which blocks quite a lot of CPU features,
+> thus the CRC32 performance is pretty poor.
 
-Please drop the reformatting that introduces an overly long line.
+Yes, unaccelerated CRC32 is a bad idea.
 
-> -int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
-> -		xfs_off_t len);
-> +int	xfs_alloc_file_space(struct xfs_inode *ip, uint32_t flags,
-> +		xfs_off_t offset, xfs_off_t len);
+> 
+> I just tried a short hack to always make direct IO to fallback to buffered
+> IO, the nodatasum performance is the same as the bouncing page solution, so
+> the slow down is not page cache itself but really the checksum.
+> 
+> With CPU features all passed to the VM, the falling-back-to-buffered direct
+> IO performance is only slightly worse (10~20%) than nodatasum cases.
 
-Also normal argument order in XFS would keep the flags last, I think
-it's best to stick to that.
-
-> -	int			mode,
-> +	int				mode,
-
-Spurious whitespace changes here.
-
->  	len = round_up(offset + len, blksize) - round_down(offset, blksize);
->  	offset = round_down(offset, blksize);
-> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-> +	if (mode & FALLOC_FL_WRITE_ZEROES) {
-> +		if (!bdev_write_zeroes_unmap_sectors(xfs_inode_buftarg(ip)->bt_bdev))
-> +			return -EOPNOTSUPP;
-
-Overly long line.
-
-> +		xfs_alloc_file_space(ip, XFS_BMAPI_ZERO, offset, len);
-
-As already mentioned, missing error return.
-
-
-Also how is the interaction of FALLOC_FL_WRITE_ZEROES and
-FALLOC_FL_KEEP_SIZE defined?
+I'm a bit lost, what are the exact cases you are comparing here?
 
