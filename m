@@ -1,154 +1,74 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 662FB3191CF;
-	Wed, 22 Oct 2025 09:27:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E6DE27B331
+	for <linux-xfs@vger.kernel.org>; Wed, 22 Oct 2025 11:32:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761125247; cv=none; b=ibtHCmcIaEOJS+K6+h3nYe+FmOLnUF/3FPpbIFBaN7zcPMuBwTLn+Ooi5WlaxeEmji4K0D0E+dIH1WE9IOHo5BIItS0UaH4rtau2H5yrORzb3HGwryFjXV7IZECmiFjuFZNb4PVbsfWURsUVxOsPITpo603sQ8gsmIzBNZWOe2A=
+	t=1761132771; cv=none; b=t6aMAvdoUIHdoRtbmEqePW1yXZ+7CqPsPnhF5fD9JzvIQem3DW+eEW39HbuBv52JevJaN2zsRr66neYuF+gBCwnPI1do09iaTFmKkGmL0xkFIp3yHmX8/sdaLzZ9aIaxJlziiB4of5oYQ8Y/r8WP+p+hk/UoVDqWbgo+4hkgnhU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761125247; c=relaxed/simple;
-	bh=UJ7WgDSrO56YuuAiFpac+GAPS0XdspQuJA+hHjmZgP0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lAtsIaS3+sEPcKKQr5+hxIAJq1UWiIbYJFfTtNhhOp2tnyv4F/3oU265TAVxvLHRtewu14Om5I3bLQyCHoVYt5Ha8aHWTnSmR/4eVWX0f8iLHJoSIHIs4lh8sfB1K/iZJxqagBaxTFYeQgsFmSpgL0jWLO2ILTnqs8EC9YaiOWA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=e+c5DiHC; arc=none smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1761132771; c=relaxed/simple;
+	bh=5gX6ShjUQTX5v5Mrjp/0VSzAvQbj1SOJ0ustv3xkEuk=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=uPGWOGQv6f+2Vrt1bHx0LP+fiHQ6DJs2aguHz/x4z2PuxGt5PeIbTKC9c2Z9Z2PlNKw5u7pgRqY9EPmGbAEz/pZlLB4QuqQcn8nVcZyaeoODSNHegvFmb1mp8HPmS59ABvew2sI7yBCakdmwg9mphCSQpGrFRnKISATh8EGDwNw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NrUfOOqz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="e+c5DiHC"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1761125245; x=1792661245;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=UJ7WgDSrO56YuuAiFpac+GAPS0XdspQuJA+hHjmZgP0=;
-  b=e+c5DiHCp7QMbBTQtF4a4I5Rf5QVAN6l+jnhz7Szj44sPBBOeX1DTt8x
-   7zAed4dYgEXhE8trKikUE5vwnEdWOYzhYurLE49sjPrNTH6TbApuJfwT+
-   Xud72t/rJpogANyw6BQd2S7OwRVLtld4cODfPgNysLpYJ2n28ZOeDTtli
-   lQHymofFPPZJNLDXZvJST4hTfidiF33ZOZUjkOBufFh+bhsZkIpxtXx9D
-   /qF10hlJNmDPfYhBqp7zsJoEt1QKSXR8CBbyCYq3RyoxLxbfGEpQ7muH9
-   rnBPZ+84uhmHg71wCan+p5/+7p2MhVH42ur+w3M8dYneBaEth+mqsf6bw
-   w==;
-X-CSE-ConnectionGUID: r9bknrZeQg26Unoq1pnClA==
-X-CSE-MsgGUID: B64w/X/sSyqJIvVc/jbLhA==
-X-IronPort-AV: E=Sophos;i="6.19,246,1754928000"; 
-   d="scan'208";a="133356607"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Oct 2025 17:27:24 +0800
-IronPort-SDR: 68f8a37c_T2FoykO3MEYOe5brwoSVXV0bwpr+21Dd+Hmkeo/lfPaV9IN
- du9w4PU57QLMRKLdUJS3M/XqA3Y4aNyHxODEeAQ==
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Oct 2025 02:27:25 -0700
-WDCIronportException: Internal
-Received: from unknown (HELO neo.wdc.com) ([10.224.28.49])
-  by uls-op-cesaip02.wdc.com with ESMTP; 22 Oct 2025 02:27:20 -0700
-From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-To: Zorro Lang <zlang@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-	fstests@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>,
-	Anand Jain <anand.jain@oracle.com>,
-	linux-btrfs@vger.kernel.org,
-	Hans Holmberg <Hans.Holmberg@wdc.com>,
-	linux-xfs@vger.kernel.org,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-	Carlos Maiolino <cmaiolino@redhat.com>,
-	Anand Jain <asj@kernel.org>
-Subject: [PATCH v7 3/3] generic: basic smoke for filesystems on zoned block devices
-Date: Wed, 22 Oct 2025 11:27:07 +0200
-Message-ID: <20251022092707.196710-4-johannes.thumshirn@wdc.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20251022092707.196710-1-johannes.thumshirn@wdc.com>
-References: <20251022092707.196710-1-johannes.thumshirn@wdc.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NrUfOOqz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27818C4CEE7
+	for <linux-xfs@vger.kernel.org>; Wed, 22 Oct 2025 11:32:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761132770;
+	bh=5gX6ShjUQTX5v5Mrjp/0VSzAvQbj1SOJ0ustv3xkEuk=;
+	h=Date:From:To:Subject:From;
+	b=NrUfOOqzVeKkMP2zT4uVnVhpTrl5kvfDDfaUwvZrQwrJrHxY6/PLI61ZRcgzQXvS4
+	 6y8j3KJJK7Hx3Z+gzxMZBMhujJcUpaMGPGnoJ2e7bkFCYr7/y53VL38KZyZkgA/8oe
+	 TkdWx3lI2xpJaJbTryiI5o/amuCZc9GoCKQeZn9Blgssu9XWI8ltVncq9TZYAxSapR
+	 gEIkuUvZkFBmcamyDUvZLTe9tTfVkk1lULrWrXIltYy3ZJmg7p9rZR0lWC+5SKXXMj
+	 sAuferO56cJQOtiVD2sQzhzJnn4DLOg54nJLvBMA2tFm9wAfRsETOAoDMLq3r8MVdo
+	 RctbjcGNpcu/Q==
+Date: Wed, 22 Oct 2025 13:32:47 +0200
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to f477af0cfa04
+Message-ID: <mqkgkexsauhpirljtasyd6c3waksmhwnh4vbbkmaiu54mn724i@upcogtyldmgq>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Add a basic smoke test for filesystems that support running on zoned
-block devices.
+Hi folks,
 
-It creates a zloop device with 2 conventional and 62 sequential zones,
-mounts it and then runs fsx on it.
+The for-next branch of the xfs-linux repository at:
 
-Currently this tests supports BTRFS, F2FS and XFS.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Anand Jain <asj@kernel.org>
-Reviewed-by: Naohiro Aota <naohiro.aota@wdc.com>
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- tests/generic/772     | 43 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/772.out |  2 ++
- 2 files changed, 45 insertions(+)
- create mode 100755 tests/generic/772
- create mode 100644 tests/generic/772.out
+has just been updated.
 
-diff --git a/tests/generic/772 b/tests/generic/772
-new file mode 100755
-index 00000000..f9840cba
---- /dev/null
-+++ b/tests/generic/772
-@@ -0,0 +1,43 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2025 Wesgtern Digital Corporation.  All Rights Reserved.
-+#
-+# FS QA Test 772
-+#
-+# Smoke test for FSes with ZBD support on zloop
-+#
-+. ./common/preamble
-+. ./common/zoned
-+
-+_begin_fstest auto zone quick
-+
-+_cleanup()
-+{
-+	_destroy_zloop $zloop
-+}
-+
-+# Modify as appropriate.
-+_require_scratch_size $((16 * 1024 * 1024)) #kB
-+_require_block_device $SCRATCH_DEV
-+_require_zloop
-+
-+_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount
-+
-+mnt="$SCRATCH_MNT/mnt"
-+zloopdir="$SCRATCH_MNT/zloop"
-+
-+mkdir -p $mnt
-+zloop=$(_create_zloop $zloopdir 256 2)
-+
-+_try_mkfs_dev $zloop >> $seqres.full 2>&1 ||\
-+	_notrun "cannot mkfs zoned filesystem"
-+_mount $zloop $mnt
-+
-+$FSX_PROG -q -N 20000 $FSX_AVOID "$mnt/fsx" >> $seqres.full
-+
-+umount $mnt
-+
-+echo Silence is golden
-+# success, all done
-+_exit 0
-diff --git a/tests/generic/772.out b/tests/generic/772.out
-new file mode 100644
-index 00000000..98c13968
---- /dev/null
-+++ b/tests/generic/772.out
-@@ -0,0 +1,2 @@
-+QA output created by 772
-+Silence is golden
--- 
-2.51.0
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
+The new head of the for-next branch is commit:
+
+f477af0cfa04 xfs: fix locking in xchk_nlinks_collect_dir
+
+4 new commits:
+
+Darrick J. Wong (4):
+      [bd721ec7dedc] xfs: don't set bt_nr_sectors to a negative number
+      [630785bfbe12] xfs: always warn about deprecated mount options
+      [3e7ec343f066] xfs: loudly complain about defunct mount options
+      [f477af0cfa04] xfs: fix locking in xchk_nlinks_collect_dir
+
+Code Diffstat:
+
+ fs/xfs/scrub/nlinks.c | 34 +++++++++++++++++++++++++++++++---
+ fs/xfs/xfs_buf.c      |  2 +-
+ fs/xfs/xfs_buf.h      |  1 +
+ fs/xfs/xfs_super.c    | 45 +++++++++++++++++++++++++++++++++++----------
+ 4 files changed, 68 insertions(+), 14 deletions(-)
