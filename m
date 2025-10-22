@@ -1,118 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DA992376E0;
-	Wed, 22 Oct 2025 17:27:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C28FE2701BB;
+	Wed, 22 Oct 2025 18:38:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761154076; cv=none; b=ChXd6YiPecxeQ9Qdzmkwf9UCEPSgG3BKqb6r6yf/xoAxE7Z1YCish+BcW/+ijyC7P1NCawlttJpf3VVuz0azEasqAeNvCu/CXgEYcYrsHIEYcxdrqYYc8BaHHwOoH7XyJkhfq+ewpg2HegvnoS0IuD/eOqng6KlPw0uMxHCvAVw=
+	t=1761158306; cv=none; b=kr6gcfVXkTlXSiAcb9dUmoQXkbtJjRkUvrNuodBxPd41kkYxWeqt9azE2ZulPqSW4ew7gIikt+Ym+xJ5IPC+kVPvlTlfYLDoNLn2aN1M4FQv+B7rAlo4EFjsvB8N5vYEmD92Y0F9KjBXLyFGIKHpcVutq6LMP3MHJNrPJYF45Wg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761154076; c=relaxed/simple;
-	bh=SQj22qzynJhYarLtKbyP0xB2U24cV0fTGmS7dLTs6co=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=h0FkCOVwuELAlyyBgSCGRB4F3olWuSpq+Fdd/AkeNUg74EO6B7zCMltP8DOKF4sdl+ZSOIcXfQ/2sw2EsvJHweuwcN9I3MFnx0lNBlVBjqcN/RvEX7RJDn0wFStoVXcIWy8jpR6yGQ+CN+Ob2J4jKhe/Dh2kYQmXx/Pxbf5gUf4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gViJWMvD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761158306; c=relaxed/simple;
+	bh=RqQlQORqCXLRUiL3vVHJ9CCKwIACu95r35ar8HrBFHk=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=n0oOToetuwHg0erVYkS+Uhrf3QwwFPs5V5l3jYUPTLN0BrJCqxZ4XPsAIAiUI++677z5+ZYU95wy3d8KUEoq+SHDutMkQYvH+u21/c+BSOJuBT28Dh/d80vl4vE7V92jd48KC15KuZ02RnEchuK0hSZ7xl2nDhD0CW4fbBzDkNY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=xdxcVq5i; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gViJWMvD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2704C4CEE7;
-	Wed, 22 Oct 2025 17:27:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761154076;
-	bh=SQj22qzynJhYarLtKbyP0xB2U24cV0fTGmS7dLTs6co=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gViJWMvDlzzk5anCzK4GH61YVcs7I5AxHppiUl4wEHeaoGn7OKO4cV1MndKo4G5Yl
-	 zcA8/lXHdI2SFN9zjsPjx8SX6cOaidsr+0hjIYC9EPlQ1GbxKA4mk2oGcut3gdrZMm
-	 +Rc9shVJSK4HzJU+ScwC5BsJopiirtZUiBgyurrkmiOfvu7BMNLbA+i68C/iDuGC7v
-	 W3q8rphsjh7QLuXuprGqqMNG5iPMTSYL2cGaODzC5kYweyHyXoVCtgSGZfv3fHXmms
-	 ELWfV6U/YLmJXkV7bZiQ4LMhGD9hUAAwmahvkfREKgLOBhWuJOL79uRIciGVDNV2s6
-	 yOUW+lfGB35Xg==
-Date: Wed, 22 Oct 2025 13:27:54 -0400
-From: Mike Snitzer <snitzer@kernel.org>
-To: Chuck Lever <cel@kernel.org>
-Cc: NeilBrown <neil@brown.name>, Jeff Layton <jlayton@kernel.org>,
-	Olga Kornievskaia <okorniev@redhat.com>,
-	Dai Ngo <dai.ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
-	linux-nfs@vger.kernel.org, Chuck Lever <chuck.lever@oracle.com>,
-	linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
-	honza@suse.de
-Subject: Re: [RFC PATCH] NFSD: Make FILE_SYNC WRITEs comply with spec
-Message-ID: <aPkUGpuBfz_E0gGu@kernel.org>
-References: <20251022162237.26727-1-cel@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="xdxcVq5i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD5A1C4CEE7;
+	Wed, 22 Oct 2025 18:38:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+	s=korg; t=1761158306;
+	bh=RqQlQORqCXLRUiL3vVHJ9CCKwIACu95r35ar8HrBFHk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=xdxcVq5ibAI/IsUG0H8rVpGBwxOnQMNU7VqKSG7xATvkS/+qPe3WUCQBIASqQ0H0T
+	 w/9dnj+Iidsy4zJM9DUPzjdnpM+mqQ4BLeH0R3gkfB4+Kv6DvvWJmiWOvYGneKiyq3
+	 JG5YgmHEHV4rOSDrvoIt293Mfutg55DryndAMF3E=
+Date: Wed, 22 Oct 2025 11:38:25 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Carlos
+ Maiolino <cem@kernel.org>, willy@infradead.org, dlemoal@kernel.org,
+ hans.holmberg@wdc.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Subject: Re: allow file systems to increase the minimum writeback chunk size
+ v2
+Message-Id: <20251022113825.f9d0a2f3143929f9e1f2967d@linux-foundation.org>
+In-Reply-To: <20251022053434.GA3729@lst.de>
+References: <20251017034611.651385-1-hch@lst.de>
+	<20251022053434.GA3729@lst.de>
+X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251022162237.26727-1-cel@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Wed, Oct 22, 2025 at 12:22:37PM -0400, Chuck Lever wrote:
-> From: Chuck Lever <chuck.lever@oracle.com>
-> 
-> Mike noted that when NFSD responds to an NFS_FILE_SYNC WRITE, it
-> does not also persist file time stamps. To wit, Section 18.32.3
-> of RFC 8881 mandates:
-> 
-> > The client specifies with the stable parameter the method of how
-> > the data is to be processed by the server. If stable is
-> > FILE_SYNC4, the server MUST commit the data written plus all file
-> > system metadata to stable storage before returning results. This
-> > corresponds to the NFSv2 protocol semantics. Any other behavior
-> > constitutes a protocol violation. If stable is DATA_SYNC4, then
-> > the server MUST commit all of the data to stable storage and
-> > enough of the metadata to retrieve the data before returning.
-> 
-> For many years, NFSD has used a "data sync only" optimization for
-> FILE_SYNC WRITEs, so file time stamps haven't been persisted as the
-> mandate above requires.
-> 
-> Reported-by: Mike Snitzer <snitzer@kernel.org>
-> Closes: https://lore.kernel.org/linux-nfs/20251018005431.3403-1-cel@kernel.org/T/#t
-> Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
-> ---
->  fs/nfsd/vfs.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> This would need to be applied to nfsd-testing before the DIRECT
-> WRITE patches. I'm guessing a Cc: stable would be needed as well.
-> 
-> diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
-> index f537a7b4ee01..2c5d38f38454 100644
-> --- a/fs/nfsd/vfs.c
-> +++ b/fs/nfsd/vfs.c
-> @@ -1315,7 +1315,8 @@ nfsd_vfs_write(struct svc_rqst *rqstp, struct svc_fh *fhp,
->  	init_sync_kiocb(&kiocb, file);
->  	kiocb.ki_pos = offset;
->  	if (stable && !fhp->fh_use_wgather)
-> -		kiocb.ki_flags |= IOCB_DSYNC;
-> +		kiocb.ki_flags |=
-> +			(stable == NFS_FILE_SYNC ? IOCB_SYNC : IOCB_DSYNC);
->  
->  	nvecs = xdr_buf_to_bvec(rqstp->rq_bvec, rqstp->rq_maxpages, payload);
->  	iov_iter_bvec(&iter, ITER_SOURCE, rqstp->rq_bvec, nvecs, *cnt);
-> -- 
-> 2.51.0
-> 
+On Wed, 22 Oct 2025 07:34:34 +0200 Christoph Hellwig <hch@lst.de> wrote:
 
-I agree with this change.  And as I just replied elsewhere, IOCB_SYNC
-doesn't cause a performance drop (at least not on modern systems with
-NVMe): https://lore.kernel.org/linux-nfs/aPkNvmXsgdNJtK_7@kernel.org/
+> Looks like everything is reviewed now, can we get this queued up
+> as it fixes nasty fragmentation for zoned XFS?
+> 
+> It seems like the most recent writeback updates went through the VFS
+> tree, although -mm has been quite common as well.
 
-Only question I have:
-does IOCB_SYNC _always_ imply IOCB_DSYNC (for VFS and all
-filesystems)?  Or should we be setting IOCB_DSYNC|IOCB_SYNC ?
+mpage, writeback, readahead, filemap, buffer.c  etc have traditionally
+been MM tree things (heck, I basically wrote them all a mere 20 years
+ago).
 
-(I took to setting both for NFSD Direct, and NFS LOCALIO sets
-both.. that was done by original LOCALIO author)
+They're transitioning to being fs things nowadays, and that makes sense
+- filesystems are the clients for this code.
 
-Basis for my question, is that there was a recent XFS performance
-improvement made by Dave Chinner, reported by Jan Kara, for
-DIO+DSYNC, see commit c91d38b57f2c4 ("xfs: rework datasync tracking
-and execution").  Will DIO + IOCB_SYNC get the benefit of DIO +
-IOCB_DSYNC relative to this XFS improvement?  I tried to review that
-but wasn't able to spend enough time on it to be convinced that to be
-the case.
+But please do keep cc'ing linux-mm and myself on this work.
 
-Mike
+> >  fs/fs-writeback.c         |   26 +++++++++-----------------
+> >  fs/super.c                |    1 +
+> >  fs/xfs/xfs_zone_alloc.c   |   28 ++++++++++++++++++++++++++--
+> >  include/linux/fs.h        |    1 +
+> >  include/linux/writeback.h |    5 +++++
+
+VFS tree, please.
