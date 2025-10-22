@@ -1,72 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C28FE2701BB;
-	Wed, 22 Oct 2025 18:38:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57FB62727F8;
+	Wed, 22 Oct 2025 23:56:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761158306; cv=none; b=kr6gcfVXkTlXSiAcb9dUmoQXkbtJjRkUvrNuodBxPd41kkYxWeqt9azE2ZulPqSW4ew7gIikt+Ym+xJ5IPC+kVPvlTlfYLDoNLn2aN1M4FQv+B7rAlo4EFjsvB8N5vYEmD92Y0F9KjBXLyFGIKHpcVutq6LMP3MHJNrPJYF45Wg=
+	t=1761177407; cv=none; b=bDEVz/KXWFPXDCM4Az1t+8HsHzNEvHufLgrC8yQx1ZhNXrtm8gQBL0UumP9NCvaf35GpOuvTWc2Jzxg4KkzNSHaudCYgMpRvtCSQlbED3OXrpUwbsXKTrB2y3+tkTMjr0dkUHT2mmj5e25SBhVpILhdRNdeAZNVExhGOf6C5ehk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761158306; c=relaxed/simple;
-	bh=RqQlQORqCXLRUiL3vVHJ9CCKwIACu95r35ar8HrBFHk=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=n0oOToetuwHg0erVYkS+Uhrf3QwwFPs5V5l3jYUPTLN0BrJCqxZ4XPsAIAiUI++677z5+ZYU95wy3d8KUEoq+SHDutMkQYvH+u21/c+BSOJuBT28Dh/d80vl4vE7V92jd48KC15KuZ02RnEchuK0hSZ7xl2nDhD0CW4fbBzDkNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=xdxcVq5i; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761177407; c=relaxed/simple;
+	bh=kaMFavPkuMtPJ7H7Wp6yDrA2mowKJ/hLpN2iLQ47Rcs=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=rUOGyXywjcCLDVhJ3PSpDbjCWvzHazD5toK1UkW4BX2A9+6K9h9rF55bSz61WjWjFyTAgeDXHZO5+Kk3aQ1+TgzTFZhVSH/HPAEh+I0N73LPNQ92bhmCSMmEb3HEJDLPumhHuhDm8T5ExXu5HM2BT1QrFS5y6AYfYL6xhgl9H0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c05rHSNN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="xdxcVq5i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD5A1C4CEE7;
-	Wed, 22 Oct 2025 18:38:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-	s=korg; t=1761158306;
-	bh=RqQlQORqCXLRUiL3vVHJ9CCKwIACu95r35ar8HrBFHk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=xdxcVq5ibAI/IsUG0H8rVpGBwxOnQMNU7VqKSG7xATvkS/+qPe3WUCQBIASqQ0H0T
-	 w/9dnj+Iidsy4zJM9DUPzjdnpM+mqQ4BLeH0R3gkfB4+Kv6DvvWJmiWOvYGneKiyq3
-	 JG5YgmHEHV4rOSDrvoIt293Mfutg55DryndAMF3E=
-Date: Wed, 22 Oct 2025 11:38:25 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Carlos
- Maiolino <cem@kernel.org>, willy@infradead.org, dlemoal@kernel.org,
- hans.holmberg@wdc.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
- linux-xfs@vger.kernel.org
-Subject: Re: allow file systems to increase the minimum writeback chunk size
- v2
-Message-Id: <20251022113825.f9d0a2f3143929f9e1f2967d@linux-foundation.org>
-In-Reply-To: <20251022053434.GA3729@lst.de>
-References: <20251017034611.651385-1-hch@lst.de>
-	<20251022053434.GA3729@lst.de>
-X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c05rHSNN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA2BCC4CEE7;
+	Wed, 22 Oct 2025 23:56:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761177407;
+	bh=kaMFavPkuMtPJ7H7Wp6yDrA2mowKJ/hLpN2iLQ47Rcs=;
+	h=Date:From:To:Cc:Subject:From;
+	b=c05rHSNNyZur4S5vFiazP5cV2LElY3oO448ge4rPTNccawZNFi9lJ6UgHca1uWZpw
+	 YJh0iXaZlMiRRnEWNeRE6hgtGmkMJTNMOHHsjdSMwvlwTlmGQHVbnlD3j92kejRFf8
+	 RQE/3OfPia7fCpE/AZy/gYQzpeCz5CMOc39MV4Q5j1UlwCPGrAG2u4WPavNqsWKviK
+	 jz8Y4NaYpXa/X1UmGlssoy2fiB5HeSMyZYUNzjGmOTBtxJndvAHdAS4PcBWIHOJ7Xf
+	 f+m8O06SH6/TfQAhNlg4YTo9W839rW1G0L4uPd3RUQBEMa7UfSU4BEsrlH44lhxBbl
+	 Yxa6xWoF06tSw==
+Date: Wed, 22 Oct 2025 16:56:46 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>, Christoph Hellwig <hch@infradead.org>
+Cc: xfs <linux-xfs@vger.kernel.org>,
+	Chandan Babu R <chandanbabu@kernel.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	fstests <fstests@vger.kernel.org>
+Subject: [PATCHBOMB 6.19] xfs: autonomous self healing
+Message-ID: <20251022235646.GO3356773@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Wed, 22 Oct 2025 07:34:34 +0200 Christoph Hellwig <hch@lst.de> wrote:
+Hi everyone,
 
-> Looks like everything is reviewed now, can we get this queued up
-> as it fixes nasty fragmentation for zoned XFS?
-> 
-> It seems like the most recent writeback updates went through the VFS
-> tree, although -mm has been quite common as well.
+You might recall that 18 months ago I showed off an early draft of a
+patchset implementing autonomous self healing capabilities for XFS.
+The premise is quite simple -- add a few hooks to the kernel to capture
+significant filesystem metadata and file health events (pretty much all
+failures), queue these events to a special anonfd, and let userspace
+read the events at its leisure.  That's patchset 1.
 
-mpage, writeback, readahead, filemap, buffer.c  etc have traditionally
-been MM tree things (heck, I basically wrote them all a mere 20 years
-ago).
+The userspace part is more interesting, because there's a new daemon
+that opens the anonfd given the root dir of a filesystem, captures a
+file handle for the root dir, detaches from the root dir, and waits for
+metadata events.  Upon receipt of an adverse health event, it will
+reopen the root directory and initiate repairs.  I've left the prototype
+Python script in place (patchset 2) but my ultimate goal is for everyone
+to use the Rust version (patchset 3) because it's much quicker to
+respond to problems.
 
-They're transitioning to being fs things nowadays, and that makes sense
-- filesystems are the clients for this code.
+New QA tests are patchset 4.  Zorro: No need to merge this right away.
 
-But please do keep cc'ing linux-mm and myself on this work.
+This work was mostly complete by the end of 2024, and I've been letting
+it run on my XFS QA testing fleets ever since then.  I am submitting
+this patchset for upstream for 6.19.  Once this is merged, the online
+fsck project will be complete.
 
-> >  fs/fs-writeback.c         |   26 +++++++++-----------------
-> >  fs/super.c                |    1 +
-> >  fs/xfs/xfs_zone_alloc.c   |   28 ++++++++++++++++++++++++++--
-> >  include/linux/fs.h        |    1 +
-> >  include/linux/writeback.h |    5 +++++
-
-VFS tree, please.
+--D
