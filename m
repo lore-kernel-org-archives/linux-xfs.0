@@ -1,74 +1,73 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E6DE27B331
-	for <linux-xfs@vger.kernel.org>; Wed, 22 Oct 2025 11:32:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1A5FCA6B;
+	Wed, 22 Oct 2025 11:32:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761132771; cv=none; b=t6aMAvdoUIHdoRtbmEqePW1yXZ+7CqPsPnhF5fD9JzvIQem3DW+eEW39HbuBv52JevJaN2zsRr66neYuF+gBCwnPI1do09iaTFmKkGmL0xkFIp3yHmX8/sdaLzZ9aIaxJlziiB4of5oYQ8Y/r8WP+p+hk/UoVDqWbgo+4hkgnhU=
+	t=1761132778; cv=none; b=BiuevrZJBzJUHWa2q2A9HpWuk9j0h2m6Dh/2+/JfmIUFWaosxpT8c7MWVPzOqBEX6pPOP4S5HCcKGULFRzlCLb643oZetuLxhf3HJgtofkY9h6ui4hb9c5fJxXST8nyic3P+8VAeDbFtur656PwBzpr6zJsB76EMliYEZ6TLxWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761132771; c=relaxed/simple;
-	bh=5gX6ShjUQTX5v5Mrjp/0VSzAvQbj1SOJ0ustv3xkEuk=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=uPGWOGQv6f+2Vrt1bHx0LP+fiHQ6DJs2aguHz/x4z2PuxGt5PeIbTKC9c2Z9Z2PlNKw5u7pgRqY9EPmGbAEz/pZlLB4QuqQcn8nVcZyaeoODSNHegvFmb1mp8HPmS59ABvew2sI7yBCakdmwg9mphCSQpGrFRnKISATh8EGDwNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NrUfOOqz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761132778; c=relaxed/simple;
+	bh=0j3aErqYStg0c4zRP+UOFNxgk15ITr7C3ltZOxxe3ZU=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=K2a0NKXmXHp7mM/+VzVxYJzaWPDNiDOo7v88+ACqJ+e5nMBldER4MdeI1wj9sCduuEuq89XfWZSRWRRjulgHibNScxBUj/DC89p0F+GKStPSpbuETmNkLUD5l7LQAFarpo/ny1gRLwUOv7CYT9I6T2XsYBp82jyW+HxAKnxeM+U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N7OLLMRm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NrUfOOqz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27818C4CEE7
-	for <linux-xfs@vger.kernel.org>; Wed, 22 Oct 2025 11:32:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N7OLLMRm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1061C4CEE7;
+	Wed, 22 Oct 2025 11:32:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761132770;
-	bh=5gX6ShjUQTX5v5Mrjp/0VSzAvQbj1SOJ0ustv3xkEuk=;
-	h=Date:From:To:Subject:From;
-	b=NrUfOOqzVeKkMP2zT4uVnVhpTrl5kvfDDfaUwvZrQwrJrHxY6/PLI61ZRcgzQXvS4
-	 6y8j3KJJK7Hx3Z+gzxMZBMhujJcUpaMGPGnoJ2e7bkFCYr7/y53VL38KZyZkgA/8oe
-	 TkdWx3lI2xpJaJbTryiI5o/amuCZc9GoCKQeZn9Blgssu9XWI8ltVncq9TZYAxSapR
-	 gEIkuUvZkFBmcamyDUvZLTe9tTfVkk1lULrWrXIltYy3ZJmg7p9rZR0lWC+5SKXXMj
-	 sAuferO56cJQOtiVD2sQzhzJnn4DLOg54nJLvBMA2tFm9wAfRsETOAoDMLq3r8MVdo
-	 RctbjcGNpcu/Q==
-Date: Wed, 22 Oct 2025 13:32:47 +0200
+	s=k20201202; t=1761132778;
+	bh=0j3aErqYStg0c4zRP+UOFNxgk15ITr7C3ltZOxxe3ZU=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=N7OLLMRmLS3CmC05BjaYai7Almvy+TlSvgwr5lS9oHaFvN87A1MX139uPqz4sTh6b
+	 uVrzA4V+VxmkB8LhK0tMtzg5hfAukq7YpoYzNM+VfaQPdjKW9AL8YvbZbAC1ACi/XF
+	 BgSB1HLlGJs9Gl4Sy7SkNYQJdHA1H2tw5Hd2rzEddKkquzXw/R2b0I7o4kHvw1Ak1K
+	 apCt5xjSgMAYyg3EZOaoU9e5jJvJSaEjOTngjR3DhmktJp3TtyZtxBJBOW2TBw0I5f
+	 QAOMQFXif5g4KmSR6PB6G52a8JXzuzpHbnTpNOwy9p95c9KqgEb50WSCWuCoOq9QId
+	 mdXtAJo6u/OVw==
 From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to f477af0cfa04
-Message-ID: <mqkgkexsauhpirljtasyd6c3waksmhwnh4vbbkmaiu54mn724i@upcogtyldmgq>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: oleksandr@natalenko.name, hch@lst.de, vbabka@suse.cz, 
+ stable@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de
+In-Reply-To: <176107133959.4152072.11526530466991879614.stgit@frogsfrogsfrogs>
+References: <176107133959.4152072.11526530466991879614.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCHSET] xfs: random fixes for 6.18
+Message-Id: <176113277643.82207.1441469219564358238.b4-ty@kernel.org>
+Date: Wed, 22 Oct 2025 13:32:56 +0200
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-Hi folks,
+On Tue, 21 Oct 2025 11:29:50 -0700, Darrick J. Wong wrote:
+> Random fixes for 6.18.
+> 
+> If you're going to start using this code, I strongly recommend pulling
+> from my git trees, which are linked below.
+> 
+> This has been running on the djcloud for months with no problems.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
+> [...]
 
-The for-next branch of the xfs-linux repository at:
+Applied to for-next, thanks!
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+[1/4] xfs: don't set bt_nr_sectors to a negative number
+      commit: bd721ec7dedcc24ced51559e42a39140b59dfd08
+[2/4] xfs: always warn about deprecated mount options
+      commit: 630785bfbe12c3ee3ebccd8b530a98d632b7e39d
+[3/4] xfs: loudly complain about defunct mount options
+      commit: 3e7ec343f066cb3b6916239680ab6ad44537b453
+[4/4] xfs: fix locking in xchk_nlinks_collect_dir
+      commit: f477af0cfa0487eddec66ffe10fd9df628ba6f52
 
-has just been updated.
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-f477af0cfa04 xfs: fix locking in xchk_nlinks_collect_dir
-
-4 new commits:
-
-Darrick J. Wong (4):
-      [bd721ec7dedc] xfs: don't set bt_nr_sectors to a negative number
-      [630785bfbe12] xfs: always warn about deprecated mount options
-      [3e7ec343f066] xfs: loudly complain about defunct mount options
-      [f477af0cfa04] xfs: fix locking in xchk_nlinks_collect_dir
-
-Code Diffstat:
-
- fs/xfs/scrub/nlinks.c | 34 +++++++++++++++++++++++++++++++---
- fs/xfs/xfs_buf.c      |  2 +-
- fs/xfs/xfs_buf.h      |  1 +
- fs/xfs/xfs_super.c    | 45 +++++++++++++++++++++++++++++++++++----------
- 4 files changed, 68 insertions(+), 14 deletions(-)
