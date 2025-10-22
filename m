@@ -1,40 +1,37 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E40991E5B68;
-	Wed, 22 Oct 2025 04:28:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9031C1DF252;
+	Wed, 22 Oct 2025 04:32:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761107340; cv=none; b=cbq9spTjMwRjbCDAL1iIpYuncCVzA7d2TvphP9g2FQv382rQ7YkRumIh9Hx0bpL8igIodmxrU5b4j5C60V1jYyGZxx0ytJneUbVwIPIPApUw2ZHkmOPfFdaRvo2IW4QeCqITklMW2kptJOZFveHuOVij/klME8dgvGFHvmBorj4=
+	t=1761107554; cv=none; b=gtPY595ngPidpcXQE8tNg6XyLrXjfFVyRxwfgYuTzGCjmV+dn73tDMSLU6Tu9gPy+iO0f3IZdysTvM/vBA6LdOvtogVWAxFcl8dYPJib7eZQTK747tkD0tpU4d+b/BM5F1vZjJ42tolA6IEapygqkUMNK2VmiVUKuYtiMVxonzU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761107340; c=relaxed/simple;
-	bh=cw20ikKdXwmFw8RfpjPp+SeOWPkF2gJOHgkDT89ikyw=;
+	s=arc-20240116; t=1761107554; c=relaxed/simple;
+	bh=saVwz+KhFex0Y4QpEcot6u4UOspVXV/nqJ39ZKC2ie8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TY2B8TXGAva0qaB0sXwZ8/jqFGyDfc1bksS95zoC4anlUSOVWJ8a6ydVIeX1I0zuP0bOBoI50d243d58j+k8F68oxLxZyhDKE9J3CjjnLWhDOddcAwBzedasBPhIGeW+YRPQmFDbajb4iXiynNi4DL7vV5ckwSyuJcq0FMs+OOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HWZWx2HF; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HWZWx2HF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CE6FC4CEE7;
-	Wed, 22 Oct 2025 04:28:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761107339;
-	bh=cw20ikKdXwmFw8RfpjPp+SeOWPkF2gJOHgkDT89ikyw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HWZWx2HF27CjWoVZFCvz6XHYDdGaNyw4igbixFE+8yt3Rqkh/Q/Tg0hqCydU+3iFE
-	 VMdt4wWkhCkYcQs+2btoZl3WhQFyCwjkwZ0VtxSzFz93R0CeEnlk0ZFL0KHhrS4/G6
-	 o8k5XEJ6XqJ+7Fdk8Cbb/jh2ClI+mQ7n57yqkgaCCm4cX7utUU1fxn1vxzsQp6dwNE
-	 QgtteVNbPWZ8HORKFcy4VzizSK0hEcZV1ynkx048Ujs8NIEFE8nxKEbjTlBZwwwA7I
-	 y9JprkgI0fQ9wLkMiB2DbnSlztGfeM/G+i+8HISIIl9rodqeTRj4goovz99vkX0M8c
-	 u9NMk4ADGb0zg==
-Date: Tue, 21 Oct 2025 21:28:58 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] check: collect core dumps from systemd-coredump
-Message-ID: <20251022042858.GL3356773@frogsfrogsfrogs>
-References: <176107189031.4164152.8523735303635067534.stgit@frogsfrogsfrogs>
- <176107189073.4164152.3187672168604514761.stgit@frogsfrogsfrogs>
- <aPhcblEhs-8YXWkB@infradead.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=iFbNMqDcVwB5DYsCHodVNTbi5756UX7LFimC6snzFKFgq679lO+iKk2NXSbtuS8TPJQAO9gA4TBUPIkuzGs37jC/UlBSGwOSdZ7mhe+WLdHdbLQ0vrUeHrckWNqQYO8IwGWGi8dIZKCCHRWJv+m9hJfHt8T1xnVdOt3b+y1Z5tE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 6BF04227A88; Wed, 22 Oct 2025 06:32:21 +0200 (CEST)
+Date: Wed, 22 Oct 2025 06:32:21 +0200
+From: hch <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+	Zorro Lang <zlang@redhat.com>, hch <hch@lst.de>,
+	Naohiro Aota <Naohiro.Aota@wdc.com>,
+	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+	Hans Holmberg <Hans.Holmberg@wdc.com>,
+	"fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v5 3/3] generic: basic smoke for filesystems on zoned
+ block devices
+Message-ID: <20251022043221.GA2371@lst.de>
+References: <20251016152032.654284-1-johannes.thumshirn@wdc.com> <20251016152032.654284-4-johannes.thumshirn@wdc.com> <20251017185633.pvpapg5gq47s2vmm@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com> <0d05cde5-024b-4136-ad51-9a56361f4b51@wdc.com> <20251018140518.2xlpmmqajgaeg7xq@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com> <8253d6b9-e98b-4a05-80c0-f255ec32ee38@wdc.com> <16e539fe-b9f0-4645-b135-3930df249eab@wdc.com> <20251021144920.GH3356773@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,25 +40,14 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aPhcblEhs-8YXWkB@infradead.org>
+In-Reply-To: <20251021144920.GH3356773@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Oct 21, 2025 at 09:24:14PM -0700, Christoph Hellwig wrote:
-> On Tue, Oct 21, 2025 at 11:42:35AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > On modern RHEL (>=8) and Debian KDE systems, systemd-coredump can be
-> 
-> Only KDE?  Most of my test systems don't have any graphic
-> environment set up.
+On Tue, Oct 21, 2025 at 07:49:20AM -0700, Darrick J. Wong wrote:
+> Except for zonefs, I think you probably have to try mkfsing the zoned
+> block device to decide if the fs really works because the others all had
+> zone support added after the initial release.
 
-Non-KDE Debian doesn't bother installing systemd-coredump.  My actual
-test systems have non-graphical Debian, but then I stood up one OL10
-system for giggles and <kaboom> coredumps broke. :P
+zonefs isn't support by xfstests because it simply shows a fixed layout
+of one file per zone and thus none of the tests would work.
 
-> Anyway, the changes looks fine:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks!
-
---D
