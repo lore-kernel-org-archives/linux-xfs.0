@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 192CA4C85
-	for <linux-xfs@vger.kernel.org>; Thu, 23 Oct 2025 00:13:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51DA3A95E
+	for <linux-xfs@vger.kernel.org>; Thu, 23 Oct 2025 00:13:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761178404; cv=none; b=HmbYHwDV+X8hYNcNPiChbbEKRyFG4LG2FHU5xuA+RPjT8WP06AJcmsP6QzK6RHvsR7jNYNBk/MyHJRKEQd50NS6f8AvIXcZ7szFUzuRRvw/QYYK6bviXRKXTvW5AcOsLz1GUV2tmVaSPyBNhHWzuBvL+T+fDp16qSdn9giCcIJk=
+	t=1761178419; cv=none; b=SODaIxCJV9gbYBtHaaCqkYJT8QfdUw2wPaun3JRrZ486zj8kmXUOj+N+NjUKhTA6cKwXYQ4xJzibmEMHrHtVZPbvTJq8aUtS2+coFqJIR30R5ycSYFM7zYnt7XjcuA8wtpoF4VUe9ZjfHeHa6F1AC0eL+dbvlgg1s1FqfyVbcvs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761178404; c=relaxed/simple;
-	bh=BVaNo5us+KbskEdJPgCPXXKzB4vimB52ocSMfmq5D3U=;
+	s=arc-20240116; t=1761178419; c=relaxed/simple;
+	bh=aH5nJkvSGbw9c8e0QaAYO48hbK3WrLWaocpOKyItGZg=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ohar3KRq0pOAnf98JkstV2SxATPohyMPHzL02KfLUEAp0gCHmJNtkrUTKyNZsVTz7TV6xXlHwxzvXMOjpzicO7QEPou3LdS0f1Yr37rYFlpIQUEtspDAa5Ut8T2SHhnClkB/U6VkGKQt0bJkTvaqTV70vnDfRSAXkVhUSMFxnSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IPCgoG/e; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=bLQ9bBfJbCFgiM2KO52GL5t6FNUdxjI0FeFI1xs/AR3iAld8ALAfQPfR+rJuJQ6R9+MwF3BWKKUa0uah5UEXGsmunSbGryA5igxzRgzzh3rrKAkTFARjPdc4141hRCZf/oEai6TTLLNH2D6SFEm4R7x1ivxWHqgzQgRepqjPS3o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A/iDuWm7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IPCgoG/e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77486C4CEE7;
-	Thu, 23 Oct 2025 00:13:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A/iDuWm7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27E99C4CEE7;
+	Thu, 23 Oct 2025 00:13:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761178403;
-	bh=BVaNo5us+KbskEdJPgCPXXKzB4vimB52ocSMfmq5D3U=;
+	s=k20201202; t=1761178419;
+	bh=aH5nJkvSGbw9c8e0QaAYO48hbK3WrLWaocpOKyItGZg=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IPCgoG/eTiXtS+lKJV2z4vBTO7Yd2XMSrXrhTS97dApuG4yViXjCzbnNtoB0L6fjR
-	 mBxtNJ7n0FrpB3E+K+huTfyxVIVoi5YbYKiTGRjNcNvchjyPVJvTY2v9YJN6MGa9Vw
-	 IZEvJ2VirERRRbTDxsv+6rpdfSJ+V8J84+C6lNKEaUT5QyBhp/sKueytOZxLABUmZD
-	 DhseE7c/51nldQ9U9/nHIsKR2v6FzAfoOysOP2L0G+GEk9prHsjBiRHBOsH0xz5LrH
-	 1aArELyix3ShRmxv3Hngzoid1T1xdC34Wez5fUAmPMRsqfoZ3evkkDs25biDSJaVMG
-	 uX/Sg32l2EznQ==
-Date: Wed, 22 Oct 2025 17:13:23 -0700
-Subject: [PATCH 04/19] xfs_healer: define Rust objects for health events and
- kernel interface
+	b=A/iDuWm7M32MB8+Lz9VvFmG/8AtnWYMmVLqCNOfANOQj+Vt81pkkAVd+xtHK1az8g
+	 PuaRm0SK8uCeDIrSTkvdvOgxOx63ryJNmEo50ZcSlawJmjauU85NLWKfjTmMV2g29G
+	 yn8TJk7hQlTBK6YZ83uaNy4lqr4hqhKpPZSoIQ0YL8HYQSHs/5NyiBUR/mUsG+iBkN
+	 fD8rqeXvOc59+G4aN59h5eUq7VsREpal+O7adC1fl5V0lhs24hCQ8LXuiLPXcOJC34
+	 0iNyC1s2RVkWW4hn5NgO/eZp5rspSVlOLc8EMLvccivcZBg29Zx3pS+lhj6cGhac9l
+	 E4qcjHulP/j6w==
+Date: Wed, 22 Oct 2025 17:13:38 -0700
+Subject: [PATCH 05/19] xfs_healer: read binary health events from the kernel
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <176117748331.1029045.8175003068963650679.stgit@frogsfrogsfrogs>
+Message-ID: <176117748350.1029045.9165184740390705872.stgit@frogsfrogsfrogs>
 In-Reply-To: <176117748158.1029045.18328755324893036160.stgit@frogsfrogsfrogs>
 References: <176117748158.1029045.18328755324893036160.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,978 +45,435 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create our own Rust types for health events; these objects will know how
-to report themselves and (later) how to initiate repairs.  Create the
-Rust binding to the kernel ioctl interface.
+Decode binary health events objects read from the kernel into the
+corresponding Rust objects so that we can deal with the events.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- healer/Cargo.toml.in           |    2 
- healer/Makefile                |    9 +-
- healer/src/healthmon/event.rs  |   82 ++++++++++++++
- healer/src/healthmon/fs.rs     |  146 ++++++++++++++++++++++++
- healer/src/healthmon/groups.rs |  139 +++++++++++++++++++++++
- healer/src/healthmon/inodes.rs |  119 ++++++++++++++++++++
- healer/src/healthmon/mod.rs    |   14 ++
- healer/src/lib.rs              |    3 +
- healer/src/main.rs             |    5 +
- healer/src/util.rs             |   72 ++++++++++++
- healer/src/xfs_types.rs        |  240 ++++++++++++++++++++++++++++++++++++++++
- m4/package_rust.m4             |    2 
- 12 files changed, 830 insertions(+), 3 deletions(-)
- create mode 100644 healer/src/healthmon/event.rs
- create mode 100644 healer/src/healthmon/fs.rs
- create mode 100644 healer/src/healthmon/groups.rs
- create mode 100644 healer/src/healthmon/inodes.rs
- create mode 100644 healer/src/healthmon/mod.rs
- create mode 100644 healer/src/util.rs
- create mode 100644 healer/src/xfs_types.rs
+ healer/Makefile                 |    1 
+ healer/src/healthmon/cstruct.rs |  343 +++++++++++++++++++++++++++++++++++++++
+ healer/src/healthmon/mod.rs     |    1 
+ healer/src/main.rs              |   25 +++
+ 4 files changed, 369 insertions(+), 1 deletion(-)
+ create mode 100644 healer/src/healthmon/cstruct.rs
 
 
-diff --git a/healer/Cargo.toml.in b/healer/Cargo.toml.in
-index e62480ff17d58e..04e9df5c1a2a70 100644
---- a/healer/Cargo.toml.in
-+++ b/healer/Cargo.toml.in
-@@ -16,6 +16,7 @@ lto = @cargo_lto@
- [dependencies]
- clap = { version = "4.0.32", features = ["derive"] }
- anyhow = { version = "1.0.69" }
-+enumset = { version = "1.0.12" }
- 
- # XXX: Crates with major version 0 are not considered ABI-stable, so the minor
- # version is treated as if it were the major version.  This creates problems
-@@ -23,6 +24,7 @@ anyhow = { version = "1.0.69" }
- # version 0.  Until these crates reach 1.0.0, we'll have to patch when things
- # break.  Ref:
- # https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html
-+nix = { version = "0", features = ["ioctl"] }	# 0.26.1
- 
- # Dynamically comment out all the gettextrs related dependency information in
- # Cargo.toml becuse cargo requires the crate to be present so that it can
 diff --git a/healer/Makefile b/healer/Makefile
-index 407e49ad868f4d..5df3ca105e143a 100644
+index 5df3ca105e143a..c40663bcc79075 100644
 --- a/healer/Makefile
 +++ b/healer/Makefile
-@@ -19,8 +19,15 @@ HFILES = \
- RUSTFILES = \
- 	src/lib.rs \
- 	src/main.rs \
-+	src/util.rs \
+@@ -23,6 +23,7 @@ RUSTFILES = \
  	src/xfs_fs.rs \
--	src/xfsprogs.rs
-+	src/xfsprogs.rs \
-+	src/xfs_types.rs \
-+	src/healthmon/event.rs \
-+	src/healthmon/fs.rs \
-+	src/healthmon/groups.rs \
-+	src/healthmon/inodes.rs \
-+	src/healthmon/mod.rs
- 
- BUILT_RUSTFILES = \
- 	src/xfs_fs.rs \
-diff --git a/healer/src/healthmon/event.rs b/healer/src/healthmon/event.rs
+ 	src/xfsprogs.rs \
+ 	src/xfs_types.rs \
++	src/healthmon/cstruct.rs \
+ 	src/healthmon/event.rs \
+ 	src/healthmon/fs.rs \
+ 	src/healthmon/groups.rs \
+diff --git a/healer/src/healthmon/cstruct.rs b/healer/src/healthmon/cstruct.rs
 new file mode 100644
-index 00000000000000..fe15156ca9e95a
+index 00000000000000..58463b0f6fa5b9
 --- /dev/null
-+++ b/healer/src/healthmon/event.rs
-@@ -0,0 +1,82 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2025 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+use crate::display_for_enum;
-+use crate::xfsprogs::M_;
-+
-+/// Common behaviors of all health events
-+pub trait XfsHealthEvent {
-+    /// Return true if this event should always be logged
-+    fn must_log(&self) -> bool {
-+        false
-+    }
-+
-+    /// Format this event as something we can display
-+    fn format(&self) -> String;
-+}
-+
-+/// Health status for metadata events
-+#[derive(Debug)]
-+pub enum XfsHealthStatus {
-+    /// Problems have been observed at runtime
-+    Sick,
-+
-+    /// Problems have been observed by xfs_scrub
-+    Corrupt,
-+
-+    /// No problems at all
-+    Healthy,
-+}
-+
-+display_for_enum!(XfsHealthStatus, {
-+    Sick    => M_("sick"),
-+    Corrupt => M_("corrupt"),
-+    Healthy => M_("healthy"),
-+});
-+
-+/// Event for the kernel losing events due to us being slow
-+pub struct LostEvent {
-+    /// Number of events lost
-+    count: u64,
-+}
-+
-+impl LostEvent {
-+    /// Create a new lost event object
-+    pub fn new(count: u64) -> LostEvent {
-+        LostEvent { count }
-+    }
-+}
-+
-+impl XfsHealthEvent for LostEvent {
-+    fn must_log(&self) -> bool {
-+        true
-+    }
-+
-+    fn format(&self) -> String {
-+        format!("{} {}", self.count, M_("events lost"))
-+    }
-+}
-+
-+/// Event for the monitor starting up
-+pub struct RunningEvent {}
-+
-+impl XfsHealthEvent for RunningEvent {
-+    fn format(&self) -> String {
-+        M_("monitoring started")
-+    }
-+}
-+
-+/// Event for the program losing events due to unrecognized inputs
-+pub struct UnknownEvent {}
-+
-+impl XfsHealthEvent for UnknownEvent {
-+    fn must_log(&self) -> bool {
-+        true
-+    }
-+
-+    fn format(&self) -> String {
-+        M_("unrecognized event")
-+    }
-+}
-diff --git a/healer/src/healthmon/fs.rs b/healer/src/healthmon/fs.rs
-new file mode 100644
-index 00000000000000..ca50683dce7f04
---- /dev/null
-+++ b/healer/src/healthmon/fs.rs
-@@ -0,0 +1,146 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2025 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+use crate::display_for_enum;
-+use crate::healthmon::event::XfsHealthEvent;
-+use crate::healthmon::event::XfsHealthStatus;
-+use crate::util::format_set;
-+use crate::xfs_types::XfsPhysRange;
-+use crate::xfsprogs::M_;
-+use enumset::EnumSet;
-+use enumset::EnumSetType;
-+
-+/// Metadata types for an XFS whole-fs metadata
-+#[derive(EnumSetType, Debug)]
-+pub enum XfsWholeFsMetadata {
-+    FsCounters,
-+    GrpQuota,
-+    MetaDir,
-+    MetaPath,
-+    NLinks,
-+    PrjQuota,
-+    QuotaCheck,
-+    UsrQuota,
-+}
-+
-+display_for_enum!(XfsWholeFsMetadata, {
-+    FsCounters => M_("fscounters"),
-+    GrpQuota =>   M_("grpquota"),
-+    MetaDir =>    M_("metadir"),
-+    MetaPath =>   M_("metapath"),
-+    NLinks =>     M_("nlinks"),
-+    PrjQuota =>   M_("prjquota"),
-+    QuotaCheck => M_("quotacheck"),
-+    UsrQuota =>   M_("usrquota"),
-+});
-+
-+/// XFS whole-fs health event
-+#[derive(Debug)]
-+pub struct XfsWholeFsEvent {
-+    /// What is being reported on?
-+    metadata: EnumSet<XfsWholeFsMetadata>,
-+
-+    /// Reported state
-+    status: XfsHealthStatus,
-+}
-+
-+impl XfsWholeFsEvent {
-+    /// Create a new whole-fs event object
-+    pub fn new(metadata: EnumSet<XfsWholeFsMetadata>, status: XfsHealthStatus) -> XfsWholeFsEvent {
-+        XfsWholeFsEvent { metadata, status }
-+    }
-+}
-+
-+impl XfsHealthEvent for XfsWholeFsEvent {
-+    fn format(&self) -> String {
-+        format!(
-+            "{} {} {}",
-+            format_set(self.metadata),
-+            M_("status"),
-+            self.status
-+        )
-+    }
-+}
-+
-+/// Reasons for a filesystem shutdown event
-+#[derive(EnumSetType, Debug)]
-+pub enum XfsShutdownReason {
-+    CorruptIncore,
-+    CorruptOndisk,
-+    DeviceRemoved,
-+    ForceUmount,
-+    LogIoerr,
-+    MetaIoerr,
-+}
-+
-+display_for_enum!(XfsShutdownReason, {
-+    CorruptIncore => M_("in-memory state corruption"),
-+    CorruptOndisk => M_("ondisk metadata corruption"),
-+    DeviceRemoved => M_("device removed"),
-+    ForceUmount   => M_("forced unmount"),
-+    LogIoerr      => M_("log I/O error"),
-+    MetaIoerr     => M_("metadata I/O error"),
-+});
-+
-+/// XFS shutdown health event
-+#[derive(Debug)]
-+pub struct XfsShutdownEvent {
-+    /// Why did the filesystem shut down?
-+    reasons: EnumSet<XfsShutdownReason>,
-+}
-+
-+impl XfsShutdownEvent {
-+    /// Create a new whole-fs event object
-+    pub fn new(reasons: EnumSet<XfsShutdownReason>) -> XfsShutdownEvent {
-+        XfsShutdownEvent { reasons }
-+    }
-+}
-+
-+impl XfsHealthEvent for XfsShutdownEvent {
-+    fn must_log(&self) -> bool {
-+        true
-+    }
-+
-+    fn format(&self) -> String {
-+        format!(
-+            "{} {}",
-+            M_("filesystem shut down due to"),
-+            format_set(self.reasons)
-+        )
-+    }
-+}
-+
-+/// Event for the filesystem being unmounted
-+pub struct XfsUnmountEvent {}
-+
-+impl XfsHealthEvent for XfsUnmountEvent {
-+    fn must_log(&self) -> bool {
-+        true
-+    }
-+
-+    fn format(&self) -> String {
-+        M_("filesystem unmounted")
-+    }
-+}
-+
-+/// Media error event
-+#[derive(Debug)]
-+pub struct XfsMediaErrorEvent {
-+    /// Where was the media error?
-+    range: XfsPhysRange,
-+}
-+
-+impl XfsMediaErrorEvent {
-+    /// Create a new file IO error event object
-+    pub fn new(range: XfsPhysRange) -> XfsMediaErrorEvent {
-+        XfsMediaErrorEvent { range }
-+    }
-+}
-+
-+impl XfsHealthEvent for XfsMediaErrorEvent {
-+    fn format(&self) -> String {
-+        format!("{} {}", M_("media error on"), self.range)
-+    }
-+}
-diff --git a/healer/src/healthmon/groups.rs b/healer/src/healthmon/groups.rs
-new file mode 100644
-index 00000000000000..0c3719fc5099eb
---- /dev/null
-+++ b/healer/src/healthmon/groups.rs
-@@ -0,0 +1,139 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2025 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+use crate::display_for_enum;
-+use crate::healthmon::event::XfsHealthEvent;
-+use crate::healthmon::event::XfsHealthStatus;
-+use crate::util::format_set;
-+use crate::xfs_types::{XfsAgNumber, XfsRgNumber};
-+use crate::xfsprogs::M_;
-+use enumset::EnumSet;
-+use enumset::EnumSetType;
-+
-+/// Metadata types for an allocation group on the data device
-+#[derive(EnumSetType, Debug)]
-+pub enum XfsPeragMetadata {
-+    Agf,
-+    Agfl,
-+    Agi,
-+    Bnobt,
-+    Cntbt,
-+    Finobt,
-+    Inobt,
-+    Inodes,
-+    Refcountbt,
-+    Rmapbt,
-+    Super,
-+}
-+
-+display_for_enum!(XfsPeragMetadata, {
-+    Agf        => M_("agf"),
-+    Agfl       => M_("agfl"),
-+    Agi        => M_("agi"),
-+    Bnobt      => M_("bnobt"),
-+    Cntbt      => M_("cntbt"),
-+    Finobt     => M_("finobt"),
-+    Inobt      => M_("inobt"),
-+    Inodes     => M_("inodes"),
-+    Refcountbt => M_("refcountbt"),
-+    Rmapbt     => M_("rmapbt"),
-+    Super      => M_("super"),
-+});
-+
-+/// XFS perag health event
-+#[derive(Debug)]
-+pub struct XfsPeragEvent {
-+    /// Allocation group number
-+    group: XfsAgNumber,
-+
-+    /// What is being reported on?
-+    metadata: EnumSet<XfsPeragMetadata>,
-+
-+    /// Reported state
-+    status: XfsHealthStatus,
-+}
-+
-+impl XfsPeragEvent {
-+    /// Create a new perag event object
-+    pub fn new(
-+        group: XfsAgNumber,
-+        metadata: EnumSet<XfsPeragMetadata>,
-+        status: XfsHealthStatus,
-+    ) -> XfsPeragEvent {
-+        XfsPeragEvent {
-+            group,
-+            metadata,
-+            status,
-+        }
-+    }
-+}
-+
-+impl XfsHealthEvent for XfsPeragEvent {
-+    fn format(&self) -> String {
-+        format!(
-+            "{} {} {}",
-+            self.group,
-+            format_set(self.metadata),
-+            self.status
-+        )
-+    }
-+}
-+
-+/// Metadata types for an allocation group on the realtime device
-+#[derive(EnumSetType, Debug)]
-+pub enum XfsRtgroupMetadata {
-+    Bitmap,
-+    Summary,
-+    Refcountbt,
-+    Rmapbt,
-+    Super,
-+}
-+
-+display_for_enum!(XfsRtgroupMetadata, {
-+    Bitmap     => M_("bitmap"),
-+    Summary    => M_("summary"),
-+    Refcountbt => M_("refcountbt"),
-+    Rmapbt     => M_("rmapbt"),
-+    Super      => M_("super"),
-+});
-+
-+/// XFS rtgroup health event
-+#[derive(Debug)]
-+pub struct XfsRtgroupEvent {
-+    /// Allocation group number
-+    group: XfsRgNumber,
-+
-+    /// What is being reported on?
-+    metadata: EnumSet<XfsRtgroupMetadata>,
-+
-+    /// Reported state
-+    status: XfsHealthStatus,
-+}
-+
-+impl XfsRtgroupEvent {
-+    /// Create a new rtgroup event object
-+    pub fn new(
-+        group: XfsRgNumber,
-+        metadata: EnumSet<XfsRtgroupMetadata>,
-+        status: XfsHealthStatus,
-+    ) -> XfsRtgroupEvent {
-+        XfsRtgroupEvent {
-+            group,
-+            metadata,
-+            status,
-+        }
-+    }
-+}
-+
-+impl XfsHealthEvent for XfsRtgroupEvent {
-+    fn format(&self) -> String {
-+        format!(
-+            "{} {} {}",
-+            self.group,
-+            format_set(self.metadata),
-+            self.status
-+        )
-+    }
-+}
-diff --git a/healer/src/healthmon/inodes.rs b/healer/src/healthmon/inodes.rs
-new file mode 100644
-index 00000000000000..5fac02a9d9cbe7
---- /dev/null
-+++ b/healer/src/healthmon/inodes.rs
-@@ -0,0 +1,119 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2025 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+use crate::display_for_enum;
-+use crate::healthmon::event::XfsHealthEvent;
-+use crate::healthmon::event::XfsHealthStatus;
-+use crate::util::format_set;
-+use crate::xfs_types::{XfsFid, XfsFileRange};
-+use crate::xfsprogs::M_;
-+use enumset::EnumSet;
-+use enumset::EnumSetType;
-+
-+/// Metadata types for an XFS inode
-+#[derive(EnumSetType, Debug)]
-+pub enum XfsInodeMetadata {
-+    Bmapbta,
-+    Bmapbtc,
-+    Bmapbtd,
-+    Core,
-+    Directory,
-+    Dirtree,
-+    Parent,
-+    Symlink,
-+    Xattr,
-+}
-+
-+display_for_enum!(XfsInodeMetadata, {
-+    Bmapbta   => M_("attrfork"),
-+    Bmapbtc   => M_("cowfork"),
-+    Bmapbtd   => M_("datafork"),
-+    Core      => M_("core"),
-+    Directory => M_("directory"),
-+    Dirtree   => M_("dirtree"),
-+    Parent    => M_("parent"),
-+    Symlink   => M_("symlink"),
-+    Xattr     => M_("xattr"),
-+});
-+
-+/// XFS inode health event
-+#[derive(Debug)]
-+pub struct XfsInodeEvent {
-+    /// File information
-+    fid: XfsFid,
-+
-+    /// What is being reported on?
-+    metadata: EnumSet<XfsInodeMetadata>,
-+
-+    /// Reported state
-+    status: XfsHealthStatus,
-+}
-+
-+impl XfsInodeEvent {
-+    /// Create a new inode metadata event object
-+    pub fn new(
-+        fid: XfsFid,
-+        metadata: EnumSet<XfsInodeMetadata>,
-+        status: XfsHealthStatus,
-+    ) -> XfsInodeEvent {
-+        XfsInodeEvent {
-+            fid,
-+            metadata,
-+            status,
-+        }
-+    }
-+}
-+
-+impl XfsHealthEvent for XfsInodeEvent {
-+    fn format(&self) -> String {
-+        format!("{} {} {}", self.fid, format_set(self.metadata), self.status)
-+    }
-+}
-+
-+/// File I/O types
-+#[derive(Debug)]
-+pub enum XfsFileIoErrorType {
-+    Readahead,
-+    Writeback,
-+    DirectioRead,
-+    DirectioWrite,
-+}
-+
-+display_for_enum!(XfsFileIoErrorType, {
-+    Readahead     => M_("readahead"),
-+    Writeback     => M_("writeback"),
-+    DirectioRead  => M_("directio_read"),
-+    DirectioWrite => M_("directio_write"),
-+});
-+
-+/// XFS file I/O error event
-+#[derive(Debug)]
-+pub struct XfsFileIoErrorEvent {
-+    /// What file I/O went wrong?
-+    iotype: XfsFileIoErrorType,
-+
-+    /// Which file?
-+    fid: XfsFid,
-+
-+    /// Which file and where?
-+    range: XfsFileRange,
-+}
-+
-+impl XfsFileIoErrorEvent {
-+    /// Create a new file IO error event object
-+    pub fn new(
-+        iotype: XfsFileIoErrorType,
-+        fid: XfsFid,
-+        range: XfsFileRange,
-+    ) -> XfsFileIoErrorEvent {
-+        XfsFileIoErrorEvent { iotype, fid, range }
-+    }
-+}
-+
-+impl XfsHealthEvent for XfsFileIoErrorEvent {
-+    fn format(&self) -> String {
-+        format!("{} {} {}", self.fid, self.iotype, self.range)
-+    }
-+}
-diff --git a/healer/src/healthmon/mod.rs b/healer/src/healthmon/mod.rs
-new file mode 100644
-index 00000000000000..a22248398a53a7
---- /dev/null
-+++ b/healer/src/healthmon/mod.rs
-@@ -0,0 +1,14 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2025 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+use crate::xfs_fs::xfs_health_monitor;
-+use nix::ioctl_write_ptr;
-+
-+pub mod event;
-+pub mod fs;
-+pub mod groups;
-+pub mod inodes;
-+
-+ioctl_write_ptr!(xfs_ioc_health_monitor, 'X', 68, xfs_health_monitor);
-diff --git a/healer/src/lib.rs b/healer/src/lib.rs
-index 9455ed840b3ab0..e9b4795be00904 100644
---- a/healer/src/lib.rs
-+++ b/healer/src/lib.rs
-@@ -6,3 +6,6 @@
- 
- pub mod xfsprogs;
- pub mod xfs_fs;
-+pub mod xfs_types;
-+pub mod util;
-+pub mod healthmon;
-diff --git a/healer/src/main.rs b/healer/src/main.rs
-index d43640e140d46c..3908dcd23922da 100644
---- a/healer/src/main.rs
-+++ b/healer/src/main.rs
-@@ -8,6 +8,7 @@ use clap::{value_parser, Arg, ArgAction, ArgMatches, Command};
- use std::fs::File;
- use std::path::PathBuf;
- use std::process::ExitCode;
-+use xfs_healer::printlogln;
- use xfs_healer::xfsprogs;
- use xfs_healer::xfsprogs::M_;
- 
-@@ -93,12 +94,12 @@ fn main() -> ExitCode {
- 
-     let args = Cli::new();
-     if args.0.get_flag("version") {
--        println!("{} {}", M_("xfs_healer version"), xfsprogs::VERSION);
-+        printlogln!("{} {}", M_("xfs_healer version"), xfsprogs::VERSION);
-         return ExitCode::SUCCESS;
-     }
- 
-     if args.0.get_flag("debug") {
--        println!("args: {:?}", args);
-+        printlogln!("args: {:?}", args);
-     }
- 
-     let app: App = args.into();
-diff --git a/healer/src/util.rs b/healer/src/util.rs
-new file mode 100644
-index 00000000000000..bce48f83b01da0
---- /dev/null
-+++ b/healer/src/util.rs
-@@ -0,0 +1,72 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2025 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+use enumset::EnumSet;
-+use enumset::EnumSetType;
-+use std::fmt::Display;
-+
-+/// Simple macro for creating errors for badly formatted event data.  The first parameter describes
-+/// why the data is bad; the second is the target type; and the third is value provided.
-+#[macro_export]
-+macro_rules! baddata {
-+    ($message:expr , $type:tt , $value:expr) => {{
-+        match (&$message, &$value) {
-+            (message_val, value_val) => {
-+                let s = format!(
-+                    "{}: {} {} {}.",
-+                    value_val,
-+                    message_val,
-+                    $crate::xfsprogs::M_("for"),
-+                    std::any::type_name::<$type>()
-+                );
-+                std::io::Error::new(std::io::ErrorKind::InvalidData, s)
-+            }
-+        }
-+    }};
-+}
-+
-+/// Write a line to standard output and flush it.
-+#[macro_export]
-+macro_rules! printlogln {
-+    ( $($t:tt)* ) => {
-+        {
-+            use std::io::Write;
-+            let mut h = std::io::stdout().lock();
-+            write!(h, $($t)* ).unwrap();
-+            write!(h, "\n").unwrap();
-+            h.flush().unwrap();
-+        }
-+    }
-+}
-+
-+/// Boilerplate to stamp out functions to convert an enum to some sort of pretty string.
-+// XXX: This could have been a derive macro
-+#[macro_export]
-+macro_rules! display_for_enum {
-+    ($enum_type:ty , { $($a:ident => $b:expr,)+ } ) => {
-+        impl std::fmt::Display for $enum_type {
-+            /// Convert from an enum to a string
-+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-+                write!(f, "{}", match self { $(<$enum_type>::$a => $b,)+ })
-+            }
-+        }
-+    };
-+}
-+
-+/// Format an enum set into a string
-+pub fn format_set<T: EnumSetType + Display>(f: EnumSet<T>) -> String {
-+    let mut ret = "".to_string();
-+    let mut is_first = true;
-+
-+    for v in f {
-+        if !is_first {
-+            ret.push_str(", ");
-+        }
-+        is_first = false;
-+        ret.push_str(&format!("{}", v));
-+    }
-+
-+    ret
-+}
-diff --git a/healer/src/xfs_types.rs b/healer/src/xfs_types.rs
-new file mode 100644
-index 00000000000000..5ce1d73d8e9342
---- /dev/null
-+++ b/healer/src/xfs_types.rs
-@@ -0,0 +1,240 @@
++++ b/healer/src/healthmon/cstruct.rs
+@@ -0,0 +1,343 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Copyright (C) 2025 Oracle.  All Rights Reserved.
 + * Author: Darrick J. Wong <djwong@kernel.org>
 + */
 +use crate::baddata;
-+use crate::display_for_enum;
++use crate::healthmon::event::LostEvent;
++use crate::healthmon::event::RunningEvent;
++use crate::healthmon::event::UnknownEvent;
++use crate::healthmon::event::XfsHealthEvent;
++use crate::healthmon::event::XfsHealthStatus;
++use crate::healthmon::fs::XfsMediaErrorEvent;
++use crate::healthmon::fs::XfsUnmountEvent;
++use crate::healthmon::fs::{XfsShutdownEvent, XfsShutdownReason};
++use crate::healthmon::fs::{XfsWholeFsEvent, XfsWholeFsMetadata};
++use crate::healthmon::groups::{XfsPeragEvent, XfsPeragMetadata};
++use crate::healthmon::groups::{XfsRtgroupEvent, XfsRtgroupMetadata};
++use crate::healthmon::inodes::{XfsFileIoErrorEvent, XfsFileIoErrorType};
++use crate::healthmon::inodes::{XfsInodeEvent, XfsInodeMetadata};
++use crate::healthmon::xfs_ioc_health_monitor;
++use crate::xfs_fs;
++use crate::xfs_fs::xfs_health_monitor;
++use crate::xfs_fs::xfs_health_monitor_event;
++use crate::xfs_types::{XfsAgNumber, XfsRgNumber};
++use crate::xfs_types::{XfsDevice, XfsPhysRange};
++use crate::xfs_types::{XfsFid, XfsFileRange, XfsIgeneration, XfsIno, XfsIoLen, XfsPos};
 +use crate::xfsprogs::M_;
-+use anyhow::{Error, Result};
-+use std::fmt::Display;
-+use std::fmt::Formatter;
++use anyhow::{Context, Result};
++use std::fs::File;
++use std::io::BufReader;
++use std::io::ErrorKind;
++use std::io::Read;
++use std::os::fd::AsRawFd;
++use std::os::fd::FromRawFd;
++use std::path::Path;
 +
-+/// Allocation group number on the data device
-+#[derive(Debug)]
-+pub struct XfsAgNumber(u32);
-+
-+impl TryFrom<u64> for XfsAgNumber {
-+    type Error = Error;
-+
-+    fn try_from(v: u64) -> Result<Self> {
-+        if v > i32::MAX as u64 {
-+            Err(baddata!(M_("AG number too large"), Self, v).into())
-+        } else {
-+            Ok(XfsAgNumber(v as u32))
++/// Boilerplate to stamp out functions to convert a u32 mask to an enumset
++/// of the given enum type.
++macro_rules! enum_set_from_mask {
++    ($enum_type:ty , $err_msg:expr , { $($a:ident => $b:ident,)+ } ) => {
++        impl $enum_type {
++            /// Convert from a bitmask to a set of enum
++            pub fn from_mask(mask: u32) -> std::io::Result<enumset::EnumSet<$enum_type>> {
++                let mut ret = enumset::EnumSet::new();
++                let badmask = 0 |
++                $($crate::xfs_fs::$a | )+
++                0;
++                if mask & !badmask != 0 { return Err(baddata!($err_msg, $enum_type, mask)); }
++                $(if mask & $crate::xfs_fs::$a != 0 { ret |= <$enum_type>::$b; })+
++                Ok(ret)
++            }
 +        }
-+    }
++    };
 +}
 +
-+impl Display for XfsAgNumber {
-+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-+        write!(f, "{} {}", M_("agno"), self.0)
-+    }
-+}
-+
-+/// Realtime group number on the realtime device
-+#[derive(Debug)]
-+pub struct XfsRgNumber(u32);
-+
-+impl Display for XfsRgNumber {
-+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-+        write!(f, "{} {}", M_("rgno"), self.0)
-+    }
-+}
-+
-+impl TryFrom<u64> for XfsRgNumber {
-+    type Error = Error;
-+
-+    fn try_from(v: u64) -> Result<Self> {
-+        if v > i32::MAX as u64 {
-+            Err(baddata!(M_("rtgroup number too large"), Self, v).into())
-+        } else {
-+            Ok(XfsRgNumber(v as u32))
++/// Boilerplate to stamp out functions to convert a u32 field to the given enum
++/// type.
++macro_rules! enum_from_field {
++    ($enum_type:ty , { $($a:ident => $b:ident,)+ } ) => {
++        impl $enum_type {
++            /// Convert from a u32 field to an enum
++            pub fn from_value(value: u32) -> std::io::Result<$enum_type> {
++                $(if value == $crate::xfs_fs::$a { return Ok(<$enum_type>::$b); })+
++                Err(baddata!($crate::xfsprogs::M_("Unknown value"), $enum_type, value))
++            }
 +        }
++    };
++}
++
++/// Iterator object that returns health events in binary
++pub struct CStructMonitor<'a> {
++    /// health monitor fd
++    objiter: BufReader<File>,
++
++    /// path to the filesystem mountpoint
++    mountpoint: &'a Path,
++}
++
++impl CStructMonitor<'_> {
++    /// Open a health monitor for an open file on an XFS filesystem
++    pub fn try_new(fp: File, mountpoint: &Path, everything: bool) -> Result<CStructMonitor> {
++        let mut hminfo = xfs_health_monitor {
++            format: xfs_fs::XFS_HEALTH_MONITOR_FMT_CSTRUCT as u8,
++            ..Default::default()
++        };
++
++        if everything {
++            hminfo.flags |= xfs_fs::XFS_HEALTH_MONITOR_VERBOSE as u64;
++        }
++
++        // SAFETY: Trusting the kernel ioctl not to corrupt stack contents, and to return us a valid
++        // file description number.
++        let health_fp = unsafe {
++            let health_fd = xfs_ioc_health_monitor(fp.as_raw_fd(), &hminfo)?;
++            File::from_raw_fd(health_fd)
++        };
++        drop(fp);
++
++        Ok(CStructMonitor {
++            objiter: BufReader::new(health_fp),
++            mountpoint,
++        })
 +    }
 +}
 +
-+/// Disk devices
-+#[derive(Debug)]
-+pub enum XfsDevice {
-+    Data,
-+    Log,
-+    Realtime,
-+}
-+
-+display_for_enum!(XfsDevice, {
-+    Data     => M_("datadev"),
-+    Log      => M_("logdev"),
-+    Realtime => M_("rtdev"),
++enum_from_field!(XfsHealthStatus, {
++    XFS_HEALTH_MONITOR_TYPE_SICK    => Sick,
++    XFS_HEALTH_MONITOR_TYPE_CORRUPT => Corrupt,
++    XFS_HEALTH_MONITOR_TYPE_HEALTHY => Healthy,
 +});
 +
-+/// Disk address, in 512b units
-+#[derive(Debug)]
-+pub struct XfsDaddr(u64);
++enum_set_from_mask!(XfsPeragMetadata, M_("Unknown per-AG metadata"), {
++    XFS_AG_GEOM_SICK_AGF      => Agf,
++    XFS_AG_GEOM_SICK_AGFL     => Agfl,
++    XFS_AG_GEOM_SICK_AGI      => Agi,
++    XFS_AG_GEOM_SICK_BNOBT    => Bnobt,
++    XFS_AG_GEOM_SICK_CNTBT    => Cntbt,
++    XFS_AG_GEOM_SICK_FINOBT   => Finobt,
++    XFS_AG_GEOM_SICK_INOBT    => Inobt,
++    XFS_AG_GEOM_SICK_INODES   => Inodes,
++    XFS_AG_GEOM_SICK_REFCNTBT => Refcountbt,
++    XFS_AG_GEOM_SICK_RMAPBT   => Rmapbt,
++    XFS_AG_GEOM_SICK_SB       => Super,
++});
 +
-+impl Display for XfsDaddr {
-+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-+        write!(f, "{} {:#x}", M_("daddr"), self.0)
-+    }
++/// Create a per-AG health event from C structure
++fn perag_event_from_cstruct(v: xfs_health_monitor_event) -> Result<Box<dyn XfsHealthEvent>> {
++    // SAFETY: Union access checked by caller
++    let ge = unsafe { v.e.group };
++
++    Ok(Box::new(XfsPeragEvent::new(
++        XfsAgNumber::try_from(ge.gno as u64).with_context(|| M_("Reading per-AG event"))?,
++        XfsPeragMetadata::from_mask(ge.mask).with_context(|| M_("Reading per-AG event"))?,
++        XfsHealthStatus::from_value(v.type_).with_context(|| M_("Reading per-AG event"))?,
++    )))
 +}
 +
-+impl From<u64> for XfsDaddr {
-+    fn from(v: u64) -> XfsDaddr {
-+        XfsDaddr(v)
-+    }
++/// Create a rtgroup health event from C structure
++fn rtgroup_event_from_cstruct(v: xfs_health_monitor_event) -> Result<Box<dyn XfsHealthEvent>> {
++    // SAFETY: Union access checked by caller
++    let ge = unsafe { v.e.group };
++
++    Ok(Box::new(XfsRtgroupEvent::new(
++        XfsRgNumber::try_from(ge.gno as u64).with_context(|| M_("Reading rtgroup event"))?,
++        XfsRtgroupMetadata::from_mask(ge.mask).with_context(|| M_("Reading rtgroup event"))?,
++        XfsHealthStatus::from_value(v.type_).with_context(|| M_("Reading rtgroup event"))?,
++    )))
 +}
 +
-+/// Disk space length, in 512b units
-+#[derive(Debug)]
-+pub struct XfsBbcount(u64);
++enum_set_from_mask!(XfsRtgroupMetadata, M_("Unknown rtgroup metadata"), {
++    XFS_RTGROUP_GEOM_SICK_BITMAP   => Bitmap,
++    XFS_RTGROUP_GEOM_SICK_SUMMARY  => Summary,
++    XFS_RTGROUP_GEOM_SICK_REFCNTBT => Refcountbt,
++    XFS_RTGROUP_GEOM_SICK_RMAPBT   => Rmapbt,
++    XFS_RTGROUP_GEOM_SICK_SUPER    => Super,
++});
 +
-+impl Display for XfsBbcount {
-+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-+        write!(f, "{} {:#x}", M_("bbcount"), self.0)
-+    }
++enum_set_from_mask!(XfsInodeMetadata, M_("Unknown inode metadata"), {
++    XFS_BS_SICK_BMBTA          => Bmapbta,
++    XFS_BS_SICK_BMBTC          => Bmapbtc,
++    XFS_BS_SICK_BMBTD          => Bmapbtd,
++    XFS_BS_SICK_INODE          => Core,
++    XFS_BS_SICK_DIR            => Directory,
++    XFS_BS_SICK_DIRTREE        => Dirtree,
++    XFS_BS_SICK_PARENT         => Parent,
++    XFS_BS_SICK_SYMLINK        => Symlink,
++    XFS_BS_SICK_XATTR          => Xattr,
++});
++
++/// Create an inode health event from C structure
++fn inode_event_from_cstruct(v: xfs_health_monitor_event) -> Result<Box<dyn XfsHealthEvent>> {
++    // SAFETY: Union access checked by caller
++    let ie = unsafe { v.e.inode };
++
++    Ok(Box::new(XfsInodeEvent::new(
++        XfsFid {
++            ino: XfsIno::try_from(ie.ino).with_context(|| M_("Reading inode event"))?,
++            gen: XfsIgeneration::try_from(ie.gen as u64)
++                .with_context(|| M_("Reading inode event"))?,
++        },
++        XfsInodeMetadata::from_mask(ie.mask).with_context(|| M_("Reading inode event"))?,
++        XfsHealthStatus::from_value(v.type_).with_context(|| M_("Reading inode event"))?,
++    )))
 +}
 +
-+impl From<u64> for XfsBbcount {
-+    fn from(v: u64) -> XfsBbcount {
-+        XfsBbcount(v)
-+    }
++enum_from_field!(XfsFileIoErrorType, {
++    XFS_HEALTH_MONITOR_TYPE_BUFREAD  => Readahead,
++    XFS_HEALTH_MONITOR_TYPE_BUFWRITE => Writeback,
++    XFS_HEALTH_MONITOR_TYPE_DIOREAD  => DirectioRead,
++    XFS_HEALTH_MONITOR_TYPE_DIOWRITE => DirectioWrite,
++});
++
++/// Create a file I/O error event from a C struct
++fn file_io_error_event_from_cstruct(
++    v: xfs_health_monitor_event,
++) -> Result<Box<dyn XfsHealthEvent>> {
++    // SAFETY: Union access checked by caller
++    let fe = unsafe { v.e.filerange };
++
++    Ok(Box::new(XfsFileIoErrorEvent::new(
++        XfsFileIoErrorType::from_value(v.type_).with_context(|| M_("Reading file I/O event"))?,
++        XfsFid {
++            ino: XfsIno::try_from(fe.ino).with_context(|| M_("Reading file I/O event"))?,
++            gen: XfsIgeneration::try_from(fe.gen as u64)
++                .with_context(|| M_("Reading file I/O event"))?,
++        },
++        XfsFileRange {
++            pos: XfsPos::try_from(fe.pos).with_context(|| M_("Reading file I/O event"))?,
++            len: XfsIoLen::try_from(fe.len).with_context(|| M_("Reading file I/O event"))?,
++        },
++    )))
 +}
 +
-+/// Range of physical storage
-+#[derive(Debug)]
-+pub struct XfsPhysRange {
-+    /// Which device is this?
-+    pub device: XfsDevice,
++enum_set_from_mask!(XfsWholeFsMetadata, M_("Unknown whole-fs metadata"), {
++    XFS_FSOP_GEOM_SICK_COUNTERS   => FsCounters,
++    XFS_FSOP_GEOM_SICK_GQUOTA     => GrpQuota,
++    XFS_FSOP_GEOM_SICK_NLINKS     => NLinks,
++    XFS_FSOP_GEOM_SICK_PQUOTA     => PrjQuota,
++    XFS_FSOP_GEOM_SICK_QUOTACHECK => QuotaCheck,
++    XFS_FSOP_GEOM_SICK_UQUOTA     => UsrQuota,
++    XFS_FSOP_GEOM_SICK_METADIR    => MetaDir,
++    XFS_FSOP_GEOM_SICK_METAPATH   => MetaPath,
++});
 +
-+    /// Start of the range, in 512b units
-+    pub daddr: XfsDaddr,
++/// Create an whole-fs health event from a C struct
++fn wholefs_event_from_cstruct(v: xfs_health_monitor_event) -> Result<Box<dyn XfsHealthEvent>> {
++    // SAFETY: Union access checked by caller
++    let fe = unsafe { v.e.fs };
 +
-+    /// Size of the range, in 512b units
-+    pub bbcount: XfsBbcount,
++    Ok(Box::new(XfsWholeFsEvent::new(
++        XfsWholeFsMetadata::from_mask(fe.mask).with_context(|| M_("Reading whole-fs event"))?,
++        XfsHealthStatus::from_value(v.type_).with_context(|| M_("Reading whole-fs event"))?,
++    )))
 +}
 +
-+impl Display for XfsPhysRange {
-+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-+        write!(f, "{} {} {}", self.device, self.daddr, self.bbcount)
-+    }
++enum_set_from_mask!(XfsShutdownReason, M_("Unknown fs shutdown reason"), {
++    XFS_HEALTH_SHUTDOWN_META_IO_ERROR  => MetaIoerr,
++    XFS_HEALTH_SHUTDOWN_LOG_IO_ERROR   => LogIoerr,
++    XFS_HEALTH_SHUTDOWN_FORCE_UMOUNT   => ForceUmount,
++    XFS_HEALTH_SHUTDOWN_CORRUPT_INCORE => CorruptIncore,
++    XFS_HEALTH_SHUTDOWN_CORRUPT_ONDISK => CorruptOndisk,
++    XFS_HEALTH_SHUTDOWN_DEVICE_REMOVED => DeviceRemoved,
++});
++
++/// Create an shutdown event from a C struct
++fn shutdown_event_from_cstruct(v: xfs_health_monitor_event) -> Result<Box<dyn XfsHealthEvent>> {
++    // SAFETY: Union access checked by caller
++    let se = unsafe { v.e.shutdown };
++
++    Ok(Box::new(XfsShutdownEvent::new(
++        XfsShutdownReason::from_mask(se.reasons)
++            .with_context(|| M_("Reading fs shutdown event"))?,
++    )))
 +}
 +
-+/// Inode number
-+#[derive(Debug)]
-+pub struct XfsIno(u64);
++enum_from_field!(XfsDevice, {
++    XFS_HEALTH_MONITOR_DOMAIN_DATADEV => Data,
++    XFS_HEALTH_MONITOR_DOMAIN_RTDEV   => Realtime,
++    XFS_HEALTH_MONITOR_DOMAIN_LOGDEV  => Log,
++});
 +
-+impl Display for XfsIno {
-+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-+        write!(f, "{} {}", M_("ino"), self.0)
-+    }
++/// Create a media error event from a C struct
++fn media_error_event_from_cstruct(v: xfs_health_monitor_event) -> Result<Box<dyn XfsHealthEvent>> {
++    // SAFETY: Union access checked by caller
++    let me = unsafe { v.e.media };
++
++    Ok(Box::new(XfsMediaErrorEvent::new(XfsPhysRange {
++        device: XfsDevice::from_value(v.domain).with_context(|| M_("Reading media error event"))?,
++        daddr: me.daddr.into(),
++        bbcount: me.bbcount.into(),
++    })))
 +}
 +
-+impl TryFrom<u64> for XfsIno {
-+    type Error = Error;
++/// Create event for the kernel telling us that it lost an event
++fn lost_event_from_cstruct(v: xfs_health_monitor_event) -> Result<Box<dyn XfsHealthEvent>> {
++    // SAFETY: Union access checked by caller
++    let le = unsafe { v.e.lost };
 +
-+    fn try_from(v: u64) -> Result<Self> {
-+        if v > i64::MAX as u64 {
-+            Err(baddata!(M_("inode number too large"), Self, v).into())
-+        } else {
-+            Ok(XfsIno(v))
++    Ok(Box::new(LostEvent::new(le.count)))
++}
++
++impl xfs_health_monitor_event {
++    /// Return an event object that can react to a health event.
++    pub fn cook(self) -> Result<Box<dyn XfsHealthEvent>> {
++        match self.domain {
++            xfs_fs::XFS_HEALTH_MONITOR_DOMAIN_RTGROUP => rtgroup_event_from_cstruct(self),
++
++            xfs_fs::XFS_HEALTH_MONITOR_DOMAIN_AG => perag_event_from_cstruct(self),
++
++            xfs_fs::XFS_HEALTH_MONITOR_DOMAIN_INODE => inode_event_from_cstruct(self),
++
++            xfs_fs::XFS_HEALTH_MONITOR_DOMAIN_FS => wholefs_event_from_cstruct(self),
++
++            xfs_fs::XFS_HEALTH_MONITOR_DOMAIN_MOUNT => match self.type_ {
++                xfs_fs::XFS_HEALTH_MONITOR_TYPE_LOST => lost_event_from_cstruct(self),
++
++                xfs_fs::XFS_HEALTH_MONITOR_TYPE_SHUTDOWN => shutdown_event_from_cstruct(self),
++
++                xfs_fs::XFS_HEALTH_MONITOR_TYPE_UNMOUNT => Ok(Box::new(XfsUnmountEvent {})),
++
++                xfs_fs::XFS_HEALTH_MONITOR_TYPE_RUNNING => Ok(Box::new(RunningEvent {})),
++
++                _ => Ok(Box::new(UnknownEvent {})),
++            },
++
++            xfs_fs::XFS_HEALTH_MONITOR_DOMAIN_DATADEV
++            | xfs_fs::XFS_HEALTH_MONITOR_DOMAIN_LOGDEV
++            | xfs_fs::XFS_HEALTH_MONITOR_DOMAIN_RTDEV => media_error_event_from_cstruct(self),
++
++            xfs_fs::XFS_HEALTH_MONITOR_DOMAIN_FILERANGE => file_io_error_event_from_cstruct(self),
++
++            _ => Ok(Box::new(UnknownEvent {})),
 +        }
 +    }
 +}
 +
-+/// Inode generation number
-+#[derive(Debug)]
-+pub struct XfsIgeneration(u32);
++impl Iterator for CStructMonitor<'_> {
++    type Item = xfs_health_monitor_event;
 +
-+impl Display for XfsIgeneration {
-+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-+        write!(f, "{} {:#x}", M_("gen"), self.0)
++    /// Return health monitoring events
++    fn next(&mut self) -> Option<Self::Item> {
++        let sz = std::mem::size_of::<xfs_health_monitor_event>();
++        let mut buf: Vec<u8> = vec![0; sz];
++        if let Err(e) = self.objiter.read_exact(&mut buf) {
++            if e.kind() != ErrorKind::UnexpectedEof {
++                eprintln!(
++                    "{}: {}: {:#}",
++                    self.mountpoint.display(),
++                    M_("Reading event blob"),
++                    e
++                );
++            }
++            return None;
++        };
++
++        let hme: *const xfs_health_monitor_event = buf.as_ptr() as *const xfs_health_monitor_event;
++
++        // SAFETY: Copying from a Vec that we sized to fit one xfs_health_monitor_event into an
++        // object of that type.
++        let ret: xfs_health_monitor_event = unsafe { *hme };
++        Some(ret)
 +    }
 +}
-+
-+impl TryFrom<u64> for XfsIgeneration {
-+    type Error = Error;
-+
-+    fn try_from(v: u64) -> Result<Self> {
-+        if v > u32::MAX as u64 {
-+            Err(baddata!(M_("inode generation number too large"), Self, v).into())
-+        } else {
-+            Ok(XfsIgeneration(v as u32))
+diff --git a/healer/src/healthmon/mod.rs b/healer/src/healthmon/mod.rs
+index a22248398a53a7..ebafd767452349 100644
+--- a/healer/src/healthmon/mod.rs
++++ b/healer/src/healthmon/mod.rs
+@@ -6,6 +6,7 @@
+ use crate::xfs_fs::xfs_health_monitor;
+ use nix::ioctl_write_ptr;
+ 
++pub mod cstruct;
+ pub mod event;
+ pub mod fs;
+ pub mod groups;
+diff --git a/healer/src/main.rs b/healer/src/main.rs
+index 3908dcd23922da..3d4d91b17708dd 100644
+--- a/healer/src/main.rs
++++ b/healer/src/main.rs
+@@ -8,6 +8,8 @@ use clap::{value_parser, Arg, ArgAction, ArgMatches, Command};
+ use std::fs::File;
+ use std::path::PathBuf;
+ use std::process::ExitCode;
++use xfs_healer::healthmon::cstruct::CStructMonitor;
++use xfs_healer::healthmon::event::XfsHealthEvent;
+ use xfs_healer::printlogln;
+ use xfs_healer::xfsprogs;
+ use xfs_healer::xfsprogs::M_;
+@@ -70,9 +72,30 @@ impl App {
+         self.path.display().to_string()
+     }
+ 
++    /// Handle a health event that has been decoded into real objects
++    fn process_event(&self, cooked: Result<Box<dyn XfsHealthEvent>>) {
++        match cooked {
++            Err(e) => {
++                eprintln!("{}: {:#}", self.path.display(), e)
++            }
++            Ok(event) => {
++                if self.log || event.must_log() {
++                    printlogln!("{}: {}", self.path.display(), event.format());
++                }
++            }
 +        }
 +    }
-+}
 +
-+/// Miniature FID for a handle
-+#[derive(Debug)]
-+pub struct XfsFid {
-+    /// Inode number
-+    pub ino: XfsIno,
+     /// Main app method
+     fn main(&self) -> Result<ExitCode> {
+-        let _fp = File::open(&self.path).with_context(|| M_("Opening filesystem failed"))?;
++        let fp = File::open(&self.path).with_context(|| M_("Opening filesystem failed"))?;
 +
-+    /// Inode generation
-+    pub gen: XfsIgeneration,
-+}
++        let hmon = CStructMonitor::try_new(fp, &self.path, self.everything)
++            .with_context(|| M_("Opening health monitor file"))?;
 +
-+impl Display for XfsFid {
-+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-+        write!(f, "{} {}", self.ino, self.gen)
-+    }
-+}
-+
-+/// File position
-+#[derive(Debug)]
-+pub struct XfsPos(u64);
-+
-+impl Display for XfsPos {
-+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-+        write!(f, "{} {}", M_("pos"), self.0)
-+    }
-+}
-+
-+impl TryFrom<u64> for XfsPos {
-+    type Error = Error;
-+
-+    fn try_from(v: u64) -> Result<Self> {
-+        if v > i64::MAX as u64 {
-+            Err(baddata!(M_("file position too large"), Self, v).into())
-+        } else {
-+            Ok(XfsPos(v))
++        for raw_event in hmon {
++            self.process_event(raw_event.cook());
 +        }
-+    }
-+}
-+
-+/// File IO length
-+#[derive(Debug)]
-+pub struct XfsIoLen(i64);
-+
-+impl Display for XfsIoLen {
-+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-+        write!(f, "{} {}", M_("len"), self.0)
-+    }
-+}
-+
-+impl TryFrom<u64> for XfsIoLen {
-+    type Error = Error;
-+
-+    fn try_from(v: u64) -> Result<Self> {
-+        if v > i64::MAX as u64 {
-+            Err(baddata!(M_("file IO length too large"), Self, v).into())
-+        } else {
-+            Ok(XfsIoLen(v as i64))
-+        }
-+    }
-+}
-+
-+/// Range of a file's bytes
-+#[derive(Debug)]
-+pub struct XfsFileRange {
-+    /// Start of range, in bytes
-+    pub pos: XfsPos,
-+
-+    /// Length of range, in bytes
-+    pub len: XfsIoLen,
-+}
-+
-+impl Display for XfsFileRange {
-+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-+        write!(f, "{} {}", self.pos, self.len)
-+    }
-+}
-diff --git a/m4/package_rust.m4 b/m4/package_rust.m4
-index 0c25d7fba02243..4b426f968c263c 100644
---- a/m4/package_rust.m4
-+++ b/m4/package_rust.m4
-@@ -129,6 +129,8 @@ AC_DEFUN([AC_HAVE_HEALER_CRATES],
- clap = { version = "4.0.32", features = [["derive"]] }
- anyhow = { version = "1.0.69" }
- $gettext_dep
-+nix = { version = "0", features = [["ioctl"]] }		# 0.26.1
-+enumset = { version = "1.0.12" }
- ],
-     [yes], [no])
- ])
+ 
+         Ok(ExitCode::SUCCESS)
+     }
 
