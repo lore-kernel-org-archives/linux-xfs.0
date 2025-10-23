@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5C0B256D;
-	Thu, 23 Oct 2025 00:05:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 685CF8C1F
+	for <linux-xfs@vger.kernel.org>; Thu, 23 Oct 2025 00:05:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761177934; cv=none; b=LYmtcgmiGjnJQYKeALxUEOyYpcYDMnkWVej2Vb3WpuxYKDHkTFwQd0qb4F4H64ibrI9FQwA2IgBFhpHRQ9VHEmb9dGSQeaShBuGuewdHtjIFy1fq+a2ftLt4IO18PZEMHgzt3DhA1pmva05jBj5I5ttG5+FEaRcQf8t7xXyJS7k=
+	t=1761177950; cv=none; b=NTaq5I9gO3WesLxRlktvjatpsvb5pNeFMDrv1e9Dbs1N9dlHhfgpTHqq3TlvpHarpURIporAARCr2Ma6GUlI4jpGtoIZB+/tSZNcHAG6NB2Ihlhgo7FHKrIuzEIpAieo16/MBLEWxj1cQGUQ8cT7M7SBzPUht/oAVWj1AmD4DBg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761177934; c=relaxed/simple;
-	bh=ZejsmaA8niJsoC5cC5YGNuU+P3axiU6zxVq0QGSCi3Q=;
+	s=arc-20240116; t=1761177950; c=relaxed/simple;
+	bh=LjusH2PxP+GNtXvK1bhZVyveE0hQJrey2O7/Hu/DV7g=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Cqhw2cjW+EoCFwOpHGNg5+4MM2QBcNUzIQlVEHVTs6E6OP2Re3r5WU3NCsusaiX+jHK2ePnPCTg/F8d2QxEcRipQBvd9skaJ2d/qpsF2+T2JXT+7fQuUS2oSdhxwEu7JkJB0aZ/UxwDOAfGwwcU8KQCoEuHmr6TLkG7W+DGCBjs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OQmBQH8N; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=D2Acu2DnBPQrcgn1VNz6uWovtf1eVZdgZfw2fmi72LQYellSF+A52aaKxjuzuM1IsdYeYMvjqIgT0ij1KjwIHZ10yTMUz1Tq8ujIifmHpfeHu90DLB/JHed4so+iVkmNhkSE4kJT/eD282gGnjDQeq13f7dtkEf0ORTaASxx4W4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OuVD4VRT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OQmBQH8N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57946C4CEE7;
-	Thu, 23 Oct 2025 00:05:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OuVD4VRT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F134EC113D0;
+	Thu, 23 Oct 2025 00:05:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761177934;
-	bh=ZejsmaA8niJsoC5cC5YGNuU+P3axiU6zxVq0QGSCi3Q=;
+	s=k20201202; t=1761177950;
+	bh=LjusH2PxP+GNtXvK1bhZVyveE0hQJrey2O7/Hu/DV7g=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=OQmBQH8NNharL6+cHX6WWNBrhQfebK9NbWX/oAzuzqn6X5kcHCxxTM+yjjZbp6kJF
-	 uJNbsQYAzPehitg4vOyPXSJt2oOjsfLGUsX+NI7yMMIOCH8NzAS1Rnv19TV4zSdIpV
-	 j2kw3cbPyb/tdjLo+Nuiu1vDzCuL2dCksG5n1DSc0x+AX4NE6YITFmFfPNu0AX033V
-	 W0J+XqsPV2KPHyWWkGoWBrny74EQ8X1IiePRrtQpEZ/A5kOKNJbrgoSJx800RNR3x3
-	 J6Nrdj2SN702H2nGsCuLEY2RowH2hwVG5aW6sPEWg3X9NXfkYmDSOu8ZbKyYnpT8dv
-	 X3OybUYDs2ImQ==
-Date: Wed, 22 Oct 2025 17:05:33 -0700
-Subject: [PATCH 19/19] xfs: send uevents when major filesystem events happen
+	b=OuVD4VRTNRaWqUJS9gTVFNqDKBk7raU2asZhyXYb2Hu5YES8ImIoi3pjXzeB51Qs0
+	 jhT5rVyGNoTKlqrU2mpac5ytt/ilPdoM1cvH1wOKI2pqQ8T/xGD13bllcIzcYbQSzW
+	 Vr7YpxnXsWofFMT2rs9NSyoR0PiefhSUmKrXFG124qsglwPfywkHzFj0u2E8RMBSUA
+	 bzUFiPBzXW8j2PZWWJ7fczlaC+GaH7iaWrLe46V4HTWhVg8WjVUpfjG/YPNk8ZlTOV
+	 B46OM1UAWWUJVVD59BT3mpysmnPEAYJLx3bcfs7ECDvbsHblgmUhcoDc7hVnttQ3UI
+	 LZpxb3tJKbngA==
+Date: Wed, 22 Oct 2025 17:05:49 -0700
+Subject: [PATCH 01/26] xfs: create hooks for monitoring health updates
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: cem@kernel.org, djwong@kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Message-ID: <176117744915.1025409.1880802310953946111.stgit@frogsfrogsfrogs>
-In-Reply-To: <176117744372.1025409.2163337783918942983.stgit@frogsfrogsfrogs>
-References: <176117744372.1025409.2163337783918942983.stgit@frogsfrogsfrogs>
+To: djwong@kernel.org, aalbersh@kernel.org
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <176117747487.1028044.15356316210082343459.stgit@frogsfrogsfrogs>
+In-Reply-To: <176117747330.1028044.14577065342150898892.stgit@frogsfrogsfrogs>
+References: <176117747330.1028044.14577065342150898892.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,205 +45,68 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Send uevents when we mount, unmount, and shut down the filesystem, so
-that we can trigger systemd services when major events happen.
+Create hooks for monitoring health events.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_super.h |   13 +++++++
- fs/xfs/xfs_fsops.c |   18 ++++++++++
- fs/xfs/xfs_super.c |   94 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 125 insertions(+)
+ libxfs/xfs_health.h |   47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index c0e85c1e42f27d..6d428bd04a0248 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -101,4 +101,17 @@ extern struct workqueue_struct *xfs_discard_wq;
- 
- struct dentry *xfs_debugfs_mkdir(const char *name, struct dentry *parent);
- 
-+#define XFS_UEVENT_BUFLEN ( \
-+	sizeof("SID=") + sizeof_field(struct super_block, s_id) + \
-+	sizeof("UUID=") + UUID_STRING_LEN + \
-+	sizeof("META_UUID=") + UUID_STRING_LEN)
-+
-+#define XFS_UEVENT_STR_PTRS \
-+	NULL, /* sid */ \
-+	NULL, /* uuid */ \
-+	NULL /* metauuid */
-+
-+int xfs_format_uevent_strings(struct xfs_mount *mp, char *buf, ssize_t buflen,
-+		char **env);
-+
- #endif	/* __XFS_SUPER_H__ */
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 69918cd1ba1dbc..b3a01361318320 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -537,6 +537,23 @@ xfs_shutdown_hook_setup(
- # define xfs_shutdown_hook(...)		((void)0)
- #endif /* CONFIG_XFS_LIVE_HOOKS */
- 
-+static void
-+xfs_send_shutdown_uevent(
-+	struct xfs_mount	*mp)
-+{
-+	char			buf[XFS_UEVENT_BUFLEN];
-+	char			*env[] = {
-+		"TYPE=shutdown",
-+		XFS_UEVENT_STR_PTRS,
-+		NULL,
-+	};
-+	int			error;
-+
-+	error = xfs_format_uevent_strings(mp, buf, sizeof(buf), &env[2]);
-+	if (!error)
-+		kobject_uevent_env(&mp->m_kobj.kobject, KOBJ_OFFLINE, env);
-+}
-+
- /*
-  * Force a shutdown of the filesystem instantly while keeping the filesystem
-  * consistent. We don't do an unmount here; just shutdown the shop, make sure
-@@ -587,6 +604,7 @@ xfs_do_force_shutdown(
- 	}
- 
- 	trace_xfs_force_shutdown(mp, tag, flags, fname, lnnum);
-+	xfs_send_shutdown_uevent(mp);
- 
- 	xfs_alert_tag(mp, tag,
- "%s (0x%x) detected at %pS (%s:%d).  Shutting down filesystem.",
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index b6a6027b4df8d8..5137f4cb8640b8 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -53,6 +53,7 @@
- #include <linux/magic.h>
- #include <linux/fs_context.h>
- #include <linux/fs_parser.h>
-+#include <linux/uuid.h>
- 
- static const struct super_operations xfs_super_operations;
- 
-@@ -1238,12 +1239,73 @@ xfs_inodegc_free_percpu(
- 	free_percpu(mp->m_inodegc);
- }
- 
-+int
-+xfs_format_uevent_strings(
-+	struct xfs_mount	*mp,
-+	char			*buf,
-+	ssize_t			buflen,
-+	char			**env)
-+{
-+	ssize_t			written;
-+
-+	ASSERT(buflen >= XFS_UEVENT_BUFLEN);
-+
-+	written = snprintf(buf, buflen, "SID=%s", mp->m_super->s_id);
-+	if (written >= buflen)
-+		return -EINVAL;
-+
-+	*env = buf;
-+	env++;
-+	buf += written + 1;
-+	buflen -= written + 1;
-+
-+	written = snprintf(buf, buflen, "UUID=%pU", &mp->m_sb.sb_uuid);
-+	if (written >= buflen)
-+		return EINVAL;
-+
-+	*env = buf;
-+	env++;
-+	buf += written + 1;
-+	buflen -= written + 1;
-+
-+	written = snprintf(buf, buflen, "META_UUID=%pU",
-+			&mp->m_sb.sb_meta_uuid);
-+	if (written >= buflen)
-+		return EINVAL;
-+
-+	*env = buf;
-+	env++;
-+	buf += written + 1;
-+	buflen -= written + 1;
-+
-+	ASSERT(buflen >= 0);
-+	return 0;
-+}
-+
-+static void
-+xfs_send_unmount_uevent(
-+	struct xfs_mount	*mp)
-+{
-+	char			buf[XFS_UEVENT_BUFLEN];
-+	char			*env[] = {
-+		"TYPE=mount",
-+		XFS_UEVENT_STR_PTRS,
-+		NULL,
-+	};
-+	int error;
-+
-+	error = xfs_format_uevent_strings(mp, buf, sizeof(buf), &env[1]);
-+	if (!error)
-+		kobject_uevent_env(&mp->m_kobj.kobject, KOBJ_REMOVE, env);
-+}
-+
- static void
- xfs_fs_put_super(
- 	struct super_block	*sb)
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
-+	xfs_send_unmount_uevent(mp);
- 	xfs_notice(mp, "Unmounting Filesystem %pU", &mp->m_sb.sb_uuid);
- 	xfs_filestream_unmount(mp);
- 	xfs_unmountfs(mp);
-@@ -1661,6 +1723,37 @@ xfs_debugfs_mkdir(
- 	return child;
- }
+diff --git a/libxfs/xfs_health.h b/libxfs/xfs_health.h
+index b31000f7190ce5..39fef33dedc6a8 100644
+--- a/libxfs/xfs_health.h
++++ b/libxfs/xfs_health.h
+@@ -289,4 +289,51 @@ void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bulkstat *bs);
+ #define xfs_metadata_is_sick(error) \
+ 	(unlikely((error) == -EFSCORRUPTED || (error) == -EFSBADCRC))
  
 +/*
-+ * Send a uevent signalling that the mount succeeded so we can use udev rules
-+ * to start background services.
++ * Parameters for tracking health updates.  The enum below is passed as the
++ * hook function argument.
 + */
-+static void
-+xfs_send_mount_uevent(
-+	struct fs_context	*fc,
-+	struct xfs_mount	*mp)
-+{
-+	char			*source;
-+	char			buf[XFS_UEVENT_BUFLEN];
-+	char			*env[] = {
-+		"TYPE=mount",
-+		NULL, /* source */
-+		XFS_UEVENT_STR_PTRS,
-+		NULL,
-+	};
-+	int			error;
++enum xfs_health_update_type {
++	XFS_HEALTHUP_SICK = 1,	/* runtime corruption observed */
++	XFS_HEALTHUP_CORRUPT,	/* fsck reported corruption */
++	XFS_HEALTHUP_HEALTHY,	/* fsck reported healthy structure */
++	XFS_HEALTHUP_UNMOUNT,	/* filesystem is unmounting */
++};
 +
-+	source = kasprintf(GFP_KERNEL, "SOURCE=%s", fc->source);
-+	if (!source)
-+		return;
-+	env[1] = source;
++/* Where in the filesystem was the event observed? */
++enum xfs_health_update_domain {
++	XFS_HEALTHUP_FS = 1,	/* main filesystem */
++	XFS_HEALTHUP_AG,	/* allocation group */
++	XFS_HEALTHUP_INODE,	/* inode */
++	XFS_HEALTHUP_RTGROUP,	/* realtime group */
++};
 +
-+	error = xfs_format_uevent_strings(mp, buf, sizeof(buf), &env[2]);
-+	if (!error)
-+		kobject_uevent_env(&mp->m_kobj.kobject, KOBJ_ADD, env);
++struct xfs_health_update_params {
++	/* XFS_HEALTHUP_INODE */
++	xfs_ino_t			ino;
++	uint32_t			gen;
 +
-+	kfree(source);
-+}
++	/* XFS_HEALTHUP_AG/RTGROUP */
++	uint32_t			group;
 +
- static int
- xfs_fs_fill_super(
- 	struct super_block	*sb,
-@@ -1974,6 +2067,7 @@ xfs_fs_fill_super(
- 		mp->m_debugfs_uuid = NULL;
- 	}
- 
-+	xfs_send_mount_uevent(fc, mp);
- 	return 0;
- 
-  out_filestream_unmount:
++	/* XFS_SICK_* flags */
++	unsigned int			old_mask;
++	unsigned int			new_mask;
++
++	enum xfs_health_update_domain	domain;
++};
++
++#ifdef CONFIG_XFS_LIVE_HOOKS
++struct xfs_health_hook {
++	struct xfs_hook			health_hook;
++};
++
++void xfs_health_hook_disable(void);
++void xfs_health_hook_enable(void);
++
++int xfs_health_hook_add(struct xfs_mount *mp, struct xfs_health_hook *hook);
++void xfs_health_hook_del(struct xfs_mount *mp, struct xfs_health_hook *hook);
++void xfs_health_hook_setup(struct xfs_health_hook *hook, notifier_fn_t mod_fn);
++#endif /* CONFIG_XFS_LIVE_HOOKS */
++
+ #endif	/* __XFS_HEALTH_H__ */
 
