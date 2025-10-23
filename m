@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C15521C16E
-	for <linux-xfs@vger.kernel.org>; Thu, 23 Oct 2025 00:00:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5934A8528E;
+	Thu, 23 Oct 2025 00:00:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761177622; cv=none; b=JFKtOoTTStRdow/SptLbsd3J0gjaQOckDo/keiXBbgpd+bM+cxSc5qqC6NL52hduBBUKuJx75MdaqNa8353+ruT6+6t5gj7DvlaSpJm550GVdF/WXb+CGerthmptpRyzl+DSPNrvTH0CYF+ItBJDUGyfcDea3Jv30tLvkDffiP0=
+	t=1761177636; cv=none; b=At8mze+Bjt1rv6kkbWLCSQvjnw4iHeMVzgOuzIiygSEmdTlAHwAs8sF5jx24e0KHKf7/0tFALnVTww8/s1T56eVMsECeioLtOmpqqbFXZjuRn4Qat2YZMSR7MJm94vbS/L0rIUUf2IUNaYSTvrtMi1+VjAOBmH1gyogvKShIT+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761177622; c=relaxed/simple;
-	bh=P/MLUkLTU48FjAhVlhKpfZne0IhhR4+SfS1GxAD8klw=;
+	s=arc-20240116; t=1761177636; c=relaxed/simple;
+	bh=Ro9mNIV62Fp6wJCt6/AvYxCWzprkYtpGnQKGD2I5un0=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Xqqe1RYdP7gpFrh4nxPXvzAzbkFlsBsxtCTtp5zYFoJjycKpSUbYXOVEgXOeJzgWstu9n4Uwchpj8UIMy80PMo6qoPbHwepA615HORsKDw9IoQCWXoXSy8oFipL1SUBGvpY/9kC6Fbu5sau6PuifbzvDIl+KZgVBf4dP1NDzOzA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IjIRIbET; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=OndMujPG9J0+5GpVpt6XaYxD9pyrVBlArSAEDsWnrkxeYuGKpfajOBe+CQef1DTlbMa4RRiTbDac7kJJLG26QHrev8XivXVJVdF2m030mOEAuBGzwlkTPElIY1Da3FZQnkcSk37toORUgQ+iVWD5QqokatPzPE3SrCRkhnMqfEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oynsdZ9e; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IjIRIbET"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83522C4CEE7;
-	Thu, 23 Oct 2025 00:00:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oynsdZ9e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28899C4CEE7;
+	Thu, 23 Oct 2025 00:00:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761177620;
-	bh=P/MLUkLTU48FjAhVlhKpfZne0IhhR4+SfS1GxAD8klw=;
+	s=k20201202; t=1761177636;
+	bh=Ro9mNIV62Fp6wJCt6/AvYxCWzprkYtpGnQKGD2I5un0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=IjIRIbETPcdMEE8ahSSbT3ij/KhcGPacOmCq8rt2BTqXOA3BJhHghs9No/YalsWas
-	 RkroiP3NpMt1T8SubOXOKuw35zwwX8paUi93kUX3530SmXRQ1J7ZW1PrkW9yFOQzx5
-	 n4Q9uVwixz74RW44gIYPbIxRXtRD3fLq0xLAyuy407Ne0CKGCKBFCXPYnjsHzPglCo
-	 UMLCzfPIxt+UlNK8prOB+ztKB8UdSi0TNefJY1A9xMVY8ZbGnhxXtnwnOCo6qInW5b
-	 XumSQSPpCxVi0bg8xKw+dOTzeqvBcyhP9Mx6+Rf+tBrr/NGbuZeRrcj/oXUZ5hdPlL
-	 lH3YypWkq4PBg==
-Date: Wed, 22 Oct 2025 17:00:20 -0700
-Subject: [PATCHSET V2 2/2] xfsprogs: autonomous self healing of filesystems in
- Rust
+	b=oynsdZ9eOyLxg0NiHkiOinZQ9Tl8uUmLYtX6yZHol8uy1RRJvp3ROhPk1GOxUMXr6
+	 XFz+VTnYaZyq2uBd+hkyjV9vOAA2NIpqUKI7M3U1PzxZK5POkSULRZKx6mhV6x0l93
+	 YRydbXaO7xyxq/qCNmgq+VsefPCgR9GlZS9Mj2mPgqFmR4g5JMCRSOMhgGdN2PEw1p
+	 LPmFDpsq3AZLzOm0QVxtJwdeGfXijRfOEDZQYdS8LEXKjjUnV5rFwd5LplgipkdTBq
+	 RVtedL+MqS8/J6xJyDBvz+n5CWlsruRAxamchAdEOoJAy9WkPEVOn5kz2ZLwEDwy0G
+	 NJn7RWVJOQ3cw==
+Date: Wed, 22 Oct 2025 17:00:35 -0700
+Subject: [PATCHSET V2] fstests: autonomous self healing of filesystems
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <176117748158.1029045.18328755324893036160.stgit@frogsfrogsfrogs>
+To: zlang@redhat.com, djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Message-ID: <176117749414.1030150.3638956559465976455.stgit@frogsfrogsfrogs>
 In-Reply-To: <20251022235646.GO3356773@frogsfrogsfrogs>
 References: <20251022235646.GO3356773@frogsfrogsfrogs>
 Precedence: bulk
@@ -46,12 +45,8 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-The initial implementation of the self healing daemon is written in
-Python.  This was useful for rapid prototyping, but a more performant
-and typechecked codebase is valuable.  Write a second implementation in
-Rust to reduce event processing overhead and library dependence.  This
-could have been done in C, but I decided to use an environment with
-somewhat fewer footguns.
+This series adds functionality and regression tests for the automated
+self healing daemon for xfs.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -61,84 +56,73 @@ Comments and questions are, as always, welcome.
 
 --D
 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=health-monitoring
+
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-monitoring-rust
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-monitoring
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=health-monitoring
 ---
 Commits in this patchset:
- * xfs_healer: start building a Rust version
- * xfs_healer: enable gettext for localization
- * xfs_healer: bindgen xfs_fs.h
- * xfs_healer: define Rust objects for health events and kernel interface
- * xfs_healer: read binary health events from the kernel
- * xfs_healer: read json health events from the kernel
- * xfs_healer: create a weak file handle so we don't pin the mount
- * xfs_healer: fix broken filesystem metadata
- * xfs_healer: check for fs features needed for effective repairs
- * xfs_healer: use getparents to look up file names
- * xfs_healer: make the rust program check if kernel support available
- * xfs_healer: use the autofsck fsproperty to select mode
- * xfs_healer: use rc on the mountpoint instead of lifetime annotations
- * xfs_healer: use thread pools
- * xfs_healer: run full scrub after lost corruption events or targeted repair failure
- * xfs_healer: use getmntent in Rust to find moved filesystems
- * xfs_healer: validate that repair fds point to the monitored fs in Rust
- * debian/control: listify the build dependencies
- * debian/control: pull in build dependencies for xfs_healer
+ * xfs: test health monitoring code
+ * xfs: test for metadata corruption error reporting via healthmon
+ * xfs: test io error reporting via healthmon
+ * xfs: test new xfs_healer daemon
 ---
- healer/bindgen_xfs_fs.h          |    6 +
- configure.ac                     |   84 ++++++++
- debian/control                   |   30 +++
- debian/rules                     |    3 
- healer/.cargo/config.toml.system |    6 +
- healer/Cargo.toml.in             |   37 +++
- healer/Makefile                  |  143 +++++++++++++
- healer/rbindgen                  |   57 +++++
- healer/src/fsgeom.rs             |   41 ++++
- healer/src/fsprops.rs            |  101 +++++++++
- healer/src/getmntent.rs          |  117 +++++++++++
- healer/src/getparents.rs         |  210 ++++++++++++++++++++
- healer/src/healthmon/cstruct.rs  |  354 +++++++++++++++++++++++++++++++++
- healer/src/healthmon/event.rs    |  122 +++++++++++
- healer/src/healthmon/fs.rs       |  163 +++++++++++++++
- healer/src/healthmon/groups.rs   |  160 +++++++++++++++
- healer/src/healthmon/inodes.rs   |  142 +++++++++++++
- healer/src/healthmon/json.rs     |  409 ++++++++++++++++++++++++++++++++++++++
- healer/src/healthmon/mod.rs      |   47 ++++
- healer/src/healthmon/samefs.rs   |   33 +++
- healer/src/lib.rs                |   17 ++
- healer/src/main.rs               |  390 ++++++++++++++++++++++++++++++++++++
- healer/src/repair.rs             |  390 ++++++++++++++++++++++++++++++++++++
- healer/src/util.rs               |   81 ++++++++
- healer/src/weakhandle.rs         |  209 +++++++++++++++++++
- healer/src/xfs_types.rs          |  292 +++++++++++++++++++++++++++
- healer/src/xfsprogs.rs.in        |   33 +++
- include/builddefs.in             |   13 +
- include/buildrules               |    1 
- m4/Makefile                      |    1 
- m4/package_rust.m4               |  163 +++++++++++++++
- 31 files changed, 3851 insertions(+), 4 deletions(-)
- create mode 100644 healer/bindgen_xfs_fs.h
- create mode 100644 healer/.cargo/config.toml.system
- create mode 100644 healer/Cargo.toml.in
- create mode 100755 healer/rbindgen
- create mode 100644 healer/src/fsgeom.rs
- create mode 100644 healer/src/fsprops.rs
- create mode 100644 healer/src/getmntent.rs
- create mode 100644 healer/src/getparents.rs
- create mode 100644 healer/src/healthmon/cstruct.rs
- create mode 100644 healer/src/healthmon/event.rs
- create mode 100644 healer/src/healthmon/fs.rs
- create mode 100644 healer/src/healthmon/groups.rs
- create mode 100644 healer/src/healthmon/inodes.rs
- create mode 100644 healer/src/healthmon/json.rs
- create mode 100644 healer/src/healthmon/mod.rs
- create mode 100644 healer/src/healthmon/samefs.rs
- create mode 100644 healer/src/lib.rs
- create mode 100644 healer/src/main.rs
- create mode 100644 healer/src/repair.rs
- create mode 100644 healer/src/util.rs
- create mode 100644 healer/src/weakhandle.rs
- create mode 100644 healer/src/xfs_types.rs
- create mode 100644 healer/src/xfsprogs.rs.in
- create mode 100644 m4/package_rust.m4
+ common/config       |    6 +
+ common/rc           |   15 ++++
+ common/systemd      |   21 +++++
+ common/xfs          |   86 +++++++++++++++++++++
+ doc/group-names.txt |    1 
+ tests/xfs/1878      |   80 ++++++++++++++++++++
+ tests/xfs/1878.out  |   10 ++
+ tests/xfs/1879      |   89 ++++++++++++++++++++++
+ tests/xfs/1879.out  |   12 +++
+ tests/xfs/1882      |   48 ++++++++++++
+ tests/xfs/1882.out  |    2 
+ tests/xfs/1883      |   60 +++++++++++++++
+ tests/xfs/1883.out  |    2 
+ tests/xfs/1884      |   90 ++++++++++++++++++++++
+ tests/xfs/1884.out  |    2 
+ tests/xfs/1885      |   53 +++++++++++++
+ tests/xfs/1885.out  |    5 +
+ tests/xfs/1896      |  206 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1896.out  |   21 +++++
+ tests/xfs/1897      |   98 ++++++++++++++++++++++++
+ tests/xfs/1897.out  |    4 +
+ tests/xfs/1898      |   36 +++++++++
+ tests/xfs/1898.out  |    4 +
+ tests/xfs/1899      |  109 +++++++++++++++++++++++++++
+ tests/xfs/1899.out  |    3 +
+ tests/xfs/1900      |  116 +++++++++++++++++++++++++++++
+ tests/xfs/1900.out  |    2 
+ tests/xfs/1901      |  138 ++++++++++++++++++++++++++++++++++
+ tests/xfs/1901.out  |    2 
+ 29 files changed, 1321 insertions(+)
+ create mode 100755 tests/xfs/1878
+ create mode 100644 tests/xfs/1878.out
+ create mode 100755 tests/xfs/1879
+ create mode 100644 tests/xfs/1879.out
+ create mode 100755 tests/xfs/1882
+ create mode 100644 tests/xfs/1882.out
+ create mode 100755 tests/xfs/1883
+ create mode 100644 tests/xfs/1883.out
+ create mode 100755 tests/xfs/1884
+ create mode 100644 tests/xfs/1884.out
+ create mode 100755 tests/xfs/1885
+ create mode 100644 tests/xfs/1885.out
+ create mode 100755 tests/xfs/1896
+ create mode 100644 tests/xfs/1896.out
+ create mode 100755 tests/xfs/1897
+ create mode 100755 tests/xfs/1897.out
+ create mode 100755 tests/xfs/1898
+ create mode 100755 tests/xfs/1898.out
+ create mode 100755 tests/xfs/1899
+ create mode 100644 tests/xfs/1899.out
+ create mode 100755 tests/xfs/1900
+ create mode 100755 tests/xfs/1900.out
+ create mode 100755 tests/xfs/1901
+ create mode 100755 tests/xfs/1901.out
 
