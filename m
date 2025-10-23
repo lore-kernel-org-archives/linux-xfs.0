@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7895679F2
-	for <linux-xfs@vger.kernel.org>; Thu, 23 Oct 2025 00:11:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E49179F2
+	for <linux-xfs@vger.kernel.org>; Thu, 23 Oct 2025 00:11:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761178278; cv=none; b=N4D1MZF8HndbNEhrVbRhx+WjQCIVNfjCQP9T0778r0NY8NopFqILGta2dwJhQuBJ/s/cLfWI73DsmG4E5eLGnakDRKztyBLwSgYz6L0gxqfUzMUvJhShwIa1spxSOFBNorM8izNNZMN2b13NfPhy2sS/A+eURJRaUbR0xnc59Ug=
+	t=1761178294; cv=none; b=kO+K6+yzpYJhprACxtgOUW2pOy/Jvf50++Tc8EJiSyBw8sbkT4qDRkWiU4ywOr5U1Cf2/lb4dtKQJBE6lFkU2Ycg2v9w1NGXCGIFaaF0kTGTJZKTWMCFYHC4jRu/nJCKExEKXx4R39DjIjY9gnk3ODeDfKYnSDVL2RFVktNBJwY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761178278; c=relaxed/simple;
-	bh=8AOvR1GwHOx8bHbpqLfkxSf5hkoJSO0UmODUhypuIGA=;
+	s=arc-20240116; t=1761178294; c=relaxed/simple;
+	bh=5khURQ+DP0yUIiJslAzAG6DBZoGEGP+vx/7RIEz8oOY=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=X4oWSFwnRkT23MF54pezpTkiFctItk4FebkKHCVa3Q2OXDB13KoU6BxnIBerTwiOuc/utvxj8G75EXzwk3wwelX+cYLuerFKw0Sx2YgsZWGjKothV7Uv3BcKrQJkkMmU7eGLPXJB0sAU/yIAGrLo4mBGrZ7alMBeQfQgbQDzNsM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mlurJ2vy; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=daEE5MUnVrcQMUxm/I5eLG6qLmK3B1NdNzLA7opM8E7mFADkFNN7Lw2otfCs4+PsbSW1pdZZSjhoCNTaG2qeBQHUczqrqBCKthCCrk11FgVYLyTnfE2tfwtAWsovHsNSjWy6Q5b+1vzJ8oeY+8KnAT0yL8jYe5pV5NJwgOXCCls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UVfICYfk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mlurJ2vy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 502EFC4CEE7;
-	Thu, 23 Oct 2025 00:11:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UVfICYfk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9CE4C4CEE7;
+	Thu, 23 Oct 2025 00:11:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761178278;
-	bh=8AOvR1GwHOx8bHbpqLfkxSf5hkoJSO0UmODUhypuIGA=;
+	s=k20201202; t=1761178294;
+	bh=5khURQ+DP0yUIiJslAzAG6DBZoGEGP+vx/7RIEz8oOY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=mlurJ2vyQ2bBCESgWztXQyoRWmpfA1n6xgymNsysoOtZhj88MQ5uFjBqKt/A+eIAV
-	 xgMvYTOmg/5Rp26kWzkUqsrqz6QRiJGdqmvgjq8jY/hD6skt2Uj1qUEFF8dPIqTT/Y
-	 I3Db2URYwdIFoIgk5OAL8plOakgOQ+cCr78HVFSNiBv4e59qN9ugEclSQjRpWs0q1v
-	 EhfNYy25pbI3lFqnH8RnFAaWkzspccjiOxPvNE7R/YDZgNeSsMwAxWq6O+UPveIGwq
-	 ICcxUqbjNICK5M+L4WXtEsXZaV9M0HIQq8YqNr8R+J+SMila22Ge3KlVnRPjFSoL/T
-	 H7gxKskIXSrAA==
-Date: Wed, 22 Oct 2025 17:11:17 -0700
-Subject: [PATCH 22/26] xfs_healer: use getmntent to find moved filesystems
+	b=UVfICYfkNRsQ71Kr0Debj/Z0TGih/KwMQ0Osxez6rGn4ygDDHAiWfi32MoZu2/CCf
+	 hG8tQ/4ZZfWT3+FV0GwhI+eZqdNFwLHf0qyKmZmUBA7I/PzKVTdxSK09szhEBSnlDv
+	 5sEmhUVB9eWaGbpdNro+6Vj29dXtKExO3jgdJ3AYIAo7cQw4TrJERzQozZXKOctNbZ
+	 O/zgNdRaESxK1W01zv77euYK01U+j8HzlX5Yo+salJhbDEtugPbUtCbQ1YBrDYozCH
+	 WtqvwrzAZnW4lR3KmUVq3tUL7GmVUhEB1NhGH+IbtVZNXsD/5P6duVp6OcwLuw8RsG
+	 3e9zeCp+d7PIA==
+Date: Wed, 22 Oct 2025 17:11:33 -0700
+Subject: [PATCH 23/26] xfs_healer: validate that repair fds point to the
+ monitored fs
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <176117747880.1028044.1705735508736088709.stgit@frogsfrogsfrogs>
+Message-ID: <176117747899.1028044.10768971355033550.stgit@frogsfrogsfrogs>
 In-Reply-To: <176117747330.1028044.14577065342150898892.stgit@frogsfrogsfrogs>
 References: <176117747330.1028044.14577065342150898892.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,199 +46,161 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Wrap the libc getmntent function in an iterator.  This enables
-xfs_healer to record the fsname (or fs spec) of the mountpoint that it's
-running against, and use that fsname to walk /proc/mounts to re-find the
-filesystem if the mount has moved elsewhere if it needs to open the fs
-to perform repairs.
+When xfs_healer reopens a mountpoint to perform a repair, it should
+validate that the opened fd points to a file on the same filesystem as
+the one being monitored.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- healer/xfs_healer.py.in |  117 ++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 114 insertions(+), 3 deletions(-)
+ healer/xfs_healer.py.in |   53 ++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 41 insertions(+), 12 deletions(-)
 
 
 diff --git a/healer/xfs_healer.py.in b/healer/xfs_healer.py.in
-index a96c9e812f5791..fac7df9d741cb0 100644
+index fac7df9d741cb0..ea7f1bb5ab45bc 100644
 --- a/healer/xfs_healer.py.in
 +++ b/healer/xfs_healer.py.in
-@@ -80,6 +80,7 @@ want_repair = False
- has_parent = False
- has_rmapbt = False
- libhandle = None
-+libc = None
+@@ -163,6 +163,28 @@ def open_health_monitor(fd, verbose = False):
+ 	ret = fcntl.ioctl(fd, XFS_IOC_HEALTH_MONITOR, arg)
+ 	return ret
  
- def printlogln(*args, **kwargs):
- 	'''Print a log message to stdout and flush it.'''
-@@ -184,6 +185,16 @@ class xfs_handle(ctypes.Structure):
- 	]
- assert ctypes.sizeof(xfs_handle) == 24
- 
-+def find_xfs_dev(mountpoint):
-+	'''Find the xfs device for a particular mount point or raise exception.'''
++class xfs_health_samefs(ctypes.Structure):
++	_fields_ = [
++		('fd',		ctypes.c_int),
++		('flags',	ctypes.c_uint),
++	]
++assert ctypes.sizeof(xfs_health_samefs) == 8
 +
-+	for mnt in some_mount_entries(
-+			lambda mnt: mnt.type == 'xfs' and \
-+				    mnt.dir == mountpoint):
-+		return mnt.fsname
++XFS_IOC_HEALTH_SAMEFS = _IOW(0x58, 69, xfs_health_samefs)
 +
-+	raise Exception(_('Cannot find xfs device'))
++def is_same_fs(mon_fd, fd):
++	'''Does fd point to the same filesystem as the monitor fd?'''
++	arg = xfs_health_samefs()
++	arg.fd = fd
++	arg.flags = 0
 +
- class fshandle(object):
- 	def __init__(self, fd, mountpoint = None):
- 		global libhandle
-@@ -193,6 +204,7 @@ class fshandle(object):
- 
- 		if isinstance(fd, fshandle):
- 			# copy an existing fshandle
-+			self.fsname = fd.fsname
- 			self.mountpoint = fd.mountpoint
- 			ctypes.pointer(self.handle)[0] = fd.handle
- 			return
-@@ -201,6 +213,7 @@ class fshandle(object):
- 			raise Exception(_('fshandle needs a mountpoint'))
- 
- 		self.mountpoint = mountpoint
-+		self.fsname = find_xfs_dev(mountpoint)
- 
- 		# Create the file and fs handles for the open mountpoint
- 		# so that we can compare them later
-@@ -222,15 +235,16 @@ class fshandle(object):
++	try:
++		fcntl.ioctl(mon_fd, XFS_IOC_HEALTH_SAMEFS, arg)
++	except OSError as e:
++		# any error means this isn't the right fs mount
++		return False
++	return True
++
+ # libhandle stuff
+ class xfs_fsid(ctypes.Structure):
+ 	_fields_ = [
+@@ -235,7 +257,7 @@ class fshandle(object):
  		hanp = ctypes.cast(buf, ctypes.POINTER(xfs_handle))
  		self.handle = hanp.contents
  
--	def reopen(self):
--		'''Reopen a file handle obtained via weak reference.'''
-+	def reopen_from(self, mountpoint):
-+		'''Reopen a file handle obtained via weak reference, using
-+		a specific mount point.'''
+-	def reopen_from(self, mountpoint):
++	def reopen_from(self, mountpoint, is_acceptable):
+ 		'''Reopen a file handle obtained via weak reference, using
+ 		a specific mount point.'''
  		global libhandle
- 		global printf_prefix
+@@ -261,7 +283,8 @@ class fshandle(object):
  
- 		buf = ctypes.c_void_p()
- 		buflen = ctypes.c_size_t()
+ 		# Did we get the same handle?
+ 		if buflen.value != ctypes.sizeof(xfs_handle) or \
+-		   bytes(hanp.contents) != bytes(self.handle):
++		   bytes(hanp.contents) != bytes(self.handle) or \
++		   not is_acceptable(fd):
+ 			os.close(fd)
+ 			libhandle.free_handle(buf, buflen)
+ 			msg = _("reopening")
+@@ -270,14 +293,15 @@ class fshandle(object):
+ 					printf_prefix)
  
--		fd = os.open(self.mountpoint, os.O_RDONLY)
-+		fd = os.open(mountpoint, os.O_RDONLY)
- 
- 		# Create the file and fs handles for the open mountpoint
- 		# so that we can compare them later
-@@ -258,6 +272,26 @@ class fshandle(object):
  		libhandle.free_handle(buf, buflen)
++
  		return fd
  
-+	def reopen(self):
-+		'''Reopen a file handle obtained via weak reference.'''
-+
-+		# First try the original mountpoint
-+		try:
-+			return self.reopen_from(self.mountpoint)
-+		except Exception as e:
-+			# Now scan /proc/self/mounts for any other bind mounts
-+			# of this filesystem
-+			for mnt in some_mount_entries(
-+					lambda mnt: mnt.type == 'xfs' and \
-+						    mnt.fsname == self.fsname):
-+				try:
-+					return self.reopen_from(mnt.dir)
-+				except:
-+					pass
-+
-+			# Return original error
-+			raise e
-+
- 	def subst(self, ino, gen):
- 		'''Substitute the inode and generation components of a handle.'''
- 		self.handle.ha_fid.fid_ino = ino
-@@ -302,6 +336,77 @@ def libhandle_load():
- 			ctypes.c_void_p,
- 			ctypes.c_size_t)
+-	def reopen(self):
++	def reopen(self, is_acceptable = lambda x: True):
+ 		'''Reopen a file handle obtained via weak reference.'''
  
-+class libc_mntent(ctypes.Structure):
-+	_fields_ = [
-+		("mnt_fsname",	ctypes.c_char_p),
-+		("mnt_dir",	ctypes.c_char_p),
-+		("mnt_type",	ctypes.c_char_p),
-+		("mnt_opts",	ctypes.c_char_p),
-+		("mnt_freq",	ctypes.c_int),
-+		("mnt_passno",	ctypes.c_int),
-+	]
-+
-+class MountEntry(object):
-+	'''Description of a mounted filesystem.'''
-+	def __init__(self, fsname, dir, type, opts):
-+		self.fsname = fsname
-+		self.dir = pathlib.Path(dir.decode('utf-8'))
-+		self.type = type.decode('utf-8')
-+		self.opts = opts
-+
-+def mount_entries():
-+	'''Iterate all mounted filesystems in the system.'''
-+	try:
-+		fp = libc.setmntent(b"/proc/self/mounts", b"r")
-+		mntbuf = libc_mntent()
-+		namebuflen = 4096
-+		namebuf = ctypes.create_string_buffer(namebuflen)
-+		mnt = libc.getmntent_r(fp, mntbuf, namebuf, namebuflen);
-+		while mnt:
-+			yield MountEntry(mnt.contents.mnt_fsname,
-+					 mnt.contents.mnt_dir,
-+					 mnt.contents.mnt_type,
-+					 mnt.contents.mnt_opts)
-+			mnt = libc.getmntent_r(fp, mntbuf, namebuf, namebuflen);
-+	finally:
-+		libc.endmntent(fp);
-+
-+def some_mount_entries(filter_fn):
-+	'''Iterate some of the mounted filesystems in the system.'''
-+	return filter(filter_fn, mount_entries())
-+
-+def libc_load():
-+	'''Load libc and set things up.'''
-+	global libc
-+
-+	soname = ctypes.util.find_library('c')
-+	if soname is None:
-+		errstr = os.strerror(errno.ENOENT)
-+		msg = _("while finding library")
-+		raise OSError(errno.ENOENT, f'{msg}: {errstr}', 'libc')
-+
-+	libc = ctypes.CDLL(soname, use_errno = True)
-+
-+	libc.setmntent.argtypes = (
-+			ctypes.c_char_p,
-+			ctypes.c_char_p)
-+	libc.setmntent.restype = ctypes.c_void_p
-+
-+	libc.getmntent_r.argtypes = (
-+			ctypes.c_void_p,
-+			ctypes.POINTER(libc_mntent),
-+			ctypes.POINTER(ctypes.c_char),
-+			ctypes.c_int)
-+	libc.getmntent_r.restype = ctypes.POINTER(libc_mntent)
-+
-+	libc.getmntent.argtypes = (
-+			ctypes.c_void_p,)
-+	libc.getmntent.restype = ctypes.POINTER(libc_mntent)
-+
-+	libc.endmntent.argtypes = (
-+			ctypes.c_void_p,)
-+	libc.endmntent.restype = ctypes.c_int
-+
- # metadata scrubbing stuff
- XFS_SCRUB_TYPE_PROBE		= 0
- XFS_SCRUB_TYPE_SB		= 1
-@@ -1244,6 +1349,12 @@ def main():
- 	if not validator_fn:
- 		return 1
+ 		# First try the original mountpoint
+ 		try:
+-			return self.reopen_from(self.mountpoint)
++			return self.reopen_from(self.mountpoint, is_acceptable)
+ 		except Exception as e:
+ 			# Now scan /proc/self/mounts for any other bind mounts
+ 			# of this filesystem
+@@ -285,7 +309,8 @@ class fshandle(object):
+ 					lambda mnt: mnt.type == 'xfs' and \
+ 						    mnt.fsname == self.fsname):
+ 				try:
+-					return self.reopen_from(mnt.dir)
++					return self.reopen_from(mnt.dir,
++							is_acceptable)
+ 				except:
+ 					pass
  
-+	try:
-+		libc_load()
-+	except OSError as e:
-+		eprintln(f"libc: {e}")
-+		return 1
+@@ -893,7 +918,7 @@ def report_shutdown(event):
+ 	msg = _("filesystem shut down due to")
+ 	printlogln(f"{printf_prefix}: {msg} {some_reasons}")
+ 
+-def handle_event(lines, fh, everything):
++def handle_event(lines, fh, everything, mon_fd):
+ 	'''Handle an event asynchronously.'''
+ 	global log
+ 	global has_parent
+@@ -981,7 +1006,7 @@ def handle_event(lines, fh, everything):
+ 		if maybe_pathify:
+ 			pathify_event(event, fh)
+ 
+-		repair_metadata(event, fh)
++		repair_metadata(event, fh, mon_fd)
+ 
+ def check_monitor(mountpoint, fd):
+ 	'''Check if the kernel can send us health events for the given mountpoint.'''
+@@ -1045,7 +1070,7 @@ def monitor(mountpoint, event_queue, check, **kwargs):
+ 			nr = 0
+ 			for lines in health_reports(mon_fp):
+ 				event_queue.submit(handle_event, lines, fh,
+-						everything)
++						everything, mon_fd)
+ 
+ 				# Periodically run the garbage collector to
+ 				# constrain memory usage in the main thread.
+@@ -1055,6 +1080,12 @@ def monitor(mountpoint, event_queue, check, **kwargs):
+ 					gc.collect()
+ 				nr += 1
+ 
++			# Once we run out of events to process, shut down all
++			# the workers and wait for them to complete before we
++			# close mon_fp so that repair reopen can't walk off
++			# freed mon_fd.
++			event_queue.shutdown(wait = True, cancel_futures = True)
 +
  	try:
- 		libhandle_load()
- 	except OSError as e:
+ 		fd = os.open(mountpoint, os.O_RDONLY)
+ 	except Exception as e:
+@@ -1244,7 +1275,7 @@ def repair_inode(event, fd):
+ 		except Exception as e:
+ 			eprintln(f"{prefix} {structure}: {e}")
+ 
+-def repair_metadata(event, fh):
++def repair_metadata(event, fh, mon_fd):
+ 	'''Repair a metadata corruption.'''
+ 	global debug
+ 	global printf_prefix
+@@ -1253,7 +1284,7 @@ def repair_metadata(event, fh):
+ 		printlogln(f'repair {event}')
+ 
+ 	try:
+-		fd = fh.reopen()
++		fd = fh.reopen(lambda fdx: is_same_fs(mon_fd, fdx))
+ 	except Exception as e:
+ 		eprintln(f"{printf_prefix}: {e}")
+ 		return
+@@ -1388,8 +1419,6 @@ def main():
+ 		# Consider SIGINT to be a clean exit.
+ 		pass
+ 
+-	args.event_queue.shutdown()
+-
+ 	# See the service mode comments in xfs_scrub.c for why we sleep and
+ 	# compress all nonzero exit codes to 1.
+ 	if 'SERVICE_MODE' in os.environ:
 
