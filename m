@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6771EACD
-	for <linux-xfs@vger.kernel.org>; Thu, 23 Oct 2025 00:12:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 724E8A95E
+	for <linux-xfs@vger.kernel.org>; Thu, 23 Oct 2025 00:13:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761178372; cv=none; b=itnWeKaGJlUKa35yiWQ4gWWpDFmwtFDmLB94sJRj70K1W6AaAZ1gmTcM0kn8t2P8YJYiEqMJVSLT09rWe+d/emEGCOvcRRg00ANygF+2nBqPzFXOmzRX2BRey3Z1S2c/MDnYQVzaKuZqO3mvDB59nfNbDUO7Qpjm6HEp8YkoVy0=
+	t=1761178389; cv=none; b=cIc1thsa8cDi159Qv4XL2T/ik5w6DfCq61yGHea59wLIqkxZpjDHz6pqwgtJt+N5O+uXgdDaDEU3MjxPsR5qOm/ptdFF2WW4GSq+8w8JrdeH9chtFYSIfPFtM12pNFzKufLq1oFCNJu1BsBSlTTgfAoVyQvPairKEMLi1ztnpy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761178372; c=relaxed/simple;
-	bh=AMUKvjmFJHqide711LtU+4gCDGhXzqwtLS1j64D60fs=;
+	s=arc-20240116; t=1761178389; c=relaxed/simple;
+	bh=78k8vwePRnxdsKaW4qXPtMJUVQphoJ5x3mp2TUCUe0k=;
 	h=Date:Subject:From:To:Cc:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KxUOe6wetKRoIKyKW2pVHqfSPDE8PeRvyFCRIFuw7vPaxxRKHkNw+LL2AsVuAfE3shNtoIgjdghSikUiU3PlzCHv3CChby/sH7OSgfmEretVI56f43rLhEXm+0tstntrU054ZJbBxV5w3QWUDGMog+LrSg/R3zR5eZSkzNCo7Nw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jaldSDqc; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=L54PtUIfg40oO9CiH9BjM/fGinqlJXvhhjKmtrcfZtksoCDNwG7nYz32CUiCogXRijngcXzKNTirv9YWiNzIA/qxbImnAxu3yjPUVGuSvu+KR6XmE0ju4yLaKHJtCguiw74PVVus2bETv8QAhpV7sxwMVBH0HWKy8V9a+zg5Jx4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZTIyvGfV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jaldSDqc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18055C4CEE7;
-	Thu, 23 Oct 2025 00:12:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZTIyvGfV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE1CEC4CEE7;
+	Thu, 23 Oct 2025 00:13:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761178372;
-	bh=AMUKvjmFJHqide711LtU+4gCDGhXzqwtLS1j64D60fs=;
+	s=k20201202; t=1761178387;
+	bh=78k8vwePRnxdsKaW4qXPtMJUVQphoJ5x3mp2TUCUe0k=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=jaldSDqcTNFTYwuzDDOVb/yLxuf9knQDwj9x0e3+KZhin1UX17FCbxWk1GykO8T9/
-	 DJJ4fHl4aII6mG4gOkSPfCl9qjtrVONQafiA1N+pe7auge2iHWKEhzkxo7Ucp7okB0
-	 P/mzi7jREOo8FxYWaVzaUObq89/X638ZGrphyYUOfbhbja5BlX8L6j436Uhdn0h/BF
-	 vVU8RiZGCwAIYUEIZtehl7KNoU2yt3/4UbgefJhAWlZxqIJdEO4JZI/W4WWBE2G5aw
-	 fwFCZ7F49otrCkFDx6kF6XI0VKYT5rqW0t44uexLzqSoBFsbt5Y1HeludV059NY/al
-	 B2ysRorcsRsHQ==
-Date: Wed, 22 Oct 2025 17:12:51 -0700
-Subject: [PATCH 02/19] xfs_healer: enable gettext for localization
+	b=ZTIyvGfVL4+LIz/lvKHwoKxBn516QC2dgZ9DsOVhEJY+zreocJxtmevkxj7FK4C8o
+	 JfwFOIFvS0BetxVTxLCH3DiPXVAFpfoBlG+E/xu2TeyzxXgAJ5KK7YEri5aYdbEr1y
+	 wZoSdC78M57aXn+nJml+4dd3L4F6NKYIL2frYq8uuqsqMshe/svIagN/w3nHm4RCYa
+	 XW8oBe7pOa8qNBh93Y+hy1lVJiLmGEtbWnyCRcSadyoWE7chyqxZRqYUR3i21tCh7i
+	 lBgb4wtzKCspywC4qoZweqxtswwAKfribp/gVuFiJOsyigvmXRmLdrvYndPMERhTOW
+	 m/2St4Aq9BJKQ==
+Date: Wed, 22 Oct 2025 17:13:07 -0700
+Subject: [PATCH 03/19] xfs_healer: bindgen xfs_fs.h
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, aalbersh@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <176117748294.1029045.12901696920449153691.stgit@frogsfrogsfrogs>
+Message-ID: <176117748313.1029045.18277017204734785364.stgit@frogsfrogsfrogs>
 In-Reply-To: <176117748158.1029045.18328755324893036160.stgit@frogsfrogsfrogs>
 References: <176117748158.1029045.18328755324893036160.stgit@frogsfrogsfrogs>
 Precedence: bulk
@@ -45,224 +45,223 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Include gettext-rs in our Rust application if the builder wants
-localization.  It's not clear to me what we're really supposed to use to
-localize Rust programs, but xfsprogs uses gettext so let's just plug
-into that for now.  Note that xgettext prior to 0.24 doesn't technically
-support Rust, but it matches patterns well enough to extract simple
-format strings (e.g. M_("hello")) despite the warnings.
+Create Rust bindings for all the stuff in xfs_fs.h so that we can call
+the health monitor and online fsck ioctls later.
 
 Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- configure.ac              |   13 ++++++++++++-
- healer/Cargo.toml.in      |   15 +++++++++++++++
- healer/Makefile           |   16 ++++++++++++++++
- healer/src/main.rs        |    4 +++-
- healer/src/xfsprogs.rs.in |   20 ++++++++++++++++++++
- include/builddefs.in      |    1 +
- include/buildrules        |    1 +
- m4/package_rust.m4        |    6 ++++++
- 8 files changed, 74 insertions(+), 2 deletions(-)
+ healer/bindgen_xfs_fs.h |    6 +++++
+ configure.ac            |   14 +++++++++++-
+ healer/Makefile         |   14 ++++++++++++
+ healer/rbindgen         |   57 +++++++++++++++++++++++++++++++++++++++++++++++
+ healer/src/lib.rs       |    1 +
+ include/builddefs.in    |    3 ++
+ m4/package_rust.m4      |   22 ++++++++++++++++++
+ 7 files changed, 116 insertions(+), 1 deletion(-)
+ create mode 100644 healer/bindgen_xfs_fs.h
+ create mode 100755 healer/rbindgen
 
 
+diff --git a/healer/bindgen_xfs_fs.h b/healer/bindgen_xfs_fs.h
+new file mode 100644
+index 00000000000000..82d11182bd11f3
+--- /dev/null
++++ b/healer/bindgen_xfs_fs.h
+@@ -0,0 +1,6 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * Copyright (c) 2025 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "xfs.h"
 diff --git a/configure.ac b/configure.ac
-index 2902fe9ca2227e..4cb253592ce09b 100644
+index 4cb253592ce09b..8b9aad143c2cec 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -143,6 +143,17 @@ AC_ARG_ENABLE(crate-checks,
- 	enable_crate_checks=yes)
- AC_SUBST(enable_crate_checks)
+@@ -283,7 +283,7 @@ if test "$have_rustc" = "yes"; then
+ 	AC_HAVE_CARGO
+ fi
  
-+# Some distributions do not package gettext-rs; provide a way to disable it
-+# for Rust without disabling it for the C programs.
-+AC_ARG_ENABLE(gettext-rs,
-+[  --enable-gettext-rs=[yes/no]   Enable gettext-rs support if gettext is enabled],,
-+	enable_gettext_rs="$enable_gettext")
-+# If the main gettext is not enabled, then we don't want the Rust version.
-+if test "$enable_gettext" = "no"; then
-+	enable_gettext_rs="no"
+-# If we have cargo, check that our crate dependencies are present
++# If we have cargo, check that we have the first two dependencies for bindgen
+ if test "$have_cargo" = "yes"; then
+ 	if test "$with_system_crates" = "yes"; then
+ 		AC_USE_SYSTEM_CRATES
+@@ -291,6 +291,18 @@ if test "$have_cargo" = "yes"; then
+ 		AC_MAYBE_USE_SYSTEM_CRATES
+ 	fi
+ 	AC_HAVE_CLIPPY
++	AC_HAVE_CLANG
++	AC_HAVE_RUSTFMT
 +fi
-+AC_SUBST(enable_gettext_rs)
 +
- #
- # If the user specified a libdir ending in lib64 do not append another
- # 64 to the library names.
-@@ -163,7 +174,7 @@ test -n "$multiarch" && enable_lib64=no
- # to "find" is required, to avoid including such directories in the
- # list.
- LOCALIZED_FILES=""
--for lfile in `find ${srcdir} -path './.??*' -prune -o -name '*.c' -print -o -name '*.py.in' -print || exit 1`; do
-+for lfile in `find ${srcdir} -path './.??*' -prune -o -name '*.c' -print -o -name '*.py.in' -print -o -name '*.rs' -print || exit 1`; do
-     LOCALIZED_FILES="$LOCALIZED_FILES \$(TOPDIR)/$lfile"
- done
- AC_SUBST(LOCALIZED_FILES)
-diff --git a/healer/Cargo.toml.in b/healer/Cargo.toml.in
-index bbd6f930510059..e62480ff17d58e 100644
---- a/healer/Cargo.toml.in
-+++ b/healer/Cargo.toml.in
-@@ -9,7 +9,22 @@ lto = @cargo_lto@
- [profile.release]
- lto = @cargo_lto@
++# If we have the first two deps for bindgen, check that we have bindgen
++if test "$have_clang:$have_rustfmt" = "yes:yes"; then
++	AC_HAVE_BINDGEN
++fi
++
++# If we have rustc, cargo, clang, rustfmt, and bindgen, check that our crate
++# dependencies are present
++if test "$have_bindgen" = "yes"; then
+ 	AC_HAVE_HEALER_CRATES
+ fi
  
-+[features]
-+@cargo_cmt_gettext@gettext = ["dep:gettext-rs"]
-+
- # Be sure to update AC_HAVE_HEALER_CRATES if you update the dependency list.
- [dependencies]
- clap = { version = "4.0.32", features = ["derive"] }
- anyhow = { version = "1.0.69" }
-+
-+# XXX: Crates with major version 0 are not considered ABI-stable, so the minor
-+# version is treated as if it were the major version.  This creates problems
-+# pulling in distro-packaged crates, so we only specify the dependency as major
-+# version 0.  Until these crates reach 1.0.0, we'll have to patch when things
-+# break.  Ref:
-+# https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html
-+
-+# Dynamically comment out all the gettextrs related dependency information in
-+# Cargo.toml becuse cargo requires the crate to be present so that it can
-+# generate a Cargo.lock file even if the build never uses it.
-+@cargo_cmt_gettext@gettext-rs = { version = "0", optional = true }	# 0.7.0
 diff --git a/healer/Makefile b/healer/Makefile
-index 4c97430b26bd42..ae248bc984b178 100644
+index ae248bc984b178..407e49ad868f4d 100644
 --- a/healer/Makefile
 +++ b/healer/Makefile
-@@ -44,6 +44,19 @@ else
- 	CARGO_INSTALL_FLAGS=--debug
+@@ -13,12 +13,17 @@ INSTALL_HEALER = install-healer
+ # Rust implementation
+ ifeq ($(HAVE_HEALER_CRATES),yes)
+ 
++HFILES = \
++	bindgen_xfs_fs.h
++
+ RUSTFILES = \
+ 	src/lib.rs \
+ 	src/main.rs \
++	src/xfs_fs.rs \
+ 	src/xfsprogs.rs
+ 
+ BUILT_RUSTFILES = \
++	src/xfs_fs.rs \
+ 	src/xfsprogs.rs
+ 
+ CARGO_MANIFEST=Cargo.toml
+@@ -130,10 +135,19 @@ $(CARGO_CONFIG):
+ 	touch $@
  endif
  
-+# Enable gettext if it's available
-+ifeq ($(ENABLE_GETTEXT_RS),yes)
-+CARGO_BUILD_FLAGS+=--features gettext
-+CARGO_CLIPPY_FLAGS+=--features gettext
-+CARGO_INSTALL_FLAGS+=--features gettext
-+CARGO_CMT_GETTEXT=
-+else
-+	# This is what you have to do to define a variable to a octothorpe.
-+	define CARGO_CMT_GETTEXT
-+#
-+endef
++ifeq ($(HAVE_RUSTFMT),yes)
++rustfmt: $(RUSTFILES)
++	rustfmt $^
 +endif
 +
- # Assume that if rustc supports LTO then cargo knows how to configure it.
- # rustc and cargo support LTO as of Rust-2021.
- ifeq ($(HAVE_RUSTC_LTO),yes)
-@@ -97,12 +110,15 @@ $(XFS_HEALER_PROG): $(XFS_HEALER_PROG).in $(builddefs) $(TOPDIR)/libfrog/gettext
- src/xfsprogs.rs: src/xfsprogs.rs.in $(builddefs)
- 	@echo "    [SED]    $@"
- 	$(Q)$(SED) -e "s|@pkg_version@|$(PKG_VERSION)|g" \
-+		   -e "s|@PACKAGE@|$(PKG_NAME)|g" \
-+		   -e "s|@LOCALEDIR@|$(PKG_LOCALE_DIR)|g" \
- 		   < $< > $@
+ docs:
+ 	@echo "    [CARGO]  doc $@"
+ 	$(Q)cargo doc --no-deps
  
- $(CARGO_MANIFEST): $(CARGO_MANIFEST).in $(builddefs)
- 	@echo "    [TOML]   $@"
- 	$(Q)$(SED) -e "s|@pkg_version@|$(PKG_VERSION)|g" \
- 		   -e "s|@cargo_lto@|$(CARGO_LTO)|g" \
-+		   -e "s|@cargo_cmt_gettext@|$(CARGO_CMT_GETTEXT)|g" \
- 		   < $< | sed -e 's|\~WIP.*|"|g' > $@
- 
- ifeq ($(USE_SYSTEM_CRATES),yes)
-diff --git a/healer/src/main.rs b/healer/src/main.rs
-index e58ffdb3eca5e3..d43640e140d46c 100644
---- a/healer/src/main.rs
-+++ b/healer/src/main.rs
-@@ -71,7 +71,7 @@ impl App {
- 
-     /// Main app method
-     fn main(&self) -> Result<ExitCode> {
--        let _fp = File::open(&self.path).with_context(|| "Opening filesystem failed")?;
-+        let _fp = File::open(&self.path).with_context(|| M_("Opening filesystem failed"))?;
- 
-         Ok(ExitCode::SUCCESS)
-     }
-@@ -89,6 +89,8 @@ impl From<Cli> for App {
- }
- 
- fn main() -> ExitCode {
-+    xfsprogs::init_localization();
++src/xfs_fs.rs: bindgen_xfs_fs.h ../libxfs/xfs_fs.h rbindgen
++	@echo "    [RBIND]  $@"
++	$(Q)./rbindgen $< $@ '*xfs_fs.h*'
 +
-     let args = Cli::new();
-     if args.0.get_flag("version") {
-         println!("{} {}", M_("xfs_healer version"), xfsprogs::VERSION);
-diff --git a/healer/src/xfsprogs.rs.in b/healer/src/xfsprogs.rs.in
-index bc5a9b227d26f0..0c5cd2d00f7c26 100644
---- a/healer/src/xfsprogs.rs.in
-+++ b/healer/src/xfsprogs.rs.in
-@@ -3,10 +3,30 @@
-  * Copyright (C) 2025 Oracle.  All Rights Reserved.
-  * Author: Darrick J. Wong <djwong@kernel.org>
+ # cargo install only knows how to build a binary and install it to $root/bin,
+ # so we install it to ./rust/bin/ and let the install-rust target move it to
+ # $prefix/usr/libexec/xfsprogs like we want.
+diff --git a/healer/rbindgen b/healer/rbindgen
+new file mode 100755
+index 00000000000000..8f31678e845606
+--- /dev/null
++++ b/healer/rbindgen
+@@ -0,0 +1,57 @@
++#!/bin/bash
++
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2025 Oracle.  All Rights Reserved.
++
++# Wrap bindgen so that it gives us what we want
++
++input="$1"
++shift
++output="$1"
++shift
++
++if [ -z "$1" ] || [ -z "${input}" ] || [ -z "${output}" ] || [ "$1" = "--help" ]; then
++	echo "Usage: $0 src dest"
++	exit 1
++fi
++
++bindgen_args=("${input}" -o "${output}")
++
++# Try to generate inline functions
++bindgen_args+=(--generate-inline-functions)
++
++# Implement Debug on all generated structures so we can debug C FFI issues
++bindgen_args+=(--impl-debug)
++
++# Implement PartialEq when possible so that we can compare file handles
++bindgen_args+=(--with-derive-partialeq)
++
++# Implement Default when possible so that we can zero-init things
++bindgen_args+=(--with-derive-default)
++
++# Don't complain about unsafe code and improperly cased typenames being wrong
++# in this file, we want the C versions as-is
++bindgen_args+=(--raw-line '#![allow(non_camel_case_types)]')
++bindgen_args+=(--raw-line '#![allow(non_snake_case)]')
++bindgen_args+=(--raw-line '#![allow(non_upper_case_globals)]')
++
++# aarch64 libc defines va_args as an opaque u64 array which causes rustc to
++# complain about passing arrays by reference.  We don't call out to va_args
++# functions from Rust, so this is irrelevant.
++bindgen_args+=(--raw-line '#![allow(improper_ctypes)]')
++
++# Don't complain about unsafe code missing safety docs because we implicitly
++# trust the C programmers
++bindgen_args+=(--raw-line '#![allow(clippy::missing_safety_doc)]')
++
++# Older versions of bindgen (e.g. 0.60) required us to request promotion of
++# size_t to usize.  This seems to be the default as of 0.69, so force it here.
++if bindgen --help | grep -q -w -- '--size_t-is-usize'; then
++	bindgen_args+=(--size_t-is-usize)
++fi
++
++# Include xfsprogs C headers; if bindgen can't find stddef.h then you need to
++# install clang
++clang_args=(-I ../include/ -I ../libxfs/ -I ../)
++
++exec bindgen "${bindgen_args[@]}" -- "${clang_args[@]}"
+diff --git a/healer/src/lib.rs b/healer/src/lib.rs
+index 34ab19e07de82f..9455ed840b3ab0 100644
+--- a/healer/src/lib.rs
++++ b/healer/src/lib.rs
+@@ -5,3 +5,4 @@
   */
-+#![allow(unexpected_cfgs)]
-+
- pub const VERSION: &str = "@pkg_version@";
  
-+/// Try to initialize a localization library.  Like the other xfsprogs utilities, we don't care
-+/// if this fails.
-+#[cfg(feature = "gettext")]
-+pub fn init_localization() {
-+    let _ = gettextrs::setlocale(gettextrs::LocaleCategory::LcAll, "");
-+    let _ = gettextrs::bindtextdomain("@PACKAGE@", "@LOCALEDIR@");
-+    let _ = gettextrs::textdomain("@PACKAGE@");
-+}
-+
-+/// Look up a string in a message catalog
-+#[cfg(feature = "gettext")]
-+pub use gettextrs::gettext as M_;
-+
-+/// Pretend to initialize localization library
-+#[cfg(not(feature = "gettext"))]
-+pub fn init_localization() {}
-+
- /// Dummy function to simulate looking up a string in a message catalog
- #[allow(non_snake_case)]
-+#[cfg(not(feature = "gettext"))]
- pub fn M_<T: Into<String>>(msgid: T) -> String {
-     msgid.into()
- }
+ pub mod xfsprogs;
++pub mod xfs_fs;
 diff --git a/include/builddefs.in b/include/builddefs.in
-index e477a77f753a22..3ac4147de8c815 100644
+index 3ac4147de8c815..20bd2d85b755e0 100644
 --- a/include/builddefs.in
 +++ b/include/builddefs.in
-@@ -102,6 +102,7 @@ ENABLE_GETTEXT	= @enable_gettext@
- ENABLE_EDITLINE	= @enable_editline@
- ENABLE_SCRUB	= @enable_scrub@
- ENABLE_HEALER	= @enable_healer@
-+ENABLE_GETTEXT_RS = @enable_gettext_rs@
+@@ -25,6 +25,9 @@ HAVE_HEALER_CRATES = @have_healer_crates@
+ CARGOFLAGS = @CARGOFLAGS@
+ USE_SYSTEM_CRATES = @use_system_crates@
+ HAVE_CLIPPY = @have_clippy@
++HAVE_CLANG = @have_clang@
++HAVE_RUSTFMT = @have_rustfmt@
++HAVE_BINDGEN = @have_bindgen@
  
- HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
- 
-diff --git a/include/buildrules b/include/buildrules
-index 871e92db02de14..814e0b79ffb8ae 100644
---- a/include/buildrules
-+++ b/include/buildrules
-@@ -88,6 +88,7 @@ ifdef POTHEAD
- XGETTEXT_FLAGS=\
- 	--keyword=_ \
- 	--keyword=N_ \
-+	--keyword=M_ \
- 	--package-name=$(PKG_NAME) \
- 	--package-version=$(PKG_VERSION) \
- 	--msgid-bugs-address=$(PKG_BUGREPORT)
+ # make sure we don't pick up whacky LDFLAGS from the make environment and
+ # only use what we calculate from the configured options above.
 diff --git a/m4/package_rust.m4 b/m4/package_rust.m4
-index 7c2504b3390941..a596ec0740f51e 100644
+index a596ec0740f51e..0c25d7fba02243 100644
 --- a/m4/package_rust.m4
 +++ b/m4/package_rust.m4
-@@ -119,10 +119,16 @@ ENDL
- # Do we have all the crates we need for xfs_healer?
- AC_DEFUN([AC_HAVE_HEALER_CRATES],
- [
-+  if test "$enable_gettext_rs" = "yes"; then
-+    gettext_dep='gettext-rs = { version = "0", optional = true }'	# 0.7.0
-+  else
-+    gettext_dep=""
-+  fi
-   AC_CHECK_CRATES([have_healer_crates], [xfs_healer],
-     [
- clap = { version = "4.0.32", features = [["derive"]] }
- anyhow = { version = "1.0.69" }
-+$gettext_dep
+@@ -132,3 +132,25 @@ $gettext_dep
  ],
      [yes], [no])
  ])
++
++# Check if clang is installed so that bindgen can find system headers.
++AC_DEFUN([AC_HAVE_CLANG],
++[
++  AC_CHECK_PROG([have_clang], [clang], [yes], [no])
++  AC_SUBST(have_clang)
++])
++
++# Check if rustfmt is installed; bindgen needs this to produce readable source
++# code.
++AC_DEFUN([AC_HAVE_RUSTFMT],
++[
++  AC_CHECK_PROG([have_rustfmt], [rustfmt], [yes], [no])
++  AC_SUBST(have_rustfmt)
++])
++
++# Check if bindgen (aka the C FFI generator) is installed
++AC_DEFUN([AC_HAVE_BINDGEN],
++[
++  AC_CHECK_PROG([have_bindgen], [bindgen], [yes], [no])
++  AC_SUBST(have_bindgen)
++])
 
