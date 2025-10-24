@@ -1,237 +1,127 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BA8D30BB89
-	for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 12:13:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB9033218B2
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 14:12:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761308004; cv=none; b=O6uU3ujTZrU/h6gA9nGUNeeujo+ojPfhyFbhKBLrIq+Ki1Lphoat81uMBV7ALkhO6B9yLuurifiSNi9y3DCOD1eRSSxkqUGJpEx+ElCcnVKzZbyV/VfzIfSqEjrEW0lXnybWZmQ35aZscKGy3TQdqK2JeOIVclEmWiCJe8yPfk0=
+	t=1761315125; cv=none; b=cePuvv4FFpoklQRgaYmCDYbAfj6E3ntPrLlXFUa3MhaH7Eqh/iq5TwfmDwJUWQ0EsC/YNDZZG/CUDiCj+J5MYKCu5v0/rk8y4ORI6PqJpFM3rFKJa37nEaRUYLUqZZLLe5/hFmqB68Zwdc89t3/MTw0E4PLCFEFB93V7l5CC0Mo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761308004; c=relaxed/simple;
-	bh=i0EfOjInC/aJdda6sojezLSbi8o9QQmIbE3cti/JV8w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OCjCyKomjsquAY91M+uwrMHJw9ynnGPiLZVLWb54BS2xlZHm7KtFArj4LDHo/9ZJsI5NJpCCfb7TWZkBeX8JQieEjAuTFaODguoIwxipBJPz6LA5JAXBrW8t/CH0IzCbkb/4CHGkJKcEt51XPmjp/6Lk5bIHJ1Ci9AnBIbz4xhc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=CjojHoYq; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=1acUFfy3; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=CjojHoYq; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=1acUFfy3; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1761315125; c=relaxed/simple;
+	bh=HN4SG8Tc9Lo4RABBZetdrW5lu5OU2pYnC/8jcLCSPDo=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:Mime-Version; b=K1RJXxX0Z758MmMOaXNcvWxNQ5lHkvbXOaIhqRVGNW7iwhjLDbOf3FylN8opHNNhxUSTAo2nQU+sBh1X2mKj1/cKUSZ3I+lAM+oMXc9ddxL4WDx4sG0BWQbnaPS5FRyuLj0FPoJO5QFqxSXjfS8TeRcdVTs2I4YoJuTzGdHX+Ow=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gnUnte83; arc=none smtp.client-ip=209.85.215.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="CjojHoYq";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="1acUFfy3";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="CjojHoYq";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="1acUFfy3"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 46D6C2120A;
-	Fri, 24 Oct 2025 12:13:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1761308000; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AkVO73khQEXexPsxQT0RVGnJrziAwGHpdDpx2ltyfZ0=;
-	b=CjojHoYqaGMzfr5XqNusQqu1GyDxPy0hnR6Ldj+jMf2eYrTAdI2alMTnKoUSmrXoHvFzyY
-	UToaifYK+aQl8TtK32yOMGz7StJr1kY/XFCLmL8yl3rGsIxvYxpuaYXr9RvWQe45kcVwON
-	5/tuFmNtP0/OwY0IBwV80drSEDaabHk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1761308000;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AkVO73khQEXexPsxQT0RVGnJrziAwGHpdDpx2ltyfZ0=;
-	b=1acUFfy3hGwnqk5XZUYklOyZE7Yzi46EVBZ/g+PJSSiLxPnydp7ewriPn0sf5iaWyR9gF9
-	M2aK7AndCIkzA5Cg==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1761308000; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AkVO73khQEXexPsxQT0RVGnJrziAwGHpdDpx2ltyfZ0=;
-	b=CjojHoYqaGMzfr5XqNusQqu1GyDxPy0hnR6Ldj+jMf2eYrTAdI2alMTnKoUSmrXoHvFzyY
-	UToaifYK+aQl8TtK32yOMGz7StJr1kY/XFCLmL8yl3rGsIxvYxpuaYXr9RvWQe45kcVwON
-	5/tuFmNtP0/OwY0IBwV80drSEDaabHk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1761308000;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AkVO73khQEXexPsxQT0RVGnJrziAwGHpdDpx2ltyfZ0=;
-	b=1acUFfy3hGwnqk5XZUYklOyZE7Yzi46EVBZ/g+PJSSiLxPnydp7ewriPn0sf5iaWyR9gF9
-	M2aK7AndCIkzA5Cg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 301D713693;
-	Fri, 24 Oct 2025 12:13:20 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Mwu+C2Bt+2jXOQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Fri, 24 Oct 2025 12:13:20 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 3BF23A28AB; Fri, 24 Oct 2025 14:13:19 +0200 (CEST)
-Date: Fri, 24 Oct 2025 14:13:19 +0200
-From: Jan Kara <jack@suse.cz>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
-	Eric Van Hensbergen <ericvh@kernel.org>, Latchesar Ionkov <lucho@ionkov.net>, 
-	Dominique Martinet <asmadeus@codewreck.org>, Christian Schoenebeck <linux_oss@crudebyte.com>, 
-	Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, Mark Fasheh <mark@fasheh.com>, 
-	Joel Becker <jlbec@evilplan.org>, Joseph Qi <joseph.qi@linux.alibaba.com>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, 
-	Josef Bacik <josef@toxicpanda.com>, Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org, 
-	v9fs@lists.linux.dev, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, jfs-discussion@lists.sourceforge.net, 
-	ocfs2-devel@lists.linux.dev, linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH 10/10] mm: rename filemap_fdatawrite_range_kick to
- filemap_flush_range
-Message-ID: <yybiur2jmv6s4n2sjlubwimmfbsrb3gx6tk67ki23jnqncaeba@wayirnpbaum3>
-References: <20251024080431.324236-1-hch@lst.de>
- <20251024080431.324236-11-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gnUnte83"
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-b679450ecb6so1541709a12.2
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 07:12:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1761315123; x=1761919923; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=SxjAAwvJxcKyZkTF4DfQc6OYD277RCMtejBYyIJXDsE=;
+        b=gnUnte83eRgANIufkHhT4H6ixg/SOQ/MPYY37MLmWcIlUN9L+zwkyqJcOpl1dc0EVE
+         jkn/DxSk24ONiyIprFWe8/VXt1ynoKYPSvRHhlDNCZDyHIopkjXwANvVK3nqsyGTuiuT
+         hj2azbQLCMm0pkwVXp+auukoHA/8ll0tM81CDHdI+cf/TP5sJx/AYRckxRZe6bJiGStA
+         qQWVw4wO8+F+pKIXUyKBW2ENgwqBMuBX9U5FUA1OfnrIbXth35v4XexF/NVyvxUE+dcJ
+         8Mmm2QiiwN5O5AKxcn/prT5L/DSYNzAQENCwMD0R/ft/6ckNR5KBC5uL9d91pmzAiJN6
+         OS2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761315123; x=1761919923;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=SxjAAwvJxcKyZkTF4DfQc6OYD277RCMtejBYyIJXDsE=;
+        b=EAUR/sndL8+CZeMRreAB3ete+vL01KT36tu8cmD5K7TDhLDe51ez63sIN5ZHWuyIDV
+         kJJrLadViqpBP3ypNdO+ky5B3qtocwgsktbWlfoPzCRn/RdvBdrSt0AhMj4Q/5muEjXU
+         j+V0Pw1YdRCL/L3G0VN/CKNV0Z+I47NqjFkkezM0y182JQOkxBemdea24KVPJlfDavm6
+         8ZhuEVPkX5WfwCRTY9VSumb6PZzoYRYjSPVbuGWvrjWVQ2hNMrCXWoQn9W7KnsGAakYM
+         1wqhHZw6Klkg7vCkasBWfb9SaH0CQD4NyP7ET4xMsDvTrjuN3zomENQFoJfWVmZDOb6P
+         jHGw==
+X-Forwarded-Encrypted: i=1; AJvYcCUtrVwRsXDptEj69Bfk3juAXaJ+tTPA22LRMtNm9MZIdRQh6QTnvvmBhj+eskFeptwgo8Guh5tAhWQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzi0v95F9EejnWGZCqwIKkTCYXSyeLaSlgxxxWjh2EgxLnhFE+w
+	5WNa9tKXbWcbdOdkx59VGGFe5nSpyQmb9dR65Yzmox7csmVVARkGdy+L
+X-Gm-Gg: ASbGnctUVoAXdXNe9sYBQ29pPCHreY6stX1hvbwG9ug6mgXAKPPWb/p3e6YOUH4jpak
+	alwjIZ2gqZ3w+NRMwkVEjeosPDJ3Ktu8o47SsjFzuUxI6mTUGOgtdSuxDpjQM1KXWgkwmIanbQr
+	+Mmdii2W/nAK9YDnwvQnpI4FM+99GkkveyKBHc7aUZvc2L5JrzzP4H4fm+ybu5JMaAt7/7GwLSK
+	NWWyoTppPHyk+FD9QJ1yQWNU5Kd/o9ByEmjnKy+Xrr1G/FlGdT70aLL+K9tcMnzzugX73BcH+xD
+	Q4KC1a9fhSkXhZ2y4NxHnxV7+i/de5IICnnok8EmLRriPRnVGTuHMLcL3xjHic1+BRcaFSnIXzP
+	noTfp7mqzuG+ba68mSTBCA2OyzxQnrZiQSyIpLnTOpco2QrfohYVWZylvO9x1tel3payYzVhMKT
+	lV1amExJrVwgIz4rl2i74qAV9TBI6ebU+G2Jdkymn9DV1/RiWbNuyVVdkPYGQB1CA=
+X-Google-Smtp-Source: AGHT+IHvWUViWUbcO4jFDmrP4XCETisDqYKqzRJMqbtZ69yGInyTHi+Yd9XnBN1TIdB68GJvKa9mEg==
+X-Received: by 2002:a17:902:e543:b0:282:ee0e:5991 with SMTP id d9443c01a7336-2946e0eb3cemr82154295ad.30.1761315123024;
+        Fri, 24 Oct 2025 07:12:03 -0700 (PDT)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.202.82])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2946dfd05dbsm57178835ad.54.2025.10.24.07.11.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Oct 2025 07:12:02 -0700 (PDT)
+Message-ID: <c45c71ce0c3dcd321807debfe580c86cc185623a.camel@gmail.com>
+Subject: Re: [PATCH 1/3] writeback: cleanup writeback_chunk_size
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>, 
+	Jan Kara <jack@suse.cz>, Carlos Maiolino <cem@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, willy@infradead.org, 
+	dlemoal@kernel.org, hans.holmberg@wdc.com, linux-mm@kvack.org, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J. Wong"
+	 <djwong@kernel.org>
+Date: Fri, 24 Oct 2025 19:41:56 +0530
+In-Reply-To: <20251017034611.651385-2-hch@lst.de>
+References: <20251017034611.651385-1-hch@lst.de>
+	 <20251017034611.651385-2-hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251024080431.324236-11-hch@lst.de>
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_COUNT_THREE(0.00)[3];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[24];
-	MIME_TRACE(0.00)[0:+];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
-X-Spam-Score: -3.80
-X-Spam-Level: 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-On Fri 24-10-25 10:04:21, Christoph Hellwig wrote:
-> Rename filemap_fdatawrite_range_kick to filemap_flush_range because it
-> is the ranged version of filemap_flush.
+On Fri, 2025-10-17 at 05:45 +0200, Christoph Hellwig wrote:
+> Return the pages directly when calculated instead of first assigning
+> them back to a variable, and directly return for the data integrity /
+> tagged case instead of going through an else clause.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks good. Feel free to add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 > ---
->  fs/sync.c          | 3 +--
->  include/linux/fs.h | 6 +++---
->  mm/fadvise.c       | 2 +-
->  mm/filemap.c       | 8 ++++----
->  4 files changed, 9 insertions(+), 10 deletions(-)
+>  fs/fs-writeback.c | 14 +++++---------
+>  1 file changed, 5 insertions(+), 9 deletions(-)
 > 
-> diff --git a/fs/sync.c b/fs/sync.c
-> index 6d8b04e04c3c..1759f6ba36cd 100644
-> --- a/fs/sync.c
-> +++ b/fs/sync.c
-> @@ -285,8 +285,7 @@ int sync_file_range(struct file *file, loff_t offset, loff_t nbytes,
->  			ret = filemap_fdatawrite_range(mapping, offset,
->  					endbyte);
->  		else
-> -			ret = filemap_fdatawrite_range_kick(mapping, offset,
-> -					endbyte);
-> +			ret = filemap_flush_range(mapping, offset, endbyte);
->  		if (ret < 0)
->  			goto out;
->  	}
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index c895146c1444..a5dbfa20f8d7 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -3014,7 +3014,7 @@ extern int __must_check file_fdatawait_range(struct file *file, loff_t lstart,
->  extern int __must_check file_check_and_advance_wb_err(struct file *file);
->  extern int __must_check file_write_and_wait_range(struct file *file,
->  						loff_t start, loff_t end);
-> -int filemap_fdatawrite_range_kick(struct address_space *mapping, loff_t start,
-> +int filemap_flush_range(struct address_space *mapping, loff_t start,
->  		loff_t end);
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index 2b35e80037fe..11fd08a0efb8 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -1893,16 +1893,12 @@ static long writeback_chunk_size(struct bdi_writeback *wb,
+>  	 *                   (maybe slowly) sync all tagged pages
+>  	 */
+>  	if (work->sync_mode == WB_SYNC_ALL || work->tagged_writepages)
+> -		pages = LONG_MAX;
+> -	else {
+> -		pages = min(wb->avg_write_bandwidth / 2,
+> -			    global_wb_domain.dirty_limit / DIRTY_SCOPE);
+> -		pages = min(pages, work->nr_pages);
+> -		pages = round_down(pages + MIN_WRITEBACK_PAGES,
+> -				   MIN_WRITEBACK_PAGES);
+> -	}
+> +		return LONG_MAX;
 >  
->  static inline int file_write_and_wait(struct file *file)
-> @@ -3051,8 +3051,8 @@ static inline ssize_t generic_write_sync(struct kiocb *iocb, ssize_t count)
->  	} else if (iocb->ki_flags & IOCB_DONTCACHE) {
->  		struct address_space *mapping = iocb->ki_filp->f_mapping;
->  
-> -		filemap_fdatawrite_range_kick(mapping, iocb->ki_pos - count,
-> -					      iocb->ki_pos - 1);
-> +		filemap_flush_range(mapping, iocb->ki_pos - count,
-> +				iocb->ki_pos - 1);
->  	}
->  
->  	return count;
-> diff --git a/mm/fadvise.c b/mm/fadvise.c
-> index f1be619f0e58..67028e30aa91 100644
-> --- a/mm/fadvise.c
-> +++ b/mm/fadvise.c
-> @@ -111,7 +111,7 @@ int generic_fadvise(struct file *file, loff_t offset, loff_t len, int advice)
->  		spin_unlock(&file->f_lock);
->  		break;
->  	case POSIX_FADV_DONTNEED:
-> -		filemap_fdatawrite_range_kick(mapping, offset, endbyte);
-> +		filemap_flush_range(mapping, offset, endbyte);
->  
->  		/*
->  		 * First and last FULL page! Partial pages are deliberately
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index f90f5bb2b825..fa770768ea3a 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -419,7 +419,7 @@ int filemap_fdatawrite(struct address_space *mapping)
->  EXPORT_SYMBOL(filemap_fdatawrite);
->  
->  /**
-> - * filemap_fdatawrite_range_kick - start writeback on a range
-> + * filemap_flush_range - start writeback on a range
->   * @mapping:	target address_space
->   * @start:	index to start writeback on
->   * @end:	last (inclusive) index for writeback
-> @@ -429,12 +429,12 @@ EXPORT_SYMBOL(filemap_fdatawrite);
->   *
->   * Return: %0 on success, negative error code otherwise.
->   */
-> -int filemap_fdatawrite_range_kick(struct address_space *mapping, loff_t start,
-> +int filemap_flush_range(struct address_space *mapping, loff_t start,
->  				  loff_t end)
->  {
->  	return filemap_writeback(mapping, start, end, WB_SYNC_NONE, NULL);
+> -	return pages;
+> +	pages = min(wb->avg_write_bandwidth / 2,
+> +		    global_wb_domain.dirty_limit / DIRTY_SCOPE);
+> +	pages = min(pages, work->nr_pages);
+> +	return round_down(pages + MIN_WRITEBACK_PAGES, MIN_WRITEBACK_PAGES);
+This looks fine to me since this simplies the overall structure of the code. I don't think this
+introduces any functional change.
+
+Reviewed-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
 >  }
-> -EXPORT_SYMBOL_GPL(filemap_fdatawrite_range_kick);
-> +EXPORT_SYMBOL_GPL(filemap_flush_range);
 >  
->  /**
->   * filemap_flush - mostly a non-blocking flush
-> @@ -447,7 +447,7 @@ EXPORT_SYMBOL_GPL(filemap_fdatawrite_range_kick);
->   */
->  int filemap_flush(struct address_space *mapping)
->  {
-> -	return filemap_fdatawrite_range_kick(mapping, 0, LLONG_MAX);
-> +	return filemap_flush_range(mapping, 0, LLONG_MAX);
->  }
->  EXPORT_SYMBOL(filemap_flush);
->  
-> -- 
-> 2.47.3
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+>  /*
+
