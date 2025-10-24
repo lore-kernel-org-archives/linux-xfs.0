@@ -1,173 +1,120 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6590B2FDC3E;
-	Fri, 24 Oct 2025 08:06:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0576222B8BD
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 09:01:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761293189; cv=none; b=s56Sbwh1pIMNbLkgPLpjrDWUxmERVecFX6acl35/uyxq7Gxai5yzUOS6QFQeiyHQb7QyqTOWpcLXQsXigXvJc4ZwPbSoBvBCmHjeVhrHITFn/+lJ8nZgWIoY0nTEwIJLGf8NtUwIaIcBFiDNkART2YHUWabq3OX7Y7+eC/wqZPY=
+	t=1761296483; cv=none; b=LPs/VL4mwxd+EsOg0pAWhmPvDgKEF3PuWNbxtBB6pezmeWczOP49i0po1Hx34OzKBZBSv/LYuRZCjK3b6V3Vm0LyNM9dN2UjvbK4ZaRa9mXXWPYTu1FydvHKT4kzqSOxsk+UFzjF+RcPl9TGwR5ZiwgLMqdR+hlWSezShQjkwHo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761293189; c=relaxed/simple;
-	bh=fwUWvRaQsLFX3LqP3Ew3i68VLcwmDW8xgH2gbbo9sQI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QwjxqzXILQca5L1PPiQv1W5S8LhMt1b3NuLfDV/4uZbHdrXTTiWT1o1evXQ5x68/8AV6Ca7y3OuaP41bbbnDsEC0QZ8mDInitWacy6UFozTLrD0mPFozcRmOA9i2wciyPee2qtsR8LtLn1V5GfjmdQw+26uQljL7WAoEBbgRK9E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=D6AogjIs; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1761296483; c=relaxed/simple;
+	bh=kzd8hR8ZB48TRf1FBLYy52ZbdXMgU2pQUI3oHfpkBtE=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:Mime-Version; b=Nm7QJZ/XLYhX/JAY6jtqSAJwofGkv7NccuISEAqKF1dPwQfCaDxAjBZNebsvwGwtbVCgY+N8lSRi1I+z2iPbBzE8/xJafFLzv1gzCstnyQG8DuN8GP+B6jtzakiqp3tL5HOhHaKtc0gK4XxkWnSr7lSINt2RVsNKDLQX3cnOIaA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FmmN4878; arc=none smtp.client-ip=209.85.210.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="D6AogjIs"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=CK4+A+XQ8xSWXf+Z9tTtAvh9OT31XsHF6kx6Btc5iA8=; b=D6AogjIsaOXIaEKMP8+nYzb2S/
-	Oi9fBsDLQ/QDLj8zWUOszOIZUXoUGJEGD6oOe3/gwwa36ob+z5Y4jnXIMl/I47R2yybCHjHy9PVpp
-	u9rk8NVCJvRsT7wc5scuOjf+d0qjgiv7xQKVzrHmYhwZolySV+SEki+Hm9VEk4MYwcBCOKWh8kE/L
-	vlzlOWvLC6nPNVOCQn/9gA1eRi4wHGrw+7X1beFwTeRlaIDXxs6ij8o/wGIbY6gxmKmEmayQZ5noV
-	iBvVRW/cRH9N2cvm1YrB7NcZkATFE2g0crlK/d+n5Fpb75Kk12b+O+FG+yCLdiKH/xMwQRP6Ju0xM
-	N9qYV9hw==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vCCoa-00000008cQn-37yb;
-	Fri, 24 Oct 2025 08:06:25 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	Eric Van Hensbergen <ericvh@kernel.org>,
-	Latchesar Ionkov <lucho@ionkov.net>,
-	Dominique Martinet <asmadeus@codewreck.org>,
-	Christian Schoenebeck <linux_oss@crudebyte.com>,
-	Chris Mason <clm@fb.com>,
-	David Sterba <dsterba@suse.com>,
-	Mark Fasheh <mark@fasheh.com>,
-	Joel Becker <jlbec@evilplan.org>,
-	Joseph Qi <joseph.qi@linux.alibaba.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Jan Kara <jack@suse.cz>,
-	linux-block@vger.kernel.org,
-	v9fs@lists.linux.dev,
-	linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	jfs-discussion@lists.sourceforge.net,
-	ocfs2-devel@lists.linux.dev,
-	linux-xfs@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [PATCH 10/10] mm: rename filemap_fdatawrite_range_kick to filemap_flush_range
-Date: Fri, 24 Oct 2025 10:04:21 +0200
-Message-ID: <20251024080431.324236-11-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251024080431.324236-1-hch@lst.de>
-References: <20251024080431.324236-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FmmN4878"
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-7a26ea3bf76so2450978b3a.2
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 02:01:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1761296481; x=1761901281; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=JzOfaQD9roYcEhX3qr2200GMaOEmWqdNntaV+C+xDvo=;
+        b=FmmN48785e4CoOH3n5OKyz1wzyowcEBIxngIdu6viSgpOh6bZqog7kKSWaVMX8wFOs
+         AwQKnR51WVp0KQQ2Rkv+EZ7+Vk0fiOZT8uvXDIeSqZYzP1DZ8Wo04ndBJ3hn3lH+bpwm
+         THir5zWbRxLgqy4AG8dcyYGlhxbEbE69kuX+YbFY892vpRqIoFtbaJ9B7tcXzvto3+Ta
+         mfq2kNCfX51IR/bswYaPXPeCpmdenqIGdYJrzpcnWALJPGQDuTj/XvUaTTQOYR8zs18T
+         1z4WHtf7RtwbHqWo7WvLYxxnZHNCkYhdCES622mEgaDIEmgnQXKyWlO76hVeTVCdbw4f
+         TRiQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761296481; x=1761901281;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=JzOfaQD9roYcEhX3qr2200GMaOEmWqdNntaV+C+xDvo=;
+        b=ZjgDIzLHUNJ1DLupsfuYbOmwuuD8iB8BkwWn/KrkqXaTuPmMA7tZt3j+X3yDycIBEs
+         bf3ENmNIrt+yy2QFdiTBWR6rkOzkgK9m5yGVfpWze+emDrJu8X+8hg5dsbsfwooZcllY
+         u9gMeLh6mS5fVVeTgmFHKG17qI+qD3W4eAoDAxEF3+VpBBKoswTjuIl6xcon4sXrAiuZ
+         2clpnzb/zcj5NFx9UnanhmjEOMdoAQelSM9COOuxeosU5pBl3fw+5KU2c/LCbxbemG7w
+         Hd8CTWDOyEbfheFhCWXGiHA6xQ0EoVWZSjlyhDWDM8CuILIgW/V6IHhmmeulopmdYyha
+         Zz2Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXPEuKhyXiQH8P3KJbMmVJMqD8Dg228Ty2Nqir0UU6523x25PBwQ8KONjghqzOgbN+aJ3g/1qbwTyo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwPjOv7y0NGXIJXk2M/6Rtn5wtX+qdJnWu0ErWvqdEU/UbC8Pde
+	6WHLjbnHhM7pKLYcNfWw5+GNe1N6C14N6OSZD9Y1geokyGz81AsJTAkO
+X-Gm-Gg: ASbGncu0fq0zhABt4afUeMbAnDUb8gFBRClBQrp23G8qgcIgItJL5/cNE61h2f/y4uk
+	A2iIBRvFSQTHxtjDZtKsQvQ/D8KlRilvQodvEqY67437SAUh9BRSYrqXbdRSPuDKIv/b1I3ozcI
+	kJF4QScnyJbiO8HIIKPQNdmxR/N6h6OQqrL/utUnzZHk8wTgxpLZYyu0V+3OqVCDCIpMlgQJ0RB
+	B9UyH+s5OD7ZAb7YB8cqKfGtpWlD2blymPjqkcvwoWZo1p4GVVtBHrVnwMMF+jUE8P3+qTaRq35
+	jSz1CfAuxLPUZI2Fuv2MZQDEbizp3RlCZz+2rfGeBHvIlVbnZx10Yb2GJG8nBL89MExofnqww0M
+	nnxlr/xz83kGBa+hD6DsNXc+ENvNXXUHtKBSLvswwA+9nJwfLwzXjpMgwSojno9XNbhDJTj4UwZ
+	CSqWY/3M2ICf62fTkq2wn/yt3auhTg4U2ZEIuQUED3noZ+meCJJtZp
+X-Google-Smtp-Source: AGHT+IEWrEXZsXwa1nm/Ns8JJ7ZzpHbBOT23EPNhXFS4lCF44h+6JLL3rQbtrCdZsowGvK3GciFshw==
+X-Received: by 2002:a05:6a00:4652:b0:79a:f5eb:3dce with SMTP id d2e1a72fcca58-7a28686017dmr1852730b3a.31.1761296481235;
+        Fri, 24 Oct 2025 02:01:21 -0700 (PDT)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.202.82])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7a274b8b343sm5215739b3a.45.2025.10.24.02.01.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Oct 2025 02:01:20 -0700 (PDT)
+Message-ID: <95366976c8fee19ab2901c4b11fe5925042fdc95.camel@gmail.com>
+Subject: Re: [PATCH 7/8] common/attr: fix _require_noattr2
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>, zlang@redhat.com
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Date: Fri, 24 Oct 2025 14:31:16 +0530
+In-Reply-To: <176054618026.2391029.1336336050566653412.stgit@frogsfrogsfrogs>
+References: 
+	<176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
+	 <176054618026.2391029.1336336050566653412.stgit@frogsfrogsfrogs>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-Rename filemap_fdatawrite_range_kick to filemap_flush_range because it
-is the ranged version of filemap_flush.
+On Wed, 2025-10-15 at 09:38 -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> attr2/noattr2 doesn't do anything anymore and aren't reported in
+> /proc/mounts, so we need to check /proc/mounts and _notrun as a result.
+> 
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> ---
+>  common/attr |    4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> 
+> diff --git a/common/attr b/common/attr
+> index 1c1de63e9d5465..35e0bee4e3aa53 100644
+> --- a/common/attr
+> +++ b/common/attr
+> @@ -241,7 +241,11 @@ _require_noattr2()
+>  		|| _fail "_try_scratch_mkfs_xfs failed on $SCRATCH_DEV"
+>  	_try_scratch_mount -o noattr2 > /dev/null 2>&1 \
+>  		|| _notrun "noattr2 mount option not supported on $SCRATCH_DEV"
+> +	grep -w "$SCRATCH_MNT" /proc/mounts | awk '{print $4}' | grep -q -w noattr2
+If noatrr2 doesn't do anything, then in that case _try_scratch_mount will ignore noattr2 and mount
+will succeed. With the above change, we are just checking if noattr2 appears in /proc/mounts(after
+the mount), if yes then the preconditions returns true, else the test using this precondition is
+notrun. Right?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/sync.c          | 3 +--
- include/linux/fs.h | 6 +++---
- mm/fadvise.c       | 2 +-
- mm/filemap.c       | 8 ++++----
- 4 files changed, 9 insertions(+), 10 deletions(-)
+This looks okay to me.
+Reviewed-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
 
-diff --git a/fs/sync.c b/fs/sync.c
-index 6d8b04e04c3c..1759f6ba36cd 100644
---- a/fs/sync.c
-+++ b/fs/sync.c
-@@ -285,8 +285,7 @@ int sync_file_range(struct file *file, loff_t offset, loff_t nbytes,
- 			ret = filemap_fdatawrite_range(mapping, offset,
- 					endbyte);
- 		else
--			ret = filemap_fdatawrite_range_kick(mapping, offset,
--					endbyte);
-+			ret = filemap_flush_range(mapping, offset, endbyte);
- 		if (ret < 0)
- 			goto out;
- 	}
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index c895146c1444..a5dbfa20f8d7 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -3014,7 +3014,7 @@ extern int __must_check file_fdatawait_range(struct file *file, loff_t lstart,
- extern int __must_check file_check_and_advance_wb_err(struct file *file);
- extern int __must_check file_write_and_wait_range(struct file *file,
- 						loff_t start, loff_t end);
--int filemap_fdatawrite_range_kick(struct address_space *mapping, loff_t start,
-+int filemap_flush_range(struct address_space *mapping, loff_t start,
- 		loff_t end);
- 
- static inline int file_write_and_wait(struct file *file)
-@@ -3051,8 +3051,8 @@ static inline ssize_t generic_write_sync(struct kiocb *iocb, ssize_t count)
- 	} else if (iocb->ki_flags & IOCB_DONTCACHE) {
- 		struct address_space *mapping = iocb->ki_filp->f_mapping;
- 
--		filemap_fdatawrite_range_kick(mapping, iocb->ki_pos - count,
--					      iocb->ki_pos - 1);
-+		filemap_flush_range(mapping, iocb->ki_pos - count,
-+				iocb->ki_pos - 1);
- 	}
- 
- 	return count;
-diff --git a/mm/fadvise.c b/mm/fadvise.c
-index f1be619f0e58..67028e30aa91 100644
---- a/mm/fadvise.c
-+++ b/mm/fadvise.c
-@@ -111,7 +111,7 @@ int generic_fadvise(struct file *file, loff_t offset, loff_t len, int advice)
- 		spin_unlock(&file->f_lock);
- 		break;
- 	case POSIX_FADV_DONTNEED:
--		filemap_fdatawrite_range_kick(mapping, offset, endbyte);
-+		filemap_flush_range(mapping, offset, endbyte);
- 
- 		/*
- 		 * First and last FULL page! Partial pages are deliberately
-diff --git a/mm/filemap.c b/mm/filemap.c
-index f90f5bb2b825..fa770768ea3a 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -419,7 +419,7 @@ int filemap_fdatawrite(struct address_space *mapping)
- EXPORT_SYMBOL(filemap_fdatawrite);
- 
- /**
-- * filemap_fdatawrite_range_kick - start writeback on a range
-+ * filemap_flush_range - start writeback on a range
-  * @mapping:	target address_space
-  * @start:	index to start writeback on
-  * @end:	last (inclusive) index for writeback
-@@ -429,12 +429,12 @@ EXPORT_SYMBOL(filemap_fdatawrite);
-  *
-  * Return: %0 on success, negative error code otherwise.
-  */
--int filemap_fdatawrite_range_kick(struct address_space *mapping, loff_t start,
-+int filemap_flush_range(struct address_space *mapping, loff_t start,
- 				  loff_t end)
- {
- 	return filemap_writeback(mapping, start, end, WB_SYNC_NONE, NULL);
- }
--EXPORT_SYMBOL_GPL(filemap_fdatawrite_range_kick);
-+EXPORT_SYMBOL_GPL(filemap_flush_range);
- 
- /**
-  * filemap_flush - mostly a non-blocking flush
-@@ -447,7 +447,7 @@ EXPORT_SYMBOL_GPL(filemap_fdatawrite_range_kick);
-  */
- int filemap_flush(struct address_space *mapping)
- {
--	return filemap_fdatawrite_range_kick(mapping, 0, LLONG_MAX);
-+	return filemap_flush_range(mapping, 0, LLONG_MAX);
- }
- EXPORT_SYMBOL(filemap_flush);
- 
--- 
-2.47.3
+--NR
+> +	local res=${PIPESTATUS[2]}
+>  	_scratch_unmount
+> +	test $res -eq 0 \
+> +		|| _notrun "noattr2 mount option no longer functional"
+>  }
+>  
+>  # getfattr -R returns info in readdir order which varies from fs to fs.
+> 
 
