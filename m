@@ -1,145 +1,106 @@
-Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FC1A31327E
-	for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 21:59:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 271F41C7009;
+	Fri, 24 Oct 2025 22:08:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761343146; cv=none; b=LgwfWMvCncMkJKBhcxJfglvuyBPH6SmG6ZjVZxl4Tiyrha4igqvbiiQ9cEodJwVJlV76xXcPPpEABoWW1mGc2akcI0z3uKAg9VroR8y7A4bkhRI3bd3y669enV9IA0WNZnjoklayQW6I9dnTRR/+7AXU5ySoEpdyvVixJuKxxq4=
+	t=1761343732; cv=none; b=FJsouNuACHLK0H4Dh/zv3mnvgTmir2kXOWvJMXPeywNqssqPaETaeRh2hU+CMVwzlYCoymgJ7VGXWuMwMmE1YrF0ma3s2nr8u5e9fGyegClvrmtFkB50DEKE9ZmswGNq5Le7ftngzQyAQYj8TKF85Lds+kMN8v8qbzZj4Nf5IkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761343146; c=relaxed/simple;
-	bh=mxdDRl5f6ypVZFwxoiySjpzvSm/XaHmi9pbQ4jbflIM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=j/PjDwEkLCIBvMY2sbzr8C/wiRsTWfCyuucglaLAfPAwyEVYrTEm9eJzzopX+PAEPZjU9V6zET5dhdZcaTTjTs2aHoO8Dj76Juk4BER2sr6JWvxCnH2BklVYwifVmwpvdca0iHnGsnLn0H8/qZFjCwt0ZhIwKwhFekALubJwq7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QKmn90F3; arc=none smtp.client-ip=209.85.160.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1761343732; c=relaxed/simple;
+	bh=Picls1+Xijq5huTjGeJpVt5CxysQFo0zKMNGi41xCLY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lD8Cxq2A58YPBTzFwKEpESOSCMA/mwc+g1cp/+OIU3k6v2+CqzrOM/jCQ0dEQub26xJ1jNTmFn09Gaj9eSeR5kz/mbRGl4GYAcItxoEpioSTFVDoZB6X6Wfs2QpRtCpjL9UMjKDswPB9dE28EjHXzhoW2q3wICm+8dKCipKNeGk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L0T9FRni; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QKmn90F3"
-Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-4e89e689ec7so15982071cf.2
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 14:59:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1761343142; x=1761947942; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=6JSu4wYR7dGj9hekjT0Scgo7oK7p56khXcsyVLerwhg=;
-        b=QKmn90F3xbYBk9WfK+osCC7TbkFMGWeGuYB9idqjQJemxKN9IqaeBRdDGM5DhnA8/T
-         5fRu4lc7X68u7KXNBHgHx6zWled4MJ5GWQOYMoSihuV2ol8Bo/HN/d+AGkvBGBbSaeZx
-         lqapDG/FeFxIOM34ggwhwYRQLOLTqJjmhVCBMp79sIBqjl12hR/EfPDMDjWZutFiJGdR
-         BTkuB9X/aX+A8BO4M9YRWfKPqqo2bzcOiZ/2G+dixUD4wZT4+q/PhJSvVvLIveHN3LkL
-         9VV0pY4neIJqsNBJB2UZjLj51CUg7LF0bxbJrK3LPqbPc3brCnsirhZAsyJ6u+U1Vs97
-         C0Mw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761343142; x=1761947942;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=6JSu4wYR7dGj9hekjT0Scgo7oK7p56khXcsyVLerwhg=;
-        b=Gm6udObeTtLHUZ9up1MywcgR+5gDH0dJNMSijQ49lNDA2lUCxWhizbxzgEsSVLolZp
-         NPYCJNOj0VRSg6EQzfdsjVShnETyEOyXoYAm68POvL8Wm5e4t7Ep2qLHXNu7/1zzIJ7+
-         2GR6971W7s3Ux0vz+UYSK1Qknr85Ix+Y10jweIo2CK/+dHImGBfAax2TE7vTPfkyxTC1
-         FcL4IIkyDbQztmomxtx6+zn57BR0sPSVpjH9neFIz42ZsWXhQ5arLxONA0fgwEFbiB5Z
-         5sXoyJEd73xRWtJ59IJzrHOUUszAGv8WxpNqouh+acP2TjWhRZpLpq2l/QTKAyR7V2lx
-         J/6w==
-X-Forwarded-Encrypted: i=1; AJvYcCXGP4+iJUBx/pgG/is3itzTZ1qEh8lDyG023lFViHclga9UGfB0QaGVNgrAHlgjhguiepp+btTtJ/Y=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzQJeM4EudK8vnz45eKRvyDahP6hHsG4Eu4pSNbXaikEjeezwXN
-	J2q/8mdTHLFHOe8IOlZY9HKBDfExwfOd//nshtjnqg3CdI75olnUtA6BfYfKfIdQ/dQ4/EUHnVI
-	41AzVbtVxtpOh6OYG3WHvbZn4zJ2yCRQ=
-X-Gm-Gg: ASbGncvc/fmkdr9VS/zOvQTHflqSfkwVi5W75s0P4cLverSMywY2PPXuYr5D84QAdhL
-	NbTJD9elMFmbsN1IBc5d+mFNYQhQdPLhgx7BpNmqHVNjX1zKSoHZWOS8TIJ8Xv1QoFHI7ouZqUk
-	FwcLIZgJ6F34HFkRaMFsy0QHCGNT132HeDbCpP7rbIr4FO2KXAPtBrzQt1YtRJOU4/1lds2eTWZ
-	RLafc1AsL+Stcqht/g+rQOH0oaI5wdoE/azzqr97xsyHMR3CV/V7lijd2aoAMKCeqtd0vs/xpEp
-	fwxbDAoNUpV1QIU=
-X-Google-Smtp-Source: AGHT+IEbBcSwdHcN87CM+xJKbvHNa6uFwmLTJi2BasWFhru45dH++MGND3s6/74r0tI8E8W9g7oqhkLME3Y3cb4B/Bg=
-X-Received: by 2002:a05:622a:180a:b0:4e8:bbd4:99d8 with SMTP id
- d75a77b69052e-4e8bbd49fd5mr247392271cf.37.1761343142321; Fri, 24 Oct 2025
- 14:59:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L0T9FRni"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AC26C4CEF1;
+	Fri, 24 Oct 2025 22:08:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761343729;
+	bh=Picls1+Xijq5huTjGeJpVt5CxysQFo0zKMNGi41xCLY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=L0T9FRni+T2LZwvK1N6E+5H40oWfXVsobxlFgroj1piKI4soS5WAmSJF+9v5f24bX
+	 iben5RaY8FgB/7ds/vp1h6XYR3UmgypT37DGiQrfm2dRr65M9rfJ3yaJ/C7Z9hmUKC
+	 uBlSPVgimH1KhgcY7AO/tI/C2a+fDGIQh91V4qbKzSq7G4gj8Pgo8KnXH+YKB71ktA
+	 T6haLOrOH54mNoHIeN+dov0szFmHKH9Ig1IopdltHhS/nb7HfiU0QwYyBwiRI3azR7
+	 pXjTgm5tbXEWkQK+a6sXPYd8ntfJJ3JOx/6IAwK46ZZMLPWcmpPguu7V57wU3FbNAd
+	 0aCrWvmVtOPvA==
+Date: Fri, 24 Oct 2025 15:08:49 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/8] common/rc: fix _require_xfs_io_shutdown
+Message-ID: <20251024220849.GM4015566@frogsfrogsfrogs>
+References: <176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
+ <176054617932.2391029.3304833304093152893.stgit@frogsfrogsfrogs>
+ <ee99fc234ccfc433662975d45f24c8900428e2ea.camel@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250926002609.1302233-1-joannelkoong@gmail.com>
- <20250926002609.1302233-8-joannelkoong@gmail.com> <aPqDPjnIaR3EF5Lt@bfoster>
- <CAJnrk1aNrARYRS+_b0v8yckR5bO4vyJkGKZHB2788vLKOY7xPw@mail.gmail.com>
- <CAJnrk1b3bHYhbW9q0r4A0NjnMNEbtCFExosAL_rUoBupr1mO3Q@mail.gmail.com>
- <aPu1ilw6Tq6tKPrf@casper.infradead.org> <CAJnrk1az+8iFnN4+bViR0USRHzQ8OejhQNNgUT+yr+g+X4nFEA@mail.gmail.com>
- <aPvolbqCAr1Tx0Pw@casper.infradead.org>
-In-Reply-To: <aPvolbqCAr1Tx0Pw@casper.infradead.org>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Fri, 24 Oct 2025 14:58:51 -0700
-X-Gm-Features: AS18NWApxbcNiaK6JJ1--DN9zMQLqfqvI7dAP8Den9ypsz9jSVcP9ZxOIt1Gw7w
-Message-ID: <CAJnrk1YZoFSMGHRK0M_=ND1RyXPgc6Ts4hh+UMOkrGqO5G884w@mail.gmail.com>
-Subject: Re: [PATCH v5 07/14] iomap: track pending read bytes more optimally
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Brian Foster <bfoster@redhat.com>, brauner@kernel.org, miklos@szeredi.hu, 
-	djwong@kernel.org, hch@infradead.org, hsiangkao@linux.alibaba.com, 
-	linux-block@vger.kernel.org, gfs2@lists.linux.dev, 
-	linux-fsdevel@vger.kernel.org, kernel-team@meta.com, 
-	linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ee99fc234ccfc433662975d45f24c8900428e2ea.camel@gmail.com>
 
-On Fri, Oct 24, 2025 at 1:59=E2=80=AFPM Matthew Wilcox <willy@infradead.org=
-> wrote:
->
-> On Fri, Oct 24, 2025 at 12:22:32PM -0700, Joanne Koong wrote:
-> > > Feels like more filesystem people should be enabling CONFIG_DEBUG_VM
-> > > when testing (excluding performance testing of course; it'll do ugly
-> > > things to your performance numbers).
-> >
-> > Point taken. It looks like there's a bunch of other memory debugging
-> > configs as well. Do you recommend enabling all of these when testing?
-> > Do you have a particular .config you use for when you run tests?
->
-> Our Kconfig is far too ornate.  We could do with a "recommended for
-> kernel developers" profile.  Here's what I'm currently using, though I
-> know it's changed over time:
->
-> CONFIG_X86_DEBUGCTLMSR=3Dy
-> CONFIG_PM_DEBUG=3Dy
-> CONFIG_PM_SLEEP_DEBUG=3Dy
-> CONFIG_ARCH_SUPPORTS_DEBUG_PAGEALLOC=3Dy
-> CONFIG_BLK_DEBUG_FS=3Dy
-> CONFIG_PNP_DEBUG_MESSAGES=3Dy
-> CONFIG_SCSI_DEBUG=3Dm
-> CONFIG_EXT4_DEBUG=3Dy
-> CONFIG_JFS_DEBUG=3Dy
-> CONFIG_XFS_DEBUG=3Dy
-> CONFIG_BTRFS_DEBUG=3Dy
-> CONFIG_UFS_DEBUG=3Dy
-> CONFIG_DEBUG_BUGVERBOSE=3Dy
-> CONFIG_DEBUG_KERNEL=3Dy
-> CONFIG_DEBUG_MISC=3Dy
-> CONFIG_DEBUG_INFO=3Dy
-> CONFIG_DEBUG_INFO_DWARF4=3Dy
-> CONFIG_DEBUG_INFO_COMPRESSED_NONE=3Dy
-> CONFIG_DEBUG_FS=3Dy
-> CONFIG_DEBUG_FS_ALLOW_ALL=3Dy
-> CONFIG_ARCH_HAS_EARLY_DEBUG=3Dy
-> CONFIG_SLUB_DEBUG=3Dy
-> CONFIG_ARCH_HAS_DEBUG_WX=3Dy
-> CONFIG_HAVE_DEBUG_KMEMLEAK=3Dy
-> CONFIG_SHRINKER_DEBUG=3Dy
-> CONFIG_ARCH_HAS_DEBUG_VM_PGTABLE=3Dy
-> CONFIG_DEBUG_VM_IRQSOFF=3Dy
-> CONFIG_DEBUG_VM=3Dy
-> CONFIG_ARCH_HAS_DEBUG_VIRTUAL=3Dy
-> CONFIG_DEBUG_MEMORY_INIT=3Dy
-> CONFIG_LOCK_DEBUGGING_SUPPORT=3Dy
-> CONFIG_DEBUG_RT_MUTEXES=3Dy
-> CONFIG_DEBUG_SPINLOCK=3Dy
-> CONFIG_DEBUG_MUTEXES=3Dy
-> CONFIG_DEBUG_WW_MUTEX_SLOWPATH=3Dy
-> CONFIG_DEBUG_RWSEMS=3Dy
-> CONFIG_DEBUG_LOCK_ALLOC=3Dy
-> CONFIG_DEBUG_LIST=3Dy
-> CONFIG_X86_DEBUG_FPU=3Dy
-> CONFIG_FAULT_INJECTION_DEBUG_FS=3Dy
->
-> (output from grep DEBUG .build/.config |grep -v ^#)
+On Fri, Oct 24, 2025 at 01:01:50PM +0530, Nirjhar Roy (IBM) wrote:
+> On Wed, 2025-10-15 at 09:37 -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Capturing the output of _scratch_shutdown_handle requires one to enclose
+> > the callsite with $(), otherwise you're comparing the literal string
+> > "_scratch_shutdown_handle" to $SCRATCH_MNT, which always fails.
+> > 
+> > Also fix _require_xfs_io_command to handle testing the shutdown command
+> > correctly.
+> > 
+> > Cc: <fstests@vger.kernel.org> # v2025.06.22
+> > Fixes: 4b1cf3df009b22 ("fstests: add helper _require_xfs_io_shutdown")
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > ---
+> >  common/rc |    7 ++++++-
+> >  1 file changed, 6 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/common/rc b/common/rc
+> > index 1ec84263c917c0..1b78cd0c358bb9 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -619,7 +619,7 @@ _scratch_shutdown_and_syncfs()
+> >  # requirement down to _require_scratch_shutdown.
+> >  _require_xfs_io_shutdown()
+> >  {
+> > -	if [ _scratch_shutdown_handle != $SCRATCH_MNT ]; then
+> > +	if [ $(_scratch_shutdown_handle) != $SCRATCH_MNT ]; then
+> Yeah, right. _scratch_shutdown_handle is a function call and should be placed in a $() or ``. 
+> >  		# Most likely overlayfs
+> >  		_notrun "xfs_io -c shutdown not supported on $FSTYP"
+> >  	fi
+> > @@ -3073,6 +3073,11 @@ _require_xfs_io_command()
+> >  		rm -f $testfile.1
+> >  		param_checked="$param"
+> >  		;;
+> > +	"shutdown")
+> > +		testio=$($XFS_IO_PROG -f -x -c "$command $param" $testfile 2>&1)
+> > +		param_checked="$param"
+> > +		_test_cycle_mount
+> > +		;;
+> Looks good to me. Just curious, any reason why we are testing with TEST_DIR and not with
+> SCRATCH_MNT? 
 
-Thank you, I'll copy this.
->
+$TEST_DIR is always available and mounted, whereas SCRATCH_* are
+optional.
+
+> Reviewed-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+
+Thanks!
+
+--D
+
+> >  	"utimes" )
+> >  		testio=`$XFS_IO_PROG -f -c "utimes 0 0 0 0" $testfile 2>&1`
+> >  		;;
+> > 
+> 
