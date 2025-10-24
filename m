@@ -1,74 +1,75 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CD992E1F0E
-	for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 07:31:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D6BE2F1FD2
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 07:44:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761291117; cv=none; b=aDZ2OWia6vuCPgHDp/8uruHLM2NSRxo2Dga30Ulmfcz9nyW7EsAvHHvMUg2HICe4IuZeStupbytds9bKZnJkzHHwhPeN+mpqFmqlmUcveCQfsMYOiJGIpQeU7mIcgrjTz/Vb+rUmrpBdmhNDUl0BKnMv6Qf/oZe9rgb7/6BzMHM=
+	t=1761291875; cv=none; b=oUAYtLL20Fz84BNuu66AGKB6xK3AhCJZfjiI8n0CUYnvUKHA9bf2KGNrHH9Y/cI+gbFW7qM1D4gGKV38lPxPa/p3PZNotihbJiSBAstBGlKax9RbjUUrrDA14axqPByJMPHmD55SPisb+Lcw48u/x6DBrR2cXdP21pbTTUpCtKg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761291117; c=relaxed/simple;
-	bh=hGGXbnlJbNirMVKZsmuNJSZHVRJA0rz2SBB/4/CB6WQ=;
+	s=arc-20240116; t=1761291875; c=relaxed/simple;
+	bh=ArZYbRNMdA6N4gxDdcBF9wkRYxv5mM3zDGm0GProB9Y=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:Mime-Version; b=HqimIP/dVL7d1DKvFLyODciPt1Us0nFiVFkwqcsAzO0WK/YYDhJZ0PVhe/KUNRPrQLzZPQw1YHp/ifuKXiBc2jWOjNbBGmXXpkD8/+RdWA9JYe5K8URoHtVNHJZeEOfVyFkKOYY7Z4mtbIr8XSHEq9+XnkK1nU9L8iW0rBF1slA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=W4pBvXHg; arc=none smtp.client-ip=209.85.210.170
+	 Content-Type:Mime-Version; b=IRGd2Ff/naUoCQ6QE/SToFI2qaFqgZ8K91l3So2FxCf9LhxWuaUHZhDjNQhxFeuSAz+58e/LeKaeZtKUa2YRmXJnxNeq65WCR2S/j3AKQQnGUY6p4/IUHUvv6iKYCuiwb5BauvX7JevYvg6SBRPFs+vsac8T4bXFd4OoRy0cs3E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JMXWtk8X; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W4pBvXHg"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-781997d195aso1269391b3a.3
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 00:31:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JMXWtk8X"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-781ea2cee3fso1730408b3a.0
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 00:44:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1761291116; x=1761895916; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1761291873; x=1761896673; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to:date
          :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=1A7P5IMbPn+t40gCyqItOLfp70nnc5B3DPRJaxQKRqg=;
-        b=W4pBvXHgcPqidzw48Ycy9P/eA+hD8L2VOrpdwfuCIm7zlvrRKabKcjHYQEs+dMzdSu
-         P81HuReZ8am02yCKw4Hx+JovB4tKrzjtKRdfbNWocPbGKcdrmTmh2t5bCbUeelNO9Om0
-         pEJ2GZTHQEWRKeWDGkrirsEm+b0lqhsBaNjtUD3ujVFQxhBj49DEsB8RdYKLRf9J7scF
-         TDk1XnxS0nJjTmTy62zSd3MEkf3/VWw2Rmd6FZNQZzs9Z9qrgtqV20wO0FQ/rSj6bdlX
-         R+EnvRe5n5ImiupTUm/xudYbMwoqLrLA08zmzqiK6mt5u27SP+XLU0qBUzBfK/6jS2q+
-         FRqQ==
+        bh=5YK5Cv2mHUZf0+sS6ZBkjl83GDLbEDehObxxO+NhiJw=;
+        b=JMXWtk8X5j6syd33yn+4vwYWYkH98W5IdJme7pzVgtElqhKon+8qobp9XJ8dLk88NE
+         KbPyoqJyv6SWjQeNl3vw0i1g6wkJJer2ysjOi9i9B9FdIgSKJ0nL7NRwM79Y+RS7DCRd
+         Etf4EDO7s3rm4m6pu+JbFb1sVhb7PqcV3Q+jlUIfveYobr08oHDfC7fbJ75covf8RQnW
+         TlkWzBwSpb3305XEiFUKqcAwkAoq3jogWqbYJT2TdicfSGTdMmIGIcDJPnk4PjP7ixo8
+         XLSdYIm4+SnGC2dOKaOubYTtHqohuiI6JAc3//bevdZYcjJbWuY8FI5QcYnd1Ct9u5em
+         ngbw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761291116; x=1761895916;
+        d=1e100.net; s=20230601; t=1761291873; x=1761896673;
         h=content-transfer-encoding:mime-version:references:in-reply-to:date
          :cc:to:from:subject:message-id:x-gm-message-state:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=1A7P5IMbPn+t40gCyqItOLfp70nnc5B3DPRJaxQKRqg=;
-        b=aHTgHCw+6WGxgVjVMkgN1kzJx3VWaAJLtXysBFqhO5szpSfUxHeVs8dYgRA8vKZCju
-         nhEBvIibcOe9BIo+JW2I6BgPWVe0d256VOv5XSLsAJ/gM1n3j4KrJjhTu+H+/auWooFy
-         YkSDx03fL5QB3sS/CQhfb4uSUi2cn4pKR7DucPNuebDfFW5rXwBRxpXkIn/oJOx/8TO+
-         AgJs5YKyOMCGf2kE6+U9F/glXPBJ8Q29Jm0AjKJwSqzAzoiLxxmVK7/Z2NMnZaY7HSL5
-         w/An7tBbx+No1IpVDRFflkEmOEQEZ6RFkYJxBfOyCpiD/AlSLjNgFw0zGl5/KJZZOtoO
-         JhnA==
-X-Forwarded-Encrypted: i=1; AJvYcCUkRiGL4UnLJj0QVbEUGgMumqfNbTpn1MZ8QcDVD9OuPtpl3Qu/D51gKWqw533PefqhggNfL5XoCI4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzb2gMN1wX1gDLFh+8k7NKxwZ1UelTswKAl0XSL7djlo136vs2y
-	NU/Ubdtc3cJqBFrNBkohYLlt0y99eSjUT/vzQg9N3dV2tPBJlZa2ZfaC0Qgttg==
-X-Gm-Gg: ASbGncvRTAYOZaujNS4LN1AXDCTP0Yyym8Ux4O/IOZTVt6cv4VIuEsn+yXkJnFBqDQ0
-	1fkAXuVisVBvBwG6mKhl20XYyQMwiXsOyq7OFi9txGm/JAbXYPAyQh5PvDd9RIx8ZKc9aA5mVQJ
-	Ukeqw7RS03Is/1BD6dwCaKubEj4+NiKDYDFraMBpvYmY/T0zR5YRA+JAouV4/Omvd5e5OXTxlW5
-	DYkeMRtfMyXDhUiLNJARudU1jqlCyOFfuLJhCU5tzdCwDm+iGJ+knRJi01OhZJcV0ho8D6ae2I/
-	F1XFXq1xr6nNw5SLz9ZEnxgztGdCKRBd+5y3aSRAOhLB9f5dQvLiQtsSDU/XzZ2ykriDRNRVO5k
-	/UAITeZCIEK6+dmaxr1+mNML60g2VSwq9b8KLqsFHlcARh5Ms6cyr6Ht8O9w6reHyEgXho4kjQF
-	n7eU1eV48HMX4swgnrDD2CHabZKEp7HKJRV9gXybr7AVPXWLwJOOkv
-X-Google-Smtp-Source: AGHT+IG/J5FlS1bROellmIONy1OUUsTDN1yuoEJ8FKRhOP/Hr0N9ZSHlvALYSp9AXRyRCWHg0DFhMQ==
-X-Received: by 2002:a05:6a21:3397:b0:2e4:9004:52fb with SMTP id adf61e73a8af0-33de8fa0809mr1819180637.4.1761291115702;
-        Fri, 24 Oct 2025 00:31:55 -0700 (PDT)
+        bh=5YK5Cv2mHUZf0+sS6ZBkjl83GDLbEDehObxxO+NhiJw=;
+        b=of3eCAhwW0c4AaDHQZtfHU819deBBdh1+OBUfc80Gz1SC/Q1PtntcDWxrp7stQm6Z3
+         WQ3RYy2fuVlCFiERWwfJm5+Q3chM/7LQZiIwaGA2Y76fRPMjCi6+5wCZ5wgR9i0RYPxk
+         Ry3Gh16WnMwRoT11wa11H/hj2gpOufodPpD8M7JJ7QAdK2ktqnSQ3pJ/a/zOYbtnq3ie
+         4jvFUHkcXKclsuZdsHhE+y9XOtKAraYy2NQmDtNSgPAIK8N6UGkThz+AkInzpHCRvnwa
+         YX9D1AjERriMrAPP9zo4nes/2jHm0cSSz1L0huoHYhraQBNHsCLa75ApWdqe3t+vv/Ld
+         BI1w==
+X-Forwarded-Encrypted: i=1; AJvYcCVgLbjnLvNnnVnugrEcSShO3HGvEGOfX88EVIOEANlfgQS6bthRbTYsCCGyWDub8GMtivXGLPBR04M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwHyoJwqJ2dLuFBELvovIzn9twdz9smW+i5s3ZKXeFCsLtQbi9l
+	6TczNqb+uXyPrezjQ1P1BiPaXt9ErUd81fXGPf3DQ+Gb+DyLcntBUAsG
+X-Gm-Gg: ASbGncuAN2SxDHN+Dg0QkdFp87tir/Rn546ilq9R2tpog2W8KbYN+GjTMiQMFy2fTZm
+	ex0TacTiCKTi6dW18xzv6Uj6bIyVryaT1CIxIGyb1kM6lOatn31M2UzhCpGjbeeMVlDyCNrye8L
+	QNPJgZ3BIHH08R02c68Bho1f24Zc/9x+y4S9Epj/wHzMQoa9nrcXlYQ+Xo4kbV1aWqzdM3Ocyx5
+	qKIsVzncftF25HAm8fCi6GWBbrQ1uBzd2LfNwnWrv5lxsmG4nB2CQ/+E6giTf1/02cOHOPSFkvh
+	tH+wU9zGPcBwXgJUMjateetUbxTvBuDL/68RTRM7HWWYPF8JUfIpq5MVZnqWAxOMnhKuiihwuwz
+	tDiwhyywOwZE6+nZiCVV97kHFi9mdFovI+3k+5S/vhxRpCM4ZNegqxtTfhzo24XBvZ3jmivorDq
+	Wt832OtP2uDfhF0xSUIf9Sp1KKTBxXUiGlaVHz7L/LlB6PqzFx670W
+X-Google-Smtp-Source: AGHT+IFjb5mZJgyR6bGIzS0AMBegu+BQn8DvDFMRLJFSSMUddJwgyi8DVtG32VC9u1C+4NcA8h2O6g==
+X-Received: by 2002:a05:6a20:3d20:b0:2fb:62bb:dec with SMTP id adf61e73a8af0-33dead55a43mr1920840637.39.1761291872700;
+        Fri, 24 Oct 2025 00:44:32 -0700 (PDT)
 Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.202.82])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b6cf4e2d787sm4233408a12.29.2025.10.24.00.31.53
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7a274aaec46sm4906323b3a.31.2025.10.24.00.44.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Oct 2025 00:31:55 -0700 (PDT)
-Message-ID: <ee99fc234ccfc433662975d45f24c8900428e2ea.camel@gmail.com>
-Subject: Re: [PATCH 2/8] common/rc: fix _require_xfs_io_shutdown
+        Fri, 24 Oct 2025 00:44:32 -0700 (PDT)
+Message-ID: <68e2839c0a7848a95fa5b2b8f6107b1e941636a4.camel@gmail.com>
+Subject: Re: [PATCH 5/8] generic/772: actually check for file_getattr
+ special file support
 From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
 To: "Darrick J. Wong" <djwong@kernel.org>, zlang@redhat.com
 Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Date: Fri, 24 Oct 2025 13:01:50 +0530
-In-Reply-To: <176054617932.2391029.3304833304093152893.stgit@frogsfrogsfrogs>
+Date: Fri, 24 Oct 2025 13:14:29 +0530
+In-Reply-To: <176054617988.2391029.18130416327249525205.stgit@frogsfrogsfrogs>
 References: 
 	<176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
-	 <176054617932.2391029.3304833304093152893.stgit@frogsfrogsfrogs>
+	 <176054617988.2391029.18130416327249525205.stgit@frogsfrogsfrogs>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
@@ -79,52 +80,69 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-On Wed, 2025-10-15 at 09:37 -0700, Darrick J. Wong wrote:
+On Wed, 2025-10-15 at 09:38 -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Capturing the output of _scratch_shutdown_handle requires one to enclose
-> the callsite with $(), otherwise you're comparing the literal string
-> "_scratch_shutdown_handle" to $SCRATCH_MNT, which always fails.
+> On XFS in 6.17, this test fails with:
 > 
-> Also fix _require_xfs_io_command to handle testing the shutdown command
-> correctly.
+>  --- /run/fstests/bin/tests/generic/772.out	2025-10-06 08:27:10.834318149 -0700
+>  +++ /var/tmp/fstests/generic/772.out.bad	2025-10-08 18:00:34.713388178 -0700
+>  @@ -9,29 +9,34 @@ Can not get fsxattr on ./foo: Invalid ar
+>   Can not set fsxattr on ./foo: Invalid argument
+>   Initial attributes state
+>   ----------------- SCRATCH_MNT/prj
+>  ------------------ ./fifo
+>  ------------------ ./chardev
+>  ------------------ ./blockdev
+>  ------------------ ./socket
+>  ------------------ ./foo
+>  ------------------ ./symlink
+>  +Can not get fsxattr on ./fifo: Inappropriate ioctl for device
+>  +Can not get fsxattr on ./chardev: Inappropriate ioctl for device
+>  +Can not get fsxattr on ./blockdev: Inappropriate ioctl for device
+>  +Can not get fsxattr on ./socket: Inappropriate ioctl for device
 > 
-> Cc: <fstests@vger.kernel.org> # v2025.06.22
-> Fixes: 4b1cf3df009b22 ("fstests: add helper _require_xfs_io_shutdown")
+> This is a result of XFS' file_getattr implementation rejecting special
+> files prior to 6.18.  Therefore, skip this new test on old kernels.
+> 
 > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 > ---
->  common/rc |    7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
+>  tests/generic/772 |    3 +++
+>  tests/xfs/648     |    3 +++
+>  2 files changed, 6 insertions(+)
 > 
 > 
-> diff --git a/common/rc b/common/rc
-> index 1ec84263c917c0..1b78cd0c358bb9 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -619,7 +619,7 @@ _scratch_shutdown_and_syncfs()
->  # requirement down to _require_scratch_shutdown.
->  _require_xfs_io_shutdown()
->  {
-> -	if [ _scratch_shutdown_handle != $SCRATCH_MNT ]; then
-> +	if [ $(_scratch_shutdown_handle) != $SCRATCH_MNT ]; then
-Yeah, right. _scratch_shutdown_handle is a function call and should be placed in a $() or ``. 
->  		# Most likely overlayfs
->  		_notrun "xfs_io -c shutdown not supported on $FSTYP"
->  	fi
-> @@ -3073,6 +3073,11 @@ _require_xfs_io_command()
->  		rm -f $testfile.1
->  		param_checked="$param"
->  		;;
-> +	"shutdown")
-> +		testio=$($XFS_IO_PROG -f -x -c "$command $param" $testfile 2>&1)
-> +		param_checked="$param"
-> +		_test_cycle_mount
-> +		;;
-Looks good to me. Just curious, any reason why we are testing with TEST_DIR and not with
-SCRATCH_MNT? 
-Reviewed-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
->  	"utimes" )
->  		testio=`$XFS_IO_PROG -f -c "utimes 0 0 0 0" $testfile 2>&1`
->  		;;
+> diff --git a/tests/generic/772 b/tests/generic/772
+> index cc1a1bb5bf655c..e68a6724654450 100755
+> --- a/tests/generic/772
+> +++ b/tests/generic/772
+> @@ -43,6 +43,9 @@ touch $projectdir/bar
+>  ln -s $projectdir/bar $projectdir/broken-symlink
+>  rm -f $projectdir/bar
+>  
+> +file_attr --get $projectdir ./fifo &>/dev/null || \
+> +	_notrun "file_getattr not supported on $FSTYP"
+> +
+Shouldn't we use $here/src/file_attr like we have done later (maybe just for consistency)?
+Also, I am wondering if we can have something like
+_require_get_attr_for_special_files() helper kind of a thing?
+--NR
+>  echo "Error codes"
+>  # wrong AT_ flags
+>  file_attr --get --invalid-at $projectdir ./foo
+> diff --git a/tests/xfs/648 b/tests/xfs/648
+> index 215c809887b609..e3c2fbe00b666a 100755
+> --- a/tests/xfs/648
+> +++ b/tests/xfs/648
+> @@ -47,6 +47,9 @@ touch $projectdir/bar
+>  ln -s $projectdir/bar $projectdir/broken-symlink
+>  rm -f $projectdir/bar
+>  
+> +$here/src/file_attr --get $projectdir ./fifo &>/dev/null || \
+> +	_notrun "file_getattr not supported on $FSTYP"
+> +
+>  $XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+>  	-c "project -sp $projectdir $id" $SCRATCH_DEV | filter_quota
+>  $XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
 > 
 
