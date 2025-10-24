@@ -1,58 +1,124 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A672F7083C;
-	Fri, 24 Oct 2025 05:40:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 905DD20D51C
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 06:49:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761284429; cv=none; b=r3VtlXzi8hcVu1oMvC+rmirDrdlfJtpGKiZzSYTMQALFa1cdYZdAwverQHKDsjGMNMYF4+IVe3b9iWVcy4pj2xS6KcpZhqzx3fPLuHh9noJSWqCZj1t8cS3MD9oJEalvumdLrLYDz7BxDnxYbyeM5ydc/aswPNpcdI9oY1S16UI=
+	t=1761288594; cv=none; b=PnPQRMW6zmZSA0wxF3TSh9yiWES6CnYYNeq9XNZAQhYlmDAyThTYc/lbPEtGAssHjvtq5KQh1zTcTnqaQ8fUJDiJ5MaS0BNfQZLy7JNWCEHvJze8+4cRiyVoZeHiMCxsU28taJep2L3aVl4DIeURwi5aFC6tduHyHWkqOJ+fU7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761284429; c=relaxed/simple;
-	bh=PBexvuG5zM7cTb8CI5RdfANzh/lurTmljF2v2AKjtC8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mLfhw6qFIX3vUSDgysakEZuu69vvonDR2QQXwciCeHvJ3YoJDsQHarcJONIq3T3vKw6ha69dEK3urJ5tK8Tz+NEK/LUrVdC+m9+Yh521/J70vKFB0FAecsvoQN28hXQ5hwJYa6DPZIEfvR+S0bI3DwMBBY/SEBGMPMZDkdNsVMs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=OA824IzM; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1761288594; c=relaxed/simple;
+	bh=9vBPEojZFqE9ty/6D3pThFauraHYwTpalTAAyZmWy+Y=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:Mime-Version; b=VnDtbQ0uAoiH4FagFktdLKrcQ4yhfDRUkEwPrnZ4HmAIw8IQZAfBlKEOxter2HZipbGxrsOza/E0axdpNE5iLuagCTFlqFRLmYCeib1ug0Z+RxpEhujl5rporCLU0r6RXwEApdnI3eSum77Kzbric8RbO9+mWWP0nHsehBsHkmA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aocwFo2i; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OA824IzM"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=PBexvuG5zM7cTb8CI5RdfANzh/lurTmljF2v2AKjtC8=; b=OA824IzMNexdPd0JJZLkJDWJVS
-	giQ9LfIZUGtUoCOzu78JhfxwTh854ryEdtu0K98UVOiGAR1Hf4y3jyllzG6+W89fufd/y0VGwHxKo
-	i6CngskkKms1rxvr4KXz1gu4XxvyfEfomuK9WvZaaBpSxcru5f7ay/sUgzLKQbAGPaUFaupicdLn/
-	hfL6vltno4uB0hfE4ZB81Z1VigHgdodJ2yBvHMGNs+MD5AngJit9xHsmhDW/Zd5sL9bl4O8WFdfn3
-	ayG6aYH026zT4PYMyYOq3QBX/KXJDN0hvku6J0s4cR6/njJJJc0z0LrrO4ibVCCEpDSQ2JiNvDTs3
-	lZVMI3/w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vCAXI-00000008I0T-3esL;
-	Fri, 24 Oct 2025 05:40:24 +0000
-Date: Thu, 23 Oct 2025 22:40:24 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/19] docs: remove obsolete links in the xfs online
- repair documentation
-Message-ID: <aPsRSFaxLNSxuDY4@infradead.org>
-References: <176117744372.1025409.2163337783918942983.stgit@frogsfrogsfrogs>
- <176117744519.1025409.3383109218141770569.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aocwFo2i"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-7a23208a0c2so1395072b3a.0
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Oct 2025 23:49:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1761288592; x=1761893392; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=km/6k02PixTAqdwRObjjj37gw0zTjmxCVFm4PbnN0vM=;
+        b=aocwFo2iwyQXzunpY3YY/LglR7A2L0TtoJ5iM61FQIOag2L6AdCQc0vK79Rc9lqR4c
+         rc9TdIJoaE8Vb9eRz7VVuDlOx8h+WUus/hn7Q0iIKZzhdeiFdeg3p/AQRH18J7O+7HrU
+         IrhYkve2wN6hzVC010WA3LshH62aimVsHhK/e1Wt/y//BlR6v9yEmbK9AV0UuuFlSrCN
+         1KAFXQ+IRhdodxZZ4uyGiMeaK7Kr9mYwU5iYEgIlb5tmFC1RjBSZbWvbFi8sSuvfPuzP
+         +kqGwVHOWHK1pmLFivSqy0fRx7lOFkqAucRfh5RPMsDQ+SS4QWv7AsFedDdXMrOBaTqv
+         eMnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761288592; x=1761893392;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=km/6k02PixTAqdwRObjjj37gw0zTjmxCVFm4PbnN0vM=;
+        b=Px4ozsQqUxlMINwvXR03IZnC4eCYbCS/Sc6XYA0SyipwiHP8RTnYNIYN+npKaFkOcL
+         j75j30oVfJnm+CXRF2pEdN9XE65PB1u9awjYijIKzkiZBaIE91n6LXGYHVfKjT0q+y9M
+         E8NoMJVzXWyQdgD4OfZMpZg6UHMI8LgNEvy5vS/elAUMfHjm1DRX9/YlQc++9mWilmqE
+         YF2rPl4JHECtV4I9499X1iBC1KpSwVPsLfu0VgtBDVRSxHWoBd51UB5ts2WaAopunvU1
+         RVzs1ZLa36HiAOqUSiBMe7zIyOpiijMV7Q0ZDHoRmsVmbYdMLytYahn2nI/50YP9rqF8
+         r+7Q==
+X-Gm-Message-State: AOJu0YwBpYgzrBabKHhjzaXPyHiM6ybTk0JNodul5wiDs62/lIodjYrT
+	LWFxb47NdMal/0MCAOosHTyILY+WJYvvHI4Lo5ZdpYbE4nJpuveLCuw2ET03nA==
+X-Gm-Gg: ASbGncsNpiCf8qgmEhVXGiiO7c+uy6vjpSpg+krvu+HoGIRYhGs7xsy4Orsyd9wK8/A
+	nJPn7GdgSTMbpPVaD4MD1fxJm7mVOSg8AQYsyUuyHp32FIDEtCN2D/DmbBkh6OXDYEoeJiH9rKF
+	tPkKLc3LWe3YEAsvQ0oURcsCuMX88StWp5AHSJhzyUv/5wOGZmsSI8BkdO7xfKoLm3mGkD76oc2
+	G9i9kktmJ0jHuja0Zad4DlpcoZpCmcO+Hp+LekqDWjwkZxBk6xaEW8mgz6phsJ/QNqvJOAAPgiU
+	zMHCupag1+1eWv7NoKTlND3fTyzraSpdFYIRoZjSyLpI8gQRZ0Y8FoRLmsZQYDqscOwL3faCVd9
+	ehbaUbay3Yn64iYGkvfqxWaumLbrwrdhZWDkrhXpLMc71Iyy0PUEAx21iNT7+n0A6AZFXmFasKm
+	anusRBZc6yzF+zR6wxMIrnsfc93nK+4ydbR7i9jZ8gP/Vi8BKUgcTg
+X-Google-Smtp-Source: AGHT+IHBw2wC0BoP2X02OWCazdHGMebKdJsDNmkJBbtCK1oS/G49+mr3awzE1GU+XQHCYvJEsXB+uA==
+X-Received: by 2002:a05:6a00:4fce:b0:7a2:7d3b:4356 with SMTP id d2e1a72fcca58-7a27d3b4449mr4993313b3a.32.1761288591770;
+        Thu, 23 Oct 2025 23:49:51 -0700 (PDT)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.202.82])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7a274bb3789sm4779374b3a.60.2025.10.23.23.49.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Oct 2025 23:49:51 -0700 (PDT)
+Message-ID: <47bc0211bd8cc5474fbb3edb5446e0e306ccb026.camel@gmail.com>
+Subject: Re: [PATCH] xfs: use kmalloc_array() instead of kmalloc() for map
+ allocation
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: Kriish Sharma <kriish.sharma2006@gmail.com>, Carlos Maiolino
+	 <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-kernel-mentees@lists.linuxfoundation.org, skhan@linuxfoundation.org, 
+	david.hunter.linux@gmail.com
+Date: Fri, 24 Oct 2025 12:19:46 +0530
+In-Reply-To: <20251018194528.1871298-1-kriish.sharma2006@gmail.com>
+References: <20251018194528.1871298-1-kriish.sharma2006@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <176117744519.1025409.3383109218141770569.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-Looks good:
+On Sat, 2025-10-18 at 19:45 +0000, Kriish Sharma wrote:
+> Using kmalloc_array() better reflects the intent to allocate an array of
+> map entries, and improves consistency with similar allocations across the
+> kernel.
+> 
+> No functional change intended.
+> 
+> Signed-off-by: Kriish Sharma <kriish.sharma2006@gmail.com>
+> ---
+>  fs/xfs/xfs_qm.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 23ba84ec919a..34ec61e455ff 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -1218,7 +1218,7 @@ xfs_qm_reset_dqcounts_buf(
+>  	if (qip->i_nblocks == 0)
+>  		return 0;
+>  
+> -	map = kmalloc(XFS_DQITER_MAP_SIZE * sizeof(*map),
+> +	map = kmalloc_array(XFS_DQITER_MAP_SIZE, sizeof(*map),
+>  			GFP_KERNEL | __GFP_NOFAIL);
+I think kmalloc_array is more useful when the size of memory to be allocated is dynamic with
+kmalloc_array doing some additional checks on the size that is being passed. In this case, both
+XFS_QUITER_MAP_SIZE  and sizeof(*map) are constant i.e, we are allocating constant size memory, so
+maybe this isn't quite necessary?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Definition of kmalloc_array()
 
-Maybe expedite this for 6.18-rc?
+static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
+{
+	if (size != 0 && n > SIZE_MAX / size)
+		return NULL;
+	return kmalloc(n * size, flags);
+}
+
+
+--NR
+>  
+>  	lblkno = 0;
 
