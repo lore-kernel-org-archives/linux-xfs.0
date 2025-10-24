@@ -1,75 +1,74 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 905DD20D51C
-	for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 06:49:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CD992E1F0E
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 07:31:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761288594; cv=none; b=PnPQRMW6zmZSA0wxF3TSh9yiWES6CnYYNeq9XNZAQhYlmDAyThTYc/lbPEtGAssHjvtq5KQh1zTcTnqaQ8fUJDiJ5MaS0BNfQZLy7JNWCEHvJze8+4cRiyVoZeHiMCxsU28taJep2L3aVl4DIeURwi5aFC6tduHyHWkqOJ+fU7g=
+	t=1761291117; cv=none; b=aDZ2OWia6vuCPgHDp/8uruHLM2NSRxo2Dga30Ulmfcz9nyW7EsAvHHvMUg2HICe4IuZeStupbytds9bKZnJkzHHwhPeN+mpqFmqlmUcveCQfsMYOiJGIpQeU7mIcgrjTz/Vb+rUmrpBdmhNDUl0BKnMv6Qf/oZe9rgb7/6BzMHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761288594; c=relaxed/simple;
-	bh=9vBPEojZFqE9ty/6D3pThFauraHYwTpalTAAyZmWy+Y=;
+	s=arc-20240116; t=1761291117; c=relaxed/simple;
+	bh=hGGXbnlJbNirMVKZsmuNJSZHVRJA0rz2SBB/4/CB6WQ=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:Mime-Version; b=VnDtbQ0uAoiH4FagFktdLKrcQ4yhfDRUkEwPrnZ4HmAIw8IQZAfBlKEOxter2HZipbGxrsOza/E0axdpNE5iLuagCTFlqFRLmYCeib1ug0Z+RxpEhujl5rporCLU0r6RXwEApdnI3eSum77Kzbric8RbO9+mWWP0nHsehBsHkmA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aocwFo2i; arc=none smtp.client-ip=209.85.210.176
+	 Content-Type:Mime-Version; b=HqimIP/dVL7d1DKvFLyODciPt1Us0nFiVFkwqcsAzO0WK/YYDhJZ0PVhe/KUNRPrQLzZPQw1YHp/ifuKXiBc2jWOjNbBGmXXpkD8/+RdWA9JYe5K8URoHtVNHJZeEOfVyFkKOYY7Z4mtbIr8XSHEq9+XnkK1nU9L8iW0rBF1slA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=W4pBvXHg; arc=none smtp.client-ip=209.85.210.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aocwFo2i"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-7a23208a0c2so1395072b3a.0
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Oct 2025 23:49:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W4pBvXHg"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-781997d195aso1269391b3a.3
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Oct 2025 00:31:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1761288592; x=1761893392; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1761291116; x=1761895916; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to:date
          :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=km/6k02PixTAqdwRObjjj37gw0zTjmxCVFm4PbnN0vM=;
-        b=aocwFo2iwyQXzunpY3YY/LglR7A2L0TtoJ5iM61FQIOag2L6AdCQc0vK79Rc9lqR4c
-         rc9TdIJoaE8Vb9eRz7VVuDlOx8h+WUus/hn7Q0iIKZzhdeiFdeg3p/AQRH18J7O+7HrU
-         IrhYkve2wN6hzVC010WA3LshH62aimVsHhK/e1Wt/y//BlR6v9yEmbK9AV0UuuFlSrCN
-         1KAFXQ+IRhdodxZZ4uyGiMeaK7Kr9mYwU5iYEgIlb5tmFC1RjBSZbWvbFi8sSuvfPuzP
-         +kqGwVHOWHK1pmLFivSqy0fRx7lOFkqAucRfh5RPMsDQ+SS4QWv7AsFedDdXMrOBaTqv
-         eMnw==
+        bh=1A7P5IMbPn+t40gCyqItOLfp70nnc5B3DPRJaxQKRqg=;
+        b=W4pBvXHgcPqidzw48Ycy9P/eA+hD8L2VOrpdwfuCIm7zlvrRKabKcjHYQEs+dMzdSu
+         P81HuReZ8am02yCKw4Hx+JovB4tKrzjtKRdfbNWocPbGKcdrmTmh2t5bCbUeelNO9Om0
+         pEJ2GZTHQEWRKeWDGkrirsEm+b0lqhsBaNjtUD3ujVFQxhBj49DEsB8RdYKLRf9J7scF
+         TDk1XnxS0nJjTmTy62zSd3MEkf3/VWw2Rmd6FZNQZzs9Z9qrgtqV20wO0FQ/rSj6bdlX
+         R+EnvRe5n5ImiupTUm/xudYbMwoqLrLA08zmzqiK6mt5u27SP+XLU0qBUzBfK/6jS2q+
+         FRqQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761288592; x=1761893392;
+        d=1e100.net; s=20230601; t=1761291116; x=1761895916;
         h=content-transfer-encoding:mime-version:references:in-reply-to:date
          :cc:to:from:subject:message-id:x-gm-message-state:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=km/6k02PixTAqdwRObjjj37gw0zTjmxCVFm4PbnN0vM=;
-        b=Px4ozsQqUxlMINwvXR03IZnC4eCYbCS/Sc6XYA0SyipwiHP8RTnYNIYN+npKaFkOcL
-         j75j30oVfJnm+CXRF2pEdN9XE65PB1u9awjYijIKzkiZBaIE91n6LXGYHVfKjT0q+y9M
-         E8NoMJVzXWyQdgD4OfZMpZg6UHMI8LgNEvy5vS/elAUMfHjm1DRX9/YlQc++9mWilmqE
-         YF2rPl4JHECtV4I9499X1iBC1KpSwVPsLfu0VgtBDVRSxHWoBd51UB5ts2WaAopunvU1
-         RVzs1ZLa36HiAOqUSiBMe7zIyOpiijMV7Q0ZDHoRmsVmbYdMLytYahn2nI/50YP9rqF8
-         r+7Q==
-X-Gm-Message-State: AOJu0YwBpYgzrBabKHhjzaXPyHiM6ybTk0JNodul5wiDs62/lIodjYrT
-	LWFxb47NdMal/0MCAOosHTyILY+WJYvvHI4Lo5ZdpYbE4nJpuveLCuw2ET03nA==
-X-Gm-Gg: ASbGncsNpiCf8qgmEhVXGiiO7c+uy6vjpSpg+krvu+HoGIRYhGs7xsy4Orsyd9wK8/A
-	nJPn7GdgSTMbpPVaD4MD1fxJm7mVOSg8AQYsyUuyHp32FIDEtCN2D/DmbBkh6OXDYEoeJiH9rKF
-	tPkKLc3LWe3YEAsvQ0oURcsCuMX88StWp5AHSJhzyUv/5wOGZmsSI8BkdO7xfKoLm3mGkD76oc2
-	G9i9kktmJ0jHuja0Zad4DlpcoZpCmcO+Hp+LekqDWjwkZxBk6xaEW8mgz6phsJ/QNqvJOAAPgiU
-	zMHCupag1+1eWv7NoKTlND3fTyzraSpdFYIRoZjSyLpI8gQRZ0Y8FoRLmsZQYDqscOwL3faCVd9
-	ehbaUbay3Yn64iYGkvfqxWaumLbrwrdhZWDkrhXpLMc71Iyy0PUEAx21iNT7+n0A6AZFXmFasKm
-	anusRBZc6yzF+zR6wxMIrnsfc93nK+4ydbR7i9jZ8gP/Vi8BKUgcTg
-X-Google-Smtp-Source: AGHT+IHBw2wC0BoP2X02OWCazdHGMebKdJsDNmkJBbtCK1oS/G49+mr3awzE1GU+XQHCYvJEsXB+uA==
-X-Received: by 2002:a05:6a00:4fce:b0:7a2:7d3b:4356 with SMTP id d2e1a72fcca58-7a27d3b4449mr4993313b3a.32.1761288591770;
-        Thu, 23 Oct 2025 23:49:51 -0700 (PDT)
+        bh=1A7P5IMbPn+t40gCyqItOLfp70nnc5B3DPRJaxQKRqg=;
+        b=aHTgHCw+6WGxgVjVMkgN1kzJx3VWaAJLtXysBFqhO5szpSfUxHeVs8dYgRA8vKZCju
+         nhEBvIibcOe9BIo+JW2I6BgPWVe0d256VOv5XSLsAJ/gM1n3j4KrJjhTu+H+/auWooFy
+         YkSDx03fL5QB3sS/CQhfb4uSUi2cn4pKR7DucPNuebDfFW5rXwBRxpXkIn/oJOx/8TO+
+         AgJs5YKyOMCGf2kE6+U9F/glXPBJ8Q29Jm0AjKJwSqzAzoiLxxmVK7/Z2NMnZaY7HSL5
+         w/An7tBbx+No1IpVDRFflkEmOEQEZ6RFkYJxBfOyCpiD/AlSLjNgFw0zGl5/KJZZOtoO
+         JhnA==
+X-Forwarded-Encrypted: i=1; AJvYcCUkRiGL4UnLJj0QVbEUGgMumqfNbTpn1MZ8QcDVD9OuPtpl3Qu/D51gKWqw533PefqhggNfL5XoCI4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzb2gMN1wX1gDLFh+8k7NKxwZ1UelTswKAl0XSL7djlo136vs2y
+	NU/Ubdtc3cJqBFrNBkohYLlt0y99eSjUT/vzQg9N3dV2tPBJlZa2ZfaC0Qgttg==
+X-Gm-Gg: ASbGncvRTAYOZaujNS4LN1AXDCTP0Yyym8Ux4O/IOZTVt6cv4VIuEsn+yXkJnFBqDQ0
+	1fkAXuVisVBvBwG6mKhl20XYyQMwiXsOyq7OFi9txGm/JAbXYPAyQh5PvDd9RIx8ZKc9aA5mVQJ
+	Ukeqw7RS03Is/1BD6dwCaKubEj4+NiKDYDFraMBpvYmY/T0zR5YRA+JAouV4/Omvd5e5OXTxlW5
+	DYkeMRtfMyXDhUiLNJARudU1jqlCyOFfuLJhCU5tzdCwDm+iGJ+knRJi01OhZJcV0ho8D6ae2I/
+	F1XFXq1xr6nNw5SLz9ZEnxgztGdCKRBd+5y3aSRAOhLB9f5dQvLiQtsSDU/XzZ2ykriDRNRVO5k
+	/UAITeZCIEK6+dmaxr1+mNML60g2VSwq9b8KLqsFHlcARh5Ms6cyr6Ht8O9w6reHyEgXho4kjQF
+	n7eU1eV48HMX4swgnrDD2CHabZKEp7HKJRV9gXybr7AVPXWLwJOOkv
+X-Google-Smtp-Source: AGHT+IG/J5FlS1bROellmIONy1OUUsTDN1yuoEJ8FKRhOP/Hr0N9ZSHlvALYSp9AXRyRCWHg0DFhMQ==
+X-Received: by 2002:a05:6a21:3397:b0:2e4:9004:52fb with SMTP id adf61e73a8af0-33de8fa0809mr1819180637.4.1761291115702;
+        Fri, 24 Oct 2025 00:31:55 -0700 (PDT)
 Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.202.82])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7a274bb3789sm4779374b3a.60.2025.10.23.23.49.48
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b6cf4e2d787sm4233408a12.29.2025.10.24.00.31.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Oct 2025 23:49:51 -0700 (PDT)
-Message-ID: <47bc0211bd8cc5474fbb3edb5446e0e306ccb026.camel@gmail.com>
-Subject: Re: [PATCH] xfs: use kmalloc_array() instead of kmalloc() for map
- allocation
+        Fri, 24 Oct 2025 00:31:55 -0700 (PDT)
+Message-ID: <ee99fc234ccfc433662975d45f24c8900428e2ea.camel@gmail.com>
+Subject: Re: [PATCH 2/8] common/rc: fix _require_xfs_io_shutdown
 From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: Kriish Sharma <kriish.sharma2006@gmail.com>, Carlos Maiolino
-	 <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kernel-mentees@lists.linuxfoundation.org, skhan@linuxfoundation.org, 
-	david.hunter.linux@gmail.com
-Date: Fri, 24 Oct 2025 12:19:46 +0530
-In-Reply-To: <20251018194528.1871298-1-kriish.sharma2006@gmail.com>
-References: <20251018194528.1871298-1-kriish.sharma2006@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>, zlang@redhat.com
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Date: Fri, 24 Oct 2025 13:01:50 +0530
+In-Reply-To: <176054617932.2391029.3304833304093152893.stgit@frogsfrogsfrogs>
+References: 
+	<176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
+	 <176054617932.2391029.3304833304093152893.stgit@frogsfrogsfrogs>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
@@ -80,45 +79,52 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-On Sat, 2025-10-18 at 19:45 +0000, Kriish Sharma wrote:
-> Using kmalloc_array() better reflects the intent to allocate an array of
-> map entries, and improves consistency with similar allocations across the
-> kernel.
+On Wed, 2025-10-15 at 09:37 -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> No functional change intended.
+> Capturing the output of _scratch_shutdown_handle requires one to enclose
+> the callsite with $(), otherwise you're comparing the literal string
+> "_scratch_shutdown_handle" to $SCRATCH_MNT, which always fails.
 > 
-> Signed-off-by: Kriish Sharma <kriish.sharma2006@gmail.com>
+> Also fix _require_xfs_io_command to handle testing the shutdown command
+> correctly.
+> 
+> Cc: <fstests@vger.kernel.org> # v2025.06.22
+> Fixes: 4b1cf3df009b22 ("fstests: add helper _require_xfs_io_shutdown")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 > ---
->  fs/xfs/xfs_qm.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  common/rc |    7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 23ba84ec919a..34ec61e455ff 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -1218,7 +1218,7 @@ xfs_qm_reset_dqcounts_buf(
->  	if (qip->i_nblocks == 0)
->  		return 0;
->  
-> -	map = kmalloc(XFS_DQITER_MAP_SIZE * sizeof(*map),
-> +	map = kmalloc_array(XFS_DQITER_MAP_SIZE, sizeof(*map),
->  			GFP_KERNEL | __GFP_NOFAIL);
-I think kmalloc_array is more useful when the size of memory to be allocated is dynamic with
-kmalloc_array doing some additional checks on the size that is being passed. In this case, both
-XFS_QUITER_MAP_SIZE  and sizeof(*map) are constant i.e, we are allocating constant size memory, so
-maybe this isn't quite necessary?
-
-Definition of kmalloc_array()
-
-static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
-{
-	if (size != 0 && n > SIZE_MAX / size)
-		return NULL;
-	return kmalloc(n * size, flags);
-}
-
-
---NR
->  
->  	lblkno = 0;
+> 
+> diff --git a/common/rc b/common/rc
+> index 1ec84263c917c0..1b78cd0c358bb9 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -619,7 +619,7 @@ _scratch_shutdown_and_syncfs()
+>  # requirement down to _require_scratch_shutdown.
+>  _require_xfs_io_shutdown()
+>  {
+> -	if [ _scratch_shutdown_handle != $SCRATCH_MNT ]; then
+> +	if [ $(_scratch_shutdown_handle) != $SCRATCH_MNT ]; then
+Yeah, right. _scratch_shutdown_handle is a function call and should be placed in a $() or ``. 
+>  		# Most likely overlayfs
+>  		_notrun "xfs_io -c shutdown not supported on $FSTYP"
+>  	fi
+> @@ -3073,6 +3073,11 @@ _require_xfs_io_command()
+>  		rm -f $testfile.1
+>  		param_checked="$param"
+>  		;;
+> +	"shutdown")
+> +		testio=$($XFS_IO_PROG -f -x -c "$command $param" $testfile 2>&1)
+> +		param_checked="$param"
+> +		_test_cycle_mount
+> +		;;
+Looks good to me. Just curious, any reason why we are testing with TEST_DIR and not with
+SCRATCH_MNT? 
+Reviewed-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+>  	"utimes" )
+>  		testio=`$XFS_IO_PROG -f -c "utimes 0 0 0 0" $testfile 2>&1`
+>  		;;
+> 
 
