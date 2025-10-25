@@ -1,41 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4AA526E165;
-	Fri, 24 Oct 2025 22:16:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C96AA3BB4A
+	for <linux-xfs@vger.kernel.org>; Sat, 25 Oct 2025 07:19:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761344209; cv=none; b=ZZJ1kA1DAZHlQk/LD0glMHBdKJHSas9pSZcDQi0McrYI0mCY5rvQUE1tcfkfoBVFmem5oLHCcKwSHe15bTuhGJT0PoTgzBfukuj6uFPJBZQgdtBmHbmfJ+1VAOeYTrpSx6Ggspvah4jCX/6BDoLbA/PKBnfAk/TdF77scHe3rt4=
+	t=1761376791; cv=none; b=EFzRjDPepTXDOOlsGCWyGcw0GLwvLrwTfUJwhaXsJtWde1aw6g1UZr52TZUKZRE0TCAB4/6KIPURJIoz5xwdW+ssyLFIaHbKHMNpJCGvoRU7aCxqIF5o1fZhpv9+dUuQPXyevHWsYkhCYE79vg4WoHvFqzGGXlyieTaNpG0ZdAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761344209; c=relaxed/simple;
-	bh=hO2iReHrVXKESwEc4bqJcL1IvEvQ10jm4vtllKXPEUE=;
+	s=arc-20240116; t=1761376791; c=relaxed/simple;
+	bh=6D8fINuKahSn/sAi3JHwWnkoP2nsOan8pYQRhQVBbN0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eYPWp3wV8PQwUyXWnz8y7CJ9k3xEmgeS3N9G5fPiz8NmNCoHo2ieCoDvASgND7k9ix656YdZ/eHkyicruotDggfC3y/lOW0x3gmsyBnBnj6KlipF1v1BUXESuvzvKJdnwOffrlMhDrfOu+aa34VhJzmm+q7VmiJ4+4ci3c4m9kE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I8nBUOEl; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jg/IK6mstjVX+rkCRWaU4/wiw2RJDPdMxVPkjkkP38FznVUGKW9a/yw6l9PQC4+isEZPf8IY8l22jWK/Vy9OhYmSOKf5fgFA+ba870A8fw7U+2ZrmupQRVbjKsx1yO6idEyx6OIltIXhgwipp/KDv6voQCKTaGc2d67A6cN/heQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ToPyWiV0; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I8nBUOEl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58D2DC4CEF1;
-	Fri, 24 Oct 2025 22:16:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761344208;
-	bh=hO2iReHrVXKESwEc4bqJcL1IvEvQ10jm4vtllKXPEUE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=I8nBUOElcg/OwxaID+wyf37DLPXMMzoOcULDLM/eWsbURMoWHCCT4SaudfkUmKhsg
-	 FD+aUuqOjUtUfHwcRi0iSjjTQCkHEoEq1e8O9rUpALOf+3HcJa08GgdGcXPG4WOB/O
-	 i9lC6JQ0buyPXFFUrP+cUow0CT3JG1UByzzs69WYXFENCyo3oYu6sKHfZLFRmvjerc
-	 eTuf94rcAk6962H4Vwj/JL6zlJORNqXM0+/tedcZYQu1OImPDV1InDVUMA6uIZF0tH
-	 MclsR9Hc8bqwv30rfovh4vcuSARTTwvvtxs35d5kGFXOCUwdomXlcxy2qxX1fVIYPa
-	 433p+iI+l4XYA==
-Date: Fri, 24 Oct 2025 15:16:47 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/8] common: fix _require_xfs_io_command pwrite -A for
- various blocksizes
-Message-ID: <20251024221647.GW6178@frogsfrogsfrogs>
-References: <176054617853.2391029.10911105763476647916.stgit@frogsfrogsfrogs>
- <176054618045.2391029.13403718073912452422.stgit@frogsfrogsfrogs>
- <4e8a9b373fdfeecd3e0de2a91ecdd75fbb94e18e.camel@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ToPyWiV0"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-47117f92e32so25869195e9.1
+        for <linux-xfs@vger.kernel.org>; Sat, 25 Oct 2025 00:19:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1761376788; x=1761981588; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=6IFfVys3GuE+pRFTFTXpJFMaFbUNYePrdEwH7CfBK3o=;
+        b=ToPyWiV0SMEE3vbaTNuzFtU1qZ8QErU99Y6n5iGBKYvva9fEb7Z/mNMuJzhkwbm22q
+         sSBvvPbIyCa+kVf2lH3O9s56RtcP61Iyq7CFtG7LtGuW3T0mYW9BJ5eYPhXLC1iIzKm1
+         R7nxd5XTXIUbDt6/3NSa7nPbg9iBkETVvTyiP31Mqcf24Ls93aXWyHXJG2RB19HRK1DU
+         txkzej3fOuCFPDR18L02DNv1Yig/Eg5mvmW2T82uojkE0lH5l311yhrwMJaGclhuQmUu
+         V1bQJz4hY+Y1ORDkkX9mjWUPTGnIsslheGTUnktWuzPhy0tDxyrs9aNrDyCDei4Xy04a
+         x73Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761376788; x=1761981588;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6IFfVys3GuE+pRFTFTXpJFMaFbUNYePrdEwH7CfBK3o=;
+        b=Gwwl+HkD+d4El/xNJEpxh7eJTv9SJDI+2T0qov+HTdPhwF0qnbBc52Y4jqGd7O9szg
+         s9brLtNc1YhgwfxKfHRRCWhjY91OH7I62Cepj8b+9QZCRYQdQ2vnmr+LmnZTMrhkTOuA
+         A7+EIPl3uKrfLjABmpuBv0OrPrY3M8rTMbhESNSBSRMG7158VKWcbUCpJ1ni0WPfP83s
+         YxjgjNTmEzav6o5WEfVUVJM3BFi2nVQO7uM3wwc70ItGSfzdgppmNIClENDjTCzryPAp
+         7VPPwrFFddu+sykmxvcQK0/T/uN4uW4ihtArBq8P081F93/b+m/dKhBFEFu47T56wN2x
+         CSwg==
+X-Gm-Message-State: AOJu0YwhxHN8Qtg72XDZAhdCxxLpFO9r6hxKngjaBSp0wAVEpzyltdJL
+	QBWVsFe7rO23RyBHkX9sFJ3JfkvbWmnEUliVAfWRMxgQbqEdN3ZjzPO6gDc1cA==
+X-Gm-Gg: ASbGnctuWY+HuZOMSWJayhMRO1gtKwjfE+3tkaOo6FAEMGx8vQtnv7Cq5vuWCOtcU3s
+	FTXWLDgcPOm6oKVuC2a7gz6gdkYSh+KCg7cPhEyv1jnURseMcYEGJBlbUzPCIEiS7cgH0BO08Hd
+	1ENc9CP9DQT8g6fB9LelO7N7LVVdJ16Nk/aCd6GjdnJS4ve170zwAAFz0SaVLOuOzrOpLSJUK3C
+	IGp+pP1EhZILunBx6xJJN344Oo9Yri0F5gNNTCsR28YDODPqXQUF08i0/7tLIQEb5JV1Y2ZG27e
+	IylrZjK/tk8Lny3ol/aXDAaogSA98Mm4W8xM+jB+AmX660jOL+6w8+SPrCbXD5EZieOCjm2CFZe
+	VUXQsz2Q7FhE4uJWuiBexhdlUBoN118bRPYNaRCUF0+/2ZqkWX3UtahNEAzlKYgDM+Wt5TSKswy
+	k3npTDQwY33anKpLDlPaMHGOiCyfvXrOV4Ynl4+UCZEncZ208X
+X-Google-Smtp-Source: AGHT+IFQQrcboMgkgtg5sbRYopXLhYQD6H8I5cE+AYM5G1GTzFc9HPZ7gEtVlJHaVnChKXydzyNknQ==
+X-Received: by 2002:a05:600c:828a:b0:46e:39e1:fc3c with SMTP id 5b1f17b1804b1-4711787617amr221456185e9.5.1761376787885;
+        Sat, 25 Oct 2025 00:19:47 -0700 (PDT)
+Received: from f13 ([2a01:e11:3:1ff0:9dcd:df29:3054:53fe])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-475dd4924a4sm19605915e9.7.2025.10.25.00.19.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 25 Oct 2025 00:19:47 -0700 (PDT)
+Date: Sat, 25 Oct 2025 09:19:45 +0200
+From: Luca Di Maio <luca.dimaio1@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev, 
+	smoser@chainguard.dev, hch@infradead.org
+Subject: Re: [PATCH v1] proto: fix file descriptor leak
+Message-ID: <6ko4ay7ukugftkbgtpsyf7brzpoiuzpubhmpzmzdc5ayvqpbat@fkapik55vnis>
+References: <20251024193649.302984-1-luca.dimaio1@gmail.com>
+ <20251024213511.GK4015566@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,73 +74,53 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4e8a9b373fdfeecd3e0de2a91ecdd75fbb94e18e.camel@gmail.com>
+In-Reply-To: <20251024213511.GK4015566@frogsfrogsfrogs>
 
-On Fri, Oct 24, 2025 at 02:48:00PM +0530, Nirjhar Roy (IBM) wrote:
-> On Wed, 2025-10-15 at 09:38 -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > In this predicate, we should test an atomic write of the minimum
-> > supported size, not just 4k.  This fixes a problem where none of the
-> > atomic write tests actually run on a 32k-fsblock xfs because you can't
-> > do a sub-fsblock atomic write.
-> > 
-> > Cc: <fstests@vger.kernel.org> # v2025.04.13
-> > Fixes: d90ee3b6496346 ("generic: add a test for atomic writes")
-> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+On Fri, Oct 24, 2025 at 02:35:11PM -0700, Darrick J. Wong wrote:
+> On Fri, Oct 24, 2025 at 09:36:48PM +0200, Luca Di Maio wrote:
+> > fix leak of pathfd introduced in commit 8a4ea72724930cfe262ccda03028264e1a81b145
+> >
+> > Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
+>
+> A few points:
+>
+> First, everyone makes mistakes, don't worry about it. :)
+> Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+Thanks Darrick :)
+
+> Second, the canonical format for kernel-ish formats is most probably
+> something like:
+>
+> Cc: <linux-xfs@vger.kernel.org> # v6.17.0
+> Fixes: 8a4ea72724930c ("proto: add ability to populate a filesystem from a directory")
+>
+> but this is xfsprogs, so there isn't any formally established
+> convention aside from "Darrick copies the kernel style and the
+> complaining hasn't been harsh enough for him to stop".
+>
+
+If it's needed I can re-rubmit with the new commit message, let me know
+
+Thanks
+L.
+
+>
 > > ---
-> >  common/rc |   14 +++++++++++---
-> >  1 file changed, 11 insertions(+), 3 deletions(-)
-> > 
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index 1b78cd0c358bb9..dcae5bc33b19ce 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -3030,16 +3030,24 @@ _require_xfs_io_command()
-> >  	"pwrite")
-> >  		# -N (RWF_NOWAIT) only works with direct vectored I/O writes
-> >  		local pwrite_opts=" "
-> > +		local write_size="4k"
-> >  		if [ "$param" == "-N" ]; then
-> >  			opts+=" -d"
-> > -			pwrite_opts+="-V 1 -b 4k"
-> > +			pwrite_opts+="-V 1 -b $write_size"
-> Nit: We can still keep this to 4k (or any random size and not necessarily a size = fsblocksize),
-> right?
-
-Well, yes, the default will still be 4k on an old kernel that doesn't
-support STATX_WRITE_ATOMIC.  For kernels that do support that flag,
-write_size will now be whatever the filesystem claims is the minimum
-write unit.
-
-> >  		fi
-> >  		if [ "$param" == "-A" ]; then
-> >  			opts+=" -d"
-> > -			pwrite_opts+="-V 1 -b 4k"
-> > +			# try to write the minimum supported atomic write size
-> > +			write_size="$($XFS_IO_PROG -f -c "statx -r -m $STATX_WRITE_ATOMIC" $testfile 2>/dev/null | \
-> > +				grep atomic_write_unit_min | \
-> > +				grep -o '[0-9]\+')"
-> > +			if [ -z "$write_size" ] || [ "$write_size" = "0" ]; then
-> > +				write_size="0 --not-supported"
-> > +			fi
-> > +			pwrite_opts+="-V 1 -b $write_size"
-> >  		fi
-> >  		testio=`$XFS_IO_PROG -f $opts -c \
-> > -		        "pwrite $pwrite_opts $param 0 4k" $testfile 2>&1`
-> > +		        "pwrite $pwrite_opts $param 0 $write_size" $testfile 2>&1`
-> This looks good to me:
-> 
-> Reviewed-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
-
-Thanks!
-
---D
-
-> >  		param_checked="$pwrite_opts $param"
-> >  		;;
-> >  	"scrub"|"repair")
-> > 
-> 
-> 
+> >  mkfs/proto.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> >
+> > diff --git a/mkfs/proto.c b/mkfs/proto.c
+> > index 2b29240d..1a7b3586 100644
+> > --- a/mkfs/proto.c
+> > +++ b/mkfs/proto.c
+> > @@ -1772,6 +1772,7 @@ handle_direntry(
+> >  	create_nondir_inode(mp, pip, fsxp, mode, creds, xname, flags, file_stat,
+> >  			    rdev, fd, fname);
+> >  out:
+> > +	close(pathfd);
+> >  	/* Reset path_buf to original */
+> >  	path_buf[path_len] = '\0';
+> >  }
+> > --
+> > 2.51.0
