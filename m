@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3855126C3A7
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Oct 2025 07:06:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC4BB2BDC2B
+	for <linux-xfs@vger.kernel.org>; Mon, 27 Oct 2025 07:06:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761548795; cv=none; b=lPpCaVTcR6AvUfPPeCZAdpp+FwDzGBmINlG28xgq1cNq5XAqRDsospiqz0plqOS2Bnk2ILxJYuIWu61dmdesNU2vGhc5GsOUgVlMsFegp69EF3CAbVSbI8hExw7brDrh61LqI4V1aTS3YvE31YdT9/njUJJEEqHumtL5JLLe4X8=
+	t=1761548798; cv=none; b=RK1jalPD9v7xJ/5QltOPBO8xfx7/eVGqXX45ojzhtFIejSmKJFzeJvOCMc7VPZqtWBAm3hCo4m3cdyyuCfQRpgpSUsnWfsrYNKQOJJruVyH59yge3DXR/H+TjaDtkF5YySbJJZqx7DRacXk1QTJrY2As2NYG+Z0T5EYu8+gXleM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761548795; c=relaxed/simple;
-	bh=gG+9ODjS8Bf+8KiNF/1MEbnGDlnWBTT8V7HYGkD130M=;
+	s=arc-20240116; t=1761548798; c=relaxed/simple;
+	bh=6xpK2RqYQVk3Lim61IfUXOccrlWDnPgRtdGiWd32bhg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dZPT3i7zKMlQAnUYf9wT7moStUJUt/pAytZQpzEKE5kDNXlLfxXLip6SBMGx2vUtzKorkX21eGMIQM7SDIjQbZ6BUBdTMa52hYbBBb8F0X/xE9MQKRiN5RaT/MMr9dote9BEroGX6teUliZsgWLfgS+Be3/pAZK5jxN/ZiPRDYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=RIVR2wCf; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=r9ylU+FpyuQjVkqvZ/5J0rB3ZXcB4ta1TgCkZTXXqpOEDXsxeizT7Y6+Vaa23DIy74k9Id+Lzo1/B66vKy4Lhj1hIrGg89lzKQTwT8pXkQNn67WpkfkRFvirLpLcGsnT2oMB0TiK2Pd6i6rTz1+XYS0UyvH9GspdDQ8MvmGlowM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=FPyOilrO; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RIVR2wCf"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FPyOilrO"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=yp3wX7bbc7Dk2CITUyo4139mgqKDkpwacgki6S0qIh8=; b=RIVR2wCfU8jDCoUcqEHpYorItU
-	82QTluh3rcpXfidGvmiuyXthv0znjZ3R4C0gWnJKmRoWlxJ04/PsSIhSac1fPY4kKO+0QQjAtLl8w
-	S8XBzyP8ryoOPp94+d/CAi8OXTBswcgatDSSvD7FJyikRhT8vegN+Am0e4LmESIrc9Pr5VeVSBI8o
-	YPa7Mz4L3yk4JddKJ67NaCcqvptBXkVILYf+rzrIbq8lCwVqH1YNcSbpbpHPNPanNwl5j1dh6Nf1Q
-	FVUVQIhOTf4uU8uDBs4A9cEdg74thkZCOAWPS4wohx3OnTlrYj3sPMb1eydkKJZdlg+BfZ+JMJXnA
-	0maDqE/Q==;
+	bh=tgGeWrvArAT1b3PCXaestjq7+IM0zXug9RAaGD5OhAY=; b=FPyOilrOdLh3yMK+aPthl/GyAs
+	hD0gBzrXOkOpLVr0Wv8wKxW1JwvsVpn+aK9JlFl1N33lq9HT2iOpw0i3DKEvzcZF7rMkfWilAr5xx
+	h28Dvb0bYjVHURyCgyR6WJg99iXZ6JU3hFnmPN2wN+r2KAsUZ8KKhlf/2BARP+pnMPaOtk/rzaziu
+	3onyNPeIhAz7zQ+Mjszbipis2Dg+tkV3gsQLf2bNvni/4DEhYvXQwhwW9PdrCVjxB3BIOWD0CJbVf
+	zhw2YQDnvebedaFRkK/t1XhDIki4lfQQu6Pm02hj8Bq57295cG6sKbYjbQyYHVEBMmpy9w+lqsokZ
+	UCL8/Fuw==;
 Received: from [62.218.44.66] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vDHJJ-0000000DFiB-1thz;
-	Mon, 27 Oct 2025 07:06:33 +0000
+	id 1vDHJM-0000000DFiO-0S3Z;
+	Mon, 27 Oct 2025 07:06:36 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org,
 	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH 7/9] xfs: remove the xlog_rec_header_t typedef
-Date: Mon, 27 Oct 2025 08:05:54 +0100
-Message-ID: <20251027070610.729960-8-hch@lst.de>
+Subject: [PATCH 8/9] xfs: remove l_iclog_heads
+Date: Mon, 27 Oct 2025 08:05:55 +0100
+Message-ID: <20251027070610.729960-9-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251027070610.729960-1-hch@lst.de>
 References: <20251027070610.729960-1-hch@lst.de>
@@ -49,165 +49,60 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-There are almost no users of the typedef left, kill it and switch the
-remaining users to use the underlying struct.
+l_iclog_heads is only used in one place and can be trivially derived
+from l_iclog_hsize by a single shift operation.  Remove it, and switch
+the initialization of l_iclog_hsize to use struct_size so that it is
+directly derived from the on-disk format definition.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_log_format.h |  4 ++--
- fs/xfs/xfs_log.c               |  6 +++---
- fs/xfs/xfs_log_recover.c       | 28 ++++++++++++++--------------
- 3 files changed, 19 insertions(+), 19 deletions(-)
+ fs/xfs/xfs_log.c      | 11 ++++++-----
+ fs/xfs/xfs_log_priv.h |  1 -
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 4cb69bd285ca..908e7060428c 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -136,7 +136,7 @@ struct xlog_rec_ext_header {
- #define XLOG_REC_EXT_SIZE \
- 	offsetofend(struct xlog_rec_ext_header, xh_cycle_data)
- 
--typedef struct xlog_rec_header {
-+struct xlog_rec_header {
- 	__be32	  h_magicno;	/* log record (LR) identifier		:  4 */
- 	__be32	  h_cycle;	/* write cycle of log			:  4 */
- 	__be32	  h_version;	/* LR version				:  4 */
-@@ -174,7 +174,7 @@ typedef struct xlog_rec_header {
- 
- 	__u8	  h_reserved[184];
- 	struct xlog_rec_ext_header h_ext[];
--} xlog_rec_header_t;
-+};
- 
- #ifdef __i386__
- #define XLOG_REC_SIZE		offsetofend(struct xlog_rec_header, h_size)
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 1fe3abbd3d36..8b3b79699596 100644
+index 8b3b79699596..47a8e74c8c5c 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -2578,9 +2578,9 @@ xlog_state_get_iclog_space(
- 	struct xlog_ticket	*ticket,
- 	int			*logoffsetp)
- {
--	int		  log_offset;
--	xlog_rec_header_t *head;
--	xlog_in_core_t	  *iclog;
-+	int			log_offset;
-+	struct xlog_rec_header	*head;
-+	struct xlog_in_core	*iclog;
+@@ -1279,11 +1279,12 @@ xlog_get_iclog_buffer_size(
+ 	log->l_iclog_size = mp->m_logbsize;
  
- restart:
- 	spin_lock(&log->l_icloglock);
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index ef0f6efc4381..03e42c7dab56 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -190,8 +190,8 @@ xlog_bwrite(
-  */
- STATIC void
- xlog_header_check_dump(
--	xfs_mount_t		*mp,
--	xlog_rec_header_t	*head)
-+	struct xfs_mount		*mp,
-+	struct xlog_rec_header		*head)
- {
- 	xfs_debug(mp, "%s:  SB : uuid = %pU, fmt = %d",
- 		__func__, &mp->m_sb.sb_uuid, XLOG_FMT);
-@@ -207,8 +207,8 @@ xlog_header_check_dump(
-  */
- STATIC int
- xlog_header_check_recover(
--	xfs_mount_t		*mp,
--	xlog_rec_header_t	*head)
-+	struct xfs_mount	*mp,
-+	struct xlog_rec_header	*head)
- {
- 	ASSERT(head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM));
+ 	/*
+-	 * # headers = size / 32k - one header holds cycles from 32k of data.
++	 * Combined size of the log record headers.  The first 32k cycles
++	 * are stored directly in the xlog_rec_header, the rest in the
++	 * variable number of xlog_rec_ext_headers at its end.
+ 	 */
+-	log->l_iclog_heads =
+-		DIV_ROUND_UP(mp->m_logbsize, XLOG_HEADER_CYCLE_SIZE);
+-	log->l_iclog_hsize = log->l_iclog_heads << BBSHIFT;
++	log->l_iclog_hsize = struct_size(log->l_iclog->ic_header, h_ext,
++		DIV_ROUND_UP(mp->m_logbsize, XLOG_HEADER_CYCLE_SIZE) - 1);
+ }
  
-@@ -238,8 +238,8 @@ xlog_header_check_recover(
-  */
- STATIC int
- xlog_header_check_mount(
--	xfs_mount_t		*mp,
--	xlog_rec_header_t	*head)
-+	struct xfs_mount	*mp,
-+	struct xlog_rec_header	*head)
- {
- 	ASSERT(head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM));
+ void
+@@ -1526,7 +1527,7 @@ xlog_pack_data(
+ 		dp += BBSIZE;
+ 	}
  
-@@ -400,7 +400,7 @@ xlog_find_verify_log_record(
- 	xfs_daddr_t		i;
- 	char			*buffer;
- 	char			*offset = NULL;
--	xlog_rec_header_t	*head = NULL;
-+	struct xlog_rec_header	*head = NULL;
- 	int			error = 0;
- 	int			smallmem = 0;
- 	int			num_blks = *last_blk - start_blk;
-@@ -437,7 +437,7 @@ xlog_find_verify_log_record(
- 				goto out;
- 		}
+-	for (i = 0; i < log->l_iclog_heads - 1; i++)
++	for (i = 0; i < (log->l_iclog_hsize >> BBSHIFT) - 1; i++)
+ 		rhead->h_ext[i].xh_cycle = cycle_lsn;
+ }
  
--		head = (xlog_rec_header_t *)offset;
-+		head = (struct xlog_rec_header *)offset;
- 
- 		if (head->h_magicno == cpu_to_be32(XLOG_HEADER_MAGIC_NUM))
- 			break;
-@@ -1237,7 +1237,7 @@ xlog_find_tail(
- 	xfs_daddr_t		*head_blk,
- 	xfs_daddr_t		*tail_blk)
- {
--	xlog_rec_header_t	*rhead;
-+	struct xlog_rec_header	*rhead;
- 	char			*offset = NULL;
- 	char			*buffer;
- 	int			error;
-@@ -1487,7 +1487,7 @@ xlog_add_record(
- 	int			tail_cycle,
- 	int			tail_block)
- {
--	xlog_rec_header_t	*recp = (xlog_rec_header_t *)buf;
-+	struct xlog_rec_header	*recp = (struct xlog_rec_header *)buf;
- 
- 	memset(buf, 0, BBSIZE);
- 	recp->h_magicno = cpu_to_be32(XLOG_HEADER_MAGIC_NUM);
-@@ -2997,7 +2997,7 @@ xlog_do_recovery_pass(
- 	int			pass,
- 	xfs_daddr_t		*first_bad)	/* out: first bad log rec */
- {
--	xlog_rec_header_t	*rhead;
-+	struct xlog_rec_header	*rhead;
- 	xfs_daddr_t		blk_no, rblk_no;
- 	xfs_daddr_t		rhead_blk;
- 	char			*offset;
-@@ -3034,7 +3034,7 @@ xlog_do_recovery_pass(
- 		if (error)
- 			goto bread_err1;
- 
--		rhead = (xlog_rec_header_t *)offset;
-+		rhead = (struct xlog_rec_header *)offset;
- 
- 		/*
- 		 * xfsprogs has a bug where record length is based on lsunit but
-@@ -3141,7 +3141,7 @@ xlog_do_recovery_pass(
- 				if (error)
- 					goto bread_err2;
- 			}
--			rhead = (xlog_rec_header_t *)offset;
-+			rhead = (struct xlog_rec_header *)offset;
- 			error = xlog_valid_rec_header(log, rhead,
- 					split_hblks ? blk_no : 0, h_size);
- 			if (error)
-@@ -3223,7 +3223,7 @@ xlog_do_recovery_pass(
- 		if (error)
- 			goto bread_err2;
- 
--		rhead = (xlog_rec_header_t *)offset;
-+		rhead = (struct xlog_rec_header *)offset;
- 		error = xlog_valid_rec_header(log, rhead, blk_no, h_size);
- 		if (error)
- 			goto bread_err2;
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index ac98ac71152d..17733ba7f251 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -406,7 +406,6 @@ struct xlog {
+ 	struct list_head	*l_buf_cancel_table;
+ 	struct list_head	r_dfops;	/* recovered log intent items */
+ 	int			l_iclog_hsize;  /* size of iclog header */
+-	int			l_iclog_heads;  /* # of iclog header sectors */
+ 	uint			l_sectBBsize;   /* sector size in BBs (2^n) */
+ 	int			l_iclog_size;	/* size of log in bytes */
+ 	int			l_iclog_bufs;	/* number of iclog buffers */
 -- 
 2.47.3
 
