@@ -1,154 +1,59 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B12092C3769
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Oct 2025 07:06:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 241CD2571DA;
+	Mon, 27 Oct 2025 07:53:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761548801; cv=none; b=joGc3CDR5hFev3k0bw2eJPrGYp8zqLN0I7R7iTZVwe3VuTBFJ5Q+aFyPO52GbOUWbpWx54BLlndN0Gzb+vpZnZU+WVdpBLlLgvPDq2Cd/w2Dqff4KwLvYZV0oTd8jx3UY+2IW5mYBOLWNIMAyteTSyxIFU+20/soGXJm4wSJDE8=
+	t=1761551590; cv=none; b=BcUA7+1ZfEx2d2mZIUQKRsrng+CEzfU5FW9WeIodZ0KHzLaoBnEhAak7tUzqlMkoFWYXY3tn8b4vyHGNwwR0GzEGmoihZBzrGcr+jsEsOUks+rInJzUwTkXgSKPgh869zp6iVUa1zqbxgZS9ZNSTiB8V5f6Ao244z8k2+PsrrtM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761548801; c=relaxed/simple;
-	bh=ygjP+0hXKozuPlWiH+CdghGrQ7dOpMe9UhbZQu/cmwU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Tah4Nkvh1r5pQPZI8b3ANbpvhwvMYcPh+tHoT3FtmvkjIjOGwvTXrE+4ax1cumB12d4VkBnVcHhgGRcTQriZgOsvPFytLY7OzZSt5T6mb3BCXzeKo3fT/jwTbbesLIXHskV2SIwjhpVw/M4UqMEfAULli+rXg1jVtIuyY/qYT18=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=L0oddVpd; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+	s=arc-20240116; t=1761551590; c=relaxed/simple;
+	bh=9GnjeSsHnLjkxWo+2Gac2ImmRjomeF/H86D/bFkYed4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=P4BPoe0/QgjfI+YFHYk04L7t2c0nSg8M5ampEWD7KCsYkdfdBwfNKxdJmFCp04DHbTRmPrQRL4GuAI9Hn0LWvZ78u5h78G0ZLB+4RghhLYhl5BjSTqHII1dSVco9wrQ3dd4POGN0nMb/rOk173aWbi7Xiokd7/0DBzwTdZl/MyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=AJUpwNf9; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="L0oddVpd"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AJUpwNf9"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=I3KUQNkkYwoPMA3lHjZxhkMfGCFDHC++zLeJi/4ViX4=; b=L0oddVpdK3BQvAXQlM7nkb1ePg
-	fFu0nzx0YECXDJTcfjUxeoT0664MUqSeHBiUwDl6ozybtdG3H29TBsuSN4Augx60St+92B6iaST0/
-	T5ZT1yLsw+gnO/BeNPzq4uuCSwpQNiXeUC/y63dcTCYp6HnZDbHTWQY9MW/BnTkMc4/5xCbIIsYhB
-	8BLz4GmTsMFk7dJnQy/DxsGI3habeQDppjT+IiiWWG2Edo0gWJfPruTuSleLJ57jS6WiVwAgAEnm/
-	GE4rXCQlksLK/TddnyYW42IrHZxi6wwbCARIR+JQep66+x65uiqEzv7tkKxfkwRPgDf7qpYMODY3q
-	aIncxvzg==;
-Received: from [62.218.44.66] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vDHJO-0000000DFiv-3pR3;
-	Mon, 27 Oct 2025 07:06:39 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH 9/9] xfs: remove the xlog_in_core_t typedef
-Date: Mon, 27 Oct 2025 08:05:56 +0100
-Message-ID: <20251027070610.729960-10-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251027070610.729960-1-hch@lst.de>
-References: <20251027070610.729960-1-hch@lst.de>
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=eQOYjhgXpstbmG2nrGPOvbyrXr1clj6Xm04OxT6dSz4=; b=AJUpwNf9IavuUpXVZ0Rh4S+HLt
+	tdAYJI8GRFwxDPq01to+ANjmSmsRQ7d5NgiQRRRntxpgg9zsoUcErXaBPKRNRDtI6wxuGPDqB/qtc
+	irC58skXOg0UE2+KQAHecdk9QYIHJP6uHPY5R/yUnFIkWV6ppXdtt0YYzGqQyTZXYPFlwy/U5JGoB
+	/pPptw0ZK2oRreUsOTnqHHwD1XAkY72kYfJXp7cWjZXWsLi0mSdG1tBWOzh3Hlbkn82zcXXyRlRV9
+	fWRwTze94SEDo6CsP6T2cCacZC1kBJqRw5YCvfjCE+89Ycay26BzGhmXQZVSj7SwimqA96PXF+LRu
+	5XH6XBNg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vDI2M-0000000DJ3r-2aoI;
+	Mon, 27 Oct 2025 07:53:06 +0000
+Date: Mon, 27 Oct 2025 00:53:06 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, Christian Brauner <brauner@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 07/10] iomap: Use folio_next_pos()
+Message-ID: <aP8k4he6WeFdCnW3@infradead.org>
+References: <20251024170822.1427218-1-willy@infradead.org>
+ <20251024170822.1427218-8-willy@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251024170822.1427218-8-willy@infradead.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Switch the few remaining users to use the underlying struct directly.
+On Fri, Oct 24, 2025 at 06:08:15PM +0100, Matthew Wilcox (Oracle) wrote:
+> This is one instruction more efficient than open-coding folio_pos() +
+> folio_size().  It's the equivalent of (x + y) << z rather than
+> x << z + y << z.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/xfs_log.c      | 18 +++++++++---------
- fs/xfs/xfs_log_priv.h |  6 +++---
- 2 files changed, 12 insertions(+), 12 deletions(-)
+Looks good:
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 47a8e74c8c5c..a311385b23d8 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1368,8 +1368,8 @@ xlog_alloc_log(
- 	int			num_bblks)
- {
- 	struct xlog		*log;
--	xlog_in_core_t		**iclogp;
--	xlog_in_core_t		*iclog, *prev_iclog=NULL;
-+	struct xlog_in_core	**iclogp;
-+	struct xlog_in_core	*iclog, *prev_iclog = NULL;
- 	int			i;
- 	int			error = -ENOMEM;
- 	uint			log2_size = 0;
-@@ -1813,10 +1813,10 @@ xlog_sync(
-  */
- STATIC void
- xlog_dealloc_log(
--	struct xlog	*log)
-+	struct xlog		*log)
- {
--	xlog_in_core_t	*iclog, *next_iclog;
--	int		i;
-+	struct xlog_in_core	*iclog, *next_iclog;
-+	int			i;
- 
- 	/*
- 	 * Destroy the CIL after waiting for iclog IO completion because an
-@@ -3293,7 +3293,7 @@ xlog_verify_iclog(
- 	int			count)
- {
- 	struct xlog_rec_header	*rhead = iclog->ic_header;
--	xlog_in_core_t		*icptr;
-+	struct xlog_in_core	*icptr;
- 	void			*base_ptr, *ptr;
- 	ptrdiff_t		field_offset;
- 	uint8_t			clientid;
-@@ -3481,11 +3481,10 @@ xlog_force_shutdown(
- 
- STATIC int
- xlog_iclogs_empty(
--	struct xlog	*log)
-+	struct xlog		*log)
- {
--	xlog_in_core_t	*iclog;
-+	struct xlog_in_core	*iclog = log->l_iclog;
- 
--	iclog = log->l_iclog;
- 	do {
- 		/* endianness does not matter here, zero is zero in
- 		 * any language.
-@@ -3494,6 +3493,7 @@ xlog_iclogs_empty(
- 			return 0;
- 		iclog = iclog->ic_next;
- 	} while (iclog != log->l_iclog);
-+
- 	return 1;
- }
- 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 17733ba7f251..0fe59f0525aa 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -181,7 +181,7 @@ struct xlog_ticket {
-  * We'll put all the read-only and l_icloglock fields in the first cacheline,
-  * and move everything else out to subsequent cachelines.
-  */
--typedef struct xlog_in_core {
-+struct xlog_in_core {
- 	wait_queue_head_t	ic_force_wait;
- 	wait_queue_head_t	ic_write_wait;
- 	struct xlog_in_core	*ic_next;
-@@ -204,7 +204,7 @@ typedef struct xlog_in_core {
- 	struct work_struct	ic_end_io_work;
- 	struct bio		ic_bio;
- 	struct bio_vec		ic_bvec[];
--} xlog_in_core_t;
-+};
- 
- /*
-  * The CIL context is used to aggregate per-transaction details as well be
-@@ -418,7 +418,7 @@ struct xlog {
- 						/* waiting for iclog flush */
- 	int			l_covered_state;/* state of "covering disk
- 						 * log entries" */
--	xlog_in_core_t		*l_iclog;       /* head log queue	*/
-+	struct xlog_in_core	*l_iclog;       /* head log queue	*/
- 	spinlock_t		l_icloglock;    /* grab to change iclog state */
- 	int			l_curr_cycle;   /* Cycle number of log writes */
- 	int			l_prev_cycle;   /* Cycle number before last
--- 
-2.47.3
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
