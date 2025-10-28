@@ -1,190 +1,275 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 407132EB84E;
-	Mon, 27 Oct 2025 21:56:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDFF91DE8B5;
+	Tue, 28 Oct 2025 09:43:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761602211; cv=none; b=l7IQnSITtNsGoP5BCL3Z1r7TNQGtXJDBGTwNrkWQSFFjKfFG14a51TZG1DeUZjfVyQ/nWUdNwlwvV2OyLC5F8lvHal0jB7vwdNJfE82A8stgczansh7Cc/KBfxnBXDt7ik/yhcjU51ydGLosL7GNb19flA2zQTe2CfxHT5Kjnd0=
+	t=1761644583; cv=none; b=N6eyPvs1TCcKnKRaFuDWf35NvACPQws1BFSDj8vb3IaUF2tBe2R1heHAuoq2+nxRppyGilk42oWSmBrOE+Apv9VHMyK10JtQQFtpkik8JrSBM2nSsw01aIS9qDGWAbrjr7p4AwTdaZj7gfmlmQWyipUZaXfjtCPUZTR3JXpeErI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761602211; c=relaxed/simple;
-	bh=405cnyAwlgl8G6n9UhDVXviAWRHuhcD6pnbJ2+1/ELo=;
+	s=arc-20240116; t=1761644583; c=relaxed/simple;
+	bh=yYCbpw7rw0zXfdbPsXkdq9oUAHa+PqvUURtYtXcjCEU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Kcz2y6BMdXxOjp8YRI8xvtmPvvnlwhyAwMQT06DovH+BtUc/UgvF8MC/yKvgEr8bHELxBlhHeKuxyEvUb0lWprdIuVh7RuxtRjauQ0qgP58gjCIjPqImx3YLKjGxfFPc76B3/j540WuNMZlF5UYqjnFHEWRA0/Lolo/+moaerBM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a+2Hs3Iy; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Lo7sMUm5AaVeka5eJN+VZnCDhBfH9tTsbM/f4t+kA2DRuDU4gHaE/u9RChcgsQWqGFDWjt9tCRdXao0v+mdPvGCRW25CquL/kWLuwwmH39EfLV/io5ff9Hwd5cXtj94eLgXiJbbS8VwLHmV4tEbl6s2PvDEWUeUMflSkNikcFcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=hxc9L8bf; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a+2Hs3Iy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A474AC4CEF1;
-	Mon, 27 Oct 2025 21:56:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761602210;
-	bh=405cnyAwlgl8G6n9UhDVXviAWRHuhcD6pnbJ2+1/ELo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=a+2Hs3IypUls8lSAjdGvQhr+l4x/IwslEpeWGbGpmjryf+rXJCB6leDz+nuXscEEQ
-	 5EEax/w4kjmRAOb2LjwX+qXZU6awcTnUqql7NwUGg4jvfaNhgYB2TtZZ9u3UXr5gdD
-	 w0Wj/GOCzQgdU82zKvFqXF7wWh5eDVyMb1qs8VMG9CcULK/1ncirpqX4OhDZW0GYF7
-	 TKGKwdBizDiRp6vdTCmTSWAQ+Ybv9keILSkKPfWzkVT5IYBTIyzMAhzePDO39Bigwg
-	 m67e7v93N0X+6QJAUBhBdBtvzuDcLp425i/OlMmWqH5iP+uU5J9Vwqb4zAkH7IHmWe
-	 FhhsQeDoIuQig==
-Date: Mon, 27 Oct 2025 14:56:50 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Qu Wenruo <wqu@suse.com>
-Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH 1/4] iomap: add IOMAP_DIO_FSBLOCK_ALIGNED flag
-Message-ID: <20251027215650.GO4015566@frogsfrogsfrogs>
-References: <20251023135559.124072-1-hch@lst.de>
- <20251023135559.124072-2-hch@lst.de>
- <20251027161027.GS3356773@frogsfrogsfrogs>
- <c4cc53b4-cc1a-4269-b67c-817a0d7f3929@suse.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="hxc9L8bf"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59RKYWVL027578;
+	Tue, 28 Oct 2025 09:42:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=9tUBTYDcqQzpWW/bGrGEUKCuJSzJSn
+	CEUDb+PoGr0HI=; b=hxc9L8bfqXVowklXYI9K2d1j47tpFmhKlo7hQNOwd0S3Fe
+	/T5Jv3w5y4IjeHOiNRTNMw3eDEORvj4y1RMvKDNk8DZD/g0qHNGy6RDJCuPEGYUe
+	56usgmW8EMuIB71Ce5mdMwD4kzJkmihbO2gB4ZCnqfs+pACnIdCeCurFQI31BhAw
+	cVaxiSYgoQTtp+50KEdVfpGCIxCkKx63y1+eSMw6jtY3ncRKvpq54nMtUPvOe9Nj
+	k99sSDYDA/tUpMQxkgIkgbXbtmO4e6cVeEx3j+3oYqduOImi8oBu6VhkLZ8uMvgw
+	JZMVJ9GO0AJnTFB6K0DDw1mwM9ffUgQYW6EDAkJg==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4a0p2935qu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 28 Oct 2025 09:42:53 +0000 (GMT)
+Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 59S9gq0i018888;
+	Tue, 28 Oct 2025 09:42:52 GMT
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4a0p2935qm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 28 Oct 2025 09:42:52 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 59S7bAEv022886;
+	Tue, 28 Oct 2025 09:42:51 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4a198xj313-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 28 Oct 2025 09:42:51 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 59S9gnh554722852
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 28 Oct 2025 09:42:49 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 4739520043;
+	Tue, 28 Oct 2025 09:42:49 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 5283D20040;
+	Tue, 28 Oct 2025 09:42:47 +0000 (GMT)
+Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.109.219.158])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Tue, 28 Oct 2025 09:42:47 +0000 (GMT)
+Date: Tue, 28 Oct 2025 15:12:44 +0530
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, djwong@kernel.org,
+        john.g.garry@oracle.com, tytso@mit.edu, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v7 05/12] generic: Add atomic write test using fio crc
+ check verifier
+Message-ID: <aQCQFOtjhyzohgnA@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
+References: <cover.1758264169.git.ojaswin@linux.ibm.com>
+ <3c034b2fb5b81b3a043f1851f3905ce6a41c827a.1758264169.git.ojaswin@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <c4cc53b4-cc1a-4269-b67c-817a0d7f3929@suse.com>
+In-Reply-To: <3c034b2fb5b81b3a043f1851f3905ce6a41c827a.1758264169.git.ojaswin@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDI1MDAxOSBTYWx0ZWRfX1NlRESG26HxE
+ E9/QZyQllKhw6rZzxTVQp3NguqFwhp1lvOY8wQBeaueLxWgvdmHzLG0RS+BqSwT0Gt2G+w4UtJp
+ VR0FGI9laE0rYoWymKNImBcp7TD1ttaFF9KVrL2QIezuhlIoJOs+hg2+m1v+3xpY0gnyerNdDUW
+ coqnmVQYi/i4aB6t+4MiIdfNOywqxz1IgWpuuO3SfRNUWlC0ADxYUxZP5sM3ykpW2Dyr58Eymbx
+ b0hkn1QEmPzxzjx33xRD1WMhy1zYN4gdZbpM8zpk8E4ex4Zu06Z0o23HujxZ5P4waG2BqCI2rE8
+ hW4i3wP7WFkn+Y70MYS1dL58wWUK6OxZ2PqpqRJBf/MmQDktJBunlRtR/af3v/ToXmf+2eJZp8r
+ QCfe5NwLrMUu/1aT0wC29+VqrWGLJQ==
+X-Proofpoint-GUID: Ynzz4YjIwNYkvSLjz6NDtqR9R3scYAnj
+X-Authority-Analysis: v=2.4 cv=V8ZwEOni c=1 sm=1 tr=0 ts=6900901d cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=kj9zAlcOel0A:10 a=x6icFKpwvdMA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8 a=yPCof4ZbAAAA:8 a=VnNF1IyMAAAA:8
+ a=SCWEXSD_nzHFeBQ-3JkA:9 a=CjuIK1q_8ugA:10 a=cPQSjfK2_nFv0Q5t_7PE:22
+X-Proofpoint-ORIG-GUID: PQGpeh3F1XewoKmTeIudnCG2mYe1P4vD
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-10-28_03,2025-10-22_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 phishscore=0 lowpriorityscore=0 malwarescore=0
+ adultscore=0 bulkscore=0 spamscore=0 clxscore=1015 suspectscore=0
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2510020000
+ definitions=main-2510250019
 
-On Tue, Oct 28, 2025 at 08:11:21AM +1030, Qu Wenruo wrote:
+On Fri, Sep 19, 2025 at 12:17:58PM +0530, Ojaswin Mujoo wrote:
+> This adds atomic write test using fio based on it's crc check verifier.
+> fio adds a crc header for each data block, which is verified later to
+> ensure there is no data corruption or torn write.
 > 
+> This test essentially does a lot of parallel RWF_ATOMIC IO on a
+> preallocated file to stress the write and end-io unwritten conversion
+> code paths. The idea is to increase code coverage to ensure RWF_ATOMIC
+> hasn't introduced any issues.
 > 
-> 在 2025/10/28 02:40, Darrick J. Wong 写道:
-> > On Thu, Oct 23, 2025 at 03:55:42PM +0200, Christoph Hellwig wrote:
-> > > From: Qu Wenruo <wqu@suse.com>
-> > > 
-> > > Btrfs requires all of its bios to be fs block aligned, normally it's
-> > > totally fine but with the incoming block size larger than page size
-> > > (bs > ps) support, the requirement is no longer met for direct IOs.
-> > > 
-> > > Because iomap_dio_bio_iter() calls bio_iov_iter_get_pages(), only
-> > > requiring alignment to be bdev_logical_block_size().
-> > > 
-> > > In the real world that value is either 512 or 4K, on 4K page sized
-> > > systems it means bio_iov_iter_get_pages() can break the bio at any page
-> > > boundary, breaking btrfs' requirement for bs > ps cases.
-> > > 
-> > > To address this problem, introduce a new public iomap dio flag,
-> > > IOMAP_DIO_FSBLOCK_ALIGNED.
-> > > 
-> > > When calling __iomap_dio_rw() with that new flag, iomap_dio::flags will
-> > > inherit that new flag, and iomap_dio_bio_iter() will take fs block size
-> > > into the calculation of the alignment, and pass the alignment to
-> > > bio_iov_iter_get_pages(), respecting the fs block size requirement.
-> > > 
-> > > The initial user of this flag will be btrfs, which needs to calculate the
-> > > checksum for direct read and thus requires the biovec to be fs block
-> > > aligned for the incoming bs > ps support.
-> > > 
-> > > Signed-off-by: Qu Wenruo <wqu@suse.com>
-> > > Reviewed-by: Pankaj Raghav <p.raghav@samsung.com>
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >   fs/iomap/direct-io.c  | 13 ++++++++++++-
-> > >   include/linux/iomap.h |  8 ++++++++
-> > >   2 files changed, 20 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> > > index 5d5d63efbd57..ce9cbd2bace0 100644
-> > > --- a/fs/iomap/direct-io.c
-> > > +++ b/fs/iomap/direct-io.c
-> > > @@ -336,10 +336,18 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
-> > >   	int nr_pages, ret = 0;
-> > >   	u64 copied = 0;
-> > >   	size_t orig_count;
-> > > +	unsigned int alignment = bdev_logical_block_size(iomap->bdev);
-> > >   	if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1))
-> > >   		return -EINVAL;
-> > > +	/*
-> > > +	 * Align to the larger one of bdev and fs block size, to meet the
-> > > +	 * alignment requirement of both layers.
-> > > +	 */
-> > > +	if (dio->flags & IOMAP_DIO_FSBLOCK_ALIGNED)
-> > > +		alignment = max(alignment, fs_block_size);
-> > > +
-> > >   	if (dio->flags & IOMAP_DIO_WRITE) {
-> > >   		bio_opf |= REQ_OP_WRITE;
-> > > @@ -434,7 +442,7 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
-> > >   		bio->bi_end_io = iomap_dio_bio_end_io;
-> > >   		ret = bio_iov_iter_get_pages(bio, dio->submit.iter,
-> > > -				bdev_logical_block_size(iomap->bdev) - 1);
-> > > +					     alignment - 1);
-> > >   		if (unlikely(ret)) {
-> > >   			/*
-> > >   			 * We have to stop part way through an IO. We must fall
-> > > @@ -639,6 +647,9 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> > >   	if (iocb->ki_flags & IOCB_NOWAIT)
-> > >   		iomi.flags |= IOMAP_NOWAIT;
-> > > +	if (dio_flags & IOMAP_DIO_FSBLOCK_ALIGNED)
-> > > +		dio->flags |= IOMAP_DIO_FSBLOCK_ALIGNED;
-> > > +
-> > >   	if (iov_iter_rw(iter) == READ) {
-> > >   		/* reads can always complete inline */
-> > >   		dio->flags |= IOMAP_DIO_INLINE_COMP;
-> > > diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> > > index 73dceabc21c8..4da13fe24ce8 100644
-> > > --- a/include/linux/iomap.h
-> > > +++ b/include/linux/iomap.h
-> > > @@ -518,6 +518,14 @@ struct iomap_dio_ops {
-> > >    */
-> > >   #define IOMAP_DIO_PARTIAL		(1 << 2)
-> > > +/*
-> > > + * Ensure each bio is aligned to fs block size.
-> > > + *
-> > > + * For filesystems which need to calculate/verify the checksum of each fs
-> > > + * block. Otherwise they may not be able to handle unaligned bios.
-> > > + */
-> > > +#define IOMAP_DIO_FSBLOCK_ALIGNED	(1 << 3)
-> > 
-> > A new flag requires an update to IOMAP_F_FLAGS_STRINGS in trace.h for
-> > tracepoint decoding.
+> Avoid doing overlapping parallel atomic writes because it might give
+> unexpected results. Use offset_increment=, size= fio options to achieve
+> this behavior.
 > 
-> I'm wondering who should fix this part.
+> Co-developed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
+> Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+> ---
+>  tests/generic/1226     | 108 +++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/1226.out |   2 +
+>  2 files changed, 110 insertions(+)
+>  create mode 100755 tests/generic/1226
+>  create mode 100644 tests/generic/1226.out
 > 
-> The original author (myself) or Christoph?
+> diff --git a/tests/generic/1226 b/tests/generic/1226
+> new file mode 100755
+> index 00000000..7ad74554
+> --- /dev/null
+> +++ b/tests/generic/1226
+> @@ -0,0 +1,108 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2025 IBM Corporation. All Rights Reserved.
+> +#
+> +# FS QA Test 1226
 
-Or the maintainer?
+Hey Zorro,
 
-Here's the relevant patch for whomever actually commits it.
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Thanks for picking these in for-next. I just noticed that the test
+number for this test has become 773, but we missed changing:
 
-diff --git i/fs/iomap/trace.h w/fs/iomap/trace.h
-index a61c1dae474270..eae9c1e5c674c8 100644
---- i/fs/iomap/trace.h
-+++ w/fs/iomap/trace.h
-@@ -121,13 +121,14 @@ DEFINE_RANGE_EVENT(iomap_zero_iter);
-        { IOMAP_F_STALE,        "STALE" }
- 
- 
- #define IOMAP_DIO_STRINGS \
-        {IOMAP_DIO_FORCE_WAIT,  "DIO_FORCE_WAIT" }, \
-        {IOMAP_DIO_OVERWRITE_ONLY, "DIO_OVERWRITE_ONLY" }, \
--       {IOMAP_DIO_PARTIAL,     "DIO_PARTIAL" }
-+       {IOMAP_DIO_PARTIAL,     "DIO_PARTIAL" }, \
-+       {IOMAP_DIO_FSBLOCK_ALIGNED,     "DIO_FSBLOCK" }
- 
- DECLARE_EVENT_CLASS(iomap_class,
-        TP_PROTO(struct inode *inode, struct iomap *iomap),
-        TP_ARGS(inode, iomap),
-        TP_STRUCT__entry(
-                __field(dev_t, dev)
+ # FS QA Test 1226
 
-> Thanks,
-> Qu
-> 
-> > 
-> > The rest of the changes look ok to me, modulo hch's subsequent fixups.
-> > 
-> > --D
-> > 
-> > >   ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> > >   		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
-> > >   		unsigned int dio_flags, void *private, size_t done_before);
-> > > -- 
-> > > 2.47.3
-> > > 
-> > > 
+ to
+
+ # FS QA Test 773
+
+
+Commit: https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git/commit/?h=for-next&id=1499d4ff2365803e97af3279ba3312bba2cc9a80
+
+Regards,
+Ojaswin
+
+> +#
+> +# Validate FS atomic write using fio crc check verifier.
+> +#
+> +. ./common/preamble
+> +. ./common/atomicwrites
+> +
+> +_begin_fstest auto aio rw atomicwrites
+> +
+> +_require_scratch_write_atomic
+> +_require_odirect
+> +_require_aio
+> +_require_fio_atomic_writes
+> +
+> +_scratch_mkfs >> $seqres.full 2>&1
+> +_scratch_mount
+> +_require_xfs_io_command "falloc"
+> +
+> +touch "$SCRATCH_MNT/f1"
+> +awu_min_write=$(_get_atomic_write_unit_min "$SCRATCH_MNT/f1")
+> +awu_max_write=$(_get_atomic_write_unit_max "$SCRATCH_MNT/f1")
+> +
+> +blocksize=$(_max "$awu_min_write" "$((awu_max_write/2))")
+> +threads=$(_min "$(($(nproc) * 2 * LOAD_FACTOR))" "100")
+> +filesize=$((blocksize * threads * 100))
+> +depth=$threads
+> +io_size=$((filesize / threads))
+> +io_inc=$io_size
+> +testfile=$SCRATCH_MNT/test-file
+> +
+> +fio_config=$tmp.fio
+> +fio_out=$tmp.fio.out
+> +
+> +fio_aw_config=$tmp.aw.fio
+> +fio_verify_config=$tmp.verify.fio
+> +
+> +function create_fio_configs()
+> +{
+> +	create_fio_aw_config
+> +	create_fio_verify_config
+> +}
+> +
+> +function create_fio_verify_config()
+> +{
+> +cat >$fio_verify_config <<EOF
+> +	[verify-job]
+> +	direct=1
+> +	ioengine=libaio
+> +	rw=read
+> +	bs=$blocksize
+> +	filename=$testfile
+> +	size=$filesize
+> +	iodepth=$depth
+> +	group_reporting=1
+> +
+> +	verify_only=1
+> +	verify=crc32c
+> +	verify_fatal=1
+> +	verify_state_save=0
+> +	verify_write_sequence=0
+> +EOF
+> +}
+> +
+> +function create_fio_aw_config()
+> +{
+> +cat >$fio_aw_config <<EOF
+> +	[atomicwrite-job]
+> +	direct=1
+> +	ioengine=libaio
+> +	rw=randwrite
+> +	bs=$blocksize
+> +	filename=$testfile
+> +	size=$io_inc
+> +	offset_increment=$io_inc
+> +	iodepth=$depth
+> +	numjobs=$threads
+> +	group_reporting=1
+> +	atomic=1
+> +
+> +	verify_state_save=0
+> +	verify=crc32c
+> +	do_verify=0
+> +EOF
+> +}
+> +
+> +create_fio_configs
+> +_require_fio $fio_aw_config
+> +
+> +cat $fio_aw_config >> $seqres.full
+> +cat $fio_verify_config >> $seqres.full
+> +
+> +$XFS_IO_PROG -fc "falloc 0 $filesize" $testfile >> $seqres.full
+> +
+> +$FIO_PROG $fio_aw_config >> $seqres.full
+> +ret1=$?
+> +$FIO_PROG $fio_verify_config >> $seqres.full
+> +ret2=$?
+> +
+> +[[ $ret1 -eq 0 && $ret2 -eq 0 ]] || _fail "fio with atomic write failed"
+> +
+> +# success, all done
+> +echo Silence is golden
+> +status=0
+> +exit
+> diff --git a/tests/generic/1226.out b/tests/generic/1226.out
+> new file mode 100644
+> index 00000000..6dce0ea5
+> --- /dev/null
+> +++ b/tests/generic/1226.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 1226
+> +Silence is golden
+> -- 
+> 2.49.0
 > 
