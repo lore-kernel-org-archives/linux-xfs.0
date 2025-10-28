@@ -1,80 +1,79 @@
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8304D2E92BC
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Oct 2025 22:28:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 482D2354AEC
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Oct 2025 22:48:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761690540; cv=none; b=q74+gmBj/xI3fQOKs4fXOqO8Qae0vrY7sG3Ts4YI8hKPZ4Ddz3fGLR6CcqhMEGA2jKdgCRj0/VIYFQP3vcVBewBjHnxv7Wpyk4fG9w2x0HlhuP7kajSLE3+PpfBSQGeN9GwydXfdlmPF4Yt2wvi6FOMhXvg+AbP95sbbBa1snUc=
+	t=1761691681; cv=none; b=cR95Ln4ChbiknaXoAtqM2I6V1txKfperLBqRMLPmlvdATHigyWzHjVLA7v38rbkMo2ZSEq4MJzFNh5cpdewQA+KH7FuaHssUbzyZ6r+JZ4nBUIlh/06bL4nsTzqhT+Z2Da6R0NGzTsAe1N9uBTdCBzYTCEzAey8XAYSKDnf6GOw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761690540; c=relaxed/simple;
-	bh=R327mkMbhOhLjP1FNeOIfxfJUXB78fgCTiAQuSDWDzM=;
+	s=arc-20240116; t=1761691681; c=relaxed/simple;
+	bh=1/WE+xbvc6Dal5pEAP6nQ5I9Rm9+W8PbrmOyYOyQAU4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Bwq6CJxdpeZgqkAp60kmh6i2j13KmdLN4o9mCjECobYstgTnlauXQ0caalclDVZRqzJ4o1bcUv7fO5rbCodVV2F9MJ75mmZdXNKm8gh128eKqpZt7nAzYw//FsXwURoD/9MHLuJaVIdapdWsJDYS5Jeoi7FlbNks9LkLpysYzRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=MGyUq52J; arc=none smtp.client-ip=209.85.216.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=atxropIvzBYSL7KQMfHxxdyU68DdsbMm1Z4TipcDpP9xSn+230nB8aaUT/2NE9FImj6Yfj6aCYX4N1wirRbZPL0k5CNkUruGchMBpF8Z3v9HQOG8tfS7gHITHDGLrxjbkrmXBHFU9SY85iZ/x68G7i9lMtlyrhbN/XCPEqhp2Fs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=cw5txWlI; arc=none smtp.client-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="MGyUq52J"
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-34029c5beabso1611772a91.1
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Oct 2025 15:28:58 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cw5txWlI"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-27d67abd215so74035ad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Oct 2025 15:48:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1761690538; x=1762295338; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1761691679; x=1762296479; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=CAU2TLyqRUUdNsn0cYS98k9VY4+CKit2Kh6z3BNF2wM=;
-        b=MGyUq52JEaDOU9YWtztQ8gloryZWlhve5rjz7NrSZkfh8Gg818LGG9ew7xhTJApDhJ
-         5BQaUzCwEQUCrMdUByxd6398w6skMq57qbscYK4Xb+tODfbqC3Xa9iqkVpsa2Wi1+uxC
-         eO8+Kwz4jSLP6rRW4zPZ4P16lsMBR4R4WS36vi1NyJPlFwdr//IatMwWdqwkRRvbtvfM
-         JXIZsuuXbfJVnA7zANKCC3HwWYmYRdcuepLA/Wb9tiD0EIBnfOVQY7Lk8MX9wxNIoWdN
-         zdOq3AAxCFIGPzcKgz7UJNlELLPd9VztaOVPfuQhphhP7AhYDlIa5ZLAnX6jmY+/pRgA
-         C0gw==
+        bh=bDTzcXmi62N+bAdKsA9MM3K6VkUn2QF2TaFyCxaOopA=;
+        b=cw5txWlIuTN2QU5L8mb2O7HgmcLoujhWuSezj1By528HjRtYaUcMiQ6ei/hW+b4eSg
+         EtyXebaRu/guzPzERPHfgX3ubrJykfDzZRr/XEk7+wGPKaoerQvXYXPY2L0QWLKQ46g5
+         Uvx5e21Jx//zbeMzmrg6WDPFkOSznKFBZaYpg2GJ6thXiaaiuZFjUG+RL1yen2BwqewK
+         OtTH8DkpgOKjon/ej6BoZWQk33lvIZFQIaQPsOjRriuJCzmkoPXYbIuXJYBS0u9w7YQH
+         1wbMUD6wKbxfvjZHhxYFFJuqrM3uQCWm7CPtxzv4/bAFL74ldejUQpj/YpNtpEI2mJrz
+         wBtQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761690538; x=1762295338;
+        d=1e100.net; s=20230601; t=1761691679; x=1762296479;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=CAU2TLyqRUUdNsn0cYS98k9VY4+CKit2Kh6z3BNF2wM=;
-        b=GnJKCHGDT/TftDs7DWAxYE8SKTb5NlFC+OANrnFdBWh4pN2EW67X8gKTRl7xQi6BQ0
-         JYEQmSnPmNTsCppd4LkAffFcCjjrP+5RJT50juPKaHL0dF/ZUkUHTyGMRoZ73Jjoh3Nq
-         xfeU1N8ZBogciesaobMTmgDdPCag8oZSX06aO+Q3a5BZ1j3DKz11w5nFkidf88LSbwPV
-         pXIB8qT3zukIvjcDhM+koHgZoZCtJl9oF7m9fICCnXYasc2CyyR7GKtkmRCdEP4bHwB8
-         Y0DFC1idYNPuie82Q25vlTXzss+G2rttm9uhdt8QDDepfOAYTFmxStZvwHHM2mROYX1Y
-         i/rQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXgaffTckjC070EiXS25YevusDmtErUZ9H4lDUVbIq4eu46E4Ly69VdLcvQYgPGT4a4PhN4n+biq3g=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxNwljSLyY3dghMwW2Aqqq80iGirFVouvDazui6EE9Ks/mFQRMo
-	80WIzN7WqBsEKG3abUcD02UgGOAbIvR7EiqfNoBGtZjq8h/kysPApzYLPPbDHqHzdqI=
-X-Gm-Gg: ASbGncuGnu1Uc55J+RNSCvro7n0sYrc8AIJFqM4fftAFbARyeMZ2WFL+c9RBMI3fGe1
-	3ql6mlWFfCfJ3v+SemxrKsLKxbe9kY9s3xlXRQ5zud+PJRZOw9PkjGBjJe9aG2q9h1ZlbcfREug
-	3E7z22x8Vnnm7mSXZ+4FYImTPqG5PrsJsxEz9TCXsJrjMuwLO8RoXH6QX7xPdbmXgNM3Q4YD+vZ
-	VLlpuNFCTbKhFb0eliSjwuIuuNLSOpWPBKMcozH4FtK0emT69brh6Wc/8dfaq/Mx2QTb2X3fGOP
-	gdlMKL5e+ZEAbogGklOTJGtsy9obR6wgwsPS/oGqUQP4gXhJorjySUBGQwy4MmQfJ3/FO53tRgT
-	N62oczW8MFjse7muwgng64R9VOgEq/Kw3pOU5KBevoqgZ2PngYW+qFKUNxKIFvSr0U863cqf1Gf
-	qnwXoqrVzcGFJ7XTtnctgmQTtNDDz5S4d7zyrih/clx+kT4oLI+g8=
-X-Google-Smtp-Source: AGHT+IGyg3OATGBkb9vX4874FYJqb/XmzITag6rb76Vk8oKi5aNj0bmOrr0g5KKcD/2bNn1E787kTQ==
-X-Received: by 2002:a17:90b:1810:b0:33e:2d0f:479c with SMTP id 98e67ed59e1d1-3403a285082mr571565a91.22.1761690537395;
-        Tue, 28 Oct 2025 15:28:57 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-58-136.pa.nsw.optusnet.com.au. [49.181.58.136])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b71268bfaa1sm11504530a12.7.2025.10.28.15.28.56
+        bh=bDTzcXmi62N+bAdKsA9MM3K6VkUn2QF2TaFyCxaOopA=;
+        b=Ur38wzLl6LerNhOwdctz4O6VR8VLy6TGLuu1Jxvm96havM3K4WAhr4zo/7VT96ZVlD
+         OYZeOGDgr8BMbeRC5zsvrI0Toztl8nSfEDKNpwi8CTVmJGzVE2zbdEMxkv65HEkbetxk
+         1Z0hU+e8pFx4iqo2hVKX4N/cgnvR6lmV5S+hq6yVTN5sG4L1Y0ssL8Yqh07HR+dCeBwP
+         guej+Ijhck8pN9FDeLHEsOGbs6E4I3sVJ9tVXCWAqc/laBOcbat4pwdapJwk6qFqrfbM
+         zm8+nlyomd8Kf0vsRVxhSyFCLiGJdO8nfQmeSj3LVKNuICZr+oR0gjnh/ag0eiyVlb1p
+         UE9Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUetRFoUpHoA5fhMEJ19wP/0/uSTcNoi92fERcMI7gzjVRdkGRJ+o5NQxcjsK2OOwcjpGYZiJeNKZE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwjEiU5EDx8AuDwOyuC6cbWOxaf/hMzh98lcISYvUUIJWHeS4Of
+	yO87tX0+hilwtboX7linLxytJGk3VS753Eb3OBZ5NAGDr8k8dvWdv0gWgZ51Zw5LNw==
+X-Gm-Gg: ASbGncs55CA0uyXQn/2aFtwmMm1O0HOUkol4h5nUhyhO+9W98j8vXGGZx2uVFxAOIRK
+	GA5nfzueNjuOT9AGsqmc4qfsOKo5rEW/apCgV6aM7fjEcq++4hhnj1E/nsLD3bAVJTmIAVykoJK
+	JMPAaRexekch+nR7eGnay8p3wLvG7mkZb7zbJJ5kvjWXnATwCm8FI1yv+gw+vsBp1s+cOXasXFM
+	ZzuacI1CIiHJtVyawztcUebbLJxGEVuChziR4GKQVkdI5zLyvjGsjHPJbYhtO/1J90if4n8J1RG
+	VafJMVP+0ptF/atCLdn7JkIaNNeC6B+35oIlegS0M1iyH216dFI80N3RcH0j86A5r8MaMHWkvCD
+	Uyp0nVL3PZazMSedcjbMAM+u8/ok78wV+OHeIFG61ZJaPouNv+vFmEofPDzp9YR5Hdk/ZWNVGVq
+	Cx9ghgM1vCEeQHvjYg2+1DizZ9xRtaQEcjqb+59Sph3bYWC5hFMWdmsE5lu+dIjc1Xl42bpsNoy
+	EJmAvYgFB5MWsvkCF3Yt+6nSfDynW+aBUc=
+X-Google-Smtp-Source: AGHT+IGVgm4/IjLLQT0cmQiv9nPeepYGw4HODw55Q9JYgkuJimkY420lDMBroEQm+to1DoESC9iCmA==
+X-Received: by 2002:a17:902:f693:b0:291:6488:5af5 with SMTP id d9443c01a7336-294dffb2cecmr1077105ad.1.1761691679356;
+        Tue, 28 Oct 2025 15:47:59 -0700 (PDT)
+Received: from google.com (235.215.125.34.bc.googleusercontent.com. [34.125.215.235])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29498d4287bsm131385965ad.80.2025.10.28.15.47.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Oct 2025 15:28:56 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1vDsBR-00000003P9L-0fi2;
-	Wed, 29 Oct 2025 09:28:53 +1100
-Date: Wed, 29 Oct 2025 09:28:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Mike Snitzer <snitzer@kernel.org>
-Cc: Chuck Lever <cel@kernel.org>, NeilBrown <neil@brown.name>,
-	Jeff Layton <jlayton@kernel.org>,
-	Olga Kornievskaia <okorniev@redhat.com>,
-	Dai Ngo <dai.ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
-	linux-nfs@vger.kernel.org, Chuck Lever <chuck.lever@oracle.com>,
-	linux-xfs@vger.kernel.org, honza@suse.de
-Subject: Re: [RFC PATCH] NFSD: Make FILE_SYNC WRITEs comply with spec
-Message-ID: <aQFDpZCGBpBoLBRo@dread.disaster.area>
-References: <20251022162237.26727-1-cel@kernel.org>
- <aPkUGpuBfz_E0gGu@kernel.org>
+        Tue, 28 Oct 2025 15:47:58 -0700 (PDT)
+Date: Tue, 28 Oct 2025 22:47:53 +0000
+From: Carlos Llamas <cmllamas@google.com>
+To: Keith Busch <kbusch@kernel.org>
+Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, hch@lst.de, axboe@kernel.dk,
+	Hannes Reinecke <hare@suse.de>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Eric Biggers <ebiggers@google.com>
+Subject: Re: [PATCHv4 5/8] iomap: simplify direct io validity check
+Message-ID: <aQFIGaA5M4kDrTlw@google.com>
+References: <20250827141258.63501-1-kbusch@meta.com>
+ <20250827141258.63501-6-kbusch@meta.com>
+ <aP-c5gPjrpsn0vJA@google.com>
+ <aP-hByAKuQ7ycNwM@kbusch-mbp>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -83,102 +82,54 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aPkUGpuBfz_E0gGu@kernel.org>
+In-Reply-To: <aP-hByAKuQ7ycNwM@kbusch-mbp>
 
-On Wed, Oct 22, 2025 at 01:27:54PM -0400, Mike Snitzer wrote:
-> On Wed, Oct 22, 2025 at 12:22:37PM -0400, Chuck Lever wrote:
-> > From: Chuck Lever <chuck.lever@oracle.com>
+On Mon, Oct 27, 2025 at 10:42:47AM -0600, Keith Busch wrote:
+> On Mon, Oct 27, 2025 at 04:25:10PM +0000, Carlos Llamas wrote:
+> > Hey Keith, I'be bisected an LTP issue down to this patch. There is a
+> > O_DIRECT read test that expects EINVAL for a bad buffer alignment.
+> > However, if I understand the patchset correctly, this is intentional
+> > move which makes this LTP test obsolete, correct?
 > > 
-> > Mike noted that when NFSD responds to an NFS_FILE_SYNC WRITE, it
-> > does not also persist file time stamps. To wit, Section 18.32.3
-> > of RFC 8881 mandates:
+> > The broken test is "test 5" here:
+> > https://github.com/linux-test-project/ltp/blob/master/testcases/kernel/syscalls/read/read02.c
 > > 
-> > > The client specifies with the stable parameter the method of how
-> > > the data is to be processed by the server. If stable is
-> > > FILE_SYNC4, the server MUST commit the data written plus all file
-> > > system metadata to stable storage before returning results. This
-> > > corresponds to the NFSv2 protocol semantics. Any other behavior
-> > > constitutes a protocol violation. If stable is DATA_SYNC4, then
-> > > the server MUST commit all of the data to stable storage and
-> > > enough of the metadata to retrieve the data before returning.
-> > 
-> > For many years, NFSD has used a "data sync only" optimization for
-> > FILE_SYNC WRITEs, so file time stamps haven't been persisted as the
-> > mandate above requires.
-> > 
-> > Reported-by: Mike Snitzer <snitzer@kernel.org>
-> > Closes: https://lore.kernel.org/linux-nfs/20251018005431.3403-1-cel@kernel.org/T/#t
-> > Signed-off-by: Chuck Lever <chuck.lever@oracle.com>
-> > ---
-> >  fs/nfsd/vfs.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > 
-> > This would need to be applied to nfsd-testing before the DIRECT
-> > WRITE patches. I'm guessing a Cc: stable would be needed as well.
-> > 
-> > diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
-> > index f537a7b4ee01..2c5d38f38454 100644
-> > --- a/fs/nfsd/vfs.c
-> > +++ b/fs/nfsd/vfs.c
-> > @@ -1315,7 +1315,8 @@ nfsd_vfs_write(struct svc_rqst *rqstp, struct svc_fh *fhp,
-> >  	init_sync_kiocb(&kiocb, file);
-> >  	kiocb.ki_pos = offset;
-> >  	if (stable && !fhp->fh_use_wgather)
-> > -		kiocb.ki_flags |= IOCB_DSYNC;
-> > +		kiocb.ki_flags |=
-> > +			(stable == NFS_FILE_SYNC ? IOCB_SYNC : IOCB_DSYNC);
-> >  
-> >  	nvecs = xdr_buf_to_bvec(rqstp->rq_bvec, rqstp->rq_maxpages, payload);
-> >  	iov_iter_bvec(&iter, ITER_SOURCE, rqstp->rq_bvec, nvecs, *cnt);
-> > -- 
-> > 2.51.0
-> > 
+> > ... and this is what I get now:
+> >   read02.c:87: TFAIL: read() failed unexpectedly, expected EINVAL: EIO (5)
 > 
-> I agree with this change.  And as I just replied elsewhere, IOCB_SYNC
-> doesn't cause a performance drop (at least not on modern systems with
-> NVMe): https://lore.kernel.org/linux-nfs/aPkNvmXsgdNJtK_7@kernel.org/
+> Yes, the changes are intentional. Your test should still see the read
+> fail since it looks like its attempting a byte aligned memory offset,
+> and most storage controllers don't advertise support for byte aligned
+> DMA. So the problem is that you got EIO instead of EINVAL? The block
+> layer that finds your misaligned address should have still failed with
+> EINVAL, but that check is deferred to pretty low in the stack rather
+> than preemptively checked as before. The filesystem may return a generic
+> EIO in that case, but not sure. What filesystem was this using?
 
-Well, that depends on the underlying file layout. If the test was
-doing IO that required allocation or unwritten extent modification,
-the IOCB_SYNC performance is identical to IOCB_DSYNC because they
-both have to stabilise metadata needed to access the file data.
+Cc: Eric Biggers <ebiggers@google.com>
 
-However, if it is a pure overwrite (i.e. writing into already
-written space) then the only filesystem metadata update that occurs
-is timestamps. At this point, IOCB_DSYNC is *much* faster than
-IOCB_SYNC because it does not require a journal flush to stabilise
-metadata.
+Ok, I did a bit more digging. I'm using f2fs but the problem in this
+case is the blk_crypto layer. The OP_READ request goes through
+submit_bio() which then calls blk_crypto_bio_prep() and if the bio has
+crypto context then it checks for bio_crypt_check_alignment().
 
-So if you didn't see any change in performance between DSYNC and
-SYNC writes, then is likely that the the tests did not exercise the
-pure overwrite path which many high performance applications
-optimise for (e.g. databases).
+This is where the LTP tests fails the alignment. However, the propagated
+error goes through "bio->bi_status = BLK_STS_IOERR" which in bio_endio()
+get translates to EIO due to blk_status_to_errno().
 
-IOWs, I'd definitely expect performance regressions to be reported
-by users from this change further down the line...
+I've verified this restores the original behavior matching the LTP test,
+so I'll write up a patch and send it a bit later.
 
-> Only question I have:
-> does IOCB_SYNC _always_ imply IOCB_DSYNC (for VFS and all
-> filesystems)?  Or should we be setting IOCB_DSYNC|IOCB_SYNC ?
-
-Yes - "all metadata" (_SYNC) has always been a super set
-of "enough metadata to retreive the data" (_DSYNC)...
-
-> (I took to setting both for NFSD Direct, and NFS LOCALIO sets
-> both.. that was done by original LOCALIO author)
-
-That's a (harmless) bug.
-
-> Basis for my question, is that there was a recent XFS performance
-> improvement made by Dave Chinner, reported by Jan Kara, for
-> DIO+DSYNC, see commit c91d38b57f2c4 ("xfs: rework datasync tracking
-> and execution").  Will DIO + IOCB_SYNC get the benefit of DIO +
-> IOCB_DSYNC relative to this XFS improvement?
-
-Yes, it will. But IOCB_SYNC will still be much slower than
-IOCB_DSYNC for pure overwrites....
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/block/blk-crypto.c b/block/blk-crypto.c
+index 1336cbf5e3bd..a417843e7e4a 100644
+--- a/block/blk-crypto.c
++++ b/block/blk-crypto.c
+@@ -293,7 +293,7 @@ bool __blk_crypto_bio_prep(struct bio **bio_ptr)
+ 	}
+ 
+ 	if (!bio_crypt_check_alignment(bio)) {
+-		bio->bi_status = BLK_STS_IOERR;
++		bio->bi_status = BLK_STS_INVAL;
+ 		goto fail;
+ 	}
+ 
