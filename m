@@ -1,214 +1,95 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DCD02EC0B5
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 09:07:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58F182E54A3
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 09:50:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761728877; cv=none; b=aD0yq7z07fzdEkWZ1Ls9+0e7WDIxBe95jURqNJ1ww69HHwI+TLSxZzJZVCvuzHQ9v5d07HDr6FVo2O8cXGSA94lxqa922rdQiLbpsRkc+CGP73DX2RbwtZy9Y5Hbc8rsTjHUBPlx42J/IPYs4nKjUML+aUa4wNmbv1r9rpbPCic=
+	t=1761731426; cv=none; b=qRve/BF/aSNgNj/pMi/A2HqS2rr5v0d5BbmHbOgvL8HXNXMT0lOBMdjg5X9n0rguV4KgMj2rB0AHH0tJXf98R3QfhMWeaAxB/O3WniQK7IH8LR2CmDQLJq1Q8wYRUwGh3EHTubZVvpSAbqyzHBwcdeie71DnS2cfHVc/T6K4ZCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761728877; c=relaxed/simple;
-	bh=YMb1+6P+fux5+CvHD0PM4E3BBhtGLgx6PDldPEkt0d0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FTP0OzBAlLYt0WY9m8yW2/CcrDwLRRHjlvrl+tAUZJAGIeGdV407i133qm9bvWWko32aFFt4Xi39WIqv6sAK82drhfLIdERHP7bPB//TzMJ6znvracRLWRuPfb/MIuKrQjG5F+Qif+Tmo4lHfPeKpGJ1uLF4GkfiBswBxNh210Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=M09RDKcI; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="M09RDKcI"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:
-	To:From:Sender:Reply-To:Content-ID:Content-Description;
-	bh=oA6fZwo392Xn/MaFmh5sEEg0ZRq/aMLmUUBphdueEPc=; b=M09RDKcIXknPvLTuUfk5DKC9FC
-	GNLW+06FcQAC+LAlWobQVramskPZ++f5SPnsw3AaCsNCe+wRp6rbog+tdxF313L/Go5s0kRmaHyfX
-	aD6bEUttUnKTPoehIoYFbCTNwtvF8c+9fWHW/8PonABzBk94NKsKprfxVcnKFJSPwkK3VP7CfVXo1
-	Rzibqz0gmzH6LlSw30Mjg54E95y3QAPsGWflV6Q4SWxUk0R53P68ZvJzrfEhfHX8uDA/HNUsLkswn
-	8kV82Wc/+Ben0vhbKFDgapcUtMc10yHbc4ldoBOYA3N7/xlFmoNtsYbybHWOLV9uOPdw9jLY/JK6C
-	pganJ8HA==;
-Received: from [2001:4bb8:2dc:1fd0:cc53:aef5:5079:41d6] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vE29q-00000000Qlu-46e1;
-	Wed, 29 Oct 2025 09:07:55 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/4] mkfs: split zone reset from discard
-Date: Wed, 29 Oct 2025 10:07:32 +0100
-Message-ID: <20251029090737.1164049-5-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251029090737.1164049-1-hch@lst.de>
-References: <20251029090737.1164049-1-hch@lst.de>
+	s=arc-20240116; t=1761731426; c=relaxed/simple;
+	bh=BMvFhu2JQpaF4T3E9tc1blugVNdOnldVDb7ENcjLjqI=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=Gm29f6kfSnl85J8febPjZ281Nm5yCIv3sV9OmGbXY6VhnoEd4rE9wdNuQh2NVge1j3GkDBCDnPA+QB83ZHP0ecd2MlbfraK7Aa6gYgNIVvUgOATm7YUh8In8FqVhH/nM3VV5LftexY9Dgz3fZoZ/aycILly+C2riqEnAfgvc30Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-430d83d262fso280905815ab.2
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 02:50:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761731424; x=1762336224;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=zRFPHqBvWqE41m7o5rfMlavGfndw1tlWRpHHn/CNEBo=;
+        b=JvaR0aR3ikSSbgOtR5Ibo4B4FWdWLM7w20K3ZuK8ROC5g3nuOJCAfdKrRqMG91BiGa
+         V6tKI0bz7AiLkXQuzTV2MWqpqusOfGt18zAI6WAUBhkxJYbiaKIxf1/KpWBi6KI2Cam4
+         mZ45PJvnQlcJn1h/PIQuFQJprZrws11ua7EOG89I8rGzfwdttsrRMFJ+r1OLZu40g3SS
+         0nifPsCbkT9XLBsC24BL9peDAhsu0CBmO6WAUngqDFheDzpvMeknjOedSMLyZ7HGnzLZ
+         BvPBZfdcyq+k9nxCqGo+sJi80cuTjftaLVg8KOyK68tUfLrkYAX1fsKJeQeHHW8qAxi+
+         Y/Kg==
+X-Forwarded-Encrypted: i=1; AJvYcCXLaFay6xnqsqYXEEGzHffTyELeq1Up0QvVU+duKUvbiiSGLvWTMNJhG5H8fxVhdWuYD6hZWEjsD7c=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyWZwlaMoC7t7jd37OyFjAMRp/Hpd9/4ylza2SnU+fpE4LWbAMf
+	SOpjzsmb+7ODGDs5zs3PBazBKBITs4x1uLPoCF85Dw7/Kt3v7Z9EHirvFKbaaUJXfQCX4ZWPJKX
+	MnOsFDwqpA9rre9+li12LjJF34YVwxf/uFNBfa8/S8G5YMjBYiZJY2JvAjpQ=
+X-Google-Smtp-Source: AGHT+IHzKNuLQKknWwbqJmjw7SumWQ7v695K1Sy9XomlF/7maRIeOSfPAicmFWK1kqWHpy8bD71ucg6XtZulYHJM1NQS07uPNA8i
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-Received: by 2002:a05:6e02:2183:b0:431:d721:266d with SMTP id
+ e9e14a558f8ab-432f9090ee3mr27884615ab.31.1761731424434; Wed, 29 Oct 2025
+ 02:50:24 -0700 (PDT)
+Date: Wed, 29 Oct 2025 02:50:24 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6901e360.050a0220.32483.0208.GAE@google.com>
+Subject: [syzbot] Monthly xfs report (Oct 2025)
+From: syzbot <syzbot+list2a4b52d8d4fbe066ed08@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Zone reset is a mandatory part of creating a file system on a zoned
-device, unlike discard, which can be skipped.  It also is implemented
-a bit different, so just split the handling.  This also means that we
-can now support the -K option to skip discard on the data section for
-zoned file systems.
+Hello xfs maintainers/developers,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
+
+During the period, 1 new issues were detected and 0 were fixed.
+In total, 16 issues are still open and 27 have already been fixed.
+
+Some of the still happening issues:
+
+Ref Crashes Repro Title
+<1> 2779    Yes   INFO: task hung in sync_inodes_sb (5)
+                  https://syzkaller.appspot.com/bug?extid=30476ec1b6dc84471133
+<2> 254     Yes   KASAN: slab-use-after-free Read in xfs_inode_item_push
+                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
+<3> 108     Yes   INFO: task hung in xfs_buf_item_unpin (2)
+                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
+<4> 53      Yes   INFO: task hung in vfs_setxattr (7)
+                  https://syzkaller.appspot.com/bug?extid=3d0a18cd22695979a7c6
+<5> 17      Yes   KASAN: slab-use-after-free Read in xfs_buf_rele (4)
+                  https://syzkaller.appspot.com/bug?extid=0391d34e801643e2809b
+<6> 13      Yes   KASAN: slab-out-of-bounds Read in xlog_cksum
+                  https://syzkaller.appspot.com/bug?extid=9f6d080dece587cfdd4c
+<7> 8       Yes   INFO: task hung in xfs_buf_get_map
+                  https://syzkaller.appspot.com/bug?extid=d74d844bdcee0902b28a
+<8> 3       Yes   INFO: task hung in xlog_force_lsn (2)
+                  https://syzkaller.appspot.com/bug?extid=c27dee924f3271489c82
+<9> 1       Yes   INFO: task hung in xfs_file_fsync
+                  https://syzkaller.appspot.com/bug?extid=9bc8c0586b39708784d9
+
 ---
- mkfs/xfs_mkfs.c | 112 +++++++++++++++++++++++-------------------------
- 1 file changed, 53 insertions(+), 59 deletions(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 09a69af31be5..cd4f3ba4a549 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1607,34 +1607,6 @@ discard_blocks(int fd, uint64_t nsectors, int quiet)
- 		printf("Done.\n");
- }
- 
--static void
--reset_zones(
--	struct mkfs_params	*cfg,
--	int			fd,
--	uint64_t		start_sector,
--	uint64_t		nsectors,
--	int			quiet)
--{
--	struct blk_zone_range range = {
--		.sector		= start_sector,
--		.nr_sectors	= nsectors,
--	};
--
--	if (!quiet) {
--		printf("Resetting zones...");
--		fflush(stdout);
--	}
--
--	if (ioctl(fd, BLKRESETZONE, &range) < 0) {
--		if (!quiet)
--			printf(" FAILED (%d)\n", -errno);
--		exit(1);
--	}
--
--	if (!quiet)
--		printf("Done.\n");
--}
--
- static __attribute__((noreturn)) void
- illegal_option(
- 	const char		*value,
-@@ -3780,41 +3752,66 @@ discard_devices(
- 	struct zone_topology	*zt,
- 	int			quiet)
- {
--	/*
--	 * This function has to be called after libxfs has been initialized.
--	 */
--
- 	if (!xi->data.isfile) {
- 		uint64_t	nsectors = xi->data.size;
- 
--		if (cfg->rtstart && zt->data.nr_zones) {
--			/*
--			 * Note that the zone reset here includes the LBA range
--			 * for the data device.
--			 *
--			 * This is because doing a single zone reset all on the
--			 * entire device (which the kernel automatically does
--			 * for us for a full device range) is a lot faster than
--			 * resetting each zone individually and resetting
--			 * the conventional zones used for the data device is a
--			 * no-op.
--			 */
--			reset_zones(cfg, xi->data.fd, 0,
--					cfg->rtstart + xi->rt.size, quiet);
-+		if (cfg->rtstart && zt->data.nr_zones)
- 			nsectors -= cfg->rtstart;
--		}
- 		discard_blocks(xi->data.fd, nsectors, quiet);
- 	}
--	if (xi->rt.dev && !xi->rt.isfile) {
--		if (zt->rt.nr_zones)
--			reset_zones(cfg, xi->rt.fd, 0, xi->rt.size, quiet);
--		else
--			discard_blocks(xi->rt.fd, xi->rt.size, quiet);
--	}
-+	if (xi->rt.dev && !xi->rt.isfile && !zt->rt.nr_zones)
-+		discard_blocks(xi->rt.fd, xi->rt.size, quiet);
- 	if (xi->log.dev && xi->log.dev != xi->data.dev && !xi->log.isfile)
- 		discard_blocks(xi->log.fd, xi->log.size, quiet);
- }
- 
-+static void
-+reset_zones(
-+	struct mkfs_params	*cfg,
-+	struct libxfs_dev	*dev,
-+	uint64_t		size,
-+	bool			quiet)
-+{
-+	struct blk_zone_range range = {
-+		.nr_sectors	= size,
-+	};
-+
-+	if (!quiet) {
-+		printf("Resetting zones...");
-+		fflush(stdout);
-+	}
-+	if (ioctl(dev->fd, BLKRESETZONE, &range) < 0) {
-+		if (!quiet)
-+			printf(" FAILED (%d)\n", -errno);
-+		exit(1);
-+	}
-+	if (!quiet)
-+		printf("Done.\n");
-+}
-+
-+static void
-+reset_devices(
-+	struct mkfs_params	*cfg,
-+	struct libxfs_init	*xi,
-+	struct zone_topology	*zt,
-+	int			quiet)
-+{
-+	/*
-+	 * Note that the zone reset here includes the conventional zones used
-+	 * for the data device.
-+	 *
-+	 * It is done that way because doing a single zone reset all on the
-+	 * entire device (which the kernel automatically does for us for a full
-+	 * device range) is a lot faster than resetting each zone individually
-+	 * and resetting the conventional zones used for the data device is a
-+	 * no-op.
-+	 */
-+	if (!xi->data.isfile && zt->data.nr_zones && cfg->rtstart)
-+		reset_zones(cfg, &xi->data, cfg->rtstart + xi->rt.size, quiet);
-+	if (xi->rt.dev && !xi->rt.isfile && zt->rt.nr_zones)
-+		reset_zones(cfg, &xi->rt, xi->rt.size, quiet);
-+}
-+
- static void
- validate_datadev(
- 	struct mkfs_params	*cfg,
-@@ -6196,13 +6193,10 @@ main(
- 	/*
- 	 * All values have been validated, discard the old device layout.
- 	 */
--	if (cli.sb_feat.zoned && !discard) {
--		fprintf(stderr,
-- _("-K not support for zoned file systems.\n"));
--		return 1;
--	}
- 	if (discard && !dry_run)
--		discard_devices(&cfg, &xi, &zt, quiet);
-+		discard_devices(&cfg, cli.xi, &zt, quiet);
-+	if (cli.sb_feat.zoned && !dry_run)
-+		reset_devices(&cfg, cli.xi, &zt, quiet);
- 
- 	/*
- 	 * we need the libxfs buffer cache from here on in.
--- 
-2.47.3
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
 
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
