@@ -1,40 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9035834BA56
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 15:41:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE1B1347FF9;
+	Wed, 29 Oct 2025 15:53:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761752476; cv=none; b=hav09ps0N+VPnFfjuZ4veQIPVkMTp1pYL9MnD92qglIvmu7dAV6vZXdEIxfhuFTL54H/4qIZyDHO1jVP4xmgZ96KDPsec9rtdbl1HqOScsaACCaFRm+Gxh099Up5Ls6lR9bAQQ9Vm/HQ4ZMC2eJcCz7FnSAWEpRCRcwWzB7wwqs=
+	t=1761753189; cv=none; b=WYcR6LJsHjIDEpOFP3zAcN2Khh0x1fCSilIRo7TD0vaJIRkxThNXFwKO6VaHWn7Eow3pOp1SAjNts3BaPREcUgwICsTnKR7KDkze7N5XF4MRWnOdC5sEf/DhEhRbvpA1DBxbfrq1TAqSRYFSz9yDY6Q+JUhDcWwc8lpcEosowKo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761752476; c=relaxed/simple;
-	bh=AP19EyAHEArxoMjxCZcTeQbXAkT3pp7UlJMsbgRb1gw=;
+	s=arc-20240116; t=1761753189; c=relaxed/simple;
+	bh=WwKfERr5kmLbKvbQKjDG+WiSiHgx2xXET+72eEpdf7Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SUQINogRhU0XapxLzkleFUTlxb6WKPdmfeAMnw3xnu/e/mfcehzumeXwZ2y7Y3hXEl6KeYn6Eyji0YDou55OabGjvpG3tzpwp3UyHWBn4uBN1D8jSnpjdtvcZD4wuIWIrHI96jO23FUIv3B5HXU1ECMjs78CsXtoq3JRI4v19sI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rqJNlIHM; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=V3dp41vigL5vhBN9WXDI3SJlxDgNafauN+I3JMVmbqTOd6RT54EBWCkKoldj6jf4nSL1gk6UDBorTARGwWmUS+3bFbhLv6MOuyTb8ENng0IH3DrEEkMNoeTsDlrpUWV5h1zuETD+mxZ0YwDE1dwjLVUwIS4sG2Tk7v20KL6C5YE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UW9ZKTtj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rqJNlIHM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F5F5C4CEF7;
-	Wed, 29 Oct 2025 15:41:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UW9ZKTtj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BEDDC4CEF7;
+	Wed, 29 Oct 2025 15:53:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761752476;
-	bh=AP19EyAHEArxoMjxCZcTeQbXAkT3pp7UlJMsbgRb1gw=;
+	s=k20201202; t=1761753187;
+	bh=WwKfERr5kmLbKvbQKjDG+WiSiHgx2xXET+72eEpdf7Y=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rqJNlIHM4IOwwKZOfXyd+cCmMZtNeflvB7I/7c+YJAud76bcxDoG301Vw3em3BC8X
-	 Sph8v7Kr4Z0Dgrzyau1q6Wlc/nAfQ/dJS62BYW1DiqH71b7V8qLIO3O24mWo6QzUMQ
-	 AotKXRCsEimOK7+w4DrZhLLn8TKh8YIMVgZVs0iybLH0cc2oHNbGIKjXsEyn4Cb31K
-	 UjBDHM8MfHGBzJo0rGxOafhyIc+uYTM6zIJd1t/bEqmjVBDvxsKrsCpm/xQCC+xrpt
-	 lHXOJEzUzIOOLfu66fDFnKXciREPPncLP6UdqrY0Yrd30vu0cftX+Ro2t7PZR+QHcZ
-	 P1iEsoyYz+uAg==
-Date: Wed, 29 Oct 2025 08:41:15 -0700
+	b=UW9ZKTtjB7mGR7Aadq072SFr+e2CBu7Sp4JlLhxbjl4UI0DCgHPX9JahEa60UhbRw
+	 Usg4fl23VpIsQ7i3MHIQW9KGhTYstQWxVqBJ33HB7LF0EW9oxFnJII17PJ2hS7Hg2Y
+	 MFMQyiBdhbQTyBoCV/+5BM4wBbS1V04O10fb/qQhDvCmRq+DKy1wyhZBF8icoh2c8v
+	 L0julos92uAWccza0T3gsNTHaB3ov+0HyH+/ZDjy3uwXrph3FHGjWxQUwky6NZjLIw
+	 uN1aK4VLOv7xQsEglrCgddGxCKWMp0dGG/WGyQDHoCEAUCJzKWvnzn+PNkbbyfU2UC
+	 EBUS7zjHcGeLA==
+Date: Wed, 29 Oct 2025 08:53:06 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: cmaiolino@redhat.com, linux-xfs@vger.kernel.org,
-	Hans Holmberg <hans.holmberg@wdc.com>
-Subject: Re: [PATCH, resend] xfs: remove the unused bv field in struct
- xfs_gc_bio
-Message-ID: <20251029154115.GB3356773@frogsfrogsfrogs>
-References: <20251027070154.727014-1-hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+	linux-block@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: fallback to buffered I/O for direct I/O when
+ stable writes are required
+Message-ID: <20251029155306.GC3356773@frogsfrogsfrogs>
+References: <20251029071537.1127397-1-hch@lst.de>
+ <20251029071537.1127397-5-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,34 +48,178 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251027070154.727014-1-hch@lst.de>
+In-Reply-To: <20251029071537.1127397-5-hch@lst.de>
 
-On Mon, Oct 27, 2025 at 08:01:50AM +0100, Christoph Hellwig wrote:
+On Wed, Oct 29, 2025 at 08:15:05AM +0100, Christoph Hellwig wrote:
+> Inodes can be marked as requiring stable writes, which is a setting
+> usually inherited from block devices that require stable writes.  Block
+> devices require stable writes when the drivers have to sample the data
+> more than once, e.g. to calculate a checksum or parity in one pass, and
+> then send the data on to a hardware device, and modifying the data
+> in-flight can lead to inconsistent checksums or parity.
+> 
+> For buffered I/O, the writeback code implements this by not allowing
+> modifications while folios are marked as under writeback, but for
+> direct I/O, the kernel currently does not have any way to prevent the
+> user application from modifying the in-flight memory, so modifications
+> can easily corrupt data despite the block driver setting the stable
+> write flag.  Even worse, corruption can happen on reads as well,
+> where concurrent modifications can cause checksum mismatches, or
+> failures to rebuild parity.  One application known to trigger this
+> behavior is Qemu when running Windows VMs, but there might be many
+> others as well.  xfstests can also hit this behavior, not only in the
+> specifically crafted patch for this (generic/761), but also in
+> various other tests that mostly stress races between different I/O
+> modes, which generic/095 being the most trivial and easy to hit
+> one.
+> 
+> Fix XFS to fall back to uncached buffered I/O when the block device
+> requires stable writes to fix these races.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> Reviewed-by: Hans Holmberg <hans.holmberg@wdc.com>
+> ---
+>  fs/xfs/xfs_file.c | 54 +++++++++++++++++++++++++++++++++++++++--------
+>  fs/xfs/xfs_iops.c |  6 ++++++
+>  2 files changed, 51 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index e09ae86e118e..0668af07966a 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -230,6 +230,12 @@ xfs_file_dio_read(
+>  	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
+>  	ssize_t			ret;
+>  
+> +	if (mapping_stable_writes(iocb->ki_filp->f_mapping)) {
+> +		xfs_info_once(ip->i_mount,
+> +			"falling back from direct to buffered I/O for read");
+> +		return -ENOTBLK;
+> +	}
+> +
+>  	trace_xfs_file_direct_read(iocb, to);
+>  
+>  	if (!iov_iter_count(to))
+> @@ -302,13 +308,22 @@ xfs_file_read_iter(
+>  	if (xfs_is_shutdown(mp))
+>  		return -EIO;
+>  
+> -	if (IS_DAX(inode))
+> +	if (IS_DAX(inode)) {
+>  		ret = xfs_file_dax_read(iocb, to);
+> -	else if (iocb->ki_flags & IOCB_DIRECT)
+> +		goto done;
+> +	}
+> +
+> +	if (iocb->ki_flags & IOCB_DIRECT) {
+>  		ret = xfs_file_dio_read(iocb, to);
+> -	else
+> -		ret = xfs_file_buffered_read(iocb, to);
+> +		if (ret != -ENOTBLK)
+> +			goto done;
+> +
+> +		iocb->ki_flags &= ~IOCB_DIRECT;
+> +		iocb->ki_flags |= IOCB_DONTCACHE;
+> +	}
+>  
+> +	ret = xfs_file_buffered_read(iocb, to);
+> +done:
+>  	if (ret > 0)
+>  		XFS_STATS_ADD(mp, xs_read_bytes, ret);
+>  	return ret;
+> @@ -883,6 +898,7 @@ xfs_file_dio_write(
+>  	struct iov_iter		*from)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
+> +	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
+>  	size_t			count = iov_iter_count(from);
+>  
+> @@ -890,15 +906,21 @@ xfs_file_dio_write(
+>  	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
+>  		return -EINVAL;
+>  
+> +	if (mapping_stable_writes(iocb->ki_filp->f_mapping)) {
+> +		xfs_info_once(mp,
+> +			"falling back from direct to buffered I/O for write");
+> +		return -ENOTBLK;
+> +	}
 
-Looks good to me too,
+/me wonders if the other filesystems will have to implement this same
+fallback and hence this should be a common helper ala
+dio_warn_stale_pagecache?  But we'll get there when we get there.
+
+> +
+>  	/*
+>  	 * For always COW inodes we also must check the alignment of each
+>  	 * individual iovec segment, as they could end up with different
+>  	 * I/Os due to the way bio_iov_iter_get_pages works, and we'd
+>  	 * then overwrite an already written block.
+>  	 */
+> -	if (((iocb->ki_pos | count) & ip->i_mount->m_blockmask) ||
+> +	if (((iocb->ki_pos | count) & mp->m_blockmask) ||
+>  	    (xfs_is_always_cow_inode(ip) &&
+> -	     (iov_iter_alignment(from) & ip->i_mount->m_blockmask)))
+> +	     (iov_iter_alignment(from) & mp->m_blockmask)))
+>  		return xfs_file_dio_write_unaligned(ip, iocb, from);
+>  	if (xfs_is_zoned_inode(ip))
+>  		return xfs_file_dio_write_zoned(ip, iocb, from);
+> @@ -1555,10 +1577,24 @@ xfs_file_open(
+>  {
+>  	if (xfs_is_shutdown(XFS_M(inode->i_sb)))
+>  		return -EIO;
+> +
+> +	/*
+> +	 * If the underlying devices requires stable writes, we have to fall
+> +	 * back to (uncached) buffered I/O for direct I/O reads and writes, as
+> +	 * the kernel can't prevent applications from modifying the memory under
+> +	 * I/O.  We still claim to support O_DIRECT as we want opens for that to
+> +	 * succeed and fall back.
+> +	 *
+> +	 * As atomic writes are only supported for direct I/O, they can't be
+> +	 * supported either in this case.
+> +	 */
+>  	file->f_mode |= FMODE_NOWAIT | FMODE_CAN_ODIRECT;
+> -	file->f_mode |= FMODE_DIO_PARALLEL_WRITE;
+> -	if (xfs_get_atomic_write_min(XFS_I(inode)) > 0)
+> -		file->f_mode |= FMODE_CAN_ATOMIC_WRITE;
+> +	if (!mapping_stable_writes(file->f_mapping)) {
+> +		file->f_mode |= FMODE_DIO_PARALLEL_WRITE;
+
+Hrm.  So parallel directio writes are disabled for writes to files on
+stable_pages devices because we have to fall back to buffered writes.
+Those serialize on i_rwsem so that's why we don't set
+FMODE_DIO_PARALLEL_WRITE, correct?  There's not some more subtle reason
+for not supporting it, right?
+
+If the answers are {yes, yes} then I've understood this well enough for
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-> ---
->  fs/xfs/xfs_zone_gc.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
-> index efcb52796d05..09830696b5f9 100644
-> --- a/fs/xfs/xfs_zone_gc.c
-> +++ b/fs/xfs/xfs_zone_gc.c
-> @@ -117,7 +117,6 @@ struct xfs_gc_bio {
->  	struct xfs_rtgroup		*victim_rtg;
+> +		if (xfs_get_atomic_write_min(XFS_I(inode)) > 0)
+> +			file->f_mode |= FMODE_CAN_ATOMIC_WRITE;
+> +	}
+> +
+>  	return generic_file_open(inode, file);
+>  }
 >  
->  	/* Bio used for reads and writes, including the bvec used by it */
-> -	struct bio_vec			bv;
->  	struct bio			bio;	/* must be last */
->  };
->  
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index caff0125faea..bd49ac6b31de 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -672,6 +672,12 @@ xfs_report_atomic_write(
+>  	struct xfs_inode	*ip,
+>  	struct kstat		*stat)
+>  {
+> +	/*
+> +	 * If the stable writes flag is set, we have to fall back to buffered
+> +	 * I/O, which doesn't support atomic writes.
+> +	 */
+> +	if (mapping_stable_writes(VFS_I(ip)->i_mapping))
+> +		return;
+>  	generic_fill_statx_atomic_writes(stat,
+>  			xfs_get_atomic_write_min(ip),
+>  			xfs_get_atomic_write_max(ip),
 > -- 
 > 2.47.3
 > 
