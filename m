@@ -1,49 +1,57 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C04E41FECD4;
-	Wed, 29 Oct 2025 08:15:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B4662522BE
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 09:07:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761725723; cv=none; b=C4kc05SHOKL/RfdUn6EdyC5wp2MCLTkulCtfJkXgcxvhEDBrskkNffk+sNLkAuGhWb83L/lzdbCXgubuDh2ngjmKtmUVzkae6/vGFbZyy7uI2KPlTJ0lXYGQjB3zhjQbSXqRGvrwnsk4laLgPvsMqg2G4d+vxfglYMzQVK/wyHg=
+	t=1761728864; cv=none; b=pswdyiyZPiyoIak+wz7mpeGV1ex+xNJCCMw2+k+qDZe4I7/hG56xKf2XJk3hmSuCf9xQBrIwEukt+eyxbqychHfPRPo5dt4QpGLKZ6xv80wzt8bVGOfJctes8ZIyIuRxkDkht/uzRBH8xit1Tkc1pc4IoZl16mPIfq5FDdAeqyg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761725723; c=relaxed/simple;
-	bh=FQXoF3ZWjp6RtkZbUtLbBqLMmCk7psdm569/6ZnbdXY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N4g/yKMwlUkzeBRYB3j58zlvzsRMH/KDlQXaaG1o12l53ouplV/o4MnYJIYVkAO5L49jQHFw9QWfnyWDKQkiqYcn/Ce4nG9p9gtxgfYa1uHBvgPvP19l/c2MOPXwgq0KNU4P9jkbmDtaZZWAKGti1GrHQp4T4IuTDlyLju85lSQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 7D37E227A88; Wed, 29 Oct 2025 09:15:16 +0100 (CET)
-Date: Wed, 29 Oct 2025 09:15:16 +0100
+	s=arc-20240116; t=1761728864; c=relaxed/simple;
+	bh=TqpungkO8c1Us2cUaaXHv6eXkA9q1sBmI3oGp1YRz1M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HuIfIUw7BxvvY04xwdzqQ7uI7bhpppcCBA4oxWS6sDAHF4WoSzgR6R2EJzIRpEBxrNnul6BB0RlhG3HygIjoDj3xm/RgzfJV0QPBJ/wPfJ/mlNCJRKwxjCgktfTmSqhtxEZlGumhYxyoSpHzUcY86kPuXXJW/HQTCxBKZ6sxnrk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SBM/zmxF; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SBM/zmxF"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=TqpungkO8c1Us2cUaaXHv6eXkA9q1sBmI3oGp1YRz1M=; b=SBM/zmxFDr70N2KpvUVvaEpOMB
+	oYguxsscu05UVGubVJ4RdS/LFg5CGkRMx7w3UptFNAE0pl7cIYFNBA2npXQ/Wj1vsNxBia2WV4mTT
+	LxFQdjmmTDfwxVArgRxfbWAwkf7uTXBFSRgvV6BBbgYm9cqVq6PnK/uVtvByna1LDMM5CIrbVRnRw
+	pbjCi7OvcVOtnTp5O4YxL4Iot6q/XQbQRS/IViAk5rbnx5UPFBj0ancs25YABQS0Me7AVW0IPjy/C
+	xF6h7XQ6KADc+gLqU/ASExgjDnq3YhKgDQeidxG6ZOKsXhFXSRA/OpL1HYHDrXmWYC+b/VTXtlFll
+	SsPSEVzA==;
+Received: from [2001:4bb8:2dc:1fd0:cc53:aef5:5079:41d6] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vE29e-00000000Qj8-0dJ7;
+	Wed, 29 Oct 2025 09:07:42 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: Qu Wenruo <wqu@suse.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
-	Christian Brauner <brauner@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH 1/4] iomap: add IOMAP_DIO_FSBLOCK_ALIGNED flag
-Message-ID: <20251029081516.GA31592@lst.de>
-References: <20251023135559.124072-1-hch@lst.de> <20251023135559.124072-2-hch@lst.de> <20251027161027.GS3356773@frogsfrogsfrogs> <c4cc53b4-cc1a-4269-b67c-817a0d7f3929@suse.com> <20251029074450.GB30412@lst.de> <d5d33754-ecd3-43f0-a917-909cd1c2ab3e@suse.com>
+To: Andrey Albershteyn <aalbersh@kernel.org>
+Cc: "Darrick J . Wong" <djwong@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: improve the discard / reset zones code in mkfs
+Date: Wed, 29 Oct 2025 10:07:28 +0100
+Message-ID: <20251029090737.1164049-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d5d33754-ecd3-43f0-a917-909cd1c2ab3e@suse.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Oct 29, 2025 at 06:30:47PM +1030, Qu Wenruo wrote:
-> Patch 2 and 3 look good to me. Thank for catching the missing pos/length 
-> checks.
->
-> If you like you can even fold the fixes into this one.
+Hi all,
 
-That would be best.  I just want to hear from Christian if he's fine
-with rebasing, as he said he already applied your original patch.
-Although it still hasn't shown up in the tree anyway.
+this series refactors the discard and reset zones code in mkfs a
+bit, and then allows discarding for the data device even when
+the RT devices sits on a zones where discard doesn't make much
+sense.
 
+Note: this sits on top of the "improve a few messages in mkfs and
+xfs_copy" series sent a while ago.
