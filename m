@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B542286897;
-	Wed, 29 Oct 2025 12:32:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02C3A611E;
+	Wed, 29 Oct 2025 12:45:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761741130; cv=none; b=Lp8pGDwcgUgXiz947EE4avYXs3COHPuLEZewnARs//rUFBOg9W82B6x48qO/BSAsSb9VJuaqQ7XeczvvlqUtRztxnRT1YdxgguA27jElRAtPADgQuRKT6f720oQ0dQ8sIUNpRQEw6R+Jp8/9VNsVsi2EZ56Nmzl5w9/MKVldBNk=
+	t=1761741957; cv=none; b=U0iZ7nzFCv8ox1mQBW6gRBUVchkf3+P+c9Qb9tnVwy7J26zCZdZssEZKlmWvobt0B7e3+sTWf+zy6SuBBGZvTWMKYdS3tTXwVbktBELeKMtr3UZ/O0npJbbtAA9ehSunLVBhrFC0RtO+1cU8xRzZsTx7FXgqUP4VKLeZyLz1ni8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761741130; c=relaxed/simple;
-	bh=bwJ2LDA4HRhC+HobQk4QKdidu746ps7rOg5uVjEgqro=;
+	s=arc-20240116; t=1761741957; c=relaxed/simple;
+	bh=IS0yothOSs8gp45qhnmrkPm97mFydRmHsnJT1EXqKgo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eTUNaKa8j06erUvGhX7TforPocf92nki/K/gBbtMHEI6jWsQDZ1B1CzmVjBcuyhkR8Oah1HoHoMBIRwJ35FMif4Aoe1YcetR1cJBjDR9He01sIbdv4JN/jGPPqaycJHZDO4J/vgYLz8DC3vBixVcCV8CPTHLFoSBGga5ZA5mxxw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FJgv2viE; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=p6jVNamfihEf8FQ9a2W21wf3sG6/cO8tPkDI1s7Skdw0+QZAsdfe9dWqYppzZoP3loeD2+ZzhcMnGvBVaJSVY+jn6ABz8J3yuI2k2MTuXdr1UzvfHNXFBo4u6gUFAINc2FOUWqkPCKRRUaz9ZScOeuwjUpzrOAxwXBzNwhsBAQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dTz0xeft; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FJgv2viE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71C35C4CEF7;
-	Wed, 29 Oct 2025 12:32:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dTz0xeft"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7DDEC4CEF7;
+	Wed, 29 Oct 2025 12:45:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761741129;
-	bh=bwJ2LDA4HRhC+HobQk4QKdidu746ps7rOg5uVjEgqro=;
+	s=k20201202; t=1761741956;
+	bh=IS0yothOSs8gp45qhnmrkPm97mFydRmHsnJT1EXqKgo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FJgv2viE4T0S7HMJU6Yh7xCC80x72PQjEKuQzhXPuI+TXewfU5c5NVc/W52pu7PQ7
-	 e5k/ft0v6KR0Wb16oe7Q37oPx+ZQEeGi6s/xnccQrVaKwi91vkHYJXFRUReY/IZ3nc
-	 4T97Tr1tWM9CQOEhIqJfxhtbk/zLt8h/HLZx2l64WfT7BRo8ZITf3nhN7slWoTc8dt
-	 oNjOLZpMChg/E6wI6M2RLrWSalIRfMVI6zvruFfFi5MDVHjLMgws2oM92LLZVguItY
-	 uScNW57JyDgVNiPgPx/zywwoqvGhxQ/EvK2QveGnFjEJ4jUyqupUot16mS9/hUiRZe
-	 sv6QR5mXH2ACw==
-Date: Wed, 29 Oct 2025 13:32:04 +0100
+	b=dTz0xeftDnVr3AL5S7r4Xcmpp+pKVc3nCN1WzBXJjgoNHTzxj4OunMAtCR2rT6qlm
+	 7y+EXq8M21BSWM9pvRyTJTJzt0GF8VGEmwNPLEHrQPK5OvPQ9TJFprUsJzhKjrVdqm
+	 pB4rkAr8y8RcbR2nhSdjfbRLempEVTa5CYqgAEBaT/xm7JmEfslwhi19KJbXb51oH8
+	 u1UL+fEQxkFjm+XdL66+tlnUUXKQfTeXXY46yO4koJ9VpC3pWtXy/nZ2UqW/RnFZZz
+	 9TWezdYAWWE9maQix8tq6S+dN1w1+HnemREOzXEvS1iS4XSZjBC6e5KwBzHUtjYbMv
+	 jdTXZg5Rqftrg==
+Date: Wed, 29 Oct 2025 13:45:52 +0100
 From: Christian Brauner <brauner@kernel.org>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, 
-	linux-xfs@vger.kernel.org, linux-mm@kvack.org, hch@infradead.org, djwong@kernel.org, 
-	willy@infradead.org
-Subject: Re: [PATCH v5 0/7] iomap: zero range folio batch support
-Message-ID: <20251029-entrichten-anrollen-b9eb57a2914f@brauner>
-References: <20251003134642.604736-1-bfoster@redhat.com>
- <20251007-kittel-tiefbau-c3cc06b09439@brauner>
- <CAJnrk1Yp-z8U7WjH81Eh3wrvuc5erZ2fUjZZa2urb-OhAe_nig@mail.gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-btrfs@vger.kernel.org, Qu Wenruo <wqu@suse.com>, 
+	djwong@kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v2] iomap: add IOMAP_DIO_FSBLOCK_ALIGNED flag
+Message-ID: <20251029-lernprogramm-neukunden-dee8eea07597@brauner>
+References: <c78d08f4e709158f30e1e88e62ab98db45dd7883.1760345826.git.wqu@suse.com>
+ <20251021-leber-dienlich-0bee81a049e1@brauner>
+ <aPiGVJTpM8aohQpk@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,69 +44,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJnrk1Yp-z8U7WjH81Eh3wrvuc5erZ2fUjZZa2urb-OhAe_nig@mail.gmail.com>
+In-Reply-To: <aPiGVJTpM8aohQpk@infradead.org>
 
-On Mon, Oct 20, 2025 at 05:14:07PM -0700, Joanne Koong wrote:
-> On Tue, Oct 7, 2025 at 4:12 AM Christian Brauner <brauner@kernel.org> wrote:
-> >
-> > On Fri, 03 Oct 2025 09:46:34 -0400, Brian Foster wrote:
-> > > Only minor changes in v5 to the XFS errortag patch. I've kept the R-b
-> > > tags because the fundamental logic is the same, but the errortag
-> > > mechanism has been reworked and so that one needed a rebase (which turns
-> > > out much simpler). A second look certainly couldn't hurt, but otherwise
-> > > the associated fstest still works as expected.
-> > >
-> > > Note that the force zeroing fstests test has since been merged as
-> > > xfs/131. Otherwise I still have some followup patches to this work re:
-> > > the ext4 on iomap work, but it would be nice to move this along before
-> > > getting too far ahead with that.
-> > >
+On Wed, Oct 22, 2025 at 12:23:00AM -0700, Christoph Hellwig wrote:
+> On Tue, Oct 21, 2025 at 03:03:08PM +0200, Christian Brauner wrote:
+> > On Mon, 13 Oct 2025 19:35:16 +1030, Qu Wenruo wrote:
+> > > Btrfs requires all of its bios to be fs block aligned, normally it's
+> > > totally fine but with the incoming block size larger than page size
+> > > (bs > ps) support, the requirement is no longer met for direct IOs.
+> > > 
+> > > Because iomap_dio_bio_iter() calls bio_iov_iter_get_pages(), only
+> > > requiring alignment to be bdev_logical_block_size().
+> > > 
 > > > [...]
-> >
+> > 
 > > Applied to the vfs-6.19.iomap branch of the vfs/vfs.git tree.
 > > Patches in the vfs-6.19.iomap branch should appear in linux-next soon.
-> >
-> > Please report any outstanding bugs that were missed during review in a
-> > new review to the original patch series allowing us to drop it.
-> >
-> > It's encouraged to provide Acked-bys and Reviewed-bys even though the
-> > patch has now been applied. If possible patch trailers will be updated.
-> >
-> > Note that commit hashes shown below are subject to change due to rebase,
-> > trailer updates or similar. If in doubt, please check the listed branch.
-> >
-> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-> > branch: vfs-6.19.iomap
-> >
-> > [1/7] filemap: add helper to look up dirty folios in a range
-> >       https://git.kernel.org/vfs/vfs/c/757f5ca76903
-> > [2/7] iomap: remove pos+len BUG_ON() to after folio lookup
-> >       https://git.kernel.org/vfs/vfs/c/e027b6ecb710
-> > [3/7] iomap: optional zero range dirty folio processing
-> >       https://git.kernel.org/vfs/vfs/c/5a9a21cb7706
 > 
-> Hi Christian,
-> 
-> Thanks for all your work with managing the vfs iomap branch. I noticed
-> for vfs-6.19.iomap, this series was merged after a prior patch in the
-> branch that had changed the iomap_iter_advance() interface [1]. As
-> such for the merging ordering, I think this 3rd patch needs this minor
-> patch-up to be compatible with the change made in [1], if you're able
-> to fold this in:
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 72196e5021b1..36ee3290669a 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -867,7 +867,8 @@ static int iomap_write_begin(struct iomap_iter *iter,
->         if (folio_pos(folio) > iter->pos) {
->                 len = min_t(u64, folio_pos(folio) - iter->pos,
->                                  iomap_length(iter));
-> -               status = iomap_iter_advance(iter, &len);
-> +               status = iomap_iter_advance(iter, len);
-> +               len = iomap_length(iter);
->                 if (status || !len)
->                         goto out_unlock;
+> I'm not seeing it yet.
 
-Thank you! Folded as requested!
+Sorry, I got lost in some work. Pushed.
