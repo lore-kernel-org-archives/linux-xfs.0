@@ -1,115 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 588AC199931;
-	Tue, 28 Oct 2025 23:03:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C07A7309EF2;
+	Wed, 29 Oct 2025 07:06:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761692633; cv=none; b=WU6b12kFAexuY48nH1qIteo0cvXUKFK2KSRi8CbjJASkoyk33OYG+CwgF44RApHesBESH5zUrSoZtS/6V9D/dLnP8NuuTGRmV2eUKkDsYpCHusbPoiIO35AZ8f9XhMnC6aUXpFLyUGtysy1sH8S+VYGF6dNBRzDjYlUK0kIxnYY=
+	t=1761721602; cv=none; b=m3C8yZjXCwcuLyAe1n0LScKLD5AFzJYsZ8Zb+ZJ1gx7FTGezu0x5QZc/PKCH5kzmts/zLAkVAm11cUSrZJE38UtVbWQXLnd6aG4khxQiUsU+wRM/bPNqM6Hlhwrj3/0VWEJAbnAcScmwUl6tPtFMDfoeHkX6rJFZAJ2ynsNR3Aw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761692633; c=relaxed/simple;
-	bh=kgX4g6vUYkvgZSZP1fvrdIYXiC9PY9BfKX/VN+ui3hw=;
+	s=arc-20240116; t=1761721602; c=relaxed/simple;
+	bh=9/SnsoO/WS+8t0J3jBEAceX5RkSw9F4ltTtJY/0MQ+Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z4lOLDILYJzwC4Pg9pltD0VVzkex0PRfw6atNjQB5HrPAvtIeNVdt4W+CEWZjMsqKOxmvzsXfxOLrjvBYBla2APjb+Dtg298wE6fgNY/ef5g1SZhZFD+6fPaUDxSYc1y1izQyMK17iac250pPxmUvoqB910vYrYmXeuLNj+Ofs0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UitXAtQ+; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UitXAtQ+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FB94C4CEE7;
-	Tue, 28 Oct 2025 23:03:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761692632;
-	bh=kgX4g6vUYkvgZSZP1fvrdIYXiC9PY9BfKX/VN+ui3hw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=UitXAtQ+ZUQ9Pn9+px3V6NR+FRxoklye0tQSSoWExizr1U8ODSP0DqrADg8Va1IlL
-	 sqwUgTk5ScjgGkrAMJfBhVcyVE3LhHbxB38slMtsnhRIzJmsiUu62coD4x/gcDOrYj
-	 f3Anr7AzIRiNB1MYTe6eu4FNeQlnF9y3YMlBVhuMxaTmWvyCJmL9nbg7C7vRytPG0W
-	 Im0kvOsKKLmzbjsMLhvnLjC1WJ6PBU5vpisfNj04Ebulit1ohS/PMm2PtfhXsJDaPi
-	 7W9Wv411rpbjAHdXtGH+1k9xg7pPNl+qtaUxWwea+86zkNWU17NTnJpufsc+eInCsS
-	 s68rycFoWURDA==
-Date: Tue, 28 Oct 2025 23:03:50 +0000
-From: Eric Biggers <ebiggers@kernel.org>
-To: Carlos Llamas <cmllamas@google.com>
-Cc: Keith Busch <kbusch@kernel.org>, Keith Busch <kbusch@meta.com>,
-	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, hch@lst.de,
-	axboe@kernel.dk, Hannes Reinecke <hare@suse.de>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=c5TiURF1id5XiXPT16lcIMOCaCj2pikmYCoLmVKojA6eAYWKRXGZftOiJqmWOCSYOHZ0T7ZuDjsNglkUOd8JGUOmIr8K+1uNLm6/7+/ybLVQY8CpGab4bqLWBMTEa/IPq+zUhqD8XHz//O0jtO5UHbZBBk61pOThfxFtbous9aY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id D391C227AAC; Wed, 29 Oct 2025 08:06:21 +0100 (CET)
+Date: Wed, 29 Oct 2025 08:06:18 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: Carlos Llamas <cmllamas@google.com>, Keith Busch <kbusch@kernel.org>,
+	Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, hch@lst.de, axboe@kernel.dk,
+	Hannes Reinecke <hare@suse.de>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCHv4 5/8] iomap: simplify direct io validity check
-Message-ID: <20251028230350.GB1639650@google.com>
-References: <20250827141258.63501-1-kbusch@meta.com>
- <20250827141258.63501-6-kbusch@meta.com>
- <aP-c5gPjrpsn0vJA@google.com>
- <aP-hByAKuQ7ycNwM@kbusch-mbp>
- <aQFIGaA5M4kDrTlw@google.com>
- <20251028225648.GA1639650@google.com>
+Message-ID: <20251029070618.GA29697@lst.de>
+References: <20250827141258.63501-1-kbusch@meta.com> <20250827141258.63501-6-kbusch@meta.com> <aP-c5gPjrpsn0vJA@google.com> <aP-hByAKuQ7ycNwM@kbusch-mbp> <aQFIGaA5M4kDrTlw@google.com> <20251028225648.GA1639650@google.com> <20251028230350.GB1639650@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20251028225648.GA1639650@google.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251028230350.GB1639650@google.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Oct 28, 2025 at 10:56:48PM +0000, Eric Biggers wrote:
-> On Tue, Oct 28, 2025 at 10:47:53PM +0000, Carlos Llamas wrote:
-> > Ok, I did a bit more digging. I'm using f2fs but the problem in this
-> > case is the blk_crypto layer. The OP_READ request goes through
-> > submit_bio() which then calls blk_crypto_bio_prep() and if the bio has
-> > crypto context then it checks for bio_crypt_check_alignment().
-> > 
-> > This is where the LTP tests fails the alignment. However, the propagated
-> > error goes through "bio->bi_status = BLK_STS_IOERR" which in bio_endio()
-> > get translates to EIO due to blk_status_to_errno().
-> > 
-> > I've verified this restores the original behavior matching the LTP test,
-> > so I'll write up a patch and send it a bit later.
-> > 
-> > diff --git a/block/blk-crypto.c b/block/blk-crypto.c
-> > index 1336cbf5e3bd..a417843e7e4a 100644
-> > --- a/block/blk-crypto.c
-> > +++ b/block/blk-crypto.c
-> > @@ -293,7 +293,7 @@ bool __blk_crypto_bio_prep(struct bio **bio_ptr)
-> >  	}
-> >  
-> >  	if (!bio_crypt_check_alignment(bio)) {
-> > -		bio->bi_status = BLK_STS_IOERR;
-> > +		bio->bi_status = BLK_STS_INVAL;
-> >  		goto fail;
-> >  	}
-> 
-> That change looks fine, but I'm wondering how this case was reached in
-> the first place.  Upper layers aren't supposed to be submitting
-> misaligned bios like this.  For example, ext4 and f2fs require
-> filesystem logical block size alignment for direct I/O on encrypted
-> files.  They check for this early, before getting to the point of
-> submitting a bio, and fall back to buffered I/O if needed.
+I think we need to take a step back and talk about what alignment
+we're talking about here, as there are two dimensions to it.
 
-I suppose it's this code in f2fs_should_use_dio():
+The first dimension is: disk alignment vs memory alignment.
 
-	/*
-	 * Direct I/O not aligned to the disk's logical_block_size will be
-	 * attempted, but will fail with -EINVAL.
-	 *
-	 * f2fs additionally requires that direct I/O be aligned to the
-	 * filesystem block size, which is often a stricter requirement.
-	 * However, f2fs traditionally falls back to buffered I/O on requests
-	 * that are logical_block_size-aligned but not fs-block aligned.
-	 *
-	 * The below logic implements this behavior.
-	 */
-	align = iocb->ki_pos | iov_iter_alignment(iter);
-	if (!IS_ALIGNED(align, i_blocksize(inode)) &&
-	    IS_ALIGNED(align, bdev_logical_block_size(inode->i_sb->s_bdev)))
-		return false;
+Disk alignment:
+  Direct I/O obviously needs to be aligned to on-disk sectors to have
+  a chance to work, as that is the lowest possible granularity of access.
 
-So it relies on the alignment check in iomap in the case where the
-request is neither logical_block_size nor filesystem_block_size aligned.
+  For fіle systems that write out of place we also need to align writes
+  to the logical block size of the file system.
 
-f2fs_should_use_dio() probably should just handle that case explicitly.
+  With blk-crypto we need to align to the DUN if it is larger than the
+  disk-sector dize.
 
-But making __blk_crypto_bio_prep() use a better error code sounds good
-too.
+Memory alignment:
 
-- Eric
+  This is the alignment of the buffer in-memory.  Hardware only really
+  cares about this when DMA engines discard the lowest bits, so a typical
+  hardware alignment requirement is to only require a dword (4 byte)
+  alignment.   For drivers that process the payload in software such
+  low alignment have a tendency to cause bugs as they're not written
+  thinking about it.  Similarly for any additional processing like
+  encryption, parity or checksums.
+
+The second dimension is for the entire operation vs individual vectors,
+this has implications both for the disk and memory alignment.  Keith
+has done work there recently to relax the alignment of the vectors to
+only require the memory alignment, so that preadv/pwritev-like calls
+can have lots of unaligned segments.
+
+I think it's the latter that's tripping up here now.  Hard coding these
+checks in the file systems seem like a bad idea, we really need to
+advertise them in the queue limits, which is complicated by the fact that
+we only want to do that for bios using block layer encryption. i.e., we
+probably need a separate queue limit that mirrors dma_alignment, but only
+for encrypted bios, and which is taken into account in the block layer
+splitting and communicated up by file systems only for encrypted bios.
+For blk-crypto-fallback we'd need DUN alignment so that the algorithms
+just work (assuming the crypto API can't scatter over misaligned
+segments), but for hardware blk-crypto I suspect that the normal DMA
+engine rules apply, and we don't need to restrict alignment.
+
