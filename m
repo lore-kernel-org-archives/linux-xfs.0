@@ -1,95 +1,113 @@
-Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58F182E54A3
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 09:50:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B542286897;
+	Wed, 29 Oct 2025 12:32:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761731426; cv=none; b=qRve/BF/aSNgNj/pMi/A2HqS2rr5v0d5BbmHbOgvL8HXNXMT0lOBMdjg5X9n0rguV4KgMj2rB0AHH0tJXf98R3QfhMWeaAxB/O3WniQK7IH8LR2CmDQLJq1Q8wYRUwGh3EHTubZVvpSAbqyzHBwcdeie71DnS2cfHVc/T6K4ZCs=
+	t=1761741130; cv=none; b=Lp8pGDwcgUgXiz947EE4avYXs3COHPuLEZewnARs//rUFBOg9W82B6x48qO/BSAsSb9VJuaqQ7XeczvvlqUtRztxnRT1YdxgguA27jElRAtPADgQuRKT6f720oQ0dQ8sIUNpRQEw6R+Jp8/9VNsVsi2EZ56Nmzl5w9/MKVldBNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761731426; c=relaxed/simple;
-	bh=BMvFhu2JQpaF4T3E9tc1blugVNdOnldVDb7ENcjLjqI=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=Gm29f6kfSnl85J8febPjZ281Nm5yCIv3sV9OmGbXY6VhnoEd4rE9wdNuQh2NVge1j3GkDBCDnPA+QB83ZHP0ecd2MlbfraK7Aa6gYgNIVvUgOATm7YUh8In8FqVhH/nM3VV5LftexY9Dgz3fZoZ/aycILly+C2riqEnAfgvc30Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-430d83d262fso280905815ab.2
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 02:50:25 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761731424; x=1762336224;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=zRFPHqBvWqE41m7o5rfMlavGfndw1tlWRpHHn/CNEBo=;
-        b=JvaR0aR3ikSSbgOtR5Ibo4B4FWdWLM7w20K3ZuK8ROC5g3nuOJCAfdKrRqMG91BiGa
-         V6tKI0bz7AiLkXQuzTV2MWqpqusOfGt18zAI6WAUBhkxJYbiaKIxf1/KpWBi6KI2Cam4
-         mZ45PJvnQlcJn1h/PIQuFQJprZrws11ua7EOG89I8rGzfwdttsrRMFJ+r1OLZu40g3SS
-         0nifPsCbkT9XLBsC24BL9peDAhsu0CBmO6WAUngqDFheDzpvMeknjOedSMLyZ7HGnzLZ
-         BvPBZfdcyq+k9nxCqGo+sJi80cuTjftaLVg8KOyK68tUfLrkYAX1fsKJeQeHHW8qAxi+
-         Y/Kg==
-X-Forwarded-Encrypted: i=1; AJvYcCXLaFay6xnqsqYXEEGzHffTyELeq1Up0QvVU+duKUvbiiSGLvWTMNJhG5H8fxVhdWuYD6hZWEjsD7c=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyWZwlaMoC7t7jd37OyFjAMRp/Hpd9/4ylza2SnU+fpE4LWbAMf
-	SOpjzsmb+7ODGDs5zs3PBazBKBITs4x1uLPoCF85Dw7/Kt3v7Z9EHirvFKbaaUJXfQCX4ZWPJKX
-	MnOsFDwqpA9rre9+li12LjJF34YVwxf/uFNBfa8/S8G5YMjBYiZJY2JvAjpQ=
-X-Google-Smtp-Source: AGHT+IHzKNuLQKknWwbqJmjw7SumWQ7v695K1Sy9XomlF/7maRIeOSfPAicmFWK1kqWHpy8bD71ucg6XtZulYHJM1NQS07uPNA8i
+	s=arc-20240116; t=1761741130; c=relaxed/simple;
+	bh=bwJ2LDA4HRhC+HobQk4QKdidu746ps7rOg5uVjEgqro=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eTUNaKa8j06erUvGhX7TforPocf92nki/K/gBbtMHEI6jWsQDZ1B1CzmVjBcuyhkR8Oah1HoHoMBIRwJ35FMif4Aoe1YcetR1cJBjDR9He01sIbdv4JN/jGPPqaycJHZDO4J/vgYLz8DC3vBixVcCV8CPTHLFoSBGga5ZA5mxxw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FJgv2viE; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FJgv2viE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71C35C4CEF7;
+	Wed, 29 Oct 2025 12:32:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761741129;
+	bh=bwJ2LDA4HRhC+HobQk4QKdidu746ps7rOg5uVjEgqro=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FJgv2viE4T0S7HMJU6Yh7xCC80x72PQjEKuQzhXPuI+TXewfU5c5NVc/W52pu7PQ7
+	 e5k/ft0v6KR0Wb16oe7Q37oPx+ZQEeGi6s/xnccQrVaKwi91vkHYJXFRUReY/IZ3nc
+	 4T97Tr1tWM9CQOEhIqJfxhtbk/zLt8h/HLZx2l64WfT7BRo8ZITf3nhN7slWoTc8dt
+	 oNjOLZpMChg/E6wI6M2RLrWSalIRfMVI6zvruFfFi5MDVHjLMgws2oM92LLZVguItY
+	 uScNW57JyDgVNiPgPx/zywwoqvGhxQ/EvK2QveGnFjEJ4jUyqupUot16mS9/hUiRZe
+	 sv6QR5mXH2ACw==
+Date: Wed, 29 Oct 2025 13:32:04 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, 
+	linux-xfs@vger.kernel.org, linux-mm@kvack.org, hch@infradead.org, djwong@kernel.org, 
+	willy@infradead.org
+Subject: Re: [PATCH v5 0/7] iomap: zero range folio batch support
+Message-ID: <20251029-entrichten-anrollen-b9eb57a2914f@brauner>
+References: <20251003134642.604736-1-bfoster@redhat.com>
+ <20251007-kittel-tiefbau-c3cc06b09439@brauner>
+ <CAJnrk1Yp-z8U7WjH81Eh3wrvuc5erZ2fUjZZa2urb-OhAe_nig@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:2183:b0:431:d721:266d with SMTP id
- e9e14a558f8ab-432f9090ee3mr27884615ab.31.1761731424434; Wed, 29 Oct 2025
- 02:50:24 -0700 (PDT)
-Date: Wed, 29 Oct 2025 02:50:24 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6901e360.050a0220.32483.0208.GAE@google.com>
-Subject: [syzbot] Monthly xfs report (Oct 2025)
-From: syzbot <syzbot+list2a4b52d8d4fbe066ed08@syzkaller.appspotmail.com>
-To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJnrk1Yp-z8U7WjH81Eh3wrvuc5erZ2fUjZZa2urb-OhAe_nig@mail.gmail.com>
 
-Hello xfs maintainers/developers,
+On Mon, Oct 20, 2025 at 05:14:07PM -0700, Joanne Koong wrote:
+> On Tue, Oct 7, 2025 at 4:12 AM Christian Brauner <brauner@kernel.org> wrote:
+> >
+> > On Fri, 03 Oct 2025 09:46:34 -0400, Brian Foster wrote:
+> > > Only minor changes in v5 to the XFS errortag patch. I've kept the R-b
+> > > tags because the fundamental logic is the same, but the errortag
+> > > mechanism has been reworked and so that one needed a rebase (which turns
+> > > out much simpler). A second look certainly couldn't hurt, but otherwise
+> > > the associated fstest still works as expected.
+> > >
+> > > Note that the force zeroing fstests test has since been merged as
+> > > xfs/131. Otherwise I still have some followup patches to this work re:
+> > > the ext4 on iomap work, but it would be nice to move this along before
+> > > getting too far ahead with that.
+> > >
+> > > [...]
+> >
+> > Applied to the vfs-6.19.iomap branch of the vfs/vfs.git tree.
+> > Patches in the vfs-6.19.iomap branch should appear in linux-next soon.
+> >
+> > Please report any outstanding bugs that were missed during review in a
+> > new review to the original patch series allowing us to drop it.
+> >
+> > It's encouraged to provide Acked-bys and Reviewed-bys even though the
+> > patch has now been applied. If possible patch trailers will be updated.
+> >
+> > Note that commit hashes shown below are subject to change due to rebase,
+> > trailer updates or similar. If in doubt, please check the listed branch.
+> >
+> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+> > branch: vfs-6.19.iomap
+> >
+> > [1/7] filemap: add helper to look up dirty folios in a range
+> >       https://git.kernel.org/vfs/vfs/c/757f5ca76903
+> > [2/7] iomap: remove pos+len BUG_ON() to after folio lookup
+> >       https://git.kernel.org/vfs/vfs/c/e027b6ecb710
+> > [3/7] iomap: optional zero range dirty folio processing
+> >       https://git.kernel.org/vfs/vfs/c/5a9a21cb7706
+> 
+> Hi Christian,
+> 
+> Thanks for all your work with managing the vfs iomap branch. I noticed
+> for vfs-6.19.iomap, this series was merged after a prior patch in the
+> branch that had changed the iomap_iter_advance() interface [1]. As
+> such for the merging ordering, I think this 3rd patch needs this minor
+> patch-up to be compatible with the change made in [1], if you're able
+> to fold this in:
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 72196e5021b1..36ee3290669a 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -867,7 +867,8 @@ static int iomap_write_begin(struct iomap_iter *iter,
+>         if (folio_pos(folio) > iter->pos) {
+>                 len = min_t(u64, folio_pos(folio) - iter->pos,
+>                                  iomap_length(iter));
+> -               status = iomap_iter_advance(iter, &len);
+> +               status = iomap_iter_advance(iter, len);
+> +               len = iomap_length(iter);
+>                 if (status || !len)
+>                         goto out_unlock;
 
-This is a 31-day syzbot report for the xfs subsystem.
-All related reports/information can be found at:
-https://syzkaller.appspot.com/upstream/s/xfs
-
-During the period, 1 new issues were detected and 0 were fixed.
-In total, 16 issues are still open and 27 have already been fixed.
-
-Some of the still happening issues:
-
-Ref Crashes Repro Title
-<1> 2779    Yes   INFO: task hung in sync_inodes_sb (5)
-                  https://syzkaller.appspot.com/bug?extid=30476ec1b6dc84471133
-<2> 254     Yes   KASAN: slab-use-after-free Read in xfs_inode_item_push
-                  https://syzkaller.appspot.com/bug?extid=1a28995e12fd13faa44e
-<3> 108     Yes   INFO: task hung in xfs_buf_item_unpin (2)
-                  https://syzkaller.appspot.com/bug?extid=837bcd54843dd6262f2f
-<4> 53      Yes   INFO: task hung in vfs_setxattr (7)
-                  https://syzkaller.appspot.com/bug?extid=3d0a18cd22695979a7c6
-<5> 17      Yes   KASAN: slab-use-after-free Read in xfs_buf_rele (4)
-                  https://syzkaller.appspot.com/bug?extid=0391d34e801643e2809b
-<6> 13      Yes   KASAN: slab-out-of-bounds Read in xlog_cksum
-                  https://syzkaller.appspot.com/bug?extid=9f6d080dece587cfdd4c
-<7> 8       Yes   INFO: task hung in xfs_buf_get_map
-                  https://syzkaller.appspot.com/bug?extid=d74d844bdcee0902b28a
-<8> 3       Yes   INFO: task hung in xlog_force_lsn (2)
-                  https://syzkaller.appspot.com/bug?extid=c27dee924f3271489c82
-<9> 1       Yes   INFO: task hung in xfs_file_fsync
-                  https://syzkaller.appspot.com/bug?extid=9bc8c0586b39708784d9
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-To disable reminders for individual bugs, reply with the following command:
-#syz set <Ref> no-reminders
-
-To change bug's subsystems, reply with:
-#syz set <Ref> subsystems: new-subsystem
-
-You may send multiple commands in a single email message.
+Thank you! Folded as requested!
