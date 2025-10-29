@@ -1,91 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44AF633A03F;
-	Wed, 29 Oct 2025 15:57:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 500D13375C3
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 15:58:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761753455; cv=none; b=mwQsPsS7ry6GbETtvNgeslMTIf7S7PkAYQFSLCEp2v/yKuhlrmqS/q4XcnqmFdUkfuOrvgviU2d9hP30WtsMwpW9SzWYcUkaxINY5F6xyKFSsJNms6hU9DheZpFwyPi3kKdJtFUIDpH88ZTK3nRnFrl06dbXg/gT6M++1u22FYY=
+	t=1761753536; cv=none; b=e3P6UOcBAqF2snhYSZEl1WGsyhtBY5YJpWYDo+BBEBOI0VSV8MqxlZpvTCohFo/PDZP4g16m1M9NhFAGVTqkjMZF59mKf0t/KjXy5sYB8ke6O3wZKKeaNYpWARX9xVlqNWmCuj0YikuamRK70lFqY7axybIEdq8egb8jkab5msA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761753455; c=relaxed/simple;
-	bh=gdBT7RGAcvNZIAmXTRdX9CBhEySRzp4H9DzlkxrSvJI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bWrVD/RNxvYCwxJFUcEgXU1g1G0GYhZvyw+SyPeZ+CgGxBLQpq6O0RXUEtYBgv4K2E2zLERro6kL1Rgb0jqQ8wE+ukyta+5KswzuWNM9GOJM/8nTneEuOA9BiMEK1cwfD9/5gpHhV4gPsuKofxQJqiPiNVb9Of7rXIhrRgjawkc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sl8vO++y; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761753536; c=relaxed/simple;
+	bh=tPzwOV7GvDpR5Xi6HBtXCUHPQBBKe8WKMdp/yKCjpiU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=mB/Q0W2cUtUMAEKOjuFQnhsqH6z+U4siRgjVPTjgUw4ID4MDuYOgtG1R3bTfZ8m2EWKpW1OpqMq0NDMTIEJIfuAe4Bj+YGa309Xo5GBnnQ4k/Q/es7gzx6ht4tHsdj2hSTmo9Ax/8oUNBEtlZVeZcyBJNYiBE7/sAWV4gtzD8F4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dqQJSL0c; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sl8vO++y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CD42C4CEF7;
-	Wed, 29 Oct 2025 15:57:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761753455;
-	bh=gdBT7RGAcvNZIAmXTRdX9CBhEySRzp4H9DzlkxrSvJI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sl8vO++yy8LE5VN1jxLfkD7i/YiTjiLMBaZLE7vU3HUzw/xOjgxKCUk+hmg+yZ1Uu
-	 RzFRlnQ2OdGIeRFuBXWJlP673k8CH1i9LnFWnD83fMXidYVPmG2yCVErms+cbAvxlf
-	 ej2ItBho4PdxhOJNa1SzBIjLzgNLQln0+IXgdpgZIgmJ3b1+rq0hI9p3OTaCcPITN8
-	 hInYjqdnzb/G1z1AcOpHT/6DRXxfYr/YTH4uqthANY4kD2CoR0ClWUR974AvDjSkCj
-	 dFyXHgp8EZrQEemU4+Y8MzXsU6i9Btjf7xFvyDYRaVfjfyD2anX506w0rYkDCp/Rox
-	 xnCrFX63o0oig==
-Date: Wed, 29 Oct 2025 08:57:34 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-block@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: use IOCB_DONTCACHE when falling back to
- buffered writes
-Message-ID: <20251029155734.GD3356773@frogsfrogsfrogs>
-References: <20251029071537.1127397-1-hch@lst.de>
- <20251029071537.1127397-4-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dqQJSL0c"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-78af3fe5b17so62087b3a.2
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 08:58:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1761753534; x=1762358334; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=MwxrExpiKXBKK+ITlQ6foefTYgM8fnPgsDyzvsZJuN8=;
+        b=dqQJSL0cde3zct34IDioKcpml5cSDJiX5DBjAXwMS5+O10h9VSDCTp231V+o50yaHa
+         /pEAmUzsxxh0yxU+NO+wQ3YMejdtnq+unVXWVITg+SnfBTmen5K1jQo1W4MMi4xda/+f
+         U70SeIvuGan9MrlgMezrcsrJm4XJ1mVPtSrP74v4SfvvJi+dBeLA0Df7kNbKD5MHrOYk
+         Tg9f0qZEzUsFJmrzc5WO7JJ9iBqwgRt0+nffaBMkQP2+CPCzyDdzH5d6jf8NY1csfH8z
+         nZOVk1Gy8393qfno8c+cUaa0d+LWBpMMOKnw2PWD+LIlcNz09xwfhvrrpAXrjvqMzsOf
+         nR+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761753534; x=1762358334;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=MwxrExpiKXBKK+ITlQ6foefTYgM8fnPgsDyzvsZJuN8=;
+        b=s+yAwTiLGKYoeCrp6dmHSFAx7QcDA7cBCySqozlk6hP639LJR7FR63C0gdwEDB5Ljf
+         pR4d+FzKsy+YAay3D3x5FpDPYxmfPm/u8V0FmAzq02qypINKSK4qrlGoZP6Ne5+e84aF
+         +AOvagHu8IyaXVndoT847Vt5pjGw8rao0XD88TMFYb6vt83bziTYgDRviDxVECdW8JwX
+         xYNrUTeoZNs13e6vew7KYLLGGPq/kQtKb9zcfZliBe7Yz7eeVxU8+Q7+gG2YnmvJ5O4z
+         WUFvS5OEpJ9DUfQRW5Q0vV48P+6BreerKBUFYgNtf9/G9MXXTnGJioiDVR8vAOqj+/q7
+         VQdg==
+X-Forwarded-Encrypted: i=1; AJvYcCUdaa5ARs/ZYaYs1DgvzVSjpgtmfesAGzKODgpQkxh49wTmE9TWUBSyBjepaLgwyyFo+EXJxThxyHE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwLGnaurn8xXeu52ZV042Q8jQUle9NcoHKkvJhQhomx9EYSmxYp
+	OO5jvEt8nOTObXUboUgwIDcaZuMbbsPt7EtaocwKC+xc7mWiDQV/0mPm
+X-Gm-Gg: ASbGncs27gNgDmg6lU/gaVJ+nVcR6VURh++98W5FhHcyRDR/73lX3KG99b/lvUsnX/r
+	TRw2SYYWNhvFl8QOZhwGT+h+WKQk4axWL0R2A9hjseCmJEpPA8NnicrVq4oUHL+FGPpAwGijDt1
+	PKB4eIExqva+2IxGdY9Oc728QC2iorSII3ehJ6U3p7IPXWZ71/SlJcKKwezld5fvI2GVP1Bdpcc
+	ftQzXbzdes3j53nwWAyhnieyFBSKg7mmtzZ1MsqJqN/pRD/nqNCXpKwAT2qjq4DmCe7zbPCYLMF
+	kWOoaxFaywX++psy8T4pzpjSfveP4R/iguGWrDBqsM14cFH/LTGRM4Pq0FfltvJGKto3GXZLuOe
+	q/McAow4bNvUrt7QDyCP3ylDyxixFqIknVJbqLPCAgLJjUpbiI+LbyukWPHmBegI+6iwwLxt0Ga
+	AZJgwHlMko0tQYYP9jhdBnlzwI3gDO1dvVUxmL549tJbj/8aQB5AlwNMqhQHrIZCyoamuDXHkMW
+	u5olaX/r8y3QyXtm83ZFPsRt70V2M59fO8xZZsLdwvPM9G+EKnTEQ87BFVY0cYi0XhF
+X-Google-Smtp-Source: AGHT+IEDUOVYU4FbtZmNjoIisTx8ifKNOJtO/21KsW1AgRzDGmjWuA4/mf+B5T+NZ/lyYpe4qwFN0Q==
+X-Received: by 2002:a05:6a00:7589:b0:7a5:396d:76af with SMTP id d2e1a72fcca58-7a5396d7d19mr2988818b3a.18.1761753534501;
+        Wed, 29 Oct 2025 08:58:54 -0700 (PDT)
+Received: from ?IPV6:2a00:79e0:2e7c:8:8b41:6bc3:2074:828c? ([2a00:79e0:2e7c:8:8b41:6bc3:2074:828c])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7a414069164sm15874564b3a.45.2025.10.29.08.58.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 29 Oct 2025 08:58:54 -0700 (PDT)
+Message-ID: <ea07dede-5baa-41e5-ad5d-a9f6a90ac6e8@gmail.com>
+Date: Wed, 29 Oct 2025 08:58:52 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251029071537.1127397-4-hch@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: fall back from direct to buffered I/O when stable writes are
+ required
+To: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+ Christian Brauner <brauner@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-block@vger.kernel.org
+References: <20251029071537.1127397-1-hch@lst.de>
+Content-Language: en-US
+From: Bart Van Assche <bart.vanassche@gmail.com>
+In-Reply-To: <20251029071537.1127397-1-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Oct 29, 2025 at 08:15:04AM +0100, Christoph Hellwig wrote:
-> Doing sub-block direct writes to COW inodes is not supported by XFS,
-> because new blocks need to be allocated as a whole.  Such writes
-> fall back to buffered I/O, and really should be using the
-> IOCB_DONTCACHE that didn't exist when the code was added to mimic
-> direct I/O semantics as closely as possible.  Also clear the
-> IOCB_DIRECT flags so that later code can't get confused by it being
-> set for something that at this point is not a direct I/O operation
-> any more.
+On 10/29/25 12:15 AM, Christoph Hellwig wrote:
+> we've had a long standing issue that direct I/O to and from devices that
+> require stable writes can corrupt data because the user memory can be
+> modified while in flight.  This series tries to address this by falling
+> back to uncached buffered I/O.  Given that this requires an extra copy it
+> is usually going to be a slow down, especially for very high bandwith
+> use cases, so I'm not exactly happy about.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> I suspect we need a way to opt out of this for applications that know
+> what they are doing, and I can think of a few ways to do that:
+> 
+> 1a) Allow a mount option to override the behavior
+> 
+> 	This allows the sysadmin to get back to the previous state.
+> 	This is fairly easy to implement, but the scope might be to wide.
+> 
+> 1b) Sysfs attribute
+> 
+> 	Same as above.  Slightly easier to modify, but a more unusual
+> 	interface.
+> 
+> 2) Have a per-inode attribute
+> 
+> 	Allows to set it on a specific file.  Would require an on-disk
+> 	format change for the usual attr options.
+> 
+> 3) Have a fcntl or similar to allow an application to override it
+> 
+> 	Fine granularity.  Requires application change.  We might not
+> 	allow any application to force this as it could be used to inject
+> 	corruption.
+> 
+> In other words, they are all kinda horrible.
 
-Seems like a reasonable fallback now that we have dontcache
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Hi Christoph,
 
---D
+Has the opposite been considered: only fall back to buffered I/O for 
+buggy software that modifies direct I/O buffers before I/O has
+completed?
 
-> ---
->  fs/xfs/xfs_file.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 5703b6681b1d..e09ae86e118e 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1119,6 +1119,9 @@ xfs_file_write_iter(
->  		ret = xfs_file_dio_write(iocb, from);
->  		if (ret != -ENOTBLK)
->  			return ret;
-> +
-> +		iocb->ki_flags &= ~IOCB_DIRECT;
-> +		iocb->ki_flags |= IOCB_DONTCACHE;
->  	}
->  
->  	if (xfs_is_zoned_inode(ip))
-> -- 
-> 2.47.3
-> 
-> 
+Regarding selecting the direct I/O behavior for a process, how about
+introducing a new prctl() flag and introducing a new command-line
+utility that follows the style of ionice and sets the new flag before
+any code runs in the started process?
+
+Thanks,
+
+Bart.
