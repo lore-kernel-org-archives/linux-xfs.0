@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C193E31158A
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 09:07:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DCD02EC0B5
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 09:07:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761728874; cv=none; b=tvW9ToZMeIGGStsf/68pTJItNfkKO5C9vHsXFtmOgCvoKe5GxsWmuwEJ8+2VEMs+Kupjh0wBSFEVrgz5nTVB9GSqvJlZHd2DcJ1UsUS+Hsq9pBIXcF6SuirYW9FvBe0GfACkmHB2p9Fo65NHkxn2gfpwy7uPab2fnjB+sA9J+do=
+	t=1761728877; cv=none; b=aD0yq7z07fzdEkWZ1Ls9+0e7WDIxBe95jURqNJ1ww69HHwI+TLSxZzJZVCvuzHQ9v5d07HDr6FVo2O8cXGSA94lxqa922rdQiLbpsRkc+CGP73DX2RbwtZy9Y5Hbc8rsTjHUBPlx42J/IPYs4nKjUML+aUa4wNmbv1r9rpbPCic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761728874; c=relaxed/simple;
-	bh=WrnV1Rc8iozZvhc2TjrOXlYIGeCiW0rV/28jxzomSFM=;
+	s=arc-20240116; t=1761728877; c=relaxed/simple;
+	bh=YMb1+6P+fux5+CvHD0PM4E3BBhtGLgx6PDldPEkt0d0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ndToKRDD/K1sLCuTVJtNa3e8fHU6UCPNqUT9rwvlf3Hv1l6GUYsydK0qlCHHU47ko+PW7JJV9RhiL5nQs0UY/Tu22PMYXMa1QShYMbVOMRkCXaJ6NSImtO0Zk0qajynNH/ZmLRfqlMHQvyc36yZ1VNfQ2rLgkEYx/aLejZmHJtk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=C9S2j4Hz; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version:Content-Type; b=FTP0OzBAlLYt0WY9m8yW2/CcrDwLRRHjlvrl+tAUZJAGIeGdV407i133qm9bvWWko32aFFt4Xi39WIqv6sAK82drhfLIdERHP7bPB//TzMJ6znvracRLWRuPfb/MIuKrQjG5F+Qif+Tmo4lHfPeKpGJ1uLF4GkfiBswBxNh210Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=M09RDKcI; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="C9S2j4Hz"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="M09RDKcI"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=hphCuFQfncC//CCL3FgFaMm09bOgf+A1ZdmX++gTLIc=; b=C9S2j4HzfpukcGxZ1OW7wmCrwv
-	/qp4zQYXjRWrPMF4Py4SAajk/LrnrdAZh9/wfagz3X9E4nPyoREiHIq62/qA/02oxayifiQ0W63vd
-	jMOqF/TYfj7liW+ptxMMgXjhR+0HQZTTARG2AvYicxXH76yBhx69PceENLPVx2TH6fGGDpXQ3jJrB
-	gjkDsdB1EdeJNH3pjPfkOFMTKQ7osTj3Hlo9dbxiAqNk+IKsSsDqL2TYiOlAiujffeN1EPakulL7e
-	LgjHWeRt/WQ34g0BJFV0SpFMka8nm1aD5cRqPLjqcBCd14examUMG45zy0Gpjdv8Bpm/l/SAHglKL
-	Y8D+bhNA==;
+	Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:
+	To:From:Sender:Reply-To:Content-ID:Content-Description;
+	bh=oA6fZwo392Xn/MaFmh5sEEg0ZRq/aMLmUUBphdueEPc=; b=M09RDKcIXknPvLTuUfk5DKC9FC
+	GNLW+06FcQAC+LAlWobQVramskPZ++f5SPnsw3AaCsNCe+wRp6rbog+tdxF313L/Go5s0kRmaHyfX
+	aD6bEUttUnKTPoehIoYFbCTNwtvF8c+9fWHW/8PonABzBk94NKsKprfxVcnKFJSPwkK3VP7CfVXo1
+	Rzibqz0gmzH6LlSw30Mjg54E95y3QAPsGWflV6Q4SWxUk0R53P68ZvJzrfEhfHX8uDA/HNUsLkswn
+	8kV82Wc/+Ben0vhbKFDgapcUtMc10yHbc4ldoBOYA3N7/xlFmoNtsYbybHWOLV9uOPdw9jLY/JK6C
+	pganJ8HA==;
 Received: from [2001:4bb8:2dc:1fd0:cc53:aef5:5079:41d6] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vE29n-00000000QlV-3Y6t;
-	Wed, 29 Oct 2025 09:07:52 +0000
+	id 1vE29q-00000000Qlu-46e1;
+	Wed, 29 Oct 2025 09:07:55 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 3/4] mkfs: remove duplicate struct libxfs_init arguments
-Date: Wed, 29 Oct 2025 10:07:31 +0100
-Message-ID: <20251029090737.1164049-4-hch@lst.de>
+Subject: [PATCH 4/4] mkfs: split zone reset from discard
+Date: Wed, 29 Oct 2025 10:07:32 +0100
+Message-ID: <20251029090737.1164049-5-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251029090737.1164049-1-hch@lst.de>
 References: <20251029090737.1164049-1-hch@lst.de>
@@ -46,194 +46,169 @@ List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The libxfs_init structure instance is pointed to by cli_params, so use
-that were it already exists instead of passing an additional argument.
+Zone reset is a mandatory part of creating a file system on a zoned
+device, unlike discard, which can be skipped.  It also is implemented
+a bit different, so just split the handling.  This also means that we
+can now support the -K option to skip discard on the data section for
+zoned file systems.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- mkfs/xfs_mkfs.c | 49 ++++++++++++++++++++++---------------------------
- 1 file changed, 22 insertions(+), 27 deletions(-)
+ mkfs/xfs_mkfs.c | 112 +++++++++++++++++++++++-------------------------
+ 1 file changed, 53 insertions(+), 59 deletions(-)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 0ba7798eccf6..09a69af31be5 100644
+index 09a69af31be5..cd4f3ba4a549 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -4005,8 +4005,7 @@ ddev_is_solidstate(
- static void
- calc_concurrency_ag_geometry(
- 	struct mkfs_params	*cfg,
--	struct cli_params	*cli,
--	struct libxfs_init	*xi)
-+	struct cli_params	*cli)
- {
- 	uint64_t		try_agsize;
- 	uint64_t		def_agsize;
-@@ -4074,11 +4073,10 @@ out:
- static void
- calculate_initial_ag_geometry(
- 	struct mkfs_params	*cfg,
--	struct cli_params	*cli,
--	struct libxfs_init	*xi)
-+	struct cli_params	*cli)
- {
- 	if (cli->data_concurrency > 0) {
--		calc_concurrency_ag_geometry(cfg, cli, xi);
-+		calc_concurrency_ag_geometry(cfg, cli);
- 	} else if (cli->agsize) {	/* User-specified AG size */
- 		cfg->agsize = getnum(cli->agsize, &dopts, D_AGSIZE);
+@@ -1607,34 +1607,6 @@ discard_blocks(int fd, uint64_t nsectors, int quiet)
+ 		printf("Done.\n");
+ }
  
-@@ -4099,8 +4097,9 @@ _("agsize (%s) not a multiple of fs blk size (%d)\n"),
- 		cfg->agcount = cli->agcount;
- 		cfg->agsize = cfg->dblocks / cfg->agcount +
- 				(cfg->dblocks % cfg->agcount != 0);
--	} else if (cli->data_concurrency == -1 && ddev_is_solidstate(xi)) {
--		calc_concurrency_ag_geometry(cfg, cli, xi);
-+	} else if (cli->data_concurrency == -1 &&
-+		   ddev_is_solidstate(cli->xi)) {
-+		calc_concurrency_ag_geometry(cfg, cli);
- 	} else {
- 		calc_default_ag_geometry(cfg->blocklog, cfg->dblocks,
- 					 cfg->dsunit, &cfg->agsize,
-@@ -4360,8 +4359,7 @@ rtdev_is_solidstate(
- static void
- calc_concurrency_rtgroup_geometry(
- 	struct mkfs_params	*cfg,
--	struct cli_params	*cli,
--	struct libxfs_init	*xi)
-+	struct cli_params	*cli)
+-static void
+-reset_zones(
+-	struct mkfs_params	*cfg,
+-	int			fd,
+-	uint64_t		start_sector,
+-	uint64_t		nsectors,
+-	int			quiet)
+-{
+-	struct blk_zone_range range = {
+-		.sector		= start_sector,
+-		.nr_sectors	= nsectors,
+-	};
+-
+-	if (!quiet) {
+-		printf("Resetting zones...");
+-		fflush(stdout);
+-	}
+-
+-	if (ioctl(fd, BLKRESETZONE, &range) < 0) {
+-		if (!quiet)
+-			printf(" FAILED (%d)\n", -errno);
+-		exit(1);
+-	}
+-
+-	if (!quiet)
+-		printf("Done.\n");
+-}
+-
+ static __attribute__((noreturn)) void
+ illegal_option(
+ 	const char		*value,
+@@ -3780,41 +3752,66 @@ discard_devices(
+ 	struct zone_topology	*zt,
+ 	int			quiet)
  {
- 	uint64_t		try_rgsize;
- 	uint64_t		def_rgsize;
-@@ -4468,8 +4466,7 @@ _("realtime group count (%llu) must be less than the maximum (%u)\n"),
- static void
- calculate_rtgroup_geometry(
- 	struct mkfs_params	*cfg,
--	struct cli_params	*cli,
--	struct libxfs_init	*xi)
-+	struct cli_params	*cli)
- {
- 	if (!cli->sb_feat.metadir) {
- 		cfg->rgcount = 0;
-@@ -4510,8 +4507,9 @@ _("rgsize (%s) not a multiple of fs blk size (%d)\n"),
- 		cfg->rgsize = cfg->rtblocks;
- 		cfg->rgcount = 0;
- 	} else if (cli->rtvol_concurrency > 0 ||
--		   (cli->rtvol_concurrency == -1 && rtdev_is_solidstate(xi))) {
--		calc_concurrency_rtgroup_geometry(cfg, cli, xi);
-+		   (cli->rtvol_concurrency == -1 &&
-+		    rtdev_is_solidstate(cli->xi))) {
-+		calc_concurrency_rtgroup_geometry(cfg, cli);
- 	} else if (is_power_of_2(cfg->rtextblocks)) {
- 		cfg->rgsize = calc_rgsize_extsize_power(cfg);
- 		cfg->rgcount = cfg->rtblocks / cfg->rgsize +
-@@ -4538,7 +4536,6 @@ static void
- adjust_nr_zones(
- 	struct mkfs_params	*cfg,
- 	struct cli_params	*cli,
--	struct libxfs_init	*xi,
- 	struct zone_topology	*zt)
- {
- 	uint64_t		new_rtblocks, slack;
-@@ -4547,7 +4544,8 @@ adjust_nr_zones(
- 	if (zt->rt.nr_zones)
- 		max_zones = zt->rt.nr_zones;
- 	else
--		max_zones = DTOBT(xi->rt.size, cfg->blocklog) / cfg->rgsize;
-+		max_zones = DTOBT(cli->xi->rt.size, cfg->blocklog) /
-+				cfg->rgsize;
+-	/*
+-	 * This function has to be called after libxfs has been initialized.
+-	 */
+-
+ 	if (!xi->data.isfile) {
+ 		uint64_t	nsectors = xi->data.size;
  
- 	if (!cli->rgcount)
- 		cfg->rgcount += XFS_RESERVED_ZONES;
-@@ -4576,7 +4574,6 @@ static void
- calculate_zone_geometry(
- 	struct mkfs_params	*cfg,
- 	struct cli_params	*cli,
--	struct libxfs_init	*xi,
- 	struct zone_topology	*zt)
- {
- 	if (cfg->rtblocks == 0) {
-@@ -4645,7 +4642,7 @@ _("rgsize (%s) not a multiple of fs blk size (%d)\n"),
+-		if (cfg->rtstart && zt->data.nr_zones) {
+-			/*
+-			 * Note that the zone reset here includes the LBA range
+-			 * for the data device.
+-			 *
+-			 * This is because doing a single zone reset all on the
+-			 * entire device (which the kernel automatically does
+-			 * for us for a full device range) is a lot faster than
+-			 * resetting each zone individually and resetting
+-			 * the conventional zones used for the data device is a
+-			 * no-op.
+-			 */
+-			reset_zones(cfg, xi->data.fd, 0,
+-					cfg->rtstart + xi->rt.size, quiet);
++		if (cfg->rtstart && zt->data.nr_zones)
+ 			nsectors -= cfg->rtstart;
+-		}
+ 		discard_blocks(xi->data.fd, nsectors, quiet);
  	}
+-	if (xi->rt.dev && !xi->rt.isfile) {
+-		if (zt->rt.nr_zones)
+-			reset_zones(cfg, xi->rt.fd, 0, xi->rt.size, quiet);
+-		else
+-			discard_blocks(xi->rt.fd, xi->rt.size, quiet);
+-	}
++	if (xi->rt.dev && !xi->rt.isfile && !zt->rt.nr_zones)
++		discard_blocks(xi->rt.fd, xi->rt.size, quiet);
+ 	if (xi->log.dev && xi->log.dev != xi->data.dev && !xi->log.isfile)
+ 		discard_blocks(xi->log.fd, xi->log.size, quiet);
+ }
  
- 	if (cli->rtsize || cli->rgcount)
--		adjust_nr_zones(cfg, cli, xi, zt);
-+		adjust_nr_zones(cfg, cli, zt);
- 
- 	if (cfg->rgcount < XFS_MIN_ZONES)  {
- 		fprintf(stderr,
-@@ -4984,7 +4981,6 @@ static uint64_t
- calc_concurrency_logblocks(
++static void
++reset_zones(
++	struct mkfs_params	*cfg,
++	struct libxfs_dev	*dev,
++	uint64_t		size,
++	bool			quiet)
++{
++	struct blk_zone_range range = {
++		.nr_sectors	= size,
++	};
++
++	if (!quiet) {
++		printf("Resetting zones...");
++		fflush(stdout);
++	}
++	if (ioctl(dev->fd, BLKRESETZONE, &range) < 0) {
++		if (!quiet)
++			printf(" FAILED (%d)\n", -errno);
++		exit(1);
++	}
++	if (!quiet)
++		printf("Done.\n");
++}
++
++static void
++reset_devices(
++	struct mkfs_params	*cfg,
++	struct libxfs_init	*xi,
++	struct zone_topology	*zt,
++	int			quiet)
++{
++	/*
++	 * Note that the zone reset here includes the conventional zones used
++	 * for the data device.
++	 *
++	 * It is done that way because doing a single zone reset all on the
++	 * entire device (which the kernel automatically does for us for a full
++	 * device range) is a lot faster than resetting each zone individually
++	 * and resetting the conventional zones used for the data device is a
++	 * no-op.
++	 */
++	if (!xi->data.isfile && zt->data.nr_zones && cfg->rtstart)
++		reset_zones(cfg, &xi->data, cfg->rtstart + xi->rt.size, quiet);
++	if (xi->rt.dev && !xi->rt.isfile && zt->rt.nr_zones)
++		reset_zones(cfg, &xi->rt, xi->rt.size, quiet);
++}
++
+ static void
+ validate_datadev(
  	struct mkfs_params	*cfg,
- 	struct cli_params	*cli,
--	struct libxfs_init	*xi,
- 	unsigned int		max_tx_bytes)
- {
- 	uint64_t		log_bytes;
-@@ -4992,7 +4988,7 @@ calc_concurrency_logblocks(
- 	unsigned int		new_logblocks;
- 
- 	if (cli->log_concurrency < 0) {
--		if (!ddev_is_solidstate(xi))
-+		if (!ddev_is_solidstate(cli->xi))
- 			goto out;
- 
- 		cli->log_concurrency = nr_cpus();
-@@ -5160,7 +5156,6 @@ static void
- calculate_log_size(
- 	struct mkfs_params	*cfg,
- 	struct cli_params	*cli,
--	struct libxfs_init	*xi,
- 	struct xfs_mount	*mp)
- {
- 	struct xfs_sb		*sbp = &mp->m_sb;
-@@ -5225,8 +5220,8 @@ _("external log device size %lld blocks too small, must be at least %lld blocks\
- 		if (cfg->lsunit) {
- 			uint64_t	max_logblocks;
- 
--			max_logblocks = min(DTOBT(xi->log.size, cfg->blocklog),
--					    XFS_MAX_LOG_BLOCKS);
-+			max_logblocks = min(XFS_MAX_LOG_BLOCKS,
-+				DTOBT(cli->xi->log.size, cfg->blocklog));
- 			align_log_size(cfg, cfg->lsunit, max_logblocks);
- 		}
- 
-@@ -5261,7 +5256,7 @@ _("max log size %d smaller than min log size %d, filesystem is too small\n"),
- 
- 		if (cli->log_concurrency != 0)
- 			cfg->logblocks = calc_concurrency_logblocks(cfg, cli,
--							xi, max_tx_bytes);
-+							max_tx_bytes);
- 
- 		/* But don't go below a reasonable size */
- 		cfg->logblocks = max(cfg->logblocks,
-@@ -6135,12 +6130,12 @@ main(
- 	 * dependent on device sizes. Once calculated, make sure everything
- 	 * aligns to device geometry correctly.
+@@ -6196,13 +6193,10 @@ main(
+ 	/*
+ 	 * All values have been validated, discard the old device layout.
  	 */
--	calculate_initial_ag_geometry(&cfg, &cli, &xi);
-+	calculate_initial_ag_geometry(&cfg, &cli);
- 	align_ag_geometry(&cfg, &ft);
- 	if (cfg.sb_feat.zoned)
--		calculate_zone_geometry(&cfg, &cli, &xi, &zt);
-+		calculate_zone_geometry(&cfg, &cli, &zt);
- 	else
--		calculate_rtgroup_geometry(&cfg, &cli, &xi);
-+		calculate_rtgroup_geometry(&cfg, &cli);
+-	if (cli.sb_feat.zoned && !discard) {
+-		fprintf(stderr,
+- _("-K not support for zoned file systems.\n"));
+-		return 1;
+-	}
+ 	if (discard && !dry_run)
+-		discard_devices(&cfg, &xi, &zt, quiet);
++		discard_devices(&cfg, cli.xi, &zt, quiet);
++	if (cli.sb_feat.zoned && !dry_run)
++		reset_devices(&cfg, cli.xi, &zt, quiet);
  
- 	calculate_imaxpct(&cfg, &cli);
- 
-@@ -6164,7 +6159,7 @@ main(
- 	 * With the mount set up, we can finally calculate the log size
- 	 * constraints and do default size calculations and final validation
- 	 */
--	calculate_log_size(&cfg, &cli, &xi, mp);
-+	calculate_log_size(&cfg, &cli, mp);
- 
- 	finish_superblock_setup(&cfg, mp, sbp);
- 
+ 	/*
+ 	 * we need the libxfs buffer cache from here on in.
 -- 
 2.47.3
 
