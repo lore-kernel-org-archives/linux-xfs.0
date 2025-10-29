@@ -1,173 +1,132 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03B0928C5DE
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 17:53:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0405533F8AD;
+	Wed, 29 Oct 2025 18:11:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761760430; cv=none; b=WMUZz3vj1SMzwbcmKlZB7YExUbpa0aKWZqlOkfEs+y0wREHs4qr6WY9mPyn5GzeLw2SXu4q4fp4MyZutMVcSml6lYuogHrkl8a1CkV3NHSclZUasT7aXtl/nZhf095pDd/stmt3btO5mS5F2bCWUyqhJP2rtKXos1TVKZpc2qqo=
+	t=1761761494; cv=none; b=nagMEzhEljlFe8+CY0zr6jxSIOAQz7uDYFddR2ip1J/CWJr3UZ488hMcERPXi+BN1LF0P2icKeyItKR/5I5xpysbfJUPruOYBhZ2zrzs3wMXQ6kotNCpdBq9XA1pMIweGozl0yTOT1zGsbWnJ237u30oxpMvHFz2zEi7hDL1AI0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761760430; c=relaxed/simple;
-	bh=omML1QeVAyxxRlwnqsBGBBz1Bdi70FQgjDwDHoZ2VvI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=awzA3AI8fXNE/OINK59f6+y0b8Uxi2dJK/NWbsTRjHe/tjJsSsy5Z5e57nH2LRnbS0ydyzJG21bt4u08bjYBpVn0XGFrRe5Yd7Ppy11CZD/N70UZiyMtXSDM4X4x0tgVjiDkPNPXmVaB5izESGUD9bmRfjeKXUWpEj16RgE6QyM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id 3A90B180F2C0;
-	Wed, 29 Oct 2025 18:53:32 +0100 (CET)
-Received: from trufa.intra.herbolt.com.herbolt.com ([172.168.31.30])
-	by mx0.herbolt.com with ESMTPSA
-	id uHGeA5xUAmlTbiMAKEJqOA
-	(envelope-from <lukas@herbolt.com>); Wed, 29 Oct 2025 18:53:32 +0100
-From: Lukas Herbolt <lukas@herbolt.com>
-To: yi.zhang@huaweicloud.com
-Cc: linux-xfs@vger.kernel.org,
-	Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH v3] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Date: Wed, 29 Oct 2025 18:53:14 +0100
-Message-ID: <20251029175313.3644646-2-lukas@herbolt.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <0e89b047-cacb-4c23-aa83-27de1eb235a5@huaweicloud.com>
-References: <0e89b047-cacb-4c23-aa83-27de1eb235a5@huaweicloud.com>
+	s=arc-20240116; t=1761761494; c=relaxed/simple;
+	bh=bO6AaglsKevRn2PyLL2DL1nGgqSin/EhNrA1KFV6V6g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=E8cvle2FVTkuIATBRHvhTzDG2lRSQHM/VJrVBl0Z4+svzVOYDUUKqHAbIq/XYs/eSX2pHtdcLY8sIVqNyB92oQ4TYEn+yJsXSJa6pMh15xIKuBkrb7pPfYJ39YWz15mi7vqHyiHT9p+DDi3ExMtUp7e+Fs9IAIe/FGjAmrftASU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xj0IR5Jc; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xj0IR5Jc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F852C4CEF7;
+	Wed, 29 Oct 2025 18:11:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761761493;
+	bh=bO6AaglsKevRn2PyLL2DL1nGgqSin/EhNrA1KFV6V6g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Xj0IR5Jc0Qyx1fLF065f4wlVHQwbo4YwZ8jobjcf9yEDc+ZRJe6iPsC/SMN06zoym
+	 ajlXUVs6CIOc0gD8mAmNtrn99tkmvH7+t8JwUeOu3AemXH6dVZW+58zUBp3KTGwWd5
+	 3gg/KoKX7XOHg+ZYz6LNNlhknyhk3JNzqHLN8YnKqf0iLbmgge/2Gxen2p/u0NznYP
+	 wHuLvAo+iDtmLgWSS/23UQcNl+S6Qjj/YwOUbws42OiSy3zPN0Y09V8nYMrTE4RArk
+	 2qbgEZZ4oLrXXKdNjsU7DuWuF8X0C4FwKQQtxxoItQSWL9O0kt+c5fqRuw4YJNW/aT
+	 IdOnBY9QkcsEg==
+Date: Wed, 29 Oct 2025 11:11:32 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, Zorro Lang <zlang@redhat.com>,
+	fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
+	john.g.garry@oracle.com, linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: fix write failures in software-provided atomic writes
+Message-ID: <20251029181132.GH3356773@frogsfrogsfrogs>
+References: <cover.1758264169.git.ojaswin@linux.ibm.com>
+ <c3a040b249485b02b569b9269b649d02d721d995.1758264169.git.ojaswin@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c3a040b249485b02b569b9269b649d02d721d995.1758264169.git.ojaswin@linux.ibm.com>
 
-Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
-the unmap write zeroes operation.
+From: Darrick J. Wong <djwong@kernel.org>
 
-v3 changes:
- - fix formating
- - fix check  on the return value of xfs_alloc_file_space
- - add check if inode COW and return -EOPNOTSUPP
+With the 5 Oct 2025 release of fstests, generic/521 fails for me on
+regular (aka non-block-atomic-writes) storage:
 
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+QA output created by 521
+dowrite: write: Input/output error
+LOG DUMP (8553 total operations):
+1(  1 mod 256): SKIPPED (no operation)
+2(  2 mod 256): WRITE    0x7e000 thru 0x8dfff	(0x10000 bytes) HOLE
+3(  3 mod 256): READ     0x69000 thru 0x79fff	(0x11000 bytes)
+4(  4 mod 256): FALLOC   0x53c38 thru 0x5e853	(0xac1b bytes) INTERIOR
+5(  5 mod 256): COPY 0x55000 thru 0x59fff	(0x5000 bytes) to 0x25000 thru 0x29fff
+6(  6 mod 256): WRITE    0x74000 thru 0x88fff	(0x15000 bytes)
+7(  7 mod 256): ZERO     0xedb1 thru 0x11693	(0x28e3 bytes)
+<snip>
+
+with a warning in dmesg from iomap about XFS trying to give it a
+delalloc mapping for a directio write.  Fix the software atomic write
+iomap_begin code to convert the reservation into a written mapping.
+This doesn't fix the data corruption problems reported by generic/760,
+but it's a start.
+
+Cc: <stable@vger.kernel.org> # v6.16
+Fixes: bd1d2c21d5d249 ("xfs: add xfs_atomic_write_cow_iomap_begin()")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_bmap_util.c |  6 +++---
- fs/xfs/xfs_bmap_util.h |  2 +-
- fs/xfs/xfs_file.c      | 24 ++++++++++++++++++------
- 3 files changed, 22 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_iomap.c |   21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 06ca11731e430..ddbcf4b0cea17 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -646,7 +646,8 @@ int
- xfs_alloc_file_space(
- 	struct xfs_inode	*ip,
- 	xfs_off_t		offset,
--	xfs_off_t		len)
-+	xfs_off_t		len,
-+	uint32_t		flags)	/* XFS_BMAPI_... */
- {
- 	xfs_mount_t		*mp = ip->i_mount;
- 	xfs_off_t		count;
-@@ -748,8 +749,7 @@ xfs_alloc_file_space(
- 		 * will eventually reach the requested range.
- 		 */
- 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
--				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
--				&nimaps);
-+				allocatesize_fsb, flags, 0, imapp, &nimaps);
- 		if (error) {
- 			if (error != -ENOSR)
- 				goto error;
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index c477b33616304..1fd4844d4ec64 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -56,7 +56,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index d3f6e3e42a1191..e1da06b157cf94 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1130,7 +1130,7 @@ xfs_atomic_write_cow_iomap_begin(
+ 		return -EAGAIN;
  
- /* preallocation and hole punch interface */
- int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
--		xfs_off_t len);
-+		xfs_off_t len, uint32_t flags);
- int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
- int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f96fbf5c54c99..38de47ffb8d39 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1261,23 +1261,32 @@ xfs_falloc_zero_range(
- 	struct xfs_zone_alloc_ctx *ac)
- {
- 	struct inode		*inode = file_inode(file);
-+	struct xfs_inode	*ip = XFS_I(inode);
- 	unsigned int		blksize = i_blocksize(inode);
- 	loff_t			new_size = 0;
- 	int			error;
+ 	trace_xfs_iomap_atomic_write_cow(ip, offset, length);
+-
++retry:
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
  
--	trace_xfs_zero_file_space(XFS_I(inode));
-+	trace_xfs_zero_file_space(ip);
+ 	if (!ip->i_cowfp) {
+@@ -1141,6 +1141,8 @@ xfs_atomic_write_cow_iomap_begin(
+ 	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap))
+ 		cmap.br_startoff = end_fsb;
+ 	if (cmap.br_startoff <= offset_fsb) {
++		if (isnullstartblock(cmap.br_startblock))
++			goto convert;
+ 		xfs_trim_extent(&cmap, offset_fsb, count_fsb);
+ 		goto found;
+ 	}
+@@ -1169,8 +1171,10 @@ xfs_atomic_write_cow_iomap_begin(
+ 	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap))
+ 		cmap.br_startoff = end_fsb;
+ 	if (cmap.br_startoff <= offset_fsb) {
+-		xfs_trim_extent(&cmap, offset_fsb, count_fsb);
+ 		xfs_trans_cancel(tp);
++		if (isnullstartblock(cmap.br_startblock))
++			goto convert;
++		xfs_trim_extent(&cmap, offset_fsb, count_fsb);
+ 		goto found;
+ 	}
  
- 	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
- 	if (error)
- 		return error;
+@@ -1210,6 +1214,19 @@ xfs_atomic_write_cow_iomap_begin(
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, IOMAP_F_SHARED, seq);
  
--	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
-+	error = xfs_free_file_space(ip, offset, len, ac);
- 	if (error)
- 		return error;
- 
- 	len = round_up(offset + len, blksize) - round_down(offset, blksize);
- 	offset = round_down(offset, blksize);
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	if (mode & FALLOC_FL_WRITE_ZEROES) {
-+		if (xfs_is_cow_inode(ip) || !bdev_write_zeroes_unmap_sectors(
-+				xfs_inode_buftarg(ip)->bt_bdev))
-+			return -EOPNOTSUPP;
-+		error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_ZERO);
-+	} else {
-+		error = xfs_alloc_file_space(ip, offset, len,
-+				XFS_BMAPI_PREALLOC);
-+	}
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1302,7 +1311,8 @@ xfs_falloc_unshare_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_alloc_file_space(XFS_I(inode),	offset, len,
-+			XFS_BMAPI_PREALLOC);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1330,7 +1340,8 @@ xfs_falloc_allocate_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
-+			XFS_BMAPI_PREALLOC);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1340,7 +1351,7 @@ xfs_falloc_allocate_range(
- 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
- 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
- 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
--		 FALLOC_FL_UNSHARE_RANGE)
-+		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
- 
- STATIC long
- __xfs_file_fallocate(
-@@ -1383,6 +1394,7 @@ __xfs_file_fallocate(
- 	case FALLOC_FL_INSERT_RANGE:
- 		error = xfs_falloc_insert_range(file, offset, len);
- 		break;
-+	case FALLOC_FL_WRITE_ZEROES:
- 	case FALLOC_FL_ZERO_RANGE:
- 		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
- 		break;
--- 
-2.51.0
-
++convert:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	error = xfs_bmapi_convert_delalloc(ip, XFS_COW_FORK, offset, iomap,
++			NULL);
++	if (error)
++		return error;
++
++	/*
++	 * Try the lookup again, because the delalloc conversion might have
++	 * turned the COW mapping into unwritten, but we need it to be in
++	 * written state.
++	 */
++	goto retry;
+ out_unlock:
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
