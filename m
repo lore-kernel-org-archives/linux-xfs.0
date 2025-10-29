@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 980C630B52B
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 09:07:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C193E31158A
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 09:07:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761728871; cv=none; b=au8OaNtWm1tBWxS8vhQWM4usj7PaOTloHK9v/6K5XsFtyElMxD0/UOVnOaxRouP+3E4BtOmTxkDP8onvwcdh8zenib8TZD1oeTZeWqQzgrejuD++11L7Vt6370q53+OxpaEkK1dBw8kRS7zJNYIz1TS6e044ybFb2ZGwhCXc74U=
+	t=1761728874; cv=none; b=tvW9ToZMeIGGStsf/68pTJItNfkKO5C9vHsXFtmOgCvoKe5GxsWmuwEJ8+2VEMs+Kupjh0wBSFEVrgz5nTVB9GSqvJlZHd2DcJ1UsUS+Hsq9pBIXcF6SuirYW9FvBe0GfACkmHB2p9Fo65NHkxn2gfpwy7uPab2fnjB+sA9J+do=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761728871; c=relaxed/simple;
-	bh=NSisV2LXqLP0cEiiBxm5rDptwedsld/AP3lwZZLJ1N8=;
+	s=arc-20240116; t=1761728874; c=relaxed/simple;
+	bh=WrnV1Rc8iozZvhc2TjrOXlYIGeCiW0rV/28jxzomSFM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MR3FN0/RomOi43wI2Omhrdf0AtfrWgLxvZV8gz8Ja+nACRmmPeCsSC01X84HUfvj6w+aBI/+V8iTfzpAQqO41DoyEApkGQGeq7fwzvA9B5me48cBxiXZcAeZucctIvetl7X0qKUwu8LKvjLIYe3L/PR3vFyh78QHpwBt2k2ZRAY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KgQFk0tC; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=ndToKRDD/K1sLCuTVJtNa3e8fHU6UCPNqUT9rwvlf3Hv1l6GUYsydK0qlCHHU47ko+PW7JJV9RhiL5nQs0UY/Tu22PMYXMa1QShYMbVOMRkCXaJ6NSImtO0Zk0qajynNH/ZmLRfqlMHQvyc36yZ1VNfQ2rLgkEYx/aLejZmHJtk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=C9S2j4Hz; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KgQFk0tC"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="C9S2j4Hz"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=BxVX5BYg6gNR5YjGhzZ9iKMk5UHmNqNV7JGpYLtSBZs=; b=KgQFk0tCrhh3VUfTenZFqA98mZ
-	FU29LVhu4rhFN9NZVj+DoUZ/Upoqaq5ATjQ9JQX9ab9jQs4+yYzKp4xma07Jis4QRaC5EJvUTh3xG
-	GAOFcgnHok3RmJsojKPLWevCLkTsjWIPHty/yO6INdwPf/2sL78MH+xsE4JaKymTCroTPM1sBUroV
-	9xMnvXg1Omr/4ICp+etwUiJ8GmfrZNL+NMK2cL9H6Fyht5Ics113TxhlAdfmdfMNGv66GOninAIef
-	IwZUU5P/0yxGvir96aBZX5fYimyWo2N+GV9y9IbEUlDqlSIXHY455jX8mRh9AUwcAyoCe6LfqUS+X
-	JaSCr+pg==;
+	bh=hphCuFQfncC//CCL3FgFaMm09bOgf+A1ZdmX++gTLIc=; b=C9S2j4HzfpukcGxZ1OW7wmCrwv
+	/qp4zQYXjRWrPMF4Py4SAajk/LrnrdAZh9/wfagz3X9E4nPyoREiHIq62/qA/02oxayifiQ0W63vd
+	jMOqF/TYfj7liW+ptxMMgXjhR+0HQZTTARG2AvYicxXH76yBhx69PceENLPVx2TH6fGGDpXQ3jJrB
+	gjkDsdB1EdeJNH3pjPfkOFMTKQ7osTj3Hlo9dbxiAqNk+IKsSsDqL2TYiOlAiujffeN1EPakulL7e
+	LgjHWeRt/WQ34g0BJFV0SpFMka8nm1aD5cRqPLjqcBCd14examUMG45zy0Gpjdv8Bpm/l/SAHglKL
+	Y8D+bhNA==;
 Received: from [2001:4bb8:2dc:1fd0:cc53:aef5:5079:41d6] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vE29k-00000000Qku-36mw;
-	Wed, 29 Oct 2025 09:07:49 +0000
+	id 1vE29n-00000000QlV-3Y6t;
+	Wed, 29 Oct 2025 09:07:52 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: "Darrick J . Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 2/4] libxfs: cleanup get_topology
-Date: Wed, 29 Oct 2025 10:07:30 +0100
-Message-ID: <20251029090737.1164049-3-hch@lst.de>
+Subject: [PATCH 3/4] mkfs: remove duplicate struct libxfs_init arguments
+Date: Wed, 29 Oct 2025 10:07:31 +0100
+Message-ID: <20251029090737.1164049-4-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251029090737.1164049-1-hch@lst.de>
 References: <20251029090737.1164049-1-hch@lst.de>
@@ -49,100 +49,191 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a libxfs_ prefix to the name, clear the structure in the helper
-instead of in the callers, and use a bool to pass a boolean argument.
+The libxfs_init structure instance is pointed to by cli_params, so use
+that were it already exists instead of passing an additional argument.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/topology.c | 9 +++++----
- libxfs/topology.h | 7 ++-----
- mkfs/xfs_mkfs.c   | 3 +--
- repair/sb.c       | 3 +--
- 4 files changed, 9 insertions(+), 13 deletions(-)
+ mkfs/xfs_mkfs.c | 49 ++++++++++++++++++++++---------------------------
+ 1 file changed, 22 insertions(+), 27 deletions(-)
 
-diff --git a/libxfs/topology.c b/libxfs/topology.c
-index 7764687beac0..366165719c84 100644
---- a/libxfs/topology.c
-+++ b/libxfs/topology.c
-@@ -224,7 +224,7 @@ static void
- blkid_get_topology(
- 	const char		*device,
- 	struct device_topology	*dt,
--	int			force_overwrite)
-+	bool			force_overwrite)
- {
- 	blkid_topology tp;
- 	blkid_probe pr;
-@@ -317,7 +317,7 @@ static void
- get_device_topology(
- 	struct libxfs_dev	*dev,
- 	struct device_topology	*dt,
--	int			force_overwrite)
-+	bool			force_overwrite)
- {
- 	struct stat		st;
- 
-@@ -364,11 +364,12 @@ get_device_topology(
- }
- 
- void
--get_topology(
-+libxfs_get_topology(
- 	struct libxfs_init	*xi,
- 	struct fs_topology	*ft,
--	int			force_overwrite)
-+	bool			force_overwrite)
- {
-+	memset(ft, 0, sizeof(*ft));
- 	get_device_topology(&xi->data, &ft->data, force_overwrite);
- 	get_device_topology(&xi->rt, &ft->rt, force_overwrite);
- 	get_device_topology(&xi->log, &ft->log, force_overwrite);
-diff --git a/libxfs/topology.h b/libxfs/topology.h
-index f0ca65f3576e..3688d56b542f 100644
---- a/libxfs/topology.h
-+++ b/libxfs/topology.h
-@@ -25,11 +25,8 @@ struct fs_topology {
- 	struct device_topology	log;
- };
- 
--void
--get_topology(
--	struct libxfs_init	*xi,
--	struct fs_topology	*ft,
--	int			force_overwrite);
-+void libxfs_get_topology(struct libxfs_init *xi, struct fs_topology *ft,
-+		bool force_overwrite);
- 
- extern void
- calc_default_ag_geometry(
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 3ccd37920321..0ba7798eccf6 100644
+index 0ba7798eccf6..09a69af31be5 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -2395,8 +2395,7 @@ validate_sectorsize(
- 		check_device_type(cli, &cli->xi->rt, !cli->rtsize, dry_run,
- 				"RT", "r");
+@@ -4005,8 +4005,7 @@ ddev_is_solidstate(
+ static void
+ calc_concurrency_ag_geometry(
+ 	struct mkfs_params	*cfg,
+-	struct cli_params	*cli,
+-	struct libxfs_init	*xi)
++	struct cli_params	*cli)
+ {
+ 	uint64_t		try_agsize;
+ 	uint64_t		def_agsize;
+@@ -4074,11 +4073,10 @@ out:
+ static void
+ calculate_initial_ag_geometry(
+ 	struct mkfs_params	*cfg,
+-	struct cli_params	*cli,
+-	struct libxfs_init	*xi)
++	struct cli_params	*cli)
+ {
+ 	if (cli->data_concurrency > 0) {
+-		calc_concurrency_ag_geometry(cfg, cli, xi);
++		calc_concurrency_ag_geometry(cfg, cli);
+ 	} else if (cli->agsize) {	/* User-specified AG size */
+ 		cfg->agsize = getnum(cli->agsize, &dopts, D_AGSIZE);
  
--	memset(ft, 0, sizeof(*ft));
--	get_topology(cli->xi, ft, force_overwrite);
-+	libxfs_get_topology(cli->xi, ft, force_overwrite);
+@@ -4099,8 +4097,9 @@ _("agsize (%s) not a multiple of fs blk size (%d)\n"),
+ 		cfg->agcount = cli->agcount;
+ 		cfg->agsize = cfg->dblocks / cfg->agcount +
+ 				(cfg->dblocks % cfg->agcount != 0);
+-	} else if (cli->data_concurrency == -1 && ddev_is_solidstate(xi)) {
+-		calc_concurrency_ag_geometry(cfg, cli, xi);
++	} else if (cli->data_concurrency == -1 &&
++		   ddev_is_solidstate(cli->xi)) {
++		calc_concurrency_ag_geometry(cfg, cli);
+ 	} else {
+ 		calc_default_ag_geometry(cfg->blocklog, cfg->dblocks,
+ 					 cfg->dsunit, &cfg->agsize,
+@@ -4360,8 +4359,7 @@ rtdev_is_solidstate(
+ static void
+ calc_concurrency_rtgroup_geometry(
+ 	struct mkfs_params	*cfg,
+-	struct cli_params	*cli,
+-	struct libxfs_init	*xi)
++	struct cli_params	*cli)
+ {
+ 	uint64_t		try_rgsize;
+ 	uint64_t		def_rgsize;
+@@ -4468,8 +4466,7 @@ _("realtime group count (%llu) must be less than the maximum (%u)\n"),
+ static void
+ calculate_rtgroup_geometry(
+ 	struct mkfs_params	*cfg,
+-	struct cli_params	*cli,
+-	struct libxfs_init	*xi)
++	struct cli_params	*cli)
+ {
+ 	if (!cli->sb_feat.metadir) {
+ 		cfg->rgcount = 0;
+@@ -4510,8 +4507,9 @@ _("rgsize (%s) not a multiple of fs blk size (%d)\n"),
+ 		cfg->rgsize = cfg->rtblocks;
+ 		cfg->rgcount = 0;
+ 	} else if (cli->rtvol_concurrency > 0 ||
+-		   (cli->rtvol_concurrency == -1 && rtdev_is_solidstate(xi))) {
+-		calc_concurrency_rtgroup_geometry(cfg, cli, xi);
++		   (cli->rtvol_concurrency == -1 &&
++		    rtdev_is_solidstate(cli->xi))) {
++		calc_concurrency_rtgroup_geometry(cfg, cli);
+ 	} else if (is_power_of_2(cfg->rtextblocks)) {
+ 		cfg->rgsize = calc_rgsize_extsize_power(cfg);
+ 		cfg->rgcount = cfg->rtblocks / cfg->rgsize +
+@@ -4538,7 +4536,6 @@ static void
+ adjust_nr_zones(
+ 	struct mkfs_params	*cfg,
+ 	struct cli_params	*cli,
+-	struct libxfs_init	*xi,
+ 	struct zone_topology	*zt)
+ {
+ 	uint64_t		new_rtblocks, slack;
+@@ -4547,7 +4544,8 @@ adjust_nr_zones(
+ 	if (zt->rt.nr_zones)
+ 		max_zones = zt->rt.nr_zones;
+ 	else
+-		max_zones = DTOBT(xi->rt.size, cfg->blocklog) / cfg->rgsize;
++		max_zones = DTOBT(cli->xi->rt.size, cfg->blocklog) /
++				cfg->rgsize;
  
- 	/* set configured sector sizes in preparation for checks */
- 	if (!cli->sectorsize) {
-diff --git a/repair/sb.c b/repair/sb.c
-index 0e4827e04678..ee1cc63fae64 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -184,8 +184,7 @@ guess_default_geometry(
- 	uint64_t		dblocks;
- 	int			multidisk;
+ 	if (!cli->rgcount)
+ 		cfg->rgcount += XFS_RESERVED_ZONES;
+@@ -4576,7 +4574,6 @@ static void
+ calculate_zone_geometry(
+ 	struct mkfs_params	*cfg,
+ 	struct cli_params	*cli,
+-	struct libxfs_init	*xi,
+ 	struct zone_topology	*zt)
+ {
+ 	if (cfg->rtblocks == 0) {
+@@ -4645,7 +4642,7 @@ _("rgsize (%s) not a multiple of fs blk size (%d)\n"),
+ 	}
  
--	memset(&ft, 0, sizeof(ft));
--	get_topology(x, &ft, 1);
-+	libxfs_get_topology(x, &ft, true);
+ 	if (cli->rtsize || cli->rgcount)
+-		adjust_nr_zones(cfg, cli, xi, zt);
++		adjust_nr_zones(cfg, cli, zt);
  
- 	/*
- 	 * get geometry from get_topology result.
+ 	if (cfg->rgcount < XFS_MIN_ZONES)  {
+ 		fprintf(stderr,
+@@ -4984,7 +4981,6 @@ static uint64_t
+ calc_concurrency_logblocks(
+ 	struct mkfs_params	*cfg,
+ 	struct cli_params	*cli,
+-	struct libxfs_init	*xi,
+ 	unsigned int		max_tx_bytes)
+ {
+ 	uint64_t		log_bytes;
+@@ -4992,7 +4988,7 @@ calc_concurrency_logblocks(
+ 	unsigned int		new_logblocks;
+ 
+ 	if (cli->log_concurrency < 0) {
+-		if (!ddev_is_solidstate(xi))
++		if (!ddev_is_solidstate(cli->xi))
+ 			goto out;
+ 
+ 		cli->log_concurrency = nr_cpus();
+@@ -5160,7 +5156,6 @@ static void
+ calculate_log_size(
+ 	struct mkfs_params	*cfg,
+ 	struct cli_params	*cli,
+-	struct libxfs_init	*xi,
+ 	struct xfs_mount	*mp)
+ {
+ 	struct xfs_sb		*sbp = &mp->m_sb;
+@@ -5225,8 +5220,8 @@ _("external log device size %lld blocks too small, must be at least %lld blocks\
+ 		if (cfg->lsunit) {
+ 			uint64_t	max_logblocks;
+ 
+-			max_logblocks = min(DTOBT(xi->log.size, cfg->blocklog),
+-					    XFS_MAX_LOG_BLOCKS);
++			max_logblocks = min(XFS_MAX_LOG_BLOCKS,
++				DTOBT(cli->xi->log.size, cfg->blocklog));
+ 			align_log_size(cfg, cfg->lsunit, max_logblocks);
+ 		}
+ 
+@@ -5261,7 +5256,7 @@ _("max log size %d smaller than min log size %d, filesystem is too small\n"),
+ 
+ 		if (cli->log_concurrency != 0)
+ 			cfg->logblocks = calc_concurrency_logblocks(cfg, cli,
+-							xi, max_tx_bytes);
++							max_tx_bytes);
+ 
+ 		/* But don't go below a reasonable size */
+ 		cfg->logblocks = max(cfg->logblocks,
+@@ -6135,12 +6130,12 @@ main(
+ 	 * dependent on device sizes. Once calculated, make sure everything
+ 	 * aligns to device geometry correctly.
+ 	 */
+-	calculate_initial_ag_geometry(&cfg, &cli, &xi);
++	calculate_initial_ag_geometry(&cfg, &cli);
+ 	align_ag_geometry(&cfg, &ft);
+ 	if (cfg.sb_feat.zoned)
+-		calculate_zone_geometry(&cfg, &cli, &xi, &zt);
++		calculate_zone_geometry(&cfg, &cli, &zt);
+ 	else
+-		calculate_rtgroup_geometry(&cfg, &cli, &xi);
++		calculate_rtgroup_geometry(&cfg, &cli);
+ 
+ 	calculate_imaxpct(&cfg, &cli);
+ 
+@@ -6164,7 +6159,7 @@ main(
+ 	 * With the mount set up, we can finally calculate the log size
+ 	 * constraints and do default size calculations and final validation
+ 	 */
+-	calculate_log_size(&cfg, &cli, &xi, mp);
++	calculate_log_size(&cfg, &cli, mp);
+ 
+ 	finish_superblock_setup(&cfg, mp, sbp);
+ 
 -- 
 2.47.3
 
