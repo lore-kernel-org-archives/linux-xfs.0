@@ -1,115 +1,91 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA4872DE71A;
-	Thu, 30 Oct 2025 13:23:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67C181EF39E;
+	Thu, 30 Oct 2025 13:53:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761830596; cv=fail; b=gTt2HTuWxYOWe8+lL3LYOEu/9bQVmbpkNacoyNONdqddnV0BtyfWQI5ZDhxoCk6bVwDPQnkYg3TpKOmyTSMb+8HMA4R4mzQvu+/NRw2mqJAdnJJNNiWsAFStFZeqQmAI7A+yZ3a7CgbHsSltgiYFKrw+9yc6HrM1bdQKzAJMbFw=
+	t=1761832382; cv=fail; b=WJoRxe0XtLeqPuTGCKl/o51fXPqnA2NfBVgJ1x7jFOM4TV0t2fyG3ETzL/p4mtEgDWOEbvA6XbuYdWCAShBqFczBKQwGSK37tjcm+y6ejXvc+ltbk0Ceh4BHBmtBY2YuxHetubRv8Sl7lWqDqhomkxtkyR7TG4L8PuLe9urpUZ4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761830596; c=relaxed/simple;
-	bh=Mmc/KnXhJAQtlMuoKrgYKNhkc0xUBy6OXLvQPGGZPmQ=;
+	s=arc-20240116; t=1761832382; c=relaxed/simple;
+	bh=GuqJaeBi5CIOpTRPWRXmMHrxb1yMZIFh704ycjK3UuA=;
 	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=Wm9empGV+91Ka6WeFvfBTmDbKBp7BCbrVJT9+lvS+TLNpC7hO0r541dNi7AVVb+Xy8I1HEX7/Z0vIRMyCJ2A1kQkVuGMCXHZaDpHZRdPj3gpgWmPxxNkpAAcE7m7qMiGu8wzBno4ny4sYViHN9TJmCcZRYjBWVKivjH0vmwTWcc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=XNmc0Dl/; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Bp0R14Oq; arc=fail smtp.client-ip=205.220.177.32
+	 Content-Type:MIME-Version; b=XDHwpXr8h18lo7+fLzoZzDQg+qDGzcTG4otOLrLk7bk2Wr7q1Bcnu54w2MxO6tjy3xRK+aY0zOKTabY1Vgmas86bZmJ8gY2hkJoEHAvsPnP3tHwh0r88LdR7W0OiTB2wXJydgK0I13tbST76/m/u+/okPSngEc2FhX9tLKgUR1I=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=UUJXRQzE; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=a3yDQeMg; arc=fail smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XNmc0Dl/";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Bp0R14Oq"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59UDCO8K024360;
-	Thu, 30 Oct 2025 13:22:40 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UUJXRQzE";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="a3yDQeMg"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59UDZ0Rh007545;
+	Thu, 30 Oct 2025 13:52:54 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=6HfjR91SKTaZ0TNGfIUG8W/7mUs1/uMA3zGmju4GM8M=; b=
-	XNmc0Dl/UmNKtOC26YFY1oFzdOAjbwH1ScMplfgwQCLHslFyYVz/y6X4gXoOQ/bo
-	3+vx8JIIDn1j2GSMmHPlz1twvPoVAJBFVe/ftCzZegy5QPntycFpVRMJ6ug5GG/g
-	h3ub6JEU6XphENheXifyPtngizN+F4zwk+1kM3nwcmZzYi1K0doY9uFACQ15wW55
-	sz8XUE4OkKzAt09g7GoBGjiz0DxU0c3NuAiQgK1mZUmozl6L6NwoogXI3mHqDf/0
-	tCDNRGqQZYdLPz7ymoH/Z2Fym+JDWNKIBovLPMuVQkh9Xs4YC3NNPcT1uDAXh3xW
-	TdBn8tcykyKhutOvJm58Kw==
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4a476hr851-1
+	corp-2025-04-25; bh=mJ5InIQSaeAZnzXIuGNCOSzprIUFF2LcLkAlws+BX+Q=; b=
+	UUJXRQzE2rHutCBCpmQFKqa/dcbZfhR6h3nNUjwvqISAVPlREOTZuXUz/pV183BM
+	dieTMrn+samGh3nPZngqWiscxIfIVJ0n5/6p3mAhB9f3leSarVkTmnEQIui2zavs
+	Y5/tp6nR4pW3F/qdEJrd2oyHcKOYXlG2AXBEuICrHl3PhWYQZndp842eY/TShgqG
+	70dUqI7gVFWgiU4zi9sm/HovKhVi8lpni3Vyr4FsG+ma/PzeL3bi3ktN5XWAJCGG
+	vg2lcMYsnlfTnXmTt/0U33rzJf3XioKvojQEjhsvnN5RrsLdm2PSMa6/jSpuUp6/
+	wkM8YBY/KwJoOibWQXGJ4Q==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4a4915r1ec-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 30 Oct 2025 13:22:40 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 59UCjS8J027654;
-	Thu, 30 Oct 2025 13:22:39 GMT
-Received: from bl2pr02cu003.outbound.protection.outlook.com (mail-eastusazon11011034.outbound.protection.outlook.com [52.101.52.34])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4a34q92maf-2
+	Thu, 30 Oct 2025 13:52:54 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 59UCxqdC017435;
+	Thu, 30 Oct 2025 13:52:53 GMT
+Received: from ch4pr04cu002.outbound.protection.outlook.com (mail-northcentralusazon11013060.outbound.protection.outlook.com [40.107.201.60])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4a33y0nctt-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 30 Oct 2025 13:22:39 +0000
+	Thu, 30 Oct 2025 13:52:53 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Z8xmr3UIG3Hbhy6vePd0q7MTAw3kOnNLMMGfxCFhI8EfPQaqNssOALeJtdMXvfcYI/GbPKULtdbJcwt0QF9Q6aovepOvTXMGQnYQzSB1QfP4AsLv3wrJjJbkHEdbA3HrNhA9Bmvwgkv+Dc2B/ZsEMvSvyH8G42mr3vZLgn/MmHX+VYn+y4HQ5LyPdBECLroHkdNYQ4taYoN685tCTPkJTuZqtNfVXm1cB4RQaSb0IwvAUewMrem9BItzy0VFTJiCvvOsBbaKIyZ9/IqIowRgb0MKw0MyxVu3YwzRVfNMkkimyfvin+ycHPxfYFR7Yjef9z4+jGN5whmNbNVYVVslFA==
+ b=dndHlhknI9xOWVcTp0wbYT7FFOUc9jQ4ry/fRxkszbD/Y0HtDR7pHpoSyl1Nn2lHrxcZVNxkjPPvAGRIJMSNvCCKJnYz1vKCjsJxVyNuprMG6Pr+rMMOTOUsLNT/H+qawNw5jnTZ/XiIgODus9wKzC78JoTybH/9zOeRq3qsckgIP3vRUMiAW8c6eOJ67nuWwUY1vIP6EVb67kzjpBVc+zznH5VyGUqvO1jegWErh0OL4Wx7s+Ma/LaHy401GOdlVoJvhaAEKcaAyOup0vfIC61mnB1bbLR8PbhSjwHc6iZUfbBMZYgN1EGgtCHR5IeWEgVecz6g95mGnA5AdrpXHg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=6HfjR91SKTaZ0TNGfIUG8W/7mUs1/uMA3zGmju4GM8M=;
- b=Qx4lnCGDs/EEF8/zpuBGr/mFZZyq5+4KjXBs/jr1m2gTd9r0EyrJV5J+WIvPDT+7VlMGMhfBM4mEXiwjFOffHun3hLtkXrjdsoh/k1ItGHFfBasechcDtwqw2jYDbOX4L6RszPKFElr8LnyvPJloBS7hoGrc6clDecEzYq6BZyO1J6fEUAtfjpeeebpfNCtEgh/x5zwF9Brmsb1kUeRilpZ+G/41SwHUgKBK+iW+dQ08ScBbWRDfoG3Er/oRPryQGaee/139fOTP2pI3b5QLfTgQxYaReFykfOidsWpKqK+1cSt9uv/b2R0Pydsda/r0IzOc9ouq3GUPKbafs7zo1g==
+ bh=mJ5InIQSaeAZnzXIuGNCOSzprIUFF2LcLkAlws+BX+Q=;
+ b=c1m3z9OrZHRAa+ZuQ7F147KIApK0ugc2N2oH8chWZiQnubDbFE0AREQDZ6NFMorYuu6BRuNEqDXVPiv0MK9/JbHChc6gy7uwoGuhADDKordzliN4PY9+cKPDV5FB2zrDEQaUhVru+hvIw+ipXGK2Koagj2kLRr20ST9ygTOxZlGYLK5d43QU/BSPAPPvlKZSJdoZnWZn+KBKTOrK8xLXdv+34kUzDEWmvizdxuFYR7zaEDu9YUGAviuDKhTIELdMYfPbMrjeC1AWLPrday4w50H0soDk1ieH01GZ4bHGDSapfQfHiQL12sOm27604De3SOK3nTxX/nqpxE/sEDQF9w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6HfjR91SKTaZ0TNGfIUG8W/7mUs1/uMA3zGmju4GM8M=;
- b=Bp0R14OqcrVt7D3zWGF9ogTgTb0KXNPGQ3N+Bd4CzpoWH2V0lhTV2JhZp+1/ns1t2rlNr8PRU0zD69xaYWqaxCvtLK6skrlvVKO8cG+EK1oQshM56CrZtc9CtQPhYY2pM5OIE9YHyQW3XL12ix1mUBRpbai0DfA4SkpvLZi6XdQ=
-Received: from BN0PR10MB5128.namprd10.prod.outlook.com (2603:10b6:408:117::24)
- by DM3PPF334FD9217.namprd10.prod.outlook.com (2603:10b6:f:fc00::c19) with
+ bh=mJ5InIQSaeAZnzXIuGNCOSzprIUFF2LcLkAlws+BX+Q=;
+ b=a3yDQeMgAZ2pnIKoVJ5mm7kVP+5ZdOZF9tizmA6G7CdLYrc1+49E97glXNx6t8r0Z5+pFbAA1QMnKf+7XqgGvile5sVsMTj5CBJGi9wF0leKokftElzSS+LFv4xTJMzf4p8bB66JdD8yhnojn44IsRuai0B0/n2499AiSwjaywc=
+Received: from MN2PR10MB4320.namprd10.prod.outlook.com (2603:10b6:208:1d5::16)
+ by MW6PR10MB7552.namprd10.prod.outlook.com (2603:10b6:303:23f::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9275.12; Thu, 30 Oct
- 2025 13:22:33 +0000
-Received: from BN0PR10MB5128.namprd10.prod.outlook.com
- ([fe80::743a:3154:40da:cf90]) by BN0PR10MB5128.namprd10.prod.outlook.com
- ([fe80::743a:3154:40da:cf90%4]) with mapi id 15.20.9253.017; Thu, 30 Oct 2025
- 13:22:32 +0000
-Message-ID: <c20d10da-08ef-4e9a-aff9-a7a9e6efe82b@oracle.com>
-Date: Thu, 30 Oct 2025 09:22:29 -0400
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9275.13; Thu, 30 Oct
+ 2025 13:52:50 +0000
+Received: from MN2PR10MB4320.namprd10.prod.outlook.com
+ ([fe80::42ec:1d58:8ba8:800c]) by MN2PR10MB4320.namprd10.prod.outlook.com
+ ([fe80::42ec:1d58:8ba8:800c%5]) with mapi id 15.20.9275.013; Thu, 30 Oct 2025
+ 13:52:49 +0000
+Message-ID: <02af7e21-1a0f-4035-b2d1-b96c9db2f5c7@oracle.com>
+Date: Thu, 30 Oct 2025 13:52:46 +0000
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 09/14] VFS/nfsd/ovl: introduce start_renaming() and
- end_renaming()
-To: NeilBrown <neil@brown.name>, Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Amir Goldstein <amir73il@gmail.com>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
-        Jeff Layton <jlayton@kernel.org>, Chris Mason <clm@fb.com>,
-        David Sterba <dsterba@suse.com>, David Howells <dhowells@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Danilo Krummrich <dakr@kernel.org>, Tyler Hicks <code@tyhicks.com>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>,
-        Namjae Jeon <linkinjeon@kernel.org>, Steve French <smfrench@gmail.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Carlos Maiolino <cem@kernel.org>,
-        John Johansen
- <john.johansen@canonical.com>,
-        Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Ondrej Mosnacek <omosnace@redhat.com>,
-        Mateusz Guzik <mjguzik@gmail.com>,
-        Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
-        Stefan Berger <stefanb@linux.ibm.com>,
-        "Darrick J. Wong"
- <djwong@kernel.org>, linux-kernel@vger.kernel.org,
-        netfs@lists.linux.dev, ecryptfs@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org,
-        linux-cifs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
-        selinux@vger.kernel.org
-References: <20251029234353.1321957-1-neilb@ownmail.net>
- <20251029234353.1321957-10-neilb@ownmail.net>
+Subject: Re: [PATCH] xfs: fix write failures in software-provided atomic
+ writes
+To: "Darrick J. Wong" <djwong@kernel.org>, Carlos Maiolino <cem@kernel.org>
+Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, Zorro Lang <zlang@redhat.com>,
+        fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
+        linux-xfs@vger.kernel.org
+References: <cover.1758264169.git.ojaswin@linux.ibm.com>
+ <c3a040b249485b02b569b9269b649d02d721d995.1758264169.git.ojaswin@linux.ibm.com>
+ <20251029181132.GH3356773@frogsfrogsfrogs>
 Content-Language: en-US
-From: Chuck Lever <chuck.lever@oracle.com>
-In-Reply-To: <20251029234353.1321957-10-neilb@ownmail.net>
-Content-Type: text/plain; charset=UTF-8
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20251029181132.GH3356773@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CH2PR07CA0004.namprd07.prod.outlook.com
- (2603:10b6:610:20::17) To BN0PR10MB5128.namprd10.prod.outlook.com
- (2603:10b6:408:117::24)
+X-ClientProxiedBy: FR3P281CA0143.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:95::6) To MN2PR10MB4320.namprd10.prod.outlook.com
+ (2603:10b6:208:1d5::16)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -117,768 +93,227 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN0PR10MB5128:EE_|DM3PPF334FD9217:EE_
-X-MS-Office365-Filtering-Correlation-Id: cfa954cc-2669-4e93-4030-08de17b7622e
-X-LD-Processed: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b,ExtAddr
+X-MS-TrafficTypeDiagnostic: MN2PR10MB4320:EE_|MW6PR10MB7552:EE_
+X-MS-Office365-Filtering-Correlation-Id: 99f64583-e46e-41ad-5673-08de17bb9d07
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
- BCL:0;ARA:13230040|1800799024|366016|7416014|376014|7053199007;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016|7053199007;
 X-Microsoft-Antispam-Message-Info:
- =?utf-8?B?ZGRsQ2ZzSTBQMWlCWkY1OFZ2QnFQem1wRnN2ZUhvNWdvZjF5aEhUZDFkVGVi?=
- =?utf-8?B?WFRuR3ZWckxFbllBVHZ5Z1NQYUZtZEQ0MFFOU3N2UjQwdGtoYitEQThicDNz?=
- =?utf-8?B?a3EzbnhBOElWQWVhalMrOGJ1a0twTEVJU1poRmg4NWIzemJnZ1dyUzRXN0xl?=
- =?utf-8?B?cThBUE1KRFg2NFlMT0lQWXNua1BEZUxLbmdSbTBreG1sZHZVTFVtOFJMNXRj?=
- =?utf-8?B?Nk10blcxdnBDbnFURHNMdUp2bFNZSlZveWxiVkszS1dsNGZxRG42bXB3MDlP?=
- =?utf-8?B?ZHJOUWYxS1RLc1hqU2cwRUJmT2pHYk5XMTF2N08vTU9ERnlYbExyNWRoM01X?=
- =?utf-8?B?bXBPZ1FzVWNiY3ZTV1F3ZWhid2xram1YNlM5L0dtSHZrWGM0eEFxaVBNMVpH?=
- =?utf-8?B?dmZpa3dVYlJHUjBxeFl0RCs2SjlDWCtsSkUvdm9ldllVbjUrdjdkZGcrbERa?=
- =?utf-8?B?OTFLRjZraXgvVUNxakRFQXZFbGNJdjIyVnMzemMzRlUvUWN5eit6dzA0Q3E5?=
- =?utf-8?B?ZU9uMi9TUDRLRHRBOFJ1SHgyczhGZitQemdqMVNGSzkxNVFraE44aG5ZOWQ3?=
- =?utf-8?B?T05iVHJCQ1JuVHErTkFYZzRiRjd0Q2ZMVFl2RjR4L2NYSTZuM0hCK3ZjNkZ4?=
- =?utf-8?B?Rm15SnREY0xPdituek9JTlgyc3pUbG8vcThXeXBLMlNOY1lGdGpOOFRtMlhi?=
- =?utf-8?B?cVc2cUg0VElBUklRekFiTldQNE0xd1N3TUhUa1V3WFdITUg2MXdXM01nb1h3?=
- =?utf-8?B?SGhkRWxXTThBNWFuWTRhb2Jsb205K0pUK1JCN1czNnVienUzR2g3alBnS21m?=
- =?utf-8?B?d3JDWDVPRlR1MUxBcXRZODdQRjluU2QxRjBCdlFSalRoN21UZXhDNW9oZWd3?=
- =?utf-8?B?Nld4WHk4TFVmRlV2Tk9DNndheS9WOENQdXliWWQwMnRWYlJJS3p5UjNkVEZi?=
- =?utf-8?B?SVZCWDlteGZtRElvd2wxNHNocSs3blg0M2dOb1NraW1LdGVockhUYmtuZDY2?=
- =?utf-8?B?M0V1ck1DM0ZiUmw2WGV6bmtLYjNPL3FCWERLT29lcjdIazNxN2ZtT2YxSHpn?=
- =?utf-8?B?S0MxV0F6dnJ4N1JNZHRWTlp4T0xmZStPVm41ckhpMmtqb29LcXNqb3VTWkR0?=
- =?utf-8?B?ZHk2dGlRR1BIdGxxVWgwMWp3WGc3S3l5U3lENkdLVDV3UzRLMFN3ZE1ta2s5?=
- =?utf-8?B?TzRpcEFmUWxTSUtYenhaMDhaaktYdHJ3SDhHNVdTR2lXTDNOT2tYTjdLSFBh?=
- =?utf-8?B?T0VJa1c0S0FvaXk4SncwVlJsQSt6ZTRYNkRFR1RDcVF4WFJBeE93cWxVNGho?=
- =?utf-8?B?WkNiOFM1M0c2QUZVQ2lZOFc2b05pdVNIYWVQcTl6Y0l2R1NKeC9uTUpFZTJO?=
- =?utf-8?B?cXRTQmRSc3lIa1VCNG9WN21HNHlUMENPUjRGUlFxMmdJVlJQMGRUMEQ2aW1L?=
- =?utf-8?B?T1FSckhQTklYUkZWSC9BcXZSZE4zQ1U2OGU3dVZWUkdyVWxYa3Z6STFVdWhx?=
- =?utf-8?B?TVM0SXNvNldSbHJzOTRkTWl5M2JoSkRBRjBoV09sNHNzTEZpbSsydXQ4MWdJ?=
- =?utf-8?B?a1hxZTN3N04veWR6OEU5cWxBNTN6amFIMHdWeThsT3lZN3g3OXNaTXZyMDY1?=
- =?utf-8?B?OXFsQUF6Y3pLWTRBSFJxNTJzakZ2bVJDVk5aVmJDbjE4LytrMXR3ZTFZMTd5?=
- =?utf-8?B?eXBYZHlUeFo4dWVmN1A0ZGlTeDlyckRCVFRmYmdOaWEvbDZRcDBGUTUraDk1?=
- =?utf-8?B?SzhocW8yWCs1endOa0xTU3dpcmdrSlUvckNDOUlDUlQ3Z09Nam5mWks4YVNO?=
- =?utf-8?B?eHFTTFo0NTlQbWNRdXBaMXlhU0dQTDRseVNHakJvTlNHY2V1RWZIUWpvbitF?=
- =?utf-8?B?T01MMG9zOUJzbXVZVENnR3BFVnJEWTdyZHNZMXB4S1ZJdTZxdnl6Y0JUM1lL?=
- =?utf-8?Q?Z6Hy19RoeLwBR447wbZ5PAYtqryYmT2c?=
+	=?utf-8?B?eFdEUHRuanF3aEY0czlINVhNRGMwVGw3alpoNjF2MmIwUUxzUlBldkx0MUJz?=
+ =?utf-8?B?QXpXL0ZYcEJhMEYyVEl3SHdjMkhBc2VMV2F1cVpUTVNpSFdheXdYN0FNOGtj?=
+ =?utf-8?B?MVJzNDV2dmZxQURCWXJCcEN1YXk1NkM4OVBsRGFCRFc1eVRUbGZaK1NpWkh6?=
+ =?utf-8?B?MDFkVFRFaDQyMlp2enlaNjdTS3ZybkNpTVdiQy9iakF1NjNNR0tXZmd5TTJ1?=
+ =?utf-8?B?WFN1N3R3YkdvdHlDRHNHUy9rNHBrOVZlc2Rlb2ZBTlM4RU5EL2h6b0piQnBr?=
+ =?utf-8?B?bjhCOE9ZRDdOanhXMVZwWUNFRlFtZktQS0Z0UEMxZ1hXeGFWd3h1aWcxOW9m?=
+ =?utf-8?B?T0dNR3BMUGZiaUxnV1VEU1NMWDZMZVd4cWQxeXhBS0Y3UTJURkdaMEdRVzlI?=
+ =?utf-8?B?YUdDb2J5VmhLZEdzWEZ1TVJ1SzRNNEJVM3YzcVZJSTliNkoxZXZ3dlJ6eno5?=
+ =?utf-8?B?aU5XelVza2EzcXUrUW4rWGxrSUJLM0R4UFlmUE52bXFabUdLYWpRTnUyYTJ2?=
+ =?utf-8?B?d01oVlJZRUZWTkcxNE1KV1lBYWswRnZyY0RPZnZ2MTJ6WkM1Qzd5bVdXVitU?=
+ =?utf-8?B?cHBXWTBlb0JWdXJ5VTRuaW94ZUFOZjJiUzh3ZGVCSmZLNkY3N0QvRndrcVh4?=
+ =?utf-8?B?TlpsbmZYNzIxN2svNm9vd1p3dEk4VXA3TDBoNm1HcmFOelRjUm92UlVyZytD?=
+ =?utf-8?B?WkRTT1B0NXpCRUFvektKaEs2dlRFSHFNWjB4NTZGMG5zV2g2UVZEYzR1bXdZ?=
+ =?utf-8?B?SGR6MG1lc0NsOWZobG4xVkJoR1lobURYVHUyVENZK3ViMU9BSnkxdmVkLzFv?=
+ =?utf-8?B?ZGdUd29ubFh4WGJLdGtXTzBGNC9WTVdoQTNVaXRHSEtWcFZIM2trUzRXUFNt?=
+ =?utf-8?B?dm5MVHBXVGdJelZINFZlZWZ0ZnY1RElPU2h3R0N1Yk0veXo5aHV0Z1NZaGtU?=
+ =?utf-8?B?c3lGT3EvRHJSWGxJbStXYS9wNk5DSzFRdnBnQk13bWduNlg2RjV3SVhEYVFZ?=
+ =?utf-8?B?NXB2OUdST2l5bFE2bWdiODZtRWdzN2FGVTNtM3RpRUdnSjFHeTR1TnIrR0F2?=
+ =?utf-8?B?UDFwZ0x0dGtJc0ZTNTZudTA0YzFGM2V5aE53T3FMdlNDSnBSd3NsQ1FZcjVN?=
+ =?utf-8?B?Y2hVT1JuWHhSb1BDa2JPUDVGWlU4NmhoMk5CNnVnRDB4Q0x0OW1nOFA0aXBt?=
+ =?utf-8?B?TEQzeUZhMHcvZlBkTTd4Y0FVT3ViQ1dmbXpqU1JFMWVtaXk0aGdoUExFQnNu?=
+ =?utf-8?B?MWxCRTF6YmR0N3E1K3JWc25rOFhYNUZGRUlCaUVLN01DQmx0WmduSk1PcTBS?=
+ =?utf-8?B?YUlQcnptbjFCV0pRSmlrbzNEY1NFUTVMNzJCUzhtdWorY1pSMmFUZ0Z1eXlK?=
+ =?utf-8?B?cXl3cC8wMmhBQXNoWWNRYVV6SWJUZ1hTMmZNZ2VCdzF4ZldpNDY0SUlESmtt?=
+ =?utf-8?B?STNPRE90dUlQQURIZUtIK282WmhXV0F0c09uUjQvdlB1a1h0dHFDZmJycDJl?=
+ =?utf-8?B?b2JxQXFxclFyY0Z3SXJ5QTBpcDQyU0ZBUTNpbkNxaWtjaWE5Z2lpOUtsdGVL?=
+ =?utf-8?B?UVg0UzdEdXJEdzNNS0F5VlZ4MHZZcS9UWHhYWUFsL1VSYVpPMWNjYVQ3WU9l?=
+ =?utf-8?B?eHlCc1Bsdm91blpzRHFhQVFmTnQ5SEVMcnJFZVR4QmJWUkNMMllxY05UNCtL?=
+ =?utf-8?B?STh4cVlRdXRnREtkb0xVZUNJczJsNVpUclBrM3ZsSVBlTkQ1ODZkVk5kaXZ0?=
+ =?utf-8?B?eFE5YUgyTHZzKzUrVldLazlBaFlxdXFNTEJoQU43UnVzODl2RzdxdHVtQXk3?=
+ =?utf-8?B?WGhpL3lYSTZCZG1SM24zVmcvcXpEZ09icW80UExNVkF1MVNBQ3o2bFF3cEJB?=
+ =?utf-8?B?eHZqUUtDTHZqTTZqaEpFWjUzWGRkWTFEVmlvN2VNUjNnN2NCbytiZjRZM3kx?=
+ =?utf-8?Q?N8YE2jThduTaJ/qXICt2S3tETmV9D0mu?=
 X-Forefront-Antispam-Report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN0PR10MB5128.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(7053199007);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR10MB4320.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(7053199007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
- =?utf-8?B?b3ZiZEU5UnEwaTBpYS81N2RJbUhrS25wbjRPWXhRdnBxaXBjUVRKM0tNTEJL?=
- =?utf-8?B?QmlOcUs4aDdLL1BEaHNRakgxYU5oMlNJekFaS3phOFdEVENxZ2ZsMjJMOEF3?=
- =?utf-8?B?bzdNa0tHbG0rblFubGxld2FBRTlaYXduTWQ1ajVKQk1TMWFxUzVxeEk4bWVx?=
- =?utf-8?B?VVJBUmFtSVBYVFFRYnN2a25IMmRPR2NoYmFmMTZUNnFmOUorUTZnSElXWW5X?=
- =?utf-8?B?NmpXYU9wRUxDR0JscDBKV0RySDZjdzVoZEU3VGc3dTNSdFJxRWY4ellKdjht?=
- =?utf-8?B?RE9LRDE3YnpjQVV4eWlhQ1dPZTZDT1hXTmVxa2V6RDNnS0dMY1VCNkluTFZF?=
- =?utf-8?B?OXdJbTdmWks2RHBkRmpJVG00NXF3eXpjcHduaHNsSXdCSll4WmZNcldTKzNt?=
- =?utf-8?B?UTI1M05qQVJ6QUtjMFB1MnVwL09Za2NpMzUvK0dXVUd1OGVpSzJmZjY5NFFz?=
- =?utf-8?B?RlJvOUVEcGRVQjRNVnEzVHh6VHJNNUlGcmo4dzYyTTVGU0ZHZUxOemhablFu?=
- =?utf-8?B?SlB1TmtxNXpJdTByeUN1TXYwcWIrZXB0dlNVbW9qYlVHVXJ4bWxpNUozcThQ?=
- =?utf-8?B?VjRTekI5M1RTa2w3aGxYbk9INHR6ekFKckVNVHBCcmNrM25sYkdtYTgxNkZk?=
- =?utf-8?B?dHVQOUlyaitGeWlJaVhjOHFpUS9pZWVyWlVSTVFPUWcxaHZmMG9FbHVXUGpK?=
- =?utf-8?B?U1dyVjNmWXlnZ1c4REwwZmVQcTE3Q0hFM2YzMHJMUHUzbWkwTkVUQktNT0Fv?=
- =?utf-8?B?MmM2VytFMm5yQ2cyd2J0TnVqaWtKaTlWNFJUT2pnYVRWR3NHWnNnaWJ1VGtv?=
- =?utf-8?B?VlliMEo0OTdqNFFDYnYrVGFuSllRUFY0TzRnbnVBbWZhV25vS0JYaVJNQUJ6?=
- =?utf-8?B?cWx6TXllUVl3S1RCOEtnNGpyL0Q2ZnY5R3piNGxkWlJwaERVWVFObHRFUG5V?=
- =?utf-8?B?NVcwRDBEMFArZElIYXVRajZRTUZkSVF4YnVYNXUrQ3J3T0tSMVdOWEhrM1pK?=
- =?utf-8?B?RFh4VzVDMC9mQ3M0djA0ZytLWGlsbTZUbEpOek1mV3dxY0dkYmFWSTNrNlI5?=
- =?utf-8?B?OEJKNnVRSDFlUEpEMEJkWTZNMDhHZUQwWFB3eHlCUDV2ajluMG9pekMwcm16?=
- =?utf-8?B?aURNa0F1TnZId1dyemlXZ2RaOVhzTXQ3OStSUTNMRXpDa1BUelkzeHpNU3lq?=
- =?utf-8?B?MG5FY3k2NTFCM3EzdjZFQjkxYmQzVmxVdlB0MlowMmlpQmtZQnY1SmxIYkox?=
- =?utf-8?B?MU1XMkhMb2hIOHN6Y3p4QXlYYmlLQTd5SjZsZWl6MGRBRnJsUklNL21IZUF3?=
- =?utf-8?B?QmlGS1hTaG1MV2FnZnZqOU1idU11VkF4L09Vc3d3aUU5L1llR3h5VkJDa0pq?=
- =?utf-8?B?aFNubWg1TlpBM3JsRC9kdzQ3a0FRa2gvaVIzNlVyUUp5Q3M5VTZnMlBUTFBa?=
- =?utf-8?B?em9ERUFHSEIwdEwvK1BYRTh5MEY0b05GVTVUTFJpMFpvQVFqNDJqY1hCaVhH?=
- =?utf-8?B?MERpSVlpTWdTNEY4WjMxaUYrc0RHSXZXOCtNb0ZZSUNRbldzOTBDTjh0WjhS?=
- =?utf-8?B?S3hFN2h6b3NmMjZOSGpva0pGUjFtQ0Fza2tCTkl3aVJnY2R3ZWFwNy9qMTdK?=
- =?utf-8?B?aXlYeW1WTmwyckNEQWtqRHVhOTZnbTZrMWxWM0M5Vm9wa29jTU96N1ZIUUs1?=
- =?utf-8?B?UGVUTE1EZE12ODAxMTgrK2wzaHFJOVRoeUw5MjA5cTR1enFyVjFLKzlITGUy?=
- =?utf-8?B?ZDQzblVlVGtuL25xd1BhRHp2anVUV0hqdGRsb0dlUjF0bzJML2g2eGVEVGJv?=
- =?utf-8?B?eE4rWE1JMC94aGFjYW1EZ1h1U0hmTVEwZXlBcGF1WExGbXpHNlU3T1hEYkFQ?=
- =?utf-8?B?ZXpxUno5QU9aSDd5VitySXo3cjYwWkhVUWVvVnRScVhvUXdmbTZzRHkxYzF6?=
- =?utf-8?B?cWdkaURMNllPYWwzemVBRFFvazNoa29sWER3dzlTM0pGcCtNLzdRcVM3MmMy?=
- =?utf-8?B?ZG5udFZ6VkpZRUlJKyt1OHN2Rkg3Tm5GWUZpTmZWK096VkgxWVFZeW5rRVl0?=
- =?utf-8?B?TmV6L1FwOVgwSTRRNi9QS1dOWjgvUUU2QWRhTUhsa1FwOE5IT01qb2JRZUVo?=
- =?utf-8?Q?JM+iOE1c1ENthACnMA/x2abcJ?=
+	=?utf-8?B?NGtzemptTU90eTAvV3JUVWNVWUczQXROZE9DZ20vSWZ6aS9WKzViUHA2WDBE?=
+ =?utf-8?B?T0lwNGV1TWxJMGJqMWZtLzlPRGFBNHc5d0oreUd4VC96YmVqdThqR3lFTkJa?=
+ =?utf-8?B?QnM5MTY0OXBaSzMvZzdETnNnUk1DR2FSTUpzbTFxeUI5clZoR0dxZVovK2sy?=
+ =?utf-8?B?Q084RUVzem54VG1ZWmpPM0dpVk5BWndiWmdjTVEyeXU0NzBNSE9VNkppTDM4?=
+ =?utf-8?B?V2hOcDRVRVVmSlJXMnljcEVGaXNYdm1VZ3RJMy9Zb2ZKWVhtN0FGL0oxZndF?=
+ =?utf-8?B?SzJwSERXUTAyU0VCelNBRXYreXd2d3oyb1ZSL1ZSUXI2MHRNQUVhQkl6dlBq?=
+ =?utf-8?B?VUN5T0w0a3JzL24zTWl4Y2U2QlV0bStLS1BxUjRSb0M1OGpnUFdYeGw3VGVt?=
+ =?utf-8?B?emE2alBwWWZwd2s0WkhZekQwR0o0QWNKRFlMNXFEamNsakV0NS9ydXpSdUl5?=
+ =?utf-8?B?T1VNUXNDOG1EUTdIRnFWdzJRRDdyV1d4dXA1Ly8xNDdGTndpTDVmekM2aWl4?=
+ =?utf-8?B?Z1JCMzlWS0dpbGhBVThORmNuaXl1ek42SWxOVkpkUEZocC9QN2Q2aVV4SUxx?=
+ =?utf-8?B?enY0a3dDWW5kNFQ4WXkrc2Qvbm1UNFRRSHVsakRCSG9Gb2k3UWtVODhmNmtZ?=
+ =?utf-8?B?OGkveW84Ym1BTHRXdnM4RHRCdWx4SkhaZ3ZRS3hyMTBHVFowUW56Qzg2QXZR?=
+ =?utf-8?B?dmtHVmZudXRyWXpDL3M4U0RoQko0aW10UkwxTUtIM0ZURVRDaXMzd0J6TzYw?=
+ =?utf-8?B?UUpzYWRnRXdFN3V2ZzdlclA2K3VUVmNFaXhVTGllUUwzNkVkY2ZaUUYrNEJM?=
+ =?utf-8?B?L1krQk52V2JLdjVwaGdYell2N05scFZXN2ZEZ1o1Z21XSlRRb282OTIwY0dF?=
+ =?utf-8?B?NnRXSTJRYmZRa1IrYWk1UEVrYzJBcC8rcHpPK3BWazNCRWRMS2VrUURHekR1?=
+ =?utf-8?B?MVhZbEE2eFE5OTlSSUhEcHhZUFp5TUhqcmZKYVVlQXNubG40RWVpekZ1MGtK?=
+ =?utf-8?B?VlQxWCtrR1FPWWJ6UFovSXo4K2U3dUNRQ2NXK01kWGVhMklUdEM0aFdsN0Zk?=
+ =?utf-8?B?TWtLLzdHWkJkNXEva2hqcUJSRnBONEJJZGxvYmhIVCs5S0VHV1JITC9WOTBL?=
+ =?utf-8?B?Rm1oZWxFVEZPRVp0Tm4yY0hHSE9JTmQxbDNMZzVmUnM2UTFOTmZ4ZDRDOGRR?=
+ =?utf-8?B?WDBkVkZYRG5XUzhWSkg0V0Y2blMyNmZMZUlDUUNxdWNmTWlUTEZYaHpLY3JU?=
+ =?utf-8?B?Lzl6ejFSeE9mWVAwMU8xODlINWlVUmE4OHVBL2J3VUhUZDVBTEVaM3E3b1cv?=
+ =?utf-8?B?T3pzc0h2UjhNZHl4akdNT2lWUTRoTXVyTlBKd1BydEhBQk8xU1RTUGlHQm1v?=
+ =?utf-8?B?VDN6N1NoajJuR0hPcjJjQVF1c0RaaHpSaTFENElOOHNpa0ZySDZGdDFmOUlK?=
+ =?utf-8?B?SEQ5TVJtRStyb1NLakRDS0kxOFZQRmhiYVlwQWFIYWFkRWpTU2hXK0ZsOVl6?=
+ =?utf-8?B?eWVOS2xlSGQ0YTFsK1h0cWdEc1RuRDU3MkRlcXlRYWp3Q05wbitVWHRyRlZS?=
+ =?utf-8?B?SmdGRG1sNjFIUmJHaVBlWU9Xd3BYR0N1bFkzc3RqNEw3TU80VVVZbE4rSWxm?=
+ =?utf-8?B?TWJxYWs3aXFGOGFXb2ljdWRta0RWRXZxYWJtbVQvbGFhektwazN3NjVIQ2Iv?=
+ =?utf-8?B?SlFjNlgvMlMvUUtSbjVaUHlLa09oMTRTUnVNMzFMZDRmSzZLMWxOL3g2WTZP?=
+ =?utf-8?B?ZVF1ZlpnT1BSM0h4czBIQWRqT0FuRTJvZUUyelhlSGkvNVA3Tjl2Q2JCbFJZ?=
+ =?utf-8?B?RE9NM0c3Nlo4UGJwOElRdE01dEtSNmRpWHpsSHYzTjNkYXIwZVZZN3lEMnR3?=
+ =?utf-8?B?TEtpRE1STEJXa21NdzBESTNFaE1NaGNXUElzUDZGRXRFTjlYOFJ0ek43eFlV?=
+ =?utf-8?B?SE1TbW9Xd3NncVhaWUFGYWxoWVJWWVV2N3RQR09qMkl1T2xoU0lNSDF0UTF2?=
+ =?utf-8?B?TmRtV3M2dzJHWHJsSzN3Y1NVZHBnaGdVYXlQTHk5MTZ2NWRBZ1FxOWhRZlhM?=
+ =?utf-8?B?YXo4ZUQvbUE0bnN0cnFad0dkOEhvUmJkcUI2Q3FIZEk4YmxGeUhxOEpiaVJx?=
+ =?utf-8?B?UUF3TGZCcHhoNU5MMHVDN3VJNzZ0QU5tbkdKbGMxeUZXd1JtTjZvVGlUekVk?=
+ =?utf-8?B?bkE9PQ==?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	NN5IQMxB7F0rhCiduLgMvoqT8XHuxuk5J9aLxAnY2UprnT6qNJP1Qnl7ArTlLeVDLtEUHmvMB+01ACN/flJDSw2C4NPBJ0rGrlC3T/19yqsFQA1KgLD1zg/1pH/RMpBbKclU9BuiyPgTB6SsYhSN/M4AIGPZ+WfwDBZd7TkkEGuIBOH8/ciLDNrBqyF3OwbrwFZ55lJ2WaOUnqvA2bdlf6OdWXuOEAKaYPxui7u49rjcmACoQrnJQDKauQfhBq+i+5dtFWNIQwYqnGlvXi5FNxi7AEvMxIJsqtJpcX3Au+ORKJntHnTo/OKwrFec4SvfDlazNKUNDRnDaOMHFeMbiD5JdC7o9C6RnQCGOa5W/+kAIOD0MqaKx0Dzlyci1hpAlCape70jBb0khl+USxE0HfiuH1L81YIrB3+3GdXBF8Bk5sf9xiOVw30ufsj7YLv90idMcaFZw44tXSKgGcIu+tXkGp81HObHLGZ0IqNIyIHo47/j0NelYHhfCNQS5+s5lvbY1ee68eg4UQ23/G4L1/vkliat3OlUvocNdMPXXrsXv1xPYRVKIo583xmwO0OoGH/vKe6Zp8aKG9m7SM1Q5mctbwXN4XtmBfm0j0IhuPw=
+	9EsMn6lJ3ZO1bNQNyCtYMDIoUlbZ4Oz2SvL1ZFpN9KknHfkpehhnCK3bwv2ViSefIkYpSws3evYtr8ZwmdQ6J+8T9vL3YM2GEBV6tMFLZFZyaBDDYbTwXvD8LewRYXxGZjW0KZX/FqNC2QVEvT1ITB9fA4UCBe9QIPPXp7y2luUgPMdkP5AnEpSqFhQ+9KRqpxVIwrv8AwfY70kKJtkcCd3mlyX4t0oXtYwQPfv8a1hxqBhh+sgxlKpdP1HSECegTZldScLOnk+LRH9TPQhXly70vJRgJ32xoE00s45Is9/r9doCw8UCHrWB25BmWKVAWz+65/BrYGcWiF/o/XTaEoki/Pb+zkBfSv1lbo90mxmRQhTfQBsFlvHfQHY0YxnEbAw+qJMXQRyPNFU8O0rnSLOPIhZPEGNgZF7GebR7/3UhMHMuDJ4DeLCCPWM1uCzQz7Cv0kueVHaEoe+sakc5v+aJdVFvcQVyTkZMAr9uxkIYK5eKYBxr3e4kIwkSVUESlge4JaIK1jE3qpOfBvgwOhSR2Hqd4OLA+LL4kHdzdHSP2PdNaRAK56ELbB1PQkfIfhylQ6Ab/EyKCvZvuE9WgLgkmoJYEDRE5QJqLsrqWuY=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cfa954cc-2669-4e93-4030-08de17b7622e
-X-MS-Exchange-CrossTenant-AuthSource: BN0PR10MB5128.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 99f64583-e46e-41ad-5673-08de17bb9d07
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR10MB4320.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2025 13:22:32.8865
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2025 13:52:49.7546
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Rn5kLAm4wzKralDXfYe7halVEWElOEA/oL3uJDv/z/C6SAhVlpe/0ruF6K1dN+T2JT9+eGpipExlA511rR1clw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM3PPF334FD9217
+X-MS-Exchange-CrossTenant-UserPrincipalName: cmukyqBM6+VrhOFC9oADXaZ+APdHLIAfnnt+h2bs7+yUf636HgmzHHZkr0fAkC0FHHiSewMwWKqbDv01T4zGZg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW6PR10MB7552
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
  definitions=2025-10-30_04,2025-10-29_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0 spamscore=0
- adultscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0 mlxscore=0
+ adultscore=0 mlxlogscore=999 suspectscore=0 spamscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2510240000
- definitions=main-2510300108
-X-Proofpoint-ORIG-GUID: C2PTMJYJHxeHL7vYc-sMK5DpOuyeNzYr
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDMwMDA5MyBTYWx0ZWRfX/Tzbzkv08FHo
- Zw/TPmGvsKyIPvQ58VXUP9vrQ1mP8247620y2uy1HiJdL9TAZSi5/1eHslG/c/PBmKxyVvy5dwL
- WZPe8fSaxKHbQxWK62CVbEGC5YFSZG9uFAyDQzA2Vo8UkTJqKRNK6kvhvQqlkhRBaxOSJSUKT8J
- WarypjQ8FLOSFT9oCLBJzVHSE7p6mksF4HJm6Zty338fOLLVEUdXGU9pqpSas2Z73VH8Im8Jvep
- TTMwBVBRnrkGGR8UtwyPedNm/arknTWSSOZiFYlmBkTic7u2b6NRJ5wfbVkvj+WFkxHYcaYHJoG
- dsbij48rvig5P73FMLN6u4jrC5rcgpBycgBJW9gHEU3686QQ0OoEvtXj8+oz4UFfqj5ApKTiNQw
- XYBrv5TTESlEejW36kxeDGeiwFdDU4d3gS6J8QYgmtxd0s4zMdg=
-X-Proofpoint-GUID: C2PTMJYJHxeHL7vYc-sMK5DpOuyeNzYr
-X-Authority-Analysis: v=2.4 cv=YaywJgRf c=1 sm=1 tr=0 ts=690366a0 b=1 cx=c_pps
- a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17
+ definitions=main-2510300112
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDMwMDExMCBTYWx0ZWRfX2CiAB7oo2sdX
+ xi8X+9dUPGbuUz9ZetX9+Lzs/bK+Dvll3zuRQ1d9dX+CcmjzDm0DazUGBa4HgbUwgGaxVw9qy/z
+ PzytLRl6oAJYoJSsQ1PpKB1klZNq5ODadXs2F7ySgtWIMmclUlrusE3Fg+oaElqIEQiWrP7FraW
+ 2f1s+bUNeDA4rXj0qc1YAQw6nErrtDwAKBwSxvVpXPTQ6pKjhAz1TKGqDNmrjQm20UoMRRdI+Jy
+ JRRAPK17dHt4ozde4Pz+Vo3ptlAaTdrtD0oIy1Ny+j4iC5pjEw0WWoOjbfF7XuBQ5ZQFGFbWOAE
+ pTgVCsXREC1a6k2VBLdgIUy7K6lF71wTWG1N7dPZZY04h1SCYIFT5M087QJn9RijwMj51JKWUes
+ +1kvrnXDXhHR+koejvV8aWTWFJJbdw==
+X-Proofpoint-ORIG-GUID: DfCyfF4vCnvo_4p0QhmmhgiZvDzqgKJr
+X-Proofpoint-GUID: DfCyfF4vCnvo_4p0QhmmhgiZvDzqgKJr
+X-Authority-Analysis: v=2.4 cv=bf9mkePB c=1 sm=1 tr=0 ts=69036db6 cx=c_pps
+ a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
  a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
  a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
  a=x6icFKpwvdMA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=pGLkceISAAAA:8 a=yPCof4ZbAAAA:8 a=tPsLzgmzpo3tGgPY_jkA:9 a=QEXdDO2ut3YA:10
- cc=ntf awl=host:12124
+ a=VwQbUJbxAAAA:8 a=1T8gf0cEKnAM2QzuOSgA:9 a=QEXdDO2ut3YA:10
+ a=cPQSjfK2_nFv0Q5t_7PE:22
 
-On 10/29/25 7:31 PM, NeilBrown wrote:
-> From: NeilBrown <neil@brown.name>
+On 29/10/2025 18:11, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> start_renaming() combines name lookup and locking to prepare for rename.
-> It is used when two names need to be looked up as in nfsd and overlayfs -
-> cases where one or both dentries are already available will be handled
-> separately.
+> With the 5 Oct 2025 release of fstests, generic/521 fails for me on
+> regular (aka non-block-atomic-writes) storage:
 > 
-> __start_renaming() avoids the inode_permission check and hash
-> calculation and is suitable after filename_parentat() in do_renameat2().
-> It subsumes quite a bit of code from that function.
+> QA output created by 521
+> dowrite: write: Input/output error
+> LOG DUMP (8553 total operations):
+> 1(  1 mod 256): SKIPPED (no operation)
+> 2(  2 mod 256): WRITE    0x7e000 thru 0x8dfff	(0x10000 bytes) HOLE
+> 3(  3 mod 256): READ     0x69000 thru 0x79fff	(0x11000 bytes)
+> 4(  4 mod 256): FALLOC   0x53c38 thru 0x5e853	(0xac1b bytes) INTERIOR
+> 5(  5 mod 256): COPY 0x55000 thru 0x59fff	(0x5000 bytes) to 0x25000 thru 0x29fff
+> 6(  6 mod 256): WRITE    0x74000 thru 0x88fff	(0x15000 bytes)
+> 7(  7 mod 256): ZERO     0xedb1 thru 0x11693	(0x28e3 bytes)
+> <snip>
 > 
-> start_renaming() does calculate the hash and check X permission and is
-> suitable elsewhere:
-> - nfsd_rename()
-> - ovl_rename()
+> with a warning in dmesg from iomap about XFS trying to give it a
+> delalloc mapping for a directio write.  Fix the software atomic write
+> iomap_begin code to convert the reservation into a written mapping.
+> This doesn't fix the data corruption problems reported by generic/760,
+> but it's a start.
+
+I was seeing the corruption and, as expected, unfortunately this does 
+not fix the issue. Indeed, I don't even touch the new codepath when 
+testing (for that corruption).
+
+As for that corruption, I am seeing the same behaviour as Ojaswin 
+described. The failure is in a read operation.
+
+It seems to be a special combo of atomic write, write, and then read 
+which reliably shows the issue. The regular write seems to write to the 
+cow fork, so I am guessing that the atomic write does not leave it in 
+proper state.
+
+I do notice for the atomic write that we are writing (calling 
+xfs_atomic_write_cow_iomap_begin() -> xfs_bmapi_write()) for more blocks 
+that are required for the atomic write. The regular write overwrites 
+these blocks, and the read is corrupted in the blocks just after the 
+atomic write. It's as if the blocks just after atomic write are not left 
+in the proper state.
+
 > 
-> In ovl, ovl_do_rename_rd() is factored out of ovl_do_rename(), which
-> itself will be gone by the end of the series.
-> 
-> Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-> Signed-off-by: NeilBrown <neil@brown.name>
-> 
-> --
-> Changes since v3:
->  - added missig dput() in ovl_rename when "whiteout" is not-NULL.
-> 
-> Changes since v2:
->  - in __start_renaming() some label have been renamed, and err
->    is always set before a "goto out_foo" rather than passing the
->    error in a dentry*.
->  - ovl_do_rename() changed to call the new ovl_do_rename_rd() rather
->    than keeping duplicate code
->  - code around ovl_cleanup() call in ovl_rename() restructured.
+> Cc: <stable@vger.kernel.org> # v6.16
+> Fixes: bd1d2c21d5d249 ("xfs: add xfs_atomic_write_cow_iomap_begin()")
+> Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 > ---
->  fs/namei.c               | 197 ++++++++++++++++++++++++++++-----------
->  fs/nfsd/vfs.c            |  73 +++++----------
->  fs/overlayfs/dir.c       |  74 +++++++--------
->  fs/overlayfs/overlayfs.h |  23 +++--
->  include/linux/namei.h    |   3 +
->  5 files changed, 218 insertions(+), 152 deletions(-)
+>   fs/xfs/xfs_iomap.c |   21 +++++++++++++++++++--
+>   1 file changed, 19 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/namei.c b/fs/namei.c
-> index 04d2819bd351..0ee0a110b088 100644
-> --- a/fs/namei.c
-> +++ b/fs/namei.c
-> @@ -3667,6 +3667,129 @@ void unlock_rename(struct dentry *p1, struct dentry *p2)
->  }
->  EXPORT_SYMBOL(unlock_rename);
->  
-> +/**
-> + * __start_renaming - lookup and lock names for rename
-> + * @rd:           rename data containing parent and flags, and
-> + *                for receiving found dentries
-> + * @lookup_flags: extra flags to pass to ->lookup (e.g. LOOKUP_REVAL,
-> + *                LOOKUP_NO_SYMLINKS etc).
-> + * @old_last:     name of object in @rd.old_parent
-> + * @new_last:     name of object in @rd.new_parent
-> + *
-> + * Look up two names and ensure locks are in place for
-> + * rename.
-> + *
-> + * On success the found dentries are stored in @rd.old_dentry,
-> + * @rd.new_dentry.  These references and the lock are dropped by
-> + * end_renaming().
-> + *
-> + * The passed in qstrs must have the hash calculated, and no permission
-> + * checking is performed.
-> + *
-> + * Returns: zero or an error.
-> + */
-> +static int
-> +__start_renaming(struct renamedata *rd, int lookup_flags,
-> +		 struct qstr *old_last, struct qstr *new_last)
-> +{
-> +	struct dentry *trap;
-> +	struct dentry *d1, *d2;
-> +	int target_flags = LOOKUP_RENAME_TARGET | LOOKUP_CREATE;
-> +	int err;
-> +
-> +	if (rd->flags & RENAME_EXCHANGE)
-> +		target_flags = 0;
-> +	if (rd->flags & RENAME_NOREPLACE)
-> +		target_flags |= LOOKUP_EXCL;
-> +
-> +	trap = lock_rename(rd->old_parent, rd->new_parent);
-> +	if (IS_ERR(trap))
-> +		return PTR_ERR(trap);
-> +
-> +	d1 = lookup_one_qstr_excl(old_last, rd->old_parent,
-> +				  lookup_flags);
-> +	err = PTR_ERR(d1);
-> +	if (IS_ERR(d1))
-> +		goto out_unlock;
-> +
-> +	d2 = lookup_one_qstr_excl(new_last, rd->new_parent,
-> +				  lookup_flags | target_flags);
-> +	err = PTR_ERR(d2);
-> +	if (IS_ERR(d2))
-> +		goto out_dput_d1;
-> +
-> +	if (d1 == trap) {
-> +		/* source is an ancestor of target */
-> +		err = -EINVAL;
-> +		goto out_dput_d2;
-> +	}
-> +
-> +	if (d2 == trap) {
-> +		/* target is an ancestor of source */
-> +		if (rd->flags & RENAME_EXCHANGE)
-> +			err = -EINVAL;
-> +		else
-> +			err = -ENOTEMPTY;
-> +		goto out_dput_d2;
-> +	}
-> +
-> +	rd->old_dentry = d1;
-> +	rd->new_dentry = d2;
-> +	return 0;
-> +
-> +out_dput_d2:
-> +	dput(d2);
-> +out_dput_d1:
-> +	dput(d1);
-> +out_unlock:
-> +	unlock_rename(rd->old_parent, rd->new_parent);
-> +	return err;
-> +}
-> +
-> +/**
-> + * start_renaming - lookup and lock names for rename with permission checking
-> + * @rd:           rename data containing parent and flags, and
-> + *                for receiving found dentries
-> + * @lookup_flags: extra flags to pass to ->lookup (e.g. LOOKUP_REVAL,
-> + *                LOOKUP_NO_SYMLINKS etc).
-> + * @old_last:     name of object in @rd.old_parent
-> + * @new_last:     name of object in @rd.new_parent
-> + *
-> + * Look up two names and ensure locks are in place for
-> + * rename.
-> + *
-> + * On success the found dentries are stored in @rd.old_dentry,
-> + * @rd.new_dentry.  These references and the lock are dropped by
-> + * end_renaming().
-> + *
-> + * The passed in qstrs need not have the hash calculated, and basic
-> + * eXecute permission checking is performed against @rd.mnt_idmap.
-> + *
-> + * Returns: zero or an error.
-> + */
-> +int start_renaming(struct renamedata *rd, int lookup_flags,
-> +		   struct qstr *old_last, struct qstr *new_last)
-> +{
-> +	int err;
-> +
-> +	err = lookup_one_common(rd->mnt_idmap, old_last, rd->old_parent);
-> +	if (err)
-> +		return err;
-> +	err = lookup_one_common(rd->mnt_idmap, new_last, rd->new_parent);
-> +	if (err)
-> +		return err;
-> +	return __start_renaming(rd, lookup_flags, old_last, new_last);
-> +}
-> +EXPORT_SYMBOL(start_renaming);
-> +
-> +void end_renaming(struct renamedata *rd)
-> +{
-> +	unlock_rename(rd->old_parent, rd->new_parent);
-> +	dput(rd->old_dentry);
-> +	dput(rd->new_dentry);
-> +}
-> +EXPORT_SYMBOL(end_renaming);
-> +
->  /**
->   * vfs_prepare_mode - prepare the mode to be used for a new inode
->   * @idmap:	idmap of the mount the inode was found from
-> @@ -5504,14 +5627,11 @@ int do_renameat2(int olddfd, struct filename *from, int newdfd,
->  		 struct filename *to, unsigned int flags)
->  {
->  	struct renamedata rd;
-> -	struct dentry *old_dentry, *new_dentry;
-> -	struct dentry *trap;
->  	struct path old_path, new_path;
->  	struct qstr old_last, new_last;
->  	int old_type, new_type;
->  	struct inode *delegated_inode = NULL;
-> -	unsigned int lookup_flags = 0, target_flags =
-> -		LOOKUP_RENAME_TARGET | LOOKUP_CREATE;
-> +	unsigned int lookup_flags = 0;
->  	bool should_retry = false;
->  	int error = -EINVAL;
->  
-> @@ -5522,11 +5642,6 @@ int do_renameat2(int olddfd, struct filename *from, int newdfd,
->  	    (flags & RENAME_EXCHANGE))
->  		goto put_names;
->  
-> -	if (flags & RENAME_EXCHANGE)
-> -		target_flags = 0;
-> -	if (flags & RENAME_NOREPLACE)
-> -		target_flags |= LOOKUP_EXCL;
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index d3f6e3e42a1191..e1da06b157cf94 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -1130,7 +1130,7 @@ xfs_atomic_write_cow_iomap_begin(
+>   		return -EAGAIN;
+>   
+>   	trace_xfs_iomap_atomic_write_cow(ip, offset, length);
 > -
->  retry:
->  	error = filename_parentat(olddfd, from, lookup_flags, &old_path,
->  				  &old_last, &old_type);
-> @@ -5556,66 +5671,40 @@ int do_renameat2(int olddfd, struct filename *from, int newdfd,
->  		goto exit2;
->  
->  retry_deleg:
-> -	trap = lock_rename(new_path.dentry, old_path.dentry);
-> -	if (IS_ERR(trap)) {
-> -		error = PTR_ERR(trap);
-> +	rd.old_parent	   = old_path.dentry;
-> +	rd.mnt_idmap	   = mnt_idmap(old_path.mnt);
-> +	rd.new_parent	   = new_path.dentry;
-> +	rd.delegated_inode = &delegated_inode;
-> +	rd.flags	   = flags;
-> +
-> +	error = __start_renaming(&rd, lookup_flags, &old_last, &new_last);
+> +retry:
+>   	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>   
+>   	if (!ip->i_cowfp) {
+> @@ -1141,6 +1141,8 @@ xfs_atomic_write_cow_iomap_begin(
+>   	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap))
+>   		cmap.br_startoff = end_fsb;
+>   	if (cmap.br_startoff <= offset_fsb) {
+> +		if (isnullstartblock(cmap.br_startblock))
+> +			goto convert;
+>   		xfs_trim_extent(&cmap, offset_fsb, count_fsb);
+>   		goto found;
+>   	}
+> @@ -1169,8 +1171,10 @@ xfs_atomic_write_cow_iomap_begin(
+>   	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap))
+>   		cmap.br_startoff = end_fsb;
+>   	if (cmap.br_startoff <= offset_fsb) {
+> -		xfs_trim_extent(&cmap, offset_fsb, count_fsb);
+>   		xfs_trans_cancel(tp);
+> +		if (isnullstartblock(cmap.br_startblock))
+> +			goto convert;
+> +		xfs_trim_extent(&cmap, offset_fsb, count_fsb);
+>   		goto found;
+>   	}
+>   
+> @@ -1210,6 +1214,19 @@ xfs_atomic_write_cow_iomap_begin(
+>   	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>   	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, IOMAP_F_SHARED, seq);
+>   
+> +convert:
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	error = xfs_bmapi_convert_delalloc(ip, XFS_COW_FORK, offset, iomap,
+> +			NULL);
 > +	if (error)
->  		goto exit_lock_rename;
-> -	}
->  
-> -	old_dentry = lookup_one_qstr_excl(&old_last, old_path.dentry,
-> -					  lookup_flags);
-> -	error = PTR_ERR(old_dentry);
-> -	if (IS_ERR(old_dentry))
-> -		goto exit3;
-> -	new_dentry = lookup_one_qstr_excl(&new_last, new_path.dentry,
-> -					  lookup_flags | target_flags);
-> -	error = PTR_ERR(new_dentry);
-> -	if (IS_ERR(new_dentry))
-> -		goto exit4;
->  	if (flags & RENAME_EXCHANGE) {
-> -		if (!d_is_dir(new_dentry)) {
-> +		if (!d_is_dir(rd.new_dentry)) {
->  			error = -ENOTDIR;
->  			if (new_last.name[new_last.len])
-> -				goto exit5;
-> +				goto exit_unlock;
->  		}
->  	}
->  	/* unless the source is a directory trailing slashes give -ENOTDIR */
-> -	if (!d_is_dir(old_dentry)) {
-> +	if (!d_is_dir(rd.old_dentry)) {
->  		error = -ENOTDIR;
->  		if (old_last.name[old_last.len])
-> -			goto exit5;
-> +			goto exit_unlock;
->  		if (!(flags & RENAME_EXCHANGE) && new_last.name[new_last.len])
-> -			goto exit5;
-> -	}
-> -	/* source should not be ancestor of target */
-> -	error = -EINVAL;
-> -	if (old_dentry == trap)
-> -		goto exit5;
-> -	/* target should not be an ancestor of source */
-> -	if (!(flags & RENAME_EXCHANGE))
-> -		error = -ENOTEMPTY;
-> -	if (new_dentry == trap)
-> -		goto exit5;
-> +			goto exit_unlock;
-> +	}
->  
-> -	error = security_path_rename(&old_path, old_dentry,
-> -				     &new_path, new_dentry, flags);
-> +	error = security_path_rename(&old_path, rd.old_dentry,
-> +				     &new_path, rd.new_dentry, flags);
->  	if (error)
-> -		goto exit5;
-> +		goto exit_unlock;
->  
-> -	rd.old_parent	   = old_path.dentry;
-> -	rd.old_dentry	   = old_dentry;
-> -	rd.mnt_idmap	   = mnt_idmap(old_path.mnt);
-> -	rd.new_parent	   = new_path.dentry;
-> -	rd.new_dentry	   = new_dentry;
-> -	rd.delegated_inode = &delegated_inode;
-> -	rd.flags	   = flags;
->  	error = vfs_rename(&rd);
-> -exit5:
-> -	dput(new_dentry);
-> -exit4:
-> -	dput(old_dentry);
-> -exit3:
-> -	unlock_rename(new_path.dentry, old_path.dentry);
-> +exit_unlock:
-> +	end_renaming(&rd);
->  exit_lock_rename:
->  	if (delegated_inode) {
->  		error = break_deleg_wait(&delegated_inode);
-> diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
-> index cd64ffe12e0b..62109885d4db 100644
-> --- a/fs/nfsd/vfs.c
-> +++ b/fs/nfsd/vfs.c
-> @@ -1885,11 +1885,12 @@ __be32
->  nfsd_rename(struct svc_rqst *rqstp, struct svc_fh *ffhp, char *fname, int flen,
->  			    struct svc_fh *tfhp, char *tname, int tlen)
->  {
-> -	struct dentry	*fdentry, *tdentry, *odentry, *ndentry, *trap;
-> +	struct dentry	*fdentry, *tdentry;
->  	int		type = S_IFDIR;
-> +	struct renamedata rd = {};
->  	__be32		err;
->  	int		host_err;
-> -	bool		close_cached = false;
-> +	struct dentry	*close_cached;
->  
->  	trace_nfsd_vfs_rename(rqstp, ffhp, tfhp, fname, flen, tname, tlen);
->  
-> @@ -1915,15 +1916,22 @@ nfsd_rename(struct svc_rqst *rqstp, struct svc_fh *ffhp, char *fname, int flen,
->  		goto out;
->  
->  retry:
-> +	close_cached = NULL;
->  	host_err = fh_want_write(ffhp);
->  	if (host_err) {
->  		err = nfserrno(host_err);
->  		goto out;
->  	}
->  
-> -	trap = lock_rename(tdentry, fdentry);
-> -	if (IS_ERR(trap)) {
-> -		err = nfserr_xdev;
-> +	rd.mnt_idmap	= &nop_mnt_idmap;
-> +	rd.old_parent	= fdentry;
-> +	rd.new_parent	= tdentry;
+> +		return error;
 > +
-> +	host_err = start_renaming(&rd, 0, &QSTR_LEN(fname, flen),
-> +				  &QSTR_LEN(tname, tlen));
-> +
-> +	if (host_err) {
-> +		err = nfserrno(host_err);
->  		goto out_want_write;
->  	}
->  	err = fh_fill_pre_attrs(ffhp);
-> @@ -1933,48 +1941,23 @@ nfsd_rename(struct svc_rqst *rqstp, struct svc_fh *ffhp, char *fname, int flen,
->  	if (err != nfs_ok)
->  		goto out_unlock;
->  
-> -	odentry = lookup_one(&nop_mnt_idmap, &QSTR_LEN(fname, flen), fdentry);
-> -	host_err = PTR_ERR(odentry);
-> -	if (IS_ERR(odentry))
-> -		goto out_nfserr;
-> +	type = d_inode(rd.old_dentry)->i_mode & S_IFMT;
-> +
-> +	if (d_inode(rd.new_dentry))
-> +		type = d_inode(rd.new_dentry)->i_mode & S_IFMT;
->  
-> -	host_err = -ENOENT;
-> -	if (d_really_is_negative(odentry))
-> -		goto out_dput_old;
-> -	host_err = -EINVAL;
-> -	if (odentry == trap)
-> -		goto out_dput_old;
-> -	type = d_inode(odentry)->i_mode & S_IFMT;
-> -
-> -	ndentry = lookup_one(&nop_mnt_idmap, &QSTR_LEN(tname, tlen), tdentry);
-> -	host_err = PTR_ERR(ndentry);
-> -	if (IS_ERR(ndentry))
-> -		goto out_dput_old;
-> -	if (d_inode(ndentry))
-> -		type = d_inode(ndentry)->i_mode & S_IFMT;
-> -	host_err = -ENOTEMPTY;
-> -	if (ndentry == trap)
-> -		goto out_dput_new;
-> -
-> -	if ((ndentry->d_sb->s_export_op->flags & EXPORT_OP_CLOSE_BEFORE_UNLINK) &&
-> -	    nfsd_has_cached_files(ndentry)) {
-> -		close_cached = true;
-> -		goto out_dput_old;
-> +	if ((rd.new_dentry->d_sb->s_export_op->flags & EXPORT_OP_CLOSE_BEFORE_UNLINK) &&
-> +	    nfsd_has_cached_files(rd.new_dentry)) {
-> +		close_cached = dget(rd.new_dentry);
-> +		goto out_unlock;
->  	} else {
-> -		struct renamedata rd = {
-> -			.mnt_idmap	= &nop_mnt_idmap,
-> -			.old_parent	= fdentry,
-> -			.old_dentry	= odentry,
-> -			.new_parent	= tdentry,
-> -			.new_dentry	= ndentry,
-> -		};
->  		int retries;
->  
->  		for (retries = 1;;) {
->  			host_err = vfs_rename(&rd);
->  			if (host_err != -EAGAIN || !retries--)
->  				break;
-> -			if (!nfsd_wait_for_delegreturn(rqstp, d_inode(odentry)))
-> +			if (!nfsd_wait_for_delegreturn(rqstp, d_inode(rd.old_dentry)))
->  				break;
->  		}
->  		if (!host_err) {
-> @@ -1983,11 +1966,6 @@ nfsd_rename(struct svc_rqst *rqstp, struct svc_fh *ffhp, char *fname, int flen,
->  				host_err = commit_metadata(ffhp);
->  		}
->  	}
-> - out_dput_new:
-> -	dput(ndentry);
-> - out_dput_old:
-> -	dput(odentry);
-> - out_nfserr:
->  	if (host_err == -EBUSY) {
->  		/*
->  		 * See RFC 8881 Section 18.26.4 para 1-3: NFSv4 RENAME
-> @@ -2006,7 +1984,7 @@ nfsd_rename(struct svc_rqst *rqstp, struct svc_fh *ffhp, char *fname, int flen,
->  		fh_fill_post_attrs(tfhp);
->  	}
->  out_unlock:
-> -	unlock_rename(tdentry, fdentry);
-> +	end_renaming(&rd);
->  out_want_write:
->  	fh_drop_write(ffhp);
->  
-> @@ -2017,9 +1995,8 @@ nfsd_rename(struct svc_rqst *rqstp, struct svc_fh *ffhp, char *fname, int flen,
->  	 * until this point and then reattempt the whole shebang.
->  	 */
->  	if (close_cached) {
-> -		close_cached = false;
-> -		nfsd_close_cached_files(ndentry);
-> -		dput(ndentry);
-> +		nfsd_close_cached_files(close_cached);
-> +		dput(close_cached);
->  		goto retry;
->  	}
->  out:
-> diff --git a/fs/overlayfs/dir.c b/fs/overlayfs/dir.c
-> index c8d0885ee5e0..0f2c2da68433 100644
-> --- a/fs/overlayfs/dir.c
-> +++ b/fs/overlayfs/dir.c
-> @@ -1124,9 +1124,7 @@ static int ovl_rename(struct mnt_idmap *idmap, struct inode *olddir,
->  	int err;
->  	struct dentry *old_upperdir;
->  	struct dentry *new_upperdir;
-> -	struct dentry *olddentry = NULL;
-> -	struct dentry *newdentry = NULL;
-> -	struct dentry *trap, *de;
-> +	struct renamedata rd = {};
->  	bool old_opaque;
->  	bool new_opaque;
->  	bool cleanup_whiteout = false;
-> @@ -1136,6 +1134,7 @@ static int ovl_rename(struct mnt_idmap *idmap, struct inode *olddir,
->  	bool new_is_dir = d_is_dir(new);
->  	bool samedir = olddir == newdir;
->  	struct dentry *opaquedir = NULL;
-> +	struct dentry *whiteout = NULL;
->  	const struct cred *old_cred = NULL;
->  	struct ovl_fs *ofs = OVL_FS(old->d_sb);
->  	LIST_HEAD(list);
-> @@ -1233,29 +1232,21 @@ static int ovl_rename(struct mnt_idmap *idmap, struct inode *olddir,
->  		}
->  	}
->  
-> -	trap = lock_rename(new_upperdir, old_upperdir);
-> -	if (IS_ERR(trap)) {
-> -		err = PTR_ERR(trap);
-> -		goto out_revert_creds;
-> -	}
-> +	rd.mnt_idmap = ovl_upper_mnt_idmap(ofs);
-> +	rd.old_parent = old_upperdir;
-> +	rd.new_parent = new_upperdir;
-> +	rd.flags = flags;
->  
-> -	de = ovl_lookup_upper(ofs, old->d_name.name, old_upperdir,
-> -			      old->d_name.len);
-> -	err = PTR_ERR(de);
-> -	if (IS_ERR(de))
-> -		goto out_unlock;
-> -	olddentry = de;
-> +	err = start_renaming(&rd, 0,
-> +			     &QSTR_LEN(old->d_name.name, old->d_name.len),
-> +			     &QSTR_LEN(new->d_name.name, new->d_name.len));
->  
-> -	err = -ESTALE;
-> -	if (!ovl_matches_upper(old, olddentry))
-> -		goto out_unlock;
-> +	if (err)
-> +		goto out_revert_creds;
->  
-> -	de = ovl_lookup_upper(ofs, new->d_name.name, new_upperdir,
-> -			      new->d_name.len);
-> -	err = PTR_ERR(de);
-> -	if (IS_ERR(de))
-> +	err = -ESTALE;
-> +	if (!ovl_matches_upper(old, rd.old_dentry))
->  		goto out_unlock;
-> -	newdentry = de;
->  
->  	old_opaque = ovl_dentry_is_opaque(old);
->  	new_opaque = ovl_dentry_is_opaque(new);
-> @@ -1263,15 +1254,15 @@ static int ovl_rename(struct mnt_idmap *idmap, struct inode *olddir,
->  	err = -ESTALE;
->  	if (d_inode(new) && ovl_dentry_upper(new)) {
->  		if (opaquedir) {
-> -			if (newdentry != opaquedir)
-> +			if (rd.new_dentry != opaquedir)
->  				goto out_unlock;
->  		} else {
-> -			if (!ovl_matches_upper(new, newdentry))
-> +			if (!ovl_matches_upper(new, rd.new_dentry))
->  				goto out_unlock;
->  		}
->  	} else {
-> -		if (!d_is_negative(newdentry)) {
-> -			if (!new_opaque || !ovl_upper_is_whiteout(ofs, newdentry))
-> +		if (!d_is_negative(rd.new_dentry)) {
-> +			if (!new_opaque || !ovl_upper_is_whiteout(ofs, rd.new_dentry))
->  				goto out_unlock;
->  		} else {
->  			if (flags & RENAME_EXCHANGE)
-> @@ -1279,19 +1270,14 @@ static int ovl_rename(struct mnt_idmap *idmap, struct inode *olddir,
->  		}
->  	}
->  
-> -	if (olddentry == trap)
-> -		goto out_unlock;
-> -	if (newdentry == trap)
-> -		goto out_unlock;
-> -
-> -	if (olddentry->d_inode == newdentry->d_inode)
-> +	if (rd.old_dentry->d_inode == rd.new_dentry->d_inode)
->  		goto out_unlock;
->  
->  	err = 0;
->  	if (ovl_type_merge_or_lower(old))
->  		err = ovl_set_redirect(old, samedir);
->  	else if (is_dir && !old_opaque && ovl_type_merge(new->d_parent))
-> -		err = ovl_set_opaque_xerr(old, olddentry, -EXDEV);
-> +		err = ovl_set_opaque_xerr(old, rd.old_dentry, -EXDEV);
->  	if (err)
->  		goto out_unlock;
->  
-> @@ -1299,18 +1285,24 @@ static int ovl_rename(struct mnt_idmap *idmap, struct inode *olddir,
->  		err = ovl_set_redirect(new, samedir);
->  	else if (!overwrite && new_is_dir && !new_opaque &&
->  		 ovl_type_merge(old->d_parent))
-> -		err = ovl_set_opaque_xerr(new, newdentry, -EXDEV);
-> +		err = ovl_set_opaque_xerr(new, rd.new_dentry, -EXDEV);
->  	if (err)
->  		goto out_unlock;
->  
-> -	err = ovl_do_rename(ofs, old_upperdir, olddentry,
-> -			    new_upperdir, newdentry, flags);
-> -	unlock_rename(new_upperdir, old_upperdir);
-> +	err = ovl_do_rename_rd(&rd);
-> +
-> +	if (!err && cleanup_whiteout)
-> +		whiteout = dget(rd.new_dentry);
-> +
-> +	end_renaming(&rd);
-> +
->  	if (err)
->  		goto out_revert_creds;
->  
-> -	if (cleanup_whiteout)
-> -		ovl_cleanup(ofs, old_upperdir, newdentry);
-> +	if (whiteout) {
-> +		ovl_cleanup(ofs, old_upperdir, whiteout);
-> +		dput(whiteout);
-> +	}
->  
->  	if (overwrite && d_inode(new)) {
->  		if (new_is_dir)
-> @@ -1336,14 +1328,12 @@ static int ovl_rename(struct mnt_idmap *idmap, struct inode *olddir,
->  	else
->  		ovl_drop_write(old);
->  out:
-> -	dput(newdentry);
-> -	dput(olddentry);
->  	dput(opaquedir);
->  	ovl_cache_free(&list);
->  	return err;
->  
->  out_unlock:
-> -	unlock_rename(new_upperdir, old_upperdir);
-> +	end_renaming(&rd);
->  	goto out_revert_creds;
->  }
->  
-> diff --git a/fs/overlayfs/overlayfs.h b/fs/overlayfs/overlayfs.h
-> index 49ad65f829dc..3cc85a893b5c 100644
-> --- a/fs/overlayfs/overlayfs.h
-> +++ b/fs/overlayfs/overlayfs.h
-> @@ -355,11 +355,24 @@ static inline int ovl_do_remove_acl(struct ovl_fs *ofs, struct dentry *dentry,
->  	return vfs_remove_acl(ovl_upper_mnt_idmap(ofs), dentry, acl_name);
->  }
->  
-> +static inline int ovl_do_rename_rd(struct renamedata *rd)
-> +{
-> +	int err;
-> +
-> +	pr_debug("rename(%pd2, %pd2, 0x%x)\n", rd->old_dentry, rd->new_dentry,
-> +		 rd->flags);
-> +	err = vfs_rename(rd);
-> +	if (err) {
-> +		pr_debug("...rename(%pd2, %pd2, ...) = %i\n",
-> +			 rd->old_dentry, rd->new_dentry, err);
-> +	}
-> +	return err;
-> +}
-> +
->  static inline int ovl_do_rename(struct ovl_fs *ofs, struct dentry *olddir,
->  				struct dentry *olddentry, struct dentry *newdir,
->  				struct dentry *newdentry, unsigned int flags)
->  {
-> -	int err;
->  	struct renamedata rd = {
->  		.mnt_idmap	= ovl_upper_mnt_idmap(ofs),
->  		.old_parent	= olddir,
-> @@ -369,13 +382,7 @@ static inline int ovl_do_rename(struct ovl_fs *ofs, struct dentry *olddir,
->  		.flags		= flags,
->  	};
->  
-> -	pr_debug("rename(%pd2, %pd2, 0x%x)\n", olddentry, newdentry, flags);
-> -	err = vfs_rename(&rd);
-> -	if (err) {
-> -		pr_debug("...rename(%pd2, %pd2, ...) = %i\n",
-> -			 olddentry, newdentry, err);
-> -	}
-> -	return err;
-> +	return ovl_do_rename_rd(&rd);
->  }
->  
->  static inline int ovl_do_whiteout(struct ovl_fs *ofs,
-> diff --git a/include/linux/namei.h b/include/linux/namei.h
-> index e5cff89679df..19c3d8e336d5 100644
-> --- a/include/linux/namei.h
-> +++ b/include/linux/namei.h
-> @@ -156,6 +156,9 @@ extern int follow_up(struct path *);
->  extern struct dentry *lock_rename(struct dentry *, struct dentry *);
->  extern struct dentry *lock_rename_child(struct dentry *, struct dentry *);
->  extern void unlock_rename(struct dentry *, struct dentry *);
-> +int start_renaming(struct renamedata *rd, int lookup_flags,
-> +		   struct qstr *old_last, struct qstr *new_last);
-> +void end_renaming(struct renamedata *rd);
->  
->  /**
->   * mode_strip_umask - handle vfs umask stripping
+> +	/*
+> +	 * Try the lookup again, because the delalloc conversion might have
+> +	 * turned the COW mapping into unwritten, but we need it to be in
+> +	 * written state.
+> +	 */
+> +	goto retry;
+>   out_unlock:
+>   	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>   	return error;
 
-For the fs/nfsd/vfs.c hunks:
-
-Acked-by: Chuck Lever <chuck.lever@oracle.com>
-
-
--- 
-Chuck Lever
