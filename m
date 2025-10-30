@@ -1,70 +1,83 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97A04278753;
-	Thu, 30 Oct 2025 14:35:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DDA62367DF
+	for <linux-xfs@vger.kernel.org>; Thu, 30 Oct 2025 14:49:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761834957; cv=none; b=SJYSYDUiG3vCmkGg1+oPYwrGRUG4i4xln/QEbyF8rcj0hYozvrp6v0wkFaV+APOr2GsYLGovomy/O6t2bFZsydPYgnIWyO5c48wgvJpwbxwJ1eu+DREA/7H2xotaHurOGazFP0bL+eshNS11O+wnpkQmXUDF2i8oQWMqY60YPVQ=
+	t=1761835790; cv=none; b=CuUgCxslJ7jz82242cDYkH8W1R+75R28PuyRYiDBIu762RgEWphx5UczLrjCBjv9+ykVrplm8LDWabR0+5objI55RVL2dgbWXOaFEyn/QvaMBXIJg+/O4rrs9sk8HQ1/jrUDMoOHdVsRYVvpznqVLjlz1oLb9IQxu3zrhZQXmn0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761834957; c=relaxed/simple;
-	bh=8eyfAvSRipMEp2JX7NAR77Qoz5T5m7hr12qeI65XIFk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oxNhWkw7DywYHbHWCrTBUunF/UX7e8i3nJcaLPuAvAF+lNVXzHXzHy7sxkk3qKJ7Of4k6lkUIwHhVMOF0gEKqYWu+uO9ZvNnN6H6nAMCpP3PCeJDDUJ2uLtLzePGi7VpY9M3RapqTYnmtRD+V3YfYyV9qbqkNjBTYWxoIbkwFsk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 83BBC227A88; Thu, 30 Oct 2025 15:35:50 +0100 (CET)
-Date: Thu, 30 Oct 2025 15:35:50 +0100
+	s=arc-20240116; t=1761835790; c=relaxed/simple;
+	bh=JKUkYQFYfSKuY2NAj4FakhbORQRR18EzkK5lE8rhiHE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=k/L2Lgf3Z5LcN4yVbcgWGeJQ948bRG62CLrmMD14q2pkOH4YggNzBRRtyNJb35LwZhq+MiuhCEsa/xc5bYL/WFxKHMRLWG9rpgGBjBzvkfxPjE+lOy4NpTlEhD/6cFIRQBYD1XExXbXNvzZqF5u2AXE6fKKiklcHf/g5/AY8WOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=f2xuHqKx; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="f2xuHqKx"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=GL4nK2rwPgl1hgz3ZGHdIvmdZV3SdM4uIuzoVO/jG3s=; b=f2xuHqKx+ec3Abnc9RqxVQF3YH
+	1vHDYzn2fqzccvivelYuPs1M4+qwgBQU3hJbldI0ctQ1P1cGfsdJdDEBOU0tDyhpHvrHsxqENZ654
+	ulCyzWoy46GtJ+CxW6oUe0rol2sfP7xyZGot8Auonei7wd9b37NrxbDl6GY/gf8m/408Pq1QtpG2f
+	a/+57WJ4KphIa2MGQ2r39K/Fg3mbidzaa74MZzI3mto3tewFfOqKqZoMQYC4eEU/eQVsHaAWFBQCz
+	lDLgVOnnbJH9hb+6Wg/iC/5MiS0j+ks4eYGjTLzIKaSb0RIaXzcWXkrvvNve+YYZkkx2iBtQc7b39
+	qulYcgLQ==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vETyG-00000004KMs-1gGA;
+	Thu, 30 Oct 2025 14:49:48 +0000
 From: Christoph Hellwig <hch@lst.de>
-To: Geoff Back <geoff@demonlair.co.uk>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
-	Carlos Maiolino <cem@kernel.org>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-block@vger.kernel.org
-Subject: Re: fall back from direct to buffered I/O when stable writes are
- required
-Message-ID: <20251030143550.GB31550@lst.de>
-References: <20251029071537.1127397-1-hch@lst.de> <aQNJ4iQ8vOiBQEW2@dread.disaster.area> <5ac7fb86-07a2-4fc6-959e-524ff54afebf@demonlair.co.uk>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: cleanup log item formatting v2
+Date: Thu, 30 Oct 2025 15:49:10 +0100
+Message-ID: <20251030144946.1372887-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <5ac7fb86-07a2-4fc6-959e-524ff54afebf@demonlair.co.uk>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Oct 30, 2025 at 12:00:26PM +0000, Geoff Back wrote:
-> I don't claim to have deep knowledge of what's going on here, but if I
-> understand correctly the problem occurs only if the process submitting
-> the direct I/O is breaking the semantic "contract" by modifying the page
-> after submitting the I/O but before it completes.
+Hi all,
 
-Except that there never has been any such "contract", written or
-unwritten.  Modifying in-flight I/O is perfectly fine IFF the data
-is sampled once as in the usual non-checksum non-RAID mode, and nothing
-ever told applications not to do it.
+I dug into a rabit hole about the log item formatting recently,
+and noticed that the handling of the opheaders is still pretty
+ugly because it leaks pre-delayed logging implementation
+details into the log item implementations.
 
->   Since the page
-> referenced by the I/O is supposed to be immutable until the I/O
-> completes, what about marking the page read only at time of submission
-> and restoring the original page permissions after the I/O completes? 
-> Then if the process writes to the page (triggering a fault) make a copy
-> of the page that can be mapped back as writeable for the process - i.e.
-> normal copy-on-write behaviour - and write a once-per-process dmesg
-> warning that the process broke the direct I/O "contract".
+The core of this series is to remove the to reserve space in the
+CIL buffers/shadow buffers for the opheaders that already were
+generated more or less on the fly by the lowlevel log write
+code anyway, but there's lots of other cleanups around it.
 
-That would be nice, but also pretty hard.  See various previous
-discussions on this topic.  Also at least for small I/O it probably
-is more expensive than bounce buffering while for large enough I/O,
-especially using PMD mappings or similar avoiding the copy will be
-very beneficial.
+Note that sits on top of the "kill xlog_in_core_2_t v3" because
+a struct removal there sits right next to a struct moved here.
 
+Changes since v1:
+ - rebased and dropped the already merged patches
+
+Diffstat:
+ libxfs/xfs_log_format.h |    7 -
+ xfs_attr_item.c         |   27 +---
+ xfs_bmap_item.c         |   10 -
+ xfs_buf_item.c          |   19 +--
+ xfs_dquot_item.c        |    9 -
+ xfs_exchmaps_item.c     |   11 -
+ xfs_extfree_item.c      |   10 -
+ xfs_icreate_item.c      |    6 
+ xfs_inode_item.c        |   49 +++-----
+ xfs_log.c               |  292 ++++++++++++++++++------------------------------
+ xfs_log.h               |   65 +---------
+ xfs_log_cil.c           |  111 ++++++++++++++++--
+ xfs_log_priv.h          |   20 +++
+ xfs_refcount_item.c     |   10 -
+ xfs_rmap_item.c         |   10 -
+ xfs_trans.h             |    4 
+ 16 files changed, 313 insertions(+), 347 deletions(-)
