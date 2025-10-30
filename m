@@ -1,124 +1,153 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4B7436CA70;
-	Thu, 30 Oct 2025 17:41:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A266A31280B
+	for <linux-xfs@vger.kernel.org>; Thu, 30 Oct 2025 18:21:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761846113; cv=none; b=CHo+qE0ZyqWX65Zmgum2HZU+qloFXQEMTq3qot2yJ1dLwygVSlgBc3Qe6vT78jxWXPibu2y4oJx92+edSU5rMsajGkO73AdVpq7B6BMyZAlcLehrro5x2zVvNdlLJYWSUckWHdunfHlU9erdRhLvfLMcdh57G6UAMg00ihED1H0=
+	t=1761848469; cv=none; b=d+PUutHxObnzGQXLCCjRLDJXriPLi8YVC3lePgNpby3xdPuEGkUUkitRUwovbDYhMLTRzTYrZz5m/yFpBUGe8cZNqUP/XwkibP/sHB1qa4hb4vZT/v4ial4d+XVzPWPSWsq8xyFpHGwx/8/xpE0ZObi2vn77GSE5Uzchr0bhWOg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761846113; c=relaxed/simple;
-	bh=XpcDxbobWuhXBAKt4h2GGHNX8CNan4v+jW1nwx/LFX8=;
+	s=arc-20240116; t=1761848469; c=relaxed/simple;
+	bh=MHjPd3cIr9Ro8JvYM4wscOP1KLV2+IEH+OrZHKIv/+Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ObtTNxJoS6MreFEDc4QZn5wlpUNuPZlt7/F5Y/Qw2Ii+3N/bbW/zS4mkcbW9dEeQ2HDf8FLSObj/O/4y3S7cZcWuEhF7duScdZ9SJBCUhKhnQOt30R2YTN+3AFdnw4zYIlGNm7gR7/hOKhy30PAK2gZ/+b/J/d88DWilTGq1AC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XyIRM5Q/; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=JujNFabsJSPjegcpG52iWKiTnNQsY5rJ9pZUIGFeSUZjo99iGO/RkAo6i0vEBiKdaECzRpQs4Qpt41/9b1Kri+A/lQtUH9W71ljxIOUzzjuhxHkB/4QakKtgj6M4WW6ytzxDwZQRcM/Tgeyb/CBFX1WY/W9HbPn5H6hKljjnsSo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=j/xDpomi; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=BgUnj8Qj; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=cCgp4+xR; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=Y02q4QQG; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XyIRM5Q/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC9C9C4CEF8;
-	Thu, 30 Oct 2025 17:41:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761846113;
-	bh=XpcDxbobWuhXBAKt4h2GGHNX8CNan4v+jW1nwx/LFX8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XyIRM5Q/rSUlJQi6J3yO4pAfO52uSoksNK1uIYJ4sHRlob7L1PL8N+X7/0ttC5B/B
-	 +U+BtrMRn8vIfPEmW9O9w3d73nUWR92vyVDgqA2UaA+0ao6hIuz3c4yXkRu3PvHX6v
-	 AoE75G0nZLr0utg3hTpXZ1MX/lsdEcr1dPN5SmuJvTAoxZWCy2OB59pZZ85Y12OJRk
-	 WiNB5nWgSjo2aoxT+21LJMcAW0n6HlEAACcs9/hFcpm6vwUQQBkeez6qKF2r2UjprS
-	 MQ5BkibVZ0t2oqvWGITt75UtO8xuXXJHZHRJnq7AsZo+A8NVBSvH08gl/fhRpQTRS+
-	 NlqrPfxi+z6Vg==
-Date: Thu, 30 Oct 2025 10:40:15 -0700
-From: Eric Biggers <ebiggers@kernel.org>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="j/xDpomi";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="BgUnj8Qj";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="cCgp4+xR";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="Y02q4QQG"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 0559D3377A;
+	Thu, 30 Oct 2025 18:21:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1761848466;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=35Rgq9aWXXCYtegCi5Nd8FkRSQcbW288tXIHMGLSzos=;
+	b=j/xDpomipRi27Xvy5GBORux7vuiP/KIQypNiMxJ8XY5CAbXUZwuZU26mxFjInTO+/6/9Az
+	yp4Zk/5YrAK9vfNS0FBWYcF1k/XIUs+WnhQtbidqXPDPPSHgwIfBn/uKBM9DiMXh76p25L
+	QfOM3INTM8rTbEHkNjI+ohNh/JXVzxw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1761848466;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=35Rgq9aWXXCYtegCi5Nd8FkRSQcbW288tXIHMGLSzos=;
+	b=BgUnj8Qjc9JEkRhbNm9umHTuI9hdu2AQHZAeqr0cUg5Ti1fHlpDUPAO2VvjgWm+mkJeEB7
+	bh0sjWg6UEJwvqCA==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=cCgp4+xR;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=Y02q4QQG
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1761848465;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=35Rgq9aWXXCYtegCi5Nd8FkRSQcbW288tXIHMGLSzos=;
+	b=cCgp4+xRw5fM4joQmxNWc82CsEDmpI8WHpVjHkG7LIHe5MO5lOaHu6CJRJPph59idlGVSo
+	1GEifCUC/UXW3iHjs+dN0oy9hpXC3sev/rDh51NDLoFJZ4y22TYsuPgNZzxHlmVyOE3yMt
+	eR70wdyU9CS8HtyYY/REg7rgXoaEcgo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1761848465;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=35Rgq9aWXXCYtegCi5Nd8FkRSQcbW288tXIHMGLSzos=;
+	b=Y02q4QQGUEocIdhPkNnWmwYmiyhHHVVYkXfo4ejKJow+PUEPO/8nr0WoTihHxbaNeNEJOT
+	4BEYFr6dQxGabwAw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D15001396A;
+	Thu, 30 Oct 2025 18:21:04 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id njTnMpCsA2lrBgAAD6G6ig
+	(envelope-from <dsterba@suse.cz>); Thu, 30 Oct 2025 18:21:04 +0000
+Date: Thu, 30 Oct 2025 19:21:03 +0100
+From: David Sterba <dsterba@suse.cz>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Llamas <cmllamas@google.com>, Keith Busch <kbusch@kernel.org>,
-	Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, axboe@kernel.dk,
-	Hannes Reinecke <hare@suse.de>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCHv4 5/8] iomap: simplify direct io validity check
-Message-ID: <20251030174015.GC1624@sol>
-References: <20250827141258.63501-1-kbusch@meta.com>
- <20250827141258.63501-6-kbusch@meta.com>
- <aP-c5gPjrpsn0vJA@google.com>
- <aP-hByAKuQ7ycNwM@kbusch-mbp>
- <aQFIGaA5M4kDrTlw@google.com>
- <20251028225648.GA1639650@google.com>
- <20251028230350.GB1639650@google.com>
- <20251029070618.GA29697@lst.de>
+Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Eric Van Hensbergen <ericvh@kernel.org>,
+	Latchesar Ionkov <lucho@ionkov.net>,
+	Dominique Martinet <asmadeus@codewreck.org>,
+	Christian Schoenebeck <linux_oss@crudebyte.com>,
+	Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+	Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>,
+	Joseph Qi <joseph.qi@linux.alibaba.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>,
+	Josef Bacik <josef@toxicpanda.com>, Jan Kara <jack@suse.cz>,
+	linux-block@vger.kernel.org, v9fs@lists.linux.dev,
+	linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, jfs-discussion@lists.sourceforge.net,
+	ocfs2-devel@lists.linux.dev, linux-xfs@vger.kernel.org,
+	linux-mm@kvack.org, Damien Le Moal <dlemoal@kernel.org>,
+	Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: Re: [PATCH 05/10] btrfs: push struct writeback_control into
+ start_delalloc_inodes
+Message-ID: <20251030182103.GC13846@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+References: <20251024080431.324236-1-hch@lst.de>
+ <20251024080431.324236-6-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251029070618.GA29697@lst.de>
+In-Reply-To: <20251024080431.324236-6-hch@lst.de>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: 0559D3377A
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.21 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	HAS_REPLYTO(0.30)[dsterba@suse.cz];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[26];
+	MIME_TRACE(0.00)[0:+];
+	R_RATELIMIT(0.00)[to_ip_from(RL9qow8fch3pfgh43469ius4rs)];
+	TO_DN_SOME(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	REPLYTO_DOM_NEQ_TO_DOM(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	REPLYTO_ADDR_EQ_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+]
+X-Spam-Score: -4.21
 
-On Wed, Oct 29, 2025 at 08:06:18AM +0100, Christoph Hellwig wrote:
-> I think we need to take a step back and talk about what alignment
-> we're talking about here, as there are two dimensions to it.
+On Fri, Oct 24, 2025 at 10:04:16AM +0200, Christoph Hellwig wrote:
+> In preparation for changing the filemap_fdatawrite_wbc API to not expose
+> the writeback_control to the callers, push the wbc declaration next to
+> the filemap_fdatawrite_wbc call and just pass the nr_to_write value to
+> start_delalloc_inodes.
 > 
-> The first dimension is: disk alignment vs memory alignment.
-> 
-> Disk alignment:
->   Direct I/O obviously needs to be aligned to on-disk sectors to have
->   a chance to work, as that is the lowest possible granularity of access.
-> 
->   For fіle systems that write out of place we also need to align writes
->   to the logical block size of the file system.
-> 
->   With blk-crypto we need to align to the DUN if it is larger than the
->   disk-sector dize.
-> 
-> Memory alignment:
-> 
->   This is the alignment of the buffer in-memory.  Hardware only really
->   cares about this when DMA engines discard the lowest bits, so a typical
->   hardware alignment requirement is to only require a dword (4 byte)
->   alignment.   For drivers that process the payload in software such
->   low alignment have a tendency to cause bugs as they're not written
->   thinking about it.  Similarly for any additional processing like
->   encryption, parity or checksums.
-> 
-> The second dimension is for the entire operation vs individual vectors,
-> this has implications both for the disk and memory alignment.  Keith
-> has done work there recently to relax the alignment of the vectors to
-> only require the memory alignment, so that preadv/pwritev-like calls
-> can have lots of unaligned segments.
-> 
-> I think it's the latter that's tripping up here now.  Hard coding these
-> checks in the file systems seem like a bad idea, we really need to
-> advertise them in the queue limits, which is complicated by the fact that
-> we only want to do that for bios using block layer encryption. i.e., we
-> probably need a separate queue limit that mirrors dma_alignment, but only
-> for encrypted bios, and which is taken into account in the block layer
-> splitting and communicated up by file systems only for encrypted bios.
-> For blk-crypto-fallback we'd need DUN alignment so that the algorithms
-> just work (assuming the crypto API can't scatter over misaligned
-> segments), but for hardware blk-crypto I suspect that the normal DMA
-> engine rules apply, and we don't need to restrict alignment.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-Allowing DIO segments to be aligned (in memory address and/or length) to
-less than crypto_data_unit_size on encrypted files has been attempted
-and discussed before.  Read the cover letter of
-https://lore.kernel.org/linux-fscrypt/20220128233940.79464-1-ebiggers@kernel.org/
-
-We eventually decided to proceed with DIO support without it, since it
-would have added a lot of complexity.  It would have made the bio
-splitting code in the block layer split bios at boundaries where the
-length isn't aligned to crypto_data_unit_size, it would have caused a
-lot of trouble for blk-crypto-fallback, and it even would have been
-incompatible with some of the hardware drivers (e.g. ufs-exynos.c).
-
-It also didn't seem to be all that useful, and it would have introduced
-edge cases that don't get tested much.  All reachable to unprivileged
-userspace code too, of course.
-
-I can't say that the idea seems all that great to me.
-
-We can always reconsider and still add support for this.  But it's not
-clear to me what's changed.
-
-- Eric
+Acked-by: David Sterba <dsterba@suse.com>
