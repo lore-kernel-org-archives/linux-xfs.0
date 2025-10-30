@@ -1,108 +1,160 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C39253FC2
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Oct 2025 00:02:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87E8D324B3F
+	for <linux-xfs@vger.kernel.org>; Thu, 30 Oct 2025 04:54:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761782543; cv=none; b=Pr2wCmCSG/VyAjws3yFu/u47Wo93/KNHUCjQdVys6a5Jdu8EOCFJ6vEmObd7v0cmmmlyfSFqozc7uITDv2Pq+2tomJAikJD7FdMJ7k5yC/UrgFYArR9vibIUKLquTYs7mfIgk5fiz+egiU0V7MD+HAQT4P+fKfgEC/F7u1ofa+U=
+	t=1761800070; cv=none; b=fFOut6a+vHz/DDwQZWGxVV+X/sJjgf2Yide+Rf40jGEo+8S/ydSVvkLE5H8WK8bkL0pfkzBWD0+bOtA12pJFP+mylWqnwZaAnhpa6beiJR17IGB03RssA2Yv9QM+Bs7NTA6fe6S5O0uob0wiJWeEP/yQhiGH8+CTs0zVKoyw9Js=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761782543; c=relaxed/simple;
-	bh=dl3hhTa425hTootTdaDXhUQrKDZMwYmQwx3qP5IX8Pc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=P9FQtzApPaNDJXUL5HGjG3o6+6gsO2tJy9s/jbO+mF1MIxuPJ0rQV2bBbs6tbvsQAF1FegjkdOL9MYs7Iuw7altSGcnpt6Dl8MHHPuSqYuhFgx/+mPsb1tJeCvpsWSMvfa72SS61s6EwS4bAyq7oAR5HnSo2ultqMqikKCyeP9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H71N2PdQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761800070; c=relaxed/simple;
+	bh=VxZENKZkB6Z+YZgyLavSwJWdOW+IEJ+F18A1MxXcN5c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tsG02ZNYVzVghmq6GIjnTjBhXH7e1Gp7eHvxDoCLnYZBO78Z6/R8yddYvTgYDvmUO23oFX6clLvE0J8F8gBiqvhe40SxmprVy28fYCfubur8qxrXrUwsi3sIoWIKgliNtPEVtrRZndNReWPMTZCWmPp5pOLxm5N8ejGuVGOvWnI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Tlgmo2/W; arc=none smtp.client-ip=209.85.214.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H71N2PdQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C073C4CEFF
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Oct 2025 00:02:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761782543;
-	bh=dl3hhTa425hTootTdaDXhUQrKDZMwYmQwx3qP5IX8Pc=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=H71N2PdQxzG6ziTeqp6xGEArkRJ3O5THDzWIrzSasxUkGLM+lUZS7+NPkBZXcwqg2
-	 9C6ap5rIfVEC9DPaLBtJo0kZ5ofahpVQxx0L+S5FFDodcAmlLFovwUGLsqoIj+Sbfb
-	 KpbTx4VAd5NnJ1O8rTiQn6TBkSlRu/j4sleywAFybv9rXoxTRHqn9c3QU8C/I1fVue
-	 r6vmdMwEFagraLeCOq8Y5w6QYS8PC6/Od5A7Y1QFEd7AtMMaHPet6V3ATCZFYaPO9a
-	 pZWWgj7WwkxWA5i5dsCthqdk6r+uTnlKEXlbTHNFJ4YrKlY0hfFMtO+mNYgRssD5aH
-	 BGDInk7GCLkVA==
-Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-b3c2db014easo94705866b.0
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 17:02:23 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCVsSdsoim+lgqC0bvUmahfD4L2lJSyCLgbMeWqzTyiq/nYZaMSktEpRfiiQGBQnWZfgXax/eHCIqPM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw3rgFnY8RSaTbpWZoDTwssY/iWndkSnDU79x0BWpNEm5pKqLnk
-	ZI/kpdFggNrsWwZNpF8oVCBxFawWGkifxLQhmbyfBJTDAYnM0+/15Hxxszy/76QjGX6Y3X/1dMt
-	3iGGfSL+2HewbqOb8HzlLrbek14NQr5U=
-X-Google-Smtp-Source: AGHT+IFp6XmtNYQvDgzIxt6N/UJfVu4TmDjNTFEnDMi0BPOBbAiMhgT+FO6/cnvMt+r32HZOllHtr/4V9Y8hAvFbtRA=
-X-Received: by 2002:a17:907:3cc4:b0:b45:eea7:e97c with SMTP id
- a640c23a62f3a-b703d5569b8mr475849266b.47.1761782541878; Wed, 29 Oct 2025
- 17:02:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Tlgmo2/W"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-27eeafd4882so93065ad.0
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Oct 2025 21:54:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1761800068; x=1762404868; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ej/auf+/EmPMyY6GqjKBQhQwJpW0Nqnj+K+f6BktHE0=;
+        b=Tlgmo2/Wm9hutAIeSz4vU5YsTZNTyN3xDraA+m7VfEoqgfH3F38q2pD3IMe1HiaPLq
+         kVM2q4++zCzHD4I1OHRRuKfZ8dlPMdqipeVzk9hyMMsv8n+VZ5dkwA32zp0l4+nMS50i
+         laKQUIrUHXeqZkODCGEF7moR5hp4b2enn2mNyoLBRuSIikghXk9mbVfpcyaJHWYCX0BH
+         Ru/b0BWyOmMOCVQe1GlArVfGajNy0aYi5WrIv//RyjOYClkZ1cdxD+NI10uTncx32WMY
+         pCdf0105ls9dKoT6X0llI1lTvCzo9LTHh2d0QkDf5um89IHEfdFp0UXQMhjoyVHmzavT
+         klFg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761800068; x=1762404868;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ej/auf+/EmPMyY6GqjKBQhQwJpW0Nqnj+K+f6BktHE0=;
+        b=FPJ/A7ZuKkKfsxAus2Qt7OfICPy9QVFwwY7WFhe1qVImn3i3hHiZoL5Xe/tjI8ZqAB
+         BsDm4wHWeBXPOqcstHEZvzVOa4Xvm07Meukj10r3cMWzr4XLg3Z6mYhheVorgNNFGkdx
+         QTzbU/2E6pPN70CBb5Qay1omeGELCxtJBVCYTKXoGtvH/AuSs16czWt7VGD9daZ4tuI9
+         +HyEqpFEV7xYmCAzrcIzcFLxkw0fnwn9wHoXjw3t9RqzvxW3OHaQNzW5sdFtZDxN+Nzh
+         v+4r6SuIBQksesEoYRwVVU2zUoesgWGUg2mKEUlgbHsNdVkFoE1Uub+zR1mbcfHCiicp
+         vmMA==
+X-Forwarded-Encrypted: i=1; AJvYcCUu8+gZpl9n3oRhleHEy5FYg10C6blG2s2kDPA3LHVA5TsLARyG607OEZnE1z3cO+kFuiTKXS76kxo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxWVyG6uZM1I3m1j3fxHPFCANJRGt5ULYkp9NvmaHwO+qXnql7G
+	n/cFqQJ3GQT4C0dIlbyfmcPmI35KXOo/TYpQF20w04ryIPuyrOGr793Lle2nETLnmczHva0fqRr
+	Fzm2VsQ==
+X-Gm-Gg: ASbGncvfTaRlgrTVN5fnp2w1MpJSo3BrpzbEA+xKqcbQkHHbSGjN4tSAAPGe3Kf6zOx
+	0+049GRVHb7ISDkPpups+C1CNR6qwvRys1cAzQb5tlvnBffbFhVUoAT12ngomlz+fXyMed+hvqh
+	o2jS3INXtAFClDjtaoTYb5aMwBm0md2t6lso8OV/K2V5lcvaxspearW81Ooc84wkxNa4M3WL9nI
+	AZP/6DfiaI3e9P8WI2I8yrcXSsFV7WiaegeBXaAqECxVkZIFapUJWeoMKkjr8N2u5ZZILZIwV4z
+	uTonzK5/blmySvLeAjZy+ILwGlkQo00Be+zDPSCnm+UdrpaI54doM0jEak5s1oOY665C0e1jQTZ
+	WVKzThpoAkEtHh0dgqcR+kDM5qoOQMJWCcphV30Okdl2ghW4LhXbVH1N7z3ap/B7ZWEGMXLnfmQ
+	SQ8r2e6pbnjJ/SucXZ/uDE5rpf3SALQZbWN7PFzq1aVCC5bJNb3MAXge/aVGzLsUNjzqAt7dBcF
+	IxW1LsvwMFACNoT4HyUo9PR7sGfFfMVpIk=
+X-Google-Smtp-Source: AGHT+IF1aIVtDtqyINIaT4VsEA6+urTc/5YTHi0A6ZrXvPoa8CEW59KPabjqx3mO+bDkKlfEESX4Bg==
+X-Received: by 2002:a17:903:22c4:b0:290:d7fd:6297 with SMTP id d9443c01a7336-294ee1aad86mr3315295ad.2.1761800067395;
+        Wed, 29 Oct 2025 21:54:27 -0700 (PDT)
+Received: from google.com (235.215.125.34.bc.googleusercontent.com. [34.125.215.235])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29498d2317csm170936075ad.48.2025.10.29.21.54.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Oct 2025 21:54:26 -0700 (PDT)
+Date: Thu, 30 Oct 2025 04:54:21 +0000
+From: Carlos Llamas <cmllamas@google.com>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: Keith Busch <kbusch@kernel.org>, Keith Busch <kbusch@meta.com>,
+	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, hch@lst.de,
+	axboe@kernel.dk, Hannes Reinecke <hare@suse.de>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCHv4 5/8] iomap: simplify direct io validity check
+Message-ID: <aQLvfayGPi1YezHV@google.com>
+References: <20250827141258.63501-1-kbusch@meta.com>
+ <20250827141258.63501-6-kbusch@meta.com>
+ <aP-c5gPjrpsn0vJA@google.com>
+ <aP-hByAKuQ7ycNwM@kbusch-mbp>
+ <aQFIGaA5M4kDrTlw@google.com>
+ <20251028225648.GA1639650@google.com>
+ <20251028230350.GB1639650@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251029234353.1321957-1-neilb@ownmail.net> <20251029234353.1321957-11-neilb@ownmail.net>
-In-Reply-To: <20251029234353.1321957-11-neilb@ownmail.net>
-From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Thu, 30 Oct 2025 09:02:09 +0900
-X-Gmail-Original-Message-ID: <CAKYAXd8QGx=GWNCw8n3Pfp-4VDOY6OTtnHvGjcvAAHESH-eLyA@mail.gmail.com>
-X-Gm-Features: AWmQ_bl65wcvcAo59bCN4Dy6QbeOgouXiHvgTquU1892ABOO7FZA8E3Xbxk2z5k
-Message-ID: <CAKYAXd8QGx=GWNCw8n3Pfp-4VDOY6OTtnHvGjcvAAHESH-eLyA@mail.gmail.com>
-Subject: Re: [PATCH v4 10/14] VFS/ovl/smb: introduce start_renaming_dentry()
-To: NeilBrown <neil@brown.name>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, 
-	Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, 
-	Jeff Layton <jlayton@kernel.org>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, 
-	David Howells <dhowells@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, Tyler Hicks <code@tyhicks.com>, 
-	Miklos Szeredi <miklos@szeredi.hu>, Chuck Lever <chuck.lever@oracle.com>, 
-	Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
-	Steve French <smfrench@gmail.com>, Sergey Senozhatsky <senozhatsky@chromium.org>, 
-	Carlos Maiolino <cem@kernel.org>, John Johansen <john.johansen@canonical.com>, 
-	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>, 
-	"Serge E. Hallyn" <serge@hallyn.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
-	Ondrej Mosnacek <omosnace@redhat.com>, Mateusz Guzik <mjguzik@gmail.com>, 
-	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, Stefan Berger <stefanb@linux.ibm.com>, 
-	"Darrick J. Wong" <djwong@kernel.org>, linux-kernel@vger.kernel.org, netfs@lists.linux.dev, 
-	ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org, 
-	linux-unionfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, apparmor@lists.ubuntu.com, 
-	linux-security-module@vger.kernel.org, selinux@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251028230350.GB1639650@google.com>
 
-On Thu, Oct 30, 2025 at 8:46=E2=80=AFAM NeilBrown <neilb@ownmail.net> wrote=
-:
->
-> From: NeilBrown <neil@brown.name>
->
-> Several callers perform a rename on a dentry they already have, and only
-> require lookup for the target name.  This includes smb/server and a few
-> different places in overlayfs.
->
-> start_renaming_dentry() performs the required lookup and takes the
-> required lock using lock_rename_child()
->
-> It is used in three places in overlayfs and in ksmbd_vfs_rename().
->
-> In the ksmbd case, the parent of the source is not important - the
-> source must be renamed from wherever it is.  So start_renaming_dentry()
-> allows rd->old_parent to be NULL and only checks it if it is non-NULL.
-> On success rd->old_parent will be the parent of old_dentry with an extra
-> reference taken.  Other start_renaming function also now take the extra
-> reference and end_renaming() now drops this reference as well.
->
-> ovl_lookup_temp(), ovl_parent_lock(), and ovl_parent_unlock() are
-> all removed as they are no longer needed.
->
-> OVL_TEMPNAME_SIZE and ovl_tempname() are now declared in overlayfs.h so
-> that ovl_check_rename_whiteout() can access them.
->
-> ovl_copy_up_workdir() now always cleans up on error.
->
-> Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-> Signed-off-by: NeilBrown <neil@brown.name>
-For ksmbd part,
-Reviewed-by: Namjae Jeon <linkinjeon@kernel.org>
-Thanks!
+On Tue, Oct 28, 2025 at 11:03:50PM +0000, Eric Biggers wrote:
+> On Tue, Oct 28, 2025 at 10:56:48PM +0000, Eric Biggers wrote:
+> > On Tue, Oct 28, 2025 at 10:47:53PM +0000, Carlos Llamas wrote:
+> > > Ok, I did a bit more digging. I'm using f2fs but the problem in this
+> > > case is the blk_crypto layer. The OP_READ request goes through
+> > > submit_bio() which then calls blk_crypto_bio_prep() and if the bio has
+> > > crypto context then it checks for bio_crypt_check_alignment().
+> > > 
+> > > This is where the LTP tests fails the alignment. However, the propagated
+> > > error goes through "bio->bi_status = BLK_STS_IOERR" which in bio_endio()
+> > > get translates to EIO due to blk_status_to_errno().
+> > > 
+> > > I've verified this restores the original behavior matching the LTP test,
+> > > so I'll write up a patch and send it a bit later.
+> > > 
+> > > diff --git a/block/blk-crypto.c b/block/blk-crypto.c
+> > > index 1336cbf5e3bd..a417843e7e4a 100644
+> > > --- a/block/blk-crypto.c
+> > > +++ b/block/blk-crypto.c
+> > > @@ -293,7 +293,7 @@ bool __blk_crypto_bio_prep(struct bio **bio_ptr)
+> > >  	}
+> > >  
+> > >  	if (!bio_crypt_check_alignment(bio)) {
+> > > -		bio->bi_status = BLK_STS_IOERR;
+> > > +		bio->bi_status = BLK_STS_INVAL;
+> > >  		goto fail;
+> > >  	}
+> > 
+> > That change looks fine, but I'm wondering how this case was reached in
+> > the first place.  Upper layers aren't supposed to be submitting
+> > misaligned bios like this.  For example, ext4 and f2fs require
+> > filesystem logical block size alignment for direct I/O on encrypted
+> > files.  They check for this early, before getting to the point of
+> > submitting a bio, and fall back to buffered I/O if needed.
+> 
+> I suppose it's this code in f2fs_should_use_dio():
+> 
+> 	/*
+> 	 * Direct I/O not aligned to the disk's logical_block_size will be
+> 	 * attempted, but will fail with -EINVAL.
+> 	 *
+> 	 * f2fs additionally requires that direct I/O be aligned to the
+> 	 * filesystem block size, which is often a stricter requirement.
+> 	 * However, f2fs traditionally falls back to buffered I/O on requests
+> 	 * that are logical_block_size-aligned but not fs-block aligned.
+> 	 *
+> 	 * The below logic implements this behavior.
+> 	 */
+> 	align = iocb->ki_pos | iov_iter_alignment(iter);
+> 	if (!IS_ALIGNED(align, i_blocksize(inode)) &&
+> 	    IS_ALIGNED(align, bdev_logical_block_size(inode->i_sb->s_bdev)))
+> 		return false;
+> 
+> So it relies on the alignment check in iomap in the case where the
+> request is neither logical_block_size nor filesystem_block_size aligned.
+> 
+> f2fs_should_use_dio() probably should just handle that case explicitly.
+> 
+> But making __blk_crypto_bio_prep() use a better error code sounds good
+> too.
+
+I realize this is a bit of a band-aid but here is the patch to fail the
+bad alignment with EINVAL:
+https://lore.kernel.org/all/20251030043919.2787231-1-cmllamas@google.com/
+
+As for the more achitectural fix suggested by Christoph, I'm absolutely
+out of my depth so I can't comment on that.
+
+Cheers,
+--
+Carlos Llamas
