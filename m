@@ -1,72 +1,71 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB8E823372C
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Oct 2025 22:02:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 314D44A35
+	for <linux-xfs@vger.kernel.org>; Thu, 30 Oct 2025 23:18:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761861768; cv=none; b=rMmd96z3Gh/ywxGYKsNTS/wlMdOGM0goz4dZ5dI/Do3V2eI+Oyrl/rZ7Mp7BD8SVWW5ENkG+eKmSeWud9ZbMeU5gFgNN1FjcmKDLIhix0FO515dpgnA4vKZNS2pOq8JeyKo6iwP4awoORjKWAYC96+WLeJoaEVZS/yCqCq10A1g=
+	t=1761866331; cv=none; b=obdLU5Fn1DoziCIXolr7g03Cy9t9mgfMdBxGP5MkxIGG7k7+dZDz9llLiXRvAkQA/zoSBeUzl5s2LcwJ0m3nL9o7Z5QR7Q2YaNBIeDuHc791JYmfMn20TghdxJM7HxKi2++R1Mp+SAQCdJkEET//I0VgY0g+O97TExdrTN1dsxk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761861768; c=relaxed/simple;
-	bh=UvRyiZNqMNUKokDlWDsbCD3weBxD2oq5vMb44qnepsw=;
+	s=arc-20240116; t=1761866331; c=relaxed/simple;
+	bh=uyIXTX283OC1kScJiq1BmNvAstOmpxdr5HCMuNHi0fQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iIPqc2QzDuxJ1ZH6zsB8Q3HjM8foCKpk+nNAkP3IyLOWWzogyZ60SHMcn/0XcGi0por0s+QZuxBeqd39b/xq404hpQyNVUUtjnP3BBCoDVJ2JA9bHGqIIew68XCbwZwtOBteYEQ/uCc0cA93OZYEWiVTCUKp7mxH7OZv9bBiFSY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=YW+HpKG9; arc=none smtp.client-ip=209.85.214.175
+	 Content-Type:Content-Disposition:In-Reply-To; b=uh+26xgvEcb2R0WA+YfgUzu6lkTlyynDQuVyqYqhyj19UCj2MT1d3oLcD3qyaqY0ltBAyN3eqHceYT29iEQ3FyBZjcL8SL+f97uIa/rT0wnz74PyzEvTjNGtKT7J+vthvmUGJKeEHK6p7nUHIOeU/CM9J3NtHzNdeVs7luTPGuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=MjkRN0eU; arc=none smtp.client-ip=209.85.214.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="YW+HpKG9"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-290d4d421f6so16409055ad.2
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Oct 2025 15:02:46 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="MjkRN0eU"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-295018cbc50so15249385ad.3
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Oct 2025 16:18:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1761861766; x=1762466566; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=e5LA5B446ZeXEQHrU7Ra5D5BiNT5+4vY/ARHOc1M/cs=;
-        b=YW+HpKG9ayD6GegW6NezJzkN0SqzwrSxdvOG4apPJFCam0i29cg6u7OEmBHmVMSo2m
-         cw5WLbdYG5mbAfwc0d1f5Xy1bwdOlzt4WlWBwP4ITVf8/Ak3y4z9Rraa7vRLhoKSZALd
-         0A/nlP1HKNhGW1hdFfr+fXnFb52FUNUNOkEZAi8tMw7ALeCyP5+adoXlVQxLKpFGNpv7
-         WBTmq36FHtV9zCeSArzoi+0SqPZflrlyiE20uaF/RMRjoUoHHIBOQAx3M26Ulg+ku69m
-         5Zg7PBRph9+HTG/HiDyAYoI2IExdn2859P4c+ueP9MnWc1OmXg109rVGCee5U321jzDd
-         tCeg==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1761866329; x=1762471129; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=qCbSBxSr0lLm7sBF21gLzNw2k4fWMvq9RhDFJxnnKCU=;
+        b=MjkRN0eUQYCY+pow13wzfHTyaRtLTZMsgpaIePm6uu+qnhlXj3rR535w+YrIxQ28h7
+         TLI5cmdgr/ZDpm14ymS20tSuC2us1e0xaVwtFBCYnm2wanpXzlgo/OFSvPN4teLcf/YE
+         /of6Mz40YLKckhLZ6V1NxZvGPGN5ttbCAeYsIGHIArq10p+wOOcOJGa9oTeeT4daqwyt
+         G2Qhg7IzpEOUwQzT0V+09gZkgduXmCV+IJtrC/hkwYITTCbvwysP79wJFSbNg8Y2Rnh3
+         fSFG8tN9e/wjgtIKjQDlK6Y4HzBOyQ8yMLQmL3Cn660PUQx7xKStnYKvtvqDpNB7oC37
+         /waQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761861766; x=1762466566;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=e5LA5B446ZeXEQHrU7Ra5D5BiNT5+4vY/ARHOc1M/cs=;
-        b=E16aOHaLX7jl/ggwBsqIq7yEnXjpHe7qFHq9Z4UCfSYiS9+zCuEVoc3Pl6yiRUP/cQ
-         kHK4qHq0sxWQNrAqP3J1bEBrSlcm9iZojo/RfqtqWGuDAjaOal4vDtsLKOXF/lobr/+m
-         3XElp+dNrbtH9ix9oNuQC4F5EkxHdIedlI8xfCH5L0/qg4diiZJPVoFyCaeVsRUIVlGU
-         4WcLdyXJu2r8G6c4LmjWh4UJyT4gXP6ppV6FWZ7ETLVWSnws85E46KPGydbAHouaVW5a
-         BkMTIqRetTtWurfKMDeVTlR4FWCIvsLv7SueEVhTA5dpCIV5NJ2ocLj0rsLH61pIFapk
-         ftsg==
-X-Forwarded-Encrypted: i=1; AJvYcCWRS7tO8mCIwbevlDFqhw1NQz9D2PuxVqvS+nXMZ7+AyzuBh6X5v4QVQ1V0TOtIjoalWORS0uSfBMg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzdFf9ed+6SjkYgwSuIk1ViwOL64eL/MB/TzkyCbPJ953tIwFCW
-	UR3f7jBMjeJDa1LVEEnP8aBzFaI8bTa99hPMA6JF+MU9Wajbd1uNDWmwhxbNFznMtOM=
-X-Gm-Gg: ASbGncsT46nF53IiMmfEdQLJni6Mfdd9deDsM06OqruuPmKblqX5xo9MhmqTFpqX3L0
-	hK+JRkk/Q/NgihdVwmFRSp7+TicormuPv4mlXsZfZTXNFt/jvALqbIJSsfo/uUhQ7Y5frNxoCc5
-	NQCNZcuRMmoMBfb2j/Khv4IrQ9hb27xo2wLe+m8O67IkgJmObTIv9odi9e6J981Fv+GOAM10ysb
-	lnmxgoaPvlb6QrEQzTIX034/SQbZASD8tuGZhChCW2+FMjXqeTuPAUCZu3+RUrU0Ums4O4M7vf5
-	KG2SHEWulWBqbQjlkPTxHtRlDcOje4r4F/K2L/DN8vaAlxgHpt3LlXuVR4ElbW9HSk6LTJCQBXr
-	xrGkWdT7NWwGdHvv6bC11hUi9tx2QMOGAFeID1WQI8IB7Ea7DlW6vzhhwX1QZXwv7fZWBAa7P7g
-	VQUbzCJCDoN46ByJ/ZTfJ6VFSOjIVQMN7xUeJDGDfZQysa3FiJExU=
-X-Google-Smtp-Source: AGHT+IEUK4VY3vlv2EG4ggLi7rfSvrtgNznZMJVA1McqV5dhVhLohhKpNsIroL+zzWYFGo32TwDWLg==
-X-Received: by 2002:a17:903:2312:b0:24c:7b94:2f53 with SMTP id d9443c01a7336-2951a420e44mr15402805ad.6.1761861765826;
-        Thu, 30 Oct 2025 15:02:45 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1761866329; x=1762471129;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qCbSBxSr0lLm7sBF21gLzNw2k4fWMvq9RhDFJxnnKCU=;
+        b=rHDplyPN72eZ+vG5/iPdU3VmevPfJRPVVQ39MgbZLrkvp8DXPAYuq2c4P5Tug7Ri2n
+         /0q+FcQ0k7NFH1yupoAc1qgkZvMqDiQJ/mlzloQXL1zbzU4p9g+kDzesRJTzK/a78x/O
+         9oeju3jy+iwgNwjO8gxtB4ASBHidKXWQrHXZ6liedbF+tijXZgRDu4DAcvD3NgK6/bmf
+         1+/s+5DxO8W5kseNodw621imXNaB5ZOHzLqdUX54A4CXxwv7y26eOE4aCb34X1pKi3fr
+         pcYPknYpM1VmFtqSxbViJIEh1aBDE5i4Z62UwJ8EBLBQAwBbRL5dsAsHN26X+4oU93d/
+         XxTQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV7pPBvexMuOxSSEyPSA5ULfBTIqLwXF+1i+WfPuisImKKU+B0+nRVsEyY96hYCRfVxmslrDo9ZDRk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzgLTSDM5HJkgayTiulFKkNiobS4IIogmc+NTkZ2Vobk+Qj/zsl
+	h7blNfcc/5qb7+f3gVveE7zQFdYcUZyI5mGbBoVjdpEysuRGSUTWvtkw101Zgl8fjO0=
+X-Gm-Gg: ASbGncuqEPX4aGEir/jaJ/eJWgBw6XexYRFW6mYd8xaF9B5rqVVi1afdQFzbed7ccrW
+	Iuy6cab4jWIjkBSJ1MvZUxTgOeYbHLJgSCg+x1GUltW8mmo49pM9RXzDqivr+MwEnNhxNt4SQnC
+	N3o9sf/7EsdUWIQClfqDMDBPYoh60eDk+NjMzuD7zYI310HANzqnV/4YgeMKYKkOrHu1ZYrgxAu
+	7aWRGV6dk2IVAJaryNbtzfSAe398iJKe9rghtf2DXLc1Ih86wZpsl5ZOUmmqTsVYSi+sVRVlT2D
+	Wy72moSPwlNf9vylxEjVlFXJKQefGHE+56U/kJbi9CCskDJ8kK6OHsZrenQb6rG1I9TNsjv0mBd
+	AUvBZKhHwDZwRGlQHYy+2yffBLYR77TBcfPdEYSmvIdPW1xw3N9YPfNcnryK/bVzJe+xz8gPRGR
+	8OsPD8607o8SMQqMuaAapSmGhHZifjSUICfBJypeO5FL+MLH7laZk=
+X-Google-Smtp-Source: AGHT+IGCGfP0IWbXjpKpFiO2EIcl6d55MTKqgA8ReFs8GKHUG4igFi9rEAY/xEAVF+O7aUhdVIl2Ew==
+X-Received: by 2002:a17:902:fc45:b0:295:73f:90db with SMTP id d9443c01a7336-2951a524b7bmr20673395ad.41.1761866329403;
+        Thu, 30 Oct 2025 16:18:49 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-58-136.pa.nsw.optusnet.com.au. [49.181.58.136])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2951ab8c1dfsm6755835ad.75.2025.10.30.15.02.45
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2952699cd48sm982535ad.83.2025.10.30.16.18.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Oct 2025 15:02:45 -0700 (PDT)
+        Thu, 30 Oct 2025 16:18:48 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.98.2)
 	(envelope-from <david@fromorbit.com>)
-	id 1vEajC-00000004HIE-0S7o;
-	Fri, 31 Oct 2025 09:02:42 +1100
-Date: Fri, 31 Oct 2025 09:02:42 +1100
+	id 1vEbuo-00000004Ia1-0Gmg;
+	Fri, 31 Oct 2025 10:18:46 +1100
+Date: Fri, 31 Oct 2025 10:18:46 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Geoff Back <geoff@demonlair.co.uk>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>,
 	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
@@ -74,88 +73,104 @@ Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
 	linux-block@vger.kernel.org
 Subject: Re: fall back from direct to buffered I/O when stable writes are
  required
-Message-ID: <aQPggv2LK4kkXj3L@dread.disaster.area>
+Message-ID: <aQPyVtkvTg4W1nyz@dread.disaster.area>
 References: <20251029071537.1127397-1-hch@lst.de>
  <aQNJ4iQ8vOiBQEW2@dread.disaster.area>
- <5ac7fb86-07a2-4fc6-959e-524ff54afebf@demonlair.co.uk>
+ <20251030143324.GA31550@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <5ac7fb86-07a2-4fc6-959e-524ff54afebf@demonlair.co.uk>
+In-Reply-To: <20251030143324.GA31550@lst.de>
 
-On Thu, Oct 30, 2025 at 12:00:26PM +0000, Geoff Back wrote:
-> On 30/10/2025 11:20, Dave Chinner wrote:
-> > On Wed, Oct 29, 2025 at 08:15:01AM +0100, Christoph Hellwig wrote:
-> >> Hi all,
-> >>
-> >> we've had a long standing issue that direct I/O to and from devices that
-> >> require stable writes can corrupt data because the user memory can be
-> >> modified while in flight.  This series tries to address this by falling
-> >> back to uncached buffered I/O.  Given that this requires an extra copy it
-> >> is usually going to be a slow down, especially for very high bandwith
-> >> use cases, so I'm not exactly happy about.
+On Thu, Oct 30, 2025 at 03:33:24PM +0100, Christoph Hellwig wrote:
+> On Thu, Oct 30, 2025 at 10:20:02PM +1100, Dave Chinner wrote:
+> > > use cases, so I'm not exactly happy about.
+> > 
 > > How many applications actually have this problem? I've not heard of
 > > anyone encoutnering such RAID corruption problems on production
 > > XFS filesystems -ever-, so it cannot be a common thing.
-> >
-> > So, what applications are actually tripping over this, and why can't
-> > these rare instances be fixed instead of penalising the vast
-> > majority of users who -don't have a problem to begin with-?
-> I don't claim to have deep knowledge of what's going on here, but if I
-> understand correctly the problem occurs only if the process submitting
-> the direct I/O is breaking the semantic "contract" by modifying the page
-> after submitting the I/O but before it completes.  Since the page
-> referenced by the I/O is supposed to be immutable until the I/O
-> completes, what about marking the page read only at time of submission
-> and restoring the original page permissions after the I/O completes? 
-> Then if the process writes to the page (triggering a fault) make a copy
-> of the page that can be mapped back as writeable for the process - i.e.
-> normal copy-on-write behaviour
+> 
+> The most common application to hit this is probably the most common
+> use of O_DIRECT: qemu.  Look up for btrfs errors with PI, caused by
+> the interaction of checksumming.  Btrfs finally fixed this a short
+> while ago, and there are reports for other applications a swell.
 
-There's nothing new in this world - this is pretty much how the IO
-paths in Irix worked back in the mid 1990s. The transparent
-zero-copy buffered read and zero-copy network send paths that this
-enabled was one of the reasons why Irix was always at the top of the
-IO performance charts, even though the CPUs were underpowered
-compared to the competition...
+I'm not asking about btrfs - I'm asking about actual, real world
+problems reported in production XFS environments.
 
-> - and write a once-per-process dmesg
-> warning that the process broke the direct I/O "contract". 
+> For RAID you probably won't see too many reports, as with RAID the
+> problem will only show up as silent corruption long after a rebuild
+> rebuild happened that made use of the racy data.
 
-Yes, there was occasionally an application that tried to re-use
-buffers before the kernel was finished with them and triggered the
-COW path.  However, these were easily identified and generally fixed
-pretty quickly by the application vendors because performance was
-the very reason they were deploying IO intensive applications on
-SGI/Irix platforms in the first place....
+Yet we are not hearing about this, either. Nobody is reporting that
+their data is being found to be corrupt days/weeks/months/years down
+the track.
 
-> And maybe tag
-> the process with a flag that forces all future "direct I/O" requests
-> made by that process to be automatically made buffered?
->
-> That way, processes that behave correctly still get direct I/O, and
-> those that do break the rules get degraded to buffered I/O.
+This is important, because software RAID5 is pretty much the -only-
+common usage of BLK_FEAT_STABLE_WRITES that users are exposed to.
+This patch set is effectively disallowing direct IO for anyone
+using software RAID5.
 
-Why? The cost of the COW for the user page is the same as copying
-the data in the first place. However, if COW faults are rare, then
-allowing DIO to continue will result in better performance overall.
+That is simply not an acceptible outcome here.
 
-The other side of this is that falling back to buffered IO for AIO
-is an -awful thing to do-. You no longer get AIO behaviour - reads
-will block on IO, and writes will block on reads and other writes...
+> With checksums
+> it is much easier to reproduce and trivially shown by various xfstests.
 
-> Unfortunately I don't know enough to know what the performance impact of
-> changing the page permissions for every direct I/O would be.
+Such as? 
 
-On high performance storage, it will almost certainly be less of an
-impact than forcing all IO to be bounce buffered through the page
-cache.
+> With increasing storage capacities checksums are becoming more and
+> more important, and I'm trying to get Linux in general and XFS
+> specifically to use them well.
+
+So when XFS implements checksums and that implementation is
+incompatible with Direct IO, then we can talk about disabling Direct
+IO on XFS when that feature is enabled. But right now, that feature
+does not exist, and ....
+
+> Right now I don't think anyone is
+> using PI with XFS or any Linux file system given the amount of work
+> I had to put in to make it work well, and how often I see regressions
+> with it.
+
+.... as you say, "nobody is using PI with XFS".
+
+So patchset is a "fix" for a problem that no-one is actually having
+right now.
+
+> > Forcing a performance regression on users, then telling them "you
+> > need to work around the performance regression" is a pretty horrible
+> > thing to do in the first place.
+> 
+> I disagree.  Not corruption user data for applications that use the
+> interface correctly per all documentation is a prime priority.
+
+Modifying an IO buffer whilst a DIO is in flight on that buffer has
+-always- been an application bug.  It is a vector for torn writes
+that don't get detected until the next read. It is a vector for
+in-memory data corruption of read buffers.
+
+Indeed, it does not matter if the underlying storage asserts
+BLK_FEAT_STABLE_WRITES or not, modifying DIO buffers that are under
+IO will (eventually) result in data corruption.  Hence, by your
+logic, we should disable Direct IO for everyone.
+
+That's just .... insane.
+
+Remember: O_DIRECT means the application takes full responsibility
+for ensuring IO concurrency semantics are correctly implemented.
+Modifying IO buffers whilst the IO buffer is being read from or
+written to by the hardware has always been an IO concurrency bug in
+the application.
+
+The behaviour being talked about here is, and always has been, an
+application IO concurrency bug, regardless of PI, stable writes,
+etc. Such an application bug existing is *not a valid reason for the
+kernel or filesystem to disable Direct IO*.
 
 -Dave.
 -- 
