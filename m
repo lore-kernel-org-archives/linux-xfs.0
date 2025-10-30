@@ -1,134 +1,133 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sender-op-o19.zoho.eu (sender-op-o19.zoho.eu [136.143.169.19])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E387D2E762E
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Oct 2025 11:20:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761823208; cv=none; b=AXZUzSS82Ia/GkFEAPAYl9xP95jVBIKFWH7aU/jjV+Sk2GLXv86yX4taVB6DgO/ExMhvxJA4Ykk2pv6Pz89I/HF+FUmi8UfLSr6AZTkeF3ChbRiDa6uoPP8cGlQqxSxyB2iR3z90xjrafG0Gzr26gmcyZj9LWkeyqffQTzS/jJI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761823208; c=relaxed/simple;
-	bh=B71bbQUME6bPFSPnTl2rUk+zM8rJpRXJqWB0RdN61nc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V9jkS79JmsMJgz95o5/zlYtuvItQEKR9gPppKqBLuZ/IzQ2PVLDS64j9aZuZRo1NeldpV5vB5D3+/gUWiBGLQ4GNkvd+DvcckxOQOab9dLEAB4caTqdKuDwTdHfPSK1BZyHA1zSB7W+0heGW7hHJ71iUOY+k1GNNk8ZGR7r5rwI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=FATxVZY5; arc=none smtp.client-ip=209.85.210.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84861287507
+	for <linux-xfs@vger.kernel.org>; Thu, 30 Oct 2025 12:02:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1761825746; cv=pass; b=lBwcwceKfdJ4c3aFR9PasEMfKUhgl0LSfkA724RhgmdrZdCWxGvTvkspIx7V/b9sJ2xzfKuWhYf/HReIeBpg1EOuYntHf4626NO1RdZ9Qu5Q+pgtsbzHVe6r+36Y0d94mwe05GfLtOovzP5OFXPBJ9vd+CKM06t+SPwhsCRkZk0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1761825746; c=relaxed/simple;
+	bh=84iQb1dwCxC9xyLsfKemUeFDBxUHPjVNNi+3KgD/8cA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LLM7CawvU9zwtFsizaNi8Qi/BD2xhqXKMMLNDcMsMizGCErgz4xMZk9hz36c8IYSkWEDLJ2+hUylfUX4+1lLZbUqtJVo/qWcyUfo2G4lw1c3DtmFO/g9eWbIYHAbxvgFIqEXf1ZiibYG3CjB6czSXLhRPq7sYppFdnkDFoPI9gE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=demonlair.co.uk; spf=pass smtp.mailfrom=demonlair.co.uk; dkim=pass (1024-bit key) header.d=demonlair.co.uk header.i=geoff@demonlair.co.uk header.b=Ufb36xN+; arc=pass smtp.client-ip=136.143.169.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=demonlair.co.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=demonlair.co.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="FATxVZY5"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-781206cce18so1142906b3a.0
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Oct 2025 04:20:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1761823206; x=1762428006; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=SNDVGLdLslRPQnKZM2E9zoqPqU4j8KmV4lXjwMAwzP8=;
-        b=FATxVZY52eiue2vTxnTXS9XbrgsPWcr82oXbq5fsVvXrS6fYt5UiVwU0LotBphrnXZ
-         gHYM4G9IRmiF7UaIj72aKzZnX6KklO9uQfDfb6nQCBIiHHuFduw7Ar2I6qeoBkbSodZz
-         09PNJ4tssChmILY10vyK0YUnBTH1Syl95PAmh9fgI/+icc/04QpDT1qekgpKZd4WLD63
-         ZmUTKWelBL8CzoRZki9MU5nC0BT+qE4eChtXTbX3fHyt5WC9PXp3SrQo3zWnPlBYrfCl
-         YBLv/58eGx3eWztGvRBsy7RARPcA7ewb8Y5vuFT8oRD+14CXLTNCF+2JpfnUvr04TRRq
-         rk+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761823206; x=1762428006;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SNDVGLdLslRPQnKZM2E9zoqPqU4j8KmV4lXjwMAwzP8=;
-        b=mv48XB4RLvwhOCYW70h7EBOhnlzydcJ07CA4AfIjGA2PMrkbQYD5xZ8tZ98gB2/lcv
-         73Sk2p7XQCxZNoBQVmTXaB+4bld6R2s9j42AURwWhHuHZyyIUX36lBUuoe3eqAmHlz3j
-         /ZW2f3sS0r0x4aU1nDeDPUYWGXXuOojg/++SWRcIGHpUTok7uHjxM0MIFVByEe3h3t6E
-         Biir9IyCstJ0fJakeUU04plgG/D/fYBq2I/7SdoUQTduIZGzigHBilmc6iXSnTt5SrV+
-         XLjza5FITU8skAksCK4VFuRxhdmJHoEk/y5+FtEGyPwmLyBX/L/jh2HrnBey65ZNaisM
-         6TrA==
-X-Forwarded-Encrypted: i=1; AJvYcCVkSGGfO9yrLFLuNTPcMu5EV71Ki4H/tYcp6cq6LkEdfWuPWCQVznpETrSW9ok//gbV5jlvC7f/FuY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzNyiA0Ezup9O4KBGdnCIHfK3rC+X3yu+r8g9pOib/KvoxflsUR
-	+yjAr/Kfyp0T3vELlI9ciXrK0yGhZZBOPNnmDUjpeCoMNLp6NN79MAwiS+waCqv4Sjc=
-X-Gm-Gg: ASbGncvYnSuc9UUMjny4070z/BMGN4UpaT7AlW/pd0Re73Z9g3ASKxmr2Ic/b1d39Yc
-	0PxGOlTrd3AEAcx2ZsH1tpL6CMeNOBfkEf36vsl2UGv5hpKi6uMNQmKfu9elw58BHzy3loYYOqQ
-	p100uBt5LkTbGQvQ1tgDVa0rf3a2r+n8JYdTxnFCZFcVL3gwOyaHKvFWxlqd9qOVWdK3SSKaJCJ
-	EBNjjRWRlg+7tbl1ThcZYgktriOtxr36zUdFirq3CPKV8lP9R9rvDAt5ixlnjIy6/YPfd+Pbrpt
-	CEWtY8qiJDJNsGKdAPtXVODZVN6yDsb67byUi7tYmnETZgzH3Bzeh/THhCY+mzuJA2C52jikzh0
-	mge5/bb2/fLDH51AkL6Lxt9352/OVcR8sA6OGHAGrt8PPXr7l4UBCtVbcbZQ57ILE49KbA7MUQ1
-	GIKdlCYguZ2lXm/5JwYhq1LP8FjisO20Bz8Z9wCExQJzU0sDuLFAlRH4z8CAmPog==
-X-Google-Smtp-Source: AGHT+IF/l5E8cKKK2vFaTAZgp/ZGb4MjtxoPBEtVt6VeAi8ECm9tlqHfB9lmTROZ9cINQrgWB7grkQ==
-X-Received: by 2002:a05:6a00:9507:b0:7a4:24af:e16f with SMTP id d2e1a72fcca58-7a612eb8487mr3627141b3a.3.1761823205858;
-        Thu, 30 Oct 2025 04:20:05 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-58-136.pa.nsw.optusnet.com.au. [49.181.58.136])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7a51bbc1b6csm5620722b3a.10.2025.10.30.04.20.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Oct 2025 04:20:05 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1vEQhG-000000044v1-299E;
-	Thu, 30 Oct 2025 22:20:02 +1100
-Date: Thu, 30 Oct 2025 22:20:02 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-block@vger.kernel.org
-Subject: Re: fall back from direct to buffered I/O when stable writes are
- required
-Message-ID: <aQNJ4iQ8vOiBQEW2@dread.disaster.area>
-References: <20251029071537.1127397-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=demonlair.co.uk header.i=geoff@demonlair.co.uk header.b="Ufb36xN+"
+ARC-Seal: i=1; a=rsa-sha256; t=1761825631; cv=none; 
+	d=zohomail.eu; s=zohoarc; 
+	b=Q8wrnbr+0lfEvwTSqeyHL3Em7bzliJUURbPvs5hnVRyLqY2+d7w7GNwBO5kh0k5URJmU89T7xNdN/fXk3FeYE5Yd4yXIaIVipX0oT+YxWzFGvZMszCjfUl6IOStM/ZkKWY3JpgEMBexG6p0tGZ84sMJdksvVh23FtuerOsfOyNo=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+	t=1761825631; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=EB0cp732OsDDfGOv/Hf8MnYe8fEWnlwPkpeCR1Zt+zo=; 
+	b=aoRdijVbvJYUfeufQw9Z8itd/Ye8AzamDWPy/YZdQnCHkiVd8Czk0IRy3pO+xNlifw6o3JdD1o6hFK96mR3bmC56m9llP3vAGuw0quQzk19fER4Vhgc/sEfZcqoiRK9DQGLl/o5OMUgrgGLIw3ldBX86FFSZNyzcaK5NtFGkPfI=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+	dkim=pass  header.i=demonlair.co.uk;
+	spf=pass  smtp.mailfrom=geoff@demonlair.co.uk;
+	dmarc=pass header.from=<geoff@demonlair.co.uk>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1761825631;
+	s=zmail; d=demonlair.co.uk; i=geoff@demonlair.co.uk;
+	h=Message-ID:Date:Date:MIME-Version:Subject:Subject:To:To:Cc:Cc:References:From:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=EB0cp732OsDDfGOv/Hf8MnYe8fEWnlwPkpeCR1Zt+zo=;
+	b=Ufb36xN+wsixKFppcR3FAeR8y8d0qKpHvgwwklV+AfMJV+Rb7Jw+vfudTsIET5LD
+	E9lNthtSwhk4yb4lIj4mgzEDFdKP6K3UbPZXMa9ZZk+Yn2csO20u50E5fMq+lJqaRzQ
+	NA+Etv36fZzmADqlaC7kLvfN66NsAPFhM+qdXuDE=
+Received: by mx.zoho.eu with SMTPS id 1761825628575601.0401082169022;
+	Thu, 30 Oct 2025 13:00:28 +0100 (CET)
+Message-ID: <5ac7fb86-07a2-4fc6-959e-524ff54afebf@demonlair.co.uk>
+Date: Thu, 30 Oct 2025 12:00:26 +0000
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251029071537.1127397-1-hch@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: fall back from direct to buffered I/O when stable writes are
+ required
+Content-Language: en-GB
+To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Christian Brauner <brauner@kernel.org>,
+ Jan Kara <jack@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+ linux-block@vger.kernel.org
+References: <20251029071537.1127397-1-hch@lst.de>
+ <aQNJ4iQ8vOiBQEW2@dread.disaster.area>
+From: Geoff Back <geoff@demonlair.co.uk>
+In-Reply-To: <aQNJ4iQ8vOiBQEW2@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ZohoMailClient: External
 
-On Wed, Oct 29, 2025 at 08:15:01AM +0100, Christoph Hellwig wrote:
-> Hi all,
-> 
-> we've had a long standing issue that direct I/O to and from devices that
-> require stable writes can corrupt data because the user memory can be
-> modified while in flight.  This series tries to address this by falling
-> back to uncached buffered I/O.  Given that this requires an extra copy it
-> is usually going to be a slow down, especially for very high bandwith
-> use cases, so I'm not exactly happy about.
+On 30/10/2025 11:20, Dave Chinner wrote:
+> On Wed, Oct 29, 2025 at 08:15:01AM +0100, Christoph Hellwig wrote:
+>> Hi all,
+>>
+>> we've had a long standing issue that direct I/O to and from devices that
+>> require stable writes can corrupt data because the user memory can be
+>> modified while in flight.  This series tries to address this by falling
+>> back to uncached buffered I/O.  Given that this requires an extra copy it
+>> is usually going to be a slow down, especially for very high bandwith
+>> use cases, so I'm not exactly happy about.
+> How many applications actually have this problem? I've not heard of
+> anyone encoutnering such RAID corruption problems on production
+> XFS filesystems -ever-, so it cannot be a common thing.
+>
+> So, what applications are actually tripping over this, and why can't
+> these rare instances be fixed instead of penalising the vast
+> majority of users who -don't have a problem to begin with-?
+I don't claim to have deep knowledge of what's going on here, but if I
+understand correctly the problem occurs only if the process submitting
+the direct I/O is breaking the semantic "contract" by modifying the page
+after submitting the I/O but before it completes.  Since the page
+referenced by the I/O is supposed to be immutable until the I/O
+completes, what about marking the page read only at time of submission
+and restoring the original page permissions after the I/O completes? 
+Then if the process writes to the page (triggering a fault) make a copy
+of the page that can be mapped back as writeable for the process - i.e.
+normal copy-on-write behaviour - and write a once-per-process dmesg
+warning that the process broke the direct I/O "contract".  And maybe tag
+the process with a flag that forces all future "direct I/O" requests
+made by that process to be automatically made buffered?
 
-How many applications actually have this problem? I've not heard of
-anyone encoutnering such RAID corruption problems on production
-XFS filesystems -ever-, so it cannot be a common thing.
+That way, processes that behave correctly still get direct I/O, and
+those that do break the rules get degraded to buffered I/O.
 
-So, what applications are actually tripping over this, and why can't
-these rare instances be fixed instead of penalising the vast
-majority of users who -don't have a problem to begin with-?
+Unfortunately I don't know enough to know what the performance impact of
+changing the page permissions for every direct I/O would be.
 
-> I suspect we need a way to opt out of this for applications that know
-> what they are doing, and I can think of a few ways to do that:
+>
+>> I suspect we need a way to opt out of this for applications that know
+>> what they are doing, and I can think of a few ways to do that:
+> ....
+>
+>> In other words, they are all kinda horrible.
+> Forcing a performance regression on users, then telling them "you
+> need to work around the performance regression" is a pretty horrible
+> thing to do in the first place. Given that none of the workarounds
+> are any better, perhaps this approach should be discarded and some
+> other way of addressin the problem be considered?
+>
+> How about we do it the other way around? If the application is known
+> to corrupt stable page based block devices, then perhaps they should
+> be setting a "DIO is not supported" option somewhere. None of them
+> are pretty, but instead of affecting the whole world, it only
+> affects the rare applications that trigger this DIO issue.
+>
+> That seems like a much better way to deal with the issue to me;
+> most users are completely unaffected, and never have to worry about
+> (or even know about) this workaround for a very specific type of
+> weird application behaviour...
+Yes, I completely agree that we should not be penalising processes that
+obey the direct I/O rules for the benefit of those that do not.
 
-....
+>
+> -Dave.
+>
+Regards,
 
-> In other words, they are all kinda horrible.
+Geoff.
 
-Forcing a performance regression on users, then telling them "you
-need to work around the performance regression" is a pretty horrible
-thing to do in the first place. Given that none of the workarounds
-are any better, perhaps this approach should be discarded and some
-other way of addressin the problem be considered?
-
-How about we do it the other way around? If the application is known
-to corrupt stable page based block devices, then perhaps they should
-be setting a "DIO is not supported" option somewhere. None of them
-are pretty, but instead of affecting the whole world, it only
-affects the rare applications that trigger this DIO issue.
-
-That seems like a much better way to deal with the issue to me;
-most users are completely unaffected, and never have to worry about
-(or even know about) this workaround for a very specific type of
-weird application behaviour...
-
--Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
