@@ -1,149 +1,108 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E1C229AB1D
-	for <linux-xfs@vger.kernel.org>; Fri, 31 Oct 2025 19:01:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11FBB2FFFAC;
+	Fri, 31 Oct 2025 20:54:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761937315; cv=none; b=BiWdbetPjgzl/dXEt2R2xOKG1trfCpBYrxzClsOmuUlld9VHuINnDuQ75jYlTWRvbT3cj4BALjozYTRyFY0dkbgNYb5nnLXGt8Lk9VIwJdcmXZ5rciYKgePrALbQasUR6bEW53vMLoPIA+lNogfQ/Mq3FfkUIMSQE8ldJV2haqY=
+	t=1761944074; cv=none; b=c8RF7MHozzij4bwAGAKayBMn0CZ/bWuIZxwM4BSkqRZ3SmqfXkYbfKyGN+eAQYe+3rCm/GdkZbDwenijj97QOuIEC7iNA2Jj9kIPOuVP7jhApZcSOSiX28Sd+J92KTzbWeefYHbuMb+KjNDxIGaa14boCxENtI3+Q3N5+wyQ34I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761937315; c=relaxed/simple;
-	bh=Rc6Q9xWMMggPEwaOpNGLrHi9Fik8q5zYFRrNjwpc0/k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SBBwI427SVmpjrz9rE4nHQkfk0ZGdG6rUhwhdoghzN/9u8821KlcZcRUwQlYzUUPU6TT5e/94kT1AdN7v/ysA/9riSRArMxPoZiyv6Gni83Al7VUUK7kMnm5ficPEyUS6VJ1GdGM95KsfIZQfc5GP8CuQPT0tgOIneNlHL9vXjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=mquQfEy/; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=kYUGwhsi; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=mquQfEy/; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=kYUGwhsi; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1761944074; c=relaxed/simple;
+	bh=XzbD3U2ssINq49YtuphnaJClHSm/ht17xeUcSKx5hP0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=hB2SDIsIizdetQxqeyTV/xFN/OqWyxhb0yEtx6ZOKDpULWaWVgIrI6/lpzA7sAVdQSjgO54Akmxrz9QlJRycgCJjmi/wXR5iVociLR2ZSmBnNRhF1mGkWddSAK4jR8627j5SJgn6RgZiuF7YSxr6C6WxGp++dsl86Zf447oiVis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3hvDimZ4; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="mquQfEy/";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="kYUGwhsi";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="mquQfEy/";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="kYUGwhsi"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3hvDimZ4"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cytWr0jGvzlpkk1;
+	Fri, 31 Oct 2025 20:54:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1761944069; x=1764536070; bh=tdPb1N/XvciTu3RYqzV2sI8G
+	GuB9BnyZJXd9jeyzPVI=; b=3hvDimZ4pmAE3kPI9/Qi3OGemeLEeui3ruzROjBn
+	E9j0eA8tDDjAZwnY4kN1Q/hbHL+dLF2ZPDd7JH90wIsr8QR5RWjMgFbakqMUQsxL
+	YkqMQFVpaFcwIctAh5cmMhyCXTcFjjx9Pv7OZq8TqTQu0iV1lo+OKZD9UFU9lmD4
+	CdYhyqYdrHHyVlwsdu+yl48KvBLlv+busO5s2lP3HodQ5Pa/t0FDQEdLK/ngJnf9
+	vER4MxP74/j0GFH3Ec3OO2uulmXNtCt4++wY0oJ6U9U32k55BP8w04gmOrYs7f4f
+	u7ETNfkeFj1iPjc3ho+MAghTB9qxJVWf0Ir932vxJnEnIw==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 2Pf8FqZxqiMt; Fri, 31 Oct 2025 20:54:29 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 2CB9D1F388;
-	Fri, 31 Oct 2025 19:01:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1761937312;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9u2ib0p1crU+V4c12Wzt2tPwDYX53KhojBLRjOI3oNU=;
-	b=mquQfEy/Gr7umKzu9IujQbUMiVgdErMIu8C4J38FnezWX2dPsaCO+drUV2k2pvOySEqCjk
-	+r1zjxWzmT2uEdGpOIL5DpGSRH2oeklnfaxAtA8EWh1TSooKvlZvUJM3fQ1wZsoquHbgUb
-	fa+d9a3ylp+TKfHK7faBe5t+Scc43ag=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1761937312;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9u2ib0p1crU+V4c12Wzt2tPwDYX53KhojBLRjOI3oNU=;
-	b=kYUGwhsinUCwJhrkk01oTYblkBx+ovLhG8BoJQOBwqR/HSRkxiQFj9zKHcF+XPOsASWVgL
-	E6ml/jAt/NW0QmCQ==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b="mquQfEy/";
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=kYUGwhsi
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1761937312;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9u2ib0p1crU+V4c12Wzt2tPwDYX53KhojBLRjOI3oNU=;
-	b=mquQfEy/Gr7umKzu9IujQbUMiVgdErMIu8C4J38FnezWX2dPsaCO+drUV2k2pvOySEqCjk
-	+r1zjxWzmT2uEdGpOIL5DpGSRH2oeklnfaxAtA8EWh1TSooKvlZvUJM3fQ1wZsoquHbgUb
-	fa+d9a3ylp+TKfHK7faBe5t+Scc43ag=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1761937312;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9u2ib0p1crU+V4c12Wzt2tPwDYX53KhojBLRjOI3oNU=;
-	b=kYUGwhsinUCwJhrkk01oTYblkBx+ovLhG8BoJQOBwqR/HSRkxiQFj9zKHcF+XPOsASWVgL
-	E6ml/jAt/NW0QmCQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0B7C913393;
-	Fri, 31 Oct 2025 19:01:52 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id JECeAqAHBWmZFgAAD6G6ig
-	(envelope-from <dsterba@suse.cz>); Fri, 31 Oct 2025 19:01:52 +0000
-Date: Fri, 31 Oct 2025 20:01:50 +0100
-From: David Sterba <dsterba@suse.cz>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org, Keith Busch <keith.busch@wdc.com>,
-	Christoph Hellwig <hch@lst.de>, dm-devel@lists.linux.dev,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
-	David Sterba <dsterba@suse.com>
-Subject: Re: [PATCH 12/13] btrfs: use blkdev_report_zones_cached()
-Message-ID: <20251031190150.GJ13846@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-References: <20251031061307.185513-1-dlemoal@kernel.org>
- <20251031061307.185513-13-dlemoal@kernel.org>
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cytWZ5Cn9zlnfZD;
+	Fri, 31 Oct 2025 20:54:17 +0000 (UTC)
+Message-ID: <c2734f13-aad7-43a0-a164-b8504ffc1cb4@acm.org>
+Date: Fri, 31 Oct 2025 13:54:16 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251031061307.185513-13-dlemoal@kernel.org>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
-X-Rspamd-Queue-Id: 2CB9D1F388
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.21 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	HAS_REPLYTO(0.30)[dsterba@suse.cz];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	MIME_TRACE(0.00)[0:+];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	TO_DN_SOME(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCPT_COUNT_TWELVE(0.00)[15];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	ARC_NA(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	REPLYTO_ADDR_EQ_FROM(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	REPLYTO_DOM_NEQ_TO_DOM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.com:email]
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spam-Score: -4.21
-X-Spam-Level: 
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 04/13] block: introduce disk_report_zone()
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
+ David Sterba <dsterba@suse.com>
+References: <20251031061307.185513-1-dlemoal@kernel.org>
+ <20251031061307.185513-5-dlemoal@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20251031061307.185513-5-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, Oct 31, 2025 at 03:13:06PM +0900, Damien Le Moal wrote:
-> Modify btrfs_get_dev_zones() and btrfs_sb_log_location_bdev() to replace
-> the call to blkdev_report_zones() with blkdev_report_zones_cached() to
-> speed-up mount operations. btrfs_get_dev_zone_info() is also modified to
-> take into account the BLK_ZONE_COND_ACTIVE condition, which is
-> equivalent to either BLK_ZONE_COND_IMP_OPEN, BLK_ZONE_COND_EXP_OPEN or
-> BLK_ZONE_COND_CLOSED.
-> 
-> With this change, mounting a freshly formatted large capacity (30 TB)
-> SMR HDD completes under 100ms compared to over 1.8s before.
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+On 10/30/25 11:12 PM, Damien Le Moal wrote:
+> -struct disk_report_zones_cb_args {
+> -	struct gendisk	*disk;
+> -	report_zones_cb	user_cb;
+> -	void		*user_data;
+> +/*
+> + * Zone report arguments for block device drivers report_zones operation.
+> + * @cb: report_zones_cb callback for each reported zone.
+> + * @data: Private data passed to report_zones_cb.
+> + */
+> +struct blk_report_zones_args {
+> +	report_zones_cb cb;
+> +	void		*data;
+>   };
 
-Acked-by: David Sterba <dsterba@suse.com>
+The suffix "_args" seems confusing to me because this data structure
+includes a callback pointer. Please consider changing "_args" into "_cb"
+to make it clear that the data structure includes a callback pointer.
+Another data structure that follows this convention is struct
+blk_plug_cb:
+
+   struct blk_plug_cb;
+   typedef void (*blk_plug_cb_fn)(struct blk_plug_cb *, bool);
+   struct blk_plug_cb {
+	struct list_head list;
+	blk_plug_cb_fn callback;
+	void *data;
+   };
+
+Since struct blk_report_zones_args is passed as an argument to
+disk_report_zone(), how about renaming this data structure into
+struct disk_report_zone_cb?'
+
+Otherwise this patch looks good to me.
+
+Thanks,
+
+Bart.
