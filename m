@@ -1,100 +1,157 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A132534EF14;
-	Fri, 31 Oct 2025 17:47:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBEDB306B0D;
+	Fri, 31 Oct 2025 17:48:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761932855; cv=none; b=jwC1DShLIaJHm88bgD97ZXmDyNO1i8w568AQnFHuQlddxfUjqfSrpvLUwnuXM3eT6ShmTNffFkggW3hX3Ph/t03U9yZD4O5MonPWBIGqpqylZTYgloDilB3Ts1wwXX/nBl0jchocBxSrvO3VKwdK7nWcNO4s34UuhN+u12Khizk=
+	t=1761932905; cv=none; b=K+pP0Cwy1lV1W7BvjAU/Zc2syUltwMTrBnpBAsTBe2cagGpiFstwLOeYp8d7ICRVE967tqWVNPpDwZ1rVZJhGt0oO689TZCgeYU8H5TBe4R45Q2NjIVK2P9OXEC974zpAadsO1reIikoxMoA+WZ17bS5RdpLvg6t/jzgys0Xhlg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761932855; c=relaxed/simple;
-	bh=QYNCbVboIyAG/M4KnYvYdhCRbkd+KqDrsyXRpF7+N0s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bXQ1zd0sK261S+GulvqCHdNomDaxhmZfSln5Do8Hq9mgw/Kkf5KTdsyHo+U8rRqEG8EzIRUQPgi6QjZaXGYPEC51oJ4DI5gqtu7hCu9/5qFoYc0TeXqkOvKP7QWBIynH5vRX1v1gE9yaahmiE+ytg4pY/mzjKkX+iH2qalv7rO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fb+37qJt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761932905; c=relaxed/simple;
+	bh=TirghRST3T97Ek6HMrDXmUxlQBdHwkN3Ro2bVMgzjlI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=XziBdy3Lx3gPhccaefTgecyV9qilo1jQMh+GrmTE2t2zriPIJ/YVu3s6z4dqzDDc1o7F6rmmpE0beQ5hBs1BW7j6RAHd8XxQV6NBqZ7lscf8Fjj7XdTYm3sHP3LISPfysAPyWO2cWLV6LfBkJOx2Fc1xlkEecFtWt0ekhOj0fjg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=mvnNsEhs; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fb+37qJt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE6E1C4CEE7;
-	Fri, 31 Oct 2025 17:47:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761932855;
-	bh=QYNCbVboIyAG/M4KnYvYdhCRbkd+KqDrsyXRpF7+N0s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Fb+37qJt+rK3tbME64cnPGBhGOeQF/HKiEy0kvHKy4VPKFtNQCQgWv9073tx5zDql
-	 9AEqpLxzGWQ/zjjsr+KonaPKvrZGmtNqztrnUdXcKS5ag558OYyg9K86A9IKV2yIHl
-	 lizcVJ/1dAT28U3SJf+xsGd5PoLibs0ADF+q9J9KmA1KFC8gqXIUlOPKQVMWG813jg
-	 DeC553v19e28HXhY4aDAC9thP1htCZPIdv8A6WHdydn9U1c8XCOkrqxYNTZx1WiHtX
-	 6ZMWBYNLoVUuXxnMxZJIrCuqXDl1XbazrwkAD55NiRo8eHaGUVcvcKwacZ62GCR3E5
-	 u94PpeXF4CXDw==
-Date: Fri, 31 Oct 2025 10:47:34 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: zlang@redhat.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/11] generic/778: fix severe performance problems
-Message-ID: <20251031174734.GD6178@frogsfrogsfrogs>
-References: <176107188615.4163693.708102333699699249.stgit@frogsfrogsfrogs>
- <176107188833.4163693.9661686434641271120.stgit@frogsfrogsfrogs>
- <aPhbp5xf9DgX0If7@infradead.org>
- <20251022042731.GK3356773@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="mvnNsEhs"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cypNw6qsGzlvq50;
+	Fri, 31 Oct 2025 17:48:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1761932894; x=1764524895; bh=nL551B3V05vqyW+XimcHYYij
+	1ibWq2M2wbELFVqT4RY=; b=mvnNsEhs1PPWUDvDh1SX4Y+85yPIV55ftsmKpUtx
+	KVnPMtra7jXYM48vO8spgPf8PYvKVtDKtRs/W2vjRpaI3tPBqSwDA8sg0mU5GLoP
+	+A2WlsZJ0L3olpHgjZY+hi8m/r9bfFHbBC6cmaaK57KjkKDXHGqnTpox8N0j3f2w
+	Kv7FROAYchc9W4NAXiiRex4Tp4aFI38ASM4HaiuDVE6YQVnmc3YfBEfvbgFLLYyt
+	nNIe18PmEAOOot6mCPZXgnniKmDOCwFblrpa/9FPFORTQXwBN/H6S6CqtDRHqieF
+	/aM4eDxaxKcoyaz2Yt7riOOV4J4R1Cn3DmQ/3Gz/8gabtg==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id taZA1Dyqq5Qm; Fri, 31 Oct 2025 17:48:14 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cypNg6Wm3zltP0b;
+	Fri, 31 Oct 2025 17:48:02 +0000 (UTC)
+Message-ID: <55887a39-21ee-4e6c-a6f3-19d75af6395a@acm.org>
+Date: Fri, 31 Oct 2025 10:48:01 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251022042731.GK3356773@frogsfrogsfrogs>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/13] block: freeze queue when updating zone resources
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
+ David Sterba <dsterba@suse.com>
+References: <20251031061307.185513-1-dlemoal@kernel.org>
+ <20251031061307.185513-2-dlemoal@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20251031061307.185513-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Oct 21, 2025 at 09:27:31PM -0700, Darrick J. Wong wrote:
-> On Tue, Oct 21, 2025 at 09:20:55PM -0700, Christoph Hellwig wrote:
-> > On Tue, Oct 21, 2025 at 11:41:33AM -0700, Darrick J. Wong wrote:
-> > > As a result, one loop through the test takes almost 4 minutes.  The test
-> > > loops 20 times, so it runs for 80 minutes(!!) which is a really long
-> > > time.
-> > 
-> > Heh.  I'm glade none of my usual test setups even supports atomics I
-> > guess :)
+On 10/30/25 11:12 PM, Damien Le Moal wrote:
+> Modify disk_update_zone_resources() to freeze the device queue before
+> updating the number of zones, zone capacity and other zone related
+> resources. The locking order resulting from the call to
+> queue_limits_commit_update_frozen() is preserved, that is, the queue
+> limits lock is first taken by calling queue_limits_start_update() before
+> freezing the queue, and the queue is unfrozen after executing
+> queue_limits_commit_update(), which replaces the call to
+> queue_limits_commit_update_frozen().
 > 
-> FWIW the failure was on a regular xfs, no hw atomics.  So in theory
-> you're affected, but only if you pulled the 20 Oct next branch.
+> This change ensures that there are no in-flights I/Os when the zone
+> resources are updated due to a zone revalidation.
 > 
-> > > So the first thing we do is observe that the giant slow loop is being
-> > > run as a single thread on an empty filesystem.  Most of the time the
-> > > allocator generates a mostly physically contiguous file.  We could
-> > > fallocate the whole file instead of fallocating one block every other
-> > > time through the loop.  This halves the setup time.
-> > > 
-> > > Next, we can also stuff the remaining pwrite commands into a bash array
-> > > and only invoke xfs_io once every 128x through the loop.  This amortizes
-> > > the xfs_io startup time, which reduces the test loop runtime to about 20
-> > > seconds.
-> > 
-> > Wouldn't it make sense to adopt src/punch-alternating.c to also be
-> > able to create unwritten extents instead of holes for the punched
-> > range and run all of this from a C program?
+> Fixes: 0b83c86b444a ("block: Prevent potential deadlock in blk_revalidate_disk_zones()")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   block/blk-zoned.c | 19 ++++++++++++++-----
+>   1 file changed, 14 insertions(+), 5 deletions(-)
 > 
-> For the write sizes it comes up with I'm guessing that this test will
-> almost always be poking the software fallbacks so it probably doesn't
-> matter if the file is full of holes.
+> diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+> index 5e2a5788dc3b..f3b371056df4 100644
+> --- a/block/blk-zoned.c
+> +++ b/block/blk-zoned.c
+> @@ -1516,8 +1516,13 @@ static int disk_update_zone_resources(struct gendisk *disk,
+>   {
+>   	struct request_queue *q = disk->queue;
+>   	unsigned int nr_seq_zones, nr_conv_zones;
+> -	unsigned int pool_size;
+> +	unsigned int pool_size, memflags;
+>   	struct queue_limits lim;
+> +	int ret;
+> +
+> +	lim = queue_limits_start_update(q);
+> +
+> +	memflags = blk_mq_freeze_queue(q);
+>   
+>   	disk->nr_zones = args->nr_zones;
+>   	disk->zone_capacity = args->zone_capacity;
+> @@ -1527,11 +1532,10 @@ static int disk_update_zone_resources(struct gendisk *disk,
+>   	if (nr_conv_zones >= disk->nr_zones) {
+>   		pr_warn("%s: Invalid number of conventional zones %u / %u\n",
+>   			disk->disk_name, nr_conv_zones, disk->nr_zones);
+> -		return -ENODEV;
+> +		ret = -ENODEV;
+> +		goto unfreeze;
+>   	}
+>   
+> -	lim = queue_limits_start_update(q);
+> -
+>   	/*
+>   	 * Some devices can advertize zone resource limits that are larger than
+>   	 * the number of sequential zones of the zoned block device, e.g. a
+> @@ -1568,7 +1572,12 @@ static int disk_update_zone_resources(struct gendisk *disk,
+>   	}
+>   
+>   commit:
+> -	return queue_limits_commit_update_frozen(q, &lim);
+> +	ret = queue_limits_commit_update(q, &lim);
+> +
+> +unfreeze:
+> +	blk_mq_unfreeze_queue(q, memflags);
+> +
+> +	return ret;
+>   }
+>   
+>   static int blk_revalidate_conv_zone(struct blk_zone *zone, unsigned int idx,
 
-...and now running this with 32k-fsblocks reveals that the
-atomic_write_loop code actually writes the wrong value into $tmp.aw and
-only runs the loop once, so the test fails because dry_run thinks the
-file size should be 0.
+Hi Damien,
 
-Also the cmds+=() line needs to insert its own -c or else you end up
-writing huge files to $here.  Ooops.
+disk_update_zone_resources() only has a single caller and just below the
+only call of this function the following code is present:
 
-Will send a v2 once the brownpaperbag testing finishes.
+	if (ret) {
+		unsigned int memflags = blk_mq_freeze_queue(q);
 
---D
+		disk_free_zone_resources(disk);
+		blk_mq_unfreeze_queue(q, memflags);
+	}
 
-> > Otherwise this looks good:
-> > 
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> Thanks!
-> 
-> --D
-> 
+Shouldn't this code be moved into disk_update_zone_resources() such that
+error handling happens without unfreezing and refreezing the request
+queue?
+
+Thanks,
+
+Bart.
