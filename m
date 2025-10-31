@@ -1,117 +1,71 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8808134A797;
-	Fri, 31 Oct 2025 13:10:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 163143128BC
+	for <linux-xfs@vger.kernel.org>; Fri, 31 Oct 2025 13:19:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761916259; cv=none; b=DmCViNHrhOZ+Hwcu4hfHcbpMhD5/X7NBXVpnkc0aNGjXN4L7tQK5+4WBx79tFHAByK7nf1b9lEPMMrh8R4QYjC4aLzgvC11hAT8yv9zxNLFCmlRZaIih4gyhVOeIbUlrTwKoE7VPY9vdOr/hoMZxe+uZ9GBikOwHM1jZBE4INCA=
+	t=1761916767; cv=none; b=YIw/6rLmjMvp+TsybK831oMoHTFv3hEetPWBLTDPYAK39yVH1eb3C73DTyBY+MGkux5kBhFjJdpv+kliVejYuKmK2JW7Yrzl4SlWE9NuXSGQ/GcQnZNmjI0LfTK7drvTzpLdTz52CzCT2F2waxdRAV+gUO901kUQSy4zGgO9fc0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761916259; c=relaxed/simple;
-	bh=xP+w8bI4i63RusuJ9L26xztN90ebpZHOthuBhNhNRUM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JpvqYpkzR1mVMVp7iGcm/cLK0f7qXgZ6aUPam2bfhkJ6KkvCHv0Hv8YlrwXq+t6y8FJbp5TahjsalBWYU9vw7pZZB/TDp61hAH1EPTlY5BNKyswEi4mVZmrPsS0B9rE2kcGfz+LfYFDpS2vmQYwoVQLF7RLnZxfsInSQnrZqi/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=W3gwCnNY; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1761916767; c=relaxed/simple;
+	bh=bBpvCh/64uY83bu7nRr9t9rO7YWP6XQbLTRBqjqFpTQ=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=g/Gr/TJV+xkSFminfwk0w1GRV5JDf0QJFr6j+KZi3xZqU6LGMJC2vdIdvl5NnXneqIkSfUbjjZPOULki7b75fQtBGRZc+y7jvBHSR+j1JF65aUmmOYC4Douz5FYf83+c4dVeUzxWZrlMBXssb5un3knf4yWlJSeDkIi2tSbeZ88=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eRGZsQpF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="W3gwCnNY"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=p9BotnxIBRB0C2xiHOcC/q08ybkD7wph2IV9C7trHZw=; b=W3gwCnNY3lZz0yh2grVjsSj5J/
-	QqdihICSc5om4nrwtElRm8brlm5Oflhsd/Ho7MIG0LL2Q6FCRgUxVz1IXCXYaWR50wnuOXDyhd6ss
-	hRU3NU224Pm32ig+Uq47lsVMTXFyq6b0boQcmX3zFHt6PLKIfazZ8zzyTgLLZaH7sbT0wCJsoxdX8
-	Zf1k1quwMCn+DRXFStJ+5mAn6eta2iPDaxrLGE9UZrYavUOmN25Gw1rCXhrqZGcG9sKUd8UhqECpR
-	KcGtLikJS8tc1DWvGeIlaGMBhp3xoMBewsGWXe0nf4NB/uwatZ0oON8RsBaaIRNCAz1xReEv9rEHs
-	mUwdbKSg==;
-Received: from [2001:4bb8:2dc:10e5:1f29:7b81:1da3:7ada] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vEou8-0000000699Y-2rhn;
-	Fri, 31 Oct 2025 13:10:57 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Christian Brauner <brauner@kernel.org>,
-	Carlos Maiolino <cem@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	Qu Wenruo <wqu@suse.com>,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: [PATCH 2/2] xfs: support sub-block aligned vectors in always COW mode
-Date: Fri, 31 Oct 2025 14:10:27 +0100
-Message-ID: <20251031131045.1613229-3-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251031131045.1613229-1-hch@lst.de>
-References: <20251031131045.1613229-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eRGZsQpF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE69AC4CEF8
+	for <linux-xfs@vger.kernel.org>; Fri, 31 Oct 2025 13:19:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761916766;
+	bh=bBpvCh/64uY83bu7nRr9t9rO7YWP6XQbLTRBqjqFpTQ=;
+	h=Date:From:To:Subject:From;
+	b=eRGZsQpFazKJosm4FK6BASnaglThHx504FRo7JZC83fFk6egrPajfb62Anj2SkKC5
+	 jEwgNsGlXqkOO45gCCGiZuODl5xDUmv2lcl1aRQpxOtO11fva193lQjTa6Kq3Mbm7Z
+	 /9npovH+nfg7k2UPU8c7CSdvdIF6gDawd7KGqeqQn5JZwtR9imL+wyaTepeG0MFadH
+	 5H7rHTQBDF1d8CeFCUKhhf7S8S4n5TifiSvu6lruUaBHcejFYnjWZwUEGd4rZ8X1HT
+	 9/dL2kQCvsxIi/l7MFw/mcdUbAaGrWhd5/Uf1K1TGYxPr3KT7lh8LMFQpcerlBN4/G
+	 5dzk9pKpbso8g==
+Date: Fri, 31 Oct 2025 14:19:23 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 0db22d7ee462
+Message-ID: <32rrxrhr3lsn6abfhdacc5im5nq7zdffzihncps3vjcxf2exvu@4rt3blhwtzwo>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Now that the block layer and iomap have grown support to indicate
-the bio sector size explicitly instead of assuming the device sector
-size, we can ask for logical block size alignment and thus support
-direct I/O writes where the overall size is logical block size
-aligned, but the boundaries between vectors might not be.
+Hi folks,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/xfs_file.c | 21 +++++++++++----------
- 1 file changed, 11 insertions(+), 10 deletions(-)
+The for-next branch of the xfs-linux repository at:
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 2702fef2c90c..f2ac4115c18b 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -674,8 +674,17 @@ xfs_file_dio_write_aligned(
- 	struct xfs_zone_alloc_ctx *ac)
- {
- 	unsigned int		iolock = XFS_IOLOCK_SHARED;
-+	unsigned int		dio_flags = 0;
- 	ssize_t			ret;
- 
-+	/*
-+	 * For always COW inodes, each bio must be aligned to the file system
-+	 * block size and not just the device sector size because we need to
-+	 * allocate a block-aligned amount of space for each write.
-+	 */
-+	if (xfs_is_always_cow_inode(ip))
-+		dio_flags |= IOMAP_DIO_FSBLOCK_ALIGNED;
-+
- 	ret = xfs_ilock_iocb_for_write(iocb, &iolock);
- 	if (ret)
- 		return ret;
-@@ -693,7 +702,7 @@ xfs_file_dio_write_aligned(
- 		iolock = XFS_IOLOCK_SHARED;
- 	}
- 	trace_xfs_file_direct_write(iocb, from);
--	ret = iomap_dio_rw(iocb, from, ops, dops, 0, ac, 0);
-+	ret = iomap_dio_rw(iocb, from, ops, dops, dio_flags, ac, 0);
- out_unlock:
- 	xfs_iunlock(ip, iolock);
- 	return ret;
-@@ -890,15 +899,7 @@ xfs_file_dio_write(
- 	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
- 		return -EINVAL;
- 
--	/*
--	 * For always COW inodes we also must check the alignment of each
--	 * individual iovec segment, as they could end up with different
--	 * I/Os due to the way bio_iov_iter_get_pages works, and we'd
--	 * then overwrite an already written block.
--	 */
--	if (((iocb->ki_pos | count) & ip->i_mount->m_blockmask) ||
--	    (xfs_is_always_cow_inode(ip) &&
--	     (iov_iter_alignment(from) & ip->i_mount->m_blockmask)))
-+	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
- 		return xfs_file_dio_write_unaligned(ip, iocb, from);
- 	if (xfs_is_zoned_inode(ip))
- 		return xfs_file_dio_write_zoned(ip, iocb, from);
--- 
-2.47.3
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+0db22d7ee462 xfs: document another racy GC case in xfs_zoned_map_extent
+
+2 new commits:
+
+Christoph Hellwig (2):
+      [83bac569c762] xfs: prevent gc from picking the same zone twice
+      [0db22d7ee462] xfs: document another racy GC case in xfs_zoned_map_extent
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_rtgroup.h |  6 ++++++
+ fs/xfs/xfs_zone_alloc.c     |  8 ++++++++
+ fs/xfs/xfs_zone_gc.c        | 27 +++++++++++++++++++++++++++
+ 3 files changed, 41 insertions(+)
