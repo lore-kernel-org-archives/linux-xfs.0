@@ -1,48 +1,48 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D40E303A06;
-	Fri, 31 Oct 2025 21:18:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34BFF303C8D;
+	Fri, 31 Oct 2025 21:40:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761945494; cv=none; b=DCVpKC0jmjUAy4Xey9xuOGf7wMj7VNMEgMXcJo7CIObXEMtW6dey/+7tgD/2mrwaWSBdexYB9ETVKosFrzbm/Fqw8sleH9H8qnxzI+AF5Z/pq/olo1xTcVxwPoKBNsyDR6ey0ujMX01R+3OLS14TMvEGkYrnTexauLbHaNHX/JE=
+	t=1761946841; cv=none; b=G9egusk+TMuS2OuXlHgPmJbtjK53Z1ibSg8Nfdd/mHyAddCWfhDJn5GU2fDbl7wwZ1gZASab3NwPvQOaWlpvRMelACMQUMpZGM9m5oSWho3F4X+FhLIY6LfinK2oBYH6ob48KzgKCHLcERsK4sSyvqKSBtWCuPK3KKyn17GtNqI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761945494; c=relaxed/simple;
-	bh=HcNP5suCLjRHRXVhgz1ZcKm6OEG2zLosp+uCNUqRda4=;
+	s=arc-20240116; t=1761946841; c=relaxed/simple;
+	bh=pkLepUgc/ycKjXUaLXzFouEk/r88Urrm91h0FmQ8G8o=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=KoMmzjx5DVwNgkBJHIBh+pNg3vqKffegiM+mBLCHY6wLfhfEkoCLDDOkmWY4KgxkSSA2ArRCIdz/Edsg7dOf39GiK93bgdd5/FjJnGmlAqads9pQcN/vqKCd5+Quo77N6rZ5LN5xYc2XC9yyp/2u1FNdfyqCrbmR0vmaKy6XIuw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=MOiAucOt; arc=none smtp.client-ip=199.89.3.6
+	 In-Reply-To:Content-Type; b=MNpki+/tK5ITmD4l2xJ/XjgLZIZh13Xb1UJRYRI9Zhcb5UGFjvtBy4hVEGD+wAMvTEET2U58GId/XxKXsefwNJwHoq9tBAN4dKI6wmwIEwyVU+8Ppa3IXnhrPSevH8xVZBrbx+og72tc9crzg1XU9nfztRC9LAgw/tOR4nDyRrU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Vefe9pMP; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="MOiAucOt"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Vefe9pMP"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cyv371rCVzlgqVY;
-	Fri, 31 Oct 2025 21:18:11 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cyvY32462zm0pJx;
+	Fri, 31 Oct 2025 21:40:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1761945488; x=1764537489; bh=dGFrbsqJ8CKkjY9qga1d96f2
-	nx443JSUVFFvLuMecYs=; b=MOiAucOtLaQV5ydR0jMixm2/LO5HKwhCk725AoCq
-	kP5jZzcKz9VStvYIXn8A/uppBX7GevrouJXU2OudQtlRy8cZqEuEJRkEKiOmwQ+g
-	e4ok5VRdxSfWBu6bJ+UnFaYCKKm7k/mwJC5gg5iwBdVLqnF0h06E4F1Qkw8kp2Hs
-	mDWTRMt9ttsGlDL9Hk3V2VFZCT+yiLkmjUCI6TYbT5qmArNtW0y2SGqTjVCyKe8v
-	EXZbvV2lwww8UCNufxlCKGXZwThSDpreQ/Gu+PQK2D1mi+hc04iSYLz/MI5i4k9h
-	pFG/hWVlWs/phvYJXwwE4jHtxycyc7diQkKBMmExZGRl2A==
+	 s=mr01; t=1761946836; x=1764538837; bh=sQ+JoXonPizc19GDbFjJt0OI
+	nnLWi/x4ES7NDAgMyic=; b=Vefe9pMPLaf3cmzjAH8pQ4CEf7qWKKRJGSzxD4yb
+	qkGJJyx+P5Vud2/vVVpBjamhCdhJg2cRUH5C7xenYLyF3sl/gG7qMBYPTS6MKtzW
+	2SQJFTEMI8mO/rPXhYA6a4gvDHaAX1uRj+8nBQKXO8sU6nbegJS41qE5CYDiGSTL
+	04oz0BePVLgb1TOHJ2h2asum0kugCc8M0llXcD4vRc09CL6wxiZ7OCA9MDFSokEI
+	Ujuymz3aYlWIpkgZ/MRWSuj4UAMaRwl9dWQTbC/n2jndrV9zVyoE9N+oZEgdK4oO
+	phoSid1sl1QWgz8lrZbKwtewKRpSWzrVNRFgVvIe7oh05Q==
 X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Zfkrr6N_4YYx; Fri, 31 Oct 2025 21:18:08 +0000 (UTC)
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id xEmyZrhwTdbZ; Fri, 31 Oct 2025 21:40:36 +0000 (UTC)
 Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cyv2t1Hg1zlstRG;
-	Fri, 31 Oct 2025 21:17:56 +0000 (UTC)
-Message-ID: <40c87475-7d5a-4792-b2a6-3eeb8406f9be@acm.org>
-Date: Fri, 31 Oct 2025 14:17:55 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cyvXp0TXLzm0pL4;
+	Fri, 31 Oct 2025 21:40:24 +0000 (UTC)
+Message-ID: <42dc640b-28e9-4706-91dc-dd075e736065@acm.org>
+Date: Fri, 31 Oct 2025 14:40:23 -0700
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,7 +50,7 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/13] block: track zone conditions
+Subject: Re: [PATCH 08/13] block: introduce blkdev_get_zone_info()
 To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
  linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
  Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
@@ -61,82 +61,83 @@ To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
  Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
  David Sterba <dsterba@suse.com>
 References: <20251031061307.185513-1-dlemoal@kernel.org>
- <20251031061307.185513-8-dlemoal@kernel.org>
+ <20251031061307.185513-9-dlemoal@kernel.org>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20251031061307.185513-8-dlemoal@kernel.org>
+In-Reply-To: <20251031061307.185513-9-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 10/30/25 11:13 PM, Damien Le Moal wrote:
-> Implement tracking of the runtime changes to zone conditions using
-> the new cond field in struct blk_zone_wplug. The size of this structure
-> remains 112 Bytes as the new field replaces the 4 Bytes padding at the
-> end of the structure. For zones that do not have a zone write plug, the
-> zones_cond array of a disk is used to track changes to zone conditions,
-> e.g. when a zone reset, reset all or finish operation is executed.
-
-Why is it necessary to track the condition of sequential zones that do
-not have a zone write plug? Please explain what the use cases are.
-
-The zoned UFS device on my desk has 3420 sequential zones and zero
-conventional zones. If the condition of zones that do not have a zone
-write plug wouldn't be tracked that would save some memory.
-> +static void blk_zone_set_cond(u8 *zones_cond, unsigned int zno,
-> +			      enum blk_zone_cond cond)
+> +static int blkdev_do_report_zones(struct block_device *bdev, sector_t sector,
+> +				  unsigned int nr_zones,
+> +				  struct blk_report_zones_args *args)
 > +{
-> +	if (!zones_cond)
-> +		return;
+> +	struct gendisk *disk = bdev->bd_disk;
 > +
-> +	switch (cond) {
-> +	case BLK_ZONE_COND_IMP_OPEN:
-> +	case BLK_ZONE_COND_EXP_OPEN:
-> +	case BLK_ZONE_COND_CLOSED:
-> +		zones_cond[zno] = BLK_ZONE_COND_ACTIVE;
-> +		return;
-> +	case BLK_ZONE_COND_NOT_WP:
-> +	case BLK_ZONE_COND_EMPTY:
-> +	case BLK_ZONE_COND_FULL:
-> +	case BLK_ZONE_COND_OFFLINE:
-> +	case BLK_ZONE_COND_READONLY:
-> +	default:
-> +		zones_cond[zno] = cond;
-> +		return;
-> +	}
+> +	if (!bdev_is_zoned(bdev) || WARN_ON_ONCE(!disk->fops->report_zones))
+> +		return -EOPNOTSUPP;
+> +
+> +	if (!nr_zones || sector >= get_capacity(disk))
+> +		return 0;
+> +
+> +	return disk->fops->report_zones(disk, sector, nr_zones, args);
 > +}
 > +
-> +static void disk_zone_set_cond(struct gendisk *disk, sector_t sector,
-> +			       enum blk_zone_cond cond)
-> +{
-> +	u8 *zones_cond;
-> +
-> +	rcu_read_lock();
-> +	zones_cond = rcu_dereference(disk->zones_cond);
-> +	if (zones_cond) {
-> +		unsigned int zno = disk_zone_no(disk, sector);
-> +
-> +		/*
-> +		 * The condition of a conventional, readonly and offline zones
-> +		 * never changes, so do nothing if the target zone is in one of
-> +		 * these conditions.
-> +		 */
-> +		switch (zones_cond[zno]) {
-> +		case BLK_ZONE_COND_NOT_WP:
-> +		case BLK_ZONE_COND_READONLY:
-> +		case BLK_ZONE_COND_OFFLINE:
-> +			break;
-> +		default:
-> +			blk_zone_set_cond(zones_cond, zno, cond);
-> +			break;
-> +		}
-> +	}
-> +	rcu_read_unlock();
-> +}
+>   /**
+>    * blkdev_report_zones - Get zones information
+>    * @bdev:	Target block device
+> @@ -226,19 +242,12 @@ struct blk_report_zones_args {
+>   int blkdev_report_zones(struct block_device *bdev, sector_t sector,
+>   			unsigned int nr_zones, report_zones_cb cb, void *data)
+>   {
+> -	struct gendisk *disk = bdev->bd_disk;
+>   	struct blk_report_zones_args args = {
+>   		.cb = cb,
+>   		.data = data,
+>   	};
+>   
+> -	if (!bdev_is_zoned(bdev) || WARN_ON_ONCE(!disk->fops->report_zones))
+> -		return -EOPNOTSUPP;
+> -
+> -	if (!nr_zones || sector >= get_capacity(disk))
+> -		return 0;
+> -
+> -	return disk->fops->report_zones(disk, sector, nr_zones, &args);
+> +	return blkdev_do_report_zones(bdev, sector, nr_zones, &args);
+>   }
+>   EXPORT_SYMBOL_GPL(blkdev_report_zones);
 
-Why does blk_zone_set_cond() accept a zone number as second argument and
-why does disk_zone_set_cond() accept a sector number as second argument?
-The callers of disk_zone_set_cond() can be optimized if its second
-argument would be changed from a sector number into a zone number.
+One change per patch please. Please split this patch into one patch that
+introduces the blkdev_do_report_zones() function and another patch with
+the remaining changes from this patch.
+> +/**
+> + * blkdev_get_zone_info - Get a zone information from cached data
+
+"Get a zone information" -> "Get zone information"
+
+> +	sector = sector & (~(zone_sectors - 1));
+
+Please consider changing the above assignment into:
+
+	sector -= bdev_offset_from_zone_start(bdev, sector);
+
+> +	/*
+> +	 * If the zone does not have a zone write plug, it is either full or
+> +	 * empty, as we otherwise would have a zone write plug for it. In this
+> +	 * case, set the write pointer accordingly and report the zone.
+> +	 * Otherwise, if we have a zone write plug, use it.
+> +	 */
+> +	zwplug = disk_get_zone_wplug(disk, sector);
+> +	if (!zwplug) {
+> +		if (zone->cond == BLK_ZONE_COND_FULL)
+> +			zone->wp = sector + zone_sectors;
+> +		else
+> +			zone->wp = sector;
+> +		return 0;
+> +	}
+
+According to ZBC-2 the write pointer is invalid for full zones.
 
 Thanks,
 
