@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35CB92F12BA;
-	Fri, 31 Oct 2025 06:17:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B20A229ACC5;
+	Fri, 31 Oct 2025 06:17:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761891426; cv=none; b=GTyX7hROBDf9A8db7REx/rw1uA/+foRLed/ReWXKlhD4iSJbMoojbeBr/svklWEtjB4OapTEN4VLD+UVgcZ0SZKvIIbhKKiSir9f5XVXfKn6WhPBk00q0WAlXw9AOx2wWdAooJoCCCfsO26NDh/l16esGn+Ksi577z9JNgvqZ0Q=
+	t=1761891429; cv=none; b=tAKARXsQvxfxzJAzRv8/ZiYJI7mQoos5TjfAff0tvNyXuttan7nSrL4+nX8690lvjD1LedQjpxfabyL+o58pSlKLmVue4fqn6Ge8n5moPMBofyuO+XARZV5mrqtBkQJ16aZBKaAoK/+4Bo5e7C/rgn17p+dXZAFWycupO/KvWBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761891426; c=relaxed/simple;
-	bh=e3PoW0O+rEzMhAl5pll3o5AMgtNjudnPG184isR6j4A=;
+	s=arc-20240116; t=1761891429; c=relaxed/simple;
+	bh=RcdhH8FLan32DnD3Wb9R3ZxdfgOUd1jZFheaQ2cEEqg=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=T2QwkMX2YGyw1P3k+AQoZtq4yPHnr6yh5DfYnHKp778mlZuf09w09sp8el78P8wN8XKPe5p57pliuDr4il6+Zcd9kvIkNX5qwHNeWSvnKL3k4GsVMFsTEUpH50nuw7XKTFa1yx1WVwp0CfKP6nDxfoTOLU1T8VZbi+9mlvMt4bA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VhdpoRnJ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=WBgNaSYVE8xmgMMkLzV3lPliPEBvCld7TrdGEdkqkdFLehRnIVOzKnXeCiim1piut3mtWJSpMVBM9nK30X9zyjiPHpKznidgZEsalA9/yv1ggoRwPYgyQEAcbeCCvcdoSXTEG6Ma9oQm7CmagYOyR19YcSCO1bCOUlh9ePq61wQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rx4GFKMh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VhdpoRnJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BD40C4CEF1;
-	Fri, 31 Oct 2025 06:17:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rx4GFKMh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7F27C116D0;
+	Fri, 31 Oct 2025 06:17:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761891425;
-	bh=e3PoW0O+rEzMhAl5pll3o5AMgtNjudnPG184isR6j4A=;
+	s=k20201202; t=1761891429;
+	bh=RcdhH8FLan32DnD3Wb9R3ZxdfgOUd1jZFheaQ2cEEqg=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=VhdpoRnJ5Yr4d5mY3yqpkeR5lRIM15siOIlTk8iQIu16HZHUUFRUWCFQKdONISdqc
-	 U+FavPfcDRfsQJ7zw3PCCf1bHA9m5eSaglk8wsiwZJt6QZj5NUJLHqSjhzmBCnNKo7
-	 l1ROpz9/Xobwu4EZ+d4Vd9Rfm8AuLnIkxT1WX245B3dhsiBdmfK1ZVKLcMp7ojtyyV
-	 IWgCGmRWyqTyqLd9hiJsSVDn7VTb9tLZjyRC/6jEpOljmIG7ZsR8FCXCH+Oq6qb0n+
-	 GM/fKdox45U/iyeQI6pnFusNM/fy0hCwU6XxJx6LvcGIsLPGAT1dGg76h0lmJ6fi0c
-	 e17QK13YOCVlw==
+	b=rx4GFKMhs1FWDGOTlO9vUQYw4QTCQvp1l9uzo4tR2+64lnCGEDHNR8OoUK+xGEgid
+	 /ztVGuZG+M7ISmGAJKw7/VVaTlnRzC+FhRFLyMtlbNxqQ4BjtmTKVwciyyyqdGXerM
+	 j1F6eB4nU9dbX+u8si+EN6rRdPc8R9WUBJGmqP1IfXUHDR1n3Yhw97oZrtmbQ9ugLd
+	 S/iT1pMch/FwFUrogBRT/gK5DBh3x42apcYDM2jYXKgOA66DYjxxXLnpXx3MXXccM5
+	 WtjmOLil2pjkr7ISo7XyIeaZ77fHVYuFkQdbH6hyEpL4VGg1Qfr4MmrJUv0D8JCyNm
+	 urooXl4miQ1GQ==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
@@ -41,9 +41,9 @@ To: Jens Axboe <axboe@kernel.dk>,
 	Carlos Maiolino <cem@kernel.org>,
 	linux-btrfs@vger.kernel.org,
 	David Sterba <dsterba@suse.com>
-Subject: [PATCH 06/13] block: use zone condition to determine conventional zones
-Date: Fri, 31 Oct 2025 15:13:00 +0900
-Message-ID: <20251031061307.185513-7-dlemoal@kernel.org>
+Subject: [PATCH 08/13] block: introduce blkdev_get_zone_info()
+Date: Fri, 31 Oct 2025 15:13:02 +0900
+Message-ID: <20251031061307.185513-9-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251031061307.185513-1-dlemoal@kernel.org>
 References: <20251031061307.185513-1-dlemoal@kernel.org>
@@ -55,358 +55,259 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The conv_zones_bitmap field of struct gendisk is used to define a bitmap
-to identify the conventional zones of a zoned block device. The bit for
-a zone is set in this bitmap if the zone is a conventional one, that is,
-if the zone type is BLK_ZONE_TYPE_CONVENTIONAL. For such zone, this
-always corresponds to the zone condition BLK_ZONE_COND_NOT_WP.
-In other words, conv_zones_bitmap tracks a single condition of the
-zones of a zoned block device.
+Introduce the function blkdev_get_zone_info() to obtain a single zone
+information from cached zone data, that is, either from the zone write
+plug for the target zone if it exists and from the disk zones_cond
+array otherwise.
 
-In preparation for tracking more zone conditions, change
-conv_zones_bitmap into an array of zone conditions, using 1 byte per
-zone. This increases the memory usage from 1 bit per zone to 1 bytes per
-zone, that is, from 16 KiB to about 100 KiB for a 30 TB SMR HDD with 256
-MiB zones. This is a trade-off to allow fast cached report zones later
-on top of this change.
+Since sequential zones that do not have a zone write plug are either
+full, empty or in a bad state (read-only or offline), the zone write
+pointer can be inferred from the zone condition cached in the disk
+zones_cond array. For sequential zones that have a zone write plug, the
+zone condition and zone write pointer are obtained from the condition
+and write pointer offset managed with the zone write plug. This allows
+obtaining the information for a zone much more quickly than having to
+execute a report zones command on the device.
 
-Rename the conv_zones_bitmap field of struct gendisk to zones_cond. Add
-a blk_revalidate_zone_cond() function to initialize the zones_cond array
-of a disk during device scan and to update it on device revalidation.
-Move the allocation of the zones_cond array to
-disk_revalidate_zone_resources(), making sure that this array is always
-allocated, even for devices that do not need zone write plugs (zone
-resources), to ensure that bdev_zone_is_seq() can be re-implemented to
-use the zone condition array in place of the conv zones bitmap.
+blkdev_get_zone_info() falls back to using a regular zone report if the
+target zone is flagged as needing an update with the
+BLK_ZONE_WPLUG_NEED_WP_UPDATE flag, or if the target device does not
+use zone write plugs (i.e. a device mapper device). In this case, the
+new function blkdev_report_zone_fallback() is used and the zone
+condition is reported consistantly with the cahced report, that is, the
+BLK_ZONE_COND_ACTIVE condition is used in place of the implicit open,
+explicit open and closed conditions. This is achieved by adding the
+.report_active field to struct blk_report_zones_args and by having
+disk_report_zone() sets the correct zone condition if .report_active is
+true.
 
-Finally, the function bdev_zone_is_seq() is rewritten to use a test on
-the condition of the target zone.
+In preparation for using blkdev_get_zone_info() in upcoming file systems
+changes, also export this function as a GPL symbol.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- block/blk-zoned.c      | 151 +++++++++++++++++++++++++++++------------
- include/linux/blkdev.h |  32 ++-------
- 2 files changed, 111 insertions(+), 72 deletions(-)
+ block/blk-zoned.c      | 165 +++++++++++++++++++++++++++++++++++++++--
+ include/linux/blkdev.h |   3 +
+ 2 files changed, 160 insertions(+), 8 deletions(-)
 
 diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 29891253a920..4997f11caa0c 100644
+index 00cfd9431c3e..03394e38645f 100644
 --- a/block/blk-zoned.c
 +++ b/block/blk-zoned.c
-@@ -114,6 +114,33 @@ const char *blk_zone_cond_str(enum blk_zone_cond zone_cond)
- }
- EXPORT_SYMBOL_GPL(blk_zone_cond_str);
+@@ -202,8 +202,24 @@ EXPORT_SYMBOL_GPL(bdev_zone_is_seq);
+ struct blk_report_zones_args {
+ 	report_zones_cb cb;
+ 	void		*data;
++	bool		report_active;
+ };
  
-+/**
-+ * bdev_zone_is_seq - check if a sector belongs to a sequential write zone
-+ * @bdev:       block device to check
-+ * @sector:     sector number
-+ *
-+ * Check if @sector on @bdev is contained in a sequential write required zone.
-+ */
-+bool bdev_zone_is_seq(struct block_device *bdev, sector_t sector)
++static int blkdev_do_report_zones(struct block_device *bdev, sector_t sector,
++				  unsigned int nr_zones,
++				  struct blk_report_zones_args *args)
 +{
 +	struct gendisk *disk = bdev->bd_disk;
-+	unsigned int zno = disk_zone_no(disk, sector);
-+	bool is_seq = false;
++
++	if (!bdev_is_zoned(bdev) || WARN_ON_ONCE(!disk->fops->report_zones))
++		return -EOPNOTSUPP;
++
++	if (!nr_zones || sector >= get_capacity(disk))
++		return 0;
++
++	return disk->fops->report_zones(disk, sector, nr_zones, args);
++}
++
+ /**
+  * blkdev_report_zones - Get zones information
+  * @bdev:	Target block device
+@@ -226,19 +242,12 @@ struct blk_report_zones_args {
+ int blkdev_report_zones(struct block_device *bdev, sector_t sector,
+ 			unsigned int nr_zones, report_zones_cb cb, void *data)
+ {
+-	struct gendisk *disk = bdev->bd_disk;
+ 	struct blk_report_zones_args args = {
+ 		.cb = cb,
+ 		.data = data,
+ 	};
+ 
+-	if (!bdev_is_zoned(bdev) || WARN_ON_ONCE(!disk->fops->report_zones))
+-		return -EOPNOTSUPP;
+-
+-	if (!nr_zones || sector >= get_capacity(disk))
+-		return 0;
+-
+-	return disk->fops->report_zones(disk, sector, nr_zones, &args);
++	return blkdev_do_report_zones(bdev, sector, nr_zones, &args);
+ }
+ EXPORT_SYMBOL_GPL(blkdev_report_zones);
+ 
+@@ -803,6 +812,23 @@ static void disk_zone_wplug_sync_wp_offset(struct gendisk *disk,
+ int disk_report_zone(struct gendisk *disk, struct blk_zone *zone,
+ 		     unsigned int idx, struct blk_report_zones_args *args)
+ {
++	if (args->report_active) {
++		/*
++		 * If we come here, then this is a report zones as a fallback
++		 * for a cached report. So collapse the implicit open, explicit
++		 * open and closed conditions into the active zone condition.
++		 */
++		switch (zone->cond) {
++		case BLK_ZONE_COND_IMP_OPEN:
++		case BLK_ZONE_COND_EXP_OPEN:
++		case BLK_ZONE_COND_CLOSED:
++			zone->cond = BLK_ZONE_COND_ACTIVE;
++			break;
++		default:
++			break;
++		}
++	}
++
+ 	if (disk->zone_wplugs_hash)
+ 		disk_zone_wplug_sync_wp_offset(disk, zone);
+ 
+@@ -813,6 +839,129 @@ int disk_report_zone(struct gendisk *disk, struct blk_zone *zone,
+ }
+ EXPORT_SYMBOL_GPL(disk_report_zone);
+ 
++static int blkdev_report_zone_cb(struct blk_zone *zone, unsigned int idx,
++				 void *data)
++{
++	memcpy(data, zone, sizeof(struct blk_zone));
++	return 0;
++}
++
++static int blkdev_report_zone_fallback(struct block_device *bdev,
++				       sector_t sector, struct blk_zone *zone)
++{
++	struct blk_report_zones_args args = {
++		.cb = blkdev_report_zone_cb,
++		.data = zone,
++		.report_active = true,
++	};
++
++	return blkdev_do_report_zones(bdev, sector, 1, &args);
++}
++
++/**
++ * blkdev_get_zone_info - Get a zone information from cached data
++ * @bdev:   Target block device
++ * @sector: Sector contained by the target zone
++ * @zone:   zone structure to return the zone information
++ *
++ * Description:
++ *    Get the zone information for the zone containing @sector using the zone
++ *    write plug of the target zone, if one exist, or the disk zone condition
++ *    array otherwise. The zone condition may be reported as being
++ *    the BLK_ZONE_COND_ACTIVE condition for a zone that is in the implicit
++ *    open, explicit open or closed condition.
++ *
++ *    Returns 0 on success and a negative error code on failure.
++ */
++int blkdev_get_zone_info(struct block_device *bdev, sector_t sector,
++			 struct blk_zone *zone)
++{
++	struct gendisk *disk = bdev->bd_disk;
++	sector_t zone_sectors = bdev_zone_sectors(bdev);
++	struct blk_zone_wplug *zwplug;
++	unsigned long flags;
 +	u8 *zones_cond;
 +
 +	if (!bdev_is_zoned(bdev))
-+		return false;
++		return -EOPNOTSUPP;
++
++	if (sector >= get_capacity(disk))
++		return -EINVAL;
++
++	memset(zone, 0, sizeof(*zone));
++	sector = sector & (~(zone_sectors - 1));
 +
 +	rcu_read_lock();
 +	zones_cond = rcu_dereference(disk->zones_cond);
-+	if (zones_cond)
-+		is_seq = zones_cond[zno] != BLK_ZONE_COND_NOT_WP;
++	if (!disk->zone_wplugs_hash || !zones_cond) {
++		rcu_read_unlock();
++		return blkdev_report_zone_fallback(bdev, sector, zone);
++	}
++	zone->cond = zones_cond[disk_zone_no(disk, sector)];
 +	rcu_read_unlock();
 +
-+	return is_seq;
-+}
-+EXPORT_SYMBOL_GPL(bdev_zone_is_seq);
++	zone->start = sector;
++	zone->len = zone_sectors;
 +
- /*
-  * Zone report arguments for block device drivers report_zones operation.
-  * @cb: report_zones_cb callback for each reported zone.
-@@ -1458,22 +1485,16 @@ static void disk_destroy_zone_wplugs_hash_table(struct gendisk *disk)
- 	disk->zone_wplugs_hash_bits = 0;
- }
- 
--static unsigned int disk_set_conv_zones_bitmap(struct gendisk *disk,
--					       unsigned long *bitmap)
-+static void disk_set_zones_cond_array(struct gendisk *disk, u8 *zones_cond)
- {
--	unsigned int nr_conv_zones = 0;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&disk->zone_wplugs_lock, flags);
--	if (bitmap)
--		nr_conv_zones = bitmap_weight(bitmap, disk->nr_zones);
--	bitmap = rcu_replace_pointer(disk->conv_zones_bitmap, bitmap,
--				     lockdep_is_held(&disk->zone_wplugs_lock));
-+	zones_cond = rcu_replace_pointer(disk->zones_cond, zones_cond,
-+				lockdep_is_held(&disk->zone_wplugs_lock));
- 	spin_unlock_irqrestore(&disk->zone_wplugs_lock, flags);
- 
--	kfree_rcu_mightsleep(bitmap);
--
--	return nr_conv_zones;
-+	kfree_rcu_mightsleep(zones_cond);
- }
- 
- void disk_free_zone_resources(struct gendisk *disk)
-@@ -1497,7 +1518,7 @@ void disk_free_zone_resources(struct gendisk *disk)
- 	mempool_destroy(disk->zone_wplugs_pool);
- 	disk->zone_wplugs_pool = NULL;
- 
--	disk_set_conv_zones_bitmap(disk, NULL);
-+	disk_set_zones_cond_array(disk, NULL);
- 	disk->zone_capacity = 0;
- 	disk->last_zone_capacity = 0;
- 	disk->nr_zones = 0;
-@@ -1516,12 +1537,31 @@ static inline bool disk_need_zone_resources(struct gendisk *disk)
- 		queue_emulates_zone_append(disk->queue);
- }
- 
-+struct blk_revalidate_zone_args {
-+	struct gendisk	*disk;
-+	u8		*zones_cond;
-+	unsigned int	nr_zones;
-+	unsigned int	nr_conv_zones;
-+	unsigned int	zone_capacity;
-+	unsigned int	last_zone_capacity;
-+	sector_t	sector;
-+};
-+
- static int disk_revalidate_zone_resources(struct gendisk *disk,
--					  unsigned int nr_zones)
-+				struct blk_revalidate_zone_args *args)
- {
- 	struct queue_limits *lim = &disk->queue->limits;
- 	unsigned int pool_size;
- 
-+	args->disk = disk;
-+	args->nr_zones =
-+		DIV_ROUND_UP_ULL(get_capacity(disk), lim->chunk_sectors);
-+
-+	/* Cached zone conditions: 1 byte per zone */
-+	args->zones_cond = kzalloc(args->nr_zones, GFP_NOIO);
-+	if (!args->zones_cond)
-+		return -ENOMEM;
-+
- 	if (!disk_need_zone_resources(disk))
- 		return 0;
- 
-@@ -1531,7 +1571,8 @@ static int disk_revalidate_zone_resources(struct gendisk *disk,
- 	 */
- 	pool_size = max(lim->max_open_zones, lim->max_active_zones);
- 	if (!pool_size)
--		pool_size = min(BLK_ZONE_WPLUG_DEFAULT_POOL_SIZE, nr_zones);
-+		pool_size =
-+			min(BLK_ZONE_WPLUG_DEFAULT_POOL_SIZE, args->nr_zones);
- 
- 	if (!disk->zone_wplugs_hash)
- 		return disk_alloc_zone_resources(disk, pool_size);
-@@ -1539,15 +1580,6 @@ static int disk_revalidate_zone_resources(struct gendisk *disk,
- 	return 0;
- }
- 
--struct blk_revalidate_zone_args {
--	struct gendisk	*disk;
--	unsigned long	*conv_zones_bitmap;
--	unsigned int	nr_zones;
--	unsigned int	zone_capacity;
--	unsigned int	last_zone_capacity;
--	sector_t	sector;
--};
--
- /*
-  * Update the disk zone resources information and device queue limits.
-  * The disk queue is frozen when this is executed.
-@@ -1556,7 +1588,7 @@ static int disk_update_zone_resources(struct gendisk *disk,
- 				      struct blk_revalidate_zone_args *args)
- {
- 	struct request_queue *q = disk->queue;
--	unsigned int nr_seq_zones, nr_conv_zones;
-+	unsigned int nr_seq_zones;
- 	unsigned int pool_size, memflags;
- 	struct queue_limits lim;
- 	int ret;
-@@ -1566,24 +1598,24 @@ static int disk_update_zone_resources(struct gendisk *disk,
- 	memflags = blk_mq_freeze_queue(q);
- 
- 	disk->nr_zones = args->nr_zones;
--	disk->zone_capacity = args->zone_capacity;
--	disk->last_zone_capacity = args->last_zone_capacity;
--	nr_conv_zones =
--		disk_set_conv_zones_bitmap(disk, args->conv_zones_bitmap);
--	if (nr_conv_zones >= disk->nr_zones) {
-+	if (args->nr_conv_zones >= disk->nr_zones) {
- 		pr_warn("%s: Invalid number of conventional zones %u / %u\n",
--			disk->disk_name, nr_conv_zones, disk->nr_zones);
-+			disk->disk_name, args->nr_conv_zones, disk->nr_zones);
- 		ret = -ENODEV;
- 		goto unfreeze;
- 	}
- 
-+	disk->zone_capacity = args->zone_capacity;
-+	disk->last_zone_capacity = args->last_zone_capacity;
-+	disk_set_zones_cond_array(disk, args->zones_cond);
-+
- 	/*
- 	 * Some devices can advertize zone resource limits that are larger than
- 	 * the number of sequential zones of the zoned block device, e.g. a
- 	 * small ZNS namespace. For such case, assume that the zoned device has
- 	 * no zone resource limits.
- 	 */
--	nr_seq_zones = disk->nr_zones - nr_conv_zones;
-+	nr_seq_zones = disk->nr_zones - args->nr_conv_zones;
- 	if (lim.max_open_zones >= nr_seq_zones)
- 		lim.max_open_zones = 0;
- 	if (lim.max_active_zones >= nr_seq_zones)
-@@ -1621,6 +1653,44 @@ static int disk_update_zone_resources(struct gendisk *disk,
- 	return ret;
- }
- 
-+static int blk_revalidate_zone_cond(struct blk_zone *zone, unsigned int idx,
-+				    struct blk_revalidate_zone_args *args)
-+{
-+	enum blk_zone_cond cond = zone->cond;
-+
-+	/* Check that the zone condition is consistent with the zone type. */
-+	switch (cond) {
-+	case BLK_ZONE_COND_NOT_WP:
-+		if (zone->type != BLK_ZONE_TYPE_CONVENTIONAL)
-+			goto invalid_condition;
-+		break;
-+	case BLK_ZONE_COND_IMP_OPEN:
-+	case BLK_ZONE_COND_EXP_OPEN:
-+	case BLK_ZONE_COND_CLOSED:
-+	case BLK_ZONE_COND_EMPTY:
-+	case BLK_ZONE_COND_FULL:
-+	case BLK_ZONE_COND_OFFLINE:
-+	case BLK_ZONE_COND_READONLY:
-+		if (zone->type != BLK_ZONE_TYPE_SEQWRITE_REQ)
-+			goto invalid_condition;
-+		break;
-+	default:
-+		pr_warn("%s: Invalid zone condition 0x%X\n",
-+			args->disk->disk_name, cond);
-+		return -ENODEV;
++	/*
++	 * If this is a conventional zone, we do not have a zone write plug and
++	 * can report the zone immediately.
++	 */
++	if (zone->cond == BLK_ZONE_COND_NOT_WP) {
++		zone->type = BLK_ZONE_TYPE_CONVENTIONAL;
++		zone->capacity = zone_sectors;
++		zone->wp = ULLONG_MAX;
++		return 0;
 +	}
 +
-+	args->zones_cond[idx] = cond;
++	/*
++	 * This is a sequential write required zone. If the zone is read-only or
++	 * offline, only set the zone write pointer to an invalid value and
++	 * report the zone.
++	 */
++	zone->type = BLK_ZONE_TYPE_SEQWRITE_REQ;
++	if (disk_zone_is_last(disk, zone))
++		zone->capacity = disk->last_zone_capacity;
++	else
++		zone->capacity = disk->zone_capacity;
++
++	if (zone->cond == BLK_ZONE_COND_READONLY ||
++	    zone->cond == BLK_ZONE_COND_OFFLINE) {
++		zone->wp = ULLONG_MAX;
++		return 0;
++	}
++
++	/*
++	 * If the zone does not have a zone write plug, it is either full or
++	 * empty, as we otherwise would have a zone write plug for it. In this
++	 * case, set the write pointer accordingly and report the zone.
++	 * Otherwise, if we have a zone write plug, use it.
++	 */
++	zwplug = disk_get_zone_wplug(disk, sector);
++	if (!zwplug) {
++		if (zone->cond == BLK_ZONE_COND_FULL)
++			zone->wp = sector + zone_sectors;
++		else
++			zone->wp = sector;
++		return 0;
++	}
++
++	spin_lock_irqsave(&zwplug->lock, flags);
++	if (zwplug->flags & BLK_ZONE_WPLUG_NEED_WP_UPDATE) {
++		spin_unlock_irqrestore(&zwplug->lock, flags);
++		disk_put_zone_wplug(zwplug);
++		return blkdev_report_zone_fallback(bdev, sector, zone);
++	}
++	zone->cond = zwplug->cond;
++	zone->wp = sector + zwplug->wp_offset;
++	spin_unlock_irqrestore(&zwplug->lock, flags);
++
++	disk_put_zone_wplug(zwplug);
 +
 +	return 0;
-+
-+invalid_condition:
-+	pr_warn("%s: Invalid zone condition 0x%x for type 0x%x\n",
-+		args->disk->disk_name, cond, zone->type);
-+
-+	return -ENODEV;
 +}
++EXPORT_SYMBOL_GPL(blkdev_get_zone_info);
 +
- static int blk_revalidate_conv_zone(struct blk_zone *zone, unsigned int idx,
- 				    struct blk_revalidate_zone_args *args)
+ static void blk_zone_reset_bio_endio(struct bio *bio)
  {
-@@ -1635,17 +1705,7 @@ static int blk_revalidate_conv_zone(struct blk_zone *zone, unsigned int idx,
- 	if (disk_zone_is_last(disk, zone))
- 		args->last_zone_capacity = zone->capacity;
- 
--	if (!disk_need_zone_resources(disk))
--		return 0;
--
--	if (!args->conv_zones_bitmap) {
--		args->conv_zones_bitmap =
--			bitmap_zalloc(args->nr_zones, GFP_NOIO);
--		if (!args->conv_zones_bitmap)
--			return -ENOMEM;
--	}
--
--	set_bit(idx, args->conv_zones_bitmap);
-+	args->nr_conv_zones++;
- 
- 	return 0;
- }
-@@ -1743,6 +1803,11 @@ static int blk_revalidate_zone_cb(struct blk_zone *zone, unsigned int idx,
- 		return -ENODEV;
- 	}
- 
-+	/* Check zone condition */
-+	ret = blk_revalidate_zone_cond(zone, idx, args);
-+	if (ret)
-+		return ret;
-+
- 	/* Check zone type */
- 	switch (zone->type) {
- 	case BLK_ZONE_TYPE_CONVENTIONAL:
-@@ -1810,10 +1875,8 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
- 	 * Ensure that all memory allocations in this context are done as if
- 	 * GFP_NOIO was specified.
- 	 */
--	args.disk = disk;
--	args.nr_zones = (capacity + zone_sectors - 1) >> ilog2(zone_sectors);
- 	noio_flag = memalloc_noio_save();
--	ret = disk_revalidate_zone_resources(disk, args.nr_zones);
-+	ret = disk_revalidate_zone_resources(disk, &args);
- 	if (ret) {
- 		memalloc_noio_restore(noio_flag);
- 		return ret;
+ 	struct gendisk *disk = bio->bi_bdev->bd_disk;
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 2f75fb15f55f..15cc13006d06 100644
+index 15cc13006d06..98a0ed989d21 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -196,7 +196,7 @@ struct gendisk {
- 	unsigned int		nr_zones;
- 	unsigned int		zone_capacity;
- 	unsigned int		last_zone_capacity;
--	unsigned long __rcu	*conv_zones_bitmap;
-+	u8 __rcu		*zones_cond;
- 	unsigned int		zone_wplugs_hash_bits;
- 	atomic_t		nr_zone_wplugs;
- 	spinlock_t		zone_wplugs_lock;
-@@ -925,6 +925,9 @@ static inline unsigned int bdev_zone_capacity(struct block_device *bdev,
- {
- 	return disk_zone_capacity(bdev->bd_disk, pos);
- }
-+
-+bool bdev_zone_is_seq(struct block_device *bdev, sector_t sector);
-+
- #else /* CONFIG_BLK_DEV_ZONED */
- static inline unsigned int disk_nr_zones(struct gendisk *disk)
- {
-@@ -1533,33 +1536,6 @@ static inline bool bdev_is_zone_aligned(struct block_device *bdev,
- 	return bdev_is_zone_start(bdev, sector);
- }
+@@ -436,6 +436,9 @@ typedef int (*report_zones_cb)(struct blk_zone *zone, unsigned int idx,
+ int disk_report_zone(struct gendisk *disk, struct blk_zone *zone,
+ 		     unsigned int idx, struct blk_report_zones_args *args);
  
--/**
-- * bdev_zone_is_seq - check if a sector belongs to a sequential write zone
-- * @bdev:	block device to check
-- * @sector:	sector number
-- *
-- * Check if @sector on @bdev is contained in a sequential write required zone.
-- */
--static inline bool bdev_zone_is_seq(struct block_device *bdev, sector_t sector)
--{
--	bool is_seq = false;
--
--#if IS_ENABLED(CONFIG_BLK_DEV_ZONED)
--	if (bdev_is_zoned(bdev)) {
--		struct gendisk *disk = bdev->bd_disk;
--		unsigned long *bitmap;
--
--		rcu_read_lock();
--		bitmap = rcu_dereference(disk->conv_zones_bitmap);
--		is_seq = !bitmap ||
--			!test_bit(disk_zone_no(disk, sector), bitmap);
--		rcu_read_unlock();
--	}
--#endif
--
--	return is_seq;
--}
--
- int blk_zone_issue_zeroout(struct block_device *bdev, sector_t sector,
- 			   sector_t nr_sects, gfp_t gfp_mask);
- 
++int blkdev_get_zone_info(struct block_device *bdev, sector_t sector,
++			 struct blk_zone *zone);
++
+ #define BLK_ALL_ZONES  ((unsigned int)-1)
+ int blkdev_report_zones(struct block_device *bdev, sector_t sector,
+ 		unsigned int nr_zones, report_zones_cb cb, void *data);
 -- 
 2.51.0
 
