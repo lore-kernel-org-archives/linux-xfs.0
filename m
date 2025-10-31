@@ -1,35 +1,26 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 318832EAB61;
-	Fri, 31 Oct 2025 15:57:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0E2F2EC0A6;
+	Fri, 31 Oct 2025 16:47:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761926258; cv=none; b=c1IcXotNz52+yWgq/P+c9TPsl+nD9Ye0D1Tl0hmDeyR5aRsfk+Tk5KLnyv4MjDMIJEGtMQIap+zxih+cT4djooHPTBAgTz0WD7hiNJ6iU8MQpaA1BiwUnHY4cE8TuZpik53r5LCzbUe7na8V11Mwkr/pi0ipBnDnzKK4kMIDFiI=
+	t=1761929234; cv=none; b=U1j3oF6lJdiEUHz6L4edeogus/E+fjY5iXTsZtHTB0UPl3RR7x3WLdD9ZBsGqZ+S6kH+1iwgnxnoJHs2H6ylhcmwQLPViQ2AI3urvQ2swlGEM+qyZal+wtXGXFA4AND/y3gqLmzXAJ3qGqer0sA7nF4mKpTx15MAoBnLFmIX8YY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761926258; c=relaxed/simple;
-	bh=7vOOCPUn+sRDAtiN3PBAow6khkmIMlLpIWRfEgzH2l8=;
+	s=arc-20240116; t=1761929234; c=relaxed/simple;
+	bh=jPOtm/oX35cB6by+NQMImwBjFg4VIUlrXBxb2qtL8sI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FbEhTrF/NGlD8naNxTYkv8QsnE6HCXsTNmgx/2ggSUTsrwcyxjOkY3PluWGLjdzF+3+egdfLUsbm65jHXlwTooMiG7Yf0WmSn4pN2SccaWEgAJfeTf2iPceHKOGOifaebBpgedbw/cpd0QjkyoyJig8KESek2ROTHTYlWlLGFZo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CoQ1cxH5; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CoQ1cxH5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24441C4CEE7;
-	Fri, 31 Oct 2025 15:57:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761926257;
-	bh=7vOOCPUn+sRDAtiN3PBAow6khkmIMlLpIWRfEgzH2l8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CoQ1cxH5nn62XVYZNwBAVJ5Twau7QqRh6ICNXwt4KOeBcxeUARlNDPs0iRHuTftOE
-	 /kUXCHz776FA5YODBQfgW259HtLERHSfkBZqgwGo3nulEgnPfwXn+VQjOCeHFWfmXs
-	 Zg0wTr95shwjkbpzsodLXUITOxbCaQG4+XW/NXogYFJar5nSjWz4oLlfo4gzTHdPEm
-	 xyNTiyrnbNjqnzh+5mvPv2ZA4ROwoYjLvTPORCOqgB0mB+mrx2/3JcCWOknvxTztcd
-	 CixgGeL7AAupqiwNAavfq/oPYh834CaIOCEdC0a27xKGxNTyqTynTjS0AT7xfxkXdn
-	 6e5R1Vubs/meA==
-Date: Fri, 31 Oct 2025 09:57:35 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>, Carlos Maiolino <cem@kernel.org>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=s8D8kCKoYrVkkBVLD8vH3/uZs520aShl9rrzcgwoXhU2w8EMkbSaV3mF2pvYEytlh38PCs9uEIoiKvmza9XprYlH1wdvSp77f1WpA/wr1aqoF4Sp2umMXBP2xHhbhzL5LnNZFCfYECcRFQ3scr3utLKlA5kyr0mHgU9ky7xkFiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 50316227A88; Fri, 31 Oct 2025 17:47:02 +0100 (CET)
+Date: Fri, 31 Oct 2025 17:47:01 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Keith Busch <kbusch@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
+	Carlos Maiolino <cem@kernel.org>,
 	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
@@ -37,12 +28,8 @@ Cc: Dave Chinner <david@fromorbit.com>, Carlos Maiolino <cem@kernel.org>,
 	linux-block@vger.kernel.org
 Subject: Re: fall back from direct to buffered I/O when stable writes are
  required
-Message-ID: <aQTcb-0VtWLx6ghD@kbusch-mbp>
-References: <20251029071537.1127397-1-hch@lst.de>
- <aQNJ4iQ8vOiBQEW2@dread.disaster.area>
- <20251030143324.GA31550@lst.de>
- <aQPyVtkvTg4W1nyz@dread.disaster.area>
- <20251031130050.GA15719@lst.de>
+Message-ID: <20251031164701.GA27481@lst.de>
+References: <20251029071537.1127397-1-hch@lst.de> <aQNJ4iQ8vOiBQEW2@dread.disaster.area> <20251030143324.GA31550@lst.de> <aQPyVtkvTg4W1nyz@dread.disaster.area> <20251031130050.GA15719@lst.de> <aQTcb-0VtWLx6ghD@kbusch-mbp>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,27 +38,41 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251031130050.GA15719@lst.de>
+In-Reply-To: <aQTcb-0VtWLx6ghD@kbusch-mbp>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Oct 31, 2025 at 02:00:50PM +0100, Christoph Hellwig wrote:
-> On Fri, Oct 31, 2025 at 10:18:46AM +1100, Dave Chinner wrote:
-> 
-> > Modifying an IO buffer whilst a DIO is in flight on that buffer has
-> > -always- been an application bug.
-> 
-> Says who?
+On Fri, Oct 31, 2025 at 09:57:35AM -0600, Keith Busch wrote:
+> Not sure of any official statement to that effect, but storage in
+> general always says the behavior of modifying data concurrently with
+> in-flight operations on that data produces non-deterministic results.
 
-Not sure of any official statement to that effect, but storage in
-general always says the behavior of modifying data concurrently with
-in-flight operations on that data produces non-deterministic results. An
-application with such behavior sounds like a bug to me as I can't
-imagine anyone purposefully choosing to persist data with a random
-outcome. If PI is enabled, I think they'd rather get a deterministic
-guard check error so they know they did something with undefined
-behavior.
+Yes, it's pretty clear that the result in non-deterministic in what you
+get.  But that result still does not result in corruption, because
+there is a clear boundary ( either the sector size, or for NVMe
+optionally even a larger bodunary) that designates the atomicy boundary.
 
-It's like having reads and writes to overlapping LBA and/or memory
-ranges concurrently outstanding. There's no guaranteed result there
-either; specs just say it's the host's responsibilty to not do that.
-The kernel doesn't stop an application from trying that on raw block
-direct-io, but I'd say that's an application bug.
+> An
+> application with such behavior sounds like a bug to me as I can't
+> imagine anyone purposefully choosing to persist data with a random
+> outcome. If PI is enabled, I think they'd rather get a deterministic
+> guard check error so they know they did something with undefined
+> behavior.
+
+As long as your clearly define your transaction boundaries that
+non-atomicy is not a problem per se.
+
+> It's like having reads and writes to overlapping LBA and/or memory
+> ranges concurrently outstanding. There's no guaranteed result there
+> either; specs just say it's the host's responsibilty to not do that.
+
+There is no guaranteed result as in an enforced ordering.  But there
+is a pretty clear model that you get either the old or new at a
+well defined boundary.
+
+> The kernel doesn't stop an application from trying that on raw block
+> direct-io, but I'd say that's an application bug.
+
+If it corrupts other applications data as in the RAID case it's
+pretty clearly not an application bug.  It's also pretty clear that
+at least some applications (qemu and other VMs) have been doings this
+for 20+ years.
