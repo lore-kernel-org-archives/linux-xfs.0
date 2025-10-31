@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 441B1346790
-	for <linux-xfs@vger.kernel.org>; Fri, 31 Oct 2025 13:25:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96CE2221540
+	for <linux-xfs@vger.kernel.org>; Fri, 31 Oct 2025 13:38:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761917103; cv=none; b=vCC9IPlZKU9KdHkmGfMHkVZAcq4CVZqPP4jCZljeIavZrLKmDrsflLbtLOIEO7DBibVjfd0fn9Hgdw9z/I8S15IBTdplGVCjOu9G1g38Z1QBr01T1/4wKmI4FyBnD4AjPHI+wptu81WSq3PvXIj4wC8f/Z6Y1Y8j/RRiT1hp1kU=
+	t=1761917931; cv=none; b=HRrC6LT3dleIZp2oHOGXDUewTz8nJSaZoHTrnyLmpiP2A7SRNQB9BWF9qURLq9plgmS5NriK+tIkr7SBOE9JXvoxMYoExZWh8ER2EN496ge/PLR1iSYsiUDULWLla+BdQ9pjUyKjS/y2b2hTU4O5lsip4eUP/xnArvYxSh9zscs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761917103; c=relaxed/simple;
-	bh=FQko4w9N2D+UNEqAtcWjSR66zvQCb/CHVESgMfnR6mU=;
+	s=arc-20240116; t=1761917931; c=relaxed/simple;
+	bh=UO9owQj5HFeDcRxvwB8sr9EVRtUeOdsE0xeK2snWZ5U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=vDW4QZ0s90jS8MpW03MO+ZjrGojA46dGenUSS7cvXdaA729hxxA7v2PDJ4dgbKtD1MBis7pmXWaYxa96i8igM9SEoo9Ge0gL7Gxr5kLE8nzVMeMO+Dm8mFirLGNmJBRJ9xIrBTBhb6Sdg8feNeSdttgyU+qTt3QkwHBK/mUrkUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RBS84Bno; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=c8dW1wXXWQNGhVXfFlNBjc3plp1LJPXRJsYliD7fWqWe24d6caTz8sZeCFHL01KgFMK1CW9sgaM7OUgKnXIxBfxm+pdbUN3CHHSx5uvd0EhHc+9y9PFLShYYRbKPlhqKq2ufaKKKjN04cF8X1WWe+JpZjpK6WszzaFKSdAoGiXY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=id8L2TlF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RBS84Bno"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9C20C4CEE7;
-	Fri, 31 Oct 2025 13:25:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="id8L2TlF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27C0FC4CEF8;
+	Fri, 31 Oct 2025 13:38:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761917102;
-	bh=FQko4w9N2D+UNEqAtcWjSR66zvQCb/CHVESgMfnR6mU=;
+	s=k20201202; t=1761917930;
+	bh=UO9owQj5HFeDcRxvwB8sr9EVRtUeOdsE0xeK2snWZ5U=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=RBS84BnoXoChS3/rSW2USSyO/ySLLfVrhIkpmOKOFQxeQRxOupQEcP773zWn/1MwQ
-	 NrUmS1BiRtJjfD6VuuRKN9VCjgIy0PHxIQkPF498VL16OmBy2Ai+dBHsfhICX9hnZO
-	 y+3iqiCFXk+uTE+9XQXYfQvIvQ9nLYw6DzZtKV4Z00JXH/cpyOulaEcO4fpgylqd7T
-	 qd3nbUWOOpvR4OG4BR6JhXXkm+3cdUofhpcubHF28juFk8lMvoC87H/BN7LgiIAZ0K
-	 mYXJjA+iGfIJxVp7nhqODSPWA4hDT+tVMJKKe/RD+c7izjJeDSBy6SS8g/RT5gDH88
-	 nUCeoIpzNcZIg==
-Date: Fri, 31 Oct 2025 14:24:59 +0100
+	b=id8L2TlFU5iwQTrCsg3o7zIOQqUkwlVtkXXC85BZebMgJjxki6kprxT1U/x+eJQUB
+	 D81MH7OSJmIhSmrFSiIkS2yKMM9no2WOKQ/+na1n23FrdibUOUz9wtRMtjbkt8LdLT
+	 A903+vavfsD+Xc6h4bnOPTlAjAEnZ5iDzX8aqz4PzOEG1cTgiNqLV9TPUsyOtb0FA2
+	 qpXQkYWmpncJAdxFIP6Is5MVJ1VIT+tXbKMPBfYlh19/Z2Ik/HTWQzZzq7+RBHKrPR
+	 WVJV823Ejl7NicaFpRfrgRjhzhTPGu9ld3o4GBjZVwTvEdNHlAR4gd1tX9t5yRS1dd
+	 AHqjfrzA9J2fg==
+Date: Fri, 31 Oct 2025 14:38:46 +0100
 From: Carlos Maiolino <cem@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH 1/9] xfs: add a XLOG_CYCLE_DATA_SIZE constant
-Message-ID: <7xdi7nnwhkqe464ylbxoxwayxo77phvuy5nvxpa74ekx7wv3xv@73mm7kx4yatl>
+Subject: Re: [PATCH 2/9] xfs: add a on-disk log header cycle array accessor
+Message-ID: <o5dzveclritedtdivt7r6wh5yov3c3aqqq5ebteprlo7x2mxzh@dqysnnqp2jxe>
 References: <20251027070610.729960-1-hch@lst.de>
- <kwdAy7x86lbi-aOr_Z2CpoqXjtLR86kxKo6EZCG8tKycJlgtiOhuogvWOwERKG4IZY2Y7g9f_npsRYfjJxaxAw==@protonmail.internalid>
- <20251027070610.729960-2-hch@lst.de>
+ <rKr1TvH8C_ToMnya7XWYDoF5eKfaiFKgLBUuWld9IHLY-sLlbONURSEilCdODioKv41fZ642Gv82F9mukIsVLQ==@protonmail.internalid>
+ <20251027070610.729960-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,127 +43,207 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251027070610.729960-2-hch@lst.de>
+In-Reply-To: <20251027070610.729960-3-hch@lst.de>
 
-On Mon, Oct 27, 2025 at 08:05:48AM +0100, Christoph Hellwig wrote:
-> The XLOG_HEADER_CYCLE_SIZE / BBSIZE expression is used a lot
-> in the log code, give it a symbolic name.
+On Mon, Oct 27, 2025 at 08:05:49AM +0100, Christoph Hellwig wrote:
+> Accessing the cycle arrays in the original log record header vs the
+> extended header is messy and duplicated in multiple places.
+> 
+> Add a xlog_cycle_data helper to abstract it out.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
-> ---
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
->  fs/xfs/libxfs/xfs_log_format.h |  5 +++--
->  fs/xfs/xfs_log.c               | 18 +++++++++---------
->  fs/xfs/xfs_log_recover.c       |  6 +++---
->  3 files changed, 15 insertions(+), 14 deletions(-)
+> ---
+>  fs/xfs/xfs_log.c         | 63 ++++++++++------------------------------
+>  fs/xfs/xfs_log_priv.h    | 18 ++++++++++++
+>  fs/xfs/xfs_log_recover.c | 17 ++---------
+>  3 files changed, 37 insertions(+), 61 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-> index 6c50cb2ece19..91a841ea5bb3 100644
-> --- a/fs/xfs/libxfs/xfs_log_format.h
-> +++ b/fs/xfs/libxfs/xfs_log_format.h
-> @@ -31,6 +31,7 @@ typedef uint32_t xlog_tid_t;
->  #define XLOG_BIG_RECORD_BSIZE	(32*1024)	/* 32k buffers */
->  #define XLOG_MAX_RECORD_BSIZE	(256*1024)
->  #define XLOG_HEADER_CYCLE_SIZE	(32*1024)	/* cycle data in header */
-> +#define XLOG_CYCLE_DATA_SIZE	(XLOG_HEADER_CYCLE_SIZE / BBSIZE)
->  #define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
->  #define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
->  #define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
-> @@ -135,7 +136,7 @@ typedef struct xlog_rec_header {
->  	__le32	  h_crc;	/* crc of log record                    :  4 */
->  	__be32	  h_prev_block; /* block number to previous LR		:  4 */
->  	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
-> -	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
-> +	__be32	  h_cycle_data[XLOG_CYCLE_DATA_SIZE];
-> 
->  	/* fields added by the Linux port: */
->  	__be32    h_fmt;        /* format of log record                 :  4 */
-> @@ -172,7 +173,7 @@ typedef struct xlog_rec_header {
-> 
->  typedef struct xlog_rec_ext_header {
->  	__be32	  xh_cycle;	/* write cycle of log			: 4 */
-> -	__be32	  xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE]; /*	: 256 */
-> +	__be32	  xh_cycle_data[XLOG_CYCLE_DATA_SIZE];		/*	: 256 */
->  } xlog_rec_ext_header_t;
-> 
->  /*
 > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 603e85c1ab4c..e09e5f71ed8c 100644
+> index e09e5f71ed8c..a569a4320a3a 100644
 > --- a/fs/xfs/xfs_log.c
 > +++ b/fs/xfs/xfs_log.c
-> @@ -1533,7 +1533,7 @@ xlog_pack_data(
+> @@ -1524,18 +1524,13 @@ xlog_pack_data(
+>  	struct xlog_in_core	*iclog,
+>  	int			roundoff)
+>  {
+> -	int			i, j, k;
+> -	int			size = iclog->ic_offset + roundoff;
+> -	__be32			cycle_lsn;
+> -	char			*dp;
+> -
+> -	cycle_lsn = CYCLE_LSN_DISK(iclog->ic_header.h_lsn);
+> +	struct xlog_rec_header	*rhead = &iclog->ic_header;
+> +	__be32			cycle_lsn = CYCLE_LSN_DISK(rhead->h_lsn);
+> +	char			*dp = iclog->ic_datap;
+> +	int			i;
 > 
->  	dp = iclog->ic_datap;
->  	for (i = 0; i < BTOBB(size); i++) {
-> -		if (i >= (XLOG_HEADER_CYCLE_SIZE / BBSIZE))
-> +		if (i >= XLOG_CYCLE_DATA_SIZE)
->  			break;
->  		iclog->ic_header.h_cycle_data[i] = *(__be32 *)dp;
+> -	dp = iclog->ic_datap;
+> -	for (i = 0; i < BTOBB(size); i++) {
+> -		if (i >= XLOG_CYCLE_DATA_SIZE)
+> -			break;
+> -		iclog->ic_header.h_cycle_data[i] = *(__be32 *)dp;
+> +	for (i = 0; i < BTOBB(iclog->ic_offset + roundoff); i++) {
+> +		*xlog_cycle_data(rhead, i) = *(__be32 *)dp;
 >  		*(__be32 *)dp = cycle_lsn;
-> @@ -1544,8 +1544,8 @@ xlog_pack_data(
+>  		dp += BBSIZE;
+>  	}
+> @@ -1543,14 +1538,6 @@ xlog_pack_data(
+>  	if (xfs_has_logv2(log->l_mp)) {
 >  		xlog_in_core_2_t *xhdr = iclog->ic_data;
 > 
->  		for ( ; i < BTOBB(size); i++) {
-> -			j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-> -			k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-> +			j = i / XLOG_CYCLE_DATA_SIZE;
-> +			k = i % XLOG_CYCLE_DATA_SIZE;
->  			xhdr[j].hic_xheader.xh_cycle_data[k] = *(__be32 *)dp;
->  			*(__be32 *)dp = cycle_lsn;
->  			dp += BBSIZE;
-> @@ -3368,9 +3368,9 @@ xlog_verify_iclog(
+> -		for ( ; i < BTOBB(size); i++) {
+> -			j = i / XLOG_CYCLE_DATA_SIZE;
+> -			k = i % XLOG_CYCLE_DATA_SIZE;
+> -			xhdr[j].hic_xheader.xh_cycle_data[k] = *(__be32 *)dp;
+> -			*(__be32 *)dp = cycle_lsn;
+> -			dp += BBSIZE;
+> -		}
+> -
+>  		for (i = 1; i < log->l_iclog_heads; i++)
+>  			xhdr[i].hic_xheader.xh_cycle = cycle_lsn;
+>  	}
+> @@ -3322,13 +3309,12 @@ xlog_verify_iclog(
+>  	struct xlog_in_core	*iclog,
+>  	int			count)
+>  {
+> -	struct xlog_op_header	*ophead;
+> +	struct xlog_rec_header	*rhead = &iclog->ic_header;
+>  	xlog_in_core_t		*icptr;
+> -	xlog_in_core_2_t	*xhdr;
+> -	void			*base_ptr, *ptr, *p;
+> +	void			*base_ptr, *ptr;
+>  	ptrdiff_t		field_offset;
+>  	uint8_t			clientid;
+> -	int			len, i, j, k, op_len;
+> +	int			len, i, op_len;
+>  	int			idx;
+> 
+>  	/* check validity of iclog pointers */
+> @@ -3342,11 +3328,10 @@ xlog_verify_iclog(
+>  	spin_unlock(&log->l_icloglock);
+> 
+>  	/* check log magic numbers */
+> -	if (iclog->ic_header.h_magicno != cpu_to_be32(XLOG_HEADER_MAGIC_NUM))
+> +	if (rhead->h_magicno != cpu_to_be32(XLOG_HEADER_MAGIC_NUM))
+>  		xfs_emerg(log->l_mp, "%s: invalid magic num", __func__);
+> 
+> -	base_ptr = ptr = &iclog->ic_header;
+> -	p = &iclog->ic_header;
+> +	base_ptr = ptr = rhead;
+>  	for (ptr += BBSIZE; ptr < base_ptr + count; ptr += BBSIZE) {
+>  		if (*(__be32 *)ptr == cpu_to_be32(XLOG_HEADER_MAGIC_NUM))
+>  			xfs_emerg(log->l_mp, "%s: unexpected magic num",
+> @@ -3354,29 +3339,19 @@ xlog_verify_iclog(
+>  	}
+> 
+>  	/* check fields */
+> -	len = be32_to_cpu(iclog->ic_header.h_num_logops);
+> +	len = be32_to_cpu(rhead->h_num_logops);
+>  	base_ptr = ptr = iclog->ic_datap;
+> -	ophead = ptr;
+> -	xhdr = iclog->ic_data;
+>  	for (i = 0; i < len; i++) {
+> -		ophead = ptr;
+> +		struct xlog_op_header	*ophead = ptr;
+> +		void			*p = &ophead->oh_clientid;
+> 
+>  		/* clientid is only 1 byte */
+> -		p = &ophead->oh_clientid;
+>  		field_offset = p - base_ptr;
+>  		if (field_offset & 0x1ff) {
 >  			clientid = ophead->oh_clientid;
 >  		} else {
 >  			idx = BTOBBT((void *)&ophead->oh_clientid - iclog->ic_datap);
-> -			if (idx >= (XLOG_HEADER_CYCLE_SIZE / BBSIZE)) {
-> -				j = idx / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-> -				k = idx % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-> +			if (idx >= XLOG_CYCLE_DATA_SIZE) {
-> +				j = idx / XLOG_CYCLE_DATA_SIZE;
-> +				k = idx % XLOG_CYCLE_DATA_SIZE;
->  				clientid = xlog_get_client_id(
->  					xhdr[j].hic_xheader.xh_cycle_data[k]);
->  			} else {
-> @@ -3392,9 +3392,9 @@ xlog_verify_iclog(
+> -			if (idx >= XLOG_CYCLE_DATA_SIZE) {
+> -				j = idx / XLOG_CYCLE_DATA_SIZE;
+> -				k = idx % XLOG_CYCLE_DATA_SIZE;
+> -				clientid = xlog_get_client_id(
+> -					xhdr[j].hic_xheader.xh_cycle_data[k]);
+> -			} else {
+> -				clientid = xlog_get_client_id(
+> -					iclog->ic_header.h_cycle_data[idx]);
+> -			}
+> +			clientid = xlog_get_client_id(*xlog_cycle_data(rhead, idx));
+>  		}
+>  		if (clientid != XFS_TRANSACTION && clientid != XFS_LOG) {
+>  			xfs_warn(log->l_mp,
+> @@ -3392,13 +3367,7 @@ xlog_verify_iclog(
 >  			op_len = be32_to_cpu(ophead->oh_len);
 >  		} else {
 >  			idx = BTOBBT((void *)&ophead->oh_len - iclog->ic_datap);
-> -			if (idx >= (XLOG_HEADER_CYCLE_SIZE / BBSIZE)) {
-> -				j = idx / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-> -				k = idx % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-> +			if (idx >= XLOG_CYCLE_DATA_SIZE) {
-> +				j = idx / XLOG_CYCLE_DATA_SIZE;
-> +				k = idx % XLOG_CYCLE_DATA_SIZE;
->  				op_len = be32_to_cpu(xhdr[j].hic_xheader.xh_cycle_data[k]);
->  			} else {
->  				op_len = be32_to_cpu(iclog->ic_header.h_cycle_data[idx]);
+> -			if (idx >= XLOG_CYCLE_DATA_SIZE) {
+> -				j = idx / XLOG_CYCLE_DATA_SIZE;
+> -				k = idx % XLOG_CYCLE_DATA_SIZE;
+> -				op_len = be32_to_cpu(xhdr[j].hic_xheader.xh_cycle_data[k]);
+> -			} else {
+> -				op_len = be32_to_cpu(iclog->ic_header.h_cycle_data[idx]);
+> -			}
+> +			op_len = be32_to_cpu(*xlog_cycle_data(rhead, idx));
+>  		}
+>  		ptr += sizeof(struct xlog_op_header) + op_len;
+>  	}
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 0cfc654d8e87..d2f17691ecca 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -711,4 +711,22 @@ xlog_item_space(
+>  	return round_up(nbytes, sizeof(uint64_t));
+>  }
+> 
+> +/*
+> + * Cycles over XLOG_CYCLE_DATA_SIZE overflow into the extended header that was
+> + * added for v2 logs.  Addressing for the cycles array there is off by one,
+> + * because the first batch of cycles is in the original header.
+> + */
+> +static inline __be32 *xlog_cycle_data(struct xlog_rec_header *rhead, unsigned i)
+> +{
+> +	if (i >= XLOG_CYCLE_DATA_SIZE) {
+> +		xlog_in_core_2_t *xhdr = (xlog_in_core_2_t *)rhead;
+> +		unsigned	j = i / XLOG_CYCLE_DATA_SIZE;
+> +		unsigned	k = i % XLOG_CYCLE_DATA_SIZE;
+> +
+> +		return &xhdr[j].hic_xheader.xh_cycle_data[k];
+> +	}
+> +
+> +	return &rhead->h_cycle_data[i];
+> +}
+> +
+>  #endif	/* __XFS_LOG_PRIV_H__ */
 > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 549d60959aee..bb2b3f976deb 100644
+> index bb2b3f976deb..ef0f6efc4381 100644
 > --- a/fs/xfs/xfs_log_recover.c
 > +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2866,7 +2866,7 @@ xlog_unpack_data(
->  	int			i, j, k;
+> @@ -2863,23 +2863,12 @@ xlog_unpack_data(
+>  	char			*dp,
+>  	struct xlog		*log)
+>  {
+> -	int			i, j, k;
+> +	int			i;
 > 
->  	for (i = 0; i < BTOBB(be32_to_cpu(rhead->h_len)) &&
-> -		  i < (XLOG_HEADER_CYCLE_SIZE / BBSIZE); i++) {
-> +		  i < XLOG_CYCLE_DATA_SIZE; i++) {
->  		*(__be32 *)dp = *(__be32 *)&rhead->h_cycle_data[i];
+> -	for (i = 0; i < BTOBB(be32_to_cpu(rhead->h_len)) &&
+> -		  i < XLOG_CYCLE_DATA_SIZE; i++) {
+> -		*(__be32 *)dp = *(__be32 *)&rhead->h_cycle_data[i];
+> +	for (i = 0; i < BTOBB(be32_to_cpu(rhead->h_len)); i++) {
+> +		*(__be32 *)dp = *xlog_cycle_data(rhead, i);
 >  		dp += BBSIZE;
 >  	}
-> @@ -2874,8 +2874,8 @@ xlog_unpack_data(
->  	if (xfs_has_logv2(log->l_mp)) {
->  		xlog_in_core_2_t *xhdr = (xlog_in_core_2_t *)rhead;
->  		for ( ; i < BTOBB(be32_to_cpu(rhead->h_len)); i++) {
-> -			j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-> -			k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-> +			j = i / XLOG_CYCLE_DATA_SIZE;
-> +			k = i % XLOG_CYCLE_DATA_SIZE;
->  			*(__be32 *)dp = xhdr[j].hic_xheader.xh_cycle_data[k];
->  			dp += BBSIZE;
->  		}
+> -
+> -	if (xfs_has_logv2(log->l_mp)) {
+> -		xlog_in_core_2_t *xhdr = (xlog_in_core_2_t *)rhead;
+> -		for ( ; i < BTOBB(be32_to_cpu(rhead->h_len)); i++) {
+> -			j = i / XLOG_CYCLE_DATA_SIZE;
+> -			k = i % XLOG_CYCLE_DATA_SIZE;
+> -			*(__be32 *)dp = xhdr[j].hic_xheader.xh_cycle_data[k];
+> -			dp += BBSIZE;
+> -		}
+> -	}
+>  }
+> 
+>  /*
 > --
 > 2.47.3
 > 
