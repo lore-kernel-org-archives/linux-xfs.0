@@ -1,161 +1,459 @@
-Received: from mail-il1-f207.google.com (mail-il1-f207.google.com [209.85.166.207])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD4EB22333D
-	for <linux-xfs@vger.kernel.org>; Sat,  1 Nov 2025 02:11:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.207
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E464734D3A5
+	for <linux-xfs@vger.kernel.org>; Sat,  1 Nov 2025 03:26:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761963091; cv=none; b=AHuMGwuDnyWysp1iiG9qspn2jBeSrViXIebaYLH9vH/Y9Fh4Khuh5MyTXca5zl4eMV0h0b80wzX4oy6zDrlxP6osORdTzCFJC9xJ2w8p842cio2WYJ5DbjGTxdVvqus0ztTxyX1LkIR6ql45DjHV+jVAwhP6JcDb7qTtFjlyLNk=
+	t=1761967594; cv=none; b=g0lpTEGdHBRWg1m97oYBT7NhahXO8992+d2SHOMfatrImUIG7C0PqTJykLpcdLLDb/nXp1YweVFr/84NHQd3IeqwUtRIzpFXUwKYRqKS+p4Nbdo/v1qDV4KXZOogT8Xn2HEk0r6P++p/rL6g2GlfdUUHiwK/+MYeLwaOkyPOg0E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761963091; c=relaxed/simple;
-	bh=K8ImMs6n9uySCZYArV5RIiG8bIqLyPLzV1sXOzBoRtY=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=hJIeFRBLpiQf/KcvScMvdU3FjUm0R1qBNeHZYKlMkl5ebCLEAwYr5Bk98vhDXtErANnduLtbv2qBJQpnWcA0mpdN9eT8ZWUjFMFV8l4QwkYr/1S7nTCzB31rSShUpQDNl7iCR/zxDSdpKk/68SLGK8vE2O45WQFBIVggskWw5Q4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.207
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f207.google.com with SMTP id e9e14a558f8ab-43322c01a48so702785ab.0
-        for <linux-xfs@vger.kernel.org>; Fri, 31 Oct 2025 19:11:29 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761963089; x=1762567889;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Y8wH2JlkS8rwz4h7Dq6s8besfCrkPbJyaWFvQHAG38c=;
-        b=MtgqNy97vXSFtnDkwkt248kYkXjGnr2pNmrZlp9BMNRqOQwGzuQ8h/NJbtjBFWl2jx
-         gboOs3Xw9d1nbpgSWrAGF0NTmNB1+ZWHiY83qUMoZ7gGAUq896+rdxm3E8fOPPaR7sAk
-         ag5q52hKX+8txGGpG9HiKaSf4d8Q0JyV7cL5nw1tGU3mUcZmpvPpYGO3x8gCFVuL/Lme
-         mmBQBNou7cIJyTMIx13zY9DM9RgsMA19ZeJPxuYoUsrvEi7+dSDru+YHIRMEEwQpDVir
-         8egZi/axdScjv0vr2LK96OXzkZuw8RM09MzaXNh1KXFv3NoYEQ0BeCAutd7iHm2mUosd
-         qEFg==
-X-Forwarded-Encrypted: i=1; AJvYcCVrmCXRxUePLSltOPjcC6+wK4nqzP+kskboI6PH3B71TPAp2Mj/gnkBCoOUWvJl+oOdjkvdjHUJLRE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yylf0mRlhCfVF3kkAkFNZtUkHyYSupICIRNmpJF7L3Wg8FXNri5
-	rUc3Z6usvs/wA+xhfUiGJ/b32cmCJm8PCAiwc7ZoGCcih3HbXSeGz1KrDPAwp5/gvy09Wqt/lgZ
-	GHFvzmXQWvTrDrSVpp3L+y3LX1eni7dkP/8rpZlPeeJ+qLBvCTZAxOmYhE0Y=
-X-Google-Smtp-Source: AGHT+IEzesGSsLWX/EFccy4sTErr4FvPtAfe/c1E2omwJKxtrILDrP3iAzGkXHjWDghJqUY1wFYh1OAqdHkvq30NnOikP4OVaNgf
+	s=arc-20240116; t=1761967594; c=relaxed/simple;
+	bh=BJEBKT4AxBHAcFq37CrsDlNde6Gc0TarooD2O2Ci5Yc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KUH2eFzo+2/z2JMydAGZ6kRBEMsveSjfxLgb5jwl7k2qHcMDlXZt/U4cRn+VJT1tbtNCkbR6UcUTo2HcuWMxQ2cIqI5SuwOc+OC+n/zru64MR2dsMKxDsI3jsSCQ/Q+hQN0ejgmnmhxLVpZvHZb6NNJxE8s8p6iJyYWyVfa4CJ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WyVsUR+Z; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WyVsUR+Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51A7EC4CEF7;
+	Sat,  1 Nov 2025 03:26:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761967593;
+	bh=BJEBKT4AxBHAcFq37CrsDlNde6Gc0TarooD2O2Ci5Yc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=WyVsUR+ZXJyTSnXdpVNT3dtbfO9JgVwgM/hB8jnN+uY/B3/K1nfPXMawB0Nm+Cdnq
+	 4HLiiYdGQgBj4KLE0ETr3XQ7Kuz7MPzyGNTeiaTOom3/g4mZBwLjCi9lOhS2q+kYIK
+	 C3SXBK5WFtB4nijMi//9rrA1+8yeW1X/Qo5grkyUn2BOgFeKv7dztmhrVauX33cSNw
+	 nz1xxGdvRcfihy8egqi36iKZdDmVs2enFfkJtqGxzKE7Wk2VVwsx0WIC4Ib5T6hZHo
+	 wwwMnqoa4A7as54T7EZ0YOjQ0JOYN5n0R+ZpRuTfL2P7b8gmHTgJhn0as2jWm/eT1j
+	 ni/p35ANzLRkA==
+Date: Fri, 31 Oct 2025 20:26:32 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 07/10] xfs: improve the calling convention for the
+ xlog_write helpers
+Message-ID: <20251101032632.GV3356773@frogsfrogsfrogs>
+References: <20251030144946.1372887-1-hch@lst.de>
+ <20251030144946.1372887-8-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1a4a:b0:422:a9aa:7ff4 with SMTP id
- e9e14a558f8ab-4330cf069bdmr81980165ab.11.1761963088808; Fri, 31 Oct 2025
- 19:11:28 -0700 (PDT)
-Date: Fri, 31 Oct 2025 19:11:28 -0700
-In-Reply-To: <68cc0578.050a0220.28a605.0006.GAE@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <69056c50.a70a0220.1e08cc.006c.GAE@google.com>
-Subject: Re: [syzbot] [iomap?] kernel BUG in folio_end_read (2)
-From: syzbot <syzbot+3686758660f980b402dc@syzkaller.appspotmail.com>
-To: brauner@kernel.org, chao@kernel.org, djwong@kernel.org, jaegeuk@kernel.org, 
-	linux-f2fs-devel@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251030144946.1372887-8-hch@lst.de>
 
-syzbot has found a reproducer for the following issue on:
+On Thu, Oct 30, 2025 at 03:49:17PM +0100, Christoph Hellwig wrote:
+> The xlog_write chain passes around the same seven variables that are
+> often passed by reference. Add a xlog_write_data structure to contain
+> them to improve code generation and readability.
+> 
+> This change reduces the generated code size by almost 200 bytes for my
+> x86_64 build:
+> 
+> $ size fs/xfs/xfs_log.o*
+>    text	   data	    bss	    dec	    hex	filename
+>   26330	   1292	      8	  27630	   6bee	fs/xfs/xfs_log.o
+>   26158	   1292	      8	  27458	   6b42	fs/xfs/xfs_log.o.old
 
-HEAD commit:    98bd8b16ae57 Add linux-next specific files for 20251031
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=163b2bcd980000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=63d09725c93bcc1c
-dashboard link: https://syzkaller.appspot.com/bug?extid=3686758660f980b402dc
-compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=176fc342580000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=10403f34580000
+Um... assuming xfs_log.o is the post-patch object file, this shows the
+text size going up by 172 bytes, right?
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/975261746f29/disk-98bd8b16.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/ad565c6cf272/vmlinux-98bd8b16.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/1816a55a8d5f/bzImage-98bd8b16.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/d6d9eee31fdb/mount_0.gz
-  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=17803f34580000)
+--D
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+3686758660f980b402dc@syzkaller.appspotmail.com
-
- vms_complete_munmap_vmas+0x206/0x8a0 mm/vma.c:1279
- do_vmi_align_munmap+0x364/0x440 mm/vma.c:1538
- do_vmi_munmap+0x253/0x2e0 mm/vma.c:1586
- __vm_munmap+0x207/0x380 mm/vma.c:3196
- __do_sys_munmap mm/mmap.c:1077 [inline]
- __se_sys_munmap mm/mmap.c:1074 [inline]
- __x64_sys_munmap+0x60/0x70 mm/mmap.c:1074
- do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
- do_syscall_64+0xfa/0xfa0 arch/x86/entry/syscall_64.c:94
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-------------[ cut here ]------------
-kernel BUG at mm/filemap.c:1530!
-Oops: invalid opcode: 0000 [#1] SMP KASAN PTI
-CPU: 1 UID: 0 PID: 5989 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/02/2025
-RIP: 0010:folio_end_read+0x1e9/0x230 mm/filemap.c:1530
-Code: 79 c7 ff 48 89 df 48 c7 c6 20 6d 74 8b e8 9f df 2e ff 90 0f 0b e8 d7 79 c7 ff 48 89 df 48 c7 c6 40 63 74 8b e8 88 df 2e ff 90 <0f> 0b e8 c0 79 c7 ff 48 89 df 48 c7 c6 20 6d 74 8b e8 71 df 2e ff
-RSP: 0018:ffffc90003f8e268 EFLAGS: 00010246
-RAX: c6904ff3387db700 RBX: ffffea0001b5ef00 RCX: 0000000000000000
-RDX: 0000000000000007 RSI: ffffffff8d780a1b RDI: 00000000ffffffff
-RBP: 0000000000000000 R08: ffffffff8f7d7477 R09: 1ffffffff1efae8e
-R10: dffffc0000000000 R11: fffffbfff1efae8f R12: 1ffffd400036bde1
-R13: 1ffffd400036bde0 R14: ffffea0001b5ef08 R15: 00fff20000004060
-FS:  0000555572333500(0000) GS:ffff888125fe2000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f57d6844000 CR3: 0000000075586000 CR4: 00000000003526f0
-Call Trace:
- <TASK>
- iomap_readahead+0x96a/0xbc0 fs/iomap/buffered-io.c:547
- iomap_bio_readahead include/linux/iomap.h:608 [inline]
- erofs_readahead+0x1c3/0x3c0 fs/erofs/data.c:383
- read_pages+0x17a/0x580 mm/readahead.c:163
- page_cache_ra_order+0x924/0xe70 mm/readahead.c:518
- filemap_readahead mm/filemap.c:2658 [inline]
- filemap_get_pages+0x7ff/0x1df0 mm/filemap.c:2704
- filemap_read+0x3f6/0x11a0 mm/filemap.c:2800
- __kernel_read+0x4cf/0x960 fs/read_write.c:530
- integrity_kernel_read+0x89/0xd0 security/integrity/iint.c:28
- ima_calc_file_hash_tfm security/integrity/ima/ima_crypto.c:480 [inline]
- ima_calc_file_shash security/integrity/ima/ima_crypto.c:511 [inline]
- ima_calc_file_hash+0x85e/0x16f0 security/integrity/ima/ima_crypto.c:568
- ima_collect_measurement+0x428/0x8f0 security/integrity/ima/ima_api.c:293
- process_measurement+0x1121/0x1a40 security/integrity/ima/ima_main.c:405
- ima_file_check+0xd7/0x120 security/integrity/ima/ima_main.c:656
- security_file_post_open+0xbb/0x290 security/security.c:2652
- do_open fs/namei.c:3977 [inline]
- path_openat+0x2f26/0x3830 fs/namei.c:4134
- do_filp_open+0x1fa/0x410 fs/namei.c:4161
- do_sys_openat2+0x121/0x1c0 fs/open.c:1437
- do_sys_open fs/open.c:1452 [inline]
- __do_sys_openat fs/open.c:1468 [inline]
- __se_sys_openat fs/open.c:1463 [inline]
- __x64_sys_openat+0x138/0x170 fs/open.c:1463
- do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
- do_syscall_64+0xfa/0xfa0 arch/x86/entry/syscall_64.c:94
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f0b08d8efc9
-Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007ffec6a5d268 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
-RAX: ffffffffffffffda RBX: 00007f0b08fe5fa0 RCX: 00007f0b08d8efc9
-RDX: 0000000000121140 RSI: 0000200000000000 RDI: ffffffffffffff9c
-RBP: 00007f0b08e11f91 R08: 0000000000000000 R09: 0000000000000000
-R10: 000000000000013d R11: 0000000000000246 R12: 0000000000000000
-R13: 00007f0b08fe5fa0 R14: 00007f0b08fe5fa0 R15: 0000000000000004
- </TASK>
-Modules linked in:
----[ end trace 0000000000000000 ]---
-RIP: 0010:folio_end_read+0x1e9/0x230 mm/filemap.c:1530
-Code: 79 c7 ff 48 89 df 48 c7 c6 20 6d 74 8b e8 9f df 2e ff 90 0f 0b e8 d7 79 c7 ff 48 89 df 48 c7 c6 40 63 74 8b e8 88 df 2e ff 90 <0f> 0b e8 c0 79 c7 ff 48 89 df 48 c7 c6 20 6d 74 8b e8 71 df 2e ff
-RSP: 0018:ffffc90003f8e268 EFLAGS: 00010246
-RAX: c6904ff3387db700 RBX: ffffea0001b5ef00 RCX: 0000000000000000
-RDX: 0000000000000007 RSI: ffffffff8d780a1b RDI: 00000000ffffffff
-RBP: 0000000000000000 R08: ffffffff8f7d7477 R09: 1ffffffff1efae8e
-R10: dffffc0000000000 R11: fffffbfff1efae8f R12: 1ffffd400036bde1
-R13: 1ffffd400036bde0 R14: ffffea0001b5ef08 R15: 00fff20000004060
-FS:  0000555572333500(0000) GS:ffff888125ee2000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000001b30063fff CR3: 0000000075586000 CR4: 00000000003526f0
-
-
----
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_log.c | 187 +++++++++++++++++++----------------------------
+>  1 file changed, 77 insertions(+), 110 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 539b22dff2d1..2b1744af8a67 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -22,6 +22,15 @@
+>  #include "xfs_health.h"
+>  #include "xfs_zone_alloc.h"
+>  
+> +struct xlog_write_data {
+> +	struct xlog_ticket	*ticket;
+> +	struct xlog_in_core	*iclog;
+> +	uint32_t		bytes_left;
+> +	uint32_t		record_cnt;
+> +	uint32_t		data_cnt;
+> +	int			log_offset;
+> +};
+> +
+>  struct kmem_cache	*xfs_log_ticket_cache;
+>  
+>  /* Local miscellaneous function prototypes */
+> @@ -43,10 +52,7 @@ STATIC void xlog_state_do_callback(
+>  STATIC int
+>  xlog_state_get_iclog_space(
+>  	struct xlog		*log,
+> -	int			len,
+> -	struct xlog_in_core	**iclog,
+> -	struct xlog_ticket	*ticket,
+> -	int			*logoffsetp);
+> +	struct xlog_write_data	*data);
+>  STATIC void
+>  xlog_sync(
+>  	struct xlog		*log,
+> @@ -1874,23 +1880,19 @@ xlog_print_trans(
+>  
+>  static inline void
+>  xlog_write_iovec(
+> -	struct xlog_in_core	*iclog,
+> -	uint32_t		*log_offset,
+> -	void			*data,
+> -	uint32_t		write_len,
+> -	int			*bytes_left,
+> -	uint32_t		*record_cnt,
+> -	uint32_t		*data_cnt)
+> +	struct xlog_write_data	*data,
+> +	void			*buf,
+> +	uint32_t		buf_len)
+>  {
+> -	ASSERT(*log_offset < iclog->ic_log->l_iclog_size);
+> -	ASSERT(*log_offset % sizeof(int32_t) == 0);
+> -	ASSERT(write_len % sizeof(int32_t) == 0);
+> +	ASSERT(data->log_offset < data->iclog->ic_log->l_iclog_size);
+> +	ASSERT(data->log_offset % sizeof(int32_t) == 0);
+> +	ASSERT(buf_len % sizeof(int32_t) == 0);
+>  
+> -	memcpy(iclog->ic_datap + *log_offset, data, write_len);
+> -	*log_offset += write_len;
+> -	*bytes_left -= write_len;
+> -	(*record_cnt)++;
+> -	*data_cnt += write_len;
+> +	memcpy(data->iclog->ic_datap + data->log_offset, buf, buf_len);
+> +	data->log_offset += buf_len;
+> +	data->bytes_left -= buf_len;
+> +	data->record_cnt++;
+> +	data->data_cnt += buf_len;
+>  }
+>  
+>  /*
+> @@ -1900,17 +1902,12 @@ xlog_write_iovec(
+>  static void
+>  xlog_write_full(
+>  	struct xfs_log_vec	*lv,
+> -	struct xlog_ticket	*ticket,
+> -	struct xlog_in_core	*iclog,
+> -	uint32_t		*log_offset,
+> -	uint32_t		*len,
+> -	uint32_t		*record_cnt,
+> -	uint32_t		*data_cnt)
+> +	struct xlog_write_data	*data)
+>  {
+>  	int			index;
+>  
+> -	ASSERT(*log_offset + *len <= iclog->ic_size ||
+> -		iclog->ic_state == XLOG_STATE_WANT_SYNC);
+> +	ASSERT(data->log_offset + data->bytes_left <= data->iclog->ic_size ||
+> +		data->iclog->ic_state == XLOG_STATE_WANT_SYNC);
+>  
+>  	/*
+>  	 * Ordered log vectors have no regions to write so this
+> @@ -1920,40 +1917,32 @@ xlog_write_full(
+>  		struct xfs_log_iovec	*reg = &lv->lv_iovecp[index];
+>  		struct xlog_op_header	*ophdr = reg->i_addr;
+>  
+> -		ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
+> -		xlog_write_iovec(iclog, log_offset, reg->i_addr,
+> -				reg->i_len, len, record_cnt, data_cnt);
+> +		ophdr->oh_tid = cpu_to_be32(data->ticket->t_tid);
+> +		xlog_write_iovec(data, reg->i_addr, reg->i_len);
+>  	}
+>  }
+>  
+>  static int
+>  xlog_write_get_more_iclog_space(
+> -	struct xlog_ticket	*ticket,
+> -	struct xlog_in_core	**iclogp,
+> -	uint32_t		*log_offset,
+> -	uint32_t		len,
+> -	uint32_t		*record_cnt,
+> -	uint32_t		*data_cnt)
+> +	struct xlog_write_data	*data)
+>  {
+> -	struct xlog_in_core	*iclog = *iclogp;
+> -	struct xlog		*log = iclog->ic_log;
+> +	struct xlog		*log = data->iclog->ic_log;
+>  	int			error;
+>  
+>  	spin_lock(&log->l_icloglock);
+> -	ASSERT(iclog->ic_state == XLOG_STATE_WANT_SYNC);
+> -	xlog_state_finish_copy(log, iclog, *record_cnt, *data_cnt);
+> -	error = xlog_state_release_iclog(log, iclog, ticket);
+> +	ASSERT(data->iclog->ic_state == XLOG_STATE_WANT_SYNC);
+> +	xlog_state_finish_copy(log, data->iclog, data->record_cnt,
+> +			data->data_cnt);
+> +	error = xlog_state_release_iclog(log, data->iclog, data->ticket);
+>  	spin_unlock(&log->l_icloglock);
+>  	if (error)
+>  		return error;
+>  
+> -	error = xlog_state_get_iclog_space(log, len, &iclog, ticket,
+> -					log_offset);
+> +	error = xlog_state_get_iclog_space(log, data);
+>  	if (error)
+>  		return error;
+> -	*record_cnt = 0;
+> -	*data_cnt = 0;
+> -	*iclogp = iclog;
+> +	data->record_cnt = 0;
+> +	data->data_cnt = 0;
+>  	return 0;
+>  }
+>  
+> @@ -1966,14 +1955,8 @@ xlog_write_get_more_iclog_space(
+>  static int
+>  xlog_write_partial(
+>  	struct xfs_log_vec	*lv,
+> -	struct xlog_ticket	*ticket,
+> -	struct xlog_in_core	**iclogp,
+> -	uint32_t		*log_offset,
+> -	uint32_t		*len,
+> -	uint32_t		*record_cnt,
+> -	uint32_t		*data_cnt)
+> +	struct xlog_write_data	*data)
+>  {
+> -	struct xlog_in_core	*iclog = *iclogp;
+>  	struct xlog_op_header	*ophdr;
+>  	int			index = 0;
+>  	uint32_t		rlen;
+> @@ -1995,25 +1978,23 @@ xlog_write_partial(
+>  		 * Hence if there isn't space for region data after the
+>  		 * opheader, then we need to start afresh with a new iclog.
+>  		 */
+> -		if (iclog->ic_size - *log_offset <=
+> +		if (data->iclog->ic_size - data->log_offset <=
+>  					sizeof(struct xlog_op_header)) {
+> -			error = xlog_write_get_more_iclog_space(ticket,
+> -					&iclog, log_offset, *len, record_cnt,
+> -					data_cnt);
+> +			error = xlog_write_get_more_iclog_space(data);
+>  			if (error)
+>  				return error;
+>  		}
+>  
+>  		ophdr = reg->i_addr;
+> -		rlen = min_t(uint32_t, reg->i_len, iclog->ic_size - *log_offset);
+> +		rlen = min_t(uint32_t, reg->i_len,
+> +			data->iclog->ic_size - data->log_offset);
+>  
+> -		ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
+> +		ophdr->oh_tid = cpu_to_be32(data->ticket->t_tid);
+>  		ophdr->oh_len = cpu_to_be32(rlen - sizeof(struct xlog_op_header));
+>  		if (rlen != reg->i_len)
+>  			ophdr->oh_flags |= XLOG_CONTINUE_TRANS;
+>  
+> -		xlog_write_iovec(iclog, log_offset, reg->i_addr,
+> -				rlen, len, record_cnt, data_cnt);
+> +		xlog_write_iovec(data, reg->i_addr, rlen);
+>  
+>  		/* If we wrote the whole region, move to the next. */
+>  		if (rlen == reg->i_len)
+> @@ -2048,23 +2029,22 @@ xlog_write_partial(
+>  			 * consumes hasn't been accounted to the lv we are
+>  			 * writing.
+>  			 */
+> -			*len += sizeof(struct xlog_op_header);
+> -			error = xlog_write_get_more_iclog_space(ticket,
+> -					&iclog, log_offset, *len, record_cnt,
+> -					data_cnt);
+> +			data->bytes_left += sizeof(struct xlog_op_header);
+> +			error = xlog_write_get_more_iclog_space(data);
+>  			if (error)
+>  				return error;
+>  
+> -			ophdr = iclog->ic_datap + *log_offset;
+> -			ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
+> +			ophdr = data->iclog->ic_datap + data->log_offset;
+> +			ophdr->oh_tid = cpu_to_be32(data->ticket->t_tid);
+>  			ophdr->oh_clientid = XFS_TRANSACTION;
+>  			ophdr->oh_res2 = 0;
+>  			ophdr->oh_flags = XLOG_WAS_CONT_TRANS;
+>  
+> -			ticket->t_curr_res -= sizeof(struct xlog_op_header);
+> -			*log_offset += sizeof(struct xlog_op_header);
+> -			*data_cnt += sizeof(struct xlog_op_header);
+> -			*len -= sizeof(struct xlog_op_header);
+> +			data->ticket->t_curr_res -=
+> +				sizeof(struct xlog_op_header);
+> +			data->log_offset += sizeof(struct xlog_op_header);
+> +			data->data_cnt += sizeof(struct xlog_op_header);
+> +			data->bytes_left -= sizeof(struct xlog_op_header);
+>  
+>  			/*
+>  			 * If rlen fits in the iclog, then end the region
+> @@ -2072,26 +2052,19 @@ xlog_write_partial(
+>  			 */
+>  			reg_offset += rlen;
+>  			rlen = reg->i_len - reg_offset;
+> -			if (rlen <= iclog->ic_size - *log_offset)
+> +			if (rlen <= data->iclog->ic_size - data->log_offset)
+>  				ophdr->oh_flags |= XLOG_END_TRANS;
+>  			else
+>  				ophdr->oh_flags |= XLOG_CONTINUE_TRANS;
+>  
+> -			rlen = min_t(uint32_t, rlen, iclog->ic_size - *log_offset);
+> +			rlen = min_t(uint32_t, rlen,
+> +				data->iclog->ic_size - data->log_offset);
+>  			ophdr->oh_len = cpu_to_be32(rlen);
+>  
+> -			xlog_write_iovec(iclog, log_offset,
+> -					reg->i_addr + reg_offset,
+> -					rlen, len, record_cnt, data_cnt);
+> -
+> +			xlog_write_iovec(data, reg->i_addr + reg_offset, rlen);
+>  		} while (ophdr->oh_flags & XLOG_CONTINUE_TRANS);
+>  	}
+>  
+> -	/*
+> -	 * No more iovecs remain in this logvec so return the next log vec to
+> -	 * the caller so it can go back to fast path copying.
+> -	 */
+> -	*iclogp = iclog;
+>  	return 0;
+>  }
+>  
+> @@ -2144,12 +2117,12 @@ xlog_write(
+>  	uint32_t		len)
+>  
+>  {
+> -	struct xlog_in_core	*iclog = NULL;
+>  	struct xfs_log_vec	*lv;
+> -	uint32_t		record_cnt = 0;
+> -	uint32_t		data_cnt = 0;
+> -	int			error = 0;
+> -	int			log_offset;
+> +	struct xlog_write_data	data = {
+> +		.ticket		= ticket,
+> +		.bytes_left	= len,
+> +	};
+> +	int			error;
+>  
+>  	if (ticket->t_curr_res < 0) {
+>  		xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
+> @@ -2158,12 +2131,11 @@ xlog_write(
+>  		xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+>  	}
+>  
+> -	error = xlog_state_get_iclog_space(log, len, &iclog, ticket,
+> -					   &log_offset);
+> +	error = xlog_state_get_iclog_space(log, &data);
+>  	if (error)
+>  		return error;
+>  
+> -	ASSERT(log_offset <= iclog->ic_size - 1);
+> +	ASSERT(data.log_offset <= data.iclog->ic_size - 1);
+>  
+>  	/*
+>  	 * If we have a context pointer, pass it the first iclog we are
+> @@ -2171,7 +2143,7 @@ xlog_write(
+>  	 * ordering.
+>  	 */
+>  	if (ctx)
+> -		xlog_cil_set_ctx_write_state(ctx, iclog);
+> +		xlog_cil_set_ctx_write_state(ctx, data.iclog);
+>  
+>  	list_for_each_entry(lv, lv_chain, lv_list) {
+>  		/*
+> @@ -2179,10 +2151,8 @@ xlog_write(
+>  		 * the partial copy loop which can handle this case.
+>  		 */
+>  		if (lv->lv_niovecs &&
+> -		    lv->lv_bytes > iclog->ic_size - log_offset) {
+> -			error = xlog_write_partial(lv, ticket, &iclog,
+> -					&log_offset, &len, &record_cnt,
+> -					&data_cnt);
+> +		    lv->lv_bytes > data.iclog->ic_size - data.log_offset) {
+> +			error = xlog_write_partial(lv, &data);
+>  			if (error) {
+>  				/*
+>  				 * We have no iclog to release, so just return
+> @@ -2191,11 +2161,10 @@ xlog_write(
+>  				return error;
+>  			}
+>  		} else {
+> -			xlog_write_full(lv, ticket, iclog, &log_offset,
+> -					 &len, &record_cnt, &data_cnt);
+> +			xlog_write_full(lv, &data);
+>  		}
+>  	}
+> -	ASSERT(len == 0);
+> +	ASSERT(data.bytes_left == 0);
+>  
+>  	/*
+>  	 * We've already been guaranteed that the last writes will fit inside
+> @@ -2204,8 +2173,8 @@ xlog_write(
+>  	 * iclog with the number of bytes written here.
+>  	 */
+>  	spin_lock(&log->l_icloglock);
+> -	xlog_state_finish_copy(log, iclog, record_cnt, 0);
+> -	error = xlog_state_release_iclog(log, iclog, ticket);
+> +	xlog_state_finish_copy(log, data.iclog, data.record_cnt, 0);
+> +	error = xlog_state_release_iclog(log, data.iclog, ticket);
+>  	spin_unlock(&log->l_icloglock);
+>  
+>  	return error;
+> @@ -2527,10 +2496,7 @@ xlog_state_done_syncing(
+>  STATIC int
+>  xlog_state_get_iclog_space(
+>  	struct xlog		*log,
+> -	int			len,
+> -	struct xlog_in_core	**iclogp,
+> -	struct xlog_ticket	*ticket,
+> -	int			*logoffsetp)
+> +	struct xlog_write_data	*data)
+>  {
+>  	int			log_offset;
+>  	struct xlog_rec_header	*head;
+> @@ -2565,7 +2531,7 @@ xlog_state_get_iclog_space(
+>  	 * must be written.
+>  	 */
+>  	if (log_offset == 0) {
+> -		ticket->t_curr_res -= log->l_iclog_hsize;
+> +		data->ticket->t_curr_res -= log->l_iclog_hsize;
+>  		head->h_cycle = cpu_to_be32(log->l_curr_cycle);
+>  		head->h_lsn = cpu_to_be64(
+>  			xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block));
+> @@ -2595,7 +2561,8 @@ xlog_state_get_iclog_space(
+>  		 * reference to the iclog.
+>  		 */
+>  		if (!atomic_add_unless(&iclog->ic_refcnt, -1, 1))
+> -			error = xlog_state_release_iclog(log, iclog, ticket);
+> +			error = xlog_state_release_iclog(log, iclog,
+> +					data->ticket);
+>  		spin_unlock(&log->l_icloglock);
+>  		if (error)
+>  			return error;
+> @@ -2608,16 +2575,16 @@ xlog_state_get_iclog_space(
+>  	 * iclogs (to mark it taken), this particular iclog will release/sync
+>  	 * to disk in xlog_write().
+>  	 */
+> -	if (len <= iclog->ic_size - iclog->ic_offset)
+> -		iclog->ic_offset += len;
+> +	if (data->bytes_left <= iclog->ic_size - iclog->ic_offset)
+> +		iclog->ic_offset += data->bytes_left;
+>  	else
+>  		xlog_state_switch_iclogs(log, iclog, iclog->ic_size);
+> -	*iclogp = iclog;
+> +	data->iclog = iclog;
+>  
+>  	ASSERT(iclog->ic_offset <= iclog->ic_size);
+>  	spin_unlock(&log->l_icloglock);
+>  
+> -	*logoffsetp = log_offset;
+> +	data->log_offset = log_offset;
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.47.3
+> 
+> 
