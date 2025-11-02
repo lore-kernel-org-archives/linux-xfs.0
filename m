@@ -1,63 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DE402F9D89
-	for <linux-xfs@vger.kernel.org>; Sat,  1 Nov 2025 17:42:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4414214A9B
+	for <linux-xfs@vger.kernel.org>; Sun,  2 Nov 2025 05:39:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762018927; cv=none; b=mHhgKyjv6LJe8zUwK8FyGKgoZUof1famwGRmi8vqhEAxX9asmW9WV7wzhT0Z5ATSbdI3OTjtueo295V0C+2aiMLxkgv3+QwcyJyEi1ODzHL73NNPgNhcCPb0ArPSgsXczKG/vALg5vmQBXw4LrofCiWXbbtENKxdg6P9nsrIryQ=
+	t=1762061946; cv=none; b=co/oArSLsSqhIEQ5uVRbCWkPF3NZPmb+KzxvH3b80x/AGRuau5ZeANmDgoyx8eK7ovDfThp7ObNkQx9UnkLm0mODs3tP1UouGQhN71mYZSgjNuGvlb50eHQtXK79aHXpXmEz01iE6u38f068RBRCz6SaQgBH+2nggo5JeWVkOEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762018927; c=relaxed/simple;
-	bh=fbBSClU7DAw3qyMKwc8iKzWipWNS7aqDrnRtt7KBTRE=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=FA7TCutGT6xxxJbzzN5nKwLghDseUF6Ysu6gQirk6IAtZBpkgnke1nZN0L/BSHK+wD3UFrvlrC9VFtDe4py5+lSKGE5t8h4IXYcuUqj96P8hj1ccIqc8bWP4LflM5ut5HCIVD31hhmyRdtrU+DSIybCZ5hvo1FCcZkodC2BFsXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A5LUUC9b; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A5LUUC9b"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CC95C4CEF1;
-	Sat,  1 Nov 2025 17:42:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762018927;
-	bh=fbBSClU7DAw3qyMKwc8iKzWipWNS7aqDrnRtt7KBTRE=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=A5LUUC9bPjaSszRZGelzdpEFFOigDvJJcIcPfThFaYwAbCf8ypIcNjjNjI+w2xyqq
-	 Ul+m/ucyzOVLoqX6kO5w6iScc6kBTqDT1wbHyrm6evTSYKgOfEqAMA/dlIyBFQyFcd
-	 WxcrvA5Juttij+OXfFXiHLpeN4lBoxw9fuScpCV246xGGhURHBz6kKsKhx4u6iMUmS
-	 yX7RnaFfFLABy4CnISbYka8gQJ1g6+2nZHn0l7bR+ECx8rAPJOgvbB+AFP6f1oWQls
-	 HLlbOIFhf5E5p+ppGfHcrkuOIKoHw/bliZwuCT//QQ6v8DFDdKUAOHjmRhDUeHjHbK
-	 HCKF94Dy4u5tQ==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id EB15A3809A1B;
-	Sat,  1 Nov 2025 17:41:43 +0000 (UTC)
-Subject: Re: [GIT PULL] XFS: fixes for v6.18-rc4
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <gq4gdpaijznzx3syhbpipjsdlcladlv6wain5y7fjqgct2zkpy@dnbipiq2yb46>
-References: <gq4gdpaijznzx3syhbpipjsdlcladlv6wain5y7fjqgct2zkpy@dnbipiq2yb46>
-X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
-X-PR-Tracked-Message-Id: <gq4gdpaijznzx3syhbpipjsdlcladlv6wain5y7fjqgct2zkpy@dnbipiq2yb46>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-6.18-rc4
-X-PR-Tracked-Commit-Id: 0db22d7ee462c42c1284e98d47840932792c1adb
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 9db0d7c5a5be25e56c3eacc1f03d296b7b0b960f
-Message-Id: <176201890261.850663.17781629601704154095.pr-tracker-bot@kernel.org>
-Date: Sat, 01 Nov 2025 17:41:42 +0000
-To: Carlos Maiolino <cem@kernel.org>
-Cc: torvalds@linux-foundation.org, linux-xfs@vger.kernel.org
+	s=arc-20240116; t=1762061946; c=relaxed/simple;
+	bh=WImCX7SvTyP9WE4YKYQAr5TtP5ayByld5OhLfhadDPQ=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=phEMEO+b1BuJZtKIeqSVIqhJG6fkQi5TBmNA71PvXy+Az7M3BJ88nHcRFCgt8ATAp0KCTk0pLEQUtRSpQ7AmmsbuG1gHhuQUecjbp4eMG84QUHxzssXtSGA/tN70zOBYLVRtjAcWx4CJWpReUwTvz+zCsShWj5SMBRR3DVAT834=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f200.google.com with SMTP id e9e14a558f8ab-431d3a4db56so136879625ab.1
+        for <linux-xfs@vger.kernel.org>; Sat, 01 Nov 2025 22:39:03 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762061942; x=1762666742;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=I5gofQLv9ATheBLZFs5eVxjk1NYdTx1xDPMzfJ3PQe4=;
+        b=rwlGr0Q2jHat8ZQw8cC+9mbz7VNZdw3SSlPNjQkK9P7zcLahjRq7VHBhEYZ8YloPoZ
+         oC4nhLJgnYnLD3sCoNfMpdz0113sIIPRUhFfewGjl2OdLo696h8vUaZDb5u1QFJgwuZk
+         qm5oyokRvmzngSWueC2oHLqIISLOCkS6GGsEPkjKCaVulmynoiI7KgMs8lxZt3sM+INd
+         SJfb/0TMXLTWl5Uv9hy2F/gANW5qPgEyjG7xC/21cx1dR5r4O63pz1vNxlcDPe3hb79d
+         0l/l79HKeM1cohd8x6CxOqv8bMjTR9xttNFG2LMRydvkEUa7Ra/7Wppp4lTYZGXeppDV
+         ZCPw==
+X-Forwarded-Encrypted: i=1; AJvYcCVmZpfJU0m3/ux0jJ27KYCKuWetsuarutMpg0qGAQtI9RyeoSYoWO/4NM8NR+Fw9F227cLnOuxT1vY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz2S5z82cj4I0rwuVGz9UPeKGZYDr/i3XXba/n1G85jUkuhmipB
+	EpCzYZYJivTCQptSUgshNdSxfQN/ywJWlhN/FN+IAFFNk5QlU5BPOhpnkQ7o4xA4xkjhAjw2shh
+	JoXMw/PRUbLJS+LFblSnS+xJX8477gSpQqp0WC6fi5WOpdl+OvsQb9vorVlY=
+X-Google-Smtp-Source: AGHT+IHCp5x9Csze7ts1+FeJTWPJ23oGo3DuAx7NFNbgLSzgUoEWPJQbXpSqgSY8kC3XvptviGA3Mx7pJPxr111i/n4AQSQen7Gh
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-Received: by 2002:a05:6e02:4c18:b0:433:2389:e0ad with SMTP id
+ e9e14a558f8ab-4332389e21fmr37683605ab.8.1762061942596; Sat, 01 Nov 2025
+ 22:39:02 -0700 (PDT)
+Date: Sat, 01 Nov 2025 22:39:02 -0700
+In-Reply-To: <68cc0578.050a0220.28a605.0006.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6906ee76.050a0220.29fc44.0016.GAE@google.com>
+Subject: Re: [syzbot] [iomap?] kernel BUG in folio_end_read (2)
+From: syzbot <syzbot+3686758660f980b402dc@syzkaller.appspotmail.com>
+To: brauner@kernel.org, chao@kernel.org, djwong@kernel.org, jaegeuk@kernel.org, 
+	joannelkoong@gmail.com, linux-f2fs-devel@lists.sourceforge.net, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-The pull request you sent on Sat, 1 Nov 2025 10:15:10 +0100:
+syzbot has bisected this issue to:
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-fixes-6.18-rc4
+commit 51311f045375984dabdf8cc523e80d39a4c3dd5a
+Author: Joanne Koong <joannelkoong@gmail.com>
+Date:   Fri Sep 26 00:26:02 2025 +0000
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/9db0d7c5a5be25e56c3eacc1f03d296b7b0b960f
+    iomap: track pending read bytes more optimally
 
-Thank you!
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=103a0012580000
+start commit:   98bd8b16ae57 Add linux-next specific files for 20251031
+git tree:       linux-next
+final oops:     https://syzkaller.appspot.com/x/report.txt?x=123a0012580000
+console output: https://syzkaller.appspot.com/x/log.txt?x=143a0012580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=63d09725c93bcc1c
+dashboard link: https://syzkaller.appspot.com/bug?extid=3686758660f980b402dc
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=176fc342580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=10403f34580000
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Reported-by: syzbot+3686758660f980b402dc@syzkaller.appspotmail.com
+Fixes: 51311f045375 ("iomap: track pending read bytes more optimally")
+
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
