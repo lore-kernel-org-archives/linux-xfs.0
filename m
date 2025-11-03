@@ -1,118 +1,106 @@
-Received: from mail.parknet.co.jp (mail.parknet.co.jp [210.171.160.6])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DB723F9FB;
-	Sun,  2 Nov 2025 16:52:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.171.160.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 609B8286D60;
+	Mon,  3 Nov 2025 05:52:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762102342; cv=none; b=mEtj/l3y8idTpoJCjGh1iTdxd6YFb3yoEu14MsUtu2Q1USI6lc1752hC1wmumfHXniymWl75nPAdW5XSfKEU6RKp4ARwTOx2nNRKaxjihCwFahpdgS7ei1SoaSeRcM9rey4mWsRVHHloTGV6ZqrsJchFO7ZpRNDwCrx6ePG3Fgg=
+	t=1762149122; cv=none; b=OiYo/olNFVK4TxDnFJHKDPplvktAmdoOQ+RV3CQ5wzmoIxqdGQsa4ZcAoBsWsawvEkfC4V/hw2kkAn+ABF9yHlr7l0ZRv3wpewk/1j8KWxZfegPboaD5DVoma9We4YbKxfWi2yQrS8NkMORp1CPMsYo9TuSTwSTFU5/LQP4sEAY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762102342; c=relaxed/simple;
-	bh=tG1mOj5y8K1Rj355ZBd7CzP/NYRIqnJUqCPOUN4cst8=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=rxk0Msb4gVkS/Ej9kdvXfGKLqsnmRHFjP2T7h4Z9dXswtr5V00smJWFkh8U5XOtXLBu6BPZryE16R+3ugWyVMqmHhU3j3EHYSnVciwqQ9nQ61q07lcEPYdv6+UgaKPVvB/eh9C0uLePrT9AoMdksEu7vUrfb2wlJy46UpcmEaOU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mail.parknet.co.jp; spf=pass smtp.mailfrom=parknet.co.jp; dkim=pass (2048-bit key) header.d=parknet.co.jp header.i=@parknet.co.jp header.b=gmn4oGGi; dkim=permerror (0-bit key) header.d=parknet.co.jp header.i=@parknet.co.jp header.b=xl0CzPYW; arc=none smtp.client-ip=210.171.160.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mail.parknet.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=parknet.co.jp
+	s=arc-20240116; t=1762149122; c=relaxed/simple;
+	bh=oxQXBcHnc/6qR2epkavIMIgHRy691/rhW8NxiXt8CoI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=O0wgU8srqBB0wfYMhgjpU3xpYywXQ/aM+jSKwNgokW8TWR27SYHALZqdHY/E1PK68mmGKbT85Tb8zkWye/hSaDqmNNWdVZpsvlx7WGaO7NkUu7ZKw6wckrZLVEvfiVJmqQ/XJsW+X5wcOSeHlrWoXHSNJ24i+eNTnZ87zmB8yNE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jTVi7sYX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=parknet.co.jp header.i=@parknet.co.jp header.b="gmn4oGGi";
-	dkim=permerror (0-bit key) header.d=parknet.co.jp header.i=@parknet.co.jp header.b="xl0CzPYW"
-Received: from ibmpc.myhome.or.jp (server.parknet.ne.jp [210.171.168.39])
-	by mail.parknet.co.jp (Postfix) with ESMTPSA id 7D2D92075526;
-	Mon,  3 Nov 2025 01:46:30 +0900 (JST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=parknet.co.jp;
-	s=20250114; t=1762101990;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4QkNrqTpgLaMsgFLBqdiu/J6+OIfL6+92dz7Yt1R3FM=;
-	b=gmn4oGGi2SRKL35r8jLaZiYiaLxj8t5VVX5LCx46bxywhpLnQFUUCUY1DjO4hyU7snR4Ig
-	Rkq97snouPU35nCQhc+KyxbqifdSYLwiy8NzQmHlBI4X4pzNN9NxxG5ro8A2tjFuV7paN2
-	1MvowMqAnXbGUPe2WzvpWcj8bE/rg9po6gwU4DLLV1tyOPXw2wxlyR78r68dM6a4VkhdkD
-	KnGeoPDwenWkDypB7MV/W4CBx2Hu/vVbTMpMEW2E7K7ZTKLa582qws+pyMcJvGyMG4Vgw/
-	gX/07BG98DlcExX+IqzUw7SL04Wx1NiKvr2yFRTUDQ1/5PEBdqS/pOTlDmh8FA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=parknet.co.jp;
-	s=20250114-ed25519; t=1762101990;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4QkNrqTpgLaMsgFLBqdiu/J6+OIfL6+92dz7Yt1R3FM=;
-	b=xl0CzPYWUwSRznIVdVLJV6fC1QxPSGvSFQhYGCxy0oZ70bT72kTwQ+ROvIsoBMW9jYxFW0
-	y3akGaRVxZqRjmDg==
-Received: from devron.myhome.or.jp (foobar@devron.myhome.or.jp [192.168.0.3])
-	by ibmpc.myhome.or.jp (8.18.1/8.18.1/Debian-7) with ESMTPS id 5A2GkTiv003147
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Mon, 3 Nov 2025 01:46:30 +0900
-Received: from devron.myhome.or.jp (foobar@localhost [127.0.0.1])
-	by devron.myhome.or.jp (8.18.1/8.18.1/Debian-7) with ESMTPS id 5A2GkTOE007358
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Mon, 3 Nov 2025 01:46:29 +0900
-Received: (from hirofumi@localhost)
-	by devron.myhome.or.jp (8.18.1/8.18.1/Submit) id 5A2GkPRb007356;
-	Mon, 3 Nov 2025 01:46:25 +0900
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-To: Yongpeng Yang <yangyongpeng.storage@gmail.com>
-Cc: Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo
- <sj1557.seo@samsung.com>, Jan Kara <jack@suse.cz>,
-        Carlos Maiolino
- <cem@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-        Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>,
-        Sasha Levin <sashal@kernel.org>,
-        Alexander
- Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        stable@vger.kernel.org, Matthew Wilcox
- <willy@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Yongpeng
- Yang <yangyongpeng@xiaomi.com>
-Subject: Re: [PATCH v2] fix missing sb_min_blocksize() return value checks
- in some filesystems
-In-Reply-To: <20251102163835.6533-2-yangyongpeng.storage@gmail.com>
-References: <20251102163835.6533-2-yangyongpeng.storage@gmail.com>
-Date: Mon, 03 Nov 2025 01:46:25 +0900
-Message-ID: <87cy60idr2.fsf@mail.parknet.co.jp>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jTVi7sYX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AADD5C4CEE7;
+	Mon,  3 Nov 2025 05:51:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762149120;
+	bh=oxQXBcHnc/6qR2epkavIMIgHRy691/rhW8NxiXt8CoI=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=jTVi7sYXkcHQhPjE/Buo3fxpB19O1VbODJ3EXpO8SGXi/OITbcTFvdjtKMvrtbm1O
+	 4Ssd2IXFKo8l1cV3gMTphDB8noMJnfpi+6sN3XtuUYq5HqTVDuT/zB9/d5xj5EsHvT
+	 omCSwnuC+7Vi0+/vLKfRUJhDnCxme3xxOwe3NgiQgy3NH+Zg5IOrITnIYZ36w37A7+
+	 DlVr7F0lKNI1oDIB7AMFkkiqnYC6a+5V6txUA1NFnWtUZ0jg66PIyqB0zUHsFgD0pj
+	 8aE8Ua1HS57b3aBY1JkluR7H7PgSvwANVrjTO/zkqg6rtBNKMbOlR+Nl/D8Nwfmlv8
+	 hsKYmwhLwhShA==
+Message-ID: <b675e291-c369-4c7e-8fa2-1470ce90f001@kernel.org>
+Date: Mon, 3 Nov 2025 14:51:57 +0900
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 10/13] block: introduce BLKREPORTZONESV2 ioctl
+To: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
+ David Sterba <dsterba@suse.com>
+References: <20251031061307.185513-1-dlemoal@kernel.org>
+ <20251031061307.185513-11-dlemoal@kernel.org>
+ <5ca96ffd-9e60-49d3-a136-c7a9eb7bce10@acm.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <5ca96ffd-9e60-49d3-a136-c7a9eb7bce10@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Yongpeng Yang <yangyongpeng.storage@gmail.com> writes:
+On 11/1/25 01:52, Bart Van Assche wrote:
+>> +	case BLKREPORTZONEV2:
+>> +		if (rep.flags & ~BLK_ZONE_REPV2_INPUT_FLAGS)
+>> +			return -EINVAL;
+> 
+> -EINVAL probably should be changed into something that indicates "not
+> supported" rather than "invalid argument"?
 
-> diff --git a/fs/fat/inode.c b/fs/fat/inode.c
-> index 9648ed097816..d22eec4f17b2 100644
-> --- a/fs/fat/inode.c
-> +++ b/fs/fat/inode.c
-> @@ -1535,7 +1535,7 @@ int fat_fill_super(struct super_block *sb, struct fs_context *fc,
->  		   void (*setup)(struct super_block *))
->  {
->  	struct fat_mount_options *opts = fc->fs_private;
-> -	int silent = fc->sb_flags & SB_SILENT;
-> +	int silent = fc->sb_flags & SB_SILENT, blocksize;
->  	struct inode *root_inode = NULL, *fat_inode = NULL;
->  	struct inode *fsinfo_inode = NULL;
->  	struct buffer_head *bh;
-> @@ -1595,8 +1595,13 @@ int fat_fill_super(struct super_block *sb, struct fs_context *fc,
->  
->  	setup(sb); /* flavour-specific stuff that needs options */
->  
-> +	error = -EINVAL;
-> +	blocksize = sb_min_blocksize(sb, 512);
-> +	if (!blocksize) {
+Not supported could be confused with the cached report zones not being
+supported. It is, but the user cannot specify input flags that are not defined.
+This is to ensure that undefined flags are always 0 and that we can use these
+going forward when we need to define a new flag.
+So EINVAL seems appropriate to me.
 
-	if (!sb_min_blocksize(sb, 512)) {
+> 
+>> index dab5d9700898..1441d79a6173 100644
+>> --- a/include/uapi/linux/blkzoned.h
+>> +++ b/include/uapi/linux/blkzoned.h
+>> @@ -82,10 +82,20 @@ enum blk_zone_cond {
+>>   /**
+>>    * enum blk_zone_report_flags - Feature flags of reported zone descriptors.
+>>    *
+>> - * @BLK_ZONE_REP_CAPACITY: Zone descriptor has capacity field.
+>> + * @BLK_ZONE_REP_CAPACITY: Output only. Indicates that zone descriptors in a
+>> + *			   zone report have a valid capacity field.
+>> + * @BLK_ZONE_REP_CACHED: Input only. Indicates that the zone report should be
+>> + *			 generated using cached zone information. In this case,
+>> + *			 the implicit open, explicit open and closed zone
+>> + *			 conditions are all reported with the
+>> + *			 BLK_ZONE_COND_ACTIVE condition.
+>>    */
+>>   enum blk_zone_report_flags {
+>> +	/* Output flags */
+>>   	BLK_ZONE_REP_CAPACITY	= (1 << 0),
+>> +
+>> +	/* Input flags */
+>> +	BLK_ZONE_REP_CACHED	= (1 << 31),
+>>   };
+> 
+> Why 1 << 31 instead of 1 << 1?
 
-Looks like this one is enough?
+Why not ? That separates input and output flags instead of mixing them in
+tighter definition.
 
-> +		fat_msg(sb, KERN_ERR, "unable to set blocksize");
-> +		goto out_fail;
-> +	}
+
+
 -- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Damien Le Moal
+Western Digital Research
