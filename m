@@ -1,48 +1,67 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EB663043C7;
-	Mon,  3 Nov 2025 15:49:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0722E3164B4
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Nov 2025 16:22:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762184962; cv=none; b=he4PnTS96kY4SNIHsYI5BAWx8m5b+KISuskr56wBZoC1xsQAr6ZCyd3W+SAksBI4I+wni7+sfM4h3q7X+s+LYTsyMbLDIgjMFfPUW8EJTUXDUU29rzyRHpVZ6752FxOrqT308P1ehb/zZZfpU36eeVBX2e+9szcGwxUkLNJjQAI=
+	t=1762186971; cv=none; b=dge/OGVeueO7uXtZ5FGC2mwUjISqBaBsIxg55fuauoyh6mcoMRkYl89K5j5rr7GzW5QIZkotRQn1T2uoMt7Yb86V9XzpRM8eiQfgAyKyOSMyktWEY3ioX+z4SnCK0snPPZEQvnaml57KW8qew0TI1oAi/u/pml6K6ldevl94C9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762184962; c=relaxed/simple;
-	bh=3H+4higPbUdrQOgNTHiHoV0OkYE8XUs1kez79VSzRho=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=lwx04wnbXmApF/jfD7x0Eme/it0s3xelY+zBRHRzH0MmnAgsYTdIr7Xt07xtDQh5FD/GG20hjA7Z43kO+Zg001gcXZaLdWKLkXGe75GAaZNyCQlbTFr/dLfCH+8yfw0ZiBQ4xhV4j60FRnuuhVFLcFRB5ZSllT5lrHty/d2gVk4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=02WulxwH; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1762186971; c=relaxed/simple;
+	bh=MAqh8a5N+ZsOAGEcWjRLDNWJ4Cf1BpHeOMi77RPjhlo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XE6g4a8fZ+rlCU3uU50p6igwnP2jidxaGa3B2GQWaH25GrKIvkmg8b9o3ZluSvWIY1LXYRxi5M8ad+VKlst/sWXMUfnCVi+QXI6C1+4lOA0pbrc5Nj5hO3GzTP8UFpVxJ8ZeyvC+OIUWnMYaiMTh/e2xrFI0UEeaOVyRPMJw1u4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cJm1QDIE; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="02WulxwH"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4d0bcB4tb7zmV4CC;
-	Mon,  3 Nov 2025 15:49:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1762184952; x=1764776953; bh=8+ZnI63ovUK1I7wBR7LkOuvP
-	2rrk7ZSWPowftFD0GXY=; b=02WulxwHEs8MyMtxjIJK7WJgs5zSkdrxPgnr2hXx
-	Aj005502n0zYHgaxpfkmmjClPgnX6gUyoxFaDwxk/Doj40Hfrb3CNbroypmkbuVH
-	oh1nrA6ZvRZzyhWG9Z2d8CrHuMfEigfkF+p9SvtXWYcG7RhtLid/jt6uhxiUM53w
-	f/NqvFt5I+kELSkk5RUYvh8uv9EbKfLuJx/g4QgtkSDGZkZpg8bT6N1cK9C15+nz
-	Iltvy47MrGSKu0OD2BQOMF03X2osqY2VJc+HLXrgk6HENnG7wlgDCSb8gKsc2DzQ
-	vX4OSfRMzF5y4fsgXJMIq15aGGyQwdBwwQ79htaeSFmw3A==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id aMFMxo0XxxXk; Mon,  3 Nov 2025 15:49:12 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4d0bbt0fDwzm5mQ7;
-	Mon,  3 Nov 2025 15:48:57 +0000 (UTC)
-Message-ID: <95c729d6-fd73-4480-af1c-68075b31cd1d@acm.org>
-Date: Mon, 3 Nov 2025 07:48:54 -0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cJm1QDIE"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-295548467c7so20088105ad.2
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Nov 2025 08:22:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1762186969; x=1762791769; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=DfeI4do2p8OwX1bs3r/PVpU23cvBEdcK3KBLEfo+aK8=;
+        b=cJm1QDIEvy6vQsHD2LLXTwJJJf4Mpe4/+xOPU31gpiXO/voaC5GoTJdUP49sLohvUe
+         VIT0lc7p9a59kWz3sRDeNRIp71R+3k+NRLHa0uOyqjEfnoLkSwpEHgF3+xHG0rIW1z0d
+         tFnbE6XgB1P2J/c1jChgyGO80pQHfClydnR3caIx3ckCib4P0qgDptgqoieL3rWnI4tU
+         YNGBeWXsxrFna+hB5hpNmNKR4ZoFxvPEWlEKPLX1TE3XYWiz1tuqhTRQ4wwi0EtxK9hG
+         a3059MRX9Km7YEESIe1OlxhdYoslcqhX0Hatum6onHcJ4RyA6vH5YOLuqMkS3voyNH4k
+         PBxw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762186969; x=1762791769;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=DfeI4do2p8OwX1bs3r/PVpU23cvBEdcK3KBLEfo+aK8=;
+        b=qUyb5rwdqxfqZ/SOwHvHfzCfF07algNQHJ7gyE92TiTFPhUFiHB1YWpWqP09JBkCyH
+         28u/yd6O+jfgDQZxyjSuS2xWArVYjCwjCVRVUVEhJt8vSR+LxW9RZe5Yn8x0bMpD1Eac
+         jzKehDFuqo/A1Iq8XpHwWThaAkN+dSGBkABViXbpQ+SUnb7CGtQ9WTN9V5yZXsscbucE
+         8Hu7QMh5zO/mvZnBvSA1Im9tKhe3KFKcat6Gxou1nO12t3gZIz6nmIrLPnXiPJmKK/DQ
+         lGSKU6N3XOVOiApTQwyE2C0x2LXQ6d+ZrnXOM74L8ioc2r46SraRdsswkuN6Wl4U6WCG
+         vSRA==
+X-Forwarded-Encrypted: i=1; AJvYcCW8Bn6WXiUptij7SOZRqwVmja9MgSqi2AaZltBL1R9Ruv0m3nRXTWq00UxYcr4GYJ/A1DRUbAvR3bY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywi9+RIrkPQ1N72vuGb3OTGgYzBDgRsVMxzs0cI2Lj78zJIdNsi
+	d2mqaWUgTEupfvrh7JLhmYnXslg4XY6yXPoQflha8CkDYXHJQk0euBFr
+X-Gm-Gg: ASbGncu8BPUFR/brVsxuvwemQu3w2dv043kOw34JzGG460verzbImztXRlGrVVcJ4O9
+	+rT63p9dJq3raMHswrtJOLG/d9S70Y7FY2f+8QZ1BSSLgDnClEFYfKmztcBhx+Js63xHkLqNOTb
+	QHKJwaJzl5+ezKMI9cNPxlQpUoFlb/nEqnyUt/DLsiVdmEIWrHYGdkBxwFp5HwPQlhrt1YKKzFF
+	W3lUMBG/rh/T8/9TTtMUZ0VRds1OB1OBRToC4s7hvfk9NT0J4imj1IH+yrxwOMtmkrDn2BmINXL
+	nmrItjO2mHx/4v53+zEgIpvB/QXck7qz2XpDbv6NrfPAuACFBkuLHHHOo1bwEt8TY2X3SCbTo6r
+	u0BO8t2Qs5iBpbvdwtSE2yTb5WDthFUby4AUur7WYOq5cz6rUdD/Y2t+tKFNibzURbiV2KaruJQ
+	isDzrpRO2bmjaoxETovF2nDbNW6yANhkcHVYhEfPuausSc5cuv7/CVFTcBA2zAyWZJSEVuL8rQ4
+	u3tCfw6iW8=
+X-Google-Smtp-Source: AGHT+IEQaEN/YRqaD9Q0fZ6GjLoywGPuwEKc41YzWo/EM8FatoGxq2+IaYk2SY8ba4sIfOPAOnQ3UA==
+X-Received: by 2002:a17:902:ecd0:b0:295:9b3a:16b7 with SMTP id d9443c01a7336-2959b3a1914mr60038095ad.4.1762186969039;
+        Mon, 03 Nov 2025 08:22:49 -0800 (PST)
+Received: from ?IPV6:2409:8a00:79b4:1a90:5d7b:82d2:2626:164a? ([2409:8a00:79b4:1a90:5d7b:82d2:2626:164a])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-295743772e9sm73908245ad.66.2025.11.03.08.22.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 03 Nov 2025 08:22:48 -0800 (PST)
+Message-ID: <a89cb9af-784d-41a6-9f1e-dfa28d09be29@gmail.com>
+Date: Tue, 4 Nov 2025 00:22:20 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,45 +69,51 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/13] block: track zone conditions
-To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
- Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
- Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
- David Sterba <dsterba@suse.com>
-References: <20251031061307.185513-1-dlemoal@kernel.org>
- <20251031061307.185513-8-dlemoal@kernel.org>
- <40c87475-7d5a-4792-b2a6-3eeb8406f9be@acm.org>
- <93215b7c-80bd-4860-8a77-42cdd4db1ec6@kernel.org>
+Subject: Re: [PATCH v3] fix missing sb_min_blocksize() return value checks in
+ some filesystems
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Namjae Jeon <linkinjeon@kernel.org>, Sungjong Seo
+ <sj1557.seo@samsung.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+ Jan Kara <jack@suse.cz>, Carlos Maiolino <cem@kernel.org>,
+ Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, Sasha Levin <sashal@kernel.org>,
+ Alexander Viro <viro@zeniv.linux.org.uk>,
+ Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+ stable@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
+ "Darrick J . Wong" <djwong@kernel.org>,
+ Yongpeng Yang <yangyongpeng@xiaomi.com>
+References: <20251103135024.35289-1-yangyongpeng.storage@gmail.com>
+ <aQi4Q536D6VviQ-6@infradead.org>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <93215b7c-80bd-4860-8a77-42cdd4db1ec6@kernel.org>
+From: Yongpeng Yang <yangyongpeng.storage@gmail.com>
+In-Reply-To: <aQi4Q536D6VviQ-6@infradead.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 11/2/25 10:05 PM, Damien Le Moal wrote:
-> On 11/1/25 06:17, Bart Van Assche wrote:
->> On 10/30/25 11:13 PM, Damien Le Moal wrote:
->>> Implement tracking of the runtime changes to zone conditions using
->>> the new cond field in struct blk_zone_wplug. The size of this structure
->>> remains 112 Bytes as the new field replaces the 4 Bytes padding at the
->>> end of the structure. For zones that do not have a zone write plug, the
->>> zones_cond array of a disk is used to track changes to zone conditions,
->>> e.g. when a zone reset, reset all or finish operation is executed.
+On 11/3/2025 10:12 PM, Christoph Hellwig wrote:
+> On Mon, Nov 03, 2025 at 09:50:24PM +0800, Yongpeng Yang wrote:
+>> From: Yongpeng Yang <yangyongpeng@xiaomi.com>
 >>
->> Why is it necessary to track the condition of sequential zones that do
->> not have a zone write plug? Please explain what the use cases are.
+>> When emulating an nvme device on qemu with both logical_block_size and
+>> physical_block_size set to 8 KiB, but without format, a kernel panic
+>> was triggered during the early boot stage while attempting to mount a
+>> vfat filesystem.
 > 
-> Because zones that do not have a zone write plug can be empty OR full.
+> Please split this into a patch per file system, with a proper commit
+> log for each.
+> 
+>> Cc: <stable@vger.kernel.org> # v6.15
+>> Fixes: a64e5a596067bd ("bdev: add back PAGE_SIZE block size validation
+>> for sb_set_blocksize()")
+> 
+> That just adds back one error case in sb_set_blocksize.
+> 
+> The Fixes tag should be for the commit adding the call to
+> sb_set_blocksize / sb_min_blocksize in each of the file systems.
+> 
 
-Why does the block layer have to track this information? Filesystems can
-easily derive this information from the filesystem metadata information,
-isn't it?
+Thanks for the suggestion. I'll send v3 and split the changes into 
+multiple patches.
 
-Thanks,
-
-Bart.
+Yongpeng,
