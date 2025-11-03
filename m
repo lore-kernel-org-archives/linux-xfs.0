@@ -1,94 +1,219 @@
-Received: from mail.parknet.co.jp (mail.parknet.co.jp [210.171.160.6])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f53.google.com (mail-qv1-f53.google.com [209.85.219.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3741528750A;
-	Mon,  3 Nov 2025 16:56:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.171.160.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9641D31D738
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Nov 2025 16:58:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762188980; cv=none; b=pJx/w19RYkJ3VBEXMIvvUf31yTFeuh1KSRUTO32/cvExRRkrhCwUcD1c7Q0s3YHOdidRDETJkWHZw0OxC7PO8OXrw721FRlxRn6M4ADk6+4rHyVrx4kEOnjFguplDTkxh0BX9SNxGw+FztsShGmX3OPbYRumQB4wKQZsxzB5wBY=
+	t=1762189114; cv=none; b=a5O91sW4OHX0eaxMAUTQIOP+oiBOBLv8+TTliUg2SU6dgbsW+zBC23iDMHnMPSa0UzFsw4WwmI2w273O0eGtoCW6DGndtpk2JvmAUVH8V50n/YeoNmesEbZBZUlRS9PMhP4Uj0w9NUMUUT3vg4eOEUrcTP+f8r7hUzyVUFvBfEQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762188980; c=relaxed/simple;
-	bh=rUdhc9/dZGIPnjRxxoKqxJEAxeMc/H4w+8L2UFjmxzo=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=sxcFw7f0Lylbe4cpLzLDFry/Up77DpqvForG2L1YdGyOFSRYDrflbJLq2QsUs2HAIregAErondp3BGJNlXLZ9m3+tMX+y4hd0Ap2JN/FgXR+YiK+pidzFum3Rg4R+VID/byrwjGgJoxMA3RHN2dWJ/wxRBwqZVvH590soeQmy8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mail.parknet.co.jp; spf=pass smtp.mailfrom=parknet.co.jp; dkim=pass (2048-bit key) header.d=parknet.co.jp header.i=@parknet.co.jp header.b=AKx8k3U9; dkim=permerror (0-bit key) header.d=parknet.co.jp header.i=@parknet.co.jp header.b=UzNzfMyW; arc=none smtp.client-ip=210.171.160.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mail.parknet.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=parknet.co.jp
+	s=arc-20240116; t=1762189114; c=relaxed/simple;
+	bh=b0O3GE4qbZNbg0oDGHxasBjYudlii3ZM6j4y5Cr/l5w=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=SLxfEya+EvDr9eD/WHIISIQtHkVQOTtNXpE2ut+7Xk1VG5uDFn4Z5A//malkmSbXP0ZtzI3LCZRMDy06pCPVkqeduHzszn3T0utfEswPLI6eG7O0mFIquNYNwqlFnVYU3WSyNVqHDzmHBLLsJYpmEZN50Pz5YZl9/5o7LavRH80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BgSNdV/7; arc=none smtp.client-ip=209.85.219.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=parknet.co.jp header.i=@parknet.co.jp header.b="AKx8k3U9";
-	dkim=permerror (0-bit key) header.d=parknet.co.jp header.i=@parknet.co.jp header.b="UzNzfMyW"
-Received: from ibmpc.myhome.or.jp (server.parknet.ne.jp [210.171.168.39])
-	by mail.parknet.co.jp (Postfix) with ESMTPSA id B1F892051576;
-	Tue,  4 Nov 2025 01:56:09 +0900 (JST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=parknet.co.jp;
-	s=20250114; t=1762188970;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V3y+4DVGUspp58JJWY2SOnaLsTUPZnxETW8fSaQHj9Y=;
-	b=AKx8k3U9AjJf5i9G34VdNUXwSa4+qoC8VJAITSzTioOXQuZHi4tcaYqIBnB69AsiFHlXHn
-	aKg3PZTxJNRyjK5u+w+pymmkoU4LG41JRrHuYHQiCkmfTCz8YPuBBcENdPeRt/DWVhoNpA
-	7SQi4ZJe4zzZwuL2HoHRKCSvUKXRTY9xXrG3eQp/e+8b26xtC8q3TZgojk5Ytz6IatD/Uz
-	HYL5SNrqkwcmK1mtbybpsHLkjElgpyXPqg2kBFRbjt+oz7T7kkpPw1MJNA4eOG38BZzZOo
-	IfbKIS1jQQp8aGTMRzd3PPFbtLRtVrq64rSlo9tjJTyrcMPzdIO1wSb5kb++vQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=parknet.co.jp;
-	s=20250114-ed25519; t=1762188970;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V3y+4DVGUspp58JJWY2SOnaLsTUPZnxETW8fSaQHj9Y=;
-	b=UzNzfMyW6oVv2Xlx7iJyGeZa1lzjOal6Bnu7ppOxhsUxiUbNl1GY6q6xFP+veTL7EhrULo
-	joOV7X6jU/nhkDBA==
-Received: from devron.myhome.or.jp (foobar@devron.myhome.or.jp [192.168.0.3])
-	by ibmpc.myhome.or.jp (8.18.1/8.18.1/Debian-7) with ESMTPS id 5A3Gu8J7034550
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 4 Nov 2025 01:56:09 +0900
-Received: from devron.myhome.or.jp (foobar@localhost [127.0.0.1])
-	by devron.myhome.or.jp (8.18.1/8.18.1/Debian-7) with ESMTPS id 5A3Gu72F110914
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 4 Nov 2025 01:56:08 +0900
-Received: (from hirofumi@localhost)
-	by devron.myhome.or.jp (8.18.1/8.18.1/Submit) id 5A3Gu52E110913;
-	Tue, 4 Nov 2025 01:56:05 +0900
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-To: Yongpeng Yang <yangyongpeng.storage@gmail.com>
-Cc: Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo
- <sj1557.seo@samsung.com>, Jan Kara <jack@suse.cz>,
-        Carlos Maiolino
- <cem@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-        Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>,
-        Sasha Levin <sashal@kernel.org>,
-        Alexander
- Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        stable@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
-        "Darrick
- J . Wong" <djwong@kernel.org>,
-        Yongpeng Yang <yangyongpeng@xiaomi.com>
-Subject: Re: [PATCH v5 1/5] vfat: fix missing sb_min_blocksize() return
- value checks
-In-Reply-To: <20251103164722.151563-2-yangyongpeng.storage@gmail.com>
-References: <20251103164722.151563-2-yangyongpeng.storage@gmail.com>
-Date: Tue, 04 Nov 2025 01:56:05 +0900
-Message-ID: <871pmfoy1m.fsf@mail.parknet.co.jp>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BgSNdV/7"
+Received: by mail-qv1-f53.google.com with SMTP id 6a1803df08f44-88056cab4eeso7989036d6.2
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Nov 2025 08:58:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1762189111; x=1762793911; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1mTsTlYaKlSyBQb/TNu3wRr8ckz09pUbjw64hL0b7SA=;
+        b=BgSNdV/7fYcawu86Vprj4piD9mA6QYHDGBDcmYm2fLXK4hRHjjKuMhNmYs7sAN7qMy
+         6aY5E1uBpvxUa2VyFxyTIbHoDlJitWdKYjjXh1r0B90tBbeL+1cQ23UqigUOPgoiM7K+
+         MDM4VqY3IVlSVpLFUPyg7TujDLirAMRRmn9PlcBvjVSdfD+VdV38CmmVndVWIT5UJV96
+         V7d80IZCUE5W/Hs2+5+oMbjsUVtHptCaN0xLW+cDqVU2OYpDJdLsFMHMpNsSGiH9tckX
+         JBEbw9g2g3V57Qjm59LD5YxyMLCFCeFslqUaEyc1ObHrCuwY5hkOSqsZY4Uyhw/RNq2K
+         6u5w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762189111; x=1762793911;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=1mTsTlYaKlSyBQb/TNu3wRr8ckz09pUbjw64hL0b7SA=;
+        b=sMDtWKgNtW1kkKwfWsFX0Qa73BMfk4VSHUTyabGqxI6XLOsaxN/Knw4xuI9mnfTybD
+         x7rJeLmYVn2iYlP/jvgqfD4J0e5JB9xNOZ/r0TWdL3IviJWZ1Z6FW+TKhlknecbbocE5
+         fLWnJ5rhmoNRfASP36mnxUA7hNnErFY4/m8+GdbjsHdDL8S5aNZlp1pdisxmn6c+WRIJ
+         usS+O3dnxbLLxTEwxuk4oRKbvea5kHNYIoirXkBs6OIk3y2Ts6w73YG6/klmt3WMWvks
+         67gZml7jIrcduXKXUjF9Tf6+jTNA1DxtJ90S+szQRnbzTJDrIPMc3NmjoKinkFmZtvWn
+         sxgg==
+X-Forwarded-Encrypted: i=1; AJvYcCWHxwByKGfmbevhKp6lmjTLbDU1cp/kK8KZGCLsu3sRDy/Kl6IyIOVliP1plxmyDaKBHlJ6K41A7Lw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzxYM7rC8AYWsTIx2r6Jt3h6tIQQ9of50lK69BmnKW0OtdkX4Qx
+	Z99NPmE8CLCpjW4al4j+xF6dKSdd2Uq/QjqrYE8ca4mcqYxiPNX8jzSVaQqtVajSP9P45p6kagZ
+	n33sU+mEclgmDytVJ2wUtKKewnaULCq9PQpuZ
+X-Gm-Gg: ASbGncvnqkD0GttUsnNuiChJyN51bdLeWQwJ+v4cTeUgEPfzz5HlZzUYp/N2GavwVO6
+	KiPbJ9ilYh1ajNOq+oNFuv54pFwGcsHh4kDzj/xShbgRxyX55B2rVCLSOOMSQWb1OxU6SzTd13r
+	+/bl3qtI2yfx674h8zn9PVlfieigiHEPWt9Qd+ox0K/HVButA8D7SUbDpAeW9Qk2wbwA2O6XVfj
+	adVS3VHoSaj2kg8LzyTO1OHWigumTjZkt8yt4CFDZJiYHViU1K6k4cR53eaiV+H0w25/Gln3DEU
+	LOVczr9r8m8Z55hLGwJ0TGityFCEMouvB7iG/C4pnos=
+X-Google-Smtp-Source: AGHT+IHyI72HABW//cHBarLcnu9+Ba1MPRR6bZ6mJXb7LBAoEIMFtTzlhgqDHkzZb+vCZHWzUpZ0aVzufuIm9gLbSlg=
+X-Received: by 2002:ac8:7f81:0:b0:4e6:ef26:3152 with SMTP id
+ d75a77b69052e-4ed310d1aa1mr166286551cf.80.1762189111384; Mon, 03 Nov 2025
+ 08:58:31 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <68cc0578.050a0220.28a605.0006.GAE@google.com> <69056c50.a70a0220.1e08cc.006c.GAE@google.com>
+In-Reply-To: <69056c50.a70a0220.1e08cc.006c.GAE@google.com>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Mon, 3 Nov 2025 08:58:20 -0800
+X-Gm-Features: AWmQ_bkDsSgdQVUGrhQNkWuvMPjtQkwEYu3HRdCHE9EaMTy5z14J08E7zjkious
+Message-ID: <CAJnrk1bF8sLU6tG2MGkt_KR4BoTd_k01CMVZJ9js2-eyh80tbw@mail.gmail.com>
+Subject: Re: [syzbot] [iomap?] kernel BUG in folio_end_read (2)
+To: syzbot <syzbot+3686758660f980b402dc@syzkaller.appspotmail.com>
+Cc: brauner@kernel.org, chao@kernel.org, djwong@kernel.org, jaegeuk@kernel.org, 
+	linux-f2fs-devel@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Yongpeng Yang <yangyongpeng.storage@gmail.com> writes:
+On Sat, Nov 1, 2025 at 1:26=E2=80=AFPM syzbot
+<syzbot+3686758660f980b402dc@syzkaller.appspotmail.com> wrote:
+>
+> syzbot has found a reproducer for the following issue on:
+>
+> HEAD commit:    98bd8b16ae57 Add linux-next specific files for 20251031
+> git tree:       linux-next
+> console output: https://syzkaller.appspot.com/x/log.txt?x=3D163b2bcd98000=
+0
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=3D63d09725c93bc=
+c1c
+> dashboard link: https://syzkaller.appspot.com/bug?extid=3D3686758660f980b=
+402dc
+> compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b797=
+6-1~exp1~20250708183702.136), Debian LLD 20.1.8
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=3D176fc342580=
+000
+> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=3D10403f3458000=
+0
+>
+> Downloadable assets:
+> disk image: https://storage.googleapis.com/syzbot-assets/975261746f29/dis=
+k-98bd8b16.raw.xz
+> vmlinux: https://storage.googleapis.com/syzbot-assets/ad565c6cf272/vmlinu=
+x-98bd8b16.xz
+> kernel image: https://storage.googleapis.com/syzbot-assets/1816a55a8d5f/b=
+zImage-98bd8b16.xz
+> mounted in repro: https://storage.googleapis.com/syzbot-assets/d6d9eee31f=
+db/mount_0.gz
+>   fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=3D=
+17803f34580000)
+>
+> IMPORTANT: if you fix the issue, please add the following tag to the comm=
+it:
+> Reported-by: syzbot+3686758660f980b402dc@syzkaller.appspotmail.com
+>
+>  vms_complete_munmap_vmas+0x206/0x8a0 mm/vma.c:1279
+>  do_vmi_align_munmap+0x364/0x440 mm/vma.c:1538
+>  do_vmi_munmap+0x253/0x2e0 mm/vma.c:1586
+>  __vm_munmap+0x207/0x380 mm/vma.c:3196
+>  __do_sys_munmap mm/mmap.c:1077 [inline]
+>  __se_sys_munmap mm/mmap.c:1074 [inline]
+>  __x64_sys_munmap+0x60/0x70 mm/mmap.c:1074
+>  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+>  do_syscall_64+0xfa/0xfa0 arch/x86/entry/syscall_64.c:94
+>  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> ------------[ cut here ]------------
+> kernel BUG at mm/filemap.c:1530!
 
-> Fixes: a64e5a596067bd ("bdev: add back PAGE_SIZE block size validation
-> for sb_set_blocksize()")
+I think this is the same bug that was fixed by [1].
 
-Looks like inserted a strange '\n'? Otherwise looks good.
--- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+[1] https://lore.kernel.org/linux-fsdevel/20251031211309.1774819-2-joannelk=
+oong@gmail.com/
+
+> Oops: invalid opcode: 0000 [#1] SMP KASAN PTI
+> CPU: 1 UID: 0 PID: 5989 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(f=
+ull)
+> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS G=
+oogle 10/02/2025
+> RIP: 0010:folio_end_read+0x1e9/0x230 mm/filemap.c:1530
+> Code: 79 c7 ff 48 89 df 48 c7 c6 20 6d 74 8b e8 9f df 2e ff 90 0f 0b e8 d=
+7 79 c7 ff 48 89 df 48 c7 c6 40 63 74 8b e8 88 df 2e ff 90 <0f> 0b e8 c0 79=
+ c7 ff 48 89 df 48 c7 c6 20 6d 74 8b e8 71 df 2e ff
+> RSP: 0018:ffffc90003f8e268 EFLAGS: 00010246
+> RAX: c6904ff3387db700 RBX: ffffea0001b5ef00 RCX: 0000000000000000
+> RDX: 0000000000000007 RSI: ffffffff8d780a1b RDI: 00000000ffffffff
+> RBP: 0000000000000000 R08: ffffffff8f7d7477 R09: 1ffffffff1efae8e
+> R10: dffffc0000000000 R11: fffffbfff1efae8f R12: 1ffffd400036bde1
+> R13: 1ffffd400036bde0 R14: ffffea0001b5ef08 R15: 00fff20000004060
+> FS:  0000555572333500(0000) GS:ffff888125fe2000(0000) knlGS:0000000000000=
+000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 00007f57d6844000 CR3: 0000000075586000 CR4: 00000000003526f0
+> Call Trace:
+>  <TASK>
+>  iomap_readahead+0x96a/0xbc0 fs/iomap/buffered-io.c:547
+>  iomap_bio_readahead include/linux/iomap.h:608 [inline]
+>  erofs_readahead+0x1c3/0x3c0 fs/erofs/data.c:383
+>  read_pages+0x17a/0x580 mm/readahead.c:163
+>  page_cache_ra_order+0x924/0xe70 mm/readahead.c:518
+>  filemap_readahead mm/filemap.c:2658 [inline]
+>  filemap_get_pages+0x7ff/0x1df0 mm/filemap.c:2704
+>  filemap_read+0x3f6/0x11a0 mm/filemap.c:2800
+>  __kernel_read+0x4cf/0x960 fs/read_write.c:530
+>  integrity_kernel_read+0x89/0xd0 security/integrity/iint.c:28
+>  ima_calc_file_hash_tfm security/integrity/ima/ima_crypto.c:480 [inline]
+>  ima_calc_file_shash security/integrity/ima/ima_crypto.c:511 [inline]
+>  ima_calc_file_hash+0x85e/0x16f0 security/integrity/ima/ima_crypto.c:568
+>  ima_collect_measurement+0x428/0x8f0 security/integrity/ima/ima_api.c:293
+>  process_measurement+0x1121/0x1a40 security/integrity/ima/ima_main.c:405
+>  ima_file_check+0xd7/0x120 security/integrity/ima/ima_main.c:656
+>  security_file_post_open+0xbb/0x290 security/security.c:2652
+>  do_open fs/namei.c:3977 [inline]
+>  path_openat+0x2f26/0x3830 fs/namei.c:4134
+>  do_filp_open+0x1fa/0x410 fs/namei.c:4161
+>  do_sys_openat2+0x121/0x1c0 fs/open.c:1437
+>  do_sys_open fs/open.c:1452 [inline]
+>  __do_sys_openat fs/open.c:1468 [inline]
+>  __se_sys_openat fs/open.c:1463 [inline]
+>  __x64_sys_openat+0x138/0x170 fs/open.c:1463
+>  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+>  do_syscall_64+0xfa/0xfa0 arch/x86/entry/syscall_64.c:94
+>  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> RIP: 0033:0x7f0b08d8efc9
+> Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f=
+7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff=
+ ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
+> RSP: 002b:00007ffec6a5d268 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+> RAX: ffffffffffffffda RBX: 00007f0b08fe5fa0 RCX: 00007f0b08d8efc9
+> RDX: 0000000000121140 RSI: 0000200000000000 RDI: ffffffffffffff9c
+> RBP: 00007f0b08e11f91 R08: 0000000000000000 R09: 0000000000000000
+> R10: 000000000000013d R11: 0000000000000246 R12: 0000000000000000
+> R13: 00007f0b08fe5fa0 R14: 00007f0b08fe5fa0 R15: 0000000000000004
+>  </TASK>
+> Modules linked in:
+> ---[ end trace 0000000000000000 ]---
+> RIP: 0010:folio_end_read+0x1e9/0x230 mm/filemap.c:1530
+> Code: 79 c7 ff 48 89 df 48 c7 c6 20 6d 74 8b e8 9f df 2e ff 90 0f 0b e8 d=
+7 79 c7 ff 48 89 df 48 c7 c6 40 63 74 8b e8 88 df 2e ff 90 <0f> 0b e8 c0 79=
+ c7 ff 48 89 df 48 c7 c6 20 6d 74 8b e8 71 df 2e ff
+> RSP: 0018:ffffc90003f8e268 EFLAGS: 00010246
+> RAX: c6904ff3387db700 RBX: ffffea0001b5ef00 RCX: 0000000000000000
+> RDX: 0000000000000007 RSI: ffffffff8d780a1b RDI: 00000000ffffffff
+> RBP: 0000000000000000 R08: ffffffff8f7d7477 R09: 1ffffffff1efae8e
+> R10: dffffc0000000000 R11: fffffbfff1efae8f R12: 1ffffd400036bde1
+> R13: 1ffffd400036bde0 R14: ffffea0001b5ef08 R15: 00fff20000004060
+> FS:  0000555572333500(0000) GS:ffff888125ee2000(0000) knlGS:0000000000000=
+000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000001b30063fff CR3: 0000000075586000 CR4: 00000000003526f0
+>
+>
+> ---
+> If you want syzbot to run the reproducer, reply with:
+> #syz test: git://repo/address.git branch-or-commit-hash
+> If you attach or paste a git patch, syzbot will apply it before testing.
+>
+
+#syz test: git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.gi=
+t
+master
