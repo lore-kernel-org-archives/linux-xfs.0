@@ -1,219 +1,142 @@
-Received: from mail-qv1-f53.google.com (mail-qv1-f53.google.com [209.85.219.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9641D31D738
-	for <linux-xfs@vger.kernel.org>; Mon,  3 Nov 2025 16:58:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4941E31815E
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Nov 2025 17:01:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762189114; cv=none; b=a5O91sW4OHX0eaxMAUTQIOP+oiBOBLv8+TTliUg2SU6dgbsW+zBC23iDMHnMPSa0UzFsw4WwmI2w273O0eGtoCW6DGndtpk2JvmAUVH8V50n/YeoNmesEbZBZUlRS9PMhP4Uj0w9NUMUUT3vg4eOEUrcTP+f8r7hUzyVUFvBfEQ=
+	t=1762189266; cv=none; b=pkquGz8jBL6SS9w1j4KOlh03QDHVdvg+ZtzSH7yineD49aLbiZh0T3QhW68JEiaKRmU6dAmdHk9kVZRD2/26jsKVkB64JEnFC6rDL88GmD1rvFr3LeNtTjbcbdlTg9ADQJYd8nWJCLCRlqe6GHv5X8/OeurkHmSs/wYLiQQ8dYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762189114; c=relaxed/simple;
-	bh=b0O3GE4qbZNbg0oDGHxasBjYudlii3ZM6j4y5Cr/l5w=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=SLxfEya+EvDr9eD/WHIISIQtHkVQOTtNXpE2ut+7Xk1VG5uDFn4Z5A//malkmSbXP0ZtzI3LCZRMDy06pCPVkqeduHzszn3T0utfEswPLI6eG7O0mFIquNYNwqlFnVYU3WSyNVqHDzmHBLLsJYpmEZN50Pz5YZl9/5o7LavRH80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BgSNdV/7; arc=none smtp.client-ip=209.85.219.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1762189266; c=relaxed/simple;
+	bh=mT4NUltDMSWTIMjqc0khKyRqUEjD6e1SZOQNzwF9iyQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TqLi+/sF2wNjux4hYHWLa9/MWj2P3thV0jgyP7Qwxq9GUaJR6+Jn4wzWuy9iJ7Dt1sIJV3r2yEhQOxzdMD0cB9wtJPBLH2num+pgpwEdM6plk7FEoaIkVB1t6qflgm1ZOYX3TQqJeSLqYG0BdSFQJAQ3Pg4YWdP50KGon5ZNrHg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C61DbEPu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BgSNdV/7"
-Received: by mail-qv1-f53.google.com with SMTP id 6a1803df08f44-88056cab4eeso7989036d6.2
-        for <linux-xfs@vger.kernel.org>; Mon, 03 Nov 2025 08:58:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762189111; x=1762793911; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1mTsTlYaKlSyBQb/TNu3wRr8ckz09pUbjw64hL0b7SA=;
-        b=BgSNdV/7fYcawu86Vprj4piD9mA6QYHDGBDcmYm2fLXK4hRHjjKuMhNmYs7sAN7qMy
-         6aY5E1uBpvxUa2VyFxyTIbHoDlJitWdKYjjXh1r0B90tBbeL+1cQ23UqigUOPgoiM7K+
-         MDM4VqY3IVlSVpLFUPyg7TujDLirAMRRmn9PlcBvjVSdfD+VdV38CmmVndVWIT5UJV96
-         V7d80IZCUE5W/Hs2+5+oMbjsUVtHptCaN0xLW+cDqVU2OYpDJdLsFMHMpNsSGiH9tckX
-         JBEbw9g2g3V57Qjm59LD5YxyMLCFCeFslqUaEyc1ObHrCuwY5hkOSqsZY4Uyhw/RNq2K
-         6u5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762189111; x=1762793911;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=1mTsTlYaKlSyBQb/TNu3wRr8ckz09pUbjw64hL0b7SA=;
-        b=sMDtWKgNtW1kkKwfWsFX0Qa73BMfk4VSHUTyabGqxI6XLOsaxN/Knw4xuI9mnfTybD
-         x7rJeLmYVn2iYlP/jvgqfD4J0e5JB9xNOZ/r0TWdL3IviJWZ1Z6FW+TKhlknecbbocE5
-         fLWnJ5rhmoNRfASP36mnxUA7hNnErFY4/m8+GdbjsHdDL8S5aNZlp1pdisxmn6c+WRIJ
-         usS+O3dnxbLLxTEwxuk4oRKbvea5kHNYIoirXkBs6OIk3y2Ts6w73YG6/klmt3WMWvks
-         67gZml7jIrcduXKXUjF9Tf6+jTNA1DxtJ90S+szQRnbzTJDrIPMc3NmjoKinkFmZtvWn
-         sxgg==
-X-Forwarded-Encrypted: i=1; AJvYcCWHxwByKGfmbevhKp6lmjTLbDU1cp/kK8KZGCLsu3sRDy/Kl6IyIOVliP1plxmyDaKBHlJ6K41A7Lw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzxYM7rC8AYWsTIx2r6Jt3h6tIQQ9of50lK69BmnKW0OtdkX4Qx
-	Z99NPmE8CLCpjW4al4j+xF6dKSdd2Uq/QjqrYE8ca4mcqYxiPNX8jzSVaQqtVajSP9P45p6kagZ
-	n33sU+mEclgmDytVJ2wUtKKewnaULCq9PQpuZ
-X-Gm-Gg: ASbGncvnqkD0GttUsnNuiChJyN51bdLeWQwJ+v4cTeUgEPfzz5HlZzUYp/N2GavwVO6
-	KiPbJ9ilYh1ajNOq+oNFuv54pFwGcsHh4kDzj/xShbgRxyX55B2rVCLSOOMSQWb1OxU6SzTd13r
-	+/bl3qtI2yfx674h8zn9PVlfieigiHEPWt9Qd+ox0K/HVButA8D7SUbDpAeW9Qk2wbwA2O6XVfj
-	adVS3VHoSaj2kg8LzyTO1OHWigumTjZkt8yt4CFDZJiYHViU1K6k4cR53eaiV+H0w25/Gln3DEU
-	LOVczr9r8m8Z55hLGwJ0TGityFCEMouvB7iG/C4pnos=
-X-Google-Smtp-Source: AGHT+IHyI72HABW//cHBarLcnu9+Ba1MPRR6bZ6mJXb7LBAoEIMFtTzlhgqDHkzZb+vCZHWzUpZ0aVzufuIm9gLbSlg=
-X-Received: by 2002:ac8:7f81:0:b0:4e6:ef26:3152 with SMTP id
- d75a77b69052e-4ed310d1aa1mr166286551cf.80.1762189111384; Mon, 03 Nov 2025
- 08:58:31 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C61DbEPu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FDD6C4CEE7;
+	Mon,  3 Nov 2025 17:01:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762189266;
+	bh=mT4NUltDMSWTIMjqc0khKyRqUEjD6e1SZOQNzwF9iyQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=C61DbEPuJfZcXSBzuuM1LZWu+7mBgNa6E8tj0OVIz1NI6CdF1exTrTUtB7IwBp2EF
+	 4W+HcueSnHukIb/+61Szz0VJdPaDyFofml48uGmZLDKGE4kGFK9zID/cIhX0z7T0QF
+	 d+9TUbZWiex2RSrZ0C7kVDX++ZuJSS4M1TEfgnSXa7ZrU1ioxUa3EOHa+Fc9gl2BYz
+	 OetJqGURHa3Xi6mwwpyVDkf8wgJ8f4Hs+f+sw/yHEUihyUfVBJJ0VvI9FP9tJ6jSIQ
+	 UrtacOsC4ZIAa10Ij7vceTWvauYqJAF02ORkOw8eaxL+3hYSmdKVMIJ2Y2Y39T0jwL
+	 aBRHK5FouD4UA==
+Date: Mon, 3 Nov 2025 09:01:05 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: add a xfs_groups_to_rfsbs helper
+Message-ID: <20251103170105.GA196370@frogsfrogsfrogs>
+References: <20251103101419.2082953-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <68cc0578.050a0220.28a605.0006.GAE@google.com> <69056c50.a70a0220.1e08cc.006c.GAE@google.com>
-In-Reply-To: <69056c50.a70a0220.1e08cc.006c.GAE@google.com>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Mon, 3 Nov 2025 08:58:20 -0800
-X-Gm-Features: AWmQ_bkDsSgdQVUGrhQNkWuvMPjtQkwEYu3HRdCHE9EaMTy5z14J08E7zjkious
-Message-ID: <CAJnrk1bF8sLU6tG2MGkt_KR4BoTd_k01CMVZJ9js2-eyh80tbw@mail.gmail.com>
-Subject: Re: [syzbot] [iomap?] kernel BUG in folio_end_read (2)
-To: syzbot <syzbot+3686758660f980b402dc@syzkaller.appspotmail.com>
-Cc: brauner@kernel.org, chao@kernel.org, djwong@kernel.org, jaegeuk@kernel.org, 
-	linux-f2fs-devel@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251103101419.2082953-1-hch@lst.de>
 
-On Sat, Nov 1, 2025 at 1:26=E2=80=AFPM syzbot
-<syzbot+3686758660f980b402dc@syzkaller.appspotmail.com> wrote:
->
-> syzbot has found a reproducer for the following issue on:
->
-> HEAD commit:    98bd8b16ae57 Add linux-next specific files for 20251031
-> git tree:       linux-next
-> console output: https://syzkaller.appspot.com/x/log.txt?x=3D163b2bcd98000=
-0
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=3D63d09725c93bc=
-c1c
-> dashboard link: https://syzkaller.appspot.com/bug?extid=3D3686758660f980b=
-402dc
-> compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b797=
-6-1~exp1~20250708183702.136), Debian LLD 20.1.8
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=3D176fc342580=
-000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=3D10403f3458000=
-0
->
-> Downloadable assets:
-> disk image: https://storage.googleapis.com/syzbot-assets/975261746f29/dis=
-k-98bd8b16.raw.xz
-> vmlinux: https://storage.googleapis.com/syzbot-assets/ad565c6cf272/vmlinu=
-x-98bd8b16.xz
-> kernel image: https://storage.googleapis.com/syzbot-assets/1816a55a8d5f/b=
-zImage-98bd8b16.xz
-> mounted in repro: https://storage.googleapis.com/syzbot-assets/d6d9eee31f=
-db/mount_0.gz
->   fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=3D=
-17803f34580000)
->
-> IMPORTANT: if you fix the issue, please add the following tag to the comm=
-it:
-> Reported-by: syzbot+3686758660f980b402dc@syzkaller.appspotmail.com
->
->  vms_complete_munmap_vmas+0x206/0x8a0 mm/vma.c:1279
->  do_vmi_align_munmap+0x364/0x440 mm/vma.c:1538
->  do_vmi_munmap+0x253/0x2e0 mm/vma.c:1586
->  __vm_munmap+0x207/0x380 mm/vma.c:3196
->  __do_sys_munmap mm/mmap.c:1077 [inline]
->  __se_sys_munmap mm/mmap.c:1074 [inline]
->  __x64_sys_munmap+0x60/0x70 mm/mmap.c:1074
->  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
->  do_syscall_64+0xfa/0xfa0 arch/x86/entry/syscall_64.c:94
->  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> ------------[ cut here ]------------
-> kernel BUG at mm/filemap.c:1530!
-
-I think this is the same bug that was fixed by [1].
-
-[1] https://lore.kernel.org/linux-fsdevel/20251031211309.1774819-2-joannelk=
-oong@gmail.com/
-
-> Oops: invalid opcode: 0000 [#1] SMP KASAN PTI
-> CPU: 1 UID: 0 PID: 5989 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(f=
-ull)
-> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS G=
-oogle 10/02/2025
-> RIP: 0010:folio_end_read+0x1e9/0x230 mm/filemap.c:1530
-> Code: 79 c7 ff 48 89 df 48 c7 c6 20 6d 74 8b e8 9f df 2e ff 90 0f 0b e8 d=
-7 79 c7 ff 48 89 df 48 c7 c6 40 63 74 8b e8 88 df 2e ff 90 <0f> 0b e8 c0 79=
- c7 ff 48 89 df 48 c7 c6 20 6d 74 8b e8 71 df 2e ff
-> RSP: 0018:ffffc90003f8e268 EFLAGS: 00010246
-> RAX: c6904ff3387db700 RBX: ffffea0001b5ef00 RCX: 0000000000000000
-> RDX: 0000000000000007 RSI: ffffffff8d780a1b RDI: 00000000ffffffff
-> RBP: 0000000000000000 R08: ffffffff8f7d7477 R09: 1ffffffff1efae8e
-> R10: dffffc0000000000 R11: fffffbfff1efae8f R12: 1ffffd400036bde1
-> R13: 1ffffd400036bde0 R14: ffffea0001b5ef08 R15: 00fff20000004060
-> FS:  0000555572333500(0000) GS:ffff888125fe2000(0000) knlGS:0000000000000=
-000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 00007f57d6844000 CR3: 0000000075586000 CR4: 00000000003526f0
-> Call Trace:
->  <TASK>
->  iomap_readahead+0x96a/0xbc0 fs/iomap/buffered-io.c:547
->  iomap_bio_readahead include/linux/iomap.h:608 [inline]
->  erofs_readahead+0x1c3/0x3c0 fs/erofs/data.c:383
->  read_pages+0x17a/0x580 mm/readahead.c:163
->  page_cache_ra_order+0x924/0xe70 mm/readahead.c:518
->  filemap_readahead mm/filemap.c:2658 [inline]
->  filemap_get_pages+0x7ff/0x1df0 mm/filemap.c:2704
->  filemap_read+0x3f6/0x11a0 mm/filemap.c:2800
->  __kernel_read+0x4cf/0x960 fs/read_write.c:530
->  integrity_kernel_read+0x89/0xd0 security/integrity/iint.c:28
->  ima_calc_file_hash_tfm security/integrity/ima/ima_crypto.c:480 [inline]
->  ima_calc_file_shash security/integrity/ima/ima_crypto.c:511 [inline]
->  ima_calc_file_hash+0x85e/0x16f0 security/integrity/ima/ima_crypto.c:568
->  ima_collect_measurement+0x428/0x8f0 security/integrity/ima/ima_api.c:293
->  process_measurement+0x1121/0x1a40 security/integrity/ima/ima_main.c:405
->  ima_file_check+0xd7/0x120 security/integrity/ima/ima_main.c:656
->  security_file_post_open+0xbb/0x290 security/security.c:2652
->  do_open fs/namei.c:3977 [inline]
->  path_openat+0x2f26/0x3830 fs/namei.c:4134
->  do_filp_open+0x1fa/0x410 fs/namei.c:4161
->  do_sys_openat2+0x121/0x1c0 fs/open.c:1437
->  do_sys_open fs/open.c:1452 [inline]
->  __do_sys_openat fs/open.c:1468 [inline]
->  __se_sys_openat fs/open.c:1463 [inline]
->  __x64_sys_openat+0x138/0x170 fs/open.c:1463
->  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
->  do_syscall_64+0xfa/0xfa0 arch/x86/entry/syscall_64.c:94
->  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> RIP: 0033:0x7f0b08d8efc9
-> Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f=
-7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff=
- ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
-> RSP: 002b:00007ffec6a5d268 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
-> RAX: ffffffffffffffda RBX: 00007f0b08fe5fa0 RCX: 00007f0b08d8efc9
-> RDX: 0000000000121140 RSI: 0000200000000000 RDI: ffffffffffffff9c
-> RBP: 00007f0b08e11f91 R08: 0000000000000000 R09: 0000000000000000
-> R10: 000000000000013d R11: 0000000000000246 R12: 0000000000000000
-> R13: 00007f0b08fe5fa0 R14: 00007f0b08fe5fa0 R15: 0000000000000004
->  </TASK>
-> Modules linked in:
-> ---[ end trace 0000000000000000 ]---
-> RIP: 0010:folio_end_read+0x1e9/0x230 mm/filemap.c:1530
-> Code: 79 c7 ff 48 89 df 48 c7 c6 20 6d 74 8b e8 9f df 2e ff 90 0f 0b e8 d=
-7 79 c7 ff 48 89 df 48 c7 c6 40 63 74 8b e8 88 df 2e ff 90 <0f> 0b e8 c0 79=
- c7 ff 48 89 df 48 c7 c6 20 6d 74 8b e8 71 df 2e ff
-> RSP: 0018:ffffc90003f8e268 EFLAGS: 00010246
-> RAX: c6904ff3387db700 RBX: ffffea0001b5ef00 RCX: 0000000000000000
-> RDX: 0000000000000007 RSI: ffffffff8d780a1b RDI: 00000000ffffffff
-> RBP: 0000000000000000 R08: ffffffff8f7d7477 R09: 1ffffffff1efae8e
-> R10: dffffc0000000000 R11: fffffbfff1efae8f R12: 1ffffd400036bde1
-> R13: 1ffffd400036bde0 R14: ffffea0001b5ef08 R15: 00fff20000004060
-> FS:  0000555572333500(0000) GS:ffff888125ee2000(0000) knlGS:0000000000000=
-000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 0000001b30063fff CR3: 0000000075586000 CR4: 00000000003526f0
->
->
+On Mon, Nov 03, 2025 at 05:14:09AM -0500, Christoph Hellwig wrote:
+> Plus a rtgroup wrapper and use that to avoid overflows when converting
+> zone/rtg counts to block counts.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-> If you want syzbot to run the reproducer, reply with:
-> #syz test: git://repo/address.git branch-or-commit-hash
-> If you attach or paste a git patch, syzbot will apply it before testing.
->
+> 
+> Changes since v1:
+>  - new names
 
-#syz test: git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.gi=
-t
-master
+Woot, thanks for refactoring this!
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--D
+
+> 
+>  fs/xfs/libxfs/xfs_group.h    | 9 +++++++++
+>  fs/xfs/libxfs/xfs_rtgroup.h  | 8 ++++++++
+>  fs/xfs/xfs_zone_gc.c         | 3 +--
+>  fs/xfs/xfs_zone_space_resv.c | 8 +++-----
+>  4 files changed, 21 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_group.h b/fs/xfs/libxfs/xfs_group.h
+> index 4423932a2313..4ae638f1c2c5 100644
+> --- a/fs/xfs/libxfs/xfs_group.h
+> +++ b/fs/xfs/libxfs/xfs_group.h
+> @@ -98,6 +98,15 @@ xfs_group_max_blocks(
+>  	return xg->xg_mount->m_groups[xg->xg_type].blocks;
+>  }
+>  
+> +static inline xfs_rfsblock_t
+> +xfs_groups_to_rfsbs(
+> +	struct xfs_mount	*mp,
+> +	uint32_t		nr_groups,
+> +	enum xfs_group_type	type)
+> +{
+> +	return (xfs_rfsblock_t)mp->m_groups[type].blocks * nr_groups;
+> +}
+> +
+>  static inline xfs_fsblock_t
+>  xfs_group_start_fsb(
+>  	struct xfs_group	*xg)
+> diff --git a/fs/xfs/libxfs/xfs_rtgroup.h b/fs/xfs/libxfs/xfs_rtgroup.h
+> index d4fcf591e63d..a94e925ae67c 100644
+> --- a/fs/xfs/libxfs/xfs_rtgroup.h
+> +++ b/fs/xfs/libxfs/xfs_rtgroup.h
+> @@ -371,4 +371,12 @@ static inline int xfs_initialize_rtgroups(struct xfs_mount *mp,
+>  # define xfs_rtgroup_get_geometry(rtg, rgeo)	(-EOPNOTSUPP)
+>  #endif /* CONFIG_XFS_RT */
+>  
+> +static inline xfs_rfsblock_t
+> +xfs_rtgs_to_rfsbs(
+> +	struct xfs_mount	*mp,
+> +	uint32_t		nr_groups)
+> +{
+> +	return xfs_groups_to_rfsbs(mp, nr_groups, XG_TYPE_RTG);
+> +}
+> +
+>  #endif /* __LIBXFS_RTGROUP_H */
+> diff --git a/fs/xfs/xfs_zone_gc.c b/fs/xfs/xfs_zone_gc.c
+> index 4ade54445532..a98939aba7b9 100644
+> --- a/fs/xfs/xfs_zone_gc.c
+> +++ b/fs/xfs/xfs_zone_gc.c
+> @@ -181,8 +181,7 @@ xfs_zoned_need_gc(
+>  	available = xfs_estimate_freecounter(mp, XC_FREE_RTAVAILABLE);
+>  
+>  	if (available <
+> -	    mp->m_groups[XG_TYPE_RTG].blocks *
+> -	    (mp->m_max_open_zones - XFS_OPEN_GC_ZONES))
+> +	    xfs_rtgs_to_rfsbs(mp, mp->m_max_open_zones - XFS_OPEN_GC_ZONES))
+>  		return true;
+>  
+>  	free = xfs_estimate_freecounter(mp, XC_FREE_RTEXTENTS);
+> diff --git a/fs/xfs/xfs_zone_space_resv.c b/fs/xfs/xfs_zone_space_resv.c
+> index 9cd38716fd25..0e54e557a585 100644
+> --- a/fs/xfs/xfs_zone_space_resv.c
+> +++ b/fs/xfs/xfs_zone_space_resv.c
+> @@ -54,12 +54,10 @@ xfs_zoned_default_resblks(
+>  {
+>  	switch (ctr) {
+>  	case XC_FREE_RTEXTENTS:
+> -		return (uint64_t)XFS_RESERVED_ZONES *
+> -			mp->m_groups[XG_TYPE_RTG].blocks +
+> -			mp->m_sb.sb_rtreserved;
+> +		return xfs_rtgs_to_rfsbs(mp, XFS_RESERVED_ZONES) +
+> +				mp->m_sb.sb_rtreserved;
+>  	case XC_FREE_RTAVAILABLE:
+> -		return (uint64_t)XFS_GC_ZONES *
+> -			mp->m_groups[XG_TYPE_RTG].blocks;
+> +		return xfs_rtgs_to_rfsbs(mp, XFS_GC_ZONES);
+>  	default:
+>  		ASSERT(0);
+>  		return 0;
+> -- 
+> 2.47.3
+> 
+> 
