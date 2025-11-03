@@ -1,36 +1,29 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC4192FD7CD;
-	Mon,  3 Nov 2025 10:29:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5A4D2472BB
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Nov 2025 10:43:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762165751; cv=none; b=rbs4+K8ECP9RZ9FDPlUii5aFeu8zmEYi+WvG5fBnwsUbDDGRcRmUwbbu12dpqhu9tZBORTa8fk7UAYmyLhejzBhWmRrHaVkAC6Yyuaa22CAAUa6+y/PJlbZ9kXwO9BRjAc7A2TEHBsPe1zDDAZAMeM0P25MMisDKDf1aIhBTOM8=
+	t=1762166605; cv=none; b=shydE5EwijWXjkqkLEsVpeMoGHRUL6Z/OCYY5803HiCZGenQPhIbgQPcT+UcHznqFiRGoTbCG/WZvMq2TtiGCT7rtS6PPIiy5DluPoNm+GH7hLDoDTDa1M1dMbqdP9rkEFflU6TuGxHMNtdhs1ZQ2UJziIHCGK4ouCBrZSAOC8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762165751; c=relaxed/simple;
-	bh=I4KqhekOC9NkOER3DEkKtQI27ATsDdkIJj+jhStltPI=;
+	s=arc-20240116; t=1762166605; c=relaxed/simple;
+	bh=nCpTjCEa3UF0kbPR1BL5y4WqNuoXNUkRRzHD9fDTwdQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AtgMJzr5awnsag9+9ULA9sRFPxyQM0ziV0C3IOXRVonG2TM/nskMdBqjJATBkGSuHTboFZC9gEzxedAnks53BpOCHJAtG3CDzJV7frUZSzotzNAMMfHwERFEvl1KR2EDSZZbLyNnqz83iY7guoTynFPaCbLEcrsySi4QLh874IE=
+	 Content-Type:Content-Disposition:In-Reply-To; b=dr2htJeRTropKbfcQyJrHdtVBvQ94q3aB4slHbSDU+fBBQIsHsLrLhH2JrAPf/FlPLvPynRh9bRaQM9yR5FepRZ1LogZ/CxnM6D9L2kNvk1zGDAw2BPikgtGD/2kbhz+ZHq/SoPKBj2MqrkpuBvNCnIh72UO1mVh2GzFQzFfQ/Q=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id C497E227A87; Mon,  3 Nov 2025 11:29:02 +0100 (CET)
-Date: Mon, 3 Nov 2025 11:29:02 +0100
+	id 8113B227A87; Mon,  3 Nov 2025 11:43:19 +0100 (CET)
+Date: Mon, 3 Nov 2025 11:43:19 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-	Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
-	dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
-	David Sterba <dsterba@suse.com>
-Subject: Re: [PATCH 08/13] block: introduce blkdev_get_zone_info()
-Message-ID: <20251103102902.GB8369@lst.de>
-References: <20251031061307.185513-1-dlemoal@kernel.org> <20251031061307.185513-9-dlemoal@kernel.org> <42dc640b-28e9-4706-91dc-dd075e736065@acm.org> <1276e2be-4d8b-4c59-822c-3af4490de24e@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 02/10] xfs: set lv_bytes in xlog_write_one_vec
+Message-ID: <20251103104318.GA9158@lst.de>
+References: <20251030144946.1372887-1-hch@lst.de> <20251030144946.1372887-3-hch@lst.de> <20251101000409.GR3356773@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,27 +32,31 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1276e2be-4d8b-4c59-822c-3af4490de24e@kernel.org>
+In-Reply-To: <20251101000409.GR3356773@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Nov 03, 2025 at 03:08:30PM +0900, Damien Le Moal wrote:
-> On 11/1/25 06:40, Bart Van Assche wrote:
-> >> +/**
-> >> + * blkdev_get_zone_info - Get a zone information from cached data
-> > 
-> > "Get a zone information" -> "Get zone information"
-> > 
-> >> +	sector = sector & (~(zone_sectors - 1));
-> > 
-> > Please consider changing the above assignment into:
-> > 
-> > 	sector -= bdev_offset_from_zone_start(bdev, sector);
+On Fri, Oct 31, 2025 at 05:04:09PM -0700, Darrick J. Wong wrote:
+> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > index ed83a0e3578e..382c55f4d8d2 100644
+> > --- a/fs/xfs/xfs_log.c
+> > +++ b/fs/xfs/xfs_log.c
+> > @@ -858,14 +858,15 @@ xlog_write_one_vec(
+> >  	struct xfs_log_vec	lv = {
+> >  		.lv_niovecs	= 1,
+> >  		.lv_iovecp	= reg,
+> > +		.lv_bytes	= reg->i_len,
 > 
-> That is a lot more arithmetic for the same thing.
-> If anything, I think this should be:
+> I'm surprised that nothing's noticed the zero lv_bytes, but I guess
+> unmount and commit record writes have always wanted a full write anyway?
 > 
-> 	sector = ALIGN(sector, zone_sectors);
+> Question: if lv_bytes is no longer zero, can this fall into the
+> xlog_write_partial branch?
 
-That would have to be ALIGN_DOWN I think.  Which sounds useful to
-clean things up to me.
+The unmount format is smaller than an opheader, so we won't split it
+because of that, but unless I'm misreading things it could fix a bug
+where we'd not get a new iclog when needed for it otherwise?
 
+The commit record is just an an opheader without any payload, so there
+is no way to even split it in theory.
+
+> 
