@@ -1,85 +1,130 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A98D13126C8;
-	Mon,  3 Nov 2025 13:35:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74564287505
+	for <linux-xfs@vger.kernel.org>; Mon,  3 Nov 2025 13:40:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762176944; cv=none; b=U0H1C36bCqB9wsohzJUISiwiIHRzIbjslzGiez48jCICssMGMyy8tSeNkyW7fYrn0V+FshMRJmVHHM5qSxQfdrRHuSPE6roUkEe3SpSLbM7mEE5tXyCAHNDPXqH/t+qG262nhj9Pg/xx1vdrseyaNe7IlMT6O9G43jpbC5bsg4Q=
+	t=1762177245; cv=none; b=cHzEBbaZb5paGbYankZAVGdG2Zqt8Mcu9oRds4PSIUOM7345jS9BLskQPnkvg1B6QIdx95umMcnBmdt4B5hFPRwaQhUOxbA4FaGQfR33A1GMLTASgD4npRoEBlVxfVIRxCZkM8maBz7cMWMDzYulH65HUJeNLHSNXMFnypHYj9w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762176944; c=relaxed/simple;
-	bh=71ngn76yrYFjaxkK05PGAxZ9HfO52W4Ba3k1t35Su6U=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XtxNDAtrNVZcxPUFBi4CsdIIzUysuYLXJVuhfQ58VVmpYzwL0PGJgZGR157tOorEAW14lZhUye/iRNp7O7FQyP3b/5WoRsjjqrfMflLH8G+fPsbfhfwzIomdkAzeBnjg4FKHkyOmWiZ/N7KY5QkIACovUk2fDqWYQNHgL8jw0do=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OWF43w5T; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762177245; c=relaxed/simple;
+	bh=JZ0P1jUJT/JHdrkC2pQPX3089iJixp+OjT43MwzgNR8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KqIQY6uDdGRf+6pdZS296lwCZqknDVh+9JeGP2jAHYJzXfwA00xpJ/ojY1ZCgbykVMepx4aNStwZMOioQIvfcbvhTOeMbGti3gmqosDFOvKRhR546a+xwlSMBGpTB1T60N57uFc0wx1j6gLaSQSDlYhzi1vAWNqkRGFp5spFTfc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mTPQC/TW; arc=none smtp.client-ip=209.85.216.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OWF43w5T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE1DDC4CEE7;
-	Mon,  3 Nov 2025 13:35:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762176944;
-	bh=71ngn76yrYFjaxkK05PGAxZ9HfO52W4Ba3k1t35Su6U=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=OWF43w5ThLkGT6v8kuvqbmh2kuLm4dhel6BuA2De50zPhfxBt3b40WdtyeO2YuLMY
-	 qfKSeQUvMgCQS+3ovwrocalAvstvwjsBe+5Bn5gd7Cct5u5RHVVjvIaynHq8t7/DyU
-	 sqjOVE0/LZ9N9f6c1FrLMbMIZ3+b/Bo/ow5rOuNuc5Klmnukp+HZFLfEolCbR4mTjO
-	 3tpKfeHk0Ue348ibeIeiP8iCbFrl6F6mur5+lHjXdIsSPpLYcjf0WPzv5l5LjRMhzc
-	 VTUGODYLFdR++42ScmSIx8g+qb4Ty0s40utpMJg5Wx8Yc0Od5k5915BNDrs/TBcg5S
-	 oEqHL3bOcNXRg==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>,
-	linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org,
-	Keith Busch <keith.busch@wdc.com>,
-	Christoph Hellwig <hch@lst.de>,
-	dm-devel@lists.linux.dev,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>,
-	linux-btrfs@vger.kernel.org,
-	David Sterba <dsterba@suse.com>
-Subject: [PATCH v2 15/15] xfs: use blkdev_report_zones_cached()
-Date: Mon,  3 Nov 2025 22:31:23 +0900
-Message-ID: <20251103133123.645038-16-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20251103133123.645038-1-dlemoal@kernel.org>
-References: <20251103133123.645038-1-dlemoal@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mTPQC/TW"
+Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-33ba5d8f3bfso3794492a91.3
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Nov 2025 05:40:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1762177242; x=1762782042; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=+8IwqJtA/22JVDtVDWFjIJd2N2jNDTeHgnje61NBmJ8=;
+        b=mTPQC/TW205WGM22q1YNn+ndPJrOc6Yjahm5rTeZ0CLzA0C3ZORehURZEkV/qyA4jx
+         ML8RGQqdmf68ZoDpjlBVJCYZndBFghHjftPIIGsVBVIhFEPiqBldDefn56V/2kPo4lx6
+         dyy3h1DmvC7TBbOYOEBsvwfGS0bfg7kYT8DL1LP/LtICizpMdmV7MAPWJ/7GzcBjgjXl
+         og21ElomjErRG678nAYWFEEeWLSCD5FMX/IN7v2wZA+m+2fEDzfIql+2hh07LcqPZclH
+         V1tpcDnYGkijZIllr90/FQ5OPQS9iujhJ0+Hm963Hftbsv1loMFjknr1HaPeBTbtIJI5
+         ZGrQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762177242; x=1762782042;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+8IwqJtA/22JVDtVDWFjIJd2N2jNDTeHgnje61NBmJ8=;
+        b=gIhQkVQQgk0Ow4ZhPbw4XOnAyuarEGFnXYBeTZd/PaI7rui0ZQOEvKk2WOvVHDTxbi
+         yRzDW/ML+LQ2b5UQ9fblx7QOV5Qj0NpzfoAQihvqD25tZaiUGZzLV3F+BrTxur86q9vo
+         l7tDhoWoEhr72R6k4Y2w9UHOfrM71PltUvS3oyCZ59lTGBVawQMGFbRN13GDfVCP+tU6
+         w87/tTFEQqNBnBImPGpuTSjglAfUuV5/FYJao8h1PQiwlToU8/l5yRIB7YHh3NFgDhVF
+         LforCMa2wwO5OWzDwnDaNLLMCTHlcY8sM69SjAwJ+y1Ro1OkvL+VBthaQ9wi8TwTP8hr
+         nT7A==
+X-Forwarded-Encrypted: i=1; AJvYcCW33VEQCnFEzKCiJrtn1fTMVZPZYjOW0zMyh8ku/e6e6uDr/cKuB7MEDzu9BHCCMvO2wVcZI5EVAk4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwKC+NFG6S0xdB+6ToNeg+xueR5aqsI8P8cvU6Ze00UIFLtgmh+
+	3UXnZyNABpQMm84CxScLanJJX8fvxxPeeADIUxCrFld1rthEXYxuyX8t
+X-Gm-Gg: ASbGnctpbI2RVKCTkA+1PRfUUYdjIZ0NMvm8swaRYxWbF+EXJKHaMzuSp/ahhr04NWZ
+	ZkL0qUTkyFm99Jg8uFXXrUHihL0ynoXLq+Xb0L0YufB16wtM21RGUHqvx9cDx5NDdxWjIyjV2I0
+	6uHcYOSppByAK2pKI8br7RaTOucpi4VoLxcPcTnoLZq2KVaFxB7xunlvhZkxOVgw8Z+DB7yklic
+	xzkZ73zx0mj3mI6wztbLGqWFaqAftNUqX17BMGYaQlARWLj35CXw4FF/62k4JeFjll9zbDs6Okh
+	sWHB4TxDP2rrTnRgK+cztx1TiNsAnPhPNd7eW5AEBqpew/voFISP0aDoSWUXYnyRLwK+vzriRxy
+	tuBlw7DYNz5fq1/OBFatJ9om5C0g1oN8Gczr4C4L1590iPaPt2Yue06VgGfMKmDTKHoGgcT6IQt
+	JS7QPg4eliays0TIBampzNQR7XHbms5I+FitVO+1qgvy2LWEuO8qsrWuBeUBtvwiIxFQC6opmH
+X-Google-Smtp-Source: AGHT+IGpJsA054j4ViTtI38jqwpBxx4LnXSeC5cZfa9rXdhBelszsgUGjl8r93/Fsuxn/l+FZEUG2g==
+X-Received: by 2002:a17:90b:2f48:b0:330:bca5:13d9 with SMTP id 98e67ed59e1d1-3408309ae43mr14629306a91.32.1762177242379;
+        Mon, 03 Nov 2025 05:40:42 -0800 (PST)
+Received: from ?IPV6:2409:8a00:79b4:1a90:5d7b:82d2:2626:164a? ([2409:8a00:79b4:1a90:5d7b:82d2:2626:164a])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3407ef4c263sm5374195a91.3.2025.11.03.05.40.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 03 Nov 2025 05:40:42 -0800 (PST)
+Message-ID: <07ab7f80-889e-4a28-adf9-12fc038bdc27@gmail.com>
+Date: Mon, 3 Nov 2025 21:40:18 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] fix missing sb_min_blocksize() return value checks in
+ some filesystems
+To: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+ Yongpeng Yang <yangyongpeng.storage@gmail.com>
+Cc: Namjae Jeon <linkinjeon@kernel.org>, Sungjong Seo
+ <sj1557.seo@samsung.com>, Jan Kara <jack@suse.cz>,
+ Carlos Maiolino <cem@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Sasha Levin <sashal@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>,
+ Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+ stable@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
+ "Darrick J . Wong" <djwong@kernel.org>,
+ Yongpeng Yang <yangyongpeng@xiaomi.com>
+References: <20251102163835.6533-2-yangyongpeng.storage@gmail.com>
+ <87cy60idr2.fsf@mail.parknet.co.jp>
+Content-Language: en-US
+From: Yongpeng Yang <yangyongpeng.storage@gmail.com>
+In-Reply-To: <87cy60idr2.fsf@mail.parknet.co.jp>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Modify xfs_mount_zones() to replace the call to blkdev_report_zones()
-with blkdev_report_zones_cached() to speed-up mount operations.
+On 11/3/2025 12:46 AM, OGAWA Hirofumi wrote:
+> Yongpeng Yang <yangyongpeng.storage@gmail.com> writes:
+> 
+>> diff --git a/fs/fat/inode.c b/fs/fat/inode.c
+>> index 9648ed097816..d22eec4f17b2 100644
+>> --- a/fs/fat/inode.c
+>> +++ b/fs/fat/inode.c
+>> @@ -1535,7 +1535,7 @@ int fat_fill_super(struct super_block *sb, struct fs_context *fc,
+>>   		   void (*setup)(struct super_block *))
+>>   {
+>>   	struct fat_mount_options *opts = fc->fs_private;
+>> -	int silent = fc->sb_flags & SB_SILENT;
+>> +	int silent = fc->sb_flags & SB_SILENT, blocksize;
+>>   	struct inode *root_inode = NULL, *fat_inode = NULL;
+>>   	struct inode *fsinfo_inode = NULL;
+>>   	struct buffer_head *bh;
+>> @@ -1595,8 +1595,13 @@ int fat_fill_super(struct super_block *sb, struct fs_context *fc,
+>>   
+>>   	setup(sb); /* flavour-specific stuff that needs options */
+>>   
+>> +	error = -EINVAL;
+>> +	blocksize = sb_min_blocksize(sb, 512);
+>> +	if (!blocksize) {
+> 
+> 	if (!sb_min_blocksize(sb, 512)) {
+> 
+> Looks like this one is enough?
+> 
 
-With this change, mounting a freshly formatted large capacity (30 TB)
-SMR HDD completes under 2s compared to over 4.7s before.
+Thanks for the review. Yes, blocksize doesn't serve any other purpose. 
+I'll remove it in v2.
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_zone_alloc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yongpeng,
 
-diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
-index 23cdab4515bb..8d819bc134cd 100644
---- a/fs/xfs/xfs_zone_alloc.c
-+++ b/fs/xfs/xfs_zone_alloc.c
-@@ -1231,7 +1231,7 @@ xfs_mount_zones(
- 	trace_xfs_zones_mount(mp);
- 
- 	if (bdev_is_zoned(bt->bt_bdev)) {
--		error = blkdev_report_zones(bt->bt_bdev,
-+		error = blkdev_report_zones_cached(bt->bt_bdev,
- 				XFS_FSB_TO_BB(mp, mp->m_sb.sb_rtstart),
- 				mp->m_sb.sb_rgcount, xfs_get_zone_info_cb, &iz);
- 		if (error < 0)
--- 
-2.51.0
+>> +		fat_msg(sb, KERN_ERR, "unable to set blocksize");
+>> +		goto out_fail;
+>> +	}
 
