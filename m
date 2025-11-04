@@ -1,99 +1,145 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 775CE2EFDA2;
-	Tue,  4 Nov 2025 21:29:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32DA52D0602
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 22:25:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762291795; cv=none; b=KJZVm1C44l+Q0l0UwpQVUI+d2u67pFqX9ug8plPM75PakFLbwxh6hMr15NIDdfCi69CVc0b9cu7TyzdpZv/xHG/ep58h89Ftg1N0pCqEm4sJ4pmF5/T3XXoWsELgvO50aIcJF04y2LSKPofUSKegsemGrsavvt66OAfZ2HKVgSo=
+	t=1762295118; cv=none; b=NfGej1+2uVWyl7PiKwHxekTd8eaCkR3tUsjxncEEXfMsvf+UM6XnqiH7ldHbYae5F47v0+emQ+2oytH5We5DKgfkBWasvc+lJ5zdvAdknECMnGBDKrL4G5dUVg0K1E44TyjlLHUlh6a9uy2nWpFnMt8VXk05SRkTSdQF04p6A7s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762291795; c=relaxed/simple;
-	bh=mrRpMfTe3Bep9D/fnxQr/mofWMHONG4SnKlqpOiGoBo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DlgOo3ZsuTm7hNP2+EP7+TR2d8UBjxnFUiw37/8f/oQ60eOBGPGzOfduZSrEJS+nA9Zn3LIKHNSUcGRrQkBx9rHyzuQmt7+Y/q3IzyyfA8j+0xEPJD3fMqBt/AH+09KaWRCBweB/X+IlNVac5xu+BpElvRmbwN+ijYfOEI46AU4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gT9vl5y3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762295118; c=relaxed/simple;
+	bh=p5l80dcXkcCAE0vnEVTmS/nMycqEBzI3Y9/zXt56fYo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nwjHjgbHmCYDBRTQn2A9+5E+lLJzu2f80ikPtVPDREbd9XbLYjuOcz8gfoJiZ/pvS9fgxddJ6xapiF3eB6GMqKr2fOFm1UzFqAurp9OAnm5eBxeWsg4kZL12GIqkB5thXzcpZGqcT30DnUx3GB5p4uC1ssKUnZ6rXWFgNYBE+B4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=EpFKCUaC; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gT9vl5y3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21400C4CEF7;
-	Tue,  4 Nov 2025 21:29:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762291795;
-	bh=mrRpMfTe3Bep9D/fnxQr/mofWMHONG4SnKlqpOiGoBo=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=gT9vl5y3uqGwa/ed4zRxOEeOJcCsbQBOBpsqmYR+IEIbeEKW+IuJ7C4Mg1WIXMf1V
-	 wbmwn5WsMpBte85oSkZU2msvXY7hg4TB2mDXhx+HKGCfb4U/yAOcIMrRQR7jH7jfnm
-	 /+u5gPay55lL1cwcWX0S8qj1H1KI7kIOgx1jU/yHDaS78f//cNtSkYe13tyg0fW48p
-	 QzOZe/98qSRyvcQ66D/E5b3eXO2pYuhXjBaBaC1dhgwwPM2wrxXjpo1FyHURRrIk8f
-	 QgVv6am5G0p0ClqHrX9RMDGXH0e1su8g6kdI1fG79eSl5SXva1us33DUS1LjrojzGk
-	 tkqwpKYYKjEFQ==
-Message-ID: <0a04e68d-5b2a-4f0b-8051-60a0b7381d17@kernel.org>
-Date: Wed, 5 Nov 2025 06:29:50 +0900
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="EpFKCUaC"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-77f67ba775aso7432870b3a.3
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Nov 2025 14:25:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1762295116; x=1762899916; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=mfVo0ghaSwYUhQpSVBTKd6jfQxJ/5xLzr1dNo6E0CE0=;
+        b=EpFKCUaCnKiRcmcZ8qYLl7rU4LAcph0TdGfcoER+Z0CRLMCZUqoU6GwW83va5mp23Y
+         dUlqjN4U1SaG9IS/S/VzFGRSaeUwmIv4HC1Hu1RwcMMEDG7vv5MxLY4buTzZVuXf94PI
+         4o93CsIzYh12mYWBdWeS/WK1LNh0/+LLq68AkGl2FnUdZWzn1f/aNaMM41pklX+TDfkW
+         5y8Fh8i8soyHvWxVJFqmJ94WHLc/DW2sQyULidyds/ekrMC5TnMcJVTmWTIdGepxEfs4
+         +vDWeKaa63ITCl0yKAYQlqyYF4t3z4Cuz8kOdENGqneCyzZXZ7Kpd7iAUYlKh7DQ5Dap
+         gqCg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762295116; x=1762899916;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mfVo0ghaSwYUhQpSVBTKd6jfQxJ/5xLzr1dNo6E0CE0=;
+        b=K+A8GGn9isjMRsOgTAGjAqEc2dRxEBGHO9wkbnIlVIUb+vQw1GCAQsP1HKTJycKOKe
+         tHHwwwnLvDiWG0utKQxX0wee/sWrQ4IlFW2LzmWdavEVTx+x9foIUjEZZqm94WWwOaWI
+         pvM9LT5AW5SlUEVvbveSHKanqmd8EwUJOT24pGxjfsYWU2dfWrBV94ZP8R0J+LqI0RvD
+         dG0iEonUqcUzBeWHD8PvPG48CgWSwqU7P9frZxWVs77UcPAldh0qu7gPnIU/neciq7NL
+         iFGBtaNzZxdlrok9D1S87bk7/Hm0WE2FMYtLZH5bKu8I/GaYcUjQndoNgzIIPDwB6QnE
+         HQrQ==
+X-Gm-Message-State: AOJu0YxIJRNSjGNCfLG3NLqDX7llWICdMMZiaosQzqnaL6F0YZkw4/+P
+	d0OY5VE4okZbpdignIipfUxBuz67hUbiTMLF4/UcOx2GTG2rSCc/pbtP8ZOAxQhxjYM=
+X-Gm-Gg: ASbGncvMpwK1Cok0O/MS5AlwCqHe6v84qg2xPnxRNQLbhaHfrTISijJgZTgV7/zjUZU
+	yA2j9DIsttjjKeYrdRLWAQ6TwgssLQQaq8gDTCI9X1/cuxqmMvaLNjUpDDZ1QTWgNS9U7qKBxMN
+	usS+RRGatSBoXTlXAVdnpOhqZkXupR+H6ZOQKTMPMLm2soDHTh/W7rOq08eli19fhKRcVvmvf4b
+	whWo8lZIfnjUE78YnyZcfwsrxgQSErjJVoRGSP2QXRYqsOrPS+UW+QxirJnbs8lngv/2/h+3fik
+	MMPk/TRcyPvI7/ZeZEYbziCwLAsJMrVuKcIguHRICIsWzUDyUotonU253iypuM3Psqktw31EsfC
+	z1gYL9Woe2NvykMyeNMomYFIkfVqfbDh54Vj9qDu5WhcBzC6OtBIVntcccyyNaKPFFaiF7eRBDl
+	Gy73A7k1Lge37GwskxZAsxg+QqK5OqVzA3CVybBk0YE6tCH3ECR3nhTSvOOb/WmA==
+X-Google-Smtp-Source: AGHT+IEMSn9BWbkIBOxsYUwxKzHgUsv59VV4FRGeVBsOTu/YzTxRUlpu9CVpwX1UWfniKOU5MASN3w==
+X-Received: by 2002:a05:6a00:ccf:b0:7ab:8583:9cc7 with SMTP id d2e1a72fcca58-7ae1ed9fadamr1142095b3a.16.1762295116134;
+        Tue, 04 Nov 2025 14:25:16 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-58-136.pa.nsw.optusnet.com.au. [49.181.58.136])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7acd382ad96sm4113517b3a.22.2025.11.04.14.25.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 04 Nov 2025 14:25:15 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1vGPSi-00000006TiP-37Uf;
+	Wed, 05 Nov 2025 09:25:12 +1100
+Date: Wed, 5 Nov 2025 09:25:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: transaction assertion failure in next-20251103
+Message-ID: <aQp9SM38XmXBEipd@dread.disaster.area>
+References: <aQohjfEFmU8lef6M@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 3/5] isofs: check the return value of
- sb_min_blocksize() in isofs_fill_super
-To: Yongpeng Yang <yangyongpeng.storage@gmail.com>,
- Namjae Jeon <linkinjeon@kernel.org>, Sungjong Seo <sj1557.seo@samsung.com>,
- OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, Jan Kara <jack@suse.cz>,
- Carlos Maiolino <cem@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Sasha Levin <sashal@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-block@vger.kernel.org, stable@vger.kernel.org,
- Matthew Wilcox <willy@infradead.org>, "Darrick J . Wong"
- <djwong@kernel.org>, Yongpeng Yang <yangyongpeng@xiaomi.com>,
- Christoph Hellwig <hch@lst.de>
-References: <20251104125009.2111925-2-yangyongpeng.storage@gmail.com>
- <20251104125009.2111925-4-yangyongpeng.storage@gmail.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20251104125009.2111925-4-yangyongpeng.storage@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aQohjfEFmU8lef6M@casper.infradead.org>
 
-On 11/4/25 21:50, Yongpeng Yang wrote:
-> From: Yongpeng Yang <yangyongpeng@xiaomi.com>
+On Tue, Nov 04, 2025 at 03:53:49PM +0000, Matthew Wilcox wrote:
+> Two runs of xfstests, two assertion failures.  One while running
+> generic/083, one while running generic/561.
 > 
-> sb_min_blocksize() may return 0. Check its return value to avoid
-> opt->blocksize and sb->s_blocksize is 0.
+> Here's the g/561 failure:
 > 
-> Cc: <stable@vger.kernel.org> # v6.15
-> Fixes: 1b17a46c9243e9 ("isofs: convert isofs to use the new mount API")
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Yongpeng Yang <yangyongpeng@xiaomi.com>
-> ---
->  fs/isofs/inode.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/fs/isofs/inode.c b/fs/isofs/inode.c
-> index 6f0e6b19383c..ad3143d4066b 100644
-> --- a/fs/isofs/inode.c
-> +++ b/fs/isofs/inode.c
-> @@ -610,6 +610,11 @@ static int isofs_fill_super(struct super_block *s, struct fs_context *fc)
->  		goto out_freesbi;
->  	}
->  	opt->blocksize = sb_min_blocksize(s, opt->blocksize);
-> +	if (!opt->blocksize) {
-> +		printk(KERN_ERR
-> +		       "ISOFS: unable to set blocksize\n");
+> generic/561       run fstests generic/561 at 2025-11-03 22:20:18
+.....
+> XFS (vdc): Corruption of in-memory data (0x8) detected at xfs_trans_mod_sb+0x2a4/0x310 (fs/xfs/xfs_trans.c:353).  Shutting down filesystem.
+> XFS (vdc): Please unmount the filesystem and rectify the problem(s)
+> XFS: Assertion failed: tp->t_blk_res >= tp->t_blk_res_used, file: fs/xfs/xfs_trans.c, line: 120
+....
+>  xfs_trans_dup+0x258/0x270
+>  xfs_trans_roll+0x48/0x120
+>  xfs_defer_trans_roll+0x5f/0x1a0
+>  xfs_defer_finish_noroll+0x3d5/0x5d0
+>  xfs_trans_commit+0x4e/0x70
+>  xfs_iomap_write_unwritten+0xe5/0x350
 
-Nit: using pr_err() maybe better here ? Not sure what isofs prefers.
+So we have a block reservation for a double split of the BMBT
+(which technically cannot happen for a double adjacent record
+insert) yet we apparently exhausted the entire block allocation.
 
-> +		goto out_freesbi;
-> +	}
->  
->  	sbi->s_high_sierra = 0; /* default is iso9660 */
->  	sbi->s_session = opt->session;
+Thing is, modifications to tp->t_blk_res_used can only be done
+through xfs_trans_mod_sb() during the transaction, which
+does:
 
+        case XFS_TRANS_SB_FDBLOCKS:
+                /*
+                 * Track the number of blocks allocated in the transaction.
+                 * Make sure it does not exceed the number reserved. If so,
+                 * shutdown as this can lead to accounting inconsistency.
+                 */
+                if (delta < 0) {
+                        tp->t_blk_res_used += (uint)-delta;
+                        if (tp->t_blk_res_used > tp->t_blk_res)
+                                xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE); 
 
+Which will shut down the filesystem the moment a block allocation
+overrun occurs. This should happen long before we get to the
+transaction commit code...
+
+IOWs, the internal runtime transaction accounting check whenever
+tp->t_blk_res_used is updated passed just fine, but it was then
+detected as broken a short time later at transaction commit time.
+
+This implies something external modified either tp->t_blk_res or
+tp->t_blk_res_used between the last time it was modified by the
+filesystem and when it bounds checked and when the transaction was
+committed and rolled.
+
+This, to me, smells of external memory corruption, not an XFS bug...
+
+> CPU: 3 UID: 0 PID: 338999 Comm: kworker/3:12 Not tainted 6.18.0-rc4-next-2025110
+
+... and you are testing on a -next kernel, so it's entirely possible
+that there is newly introduced memory corruption bug somewhere
+outside of XFS.
+
+Can you reproduce this on a vanilla v6.18-rc4 kernel?
+
+-Dave.
 -- 
-Damien Le Moal
-Western Digital Research
+Dave Chinner
+david@fromorbit.com
