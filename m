@@ -1,52 +1,34 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4A352D29C7;
-	Tue,  4 Nov 2025 15:42:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 760111E9B37;
+	Tue,  4 Nov 2025 15:52:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762270930; cv=none; b=li6bvxkaHGoOwY9DVQwGybr5qKjkcRjh3SruDcLccsaJLdn7ANkkrqfvZ2lmrkEp7hXU/+OyVasBVPH6MazCrPsxOZTR7Slnmnpp/tA7aLEBMtQdxK9EHmyVY6Snv08oDMrMMyRGktkDgW2txDDNRT+LonGS6lIzS+U1nvUjTpE=
+	t=1762271540; cv=none; b=QDgzwcbE4J6v+nqclj/wrI4ISBx34LN7/B+SU20DLz0YtldU0VOI0fojLp6sNLIICwjWzWgh+Y0BSjAicuy1bYg5mW5As2OFT4Dbx3bZ74uZjZR+9Q5XCYLXA8eLlZSjdqd/GMuOqpUM8BSzBUuX12/mlpac8BGzWbaATI0mfp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762270930; c=relaxed/simple;
-	bh=zn1m5Yrbru0NFZYJtkCvLKEy/K3uEFrJ9Xpgegcq+/U=;
+	s=arc-20240116; t=1762271540; c=relaxed/simple;
+	bh=XsEhg04RWKTgiB4cYbeNQOOYIBfy6/5/afqsKR1Hpqo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HI2k6K+ZopNZbXyln+tdjR7voVrPd+y14KYuVxNWOzwWRz4TLxYBW3hQ5THgo3f2J70uB/IvGDLLqkWP/lkRiHJ/kkhlQGQJcIRO7A5WmxxtX3oxhkCWCl/Kq+HwThbRFZ151fvnC8oB9Qtyw61yrsJ+fE6rHdcAbU8koWxSxbc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oocAw9TR; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oocAw9TR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67AAFC4CEF7;
-	Tue,  4 Nov 2025 15:42:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762270930;
-	bh=zn1m5Yrbru0NFZYJtkCvLKEy/K3uEFrJ9Xpgegcq+/U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oocAw9TRzbKZDGx0kb70RwQtL6Cv5s5WstpdVwwAxl8sGO1daWPCUwBylVcnrmssZ
-	 a9neZiXhrdkGWZKbWBgN3nGMQtKI7w1qPnuD5hu6I2a2C0OOz2fCHcATvHspzu+uLt
-	 XaQo0TYXFkHWYlahZKXrJKnjuyyBRE8px0CRl68UM3qnbsUEoX8iqjr1rRra9Xw0i6
-	 KBEJ7nL702821ndOZRFYjXE8li5Syc5TdZgYo+A8BAwJC/sMKYak8mVQFI/vtf0Tlz
-	 tZc21Roa9XpYz54cqfBEPpTWeaSucVf9bcQU5WGwblGAEzSPsnGFyPLtPgg103bhV4
-	 aa7bOSfo+KA6g==
-Date: Tue, 4 Nov 2025 07:42:09 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Yongpeng Yang <yangyongpeng.storage@gmail.com>
-Cc: Namjae Jeon <linkinjeon@kernel.org>,
-	Sungjong Seo <sj1557.seo@samsung.com>,
-	OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-	Jan Kara <jack@suse.cz>, Carlos Maiolino <cem@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Sasha Levin <sashal@kernel.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-	stable@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
-	Yongpeng Yang <yangyongpeng@xiaomi.com>
-Subject: Re: [PATCH v4 4/5] xfs: check the return value of sb_min_blocksize()
- in xfs_fs_fill_super
-Message-ID: <20251104154209.GA196362@frogsfrogsfrogs>
-References: <20251103163617.151045-2-yangyongpeng.storage@gmail.com>
- <20251103163617.151045-5-yangyongpeng.storage@gmail.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=JajaPVIo7/SPkO+qpm3DUj0MGdsPR4RAi7XnxkJ2ivE+3mi3XGmM1hWSZHNxen3rPa/o2wPfsptY3HP5RSxaq1HtL6vNraWfjRKplDm1L5/vPWZXRXGqkRqQ8DtZiGX0Ij4VDY8z87tMycgygPxw52BxA/0kwfam8ED5P1BS1cE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 69E29227A87; Tue,  4 Nov 2025 16:52:13 +0100 (CET)
+Date: Tue, 4 Nov 2025 16:52:13 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+	linux-block@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs: use IOCB_DONTCACHE when falling back to
+ buffered writes
+Message-ID: <20251104155213.GA651@lst.de>
+References: <20251029071537.1127397-1-hch@lst.de> <20251029071537.1127397-4-hch@lst.de> <a162ddcbd8c73adf43c7c64179db06ce60b087d6.camel@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -55,49 +37,31 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251103163617.151045-5-yangyongpeng.storage@gmail.com>
+In-Reply-To: <a162ddcbd8c73adf43c7c64179db06ce60b087d6.camel@gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Nov 04, 2025 at 12:36:17AM +0800, Yongpeng Yang wrote:
-> From: Yongpeng Yang <yangyongpeng@xiaomi.com>
-> 
-> sb_min_blocksize() may return 0. Check its return value to avoid the
-> filesystem super block when sb->s_blocksize is 0.
-> 
-> Cc: <stable@vger.kernel.org> # v6.15
-> Fixes: a64e5a596067bd ("bdev: add back PAGE_SIZE block size validation
-> for sb_set_blocksize()")
+On Tue, Nov 04, 2025 at 06:03:35PM +0530, Nirjhar Roy (IBM) wrote:
+> > Doing sub-block direct writes to COW inodes is not supported by XFS,
+> > because new blocks need to be allocated as a whole.  Such writes
+>
+> Okay, since allocation of new blocks involves whole lot of metatdata
+> updates/transactions etc and that would consume a lot of time and in
+> this large window the user buffer(for direct I/O) can be re-used/freed
+> which would cause corruptions?
 
-Odd line wrapping, does this actually work with $stablemaintainer
-scripts?
+I don't understand what you're trying to say here.
 
-> Signed-off-by: Yongpeng Yang <yangyongpeng@xiaomi.com>
+> Just thinking out loud: What if we supported sub-block direct IO in XFS
+> and indeed allocated new blocks+ update the metadata structures and then
+> directly write the user data to the newly allocated blocks instead of
+> using the page cache?
+>
+> Assuming the application doesn't modify the user data buffer - can we
+> (at least theoritically) do such kind of sub-block DIO?
 
-Otherwise looks fine to me
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+Regular XFS does that.  Zoned XFS or the always COW debug mode can't do
+that (except maybe for appends) as it it requires a read-modify-write
+cycle that is not implemented in iomap.  Yes, we could implement that,
+but it's not going to perform any better than the fallback, and would
+also require full serialization.
 
---D
-
-> ---
->  fs/xfs/xfs_super.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 1067ebb3b001..bc71aa9dcee8 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1693,7 +1693,10 @@ xfs_fs_fill_super(
->  	if (error)
->  		return error;
->  
-> -	sb_min_blocksize(sb, BBSIZE);
-> +	if (!sb_min_blocksize(sb, BBSIZE)) {
-> +		xfs_err(mp, "unable to set blocksize");
-> +		return -EINVAL;
-> +	}
->  	sb->s_xattr = xfs_xattr_handlers;
->  	sb->s_export_op = &xfs_export_operations;
->  #ifdef CONFIG_XFS_QUOTA
-> -- 
-> 2.43.0
-> 
-> 
