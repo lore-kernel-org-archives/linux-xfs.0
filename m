@@ -1,81 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72394347FDC
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 23:39:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0313B347FF3
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 23:40:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762299571; cv=none; b=UxOCbT9ucgooiI4l/dsoYzgZuMKadfUPY++Gemtnlp6ZWTmezSuxSx55tXv2H7T95O4X0SeV3cNncdr9hyTOUKblDftehQqQp0nOjkwU2KJXfO6zPkT1dtLGSde+S/08Xm1OY1l66whQ+g4mPoXLEx7ELt7HsGZneAB9JWGHQco=
+	t=1762299610; cv=none; b=IyODe5eJaKNx7s6ccG/VikKuUgcHLn4neesXMkoeXcXG4QTU02mqxADZyyrypvLdN0UX+P98nI32B6ehgF5jaEQKMOJRRnsQ89OJvbgrPa/xmqoRKUDwVztQE1Uzi4PKOJJTVCJhFNC8kg3LPuFvTU8rfj/zqYTB4BmiYRgVpm0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762299571; c=relaxed/simple;
-	bh=QFGOFIN5sZk+/T2KDcDYbudaVi5Gh2Nbc8e6BIIb5BI=;
+	s=arc-20240116; t=1762299610; c=relaxed/simple;
+	bh=zFuXE3mJ9p5xhmjjIpZKEjcC94xxumzUntqQlEQrOsU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u5qi5WDE10/DPoeMYhjZ+reaa1ijeMpjgW55prh20NOB6sauh4IqfONNv0dK0nYIeJV1p/Bx3bRLUO1ks/+MGJ5XamDfKZjNmwH50h711P+h83iD2RXphKSVGonrwlsNfrLEIlmuP8wc6Z0aJOaon6oN+tpW0RgcaBTNcCIuPdU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pFot7Hgg; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Hl/ScJMHYFE18+BZDZ4Mq1KlWysxXMpEH3amPQ93Va7wA27entVmJvxj+vIrl1aeW7uoLVce+yF/5zopxSYKN81zm7yfKb7bDky/v6geeHBZi3aN4rOXRjKLKy2ZJwf3+OQWngk3DLCAKxZN5sBJz84b1VNWFHC8cYX0bZIxlY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V4PVtr6G; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pFot7Hgg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C07BC4CEF8;
-	Tue,  4 Nov 2025 23:39:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V4PVtr6G"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF5E2C4CEF7;
+	Tue,  4 Nov 2025 23:40:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762299571;
-	bh=QFGOFIN5sZk+/T2KDcDYbudaVi5Gh2Nbc8e6BIIb5BI=;
+	s=k20201202; t=1762299609;
+	bh=zFuXE3mJ9p5xhmjjIpZKEjcC94xxumzUntqQlEQrOsU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pFot7HggXovLhd8eGZpwJTVzdW3Ec/c/ZaPRa7rMxix0BZlQG08c1POxT9YKJyYp1
-	 AUBh2j6CqqXd5altSykRU6h8R+Ua0KDl5M83rN4//+xwLrRt+4d1x63V4nqGbmpRPY
-	 KXkYv7yKGRdtOmaNLT3FKHrF6OED8XCt/nLuG72l2QOZZyGIcNtl9FGG6uNUZp0HZd
-	 elPWmQ6u6YVtTJ/HXZ3w4NA1zNe924LSbns9yn1U2vrGu8WE7O5KsNNKyPtzywMJYU
-	 mAVJn2QyhPPakAihdf4HYnkmmvNtEC5zLE6Xd0BiATVblSKXzyeGfQDqmNQnPWQEWa
-	 wYwAa53xfR7Nw==
-Date: Tue, 4 Nov 2025 15:39:30 -0800
+	b=V4PVtr6G1agsHMGXhVdW4xohCRhKHvy/2Tiiy8wZ87xt3HeYj8BIdVpnquGqGynsj
+	 Azo+wgP2/2fx5xmXZ965R8HH61sGGSvUcXTRssc2x8cLiXKMBsAsAK7VbZORX0ci35
+	 gZtcxCUo6uuev2vlrlr30B2fi8YiL2W60FcSHMcrDtp3/F+mmsPEPdBWQJkV7DZNQr
+	 kRQFsVFZkCMq/ZIL3ixoF38rDC/Ct3CER7xyKzTsiIUq6ntYxLUDoUf/sFpZsNbmSP
+	 0j8sxVzFU2DrCeRM32ii/0qrVaybbirBAPE3E15Z7myit2yzsuoJ7w+4dwdktFWRkD
+	 PDuhxKT44jkMQ==
+Date: Tue, 4 Nov 2025 15:40:09 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/10] xfs: set lv_bytes in xlog_write_one_vec
-Message-ID: <20251104233930.GP196370@frogsfrogsfrogs>
+Subject: Re: [PATCH 07/10] xfs: improve the calling convention for the
+ xlog_write helpers
+Message-ID: <20251104234009.GQ196370@frogsfrogsfrogs>
 References: <20251030144946.1372887-1-hch@lst.de>
- <20251030144946.1372887-3-hch@lst.de>
- <20251101000409.GR3356773@frogsfrogsfrogs>
- <20251103104318.GA9158@lst.de>
+ <20251030144946.1372887-8-hch@lst.de>
+ <20251101032632.GV3356773@frogsfrogsfrogs>
+ <20251103104658.GB9158@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20251103104318.GA9158@lst.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251103104658.GB9158@lst.de>
 
-On Mon, Nov 03, 2025 at 11:43:19AM +0100, Christoph Hellwig wrote:
-> On Fri, Oct 31, 2025 at 05:04:09PM -0700, Darrick J. Wong wrote:
-> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > > index ed83a0e3578e..382c55f4d8d2 100644
-> > > --- a/fs/xfs/xfs_log.c
-> > > +++ b/fs/xfs/xfs_log.c
-> > > @@ -858,14 +858,15 @@ xlog_write_one_vec(
-> > >  	struct xfs_log_vec	lv = {
-> > >  		.lv_niovecs	= 1,
-> > >  		.lv_iovecp	= reg,
-> > > +		.lv_bytes	= reg->i_len,
+On Mon, Nov 03, 2025 at 11:46:58AM +0100, Christoph Hellwig wrote:
+> On Fri, Oct 31, 2025 at 08:26:32PM -0700, Darrick J. Wong wrote:
+> > > $ size fs/xfs/xfs_log.o*
+> > >    text	   data	    bss	    dec	    hex	filename
+> > >   26330	   1292	      8	  27630	   6bee	fs/xfs/xfs_log.o
+> > >   26158	   1292	      8	  27458	   6b42	fs/xfs/xfs_log.o.old
 > > 
-> > I'm surprised that nothing's noticed the zero lv_bytes, but I guess
-> > unmount and commit record writes have always wanted a full write anyway?
-> > 
-> > Question: if lv_bytes is no longer zero, can this fall into the
-> > xlog_write_partial branch?
+> > Um... assuming xfs_log.o is the post-patch object file, this shows the
+> > text size going up by 172 bytes, right?
 > 
-> The unmount format is smaller than an opheader, so we won't split it
-> because of that, but unless I'm misreading things it could fix a bug
-> where we'd not get a new iclog when needed for it otherwise?
+> That one does.  I was pretty sure it was the other way around, so І
+> re-run this with the current tree:
+> 
+> $ size fs/xfs/xfs_log.o*
+>    text	   data	    bss	    dec	    hex	filename
+>   29300	   1730	    176	  31206	   79e6	fs/xfs/xfs_log.o
+>   29160	   1730	    176	  31066	   795a	fs/xfs/xfs_log.o.old
+> 
+> but yes, this grows the text size somewhat unexpectedly.
+> 
+> I still like the new code, but I guess this now counts as a pessimization :(
 
-Yeah, I think that's theoretically possible.  I wonder what that would
-look like to generic/388 though?  I haven't seen any problems with log
-recovery for a while other than the large xattr thing, so maybe it's not
-worth worrying about.
-
-> The commit record is just an an opheader without any payload, so there
-> is no way to even split it in theory.
-
-<nod>
+"Cleaning up the method signatures is worth 140 bytes" :)
 
 --D
