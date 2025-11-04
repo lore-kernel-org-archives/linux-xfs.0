@@ -1,40 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 293CF2FD69E
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 22:48:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C95F347BBC;
+	Tue,  4 Nov 2025 23:38:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762296489; cv=none; b=rBHr95h+fEz9jBJ1EQA7JHjUWTqPjni7KZp+uM6o/Fty6Ghhef1KW5HCLhTA0zf1Bh7mLkDI4tIm+JwU8f+CIC9pDjy2K+qQt6YMAVSKihQirqZJ7hV5ukfwEqXYBCvCqq7S8I9hyg+cGHGDPTdIufoB2eYEyElUGIAh8JKegPA=
+	t=1762299505; cv=none; b=kA+7nTohmKNxNsqchywktUOa/w9YYReN13EVZa4qVfODEiOCl/eOXXv1YWovzlLvzd/AhNdyslGJoUjlRsMj6jrsxm9FLRfZ/rjfsCfPTSh9MahoTtMWMJMKW6sSHawblpzzXztye5rtK56Y6KvploZ4LGFHYDjlgr8X4XpIyp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762296489; c=relaxed/simple;
-	bh=qzgNQDYWei/T0rS9YSZD7w6Y7zN0QsPqbmyu/c0a50A=;
+	s=arc-20240116; t=1762299505; c=relaxed/simple;
+	bh=tJcYkVr7LDCJ3MMs5R6illjOG3OtSdYUQ0177dtNWZI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M6tdjcDyK5HMb/xr1aa3IqoonTCmwRgXYXu6Ijp0Ck5oCNfazp1ovQtJBCBzoT/IoZ8tFNdG2EylZk+KA3MH3nepS90+3RoiIy6S/w3ugiU6tIj3f1iQXfdVkyyqpuPcbBtUzo8Lyq8qsPYT+Jzgoc5xSz2el/C0cih75Vdg4bg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E5AJU9v3; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Oi1Ey9ywAnYcdKFZrEVWFT2Hulod0v7LjrEJyzPBLSm7TCZNQCGWTc7lcY90gI+t/sUgTH2ZiB6BpniUERphS/MvkWyB8nCgfUQmmtXwX7ER+Sdc742RM0aAofCK4r5WTrXaZwRsRyBfd3tJwy2zoBKjUqpEoxHFfp6e3dzMe7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bf69R+tQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E5AJU9v3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CCD2C4CEF7;
-	Tue,  4 Nov 2025 22:48:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bf69R+tQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A562CC4CEF7;
+	Tue,  4 Nov 2025 23:38:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762296487;
-	bh=qzgNQDYWei/T0rS9YSZD7w6Y7zN0QsPqbmyu/c0a50A=;
+	s=k20201202; t=1762299504;
+	bh=tJcYkVr7LDCJ3MMs5R6illjOG3OtSdYUQ0177dtNWZI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=E5AJU9v3AuYiJ4SJNqjvJQDWzEuDH78EH+JuHOaB7tmCvZQAmA5BW8uJSJaMZXplN
-	 ha8l6naARV8TZyWuOwpRV8WlXHBjLR0r7hY9T4AMj8w8xnKAtSZa3cQpuhBlaTenek
-	 JloAEWPjAtn+P2xtPevc7701OoYtL8T43MG2GCF5MKi8uAYyCAK78juI3B55UCwK5o
-	 a/0QSgBDrIUDMgAHUPpkHY7ZSHyHKhaS+tYXFKTOxwAVIokXMw4ElGtpufCxU08xWl
-	 d1sTbdOyQVbqWxG5MT4eJ6sibfKPSzkBIyIvPPfawc/KvCt/gNNG9cOuEVYl+2yTHP
-	 UewWjr8Xnq8Tw==
-Date: Tue, 4 Nov 2025 14:48:06 -0800
+	b=bf69R+tQbvoJJc0RLl9XP2yy03u+QbW76n0pXCeLTt4k21stSTQLGIfFCFkPgQ8wr
+	 xjByoqA7J03Ezw4oQ1gFjVlemtqgC8X3ekeY0ngiO18CkRnq0BgNr3724p7SawDRr0
+	 pINZzgqhVjY6vAX/P3BQ0wl/7Wv4mqE1hkELAV28qBDh2jF4epW7BBQlUUQfoHP4St
+	 CVldaiJhf4RI9Tv1aX4GuHvO+D5PYMfIKw47sXuEDYcshMVEmDtC/Tdy8fe60aAzXq
+	 KxEjpkZqFI8xy2BPoIR031tGqioAaBazMmRW297lx8gZnlJJLgSqbRBK/EyrVPDmNM
+	 v8cLinDTB4/Cg==
+Date: Tue, 4 Nov 2025 15:38:24 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: aalbersh@kernel.org
-Cc: linux-xfs@vger.kernel.org, Neal Gompa <neal@gompa.dev>
-Subject: Re: [PATCHSET V2 2/2] xfsprogs: autonomous self healing of
- filesystems in Rust
-Message-ID: <20251104224806.GN196370@frogsfrogsfrogs>
-References: <20251022235646.GO3356773@frogsfrogsfrogs>
- <176117748158.1029045.18328755324893036160.stgit@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, Keith Busch <kbusch@kernel.org>,
+	Dave Chinner <david@fromorbit.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Christian Brauner <brauner@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+	linux-block@vger.kernel.org
+Subject: Re: fall back from direct to buffered I/O when stable writes are
+ required
+Message-ID: <20251104233824.GO196370@frogsfrogsfrogs>
+References: <20251029071537.1127397-1-hch@lst.de>
+ <aQNJ4iQ8vOiBQEW2@dread.disaster.area>
+ <20251030143324.GA31550@lst.de>
+ <aQPyVtkvTg4W1nyz@dread.disaster.area>
+ <20251031130050.GA15719@lst.de>
+ <aQTcb-0VtWLx6ghD@kbusch-mbp>
+ <20251031164701.GA27481@lst.de>
+ <kpk2od2fuqofdoneqse2l3gvn7wbqx3y4vckmnvl6gc2jcaw4m@hsxqmxshckpj>
+ <20251103122111.GA17600@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,148 +57,118 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <176117748158.1029045.18328755324893036160.stgit@frogsfrogsfrogs>
+In-Reply-To: <20251103122111.GA17600@lst.de>
 
-On Wed, Oct 22, 2025 at 05:00:20PM -0700, Darrick J. Wong wrote:
-> Hi all,
+On Mon, Nov 03, 2025 at 01:21:11PM +0100, Christoph Hellwig wrote:
+> On Mon, Nov 03, 2025 at 12:14:06PM +0100, Jan Kara wrote:
+> > > Yes, it's pretty clear that the result in non-deterministic in what you
+> > > get.  But that result still does not result in corruption, because
+> > > there is a clear boundary ( either the sector size, or for NVMe
+> > > optionally even a larger bodunary) that designates the atomicy boundary.
+> > 
+> > Well, is that boundary really guaranteed? I mean if you modify the buffer
+> > under IO couldn't it happen that the DMA sees part of the sector new and
+> > part of the sector old? I agree the window is small but I think the real
+> > guarantee is architecture dependent and likely cacheline granularity or
+> > something like that.
 > 
-> The initial implementation of the self healing daemon is written in
-> Python.  This was useful for rapid prototyping, but a more performant
-> and typechecked codebase is valuable.  Write a second implementation in
-> Rust to reduce event processing overhead and library dependence.  This
-> could have been done in C, but I decided to use an environment with
-> somewhat fewer footguns.
+> If you actually modify it: yes.  But I think Keith' argument was just
+> about regular racing reads vs writes.
+> 
+> > > pretty clearly not an application bug.  It's also pretty clear that
+> > > at least some applications (qemu and other VMs) have been doings this
+> > > for 20+ years.
+> > 
+> > Well, I'm mostly of the opinion that modifying IO buffers in flight is an
+> > application bug (as much as most current storage stacks tolerate it) but on
+> > the other hand returning IO errors later or even corrupting RAID5 on resync
+> > is, in my opinion, not a sane error handling on the kernel side either so I
+> > think we need to do better.
+> 
+> Yes.  Also if you look at the man page which is about official as it gets
+> for the semantics you can't find anything requiring the buffers to be
+> stable (but all kinds of other odd rants).
+> 
+> > I also think the performance cost of the unconditional bounce buffering is
+> > so heavy that it's just a polite way of pushing the app to do proper IO
+> > buffer synchronization itself (assuming it cares about IO performance but
+> > given it bothered with direct IO it presumably does). 
+> >
+> > So the question is how to get out of this mess with the least disruption
+> > possible which IMO also means providing easy way for well-behaved apps to
+> > avoid the overhead.
+> 
+> Remember the cases where this matters is checksumming and parity, where
+> we touch all the cache lines anyway and consume the DRAM bandwidth,
+> although bounce buffering upgrades this from pure reads to also writes.
+> So the overhead is heavy, but if we handle it the right way, that is
+> doing the checksum/parity calculation while the cache line is still hot
+> it should not be prohibitive.  And getting this right in the direct
+> I/O code means that the low-level code could stop bounce buffering
+> for buffered I/O, providing a major speedup there.
+> 
+> I've been thinking a bit more on how to better get the copy close to the
+> checksumming at least for PI, and to avoid the extra copies for RAID5
+> buffered I/O. M maybe a better way is to mark a bio as trusted/untrusted
+> so that the checksumming/raid code can bounce buffer it, and I start to
+> like that idea.  A complication is that PI could relax that requirement
+> if we support PI passthrough from userspace (currently only for block
+> device, but I plan to add file system support), where the device checks
+> it, but we can't do that for parity RAID.
 
-Having discarded the json output format last week, I decided to rewrite
-the Python version of xfs_healer in C partly out of curiosity and partly
-because I didn't see much advantage to having a Python script to call
-ioctls and interpret C structs.  After removing the json support from
-the Rust version, the release binary sizes are:
+IIRC, a PI disk is supposed to check the supplied CRC against the
+supplied data, and fail the write if there's a discrepancy, right?  In
+that case, an application can't actually corrupt its own data because
+hardware will catch it.
 
--rwxr-xr-x root/root   1051096 2025-11-04 14:25 ./usr/libexec/xfsprogs/xfs_healer
--rwxr-xr-x root/root     43904 2025-11-04 14:25 ./usr/libexec/xfsprogs/xfs_healer.orig
+For reads, the kernel will check the supplied CRC against the data
+buffer, right?  So a program can blow itself up, but that only affects
+the buggy program.
 
-This is a nearly 24x size increase to have Rust.  I'm a n00b Rustacean
-and a veteran C stuckee, but between that and the difficulties of
-integrating two languages and two build systems together, I don't think
-it's worth the trouble to keep the Rust code.  I've made a final push
-with the Rust code to my dev repo for the sake of posterity:
+I think that means the following:
 
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-monitoring-rust_2025-11-04
+A. We can allow mutant directio to non-PI devices because buggy programs
+   can only screw themselves over.  Not great but we've allowed this
+   forever.
 
-But I'm deleting this from my tree after I send this email.
+B. We can also allow it to PI devices because those buggy programs will
+   get hit with EIOs immediately.
 
-That said, I quite enjoyed using this an excuse to familiarize myself
-with how to write bad Rust code.  Using traits and the newtype pattern
-for geometric units (e.g. xfs_fsblock_t) was very helpful in keeping
-unit conversions understandable; and having to think about object access
-and lifetimes helped me produce a stable prototype very quickly.  It
-also helps that rustc errors are far more helpful than gcc.
+C. Mutant directio reads from a RAID1/5 on non-PI devices are ok-ish
+   because the broken application can decide to retry and that's just
+   wasting resources.
 
-The only thing I didn't particularly like is the forced coordination for
-shared resources that already coordinate threads -- you can't easily
-have multiple readers sharing an open fd, even if that magic fd only
-emits struct sized objects and takes i_rwsem exclusively to prevent
-corruption problems.
+D. Mutant directio reads from a RAID1/5 on PI devices are not good
+   because the read failure will result in an unnecessary rebuild, which
+   could turn really bad if the other disks are corrupt.
 
-Dealing with cargo for a distro package build was nightmarish --
-hermetically sealed build systems (you want this) can't access crates.io
-which means that I as the author had to be careful only to use crate
-packages that are in EPEL or Debian stable, and to tell cargo only to
-look on the local filesystem.  So I guess I now have experience in that,
-should anyone want to know how to do that.
+E. Mutant directio writes to a RAID5 are bad bad bad because you corrupt
+   the stripe and now unsuspecting users on other strips lose data.
 
-(Also, how do you do i18n in Rust programs?  gettext???)
+I think the btrfs corruption problems are akin to a RAID5 where you can
+persist the wrong CRC to storage and you'll only see it on re-read; but
+at least the blast is contained to the buggy application's file.
+
+I wonder if that means we really need a way to convey the potential
+damage of a mutant write through the block layer / address space so that
+the filesystem can do the right thing?  IOWs, instead of a single
+stable-pages flag, something along the lines of:
+
+enum mutation_blast_radius {
+	/* nobody will notice a thing */
+	MBR_UNCHECKED,
+
+	/* program doing the corruption will notice */
+	MBR_BADAPP,
+
+	/* everyone else's data get corrupted too */
+	MBR_EVERYONE,
+};
+
+AS_STABLE_WRITES is set for MBR_BADAPP and MBR_EVERYONE, and the
+directio -> dontcache flag change is done for a write to a MBR_EVERYONE
+bdev.
+
+Hm?
 
 --D
-
-> If you're going to start using this code, I strongly recommend pulling
-> from my git trees, which are linked below.
-> 
-> This has been running on the djcloud for months with no problems.  Enjoy!
-> Comments and questions are, as always, welcome.
-> 
-> --D
-> 
-> xfsprogs git tree:
-> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-monitoring-rust
-> ---
-> Commits in this patchset:
->  * xfs_healer: start building a Rust version
->  * xfs_healer: enable gettext for localization
->  * xfs_healer: bindgen xfs_fs.h
->  * xfs_healer: define Rust objects for health events and kernel interface
->  * xfs_healer: read binary health events from the kernel
->  * xfs_healer: read json health events from the kernel
->  * xfs_healer: create a weak file handle so we don't pin the mount
->  * xfs_healer: fix broken filesystem metadata
->  * xfs_healer: check for fs features needed for effective repairs
->  * xfs_healer: use getparents to look up file names
->  * xfs_healer: make the rust program check if kernel support available
->  * xfs_healer: use the autofsck fsproperty to select mode
->  * xfs_healer: use rc on the mountpoint instead of lifetime annotations
->  * xfs_healer: use thread pools
->  * xfs_healer: run full scrub after lost corruption events or targeted repair failure
->  * xfs_healer: use getmntent in Rust to find moved filesystems
->  * xfs_healer: validate that repair fds point to the monitored fs in Rust
->  * debian/control: listify the build dependencies
->  * debian/control: pull in build dependencies for xfs_healer
-> ---
->  healer/bindgen_xfs_fs.h          |    6 +
->  configure.ac                     |   84 ++++++++
->  debian/control                   |   30 +++
->  debian/rules                     |    3 
->  healer/.cargo/config.toml.system |    6 +
->  healer/Cargo.toml.in             |   37 +++
->  healer/Makefile                  |  143 +++++++++++++
->  healer/rbindgen                  |   57 +++++
->  healer/src/fsgeom.rs             |   41 ++++
->  healer/src/fsprops.rs            |  101 +++++++++
->  healer/src/getmntent.rs          |  117 +++++++++++
->  healer/src/getparents.rs         |  210 ++++++++++++++++++++
->  healer/src/healthmon/cstruct.rs  |  354 +++++++++++++++++++++++++++++++++
->  healer/src/healthmon/event.rs    |  122 +++++++++++
->  healer/src/healthmon/fs.rs       |  163 +++++++++++++++
->  healer/src/healthmon/groups.rs   |  160 +++++++++++++++
->  healer/src/healthmon/inodes.rs   |  142 +++++++++++++
->  healer/src/healthmon/json.rs     |  409 ++++++++++++++++++++++++++++++++++++++
->  healer/src/healthmon/mod.rs      |   47 ++++
->  healer/src/healthmon/samefs.rs   |   33 +++
->  healer/src/lib.rs                |   17 ++
->  healer/src/main.rs               |  390 ++++++++++++++++++++++++++++++++++++
->  healer/src/repair.rs             |  390 ++++++++++++++++++++++++++++++++++++
->  healer/src/util.rs               |   81 ++++++++
->  healer/src/weakhandle.rs         |  209 +++++++++++++++++++
->  healer/src/xfs_types.rs          |  292 +++++++++++++++++++++++++++
->  healer/src/xfsprogs.rs.in        |   33 +++
->  include/builddefs.in             |   13 +
->  include/buildrules               |    1 
->  m4/Makefile                      |    1 
->  m4/package_rust.m4               |  163 +++++++++++++++
->  31 files changed, 3851 insertions(+), 4 deletions(-)
->  create mode 100644 healer/bindgen_xfs_fs.h
->  create mode 100644 healer/.cargo/config.toml.system
->  create mode 100644 healer/Cargo.toml.in
->  create mode 100755 healer/rbindgen
->  create mode 100644 healer/src/fsgeom.rs
->  create mode 100644 healer/src/fsprops.rs
->  create mode 100644 healer/src/getmntent.rs
->  create mode 100644 healer/src/getparents.rs
->  create mode 100644 healer/src/healthmon/cstruct.rs
->  create mode 100644 healer/src/healthmon/event.rs
->  create mode 100644 healer/src/healthmon/fs.rs
->  create mode 100644 healer/src/healthmon/groups.rs
->  create mode 100644 healer/src/healthmon/inodes.rs
->  create mode 100644 healer/src/healthmon/json.rs
->  create mode 100644 healer/src/healthmon/mod.rs
->  create mode 100644 healer/src/healthmon/samefs.rs
->  create mode 100644 healer/src/lib.rs
->  create mode 100644 healer/src/main.rs
->  create mode 100644 healer/src/repair.rs
->  create mode 100644 healer/src/util.rs
->  create mode 100644 healer/src/weakhandle.rs
->  create mode 100644 healer/src/xfs_types.rs
->  create mode 100644 healer/src/xfsprogs.rs.in
->  create mode 100644 m4/package_rust.m4
-> 
-> 
