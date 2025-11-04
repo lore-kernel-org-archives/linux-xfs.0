@@ -1,63 +1,63 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD5BA1F1513
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 12:50:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99E2A2E092D
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 12:51:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762260661; cv=none; b=pLy4qFHsJ8LEM1zN/evzbSdmUh1Vn5UQNB9xYeJFlEpE4403sKpzDEj3elwYUEII91d8rKKW/YfariZ0sbcGXJqXLoOXacQGU7kH09nKI7lBKZgH1CYtyr7B7v3F4uMcNNi3zNMq0qQgyTbMrfTgfBlzpPcs+FrWEK/Y5PDYhoU=
+	t=1762260669; cv=none; b=Kkqr8g8cKGTERXz4w8eGBPDDO/P1onqDDqtPWOLIgbqGUzZD+Kv5492VQqzMVZXfUO27FNMSONc8jloHQ8DmQeY6zgn37NXpYZM/Ol65efCjE/PstCIQE4YyXh+3ho08WHlWZK1EaIxd89wrRQQ7UYEvKqN7t7JyxRrU1/ccUpQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762260661; c=relaxed/simple;
-	bh=Zc/y7/iyuhzo73FcQYuGWiCMqi/pQGpHb9Cqw0BNl8Y=;
+	s=arc-20240116; t=1762260669; c=relaxed/simple;
+	bh=S3L8yWcPf7Uvvhuw8kb5mV50ABXqzeKjCs/M0blRocI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hSlfhvTqOE6s80tMrefYl1btAlARAbjlXBNP7A0GllXGb9KpqHzqrZgeLh19rviYRHyMBly2lM3jYIP1pGMN3Wl/72ivrjNqFDjEqEk8QnGAshV5+wULuHVyQwJGeyruuLv7TxIA+p/o8Sih/MAFxzlCsSUGvCPpV+XsKcvhbgU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=N5hbyQCf; arc=none smtp.client-ip=209.85.210.182
+	 MIME-Version; b=RsR8bYOWKwzT59RX20X0d1kazSho5mQGJNzxR0YuwPxnqAKZjsm43PZt3E0m8rGDRMI3AyFGHY8Z9Aj9aaWd1HC/Vo0cOaOiI8vFvymRAYwWO7HJ3Qm5OOdpC4RGp6z1bbKYaOOM4JYZEXIXwDx89YsTxhOpCShySgZxf1LAbmU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a1g5b/AV; arc=none smtp.client-ip=209.85.216.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="N5hbyQCf"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-781206cce18so5848192b3a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Nov 2025 04:50:59 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a1g5b/AV"
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-340c39ee02dso2790191a91.1
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Nov 2025 04:51:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762260659; x=1762865459; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1762260668; x=1762865468; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=8asDZdZ/5ha36TqW9viVaU035nISljT2hMRnvK4GxFQ=;
-        b=N5hbyQCfZj1/OGGI72+GgKXdJ08+1645rRmavy4TlrZ2aP3Rlsohnd6HUAPJeV2/s8
-         huUzE/fcj7DETBzdWOTAXqAdzp+rAOIAeluflpmfy2Gicx1lLMqmNheoEioy/GYaYx6u
-         DpRK4O9nnXzCvXmOn3AI6pvQ3MbmbF0ONYLiM559v5eiNlnhKPmApca2A7MMPsO/abCf
-         pDe7+v8QvbGsSuhhBFIMpreLlmHZZAed15xwJTRQLONTuArUROzG1cH+l0IGOo64Y5fw
-         US4ppbUNpttTtn5/j04LmI/UHogRXNbcRaG1ZvP/127r3viM9WVnX/o/BsldFmnN98ha
-         6RBg==
+        bh=AM4LaUJGUQ26yP1YfE9/TUkYoY6eJkQufUALxNmpnUs=;
+        b=a1g5b/AVw083mhh/EpgN81CSzncrNP02f45pvke2+H2d1K+ePlVS7/AdsD//K9Xnmm
+         qLQtCsFfGFCsnt2Y/LqodDoEmtnTjbsPVRijPGMOzjp0GrT6jJL8sdP48Eoy9tWypLhk
+         1YEXzboA7S8rYv5hW9Nmuvn7MaNVAdbpT8fGWCOGm1ABaIlRHVIxd8itcTcCtSMsoJRo
+         O++Q3h3FigWAIxt9iAnB5dc4USxmpEj8iMHUnvo9xgf9XB0zI+CrA3rKO0RlNI7DVTi+
+         zzTaTGet8CBRG/cJ655hUKqPe3QlZrOvO1Mi2xNKjwg7K97c9O/ir94bdqljjK0esjBv
+         wxyA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762260659; x=1762865459;
+        d=1e100.net; s=20230601; t=1762260668; x=1762865468;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=8asDZdZ/5ha36TqW9viVaU035nISljT2hMRnvK4GxFQ=;
-        b=as7fLZH+omFSuVPi8iNbJvP7utfct7v1Saq7bNI7f2VJWzxTsO0TzqvvSM9gSLWLQD
-         Deen6+XRt5GVvQJBpRxpyp16z1cROrTchbjyUj/euIRZ/JP7bRgBrYOBUDXj2t1lKHT4
-         d67k3phbVeSaK3If76a61+SlxGFwM06DGBhMzVjgWfSrze1dseS03VcCGhOshS+OPiNi
-         ruK2i7/LxJ8a0Y0xS9b5RiTzCV7h/JyOFR50fRP8xG8Kub6PhaPdd+EQ65+FV7P0nwl2
-         lpKnEYsWVp8YlK4KOLX0ZeBdvQdD7tttHka6Bz7m0neDJBKKLNKzbhJWIeHB5kWdvgl5
-         MNUQ==
-X-Gm-Message-State: AOJu0Yzg5Q93vMi8we/fK2p54vJw+EsDt9EyIejDm+qPGI3EkAvFs+mb
-	I/icfsZUypf/FSXMKiU7zDHTt7ANRP6AuPQ58y1nyj8iruUgpmkM33Jp
-X-Gm-Gg: ASbGncvPXrDoywmoRHFO/7V9SkxcyjLNv8Tce39UlhOMghnQKRjNJcdsKXXHhHlFu4U
-	nnxGBzzufGrSM6dsFzlLt9e3IwEa/6F1FKvRxWA+GwrdqXeUtXRlkdplFuEbREaKEGSwSbBk0SR
-	x9PII2pWIgbQrRkLfjqP4U3du+A2eLZHwZzEk8XnOPLwxkDjxHi64nLvbyysRv0EUE914FNECPg
-	UkOcBeniOOvsh4tvpqznD1u14KLIfaxNr+9e6QwCdw/OeXGPXOqkSEI1Ofyf/s5YdF3LkahzwlF
-	eJLLv3afBZ/acnQSXovIQoze/72pE8HWdRTO1bq4wiR6Q20q0cfx1jlL3PLLZOGasgmhmcMv7Ql
-	M7yD4BUDEJtO5FljTb768ikFCqiCZCRVmy/x0sNw/kCz8I04+cFmGXni2O0MjcJM351Vns/O3xn
-	nHYhLU0QUt1MvLVu+l4PbHd+6RazsBM/6HLvqlNZpDjVM+wbB2Lk8ADp7Fnw==
-X-Google-Smtp-Source: AGHT+IFSneBnWTt2VQT9MEymny53bGd7ZCTNmsINIZkl0njlmgUgoGuMpFK6R9EKutPwtc1t3a4fcQ==
-X-Received: by 2002:a05:6a00:1988:b0:7a9:7887:f0fa with SMTP id d2e1a72fcca58-7acbf0b9e3amr3856752b3a.1.1762260658993;
-        Tue, 04 Nov 2025 04:50:58 -0800 (PST)
+        bh=AM4LaUJGUQ26yP1YfE9/TUkYoY6eJkQufUALxNmpnUs=;
+        b=i3h3F/6pgAQaGUzZdJ9GUu7j2ypreN0vD5bxdwBv7ScGJX4NzCVHe9I1ZY/kn+LiM0
+         88ReQPEqnLPB+VT6oQx7oIOwY5ivylk703sd8DOxgKOsV8lT31vZhXgzYeGQezhMOQcF
+         fS4X/sfuz+Z3LNi1qLlhwi2MS5XfUczvmWC+boIvh1+OAGLgAbhN7um8b+tBDAYzHJRb
+         T2krUyFeAWN7yJrJBPrcbQaSq1p1IOw/sQjL40nPpNbavPqUgyHjgGAEIkwiHR/M8pi/
+         5NGIaXdY31go6n+1aMm3hnZkArT6UZIGisy6xD6NPfR3/oP2XTVf8wBgfJDfXfPBbT6f
+         vmmA==
+X-Gm-Message-State: AOJu0YwUuWIEnkY4szHwBzir0MDf+JQG7hJGidP9qKX3TWDjNtK9VlzA
+	/1A/Ox320GJM5MLBmDDq+5HAqEughh603f1gwAKYGJlgUvF3C01oNl6c
+X-Gm-Gg: ASbGncuUaDGO/Ds/WdR+xd0hjqPNJEOrypJJmAzAMlc7YbsC7HelvOo+Vi/lviJbFUa
+	EvyJxXtpHOwXdiHFTadQAd9EOhxmE3qQxlo8mlcIASHAnCS8sHgEOZZY/U4wl0qFVztn6i/8gFt
+	LiJqe8CB2tooESNu5A7Zf0AZCpil8aumd8b+np4BN6ES2dqHnb1Gfc7m+XH8y39sE5y8RwneAG2
+	RxmZbWrKYg3GBlK+wTYGuxP+EGWhpwa13fzsXFTqxbIwfqT++/T8S3EOY612NblOc6mIqSwfhQA
+	eYgVmk1D7gG4pqgStS48HRgzZsPDeBKj4nmTv9lXOLE24VTMhDgGPVH0JdEZ/tjEJ5aInFrBgiF
+	hCn8JB3BY7xTsRVZD4CCyInWuTZapU+jQWXRCnMNE1ne3FVNTMEe7xrCzV4V/A2G7My34BNm9hG
+	9HNW2Et63AJijbI9UnVX4ELZhFT3m7OniBRVLbiuPC6Io2Ul8=
+X-Google-Smtp-Source: AGHT+IH3JuuEMoP9YT3zyIl/+HUSXK+p3FIZ5E5NT2awhGYYunlZYurin74ce3hTLqp46OSwVZT1sA==
+X-Received: by 2002:a17:90b:3946:b0:33b:c9b6:1cd with SMTP id 98e67ed59e1d1-34083074e9bmr20646792a91.19.1762260667843;
+        Tue, 04 Nov 2025 04:51:07 -0800 (PST)
 Received: from xiaomi-ThinkCentre-M760t.mioffice.cn ([43.224.245.241])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7acd6d026dcsm2860710b3a.70.2025.11.04.04.50.54
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7acd6d026dcsm2860710b3a.70.2025.11.04.04.51.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Nov 2025 04:50:58 -0800 (PST)
+        Tue, 04 Nov 2025 04:51:07 -0800 (PST)
 From: Yongpeng Yang <yangyongpeng.storage@gmail.com>
 To: Namjae Jeon <linkinjeon@kernel.org>,
 	Sungjong Seo <sj1557.seo@samsung.com>,
@@ -78,9 +78,9 @@ Cc: linux-xfs@vger.kernel.org,
 	"Darrick J . Wong" <djwong@kernel.org>,
 	Yongpeng Yang <yangyongpeng@xiaomi.com>,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v6 3/5] isofs: check the return value of sb_min_blocksize() in isofs_fill_super
-Date: Tue,  4 Nov 2025 20:50:08 +0800
-Message-ID: <20251104125009.2111925-4-yangyongpeng.storage@gmail.com>
+Subject: [PATCH v6 4/5] xfs: check the return value of sb_min_blocksize() in xfs_fs_fill_super
+Date: Tue,  4 Nov 2025 20:50:09 +0800
+Message-ID: <20251104125009.2111925-5-yangyongpeng.storage@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20251104125009.2111925-2-yangyongpeng.storage@gmail.com>
 References: <20251104125009.2111925-2-yangyongpeng.storage@gmail.com>
@@ -94,34 +94,33 @@ Content-Transfer-Encoding: 8bit
 
 From: Yongpeng Yang <yangyongpeng@xiaomi.com>
 
-sb_min_blocksize() may return 0. Check its return value to avoid
-opt->blocksize and sb->s_blocksize is 0.
+sb_min_blocksize() may return 0. Check its return value to avoid the
+filesystem super block when sb->s_blocksize is 0.
 
 Cc: <stable@vger.kernel.org> # v6.15
-Fixes: 1b17a46c9243e9 ("isofs: convert isofs to use the new mount API")
-Reviewed-by: Jan Kara <jack@suse.cz>
+Fixes: a64e5a596067bd ("bdev: add back PAGE_SIZE block size validation for sb_set_blocksize()")
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Yongpeng Yang <yangyongpeng@xiaomi.com>
 ---
- fs/isofs/inode.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ fs/xfs/xfs_super.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/isofs/inode.c b/fs/isofs/inode.c
-index 6f0e6b19383c..ad3143d4066b 100644
---- a/fs/isofs/inode.c
-+++ b/fs/isofs/inode.c
-@@ -610,6 +610,11 @@ static int isofs_fill_super(struct super_block *s, struct fs_context *fc)
- 		goto out_freesbi;
- 	}
- 	opt->blocksize = sb_min_blocksize(s, opt->blocksize);
-+	if (!opt->blocksize) {
-+		printk(KERN_ERR
-+		       "ISOFS: unable to set blocksize\n");
-+		goto out_freesbi;
-+	}
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index e85a156dc17d..fbb8009f1c0f 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1662,7 +1662,10 @@ xfs_fs_fill_super(
+ 	if (error)
+ 		return error;
  
- 	sbi->s_high_sierra = 0; /* default is iso9660 */
- 	sbi->s_session = opt->session;
+-	sb_min_blocksize(sb, BBSIZE);
++	if (!sb_min_blocksize(sb, BBSIZE)) {
++		xfs_err(mp, "unable to set blocksize");
++		return -EINVAL;
++	}
+ 	sb->s_xattr = xfs_xattr_handlers;
+ 	sb->s_export_op = &xfs_export_operations;
+ #ifdef CONFIG_XFS_QUOTA
 -- 
 2.43.0
 
