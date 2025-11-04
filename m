@@ -1,126 +1,109 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F23D01CD15
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 12:33:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A9AE1EDA2C
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 12:36:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762259625; cv=none; b=c6Ftk2EvhcGRth09efGzpSjYVxJdhOU0FnqonpVP5rUMHT31IPtuCT4Jfc9/CasUWiNaFSpGiHLKTWdhFe2Uh0wHTNoNzFpIl1MFOifcKbjM8OXaw4kR41uDwk76Xc37JC4XqSLSSoxAkG4/OY1InmgVDMd1wbYuF/eCThtvyeU=
+	t=1762259801; cv=none; b=BkXIsN8mtB477fq8Xek/miTRY4zJda82rTWXGAUST29S/E/3QkFgzGGeG1hgtrHhzcbl6H/5goXozI6pHDNMl0fxepkAsJzyQWm3HwO/0Et04/cZ8n7SEUchx/hd9Xq80H5IPJL7/l/+e42sTHNja+1R4fcLxROqZnPwrczkC1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762259625; c=relaxed/simple;
-	bh=PVG/u/rBRJtGXc7icffonY7sSvjL0w8UC+NsDC4RqhA=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:Mime-Version; b=rWtxHEtmwGsw3adVy+84GB0EomyUgD4vAlJSO0uCIjCN8IKfoSZ3OP2QWXSUKwYRP0okdBNK5RH5NMT3VzwhbZx3UqfjzfGb3nzzdc7h8HFJv7ikHePmSA9sTdCy8QrqSx5I6yqZj+IPDV0Ixn5s7o5HJU996lV31ogrP2KNcTw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gV7J1MhR; arc=none smtp.client-ip=209.85.214.171
+	s=arc-20240116; t=1762259801; c=relaxed/simple;
+	bh=OY6wmS2cjaoU74ByE55r3CESyyslJw59xMwwDbCQcNM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Ubs4FThnRfn3D4wn3/Jxb2cddKxZabC6LUJGzIMGEcERXzL2fJ0CFCsJrjwVDuqGUKpDWONOOSbIfnmY2a/zTYduoAd9i6o6siRu1ixuxzGfZHudcODzqi02+PL6cH++ntYOZkh4/pTWFxWqJ4WAZcCZAIDYf+TtxMo3sdT9GE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=e0D1kAcx; arc=none smtp.client-ip=209.85.216.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gV7J1MhR"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-295f937d4c3so6718915ad.3
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Nov 2025 04:33:43 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e0D1kAcx"
+Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-34188ba567eso307819a91.1
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Nov 2025 04:36:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762259623; x=1762864423; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to:date
-         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=iRHHdJQM2gcBeM06136CQSgxSJ3eclLtWip34bcWYH4=;
-        b=gV7J1MhRmn62F5zM9AFF5163CxrhGjqCIvlisytWIbGoMhUdo8L0WHCJCAEjTHNKJR
-         wdtLGJdQJLDRGL4uTiaZsH5OIkBE04KlizY5y8mb81o5v5J/HJb1GgvCyhspkzhXO0Ko
-         HLlYZBNyOWNyC8EKfQQhdsvolw1Vq6AePzTCIT34DnRkVR9ZQT090KCtGTTceC19x8M1
-         amUhZ7PwnGdaQtpe5AO6A+XqSKZY09RGwRPrfQB4fuMc6wXkh1jlmywVMwwE3ZWTtBaf
-         oZ/8Lz0QDKwWIhkzPvrv7njY08lt+GNV2k2xHxqeAgt0aqS4c6qOqR/hx/mHhYfeztu3
-         dsuw==
+        d=gmail.com; s=20230601; t=1762259799; x=1762864599; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=YuYa8Vyc5g36zBbzEp6ohHNgPOjM03c64dcRTIxk/XA=;
+        b=e0D1kAcxX/U2JrPsU6OZoYyaStafkLiLKMsT4xfwfjtykF5wtNbe3WZJTO3BsLzqY3
+         k1FpVVc4jeUoX6wQabLcMaozAJud6YY0SDId2ZIxAi4mxaSlR/7yzYza737NALtoamdM
+         AvsVKHu6SxYAS5LDjDB9lCBLmLHVLWCK+83xQ8Sdbv74fdW0vYl96JadzvHRxklYsw7q
+         SqcJ7+FcZ+u55vuyZQh0VkmkLqk1wPbyYMUv9kwKOHMSIn8uv5eu/0x4iiSQveQ4W6Nj
+         H9aT0tsu8HNI1FL4+12ggVwrzv1N/lEUwb0IAFhtpFyvEIG5ZXDM3zv+3v2lzxA7NgMN
+         CF7A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762259623; x=1762864423;
-        h=content-transfer-encoding:mime-version:references:in-reply-to:date
-         :cc:to:from:subject:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=iRHHdJQM2gcBeM06136CQSgxSJ3eclLtWip34bcWYH4=;
-        b=Ai1x49QNxmcIq9EK3TnzHPwZh9RkHEpGLws9UpOwDiZbjS6I7zY9gIgSK/x2aBnXfm
-         F55zGTSBurMl4DUWmpawKE1Ry11VfestKk5z90/VqENGDel3cqlr3UNmDX9KhOg/Cays
-         IAd3cevMAagW9E6YyhC+pNyL4dc0/M+cz3NzhafOsrHbB5v7PMT9kagHDALL7QU/2/3q
-         xuOWye7xG3N5IKcjm3CvPvYRRbHuRxNS115sIz/BL2aSQYoaYwlXKmkNqkeBmeELdI/w
-         jZTvTY01nTASatsA5R+E6Z+Hn4f1f0/5B0GMVtB8fucGQD7vhXL1na4C0cbiJPup1vSW
-         8N9Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXNT8mCG4RE3qyqPIoFdKjQInUptb7xYA45TWwTyEaNwBWqkEkWyFJq3G7iB/WmIw/LfkP9RAqY7Ao=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyLZ4l+EA4zDb0vAbUb6a0xQM6e6tIEC7DFlFEeP+fx3WymtD0E
-	gkoDJmnCLlIP5E3K8Kvusts6CSefu96uJ6DH2ADrMgFpbOjbp+7NBnW3
-X-Gm-Gg: ASbGnctN3Z1kXZe0Lqxz8QEkv10rJlHCMWKjCWcoQYUaT2YazpF1eZ5M12l8dXgVFvE
-	w94MvpIyxuYuiySISEZr3s93Coy+PXwZcEtSf25lbpF3VxHHsTiJ/H8Zghd3QW9xxEoZgkJ1oNx
-	+mpwW0wpTMsRIAWZiQCmrQPEUw411JTyJ+eoCH+GRqsYzsR7WUqtP+GS/wtPU89qfHrjBkdVV1/
-	Ge4GZCnih79z2e6oRhOfR7+XPaADC7ncUoD81YxckNkH4YXu3hINRK57mo+nBJSaSGNInwYVVwl
-	GIFy7aGLxMeuNHb7ctIzjxzA7BXiDrwOnsWM9JIU2+SmfKDkjPAA+LdVskWOHmR4TOZiHzYodR2
-	Lr+6xtoZZkof+CDBrt5UT1M/c0TBFZXj61bg2wlU7XD/FrWlnUYC5BoI95JdhQ1ugOHSEiZMWiR
-	h+ifzzOzK5D+vb5J8t2alAM914VRpwz429Gi5GCCGyy515lIHFQNx3xA==
-X-Google-Smtp-Source: AGHT+IFcDWr3KBlNMXeLNPkyZZOa63IpUuqeGF/O+KRb8PWkuF5qhGuak3PkMEe642XnoKQJ5ppqRw==
-X-Received: by 2002:a17:902:da8b:b0:295:2cb6:f498 with SMTP id d9443c01a7336-2952cb6f55emr159576605ad.7.1762259623021;
-        Tue, 04 Nov 2025 04:33:43 -0800 (PST)
-Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.200.106])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29601a5d181sm26106575ad.85.2025.11.04.04.33.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Nov 2025 04:33:40 -0800 (PST)
-Message-ID: <a162ddcbd8c73adf43c7c64179db06ce60b087d6.camel@gmail.com>
-Subject: Re: [PATCH 3/4] xfs: use IOCB_DONTCACHE when falling back to
- buffered writes
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-To: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>, 
-	Christian Brauner
-	 <brauner@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, "Martin K. Petersen"
- <martin.petersen@oracle.com>,  linux-kernel@vger.kernel.org,
- linux-xfs@vger.kernel.org,  linux-fsdevel@vger.kernel.org,
- linux-raid@vger.kernel.org,  linux-block@vger.kernel.org
-Date: Tue, 04 Nov 2025 18:03:35 +0530
-In-Reply-To: <20251029071537.1127397-4-hch@lst.de>
-References: <20251029071537.1127397-1-hch@lst.de>
-	 <20251029071537.1127397-4-hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
+        d=1e100.net; s=20230601; t=1762259799; x=1762864599;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=YuYa8Vyc5g36zBbzEp6ohHNgPOjM03c64dcRTIxk/XA=;
+        b=iyvf1WlxkpzXoPF3+Tfk7Ktkxs+y3u1ZcoR1G1Dwj/nNJwpcVWpd4KqTX+fNQpw9GJ
+         B47Pko/XK6awP6O1xUstYlGm+H0NzCTtSwF6pPp8VKFw9DlXFtmwfg5Ii7YRW+6HQp4u
+         Pf1GIdkNjQqV8RKjv+dh28ROyUOowq97r0+vC1v6w+hkCv80pfgJgmJYIAWccljTQpTg
+         pvCDQuV9GGQJxIHMaapxiSIhlQYL8zbozYH1i9ERzgkSXDTIPk4S2yBMOQdw7TL/MOOj
+         thFAQ5TZy3Zr5K0kc+m0w5qZs03oO5Gfx6qM2gcdrPxXAdRVZHpz5PeDHesroTTh8n0O
+         5QKQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV16rBn/O5eUxUloHnfdocGx2i02er8UAcKaoODTHbQ2CYEWkoWflj/Xi+EvtCj1RTznMGHfSoHEtI=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyvug6kBaJM5PH/DeZT5YN7VRum+nxrTj2BK2WWOo/FlTNN09yc
+	JkIs3SdWAB6+RaZPLlQK4qlrYJpVZLjiFy09i7BiqMXlll/m5PMtaJDq
+X-Gm-Gg: ASbGnctz2KYbErrvp4KPXgwlGPMYX06paToXaePuq/xo9EqBLPyJp6sAd/UkUDmraBU
+	1SJLquKL+B8OOoGL8CAZpBlDNxGRP0l02RrfPtxUZ85z0+LzwVmdjBZvQj0lG2g+Dc6oBK/LSuR
+	k1bvumr/zEV2BAWaVgQCsXHkIX+3NNCAY59tOaNR94fundFnivQOW25nIObPiTYN/1HjBryJJEy
+	C38ZAk/5IExeF5baFdCzRgyL/CexxiHwc/zLG/qfz+RHVKyV9wrtY5QgwCCRTDPN6gyPXcmojyA
+	Lnbr9Si6Vez/VosiBSNPE3fvqB47ed6mwARiGcLutl5cB+e13p4cmU7CcWT5ZhjJ40zBj4u2MlT
+	8IovqJk7+zgsPZYOjJxm742NouHebKksJXhXv7c8+TeW5vAoDw+HqrdK+NuXLK60uYBEsEs4T4L
+	YXXnlwNsSBOdgvKKY/K5c=
+X-Google-Smtp-Source: AGHT+IEqu3D4nCBfCW/PW2rcdwd+c+X0hF9STm+2SPgeMcdKeUwLd7lODO/G7LNmaVev7hTJtyCaaQ==
+X-Received: by 2002:a17:90b:3c89:b0:32e:9f1e:4ee4 with SMTP id 98e67ed59e1d1-3408305863fmr23514216a91.17.1762259799323;
+        Tue, 04 Nov 2025 04:36:39 -0800 (PST)
+Received: from [10.189.138.37] ([43.224.245.241])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-341599f14bbsm4565467a91.13.2025.11.04.04.36.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 04 Nov 2025 04:36:39 -0800 (PST)
+Message-ID: <ffc08b98-403c-4d29-abbd-b599c7c5e3d7@gmail.com>
+Date: Tue, 4 Nov 2025 20:36:33 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 5/5] block: add __must_check attribute to
+ sb_min_blocksize()
+To: Christoph Hellwig <hch@infradead.org>,
+ Yongpeng Yang <yangyongpeng.storage@gmail.com>
+Cc: Namjae Jeon <linkinjeon@kernel.org>, Sungjong Seo
+ <sj1557.seo@samsung.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+ Jan Kara <jack@suse.cz>, Carlos Maiolino <cem@kernel.org>,
+ Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, Sasha Levin <sashal@kernel.org>,
+ Alexander Viro <viro@zeniv.linux.org.uk>,
+ Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+ stable@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
+ "Darrick J . Wong" <djwong@kernel.org>,
+ Yongpeng Yang <yangyongpeng@xiaomi.com>
+References: <20251103164722.151563-2-yangyongpeng.storage@gmail.com>
+ <20251103164722.151563-6-yangyongpeng.storage@gmail.com>
+ <aQnd4-RRe4K_b4CA@infradead.org>
+Content-Language: en-US
+From: Yongpeng Yang <yangyongpeng.storage@gmail.com>
+In-Reply-To: <aQnd4-RRe4K_b4CA@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On Wed, 2025-10-29 at 08:15 +0100, Christoph Hellwig wrote:
-> Doing sub-block direct writes to COW inodes is not supported by XFS,
-> because new blocks need to be allocated as a whole.  Such writes
-Okay, since allocation of new blocks involves whole lot of metatdata updates/transactions etc and
-that would consume a lot of time and in this large window the user buffer(for direct I/O) can be re-
-used/freed which would cause corruptions?
-Just thinking out loud: What if we supported sub-block direct IO in XFS and indeed allocated new
-blocks+ update the metadata structures and then directly write the user data to the newly allocated
-blocks instead of using the page cache? Assuming the application doesn't modify the user data buffer
-- can we (at least theoritically) do such kind of sub-block DIO?
---NR
-> fall back to buffered I/O, and really should be using the
-> IOCB_DONTCACHE that didn't exist when the code was added to mimic
-Just curious: How was it mimiced? 
-> direct I/O semantics as closely as possible.  Also clear the
-> IOCB_DIRECT flags so that later code can't get confused by it being
-> set for something that at this point is not a direct I/O operation
-> any more.
-This makes sense to me.
+On 11/4/25 19:05, Christoph Hellwig wrote:
+>> -extern int sb_min_blocksize(struct super_block *, int);
+>> +extern int __must_check sb_min_blocksize(struct super_block *, int);
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_file.c | 3 +++
->  1 file changed, 3 insertions(+)
+> Please drop the pointless extern here, and spell out the parameter
+> names.
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 5703b6681b1d..e09ae86e118e 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1119,6 +1119,9 @@ xfs_file_write_iter(
->  		ret = xfs_file_dio_write(iocb, from);
->  		if (ret != -ENOTBLK)
->  			return ret;
-> +
-> +		iocb->ki_flags &= ~IOCB_DIRECT;
-> +		iocb->ki_flags |= IOCB_DONTCACHE;
->  	}
->  
->  	if (xfs_is_zoned_inode(ip))
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
 
+Thanks for the review. I'll send v6 and fix it.
+
+Yongpeng,
