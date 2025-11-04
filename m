@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFEB7295D90;
-	Tue,  4 Nov 2025 16:56:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4464331A7C
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 16:59:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762275366; cv=none; b=FAc5pUMG65Q/eejDSFRvlXi6i2aWptUGLheugnDn8qLsoH5K+9lwRtpYtW6HauQXNodk/tcZl4yMO0odOevIleA5381Xdgw1B81+T3Q063Q3QvtCWQMkN7A9Xc0sw5hfBRJA9zjm9XQn3kBANVDl5XmOysZ8PLFWBlBFDECaIS0=
+	t=1762275561; cv=none; b=I4oQ8ApYHU3o1SlySPCEHngvv5xgh+E2pE+2yEI8qWpntg0h12bpfFYEWxlGX2G34B1cEy23b79Nvee39L1f4ttEd+wJveLYdt8bfb9yO7VjpAQNUrwCijkuuTi66p2FFnbCbJnTqePWpRJixlMEd+zNJJmIEENmRQDCEJWjmpY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762275366; c=relaxed/simple;
-	bh=eqs2yq51xWQnT3gXWbJSq5lHBNf62/pOzGYULwBh50I=;
+	s=arc-20240116; t=1762275561; c=relaxed/simple;
+	bh=BgeMGJJg+cDFVmmfQeBA83QxORGOUn3CHNmF3dde81c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KLbR/1EXGXOszqdDQhHFN4GPtpO8JWoMfDhWmLdtJc3fCbgqqJvWaUvHmfLwvvTgbPEtWZUPg1euVpW6kCK8MC1QBdQW7k/hWJnOst/ls2AZCwloZMJdf+m10XwBRm7bRVMzK9rN670U49bMzBEG8hW4N9vH34QjJmqgDLmZnY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aU0EsDIp; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=AQZMcKTuUVHUkgfBaoZq2y05N4XNX7auGZz13mO6DwS9LT+J/P4V0p8OMAeCpNd16l8DmKJF0HnZa22fGskuz/65s39C9sr+7HRFYSyV2giDZgskSvoXg0Kvvq0dIOrPP1+8WwmmKG3Nau5Ms6YSH8l9wrClTbOKsTP93t8CIYM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mNHXXdhJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aU0EsDIp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2333FC4CEF8;
-	Tue,  4 Nov 2025 16:56:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mNHXXdhJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 674D5C4CEF7;
+	Tue,  4 Nov 2025 16:59:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762275366;
-	bh=eqs2yq51xWQnT3gXWbJSq5lHBNf62/pOzGYULwBh50I=;
+	s=k20201202; t=1762275560;
+	bh=BgeMGJJg+cDFVmmfQeBA83QxORGOUn3CHNmF3dde81c=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aU0EsDIpiBnA1pOZOB8EDfxEdQlvUcdteg3YBFzkUOP4Wzx6nsRl5wihR5p7KwN/W
-	 m55gBob7NhOtqh2QXNbarob/gg0gvYzsCiJQwPjr6I5JoKQ2/E6V+rYg9hbI9sYEaJ
-	 TIebu5dyJW/p6aBpLBLw60TqNFjsb9lV2x2B8HNgjdefkhub8IJ1wlJpmfxfK42xjj
-	 9WEsUmkbxRe4arRP+d7a5wvlU66t7Z4MV6wpyy9tKMnhwicj4HTljxEqFfn8NEOy87
-	 BpFsMQ8lw+R8C2dpDzkiC2iWdHnV+vyMoi522rjo2FMyRJmlRJrT9MeHqtfDK9Xh2v
-	 EP8CxaO5fU9ow==
-Date: Tue, 4 Nov 2025 08:56:05 -0800
+	b=mNHXXdhJIYmoShGtr35oE1U8eJvZufxGTQIVHSDlr4byNoQySfahp5yaqrP3+X0hO
+	 MDi4qZ8q1wvA0T6t0O75ZrMVyZVfkTWuauYctLoCbz37z+zieD8bo3okP8nPgy2G6A
+	 pWHoSYxOsrX9tgyeZzgiBxNBHq+gp3XBsvbLTkBO/t2iq9E8W0HwlV1NGp4ZO5itEu
+	 ISHwTm1wh77tyBrA5USMscNCxIuTwuvA0TZRP4+Rt5J3uAxBIvOvBn6atr3lSaIhEc
+	 n+J5Vn/rs3BqzB7Up3IjfmyKhSOvYRQF12HSI4YPcXFWbndNJi6oid2xsR0YJt23rw
+	 QYFNbxfLTagFw==
+Date: Tue, 4 Nov 2025 08:59:19 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Gou Hao <gouhao@uniontech.com>
-Cc: cem@kernel.org, corbet@lwn.net, linux-xfs@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	gouhaojake@163.com, guanwentao@uniontech.com
-Subject: Re: [PATCH] xfs-doc: Fix typo error
-Message-ID: <20251104165605.GI196370@frogsfrogsfrogs>
-References: <20251104093406.9135-1-gouhao@uniontech.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: free xfs_busy_extents structure when no RT extents
+ are queued
+Message-ID: <20251104165919.GJ196370@frogsfrogsfrogs>
+References: <20251104104301.2417171-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,36 +42,52 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251104093406.9135-1-gouhao@uniontech.com>
+In-Reply-To: <20251104104301.2417171-1-hch@lst.de>
 
-On Tue, Nov 04, 2025 at 05:34:06PM +0800, Gou Hao wrote:
-> online fsck may take longer than offline fsck...
+On Tue, Nov 04, 2025 at 05:43:01AM -0500, Christoph Hellwig wrote:
+> kmemleak occasionally reports leaking xfs_busy_extents structure
+> from xfs_scrub calls after running xfs/528 (but attributed to following
+> tests), which seems to be caused by not freeing the xfs_busy_extents
+> structure when tr.queued is 0 and xfs_trim_rtgroup_extents breaks out
+> of the main loop.  Free the structure in this case.
 > 
-> Signed-off-by: Gou Hao <gouhao@uniontech.com>
+> Fixes: a3315d11305f ("xfs: use rtgroup busy extent list for FITRIM")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-With hch's comments about the commit message addressed,
+Yep, this fixes a memory leak.  I wonder if you could combine the two
+into:
+
+	if (error || !tr.queued) {
+		kfree(tr.extents);
+		break;
+	}
+
+But I don't care passionately either way.
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  Documentation/filesystems/xfs/xfs-online-fsck-design.rst | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/xfs/xfs_discard.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> diff --git a/Documentation/filesystems/xfs/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-> index 8cbcd3c26434..55e727b5f12e 100644
-> --- a/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-> +++ b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-> @@ -249,7 +249,7 @@ sharing and lock acquisition rules as the regular filesystem.
->  This means that scrub cannot take *any* shortcuts to save time, because doing
->  so could lead to concurrency problems.
->  In other words, online fsck is not a complete replacement for offline fsck, and
-> -a complete run of online fsck may take longer than online fsck.
-> +a complete run of online fsck may take longer than offline fsck.
->  However, both of these limitations are acceptable tradeoffs to satisfy the
->  different motivations of online fsck, which are to **minimize system downtime**
->  and to **increase predictability of operation**.
+> diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+> index ee49f20875af..6917de832191 100644
+> --- a/fs/xfs/xfs_discard.c
+> +++ b/fs/xfs/xfs_discard.c
+> @@ -726,8 +726,10 @@ xfs_trim_rtgroup_extents(
+>  			break;
+>  		}
+>  
+> -		if (!tr.queued)
+> +		if (!tr.queued) {
+> +			kfree(tr.extents);
+>  			break;
+> +		}
+>  
+>  		/*
+>  		 * We hand the extent list to the discard function here so the
 > -- 
-> 2.20.1
+> 2.47.3
 > 
 > 
