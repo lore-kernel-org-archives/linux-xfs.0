@@ -1,184 +1,186 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012032.outbound.protection.outlook.com [40.93.195.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EAC4192D97;
-	Tue,  4 Nov 2025 04:16:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762229765; cv=fail; b=OaLDpNaogvR61JcDztMC6FslS/rbteg6Dw/GRAjytTsFKnVig365PuF3mRDxHhOZzBTOrUsSaMIi04xFq0APHY3D52EX+vaVOCYCWsWGsGAV0T1Jh7ALoqXgpAqZNuA8Sd7s4JbKuoXctsONl44j1iW/ttomdcgR+DQdMDxUpQM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762229765; c=relaxed/simple;
-	bh=2gc127TZy6LzBlvfgRe0aRrGWbkprYIO+UsDyGu7ljw=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=jBA3/oRev+z7MDqnXPXiPnK49q5nzSf+PPYw4f/CNsSetlQeSJFTJQ7miKB+c8RekwgvjQLLugnAGPaUTpLy9PgkfR8gnS+jpg6PTSfbfeHxDoVRI2vgUtk+07MzYlM10l93rz8Fn+lc9ox2+RIyzlVLlkKTfK28xKV3CZ5sVFo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=RO1tSUXD; arc=fail smtp.client-ip=40.93.195.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBB202FD7DF
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 07:00:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1762239620; cv=none; b=pPtMpxMdG4pQo9lQPb1DMi4CivH8qBDk2rQojAwpTxH7l6cTXMaQwwmPvTt1kXnkj20I2hfqHUyJ+p7R/THHotHEPPg6G9+6KRPdWuI0nPQltINPSdYOj2EzrR5HGKE9/P5WX+Q9Lk+kawTbnIA51Id163n7mMwOOV3tneJoduA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1762239620; c=relaxed/simple;
+	bh=FGCfv80twEdU+R8XzVK1ejUCe8z8NADKArJeiCnBOKg=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:Mime-Version; b=bilE99y0h5lN7taQ2bGIIXNPS19f7nTy5xfrkXOANGWDbdptnYaIDX3xFyQWivsZkUpGZ8I5+ler9L3M93S9+bd7OV6dcV/n7DZzO1+/fXojW79BjHWQlh8gWqReq9K/vVF01ydLwkv6DnuvHRhDDRo7o1WttmlWLZrfj7dWf9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FbCgQvdu; arc=none smtp.client-ip=209.85.216.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="RO1tSUXD"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=JOHTJ6H95mP2tiLQJFm2YFL5iQiUMDDUcB+73iCOGM7iw/3svoHK6YhRsdbKpuQltpKCQCZgi+CErjcBDpw01vJEZrou0ANrwDQ7b1nQALCA1ymqLBrfb9gvRNZcuqiDfoSEnWIA6l2n/fN24HlttBV74F+8mmdHA8X6Gp8pYN+bUV2QUzoXCowtD2gLV+I8ct9ruTcnOtuwxu5B+c1iL9UB58ybZaKicgE9I4LLx45d7DzypgNr/zx4cQ9daMeHRdU2j4eeSDjf3Dsm6CVzK71WQNR1QYffO46TlM11lwYboP70g/Qor5+7asZNmsOOFWOybMqKIR+1uwVciEOKAw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=2gc127TZy6LzBlvfgRe0aRrGWbkprYIO+UsDyGu7ljw=;
- b=tgfzFaTSt1S6j63Z3DAgtXxBb6D3aghGnnICWCwwGu+wURUEajdaVCB3V35YhheS91/0d7FsUjLtJ/QCyOUqjxtukJPFZ2dKIESt4JL54jVUAc/lvWQSK8tenYF6MwZRD2afovas2Mf3SlvEeK7Wd7lZNUGoEXaqUkKptkO5FEwDJ5+E1eyKsuSiBKaC36lVhMKZ0xNhEHp50Zhcgvyh01YPBWzFtgqmMrv8mtVQbfq42HQOanf+2XMb0s+D4IIuMczbARLSoDgvrFTrF5xxxQEkQgMwYgXMmcBZgn0+7Xfoua+1Y8pjp6ry8BFB1N186A2gttXfbYOMVjd9wRAn5A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2gc127TZy6LzBlvfgRe0aRrGWbkprYIO+UsDyGu7ljw=;
- b=RO1tSUXDufSrlmNsMxyJwsV82HGt1wWGjuZXu4JGmyV8pXZZWxPXnQqM9ekdKGjATfA7lghqcBaW+c4FhTKb2gxxIRvXi00WMgS20+wWCrHJeLP049QQvrKuTZqFD269gWtvj6F4dObUR0mBdLbyFhVXKm9hxrG65OB5ZmAeafKZwAw8LN/Yj4V3FzMda+f2MboYNonEJFZ7Sq6EM6pzx7PYiDn6ufCfXN/+LdEZS2seEa7dHeY3USeNCoei5RvnIR0Kc3Ky4f8X2SUJ45NRUI4gxsvxUkaVYgIQbxOtHgVfpTfu5DcQwv2EndpNk4BgVcc4VLvzlA4nYB6zg9WEKg==
-Received: from LV3PR12MB9404.namprd12.prod.outlook.com (2603:10b6:408:219::9)
- by DM4PR12MB8449.namprd12.prod.outlook.com (2603:10b6:8:17f::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9298.7; Tue, 4 Nov
- 2025 04:15:59 +0000
-Received: from LV3PR12MB9404.namprd12.prod.outlook.com
- ([fe80::57ac:82e6:1ec5:f40b]) by LV3PR12MB9404.namprd12.prod.outlook.com
- ([fe80::57ac:82e6:1ec5:f40b%5]) with mapi id 15.20.9275.015; Tue, 4 Nov 2025
- 04:15:59 +0000
-From: Chaitanya Kulkarni <chaitanyak@nvidia.com>
-To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, Keith
- Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
-	"dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>, Mike Snitzer
-	<snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, "Martin K .
- Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>, "linux-xfs@vger.kernel.org"
-	<linux-xfs@vger.kernel.org>, Carlos Maiolino <cem@kernel.org>,
-	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, David Sterba
-	<dsterba@suse.com>
-Subject: Re: [PATCH v3 15/15] xfs: use blkdev_report_zones_cached()
-Thread-Topic: [PATCH v3 15/15] xfs: use blkdev_report_zones_cached()
-Thread-Index: AQHcTSt0r4OESdxxoUiLeeAb+ihxprTh6RoA
-Date: Tue, 4 Nov 2025 04:15:59 +0000
-Message-ID: <bbd13325-b965-4787-afd3-e1959a146f56@nvidia.com>
-References: <20251104013147.913802-1-dlemoal@kernel.org>
- <20251104013147.913802-16-dlemoal@kernel.org>
-In-Reply-To: <20251104013147.913802-16-dlemoal@kernel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-user-agent: Mozilla Thunderbird
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: LV3PR12MB9404:EE_|DM4PR12MB8449:EE_
-x-ms-office365-filtering-correlation-id: 38dc450c-330f-4b35-31de-08de1b58dbd8
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|376014|7416014|10070799003|366016|1800799024|921020|38070700021;
-x-microsoft-antispam-message-info:
- =?utf-8?B?dTNvaVQ5UCtxUFRXVFQxZUtrMVptdlNOaFVnN3kyTzdGRk96c2VYYzQ3VjlY?=
- =?utf-8?B?L3lENmN3NmtyYWRQT3VhdXZkd3VSdnJnZkRub2tMUVA1ZDhyalRtR1ErbkpS?=
- =?utf-8?B?VG5hd0F6MTl6SmJRUzZiQUJGRVl4MTIvdkZBSFB6TDJDN3VNTUliS1pvL01v?=
- =?utf-8?B?ajlUVCtpMFRkaGdMSTZxUERyVTl6Y2JYRDMrdUlEclpsKzg2RnFXTVJaTEdX?=
- =?utf-8?B?enJOa29pQkRGTC9nSndObCtLWG9NL3czcmhrTXVPQ3k5bjg2dk5zdzBQaGNI?=
- =?utf-8?B?UlJ1WTlEQWhHeFc0SlJqWkRaY2x1a3Q0WGV3cFlsdGltREFsaEw2ODlpZnZ5?=
- =?utf-8?B?dDArZWFkMFRoSDlBNHNsZURwNzM0THcyais0SE9MSGFzREljdVkwZjVHK2dF?=
- =?utf-8?B?VzhCQlZmY0UwZFJCMHpTc2pWTGNzdmY4MU93Z21SYmkxZWxzcEFXdU5iZGhv?=
- =?utf-8?B?Z1V2azMwZVRETjkvVzVoQWhqdXdhTTlka3dZMTFvY095cGhQRHpnblBNUUt0?=
- =?utf-8?B?VVhadkF0MnZyWmMzTU4rRzdVMWxoU0N4ZE4xbkl1MkpZL3pMQkx1YjZoV2Fo?=
- =?utf-8?B?VHZZSUlFSTg3MlJCR1VZaEZCdG9vRzlUelJRZUt3b05UbWVvTGU0aXVHZTJE?=
- =?utf-8?B?OHNNdWxHeVVhSmk3ZC9PdXYrMWMya09xZWR4K0IweENwUlpnOEM1SU4weUhU?=
- =?utf-8?B?S2toQXFqWFUrTjE4Q05UVktFWEZ0WE5NVHk3UGtiMzMzYTQ3eGtWS2tSdEkr?=
- =?utf-8?B?TkJMS3BlTjJXd3hyZEVZbkR6TVZFQkxWdEhFZExGenBGME5xZnl2c0cwZE0x?=
- =?utf-8?B?WWlnK1FXQnIyUTNnamdhNUR5RmQzN0FRSEhRWnk1Q2ZuaVcyVVhtR3VwaWNq?=
- =?utf-8?B?SkJRYkRqUUVHbitFZCthOW05RVhrMEQzeVJqanNCYVBkUzZ6N2ZWR3dTS2xD?=
- =?utf-8?B?M0VlTFlSZGI2UTdLanBQUXpFdVlWdnVjSnJUaXk4WmcwcFhkYXM0d3pHRU9E?=
- =?utf-8?B?d3J3Qy82a1V1YmlsWVkrVk1XZ3dxb3MrN2ZBbjdVUW1QM3VrMWV6WTdkT1Jp?=
- =?utf-8?B?YUc4dUI3R2lnbWVoQi83RzZ5RHlFdFlOMFQ4K1Q2NGxRZEV4UjQvb3ZWUUN1?=
- =?utf-8?B?T0YvT1JwOXFlcy9tclAzdml3VTFVTER6U0Z4SklUSldkYUlWbmVYT3ZCUzd3?=
- =?utf-8?B?MnRBMUVvYzQxT2xzWUdNTkFiOEJkL0tpUlZEUXRKaHVZV3Jza3p4RWdLT01S?=
- =?utf-8?B?TXJMMlBna1ZVeUVuSE16ZnlZSVZJenRiUEx3QU50cmlxSmJ2QjkzNUgwb3F3?=
- =?utf-8?B?K25IUVhKQnVMcG1XSkJ5N0tnVGdFeWdpWXJWT295WW9xYkZYQ2o5LzRXdEtR?=
- =?utf-8?B?SWpNTDh1aXcrZS9haVNlTDlJc0EyOEZScmJxUERkbWhXMnVxRkVwU2pGeXhY?=
- =?utf-8?B?QWExMTNlNXhBZlR1U2Q5NVlmZlpPdUJnRWVBNEsvSERBaTVmdFkwa0ZRTnps?=
- =?utf-8?B?SkxaS2IzWVR6OVdIWDB5WGtkc3VqQ3VwakpaOGltUFdSN0hYTFhoOVRsSDJD?=
- =?utf-8?B?VDFnaDRId3BnNTd6S0hGY0hEZ3I2U08yRzVxMENpMXNRWUtUSllSOCt3YWZ0?=
- =?utf-8?B?OHN3ZGF2a2lvcE1UZUc5VzRWUkRDRnJvSGdNbnpuYm9sbmJDTFE2NG9BWi9n?=
- =?utf-8?B?bm5XejVFcEFiSjMzelkxSCtKM2wrR210M1l5a1N3dUtNeUE0ajVnb3VoblJ5?=
- =?utf-8?B?VW1oUFhWcXltR2FRVHNML3ZLa2hFeDhZcTVzc2ZpRndsb1liMnowbDBEdGVs?=
- =?utf-8?B?WDBrVGZiTG0vWXczN3VXeWc5NmNrTFpENlF6Zy9QT1dwWTZ0bGkyRkZSbFBX?=
- =?utf-8?B?UUpyQXY5S01zdFZOV2tvZnJKUXlrYUVYR2hjaTlHZzhGcFY4bkZQSnBmblJr?=
- =?utf-8?B?M0V5SUVuNjJMeStGb3lJcWU3STRkZmN3YnpwUGFac2JYKzNUZno4NTFnbWNP?=
- =?utf-8?B?YzgwNnVHUjl1ZlFIMVl5ckovS2hqSmFhMFR2RWsrZXJjeXdTL3VGN3VIUERp?=
- =?utf-8?B?R0lRRDNCTmZYMTAvRlJqYWJWNXNwdFMxVHUzQT09?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR12MB9404.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(10070799003)(366016)(1800799024)(921020)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?dlNmZDZMbGFZRkdld1F5cHBzRnpkbXhTdEcvVzdGc0JIeVJmUDdSa1I2dUpS?=
- =?utf-8?B?T3U1dU1OSXQ5TWZRVU92Qi9yMytFS0Z1TDQySHVZV0VUZmZubDlOdE50Y2pl?=
- =?utf-8?B?YXdNTUNXUXJraVgvRFIxMXFvNUpJMU14M05FVFg1NTZsMHZLekpYR1VrTmUx?=
- =?utf-8?B?b0FzRVNqSDQxd3pvdCs3OG82OUFXajJTdDVzaVdpMjVJV1BDanh0OVdBc08w?=
- =?utf-8?B?SkNzZVQ1NGxRWm1RVnJsWGZjTWxHTndMazUraFZNK1duTVEyWk5ML0UyYXZW?=
- =?utf-8?B?WmZlRzRLNDZoakZEQSsvV2M5bFFIeXcrRDJIT0xyV29FeUFpMnpPVnI3MjFE?=
- =?utf-8?B?b252VWkzT1ZnVGZyWktHYmhEZmxmZmtOSlg1M2p0cHR0ckY0MC94Uy9qTEh2?=
- =?utf-8?B?VDNCMUZGUXMzaWxmQllub2gzMEhSZTlzd1lqNUlQMTB1bFQ1aDVDYkY4TEky?=
- =?utf-8?B?ejYzNjVITVJ1ZzNoSkowQmRYUTVwaENzTWh5VUdOUThYS3c0Z2xzSmZyUmNs?=
- =?utf-8?B?VXJocTBiV1U5UktYSUJvemdwc0NyZUlyRFFZVFZoYVVHdWR2NVQrbmwyVk9B?=
- =?utf-8?B?THRjMW9OZzhaVlgwU3Y4MnpHQXNUZlFNc1NTRlRYRWRoTFVaZXczVk9TT1kv?=
- =?utf-8?B?aC9OWGpubUlEK3QraFN3ZjJPbWZxNEhNamRycWtzbTdPNWZIQ09leUhua01C?=
- =?utf-8?B?Q1BNNFZRc3NqMnhWUjNlY1VIRGZpTE1id0VRY3Q4U2lQVzcwbWEzcW9BZjN3?=
- =?utf-8?B?VnlMalFtU2RnUXZEUTNqMENMaDlXZklDT1lTTGMwYTFYdW14L0VkaVZkMC9X?=
- =?utf-8?B?cWJjbStFK3FtelFtNHQydVE2MVRmaTZ3YmpJZldNWlFxTEIreU44YmRhZ0RY?=
- =?utf-8?B?TEppUUNmUHhRcWJGLzJleGpUVnJubm9FSUVCb1ViZGp6cFdUMUgrSE1ETVI3?=
- =?utf-8?B?Y3M1S3gvbXZ3SC9UMW01Y0VDaFM5Q2NUdXBsWXpoZ1pIQWF6Sjg5OXFsQjRF?=
- =?utf-8?B?RGJubjM1NG5NMWt4L3V2ckFPVnBpb0Jrd05zNC9hWXkxNzluRDJLMUF1cFFo?=
- =?utf-8?B?TTB2QlVnU3lJNTBYNTJaL096NHp0aDFkeURoa1VjUkM3R3E4d1lvNVgrQ2Vz?=
- =?utf-8?B?cXBlQ1BjVGhCeUp5WmVvZGlPektkOW02WGpvcTQxVUZTUVNvdlB4VEJDVGhl?=
- =?utf-8?B?cm1UV2xmcVkzQ1l0bnlmcXdpVlpsN2J5OFd5Q05mMUN2bGNWQ05TS1lDSHc0?=
- =?utf-8?B?ZlpmYWdPZVh0OGZmNTZ4MjZtTHVIVmVRQ29zR0tkbHd5cllNTzk5UEVKYU1M?=
- =?utf-8?B?aVJxQU43RzVUaVg1NjZPMmNHZ1JWaE5LUDloM1NsRkF6ZHNJOWlaVWJtQzJV?=
- =?utf-8?B?bGJxcHFxUnVNWUhKcGxpRllEczVqMVRRVUthazYxdUxuZUg1VEF0NURTaFBH?=
- =?utf-8?B?R1NzaHFyMjd5RmVKVjNiNnVXelh2T1hJdlpicmtQekhqM3VxWkJKelUzM1Vv?=
- =?utf-8?B?R3hzMU1kMk1DaWJVSForZ29IczQ3MVI0dUxCZTlQa1BEUGZSUmVDQms2VzhU?=
- =?utf-8?B?RldWQWE2RFpqcDRlQ3VOQ2FiMWZUeDRBU1M3eS9XSkhhR29hbm83dGxTbFZy?=
- =?utf-8?B?ajBNakhaSUxZd0tmVkNqS01tNzY1V043K3RHR2QvNmY4U2czS1o5ZTB1NWlm?=
- =?utf-8?B?UHFCY1lyUDlVMzdDV0pLNE1JWktxbEVkUU4vcW9IV0NONUd1VVJqYmxzZVdX?=
- =?utf-8?B?VkV2Tnd3UXU1ZUlISEZqM0ZURHpOYUg0RUN1YjNhSk9MeXpmUHZ3OTd5RWUx?=
- =?utf-8?B?QVlYLy9MZU5zQ2wzK202MkdsVWFDbVNVQUgzTmlVNUxoY0NRcEl1TVMvM1ZP?=
- =?utf-8?B?SCt4OUJIeHNxZDVLNUdBZGgwaVB5Um9Md3RHeFpDaTBsYTErRXNucmxldUlr?=
- =?utf-8?B?WXgxeEdSZTJmUDAySFhUNjYwTXAwdk1JeUJWYVBRT2l5NTFtaC91TENPSTIr?=
- =?utf-8?B?YmRLcExiWGc1YmhXVVZoc0NjdW1yekFrbmhnMFdrRjBNZnJuRmZpN1J5Uk1Z?=
- =?utf-8?B?TGorUS9hMks5Z3VKR09wTG15VXZlenVhanhDSlBhcXpjeGhmWnlNQ0Qvb1BX?=
- =?utf-8?B?d05IWmJVUXVxN0ppNXMzeXhZQk5BTEg2bUNrMDE5UnVIdHNyT1NjdG80cXpE?=
- =?utf-8?Q?6IH3VZcQstf74mPXyRWGPYSldL2AcHF5xIl4ohLsS8PN?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <009A5CBDDCA73241B9F2E378888541AD@namprd12.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FbCgQvdu"
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-3410c86070dso1452980a91.1
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Nov 2025 23:00:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1762239615; x=1762844415; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=f/FIOUr7S9hTEYtUjYatl+ZnZSEtRo87u/cEQk+2WP4=;
+        b=FbCgQvduY+kiMoBAfavdLJOETBVfGVgmUaKrOYa11on1jxXoPfqaBcw+U7TkdD5H4R
+         +GhT2Uz1LzAE3NsDLkwV/tE+Q6thVyn7Eh8heVZDp1kKM0HUPCClZ0r5Rtrj+Cdb6aNv
+         err+Wt91QKD09n0PMWpJzAhJAb+LdwmzzkMpOmqFul/l2rjjyj7U/gfSBsjSrXQpLH/g
+         MzJVmNS+3Ka5ArrnG9Bv8v3lL+blPMX3z54UDzrOu0XUl3Oplrfwu+CWSL+J0vwYHIMT
+         6wPg/FXcYJXYMQjd8G1HFQumxaEiK/QDDPgirOlvfTJYq+sDfjl0EbtBwcH7qp2xtPUY
+         Ihgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762239615; x=1762844415;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=f/FIOUr7S9hTEYtUjYatl+ZnZSEtRo87u/cEQk+2WP4=;
+        b=XdaZlpccBmVzLPaiV91Sv9S+MZ0BpzB3TKvIJr5Qdf99QqCzrZZKXyH1BOWdZzXNSe
+         9URtXft8cFNzD+LBWTkkjnXNvW8lJGEdAOZXoJlRRdgceDN//nWTF5OISzYK6LD6cBg2
+         FFetDb7GwyiulisJdG/yqpePXl+bJs7D+SqN/OqlTcEiusfHR967TyMVBxQFrrCGq80H
+         hw4XtgLura6XSsgM9K2Kkoi2KRzZ90bCgRQ6rPSJUut7gE4EOE4eKQiVLfW/jpWKzQzp
+         scNyYgYTugjklHJRGqn4Jdfd/YIA9C5XggCwhG2C+hDfAbxacXQuNSnLz5b3Ak9uQJ3n
+         zL4w==
+X-Forwarded-Encrypted: i=1; AJvYcCX5M0lVEy/pH4kOKuoiLDeV0+VrmOpMu3oDnZLfg2mLTTVVklwYX52vUdTtF9yYKhsJnICxKq9SFjo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzrotkJgxHeq0gZGM706tgdCEdTfV5NuW+3fEUxvzQ/aoL7UyAB
+	XUWvEnTNv1wrqwdcB5noPrMX4TkSmspZ7jqMHwzX2r98noUO1Gvz9H7n
+X-Gm-Gg: ASbGnctyvYA7UT51mDqSplyfqnputnBnNJVwsQ9NGG532KjnHMH+AmGAJQzbZnia067
+	pwRohnZoZQ9KlUiDo2bs3Y59hhE8L4t04SgWJvR4oJ8iHLjnVW1ek85RDoegRyp2NMB17e/EqPa
+	MyKVLq3O51AtqeXxcEjUIORIUZh/0rlbofIqOUwaDnr4GTJL17GxP9lWZ0aSHm33vApU7d1wSvp
+	9EaAR5hc2W1M9p9U/87Hz577pVO398as2/2JaqS5t2yo9r0k/dvQxubvgZOjFHKu0NBhLxuO611
+	TCQSUxNATrQdQKMpq32gktd5xrL65JAjUsel2tTJsoCQIKEYR8l67et9y1V5/Q+o13fFGcv4YBz
+	l5vvd/OUORBzr8ekxUhfbqDqIV9qyJlVUHHPU9phCbwtVuWGgACyCxG1q6nwUJyBwy22m3oFIWp
+	5sN6GyXsv83seGOSEF9WPjLpdGKRYDtsGgITXQYTAJ6LpRWhOc1w==
+X-Google-Smtp-Source: AGHT+IFswYKAZZGcmKubDw1Ut70XcdWnygbu/Nz8V8ZIBKgcbXyXjsFNYlrpqEz2UFnG6Imng1iP6Q==
+X-Received: by 2002:a17:90b:2783:b0:340:ff7d:c2e with SMTP id 98e67ed59e1d1-340ff7d105cmr10133442a91.29.1762239614970;
+        Mon, 03 Nov 2025 23:00:14 -0800 (PST)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([129.41.58.6])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3415c4aa8a5sm3316460a91.13.2025.11.03.23.00.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Nov 2025 23:00:14 -0800 (PST)
+Message-ID: <f79ef55f5ec05400582dea69e7bc3f14f5a5d1f0.camel@gmail.com>
+Subject: Re: [PATCH 1/4] fs: replace FOP_DIO_PARALLEL_WRITE with a fmode bits
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>, 
+	Christian Brauner
+	 <brauner@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>,  linux-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org,  linux-fsdevel@vger.kernel.org,
+ linux-raid@vger.kernel.org,  linux-block@vger.kernel.org
+Date: Tue, 04 Nov 2025 12:30:06 +0530
+In-Reply-To: <20251029071537.1127397-2-hch@lst.de>
+References: <20251029071537.1127397-1-hch@lst.de>
+	 <20251029071537.1127397-2-hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: LV3PR12MB9404.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 38dc450c-330f-4b35-31de-08de1b58dbd8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Nov 2025 04:15:59.2413
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: hq5tgHvjYFXApouTi4eLCMFtWyMxMPaY2QuAK8t+OKOBLdw08YZRt1OTbfDbeIyHBt57boWGNnnsA0dFJYh/6Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB8449
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-T24gMTEvMy8yNSAxNzozMSwgRGFtaWVuIExlIE1vYWwgd3JvdGU6DQo+IE1vZGlmeSB4ZnNfbW91
-bnRfem9uZXMoKSB0byByZXBsYWNlIHRoZSBjYWxsIHRvIGJsa2Rldl9yZXBvcnRfem9uZXMoKQ0K
-PiB3aXRoIGJsa2Rldl9yZXBvcnRfem9uZXNfY2FjaGVkKCkgdG8gc3BlZWQtdXAgbW91bnQgb3Bl
-cmF0aW9ucy4NCj4NCj4gV2l0aCB0aGlzIGNoYW5nZSwgbW91bnRpbmcgYSBmcmVzaGx5IGZvcm1h
-dHRlZCBsYXJnZSBjYXBhY2l0eSAoMzAgVEIpDQo+IFNNUiBIREQgY29tcGxldGVzIHVuZGVyIDJz
-IGNvbXBhcmVkIHRvIG92ZXIgNC43cyBiZWZvcmUuDQo+DQo+IFNpZ25lZC1vZmYtYnk6IERhbWll
-biBMZSBNb2FsPGRsZW1vYWxAa2VybmVsLm9yZz4NCj4gUmV2aWV3ZWQtYnk6IENocmlzdG9waCBI
-ZWxsd2lnPGhjaEBsc3QuZGU+DQo+IFJldmlld2VkLWJ5OiBKb2hhbm5lcyBUaHVtc2hpcm48am9o
-YW5uZXMudGh1bXNoaXJuQHdkYy5jb20+DQo+IC0tLQ0KDQoNCkxvb2tzIGdvb2QuDQoNClJldmll
-d2VkLWJ5OiBDaGFpdGFueWEgS3Vsa2FybmkgPGtjaEBudmlkaWEuY29tPg0KDQotY2sNCg0KDQo=
+On Wed, 2025-10-29 at 08:15 +0100, Christoph Hellwig wrote:
+> To properly handle the direct to buffered I/O fallback for devices that
+> require stable writes, we need to be able to set the DIO_PARALLEL_WRITE
+> on a per-file basis and no statically for a given file_operations
+> instance.
+So, is the fallback configurable(like we can turn it on/off)? Looking at the code it seems like it
+is not. Any reason for not making it configurable?
+--NR
+> 
+> This effectively reverts a part of 210a03c9d51a ("fs: claw back a few
+> FMODE_* bits").
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/ext4/file.c      | 2 +-
+>  fs/xfs/xfs_file.c   | 4 ++--
+>  include/linux/fs.h  | 7 ++-----
+>  io_uring/io_uring.c | 2 +-
+>  4 files changed, 6 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> index 7a8b30932189..b484e98b9c78 100644
+> --- a/fs/ext4/file.c
+> +++ b/fs/ext4/file.c
+> @@ -924,6 +924,7 @@ static int ext4_file_open(struct inode *inode, struct file *filp)
+>  		filp->f_mode |= FMODE_CAN_ATOMIC_WRITE;
+>  
+>  	filp->f_mode |= FMODE_NOWAIT | FMODE_CAN_ODIRECT;
+> +	filp->f_mode |= FMODE_DIO_PARALLEL_WRITE;
+>  	return dquot_file_open(inode, filp);
+>  }
+>  
+> @@ -978,7 +979,6 @@ const struct file_operations ext4_file_operations = {
+>  	.splice_write	= iter_file_splice_write,
+>  	.fallocate	= ext4_fallocate,
+>  	.fop_flags	= FOP_MMAP_SYNC | FOP_BUFFER_RASYNC |
+> -			  FOP_DIO_PARALLEL_WRITE |
+>  			  FOP_DONTCACHE,
+>  };
+>  
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 2702fef2c90c..5703b6681b1d 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1553,6 +1553,7 @@ xfs_file_open(
+>  	if (xfs_is_shutdown(XFS_M(inode->i_sb)))
+>  		return -EIO;
+>  	file->f_mode |= FMODE_NOWAIT | FMODE_CAN_ODIRECT;
+> +	file->f_mode |= FMODE_DIO_PARALLEL_WRITE;
+>  	if (xfs_get_atomic_write_min(XFS_I(inode)) > 0)
+>  		file->f_mode |= FMODE_CAN_ATOMIC_WRITE;
+>  	return generic_file_open(inode, file);
+> @@ -1951,8 +1952,7 @@ const struct file_operations xfs_file_operations = {
+>  	.fadvise	= xfs_file_fadvise,
+>  	.remap_file_range = xfs_file_remap_range,
+>  	.fop_flags	= FOP_MMAP_SYNC | FOP_BUFFER_RASYNC |
+> -			  FOP_BUFFER_WASYNC | FOP_DIO_PARALLEL_WRITE |
+> -			  FOP_DONTCACHE,
+> +			  FOP_BUFFER_WASYNC | FOP_DONTCACHE,
+>  };
+>  
+>  const struct file_operations xfs_dir_file_operations = {
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index c895146c1444..09b47effc55e 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -128,9 +128,8 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
+>  #define FMODE_WRITE_RESTRICTED	((__force fmode_t)(1 << 6))
+>  /* File supports atomic writes */
+>  #define FMODE_CAN_ATOMIC_WRITE	((__force fmode_t)(1 << 7))
+> -
+> -/* FMODE_* bit 8 */
+> -
+> +/* Supports non-exclusive O_DIRECT writes from multiple threads */
+> +#define FMODE_DIO_PARALLEL_WRITE ((__force fmode_t)(1 << 8))
+>  /* 32bit hashes as llseek() offset (for directories) */
+>  #define FMODE_32BITHASH         ((__force fmode_t)(1 << 9))
+>  /* 64bit hashes as llseek() offset (for directories) */
+> @@ -2317,8 +2316,6 @@ struct file_operations {
+>  #define FOP_BUFFER_WASYNC	((__force fop_flags_t)(1 << 1))
+>  /* Supports synchronous page faults for mappings */
+>  #define FOP_MMAP_SYNC		((__force fop_flags_t)(1 << 2))
+> -/* Supports non-exclusive O_DIRECT writes from multiple threads */
+> -#define FOP_DIO_PARALLEL_WRITE	((__force fop_flags_t)(1 << 3))
+>  /* Contains huge pages */
+>  #define FOP_HUGE_PAGES		((__force fop_flags_t)(1 << 4))
+>  /* Treat loff_t as unsigned (e.g., /dev/mem) */
+> diff --git a/io_uring/io_uring.c b/io_uring/io_uring.c
+> index 296667ba712c..668937da27e8 100644
+> --- a/io_uring/io_uring.c
+> +++ b/io_uring/io_uring.c
+> @@ -469,7 +469,7 @@ static void io_prep_async_work(struct io_kiocb *req)
+>  
+>  		/* don't serialize this request if the fs doesn't need it */
+>  		if (should_hash && (req->file->f_flags & O_DIRECT) &&
+> -		    (req->file->f_op->fop_flags & FOP_DIO_PARALLEL_WRITE))
+> +		    (req->file->f_mode & FMODE_DIO_PARALLEL_WRITE))
+>  			should_hash = false;
+>  		if (should_hash || (ctx->flags & IORING_SETUP_IOPOLL))
+>  			io_wq_hash_work(&req->work, file_inode(req->file));
+
