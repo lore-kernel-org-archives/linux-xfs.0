@@ -1,128 +1,140 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AC812DC332;
-	Tue,  4 Nov 2025 20:59:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEFF61A9F90;
+	Tue,  4 Nov 2025 21:26:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762289995; cv=none; b=irQNeiCW7QHjzMyo7UsYl0he8AOwy/fp7uBRHHt69wtwOzmaY2akBZT8Xhe++0aR9wPIq6FKwgvt6S4sXcm/ihw6E4VOO07Blg0SnYz8X6WsRR5qbWOe8q26fAcCMQTSiAvfmWQAnc2KpgV+nGmhrFr0zdZGDVehYLDaFc6QHiY=
+	t=1762291597; cv=none; b=Khjj7XXnFIgC2mY962kFXfNPxRkIyApEhJjR5C8UrwzNkM6tIxKT3ROQ8M5ihUb1755UvPczVgqyFuLcjMCJ+1Vv9VgaBHF9qlJonN2vCqJ8Zj01kct8ANnHdIPCEXsuSKdMutZKTbI0fhpbSicqiu1jg7pqiXVY0XsCEl0uip4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762289995; c=relaxed/simple;
-	bh=ZbevVTsyzkuKwdQrJJOdeX7YrKTFidZKoeeACl1fcI4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BcEAerHKbbGyTveBqCmiDbBptyRalprb/7xrp943wfO7LNV76/Y9kmhrG4orRwd6bTgxQZ1Hqc/ZAN5hmlGz55+gJyVTbbRiCq7hRk6zx3/g75zsWQjMQFaLUdC5QHGf+gF7oO+bfWQ7ka2Ryii4uEZoxRWDX/+g+BBllNLGUSA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aHU1/+Nx; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762291597; c=relaxed/simple;
+	bh=t1iehyOxpfgWNuOiIm++Sga1BBrEW/RG2uCKuzrgMbA=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=CfzqY0crfBShrquMIKoCFjSyOtPFh/2hQ+UAG94E2AItvpoRogIlJ3Z0rirHgF20DXfd6Plaa1kLiPrkIJ+u+iBNmsyunGNOjV8YICflAx/+YxU0TbBbGpN6b8X5UDbn5gDGuoI0KniM9m88FISa+WmfALNQPVwbz1A76JfU218=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=opscmHY0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aHU1/+Nx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA585C116B1;
-	Tue,  4 Nov 2025 20:59:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="opscmHY0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8987CC4CEF7;
+	Tue,  4 Nov 2025 21:26:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762289994;
-	bh=ZbevVTsyzkuKwdQrJJOdeX7YrKTFidZKoeeACl1fcI4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=aHU1/+NxHTGcstCciKvN0HOtfqbZvcKPFHaJAIxHidNwzrAUH57pju/VvROjFT57e
-	 9rImaFQb4z8LuzRklIxZLJF2VrGAH+JLi7zsSFkq1D6Np4PjBtNYScd1PR0ri1TAtO
-	 C8/TJ5vEMM3KUaF2iZ2FJtiFVDHMxidEJ0H/ZcmFov1S5b28kv2BMp+H+YUgVLxQEb
-	 fODPu/xN0+jxDzu5/ZHF6J2R+epjSqAVdQcC4nlJyvr175SaM5q8EYEdPQE5eXwQUE
-	 yVevNDW2NW1iLpxmhZ7XasSauPf7KOKeLRcqsgrgXv3zRMqhAJjr+vy5jphrmBIYO6
-	 gnqNNZ4ccEsBQ==
-Message-ID: <9f899cd8-7187-4878-b294-337d964c9587@kernel.org>
-Date: Wed, 5 Nov 2025 05:59:51 +0900
+	s=k20201202; t=1762291597;
+	bh=t1iehyOxpfgWNuOiIm++Sga1BBrEW/RG2uCKuzrgMbA=;
+	h=From:To:Subject:Date:From;
+	b=opscmHY0kdfNAdwGM7WetCQAiyCvOlf6ec8qWklHNhPnmrb0wt7v7I1hgs0VPlqey
+	 8xNspSUQlUJ8lF5REhkOGia2SJ37VZhdnYp4r9axXcvX/UFHm9MDOWadmRkgfXSmPy
+	 S3adRQVu4hfkP/SQoxzecBfj+CedG4C7+wxZ4Z0q0kVdnffWAi0zb0bDMfmTbybKg2
+	 /UsY4kXFYAlJFYT3PH0LtndJs9Cutze2+D0Tqo1BY8K7gVmUj1IAdALXQFCLWmMJcC
+	 BD3GqDDBrSG4ow4pLspGK6dC2xJwgMcvWjOhEZGUeUxttulPffVjO7/0T/2pcE4Vl3
+	 H+0y7+2iMZzVg==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>,
+	linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	Keith Busch <keith.busch@wdc.com>,
+	Christoph Hellwig <hch@lst.de>,
+	dm-devel@lists.linux.dev,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>,
+	linux-btrfs@vger.kernel.org,
+	David Sterba <dsterba@suse.com>
+Subject: [PATCH v4 00/15] Introduce cached report zones
+Date: Wed,  5 Nov 2025 06:22:34 +0900
+Message-ID: <20251104212249.1075412-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 00/15] Introduce cached report zones
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
- linux-nvme@lists.infradead.org, Keith Busch <keith.busch@wdc.com>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
- Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
- David Sterba <dsterba@suse.com>
-References: <20251104013147.913802-1-dlemoal@kernel.org>
- <20251104144158.GA27416@lst.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20251104144158.GA27416@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 11/4/25 23:41, Christoph Hellwig wrote:
-> I just threw this into my xfstests setup, and it seems this version
-> is broken somehow.  Running on emulated ZNS devices with XFS I get
-> a lot of failures with warnings like this:
-> 
-> [   30.068652] XFS (nvme1n1): empty zone 1 has non-zero used counter (0x1).
-> 
-> [   49.316873] XFS (nvme0n1): empty zone 2 has non-zero used counter (0x10).
-> 
-> so it seems like it's not tracking WPs correctly, probably when using
-> zone append and unmount/remounting.
+This patch series implements a cached report zones using information
+from the block layer zone write plugs and a new zone condition tracking.
+This avoids having to execute slow report zones commands on the device
+when for instance mounting file systems, which can significantly speed
+things up, especially in setups with multiple SMR HDDs (e.g. a BTRFS
+RAID volume).
 
-Aouch ! I totally missed that !
+The first patch improves handling of zone management commands. Patch 2
+fixes zone resource updates and the following 3 patches cleanup the zone
+code in preparation for introducing cached zone report support.
+From patch 6 to 13, cached report zones is implemented and made
+available to users with a new ioctl() command.
 
-First problem, trivial, I am missing this in the xfs patch:
+Finally, patches 14 and 15 introduce the use of cached report zones in
+the mount operation of XFS and BTRFS.
 
-diff --git a/fs/xfs/libxfs/xfs_zones.c b/fs/xfs/libxfs/xfs_zones.c
-index b0791a71931c..b40f71f878b5 100644
---- a/fs/xfs/libxfs/xfs_zones.c
-+++ b/fs/xfs/libxfs/xfs_zones.c
-@@ -95,6 +95,7 @@ xfs_zone_validate_seq(
-        case BLK_ZONE_COND_IMP_OPEN:
-        case BLK_ZONE_COND_EXP_OPEN:
-        case BLK_ZONE_COND_CLOSED:
-+       case BLK_ZONE_COND_ACTIVE:
-                return xfs_zone_validate_wp(zone, rtg, write_pointer);
-        case BLK_ZONE_COND_FULL:
-                return xfs_zone_validate_full(zone, rtg, write_pointer);
+These patches are against Jens' for-next tree.
 
-Second problem is a little more subtle: when disk_insert_zone_wplug() is called
-from blk_revalidate_disk_zones() callback for a non empty zone, the zone
-condition is set to BLK_ZONE_COND_NOT_WP if we do not have a disk zones_cond
-array. But we never have that on the first call to blk_revalidate_disk_zones()
-since that function sets it at the end of the revalidation. So we need this
-change to also avoid mount errors after a reboot for an FS with partially
-written zones:
+Changes from v3:
+ - Rebased on the latest block for-next tree.
+ - Fixed handling of the active zone condition in patch 7 and patch 15.
+ - Added review tags.
 
- diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index bf6495f0d49f..bba64b427082 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -527,12 +527,20 @@ static bool disk_insert_zone_wplug(struct gendisk *disk,
-                        return false;
-                }
-        }
-+
-+       /*
-+        * Set the zone condition: if we do not yet have a zones_cond array
-+        * attached to the disk, then this is a zone write plug insert from the
-+        * first call to blk_revalidate_disk_zones(), in which case the zone is
-+        * necessarilly in the active condition.
-+        */
-        zones_cond = rcu_dereference_check(disk->zones_cond,
-                                lockdep_is_held(&disk->zone_wplugs_lock));
-        if (zones_cond)
-                zwplug->cond = zones_cond[zwplug->zone_no];
-        else
--               zwplug->cond = BLK_ZONE_COND_NOT_WP;
-+               zwplug->cond = BLK_ZONE_COND_ACTIVE;
-+
-        hlist_add_head_rcu(&zwplug->node, &disk->zone_wplugs_hash[idx]);
-        atomic_inc(&disk->nr_zone_wplugs);
-        spin_unlock_irqrestore(&disk->zone_wplugs_lock, flags);
+Changes from v2:
+ - Rebased on the latest block for-next tree
+ - Fixed compilation warning (undocumented argument) in patch 4
+ - Modified patch 13 to display condition name instead of raw value, as
+   suggested by Johannes.
+ - Added review tags
 
-I will integrate these fixes in v5 and resend.
+Changes from v1:
+ - Move the patch "block: handle zone management operations completions"
+   at the beginning of the series and added a Fixes tag.
+ - Reworked a little patch 2 as suggested by Bart (error path handling)
+ - Added patch 8 as requested by Bart.
+ - Added patch 12 as suggested by Bart.
+ - Corrected various typos in commit messages and code comments.
+ - Added review tags
+
+Damien Le Moal (15):
+  block: handle zone management operations completions
+  block: freeze queue when updating zone resources
+  block: cleanup blkdev_report_zones()
+  block: introduce disk_report_zone()
+  block: reorganize struct blk_zone_wplug
+  block: use zone condition to determine conventional zones
+  block: track zone conditions
+  block: refactor blkdev_report_zones() code
+  block: introduce blkdev_get_zone_info()
+  block: introduce blkdev_report_zones_cached()
+  block: introduce BLKREPORTZONESV2 ioctl
+  block: improve zone_wplugs debugfs attribute output
+  block: add zone write plug condition to debugfs zone_wplugs
+  btrfs: use blkdev_report_zones_cached()
+  xfs: use blkdev_report_zones_cached()
+
+ block/blk-zoned.c                 | 798 +++++++++++++++++++++++-------
+ block/blk.h                       |  14 +
+ block/ioctl.c                     |   1 +
+ drivers/block/null_blk/null_blk.h |   3 +-
+ drivers/block/null_blk/zoned.c    |   4 +-
+ drivers/block/ublk_drv.c          |   4 +-
+ drivers/block/virtio_blk.c        |  11 +-
+ drivers/block/zloop.c             |   4 +-
+ drivers/md/dm-zone.c              |  54 +-
+ drivers/md/dm.h                   |   3 +-
+ drivers/nvme/host/core.c          |   5 +-
+ drivers/nvme/host/multipath.c     |   4 +-
+ drivers/nvme/host/nvme.h          |   2 +-
+ drivers/nvme/host/zns.c           |  10 +-
+ drivers/scsi/sd.h                 |   2 +-
+ drivers/scsi/sd_zbc.c             |  20 +-
+ fs/btrfs/zoned.c                  |  11 +-
+ fs/xfs/libxfs/xfs_zones.c         |   1 +
+ fs/xfs/xfs_zone_alloc.c           |   2 +-
+ include/linux/blkdev.h            |  49 +-
+ include/linux/device-mapper.h     |  10 +-
+ include/uapi/linux/blkzoned.h     |  46 +-
+ include/uapi/linux/fs.h           |   2 +-
+ 23 files changed, 784 insertions(+), 276 deletions(-)
 
 
-
-
+base-commit: 88e5f3c82190f1f4391618a49a61e99606a3fc00
 -- 
-Damien Le Moal
-Western Digital Research
+2.51.0
+
