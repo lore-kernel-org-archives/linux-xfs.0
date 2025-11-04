@@ -1,75 +1,79 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0313B347FF3
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 23:40:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 551AF2D8DD3
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 23:45:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762299610; cv=none; b=IyODe5eJaKNx7s6ccG/VikKuUgcHLn4neesXMkoeXcXG4QTU02mqxADZyyrypvLdN0UX+P98nI32B6ehgF5jaEQKMOJRRnsQ89OJvbgrPa/xmqoRKUDwVztQE1Uzi4PKOJJTVCJhFNC8kg3LPuFvTU8rfj/zqYTB4BmiYRgVpm0=
+	t=1762299934; cv=none; b=jwNy4c49PV569GPOV+SnI1Maz6O7kvaDvQ/CNWqoIwiABrgrrU8q65Od31EC31UZjDLBYLEktunBMvj0zAKXEoBWEXuQ7RFRLhd6f+4YCLtbdz9c+bt+FVYTPpqjalG9R0DBJ8MM2rzkGrUmN6Gcbw6hxGQaYV86BrV/P6keBkU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762299610; c=relaxed/simple;
-	bh=zFuXE3mJ9p5xhmjjIpZKEjcC94xxumzUntqQlEQrOsU=;
+	s=arc-20240116; t=1762299934; c=relaxed/simple;
+	bh=YYYtA3I5UnRakWulbISXSy8PKGBU7FIq0Tjj3XUDveo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Hl/ScJMHYFE18+BZDZ4Mq1KlWysxXMpEH3amPQ93Va7wA27entVmJvxj+vIrl1aeW7uoLVce+yF/5zopxSYKN81zm7yfKb7bDky/v6geeHBZi3aN4rOXRjKLKy2ZJwf3+OQWngk3DLCAKxZN5sBJz84b1VNWFHC8cYX0bZIxlY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V4PVtr6G; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fDjec/VF3LgsI8CNQZc4XcuddyQXx7H9+f3+qS/amjXCG60qFZFlm1D18FXDcPvm+etFrhXqQy5DwqXt6ox5B88kmSRj0ykL/ztP+N3VK4QPO1zVucatbBbR4P2gvOJvdrFbf98yEX46UklaCEm4TawwhmPf+K06XF/FqsEeI2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P/QuC0mX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V4PVtr6G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF5E2C4CEF7;
-	Tue,  4 Nov 2025 23:40:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P/QuC0mX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3101AC4CEF7;
+	Tue,  4 Nov 2025 23:45:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762299609;
-	bh=zFuXE3mJ9p5xhmjjIpZKEjcC94xxumzUntqQlEQrOsU=;
+	s=k20201202; t=1762299934;
+	bh=YYYtA3I5UnRakWulbISXSy8PKGBU7FIq0Tjj3XUDveo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=V4PVtr6G1agsHMGXhVdW4xohCRhKHvy/2Tiiy8wZ87xt3HeYj8BIdVpnquGqGynsj
-	 Azo+wgP2/2fx5xmXZ965R8HH61sGGSvUcXTRssc2x8cLiXKMBsAsAK7VbZORX0ci35
-	 gZtcxCUo6uuev2vlrlr30B2fi8YiL2W60FcSHMcrDtp3/F+mmsPEPdBWQJkV7DZNQr
-	 kRQFsVFZkCMq/ZIL3ixoF38rDC/Ct3CER7xyKzTsiIUq6ntYxLUDoUf/sFpZsNbmSP
-	 0j8sxVzFU2DrCeRM32ii/0qrVaybbirBAPE3E15Z7myit2yzsuoJ7w+4dwdktFWRkD
-	 PDuhxKT44jkMQ==
-Date: Tue, 4 Nov 2025 15:40:09 -0800
+	b=P/QuC0mXrxWB7rTb1KFQxnTy0KMa2qijRY1uE/a061ntLRphJB8fvWMx7Q5CgH9R1
+	 Ci18Wy5DPSQ3Ks2WZ9wuV1jHyggB7WPBqztt97mLUNxc7ha4yMP5NMzXEbGYqsq837
+	 b28Evzwf23IRxjdBb1Aad+ySAIeKGgl1RMVtJ88mc3S4pgV5r3CinMIHOFB4E71cd8
+	 89WV4uqcLs8ZZW88R4GfAO0LXpcz2PwQb8M8OPP6qAinNqQFCeMZpSFuYylcahOwvJ
+	 Sa2upB2/+TmpYa6CMWhNbMqMMt6Rjzz+CwA5DPneG4xOvkL46bCU7r9q/QBYd/ynw/
+	 pvdcZ+1YIjY7g==
+Date: Tue, 4 Nov 2025 15:45:33 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 07/10] xfs: improve the calling convention for the
- xlog_write helpers
-Message-ID: <20251104234009.GQ196370@frogsfrogsfrogs>
+Subject: Re: [PATCH 09/10] xfs: improve the iclog space assert in
+ xlog_write_iovec
+Message-ID: <20251104234533.GR196370@frogsfrogsfrogs>
 References: <20251030144946.1372887-1-hch@lst.de>
- <20251030144946.1372887-8-hch@lst.de>
- <20251101032632.GV3356773@frogsfrogsfrogs>
- <20251103104658.GB9158@lst.de>
+ <20251030144946.1372887-10-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251103104658.GB9158@lst.de>
+In-Reply-To: <20251030144946.1372887-10-hch@lst.de>
 
-On Mon, Nov 03, 2025 at 11:46:58AM +0100, Christoph Hellwig wrote:
-> On Fri, Oct 31, 2025 at 08:26:32PM -0700, Darrick J. Wong wrote:
-> > > $ size fs/xfs/xfs_log.o*
-> > >    text	   data	    bss	    dec	    hex	filename
-> > >   26330	   1292	      8	  27630	   6bee	fs/xfs/xfs_log.o
-> > >   26158	   1292	      8	  27458	   6b42	fs/xfs/xfs_log.o.old
-> > 
-> > Um... assuming xfs_log.o is the post-patch object file, this shows the
-> > text size going up by 172 bytes, right?
+On Thu, Oct 30, 2025 at 03:49:19PM +0100, Christoph Hellwig wrote:
+> We need enough space for the length we copy into the iclog, not just
+> some space, so tighten up the check a bit.
 > 
-> That one does.  I was pretty sure it was the other way around, so І
-> re-run this with the current tree:
-> 
-> $ size fs/xfs/xfs_log.o*
->    text	   data	    bss	    dec	    hex	filename
->   29300	   1730	    176	  31206	   79e6	fs/xfs/xfs_log.o
->   29160	   1730	    176	  31066	   795a	fs/xfs/xfs_log.o.old
-> 
-> but yes, this grows the text size somewhat unexpectedly.
-> 
-> I still like the new code, but I guess this now counts as a pessimization :(
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-"Cleaning up the method signatures is worth 140 bytes" :)
+Makes sense to me,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
+
+> ---
+>  fs/xfs/xfs_log.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 7c751665bc44..8b8fdef6414d 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1889,7 +1889,7 @@ xlog_write_iovec(
+>  	void			*buf,
+>  	uint32_t		buf_len)
+>  {
+> -	ASSERT(xlog_write_space_left(data) > 0);
+> +	ASSERT(xlog_write_space_left(data) >= buf_len);
+>  	ASSERT(data->log_offset % sizeof(int32_t) == 0);
+>  	ASSERT(buf_len % sizeof(int32_t) == 0);
+>  
+> -- 
+> 2.47.3
+> 
+> 
