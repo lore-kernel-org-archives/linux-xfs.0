@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E74FF334396;
-	Tue,  4 Nov 2025 17:18:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 428587083C;
+	Tue,  4 Nov 2025 17:24:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762276683; cv=none; b=LaRjP+ZhvlHep/Ko5z8Gw0l6M6l/FPjcsTHQ+G0Uevu6gjpyfDw4ed8L43afNxBJ8vsJ+0UrZZvS2hbplXSL/uHLk7bhAPjGEDYBzy2Z6wmqNGSjEu7lFr7zFgPihd1IuFz3Dc+nV85kpLURTwQPeGUXsooLWqo+6r8I4TTLXOM=
+	t=1762277094; cv=none; b=NJmFrvtYPxpWfmM1o/wEBTSjSxQtr3maKBVdlCvmgNlHoAge8BTEhoLBN7UWfGn4w891/dJrSfMWYZ96xp1iYC/jNanXeamRkxx2+r38HeNX/d8IPP4UGunlakjPn9Oms1cIXKKGfxYh4Te7+uoNAikH0Za4lZtRa0vo6yJ1LG0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762276683; c=relaxed/simple;
-	bh=OehEy2RqSln3rqPcjFDM6qg/2qUKWCks8ZYNM0/zQxc=;
+	s=arc-20240116; t=1762277094; c=relaxed/simple;
+	bh=5Iw7O26S9lKlP1jRVcvy+OhqJVgX7BIdjCH6DDmPqVg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p8fFKMyXSGj6PLjRrDjLVdfvSFNq5ut4ZRlEwNY8pGObfPJ+y2GgfP9n9RbG5FJejb5CbubXmVMvfteemUJe5lRvC6S7XYlp+So3P4huEnm65qosFBNiHe3HPETAM+3RHDLPfVJGaGK9tBovYKz9t8GVxbwNiIcaTz8BoR3QE64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MxeklXDA; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ci/GAZXXP3G3AftQBpiUm9CUpCUl2inXKKHQ8WeljtzgHH9vNMIF1Y/zv7CXV//a8/zy3Y9st7jmzjO78JFOKNXMzSW/UxRKec4czgjvJjRCrsvHMf7CdRW06LLzNilu3TNCL73jnNRsJBZ/fWnWcNDl8yQhZFGchknqI/1eXrE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vHwCsRFb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MxeklXDA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F8D1C4CEF7;
-	Tue,  4 Nov 2025 17:18:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vHwCsRFb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8EE6C4CEF7;
+	Tue,  4 Nov 2025 17:24:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762276682;
-	bh=OehEy2RqSln3rqPcjFDM6qg/2qUKWCks8ZYNM0/zQxc=;
+	s=k20201202; t=1762277093;
+	bh=5Iw7O26S9lKlP1jRVcvy+OhqJVgX7BIdjCH6DDmPqVg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=MxeklXDAmjSFb5HKr1Ndl7A0GR8+3KftXmVTflK9VCzO8vPIvZWbgSBT5B7aUwTl7
-	 ufC0fcGA4+zPFDwtOdyFmd4TJZIa53qpdIIlNsCrwXssCC9C7sjhtNPO5UXVE/FDPw
-	 s5/m13DinKrwc3UcDR5/San2BdtxlDJpd35r6aEtl0Qt0aMzx1g76ZR3FNHMz06ABa
-	 vOQmnM8Cu5GA+XJWVyY89VU5Nhgdie/7H3VGWQP1tSknL6dTnJUw3YUO3J4DS6uiJx
-	 epouSljy63uF1fBqOVCLOFXDP9CLxRQLXrh+ptMvTnDeTBU5/x+z7ntx6eO+DJbqqB
-	 vwcYGHYalq3RA==
-Date: Tue, 4 Nov 2025 09:18:01 -0800
+	b=vHwCsRFbRwpTz73SllFx0xVeeVtVtTl0waI1IU6PJ4AgA4RHwjV1W6PPpCotZT85l
+	 8XukH8Jk47eGwZufQiJ4FJQBqLvEpT/2I0OMotA0QoTuLDyuL5OKFGGKyAAOjo23xt
+	 sq04xu8JEUFJuAJaJErrTvRRjUGnONDamEcxU0igdnQGi+XwNTAU5eUk3JgKX9lIlH
+	 XabfO+baxD+rt6hYWXbRZ44SeMnYDR6WhXBSLP7/fyRW2adag9INklmyu0meYFGva6
+	 U4/Ke6+OL9zOpqXNjEjRlZlKWlkhzsirG0DMicqo1OYThFhJCrzJRjPnwHNkRenRbd
+	 gpwNQVTvXJD8A==
+Date: Tue, 4 Nov 2025 09:24:53 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: John Garry <john.g.garry@oracle.com>
 Cc: Carlos Maiolino <cem@kernel.org>, Ojaswin Mujoo <ojaswin@linux.ibm.com>,
 	Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
 	Ritesh Harjani <ritesh.list@gmail.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: fix various problems in
- xfs_atomic_write_cow_iomap_begin
-Message-ID: <20251104171801.GL196370@frogsfrogsfrogs>
+Subject: Re: [PATCH 1/2] xfs: fix delalloc write failures in
+ software-provided atomic writes
+Message-ID: <20251104172453.GM196370@frogsfrogsfrogs>
 References: <20251103174024.GB196370@frogsfrogsfrogs>
- <20251103174400.GC196370@frogsfrogsfrogs>
- <02174386-c930-419e-9ad2-2ae265235d6d@oracle.com>
+ <cb1f1963-8ca4-460f-b620-6026a26ce9eb@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,187 +45,126 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <02174386-c930-419e-9ad2-2ae265235d6d@oracle.com>
+In-Reply-To: <cb1f1963-8ca4-460f-b620-6026a26ce9eb@oracle.com>
 
-On Tue, Nov 04, 2025 at 12:07:53PM +0000, John Garry wrote:
-> On 03/11/2025 17:44, Darrick J. Wong wrote:
+On Tue, Nov 04, 2025 at 10:08:10AM +0000, John Garry wrote:
+> On 03/11/2025 17:40, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > I think there are several things wrong with this function:
+> > With the 20 Oct 2025 release of fstests, generic/521 fails for me on
+> > regular (aka non-block-atomic-writes) storage:
 > > 
-> > A) xfs_bmapi_write can return a much larger unwritten mapping than what
-> >     the caller asked for.  We convert part of that range to written, but
-> >     return the entire written mapping to iomap even though that's
-> >     inaccurate.
+> > QA output created by 521
+> > dowrite: write: Input/output error
+> > LOG DUMP (8553 total operations):
+> > 1(  1 mod 256): SKIPPED (no operation)
+> > 2(  2 mod 256): WRITE    0x7e000 thru 0x8dfff	(0x10000 bytes) HOLE
+> > 3(  3 mod 256): READ     0x69000 thru 0x79fff	(0x11000 bytes)
+> > 4(  4 mod 256): FALLOC   0x53c38 thru 0x5e853	(0xac1b bytes) INTERIOR
+> > 5(  5 mod 256): COPY 0x55000 thru 0x59fff	(0x5000 bytes) to 0x25000 thru 0x29fff
+> > 6(  6 mod 256): WRITE    0x74000 thru 0x88fff	(0x15000 bytes)
+> > 7(  7 mod 256): ZERO     0xedb1 thru 0x11693	(0x28e3 bytes)
 > > 
-> > B) The arguments to xfs_reflink_convert_cow_locked are wrong -- an
-> >     unwritten mapping could be *smaller* than the write range (or even
-> >     the hole range).  In this case, we convert too much file range to
-> >     written state because we then return a smaller mapping to iomap.
-> > 
-> > C) It doesn't handle delalloc mappings.  This I covered in the patch
-> >     that I already sent to the list.
-> > 
-> > D) Reassigning count_fsb to handle the hole means that if the second
-> >     cmap lookup attempt succeeds (due to racing with someone else) we
-> >     trim the mapping more than is strictly necessary.  The changing
-> >     meaning of count_fsb makes this harder to notice.
-> > 
-> > E) The tracepoint is kinda wrong because @length is mutated.  That makes
-> >     it harder to chase the data flows through this function because you
-> >     can't just grep on the pos/bytecount strings.
-> > 
-> > F) We don't actually check that the br_state = XFS_EXT_NORM assignment
-> >     is accurate, i.e that the cow fork actually contains a written
-> >     mapping for the range we're interested in
-> > 
-> > G) Somewhat inadequate documentation of why we need to xfs_trim_extent
-> >     so aggressively in this function.
-> > 
-> > H) Not sure why xfs_iomap_end_fsb is used here, the vfs already clamped
-> >     the write range to s_maxbytes.
-> 
-> Can you point out that code? I wonder if we should be rejecting anything
-> which goes over s_maxbytes for RWF_ATOMIC.
-
-generic_write_check_limits:
-https://elixir.bootlin.com/linux/v6.17.7/source/fs/read_write.c#L1709
-
-xfs_file_dio_write_atomic -> xfs_file_write_checks ->
-generic_write_checks -> generic_write_checks_count ->
-generic_write_check_limits
-
-> > 
-> > Fix these issues, and then the atomic writes regressions in generic/760,
-> > generic/617, generic/091, generic/263, and generic/521 all go away for
-> > me.
+> > with a warning in dmesg from iomap about XFS trying to give it a
+> > delalloc mapping for a directio write.  Fix the software atomic write
+> > iomap_begin code to convert the reservation into a written mapping.
+> > This doesn't fix the data corruption problems reported by generic/760,
+> > but it's a start.
 > > 
 > > Cc: <stable@vger.kernel.org> # v6.16
 > > Fixes: bd1d2c21d5d249 ("xfs: add xfs_atomic_write_cow_iomap_begin()")
 > > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
 > 
-> this looks ok, thanks
+> FWIW:
 > 
 > Reviewed-by: John Garry <john.g.garry@oracle.com>
 > 
-> I'm just doing powerfail testing - I'll let you know if any issues found
-> 
 > > ---
-> >   fs/xfs/xfs_iomap.c |   60 ++++++++++++++++++++++++++++++++++++++++++----------
-> >   1 file changed, 49 insertions(+), 11 deletions(-)
+> >   fs/xfs/xfs_iomap.c |   21 +++++++++++++++++++--
+> >   1 file changed, 19 insertions(+), 2 deletions(-)
 > > 
 > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index e1da06b157cf94..469f34034daddd 100644
+> > index d3f6e3e42a1191..e1da06b157cf94 100644
 > > --- a/fs/xfs/xfs_iomap.c
 > > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -1091,6 +1091,29 @@ const struct iomap_ops xfs_zoned_direct_write_iomap_ops = {
-> >   };
-> >   #endif /* CONFIG_XFS_RT */
-> > +#ifdef DEBUG
-> > +static void
-> > +xfs_check_atomic_conversion(
-> 
-> xfs_check_atomic_cow_conversion() might be better, I don't think that it is
-> so important
-
-Ok.
-
---D
-
-> > +	struct xfs_inode		*ip,
-> > +	xfs_fileoff_t			offset_fsb,
-> > +	xfs_filblks_t			count_fsb,
-> > +	const struct xfs_bmbt_irec	*cmap)
-> > +{
-> > +	struct xfs_iext_cursor		icur;
-> > +	struct xfs_bmbt_irec		cmap2 = { };
-> > +
-> > +	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap2))
-> > +		xfs_trim_extent(&cmap2, offset_fsb, count_fsb);
-> > +
-> > +	ASSERT(cmap2.br_startoff == cmap->br_startoff);
-> > +	ASSERT(cmap2.br_blockcount == cmap->br_blockcount);
-> > +	ASSERT(cmap2.br_startblock == cmap->br_startblock);
-> > +	ASSERT(cmap2.br_state == cmap->br_state);
-> > +}
-> > +#else
-> > +# define xfs_check_atomic_conversion(...)	((void)0)
-> > +#endif
-> > +
-> >   static int
-> >   xfs_atomic_write_cow_iomap_begin(
-> >   	struct inode		*inode,
-> > @@ -1102,9 +1125,10 @@ xfs_atomic_write_cow_iomap_begin(
-> >   {
-> >   	struct xfs_inode	*ip = XFS_I(inode);
-> >   	struct xfs_mount	*mp = ip->i_mount;
-> > -	const xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> > -	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, length);
-> > -	xfs_filblks_t		count_fsb = end_fsb - offset_fsb;
-> > +	const xfs_fileoff_t	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> > +	const xfs_fileoff_t	end_fsb = XFS_B_TO_FSB(mp, offset + length);
-> > +	const xfs_filblks_t	count_fsb = end_fsb - offset_fsb;
-> > +	xfs_filblks_t		hole_count_fsb;
-> >   	int			nmaps = 1;
-> >   	xfs_filblks_t		resaligned;
-> >   	struct xfs_bmbt_irec	cmap;
-> > @@ -1143,14 +1167,20 @@ xfs_atomic_write_cow_iomap_begin(
+> > @@ -1130,7 +1130,7 @@ xfs_atomic_write_cow_iomap_begin(
+> >   		return -EAGAIN;
+> >   	trace_xfs_iomap_atomic_write_cow(ip, offset, length);
+> > -
+> > +retry:
+> >   	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> >   	if (!ip->i_cowfp) {
+> > @@ -1141,6 +1141,8 @@ xfs_atomic_write_cow_iomap_begin(
+> >   	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap))
+> >   		cmap.br_startoff = end_fsb;
 > >   	if (cmap.br_startoff <= offset_fsb) {
-> >   		if (isnullstartblock(cmap.br_startblock))
-> >   			goto convert;
-> > +
-> > +		/*
-> > +		 * cmap could extend outside the write range due to previous
-> > +		 * speculative preallocations.  We must trim cmap to the write
-> > +		 * range because the cow fork treats written mappings to mean
-> > +		 * "write in progress".
-> > +		 */
+> > +		if (isnullstartblock(cmap.br_startblock))
+> 
+> This following comment is unrelated to this patch and is only relevant to
+> pre-existing code:
+> 
+> isnullstartblock() seems to be a check specific to delayed allocation, so I
+> don't why "null" is used in the name, and not "delalloc" or something else
+> more specific.
+> 
+> I guess that there is some history here (behind the naming).
+
+I think the "null" is meant in the sense of "null pointer to storage
+device", which is an odd way of saying "file range space reservation" :)
+
+If you use high-level function xfs_bmapi_read(), then it sets
+br_startblock to DELAYSTARTBLOCK which is a little more clear.
+
+But here we're doing a direct lookup in the iext tree, so we have to
+interpret the raw incore record.  For a delayed allocation of N blocks,
+we reserve those N blocks from the free space counter and stuff that in
+br_blockcount; and enough space to handle btree expansions in the lower
+17 bits of br_startblock.  That's why isnullstartblock does a bunch of
+masking magic.
+
+> > +			goto convert;
 > >   		xfs_trim_extent(&cmap, offset_fsb, count_fsb);
 > >   		goto found;
 > >   	}
-> > -	end_fsb = cmap.br_startoff;
-> > -	count_fsb = end_fsb - offset_fsb;
-> > +	hole_count_fsb = cmap.br_startoff - offset_fsb;
-> > -	resaligned = xfs_aligned_fsb_count(offset_fsb, count_fsb,
-> > +	resaligned = xfs_aligned_fsb_count(offset_fsb, hole_count_fsb,
-> >   			xfs_get_cowextsz_hint(ip));
-> >   	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > @@ -1186,7 +1216,7 @@ xfs_atomic_write_cow_iomap_begin(
-> >   	 * atomic writes to that same range will be aligned (and don't require
-> >   	 * this COW-based method).
-> >   	 */
-> > -	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
-> > +	error = xfs_bmapi_write(tp, ip, offset_fsb, hole_count_fsb,
-> >   			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC |
-> >   			XFS_BMAPI_EXTSZALIGN, 0, &cmap, &nmaps);
-> >   	if (error) {
-> > @@ -1199,17 +1229,25 @@ xfs_atomic_write_cow_iomap_begin(
-> >   	if (error)
-> >   		goto out_unlock;
-> > +	/*
-> > +	 * cmap could map more blocks than the range we passed into bmapi_write
-> > +	 * because of EXTSZALIGN or adjacent pre-existing unwritten mappings
-> > +	 * that were merged.  Trim cmap to the original write range so that we
-> > +	 * don't convert more than we were asked to do for this write.
-> > +	 */
-> > +	xfs_trim_extent(&cmap, offset_fsb, count_fsb);
-> > +
-> >   found:
-> >   	if (cmap.br_state != XFS_EXT_NORM) {
-> > -		error = xfs_reflink_convert_cow_locked(ip, offset_fsb,
-> > -				count_fsb);
-> > +		error = xfs_reflink_convert_cow_locked(ip, cmap.br_startoff,
-> > +				cmap.br_blockcount);
-> >   		if (error)
-> >   			goto out_unlock;
-> >   		cmap.br_state = XFS_EXT_NORM;
-> > +		xfs_check_atomic_conversion(ip, offset_fsb, count_fsb, &cmap);
+> > @@ -1169,8 +1171,10 @@ xfs_atomic_write_cow_iomap_begin(
+> >   	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap))
+> >   		cmap.br_startoff = end_fsb;
+> >   	if (cmap.br_startoff <= offset_fsb) {
+> > -		xfs_trim_extent(&cmap, offset_fsb, count_fsb);
+> >   		xfs_trans_cancel(tp);
+> > +		if (isnullstartblock(cmap.br_startblock))
+> > +			goto convert;
+> > +		xfs_trim_extent(&cmap, offset_fsb, count_fsb);
+> >   		goto found;
 > >   	}
-> > -	length = XFS_FSB_TO_B(mp, cmap.br_startoff + cmap.br_blockcount);
-> > -	trace_xfs_iomap_found(ip, offset, length - offset, XFS_COW_FORK, &cmap);
-> > +	trace_xfs_iomap_found(ip, offset, length, XFS_COW_FORK, &cmap);
-> >   	seq = xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED);
+> > @@ -1210,6 +1214,19 @@ xfs_atomic_write_cow_iomap_begin(
 > >   	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 > >   	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, IOMAP_F_SHARED, seq);
+> > +convert:
+> 
+> minor comment:
+> 
+> could convert_delay be a better name, like used in
+> xfs_buffered_write_iomap_begin()?
+
+Yeah, that'll be more consistent.  Thanks for reviewing both patches.
+
+--D
+
+> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > +	error = xfs_bmapi_convert_delalloc(ip, XFS_COW_FORK, offset, iomap,
+> > +			NULL);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	/*
+> > +	 * Try the lookup again, because the delalloc conversion might have
+> > +	 * turned the COW mapping into unwritten, but we need it to be in
+> > +	 * written state.
+> > +	 */
+> > +	goto retry;
+> >   out_unlock:
+> >   	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> >   	return error;
 > 
 > 
