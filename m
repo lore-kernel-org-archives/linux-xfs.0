@@ -1,48 +1,67 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E163D2ECD3A;
-	Tue,  4 Nov 2025 20:37:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9865D2ECD3A
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 20:42:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762288634; cv=none; b=F2MWyFDtTq2a/JUtck45Nx+zUU9FDpqth/L3q1+L6EVQkjpY8f1iE7fkY9Zjuc/qTKgFLLrrRMdlvXTEf5jOy4+mwe4dbIN/7xyGzD9AICL45SRJtT3R42QCyOhh5gzuGEzcR61p0LsfnBHOKjh27x8lp+bmv/v5140HwNQo0E4=
+	t=1762288967; cv=none; b=tft8jV8/IswJFhc9ihJLt0Sy2SL89BmE1XOlFNGcYY1ZW+1TvnPIMCLPFkcElQgko9n07cXcHG698pdY2K+JucKFtbgw2yj1Bu25cIs07Rdc/6SYv6hUZqi4VSoCJHgvejvXwT/rhWlb39CfDiCHpIGmXx/D3mf24tV54/caS/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762288634; c=relaxed/simple;
-	bh=Hd5WRC5q73BCc88/cX72o+WZOdt8iG1dF8beT1jc//4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=NP6DjK2U3LW/goXtxDxn680g1Sbl4BSGNjc/GeCKJgyeMWm277y/QAfLnzvliOmziqeKljY7W8aemmMjodrTpW3ERLV6m9R0CiGMDz30m2Oqe1OJftg91r//O0GOXYCZWleXOeUEQO1pQ6GjmYp+8IOVkzknAXje6gNCj2Og/t0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=njyrOopW; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1762288967; c=relaxed/simple;
+	bh=JGsJhmJeF5q8J7Ype2nL15gIcp7qqgcNpRYXX2zKA1U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Hpn/jMg5uyUPdUzYPOIszUK8eZzBc4s2K291XEF6kdic1IsKo4mJE1QFh17osuggix6Ex4G9ZXOxMHJWhAD3l8mUxP/Kah6zN/GOQmVVLWLWaSGtYUQqmC9s5AD8LgAeXeC77AR96ZncTcaxRWHZB1PrEVUQa7hFWXSdvBNOGjY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=NF4B26cu; arc=none smtp.client-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="njyrOopW"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4d1Kxr66nZznDrCk;
-	Tue,  4 Nov 2025 20:37:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1762288622; x=1764880623; bh=Hd5WRC5q73BCc88/cX72o+WZ
-	Odt8iG1dF8beT1jc//4=; b=njyrOopWTof8U96TrrWMp1a4Efg7XVUfLDtQYyzb
-	aTMFdUJX01Eu6nU3f0ycgIQ5A43cI+9q+eSogfozr65UTP/B8IKkmDal9zYZTdTC
-	xn5n1dVPMj/UYaFV9EZISUSEPAfoTT+J3gsGtepGxTdc4WtilYiIYItT4hOLRxX8
-	fnvPSrkzoSDif2AUDTiKSs6bSzBN7uXecCLnD2g8pYeQcj5dI+dAT1gW/c4+0MaE
-	DZKyAR+CreJGcVkEpKm3pa/Y2LHj3iVAtAXgTnfyF3hmbFZ/1h4jLlPD2glv3Eye
-	oOFphoXnwW8KN42ignT3IE+q+Xa9zzo+tkZ8D3rkbzrpIQ==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 9hBJWyN-oUgM; Tue,  4 Nov 2025 20:37:02 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4d1KxY3VgNznDrCX;
-	Tue,  4 Nov 2025 20:36:47 +0000 (UTC)
-Message-ID: <46fb6d7e-e3c9-48fb-ab2e-f432df9f9c05@acm.org>
-Date: Tue, 4 Nov 2025 12:36:46 -0800
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="NF4B26cu"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-429c2f6a580so869884f8f.1
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Nov 2025 12:42:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1762288964; x=1762893764; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=3/I2a0uZTAnglwIVDCoK1EV+nWMPjHOXPCZYdwAgCYY=;
+        b=NF4B26cuPHjv3gz17Rsd4oUx/nd3H2cVMGfdAtWNrXbFRIn90kvaIWFt3FX9h1quZJ
+         kLLp5i6VaIXIirF0hn9FPubdMMfmwIMNzylZN3OiRuxw32b2UMKihBm8DYldouUrhFym
+         2tqjhuNCieP75phG/5Dlp3EO/UP3JX5c/ckIbEo/zfl/KaTbCzNlVwJ8zwHt+CIsG2xM
+         BbHYPVW3s4uJC6BrZ1ZN58sX2ZOp21+aJX+ytIjJG5vkbyhnIn9xz/tD7NXW599Y3jpK
+         v8PhPVLh8vmgGdnZqIE6CobxZEn+jhXyhzFecnCon9lim+OttiR3GX6GdmzS77ICPWGM
+         RCNA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762288964; x=1762893764;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=3/I2a0uZTAnglwIVDCoK1EV+nWMPjHOXPCZYdwAgCYY=;
+        b=Hi/PnqSAwnbYMKPYdmhPgoc37QquoRCA63JfY9TXQ4JPzd7rDqay5MEiRj+NwUgn+Y
+         6M0KShA//B0h4FKlMQwP49AeSNEnEfRqHT5gXBMS0R6vCiRm3Brw6G0bgTbYSlqIL423
+         Y/i7Viq3pysQYpJ2kG7luEcKIcpQoI6UktRivLoxOe2zHPqR2hI7jgIRob9qd4DVE9Pc
+         PU8qu/xBUdyED9Myr0GYKoyTITpCJ54+qY84tjBRVPz1qOqpxoHoG69WgqVRC0FbD0NE
+         kUMSewTdh+IM5gbj6kb50jMmTndT41Z/qMgfpIGzNGOuCPIRj5DbwJj/e6bOtBpQlNMg
+         NB0A==
+X-Forwarded-Encrypted: i=1; AJvYcCUOaIuwuT0uX9C1xD9CqcWm+kOo4QgfB0u5g2esiwiQH1lUxEXvl8NV7J5ZiVxZjHVKIW9rRnttylw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyWr+sg7PhrC6lNcZ5EHlpyDvy5T5XJYKhdhMeuuLtJI97rWgyT
+	JNzZXePRBut3zw0SUYEcWAYpFUICpWb5LuX+eY1tzLMcXiEiOUe8ldQhSrZxDURiGtU=
+X-Gm-Gg: ASbGnctSpTUK1v49kHqwvN7rERH+ix175uOstH3EUh5U1cNsxWfZVMkx0fmF/WNBnsF
+	xQRVflgtE7qSx6cZAsxcRcN+7uKq+peuShM0H3YIKjVRovLUwXRgoROw+Xpprji5pN6bXVxErCF
+	yDzuPywyfJvla+8aAXSg27cH9/UPlKWCuNrOMpDAz4UUkaJ/lRyzNo1zJNSDjGrXGxcfgHVQkMA
+	GSXMhfAjL3SGNNRdS5nCGgwLwoc7cY4IttGZzEzw/SNGhouhva5kcI0Pewofq8+a4FqqwovfO5s
+	gSvCR/wLNPVaLsTG5WUr55f2lCcl8Il2rF1je9J4HUvajOzu470wuNaf/gPtwzHlHeEtD94tiq+
+	kDsllZl1eDJ6qjFMEWBmAoi7ZZPVy31HNa9/qFQU94u3uUZClLGVpP3j4ZGykJrT1OCmPaM5aHs
+	FJpCeNjNeIOtyNZdxTzhAF0MNmrOSF
+X-Google-Smtp-Source: AGHT+IG8Z203PhFCyhJhz48A8l8UhXjLU1AaikFIf0iJkmfVY5x+Gi/GZMr6bL+04r89yb9RlNQzVA==
+X-Received: by 2002:a05:6000:26d3:b0:429:c851:69bc with SMTP id ffacd0b85a97d-429e32dd761mr472461f8f.8.1762288963767;
+        Tue, 04 Nov 2025 12:42:43 -0800 (PST)
+Received: from ?IPV6:2403:580d:fda1::e9d? (2403-580d-fda1--e9d.ip6.aussiebb.net. [2403:580d:fda1::e9d])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7acd3246e7bsm3976191b3a.8.2025.11.04.12.42.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 04 Nov 2025 12:42:43 -0800 (PST)
+Message-ID: <247c8075-60d3-4090-a76d-8d59d9e859ca@suse.com>
+Date: Wed, 5 Nov 2025 07:12:38 +1030
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -50,33 +69,86 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 11/15] block: introduce BLKREPORTZONESV2 ioctl
-To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
- Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
- Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
- David Sterba <dsterba@suse.com>
-References: <20251104013147.913802-1-dlemoal@kernel.org>
- <20251104013147.913802-12-dlemoal@kernel.org>
- <0cb7eefb-4501-47e8-805f-6e8737ca6bb5@acm.org>
- <da7e8c3e-49fe-49bd-9642-3b0ae67a3503@kernel.org>
+Subject: Re: [PATCH RFC 2/8] btrfs: use super write guard in
+ btrfs_reclaim_bgs_work()
+To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+ linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+References: <20251104-work-guards-v1-0-5108ac78a171@kernel.org>
+ <20251104-work-guards-v1-2-5108ac78a171@kernel.org>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <da7e8c3e-49fe-49bd-9642-3b0ae67a3503@kernel.org>
+From: Qu Wenruo <wqu@suse.com>
+Autocrypt: addr=wqu@suse.com; keydata=
+ xsBNBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
+ 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
+ 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
+ 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
+ gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
+ AAHNGFF1IFdlbnJ1byA8d3F1QHN1c2UuY29tPsLAlAQTAQgAPgIbAwULCQgHAgYVCAkKCwIE
+ FgIDAQIeAQIXgBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXVgBQkQ/lqxAAoJEMI9kfOh
+ Jf6o+jIH/2KhFmyOw4XWAYbnnijuYqb/obGae8HhcJO2KIGcxbsinK+KQFTSZnkFxnbsQ+VY
+ fvtWBHGt8WfHcNmfjdejmy9si2jyy8smQV2jiB60a8iqQXGmsrkuR+AM2V360oEbMF3gVvim
+ 2VSX2IiW9KERuhifjseNV1HLk0SHw5NnXiWh1THTqtvFFY+CwnLN2GqiMaSLF6gATW05/sEd
+ V17MdI1z4+WSk7D57FlLjp50F3ow2WJtXwG8yG8d6S40dytZpH9iFuk12Sbg7lrtQxPPOIEU
+ rpmZLfCNJJoZj603613w/M8EiZw6MohzikTWcFc55RLYJPBWQ+9puZtx1DopW2jOwE0EWdWB
+ rwEIAKpT62HgSzL9zwGe+WIUCMB+nOEjXAfvoUPUwk+YCEDcOdfkkM5FyBoJs8TCEuPXGXBO
+ Cl5P5B8OYYnkHkGWutAVlUTV8KESOIm/KJIA7jJA+Ss9VhMjtePfgWexw+P8itFRSRrrwyUf
+ E+0WcAevblUi45LjWWZgpg3A80tHP0iToOZ5MbdYk7YFBE29cDSleskfV80ZKxFv6koQocq0
+ vXzTfHvXNDELAuH7Ms/WJcdUzmPyBf3Oq6mKBBH8J6XZc9LjjNZwNbyvsHSrV5bgmu/THX2n
+ g/3be+iqf6OggCiy3I1NSMJ5KtR0q2H2Nx2Vqb1fYPOID8McMV9Ll6rh8S8AEQEAAcLAfAQY
+ AQgAJgIbDBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXWBBQkQ/lrSAAoJEMI9kfOhJf6o
+ cakH+QHwDszsoYvmrNq36MFGgvAHRjdlrHRBa4A1V1kzd4kOUokongcrOOgHY9yfglcvZqlJ
+ qfa4l+1oxs1BvCi29psteQTtw+memmcGruKi+YHD7793zNCMtAtYidDmQ2pWaLfqSaryjlzR
+ /3tBWMyvIeWZKURnZbBzWRREB7iWxEbZ014B3gICqZPDRwwitHpH8Om3eZr7ygZck6bBa4MU
+ o1XgbZcspyCGqu1xF/bMAY2iCDcq6ULKQceuKkbeQ8qxvt9hVxJC2W3lHq8dlK1pkHPDg9wO
+ JoAXek8MF37R8gpLoGWl41FIUb3hFiu3zhDDvslYM4BmzI18QgQTQnotJH8=
+In-Reply-To: <20251104-work-guards-v1-2-5108ac78a171@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 11/4/25 12:13 PM, Damien Le Moal wrote:
-> As I said, I did. See the comments with the BLK_ZONE_COND_ACTIVE condition.
-> If you think that is not enough, I can cross reference tht in the comment for
-> BLKREPORTZONEV2.
-The current documentation requires puzzling some pieces of information
-together but this is probably sufficient.
+
+
+在 2025/11/4 22:42, Christian Brauner 写道:
+> Signed-off-by: Christian Brauner <brauner@kernel.org>
+> ---
+>   fs/btrfs/block-group.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/fs/btrfs/block-group.c b/fs/btrfs/block-group.c
+> index 5322ef2ae015..8284b9435758 100644
+> --- a/fs/btrfs/block-group.c
+> +++ b/fs/btrfs/block-group.c
+> @@ -1850,7 +1850,7 @@ void btrfs_reclaim_bgs_work(struct work_struct *work)
+>   	if (!btrfs_should_reclaim(fs_info))
+>   		return;
+>   
+> -	sb_start_write(fs_info->sb);
+> +	guard(super_write)(fs_info->sb);
+>   
+>   	if (!btrfs_exclop_start(fs_info, BTRFS_EXCLOP_BALANCE)) {
+>   		sb_end_write(fs_info->sb);
+
+This one is still left using the old scheme, and there is another one in 
+the mutex_trylock() branch.
+
+I'm wondering how safe is the new scope based auto freeing.
+
+Like when the freeing function is called? Will it break the existing 
+freeing/locking sequence in other locations?
+
+For this call site, sb_end_write() is always called last so it's fine.
 
 Thanks,
+Qu
 
-Bart.
+> @@ -2030,7 +2030,6 @@ void btrfs_reclaim_bgs_work(struct work_struct *work)
+>   	list_splice_tail(&retry_list, &fs_info->reclaim_bgs);
+>   	spin_unlock(&fs_info->unused_bgs_lock);
+>   	btrfs_exclop_finish(fs_info);
+> -	sb_end_write(fs_info->sb);
+>   }
+>   
+>   void btrfs_reclaim_bgs(struct btrfs_fs_info *fs_info)
+> 
+
