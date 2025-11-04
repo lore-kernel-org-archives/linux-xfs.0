@@ -1,196 +1,76 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 457D415CD74
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 08:59:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E69CA314B6D
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 09:15:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762246758; cv=none; b=IB+ylktgxl5Ra/HmATQvD6sGR722CUr4TQeZL0zGzO4znY6SSzGVgjSXiGXt81EUiMZLa3UtfSN14/9k9rYAVQv6aO+rMrRQUVnSjiHwV6uDQd5CWbrRbfJI+h+5ialpRuiVwJ7ZEXkteL/2toET0RJiGxmm2bo1j+l4pc2Rq+Q=
+	t=1762247704; cv=none; b=GBnNKRp4LE32Q0aqRm+TwIj5kg22MRhNZUCBviy+npwXU3yzqDragO+xZaReKTnweeCaba5Fv3KX3INRK0tU0CWRj1gRx5QAiTT4QtDJ8tXR4mho662RTSl1Ghpi5Wd2D077iVQkYWhRVi6aLZz38g7lU4CT2Vsvmsy8nw98XWs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762246758; c=relaxed/simple;
-	bh=5JMNWhwcNO8dRjYHih9/DdKYtWKpXKT/ZdkKaFVrUZg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZR3fR50eoAoZaKEXq5//P/CJWkFEIIRP9xbeWguSHl4g0izb7Np7Wkscf9PwjiMxmCRueHt+oxQnJWNIF1mdA1axldEfAJwSIN1MpkZoGabs5FqdgD4QPd5eCLGGV67kS5MuIbQ6S2s2FZkYI5b0MfjU5amwwQ/zYX0aD+zF9us=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=eJPrZOpe; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=zZD60Nvn; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=eJPrZOpe; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=zZD60Nvn; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1762247704; c=relaxed/simple;
+	bh=WCHRKJG4h/qF6rkPM/jXlEGVDcHQMW4Qmr+YBYBa01Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UBBO5FzpBQF2IUAvqaq68kdXe1l4ezJNKg1o5oNMY9lprPNlAWCgKzcCQ8/OItbvZPZ+TEXF6RNCCrYFmEU48ENiwpzRZwbKlhBr5kHsq1Xq/QSMyczv+47XSRc61MDo3BBbxPvcEJECJyhk9ho4azfzNpSW1wl/UMaLoPuglyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WeSuGgv/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="eJPrZOpe";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="zZD60Nvn";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="eJPrZOpe";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="zZD60Nvn"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 46D4821181;
-	Tue,  4 Nov 2025 08:59:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1762246755; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lYheQBRGcVqlTXI1JyYQyiIeOMV9/eRoJPBxMRYmLiw=;
-	b=eJPrZOpeDwh2UQNXtYYYqgOaVT4Y8SZAdag42bF55AoMJNHro1CVT4rZ+NedKhPDWizk3e
-	ws90OrlGFEo6CbBZt0zdQsHL/tT5FDeq6p5pbkC/tdAalESkWgwIoJaYoL03y2fM+uEQFS
-	dhr5ySjzdS1+XdzBlbh9quKyPq2AE08=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1762246755;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lYheQBRGcVqlTXI1JyYQyiIeOMV9/eRoJPBxMRYmLiw=;
-	b=zZD60Nvn11Ir61m8JDukAbMAKPj0ZET+tuQKJHK2hxYNj/tMeTnmmqE62QLu0qSCY/psRF
-	6l5y6wYR10R0nSBg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=eJPrZOpe;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=zZD60Nvn
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1762246755; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lYheQBRGcVqlTXI1JyYQyiIeOMV9/eRoJPBxMRYmLiw=;
-	b=eJPrZOpeDwh2UQNXtYYYqgOaVT4Y8SZAdag42bF55AoMJNHro1CVT4rZ+NedKhPDWizk3e
-	ws90OrlGFEo6CbBZt0zdQsHL/tT5FDeq6p5pbkC/tdAalESkWgwIoJaYoL03y2fM+uEQFS
-	dhr5ySjzdS1+XdzBlbh9quKyPq2AE08=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1762246755;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lYheQBRGcVqlTXI1JyYQyiIeOMV9/eRoJPBxMRYmLiw=;
-	b=zZD60Nvn11Ir61m8JDukAbMAKPj0ZET+tuQKJHK2hxYNj/tMeTnmmqE62QLu0qSCY/psRF
-	6l5y6wYR10R0nSBg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 38493139A9;
-	Tue,  4 Nov 2025 08:59:15 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id O+S2DWPACWkzegAAD6G6ig
-	(envelope-from <jack@suse.cz>); Tue, 04 Nov 2025 08:59:15 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id EDCC7A2812; Tue,  4 Nov 2025 09:59:10 +0100 (CET)
-Date: Tue, 4 Nov 2025 09:59:10 +0100
-From: Jan Kara <jack@suse.cz>
-To: Yongpeng Yang <yangyongpeng.storage@gmail.com>
-Cc: Namjae Jeon <linkinjeon@kernel.org>, 
-	Sungjong Seo <sj1557.seo@samsung.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, 
-	Jan Kara <jack@suse.cz>, Carlos Maiolino <cem@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Sasha Levin <sashal@kernel.org>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, 
-	Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-block@vger.kernel.org, stable@vger.kernel.org, Matthew Wilcox <willy@infradead.org>, 
-	"Darrick J . Wong" <djwong@kernel.org>, Yongpeng Yang <yangyongpeng@xiaomi.com>
-Subject: Re: [PATCH v4 5/5] block: add __must_check attribute to
- sb_min_blocksize()
-Message-ID: <7tabta4e54yl3jsk7axwrs2kabefv236wc7ijrlogb222bxidp@oozpqae467ax>
-References: <20251103163617.151045-2-yangyongpeng.storage@gmail.com>
- <20251103163617.151045-6-yangyongpeng.storage@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WeSuGgv/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7707C4CEF7;
+	Tue,  4 Nov 2025 09:15:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762247703;
+	bh=WCHRKJG4h/qF6rkPM/jXlEGVDcHQMW4Qmr+YBYBa01Y=;
+	h=From:To:Cc:Subject:Date:From;
+	b=WeSuGgv/HzZVtfbXDcpMT4TU+rNjp3nqkOeS4NN1pQM83cjCpURn7dj9wWEsY/XUg
+	 vD+GhzPcfRny6Gs/gM+yN0FWi83d4yidRrMwk+Ok9dU7yAHrMlcM0+HFvDnCNsQCNq
+	 fdOSMo6cFUCpTUXrQQ7dpWOpmLbUZhle8Y4dAkh0Ufu2ZTf98AunKiCWgn7VblEKED
+	 Ei7VwfZenlVaTBFuwt+C9rjtTT0sgPLLgMyYKXYa+Ko9+xtCUAYxP3r5f0vbfVH0jl
+	 ypxjrwO6JF0AFn4N/n6HW9lu4PGy3m6M58NNY65zr2Zez1csKI033YGZcBw+x1w1By
+	 LzYMpCJE5Gh8Q==
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Chandan Babu R <chandanbabu@kernel.org>,
+	cem@kernel.org,
+	djwong@kernel.org
+Subject: [PATCH 1/2] libfrog: Prevent unnecessary waking of worker thread when using bounded workqueues
+Date: Tue,  4 Nov 2025 14:44:36 +0530
+Message-ID: <20251104091439.1276907-1-chandanbabu@kernel.org>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251103163617.151045-6-yangyongpeng.storage@gmail.com>
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 46D4821181
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-2.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	FREEMAIL_TO(0.00)[gmail.com];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[19];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	TO_DN_SOME(0.00)[]
-X-Spam-Score: -2.51
 
-On Tue 04-11-25 00:36:18, Yongpeng Yang wrote:
-> From: Yongpeng Yang <yangyongpeng@xiaomi.com>
-> 
-> When sb_min_blocksize() returns 0 and the return value is not checked,
-> it may lead to a situation where sb->s_blocksize is 0 when
-> accessing the filesystem super block. After commit a64e5a596067bd
-> ("bdev: add back PAGE_SIZE block size validation for
-> sb_set_blocksize()"), this becomes more likely to happen when the
-> block device’s logical_block_size is larger than PAGE_SIZE and the
-> filesystem is unformatted. Add the __must_check attribute to ensure
-> callers always check the return value.
-> 
-> Suggested-by: Matthew Wilcox <willy@infradead.org>
-> Signed-off-by: Yongpeng Yang <yangyongpeng@xiaomi.com>
+When woken up, a worker will pick a work item from the workqueue and wake up
+another worker when the current workqueue is a bounded workqueue and if there
+is atleast one more work item remains to be processed.
 
-Looks good. Feel free to add:
+The commit 12838bda12e669 ("libfrog: fix overly sleep workqueues") prevented
+single-threaded processing of work items by waking up sleeping workers when a
+work item is added to the workqueue. Hence the earlier described mechanism of
+waking workers is no longer required.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+---
+ libfrog/workqueue.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-								Honza
-
-> ---
->  block/bdev.c       | 2 +-
->  include/linux/fs.h | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/block/bdev.c b/block/bdev.c
-> index 810707cca970..638f0cd458ae 100644
-> --- a/block/bdev.c
-> +++ b/block/bdev.c
-> @@ -231,7 +231,7 @@ int sb_set_blocksize(struct super_block *sb, int size)
->  
->  EXPORT_SYMBOL(sb_set_blocksize);
->  
-> -int sb_min_blocksize(struct super_block *sb, int size)
-> +int __must_check sb_min_blocksize(struct super_block *sb, int size)
->  {
->  	int minsize = bdev_logical_block_size(sb->s_bdev);
->  	if (size < minsize)
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index c895146c1444..26d4ca0f859a 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -3424,7 +3424,7 @@ extern void inode_sb_list_add(struct inode *inode);
->  extern void inode_add_lru(struct inode *inode);
->  
->  extern int sb_set_blocksize(struct super_block *, int);
-> -extern int sb_min_blocksize(struct super_block *, int);
-> +extern int __must_check sb_min_blocksize(struct super_block *, int);
->  
->  int generic_file_mmap(struct file *, struct vm_area_struct *);
->  int generic_file_mmap_prepare(struct vm_area_desc *desc);
-> -- 
-> 2.43.0
-> 
+diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
+index db5b3f68b..9384270ff 100644
+--- a/libfrog/workqueue.c
++++ b/libfrog/workqueue.c
+@@ -51,10 +51,6 @@ workqueue_thread(void *arg)
+ 		wq->next_item = wi->next;
+ 		wq->item_count--;
+ 
+-		if (wq->max_queued && wq->next_item) {
+-			/* more work, wake up another worker */
+-			pthread_cond_signal(&wq->wakeup);
+-		}
+ 		wq->active_threads++;
+ 		pthread_mutex_unlock(&wq->lock);
+ 
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.45.2
+
