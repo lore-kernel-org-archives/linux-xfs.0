@@ -1,74 +1,80 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA50A2D8370;
-	Tue,  4 Nov 2025 11:05:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6E962C0F7E
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 11:23:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762254312; cv=none; b=eXXoQ4cy5lcaLLNXwvnJRmf9j53MAVIhAzgMJon5Jp9C5wsd/CtbuETt6FWjv2AQtZg3JX7InEqZE69cSRt4pDqaSzDkK3WHje3Z8UAtmO5pdOq9moiZwWCRV98b39xomhJwpXFUObnlVIaqpg2lYHjAs0Tru6wABBT+cGcvFoY=
+	t=1762255418; cv=none; b=cFLHwWvTJMqQuO6T0jfjr9Kstd3wQUtQBNSvGlBNnc3W45y7//CvAYzKnlPPAgEncdMnlYpeKiDqS5Fc7e5KMkdukZNMjWxrSarvwQHFpJ+aMkGgY7FPRzTR25h4KwfxSQFUU4+vSuh4krdyvNlfPcqc+i1B74EUyvSiidN/C9o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762254312; c=relaxed/simple;
-	bh=x7VFxaEfFJcXYW8kQ2jVyHo5VuvXNFiqYqtA/C/VNcI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iPJl5U6vxFR+qlO7gVpd3sec322awasE94mIvy0PnGQz95hj7TUZyteCXYcKTis310IiI3YHpVEwekkj0NcRsZ/TCesy5cdnIoy/lattEIkwiqozaGxqeUha9ijin2YGa0CM9eE7uMFQ46GA5a/g7xhgxN/5pEksyhzyACxtLdE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=co5dbW7Q; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1762255418; c=relaxed/simple;
+	bh=8QvCktKDhf4f1u1Vq/VpczdWKHQQCXDw1Hw1+e9GXCM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=f2Da/Pjuox3x6bH8BIAsvSoHz1OwZHOzDfwZFyEC7ODTFBLaf0A+2+EwcO2SJ2PH1bG5oVfgLLUDUxb5eVAuOoRjY3Yl2/UVEeK0sLKAeQ/AqM9ZBQ4vAO+ZTJqcU4ljwCWC08q0ZISZ4IsfgY8Z14DsWFiRArgnYpJF/3p2qwk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r0sRWJkk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="co5dbW7Q"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=x7VFxaEfFJcXYW8kQ2jVyHo5VuvXNFiqYqtA/C/VNcI=; b=co5dbW7QbBK83kIUm3gH0igDSA
-	PVkMt2hg5qLblPAsI+4Vi4y2YtZG2BugMVNq4ZZTIzUbhnZqawMuIfS3f/lAQMMDibHJ0uGgDg3JX
-	OSAvRPTav8KbRkfVSjHUSr2RvLpBvqnejyuCsSQJMlSP63i0Po4kJuKyiHcliogDx3UgdDucL0QV2
-	5G9cBUCM2dQWz8l4f09Jaa8qqiY0J3vhOtGZBRi7qpJUgM5E72ywh1UULQrV+HwK84b8Wg9OQqxOa
-	sa1NlfZ2ZD9070rbebqg7/qDEGBwpI4vxctc85i+ErVSm8V7QD915w+fVH/P1zrCGHsWA59Vr+pC6
-	cCGguqqQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vGEqZ-0000000BgZq-3zNW;
-	Tue, 04 Nov 2025 11:05:07 +0000
-Date: Tue, 4 Nov 2025 03:05:07 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Yongpeng Yang <yangyongpeng.storage@gmail.com>
-Cc: Namjae Jeon <linkinjeon@kernel.org>,
-	Sungjong Seo <sj1557.seo@samsung.com>,
-	OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-	Jan Kara <jack@suse.cz>, Carlos Maiolino <cem@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Sasha Levin <sashal@kernel.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>,
-	Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-	stable@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	Yongpeng Yang <yangyongpeng@xiaomi.com>
-Subject: Re: [PATCH v5 5/5] block: add __must_check attribute to
- sb_min_blocksize()
-Message-ID: <aQnd4-RRe4K_b4CA@infradead.org>
-References: <20251103164722.151563-2-yangyongpeng.storage@gmail.com>
- <20251103164722.151563-6-yangyongpeng.storage@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r0sRWJkk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 491CCC4CEF7
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 11:23:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762255418;
+	bh=8QvCktKDhf4f1u1Vq/VpczdWKHQQCXDw1Hw1+e9GXCM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=r0sRWJkk37H3JkpOodMV0+EjKK9tzee9FG0AFOcfVeuiZobZN38jJk1UtSfAoqJK/
+	 veTBlS1fQ6hfBYC9PJN2ZBLXv/Vz301Bwo6wgUvKHyexWQPDMFoi8S/x/JjAQynTId
+	 CESpU+9qLnnCKRdp0ILU1kOFjTZMWuUgmLl9jxBrstYx/qelzzxljpG5WGHsKHyutc
+	 rAZRlAZW++FOVbb8IiDk9tnwaEWuZKz0riKUYTVl/bbCEb6EqstBIh5ZZ9Nitihc+b
+	 i6+BfApcP1UEAz+MqHrvxsBSnQo5gXtqFFcDqwwX7IS+x6U1Wej9gywNLSIF2nTb6x
+	 zzlRAE5tGE1iw==
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-b6d3effe106so845896166b.2
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Nov 2025 03:23:38 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCV0Wa7xsllzVDO1KuZCoose1dOX1s4737uXMq2X45o4sxjthyZHyjVT+z8Bh7qaM7xuSslUnMlXQhM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyYWdwpHcqEuLdKmeJ429aM/9VNDPpmKzLVxttb/eWDV/1KMd8m
+	vaRh5jUCh8YUeFiBlqMM0S8NDnwepPBaydTb9u5yvqVSKxQYKXrGZhnOzTjhZRiOxR0zqbOSoUL
+	C5rV5xwJIex7KL4fWM82BU3ronvRFMnw=
+X-Google-Smtp-Source: AGHT+IH7LvDNSwoTpF4soNgCygU7sKSb5+rshVWIelKN+H6EyJT9JU/5OphYh+TJs6a21nLr+KJr6DuIz1aY9u05PJo=
+X-Received: by 2002:a17:906:5955:b0:b70:7196:c8b3 with SMTP id
+ a640c23a62f3a-b707196dce5mr1166773566b.61.1762255411837; Tue, 04 Nov 2025
+ 03:23:31 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251103164722.151563-6-yangyongpeng.storage@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20251103164722.151563-2-yangyongpeng.storage@gmail.com>
+ <20251103164722.151563-3-yangyongpeng.storage@gmail.com> <aQndHokFr0ouIEAq@infradead.org>
+In-Reply-To: <aQndHokFr0ouIEAq@infradead.org>
+From: Namjae Jeon <linkinjeon@kernel.org>
+Date: Tue, 4 Nov 2025 20:23:19 +0900
+X-Gmail-Original-Message-ID: <CAKYAXd-APJnAaKv+HXQQWf5eAJDV6foTxRiMAY6hUjVXn9V33Q@mail.gmail.com>
+X-Gm-Features: AWmQ_blghmPbTPJSBe6UZI-JxbMb9_NX_eDplsi0aFEhQKP7xTARlzSrq5ZjKwE
+Message-ID: <CAKYAXd-APJnAaKv+HXQQWf5eAJDV6foTxRiMAY6hUjVXn9V33Q@mail.gmail.com>
+Subject: Re: [PATCH v5 2/5] exfat: check return value of sb_min_blocksize in exfat_read_boot_sector
+To: Yongpeng Yang <yangyongpeng.storage@gmail.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Sungjong Seo <sj1557.seo@samsung.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, 
+	Jan Kara <jack@suse.cz>, Carlos Maiolino <cem@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Sasha Levin <sashal@kernel.org>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, 
+	stable@vger.kernel.org, Matthew Wilcox <willy@infradead.org>, 
+	"Darrick J . Wong" <djwong@kernel.org>, Yongpeng Yang <yangyongpeng@xiaomi.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> -extern int sb_min_blocksize(struct super_block *, int);
-> +extern int __must_check sb_min_blocksize(struct super_block *, int);
-
-Please drop the pointless extern here, and spell out the parameter
-names.
-
-Otherwise looks good:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
+On Tue, Nov 4, 2025 at 8:02=E2=80=AFPM Christoph Hellwig <hch@infradead.org=
+> wrote:
+>
+> On Tue, Nov 04, 2025 at 12:47:20AM +0800, Yongpeng Yang wrote:
+> > From: Yongpeng Yang <yangyongpeng@xiaomi.com>
+> >
+> > sb_min_blocksize() may return 0. Check its return value to avoid
+> > accessing the filesystem super block when sb->s_blocksize is 0.
+>
+> Looks good:
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Applied it to #dev.
+Thanks!
+>
+>
