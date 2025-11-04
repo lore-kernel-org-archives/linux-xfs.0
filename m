@@ -1,105 +1,62 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12CE12E8B97
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 11:36:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 176BC2E3373;
+	Tue,  4 Nov 2025 12:03:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762256184; cv=none; b=CgvI3wKaHqFelEUTaeJmkMcFly1Yo8LqsIZiHhMccYx26kp0gFLJrXnto1f2Q3Lba4xTybt1Vl4sU7TgyNp3qMl9+Ah9a21hfwjCbityNE0H/nVJpQGv0m1ozw9vpA5h3n8uzxXdYsgYyhjlLVUoSDwrsbrLIvuukTKm51irZlo=
+	t=1762257796; cv=none; b=aow9LAiknrbEPDyqf9BtndFGtGwaNHNUVlFMItVZ16L+I5HijmxLLPkxdYGfunBgFM+QDtiiwkaGTQZA/19eVlEi+qsallHuzPNDOuTX/nDd47Ykv4IwYtfd5UEhEb5kpXBHHvAmVViji3ZWBWQyEM5+L7c2BSavXbr40oDcGDU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762256184; c=relaxed/simple;
-	bh=4Wn7QoWN8xCjPbayQz8lhEGh7Deb0qobPKG4uApIIcw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mo3FDPCuKvMaGrzUSzcE/91HbTKI5qh5/h5XuDVDElTIYXDOlBpe7b7Kw7rT/UBmAY/KV4wSlBo7Ch1K92hnbdpfMT3jJUnjoLwEn/rkc3rj2XFhzG8Qbsji5GXNCUMN7jhgmjn99v7q3CpXx4NDfdnA5XvvFDCN+Bv/InFjWcY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XhbQY4KH; arc=none smtp.client-ip=209.85.216.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XhbQY4KH"
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-340c680fe8cso2617206a91.0
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Nov 2025 03:36:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762256182; x=1762860982; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=J90ejmNRDc/sJDDkigtmzgp7USpf0W7zUJJf8FzaScs=;
-        b=XhbQY4KHrdoXsiTDoo1psvWT9ZSFeWVbB5xRe+5H+LV2bxXwLsW8utoG6FhN3O7pLS
-         MyTifCLpcAzB2gdLFUOHbsmJdmA1iNd7y13djpmgOkb56IEJKWyJ8p9oukP3iKEc916s
-         pI5Wy49vXr1h40zQQ8yPTcnjJSwLLHYpPENUy0WW4kyk1yZByFshEtau2Sqn7YjckQ+B
-         409xSBuciVKOw1gE+zmOkxaBtr5NdTa4ozcH7bwdMbBbryv5CYF6vQiec4bdFlu5p5wm
-         LDlKiTcJAv09hb3OqZ8UwRzV7F8psluJz/bxkp1m8GdGmAlsOtYQwqX/Dk/tAfaEp0Na
-         XqDQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762256182; x=1762860982;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=J90ejmNRDc/sJDDkigtmzgp7USpf0W7zUJJf8FzaScs=;
-        b=vyOHdtMqSxePmtuXl6C8DSA1g4HFsLuJYCEDhOZOJgkFZ8j+GE2lyXJyOG/oc6QdhR
-         9VrD6cfKHgSFD+4Fx0dOmWfiADbyP5jpe9sjXEr8/7Ye2UxOoNej/m1b4EDukh6VcZbI
-         0KTpV9dBjQn4Cqq3OtXOXpIFF27kR7UKgC1PQGl89Ona7lrPkl8omDOMq+vFtyGbsIWD
-         Lnj9r7ndP3IL7Of7ZgqX3HhvSo1JJVucORfcVahb7g3GJsEwiLZ3fmA6XWOI4UXDULev
-         HRzuc4dlThncRYUIrNLAtIDPcHHQxE97djLRcXNoEINt6aHJHX7zUUSb6b6hOSerBy5M
-         phzw==
-X-Forwarded-Encrypted: i=1; AJvYcCU4Y/Mf/jPA5Qi0qc2W/kTie2JVMBbTjBPFgM7spujj+lQuPrVOp1m0dAJW7VYgx4DFjYHP5+Cc2mE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw0ch2IoHreysBbeb3fOMk2wEyjlC1uIXq6eS9s/7Cx8yybzR5C
-	cnxHeg6Jz+UwYUB42TKouLz6k2TFY4dCGcMeZjIvdwU6wBfY8C67mDt5
-X-Gm-Gg: ASbGncvto3GatSLjab7PR7PgwBfJhfnrxZd20NOzxs4oT6e9L6cVUft/6kIqXVbUozE
-	9e79/qSaTV/+HeiMvwFgtOT9k5GjZ84uMlYf81pBQ0kcJjLX9BhiRoo3Wu2R+Jiss7qQxLfP095
-	O0qsmWiZWSYQ2rSlD3d+Hdrg7SlQkYksyLdv0hf4Q+M7ktT91KBs3kRSsEvGNgGWkYN5SyDRYyk
-	o+TZ5vSCOtrKPApDMh6HUvCPqex8SfmKxC57DGUnPtdCZbrLhIfts6jmkNEGtHgKm5iUOlZFZUC
-	78e17nhl7rP8JND2hOHBLteIcAH6wuIhU2cZBFhp0nmiCnfmv10lG6iBIq+HYPXYtgB8FxcI1go
-	jYVePljGPJ4OiZIeGUghoWsaaGAj+M9+ul1+Un/Nov9nbcFOqoTFq0qPflgRse7sfBMpXwpbrPt
-	SAjSVQlWdWtFs6plS1eLA=
-X-Google-Smtp-Source: AGHT+IF5OrzuKARwkp1GVv+qC6PxEHYGj29XXgnA/RkKZqGw4wpxfHkO7e6iSIhsRiQeNJQp1sxCHw==
-X-Received: by 2002:a17:90b:17ca:b0:340:d569:d295 with SMTP id 98e67ed59e1d1-340d569d470mr13962469a91.24.1762256182197;
-        Tue, 04 Nov 2025 03:36:22 -0800 (PST)
-Received: from [10.189.138.37] ([43.224.245.241])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3415c4aa89asm4228751a91.11.2025.11.04.03.36.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Nov 2025 03:36:21 -0800 (PST)
-Message-ID: <1abbf495-58b0-4f04-8494-6339640253f1@gmail.com>
-Date: Tue, 4 Nov 2025 19:36:16 +0800
+	s=arc-20240116; t=1762257796; c=relaxed/simple;
+	bh=QS40qdRp3eQcP2yb01uL6R/pw61ly5auhn8DQ2oVhbM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ixqWDPV83oE76DNFow1S8MGPbZ3J5zXq47rt1sSn/smegodm3HjLm9R9NJKvwBTk1Mn6yILTRVOn+Y/5mlxU15QoVfWUjp/IeI5JKkbX5TZlSGwQST2fgLseFqtkeZ10TApUQmkS7eQ3/VACp+Ab7qVa53QUKnhOIeynW4wRHtk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id AA5B6227A88; Tue,  4 Nov 2025 13:03:09 +0100 (CET)
+Date: Tue, 4 Nov 2025 13:03:09 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+	Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	Christoph Hellwig <hch@lst.de>,
+	"dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
+	Mike Snitzer <snitzer@kernel.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+	David Sterba <dsterba@suse.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCH 07/13] block: track zone conditions
+Message-ID: <20251104120309.GA16283@lst.de>
+References: <20251031061307.185513-1-dlemoal@kernel.org> <20251031061307.185513-8-dlemoal@kernel.org> <40c87475-7d5a-4792-b2a6-3eeb8406f9be@acm.org> <93215b7c-80bd-4860-8a77-42cdd4db1ec6@kernel.org> <95c729d6-fd73-4480-af1c-68075b31cd1d@acm.org> <6008fbc8-b556-46d9-98a5-a4622731d206@nvidia.com> <83b60505-64a4-40fe-aa50-02a56ca7ad8c@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/5] vfat: fix missing sb_min_blocksize() return value
- checks
-To: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
- Yongpeng Yang <yangyongpeng.storage@gmail.com>
-Cc: Namjae Jeon <linkinjeon@kernel.org>, Sungjong Seo
- <sj1557.seo@samsung.com>, Jan Kara <jack@suse.cz>,
- Carlos Maiolino <cem@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Sasha Levin <sashal@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Christoph Hellwig
- <hch@infradead.org>, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
- stable@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
- "Darrick J . Wong" <djwong@kernel.org>,
- Yongpeng Yang <yangyongpeng@xiaomi.com>
-References: <20251103164722.151563-2-yangyongpeng.storage@gmail.com>
- <871pmfoy1m.fsf@mail.parknet.co.jp>
-Content-Language: en-US
-From: Yongpeng Yang <yangyongpeng.storage@gmail.com>
-In-Reply-To: <871pmfoy1m.fsf@mail.parknet.co.jp>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <83b60505-64a4-40fe-aa50-02a56ca7ad8c@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On 11/4/25 00:56, OGAWA Hirofumi wrote:
-> Yongpeng Yang <yangyongpeng.storage@gmail.com> writes:
+On Tue, Nov 04, 2025 at 07:53:07AM +0900, Damien Le Moal wrote:
+> > In case current file systems store this, isn't that a code duplication for each
+> > fs ? perhaps having a central interface at block layer should help remove the
+> > code duplication ?
 > 
->> Fixes: a64e5a596067bd ("bdev: add back PAGE_SIZE block size validation
->> for sb_set_blocksize()")
-> 
-> Looks like inserted a strange '\n'? Otherwise looks good.
+> catch 22: You cannot ask the file system without first knowing the zone layout
+> and conditions of zone to check the file system metadata.
 
-Thanks for the review. Sorry for the mistake. I copied the commit 
-message from my text editor, and it got automatically line-wrapped.
+The file system also really needs to verify that it's view matches the
+hardware view at mount time, otherwise you'll run into really nasty
+cases later when they are out of sync due to a bug or corruption.
 
-Yongpeng,
