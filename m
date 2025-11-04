@@ -1,105 +1,196 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B1C23016E4;
-	Tue,  4 Nov 2025 07:38:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 457D415CD74
+	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 08:59:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762241928; cv=none; b=qIlHnQxH2COx4/jRYs/b5oNSeAz4LWfuJPtx4mP+1rJWuRoJMRgz6yKGKOlMwH7/6tYl+yMSmXycqYY6YSnZwYWQEZoxF0MakDADpDlQ4+YCCzLWTrex8PW4JD2XBJvQYcPpoayilK0N7JNj/uUGMTbZlWHq4GD1mS3BU7eW65k=
+	t=1762246758; cv=none; b=IB+ylktgxl5Ra/HmATQvD6sGR722CUr4TQeZL0zGzO4znY6SSzGVgjSXiGXt81EUiMZLa3UtfSN14/9k9rYAVQv6aO+rMrRQUVnSjiHwV6uDQd5CWbrRbfJI+h+5ialpRuiVwJ7ZEXkteL/2toET0RJiGxmm2bo1j+l4pc2Rq+Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762241928; c=relaxed/simple;
-	bh=POLqaQ94dh/t6J0gDfAv8qWZd1iCMjPLAZedaVguceE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=hR9GqG917mNfyt0zGao/UBS16IBijlqmPwfu3BtIhEa1Iag425N2NX3+hKEp7H/FvtQBIUWWLx7zXJCkbeK3R0f6Dm2MU+CjvG6YK7amGPaHwJkL2ebwbEZcZhhVS6abNBDxc/y6ShivsSvz55hQSrSvnTCoAuDIEieRbs6P320=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Axyt6UGg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762246758; c=relaxed/simple;
+	bh=5JMNWhwcNO8dRjYHih9/DdKYtWKpXKT/ZdkKaFVrUZg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZR3fR50eoAoZaKEXq5//P/CJWkFEIIRP9xbeWguSHl4g0izb7Np7Wkscf9PwjiMxmCRueHt+oxQnJWNIF1mdA1axldEfAJwSIN1MpkZoGabs5FqdgD4QPd5eCLGGV67kS5MuIbQ6S2s2FZkYI5b0MfjU5amwwQ/zYX0aD+zF9us=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=eJPrZOpe; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=zZD60Nvn; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=eJPrZOpe; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=zZD60Nvn; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Axyt6UGg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 166CFC4CEF7;
-	Tue,  4 Nov 2025 07:38:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762241926;
-	bh=POLqaQ94dh/t6J0gDfAv8qWZd1iCMjPLAZedaVguceE=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=Axyt6UGg5x6PGMQG7ZOVMKFrpxvXwFDDylFW2fjveB6lK7jF1SA/pmq//ghwx4V1d
-	 W1MCAkzVn0rQ41EblL1QQxkn5+tLuzehDAFs9yjy+QCjPxTpaBS3/lRZpJb/YrxKJ/
-	 ky4P4XTsqB7OK7fnjDBLIhm5ebHBh5NdYyVAeryN6v3BIuKhWR//b363O5C596bvGr
-	 BldM+8IDv/ETGFZ2RRmsJ2x/aq68EvWGAdYHOa93bboU1FvQJ3mKk7kGv4bIQY375a
-	 8ZJwn9MSvin17zPZzwAL0mtluwI5ehmY1zeInEjpM2wvpUPgKctfV5LsFS+uSGA9Fs
-	 9yjPorGvg8NJQ==
-Message-ID: <de15eadd-98fc-4456-8263-712e9d519adf@kernel.org>
-Date: Tue, 4 Nov 2025 16:38:43 +0900
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="eJPrZOpe";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="zZD60Nvn";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="eJPrZOpe";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="zZD60Nvn"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 46D4821181;
+	Tue,  4 Nov 2025 08:59:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1762246755; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lYheQBRGcVqlTXI1JyYQyiIeOMV9/eRoJPBxMRYmLiw=;
+	b=eJPrZOpeDwh2UQNXtYYYqgOaVT4Y8SZAdag42bF55AoMJNHro1CVT4rZ+NedKhPDWizk3e
+	ws90OrlGFEo6CbBZt0zdQsHL/tT5FDeq6p5pbkC/tdAalESkWgwIoJaYoL03y2fM+uEQFS
+	dhr5ySjzdS1+XdzBlbh9quKyPq2AE08=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1762246755;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lYheQBRGcVqlTXI1JyYQyiIeOMV9/eRoJPBxMRYmLiw=;
+	b=zZD60Nvn11Ir61m8JDukAbMAKPj0ZET+tuQKJHK2hxYNj/tMeTnmmqE62QLu0qSCY/psRF
+	6l5y6wYR10R0nSBg==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=eJPrZOpe;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=zZD60Nvn
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1762246755; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lYheQBRGcVqlTXI1JyYQyiIeOMV9/eRoJPBxMRYmLiw=;
+	b=eJPrZOpeDwh2UQNXtYYYqgOaVT4Y8SZAdag42bF55AoMJNHro1CVT4rZ+NedKhPDWizk3e
+	ws90OrlGFEo6CbBZt0zdQsHL/tT5FDeq6p5pbkC/tdAalESkWgwIoJaYoL03y2fM+uEQFS
+	dhr5ySjzdS1+XdzBlbh9quKyPq2AE08=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1762246755;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lYheQBRGcVqlTXI1JyYQyiIeOMV9/eRoJPBxMRYmLiw=;
+	b=zZD60Nvn11Ir61m8JDukAbMAKPj0ZET+tuQKJHK2hxYNj/tMeTnmmqE62QLu0qSCY/psRF
+	6l5y6wYR10R0nSBg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 38493139A9;
+	Tue,  4 Nov 2025 08:59:15 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id O+S2DWPACWkzegAAD6G6ig
+	(envelope-from <jack@suse.cz>); Tue, 04 Nov 2025 08:59:15 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id EDCC7A2812; Tue,  4 Nov 2025 09:59:10 +0100 (CET)
+Date: Tue, 4 Nov 2025 09:59:10 +0100
+From: Jan Kara <jack@suse.cz>
+To: Yongpeng Yang <yangyongpeng.storage@gmail.com>
+Cc: Namjae Jeon <linkinjeon@kernel.org>, 
+	Sungjong Seo <sj1557.seo@samsung.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, 
+	Jan Kara <jack@suse.cz>, Carlos Maiolino <cem@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Sasha Levin <sashal@kernel.org>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, 
+	Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-block@vger.kernel.org, stable@vger.kernel.org, Matthew Wilcox <willy@infradead.org>, 
+	"Darrick J . Wong" <djwong@kernel.org>, Yongpeng Yang <yangyongpeng@xiaomi.com>
+Subject: Re: [PATCH v4 5/5] block: add __must_check attribute to
+ sb_min_blocksize()
+Message-ID: <7tabta4e54yl3jsk7axwrs2kabefv236wc7ijrlogb222bxidp@oozpqae467ax>
+References: <20251103163617.151045-2-yangyongpeng.storage@gmail.com>
+ <20251103163617.151045-6-yangyongpeng.storage@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 11/15] block: introduce BLKREPORTZONESV2 ioctl
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
- Jens Axboe <axboe@kernel.dk>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- Keith Busch <keith.busch@wdc.com>, hch <hch@lst.de>,
- "dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
- Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- Carlos Maiolino <cem@kernel.org>,
- "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
- David Sterba <dsterba@suse.com>
-References: <20251103133123.645038-1-dlemoal@kernel.org>
- <20251103133123.645038-12-dlemoal@kernel.org>
- <982ed7d8-e818-4d9c-a734-64ab8b21a7e3@wdc.com>
- <0154c2a8-a3ed-45d3-8f8a-1581106212fb@kernel.org>
- <f7025e4f-3205-4bae-93c0-68e02dd11ca9@wdc.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <f7025e4f-3205-4bae-93c0-68e02dd11ca9@wdc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251103163617.151045-6-yangyongpeng.storage@gmail.com>
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: 46D4821181
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-2.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FREEMAIL_TO(0.00)[gmail.com];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[19];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	TAGGED_RCPT(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	TO_DN_SOME(0.00)[]
+X-Spam-Score: -2.51
 
-On 11/4/25 16:23, Johannes Thumshirn wrote:
-> On 11/4/25 1:15 AM, Damien Le Moal wrote:
->> On 11/4/25 00:17, Johannes Thumshirn wrote:
->>> On 11/3/25 2:38 PM, Damien Le Moal wrote:
->>>> Introduce the new BLKREPORTZONESV2 ioctl command to allow user
->>>> applications access to the fast zone report implemented by
->>>> blkdev_report_zones_cached(). This new ioctl is defined as number 142
->>>> and is documented in include/uapi/linux/fs.h.
->>>>
->>>> Unlike the existing BLKREPORTZONES ioctl, this new ioctl uses the flags
->>>> field of struct blk_zone_report also as an input. If the user sets the
->>>> BLK_ZONE_REP_CACHED flag as an input, then blkdev_report_zones_cached()
->>>> is used to generate the zone report using cached zone information. If
->>>> this flag is not set, then BLKREPORTZONESV2 behaves in the same manner
->>>> as BLKREPORTZONES and the zone report is generated by accessing the
->>>> zoned device.
->>>
->>> Is there a downside to always do the caching? A.k.a do we need the new
->>> ioctl or can we keep using the old one and cache the report zones reply?
->> The old one is needed to allow getting the precise imp open, exp open, closed
->> conditions, if the user cares about these. E.g. Zonefs does because of the
->> (optional) explicit zone open done on file open.
->>
->> And we cannot break existing user space anyway (e.g. sysutils blkzone), so we
->> must return the "legacy" report unless asked otherwise.
+On Tue 04-11-25 00:36:18, Yongpeng Yang wrote:
+> From: Yongpeng Yang <yangyongpeng@xiaomi.com>
 > 
+> When sb_min_blocksize() returns 0 and the return value is not checked,
+> it may lead to a situation where sb->s_blocksize is 0 when
+> accessing the filesystem super block. After commit a64e5a596067bd
+> ("bdev: add back PAGE_SIZE block size validation for
+> sb_set_blocksize()"), this becomes more likely to happen when the
+> block device’s logical_block_size is larger than PAGE_SIZE and the
+> filesystem is unformatted. Add the __must_check attribute to ensure
+> callers always check the return value.
 > 
-> OK, let me read the patches again, but why can't we do a "write-through" 
-> style caching? I.e. something in the system is executing
-> 
-> blkdev_report_zones(), the cache will be populated as well.
+> Suggested-by: Matthew Wilcox <willy@infradead.org>
+> Signed-off-by: Yongpeng Yang <yangyongpeng@xiaomi.com>
 
-The cache is initialized with zone revalidation and maintained as IOs and zone
-management operations are executeds. No need to involve blkdev_report_zones()
-for maintaining the zone information. Not to mention that it would be impossible
-to correctly do it without guaranteeing that report zones is the *only* command
-being executed. Otherwise, by the time you process a zone report,
-write/reset/finish IOs to that zone may already have changed it.
+Looks good. Feel free to add:
 
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
+> ---
+>  block/bdev.c       | 2 +-
+>  include/linux/fs.h | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/block/bdev.c b/block/bdev.c
+> index 810707cca970..638f0cd458ae 100644
+> --- a/block/bdev.c
+> +++ b/block/bdev.c
+> @@ -231,7 +231,7 @@ int sb_set_blocksize(struct super_block *sb, int size)
+>  
+>  EXPORT_SYMBOL(sb_set_blocksize);
+>  
+> -int sb_min_blocksize(struct super_block *sb, int size)
+> +int __must_check sb_min_blocksize(struct super_block *sb, int size)
+>  {
+>  	int minsize = bdev_logical_block_size(sb->s_bdev);
+>  	if (size < minsize)
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index c895146c1444..26d4ca0f859a 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -3424,7 +3424,7 @@ extern void inode_sb_list_add(struct inode *inode);
+>  extern void inode_add_lru(struct inode *inode);
+>  
+>  extern int sb_set_blocksize(struct super_block *, int);
+> -extern int sb_min_blocksize(struct super_block *, int);
+> +extern int __must_check sb_min_blocksize(struct super_block *, int);
+>  
+>  int generic_file_mmap(struct file *, struct vm_area_struct *);
+>  int generic_file_mmap_prepare(struct vm_area_desc *desc);
+> -- 
+> 2.43.0
+> 
 -- 
-Damien Le Moal
-Western Digital Research
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
