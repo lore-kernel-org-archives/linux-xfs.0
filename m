@@ -1,42 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtpbgsg2.qq.com (smtpbgsg2.qq.com [54.254.200.128])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0412931579B
-	for <linux-xfs@vger.kernel.org>; Tue,  4 Nov 2025 09:15:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C77021FF47;
+	Tue,  4 Nov 2025 09:36:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.254.200.128
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762247712; cv=none; b=A+rwc/UcluBoczRLY7Q6MhcCTgc3p43e/bEZKn32kbl6uY5rtE/kt9s/OGHx6d9YEXxpAo8J85oCJktv7NiS5QeeqLr1t27t5Yu6se39HOiA3pSS7O3stLviO/vDdeyp+za7hCg9uK8bbNHn46JPfSUkbzruNRaXwlJRzd+2d5E=
+	t=1762248974; cv=none; b=tEFHKRn9av+DO5qz3MN3yAMUm23843sxZVFAWg7q997Evt8gEXA2EeleqRWZAs2wV2KGWhpvGqljwH1y1oJnSoeaOwjxU8cvnMrG5y1UWBDZwx4PkeZrHfMPfR9v5jsdGbmfIxTiyY4fq7y8+BAvhUGkDB4wUkl/GBuAj0eO33I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762247712; c=relaxed/simple;
-	bh=e4s3VvuBQ2pnWlWSJUk7XK2mG4q18yaNAD5ALZL5ozo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sj3Csio/8ZkVfqM4V5UcOCjg4lXGrZn6BuMatvp/G/1nt3ubBvkmraeVTS4eYPWVr2EtL1ptXTfI2P7hCn61OBY2MnU07sCOupOegHZ5m0d0iMkV25EF4oKq7Osaqs/9lI8N6o9pfHM6LyiVsPcAlklLSvPtfx4g1F5yhwVEpW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oszyRlfp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762248974; c=relaxed/simple;
+	bh=dRUGXfYeACsEaLRPUhjJcWbtimfoTFK+PgSLMNC6gUs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=tdXoJrsyNSJHPITDr7kXHoEsHrETpC+Jrr5T47zLk/lt5ALJpiW55yS6LEnWQ7fuLw5djU0uitwQ0tGObmKyvSjPi3IRBWCPQo1oaC3TuRzdcRinYraQu7JwUJbBKAoL1I4+tti651ZkeTtflYG7C2rp/aPKr7+ahdvNgVStvD0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=EYEiNM3E; arc=none smtp.client-ip=54.254.200.128
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oszyRlfp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04171C4CEF8;
-	Tue,  4 Nov 2025 09:15:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762247711;
-	bh=e4s3VvuBQ2pnWlWSJUk7XK2mG4q18yaNAD5ALZL5ozo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=oszyRlfp+/AxtrBWis7Dx265McS5jbkPen877D1PlVKSJe29s/WqNMIfTxwXMKAm8
-	 PN25zku1E2eDrkckHjpLuiXR9sYHiNpov+jvug3Z4erJwpHDeF+xUYpr7akyEE7i14
-	 D9c+PpJ0ATfVboASxvwIjyHvNpxAr6PXSjAavXgTsTuHEmpXFgQplCP5kHdDfUt616
-	 kYcXVC6zr0fQqTfNd0YvMlZvXTTpwqJSlL+g/rZXb5YKLLYwURbhXcBG0vz4cXuTNr
-	 5/ARAbubZUOTkv9oxT2KgETCLK0Jn3ukUVYNrfsdnlTGDrl9sBhOC4PnBm+krA6iTd
-	 SBHWrzj6fE3Ew==
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: linux-xfs@vger.kernel.org
-Cc: Chandan Babu R <chandanbabu@kernel.org>,
-	cem@kernel.org,
-	djwong@kernel.org
-Subject: [PATCH 2/2] repair/prefetch.c: Create one workqueue with multiple workers
-Date: Tue,  4 Nov 2025 14:44:37 +0530
-Message-ID: <20251104091439.1276907-2-chandanbabu@kernel.org>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20251104091439.1276907-1-chandanbabu@kernel.org>
-References: <20251104091439.1276907-1-chandanbabu@kernel.org>
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="EYEiNM3E"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1762248931;
+	bh=jmGhMAgaBUM0BajBlocMSy6qJhGOcjmpM0oQwDNPRRM=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=EYEiNM3EoYmJd9jFxYUQ2cUaTYEifLxpT01cFNWoMVirWK02PdAR3jEq/GJojFDWN
+	 V9Z98w87s+h72UfKKAN2gHDQwr0EyyVUqd2UQ0clEpDogdDaYfh2WNj5Zu+vP1Mcj4
+	 bsuDhcPyrr3/lL+Y5uDhWYDaVXZeRMqK7QTR8cQg=
+X-QQ-mid: zesmtpsz4t1762248911t51d15bed
+X-QQ-Originating-IP: se3KyUxOOCabbjx22pKi04RZr2zGRV6ZOgOzhQpzaeA=
+Received: from localhost.localdomain ( [1.85.7.34])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Tue, 04 Nov 2025 17:35:09 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 5451745896443902141
+EX-QQ-RecipientCnt: 7
+From: Gou Hao <gouhao@uniontech.com>
+To: cem@kernel.org,
+	corbet@lwn.net
+Cc: linux-xfs@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	gouhaojake@163.com,
+	guanwentao@uniontech.com
+Subject: [PATCH] xfs-doc: Fix typo error
+Date: Tue,  4 Nov 2025 17:34:06 +0800
+Message-Id: <20251104093406.9135-1-gouhao@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,62 +50,48 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz7a-0
+X-QQ-XMAILINFO: OAv5WZ8gfM/qx/hcYtFNWbd0ImY6K/x+CvPrjM5EzVpWaOT0G4KLkSFq
+	ulaQWkeAdK1fj9fXyF0Z5fsYMti9RCzlJ0bj5lB9mG+gufL1OsXiirLjn0P01M+D5oE9Hnb
+	tW2kIldyIQqryrxNd/VG4Nmr+fiEehBbRe1lB7aEexDNlCi10BweTaCEkd9G4wZc1J5yZXO
+	6Z7bG5en7M/NFrP1YTCWCgR4XQpnhBccsGRGcHkwYieG0yp9BFkSLqctAzqa6Jw56Kfe/Gh
+	qJ8Xt9/6WT9TU3HAbbhEEY5BQrDSUgsz4WD9dOEv1VdmMvTUqh/f91LPC2/BTpNNYsuZPF3
+	BnWalk0TCuZMwdF5M/RhrZwmgo1rQTjC6GcBUUUb8I11Ss8tIRd3OGx5ewJFXuKFi84Wfoo
+	2ppV9LA1QYvtpjAqk6L3QYwb8J+GIi2J/n/+R1Q2UcXLbKLE8YDO2LLVSzoKTCjAQ1G/KAE
+	6JRGQhyd4NYgspjnRY5RRNLGyj+eRRj7+C+36IkXPc3OrDIiVifjUe1Xk82h2lArXbaU/4z
+	QUdXRA3SreA6aObq8KpzKS/9LDPSNlbAwNBHo88B0WOB7WD4cZN64Y5ZW++9t6KxpSgjxw0
+	pswK3uIaue8Bo/RA7mRKJD2lcHiiQ1/kVc38R64DeeKJJ8QgqJMp/fJiLEMb4DEczSQNOIV
+	hzeNjUOlsbwJvPI5unLXJy4QI3gJtrBQbjc0TRpOM7wpgQRwFr/B8OE10Z6Myyu2vm1Z5gZ
+	X64+D3w2IurLNsC9H5iStCX9TDAPOO5e/M5ISgOb3rD7lCv/ch5tbyi57o0XHQF+dAdtVim
+	AZk/pSuPdr2+1CmU3+Ji0LDN7HUtujrUzujZ+M9RagDUaY0a9hzE3hfdAZYNXcFh2ANY5Fy
+	Z87SfI0vRZvDWDO/zToj4Ot1uUhpImuv6dsENTW1uvoGLITlRCr+iCynzLtUKN4G9WdMNkL
+	KimjVrZ/FgcpB53giFE5P6OWfu1WSBpMQ3votbZMWt18JjM8T80tgX5RepVTIBspMQe5kIE
+	jH0+b4C71HsRZ5Jp118sXX8hm+26dgrwW+sIRGwW1p4h6NGLy2bWJKNfdWsK63A9vqJigKG
+	+9RFBdVH8bIwvvYm0WYB99IDOh/n5G5/w==
+X-QQ-XMRINFO: M/715EihBoGSf6IYSX1iLFg=
+X-QQ-RECHKSPAM: 0
 
-When xfs_repair is executed with a non-zero value for ag_stride,
-do_inode_prefetch() create multiple workqueues with each of them having just
-one worker thread.
+online fsck may take longer than offline fsck...
 
-Since commit 12838bda12e669 ("libfrog: fix overly sleep workqueues"), a
-workqueue can process multiple work items concurrently. Hence, this commit
-replaces the above logic with just one workqueue having multiple workers.
-
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+Signed-off-by: Gou Hao <gouhao@uniontech.com>
 ---
- repair/prefetch.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ Documentation/filesystems/xfs/xfs-online-fsck-design.rst | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 5ecf19ae9..8cd3416fa 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -1024,7 +1024,6 @@ do_inode_prefetch(
- {
- 	int			i;
- 	struct workqueue	queue;
--	struct workqueue	*queues;
- 	int			queues_started = 0;
- 
- 	/*
-@@ -1056,7 +1055,7 @@ do_inode_prefetch(
- 	/*
- 	 * create one worker thread for each segment of the volume
- 	 */
--	queues = malloc(thread_count * sizeof(struct workqueue));
-+	create_work_queue(&queue, mp, thread_count);
- 	for (i = 0; i < thread_count; i++) {
- 		struct pf_work_args *wargs;
- 
-@@ -1067,8 +1066,7 @@ do_inode_prefetch(
- 		wargs->dirs_only = dirs_only;
- 		wargs->func = func;
- 
--		create_work_queue(&queues[i], mp, 1);
--		queue_work(&queues[i], prefetch_ag_range_work, 0, wargs);
-+		queue_work(&queue, prefetch_ag_range_work, 0, wargs);
- 		queues_started++;
- 
- 		if (wargs->end_ag >= mp->m_sb.sb_agcount)
-@@ -1078,9 +1076,7 @@ do_inode_prefetch(
- 	/*
- 	 * wait for workers to complete
- 	 */
--	for (i = 0; i < queues_started; i++)
--		destroy_work_queue(&queues[i]);
--	free(queues);
-+	destroy_work_queue(&queue);
- }
- 
- void
+diff --git a/Documentation/filesystems/xfs/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
+index 8cbcd3c26434..55e727b5f12e 100644
+--- a/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
++++ b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
+@@ -249,7 +249,7 @@ sharing and lock acquisition rules as the regular filesystem.
+ This means that scrub cannot take *any* shortcuts to save time, because doing
+ so could lead to concurrency problems.
+ In other words, online fsck is not a complete replacement for offline fsck, and
+-a complete run of online fsck may take longer than online fsck.
++a complete run of online fsck may take longer than offline fsck.
+ However, both of these limitations are acceptable tradeoffs to satisfy the
+ different motivations of online fsck, which are to **minimize system downtime**
+ and to **increase predictability of operation**.
 -- 
-2.45.2
+2.20.1
 
