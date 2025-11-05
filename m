@@ -1,109 +1,89 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CBAF2836A0
-	for <linux-xfs@vger.kernel.org>; Wed,  5 Nov 2025 18:40:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F8AE319604
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Nov 2025 19:13:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762368031; cv=none; b=dP9VvHTgZ9M4Wx1TVxaZEJ4dhI91U2JuleqnB33wFoRS+YuCEUtwala297uiZ+y9A/U3jHc7ZDvttc8M6MnL1hzoS1WyZl2qG7eZerEQuj3RMKd57Ptm5CKdRliSZ/XOmmqQNJoy45+2tBoi4K7zbid343oTqIWPMCaqS9BMUUM=
+	t=1762370002; cv=none; b=f4IM2KSfH94mKxnvAYu/A1R/DGHKqRD3pLzbU8U3rIMWzNhhCTN3Uz5dZWq4qHfLywhn2hsOZYSfcnJeHOTVFndqXhl/nRSVSroB9BpmTA2iBK1ygbd1CgvC6xKm+c1HMjnzFtk5OWNetTsPhnhqeOMcRNR1G6I5ANqDXMFgh0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762368031; c=relaxed/simple;
-	bh=AvBw7pIapYDjfqbEZ1bgncfbRO2NgqW+PZq/6jkqGM8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GFv5qnA4uDgmx6rKAs4U0ZYwy43IQUe+3TVtnz45SZOothbGA0p63hPRFAsci0e944hzwwDv1/TTZkumE9PNvIs/KQWdjxH3Y/d7IBrrMrExbqtrVNEsCSd0kzUHcEMbN+w232LK6ZiaGSS1ngUp9/be05nkjvptptc+3qpm8dE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=gisM+4T3; arc=none smtp.client-ip=209.85.221.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1762370002; c=relaxed/simple;
+	bh=OSCSNX5cY4t5bVWyezelQuUot3W5C/FP5ZGqW+HgnOY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dTRA6F/3iwn697UqYO8WH3c0rNllUPBu85JykJQGgJxIhpeVZL2HNPZHng19AsR+JIQs04Jae2d4KFog0mpbusclj6b6eic4EAwi1Hxf0eAv6SsqaaxeGGEoPly+/2RiwkhZj9cZgmvINknKd0CPNMr9dslAH8qr+OmXDDqMSJA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LxrIQ2P/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="gisM+4T3"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-429c8632fcbso110762f8f.1
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Nov 2025 10:40:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1762368027; x=1762972827; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=XIyQJV0BoOq8cM6bW2Nc4tys93TVUqC9F2FCguuU5Y4=;
-        b=gisM+4T3Q9267eqJ1ys58qBqAdKRrmOcVQb1cdNiSx2qEd6cyvWlRcW8mUU8WvIePz
-         1HrZfi4mV+sXAsV/7HQHl1PJQmjJb667uvzaCzODUDwSeMD9VZv76Ye7JZyc5T2nSzp5
-         ZuXCqKHPHPXQra6fPgpeIB7w9aXpQPJXACBYR8fWFMxgSz3Kvs1JAboHCMbeQB3C+2Wa
-         0wLyX1yRhzSG1+7YSeGI9RNx8iAFDkUmKxSncp8mB7DrF06FvWOqzhpmJHKiIkynBLsw
-         w+I38X/mNLUSVaukwi4bauaUP0xoBjL5uqF+s80cMD7Shg2gfpNSm5mfzEXHN4hEEUy7
-         X7RQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762368027; x=1762972827;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=XIyQJV0BoOq8cM6bW2Nc4tys93TVUqC9F2FCguuU5Y4=;
-        b=PQ4vFiXGfSujMx+mZJDa4B60UyQOt8ag2nerHbKfgK5+Gv7Gn9Js66MGXx3OWmkM+a
-         PrGayPW5lofD8NYgpHfOalproh+vnuvub/B7tDnhJ8/VBRJsrTiS2vkx1OWhx0qGvdIR
-         sZ+T4wkSj4rPR8z9RRE7xJejHQB4HDH1eMUXpcNQlhDShW1By3GUrkDGvRkafGiH3jQj
-         ihKMx1xU1Rw1LfIHUFBcDzePCIRjULNqK4NX8fElToOQxp71V4stlXBLFnivpO+VR5rF
-         dHYkaXSRwH2DUP9VM7daFYw1ZcZ1qbnHiXRYwDZNWFi8mUztR09uxBZm0RCSBOzq6lbn
-         DbYQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU8D7edgUkG1f2nR2XVJgt5h/ubemp6mY+V/irMQzXzwH2mUP/LdHeQTxigohogg2AqD/SIg8OXfRA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxv2fGCgah7mFW6fE80+IeIuzXdx26HVKTQLO9mV8NzNKdUSUjG
-	BdY6u9hIoJrhkCmNqg8zlnrp3GMlqkPLAYXNinbM8Ul3T07SNBldiJbKIEe+zqfhVNgZ4McogqW
-	VBl9Zmmol7xSlmnMUWr7LRBdZo+C+0Ryp9lUJZql5kQ==
-X-Gm-Gg: ASbGncttL/qbIZUnaYWHgOhi8Czcm9XhwHFs6Qvfvkip/aeMndjVS2lZyAvd54z4W2v
-	sd6jYdhVDszfTTCXCbRQq2U7NItr0lEruU4k6SIV0M5ILiGT5VFQAQMNZbV7hsDBChAD2DZxP4s
-	jZNNQNUQ5Cd3orvIn+rmz5lK8vaSAC66CIG6cm0gLduz4tiU/FRasYhzPaSlc/EzAY4PvH1Zi4S
-	n0sZIGpfj63dUMcL3g8m+jB5+cDI2KjOiOE8/+9KGbUOoPALe3QhCKErtD80K62InxyFnFNWQRM
-	ppyg3XriZyh2gOl5lAKrNRb6/CjeEI1RJv7o0gOZ/hb2zq9cUQj8O4Mrzg==
-X-Google-Smtp-Source: AGHT+IE7JHWAjENwi47IGOpfVP4yA/c0uXNjUPhrOCm2JpvPKV7uVzx/cwlCOY7h0IJ+8GoTWuRVpHEfcxcTPv30XiU=
-X-Received: by 2002:a05:6000:2184:b0:429:b8f9:a87e with SMTP id
- ffacd0b85a97d-429e32e9348mr2957432f8f.20.1762368027493; Wed, 05 Nov 2025
- 10:40:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LxrIQ2P/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46822C4CEF5;
+	Wed,  5 Nov 2025 19:13:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762370002;
+	bh=OSCSNX5cY4t5bVWyezelQuUot3W5C/FP5ZGqW+HgnOY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LxrIQ2P/sCxgFJudzcLW9IB3gDceqO/Ta1JcIvuGe7taASXGHJfpzljOGHk4RgG0C
+	 UZmGJxNjR/Ok/gsTq5M4QXZjiWMbF+2+J6vo9aT0TEkxTrITy0sYx3JvqqckU/jaU0
+	 mtuMcAnleLLIIhyf0UfZUhSZ2jkfdy25m2csP10FJEiWrogSj8srpR+rK3vO+5wfDR
+	 R1zj6+zLYWoTOMrlxBZ/qUTWaTNFr5KXF169zzJwepJtwqzVSDDGzvW6IQ0SWr4mOK
+	 yJLOwPr6lp34OFrqLunmC2KY08ZN4mtA6aCE8lbG28L/mB7b4Y3RSi8iWmeDbRfxAT
+	 1sMV4P2eW7Jtw==
+Date: Wed, 5 Nov 2025 11:13:20 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>,
+	linux-xfs@vger.kernel.org, ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com, bfoster@redhat.com, david@fromorbit.com,
+	hsiangkao@linux.alibaba.com
+Subject: Re: [RFC V3 0/3] xfs: Add support to shrink multiple empty AGs
+Message-ID: <20251105191320.GD196370@frogsfrogsfrogs>
+References: <cover.1760640936.git.nirjhar.roy.lists@gmail.com>
+ <aPiFBxhc34RNgu5h@infradead.org>
+ <20251022160532.GM3356773@frogsfrogsfrogs>
+ <aPnMk_2YNHLJU5wm@infradead.org>
+ <24f9b4c3-1210-4fb2-a400-ffaa30bafddb@gmail.com>
+ <aQtNVxaIKy6hpuZh@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251104-work-guards-v1-0-5108ac78a171@kernel.org> <20251104-work-guards-v1-8-5108ac78a171@kernel.org>
-In-Reply-To: <20251104-work-guards-v1-8-5108ac78a171@kernel.org>
-From: Daniel Vacek <neelx@suse.com>
-Date: Wed, 5 Nov 2025 19:40:16 +0100
-X-Gm-Features: AWmQ_blzod4RW1ZTgCh0cBumT4ZK5h0yfmsbksJOvdN6HEySSPMcZBN44FECEdQ
-Message-ID: <CAPjX3FfyQ4wDD54_=wz62OBsSO30C2f7dmXZcKEu2JgpuER_KQ@mail.gmail.com>
-Subject: Re: [PATCH RFC 8/8] xfs: use super write guard in xfs_file_ioctl()
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aQtNVxaIKy6hpuZh@infradead.org>
 
-On Tue, 4 Nov 2025 at 13:17, Christian Brauner <brauner@kernel.org> wrote:
->
-> Signed-off-by: Christian Brauner <brauner@kernel.org>
-> ---
->  fs/xfs/xfs_ioctl.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
->
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index a6bb7ee7a27a..f72e96f54cb5 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1408,10 +1408,8 @@ xfs_file_ioctl(
->
->                 trace_xfs_ioc_free_eofblocks(mp, &icw, _RET_IP_);
->
-> -               sb_start_write(mp->m_super);
-> -               error = xfs_blockgc_free_space(mp, &icw);
-> -               sb_end_write(mp->m_super);
-> -               return error;
-> +               scoped_guard(super_write, mp->m_super)
-> +                       return xfs_blockgc_free_space(mp, &icw);
+On Wed, Nov 05, 2025 at 05:12:55AM -0800, Christoph Hellwig wrote:
+> On Wed, Nov 05, 2025 at 01:26:50PM +0530, Nirjhar Roy (IBM) wrote:
+> > Sorry for the delayed response. So, my initial plan was to get the the
+> > shrink work only for empty AGs for now (since we already have the last AG
+> > partial shrink merged).
+> 
+> For normal XFS file systems that isn't really very useful, as the last
+> AG will typically have inodes as well.
+> 
+> Unless we decide and actively promoted inode32 for uses cases that want
+> shrinking.  Which reminds me that we really should look into maybe
+> promoting metadata primary AGs - on SSDs that will most likely give us
+> better I/O patterns to the device, or at least none that are any worse
+> without it.
 
-Again, scope_guard where not needed, right?
+I don't think we quite want inode32 per se -- I think what would be more
+useful for these shrink cases is constraining inode allocations between
+AG 0 and whichever AG the log is in (since you also can't move the log),
+and only expanding the allowed AGs if we hit ENOSPC.
 
---nX
+(Or as hch suggested, porting to rtgroups would at least strengthen the
+justification for merging because there are no inodes to get in the way
+on the realtime volume.)
 
->         }
->
->         case XFS_IOC_EXCHANGE_RANGE:
->
-> --
-> 2.47.3
->
->
+> > Do you think this will be helpful for users?
+> > Regarding the data/inode movement, can you please give me some
+> > ideas/pointers as to how can we move the inodes. I can in parallel start
+> > exploring those areas and work incrementally.
+> 
+> I don't really have a really good idea except for having either a new
+> btree or a major modification to the inobt provide the inode number to
+> disk location mapping.
+
+Storing the inode cores in the inobt itself, which would be uuuuugly.
+
+--D
