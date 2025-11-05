@@ -1,135 +1,133 @@
-Received: from mail-il1-f174.google.com (mail-il1-f174.google.com [209.85.166.174])
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32FE8314B64
-	for <linux-xfs@vger.kernel.org>; Wed,  5 Nov 2025 15:45:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6FC8321448
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Nov 2025 16:33:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762357510; cv=none; b=WxdkR+Mz2rsDDG25TWnxhQltb2Q2niGCaSYy1hmA8phAvzM+PZ7g7wmLhRUmvxTg0CU9eO8o3/cohhb8gh0PErVo3DYCPHiKP2oBMIMSD0A6HofwD59/o8ild5t5dyfEJpF5AIjHHFx15WZYoHdUeQiGl/5yGRGleRQvE8xkS90=
+	t=1762360399; cv=none; b=FYiL25gZu4uaZMdTQUqCfov2IWnz+3rsS8utokzYe85XqN6NXK8G6+pVPUusY04ka9JSCXCLATSMmwiVg+f22hXLMm5BNnOsAnI63ZV6kN+irzDKIUWh1PxMe/GMicTxeIvpxohEWsShFyUWj9K40d+6FzCLAEGMmOVStdUKMgg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762357510; c=relaxed/simple;
-	bh=vBpIbHl5BJYu3GvhFAscHMjHAct8CImIgNJ4c1z/oeA=;
-	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=a7xdwuaaEDdHjcx2qOLpMz4oU1tLm+MOJyYUywuA4wnXeiBbxjpx0fsmSd7aBv2HWNvxd0xPCoMgkbK98I21nblnW6maMrAQWYyaZLVHm1H+ztbpstOVnyjY/4BY1neSgzQo2KZ45tzEBUO42b7LO7KvqvUaYsb1CAvc2jkqjIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=oXBG7qxR; arc=none smtp.client-ip=209.85.166.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1762360399; c=relaxed/simple;
+	bh=Q3KigkSvYwK5JS9sgke5e3cj+3o6CQW5ok3nCz3pwtk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=FU7gPqfJ3REtuLJCoywTt5RMtksMeYUTV+EZou8wzl2hpjkaAjjFO47kCAm8DP/bc/305gEQ3dyvf1alIl1xinZdhkqSuiW+cjNkIgLF/xYFObFiob1hl5dvlPyEnO/T2TLvN0sKwF84RHlJDNE6QIXc6sh4CMPa81LmZN7aPNM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=MWu2qJtv; arc=none smtp.client-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="oXBG7qxR"
-Received: by mail-il1-f174.google.com with SMTP id e9e14a558f8ab-43321629a25so43848075ab.3
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Nov 2025 07:45:07 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="MWu2qJtv"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4711b95226dso1625e9.0
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Nov 2025 08:33:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1762357507; x=1762962307; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=pmEA5UIRtFUkoJTebXPiJtfqEeDxZBhUOtjCk6lwm1Q=;
-        b=oXBG7qxRAgxxpjvyoxPULOa1fgROdBp/4Z8g918iu8f5OrPjl3F4GHIx5MFNTDhIAn
-         pqEWO68Dj3gmQhJr7qUItHwJwG64ld8NCI3MV7bCUWXu1dZb9kfWdGjqhLEvZ479OLxd
-         7WiqKEvubQDho+R74G9Dyx22NjREEAjXzpV9A8ulR2vqMXlAUzbRrF27vJeKUN9IErWH
-         nS5fM8dz6irJDPhN+oXQW2NNuh/Xd+GhLhTh5UE92ErPNvWvCwMnK0USG76HfdDLNIZh
-         XCRNyUDNOSW9hHsEDGFGMI7ZCsw/O3VLkbMk72QQA/atz5Zr6aL5e+7DVF1PHSDpOj60
-         NUcA==
+        d=suse.com; s=google; t=1762360394; x=1762965194; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=fxgECH2xm74nun5bYq3yo2lzpHEkoDKEqM0ldiRMQUQ=;
+        b=MWu2qJtv8JOAzbF1l/Dfac/mUsfdWhU2PrESm+dpybLCBJnwzUc5LHrzFeyYicizZV
+         QL5LsPtr47GPBuYwF8wfqqratL1fUBnLrJQgjcd1b6s1YA5rBYsnDmKZtyC+Ow4HlU7q
+         AQAzpscIlmpbTdyPvdctdJ4BMh5qMwsRjkj6Fvd9CQpDsyMSs6TflhqWP9RFDLa7M+s9
+         2x+sz6cJAfEGwCS44z+5XqDOE7iMxrzY9LgrIibeHzjTnzPqRpjtAaPxUpMHDj3E8GAt
+         yMCulqkogs5ujpeBt7WOZ06BLnkdGw2GL+AKqfoZKxG1ywoPe9n9aKsPQ94PivQ4Ssmu
+         HHaQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762357507; x=1762962307;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:to:from:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1762360394; x=1762965194;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=pmEA5UIRtFUkoJTebXPiJtfqEeDxZBhUOtjCk6lwm1Q=;
-        b=FLqK7JJOK3EjK/9+Sa6Yg14mQa4PUkdZzqMr1RTIpjcWVWWC5OQer7vEo017YZsl6J
-         js2Js7ZDHSSQ9X0kBRHJHFyrBCb00m224UOJ41zq1SIr5Ga0T2QrKEGkQn5qDCtKrq2P
-         hb/cK786RTaE+sOBdcguYq3+VGNXxAMVijOhj9I3857+ANoxugfDu+JO6f0PxwwvO1qA
-         na7bkdGzWc/h53HDG7i0jEscX+M2kVYiLPnlabTIV/RN5hjarh9d5EzWEbpvD97AG7KN
-         v/qZlJW2kH0eB/gB+Z2/r1pVM6NO+mWdIzMEYjfSg2CEr6HjOMCyE+/GPPEZK4fsuKPI
-         1q7w==
-X-Forwarded-Encrypted: i=1; AJvYcCUdg0DAoAMKjcPWtQqlHPVCGf/utVrCvkkwvTXbM7rEEmXLaS+4rQm4i9f+dc3WqUflj8d/SnmolLo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwA+ykt8wZUhghUDwbKy9u0RQfaZ0z+cvzepNXJ+14hBAr056sp
-	wzHqL1bsogaV5QG+5wbE7fAVf/ZxCbyqAyqig9f8aryYDH7+6jnWm3MULiaoaLpzJDI=
-X-Gm-Gg: ASbGncvz/5udn9gFoyqUk7Skh/gZLcP4NUpGgpNuQlULldZ0VZrW7hDD5YnqTdKF+EE
-	vdot8DACCl7RObCqLM2wbzF1Kc8ogA4SKvoR6K9moeSEpS88ldp74qvAVDCzizf6juuTo3Ns1Xv
-	udREu9vNzbjNNQEAQhKTS14Lga+PscPpk3o+Vy5z3D7yAdw/t7pdZfo1SyJLSCSsNYwRoMZWXyw
-	BMmAkS9Ilj0Jb40Am4FBGQtT4AjtjVrZ12xMs9e4fMLl15mPUjKIIRoHf5Qfm98AEmqCVgi/6VL
-	cMET3VF3FSvxwPY7rIDitU9kIJIpBnGiQPRjZwPhQUWBo4cZXVUMtJ914ToaMZGbmg/tCsK37fe
-	3/QcjVsTAiOKSPsAU/680PMfq52QskTogHCMq1OwBwa01ihGudL7LjQp7eTmn0RnHv0dy5KOeLa
-	+DFw==
-X-Google-Smtp-Source: AGHT+IGRprlY0B/j7MFC0euD5DLU4VAIhfixS9xB+G6Pb3CIfQJOwUgjuW1G2xa98UfKd2ncVWvKMA==
-X-Received: by 2002:a05:6e02:1a85:b0:433:2957:2e87 with SMTP id e9e14a558f8ab-433407d98e4mr47454155ab.28.1762357507117;
-        Wed, 05 Nov 2025 07:45:07 -0800 (PST)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-5b72258d4e8sm2521439173.3.2025.11.05.07.45.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Nov 2025 07:45:06 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
- Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>, 
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>, 
- Mikulas Patocka <mpatocka@redhat.com>, 
- "Martin K . Petersen" <martin.petersen@oracle.com>, 
- linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org, 
- Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org, 
- David Sterba <dsterba@suse.com>, Damien Le Moal <dlemoal@kernel.org>
-In-Reply-To: <20251104212249.1075412-1-dlemoal@kernel.org>
-References: <20251104212249.1075412-1-dlemoal@kernel.org>
-Subject: Re: [PATCH v4 00/15] Introduce cached report zones
-Message-Id: <176235750606.190479.10317258805246349798.b4-ty@kernel.dk>
-Date: Wed, 05 Nov 2025 08:45:06 -0700
+        bh=fxgECH2xm74nun5bYq3yo2lzpHEkoDKEqM0ldiRMQUQ=;
+        b=dYjXAdecoazJx208AN6KeVwVTeSTduLq91FNb0EV2/3/NpeGJLzV4Dr/dMbMe0JerY
+         cBm2oQDAfQIK2E+dpjxNmY9AxZXFj+tmWrdtiGODWzGJZH6dCtdu0st6qYAoJQbyNibo
+         rQYBFSrrqPj8riSNNzgaZJSU24/kaE1kh8XH3/mdRkBRHMol5XpSmLBwhkQxBZ6vo+ot
+         oiyhaFPpXJSC7gVxQwGuh7XOdEgDKTWG2n1MuKudaoM3IK97VO9WMlRLgz7wSdhrmDEP
+         +LzjIg2STUAssvUsCzzzN6A+YwmRj5iF75/bWavg90Cmua45SzbJwB38cCHxhfkhB8O0
+         uumg==
+X-Forwarded-Encrypted: i=1; AJvYcCX45sgwFRIrTDitugrbVMv+eK9OWJ89VyFtgFB8ZjgqWV9BzvLV19FETZoM6vEAFhkB+kkxZ/DX/5c=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxDHpmkqQkgKuzk7qK273jJ8WD4rBKMIPluIybzflZqJwEvgWHW
+	En9mKy3qW5u08z2UYktOVsSIJi5VO7J2aA+cstgqC8GnM57cGTB/Q4FnQKE0EdRy99e0AH84U82
+	LaoOXVGccbBXZR1crFl3y4ZEL+zPDSiKCoGWPawund2utW6xniJeb
+X-Gm-Gg: ASbGncvzWdPuoO2YiA+7zAFNvGDlYsnjrKKekH1pL1ADMEax27/ApnWMJbVrT58Cxlm
+	Dee182tcpYLvwDzHPm1nY6VQuW8sl5geFSURG8tUO7WTXcdpEifmdOz9Cb5bBMecTW2k1bs7CrP
+	/0iIQ9bH1NVLMc1u2BcgTQY6s4WA0MGV0P66r90lgQkxUC1O4Pv4kKbg2wWzDSQI7Ynx4NN8Jey
+	ti9Ap5DBIDpdC0un/fxozbgSYZvZ03tiSHCBMHCJOpAiPXhs5vKe3QQb/1tlLoxV/CqQhnUkL/A
+	6NmpUmuL+uwWJUo7LFMvk0TlWow1hOj9KotPF+9hK/DSDBy+g6LKIflwYg==
+X-Google-Smtp-Source: AGHT+IEz7I4CY+GlSdoe/bflZWVcU0m0o1McZfVokzTIe0B2RRVoH+RBVlVjzJASkrgFqD3eiDzaXjnkv21y5vlztVg=
+X-Received: by 2002:a05:600c:4584:b0:477:55de:4a6 with SMTP id
+ 5b1f17b1804b1-4775cdbe238mr35989165e9.3.1762360394279; Wed, 05 Nov 2025
+ 08:33:14 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
+References: <20251104-work-guards-v1-0-5108ac78a171@kernel.org>
+ <20251104-work-guards-v1-2-5108ac78a171@kernel.org> <247c8075-60d3-4090-a76d-8d59d9e859ca@suse.com>
+In-Reply-To: <247c8075-60d3-4090-a76d-8d59d9e859ca@suse.com>
+From: Daniel Vacek <neelx@suse.com>
+Date: Wed, 5 Nov 2025 17:33:03 +0100
+X-Gm-Features: AWmQ_blmtnDHlxA5kivLFHuNDFJT0rxb6Yv2ZgkGpfB5WfZtUJKHjLM2jWHF-pQ
+Message-ID: <CAPjX3Ffptip7onCpm30OiC+zvfNV05_B1GQYM4-Lem-V12_ERQ@mail.gmail.com>
+Subject: Re: [PATCH RFC 2/8] btrfs: use super write guard in btrfs_reclaim_bgs_work()
+To: Qu Wenruo <wqu@suse.com>
+Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 4 Nov 2025 at 21:43, Qu Wenruo <wqu@suse.com> wrote:
+> =E5=9C=A8 2025/11/4 22:42, Christian Brauner =E5=86=99=E9=81=93:
+> > Signed-off-by: Christian Brauner <brauner@kernel.org>
+> > ---
+> >   fs/btrfs/block-group.c | 3 +--
+> >   1 file changed, 1 insertion(+), 2 deletions(-)
+> >
+> > diff --git a/fs/btrfs/block-group.c b/fs/btrfs/block-group.c
+> > index 5322ef2ae015..8284b9435758 100644
+> > --- a/fs/btrfs/block-group.c
+> > +++ b/fs/btrfs/block-group.c
+> > @@ -1850,7 +1850,7 @@ void btrfs_reclaim_bgs_work(struct work_struct *w=
+ork)
+> >       if (!btrfs_should_reclaim(fs_info))
+> >               return;
+> >
+> > -     sb_start_write(fs_info->sb);
+> > +     guard(super_write)(fs_info->sb);
+> >
+> >       if (!btrfs_exclop_start(fs_info, BTRFS_EXCLOP_BALANCE)) {
+> >               sb_end_write(fs_info->sb);
+>
+> This one is still left using the old scheme, and there is another one in
+> the mutex_trylock() branch.
+>
+> I'm wondering how safe is the new scope based auto freeing.
+>
+> Like when the freeing function is called? Will it break the existing
+> freeing/locking sequence in other locations?
+>
+> For this call site, sb_end_write() is always called last so it's fine.
 
-On Wed, 05 Nov 2025 06:22:34 +0900, Damien Le Moal wrote:
-> This patch series implements a cached report zones using information
-> from the block layer zone write plugs and a new zone condition tracking.
-> This avoids having to execute slow report zones commands on the device
-> when for instance mounting file systems, which can significantly speed
-> things up, especially in setups with multiple SMR HDDs (e.g. a BTRFS
-> RAID volume).
-> 
-> [...]
+It needs to be used sensibly. In this case it matches the original semantic=
+s.
+Well, up to the part where a guard just consumes additional
+stack/register storing the sb pointer. That is the price which needs
+to be accounted for.
 
-Applied, thanks!
+--nX
 
-[01/15] block: handle zone management operations completions
-        commit: efae226c2ef19528ffd81d29ba0eecf1b0896ca2
-[02/15] block: freeze queue when updating zone resources
-        commit: bba4322e3f303b2d656e748be758320b567f046f
-[03/15] block: cleanup blkdev_report_zones()
-        commit: e8ecb21f081fe0cab33dc20cbe65ccbbfe615c15
-[04/15] block: introduce disk_report_zone()
-        commit: fdb9aed869f34d776298b3a8197909eb820e4d0d
-[05/15] block: reorganize struct blk_zone_wplug
-        commit: ca1a897fb266c4b23b5ecb99fe787ed18559057d
-[06/15] block: use zone condition to determine conventional zones
-        commit: 6e945ffb6555705cf20b1fcdc21a139911562995
-[07/15] block: track zone conditions
-        commit: 0bf0e2e4666822b62d7ad6473dc37fd6b377b5f1
-[08/15] block: refactor blkdev_report_zones() code
-        commit: 1af3f4e0c42b377f3405df498440566e3468c314
-[09/15] block: introduce blkdev_get_zone_info()
-        commit: f2284eec5053df271c78e687672247922bcee881
-[10/15] block: introduce blkdev_report_zones_cached()
-        commit: 31f0656a4ab712edf2888eabcc0664197a4a938e
-[11/15] block: introduce BLKREPORTZONESV2 ioctl
-        commit: b30ffcdc0c15a88f8866529d3532454e02571221
-[12/15] block: improve zone_wplugs debugfs attribute output
-        commit: 2b39d4a6c67d11ead8f39ec6376645d8e9d34554
-[13/15] block: add zone write plug condition to debugfs zone_wplugs
-        commit: 1efbbc641ef7d673059cded789b9c8a743c17c9a
-[14/15] btrfs: use blkdev_report_zones_cached()
-        commit: ad3c1188b401cbc0533515ba2d45396b4fa320e1
-[15/15] xfs: use blkdev_report_zones_cached()
-        commit: e04ccfc28252f181ea8d469d834b48e7dece65b2
-
-Best regards,
--- 
-Jens Axboe
-
-
-
+> Thanks,
+> Qu
+>
+> > @@ -2030,7 +2030,6 @@ void btrfs_reclaim_bgs_work(struct work_struct *w=
+ork)
+> >       list_splice_tail(&retry_list, &fs_info->reclaim_bgs);
+> >       spin_unlock(&fs_info->unused_bgs_lock);
+> >       btrfs_exclop_finish(fs_info);
+> > -     sb_end_write(fs_info->sb);
+> >   }
+> >
+> >   void btrfs_reclaim_bgs(struct btrfs_fs_info *fs_info)
+> >
+>
+>
