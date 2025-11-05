@@ -1,97 +1,298 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 496CE32145E;
-	Wed,  5 Nov 2025 14:54:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9994333751
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Nov 2025 15:23:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762354472; cv=none; b=j/ulP0OE9pnEs/znBp5+pu6I+lE8FkOXuzRJFt607z1P4iZKpRDoh+npxs5VgJWlAw4ytaQZN+mX2c3DWG7l5nRJ7cMfktS2yQgxpnyMfQnCYnoGAg2yTpADzjfvMdcQlDCgrsC0MvTYhBT4e7zjj4tvf0lNSitzIpVrLeX52PQ=
+	t=1762356212; cv=none; b=ETl8qWuYcTJ6BxAHwNSdZyXogHXhb31yexnkci7MCXeh4lqI/lCdugMOEgLnH+9RC6hTDy8lgndiE2AY5/WcZjouQREGykmh29zyNU923MUsJV+EN2n7BpNWD6SeyoQ6S7/vqP9zIFueczCnGvqjfN+cwy46wW9PhW/HGq0OvmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762354472; c=relaxed/simple;
-	bh=wg6hvq1fDEKKHo+ksANPIzinuZ9SiV9KbZGzhCFjZa4=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=k9yX+fOEw4IWS7ZB18LhlbUYaFA2CrstnZ1FotGIeSr+OLabvCbXZ3sE1UajNeqF3/JYpEX0xF53S155t27EfUhXiEEjdZcoGJJ5YbmjD/BicNO99fMtv7aJeyuww6Qum4RRdYym0+JWm/sfev5+gJw6/obzYUQ9yyM8kMmdgR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=ixdPaQRV; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=2m96Jera; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1762356212; c=relaxed/simple;
+	bh=ag5YoTPdrPFC4dkdITJ1pF8E3Z5xpwBr6rSWH351Has=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fr0jvsmaPtaHJ10Od0qAHk8/AjIuhWEsZrVbAJNljb1oe0oRjzg4w3NE48rbRXWsZgmqr9BKgwSNujgywsFg7kFkDwd98EWFK+nDrelMJo13BlKfYT/5GQbXMdVywl1DP3iCWIv/ZwgYPH1esR1Ek270dzrbjralnr2LMRTzefM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EokHJRxg; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ixdPaQRV";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="2m96Jera"
-From: John Ogness <john.ogness@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1762354469;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EokHJRxg"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1762356209;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=4WxYZ+JeksWx9qzLRbdr/qx4v36wWsQth6BFNnfgxlQ=;
-	b=ixdPaQRVOB+Vf/Rjjt9TIHFHfrqbSTg3oXt1SBrY/0vcLZ3MY87d7ex88vzn9l3lEIuIr4
-	SYOhn1zLfUUR9JxPwjeVT3ocT2rGfFH9s0+WhzF8+55J3QdyYj0GGo9OxBGtgCLzc3cEB4
-	j+7huapGfATu6aXcGZx3HvIVIRJd2rx361EYoZ4iWJww4qISDNV+YhQMhfuIfwD9zpD4EU
-	0vfvDqS4xB2aOQCu29sG8SGr4nzHqkpKmfxGlwBIaWjcQXMCYgdpWNJH4BD4eRd+S5GU80
-	LcUK6NbiRXQLTibQHLucRQq7kjLOW/8GAhso1ChYyGhbENo+5sYW9hDGQAAu6A==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1762354469;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4WxYZ+JeksWx9qzLRbdr/qx4v36wWsQth6BFNnfgxlQ=;
-	b=2m96Jera/0TPmblmwvx8TPXahXVuSgKJFttdj9F8sJkbbeCoeN5f4LoITxROKlrWQVRSFQ
-	9nPJhdCcdzIbFODw==
-To: Petr Mladek <pmladek@suse.com>, Joanne Koong <joannelkoong@gmail.com>
-Cc: syzbot <syzbot+3686758660f980b402dc@syzkaller.appspotmail.com>,
- "amurray@thegoodpenguin.co.uk" <amurray@thegoodpenguin.co.uk>,
- brauner@kernel.org, chao@kernel.org, djwong@kernel.org,
- jaegeuk@kernel.org, linux-f2fs-devel@lists.sourceforge.net,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [iomap?] kernel BUG in folio_end_read (2)
-In-Reply-To: <aQpFLJM96uRpO4S-@pathway.suse.cz>
-References: <CAJnrk1bF8sLU6tG2MGkt_KR4BoTd_k01CMVZJ9js2-eyh80tbw@mail.gmail.com>
- <69096836.a70a0220.88fb8.0006.GAE@google.com>
- <CAJnrk1Yo4dRVSaPCaAGkHc+in03KaTXJ+KxckhLoSrRxbEdDBg@mail.gmail.com>
- <aQpFLJM96uRpO4S-@pathway.suse.cz>
-Date: Wed, 05 Nov 2025 16:00:28 +0106
-Message-ID: <87ldkk34yj.fsf@jogness.linutronix.de>
+	bh=7PJUr+f5olR/jyN7nRxBruG+NMIS0PyWOocDj5Lcsb8=;
+	b=EokHJRxgizP7sUE3lhFcbSroAQs/R5FXA+VImrx+ROu26uR3WCh1y4EQttfdLMiXMT+Nr9
+	Tj6erxN5xQOeT0pg8qT7LKWoDkP/3+Rlws0rVBRl3xuQGsFUf2iwUswMHZtAJvA3eD2p2m
+	00SnYx5WphTPBEvwplRt1E9juxhLgog=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-520-pjbQSGADOQmuiNDrZXIr9Q-1; Wed,
+ 05 Nov 2025 10:23:25 -0500
+X-MC-Unique: pjbQSGADOQmuiNDrZXIr9Q-1
+X-Mimecast-MFC-AGG-ID: pjbQSGADOQmuiNDrZXIr9Q_1762356204
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 14C7D1800350;
+	Wed,  5 Nov 2025 15:23:24 +0000 (UTC)
+Received: from bfoster (unknown [10.22.88.135])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4DC10180035F;
+	Wed,  5 Nov 2025 15:23:23 +0000 (UTC)
+Date: Wed, 5 Nov 2025 10:27:52 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/6] iomap: replace folio_batch allocation with stack
+ allocation
+Message-ID: <aQts-Fg2YUoIbVsV@bfoster>
+References: <20251016190303.53881-1-bfoster@redhat.com>
+ <20251016190303.53881-2-bfoster@redhat.com>
+ <20251105000716.GU196370@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251105000716.GU196370@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On 2025-11-04, Petr Mladek <pmladek@suse.com> wrote:
-> Adding John into Cc.
+On Tue, Nov 04, 2025 at 04:07:16PM -0800, Darrick J. Wong wrote:
+> On Thu, Oct 16, 2025 at 03:02:58PM -0400, Brian Foster wrote:
+> > Zhang Yi points out that the dynamic folio_batch allocation in
+> > iomap_fill_dirty_folios() is problematic for the ext4 on iomap work
+> > that is under development because it doesn't sufficiently handle the
+> > allocation failure case (by allowing a retry, for example).
+> > 
+> > The dynamic allocation was initially added for simplicity and to
+> > help indicate whether the batch was used or not by the calling fs.
+> > To address this issue, put the batch on the stack of
+> > iomap_zero_range() and use a flag to control whether the batch
+> > should be used in the iomap folio lookup path. This keeps things
+> > simple and eliminates the concern for ext4 on iomap.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> 
+> Hrmm, so who kmallocs the fbatch array now?  Is that left as an exercise
+> to the filesystem?  I'm confused because I don't see the kmalloc call
+> reappear elsewhere, at least not in this patch.
+> 
 
-Thanks.
+It's no longer dynamically allocated. It's allocated on the stack in
+iomap_zero_range(), and a flag is set on the iomap if the pagecache
+lookup occurs. The allocation is a potential problem for the ext4 on
+iomap port, so this elides the need for dealing with alloc failures and
+whatnot.
 
-> It rather looks like an internal bug in the printk_ringbuffer code.
-> And there is only one recent patch:
->
->    https://patch.msgid.link/20250905144152.9137-2-d-tatianin@yandex-team.ru
->
-> The scenario leading to the WARN() is not obvious to me. But the patch
-> touched this code path. So it is a likely culprit. I have to think
-> more about it.
+This is probably how it should have been done from the start, but when
+the flag related feedback came along it was deep enough in test/review
+cycle that I preferred to do it separately.
 
-I have been digging into this all day and I can find no explanation.
+Brian
 
-The patch you refer to brings a minor semantic change: is_blk_wrapped()
-returns false if begin_lpos and next_lpos are the same, whereas before
-we would have true. However, these values are not allowed to be the same
-(except for the data-less special case values).
+> --D
+> 
+> > ---
+> >  fs/iomap/buffered-io.c | 45 ++++++++++++++++++++++++++++--------------
+> >  fs/iomap/iter.c        |  6 +++---
+> >  fs/xfs/xfs_iomap.c     | 11 ++++++-----
+> >  include/linux/iomap.h  |  8 ++++++--
+> >  4 files changed, 45 insertions(+), 25 deletions(-)
+> > 
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index 51ecb6d48feb..05ff82c5432e 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -761,7 +761,7 @@ static struct folio *__iomap_get_folio(struct iomap_iter *iter,
+> >  	if (!mapping_large_folio_support(iter->inode->i_mapping))
+> >  		len = min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
+> >  
+> > -	if (iter->fbatch) {
+> > +	if (iter->iomap.flags & IOMAP_F_FOLIO_BATCH) {
+> >  		struct folio *folio = folio_batch_next(iter->fbatch);
+> >  
+> >  		if (!folio)
+> > @@ -858,7 +858,7 @@ static int iomap_write_begin(struct iomap_iter *iter,
+> >  	 * process so return and let the caller iterate and refill the batch.
+> >  	 */
+> >  	if (!folio) {
+> > -		WARN_ON_ONCE(!iter->fbatch);
+> > +		WARN_ON_ONCE(!(iter->iomap.flags & IOMAP_F_FOLIO_BATCH));
+> >  		return 0;
+> >  	}
+> >  
+> > @@ -1473,23 +1473,34 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
+> >  	return status;
+> >  }
+> >  
+> > -loff_t
+> > +/**
+> > + * iomap_fill_dirty_folios - fill a folio batch with dirty folios
+> > + * @iter: Iteration structure
+> > + * @start: Start offset of range. Updated based on lookup progress.
+> > + * @end: End offset of range
+> > + *
+> > + * Returns the associated control flag if the folio batch is available and the
+> > + * lookup performed. The caller is responsible to set the flag on the associated
+> > + * iomap.
+> > + */
+> > +unsigned int
+> >  iomap_fill_dirty_folios(
+> >  	struct iomap_iter	*iter,
+> > -	loff_t			offset,
+> > -	loff_t			length)
+> > +	loff_t			*start,
+> > +	loff_t			end)
+> >  {
+> >  	struct address_space	*mapping = iter->inode->i_mapping;
+> > -	pgoff_t			start = offset >> PAGE_SHIFT;
+> > -	pgoff_t			end = (offset + length - 1) >> PAGE_SHIFT;
+> > +	pgoff_t			pstart = *start >> PAGE_SHIFT;
+> > +	pgoff_t			pend = (end - 1) >> PAGE_SHIFT;
+> >  
+> > -	iter->fbatch = kmalloc(sizeof(struct folio_batch), GFP_KERNEL);
+> > -	if (!iter->fbatch)
+> > -		return offset + length;
+> > -	folio_batch_init(iter->fbatch);
+> > +	if (!iter->fbatch) {
+> > +		*start = end;
+> > +		return 0;
+> > +	}
+> >  
+> > -	filemap_get_folios_dirty(mapping, &start, end, iter->fbatch);
+> > -	return (start << PAGE_SHIFT);
+> > +	filemap_get_folios_dirty(mapping, &pstart, pend, iter->fbatch);
+> > +	*start = (pstart << PAGE_SHIFT);
+> > +	return IOMAP_F_FOLIO_BATCH;
+> >  }
+> >  EXPORT_SYMBOL_GPL(iomap_fill_dirty_folios);
+> >  
+> > @@ -1498,17 +1509,21 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+> >  		const struct iomap_ops *ops,
+> >  		const struct iomap_write_ops *write_ops, void *private)
+> >  {
+> > +	struct folio_batch fbatch;
+> >  	struct iomap_iter iter = {
+> >  		.inode		= inode,
+> >  		.pos		= pos,
+> >  		.len		= len,
+> >  		.flags		= IOMAP_ZERO,
+> >  		.private	= private,
+> > +		.fbatch		= &fbatch,
+> >  	};
+> >  	struct address_space *mapping = inode->i_mapping;
+> >  	int ret;
+> >  	bool range_dirty;
+> >  
+> > +	folio_batch_init(&fbatch);
+> > +
+> >  	/*
+> >  	 * To avoid an unconditional flush, check pagecache state and only flush
+> >  	 * if dirty and the fs returns a mapping that might convert on
+> > @@ -1519,11 +1534,11 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+> >  	while ((ret = iomap_iter(&iter, ops)) > 0) {
+> >  		const struct iomap *srcmap = iomap_iter_srcmap(&iter);
+> >  
+> > -		if (WARN_ON_ONCE(iter.fbatch &&
+> > +		if (WARN_ON_ONCE((iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
+> >  				 srcmap->type != IOMAP_UNWRITTEN))
+> >  			return -EIO;
+> >  
+> > -		if (!iter.fbatch &&
+> > +		if (!(iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
+> >  		    (srcmap->type == IOMAP_HOLE ||
+> >  		     srcmap->type == IOMAP_UNWRITTEN)) {
+> >  			s64 status;
+> > diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
+> > index 66ca12aac57d..026d85823c76 100644
+> > --- a/fs/iomap/iter.c
+> > +++ b/fs/iomap/iter.c
+> > @@ -8,10 +8,10 @@
+> >  
+> >  static inline void iomap_iter_reset_iomap(struct iomap_iter *iter)
+> >  {
+> > -	if (iter->fbatch) {
+> > +	if (iter->iomap.flags & IOMAP_F_FOLIO_BATCH) {
+> >  		folio_batch_release(iter->fbatch);
+> > -		kfree(iter->fbatch);
+> > -		iter->fbatch = NULL;
+> > +		folio_batch_reinit(iter->fbatch);
+> > +		iter->iomap.flags &= ~IOMAP_F_FOLIO_BATCH;
+> >  	}
+> >  
+> >  	iter->status = 0;
+> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > index 535bf3b8705d..01833aca37ac 100644
+> > --- a/fs/xfs/xfs_iomap.c
+> > +++ b/fs/xfs/xfs_iomap.c
+> > @@ -1775,7 +1775,6 @@ xfs_buffered_write_iomap_begin(
+> >  	 */
+> >  	if (flags & IOMAP_ZERO) {
+> >  		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+> > -		u64 end;
+> >  
+> >  		if (isnullstartblock(imap.br_startblock) &&
+> >  		    offset_fsb >= eof_fsb)
+> > @@ -1795,12 +1794,14 @@ xfs_buffered_write_iomap_begin(
+> >  		 */
+> >  		if (imap.br_state == XFS_EXT_UNWRITTEN &&
+> >  		    offset_fsb < eof_fsb) {
+> > -			loff_t len = min(count,
+> > -					 XFS_FSB_TO_B(mp, imap.br_blockcount));
+> > +			loff_t foffset = offset, fend;
+> >  
+> > -			end = iomap_fill_dirty_folios(iter, offset, len);
+> > +			fend = offset +
+> > +			       min(count, XFS_FSB_TO_B(mp, imap.br_blockcount));
+> > +			iomap_flags |= iomap_fill_dirty_folios(iter, &foffset,
+> > +							       fend);
+> >  			end_fsb = min_t(xfs_fileoff_t, end_fsb,
+> > -					XFS_B_TO_FSB(mp, end));
+> > +					XFS_B_TO_FSB(mp, foffset));
+> >  		}
+> >  
+> >  		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+> > diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> > index cd0f573156d6..79da917ff45e 100644
+> > --- a/include/linux/iomap.h
+> > +++ b/include/linux/iomap.h
+> > @@ -87,6 +87,9 @@ struct vm_fault;
+> >  /*
+> >   * Flags set by the core iomap code during operations:
+> >   *
+> > + * IOMAP_F_FOLIO_BATCH indicates that the folio batch mechanism is active
+> > + * for this operation, set by iomap_fill_dirty_folios().
+> > + *
+> >   * IOMAP_F_SIZE_CHANGED indicates to the iomap_end method that the file size
+> >   * has changed as the result of this write operation.
+> >   *
+> > @@ -94,6 +97,7 @@ struct vm_fault;
+> >   * range it covers needs to be remapped by the high level before the operation
+> >   * can proceed.
+> >   */
+> > +#define IOMAP_F_FOLIO_BATCH	(1U << 13)
+> >  #define IOMAP_F_SIZE_CHANGED	(1U << 14)
+> >  #define IOMAP_F_STALE		(1U << 15)
+> >  
+> > @@ -351,8 +355,8 @@ bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio);
+> >  int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+> >  		const struct iomap_ops *ops,
+> >  		const struct iomap_write_ops *write_ops);
+> > -loff_t iomap_fill_dirty_folios(struct iomap_iter *iter, loff_t offset,
+> > -		loff_t length);
+> > +unsigned int iomap_fill_dirty_folios(struct iomap_iter *iter, loff_t *start,
+> > +		loff_t end);
+> >  int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+> >  		bool *did_zero, const struct iomap_ops *ops,
+> >  		const struct iomap_write_ops *write_ops, void *private);
+> > -- 
+> > 2.51.0
+> > 
+> > 
+> 
 
-> Anyway, I wonder if the WARNING is reproducible and if it happens even after
-> reverting the commit 67e1b0052f6bb82be84e3 ("printk_ringbuffer: don't
-> needlessly wrap data blocks around")
-
-Note that a quick search on lore shows another similar report:
-
-https://lore.kernel.org/all/69078fb6.050a0220.29fc44.0029.GAE@google.com/
-
-We may want to revert the commit until we can take a closer look at
-this.
-
-I will divert my energies from code-reading to trying to reproduce this.
-
-John
