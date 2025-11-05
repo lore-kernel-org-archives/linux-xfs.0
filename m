@@ -1,93 +1,246 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93A3C1C862E;
-	Wed,  5 Nov 2025 17:47:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 673ED279DCD;
+	Wed,  5 Nov 2025 18:28:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762364826; cv=none; b=uvpbOFohODUIjizbbm5sMsqIYkGWwqwJpQBpTPRt4tEjWTUGSGobvWMGSQEiXFZj5LJSmTmmom5JQV7SOZz0m6cDwVfUyHMZblAw73jWjdeq9tV1JwL6ZkPhRW34xOUJYdVHMU9yJhi3NJ2DYLdlKMJ6IeAoI4TNxPbfuLDZ1G4=
+	t=1762367290; cv=none; b=NgL/jpC8oq3wg79FmQTQmqMyLoXS16DMo2rEtZEpbCo0RMbJ5yjbiweKZifMxZcnyJjrw5wtyWqawxoUOZB7gU2+pFLMLKCDvxxLP8pfg+vyWH1OivnVIP6sNlqCY8FAdbF7pwn3R8iw357ibW0hH4HyQO6CyJIwPseA02tyT2M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762364826; c=relaxed/simple;
-	bh=/BXvEGHymUGiCxnhk7dwuwRbwFwHhZSRcQPI5vRjORU=;
+	s=arc-20240116; t=1762367290; c=relaxed/simple;
+	bh=lCErqhJPXCZ/Wked5pnYjVVMhMqyae/xHR41/rZuzgI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e7wmpCO34YfNXCIyvcnc+t09I7O5qB+fFptxtLmIIakwX4pYFVfTbwFO2rSkip6yu1/o/1BOEwCeNuC8Rs7doVtPNu5URib26kO7Lt68TLq/GjqYLdlsF6El6+OcXCS3r4CjC+DI3cjsNPOxjSXy71IRpI13g/TUU62JlrmQ0CI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mQ9X8BzK; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=DTcL0u6nmWcvELoHsmPqBMSsFbw2Q9qdPXGu6xySa3+sBP00fmTC+PCdBhoNhUHUNgRTCCMsqtmRvU5WY52PiRX2H1s2WGXH0U63gj9fzdc4rkUnb/Ei14X91NjnfBNKVtMyS9XWL0L8Po7G9Q0LEqV6RrDpb/XJsX+b9ehNpVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YZ4TiB4N; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mQ9X8BzK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B411C4CEF5;
-	Wed,  5 Nov 2025 17:47:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YZ4TiB4N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C192FC116B1;
+	Wed,  5 Nov 2025 18:28:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762364826;
-	bh=/BXvEGHymUGiCxnhk7dwuwRbwFwHhZSRcQPI5vRjORU=;
+	s=k20201202; t=1762367288;
+	bh=lCErqhJPXCZ/Wked5pnYjVVMhMqyae/xHR41/rZuzgI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mQ9X8BzKqz1q1rRcBXlYS3n7HX/M1Oy6G9we0Uzy+lxhEQjjDKhg0yvCGtAQZUn7m
-	 HiaWkmCpbzMFZ5/XKpG+rVk10jYgdWV7LujFhYX7yOVJbLXoJ/3JIfwoEf6N7UjyFB
-	 2lZQVhsdRsL/KO8uyi/O14WEUt5G5Z8+N6x5VZfx6scyIuI+AixvCj4NVUmlEfaJrt
-	 wceaIP1uz4FPOOB1XjNhW3fd7YrWGi1Y6g1OQRkf5iTzhfnen6AkLuQrxvH1Jzp3kS
-	 ced65H7g6Lcjt7bm7IpFnK719Q+G9JMiZ4tnB2XAJrbjDSukuCvdzbmDCOSCLCJYYH
-	 cEVxaXDoP7wkA==
-Date: Wed, 5 Nov 2025 09:47:05 -0800
+	b=YZ4TiB4N6+QOeirA5dp4+yqy3BQT3Ork849ApydejVLqsxckoCJ8ew71cpH8ZwUZS
+	 1jQMfBf0mXyVE89dHbBa48zHxZKUese9ljnuFoDEJjfoy4Ise6XZ78Q+aD08Ie5q23
+	 4dXsnxSdjU+M2CdGeFFvnxcwMTtZpI0zV0KHSeUlKuvOxnWNastbiOgOJxIpUtTmGR
+	 hj1DWRmo5onPakVIT8UXIlwBPVOtI95mWcE826JHUM6Ek0nFL5pJFqtxmAhQ0/1GMG
+	 +JSDT02Ui6BkAPUZf7zBwK2Xn3gauBrHN9RvE0PIzmtOZrjOCNj/Rv3zyxFiyVrdsU
+	 lqD1i52B/NRuQ==
+Date: Wed, 5 Nov 2025 10:28:08 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>,
-	Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFC 8/8] xfs: use super write guard in xfs_file_ioctl()
-Message-ID: <20251105174705.GB196358@frogsfrogsfrogs>
-References: <20251104-work-guards-v1-0-5108ac78a171@kernel.org>
- <20251104-work-guards-v1-8-5108ac78a171@kernel.org>
- <20251104170845.GK196370@frogsfrogsfrogs>
- <20251104-mitglied-ozonwerte-88de46f0b26a@brauner>
+To: Jan Kara <jack@suse.cz>
+Cc: Amir Goldstein <amir73il@gmail.com>, cem@kernel.org, hch@lst.de,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	gabriel@krisman.be, Christian Brauner <brauner@kernel.org>
+Subject: Re: [PATCH 1/6] iomap: report file IO errors to fsnotify
+Message-ID: <20251105182808.GC196370@frogsfrogsfrogs>
+References: <176230366393.1647991.7608961849841103569.stgit@frogsfrogsfrogs>
+ <176230366453.1647991.17002688390201603817.stgit@frogsfrogsfrogs>
+ <ewqcnrecsvpi5wy3mufy3swnf46ejnz4kc5ph2eb4iriftdddi@mamiprlrvi75>
+ <CAOQ4uxhfrHNk+b=BW5o7We=jC7ob4JbuL4vQz8QhUKD0VaRP=A@mail.gmail.com>
+ <g2xevmkixxjturg47qv4gokvxvbah275z5slweehj2pvesl3zs@ordfml4v7gaa>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20251104-mitglied-ozonwerte-88de46f0b26a@brauner>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <g2xevmkixxjturg47qv4gokvxvbah275z5slweehj2pvesl3zs@ordfml4v7gaa>
 
-On Tue, Nov 04, 2025 at 09:57:30PM +0100, Christian Brauner wrote:
-> On Tue, Nov 04, 2025 at 09:08:45AM -0800, Darrick J. Wong wrote:
-> > On Tue, Nov 04, 2025 at 01:12:37PM +0100, Christian Brauner wrote:
-> > > Signed-off-by: Christian Brauner <brauner@kernel.org>
-> > > ---
-> > >  fs/xfs/xfs_ioctl.c | 6 ++----
-> > >  1 file changed, 2 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > > index a6bb7ee7a27a..f72e96f54cb5 100644
-> > > --- a/fs/xfs/xfs_ioctl.c
-> > > +++ b/fs/xfs/xfs_ioctl.c
-> > > @@ -1408,10 +1408,8 @@ xfs_file_ioctl(
-> > >  
-> > >  		trace_xfs_ioc_free_eofblocks(mp, &icw, _RET_IP_);
-> > >  
-> > > -		sb_start_write(mp->m_super);
-> > > -		error = xfs_blockgc_free_space(mp, &icw);
-> > > -		sb_end_write(mp->m_super);
-> > > -		return error;
-> > > +		scoped_guard(super_write, mp->m_super)
-> > > +			return xfs_blockgc_free_space(mp, &icw);
+On Wed, Nov 05, 2025 at 03:24:41PM +0100, Jan Kara wrote:
+> On Wed 05-11-25 12:14:52, Amir Goldstein wrote:
+> > On Wed, Nov 5, 2025 at 12:00 PM Jan Kara <jack@suse.cz> wrote:
+> > > > diff --git a/include/linux/fs.h b/include/linux/fs.h
+> > > > index 5e4b3a4b24823f..1cb3965db3275c 100644
+> > > > --- a/include/linux/fs.h
+> > > > +++ b/include/linux/fs.h
+> > > > @@ -80,6 +80,7 @@ struct fs_context;
+> > > >  struct fs_parameter_spec;
+> > > >  struct file_kattr;
+> > > >  struct iomap_ops;
+> > > > +struct notifier_head;
+> > > >
+> > > >  extern void __init inode_init(void);
+> > > >  extern void __init inode_init_early(void);
+> > > > @@ -1587,6 +1588,7 @@ struct super_block {
+> > > >
+> > > >       spinlock_t              s_inode_wblist_lock;
+> > > >       struct list_head        s_inodes_wb;    /* writeback inodes */
+> > > > +     struct blocking_notifier_head   s_error_notifier;
+> > > >  } __randomize_layout;
+> > > >
+> > > >  static inline struct user_namespace *i_user_ns(const struct inode *inode)
+> > > > @@ -4069,4 +4071,66 @@ static inline bool extensible_ioctl_valid(unsigned int cmd_a,
+> > > >       return true;
+> > > >  }
+> > > >
+> > > > +enum fs_error_type {
+> > > > +     /* pagecache reads and writes */
+> > > > +     FSERR_READAHEAD,
+> > > > +     FSERR_WRITEBACK,
+> > > > +
+> > > > +     /* directio read and writes */
+> > > > +     FSERR_DIO_READ,
+> > > > +     FSERR_DIO_WRITE,
+> > > > +
+> > > > +     /* media error */
+> > > > +     FSERR_DATA_LOST,
+> > > > +
+> > > > +     /* filesystem metadata */
+> > > > +     FSERR_METADATA,
+> > > > +};
+> > > > +
+> > > > +struct fs_error {
+> > > > +     struct work_struct work;
+> > > > +     struct super_block *sb;
+> > > > +     struct inode *inode;
+> > > > +     loff_t pos;
+> > > > +     u64 len;
+> > > > +     enum fs_error_type type;
+> > > > +     int error;
+> > > > +};
+> > > > +
+> > > > +struct fs_error_hook {
+> > > > +     struct notifier_block nb;
+> > > > +};
+> > > > +
+> > > > +static inline int sb_hook_error(struct super_block *sb,
+> > > > +                             struct fs_error_hook *h)
+> > > > +{
+> > > > +     return blocking_notifier_chain_register(&sb->s_error_notifier, &h->nb);
+> > > > +}
+> > > > +
+> > > > +static inline void sb_unhook_error(struct super_block *sb,
+> > > > +                                struct fs_error_hook *h)
+> > > > +{
+> > > > +     blocking_notifier_chain_unregister(&sb->s_error_notifier, &h->nb);
+> > > > +}
+> > > > +
+> > > > +static inline void sb_init_error_hook(struct fs_error_hook *h, notifier_fn_t fn)
+> > > > +{
+> > > > +     h->nb.notifier_call = fn;
+> > > > +     h->nb.priority = 0;
+> > > > +}
+> > > > +
+> > > > +void __sb_error(struct super_block *sb, struct inode *inode,
+> > > > +             enum fs_error_type type, loff_t pos, u64 len, int error);
+> > > > +
+> > > > +static inline void sb_error(struct super_block *sb, int error)
+> > > > +{
+> > > > +     __sb_error(sb, NULL, FSERR_METADATA, 0, 0, error);
+> > > > +}
+> > > > +
+> > > > +static inline void inode_error(struct inode *inode, enum fs_error_type type,
+> > > > +                            loff_t pos, u64 len, int error)
+> > > > +{
+> > > > +     __sb_error(inode->i_sb, inode, type, pos, len, error);
+> > > > +}
+> > > > +
 > > 
-> > Can we go full on Java?
-> > 
-> > #define with_sb_write(sb) scoped_guard(super_write, (sb))
-> > 
-> > 	with_sb_write(mp->m_super)
-> > 		return xfs_blockgc_free_space(mp, &icw);
-> > 
-> > I still keep seeing scoped_guard() as a function call, not the sort of
-> > thing that starts a new block.
-> > 
-> > [If I missed the bikeshedding war over this, I'll let this go]
+> > Apart from the fact that Christian is not going to be happy with this
+> > bloat of fs.h shouldn't all this be part of fsnotify.h?
 > 
-> It's an option and what I did for the creds stuff. The thing is thought
-> that scoped_guard() is more widespread by now and thus probably easier
-> to grasp for readers that are familiar with it. I'm not married to it.
+> Point that this maybe doesn't belong to fs.h is a good one. But I don't
+> think fsnotify.h is appropriate either because this isn't really part of
+> fsnotify. It is a layer on top that's binding fsnotify and notifier chain
+> notification. So maybe a new fs_error.h header?
 
-The wait_ macro would maintain sb_.*_write greppability, though I don't
-know how important that might be.
+Fine with me, though it'd be a small header.
+
+> > I do not see why ext4 should not use the same workqueue
+> > or why any code would need to call fsnotify_sb_error() directly.
+> 
+> Yes, I guess we can convert ext4 to the same framework but I'm fine with
+> cleaning that up later.
+
+Yes, that should be a trivial patch to change fsnotify_sb_error ->
+sb_error/inode_error.
+
+> > > > +void __sb_error(struct super_block *sb, struct inode *inode,
+> > > > +             enum fs_error_type type, loff_t pos, u64 len, int error)
+> > > > +{
+> > > > +     struct fs_error *fserr = kzalloc(sizeof(struct fs_error), GFP_ATOMIC);
+> > > > +
+> > > > +     if (!fserr) {
+> > > > +             printk(KERN_ERR
+> > > > + "lost fs error report for ino %lu type %u pos 0x%llx len 0x%llx error %d",
+> > > > +                             inode ? inode->i_ino : 0, type,
+> > > > +                             pos, len, error);
+> > > > +             return;
+> > > > +     }
+> > > > +
+> > > > +     if (inode) {
+> > > > +             fserr->sb = inode->i_sb;
+> > > > +             fserr->inode = igrab(inode);
+> > > > +     } else {
+> > > > +             fserr->sb = sb;
+> > > > +     }
+> > > > +     fserr->type = type;
+> > > > +     fserr->pos = pos;
+> > > > +     fserr->len = len;
+> > > > +     fserr->error = error;
+> > > > +     INIT_WORK(&fserr->work, handle_sb_error);
+> > > > +
+> > > > +     schedule_work(&fserr->work);
+> > > > +}
+> > > > +EXPORT_SYMBOL_GPL(__sb_error);
+> > > >
+> > 
+> > ...
+> > We recently discovered that fsnotify_sb_error() calls are exposed to
+> > races with generic_shutdown_super():
+> > https://lore.kernel.org/linux-fsdevel/scmyycf2trich22v25s6gpe3ib6ejawflwf76znxg7sedqablp@ejfycd34xvpa/
+
+Hrmm.  I've noticed that ever since I added this new patchset, I've been
+getting more instances of outright crashes in the timer code, or
+workqueue lockups.  I wonder if that UAF is what's going on here...
+
+> > Will punting all FS_ERROR events to workqueue help to improve this
+> > situation or will it make it worse?
+> 
+> Worse. But you raise a really good point which I've missed during my
+> review. Currently there's nothing which synchronizes pending works with
+> superblock getting destroyed with obvious UAF issues already in
+> handle_sb_error().
+
+I wonder, could __sb_error call get_active_super() to obtain an active
+reference to the sb, and then deactivate_super() it in the workqueue
+callback?  If we can't get an active ref then we presume that the fs is
+already shutting down and don't send the event.
+
+The igrab/iput was supposed to prevent the same UAF from happening with
+the inode, but I should've checked for a non-null return value.
+
+> > Another question to ask is whether reporting fs error duing fs shutdown
+> > is a feature or anti feature?
+> 
+> I think there must be a point of no return during fs shutdown after which
+> we just stop emitting errors.
+
+I agree, once S_ACTIVE hits zero there's no point in sending further
+errors.
+
+> > If this is needed then we could change fsnotify_sb_error() to
+> > take ino,gen or file handle directly instead of calling filesystem to encode
+> > a file handle to report with the event.
+
+That would be another way to do it.  The sole downstream consumer of the
+s_error_notifier-based events only cares about ino/gen.
+
+> This lifetime issue is not limited to fsnotify. I think __sb_error() needs
+> to check whether the superblock is still alive and synchronize properly
+> with sb shutdown (at which point making ext4 use this framework will be a
+> net win because it will close this race for ext4 as well).
+
+<nod>
 
 --D
+
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
+> 
