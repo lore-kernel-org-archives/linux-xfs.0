@@ -1,39 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CC601DFDE;
-	Wed,  5 Nov 2025 00:14:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88CD23594B;
+	Wed,  5 Nov 2025 00:15:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762301686; cv=none; b=s5jHSu5wc5NV2FuFgO1/FOTl5i72M/fOWA6GZMGZ4LHYTjElnz7hKpxu8VKSkwDNeZAqR0f0SkuqULEbxitHiTKAMxpRa4bQzRfnD19RSfPjhUTSy2qk12KsBbvdTW1E0tyOzlSDlno//2E0qNSdbT5cKSFS7xOY6ZAZIzmAK1g=
+	t=1762301739; cv=none; b=Wajy4f0S3CArNBYmlGpLGbwPsNPE9jwO3lssEODErEb05sOvT7wQcFPzm60wPIabmUCjgaXXWyvJUkNQyIBJjmwUtfSK9jJ/C1kZD4C2MwwS+gMj96ver7tT1rEDNK1jqMAhQoZZSxJkDmw51aPnXskQ0hBZtXiHRApG6LnYzio=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762301686; c=relaxed/simple;
-	bh=4+OjzYPim783G2VpmBxIU6MsTjyuOWle5mtI3ZIzbf0=;
+	s=arc-20240116; t=1762301739; c=relaxed/simple;
+	bh=r4M7E1bgherYIdsP/efBy3Zeb2wJ+msgwPwrDE7DK40=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UqZ/Xyrk6mGsLbZ8+IVb+DCOuDvEIa3Hj58TUf4J8Cv0yQgY1qXnIoy9uOcWGqfh7gV2wePmx6wJefj2pTRmo+MPpJr/E8MrRsKwzFsa1ApUQOhkV79Aca63aiHP9ZIAeMcENpF6fGhax4iL7tBVJIGvTpXlBJTmO6WyvaoI5UY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dYc5xhMk; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=DR+1SZ2Ductz61PaQnL8benBUP7rE/o87t9d5p1J4VRFC/zXYi88bQNbMFOJN78PRr/990yVWQoMecs4+8jUa2bfXWG2nJYXU4IXXa7V2rVzhzRakYTem7Zctiew2P3b8tLf6s/Yudkafsx8YOZXBkV4ZFeQ4dPCRPavyOUphP8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZRW1gwqj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dYc5xhMk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B89E1C4CEF7;
-	Wed,  5 Nov 2025 00:14:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZRW1gwqj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E6C4C116B1;
+	Wed,  5 Nov 2025 00:15:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762301685;
-	bh=4+OjzYPim783G2VpmBxIU6MsTjyuOWle5mtI3ZIzbf0=;
+	s=k20201202; t=1762301739;
+	bh=r4M7E1bgherYIdsP/efBy3Zeb2wJ+msgwPwrDE7DK40=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dYc5xhMkmKlmESYXPy5QaO+IDAadw2tJR/IBn4pDt2qurgrYmjdULmwqnKGuQH/+1
-	 hDUDII7Ws9P6Xd1KOxMHvpcoxJ+nBFC7BD3wX8zlY8DXRzKg8g8W0Qo2y5nz6fxAwb
-	 86MaiUKF7FXk/L04cCyiXkTEcL3hW5UuCeHIeP13KOgCYuIXW8EcqlrwRW3/IeW7/2
-	 ZZWTCR4UIddO86paXxOFBW9w4wJ1DDCImtz5m1uzxAykvL5zFhfRDVncl4u96dmItS
-	 gMOgHssDh975QOlTlBVegzP1JyPpxANdIdokmHbQjAhwJTM/OTtVt+yjHE+KOmVG9f
-	 6Gri0XyG1PA8A==
-Date: Tue, 4 Nov 2025 16:14:45 -0800
+	b=ZRW1gwqjWAlxGNEm5yZrvQ1KMEnEn9E1xUUUbDBngp+H7UlHk3Fi9aoVX/q4XxGDI
+	 OYDl8VXVeGzGYykaw1GNoNHjYhNYsniIupO56u51vAQ/zlntP9dSHxZMuC/FYMYWup
+	 pRxlu8xVHVBsGbd1vFUfwqCo9apSbAh5lPR7VgbcbS06xlf+BH7Z0X2QoyaIdfnc7G
+	 MWpOU7kI1YQvulYpVv/+NsL5/AxCPdMhsxeyvh9+mwdsrQ1QRuZ4UTbf5uV8MTTDWg
+	 EEUPF0km5TwrwgPRAMSgsgu+nji+swd/negmKylYOWRsDaE7ne2dDn9tUaIyVQEFkM
+	 HvGWSRpLKzKtg==
+Date: Tue, 4 Nov 2025 16:15:38 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/6] xfs: flush eof folio before insert range size update
-Message-ID: <20251105001445.GW196370@frogsfrogsfrogs>
-References: <20251016190303.53881-1-bfoster@redhat.com>
- <20251016190303.53881-4-bfoster@redhat.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, Zorro Lang <zlang@redhat.com>,
+	fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>,
+	john.g.garry@oracle.com, linux-xfs@vger.kernel.org
+Subject: [PATCH v2 2/2] xfs: fix various problems in
+ xfs_atomic_write_cow_iomap_begin
+Message-ID: <20251105001538.GX196370@frogsfrogsfrogs>
+References: <20251105001200.GV196370@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,76 +44,167 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251016190303.53881-4-bfoster@redhat.com>
+In-Reply-To: <20251105001200.GV196370@frogsfrogsfrogs>
 
-On Thu, Oct 16, 2025 at 03:03:00PM -0400, Brian Foster wrote:
-> The flush in xfs_buffered_write_iomap_begin() for zero range over a
-> data fork hole fronted by COW fork prealloc is primarily designed to
-> provide correct zeroing behavior in particular pagecache conditions.
-> As it turns out, this also partially masks some odd behavior in
-> insert range (via zero range via setattr).
-> 
-> Insert range bumps i_size the length of the new range, flushes,
-> unmaps pagecache and cancels COW prealloc, and then right shifts
-> extents from the end of the file back to the target offset of the
-> insert. Since the i_size update occurs before the pagecache flush,
-> this creates a transient situation where writeback around EOF can
-> behave differently.
+From: Darrick J. Wong <djwong@kernel.org>
 
-Why not flush the file from @offset to EOF, flush the COW
-preallocations, extend i_size, and only then start shifting extents?
-That would seem a lot more straightforward to me.
+I think there are several things wrong with this function:
 
---D
+A) xfs_bmapi_write can return a much larger unwritten mapping than what
+   the caller asked for.  We convert part of that range to written, but
+   return the entire written mapping to iomap even though that's
+   inaccurate.
 
-> This appears to be corner case situation, but if happens to be
-> fronted by COW fork speculative preallocation and a large, dirty
-> folio that contains at least one full COW block beyond EOF, the
-> writeback after i_size is bumped may remap that COW fork block into
-> the data fork within EOF. The block is zeroed and then shifted back
-> out to post-eof, but this is unexpected in that it leads to a
-> written post-eof data fork block. This can cause a zero range
-> warning on a subsequent size extension, because we should never find
-> blocks that require physical zeroing beyond i_size.
-> 
-> To avoid this quirk, flush the EOF folio before the i_size update
-> during insert range. The entire range will be flushed, unmapped and
-> invalidated anyways, so this should be relatively unnoticeable.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/xfs_file.c | 17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 5b9864c8582e..cc3a9674ad40 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1226,6 +1226,23 @@ xfs_falloc_insert_range(
->  	if (offset >= isize)
->  		return -EINVAL;
->  
-> +	/*
-> +	 * Let writeback clean up EOF folio state before we bump i_size. The
-> +	 * insert flushes before it starts shifting and under certain
-> +	 * circumstances we can write back blocks that should technically be
-> +	 * considered post-eof (and thus should not be submitted for writeback).
-> +	 *
-> +	 * For example, a large, dirty folio that spans EOF and is backed by
-> +	 * post-eof COW fork preallocation can cause block remap into the data
-> +	 * fork. This shifts back out beyond EOF, but creates an expectedly
-> +	 * written post-eof block. The insert is going to flush, unmap and
-> +	 * cancel prealloc across this whole range, so flush EOF now before we
-> +	 * bump i_size to provide consistent behavior.
-> +	 */
-> +	error = filemap_write_and_wait_range(inode->i_mapping, isize, isize);
-> +	if (error)
-> +		return error;
-> +
->  	error = xfs_falloc_setsize(file, isize + len);
->  	if (error)
->  		return error;
-> -- 
-> 2.51.0
-> 
-> 
+B) The arguments to xfs_reflink_convert_cow_locked are wrong -- an
+   unwritten mapping could be *smaller* than the write range (or even
+   the hole range).  In this case, we convert too much file range to
+   written state because we then return a smaller mapping to iomap.
+
+C) It doesn't handle delalloc mappings.  This I covered in the patch
+   that I already sent to the list.
+
+D) Reassigning count_fsb to handle the hole means that if the second
+   cmap lookup attempt succeeds (due to racing with someone else) we
+   trim the mapping more than is strictly necessary.  The changing
+   meaning of count_fsb makes this harder to notice.
+
+E) The tracepoint is kinda wrong because @length is mutated.  That makes
+   it harder to chase the data flows through this function because you
+   can't just grep on the pos/bytecount strings.
+
+F) We don't actually check that the br_state = XFS_EXT_NORM assignment
+   is accurate, i.e that the cow fork actually contains a written
+   mapping for the range we're interested in
+
+G) Somewhat inadequate documentation of why we need to xfs_trim_extent
+   so aggressively in this function.
+
+H) Not sure why xfs_iomap_end_fsb is used here, the vfs already clamped
+   the write range to s_maxbytes.
+
+Fix these issues, and then the atomic writes regressions in generic/760,
+generic/617, generic/091, generic/263, and generic/521 all go away for
+me.
+
+Cc: <stable@vger.kernel.org> # v6.16
+Fixes: bd1d2c21d5d249 ("xfs: add xfs_atomic_write_cow_iomap_begin()")
+Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: John Garry <john.g.garry@oracle.com>
+---
+v2: rename debug function
+---
+ fs/xfs/xfs_iomap.c |   61 +++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 50 insertions(+), 11 deletions(-)
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 788bfdce608a7d..490e12cb99be9c 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1091,6 +1091,29 @@ const struct iomap_ops xfs_zoned_direct_write_iomap_ops = {
+ };
+ #endif /* CONFIG_XFS_RT */
+ 
++#ifdef DEBUG
++static void
++xfs_check_atomic_cow_conversion(
++	struct xfs_inode		*ip,
++	xfs_fileoff_t			offset_fsb,
++	xfs_filblks_t			count_fsb,
++	const struct xfs_bmbt_irec	*cmap)
++{
++	struct xfs_iext_cursor		icur;
++	struct xfs_bmbt_irec		cmap2 = { };
++
++	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap2))
++		xfs_trim_extent(&cmap2, offset_fsb, count_fsb);
++
++	ASSERT(cmap2.br_startoff == cmap->br_startoff);
++	ASSERT(cmap2.br_blockcount == cmap->br_blockcount);
++	ASSERT(cmap2.br_startblock == cmap->br_startblock);
++	ASSERT(cmap2.br_state == cmap->br_state);
++}
++#else
++# define xfs_check_atomic_cow_conversion(...)	((void)0)
++#endif
++
+ static int
+ xfs_atomic_write_cow_iomap_begin(
+ 	struct inode		*inode,
+@@ -1102,9 +1125,10 @@ xfs_atomic_write_cow_iomap_begin(
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	const xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+-	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, length);
+-	xfs_filblks_t		count_fsb = end_fsb - offset_fsb;
++	const xfs_fileoff_t	offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	const xfs_fileoff_t	end_fsb = XFS_B_TO_FSB(mp, offset + length);
++	const xfs_filblks_t	count_fsb = end_fsb - offset_fsb;
++	xfs_filblks_t		hole_count_fsb;
+ 	int			nmaps = 1;
+ 	xfs_filblks_t		resaligned;
+ 	struct xfs_bmbt_irec	cmap;
+@@ -1143,14 +1167,20 @@ xfs_atomic_write_cow_iomap_begin(
+ 	if (cmap.br_startoff <= offset_fsb) {
+ 		if (isnullstartblock(cmap.br_startblock))
+ 			goto convert_delay;
++
++		/*
++		 * cmap could extend outside the write range due to previous
++		 * speculative preallocations.  We must trim cmap to the write
++		 * range because the cow fork treats written mappings to mean
++		 * "write in progress".
++		 */
+ 		xfs_trim_extent(&cmap, offset_fsb, count_fsb);
+ 		goto found;
+ 	}
+ 
+-	end_fsb = cmap.br_startoff;
+-	count_fsb = end_fsb - offset_fsb;
++	hole_count_fsb = cmap.br_startoff - offset_fsb;
+ 
+-	resaligned = xfs_aligned_fsb_count(offset_fsb, count_fsb,
++	resaligned = xfs_aligned_fsb_count(offset_fsb, hole_count_fsb,
+ 			xfs_get_cowextsz_hint(ip));
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+@@ -1186,7 +1216,7 @@ xfs_atomic_write_cow_iomap_begin(
+ 	 * atomic writes to that same range will be aligned (and don't require
+ 	 * this COW-based method).
+ 	 */
+-	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
++	error = xfs_bmapi_write(tp, ip, offset_fsb, hole_count_fsb,
+ 			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC |
+ 			XFS_BMAPI_EXTSZALIGN, 0, &cmap, &nmaps);
+ 	if (error) {
+@@ -1199,17 +1229,26 @@ xfs_atomic_write_cow_iomap_begin(
+ 	if (error)
+ 		goto out_unlock;
+ 
++	/*
++	 * cmap could map more blocks than the range we passed into bmapi_write
++	 * because of EXTSZALIGN or adjacent pre-existing unwritten mappings
++	 * that were merged.  Trim cmap to the original write range so that we
++	 * don't convert more than we were asked to do for this write.
++	 */
++	xfs_trim_extent(&cmap, offset_fsb, count_fsb);
++
+ found:
+ 	if (cmap.br_state != XFS_EXT_NORM) {
+-		error = xfs_reflink_convert_cow_locked(ip, offset_fsb,
+-				count_fsb);
++		error = xfs_reflink_convert_cow_locked(ip, cmap.br_startoff,
++				cmap.br_blockcount);
+ 		if (error)
+ 			goto out_unlock;
+ 		cmap.br_state = XFS_EXT_NORM;
++		xfs_check_atomic_cow_conversion(ip, offset_fsb, count_fsb,
++				&cmap);
+ 	}
+ 
+-	length = XFS_FSB_TO_B(mp, cmap.br_startoff + cmap.br_blockcount);
+-	trace_xfs_iomap_found(ip, offset, length - offset, XFS_COW_FORK, &cmap);
++	trace_xfs_iomap_found(ip, offset, length, XFS_COW_FORK, &cmap);
+ 	seq = xfs_iomap_inode_sequence(ip, IOMAP_F_SHARED);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, IOMAP_F_SHARED, seq);
