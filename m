@@ -1,154 +1,292 @@
-Received: from flow-b6-smtp.messagingengine.com (flow-b6-smtp.messagingengine.com [202.12.124.141])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27DF92C236D;
-	Wed,  5 Nov 2025 21:27:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C572C3272;
+	Wed,  5 Nov 2025 21:41:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762378069; cv=none; b=n5YURDpxDuQmUtzARuFI80OXZhMWoF0LYMHA4URtQeX4tcDwOuA9Y9oh2D6lCjhtIA4Oe4RazGr3WvNZrbkC/ACaPF5XlasQU2KZEezr3+9axVq1BtvanY6TEaZU69/7W73eXqJR+86a1Kg0Zsp6g5XadzMx99mD0RAEuyTKOq8=
+	t=1762378861; cv=none; b=O+KtEZ3VAisGTRra0DWMcKMrh7ZQN6qdv6LKDBV0jHVdICJ/9TdHUaVaO4hv3ig3fcg1LRBIw68xkxtsVYEbDuu6Di/VvVkMzgNCWFwbqznRHuMo+FHDst3BFMLFoih6Ewg+pj2dUoP02OQBWdu3yMMjpcj3SYDY0dI0DroIv3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762378069; c=relaxed/simple;
-	bh=bsJ/Udr6HIBj2j3DHtF1mJqwIo8FnbCO8DJuuTTp7AY=;
-	h=Content-Type:MIME-Version:From:To:Cc:Subject:In-reply-to:
-	 References:Date:Message-id; b=UF1HRXU3T5n1v8Zh88rIW7d38dZB8hJ0jejZ3gc1padRMQTcbYWaCTCOQvwNpktoLk50XzQixqlOHZnq3MBhRx+DAWwhoLZ2Su+MQ2cijeBGpE6cTL5eoxwAfjUs/0fBrV2lG3tiE/UfiY9pm/8ssIPtPuXQ8Th4fvSrMV60s/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net; spf=pass smtp.mailfrom=ownmail.net; dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b=NBHnJwpj; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=3M/rrUhi; arc=none smtp.client-ip=202.12.124.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ownmail.net
+	s=arc-20240116; t=1762378861; c=relaxed/simple;
+	bh=I4xglvYP7xXaLmhAJpWvbNEUQkuDuGZ03lMM2CwRXv4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rv/Wshe18y3FnqsxdfScPhip/fT6vPng45lPB9tiAj/4zS0p3Hu1RTk/OaXB4JJ7L8iMItgEc6A7usYYb5xxtNzoyFsXa6cqovKLmtwiXjoSIkO9Bk2W5Ov4xUx2HlXkznNfNYPg3ruk7iK3SuWhIfZWTIkfZSN5roSgo/KT7cw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XyiNM0is; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b="NBHnJwpj";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="3M/rrUhi"
-Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
-	by mailflow.stl.internal (Postfix) with ESMTP id 0D9511300C27;
-	Wed,  5 Nov 2025 16:27:45 -0500 (EST)
-Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-03.internal (MEProxy); Wed, 05 Nov 2025 16:27:46 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ownmail.net; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:reply-to:subject:subject:to:to; s=fm3; t=
-	1762378064; x=1762385264; bh=5CX/6mtoYFxir8X1F5OVPvA/OUy5Hh9/ND3
-	R8DtJqdE=; b=NBHnJwpjzuHIsUT27Y57rWaJK10DtVOwxECp26qAgU5U2ikzYZl
-	M90AeLnEPJscbb16J19gvwy+B4NZoJRivr0Kl/sDL1WtKYsBIOcIU/852lrhgqq/
-	GKpuXfd3fOlM1hSTmng5Eykm2SDZU+rDa1/3QCl4npJjdOdSa4TG9dpLKZzWTZau
-	gQKLJddbfSk7iP2cfocCd6lwvv8WNjntDUxjyvhguNRIoYy5cYz8v7pgB6OdrZID
-	eo/hzOuwTPvx8j13d20hMasG3aiklwbNYaKqed8tm9GulrRukjfYfVMUU+ubDqNE
-	5IFnjPvLo6riN3CKxIUqANOUuK511UeBr+g==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1762378064; x=
-	1762385264; bh=5CX/6mtoYFxir8X1F5OVPvA/OUy5Hh9/ND3R8DtJqdE=; b=3
-	M/rrUhioH8XUekNhjPbddPDnBn7n7UQz6zEWYhMdJzgaKPUZki5Si9V9oHY1Ogop
-	wXK5pvp5JtloGloRJyhjQ+2g3DFkHJIsPf1kJQ9SRoFA1OYYao78/h5ua/7WVVKr
-	DX+Ajwtsc07FWpwIeyLBbksAID7RZIbG2vTFcoPvGOBOYPZWyaoKettLH2wbO2Id
-	zKDpw89eEUWl/BgYOURwsIfdCSu9Zdtbf8szQKl7cVJ5bzYuDeYhoPqbJZCUYoKO
-	UZQ0HyqjcmXxStXvR2TDlvY0c4w3Pn/LIGuOHcFde9b8MNLY8rM1ER7IKpgSaQz2
-	fo67zQAgkeqNFzV2z+NIw==
-X-ME-Sender: <xms:UMELaTX303FHgII2VhPCDsLqAaz7DXpODKCSAw4DGpYCqOIYMw_8zQ>
-    <xme:UMELaalAv0IbTqHYOiNCaxTQxCHNYl3ObvfykhtHLjOM-xv4HXM4-O5UB5FicXKO4
-    aJ5vH9vBYrGmrMZ_ywg8xmZ6HOs7HRayKsq762rTphtV6QY5VU>
-X-ME-Received: <xmr:UMELaXr1-Ji_La_HqW1BRUEv9gTeMOwPrnbybPjNk5nkzekaJJ_jmOB-OurJPK7b-HcbN7SNbSmn59Pi_qJVyNSOkvZPYWst3NWLBXCl3DJX>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdeggddukeegleekucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurheptgfgggfhvfevufgjfhffkfhrsehtjeertddttdejnecuhfhrohhmpefpvghilheu
-    rhhofihnuceonhgvihhlsgesohifnhhmrghilhdrnhgvtheqnecuggftrfgrthhtvghrnh
-    epudetfefhudevhedvfeeufedvffekveekgfdtfefggfekheejgefhteeihffggfelnecu
-    vehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepnhgvihhlsg
-    esohifnhhmrghilhdrnhgvthdpnhgspghrtghpthhtohepgeefpdhmohguvgepshhmthhp
-    ohhuthdprhgtphhtthhopehvihhrohesiigvnhhivhdrlhhinhhugidrohhrghdruhhkpd
-    hrtghpthhtohepnhgvthguvghvsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthht
-    oheplhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhope
-    hlihhnuhigqdhunhhiohhnfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthht
-    oheplhhinhhugidqnhhfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhope
-    hlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthho
-    pehlihhnuhigqdhfshguvghvvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpth
-    htoheplhhinhhugidqtghifhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthht
-    ohepvggtrhihphhtfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:UMELaas2dgxfilRLBUrQKjBzvFla9FVJzR7OHV29epBrN0TxHC_Zrg>
-    <xmx:UMELaXL_tyUQYVcmu-B8I71Pa7g3b9MIUvkmgGp58Io5P9qADq2c4w>
-    <xmx:UMELaX8_nhpfJRosFBux8I7DSDNy8EkxssJf6tgxkmBv96HvCzl8zA>
-    <xmx:UMELaT6oKvaTbilSvWrldHDoodd9WTL6TODMPNKGUr-HrQG2M0IzRg>
-    <xmx:UMELacRM2CO16jgdzCpw14XismqrJauCEWxLaqWueHVYB4MJELrVVaIb>
-Feedback-ID: iab3e480c:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 5 Nov 2025 16:27:33 -0500 (EST)
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XyiNM0is"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD8F5C4CEF5;
+	Wed,  5 Nov 2025 21:41:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762378860;
+	bh=I4xglvYP7xXaLmhAJpWvbNEUQkuDuGZ03lMM2CwRXv4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XyiNM0isJo1b9kSyOrrYtH1/RmuzLdmXSONV8WKowoPkSI2W19mjuDfHC98kQSRXb
+	 xqReVTZinm9MHQKPIyXY0wXE+YQ+3trHgx8Btq4NE4gsFizcgCZMHPA3FzO91wA6U6
+	 5EN24KJD5iH8QLiyEkM5Cc/hWUxsLXvxDJgpF2diKtK7xdSfd0YF0aqOfKQ7KC6oGM
+	 d/172l7Y+UY1eUfOXfjzmr/DTdYFUCGrjMYrPniRn/DLqD1ICfMhQjQi97/S0DISzi
+	 1yUYJarXmvLUR3+4Dfg1CEMeRD5x61brctc85kVkBUvcQF4aqv3s0pa1AJH2ymc1aL
+	 KN6Efu09QXZyw==
+Date: Wed, 5 Nov 2025 13:41:00 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/6] iomap: replace folio_batch allocation with stack
+ allocation
+Message-ID: <20251105214100.GM196362@frogsfrogsfrogs>
+References: <20251016190303.53881-1-bfoster@redhat.com>
+ <20251016190303.53881-2-bfoster@redhat.com>
+ <20251105000716.GU196370@frogsfrogsfrogs>
+ <aQts-Fg2YUoIbVsV@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: NeilBrown <neilb@ownmail.net>
-To: "Jeff Layton" <jlayton@kernel.org>
-Cc: "Miklos Szeredi" <miklos@szeredi.hu>,
- "Alexander Viro" <viro@zeniv.linux.org.uk>,
- "Christian Brauner" <brauner@kernel.org>, "Jan Kara" <jack@suse.cz>,
- "Chuck Lever" <chuck.lever@oracle.com>,
- "Alexander Aring" <alex.aring@gmail.com>,
- "Trond Myklebust" <trondmy@kernel.org>,
- "Anna Schumaker" <anna@kernel.org>, "Steve French" <sfrench@samba.org>,
- "Paulo Alcantara" <pc@manguebit.org>,
- "Ronnie Sahlberg" <ronniesahlberg@gmail.com>,
- "Shyam Prasad N" <sprasad@microsoft.com>, "Tom Talpey" <tom@talpey.com>,
- "Bharath SM" <bharathsm@microsoft.com>,
- "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- "Danilo Krummrich" <dakr@kernel.org>,
- "David Howells" <dhowells@redhat.com>, "Tyler Hicks" <code@tyhicks.com>,
- "Olga Kornievskaia" <okorniev@redhat.com>,
- "Dai Ngo" <Dai.Ngo@oracle.com>, "Amir Goldstein" <amir73il@gmail.com>,
- "Namjae Jeon" <linkinjeon@kernel.org>,
- "Steve French" <smfrench@gmail.com>,
- "Sergey Senozhatsky" <senozhatsky@chromium.org>,
- "Carlos Maiolino" <cem@kernel.org>,
- "Kuniyuki Iwashima" <kuniyu@google.com>,
- "David S. Miller" <davem@davemloft.net>,
- "Eric Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>,
- "Paolo Abeni" <pabeni@redhat.com>, "Simon Horman" <horms@kernel.org>,
- linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org,
- samba-technical@lists.samba.org, netfs@lists.linux.dev,
- ecryptfs@vger.kernel.org, linux-unionfs@vger.kernel.org,
- linux-xfs@vger.kernel.org, netdev@vger.kernel.org,
- "Jeff Layton" <jlayton@kernel.org>
-Subject: Re: [PATCH v5 09/17] vfs: clean up argument list for vfs_create()
-In-reply-to: <20251105-dir-deleg-ro-v5-9-7ebc168a88ac@kernel.org>
-References: <20251105-dir-deleg-ro-v5-0-7ebc168a88ac@kernel.org>,
- <20251105-dir-deleg-ro-v5-9-7ebc168a88ac@kernel.org>
-Date: Thu, 06 Nov 2025 08:27:31 +1100
-Message-id: <176237805165.634289.1849067298194355086@noble.neil.brown.name>
-Reply-To: NeilBrown <neil@brown.name>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aQts-Fg2YUoIbVsV@bfoster>
 
-On Thu, 06 Nov 2025, Jeff Layton wrote:
-> As Neil points out:
+On Wed, Nov 05, 2025 at 10:27:52AM -0500, Brian Foster wrote:
+> On Tue, Nov 04, 2025 at 04:07:16PM -0800, Darrick J. Wong wrote:
+> > On Thu, Oct 16, 2025 at 03:02:58PM -0400, Brian Foster wrote:
+> > > Zhang Yi points out that the dynamic folio_batch allocation in
+> > > iomap_fill_dirty_folios() is problematic for the ext4 on iomap work
+> > > that is under development because it doesn't sufficiently handle the
+> > > allocation failure case (by allowing a retry, for example).
+> > > 
+> > > The dynamic allocation was initially added for simplicity and to
+> > > help indicate whether the batch was used or not by the calling fs.
+> > > To address this issue, put the batch on the stack of
+> > > iomap_zero_range() and use a flag to control whether the batch
+> > > should be used in the iomap folio lookup path. This keeps things
+> > > simple and eliminates the concern for ext4 on iomap.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > 
+> > Hrmm, so who kmallocs the fbatch array now?  Is that left as an exercise
+> > to the filesystem?  I'm confused because I don't see the kmalloc call
+> > reappear elsewhere, at least not in this patch.
+> > 
 > 
-> "I would be in favour of dropping the "dir" arg because it is always
-> d_inode(dentry->d_parent) which is stable."
+> It's no longer dynamically allocated. It's allocated on the stack in
+> iomap_zero_range(), and a flag is set on the iomap if the pagecache
+> lookup occurs. The allocation is a potential problem for the ext4 on
+> iomap port, so this elides the need for dealing with alloc failures and
+> whatnot.
+
+Oh, silly me.  I got mixed up thinking that the deleted kmalloc was
+allocating folio_batch::folios whereas in reality the kmalloc was for
+the entire struct folio_batch.  So yes, it's allocated on the stack.
+Sorry about the noise.
+
+--D
+
+> This is probably how it should have been done from the start, but when
+> the flag related feedback came along it was deep enough in test/review
+> cycle that I preferred to do it separately.
 > 
-> ...and...
+> Brian
 > 
-> "Also *every* caller of vfs_create() passes ".excl = true".  So maybe we
-> don't need that arg at all."
+> > --D
+> > 
+> > > ---
+> > >  fs/iomap/buffered-io.c | 45 ++++++++++++++++++++++++++++--------------
+> > >  fs/iomap/iter.c        |  6 +++---
+> > >  fs/xfs/xfs_iomap.c     | 11 ++++++-----
+> > >  include/linux/iomap.h  |  8 ++++++--
+> > >  4 files changed, 45 insertions(+), 25 deletions(-)
+> > > 
+> > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > > index 51ecb6d48feb..05ff82c5432e 100644
+> > > --- a/fs/iomap/buffered-io.c
+> > > +++ b/fs/iomap/buffered-io.c
+> > > @@ -761,7 +761,7 @@ static struct folio *__iomap_get_folio(struct iomap_iter *iter,
+> > >  	if (!mapping_large_folio_support(iter->inode->i_mapping))
+> > >  		len = min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
+> > >  
+> > > -	if (iter->fbatch) {
+> > > +	if (iter->iomap.flags & IOMAP_F_FOLIO_BATCH) {
+> > >  		struct folio *folio = folio_batch_next(iter->fbatch);
+> > >  
+> > >  		if (!folio)
+> > > @@ -858,7 +858,7 @@ static int iomap_write_begin(struct iomap_iter *iter,
+> > >  	 * process so return and let the caller iterate and refill the batch.
+> > >  	 */
+> > >  	if (!folio) {
+> > > -		WARN_ON_ONCE(!iter->fbatch);
+> > > +		WARN_ON_ONCE(!(iter->iomap.flags & IOMAP_F_FOLIO_BATCH));
+> > >  		return 0;
+> > >  	}
+> > >  
+> > > @@ -1473,23 +1473,34 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
+> > >  	return status;
+> > >  }
+> > >  
+> > > -loff_t
+> > > +/**
+> > > + * iomap_fill_dirty_folios - fill a folio batch with dirty folios
+> > > + * @iter: Iteration structure
+> > > + * @start: Start offset of range. Updated based on lookup progress.
+> > > + * @end: End offset of range
+> > > + *
+> > > + * Returns the associated control flag if the folio batch is available and the
+> > > + * lookup performed. The caller is responsible to set the flag on the associated
+> > > + * iomap.
+> > > + */
+> > > +unsigned int
+> > >  iomap_fill_dirty_folios(
+> > >  	struct iomap_iter	*iter,
+> > > -	loff_t			offset,
+> > > -	loff_t			length)
+> > > +	loff_t			*start,
+> > > +	loff_t			end)
+> > >  {
+> > >  	struct address_space	*mapping = iter->inode->i_mapping;
+> > > -	pgoff_t			start = offset >> PAGE_SHIFT;
+> > > -	pgoff_t			end = (offset + length - 1) >> PAGE_SHIFT;
+> > > +	pgoff_t			pstart = *start >> PAGE_SHIFT;
+> > > +	pgoff_t			pend = (end - 1) >> PAGE_SHIFT;
+> > >  
+> > > -	iter->fbatch = kmalloc(sizeof(struct folio_batch), GFP_KERNEL);
+> > > -	if (!iter->fbatch)
+> > > -		return offset + length;
+> > > -	folio_batch_init(iter->fbatch);
+> > > +	if (!iter->fbatch) {
+> > > +		*start = end;
+> > > +		return 0;
+> > > +	}
+> > >  
+> > > -	filemap_get_folios_dirty(mapping, &start, end, iter->fbatch);
+> > > -	return (start << PAGE_SHIFT);
+> > > +	filemap_get_folios_dirty(mapping, &pstart, pend, iter->fbatch);
+> > > +	*start = (pstart << PAGE_SHIFT);
+> > > +	return IOMAP_F_FOLIO_BATCH;
+> > >  }
+> > >  EXPORT_SYMBOL_GPL(iomap_fill_dirty_folios);
+> > >  
+> > > @@ -1498,17 +1509,21 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+> > >  		const struct iomap_ops *ops,
+> > >  		const struct iomap_write_ops *write_ops, void *private)
+> > >  {
+> > > +	struct folio_batch fbatch;
+> > >  	struct iomap_iter iter = {
+> > >  		.inode		= inode,
+> > >  		.pos		= pos,
+> > >  		.len		= len,
+> > >  		.flags		= IOMAP_ZERO,
+> > >  		.private	= private,
+> > > +		.fbatch		= &fbatch,
+> > >  	};
+> > >  	struct address_space *mapping = inode->i_mapping;
+> > >  	int ret;
+> > >  	bool range_dirty;
+> > >  
+> > > +	folio_batch_init(&fbatch);
+> > > +
+> > >  	/*
+> > >  	 * To avoid an unconditional flush, check pagecache state and only flush
+> > >  	 * if dirty and the fs returns a mapping that might convert on
+> > > @@ -1519,11 +1534,11 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+> > >  	while ((ret = iomap_iter(&iter, ops)) > 0) {
+> > >  		const struct iomap *srcmap = iomap_iter_srcmap(&iter);
+> > >  
+> > > -		if (WARN_ON_ONCE(iter.fbatch &&
+> > > +		if (WARN_ON_ONCE((iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
+> > >  				 srcmap->type != IOMAP_UNWRITTEN))
+> > >  			return -EIO;
+> > >  
+> > > -		if (!iter.fbatch &&
+> > > +		if (!(iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
+> > >  		    (srcmap->type == IOMAP_HOLE ||
+> > >  		     srcmap->type == IOMAP_UNWRITTEN)) {
+> > >  			s64 status;
+> > > diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
+> > > index 66ca12aac57d..026d85823c76 100644
+> > > --- a/fs/iomap/iter.c
+> > > +++ b/fs/iomap/iter.c
+> > > @@ -8,10 +8,10 @@
+> > >  
+> > >  static inline void iomap_iter_reset_iomap(struct iomap_iter *iter)
+> > >  {
+> > > -	if (iter->fbatch) {
+> > > +	if (iter->iomap.flags & IOMAP_F_FOLIO_BATCH) {
+> > >  		folio_batch_release(iter->fbatch);
+> > > -		kfree(iter->fbatch);
+> > > -		iter->fbatch = NULL;
+> > > +		folio_batch_reinit(iter->fbatch);
+> > > +		iter->iomap.flags &= ~IOMAP_F_FOLIO_BATCH;
+> > >  	}
+> > >  
+> > >  	iter->status = 0;
+> > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > > index 535bf3b8705d..01833aca37ac 100644
+> > > --- a/fs/xfs/xfs_iomap.c
+> > > +++ b/fs/xfs/xfs_iomap.c
+> > > @@ -1775,7 +1775,6 @@ xfs_buffered_write_iomap_begin(
+> > >  	 */
+> > >  	if (flags & IOMAP_ZERO) {
+> > >  		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+> > > -		u64 end;
+> > >  
+> > >  		if (isnullstartblock(imap.br_startblock) &&
+> > >  		    offset_fsb >= eof_fsb)
+> > > @@ -1795,12 +1794,14 @@ xfs_buffered_write_iomap_begin(
+> > >  		 */
+> > >  		if (imap.br_state == XFS_EXT_UNWRITTEN &&
+> > >  		    offset_fsb < eof_fsb) {
+> > > -			loff_t len = min(count,
+> > > -					 XFS_FSB_TO_B(mp, imap.br_blockcount));
+> > > +			loff_t foffset = offset, fend;
+> > >  
+> > > -			end = iomap_fill_dirty_folios(iter, offset, len);
+> > > +			fend = offset +
+> > > +			       min(count, XFS_FSB_TO_B(mp, imap.br_blockcount));
+> > > +			iomap_flags |= iomap_fill_dirty_folios(iter, &foffset,
+> > > +							       fend);
+> > >  			end_fsb = min_t(xfs_fileoff_t, end_fsb,
+> > > -					XFS_B_TO_FSB(mp, end));
+> > > +					XFS_B_TO_FSB(mp, foffset));
+> > >  		}
+> > >  
+> > >  		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+> > > diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> > > index cd0f573156d6..79da917ff45e 100644
+> > > --- a/include/linux/iomap.h
+> > > +++ b/include/linux/iomap.h
+> > > @@ -87,6 +87,9 @@ struct vm_fault;
+> > >  /*
+> > >   * Flags set by the core iomap code during operations:
+> > >   *
+> > > + * IOMAP_F_FOLIO_BATCH indicates that the folio batch mechanism is active
+> > > + * for this operation, set by iomap_fill_dirty_folios().
+> > > + *
+> > >   * IOMAP_F_SIZE_CHANGED indicates to the iomap_end method that the file size
+> > >   * has changed as the result of this write operation.
+> > >   *
+> > > @@ -94,6 +97,7 @@ struct vm_fault;
+> > >   * range it covers needs to be remapped by the high level before the operation
+> > >   * can proceed.
+> > >   */
+> > > +#define IOMAP_F_FOLIO_BATCH	(1U << 13)
+> > >  #define IOMAP_F_SIZE_CHANGED	(1U << 14)
+> > >  #define IOMAP_F_STALE		(1U << 15)
+> > >  
+> > > @@ -351,8 +355,8 @@ bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio);
+> > >  int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+> > >  		const struct iomap_ops *ops,
+> > >  		const struct iomap_write_ops *write_ops);
+> > > -loff_t iomap_fill_dirty_folios(struct iomap_iter *iter, loff_t offset,
+> > > -		loff_t length);
+> > > +unsigned int iomap_fill_dirty_folios(struct iomap_iter *iter, loff_t *start,
+> > > +		loff_t end);
+> > >  int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+> > >  		bool *did_zero, const struct iomap_ops *ops,
+> > >  		const struct iomap_write_ops *write_ops, void *private);
+> > > -- 
+> > > 2.51.0
+> > > 
+> > > 
+> > 
 > 
-> Drop both arguments from vfs_create() and fix up the callers.
 > 
-> Suggested-by: NeilBrown <neilb@ownmail.net>
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-
-This I like.
-
-Reviewed-by: NeilBrown <neil@brown.name>
-
-It would be consistent to also remove the 'dir' arg from vfs_mkdir(),
-vfs_mknod(), etc.  I wouldn't do that until we find out what other
-people think of the change.
-
-Thanks,
-NeilBrown
-
-
