@@ -1,81 +1,80 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72D992D0C8A
-	for <linux-xfs@vger.kernel.org>; Wed,  5 Nov 2025 07:13:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33FFA2D2383
+	for <linux-xfs@vger.kernel.org>; Wed,  5 Nov 2025 07:14:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762326813; cv=none; b=smVZD6i6bQtG2bOyK3yeXtcnJrQz1x0kAmulOmA8ipghpCyMV9ZUzmDE+b1ot7QgotWOxfan42VFj0r7iah0IihilMTyckGPYwHvq9thqFTl/dDqdqB28duSnUv2Lq6wIsXGcDSTfmHgul5QyYYROqxTX64oEM+7d6Bj0ddDizY=
+	t=1762326850; cv=none; b=orSAHpEKDMVHSOi7ew4D7fUipGMhVI+qw6xGBto2C+qws01rraKAhqCGNVh/bRJPx0kDnZBHfhc0TinlEDohfF8vb0UCFhRji/ZvwBxyh/5fAfg9pIsq9wqfs/gi5UvFx+VsuKC4YabhySr81jtl/dWgyKBG5l0WoYrHz1rVP8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762326813; c=relaxed/simple;
-	bh=6buDsgkObLRHEk4bLt1U975Il0m3a8kg7vWs1HuKNt8=;
+	s=arc-20240116; t=1762326850; c=relaxed/simple;
+	bh=7H1fhNllsJx9cEcEcsuhg54HQgWliSam8LLrwiOWY/Y=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=TuQsaeuYIcFDmTwA2JLFXk/zkJbF61eiDsXHwRBTK7LSADQ/VMeHKpjoQVYRpQkP/yMWayp5xgl1Jj6MqtErzk2ZznpG8TH+7q1qhvOY4SEbZdQEMNTyTDvpEXDFEfrKlU6RYOSAXyKEms5laQIbhR93bvhKfN1pmSy/Y+FmQj0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=15ehS71h; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=WZqtjCmZ; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=15ehS71h; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=WZqtjCmZ; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=h2hKFXJ2As1Nu7UV9FTj120kZwbwUxuq99JPXR3zYS0wv/1dfBUnX4ucPuSBY7ZFpVOEVDuKi0LgQ6V3g06kjEMU8r9MCm0iohzWza55XeO7JZOn+avhMEET4DTvIs1YO72Z6rh+EYCS0/VnwGvmutQZco3JMQdgz4rsxnvrjzw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=BQrWy1pu; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=eEX2e7QK; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=BQrWy1pu; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=eEX2e7QK; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="15ehS71h";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="WZqtjCmZ";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="15ehS71h";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="WZqtjCmZ"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="BQrWy1pu";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="eEX2e7QK";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="BQrWy1pu";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="eEX2e7QK"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 6198F1F394;
-	Wed,  5 Nov 2025 07:13:29 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 5A86C21192;
+	Wed,  5 Nov 2025 07:14:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1762326809; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1762326847; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=O1a55L6eu+gyi8zUO1ywz4lkQc8YLbGa317PQqwBunM=;
-	b=15ehS71hGPn11c1PE+qsAGqXEK9jtnSO4uwc7XoPfSf0sDhXXSCYTEgyiGjzRlDdIo0hcI
-	Ixx1FTnin/4l7IALHbXQYMc15OfpwYeGb+vCpBlnu9viakTyxZe7SZwHhCDN6Q3Sh9nkCK
-	yxoTY9+NrVqKV/9dFgztjGAZva6D+90=
+	bh=SdZvQ0i6OaTxmcVuq8+ooiSc+ysgf4J+yTkRFYF9X7U=;
+	b=BQrWy1puabSTI0tkYnmFKPMRqbUccGSXtI2DOoGTcH1WI2AzbP/PtS8JOvN+Xh6YbT5s3Z
+	GVGKccwe9i83v2c2sV2RUafuCyz8/Z/wTT7yLOlwEE5bucZqumPvB3VHv0C65n//bAEUbh
+	+JT/pxAYsoxRI5xHWIK4ZM16YOEwo6s=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1762326809;
+	s=susede2_ed25519; t=1762326847;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=O1a55L6eu+gyi8zUO1ywz4lkQc8YLbGa317PQqwBunM=;
-	b=WZqtjCmZw6u3IeInXtmu+NkG8A2zk2FLqmzIjqEjdFjmalz9wLFOBLXxZRVkFvJxS8TzX0
-	Gmne2eel+pD5qqDg==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=15ehS71h;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=WZqtjCmZ
+	bh=SdZvQ0i6OaTxmcVuq8+ooiSc+ysgf4J+yTkRFYF9X7U=;
+	b=eEX2e7QKXAmZgNWiu0Vjwqk/8jMmha27UEXY/hBuyyCuBJtvRhgqemDEhTDGJXTiFOIdYa
+	IEZOr4zmKo83ytCw==
+Authentication-Results: smtp-out1.suse.de;
+	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1762326809; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1762326847; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=O1a55L6eu+gyi8zUO1ywz4lkQc8YLbGa317PQqwBunM=;
-	b=15ehS71hGPn11c1PE+qsAGqXEK9jtnSO4uwc7XoPfSf0sDhXXSCYTEgyiGjzRlDdIo0hcI
-	Ixx1FTnin/4l7IALHbXQYMc15OfpwYeGb+vCpBlnu9viakTyxZe7SZwHhCDN6Q3Sh9nkCK
-	yxoTY9+NrVqKV/9dFgztjGAZva6D+90=
+	bh=SdZvQ0i6OaTxmcVuq8+ooiSc+ysgf4J+yTkRFYF9X7U=;
+	b=BQrWy1puabSTI0tkYnmFKPMRqbUccGSXtI2DOoGTcH1WI2AzbP/PtS8JOvN+Xh6YbT5s3Z
+	GVGKccwe9i83v2c2sV2RUafuCyz8/Z/wTT7yLOlwEE5bucZqumPvB3VHv0C65n//bAEUbh
+	+JT/pxAYsoxRI5xHWIK4ZM16YOEwo6s=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1762326809;
+	s=susede2_ed25519; t=1762326847;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=O1a55L6eu+gyi8zUO1ywz4lkQc8YLbGa317PQqwBunM=;
-	b=WZqtjCmZw6u3IeInXtmu+NkG8A2zk2FLqmzIjqEjdFjmalz9wLFOBLXxZRVkFvJxS8TzX0
-	Gmne2eel+pD5qqDg==
+	bh=SdZvQ0i6OaTxmcVuq8+ooiSc+ysgf4J+yTkRFYF9X7U=;
+	b=eEX2e7QKXAmZgNWiu0Vjwqk/8jMmha27UEXY/hBuyyCuBJtvRhgqemDEhTDGJXTiFOIdYa
+	IEZOr4zmKo83ytCw==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C5139132DD;
-	Wed,  5 Nov 2025 07:13:28 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B1280132DD;
+	Wed,  5 Nov 2025 07:14:06 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id jt1/Lhj5Cmn1FgAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 05 Nov 2025 07:13:28 +0000
-Message-ID: <1aca72f5-df99-4277-a36b-e9d259f77afd@suse.de>
-Date: Wed, 5 Nov 2025 08:13:28 +0100
+	id jxNqKT75CmmmFwAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 05 Nov 2025 07:14:06 +0000
+Message-ID: <83168e99-3c65-4b6e-ae09-c3ee1de2cb5b@suse.de>
+Date: Wed, 5 Nov 2025 08:14:06 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -83,7 +82,7 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 14/15] btrfs: use blkdev_report_zones_cached()
+Subject: Re: [PATCH v3 15/15] xfs: use blkdev_report_zones_cached()
 To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
  linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
  Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
@@ -94,68 +93,68 @@ To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
  Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
  David Sterba <dsterba@suse.com>
 References: <20251104013147.913802-1-dlemoal@kernel.org>
- <20251104013147.913802-15-dlemoal@kernel.org>
+ <20251104013147.913802-16-dlemoal@kernel.org>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20251104013147.913802-15-dlemoal@kernel.org>
+In-Reply-To: <20251104013147.913802-16-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 6198F1F394
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.51 / 50.00];
+X-Spamd-Result: default: False [-4.30 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.998];
 	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
 	FUZZY_RATELIMITED(0.00)[rspamd.com];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
 	ARC_NA(0.00)[];
 	RCPT_COUNT_TWELVE(0.00)[15];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MIME_TRACE(0.00)[0:+];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_TLS_ALL(0.00)[];
 	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
 	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FROM_EQ_ENVFROM(0.00)[];
 	FROM_HAS_DN(0.00)[];
 	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,wdc.com:email,suse.de:email,suse.de:mid,suse.de:dkim];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Action: no action
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[wdc.com:email,lst.de:email,suse.de:mid,suse.de:email]
 X-Spam-Flag: NO
-X-Spam-Score: -4.51
+X-Spam-Score: -4.30
 X-Spam-Level: 
 
 On 11/4/25 02:31, Damien Le Moal wrote:
-> Modify btrfs_get_dev_zones() and btrfs_sb_log_location_bdev() to replace
-> the call to blkdev_report_zones() with blkdev_report_zones_cached() to
-> speed-up mount operations. btrfs_get_dev_zone_info() is also modified to
-> take into account the BLK_ZONE_COND_ACTIVE condition, which is
-> equivalent to either BLK_ZONE_COND_IMP_OPEN, BLK_ZONE_COND_EXP_OPEN or
-> BLK_ZONE_COND_CLOSED.
+> Modify xfs_mount_zones() to replace the call to blkdev_report_zones()
+> with blkdev_report_zones_cached() to speed-up mount operations.
 > 
 > With this change, mounting a freshly formatted large capacity (30 TB)
-> SMR HDD completes under 100ms compared to over 1.8s before.
+> SMR HDD completes under 2s compared to over 4.7s before.
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> Acked-by: David Sterba <dsterba@suse.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > ---
->   fs/btrfs/zoned.c | 11 ++++++-----
->   1 file changed, 6 insertions(+), 5 deletions(-)
+>   fs/xfs/xfs_zone_alloc.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 > 
+> diff --git a/fs/xfs/xfs_zone_alloc.c b/fs/xfs/xfs_zone_alloc.c
+> index 23cdab4515bb..8d819bc134cd 100644
+> --- a/fs/xfs/xfs_zone_alloc.c
+> +++ b/fs/xfs/xfs_zone_alloc.c
+> @@ -1231,7 +1231,7 @@ xfs_mount_zones(
+>   	trace_xfs_zones_mount(mp);
+>   
+>   	if (bdev_is_zoned(bt->bt_bdev)) {
+> -		error = blkdev_report_zones(bt->bt_bdev,
+> +		error = blkdev_report_zones_cached(bt->bt_bdev,
+>   				XFS_FSB_TO_BB(mp, mp->m_sb.sb_rtstart),
+>   				mp->m_sb.sb_rgcount, xfs_get_zone_info_cb, &iz);
+>   		if (error < 0)
+
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
-hannes
+Hannes
 -- 
 Dr. Hannes Reinecke                  Kernel Storage Architect
 hare@suse.de                                +49 911 74053 688
