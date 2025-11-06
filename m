@@ -1,186 +1,77 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 796493090E0
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Nov 2025 10:13:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0214B261B8F
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Nov 2025 11:06:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762424031; cv=none; b=anio77s/3ANNzV2xsKuIsg4UhX2NaLjv2nAFjitFKDUPcS6094GLYTgXkZ3OIlZYRrM8pJVDGD7/9v23zMxfo36yjxcARk1HOtqQG88U9r/VGbWVihDxEZO8gKmCq0YOy1EFu09YQqbbbJAVdImGWNtxEmJnrx2RHq0oSGaGBpg=
+	t=1762427165; cv=none; b=puq0M5ZIISNII36dgRSc8qQtrgAuf7OqkNy4TQ0BfkGdJZUr3jw2Kw1DXNvX6yvow3q2xpFjB9wViaoIUzFpEPr95eBD5XQ+ZmmtP8gyVK2uWw/gPnsBR3Mf4q0a6AYCYWOUgQKCzryUKypHQroNvqNvzf3J7Af10YsTz5mknhI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762424031; c=relaxed/simple;
-	bh=2Dqgj3ARMAZloy2d+yx/6Dy8TnZquGzcUD0JkFUNwII=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PX0ouTzSDXMjUlYeT2QH1RWIbIUdnOxixXnx7bWZ50SAp3g6cyi8UnVYYFxme7tqz8jIxIWiF+gUDP5AuFSXfFGhrYmQGPPBjIRLF/U8oJTxJJz24iYf8M3s5OHc1Y3FQ1wIitRQLJcIwl6pu924xHNjzzFhTouLukIg8/FiFTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Oj6PZ1XT; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=5M8BwnlH; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Nx0DTY83; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=9bQMqnV0; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Oj6PZ1XT";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="5M8BwnlH";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Nx0DTY83";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="9bQMqnV0"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 61EE3211D5;
-	Thu,  6 Nov 2025 10:13:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1762424027; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=U0qet8K6rw8ALVRCEQwaBHLS2xzMNx2BB/UQa7MLpbs=;
-	b=Oj6PZ1XTq4UzibZQTggjGDCDIdQUUr3p4bKVGq3KeiY+gJyO00L7dqKgzfjgu0crbD8/ri
-	3NZ1ZQLZ7O3ZBf2OXPZATSRhnbzvrGaEFq2t/ie7uS78hS25ltqjzSZAeP5/wHZduHs9PY
-	SG+Ri+XJ/LcmcVgbd51R/FYTzVq9L6Y=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1762424027;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=U0qet8K6rw8ALVRCEQwaBHLS2xzMNx2BB/UQa7MLpbs=;
-	b=5M8BwnlHLndGMvwDk5mpe+Rt9KkB9G7slMuZd7+5+qzD6IZNwhaT+PM1Z8GgpwJSZM7CJt
-	7M6W4Mp2I3FLwlCw==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=Nx0DTY83;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=9bQMqnV0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1762424026; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=U0qet8K6rw8ALVRCEQwaBHLS2xzMNx2BB/UQa7MLpbs=;
-	b=Nx0DTY839ZnecFDxZZ79zBc2DMcKWlosUysgEy0IHbFg1EEN6S92aap4/8fga/JpdJkRq7
-	HPopxbu1UFIvChYFGc1MPtnXgabWAUo1Fb1sAduhamMlnxfaXc9Uf3Pkf+Tv63Z9psldT8
-	5GfclCnqcvTghtR422vYNbQ1QGNUdmg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1762424026;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=U0qet8K6rw8ALVRCEQwaBHLS2xzMNx2BB/UQa7MLpbs=;
-	b=9bQMqnV04NrR5LKNKTBGCaW47u4LnmUt2oKcRRiP0yw1XKo872G2Es/4kU/uebx2XCW2GB
-	lB6vClfsKg7yt6Cg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 496F813A31;
-	Thu,  6 Nov 2025 10:13:46 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id kCOaEdp0DGluQwAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 06 Nov 2025 10:13:46 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id CDE27A0948; Thu,  6 Nov 2025 11:13:45 +0100 (CET)
-Date: Thu, 6 Nov 2025 11:13:45 +0100
-From: Jan Kara <jack@suse.cz>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, 
-	cem@kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, gabriel@krisman.be, Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH 1/6] iomap: report file IO errors to fsnotify
-Message-ID: <flgcbd3bzaa6sdlnspub7htwyengcuuadbcws32edns7z5fpgr@kyjoo4tf7qyf>
-References: <176230366393.1647991.7608961849841103569.stgit@frogsfrogsfrogs>
- <176230366453.1647991.17002688390201603817.stgit@frogsfrogsfrogs>
- <ewqcnrecsvpi5wy3mufy3swnf46ejnz4kc5ph2eb4iriftdddi@mamiprlrvi75>
- <CAOQ4uxhfrHNk+b=BW5o7We=jC7ob4JbuL4vQz8QhUKD0VaRP=A@mail.gmail.com>
- <g2xevmkixxjturg47qv4gokvxvbah275z5slweehj2pvesl3zs@ordfml4v7gaa>
- <20251105182808.GC196370@frogsfrogsfrogs>
- <20251105194138.GK196362@frogsfrogsfrogs>
+	s=arc-20240116; t=1762427165; c=relaxed/simple;
+	bh=MDxxMhIORU1N6H7vl53fjvMx/eCJgCUEAWu06Xd4fyo=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=TXEm61Xrq1Vbgk52dj2zS3tmb+4l/VLi9AQC/GQrWIby0qfUinTqPOTiyNI7OL0Yrs14iaqmZQoNX01HGDDIAeAq3t9bU4gx/E5dI4AmaqDFgKZhF+fyCahUs47h1tLSAb3N+XBZc7Xpmh1rgyZRs7l8fmNsvMEGcmy6gy9FjuQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-433312ee468so1785325ab.1
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Nov 2025 03:06:03 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762427163; x=1763031963;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=7YLmpBcJQQJc3uvBPyux9aBsbuqfkQpqtFUsIwakHSk=;
+        b=krCEKPloYLcnzMEHs4y4fkGaK3w7yE8b3ya9f0l4aoR/GTmQWmlgziclFJgc/TOtjd
+         rZZ5HJE8fpqKAsm+/gGMZV2WLdFVv2WOzZ0o9m3hN9MZd3JKqNQFJZAGzrjQQiQIOfTs
+         efHpeXETG7D12T52eXNIYvyYk+YlL6jLhieK/xU4VF8hyhKqtBFYI5UDIfN0GjX0ldG1
+         8RAvpzdURQ8JTdk4ALY61Ap8lpFxPlY9GxKC04ri8dE7WgQUpeorAsYvV6UiLuyei3DF
+         /gK06k9y4ZdLcamqnRQEOfxcUsa4dCDt7qXn8sPb68UpTat3BTGOMjakrmt7bHe0uEPm
+         SYLg==
+X-Forwarded-Encrypted: i=1; AJvYcCXrzeMXOR7nnC22Gw+uDx18Znk0qxlx1nifYzbWdRPiuHW/AoGAzWCuWsj5PYA7Iou6HB0/OfHEXnE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5u2KhXW1vkTQ6sYtDVcMaiP92LGi+K3+c7XHz34+4kkHhrHV4
+	oTFATnjkxEWrEkA5OTI1xxz7nUvZPUXzTOJMkFT15pKRaN9xh2AZzfFARATPpwqUWmVLdmhLI32
+	hXSwTn2K5OAPghQRBZTb6IHY3StSbnFyF/kkAqPMxl5qLsAM0dwv0UOZsLks=
+X-Google-Smtp-Source: AGHT+IE/u/KUDmfVhtAT+bF/JPkOxMXgQqhGjaEF35rveLN7I4NxGZIDTM47S3PtW6CsTFA7cmt9IEyen43RF5wsFZCo3/mO09du
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251105194138.GK196362@frogsfrogsfrogs>
-X-Rspamd-Queue-Id: 61EE3211D5
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_TLS_LAST(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_COUNT_THREE(0.00)[3];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	FREEMAIL_CC(0.00)[suse.cz,gmail.com,kernel.org,lst.de,vger.kernel.org,krisman.be];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[9];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.com:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spam-Score: -4.01
-X-Spam-Level: 
+X-Received: by 2002:a05:6e02:1567:b0:433:2400:2eef with SMTP id
+ e9e14a558f8ab-4334ee78384mr39296765ab.13.1762427163097; Thu, 06 Nov 2025
+ 03:06:03 -0800 (PST)
+Date: Thu, 06 Nov 2025 03:06:03 -0800
+In-Reply-To: <6774bf44.050a0220.25abdd.098a.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <690c811b.050a0220.3d0d33.014d.GAE@google.com>
+Subject: Re: [syzbot] [mm?] KASAN: slab-use-after-free Read in filemap_map_pages
+From: syzbot <syzbot+14d047423f40dc1dac89@syzkaller.appspotmail.com>
+To: akpm@linux-foundation.org, chandan.babu@oracle.com, david@redhat.com, 
+	hdanton@sina.com, jgg@ziepe.ca, jhubbard@nvidia.com, kas@kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-mm@kvack.org, linux-xfs@vger.kernel.org, peterx@redhat.com, 
+	syzkaller-bugs@googlegroups.com, willy@infradead.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed 05-11-25 11:41:38, Darrick J. Wong wrote:
-> On Wed, Nov 05, 2025 at 10:28:08AM -0800, Darrick J. Wong wrote:
-> > On Wed, Nov 05, 2025 at 03:24:41PM +0100, Jan Kara wrote:
-> > > On Wed 05-11-25 12:14:52, Amir Goldstein wrote:
-> > > > 
-> > > > ...
-> > > > We recently discovered that fsnotify_sb_error() calls are exposed to
-> > > > races with generic_shutdown_super():
-> > > > https://lore.kernel.org/linux-fsdevel/scmyycf2trich22v25s6gpe3ib6ejawflwf76znxg7sedqablp@ejfycd34xvpa/
-> > 
-> > Hrmm.  I've noticed that ever since I added this new patchset, I've been
-> > getting more instances of outright crashes in the timer code, or
-> > workqueue lockups.  I wonder if that UAF is what's going on here...
-> > 
-> > > > Will punting all FS_ERROR events to workqueue help to improve this
-> > > > situation or will it make it worse?
-> > > 
-> > > Worse. But you raise a really good point which I've missed during my
-> > > review. Currently there's nothing which synchronizes pending works with
-> > > superblock getting destroyed with obvious UAF issues already in
-> > > handle_sb_error().
-> > 
-> > I wonder, could __sb_error call get_active_super() to obtain an active
-> > reference to the sb, and then deactivate_super() it in the workqueue
-> > callback?  If we can't get an active ref then we presume that the fs is
-> > already shutting down and don't send the event.
-> 
-> ...and now that I've actually tried it, I realize that we can't actually
-> call get_active_super because it can sleep waiting for s_umount and
-> SB_BORN.  Maybe we could directly atomic_inc_not_zero(&sb->s_active)
-> adn trust that the caller has an active ref to the sb?  I think that's
-> true for anyone calling __sb_error with a non-null inode.
+syzbot suspects this issue was fixed by commit:
 
-Well, the side-effects of holding active sb reference from some workqueue
-item tend to hit back occasionally (like when userspace assumes the device
-isn't used anymore but it in fact still is because of the active
-reference). Every time we tried something like this (last time it was with
-iouring I believe) some user came back and complained his setup broke. In
-this case it should be really rare but still I think it's better to avoid
-it if we can (plus I'm not sure what you'd like to do for __sb_error()
-callers that don't get the inode and thus active reference isn't really
-guaranteed - they still need the protection against umount so that
-handle_sb_error() can do the notifier callchain thing).
+commit 357b92761d942432c90aeeb965f9eb0c94466921
+Author: Kiryl Shutsemau <kas@kernel.org>
+Date:   Tue Sep 23 11:07:10 2025 +0000
 
-So I think a better solution might be that generic_shutdown_super() waits
-for pending error notifications after clearing SB_ACTIVE before umount
-proceeds further and __sb_error() just starts discarding new notifications
-as soon as we see SB_ACTIVE is clear.
+    mm/filemap: map entire large folio faultaround
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=12658532580000
+start commit:   b19a97d57c15 Merge tag 'pull-fixes' of git://git.kernel.or..
+git tree:       upstream
+kernel config:  https://syzkaller.appspot.com/x/.config?x=292f3bc9f654adeb
+dashboard link: https://syzkaller.appspot.com/bug?extid=14d047423f40dc1dac89
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12399442580000
+
+If the result looks correct, please mark the issue as fixed by replying with:
+
+#syz fix: mm/filemap: map entire large folio faultaround
+
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
