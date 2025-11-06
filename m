@@ -1,135 +1,186 @@
-Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CF7627510B
-	for <linux-xfs@vger.kernel.org>; Thu,  6 Nov 2025 10:04:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 796493090E0
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Nov 2025 10:13:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762423478; cv=none; b=tOVYKVhJkZZxXGhFsYfXqXnGz5cWfMj2MHSPj3A/w3uRGpxo1BWE/sq5AgbWN0mTNGPGjjgUC8D5U99SXNfA8RECFtyCrE/Xe68JzqqoHtpPxsSfZD7WcPrxcHZRJYPLpjD41N1cK4MeQDtDy1J94NSAUqQ5qcIe+y3L+gz3Kto=
+	t=1762424031; cv=none; b=anio77s/3ANNzV2xsKuIsg4UhX2NaLjv2nAFjitFKDUPcS6094GLYTgXkZ3OIlZYRrM8pJVDGD7/9v23zMxfo36yjxcARk1HOtqQG88U9r/VGbWVihDxEZO8gKmCq0YOy1EFu09YQqbbbJAVdImGWNtxEmJnrx2RHq0oSGaGBpg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762423478; c=relaxed/simple;
-	bh=vT6p2Ft83AUVQpnKCW7qD9vJskfIVgaA8WibD4YKicI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FoRr5HMvlokD6Z1xDsj/ATv/n0mpGd0fTLGYSpQKPHzdjOvDtCRD/bZZgjYxPFblke1rBtAV55jGxW+EDUz1ybs/1QNjWgT/3sH8P00XpNIjj217YaN5fg7j+SWm2d1SJqmz4x5/f2XBKev1FurCiDMdxzDrD1FOZnT5LjG2alc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=EWJw7Utr; arc=none smtp.client-ip=209.85.221.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1762424031; c=relaxed/simple;
+	bh=2Dqgj3ARMAZloy2d+yx/6Dy8TnZquGzcUD0JkFUNwII=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PX0ouTzSDXMjUlYeT2QH1RWIbIUdnOxixXnx7bWZ50SAp3g6cyi8UnVYYFxme7tqz8jIxIWiF+gUDP5AuFSXfFGhrYmQGPPBjIRLF/U8oJTxJJz24iYf8M3s5OHc1Y3FQ1wIitRQLJcIwl6pu924xHNjzzFhTouLukIg8/FiFTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Oj6PZ1XT; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=5M8BwnlH; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Nx0DTY83; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=9bQMqnV0; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="EWJw7Utr"
-Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-429b7ba208eso478744f8f.1
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Nov 2025 02:04:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1762423474; x=1763028274; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=9pzqQqc6IcRolbDep+B7yNbdFvNbgM81NTbfjuCoPvY=;
-        b=EWJw7Utr7kFd1f8ZUvIiWqRkqtKpp52g+YmchQCC4S05k6Cd7cFYbI+ad6Z/wgp0vc
-         l3t3z4j+yGbb0fk4sgWWdegtBJxI7obj6qrPaE6kNk8wzESqc6MD/iCcSb/mmGOXArGL
-         mhkhgr1QN2TVly2laj9kolEjdnI0pFcssp/wBrHarXmhYgzioJfGI39iU6o3sTh0K5Ca
-         qLC4ZWZb4HKr+Vjy5a+nNMWqiCWm9OZxnLVoca1XNJZBF02yK7jlDllo8dxNSvUoOVbQ
-         rwmSQewTkbu/RagiSfsR/QUNYV97HrT5pqew0iD3rNbxZ+rLSmGbbTzi/FimbAeDctQw
-         y8TA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762423474; x=1763028274;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=9pzqQqc6IcRolbDep+B7yNbdFvNbgM81NTbfjuCoPvY=;
-        b=VPigB8Vv8PJuzysXuqJ2s9UZxSBaw70bb3IkMJhs96fCl7fVBqYcj4LgBz/TNMXmk0
-         1DuBq4EZGiY+qlwSCuz+XS729X6Y0Z1xc1PHYv/RAu04gN1ySv3sXrNsFTDzRTh/4Nyd
-         13f/cYMvmblxrjTxMkFETleMQ3xLjzWoEij7eDWAR7X2bDUz9cKkLgPujnR8UXc/GJS7
-         kVyqRVL/OmN6I0VanXWQWI2MyOE3+hCiarJ950y2xG+fy4Bc1XywNNfjOdj3daLPzCaA
-         XYafXGaf3SZeukF/JiHAaTqiPCukQc7Rtyx7+micdIUD/Z0iMBAgAoXHf25fO//MR1Gy
-         5O7A==
-X-Forwarded-Encrypted: i=1; AJvYcCUh6VHpgwcswpQ+g1u0ZSwqNX8/wxBtVbw+Fay4W7dzgfK8YeAjbZCam2yC6itsiKngpadbvl8NFyI=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw1ZvIBLfFWpxVt3hQ9+hpB4EtwuzG39Mw+5Bv2VxGIIYTzg8LC
-	JgY9gRtrsSdoF1e0Ahs/sPGZoBHtJtrKCqGsfodqj/lVLQzOTpXVt9g3MQpZQmkNUPke71m2yrM
-	eVduO/5I8vGkG9Agvy00PD1fZGx3w8vUSMFxkqtFg4n0lus4IM74K
-X-Gm-Gg: ASbGnctxxaPb6BsInwYABapRIGTx2y9yzjWhYRcnrGiRJjkC5U1/WtriV6lcWbvhziB
-	Knp5m9VIWY+x4dvrj0pZg7U8eS0meP+wJJYebP050fpSj+ISs5vay6ro048liy8PztHqqbjOE7x
-	n2Tb7jRr2q2gFC3LEUrxvXjLT/wAcr90P3QAjLiErOkJ/xZiUYegl9zyKFwW/CenAvwazGIT/7N
-	tKPRSwzCta9TdPa26f4QML+LY2OV182WB7OxbIM0k0uecpqnR2DpM/t0ab8OMkUKXUHDLfP26fY
-	bjqYJwd/mE3MKTmN3Ukf8JVhospCmW4vKahCRcG/27jFShOOZ5kguCpYeg==
-X-Google-Smtp-Source: AGHT+IF9F1VA3FkhFo+HExPWDHAEgrgxeGGJA7rdOjuOxk6TFCz8t+ouX+7Zbvmcn9f9578SldeY9TT64Kn6ISeqc/8=
-X-Received: by 2002:a05:6000:2386:b0:429:d3a7:18bd with SMTP id
- ffacd0b85a97d-429e334019cmr5012608f8f.59.1762423473555; Thu, 06 Nov 2025
- 02:04:33 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Oj6PZ1XT";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="5M8BwnlH";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Nx0DTY83";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="9bQMqnV0"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 61EE3211D5;
+	Thu,  6 Nov 2025 10:13:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1762424027; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=U0qet8K6rw8ALVRCEQwaBHLS2xzMNx2BB/UQa7MLpbs=;
+	b=Oj6PZ1XTq4UzibZQTggjGDCDIdQUUr3p4bKVGq3KeiY+gJyO00L7dqKgzfjgu0crbD8/ri
+	3NZ1ZQLZ7O3ZBf2OXPZATSRhnbzvrGaEFq2t/ie7uS78hS25ltqjzSZAeP5/wHZduHs9PY
+	SG+Ri+XJ/LcmcVgbd51R/FYTzVq9L6Y=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1762424027;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=U0qet8K6rw8ALVRCEQwaBHLS2xzMNx2BB/UQa7MLpbs=;
+	b=5M8BwnlHLndGMvwDk5mpe+Rt9KkB9G7slMuZd7+5+qzD6IZNwhaT+PM1Z8GgpwJSZM7CJt
+	7M6W4Mp2I3FLwlCw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=Nx0DTY83;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=9bQMqnV0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1762424026; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=U0qet8K6rw8ALVRCEQwaBHLS2xzMNx2BB/UQa7MLpbs=;
+	b=Nx0DTY839ZnecFDxZZ79zBc2DMcKWlosUysgEy0IHbFg1EEN6S92aap4/8fga/JpdJkRq7
+	HPopxbu1UFIvChYFGc1MPtnXgabWAUo1Fb1sAduhamMlnxfaXc9Uf3Pkf+Tv63Z9psldT8
+	5GfclCnqcvTghtR422vYNbQ1QGNUdmg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1762424026;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=U0qet8K6rw8ALVRCEQwaBHLS2xzMNx2BB/UQa7MLpbs=;
+	b=9bQMqnV04NrR5LKNKTBGCaW47u4LnmUt2oKcRRiP0yw1XKo872G2Es/4kU/uebx2XCW2GB
+	lB6vClfsKg7yt6Cg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 496F813A31;
+	Thu,  6 Nov 2025 10:13:46 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id kCOaEdp0DGluQwAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 06 Nov 2025 10:13:46 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id CDE27A0948; Thu,  6 Nov 2025 11:13:45 +0100 (CET)
+Date: Thu, 6 Nov 2025 11:13:45 +0100
+From: Jan Kara <jack@suse.cz>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, 
+	cem@kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, gabriel@krisman.be, Christian Brauner <brauner@kernel.org>
+Subject: Re: [PATCH 1/6] iomap: report file IO errors to fsnotify
+Message-ID: <flgcbd3bzaa6sdlnspub7htwyengcuuadbcws32edns7z5fpgr@kyjoo4tf7qyf>
+References: <176230366393.1647991.7608961849841103569.stgit@frogsfrogsfrogs>
+ <176230366453.1647991.17002688390201603817.stgit@frogsfrogsfrogs>
+ <ewqcnrecsvpi5wy3mufy3swnf46ejnz4kc5ph2eb4iriftdddi@mamiprlrvi75>
+ <CAOQ4uxhfrHNk+b=BW5o7We=jC7ob4JbuL4vQz8QhUKD0VaRP=A@mail.gmail.com>
+ <g2xevmkixxjturg47qv4gokvxvbah275z5slweehj2pvesl3zs@ordfml4v7gaa>
+ <20251105182808.GC196370@frogsfrogsfrogs>
+ <20251105194138.GK196362@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251104-work-guards-v1-0-5108ac78a171@kernel.org>
- <20251104-work-guards-v1-5-5108ac78a171@kernel.org> <CAPjX3FeEZd7gX1OeCxRXrdBMafHOONB2WQO_JOZuxKoVEygzuQ@mail.gmail.com>
- <5puaizn2a4dpoinvkct2nz5zdvvv5vdrlrmwcz7j6vl7qrxicb@b4qi4yfk4a5u>
-In-Reply-To: <5puaizn2a4dpoinvkct2nz5zdvvv5vdrlrmwcz7j6vl7qrxicb@b4qi4yfk4a5u>
-From: Daniel Vacek <neelx@suse.com>
-Date: Thu, 6 Nov 2025 11:04:22 +0100
-X-Gm-Features: AWmQ_bl_uakVnhsIAEGayoqj-TUUrVul9249azhsCYCCICpGbdkLg5N_W05IYjE
-Message-ID: <CAPjX3FdKdV5ouW3Vjx1jMO8Ye_21x5CDtpOn+BBD_tou1gPkSg@mail.gmail.com>
-Subject: Re: [PATCH RFC 5/8] ext4: use super write guard in write_mmp_block()
-To: Jan Kara <jack@suse.cz>
-Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, linux-btrfs@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251105194138.GK196362@frogsfrogsfrogs>
+X-Rspamd-Queue-Id: 61EE3211D5
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_TLS_LAST(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_COUNT_THREE(0.00)[3];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	FREEMAIL_CC(0.00)[suse.cz,gmail.com,kernel.org,lst.de,vger.kernel.org,krisman.be];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[9];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.com:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spam-Score: -4.01
+X-Spam-Level: 
 
-On Thu, 6 Nov 2025 at 10:24, Jan Kara <jack@suse.cz> wrote:
->
-> On Wed 05-11-25 19:33:35, Daniel Vacek wrote:
-> > On Tue, 4 Nov 2025 at 13:16, Christian Brauner <brauner@kernel.org> wrote:
-> > >
-> > > Signed-off-by: Christian Brauner <brauner@kernel.org>
-> > > ---
-> > >  fs/ext4/mmp.c | 8 ++------
-> > >  1 file changed, 2 insertions(+), 6 deletions(-)
-> > >
-> > > diff --git a/fs/ext4/mmp.c b/fs/ext4/mmp.c
-> > > index ab1ff51302fb..6f57c181ff77 100644
-> > > --- a/fs/ext4/mmp.c
-> > > +++ b/fs/ext4/mmp.c
-> > > @@ -57,16 +57,12 @@ static int write_mmp_block_thawed(struct super_block *sb,
-> > >
-> > >  static int write_mmp_block(struct super_block *sb, struct buffer_head *bh)
-> > >  {
-> > > -       int err;
-> > > -
-> > >         /*
-> > >          * We protect against freezing so that we don't create dirty buffers
-> > >          * on frozen filesystem.
-> > >          */
-> > > -       sb_start_write(sb);
-> > > -       err = write_mmp_block_thawed(sb, bh);
-> > > -       sb_end_write(sb);
-> > > -       return err;
-> > > +       scoped_guard(super_write, sb)
-> > > +               return write_mmp_block_thawed(sb, bh);
-> >
-> > Why the scoped_guard here? Should the simple guard(super_write)(sb) be
-> > just as fine here?
->
-> Not sure about Ted but I prefer scoped_guard() to plain guard() because the
-> scoping makes it more visually obvious where the unlocking happens. Of
-> course there has to be a balance as the indentation level can go through
-> the roof but that's not the case here...
+On Wed 05-11-25 11:41:38, Darrick J. Wong wrote:
+> On Wed, Nov 05, 2025 at 10:28:08AM -0800, Darrick J. Wong wrote:
+> > On Wed, Nov 05, 2025 at 03:24:41PM +0100, Jan Kara wrote:
+> > > On Wed 05-11-25 12:14:52, Amir Goldstein wrote:
+> > > > 
+> > > > ...
+> > > > We recently discovered that fsnotify_sb_error() calls are exposed to
+> > > > races with generic_shutdown_super():
+> > > > https://lore.kernel.org/linux-fsdevel/scmyycf2trich22v25s6gpe3ib6ejawflwf76znxg7sedqablp@ejfycd34xvpa/
+> > 
+> > Hrmm.  I've noticed that ever since I added this new patchset, I've been
+> > getting more instances of outright crashes in the timer code, or
+> > workqueue lockups.  I wonder if that UAF is what's going on here...
+> > 
+> > > > Will punting all FS_ERROR events to workqueue help to improve this
+> > > > situation or will it make it worse?
+> > > 
+> > > Worse. But you raise a really good point which I've missed during my
+> > > review. Currently there's nothing which synchronizes pending works with
+> > > superblock getting destroyed with obvious UAF issues already in
+> > > handle_sb_error().
+> > 
+> > I wonder, could __sb_error call get_active_super() to obtain an active
+> > reference to the sb, and then deactivate_super() it in the workqueue
+> > callback?  If we can't get an active ref then we presume that the fs is
+> > already shutting down and don't send the event.
+> 
+> ...and now that I've actually tried it, I realize that we can't actually
+> call get_active_super because it can sleep waiting for s_umount and
+> SB_BORN.  Maybe we could directly atomic_inc_not_zero(&sb->s_active)
+> adn trust that the caller has an active ref to the sb?  I think that's
+> true for anyone calling __sb_error with a non-null inode.
 
-In a general case I completely agree. Though here you can see the end
-of the block right on the next line so it looks quite obvious to me
-how far the guarded region spans.
+Well, the side-effects of holding active sb reference from some workqueue
+item tend to hit back occasionally (like when userspace assumes the device
+isn't used anymore but it in fact still is because of the active
+reference). Every time we tried something like this (last time it was with
+iouring I believe) some user came back and complained his setup broke. In
+this case it should be really rare but still I think it's better to avoid
+it if we can (plus I'm not sure what you'd like to do for __sb_error()
+callers that don't get the inode and thus active reference isn't really
+guaranteed - they still need the protection against umount so that
+handle_sb_error() can do the notifier callchain thing).
 
-But the question is whether to use the guards at all. To me it's a
-huge change in reading and understanding the code as more things are
-implied and not explicit. Such implied things result in additional
-cognitive load. I guess we can handle it eventually. Yet we can fail
-from time to time and it is likely we will, at least in the beginning.
+So I think a better solution might be that generic_shutdown_super() waits
+for pending error notifications after clearing SB_ACTIVE before umount
+proceeds further and __sb_error() just starts discarding new notifications
+as soon as we see SB_ACTIVE is clear.
 
-Well, my point is this is a new style we're not used to, yet. It just
-takes time to adapt. (And usually a few failures to do so.)
-
---nX
-
->                                                                 Honza
-> --
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
