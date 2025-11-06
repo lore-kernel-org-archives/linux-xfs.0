@@ -1,42 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 039D032AADD;
-	Thu,  6 Nov 2025 13:27:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5951132AADD
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Nov 2025 13:27:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762435633; cv=none; b=E8EKmJIWfzg+3HkyyK3KAq0qSxPyqNFV30Y+1avGkQQ4A9gMhSifp88Vc46egImek5WDz5ssOuRvx4jvvyszGNqZjV/yfEL3nHvu/i2UOG20hYtDyB8nqEltTDVyAd8gqjHaIGgrhXAtEUrj9G1DxqnvFR+TDX1Weztqo4VLA8o=
+	t=1762435634; cv=none; b=eL5A5gfEiJch3T9wtD/Cqk9Ao1ZDKPgU7aW3XhFHPLlHFgMqF7HPPDThKCZovmdKvN02TnBL+JnsWht7VyET11OaClPJvs1J7lclK13edTEfZR1mCcIu3LFx9f5lznirMZkeH0xto+JcNSwbp1HmgGuEMlnA+ssUaaSDLNquYHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762435633; c=relaxed/simple;
-	bh=HjwbmFgyyeQwjxfwDWx2/mCtNwWxNP+OGPSvtOzOdmY=;
+	s=arc-20240116; t=1762435634; c=relaxed/simple;
+	bh=s+HE41Hqexopb6otIZtNysHmZaBi33eDrT9biQ6Gv6g=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Cxbx6/4goDSdEBdDttOGBMBgpmjQbJvaouWa/pgAL5HbRPU0u7ZREPYsbeSUvskck6PcpTQXK3Xp2unuWQHf7sC2D0Y8ifL+1wXSzJMSVcX6JJQEUF2k00JSPtDtLs3aZIX5DGn3iwIrHZqe0ldTMSnaMsbfyTktPTl/RJcO10g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=orlA5546; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=oiw9oZcMaX29QeV3Kx2pfmGweVzPud0urGXsNs6EIrXvUoM2wXdIYfI0Jhe19wryX4gFPlSDOzYom4gya9h3qGvkJbEm0N/E/XWj4H0eJur/J4gRGEJ9y5Wd4bEM9pHgRoHRmD5p3Dd0FZEY/lU+DQzIV9AtfV+M+mYOEAEksgQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IchTcykC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="orlA5546"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B58F5C116D0;
-	Thu,  6 Nov 2025 13:27:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IchTcykC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E55BCC16AAE;
+	Thu,  6 Nov 2025 13:27:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762435630;
-	bh=HjwbmFgyyeQwjxfwDWx2/mCtNwWxNP+OGPSvtOzOdmY=;
+	s=k20201202; t=1762435631;
+	bh=s+HE41Hqexopb6otIZtNysHmZaBi33eDrT9biQ6Gv6g=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=orlA5546GZH0S/J86Oj0J2LsZKHgF1JJbmMmR/AQHhhHvxUNpZ9QKlpkFdgkVgYSf
-	 Y1b2Dvt9BD237Ei1jZlaMQtFpyT6hjxvp//vk7A8AXj378hdZ+U1iv8BMDylIGpv51
-	 OtVXI60IapoN4ZKT0ISe3HtPEqfD1ZGaQrtWiVx0pSmJWyqmK8gdq4Z5q9m+gxqqmz
-	 +orsK23s35p1t3jyhatiYmJqVNC0R47+iIouV/Z4MgSZdJYIxUXLpJwxaDd+iLW90k
-	 3SlMqhTCTVA4YuirzYncfqJGU4cFZRwvafpbIcGkxC67xvgRnb3iRAM4IuZFPkvX+E
-	 XvQREepKxT0Cg==
+	b=IchTcykCSiCXDvGTraEQmHrevHP69sFnzAQndDhuIImepqYg5gWwEDUfBCGOpnIaW
+	 6Q11nq1vDMGmZZ8P0dJB/+TWQGvlxFzzv1TUpkD70O2XQphmisso9IAlWFVIJn0xmg
+	 is/mUP105Ood75ubHjMroRD2CIapw0b6UckEnLeJaH40ROIApsFLyqyf1tPYZZbk6n
+	 a2dwlXKOUU7MDjvtwoG618TzbUWODylAq75n6vwY780vNuA2uG8WCgDo8ohTyHxLvx
+	 XYLfTSAZuQgf4Du6w4XgEo7NpBDJJ067tAlNXtqoPg2h7pgZ3rmyJOMLNMP7XvNEZq
+	 T9LTFeuftYpDQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, Zorro Lang <zlang@redhat.com>, 
- fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>, 
- john.g.garry@oracle.com, linux-xfs@vger.kernel.org
-In-Reply-To: <20251105001200.GV196370@frogsfrogsfrogs>
-References: <20251105001200.GV196370@frogsfrogsfrogs>
-Subject: Re: [PATCH v2 1/2] xfs: fix delalloc write failures in
- software-provided atomic writes
-Message-Id: <176243562837.345504.16909430155008949617.b4-ty@kernel.org>
-Date: Thu, 06 Nov 2025 14:27:08 +0100
+To: Christoph Hellwig <hch@lst.de>
+Cc: hans.holmberg@wdc.com, linux-xfs@vger.kernel.org
+In-Reply-To: <20251104135053.2455097-1-hch@lst.de>
+References: <20251104135053.2455097-1-hch@lst.de>
+Subject: Re: [PATCH] xfs: fix a rtgroup leak when xfs_init_zone fails
+Message-Id: <176243563064.345504.3036095110850646991.b4-ty@kernel.org>
+Date: Thu, 06 Nov 2025 14:27:10 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,29 +44,16 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Tue, 04 Nov 2025 16:12:00 -0800, Darrick J. Wong wrote:
-> With the 20 Oct 2025 release of fstests, generic/521 fails for me on
-> regular (aka non-block-atomic-writes) storage:
+On Tue, 04 Nov 2025 08:50:53 -0500, Christoph Hellwig wrote:
+> Drop the rtgrop reference when xfs_init_zone fails for a conventional
+> device.
 > 
-> QA output created by 521
-> dowrite: write: Input/output error
-> LOG DUMP (8553 total operations):
-> 1(  1 mod 256): SKIPPED (no operation)
-> 2(  2 mod 256): WRITE    0x7e000 thru 0x8dfff	(0x10000 bytes) HOLE
-> 3(  3 mod 256): READ     0x69000 thru 0x79fff	(0x11000 bytes)
-> 4(  4 mod 256): FALLOC   0x53c38 thru 0x5e853	(0xac1b bytes) INTERIOR
-> 5(  5 mod 256): COPY 0x55000 thru 0x59fff	(0x5000 bytes) to 0x25000 thru 0x29fff
-> 6(  6 mod 256): WRITE    0x74000 thru 0x88fff	(0x15000 bytes)
-> 7(  7 mod 256): ZERO     0xedb1 thru 0x11693	(0x28e3 bytes)
 > 
-> [...]
 
 Applied to for-next, thanks!
 
-[1/2] xfs: fix delalloc write failures in software-provided atomic writes
-      commit: 8d54eacd82a0623a963e0c150ad3b02970638b0d
-[2/2] xfs: fix various problems in xfs_atomic_write_cow_iomap_begin
-      commit: 8d7bba1e8314013ecc817a91624104ceb9352ddc
+[1/1] xfs: fix a rtgroup leak when xfs_init_zone fails
+      commit: f5714a3c1a5658251360603231efe1bee21f9c2c
 
 Best regards,
 -- 
