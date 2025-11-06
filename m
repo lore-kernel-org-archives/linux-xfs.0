@@ -1,137 +1,169 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from flow-b4-smtp.messagingengine.com (flow-b4-smtp.messagingengine.com [202.12.124.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD52C296BB3;
-	Wed,  5 Nov 2025 22:37:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F72433E7;
+	Thu,  6 Nov 2025 00:53:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762382237; cv=none; b=pFYJBe9V4hYXcv0zDA99N1xGQK2Qf4rMPhNVbuVpKbUCeAag8wJEjtevL474/NzxyOHqtfPphD6V3sBa7aJv08rGG2tYdJ4CE6qRol/44bmMEaISeUOI34hhcysjO/qE6p/nPa6UTs3xV3MrykWNogZiqeSlS140/avkbAOBTtI=
+	t=1762390438; cv=none; b=l4lDySHiT6G6wIaJ4TCBXPKTiKfiPoIb3vlhjhguV1cvlzuLnSRs1+m6G41WVrzFH7d7Kwr4K1v+NH+h8RqakxrVEj8AeVWTR/UUSSucBaZGY/IVxycDpgPncZ1mB/fBiGdkoH4iY+XdwF8FX6toldtMCCHqkFFQNgishnmQn4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762382237; c=relaxed/simple;
-	bh=q+C3/IslLpBtokaaPSnhZWXbEjSBqlpoHmBWRxFsodI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sg4w6wLS5smKZ3vTJePbI0fu2/VmpWhzCNTs9IcB9FyrJYzD12haATcxB8q2UFe2dh7/JGOaO6JY/wnL+N3mk/P8FRmorv/IbESUOtfTeRR1pdGkEwLQv3LqXeDmPpGLmFUmmRqY/WCAeJbliAvekcpqdPcX9te6SVnaihTReiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O5IcYbS8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762390438; c=relaxed/simple;
+	bh=3ERjpLCmuIj9csZ2sFv6nTmhf6csyCGZas5vCN/TMfM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Kj6w7u7noEoSrWotdlq8COerqf4/hwzeItBAtFbShXwN/tf3HxxoDyiGpSXb0Rp3Vhi3l8KtwVRRWOW9UYd5y2J53O8avnlAq5V3PP1b0Le+h0SYmf36VPQ83DRUy0nrDU3o2xtegUJkwcmNvA9szY2lNHtMfFZnN604NEZO8Nw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net; spf=pass smtp.mailfrom=ownmail.net; dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b=Vavf093Z; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=XfnnnsrX; arc=none smtp.client-ip=202.12.124.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ownmail.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O5IcYbS8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4876AC4CEFB;
-	Wed,  5 Nov 2025 22:37:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762382236;
-	bh=q+C3/IslLpBtokaaPSnhZWXbEjSBqlpoHmBWRxFsodI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=O5IcYbS84fxyFSuOR/5dI9tPNB7thCsZYBtMSEIQiUXhFTWKaHLJlAStw3OJsm2Xo
-	 udPlC66/X8WFDYHfJqC7h4aai0y1wARt7j4TA6LZxPa2vr0VW2gr283YpSDY3GnROx
-	 WgHl8hf63njPD7k2dJg/lTy0On98qWpdAcAQ+n4ZpT88ZFoZX/UL/+D+2MJQHGbLs/
-	 FiVJWB6w4QD8RvS0FRBTtYo7HG3X0n/ygGPlE+Avd5O0mkRNtCZNb5rPC5zHPf4Uch
-	 7ll/fMbFK1xlPIxHt8BDyLbjM/XflmwMcNNSsw/KZc+PmfQBqAqZcy9QvKcA7q8x0U
-	 Oc/VysDYKiVoA==
-Date: Wed, 5 Nov 2025 14:37:15 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs: replace zero range flush with folio batch
-Message-ID: <20251105223715.GI196370@frogsfrogsfrogs>
-References: <20251016190303.53881-1-bfoster@redhat.com>
- <20251016190303.53881-7-bfoster@redhat.com>
+	dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b="Vavf093Z";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="XfnnnsrX"
+Received: from phl-compute-11.internal (phl-compute-11.internal [10.202.2.51])
+	by mailflow.stl.internal (Postfix) with ESMTP id D6C4713005D8;
+	Wed,  5 Nov 2025 19:53:54 -0500 (EST)
+Received: from phl-mailfrontend-02 ([10.202.2.163])
+  by phl-compute-11.internal (MEProxy); Wed, 05 Nov 2025 19:53:55 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ownmail.net; h=
+	cc:cc:content-transfer-encoding:content-type:date:date:from:from
+	:in-reply-to:message-id:mime-version:reply-to:reply-to:subject
+	:subject:to:to; s=fm3; t=1762390434; x=1762397634; bh=fW2s5ypcy3
+	mE4M5DNemKjsqRw12Wruu7AEwnCZErNvY=; b=Vavf093ZKA3HaVhSLm3vlSy8Xd
+	u0/5BH0TUN7wjN7r7AlMjXvF2BpEAPO67/rudwOQwwEiiNXZWFRKsdhPxEFx/0vR
+	q8eJ8l45Azxa213QOlq/txxZSGJPD0pPzDFRnpEmM/3YIWq7vly659u4OPkgyef1
+	dxndM72zUIuOZEqEnFiBYI7PeNbz+R/Usg9GvQBtK6RSlHRcv9sK8SvFCeHT6fbt
+	AlsV8kv6W0CoXXKWhZ+RQ/fNpuit9Cn/c/6vyNNq31CcBUBKQFSgpwX+jTOYseBj
+	rlrJY32JklsWuvGTEVnuQmb6SbNnHOlu1bqxN8KY5R/pLruXNs9NgF5nTBpg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:date:date:feedback-id:feedback-id:from:from
+	:in-reply-to:message-id:mime-version:reply-to:reply-to:subject
+	:subject:to:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+	fm3; t=1762390434; x=1762397634; bh=fW2s5ypcy3mE4M5DNemKjsqRw12W
+	ruu7AEwnCZErNvY=; b=XfnnnsrXCRSGFq11XFo2dnyX9afQskqjRuN4zOxhuKc+
+	QEaAJrZyyqmOeS/brWS6kHbd4MsQD2vzOXUGgEXQxxC7T4YwWHOJJDXBXkTXES7p
+	7NYDhX6RCBvrmoGyyAlsJNutNgW/edGjNMabYrdjzhuTcsc5oxcK+XtolNytCdcF
+	GFjo1qkifvGQu8q5Gu2YeCKTJyDFnTKKoghHuouiVuZecxMAw++fnW0O9cFwHEn2
+	oPZI2nVYDEYcUY4a7I4HQFVWPIWF3N4iwBe+3loW7PQAbW6tAZqqytGC7lju2nOm
+	+HXffy50EjFktW1f2DHhz6AxedNfLPxQqXAmSYiBLQ==
+X-ME-Sender: <xms:ofELaWVM0Ec2_3qQmdGrCZh7bOmwSLLeNpfej0MUloFVhDsEruyleA>
+    <xme:ofELaXoTcah6tJhEe2L4jeQ45KX76lk6p5f3XSAib8BO2dXitRNR8_BuHcUMoo80b
+    nJlT89nCK0ue2vUhe7k_NBATsa4GCxE6sPJFc8iTb3OQbyFmw>
+X-ME-Received: <xmr:ofELaXYsQ_tE_nET7oQsgxRXL3aP83AKuo3EFeq7hN0WswSLYRPoKPu-KmQ6woJMMl3MUIb4qwz0l2hTo6ZA7pJXOp1yVT5N5D2cV5DgFkOl>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdeggddukeehfeelucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhephffvvefufffkofhrggfgsedtkeertdertddtnecuhfhrohhmpefpvghilheurhho
+    fihnuceonhgvihhlsgesohifnhhmrghilhdrnhgvtheqnecuggftrfgrthhtvghrnhepge
+    etfeegtddtvdeigfegueevfeelleelgfejueefueektdelieeikeevtdelveelnecuvehl
+    uhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepnhgvihhlsgesoh
+    ifnhhmrghilhdrnhgvthdpnhgspghrtghpthhtohepgedtpdhmohguvgepshhmthhpohhu
+    thdprhgtphhtthhopehvihhrohesiigvnhhivhdrlhhinhhugidrohhrghdruhhkpdhrtg
+    hpthhtohepshgvlhhinhhugiesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthho
+    pehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplh
+    hinhhugidquhhnihhonhhfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthho
+    pehlihhnuhigqdhsvggtuhhrihhthidqmhhoughulhgvsehvghgvrhdrkhgvrhhnvghlrd
+    horhhgpdhrtghpthhtoheplhhinhhugidqnhhfshesvhhgvghrrdhkvghrnhgvlhdrohhr
+    ghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdroh
+    hrghdprhgtphhtthhopehlihhnuhigqdhfshguvghvvghlsehvghgvrhdrkhgvrhhnvghl
+    rdhorhhgpdhrtghpthhtoheplhhinhhugidqtghifhhssehvghgvrhdrkhgvrhhnvghlrd
+    horhhg
+X-ME-Proxy: <xmx:ofELabCTghuLfp0--0hYEkU2bwBXxKLJ71aRdgB6mvhwcj8SFcycAQ>
+    <xmx:ofELaSGZGYnMpOUyRsWpCEX8xkOYu-fRpkQJkv-fLFW6suYrq6hQ9A>
+    <xmx:ofELaXznwnvFLJ_kGJc6OO6fsviAct-9OHOf8EWvQ0Tw_WAOSAA3VQ>
+    <xmx:ofELaXcMf5i-Rj0C8H43I4YDLffIOq2ZHMfIdGInyI7PfUgf7YJDMQ>
+    <xmx:ovELaatntL_mJ-3ijxYxjoG5eH2TE3wdGzPm9xGwHejIKZ20FUl_jMTO>
+Feedback-ID: iab3e480c:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 5 Nov 2025 19:53:43 -0500 (EST)
+From: NeilBrown <neilb@ownmail.net>
+To: "Alexander Viro" <viro@zeniv.linux.org.uk>,
+	"Christian Brauner" <brauner@kernel.org>,
+	"Amir Goldstein" <amir73il@gmail.com>
+Cc: "Jan Kara" <jack@suse.cz>,	linux-fsdevel@vger.kernel.org,
+	Jeff Layton <jlayton@kernel.org>,	Chris Mason <clm@fb.com>,
+	David Sterba <dsterba@suse.com>,	David Howells <dhowells@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,	Tyler Hicks <code@tyhicks.com>,
+	Miklos Szeredi <miklos@szeredi.hu>,	Chuck Lever <chuck.lever@oracle.com>,
+	Olga Kornievskaia <okorniev@redhat.com>,	Dai Ngo <Dai.Ngo@oracle.com>,
+	Namjae Jeon <linkinjeon@kernel.org>,	Steve French <smfrench@gmail.com>,
+	Sergey Senozhatsky <senozhatsky@chromium.org>,
+	Carlos Maiolino <cem@kernel.org>,
+	John Johansen <john.johansen@canonical.com>,
+	Paul Moore <paul@paul-moore.com>,	James Morris <jmorris@namei.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	Stephen Smalley <stephen.smalley.work@gmail.com>,
+	Ondrej Mosnacek <omosnace@redhat.com>,	Mateusz Guzik <mjguzik@gmail.com>,
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+	Stefan Berger <stefanb@linux.ibm.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,	linux-kernel@vger.kernel.org,
+	netfs@lists.linux.dev,	ecryptfs@vger.kernel.org,
+	linux-nfs@vger.kernel.org,	linux-unionfs@vger.kernel.org,
+	linux-cifs@vger.kernel.org,	linux-xfs@vger.kernel.org,
+	linux-security-module@vger.kernel.org,	selinux@vger.kernel.org
+Subject: [PATCH v5 00/14] Create and use APIs to centralise locking for directory ops.
+Date: Thu,  6 Nov 2025 11:50:44 +1100
+Message-ID: <20251106005333.956321-1-neilb@ownmail.net>
+X-Mailer: git-send-email 2.50.0.107.gf914562f5916.dirty
+Reply-To: NeilBrown <neil@brown.name>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251016190303.53881-7-bfoster@redhat.com>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Oct 16, 2025 at 03:03:03PM -0400, Brian Foster wrote:
-> Now that the zero range pagecache flush is purely isolated to
-> providing zeroing correctness in this case, we can remove it and
-> replace it with the folio batch mechanism that is used for handling
-> unwritten extents.
-> 
-> This is still slightly odd in that XFS reports a hole vs. a mapping
-> that reflects the COW fork extents, but that has always been the
-> case in this situation and so a separate issue. We drop the iomap
-> warning that assumes the folio batch is always associated with
-> unwritten mappings, but this is mainly a development assertion as
-> otherwise the core iomap fbatch code doesn't care much about the
-> mapping type if it's handed the set of folios to process.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/iomap/buffered-io.c |  4 ----
->  fs/xfs/xfs_iomap.c     | 16 ++++------------
->  2 files changed, 4 insertions(+), 16 deletions(-)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index d6de689374c3..7bc4b8d090ee 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1534,10 +1534,6 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
->  	while ((ret = iomap_iter(&iter, ops)) > 0) {
->  		const struct iomap *srcmap = iomap_iter_srcmap(&iter);
->  
-> -		if (WARN_ON_ONCE((iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
-> -				 srcmap->type != IOMAP_UNWRITTEN))
-> -			return -EIO;
-> -
->  		if (!(iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
->  		    (srcmap->type == IOMAP_HOLE ||
->  		     srcmap->type == IOMAP_UNWRITTEN)) {
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 29f1462819fa..5a845a0ded79 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1704,7 +1704,6 @@ xfs_buffered_write_iomap_begin(
->  {
->  	struct iomap_iter	*iter = container_of(iomap, struct iomap_iter,
->  						     iomap);
-> -	struct address_space	*mapping = inode->i_mapping;
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	struct xfs_mount	*mp = ip->i_mount;
->  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> @@ -1736,7 +1735,6 @@ xfs_buffered_write_iomap_begin(
->  	if (error)
->  		return error;
->  
-> -restart:
->  	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
->  	if (error)
->  		return error;
-> @@ -1812,16 +1810,10 @@ xfs_buffered_write_iomap_begin(
->  		xfs_trim_extent(&imap, offset_fsb,
->  			    cmap.br_startoff + cmap.br_blockcount - offset_fsb);
->  		start = XFS_FSB_TO_B(mp, imap.br_startoff);
-> -		end = XFS_FSB_TO_B(mp,
-> -				   imap.br_startoff + imap.br_blockcount) - 1;
-> -		if (filemap_range_needs_writeback(mapping, start, end)) {
-> -			xfs_iunlock(ip, lockmode);
-> -			error = filemap_write_and_wait_range(mapping, start,
-> -							     end);
-> -			if (error)
-> -				return error;
-> -			goto restart;
-> -		}
-> +		end = XFS_FSB_TO_B(mp, imap.br_startoff + imap.br_blockcount);
-> +		iomap_flags |= iomap_fill_dirty_folios(iter, &start, end);
-> +		xfs_trim_extent(&imap, offset_fsb,
-> +				XFS_B_TO_FSB(mp, start) - offset_fsb);
 
-Hrm, ok.  This replaces the pagecache flush with passing in folios and
-letting iomap zero the folios regardless of whatever's in the mapping.
-That seems to me like a reasonable way to solve the immediate problem
-without the huge reengineering ->iomap_begin project.
+This version contains a couple of fixes thanks to Al's review and Dan's
+robot, and a couple of s-o-b and a-b tags.
+It is based on vfs-all (e90fbb585e64).
 
-The changes here mostly look ok to me, though I wonder how well this all
-meshes with all the other iomap work headed to 6.19...
+Previous description:
 
---D
+ this series is the next part of my effort to change directory-op
+ locking to allow multiple concurrent ops in a directory.  Ultimately we
+ will (in my plan) lock the target dentry(s) rather than the whole
+ parent directory.
 
->  
->  		goto found_imap;
->  	}
-> -- 
-> 2.51.0
-> 
-> 
+ To help with changing the locking protocol, this series centralises
+ locking and lookup in some helpers.  The various helpers are introduced
+ and then used in the same patch - roughly one patch per helper though
+ with various exceptions.
+
+ I haven't introduced these helpers into the various filesystems that
+ Al's tree-in-dcache series is changing.  That series introduces and
+ uses similar helpers tuned to the specific needs of that set of
+ filesystems.  Ultimately all the helpers will use the same backends
+ which can then be adjusted when it is time to change the locking
+ protocol.
+
+ One change that deserves highlighting is in patch 13 where vfs_mkdir()
+ is changed to unlock the parent on failure, as well as the current
+ behaviour of dput()ing the dentry on failure.  Once this change is in
+ place, the final step of both create and an remove sequences only
+ requires the target dentry, not the parent.  So e.g.  end_creating() is
+ only given the dentry (which may be IS_ERR() after vfs_mkdir()).  This
+ helps establish the pattern that it is the dentry that is being locked
+ and unlocked (the lock is currently held on dentry->d_parent->d_inode,
+ but that can change).
+
+ Please review the changes I've made to your respective code areas and
+ let us know of any problems.
+
+Thanks,
+NeilBrown
+
+ [PATCH v5 01/14] debugfs: rename end_creating() to
+ [PATCH v5 02/14] VFS: introduce start_dirop() and end_dirop()
+ [PATCH v5 03/14] VFS: tidy up do_unlinkat()
+ [PATCH v5 04/14] VFS/nfsd/cachefiles/ovl: add start_creating() and
+ [PATCH v5 05/14] VFS/nfsd/cachefiles/ovl: introduce start_removing()
+ [PATCH v5 06/14] VFS: introduce start_creating_noperm() and
+ [PATCH v5 07/14] VFS: introduce start_removing_dentry()
+ [PATCH v5 08/14] VFS: add start_creating_killable() and
+ [PATCH v5 09/14] VFS/nfsd/ovl: introduce start_renaming() and
+ [PATCH v5 10/14] VFS/ovl/smb: introduce start_renaming_dentry()
+ [PATCH v5 11/14] Add start_renaming_two_dentries()
+ [PATCH v5 12/14] ecryptfs: use new start_creating/start_removing APIs
+ [PATCH v5 13/14] VFS: change vfs_mkdir() to unlock on failure.
+ [PATCH v5 14/14] VFS: introduce end_creating_keep()
