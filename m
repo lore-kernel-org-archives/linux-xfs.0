@@ -1,61 +1,77 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BB4232B9AF;
-	Thu,  6 Nov 2025 12:49:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 039D032AADD;
+	Thu,  6 Nov 2025 13:27:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762433349; cv=none; b=WTNnhhWYr3nYvzeZ8nHL4xIyRn0W41alKesWwvmtF4Db3VYyeqG/dNr2ePonEQJ/mStkoQ/ynkmUN3pIQMgfyxH3RHsyRk0dYD+dCRsEOmE5wV134uj5lOSATj+8gP70+82XRFxw1wABn4JoxAginnHS5MrWP9b8fJ0DuwI+BUQ=
+	t=1762435633; cv=none; b=E8EKmJIWfzg+3HkyyK3KAq0qSxPyqNFV30Y+1avGkQQ4A9gMhSifp88Vc46egImek5WDz5ssOuRvx4jvvyszGNqZjV/yfEL3nHvu/i2UOG20hYtDyB8nqEltTDVyAd8gqjHaIGgrhXAtEUrj9G1DxqnvFR+TDX1Weztqo4VLA8o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762433349; c=relaxed/simple;
-	bh=AAcmMA1g/UsJicNcMiuPDIq1WYbpJDVtTTqPRl9ZtDU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m7w7Ycv3OED4e+Ym+Z2f8VW6woPCFmOLT+vYqte5fhgZ9ao7vMYqorax03khLVNGfUjunpn1SGGDQFXGUgeULY6fh72u4SNrLsGqPzCos4jtJ6lwOmrg230IfIN2Okhh8rhWEDi7HuldckXFmIpM3CSJPAcrvRYtorZk8sDzeZ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id C090B227A87; Thu,  6 Nov 2025 13:49:00 +0100 (CET)
-Date: Thu, 6 Nov 2025 13:49:00 +0100
-From: hch <hch@lst.de>
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, hch <hch@lst.de>,
-	Jan Kara <jack@suse.cz>, Keith Busch <kbusch@kernel.org>,
-	Dave Chinner <david@fromorbit.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Christian Brauner <brauner@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Subject: Re: fall back from direct to buffered I/O when stable writes are
- required
-Message-ID: <20251106124900.GA6144@lst.de>
-References: <aQPyVtkvTg4W1nyz@dread.disaster.area> <20251031130050.GA15719@lst.de> <aQTcb-0VtWLx6ghD@kbusch-mbp> <20251031164701.GA27481@lst.de> <kpk2od2fuqofdoneqse2l3gvn7wbqx3y4vckmnvl6gc2jcaw4m@hsxqmxshckpj> <20251103122111.GA17600@lst.de> <20251104233824.GO196370@frogsfrogsfrogs> <20251105141130.GB22325@lst.de> <20251105214407.GN196362@frogsfrogsfrogs> <9530fca4-418d-4415-b365-cad04a06449b@wdc.com>
+	s=arc-20240116; t=1762435633; c=relaxed/simple;
+	bh=HjwbmFgyyeQwjxfwDWx2/mCtNwWxNP+OGPSvtOzOdmY=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=Cxbx6/4goDSdEBdDttOGBMBgpmjQbJvaouWa/pgAL5HbRPU0u7ZREPYsbeSUvskck6PcpTQXK3Xp2unuWQHf7sC2D0Y8ifL+1wXSzJMSVcX6JJQEUF2k00JSPtDtLs3aZIX5DGn3iwIrHZqe0ldTMSnaMsbfyTktPTl/RJcO10g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=orlA5546; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="orlA5546"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B58F5C116D0;
+	Thu,  6 Nov 2025 13:27:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762435630;
+	bh=HjwbmFgyyeQwjxfwDWx2/mCtNwWxNP+OGPSvtOzOdmY=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=orlA5546GZH0S/J86Oj0J2LsZKHgF1JJbmMmR/AQHhhHvxUNpZ9QKlpkFdgkVgYSf
+	 Y1b2Dvt9BD237Ei1jZlaMQtFpyT6hjxvp//vk7A8AXj378hdZ+U1iv8BMDylIGpv51
+	 OtVXI60IapoN4ZKT0ISe3HtPEqfD1ZGaQrtWiVx0pSmJWyqmK8gdq4Z5q9m+gxqqmz
+	 +orsK23s35p1t3jyhatiYmJqVNC0R47+iIouV/Z4MgSZdJYIxUXLpJwxaDd+iLW90k
+	 3SlMqhTCTVA4YuirzYncfqJGU4cFZRwvafpbIcGkxC67xvgRnb3iRAM4IuZFPkvX+E
+	 XvQREepKxT0Cg==
+From: Carlos Maiolino <cem@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, Zorro Lang <zlang@redhat.com>, 
+ fstests@vger.kernel.org, Ritesh Harjani <ritesh.list@gmail.com>, 
+ john.g.garry@oracle.com, linux-xfs@vger.kernel.org
+In-Reply-To: <20251105001200.GV196370@frogsfrogsfrogs>
+References: <20251105001200.GV196370@frogsfrogsfrogs>
+Subject: Re: [PATCH v2 1/2] xfs: fix delalloc write failures in
+ software-provided atomic writes
+Message-Id: <176243562837.345504.16909430155008949617.b4-ty@kernel.org>
+Date: Thu, 06 Nov 2025 14:27:08 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9530fca4-418d-4415-b365-cad04a06449b@wdc.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-On Thu, Nov 06, 2025 at 09:50:10AM +0000, Johannes Thumshirn wrote:
-> On 11/5/25 10:44 PM, Darrick J. Wong wrote:
-> > Just out of curiosity -- is qemu itself mutating the buffers that it is
-> > passing down to the lower levels via dio?  Or is it a program in the
-> > guest that's mutating buffers that are submitted for dio, which then get
-> > zerocopied all the way down to the hypervisor?
+On Tue, 04 Nov 2025 16:12:00 -0800, Darrick J. Wong wrote:
+> With the 20 Oct 2025 release of fstests, generic/521 fails for me on
+> regular (aka non-block-atomic-writes) storage:
 > 
-> If my memory serves me right it is the guest (or at least can be). I 
-> remember a bug report on btrfs where a Windows guest had messed up 
-> checksums because of modifying inflight I/O.
+> QA output created by 521
+> dowrite: write: Input/output error
+> LOG DUMP (8553 total operations):
+> 1(  1 mod 256): SKIPPED (no operation)
+> 2(  2 mod 256): WRITE    0x7e000 thru 0x8dfff	(0x10000 bytes) HOLE
+> 3(  3 mod 256): READ     0x69000 thru 0x79fff	(0x11000 bytes)
+> 4(  4 mod 256): FALLOC   0x53c38 thru 0x5e853	(0xac1b bytes) INTERIOR
+> 5(  5 mod 256): COPY 0x55000 thru 0x59fff	(0x5000 bytes) to 0x25000 thru 0x29fff
+> 6(  6 mod 256): WRITE    0x74000 thru 0x88fff	(0x15000 bytes)
+> 7(  7 mod 256): ZERO     0xedb1 thru 0x11693	(0x28e3 bytes)
+> 
+> [...]
 
-qemu passes I/O through, so yes it is guest controller.  Windows is most
-famous, but the Linux swap code can trigger it easily too.
+Applied to for-next, thanks!
+
+[1/2] xfs: fix delalloc write failures in software-provided atomic writes
+      commit: 8d54eacd82a0623a963e0c150ad3b02970638b0d
+[2/2] xfs: fix various problems in xfs_atomic_write_cow_iomap_begin
+      commit: 8d7bba1e8314013ecc817a91624104ceb9352ddc
+
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
