@@ -1,34 +1,47 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF136281357;
-	Thu,  6 Nov 2025 17:05:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE81D34EEEC;
+	Thu,  6 Nov 2025 17:06:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762448709; cv=none; b=OpSxDyWnZZgGXfw2aE+NTIAZU4otq3HMqgMz/wfgLspeZEf7kC2V2TsqUG+P8SUUl3m382w+jXl3KopE57PDbAluFVJ/AMM1uoa42ovsmBb2ZCs0P/Mrj4PIk3eTeWY1NxHbRNf9XZH229ULNN3cMQAXcfoehyvijHQL6FdXkc0=
+	t=1762448779; cv=none; b=Qwhw879Vu2g1H07e8+vl1wEGLvXCqBxkjen+GLz09p0MJv1ZZvfxS97oAeZbehhOL8y62/yX8ay+DuoG3LUBGwKGcdzif+ed2Y6yS+m9Rpu5QBjxkVbWE7oc1Yi7U4Fdk7hzSZwSGgyNAWHRre67LSIdXq9nmthmG0CEz6sbU2w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762448709; c=relaxed/simple;
-	bh=AJDmimB9BIj3xJ2WN3XZvLrcXtlKdcgLfwBmJ5jDjzQ=;
+	s=arc-20240116; t=1762448779; c=relaxed/simple;
+	bh=HYqSbMVlgRrqd3ughnLCDZUQclzo5+JlWp/SGvPq9II=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qAWMmIiQU4MD9aECc3fanyjn786zwlmg2OE2aVlqj3WIPOQvohw/jUTOrdZUzXSvnSi9yJWqLZKHIKu6gOAbUd4ckZbUlZZ/8fFqlblVt0auPavm4LnthaUD/T6zjR1SI0ScIEepTsIxVCyq1AhGbMDKtj09t/ix2sx2YNTh9pQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 53C546732A; Thu,  6 Nov 2025 18:05:01 +0100 (CET)
-Date: Thu, 6 Nov 2025 18:05:01 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Florian Weimer <fweimer@redhat.com>
-Cc: Matthew Wilcox <willy@infradead.org>, Christoph Hellwig <hch@lst.de>,
-	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>,
-	Dave Chinner <david@fromorbit.com>,
-	"Darrick J . Wong" <djwong@kernel.org>,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	libc-alpha@sourceware.org
-Subject: Re: [RFC] xfs: fake fallocate success for always CoW inodes
-Message-ID: <20251106170501.GA25601@lst.de>
-References: <20251106133530.12927-1-hans.holmberg@wdc.com> <lhuikfngtlv.fsf@oldenburg.str.redhat.com> <20251106135212.GA10477@lst.de> <aQyz1j7nqXPKTYPT@casper.infradead.org> <lhu4ir7gm1r.fsf@oldenburg.str.redhat.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=MNJ4nq9NlI8szud5/wCh2plC2ivOCP7qJ1EzwCORjbZpdevutiVX2SDSao0c995bMP1woPsvEGxa6JGi8ONR+wYY8H7HnHeR82Q2RVNB55H+WP56BHZtM377oUt+wQuMn7fZbc8r8t9Qy6hJDCddrQwN3+DUDHoVL6+zLj+/J9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lpmjo3Ie; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lpmjo3Ie"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42B75C16AAE;
+	Thu,  6 Nov 2025 17:06:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762448779;
+	bh=HYqSbMVlgRrqd3ughnLCDZUQclzo5+JlWp/SGvPq9II=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Lpmjo3IePtJIA9J3kBZEIZl5WgYzWCc/p5gARiwQwsrhvZhVjJ3q9++asd5Bfip31
+	 /wZ72cjEbdeOrSIvo/eYnYOCQ2/TPG9nLBjrqqenKtf+wleMtg6KvDi4ht/+Vi2tCh
+	 bY+WJFPDpIC2wzQZM8KUVW5/hwAEFq3+ncVoz/qiCxt1rC8zGokZTcx2vFV07cjSw3
+	 jqtUm+M+vNE9V+NSU642+TsaGotfX0L+5CphHRR1WEDIYSJdGsgH9zOsnB4R/4iuV2
+	 SvPBTPqqnqQQQ+KyAjZZwCu9cvNPiSz0iPPDTe/ulDeybAyQDUD4Kr3EaBY+qeyiAf
+	 kG+HWxDOxHh3A==
+Date: Thu, 6 Nov 2025 09:06:18 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Amir Goldstein <amir73il@gmail.com>, cem@kernel.org, hch@lst.de,
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	gabriel@krisman.be, Christian Brauner <brauner@kernel.org>
+Subject: Re: [PATCH 1/6] iomap: report file IO errors to fsnotify
+Message-ID: <20251106170618.GR196362@frogsfrogsfrogs>
+References: <176230366393.1647991.7608961849841103569.stgit@frogsfrogsfrogs>
+ <176230366453.1647991.17002688390201603817.stgit@frogsfrogsfrogs>
+ <ewqcnrecsvpi5wy3mufy3swnf46ejnz4kc5ph2eb4iriftdddi@mamiprlrvi75>
+ <CAOQ4uxhfrHNk+b=BW5o7We=jC7ob4JbuL4vQz8QhUKD0VaRP=A@mail.gmail.com>
+ <g2xevmkixxjturg47qv4gokvxvbah275z5slweehj2pvesl3zs@ordfml4v7gaa>
+ <20251105182808.GC196370@frogsfrogsfrogs>
+ <20251105194138.GK196362@frogsfrogsfrogs>
+ <flgcbd3bzaa6sdlnspub7htwyengcuuadbcws32edns7z5fpgr@kyjoo4tf7qyf>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,24 +50,73 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <lhu4ir7gm1r.fsf@oldenburg.str.redhat.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <flgcbd3bzaa6sdlnspub7htwyengcuuadbcws32edns7z5fpgr@kyjoo4tf7qyf>
 
-On Thu, Nov 06, 2025 at 05:31:28PM +0100, Florian Weimer wrote:
-> It's been a few years, I think, and maybe we should drop the allocation
-> logic from posix_fallocate in glibc?  Assuming that it's implemented
-> everywhere it makes sense?
+On Thu, Nov 06, 2025 at 11:13:45AM +0100, Jan Kara wrote:
+> On Wed 05-11-25 11:41:38, Darrick J. Wong wrote:
+> > On Wed, Nov 05, 2025 at 10:28:08AM -0800, Darrick J. Wong wrote:
+> > > On Wed, Nov 05, 2025 at 03:24:41PM +0100, Jan Kara wrote:
+> > > > On Wed 05-11-25 12:14:52, Amir Goldstein wrote:
+> > > > > 
+> > > > > ...
+> > > > > We recently discovered that fsnotify_sb_error() calls are exposed to
+> > > > > races with generic_shutdown_super():
+> > > > > https://lore.kernel.org/linux-fsdevel/scmyycf2trich22v25s6gpe3ib6ejawflwf76znxg7sedqablp@ejfycd34xvpa/
+> > > 
+> > > Hrmm.  I've noticed that ever since I added this new patchset, I've been
+> > > getting more instances of outright crashes in the timer code, or
+> > > workqueue lockups.  I wonder if that UAF is what's going on here...
+> > > 
+> > > > > Will punting all FS_ERROR events to workqueue help to improve this
+> > > > > situation or will it make it worse?
+> > > > 
+> > > > Worse. But you raise a really good point which I've missed during my
+> > > > review. Currently there's nothing which synchronizes pending works with
+> > > > superblock getting destroyed with obvious UAF issues already in
+> > > > handle_sb_error().
+> > > 
+> > > I wonder, could __sb_error call get_active_super() to obtain an active
+> > > reference to the sb, and then deactivate_super() it in the workqueue
+> > > callback?  If we can't get an active ref then we presume that the fs is
+> > > already shutting down and don't send the event.
+> > 
+> > ...and now that I've actually tried it, I realize that we can't actually
+> > call get_active_super because it can sleep waiting for s_umount and
+> > SB_BORN.  Maybe we could directly atomic_inc_not_zero(&sb->s_active)
+> > adn trust that the caller has an active ref to the sb?  I think that's
+> > true for anyone calling __sb_error with a non-null inode.
+> 
+> Well, the side-effects of holding active sb reference from some workqueue
+> item tend to hit back occasionally (like when userspace assumes the device
+> isn't used anymore but it in fact still is because of the active
+> reference). Every time we tried something like this (last time it was with
+> iouring I believe) some user came back and complained his setup broke. In
+> this case it should be really rare but still I think it's better to avoid
+> it if we can (plus I'm not sure what you'd like to do for __sb_error()
+> callers that don't get the inode and thus active reference isn't really
+> guaranteed - they still need the protection against umount so that
+> handle_sb_error() can do the notifier callchain thing).
+> 
+> So I think a better solution might be that generic_shutdown_super() waits
+> for pending error notifications after clearing SB_ACTIVE before umount
+> proceeds further and __sb_error() just starts discarding new notifications
+> as soon as we see SB_ACTIVE is clear.
 
-I really think it should go away.  If it turns out we find cases where
-it was useful we can try to implement a zeroing fallocate in the kernel
-for the file system where people want it.  gfs2 for example currently
-has such an implementation, and we could have somewhat generic library
-version of it.
+<nod> Summarizing what we just talked about on the ext4 call--
 
-> There are more always-CoW, compressing file
-> systems these days, so applications just have to come to terms with the
-> fact that even after posix_fallocate, writes can still fail, and not
-> just because of media errors.
+Instead of grabbing an active reference to the sb, I'll instead fix
+__sb_error to (a) ignore !BORN || !ACTIVE || DYING supers, and (b)
+increment a counter in the sb whenever we queue an event, and decrement
+it when the worker finishes with it.  generic_shutdown_super can then
+wait (having just cleared ACTIVE) for the counter to hit zero before it
+stops fsnotify and drops the dentry cache.
 
-Yes.
+Or at least that's what I'll try today.
 
+--D
+
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
+> 
