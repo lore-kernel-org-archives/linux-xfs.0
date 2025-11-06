@@ -1,44 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09ECF32C92B;
-	Thu,  6 Nov 2025 15:58:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7126134D919
+	for <linux-xfs@vger.kernel.org>; Thu,  6 Nov 2025 16:23:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762444721; cv=none; b=o5lM4UJ3TBr+TNGU0/ZFJUxJeDL7/kwyCKL8PwarD74HN42BcTiKJkNxb7zXD2D2Pmb+G76Wm5wK/pt4xse5p037kg+uVfFh2B44gcSIzHl6HHoaxAyz2txmAOmYZ+z5agnTFE9nzX4k0JUEuVSMwynR8nt9mwJVyDyDA5WJj6I=
+	t=1762446184; cv=none; b=Ernc+bjhdYEmRztbvWI+6mHOB6tMtDYz7rUG7Il2XUuc3abpwOzdLAoeALSMrUnkUljt8ImlJuANQl5Oz6AC76dR2Nw68aZbvjzuMwNDIitChrzBh5Ev9+yMu3QiQi6nBusp2PzWBJsV3KNP/OW1k3OEZq84Pvw6Omr0/tnsagM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762444721; c=relaxed/simple;
-	bh=9FwOxNw1WGCO5wemKG5MclpcAyf+sp834GswSeo09qs=;
+	s=arc-20240116; t=1762446184; c=relaxed/simple;
+	bh=QMwx9Y+xF9cVbWXfyXeGBs4ta6W7qz9juYRb33R/OYQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AMWIs0Wef4ZUPRJzV+rKtgEvg19QJW+aZ+iyjHd4Cr6lz295tMbkggxlYN8QpUqcWOzcNT7tfaxm5Z4AYVNDAR21y8e4GrCcb/ZNYqFJogkAO3rSlGLjMwaw2xzfrdpROK4JbAclVUe/NOqDP6LpYmk3uqCzeEJpJWgHiuPTds4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qVU+OgVv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Yu6Ds3qETW0a5OaIWAN5S+gpP4rfNEA4dyqw6ftyJft38DRUzx/w6CbCixyUWyZe7yI1aSw2CXyCzmGA1mkDRS9xxT3m7kHnrCkexibeJ1sQA6iFqgrccWJT7cOS5UGE03b9RMvc0Rg/7hS5r10vc3DiBoyevOWlrK6TyyfGS24=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=EIzFfYv0; arc=none smtp.client-ip=209.85.208.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qVU+OgVv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AEE3C4CEFB;
-	Thu,  6 Nov 2025 15:58:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762444720;
-	bh=9FwOxNw1WGCO5wemKG5MclpcAyf+sp834GswSeo09qs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qVU+OgVvg8WExYVUs7vDAirX8Z0N/BFhsnn0y1VXdhayblbzI7VpDh7eXV5xReqFa
-	 bPfEpvJy3hhQGAB8uv9485VTlDwK/OGf9WGy/pFX/8IGs0wf/RSj68oObPxoa2WqbP
-	 uco0s9a/1sa/1FI99tTFxV153Mfyi6actqB2GCGrWdhtYALVgvCdgayzxEB0kGga5y
-	 3yv2ZJoYaA2yrw0D8yAhGfszQXB6xEI5yD5edssWNvktEyAP3SeiRLuNiO3scxT/IL
-	 SRM2/K7MIyQQoeyiq/VeS/UpXm60AolC8l16Ji7TiAag1l2DjAEfZ7vRnXIYpwWa61
-	 n4SOwYxY9c9nA==
-Date: Thu, 6 Nov 2025 07:58:39 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] iomap: replace folio_batch allocation with stack
- allocation
-Message-ID: <20251106155839.GG196391@frogsfrogsfrogs>
-References: <20251016190303.53881-1-bfoster@redhat.com>
- <20251016190303.53881-2-bfoster@redhat.com>
- <20251105000716.GU196370@frogsfrogsfrogs>
- <aQts-Fg2YUoIbVsV@bfoster>
- <20251105214100.GM196362@frogsfrogsfrogs>
- <aQzD6oE6QCzqaV8X@bfoster>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="EIzFfYv0"
+Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-64088c6b309so1770375a12.0
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Nov 2025 08:23:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1762446179; x=1763050979; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=vNsPx84ow00us8mQGNUZ/5IigkZKqRCW8jzXpmXKZ2g=;
+        b=EIzFfYv0qSKDrFeQ4pLXNv2fEpXq2CbjwVay8WR7wsoR3A+sGp+VI5XAdmHz5sKvsY
+         g75Pv0nc5wKQ7GontmeUtNPk9+ff90eld3IV71RVkQu8MYYTgCrSU/i7T8V9EGqpTt3l
+         WsSZzDJuE1v/My3Fp9Hlin4xJXdU8d4xholJo5gn2gb7HycmTsEdZaj2hSWP23K3ZYMr
+         fiDvyi8xxtxQwsor1mMRCQhPtI7oaAd7ddZD1nIsmXvnpudkQL5Gx4/Zc8D6Lj54rnQx
+         n11utpUQqQws1Sto3JPZcv9GIdCA/hICOzbkuRVfhkPHNrbPHmVD681pTy9EhPAzY9eE
+         KKMA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762446179; x=1763050979;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=vNsPx84ow00us8mQGNUZ/5IigkZKqRCW8jzXpmXKZ2g=;
+        b=sj7mwAfSwZbKM0IdOPpi76gc4ALzB86JH+WrBxH/f4h4piROfXLbS7NCCnHYDQsv8C
+         9Ciaor0wbI5PP2LpRneiWPcnCR0Ji8OOuhZzGTwWumSTgfAVj7IiN3Ov5DFUlMZE6gom
+         xUUTZNj8k52hlM3M+s5+xUV6+X1q1CRygFCDANOZmg2uGXZmfHzT3l6cI/j/aS8ZLnmV
+         sytI6X9xinLtZ8r5faI5jMNpHjqOkvhaGf3ld8dRf4m5oIvFwpetyxVClOdmh+RhF19L
+         qW3S9QCosN5NWl59C3Eg/oAJ6L8e5GCqheYxfQk/dHbLb1TEDT5WlUgPmwnEH9m+SG8v
+         0pqQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUmz5DZHH+vjhzWwgGkxNrUzpH76FXAQSiKc928EIm15CkpVMfPlq1K+FEp80dXebh3qFP4462Moxw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy1BOok4WLnhvnAV+OtSxsgA0VstMLzlVXqz2hW8Rnj2fQ4bFqq
+	L2N5muQBR60lCnf1rRWtLckd+AQ5HDtPTAorixZyeI5lsHjtKOFcODqnLc+WgdT+oh0=
+X-Gm-Gg: ASbGncvf8v06UkRFUqgfEAKoFUUIMTen5DOt6pKqvy8rc6Pt1hju+W+laeuybjxDyTP
+	pV+CDVGQZ7IU99+qLZrEH618+n0AvSjALcqOMg300hGHsjwyaZAtrIafN75H9D4RAbUkCfPZR/N
+	x1cJ09URNSas6brob3FoBPV1CKf0aSXHLsuhMXriRfqYnyRE45yEmlFvhumSHF1yMrhS2FThkR+
+	f8b71cI8HZ0nE+i7Irf0jk++bEsW9Ld9HorHxb5BwyhfiWineO36YeQKx9WqzBb6JeFRMavm6Se
+	Nfrykq+s00zSouB5JFZ8CANn7SdImXjWhaqTA33r+F4WdmgNcvEPZ7Hgir5/QkZyVXQZ8RYyA+Z
+	eOv08zSTgvlxA6g0btk47uLp/GFIkXGWYv+w0t1ZiBJ0UA52uVq9EqdhmzozAUrW5MWlgUCKGDQ
+	6DHt8ntbumKUrSCA==
+X-Google-Smtp-Source: AGHT+IE08HmORqHbz2m0uvai3cj8NgPnbGUJ7c/vK84uqQfLOz86XCiAJbCrlgBPuPPnAW3Py/FEIA==
+X-Received: by 2002:a17:907:9409:b0:b40:b54d:e687 with SMTP id a640c23a62f3a-b726561117amr730715966b.47.1762446178676;
+        Thu, 06 Nov 2025 08:22:58 -0800 (PST)
+Received: from pathway.suse.cz ([176.114.240.130])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b72893cc74bsm244483466b.33.2025.11.06.08.22.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Nov 2025 08:22:58 -0800 (PST)
+Date: Thu, 6 Nov 2025 17:22:55 +0100
+From: Petr Mladek <pmladek@suse.com>
+To: John Ogness <john.ogness@linutronix.de>
+Cc: Joanne Koong <joannelkoong@gmail.com>,
+	syzbot <syzbot+3686758660f980b402dc@syzkaller.appspotmail.com>,
+	"amurray@thegoodpenguin.co.uk" <amurray@thegoodpenguin.co.uk>,
+	brauner@kernel.org, chao@kernel.org, djwong@kernel.org,
+	jaegeuk@kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [iomap?] kernel BUG in folio_end_read (2)
+Message-ID: <aQzLX_y8PvBMiZ9f@pathway.suse.cz>
+References: <CAJnrk1bF8sLU6tG2MGkt_KR4BoTd_k01CMVZJ9js2-eyh80tbw@mail.gmail.com>
+ <69096836.a70a0220.88fb8.0006.GAE@google.com>
+ <CAJnrk1Yo4dRVSaPCaAGkHc+in03KaTXJ+KxckhLoSrRxbEdDBg@mail.gmail.com>
+ <aQpFLJM96uRpO4S-@pathway.suse.cz>
+ <87ldkk34yj.fsf@jogness.linutronix.de>
+ <aQuABK25fdBVTGZc@pathway.suse.cz>
+ <87bjlgqmk5.fsf@jogness.linutronix.de>
+ <87tsz7iea2.fsf@jogness.linutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,267 +86,209 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aQzD6oE6QCzqaV8X@bfoster>
+In-Reply-To: <87tsz7iea2.fsf@jogness.linutronix.de>
 
-On Thu, Nov 06, 2025 at 10:51:06AM -0500, Brian Foster wrote:
-> On Wed, Nov 05, 2025 at 01:41:00PM -0800, Darrick J. Wong wrote:
-> > On Wed, Nov 05, 2025 at 10:27:52AM -0500, Brian Foster wrote:
-> > > On Tue, Nov 04, 2025 at 04:07:16PM -0800, Darrick J. Wong wrote:
-> > > > On Thu, Oct 16, 2025 at 03:02:58PM -0400, Brian Foster wrote:
-> > > > > Zhang Yi points out that the dynamic folio_batch allocation in
-> > > > > iomap_fill_dirty_folios() is problematic for the ext4 on iomap work
-> > > > > that is under development because it doesn't sufficiently handle the
-> > > > > allocation failure case (by allowing a retry, for example).
-> > > > > 
-> > > > > The dynamic allocation was initially added for simplicity and to
-> > > > > help indicate whether the batch was used or not by the calling fs.
-> > > > > To address this issue, put the batch on the stack of
-> > > > > iomap_zero_range() and use a flag to control whether the batch
-> > > > > should be used in the iomap folio lookup path. This keeps things
-> > > > > simple and eliminates the concern for ext4 on iomap.
-> > > > > 
-> > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > 
-> > > > Hrmm, so who kmallocs the fbatch array now?  Is that left as an exercise
-> > > > to the filesystem?  I'm confused because I don't see the kmalloc call
-> > > > reappear elsewhere, at least not in this patch.
-> > > > 
-> > > 
-> > > It's no longer dynamically allocated. It's allocated on the stack in
-> > > iomap_zero_range(), and a flag is set on the iomap if the pagecache
-> > > lookup occurs. The allocation is a potential problem for the ext4 on
-> > > iomap port, so this elides the need for dealing with alloc failures and
-> > > whatnot.
-> > 
-> > Oh, silly me.  I got mixed up thinking that the deleted kmalloc was
-> > allocating folio_batch::folios whereas in reality the kmalloc was for
-> > the entire struct folio_batch.  So yes, it's allocated on the stack.
-> > Sorry about the noise.
-> > 
+On Thu 2025-11-06 12:42:21, John Ogness wrote:
+> On 2025-11-05, John Ogness <john.ogness@linutronix.de> wrote:
+> >> Another question is whether this is the only problem caused the patch.
+> >
+> > This comparison is quite special. It caught my attention while combing
+> > through the code.
 > 
-> Np.. This alloc was also just brought up here:
-> 
-> https://lore.kernel.org/linux-xfs/aQu8B63pEAzGRAkj@dread.disaster.area/
-> 
-> ... so I'm wondering if this should be split off into a standalone patch
-> to try and land sooner than the rest (assuming I can get R-b's)..?
+> The reason that this comparison is special is because it is the only one
+> that does not take wrapping into account. I did it that way originally
+> because it is AND with a wrap check. But this is an ugly special
+> case. It should use the same wrap check as the other 3 cases in
+> nbcon.c. If it had, the bug would not have happened.
 
-Yes, that's a good idea.  I'll likely rvb it, and we can armtwist the
-reporter to test it for us too. ;)
+I think that there are actually some differences between the
+comparsions, see below.
 
---D
+> I always considered these wrap checks to be non-obvious and
+> error-prone. So what if we create a nice helper function to simplify and
+> unify the wrap checks? Something like this:
 
-> Brian
-> 
-> > --D
-> > 
-> > > This is probably how it should have been done from the start, but when
-> > > the flag related feedback came along it was deep enough in test/review
-> > > cycle that I preferred to do it separately.
-> > > 
-> > > Brian
-> > > 
-> > > > --D
-> > > > 
-> > > > > ---
-> > > > >  fs/iomap/buffered-io.c | 45 ++++++++++++++++++++++++++++--------------
-> > > > >  fs/iomap/iter.c        |  6 +++---
-> > > > >  fs/xfs/xfs_iomap.c     | 11 ++++++-----
-> > > > >  include/linux/iomap.h  |  8 ++++++--
-> > > > >  4 files changed, 45 insertions(+), 25 deletions(-)
-> > > > > 
-> > > > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > > > > index 51ecb6d48feb..05ff82c5432e 100644
-> > > > > --- a/fs/iomap/buffered-io.c
-> > > > > +++ b/fs/iomap/buffered-io.c
-> > > > > @@ -761,7 +761,7 @@ static struct folio *__iomap_get_folio(struct iomap_iter *iter,
-> > > > >  	if (!mapping_large_folio_support(iter->inode->i_mapping))
-> > > > >  		len = min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
-> > > > >  
-> > > > > -	if (iter->fbatch) {
-> > > > > +	if (iter->iomap.flags & IOMAP_F_FOLIO_BATCH) {
-> > > > >  		struct folio *folio = folio_batch_next(iter->fbatch);
-> > > > >  
-> > > > >  		if (!folio)
-> > > > > @@ -858,7 +858,7 @@ static int iomap_write_begin(struct iomap_iter *iter,
-> > > > >  	 * process so return and let the caller iterate and refill the batch.
-> > > > >  	 */
-> > > > >  	if (!folio) {
-> > > > > -		WARN_ON_ONCE(!iter->fbatch);
-> > > > > +		WARN_ON_ONCE(!(iter->iomap.flags & IOMAP_F_FOLIO_BATCH));
-> > > > >  		return 0;
-> > > > >  	}
-> > > > >  
-> > > > > @@ -1473,23 +1473,34 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
-> > > > >  	return status;
-> > > > >  }
-> > > > >  
-> > > > > -loff_t
-> > > > > +/**
-> > > > > + * iomap_fill_dirty_folios - fill a folio batch with dirty folios
-> > > > > + * @iter: Iteration structure
-> > > > > + * @start: Start offset of range. Updated based on lookup progress.
-> > > > > + * @end: End offset of range
-> > > > > + *
-> > > > > + * Returns the associated control flag if the folio batch is available and the
-> > > > > + * lookup performed. The caller is responsible to set the flag on the associated
-> > > > > + * iomap.
-> > > > > + */
-> > > > > +unsigned int
-> > > > >  iomap_fill_dirty_folios(
-> > > > >  	struct iomap_iter	*iter,
-> > > > > -	loff_t			offset,
-> > > > > -	loff_t			length)
-> > > > > +	loff_t			*start,
-> > > > > +	loff_t			end)
-> > > > >  {
-> > > > >  	struct address_space	*mapping = iter->inode->i_mapping;
-> > > > > -	pgoff_t			start = offset >> PAGE_SHIFT;
-> > > > > -	pgoff_t			end = (offset + length - 1) >> PAGE_SHIFT;
-> > > > > +	pgoff_t			pstart = *start >> PAGE_SHIFT;
-> > > > > +	pgoff_t			pend = (end - 1) >> PAGE_SHIFT;
-> > > > >  
-> > > > > -	iter->fbatch = kmalloc(sizeof(struct folio_batch), GFP_KERNEL);
-> > > > > -	if (!iter->fbatch)
-> > > > > -		return offset + length;
-> > > > > -	folio_batch_init(iter->fbatch);
-> > > > > +	if (!iter->fbatch) {
-> > > > > +		*start = end;
-> > > > > +		return 0;
-> > > > > +	}
-> > > > >  
-> > > > > -	filemap_get_folios_dirty(mapping, &start, end, iter->fbatch);
-> > > > > -	return (start << PAGE_SHIFT);
-> > > > > +	filemap_get_folios_dirty(mapping, &pstart, pend, iter->fbatch);
-> > > > > +	*start = (pstart << PAGE_SHIFT);
-> > > > > +	return IOMAP_F_FOLIO_BATCH;
-> > > > >  }
-> > > > >  EXPORT_SYMBOL_GPL(iomap_fill_dirty_folios);
-> > > > >  
-> > > > > @@ -1498,17 +1509,21 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
-> > > > >  		const struct iomap_ops *ops,
-> > > > >  		const struct iomap_write_ops *write_ops, void *private)
-> > > > >  {
-> > > > > +	struct folio_batch fbatch;
-> > > > >  	struct iomap_iter iter = {
-> > > > >  		.inode		= inode,
-> > > > >  		.pos		= pos,
-> > > > >  		.len		= len,
-> > > > >  		.flags		= IOMAP_ZERO,
-> > > > >  		.private	= private,
-> > > > > +		.fbatch		= &fbatch,
-> > > > >  	};
-> > > > >  	struct address_space *mapping = inode->i_mapping;
-> > > > >  	int ret;
-> > > > >  	bool range_dirty;
-> > > > >  
-> > > > > +	folio_batch_init(&fbatch);
-> > > > > +
-> > > > >  	/*
-> > > > >  	 * To avoid an unconditional flush, check pagecache state and only flush
-> > > > >  	 * if dirty and the fs returns a mapping that might convert on
-> > > > > @@ -1519,11 +1534,11 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
-> > > > >  	while ((ret = iomap_iter(&iter, ops)) > 0) {
-> > > > >  		const struct iomap *srcmap = iomap_iter_srcmap(&iter);
-> > > > >  
-> > > > > -		if (WARN_ON_ONCE(iter.fbatch &&
-> > > > > +		if (WARN_ON_ONCE((iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
-> > > > >  				 srcmap->type != IOMAP_UNWRITTEN))
-> > > > >  			return -EIO;
-> > > > >  
-> > > > > -		if (!iter.fbatch &&
-> > > > > +		if (!(iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
-> > > > >  		    (srcmap->type == IOMAP_HOLE ||
-> > > > >  		     srcmap->type == IOMAP_UNWRITTEN)) {
-> > > > >  			s64 status;
-> > > > > diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
-> > > > > index 66ca12aac57d..026d85823c76 100644
-> > > > > --- a/fs/iomap/iter.c
-> > > > > +++ b/fs/iomap/iter.c
-> > > > > @@ -8,10 +8,10 @@
-> > > > >  
-> > > > >  static inline void iomap_iter_reset_iomap(struct iomap_iter *iter)
-> > > > >  {
-> > > > > -	if (iter->fbatch) {
-> > > > > +	if (iter->iomap.flags & IOMAP_F_FOLIO_BATCH) {
-> > > > >  		folio_batch_release(iter->fbatch);
-> > > > > -		kfree(iter->fbatch);
-> > > > > -		iter->fbatch = NULL;
-> > > > > +		folio_batch_reinit(iter->fbatch);
-> > > > > +		iter->iomap.flags &= ~IOMAP_F_FOLIO_BATCH;
-> > > > >  	}
-> > > > >  
-> > > > >  	iter->status = 0;
-> > > > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > > > > index 535bf3b8705d..01833aca37ac 100644
-> > > > > --- a/fs/xfs/xfs_iomap.c
-> > > > > +++ b/fs/xfs/xfs_iomap.c
-> > > > > @@ -1775,7 +1775,6 @@ xfs_buffered_write_iomap_begin(
-> > > > >  	 */
-> > > > >  	if (flags & IOMAP_ZERO) {
-> > > > >  		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
-> > > > > -		u64 end;
-> > > > >  
-> > > > >  		if (isnullstartblock(imap.br_startblock) &&
-> > > > >  		    offset_fsb >= eof_fsb)
-> > > > > @@ -1795,12 +1794,14 @@ xfs_buffered_write_iomap_begin(
-> > > > >  		 */
-> > > > >  		if (imap.br_state == XFS_EXT_UNWRITTEN &&
-> > > > >  		    offset_fsb < eof_fsb) {
-> > > > > -			loff_t len = min(count,
-> > > > > -					 XFS_FSB_TO_B(mp, imap.br_blockcount));
-> > > > > +			loff_t foffset = offset, fend;
-> > > > >  
-> > > > > -			end = iomap_fill_dirty_folios(iter, offset, len);
-> > > > > +			fend = offset +
-> > > > > +			       min(count, XFS_FSB_TO_B(mp, imap.br_blockcount));
-> > > > > +			iomap_flags |= iomap_fill_dirty_folios(iter, &foffset,
-> > > > > +							       fend);
-> > > > >  			end_fsb = min_t(xfs_fileoff_t, end_fsb,
-> > > > > -					XFS_B_TO_FSB(mp, end));
-> > > > > +					XFS_B_TO_FSB(mp, foffset));
-> > > > >  		}
-> > > > >  
-> > > > >  		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
-> > > > > diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> > > > > index cd0f573156d6..79da917ff45e 100644
-> > > > > --- a/include/linux/iomap.h
-> > > > > +++ b/include/linux/iomap.h
-> > > > > @@ -87,6 +87,9 @@ struct vm_fault;
-> > > > >  /*
-> > > > >   * Flags set by the core iomap code during operations:
-> > > > >   *
-> > > > > + * IOMAP_F_FOLIO_BATCH indicates that the folio batch mechanism is active
-> > > > > + * for this operation, set by iomap_fill_dirty_folios().
-> > > > > + *
-> > > > >   * IOMAP_F_SIZE_CHANGED indicates to the iomap_end method that the file size
-> > > > >   * has changed as the result of this write operation.
-> > > > >   *
-> > > > > @@ -94,6 +97,7 @@ struct vm_fault;
-> > > > >   * range it covers needs to be remapped by the high level before the operation
-> > > > >   * can proceed.
-> > > > >   */
-> > > > > +#define IOMAP_F_FOLIO_BATCH	(1U << 13)
-> > > > >  #define IOMAP_F_SIZE_CHANGED	(1U << 14)
-> > > > >  #define IOMAP_F_STALE		(1U << 15)
-> > > > >  
-> > > > > @@ -351,8 +355,8 @@ bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio);
-> > > > >  int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
-> > > > >  		const struct iomap_ops *ops,
-> > > > >  		const struct iomap_write_ops *write_ops);
-> > > > > -loff_t iomap_fill_dirty_folios(struct iomap_iter *iter, loff_t offset,
-> > > > > -		loff_t length);
-> > > > > +unsigned int iomap_fill_dirty_folios(struct iomap_iter *iter, loff_t *start,
-> > > > > +		loff_t end);
-> > > > >  int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
-> > > > >  		bool *did_zero, const struct iomap_ops *ops,
-> > > > >  		const struct iomap_write_ops *write_ops, void *private);
-> > > > > -- 
-> > > > > 2.51.0
-> > > > > 
-> > > > > 
-> > > > 
-> > > 
-> > > 
-> > 
-> 
+But I agree that some wrappers with a good description
+would be helpful.
+
+> diff --git a/kernel/printk/printk_ringbuffer.c b/kernel/printk/printk_ringbuffer.c
+> index 839f504db6d30..8499ee642c31d 100644
+> --- a/kernel/printk/printk_ringbuffer.c
+> +++ b/kernel/printk/printk_ringbuffer.c
+> @@ -390,6 +390,17 @@ static unsigned int to_blk_size(unsigned int size)
+>  	return size;
+>  }
+>  
+> +/*
+> + * Check if @lpos1 is before @lpos2. This takes ringbuffer wrapping
+> + * into account. If @lpos1 is more than a full wrap before @lpos2,
+> + * it is considered to be after @lpos2.
+
+The 2nd sentence is a brain teaser ;-)
+
+> + */
+> +static bool lpos1_before_lpos2(struct prb_data_ring *data_ring,
+> +			       unsigned long lpos1, unsigned long lpos2)
+> +{
+> +	return lpos2 - lpos1 - 1 < DATA_SIZE(data_ring);
+> +}
+
+It would be nice to describe the semantic a more clean way. Sigh,
+it is not easy. I tried several variants and ended up with:
+
+   + using "lt" instead of "before" because "lower than" is
+     a well known mathematical therm.
+
+   + adding "_safe" suffix to make it clear that it is not
+     a simple mathematical comparsion. It takes the wrap
+     into account.
+
+Something like:
+
+/*
+ * Returns true when @lpos1 is lower than @lpos2 and both values
+ * are comparable.
+ *
+ * It is safe when the compared values are read a lock less way.
+ * One of them must be already overwritten when the difference
+ * is bigger then the data ring buffer size.
+ */
+static bool lpos1_lt_lpos2_safe(struct prb_data_ring *data_ring,
+				unsined long lpos1, unsigned long lpos2)
+{
+	return lpos2 - lpos1 - 1 < DATA_SIZE(data_ring);
+}
+
+>  /*
+>   * Sanity checker for reserve size. The ringbuffer code assumes that a data
+>   * block does not exceed the maximum possible size that could fit within the
+> @@ -577,7 +588,7 @@ static bool data_make_reusable(struct printk_ringbuffer *rb,
+>  	unsigned long id;
+>  
+>  	/* Loop until @lpos_begin has advanced to or beyond @lpos_end. */
+> -	while ((lpos_end - lpos_begin) - 1 < DATA_SIZE(data_ring)) {
+> +	while (lpos1_before_lpos2(data_ring, lpos_begin, lpos_end)) {
+
+lpos1_lt_lpos2_safe() fits here.
+
+>  		blk = to_block(data_ring, lpos_begin);
+>  		/*
+> @@ -668,7 +679,7 @@ static bool data_push_tail(struct printk_ringbuffer *rb, unsigned long lpos)
+>  	 * sees the new tail lpos, any descriptor states that transitioned to
+>  	 * the reusable state must already be visible.
+>  	 */
+> -	while ((lpos - tail_lpos) - 1 < DATA_SIZE(data_ring)) {
+> +	while (lpos1_before_lpos2(data_ring, tail_lpos, lpos)) {
+>  		/*
+>  		 * Make all descriptors reusable that are associated with
+>  		 * data blocks before @lpos.
+
+Same here.
+
+> @@ -1149,7 +1160,7 @@ static char *data_realloc(struct printk_ringbuffer *rb, unsigned int size,
+>  	next_lpos = get_next_lpos(data_ring, blk_lpos->begin, size);
+>  
+>  	/* If the data block does not increase, there is nothing to do. */
+> -	if (head_lpos - next_lpos < DATA_SIZE(data_ring)) {
+> +	if (!lpos1_before_lpos2(data_ring, head_lpos, next_lpos)) {
+
+I think that the original code was correct. And using the "-1" is
+wrong here.
+
+Both data_make_reusable() and data_push_tail() had to use "-1"
+because it was the "lower than" semantic. But in this case,
+we do not need to do anything even when "head_lpos == next_lpos"
+
+By other words, both data_make_reusable() and data_push_tail()
+needed to make a free space when the position was "lower than".
+There was enough space when the values were "equal".
+
+It means that "equal" should be OK in data_realloc(). By other
+words, data_realloc() should use "le" aka "less or equal"
+semantic.
+
+The helper function might be:
+
+/*
+ * Returns true when @lpos1 is lower or equal than @lpos2 and both
+ * values are comparable.
+ *
+ * It is safe when the compared values are read a lock less way.
+ * One of them must be already overwritten when the difference
+ * is bigger then the data ring buffer size.
+ */
+static bool lpos1_le_lpos2_safe(struct prb_data_ring *data_ring,
+				unsined long lpos1, unsigned long lpos2)
+{
+	return lpos2 - lpos1 < DATA_SIZE(data_ring);
+}
+
+
+>  		if (wrapped)
+>  			blk = to_block(data_ring, 0);
+>  		else
+> @@ -1262,7 +1273,7 @@ static const char *get_data(struct prb_data_ring *data_ring,
+>  
+>  	/* Regular data block: @begin less than @next and in same wrap. */
+>  	if (!is_blk_wrapped(data_ring, blk_lpos->begin, blk_lpos->next) &&
+> -	    blk_lpos->begin < blk_lpos->next) {
+> +	    lpos1_before_lpos2(data_ring, blk_lpos->begin, blk_lpos->next)) {
+
+Hmm, I think that it is more complicated here.
+
+The "lower than" semantic is weird here. One would expect that "equal"
+values, aka "zero size" is perfectly fine.
+
+It does not hurt because the "zero size" case is already handled
+earlier. But still, the "lower than" semantic does not fit here.
+
+IMHO, the main motivation for this fix is to make sure that
+blk_lpos->begin and blk_lpos->next will produce a valid
+*data_size.
+
+From this POV, even lpos1_le_lpos2_safe() does not fit here
+because the data_size must be lower than half of the size
+of the ring buffer.
+
+> 		db = to_block(data_ring, blk_lpos->begin);
+>  		*data_size = blk_lpos->next - blk_lpos->begin;
+
+I think that we should do the following:
+
+diff --git a/kernel/printk/printk_ringbuffer.c b/kernel/printk/printk_ringbuffer.c
+index 839f504db6d3..78e02711872e 100644
+--- a/kernel/printk/printk_ringbuffer.c
++++ b/kernel/printk/printk_ringbuffer.c
+@@ -1260,9 +1260,8 @@ static const char *get_data(struct prb_data_ring *data_ring,
+ 		return NULL;
+ 	}
+ 
+-	/* Regular data block: @begin less than @next and in same wrap. */
+-	if (!is_blk_wrapped(data_ring, blk_lpos->begin, blk_lpos->next) &&
+-	    blk_lpos->begin < blk_lpos->next) {
++	/* Regular data block: @begin and @next in same wrap. */
++	if (!is_blk_wrapped(data_ring, blk_lpos->begin, blk_lpos->next)) {
+ 		db = to_block(data_ring, blk_lpos->begin);
+ 		*data_size = blk_lpos->next - blk_lpos->begin;
+ 
+@@ -1279,6 +1278,10 @@ static const char *get_data(struct prb_data_ring *data_ring,
+ 		return NULL;
+ 	}
+ 
++	/* Double check that the data_size is reasonable. */
++	if (WARN_ON_ONCE(!data_check_size(data_ring, *data_size)))
++		return NULL;
++
+ 	/* A valid data block will always be aligned to the ID size. */
+ 	if (WARN_ON_ONCE(blk_lpos->begin != ALIGN(blk_lpos->begin, sizeof(db->id))) ||
+ 	    WARN_ON_ONCE(blk_lpos->next != ALIGN(blk_lpos->next, sizeof(db->id)))) {
+
+1. Just distinguish regular vs. wrapped. vs. invalid block.
+
+2. Add sanity check for the "data_size". It might catch some wrong values
+   in both code paths for "regular" and "wrapped" blocks. So, win win.
+
+How does that sound?
+
+Best Regards,
+Petr
