@@ -1,38 +1,25 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B29A533F8BE;
-	Thu,  6 Nov 2025 14:42:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DE61D271;
+	Thu,  6 Nov 2025 14:46:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762440157; cv=none; b=W53TO3WAhtNoPCYBOLT5Sszn7ngYmRHpKCpfX2Kwaj+UT/tn28eOanHaWILksol8aoWdm9ag3OheiTXghkyvZiVEuxydSlZ1LhiC/wdXi8JlyKUxK80hAixFSEyTP0JJ0WFIdAIr/QDXQOwjwWg5ukJyPpZK/nnAI8gbihQ4al8=
+	t=1762440377; cv=none; b=MvfcrH+KImPZMt0ff3EQCpF0LmMOw7t+0UkjUw8UW53Sw7N/lZYwPnqY9rZqzSvEJkmvSHGUVDu4827HW07bLhZqdBaEovn7dS41HkbIIo3tC6azZLVF4+6U+jmpTTGn5gkdsq80jTOG7NDBO7Nyv17PCFKlY6KWKq56YrAgqw4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762440157; c=relaxed/simple;
-	bh=XCL0KhhrHG5plCqfuuBw0XxZzn9yfR42S6yeDmlCXqE=;
+	s=arc-20240116; t=1762440377; c=relaxed/simple;
+	bh=FaWCe0HBuSNVm+1a2uvCPEoKIlnvRBc0xcItbF2Xdqg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ErqAllMMH5uc+mkyxzv28THTse9w2qfiVK3Ic37wMsN4lYYVuQkl7uav6RyMBRBOWWPPpu2/h5rM0J39yVQwSteP8HA7z0QmNIoyo3FA2toij8Yht1KCUiK96vK57rWHkSBbEUfGZQZJZx0bR1KAXOEGFwAUTYD3w//YYIRwQ+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ia2TRo7B; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ia2TRo7B"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=sJ9c+b+VfFvQuoP2g/4jPNJjSn7A1S3rq8wxhwzlLak=; b=ia2TRo7B6xlRXy2oLByeygzrdf
-	MZZ1WYSLYaf5VRrlQ4b/jipQL8wOKwkJvoXMFCKT07vBziOIe1pwNlMn0SWBRQHiGYc0qwnKT4Eax
-	ZVM5ILcm1EsGvcJLw39QiJbZwGimtuq3ucPJOlMDk9rbKtnyuoXPpFyzqZ87X/tb6etOWPw9sv6ol
-	uFVHMmcGBRuy9OUIDvriMXsHeW9Jqi15ZVGv635bxbVBLnlMxeZZp7Mw2pLf9LxJhyvVW3C8y+i1N
-	InUbt0xRjXuiyK+EpKYytkFr46BToh8nhXKjYlRuXfOGFrRMQwiznbx6yPd5xULO1q6Gby7VZfYIg
-	bIZwEptA==;
-Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vH1C2-00000004A5h-2uxe;
-	Thu, 06 Nov 2025 14:42:30 +0000
-Date: Thu, 6 Nov 2025 14:42:30 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Florian Weimer <fweimer@redhat.com>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=hhoWPgwsw74TbIlggLNhSvJZ02PDRj7kJE9RCtTdJjHqPFLMaCX9AfK1rknLgBqH/+GtFXQFzmMBSSJqAPOWvJi9JfmbqIUH06LN4PyUnCMKgQxlHec8a/MZbKPoWCxNEtCj9DYFvu9q/mYnsGxVgYfq+LFDezGpXjykV9ZjIM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id ECB46227AAE; Thu,  6 Nov 2025 15:46:10 +0100 (CET)
+Date: Thu, 6 Nov 2025 15:46:10 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, Florian Weimer <fweimer@redhat.com>,
 	Hans Holmberg <hans.holmberg@wdc.com>, linux-xfs@vger.kernel.org,
 	Carlos Maiolino <cem@kernel.org>,
 	Dave Chinner <david@fromorbit.com>,
@@ -40,10 +27,8 @@ Cc: Florian Weimer <fweimer@redhat.com>,
 	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
 	libc-alpha@sourceware.org
 Subject: Re: [RFC] xfs: fake fallocate success for always CoW inodes
-Message-ID: <aQyz1j7nqXPKTYPT@casper.infradead.org>
-References: <20251106133530.12927-1-hans.holmberg@wdc.com>
- <lhuikfngtlv.fsf@oldenburg.str.redhat.com>
- <20251106135212.GA10477@lst.de>
+Message-ID: <20251106144610.GA14909@lst.de>
+References: <20251106133530.12927-1-hans.holmberg@wdc.com> <lhuikfngtlv.fsf@oldenburg.str.redhat.com> <20251106135212.GA10477@lst.de> <aQyz1j7nqXPKTYPT@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -52,24 +37,33 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251106135212.GA10477@lst.de>
+In-Reply-To: <aQyz1j7nqXPKTYPT@casper.infradead.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Nov 06, 2025 at 02:52:12PM +0100, Christoph Hellwig wrote:
-> On Thu, Nov 06, 2025 at 02:48:12PM +0100, Florian Weimer wrote:
-> > * Hans Holmberg:
+On Thu, Nov 06, 2025 at 02:42:30PM +0000, Matthew Wilcox wrote:
+> On Thu, Nov 06, 2025 at 02:52:12PM +0100, Christoph Hellwig wrote:
+> > On Thu, Nov 06, 2025 at 02:48:12PM +0100, Florian Weimer wrote:
+> > > * Hans Holmberg:
+> > > 
+> > > > We don't support preallocations for CoW inodes and we currently fail
+> > > > with -EOPNOTSUPP, but this causes an issue for users of glibc's
+> > > > posix_fallocate[1]. If fallocate fails, posix_fallocate falls back on
+> > > > writing actual data into the range to try to allocate blocks that way.
+> > > > That does not actually gurantee anything for CoW inodes however as we
+> > > > write out of place.
+> > > 
+> > > Why doesn't fallocate trigger the copy instead?  Isn't this what the
+> > > user is requesting?
 > > 
-> > > We don't support preallocations for CoW inodes and we currently fail
-> > > with -EOPNOTSUPP, but this causes an issue for users of glibc's
-> > > posix_fallocate[1]. If fallocate fails, posix_fallocate falls back on
-> > > writing actual data into the range to try to allocate blocks that way.
-> > > That does not actually gurantee anything for CoW inodes however as we
-> > > write out of place.
-> > 
-> > Why doesn't fallocate trigger the copy instead?  Isn't this what the
-> > user is requesting?
+> > What copy?
 > 
-> What copy?
+> I believe Florian is thinking of CoW in the sense of "share while read
+> only, then you have a mutable block allocation", rather than the
+> WAFL (or SMR) sense of "we always put writes in a new location".
 
-I believe Florian is thinking of CoW in the sense of "share while read
-only, then you have a mutable block allocation", rather than the
-WAFL (or SMR) sense of "we always put writes in a new location".
+Note that the glibc posix_fallocate(3( fallback will never copy anyway.
+It does a racy check and somewhat broken check if there is already
+data, and if it thinks there isn't it writes zeroes.  Which is the
+wrong thing for just about every use case imaginable.  And the only
+thing to stop it from doing that is to implement fallocate(2) and
+return success.
