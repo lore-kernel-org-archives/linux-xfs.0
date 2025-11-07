@@ -1,40 +1,72 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D44B2EB876
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Nov 2025 16:37:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82B202BE658
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Nov 2025 17:38:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762533463; cv=none; b=fUoJhuPOKgN/0SjSrDDFDUhCJoAngl7RyWNoRLk7dScoOVtHo64Rsw1hStjgVhCvB+EXKxkLyLlSKj+cgSOKCGRDbAK6PmIL7D9F2T4LV9QFUZaPseyFN9+flCFG0reXG6DgUr/q69lerxjXdlE15m/8jn9Dg44QlxuoSV44+eM=
+	t=1762537133; cv=none; b=qiRe2Cwzs/c109gJ3i36933C2Lv/BkX3LdKRjGa7STmbT2YcoyZgA+0NiCHyU3uCAzf+r1AM8DeL7cqWyd2/wDWXBVN8+jNPVB1ygSWSAJtLzTJqsk+kfSf5y49SrJUEYbJXo2bZZ8+H0EYcxXLy5qUaOWnL5iyBB9Zl6RWntA0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762533463; c=relaxed/simple;
-	bh=ud7tnY0RzGPuRr0SZYCBwZXO8u4nNJPKUtqiRRitaOc=;
+	s=arc-20240116; t=1762537133; c=relaxed/simple;
+	bh=nqPRiF1UVLb08/ED3mgdXEin7kZb8kZvaa1uTBeIoe4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ni4lU7kzOc/zEouDWRhbdj3T/6ny2jJOU4VKXNlYUdsxRV7XDlnelgTLODjw2E+L23chA9gurgvL8oMyEOw/QnjhXKzTJSX7HNyIHJRw0BglJswvH7hxw+IOjtzuSTqPAfkMZOGaVMHUNUIX9Sq0gneuz31rni1Z3BO+bsfO/vY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QM1oM5Js; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=WSbyFxH/hK3Ww5zqfDeYrfzzMa6tJ40AvMedohPjyKxxMyQyjcB2LoNnoaCBX7vqonB1GPaBHWXwpjnqOyH+hZENPKbwNe9DSpW8LtjWgSm8v65QLNOqeUT4hmEbOi7C4FBdYf4DbECUBl2UgB0slgoD+Rd2lRNvF7wZojW6tVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=P6S9xBjt; arc=none smtp.client-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QM1oM5Js"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71DBDC4CEF7;
-	Fri,  7 Nov 2025 16:37:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762533462;
-	bh=ud7tnY0RzGPuRr0SZYCBwZXO8u4nNJPKUtqiRRitaOc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QM1oM5JsRQcFfuenVEoV0LPgYVu2WVzpl3X8ZogjBeqgMVjtYCBZeaX7nqGnWeBf1
-	 2xVAV2NdV7NG5bf7l+oKQ8sO6MoVefPrpqvXGvcAMKGcDnkP9sZPlcY7pRx6w+RLYg
-	 rZwsTa1KgZel2CWwfUpUc0Dlzve3t3ysrJ640Nm5t9taUWu2IPqp3j2yemZDfqLpL9
-	 33zDWxbJTJJB2gwOJTymxKxc5D9fUCmMi93p2rw5ZH6MBOGGJJx9q4hrTJ9++KITtp
-	 E6xHTfZ2RAOri1m3S1Cuh3cp/rKRVeBhrQp4NFrzPT/tiE8rPkchr0pjEyat1gYia4
-	 lwl3p0EPpx/RA==
-Date: Fri, 7 Nov 2025 08:37:41 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Luca Di Maio <luca.dimaio1@gmail.com>
-Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P6S9xBjt"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4711b95226dso10137845e9.0
+        for <linux-xfs@vger.kernel.org>; Fri, 07 Nov 2025 09:38:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1762537130; x=1763141930; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=FkGrb5FIfYGjvwq3xqqJa/an5bkzJawmSPcfz37UvHg=;
+        b=P6S9xBjt0OqNL+osLhLSKbSDGjdbPOKKnYgsjhF39nNTlDZLaShaLpB/JXogALcdy5
+         6BoVBqihCfZZDT02hsw4Wf+ikYOt2sovLhxcR8ObqewfhIJlVmO2Q0Y9CkfpYx2Waf3J
+         lh+cMVJ38zhO+5mwshEyb8dpVBlwmZTE1B0iMtStGOF3hB42Pj8hPWYmbBwBBDBMv3u+
+         4gXNKH5cT+X/of53XOsiWS0qFjla+UN/RcWkBTRTeUbJ+42RtmarODm6pn2KRW2w0M3A
+         ndjsH+cSryzDlc4i9rMjthAxQSAEnoC304STTNViGbrq6wGcxBEHX3E4JnGDp6N1cpJR
+         4HNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762537130; x=1763141930;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=FkGrb5FIfYGjvwq3xqqJa/an5bkzJawmSPcfz37UvHg=;
+        b=YlbzFtLDJq7LkHeIsO/MY4DBTYiJeOdKBEBjYRVaMIlfSIthvZebOuc8NhCzACD1ga
+         oqQU5dkQbf0l0WQg/LBLgNfWT4YhmHamwoP2mWoEbEMr/R8u9M7NWNhQ4vW6fnmPe13a
+         7+/rpKL+vG36mKOX0l0w2gG4+8k/sILvgAFL/YDmlETC/34+rZwgKshMq3gWj3r7ZiUY
+         I5iETugZ1R185j4KKqekOkouoLouWd+9tqdgdiJdy7r9WFXZ/KK+zwa5ysimKIPDNEpC
+         f576a0LdVRUP812JD4k36o3GrQthPyIDbtH/m98thmv+VibVZDqzEJa55EK2Je3gjbZW
+         Uc3g==
+X-Gm-Message-State: AOJu0YyZ4IancXYfI5QgJNykAF31rlVthl5tNjKmYXMV5QXqbZzPPcjT
+	P5GPzIo4AITckx6s3KBUE41fbhM8EyGh9Fgq9eKn+JX8EL3sCbhdcyzg
+X-Gm-Gg: ASbGnct79bRlSLTvN+9Lc1SvTz6s5NaLeFVT4Kw0nM77AxmOoqmi33BzwJu1izb7nAH
+	e+9ynI1U+TfRuCs9Ho2vj1RLHnrkAs28ap37Gv32NyXy2mEyDWUTYAotrzj0pdeXBSaO1eyjB7m
+	SHLQ/k8kfJAUrnnebFyncK9Fiurmj/IFPm2aEkZygApH3G5FW0GxE3NVHYEPwOFGeZamqRN7RRg
+	1TSV4DCHxxQuyFBo7kYF7KnMBBc9ZeQwVl14mdSlmWRq01YihbTSnAGlKZuZIpAuqJ435Hi1IID
+	NK9oekwaf+T4pITtzQRVRNQdkSeFS9oEPQ1n2TYG4Utssl4iK94zApEwr+7Peki8WdCtcerOcjv
+	3mVivk15ifLoWTq+dnlVL60BMwO0X8f+pbA/G/jdt2gOz/klNsst46LHoWIdsRjhpeM2Q0dnW4B
+	soGe4L+WAAVWgHx4gpBOMDx1BdaN0Td+qPT4Qsa6BlSURK+/kYIxLinc1wswo=
+X-Google-Smtp-Source: AGHT+IFcAjngPn3GKJMVqlX5Xw5rpaehjrzKKTy6v194wpLN84n9XvR3Yh+mnOmnddDKNo4Mk9lGQw==
+X-Received: by 2002:a05:600c:4ba2:b0:477:4345:7c59 with SMTP id 5b1f17b1804b1-4776bcc9886mr25279955e9.40.1762537129593;
+        Fri, 07 Nov 2025 09:38:49 -0800 (PST)
+Received: from f13 ([2a01:e11:3:1ff0:dd42:7144:9aa4:2bfc])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4776bcfd2e5sm60335755e9.13.2025.11.07.09.38.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 07 Nov 2025 09:38:49 -0800 (PST)
+Date: Fri, 7 Nov 2025 18:38:47 +0100
+From: Luca Di Maio <luca.dimaio1@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org, dimitri.ledkov@chainguard.dev, 
 	smoser@chainguard.dev
 Subject: Re: [PATCH v1] libxfs: support reproducible filesystems using
  deterministic time/seed
-Message-ID: <20251107163741.GJ196391@frogsfrogsfrogs>
+Message-ID: <ozzqqsmphjqdjll56bntpsgfextta7wvv4x7rq7p3vsewaj4za@nigafa5dhfqk>
 References: <20251107161242.3659615-1-luca.dimaio1@gmail.com>
+ <20251107163741.GJ196391@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -43,246 +75,75 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251107161242.3659615-1-luca.dimaio1@gmail.com>
+In-Reply-To: <20251107163741.GJ196391@frogsfrogsfrogs>
 
-On Fri, Nov 07, 2025 at 05:12:41PM +0100, Luca Di Maio wrote:
-> Add support for reproducible filesystem creation through two environment
-> variables that enable deterministic behavior when building XFS filesystems.
+Thanks Darrick for the review
+
+On Fri, Nov 07, 2025 at 08:37:41AM -0800, Darrick J. Wong wrote:
+> > +	if (!read_env) {
+> > +		read_env = true;
+> > +		source_date_epoch = getenv("SOURCE_DATE_EPOCH");
+> > +		if (source_date_epoch && source_date_epoch[0] != '\0') {
+> > +			errno = 0;
+> > +			epoch = strtoul(source_date_epoch, NULL, 10);
 > 
-> SOURCE_DATE_EPOCH support:
-> When SOURCE_DATE_EPOCH is set, use its value for all filesystem timestamps
-> instead of the current time. This follows the reproducible builds
-> specification (https://reproducible-builds.org/specs/source-date-epoch/)
-> and ensures consistent inode timestamps across builds.
+> time64_t is an alias for long long int, I think you want strtoll here.
 > 
-> DETERMINISTIC_SEED support:
-> When DETERMINISTIC_SEED is set, use it to generate deterministic values
-> from get_random_u32() instead of reading from /dev/urandom. This ensures
-> that UUIDs, and other randomly-selected values are consistent across builds.
+> Also you ought to provide an endptr so that you can check that strtoll
+> consumed the entire $SOURCE_DATE_EPOCH string.  The
+> reproducible-builds.org spec you reference above says:
 > 
-> The implementation introduces two helper functions to minimize changes
-> to existing code:
+> "The value MUST be an ASCII representation of an integer with no
+> fractional component, identical to the output format of date +%s."
 > 
-> - current_fixed_time(): Helper that parses and caches SOURCE_DATE_EPOCH.
->   Returns fixed timestamp when set, with fallback on parse errors.
-> - get_msws_prng_32(): Helper implementing Middle Square Weyl Sequence PRNG.
->   Uses DETERMINISTIC_SEED to generate deterministic pseudo-random sequence.
->   Accepts decimal/hex/octal values via base-0 parsing.
-> - Both helpers use one-time initialization to avoid repeated getenv() calls.
-> - Both quickly exit and noop if environment is not set or has invalid
->   variables, falling back to original behaviour.
+> which I interpret to mean that
 > 
-> Example usage:
->   SOURCE_DATE_EPOCH=1234567890 \
->   DETERMINISTIC_SEED=0xDEADBEEF \
->   mkfs.xfs \
-> 	-m uuid=$EXAMPLE_UUID \
-> 	-p file=./rootfs \
-> 	disk1.img
+> # SOURCE_DATE_EPOCH=35hotdogs mkfs.xfs -f /dev/sda ...
 > 
-> This enables distributions and build systems to create bit-for-bit
-> identical XFS filesystems when needed for verification and debugging.
+> shouldn't be allowed.
+>
+
+Alright, makes things easier I guess
+
+> > +			if (errno != 0) {
+> > +				epoch = -1;
+> > +				return false;
+> > +			}
+> > +		}
+> > +	}
+> > +
+> > +	/*
+> > +	 * This will happen only if we successfully read a valid
+> > +	 * SOURCE_DATE_EPOCH and properly initiated the epoch value.
+> > +	 */
+> > +	if (read_env && epoch >= 0) {
 > 
-> Signed-off-by: Luca Di Maio <luca.dimaio1@gmail.com>
-> ---
->  libxfs/util.c | 132 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 132 insertions(+)
+> Why disallow negative timestamps?  Suppose I want all the new files to
+> have a timestamp of November 5th, 1955?
+>
+
+Wanted to reuse the epoch also as a way to track initialization of the
+value, but I guess using another variable unblocks this
+
+> > +		tv->tv_sec = (time_t)epoch;
 > 
-> diff --git a/libxfs/util.c b/libxfs/util.c
-> index 3597850d..676da81b 100644
-> --- a/libxfs/util.c
-> +++ b/libxfs/util.c
-> @@ -137,12 +137,69 @@ xfs_log_calc_unit_res(
->  	return unit_bytes;
->  }
->  
-> +/*
-> + * current_fixed_time() tries to detect if SOURCE_DATE_EPOCH is in our
-> + * environment, and set input timespec's timestamp to that value.
-> + *
-> + * Returns true on success, fail otherwise.
-> + */
-> +bool
-> +current_fixed_time(
-> +	struct			timespec64 *tv)
-> +{
-> +	/*
-> +	 * To avoid many getenv() we'll use an initialization static flag, so
-> +	 * we only read once.
-> +	 */
-> +	static bool		read_env = false;
-> +	static time64_t		epoch = -1;
-> +	char			*source_date_epoch;
-> +
-> +	if (!read_env) {
-> +		read_env = true;
-> +		source_date_epoch = getenv("SOURCE_DATE_EPOCH");
-> +		if (source_date_epoch && source_date_epoch[0] != '\0') {
-> +			errno = 0;
-> +			epoch = strtoul(source_date_epoch, NULL, 10);
-
-time64_t is an alias for long long int, I think you want strtoll here.
-
-Also you ought to provide an endptr so that you can check that strtoll
-consumed the entire $SOURCE_DATE_EPOCH string.  The
-reproducible-builds.org spec you reference above says:
-
-"The value MUST be an ASCII representation of an integer with no
-fractional component, identical to the output format of date +%s."
-
-which I interpret to mean that
-
-# SOURCE_DATE_EPOCH=35hotdogs mkfs.xfs -f /dev/sda ...
-
-shouldn't be allowed.
-
-> +			if (errno != 0) {
-> +				epoch = -1;
-> +				return false;
-> +			}
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * This will happen only if we successfully read a valid
-> +	 * SOURCE_DATE_EPOCH and properly initiated the epoch value.
-> +	 */
-> +	if (read_env && epoch >= 0) {
-
-Why disallow negative timestamps?  Suppose I want all the new files to
-have a timestamp of November 5th, 1955?
-
-> +		tv->tv_sec = (time_t)epoch;
-
-time_t can be 32-bit; don't needlessly truncate epoch.
-
-> +		tv->tv_nsec = 0;
-> +		return true;
-> +	}
-> +
-> +	/*
-> +	 * We initialized but had no valid SOURCE_DATE_EPOCH so we fall back
-> +	 * to regular behaviour.
-> +	 */
-> +	return false;
-> +}
-> +
->  struct timespec64
->  current_time(struct inode *inode)
->  {
->  	struct timespec64	tv;
->  	struct timeval		stv;
->  
-> +	/*
-> +	 * Check if we're creating a reproducible filesystem.
-> +	 * In this case we try to parse our SOURCE_DATE_EPOCH from environment.
-> +	 * If it fails, fall back to returning gettimeofday()
-> +	 * like we used to do.
-> +	 */
-> +	if (current_fixed_time(&tv))
-> +		return tv;
-> +
->  	gettimeofday(&stv, (struct timezone *)0);
->  	tv.tv_sec = stv.tv_sec;
->  	tv.tv_nsec = stv.tv_usec * 1000;
-> @@ -515,6 +572,72 @@ void xfs_dirattr_mark_sick(struct xfs_inode *ip, int whichfork) { }
->  void xfs_da_mark_sick(struct xfs_da_args *args) { }
->  void xfs_inode_mark_sick(struct xfs_inode *ip, unsigned int mask) { }
->  
-> +/*
-> + * get_msws_prng_32() tries to detect if DETERMINISTIC_SEED is in our
-> + * environment, and set our result to a pseudo-random number instead of
-> + * extracting from getrandom().
-
-Why not return a fixed "random" value?  Wouldn't that be more obviously
-deterministic?
-
-	if (getenv("DETERMINISTIC_SEED"))
-		return 0x53414d45;		/* "SAME" */
-
---D
-
-> + *
-> + * Returns true on success, fail otherwise.
-> + *
-> + * This function uses Middle Square Weyl Sequence to create pseudo-random
-> + * numbers based on our DETERMINISTIC_SEED.
-> + *    Ref: https://arxiv.org/pdf/1704.00358
-> + */
-> +bool
-> +get_msws_prng_32(
-> +	uint32_t	*result)
-> +{
-> +	/*
-> +	 * To avoid many getenv() we'll use an initialization static flag, so
-> +	 * we only read once.
-> +	 */
-> +	static bool	read_env = false;
-> +	/* MSWS state variables */
-> +	static uint64_t msws_c = 0;  /* increment (user seed) */
-> +	static uint64_t msws_n = 0;  /* current value */
-> +	static uint64_t msws_s = 0;  /* accumulator */
-> +	char		*seed;
-> +	unsigned long	deterministic_seed;
-> +
-> +	if (!read_env) {
-> +		read_env = true;
-> +		seed = getenv("DETERMINISTIC_SEED");
-> +		if (seed && seed[0] != '\0') {
-> +			errno = 0;
-> +			deterministic_seed = strtoul(seed, NULL, 0);
-> +			if (errno != 0)
-> +				return false;
-> +
-> +			/*
-> +			 * In this variation or MSWS we will use
-> +			 * DETERMINISTIC_SEED as our odd number in the formula,
-> +			 * so we will need to ensure it is odd.
-> +			 */
-> +			msws_c = deterministic_seed | 1;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * This will happen only if we successfully read a valid
-> +	 * DETERMINISTIC_SEED and properly initiated the sequence.
-> +	 */
-> +	if (read_env && msws_c != 0) {
-> +		msws_n *= msws_n;
-> +		msws_s += msws_c;
-> +		msws_n += msws_s;
-> +		msws_n = (msws_n >> 32) | (msws_n << 32);
-> +		*result = (uint32_t)msws_n;
-> +
-> +		return true;
-> +	}
-> +
-> +	/*
-> +	 * We initialized but had no valid DETERMINISTIC_SEED so we fall back
-> +	 * to regular behaviour.
-> +	 */
-> +	return false;
-> +}
-> +
->  #ifdef HAVE_GETRANDOM_NONBLOCK
->  uint32_t
->  get_random_u32(void)
-> @@ -522,6 +645,15 @@ get_random_u32(void)
->  	uint32_t	ret;
->  	ssize_t		sz;
->  
-> +	/*
-> +	* Check if we're creating a reproducible filesystem.
-> +	* In this case we try to parse our DETERMINISTIC_SEED from environment
-> +	* and use a pseudorandom number generator.
-> +	* If it fails, fall back to returning getrandom()
-> +	* like we used to do.
-> +	*/
-> +	if (get_msws_prng_32(&ret))
-> +		return ret;
->  	/*
->  	 * Try to extract a u32 of randomness from /dev/urandom.  If that
->  	 * fails, fall back to returning zero like we used to do.
-> -- 
-> 2.51.2
+> time_t can be 32-bit; don't needlessly truncate epoch.
 > 
+
+Ack
+
+> Why not return a fixed "random" value?  Wouldn't that be more obviously
+> deterministic?
+> 
+> 	if (getenv("DETERMINISTIC_SEED"))
+> 		return 0x53414d45;		/* "SAME" */
+> 
+> --D
+>
+
+I wanted to make sure other stuff that could rely on having different
+numbers from random, didn't break, but I guess it makes things even
+simpler this way
+
+L.
+
