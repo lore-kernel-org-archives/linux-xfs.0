@@ -1,347 +1,249 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from flow-a5-smtp.messagingengine.com (flow-a5-smtp.messagingengine.com [103.168.172.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F27429B77C;
-	Thu,  6 Nov 2025 23:32:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C23A33993;
+	Fri,  7 Nov 2025 00:01:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762471930; cv=none; b=O8C/B4jeGGf4VyiBeu50JTYNEpyejSs4AkcpHsb/JEarRktN0x7X6si5Rn7Azm6o/VSL5vdzh+L8xSByWV3dDnztNAdN/VER45CrTDEX9Aw5qau16QNxd/42vxyYKaKxeI64EzSNE0W2LHY08/hs2aS251I4TQKxrW+FNGQ/m5g=
+	t=1762473681; cv=none; b=ufJ4zqM+wyIPsjRK193FvrNokGG8H5JotQCaEz+5/ywGO0gzCbAKdeXXS87qBajmt7/nSDGn52hFA2/0C4NSQD5WZQ3FY1D2zwrkGJ2e58HdCXT3JVihuupOidW4o11gd7t94HiSh/ADjaY6BOHWPJtd/MtYyP+Kta8ZdkjZ8ts=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762471930; c=relaxed/simple;
-	bh=kwFIXGmDTz0KkgPWThrn6kIiD9F0ge+/uB7o9DvzaIQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BAvBdFkjy5+Hfkyx36x4gXtfrcWrL8rHY5OxzKxtAscjtKaDca2xmcwsdVoS3mlXoJ33kWdjy04+LSbuAnUbesQqwkhcYRgDs2OZvqBAyo1a99Uy3V8HxIQL0iJFMWIiZ+RxJoIExel2NiPrrmSmdjAKvDtVqJUP/jXT3yDm8ck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PY3rlzsz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762473681; c=relaxed/simple;
+	bh=MufCujU/0LsEsdoh25mDaMBAKJ5uFyL9+gDf2+vBd+0=;
+	h=Content-Type:MIME-Version:From:To:Cc:Subject:In-reply-to:
+	 References:Date:Message-id; b=oHYXEcTSYoHyVkX72EIqQp/P5StWGobo798vrgPKFkPEkyNRL5ulqc34y95dBzU5Q70jyjXpa6GEl3JMrRYy72FKDLvfRAtsDuZPNxrlAQyxUhrdj6GtCfXZaxIIc/Z6SGzkmAFCGOCwEtUPUkJZUwttL8x470KeSzTiJxH2JMk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net; spf=pass smtp.mailfrom=ownmail.net; dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b=WZYAC5pt; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Psg2gNos; arc=none smtp.client-ip=103.168.172.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ownmail.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PY3rlzsz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 828E3C113D0;
-	Thu,  6 Nov 2025 23:32:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762471929;
-	bh=kwFIXGmDTz0KkgPWThrn6kIiD9F0ge+/uB7o9DvzaIQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PY3rlzszd8HeovWoMEwil15yWUj3nJDd+KAARRV982DSu1LzqHHuCN2vJRwGlVI6e
-	 dvV50K5HmfMNLwM0ezVOkZwEDsyJnHnC1ySS5BFlgFqZOUUP3Jjk+em3N6yrY4qM+g
-	 IAbmdVTG92RzUCp10JnLVPcpxKyz/w6pZchu23cH6Wxpo0ttNXpAnM76csI9XIirEa
-	 hvv5684hKL7+jUySNsUap90DekGbtFWTZuNB63wSBfpnuLz6ahWGzLpJWI+4bUoejG
-	 2ftamriKytvKIY30zqOCohVaLkHbWmmzbkAEpdYxrsutGrYzq9bpsxp8+4XsOxms/d
-	 hk4HV08MwlVRA==
-Date: Thu, 6 Nov 2025 15:32:08 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/6] iomap, xfs: lift zero range hole mapping flush into
- xfs
-Message-ID: <20251106233208.GU196362@frogsfrogsfrogs>
-References: <20251016190303.53881-1-bfoster@redhat.com>
- <20251016190303.53881-3-bfoster@redhat.com>
- <20251105003114.GY196370@frogsfrogsfrogs>
- <aQtuPFHtzm8-zeqS@bfoster>
- <20251105222350.GO196362@frogsfrogsfrogs>
- <aQzEQtynNsJLdLcD@bfoster>
+	dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b="WZYAC5pt";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Psg2gNos"
+Received: from phl-compute-12.internal (phl-compute-12.internal [10.202.2.52])
+	by mailflow.phl.internal (Postfix) with ESMTP id 2F76A13801BB;
+	Thu,  6 Nov 2025 19:01:16 -0500 (EST)
+Received: from phl-mailfrontend-01 ([10.202.2.162])
+  by phl-compute-12.internal (MEProxy); Thu, 06 Nov 2025 19:01:16 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ownmail.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:reply-to:subject:subject:to:to; s=fm3; t=
+	1762473676; x=1762480876; bh=H6fp6wT7I155+JjI5U+YS+I+wpfi8UjlpY4
+	LU8fjdU4=; b=WZYAC5ptT+JI+E3LCYQDPMrHgn2+EeezTwSX9Fj81LnO57sEIW0
+	r5bog5i33AtRsNThYOW5jDpkHJo5LmpOQU7UBC/WI2CsBHqkVpPTyHV/ApxUM1tN
+	z6dVSfEJthkopAMT44s7CyEjRA2sDrA7Y2ef+eMrFuZp33UeziEFvqR18wUswgoZ
+	7iPlUWWsOUPV/ZTTFBfyHToZxwjR9SvGXXZHsmi76QwHLy2cwbWHeeTpiMc4d1Bx
+	XeBUu2V3z1ClTvl5FdR+kiB+ei1mybka1yZ1GjCONTkXDJfd+mNjp5j/C8/VHSTP
+	dThaFVWL2uE50jq2dsohAmGrZdbMqVO7Ang==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1762473676; x=
+	1762480876; bh=H6fp6wT7I155+JjI5U+YS+I+wpfi8UjlpY4LU8fjdU4=; b=P
+	sg2gNosOUgNreOPGLlVE9k8r0A93bFTvKl0A1YiFCaR0/yxDdKMWNofRmX2pbv2C
+	pRquqzDxvSlnoOFKUo3q0Ir6NiXbOSxcJH8T5/d9/oXcWZsBYNknHCW+NvYGKU2G
+	Ni1/LdQGu7Us7ontcePjlATrS/pgRVzjGEEX7HanmFiC2g+ePTDJ5SSAtpJBah0H
+	UWRXuHQQCAsLEu8BLIO90FsUNkSBOy8aoz2K3RYVbczfmOyGIUeyWzmqDvAPkDRA
+	jQU6SMudoXVNKkegC9Kaz3mNZdYl5nPuZwKwE6TAABXrWOiDglM1NlGb8+vPxFje
+	mse7RGNm/dK9IXvzGfidw==
+X-ME-Sender: <xms:xDYNaRhNbUJHsahPPmb6piowRnF47nS9W-BDbBUWZMioGCLB0QKE0Q>
+    <xme:xDYNadGCoPUcs45mlm9G-M-v6BypV59NlC8i5D0rXfDdqG1vicJvxUwSAeEgzm-AW
+    mM9E_dg4ffodJEGnHgTyJ5KyY9-2grnnN8X99UhFArcj-pfDw>
+X-ME-Received: <xmr:xDYNaZhYRnJe2Zwy43UTfxOwR_mAMlSeo2ztdDGjHNPtTGiDI9p-9jO_eGsbdcJ0bT11eVgdtj8wsq09LuBid3ldax93JTUA9nFc7WrB4ws3>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdeggddukeekudeiucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurheptgfgggfhvfevufgjfhffkfhrsehtqhertddttdejnecuhfhrohhmpefpvghilheu
+    rhhofihnuceonhgvihhlsgesohifnhhmrghilhdrnhgvtheqnecuggftrfgrthhtvghrnh
+    epleejtdefgeeukeeiteduveehudevfeffvedutefgteduhfegvdfgtdeigeeuudejnecu
+    vehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepnhgvihhlsg
+    esohifnhhmrghilhdrnhgvthdpnhgspghrtghpthhtohepleegpdhmohguvgepshhmthhp
+    ohhuthdprhgtphhtthhopehvihhrohesiigvnhhivhdrlhhinhhugidrohhrghdruhhkpd
+    hrtghpthhtohepfhhrrghnkhdrlhhisehvihhvohdrtghomhdprhgtphhtthhopehlihhn
+    uhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugi
+    dquhhnihhonhhfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhn
+    uhigqdhnihhlfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinh
+    hugidqnhhfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhig
+    qdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuh
+    igqdhhrghruggvnhhinhhgsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtohep
+    lhhinhhugidqfhhsuggvvhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrgh
+X-ME-Proxy: <xmx:xDYNaRZM3kLhMQrgyC03y_mvDTyKIhHr-UZRyaVoDw1bUdd3TO5KWQ>
+    <xmx:xDYNab6BMLI1rNIb697RuBsl1xbiAOh3-jJjQLerAQCMMocsAIIZ6A>
+    <xmx:xDYNaWzpKwiCJssErWAKaC5Omh24WDMdd_ESMwy-1QKK0c3T8HNikg>
+    <xmx:xDYNadOOkUDnvT6bORX3tFjgvG8jH6RVTiJmdbw7J549hUUGJI3E9w>
+    <xmx:zDYNaZmP4HdGrgNN2fuf1yLCRS5MEi7pUT3ZiXhJ138U_-MYPTZPl43i>
+Feedback-ID: iab3e480c:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 6 Nov 2025 19:00:45 -0500 (EST)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aQzEQtynNsJLdLcD@bfoster>
+From: NeilBrown <neilb@ownmail.net>
+To: "Jeff Layton" <jlayton@kernel.org>
+Cc: "Eric Van Hensbergen" <ericvh@kernel.org>,
+ "Latchesar Ionkov" <lucho@ionkov.net>,
+ "Dominique Martinet" <asmadeus@codewreck.org>,
+ "Christian Schoenebeck" <linux_oss@crudebyte.com>,
+ "David Sterba" <dsterba@suse.com>, "David Howells" <dhowells@redhat.com>,
+ "Marc Dionne" <marc.dionne@auristor.com>,
+ "Alexander Viro" <viro@zeniv.linux.org.uk>,
+ "Christian Brauner" <brauner@kernel.org>, "Jan Kara" <jack@suse.cz>,
+ "Tigran A. Aivazian" <aivazian.tigran@gmail.com>,
+ "Chris Mason" <clm@fb.com>, "Xiubo Li" <xiubli@redhat.com>,
+ "Ilya Dryomov" <idryomov@gmail.com>, "Jan Harkes" <jaharkes@cs.cmu.edu>,
+ coda@cs.cmu.edu, "Tyler Hicks" <code@tyhicks.com>,
+ "Jeremy Kerr" <jk@ozlabs.org>, "Ard Biesheuvel" <ardb@kernel.org>,
+ "Namjae Jeon" <linkinjeon@kernel.org>,
+ "Sungjong Seo" <sj1557.seo@samsung.com>,
+ "Yuezhang Mo" <yuezhang.mo@sony.com>, "Theodore Ts'o" <tytso@mit.edu>,
+ "Andreas Dilger" <adilger.kernel@dilger.ca>,
+ "Jaegeuk Kim" <jaegeuk@kernel.org>, "Chao Yu" <chao@kernel.org>,
+ "OGAWA Hirofumi" <hirofumi@mail.parknet.co.jp>,
+ "Miklos Szeredi" <miklos@szeredi.hu>,
+ "Andreas Gruenbacher" <agruenba@redhat.com>,
+ "Viacheslav Dubeyko" <slava@dubeyko.com>,
+ "John Paul Adrian Glaubitz" <glaubitz@physik.fu-berlin.de>,
+ "Yangtao Li" <frank.li@vivo.com>, "Richard Weinberger" <richard@nod.at>,
+ "Anton Ivanov" <anton.ivanov@cambridgegreys.com>,
+ "Johannes Berg" <johannes@sipsolutions.net>,
+ "Mikulas Patocka" <mikulas@artax.karlin.mff.cuni.cz>,
+ "Muchun Song" <muchun.song@linux.dev>,
+ "Oscar Salvador" <osalvador@suse.de>,
+ "David Hildenbrand" <david@redhat.com>,
+ "David Woodhouse" <dwmw2@infradead.org>,
+ "Dave Kleikamp" <shaggy@kernel.org>,
+ "Trond Myklebust" <trondmy@kernel.org>,
+ "Anna Schumaker" <anna@kernel.org>,
+ "Ryusuke Konishi" <konishi.ryusuke@gmail.com>,
+ "Konstantin Komarov" <almaz.alexandrovich@paragon-software.com>,
+ "Mark Fasheh" <mark@fasheh.com>, "Joel Becker" <jlbec@evilplan.org>,
+ "Joseph Qi" <joseph.qi@linux.alibaba.com>,
+ "Bob Copeland" <me@bobcopeland.com>,
+ "Mike Marshall" <hubcap@omnibond.com>,
+ "Martin Brandenburg" <martin@omnibond.com>,
+ "Amir Goldstein" <amir73il@gmail.com>,
+ "Steve French" <sfrench@samba.org>, "Paulo Alcantara" <pc@manguebit.org>,
+ "Ronnie Sahlberg" <ronniesahlberg@gmail.com>,
+ "Shyam Prasad N" <sprasad@microsoft.com>, "Tom Talpey" <tom@talpey.com>,
+ "Bharath SM" <bharathsm@microsoft.com>,
+ "Zhihao Cheng" <chengzhihao1@huawei.com>,
+ "Hans de Goede" <hansg@kernel.org>, "Carlos Maiolino" <cem@kernel.org>,
+ "Hugh Dickins" <hughd@google.com>,
+ "Baolin Wang" <baolin.wang@linux.alibaba.com>,
+ "Andrew Morton" <akpm@linux-foundation.org>,
+ "Kees Cook" <kees@kernel.org>,
+ "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+ linux-kernel@vger.kernel.org, v9fs@lists.linux.dev,
+ linux-fsdevel@vger.kernel.org, linux-afs@lists.infradead.org,
+ linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+ codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
+ linux-efi@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-f2fs-devel@lists.sourceforge.net, gfs2@lists.linux.dev,
+ linux-um@lists.infradead.org, linux-mm@kvack.org,
+ linux-mtd@lists.infradead.org, jfs-discussion@lists.sourceforge.net,
+ linux-nfs@vger.kernel.org, linux-nilfs@vger.kernel.org,
+ ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
+ linux-karma-devel@lists.sourceforge.net, devel@lists.orangefs.org,
+ linux-unionfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+ samba-technical@lists.samba.org, linux-xfs@vger.kernel.org,
+ linux-hardening@vger.kernel.org
+Subject:
+ Re: [PATCH] vfs: remove the excl argument from the ->create() inode_operation
+In-reply-to: <f5927a9bb985b9ad241bc5f9fc32acfd35340222.camel@kernel.org>
+References: <20251105-create-excl-v1-1-a4cce035cc55@kernel.org>,
+ <176237780417.634289.15818324160940255011@noble.neil.brown.name>,
+ <6758176514cdd6e2ceacb3bd0e4d63fb8784b7c6.camel@kernel.org>,
+ <f5927a9bb985b9ad241bc5f9fc32acfd35340222.camel@kernel.org>
+Date: Fri, 07 Nov 2025 11:00:34 +1100
+Message-id: <176247363419.634289.473957828516111884@noble.neil.brown.name>
+Reply-To: NeilBrown <neil@brown.name>
 
-On Thu, Nov 06, 2025 at 10:52:34AM -0500, Brian Foster wrote:
-> On Wed, Nov 05, 2025 at 02:23:50PM -0800, Darrick J. Wong wrote:
-> > On Wed, Nov 05, 2025 at 10:33:16AM -0500, Brian Foster wrote:
-> > > On Tue, Nov 04, 2025 at 04:31:14PM -0800, Darrick J. Wong wrote:
-> > > > On Thu, Oct 16, 2025 at 03:02:59PM -0400, Brian Foster wrote:
-> > > > > iomap zero range has a wart in that it also flushes dirty pagecache
-> > > > > over hole mappings (rather than only unwritten mappings). This was
-> > > > > included to accommodate a quirk in XFS where COW fork preallocation
-> > > > > can exist over a hole in the data fork, and the associated range is
-> > > > > reported as a hole. This is because the range actually is a hole,
-> > > > > but XFS also has an optimization where if COW fork blocks exist for
-> > > > > a range being written to, those blocks are used regardless of
-> > > > > whether the data fork blocks are shared or not. For zeroing, COW
-> > > > > fork blocks over a data fork hole are only relevant if the range is
-> > > > > dirty in pagecache, otherwise the range is already considered
-> > > > > zeroed.
-> > > > 
-> > > > It occurs to me that the situation (unwritten cow mapping, hole in data
-> > > > fork) results in iomap_iter::iomap getting the unwritten mapping, and
-> > > > iomap_iter::srcmap getting the hole mapping.  iomap_iter_srcmap returns
-> > > > iomap_itere::iomap because srcmap.type == HOLE.
-> > > > 
-> > > > But then you have ext4 where there is no cow fork, so it will only ever
-> > > > set iomap_iter::iomap, leaving iomap_iter::srcmap set to the default.
-> > > > The default srcmap is a HOLE.
-> > > > 
-> > > > So iomap can't distinguish between xfs' speculative cow over a hole
-> > > > behavior vs. ext4 just being simple.  I wonder if we actually need to
-> > > > introduce a new iomap type for "pure overwrite"?
-> > > > 
-> > > 
-> > > I definitely think we need a better solution here in iomap. The current
-> > > iomap/srcmap management/handling is quite confusing. What that solution
-> > > is, I'm not sure.
-> > > 
-> > > > The reason I say that that in designing the fuse-iomap uapi, it was a
-> > > > lot easier to understand the programming model if there was always
-> > > > explicit read and write mappings being sent back and forth; and a new
-> > > > type FUSE_IOMAP_TYPE_PURE_OVERWRITE that could be stored in the write
-> > > > mapping to mean "just look at the read mapping".  If such a beast were
-> > > > ported to the core iomap code then maybe that would help here?
-> > > > 
-> > > 
-> > > I'm not following what this means. Separate read/write mappings for each
-> > > individual iomap operation (i.e. "read from here, write to there"), or
-> > > separate iomap structures to be used for read ops vs. write ops, or
-> > > something else..?
-> > 
-> > "read from here, write to there".
-> > 
-> 
-> Ok..
-> 
-> > First, we move IOMAP_HOLE up one:
-> > 
-> > #define IOMAP_NULL	0	/* no mapping here at all */
-> > #define IOMAP_HOLE	1	/* no blocks allocated, need allocation */
-> > #define IOMAP_DELALLOC	2	/* delayed allocation blocks */
-> > ...
-> > 
-> > and do some renaming:
-> > 
-> > struct iomap_iter {
-> > 	struct inode *inode;
-> > 	loff_t pos;
-> > 	u64 len;
-> > 	loff_t iter_start_pos;
-> > 	int status;
-> > 	unsigned flags;
-> > 	struct iomap write_map;
-> > 	struct iomap read_map;
-> > 	void *private;
-> > };
-> > 
-> > Then we change the interface so that ->iomap_begin always sets read_map
-> > to a mapping from which file data can be read, and write_map is always
-> > set to a mapping into which file data can be written.  If a filesystem
-> > doesn't support out of place writes, then it can ignore write_map and
-> > write_map.type will be IOMAP_NULL.
-> > 
-> > (Obviously the fs always has to supply a read mapping)
-> > 
-> > The read operations (e.g. readahead, fiemap) only ever pay attention to
-> > what the filesystem supplies in iomap_iter::read_map.
-> > 
-> > An unaligned pagecache write to an uncached region uses the read mapping
-> > to pull data into the pagecache.  For writeback, we'd use the write
-> > mapping if it's non-null, or else the read mapping.
-> > 
-> 
-> Or perhaps let the read/write mappings overlap? It's not clear to me if
-> that's better or worse. ;P
-> 
-> > This might not move the needle much wrt to fixing your problem, but at
-> > least it eliminates the weirdness around "@iomap is for reads except
-> > when you're doing a write but you have to do a read *and* @srcmap isn't
-> > a hole".
-> > 
-> 
-> Yeah.. it might be reaching a pedantic level, but to me having a couple
-> mappings that say "you can read from this range, write to that range,
-> and they might be the same" is more clear than the srcmap/dstmap/maybe
-> both logic we have today.
-> 
-> I'd be a little concerned about having similar complexity along the
-> lines of "read from here, write to there, except maybe sometimes write
-> to where you read from" in iomap if we could just make the logic dead
-> simple/consistent and give the fs helpers to fill things out properly.
-> But again this is my first exposure to the idea and so I'm thinking out
-> loud and probably missing some details..
+On Fri, 07 Nov 2025, Jeff Layton wrote:
+> On Thu, 2025-11-06 at 07:07 -0500, Jeff Layton wrote:
+> > On Thu, 2025-11-06 at 08:23 +1100, NeilBrown wrote:
+> > > On Thu, 06 Nov 2025, Jeff Layton wrote:
+> > > > Since ce8644fcadc5 ("lookup_open(): expand the call of vfs_create()"),
+> > > > the "excl" argument to the ->create() inode_operation is always set to
+> > > > true. Remove it, and fix up all of the create implementations.
+> > >=20
+> > > nonono
+> > >=20
+> > >=20
+> > > > @@ -3802,7 +3802,7 @@ static struct dentry *lookup_open(struct nameid=
+ata *nd, struct file *file,
+> > > >  		}
+> > > > =20
+> > > >  		error =3D dir_inode->i_op->create(idmap, dir_inode, dentry,
+> > > > -						mode, open_flag & O_EXCL);
+> > > > +						mode);
+> > >=20
+> > > "open_flag & O_EXCL" is not the same as "true".
+> > >=20
+> > > It is true that "all calls to vfs_create() pass true for 'excl'"
+> > > The same is NOT true for inode_operations.create.
+> > >=20
+> >=20
+> > I don't think this is a problem, actually:
+> >=20
+> > Almost all of the existing ->create() operations ignore the "excl"
+> > bool. There are only two that I found that do not: NFS and GFS2. Both
+> > of those have an ->atomic_open() operation though, so lookup_open()
+> > will never call ->create() for those filesystems. This means that -
+> > > create() _is_ always called with excl =3D=3D true.
+>=20
+> How about this for a revised changelog, which makes the above clear:
+>=20
+>     vfs: remove the excl argument from the ->create() inode_operation
+>    =20
+>     Since ce8644fcadc5 ("lookup_open(): expand the call of vfs_create()"),
+>     the "excl" argument to the ->create() inode_operation is always set to
+>     true in vfs_create().
+>    =20
+>     There is another call to ->create() in lookup_open() that can set it to
+>     either true or false. All of the ->create() operations in the kernel
+>     ignore the excl argument, except for NFS and GFS2. Both NFS and GFS2
+>     have an ->atomic_open() operation, however so lookup_open() will never
+>     call ->create() on those filesystems.
+>    =20
+>     Remove the "excl" argument from the ->create() operation, and fix up the
+>     filesystems accordingly.
 
-That's basically it.  I thought about requiring the fuse server to fill
-out both read and write iomaps, but decided the OVERWRITE_ONLY way was
-easier because libfuse could initialize write_iomap to OVERWRITE_ONLY
-which would be a "sane" default.
+Thanks, that is a substantial improvement.  I see your point now and I
+think this is a really nice cleanup to make - thanks.
 
-A harder question is: what would filesystems put in write_map for a pure
-read?  They could leave it at the default (null mapping) and the kernel
-wouldn't pay attention to it.
+I think the commit message could be improved further by leading with the
+detail that is central - that most ->create function ignore 'excl'.
 
-> > > > A hole with an out-of-place mapping needs a flush (or maybe just go find
-> > > > the pagecache and zero it), whereas a hole with nothing else backing it
-> > > > clearly doesn't need any action at all.
-> > > > 
-> > > > Does that help?
-> > > > 
-> > > 
-> > > This kind of sounds like what we're already doing in iomap, so I suspect
-> > > I'm missing something on the fuse side...
-> > > 
-> > > WRT this patchset, I'm trying to address the underlying problems that
-> > > require the flush-a-dirty-hole hack that provides zeroing correctness
-> > > for XFS. This needs to be lifted out of iomap because it also causes
-> > > problems for ext4, but can be bypassed completely for XFS as well by the
-> > > end of the series. The first part is just a straight lift into xfs, but
-> > > the next patches replace the flush with use of the folio batch, and
-> > > split off the band-aid case down into insert range where this flush was
-> > > also indirectly suppressing issues.
-> > > 
-> > > For the former, if you look at the last few patches the main reason we
-> > > rely on the flush-a-dirty-hole hack is that we don't actually report the
-> > > mappings correctly in XFS for zero range with respect to allowable
-> > > behavior. We just report a hole if one exists in the data fork. So this
-> > > is trying to encode that "COW fork prealloc over data fork hole"
-> > > scenario correctly for zero range, and also identify when we need to
-> > > consider whether the mapping range is dirty in cache (i.e. unwritten COW
-> > > blocks).
-> > 
-> > Ahh, ok.  I think I get what you're saying now -- instead of doddering
-> > around in iomap to make it know the difference between "prealloc in cow,
-> > hole in data fork" vs. "hole in data fork", you'd rather try to
-> > accumulate folios in the folio_batch, hand that to iomap, and then iomap
-> > will just zero folios in the batch.  No need for the preflush or deep
-> > surgery to core code.
-> > 
-> 
-> Yeah, I don't want to preclude potential mapping improvements, but I'm
-> also not trying to solve that here just for zero range.
+ With two exceptions, ->create() methods provided by filesystems ignore
+ the "excl" flag.  Those exception are NFS and GFS2 which both also
+ provide ->atomic_open.
 
-<nod> The problem fixed by each of our patchsets is not a sidequest for
-the other's. ;)
+ excl is always true when ->create is called from vfs_create() (since
+ commit......) so the only time it can be false is when it is called by
+ lookup_open() for filesystems that do not provide ->atomic_open.
 
-I think your patchset is fine, but remind me -- what happens if you
-can't fill the whole folio batch?  iomap just calls us back to get the
-rest of the mapping and more folios?  I think that's sufficient to fix
-the problem.
+ So the excl flag to ->create is either ignored or true.  So we can
+ remove it and change NFS and GFS2 to acts as though it were true.
 
-> I suppose we could consider changing this particular case to also report
-> the cow mapping (similar to buffered write IIRC) and maybe that would
-> reduce some quirkiness, but I'd have to think harder and test that out.
-> It might probably still be a separate patch just because I'm hesitant to
-> change too much at once and hurt bisectability.
+>=20
+> Maybe we also need some comments or updates to Documentation/ to make
+> it clear that ->create() always implies O_EXCL semantics?
 
-It never hurts to tack the experimental patches on the end of series, if
-it would help answer hypothetical questions.  Though those ought to be
-marked as such.
+Definitely, something in porting.rst and something in vfs.rst.
 
---D
+I would be worth saying somewhere that if the fs needs to mediate
+non-exclusive creation, it must provide atomic_open().
 
-> > > So yes in general I think we need to improve on iomap reporting somehow,
-> > > but I don't necessarily see how that avoids the need (or desire) to fix
-> > > up the iomap_begin logic. I also think it's confusing enough that it
-> > > should probably be a separate discussion (I'd probably need to stare at
-> > > the fuse-related proposition to grok it).
-> > > 
-> > > Ultimately the flush in zero range should go away completely except for
-> > > the default/fallback case where the fs supports zero range, fails to
-> > > check pagecache itself, and iomap has otherwise detected that the range
-> > > over an unwritten mapping was dirty. There has been some discussion over
-> > > potentially lifting the batch lookup into iomap as well, but there are
-> > > some details that would need to be worked out to determine whether that
-> > > can be done safely.
-> > 
-> > <nod> ok I'll keep reading this series.
-> > 
-> 
-> Thanks.
-> 
-> Brian
-> 
-> > --D
-> > 
-> > > Brian
-> > > 
-> > > > --D
-> > > > 
-> > > > > The easiest way to deal with this corner case is to flush the
-> > > > > pagecache to trigger COW remapping into the data fork, and then
-> > > > > operate on the updated on-disk state. The problem is that ext4
-> > > > > cannot accommodate a flush from this context due to being a
-> > > > > transaction deadlock vector.
-> > > > > 
-> > > > > Outside of the hole quirk, ext4 can avoid the flush for zero range
-> > > > > by using the recently introduced folio batch lookup mechanism for
-> > > > > unwritten mappings. Therefore, take the next logical step and lift
-> > > > > the hole handling logic into the XFS iomap_begin handler. iomap will
-> > > > > still flush on unwritten mappings without a folio batch, and XFS
-> > > > > will flush and retry mapping lookups in the case where it would
-> > > > > otherwise report a hole with dirty pagecache during a zero range.
-> > > > > 
-> > > > > Note that this is intended to be a fairly straightforward lift and
-> > > > > otherwise not change behavior. Now that the flush exists within XFS,
-> > > > > follow on patches can further optimize it.
-> > > > > 
-> > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > > ---
-> > > > >  fs/iomap/buffered-io.c |  2 +-
-> > > > >  fs/xfs/xfs_iomap.c     | 25 ++++++++++++++++++++++---
-> > > > >  2 files changed, 23 insertions(+), 4 deletions(-)
-> > > > > 
-> > > > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > > > > index 05ff82c5432e..d6de689374c3 100644
-> > > > > --- a/fs/iomap/buffered-io.c
-> > > > > +++ b/fs/iomap/buffered-io.c
-> > > > > @@ -1543,7 +1543,7 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
-> > > > >  		     srcmap->type == IOMAP_UNWRITTEN)) {
-> > > > >  			s64 status;
-> > > > >  
-> > > > > -			if (range_dirty) {
-> > > > > +			if (range_dirty && srcmap->type == IOMAP_UNWRITTEN) {
-> > > > >  				range_dirty = false;
-> > > > >  				status = iomap_zero_iter_flush_and_stale(&iter);
-> > > > >  			} else {
-> > > > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > > > > index 01833aca37ac..b84c94558cc9 100644
-> > > > > --- a/fs/xfs/xfs_iomap.c
-> > > > > +++ b/fs/xfs/xfs_iomap.c
-> > > > > @@ -1734,6 +1734,7 @@ xfs_buffered_write_iomap_begin(
-> > > > >  	if (error)
-> > > > >  		return error;
-> > > > >  
-> > > > > +restart:
-> > > > >  	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
-> > > > >  	if (error)
-> > > > >  		return error;
-> > > > > @@ -1761,9 +1762,27 @@ xfs_buffered_write_iomap_begin(
-> > > > >  	if (eof)
-> > > > >  		imap.br_startoff = end_fsb; /* fake hole until the end */
-> > > > >  
-> > > > > -	/* We never need to allocate blocks for zeroing or unsharing a hole. */
-> > > > > -	if ((flags & (IOMAP_UNSHARE | IOMAP_ZERO)) &&
-> > > > > -	    imap.br_startoff > offset_fsb) {
-> > > > > +	/* We never need to allocate blocks for unsharing a hole. */
-> > > > > +	if ((flags & IOMAP_UNSHARE) && imap.br_startoff > offset_fsb) {
-> > > > > +		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
-> > > > > +		goto out_unlock;
-> > > > > +	}
-> > > > > +
-> > > > > +	/*
-> > > > > +	 * We may need to zero over a hole in the data fork if it's fronted by
-> > > > > +	 * COW blocks and dirty pagecache. To make sure zeroing occurs, force
-> > > > > +	 * writeback to remap pending blocks and restart the lookup.
-> > > > > +	 */
-> > > > > +	if ((flags & IOMAP_ZERO) && imap.br_startoff > offset_fsb) {
-> > > > > +		if (filemap_range_needs_writeback(inode->i_mapping, offset,
-> > > > > +						  offset + count - 1)) {
-> > > > > +			xfs_iunlock(ip, lockmode);
-> > > > > +			error = filemap_write_and_wait_range(inode->i_mapping,
-> > > > > +						offset, offset + count - 1);
-> > > > > +			if (error)
-> > > > > +				return error;
-> > > > > +			goto restart;
-> > > > > +		}
-> > > > >  		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
-> > > > >  		goto out_unlock;
-> > > > >  	}
-> > > > > -- 
-> > > > > 2.51.0
-> > > > > 
-> > > > > 
-> > > > 
-> > > 
-> > > 
-> > 
-> 
-> 
+Thanks,
+NeilBrown
+
+
+> --=20
+> Jeff Layton <jlayton@kernel.org>
+>=20
+
