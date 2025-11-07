@@ -1,120 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A02432D0E6
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Nov 2025 17:50:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA4E61D61A3
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Nov 2025 19:47:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762537805; cv=none; b=eNnelRMYsdluoR8C8EsAo2B4Q0dtC7lGCHPnpj40j1avO0K6bNEJVawtM9/JKi3xH84qUks2FYZa/io3LODGTxOeixgq6VGtGKZR+O2OVEHp7ClgZgN6GzYMkm4wx148TGnnbgm8il7jocRS0oCyVkdks4XiXGiiZq+roh+S7UU=
+	t=1762544879; cv=none; b=qq+1R9D2DSVKWqD9ztRn/rUW+wKU4EvgbeLUg7Q9w7BzXYI0yhV7d5VDcVsKjtGpBcheSjyDiumWR19GYuC7Xumvjduh49BcjUS9OM5x8kcEJHOXwXjnbj9BG3NUATN6Qvcd7sP05nndyZKOGy3sLE6ibqhADoGqVZahQRAGHWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762537805; c=relaxed/simple;
-	bh=GtiLzC7FyrkNXTeFSkMvBNVgqKfecKUDohCXRmYzYIw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WYjQettlxAAHNBxeGVFeist1LV5sMwKrTPh5jI+monnKhtTV9C8ErvaZQul48IjdO6hCTRkZnEX06lkNhCuFq/+6DYt+CwaXp+p+Br67wMArS9V9H9MDO14WHf3JaPTNGkTQuXXr/waFQ71rQbGpNAhWIda2foFbGOMs0uwgcr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TAwVo4xZ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762544879; c=relaxed/simple;
+	bh=crDtNp7DFMNFe28/f5JxM9VqAwosYQKkPk4uzhNkWkA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SChpDXLnGS8ijXVbTDIkuuzwjptg4jUf1GSx6jVxFWRQvyfDRhuqE3DGJHV4t69ArIwABk2xve5kOGO41i47gqC0ixb1tz4hHMC6LsuEHebbmQVaJMqGhrY8bWgDpQy62RfcpP/68zy42aXbiS7QuD+o5LGurYkDZjhyfbiOJoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=rkvbqOoL; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=JAQh3Slj; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TAwVo4xZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2F9CC19424;
-	Fri,  7 Nov 2025 17:50:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762537805;
-	bh=GtiLzC7FyrkNXTeFSkMvBNVgqKfecKUDohCXRmYzYIw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TAwVo4xZ4+IJ/6yq5hiMOlrSD+o1rwDJIitnOHSR0B7H10MsfIiu/6VZLErp9Lx94
-	 G1VDnSvCxoXDHeGmuB0oS/kkb4RGnDM5vJTYqyK0/vbB7Gte8h4WYUhs14ZqsdAe5n
-	 Q8CP0gJbcCJyA54eGZFa2vKYV3GcTNTGH/TydzYtzolebHbuCw1aNku5PCBXaOJT5A
-	 2SmTMcutqg6zv/PEKEYgDb50UR98YEzJ1dAaFs+7bm/n5PqcqXtDvbgWGS51ssnSWd
-	 ya3XYWjhVJpyXCuVFaGycNqkJ4hqW9JAmbJwO+KkxFTP6IXgLHGVjjk6p6WlheKIrR
-	 5t/gPU7gm3DwQ==
-Date: Fri, 7 Nov 2025 09:50:04 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-	"ojaswin@linux.ibm.com" <ojaswin@linux.ibm.com>
-Subject: Re: [bug report] fstests generic/774 hang
-Message-ID: <20251107175004.GL196370@frogsfrogsfrogs>
-References: <mx6gzhhkvcdnadmmxziu77cuywq4ql5u2hp6fd673vorhx35pz@jmyv74f236ka>
- <c5cff4c3-cf0a-47cc-9ae5-20d7316b3c09@oracle.com>
- <2c4d144b-81fd-4e4c-90a8-fd3c2082246c@oracle.com>
- <6xn2324slfvddlzwydjxigijdfu7gbpzk77iumjiubolirqzd3@fbuqjbbirtc4>
- <coeibafpki7dasbxwom36kwjpfiv4urshmderxovgyuefx22pv@jiyp3ll44kyr>
- <c690eebb-ad51-4fc4-b542-58d0a9265115@oracle.com>
- <cc5yndgo6enxwtnwvcc26wdoxg3wdnnzie6lvn2mttrzkeez24@6sk5qlhlrozp>
- <20251107042840.GK196370@frogsfrogsfrogs>
- <raxwda5jgqm463olshbx5q32iy3kpfayoj7xaj5yl5dlduiv6m@szrvfmnxeant>
- <5e3f6b82-1e8c-4cd1-90a6-e1612f76370b@oracle.com>
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="rkvbqOoL";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="JAQh3Slj"
+Received: from pathway.suse.cz (unknown [10.100.208.146])
+	by smtp-out2.suse.de (Postfix) with ESMTP id 9CF432057A;
+	Fri,  7 Nov 2025 19:47:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1762544876; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=KtC7rzSK0aTgwHJiLrZd7KjHwgNeZ15oPHoIeGdUNXA=;
+	b=rkvbqOoLf/C/5wQktFj0MjJl0kWvB1Y/VlxHjJm4yYgjz4pdo+nzkCZ1V1IbsAY+whRSDQ
+	8CuVv8FFzC9Sk/cgk8VuWeB3rBfjguZB3bBmqQTT08wgh5S1kls6Sz/KprVLoEkK5pPk2P
+	JtchIAocLGTX7/9zj2+n1bQ/IK6D5C0=
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1762544875; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=KtC7rzSK0aTgwHJiLrZd7KjHwgNeZ15oPHoIeGdUNXA=;
+	b=JAQh3SljtpaRNpy8XtXBtdDrcg6qpsHyxTJ69siFOUXMzSS2fh1Ov9qye8HHQ7UNaWOGHf
+	Ou4vNqzCdzWFhe4qkvH5EdXRXLW52AfxJ43Us360WIQbeGPMUM+7tnzlTWpowfNzpRxsr9
+	+gAGBHFsXEtmbaOqJeOlNdRoJLXs5+I=
+From: Petr Mladek <pmladek@suse.com>
+To: John Ogness <john.ogness@linutronix.de>
+Cc: Joanne Koong <joannelkoong@gmail.com>,
+	"amurray @ thegoodpenguin . co . uk" <amurray@thegoodpenguin.co.uk>,
+	brauner@kernel.org,
+	chao@kernel.org,
+	djwong@kernel.org,
+	jaegeuk@kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com,
+	Petr Mladek <pmladek@suse.com>
+Subject: [PATCH 0/2] printk_ringbuffer: Fix regression in get_data() and clean up data size checks
+Date: Fri,  7 Nov 2025 20:47:18 +0100
+Message-ID: <20251107194720.1231457-1-pmladek@suse.com>
+X-Mailer: git-send-email 2.51.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5e3f6b82-1e8c-4cd1-90a6-e1612f76370b@oracle.com>
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-2.78 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	NEURAL_HAM_SHORT(-0.18)[-0.907];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_TWELVE(0.00)[13];
+	ARC_NA(0.00)[];
+	RCVD_COUNT_ZERO(0.00)[0];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FREEMAIL_CC(0.00)[gmail.com,thegoodpenguin.co.uk,kernel.org,lists.sourceforge.net,vger.kernel.org,googlegroups.com,suse.com];
+	TO_DN_SOME(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com]
+X-Spam-Flag: NO
+X-Spam-Score: -2.78
 
-On Fri, Nov 07, 2025 at 12:48:38PM +0000, John Garry wrote:
-> On 07/11/2025 05:53, Shinichiro Kawasaki wrote:
-> > On Nov 06, 2025 / 20:28, Darrick J. Wong wrote:
-> > > On Fri, Nov 07, 2025 at 02:27:50AM +0000, Shinichiro Kawasaki wrote:
-> > > > On Nov 06, 2025 / 08:53, John Garry wrote:
-> > ...
-> > > > > Having a hang - even for the conditions set - should not produce a hang. I
-> > > > > can check on whether we can improve the software-based atomic writes in xfs
-> > > > > to avoid this.
-> > > > 
-> > > > Thanks. Will sysrq-t output help? If it helps, I can take it from the hanging
-> > > > test node and share.
-> > > 
-> > > Yes, anything you can share would be helpful.
-> > 
-> > Okay, I attached dmesg log file (dmesg.gz), which contains the INFO messages and
-> > the sysrq-t output. It was taken with v6.18-rc4 kernel with the fix patches by
-> > Darrick. I also attached the kernel config (_config.gz) which I used to build
-> > the test target kernel.
-> > 
-> > > FWIW the test runs in 51
-> > > seconds here, but I only have 4 CPUs in the VM and fast storage so its
-> > > filesize is "only" 800MB.
-> > 
-> > FYI, my test node has 24 CPUs. The hang is sporadic and I needed to repeat the
-> > test case a few times to recreate it with the 8GiB TCMU devices. When it does
-> > not hang, the test case takes about an hour to complete.
-> 
-> Hi Shinichiro,
-> 
-> Can you still stop the test with ctrl^C, right?
-> 
-> @Darrick, I worry that there is too much ip lock contention in
-> xfs_atomic_write_cow_iomap_begin(), especially since we may drop and
-> re-acquire the lock (in xfs_trans_alloc_inode()). Maybe we should force
-> serialization in xfs_file_dio_write_atomic(). After all, this was not
-> intended to provide good performance. Or look at other ways to optimise this
-> (if we do want good performance).
+This is outcome of the long discussion about the regression caused
+by 67e1b0052f6bb82 ("printk_ringbuffer: don't needlessly wrap data blocks around"),
+see https://lore.kernel.org/all/69096836.a70a0220.88fb8.0006.GAE@google.com/
 
-I don't see how that helps.  All that does is shift the lock contention
-from xfs_inode::i_lock to inode::i_rwsem.  At the end of the day, this
-test is starting up 2*nr_cpus threads to issue large atomic directio
-writes that take a long time to complete.  Stall warnings when there are
-a large number of threads all trying to directio write to a file whose
-blocks require a metadata update upon IO completion are a long known
-problem.
+The 1st patch fixes the regression as agreed, see
+https://lore.kernel.org/all/87ecqb3qd0.fsf@jogness.linutronix.de/
 
-I altered my test VM to have 24 cores and enough RAM to avoid OOMing the
-machine.  Setting up the mixed mappings file took 27 seconds, and the
-aio writes themselves took 3:15.  Validating the contents took 4
-seconds.
+The 2nd patch adds a helper function to unify the checks whether
+a more space is needed. I did my best to address all the concerns
+about various proposed variants.
 
-Maaaybe we should back off on the file size.  I don't see why it needs
-to create a 5GB file for testing.  The verify runs at 2100MB/s whereas
-the atomic writes plod along at 25MB/s.  That's why this test takes a
-loooong time to run.
+Note that I called the new helper function "need_more_space()" in the end.
+It avoids all the problems with "before" vs. "lt" vs "le",
+and "_safe" vs. "_sane" vs. "_bounded".
 
-(I don't see the lfsr complaints, but I'm running fio 3.41 from git)
+IMHO, the name "need_more_space()" fits very well in all three
+locations, surprisingly even in data_realloc(). But it is possible
+that you disagree. Let me know if you hate it ;-)
 
---D
 
-> Thanks,
-> John
-> 
+The patchset applies on top of printk/linux.git, branch for-6.19.
+It should apply on top of linux-next as well.
+
+Petr Mladek (2):
+  printk_ringbuffer: Fix check of valid data size when blk_lpos
+    overflows
+  printk_ringbuffer: Create a helper function to decide whether a more
+    space is needed
+
+ kernel/printk/printk_ringbuffer.c | 40 +++++++++++++++++++++++++------
+ 1 file changed, 33 insertions(+), 7 deletions(-)
+
+-- 
+2.51.1
+
