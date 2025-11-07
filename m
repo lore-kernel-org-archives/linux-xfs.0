@@ -1,36 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48E8E3019D0
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Nov 2025 09:42:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EF452D9EC7
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Nov 2025 11:48:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762508545; cv=none; b=LaoLKs7T1qkAL/NPWNmlCxhv+icRcrMhxYwTkKs/Vpr4V/uYlva2N/kIutIr29iCjtR3yOwjiZVvnNIYEudnoi/NBp5bSchPIM+gzmRSQy5aCJN5GIxWhQOIde4N5fKs4Ii8+wRkTXIcuLfL+jNazYz+YZIVgPmJIzkUOdFcSgs=
+	t=1762516122; cv=none; b=f4fP6xNHqLAjZS1BZMhyJqztX7wCW/Z6xLDszMNwJhBTVXJ/HZC4CDFfx+JHWClflSOlDA7T/AqZ7244xcspSjbtOV+NVOOEbc87CLWPuHsCuMiWshkMS5wKdMwSh2Gq5EPU6CUfbiM7YgCbmQKULFDpKsqE2QLOTeAP4bMhNsc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762508545; c=relaxed/simple;
-	bh=Ak/rAiYCOgEwqXgQA+/n7Y376rVfCuJdQvMln97qd+Q=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=AcplhSpNBeaiuNMuBZdbyjDybwPaz2odnULlv8F+HhiCNmOAPoK1rA6/IUEMKEl1tYPED4SIG4LCSd9aSHHcuMJ9TY7jQS3SvlcOj5K/QWjCCeRmD81RDqxxToFW6II1PRsDCMnst7hFUfLLlOhhkz7hGKGLBXmR53HmXeaAxss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hKcXRiLi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762516122; c=relaxed/simple;
+	bh=2RT+fnmoZ4nfvY5zlKMIbHcZWAoZa52HOltas4MhZt0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UCthmCDekvr5aaPE6elX9b5xzgL3xc+JJxFgEfkmeAE9DL0EVU+YhfHL3F3kgbG7YYSE1OTxQHlg4nKj9FwyXI31itER6xJkG6Le8ujkoufcZus8SdM7w4cGCYiZkqCDPsQl9uyeP9g14TQXB0t80WWGbnQ0rcQoeP2bqf4I3CA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=P7aHNV3j; arc=none smtp.client-ip=209.85.218.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hKcXRiLi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2065FC2BCB6
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Nov 2025 09:42:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762508544;
-	bh=Ak/rAiYCOgEwqXgQA+/n7Y376rVfCuJdQvMln97qd+Q=;
-	h=Date:From:To:Subject:From;
-	b=hKcXRiLiVXCxr5BYClHPNihNJvBuygNkL1sr/eiJ357Gzj4LUQN46qIiYLd224hwS
-	 ggvyYXXV1ZW926R0HQGhV8kj2RfatH8YrhoFwSQe0wLo7eoLIc4RcAm2OpHxNlkFiN
-	 nHezlLOIJQCMSSJiIudsjvjACIC1lBYKvMVsnWpUa+Ab4C61VawfJYF5e7OfaqQ/j0
-	 fp/EREuD6yvu2NjPf8M4+wtj/CE0u+msDORoHHIABs5wjlXCMbVD3HA2lAY7euWPzd
-	 xWVw6Zt/37gtY8kLJprNft4R4+F2gSVFUgkopmLIRSzGAge6cq3c4BDPwVNvwPALe9
-	 pQFfjfXeOzSHw==
-Date: Fri, 7 Nov 2025 10:42:21 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: linux-xfs@vger.kernel.org
-Subject: generic/648 metadata corruption
-Message-ID: <gjureda6lp7phaaum3ffwmcumu5q2zisatei73o6u2mgvohkkk@n2i2bwltxjqu>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="P7aHNV3j"
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-b3e9d633b78so120203066b.1
+        for <linux-xfs@vger.kernel.org>; Fri, 07 Nov 2025 03:48:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1762516118; x=1763120918; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=0btHuhgoXf1JIAcsuz3z0Yh6Fl6KHmjrhbtAp1FpJMM=;
+        b=P7aHNV3jloCek62WlFnRJC//16l643rNzJTBMrkq1gPlA0uuTXC7AbsP45doGVFfhu
+         Z/N8J+9MPHUJRsbju0gzwa0ysNiaTsWeCtMey6l0kTYs0n3a9TlDrrGRWwSnDEYzy6xt
+         00Yumg9eWeosEb3cErFvH1MWXqBBEFt9s6/GH97dkfTNYsNU1rqcv2w8zdDL+9dWRuYz
+         7SO8UrDtP9r1/XyEUB0CEzDxHp/ps7Hlavt9TKmLVHt1ffO5Voja9tpg75wbnxqX/E1J
+         8ylaWqv1+HrKj8+/nhBq+EmD9qganj8UktR6clILHy2r/qAGlNI0ryvgMkVlTfw2v6ci
+         yjEw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762516118; x=1763120918;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=0btHuhgoXf1JIAcsuz3z0Yh6Fl6KHmjrhbtAp1FpJMM=;
+        b=eEnvUsYDEngdM6voAGAxadhk/uuOSXcHwWCSzjyowOAz5V8IN/Go21tLQJdgd3e7MG
+         JFbMFhBPdCriXz6pU9VLDmVXfhjC8bXVCFS2lGpbiavl0g5mBoTT7t1WJw/VnGqYU2bU
+         A5dG8qMWPMYGcxI/zkT9eaiTnsGbZJoC9ZX48EWX+O7wUMVXwRRB/u2E7RL+5kx1IY+9
+         Qs+ajJ0kCikBPEHIe7KJxnjeKwG7Z45F/J4AJm3bc0yEt6mzEb7qoVZa12du+1BPUft8
+         7nXZ4Zmeb7cRoUZkpAS//padI8L7T2txMFB+yIzYRjSUSIZWclhSbuDmlxAmwE9wJgG6
+         C9zw==
+X-Forwarded-Encrypted: i=1; AJvYcCU/9SyVqokGlOhQoUJZhE5MKTrRncp5m65sUoTpQaHYHFTGiJxTF2WCHwAWO+r9Glb38JsQ19GA3As=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwT5BwnDNHyed+lwqJQb9oK9MLJ/jseuv8vWbHYc+GO6LTXeEIS
+	hYrtsOFV5r5ekF1X8d8CfSQKF4RKXmNHHo5GEOUkdkGgdwo72dTERovNZsU/sI4GOnQ=
+X-Gm-Gg: ASbGncv1tE0k61kZN6GudEnpNNvfWJtcMn5sJh3LrbUh1DKllNfW9S7nXD7sXBYu69P
+	vPHQE7MOjVOhOH9r1vnBTrNCfEjV5KwPfvez9At1qralhvHme+X4Pcqp+c3nmBvVlX5TsUnWvNN
+	12MZfpik74MxWNLyiF27ByIgOTH9Bg21eHmmUraVciJYQ5+g5OooKL1xjoEx5UwmXMFNsEH7ocd
+	jv899f9E6c9FgwoBr3dL20Su7CvFVHqbKu2ga2tIpjpkDzH43LGXTOTGrllsierLOrUn6asF52U
+	l9xt7kLyF7IwgsiUeCaDuZ4gBWnEM3aPVZRev67p6ELBPuqKS6Zbl4hM+fOt4ujIa2Ss2bdG9JY
+	4SliUswWNY/go4D2IrJ5kXbapkGsNI6S+mAjvWZe+3L9niDGMesL2h1YX0suE6R5kPr4bxsFpBn
+	voZ+AMVNPgtW3zY9UsOEwA70RU
+X-Google-Smtp-Source: AGHT+IEokWk1ZSxMf9gnaVqeMhezk2Opyg5SPlA30ekZY/SCq/nzbaLIFzm2m4+Eq/H2tXmxOh/49A==
+X-Received: by 2002:a17:907:9489:b0:b72:c103:88da with SMTP id a640c23a62f3a-b72d0adb87bmr177003966b.26.1762516117816;
+        Fri, 07 Nov 2025 03:48:37 -0800 (PST)
+Received: from pathway.suse.cz ([176.114.240.130])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b72d3baf872sm85014366b.27.2025.11.07.03.48.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 07 Nov 2025 03:48:37 -0800 (PST)
+Date: Fri, 7 Nov 2025 12:48:35 +0100
+From: Petr Mladek <pmladek@suse.com>
+To: John Ogness <john.ogness@linutronix.de>
+Cc: Joanne Koong <joannelkoong@gmail.com>,
+	syzbot <syzbot+3686758660f980b402dc@syzkaller.appspotmail.com>,
+	"amurray@thegoodpenguin.co.uk" <amurray@thegoodpenguin.co.uk>,
+	brauner@kernel.org, chao@kernel.org, djwong@kernel.org,
+	jaegeuk@kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [iomap?] kernel BUG in folio_end_read (2)
+Message-ID: <aQ3ck9Bltoac7-0d@pathway.suse.cz>
+References: <CAJnrk1bF8sLU6tG2MGkt_KR4BoTd_k01CMVZJ9js2-eyh80tbw@mail.gmail.com>
+ <69096836.a70a0220.88fb8.0006.GAE@google.com>
+ <CAJnrk1Yo4dRVSaPCaAGkHc+in03KaTXJ+KxckhLoSrRxbEdDBg@mail.gmail.com>
+ <aQpFLJM96uRpO4S-@pathway.suse.cz>
+ <87ldkk34yj.fsf@jogness.linutronix.de>
+ <aQuABK25fdBVTGZc@pathway.suse.cz>
+ <87bjlgqmk5.fsf@jogness.linutronix.de>
+ <87tsz7iea2.fsf@jogness.linutronix.de>
+ <aQzLX_y8PvBMiZ9f@pathway.suse.cz>
+ <87h5v73s5g.fsf@jogness.linutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,138 +88,273 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <87h5v73s5g.fsf@jogness.linutronix.de>
 
-Hello, has anybody has found any issues with generic/648 recently?
+On Thu 2025-11-06 20:04:03, John Ogness wrote:
+> On 2025-11-06, Petr Mladek <pmladek@suse.com> wrote:
+> >> diff --git a/kernel/printk/printk_ringbuffer.c b/kernel/printk/printk_ringbuffer.c
+> >> index 839f504db6d30..8499ee642c31d 100644
+> >> --- a/kernel/printk/printk_ringbuffer.c
+> >> +++ b/kernel/printk/printk_ringbuffer.c
+> >> @@ -390,6 +390,17 @@ static unsigned int to_blk_size(unsigned int size)
+> >>  	return size;
+> >>  }
+> >>  
+> >> +/*
+> >> + * Check if @lpos1 is before @lpos2. This takes ringbuffer wrapping
+> >> + * into account. If @lpos1 is more than a full wrap before @lpos2,
+> >> + * it is considered to be after @lpos2.
+> >
+> > The 2nd sentence is a brain teaser ;-)
+> >
+> >> + */
+> >> +static bool lpos1_before_lpos2(struct prb_data_ring *data_ring,
+> >> +			       unsigned long lpos1, unsigned long lpos2)
+> >> +{
+> >> +	return lpos2 - lpos1 - 1 < DATA_SIZE(data_ring);
+> >> +}
+> >
+> > It would be nice to describe the semantic a more clean way. Sigh,
+> > it is not easy. I tried several variants and ended up with:
+> >
+> >    + using "lt" instead of "before" because "lower than" is
+> >      a well known mathematical therm.
+> 
+> I explicitly chose a word other than "less" or "lower" because I was
+> concerned people might visualize values. The lpos does not necessarily
+> have a lesser or lower value. "Preceeds" would also be a choice of mine.
 
-I've hit it on my test batch this evening, running a 2k block size a
-metadata corruption error o generic/648.
+The word "before" was fine. I proposed "lt" because it was shorter and
+I wanted to add "le" variant. I wanted to keep it short also because I
+wanted to add another suffix to make it obvious that there was
+the twist with wrapping.
 
-I'll rerun the tests now and it later today, sharing it for a broader
-audience.
 
-This is running xfs's branch xfs-6.18-fixes.
+> When I see "lt" I immediately think "less than" and "<". But I will not
+> fight it. I can handle "lt".
+> 
+> >    + adding "_safe" suffix to make it clear that it is not
+> >      a simple mathematical comparsion. It takes the wrap
+> >      into account.
+> 
+> I find "_safe" confusing. Especially when you look at the implementation
+> you wonder, "what is safe about this?". Especially when comparing it to
+> all the complexity of the rest of the code. But I can handle "_safe" if
+> it is important for you.
 
-I don't remember have seen this on my previous runs, but
-I'll check the logs just in case.
+OK, forget "_safe". The helper function should make the code more
+clear. And it won't work when even you or me are confused.
 
-The fsstress process ended up getting stuck at:
+I though about "_wrap" but it was confusing as well. The code uses
+the word "wrap" many times and it is always about wrapping over
+the end of the data ring, for example, DATA_WRAPS() computes how
+many times the data array was filled [*].
 
-$ sudo cat /proc/2969171/stack 
-[<0>] folio_wait_bit_common+0x138/0x340
-[<0>] folio_wait_bit+0x1c/0x30
-[<0>] folio_wait_writeback+0x2f/0x90
-[<0>] __filemap_fdatawait_range+0x8d/0xf0
-[<0>] filemap_fdatawait_keep_errors+0x22/0x50
-[<0>] sync_inodes_sb+0x22c/0x2d0
-[<0>] sync_filesystem+0x70/0xb0
-[<0>] __x64_sys_syncfs+0x4e/0xd0
-[<0>] x64_sys_call+0x778/0x1da0
-[<0>] do_syscall_64+0x7f/0x7b0
-[<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
+But in this case, data_make_reusable(), and data_push_tail(),
+the edge for wrapping is a moving target. It is defined by
+data_ring->head_lpos and data_ring->tail_lpos.
 
-The kernel log from the last mount.
+[*] It is not the exact number because it is computed from lpos
+    which is not initialized to zero and might overflow.
 
-[ 7467.362544] XFS (loop0): EXPERIMENTAL metadata directory tree feature enabled.  Use at your own risk!
-[ 7467.363481] XFS (loop0): Mounting V5 Filesystem 2b40a1e4-f2f6-4a87-8f86-bbfc8a748329
-[ 7467.880205] XFS (loop0): Starting recovery (logdev: internal)
-[ 7468.006067] XFS (loop0): Ending recovery (logdev: internal)
-[ 7470.131605] buffer_io_error: 8 callbacks suppressed
-[ 7470.131613] Buffer I/O error on dev dm-1, logical block 243952, async page read
-[ 7470.148095] I/O error, dev loop0, sector 10071568 op 0x0:(READ) flags 0x81700 phys_seg 1 prio class 2
-[ 7470.148145] dm-0: writeback error on inode 71, offset 239466496, sector 668620
-[ 7470.150431] dm-0: writeback error on inode 71, offset 295327744, sector 1291332
-[ 7470.152500] dm-0: writeback error on inode 71, offset 239519744, sector 668724
-[ 7470.153937] dm-0: writeback error on inode 71, offset 3490498560, sector 103136
-[ 7470.154564] dm-0: writeback error on inode 71, offset 295213056, sector 1290512
-[ 7470.155123] Buffer I/O error on dev dm-0, logical block 41942912, async page read
-[ 7470.155132] Buffer I/O error on dev dm-0, logical block 41942913, async page read
-[ 7470.155136] Buffer I/O error on dev dm-0, logical block 41942914, async page read
-[ 7470.155139] Buffer I/O error on dev dm-0, logical block 41942915, async page read
-[ 7470.155142] Buffer I/O error on dev dm-0, logical block 41942916, async page read
-[ 7470.155145] Buffer I/O error on dev dm-0, logical block 41942917, async page read
-[ 7470.155148] Buffer I/O error on dev dm-0, logical block 41942918, async page read
-[ 7470.155151] Buffer I/O error on dev dm-0, logical block 41942919, async page read
-[ 7470.156967] dm-0: writeback error on inode 71, offset 3724138496, sector 1262832
-[ 7470.158445] dm-0: writeback error on inode 71, offset 295239680, sector 1301124
-[ 7470.158458] dm-0: writeback error on inode 71, offset 1988405248, sector 10605108
-[ 7470.167752] dm-0: writeback error on inode 71, offset 3490500608, sector 103140
-[ 7470.168539] dm-0: writeback error on inode 71, offset 3768272896, sector 1301296
-[ 7470.169439] I/O error, dev loop0, sector 10071568 op 0x0:(READ) flags 0x1000 phys_seg 1 prio class 2
-[ 7470.169425] I/O error, dev loop0, sector 6817447 op 0x1:(WRITE) flags 0x9800 phys_seg 1 prio class 2
-[ 7470.170375] XFS (loop0): metadata I/O error in "xfs_btree_read_buf_block+0xb7/0x170 [xfs]" at daddr 0x99ae10 len 4 error 5
-[ 7470.172378] XFS (loop0): log I/O error -5
-[ 7470.179737] I/O error, dev loop0, sector 0 op 0x1:(WRITE) flags 0x800 phys_seg 0 prio class 2
-[ 7470.182399] XFS (dm-0): log I/O error -5
-[ 7470.183490] XFS (dm-0): Filesystem has been shut down due to log error (0x2).
-[ 7470.185349] XFS (dm-0): Please unmount the filesystem and rectify the problem(s).
-[ 7470.187467] I/O error, dev loop0, sector 6817489 op 0x1:(WRITE) flags 0x9800 phys_seg 1 prio class 2
-[ 7470.188787] I/O error, dev loop0, sector 6817489 op 0x1:(WRITE) flags 0x9800 phys_seg 1 prio class 2
-[ 7470.189868] XFS (loop0): log I/O error -5
-[ 7470.190717] I/O error, dev loop0, sector 6817617 op 0x1:(WRITE) flags 0x9800 phys_seg 1 prio class 2
-[ 7470.193844] XFS (loop0): log I/O error -5
-[ 7470.195987] XFS (loop0): Metadata I/O Error (0x1) detected at xfs_trans_read_buf_map+0x1fe/0x4c0 [xfs] (fs/xfs/xfs_trans_buf.c:311).  Shutting down filesystem.
-[ 7470.200555] XFS (loop0): Please unmount the filesystem and rectify the problem(s)
-[ 7470.201821] XFS (loop0): Metadata corruption detected at xfs_dinode_verify.part.0+0x434/0xcb0 [xfs], inode 0x40d422 xfs_inode_item_precommit_check
-[ 7470.206186] XFS (loop0): Unmount and run xfs_repair
-[ 7470.207577] XFS (loop0): First 128 bytes of corrupted metadata buffer:
-[ 7470.209043] 00000000: 49 4e 81 b6 03 02 00 00 00 00 03 8b 00 00 02 1c  IN..............
-[ 7470.210242] 00000010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 0d  ................
-[ 7470.211633] 00000020: 36 42 da 8b dd 84 5e ec 36 42 da 8b ea d0 f9 2c  6B....^.6B.....,
-[ 7470.212668] 00000030: 36 42 da 8b ea d0 f9 2c 00 00 00 00 00 25 b8 00  6B.....,.....%..
-[ 7470.213878] 00000040: 00 00 00 00 00 00 03 32 00 00 00 00 00 00 00 00  .......2........
-[ 7470.215056] 00000050: 00 00 18 01 00 00 00 00 00 00 00 02 6e b2 b8 ce  ............n...
-[ 7470.216375] 00000060: 00 00 00 00 9f bb e2 1f 00 00 00 00 00 00 00 2f  .............../
-[ 7470.217157] 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 1a  ................
-[ 7470.218462] XFS: Assertion failed: fa == NULL, file: fs/xfs/xfs_inode_item.c, line: 62
-[ 7470.219749] ------------[ cut here ]------------
-[ 7470.220602] kernel BUG at fs/xfs/xfs_message.c:102!
-[ 7470.221232] Oops: invalid opcode: 0000 [#1] SMP NOPTI
-[ 7470.221907] CPU: 9 UID: 0 PID: 2967999 Comm: kworker/9:2 Not tainted 6.18.0-rc2.xfsRC5+ #23 PREEMPT(voluntary) 
-[ 7470.223443] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-2.fc40 04/01/2014
-[ 7470.224773] Workqueue: xfs-conv/loop0 xfs_end_io [xfs]
-[ 7470.225855] RIP: 0010:assfail+0x35/0x3f [xfs]
-[ 7470.226665] Code: 89 d0 41 89 c9 48 c7 c2 98 04 a0 c0 48 89 f1 48 89 fe 48 c7 c7 48 d6 9e c0 48 89 e5 e8 a4 fd ff ff 80 3d b5 62 26 00 00 74 02 <0f> 0b 0f 0b 5d e9 91 1d ba f8 48 8d 45 10 4c 8d 6c 24 10 48 89 e2
-[ 7470.228907] RSP: 0018:ffffb2e087bcfc60 EFLAGS: 00010202
-[ 7470.229492] RAX: 0000000000000000 RBX: ffff9e399129e400 RCX: 000000007fffffff
-[ 7470.230298] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffffc09ed648
-[ 7470.231094] RBP: ffffb2e087bcfc60 R08: 0000000000000000 R09: 000000000000000a
-[ 7470.231871] R10: 000000000000000a R11: 0fffffffffffffff R12: ffff9e3988311800
-[ 7470.232670] R13: ffff9e399a358000 R14: ffff9e3c05054318 R15: ffff9e3999d0d790
-[ 7470.233457] FS:  0000000000000000(0000) GS:ffff9e3d3e65f000(0000) knlGS:0000000000000000
-[ 7470.234362] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 7470.235002] CR2: 00007f2f373b20d8 CR3: 0000000114904005 CR4: 0000000000772ef0
-[ 7470.235805] PKRU: 55555554
-[ 7470.236113] Call Trace:
-[ 7470.236417]  <TASK>
-[ 7470.236688]  xfs_inode_item_precommit+0x1b8/0x370 [xfs]
-[ 7470.237601]  __xfs_trans_commit+0xba/0x410 [xfs]
-[ 7470.238453]  xfs_trans_commit+0x3b/0x70 [xfs]
-[ 7470.239245]  xfs_setfilesize+0xff/0x160 [xfs]
-[ 7470.240098]  xfs_end_ioend+0x235/0x2c0 [xfs]
-[ 7470.240921]  xfs_end_io+0xba/0xf0 [xfs]
-[ 7470.241680]  process_one_work+0x199/0x360
-[ 7470.242193]  worker_thread+0x265/0x3a0
-[ 7470.242637]  ? _raw_spin_unlock_irqrestore+0x12/0x40
-[ 7470.243215]  ? __pfx_worker_thread+0x10/0x10
-[ 7470.243737]  kthread+0x10f/0x250
-[ 7470.244173]  ? _raw_spin_unlock_irq+0x12/0x30
-[ 7470.244747]  ? __pfx_kthread+0x10/0x10
-[ 7470.245160]  ret_from_fork+0x1cb/0x200
-[ 7470.245617]  ? __pfx_kthread+0x10/0x10
-[ 7470.246038]  ret_from_fork_asm+0x1a/0x30
-[ 7470.246495]  </TASK>
-[ 7470.246744] Modules linked in: dm_zero dm_thin_pool dm_persistent_data dm_bio_prison dm_snapshot dm_bufio dm_flakey ip_set nf_tables sunrpc intel_rapl_msr intel_rapl_common intel_uncore_frequency_common kvm_intel kvm iTCO_wdt intel_pmc_bxt iTCO_vendor_support irqbypass rapl i2c_i801 i2c_smbus lpc_ich virtio_balloon joydev dm_mod loop nfnetlink zram xfs polyval_clmulni ghash_clmulni_intel serio_raw fuse qemu_fw_cfg [last unloaded: scsi_debug]
-[ 7470.251529] ---[ end trace 0000000000000000 ]---
-[ 7470.252054] RIP: 0010:assfail+0x35/0x3f [xfs]
-[ 7470.252842] Code: 89 d0 41 89 c9 48 c7 c2 98 04 a0 c0 48 89 f1 48 89 fe 48 c7 c7 48 d6 9e c0 48 89 e5 e8 a4 fd ff ff 80 3d b5 62 26 00 00 74 02 <0f> 0b 0f 0b 5d e9 91 1d ba f8 48 8d 45 10 4c 8d 6c 24 10 48 89 e2
-[ 7470.254883] RSP: 0018:ffffb2e087bcfc60 EFLAGS: 00010202
-[ 7470.255472] RAX: 0000000000000000 RBX: ffff9e399129e400 RCX: 000000007fffffff
-[ 7470.256377] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffffc09ed648
-[ 7470.257191] RBP: ffffb2e087bcfc60 R08: 0000000000000000 R09: 000000000000000a
-[ 7470.258034] R10: 000000000000000a R11: 0fffffffffffffff R12: ffff9e3988311800
-[ 7470.258830] R13: ffff9e399a358000 R14: ffff9e3c05054318 R15: ffff9e3999d0d790
-[ 7470.259637] FS:  0000000000000000(0000) GS:ffff9e3d3e65f000(0000) knlGS:0000000000000000
-[ 7470.260537] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 7470.261179] CR2: 00007f2f373b20d8 CR3: 0000000114904005 CR4: 0000000000772ef0
-[ 7470.261963] PKRU: 55555554
+> > Something like:
+> >
+> > /*
+> >  * Returns true when @lpos1 is lower than @lpos2 and both values
+> >  * are comparable.
+> >  *
+> >  * It is safe when the compared values are read a lock less way.
+> >  * One of them must be already overwritten when the difference
+> >  * is bigger then the data ring buffer size.
+> 
+> This makes quite a bit of assumptions about the context and intention of
+> the call. I preferred my brain teaser version. But to me it is not worth
+> bike-shedding. If this explanation helps you, I am fine with it.
 
+My problem with the "brain teaser" version is the sentence"
+
+  "If @lpos1 is more than a full wrap before @lpos2,
+   it is considered to be after @lpos2."
+
+It says what it does but it does not explain why. And the "why"
+is very important here.
+
+I actually think that the sentence is misleading. If @lpos1 is more
+than a full wrap before @lpos2 it is still _before_ @lpos2!
+
+Why we want to return "false" in this case? My understanding is
+that it is because we want to break the "while" cycle where
+the function is used because we are clearly working with
+outdated lpos values.
+
+What about?
+
+/*
+ * Return true when @lpos1 is lower than @lpos2 and both values
+ * look sane.
+ *
+ * They are considered insane when the difference is bigger than
+ * the data buffer size. It happens when the values are read
+ * without locking and another CPU already moved the ring buffer
+ * head and/or tail.
+ *
+ * The caller must behave carefully. The changes based on this
+ * check must be done using cmpxchg() to confirm that the check
+ * worked with valid values.
+ */
+static bool lpos1_before_lpos2_sane(struct prb_data_ring *data_ring,
+				    unsined long lpos1, unsigned long lpos2)
+{
+	return lpos2 - lpos1 - 1 < DATA_SIZE(data_ring);
+}
+
+Feel free to come up with any other function name or description.
+Whatever you think that is more clear. but I have a favor to ask you to:
+
+  + explain why the function returns false when the difference is
+    bigger that the data buffer size.
+
+  + ideally avoid the word "wrap" because it has another meaning
+    in the printk ring buffer code as explained earlier.
+
+
+> >>  /*
+> >>   * Sanity checker for reserve size. The ringbuffer code assumes that a data
+> >>   * block does not exceed the maximum possible size that could fit within the
+> >> @@ -577,7 +588,7 @@ static bool data_make_reusable(struct printk_ringbuffer *rb,
+> >>  	unsigned long id;
+> >>  
+> >>  	/* Loop until @lpos_begin has advanced to or beyond @lpos_end. */
+> >> -	while ((lpos_end - lpos_begin) - 1 < DATA_SIZE(data_ring)) {
+> >> +	while (lpos1_before_lpos2(data_ring, lpos_begin, lpos_end)) {
+> >
+> > lpos1_lt_lpos2_safe() fits here.
+> >
+> >>  		blk = to_block(data_ring, lpos_begin);
+> >>  		/*
+> >> @@ -668,7 +679,7 @@ static bool data_push_tail(struct printk_ringbuffer *rb, unsigned long lpos)
+> >>  	 * sees the new tail lpos, any descriptor states that transitioned to
+> >>  	 * the reusable state must already be visible.
+> >>  	 */
+> >> -	while ((lpos - tail_lpos) - 1 < DATA_SIZE(data_ring)) {
+> >> +	while (lpos1_before_lpos2(data_ring, tail_lpos, lpos)) {
+> >>  		/*
+> >>  		 * Make all descriptors reusable that are associated with
+> >>  		 * data blocks before @lpos.
+> >
+> > Same here.
+> >
+> >> @@ -1149,7 +1160,7 @@ static char *data_realloc(struct printk_ringbuffer *rb, unsigned int size,
+> >>  	next_lpos = get_next_lpos(data_ring, blk_lpos->begin, size);
+> >>  
+> >>  	/* If the data block does not increase, there is nothing to do. */
+> >> -	if (head_lpos - next_lpos < DATA_SIZE(data_ring)) {
+> >> +	if (!lpos1_before_lpos2(data_ring, head_lpos, next_lpos)) {
+> >
+> > I think that the original code was correct. And using the "-1" is
+> > wrong here.
+> 
+> You have overlooked that I inverted the check. It is no longer checking:
+> 
+>     next_pos <= head_pos
+> 
+> but is instead checking:
+> 
+>     !(head_pos < next_pos)
+> 
+> IOW, if "next has not overtaken head".
+
+I see. I missed this. Hmm, this would be correct when the comparsion was
+mathemathical (lt, le). But is this correct in our case when take
+into account the ring buffer wrapping?
+
+The original check returned "false" when the difference between head_lpos
+and next_lpos was bigger than the data ring size.
+
+The new check would return "true", aka "!false", in this case.
+
+Hmm, it seems that the buffer wrapping is not possible because
+this code is called when desc_reopen_last() succeeded. And nobody
+is allowed to free reopened block.
+
+Anyway, I consider using (!lpos1_before_lpos2()) as highly confusing
+in this case.
+
+I would either keep the code as is. Maybe we could add a comment
+explaining that
+
+	if (head_lpos - next_lpos < DATA_SIZE(data_ring)) {
+
+might fail only when the substraction is negative. It should never be
+positive because head_lpos advanced more than the data buffer size
+over next_lpos because the data block is reopened and nobody could
+free it.
+
+Maybe, we could even add a check for this.
+
+
+> > Both data_make_reusable() and data_push_tail() had to use "-1"
+> > because it was the "lower than" semantic. But in this case,
+> > we do not need to do anything even when "head_lpos == next_lpos"
+> >
+> > By other words, both data_make_reusable() and data_push_tail()
+> > needed to make a free space when the position was "lower than".
+> > There was enough space when the values were "equal".
+> >
+> > It means that "equal" should be OK in data_realloc(). By other
+> > words, data_realloc() should use "le" aka "less or equal"
+> > semantic.
+> >
+> > The helper function might be:
+> >
+> > /*
+> >  * Returns true when @lpos1 is lower or equal than @lpos2 and both
+> >  * values are comparable.
+> >  *
+> >  * It is safe when the compared values are read a lock less way.
+> >  * One of them must be already overwritten when the difference
+> >  * is bigger then the data ring buffer size.
+> >  */
+> > static bool lpos1_le_lpos2_safe(struct prb_data_ring *data_ring,
+> > 				unsined long lpos1, unsigned long lpos2)
+> > {
+> > 	return lpos2 - lpos1 < DATA_SIZE(data_ring);
+> > }
+> 
+> If you negate lpos1_lt_lpos2_safe() and swap the parameters, there is no
+> need for a second helper. That is what I did.
+
+Sigh, lpos1_le_lpos2_safe() does not say the truth after all.
+And (!lpos1_lt_lpos2_safe()) looks wrong to me.
+
+I am going to wait what you say about my comments above.
+
+> >> @@ -1262,7 +1273,7 @@ static const char *get_data(struct prb_data_ring *data_ring,
+> >>  
+> >>  	/* Regular data block: @begin less than @next and in same wrap. */
+> >>  	if (!is_blk_wrapped(data_ring, blk_lpos->begin, blk_lpos->next) &&
+> >> -	    blk_lpos->begin < blk_lpos->next) {
+> >> +	    lpos1_before_lpos2(data_ring, blk_lpos->begin, blk_lpos->next)) {
+> >
+> > Hmm, I think that it is more complicated here.
+> >
+> > The "lower than" semantic is weird here. One would expect that "equal"
+> > values, aka "zero size" is perfectly fine.
+> 
+> No, we would _not_ expect that zero size is OK, because we are detecting
+> "Regular data blocks", in which case they must _not_ be equal.
+
+It seems that you have more or less agreed with my proposal to
+use  check_data_size() in the other replay, see
+https://lore.kernel.org/all/87ecqb3qd0.fsf@jogness.linutronix.de/
+
+I think about fixing this in a separate patch and pushing this
+into linux-next ASAP to fix the regression.
+
+We could improve the other comparisons later...
+
+How does that sound?
+Should I prepare the patch for get_data() are you going to do so?
+
+Best Regards,
+Petr
