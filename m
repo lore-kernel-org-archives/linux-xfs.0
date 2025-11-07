@@ -1,184 +1,196 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11B2332779A
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Nov 2025 19:48:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B678523D28F
+	for <linux-xfs@vger.kernel.org>; Fri,  7 Nov 2025 22:11:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762544903; cv=none; b=sJwhegbciqTq3CACzwhytEp1gjK4gvTM2Ed3+AoB90UqwXsmAedcYNi9Zgy0aR1sNPz7q9NqeJqGa8eNbP+dfm5Yrg5ohDtJg2ivWyiXZbGAFD6guvn5rSZM+ZrhfGgp8b6Wg3musT/0HjWpM6HpqsFLmiWUCicxDTBgTxdkKGY=
+	t=1762553494; cv=none; b=KbSt17HFffUPZOG/lJubjP3inyS+GKP4iJyptpXRSI9HuldNPH+6lGyfJjcXXopqc6c+zCWxByr774xNWVVeKrv1wQ9/Zc8hparcjir98MZzMsN2VjjEYQEpukpMfNPzcN5rYEbErrgGi7ufw0E/b9d1NHG5Yuzl4We53EpCUhU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762544903; c=relaxed/simple;
-	bh=xhfGegLyC0qmYHR2Cn+EA+Am2tWiKLZdpesevI/Yht8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tEBDmlBymRGXM/8LyRBIExWrI7xy6JUi3Q/N63REiWyf8yrRHJP+PfwwzMq2kJAXaUBrrn58wdOQ950fE5YMfRxEjy2+Rrn2sXbL1S9tIh8PMDHEuyGli/ZdfmRlFra6GXJkKz64/HwsPelSLxer+1J3JpksyZLKqghiZSCy0Do=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=qkvbxtBQ; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=qDmQYczD; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1762553494; c=relaxed/simple;
+	bh=4vqACxln4FzRM9w5Ktmons9mJM+Y+hZ6l/lnx+Hbqfg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IzDSgg/lLfhtAi1Yo77sHCNidSFCVwagK/AtlkAER7g0VQ98KEcbgVRLd1edHgu4ulQSPc3am3Aq/uMhEoiQmYarNyasXBP396qnArUxpQzQ7Ti+IXeMPmznkJ9nQugIfaicXeEb/Mw/htrIhxisNn6t/MurxRfEAL2yDrDfd04=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=uuOK26CC; arc=none smtp.client-ip=209.85.210.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="qkvbxtBQ";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="qDmQYczD"
-Received: from pathway.suse.cz (unknown [10.100.208.146])
-	by smtp-out2.suse.de (Postfix) with ESMTP id 14CC32056D;
-	Fri,  7 Nov 2025 19:48:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1762544899; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IeO70OJ5TY7FEk0BCI4hVN3mDp8lmCuzmxRyi+G2tng=;
-	b=qkvbxtBQDmIDilJnTOR0vYQytDAYcCw71oDIP3POIkLEhr8bapI3sWiATSNDFvTeRucO8H
-	LIPX1a3YE3GSiy6axv1llPkccnytvEYkFxzhT98XYRO1rfkRjHLL56Ile/Y7srAVPSM4yN
-	Wh1TV2iE8VQSmTV4FVbXIZHKINQOAAg=
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1762544898; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IeO70OJ5TY7FEk0BCI4hVN3mDp8lmCuzmxRyi+G2tng=;
-	b=qDmQYczDGUxbgVIUIjLuV4gS0bREuJF+39GbqXFP+0r/zTMv+p7W8nNHpW5N2tdqeAOCt6
-	2m6dtwSCm6xiG1m1D4OKACkz/bwP1gft3kKFiW0IdHQX4f8je6VBm4eSN3JxEVoDbiC1oH
-	RlvIJmhpoywOTxhEAVMBPPDpTIxuuIg=
-From: Petr Mladek <pmladek@suse.com>
-To: John Ogness <john.ogness@linutronix.de>
-Cc: Joanne Koong <joannelkoong@gmail.com>,
-	"amurray @ thegoodpenguin . co . uk" <amurray@thegoodpenguin.co.uk>,
-	brauner@kernel.org,
-	chao@kernel.org,
-	djwong@kernel.org,
-	jaegeuk@kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com,
-	Petr Mladek <pmladek@suse.com>
-Subject: [PATCH 2/2] printk_ringbuffer: Create a helper function to decide whether a more space is needed
-Date: Fri,  7 Nov 2025 20:47:20 +0100
-Message-ID: <20251107194720.1231457-3-pmladek@suse.com>
-X-Mailer: git-send-email 2.51.1
-In-Reply-To: <20251107194720.1231457-1-pmladek@suse.com>
-References: <20251107194720.1231457-1-pmladek@suse.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="uuOK26CC"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-7aad4823079so1158824b3a.0
+        for <linux-xfs@vger.kernel.org>; Fri, 07 Nov 2025 14:11:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1762553491; x=1763158291; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=1jyxW3fesgshID5t6WnIyUAtcHYrLQynsJx+xxPljOQ=;
+        b=uuOK26CCq+AwFN63FwrqOcUUTfj/IBva9DYYMIWwRBdsSsBw8NpZ/RTnDILXdEd1/q
+         0chGWDau6OGh7ZMH2Fcbx4gtgZ0JQpSyfBvhIV7BgvD5bmGkgakA105dl0/8nojqffFT
+         2WR7yHbZoUnxrUNizax5nti2WtOZivZVD6VMFWE9iEFmX9D1J/7JU6UcEyLuGoOkD/Qq
+         jJNNmpwTqlGUbIfuwo8hsc7eGrVKGXkVYVQgrNYJfrjO42f5lS2mr9qLZGhjNiCrb8aH
+         jMgguWLT6f9lQz8k/bG87QHp0l+whB58ph6Y6Jkg0kuA8XY9en0aiRgFcgicb1m1lolL
+         nuHg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762553491; x=1763158291;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=1jyxW3fesgshID5t6WnIyUAtcHYrLQynsJx+xxPljOQ=;
+        b=ZunOBHsYbkGSGp1WPEXS1tiIeErxNgQ0gLf9REloK/PprKlEja2S5tGTWZEG2mfOQe
+         Xtvug8djrKBsWcj653AK+LATyqGvf/jnlwAMYh+wHvfgLnXMAv47kuIf2/BD867br3aW
+         gUU7zZDiqQUkEKvPFAo0avz0H9E0LGxnuLQF8sIWO6KX03wFJObJbG4M01QflsuVgNjs
+         YLzU/jWT/njfAhgCPirI6jg4ca1gRSwQHdXnNaZ5RjsAz4BZ+4f23farwX+ooxk57YMZ
+         z42m3qX4eZukFWb5QO/skuImA/XOwiWLPLnKoIp5OcgRB6Xty7oNnLBBwkGGIqnLFKQQ
+         Q16w==
+X-Gm-Message-State: AOJu0YyByVEoY3JLuQX509Ka7Hs3cRwyBCQ1JmF3EF6Q8TdacgGaX8Rj
+	7XupfeEalYfzGsqJJoTfQ9T6fasH2kiecLn0vHCPg6Ci+I8RidzAOQ1XYvpl6zgvtGc=
+X-Gm-Gg: ASbGncu9q99FzPGijAPg/PPtc/RXLgT+OWxcrnpus+pR+EXbI6cu5d+I1J+wTp1fCwJ
+	MIyVO7JkZo1xokaoVbM5MnLMK/5FQMyzmaV/JpOmA8xp7cXbp0+GNCJG+AEpebgtyemURZSFeWw
+	e3Hbq9ZhdZSAh3FiTObSx29fY3EpqxfCrUo8aXZEUHwJao017iWNi4i5jd51r60jGPCA1MzJ4DL
+	flcmxTSiK9bqjJrEhdEKnW5YscHdnk10rMStHb1QwOLM5gB2rb0F3qM+wAHuU7sgbuiylrYD9CO
+	D35hjwKvhZZ/BpGOtllYulT/kKjeCCPdAs3mJiL/iCXwJ+3Mzrchb0E6T3kWOiCGtAlneQkWIJa
+	Bar1sK0SNvTpQzeR69Vlxj5Wp+0JJsDWRjyB6H1mQcbC1/1n179Ki/2+Ndk1bSveMeKtN2BBKWV
+	mhF4Bdtuf5NZL+yxP/2ZJqWvts9ZjZHO+hZRyISyf2ecZZrQCTFkA=
+X-Google-Smtp-Source: AGHT+IGj5BmzFN7YUE+JnxUyyoB6Bc49rfeYLNVLNk5rCfxdNXBnBexaG8zEycDxgqvTAApPQPJjPw==
+X-Received: by 2002:a05:6a00:114a:b0:781:1f28:eadd with SMTP id d2e1a72fcca58-7b226f8bf76mr801298b3a.20.1762553490518;
+        Fri, 07 Nov 2025 14:11:30 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-58-136.pa.nsw.optusnet.com.au. [49.181.58.136])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7b0c9c0874bsm3869169b3a.16.2025.11.07.14.11.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 07 Nov 2025 14:11:30 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1vHUg3-00000007nFF-1AmT;
+	Sat, 08 Nov 2025 09:11:27 +1100
+Date: Sat, 8 Nov 2025 09:11:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: generic/648 metadata corruption
+Message-ID: <aQ5uj_hWPiZQD1Wy@dread.disaster.area>
+References: <gjureda6lp7phaaum3ffwmcumu5q2zisatei73o6u2mgvohkkk@n2i2bwltxjqu>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spamd-Result: default: False [-6.79 / 50.00];
-	REPLY(-4.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_MISSING_CHARSET(0.50)[];
-	NEURAL_HAM_SHORT(-0.19)[-0.942];
-	MIME_GOOD(-0.10)[text/plain];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	TO_DN_SOME(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[13];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	R_RATELIMIT(0.00)[to_ip_from(RLreigq8okzrb3g3qsqhoz9iaq)];
-	FREEMAIL_CC(0.00)[gmail.com,thegoodpenguin.co.uk,kernel.org,lists.sourceforge.net,vger.kernel.org,googlegroups.com,suse.com];
-	RCVD_COUNT_ZERO(0.00)[0];
-	FROM_HAS_DN(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com]
-X-Spam-Flag: NO
-X-Spam-Score: -6.79
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <gjureda6lp7phaaum3ffwmcumu5q2zisatei73o6u2mgvohkkk@n2i2bwltxjqu>
 
-The decision whether some more space is needed is tricky in the printk
-ring buffer code:
+On Fri, Nov 07, 2025 at 10:42:21AM +0100, Carlos Maiolino wrote:
+> Hello, has anybody has found any issues with generic/648 recently?
+> 
+> I've hit it on my test batch this evening, running a 2k block size a
+> metadata corruption error o generic/648.
+> 
+> I'll rerun the tests now and it later today, sharing it for a broader
+> audience.
+> 
+> This is running xfs's branch xfs-6.18-fixes.
+> 
+> I don't remember have seen this on my previous runs, but
+> I'll check the logs just in case.
+> 
+> The fsstress process ended up getting stuck at:
+> 
+> $ sudo cat /proc/2969171/stack 
+> [<0>] folio_wait_bit_common+0x138/0x340
+> [<0>] folio_wait_bit+0x1c/0x30
+> [<0>] folio_wait_writeback+0x2f/0x90
+> [<0>] __filemap_fdatawait_range+0x8d/0xf0
+> [<0>] filemap_fdatawait_keep_errors+0x22/0x50
+> [<0>] sync_inodes_sb+0x22c/0x2d0
+> [<0>] sync_filesystem+0x70/0xb0
+> [<0>] __x64_sys_syncfs+0x4e/0xd0
+> [<0>] x64_sys_call+0x778/0x1da0
+> [<0>] do_syscall_64+0x7f/0x7b0
+> [<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
-  1. The given lpos values might overflow. A subtraction must be used
-     instead of a simple "lower than" check.
+Yeah, no surprise, the kernel is oopsing in IO completion with the
+folio still in writeback state - nothing will ever change the state
+on that folio now, so sync operations will block forever on it.
 
-  2. Another CPU might reuse the space in the mean time. It can be
-     detected when the subtraction is bigger than DATA_SIZE(data_ring).
+> The kernel log from the last mount.
+> 
+> [ 7467.362544] XFS (loop0): EXPERIMENTAL metadata directory tree feature enabled.  Use at your own risk!
+> [ 7467.363481] XFS (loop0): Mounting V5 Filesystem 2b40a1e4-f2f6-4a87-8f86-bbfc8a748329
+> [ 7467.880205] XFS (loop0): Starting recovery (logdev: internal)
+> [ 7468.006067] XFS (loop0): Ending recovery (logdev: internal)
+> [ 7470.131605] buffer_io_error: 8 callbacks suppressed
+> [ 7470.131613] Buffer I/O error on dev dm-1, logical block 243952, async page read
+> [ 7470.148095] I/O error, dev loop0, sector 10071568 op 0x0:(READ) flags 0x81700 phys_seg 1 prio class 2
+> [ 7470.148145] dm-0: writeback error on inode 71, offset 239466496, sector 668620
+....
+> [ 7470.195987] XFS (loop0): Metadata I/O Error (0x1) detected at xfs_trans_read_buf_map+0x1fe/0x4c0 [xfs] (fs/xfs/xfs_trans_buf.c:311).  Shutting down filesystem.
+> [ 7470.200555] XFS (loop0): Please unmount the filesystem and rectify the problem(s)
+> [ 7470.201821] XFS (loop0): Metadata corruption detected at xfs_dinode_verify.part.0+0x434/0xcb0 [xfs], inode 0x40d422 xfs_inode_item_precommit_check
 
-  3. There is exactly enough space when the result of the subtraction
-     is zero. But more space is needed when the result is exactly
-     DATA_SIZE(data_ring).
+So what check did this fail? Convert
+xfs_dinode_verify.part.0+0x434xfs_dinode_verify.part.0+0x434 to a
+line number and that will tell us what the actual corruption
+detected was.
 
-Add a helper function to make sure that the check is done correctly
-in all situations. Also it helps to make the code consistent and
-better documented.
+> [ 7470.206186] XFS (loop0): Unmount and run xfs_repair
+> [ 7470.207577] XFS (loop0): First 128 bytes of corrupted metadata buffer:
+> [ 7470.209043] 00000000: 49 4e 81 b6 03 02 00 00 00 00 03 8b 00 00 02 1c  IN..............
+> [ 7470.210242] 00000010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 0d  ................
+> [ 7470.211633] 00000020: 36 42 da 8b dd 84 5e ec 36 42 da 8b ea d0 f9 2c  6B....^.6B.....,
+> [ 7470.212668] 00000030: 36 42 da 8b ea d0 f9 2c 00 00 00 00 00 25 b8 00  6B.....,.....%..
+> [ 7470.213878] 00000040: 00 00 00 00 00 00 03 32 00 00 00 00 00 00 00 00  .......2........
+> [ 7470.215056] 00000050: 00 00 18 01 00 00 00 00 00 00 00 02 6e b2 b8 ce  ............n...
+> [ 7470.216375] 00000060: 00 00 00 00 9f bb e2 1f 00 00 00 00 00 00 00 2f  .............../
+> [ 7470.217157] 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 1a  ................
+> [ 7470.218462] XFS: Assertion failed: fa == NULL, file: fs/xfs/xfs_inode_item.c, line: 62
+> [ 7470.219749] ------------[ cut here ]------------
+> [ 7470.220602] kernel BUG at fs/xfs/xfs_message.c:102!
+> [ 7470.221232] Oops: invalid opcode: 0000 [#1] SMP NOPTI
+> [ 7470.221907] CPU: 9 UID: 0 PID: 2967999 Comm: kworker/9:2 Not tainted 6.18.0-rc2.xfsRC5+ #23 PREEMPT(voluntary) 
+> [ 7470.223443] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-2.fc40 04/01/2014
+> [ 7470.224773] Workqueue: xfs-conv/loop0 xfs_end_io [xfs]
+> [ 7470.225855] RIP: 0010:assfail+0x35/0x3f [xfs]
+> [ 7470.226665] Code: 89 d0 41 89 c9 48 c7 c2 98 04 a0 c0 48 89 f1 48 89 fe 48 c7 c7 48 d6 9e c0 48 89 e5 e8 a4 fd ff ff 80 3d b5 62 26 00 00 74 02 <0f> 0b 0f 0b 5d e9 91 1d ba f8 48 8d 45 10 4c 8d 6c 24 10 48 89 e2
+> [ 7470.228907] RSP: 0018:ffffb2e087bcfc60 EFLAGS: 00010202
+> [ 7470.229492] RAX: 0000000000000000 RBX: ffff9e399129e400 RCX: 000000007fffffff
+> [ 7470.230298] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffffc09ed648
+> [ 7470.231094] RBP: ffffb2e087bcfc60 R08: 0000000000000000 R09: 000000000000000a
+> [ 7470.231871] R10: 000000000000000a R11: 0fffffffffffffff R12: ffff9e3988311800
+> [ 7470.232670] R13: ffff9e399a358000 R14: ffff9e3c05054318 R15: ffff9e3999d0d790
+> [ 7470.233457] FS:  0000000000000000(0000) GS:ffff9e3d3e65f000(0000) knlGS:0000000000000000
+> [ 7470.234362] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [ 7470.235002] CR2: 00007f2f373b20d8 CR3: 0000000114904005 CR4: 0000000000772ef0
+> [ 7470.235805] PKRU: 55555554
+> [ 7470.236113] Call Trace:
+> [ 7470.236417]  <TASK>
+> [ 7470.236688]  xfs_inode_item_precommit+0x1b8/0x370 [xfs]
+> [ 7470.237601]  __xfs_trans_commit+0xba/0x410 [xfs]
+> [ 7470.238453]  xfs_trans_commit+0x3b/0x70 [xfs]
+> [ 7470.239245]  xfs_setfilesize+0xff/0x160 [xfs]
 
-Suggested-by: John Ogness <john.ogness@linutronix.de>
-Link: https://lore.kernel.org/r/87tsz7iea2.fsf@jogness.linutronix.de
-Signed-off-by: Petr Mladek <pmladek@suse.com>
----
- kernel/printk/printk_ringbuffer.c | 31 +++++++++++++++++++++++++++----
- 1 file changed, 27 insertions(+), 4 deletions(-)
+Hmmmm. I wonder. The issue was detected from IO completion
+processing.....
 
-diff --git a/kernel/printk/printk_ringbuffer.c b/kernel/printk/printk_ringbuffer.c
-index 3e6fd8d6fa9f..ede3039dd041 100644
---- a/kernel/printk/printk_ringbuffer.c
-+++ b/kernel/printk/printk_ringbuffer.c
-@@ -411,6 +411,23 @@ static bool data_check_size(struct prb_data_ring *data_ring, unsigned int size)
- 	return to_blk_size(size) <= DATA_SIZE(data_ring) / 2;
- }
- 
-+/*
-+ * Compare the current and requested logical position and decide
-+ * whether more space needed.
-+ *
-+ * Return false when @lpos_current is already at or beyond @lpos_target.
-+ *
-+ * Also return false when the difference between the positions is bigger
-+ * than the size of the data buffer. It might happen only when the caller
-+ * raced with another CPU(s) which already made and used the space.
-+ */
-+static bool need_more_space(struct prb_data_ring *data_ring,
-+			    unsigned long lpos_current,
-+			    unsigned long lpos_target)
-+{
-+	return lpos_target - lpos_current - 1 < DATA_SIZE(data_ring);
-+}
-+
- /* Query the state of a descriptor. */
- static enum desc_state get_desc_state(unsigned long id,
- 				      unsigned long state_val)
-@@ -577,7 +594,7 @@ static bool data_make_reusable(struct printk_ringbuffer *rb,
- 	unsigned long id;
- 
- 	/* Loop until @lpos_begin has advanced to or beyond @lpos_end. */
--	while ((lpos_end - lpos_begin) - 1 < DATA_SIZE(data_ring)) {
-+	while (need_more_space(data_ring, lpos_begin, lpos_end)) {
- 		blk = to_block(data_ring, lpos_begin);
- 
- 		/*
-@@ -668,7 +685,7 @@ static bool data_push_tail(struct printk_ringbuffer *rb, unsigned long lpos)
- 	 * sees the new tail lpos, any descriptor states that transitioned to
- 	 * the reusable state must already be visible.
- 	 */
--	while ((lpos - tail_lpos) - 1 < DATA_SIZE(data_ring)) {
-+	while (need_more_space(data_ring, tail_lpos, lpos)) {
- 		/*
- 		 * Make all descriptors reusable that are associated with
- 		 * data blocks before @lpos.
-@@ -1148,8 +1165,14 @@ static char *data_realloc(struct printk_ringbuffer *rb, unsigned int size,
- 
- 	next_lpos = get_next_lpos(data_ring, blk_lpos->begin, size);
- 
--	/* If the data block does not increase, there is nothing to do. */
--	if (head_lpos - next_lpos < DATA_SIZE(data_ring)) {
-+	/*
-+	 * Use the current data block when the size does not increase.
-+	 *
-+	 * Note that need_more_space() could never return false here because
-+	 * the difference between the positions was bigger than the data
-+	 * buffer size. The data block is reopened and can't get reused.
-+	 */
-+	if (!need_more_space(data_ring, head_lpos, next_lpos)) {
- 		if (wrapped)
- 			blk = to_block(data_ring, 0);
- 		else
+We've just written the in-memory inode to the buffer, calculated the
+CRC, and then we verify what we've written. Something in the dinode
+is coming out invalid, so either there is a code bug writing an
+invalid value somewhere, or the in-memory VFS/XFS inode metadata has
+been corrupted prior to this IO completion transaction commit being
+run.
+
+Willy has been seeing unexpected transaction overruns on similar IO
+error based tests in IO completion processing that smell of
+memory corruption. These have been on 6.18-rc4-next and
+6.18-rc4-fs-next kernels, IIUC.
+
+Now we have a debug check of an inode in IO completion detecting
+in-memory corruption during a test that has triggered IO error
+processing on a plain 6.18-rc2 kernel
+
+Coincidence? Maybe, but I'm is starting to think a new memory
+corruption bug has been introduced in the 6.18 merge cycle
+somewhere in the IO error processing paths....
+
+-Dave.
 -- 
-2.51.1
-
+Dave Chinner
+david@fromorbit.com
