@@ -1,39 +1,68 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0313620299B
-	for <linux-xfs@vger.kernel.org>; Fri,  7 Nov 2025 23:58:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3958F45C0B;
+	Sat,  8 Nov 2025 01:16:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762559934; cv=none; b=sP4NdTtRbFkwKbei7gpJ1cRXsAmHjjERoiz/bFwN6CEWqM09Z/64p6cPorYfPQJOtfDVPRC/RbPRDFSZKfMoHlW71WuFDpjPCijMSoGwKA7KAwNIRPrmKcyiD1kpsVW7Jy63gsqagAJnDAczIO+/qQeUxKXawVX0Dc97PrS0s2A=
+	t=1762564617; cv=none; b=B1h67evaYY+8mK/BAn5FrIH/ciJxPUajLxZ8pdyfj7+Or1oTnoBhUizeYactg+xfk6taOsNlnl4gCYIzRNOBLfY771KqxW8fbQzT6cgWGPoVutUgoxcMhqdpCjSJBzSvWZPxfZrMcmD+v7FmTEY5QbZoq/ZRF2e5JH5aErp2oL4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762559934; c=relaxed/simple;
-	bh=/RgXkbgxqvhhJPf1dRr/uzni7vsGVekvFb4v7z5KRfY=;
+	s=arc-20240116; t=1762564617; c=relaxed/simple;
+	bh=Z2R2Y+Y7iYLIBfc+xrkSR2Yr7K6yCTnIgBnYqJBs2Pw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HefqY5v/6aPhzSm4NVnOmmmHDDyG0KHGbF81UWNRqwI7IWMCyhMOH8AeZPVfH2FXAiUmdJW+Jt1pV0PnQJM5TPS8T7j1RASEV8G8m4Ml2fZ8orieoO6nrb3qgdtXk1pkXhyMwd1NIhmlVMeKbGgjc+JGCqU62ORHJKVOM1wrSAY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UzKaQ4fM; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=oflWeDaAGl9HygF6dDJihmcJredAgxzDRnDL3Y7M7qKRBqzu+OiEjv+DUwosYsq0Y44TiLegQdhH5K0y3/qPWthdEU2rEWb77fdGDviMmO0A02sPUDlH8mmLgs8X6o7vhKdG4wkKk/jGKQPsezl9SGEcqRllrGnAPwsCgaCczt0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=XRRklK0a; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UzKaQ4fM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7497AC4CEF5;
-	Fri,  7 Nov 2025 23:58:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762559933;
-	bh=/RgXkbgxqvhhJPf1dRr/uzni7vsGVekvFb4v7z5KRfY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=UzKaQ4fMpxHutXBU9YgaTSt+jfJBU/P5O3bjOhUGDYQoK2+cUphzxQz90PHo3NusA
-	 XsrD8/gPUK8WZG/6WEPEjEIttapcAGYmvqmP+nQsnCysz++rItij0hbv7EhYoEAlKg
-	 qt9Tno5DfUWw/Zrnus9IfG9GdWgSNWFMRK5ZHzEJPbcINET0VOKd4qbr4Bx1KUr3Ih
-	 53BWvBSfWaujoJ7saIcONvNtEBbtV5D0+vj/YuIf3P8p8uL+l91rNWe7aL+1i6xz3H
-	 5oh+s0kXokRd9lBiyv6+zLI4hDs6kXMtB4aq5U0NDsmjVP6s+TV4T0lp9qLXbeG0RQ
-	 eG986oA6pbjng==
-Date: Fri, 7 Nov 2025 15:58:52 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: generic/648 metadata corruption
-Message-ID: <20251107235852.GN196370@frogsfrogsfrogs>
-References: <gjureda6lp7phaaum3ffwmcumu5q2zisatei73o6u2mgvohkkk@n2i2bwltxjqu>
- <aQ5uj_hWPiZQD1Wy@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="XRRklK0a"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1762564615; x=1794100615;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Z2R2Y+Y7iYLIBfc+xrkSR2Yr7K6yCTnIgBnYqJBs2Pw=;
+  b=XRRklK0aRYzf862/TSqViFFVhbciSUJEMFR39kWWffSrQiPZ+rQgTMGS
+   OIdSsJRVZJ+u9xK1+kMJ4S79mY7mKmgcl39zDFIbbEro3FrEd6b+/XCSz
+   BcvMQs+mskgqKo7rOy+OaYppw+acVEG795h+zx8aMsq72C7AAg1hbicLi
+   fYc0Xhl+HPTPvE2k3eFG9TK6HhtxxF4f81HOIxg/alHpOVeD7JWJiYIOb
+   +esKCQHmrXKcIg9ES8F/slbsmRd1ZlCXCMNqTgUXAwS6QjMDrA1567++j
+   8LY0xJDSpk3mCuuF+QW/A1bbdkmkz7cPBJY5e0s/13LcMK7qVscE9RZMm
+   A==;
+X-CSE-ConnectionGUID: xtQJUMJRTI+yd4qoPcq5Fw==
+X-CSE-MsgGUID: nj0f87SuQHeDJFFtlpVo8g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11606"; a="75328244"
+X-IronPort-AV: E=Sophos;i="6.19,288,1754982000"; 
+   d="scan'208";a="75328244"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2025 17:16:55 -0800
+X-CSE-ConnectionGUID: JxjCYdpvSpqW/a7GIPacDA==
+X-CSE-MsgGUID: 8XFmiRmJTaC5TUgp0Bwudg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,288,1754982000"; 
+   d="scan'208";a="193209633"
+Received: from lkp-server01.sh.intel.com (HELO 6ef82f2de774) ([10.239.97.150])
+  by fmviesa004.fm.intel.com with ESMTP; 07 Nov 2025 17:16:50 -0800
+Received: from kbuild by 6ef82f2de774 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1vHXZQ-0000ZL-1W;
+	Sat, 08 Nov 2025 01:16:48 +0000
+Date: Sat, 8 Nov 2025 09:15:48 +0800
+From: kernel test robot <lkp@intel.com>
+To: Fengnan Chang <changfengnan@bytedance.com>, axboe@kernel.dk,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
+	asml.silence@gmail.com, willy@infradead.org, djwong@kernel.org,
+	hch@infradead.org, ritesh.list@gmail.com,
+	linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, ming.lei@redhat.com,
+	linux-nvme@lists.infradead.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Fengnan Chang <changfengnan@bytedance.com>
+Subject: Re: [PATCH v2 1/2] block: use bio_alloc_bioset for passthru IO by
+ default
+Message-ID: <202511080837.qd2MmgFS-lkp@intel.com>
+References: <20251107020557.10097-2-changfengnan@bytedance.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,131 +71,137 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aQ5uj_hWPiZQD1Wy@dread.disaster.area>
+In-Reply-To: <20251107020557.10097-2-changfengnan@bytedance.com>
 
-On Sat, Nov 08, 2025 at 09:11:27AM +1100, Dave Chinner wrote:
-> On Fri, Nov 07, 2025 at 10:42:21AM +0100, Carlos Maiolino wrote:
-> > Hello, has anybody has found any issues with generic/648 recently?
-> > 
-> > I've hit it on my test batch this evening, running a 2k block size a
-> > metadata corruption error o generic/648.
-> > 
-> > I'll rerun the tests now and it later today, sharing it for a broader
-> > audience.
-> > 
-> > This is running xfs's branch xfs-6.18-fixes.
-> > 
-> > I don't remember have seen this on my previous runs, but
-> > I'll check the logs just in case.
-> > 
-> > The fsstress process ended up getting stuck at:
-> > 
-> > $ sudo cat /proc/2969171/stack 
-> > [<0>] folio_wait_bit_common+0x138/0x340
-> > [<0>] folio_wait_bit+0x1c/0x30
-> > [<0>] folio_wait_writeback+0x2f/0x90
-> > [<0>] __filemap_fdatawait_range+0x8d/0xf0
-> > [<0>] filemap_fdatawait_keep_errors+0x22/0x50
-> > [<0>] sync_inodes_sb+0x22c/0x2d0
-> > [<0>] sync_filesystem+0x70/0xb0
-> > [<0>] __x64_sys_syncfs+0x4e/0xd0
-> > [<0>] x64_sys_call+0x778/0x1da0
-> > [<0>] do_syscall_64+0x7f/0x7b0
-> > [<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
-> 
-> Yeah, no surprise, the kernel is oopsing in IO completion with the
-> folio still in writeback state - nothing will ever change the state
-> on that folio now, so sync operations will block forever on it.
-> 
-> > The kernel log from the last mount.
-> > 
-> > [ 7467.362544] XFS (loop0): EXPERIMENTAL metadata directory tree feature enabled.  Use at your own risk!
-> > [ 7467.363481] XFS (loop0): Mounting V5 Filesystem 2b40a1e4-f2f6-4a87-8f86-bbfc8a748329
-> > [ 7467.880205] XFS (loop0): Starting recovery (logdev: internal)
-> > [ 7468.006067] XFS (loop0): Ending recovery (logdev: internal)
-> > [ 7470.131605] buffer_io_error: 8 callbacks suppressed
-> > [ 7470.131613] Buffer I/O error on dev dm-1, logical block 243952, async page read
-> > [ 7470.148095] I/O error, dev loop0, sector 10071568 op 0x0:(READ) flags 0x81700 phys_seg 1 prio class 2
-> > [ 7470.148145] dm-0: writeback error on inode 71, offset 239466496, sector 668620
-> ....
-> > [ 7470.195987] XFS (loop0): Metadata I/O Error (0x1) detected at xfs_trans_read_buf_map+0x1fe/0x4c0 [xfs] (fs/xfs/xfs_trans_buf.c:311).  Shutting down filesystem.
-> > [ 7470.200555] XFS (loop0): Please unmount the filesystem and rectify the problem(s)
-> > [ 7470.201821] XFS (loop0): Metadata corruption detected at xfs_dinode_verify.part.0+0x434/0xcb0 [xfs], inode 0x40d422 xfs_inode_item_precommit_check
-> 
-> So what check did this fail? Convert
-> xfs_dinode_verify.part.0+0x434xfs_dinode_verify.part.0+0x434 to a
-> line number and that will tell us what the actual corruption
-> detected was.
-> 
-> > [ 7470.206186] XFS (loop0): Unmount and run xfs_repair
-> > [ 7470.207577] XFS (loop0): First 128 bytes of corrupted metadata buffer:
-> > [ 7470.209043] 00000000: 49 4e 81 b6 03 02 00 00 00 00 03 8b 00 00 02 1c  IN..............
-> > [ 7470.210242] 00000010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 0d  ................
-> > [ 7470.211633] 00000020: 36 42 da 8b dd 84 5e ec 36 42 da 8b ea d0 f9 2c  6B....^.6B.....,
-> > [ 7470.212668] 00000030: 36 42 da 8b ea d0 f9 2c 00 00 00 00 00 25 b8 00  6B.....,.....%..
-> > [ 7470.213878] 00000040: 00 00 00 00 00 00 03 32 00 00 00 00 00 00 00 00  .......2........
-> > [ 7470.215056] 00000050: 00 00 18 01 00 00 00 00 00 00 00 02 6e b2 b8 ce  ............n...
-> > [ 7470.216375] 00000060: 00 00 00 00 9f bb e2 1f 00 00 00 00 00 00 00 2f  .............../
-> > [ 7470.217157] 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 1a  ................
-> > [ 7470.218462] XFS: Assertion failed: fa == NULL, file: fs/xfs/xfs_inode_item.c, line: 62
-> > [ 7470.219749] ------------[ cut here ]------------
-> > [ 7470.220602] kernel BUG at fs/xfs/xfs_message.c:102!
-> > [ 7470.221232] Oops: invalid opcode: 0000 [#1] SMP NOPTI
-> > [ 7470.221907] CPU: 9 UID: 0 PID: 2967999 Comm: kworker/9:2 Not tainted 6.18.0-rc2.xfsRC5+ #23 PREEMPT(voluntary) 
-> > [ 7470.223443] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-2.fc40 04/01/2014
-> > [ 7470.224773] Workqueue: xfs-conv/loop0 xfs_end_io [xfs]
-> > [ 7470.225855] RIP: 0010:assfail+0x35/0x3f [xfs]
-> > [ 7470.226665] Code: 89 d0 41 89 c9 48 c7 c2 98 04 a0 c0 48 89 f1 48 89 fe 48 c7 c7 48 d6 9e c0 48 89 e5 e8 a4 fd ff ff 80 3d b5 62 26 00 00 74 02 <0f> 0b 0f 0b 5d e9 91 1d ba f8 48 8d 45 10 4c 8d 6c 24 10 48 89 e2
-> > [ 7470.228907] RSP: 0018:ffffb2e087bcfc60 EFLAGS: 00010202
-> > [ 7470.229492] RAX: 0000000000000000 RBX: ffff9e399129e400 RCX: 000000007fffffff
-> > [ 7470.230298] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffffc09ed648
-> > [ 7470.231094] RBP: ffffb2e087bcfc60 R08: 0000000000000000 R09: 000000000000000a
-> > [ 7470.231871] R10: 000000000000000a R11: 0fffffffffffffff R12: ffff9e3988311800
-> > [ 7470.232670] R13: ffff9e399a358000 R14: ffff9e3c05054318 R15: ffff9e3999d0d790
-> > [ 7470.233457] FS:  0000000000000000(0000) GS:ffff9e3d3e65f000(0000) knlGS:0000000000000000
-> > [ 7470.234362] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > [ 7470.235002] CR2: 00007f2f373b20d8 CR3: 0000000114904005 CR4: 0000000000772ef0
-> > [ 7470.235805] PKRU: 55555554
-> > [ 7470.236113] Call Trace:
-> > [ 7470.236417]  <TASK>
-> > [ 7470.236688]  xfs_inode_item_precommit+0x1b8/0x370 [xfs]
-> > [ 7470.237601]  __xfs_trans_commit+0xba/0x410 [xfs]
-> > [ 7470.238453]  xfs_trans_commit+0x3b/0x70 [xfs]
-> > [ 7470.239245]  xfs_setfilesize+0xff/0x160 [xfs]
-> 
-> Hmmmm. I wonder. The issue was detected from IO completion
-> processing.....
-> 
-> We've just written the in-memory inode to the buffer, calculated the
-> CRC, and then we verify what we've written. Something in the dinode
-> is coming out invalid, so either there is a code bug writing an
-> invalid value somewhere, or the in-memory VFS/XFS inode metadata has
-> been corrupted prior to this IO completion transaction commit being
-> run.
-> 
-> Willy has been seeing unexpected transaction overruns on similar IO
-> error based tests in IO completion processing that smell of
-> memory corruption. These have been on 6.18-rc4-next and
-> 6.18-rc4-fs-next kernels, IIUC.
-> 
-> Now we have a debug check of an inode in IO completion detecting
-> in-memory corruption during a test that has triggered IO error
-> processing on a plain 6.18-rc2 kernel
-> 
-> Coincidence? Maybe, but I'm is starting to think a new memory
-> corruption bug has been introduced in the 6.18 merge cycle
-> somewhere in the IO error processing paths....
+Hi Fengnan,
 
-Oh, there definitely is *something* wrong.  I turned on kasan to try to
-take another stab at fixing the maple_node leak.  KASAN reported a UAF
-in blkdev_put (which iirc has been reported already) in two of the VMs.
-The rest of the VMs reported inode precommit errors in the UUID check
-but no KASAN reports.
+kernel test robot noticed the following build warnings:
 
---D
+[auto build test WARNING on 4a0c9b3391999818e2c5b93719699b255be1f682]
 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+url:    https://github.com/intel-lab-lkp/linux/commits/Fengnan-Chang/block-use-bio_alloc_bioset-for-passthru-IO-by-default/20251107-100851
+base:   4a0c9b3391999818e2c5b93719699b255be1f682
+patch link:    https://lore.kernel.org/r/20251107020557.10097-2-changfengnan%40bytedance.com
+patch subject: [PATCH v2 1/2] block: use bio_alloc_bioset for passthru IO by default
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20251108/202511080837.qd2MmgFS-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251108/202511080837.qd2MmgFS-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202511080837.qd2MmgFS-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/nvme/host/ioctl.c:500:3: warning: variable 'rq_flags' is uninitialized when used here [-Wuninitialized]
+     500 |                 rq_flags |= REQ_NOWAIT;
+         |                 ^~~~~~~~
+   drivers/nvme/host/ioctl.c:449:20: note: initialize the variable 'rq_flags' to silence this warning
+     449 |         blk_opf_t rq_flags;
+         |                           ^
+         |                            = 0
+   1 warning generated.
+
+
+vim +/rq_flags +500 drivers/nvme/host/ioctl.c
+
+c0a7ba77e81b84 Jens Axboe          2022-09-21  437  
+456cba386e94f2 Kanchan Joshi       2022-05-11  438  static int nvme_uring_cmd_io(struct nvme_ctrl *ctrl, struct nvme_ns *ns,
+f569add47119fa Anuj Gupta          2022-05-11  439  		struct io_uring_cmd *ioucmd, unsigned int issue_flags, bool vec)
+456cba386e94f2 Kanchan Joshi       2022-05-11  440  {
+456cba386e94f2 Kanchan Joshi       2022-05-11  441  	struct nvme_uring_cmd_pdu *pdu = nvme_uring_cmd_pdu(ioucmd);
+fd9b8547bc5c34 Breno Leitao        2023-05-04  442  	const struct nvme_uring_cmd *cmd = io_uring_sqe_cmd(ioucmd->sqe);
+456cba386e94f2 Kanchan Joshi       2022-05-11  443  	struct request_queue *q = ns ? ns->queue : ctrl->admin_q;
+456cba386e94f2 Kanchan Joshi       2022-05-11  444  	struct nvme_uring_data d;
+456cba386e94f2 Kanchan Joshi       2022-05-11  445  	struct nvme_command c;
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  446  	struct iov_iter iter;
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  447  	struct iov_iter *map_iter = NULL;
+456cba386e94f2 Kanchan Joshi       2022-05-11  448  	struct request *req;
+070157fe67aee9 Fengnan Chang       2025-11-07  449  	blk_opf_t rq_flags;
+456cba386e94f2 Kanchan Joshi       2022-05-11  450  	blk_mq_req_flags_t blk_flags = 0;
+470e900c8036ff Kanchan Joshi       2022-09-30  451  	int ret;
+456cba386e94f2 Kanchan Joshi       2022-05-11  452  
+456cba386e94f2 Kanchan Joshi       2022-05-11  453  	c.common.opcode = READ_ONCE(cmd->opcode);
+456cba386e94f2 Kanchan Joshi       2022-05-11  454  	c.common.flags = READ_ONCE(cmd->flags);
+456cba386e94f2 Kanchan Joshi       2022-05-11  455  	if (c.common.flags)
+456cba386e94f2 Kanchan Joshi       2022-05-11  456  		return -EINVAL;
+456cba386e94f2 Kanchan Joshi       2022-05-11  457  
+456cba386e94f2 Kanchan Joshi       2022-05-11  458  	c.common.command_id = 0;
+456cba386e94f2 Kanchan Joshi       2022-05-11  459  	c.common.nsid = cpu_to_le32(cmd->nsid);
+456cba386e94f2 Kanchan Joshi       2022-05-11  460  	if (!nvme_validate_passthru_nsid(ctrl, ns, le32_to_cpu(c.common.nsid)))
+456cba386e94f2 Kanchan Joshi       2022-05-11  461  		return -EINVAL;
+456cba386e94f2 Kanchan Joshi       2022-05-11  462  
+456cba386e94f2 Kanchan Joshi       2022-05-11  463  	c.common.cdw2[0] = cpu_to_le32(READ_ONCE(cmd->cdw2));
+456cba386e94f2 Kanchan Joshi       2022-05-11  464  	c.common.cdw2[1] = cpu_to_le32(READ_ONCE(cmd->cdw3));
+456cba386e94f2 Kanchan Joshi       2022-05-11  465  	c.common.metadata = 0;
+456cba386e94f2 Kanchan Joshi       2022-05-11  466  	c.common.dptr.prp1 = c.common.dptr.prp2 = 0;
+456cba386e94f2 Kanchan Joshi       2022-05-11  467  	c.common.cdw10 = cpu_to_le32(READ_ONCE(cmd->cdw10));
+456cba386e94f2 Kanchan Joshi       2022-05-11  468  	c.common.cdw11 = cpu_to_le32(READ_ONCE(cmd->cdw11));
+456cba386e94f2 Kanchan Joshi       2022-05-11  469  	c.common.cdw12 = cpu_to_le32(READ_ONCE(cmd->cdw12));
+456cba386e94f2 Kanchan Joshi       2022-05-11  470  	c.common.cdw13 = cpu_to_le32(READ_ONCE(cmd->cdw13));
+456cba386e94f2 Kanchan Joshi       2022-05-11  471  	c.common.cdw14 = cpu_to_le32(READ_ONCE(cmd->cdw14));
+456cba386e94f2 Kanchan Joshi       2022-05-11  472  	c.common.cdw15 = cpu_to_le32(READ_ONCE(cmd->cdw15));
+456cba386e94f2 Kanchan Joshi       2022-05-11  473  
+7d9d7d59d44b7e Christoph Hellwig   2023-06-08  474  	if (!nvme_cmd_allowed(ns, &c, 0, ioucmd->file->f_mode & FMODE_WRITE))
+855b7717f44b13 Kanchan Joshi       2022-10-31  475  		return -EACCES;
+855b7717f44b13 Kanchan Joshi       2022-10-31  476  
+456cba386e94f2 Kanchan Joshi       2022-05-11  477  	d.metadata = READ_ONCE(cmd->metadata);
+456cba386e94f2 Kanchan Joshi       2022-05-11  478  	d.addr = READ_ONCE(cmd->addr);
+456cba386e94f2 Kanchan Joshi       2022-05-11  479  	d.data_len = READ_ONCE(cmd->data_len);
+456cba386e94f2 Kanchan Joshi       2022-05-11  480  	d.metadata_len = READ_ONCE(cmd->metadata_len);
+456cba386e94f2 Kanchan Joshi       2022-05-11  481  	d.timeout_ms = READ_ONCE(cmd->timeout_ms);
+456cba386e94f2 Kanchan Joshi       2022-05-11  482  
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  483  	if (d.data_len && (ioucmd->flags & IORING_URING_CMD_FIXED)) {
+3c12a8939e0474 Pavel Begunkov      2025-05-20  484  		int ddir = nvme_is_write(&c) ? WRITE : READ;
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  485  
+3c12a8939e0474 Pavel Begunkov      2025-05-20  486  		if (vec)
+3c12a8939e0474 Pavel Begunkov      2025-05-20  487  			ret = io_uring_cmd_import_fixed_vec(ioucmd,
+3c12a8939e0474 Pavel Begunkov      2025-05-20  488  					u64_to_user_ptr(d.addr), d.data_len,
+3c12a8939e0474 Pavel Begunkov      2025-05-20  489  					ddir, &iter, issue_flags);
+3c12a8939e0474 Pavel Begunkov      2025-05-20  490  		else
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  491  			ret = io_uring_cmd_import_fixed(d.addr, d.data_len,
+3c12a8939e0474 Pavel Begunkov      2025-05-20  492  					ddir, &iter, ioucmd, issue_flags);
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  493  		if (ret < 0)
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  494  			return ret;
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  495  
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  496  		map_iter = &iter;
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  497  	}
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  498  
+456cba386e94f2 Kanchan Joshi       2022-05-11  499  	if (issue_flags & IO_URING_F_NONBLOCK) {
+888545cb43d763 Anuj Gupta          2023-01-17 @500  		rq_flags |= REQ_NOWAIT;
+456cba386e94f2 Kanchan Joshi       2022-05-11  501  		blk_flags = BLK_MQ_REQ_NOWAIT;
+456cba386e94f2 Kanchan Joshi       2022-05-11  502  	}
+585079b6e42538 Kanchan Joshi       2022-08-23  503  	if (issue_flags & IO_URING_F_IOPOLL)
+585079b6e42538 Kanchan Joshi       2022-08-23  504  		rq_flags |= REQ_POLLED;
+456cba386e94f2 Kanchan Joshi       2022-05-11  505  
+470e900c8036ff Kanchan Joshi       2022-09-30  506  	req = nvme_alloc_user_request(q, &c, rq_flags, blk_flags);
+456cba386e94f2 Kanchan Joshi       2022-05-11  507  	if (IS_ERR(req))
+456cba386e94f2 Kanchan Joshi       2022-05-11  508  		return PTR_ERR(req);
+470e900c8036ff Kanchan Joshi       2022-09-30  509  	req->timeout = d.timeout_ms ? msecs_to_jiffies(d.timeout_ms) : 0;
+470e900c8036ff Kanchan Joshi       2022-09-30  510  
+99fde895ff56ac Xinyu Zhang         2025-02-27  511  	if (d.data_len) {
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  512  		ret = nvme_map_user_request(req, d.addr, d.data_len,
+38808af53c6e72 Caleb Sander Mateos 2025-03-28  513  			nvme_to_user_ptr(d.metadata), d.metadata_len,
+c4b680ac286382 Pavel Begunkov      2025-05-20  514  			map_iter, vec ? NVME_IOCTL_VEC : 0);
+470e900c8036ff Kanchan Joshi       2022-09-30  515  		if (ret)
+cd683de63e1d7c Caleb Sander Mateos 2025-03-28  516  			goto out_free_req;
+470e900c8036ff Kanchan Joshi       2022-09-30  517  	}
+456cba386e94f2 Kanchan Joshi       2022-05-11  518  
+456cba386e94f2 Kanchan Joshi       2022-05-11  519  	/* to free bio on completion, as req->bio will be null at that time */
+456cba386e94f2 Kanchan Joshi       2022-05-11  520  	pdu->bio = req->bio;
+d6aacee9255e7f Keith Busch         2023-11-30  521  	pdu->req = req;
+c0a7ba77e81b84 Jens Axboe          2022-09-21  522  	req->end_io_data = ioucmd;
+c0a7ba77e81b84 Jens Axboe          2022-09-21  523  	req->end_io = nvme_uring_cmd_end_io;
+e2e530867245d0 Christoph Hellwig   2022-05-24  524  	blk_execute_rq_nowait(req, false);
+456cba386e94f2 Kanchan Joshi       2022-05-11  525  	return -EIOCBQUEUED;
+cd683de63e1d7c Caleb Sander Mateos 2025-03-28  526  
+cd683de63e1d7c Caleb Sander Mateos 2025-03-28  527  out_free_req:
+cd683de63e1d7c Caleb Sander Mateos 2025-03-28  528  	blk_mq_free_request(req);
+cd683de63e1d7c Caleb Sander Mateos 2025-03-28  529  	return ret;
+456cba386e94f2 Kanchan Joshi       2022-05-11  530  }
+456cba386e94f2 Kanchan Joshi       2022-05-11  531  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
