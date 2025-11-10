@@ -1,41 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1243919DF4F
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Nov 2025 13:24:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA94023C516
+	for <linux-xfs@vger.kernel.org>; Mon, 10 Nov 2025 13:24:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762781079; cv=none; b=mKJN8jpvuphdbcLG/5fQgsb65z/1vYk0E7lWa1JAYh9mfm9/1FtiwxmGABGagdEWYPY1squ2Fyz2sWPViAr1BSUa+9iYyJ7tPXdiCuYV7YCGmk6Hz2RUyK5oHoWLr/2vh9KRp1wlQBs6J6PKjwJF77aPAI+J5KGGtKtXR3fu6yM=
+	t=1762781083; cv=none; b=UpehvHm8eW7WTABvVVJ0THphRytsOBbLMUWgwd4hGaU89jMk7gEwwsMRtEBPoCrWgcEkdcSZLZyyAG/bnl4fzR/fc6glRjIEhwSEs1H+CDz0OIh/82O8QJfndVKbbED3z6u2c5E0eHTR8qWLPybM2yg9tZzBqgb09PcwffQO9sQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762781079; c=relaxed/simple;
-	bh=df2DbsAxo+C6c7sYJgct2vBV+3RtT+flVm4u+Kigy0I=;
+	s=arc-20240116; t=1762781083; c=relaxed/simple;
+	bh=ZxZrwJ1k2FSJabxI9dqK21cYeIUQQxRyT6Rc92WPKOc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dXd7y8EqA8PLlTO5jBDwZnjIodfGor58cBeP3BLcGG4gwsP612T0zKcbdENtrQBLOoL7783BX1lbaciZhsqxp9IuFg/4hTDzZ5KlwwAJTlc4HKFzo+Kc3WtzMWwoZU4JqpfrmXUD7hLnQ97MqhU03a8HXYpMsvEwIv9JQDhMahQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=K5nLWUMw; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=IgUBDNZHO7u3DdquwY6wBTSRxqoehMvLdXx49qLT0fS3NRcg70Yt134dItgAdc2GfBtAVDDH3xTPGdIi9EWQot4XIpf4OpdBM+0RUQLaV2kzGxGrSmR/D9cEoc6jawJmkiNVqhHeFhOt/HGoLUGTsHEK0GHy136/Ms8LKmdlX9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ElObC00A; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="K5nLWUMw"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ElObC00A"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=O6Y5csMYD68XBhEfTAhiHSdDe6CtPf3KN3aFxNiOinc=; b=K5nLWUMwC3SL9V+eq3Wo2vVqqD
-	czdx/TLHdWisWKBE6advMv1Gl5ifVU+Xk23Wqfka0L2sHa68pwLgPQV7sThpsKKf7CwRw638f1M1t
-	Z5PRgAl0evKgMh4xrgF6aJjvOQAXvEO4nfg1sO3YjYIa9K6x0VtOZKXjgcG83N4Xxvm2J9AcTok1j
-	OMPhEX5pcgZsFcAGYozRlohRmvnu0rdwsS0RvB8p8aKC246VHfC/oOWGSJ6+SJX8yQMLbNBtejnHf
-	EL/FaPFqkfeztL/nAyl7inyku2ZkaO04Aqh3sOTLO35BcRvibJwCeD8EFRvcdu/Havi0fUkrB2/he
-	nQZsowuA==;
+	bh=xc9eOaiiOLm6GtV7wVb9nxDG/F5Hp/nvNysnqEvlAHQ=; b=ElObC00Aqh1M8dayViF7+L2trY
+	bKnYwomvrx/VMfQ3kRaJ38PH0dRLOv99cShDNUqheAE0sDu29eUGxyESPb8OMkHtZSuMiLNoFRmTt
+	0vYFelx4GPnKbceM/+qiPl7LDGL6RRbex3n29YED3LUsED55sV8D8lxosXWUHlTZoZuroqoqEJnca
+	QspyuG5v0AVDJllXOggdZ0rslGAdVscRwU8iITuz/UuLKtw1wi90cBeTdLJwffJOqdIR5HuKFsbGo
+	8IK6mSEkm2a37js0ebYSs+g2DQYogcFabaDcUYH8NCm5gVG/E66WiWySwkCrK7motA98qA1TlS//i
+	kfMmuy2g==;
 Received: from [2001:4bb8:2c0:cf7f:fd19:c125:bec7:dd6d] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vIRsr-00000005UVK-0uYd;
-	Mon, 10 Nov 2025 13:24:37 +0000
+	id 1vIRsu-00000005UVc-3MCl;
+	Mon, 10 Nov 2025 13:24:41 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 14/18] xfs: move q_qlock locking into xqcheck_compare_dquot
-Date: Mon, 10 Nov 2025 14:23:06 +0100
-Message-ID: <20251110132335.409466-15-hch@lst.de>
+Subject: [PATCH 15/18] xfs: move quota locking into xqcheck_commit_dquot
+Date: Mon, 10 Nov 2025 14:23:07 +0100
+Message-ID: <20251110132335.409466-16-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251110132335.409466-1-hch@lst.de>
 References: <20251110132335.409466-1-hch@lst.de>
@@ -48,66 +48,78 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Instead of having both callers do it.
+Drop two redundant lock roundtrips by not requiring q_lock to be held on
+entry and return.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/quotacheck.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ fs/xfs/scrub/quotacheck_repair.c | 21 ++-------------------
+ 1 file changed, 2 insertions(+), 19 deletions(-)
 
-diff --git a/fs/xfs/scrub/quotacheck.c b/fs/xfs/scrub/quotacheck.c
-index 20220afd90f1..d412a8359784 100644
---- a/fs/xfs/scrub/quotacheck.c
-+++ b/fs/xfs/scrub/quotacheck.c
-@@ -563,6 +563,7 @@ xqcheck_compare_dquot(
- 		return -ECANCELED;
- 	}
+diff --git a/fs/xfs/scrub/quotacheck_repair.c b/fs/xfs/scrub/quotacheck_repair.c
+index 3013211fa6c1..51be8d8d261b 100644
+--- a/fs/xfs/scrub/quotacheck_repair.c
++++ b/fs/xfs/scrub/quotacheck_repair.c
+@@ -52,13 +52,11 @@ xqcheck_commit_dquot(
+ 	bool			dirty = false;
+ 	int			error = 0;
  
-+	mutex_lock(&dq->q_qlock);
- 	mutex_lock(&xqc->lock);
- 	error = xfarray_load_sparse(counts, dq->q_id, &xcdq);
- 	if (error)
-@@ -589,7 +590,9 @@ xqcheck_compare_dquot(
- 		xchk_set_incomplete(xqc->sc);
- 		error = -ECANCELED;
- 	}
-+out_unlock:
- 	mutex_unlock(&xqc->lock);
-+	mutex_unlock(&dq->q_qlock);
+-	/* Unlock the dquot just long enough to allocate a transaction. */
+-	mutex_unlock(&dq->q_qlock);
+ 	error = xchk_trans_alloc(xqc->sc, 0);
+-	mutex_lock(&dq->q_qlock);
  	if (error)
  		return error;
  
-@@ -597,10 +600,6 @@ xqcheck_compare_dquot(
- 		return -ECANCELED;
++	mutex_lock(&dq->q_qlock);
+ 	xfs_trans_dqjoin(xqc->sc->tp, dq);
  
- 	return 0;
+ 	if (xchk_iscan_aborted(&xqc->iscan)) {
+@@ -115,23 +113,12 @@ xqcheck_commit_dquot(
+ 	if (dq->q_id)
+ 		xfs_qm_adjust_dqtimers(dq);
+ 	xfs_trans_log_dquot(xqc->sc->tp, dq);
 -
--out_unlock:
--	mutex_unlock(&xqc->lock);
+-	/*
+-	 * Transaction commit unlocks the dquot, so we must re-lock it so that
+-	 * the caller can put the reference (which apparently requires a locked
+-	 * dquot).
+-	 */
+-	error = xrep_trans_commit(xqc->sc);
+-	mutex_lock(&dq->q_qlock);
 -	return error;
++	return xrep_trans_commit(xqc->sc);
+ 
+ out_unlock:
+ 	mutex_unlock(&xqc->lock);
+ out_cancel:
+ 	xchk_trans_cancel(xqc->sc);
+-
+-	/* Re-lock the dquot so the caller can put the reference. */
+-	mutex_lock(&dq->q_qlock);
+ 	return error;
  }
  
- /*
-@@ -635,9 +634,7 @@ xqcheck_walk_observations(
- 		if (error)
- 			return error;
- 
--		mutex_lock(&dq->q_qlock);
- 		error = xqcheck_compare_dquot(xqc, dqtype, dq);
--		mutex_unlock(&dq->q_qlock);
- 		xfs_qm_dqrele(dq);
- 		if (error)
- 			return error;
-@@ -675,9 +672,7 @@ xqcheck_compare_dqtype(
- 	/* Compare what we observed against the actual dquots. */
+@@ -155,9 +142,7 @@ xqcheck_commit_dqtype(
+ 	 */
  	xchk_dqiter_init(&cursor, sc, dqtype);
  	while ((error = xchk_dquot_iter(&cursor, &dq)) == 1) {
 -		mutex_lock(&dq->q_qlock);
- 		error = xqcheck_compare_dquot(xqc, dqtype, dq);
+ 		error = xqcheck_commit_dquot(xqc, dqtype, dq);
 -		mutex_unlock(&dq->q_qlock);
  		xfs_qm_dqrele(dq);
  		if (error)
  			break;
+@@ -188,9 +173,7 @@ xqcheck_commit_dqtype(
+ 		if (error)
+ 			return error;
+ 
+-		mutex_lock(&dq->q_qlock);
+ 		error = xqcheck_commit_dquot(xqc, dqtype, dq);
+-		mutex_unlock(&dq->q_qlock);
+ 		xfs_qm_dqrele(dq);
+ 		if (error)
+ 			return error;
 -- 
 2.47.3
 
