@@ -1,42 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76B7A19DF4F
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Nov 2025 13:24:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B89219DF4F
+	for <linux-xfs@vger.kernel.org>; Mon, 10 Nov 2025 13:24:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762781058; cv=none; b=VtyeOyakUiEgXZp5GrB2JOjig7OT4XoURk4KFWnGyuDiSs4tTByPPxBSPgwicrutrM/jbNzngXxRD/oFHgyOSheQMPpIPAihIHL6G6750MY5nrvRRyZEAw2DPAOnGARH+O97Woxs8b+0t+/w8NDv9yLV5O5Sr9ObQyaMpnej5+A=
+	t=1762781063; cv=none; b=moYgjZ3tuN3h7zqdCG5iwstggLugcLITPHvoO3gv++HKDjVGv02HdzT6admw8VK7NQSuOTygrY9yP9/waeMVwfZR9z0hpYP3C/r1bRk0SJEZtIa7yTExM+coolRQWrmWWAPXK+SsGVj6Fr7AbfyImxXx8w/MKAX0eQ1PlM0qXBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762781058; c=relaxed/simple;
-	bh=RukYdGtsl9cRz6s/gC93DvmYItZFqOt5ki3XWbhUUVw=;
+	s=arc-20240116; t=1762781063; c=relaxed/simple;
+	bh=2FJp53/MPKncnm7jRNxblgAMVQJv2oZudm4Ra5IVNWM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ibq75Z0dmWZ+fQ7eSgZ/RZR1iokuMhnUHt5F2rApQaCEW3D42reVYwhYvtHUp2tZmiK1bScZ4MqJYuCnQrVbbZkVD0Dog1J48mNKBw7CmALNKeMBeZ/LxJMM7e1ccB+bv4YEl9bXlCZ1NqW3gbntAR2Hj7/EpZqegR8EHkyb0LA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=F221YRkx; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=lFJ0jf5OYs0Ssx5HU0dhMcWU2CrdolooXUFZZRHrNNgOC7XPdIVeGrMqg/X/YeMpjrW6x4SKZUs0QdyfmB5AtAD4MTBR4ii/lrD6ytjNe5HKappgUpca7iVLTp1LTV9j+Ux5newwgZCp71WYEctoeN0/X9h+HnfY3bb4i0Ulxn8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=3bm7Gn3g; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="F221YRkx"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="3bm7Gn3g"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=nwu4wkuJ7o7xnjEvOTTZBy0oy4/6Czfp/e8a2b/mrfU=; b=F221YRkx6tNjzLMSz9YMTf4OeT
-	t2cpFPqWFcsLYf8gszzBA3rkVcq3Jdv2ZnwFcNno/oE5ysb0cZA9ttul/9zdnHiKRyDXZcTRUzhX2
-	DVyQw14uHL+As1B6P4pf4CJZfp2vzfqlY0WeqU8jcGxRZ6c+vOAKdyb4F3cHqTILowgvkALiKwte6
-	kitbXEkn3feK/jRo/CpL9HJYxUwZWebyNUsV7EnghDKYpZYsh7VJ3RajUbcGTJzffJg+BQCkpuHRV
-	A2sriYO5NBJmlxvnvLkVZHRQUhrZMX6kYMOaTarkrMfC8EPfzUJjQv8u6/FBpvysaiAQA41cd4pKt
-	wc4ebYZg==;
+	bh=7O/sLI5WiO8zxLFjf15u8S0sDyxXCRiV7uSftkIL/a8=; b=3bm7Gn3g6kTMrnlfDUyukhrBj6
+	ZRAxtJig/CpsYRfNU7K8ubYyPM4hUNjJutdX1QyliPeY3jU0Z+9tLdG270q2HS9HIf8TG/S5nr6fT
+	mSYPrq/xFVKCk+Lo+lWs9cXVp6xmnt8icLRbnHHd1WYuRca16tgaNIQH7yj0nrlnrYLUV0ryvWmR5
+	1jINo7OG+JzGxnRyo0ogF+WkCGtLIfel5YxqYz6obiqTK2aHVY/2XOBWH4g5EUdUt1Oc2QNt61m5q
+	CcwcH73YDt8prdyt+Tmq8Pyz8Gs7f1YWsxDBIuE9gMd2fEiew0cd4zkvwJAR7oE3aPGwwYa0mHGhZ
+	OXSVl7Lw==;
 Received: from [2001:4bb8:2c0:cf7f:fd19:c125:bec7:dd6d] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vIRsW-00000005UTN-1kF2;
-	Mon, 10 Nov 2025 13:24:16 +0000
+	id 1vIRsb-00000005UU6-0Etx;
+	Mon, 10 Nov 2025 13:24:21 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org,
 	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH 09/18] xfs: fold xfs_qm_dqattach_one into xfs_qm_dqget_inode
-Date: Mon, 10 Nov 2025 14:23:01 +0100
-Message-ID: <20251110132335.409466-10-hch@lst.de>
+Subject: [PATCH 10/18] xfs: return the dquot unlocked from xfs_qm_dqget
+Date: Mon, 10 Nov 2025 14:23:02 +0100
+Message-ID: <20251110132335.409466-11-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251110132335.409466-1-hch@lst.de>
 References: <20251110132335.409466-1-hch@lst.de>
@@ -49,123 +49,155 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-xfs_qm_dqattach_one is a thin wrapper around xfs_qm_dqget_inode.  Move
-the extra asserts into xfs_qm_dqget_inode, drop the unneeded q_qlock
-roundtrip and merge the two functions.
+There is no reason to lock the dquot in xfs_qm_dqget, which just acquires
+a reference.  Move the locking to the callers, or remove it in cases where
+the caller instantly unlocks the dquot.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_dquot.c |  9 ++++++---
- fs/xfs/xfs_qm.c    | 40 +++-------------------------------------
- 2 files changed, 9 insertions(+), 40 deletions(-)
+ fs/xfs/scrub/dqiterate.c         | 1 +
+ fs/xfs/scrub/quotacheck.c        | 1 +
+ fs/xfs/scrub/quotacheck_repair.c | 1 +
+ fs/xfs/xfs_dquot.c               | 4 ++--
+ fs/xfs/xfs_qm.c                  | 4 +---
+ fs/xfs/xfs_qm_bhv.c              | 1 +
+ fs/xfs/xfs_qm_syscalls.c         | 2 ++
+ 7 files changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 8b4434e6df09..862fec529512 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -994,7 +994,7 @@ xfs_qm_dqget_inode(
- 	struct xfs_inode	*ip,
- 	xfs_dqtype_t		type,
- 	bool			can_alloc,
--	struct xfs_dquot	**O_dqpp)
-+	struct xfs_dquot	**dqpp)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
-@@ -1003,6 +1003,9 @@ xfs_qm_dqget_inode(
- 	xfs_dqid_t		id;
- 	int			error;
- 
-+	ASSERT(!*dqpp);
-+	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
-+
- 	error = xfs_qm_dqget_checks(mp, type);
+diff --git a/fs/xfs/scrub/dqiterate.c b/fs/xfs/scrub/dqiterate.c
+index 20c4daedd48d..6f1185afbf39 100644
+--- a/fs/xfs/scrub/dqiterate.c
++++ b/fs/xfs/scrub/dqiterate.c
+@@ -205,6 +205,7 @@ xchk_dquot_iter(
  	if (error)
  		return error;
-@@ -1068,8 +1071,8 @@ xfs_qm_dqget_inode(
- 	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
+ 
++	mutex_lock(&dq->q_qlock);
+ 	cursor->id = dq->q_id + 1;
+ 	*dqpp = dq;
+ 	return 1;
+diff --git a/fs/xfs/scrub/quotacheck.c b/fs/xfs/scrub/quotacheck.c
+index 180449f654f6..bef63f19cd87 100644
+--- a/fs/xfs/scrub/quotacheck.c
++++ b/fs/xfs/scrub/quotacheck.c
+@@ -635,6 +635,7 @@ xqcheck_walk_observations(
+ 		if (error)
+ 			return error;
+ 
++		mutex_lock(&dq->q_qlock);
+ 		error = xqcheck_compare_dquot(xqc, dqtype, dq);
+ 		mutex_unlock(&dq->q_qlock);
+ 		xfs_qm_dqrele(dq);
+diff --git a/fs/xfs/scrub/quotacheck_repair.c b/fs/xfs/scrub/quotacheck_repair.c
+index 11153e24b565..3b23219d43ed 100644
+--- a/fs/xfs/scrub/quotacheck_repair.c
++++ b/fs/xfs/scrub/quotacheck_repair.c
+@@ -187,6 +187,7 @@ xqcheck_commit_dqtype(
+ 		if (error)
+ 			return error;
+ 
++		mutex_lock(&dq->q_qlock);
+ 		error = xqcheck_commit_dquot(xqc, dqtype, dq);
+ 		mutex_unlock(&dq->q_qlock);
+ 		xfs_qm_dqrele(dq);
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 862fec529512..1c9c17892874 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -895,7 +895,7 @@ xfs_qm_dqget_checks(
+ 
+ /*
+  * Given the file system, id, and type (UDQUOT/GDQUOT/PDQUOT), return a
+- * locked dquot, doing an allocation (if requested) as needed.
++ * dquot, doing an allocation (if requested) as needed.
+  */
+ int
+ xfs_qm_dqget(
+@@ -940,7 +940,6 @@ xfs_qm_dqget(
  	trace_xfs_dqget_miss(dqp);
  found:
--	*O_dqpp = dqp;
+ 	*O_dqpp = dqp;
 -	mutex_lock(&dqp->q_qlock);
-+	trace_xfs_dqattach_get(dqp);
-+	*dqpp = dqp;
  	return 0;
  }
  
+@@ -1098,6 +1097,7 @@ xfs_qm_dqget_next(
+ 		else if (error != 0)
+ 			break;
+ 
++		mutex_lock(&dqp->q_qlock);
+ 		if (!XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+ 			*dqpp = dqp;
+ 			return 0;
 diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index b571eff51694..f3f7947bc4ed 100644
+index f3f7947bc4ed..a81b8b7a4e4f 100644
 --- a/fs/xfs/xfs_qm.c
 +++ b/fs/xfs/xfs_qm.c
-@@ -287,40 +287,6 @@ xfs_qm_unmount_quotas(
- 		xfs_qm_destroy_quotainos(mp->m_quotainfo);
- }
- 
--STATIC int
--xfs_qm_dqattach_one(
--	struct xfs_inode	*ip,
--	xfs_dqtype_t		type,
--	bool			doalloc,
--	struct xfs_dquot	**IO_idqpp)
--{
--	struct xfs_dquot	*dqp;
--	int			error;
--
--	ASSERT(!*IO_idqpp);
--	xfs_assert_ilocked(ip, XFS_ILOCK_EXCL);
--
--	/*
--	 * Find the dquot from somewhere. This bumps the reference count of
--	 * dquot and returns it locked.  This can return ENOENT if dquot didn't
--	 * exist on disk and we didn't ask it to allocate; ESRCH if quotas got
--	 * turned off suddenly.
--	 */
--	error = xfs_qm_dqget_inode(ip, type, doalloc, &dqp);
--	if (error)
--		return error;
--
--	trace_xfs_dqattach_get(dqp);
--
--	/*
--	 * dqget may have dropped and re-acquired the ilock, but it guarantees
--	 * that the dquot returned is the one that should go in the inode.
--	 */
--	*IO_idqpp = dqp;
--	mutex_unlock(&dqp->q_qlock);
--	return 0;
--}
--
- static bool
- xfs_qm_need_dqattach(
- 	struct xfs_inode	*ip)
-@@ -360,7 +326,7 @@ xfs_qm_dqattach_locked(
- 	ASSERT(!xfs_is_metadir_inode(ip));
- 
- 	if (XFS_IS_UQUOTA_ON(mp) && !ip->i_udquot) {
--		error = xfs_qm_dqattach_one(ip, XFS_DQTYPE_USER,
-+		error = xfs_qm_dqget_inode(ip, XFS_DQTYPE_USER,
- 				doalloc, &ip->i_udquot);
- 		if (error)
- 			goto done;
-@@ -368,7 +334,7 @@ xfs_qm_dqattach_locked(
+@@ -1268,6 +1268,7 @@ xfs_qm_quotacheck_dqadjust(
+ 		return error;
  	}
  
- 	if (XFS_IS_GQUOTA_ON(mp) && !ip->i_gdquot) {
--		error = xfs_qm_dqattach_one(ip, XFS_DQTYPE_GROUP,
-+		error = xfs_qm_dqget_inode(ip, XFS_DQTYPE_GROUP,
- 				doalloc, &ip->i_gdquot);
- 		if (error)
- 			goto done;
-@@ -376,7 +342,7 @@ xfs_qm_dqattach_locked(
++	mutex_lock(&dqp->q_qlock);
+ 	error = xfs_dquot_attach_buf(NULL, dqp);
+ 	if (error)
+ 		goto out_unlock;
+@@ -1907,7 +1908,6 @@ xfs_qm_vop_dqalloc(
+ 			/*
+ 			 * Get the ilock in the right order.
+ 			 */
+-			mutex_unlock(&uq->q_qlock);
+ 			lockflags = XFS_ILOCK_SHARED;
+ 			xfs_ilock(ip, lockflags);
+ 		} else {
+@@ -1929,7 +1929,6 @@ xfs_qm_vop_dqalloc(
+ 				ASSERT(error != -ENOENT);
+ 				goto error_rele;
+ 			}
+-			mutex_unlock(&gq->q_qlock);
+ 			lockflags = XFS_ILOCK_SHARED;
+ 			xfs_ilock(ip, lockflags);
+ 		} else {
+@@ -1947,7 +1946,6 @@ xfs_qm_vop_dqalloc(
+ 				ASSERT(error != -ENOENT);
+ 				goto error_rele;
+ 			}
+-			mutex_unlock(&pq->q_qlock);
+ 			lockflags = XFS_ILOCK_SHARED;
+ 			xfs_ilock(ip, lockflags);
+ 		} else {
+diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+index e5a30b12253c..edc0aef3cf34 100644
+--- a/fs/xfs/xfs_qm_bhv.c
++++ b/fs/xfs/xfs_qm_bhv.c
+@@ -73,6 +73,7 @@ xfs_qm_statvfs(
+ 	struct xfs_dquot	*dqp;
+ 
+ 	if (!xfs_qm_dqget(mp, ip->i_projid, XFS_DQTYPE_PROJ, false, &dqp)) {
++		mutex_lock(&dqp->q_qlock);
+ 		xfs_fill_statvfs_from_dquot(statp, ip, dqp);
+ 		mutex_unlock(&dqp->q_qlock);
+ 		xfs_qm_dqrele(dqp);
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 441f9806cddb..6c8924780d7a 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -302,6 +302,7 @@ xfs_qm_scall_setqlim(
+ 		return error;
  	}
  
- 	if (XFS_IS_PQUOTA_ON(mp) && !ip->i_pdquot) {
--		error = xfs_qm_dqattach_one(ip, XFS_DQTYPE_PROJ,
-+		error = xfs_qm_dqget_inode(ip, XFS_DQTYPE_PROJ,
- 				doalloc, &ip->i_pdquot);
- 		if (error)
- 			goto done;
++	mutex_lock(&dqp->q_qlock);
+ 	defq = xfs_get_defquota(q, xfs_dquot_type(dqp));
+ 	mutex_unlock(&dqp->q_qlock);
+ 
+@@ -459,6 +460,7 @@ xfs_qm_scall_getquota(
+ 	 * If everything's NULL, this dquot doesn't quite exist as far as
+ 	 * our utility programs are concerned.
+ 	 */
++	mutex_lock(&dqp->q_qlock);
+ 	if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+ 		error = -ENOENT;
+ 		goto out_put;
 -- 
 2.47.3
 
