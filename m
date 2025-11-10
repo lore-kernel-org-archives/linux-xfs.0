@@ -1,166 +1,248 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE3DC308F0B
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Nov 2025 13:24:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 568F031280E
+	for <linux-xfs@vger.kernel.org>; Mon, 10 Nov 2025 13:38:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762781094; cv=none; b=Slfxw82g0BxBGYdeHwKunS8zr023Nn57uXf5th0Tpw6lnWLnS4vC6hzIcL9GjGs6sYJiLP2jFPbj2Soe02Mf3vlYDBcTnt9o2iTWnN1xuOjtc5c8Iu6V+o5yz0lyC+bYxpaNMbmqjUffJxZK4NtbfVd2jSOGZ7FhKzlRjRTKQmU=
+	t=1762781895; cv=none; b=rDji+RsgZHqG8VHTsw0uQ4gmPKqafa4GAej6n8iZsNwF0Fb6jJkYoO1cJvSWg0s6Z1t+L5MyYalt2f44t7A/ZBM35CTYj+ofRMlNo5855uF5DC0J7CTZoZYByxW0FFIWNAOKO2aVI0z7SAr5l8+CR3XvBpZXN8IECKUp4Wdd5Hw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762781094; c=relaxed/simple;
-	bh=xYIQNMlIWRR7H2uAwVDdizBVEkzdgqSuPgA2j4IO58w=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=N9aOifd7Q2GZ6WqnYgcbffPRCCO+AcBlAgkn4u9VQusrfX+1wZfSeUgcEQRFxdmUh5hxIk4fyIUg8GApCsgp5FgZ0SzBWaDoWZbmzk/hjN9okNqAh/NVlccg7OvXlEQqzr33qGEABd/J2yCzt+ZF5jJlzYZ+1xtt0+/qWMDKV4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Xg3DIlKx; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1762781895; c=relaxed/simple;
+	bh=HOUCuTxWwKHYskDLNwEKHT2ZtC97epKNJQ0iYXnYKSw=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:Mime-Version; b=U1p4i3c6Xpq9F8y4+65CYUmVA1aiLMcXkjJw6rx2zgjyur/8yqEMDyxN+oo10K2P45ZmqHoF+gRUmbxGSaFhBuL39j4oTxVOyA2BnQ40tAcRkVfoIYvDgk/XWkwxFcLaMSUmv+PBgIs0qn/U7hkROvmhML8yVtL9ajcjGy/FY04=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cnzfU5Dx; arc=none smtp.client-ip=209.85.210.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Xg3DIlKx"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=QH3BXxTkK2vBMxMYpr1CS7hwiGxQQA/pqCnKWhNMUgo=; b=Xg3DIlKxf+jrsBSYogTiUTvtAt
-	z1eG5era2QNos898tmusQt5jBPIyH2yOPKBFzafqZLqdcBomflE3Th/Dx8/Lpc8R3EtvSgtfSXnGm
-	tHPUMm/ieByL237k2UtelapVr6SvwcQPJ4NoWStPx0n2+JgHDv8mw8S2gkyGmKx+D+trBMyDARA3h
-	7OZcTBXcvttPz7NXL9fHmhxV71r2p2chg1n+5sr1fljk7MgwJZFBgCtTMZE7CIM186ELtonFPrb7w
-	U9GwOHSVGb742/CE6g6bcR0TCrkBnz4vQ5uk2DZHCpKBILyFgXx3uKkCbRLBa7cFOTwvI2Pmm+cKI
-	mafI0AVw==;
-Received: from [2001:4bb8:2c0:cf7f:fd19:c125:bec7:dd6d] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vIRt5-00000005UWT-3vXI;
-	Mon, 10 Nov 2025 13:24:52 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 18/18] xfs: reduce ilock roundtrips in xfs_qm_vop_dqalloc
-Date: Mon, 10 Nov 2025 14:23:10 +0100
-Message-ID: <20251110132335.409466-19-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251110132335.409466-1-hch@lst.de>
-References: <20251110132335.409466-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cnzfU5Dx"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-7ad1cd0db3bso2209167b3a.1
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Nov 2025 05:38:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1762781892; x=1763386692; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jnGlBRb9DwPiK9LmBGDtYmrRRuxIEh43z/epZv69VLQ=;
+        b=cnzfU5Dx7ei5165Oe21fXuxJobF5pYYWzJ6nz44a4qpnbTDHfaxt2uNEIxhyaar0gM
+         NOiGAVlSOw9p1tOzQFuPRIqGvuf7I5xwuy589Sfw72gkHII2klEm/0qHqw9/xcP4QnE7
+         CwA3VrKfrqD4OxTCCcSZdGsjfPcDafyt4ICvATeS2b9s0zidabiqqVankwQQ8doo+pE9
+         JCEyAQVtuSQ7MsXe7Z/V54rHKuuNGWADEvDJrG02KvQ3jGrz2og562GH4STpSy6GuVHq
+         qiQfG5gqFJ9amS4S1jQCXko05sruq0T0IEbHGMzBXbpV1F0k8G3JEXxaNJD2cK7jWkTK
+         oF3w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762781892; x=1763386692;
+        h=content-transfer-encoding:mime-version:references:in-reply-to:date
+         :cc:to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=jnGlBRb9DwPiK9LmBGDtYmrRRuxIEh43z/epZv69VLQ=;
+        b=JWURNthpbZMjv55Kdlca5DRjSJFY47RR8nB5vj0790gjFEz+YT7Kl88l1IObZp++oY
+         rRoXdkvet1LnaIEwFuj8F4K1rtfR/yqmkWaxlZtsDEn4mULRnsiRb2Rfbhoy6laBtj2A
+         1RodrvDirECGlDRq54jz43vHWMrsHrxET12ryrlMgJzHKl7+QTMymC9aw5rgptM+7vBe
+         yX+HqFtQmMoOq1Jbm4eFco8q8BGMxe/xv84ondOezrGBDaRsaN+XBJYAsTYwH+YGlrOT
+         s39U5P3A/7aGyU9NaZkQoPaxfQtdhFeUCxFY8rxZRQ401V6njmHXxUHpXr+wHJ7WEO6T
+         hiXA==
+X-Forwarded-Encrypted: i=1; AJvYcCURFcu/odD3AHpJ7IwN+8otJ9WhP8PHr97bZBDzWCRtwu1YMvYzIREJ/zu6WtCf1uSvaaOnEbbSB3I=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyo6IHqbPcD/sPSXvx7OOnYDx7PYn0DcY+csyZhrcneIuSBKXBk
+	wrrliBZxKI5e7gC9ZD2Au5f6cLWFrmrdlbBozvD8zXNgrqR3aAgmz6qJgJrWQQ==
+X-Gm-Gg: ASbGnctFsrXACqssT/272Gfo/Zg2F1WkwORb7KwMdIbh78Jh7J6r82nnjhHk19Q8mL4
+	XWBOfwyDg6d8nBcLm34m7tmj39Y84PIR8UNR+5+qeAAZj+AioBDZdWxw+V4jGyigedzwU74xvQI
+	IGy+9tbk+lG69iX140dtrH4C2H7kaJl4R6LzQGicAxMMjDlojmKyCCSCL/bJvYrMODjobXTUGpH
+	3IdsqLjSC9ym5ElvfAYi8zF+7yfuZpc5qacTw9xPuhzNOQ9/MW3VHlqYPY+qgUqjYvzRjVIGcuC
+	/X2OUswf9CLZiKnZZUTvzVaH4OlYXMIMKeuWkyqsXcG4WLbxjBZw5q02cUo6vea05VNWVV4brz3
+	Ubj6V31VbglENSWgyIRPWWuoRx+sNzD6bZqfe4W5pDf47tyIPT6tH6A+PQ8bayJmQp4eZbC92IJ
+	BDzdE1f7Dq8gJTWypzO79cdoXsITBQAmmQRccqDqqR6jNmdDgnOVaJ/4fsKMemBo9m
+X-Google-Smtp-Source: AGHT+IHNvk2m9lZznt0nbMSiGOUuWH6p+xE2cZfK8zcBuHfxFqo1BWD3CQfalfJc7QB2TuotmiLZDQ==
+X-Received: by 2002:a05:6a21:32a0:b0:334:a784:304a with SMTP id adf61e73a8af0-353a2d3cec1mr9389506637.33.1762781891518;
+        Mon, 10 Nov 2025 05:38:11 -0800 (PST)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.198.166])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-ba8f9ed21desm13311276a12.11.2025.11.10.05.38.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 Nov 2025 05:38:11 -0800 (PST)
+Message-ID: <7f7163d79dc89ae8c8d1157ce969b369acbcfb5d.camel@gmail.com>
+Subject: Re: [PATCH 4/4] xfs: fallback to buffered I/O for direct I/O when
+ stable writes are required
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>, 
+	Christian Brauner
+	 <brauner@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>,  linux-kernel@vger.kernel.org,
+ linux-xfs@vger.kernel.org,  linux-fsdevel@vger.kernel.org,
+ linux-raid@vger.kernel.org,  linux-block@vger.kernel.org
+Date: Mon, 10 Nov 2025 19:08:05 +0530
+In-Reply-To: <20251029071537.1127397-5-hch@lst.de>
+References: <20251029071537.1127397-1-hch@lst.de>
+	 <20251029071537.1127397-5-hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-27.el8_10) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-xfs_qm_vop_dqalloc only needs the (exclusive) ilock for attaching dquots
-to the inode if not done so yet.  All the other locks don't touch the inode
-and don't need the ilock - the i_rwsem / iolock protects against changes
-to the IDs while we are in a method, and the ilock would not help because
-dropping it for the dqget calls would be racy anyway.
+On Wed, 2025-10-29 at 08:15 +0100, Christoph Hellwig wrote:
+> Inodes can be marked as requiring stable writes, which is a setting
+> usually inherited from block devices that require stable writes.  Block
+> devices require stable writes when the drivers have to sample the data
+> more than once, e.g. to calculate a checksum or parity in one pass, and
+> then send the data on to a hardware device, and modifying the data
+> in-flight can lead to inconsistent checksums or parity.
+> 
+> For buffered I/O, the writeback code implements this by not allowing
+> modifications while folios are marked as under writeback, but for
+> direct I/O, the kernel currently does not have any way to prevent the
+> user application from modifying the in-flight memory, so modifications
+> can easily corrupt data despite the block driver setting the stable
+> write flag.  Even worse, corruption can happen on reads as well,
+> where concurrent modifications can cause checksum mismatches, or
+> failures to rebuild parity.  One application known to trigger this
+> behavior is Qemu when running Windows VMs, but there might be many
+> others as well.  xfstests can also hit this behavior, not only in the
+> specifically crafted patch for this (generic/761), but also in
+> various other tests that mostly stress races between different I/O
+> modes, which generic/095 being the most trivial and easy to hit
+> one.
+> 
+> Fix XFS to fall back to uncached buffered I/O when the block device
+> requires stable writes to fix these races.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_file.c | 54 +++++++++++++++++++++++++++++++++++++++--------
+>  fs/xfs/xfs_iops.c |  6 ++++++
+>  2 files changed, 51 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index e09ae86e118e..0668af07966a 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -230,6 +230,12 @@ xfs_file_dio_read(
+>  	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
+>  	ssize_t			ret;
+>  
+> +	if (mapping_stable_writes(iocb->ki_filp->f_mapping)) {
+> +		xfs_info_once(ip->i_mount,
+> +			"falling back from direct to buffered I/O for read");
+> +		return -ENOTBLK;
+> +	}
+> +
+>  	trace_xfs_file_direct_read(iocb, to);
+>  
+>  	if (!iov_iter_count(to))
+> @@ -302,13 +308,22 @@ xfs_file_read_iter(
+>  	if (xfs_is_shutdown(mp))
+>  		return -EIO;
+>  
+> -	if (IS_DAX(inode))
+> +	if (IS_DAX(inode)) {
+>  		ret = xfs_file_dax_read(iocb, to);
+> -	else if (iocb->ki_flags & IOCB_DIRECT)
+> +		goto done;
+> +	}
+> +
+> +	if (iocb->ki_flags & IOCB_DIRECT) {
+>  		ret = xfs_file_dio_read(iocb, to);
+> -	else
+> -		ret = xfs_file_buffered_read(iocb, to);
+> +		if (ret != -ENOTBLK)
+> +			goto done;
+> +
+> +		iocb->ki_flags &= ~IOCB_DIRECT;
+> +		iocb->ki_flags |= IOCB_DONTCACHE;
+> +	}
+>  
+> +	ret = xfs_file_buffered_read(iocb, to);
+> +done:
+>  	if (ret > 0)
+>  		XFS_STATS_ADD(mp, xs_read_bytes, ret);
+>  	return ret;
+> @@ -883,6 +898,7 @@ xfs_file_dio_write(
+>  	struct iov_iter		*from)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
+> +	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
+>  	size_t			count = iov_iter_count(from);
+>  
+> @@ -890,15 +906,21 @@ xfs_file_dio_write(
+>  	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
+>  		return -EINVAL;
+>  
+> +	if (mapping_stable_writes(iocb->ki_filp->f_mapping)) {
+> +		xfs_info_once(mp,
+> +			"falling back from direct to buffered I/O for write");
+Minor: Let us say that an user opens a file in O_DIRECT in an atomic write enabled device(requiring
+stable writes), we get this warning once. Now the same/different user/application opens another file
+with O_DIRECT in the same atomic write enabled device and expects atomic write to be enabled - but
+it will not be enabled (since the kernel has falled back to the uncached buffered write path)
+without any warning message. Won't that be a bit confusing for the user (of course unless the user
+is totally aware of the kernel's exact behavior)?
+--NR
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_qm.c | 32 +++-----------------------------
- 1 file changed, 3 insertions(+), 29 deletions(-)
-
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index a81b8b7a4e4f..95be67ac6eb4 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1861,16 +1861,12 @@ xfs_qm_vop_dqalloc(
- 	struct xfs_dquot	*gq = NULL;
- 	struct xfs_dquot	*pq = NULL;
- 	int			error;
--	uint			lockflags;
- 
- 	if (!XFS_IS_QUOTA_ON(mp))
- 		return 0;
- 
- 	ASSERT(!xfs_is_metadir_inode(ip));
- 
--	lockflags = XFS_ILOCK_EXCL;
--	xfs_ilock(ip, lockflags);
--
- 	if ((flags & XFS_QMOPT_INHERIT) && XFS_INHERIT_GID(ip))
- 		gid = inode->i_gid;
- 
-@@ -1879,37 +1875,22 @@ xfs_qm_vop_dqalloc(
- 	 * if necessary. The dquot(s) will not be locked.
- 	 */
- 	if (XFS_NOT_DQATTACHED(mp, ip)) {
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		error = xfs_qm_dqattach_locked(ip, true);
--		if (error) {
--			xfs_iunlock(ip, lockflags);
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		if (error)
- 			return error;
--		}
- 	}
- 
- 	if ((flags & XFS_QMOPT_UQUOTA) && XFS_IS_UQUOTA_ON(mp)) {
- 		ASSERT(O_udqpp);
- 		if (!uid_eq(inode->i_uid, uid)) {
--			/*
--			 * What we need is the dquot that has this uid, and
--			 * if we send the inode to dqget, the uid of the inode
--			 * takes priority over what's sent in the uid argument.
--			 * We must unlock inode here before calling dqget if
--			 * we're not sending the inode, because otherwise
--			 * we'll deadlock by doing trans_reserve while
--			 * holding ilock.
--			 */
--			xfs_iunlock(ip, lockflags);
- 			error = xfs_qm_dqget(mp, from_kuid(user_ns, uid),
- 					XFS_DQTYPE_USER, true, &uq);
- 			if (error) {
- 				ASSERT(error != -ENOENT);
- 				return error;
- 			}
--			/*
--			 * Get the ilock in the right order.
--			 */
--			lockflags = XFS_ILOCK_SHARED;
--			xfs_ilock(ip, lockflags);
- 		} else {
- 			/*
- 			 * Take an extra reference, because we'll return
-@@ -1922,15 +1903,12 @@ xfs_qm_vop_dqalloc(
- 	if ((flags & XFS_QMOPT_GQUOTA) && XFS_IS_GQUOTA_ON(mp)) {
- 		ASSERT(O_gdqpp);
- 		if (!gid_eq(inode->i_gid, gid)) {
--			xfs_iunlock(ip, lockflags);
- 			error = xfs_qm_dqget(mp, from_kgid(user_ns, gid),
- 					XFS_DQTYPE_GROUP, true, &gq);
- 			if (error) {
- 				ASSERT(error != -ENOENT);
- 				goto error_rele;
- 			}
--			lockflags = XFS_ILOCK_SHARED;
--			xfs_ilock(ip, lockflags);
- 		} else {
- 			ASSERT(ip->i_gdquot);
- 			gq = xfs_qm_dqhold(ip->i_gdquot);
-@@ -1939,15 +1917,12 @@ xfs_qm_vop_dqalloc(
- 	if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
- 		ASSERT(O_pdqpp);
- 		if (ip->i_projid != prid) {
--			xfs_iunlock(ip, lockflags);
- 			error = xfs_qm_dqget(mp, prid,
- 					XFS_DQTYPE_PROJ, true, &pq);
- 			if (error) {
- 				ASSERT(error != -ENOENT);
- 				goto error_rele;
- 			}
--			lockflags = XFS_ILOCK_SHARED;
--			xfs_ilock(ip, lockflags);
- 		} else {
- 			ASSERT(ip->i_pdquot);
- 			pq = xfs_qm_dqhold(ip->i_pdquot);
-@@ -1955,7 +1930,6 @@ xfs_qm_vop_dqalloc(
- 	}
- 	trace_xfs_dquot_dqalloc(ip);
- 
--	xfs_iunlock(ip, lockflags);
- 	if (O_udqpp)
- 		*O_udqpp = uq;
- 	else
--- 
-2.47.3
+> +		return -ENOTBLK;
+> +	}
+> +
+>  	/*
+>  	 * For always COW inodes we also must check the alignment of each
+>  	 * individual iovec segment, as they could end up with different
+>  	 * I/Os due to the way bio_iov_iter_get_pages works, and we'd
+>  	 * then overwrite an already written block.
+>  	 */
+> -	if (((iocb->ki_pos | count) & ip->i_mount->m_blockmask) ||
+> +	if (((iocb->ki_pos | count) & mp->m_blockmask) ||
+>  	    (xfs_is_always_cow_inode(ip) &&
+> -	     (iov_iter_alignment(from) & ip->i_mount->m_blockmask)))
+> +	     (iov_iter_alignment(from) & mp->m_blockmask)))
+>  		return xfs_file_dio_write_unaligned(ip, iocb, from);
+>  	if (xfs_is_zoned_inode(ip))
+>  		return xfs_file_dio_write_zoned(ip, iocb, from);
+> @@ -1555,10 +1577,24 @@ xfs_file_open(
+>  {
+>  	if (xfs_is_shutdown(XFS_M(inode->i_sb)))
+>  		return -EIO;
+> +
+> +	/*
+> +	 * If the underlying devices requires stable writes, we have to fall
+> +	 * back to (uncached) buffered I/O for direct I/O reads and writes, as
+> +	 * the kernel can't prevent applications from modifying the memory under
+> +	 * I/O.  We still claim to support O_DIRECT as we want opens for that to
+> +	 * succeed and fall back.
+> +	 *
+> +	 * As atomic writes are only supported for direct I/O, they can't be
+> +	 * supported either in this case.
+> +	 */
+>  	file->f_mode |= FMODE_NOWAIT | FMODE_CAN_ODIRECT;
+> -	file->f_mode |= FMODE_DIO_PARALLEL_WRITE;
+> -	if (xfs_get_atomic_write_min(XFS_I(inode)) > 0)
+> -		file->f_mode |= FMODE_CAN_ATOMIC_WRITE;
+> +	if (!mapping_stable_writes(file->f_mapping)) {
+> +		file->f_mode |= FMODE_DIO_PARALLEL_WRITE;
+> +		if (xfs_get_atomic_write_min(XFS_I(inode)) > 0)
+> +			file->f_mode |= FMODE_CAN_ATOMIC_WRITE;
+> +	}
+> +
+>  	return generic_file_open(inode, file);
+>  }
+>  
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index caff0125faea..bd49ac6b31de 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -672,6 +672,12 @@ xfs_report_atomic_write(
+>  	struct xfs_inode	*ip,
+>  	struct kstat		*stat)
+>  {
+> +	/*
+> +	 * If the stable writes flag is set, we have to fall back to buffered
+> +	 * I/O, which doesn't support atomic writes.
+> +	 */
+> +	if (mapping_stable_writes(VFS_I(ip)->i_mapping))
+> +		return;
+>  	generic_fill_statx_atomic_writes(stat,
+>  			xfs_get_atomic_write_min(ip),
+>  			xfs_get_atomic_write_max(ip),
 
