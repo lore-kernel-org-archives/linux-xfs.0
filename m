@@ -1,43 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B5D73101D3
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Nov 2025 13:23:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B4D221CC64
+	for <linux-xfs@vger.kernel.org>; Mon, 10 Nov 2025 13:23:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762781028; cv=none; b=m35+E/e4u3YaVz2pIZZldy/c2V/uMtpt/my9cZDLENI9OTEASmaOnVoQ55winrh/rpbcZt04bHfOeEsWgiLapifBfgggeFJupV/6u2ukFFSmaWF4kQUYMPPIMJ/0jPEipPUBuTpUv8g+zd+5SqXR4f96TrcMWE9lwbYzcAUSF2Y=
+	t=1762781030; cv=none; b=d7sNCp2Je6WZK2UpFAkAglfbBTGaaLdHYJ44Nxiss2zlF6kXvniJ5P23R2MuY31NxMUUqTygPPzA4te+ZnuiGoREr9YdBB0PVSu+n2kX4Uk7i3FcIIKtRSOAgpDYyZhCv6W8a0kEeYF12DgAs90mX5G3QnR3oiFfzV/nT3+WRcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762781028; c=relaxed/simple;
-	bh=OhkKME1HMgFBu+RJwOEVL3W8QtcLcfxW0H4PEWAZ0IA=;
+	s=arc-20240116; t=1762781030; c=relaxed/simple;
+	bh=ucxIsh61qodcuLyo9RCHk4xsFuIYxZtO/n7gtxc1ZQQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YB70rKxzmvTnESYu1W5eJt2oLQ+qoqaxwaq+N8RYUYa4jMS3JMrxeje7bhdJdfhAt0pqqW91mXyVmt/hRbyE62YrhUgL5qqKqrejM2jMDchi4Z0DfdGsbHnGpguOOKix9ysr5FeDfcicTrQzuOtSeGm4FYKAopdxqZ6Xqx8VUm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=XIUs550x; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=uGPHlU7OWmff1IS47xgR8hoiWXS370xpNG+Vnc7baIKpZGVVs1SFwnHAhHiXnI72HGEAzT0hZDzUajxWi+TnwocvMKYi1V4LuyDy9NhJmG8oWtJddsV03MPtUemvTMb+H+PIUXDnHxk74Rgbz60CDMmNAhSnFvMiYwCNAnnUnL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=z3B3WEYV; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XIUs550x"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="z3B3WEYV"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=jcJxqU6nJquqPHTLQZ6C9tDxvHBigzWQ+OJeNJwiHaI=; b=XIUs550xDh7FgTvSOR4Ts0Vl7X
-	lQc4tR92hJeeG4lJwfymR8jAvaV4TmKFF4DzQzz453TugWBQAwnWmcVCg8iR0Vmh8Uw10H9oCKEt5
-	XH3po52hUlXmvY0Ip2QRgKKZfvQeQfdqBCEYMYUZDWRPeAtI2fhn2MdSpDoJmF3V7KEg60/i9LyUA
-	HEht7U+Nx4DnYlqfdjMScYB33z5lMQW1HL2e87aAddDH3H/c94zaGKVQlgY99mOkLkiH9JaICcgmI
-	9OnmCdXK1wU2JDjtHx15XIuqTddyNRfBxYYnwPYOmNWMdQCTS7DzQlqw4/hh5e+E3OIQwP9eTt6yP
-	gM3PUmaQ==;
+	bh=rFTZOhuMo19KDIw+860xgRGZmeVvAo8PkW31iK8tH4E=; b=z3B3WEYVsK73L0pZHXRc6K9Bpc
+	hS9wc0okePBW+t8U35gLn1hoUBM7X17NLCzeGxvpf2AUEql5YR/lpr4s8zdFkS8291GgvM9TUI3ee
+	D4sFecPHm/JYz/KzGwIAuUWZTmesu8oPVcgctMZsn/iNLECPhOrYHpGMorStkMt6BNlo6eWjSN+oM
+	ou8wT36wb953osnCOA2gp4DYWi0GygVD17net8UG03CPgQwsrj0XIh/31CaaoC1fld7Yj5JRJ4Fi6
+	XIW5cupOyC9lr2O7LSWfl30l9ROKw7tjBaGQs4q1prUytMz7dSi2n7xYR9WlwiVAaxsAJ9YDBC03H
+	zQmPHshw==;
 Received: from [2001:4bb8:2c0:cf7f:fd19:c125:bec7:dd6d] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vIRs0-00000005URw-0lcb;
-	Mon, 10 Nov 2025 13:23:44 +0000
+	id 1vIRs3-00000005US7-1PQB;
+	Mon, 10 Nov 2025 13:23:47 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org,
-	kernel test robot <lkp@intel.com>,
-	Dan Carpenter <dan.carpenter@linaro.org>
-Subject: [PATCH 01/18] xfs: don't leak a locked dquot when xfs_dquot_attach_buf fails
-Date: Mon, 10 Nov 2025 14:22:53 +0100
-Message-ID: <20251110132335.409466-2-hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: [PATCH 02/18] xfs: make qi_dquots a 64-bit value
+Date: Mon, 10 Nov 2025 14:22:54 +0100
+Message-ID: <20251110132335.409466-3-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251110132335.409466-1-hch@lst.de>
 References: <20251110132335.409466-1-hch@lst.de>
@@ -50,42 +48,44 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-xfs_qm_quotacheck_dqadjust acquired the dquot through xfs_qm_dqget,
-which means it owns a reference and holds q_qlock.  Both need to
-be dropped on an error exit.
+qi_dquots counts all quotas in the file system, which can be up to
+3 * UINT_MAX and overflow a 32-bit counter, but can't be negative.
+Make qi_dquots a uint64_t, and saturate the value to UINT_MAX for
+userspace reporting.
 
-Fixes: ca378189fdfa ("xfs: convert quotacheck to attach dquot buffers")
-Reported-by: kernel test robot <lkp@intel.com>
-Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_qm.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_qm.h       | 2 +-
+ fs/xfs/xfs_quotaops.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 23ba84ec919a..18a19947bbdb 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1318,7 +1318,7 @@ xfs_qm_quotacheck_dqadjust(
- 
- 	error = xfs_dquot_attach_buf(NULL, dqp);
- 	if (error)
--		return error;
-+		goto out_unlock;
- 
- 	trace_xfs_dqadjust(dqp);
- 
-@@ -1348,8 +1348,9 @@ xfs_qm_quotacheck_dqadjust(
- 	}
- 
- 	dqp->q_flags |= XFS_DQFLAG_DIRTY;
-+out_unlock:
- 	xfs_qm_dqput(dqp);
--	return 0;
-+	return error;
- }
- 
- /*
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 35b64bc3a7a8..e88ed6ad0e65 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -57,7 +57,7 @@ struct xfs_quotainfo {
+ 	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
+ 	struct xfs_inode	*qi_dirip;	/* quota metadir */
+ 	struct list_lru		qi_lru;
+-	int			qi_dquots;
++	uint64_t		qi_dquots;
+ 	struct mutex		qi_quotaofflock;/* to serialize quotaoff */
+ 	xfs_filblks_t		qi_dqchunklen;	/* # BBs in a chunk of dqs */
+ 	uint			qi_dqperchunk;	/* # ondisk dq in above chunk */
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index 4c7f7ce4fd2f..94fbe3d99ec7 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -65,7 +65,7 @@ xfs_fs_get_quota_state(
+ 	memset(state, 0, sizeof(*state));
+ 	if (!XFS_IS_QUOTA_ON(mp))
+ 		return 0;
+-	state->s_incoredqs = q->qi_dquots;
++	state->s_incoredqs = min_t(uint64_t, q->qi_dquots, UINT_MAX);
+ 	if (XFS_IS_UQUOTA_ON(mp))
+ 		state->s_state[USRQUOTA].flags |= QCI_ACCT_ENABLED;
+ 	if (XFS_IS_UQUOTA_ENFORCED(mp))
 -- 
 2.47.3
 
