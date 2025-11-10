@@ -1,41 +1,42 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 023C93101C5
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Nov 2025 13:24:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7791A23C516
+	for <linux-xfs@vger.kernel.org>; Mon, 10 Nov 2025 13:24:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762781086; cv=none; b=hwpHsmgfQ3gIoMefI2F9G7WARrdyp5RqWRYQO74M8GSftSP9vmdNsSYfcxiZU1wR9zoxr/mJIiK9fRlFJ+VZTpMBIlR37szOqtwUkBllo/uO8aVGK9llQxp8TuRlCDAvyT+OckV4BgzgQIWqo1Lo3slGqcWWVT4c8X74H+l8Lt4=
+	t=1762781090; cv=none; b=Hag5xkxxBBYJ8gwTBAIgj6SxNKgd7xjOy7tF1HGTg6lw5KS8yjjLOfeMHeP4dAq4fZfe38jOHwW8EGIOiRg2zBG56nKlehE4uO0Uk8d7+RtzUD8bIwpcJlR/E4rVBuVDyXXUd5SiwY9uhXxMUfUva5hb9NRwoB+ECFwQ3U9pNY8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762781086; c=relaxed/simple;
-	bh=a/IpGjzqJQ4SlraI9Ly8ZchNBVTNXel+u43vif3MWj0=;
+	s=arc-20240116; t=1762781090; c=relaxed/simple;
+	bh=E1dLRJo6R9UiAHjtzPOiwWnWfcQ6NdpUgxgp2MB7nyw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y0GG1YVOcMivi8asvTwBaPsKHQ8TqixtFFtwSkMaybwRDxmWGkNR9aKXttAzkK5gxLg+UChqIvb9xnhfQd3OZwW+Vm8/8CbBUafJWjJCK2xUN1yevQ++GOzI+97LgM8CzZZ+/10Y7YAdqxHAHELHxyTkaeROlBC+qHFC7rFcmfQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KKjJCq0o; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=ojvbdJD/hnODtZzNJ/j1YAO4XUXIov9P9stE9r1qwRVqrIdlK4uUwdPP2qVcYyR/T6nEh8Rjd90D2ELbzUKsewfUjK1gZKeoQYTRLuulIywcxRhm156DDSCrySj5SznYBG7pJBYNtG7SJ1mDvyRhHl0CkVUFO9wAfScMFsqW2WY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=EBP+7sxO; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KKjJCq0o"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EBP+7sxO"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=v2MaZnU0QUEO2FpucWaki1X02itVD0OxSLsu4ctp7bc=; b=KKjJCq0oJBywLTGLt4CzFH6Zs2
-	NFC6swZMPvuPudMiEYulhuP9TnZ5MiCbf/VZ3TdOl/Q+NgsX95CdKtFV5wahOrx51budKtny7hFmn
-	x0NDZanMWK3avJDJ4fwp+qCMInc9fluH9ROBsPnWecUn9gIzn5zU7bT+OdJGYo27MedKMHtjEc99S
-	r/SAyGcOxnRcDP+rSOS9bNhvTnMKfMYNifbdeholBGq5tyIbNau6Bg5NfB2TVxoRkXXJXiY8QHT50
-	/Mn2b2z2+eVX0VexjtznQ3wMzA9rtIJQMlZkQL32Lbyjk2T6Sw1xWWeQBeDKJdk/87B5W0aZgUpg4
-	w/VXYCpg==;
+	bh=o948vi2c1M1z7+RQi9rjE9yB/xuBE9wt69SKy4KROvo=; b=EBP+7sxODF74FhEpNCBwDdBZ4U
+	yZAcn03/5ROpFZrRVtP2Sj0DGq2Y75WQoTBDqe0pN9meULP5rI9DvdD1ATH2uGxGjz82PkJ7xA5Ty
+	lQ9JgupJK+Fdfut1WOgo3ZoWMw9aD2CUzMR4PQlxnViKD+E64eMqCCTsSo12CH5WEjpmaTgb7CZPX
+	w4mE3vYzJ0xTb0oTycZdfNXsZ9MQOtsDx/LanozcmedAmUfsdWzHx7DJuIZAogtUpg4rwcUCRpNK1
+	4hjQ0614IY+vbO0vjJ851i8FMDUyfBCnQyGmz7Uk5VYF/kIiXOTPRJNLOgcZArTldUHKMox2UYFXo
+	RL8sIFcQ==;
 Received: from [2001:4bb8:2c0:cf7f:fd19:c125:bec7:dd6d] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vIRsy-00000005UVx-0OyN;
-	Mon, 10 Nov 2025 13:24:44 +0000
+	id 1vIRt2-00000005UWF-1LIQ;
+	Mon, 10 Nov 2025 13:24:48 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 16/18] xfs: move quota locking into xrep_quota_item
-Date: Mon, 10 Nov 2025 14:23:08 +0100
-Message-ID: <20251110132335.409466-17-hch@lst.de>
+Cc: linux-xfs@vger.kernel.org,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH 17/18] xfs: move xfs_dquot_tree calls into xfs_qm_dqget_cache_{lookup,insert}
+Date: Mon, 10 Nov 2025 14:23:09 +0100
+Message-ID: <20251110132335.409466-18-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251110132335.409466-1-hch@lst.de>
 References: <20251110132335.409466-1-hch@lst.de>
@@ -48,69 +49,103 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Drop two redundant lock roundtrips by not requiring q_lock to be held on
-entry and return.
+These are the low-level functions that needs them, so localize the
+(trivial) calculation of the radix tree root there.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/scrub/quota_repair.c | 16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_dquot.c | 24 +++++++++++-------------
+ 1 file changed, 11 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
-index dae4889bdc84..b1d661aa5f06 100644
---- a/fs/xfs/scrub/quota_repair.c
-+++ b/fs/xfs/scrub/quota_repair.c
-@@ -184,17 +184,13 @@ xrep_quota_item(
- 	/*
- 	 * We might need to fix holes in the bmap record for the storage
- 	 * backing this dquot, so we need to lock the dquot and the quota file.
--	 * dqiterate gave us a locked dquot, so drop the dquot lock to get the
--	 * ILOCK_EXCL.
- 	 */
--	mutex_unlock(&dq->q_qlock);
- 	xchk_ilock(sc, XFS_ILOCK_EXCL);
- 	mutex_lock(&dq->q_qlock);
--
- 	error = xrep_quota_item_bmap(sc, dq, &dirty);
- 	xchk_iunlock(sc, XFS_ILOCK_EXCL);
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 1c9c17892874..612ca682a513 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -801,10 +801,11 @@ xfs_dq_get_next_id(
+ static struct xfs_dquot *
+ xfs_qm_dqget_cache_lookup(
+ 	struct xfs_mount	*mp,
+-	struct xfs_quotainfo	*qi,
+-	struct radix_tree_root	*tree,
+-	xfs_dqid_t		id)
++	xfs_dqid_t		id,
++	xfs_dqtype_t		type)
+ {
++	struct xfs_quotainfo	*qi = mp->m_quotainfo;
++	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
+ 	struct xfs_dquot	*dqp;
+ 
+ restart:
+@@ -843,11 +844,12 @@ xfs_qm_dqget_cache_lookup(
+ static int
+ xfs_qm_dqget_cache_insert(
+ 	struct xfs_mount	*mp,
+-	struct xfs_quotainfo	*qi,
+-	struct radix_tree_root	*tree,
+ 	xfs_dqid_t		id,
++	xfs_dqtype_t		type,
+ 	struct xfs_dquot	*dqp)
+ {
++	struct xfs_quotainfo	*qi = mp->m_quotainfo;
++	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
+ 	unsigned int		nofs_flags;
+ 	int			error;
+ 
+@@ -905,8 +907,6 @@ xfs_qm_dqget(
+ 	bool			can_alloc,
+ 	struct xfs_dquot	**O_dqpp)
+ {
+-	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
+ 	struct xfs_dquot	*dqp;
+ 	int			error;
+ 
+@@ -915,7 +915,7 @@ xfs_qm_dqget(
+ 		return error;
+ 
+ restart:
+-	dqp = xfs_qm_dqget_cache_lookup(mp, qi, tree, id);
++	dqp = xfs_qm_dqget_cache_lookup(mp, id, type);
+ 	if (dqp)
+ 		goto found;
+ 
+@@ -923,7 +923,7 @@ xfs_qm_dqget(
  	if (error)
--		return error;
-+		goto out_unlock_dquot;
+ 		return error;
  
- 	/* Check the limits. */
- 	if (dq->q_blk.softlimit > dq->q_blk.hardlimit) {
-@@ -246,7 +242,7 @@ xrep_quota_item(
- 	xrep_quota_item_timer(sc, &dq->q_rtb, &dirty);
+-	error = xfs_qm_dqget_cache_insert(mp, qi, tree, id, dqp);
++	error = xfs_qm_dqget_cache_insert(mp, id, type, dqp);
+ 	if (error) {
+ 		xfs_qm_dqdestroy(dqp);
+ 		if (error == -EEXIST) {
+@@ -996,8 +996,6 @@ xfs_qm_dqget_inode(
+ 	struct xfs_dquot	**dqpp)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
+ 	struct xfs_dquot	*dqp;
+ 	xfs_dqid_t		id;
+ 	int			error;
+@@ -1016,7 +1014,7 @@ xfs_qm_dqget_inode(
+ 	id = xfs_qm_id_for_quotatype(ip, type);
  
- 	if (!dirty)
--		return 0;
-+		goto out_unlock_dquot;
+ restart:
+-	dqp = xfs_qm_dqget_cache_lookup(mp, qi, tree, id);
++	dqp = xfs_qm_dqget_cache_lookup(mp, id, type);
+ 	if (dqp)
+ 		goto found;
  
- 	trace_xrep_dquot_item(sc->mp, dq->q_type, dq->q_id);
- 
-@@ -257,8 +253,10 @@ xrep_quota_item(
- 		xfs_qm_adjust_dqtimers(dq);
+@@ -1052,7 +1050,7 @@ xfs_qm_dqget_inode(
+ 		return -ESRCH;
  	}
- 	xfs_trans_log_dquot(sc->tp, dq);
--	error = xfs_trans_roll(&sc->tp);
--	mutex_lock(&dq->q_qlock);
-+	return xfs_trans_roll(&sc->tp);
-+
-+out_unlock_dquot:
-+	mutex_unlock(&dq->q_qlock);
- 	return error;
- }
  
-@@ -512,9 +510,7 @@ xrep_quota_problems(
- 
- 	xchk_dqiter_init(&cursor, sc, dqtype);
- 	while ((error = xchk_dquot_iter(&cursor, &dq)) == 1) {
--		mutex_lock(&dq->q_qlock);
- 		error = xrep_quota_item(&rqi, dq);
--		mutex_unlock(&dq->q_qlock);
- 		xfs_qm_dqrele(dq);
- 		if (error)
- 			break;
+-	error = xfs_qm_dqget_cache_insert(mp, qi, tree, id, dqp);
++	error = xfs_qm_dqget_cache_insert(mp, id, type, dqp);
+ 	if (error) {
+ 		xfs_qm_dqdestroy(dqp);
+ 		if (error == -EEXIST) {
 -- 
 2.47.3
 
