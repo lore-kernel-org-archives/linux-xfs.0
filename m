@@ -1,256 +1,175 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3348C823DD
-	for <linux-xfs@vger.kernel.org>; Mon, 10 Nov 2025 08:58:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762765117; cv=fail; b=bLFlhpzDspERVXB3gJEVbwFl44lDuVVqP8TotsshQ71yfscJDYqybBlbUzoQfID8XEWeA6eYhYBbBQMYfm2SiSLrIfTVKivjbooFM3mXBJGSW3GFH9L1sSpGk87Uzb+KDebsR3/lHZahzD4lVCxtUzUFqhDR75pRIZfKBvq33aw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762765117; c=relaxed/simple;
-	bh=Yi6CBLwsHvMa/V50rDc0vD2pNz0rHKud4B7umzOOjVQ=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=sBu4FV7o7fxfSOvhQzDllWGXxDuL0mU5Mn1VZh/UJs8VY9BltbpTF/F6os5WLQLg6r3tdHMAcqDaa8cA4Sdzey6zkMBbOsnwj2U28MfNKw8DJHALvzSLkVZAlW35B6ea/1yfqq/NkdvTjolkAFIBpKhIqa59S94D23O6eCiPDio=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=q01jHwi2; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=KkZS78l4; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6538212560;
+	Mon, 10 Nov 2025 09:13:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1762766001; cv=none; b=k8hAytAMKSf9Mke/j4NH6A665Xt04ISarTLSE53qGtagEhX2J9PgjYoB631uwtsDSi2nRVjlsP2L9qJQydXQSNlYbQUGxY/LMOAqZYGaaKA4S1TjwMAHMvY0VyJ5ZpuxnBJuqLT+pBectYmIeWhtnreYiuGLc7cbr/UYZNKW700=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1762766001; c=relaxed/simple;
+	bh=HoHGOdSj7bTFhoiT0pF3v/Oy7LXbjZm8k5NEe753yd4=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=sa4rfaqJ4NR+AaLNP7qCeRP9DLSqY1Ud6rrY6KZUXF9xDcM1omO6x1cDpckvtpj5gWWA3PR5dNSXA64RtGMMo+OC7BMbrf0DTMLtZKL6ihwJkJ6QpKtXGgVZv16xF9Y165RT3Jn4H1wrvywX4ZMEFX6lBnr40ikrBhGkxhWLyp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=IeTpOANL; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=oAH1FF64; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="q01jHwi2";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="KkZS78l4"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5AA8pRxs005011;
-	Mon, 10 Nov 2025 08:58:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=eVl2fN28hG8ydy25TlTCy2NNxmX2xCSUZ4baktpSCC8=; b=
-	q01jHwi2G771LkGVDyzoUCP13gpD0p52OHpqsHDaJecZ/h6Uavn5Qt3A0dnu0Z95
-	xguhWNo2lnUpx4x4TlYUYMBUKpr9eBjgE5CdbzpVeigwfXS8J1l5iDHVgnJIz+Vy
-	WfiLubtZU5WUtRFwQ4TsOytVW6Ku6WY2ctUoRXiA9zsoOE/0atY4qiOvoTXCqh/c
-	kR11BG5zA/kN/wmF3jiYhyRelKTP1znGf0HHPYzmOd069dM9FQN1ueFwZaA72SLV
-	WLC/kz/sQyDd2h07+wAnOtz7wPcCTx9GP+DIAhpeMU+6KcUSuBook1Wau+5YDOCi
-	s1hvqBzIOccgCPIq/MWT1Q==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4abcvw80q2-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 10 Nov 2025 08:58:32 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5AA85Ut7007654;
-	Mon, 10 Nov 2025 08:58:31 GMT
-Received: from ch1pr05cu001.outbound.protection.outlook.com (mail-northcentralusazon11010034.outbound.protection.outlook.com [52.101.193.34])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4a9va8d0ve-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 10 Nov 2025 08:58:31 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=tzCixKC9c7i612JRcbMEVieLXnx1/XcTI5/iswSdmMw3wbHfIlzfVC59/utJ/iOw7d9aCRCCzrKlz90IgK7OF8P3svJSs5OPIJZ4wJGiEUyFWIT3Z/3LWdJGIUQJJUalcE23CioZZhFP7GvbWt25LfPTCWn+14Y3zrwI2A/Dy1JEBd8pPPdVdn3h1ne+SJLR652q/q9QcAs1SLwj9ZpBb44eTYbMyxUKTR8pohf2HOToZ7r4/cih+L6gWpzGc9C/70siA3g02Me1NfbKi+B3xNN5iMriddEgImDBzvK6ox4yVlgjeJTUZ9TbvFnmRDdreqJ7T4+batMvcIIQtqW4Xw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=eVl2fN28hG8ydy25TlTCy2NNxmX2xCSUZ4baktpSCC8=;
- b=vilWy/JJhlLB/HCLcQj04IFxJxPsuFicxgsfKlVhwo7rX329N0xju0g0RdVy+aSpN/x5PlViVhrmvxrtMA+S+nccPMMwmX/FjO27CnijzlZ44YJ5ruRveWEGAsKw3ICV57M+UkMm+NYFKeh1Ac6JrvkPT9/loLjvx0PIFgXaCylz9yDqXRElaP4vy+KQLLv1gcbehs2gQs377isTvtMWIEXLAyIUSf7Wrfy2BmbTK7HWpZAY80EXpzL8El8KN5wSlLICcm0lv2BORv7f0RR7dO51UIhHBn7x7vGaGjIXBCw+TZ/zeNKNTX8vAxlDZBMBrMJPyQyn5k9Nd2roXBC+zw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=eVl2fN28hG8ydy25TlTCy2NNxmX2xCSUZ4baktpSCC8=;
- b=KkZS78l4kLygXiAmKGIjWkUaaYEQJjQiROZV4eUQ1O+k0Ux0g03LZqhR/PMcgHz5ZfE2pmOToo6goxlnrL9TnWrlxl9Fyma1hbnqK02dWSXcOqRQjhCSk+kwpPUZZ6xx3VPzlCiw5r/lHBCAHEVuuHJ2hwwo8D7NHix5+Zrt7LA=
-Received: from MN2PR10MB4320.namprd10.prod.outlook.com (2603:10b6:208:1d5::16)
- by SJ5PPFE1CCE93FE.namprd10.prod.outlook.com (2603:10b6:a0f:fc02::7d8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9298.16; Mon, 10 Nov
- 2025 08:58:28 +0000
-Received: from MN2PR10MB4320.namprd10.prod.outlook.com
- ([fe80::42ec:1d58:8ba8:800c]) by MN2PR10MB4320.namprd10.prod.outlook.com
- ([fe80::42ec:1d58:8ba8:800c%5]) with mapi id 15.20.9298.015; Mon, 10 Nov 2025
- 08:58:28 +0000
-Message-ID: <64746661-261e-478d-9d98-fb27379f9df8@oracle.com>
-Date: Mon, 10 Nov 2025 08:58:27 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [bug report] fstests generic/774 hang
-To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-References: <cmk52aqexackyz65phxgme55a3tdrermo3o4skr4lo4pwvvvcp@jmcblnfikbp2>
- <20251105003315.GZ196370@frogsfrogsfrogs>
- <mx6gzhhkvcdnadmmxziu77cuywq4ql5u2hp6fd673vorhx35pz@jmyv74f236ka>
- <c5cff4c3-cf0a-47cc-9ae5-20d7316b3c09@oracle.com>
- <2c4d144b-81fd-4e4c-90a8-fd3c2082246c@oracle.com>
- <aRCB_TzOAtHaTPOl@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <aRCB_TzOAtHaTPOl@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO4P123CA0696.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:37b::10) To MN2PR10MB4320.namprd10.prod.outlook.com
- (2603:10b6:208:1d5::16)
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="IeTpOANL";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="oAH1FF64"
+From: John Ogness <john.ogness@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1762765998;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=aWYulQfR0TreZlqe/qFy/nUmcaT6X+aYnci2sC0M8+s=;
+	b=IeTpOANLyUhi255Pz3g+GevA/LeLToFvR9GF2uEztHAPEeKnyegJT3Hx3QBbSw6VWL+pCX
+	KPmV+FYcX4exu56pt2rFkK9IVBVptW6wt88fQE/voW9NljT+MUXz4q1quD3uhoiaxmOvDZ
+	kW1IIDMpoHlwWkc7+o4msV5t9Pb8rScnkzWoNd8ZeEtkcdpkAk6bA6X6QhPQNHeFyyucR5
+	LBLBwFz3cMuMKC6TCHnNCi5qTU8UwAKD2BbzxBom5/9H4XmT8FQpz9d3d3E7i2le3FHHUx
+	djBrKgBBegfnxGC7fpOzxx1qO6r3Hu1XnnsQY2upt8YdYK2VfC8a/O2WlymhJg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1762765998;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=aWYulQfR0TreZlqe/qFy/nUmcaT6X+aYnci2sC0M8+s=;
+	b=oAH1FF64UEij1BWuPu1puzZO5DMShnO2Ri9sQ+M46IzSSjZp9jXlTuVFsi3DBPswFcgpav
+	x7YvoAmfFmu0DdDQ==
+To: Petr Mladek <pmladek@suse.com>
+Cc: Joanne Koong <joannelkoong@gmail.com>, "amurray @ thegoodpenguin . co .
+ uk" <amurray@thegoodpenguin.co.uk>, brauner@kernel.org, chao@kernel.org,
+ djwong@kernel.org, jaegeuk@kernel.org,
+ linux-f2fs-devel@lists.sourceforge.net, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+ syzkaller-bugs@googlegroups.com, Petr Mladek <pmladek@suse.com>
+Subject: Re: [PATCH 1/2] printk_ringbuffer: Fix check of valid data size
+ when blk_lpos overflows
+In-Reply-To: <20251107194720.1231457-2-pmladek@suse.com>
+References: <20251107194720.1231457-1-pmladek@suse.com>
+ <20251107194720.1231457-2-pmladek@suse.com>
+Date: Mon, 10 Nov 2025 10:19:17 +0106
+Message-ID: <87ms4uuu6q.fsf@jogness.linutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN2PR10MB4320:EE_|SJ5PPFE1CCE93FE:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1296e215-5511-4ab2-fa37-08de203750be
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?UUlpbzJBaDdoeVdnOG5uN1c2a3lkL2RJRmJCcXhtcVhNcmthOWVIWDRDODZO?=
- =?utf-8?B?aXhYbFV4dVZlcm53M215SkRBQXhDRElNU2V6dWhyUmVhV3h2RzNtVTVkUmdJ?=
- =?utf-8?B?dlRmbWtxcHZZUjdEaTlVZXBqckZxQXp0cE9wK1g5a2hzcWphY0kva2RybmVB?=
- =?utf-8?B?RmJvaHJZTks3VFNuZDFnVVlJc1lyYnMrV1NuVWdnbE1FLzYrUVppN2JyMFBI?=
- =?utf-8?B?cnlSSGQ1Z09jNWhTYU4wUGNzbDA4Y1NMYklGTDRVQkd4UWJQeXlCY0t5amNE?=
- =?utf-8?B?eDhjUVdyaXc3WmVTL0dibW1KcDdzY0hzb0xKL2Z6c3Jtdmx3NURJcmhSQ0s4?=
- =?utf-8?B?dWYxSFF5L25ESU5hYVk1MkJMcXVMeUE3MkFTTFNOaSt6OVJybFlDOFBqNEFo?=
- =?utf-8?B?U3ZVUUQ1NjJEdnJScTJ4VlNvSEFJRm5UbldhcXNlUGRjT0l6MHp0RTA3bEtM?=
- =?utf-8?B?dDRSbktsNzZmT2Z5QXZqdk1BV0tTQzRaUGJSNEJOYmd1MzJ1aDh1cmFWWjF4?=
- =?utf-8?B?S2l1R00veHp2UVJGbDdKNCswOTA4Tjg0NVpKT25PZFBUazBTdkpFMDNNTSsr?=
- =?utf-8?B?ODBHcVJnNXVwNzBCWXhBbENLUS91dCtPOUJXQnFKWXhqREZ5S0locytxbGdx?=
- =?utf-8?B?RW1TUFNLZkk1YWxKTUk2QVlUZnVIOEJJbUQzOHJUVkFVSnZtVlN3UytTSnNF?=
- =?utf-8?B?Q001dGJJSkRRMlZHWUtLays5Yi8wUytoOFNLQk54blZuT0grajczT1dlZWc1?=
- =?utf-8?B?My9QSXdnYjNNK25QeXJPdXJCUlo2UXMyblJnR0hDOXNSaERsaWdmdHJGbjE0?=
- =?utf-8?B?bGpmQmF2UFIxQ2hmWVJWSWR3ZlVRcDdsZU9qRU9LZG5TWlNYTUJBdmtKamhl?=
- =?utf-8?B?TEpyMXViTDJPZGtxSlNvb1h3b3liSkhJSjdpTFI2dVhGOGJ6K3BJWjliR09D?=
- =?utf-8?B?a1N6T0tSbVhFR0NEb282MlNVb0lobzgvcG14RG4rNXltWU5PenFocFJPaHZ2?=
- =?utf-8?B?UjhiR2ZrOVVFVklSUm5oM1FkTnEvT3djWExMQ2tqR3cyd2ZpVFJiZTM2U2xL?=
- =?utf-8?B?VkRsZ2ZIb1NOaDEzc0ZNbytZZkF6anZBMHh4Y0VIQ0NYWWtYNlVpeUsyR1R5?=
- =?utf-8?B?OGFZYUdjd3NUc0lBVjVyRll6cjVyUWR2cWw5THY0Z3lRTHNHbVB3VTJkWWJC?=
- =?utf-8?B?MjJ3QWJyWE5vVkFqajIxMk9jZmE0cUxGN2crclVUYmc3elF2NkJpQ1RUYUZ6?=
- =?utf-8?B?U3g0eXQwTGRPd1N2a1dtUHY0a3hFWmIzeDRyWnNCTUxmL2RBVnZ6aEVPcnVH?=
- =?utf-8?B?TjVMaFkrZm5XYzA4NjhJR0pndGs2TlFKTm5xV1gxQWROM3dCYTBTMG9HWjdj?=
- =?utf-8?B?dWF4alFpQTMvQWJkQmt6bnAzLzhLY1RRYi9xVEVRcUtuaWlMMC93QzBxT05q?=
- =?utf-8?B?LzVpdUl0cjl6U0lCRm8wbzlxSWFQR2dEK1ZHdnVZdTRyUUtwTzJ2MTRzWUR1?=
- =?utf-8?B?MXZudGJnUjJ4aWIrQjJRNFBvemxNZ3didFJhcXdWWmJBY0ovbzd3OVNaNVpi?=
- =?utf-8?B?OXc1dGlGckgyWHlVU3QyblloTUUyendpSzFuSS9KUUJ5dWVRYjdEQW5FeUJP?=
- =?utf-8?B?NHpRMjJ1SWJrd255UDhYMkVlMzY0YUYwMlZ1czVheHo5Q20wdlVjMUsyVUNY?=
- =?utf-8?B?SXZlUnMyM0dNRnozVEk4RDZTTUJuR1JlTW9ZUFdkWTFDcFMwZGF3aTJPeUJz?=
- =?utf-8?B?VCtEdlhpTkRZQVIxU1RUeFM1eHdxMWRIQkUxWmI0clc2Y1NZbm1HcVBKT2tB?=
- =?utf-8?B?MEoyVUtlY2tRdEJYckZIemM4c1ViTnpiUng3R0VGWEowWlJ2a1NRVWxvbXp1?=
- =?utf-8?B?eXkvREVIazc1VFhUM2p0dFZYS0JWa2g3Vlg0enpGMTlLbTlMd2FzemFnWTRE?=
- =?utf-8?Q?6VkVHsipULeK4VggwvPxUUrsSViVcta3?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR10MB4320.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?NEhkeEJ0RlZRa1hlTDRKa2NRVWxUaTd1aER1MWRSRW9MUjRnZTJEYmRNamFW?=
- =?utf-8?B?Rk9yaENxSUdwQm5kbFhsR3A0cENXWW5VRzdzS3l4cEhXSXhuVDM2M25PZmRB?=
- =?utf-8?B?SjlNUmNkc3F4dHJYdm9uVThXUW9KeUk4THpJOXV1Zmd0YmhsL1ZMVFZCRi9y?=
- =?utf-8?B?R0R2OGlSS05UN0Q4TitXV3pLR2xBS044VDNaVTNEbm9ja3d4S0p3ZnJXOGd4?=
- =?utf-8?B?a3pHSjJ1Sk9RTW5OaTBYYmkzWmRUNERibHlMdzdMVUkzVHBLOWt5V3RGZ2pk?=
- =?utf-8?B?VldXMGJsdEtYUlo3aWVnNk4rNDVFelAwbjhhMUx4QS9uZHdwdTdpZFgzN0pa?=
- =?utf-8?B?aitCZUJTNzZDNXZVSUEyVE8yWXdHd0N4Wk5kemtmM0RxWFpONlRyaWxGRlc5?=
- =?utf-8?B?d2ZIdmtxb2FzQ2tVUnQwaEhFdE9NZXFYMzdVcWplbkg4ZmY3ZHp1M09STDhK?=
- =?utf-8?B?Y0dpQWY1Umtrelp1bnVycURUazhidVYwakRTLy9DS1B3eEtqdUdoNEl3VnFO?=
- =?utf-8?B?V1RMQU5ka1o0Z0MyL3ZZWDR1NmZNZkh5aFkrVm9DMDFRT0hhbUsrVkNndzNH?=
- =?utf-8?B?eUR0dHd2SVJSVk5TRS9YN2ozMmxUMkhwMDY0ODJwZXRQZ0xBTW9Lcm9CWGEw?=
- =?utf-8?B?eXRiNkQ3YU5yeENkRU83T0FidnhSZzJ6S04zelM1NlJ6ejc1Y09OZFoyWHA2?=
- =?utf-8?B?d3l2d2NDVzNsUGlXZ0MvSXJ4UjZQcjFZUHNRelBMQnMwRVloejN2QitZS1Na?=
- =?utf-8?B?bmdXUXVsejNTMU5YNUNVVHROc3dLdkEyR1IzSTlIZXlaZHplajczOU12UWhx?=
- =?utf-8?B?LzIwSTc2NlAyN0o1U2hmK3A5VmNlMzFHeTRtbDI1TVQ3SnVrKzcwcUlUVjhS?=
- =?utf-8?B?VXZJZWZVcVpSQWhtaTZsanlGSGsvMXk0OUYxUTNFVm5neU82MXJycVlNdER0?=
- =?utf-8?B?OHpKVUhpOE9HK1BoblVjR2M4ZlhSazJpMlNxT2J2aXc3SjRjYlBDWFBnUER3?=
- =?utf-8?B?dkR4Ym9OQTkwZHZqUThKVkp1S2NaL1RhMElvYWlORXpWL1ZlWlZDQkIxcjVy?=
- =?utf-8?B?OFEzclk1TCt1eVZWT1VVbGdFdEllNTBOaGhnQ2R6VzZlbHJUS3BUVUhBWUxM?=
- =?utf-8?B?Q0VpaFJ0T09aTVdEWUlhY2lxblVEMDEyRXUrczNqR01EejlaV0RxT0xHKzNO?=
- =?utf-8?B?WnFBNm5YUXRKUlk1Yk1rVFdrVTV5b0FHQStiYlBlMjJoS2l5bkZhV0loQlJw?=
- =?utf-8?B?aE1xdGFHdjdNdzRPRXM4ZDYvTXNhaGpKNmdIdE1TdTB5U1hxYWtWMElNcXIx?=
- =?utf-8?B?U3ZCSjNYZmcwWStkbG54bXJPWWh4NEVnRU85RGYrODNLZ013bGIybkVuVUVk?=
- =?utf-8?B?YVhNQmNSblZhcDdreGNXTklZaXRaNWMzMWp1SEQ2dGtLOTJhZVljdXBKK1U4?=
- =?utf-8?B?ejZpbFh6Vm1RNFVxdVFjbVZVQUk1ekxackY5WkRrNnQxV1N1UEhhc3NwY2ZY?=
- =?utf-8?B?cmxlZXFoNGNUVWYyNTA3Zy8zLzF5anRFQ2lhRXp5cmIzRlBjbU9DdWxqWHA5?=
- =?utf-8?B?Q2plRDdMQlN1cXQvdXkrdS9IVHRueHhhV3dmdVRCaGd0YXlSRWRaWVZXa3Z2?=
- =?utf-8?B?MWJzZ0RWSEpvdnRYSnFyTnFpNGd4NlJIaDVwdlc0blZyMGxXbFhYNkMxQjFU?=
- =?utf-8?B?ME5pZWFNUHlOY044MWpMWmtHMWNJeEV3dnhSNThhVVY0eFoxcjBZZDhhWGFk?=
- =?utf-8?B?YllMUlBJMDBrMy8rOFUwakxYQm9Kb0lBSHhMUHBmTHN5aUlDdTBTTUx1RFly?=
- =?utf-8?B?MTJpQU1zTTl3RndUbTY0eXdXNjJLTXZSZlFHSFA0RWtqc21pd1ltZVp2dXR1?=
- =?utf-8?B?emFTUmpZUUJtVVhWelJId05HSzFSUjd0MmZnRWtkbVRtVkMvQlkzbGFjdkx6?=
- =?utf-8?B?QzUxZ29LaTVlQnVRb2N2ZDBjRlM2dDVFSkRwSm4vVVRHTk44Z1RnU0xNZWRS?=
- =?utf-8?B?eDh4SCszOVhlMit4NC8wRC9EbEtBV2ludk1oME03MjgrRzRaVDlHRkRuU2Vt?=
- =?utf-8?B?bk42WFd5dHhSZkw2U3NwVEJLQ3VHSDQ0WjRTSHVJNWQ1VmdHQWxJSzdnWHdT?=
- =?utf-8?Q?c/Mvf/lOkgXS9QRUVZvBFIuLp?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	OPC6dcMEq5eWvclS3qX6stMIk+aoO+eLNC3J7CyrRdf+HX7HZjNKGuHjjuTOrlaKKPYijGxmpEGitox55mnJ6NK7hs8dgRSUJvTy8Y2a+iIDlF/PpPOceJ7+Vy84zHXuaeDtPysLKljdq/WzwKlwHqnjOt31+WDjkpllvH1Ca3m7O0Zjmei5JDzyDnE8At0vyRrE5rVEXmYIxLZSyXqwYop0HiT98qMOJJbUDjzeFmHUrx/A4crRx0cCSRyVTTt+wEIltLTJaIrPRFHaIsG8GeD61Ox3xlh0UnZx/B4NYYY1PU5Px8kaQeit0qC1q+N4A9bfCdq079sWsliQgVR7ddIFlt/4X7ZbOG5hUKQnvqPkGCwqcIeETSAEdt5PKepN5+SER2yWZq6eXs5nn+b/HTuXVpbvrAZTW7m7Y+mT0hhZBXmPsTEfKn16JBSosZIIcAMTxIALsPTW9XPzLKZuvpMPx11Ya3ERys3kUZaI50ILYXekTJqE4bpYal8Lk/xwMXQeheFFpJb4j1ukdXWiu6b0sPBxhZsd3935ZZgrnhmQT8mId0GBjkFSBznrAQj3mpHVmqvRsnIavl+nAaLlxGmVZpQS7eZJYcHhqRpgoRw=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1296e215-5511-4ab2-fa37-08de203750be
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR10MB4320.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2025 08:58:28.5206
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: nAOvU/qi0mzxJK4h6a+zkn8sF+HsEokDsjkIyzaOzrEfcfNpt7nJz5UF44h/1KggLfclfUHrsvhsgtAXQ+1FpA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ5PPFE1CCE93FE
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-11-10_03,2025-11-06_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 spamscore=0
- mlxscore=0 bulkscore=0 suspectscore=0 mlxlogscore=999 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2510240000
- definitions=main-2511100078
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTEwMDA3NyBTYWx0ZWRfXzRAWtExVzaYu
- ZObckPqDDy/40mWyg3Zdi0pdc2BTNhESabyvUx6moXT4S21DG7aIJX5J2+TD+ySVLLB0/GNV5oS
- i3Dqrre/9EjO5nWyiUNwirbh6lBrzMwlDuYVAqFiX7EYXHYUWlx7GBKAIuvJZOy0XqtqBuYIbHf
- HYjl+gsmuGlF4Y+JJK5IoXjruH588ygFHAuRl9Lc2L0u3l+M9nlktWcvwctJSVGa79grTgZZkO0
- gjFy7G79dJiT6K2M62q+WxeDCPzfNm3lHOcfDwYDXC+pfELJ8bVSBFzWg+uQkGbRj59QlBq3NzK
- jxvstm+i5NpJlF2mDUsF6Wy2AS1uFbPk7fxA3nzwGmWYyCzthymtQirvr+P48T1q30C+4tt/zlv
- ZkXzjaTHj663utsdvEtOCUAKgD5CYg==
-X-Proofpoint-ORIG-GUID: wJHqtLUPxfpqql16Np5vma1rBgniVz2d
-X-Proofpoint-GUID: wJHqtLUPxfpqql16Np5vma1rBgniVz2d
-X-Authority-Analysis: v=2.4 cv=LM9rgZW9 c=1 sm=1 tr=0 ts=6911a938 cx=c_pps
- a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
- a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=6UeiqGixMTsA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=5oggcT7bRuVlgGp9o0wA:9 a=QEXdDO2ut3YA:10
+Content-Type: text/plain
 
-On 09/11/2025 11:58, Ojaswin Mujoo wrote:
->> aw_bsize for  me is 1M, and threads is 32
->>
->> aw_bsize is large as XFS supports software-based atomics, which is generally
->> going to be huge compared to anything which HW can support.
->>
->> When I tried to run this test, it was not completing in a sane amount of
->> time - it was taking many minutes before I gave up.
-> Hi John, Shinichiro, Darrick.
-> 
-> Thanks for looking into this. Sorry, I'm on vacation so a bit slow in
-> responding.
-> 
-> Anyways, the logic behind the filesize calculation is that we want each
-> thread to do 100 atomic writes in their own isolated ranges in the file.
-> But seems like it is being especially slow when we have high CPUs.
+On 2025-11-07, Petr Mladek <pmladek@suse.com> wrote:
+> The commit 67e1b0052f6bb8 ("printk_ringbuffer: don't needlessly wrap
+> data blocks around") allows to use the last 4 bytes of the ring buffer.
+>
+> But the check for the @data_size was not properly updated in get_data().
+> It fails when "blk_lpos->next" overflows to "0". In this case:
+>
+>   + is_blk_wrapped(data_ring, blk_lpos->begin, blk_lpos->next)
+>     returns "false" because it checks "blk_lpos->next - 1".
+>
+>   + "blk_lpos->begin < blk_lpos->next" fails because "blk_lpos->next"
+>     is already 0.
+>
+>   + is_blk_wrapped(data_ring, blk_lpos->begin + DATA_SIZE(data_ring),
+>     blk_lpos->next) returns "false" because "begin_lpos" is from
+>     the next wrap but "next_lpos - 1" is from the previous one.
+>
+> As a result, get_data() triggers the WARN_ON_ONCE() for "Illegal
+> block description", for example:
+>
+> [  216.317316][ T7652] loop0: detected capacity change from 0 to 16
+> ** 1 printk messages dropped **
+> [  216.327750][ T7652] ------------[ cut here ]------------
+> [  216.327789][ T7652] WARNING: kernel/printk/printk_ringbuffer.c:1278 at get_data+0x48a/0x840, CPU#1: syz.0.585/7652
+> [  216.327848][ T7652] Modules linked in:
+> [  216.327907][ T7652] CPU: 1 UID: 0 PID: 7652 Comm: syz.0.585 Not tainted syzkaller #0 PREEMPT(full)
+> [  216.327933][ T7652] Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/02/2025
+> [  216.327953][ T7652] RIP: 0010:get_data+0x48a/0x840
+> [  216.327986][ T7652] Code: 83 c4 f8 48 b8 00 00 00 00 00 fc ff df 41 0f b6 04 07 84 c0 0f 85 ee 01 00 00 44 89 65 00 49 83 c5 08 eb 13 e8 a7 19 1f 00 90 <0f> 0b 90 eb 05 e8 9c 19 1f 00 45 31 ed 4c 89 e8 48 83 c4 28 5b 41
+> [  216.328007][ T7652] RSP: 0018:ffffc900035170e0 EFLAGS: 00010293
+> [  216.328029][ T7652] RAX: ffffffff81a1eee9 RBX: 00003fffffffffff RCX: ffff888033255b80
+> [  216.328048][ T7652] RDX: 0000000000000000 RSI: 00003fffffffffff RDI: 0000000000000000
+> [  216.328063][ T7652] RBP: 0000000000000012 R08: 0000000000000e55 R09: 000000325e213cc7
+> [  216.328079][ T7652] R10: 000000325e213cc7 R11: 00001de4c2000037 R12: 0000000000000012
+> [  216.328095][ T7652] R13: 0000000000000000 R14: ffffc90003517228 R15: 1ffffffff1bca646
+> [  216.328111][ T7652] FS:  00007f44eb8da6c0(0000) GS:ffff888125fda000(0000) knlGS:0000000000000000
+> [  216.328131][ T7652] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  216.328147][ T7652] CR2: 00007f44ea9722e0 CR3: 0000000066344000 CR4: 00000000003526f0
+> [  216.328168][ T7652] Call Trace:
+> [  216.328178][ T7652]  <TASK>
+> [  216.328199][ T7652]  _prb_read_valid+0x672/0xa90
+> [  216.328328][ T7652]  ? desc_read+0x1b8/0x3f0
+> [  216.328381][ T7652]  ? __pfx__prb_read_valid+0x10/0x10
+> [  216.328422][ T7652]  ? panic_on_this_cpu+0x32/0x40
+> [  216.328450][ T7652]  prb_read_valid+0x3c/0x60
+> [  216.328482][ T7652]  printk_get_next_message+0x15c/0x7b0
+> [  216.328526][ T7652]  ? __pfx_printk_get_next_message+0x10/0x10
+> [  216.328561][ T7652]  ? __lock_acquire+0xab9/0xd20
+> [  216.328595][ T7652]  ? console_flush_all+0x131/0xb10
+> [  216.328621][ T7652]  ? console_flush_all+0x478/0xb10
+> [  216.328648][ T7652]  console_flush_all+0x4cc/0xb10
+> [  216.328673][ T7652]  ? console_flush_all+0x131/0xb10
+> [  216.328704][ T7652]  ? __pfx_console_flush_all+0x10/0x10
+> [  216.328748][ T7652]  ? is_printk_cpu_sync_owner+0x32/0x40
+> [  216.328781][ T7652]  console_unlock+0xbb/0x190
+> [  216.328815][ T7652]  ? __pfx___down_trylock_console_sem+0x10/0x10
+> [  216.328853][ T7652]  ? __pfx_console_unlock+0x10/0x10
+> [  216.328899][ T7652]  vprintk_emit+0x4c5/0x590
+> [  216.328935][ T7652]  ? __pfx_vprintk_emit+0x10/0x10
+> [  216.328993][ T7652]  _printk+0xcf/0x120
+> [  216.329028][ T7652]  ? __pfx__printk+0x10/0x10
+> [  216.329051][ T7652]  ? kernfs_get+0x5a/0x90
+> [  216.329090][ T7652]  _erofs_printk+0x349/0x410
+> [  216.329130][ T7652]  ? __pfx__erofs_printk+0x10/0x10
+> [  216.329161][ T7652]  ? __raw_spin_lock_init+0x45/0x100
+> [  216.329186][ T7652]  ? __init_swait_queue_head+0xa9/0x150
+> [  216.329231][ T7652]  erofs_fc_fill_super+0x1591/0x1b20
+> [  216.329285][ T7652]  ? __pfx_erofs_fc_fill_super+0x10/0x10
+> [  216.329324][ T7652]  ? sb_set_blocksize+0x104/0x180
+> [  216.329356][ T7652]  ? setup_bdev_super+0x4c1/0x5b0
+> [  216.329385][ T7652]  get_tree_bdev_flags+0x40e/0x4d0
+> [  216.329410][ T7652]  ? __pfx_erofs_fc_fill_super+0x10/0x10
+> [  216.329444][ T7652]  ? __pfx_get_tree_bdev_flags+0x10/0x10
+> [  216.329483][ T7652]  vfs_get_tree+0x92/0x2b0
+> [  216.329512][ T7652]  do_new_mount+0x302/0xa10
+> [  216.329537][ T7652]  ? apparmor_capable+0x137/0x1b0
+> [  216.329576][ T7652]  ? __pfx_do_new_mount+0x10/0x10
+> [  216.329605][ T7652]  ? ns_capable+0x8a/0xf0
+> [  216.329637][ T7652]  ? kmem_cache_free+0x19b/0x690
+> [  216.329682][ T7652]  __se_sys_mount+0x313/0x410
+> [  216.329717][ T7652]  ? __pfx___se_sys_mount+0x10/0x10
+> [  216.329836][ T7652]  ? do_syscall_64+0xbe/0xfa0
+> [  216.329869][ T7652]  ? __x64_sys_mount+0x20/0xc0
+> [  216.329901][ T7652]  do_syscall_64+0xfa/0xfa0
+> [  216.329932][ T7652]  ? lockdep_hardirqs_on+0x9c/0x150
+> [  216.329964][ T7652]  ? entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> [  216.329988][ T7652]  ? clear_bhb_loop+0x60/0xb0
+> [  216.330017][ T7652]  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+> [  216.330040][ T7652] RIP: 0033:0x7f44ea99076a
+> [  216.330080][ T7652] Code: d8 64 89 02 48 c7 c0 ff ff ff ff eb a6 e8 de 1a 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
+> [  216.330100][ T7652] RSP: 002b:00007f44eb8d9e68 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
+> [  216.330128][ T7652] RAX: ffffffffffffffda RBX: 00007f44eb8d9ef0 RCX: 00007f44ea99076a
+> [  216.330146][ T7652] RDX: 0000200000000180 RSI: 00002000000001c0 RDI: 00007f44eb8d9eb0
+> [  216.330164][ T7652] RBP: 0000200000000180 R08: 00007f44eb8d9ef0 R09: 0000000000000000
+> [  216.330181][ T7652] R10: 0000000000000000 R11: 0000000000000246 R12: 00002000000001c0
+> [  216.330196][ T7652] R13: 00007f44eb8d9eb0 R14: 00000000000001a1 R15: 0000200000000080
+> [  216.330233][ T7652]  </TASK>
+>
+> Solve the problem by moving and fixing the sanity check. The problematic
+> if-else-if-else code will just distinguish three basic scenarios:
+> "regular" vs. "wrapped" vs. "too many times wrapped" block.
+>
+> The new sanity check is more precise. A valid "data_size" must be
+> lower than half of the data buffer size. Also it must not be zero at
+> this stage. It allows to catch problematic "data_size" even for wrapped
+> blocks.
+>
+> Closes: https://lore.kernel.org/all/69096836.a70a0220.88fb8.0006.GAE@google.com/
+> Closes: https://lore.kernel.org/all/69078fb6.050a0220.29fc44.0029.GAE@google.com/
+> Fixes: 67e1b0052f6bb82 ("printk_ringbuffer: don't needlessly wrap data blocks around")
+> Signed-off-by: Petr Mladek <pmladek@suse.com>
 
-It's not just the number of CPUs which is the problem. The test does the 
-awu max size writes - for XFS, this size can be many MBs, and not like 
-typically < 100 KBs for any FS which relies only on HW-based atomic 
-writes, i.e. ext4. Please also consider limiting the awu max size.
-
-> 
-> I think in that sense, it'll be better to limit the threads itself
-> rather than filesize. Since its a stress test we dont want it to be too
-> less. Maybe:
-> 
-> diff --git a/tests/generic/774 b/tests/generic/774
-> index 7a4d7016..c68fb4b7 100755
-> --- a/tests/generic/774
-> +++ b/tests/generic/774
-> @@ -28,7 +28,7 @@ awu_max_write=$(_get_atomic_write_unit_max "$SCRATCH_MNT/f1")
->   aw_bsize=$(_max "$awu_min_write" "$((awu_max_write/4))")
->   fsbsize=$(_get_block_size $SCRATCH_MNT)
-> 
-> -threads=$(_min "$(($(nproc) * 2 * LOAD_FACTOR))" "100")
-> +threads=$(_min "$(($(nproc) * 2 * LOAD_FACTOR))" "16")
->   filesize=$((aw_bsize * threads * 100))
->   depth=$threads
->   aw_io_size=$((filesize / threads))
-> 
-> Can you check if this helps?
-
+Reviewed-by: John Ogness <john.ogness@linutronix.de>
+Tested-by: John Ogness <john.ogness@linutronix.de>
