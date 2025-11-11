@@ -1,172 +1,122 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58B933AA195
-	for <linux-xfs@vger.kernel.org>; Tue, 11 Nov 2025 14:02:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25D5D3115BD
+	for <linux-xfs@vger.kernel.org>; Tue, 11 Nov 2025 14:11:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762869774; cv=none; b=se7JGgypm8qPsnpjxaYvJpaeWic04E1T4Klc5Np9Ei31QLWkM8cDhtvzCO3sTrgP15a7140uHa4zsIZ6eEwnH3SniAZBc1Yn2jLHVfYM/+Wf1Bpu9WfR1xOyM07XUcMlQMSuiBEAnEraw1u4Q+pCOl4Ln48SpTW0E/HR56owl64=
+	t=1762870312; cv=none; b=VWfgkIEJp3cbTOgrnu7e6XUbWXFslli5musViP8R8aVugong4HXm+LjG7EtiYhAYHJJ9u0oB0wbNI2I2h432yGLsJ+dgokDoK344922z9lVsi3M8PqVF2F3gM55ivloVstYc4c8Y6+vzh+sixC/SD3KWuK0HwP+A8BXlLZWa3R4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762869774; c=relaxed/simple;
-	bh=gU8piPZjTHFDHdqUCbuwlUUccTzTooCZwUEsrts1GM4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FzaUY/5KYsH1m7iQ89WTmUo+lkyCWxr3AFM3WA9ZXf0Pubr5z9oTEf5jApgIpSucB05g+b+nY/54Vn1ifUILR3kg7t9yKDA2ENFxTFpB+kphCEjltcvQ9YWin0E0Qp7RYqYMl19ThieYoP2TU882DIdvY+X5p25h5PY/+vbuedc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QaqXuFQt; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1762870312; c=relaxed/simple;
+	bh=MH0KXhVR5TpPR5MgKC1TlWC9btmC8oLjnMtM5L7/gnQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OyJ0cuxW8S+MPbeGGHV+p7FYitrXy5YitwA4+rA8fC+lmuOKQsPPh+ivWt1z3GZP0LT95lc7KOt6qonKOVBedNmGnfnbsRR6hAlrcNDbiK0XxO0jj1jCpi/OFzoLr9L8fpTsuWLyc5N2zB5ZTYbExtPAomR8G5qPVffcxMEo/T4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SCM6RPd7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QaqXuFQt"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1762869771;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fwMs2HSqhbZAdwuzANZii4wadi5w54+e2uSw8pvjaGE=;
-	b=QaqXuFQtUe/WyfexsiQMldTq5JSDfdVrvYHg6A4YD68UDrWmZ9O0eU23IXaIoGDZAFuHY4
-	+b28qa6O8qcjH57c9e6YhNR5QiNvp6OaaHnBhijnTYdsvbqSoIP7IGL7Bk+Zu5fZ1oRtes
-	lwLevNZB7P55AZJUJLmebizS//DmYvU=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-475-KUK4moJfMgCUbjSZI3OGTQ-1; Tue,
- 11 Nov 2025 09:02:46 -0500
-X-MC-Unique: KUK4moJfMgCUbjSZI3OGTQ-1
-X-Mimecast-MFC-AGG-ID: KUK4moJfMgCUbjSZI3OGTQ_1762869765
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2F6301800561;
-	Tue, 11 Nov 2025 14:02:45 +0000 (UTC)
-Received: from bfoster (unknown [10.22.64.29])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 62B71195608E;
-	Tue, 11 Nov 2025 14:02:44 +0000 (UTC)
-Date: Tue, 11 Nov 2025 09:07:16 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: fs-next-20251103 reclaim lockdep splat
-Message-ID: <aRNDFNenNDq3icjw@bfoster>
-References: <aQux3yPwLFU42qof@casper.infradead.org>
- <aQu8B63pEAzGRAkj@dread.disaster.area>
- <aQySlxEJAHY5vVaC@bfoster>
- <aRJg-LcA8RGeqOgQ@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SCM6RPd7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 810F6C19422;
+	Tue, 11 Nov 2025 14:11:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762870311;
+	bh=MH0KXhVR5TpPR5MgKC1TlWC9btmC8oLjnMtM5L7/gnQ=;
+	h=From:To:Cc:Subject:Date:From;
+	b=SCM6RPd7PyPXnjzRRZCv+on8Sa3L3W7raQ7Q5kr9lJGlia7hQmmUEj6nLNArTjrZV
+	 sAnZ0e5mUqkltrUZRwEAmcVqCfuVa5Vq8CGdgFhZkxCUwUm2VjDXTYzL2qcA1M0E69
+	 B+U5ZH2mnfUqDcb+ZMiN6o2MomntCx9SVZyEReF9aQp+SRzPgQwYB7yS9UVafAOrN9
+	 zD3+UbIMXVhgasXUvq/ZSbeKkvPnF0hIEU6UDc8Oy8RbJowfJ3KYOI3Nfh5E7+OuUO
+	 N5H++c6VkptPjlQvxG75vR+AsY4rfO6Ho0I5E3uDf20RxctF8yetfJVuOluB0yk5/t
+	 iqE6M6mOZuhJA==
+From: cem@kernel.org
+To: aalbersh@kernel.org
+Cc: david@fromorbit.com,
+	hubjin657@outlook.com,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH] metadump: catch used extent array overflow
+Date: Tue, 11 Nov 2025 15:10:57 +0100
+Message-ID: <20251111141139.638844-1-cem@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aRJg-LcA8RGeqOgQ@dread.disaster.area>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Content-Transfer-Encoding: 8bit
 
-On Tue, Nov 11, 2025 at 09:02:32AM +1100, Dave Chinner wrote:
-> On Thu, Nov 06, 2025 at 07:20:39AM -0500, Brian Foster wrote:
-> > On Thu, Nov 06, 2025 at 08:05:11AM +1100, Dave Chinner wrote:
-> > > On Wed, Nov 05, 2025 at 08:21:51PM +0000, Matthew Wilcox wrote:
-> > > > In trying to bisect the earlier reported transaction assertion failure,
-> > > > I hit this:
-> > > > 
-> > > > generic/476       run fstests generic/476 at 2025-11-05 20:16:46
-> ....
-> > > As I said on #xfs: false positive on the inode lock.
-> > > 
-> > > Reclaim is running in GFP_KERNEL context, so it's allowed to lock
-> > > unreferenced inodes.
-> > > 
-> > > The inodes that the allocation context holds locked are referenced
-> > > inodes, so it cannot self-deadlock on the inode locks it holds
-> > > because reclaim does not access or lock referenced inodes.
-> > > 
-> > > That being said, looking at this patch:
-> > > 
-> > > https://lore.kernel.org/linux-xfs/20251003134642.604736-4-bfoster@redhat.com/
-> > > 
-> > > I think the allocation that iomap_fill_dirty_folios() should
-> > > probably be using mapping_gfp_constraint(mapping, GFP_KERNEL) rather
-> > > than a hard coded GFP_KERNEL allocation. This is deep in the
-> > > buffered write path and the xfs ILOCK is held when
-> > > iomap_fill_dirty_folios() and it does folio lookups in that
-> > > context.
-> > > 
-> > 
-> > There's an outstanding patch to nuke this allocation completely:
-> > 
-> > https://lore.kernel.org/linux-fsdevel/20251016190303.53881-2-bfoster@redhat.com/
-> > 
-> > This was also problematic for the ext4 on iomap WIP, so combined with
-> > the cleanup to use an iomap flag this seemed more elegant overall.
-> 
-> Ok, that looks like a good way to get rid of the allocation, so
-> you can add
-> 
-> Acked-by: Dave Chinner <dchinner@redhat.com>
-> 
-> to it.
-> 
+From: Carlos Maiolino <cem@kernel.org>
 
-Thanks. I'll repost that one standalone since the rest of that series
-still needs some work.
+An user reported a SIGSEGV when attempting to create a metadump image of
+a filesystem.
+The reason is because we fail to catch a possible overflow in the
+used extents array in process_exinode() which may happen if the extent
+count is corrupted.
+This leads process_bmbt_reclist() to attempt to index into the array
+using the bogus extent count with:
 
-> > The patch series it's part of still needs work, but this one is just a
-> > standalone cleanup. If I can get some acks on it I'm happy to repost it
-> > separately to take this issue off the table..
-> > 
-> > > Huh - that kinda feels like a lock order violation. ILOCK is not
-> > > supposed to be held when we do page cache operations as the lock
-> > > order defined by writback operations is folio lookup -> folio lock
-> > > -> ILOCK.
-> > > 
-> > > So maybe this is a problem here, but not the one lockdep flagged...
-> > 
-> > Yeah.. but filemap_get_folios_dirty() is somewhat advisory. It is
-> > intended for use in this context, so only trylocks folios and those that
-> > it cannot lock, it just assumes are dirty||writeback and includes them
-> > in the batch for locking later (where later is defined as after the
-> > iomap callback returns where iomap typically does folio lookup/lock for
-> > buffered writes).
-> 
-> I guess I don't understand why this needs to be done under the
-> ilock. I've read the patches, and it doesn't explain to me why we
-> need to look up the pages under the ILOCK? The only constraint I see
-> is trimming the extent map to match the end of a full fbatch array,
-> but that doesn't seem like it can't be done by iomap itself.
-> 
-> Why do we need to do this dirty-folio batch lookup under the
-> ILOCK instead of as a loop in iomap_zero_range() that grabs a fbatch
-> for the unwritten mapping before calling iomap_zero_iter()
-> repeatedly until we either hit the end of the mapping or there are
-> no more dirty folios over the mapping?
-> 
+convert_extent(&rp[numrecs - 1], &o, &s, &c, &f);
 
-It doesn't need to be under ilock, just either under ilock or before
-iomap_begin to rule out problematic inconsistency (i.e. seeing a clean
-folio && unwritten mapping and racing with writeback). This was
-discussed at multiple points during review of the original batch series.
+Fix this by extending the used counter to xfs_extnum_t (uint64_t)
+and checking for the overflow possibility.
 
-The longer term prospects for this are to potentially use it for
-multiple different operations, and therefore lift it into core iomap
-(not necessarily just zero range). The reason it's done this way to
-start was mainly just to manage scope and complexity. The use case is
-bounded, so it was easiest to work this in where it is and defer
-complexity associated with broader use to later.
+Reported-by: "hubert ." <hubjin657@outlook.com>
+Suggested-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+---
+ db/metadump.c | 28 +++++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 9 deletions(-)
 
-That might sound pedantic, but when you consider things like dependent
-changes like incremental iter advancement, the impedence mismatch
-between some of these changes and the ext4-on-iomap WIP, and the little
-issues that fall out of that, this is all much easier to develop,
-support and improve with as little unnecessary complexity as possible. I
-think when some of the kinks the rest of that series is trying to
-address are worked out, that might be a reasonable point to consider
-such a lift.
-
-Brian
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+diff --git a/db/metadump.c b/db/metadump.c
+index 24eb99da1723..430120ec8888 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -2395,21 +2395,25 @@ process_btinode(
+ 
+ static int
+ process_exinode(
+-	struct xfs_dinode 	*dip,
++	struct xfs_dinode	*dip,
+ 	int			whichfork)
+ {
+ 	xfs_extnum_t		max_nex = xfs_iext_max_nextents(
+ 			xfs_dinode_has_large_extent_counts(dip), whichfork);
+ 	xfs_extnum_t		nex = xfs_dfork_nextents(dip, whichfork);
+-	int			used = nex * sizeof(struct xfs_bmbt_rec);
++	xfs_extnum_t		used = nex * sizeof(struct xfs_bmbt_rec);
+ 
+-	if (nex > max_nex || used > XFS_DFORK_SIZE(dip, mp, whichfork)) {
+-		if (metadump.show_warnings)
+-			print_warning("bad number of extents %llu in inode %lld",
+-				(unsigned long long)nex,
+-				(long long)metadump.cur_ino);
+-		return 1;
+-	}
++	/* Catch used extent array overflows */
++	if (used < nex)
++	       goto out_warn;
++
++	/* Invalid number of extents */
++	if (nex > max_nex)
++		goto out_warn;
++
++	/* Extent array should fit into the inode fork */
++	if (used > XFS_DFORK_SIZE(dip, mp, whichfork))
++		goto out_warn;
+ 
+ 	/* Zero unused data fork past used extents */
+ 	if (metadump.zero_stale_data &&
+@@ -2421,6 +2425,12 @@ process_exinode(
+ 	return process_bmbt_reclist(dip, whichfork,
+ 			(struct xfs_bmbt_rec *)XFS_DFORK_PTR(dip, whichfork),
+ 			nex);
++
++out_warn:
++	if (metadump.show_warnings)
++		print_warning("bad number of extents %llu in inode %lld",
++			(unsigned long long)nex, (long long)metadump.cur_ino);
++	return 1;
+ }
+ 
+ static int
+-- 
+2.51.0
 
