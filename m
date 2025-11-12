@@ -1,42 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9BB831B13D
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 12:15:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27C70318120
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 12:15:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762949710; cv=none; b=F/x87Trv6Mn9ElpV/sItf7IA4C/qdfdShZ5AGZ6vmuVJK7bC2c/0hUBVwh3NtFOUXn5aQAiw9ff8P/zvnwP0WZ50bmcScUZLW+FoNu/t4hZ9IJZD74FMoFwx88f7KvIuJF/j4L2FUE3NgfdMi6VwA4PuuAtNUCPI6HJWRL4BgKs=
+	t=1762949710; cv=none; b=X3C1+MkMUaXZGs9KRxKPYRaWHkoy494j54FVnNW5/VJ+7Zc14dX6Cuo9S+I1HktpVMRnK3Mbs9JNYi8COm8b5btSzO46ULmWILPrg4JFX+dqJbc+Va702bT1FglUiVAKjuVWRh1spVeS5dXnFCcV4HMjdrb7wlTc2AxhgIvtIXI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1762949710; c=relaxed/simple;
-	bh=eMSwP1X5WcNr9r0TvdD4PG7dxnd7JgodvEIfK3Vuy0o=;
+	bh=w8QUu7PIR10LAOrxwCNBvyZhtVEZ7aNx6nUE5NYtsPc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aQV9y4wkjJhgu9G4lgLyqch/h3PoL9fzKcwHH1Muyle96L2kp9U6jzmugawVzpLOjpP/9z1vOqaDqE+cH8Te1KIgCrUHtpnbey8CpeQwxrozuJGW+G6HVuAmCsitzuugUpUe9ULwjIKF5aey3tZF3/fKPCjiEFwSygbB4ltw6iA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yaXl0R0T; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=Uj//wpV7K5d/lPQOOv+q/52ukyMGyKp2TIomu02mD1xOsf+vTmCaDZ+1sDRw2d23FEX5gRMzjx3g5vtE5uj37JO3A7MHbwwjwm/ZtboJZMgG0fl+JFfo6TV+UcfrXYWyA+OVLA9X3k95ucKbU4QBuk2sMZDlMk47sJskjb+V2IY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=CZF3SNQr; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yaXl0R0T"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CZF3SNQr"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=ledluPQHZk2RtwRyVUfxnK+vmJnQDTxVBA9q+dcdPTw=; b=yaXl0R0Tm/hbe4H5802OaDtO+w
-	xDH6oWIBWeT88etShuaYOYSoV0+woBRpQ33Nr9OS+WW3QKEdli5bGeBUgo57Ssyb3XTrMrMrIlR7p
-	11FQL6eB1NN4weohzMUhyYzR062VWrtGl3idqlgYcT8/XPdRr21I0adm949kHEFmKdkUDHaMfeBol
-	R7xe8EEkGGwnOnfRVUjvG9Bje3RuvurAO/6vHm0/Pi0Dm9ueVd9iE/92Sc3PSr5f76uE/BU4JuNn3
-	QJ3ZvblVBVgIJ/llNHPRJm+OT49wjD8sLN7navL446SXKShs346mtN7ncuUa1KH4lbwHYqKhi9PZg
-	udJptwvQ==;
+	bh=QDzcE/YLyB34vY0n6DIUM/RBKt2m5y79ZDWPG3YnlkQ=; b=CZF3SNQr1NgZ/XSA10kBPtkFTM
+	eI+hxITokdMY1a4s8n0WwYd60jTLBeQIa0nTiX7/xbSEykDThyJhzUmdTZy/r3dx44VkF3kmTx+ME
+	yRw4BXz0/6FWcD100pv9DB0W8Fui3ddBu7sIEPkfFRvC8TnOLDLJOGngP64ATAgQeSscMuvuLXvx4
+	n91exeMhgigsixlvJhJsZ6wSx2J4EKE8KHNhIHxANSn3in2NnuYeSLNDW3vxmn87QlAeYUEay1ofL
+	pAUXRvUdLHCShNKpPn4eY4In7fQlJbiBTQZDX0a2SdfQG8L7Xt5YyorpxuoIVxyKBT7upSc8dcsj5
+	Gr9qRtUA==;
 Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vJ9ke-00000008lAZ-3c1i;
-	Wed, 12 Nov 2025 12:15:05 +0000
+	id 1vJ9kh-00000008lAu-48i0;
+	Wed, 12 Nov 2025 12:15:08 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH 01/10] xfs: add a xlog_write_one_vec helper
-Date: Wed, 12 Nov 2025 13:14:17 +0100
-Message-ID: <20251112121458.915383-2-hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+Subject: [PATCH 02/10] xfs: set lv_bytes in xlog_write_one_vec
+Date: Wed, 12 Nov 2025 13:14:18 +0100
+Message-ID: <20251112121458.915383-3-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251112121458.915383-1-hch@lst.de>
 References: <20251112121458.915383-1-hch@lst.de>
@@ -49,115 +48,50 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a wrapper for xlog_write for the two callers who need to build a
-log_vec and add it to a single-entry chain instead of duplicating the
-code.
+lv_bytes is mostly just use by the CIL code, but has crept into the
+low-level log writing code to decide on a full or partial iclog
+write.  Ensure it is valid even for the special log writes that don't
+go through the CIL by initializing it in xlog_write_one_vec.
 
+Note that even without this fix, the checkpoint commits would never
+trigger a partial iclog write, as they have no payload beyond the
+opheader.
+
+The unmount record on the other hand could in theory trigger a an
+overflow of the iclog, but given that is has never been seen in
+the wild this has probably been masked by the small size of it
+and the fact that the unmount process does multiple log forces
+before writing the unmount record and we thus usually operate on
+an empty or almost empty iclog.
+
+Fixes: 110dc24ad2ae ("xfs: log vector rounding leaks log space")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 ---
- fs/xfs/xfs_log.c      | 35 +++++++++++++++++++++--------------
- fs/xfs/xfs_log_cil.c  | 11 +----------
- fs/xfs/xfs_log_priv.h |  2 ++
- 3 files changed, 24 insertions(+), 24 deletions(-)
+ fs/xfs/xfs_log.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index a311385b23d8..ed83a0e3578e 100644
+index ed83a0e3578e..382c55f4d8d2 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -848,6 +848,26 @@ xlog_wait_on_iclog(
- 	return 0;
- }
- 
-+int
-+xlog_write_one_vec(
-+	struct xlog		*log,
-+	struct xfs_cil_ctx	*ctx,
-+	struct xfs_log_iovec	*reg,
-+	struct xlog_ticket	*ticket)
-+{
-+	struct xfs_log_vec	lv = {
-+		.lv_niovecs	= 1,
-+		.lv_iovecp	= reg,
-+	};
-+	LIST_HEAD		(lv_chain);
-+
-+	/* account for space used by record data */
-+	ticket->t_curr_res -= reg->i_len;
-+
-+	list_add(&lv.lv_list, &lv_chain);
-+	return xlog_write(log, ctx, &lv_chain, ticket, reg->i_len);
-+}
-+
- /*
-  * Write out an unmount record using the ticket provided. We have to account for
-  * the data space used in the unmount ticket as this write is not done from a
-@@ -876,21 +896,8 @@ xlog_write_unmount_record(
- 		.i_len = sizeof(unmount_rec),
- 		.i_type = XLOG_REG_TYPE_UNMOUNT,
+@@ -858,14 +858,15 @@ xlog_write_one_vec(
+ 	struct xfs_log_vec	lv = {
+ 		.lv_niovecs	= 1,
+ 		.lv_iovecp	= reg,
++		.lv_bytes	= reg->i_len,
  	};
--	struct xfs_log_vec vec = {
--		.lv_niovecs = 1,
--		.lv_iovecp = &reg,
--	};
--	LIST_HEAD(lv_chain);
--	list_add(&vec.lv_list, &lv_chain);
--
--	BUILD_BUG_ON((sizeof(struct xlog_op_header) +
--		      sizeof(struct xfs_unmount_log_format)) !=
--							sizeof(unmount_rec));
--
--	/* account for space used by record data */
--	ticket->t_curr_res -= sizeof(unmount_rec);
+ 	LIST_HEAD		(lv_chain);
  
--	return xlog_write(log, NULL, &lv_chain, ticket, reg.i_len);
-+	return xlog_write_one_vec(log, NULL, &reg, ticket);
+ 	/* account for space used by record data */
+-	ticket->t_curr_res -= reg->i_len;
++	ticket->t_curr_res -= lv.lv_bytes;
+ 
+ 	list_add(&lv.lv_list, &lv_chain);
+-	return xlog_write(log, ctx, &lv_chain, ticket, reg->i_len);
++	return xlog_write(log, ctx, &lv_chain, ticket, lv.lv_bytes);
  }
  
  /*
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 778ac47adb8c..83aa06e19cfb 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -1098,13 +1098,7 @@ xlog_cil_write_commit_record(
- 		.i_len = sizeof(struct xlog_op_header),
- 		.i_type = XLOG_REG_TYPE_COMMIT,
- 	};
--	struct xfs_log_vec	vec = {
--		.lv_niovecs = 1,
--		.lv_iovecp = &reg,
--	};
- 	int			error;
--	LIST_HEAD(lv_chain);
--	list_add(&vec.lv_list, &lv_chain);
- 
- 	if (xlog_is_shutdown(log))
- 		return -EIO;
-@@ -1112,10 +1106,7 @@ xlog_cil_write_commit_record(
- 	error = xlog_cil_order_write(ctx->cil, ctx->sequence, _COMMIT_RECORD);
- 	if (error)
- 		return error;
--
--	/* account for space used by record data */
--	ctx->ticket->t_curr_res -= reg.i_len;
--	error = xlog_write(log, ctx, &lv_chain, ctx->ticket, reg.i_len);
-+	error = xlog_write_one_vec(log, ctx, &reg, ctx->ticket);
- 	if (error)
- 		xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
- 	return error;
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 0fe59f0525aa..d2410e78b7f5 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -507,6 +507,8 @@ void	xlog_print_trans(struct xfs_trans *);
- int	xlog_write(struct xlog *log, struct xfs_cil_ctx *ctx,
- 		struct list_head *lv_chain, struct xlog_ticket *tic,
- 		uint32_t len);
-+int	xlog_write_one_vec(struct xlog *log, struct xfs_cil_ctx *ctx,
-+		struct xfs_log_iovec *reg, struct xlog_ticket *ticket);
- void	xfs_log_ticket_ungrant(struct xlog *log, struct xlog_ticket *ticket);
- void	xfs_log_ticket_regrant(struct xlog *log, struct xlog_ticket *ticket);
- 
 -- 
 2.47.3
 
