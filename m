@@ -1,122 +1,83 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD59D28642A
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 07:14:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34DAD27FB25;
+	Wed, 12 Nov 2025 07:22:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762931652; cv=none; b=R0mnnQe+adwipZowLfy11ghQBykjZ2LdCH6TrpED0lyFE9O/QqXz1Ey90jtCqy9aeMfdWSHRqJCJyF+vf5yk0QgtemXCiLFxuR0HftZweVw1VTRJnumkjttMU9D6bHqaO78JLAjePVdqQhIc3DbOqi16oxBatUF0m0PSTppMb5w=
+	t=1762932147; cv=none; b=t61vtZKyDe0JFjih2fBSOFw/CYHdAy3wYMSnU+RZJEZcBLiNqsAL855BHy2CSWwzWuwD0GFFhk8Pj3PV8wQTgqWYzCgV/e4DCg+8stYOFZFVghwxbsaUZO1K9bMX2tnuPQnoypDx8oeG5aZ0iFn0t+mCEdsRLehNXO7WlpORoj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762931652; c=relaxed/simple;
-	bh=cUgCmt7/S4H78nSegwnrwPgzDrfISuJQ8hnVSCrlVDQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=C0PajoTe2n7/+0Rv87IVq1sYUeG/SFKkc9MnGiSrv6NqWOl1Mu/ojlM5B0S2bgHCNgxaard+In+BcCnTBDa2w2yzYAzt7WA9uqeUHTMUe9EKiqChWH88YyDG4p07+kaLSXfop9KHTwTyAt+Bq8vtNHYNS2K3Fcj3MMId1uds1gw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XgH8q1jr; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1762932147; c=relaxed/simple;
+	bh=O6UCP/G+PwFHDjWWza6+KFFbEbFZZ47xszmTk+pmq44=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IJY5xQV+iQXajngFm0fKdBQQIL4u4deQ8SlYKr+YXJk4I15QCYsTqI5aHSjYzNFQCRbpfErVC6EMhdwbw0ZdMudJn9KTR4ZzeeBm81ZsG4QjupIlZUI8PABf6O8cGicxvFcj3gRtkJ1USBGOUBDhfNKtlB1KEMTsfmqBVGCo0/o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UmgunZNl; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XgH8q1jr"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-29555b384acso5271535ad.1
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Nov 2025 23:14:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762931650; x=1763536450; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=X8sb02e1W+AKeJ6wR0eYaD2KkfiM6HqalBahoIkkYHA=;
-        b=XgH8q1jr2+XQgLkfDKCa/eUWE1ZvSrkjRxtr5lBbLGxRYdtzxNaRzJKM50Ux2SEHOn
-         0BlAjFIYdWeA6qeOVyyZmDrK6k4OKLxGTQYKjGI7qHlLKCwbVIW0OFzrgEv4v5ewBziv
-         lv4ohKUGv7dG6To2zsCiMcMO+Ruuo3xwZdTgTqKyLYSvet1wbq7QLkzDOvfx78zFlOw+
-         MR3w5gfbC9TLFm1qlc0UjFCOBC78Zar1o6Tx335kme/yEGz0nsP3JeYSRpYmnGxuxOuv
-         z5Wpi3dE0zdK4SoBYUa7rWSOkPUcOAf6XQY3Au3eII4YW4J+vud6XV4zDnR1hSYZ39Yj
-         SQ2g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762931650; x=1763536450;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=X8sb02e1W+AKeJ6wR0eYaD2KkfiM6HqalBahoIkkYHA=;
-        b=T6rkRC+onjAjAv6GsmGX66BlZ8K0Iu0UNNjNxt59BDqdJy3K4NBw4kyt87gUfagVgN
-         sNVssdHA9KPRv/92nMw4jjrn4/KBS4oVMhSys6vjcFY9NTd8wcc18PdOTu6vT5UZQY6H
-         hZJtmITLv8afU0D+a99O223rQk/bC+nBMRfM917MDvj3zZKvnTgA0AP2CSI+LZdgIUT/
-         Y7alItjibs7Jz9EmDq7mLwbEWbjFXBvnnqR4OgVg0v6p1O57kanNFttgzP6wqAPPtxcV
-         CC+n6/K3gUW98MVWmr5hmi7Rs6bY86enc6M6HCXNMi0gUsdI5hwfFEoQTkql5r4LtQCF
-         kWRw==
-X-Forwarded-Encrypted: i=1; AJvYcCVnZyuRkWNyRTd9lFH2VtTqeQarMaWP3gbv4euo3NEr0uY/Yg8Mr+lxmaMsLEbI7SKPG+uvmGh9wJA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzcVKSNPckpDZQEnsKy1FQPSdBhT/L/HTyB40R1ZQZ9BAlniGth
-	ukeWqo59rLmcwcwiFW//2qaY6CZygaznsDulJ5HX2b7P6N10myG1pSuw
-X-Gm-Gg: ASbGncs0LnZB+svA8d4soIgAbquIh+9TTKyM3mHKUKK/7Oz+7D7SQD9E9Krq5mn63WQ
-	OOoM+GuYrERVAgZdbEbZ2TXP70djRncZ7i1/yoVCQgjo6VGTS74DJPy7rGd29xHKrfpCXjqmyvQ
-	G2YLo3m9USwPo8cp993pZSNjoOSVD0maHygGTj7+ki8H6tOFjPU0MfOIr0GOUk1Ao/n78K6FMMv
-	oyFuhBstyD/h76C+2WYOYABUvEEXwd54+53cVvC/2onsoXuWnnRiN/ia3dvuxdoHmx/Ae/hY6uC
-	DSefqvk8W+t+GVLX6eX1eXZuGNFoyVeZcYz6hchvPEeXmtBGDyPDAGabbVsXcFexXTt+CGXbSLP
-	4//BLQBky7UOyvOonjZtR2yflokfrSOpWcXb0m0/vpEwigFU1IcH26SjMypCJzRPBl9/PhjM4Js
-	if31zqcHr7Zjdb+JPS
-X-Google-Smtp-Source: AGHT+IFxIDHbMDQtJnDd1j29er8I9W16ktyYHaqy/e9kdgu1LMq6asMSVrMWec36NOc6lpyOhk0v6w==
-X-Received: by 2002:a17:903:3d0b:b0:295:9e4e:4090 with SMTP id d9443c01a7336-2984edde5demr21733055ad.52.1762931650013;
-        Tue, 11 Nov 2025 23:14:10 -0800 (PST)
-Received: from [9.109.246.38] ([129.41.58.6])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2984dca027esm19947645ad.70.2025.11.11.23.14.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 11 Nov 2025 23:14:09 -0800 (PST)
-Message-ID: <c91c87ab-dd85-4c42-9af4-a25ea2540de3@gmail.com>
-Date: Wed, 12 Nov 2025 12:43:05 +0530
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UmgunZNl"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=iypHX/IvTFhbd6hRQmMRGYvjYeuaIPnHVEBfhwzXUi0=; b=UmgunZNlwPQy+MkncDU67PgzmG
+	o5VReWeinXTIIJa7nXpduXS0vncVLLDfA5WXnKtlQQYdADkFkE/mNlTvH0eqcZByGAgUbM9nl5JP9
+	02E8uxYg4/h4np8dUYZOM+wzmsBGYiyWa4ZrnI3oTxwLSotSkXUzePr1XShlOsiTIrIV2Vgnk+SCu
+	AVK57bcoWCggA7VSHg+R2W7mInC3OhRZiU5DSa7FwuzDk94ERGuJKIXHIEwS5aYeJS+blrORILeUh
+	TN0pBIlGSjMwaGrjCj3mOKUFjozkLM4xoCe0EIn1G53SwGMUv6B33TL14ziJ3Lv+ZjcAzZV7BqG0X
+	6ZqUaJkQ==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vJ5BN-00000008Gjj-31PN;
+	Wed, 12 Nov 2025 07:22:22 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Christian Brauner <brauner@kernel.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jens Axboe <axboe@kernel.dk>,
+	Avi Kivity <avi@scylladb.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Naohiro Aota <naohiro.aota@wdc.com>,
+	Johannes Thumshirn <jth@kernel.org>,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	io-uring@vger.kernel.org
+Subject: enable iomap dio write completions from interrupt context
+Date: Wed, 12 Nov 2025 08:21:24 +0100
+Message-ID: <20251112072214.844816-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/4] xfs: fallback to buffered I/O for direct I/O when
- stable writes are required
-Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, Christian Brauner <brauner@kernel.org>,
- Jan Kara <jack@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
- linux-block@vger.kernel.org
-References: <20251029071537.1127397-1-hch@lst.de>
- <20251029071537.1127397-5-hch@lst.de>
- <7f7163d79dc89ae8c8d1157ce969b369acbcfb5d.camel@gmail.com>
- <20251110135932.GA11277@lst.de>
-From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
-In-Reply-To: <20251110135932.GA11277@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
+Hi all,
 
-On 11/10/25 19:29, Christoph Hellwig wrote:
-> On Mon, Nov 10, 2025 at 07:08:05PM +0530, Nirjhar Roy (IBM) wrote:
->> Minor: Let us say that an user opens a file in O_DIRECT in an atomic
->> write enabled device(requiring stable writes), we get this warning
->> once. Now the same/different user/application opens another file
->> with O_DIRECT in the same atomic write enabled device and expects
->> atomic write to be enabled - but it will not be enabled (since the
->> kernel has falled back to the uncached buffered write path)
->> without any warning message. Won't that be a bit confusing for the
->> user (of course unless the user is totally aware of the kernel's exact
->> behavior)?
-> The kernel with this patch should reject IOCB_ATOMIC writes because
-> the FMODE_CAN_ATOMIC_WRITE is not set when we need to fallback.
-Okay, makes sense.
->
-> But anyway, based on the feedback in this thread I plan to revisit the
-> approach so that the I/O issuer can declare I/O stable (initially just
-> for buffered I/O, but things like nvmet and nfsd might be able to
-> guarantee that for direct I/O as well), and then bounce buffer in lower
-> layers.  This should then also support parallel writes, async I/O and
-> atomic writes.
+Currently iomap defers all write completions to interrupt context.  This
+was based on my assumption that no one cares about the latency of those
+to simplify the code vs the old direct-io.c.  It turns out someone cared,
+as Avi reported a lot of context switches with ScyllaDB, which at least
+in older kernels with workqueue scheduling issues caused really high
+tail latencies.
 
-Okay.
+Fortunately allowing the direct completions is pretty easy with all the
+other iomap changes we had since.
 
---NR
+While doing this I've also found dead code which gets removed (patch 1)
+and an incorrect assumption in zonefs that read completions are called
+in user context, which it assumes for it's error handling.  Fix this by
+always calling error completions from user context (patch 2).
 
->
--- 
-Nirjhar Roy
-Linux Kernel Developer
-IBM, Bangalore
+Against the vfs/vfs-6.19.iomap branch.
 
+Diffstat:
+ Documentation/filesystems/iomap/operations.rst |    4 
+ fs/backing-file.c                              |    6 -
+ fs/iomap/direct-io.c                           |  149 +++++++++++--------------
+ include/linux/fs.h                             |   43 +------
+ io_uring/rw.c                                  |   16 --
+ 5 files changed, 81 insertions(+), 137 deletions(-)
