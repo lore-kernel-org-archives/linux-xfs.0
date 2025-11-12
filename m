@@ -1,29 +1,39 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4384023F42D
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 14:37:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11BC52BEFF3;
+	Wed, 12 Nov 2025 14:39:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762958226; cv=none; b=Xbx+0jcr2xPswXcIFtdgPLPdXU9umgWsjlMWzScdovX/vgRmzWtplY7wyhlDZeNi7qAftdNQVQgoh3m7ftez1Nwhl2MTNZlp/dalpa1gu4HlDPefbAefCxN3VoRWpT7ZC0bbOpzywZLRRgV3kGmAWUVtMKdNGYHboGxkzb94zzI=
+	t=1762958343; cv=none; b=Vh5dkhxIsZL+c8Znk8PglwXOaJIIGsfWuZv12R9htUnztiQqhwbhQb/sDvGGJ5u8wFR7wThnTc4l/HFhotMEqLYmWe90HNsTE7vXH8UGQJj/AUrugU7IdkTLlqAiLuOIosG2IYv95sErfXPncwQyPTIbMG30f8ZcEqZl+Nv5ISY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762958226; c=relaxed/simple;
-	bh=PJvfuqGQt1mVMo+1+4PgPgx/pa2DXoaXyGTzm8HMejQ=;
+	s=arc-20240116; t=1762958343; c=relaxed/simple;
+	bh=cI8ffqm3gd67ue1Kq31NcC/9D3b2gf4QTsTgwpks86E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ttar5SoORdlk+2/JwNEDor5rnQICJ19KBmTVGYWEJ9OfJCrFziAEyN/1f22+JpaiykBZOmoot4Kt00e73T+lFuDavEp1RaQcUi+omvWOjoKYiJMToT2h+/7IszRKSkprqRkFSkQCPUqwTGjFPJSkdgnhf2HE4+Fc2g5xzBiq9Bk=
+	 Content-Type:Content-Disposition:In-Reply-To; b=LSme3t5zYS/63bAXV0RV/J2VJXNuJqTPmkAd+Nyk7lROy1UN5kM0/h7UKeWXgBskhQIInLIDtm72CaejJUO3ibgMtvq6YC1pvX0Xx1Nj0bXE5ANhUPpmkGNdwmdObeFFiktq07kosGALmXnwuY5B/WaG5L3rDdKDpmD8gtERzZ8=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 80665227A87; Wed, 12 Nov 2025 15:36:59 +0100 (CET)
-Date: Wed, 12 Nov 2025 15:36:59 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, aalbersh@redhat.com,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] mkfs: fix zone capacity check for sequential zones
-Message-ID: <20251112143659.GA2831@lst.de>
-References: <20251112123356.701593-1-cem@kernel.org> <uUmqo8OzhTSa5OB27aq49lemNQh91fH_TCYzB5kvOcruOsQHbBfzrdozvkQ3xIWvFb_iB9od-8CjKaC8vQGP2Q==@protonmail.internalid> <20251112125056.GA27028@lst.de> <na5s5f2afoc3w5sijoq4xqni3oex7ivxqkrqfz5pt7dtf5aivr@3xvsap3qzpcw>
+	id 4372E6732A; Wed, 12 Nov 2025 15:38:58 +0100 (CET)
+Date: Wed, 12 Nov 2025 15:38:58 +0100
+From: hch <hch@lst.de>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: hch <hch@lst.de>, Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
+	Keith Busch <kbusch@kernel.org>, Dave Chinner <david@fromorbit.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Christian Brauner <brauner@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Subject: Re: fall back from direct to buffered I/O when stable writes are
+ required
+Message-ID: <20251112143858.GA3006@lst.de>
+References: <aQTcb-0VtWLx6ghD@kbusch-mbp> <20251031164701.GA27481@lst.de> <kpk2od2fuqofdoneqse2l3gvn7wbqx3y4vckmnvl6gc2jcaw4m@hsxqmxshckpj> <20251103122111.GA17600@lst.de> <20251104233824.GO196370@frogsfrogsfrogs> <20251105141130.GB22325@lst.de> <20251105214407.GN196362@frogsfrogsfrogs> <9530fca4-418d-4415-b365-cad04a06449b@wdc.com> <20251106124900.GA6144@lst.de> <aRSXQKgkV55fFtNG@fedora>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,12 +42,14 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <na5s5f2afoc3w5sijoq4xqni3oex7ivxqkrqfz5pt7dtf5aivr@3xvsap3qzpcw>
+In-Reply-To: <aRSXQKgkV55fFtNG@fedora>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Nov 12, 2025 at 02:25:11PM +0100, Carlos Maiolino wrote:
-> Your call. I can add it to the V2, giving I'll rewrite the above to
-> remove the unneeded braces.
+On Wed, Nov 12, 2025 at 10:18:40PM +0800, Ming Lei wrote:
+> Looks buffer overwrite is actually done by buggy software in guest side,
+> why is qemu's trouble? Or will qemu IO emulator write to the IO buffer
+> when guest IO is inflight?
 
-Nah, let's do one thing at a time.
+It is ultimately caused by the guest.  But just like local software it
+is in no way buggy just because you don't like the pattern.
 
