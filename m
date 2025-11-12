@@ -1,28 +1,45 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D98525F96D
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 12:51:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CDFB274FF5;
+	Wed, 12 Nov 2025 12:53:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762951868; cv=none; b=MMKoZBhWNQe4jEIkXvolkF6hAhfgp62TOhYlOyJrwcg47U2Piw9XbShj0lJBbFZ6zKc89R134brWzlIFoS68TfHOpaRNN7kS46/ZW+vmqIOI+OuZ6yJBK0pqPsqPL8kl7mDSBSCtGt/qJ6GtXLnP3Bej3YrX9F0ynVPlr1Ttxp4=
+	t=1762952035; cv=none; b=LZopOrEOl3Mjcw/m7r25mhFEjzbR+DMXJO+TdPPv7a8eTanWHeOh8mZgMC9Ysxq9OQAsnMztDz6jCE0+c3sl5elOaGgnjgoIXjX4N5kwS0byllIajKntxTblS4VIKRcY32d8M2ZwSrtrGn9u8po2dcTPBdLGQAFtGXSL65TtgXQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762951868; c=relaxed/simple;
-	bh=75XrmWbdVCmnkgl0FeVGlJJQbcpvrFaml6yy9JtFCuQ=;
+	s=arc-20240116; t=1762952035; c=relaxed/simple;
+	bh=z8S/99uZskvY300XNWmpm8V4inQtKLtvvDWMbV1GgMg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NceYxxzfh2A9Crri3pcI2Ie5lbYGmf54wgBHi5Mw+75Lwc2URhYC4fatpWdPe1adZMg2dnplc515Dx/+kaODiQt5mnk4SCRWsxZcCR3kDrYRBAofmDT33M3ThTNaCWcZLsG5TNSQv3WrwBdBdUvz8enXsympkggaPbjBr35ZsaU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 80059227A87; Wed, 12 Nov 2025 13:50:56 +0100 (CET)
-Date: Wed, 12 Nov 2025 13:50:56 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: cem@kernel.org
-Cc: aalbersh@redhat.com, linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH] mkfs: fix zone capacity check for sequential zones
-Message-ID: <20251112125056.GA27028@lst.de>
-References: <20251112123356.701593-1-cem@kernel.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=A2uirJy6CoUzh16OntagfIatI6bvAtNq8c9/lGEsY4tge+ZCiiReucOqSH4sUo6QtWqWLvRaGUr6RqU18Yl9dJebQ5eGoxYdogZ0sKw/LZwilLrbcG+Kp1tCdtm47uTRpu2Y/7svnGmr4RzLH+EwRAm27SbSyQFOLof7SU9Ikbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nqcgdMv0; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nqcgdMv0"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=T662K4QHEyU3kT05O5jxYs9Et2+lOD9+Rx0jTzI/Mmo=; b=nqcgdMv0WGGF5JfsxULCwyeTzV
+	gJdSBWl5tNlG4Or1d20Ouqydt1cgo+vSI3HJZUiwQ0SNNVEf5xKQ8pHqbFlzr5LE0b1R6RndwMZ9Z
+	ySswK1pRwFm6K/mjc1cGHQDyuUoMS1W6sgVt/6jNK+y1RuM8d0YgScGOfsJsV3SKF17wLUlQvGFgx
+	8MzCYu6G67Z7c1fyxnw6DxdPmfWeQkGirF13QuUbwBA88azQ3996l9YGZBFBHlSIs7QZSc7sJS9NB
+	sg9ACpNu6+E2MocoNlyBiblo4VOiHItaz3AtII1av1E6RmEfHyA3i701Q6xSpRTILuSEOgWLGCgg9
+	bZ9VfE8A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vJAMA-00000008nxp-3eqP;
+	Wed, 12 Nov 2025 12:53:50 +0000
+Date: Wed, 12 Nov 2025 04:53:50 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] iomap: replace folio_batch allocation with stack
+ allocation
+Message-ID: <aRSDXpcrs7fZ_ggO@infradead.org>
+References: <20251111175047.321869-1-bfoster@redhat.com>
+ <aRRHzBlw6pc3cQjr@infradead.org>
+ <aRR_FdE96gzkskqP@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -31,33 +48,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251112123356.701593-1-cem@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <aRR_FdE96gzkskqP@bfoster>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Nov 12, 2025 at 01:33:16PM +0100, cem@kernel.org wrote:
-> FWIS, writing the patch description I'm assuming that the conventional zones
-> always come first and we can't have a zoned device starting with
-> sequential zones followed by conventional zones.
+On Wed, Nov 12, 2025 at 07:35:33AM -0500, Brian Foster wrote:
+> Hmm.. well I never really loved the flag return (or the end return), but
+> I wanted to make the iomap helper more consistent with the underlying
+> filemap helper because I think that reduces unnecessary complexity.
 
-XFS kinda assumes this by not counting counting conventional zones found
-after sequential zones, so we'll error out due to the lack of conventional
-space later unless a separate device is used.
+Probably.  But the weird filemap (in general, not just the helper)
+calling convention of using page indices and non-inclusive ends doesn't
+really help with making it useful for higher level code.
 
-> +static void
-> +zone_validate_capacity(
-> +	struct zone_info	*zi,
-> +	__u64			capacity,
-> +	bool			conventional)
-> +{
-> +	if (conventional && (zi->zone_capacity != zi->zone_size)) {
+> I
+> suppose we could also make the flags an out param and either return void
+> or just pass through the filemap helper return (i.e. folio count)...
 
-No need for the inner braces.
+That would seem more logical to me.  Besides not really liking the new
+convention overly much (but that's a minor nitpick) my main issue was
+that this was hidden in a functional change without any explanation.
 
-Otherwise this looks good:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Note that we should also verify that if a device is used purely as
-RT device (aka no internal RT device), that there are either no
-conventional zones, or zone capacity == zone_size.  I can look into
-that as an incremental patch.
