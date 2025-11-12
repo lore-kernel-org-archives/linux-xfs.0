@@ -1,183 +1,101 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 868C221CC62
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 21:16:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D4582E62D1
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 21:57:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762982180; cv=none; b=Y7tqfSZMIiwrtWODg5cvLLj2uAmJfsVJaTaVm6Glj6zI+emJpLkHA7Xpa270wtzEbMdtdef82+/bFl7/8pXTz1RbYWDXwLDCK4aJwUkDjkH2Cl3SwxGR44MWbzffExC9HztcDQ8YaozRO6xEIf/fmFOtzXkGS4tebAH/WLytuE0=
+	t=1762984622; cv=none; b=sj8mkp7dPzztUNni1XKZ6wEWk144pX8pEhZ/qJZxzmExLCldm7JhKNELKYQ9Obd8Zk0bEDKmO8lNoI0Zu9NY6L+r1k+wcJPgRrIQRIDDSCr+65EMEpk7tAML8I9LkdJu0+zuVnWFslsoQGY8ACyRDNxXP/1c77BHG9nMLBiaFWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762982180; c=relaxed/simple;
-	bh=MyzdmlsVzDUM+ctSvyrsY4+hd/A66UIPWx9xoD1XWmw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=E12dsvTS9p7QBGAqhNEYs/LCgbYW2RcprpQQ/Zco0rtkykXv1M56dYMdjN1XcNYLR3BEfWuprzOn0s9mE8y0L01npq5kdNmrzvUrc9rNul15ifLd/uuJZRf6z3W+dt0dmjWJIZRYUD1FI6oRC7x4z0QQVFQVypxqNOx9pZ4Ywyg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id 60D61180F2C0;
-	Wed, 12 Nov 2025 22:07:24 +0100 (CET)
-Received: from trufa.intra.herbolt.com.herbolt.com ([172.168.31.30])
-	by mx0.herbolt.com with ESMTPSA
-	id yZu5DAz3FGnUDDMAKEJqOA
-	(envelope-from <lukas@herbolt.com>); Wed, 12 Nov 2025 22:07:24 +0100
-From: Lukas Herbolt <lukas@herbolt.com>
-To: hch@infradead.org,
-	djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org,
-	Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH v4] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Date: Wed, 12 Nov 2025 22:02:45 +0100
-Message-ID: <20251112210244.1377664-2-lukas@herbolt.com>
-X-Mailer: git-send-email 2.51.1
-In-Reply-To: <aQMTYZTZIA2LF4h0@infradead.org>
-References: <aQMTYZTZIA2LF4h0@infradead.org>
+	s=arc-20240116; t=1762984622; c=relaxed/simple;
+	bh=0OTFUF8dKlxaDdn36rkr2KB5xF/wOSqhfWxtBGzWaxg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=V7CTnlVcl6n19Dew4R8UD3ekBrikpldhUC7ii7QHfUWLLbLvSCScnKre8XbPuUg+Nr4RpJV4jeqJjdRRsRywT0VAlWkbzaYcY9sXmEijxxmfEtx3sgN0BH1JGUyF8Caw2Uf+kSBHSUcqx6yVCL3iO4eA/ga//6BIP85MV+IUOP4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=YTZQqEPi; arc=none smtp.client-ip=209.85.215.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="YTZQqEPi"
+Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-bb7799edea8so94743a12.3
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 13:57:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1762984620; x=1763589420; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=UtzYm6CaQwwng4XDexAXOIVM2T8jYsSpOQI11uV7cIk=;
+        b=YTZQqEPiaS/si8bOxnMCFdjnMaTXToGa+627P0ihXde9THCYTRabrnR046dIV/9vpK
+         /xGW+/fpk3Ayxcxslmwu8IskYnDVZNHuoz9XgU1oKhwcgEecoUEg0CDvUWsiwQ9QhrD6
+         qLzuJ3lhLMCeBg24li73qvZf9qJVTZEH6YQ5QfO7ag9GmeW0S553HICngVx2EtmTy1Zd
+         W1TXGld4qghxcGaaLTfm/yqBFdwe9/CMI34rzzA0dL6ygouoq7/eAotojbh3vs493UHc
+         P/Yptk1U+JYikQORa3NX0S9xOGe2j4bmELyr8Eqj4URJvRyHBtGASEtlIQxNcDPAl4zc
+         Shgg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762984620; x=1763589420;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=UtzYm6CaQwwng4XDexAXOIVM2T8jYsSpOQI11uV7cIk=;
+        b=dvJdU9ycbYZIeVbqMO8kJAiMbpwjA8lFeCN65FkUZz2BFuD3rN++zgVJ9YVhdJhctv
+         JJqV5/ep5XPzNW/0LRTb43o1yGr2ka39z48B4RmgCMDNiDpiqmHsaHmnKTZBOc/nAbSB
+         fcUf8opptrr0i5nO3r7tIiOUyV7ZICph6oPF/qnGMOJ1JbOocBAP4tsvgYQBNgfTWgUp
+         9BHvQf6slxJG9PDye6zUUvw9ZZPULrRMBUaf3uNxijsVuaKihi+WVlMLIGwf3vbnicVE
+         dBOWw1F6/SAIA6i+3knxDO9kwxeTgVUdSe94mGuPlnor22T8nWoZPXgI56oq+Hsb09H9
+         UjWg==
+X-Forwarded-Encrypted: i=1; AJvYcCUPc9ifSMtqAYlZLGshAOWnSlc8H7ZGgEQj2Rzdu+6msiotQHsDsyzGbq9p1Hgbkxry/DKrNwB0Fxk=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw3kScqF2kKAIeFQSSd2zK9p5rorCLwZg6jntSBUbqlRBSmgCuR
+	DH00QfwVIWm0chbxqk6n0FyJyA240quV0IZiQRVmjWSSdQca5TM+W6G4gGlmS+x9Z4o=
+X-Gm-Gg: ASbGncuYu/xK8GFXij66Hx0G9B1cxjMXErJiFNxqViqAOQxq6HIbDUfFCvnPv6jzl2/
+	7WUStgW5kjQZOelhsn2Uabxx3PpFTJBhOx6p5xph6s8vHhufXIdeamYOSuJE1gmVE5Cy1sSPiyV
+	TfLTFW3Y71ASTAbQjQSVz4tk3aNfXpJluWrZdyGR7178VgtOTmogCsXX8HoYSCDXLXqRxff/Dn8
+	lzIxNSu9WpeOsWTgc9Qcg2djXl42EMhrJs5DGprC6sd8PZ1+aRZ9VcLMDTHvb9EKeeHszpw0mI4
+	RI6ucA7Bl0d6WXlwJxoeyR4hIC9z4qmZJI/yPtZ+yayJx2yLh7A2H3FAua39LvVkGB3VXHQqCSz
+	FXz2UYqS2wjv/I2uYNAoCu8cH+UW0GiClvrCtX+ElUtL/41Cih0aPfk5tuHVerweWpiOs224wE/
+	+bDduI6f3dHPWsQqkNvjmfAejbzKhDn7jukF5HNS5P3Rkk7VuW9zc=
+X-Google-Smtp-Source: AGHT+IGGcSgtma54hv+7RKzmUmjycRVqw/LnJDNDCrdXo50noFmBCjb2IbQqtC0Ft6zra7BT9FpOHw==
+X-Received: by 2002:a17:902:d4c3:b0:28e:756c:707e with SMTP id d9443c01a7336-2984eda94d4mr56523225ad.33.1762984620190;
+        Wed, 12 Nov 2025 13:57:00 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-58-136.pa.nsw.optusnet.com.au. [49.181.58.136])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2985c2ccd1fsm1507945ad.110.2025.11.12.13.56.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Nov 2025 13:56:59 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1vJIpk-00000009zCe-0KVQ;
+	Thu, 13 Nov 2025 08:56:56 +1100
+Date: Thu, 13 Nov 2025 08:56:56 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: Christian Brauner <brauner@kernel.org>, djwong@kernel.org,
+	ritesh.list@gmail.com, john.g.garry@oracle.com, tytso@mit.edu,
+	willy@infradead.org, dchinner@redhat.com, hch@lst.de,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, jack@suse.cz, nilay@linux.ibm.com,
+	martin.petersen@oracle.com, rostedt@goodmis.org, axboe@kernel.dk,
+	linux-block@vger.kernel.org, linux-trace-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH 0/8] xfs: single block atomic writes for buffered IO
+Message-ID: <aRUCqA_UpRftbgce@dread.disaster.area>
+References: <cover.1762945505.git.ojaswin@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cover.1762945505.git.ojaswin@linux.ibm.com>
 
-Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
-the unmap write zeroes operation.
+On Wed, Nov 12, 2025 at 04:36:03PM +0530, Ojaswin Mujoo wrote:
+> This patch adds support to perform single block RWF_ATOMIC writes for
+> iomap xfs buffered IO. This builds upon the inital RFC shared by John
+> Garry last year [1]. Most of the details are present in the respective 
+> commit messages but I'd mention some of the design points below:
 
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
----
-v4 changes:
-	check if xfs_is_always_cow_inode
-	rename flags -> bmapi_flags
-	note about XFS_BMAPI_ZERO can cause software zeroing 
+What is the use case for this functionality? i.e. what is the
+reason for adding all this complexity?
 
- fs/xfs/xfs_bmap_util.c | 10 ++++++++--
- fs/xfs/xfs_bmap_util.h |  2 +-
- fs/xfs/xfs_file.c      | 25 +++++++++++++++++++------
- 3 files changed, 28 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 06ca11731e430..ced34ce4597b4 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -642,11 +642,17 @@ xfs_free_eofblocks(
- 	return error;
- }
- 
-+/*
-+ * Callers can specify bmapi_flags, if XFS_BMAPI_ZERO is used
-+ * there are no further checks whether the hardware supports it
-+ * and it can fallback to software zeroing.
-+ */
- int
- xfs_alloc_file_space(
- 	struct xfs_inode	*ip,
- 	xfs_off_t		offset,
--	xfs_off_t		len)
-+	xfs_off_t		len,
-+	uint32_t		bmapi_flags)
- {
- 	xfs_mount_t		*mp = ip->i_mount;
- 	xfs_off_t		count;
-@@ -748,7 +754,7 @@ xfs_alloc_file_space(
- 		 * will eventually reach the requested range.
- 		 */
- 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
--				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
-+				allocatesize_fsb, bmapi_flags, 0, imapp,
- 				&nimaps);
- 		if (error) {
- 			if (error != -ENOSR)
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index c477b33616304..2895cc97a5728 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -56,7 +56,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- 
- /* preallocation and hole punch interface */
- int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
--		xfs_off_t len);
-+		xfs_off_t len, uint32_t bmapi_flags);
- int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
- int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f96fbf5c54c99..d52db0d7af8ff 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1261,23 +1261,33 @@ xfs_falloc_zero_range(
- 	struct xfs_zone_alloc_ctx *ac)
- {
- 	struct inode		*inode = file_inode(file);
-+	struct xfs_inode	*ip = XFS_I(inode);
- 	unsigned int		blksize = i_blocksize(inode);
- 	loff_t			new_size = 0;
- 	int			error;
- 
--	trace_xfs_zero_file_space(XFS_I(inode));
-+	trace_xfs_zero_file_space(ip);
- 
- 	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
- 	if (error)
- 		return error;
- 
--	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
-+	error = xfs_free_file_space(ip, offset, len, ac);
- 	if (error)
- 		return error;
- 
- 	len = round_up(offset + len, blksize) - round_down(offset, blksize);
- 	offset = round_down(offset, blksize);
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	if (mode & FALLOC_FL_WRITE_ZEROES) {
-+		if (xfs_is_always_cow_inode(ip) ||
-+				!bdev_write_zeroes_unmap_sectors(
-+				xfs_inode_buftarg(ip)->bt_bdev))
-+			return -EOPNOTSUPP;
-+		error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_ZERO);
-+	} else {
-+		error = xfs_alloc_file_space(ip, offset, len,
-+				XFS_BMAPI_PREALLOC);
-+	}
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1302,7 +1312,8 @@ xfs_falloc_unshare_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
-+			XFS_BMAPI_PREALLOC);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1330,7 +1341,8 @@ xfs_falloc_allocate_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
-+			XFS_BMAPI_PREALLOC);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1340,7 +1352,7 @@ xfs_falloc_allocate_range(
- 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
- 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
- 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
--		 FALLOC_FL_UNSHARE_RANGE)
-+		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
- 
- STATIC long
- __xfs_file_fallocate(
-@@ -1383,6 +1395,7 @@ __xfs_file_fallocate(
- 	case FALLOC_FL_INSERT_RANGE:
- 		error = xfs_falloc_insert_range(file, offset, len);
- 		break;
-+	case FALLOC_FL_WRITE_ZEROES:
- 	case FALLOC_FL_ZERO_RANGE:
- 		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
- 		break;
+-Dave.
 -- 
-2.51.1
-
+Dave Chinner
+david@fromorbit.com
