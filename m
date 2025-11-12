@@ -1,206 +1,183 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59D7B2C11E6
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 20:26:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 868C221CC62
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 21:16:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762979171; cv=none; b=SjmTrl4eVaG1IyH6QGQIs5oN53HTtNJeoSeOWpOvSPjTDxnt/ebYOMg7ljnG8pnWldxhTnkvxx/i3uy9rRILNpRTh1zUsjzVDSIMwQtgybKFDw4TtBlBPF8TrATXZG5nKWpJF5hiDEkCximOJ232jupFJuPUoh64NaHZJJAFckE=
+	t=1762982180; cv=none; b=Y7tqfSZMIiwrtWODg5cvLLj2uAmJfsVJaTaVm6Glj6zI+emJpLkHA7Xpa270wtzEbMdtdef82+/bFl7/8pXTz1RbYWDXwLDCK4aJwUkDjkH2Cl3SwxGR44MWbzffExC9HztcDQ8YaozRO6xEIf/fmFOtzXkGS4tebAH/WLytuE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762979171; c=relaxed/simple;
-	bh=v0SjqgH+YG1sZwa5Ba9D/5N785IsWxSnZX1SoUdFBt0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CvCjnFtN/EbrzwIArr39+Ev2X48CSHAkuy3YJVVQbYVozDn4+UT2FdNsA2iJ/UEurNY0kTogA6NwigcDjW4HOrgQ1CZIyV5Vaouf1yUxt22Un1w7NyIttzAuZ52JS88k5v1587Jcrel1T4LtorKNkWiPhXUgQIv/s6b/+qR1M+0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=SWM6oR4h; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=aGBVgf1Z; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=yec9KDRU; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=DznqdpZs; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="SWM6oR4h";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="aGBVgf1Z";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="yec9KDRU";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="DznqdpZs"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id F0EC121A92;
-	Wed, 12 Nov 2025 20:26:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1762979167; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rpekitoZ7m8MJi0nsXMgz3mH/y4dzIu7lcdTuhiD7lY=;
-	b=SWM6oR4hgrZr2R3OORKUVgAdf+s+gFirgoqywGOMhcwMMkwmMudRcGQ1ZcCDg8O2P1UAUw
-	uAWjKgctCLMA46+tK6vb44Ak+w/fdHFHGYLlnqq612d/+zmPLEsEyvSFurX4oRJHTbVD62
-	2d448tJ/171d73xvgn3lWq2AGPeAja4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1762979167;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rpekitoZ7m8MJi0nsXMgz3mH/y4dzIu7lcdTuhiD7lY=;
-	b=aGBVgf1ZRjqxtPWVwXXp7cDBo29ZypYxozmaCN8KpYsXlymY9FYNNUuXw7T2IlSxLmPp6R
-	nMPnlUP8SJFiXFBg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=yec9KDRU;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=DznqdpZs
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1762979166; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rpekitoZ7m8MJi0nsXMgz3mH/y4dzIu7lcdTuhiD7lY=;
-	b=yec9KDRUiK3W8Xf7v6mu2j26/AnJmD+obOjGqpMvbom+vVt/fP0nrqc7R6LV6a5PwjX3Wr
-	12s34mKqO3nOfAsDKHIFsyOt2jmrIJj59MV89scLdDRJ5uu6L+IsmDHQNN9MkeQr6TJNM8
-	ouECsT7WpUpOdRlHs0KnK5mB0eSbu08=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1762979166;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rpekitoZ7m8MJi0nsXMgz3mH/y4dzIu7lcdTuhiD7lY=;
-	b=DznqdpZsawoQbn5lI8+e3l+2vCod2Sv8nk3K1d0ESqERHzmkn2dXbiNyjqROz7nlLprWmk
-	/1an6zKkG2GTjzAQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E2F103EA61;
-	Wed, 12 Nov 2025 20:26:06 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id w+r/Nl7tFGn7EQAAD6G6ig
-	(envelope-from <jack@suse.cz>); Wed, 12 Nov 2025 20:26:06 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 7CE24A06F7; Wed, 12 Nov 2025 21:25:58 +0100 (CET)
-Date: Wed, 12 Nov 2025 21:25:58 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Jens Axboe <axboe@kernel.dk>, Avi Kivity <avi@scylladb.com>, 
-	Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>, 
-	Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	io-uring@vger.kernel.org
-Subject: Re: [PATCH 4/5] iomap: support write completions from interrupt
- context
-Message-ID: <nujtqnweb7jfbyk4ov3a7z5tdtl24xljntzbpecgv6l7aoeytd@nkxsilt6w7d3>
-References: <20251112072214.844816-1-hch@lst.de>
- <20251112072214.844816-5-hch@lst.de>
+	s=arc-20240116; t=1762982180; c=relaxed/simple;
+	bh=MyzdmlsVzDUM+ctSvyrsY4+hd/A66UIPWx9xoD1XWmw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=E12dsvTS9p7QBGAqhNEYs/LCgbYW2RcprpQQ/Zco0rtkykXv1M56dYMdjN1XcNYLR3BEfWuprzOn0s9mE8y0L01npq5kdNmrzvUrc9rNul15ifLd/uuJZRf6z3W+dt0dmjWJIZRYUD1FI6oRC7x4z0QQVFQVypxqNOx9pZ4Ywyg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
+Received: from mx0.herbolt.com (localhost [127.0.0.1])
+	by mx0.herbolt.com (Postfix) with ESMTP id 60D61180F2C0;
+	Wed, 12 Nov 2025 22:07:24 +0100 (CET)
+Received: from trufa.intra.herbolt.com.herbolt.com ([172.168.31.30])
+	by mx0.herbolt.com with ESMTPSA
+	id yZu5DAz3FGnUDDMAKEJqOA
+	(envelope-from <lukas@herbolt.com>); Wed, 12 Nov 2025 22:07:24 +0100
+From: Lukas Herbolt <lukas@herbolt.com>
+To: hch@infradead.org,
+	djwong@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	Lukas Herbolt <lukas@herbolt.com>
+Subject: [PATCH v4] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+Date: Wed, 12 Nov 2025 22:02:45 +0100
+Message-ID: <20251112210244.1377664-2-lukas@herbolt.com>
+X-Mailer: git-send-email 2.51.1
+In-Reply-To: <aQMTYZTZIA2LF4h0@infradead.org>
+References: <aQMTYZTZIA2LF4h0@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251112072214.844816-5-hch@lst.de>
-X-Rspamd-Queue-Id: F0EC121A92
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-0.999];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	ARC_NA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCPT_COUNT_TWELVE(0.00)[13];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.com:email];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_TLS_LAST(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+]
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spam-Score: -4.01
-X-Spam-Level: 
+Content-Transfer-Encoding: 8bit
 
-On Wed 12-11-25 08:21:28, Christoph Hellwig wrote:
-> Completions for pure overwrites don't need to be deferred to a workqueue
-> as there is no work to be done, or at least no work that needs a user
-> context.  Set the IOMAP_DIO_INLINE_COMP by default for writes like we
-> already do for reads, and the clear it for all the cases that actually
-> do need a user context for completions to update the inode size or
-> record updates to the logical to physical mapping.
-> 
-> I've audited all users of the ->end_io callback, and they only require
-> user context for I/O that involves unwritten extents, COW, size
-> extensions, or error handling and all those are still run from workqueue
-> context.
-> 
-> This restores the behavior of the old pre-iomap direct I/O code.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-...
-> @@ -365,6 +374,16 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  			else
->  				dio->flags &= ~IOMAP_DIO_WRITE_THROUGH;
->  		}
-> +
-> +		/*
-> +		 * We can only do inline completion for pure overwrites that
-> +		 * don't require additional I/O at completion time.
-> +		 *
-> +		 * This rules out writes that need zeroing or extent conversion,
-> +		 * or extend the file size.
-> +		 */
-> +		if (!iomap_dio_is_overwrite(iomap))
-> +			dio->flags &= ~IOMAP_DIO_INLINE_COMP;
->  	} else {
->  		bio_opf |= REQ_OP_READ;
->  	}
+Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
+the unmap write zeroes operation.
 
-OK, now I see why you wrote iomap_dio_is_overwrite() the way you did. You
-still want to keep completions inline for overwrites of possibly
-uncommitted extents. But I have to admit it all seems somewhat fragile and
-difficult to follow. Can't we just check for IOMAP_DIO_UNWRITTEN |
-IOMAP_DIO_COW | IOMAP_DIO_NEED_SYNC in flags (plus the i_size check) and be
-done with it?
+Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+---
+v4 changes:
+	check if xfs_is_always_cow_inode
+	rename flags -> bmapi_flags
+	note about XFS_BMAPI_ZERO can cause software zeroing 
 
-								Honza
+ fs/xfs/xfs_bmap_util.c | 10 ++++++++--
+ fs/xfs/xfs_bmap_util.h |  2 +-
+ fs/xfs/xfs_file.c      | 25 +++++++++++++++++++------
+ 3 files changed, 28 insertions(+), 9 deletions(-)
 
-> @@ -669,6 +691,12 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  				dio->flags |= IOMAP_DIO_WRITE_THROUGH;
->  		}
->  
-> +		/*
-> +		 * Inode size updates must to happen from process context.
-> +		 */
-> +		if (iomi.pos + iomi.len > dio->i_size)
-> +			dio->flags &= ~IOMAP_DIO_INLINE_COMP;
-> +
->  		/*
->  		 * Try to invalidate cache pages for the range we are writing.
->  		 * If this invalidation fails, let the caller fall back to
-> @@ -741,9 +769,14 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	 * If all the writes we issued were already written through to the
->  	 * media, we don't need to flush the cache on IO completion. Clear the
->  	 * sync flag for this case.
-> +	 *
-> +	 * Otherwise clear the inline completion flag if any sync work is
-> +	 * needed, as that needs to be performed from process context.
->  	 */
->  	if (dio->flags & IOMAP_DIO_WRITE_THROUGH)
->  		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
-> +	else if (dio->flags & IOMAP_DIO_NEED_SYNC)
-> +		dio->flags &= ~IOMAP_DIO_INLINE_COMP;
->  
->  	/*
->  	 * We are about to drop our additional submission reference, which
-> -- 
-> 2.47.3
-> 
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 06ca11731e430..ced34ce4597b4 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -642,11 +642,17 @@ xfs_free_eofblocks(
+ 	return error;
+ }
+ 
++/*
++ * Callers can specify bmapi_flags, if XFS_BMAPI_ZERO is used
++ * there are no further checks whether the hardware supports it
++ * and it can fallback to software zeroing.
++ */
+ int
+ xfs_alloc_file_space(
+ 	struct xfs_inode	*ip,
+ 	xfs_off_t		offset,
+-	xfs_off_t		len)
++	xfs_off_t		len,
++	uint32_t		bmapi_flags)
+ {
+ 	xfs_mount_t		*mp = ip->i_mount;
+ 	xfs_off_t		count;
+@@ -748,7 +754,7 @@ xfs_alloc_file_space(
+ 		 * will eventually reach the requested range.
+ 		 */
+ 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+-				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
++				allocatesize_fsb, bmapi_flags, 0, imapp,
+ 				&nimaps);
+ 		if (error) {
+ 			if (error != -ENOSR)
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index c477b33616304..2895cc97a5728 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -56,7 +56,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+ 
+ /* preallocation and hole punch interface */
+ int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
+-		xfs_off_t len);
++		xfs_off_t len, uint32_t bmapi_flags);
+ int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
+ int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index f96fbf5c54c99..d52db0d7af8ff 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1261,23 +1261,33 @@ xfs_falloc_zero_range(
+ 	struct xfs_zone_alloc_ctx *ac)
+ {
+ 	struct inode		*inode = file_inode(file);
++	struct xfs_inode	*ip = XFS_I(inode);
+ 	unsigned int		blksize = i_blocksize(inode);
+ 	loff_t			new_size = 0;
+ 	int			error;
+ 
+-	trace_xfs_zero_file_space(XFS_I(inode));
++	trace_xfs_zero_file_space(ip);
+ 
+ 	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
++	error = xfs_free_file_space(ip, offset, len, ac);
+ 	if (error)
+ 		return error;
+ 
+ 	len = round_up(offset + len, blksize) - round_down(offset, blksize);
+ 	offset = round_down(offset, blksize);
+-	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
++	if (mode & FALLOC_FL_WRITE_ZEROES) {
++		if (xfs_is_always_cow_inode(ip) ||
++				!bdev_write_zeroes_unmap_sectors(
++				xfs_inode_buftarg(ip)->bt_bdev))
++			return -EOPNOTSUPP;
++		error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_ZERO);
++	} else {
++		error = xfs_alloc_file_space(ip, offset, len,
++				XFS_BMAPI_PREALLOC);
++	}
+ 	if (error)
+ 		return error;
+ 	return xfs_falloc_setsize(file, new_size);
+@@ -1302,7 +1312,8 @@ xfs_falloc_unshare_range(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
++	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
++			XFS_BMAPI_PREALLOC);
+ 	if (error)
+ 		return error;
+ 	return xfs_falloc_setsize(file, new_size);
+@@ -1330,7 +1341,8 @@ xfs_falloc_allocate_range(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
++	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
++			XFS_BMAPI_PREALLOC);
+ 	if (error)
+ 		return error;
+ 	return xfs_falloc_setsize(file, new_size);
+@@ -1340,7 +1352,7 @@ xfs_falloc_allocate_range(
+ 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
+ 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
+ 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
+-		 FALLOC_FL_UNSHARE_RANGE)
++		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
+ 
+ STATIC long
+ __xfs_file_fallocate(
+@@ -1383,6 +1395,7 @@ __xfs_file_fallocate(
+ 	case FALLOC_FL_INSERT_RANGE:
+ 		error = xfs_falloc_insert_range(file, offset, len);
+ 		break;
++	case FALLOC_FL_WRITE_ZEROES:
+ 	case FALLOC_FL_ZERO_RANGE:
+ 		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
+ 		break;
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.51.1
+
