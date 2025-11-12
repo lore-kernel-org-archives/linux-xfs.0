@@ -1,77 +1,78 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 518DB27703E
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 20:07:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59D7B2C11E6
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 20:26:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762978045; cv=none; b=BdAdtLq8MDU/jsqiX5vqc99e9ozLOf1l+B+mCYIjXvb8rkz3PxofIeXVPyKqUYL2SJ6V1MCESG8fUWVisZls40QgxbeWhc90W+E9howxVdzrTM/m/iaPoMZYIIOgYmeCb/AhuAX2df7mtr7iIgco8PTHlF8yDqkenklXpkD0YyE=
+	t=1762979171; cv=none; b=SjmTrl4eVaG1IyH6QGQIs5oN53HTtNJeoSeOWpOvSPjTDxnt/ebYOMg7ljnG8pnWldxhTnkvxx/i3uy9rRILNpRTh1zUsjzVDSIMwQtgybKFDw4TtBlBPF8TrATXZG5nKWpJF5hiDEkCximOJ232jupFJuPUoh64NaHZJJAFckE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762978045; c=relaxed/simple;
-	bh=OyELlum8rnqP+3OWIJjw1GtiA9eHW7s/L24OaJS7nxs=;
+	s=arc-20240116; t=1762979171; c=relaxed/simple;
+	bh=v0SjqgH+YG1sZwa5Ba9D/5N785IsWxSnZX1SoUdFBt0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N+JRT5XUU8qHnEUmzF/rgH+8zsgAhfwiBwgHR8CaoFbDFTVhmPlETXpsZOwt0uuZ6UFITtguQdSkeCuj/vlJjIDAWZXDtDEC53yo9H6M33E1kqFTqVlQOChv0NOkpAHmK9aRMvqbLtlnSDCI/Fg46IrUc4tq2HVEQEqnErd0638=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=zLA86m9v; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=BgGUfkMh; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=zLA86m9v; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=BgGUfkMh; arc=none smtp.client-ip=195.135.223.131
+	 Content-Type:Content-Disposition:In-Reply-To; b=CvCjnFtN/EbrzwIArr39+Ev2X48CSHAkuy3YJVVQbYVozDn4+UT2FdNsA2iJ/UEurNY0kTogA6NwigcDjW4HOrgQ1CZIyV5Vaouf1yUxt22Un1w7NyIttzAuZ52JS88k5v1587Jcrel1T4LtorKNkWiPhXUgQIv/s6b/+qR1M+0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=SWM6oR4h; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=aGBVgf1Z; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=yec9KDRU; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=DznqdpZs; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="zLA86m9v";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="BgGUfkMh";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="zLA86m9v";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="BgGUfkMh"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="SWM6oR4h";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="aGBVgf1Z";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="yec9KDRU";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="DznqdpZs"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 246EC1F798;
-	Wed, 12 Nov 2025 20:07:21 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id F0EC121A92;
+	Wed, 12 Nov 2025 20:26:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1762978041; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1762979167; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=qtZw85MEtkqlQI5Jqgm3WsmuZxCe+UQOLkKFFKSJNHw=;
-	b=zLA86m9vA+DqfF3fjr7WVhDUYklfGbcNvP9B699k8OGr+3A2Iy1QuoRrlwDB1Pi7uf2w3b
-	0QNS1Arh8sHXf1PzFuxHGQHMewTZINw8eTXdoEuKuvhLrrpEEsHpPS1FJWyO7taVgFC/kt
-	v7JM6TNGoNoEzzIVRzkgM7nJtMasOxk=
+	bh=rpekitoZ7m8MJi0nsXMgz3mH/y4dzIu7lcdTuhiD7lY=;
+	b=SWM6oR4hgrZr2R3OORKUVgAdf+s+gFirgoqywGOMhcwMMkwmMudRcGQ1ZcCDg8O2P1UAUw
+	uAWjKgctCLMA46+tK6vb44Ak+w/fdHFHGYLlnqq612d/+zmPLEsEyvSFurX4oRJHTbVD62
+	2d448tJ/171d73xvgn3lWq2AGPeAja4=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1762978041;
+	s=susede2_ed25519; t=1762979167;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=qtZw85MEtkqlQI5Jqgm3WsmuZxCe+UQOLkKFFKSJNHw=;
-	b=BgGUfkMh4Dk2tCUfEV4IfA8b6kH1xDx2y6LiF06j9VCWpNSDQwvAEf5Jmmj4vw2CMQD9px
-	T5Nop1wGp3ZzbpCg==
-Authentication-Results: smtp-out2.suse.de;
-	none
+	bh=rpekitoZ7m8MJi0nsXMgz3mH/y4dzIu7lcdTuhiD7lY=;
+	b=aGBVgf1ZRjqxtPWVwXXp7cDBo29ZypYxozmaCN8KpYsXlymY9FYNNUuXw7T2IlSxLmPp6R
+	nMPnlUP8SJFiXFBg==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=yec9KDRU;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=DznqdpZs
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1762978041; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1762979166; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=qtZw85MEtkqlQI5Jqgm3WsmuZxCe+UQOLkKFFKSJNHw=;
-	b=zLA86m9vA+DqfF3fjr7WVhDUYklfGbcNvP9B699k8OGr+3A2Iy1QuoRrlwDB1Pi7uf2w3b
-	0QNS1Arh8sHXf1PzFuxHGQHMewTZINw8eTXdoEuKuvhLrrpEEsHpPS1FJWyO7taVgFC/kt
-	v7JM6TNGoNoEzzIVRzkgM7nJtMasOxk=
+	bh=rpekitoZ7m8MJi0nsXMgz3mH/y4dzIu7lcdTuhiD7lY=;
+	b=yec9KDRUiK3W8Xf7v6mu2j26/AnJmD+obOjGqpMvbom+vVt/fP0nrqc7R6LV6a5PwjX3Wr
+	12s34mKqO3nOfAsDKHIFsyOt2jmrIJj59MV89scLdDRJ5uu6L+IsmDHQNN9MkeQr6TJNM8
+	ouECsT7WpUpOdRlHs0KnK5mB0eSbu08=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1762978041;
+	s=susede2_ed25519; t=1762979166;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=qtZw85MEtkqlQI5Jqgm3WsmuZxCe+UQOLkKFFKSJNHw=;
-	b=BgGUfkMh4Dk2tCUfEV4IfA8b6kH1xDx2y6LiF06j9VCWpNSDQwvAEf5Jmmj4vw2CMQD9px
-	T5Nop1wGp3ZzbpCg==
+	bh=rpekitoZ7m8MJi0nsXMgz3mH/y4dzIu7lcdTuhiD7lY=;
+	b=DznqdpZsawoQbn5lI8+e3l+2vCod2Sv8nk3K1d0ESqERHzmkn2dXbiNyjqROz7nlLprWmk
+	/1an6zKkG2GTjzAQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 160D13EA61;
-	Wed, 12 Nov 2025 20:07:21 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E2F103EA61;
+	Wed, 12 Nov 2025 20:26:06 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id t8gdBfnoFGkCfwAAD6G6ig
-	(envelope-from <jack@suse.cz>); Wed, 12 Nov 2025 20:07:21 +0000
+	id w+r/Nl7tFGn7EQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Wed, 12 Nov 2025 20:26:06 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id C5F7BA06F7; Wed, 12 Nov 2025 21:07:20 +0100 (CET)
-Date: Wed, 12 Nov 2025 21:07:20 +0100
+	id 7CE24A06F7; Wed, 12 Nov 2025 21:25:58 +0100 (CET)
+Date: Wed, 12 Nov 2025 21:25:58 +0100
 From: Jan Kara <jack@suse.cz>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Christian Brauner <brauner@kernel.org>, 
@@ -80,10 +81,11 @@ Cc: Christian Brauner <brauner@kernel.org>,
 	Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>, 
 	Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
 	io-uring@vger.kernel.org
-Subject: Re: [PATCH 3/5] iomap: rework REQ_FUA selection
-Message-ID: <7ew6yrzcgv7v6ckhmw4oxw7bjx37n4dabzdlbbs6gpowcph2yk@4qaombbiigik>
+Subject: Re: [PATCH 4/5] iomap: support write completions from interrupt
+ context
+Message-ID: <nujtqnweb7jfbyk4ov3a7z5tdtl24xljntzbpecgv6l7aoeytd@nkxsilt6w7d3>
 References: <20251112072214.844816-1-hch@lst.de>
- <20251112072214.844816-4-hch@lst.de>
+ <20251112072214.844816-5-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -92,96 +94,110 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251112072214.844816-4-hch@lst.de>
-X-Spam-Level: 
-X-Spamd-Result: default: False [-3.80 / 50.00];
+In-Reply-To: <20251112072214.844816-5-hch@lst.de>
+X-Rspamd-Queue-Id: F0EC121A92
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.01 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
 	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
 	MIME_GOOD(-0.10)[text/plain];
-	MISSING_XM_UA(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	MIME_TRACE(0.00)[0:+];
+	MX_GOOD(-0.01)[];
 	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[13];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
+	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCPT_COUNT_TWELVE(0.00)[13];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.com:email];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
 	TO_DN_SOME(0.00)[];
 	FROM_EQ_ENVFROM(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
 	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
 	RCVD_TLS_LAST(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.cz:email,lst.de:email]
+	DKIM_TRACE(0.00)[suse.cz:+]
+X-Rspamd-Action: no action
 X-Spam-Flag: NO
-X-Spam-Score: -3.80
+X-Spam-Score: -4.01
+X-Spam-Level: 
 
-On Wed 12-11-25 08:21:27, Christoph Hellwig wrote:
-> The way how iomap_dio_can_use_fua and the caller is structured is
-> a bit confusing, as the main guarding condition is hidden in the
-> helper, and the secondary conditions are split between caller and
-> callee.
+On Wed 12-11-25 08:21:28, Christoph Hellwig wrote:
+> Completions for pure overwrites don't need to be deferred to a workqueue
+> as there is no work to be done, or at least no work that needs a user
+> context.  Set the IOMAP_DIO_INLINE_COMP by default for writes like we
+> already do for reads, and the clear it for all the cases that actually
+> do need a user context for completions to update the inode size or
+> record updates to the logical to physical mapping.
 > 
-> Refactor the code, so that there is a main IOMAP_DIO_WRITE_THROUGH
-> guard in iomap_dio_bio_iter, which is directly tied to clearing it
-> when not supported, and a helper that just checks if the I/O is a
-> pure overwrite.
+> I've audited all users of the ->end_io callback, and they only require
+> user context for I/O that involves unwritten extents, COW, size
+> extensions, or error handling and all those are still run from workqueue
+> context.
+> 
+> This restores the behavior of the old pre-iomap direct I/O code.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-One nit below but feel free to add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-> -static inline bool iomap_dio_can_use_fua(const struct iomap *iomap,
-> -		struct iomap_dio *dio)
-> +static inline bool iomap_dio_is_overwrite(const struct iomap *iomap)
->  {
-> -	if (iomap->flags & (IOMAP_F_SHARED | IOMAP_F_DIRTY))
-> +	if (iomap->type != IOMAP_MAPPED)
->  		return false;
-> -	if (!(dio->flags & IOMAP_DIO_WRITE_THROUGH))
-> -		return false;
-> -	return !bdev_write_cache(iomap->bdev) || bdev_fua(iomap->bdev);
-> +	return !(iomap->flags & (IOMAP_F_NEW | IOMAP_F_SHARED));
->  }
-
-I'm a bit puzzled why did you leave IOMAP_F_DIRTY check in the caller.
-Because that means we need metadata update to make the extent stable as the
-comment before this function states...
-
-								Honza
-
->  static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
-> @@ -355,12 +349,22 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
->  
->  		if (iomap->flags & IOMAP_F_NEW)
->  			need_zeroout = true;
-> -		else if (iomap->type == IOMAP_MAPPED &&
-> -			 iomap_dio_can_use_fua(iomap, dio))
-> -			bio_opf |= REQ_FUA;
->  
-> -		if (!(bio_opf & REQ_FUA))
-> -			dio->flags &= ~IOMAP_DIO_WRITE_THROUGH;
+...
+> @@ -365,6 +374,16 @@ static int iomap_dio_bio_iter(struct iomap_iter *iter, struct iomap_dio *dio)
+>  			else
+>  				dio->flags &= ~IOMAP_DIO_WRITE_THROUGH;
+>  		}
+> +
 > +		/*
-> +		 * Use a FUA write if we need datasync semantics and this is a
-> +		 * pure overwrite that doesn't require any metadata updates.
+> +		 * We can only do inline completion for pure overwrites that
+> +		 * don't require additional I/O at completion time.
 > +		 *
-> +		 * This allows us to avoid cache flushes on I/O completion.
+> +		 * This rules out writes that need zeroing or extent conversion,
+> +		 * or extend the file size.
 > +		 */
-> +		if (dio->flags & IOMAP_DIO_WRITE_THROUGH) {
-> +			if (iomap_dio_is_overwrite(iomap) &&
-> +			    !(iomap->flags & IOMAP_F_DIRTY) &&
-> +			    (!bdev_write_cache(iomap->bdev) ||
-> +			     bdev_fua(iomap->bdev)))
-> +				bio_opf |= REQ_FUA;
-> +			else
-> +				dio->flags &= ~IOMAP_DIO_WRITE_THROUGH;
-> +		}
+> +		if (!iomap_dio_is_overwrite(iomap))
+> +			dio->flags &= ~IOMAP_DIO_INLINE_COMP;
 >  	} else {
 >  		bio_opf |= REQ_OP_READ;
 >  	}
+
+OK, now I see why you wrote iomap_dio_is_overwrite() the way you did. You
+still want to keep completions inline for overwrites of possibly
+uncommitted extents. But I have to admit it all seems somewhat fragile and
+difficult to follow. Can't we just check for IOMAP_DIO_UNWRITTEN |
+IOMAP_DIO_COW | IOMAP_DIO_NEED_SYNC in flags (plus the i_size check) and be
+done with it?
+
+								Honza
+
+> @@ -669,6 +691,12 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  				dio->flags |= IOMAP_DIO_WRITE_THROUGH;
+>  		}
+>  
+> +		/*
+> +		 * Inode size updates must to happen from process context.
+> +		 */
+> +		if (iomi.pos + iomi.len > dio->i_size)
+> +			dio->flags &= ~IOMAP_DIO_INLINE_COMP;
+> +
+>  		/*
+>  		 * Try to invalidate cache pages for the range we are writing.
+>  		 * If this invalidation fails, let the caller fall back to
+> @@ -741,9 +769,14 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  	 * If all the writes we issued were already written through to the
+>  	 * media, we don't need to flush the cache on IO completion. Clear the
+>  	 * sync flag for this case.
+> +	 *
+> +	 * Otherwise clear the inline completion flag if any sync work is
+> +	 * needed, as that needs to be performed from process context.
+>  	 */
+>  	if (dio->flags & IOMAP_DIO_WRITE_THROUGH)
+>  		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
+> +	else if (dio->flags & IOMAP_DIO_NEED_SYNC)
+> +		dio->flags &= ~IOMAP_DIO_INLINE_COMP;
+>  
+>  	/*
+>  	 * We are about to drop our additional submission reference, which
 > -- 
 > 2.47.3
 > 
