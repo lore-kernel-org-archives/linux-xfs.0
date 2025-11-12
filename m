@@ -1,129 +1,96 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C663E324B2A
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 12:15:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2784232D44B
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 12:31:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762949740; cv=none; b=bfJB7vulkOA/kX5ahQXf4wAZlyy3gQ1uTzK6O7dqm2NMOj60cgyggrjG7o4VsUYX49Fl/TjGqMW6m3ISSZ+9GAqo/fc3SCTL12R4ynNfdxR0FZ49k44Q/VVbPEIWkITfSLXVOxk7x3YnOG3YPAgXYZHZ5MsAVAhHgPe5x2hn18U=
+	t=1762950672; cv=none; b=DQilHp9eEYfgwGNZ1zxU00bCnlvt5rfOey9d0M0TPpPwFB0o0tGvr11wG8WYsyR4f6rDD1hdE+37MOWR9YvfGUm1Ju/h+DuOHVlK0qRZikAWjbCLM8IGakEYLDHDFr6As8REyRugPtg398e2Y1Pq25WdlqA8YpCyBXbvhL44gQQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762949740; c=relaxed/simple;
-	bh=6efgM+wT+biG1zTBe25CCFnAXnkdECbbzI02xyYZBdI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fJtY3tTQcRIsyRr5Ufbbaumgw/x5zMhiBpEfzl9m0OlGmKv0SfUVngdd4EYhW0uNgPzLajmRZ7nUt0oRmrVlWI55nCiRTKgsG8m/lCq/8hEs1RTG09iXfHSXWNL7+LlNJU2mTQc8u1Rpdj/gt7WuWdWJMjvRfsu02iMFeGF+Zpc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=i9nqdLjv; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1762950672; c=relaxed/simple;
+	bh=fBzCD+S/Q0bhMTu6DGyQLbBifn1yv9AM3vZyc2Ua55E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rkL0HuiHVgMVcTiJEXq9dBNMIxeqXMkMrKYXGpwRns9NsJbx8V4YYqAXnw/Gt1mAKuYnV2g9U+17W7uD2El/m4aIVKUOTIl5t+ixIHYJc1nusCSwR7M+h/y4HjJAhJMaz3w7fm04MhDTx6Jkl+Smo/5j0bW7Zr8kJfnacWblnmE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DxyMBHOe; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="i9nqdLjv"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=Qpb2GMPfZHPcNr3yTZbFaOzfWS/m2F75aTqevSQ+CV4=; b=i9nqdLjvLkxno4sXeGHZoIANPc
-	AIsystAEafqcEjYrcK4KofRVPdvKDv7OmV0vf08rbaVWWJmVIGuLteW66U8yLJsHYiJqe9zQs8zv/
-	i31ov47O0xNIdjHShLKLwYlpXtnxsfseFpzBb5MWw1wGP69xkewwwyoJDvMARKUkxub65aIp5gxXI
-	pLnJMPPaU6+iETKx80gS9l3oPX6UePD5TSezHMVkzLiyxozTbNz2To/4BZ2zWYzQR9BU5Q68ywacl
-	ms2XKBe9D9CV9D8um/O8r/fUjoDwFb9V2cXqh5qAliGISLhrVYRKqdBakLC5ICpuj2PmUIOOVtLlO
-	Cwyq0VKQ==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vJ9lB-00000008lEx-2pXQ;
-	Wed, 12 Nov 2025 12:15:38 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Carlos Maiolino <cem@kernel.org>
-Cc: linux-xfs@vger.kernel.org,
-	"Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH 10/10] xfs: factor out a xlog_write_space_advance helper
-Date: Wed, 12 Nov 2025 13:14:26 +0100
-Message-ID: <20251112121458.915383-11-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251112121458.915383-1-hch@lst.de>
-References: <20251112121458.915383-1-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DxyMBHOe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1762950667;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=D+pcmmtn0+D/t3JnLP0caZ+DUCoyUBZiXeEM0hM8S50=;
+	b=DxyMBHOeh2v/8x8jfQx+wO/9uyVoALF2pVDQ02pmCtm2YlP+kvrWVoG3JMEaDDz2VPyd/B
+	JSCqh8U9igEWVipGXlQkLAIdnfTnF93utpZ+3EpBcYfJlkhYc0F/smO9TIrGbZSgSWGNYD
+	OiN/xPfljrf0NpjKCs40ZsTzFW84HzQ=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-353-AOA8VDqUOg6zl-GQbw-s0A-1; Wed,
+ 12 Nov 2025 07:31:04 -0500
+X-MC-Unique: AOA8VDqUOg6zl-GQbw-s0A-1
+X-Mimecast-MFC-AGG-ID: AOA8VDqUOg6zl-GQbw-s0A_1762950663
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C94B919560B6;
+	Wed, 12 Nov 2025 12:31:02 +0000 (UTC)
+Received: from bfoster (unknown [10.22.64.29])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1109A1800451;
+	Wed, 12 Nov 2025 12:31:01 +0000 (UTC)
+Date: Wed, 12 Nov 2025 07:35:33 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] iomap: replace folio_batch allocation with stack
+ allocation
+Message-ID: <aRR_FdE96gzkskqP@bfoster>
+References: <20251111175047.321869-1-bfoster@redhat.com>
+ <aRRHzBlw6pc3cQjr@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aRRHzBlw6pc3cQjr@infradead.org>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Add a new xlog_write_space_advance that returns the current place in the
-iclog that data is written to, and advances the various counters by the
-amount taken from xlog_write_iovec, and also use it xlog_write_partial,
-which open codes the counter adjustments, but misses the asserts.
+On Wed, Nov 12, 2025 at 12:39:40AM -0800, Christoph Hellwig wrote:
+> On Tue, Nov 11, 2025 at 12:50:47PM -0500, Brian Foster wrote:
+> >  		if (imap.br_state == XFS_EXT_UNWRITTEN &&
+> >  		    offset_fsb < eof_fsb) {
+> > -			loff_t len = min(count,
+> > -					 XFS_FSB_TO_B(mp, imap.br_blockcount));
+> > +			loff_t foffset = offset, fend;
+> >  
+> > -			end = iomap_fill_dirty_folios(iter, offset, len);
+> > +			fend = offset +
+> > +			       min(count, XFS_FSB_TO_B(mp, imap.br_blockcount));
+> > +			iomap_flags |= iomap_fill_dirty_folios(iter, &foffset,
+> > +							       fend);
+> >  			end_fsb = min_t(xfs_fileoff_t, end_fsb,
+> > -					XFS_B_TO_FSB(mp, end));
+> > +					XFS_B_TO_FSB(mp, foffset));
+> 
+> Maybe it's just me, but I found the old calling convention a lot more
+> logic.  Why not keep it and extend it for passing the flags as an
+> in/out argument?  That would also keep the churn down a bit.
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
- fs/xfs/xfs_log.c | 32 ++++++++++++++++++++------------
- 1 file changed, 20 insertions(+), 12 deletions(-)
+Hmm.. well I never really loved the flag return (or the end return), but
+I wanted to make the iomap helper more consistent with the underlying
+filemap helper because I think that reduces unnecessary complexity. I
+suppose we could also make the flags an out param and either return void
+or just pass through the filemap helper return (i.e. folio count)...
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 8b8fdef6414d..511756429336 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1883,21 +1883,31 @@ static inline uint32_t xlog_write_space_left(struct xlog_write_data *data)
- 	return data->iclog->ic_size - data->log_offset;
- }
- 
-+static void *
-+xlog_write_space_advance(
-+	struct xlog_write_data	*data,
-+	unsigned int		len)
-+{
-+	void			*p = data->iclog->ic_datap + data->log_offset;
-+
-+	ASSERT(xlog_write_space_left(data) >= len);
-+	ASSERT(data->log_offset % sizeof(int32_t) == 0);
-+	ASSERT(len % sizeof(int32_t) == 0);
-+
-+	data->data_cnt += len;
-+	data->log_offset += len;
-+	data->bytes_left -= len;
-+	return p;
-+}
-+
- static inline void
- xlog_write_iovec(
- 	struct xlog_write_data	*data,
- 	void			*buf,
- 	uint32_t		buf_len)
- {
--	ASSERT(xlog_write_space_left(data) >= buf_len);
--	ASSERT(data->log_offset % sizeof(int32_t) == 0);
--	ASSERT(buf_len % sizeof(int32_t) == 0);
--
--	memcpy(data->iclog->ic_datap + data->log_offset, buf, buf_len);
--	data->log_offset += buf_len;
--	data->bytes_left -= buf_len;
-+	memcpy(xlog_write_space_advance(data, buf_len), buf, buf_len);
- 	data->record_cnt++;
--	data->data_cnt += buf_len;
- }
- 
- /*
-@@ -2038,7 +2048,8 @@ xlog_write_partial(
- 			if (error)
- 				return error;
- 
--			ophdr = data->iclog->ic_datap + data->log_offset;
-+			ophdr = xlog_write_space_advance(data,
-+					sizeof(struct xlog_op_header));
- 			ophdr->oh_tid = cpu_to_be32(data->ticket->t_tid);
- 			ophdr->oh_clientid = XFS_TRANSACTION;
- 			ophdr->oh_res2 = 0;
-@@ -2046,9 +2057,6 @@ xlog_write_partial(
- 
- 			data->ticket->t_curr_res -=
- 				sizeof(struct xlog_op_header);
--			data->log_offset += sizeof(struct xlog_op_header);
--			data->data_cnt += sizeof(struct xlog_op_header);
--			data->bytes_left -= sizeof(struct xlog_op_header);
- 
- 			/*
- 			 * If rlen fits in the iclog, then end the region
--- 
-2.47.3
+Brian
+
+> Otherwise the change looks good.
+> 
 
