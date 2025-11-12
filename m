@@ -1,136 +1,188 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from flow-a4-smtp.messagingengine.com (flow-a4-smtp.messagingengine.com [103.168.172.139])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDE1E2EA490
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 22:19:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 240B92D662F;
+	Wed, 12 Nov 2025 22:50:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762985995; cv=none; b=TqJ+7Am+o4El8LD0m1ntP8BSvadyTpgN/nyXRJ4gkRF5qTeRuKwzVL9TRNX3E1lhdl12YEv73yny+L4ZjoIMgDAI2YejFV2ON9sNOyL0ye+het5HMJWT2qI63H/XOGnlBfGVu++qtjHJJLHE7IJOmHyQUjnPUcnp7HNmIfZR4vg=
+	t=1762987851; cv=none; b=HD5Xal+Zr7lriij/G0bjyszNOGPePlRtVdhzrmLq8H3OW65U5IwIFmuYeYh2zHFQArQPpcEb1LdYcjc93Hq7/O5oV61h6uh+lNqvJyl1MG1nCG7ZoDEOy/mZPaZTKy2IC7jhrhYGxR6CrmcRLuoTb2UQWShXcHjRoI2tPi+YhFo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762985995; c=relaxed/simple;
-	bh=unLPp2rzYuoxWbtv89S5pYlQJKMZKA9scZeJBdGlmIA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bmGJrdU1BRfTYdUwtN9L4qLyHN7MzkereguYACNWy66yjG3Xiuf+j48Dzq6qAiWyxnOE+C3QCwrSDANv3dog6Kw/ihMwz/CdsjSRMgtN4hjfS7f0/At48wNoAkvhUJ/q6uxVGBjcaNRBjQCilHFhgH489aKz77REgf6jBGN918c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=h21Y62F3; arc=none smtp.client-ip=209.85.210.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1762987851; c=relaxed/simple;
+	bh=gk7jTwjg4YxTK3MshudwEyHBJmgG7UmOjt2m1+Hpy58=;
+	h=Content-Type:MIME-Version:From:To:Cc:Subject:In-reply-to:
+	 References:Date:Message-id; b=OFR7JHd88JXJxIrLb7TcuuQUsxn5OON07B63a3EzAWjkgZjr0aeBFKif2EA6r7JeuW3sgxakuroMtigzpEzXjyVGgbd7T1F0a4IrCKFe2CG0IaGO5gO0KA27SpThmk/ljpPNPnLH60Vop0rM847w9jErooqjvsxnLF5aj8pHxYQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net; spf=pass smtp.mailfrom=ownmail.net; dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b=jir4MDTS; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=BLfz97DO; arc=none smtp.client-ip=103.168.172.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ownmail.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ownmail.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="h21Y62F3"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-793021f348fso106291b3a.1
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 14:19:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1762985993; x=1763590793; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=4g6kCT4s+7bhT0JH0DcrOQKdbv70N4aP0FSpxYAN3OU=;
-        b=h21Y62F3TnPoT/SDuFCnWTWTVK5Uu/nh99+qyYrQ2kunM8H3u509FyAKpj73lkndQH
-         tcD1D5yGnsUcoaT6BWyoiT1P7BZg4j8nN7K8fdTEQo1lH39K24JREqRXeGjDNa3L7kf+
-         S8RftXpP6jMMUCNqY+2mPAE3ox3W7tASFudljD8jy849myNUfVE7SjDLx8VkTwdif+JH
-         hVG+Rf6l6YOpu77Gts5RgKvK61aqspAOSSfU1GpO2h2i9vTcDxgzu/iF6s2y5chQ9kkK
-         3JxczHuJL4+5nTJC+zhlkj50x1ZxiTZ2Gnng3MYlHCx8dwVEeBJmU53K7KHGLz3/UU64
-         Kl/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762985993; x=1763590793;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=4g6kCT4s+7bhT0JH0DcrOQKdbv70N4aP0FSpxYAN3OU=;
-        b=KEiyDFjAGSq9M8GwkZGUPKvpMPpR8yU8ahBWCZUVDSf6Mv6twRssTR9+pAJnZ7iHYA
-         ACKSseYOVG5Ht3hmBHAO4XBuZOwuNK9/Ah73nN5K3/RVb0huHG3dI6rIxml8d7hVpwa9
-         UtXVIX1peYx18KDVZfhhUBZGwX+oiAj/ChpXfmnAYJxn6N7YPNO0VuEaRXhzZ2jjhBoA
-         fe3kN8uUMGpvYgcenaqzXlMQ0i+/94bLQodEBmvyr1JK0DJE1ASRjOvMTaBoJ2uAMv//
-         j3b+YuVczysLFJ+dKshzVQKtgRGh+XmWEEIk+iYAYTtf4TJPPWpQhn0rMMrOX52iMOb9
-         QQWw==
-X-Forwarded-Encrypted: i=1; AJvYcCWxz06BeH8tCPHFftj5DEUK9TY2tqE6grN2WNz3M3DajuT10ouHH8hm4COpemC1qvd32LfBTN4l2zs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzxrvOWEsFDHP+Tj/hsC/U3xnYT3Tj3zrEj3Pw1pdI6qmhr87FL
-	7qtpiiYlV8ML3MpSskpoxhKHrmFz071/a6qVrOhdq1aepMrpVfVzeK9MEg/zjiZVn5M=
-X-Gm-Gg: ASbGncth1v+zDRtxkhvpZ03NycUA5xiTrVHJJrorW3ixvzyj9vRZBi8xphod7Upemod
-	rmNgzsUAao64QlFh4VzBX/T6p+3SsvLnC107bAYUuT+UjSOuYMiKr8y+EOdOa7x8P7Ynfh0I5zb
-	KPzK/4hJr1YVQMV5ZzYNvQOMT0KQVyFUSFL+lV39kCQVKbt6W3Mh/OjzOtZ4stzHt9KZWiw6doe
-	MtmpgCO+PIWaPNAPb98jf5pTqizUeVOaMHyLHuEdkKTQZ3Y6FM5iQIXuq7MERBckCGnl4TziWbU
-	ZoqX/LKQoIZhfjIFIdY4auDnbTCNSQB9knhxmoLEdsG4NqvhIfJIxebsimbF8uD4vvTFHTVQFEb
-	DTHcO+CPzDNc2obmyI/7rfcFzuN9p76E742I4PjyqDvzBUSllE6CPevFQ5uHtLxAg0nkHIiTW3W
-	HUgOWXNPZMqds96p+tP9IfiE/nQpFc8DTTkGNf7ve615/cY0kK6ko=
-X-Google-Smtp-Source: AGHT+IHAa8tCyfwo4LnzmXlglXEr2HrToLcPw7JFbhkznGZRRLapV1K3KjrEoN6EGIup6pNwE09Bkg==
-X-Received: by 2002:a05:6a00:992:b0:7ab:2fd6:5d42 with SMTP id d2e1a72fcca58-7b7a48f6387mr5692995b3a.16.1762985992953;
-        Wed, 12 Nov 2025 14:19:52 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-58-136.pa.nsw.optusnet.com.au. [49.181.58.136])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7b924aea005sm80341b3a.3.2025.11.12.14.19.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Nov 2025 14:19:52 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1vJJBu-00000009zUN-0VHA;
-	Thu, 13 Nov 2025 09:19:50 +1100
-Date: Thu, 13 Nov 2025 09:19:50 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Raphael Pinsonneault-Thibeault <rpthibeault@gmail.com>
-Cc: cem@kernel.org, djwong@kernel.org, chandanbabu@kernel.org,
-	bfoster@redhat.com, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linux.dev,
-	skhan@linuxfoundation.org,
-	syzbot+9f6d080dece587cfdd4c@syzkaller.appspotmail.com
-Subject: Re: [PATCH] xfs: ensure log recovery buffer is resized to avoid OOB
-Message-ID: <aRUIBj3ntHM1rcfo@dread.disaster.area>
-References: <20251112141032.2000891-3-rpthibeault@gmail.com>
+	dkim=pass (2048-bit key) header.d=ownmail.net header.i=@ownmail.net header.b="jir4MDTS";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="BLfz97DO"
+Received: from phl-compute-09.internal (phl-compute-09.internal [10.202.2.49])
+	by mailflow.phl.internal (Postfix) with ESMTP id 2988313806A6;
+	Wed, 12 Nov 2025 17:50:47 -0500 (EST)
+Received: from phl-mailfrontend-02 ([10.202.2.163])
+  by phl-compute-09.internal (MEProxy); Wed, 12 Nov 2025 17:50:47 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ownmail.net; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:reply-to:subject:subject:to:to; s=fm3; t=
+	1762987847; x=1762995047; bh=hNbQnRc+kFUP5bxPugl1ooBdBy11Z0986aY
+	SJmKRoLs=; b=jir4MDTSxsZfdM2IRl9MZbN0ALWiQls5PQ+nkklZ0+Odf25WN63
+	px+vcxmJZ/343yP0NnlBKVwK9UifM3DSBJDQPbAFUEV9RD5AqwZvUJdQhaLuTQmw
+	UMa/+H1qYZUQYbJ01k3iXjj+uLQe7TureLQBiP2RBEbTDpfefArurTdZIdbV79J/
+	VG9hoPkx4Re71SD1pdP5jdsU8c4x8Ezycn/VnUN5FCrl/jR70BlyL4zfNzJy/h3A
+	nfRtqg2lcQaFC5lamfb3UvooMox2B6ZgIGDv1YGF6LqG6+o9WobjyEhGWpJol2dM
+	OhU0GqkHlPpxdhVwG/7n3HoSAb6+icZzBmA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1762987847; x=
+	1762995047; bh=hNbQnRc+kFUP5bxPugl1ooBdBy11Z0986aYSJmKRoLs=; b=B
+	Lfz97DOs9f3pV8SMym55iFWtFF0Whk7qDnQ7uIoppMUeJlo6Z0wL/odbqfprJdGy
+	FnYb68xmGsmOb4bwylkvMw9b4omvIT1aH6A93ZOUtT4iIQDLLSTrgX0qy9L8EkJx
+	2zLSUyHXFGTj3nsbQOhT9OJZCobm3DukzPSXo2q4pi0NvwU8nF5h8OcA0NO+5+WA
+	0PEOnjwgyw2GICsat/bKQx5g2FiKE36lmJ2EeDP81tYbdF2UKae3j5A0ArfiPEkq
+	tRNKKiTUoVkBXzLbRPb+3CMC74viLl/0M55NkH+tCt3g9/mQCG6MbNsCmCzOGKZi
+	c2sokfrybzXBgGwQIO8xQ==
+X-ME-Sender: <xms:RQ8VafhhigNHwThNGgZL6VDUmCMzXzWdXCNwp2pF9cAfKCwuajl6KA>
+    <xme:RQ8VaRrwL2PAkM5MKDdTENePzo0MjHhfVHYDfATSpFFtRSDGrSBcOfJ_2gZsV_Bhk
+    uahMwsauI6qCdXkAeG549afc_l-kQDyx0JOK71rMbO5t_g8>
+X-ME-Received: <xmr:RQ8VaXJM8GaoDYtM7fK95Dxg6WkypMVogX_gysXAEdMyX14QpFP4ew9huDyHB4B5ld3mGurSzbtmUMvrPXcurN68ClN2Anzm-nOx7SrNsNiE>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdeggddvtdehfeduucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucenucfjughrpegtgfgghffvvefujghffffkrhesthhqre
+    dttddtjeenucfhrhhomheppfgvihhluehrohifnhcuoehnvghilhgssehofihnmhgrihhl
+    rdhnvghtqeenucggtffrrghtthgvrhhnpeffhefggfegfeefuddtvdektdekheduudeftd
+    dufefhgfetteffudehheffjeefgeenucffohhmrghinhepkhgvrhhnvghlrdhorhhgpdhs
+    hiiisghothdrohhrghenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrih
+    hlfhhrohhmpehnvghilhgssehofihnmhgrihhlrdhnvghtpdhnsggprhgtphhtthhopeeg
+    fedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepvhhirhhoseiivghnihhvrdhlih
+    hnuhigrdhorhhgrdhukhdprhgtphhtthhopehsvghlihhnuhigsehvghgvrhdrkhgvrhhn
+    vghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlh
+    drohhrghdprhgtphhtthhopehlihhnuhigqdhunhhiohhnfhhssehvghgvrhdrkhgvrhhn
+    vghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqshgvtghurhhithihqdhmohguuhhlvg
+    esvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhnfhhssehv
+    ghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlse
+    hvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqfhhsuggvvhgv
+    lhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdgtihhfsh
+    esvhhgvghrrdhkvghrnhgvlhdrohhrgh
+X-ME-Proxy: <xmx:RQ8VaU_TZlxPuvrWeAqkACaP2k8Al-3-wPUeHNBrUxdJjRalfLbJiQ>
+    <xmx:RQ8VabLvN9wKNh7vsrGQuPbdRitR6XBWPg0OYSH6a_8Jv-ozj0HwQA>
+    <xmx:RQ8VacyF-HUMepz3fbS9mezvCzbSlJV_E4Q-4rygphXSIubclEfTDQ>
+    <xmx:RQ8VaZQFjRq0rKiXJyTmjlzTiI1hgqKgTB2deemjEUNcNAYbcMDMYQ>
+    <xmx:Rw8VaRng3xIxkUPzVLT2SQWh71AIXEEteEsvxx4LCf38ADBus3t6KOp1>
+Feedback-ID: iab3e480c:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 12 Nov 2025 17:50:34 -0500 (EST)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251112141032.2000891-3-rpthibeault@gmail.com>
+From: NeilBrown <neilb@ownmail.net>
+To: "syzbot ci" <syzbot+ci853f3070c3383748@syzkaller.appspotmail.com>
+Cc: amir73il@gmail.com, brauner@kernel.org, cem@kernel.org,
+ chuck.lever@oracle.com, clm@fb.com, code@tyhicks.com, dai.ngo@oracle.com,
+ dakr@kernel.org, dhowells@redhat.com, djwong@kernel.org,
+ dsterba@suse.com, ecryptfs@vger.kernel.org, gregkh@linuxfoundation.org,
+ jack@suse.cz, jlayton@kernel.org, jmorris@namei.org,
+ john.johansen@canonical.com, linkinjeon@kernel.org,
+ linux-cifs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
+ linux-security-module@vger.kernel.org, linux-unionfs@vger.kernel.org,
+ linux-xfs@vger.kernel.org, lorenzo.stoakes@oracle.com, miklos@szeredi.hu,
+ mjguzik@gmail.com, netfs@lists.linux.dev, okorniev@redhat.com,
+ omosnace@redhat.com, paul@paul-moore.com, rafael@kernel.org,
+ selinux@vger.kernel.org, senozhatsky@chromium.org, serge@hallyn.com,
+ smfrench@gmail.com, stefanb@linux.ibm.com,
+ stephen.smalley.work@gmail.com, viro@zeniv.linux.org.uk,
+ syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot ci] Re: Create and use APIs to centralise locking for
+ directory ops.
+In-reply-to: <690c6437.050a0220.baf87.0083.GAE@google.com>
+References: <20251106005333.956321-1-neilb@ownmail.net>,
+ <690c6437.050a0220.baf87.0083.GAE@google.com>
+Date: Thu, 13 Nov 2025 09:50:26 +1100
+Message-id: <176298782655.634289.16817979269470605281@noble.neil.brown.name>
+Reply-To: NeilBrown <neil@brown.name>
 
-On Wed, Nov 12, 2025 at 09:10:34AM -0500, Raphael Pinsonneault-Thibeault wrote:
-> In xlog_do_recovery_pass(),
-> commit 45cf976008dd ("xfs: fix log recovery buffer allocation for the legacy h_size fixup")
-> added a fix to take the corrected h_size (from the xfsprogs bug
-> workaround) into consideration for the log recovery buffer calculation.
-> Without it, we would still allocate the buffer based on the incorrect
-> on-disk size.
-> 
-> However, in a scenario similar to 45cf976008dd, syzbot creates a fuzzed
-> record where xfs_has_logv2() but the xlog_rec_header h_version !=
-> XLOG_VERSION_2.
+On Thu, 06 Nov 2025, syzbot ci wrote:
+> syzbot ci has tested the following series
+>=20
+> [v5] Create and use APIs to centralise locking for directory ops.
+> https://lore.kernel.org/all/20251106005333.956321-1-neilb@ownmail.net
+> * [PATCH v5 01/14] debugfs: rename end_creating() to debugfs_end_creating()
+> * [PATCH v5 02/14] VFS: introduce start_dirop() and end_dirop()
+> * [PATCH v5 03/14] VFS: tidy up do_unlinkat()
+> * [PATCH v5 04/14] VFS/nfsd/cachefiles/ovl: add start_creating() and end_cr=
+eating()
+> * [PATCH v5 05/14] VFS/nfsd/cachefiles/ovl: introduce start_removing() and =
+end_removing()
+> * [PATCH v5 06/14] VFS: introduce start_creating_noperm() and start_removin=
+g_noperm()
+> * [PATCH v5 07/14] VFS: introduce start_removing_dentry()
+> * [PATCH v5 08/14] VFS: add start_creating_killable() and start_removing_ki=
+llable()
+> * [PATCH v5 09/14] VFS/nfsd/ovl: introduce start_renaming() and end_renamin=
+g()
+> * [PATCH v5 10/14] VFS/ovl/smb: introduce start_renaming_dentry()
+> * [PATCH v5 11/14] Add start_renaming_two_dentries()
+> * [PATCH v5 12/14] ecryptfs: use new start_creating/start_removing APIs
+> * [PATCH v5 13/14] VFS: change vfs_mkdir() to unlock on failure.
+> * [PATCH v5 14/14] VFS: introduce end_creating_keep()
+>=20
+> and found the following issues:
+> * WARNING: lock held when returning to user space in start_creating
+> * possible deadlock in mnt_want_write
+>=20
+> Full report is available here:
+> https://ci.syzbot.org/series/4f406e4d-6aba-457a-b9c1-21f4407176a0
+>=20
+> ***
+>=20
+> WARNING: lock held when returning to user space in start_creating
 
-We should abort journal recovery at that point because the record
-header is corrupt and we can't trust it.
+I think this was due to a bug in=20
+   VFS: change vfs_mkdir() to unlock on failure.
+in ovl_create_real()
 
-i.e. A filesytem with a version 2 log will only ever set XLOG_VERSION_2
-in it's headers (and v1 will only ever set V_1), so if there is a
-mismatch something has gone wrong and we should stop processing the
-journal immediately.
+That patch removed a end_creating() call that was after
+ovl_create_real() returned failure, but didn't add end_creating() in
+ovl_create_real() on failure.  So it could exit with the lock still
+held.
 
-Otherwise, stuff taht assumes the version flags are coherenti like
-this...
+This patch should fix it, particularly the second hunk.
 
-> Meaning, we skip the log recover buffer calculation
-> fix and allocate the buffer based on the incorrect on-disk size. Hence,
-> a KASAN: slab-out-of-bounds read in xlog_do_recovery_pass() ->
-> xlog_recover_process() -> xlog_cksum().
+Thanks,
+NeilBrown
 
-... goes wrong.
-
-....
-
-> Can xfs_has_logv2() and xlog_rec_header h_version ever disagree?
-
-No. As per above, if they differ, either the journal or the
-superblock has been corrupted and we need to abort processing with a
--EFSCORRUPTED error immediately.
-
-That's the change that needs to be made here - xlog_valid_rec_header()
-should validate that the header and sb log versions match, not just
-that the record header only has "known" version bits set.
-
-If we validate this up front, then the rest of the code can then
-safely assume that xfs_has_logv2() and xlog_rec_header h_version are
-coherent and correct and so won't be exposed to bugs related to an
-undetected mismatch of various version fields...
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/overlayfs/dir.c b/fs/overlayfs/dir.c
+index a4a0dc261310..739f974dc258 100644
+--- a/fs/overlayfs/dir.c
++++ b/fs/overlayfs/dir.c
+@@ -187,7 +187,7 @@ struct dentry *ovl_create_real(struct ovl_fs *ofs, struct=
+ dentry *parent,
+ 			if (!err && ofs->casefold !=3D ovl_dentry_casefolded(newdentry)) {
+ 				pr_warn_ratelimited("wrong inherited casefold (%pd2)\n",
+ 						    newdentry);
+-				dput(newdentry);
++				end_creating(newdentry);
+ 				err =3D -EINVAL;
+ 			}
+ 			break;
+@@ -237,8 +237,7 @@ struct dentry *ovl_create_real(struct ovl_fs *ofs, struct=
+ dentry *parent,
+ 	}
+ out:
+ 	if (err) {
+-		if (!IS_ERR(newdentry))
+-			dput(newdentry);
++		end_creating(newdentry);
+ 		return ERR_PTR(err);
+ 	}
+ 	return newdentry;
