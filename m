@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7867C2BEFFB
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 02:32:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79DD7221F03
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 02:32:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762914736; cv=none; b=gAM3cJ6MizM51Rr4AtQLU6wZYzcrs5VAfa/6/rMW6EK7LzhgtiqHiiWNpH2mMSvpTw8+Rd6BVSSnjQqSK2FsoDm4IdfhSQHnV1l3F1eLxi7mTyCx82ggyRjHp0knY2kBMgZ7/GzoV2YgHXIdQs1DUNr4OPEaDvAoTGD+BVl6h5Q=
+	t=1762914751; cv=none; b=eOdbDAv1Cbp/GFmTOdLxVkm32T5JWUbJ6MrZ+JGHh0QXHygKShZW3HBUQfTrQbqGCORu08D11TOx5m9BbnH55InW4ngb+s9dBdiwfKLl1dUUWqiQNwKRfYpCMhfhz8jrlfrDvgKqxJEK3ccI/UcKopGEgwmrx1mUjN5fcgia0rY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762914736; c=relaxed/simple;
-	bh=Gdjdw65xkxY33Jf2lW/Y80szlq8GxaFicMUP0Lk0YHs=;
+	s=arc-20240116; t=1762914751; c=relaxed/simple;
+	bh=1YOWcbQEPM1qdgIXaBlhJ2VXRn2kLtjy6wFNqdE+BqE=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=XyA5dYnl80pLnYTaKQE4MdZicBIZ8UC4snTYVbf88v4ajXda2a1Y3Ex5UizcsuW7/bcV39ElzZzJuoiRWi8roej5SpZYBHKFBWxdQcfIsgdG7XoUJiR+E2xDZCtx+ETn6kuK3Wj/crcRFsnlthuW0Yp6CcMhy72lK/42z+kBHbM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jYD6W5AD; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:MIME-Version; b=cfIfK/0uNfoiK1Z3KT8xj9KTgSUJt8vsDmHI8xhSNqpQ5YG0s78InWt2ep9zPtzSPuXNRr88ZhzIDF1n9x8NNF1ugJcjAmgbSy99IZz/bB7FK2wRPTtBh9m5lXv27aTuOaoYwSjVLkAyXe0Oyfk7ur94LlCZX3zryo3fz8AtwJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S8IsOieT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jYD6W5AD"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 0C42AC4CEFB
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 02:32:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S8IsOieT"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id E71EBC16AAE
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 02:32:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762914736;
-	bh=Gdjdw65xkxY33Jf2lW/Y80szlq8GxaFicMUP0Lk0YHs=;
+	s=k20201202; t=1762914750;
+	bh=1YOWcbQEPM1qdgIXaBlhJ2VXRn2kLtjy6wFNqdE+BqE=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=jYD6W5ADx4B9JlJB+7MSkHZ2bj7gmKz3L86BsojT7BzsoHI3FQYhxfwdgMpwPNRHQ
-	 jgARz2UqDlQHQaPnIoAmWgetkpoS8IQb9g5di6GGT+M7EyuL9DKFl+QslT2bbdCsWF
-	 oZUFuyPLrluW+BwFebTRqQFbaFjXHxpDCvK9+g9gr4JAAynAwGpwnzZWg5tcBDHtIA
-	 NCWENgu6yPQ1BnCeYZhpTr7IrNPcFUXkm1M0uZ0bHIMgPlUc4qSd2YroHNlmcJywS6
-	 ROyLCSlHDmFxCLvm77Sp2LuNkgQlJhzCcBdV1Ji6ZC650KfwLumK8yL1t8q/veAeVc
-	 fwvJ5+sAHOm4w==
+	b=S8IsOieT6PyQNE94Q/neV+wpwObSua/fmvyIvBdPlzk/hpDIik0xRar1wi2nNqHmC
+	 HajBQKew6Xx5rS/f0RW+PqumjCdGob6zhxzMoxvEDXJ0U4cIxOKIPYLTfIFaomcJnv
+	 wfZuEihB10cB0b5tSEXnb21fxW0+RBevX/Gr+QfeNarE4TuJShe+nMWzyxeyeupodH
+	 mwSSz3a1z25eKC1h7UX6AKtSS319Dh0bidd8bPMFSkp0K3N+sj31xVqY7Omu907mog
+	 /L+Bdol0axOjtsxhr83VYYnwO0ZpMhc1CwTu3wWYoPaKJgrrqGQgSN7jwlQ5IcqpMz
+	 AIG6Vz6zFk6rQ==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id EBCE1C41613; Wed, 12 Nov 2025 02:32:15 +0000 (UTC)
+	id D8456CAB780; Wed, 12 Nov 2025 02:32:30 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-xfs@vger.kernel.org
 Subject: [Bug 216031] forced kernel crash soon after startup exposes XFS
  growfs race condition
-Date: Wed, 12 Nov 2025 02:32:13 +0000
+Date: Wed, 12 Nov 2025 02:32:28 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
@@ -42,13 +42,13 @@ X-Bugzilla-Version: 2.5
 X-Bugzilla-Keywords: 
 X-Bugzilla-Severity: normal
 X-Bugzilla-Who: sandeen@sandeen.net
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: CODE_FIX
 X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-216031-201763-4B599n5Z93@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: bug_status resolution
+Message-ID: <bug-216031-201763-ehVUdf2odn@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-216031-201763@https.bugzilla.kernel.org/>
 References: <bug-216031-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -68,13 +68,8 @@ Eric Sandeen (sandeen@sandeen.net) changed:
 
            What    |Removed                     |Added
 ----------------------------------------------------------------------------
-                 CC|                            |sandeen@sandeen.net
-
---- Comment #1 from Eric Sandeen (sandeen@sandeen.net) ---
-I retested the reproducer on 6.15 and saw no errors.
-I'm not entirely sure when or how this got fixed, but it seems to be fixed =
-now,
-so closing.
+             Status|NEW                         |RESOLVED
+         Resolution|---                         |CODE_FIX
 
 --=20
 You may reply to this email to add a comment.
