@@ -1,96 +1,165 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2784232D44B
-	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 12:31:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B729332C921
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 12:34:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762950672; cv=none; b=DQilHp9eEYfgwGNZ1zxU00bCnlvt5rfOey9d0M0TPpPwFB0o0tGvr11wG8WYsyR4f6rDD1hdE+37MOWR9YvfGUm1Ju/h+DuOHVlK0qRZikAWjbCLM8IGakEYLDHDFr6As8REyRugPtg398e2Y1Pq25WdlqA8YpCyBXbvhL44gQQ=
+	t=1762950847; cv=none; b=MteqHmJ1+VBI3Kkp2WtkZVIBH4H789N536DGE7GlMa/Mnw/B53C029PpvLDT6tPuh2VOTSDHm5O6CEUhMEn0/I4H2XT/XAkyz/qKJ8+HOoKUnRBgzDEsV95ePidTI/nfE/x1bvje/JRljZE7z8WQ5VDrXASDlZpuQKRjLg0UnHk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762950672; c=relaxed/simple;
-	bh=fBzCD+S/Q0bhMTu6DGyQLbBifn1yv9AM3vZyc2Ua55E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rkL0HuiHVgMVcTiJEXq9dBNMIxeqXMkMrKYXGpwRns9NsJbx8V4YYqAXnw/Gt1mAKuYnV2g9U+17W7uD2El/m4aIVKUOTIl5t+ixIHYJc1nusCSwR7M+h/y4HjJAhJMaz3w7fm04MhDTx6Jkl+Smo/5j0bW7Zr8kJfnacWblnmE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DxyMBHOe; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1762950847; c=relaxed/simple;
+	bh=z7/mVq0gtO0EkUKT9CDfwsCKhHR8VN1XdyIZDQ2OjNQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=V5M+YGo/q+D0iyGvvemz3xJh2ruWOTN9x2hE9ONeDbPiwHtaUgXuoT5zgCUQzwRFsMZm83SUJs1z2piAZ7x5UlUB31eir71Mzg1gp/8qJwV5xzMeaf0oXYUFeeMErkPsBOwLjL8NO8vmQR+fqUli87QYpmchUiLYF24fAGfEJ5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rWGjOFP8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DxyMBHOe"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1762950667;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=D+pcmmtn0+D/t3JnLP0caZ+DUCoyUBZiXeEM0hM8S50=;
-	b=DxyMBHOeh2v/8x8jfQx+wO/9uyVoALF2pVDQ02pmCtm2YlP+kvrWVoG3JMEaDDz2VPyd/B
-	JSCqh8U9igEWVipGXlQkLAIdnfTnF93utpZ+3EpBcYfJlkhYc0F/smO9TIrGbZSgSWGNYD
-	OiN/xPfljrf0NpjKCs40ZsTzFW84HzQ=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-353-AOA8VDqUOg6zl-GQbw-s0A-1; Wed,
- 12 Nov 2025 07:31:04 -0500
-X-MC-Unique: AOA8VDqUOg6zl-GQbw-s0A-1
-X-Mimecast-MFC-AGG-ID: AOA8VDqUOg6zl-GQbw-s0A_1762950663
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C94B919560B6;
-	Wed, 12 Nov 2025 12:31:02 +0000 (UTC)
-Received: from bfoster (unknown [10.22.64.29])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1109A1800451;
-	Wed, 12 Nov 2025 12:31:01 +0000 (UTC)
-Date: Wed, 12 Nov 2025 07:35:33 -0500
-From: Brian Foster <bfoster@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] iomap: replace folio_batch allocation with stack
- allocation
-Message-ID: <aRR_FdE96gzkskqP@bfoster>
-References: <20251111175047.321869-1-bfoster@redhat.com>
- <aRRHzBlw6pc3cQjr@infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rWGjOFP8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 323B9C4CEF8;
+	Wed, 12 Nov 2025 12:34:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762950847;
+	bh=z7/mVq0gtO0EkUKT9CDfwsCKhHR8VN1XdyIZDQ2OjNQ=;
+	h=From:To:Cc:Subject:Date:From;
+	b=rWGjOFP8Ycm8VJRYFZ6TNxhcMeC/PkWqw65Iw64mknG0U9MLfk4nnDcBsoISRKDsR
+	 g6TN7WC4fhtpK4b023lj6pmTNC9jQ3rvVtoD6DUc1Ao6QDI/nRBZLKwdkjF10gJu5/
+	 6OUwAm5Z+XQnNnxKQ0fgJ8FK2rvI+ivSgXEoE5/UHvftTrpPCjU+Hq6oYXf5AexGbf
+	 hCf0r/2IWQ+BAE1CLHCp63nHe6sP+75jJfa6h4O9yMNB0JVkvxr263xGTLF7pzjw1M
+	 WmnoKdk477vFURibL8YdZ/9dUWLgGUz7yGuZt7NejLWD7sw22ySY6wZcV5FaaKtxKI
+	 GE9b7yFvoPkZg==
+From: cem@kernel.org
+To: aalbersh@redhat.com
+Cc: linux-xfs@vger.kernel.org,
+	hch@lst.de
+Subject: [PATCH] mkfs: fix zone capacity check for sequential zones
+Date: Wed, 12 Nov 2025 13:33:16 +0100
+Message-ID: <20251112123356.701593-1-cem@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aRRHzBlw6pc3cQjr@infradead.org>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 12, 2025 at 12:39:40AM -0800, Christoph Hellwig wrote:
-> On Tue, Nov 11, 2025 at 12:50:47PM -0500, Brian Foster wrote:
-> >  		if (imap.br_state == XFS_EXT_UNWRITTEN &&
-> >  		    offset_fsb < eof_fsb) {
-> > -			loff_t len = min(count,
-> > -					 XFS_FSB_TO_B(mp, imap.br_blockcount));
-> > +			loff_t foffset = offset, fend;
-> >  
-> > -			end = iomap_fill_dirty_folios(iter, offset, len);
-> > +			fend = offset +
-> > +			       min(count, XFS_FSB_TO_B(mp, imap.br_blockcount));
-> > +			iomap_flags |= iomap_fill_dirty_folios(iter, &foffset,
-> > +							       fend);
-> >  			end_fsb = min_t(xfs_fileoff_t, end_fsb,
-> > -					XFS_B_TO_FSB(mp, end));
-> > +					XFS_B_TO_FSB(mp, foffset));
-> 
-> Maybe it's just me, but I found the old calling convention a lot more
-> logic.  Why not keep it and extend it for passing the flags as an
-> in/out argument?  That would also keep the churn down a bit.
-> 
+From: Carlos Maiolino <cem@kernel.org>
 
-Hmm.. well I never really loved the flag return (or the end return), but
-I wanted to make the iomap helper more consistent with the underlying
-filemap helper because I think that reduces unnecessary complexity. I
-suppose we could also make the flags an out param and either return void
-or just pass through the filemap helper return (i.e. folio count)...
+Sequential zones can have a different, smaller capacity than
+conventional zones.
 
-Brian
+Currently mkfs assumes both sequential and conventional zones will have
+the same capacity and and set the zone_info to the capacity of the first
+found zone and use that value to validate all the remaining zones's
+capacity.
 
-> Otherwise the change looks good.
-> 
+Because conventional zones can't have a different capacity than its
+size, the first zone always have the largest possible capacity, so, mkfs
+will fail to validate any consecutive sequential zone if its capacity is
+smaller than the conventional zones.
+
+What we should do instead, is set the zone info capacity accordingly to
+the settings of first zone found of the respective type and validate
+the capacity based on that instead of assuming all zones will have the
+same capacity.
+
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+
+FWIS, writing the patch description I'm assuming that the conventional zones
+always come first and we can't have a zoned device starting with
+sequential zones followed by conventional zones.
+
+ mkfs/xfs_mkfs.c | 50 +++++++++++++++++++++++++++++++------------------
+ 1 file changed, 32 insertions(+), 18 deletions(-)
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index cd4f3ba4a549..1378e788eb95 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2545,6 +2545,28 @@ struct zone_topology {
+ /* random size that allows efficient processing */
+ #define ZONES_PER_IOCTL			16384
+ 
++static void
++zone_validate_capacity(
++	struct zone_info	*zi,
++	__u64			capacity,
++	bool			conventional)
++{
++	if (conventional && (zi->zone_capacity != zi->zone_size)) {
++		fprintf(stderr, _("Zone capacity equal to Zone size required for conventional zones.\n"));
++		exit(1);
++	}
++
++	if (zi->zone_capacity > zi->zone_size) {
++		fprintf(stderr, _("Zone capacity larger than zone size!\n"));
++		exit(1);
++	}
++
++	if (zi->zone_capacity != capacity) {
++		fprintf(stderr, _("Inconsistent zone capacity!\n"));
++		exit(1);
++	}
++}
++
+ static void
+ report_zones(
+ 	const char		*name,
+@@ -2621,6 +2643,11 @@ _("Inconsistent zone size!\n"));
+ 
+ 			switch (zones[i].type) {
+ 			case BLK_ZONE_TYPE_CONVENTIONAL:
++				if (!zi->zone_capacity)
++					zi->zone_capacity = zones[i].capacity;
++				zone_validate_capacity(zi, zones[i].capacity,
++						       true);
++
+ 				/*
+ 				 * We can only use the conventional space at the
+ 				 * start of the device for metadata, so don't
+@@ -2632,6 +2659,11 @@ _("Inconsistent zone size!\n"));
+ 					zi->nr_conv_zones++;
+ 				break;
+ 			case BLK_ZONE_TYPE_SEQWRITE_REQ:
++				if (!found_seq)
++					zi->zone_capacity = zones[i].capacity;
++				zone_validate_capacity(zi, zones[i].capacity,
++						       false);
++
+ 				found_seq = true;
+ 				break;
+ 			case BLK_ZONE_TYPE_SEQWRITE_PREF:
+@@ -2644,19 +2676,6 @@ _("Unknown zone type (0x%x) found.\n"), zones[i].type);
+ 				exit(1);
+ 			}
+ 
+-			if (!n) {
+-				zi->zone_capacity = zones[i].capacity;
+-				if (zi->zone_capacity > zi->zone_size) {
+-					fprintf(stderr,
+-_("Zone capacity larger than zone size!\n"));
+-					exit(1);
+-				}
+-			} else if (zones[i].capacity != zi->zone_capacity) {
+-				fprintf(stderr,
+-_("Inconsistent zone capacity!\n"));
+-				exit(1);
+-			}
+-
+ 			n++;
+ 		}
+ 		sector = zones[rep->nr_zones - 1].start +
+@@ -2683,11 +2702,6 @@ validate_zoned(
+ _("Data devices requires conventional zones.\n"));
+ 				usage();
+ 			}
+-			if (zt->data.zone_capacity != zt->data.zone_size) {
+-				fprintf(stderr,
+-_("Zone capacity equal to Zone size required for conventional zones.\n"));
+-				usage();
+-			}
+ 
+ 			cli->sb_feat.zoned = true;
+ 			cfg->rtstart =
+-- 
+2.51.0
 
