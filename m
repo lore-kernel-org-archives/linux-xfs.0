@@ -1,83 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61E302BE02C;
-	Wed, 12 Nov 2025 09:01:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7BA7186294
+	for <linux-xfs@vger.kernel.org>; Wed, 12 Nov 2025 10:33:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762938072; cv=none; b=IbYqAGKwh0FIc+WIaGoSRnsxDMeIwtQR++IM/bFQeC+SVB1Mv0/o1vOkvMTr6w8O6JHhYn3BODfjMQNl+yI2nd7HCQ68FH7uKHg8IiMZRZ8NDovJaaPXg8lL6liQtdl12lKZBs8kg7+LXAycG7qurliYK88PVmny8iaziEBimqo=
+	t=1762943597; cv=none; b=Y/buL+Jv5DU505Wqtro8XtYa4re348oCY8zFJ1Nc4JxQOEapzqrdWkUA4TeVyWO4gKpYCuo+KMHNorbDjxD1N379xKwqaRt5F021adQYvofmfneWOCRgV958eLayKlo3GCmlPwCmWknpzb+Ig6LMMoWqg+hz8BuNqScH7J+Q+Ng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762938072; c=relaxed/simple;
-	bh=NmxT3e9rVD+Vk0gwGiTwEsfo+VbVQUJ9eVtsypMNXuc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kjIRRlg54TReeS1MKEdXqZMJlYz4sTsQ14Evn9NObmG+g9VbSGcYYnj5EgTSrPT7sDHFa8coyGKrkoem+DiMeIT6HR/0UrRv7k/L1mQ9OunOXBG7JqH6rBSM+hkTbxc577N+IxKQRVERNzGp/D/mL7fm7KeRTsxGW8obojUksYs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sdP5jmGf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762943597; c=relaxed/simple;
+	bh=qGO9J5NtZNpJa5LH/0tBIAuXxFafISkHb1LCKFkj2k4=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=qwDdJWh7k7GGmzJT8pNqGT+J7kSGbigXWhNjUajDR6p6m/Z77VPPEA67mHRp05PIaHIoIrAnAuYu3cDihRGMv/cdm/mKJ046DK9yg0REyz/jI7FLW1zsjeLj+6n0mZ/kgazNHd4RVkyDK82CxqCovyOWT6/JO+dfDdWGzJc3NhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IqaHHiNa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sdP5jmGf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6871C4CEF5;
-	Wed, 12 Nov 2025 09:01:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IqaHHiNa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFDB8C116B1;
+	Wed, 12 Nov 2025 10:33:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762938071;
-	bh=NmxT3e9rVD+Vk0gwGiTwEsfo+VbVQUJ9eVtsypMNXuc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=sdP5jmGfLM+SqEuBX/RsMGAmFa8GSx+5s3qlPF12YVUgFuFMpcff20Xhp8BQtu318
-	 XA2RUpFBp4/3lodTcuJD9YOxWBHcqQMk3h0u5+ME/+CzWeA+bk0+dKlaisCTBqHd6o
-	 T355kOHQKyPmjbq0GoHZQNmcLvQtYngvT4iiH2Yz4Pxoon6WrwLqGla9zLz5WNvIde
-	 cx9FOyjZdSQNY97ifMj9UKI2ssD71LcFv7Xa9qcxmE1cNFEdtAm9HMRRMZLh6u0A5a
-	 AD1vXlXRa/op+Ax2MTk3mKPyO0SMhntbfLDp2az621cBgWCihv3p++dBVMO0VEQrwn
-	 3SDY/PgaVZE9g==
-From: Christian Brauner <brauner@kernel.org>
-To: Jeff Layton <jlayton@kernel.org>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-cifs@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	netfs@lists.linux.dev,
-	ecryptfs@vger.kernel.org,
-	linux-unionfs@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	netdev@vger.kernel.org,
-	linux-api@vger.kernel.org,
-	Miklos Szeredi <miklos@szeredi.hu>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Jan Kara <jack@suse.cz>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Alexander Aring <alex.aring@gmail.com>,
-	Trond Myklebust <trondmy@kernel.org>,
-	Anna Schumaker <anna@kernel.org>,
-	Steve French <sfrench@samba.org>,
-	Paulo Alcantara <pc@manguebit.org>,
-	Ronnie Sahlberg <ronniesahlberg@gmail.com>,
-	Shyam Prasad N <sprasad@microsoft.com>,
-	Tom Talpey <tom@talpey.com>,
-	Bharath SM <bharathsm@microsoft.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	David Howells <dhowells@redhat.com>,
-	Tyler Hicks <code@tyhicks.com>,
-	NeilBrown <neil@brown.name>,
-	Olga Kornievskaia <okorniev@redhat.com>,
-	Dai Ngo <Dai.Ngo@oracle.com>,
-	Amir Goldstein <amir73il@gmail.com>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Steve French <smfrench@gmail.com>,
-	Sergey Senozhatsky <senozhatsky@chromium.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	Kuniyuki Iwashima <kuniyu@google.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Simon Horman <horms@kernel.org>
-Subject: Re: [PATCH v6 00/17] vfs: recall-only directory delegations for knfsd
-Date: Wed, 12 Nov 2025 10:00:47 +0100
-Message-ID: <20251112-allesamt-ursprung-7581bf774318@brauner>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251111-dir-deleg-ro-v6-0-52f3feebb2f2@kernel.org>
-References: <20251111-dir-deleg-ro-v6-0-52f3feebb2f2@kernel.org>
+	s=k20201202; t=1762943597;
+	bh=qGO9J5NtZNpJa5LH/0tBIAuXxFafISkHb1LCKFkj2k4=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=IqaHHiNaRJ5vPv851EpqYbHxPMQDc5lzMtOqEnCUkX117kIdAR+z63N4FUvP0zxw4
+	 /Br+VYWZzR7NSTyU1/Nk0CukmgkLRexW4C8t7wr6gnJn34yb6ARkx3xYixCG7kM9/o
+	 IfFNqndR+4JbmgyZGRRrb1ysEbiyEKdX6vJ4RmkEpUy4CrY567Y5N37JHIy/t8PuC6
+	 2QZYelHStnawsQjcqb/oocIPpF46WQSP//bgMrF/800f0lFD5Kga8sX1+lbu2gxD1R
+	 ZmTJyAubKzhU7R++S1M96iryEyHEGtnxai6X16Vsz3pJR1NtFwpehTXkeaY5kgte21
+	 wBzmXqL+pr3Ew==
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+In-Reply-To: <20251027070610.729960-1-hch@lst.de>
+References: <20251027070610.729960-1-hch@lst.de>
+Subject: Re: kill xlog_in_core_2_t v3
+Message-Id: <176294359646.682626.5824293511107187767.b4-ty@kernel.org>
+Date: Wed, 12 Nov 2025 11:33:16 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -85,67 +41,41 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3125; i=brauner@kernel.org; h=from:subject:message-id; bh=NmxT3e9rVD+Vk0gwGiTwEsfo+VbVQUJ9eVtsypMNXuc=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSK+Jx86vPs+ErnB/wb72nN1on3KMp9zX7dQSQ82GOlr L4T45e1HaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABN5uY/hn/2qqoNLZz+dwN+8 MaJT8c46z87PsQEvsjp28yya0xLDk8bwTylL6cEuZvNOz6YbIjsbtC63ni4K0TY9cPOZxLVsp4t dPAA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-On Tue, 11 Nov 2025 09:12:41 -0500, Jeff Layton wrote:
-> Behold, another version of the directory delegation patchset. This
-> version contains support for recall-only delegations. Support for
-> CB_NOTIFY will be forthcoming (once the client-side patches have caught
-> up).
-> 
-> The main changes here are in response to Jan's comments. I also changed
-> struct delegation use to fixed-with integer types.
+On Mon, 27 Oct 2025 08:05:47 +0100, Christoph Hellwig wrote:
+> xlog_in_core_2_t is probably one of the most confusing types in the
+> kernel. Not only does it describe an on-disk format despite claiming
+> to be in-core in the name, but it is also has an extremely confusing
+> layout.  This series revamps our C representation of the underlying
+> data structures so that they hopefully make a lot more sense while
+> killing off xlog_in_core_2_t for good.
 > 
 > [...]
 
-Applied to the vfs-6.19.directory.delegations branch of the vfs/vfs.git tree.
-Patches in the vfs-6.19.directory.delegations branch should appear in linux-next soon.
+Applied to for-next, thanks!
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+[1/9] xfs: add a XLOG_CYCLE_DATA_SIZE constant
+      commit: 74d975ed6c9f8ba44179502a8ad5a839b38e8630
+[2/9] xfs: add a on-disk log header cycle array accessor
+      commit: 899b7ee44baebcfb2b2366b2aff6e9aca4486c4d
+[3/9] xfs: don't use xlog_in_core_2_t in struct xlog_in_core
+      commit: be665a4e27417227cf40cfe27e616838bb46548c
+[4/9] xfs: cleanup xlog_alloc_log a bit
+      commit: 16c18021e1f518e6ddd4ddf2b57aaca7a47a7124
+[5/9] xfs: remove a very outdated comment from xlog_alloc_log
+      commit: 9ed9df98fcd7203c0eeac21e6784bb7cc7a291d3
+[6/9] xfs: remove xlog_in_core_2_t
+      commit: fe985b910e03fd91193f399a1aca9d1ea22c2557
+[7/9] xfs: remove the xlog_rec_header_t typedef
+      commit: ef1e275638fe6f6d54c18a770c138e4d5972b280
+[8/9] xfs: remove l_iclog_heads
+      commit: bc2dd9f2ba004cb4cce671dbe62f5193f58e4abc
+[9/9] xfs: remove the xlog_in_core_t typedef
+      commit: 6731f85d38aa476275183ccdd73527cd6d7f3297
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+Best regards,
+-- 
+Carlos Maiolino <cem@kernel.org>
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-6.19.directory.delegations
-
-[01/17] filelock: make lease_alloc() take a flags argument
-        https://git.kernel.org/vfs/vfs/c/6fc5f2b19e75
-[02/17] filelock: rework the __break_lease API to use flags
-        https://git.kernel.org/vfs/vfs/c/4be9f3cc582a
-[03/17] filelock: add struct delegated_inode
-        https://git.kernel.org/vfs/vfs/c/6976ed2dd0d5
-[04/17] filelock: push the S_ISREG check down to ->setlease handlers
-        https://git.kernel.org/vfs/vfs/c/e6d28ebc17eb
-[05/17] vfs: add try_break_deleg calls for parents to vfs_{link,rename,unlink}
-        https://git.kernel.org/vfs/vfs/c/b46ebf9a768d
-[06/17] vfs: allow mkdir to wait for delegation break on parent
-        https://git.kernel.org/vfs/vfs/c/e12d203b8c88
-[07/17] vfs: allow rmdir to wait for delegation break on parent
-        https://git.kernel.org/vfs/vfs/c/4fa76319cd0c
-[08/17] vfs: break parent dir delegations in open(..., O_CREAT) codepath
-        https://git.kernel.org/vfs/vfs/c/134796f43a5e
-[09/17] vfs: clean up argument list for vfs_create()
-        https://git.kernel.org/vfs/vfs/c/85bbffcad730
-[10/17] vfs: make vfs_create break delegations on parent directory
-        https://git.kernel.org/vfs/vfs/c/c826229c6a82
-[11/17] vfs: make vfs_mknod break delegations on parent directory
-        https://git.kernel.org/vfs/vfs/c/e8960c1b2ee9
-[12/17] vfs: make vfs_symlink break delegations on parent dir
-        https://git.kernel.org/vfs/vfs/c/92bf53577f01
-[13/17] filelock: lift the ban on directory leases in generic_setlease
-        https://git.kernel.org/vfs/vfs/c/d0eab9fc1047
-[14/17] nfsd: allow filecache to hold S_IFDIR files
-        https://git.kernel.org/vfs/vfs/c/544a0ee152f0
-[15/17] nfsd: allow DELEGRETURN on directories
-        https://git.kernel.org/vfs/vfs/c/80c8afddc8b1
-[16/17] nfsd: wire up GET_DIR_DELEGATION handling
-        https://git.kernel.org/vfs/vfs/c/8b99f6a8c116
-[17/17] vfs: expose delegation support to userland
-        https://git.kernel.org/vfs/vfs/c/1602bad16d7d
