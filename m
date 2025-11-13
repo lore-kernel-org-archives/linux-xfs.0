@@ -1,45 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC2632D6E51
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Nov 2025 11:09:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 139F334AAF9
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Nov 2025 11:52:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763032154; cv=none; b=pJCS/Fao4sCsc73ETkskFMIAtdM6YZT03yeJ751vCOTE/qqKmArniaNA2uT6mFXjhLKqPItvEl9eDRkV86NDQxZybM6DmR3KHQfJM08O1YNPNnJCpfjoN4NqORiPnkkc9YE92Ix0rZOBqvFe/t8W0tHkmZTau9S5QzATnqpa1ts=
+	t=1763034749; cv=none; b=BA58tBmUh4B22xq5n5Kg0TtJ80STWbRJhrxxzL19X2wUFhPJLpRM54MlyDdtWahASTpSJlHSiXbVHBt7N5cxe2VBMFf7zwjlaxHHfhaOxOKRsu5O3Vg9xSbfHjOs8TFGvWTfpezIUvJVBsPkAtK73lEProu5JmsuCSj4JggdoyA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763032154; c=relaxed/simple;
-	bh=1mRlQqJT8tc+WfmsJKzktgmuAOQ+AUnfN6uAFt/9Uec=;
+	s=arc-20240116; t=1763034749; c=relaxed/simple;
+	bh=Yy7JgJb4FCddQbs+GZYis9iRWRKBjG84eghi27iE7Ak=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L3rwgZHN6Pxh8fsdLwgwmtwbYmqw/EaYCYMzv7rst2r+Tbxlytf2RskA5WcWfaJtCcGV6Gp0l5/aC1EI/fML1arAulzDcTh4aUxL9pjcIoLPoncBHpYV2TQZ6mi9JxScy7wHLhY5RyrfL1FdjTz3Mrc7b/vTYwiyeZzIuRu+wBQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pFxgb9ZN; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZeDo2V9KMHs4l2eOXNVBey0f/psC1aAplZeQOzHk27A4qmgpimUiahOr6v8rr59x4nWqnioQXOLwEFnAB4RpZLzvtqfvYF2xso8+/yrAuWy/VHhskKDNBmsDE0ihrNMACoXcAsR/yN9zgkVIhx5lVxi8gt7zNaZGwg9JuVw/TSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=blPw1ePC; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=WLnx8sje; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=blPw1ePC; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=WLnx8sje; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pFxgb9ZN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71B0FC4CEF5;
-	Thu, 13 Nov 2025 11:09:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763032154;
-	bh=1mRlQqJT8tc+WfmsJKzktgmuAOQ+AUnfN6uAFt/9Uec=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pFxgb9ZNvlCRNENR/OvH/4BfyGeVk98MBxnex2pSyrMeCPTqDRKWoYZnjw78P72yt
-	 5Gt47jX7H3UWaImiA0FEkfFp76wsBvvFftENR6Xpr9hsuQ8Hsfp5PEypZDErGBoxeI
-	 UakKkoXfekrEO+dJM9pd9KUS5O4JHeHq13TGRtlTCXNVMemPFu+U2hykZlXqWC6+J3
-	 P5xgBZzdML6CUJz+LEfsBadNq6J5FuFOYlrqiuwbRZx8wGcgHs4mOnfrngt+PKZ6YT
-	 1BayUCNvAJU56i6Y1jH97D5X05TzeHGAbK0cte6SUYYX9ed1PIZBc6spzbe7sC6Ksq
-	 /yX8RlCnTH7vw==
-Date: Thu, 13 Nov 2025 12:09:09 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, aalbersh@kernel.org, 
-	david@fromorbit.com, hubjin657@outlook.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] metadump: catch used extent array overflow
-Message-ID: <aiqeiz2c6pwtcsojofyfnv7r5o67ip2p24faf2kjwdbtdlf475@6u3ruuk5fbx3>
-References: <20251111141139.638844-1-cem@kernel.org>
- <NM5nTfOcdVh4Bz31WhekwpUkERNHbF4mHQTkHyzB2nADKWkzKweM2xvo8AyVGHJnBk0joWMby8EL6pNvIVmKQw==@protonmail.internalid>
- <aRNGBoLES2Re4L5m@infradead.org>
- <t2d73maqm4uxsipsacb423dcsg3u6dy3gty3u34wlj3zp4xfgw@lalkwdrmkj2b>
- <20251112163608.GZ196370@frogsfrogsfrogs>
- <kiF3QEt7mVpzNcCiRIobKwQml-Bf3KcdLNIvDtizjwO1h7qnl91aha-zXymV9Qs9oGaCX1nqcAj3bYpf_oHOBg==@protonmail.internalid>
- <aRS4Smu72bIwabJn@infradead.org>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="blPw1ePC";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="WLnx8sje";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="blPw1ePC";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="WLnx8sje"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 033352186F;
+	Thu, 13 Nov 2025 11:52:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1763034746; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=K4gKGyIlZECoAZ0pnt30zJaMvG0jDsxFuJsyG2gSarc=;
+	b=blPw1ePC98gRAOVeF4FXhp+yMinjXmKBTxLvEFvnjNMwco0TdsAVmoUmpMdYnolhnMiSig
+	OaGvJ6nbdF3Mea5n1yZ2fTqqzxxuvokZgz+hbry9pWKSwK+LglecjXoD6KVjY7WVYfcIvl
+	ciH9Obk8QC60gOrARM5weoPNVFfCtvE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1763034746;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=K4gKGyIlZECoAZ0pnt30zJaMvG0jDsxFuJsyG2gSarc=;
+	b=WLnx8sjeKAW4zuUvsbbXCunFP2f8wqnkFkDisL7iyLMxNh9RDeeP5duBZZsimlXciSUBm/
+	6IjS541FktMUf2Cw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=blPw1ePC;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=WLnx8sje
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1763034746; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=K4gKGyIlZECoAZ0pnt30zJaMvG0jDsxFuJsyG2gSarc=;
+	b=blPw1ePC98gRAOVeF4FXhp+yMinjXmKBTxLvEFvnjNMwco0TdsAVmoUmpMdYnolhnMiSig
+	OaGvJ6nbdF3Mea5n1yZ2fTqqzxxuvokZgz+hbry9pWKSwK+LglecjXoD6KVjY7WVYfcIvl
+	ciH9Obk8QC60gOrARM5weoPNVFfCtvE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1763034746;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=K4gKGyIlZECoAZ0pnt30zJaMvG0jDsxFuJsyG2gSarc=;
+	b=WLnx8sjeKAW4zuUvsbbXCunFP2f8wqnkFkDisL7iyLMxNh9RDeeP5duBZZsimlXciSUBm/
+	6IjS541FktMUf2Cw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E605F3EA61;
+	Thu, 13 Nov 2025 11:52:25 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id B9ggOHnGFWmfBQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 13 Nov 2025 11:52:25 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 7B6A6A0976; Thu, 13 Nov 2025 12:52:25 +0100 (CET)
+Date: Thu, 13 Nov 2025 12:52:25 +0100
+From: Jan Kara <jack@suse.cz>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, Christian Brauner <brauner@kernel.org>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Jens Axboe <axboe@kernel.dk>, Avi Kivity <avi@scylladb.com>, 
+	Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>, 
+	Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	io-uring@vger.kernel.org
+Subject: Re: enable iomap dio write completions from interrupt context
+Message-ID: <yzywtpzufhambbcqrd5ijgmkzjr4l62ealwxsfsn6vhlwtpjuk@7rwvj337kfml>
+References: <20251112072214.844816-1-hch@lst.de>
+ <zqi5yb34w6zsqe7yiv7nryx7xl23txy5fmr5h7ydug7rjnby3l@leukbllawuv2>
+ <20251113100527.GA10056@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -48,19 +94,55 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aRS4Smu72bIwabJn@infradead.org>
+In-Reply-To: <20251113100527.GA10056@lst.de>
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: 033352186F
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.01 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	FROM_HAS_DN(0.00)[];
+	ARC_NA(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCPT_COUNT_TWELVE(0.00)[13];
+	MIME_TRACE(0.00)[0:+];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.com:email]
+X-Spam-Score: -4.01
 
-On Wed, Nov 12, 2025 at 08:39:38AM -0800, Christoph Hellwig wrote:
-> On Wed, Nov 12, 2025 at 08:36:08AM -0800, Darrick J. Wong wrote:
-> > > > used really isn't a xfs_extnum_t, so you probably just want to use an
-> > > > undecored uint64_t.
-> > >
-> > > Fair enough. Thanks!
-> >
-> > Does check_mul_overflow work for this purpose?
+On Thu 13-11-25 11:05:27, Christoph Hellwig wrote:
+> On Thu, Nov 13, 2025 at 10:58:00AM +0100, Jan Kara wrote:
+> > On Wed 12-11-25 08:21:24, Christoph Hellwig wrote:
+> > > While doing this I've also found dead code which gets removed (patch 1)
+> > > and an incorrect assumption in zonefs that read completions are called
+> > > in user context, which it assumes for it's error handling.  Fix this by
+> > > always calling error completions from user context (patch 2).
+> > 
+> > Speaking of zonefs, I how is the unconditional locking of
+> > zi->i_truncate_mutex in zonefs_file_write_dio_end_io() compatible with
+> > inline completions?
 > 
-> 
-> Oh, I didn't realize we have that in xfsprogs now.  Using it here
-> sounds like a good idea.
+> It wouldn't, but zonefs doesn't use write inline completions because
+> it marks all I/O to sequential zones as unwritten.
 
-+1, thanks Darrick, I'll update it.
+Ah, now I see that. Thanks for explanation.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
