@@ -1,80 +1,167 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C0A62D94A3;
-	Thu, 13 Nov 2025 12:35:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 513E635CBC6
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Nov 2025 13:46:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763037341; cv=none; b=RjJcaqYQN49OYIaEfnqBiaerIYQQNmwEHkWWAkKucZDQxWRopEnu/YS2ZsiJEWTSQV0Hc2yesYNS3JFR444hNLc4psqCtzvCqq3QftZJ3U1Gc0mF25rH3vOqjUaE4ctM3Pc00uWrQ7NrKqTJku0XvrafZHnD+1EiLIHrRCnH0MQ=
+	t=1763041604; cv=none; b=RR7oaMuai8em1s9oY6tpckMiFoH2kNGamPbe8DTB1qfIwNnC8ynsAbYHKd9JgGsysqgoePnWpebxr/+JU1/IAwEvqb2gOcrUW+oi1tevovtPLou9eZNYVYDe+wdrHGfOHi8kPhCVf3J8Af0SeA3b+IYmaKFBpWlFhb3GMGqE1o4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763037341; c=relaxed/simple;
-	bh=ePxJvEbztbjKYCAVyd7deFPKSp7j62o+wMmttRco0HE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dh/N62Gsns32IrATUuOkhO2rha+QNBBxZoMsHVZ1OfKYrFDoqh5abOnwu/Odiq2gV5+f+IszBz+yaw0L95pk9/9N+yEE+LX6PVTetnRCSum2bvs+bIBO25S+BPIsmcShb23q9Y1xZR5zDNlEaAGmYSMlXh6qRrQ+hw/FhMZigjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 2D9D3227A88; Thu, 13 Nov 2025 13:35:33 +0100 (CET)
-Date: Thu, 13 Nov 2025 13:35:32 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	"Darrick J. Wong" <djwong@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-	Avi Kivity <avi@scylladb.com>, Damien Le Moal <dlemoal@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>,
-	Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org
-Subject: Re: [PATCH 4/5] iomap: support write completions from interrupt
- context
-Message-ID: <20251113123532.GA21292@lst.de>
-References: <20251112072214.844816-1-hch@lst.de> <20251112072214.844816-5-hch@lst.de> <nujtqnweb7jfbyk4ov3a7z5tdtl24xljntzbpecgv6l7aoeytd@nkxsilt6w7d3> <20251113065055.GA29641@lst.de> <x76swsaqkkyko6oyjch2imsbqh3q3dx3uqqofjnktzbzfdkbhe@jog777bckvu6> <20251113100630.GB10056@lst.de> <ewzcc5tots6ughnbqlqmvje4ex2eb5tug2mapzvcf4zstb7fxn@qruu4xs4nblt>
+	s=arc-20240116; t=1763041604; c=relaxed/simple;
+	bh=2H6rlx29WaH6+Ck5dAl4McPh5eS7DdZ2e2j7s8uw6r4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=s+YDwDyvgt1mp9iYWcQEjRPuux8xGQtRJKaLMHSVopJM+ncmYg4OsCZNjvNpF6vkmFPdLlbmo9uaPQv/85OLaS5MVKiNJUNOB5ByLylcWKJowywXNUT/rfpX2KgkM+XLc7OLWwK0bMg+miVMS971QgShl9hHchnAKuAqribjsoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ue2swg17; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ue2swg17"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33007C4CEF1;
+	Thu, 13 Nov 2025 13:46:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763041604;
+	bh=2H6rlx29WaH6+Ck5dAl4McPh5eS7DdZ2e2j7s8uw6r4=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Ue2swg17VobiVv12Y1Z/ZLca7Tb+zzXteUshMB9NRN56e21aTRDYu+2kKBSQCru7O
+	 CUdeIWUY3+LIS2/PqBNgNX8KMZs4wOepXRRbUyKvSSbBhAlrcTyWb8Dx2Rv1PUrXpO
+	 ctQFi1ucY3TBzJbtZXUsSV5D5HuLuqpBs8srlbFLryR5s9WCqySeMgMAyhJjU6SKK1
+	 JM19K9Ga7EZPa43o8AYxfIgOqnPXOPiHv3hPH90mXqPzC+ULcswjUiTwEpGWWuMRka
+	 boklpXBYxNU8pbNOFXjpwjjUKOS98DzzqbdM9jmQH5PdDYO+JfFyRa3womxz9eHp/O
+	 P5zPOIWCN8/dQ==
+From: cem@kernel.org
+To: aalbersh@redhat.com
+Cc: linux-xfs@vger.kernel.org,
+	hch@lst.de
+Subject: [PATCH V2] mkfs: fix zone capacity check for sequential zones
+Date: Thu, 13 Nov 2025 14:46:13 +0100
+Message-ID: <20251113134632.754351-1-cem@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ewzcc5tots6ughnbqlqmvje4ex2eb5tug2mapzvcf4zstb7fxn@qruu4xs4nblt>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 
-On Thu, Nov 13, 2025 at 01:06:34PM +0100, Jan Kara wrote:
-> On Thu 13-11-25 11:06:30, Christoph Hellwig wrote:
-> > On Thu, Nov 13, 2025 at 10:54:46AM +0100, Jan Kara wrote:
-> > > > You mean drop the common helper?  How would that be better and less
-> > > > fragile?   Note that I care strongly, but I don't really see the point.
-> > > 
-> > > Sorry I was a bit terse. What I meant is that the two users of
-> > > iomap_dio_is_overwrite() actually care about different things and that
-> > > results in that function having a bit odd semantics IMHO. The first user
-> > > wants to figure out whether calling generic_write_sync() is needed upon io
-> > > completion to make data persistent (crash safe).
-> > 
-> > Yes.
-> > 
-> > > The second user cares
-> > > whether we need to do metadata modifications upon io completion to make data
-> > > visible at all.
-> > 
-> > Not quite.  It cares if either generic_write_sync needs be called,
-> > or we need a metadata modification, because both require the workqueue.
-> 
-> I agree but generic_write_sync() calling is handled by 
-> 
-> +       else if (dio->flags & IOMAP_DIO_NEED_SYNC)
-> +               dio->flags &= ~IOMAP_DIO_INLINE_COMP;
-> 
-> in your patch. So I assumed (maybe wrongly) that the second call to
-> iomap_dio_is_overwrite() in iomap_dio_bio_iter() is only about detecting a
-> need of metadata modification. And my argument is that the patch could use
-> IOMAP_DIO_UNWRITTEN | IOMAP_DIO_COW the same way as it uses
-> IOMAP_DIO_NEED_SYNC instead of calling iomap_dio_is_overwrite().
-> 
-> But if you don't like that I don't think it makes a huge difference and the
-> code is correct as is so feel free to add:
+From: Carlos Maiolino <cem@kernel.org>
 
-I'll take a look if there is a way to clear thing up a bit.
+Sequential zones can have a different, smaller capacity than
+conventional zones.
+
+Currently mkfs assumes both sequential and conventional zones will have
+the same capacity and and set the zone_info to the capacity of the first
+found zone and use that value to validate all the remaining zones's
+capacity.
+
+Because conventional zones can't have a different capacity than its
+size, the first zone always have the largest possible capacity, so, mkfs
+will fail to validate any consecutive sequential zone if its capacity is
+smaller than the conventional zones.
+
+What we should do instead, is set the zone info capacity accordingly to
+the settings of first zone found of the respective type and validate
+the capacity based on that instead of assuming all zones will have the
+same capacity.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+
+Changelog:
+	v2:
+	 - remove unnecessary braces
+	 - add hch's RwB
+
+ mkfs/xfs_mkfs.c | 50 +++++++++++++++++++++++++++++++------------------
+ 1 file changed, 32 insertions(+), 18 deletions(-)
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index cd4f3ba4a549..8f5a6fa56764 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2545,6 +2545,28 @@ struct zone_topology {
+ /* random size that allows efficient processing */
+ #define ZONES_PER_IOCTL			16384
+ 
++static void
++zone_validate_capacity(
++	struct zone_info	*zi,
++	__u64			capacity,
++	bool			conventional)
++{
++	if (conventional && zi->zone_capacity != zi->zone_size) {
++		fprintf(stderr, _("Zone capacity equal to Zone size required for conventional zones.\n"));
++		exit(1);
++	}
++
++	if (zi->zone_capacity > zi->zone_size) {
++		fprintf(stderr, _("Zone capacity larger than zone size!\n"));
++		exit(1);
++	}
++
++	if (zi->zone_capacity != capacity) {
++		fprintf(stderr, _("Inconsistent zone capacity!\n"));
++		exit(1);
++	}
++}
++
+ static void
+ report_zones(
+ 	const char		*name,
+@@ -2621,6 +2643,11 @@ _("Inconsistent zone size!\n"));
+ 
+ 			switch (zones[i].type) {
+ 			case BLK_ZONE_TYPE_CONVENTIONAL:
++				if (!zi->zone_capacity)
++					zi->zone_capacity = zones[i].capacity;
++				zone_validate_capacity(zi, zones[i].capacity,
++						       true);
++
+ 				/*
+ 				 * We can only use the conventional space at the
+ 				 * start of the device for metadata, so don't
+@@ -2632,6 +2659,11 @@ _("Inconsistent zone size!\n"));
+ 					zi->nr_conv_zones++;
+ 				break;
+ 			case BLK_ZONE_TYPE_SEQWRITE_REQ:
++				if (!found_seq)
++					zi->zone_capacity = zones[i].capacity;
++				zone_validate_capacity(zi, zones[i].capacity,
++						       false);
++
+ 				found_seq = true;
+ 				break;
+ 			case BLK_ZONE_TYPE_SEQWRITE_PREF:
+@@ -2644,19 +2676,6 @@ _("Unknown zone type (0x%x) found.\n"), zones[i].type);
+ 				exit(1);
+ 			}
+ 
+-			if (!n) {
+-				zi->zone_capacity = zones[i].capacity;
+-				if (zi->zone_capacity > zi->zone_size) {
+-					fprintf(stderr,
+-_("Zone capacity larger than zone size!\n"));
+-					exit(1);
+-				}
+-			} else if (zones[i].capacity != zi->zone_capacity) {
+-				fprintf(stderr,
+-_("Inconsistent zone capacity!\n"));
+-				exit(1);
+-			}
+-
+ 			n++;
+ 		}
+ 		sector = zones[rep->nr_zones - 1].start +
+@@ -2683,11 +2702,6 @@ validate_zoned(
+ _("Data devices requires conventional zones.\n"));
+ 				usage();
+ 			}
+-			if (zt->data.zone_capacity != zt->data.zone_size) {
+-				fprintf(stderr,
+-_("Zone capacity equal to Zone size required for conventional zones.\n"));
+-				usage();
+-			}
+ 
+ 			cli->sb_feat.zoned = true;
+ 			cfg->rtstart =
+-- 
+2.51.0
 
