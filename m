@@ -1,167 +1,284 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 513E635CBC6
-	for <linux-xfs@vger.kernel.org>; Thu, 13 Nov 2025 13:46:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 519BD21D3F3
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Nov 2025 13:49:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763041604; cv=none; b=RR7oaMuai8em1s9oY6tpckMiFoH2kNGamPbe8DTB1qfIwNnC8ynsAbYHKd9JgGsysqgoePnWpebxr/+JU1/IAwEvqb2gOcrUW+oi1tevovtPLou9eZNYVYDe+wdrHGfOHi8kPhCVf3J8Af0SeA3b+IYmaKFBpWlFhb3GMGqE1o4=
+	t=1763041777; cv=none; b=GlPVYe3qGaHxBiEgOxeSEsq8GJE4/hdWMxGL5A9rvTpVZ7KEw8YFxLnYCkMpYBcVFRAIGXqsQhUqJlmqrZrRT0xGIQYHWoQRv8qpfe1+WuVWBX0e/MyX7gwzaZ6OChKDJUw4F1s/Unn75wMPK76fTUJIwoYiJFJAWfrgADgDzMk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763041604; c=relaxed/simple;
-	bh=2H6rlx29WaH6+Ck5dAl4McPh5eS7DdZ2e2j7s8uw6r4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=s+YDwDyvgt1mp9iYWcQEjRPuux8xGQtRJKaLMHSVopJM+ncmYg4OsCZNjvNpF6vkmFPdLlbmo9uaPQv/85OLaS5MVKiNJUNOB5ByLylcWKJowywXNUT/rfpX2KgkM+XLc7OLWwK0bMg+miVMS971QgShl9hHchnAKuAqribjsoE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ue2swg17; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763041777; c=relaxed/simple;
+	bh=2tBJMdXl0kh5vuIB2iXCFdZNYDPkd/2yjg8Ysr4Tt4I=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=j0L1adwq2YIQ8Y9icE1Ko/2IlK5Hw45CYR9NaPXxjbUWZP7oNCemBLFpDR/l7q7P0eaBWD9v/42HR+y54JnuRmQ/cr3g9GmbCSF1REwJWbjO0imCyYgKu/p1fK9sdhcJBPwrx6SWHts+7OuUt+I1EUiktTBpMAfjmqgcAFFxxXM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QvPiBXHd; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ue2swg17"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33007C4CEF1;
-	Thu, 13 Nov 2025 13:46:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763041604;
-	bh=2H6rlx29WaH6+Ck5dAl4McPh5eS7DdZ2e2j7s8uw6r4=;
-	h=From:To:Cc:Subject:Date:From;
-	b=Ue2swg17VobiVv12Y1Z/ZLca7Tb+zzXteUshMB9NRN56e21aTRDYu+2kKBSQCru7O
-	 CUdeIWUY3+LIS2/PqBNgNX8KMZs4wOepXRRbUyKvSSbBhAlrcTyWb8Dx2Rv1PUrXpO
-	 ctQFi1ucY3TBzJbtZXUsSV5D5HuLuqpBs8srlbFLryR5s9WCqySeMgMAyhJjU6SKK1
-	 JM19K9Ga7EZPa43o8AYxfIgOqnPXOPiHv3hPH90mXqPzC+ULcswjUiTwEpGWWuMRka
-	 boklpXBYxNU8pbNOFXjpwjjUKOS98DzzqbdM9jmQH5PdDYO+JfFyRa3womxz9eHp/O
-	 P5zPOIWCN8/dQ==
-From: cem@kernel.org
-To: aalbersh@redhat.com
-Cc: linux-xfs@vger.kernel.org,
-	hch@lst.de
-Subject: [PATCH V2] mkfs: fix zone capacity check for sequential zones
-Date: Thu, 13 Nov 2025 14:46:13 +0100
-Message-ID: <20251113134632.754351-1-cem@kernel.org>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QvPiBXHd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1763041774;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=GgcxqGOkPKL+u+JrA2McOJ6M6R3yj2NAENV2OrWShSw=;
+	b=QvPiBXHd+OqmTnSAzRrRMCtYE2H07XU1SvLi6TezDJIHdmM3AqZaro5hUxeTCaKBWFpWzg
+	pVK7YktwdhTyJSUqvXWUYjYYnZO8Vl88vlpj1UGlqlsAVPKOUQOqRDfPSmOd/iWJ6tPpte
+	A7GviGygiRqteqVCqa6FDHRpHbBeX1w=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-694-SvbAzkYgMmm138W965Bt1g-1; Thu,
+ 13 Nov 2025 08:49:32 -0500
+X-MC-Unique: SvbAzkYgMmm138W965Bt1g-1
+X-Mimecast-MFC-AGG-ID: SvbAzkYgMmm138W965Bt1g_1763041772
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E91B318AB42A;
+	Thu, 13 Nov 2025 13:49:31 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.64.29])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 4B1E1180049F;
+	Thu, 13 Nov 2025 13:49:31 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+To: linux-fsdevel@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: [PATCH v2] iomap: replace folio_batch allocation with stack allocation
+Date: Thu, 13 Nov 2025 08:54:04 -0500
+Message-ID: <20251113135404.553339-1-bfoster@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-From: Carlos Maiolino <cem@kernel.org>
+Zhang Yi points out that the dynamic folio_batch allocation in
+iomap_fill_dirty_folios() is problematic for the ext4 on iomap work
+that is under development because it doesn't sufficiently handle the
+allocation failure case (by allowing a retry, for example).
 
-Sequential zones can have a different, smaller capacity than
-conventional zones.
+The dynamic allocation was initially added for simplicity and to
+help indicate whether the batch was used or not by the calling fs.
+To address this issue, put the batch on the stack of
+iomap_zero_range() and use a flag to control whether the batch
+should be used in the iomap folio lookup path. This keeps things
+simple and eliminates the concern for ext4 on iomap.
 
-Currently mkfs assumes both sequential and conventional zones will have
-the same capacity and and set the zone_info to the capacity of the first
-found zone and use that value to validate all the remaining zones's
-capacity.
+While here, also clean up the fill helper signature to be more
+consistent with the underlying filemap helper. Pass through the
+return value of the filemap helper (folio count) and update the
+lookup offset via an out param.
 
-Because conventional zones can't have a different capacity than its
-size, the first zone always have the largest possible capacity, so, mkfs
-will fail to validate any consecutive sequential zone if its capacity is
-smaller than the conventional zones.
-
-What we should do instead, is set the zone info capacity accordingly to
-the settings of first zone found of the respective type and validate
-the capacity based on that instead of assuming all zones will have the
-same capacity.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Acked-by: Dave Chinner <dchinner@redhat.com>
 ---
 
-Changelog:
-	v2:
-	 - remove unnecessary braces
-	 - add hch's RwB
+v2:
+- Reworked fill function to return folio count and pass flags as param.
+- Updated commit log to note function signature changes.
+v1: https://lore.kernel.org/linux-fsdevel/20251111175047.321869-1-bfoster@redhat.com/
 
- mkfs/xfs_mkfs.c | 50 +++++++++++++++++++++++++++++++------------------
- 1 file changed, 32 insertions(+), 18 deletions(-)
+ fs/iomap/buffered-io.c | 50 +++++++++++++++++++++++++++++-------------
+ fs/iomap/iter.c        |  6 ++---
+ fs/xfs/xfs_iomap.c     | 11 +++++-----
+ include/linux/iomap.h  |  8 +++++--
+ 4 files changed, 50 insertions(+), 25 deletions(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index cd4f3ba4a549..8f5a6fa56764 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2545,6 +2545,28 @@ struct zone_topology {
- /* random size that allows efficient processing */
- #define ZONES_PER_IOCTL			16384
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 9b0b9cf7caa7..bc8b2ebb3330 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -772,7 +772,7 @@ static struct folio *__iomap_get_folio(struct iomap_iter *iter,
+ 	if (!mapping_large_folio_support(iter->inode->i_mapping))
+ 		len = min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
  
-+static void
-+zone_validate_capacity(
-+	struct zone_info	*zi,
-+	__u64			capacity,
-+	bool			conventional)
-+{
-+	if (conventional && zi->zone_capacity != zi->zone_size) {
-+		fprintf(stderr, _("Zone capacity equal to Zone size required for conventional zones.\n"));
-+		exit(1);
-+	}
-+
-+	if (zi->zone_capacity > zi->zone_size) {
-+		fprintf(stderr, _("Zone capacity larger than zone size!\n"));
-+		exit(1);
-+	}
-+
-+	if (zi->zone_capacity != capacity) {
-+		fprintf(stderr, _("Inconsistent zone capacity!\n"));
-+		exit(1);
-+	}
-+}
-+
- static void
- report_zones(
- 	const char		*name,
-@@ -2621,6 +2643,11 @@ _("Inconsistent zone size!\n"));
+-	if (iter->fbatch) {
++	if (iter->iomap.flags & IOMAP_F_FOLIO_BATCH) {
+ 		struct folio *folio = folio_batch_next(iter->fbatch);
  
- 			switch (zones[i].type) {
- 			case BLK_ZONE_TYPE_CONVENTIONAL:
-+				if (!zi->zone_capacity)
-+					zi->zone_capacity = zones[i].capacity;
-+				zone_validate_capacity(zi, zones[i].capacity,
-+						       true);
-+
- 				/*
- 				 * We can only use the conventional space at the
- 				 * start of the device for metadata, so don't
-@@ -2632,6 +2659,11 @@ _("Inconsistent zone size!\n"));
- 					zi->nr_conv_zones++;
- 				break;
- 			case BLK_ZONE_TYPE_SEQWRITE_REQ:
-+				if (!found_seq)
-+					zi->zone_capacity = zones[i].capacity;
-+				zone_validate_capacity(zi, zones[i].capacity,
-+						       false);
-+
- 				found_seq = true;
- 				break;
- 			case BLK_ZONE_TYPE_SEQWRITE_PREF:
-@@ -2644,19 +2676,6 @@ _("Unknown zone type (0x%x) found.\n"), zones[i].type);
- 				exit(1);
- 			}
+ 		if (!folio)
+@@ -869,7 +869,7 @@ static int iomap_write_begin(struct iomap_iter *iter,
+ 	 * process so return and let the caller iterate and refill the batch.
+ 	 */
+ 	if (!folio) {
+-		WARN_ON_ONCE(!iter->fbatch);
++		WARN_ON_ONCE(!(iter->iomap.flags & IOMAP_F_FOLIO_BATCH));
+ 		return 0;
+ 	}
  
--			if (!n) {
--				zi->zone_capacity = zones[i].capacity;
--				if (zi->zone_capacity > zi->zone_size) {
--					fprintf(stderr,
--_("Zone capacity larger than zone size!\n"));
--					exit(1);
--				}
--			} else if (zones[i].capacity != zi->zone_capacity) {
--				fprintf(stderr,
--_("Inconsistent zone capacity!\n"));
--				exit(1);
--			}
--
- 			n++;
+@@ -1483,23 +1483,39 @@ static int iomap_zero_iter(struct iomap_iter *iter, bool *did_zero,
+ 	return status;
+ }
+ 
+-loff_t
++/**
++ * iomap_fill_dirty_folios - fill a folio batch with dirty folios
++ * @iter: Iteration structure
++ * @start: Start offset of range. Updated based on lookup progress.
++ * @end: End offset of range
++ * @iomap_flags: Flags to set on the associated iomap to track the batch.
++ *
++ * Returns the folio count directly. Also returns the associated control flag if
++ * the the batch lookup is performed and the expected offset of a subsequent
++ * lookup via out params. The caller is responsible to set the flag on the
++ * associated iomap.
++ */
++unsigned int
+ iomap_fill_dirty_folios(
+ 	struct iomap_iter	*iter,
+-	loff_t			offset,
+-	loff_t			length)
++	loff_t			*start,
++	loff_t			end,
++	unsigned int		*iomap_flags)
+ {
+ 	struct address_space	*mapping = iter->inode->i_mapping;
+-	pgoff_t			start = offset >> PAGE_SHIFT;
+-	pgoff_t			end = (offset + length - 1) >> PAGE_SHIFT;
++	pgoff_t			pstart = *start >> PAGE_SHIFT;
++	pgoff_t			pend = (end - 1) >> PAGE_SHIFT;
++	unsigned int		count;
+ 
+-	iter->fbatch = kmalloc(sizeof(struct folio_batch), GFP_KERNEL);
+-	if (!iter->fbatch)
+-		return offset + length;
+-	folio_batch_init(iter->fbatch);
++	if (!iter->fbatch) {
++		*start = end;
++		return 0;
++	}
+ 
+-	filemap_get_folios_dirty(mapping, &start, end, iter->fbatch);
+-	return (start << PAGE_SHIFT);
++	count = filemap_get_folios_dirty(mapping, &pstart, pend, iter->fbatch);
++	*start = (pstart << PAGE_SHIFT);
++	*iomap_flags |= IOMAP_F_FOLIO_BATCH;
++	return count;
+ }
+ EXPORT_SYMBOL_GPL(iomap_fill_dirty_folios);
+ 
+@@ -1508,17 +1524,21 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+ 		const struct iomap_ops *ops,
+ 		const struct iomap_write_ops *write_ops, void *private)
+ {
++	struct folio_batch fbatch;
+ 	struct iomap_iter iter = {
+ 		.inode		= inode,
+ 		.pos		= pos,
+ 		.len		= len,
+ 		.flags		= IOMAP_ZERO,
+ 		.private	= private,
++		.fbatch		= &fbatch,
+ 	};
+ 	struct address_space *mapping = inode->i_mapping;
+ 	int ret;
+ 	bool range_dirty;
+ 
++	folio_batch_init(&fbatch);
++
+ 	/*
+ 	 * To avoid an unconditional flush, check pagecache state and only flush
+ 	 * if dirty and the fs returns a mapping that might convert on
+@@ -1529,11 +1549,11 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+ 	while ((ret = iomap_iter(&iter, ops)) > 0) {
+ 		const struct iomap *srcmap = iomap_iter_srcmap(&iter);
+ 
+-		if (WARN_ON_ONCE(iter.fbatch &&
++		if (WARN_ON_ONCE((iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
+ 				 srcmap->type != IOMAP_UNWRITTEN))
+ 			return -EIO;
+ 
+-		if (!iter.fbatch &&
++		if (!(iter.iomap.flags & IOMAP_F_FOLIO_BATCH) &&
+ 		    (srcmap->type == IOMAP_HOLE ||
+ 		     srcmap->type == IOMAP_UNWRITTEN)) {
+ 			s64 status;
+diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
+index 8692e5e41c6d..c04796f6e57f 100644
+--- a/fs/iomap/iter.c
++++ b/fs/iomap/iter.c
+@@ -8,10 +8,10 @@
+ 
+ static inline void iomap_iter_reset_iomap(struct iomap_iter *iter)
+ {
+-	if (iter->fbatch) {
++	if (iter->iomap.flags & IOMAP_F_FOLIO_BATCH) {
+ 		folio_batch_release(iter->fbatch);
+-		kfree(iter->fbatch);
+-		iter->fbatch = NULL;
++		folio_batch_reinit(iter->fbatch);
++		iter->iomap.flags &= ~IOMAP_F_FOLIO_BATCH;
+ 	}
+ 
+ 	iter->status = 0;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 04f39ea15898..37a1b33e9045 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1831,7 +1831,6 @@ xfs_buffered_write_iomap_begin(
+ 	 */
+ 	if (flags & IOMAP_ZERO) {
+ 		xfs_fileoff_t eof_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
+-		u64 end;
+ 
+ 		if (isnullstartblock(imap.br_startblock) &&
+ 		    offset_fsb >= eof_fsb)
+@@ -1851,12 +1850,14 @@ xfs_buffered_write_iomap_begin(
+ 		 */
+ 		if (imap.br_state == XFS_EXT_UNWRITTEN &&
+ 		    offset_fsb < eof_fsb) {
+-			loff_t len = min(count,
+-					 XFS_FSB_TO_B(mp, imap.br_blockcount));
++			loff_t foffset = offset, fend;
+ 
+-			end = iomap_fill_dirty_folios(iter, offset, len);
++			fend = offset +
++			       min(count, XFS_FSB_TO_B(mp, imap.br_blockcount));
++			iomap_fill_dirty_folios(iter, &foffset, fend,
++						&iomap_flags);
+ 			end_fsb = min_t(xfs_fileoff_t, end_fsb,
+-					XFS_B_TO_FSB(mp, end));
++					XFS_B_TO_FSB(mp, foffset));
  		}
- 		sector = zones[rep->nr_zones - 1].start +
-@@ -2683,11 +2702,6 @@ validate_zoned(
- _("Data devices requires conventional zones.\n"));
- 				usage();
- 			}
--			if (zt->data.zone_capacity != zt->data.zone_size) {
--				fprintf(stderr,
--_("Zone capacity equal to Zone size required for conventional zones.\n"));
--				usage();
--			}
  
- 			cli->sb_feat.zoned = true;
- 			cfg->rtstart =
+ 		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 8b1ac08c7474..ce2c9fbd8e16 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -88,6 +88,9 @@ struct vm_fault;
+ /*
+  * Flags set by the core iomap code during operations:
+  *
++ * IOMAP_F_FOLIO_BATCH indicates that the folio batch mechanism is active
++ * for this operation, set by iomap_fill_dirty_folios().
++ *
+  * IOMAP_F_SIZE_CHANGED indicates to the iomap_end method that the file size
+  * has changed as the result of this write operation.
+  *
+@@ -95,6 +98,7 @@ struct vm_fault;
+  * range it covers needs to be remapped by the high level before the operation
+  * can proceed.
+  */
++#define IOMAP_F_FOLIO_BATCH	(1U << 13)
+ #define IOMAP_F_SIZE_CHANGED	(1U << 14)
+ #define IOMAP_F_STALE		(1U << 15)
+ 
+@@ -352,8 +356,8 @@ bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio);
+ int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+ 		const struct iomap_ops *ops,
+ 		const struct iomap_write_ops *write_ops);
+-loff_t iomap_fill_dirty_folios(struct iomap_iter *iter, loff_t offset,
+-		loff_t length);
++unsigned int iomap_fill_dirty_folios(struct iomap_iter *iter, loff_t *start,
++		loff_t end, unsigned int *iomap_flags);
+ int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+ 		bool *did_zero, const struct iomap_ops *ops,
+ 		const struct iomap_write_ops *write_ops, void *private);
 -- 
-2.51.0
+2.51.1
 
