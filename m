@@ -1,54 +1,98 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A98222F5463;
-	Thu, 13 Nov 2025 05:58:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35B0523EAAA
+	for <linux-xfs@vger.kernel.org>; Thu, 13 Nov 2025 06:48:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763013488; cv=none; b=V1I3pk7UMmTxyWy3C6r0xC3emrhd0hVc7PlGlAM9wnxk5i4u1YVBRPhsWMG9PaFlOzfTzjByqgk4s+koWwvdXPCUJm97GxF9HLLDUc4bEuBJAIIooF6HwFX0KBjXTA/dEJmPP8RC6as9+ty1tm5Sntl2HR5+/TYO49bF8j8QxQY=
+	t=1763016521; cv=none; b=hhyx01l6WHOzOy/D4VNxXWkSoaQMZwB1DgJzI5g5nBLoHReQzKo2Ws/gHl4lcRhaQCTUziuKmSzN+k9KKwAfbnkrd7B1DvOdJgqFAcg97lHcTX+AtAvjllYeA2tlFQoWRP2fLqRglV7lxwvhE54/gmTsh3/vA+qysLWamknDXNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763013488; c=relaxed/simple;
-	bh=JKWBAyeIxHlTSXPkW7ON9aStxpB/OdKegHS47MxZbSs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ETlh0drEWGgSDN5XN0sr+jjYodY5B4/pWjWBlkoNs9e6Q79r18VdJjOc2jxwF4PX24iywsuyUJrCuQ3MVYUfn1lwXkhKMGXy5EkqTBE/kR3/+6fxDeuumlLoGkGIfO+2fYX+ir0b7t3CIvBxECaMCyqbN1OSot+Rpl9hV1XRViw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id BAF406732A; Thu, 13 Nov 2025 06:57:58 +0100 (CET)
-Date: Thu, 13 Nov 2025 06:57:58 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Ritesh Harjani <ritesh.list@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
-	Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	Christian Brauner <brauner@kernel.org>, djwong@kernel.org,
-	john.g.garry@oracle.com, tytso@mit.edu, willy@infradead.org,
-	dchinner@redhat.com, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, jack@suse.cz,
-	nilay@linux.ibm.com, martin.petersen@oracle.com,
-	rostedt@goodmis.org, axboe@kernel.dk, linux-block@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/8] xfs: single block atomic writes for buffered IO
-Message-ID: <20251113055758.GA29014@lst.de>
-References: <cover.1762945505.git.ojaswin@linux.ibm.com> <aRUCqA_UpRftbgce@dread.disaster.area> <20251113052337.GA28533@lst.de> <87frai8p46.ritesh.list@gmail.com>
+	s=arc-20240116; t=1763016521; c=relaxed/simple;
+	bh=YROUopYWe/0gOYwKFo507zDSX/1oJRlQc2C4hrYTlkw=;
+	h=Message-ID:Date:MIME-Version:To:CC:From:Subject:Content-Type; b=hAwDBTyO9MiLl/CnQGon0UfVsRWNgaBWwQkDoZpVocBsDCTqR1i6vZHFYKbJ4yfGXO729n0rDW4q+2PbvbCnyB2wbtbQyT1fRLlUfAy8X07X0wccLdVKKlr1XS4W46Aauz+4Dy1DBxYA8rqB8NX0F05H7JMcFMbGkAvM69uskLY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=NU7ZxOoS; arc=none smtp.client-ip=113.46.200.219
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="NU7ZxOoS"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=hn0KKtStKm7r6si39dNPhTZC49/tA3eu15X4/2McHAI=;
+	b=NU7ZxOoSBbUe/iLT2AwkU7zF5JsqjLYGCmc1eKAzpYW1IgHAgDAI173GnEZvx5KSuKm2XTxFM
+	d4DxLvngjEfrk7PH27HHpDfRyMIt7o0beBhmXuh55wFBJrHQMmf7U1rVf+kZOCLWezfKaVrulDl
+	YUAhDqrX9apIle/mJRSahZ4=
+Received: from mail.maildlp.com (unknown [172.19.88.194])
+	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4d6W5p1Llnz1prMy;
+	Thu, 13 Nov 2025 14:46:54 +0800 (CST)
+Received: from kwepemj500016.china.huawei.com (unknown [7.202.194.46])
+	by mail.maildlp.com (Postfix) with ESMTPS id D63031401E0;
+	Thu, 13 Nov 2025 14:48:34 +0800 (CST)
+Received: from [10.174.187.148] (10.174.187.148) by
+ kwepemj500016.china.huawei.com (7.202.194.46) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 13 Nov 2025 14:48:34 +0800
+Message-ID: <7ae57ed5-75bd-277b-8cb7-970e65761dcd@huawei.com>
+Date: Thu, 13 Nov 2025 14:48:34 +0800
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <yangyun50@huawei.com>
+From: Wu Guanghao <wuguanghao3@huawei.com>
+Subject: [PATCH] libxfs: remove the duplicate allocation of
+ xfs_extfree_item_cache
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <87frai8p46.ritesh.list@gmail.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
+ kwepemj500016.china.huawei.com (7.202.194.46)
 
-On Thu, Nov 13, 2025 at 11:12:49AM +0530, Ritesh Harjani wrote:
-> For e.g. https://lwn.net/Articles/974578/ goes in depth and talks about
-> Postgres folks looking for this, since PostgreSQL databases uses
-> buffered I/O for their database writes.
+In init_caches()，the xfs_extfree_item_cache is being repeatedly initialized.
+The code flow is as follows:
 
-Honestly, a database stubbornly using the wrong I/O path should not be
-a reaѕon for adding this complexity.
+init_caches()
+    ...
+    xfs_defer_init_item_caches()
+        xfs_extfree_intent_init_cache()
+            // first alloc
+            xfs_extfree_item_cache = kmem_cache_create("xfs_extfree_intent",...);
+    ...
+    // second alloc
+    xfs_extfree_item_cache = kmem_cache_init(..., "xfs_extfree_item");
 
+So, remove the duplicate allocation code.
+
+Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+---
+ libxfs/init.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 393a9467..a5e89853 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -214,9 +214,6 @@ init_caches(void)
+ 		fprintf(stderr, "Could not allocate btree cursor caches.\n");
+ 		abort();
+ 	}
+-	xfs_extfree_item_cache = kmem_cache_init(
+-			sizeof(struct xfs_extent_free_item),
+-			"xfs_extfree_item");
+ 	xfs_trans_cache = kmem_cache_init(
+ 			sizeof(struct xfs_trans), "xfs_trans");
+ 	xfs_parent_args_cache = kmem_cache_init(
+@@ -236,7 +233,6 @@ destroy_caches(void)
+ 	leaked += kmem_cache_destroy(xfs_da_state_cache);
+ 	xfs_defer_destroy_item_caches();
+ 	xfs_btree_destroy_cur_caches();
+-	leaked += kmem_cache_destroy(xfs_extfree_item_cache);
+ 	leaked += kmem_cache_destroy(xfs_trans_cache);
+ 	leaked += kmem_cache_destroy(xfs_parent_args_cache);
+
+-- 
+2.27.0
