@@ -1,35 +1,48 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CF0C289811;
-	Thu, 13 Nov 2025 06:51:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA9BC2F2E;
+	Thu, 13 Nov 2025 06:55:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763016663; cv=none; b=ZqP97qxt4gYoP2Zt6V1dkJxSwcM7GA0qNj0UlysDkeSvWu2FHBmEtishcHcqr9fjo8XE2EtLeIU/XiHT6huPEA4wTGrF+dWLyRhpg2O5lLix2AFqn6yv5+bD7Xo6CN0ViFGPcfgZ8gkRUztHHDgt/4o1mCfc+XD7Jb6wx2juUjM=
+	t=1763016948; cv=none; b=P9fkU2RFtug9jJahWUU8eJa+QC1wEuuXPBKwVnTNfW1rZlO/4Fjjgy+45myqtUHSofvx/9a5KE6KhvqgYGbdl1hgqWLdTgywQLkcSKi4W+xBchll4Ghb+atW5qiOT+HTP4Ol8r6tbBQi2JP7JQ3Ot46Cpoh8Xs9Gs1/nvO7iN8M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763016663; c=relaxed/simple;
-	bh=+WKoqGO2f9tpwqkvL4EZEY7g5ZBBuAqMDoq+Jh0H5oI=;
+	s=arc-20240116; t=1763016948; c=relaxed/simple;
+	bh=NdrChLn5Ca63Qt8rRXJjVn3C6tdxVnLlwSl0CfW6iMI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sRfiElycLPZdcKReNrO3Of0NgYZg9uYe/CNA1XnHULcKg+ZE01GXDSf8Ri/rXis8Zt4l2qoxePVRvExbgKyuePxZVW/wGUtP2VLrbQB/maVat9/vHQf11UjEP/LjMN6lgHXxMrg/Kja08VrEIgOY51U27hVrSVvBe3vY73r8bqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 3BF816732A; Thu, 13 Nov 2025 07:50:56 +0100 (CET)
-Date: Thu, 13 Nov 2025 07:50:55 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	"Darrick J. Wong" <djwong@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-	Avi Kivity <avi@scylladb.com>, Damien Le Moal <dlemoal@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>,
-	Johannes Thumshirn <jth@kernel.org>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org
-Subject: Re: [PATCH 4/5] iomap: support write completions from interrupt
- context
-Message-ID: <20251113065055.GA29641@lst.de>
-References: <20251112072214.844816-1-hch@lst.de> <20251112072214.844816-5-hch@lst.de> <nujtqnweb7jfbyk4ov3a7z5tdtl24xljntzbpecgv6l7aoeytd@nkxsilt6w7d3>
+	 Content-Type:Content-Disposition:In-Reply-To; b=QoBnvcttYvO7YpHz/ZojXfJGZKsyhhBzwcL0tlRiS/lllaY1C41rkNRWMGUewXImejKx1CThi2B4Td+vk9RjMJs3NCJ4c5BgLWisDh3MF20UETbxqMsGb0FHftIitn54TfAnTvTlA/HBtR3ce2J9Q6rlXdMEG2iYVigGh4/4vNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=aVHJitlj; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aVHJitlj"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=El7SI5PteVGd8tbOlaue5rfugn9SVEem2nHz9oU0BvI=; b=aVHJitljtBgk4hh3Pkc2l0tkJM
+	knBECJWSzmXxCpWyqOauwO3EyvW2DbZIG5wrGwZhfHI5+8bRy10/mCE13DHjENoLsfExmzkBJnsmT
+	qA/f8qVFwM+Oe0dPXpdDVMn3rDHykjBlmpV3IX2jmCToxXyZvpwkmGbqfqcyz+KcTsuBLd29ngrgL
+	xh/Xg7Wf8Ypwuh49cwF4fhhVCkiZUiGvFocJNXAjDkPNBCDGDUZqRMY+FVjH//yB4LsvCr+MOzIPX
+	LQP/p6n24M42gSmQr4qCYkSG3IqAF6myu0f7PdovoF1eHMTcfG2kXXrDhNGogpIPydktGMUkxmN04
+	qgU73Ysg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vJRF8-00000009ySp-1VBd;
+	Thu, 13 Nov 2025 06:55:42 +0000
+Date: Wed, 12 Nov 2025 22:55:42 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Raphael Pinsonneault-Thibeault <rpthibeault@gmail.com>, cem@kernel.org,
+	chandanbabu@kernel.org, bfoster@redhat.com,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-kernel-mentees@lists.linux.dev, skhan@linuxfoundation.org,
+	syzbot+9f6d080dece587cfdd4c@syzkaller.appspotmail.com
+Subject: Re: [PATCH] xfs: reject log records with v2 size but v1 header
+ version to avoid OOB
+Message-ID: <aRWA7v5Yng5i4X1U@infradead.org>
+References: <aRSng1I6l1f7l7EB@infradead.org>
+ <20251112181817.2027616-2-rpthibeault@gmail.com>
+ <20251112184504.GA196370@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,34 +51,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <nujtqnweb7jfbyk4ov3a7z5tdtl24xljntzbpecgv6l7aoeytd@nkxsilt6w7d3>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20251112184504.GA196370@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Nov 12, 2025 at 09:25:58PM +0100, Jan Kara wrote:
-> > +
-> > +		/*
-> > +		 * We can only do inline completion for pure overwrites that
-> > +		 * don't require additional I/O at completion time.
-> > +		 *
-> > +		 * This rules out writes that need zeroing or extent conversion,
-> > +		 * or extend the file size.
-> > +		 */
-> > +		if (!iomap_dio_is_overwrite(iomap))
-> > +			dio->flags &= ~IOMAP_DIO_INLINE_COMP;
-> >  	} else {
-> >  		bio_opf |= REQ_OP_READ;
-> >  	}
+On Wed, Nov 12, 2025 at 10:45:04AM -0800, Darrick J. Wong wrote:
+> > @@ -3064,8 +3064,12 @@ xlog_do_recovery_pass(
+> >  		 * still allocate the buffer based on the incorrect on-disk
+> >  		 * size.
+> >  		 */
+> > -		if (h_size > XLOG_HEADER_CYCLE_SIZE &&
+> > -		    (rhead->h_version & cpu_to_be32(XLOG_VERSION_2))) {
 > 
-> OK, now I see why you wrote iomap_dio_is_overwrite() the way you did. You
-> still want to keep completions inline for overwrites of possibly
-> uncommitted extents.
+> Just out of curiosity, why is this a bit flag test?  Did XFS ever emit a
+> log record with both XLOG_VERSION_2 *and* XLOG_VERSION_1 set?  The code
+> that writes new log records only sets h_version to 1 or 2, not 3.
 
-Yes.
+Yeah.  This particular instance got added by me, but it is a copy and
+paste from xlog_logrec_hblks, which again consolidate multiple chunks
+of this style of code, which were moved around a few times.
 
-> But I have to admit it all seems somewhat fragile and
-> difficult to follow. Can't we just check for IOMAP_DIO_UNWRITTEN |
-> IOMAP_DIO_COW | IOMAP_DIO_NEED_SYNC in flags (plus the i_size check) and be
-> done with it?
+I think originally this came from Nathan fixing this:
 
-You mean drop the common helper?  How would that be better and less
-fragile?   Note that I care strongly, but I don't really see the point.
+-               if ((h_version && XLOG_VERSION_2) &&
++
++               if ((h_version & XLOG_VERSION_2) &&
+
+or in other words, this was a mess all the way back.
+
