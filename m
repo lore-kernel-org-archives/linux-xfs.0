@@ -1,36 +1,39 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A91A32573E;
-	Fri, 14 Nov 2025 15:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE3633358BC
+	for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 16:44:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763134611; cv=none; b=Y1r3nHLouYxc7T9Vud0vfpQ44jCFkdGnIYxVWTIOFnoTw8az1DPs4N664UWIoeKCVkW08wCYCrT0IISTTmioUaHamrtdVLBUiXxotKTCIalDf3DFkBqyXwTsyEIwIdJ3p3u04Fs5SopxJYkCChnfGrp5jg2SqhZK5s8WWAG4Kxg=
+	t=1763138677; cv=none; b=tX2QPjGqmkiFLIud0AURXR2nGqxFiDuKOCDlWZvUXREnfBNGM3vqK4srDYOgVSRALMxs4ZcbUh9+lr7LDYj9OPT3xwQT+2psmzNlCRowxW/YO1iSzIc2N0YV//dkiuP7hABgj2jPCaip8R7bnQ8TesYhpxQZWqxgJHZWQ9uxxBA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763134611; c=relaxed/simple;
-	bh=puvLXh5u8I8NJkQFC3SxNEhEGzv/w9+sDClfLtptJ8M=;
+	s=arc-20240116; t=1763138677; c=relaxed/simple;
+	bh=y11jh129VzpLg1lcfaYjRW4POIy0FP8Mzkz+l0q9EE8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qHViGaRnD8sByu8F7YijPjFYy6xUYpS2USDCbt/+rFlnSGxDAxzA8We1IfF0Xo8YWe8A8ewEMWPk4qeQJnfqTaX9QqHoCE/r9R2kPh6ywPD0EHnfiAnn43/GKf67T1V/S63eSjClZnTjDNKlvKWLwt8703pBzi/Jw4zaKa5ANNI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id A84A4227A88; Fri, 14 Nov 2025 16:36:44 +0100 (CET)
-Date: Fri, 14 Nov 2025 16:36:44 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Kevin Wolf <kwolf@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>,
-	Keith Busch <kbusch@kernel.org>, Dave Chinner <david@fromorbit.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Christian Brauner <brauner@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-block@vger.kernel.org
-Subject: Re: fall back from direct to buffered I/O when stable writes are
- required
-Message-ID: <20251114153644.GA31395@lst.de>
-References: <20251031130050.GA15719@lst.de> <aQTcb-0VtWLx6ghD@kbusch-mbp> <20251031164701.GA27481@lst.de> <kpk2od2fuqofdoneqse2l3gvn7wbqx3y4vckmnvl6gc2jcaw4m@hsxqmxshckpj> <20251103122111.GA17600@lst.de> <aRYXuwtSQUz6buBs@redhat.com> <20251114053943.GA26898@lst.de> <aRb2g3VLjz1Q_rLa@redhat.com> <20251114120152.GA13689@lst.de> <aRchGBJA1ExoGi8W@redhat.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=mCkAMoyF7N1PDjpbXao3VQpEUYCjclaWIyFyhooZVztfep/eSq/hNP2kCsF0ABm8cg4xdBB2KHdgpHo1TuTV5HlVc5QbN53KDqlo+gM5uPxvqk/6Mn0r6I0mIXKCDSIxFbIJDrPA8j9jPvMy2YgyvpJwb2qo6RRyC3wzIb4bppk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PZ3cq0VT; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PZ3cq0VT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A0A6C19422;
+	Fri, 14 Nov 2025 16:44:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763138677;
+	bh=y11jh129VzpLg1lcfaYjRW4POIy0FP8Mzkz+l0q9EE8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=PZ3cq0VTfkREixDUaCuCBs3PQKE8ESDxN4mAPiAfjCpK7HL4I3kuhx/YJyDqMbelS
+	 OUHF1HT0z2HV+nOo3tdF6SV8/ihxVoNNGkwU/NQ5yck3vtxgE3sM+K2m24h7/KAuIR
+	 qIBbxWzvjNmb7tOi7WuZdVhBk3j3FrGnTGcwRUEUGgDI3Y8aAo9s6fcIjt0Gk/GLMg
+	 R2SsdihXETmG1bgidXk6+JUxws/jN8JkokAT1XJKJa7mYdqjmAN7Hw3DqHxzTztaP4
+	 Gr+Tou2MeErNEMzWgWHxPLGjXB/9M0TwmHRq1GL8F813CcVLNrk5SZuwkNAWJTE5iC
+	 S7IPMMcxRdMeg==
+Date: Fri, 14 Nov 2025 08:44:36 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Lukas Herbolt <lukas@herbolt.com>
+Cc: hch@infradead.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v5] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+Message-ID: <20251114164436.GE196370@frogsfrogsfrogs>
+References: <aRWB3ZCiCBQ8TcGR@infradead.org>
+ <20251114085524.1468486-3-lukas@herbolt.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,32 +42,157 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aRchGBJA1ExoGi8W@redhat.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20251114085524.1468486-3-lukas@herbolt.com>
 
-On Fri, Nov 14, 2025 at 01:31:20PM +0100, Kevin Wolf wrote:
-> My main point above was that RAID and (potentially passed through) PI
-> are independent of each other and I think that's still true with or
-> without multiple stability levels.
+On Fri, Nov 14, 2025 at 09:55:26AM +0100, Lukas Herbolt wrote:
+> Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
+> the unmap write zeroes operation.
 > 
-> If you don't have these levels, you just have to treat level 1 and 2 the
-> same, i.e. bounce all the time if the kernel needs the guarantee (which
-> is not for userspace PI, unless the same request needs the bounce buffer
-> for another reason in a different place like RAID). That might be less
-> optimal, but still correct and better than what happens today because at
-> least you don't bounce for level 0 any more.
+> Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
+> ---
+> v5 changes:
+> 	formating
+> 
+>  fs/xfs/xfs_bmap_util.c | 10 ++++++++--
+>  fs/xfs/xfs_bmap_util.h |  2 +-
+>  fs/xfs/xfs_file.c      | 25 +++++++++++++++++++------
+>  3 files changed, 28 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 06ca11731e430..ee5765bf52944 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -642,11 +642,17 @@ xfs_free_eofblocks(
+>  	return error;
+>  }
+>  
+> +/*
+> + * Callers can specify bmapi_flags, if XFS_BMAPI_ZERO is used there are no
+> + * further checks whether the hard ware supports and it can fallback to
+> + * software zeroing.
+> + */
+>  int
+>  xfs_alloc_file_space(
+>  	struct xfs_inode	*ip,
+>  	xfs_off_t		offset,
+> -	xfs_off_t		len)
+> +	xfs_off_t		len,
+> +	uint32_t		bmapi_flags)
+>  {
+>  	xfs_mount_t		*mp = ip->i_mount;
+>  	xfs_off_t		count;
+> @@ -748,7 +754,7 @@ xfs_alloc_file_space(
+>  		 * will eventually reach the requested range.
+>  		 */
+>  		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+> -				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
+> +				allocatesize_fsb, bmapi_flags, 0, imapp,
+>  				&nimaps);
+>  		if (error) {
+>  			if (error != -ENOSR)
+> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> index c477b33616304..2895cc97a5728 100644
+> --- a/fs/xfs/xfs_bmap_util.h
+> +++ b/fs/xfs/xfs_bmap_util.h
+> @@ -56,7 +56,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+>  
+>  /* preallocation and hole punch interface */
+>  int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
+> -		xfs_off_t len);
+> +		xfs_off_t len, uint32_t bmapi_flags);
+>  int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
+>  		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
+>  int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index f96fbf5c54c99..3ed11b1028563 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1261,23 +1261,33 @@ xfs_falloc_zero_range(
+>  	struct xfs_zone_alloc_ctx *ac)
+>  {
+>  	struct inode		*inode = file_inode(file);
+> +	struct xfs_inode	*ip = XFS_I(inode);
+>  	unsigned int		blksize = i_blocksize(inode);
+>  	loff_t			new_size = 0;
+>  	int			error;
+>  
+> -	trace_xfs_zero_file_space(XFS_I(inode));
+> +	trace_xfs_zero_file_space(ip);
+>  
+>  	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
+> +	error = xfs_free_file_space(ip, offset, len, ac);
+>  	if (error)
+>  		return error;
+>  
+>  	len = round_up(offset + len, blksize) - round_down(offset, blksize);
+>  	offset = round_down(offset, blksize);
+> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	if (mode & FALLOC_FL_WRITE_ZEROES) {
+> +		if (xfs_is_always_cow_inode(ip) ||
+> +				!bdev_write_zeroes_unmap_sectors(
+> +					xfs_inode_buftarg(ip)->bt_bdev))
 
-Agreed.
+I think hch was asking for this indentation:
 
-> If there is something you can optimise by delegating the responsibility
-> to userspace in some cases - like you can prove that only the
-> application itself would be harmed by doing things wrong - then having
-> level 1 separate could certainly be interesting. In this case, I'd
-> consider adding an RWF_* flag for userspace to make the promise even
-> outside PI passthrough. But while potentially worthwhile, it feels like
-> this is a separate optimisation from what you tried to address here.
+		if (xfs_is_always_cow_inode(ip) ||
+		    !bdev_write_zeroes_unmap_sectors(
+				xfs_inode_buftarg(ip)->bt_bdev))
+			return -EOPNOTSUPP;
 
-Agreed as well.
+(otherwise the code looks correct to me)
 
-In fact I'm kinda lost what we're even arguing about :)
+--D
 
+> +		error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_ZERO);
+> +	} else {
+> +		error = xfs_alloc_file_space(ip, offset, len,
+> +				XFS_BMAPI_PREALLOC);
+> +	}
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1302,7 +1312,8 @@ xfs_falloc_unshare_range(
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
+> +			XFS_BMAPI_PREALLOC);
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1330,7 +1341,8 @@ xfs_falloc_allocate_range(
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
+> +	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
+> +			XFS_BMAPI_PREALLOC);
+>  	if (error)
+>  		return error;
+>  	return xfs_falloc_setsize(file, new_size);
+> @@ -1340,7 +1352,7 @@ xfs_falloc_allocate_range(
+>  		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
+>  		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
+>  		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
+> -		 FALLOC_FL_UNSHARE_RANGE)
+> +		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
+>  
+>  STATIC long
+>  __xfs_file_fallocate(
+> @@ -1383,6 +1395,7 @@ __xfs_file_fallocate(
+>  	case FALLOC_FL_INSERT_RANGE:
+>  		error = xfs_falloc_insert_range(file, offset, len);
+>  		break;
+> +	case FALLOC_FL_WRITE_ZEROES:
+>  	case FALLOC_FL_ZERO_RANGE:
+>  		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
+>  		break;
+> -- 
+> 2.51.1
+> 
+> 
