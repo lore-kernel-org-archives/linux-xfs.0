@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86ED62C21CF;
-	Fri, 14 Nov 2025 17:04:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B30F128A704;
+	Fri, 14 Nov 2025 17:06:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763139843; cv=none; b=COjMKBiAk4aGDSnSI2qrFFYY2P0oFlo5deir60+U/kV4i2lQOEUuQmuLHieTx77GZC9egC1I1vT3K+mQalqBjLcJi7aQ1DBFRMU31SFsXfEF2dkwJanfUJvOpBy98frqrWzf5cB3DFFK51i9EthtZf8u7ilzvHiOYErdCSDS2T4=
+	t=1763139984; cv=none; b=ermlmsDubykM8AnByIoytutxE9T47W8oZlBtAaH/BRSCsJ4R4LDuo1YxFeKWAQ5nqBzBWHVi6nvCHgvcINHxVdLuWggRPEYCHVn1vvnZGX7xNUXL4m7AyVb4BIpyQDHUR1j7vdikjuKUuzLzNPF/F2F33osbnm2gVXBphMJfw2Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763139843; c=relaxed/simple;
-	bh=zHnzkeAXG8r0TS4i51hfqGo5aCCLom/pjYdhEKjIo3I=;
+	s=arc-20240116; t=1763139984; c=relaxed/simple;
+	bh=w0i96fXKDhKHkWWpLUUlwu2DiFVVK8gVhYnMkhFa980=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z04WDJIsw45s/iPMHBG5aJ2GPu15MkrcXDopmtwpM+MY7Ojr/2QnVQNbdSJgxG2FF5NcIAtxKSoXV3BB0nkHfIqu9lfsyo1H2FC9tqvmBIlUx6TIleDLfAuO0O+DaonlZMn2XFR0nvRwu6Vw/M8MmJKkJcWfTpuaw0Q6z9Jt8mU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SF4FdfPB; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=c9wVMMRpjyvgFz6BmOmFpM88kC32NBw9Ld0gxyjvFCQdxNQ21/tl8l9V4Orhajqjx+KKaF5aXkk8gaBBarJ7Dmlfa0X9qrklzpxDC5FlTsA2gdeiDCjfqPPX7GRKdUgyuWAJzonZn8UxRbOM7nbpLNVfPiY0sXvOvJ3dLIqW794=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q0NgKSpT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SF4FdfPB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8898C4CEF1;
-	Fri, 14 Nov 2025 17:04:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q0NgKSpT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3979CC19422;
+	Fri, 14 Nov 2025 17:06:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763139843;
-	bh=zHnzkeAXG8r0TS4i51hfqGo5aCCLom/pjYdhEKjIo3I=;
+	s=k20201202; t=1763139984;
+	bh=w0i96fXKDhKHkWWpLUUlwu2DiFVVK8gVhYnMkhFa980=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SF4FdfPBAeMJGDK5nHE+TX9Sqn5teUpBH0eDnHcfs8MTGp18QoHx+3dVCiqaz9uTl
-	 nG5uoTbYHmHDP/0KKfm+cG47bamDdDIV++iXKaB2ASakuaqxJmuz+IfzQtJJOBKT4Y
-	 PjkIAQRrzw+h0LYSK7RbrmIQ8Rc9EidqLQJFZCEMQqyEyT7COyKo7lCHPE5pIqFO+x
-	 frQk1C9OChiVl1vbMuLzEZSoqZBfS2GEl6JqneZcg2IbNG7uZ2lQUdMgHBqMMMlGZT
-	 6s7Qb4eYb9TI1FjveCfyYbCv/VjAogznMCb2Hfdv2SZOxFl2F2STydsYizxZ8IzW/U
-	 GeGMvasQwHCYQ==
-Date: Fri, 14 Nov 2025 09:04:02 -0800
+	b=q0NgKSpTUyKqfws8Yhd80qAAEXnYwmT2GR+fKiAEBmMFuOOBprxld9WiqlG1U+W5U
+	 9fgZCF4gTWnZ/Rys7WS+g1oFk5nKimyFfbJV/nj0F1T6YrfVZIlRXHMA8NFm8G9m0M
+	 TkhwG0gcFgMecbNxryj0Zn7S/OVzN+VbZNWIPped5nzvgqNb1AuRk6+7n9crbNumUW
+	 3B8SsHPgbekZqMObCVcLHPvzB4InUc8e7KKQk+eZwhkM3bEVHXIjcMVwey8q9wztHI
+	 OH3uFgI8xlo3Sf/OpNUrCS7yCvdouRzLsoGfHLdEnZv/DuLgnVIKWwljEY8ur8tkMu
+	 B44HgobcRq03Q==
+Date: Fri, 14 Nov 2025 09:06:23 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>,
@@ -34,10 +34,11 @@ Cc: Carlos Maiolino <cem@kernel.org>,
 	Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
 	Chris Li <sparse@chrisli.org>, linux-sparse@vger.kernel.org,
 	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: move some code out of xfs_iget_recycle
-Message-ID: <20251114170402.GJ196370@frogsfrogsfrogs>
+Subject: Re: [PATCH 3/3] xfs: work around sparse context tracking in
+ xfs_qm_dquot_isolate
+Message-ID: <20251114170623.GK196370@frogsfrogsfrogs>
 References: <20251114055249.1517520-1-hch@lst.de>
- <20251114055249.1517520-3-hch@lst.de>
+ <20251114055249.1517520-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,86 +47,57 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251114055249.1517520-3-hch@lst.de>
+In-Reply-To: <20251114055249.1517520-4-hch@lst.de>
 
-On Fri, Nov 14, 2025 at 06:52:24AM +0100, Christoph Hellwig wrote:
-> Having a function drop locks, reacquire them and release them again
-> seems to confuse the clang lock analysis even more than it confuses
-> humans.  Keep the humans and machines sanity by moving a chunk of
-> code into the caller to simplify the lock tracking.
+On Fri, Nov 14, 2025 at 06:52:25AM +0100, Christoph Hellwig wrote:
+> sparse gets confused by the goto after spin_trylock:
 > 
+> fs/xfs/xfs_qm.c:486:33: warning: context imbalance in 'xfs_qm_dquot_isolate' - different lock contexts for basic block
+> 
+> work around this by duplicating the trivial amount of code after the
+> label.
+
+Might want to leave a code comment about shutting up sparse so that
+someone doesn't revert this change to optimize LOC.  That said ...
+what is the differing lock context?  Does sparse not understand the
+spin_trylock?
+
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_icache.c | 31 +++++++++++++------------------
->  1 file changed, 13 insertions(+), 18 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index e44040206851..546efa6cec72 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -358,7 +358,7 @@ xfs_reinit_inode(
->  static int
->  xfs_iget_recycle(
->  	struct xfs_perag	*pag,
-> -	struct xfs_inode	*ip) __releases(&ip->i_flags_lock)
-> +	struct xfs_inode	*ip)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  	struct inode		*inode = VFS_I(ip);
-> @@ -366,20 +366,6 @@ xfs_iget_recycle(
->  
->  	trace_xfs_iget_recycle(ip);
->  
-> -	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
-> -		return -EAGAIN;
-> -
-> -	/*
-> -	 * We need to make it look like the inode is being reclaimed to prevent
-> -	 * the actual reclaim workers from stomping over us while we recycle
-> -	 * the inode.  We can't clear the radix tree tag yet as it requires
-> -	 * pag_ici_lock to be held exclusive.
-> -	 */
-> -	ip->i_flags |= XFS_IRECLAIM;
-> -
-> -	spin_unlock(&ip->i_flags_lock);
-> -	rcu_read_unlock();
-> -
->  	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
->  	error = xfs_reinit_inode(mp, inode);
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> @@ -576,10 +562,19 @@ xfs_iget_cache_hit(
->  
->  	/* The inode fits the selection criteria; process it. */
->  	if (ip->i_flags & XFS_IRECLAIMABLE) {
-> -		/* Drops i_flags_lock and RCU read lock. */
-> -		error = xfs_iget_recycle(pag, ip);
-> -		if (error == -EAGAIN)
-> +		/*
-> +		 * We need to make it look like the inode is being reclaimed to
-> +		 * prevent the actual reclaim workers from stomping over us
-> +		 * while we recycle the inode.  We can't clear the radix tree
-> +		 * tag yet as it requires pag_ici_lock to be held exclusive.
-> +		 */
-> +		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
->  			goto out_skip;
-> +		ip->i_flags |= XFS_IRECLAIM;
-> +		spin_unlock(&ip->i_flags_lock);
-> +		rcu_read_unlock();
 
-I wonder, does sparse get confused by rcu_read_lock having been taken by
-the caller but unlocked here?
-
-The code move looks correct though.
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
-
-> +
-> +		error = xfs_iget_recycle(pag, ip);
->  		if (error)
->  			return error;
->  	} else {
+> ---
+>  fs/xfs/xfs_qm.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 95be67ac6eb4..66d25ac9600b 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -422,8 +422,11 @@ xfs_qm_dquot_isolate(
+>  	struct xfs_qm_isolate	*isol = arg;
+>  	enum lru_status		ret = LRU_SKIP;
+>  
+> -	if (!spin_trylock(&dqp->q_lockref.lock))
+> -		goto out_miss_busy;
+> +	if (!spin_trylock(&dqp->q_lockref.lock)) {
+> +		trace_xfs_dqreclaim_busy(dqp);
+> +		XFS_STATS_INC(dqp->q_mount, xs_qm_dqreclaim_misses);
+> +		return LRU_SKIP;
+> +	}
+>  
+>  	/*
+>  	 * If something else is freeing this dquot and hasn't yet removed it
+> @@ -482,7 +485,6 @@ xfs_qm_dquot_isolate(
+>  
+>  out_miss_unlock:
+>  	spin_unlock(&dqp->q_lockref.lock);
+> -out_miss_busy:
+>  	trace_xfs_dqreclaim_busy(dqp);
+>  	XFS_STATS_INC(dqp->q_mount, xs_qm_dqreclaim_misses);
+>  	return ret;
 > -- 
 > 2.47.3
 > 
