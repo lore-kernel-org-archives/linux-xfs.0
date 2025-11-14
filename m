@@ -1,60 +1,36 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8967A2F25FA;
-	Fri, 14 Nov 2025 06:28:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F1772F6176
+	for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 08:56:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763101710; cv=none; b=r46qDz5RXhXJD6V3Fw8Saj7fgbJhbS/seFbvctPx00YrKWbx0DWWGm77F0HeCV327jtmrqBiDB0EBe8h5IcgXBhjFVYTRAB7BgnBgjs+MUOfbWACtIAXpYurfEOdbTl6O0n0x3w/4/SyQ7IiMsroQ0jiZghhVCXYWXx1v2xuukE=
+	t=1763110574; cv=none; b=Rlvewup//kc6K1uY4vEro2oDfGK3Pq+z+PsNvH5/o2swQ5sR+Rd7cSD/1dowoVm8eaWTxeFVIi3q3I1/LBBDjY2sDkMraF9IaN2L9Qt/uu9aMMkMbIdWTJTBPa1S1h1GdP0k1B7MJ+MjGv5OPN7ZGeX1wGp4e7Eu8RVwTwhPFLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763101710; c=relaxed/simple;
-	bh=Px//exW9w+i1Xyx0n/Gu2ivv2DKbOfMBeouZxCEIvg4=;
+	s=arc-20240116; t=1763110574; c=relaxed/simple;
+	bh=LbfkTvTvB3Ju35t5Vd5TOjOtaoNaYmmlFIkscYBPveY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ml1BggoMyumwRgwONzKZtibJsqmCW2f5255RTbTy0mW71DJ4voNhxj1IOZuhYO+KBw6qja46EolEstDGRZ7XQl+uhnUUG9J2rlMJKELhgDceL4C97VD9tT22qgP+x8i8juf+lglPiL9I+hQPiQzoA6YH6TllK1RlZKvAKxS11p0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wDjPg/Hn; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wDjPg/Hn"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=wLYiunlc4HRKn1/cO6G76qMYBolsg+5Lse9an4ctyXI=; b=wDjPg/HnYNzaiMxT8G9jB6lS4A
-	7iN7sM3Ekdm2Y6UeAx6yBrOE/02uZVIC5ITdC+LD0180UwMMnX5hOq0PIibCShC3MMzISsNP9XXq6
-	VZylP7Zr9IdEEkPqJBNzqX/e8IRX6CyNdJRAlwfilDk+O1L30SGJbpNZ3WGlPVeVhQieOv13EAZ/k
-	VUUjjD4BEOG8AOlr18JvaUhH3mHzKKKw3eoxHGMP7KThMLN3jr6kT/+L6kecdQKPoZnsfsFrkCbJT
-	roucWpCkQe22oqYGzMwe2fB9AIYqy7GRKQJ9FZgDpboo8q0DRVtmvkZdsmVTuF/7bcn4x82tnhNmH
-	fUvOZNGQ==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vJnIJ-0000000BfCq-0DHz;
-	Fri, 14 Nov 2025 06:28:27 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>,
-	David Sterba <dsterba@suse.com>,
-	Jan Kara <jack@suse.cz>,
-	Mike Marshall <hubcap@omnibond.com>,
-	Martin Brandenburg <martin@omnibond.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Stefan Roesch <shr@fb.com>,
-	Jeff Layton <jlayton@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	gfs2@lists.linux.dev,
-	io-uring@vger.kernel.org,
-	devel@lists.orangefs.org,
-	linux-unionfs@vger.kernel.org,
-	linux-mtd@lists.infradead.org,
-	linux-xfs@vger.kernel.org,
-	linux-nfs@vger.kernel.org
-Subject: [PATCH 14/14] xfs: enable non-blocking timestamp updates
-Date: Fri, 14 Nov 2025 07:26:17 +0100
-Message-ID: <20251114062642.1524837-15-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251114062642.1524837-1-hch@lst.de>
-References: <20251114062642.1524837-1-hch@lst.de>
+	 MIME-Version; b=FbMtw88K/p3aME4aghzCSPNfw90eOzLOC/Z/6m4sBoiHeIHLu/zsoMiHIvB0HRHUvli/FVcs/8Bwcd6xy4BJTazB8hbwpQArOaUiKqRanKxTabIXnE5pXqnoK3l++HWo+9v98ZZltv5alqj1VTQXr+bZvUlvmYKuYKpYW19zULU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
+Received: from mx0.herbolt.com (localhost [127.0.0.1])
+	by mx0.herbolt.com (Postfix) with ESMTP id C2FB5180F2C0;
+	Fri, 14 Nov 2025 09:55:52 +0100 (CET)
+Received: from trufa.intra.herbolt.com.herbolt.com ([172.168.31.30])
+	by mx0.herbolt.com with ESMTPSA
+	id oUeSJJjuFmk5sTQAKEJqOA
+	(envelope-from <lukas@herbolt.com>); Fri, 14 Nov 2025 09:55:52 +0100
+From: Lukas Herbolt <lukas@herbolt.com>
+To: hch@infradead.org
+Cc: linux-xfs@vger.kernel.org,
+	Lukas Herbolt <lukas@herbolt.com>
+Subject: [PATCH v5] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+Date: Fri, 14 Nov 2025 09:55:26 +0100
+Message-ID: <20251114085524.1468486-3-lukas@herbolt.com>
+X-Mailer: git-send-email 2.51.1
+In-Reply-To: <aRWB3ZCiCBQ8TcGR@infradead.org>
+References: <aRWB3ZCiCBQ8TcGR@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -62,42 +38,143 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The lazytime path using generic_update_time can never block in XFS
-because there is no ->dirty_inode method that could block.  Allow
-non-blocking timestamp updates for this case.
+Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
+the unmap write zeroes operation.
 
-Fixes: 66fa3cedf16a ("fs: Add async write file modification handling.")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
 ---
- fs/xfs/xfs_iops.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+v5 changes:
+	formating
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index bd0b7e81f6ab..3d7b89ffacde 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1195,9 +1195,6 @@ xfs_vn_update_time(
+ fs/xfs/xfs_bmap_util.c | 10 ++++++++--
+ fs/xfs/xfs_bmap_util.h |  2 +-
+ fs/xfs/xfs_file.c      | 25 +++++++++++++++++++------
+ 3 files changed, 28 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 06ca11731e430..ee5765bf52944 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -642,11 +642,17 @@ xfs_free_eofblocks(
+ 	return error;
+ }
  
- 	trace_xfs_update_time(ip);
++/*
++ * Callers can specify bmapi_flags, if XFS_BMAPI_ZERO is used there are no
++ * further checks whether the hard ware supports and it can fallback to
++ * software zeroing.
++ */
+ int
+ xfs_alloc_file_space(
+ 	struct xfs_inode	*ip,
+ 	xfs_off_t		offset,
+-	xfs_off_t		len)
++	xfs_off_t		len,
++	uint32_t		bmapi_flags)
+ {
+ 	xfs_mount_t		*mp = ip->i_mount;
+ 	xfs_off_t		count;
+@@ -748,7 +754,7 @@ xfs_alloc_file_space(
+ 		 * will eventually reach the requested range.
+ 		 */
+ 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+-				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
++				allocatesize_fsb, bmapi_flags, 0, imapp,
+ 				&nimaps);
+ 		if (error) {
+ 			if (error != -ENOSR)
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index c477b33616304..2895cc97a5728 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -56,7 +56,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
  
--	if (flags & S_NOWAIT)
--		return -EAGAIN;
--
- 	if (inode->i_sb->s_flags & SB_LAZYTIME) {
- 		if (!((flags & S_VERSION) &&
- 		      inode_maybe_inc_iversion(inode, false)))
-@@ -1207,6 +1204,9 @@ xfs_vn_update_time(
- 		log_flags |= XFS_ILOG_CORE;
- 	}
+ /* preallocation and hole punch interface */
+ int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
+-		xfs_off_t len);
++		xfs_off_t len, uint32_t bmapi_flags);
+ int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
+ int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index f96fbf5c54c99..3ed11b1028563 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1261,23 +1261,33 @@ xfs_falloc_zero_range(
+ 	struct xfs_zone_alloc_ctx *ac)
+ {
+ 	struct inode		*inode = file_inode(file);
++	struct xfs_inode	*ip = XFS_I(inode);
+ 	unsigned int		blksize = i_blocksize(inode);
+ 	loff_t			new_size = 0;
+ 	int			error;
  
-+	if (flags & S_NOWAIT)
-+		return -EAGAIN;
-+
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
+-	trace_xfs_zero_file_space(XFS_I(inode));
++	trace_xfs_zero_file_space(ip);
+ 
+ 	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
  	if (error)
  		return error;
+ 
+-	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
++	error = xfs_free_file_space(ip, offset, len, ac);
+ 	if (error)
+ 		return error;
+ 
+ 	len = round_up(offset + len, blksize) - round_down(offset, blksize);
+ 	offset = round_down(offset, blksize);
+-	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
++	if (mode & FALLOC_FL_WRITE_ZEROES) {
++		if (xfs_is_always_cow_inode(ip) ||
++				!bdev_write_zeroes_unmap_sectors(
++					xfs_inode_buftarg(ip)->bt_bdev))
++			return -EOPNOTSUPP;
++		error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_ZERO);
++	} else {
++		error = xfs_alloc_file_space(ip, offset, len,
++				XFS_BMAPI_PREALLOC);
++	}
+ 	if (error)
+ 		return error;
+ 	return xfs_falloc_setsize(file, new_size);
+@@ -1302,7 +1312,8 @@ xfs_falloc_unshare_range(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
++	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
++			XFS_BMAPI_PREALLOC);
+ 	if (error)
+ 		return error;
+ 	return xfs_falloc_setsize(file, new_size);
+@@ -1330,7 +1341,8 @@ xfs_falloc_allocate_range(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
++	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
++			XFS_BMAPI_PREALLOC);
+ 	if (error)
+ 		return error;
+ 	return xfs_falloc_setsize(file, new_size);
+@@ -1340,7 +1352,7 @@ xfs_falloc_allocate_range(
+ 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
+ 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
+ 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
+-		 FALLOC_FL_UNSHARE_RANGE)
++		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
+ 
+ STATIC long
+ __xfs_file_fallocate(
+@@ -1383,6 +1395,7 @@ __xfs_file_fallocate(
+ 	case FALLOC_FL_INSERT_RANGE:
+ 		error = xfs_falloc_insert_range(file, offset, len);
+ 		break;
++	case FALLOC_FL_WRITE_ZEROES:
+ 	case FALLOC_FL_ZERO_RANGE:
+ 		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
+ 		break;
 -- 
-2.47.3
+2.51.1
 
