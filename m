@@ -1,70 +1,51 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30AEBBA3D
-	for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 12:31:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F405030F52B;
+	Fri, 14 Nov 2025 13:16:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763123495; cv=none; b=Zny+wNjbdXpz/je1ILXe2VJ3I/wwpLSfsG5cVp7xmYgs79CKflrkjYhyJ1fgLZ6GiO3NxDhU4cIZLroQOrpVmkutMsoSwkx8aH2gMou8yWLaDs1vSi42AM/SwD26Tz3wFhGVSOdODfwKTX8JzVtbAuK1s2WvDEfORniTMpE6u/0=
+	t=1763126222; cv=none; b=W4Mkx9/DGkwCF+SWm3GFdWJjnmNywXMFrkGJc5vAbzr2PWfvENq4+Etu5B5zawMsWD9mbVb9Jl2ZfuQYIxVw96MNi3DWlMwtR159El0mmqUYV//y5lGgS7DxQPdQuR9HBbkx+jhBocIwCNTdKTTuuCSeeAaYwthKPGV7R76Ty9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763123495; c=relaxed/simple;
-	bh=I/5ZwKDnJtZ1QHeVA7vHi5YjQFEo9sYBLzy3T8zEbME=;
+	s=arc-20240116; t=1763126222; c=relaxed/simple;
+	bh=m25Ht5MJmYjNkEujCtZhivVNuoNdHi2llzCoTBXzsv0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rnRr02VfHGxl2cDNzU3JxONpoUrcCNtLZQsu4FCjfCORjlY4NVMYZWaHUhkoeBSpL4l/Cakppcd3EgLOnKnQQMgoPgISPEGw5/BGjA9Xrhz5fIjjEhgHgsBoYfx5br4pqd8yVLhFMfpBuGzNhdPl1bxjIYGfuUZLkpqk/DV1KyY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CMotN4Is; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=faUkkKPVboDcIKTbVRyNDVNV+gOsPDgykr0FSJfNDA5MzLQMFQj2kEqhBOzktZr8z43/4l9tuxeEOawYJh7Gn0EWxTs047MgRGs4jpV+sPeV3zg1VxqVMEDgvOT7bAu/ayCi4RAgg581gDbhYSdZ+Afh2QBqmMoXjIpklJHlLVE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=uhTAacUV; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CMotN4Is"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1763123493;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IFVcxodsfdbO76GQsBhbtk1ePR5txWpCuWnMr3v/vyY=;
-	b=CMotN4IsWlorLC341YeUxGOUdwjoajIZfoaJ2EZCLlQHKbgNUSDZiYrlsYlPShol+Xgn9c
-	7Qyieglsml8EnIoVW7Ow0oWCMWb35C6ZpmSzQAh/mO8zuWbeHJjmpRtPEpGLnHH7xSt2fk
-	C8PcoMCaWzX7QvDYW/5tWEVHbmfW+NQ=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-26-AXg7kpStM3KFnE5mu2sImQ-1; Fri,
- 14 Nov 2025 07:31:29 -0500
-X-MC-Unique: AXg7kpStM3KFnE5mu2sImQ-1
-X-Mimecast-MFC-AGG-ID: AXg7kpStM3KFnE5mu2sImQ_1763123487
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6D12B18AB406;
-	Fri, 14 Nov 2025 12:31:27 +0000 (UTC)
-Received: from redhat.com (unknown [10.44.33.81])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5651D19560B9;
-	Fri, 14 Nov 2025 12:31:23 +0000 (UTC)
-Date: Fri, 14 Nov 2025 13:31:20 +0100
-From: Kevin Wolf <kwolf@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, Keith Busch <kbusch@kernel.org>,
-	Dave Chinner <david@fromorbit.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Christian Brauner <brauner@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-block@vger.kernel.org
-Subject: Re: fall back from direct to buffered I/O when stable writes are
- required
-Message-ID: <aRchGBJA1ExoGi8W@redhat.com>
-References: <aQPyVtkvTg4W1nyz@dread.disaster.area>
- <20251031130050.GA15719@lst.de>
- <aQTcb-0VtWLx6ghD@kbusch-mbp>
- <20251031164701.GA27481@lst.de>
- <kpk2od2fuqofdoneqse2l3gvn7wbqx3y4vckmnvl6gc2jcaw4m@hsxqmxshckpj>
- <20251103122111.GA17600@lst.de>
- <aRYXuwtSQUz6buBs@redhat.com>
- <20251114053943.GA26898@lst.de>
- <aRb2g3VLjz1Q_rLa@redhat.com>
- <20251114120152.GA13689@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uhTAacUV"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=Vo+N5YbzZDjZeiNvAhfJhGp+deegDT8E/3cOAOwzUvY=; b=uhTAacUV/flhXWxNQV5FeR3HnC
+	dbisfExygmslgLyDpvLG+2/Hlg/pmt0VQFR60ENfWSheMwZ71gSfJvn5cpAz3jQ4C8GbW22mGZnvr
+	IAvWXV16IcxEqXlj9aGECgc6jWa+TYNslUF/UG5UZnNeVmX9uCBtHkF3/PhZqpKloo53DY7lQjfBs
+	aJlrIOpHrSuxqQ5zFLrpzFxS0hDURfOE1mKKnlaxrFAzISnDVMx2YoDYjEeGrpZfA+xmHgA5z4Aqa
+	ikMn5lzxyvLtVuWvtU3KSheAYA6RnH67j72rXcCqX5yw2ewTbxE7qcEs/APRhRTTgydkga2huH2E1
+	f93tK/uw==;
+Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vJtfX-00000009Mru-0lqh;
+	Fri, 14 Nov 2025 13:16:51 +0000
+Date: Fri, 14 Nov 2025 13:16:50 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Ritesh Harjani <ritesh.list@gmail.com>
+Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+	Christian Brauner <brauner@kernel.org>, djwong@kernel.org,
+	john.g.garry@oracle.com, tytso@mit.edu, dchinner@redhat.com,
+	hch@lst.de, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, jack@suse.cz, nilay@linux.ibm.com,
+	martin.petersen@oracle.com, rostedt@goodmis.org, axboe@kernel.dk,
+	linux-block@vger.kernel.org, linux-trace-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH 2/8] mm: Add PG_atomic
+Message-ID: <aRcrwgxV6cBu2_RH@casper.infradead.org>
+References: <cover.1762945505.git.ojaswin@linux.ibm.com>
+ <5f0a7c62a3c787f2011ada10abe3826a94f99e17.1762945505.git.ojaswin@linux.ibm.com>
+ <aRSuH82gM-8BzPCU@casper.infradead.org>
+ <87ecq18azq.ritesh.list@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -73,57 +54,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251114120152.GA13689@lst.de>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+In-Reply-To: <87ecq18azq.ritesh.list@gmail.com>
 
-Am 14.11.2025 um 13:01 hat Christoph Hellwig geschrieben:
-> On Fri, Nov 14, 2025 at 10:29:39AM +0100, Kevin Wolf wrote:
-> > Right, but since this is direct I/O and the approach with only declaring
-> > I/O from the page cache safe without a bounce buffer means that RAID has
-> > to use a bounce buffer here anyway (with or without PI), doesn't this
-> > automatically solve it?
+On Fri, Nov 14, 2025 at 10:30:09AM +0530, Ritesh Harjani wrote:
+> Matthew Wilcox <willy@infradead.org> writes:
+> 
+> > On Wed, Nov 12, 2025 at 04:36:05PM +0530, Ojaswin Mujoo wrote:
+> >> From: John Garry <john.g.garry@oracle.com>
+> >> 
+> >> Add page flag PG_atomic, meaning that a folio needs to be written back
+> >> atomically. This will be used by for handling RWF_ATOMIC buffered IO
+> >> in upcoming patches.
 > >
-> > So if it's only PI, it's the problem of userspace, and if you add RAID
-> > on top, then the normal rules for RAID apply. (And that the buffer
-> > doesn't get modified and PI doesn't become invalid until RAID does its
-> > thing is still a userspace problem.)
+> > Page flags are a precious resource.  I'm not thrilled about allocating one
+> > to this rather niche usecase.  Wouldn't this be more aptly a flag on the
+> > address_space rather than the folio?  ie if we're doing this kind of write
+> > to a file, aren't most/all of the writes to the file going to be atomic?
 > 
-> Well, only if we have different levels of I/O stability guarantees:
+> As of today the atomic writes functionality works on the per-write
+> basis (given it's a per-write characteristic). 
 > 
-> Level 0
->   - trusted caller guarantees pages are stable (buffered I/O,
->     in-kernel direct I/O callers that control the buffer)
-> 
-> Level 1:
->   - untrusted caller declares the pages are stable
->     (direct I/O with PI)
-> 
-> Level 2:
->   - no one guarantees nothing
->     (other direct I/O directly or indirectly fed from userspace)
-> 
-> PI formatted devices would only bounce for 1, parity would bounce for
-> 1 and 2.  Software checksums could probably get away with only 1,
-> although 2 would feel safer.
+> So, we can have two types of dirty folios sitting in the page cache of
+> an inode. Ones which were done using atomic buffered I/O flag
+> (RWF_ATOMIC) and the other ones which were non-atomic writes. Hence a
+> need of a folio flag to distinguish between the two writes.
 
-My main point above was that RAID and (potentially passed through) PI
-are independent of each other and I think that's still true with or
-without multiple stability levels.
-
-If you don't have these levels, you just have to treat level 1 and 2 the
-same, i.e. bounce all the time if the kernel needs the guarantee (which
-is not for userspace PI, unless the same request needs the bounce buffer
-for another reason in a different place like RAID). That might be less
-optimal, but still correct and better than what happens today because at
-least you don't bounce for level 0 any more.
-
-If there is something you can optimise by delegating the responsibility
-to userspace in some cases - like you can prove that only the
-application itself would be harmed by doing things wrong - then having
-level 1 separate could certainly be interesting. In this case, I'd
-consider adding an RWF_* flag for userspace to make the promise even
-outside PI passthrough. But while potentially worthwhile, it feels like
-this is a separate optimisation from what you tried to address here.
-
-Kevin
-
+I know, but is this useful?  AFAIK, the files where Postgres wants to
+use this functionality are the log files, and all writes to the log
+files will want to use the atomic functionality.  What's the usecase
+for "I want to mix atomic and non-atomic buffered writes to this file"?
