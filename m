@@ -1,180 +1,54 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F1772F6176
-	for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 08:56:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AA573016E4
+	for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 08:57:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763110574; cv=none; b=Rlvewup//kc6K1uY4vEro2oDfGK3Pq+z+PsNvH5/o2swQ5sR+Rd7cSD/1dowoVm8eaWTxeFVIi3q3I1/LBBDjY2sDkMraF9IaN2L9Qt/uu9aMMkMbIdWTJTBPa1S1h1GdP0k1B7MJ+MjGv5OPN7ZGeX1wGp4e7Eu8RVwTwhPFLQ=
+	t=1763110634; cv=none; b=MhF6XU4T4GPGs1V5ovzVJh92QXLd7AChSMpmW0Zfp7wqL9KwJLnahcnGcr0FXvge9N9uy74K8XLRLlW/ickZXwT1TqkS9UHS9FKqruDSdnN3h2KUd0DsAQF5ugiWTLxTNoJHnEmV2iHxf3N/mXhM3Y8HDaKpK1WfrMoS+oYCoyA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763110574; c=relaxed/simple;
-	bh=LbfkTvTvB3Ju35t5Vd5TOjOtaoNaYmmlFIkscYBPveY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FbMtw88K/p3aME4aghzCSPNfw90eOzLOC/Z/6m4sBoiHeIHLu/zsoMiHIvB0HRHUvli/FVcs/8Bwcd6xy4BJTazB8hbwpQArOaUiKqRanKxTabIXnE5pXqnoK3l++HWo+9v98ZZltv5alqj1VTQXr+bZvUlvmYKuYKpYW19zULU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id C2FB5180F2C0;
-	Fri, 14 Nov 2025 09:55:52 +0100 (CET)
-Received: from trufa.intra.herbolt.com.herbolt.com ([172.168.31.30])
-	by mx0.herbolt.com with ESMTPSA
-	id oUeSJJjuFmk5sTQAKEJqOA
-	(envelope-from <lukas@herbolt.com>); Fri, 14 Nov 2025 09:55:52 +0100
-From: Lukas Herbolt <lukas@herbolt.com>
-To: hch@infradead.org
-Cc: linux-xfs@vger.kernel.org,
-	Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH v5] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
-Date: Fri, 14 Nov 2025 09:55:26 +0100
-Message-ID: <20251114085524.1468486-3-lukas@herbolt.com>
-X-Mailer: git-send-email 2.51.1
-In-Reply-To: <aRWB3ZCiCBQ8TcGR@infradead.org>
+	s=arc-20240116; t=1763110634; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AQi2VMSCM7Dxmr8uipxKdbUJCB9X5CgiGGzbuX3F6KZensTbAU7qO6Dwx6t31ssn7WmkNPPfO4Blp+caHhLCSBZ0eO4YlxXS6/fRK5+lQEbtiao5otHn97RIjLL0ojwSAA9x62DX116ifKh7jlXfWfr83afu5n+ialDXKhc1ND4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1zCvDsPh; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1zCvDsPh"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=1zCvDsPh5BotCp8F+KoLoyvwDK
+	LQr0vVGXFDGtfIpw0uBPQNfeSkagAKaQIOULtyx2QUr/1NTbt2Ke1owJM6Xp9CRGOfZliqV0U4w4l
+	vQRGrcvF7P6CyJ8n1OpR2hhagQN4ah9cXUX9S9ZXB1tYmzgcR3C2bUUEEMWFufCDJkW3UsHP8/hOJ
+	sL/HibC0Vn9qV+KeJjoniNYnzcxn044Xrd2oh4T9XmEhZ1kzwZHR/p0XEVz6PXLFyb8zhjGqRjf7d
+	jxHIdfpDqqmfJwkFMmXvOAsdLn+la63HfrGE65BiqqzKzLOekkr2orqmrr2MyN4UJxqJ1FeLKKwt+
+	pm10UaNg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vJpc7-0000000Bqr1-1ytd;
+	Fri, 14 Nov 2025 08:57:03 +0000
+Date: Fri, 14 Nov 2025 00:57:03 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Lukas Herbolt <lukas@herbolt.com>
+Cc: hch@infradead.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v5] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+Message-ID: <aRbu3_gQ8E7LgdR0@infradead.org>
 References: <aRWB3ZCiCBQ8TcGR@infradead.org>
+ <20251114085524.1468486-3-lukas@herbolt.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251114085524.1468486-3-lukas@herbolt.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add support for FALLOC_FL_WRITE_ZEROES if the underlying device enable
-the unmap write zeroes operation.
+Looks good:
 
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
----
-v5 changes:
-	formating
-
- fs/xfs/xfs_bmap_util.c | 10 ++++++++--
- fs/xfs/xfs_bmap_util.h |  2 +-
- fs/xfs/xfs_file.c      | 25 +++++++++++++++++++------
- 3 files changed, 28 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 06ca11731e430..ee5765bf52944 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -642,11 +642,17 @@ xfs_free_eofblocks(
- 	return error;
- }
- 
-+/*
-+ * Callers can specify bmapi_flags, if XFS_BMAPI_ZERO is used there are no
-+ * further checks whether the hard ware supports and it can fallback to
-+ * software zeroing.
-+ */
- int
- xfs_alloc_file_space(
- 	struct xfs_inode	*ip,
- 	xfs_off_t		offset,
--	xfs_off_t		len)
-+	xfs_off_t		len,
-+	uint32_t		bmapi_flags)
- {
- 	xfs_mount_t		*mp = ip->i_mount;
- 	xfs_off_t		count;
-@@ -748,7 +754,7 @@ xfs_alloc_file_space(
- 		 * will eventually reach the requested range.
- 		 */
- 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
--				allocatesize_fsb, XFS_BMAPI_PREALLOC, 0, imapp,
-+				allocatesize_fsb, bmapi_flags, 0, imapp,
- 				&nimaps);
- 		if (error) {
- 			if (error != -ENOSR)
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index c477b33616304..2895cc97a5728 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -56,7 +56,7 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
- 
- /* preallocation and hole punch interface */
- int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
--		xfs_off_t len);
-+		xfs_off_t len, uint32_t bmapi_flags);
- int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t len, struct xfs_zone_alloc_ctx *ac);
- int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f96fbf5c54c99..3ed11b1028563 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1261,23 +1261,33 @@ xfs_falloc_zero_range(
- 	struct xfs_zone_alloc_ctx *ac)
- {
- 	struct inode		*inode = file_inode(file);
-+	struct xfs_inode	*ip = XFS_I(inode);
- 	unsigned int		blksize = i_blocksize(inode);
- 	loff_t			new_size = 0;
- 	int			error;
- 
--	trace_xfs_zero_file_space(XFS_I(inode));
-+	trace_xfs_zero_file_space(ip);
- 
- 	error = xfs_falloc_newsize(file, mode, offset, len, &new_size);
- 	if (error)
- 		return error;
- 
--	error = xfs_free_file_space(XFS_I(inode), offset, len, ac);
-+	error = xfs_free_file_space(ip, offset, len, ac);
- 	if (error)
- 		return error;
- 
- 	len = round_up(offset + len, blksize) - round_down(offset, blksize);
- 	offset = round_down(offset, blksize);
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	if (mode & FALLOC_FL_WRITE_ZEROES) {
-+		if (xfs_is_always_cow_inode(ip) ||
-+				!bdev_write_zeroes_unmap_sectors(
-+					xfs_inode_buftarg(ip)->bt_bdev))
-+			return -EOPNOTSUPP;
-+		error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_ZERO);
-+	} else {
-+		error = xfs_alloc_file_space(ip, offset, len,
-+				XFS_BMAPI_PREALLOC);
-+	}
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1302,7 +1312,8 @@ xfs_falloc_unshare_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
-+			XFS_BMAPI_PREALLOC);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1330,7 +1341,8 @@ xfs_falloc_allocate_range(
- 	if (error)
- 		return error;
- 
--	error = xfs_alloc_file_space(XFS_I(inode), offset, len);
-+	error = xfs_alloc_file_space(XFS_I(inode), offset, len,
-+			XFS_BMAPI_PREALLOC);
- 	if (error)
- 		return error;
- 	return xfs_falloc_setsize(file, new_size);
-@@ -1340,7 +1352,7 @@ xfs_falloc_allocate_range(
- 		(FALLOC_FL_ALLOCATE_RANGE | FALLOC_FL_KEEP_SIZE |	\
- 		 FALLOC_FL_PUNCH_HOLE |	FALLOC_FL_COLLAPSE_RANGE |	\
- 		 FALLOC_FL_ZERO_RANGE |	FALLOC_FL_INSERT_RANGE |	\
--		 FALLOC_FL_UNSHARE_RANGE)
-+		 FALLOC_FL_UNSHARE_RANGE | FALLOC_FL_WRITE_ZEROES)
- 
- STATIC long
- __xfs_file_fallocate(
-@@ -1383,6 +1395,7 @@ __xfs_file_fallocate(
- 	case FALLOC_FL_INSERT_RANGE:
- 		error = xfs_falloc_insert_range(file, offset, len);
- 		break;
-+	case FALLOC_FL_WRITE_ZEROES:
- 	case FALLOC_FL_ZERO_RANGE:
- 		error = xfs_falloc_zero_range(file, mode, offset, len, ac);
- 		break;
--- 
-2.51.1
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
