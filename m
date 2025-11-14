@@ -1,94 +1,73 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6830D31618B;
-	Fri, 14 Nov 2025 11:47:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 999E62DFA48;
+	Fri, 14 Nov 2025 12:02:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763120851; cv=none; b=MbDKiIIThg6TFWSALCSgLusnviEubfjMZpUYmk7vDjw3L2w5VjUPs9VYRUcBjiQshnDxmOCW5iAyhEPFCC1eI1uyAa2aPyztiCfJgulqPTxtjG/UYc8m9YJ7Y73XdMeIMzQgscTY4XK2qwgO3duV9FtiRo+MqvnPO3HFW3QQHTs=
+	t=1763121723; cv=none; b=o7njJfgGFEqaqY/FRnEtMzeMwD7Y+L3zmTkbAk4MbkpSgTRv3y7fHpQy/ZqeTFkhUNQ6I9/Tilg7TkSbEnF+kGZe4QGTrl20sdASp9IrFCZSAFn/0STILHDMz1PMsoRNrYHqpXsn4WuEClNwpy0Ysij+rh6A4eZjVfCMtnNkWgU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763120851; c=relaxed/simple;
-	bh=RYmfyxnd44YBm9qRxknxIsvpnN+q7uX4ZyGg3dXJhWs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=X3jb5ilBryEVy9CDe9N5KvFlwgJjzKoT5xP1RTZ5aBNByGZ0U8We0gKXweSOxkZMwTy9KdLZDw2dvUie4f3eZZoWynvKXKj1WNWSRATWls1G3evnbxiOpV1dWO60TgsfBaFT+HxnJlqw9IOV8NN5fBeW+5G1fHhhQKWJzDRyggE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=swCOEUwF; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="swCOEUwF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA0E5C16AAE;
-	Fri, 14 Nov 2025 11:47:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763120850;
-	bh=RYmfyxnd44YBm9qRxknxIsvpnN+q7uX4ZyGg3dXJhWs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=swCOEUwFDZh8N+CoqAHwqJnNTs9ArbLrXSHUkfNMxzE0dAsJhXF1YK0h4dinnNmnh
-	 AxVxjv5ZiMIo4scYa777S1WkauAAN9o2XKahy9hEbqn/U2842NbuRuc5I6XW6dqlqA
-	 js/BsvNShGpxDkicSX8r01+7sPT2FuMggxoJjoYPJ67bQZ8mPA914Zoz5kZQm+JBlr
-	 AlPBH7CQ4rI4BXLRjmBRToIydgTB2iVCEgK6lGYWeRIqcetLLIjk8J/JU6oJ/4pqJj
-	 EGXUjf2huxpfz9kJQt2bM1LOJjtnPvGO//3QQwl+NRSuQ3elsMJow5RcDmNUzEqbeT
-	 kfRsAo79aRA1Q==
-From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jens Axboe <axboe@kernel.dk>,
-	Avi Kivity <avi@scylladb.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Naohiro Aota <naohiro.aota@wdc.com>,
-	Johannes Thumshirn <jth@kernel.org>,
-	linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	io-uring@vger.kernel.org
-Subject: Re: enable iomap dio write completions from interrupt context v2
-Date: Fri, 14 Nov 2025 12:47:23 +0100
-Message-ID: <20251114-postfach-entgleisen-90917e292b3b@brauner>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251113170633.1453259-1-hch@lst.de>
-References: <20251113170633.1453259-1-hch@lst.de>
+	s=arc-20240116; t=1763121723; c=relaxed/simple;
+	bh=K6naIdsy7yyYyA4vb9Cz7pWbHURboZOc8nlzvye4JfE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R2Ht4EKE7aIMB1DlstE2Z3z/aPGsGgwn4Lb/9KdTFbVXqxRDVE82YMHMoFAqlmidcEm8Fg0D9IJNUZujI262Fu8rOgILiaGo4yHUvuv19/4hg0A9h+jRk7l7x3RR7QBQY36L9arxPjw/He+JCkvHOaUnoXPiVBoAbtZgD38aN58=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id F2CA5227AAA; Fri, 14 Nov 2025 13:01:52 +0100 (CET)
+Date: Fri, 14 Nov 2025 13:01:52 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Kevin Wolf <kwolf@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>,
+	Keith Busch <kbusch@kernel.org>, Dave Chinner <david@fromorbit.com>,
+	Carlos Maiolino <cem@kernel.org>,
+	Christian Brauner <brauner@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+	linux-block@vger.kernel.org
+Subject: Re: fall back from direct to buffered I/O when stable writes are
+ required
+Message-ID: <20251114120152.GA13689@lst.de>
+References: <20251030143324.GA31550@lst.de> <aQPyVtkvTg4W1nyz@dread.disaster.area> <20251031130050.GA15719@lst.de> <aQTcb-0VtWLx6ghD@kbusch-mbp> <20251031164701.GA27481@lst.de> <kpk2od2fuqofdoneqse2l3gvn7wbqx3y4vckmnvl6gc2jcaw4m@hsxqmxshckpj> <20251103122111.GA17600@lst.de> <aRYXuwtSQUz6buBs@redhat.com> <20251114053943.GA26898@lst.de> <aRb2g3VLjz1Q_rLa@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1669; i=brauner@kernel.org; h=from:subject:message-id; bh=RYmfyxnd44YBm9qRxknxIsvpnN+q7uX4ZyGg3dXJhWs=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSKi50R1z5mnR649NWxqalN2uIdtnbppw8FT7raXLQk9 w5HV3t4RykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwEQYEhj+Z65YkBj3kLsuZgWb 5ZumxbsTSq58lD8XN8lo9s1pn+8IcjEyrJ1yW/njkUn8TOtexN3lKy0SN9wrE/wowcDz2E92xnm TeQA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aRb2g3VLjz1Q_rLa@redhat.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, 13 Nov 2025 18:06:25 +0100, Christoph Hellwig wrote:
-> Currently iomap defers all write completions to interrupt context.  This
-> was based on my assumption that no one cares about the latency of those
-> to simplify the code vs the old direct-io.c.  It turns out someone cared,
-> as Avi reported a lot of context switches with ScyllaDB, which at least
-> in older kernels with workqueue scheduling issues caused really high
-> tail latencies.
-> 
-> [...]
+On Fri, Nov 14, 2025 at 10:29:39AM +0100, Kevin Wolf wrote:
+> Right, but since this is direct I/O and the approach with only declaring
+> I/O from the page cache safe without a bounce buffer means that RAID has
+> to use a bounce buffer here anyway (with or without PI), doesn't this
+> automatically solve it?
+>
+> So if it's only PI, it's the problem of userspace, and if you add RAID
+> on top, then the normal rules for RAID apply. (And that the buffer
+> doesn't get modified and PI doesn't become invalid until RAID does its
+> thing is still a userspace problem.)
 
-Applied to the vfs-6.19.iomap branch of the vfs/vfs.git tree.
-Patches in the vfs-6.19.iomap branch should appear in linux-next soon.
+Well, only if we have different levels of I/O stability guarantees:
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+Level 0
+  - trusted caller guarantees pages are stable (buffered I/O,
+    in-kernel direct I/O callers that control the buffer)
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+Level 1:
+  - untrusted caller declares the pages are stable
+    (direct I/O with PI)
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
+Level 2:
+  - no one guarantees nothing
+    (other direct I/O directly or indirectly fed from userspace)
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-6.19.iomap
+PI formatted devices would only bounce for 1, parity would bounce for
+1 and 2.  Software checksums could probably get away with only 1,
+although 2 would feel safer.
 
-[1/5] fs, iomap: remove IOCB_DIO_CALLER_COMP
-      https://git.kernel.org/vfs/vfs/c/56749ed317e2
-[2/5] iomap: always run error completions in user context
-      https://git.kernel.org/vfs/vfs/c/222f2c7c6d14
-[3/5] iomap: rework REQ_FUA selection
-      https://git.kernel.org/vfs/vfs/c/845c50436431
-[4/5] iomap: support write completions from interrupt context
-      https://git.kernel.org/vfs/vfs/c/a4ae47e5d2bc
-[5/5] iomap: invert the polarity of IOMAP_DIO_INLINE_COMP
-      https://git.kernel.org/vfs/vfs/c/65a466aef147
