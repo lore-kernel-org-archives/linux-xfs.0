@@ -1,128 +1,124 @@
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+Received: from mail-yx1-f52.google.com (mail-yx1-f52.google.com [74.125.224.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7733340A57
-	for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 17:57:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E39B332EA2
+	for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 18:18:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763143033; cv=none; b=p00nQPoCHXTtDU8gGbhVj+0tOA2BMVajQ2AmPN9vMRU+nGrHSAPYclpOHlfGROjB5o1dk7BHa19+LALTOMun8QupRJjcMQX8/5s/nUZPu75kUBB8qnrLUPj7vb0+uzdAKkSnefnyf0Um6J/0rLKgeYUN/B1yZSXbGKQUwoA9Pnw=
+	t=1763144318; cv=none; b=DU9qUJmRl2Ljk7AT8SuBNMiGWFDe4SJrbFpQFxt0rbyp2zz5NsCaUeYYoLUPusMx5axo5jHMdGm9VMzMIfRNp8Iavv49rlT1py+b/Bku/yRCsUgNLzmpoT+uRouf5SNTM3M+iLhLkvpqY9VZYXS94dXFqyiDlZPnkV7AWz8lJK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763143033; c=relaxed/simple;
-	bh=so6p0BHVkjQUfy+5X9skc9NOHgaJ9CFjc9wu+7i/eWc=;
+	s=arc-20240116; t=1763144318; c=relaxed/simple;
+	bh=q+G6p9rlYVdF4IAY15DAkNeh78dBDH2GAlKPgkYV1L0=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=S06t5yBNwhkhyFnpKpvn7MugqueTvKKymV55neC7uRs5opRDHANcN8sufEbE0QC0e1DNf2L9Nm4bXoeGKjeIeX+iBydsxggy0Fe+hHmBotl0lBjNKSroTkaJOLQZ1oXpSA3TXrj2TWXjArn0IJ4JKNl1AoBtQWudmikZJ4FyHPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=XOq4Cp9u; arc=none smtp.client-ip=209.85.208.50
+	 To:Cc:Content-Type; b=bEClnBtwk2JqpMIr+WdQEK3JsQFTRfmZh0otnR0ObeGu08FvHtsKBUBWR2LrBYlgOrVrelSXwgQ/knFsLQdA8mEybtB42W1VAsoB7LPSfjuhRzMT56b4ARORk0o2QwGbCVDHWV+KlW7J34c+RskWo1W/yZILQFHqD950hpew/dQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=WRUnsJBs; arc=none smtp.client-ip=74.125.224.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="XOq4Cp9u"
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-6417313bddaso3953873a12.3
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 09:57:10 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="WRUnsJBs"
+Received: by mail-yx1-f52.google.com with SMTP id 956f58d0204a3-63f996d4e1aso2065022d50.0
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 10:18:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1763143029; x=1763747829; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=vNklGNQ9bRGgaodQC83USJCDTJzreS5VEwsOUbpJpVw=;
-        b=XOq4Cp9u3X/dkIWJkt/EEn4iVYho+yp5+ziTnwHQkq5iJbc5K+ziK6MUz+yhha6FRM
-         7HmYV7jHku5mkspyf3kXneWCGLWjTr35qt9ga1I69H3z9a/bZGNRZOHX6nEpFpo0EjzF
-         sTcPtjevf3PMwTbgWo6yzQSDxTkbMnltRLh3g=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763143029; x=1763747829;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=linux-foundation.org; s=google; t=1763144315; x=1763749115; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=vNklGNQ9bRGgaodQC83USJCDTJzreS5VEwsOUbpJpVw=;
-        b=GiZCT96fLg3AZ964+OfnHzNxMat5WnWAGVYrPDAKOVab8QC3rDsXwA1eIYmysYnUqA
-         ilsVQ7QLFX85yLypPAzlm2M6xfhQVWOfgsG1VM361HWEKgO1MAE9Gjt05GoJwbE/0DW9
-         TTiK7N5tZl0vfjhbTxok6FXfiig+aUXz5djN1CsdDtvXnQXmKxvyFwnA5NPnRHKZsNbS
-         M8bGR5Sk8NTNeLLc10/7uHT1P04vMobUTt2TFAE+2I6SYFHilozE/YOCZ5kIwSms1N01
-         gCIxxsBnZ35Tvq05V1bMh7lTlGmE7u95w8BFkL/sLH/0ovGxhZTtYbDTFL4Edr1dK62B
-         3jFg==
-X-Forwarded-Encrypted: i=1; AJvYcCVT88aWvGfThkJCy0lVTAWttmegTvoR+aJUqtiNx4n7HJaOkH7GmVae4huKzhRHoWETx5SOYnlVCg4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxjgqHzMiIc4V9suz/Imwbak+9vY7mNSuPFgufVsvajntVTWvCn
-	BUOqIi0ssQKFviOceSU0r0TXFmhDAt33q5lk/cwlLo9y0VUMto6gLb0F1nf9Oan3RdzNTFRps8S
-	SvCKhuPY=
-X-Gm-Gg: ASbGncstHOZTNVKOtvZupNUqalypWyP+vw8uwd6j2R8oA7WiNCumpqpeOzH8m71klY0
-	kpDJso57uQSB22LbEMNcpKbawvqJ4kH5ILkIrvVMd2Y1N20AwS/xZUf5HzqRijjhXR5PhKcpUdJ
-	FprI31X1C/9byROTIfUHEoUeNOsTOgSCUD/0XmYKEbiu95KxW6cDLFj+0kyB4Bv1Z/VBk9VRsgK
-	sgv1kRyo4ephILtPKWG7uzqffYViM+21HAeexhZkUvHk9clCd7bEy0Abjv2IrulqLQ9gtOQqTnl
-	csGx70+nvrgDzgWpcYH4hpsT8FGbiH60+8gzYGyUYJsKRKF09BStnsOF0jyqpzKv9udiTM8SQZJ
-	ggZdjiRNT7cqp7OrrjVt8BJ2wK37rcy6v+TtE6AqW4cFY11Dz6wMG/1zhy4H6Rx2Gz3vX2/BaIK
-	AW57GIw8C7vWfykt1QgTQC9dikT134IiS/yHHB4cCiPZreqKFE4Q==
-X-Google-Smtp-Source: AGHT+IEHmvX+WKtNVlWqtSbmvurzjZjCYXYJWlGuU5Qkvm8BRsNXagCltDmxCTDEFOG7WDkshWlj2w==
-X-Received: by 2002:a17:907:e8e:b0:b70:f2c4:bdf7 with SMTP id a640c23a62f3a-b736793d687mr451654066b.31.1763143028942;
-        Fri, 14 Nov 2025 09:57:08 -0800 (PST)
-Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com. [209.85.218.44])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b734fd809d2sm435137066b.42.2025.11.14.09.57.07
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 14 Nov 2025 09:57:07 -0800 (PST)
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-b7277324204so299725366b.0
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 09:57:07 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWQEdzJ2e3vp7RYMie+GH9vPBWQg+CLIEasLhY4LBb7qfCfFpOa/VhL1RH+oyLu1nv7r73L+0Whfd8=@vger.kernel.org
-X-Received: by 2002:a17:907:a4c:b0:b73:594e:1c47 with SMTP id
- a640c23a62f3a-b7367829b07mr457884466b.26.1763143027209; Fri, 14 Nov 2025
- 09:57:07 -0800 (PST)
+        bh=6RchFDA63Jl2Lp6o20oDSql3FkElvmeYALm/OMSMHBI=;
+        b=WRUnsJBsNMBs1DL2X/Kf7B9e+Bj5EZPRhet/0A3+RubCKntB1duM6OpJdJh6jKR8et
+         xuqaVSld7UI+1rpiU/nRtYN6+qrdhtGNTOf3XiL4w7fZEqs5korjE4754y+YO3Dr4hFI
+         9jLqogGxdR0NzlppoErl1ZQeJJd130mJhNQzQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1763144315; x=1763749115;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=6RchFDA63Jl2Lp6o20oDSql3FkElvmeYALm/OMSMHBI=;
+        b=Nvllmw0qoRMrErCK27FNOuoBheAQLPVG979hJbXmqopnMqY8Zsqr782wv+7mxTQm2C
+         1AYlqulNG0OSaGIUrBlv7GWWs+H/2NJt9KPXDIoM8s6m6LZoPSynAmmeO2T7y3Dxlm1T
+         PaFsxM93FjNNwY7WyygAX3QkfartXQgiEqI1E3RgwHH57hOhN/CWPiA8etB48brEPDCt
+         AV70krHH2lUHiiKD2VNKIv74EBRKJWkhJJ0VgPx21QNHcJtvY5stfNKJ0wP8hvbhqade
+         CRYi0GjggOfoAEWK/CRO3Ntbd3g6PSalTOmEE6xnH6h+HeL5XbcHfFqmAymsI9I/HebW
+         PKDQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWQjfsGUT64QsKpKOxDEjI6YqqsA2mQXmwSAdKUbpXDvTPb7CbDluwZEXfXBtUzsyEOdRMy3gaVZag=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzdMaj0eFQe/wzxAVyI523cUopCOjWM2UPO9N6rcrWSuCAWoTbO
+	nJsmKkU/pOjLRqWFVhXgK+Y17m6c3Ml5QpyjZMXXNPl3Skqu3thDzyY6IhNlYLnNJoQr1mZ9yuC
+	KWegPaXSsvQbNJ8/WSgikWfi+qM+Almd2Wa2xREJz6mP1oydLk9bm72v6xA==
+X-Gm-Gg: ASbGncsMrTpWsGXj/rke1BYlQoYaMuispS6verEawiFaLG52YX/GquygX978IkOifsQ
+	aPQVxoKXCoFoutDoNpBirTMVOkbkgKWKD0qPK99gMiSiESK/D9gWUbXfDi8CRwc9D9NMBuZRd+x
+	ryv6eGDHazMwP+3rB+OBd5QFw4ABG+H/34SRV7WMLuek6REcoIvLukgoGOx1Oe8UdZr/rOC4ZhK
+	7BQxS2rfZN2mHlPZ0sl0zRfb5nV4fnEjIuF9CV27UJJaTCgKNITrtKW8YmDshK4HZosxQ6ww5+k
+	ttuj+XBnh1u19rcx
+X-Google-Smtp-Source: AGHT+IEkrrkkDCPBST2SSDzieRk/7lHjozCohOP4iZxzRJLyNlSuNDKsPOvPXofON9amzy4eOciLaHdtAeIIvM6ecKw=
+X-Received: by 2002:a05:690c:6e08:b0:786:5620:fad3 with SMTP id
+ 00721157ae682-78929e15d08mr41201237b3.11.1763144315285; Fri, 14 Nov 2025
+ 10:18:35 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251114055249.1517520-1-hch@lst.de>
-In-Reply-To: <20251114055249.1517520-1-hch@lst.de>
+References: <20251114055249.1517520-1-hch@lst.de> <20251114055249.1517520-2-hch@lst.de>
+In-Reply-To: <20251114055249.1517520-2-hch@lst.de>
 From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 14 Nov 2025 09:56:51 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wg=B_E6xyFWF0s2mGrRP==7Oo9WAt645x6n+Fb2FAWNjw@mail.gmail.com>
-X-Gm-Features: AWmQ_bkAygS1m4gIrLP85OuFDxKOwq2g5_BcgKz10fXDRtXdYrbuz2oWG7iLQkk
-Message-ID: <CAHk-=wg=B_E6xyFWF0s2mGrRP==7Oo9WAt645x6n+Fb2FAWNjw@mail.gmail.com>
-Subject: Re: make xfs sparse-warning free
+Date: Fri, 14 Nov 2025 10:18:24 -0800
+X-Gm-Features: AWmQ_bkVV8Sj_GIT8Ewq_zzysvsvBXQ2TETrcIO1MdsndiK3KIFex7SyIgpCoiw
+Message-ID: <CAADWXX_ORdj=PaW5oeMybV6sEV6UxbZnRw4=TDZpa1Ejt0vbJQ@mail.gmail.com>
+Subject: Re: [PATCH 1/3] lockref: add a __cond_lock annotation for lockref_put_or_lock
 To: Christoph Hellwig <hch@lst.de>
 Cc: Carlos Maiolino <cem@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
 	Luc Van Oostenryck <luc.vanoostenryck@gmail.com>, Chris Li <sparse@chrisli.org>, 
 	linux-sparse@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, 13 Nov 2025 at 21:54, Christoph Hellwig <hch@lst.de> wrote:
+[ Christoph, while I have some minor comments on the patch, the
+primary reason for this reply is actually that this was in my spam
+box.
+
+  Your email sending is violating DKIM rules: your "From:" is
+"lst.de", but you use "infradead.org" as your SMTP server, and the
+DKIM signature then has d=3Dinfradead.org as a result.
+
+  That's a so-called "alignment" failure, and is pretty fundamental
+and a sign of spam. You can't verify that an email is from a valid
+address by then using a different domain entirely as the "look, trust
+me" thing.
+
+  So your emails all end up with dmarc failures, and then are much
+more likely to be marked as spam. ]
+
+On Thu, Nov 13, 2025 at 9:54=E2=80=AFPM Christoph Hellwig <hch@lst.de> wrot=
+e:
 >
-> this series isn't really a series, but a collection of two very different
-> patches toward the result of having no sparse warnings for fs/xfs/.
+> -bool lockref_put_or_lock(struct lockref *lockref);
+> +bool _lockref_put_or_lock(struct lockref *lockref);
+> +#define lockref_put_or_lock(_lockref) \
+> +       (!__cond_lock((_lockref)->lock, !_lockref_put_or_lock(_lockref)))
 
-So I answered the wrong email (because I saw the other email first).
+I don't think this is wrong per se, but rather than rename the
+function, I wonder if it wouldn't be simpler to just have a
 
-I think making it sparse-clean is obviously good, but as mentioned in
-the other email, I think the clang context tracking is the (near)
-future when it comes to static help in lock context tracking.
+  #undef lockref_put_or_lock
 
-I know you looked at that clang context thing earlier, and assumed
-that that is what triggered this work in the first place?
+in lib/lockref.c and just keep the same name for the function and the macro=
+.
 
-Anyway, iirc Chris Li already at some point indicated that he'd rather
-remove the sparse context checking entirely than try to make it
-smarter.
+Macro expansion isn't recursive, and having
 
-I do think that being sparse-clean for the current sparse context
-tracking is a "good thing", but not really because it makes sparse
-happy: it's a good thing mainly because *if* you can do it, it tends
-to mean that the lock context rules are really simple and
-straightforward, because sparse just doesn't do anything non-simple
-very well in this area.
+    #define a(x) something-something a(x)
 
-So when you say about patch 2:
+is actually perfectly fine, and something we do intentionally for
+other reasons (typically because it also allows us to then use "#ifdef
+a" to check whether there is some architecture-specific implementation
+of 'a()')
 
-> I actually think this improves the code, so I think this should go into
-> the XFS tree.
+And yes, you do need that "#undef" to then not get crazy parse errors
+in the actual definition and export of the function, but it would
+allow us to avoid yet another "underscore version of the function".
 
-I heartily agree. But then
-
-> Patch 3 duplicates some XFS code to work around the lock context tracking,
-> but I think it is pretty silly.
-
-makes me go "if you have to make the code worse to make sparse happy,
-maybe just look at the clang context tracking instead?"
-
-Because I *assume* that the more complete clang context tracking
-series doesn't need that?
+I dunno. Not a big deal, but it seems annoying to make up a new name for th=
+is.
 
             Linus
