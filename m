@@ -1,105 +1,128 @@
-Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B45233BBB1
-	for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 17:28:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7733340A57
+	for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 17:57:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763141317; cv=none; b=kz46mjGeWBQVEK0w/xhbZI0RakaUpUGhFM0I5ONLFA2fKfNfb0V7merNto4tLduQtSeeZLTp4Ho5AiggImjmBnZagtf3pi4C2kWblH5A6E+LfX8/1YN1E+WWRH2sa6UcJXhSdI8gZCzdkvTaw8DMdEHAFGub0nWt6IOnCIX+nP4=
+	t=1763143033; cv=none; b=p00nQPoCHXTtDU8gGbhVj+0tOA2BMVajQ2AmPN9vMRU+nGrHSAPYclpOHlfGROjB5o1dk7BHa19+LALTOMun8QupRJjcMQX8/5s/nUZPu75kUBB8qnrLUPj7vb0+uzdAKkSnefnyf0Um6J/0rLKgeYUN/B1yZSXbGKQUwoA9Pnw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763141317; c=relaxed/simple;
-	bh=0BQJjPCgi1Ks2wufI3U7irPuueJ3BznprLLd2GrrZ84=;
+	s=arc-20240116; t=1763143033; c=relaxed/simple;
+	bh=so6p0BHVkjQUfy+5X9skc9NOHgaJ9CFjc9wu+7i/eWc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Ygds/kKjlv8OoV1TsQ5B1298sHm1zT3S84TQtHJRsDQfJbcs/WxpRYnv77r30BOZ5V3YGlD7tIzzBdSfVqtqwUCDfrR6I7vKlCrduwj32FsxAWEfMkWgm0RlC0y1PW0PwQioL8WQk/4MBFyA9Coy7hRhBZ6yuR8PAooJ6TA76os=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=TEJ9waIg; arc=none smtp.client-ip=209.85.208.46
+	 To:Cc:Content-Type; b=S06t5yBNwhkhyFnpKpvn7MugqueTvKKymV55neC7uRs5opRDHANcN8sufEbE0QC0e1DNf2L9Nm4bXoeGKjeIeX+iBydsxggy0Fe+hHmBotl0lBjNKSroTkaJOLQZ1oXpSA3TXrj2TWXjArn0IJ4JKNl1AoBtQWudmikZJ4FyHPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=XOq4Cp9u; arc=none smtp.client-ip=209.85.208.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="TEJ9waIg"
-Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-640b06fa959so4036885a12.3
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 09:28:34 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="XOq4Cp9u"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-6417313bddaso3953873a12.3
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 09:57:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1763141313; x=1763746113; darn=vger.kernel.org;
+        d=linux-foundation.org; s=google; t=1763143029; x=1763747829; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=iHdilhx9M0Sn5mPxaXisVhxNAxMfQTLffsrPcjjnXqc=;
-        b=TEJ9waIgLzERVE8zl2zorN6cngl52YHVBHML88m0/s7YR+Kk93qt/rwwfrv9Xy25yu
-         haBjtY2GNiw52LL/kOIhSh1tTHL1eLDqMlSV1NyasyTdnsapMqu9Cky+3pOcmDcZJSPU
-         mtH0+FBUT7PGHFq2O2KdRDjo89q/rHlflBChA=
+        bh=vNklGNQ9bRGgaodQC83USJCDTJzreS5VEwsOUbpJpVw=;
+        b=XOq4Cp9u3X/dkIWJkt/EEn4iVYho+yp5+ziTnwHQkq5iJbc5K+ziK6MUz+yhha6FRM
+         7HmYV7jHku5mkspyf3kXneWCGLWjTr35qt9ga1I69H3z9a/bZGNRZOHX6nEpFpo0EjzF
+         sTcPtjevf3PMwTbgWo6yzQSDxTkbMnltRLh3g=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763141313; x=1763746113;
+        d=1e100.net; s=20230601; t=1763143029; x=1763747829;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=iHdilhx9M0Sn5mPxaXisVhxNAxMfQTLffsrPcjjnXqc=;
-        b=YB88A7TXajwR2nHuBIdLrG9QTipHoMup0kFNw9T2bP5xd53pN4wj4vo5a2usiSNEGz
-         TSNGyoU+xgT6gTHmuwiLHNlt1/2nwNx3Hc5RSPFfccp4ZJWfdfRNWiiXQ7FPZcLg1Um9
-         vZwOLbgJbN1CsMFl3o49QPCebM2LJh8l2NcJNSQprEoefT4ZtHhsb9yddMZuUQTlWJ8S
-         kozP1Psv2ot92VzATmM7n+lOrL4YdQkpsIhQjH6unYvNmWAEyVtPRCeEXHW5JT5tU6kK
-         /hH+YQzwKphvVaYhNc3Qhz0fuduDGnDElzLDBdl6VabQkUgKcEvHDduutnW4uhMCF3ex
-         U81A==
-X-Forwarded-Encrypted: i=1; AJvYcCWnhWeX8rF95biE2VjmtLfDtcYGTz+wtG8a7zOO82pLQAz0nml2oyz9GzkqW5VZUF3dW14N/TRzDsU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyMSRaf2IX/R3Tk/GJ3JMGdF+xGmK9jEOz1TuMJ9+L6K7dpGeW5
-	sj5Wksef7qdojIrHHzc+zAPztSyznAH1EI2ajwXtMuZ0iHNk+CSsOTksiZYay+Bn5ATYFUZNP5t
-	q7KALjsQ=
-X-Gm-Gg: ASbGnctYiYfeaJ2mMVjkWx3rj/Mn8V2Lq7UCIjKP4VImMqPZJWoxdB4fZAsZw0VaUo1
-	tG2saCs7fVKlSRjwo7C33On9TN17mCzoF6bXMJGJydHrDiRwudn5rRumbIeC7hsiCfwC236++84
-	1tMQydW/buNrnUJg5oXGNBstZRGYONVEu5Dm9dwFSiJlNUhiVLoCFJSbbBXGCVWjSxcKde+m5uz
-	N24nce3WVrZlAHUzNaomA27pT66KNsIrSS0ii+iSXeUA5voYtKAmFM9RmvD0MZtfrAcZElFtkpE
-	7O7e+dErgsz9MmKolLqZjPiffqz1snlVeKaVYFeeXRKWivfnKa/W3Vxwc89aGoa4UsSnLrpLR1U
-	R7X1w+08FjgY6pwU8CzRXfBqTp5HzNprFr02+PIzYcjmmxaHFTlVgyDSq42jDAVCGbXx7qU3q4M
-	aB6ErbLbarFfu1q3WP4XHMBMSwpKGN58nhRhKHlwP3Xq3P7JMtfA==
-X-Google-Smtp-Source: AGHT+IFIimHMv3LXebuai+9d5q3KDtT5HMuIWwHSoUXGRNidVgx2jVyol9wnruIvOJDgNt8z/v840A==
-X-Received: by 2002:a05:6402:2115:b0:640:ef03:82c9 with SMTP id 4fb4d7f45d1cf-64350e1fa2cmr3187214a12.11.1763141313299;
-        Fri, 14 Nov 2025 09:28:33 -0800 (PST)
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com. [209.85.208.50])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6433a3d87e3sm3991051a12.7.2025.11.14.09.28.31
+        bh=vNklGNQ9bRGgaodQC83USJCDTJzreS5VEwsOUbpJpVw=;
+        b=GiZCT96fLg3AZ964+OfnHzNxMat5WnWAGVYrPDAKOVab8QC3rDsXwA1eIYmysYnUqA
+         ilsVQ7QLFX85yLypPAzlm2M6xfhQVWOfgsG1VM361HWEKgO1MAE9Gjt05GoJwbE/0DW9
+         TTiK7N5tZl0vfjhbTxok6FXfiig+aUXz5djN1CsdDtvXnQXmKxvyFwnA5NPnRHKZsNbS
+         M8bGR5Sk8NTNeLLc10/7uHT1P04vMobUTt2TFAE+2I6SYFHilozE/YOCZ5kIwSms1N01
+         gCIxxsBnZ35Tvq05V1bMh7lTlGmE7u95w8BFkL/sLH/0ovGxhZTtYbDTFL4Edr1dK62B
+         3jFg==
+X-Forwarded-Encrypted: i=1; AJvYcCVT88aWvGfThkJCy0lVTAWttmegTvoR+aJUqtiNx4n7HJaOkH7GmVae4huKzhRHoWETx5SOYnlVCg4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxjgqHzMiIc4V9suz/Imwbak+9vY7mNSuPFgufVsvajntVTWvCn
+	BUOqIi0ssQKFviOceSU0r0TXFmhDAt33q5lk/cwlLo9y0VUMto6gLb0F1nf9Oan3RdzNTFRps8S
+	SvCKhuPY=
+X-Gm-Gg: ASbGncstHOZTNVKOtvZupNUqalypWyP+vw8uwd6j2R8oA7WiNCumpqpeOzH8m71klY0
+	kpDJso57uQSB22LbEMNcpKbawvqJ4kH5ILkIrvVMd2Y1N20AwS/xZUf5HzqRijjhXR5PhKcpUdJ
+	FprI31X1C/9byROTIfUHEoUeNOsTOgSCUD/0XmYKEbiu95KxW6cDLFj+0kyB4Bv1Z/VBk9VRsgK
+	sgv1kRyo4ephILtPKWG7uzqffYViM+21HAeexhZkUvHk9clCd7bEy0Abjv2IrulqLQ9gtOQqTnl
+	csGx70+nvrgDzgWpcYH4hpsT8FGbiH60+8gzYGyUYJsKRKF09BStnsOF0jyqpzKv9udiTM8SQZJ
+	ggZdjiRNT7cqp7OrrjVt8BJ2wK37rcy6v+TtE6AqW4cFY11Dz6wMG/1zhy4H6Rx2Gz3vX2/BaIK
+	AW57GIw8C7vWfykt1QgTQC9dikT134IiS/yHHB4cCiPZreqKFE4Q==
+X-Google-Smtp-Source: AGHT+IEHmvX+WKtNVlWqtSbmvurzjZjCYXYJWlGuU5Qkvm8BRsNXagCltDmxCTDEFOG7WDkshWlj2w==
+X-Received: by 2002:a17:907:e8e:b0:b70:f2c4:bdf7 with SMTP id a640c23a62f3a-b736793d687mr451654066b.31.1763143028942;
+        Fri, 14 Nov 2025 09:57:08 -0800 (PST)
+Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com. [209.85.218.44])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b734fd809d2sm435137066b.42.2025.11.14.09.57.07
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 14 Nov 2025 09:28:31 -0800 (PST)
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-640bd9039fbso3868813a12.2
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 09:28:31 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVTo4wdHWMSKVz2HjRZm6KN/aHHNBs9n2Hj/CT5t8qbm1pEz4B9c0ofGXc3qMZhGFe71CrFM2t4mh4=@vger.kernel.org
-X-Received: by 2002:a17:906:f597:b0:b73:42e3:e70f with SMTP id
- a640c23a62f3a-b73677ee9f3mr379951266b.6.1763141311414; Fri, 14 Nov 2025
- 09:28:31 -0800 (PST)
+        Fri, 14 Nov 2025 09:57:07 -0800 (PST)
+Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-b7277324204so299725366b.0
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 09:57:07 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWQEdzJ2e3vp7RYMie+GH9vPBWQg+CLIEasLhY4LBb7qfCfFpOa/VhL1RH+oyLu1nv7r73L+0Whfd8=@vger.kernel.org
+X-Received: by 2002:a17:907:a4c:b0:b73:594e:1c47 with SMTP id
+ a640c23a62f3a-b7367829b07mr457884466b.26.1763143027209; Fri, 14 Nov 2025
+ 09:57:07 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251114055249.1517520-1-hch@lst.de> <20251114055249.1517520-3-hch@lst.de>
- <20251114170402.GJ196370@frogsfrogsfrogs>
-In-Reply-To: <20251114170402.GJ196370@frogsfrogsfrogs>
+References: <20251114055249.1517520-1-hch@lst.de>
+In-Reply-To: <20251114055249.1517520-1-hch@lst.de>
 From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 14 Nov 2025 09:28:15 -0800
-X-Gmail-Original-Message-ID: <CAHk-=whmYntzyDUOjmoyKR_oyzg9Gddnda447KioykKi3FmzDQ@mail.gmail.com>
-X-Gm-Features: AWmQ_bnPyaNFGJboMfVt9LBmNURVdE-jeW-JZAYBUC12bhugNENatC7jxLidgNM
-Message-ID: <CAHk-=whmYntzyDUOjmoyKR_oyzg9Gddnda447KioykKi3FmzDQ@mail.gmail.com>
-Subject: Re: [PATCH 2/3] xfs: move some code out of xfs_iget_recycle
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cem@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, 
+Date: Fri, 14 Nov 2025 09:56:51 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wg=B_E6xyFWF0s2mGrRP==7Oo9WAt645x6n+Fb2FAWNjw@mail.gmail.com>
+X-Gm-Features: AWmQ_bkAygS1m4gIrLP85OuFDxKOwq2g5_BcgKz10fXDRtXdYrbuz2oWG7iLQkk
+Message-ID: <CAHk-=wg=B_E6xyFWF0s2mGrRP==7Oo9WAt645x6n+Fb2FAWNjw@mail.gmail.com>
+Subject: Re: make xfs sparse-warning free
+To: Christoph Hellwig <hch@lst.de>
+Cc: Carlos Maiolino <cem@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
 	Luc Van Oostenryck <luc.vanoostenryck@gmail.com>, Chris Li <sparse@chrisli.org>, 
 	linux-sparse@vger.kernel.org, linux-xfs@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-On Fri, 14 Nov 2025 at 09:06, Darrick J. Wong <djwong@kernel.org> wrote:
+On Thu, 13 Nov 2025 at 21:54, Christoph Hellwig <hch@lst.de> wrote:
 >
-> I wonder, does sparse get confused by rcu_read_lock having been taken by
-> the caller but unlocked here?
+> this series isn't really a series, but a collection of two very different
+> patches toward the result of having no sparse warnings for fs/xfs/.
 
-I think we'll sunset all the sparse lock context checks - they were
-never very good, but they were "all we had".  It was useful in limited
-and simpler places (because the sparse logic itself was limited and
-simple), but it never worked well for anything more complex.
+So I answered the wrong email (because I saw the other email first).
 
-Now that clang is about to get context checking, and doing it much
-more properly, the half-arsed sparse complaints should be ignored in
-favor of just trying to make clang understand things well enough.
+I think making it sparse-clean is obviously good, but as mentioned in
+the other email, I think the clang context tracking is the (near)
+future when it comes to static help in lock context tracking.
 
-Put another way: don't worry about sparse.
+I know you looked at that clang context thing earlier, and assumed
+that that is what triggered this work in the first place?
 
-                Linus
+Anyway, iirc Chris Li already at some point indicated that he'd rather
+remove the sparse context checking entirely than try to make it
+smarter.
+
+I do think that being sparse-clean for the current sparse context
+tracking is a "good thing", but not really because it makes sparse
+happy: it's a good thing mainly because *if* you can do it, it tends
+to mean that the lock context rules are really simple and
+straightforward, because sparse just doesn't do anything non-simple
+very well in this area.
+
+So when you say about patch 2:
+
+> I actually think this improves the code, so I think this should go into
+> the XFS tree.
+
+I heartily agree. But then
+
+> Patch 3 duplicates some XFS code to work around the lock context tracking,
+> but I think it is pretty silly.
+
+makes me go "if you have to make the code worse to make sparse happy,
+maybe just look at the clang context tracking instead?"
+
+Because I *assume* that the more complete clang context tracking
+series doesn't need that?
+
+            Linus
