@@ -1,73 +1,79 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 999E62DFA48;
-	Fri, 14 Nov 2025 12:02:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04274BA3D;
+	Fri, 14 Nov 2025 12:24:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763121723; cv=none; b=o7njJfgGFEqaqY/FRnEtMzeMwD7Y+L3zmTkbAk4MbkpSgTRv3y7fHpQy/ZqeTFkhUNQ6I9/Tilg7TkSbEnF+kGZe4QGTrl20sdASp9IrFCZSAFn/0STILHDMz1PMsoRNrYHqpXsn4WuEClNwpy0Ysij+rh6A4eZjVfCMtnNkWgU=
+	t=1763123092; cv=none; b=M2u5i/QIENyB9GgQz58g43qoBJYxuGR9Wday9Gv0wvi8f0WZTvQxcITPn7qfGLS77BP7dA421w146Tiv77mPFc3t2R2EWcwL/5M5YtZFNOa5nDjT77fjMZvc2jMjo/WPzgjL6FACfmlgqGKX8rp6wx0ZKMKpWOXO35iuqYBZ1Kk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763121723; c=relaxed/simple;
-	bh=K6naIdsy7yyYyA4vb9Cz7pWbHURboZOc8nlzvye4JfE=;
+	s=arc-20240116; t=1763123092; c=relaxed/simple;
+	bh=+mBDMZqOqXyj1nw2FoUq3hfj9Pq1+bVG+kNKFkCOjGM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R2Ht4EKE7aIMB1DlstE2Z3z/aPGsGgwn4Lb/9KdTFbVXqxRDVE82YMHMoFAqlmidcEm8Fg0D9IJNUZujI262Fu8rOgILiaGo4yHUvuv19/4hg0A9h+jRk7l7x3RR7QBQY36L9arxPjw/He+JCkvHOaUnoXPiVBoAbtZgD38aN58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id F2CA5227AAA; Fri, 14 Nov 2025 13:01:52 +0100 (CET)
-Date: Fri, 14 Nov 2025 13:01:52 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Kevin Wolf <kwolf@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>,
-	Keith Busch <kbusch@kernel.org>, Dave Chinner <david@fromorbit.com>,
-	Carlos Maiolino <cem@kernel.org>,
-	Christian Brauner <brauner@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-block@vger.kernel.org
-Subject: Re: fall back from direct to buffered I/O when stable writes are
- required
-Message-ID: <20251114120152.GA13689@lst.de>
-References: <20251030143324.GA31550@lst.de> <aQPyVtkvTg4W1nyz@dread.disaster.area> <20251031130050.GA15719@lst.de> <aQTcb-0VtWLx6ghD@kbusch-mbp> <20251031164701.GA27481@lst.de> <kpk2od2fuqofdoneqse2l3gvn7wbqx3y4vckmnvl6gc2jcaw4m@hsxqmxshckpj> <20251103122111.GA17600@lst.de> <aRYXuwtSQUz6buBs@redhat.com> <20251114053943.GA26898@lst.de> <aRb2g3VLjz1Q_rLa@redhat.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=uncm53JlyQI3sC0uNQ/siFO2d34jb51g2OdTsNckO1Up3EqgIVPiq51Rw7opVrd3tCYaVTwmhhztHrU3GnXRiYbYz/zdXXB3od0WLMH/2xoNY6jnSyTZgN/L9OFbk5Bk8NhCYQZokI84gmzPfKqH+1zM0EaReMHFKhJ91cos8ro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L88J3kMN; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L88J3kMN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B678C4AF09;
+	Fri, 14 Nov 2025 12:24:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763123091;
+	bh=+mBDMZqOqXyj1nw2FoUq3hfj9Pq1+bVG+kNKFkCOjGM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=L88J3kMNXclmlVXvSCh0nwJz3MI/z//UToTodAyB8+hSlNnkgXmt679fqapIropxt
+	 TUKtETf1WbcWvQE6SEEa+vxb91ma9o4EiZV0RToOZ4Ov5mPY5b43+Ubt0LW1+fDwfU
+	 tLqEQIv5BoWbspBjSFZbeubTeip6wzBqqXljdlL33QtlYekrXKtmNVKynge7yPqMts
+	 +QLPN90oTnvZgsDNursj4MM6EYHj2IB3cRa5vnPrY6LbfG/BgI4m2zsEsMemyRtNPJ
+	 ymiv896FRZ1UahmIF3bSUq4VROCfN8SABYT93BJyBU6UnvuYE29zdU0f92GFitE8Zk
+	 L1O4gixSsAR3g==
+Date: Fri, 14 Nov 2025 13:24:41 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: NeilBrown <neil@brown.name>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, 
+	Jeff Layton <jlayton@kernel.org>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, 
+	David Howells <dhowells@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
+	Tyler Hicks <code@tyhicks.com>, Miklos Szeredi <miklos@szeredi.hu>, 
+	Chuck Lever <chuck.lever@oracle.com>, Olga Kornievskaia <okorniev@redhat.com>, 
+	Dai Ngo <Dai.Ngo@oracle.com>, Namjae Jeon <linkinjeon@kernel.org>, 
+	Steve French <smfrench@gmail.com>, Sergey Senozhatsky <senozhatsky@chromium.org>, 
+	Carlos Maiolino <cem@kernel.org>, John Johansen <john.johansen@canonical.com>, 
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>, 
+	"Serge E. Hallyn" <serge@hallyn.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
+	Ondrej Mosnacek <omosnace@redhat.com>, Mateusz Guzik <mjguzik@gmail.com>, 
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, Stefan Berger <stefanb@linux.ibm.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, linux-kernel@vger.kernel.org, netfs@lists.linux.dev, 
+	ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
+	linux-cifs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-security-module@vger.kernel.org, 
+	selinux@vger.kernel.org
+Subject: Re: [PATCH v6 00/15] Create and use APIs to centralise locking for
+ directory ops
+Message-ID: <20251114-baden-banknoten-96fb107f79d7@brauner>
+References: <20251113002050.676694-1-neilb@ownmail.net>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <aRb2g3VLjz1Q_rLa@redhat.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20251113002050.676694-1-neilb@ownmail.net>
 
-On Fri, Nov 14, 2025 at 10:29:39AM +0100, Kevin Wolf wrote:
-> Right, but since this is direct I/O and the approach with only declaring
-> I/O from the page cache safe without a bounce buffer means that RAID has
-> to use a bounce buffer here anyway (with or without PI), doesn't this
-> automatically solve it?
->
-> So if it's only PI, it's the problem of userspace, and if you add RAID
-> on top, then the normal rules for RAID apply. (And that the buffer
-> doesn't get modified and PI doesn't become invalid until RAID does its
-> thing is still a userspace problem.)
+On Thu, Nov 13, 2025 at 11:18:23AM +1100, NeilBrown wrote:
+> Following is a new version of this series:
+>  - fixed a bug found by syzbot
+>  - cleanup suggested by Stephen Smalley
+>  - added patch for missing updates in smb/server - thanks Jeff Layton
 
-Well, only if we have different levels of I/O stability guarantees:
+The codeflow right now is very very gnarly in a lot of places which
+obviously isn't your fault. But start_creating() and end_creating()
+would very naturally lend themselves to be CLASS() guards.
 
-Level 0
-  - trusted caller guarantees pages are stable (buffered I/O,
-    in-kernel direct I/O callers that control the buffer)
-
-Level 1:
-  - untrusted caller declares the pages are stable
-    (direct I/O with PI)
-
-Level 2:
-  - no one guarantees nothing
-    (other direct I/O directly or indirectly fed from userspace)
-
-PI formatted devices would only bounce for 1, parity would bounce for
-1 and 2.  Software checksums could probably get away with only 1,
-although 2 would feel safer.
-
+Unrelated: I'm very inclined to slap a patch on top that renames
+start_creating()/end_creating() and start_dirop()/end_dirop() to
+vfs_start_creating()/vfs_end_creating() and
+vfs_start_dirop()/vfs_end_dirop(). After all they are VFS level
+maintained helpers and I try to be consistent with the naming in the
+codebase making it very easy to grep.
