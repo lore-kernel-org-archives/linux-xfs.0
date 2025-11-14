@@ -1,196 +1,226 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f65.google.com (mail-pj1-f65.google.com [209.85.216.65])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2DEE326926;
-	Fri, 14 Nov 2025 14:53:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5EEF32ED4A
+	for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 15:22:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763131983; cv=none; b=eXti+IXMfuftisYoMR7UryCRJQ4Yv7flbSt2FQibAGk+SPIVklr6B76vgVlOBWitbzdDxN+VFZc4Sb94P1wfi9qaa6VhO3uNYZuDjON2Slzu1k9JJM8RClc1PnWyTlX7XoXUgFuOMnrqWGIDkNWrnFDLNKK3r+JCwWmvzN3fhx4=
+	t=1763133728; cv=none; b=fmjXPZyJgvZy2sUN13jVUQdbEzAXYApJ+Bh9PlgXG2W7zpRB6m+wbghD6Yg7eGKyDrvCEXDULD+rYPSU8SZdZsL6lDoFVqTsv3LkRk2JlXvPPkJ1Pxip4rdHmxpHZWm4RFIl8YWs+nh786iy7MRyD89Uo3H6kEUiPbk2BqKx0/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763131983; c=relaxed/simple;
-	bh=bOinV6RVaARmlpZUe0qjE6MXgdyU1TzJwTlect5gW88=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=az/nL5mb/gX3Qz79ygAmuXXIwh9oOJFg45lZ5QBwOALH2TU1RUP9R4k31c1TbuSWLNFxM6SKqx+QHdr/OidGcbcXl8J3EEOnNUMn62x/ASJN8GWyzLKqyoDieTMuO9u8dqBS5CPGzip6yZS3JbR6ZUnP2nboWgYPVjtvkhqPIQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kJTSo2na; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763133728; c=relaxed/simple;
+	bh=MxuQ3439tCkN9wzG3jkskP1VwrEe6F3iqjTMze1yDZw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=f4/FD7Oi+ctuiTI/0I9QOZf+brfWGYEKKlBDxM6QCgb2K1cnhWM4noMcgx1CCWw/hUhrJ2cpgr+c+synYI9bu2cJtv2IWzlJ3g3vOdQ1Tp8dl3t00ceafKlrcKB9QCM14845aX9xXoHbFNP+waIArTV0SiLnx2kvx9F50RXQnD8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E/VtbQli; arc=none smtp.client-ip=209.85.216.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kJTSo2na"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FE0AC4AF09;
-	Fri, 14 Nov 2025 14:53:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763131983;
-	bh=bOinV6RVaARmlpZUe0qjE6MXgdyU1TzJwTlect5gW88=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-	b=kJTSo2narE1D5r4U/jC6F+wHAwsN2xXIKKFmr2M4I2idvCTD/tqcxatFRwxmr8ENc
-	 hOeFC+BMfOtYZ8TuHleBtGXy94o6TpcyST4sTEy0vVgsClmocEEHU7YkSqQpRo8tQO
-	 2/rHm+qXhnupB8697Z+zQ5Fihul95sVROs5flFLiAkIlTkk1qBZz6gO7sbympCt/eV
-	 ntcsRSMrYwgt9jNxQpMQFOnhHke6QcBHEtTzMs2u/9fbwCPtdjeicTmjFdu2ZhZzAW
-	 yDeMm0uVUut7g/uSKjJIWM17LvCkf481PS1h3YwJH2neNrXuPhNeVsbNPSV5YVyl3C
-	 Bco3EvrkF+4VA==
-Message-ID: <3209fb8c9be25362316bf3585a156c21f3b0a7e2.camel@kernel.org>
-Subject: Re: [PATCH v6 00/15] Create and use APIs to centralise locking for
- directory ops
-From: Jeff Layton <jlayton@kernel.org>
-To: Christian Brauner <brauner@kernel.org>, NeilBrown <neil@brown.name>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Amir Goldstein	
- <amir73il@gmail.com>, Jan Kara <jack@suse.cz>,
- linux-fsdevel@vger.kernel.org,  Chris Mason	 <clm@fb.com>, David Sterba
- <dsterba@suse.com>, David Howells <dhowells@redhat.com>,  Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>, Danilo Krummrich	 <dakr@kernel.org>, Tyler Hicks
- <code@tyhicks.com>, Miklos Szeredi	 <miklos@szeredi.hu>, Chuck Lever
- <chuck.lever@oracle.com>, Olga Kornievskaia	 <okorniev@redhat.com>, Dai Ngo
- <Dai.Ngo@oracle.com>, Namjae Jeon	 <linkinjeon@kernel.org>, Steve French
- <smfrench@gmail.com>, Sergey Senozhatsky	 <senozhatsky@chromium.org>,
- Carlos Maiolino <cem@kernel.org>, John Johansen	
- <john.johansen@canonical.com>, Paul Moore <paul@paul-moore.com>, James
- Morris	 <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, Stephen
- Smalley	 <stephen.smalley.work@gmail.com>, Ondrej Mosnacek
- <omosnace@redhat.com>,  Mateusz Guzik <mjguzik@gmail.com>, Lorenzo Stoakes
- <lorenzo.stoakes@oracle.com>, Stefan Berger	 <stefanb@linux.ibm.com>,
- "Darrick J. Wong" <djwong@kernel.org>, 	linux-kernel@vger.kernel.org,
- netfs@lists.linux.dev, ecryptfs@vger.kernel.org, 
-	linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, 
-	linux-cifs@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-security-module@vger.kernel.org, selinux@vger.kernel.org
-Date: Fri, 14 Nov 2025 09:52:59 -0500
-In-Reply-To: <20251114-liedgut-eidesstattlich-8c116178202f@brauner>
-References: <20251113002050.676694-1-neilb@ownmail.net>
-	 <20251114-baden-banknoten-96fb107f79d7@brauner>
-	 <20251114-liedgut-eidesstattlich-8c116178202f@brauner>
-Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
- keydata=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
- QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.1 (3.58.1-1.fc43) 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E/VtbQli"
+Received: by mail-pj1-f65.google.com with SMTP id 98e67ed59e1d1-3438231df5fso2354574a91.2
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Nov 2025 07:22:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1763133726; x=1763738526; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=30oEX3U/fuyuD+ICsPgWp/MsngawZG4yRZy1PkVA8Yw=;
+        b=E/VtbQliYmqGAu+JPAhsT+q1VhJPfjnFUiHdOcE4jPIArDamhIMxDSed4rlx7FODu3
+         dBrp0s3kjN9Q/rf2tuy5iuf02cQinFeaQfFBCRIhSmX9z4GEP3C2CkZ0WOi9Ar+FWZ0+
+         WyjUYszhMeoIqpMt09GcGMRC2FX0/DuWC48+A0PTkzgG9F7AdRp6OHuHTZdlhYzXwvvi
+         Ghb+eGH/ErNqrl+iE5nZuGUGEDMjzfRIjgTjb7ouJrHS/byPrZcsEPkj78KIU7r8B9MZ
+         dEhNpjVGqxQO3TeB3oGKAlpbjOKHXV6YdfdSxEoSZVaQgAoKh7Q4t3X/M/6x63t7VaGM
+         9gYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1763133726; x=1763738526;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=30oEX3U/fuyuD+ICsPgWp/MsngawZG4yRZy1PkVA8Yw=;
+        b=F8DZp+a7l1hRiC13a+JwqNFdV+KD8//vCmASTQQ44sSu3LQzF0YlFsqUxhzqZpf/ad
+         arVgdqg+3+5xOIV17F1milet7tO0TXMC6VkwPeIX39CF5RfLmOCHNiBIe70idhCmxkLD
+         A+CPzv65n3hemQ7+ShgMjAELgdhsBw/GX1JMbunNRx4FlD5xXbvFSP0VBoX4OckTXyOl
+         6gDkuTl13YzWonDGNOundeflvM5CJWTTfBQJMwXM6vk0IbNrWSMdwW+1sr2bpq5KQ+1B
+         otWs+rceJjYpbfq/QbMDGSadD4MZXyNW9XyeobT52MhRK/jMQl801CsVQPidWyONIojL
+         qPsg==
+X-Forwarded-Encrypted: i=1; AJvYcCW+afW+fqZVwQxFiUIN+UI6ESakJTbPqnqJ3vUHLVwBrejgqr3UsdVtR229gw/hgbS9syehzkQkDxI=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw//yFMCzOJ9BPUQN3pYEdvAn94QXYL1TJWJfLT9Ncb/LGXwkpK
+	OMYPeRLyLTVMOcp5GF5nMFFEk9IX4LouDrPJ4naRkSHVY10MWgqFgqdfvqJ18r/e2bA/FA==
+X-Gm-Gg: ASbGncsZi2KzzTTpGJpjiCruBoGxnyMfRiysw35K4g+3H3vRLY8D+DFrM3sfD4P6gQx
+	ysVuz+Dz2k4YH3jaMrJCZODpOlZZcnQDI94sIjGQWDcLpLSWmMDWhlivY97SNea9mjNG5qTxnXt
+	X0yiau4o4Z96m8zakz/lebWJwlT19fgEOXgPyUMlfJGwGLxj7VsuMwJJQUS0wnzxjUR4+LFpuOK
+	zl9T4uMS4v9CuORuXde5evo8gjONm24E9B3k8sOjGyUI+DXljMs6ByfAUgpo1bDqLFZ0ZauiiLF
+	nIEGzED6nZ2JNlkt/Tj8Bhh0m+clTWPx6KDlnCYJfGPujlQ5x2Pec6eDlmXm/AqCBVl6xYYYxQ6
+	qlGbaTutgpNq+71zxbXxYTR3JyOTSfNEiUJm7DAAhq87YTafiP/FrOgR1uvPk8bftY2h8/xaI61
+	8uUSY1olxJjDQKFT9Y9bc8EYgWvKwFzy3kA9ttRvoC/ie+Ahq/8msCoWvw
+X-Google-Smtp-Source: AGHT+IE5qDC8/sUBhoCV3Ioa0esI3fdP2ilmA2reTm1EZjB6iaCbcERLeQ78kCl58RXIWpBQFSajCw==
+X-Received: by 2002:a17:90a:ec84:b0:336:9dcf:ed14 with SMTP id 98e67ed59e1d1-343fa52bea5mr3951687a91.23.1763133725903;
+        Fri, 14 Nov 2025 07:22:05 -0800 (PST)
+Received: from HAOQINHUANG-MC0.tencent.com ([2409:8a00:1a23:4eb0:6d06:3a75:c0b6:55ee])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7b9251ca3e9sm5613641b3a.29.2025.11.14.07.22.03
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Fri, 14 Nov 2025 07:22:05 -0800 (PST)
+From: Haoqin Huang <haoqinhuang7@gmail.com>
+To: chandan.babu@oracle.com,
+	djwong@kernel.org,
+	linux-xfs@vger.kernel.org
+Cc: Haoqin Huang <haoqinhuang@tencent.com>,
+	Rongwei Wang <zigiwang@tencent.com>
+Subject: [PATCH] xfs: fix deadlock between busy flushing and t_busy
+Date: Fri, 14 Nov 2025 23:21:47 +0800
+Message-ID: <20251114152147.66688-1-haoqinhuang7@gmail.com>
+X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Fri, 2025-11-14 at 15:23 +0100, Christian Brauner wrote:
-> On Fri, Nov 14, 2025 at 01:24:41PM +0100, Christian Brauner wrote:
-> > On Thu, Nov 13, 2025 at 11:18:23AM +1100, NeilBrown wrote:
-> > > Following is a new version of this series:
-> > >  - fixed a bug found by syzbot
-> > >  - cleanup suggested by Stephen Smalley
-> > >  - added patch for missing updates in smb/server - thanks Jeff Layton
-> >=20
-> > The codeflow right now is very very gnarly in a lot of places which
-> > obviously isn't your fault. But start_creating() and end_creating()
-> > would very naturally lend themselves to be CLASS() guards.
-> >
-> > Unrelated: I'm very inclined to slap a patch on top that renames
-> > start_creating()/end_creating() and start_dirop()/end_dirop() to
-> > vfs_start_creating()/vfs_end_creating() and
-> > vfs_start_dirop()/vfs_end_dirop(). After all they are VFS level
-> > maintained helpers and I try to be consistent with the naming in the
-> > codebase making it very easy to grep.
->=20
-> @Neil, @Jeff, could you please look at:
-> https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/log/?h=3Dvfs.=
-all
->=20
-> and specifically at the merge conflict resolution I did for:
->=20
-> https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/commit/?h=3Dv=
-fs.all&id=3Df28c9935f78bffe6fee62f7fb9f6c5af7e30d9b2
->=20
-> and tell me whether it all looks sane?
+From: Haoqin Huang <haoqinhuang@tencent.com>
 
+In case of insufficient disk space, the newly released blocks can be
+allocated from free list. And in this scenario, file system will
+search ag->pagb_tree (busy tree), and trim busy node if hits.
+Immediately afterwards, xfs_extent_busy_flush() will be called to
+flush logbuf to clear busy tree.
 
-I don't see any major issues. I'm kicking off a quick pynfs test run
-now with it. One fairly minor nit:
+But a deadlock could be triggered by xfs_extent_busy_flush() if
+current tp->t_busy and flush AG meet:
 
-@@ -212,15 +210,13 @@ nfsd4_create_clid_dir(struct nfs4_client *clp)
- 		 * In the 4.0 case, we should never get here; but we may
- 		 * as well be forgiving and just succeed silently.
- 		 */
--		goto out_put;
--	dentry =3D vfs_mkdir(&nop_mnt_idmap, d_inode(dir), dentry, 0700, NULL);
-+		goto out_end;
-+	dentry =3D vfs_mkdir(&nop_mnt_idmap, d_inode(dir), dentry, S_IRWXU, NULL)=
-;
- 	if (IS_ERR(dentry))
- 		status =3D PTR_ERR(dentry);
+The current trans which t_busy is non-empty, and:
+  1. The block B1, B2 all belong to AG A, and have inserted into
+     current tp->t_busy;
+  2. and AG A's busy tree (pagb_tree) only has the blocks coincidentally.
+  2. xfs_extent_busy_flush() is flushing AG A.
 
-I'm not sure if it was Neil's patch or your resolution that changed it,
-but the change from 0700 to a symbolic constant is not preferred, IMO.
-File modes are one of the few places where I think it's easier to
-interpret (octal) numbers rather than symbolic constants.
+In a short word, The trans flushing AG A, and also waiting AG A
+to clear busy tree, but the only blocks of busy tree also in
+this trans's t_busy. A deadlock appeared.
 
---=20
-Jeff Layton <jlayton@kernel.org>
+The detailed process of this deadlock:
+
+xfs_reflink_end_cow()
+xfs_trans_commit()
+xfs_defer_finish_noroll()
+  xfs_defer_finish_one()
+    xfs_refcount_update_finish_item()    <== step1. cow alloc (tp1)
+      __xfs_refcount_cow_alloc()
+        xfs_refcountbt_free_block()
+          xfs_extent_busy_insert()       <-- step2. x1 x2 insert tp1->t_busy
+    <No trans roll>
+    xfs_refcount_update_finish_item()    <== step3: cow free (tp1)
+      __xfs_refcount_cow_free()
+        xfs_refcount_adjust_cow()
+          xfs_refcount_split_extent()
+            xfs_refcount_insert()
+              xfs_alloc_ag_vextent_near()
+                xfs_extent_busy_flush()  <-- step4: flush but current tp1->t_busy
+                                             only has x1 x2 which incurs ag3's
+                                             busy_gen can't increase.
+
+Actually, commit 8ebbf262d468 ("xfs: don't block in busy flushing when freeing extents")
+had fix a similar deadlock. But current flush routine doesn't
+handle -EAGAIN roll back rightly.
+
+The solution of the deadlock is fix xfs_extent_busy_flush() to
+return -EAGAIN before deadlock, and make sure xfs_refcount_split_extent()
+save the original extent and roll it back when it's callee
+return -EAGAIN.
+
+Signed-off-by: Haoqin Huang <haoqinhuang@tencent.com>
+Signed-off-by: Rongwei Wang <zigiwang@tencent.com>
+---
+ fs/xfs/libxfs/xfs_refcount.c | 15 ++++++++++++++-
+ fs/xfs/xfs_bmap_item.c       |  3 +++
+ fs/xfs/xfs_extent_busy.c     |  7 +++++++
+ fs/xfs/xfs_refcount_item.c   |  2 ++
+ 4 files changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 2484dc9f6d7e..0ecda9df40ec 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -429,6 +429,7 @@ xfs_refcount_split_extent(
+ 	struct xfs_refcount_irec	rcext, tmp;
+ 	int				found_rec;
+ 	int				error;
++	struct xfs_refcount_irec	saved_rcext;
+ 
+ 	*shape_changed = false;
+ 	error = xfs_refcount_lookup_le(cur, domain, agbno, &found_rec);
+@@ -453,6 +454,9 @@ xfs_refcount_split_extent(
+ 	*shape_changed = true;
+ 	trace_xfs_refcount_split_extent(cur, &rcext, agbno);
+ 
++	/* Save the original extent for potential rollback */
++	saved_rcext = rcext;
++
+ 	/* Establish the right extent. */
+ 	tmp = rcext;
+ 	tmp.rc_startblock = agbno;
+@@ -465,8 +469,17 @@ xfs_refcount_split_extent(
+ 	tmp = rcext;
+ 	tmp.rc_blockcount = agbno - rcext.rc_startblock;
+ 	error = xfs_refcount_insert(cur, &tmp, &found_rec);
+-	if (error)
++	if (error) {
++		/*
++		 * If failed to insert the left extent, we need to restore the
++		 * right extent to its original state to maintain consistency.
++		 */
++		int ret = xfs_refcount_update(cur, &saved_rcext);
++
++		if (ret)
++			error = ret;
+ 		goto out_error;
++	}
+ 	if (XFS_IS_CORRUPT(cur->bc_mp, found_rec != 1)) {
+ 		xfs_btree_mark_sick(cur);
+ 		error = -EFSCORRUPTED;
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 80f0c4bcc483..1b5241bfc304 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -403,6 +403,9 @@ xfs_bmap_update_finish_item(
+ 		ASSERT(bi->bi_type == XFS_BMAP_UNMAP);
+ 		return -EAGAIN;
+ 	}
++	/* trigger a trans roll. */
++	if (error == -EAGAIN)
++		return error;
+ 
+ 	xfs_bmap_update_cancel_item(item);
+ 	return error;
+diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+index da3161572735..c4dabee0c40d 100644
+--- a/fs/xfs/xfs_extent_busy.c
++++ b/fs/xfs/xfs_extent_busy.c
+@@ -631,6 +631,13 @@ xfs_extent_busy_flush(
+ 
+ 		if (alloc_flags & XFS_ALLOC_FLAG_FREEING)
+ 			return -EAGAIN;
++
++		/*
++		 * To avoid deadlocks if alloc_flags without any FLAG set
++		 * and t_busy is not empty.
++		 */
++		if (!alloc_flags && busy_gen == READ_ONCE(pag->pagb_gen))
++			return -EAGAIN;
+ 	}
+ 
+ 	/* Wait for committed busy extents to resolve. */
+diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+index 3728234699a2..1932ce86090b 100644
+--- a/fs/xfs/xfs_refcount_item.c
++++ b/fs/xfs/xfs_refcount_item.c
+@@ -416,6 +416,8 @@ xfs_refcount_update_finish_item(
+ 		       ri->ri_type == XFS_REFCOUNT_DECREASE);
+ 		return -EAGAIN;
+ 	}
++	if (error == -EAGAIN)
++		return error;
+ 
+ 	xfs_refcount_update_cancel_item(item);
+ 	return error;
+-- 
+2.43.5
+
