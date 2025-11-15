@@ -1,60 +1,61 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6EEC13C8EA
-	for <linux-xfs@vger.kernel.org>; Sat, 15 Nov 2025 15:51:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E121B222585
+	for <linux-xfs@vger.kernel.org>; Sat, 15 Nov 2025 15:51:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763221883; cv=none; b=uGufrtobdHFY+U2DTdEhb5pQsI/zR8gf3Jv3swoFmTScGvJcUcWfDOQBoDJtxI6XDkJk0t80ntucCUHoeg2LPtPfKrstr6XQMZ8Pj+sHw42cZjprjBjrX10dSjRqg5/6+e/pH/ESHJ70K8+se/WLJp31+2i5osquz6ujNH9x+FY=
+	t=1763221885; cv=none; b=FhtnZkqe0qYeS+qn21oIx0zzu5yUHH7ZEtHxAo6qSVG/6wwPsWokuR/oN1lLJuIZaljEYrIsI4U1jIxLQVfkccpT5JuW8HGUYXb1yC5OQYSj6rlFc8inN/Ed3xuNGiqyEO5NprSTlNGdsu7L2PyACiQUUD/CQ2k0oqwKygSTvng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763221883; c=relaxed/simple;
-	bh=TfHKuzbtuvi3qhX+XliCiSooCswFkwqGdJHoDWVUtUk=;
+	s=arc-20240116; t=1763221885; c=relaxed/simple;
+	bh=sXzuvODmAMEHA7GjipRn4j4jK4UXsgSGUyG1J4Tnh+I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ULOE+WbbePxxf1qEv/Ejd5vU+3OBrmNNYqEHGEpjIn0mRGWU1hBE6jBuWKq49W4hWjhXwQPFw3r2/DN3NBN8MCEqRlrxLchff/B1f3BUUV3mD8tfXL7df6epXt6xN9C+S8LaLbEtADjVJ/YovDgc74xQmo0FmhsmaEaZNcJtTR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=E/YlKHSE; arc=none smtp.client-ip=198.175.65.15
+	 Content-Type:Content-Disposition:In-Reply-To; b=uypR8IP4PKyyM09lYLuJqQXRKTUswoldhiVVddYbJFT6NlfCt4jzeEdE2oOjAwMz+VIK+Nfh7oy0a3gQjjw1ki2I5qSiTiW1lCgP5pcKEO9+wwdBYMdYO9aZt7HqygFWxyv7ML5X9cSv6memNB//HDz0KOF/hSYIZfb9qMSOBu0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=me4tt08d; arc=none smtp.client-ip=198.175.65.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="E/YlKHSE"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="me4tt08d"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763221881; x=1794757881;
+  t=1763221884; x=1794757884;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=TfHKuzbtuvi3qhX+XliCiSooCswFkwqGdJHoDWVUtUk=;
-  b=E/YlKHSEq2f9VnmFvhfPocqWHRDMWHjO0sMebwX57Rb2wgC1qVo5GqTD
-   0tW/ILkoA8c7RzzZSsTuzLdcwW73uP28E6JXSXJXorzm025fvN1+3xMOs
-   fC1dJfGjrZV8deAojVcbztCsmM/LLY7QzmyxAxIaO+zrpiQDKpTBuZVsU
-   AAH4zpUHnVATG366bnSCRxAoLVf+3TqS2vjYvRfid68+227C8XC+l/qvs
-   o4XOmDFxVEQoEa2z7ZbLgORvjqn+P+d4rDD3ptKzSFBtzPKfSPSuRqUwf
-   g7Rv4JqSxZGSWTQE2ESF55ngoUxrqjvxZQLPwebi++qu202Tn/lrKdbXn
-   g==;
-X-CSE-ConnectionGUID: Yjj18HBOQeuZXyBf25L99A==
-X-CSE-MsgGUID: 73XtlUzXTqCmlOH0H/jdfg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11614"; a="68913267"
+  bh=sXzuvODmAMEHA7GjipRn4j4jK4UXsgSGUyG1J4Tnh+I=;
+  b=me4tt08duCqOY+r62PM2EytCxWKxXLrFclALf87i+LQtQr5f7ajgHP3V
+   A4xypPuTSlMCfTNGzUSEOKok4uYQJLxw2M45cGuxy1/Xwhioz2jpumQwO
+   U9jsi+rrD/GkzgxVT2uXYvN6ii/MoabkWqYqnmpc4CfMtpnLgmfyJ39+r
+   lwoWlX8CXrgrEeHV6756Pp6o9Y28kjRTT6/BLG9JNEvuLQli7KB1mWStO
+   aFTmfEfbU69ULBzW7YgUI8SJ0BPZe7XajdSreBEzqbCe76isv9Qx8BrsX
+   hpppUARKJyZW9w/dv6F27N5JjOpM3LCo37cDIxDG7P2YW5eitI2WfKTh8
+   Q==;
+X-CSE-ConnectionGUID: zePJYomhTFObEYrMXtawcw==
+X-CSE-MsgGUID: AgaK8G6wQCudTUd8MntpYA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11614"; a="68913268"
 X-IronPort-AV: E=Sophos;i="6.19,307,1754982000"; 
-   d="scan'208";a="68913267"
+   d="scan'208";a="68913268"
 Received: from orviesa007.jf.intel.com ([10.64.159.147])
   by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2025 07:51:21 -0800
-X-CSE-ConnectionGUID: 8rlJwGJQQBqIC3zx00avkA==
-X-CSE-MsgGUID: Q0LtbMb6TzSWuo9YnDkWSw==
+X-CSE-ConnectionGUID: /G7SFG5HSZK2GIV28DUQug==
+X-CSE-MsgGUID: ZLWDLyqTRP+cWSyOlFIqgQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,307,1754982000"; 
-   d="scan'208";a="190083683"
+   d="scan'208";a="190083684"
 Received: from lkp-server01.sh.intel.com (HELO 7b01c990427b) ([10.239.97.150])
   by orviesa007.jf.intel.com with ESMTP; 15 Nov 2025 07:51:19 -0800
 Received: from kbuild by 7b01c990427b with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1vKIYW-00083p-1C;
+	id 1vKIYW-00083n-19;
 	Sat, 15 Nov 2025 15:51:16 +0000
-Date: Sat, 15 Nov 2025 23:50:58 +0800
+Date: Sat, 15 Nov 2025 23:50:57 +0800
 From: kernel test robot <lkp@intel.com>
 To: Haoqin Huang <haoqinhuang7@gmail.com>, chandan.babu@oracle.com,
 	djwong@kernel.org, linux-xfs@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, Haoqin Huang <haoqinhuang@tencent.com>,
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Haoqin Huang <haoqinhuang@tencent.com>,
 	Rongwei Wang <zigiwang@tencent.com>
 Subject: Re: [PATCH] xfs: fix deadlock between busy flushing and t_busy
-Message-ID: <202511152332.yaXc6tmQ-lkp@intel.com>
+Message-ID: <202511152311.UvZyd6Gi-lkp@intel.com>
 References: <20251114152147.66688-1-haoqinhuang7@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -80,64 +81,30 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Haoqin-Huang/xfs-fix-dead
 base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
 patch link:    https://lore.kernel.org/r/20251114152147.66688-1-haoqinhuang7%40gmail.com
 patch subject: [PATCH] xfs: fix deadlock between busy flushing and t_busy
-config: m68k-mac_defconfig (https://download.01.org/0day-ci/archive/20251115/202511152332.yaXc6tmQ-lkp@intel.com/config)
-compiler: m68k-linux-gcc (GCC) 15.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251115/202511152332.yaXc6tmQ-lkp@intel.com/reproduce)
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20251115/202511152311.UvZyd6Gi-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251115/202511152311.UvZyd6Gi-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202511152332.yaXc6tmQ-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202511152311.UvZyd6Gi-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
-   In file included from <command-line>:
-   fs/xfs/xfs_extent_busy.c: In function 'xfs_extent_busy_flush':
->> fs/xfs/xfs_extent_busy.c:639:59: error: 'pag' undeclared (first use in this function); did you mean 'page'?
+>> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
      639 |                 if (!alloc_flags && busy_gen == READ_ONCE(pag->pagb_gen))
-         |                                                           ^~~
-   include/linux/compiler_types.h:577:23: note: in definition of macro '__compiletime_assert'
-     577 |                 if (!(condition))                                       \
-         |                       ^~~~~~~~~
-   include/linux/compiler_types.h:597:9: note: in expansion of macro '_compiletime_assert'
-     597 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-         |         ^~~~~~~~~~~~~~~~~~~
-   include/asm-generic/rwonce.h:36:9: note: in expansion of macro 'compiletime_assert'
-      36 |         compiletime_assert(__native_word(t) || sizeof(t) == sizeof(long long),  \
-         |         ^~~~~~~~~~~~~~~~~~
-   include/asm-generic/rwonce.h:36:28: note: in expansion of macro '__native_word'
-      36 |         compiletime_assert(__native_word(t) || sizeof(t) == sizeof(long long),  \
-         |                            ^~~~~~~~~~~~~
-   include/asm-generic/rwonce.h:49:9: note: in expansion of macro 'compiletime_assert_rwonce_type'
-      49 |         compiletime_assert_rwonce_type(x);                              \
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   fs/xfs/xfs_extent_busy.c:639:49: note: in expansion of macro 'READ_ONCE'
-     639 |                 if (!alloc_flags && busy_gen == READ_ONCE(pag->pagb_gen))
-         |                                                 ^~~~~~~~~
-   fs/xfs/xfs_extent_busy.c:639:59: note: each undeclared identifier is reported only once for each function it appears in
-     639 |                 if (!alloc_flags && busy_gen == READ_ONCE(pag->pagb_gen))
-         |                                                           ^~~
-   include/linux/compiler_types.h:577:23: note: in definition of macro '__compiletime_assert'
-     577 |                 if (!(condition))                                       \
-         |                       ^~~~~~~~~
-   include/linux/compiler_types.h:597:9: note: in expansion of macro '_compiletime_assert'
-     597 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-         |         ^~~~~~~~~~~~~~~~~~~
-   include/asm-generic/rwonce.h:36:9: note: in expansion of macro 'compiletime_assert'
-      36 |         compiletime_assert(__native_word(t) || sizeof(t) == sizeof(long long),  \
-         |         ^~~~~~~~~~~~~~~~~~
-   include/asm-generic/rwonce.h:36:28: note: in expansion of macro '__native_word'
-      36 |         compiletime_assert(__native_word(t) || sizeof(t) == sizeof(long long),  \
-         |                            ^~~~~~~~~~~~~
-   include/asm-generic/rwonce.h:49:9: note: in expansion of macro 'compiletime_assert_rwonce_type'
-      49 |         compiletime_assert_rwonce_type(x);                              \
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   fs/xfs/xfs_extent_busy.c:639:49: note: in expansion of macro 'READ_ONCE'
-     639 |                 if (!alloc_flags && busy_gen == READ_ONCE(pag->pagb_gen))
-         |                                                 ^~~~~~~~~
+         |                                                           ^
+>> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
+>> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
+>> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
+>> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
+>> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
+>> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
+   7 errors generated.
 
 
-vim +639 fs/xfs/xfs_extent_busy.c
+vim +/pag +639 fs/xfs/xfs_extent_busy.c
 
    594	
    595	/*
