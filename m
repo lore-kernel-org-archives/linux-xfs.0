@@ -1,62 +1,87 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E121B222585
-	for <linux-xfs@vger.kernel.org>; Sat, 15 Nov 2025 15:51:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28FC7233735
+	for <linux-xfs@vger.kernel.org>; Sun, 16 Nov 2025 08:11:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763221885; cv=none; b=FhtnZkqe0qYeS+qn21oIx0zzu5yUHH7ZEtHxAo6qSVG/6wwPsWokuR/oN1lLJuIZaljEYrIsI4U1jIxLQVfkccpT5JuW8HGUYXb1yC5OQYSj6rlFc8inN/Ed3xuNGiqyEO5NprSTlNGdsu7L2PyACiQUUD/CQ2k0oqwKygSTvng=
+	t=1763280717; cv=none; b=ZraWxIYZcFKKScHW0zVtI3bQ4H3/LB/vAcKwryBaW+sTMy0fFh438n9ukCOZZsn/Adf7S9LQml8lC98BrvirIRcpWKl0qP60+hs9U2EBSzAlnE4E29I+qdRCUejsug7RUsntQXgunRoI0ctv7E8MM0ypsElIcoWt1nKruZ2JtwY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763221885; c=relaxed/simple;
-	bh=sXzuvODmAMEHA7GjipRn4j4jK4UXsgSGUyG1J4Tnh+I=;
+	s=arc-20240116; t=1763280717; c=relaxed/simple;
+	bh=4jwDEm2sAyYHKu+zGh5hRNHcB8FQ+DLUM7X5j7Jlq5E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uypR8IP4PKyyM09lYLuJqQXRKTUswoldhiVVddYbJFT6NlfCt4jzeEdE2oOjAwMz+VIK+Nfh7oy0a3gQjjw1ki2I5qSiTiW1lCgP5pcKEO9+wwdBYMdYO9aZt7HqygFWxyv7ML5X9cSv6memNB//HDz0KOF/hSYIZfb9qMSOBu0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=me4tt08d; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=tpEJm0ZX0faIXtaKEpl26wcid8jeNdWK/psQzyULdY4XQEf3kZHgXtHJRXnyFFah7ptauZJb34Z/EwdZ2vnNf0SPRhjC8n9JD/9lsnVsAwX5M10+cHELjiq/jaZfp/pplTk4fet9xln1WnuAYwntB3cpUt2t03Zy7UsDEcGLOQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=cbzwDDRp; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="me4tt08d"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763221884; x=1794757884;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=sXzuvODmAMEHA7GjipRn4j4jK4UXsgSGUyG1J4Tnh+I=;
-  b=me4tt08duCqOY+r62PM2EytCxWKxXLrFclALf87i+LQtQr5f7ajgHP3V
-   A4xypPuTSlMCfTNGzUSEOKok4uYQJLxw2M45cGuxy1/Xwhioz2jpumQwO
-   U9jsi+rrD/GkzgxVT2uXYvN6ii/MoabkWqYqnmpc4CfMtpnLgmfyJ39+r
-   lwoWlX8CXrgrEeHV6756Pp6o9Y28kjRTT6/BLG9JNEvuLQli7KB1mWStO
-   aFTmfEfbU69ULBzW7YgUI8SJ0BPZe7XajdSreBEzqbCe76isv9Qx8BrsX
-   hpppUARKJyZW9w/dv6F27N5JjOpM3LCo37cDIxDG7P2YW5eitI2WfKTh8
-   Q==;
-X-CSE-ConnectionGUID: zePJYomhTFObEYrMXtawcw==
-X-CSE-MsgGUID: AgaK8G6wQCudTUd8MntpYA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11614"; a="68913268"
-X-IronPort-AV: E=Sophos;i="6.19,307,1754982000"; 
-   d="scan'208";a="68913268"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2025 07:51:21 -0800
-X-CSE-ConnectionGUID: /G7SFG5HSZK2GIV28DUQug==
-X-CSE-MsgGUID: ZLWDLyqTRP+cWSyOlFIqgQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,307,1754982000"; 
-   d="scan'208";a="190083684"
-Received: from lkp-server01.sh.intel.com (HELO 7b01c990427b) ([10.239.97.150])
-  by orviesa007.jf.intel.com with ESMTP; 15 Nov 2025 07:51:19 -0800
-Received: from kbuild by 7b01c990427b with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1vKIYW-00083n-19;
-	Sat, 15 Nov 2025 15:51:16 +0000
-Date: Sat, 15 Nov 2025 23:50:57 +0800
-From: kernel test robot <lkp@intel.com>
-To: Haoqin Huang <haoqinhuang7@gmail.com>, chandan.babu@oracle.com,
-	djwong@kernel.org, linux-xfs@vger.kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Haoqin Huang <haoqinhuang@tencent.com>,
-	Rongwei Wang <zigiwang@tencent.com>
-Subject: Re: [PATCH] xfs: fix deadlock between busy flushing and t_busy
-Message-ID: <202511152311.UvZyd6Gi-lkp@intel.com>
-References: <20251114152147.66688-1-haoqinhuang7@gmail.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="cbzwDDRp"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2958db8ae4fso31138985ad.2
+        for <linux-xfs@vger.kernel.org>; Sun, 16 Nov 2025 00:11:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1763280714; x=1763885514; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=HxFwg3ju+ftuSMqIiYAdOOvZ0OAIJu2EJhRRFE1j4DA=;
+        b=cbzwDDRpkw3DgAJ3PaSrTatxTwbDkfkdswhBitGYCpQlycV6H62giabeUcmpEZdd0/
+         GHsK/NQUeUOOnvuXK8Qanh9NY9E+0qjtAXW4WUejYI5Bz4eFZKZwhzRVqnD7u4RbSeJQ
+         HB5Hm03mGZYK13pfL4ayd6Rw5Ni+OFxI7eVdF+ZHsEeb0yhOwQweDqvjqArD7YTXClsc
+         fxPRjT0QP1cFhaWQMVNXMWcto4SY1t2lIPBeE5dYff6RUBWoX2k1ifkP6elRzlhEyKah
+         cJrbTTWiCA8RQmQ2OCAAv4hY0l/ylzAJmv4Dk+rVTE7/JHheEZ0f62/XuETG1I5c8ezD
+         ywwA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1763280714; x=1763885514;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=HxFwg3ju+ftuSMqIiYAdOOvZ0OAIJu2EJhRRFE1j4DA=;
+        b=Ov7/1UqECcBTN6j6MXBmnvDNH8zCwvcSR+EnDa/V2PTxHHfzNHAFsU4RlEX2UN0zv6
+         x3gEo26vAkGCAPLjCcAxQtzCNzrBVaovjtCFUOy4P21/N3AZg2IU+GrNyStmAbzRnqEz
+         F/AFs8vtSeNBEmDJOLprXQ6NMpEKENvq4SqEZpuwGo6K2PsZYbjnKmIMkc8ByHUVhzGx
+         DdT4hXXXXNc6paQFwOt0QM/60qc/6A62sXSCCACtfzbYtFyBPH8w6xZgWAvyYTdoZPkN
+         4VUOTMx0Usuothepz6+XQXbf1ujiBzDL5zp7Gekz/0GWdICgNwraeG6JCde5SJbz3k+p
+         fcZA==
+X-Forwarded-Encrypted: i=1; AJvYcCXQ9Fqd5PCGH+7gcK3siTeZriF531+YbGllgpefvlWH6N9keltWZn+FyowJxuhInb/ixB45YIU8g1c=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxYmhzv8uis+SLHvFbstKnLSAR679dDKQ0BtHJjHgSwX0GrpxI4
+	n6tUQl3M5Oqs/PIhgvuHy+7gtwZugHswH9U4wJXBz3Z3roLmAvr9Ac0p68Hoo01sFCQ=
+X-Gm-Gg: ASbGncsoi/8ucehaDuPOsz6MCpDKh6RM/z3TirjCGgmcETmiucJzZM2ctzxXhGS+5yp
+	CyM8Lmj1EkXBx+MBrr1sie4/GQnJcHm8DIdGA/rx6kmuMsW06krb77r4AiKq4slwTPh9qwLgVaX
+	Ip2loQ+SPavZ0JllqRp0sBdNfONytcP4gpP9kmGMWSOeDs1OfQdgLLXXP2p4HPdjCFw0RoJvM7r
+	JTl6flMhBcOzLg+1jZWss9vsn7hbCjSefg6UiVDYQa+OCcOZUW4Ak+KbO4eu+sqmk3lJKHN/7PB
+	QlLSuUttQ4qsgDsA0C4j4Ea1RnIiLmaoYycNKs3zhwWM/qMWuL5qIRfgrHgvCefphHRuJZ7Vw6J
+	SnJrtFO6p6G2NoybWNRkcpqOi7hFMn+xTu5Ggo0eAweed5sdKxKfYmmraPlReZucoSuNSRNXpQG
+	FsGoPCgxaCuvOvnh3ZjoLEYlA+sWrb4KhjIoMwhlUZP0A1ZPFrK54=
+X-Google-Smtp-Source: AGHT+IG4zTCgOyc8q36N6azv8U3/msRqtiTIPYqJrKFmmGWBG01OEhj/Rfjn+kBTPtApfo/xiU3cYQ==
+X-Received: by 2002:a17:903:230a:b0:295:94e1:91da with SMTP id d9443c01a7336-2986a73b093mr100196375ad.33.1763280714289;
+        Sun, 16 Nov 2025 00:11:54 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-58-136.pa.nsw.optusnet.com.au. [49.181.58.136])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2985c234726sm104981205ad.8.2025.11.16.00.11.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 16 Nov 2025 00:11:53 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.98.2)
+	(envelope-from <david@fromorbit.com>)
+	id 1vKXrS-0000000BUZh-0XuM;
+	Sun, 16 Nov 2025 19:11:50 +1100
+Date: Sun, 16 Nov 2025 19:11:50 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, Christoph Hellwig <hch@lst.de>,
+	Christian Brauner <brauner@kernel.org>, djwong@kernel.org,
+	john.g.garry@oracle.com, tytso@mit.edu, willy@infradead.org,
+	dchinner@redhat.com, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, jack@suse.cz,
+	nilay@linux.ibm.com, martin.petersen@oracle.com,
+	rostedt@goodmis.org, axboe@kernel.dk, linux-block@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH 0/8] xfs: single block atomic writes for buffered IO
+Message-ID: <aRmHRk7FGD4nCT0s@dread.disaster.area>
+References: <cover.1762945505.git.ojaswin@linux.ibm.com>
+ <aRUCqA_UpRftbgce@dread.disaster.area>
+ <20251113052337.GA28533@lst.de>
+ <87frai8p46.ritesh.list@gmail.com>
+ <aRWzq_LpoJHwfYli@dread.disaster.area>
+ <aRb0WQJi4rQQ-Zmo@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -65,109 +90,186 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251114152147.66688-1-haoqinhuang7@gmail.com>
+In-Reply-To: <aRb0WQJi4rQQ-Zmo@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
 
-Hi Haoqin,
+On Fri, Nov 14, 2025 at 02:50:25PM +0530, Ojaswin Mujoo wrote:
+> On Thu, Nov 13, 2025 at 09:32:11PM +1100, Dave Chinner wrote:
+> > On Thu, Nov 13, 2025 at 11:12:49AM +0530, Ritesh Harjani wrote:
+> > > Christoph Hellwig <hch@lst.de> writes:
+> > > 
+> > > > On Thu, Nov 13, 2025 at 08:56:56AM +1100, Dave Chinner wrote:
+> > > >> On Wed, Nov 12, 2025 at 04:36:03PM +0530, Ojaswin Mujoo wrote:
+> > > >> > This patch adds support to perform single block RWF_ATOMIC writes for
+> > > >> > iomap xfs buffered IO. This builds upon the inital RFC shared by John
+> > > >> > Garry last year [1]. Most of the details are present in the respective 
+> > > >> > commit messages but I'd mention some of the design points below:
+> > > >> 
+> > > >> What is the use case for this functionality? i.e. what is the
+> > > >> reason for adding all this complexity?
+> > > >
+> > > > Seconded.  The atomic code has a lot of complexity, and further mixing
+> > > > it with buffered I/O makes this even worse.  We'd need a really important
+> > > > use case to even consider it.
+> > > 
+> > > I agree this should have been in the cover letter itself. 
+> > > 
+> > > I believe the reason for adding this functionality was also discussed at
+> > > LSFMM too...  
+> > > 
+> > > For e.g. https://lwn.net/Articles/974578/ goes in depth and talks about
+> > > Postgres folks looking for this, since PostgreSQL databases uses
+> > > buffered I/O for their database writes.
+> > 
+> > Pointing at a discussion about how "this application has some ideas
+> > on how it can maybe use it someday in the future" isn't a
+> > particularly good justification. This still sounds more like a
+> > research project than something a production system needs right now.
+> 
+> Hi Dave, Christoph,
+> 
+> There were some discussions around use cases for buffered atomic writes
+> in the previous LSFMM covered by LWN here [1]. AFAIK, there are 
+> databases that recommend/prefer buffered IO over direct IO. As mentioned
+> in the article, MongoDB being one that supports both but recommends
+> buffered IO. Further, many DBs support both direct IO and buffered IO
+> well and it may not be fair to force them to stick to direct IO to get
+> the benefits of atomic writes.
+> 
+> [1] https://lwn.net/Articles/1016015/
 
-kernel test robot noticed the following build errors:
+You are quoting a discussion about atomic writes that was
+held without any XFS developers present. Given how XFS has driven
+atomic write functionality so far, XFS developers might have some
+..... opinions about how buffered atomic writes in XFS...
 
-[auto build test ERROR on xfs-linux/for-next]
-[also build test ERROR on linus/master v6.18-rc5 next-20251114]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Indeed, go back to the 2024 buffered atomic IO LSFMM discussion,
+where there were XFS developers present. That's the discussion that
+Ritesh referenced, so you should be aware of it.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Haoqin-Huang/xfs-fix-deadlock-between-busy-flushing-and-t_busy/20251115-002142
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-patch link:    https://lore.kernel.org/r/20251114152147.66688-1-haoqinhuang7%40gmail.com
-patch subject: [PATCH] xfs: fix deadlock between busy flushing and t_busy
-config: x86_64-kexec (https://download.01.org/0day-ci/archive/20251115/202511152311.UvZyd6Gi-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251115/202511152311.UvZyd6Gi-lkp@intel.com/reproduce)
+https://lwn.net/Articles/974578/
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202511152311.UvZyd6Gi-lkp@intel.com/
+Back then I talked about how atomic writes made no sense as
+-writeback IO- given the massive window for anything else to modify
+the data in the page cache. There is no guarantee that what the
+application wrote in the syscall is what gets written to disk with
+writeback IO. i.e. anything that can access the page cache can
+"tear" application data that is staged as "atomic data" for later
+writeback.
 
-All errors (new ones prefixed by >>):
+IOWs, the concept of atomic writes for writeback IO makes almost no
+sense at all - dirty data at rest in the page cache is not protected
+against 3rd party access or modification. The "atomic data IO"
+semantics can only exist in the submitting IO context where
+exclusive access to the user data can be guaranteed.
 
->> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
-     639 |                 if (!alloc_flags && busy_gen == READ_ONCE(pag->pagb_gen))
-         |                                                           ^
->> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
->> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
->> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
->> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
->> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
->> fs/xfs/xfs_extent_busy.c:639:45: error: use of undeclared identifier 'pag'
-   7 errors generated.
+IMO, the only way semantics that makes sense for buffered atomic
+writes through the page cache is write-through IO. The "atomic"
+context is related directly to user data provided at IO submission,
+and so IO submitted must guarantee exactly that data is being
+written to disk in that IO.
 
+IOWs, we have to guarantee exclusive access between the data copy-in
+and the pages being marked for writeback. The mapping needs to be
+marked as using stable pages to prevent anyone else changing the
+cached data whilst it has an atomic IO pending on it.
 
-vim +/pag +639 fs/xfs/xfs_extent_busy.c
+That means folios covering atomic IO ranges do not sit in the page
+cache in a dirty state - they *must* immediately transition to the
+writeback state before the folio is unlocked so that *nothing else
+can modify them* before the physical REQ_ATOMIC IO is submitted and
+completed.
 
-   594	
-   595	/*
-   596	 * Flush out all busy extents for this group.
-   597	 *
-   598	 * If the current transaction is holding busy extents, the caller may not want
-   599	 * to wait for committed busy extents to resolve. If we are being told just to
-   600	 * try a flush or progress has been made since we last skipped a busy extent,
-   601	 * return immediately to allow the caller to try again.
-   602	 *
-   603	 * If we are freeing extents, we might actually be holding the only free extents
-   604	 * in the transaction busy list and the log force won't resolve that situation.
-   605	 * In this case, we must return -EAGAIN to avoid a deadlock by informing the
-   606	 * caller it needs to commit the busy extents it holds before retrying the
-   607	 * extent free operation.
-   608	 */
-   609	int
-   610	xfs_extent_busy_flush(
-   611		struct xfs_trans	*tp,
-   612		struct xfs_group	*xg,
-   613		unsigned		busy_gen,
-   614		uint32_t		alloc_flags)
-   615	{
-   616		struct xfs_extent_busy_tree *eb = xg->xg_busy_extents;
-   617		DEFINE_WAIT		(wait);
-   618		int			error;
-   619	
-   620		error = xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
-   621		if (error)
-   622			return error;
-   623	
-   624		/* Avoid deadlocks on uncommitted busy extents. */
-   625		if (!list_empty(&tp->t_busy)) {
-   626			if (alloc_flags & XFS_ALLOC_FLAG_TRYFLUSH)
-   627				return 0;
-   628	
-   629			if (busy_gen != READ_ONCE(eb->eb_gen))
-   630				return 0;
-   631	
-   632			if (alloc_flags & XFS_ALLOC_FLAG_FREEING)
-   633				return -EAGAIN;
-   634	
-   635			/*
-   636			 * To avoid deadlocks if alloc_flags without any FLAG set
-   637			 * and t_busy is not empty.
-   638			 */
- > 639			if (!alloc_flags && busy_gen == READ_ONCE(pag->pagb_gen))
-   640				return -EAGAIN;
-   641		}
-   642	
-   643		/* Wait for committed busy extents to resolve. */
-   644		do {
-   645			prepare_to_wait(&eb->eb_wait, &wait, TASK_KILLABLE);
-   646			if  (busy_gen != READ_ONCE(eb->eb_gen))
-   647				break;
-   648			schedule();
-   649		} while (1);
-   650	
-   651		finish_wait(&eb->eb_wait, &wait);
-   652		return 0;
-   653	}
-   654	
+If we've got the folios marked as writeback, we can pack them
+immediately into a bio and submit the IO (e.g. via the iomap DIO
+code). There is no need to involve the buffered IO writeback path
+here; we've already got the folios at hand and in the right state
+for IO. Once the IO is done, we end writeback on them and they
+remain clean in the page caceh for anyone else to access and
+modify...
 
+This gives us the same physical IO semantics for buffered and direct
+atomic IO, and it allows the same software fallbacks for larger IO
+to be used as well.
+
+> > Why didn't you use the existing COW buffered write IO path to
+> > implement atomic semantics for buffered writes? The XFS
+> > functionality is already all there, and it doesn't require any
+> > changes to the page cache or iomap to support...
+> 
+> This patch set focuses on HW accelerated single block atomic writes with
+> buffered IO, to get some early reviews on the core design.
+
+What hardware acceleration? Hardware atomic writes are do not make
+IO faster; they only change IO failure semantics in certain corner
+cases. Making buffered writeback IO use REQ_ATOMIC does not change
+the failure semantics of buffered writeback from the point of view
+of an application; the applicaiton still has no idea just how much
+data or what files lost data whent eh system crashes.
+
+Further, writeback does not retain application write ordering, so
+the application also has no control over the order that structured
+data is updated on physical media.  Hence if the application needs
+specific IO ordering for crash recovery (e.g. to avoid using a WAL)
+it cannot use background buffered writeback for atomic writes
+because that does not guarantee ordering.
+
+What happens when you do two atomic buffered writes to the same file
+range? The second on hits the page cache, so now the crash recovery
+semantic is no longer "old or new", it's "some random older version
+or new". If the application rewrites a range frequently enough,
+on-disk updates could skip dozens of versions between "old" and
+"new", whilst other ranges of the file move one version at a time.
+The application has -zero control- of this behaviour because it is
+background writeback that determines when something gets written to
+disk, not the application.
+
+IOWs, the only way to guarantee single version "old or new" atomic
+buffered overwrites for any given write would be to force flushing
+of the data post-write() completion.  That means either O_DSYNC,
+fdatasync() or sync_file_range(). And this turns the atomic writes
+into -write-through- IO, not write back IO...
+
+> Just like we did for direct IO atomic writes, the software fallback with
+> COW and multi block support can be added eventually.
+
+If the reason for this functionality is "maybe someone
+can use it in future", then you're not implementing this
+functionality to optimise an existing workload. It's a research
+project looking for a user.
+
+Work with the database engineers to build a buffered atomic write
+based engine that implements atomic writes with RWF_DSYNC.
+Make it work, and optimise it to be competitive with existing
+database engines, than then show how much faster it is using
+RWF_ATOMIC buffered writes.
+
+Alternatively - write an algorithm that assumes the filesystem is
+using COW for overwrites, and optimise the data integrity algorithm
+based on this knowledge. e.g. use always-cow mode on XFS, or just
+optimise for normal bcachefs or btrfs buffered writes. Use O_DSYNC
+when completion to submission ordering is required. Now you have
+an application algorithm that is optimised for old-or-new behaviour,
+and that can then be acclerated on overwrite-in-place capable
+filesystems by using a direct-to-hw REQ_ATOMIC overwrite to provide
+old-or-new semantics instead of using COW.
+
+Yes, there are corner cases - partial writeback, fragmented files,
+etc - where data will a mix of old and new when using COW without
+RWF_DSYNC.  Those are the the cases that RWF_ATOMIC needs to
+mitigate, but we don't need whacky page cache and writeback stuff to
+implement RWF_ATOMIC semantics in COW capable filesystems.
+
+i.e. enhance the applicaitons to take advantage of native COW
+old-or-new data semantics for buffered writes, then we can look at
+direct-to-hw fast paths to optimise those algorithms.
+
+Trying to go direct-to-hw first without having any clue of how
+applications are going to use such functionality is backwards.
+Design the applicaiton level code that needs highly performant
+old-or-new buffered write guarantees, then we can optimise the data
+paths for it...
+
+-Dave.
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Dave Chinner
+david@fromorbit.com
