@@ -1,181 +1,172 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D80A3191DE
-	for <linux-xfs@vger.kernel.org>; Mon, 17 Nov 2025 20:51:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBAEC30F7F7
+	for <linux-xfs@vger.kernel.org>; Mon, 17 Nov 2025 23:04:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763412695; cv=none; b=p1Pn0wcsPNOh52QMLpEexQPmrJ0CeVlQ4pOhauxhajw4menf3Sr4RdN9kR9+yhNfDI5BpTnKIJM/Ej9MsZXMaftqZmTqyntn8V9hxfAaJUI9Al7mqVyaiyYGiImDxkMAzqzraf/W5HRmK2onmMQPozdujLFMn/8J4R7sB1zsofs=
+	t=1763420682; cv=none; b=Qa7YEBjwG40rh1gZTDJTu4MuC0uNinMwD8GeyyRAErxtHrqZrqx19hJ9xaQFzHveFltfDBcmMcSWLTfZdYxvgjvVYgEb/D6huAVKaMGR0Q/ufXto7xWDEiF7EOU9Ybp4fUr3uMUoPZKOkIPkVj3KD1rn52qa2AboYG2iBUNpCrk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763412695; c=relaxed/simple;
-	bh=MhRuGKREKjnDv5Rvs5Tcu3ha4BQBYTByx2vMFukybAI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Uk9xddWqTJuUAGdtpSVufVWmETDSP/VhYjbrGWLDA60mkQsiY0lH1TNsYpMuuvoJ1WToaszeMkgunxNTi2Z1jdXjOn7Gu8kxXlNlt+2cFafUa0/xYUitYjptEn2NC15PIEopmQdMJeYjvI/wofEWQfPN1al/00makfqlGHZkgC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=k5JggWYP; arc=none smtp.client-ip=209.85.210.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1763420682; c=relaxed/simple;
+	bh=i7DdhnG71ftd4i2m2G21HgRfKhN3UzNnHz1O3MhLXC4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=avoEZ2zTayzRuWXZiy/Ed2uqVtgfXO/ZjNMC3Cx4zah7LWrQgZB54Q5BrgG3sC3F42ZM78BRPScSwQbXt5uBwlp2zLl0a95v8R5/AX0S0Uz80oyqmtShg3rQ1cbt0dL1VbEV53C2lo7MT3yE/qFUxcI7lRvKnoZA1sHzlDnXJ2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com; spf=pass smtp.mailfrom=paul-moore.com; dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b=YmjZq2vE; arc=none smtp.client-ip=209.85.216.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=paul-moore.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="k5JggWYP"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-7ad1cd0db3bso4039949b3a.1
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Nov 2025 12:51:33 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b="YmjZq2vE"
+Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-34374febdefso5184179a91.0
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Nov 2025 15:04:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1763412692; x=1764017492; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=VzhSFtd1TJYR/cIblKSU+QrS3cy0V4ly+fmhKB6r+qY=;
-        b=k5JggWYPoO+BSCmkWvSENgLSY7VpDkFZpUobtUkiLdyHcfvOVjG/7umvPtVzdDJ6Yt
-         GqYhtxescCO4qPkHW7t/atI3oVslTbgyQArfVL/V7yi9eZGXTmbeKh75jxVkFp6jBKBR
-         uM+mK9A3DAbsRNzaCcTKHa446Br/tBeN8ClPiof63iq6kknLAJeWihVvNt+Z5Oc39ug+
-         sNgufYbP+LieOvVfDnyStlUF9vXgTftwlGOFxEOdALx4yAAJ5wmDahs+nuZqgpRg5HyZ
-         t/XpcIh2k0btXfL358zNgpsPEg9goAYsNZYIoVookT2hpP1/R+cR+G34z2lPDccrh8XN
-         1Hag==
+        d=paul-moore.com; s=google; t=1763420676; x=1764025476; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=67DqjyCI/JhVTsF1ULoiPuOUOphLY2mp3g5O7RzL6g8=;
+        b=YmjZq2vEP3RrKkuynMuBECfzV/qmuCZcW2k5SrDDwNLrBwCjhC9leZeksspqC9Reg5
+         7m1qs16aYUYUzMy31VgnfaRfQ925KDC/Wf0JDl3vg/7PHxxunMH/Nn6A8qpdHIeOgmKF
+         SSalfOtnM6+aKcPi/R1diKoX6mzhOZoLeEgbC5txiQiK8mFtldLoRKhJhxkJw2YYx59r
+         W0OtXAGkR5gvdztwjWl9g4n1k7D8tVL8dwrwiXVcU0tTMTY3u4bltrQMVL5eUp5spcvr
+         GNGswPZEV3ZLiPG9FXx0fVQEcWAztc4A7KBMY/KmU8D+TNzUS8SypFep3kDas3TIZnAY
+         J+LA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763412692; x=1764017492;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=VzhSFtd1TJYR/cIblKSU+QrS3cy0V4ly+fmhKB6r+qY=;
-        b=O1mtccBxD+rNfbguHgGQOXItHdCrTGPUY7HIZC35zjWMRKk0PuqaIh7ibBzTXNl1HE
-         1zbL/pD3e1Ui0LGwhdD0KSB329pKZVjyTSNUjoGmy5NTFueWyL+z6LD/u5G3YlZlq+ea
-         LR0oLytvNn4BxYbN+Vtwdhu/MSqV3AKk5F5blrPsw0Ba+e3rIMS5oeGSDKWCNI47MAT3
-         SnkkhczuglJny4msWU2d3Cd2h5KAEhXhMijS6N2d2h6fPGvDhtkjzggSIu1MczipADb3
-         noFFmV2JRzaJG/+F6QLmn4VavwNx+wLOzHSiWxBjTAxwo7mIAr8ff72T+QN9okbCEqTg
-         FEsg==
-X-Forwarded-Encrypted: i=1; AJvYcCV849N3216t4miB7RhSOKHs4hrOEAOWq3F9e0JRlukJlJYVT27mOGSFHpCM5CpiahjIAjoL7oNwcHo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz8MAojsGO+D0vetIZG07Z9gUaX5i7x1Zb3sUNU+kMy16UUkAdi
-	gdNOhEr8KLFgStJl1UOIWXbXZUFuZ7ALoW35ACe5L5BaaPFUKBiHg+/WI9sT0gK3Q0M=
-X-Gm-Gg: ASbGnctwvS9cSqNyD6zXRDMf7AjcY16w21CWyUnqgWFahxJcVrsU1luTKylhZWf/vj5
-	0bpkkRLdnaA6EcPRT9ePF03RuQWIyTK/dr48Hg5uoS9o1rcXzUp/lC9HxK71Kid2XC7MeTL+9sZ
-	L9+r+uWDg/WO7AoFUC3YxE48GKE/6kSbY5uwrcdRrdTHSNaJE5xzd/bY73w3fDFZ6niKMSQZ5BV
-	SW8bjVZrxc/4j8oDsSN41PRkq25CTVTbn/PgBNLcoNW01Juqj3P3wLwblkLgSUFxtYwD1HnrClg
-	uIK0wGb2io96YSPn8S4ZFxva6i/+priIrzT9htb/pd7VLADO06QFQ9t4Lu3C+INdcVngWaxU/gQ
-	6ftxoRiU3iaOm1eCLPOu1DNNnPEWwmeJRUmhHBDnlslHiZ7L2XUGi/G6WcXmr6POkYw2bjenY7k
-	M27YKtx3ZwlvUWZ/dJeZ+Dgi/G8ZBZ/LscTvN6lglD/cwQiZRbec1C0+wVfJcAcg==
-X-Google-Smtp-Source: AGHT+IFmWemPBugDags9Dp2aFdnpOuTH5HosoXLiUasMcQMlSkctA94mD5u3ieiUdMxFP9/1+M2F7w==
-X-Received: by 2002:a05:6a00:982:b0:7b2:2d85:ae59 with SMTP id d2e1a72fcca58-7ba39ecfa9dmr13503855b3a.11.1763412692398;
-        Mon, 17 Nov 2025 12:51:32 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-58-136.pa.nsw.optusnet.com.au. [49.181.58.136])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7b92714df0esm14242994b3a.37.2025.11.17.12.51.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Nov 2025 12:51:31 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1vL6C7-0000000CADH-2ixk;
-	Tue, 18 Nov 2025 07:51:27 +1100
-Date: Tue, 18 Nov 2025 07:51:27 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-	Ritesh Harjani <ritesh.list@gmail.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Christian Brauner <brauner@kernel.org>, djwong@kernel.org,
-	tytso@mit.edu, willy@infradead.org, dchinner@redhat.com,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, jack@suse.cz, nilay@linux.ibm.com,
-	martin.petersen@oracle.com, rostedt@goodmis.org, axboe@kernel.dk,
-	linux-block@vger.kernel.org, linux-trace-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/8] xfs: single block atomic writes for buffered IO
-Message-ID: <aRuKz4F3xATf8IUp@dread.disaster.area>
-References: <cover.1762945505.git.ojaswin@linux.ibm.com>
- <aRUCqA_UpRftbgce@dread.disaster.area>
- <20251113052337.GA28533@lst.de>
- <87frai8p46.ritesh.list@gmail.com>
- <aRWzq_LpoJHwfYli@dread.disaster.area>
- <aRb0WQJi4rQQ-Zmo@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <aRmHRk7FGD4nCT0s@dread.disaster.area>
- <8d645cb5-7589-4544-a547-19729610d44d@oracle.com>
+        d=1e100.net; s=20230601; t=1763420676; x=1764025476;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=67DqjyCI/JhVTsF1ULoiPuOUOphLY2mp3g5O7RzL6g8=;
+        b=DzGUxzKMZgr/HG+RVsPeCsdNXI8sC2eIeTDHqoh0rmv+aYKeXsEC+tSPsXCmyLqCyf
+         PJ8aO3pIlvleB0PANSeq5FFXuaa4jBaJuhdwLLwMKrfXYbJjJFikwPfejygMljUdVMDb
+         WuqU7UCy0jfIUchHXhqhV6dBIVEHpARRGmPrB9kQG5eVr6qlOrDp/j+Ua2ECEftJOUU+
+         zXF+l1prrYfDl6OnU8LH3RrKdQYC5fp2uiidX/cAvhxvRcjV+tGOf+0+wDcjHtFhOuFm
+         yVyua2gy+wKc0GetgbXpB1uYAxw0ZVC3Vw26Hr89JCmXbMc3l44gCqSRsRufgRe/2Q0I
+         xaEg==
+X-Forwarded-Encrypted: i=1; AJvYcCULDPLpcsePfaXtAn72AJ2MlWzlkRrTd5+erBp+267EYj89GcgUoqAYcmVPB8v8Lw595wj1+Z8z0jo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyETGNz2piSR5boFk3CCh/0R9pH6V8h/JVF2Hwr4fLTvF6GwBZ8
+	yoxetCm3cJdSdiT9ssA6jciskojT1j8WJqBYECOcXndUAEAAKwymm0X9UwhAUseg4qlrybaK1dV
+	sj/Qcq+uoOwXHeWrhrGn7FNVCZlTPMCP7WqxGwZbk
+X-Gm-Gg: ASbGncvvWtVZnBwI6VNdeT1e8dvJkeFpwSVtX49mOZpoVumQ3T8z4ktNagSV6czMWcv
+	4ZI4Pz9/AOTSdvLpiUt+hITiPahb5AnuGHRG/sv0KyGLo8CYWfIU0raWaA3LUjqOtzp13PNzQZD
+	tqC8dFcygWaYWFbPE0Lqpww6XXsO0O0MvMgkZywSD7ceLDpwXhxxeL/r9PX2e8xw/0f/LCbE5ZK
+	B3cUUrFP9/I1QinJNwUAOiSaD0tawE4moRo452ZjsrPSCylMKTgnzbbjZvLRc2offBBL+fyLyNC
+	PLQlww==
+X-Google-Smtp-Source: AGHT+IEvNsvH0S9IPXXRMbbmgzHTccG9PPI2nYN0bRiYDZkjLr7eZa3zFcl2Aq+G2oZCl+9tdbOi4J//UzL45yvj1Lw=
+X-Received: by 2002:a17:90b:3a45:b0:341:2141:d809 with SMTP id
+ 98e67ed59e1d1-343fa74b235mr16121302a91.26.1763420676475; Mon, 17 Nov 2025
+ 15:04:36 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8d645cb5-7589-4544-a547-19729610d44d@oracle.com>
+References: <20251113002050.676694-1-neilb@ownmail.net> <20251113002050.676694-13-neilb@ownmail.net>
+In-Reply-To: <20251113002050.676694-13-neilb@ownmail.net>
+From: Paul Moore <paul@paul-moore.com>
+Date: Mon, 17 Nov 2025 18:04:25 -0500
+X-Gm-Features: AWmQ_blmwKtGFLQfMeJ-bOJqBB1-xlrqHYzasnjIoux8218WIXniQF0qawaCUpA
+Message-ID: <CAHC9VhQERRrabQhMUd3DHRg+TqV6Ztoo0kqwK_tn5u--in-f4Q@mail.gmail.com>
+Subject: Re: [PATCH v6 12/15] Add start_renaming_two_dentries()
+To: NeilBrown <neil@brown.name>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, 
+	Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, 
+	Jeff Layton <jlayton@kernel.org>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, 
+	David Howells <dhowells@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, Tyler Hicks <code@tyhicks.com>, 
+	Miklos Szeredi <miklos@szeredi.hu>, Chuck Lever <chuck.lever@oracle.com>, 
+	Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
+	Namjae Jeon <linkinjeon@kernel.org>, Steve French <smfrench@gmail.com>, 
+	Sergey Senozhatsky <senozhatsky@chromium.org>, Carlos Maiolino <cem@kernel.org>, 
+	John Johansen <john.johansen@canonical.com>, James Morris <jmorris@namei.org>, 
+	"Serge E. Hallyn" <serge@hallyn.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
+	Ondrej Mosnacek <omosnace@redhat.com>, Mateusz Guzik <mjguzik@gmail.com>, 
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, Stefan Berger <stefanb@linux.ibm.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, linux-kernel@vger.kernel.org, netfs@lists.linux.dev, 
+	ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org, 
+	linux-unionfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-security-module@vger.kernel.org, 
+	selinux@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Nov 17, 2025 at 10:59:55AM +0000, John Garry wrote:
-> On 16/11/2025 08:11, Dave Chinner wrote:
-> > > This patch set focuses on HW accelerated single block atomic writes with
-> > > buffered IO, to get some early reviews on the core design.
-> > What hardware acceleration? Hardware atomic writes are do not make
-> > IO faster; they only change IO failure semantics in certain corner
-> > cases.
-> 
-> I think that he references using REQ_ATOMIC-based bio vs xfs software-based
-> atomic writes (which reuse the CoW infrastructure). And the former is
-> considerably faster from my testing (for DIO, obvs). But the latter has not
-> been optimized.
+On Wed, Nov 12, 2025 at 7:42=E2=80=AFPM NeilBrown <neilb@ownmail.net> wrote=
+:
+>
+> From: NeilBrown <neil@brown.name>
+>
+> A few callers want to lock for a rename and already have both dentries.
+> Also debugfs does want to perform a lookup but doesn't want permission
+> checking, so start_renaming_dentry() cannot be used.
+>
+> This patch introduces start_renaming_two_dentries() which is given both
+> dentries.  debugfs performs one lookup itself.  As it will only continue
+> with a negative dentry and as those cannot be renamed or unlinked, it is
+> safe to do the lookup before getting the rename locks.
+>
+> overlayfs uses start_renaming_two_dentries() in three places and  selinux
+> uses it twice in sel_make_policy_nodes().
+>
+> In sel_make_policy_nodes() we now lock for rename twice instead of just
+> once so the combined operation is no longer atomic w.r.t the parent
+> directory locks.  As selinux_state.policy_mutex is held across the whole
+> operation this does not open up any interesting races.
+>
+> Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+> Reviewed-by: Jeff Layton <jlayton@kernel.org>
+> Signed-off-by: NeilBrown <neil@brown.name>
+>
+> ---
+> changes since v5:
+>  - sel_make_policy_nodes now uses "goto out" on error from start_renaming=
+_two_dentries()
+>
+> changes since v3:
+>  added missing assignment to rd.mnt_idmap in ovl_cleanup_and_whiteout
+> ---
+>  fs/debugfs/inode.c           | 48 ++++++++++++--------------
+>  fs/namei.c                   | 65 ++++++++++++++++++++++++++++++++++++
+>  fs/overlayfs/dir.c           | 43 ++++++++++++++++--------
+>  include/linux/namei.h        |  2 ++
+>  security/selinux/selinuxfs.c | 15 +++++++--
+>  5 files changed, 131 insertions(+), 42 deletions(-)
 
-For DIO, REQ_ATOMIC IO will generally be faster than the software
-fallback because no page cache interactions or data copy is required
-by the DIO REQ_ATOMIC fast path.
+...
 
-But we are considering buffered writes, which *must* do a data copy,
-and so the behaviour and performance differential of doing a COW vs
-trying to force writeback to do REQ_ATOMIC IO is going to be much
-different.
+> diff --git a/fs/namei.c b/fs/namei.c
+> index 4b740048df97..7f0384ceb976 100644
+> --- a/fs/namei.c
+> +++ b/fs/namei.c
+> @@ -3877,6 +3877,71 @@ int start_renaming_dentry(struct renamedata *rd, i=
+nt lookup_flags,
+>  }
+>  EXPORT_SYMBOL(start_renaming_dentry);
+>
+> +/**
+> + * start_renaming_two_dentries - Lock to dentries in given parents for r=
+ename
 
-Consider that the way atomic buffered writes have been implemented
-in writeback - turning off all folio and IO merging.  This means
-writeback efficiency of atomic writes is going to be horrendous
-compared to COW writes that don't use REQ_ATOMIC.
+I'm guessing you meant this to read "Lock *two* dentries ...".
 
-Further, REQ_ATOMIC buffered writes need to turn off delayed
-allocation because if you can't allocate aligned extents then the
-atomic write can *never* be performed. Hence we have to allocate up
-front where we can return errors to userspace immediately, rather
-than just reserve space and punt allocation to writeback. i.e. we
-have to avoid the situation where we have dirty "atomic" data in the
-page cache that cannot be written because physical allocation fails.
+Otherwise the SELinux changes look fine to me.
 
-The likely outcome of turning off delalloc is that it further
-degrades buffered atomic write writeback efficiency because it
-removes the ability for the filesystem to optimise physical locality
-of writeback IO. e.g. adjacent allocation across multiple small
-files or packing of random writes in a single file to allow them to
-merge at the block layer into one big IO...
+Acked-by: Paul Moore <paul@paul-moore.com> (SELinux)
 
-REQ_ATOMIC is a natural fit for DIO because DIO is largely a "one
-write syscall, one physical IO" style interface. Buffered writes,
-OTOH, completely decouples application IO from physical IO, and so
-there is no real "atomic" connection between the data being written
-into the page caceh and the physical IO that is performed at some
-time later.
+> + * @rd:           rename data containing parent
+> + * @old_dentry:   dentry of name to move
+> + * @new_dentry:   dentry to move to
+> + *
+> + * Ensure locks are in place for rename and check parentage is still cor=
+rect.
+> + *
+> + * On success the two dentries are stored in @rd.old_dentry and
+> + * @rd.new_dentry and @rd.old_parent and @rd.new_parent are confirmed to
+> + * be the parents of the dentries.
+> + *
+> + * References and the lock can be dropped with end_renaming()
+> + *
+> + * Returns: zero or an error.
+> + */
 
-This decoupling of physical IO is what brings all the problems and
-inefficiencies. The filesystem being able to mark the RWF_ATOMIC
-write range as a COW range at submission time creates a natural
-"atomic IO" behaviour without requiring the page cache or writeback
-to even care that the data needs to be written atomically.
-
-From there, we optimise the COW IO path to record that
-the new COW extent was created for the purpose of an atomic write.
-Then when we go to write back data over that extent, the filesystem
-can chose to do a REQ_ATOMIC write to do an atomic overwrite instead
-of allocating a new extent and swapping the BMBT extent pointers at
-IO completion time.
-
-We really don't care if 4x16kB adjacent RWF_ATOMIC writes are
-submitted as 1x64kB REQ_ATOMIC IO or 4 individual 16kB REQ_ATOMIC
-IOs. The former is much more efficient from an IO perspective, and
-the COW path can actually optimise for this because it can track the
-atomic write ranges in cache exactly. If the range is larger (or
-unaligned) than what REQ_ATOMIC can handle, we use COW writeback to
-optimise for maximum writeback bandwidth, otherwise we use
-REQ_ATOMIC to optimise for minimum writeback submission and
-completion overhead...
-
-IOWs, I think that for XFS (and other COW-capable filesystems) we
-should be looking at optimising the COW IO path to use REQ_ATOMIC
-where appropriate to create a direct overwrite fast path for
-RWF_ATOMIC buffered writes. This seems a more natural and a lot less
-intrusive than trying to blast through the page caceh abstractions
-to directly couple userspace IO boundaries to physical writeback IO
-boundaries...
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--=20
+paul-moore.com
