@@ -1,79 +1,102 @@
-Received: from mail-m15592.qiye.163.com (mail-m15592.qiye.163.com [101.71.155.92])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65480280CE0
-	for <linux-xfs@vger.kernel.org>; Tue, 18 Nov 2025 11:06:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.92
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D771136C5B5
+	for <linux-xfs@vger.kernel.org>; Tue, 18 Nov 2025 17:00:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763463987; cv=none; b=Pgk8PAgdy0zboPRJVaO7Xgqyz26RuYI7mET/Zpv28pypBwfmObSNpkmDFJWng7Bm+roLsoS8CWQHD978XAf54+J83fQ+jrxzywQ+AzFLYHXMto0QzPhKTTQZ3uS0kChkr4L1g3MSMPkdwdYnF/aQnjwcon7mDnM8jm6U9YNEsG4=
+	t=1763485203; cv=none; b=ROZoy6msCKkKmZ+46pQCkedv+6kGNCp53Bawv9Wr8SgBkX6srGuHd/iuSdr2ur3byXECj1LFFTO8pyBF1nmyTnNQaI4vVDS/5YuE47ln/OxpRWSyACT+h1bd4NJt+KjwtOuZJ87/ERJlfS5MdVaamaGv2PiOR8D++csaOs2LwbI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763463987; c=relaxed/simple;
-	bh=2z5aQ0vWLI3kcmrOdOv2zLqVJ5jrXa47br9lDZqAmfY=;
-	h=Content-Type:Message-ID:To:Cc:Subject:MIME-Version:From:Date; b=CgRyIxE6q2dsjWrH3AOSg7G5b/JMP8xfUb4wmmkyOU7jk23fRqi35Clrn3Smms6dXRVhEPNHpWrZU/LiyID59kwsMzy1OONK0ID9OC+ZrK+Gtq7htsdEvtOLmJhIlPKrsaY4co4WqrH90PuXC8PQfozo8hDQ+wiK1nTtLlCDXj4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stu.pku.edu.cn; spf=pass smtp.mailfrom=stu.pku.edu.cn; dkim=pass (1024-bit key) header.d=stu.pku.edu.cn header.i=@stu.pku.edu.cn header.b=en0+dxec; arc=none smtp.client-ip=101.71.155.92
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stu.pku.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stu.pku.edu.cn
+	s=arc-20240116; t=1763485203; c=relaxed/simple;
+	bh=uTiP2LQj+KqTA7YOlsKA0AjChXTrZfTDjnhGOaOzjsU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DEdR+YhJeYhBZay5OjFkRz+dcbUwOu8UtF8RwBPa0/EgrjhKVkEGulOxlxmk4tKfaXcFQzizmv6lZ3Mz7fxDTqoqE+jcW41QIQ4xrmn9zPbhXIVMAsnOkdnXNOs+EJrQGeRrBsmhEpdyTJYLrkuPzWfevAITAPDqt3EG0D1zmJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LsDml0rz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=stu.pku.edu.cn header.i=@stu.pku.edu.cn header.b="en0+dxec"
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-Message-ID: <AA6A7gB4JrG-pMrNGmqTzap7.1.1763463974419.Hmail.2200013188@stu.pku.edu.cn>
-To: linux-kernel <linux-kernel@vger.kernel.org>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, cem <cem@kernel.org>
-Subject: =?UTF-8?B?W0JVR10geGZzOiBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2UgaW4geGZzX2J1Zi5oOiB4ZnNfYnVmX2RhZGRyKCk=?=
-X-Priority: 3
-X-Mailer: HMail Webmail Server V2.0 Copyright (c) 2016-163.com Sirius_WEB_MAC_1.55.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LsDml0rz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 489D9C2BC87;
+	Tue, 18 Nov 2025 17:00:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763485202;
+	bh=uTiP2LQj+KqTA7YOlsKA0AjChXTrZfTDjnhGOaOzjsU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LsDml0rzeiUSt/ZaCgL/419+wBWNZt3WOkATw0VoxWXm5J6hNOvqwDXxfyCbS7qLL
+	 sV+I9/A/SkpiVLdJ48NGmyLPVSw7p0CRYoY8dGLHcNGh/iKlObhsY9rmYf3JGlMTjS
+	 dcz6pVtLZppVeyFgCW8XR0sRT3muHj+6woEDAhoB9Vu12yGfxKqYivJV4iawQyx5p3
+	 ZOWTdKUvKygmf0FhagEYIqV7PC1MOC+4vQinAA2qcN7vOxmQ5EvMAZiDjmQRIRyx3G
+	 qZofigjq1opoVgdbadvjCuAis9wZPSv00HqwWvuqPT5VkAodVpyVEDVmLrwx6Ae7mD
+	 IIQ779Sk/7MYw==
+Date: Tue, 18 Nov 2025 08:59:59 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Hongxu Jia <hongxu.jia@windriver.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
+Subject: Re: [PATCH] doc/man: support reproducible builds
+Message-ID: <20251118165959.GL196370@frogsfrogsfrogs>
+References: <20251118092113.2265541-1-hongxu.jia@windriver.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Received: from 2200013188@stu.pku.edu.cn( [210.73.43.101] ) by ajax-webmail ( [127.0.0.1] ) ; Tue, 18 Nov 2025 19:06:14 +0800 (GMT+08:00)
-From: =?UTF-8?B?5p2O5aSp5a6H?= <lty218@stu.pku.edu.cn>
-Date: Tue, 18 Nov 2025 19:06:14 +0800 (GMT+08:00)
-X-HM-Tid: 0a9a969bf57109b6kunm203372683e77
-X-HM-MType: 1
-X-HM-NTES-SC: AL0_4z5B86Wr4Tz9jdMF+bhXMYTqrvk2VXm1s3jojcL7ki9S5UDbyOJxmDzs8e
-	YzTqMdKwpWKMh6NnGmqzdrLX2gtTey0Qdv8YXgJND7/w1b1SByRcTnbLhobfrm77yNE9B7x4QpAb
-	f1ToWR97W4vyvs9YOdxlfU36A3TtdUm6C01vU=
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVkZGU5JVkpCTh8ZQklCHRhNQlYVFAkWGhdVEwETFh
-	oSFyQUDg9ZV1kYEgtZQVlJSktVTEhVT0hVSktKWVdZFhoPEhUdFFlBWU9LSFVKS0hKTk5IVUpLS1
-	VKQktLWQY+
-DKIM-Signature: a=rsa-sha256;
-	b=en0+dxeckYNTdYygY+U7bC4T73Lxvjy8N7X0t0Tvu6qm3cpkvZEkg4bG9GtADGrjAt/7jSPDRrQgsFJtLHdHHvR7LM+0HAPKcS1giLR5tZTTzDXU398UrQgqsRhF/JItjGtda2JEH71dbWxygf8JhAoySG2DTWZl+7aVlgPGHK0=; c=relaxed/relaxed; s=default; d=stu.pku.edu.cn; v=1;
-	bh=2z5aQ0vWLI3kcmrOdOv2zLqVJ5jrXa47br9lDZqAmfY=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251118092113.2265541-1-hongxu.jia@windriver.com>
 
-VGhlIGtlcm5lbCByZXBvcnRzIGEga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSB3aGVu
-IHRoZSBzeXNfbW91bnQgaXMgY2FsbGVkLiBUaGlzIGlzIHRyaWdnZXJlZCBieSB0aGUgc3RhdGVt
-ZW50IGJfbWFwc1swXSwgd2hlcmUgYl9tYXBzIGlzIE5VTEwuCgpUaGlzIGJ1ZyB3YXMgZGlzY292
-ZXJlZCB0aHJvdWdoIGEgZnV6emluZyBmcmFtZXdvcmsgb24gTGludXggdjYuMih4ODZfNjQsIFFF
-TVUpLiBTaW5jZSBubyByZXByb2R1Y2luZyBjb2RlIGlzIGxlZnQsIHdlIGhhdmUgb25seSB0aGUg
-cmVwb3J0IHRvIGFuYWx5emUuIEkgaGF2ZSBjaGVja2VkIHRoZSBzdGFjayBmcmFtZSBhbmQgcmVs
-ZXZhbnQgY29kZS4gQWZ0ZXIgY29tcGFyaW5nIGl0IHdpdGggdGhlIG1haW5saW5lIGNvZGUsIHRo
-ZSBidWdneSBjb2RlIGF0IHhmc19idWYuaDozMzMgYW5kIGF0IHhmc19idHJlZS5jOjE5MDIgKGxp
-bmVzIGFjY29yZGluZyB0byByYzUgb24gbWFpbmxpbmUpIHJlbWFpbnMgdW5jaGFuZ2VkLiBUaGVy
-ZWZvcmUsIEkgc3VzcGVjdCB0aGF0IHRoaXMgYnVnIGNvdWxkIGFsc28gb2NjdXIgaW4gdGhlIGxh
-dGVzdCBrZXJuZWwuCgpUbyBkZXRlcm1pbmUgd2h5IGJfbWFwcyBpcyBOVUxMLCBJIHJldmlld2Vk
-IGFsbCBzdGF0ZW1lbnRzIGludm9sdmluZyBiX21hcHMgYW5kIGZvdW5kIG9ubHkgMiBhc3NpZ25t
-ZW50cyB0byBiX21hcHM6IGF0IHhmc19idWYuYzoyOTYvMjk4LiBUaHVzLCBJIGJlbGlldmUgdGhl
-IGlzc3VlIG1heSBiZSBkdWUgdG8gb25lIG9mIHRoZSBmb2xsb3dpbmcgcmVhc29uczoKMS4gQXQg
-eGZzX2J1Zi5jOiB4ZnNfYnVmX2FsbG9jKCksIG5vIHByb3BlciB2YWx1ZSBpcyBzZXQgZm9yIGJf
-bWFwcywgd2hpY2ggc2VlbXMgdW5saWtlbHkuCjIuIFJhY2UgY29uZGl0aW9ucyBtYXkgaGF2ZSBv
-Y2N1cnJlZCwgY2F1c2luZyB0aGUgYl9tYXBzIGZpZWxkIHRvIGJlIGFjY2Vzc2VkIGJlZm9yZSBw
-cm9wZXJseSBpbml0aWFsaXplZC4KCkEgc2ltcGxlIGZpeCBtaWdodCBiZSB0byBlbnN1cmUgYnAt
-Jmd0O2JfbWFwcyBpcyBub3QgTlVMTCBpbiB4ZnNfYnVmX2RhZGRyKCksIGJ1dCB0aGlzIGRvZXMg
-bm90IGFkZHJlc3MgdGhlIHJvb3QgY2F1c2Ugb2YgdGhlIHByb2JsZW0uIEl0IG1heSBiZSBiZXR0
-ZXIgdG8gaW52ZXN0aWdhdGUgd2hldGhlciB0aGVyZSBjb3VsZCBiZSBhIHNpdHVhdGlvbiB3aGVy
-ZSB0aGUgdXNhZ2Ugb2NjdXJzIGJlZm9yZSBpbml0aWFsaXphdGlvbi4KSSBob3BlIHRoaXMgYW5h
-bHlzaXMgaGVscHMgcHJvdmlkZSBtb3JlIGNsYXJpdHkuCgpUZXN0IGVudmlyb25tZW50LCBjb25m
-aWd1cmF0aW9uLCBhbmQga2VybmVsIGxvZ3MgYXJlIGxpc3RlZCBiZWxvdzoKCglLZXJuZWwgNi4y
-OiBodHRwczovL3d3dy5rZXJuZWwub3JnL3B1Yi9saW51eC9rZXJuZWwvdjYueC9saW51eC02LjIu
-dGFyLmd6CglDb25maWd1cmF0aW9uOiBodHRwczovL2dpdGh1Yi5jb20vV3htLTIzMy9LQ29uZmln
-RnV6el9SZXByb3MvcmF3L3JlZnMvaGVhZHMvbWFzdGVyLzYyLWNvbmZpZwoJS2VybmVsIGxvZzog
-aHR0cHM6Ly9naXRodWIuY29tL2oxYWthaS9LQ29uZmlnRnV6el9idWcvcmF3L2Q1MDgwOGZlMzFk
-NWZjMzA3Y2MwZWI1N2YwY2IyOWJjNGZhNTM3ZDIveDg2L2NyYXNoZXMtcGFydDEvMDAwOF8wYjhl
-ZWE3ZDM5NzEwZDk3ZGNmMWJjNDhkMzZhYzAzODI2OWE1ZTdlL3g4Nl82Ml82Nl9zeXprYWxsZXJf
-MDkwNC0yXzYuMl94aWFuK3lpbi9yZXBvcnQwDQoNCg==
+On Tue, Nov 18, 2025 at 01:21:13AM -0800, Hongxu Jia wrote:
+> From: Hongxu Jia <hongxu.jia@eng.windriver.com>
+> 
+> When compressing, do not save the original file name and
+> timestamp by default (gzip -n). Make archives be reproducible
+> at each build
+> 
+> Signed-off-by: Hongxu Jia <hongxu.jia@eng.windriver.com>
+
+Seems fine to me.
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+
+--D
+
+> ---
+>  doc/Makefile        | 2 +-
+>  include/buildmacros | 4 ++--
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/doc/Makefile b/doc/Makefile
+> index 83dfa38b..17b63c85 100644
+> --- a/doc/Makefile
+> +++ b/doc/Makefile
+> @@ -14,7 +14,7 @@ include $(BUILDRULES)
+>  
+>  CHANGES.gz:
+>  	@echo "    [ZIP]    $@"
+> -	$(Q)$(ZIP) --best -c < CHANGES > $@
+> +	$(Q)$(ZIP) -n --best -c < CHANGES > $@
+>  
+>  install: default
+>  	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
+> diff --git a/include/buildmacros b/include/buildmacros
+> index 9183e5bc..6ba0d515 100644
+> --- a/include/buildmacros
+> +++ b/include/buildmacros
+> @@ -105,7 +105,7 @@ INSTALL_MAN = \
+>  			t=$(MAN_DEST)/$$m.$(MAN_SECTION); \
+>  			if $$first; then \
+>  				if $(HAVE_ZIPPED_MANPAGES); then \
+> -					$(ZIP) -9 -c $$d > $$d.gz; _sfx=.gz; \
+> +					$(ZIP) -n -9 -c $$d > $$d.gz; _sfx=.gz; \
+>  				fi; \
+>  				u=$$m.$(MAN_SECTION)$$_sfx; \
+>  				echo $(INSTALL) -m 644 $${d}$$_sfx $${t}$$_sfx;\
+> @@ -132,6 +132,6 @@ endif
+>  MAN_MAKERULE = \
+>  	@for f in *.[12345678] ""; do \
+>  		if test ! -z "$$f"; then \
+> -			$(ZIP) --best -c < $$f > $$f.gz; \
+> +			$(ZIP) -n --best -c < $$f > $$f.gz; \
+>  		fi; \
+>  	done
+> -- 
+> 2.49.0
+> 
+> 
