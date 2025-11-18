@@ -1,60 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E5782EA743
-	for <linux-xfs@vger.kernel.org>; Tue, 18 Nov 2025 09:53:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1877F325724
+	for <linux-xfs@vger.kernel.org>; Tue, 18 Nov 2025 09:54:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763459597; cv=none; b=IyrxV+v6cqi4l645ymvKBoTC2Oi0jrCS0EjtExne3uIpeaFTZPLGUhg0GMQpY1MuLfreI/TOZzW6Cb69uEwmzU8YfTUTYBSybtfnmJs4mxObqxy6LA6VvkyzGf7OWjGew/0nCh8iVSKzpibnJdnEUjNp69RfhH5MzEMuJkm3KJU=
+	t=1763459648; cv=none; b=rP9wouG4o4F8UTX538isTh27NDbNrEW7IboyUp8xyW5964/5mVXmF3xUkL3lXnN8KY9V/I99mZ+h1GYCG6Lu85JkN6bqola2ZpDF0h/nJ6xscLVk7qlHagJMB4HtZGDSvUgv3afW7ziN6/I0F0R6ZKiQXHb3zdbyKb9izrm5ths=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763459597; c=relaxed/simple;
-	bh=k86vT54j85CuTUUdNBVp9M9GgqnWzecaDBnreE06n4Y=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=N94CJR+pDJL8y/nFYojkgUielLwFkvpjlGOFsdIQT+eCE109cAAw3sYAND6PbqzgJmDn+2azoMU6wjCmgHKti+AOuSEYVCJqRpqBHPTIylcZgSCpp5zUCgrThd4b/6hVHlOQEiK4l7gUO6LhQhz5Kvp+BBerEoQ7x+je16m/0iA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lwdz2rQy; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763459648; c=relaxed/simple;
+	bh=QZVIYU1D+53UNjyzsPJfTc/7CW2+2rwtnBOFKszKpkw=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=Ne9391PEIynWCnOW8AJpLOfT9ZW49pr6wNd2BppIqpl/auQrh4psNdKKvpirIWbcwcKZWhsD/gPwtgt+O5yq89+2ipcvwo0FNSXSuOws1u0BfDvrnJypkHp0/8MT5fNBGUo3N1luD9Tg9Obeyvk8wP7FYTSeB6YQfRk+i4YcmPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ELshS9WP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lwdz2rQy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5495BC4CEF5;
-	Tue, 18 Nov 2025 09:53:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ELshS9WP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80F3FC2BCB5
+	for <linux-xfs@vger.kernel.org>; Tue, 18 Nov 2025 09:54:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763459596;
-	bh=k86vT54j85CuTUUdNBVp9M9GgqnWzecaDBnreE06n4Y=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=Lwdz2rQynJwEA12cuhdNw7ZPzfvMAK/L/Im3Mou8+IHUMS5LN+QhrY54lmAjCwe5l
-	 m4LzCvJWkWWd7sfjGDazjLffx8iQTZzn2kud2BBK9BYke4ZU3LZBYER+gFcqfIdXop
-	 ROwNXTQKuK8UCLqYXiYxop09AopLbkEmbjC6W2gMnxin0e3LQsDLbXP+878LSnq1zb
-	 tijqNcg1V6NJLTfWEvROd3rmQKJqT73Hb+KKViZQxh7RyswfkRka/pDwFGiULNwHFl
-	 35eaeYlP8UukAG5FjKFEDwQJN9gtXHPPTtt0dIqX5LBFwxcFxQN4cw8mb4w5Il8EY9
-	 t74spqJ+3mIuQ==
+	s=k20201202; t=1763459647;
+	bh=QZVIYU1D+53UNjyzsPJfTc/7CW2+2rwtnBOFKszKpkw=;
+	h=Date:From:To:Subject:From;
+	b=ELshS9WPfw3B7YrlfrjJnjz4RMOU9GYkjVzFfXvwLhSheqw3UvC2L5fBNQ58MmzfS
+	 AvdWxJKV7uHuWhZAx8DzyQe4Fcxcl+sPyDpDOb+fg+B+/IqEiLQlQK2fzNRXSPtVGg
+	 d9QFb3NrQwpdjmaQ9/jc1muCpgv3sFeCq+Qhng/l2f6K2Jzp0L7kVlOd91PYxV+JpJ
+	 RMuTT7RYPU+Lly5Qhj08ASmYts2EgZJW+O6//ISf7ocECULt0Za1sPdZPZm2w82ntm
+	 dEf1IgQ3QPOoxEajPPDyJ/UWrKcj8moahKj3IOsUuS6zTzg4mbkF3+bU+ozP1jd4GD
+	 iidfpZCRTuSzw==
+Date: Tue, 18 Nov 2025 10:54:02 +0100
 From: Carlos Maiolino <cem@kernel.org>
-To: cmaiolino@redhat.com, Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Hans Holmberg <hans.holmberg@wdc.com>
-In-Reply-To: <20251027070154.727014-1-hch@lst.de>
-References: <20251027070154.727014-1-hch@lst.de>
-Subject: Re: [PATCH, resend] xfs: remove the unused bv field in struct
- xfs_gc_bio
-Message-Id: <176345959498.25131.11531761018364077285.b4-ty@kernel.org>
-Date: Tue, 18 Nov 2025 10:53:14 +0100
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 9b0305968d60
+Message-ID: <nke6jqewffixeqisqnb37kjheeex4fqmlfhz7cpucddrx6cksi@ekbx3rhq5yce>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
-
-On Mon, 27 Oct 2025 08:01:50 +0100, Christoph Hellwig wrote:
-> 
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
 
-Applied to for-next, thanks!
+Hi folks,
 
-[1/1] xfs: remove the unused bv field in struct xfs_gc_bio
-      commit: 9b0305968d60a7672a7db29c07cfbe03bc5ae3ab
+The for-next branch of the xfs-linux repository at:
 
-Best regards,
--- 
-Carlos Maiolino <cem@kernel.org>
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+9b0305968d60 xfs: remove the unused bv field in struct xfs_gc_bio
+
+1 new commit:
+
+Christoph Hellwig (1):
+      [9b0305968d60] xfs: remove the unused bv field in struct xfs_gc_bio
+
+Code Diffstat:
+
+ fs/xfs/xfs_zone_gc.c | 1 -
+ 1 file changed, 1 deletion(-)
