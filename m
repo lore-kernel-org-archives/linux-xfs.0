@@ -1,127 +1,175 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FBBD28750A
-	for <linux-xfs@vger.kernel.org>; Tue, 18 Nov 2025 17:31:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAEB22D248D
+	for <linux-xfs@vger.kernel.org>; Tue, 18 Nov 2025 20:08:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763487078; cv=none; b=NM6QAoCUplFd5zK8sW5ErczSLCsA7WbZ9bIpVeEpyc7/U8nmFCEE24TaBdMaoA/FqrFOpPM8ERdJ0fd/NDjy3TGKNV8eFR7q21cf3fCavfPWt6cOgvqFQaixbkKoqT+gIboQtawLXwbsECFrIBhOc7BEtZNYLxdu4phR5YJKwGg=
+	t=1763496524; cv=none; b=D/ngzsezINLwwLFgN30vsAUWcpfdBUrJ1jHRfyGujNOlNszjgm8lj3qRAgQTP5I9pgiBJX8t80u9CPp0Sk+T/mmUEfuWZ7REbbIXmyZdb3AtGM4PhqgTJXjvShbwMnIZYehxH9AhH7k/gbEBUXFhRhRN2Y/aQkqQvg+UhnNEhD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763487078; c=relaxed/simple;
-	bh=nhASVdDt4OdAwVAANU2bomnv6+IJT33HttvU1MpH8Lo=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:References; b=VKSZuMRN4Kq6nk5S30NdnjKoQCZ0FyXiwFSXwdp6rE1A8xahpmghzq37/22GpDEEIG4z6rCUijr8bNO2UAZp7pTzVUy6K6jdB361JJcUGtvNB6PCqG97bEGBVg72ohSe/PYQztM4655KejwIboc882IOAyj90dgd7Xd8TLk6JZs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NLoGzHJf; arc=none smtp.client-ip=209.85.216.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1763496524; c=relaxed/simple;
+	bh=zKyz003uJALUvMNRCDsF88+LaqoAo6S0DQMxbylWp5M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=o5XSb+5V9wGywaMmAzzlYjUSuiOHHoRv74760Tl8tNdF1+bVtgPTMk2y40msOrrErf8t6xMTLDXISwxhJuIHP9IqPN0s9hkTFxKJ2mcIdfooAmANdGYiMsMfZJWaegLIZ0TQGioNZgeGSXErilBT8sM1hVTvkP19etlI65QUct8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IY0xy4+d; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NLoGzHJf"
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-34361025290so4412984a91.1
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Nov 2025 09:31:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1763487076; x=1764091876; darn=vger.kernel.org;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=jJZHPmpfAYK3kOvAYzdDDouNFc3+GX3mg/4dP4wkGpE=;
-        b=NLoGzHJfgXsbAIpeLOuT6H6thcbOWsDrkYUlxHE9fk3EaW4cGSmISVyDK/gU6ynD88
-         N14Z9t/iBYvcVGGUJmeap1tNlmbkLAjhKlO+R0Dgqq2Is/zEvq+xKgVPOz5ZG5yPGTNM
-         ubaLmhdYov6TNgBBIgKY995lAQtqIcbwfnFAi76HWg7vURciDFf/clqnmsX/E6xwn9ys
-         HhzeJjSb/w6tbMbCjRS5qTE6A3g4D5uSTi50vWEpjslAIkTDywlrFQRmUKQfGoaiFbgV
-         Yoju0NimoDihKurn/a1/7eNFWW7gMu4HWdBJazse1O9QWcZTXqRrQHyNqfB+W5W3kNjs
-         8KRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763487076; x=1764091876;
-        h=references:message-id:date:in-reply-to:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=jJZHPmpfAYK3kOvAYzdDDouNFc3+GX3mg/4dP4wkGpE=;
-        b=X8Hw0cYtz9zygR9GVfwtPoQk2PBWyxY3kLNuFCWnnKnN+/TSXXONbhg/oHqIhVMhvY
-         eKNDFkUzMLpYGOnfGS4vVvPAlwMnd1vCXnZjOFXf55LZYWx/ezMY8iFqKJVgSMDBxM0/
-         /9DR+KOb6xEu1ZGFkTFBljX0PkEN3JntUYbeg8ibcjZhjhc1HHFcNMPHLbX7EkLLnOSA
-         Kq8p0HZkObtZxYCqH/eYmkQ9z7wiDbvJTjF0MQgzpKjSqurcUlUqPazNFN9oCJvQp+Hr
-         x9KoSTgBVmipGFnqmsaCCW3Z5NpXNi02Kbz4eXZHK86yvkdLJuI+BxbfWcZiWr2YIkOr
-         5fqw==
-X-Forwarded-Encrypted: i=1; AJvYcCXrBXBUK2OuyukgzieI+a1RcUKADJRccH1qwLTpSIEl0O+w3TWbMFBzYfoz14C9mqBE9aEoL8TZbLA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxdoYO7V7O2akvSAE5i/wEPuSGQb25TyxAPDxGPvDag3hzni2jD
-	UMtPAHyfvZ5v+8uEUL4pyIZ5/NWw33+0o16Jj5dh6uaw+jIUDwUr8KIo
-X-Gm-Gg: ASbGncvdYG4V0keS5opXYA/a1noI1swmE69MgL37Tbq8pQQ9icOMlizl3ZWepGrF93d
-	kYY7RSnWh3752G7BcTyjJtBWV2ArXVgZbRnrlV6dIZNVA0Gw8JBNHQlEVdfN6y3M1isPqOtwjyE
-	ItEw/S7BXSFEBXVp6jXdk9u+4B+lBY6LQnFT9cb6+XHLUPKvFFfgPeTyLm1vO2kUgZEo8xMlX9w
-	9faw6croUoPZS1noxx4avthEbERXfv7dJ8uOyni1BodJZfRg4b6Vvgf1GJYs+b95mvf1Cjoikkz
-	Y9McvoNPGqrA/wx+DJvdJZc7PGy8lyBw7/h1sbZBq1zRzmIGj2Ima3b3TiHXXb32wmphKJ8I6r3
-	9yLZ18Bt3qDj9Ga7nIToar7iq/Hw2uWfW39PRQnpuaF7xRHqV2v9jN9N+b50xiSpa3XvOu0s=
-X-Google-Smtp-Source: AGHT+IEQrU5uwPDP3B0D60MQHHmGXSAeXE5fv7FgIePf1xPikPaNbxxiXR2fp/Zl+qVssNoTrpyjFQ==
-X-Received: by 2002:a17:90b:3843:b0:330:7a32:3290 with SMTP id 98e67ed59e1d1-343fa751ad3mr18844371a91.37.1763487075532;
-        Tue, 18 Nov 2025 09:31:15 -0800 (PST)
-Received: from dw-tp ([49.207.232.208])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-345af0fcc0csm1694884a91.0.2025.11.18.09.31.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Nov 2025 09:31:13 -0800 (PST)
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Ojaswin Mujoo <ojaswin@linux.ibm.com>, Christian Brauner <brauner@kernel.org>, djwong@kernel.org, john.g.garry@oracle.com, tytso@mit.edu, dchinner@redhat.com, hch@lst.de, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, jack@suse.cz, nilay@linux.ibm.com, martin.petersen@oracle.com, rostedt@goodmis.org, axboe@kernel.dk, linux-block@vger.kernel.org, linux-trace-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 2/8] mm: Add PG_atomic
-In-Reply-To: <aRcrwgxV6cBu2_RH@casper.infradead.org>
-Date: Tue, 18 Nov 2025 21:47:42 +0530
-Message-ID: <878qg32u3d.ritesh.list@gmail.com>
-References: <cover.1762945505.git.ojaswin@linux.ibm.com> <5f0a7c62a3c787f2011ada10abe3826a94f99e17.1762945505.git.ojaswin@linux.ibm.com> <aRSuH82gM-8BzPCU@casper.infradead.org> <87ecq18azq.ritesh.list@gmail.com> <aRcrwgxV6cBu2_RH@casper.infradead.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IY0xy4+d"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1763496521;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ab7N6fkP8RMKQvUh/0BuymZtJzOzx//JiTSo7GZWmts=;
+	b=IY0xy4+doT/2f0Pcde0apqq3ikElnTUUgnM0aKTCLD/QADRZ6nN/7dZXew+YnUoartlWzl
+	iKDZNrmrTNQ17j0I6LPDb1IprWVJS0eyH2ToXr2YGEiXhfa6LDRhAk47bnzQX09pDuRDZd
+	rBaKGWn4/tIcL3buDlbGG4pIQPV3sCA=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-549-YbsAIlmUP_62PIzFvXvlfw-1; Tue,
+ 18 Nov 2025 15:08:39 -0500
+X-MC-Unique: YbsAIlmUP_62PIzFvXvlfw-1
+X-Mimecast-MFC-AGG-ID: YbsAIlmUP_62PIzFvXvlfw_1763496518
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C3B471800650;
+	Tue, 18 Nov 2025 20:08:38 +0000 (UTC)
+Received: from bfoster (unknown [10.22.64.29])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 076D9180047F;
+	Tue, 18 Nov 2025 20:08:37 +0000 (UTC)
+Date: Tue, 18 Nov 2025 15:08:35 -0500
+From: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/6] xfs: flush eof folio before insert range size update
+Message-ID: <aRzSQypQIad3TsBT@bfoster>
+References: <20251016190303.53881-1-bfoster@redhat.com>
+ <20251016190303.53881-4-bfoster@redhat.com>
+ <20251105001445.GW196370@frogsfrogsfrogs>
+ <aQtughoBHt6LRTUx@bfoster>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aQtughoBHt6LRTUx@bfoster>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Matthew Wilcox <willy@infradead.org> writes:
+On Wed, Nov 05, 2025 at 10:34:26AM -0500, Brian Foster wrote:
+> On Tue, Nov 04, 2025 at 04:14:45PM -0800, Darrick J. Wong wrote:
+> > On Thu, Oct 16, 2025 at 03:03:00PM -0400, Brian Foster wrote:
+> > > The flush in xfs_buffered_write_iomap_begin() for zero range over a
+> > > data fork hole fronted by COW fork prealloc is primarily designed to
+> > > provide correct zeroing behavior in particular pagecache conditions.
+> > > As it turns out, this also partially masks some odd behavior in
+> > > insert range (via zero range via setattr).
+> > > 
+> > > Insert range bumps i_size the length of the new range, flushes,
+> > > unmaps pagecache and cancels COW prealloc, and then right shifts
+> > > extents from the end of the file back to the target offset of the
+> > > insert. Since the i_size update occurs before the pagecache flush,
+> > > this creates a transient situation where writeback around EOF can
+> > > behave differently.
+> > 
+> > Why not flush the file from @offset to EOF, flush the COW
+> > preallocations, extend i_size, and only then start shifting extents?
+> > That would seem a lot more straightforward to me.
+> > 
+> 
+> I agree. I noted in the cover letter that I started with this approach
+> of reordering the existing sequence of operations, but the factoring
+> looked ugly enough that I stopped and wanted to solicit input.
+> 
 
-> On Fri, Nov 14, 2025 at 10:30:09AM +0530, Ritesh Harjani wrote:
->> Matthew Wilcox <willy@infradead.org> writes:
->> 
->> > On Wed, Nov 12, 2025 at 04:36:05PM +0530, Ojaswin Mujoo wrote:
->> >> From: John Garry <john.g.garry@oracle.com>
->> >> 
->> >> Add page flag PG_atomic, meaning that a folio needs to be written back
->> >> atomically. This will be used by for handling RWF_ATOMIC buffered IO
->> >> in upcoming patches.
->> >
->> > Page flags are a precious resource.  I'm not thrilled about allocating one
->> > to this rather niche usecase.  Wouldn't this be more aptly a flag on the
->> > address_space rather than the folio?  ie if we're doing this kind of write
->> > to a file, aren't most/all of the writes to the file going to be atomic?
->> 
->> As of today the atomic writes functionality works on the per-write
->> basis (given it's a per-write characteristic). 
->> 
->> So, we can have two types of dirty folios sitting in the page cache of
->> an inode. Ones which were done using atomic buffered I/O flag
->> (RWF_ATOMIC) and the other ones which were non-atomic writes. Hence a
->> need of a folio flag to distinguish between the two writes.
->
-> I know, but is this useful?  AFAIK, the files where Postgres wants to
-> use this functionality are the log files, and all writes to the log
-> files will want to use the atomic functionality.  What's the usecase
-> for "I want to mix atomic and non-atomic buffered writes to this file"?
+Well this is annoying.. I looked into lifting the prepare shift bits a
+level up and just invoking it before the truncate, but that actually
+appears to be incorrect in at least one case. I.e., the truncate up for
+insert range invokes zero eof for partial zeroing of the eof block,
+which brings a folio back into pagecache (after the lifted flush/unmap)
+within the range being shfited. This then creates a post-shift cache
+inconsistency. This is resolved by restoring the flush/unmap between the
+truncate and extent shift, so we end up just having it in both places.
 
-Actually this goes back to the design of how we added support of atomic
-writes during DIO. So during the initial design phase we decided that
-this need not be a per-inode attribute or an open flag, but this is a
-per write I/O characteristic.
+So atm I'm not really sure if there's a better option than what this
+patch is doing. There are probably other ways to implement it, like
+perhaps introducing ability to convert blocks that are shifted out from
+eof, but that just seems like unnecessary complexity for basically
+implementing the same sort of thing.
 
-So as per the current design, we don't have any open flag or a
-persistent inode attribute which says kernel should permit _only_ atomic
-writes I/O to this file. Instead what we support today is DIO atomic
-writes using RWF_ATOMIC flag in pwritev2 syscall.
+I dunno.. insert range is odd in this regard. I'll think a bit more
+about it while I look into the zero range cow mapping reporting thing.
 
-Having said that there can be several policy decision that could still be
-discussed e.g. make sure any previous dirty data is flushed to disk when a
-buffered atomic write request is made to an inode. 
-Maybe that would allow us to just keep a flag at the address space level
-because we would never have a mix of atomic and non-atomic page cache
-pages.
+Brian
 
-IMO, I agree that folio flag is a scarce resource, but I guess the
-initial goal of this patch series is mainly to discuss the initial
-design of the core feature i.e. how buffered atomic writes should look
-in Linux kernel. I agree and point taken that we should be careful with
-using folio flags, but let's see how the design shapes up maybe? - that
-will help us understand whether a folio flag is really required or maybe
-an address space flag would do. 
+> The details of that fell out of my brain since I posted this,
+> unfortunately. I suspect it may have been related to layering or
+> something wrt the prepare_shift factoring, but I'll take another look in
+> that direction for v2 and once I've got some feedback on the rest of the
+> series.. Thanks.
+> 
+> Brian
+> 
+> > --D
+> > 
+> > > This appears to be corner case situation, but if happens to be
+> > > fronted by COW fork speculative preallocation and a large, dirty
+> > > folio that contains at least one full COW block beyond EOF, the
+> > > writeback after i_size is bumped may remap that COW fork block into
+> > > the data fork within EOF. The block is zeroed and then shifted back
+> > > out to post-eof, but this is unexpected in that it leads to a
+> > > written post-eof data fork block. This can cause a zero range
+> > > warning on a subsequent size extension, because we should never find
+> > > blocks that require physical zeroing beyond i_size.
+> > > 
+> > > To avoid this quirk, flush the EOF folio before the i_size update
+> > > during insert range. The entire range will be flushed, unmapped and
+> > > invalidated anyways, so this should be relatively unnoticeable.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_file.c | 17 +++++++++++++++++
+> > >  1 file changed, 17 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > index 5b9864c8582e..cc3a9674ad40 100644
+> > > --- a/fs/xfs/xfs_file.c
+> > > +++ b/fs/xfs/xfs_file.c
+> > > @@ -1226,6 +1226,23 @@ xfs_falloc_insert_range(
+> > >  	if (offset >= isize)
+> > >  		return -EINVAL;
+> > >  
+> > > +	/*
+> > > +	 * Let writeback clean up EOF folio state before we bump i_size. The
+> > > +	 * insert flushes before it starts shifting and under certain
+> > > +	 * circumstances we can write back blocks that should technically be
+> > > +	 * considered post-eof (and thus should not be submitted for writeback).
+> > > +	 *
+> > > +	 * For example, a large, dirty folio that spans EOF and is backed by
+> > > +	 * post-eof COW fork preallocation can cause block remap into the data
+> > > +	 * fork. This shifts back out beyond EOF, but creates an expectedly
+> > > +	 * written post-eof block. The insert is going to flush, unmap and
+> > > +	 * cancel prealloc across this whole range, so flush EOF now before we
+> > > +	 * bump i_size to provide consistent behavior.
+> > > +	 */
+> > > +	error = filemap_write_and_wait_range(inode->i_mapping, isize, isize);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > >  	error = xfs_falloc_setsize(file, isize + len);
+> > >  	if (error)
+> > >  		return error;
+> > > -- 
+> > > 2.51.0
+> > > 
+> > > 
+> > 
+> 
+> 
 
--ritesh
