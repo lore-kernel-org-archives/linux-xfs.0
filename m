@@ -1,114 +1,60 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 566D52D46DD;
-	Tue, 18 Nov 2025 08:04:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B3452F12D6
+	for <linux-xfs@vger.kernel.org>; Tue, 18 Nov 2025 09:05:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763453075; cv=none; b=bRcdIYdqa+X49PxiHzvFtBLtimTfQTbWFVNlHZ3bM2Il4m8tAlSEW+Loa6zOGZCfKqU29xNZ5ktQoPoHn1jhVkOCc2s3KK4DxeL6pAVdZp60U3zagFw3e4t+YK6H1jC3Jg4mtcRBI14/txwzrvQWgDooURKsHRzNEJxP7c5q5EU=
+	t=1763456723; cv=none; b=tpw1LRWo8kuihUnX4z7Fnl8IxagoXI71DCDikDy7YuKDSvqgvlcvtQmQ7JptUYM0wenOxM/sHKaBx62hCYTD1413ZCep9XY3wJZoAx8DoJ/a48Vk22tUjwDX1bapHIwnLOifkxSRQqMgfF0M8xGsFuqSU5WGpqXJdqhuCsKOs20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763453075; c=relaxed/simple;
-	bh=mPXKpqB6qHKnSgcmE9DJEPoUQXkPovVQvUnM+auWdpQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u4M2pO5GI0qRikNgWDkabhUka5MInyQGhO5+C+3apZH8OufYKW0ctNbOce1hH1H7BpmjO/SqwEcYVlwCsWEmzeLFW/XQkRGVBklPRbk2hNsAi2Vm04OgNI6RhbLnP1ObsY/zHZxWOyyxPEFbx5cWAp1/PUqevBQa0dk2w71XeP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 4C26167373; Tue, 18 Nov 2025 09:04:27 +0100 (CET)
-Date: Tue, 18 Nov 2025 09:04:27 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
-Cc: linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-	axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org,
-	mpatocka@redhat.com, song@kernel.org, yukuai3@huawei.com,
-	hch@lst.de, sagi@grimberg.me, kch@nvidia.com, jaegeuk@kernel.org,
-	chao@kernel.org, cem@kernel.org
-Subject: Re: [RFC PATCH] block: change __blkdev_issue_discard() return type
- to void
-Message-ID: <20251118080427.GA26299@lst.de>
-References: <20251118074243.636812-1-ckulkarnilinux@gmail.com>
+	s=arc-20240116; t=1763456723; c=relaxed/simple;
+	bh=DIw7f87+JauwrWEZ6CY9x6iovnqLew646AE1IiwLgs0=;
+	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
+	 Message-ID:Content-Type; b=LGGyguOS7LsIMA+iBL1Q8pEjYWFQcmp4Fx9WizXWGl1YzWiBjNicp1qEJwTmASH4Z2MFCV0dSvSNqLQZxsPcx6fKTvrKSHuXDimGIy5xGy3zEbkl60yfSvFgTCfemIWTHT/8LFuPc7/j3nRP1RscoYahyAoxHFMVK/gaJFPQ5rs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
+Received: from mx0.herbolt.com (localhost [127.0.0.1])
+	by mx0.herbolt.com (Postfix) with ESMTP id E88C7180F2C0;
+	Tue, 18 Nov 2025 10:05:05 +0100 (CET)
+Received: from mail.herbolt.com ([172.168.31.10])
+	by mx0.herbolt.com with ESMTPSA
+	id ofqlLsE2HGllBTkAKEJqOA
+	(envelope-from <lukas@herbolt.com>); Tue, 18 Nov 2025 10:05:05 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251118074243.636812-1-ckulkarnilinux@gmail.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Date: Tue, 18 Nov 2025 10:05:05 +0100
+From: lukas@herbolt.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v5] xfs: add FALLOC_FL_WRITE_ZEROES to XFS code base
+In-Reply-To: <aRdco1GtU5BK2z6C@infradead.org>
+References: <aRWB3ZCiCBQ8TcGR@infradead.org>
+ <20251114085524.1468486-3-lukas@herbolt.com>
+ <20251114164436.GE196370@frogsfrogsfrogs> <aRdco1GtU5BK2z6C@infradead.org>
+Message-ID: <1fff1ff15d93adb5d2d7c45c3e160e76@herbolt.com>
+X-Sender: lukas@herbolt.com
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Nov 17, 2025 at 11:42:43PM -0800, Chaitanya Kulkarni wrote:
-> Due to involvement of all the subsystem making it as an RFC, ideally
-> it shuoldn't be an RFC.
+On 2025-11-14 17:45, Christoph Hellwig wrote:
+> On Fri, Nov 14, 2025 at 08:44:36AM -0800, Darrick J. Wong wrote:
+>> I think hch was asking for this indentation:
+>> 
+>> 		if (xfs_is_always_cow_inode(ip) ||
+>> 		    !bdev_write_zeroes_unmap_sectors(
+>> 				xfs_inode_buftarg(ip)->bt_bdev))
+>> 			return -EOPNOTSUPP;
+> 
+> That would have been my first preference.  But the current version is
+> readable enough, so I'm fine.
 
-I think best would be a series that drops error checking first,
-and then changes the return type.  That way we can maybe get all
-the callers fixed up in this merge window and then drop the return
-value after -rc1.
->  			gfp_mask)))
->  		*biop = bio_chain_and_submit(*biop, bio);
-> -	return 0;
->  }
->  EXPORT_SYMBOL(__blkdev_issue_discard);
->  
-> @@ -90,8 +89,8 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
->  	int ret;
->  
->  	blk_start_plug(&plug);
-> -	ret = __blkdev_issue_discard(bdev, sector, nr_sects, gfp_mask, &bio);
-> -	if (!ret && bio) {
-> +	__blkdev_issue_discard(bdev, sector, nr_sects, gfp_mask, &bio);
 
-ret now needs to be initialized to 0 above.
-
-> index 8d246b8ca604..f26010c46c33 100644
-> --- a/drivers/nvme/target/io-cmd-bdev.c
-> +++ b/drivers/nvme/target/io-cmd-bdev.c
-> @@ -366,16 +366,11 @@ static u16 nvmet_bdev_discard_range(struct nvmet_req *req,
->  		struct nvme_dsm_range *range, struct bio **bio)
->  {
->  	struct nvmet_ns *ns = req->ns;
-> -	int ret;
->  
-> -	ret = __blkdev_issue_discard(ns->bdev,
-> +	__blkdev_issue_discard(ns->bdev,
->  			nvmet_lba_to_sect(ns, range->slba),
->  			le32_to_cpu(range->nlb) << (ns->blksize_shift - 9),
->  			GFP_KERNEL, bio);
-> -	if (ret && ret != -EOPNOTSUPP) {
-> -		req->error_slba = le64_to_cpu(range->slba);
-> -		return errno_to_nvme_status(req, ret);
-> -	}
->  	return NVME_SC_SUCCESS;
-
-nvmet_bdev_discard_range can return void now.
-
-> diff --git a/fs/f2fs/segment.c b/fs/f2fs/segment.c
-> index b45eace879d7..e6078176f733 100644
-> --- a/fs/f2fs/segment.c
-> +++ b/fs/f2fs/segment.c
-> @@ -1346,7 +1346,7 @@ static int __submit_discard_cmd(struct f2fs_sb_info *sbi,
->  		if (time_to_inject(sbi, FAULT_DISCARD)) {
->  			err = -EIO;
->  		} else {
-> -			err = __blkdev_issue_discard(bdev,
-> +			__blkdev_issue_discard(bdev,
->  					SECTOR_FROM_BLOCK(start),
->  					SECTOR_FROM_BLOCK(len),
->  					GFP_NOFS, &bio);
-
-Please fold the following 'if (err)' block directly into the injection
-one, and either initialize err to 0, or use a direct return from that
-block to skip the last branch in the function checking err.
-
->  	blk_finish_plug(&plug);
->  
-> -	return error;
-> +	return 0;
-
-Please drop the error return for xfs_discard_extents entirely.
-
+I see it now, sorry! Obviously roundcube, despite of being set to plain 
+text,
+mangled the white spaces. Let me correct it!
