@@ -1,43 +1,42 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EFD8316180;
-	Wed, 19 Nov 2025 06:14:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79A403148B7;
+	Wed, 19 Nov 2025 06:25:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763532869; cv=none; b=hTTQUM62uB6twNr94y8xB68BCDRc/voorjnRVEfA8+N10qGzRBEo6VJA88GJZZnamsllXns8THn8p76YhrZRuDUP7NL5o13Vu6Wi44cuh2+CQ1uUEBS96rYFxBJ7tPfaJG0cY98hV0tBQNpMz+p7WA9QYxGxH9tdOcXav7xxFtw=
+	t=1763533512; cv=none; b=h/5ci0kHermGe4ivdn7HeHd9GeNnJNiCACYdkSFY0o31/HXTbkVba5t18NbFc48wuaEuPymnKj1+6/97oeM5bCf6X+ehEbLMMCu5TrvuuqIUDkQLZqrgmcxgpU/GAGzgt1THsB+fLP4LWyXTf7dgHcZyY7VSu6Z4F70RHhsKfoU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763532869; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1763533512; c=relaxed/simple;
+	bh=AqAHNkrHxx42jEBoafUC+KtV3iXc+xj17wNWRju+99A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=f89mC/F2+GS/6eQYTXn7nelu4hmfzXW2LB1lpmgm2+VvsssNbDLRENtgNBv34E24Wk7VKLry9fYH/yEU8Z7alqf+qThD0vKLhPT//1zoqyKRwkY9hN0GdE6XeD2fEHIr2GCYE1FZig0NEqlpPw2MSjFsD5rwbnc8/YjTS+pyE4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nCZi5sm+; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nCZi5sm+"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=nCZi5sm+mc/1WlIU9t0ehK/fYy
-	ZhI5o3qBglmgYQCwx1z3ojU5UHtQdEaD3wc8aLMIKjnPYU/lMnCA2KzunyIfkmsSXWDc0mtUQ/X6U
-	y9ak7cm3maXKX+9sHpQz/O0kGJeDi/DhEBH6i3Qxpg9jSHEhvKRK8LO7N86QpMQFIBnX3dKk9wlXp
-	7+V59GnBcluvgaR45r/VCnXXbBxqbROmEjkYYp1cj6rQ7zQ1HbEtch1I8jnKPHazcQneoBxq0ApKb
-	2DkdaSPGnvb+mUTCSOUcy5LecjKjU37qv469nNKdupkBupmyELY5XqjAxHymJ++CJy+bg6Tv/G+1O
-	S/mZ2/qQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vLbSS-00000002cmD-3Wbs;
-	Wed, 19 Nov 2025 06:14:24 +0000
-Date: Tue, 18 Nov 2025 22:14:24 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Donald Douwsma <ddouwsma@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-	Zorro Lang <zlang@kernel.org>
-Subject: Re: [PATCH v3] xfs: test case for handling io errors when reading
- extended attributes
-Message-ID: <aR1gQC0ZhOHoxHby@infradead.org>
-References: <20251119041210.2385106-1-ddouwsma@redhat.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z5uYNvxLjaRh5Rl5dc0gUk8Y8olYpCY9K6IDAvdGHnf/84W9jy9nXD7kKHLkJhYODykSDtBHgFu5VFm4LiozYucUHKXA5k4eJD4wICY/cdULDdZ3mR4nf7QPk8P51iRngWSP93PA1RAUe34TQw9k7skssKZ4hien/EpwwbPwHH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id C1E6768AFE; Wed, 19 Nov 2025 07:25:01 +0100 (CET)
+Date: Wed, 19 Nov 2025 07:25:01 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Chaitanya Kulkarni <chaitanyak@nvidia.com>
+Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>,
+	Jan Kara <jack@suse.cz>, Mike Marshall <hubcap@omnibond.com>,
+	Martin Brandenburg <martin@omnibond.com>,
+	Carlos Maiolino <cem@kernel.org>, Stefan Roesch <shr@fb.com>,
+	Jeff Layton <jlayton@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+	"gfs2@lists.linux.dev" <gfs2@lists.linux.dev>,
+	"io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+	"devel@lists.orangefs.org" <devel@lists.orangefs.org>,
+	"linux-unionfs@vger.kernel.org" <linux-unionfs@vger.kernel.org>,
+	"linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
+	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+	"linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>
+Subject: Re: [PATCH 05/14] fs: remove inode_update_time
+Message-ID: <20251119062501.GA20592@lst.de>
+References: <20251114062642.1524837-1-hch@lst.de> <20251114062642.1524837-6-hch@lst.de> <813f36d3-2431-4266-bb2e-faa3fc2a8fd7@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,10 +45,22 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251119041210.2385106-1-ddouwsma@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <813f36d3-2431-4266-bb2e-faa3fc2a8fd7@nvidia.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Looks good:
+On Mon, Nov 17, 2025 at 06:59:25AM +0000, Chaitanya Kulkarni wrote:
+> > -	ret = inode_update_time(inode, sync_mode);
+> > +	if (inode->i_op->update_time)
+> > +		ret = inode->i_op->update_time(inode, sync_mode);
+> > +	else
+> > +		generic_update_time(inode, sync_mode);
+> >   	mnt_put_write_access_file(file);
+> >   	return ret;
+> >   }
+> 
+> do you need to catch the value from generic_update_time() to match
+> if case ? although original code was returning 0 for generic_update_time()
+> case :
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Yes.  It doesn't matter for this series, but it's good future-proofing.
 
