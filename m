@@ -1,349 +1,250 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C993178F4A
-	for <linux-xfs@vger.kernel.org>; Thu, 20 Nov 2025 01:15:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763601317; cv=none; b=aKsyniDk+/dfGaadBKX3eOYA8F7+/kTxQMt9zVABHe45KZL1CzN8PiKATpa5OwkVda10v9ir6peXN4HpKCSu8cHxuOUFEoOEV6uyP8wkKnbzZ/ub0W0JjkIgQZuJhLjEpWd2AC+KQo5qCIk9ftNcWW5O1EqOIJBeQ20ZrcHko+M=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763601317; c=relaxed/simple;
-	bh=enrbeARSJgv/CaMiA7uXqQrBJp4Pb05gpkgC+U48+tQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qr+2cliIZugFB++NhSbk8x763EAJ0oRUMNCf8MXsqWURg8ytZNy67TS82G+Kv6RlGl9QmmsT3oLnDVSZ/MTVPkDRsMB9D7W4FlMcpP8ONAopgvfK4eZpn6tcnOrnq2ht0NIuvsYHkX3BjwJmoa8CZU2+HpVKG9yCip7GCw3bIJg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=J56y9CC5; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=OJjs06mL; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 198B9179A3;
+	Thu, 20 Nov 2025 06:01:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1763618513; cv=fail; b=OUXTOn2O5sUY/YMgMMMsZ2I2Zq5UoicXw8y6FiVaqTj9D0L8blGA1Q6AfBz6MLRlfpQqOSiNrnigjcU+zMMgXSGLZu8Q9yzuIXCsX5bmIyQSfMIACjxku/5G/rKXlRDsXltESOGAGqVOlY9lsIGe7IDSDp+p+d6nkVYP1tcFb+Y=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1763618513; c=relaxed/simple;
+	bh=Bl3uMcjnB87tmEJxzQFpBTyPSm06zLw7rWgFBrShybM=;
+	h=Date:From:To:CC:Subject:Message-ID:Content-Type:
+	 Content-Disposition:MIME-Version; b=gai5SYv0u/vhlOPbM2Zi9kyz35HH/P/lWYnsAESNktHLgW45RpyC84lnGwJmPliq/zEbypdLOc7j8FAmXA1UfxqDiy9Xe1hgh7R5RsWuJQrUku89QGNcEudiIWnNRg2i284CNtQQMow6FTQrsdJmRcl2ZlNpokr3FLIqgI7OJOI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=La5+IQG/; arc=fail smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J56y9CC5";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="OJjs06mL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1763601314;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NqgqOwd5jqp5oDAf2y+M8e0ASYazdS1wJvsZ356bYZE=;
-	b=J56y9CC5NRCYIDZtO+8tZLrw0DtIZQGhOKH36V/eVpfitRy77937Mjs3BiDla2LNAfN+MD
-	4BwT0LjSNKjOujoweLE41Sn65/5VDOYDTjRT5C+J3eQ0InPaBXjjnUFX/ZxG/H2Pm9z63q
-	/SiAh9VE12/8Xry35fJYQcTW6rrSnpY=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-645-dcKTlc9IORq-6XWpRt__fQ-1; Wed, 19 Nov 2025 20:15:13 -0500
-X-MC-Unique: dcKTlc9IORq-6XWpRt__fQ-1
-X-Mimecast-MFC-AGG-ID: dcKTlc9IORq-6XWpRt__fQ_1763601313
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-4ee4a0ad6a6so6934531cf.0
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Nov 2025 17:15:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1763601312; x=1764206112; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=NqgqOwd5jqp5oDAf2y+M8e0ASYazdS1wJvsZ356bYZE=;
-        b=OJjs06mLqNZ2gbuz4u/Q8evVDQvRIij0PkwPs9xuRAN71IRh495sVk2HlNM1z20KhD
-         U1UdWcz9+z/GRWywHFu91UemBu/Z1LtEthlJkUtqGRJYWxZ27HiAQfF0ltsv/UlZ/qAP
-         VPOAYrQCtWoUckw8kYOm60qEpe4YXTGu4yrqOADlZm+wo7E0RAj9sne/sZmF6/gIZxjK
-         t3gsMO4bB8JkcUnvyebyCgIg5BaxgX06gP8L/LTQtr5v4p7fSx8rXEY9++fqEfHbTMrU
-         mMGvN+nogGJiHW6rilqdH/6axeBxmzbll50+fruThAeaZe9hzxcCjIlVXg4qJmFFPnwm
-         +/Dg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763601312; x=1764206112;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=NqgqOwd5jqp5oDAf2y+M8e0ASYazdS1wJvsZ356bYZE=;
-        b=izGvfZbIcxq9K34D6Kij8bLPHa2/QFZtASnYap+9toVUUS6Z8DhgTg88zakZc+9GH9
-         mrI5WjJLdriIClBZ3ArX1dn/x3wefprDITg/RgAs42hQnrcmkjd+Q/7QN8q/Zv2LCNBV
-         NZ5QiIDJCFSuPZdh5VaSBOT2bzkx4EIouU7KQjb7N04bnVlxVZneiWdkZ21h/z7YUNf4
-         G+AjN9m9PxnExdFHVeLwI6igI5hIqP/WboakFIwSkA2b0FUdQU+nJqjVZHpuwYgJWl78
-         oWslwMYi/kmUiuRRVPMvcp9sciKg5CjCYMWYHv9g2JHjby5QDfswhAahT3TwJA9INEDQ
-         3jRw==
-X-Gm-Message-State: AOJu0YwebBItU1u1dj+rYbJbCOB/S8/dP58aNkd7qEr7h0UYXZb1jATD
-	pZ+ggPg3WZufyKxnHWAd3GChVegrcTYjlxa18APxmF+ei/llkoqf3XqZ7ZHTTANOjS7NRP2sVNl
-	XrRfXZ2D6KfoyiRia78v5xTpXefE2/5zZ2feXSlp99Hy5lUyk9H5skvCwZ/UkLg==
-X-Gm-Gg: ASbGncsEPHuhNdGazsi/nhIzXmRW+aXWoUoxxhoaIGErlAyejhAGp2HNgs+izqFXmG1
-	qeTSKMFRADybIPLZJLdmncSJ3BkzFaM3T8HMat1IJjEhwcdOCeVx7tFCe6XkyCByXEw4GL8eme+
-	duJBzjKMhdoiB5BpzKt4acP0BxtZ2mUvnoYe8sO70Op/vVu5kOPCmm/1T0KMnXPryZWZCay7N1X
-	rVVdUa2oYACHhN0p2JYUC2e4HgPgfqSjvgFTTS3McX081ZIFZlWrL8oqG1m1/EUkygTXIQeH5J5
-	V5FCm9TB/UlwJcypj0N/4iC7tKO2eZgkMVuZC6TncfhaeikCwSPVlGOTg524AkeGM1r6GD06IK8
-	mCksrwKO4oNvib0UaSUm/z4XRr2H1J8WV0dy2E9SpbuCuqeI0WP3dR8CF
-X-Received: by 2002:ac8:7e85:0:b0:4ec:f1cc:37c0 with SMTP id d75a77b69052e-4ee4971e94bmr19540041cf.81.1763601312591;
-        Wed, 19 Nov 2025 17:15:12 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFo80YT4ij2I/FfCnf4li9DX7WFNQtjycZ4PKqwbBCDEA0dksjzzKSCwFXp54r7zQ2EpoKMDQ==
-X-Received: by 2002:ac8:7e85:0:b0:4ec:f1cc:37c0 with SMTP id d75a77b69052e-4ee4971e94bmr19539621cf.81.1763601312121;
-        Wed, 19 Nov 2025 17:15:12 -0800 (PST)
-Received: from ?IPV6:2001:8003:4a36:e700:8cd:5151:364a:2095? ([2001:8003:4a36:e700:8cd:5151:364a:2095])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-4ee4cbc3c81sm1215061cf.16.2025.11.19.17.15.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 Nov 2025 17:15:11 -0800 (PST)
-Message-ID: <193ae927-9a53-4fa0-9cbe-4e677af2525c@redhat.com>
-Date: Thu, 20 Nov 2025 12:15:06 +1100
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="La5+IQG/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1763618512; x=1795154512;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=Bl3uMcjnB87tmEJxzQFpBTyPSm06zLw7rWgFBrShybM=;
+  b=La5+IQG/SbHVoKPky3bJB7c68Kd4kHak/l1xUc7XAf/7brKxB9jxUSyO
+   vZbWpCA1dF1htQVMbMyTpOcI0VzWTgR53LU2aZORSuSZIMe8gNq1J0Zyh
+   yHFmFNB1hguNegpaYVVrTzcEvZR78TBl/GLcs7vZYGwz231QlsmERTYLM
+   f1j/b/zkCJWVT0rPbkEkQwiZsxcspYc/UmAiP1tmSxXfk+9VdtV+0AuU7
+   nvO/7z/v2rNjNcJuN+bQDrqO3rFGhPHgaGBwl8ZOrmg4PeWjqP57jZOxk
+   qPc8RZGvtKe8Vpf70zlMWlJeqEfO+CPBY4I0WKSVMxCmyvo5+ofJ4Yfh6
+   g==;
+X-CSE-ConnectionGUID: zAj0RbDZT82TTlj9pozEzQ==
+X-CSE-MsgGUID: S3AZkqEVTdiu8mNCAKB3LQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11618"; a="64681057"
+X-IronPort-AV: E=Sophos;i="6.19,317,1754982000"; 
+   d="scan'208";a="64681057"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2025 22:01:52 -0800
+X-CSE-ConnectionGUID: TritE+BhTymvYz+AAWZjNQ==
+X-CSE-MsgGUID: yo7JCu08Sw60HHyZHjqzQQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,317,1754982000"; 
+   d="scan'208";a="192066341"
+Received: from fmsmsx902.amr.corp.intel.com ([10.18.126.91])
+  by fmviesa010.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2025 22:01:51 -0800
+Received: from FMSMSX903.amr.corp.intel.com (10.18.126.92) by
+ fmsmsx902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.27; Wed, 19 Nov 2025 22:01:51 -0800
+Received: from fmsedg901.ED.cps.intel.com (10.1.192.143) by
+ FMSMSX903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.27 via Frontend Transport; Wed, 19 Nov 2025 22:01:51 -0800
+Received: from CY7PR03CU001.outbound.protection.outlook.com (40.93.198.14) by
+ edgegateway.intel.com (192.55.55.81) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.27; Wed, 19 Nov 2025 22:01:48 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=IDihphp8z8tIWDrTYARmlabw3PChLNh36dm6XfZ3eC3rL13QUHazhJeYRZw2vLfpczf2ilLFiwg0EgiLCTnLv3DnghksH0kv50s3YIfbaXhDSZdk5DRTW4zfKQ1bLMbxrTU4SM/uyhjxBr/w0vJipn8tz4UsuQPhEsZBqN12trBBjf1gTRoRnY/vVE7mJYfaWoszbE1ue0E5QMhcHSCMwQF3yh1uOpYP0YpA/fBfxacpnFn/jgo1Oq95yX2RtzsO5Fiy2QkpWbvrF09EeEi+BdKZWarsQLfP1eZK2VLBm5viQ4UgdrXMfjTlLULNP3GAu+Ox2Fi6+yFb30MBD50dtA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=7yEPC3dsm4NBoT+OEYw7fvRsI9CmbLKkGTV6OmKX2/8=;
+ b=XZ0m799HXmHxQ8B+xmoODCbniBU3KBX5tQOq1sGb3mHHBGQmrFebJlr0F7puXmO/olDw5lw5Vk3IAMo/42Vt8+tkqYewbymJ+H4juGWP/tYFnfqg7+IzxOElyW67jRN/3ZmlaplLz1toOsjQ+kPRo9Opk1tUxtkcAE/8bfc4ZEbzBfzeO1vWtdnNv/XbD79kHPcavVtMYNTTR4gAJuxWAbPI/2Gx1+HpEx2BIALME6+79avIbwJtXZVuYRRirzusKeIe95dM4XGiCn280OSRZjc/e+c8BgSJSGk+eP8tCt2KIn8bJZ8hkFjzWS5j95Zb5JwzVQ4vHJESZYIUDQXzDA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from LV3PR11MB8603.namprd11.prod.outlook.com (2603:10b6:408:1b6::9)
+ by SA2PR11MB5068.namprd11.prod.outlook.com (2603:10b6:806:116::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9343.10; Thu, 20 Nov
+ 2025 06:01:45 +0000
+Received: from LV3PR11MB8603.namprd11.prod.outlook.com
+ ([fe80::4622:29cf:32b:7e5c]) by LV3PR11MB8603.namprd11.prod.outlook.com
+ ([fe80::4622:29cf:32b:7e5c%5]) with mapi id 15.20.9343.009; Thu, 20 Nov 2025
+ 06:01:45 +0000
+Date: Thu, 20 Nov 2025 14:01:35 +0800
+From: kernel test robot <oliver.sang@intel.com>
+To: Joanne Koong <joannelkoong@gmail.com>
+CC: <oe-lkp@lists.linux.dev>, <lkp@intel.com>, Christian Brauner
+	<brauner@kernel.org>, Christoph Hellwig <hch@lst.de>, "Darrick J. Wong"
+	<djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
+	<linux-fsdevel@vger.kernel.org>, <oliver.sang@intel.com>
+Subject: [linux-next:master] [iomap]  f8eaf79406: xfstests.generic.439.fail
+Message-ID: <202511201341.e536bf55-lkp@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+X-ClientProxiedBy: KL1P15301CA0064.APCP153.PROD.OUTLOOK.COM
+ (2603:1096:820:3d::7) To LV3PR11MB8603.namprd11.prod.outlook.com
+ (2603:10b6:408:1b6::9)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] xfs: test case for handling io errors when reading
- extended attributes
-To: Zorro Lang <zlang@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
- Zorro Lang <zlang@kernel.org>
-References: <20251119041210.2385106-1-ddouwsma@redhat.com>
- <20251119100709.zbkenjwztblkjobd@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-Content-Language: en-US, en-AU
-From: Donald Douwsma <ddouwsma@redhat.com>
-In-Reply-To: <20251119100709.zbkenjwztblkjobd@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-On 19/11/25 21:07, Zorro Lang wrote:
-> On Wed, Nov 19, 2025 at 03:12:10PM +1100, Donald Douwsma wrote:
->> We've seen reports from the field panicking in xfs_trans_brelse after an
->> IO error when reading an attribute block.
->>
->> sd 0:0:23:0: [sdx] tag#271 CDB: Read(16) 88 00 00 00 00 00 9b df 5e 78 00 00 00 08 00 00
->> critical medium error, dev sdx, sector 2615107192 op 0x0:(READ) flags 0x1000 phys_seg 1 prio class 2
->> XFS (sdx1): metadata I/O error in "xfs_da_read_buf+0xe1/0x140 [xfs]" at daddr 0x9bdf5678 len 8 error 61
->> BUG: kernel NULL pointer dereference, address: 00000000000000e0
->> ...
->> RIP: 0010:xfs_trans_brelse+0xb/0xe0 [xfs]
->>
->> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
->>
->> ---
->> V3
->> - Zorro's suggestions (_require_scsi_debug, _require_scratch, ..., use _get_file_block_size
->>   drop dry_run, fix local variables and parameters, common/attr, ...)
->> - Override SELINUX_MOUNT_OPTIONS to avoid _scratch_mount breaking the test
->> - Add test to quick attr
->> - Change test_attr() to work with blocks instead of bytes
->> - Name the scsi_debug options to make it clearer where the error is active
->> - Determine size of the attr value required based on filesystem block size
->> V2
->> - As this is specific to ENODATA test using scsi_debug instead of dmerror
->> which returns EIO.
->> ---
->>  common/scsi_debug |   8 ++-
->>  tests/xfs/999     | 139 ++++++++++++++++++++++++++++++++++++++++++++++
->>  tests/xfs/999.out |   2 +
->>  3 files changed, 148 insertions(+), 1 deletion(-)
->>  create mode 100755 tests/xfs/999
->>  create mode 100644 tests/xfs/999.out
->>
->> diff --git a/common/scsi_debug b/common/scsi_debug
->> index 1e0ca255..c3fe7be6 100644
->> --- a/common/scsi_debug
->> +++ b/common/scsi_debug
->> @@ -6,6 +6,7 @@
->>  
->>  . common/module
->>  
->> +# _require_scsi_debug [mod_param]
->>  _require_scsi_debug()
->>  {
->>  	local mod_present=0
->> @@ -30,9 +31,14 @@ _require_scsi_debug()
->>  			_patient_rmmod scsi_debug || _notrun "scsi_debug module in use"
->>  		fi
->>  	fi
->> +
->>  	# make sure it has the features we need
->>  	# logical/physical sectors plus unmap support all went in together
->> -	modinfo scsi_debug | grep -wq sector_size || _notrun "scsi_debug too old"
->> +	grep -wq sector_size <(modinfo scsi_debug) || _notrun "scsi_debug too old"
->> +	# make sure it supports this module parameter
->> +	if [ -n "$1" ];then
->> +		grep -Ewq "$1" <(modinfo scsi_debug) || _notrun "scsi_debug not support $1"
->> +	fi
->>  }
->>  
->>  # Args: [physical sector size, [logical sector size, [unaligned(0|1), [size in megs]]]]
->> diff --git a/tests/xfs/999 b/tests/xfs/999
->> new file mode 100755
->> index 00000000..2a571195
->> --- /dev/null
->> +++ b/tests/xfs/999
->> @@ -0,0 +1,139 @@
->> +#!/bin/bash
->> +# SPDX-License-Identifier: GPL-2.0
->> +# Copyright (c) 2025 Red Hat Inc.  All Rights Reserved.
->> +#
->> +# FS QA Test 999
->> +#
->> +# Regression test for panic following IO error when reading extended attribute blocks
->> +#
->> +#   XFS (sda): metadata I/O error in "xfs_da_read_buf+0xe1/0x140 [xfs]" at daddr 0x78 len 8 error 61
->> +#   BUG: kernel NULL pointer dereference, address: 00000000000000e0
->> +#   ...
->> +#   RIP: 0010:xfs_trans_brelse+0xb/0xe0 [xfs]
->> +#
->> +# For SELinux enabled filesystems the attribute security.selinux will be
->> +# created before any additional attributes are added. In this case the
->> +# regression will trigger via security_d_instantiate() during a stat(2),
->> +# without SELinux this should trigger from fgetxattr(2).
->> +#
->> +# Kernels prior to v4.16 don't have medium_error_start, and only return errors
->> +# for a specific location, making scsi_debug unsuitable for checking old
->> +# kernels. See d9da891a892a scsi: scsi_debug: Add two new parameters to
->> +# scsi_debug driver
->> +#
->> +
->> +. ./common/preamble
->> +_begin_fstest auto quick attr
->> +
->> +_fixed_by_kernel_commit ae668cd567a6 \
->> +	"xfs: do not propagate ENODATA disk errors into xattr code"
->> +
->> +# Override the default cleanup function.
->> +_cleanup()
->> +{
->> +	_unmount $SCRATCH_MNT 2>/dev/null
->> +	_put_scsi_debug_dev
->> +	cd /
->> +	rm -f $tmp.*
->> +}
->> +
->> +# Import common functions.
->> +. ./common/attr
->> +. ./common/scsi_debug
->> +
->> +_require_scratch_nocheck
->> +_require_scsi_debug "medium_error_start"
->> +_require_attrs user
->> +
->> +# If SELinux is enabled common/config sets a default context, which which breaks this test.
->                                                                        ^^^^^
-> 
->> +export SELINUX_MOUNT_OPTIONS=""
->> +
->> +scsi_debug_dev=$(_get_scsi_debug_dev)
->> +scsi_debug_opt_noerror=0
->> +scsi_debug_opt_error=${scsi_debug_opt_error:=2}
->> +test -b $scsi_debug_dev || _notrun "Failed to initialize scsi debug device"
->> +echo "SCSI debug device $scsi_debug_dev" >>$seqres.full
->> +
->> +SCRATCH_DEV=$scsi_debug_dev
->> +_scratch_mkfs >> $seqres.full
->> +_scratch_mount
->> +
->> +block_size=$(_get_file_block_size $SCRATCH_MNT)
->> +inode_size=$(_xfs_get_inode_size $SCRATCH_MNT)
->> +error_length=$((block_size/512)) # Error all sectors in the block
->> +
->> +echo Block size $block_size >> $seqres.full
->> +echo Inode size $inode_size >> $seqres.full
->> +
->> +test_attr()
->> +{
->> +	local test=$1
->> +	local testfile=$SCRATCH_MNT/$test
->> +	local attr_blocks=$2
->> +	local error_at_block=${3:-0}
->> +
->> +	local attr_size_bytes=$((block_size/2*attr_blocks))
->> +
->> +	# The maximum size for a single value is ATTR_MAX_VALUELEN (64*1024)
->> +	# If we wanted to test a larger range of extent combinations the test
->> +	# would need to use multiple values.
->> +	[[ $attr_size_bytes -ge 65536 ]] && echo "Test would need to be modified to support > 64k values for $attr_blocks blocks".
->> +
->> +	echo $scsi_debug_opt_noerror > /sys/module/scsi_debug/parameters/opts
->> +
->> +	echo -e "\nTesting : $test" >> $seqres.full
->> +	echo -e "attr size: $attr_blocks" >> $seqres.full
->> +	echo -e "error at block: $error_at_block\n" >> $seqres.full
->> +
->> +	touch $testfile
->> +	local inode=$(stat -c '%i' $testfile)
->> +	$SETFATTR_PROG -n user.test_attr -v $(printf "%0*d" $attr_size_bytes $attr_size_bytes) $testfile
->> +
->> +	$XFS_IO_PROG -c "bmap -al" $testfile >> $seqres.full
->> +	start_blocks=($($XFS_IO_PROG -c "bmap -al" $testfile | awk 'match($3, /[0-9]+/, a) {print a[0]}'))
->         ^^^^^^^^^^^^
->         local start_blocks
-> 
-> 
-> OK, so you still don't want to use:
-> 
->   local start_blocks=$(_scratch_xfs_get_metadata_field "a.bmx[0].startblock" "inode $inode")
-
-I'm used to looking at extent information on mounted filesystems with xfs_bmap,
-so it felt more natural.
-
-I also wanted to make it easy to extend this to btree format attr if required.
-It may be possible to do that with _scratch_xfs_get_metadata_field if it works
-with btdump, but would add complexity.
-
-> Anyway, both ways are good to get the start_blocks for this case. So ... (don't need to send v4)
-> 
-> Reviewed-by: Zorro Lang <zlang@redhat.com>
-> 
-
-Thanks for your help and feedback with this,
-Don
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV3PR11MB8603:EE_|SA2PR11MB5068:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0aeed76f-ce93-4242-7361-08de27fa48e2
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|376014;
+X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?cI3YkkdbyhXCzaXErbZ/uvxy03+38FHzI5eXMkj+ZYAeUJj5CC9xGBRPgfBN?=
+ =?us-ascii?Q?JKCJFXwymG8tfPTKsv/SIWM8IXfhgfRZQ+SiMcsjaDq4Zfqydceq82VJmc7U?=
+ =?us-ascii?Q?ELXid3IWrBoYfCqhmjo0fAxqBtqSZMvGy8JLS1aHfDwa9oUy35ZwpXV3HsQF?=
+ =?us-ascii?Q?WYrMfJOfD41aN3syUvkFc797Yz+MKRJ+Cmkz1687ZRWpz0FyxsCpiEjaVMD0?=
+ =?us-ascii?Q?aW5FiuVame9N7mHvEZtI7SS8NZHb05yitbeebhewz100IFHcmocJVNUOQ2tl?=
+ =?us-ascii?Q?xgID2oK7C0GQs8yCbkm7Jgm/WGh9CSifkmSlfqPJT/ryw4+0FwpEIdiwtgS5?=
+ =?us-ascii?Q?rK6fsbdBRQfpFSXzhWhvDVoPcchzYoOUaMmdFGRDIzta3t/ZM7GU0o8wQJys?=
+ =?us-ascii?Q?TJpSGNJYVQ/U34KAVYhUIyRcRavtCCm//S6It9TAjPPRrHe9iJRRFMqETl7+?=
+ =?us-ascii?Q?n85yIiw+QMH+u/H3b3+8XTqdux3rQAtvwzgnMXOUGy5eBz62t5a69awVRJeB?=
+ =?us-ascii?Q?LU39x8eR0w60cIc1o1a97KfbQlJcGgfPczPbKO2kH+a64YAzCk21tgNmgWw4?=
+ =?us-ascii?Q?3795V0Q5/A7dqN8zjk9hsyLIeI3M1ux8o4F4RFEMmPV0WVYK2o8CswfwZ9fZ?=
+ =?us-ascii?Q?W+t4CZ74st+BULjIaeI/jZRNyJJRI9sEbVSh+vOqc/5xlhnA1e6ey8AZob6c?=
+ =?us-ascii?Q?60MWXgo5o8vDulUpEC43M+B6xOKYtxbJwKfBuoRn7kiYkRHXmOooOQjEr0N5?=
+ =?us-ascii?Q?LE3Vl7cYkShY4wSUxB3sEwNUVLVahqJ2EL/MlinoEVRonUy6ii++gqu1nHbC?=
+ =?us-ascii?Q?6TMnXBLpsJvBCE4vgS8jtl0Gf9S6UPJbfsfmSY+kgZMaQybqK32rQMyQtKkJ?=
+ =?us-ascii?Q?5/4KWGVRUUv+xjSSVT3MKKq+fyXKXYotIZJv53j98Pt1JpguefN+svXxdLAC?=
+ =?us-ascii?Q?rXwq21kuHx68QLJ3B1O6M/3Y2aOLtudqPc9oJclGCDJV9ayonCdZbXw89L4W?=
+ =?us-ascii?Q?XA5X+lXdqnZKcI/vqnznoeHwurrroF0DMl84dz31CAXg/Fx2ASZgu+iF7PzD?=
+ =?us-ascii?Q?8vaaW8TW21gcmFwmOrl8GTUknkAPpiP+T77VkIATfDq0uAS0+0v3nVcUG1uc?=
+ =?us-ascii?Q?Bzs0HMWJXlOY7MsMcFdGt/kPZwDCCUpxGOoo4fXwZOBEXPTrTDY5XY2hc7CY?=
+ =?us-ascii?Q?4CQgLcBh2J78HmLVze9ExNoMJiMMfmS/iw5D3k7B9XhxUMpMDdljF7+qWFUV?=
+ =?us-ascii?Q?9SYNi/MgZIB2LSwAEzbA2Po/x8gHRvX89HEHIUwM88/0gk6DCQWyk4b1xdZF?=
+ =?us-ascii?Q?Ck7E56/9l8UYLeLcnDNeYyxPhm4CmXqA+iyYDlALyRKKKmbv3z34JsO7Ez1Y?=
+ =?us-ascii?Q?VSJ2bkRiYZ0xZmakGMBNonjs8UjEX+kUwDf13UxIcfnz7oGHRh59hG0H8Qyv?=
+ =?us-ascii?Q?ioMhdsWb8/AJVb2iEREaifhYukLTwUE2QNCxDsnGwVLEIrR18px++g=3D=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR11MB8603.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?+Uyc2j+aAg8tdVZ5BkP+vpHT71xJZcmgZm40sgvvGO4GDRh62Be0hHF9kvFt?=
+ =?us-ascii?Q?jhl+/qy6JTusXV9RkF6zFqAwR5q5DmRoN+m6ihh2AS8HfcXrZxM6Zjm+zCC/?=
+ =?us-ascii?Q?qG2S+f4VkcWK/ICLTZMFSfLzAUp1qbs0ezPZcjr9XMw6EAv9Dk4xguMQ4a/Z?=
+ =?us-ascii?Q?8BC2NA+13cjRJnscZ9uXbN7BeBs+HWde2cFsjJYRVR/3v6K0CLpLlFbD6PTu?=
+ =?us-ascii?Q?muvYysZfBToKEGaG20Xke6dmkFCH6/0O5GUdBUduIq4aRG83x32hHWlMf/p8?=
+ =?us-ascii?Q?GI6m53CKZtC4LwhZhBjvz2bBV57UMU419qGc24wmTWCRm4NK1Njy/xu0PwLv?=
+ =?us-ascii?Q?zZDondG0keR6mzhWON+19G9E0iO6zzCK4QdQtNj/hYK3530xZyFJqb5VGvP4?=
+ =?us-ascii?Q?GFCS2kmrwItAFdAuxKZQStZ/7MBIINGdIIttp+l6E0ochXOqsEa08TtWxOre?=
+ =?us-ascii?Q?j9XCgHfcCEUC++dSjXALRW9Vo7FhlcfCwnOcR1q52zjPnTbtDOFyQvFVEr2+?=
+ =?us-ascii?Q?OCTNQ7BFfZ8Kvy9wkFiD2zU7rkmROYOxJR1BVpROFWJUndfXOL+Ht3gOhPXN?=
+ =?us-ascii?Q?wVOu5u9BaembQeLVllDzSCWMlMIZLCXvL7STuwz+NXXTvfyOtgjOkoFQW6Xz?=
+ =?us-ascii?Q?j6OIuQlyGSxp4tqSOZvTGs0N1nNh+6qe1GmvvYlVu9krT22YtXnsk38whv3R?=
+ =?us-ascii?Q?e4a3CBz6c8ZWA03Vv4YaVUlP6hotRz/CqAEYH0liLMgEfIeRt8VO1Urk2cGu?=
+ =?us-ascii?Q?90iH4BV8N6r45UYG+dHjRxrVtIFrpe7nVZ0nto4ymzM9n/cbclUN3t6QGX9I?=
+ =?us-ascii?Q?NXHQ4C/xO/PJPFiw5LykWJYXRQS1pHR9BD0umK9CUp6hRducOho5kemmEw2d?=
+ =?us-ascii?Q?BdqI6zS3zr3/0/ThhqSlTuWRx3lljGZY3igy7fR/eU+Q7q4fwmLVYurBX0IV?=
+ =?us-ascii?Q?+n07JQDmt6xJW4Q8pycgN4oNyV5I5ss5SDbB1/UHegdiGPC9Ge2P6Uewft52?=
+ =?us-ascii?Q?DQd2q2KAlxjohZctEDQ8g1I2cxy9U4E6bmKgikVXK3PeSQioBmTRZ8WK+qAy?=
+ =?us-ascii?Q?WblgQbVsAERu3uiaTnbCY4RLTq9nAvADpaGJZAfTlAcPzhuzDiI550H4GzSC?=
+ =?us-ascii?Q?1MqWsQj78K6TqrQ8wBbpB+5WFS1MOAwCBaa2LdsiDIppU2PKuzSKSwyvD50W?=
+ =?us-ascii?Q?Luw4eVwhJH6co+L4lhKe60sNdCXqi3YgrxF37sprNodPPrZNnYFIJazQW1rZ?=
+ =?us-ascii?Q?qHsUu6Vmume+vBLU5eYMUsYLhlKV4+lz0FNNAUmvBKZEbxqI/+tiywxtFzBK?=
+ =?us-ascii?Q?rmZwhhpRco8WgI/JymV7WsFY4kxFNexmx53tItZ85UCRrvqYhWED54RIimqa?=
+ =?us-ascii?Q?BUhJUpJynC7J71BKKCX6FAnuqvcB1/2SWLuEz8JZx4FQy+defW76FI9g22fF?=
+ =?us-ascii?Q?1ZEJX2Bi4/4M/f+uttWh55G3UiWQCul+rjMZ/1Qb4+gHAIuD0F+gIlRGm/kI?=
+ =?us-ascii?Q?W3elUi7ec3zq+QP4t/f3OlmcLDuWXthNsW9svUhInnd8zyUug080xt27xStM?=
+ =?us-ascii?Q?mkCuKp0gQp3nENUe8zyCDA5JTUeF6W9jZkgOgdwnALqykGmVfCKQAFBNaQMb?=
+ =?us-ascii?Q?Ww=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0aeed76f-ce93-4242-7361-08de27fa48e2
+X-MS-Exchange-CrossTenant-AuthSource: LV3PR11MB8603.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Nov 2025 06:01:45.4678
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: s5d+ohpY7pV0aOpm0sfSwG8pFRljmFDBevhcpXG1ry0sSYCl7xUvBjmdNwF76//IojxQ0h/bhPcZrVMH2Cc+fg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR11MB5068
+X-OriginatorOrg: intel.com
 
 
->> +	echo "Attribute fork extent(s) start at ${start_blocks[*]}" >> $seqres.full
->> +
->> +	_scratch_unmount
->> +
->> +	echo "Dump inode $inode details with xfs_db" >> $seqres.full
->> +	_scratch_xfs_db -c "inode $inode" -c "print core.aformat core.naextents a" >> $seqres.full
->> +
->> +	if [[ start_blocks[0] -ne 0 ]]; then
->> +		# Choose the block to error, currently only works with a single extent.
->> +		error_daddr=$((start_blocks[0] + error_at_block*block_size/512))
->> +	else
->> +		# Default to the inode daddr when no extents were found.
->> +		# Errors when getfattr(1) stats the inode and doesnt get to getfattr(2)
->> +		error_daddr=$(_scratch_xfs_db -c "inode $inode" -c "daddr" | awk '{print $4}')
->> +	fi
->> +
->> +	_scratch_mount
->> +
->> +	echo "Setup scsi_debug to error when reading attributes from block" \
->> +	     "$error_at_block at daddr $error_daddr" >> $seqres.full
->> +	echo $error_daddr > /sys/module/scsi_debug/parameters/medium_error_start
->> +	echo $error_length > /sys/module/scsi_debug/parameters/medium_error_count
->> +	echo $scsi_debug_opt_error > /sys/module/scsi_debug/parameters/opts
->> +	grep ^ /sys/module/scsi_debug/parameters/{medium_error_start,medium_error_count,opts} >> $seqres.full
->> +
->> +	echo "Read the extended attribute on $testfile" >> $seqres.full
->> +	sync # the fstests logs to disk.
->> +
->> +	_getfattr -d -m - $testfile >> $seqres.full 2>&1 # Panic here on failure
->> +}
->> +
->> +# aformat shortform
->> +test_attr "attr_local" 0 0
->> +
->> +# aformat extents
->> +# Single leaf block, known to panic
->> +test_attr "attr_extent_one_block" 1 0
->> +
->> +# Other tests to exercise multi block extents
->> +test_attr "attr_extent_two_blocks_1" 2 1
->> +test_attr "attr_extent_two_blocks_2" 2 2
->> +
->> +# success, all done
->> +echo Silence is golden
->> +status=0
->> +exit
->> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
->> new file mode 100644
->> index 00000000..3b276ca8
->> --- /dev/null
->> +++ b/tests/xfs/999.out
->> @@ -0,0 +1,2 @@
->> +QA output created by 999
->> +Silence is golden
->> -- 
->> 2.47.3
->>
->>
-> 
+
+Hello,
+
+kernel test robot noticed "xfstests.generic.439.fail" on:
+
+commit: f8eaf79406fe9415db0e7a5c175b50cb01265199 ("iomap: simplify ->read_folio_range() error handling for reads")
+https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
+
+[test failed on linux-next/master fe4d0dea039f2befb93f27569593ec209843b0f5]
+
+in testcase: xfstests
+version: xfstests-x86_64-5b75444b-1_20251117
+with following parameters:
+
+	disk: 4HDD
+	fs: xfs
+	test: generic-439
+
+
+
+config: x86_64-rhel-9.4-func
+compiler: gcc-14
+test machine: 8 threads Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz (Skylake) with 16G memory
+
+(please refer to attached dmesg/kmsg for entire log/backtrace)
+
+
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <oliver.sang@intel.com>
+| Closes: https://lore.kernel.org/oe-lkp/202511201341.e536bf55-lkp@intel.com
+
+2025-11-19 08:42:31 cd /lkp/benchmarks/xfstests
+2025-11-19 08:42:32 export TEST_DIR=/fs/sda1
+2025-11-19 08:42:32 export TEST_DEV=/dev/sda1
+2025-11-19 08:42:32 export FSTYP=xfs
+2025-11-19 08:42:32 export SCRATCH_MNT=/fs/scratch
+2025-11-19 08:42:32 mkdir /fs/scratch -p
+2025-11-19 08:42:32 export SCRATCH_DEV=/dev/sda4
+2025-11-19 08:42:32 export SCRATCH_LOGDEV=/dev/sda2
+meta-data=/dev/sda1              isize=512    agcount=4, agsize=13107200 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=1
+         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
+         =                       exchange=0   metadir=0
+data     =                       bsize=4096   blocks=52428800, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1, parent=0
+log      =internal log           bsize=4096   blocks=25600, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+         =                       rgcount=0    rgsize=0 extents
+2025-11-19 08:42:33 export MKFS_OPTIONS=-mreflink=1
+2025-11-19 08:42:33 echo generic/439
+2025-11-19 08:42:33 ./check generic/439
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/x86_64 lkp-skl-d07 6.18.0-rc1-00033-gf8eaf79406fe #1 SMP PREEMPT_DYNAMIC Wed Nov 19 16:30:42 CST 2025
+MKFS_OPTIONS  -- -f -mreflink=1 /dev/sda4
+MOUNT_OPTIONS -- /dev/sda4 /fs/scratch
+
+generic/439        _check_dmesg: something found in dmesg (see /lkp/benchmarks/xfstests/results//generic/439.dmesg)
+
+Ran: generic/439
+Failures: generic/439
+Failed 1 of 1 tests
+
+
+
+
+The kernel config and materials to reproduce are available at:
+https://download.01.org/0day-ci/archive/20251120/202511201341.e536bf55-lkp@intel.com
+
+
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
 
