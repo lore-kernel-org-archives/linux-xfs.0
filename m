@@ -1,336 +1,157 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71F352D0600;
-	Thu, 20 Nov 2025 12:15:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F133E2FF645;
+	Thu, 20 Nov 2025 13:32:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763640928; cv=none; b=MLrSzvIeM1dhKAM/IaLr/iOR77sj9zqqBtgX/lvR1sanBoflPaVji2hh0pTt66v/yYg/lThfc2t6cx+1fJc2TZZSaD4en/h56uIfdxtGjig1RrQV/AxHx5FrPHPz936N4cc839kIlHLjvuvyn2EaxYUOgfmIzbZUZRsd1wRXi9c=
+	t=1763645556; cv=none; b=nb16iZaSVHGTgLO65fNNCbRoPAbxgqvYKgmd3/SR5zno1TwBsRZ0ujlcB4yISG2jXg6Uadcpir0ec8kJDClMrvCX3tB1YBUV2GAJu3ymfXhnzxcuCc4UWbgarLHOqPh+2TuG+yG9aOTMX9ZaqZVO7n9/mpFKlSv854W//FwQy8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763640928; c=relaxed/simple;
-	bh=iiTBllRFNBfDrnqnao3rStmALYx6sVXy4eCt7cTwtCI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BAj25WiSaFfrdDhLmYiR0EbCuU9dHINx8xA1uPdOtZpgdtxb3meMZX2gCMUTP2cKSbk8CE9gztdmi0IaaGHS1LnhftP9q5v6N+2KB4CW3Irtjh+aM0jPqf/+k20heGR7vdOO1T5G2FmDPzY/4PVmd/D3PQ0aH/FjL+oMpR90eTM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=EUeocMSX; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1763645556; c=relaxed/simple;
+	bh=qW5PCmBODlPZRDyUopfvE40TvtcE132BUVZxjCJW8Xk=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=AzpjyBmlT8xtHvNL4aoc9Ymm7vCtUhQt5EY7umXivRjLkBVY8VuXtjWvFF7PgtOHzV/BL3ryxbzkCUHXbt+LXgzr0Hv0NjSPxvl7LpTvojvnCjkYRifcVuDjmdOdwDIUM7wK/th/DT2iUvd/x4QYqFTba4tMkUMo56x6FRjFlLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AOuwkqTj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="EUeocMSX"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5AKC7E9G029043;
-	Thu, 20 Nov 2025 12:14:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=BmQGXOrLqR42QAIqI1W4D/JNPzmWBe
-	bAgsCF39Fhysc=; b=EUeocMSXk9QosseBzTaFAceXVFzNSCY34ZR9Z7p6CSVJEA
-	fFYuMwmQ9ACPyZit85kaC0W1QF4PjRXPXTP1yVPSTYJn1ph7I3PaQ+2QoWuL0CeT
-	OSfWxL3OoTu7oZy+p4HM1o4ZhQsy8SArHOEy4axzV/M7kqnNra1PyGbuixaFmdrO
-	48vnCo9uPXGBonTVXX3Czbhm3WUz7f6sPvjnWmHyoF4nBp2pqXyObeqR+uQel2js
-	0H+VbwkDwGlK0NUTUpPK6UTzx8vLkY9XHJU3moosVGaIaFnKs9TNT7n/usurZbla
-	98iseQcdu7jsKekfmBX6SEe/qBgvgstGjpAv5wew==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4aejk1paf0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 20 Nov 2025 12:14:59 +0000 (GMT)
-Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 5AKCEwuB017022;
-	Thu, 20 Nov 2025 12:14:58 GMT
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4aejk1paew-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 20 Nov 2025 12:14:58 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 5AKB0AJK017404;
-	Thu, 20 Nov 2025 12:14:57 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4af6j1x065-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 20 Nov 2025 12:14:57 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 5AKCEuCY39780754
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 20 Nov 2025 12:14:56 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E1F6720040;
-	Thu, 20 Nov 2025 12:14:55 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E21C720043;
-	Thu, 20 Nov 2025 12:14:51 +0000 (GMT)
-Received: from li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com (unknown [9.109.219.158])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Thu, 20 Nov 2025 12:14:51 +0000 (GMT)
-Date: Thu, 20 Nov 2025 17:44:49 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ritesh Harjani <ritesh.list@gmail.com>, Christoph Hellwig <hch@lst.de>,
-        Christian Brauner <brauner@kernel.org>, djwong@kernel.org,
-        john.g.garry@oracle.com, tytso@mit.edu, willy@infradead.org,
-        dchinner@redhat.com, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, jack@suse.cz,
-        nilay@linux.ibm.com, martin.petersen@oracle.com, rostedt@goodmis.org,
-        axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-trace-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/8] xfs: single block atomic writes for buffered IO
-Message-ID: <aR8GObWa1mtbbtts@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
-References: <cover.1762945505.git.ojaswin@linux.ibm.com>
- <aRUCqA_UpRftbgce@dread.disaster.area>
- <20251113052337.GA28533@lst.de>
- <87frai8p46.ritesh.list@gmail.com>
- <aRWzq_LpoJHwfYli@dread.disaster.area>
- <aRb0WQJi4rQQ-Zmo@li-dc0c254c-257c-11b2-a85c-98b6c1322444.ibm.com>
- <aRmHRk7FGD4nCT0s@dread.disaster.area>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AOuwkqTj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BD7EC116D0;
+	Thu, 20 Nov 2025 13:32:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763645555;
+	bh=qW5PCmBODlPZRDyUopfvE40TvtcE132BUVZxjCJW8Xk=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+	b=AOuwkqTjf9Ni+H2ZFZYDIGxzZSpEJ5/w0vZYFOkMVKnysk0ipudTb5MMiTNASiNA1
+	 pgPUz3Ffnz/O1eQ18M1cGpQmwAxUODA7mQhCTWnfmJxQ9lO7fehC7I7IbLzvKBnzPk
+	 TXXt6H3G6NV320yz8pmlYzgSUboVw66roF2S2/brQgc7BaqhiWRU3xsgZW5lXvxcof
+	 r4abHvfszdOZxAT6ECBMg1bElpuF+o36Fa+ypEzt+o8uxh7nIMN3cI5PBuYTJcYLSH
+	 hnZNqkGFG2TCNMJgds9pUFEoZy5sNyxQd4mZqdk49MsGepIItJe9xPS1W2QGIs3syK
+	 N866258cO04Fw==
+Message-ID: <3933f47761845a016dcb6c851a99fdcedffc65d0.camel@kernel.org>
+Subject: Re: [PATCH 09/16] fs: exit early in generic_update_time when there
+ is no work
+From: Jeff Layton <jlayton@kernel.org>
+To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>, Jan
+ Kara <jack@suse.cz>, Mike Marshall <hubcap@omnibond.com>, Martin
+ Brandenburg	 <martin@omnibond.com>, Carlos Maiolino <cem@kernel.org>,
+ Stefan Roesch	 <shr@fb.com>, linux-kernel@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, 	linux-fsdevel@vger.kernel.org,
+ gfs2@lists.linux.dev, io-uring@vger.kernel.org, 	devel@lists.orangefs.org,
+ linux-unionfs@vger.kernel.org, 	linux-mtd@lists.infradead.org,
+ linux-xfs@vger.kernel.org, 	linux-nfs@vger.kernel.org
+Date: Thu, 20 Nov 2025 08:32:33 -0500
+In-Reply-To: <20251120064859.2911749-10-hch@lst.de>
+References: <20251120064859.2911749-1-hch@lst.de>
+	 <20251120064859.2911749-10-hch@lst.de>
+Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
+ keydata=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
+ QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.1 (3.58.1-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aRmHRk7FGD4nCT0s@dread.disaster.area>
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=C/nkCAP+ c=1 sm=1 tr=0 ts=691f0643 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=kj9zAlcOel0A:10 a=6UeiqGixMTsA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=07d9gI8wAAAA:8 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
- a=QkCu-KvVQgBkKXyteS4A:9 a=CjuIK1q_8ugA:10 a=e2CUPOnPG4QKp8I52DXD:22
- a=biEYGPWJfzWAr4FL6Ov7:22
-X-Proofpoint-GUID: QY8vQPMMKHQZuhxLUU8MzOElMmP_zUb_
-X-Proofpoint-ORIG-GUID: yvqGZeDceYeUfnkxgEv76IrM8wfF74Db
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTE1MDAzMiBTYWx0ZWRfX+pck3x06oJSH
- wFNr41pE/Z4Kt9RRpJCPvqy1URHIf78uqbpEyJ0Tom3RdhiP0N9cwtgbT27ML0Dn5/vfUb+m2RJ
- P2Cxhu21a6rEg92xcpGUcJnSFIzNbty3OzibQ6z4LaQ8CFBxsJ6tZ+9BCgAAYfbG6zix77U8P+f
- 42CuBl9g4YbnmUZAckagpVnw6MfGU7fDdVswcmxGcxMTxG7lp5jaWBtKo902F198kd+m1Qp/ss/
- 6mSyMrCXvAlsB97taBiHtKZS8senXTURcdTNqY6OoqhUpJbEoV2elq+Ghbeu3WnIn/42JSk0++E
- QdEArDShq4bKSdbXazxKNyx1XGHAfZjhqD+kFyM0DPPr9ViiQrLaxcGMaST6/XnrQiWX1LeKgXE
- bufZvnwC93o5Kl2iMH1Jmng7J/L1/w==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-11-20_04,2025-11-20_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 priorityscore=1501 spamscore=0 impostorscore=0 bulkscore=0
- malwarescore=0 suspectscore=0 clxscore=1015 lowpriorityscore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2510240000 definitions=main-2511150032
 
-On Sun, Nov 16, 2025 at 07:11:50PM +1100, Dave Chinner wrote:
-> On Fri, Nov 14, 2025 at 02:50:25PM +0530, Ojaswin Mujoo wrote:
-> > On Thu, Nov 13, 2025 at 09:32:11PM +1100, Dave Chinner wrote:
-> > > On Thu, Nov 13, 2025 at 11:12:49AM +0530, Ritesh Harjani wrote:
-> > > > Christoph Hellwig <hch@lst.de> writes:
-> > > > 
-> > > > > On Thu, Nov 13, 2025 at 08:56:56AM +1100, Dave Chinner wrote:
-> > > > >> On Wed, Nov 12, 2025 at 04:36:03PM +0530, Ojaswin Mujoo wrote:
-> > > > >> > This patch adds support to perform single block RWF_ATOMIC writes for
-> > > > >> > iomap xfs buffered IO. This builds upon the inital RFC shared by John
-> > > > >> > Garry last year [1]. Most of the details are present in the respective 
-> > > > >> > commit messages but I'd mention some of the design points below:
-> > > > >> 
-> > > > >> What is the use case for this functionality? i.e. what is the
-> > > > >> reason for adding all this complexity?
-> > > > >
-> > > > > Seconded.  The atomic code has a lot of complexity, and further mixing
-> > > > > it with buffered I/O makes this even worse.  We'd need a really important
-> > > > > use case to even consider it.
-> > > > 
-> > > > I agree this should have been in the cover letter itself. 
-> > > > 
-> > > > I believe the reason for adding this functionality was also discussed at
-> > > > LSFMM too...  
-> > > > 
-> > > > For e.g. https://lwn.net/Articles/974578/ goes in depth and talks about
-> > > > Postgres folks looking for this, since PostgreSQL databases uses
-> > > > buffered I/O for their database writes.
-> > > 
-> > > Pointing at a discussion about how "this application has some ideas
-> > > on how it can maybe use it someday in the future" isn't a
-> > > particularly good justification. This still sounds more like a
-> > > research project than something a production system needs right now.
-> > 
-> > Hi Dave, Christoph,
-> > 
-> > There were some discussions around use cases for buffered atomic writes
-> > in the previous LSFMM covered by LWN here [1]. AFAIK, there are 
-> > databases that recommend/prefer buffered IO over direct IO. As mentioned
-> > in the article, MongoDB being one that supports both but recommends
-> > buffered IO. Further, many DBs support both direct IO and buffered IO
-> > well and it may not be fair to force them to stick to direct IO to get
-> > the benefits of atomic writes.
-> > 
-> > [1] https://lwn.net/Articles/1016015/
-> 
-> You are quoting a discussion about atomic writes that was
-> held without any XFS developers present. Given how XFS has driven
-> atomic write functionality so far, XFS developers might have some
-> ..... opinions about how buffered atomic writes in XFS...
-> 
-> Indeed, go back to the 2024 buffered atomic IO LSFMM discussion,
-> where there were XFS developers present. That's the discussion that
-> Ritesh referenced, so you should be aware of it.
-> 
-> https://lwn.net/Articles/974578/
-> 
-> Back then I talked about how atomic writes made no sense as
-> -writeback IO- given the massive window for anything else to modify
-> the data in the page cache. There is no guarantee that what the
-> application wrote in the syscall is what gets written to disk with
-> writeback IO. i.e. anything that can access the page cache can
-> "tear" application data that is staged as "atomic data" for later
-> writeback.
-> 
-> IOWs, the concept of atomic writes for writeback IO makes almost no
-> sense at all - dirty data at rest in the page cache is not protected
-> against 3rd party access or modification. The "atomic data IO"
-> semantics can only exist in the submitting IO context where
-> exclusive access to the user data can be guaranteed.
-> 
-> IMO, the only way semantics that makes sense for buffered atomic
-> writes through the page cache is write-through IO. The "atomic"
-> context is related directly to user data provided at IO submission,
-> and so IO submitted must guarantee exactly that data is being
-> written to disk in that IO.
-> 
-> IOWs, we have to guarantee exclusive access between the data copy-in
-> and the pages being marked for writeback. The mapping needs to be
-> marked as using stable pages to prevent anyone else changing the
-> cached data whilst it has an atomic IO pending on it.
-> 
-> That means folios covering atomic IO ranges do not sit in the page
-> cache in a dirty state - they *must* immediately transition to the
-> writeback state before the folio is unlocked so that *nothing else
-> can modify them* before the physical REQ_ATOMIC IO is submitted and
-> completed.
-> 
-> If we've got the folios marked as writeback, we can pack them
-> immediately into a bio and submit the IO (e.g. via the iomap DIO
-> code). There is no need to involve the buffered IO writeback path
-> here; we've already got the folios at hand and in the right state
-> for IO. Once the IO is done, we end writeback on them and they
-> remain clean in the page caceh for anyone else to access and
-> modify...
+On Thu, 2025-11-20 at 07:47 +0100, Christoph Hellwig wrote:
+> Exit early if not attributes are to be updated, to avoid a spurious call
+> to __mark_inode_dirty which can turn into a fairly expensive no-op due to
+> the extra checks and locking.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/inode.c | 3 +++
+>  1 file changed, 3 insertions(+)
+>=20
+> diff --git a/fs/inode.c b/fs/inode.c
+> index 15a8b2cf78ef..cda78f76e1dd 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -2110,6 +2110,9 @@ int generic_update_time(struct inode *inode, int fl=
+ags)
+>  	int updated =3D inode_update_timestamps(inode, flags);
+>  	int dirty_flags =3D 0;
+> =20
+> +	if (!updated)
+> +		return 0;
+> +
+>  	if (updated & (S_ATIME|S_MTIME|S_CTIME))
+>  		dirty_flags =3D inode->i_sb->s_flags & SB_LAZYTIME ? I_DIRTY_TIME : I_=
+DIRTY_SYNC;
+>  	if (updated & S_VERSION)
 
-Hi Dave,
-
-I believe the essenece of your comment is that the data in the page
-cache can be modified between the write and the writeback time and hence
-it makes sense to have a write-through only semantic for RWF_ATOMIC
-buffered IO.
-
-However, as per various discussions around this on the mailing list, it
-is my understanding that protecting tearing against an application
-changing a data range that was previously written atomically is
-something that falls out of scope of RWF_ATOMIC.
-
-As John pointed out in [1], even with dio, RWF_ATOMIC writes can be torn
-if the application does parallel overlaps. The only thing we guarantee
-is the data doesn't tear when the actualy IO happens, and from there its
-the userspace's responsibility to not change the data till IO [2]. I
-believe userspace changing data between write and writeback time falls
-in the same category.
-
-
-[1] https://lore.kernel.org/fstests/0af205d9-6093-4931-abe9-f236acae8d44@oracle.com/
-[2] https://lore.kernel.org/fstests/20250729144526.GB2672049@frogsfrogsfrogs/
-
-> 
-> This gives us the same physical IO semantics for buffered and direct
-> atomic IO, and it allows the same software fallbacks for larger IO
-> to be used as well.
-> 
-> > > Why didn't you use the existing COW buffered write IO path to
-> > > implement atomic semantics for buffered writes? The XFS
-> > > functionality is already all there, and it doesn't require any
-> > > changes to the page cache or iomap to support...
-> > 
-> > This patch set focuses on HW accelerated single block atomic writes with
-> > buffered IO, to get some early reviews on the core design.
-> 
-> What hardware acceleration? Hardware atomic writes are do not make
-> IO faster; they only change IO failure semantics in certain corner
-> cases. Making buffered writeback IO use REQ_ATOMIC does not change
-> the failure semantics of buffered writeback from the point of view
-> of an application; the applicaiton still has no idea just how much
-> data or what files lost data whent eh system crashes.
-> 
-> Further, writeback does not retain application write ordering, so
-> the application also has no control over the order that structured
-> data is updated on physical media.  Hence if the application needs
-> specific IO ordering for crash recovery (e.g. to avoid using a WAL)
-> it cannot use background buffered writeback for atomic writes
-> because that does not guarantee ordering.
-> 
-> What happens when you do two atomic buffered writes to the same file
-> range? The second on hits the page cache, so now the crash recovery
-> semantic is no longer "old or new", it's "some random older version
-> or new". If the application rewrites a range frequently enough,
-> on-disk updates could skip dozens of versions between "old" and
-> "new", whilst other ranges of the file move one version at a time.
-> The application has -zero control- of this behaviour because it is
-> background writeback that determines when something gets written to
-> disk, not the application.
-> 
-> IOWs, the only way to guarantee single version "old or new" atomic
-> buffered overwrites for any given write would be to force flushing
-> of the data post-write() completion.  That means either O_DSYNC,
-> fdatasync() or sync_file_range(). And this turns the atomic writes
-> into -write-through- IO, not write back IO...
-
-I agree that there is no ordeirng guarantee without calls to sync and
-friends, but as with all other IO paths, it has always been the
-applicatoin that needs to enforce the ordering. Applications like DBs
-are well aware of this however there are still areas where they can
-benefit with unordered atomic IO, eg bg write of a bunch of dirty
-buffers, which only need to be sync'd once during checkpoint.
-
-> 
-> > Just like we did for direct IO atomic writes, the software fallback with
-> > COW and multi block support can be added eventually.
-> 
-> If the reason for this functionality is "maybe someone
-> can use it in future", then you're not implementing this
-> functionality to optimise an existing workload. It's a research
-> project looking for a user.
-> 
-> Work with the database engineers to build a buffered atomic write
-> based engine that implements atomic writes with RWF_DSYNC.
-> Make it work, and optimise it to be competitive with existing
-> database engines, than then show how much faster it is using
-> RWF_ATOMIC buffered writes.
-> 
-> Alternatively - write an algorithm that assumes the filesystem is
-> using COW for overwrites, and optimise the data integrity algorithm
-> based on this knowledge. e.g. use always-cow mode on XFS, or just
-> optimise for normal bcachefs or btrfs buffered writes. Use O_DSYNC
-> when completion to submission ordering is required. Now you have
-> an application algorithm that is optimised for old-or-new behaviour,
-> and that can then be acclerated on overwrite-in-place capable
-> filesystems by using a direct-to-hw REQ_ATOMIC overwrite to provide
-> old-or-new semantics instead of using COW.
-> 
-> Yes, there are corner cases - partial writeback, fragmented files,
-> etc - where data will a mix of old and new when using COW without
-> RWF_DSYNC.  Those are the the cases that RWF_ATOMIC needs to
-> mitigate, but we don't need whacky page cache and writeback stuff to
-> implement RWF_ATOMIC semantics in COW capable filesystems.
-> 
-> i.e. enhance the applicaitons to take advantage of native COW
-> old-or-new data semantics for buffered writes, then we can look at
-> direct-to-hw fast paths to optimise those algorithms.
-> 
-> Trying to go direct-to-hw first without having any clue of how
-> applications are going to use such functionality is backwards.
-> Design the applicaiton level code that needs highly performant
-> old-or-new buffered write guarantees, then we can optimise the data
-> paths for it...
-
-Got it, thanks for the pointers Dave, we will look into this.
-
-Regards,
-ojaswin
-
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Reviewed-by: Jeff Layton <jlayton@kernel.org>
