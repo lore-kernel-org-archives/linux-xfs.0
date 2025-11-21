@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03A731862;
-	Fri, 21 Nov 2025 16:43:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EEBC2D9EC7;
+	Fri, 21 Nov 2025 17:04:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763743438; cv=none; b=WMOx6N1G2F5unezmn0IbKaZyWpJerKknkiE5F05mr2k21CB/nFmvL8XsBjtnLUI6flKp224nHOpXb4i0vqFaZ/661affbw00OzDwN33XkJyzxTj0eKB4dPlFcWrZEnuvMsG1DxSFSeVbbjkjDOZ+r6x/9Un6mGbRkT8AdSjOUYA=
+	t=1763744683; cv=none; b=staBtEiMDYYPAIZYdCbbs+PPrDuFFsNFEAdfGKSDYUJ/LGwf005DzY5RyI7vNgtTK/tIMeF2yjaGyt1f+UHd0eGs+fLSetCI/gpZ5Pv87U3ptOSQFn5k7Olu5tjWof84U0jDYMFloslfT3hw6yw1oVshDMoCS0r7qRnZRT3InRQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763743438; c=relaxed/simple;
-	bh=O0NeCM1aqHsDdVcalf19UL/Q3n5vMpE7SNHyhehrMQs=;
+	s=arc-20240116; t=1763744683; c=relaxed/simple;
+	bh=E7gGSRlT3EEnVwdxumPZ0J2/0FVLsiRXO4ZosciiKVw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Cbuvjd+F8dZz8fFGwNqgVi+kIsJKA5EPquD0QSWtFz+UMNbE2XCOXIhij2jHhn0RxnwPVfeDsTCCPwjiPXcDT4jc0ag9PM3xUIl2l++05sOsuy/ilmbPLi5xgDFPHA/jst98EI9VYj2F6rAxwUHqrX32j2JvF3m2PNeFP2nICLY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q0x0oeDI; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Dz8/ghtHo/Y8I0+5/ucyH0epNwPvAKQy5hb0GI5IafuwOQ65q2a8+iFzH7QYjD14oYjGDZOLVoSsJM3fQeNbi0yDtzzH6S8AfPSa5B7NV/KS/YaDZcsbe/QKAZMVazQFOgfVu7X6f43eoaZmrXXsGhbdCPdfpKt1Oa80NkUm5Rs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eovfbcZC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q0x0oeDI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 831D5C116C6;
-	Fri, 21 Nov 2025 16:43:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eovfbcZC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EF40C4CEF1;
+	Fri, 21 Nov 2025 17:04:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763743437;
-	bh=O0NeCM1aqHsDdVcalf19UL/Q3n5vMpE7SNHyhehrMQs=;
+	s=k20201202; t=1763744682;
+	bh=E7gGSRlT3EEnVwdxumPZ0J2/0FVLsiRXO4ZosciiKVw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Q0x0oeDI+HHsEBve0VHEhZfA0aNPbQWAev17BzBOfBGSNx3ww+dILKa5enpMIn11o
-	 5hCZuIe0y079ztEAGxFXWkBeQtwm527v0F1STew1+pogQVUJDZNODxYmVmcSToSGzK
-	 RPZKsY08tdIT4WM7W+ZVfl4xeYrOpXOPxchP6pUpZ75ikcOXSf7wkR31Va2PN6mUgi
-	 KG9vfzUiOlZ8SH9ByRL5vJLuV20THTWqQToE2PLqXfn0Xca4+tBfXnVDwNjVvZm6/5
-	 MqGJ4Le3o3MJx10g9iwpqG/NApawDj895WY3e7EQJCa2jBMD7qkqfqy9y2qTE0RLY2
-	 naoEs/Mslwysg==
-Date: Fri, 21 Nov 2025 08:43:57 -0800
+	b=eovfbcZCz8kDRz7CbkesD2a+p/jBS/9nKer3WLvSyR1rTtfJvkP4e4hV/nbGLkigz
+	 oT/t8EOIAVKcwFqgs1Ewmc1aXUzzIwqjk/VedWkIZUYvYPWsjE1BU3P+pnfkozHGdq
+	 8OJV4JmfW5kHgMDeJ339FvVN0jU5ARuZj49C4yGRZoZauQt0NvzxdZfRnzWyJgsdLM
+	 nlwD//wlsH6CDSMqNFQoCb5IEWyh62o5mWK42affjN6Nuug90U7ZblMEXlG1nzB1Pp
+	 yIfDmS1XpFIuEUbUoqxkQzEJxAY/P8/KwV8SNejnhEUowAJ2q0Sr7sbxR6oeIXkCwL
+	 0tQKZqbx5g8/w==
+Date: Fri, 21 Nov 2025 09:04:41 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
 	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs/049: create the nested XFS file systems on the
- loop device
-Message-ID: <20251121164357.GN196366@frogsfrogsfrogs>
+Subject: Re: [PATCH 3/3] xfs/158: _notrun when the file system can't be
+ created
+Message-ID: <20251121170441.GO196366@frogsfrogsfrogs>
 References: <20251121071013.93927-1-hch@lst.de>
- <20251121071013.93927-3-hch@lst.de>
+ <20251121071013.93927-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -44,47 +44,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251121071013.93927-3-hch@lst.de>
+In-Reply-To: <20251121071013.93927-4-hch@lst.de>
 
-On Fri, Nov 21, 2025 at 08:10:06AM +0100, Christoph Hellwig wrote:
-> Without this I see failures on 4k sector size RT devices, as mkfs.xfs
-> can't pick up the logical block size on files.  Note that the test
-> already does this for the nested ext2 image as well.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Fri, Nov 21, 2025 at 08:10:07AM +0100, Christoph Hellwig wrote:
+> I get an "inode btree counters not supported without finobt support"
+> with some zoned setups with the latests xfsprogs.  Just _notrun the
+> test if we can't create the original file system feature combination
+> that we're trying to upgrade from.
 
-LGTM,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+What configuration, specifically?  I haven't noticed any problems with
+xfs/158 and:
+
+MKFS_OPTIONS  -- -f -m metadir=1 -r zoned=1 /dev/sdf
+MKFS_OPTIONS  -- -f -rrtdev=/dev/sdd -m metadir=1 -d rtinherit=1 -r zoned=1 /dev/sdf
 
 --D
 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  tests/xfs/049 | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+>  tests/xfs/158 | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/tests/xfs/049 b/tests/xfs/049
-> index 07feb58c9ad6..a3f478fa9351 100755
-> --- a/tests/xfs/049
-> +++ b/tests/xfs/049
-> @@ -58,7 +58,9 @@ mount -t ext2 $SCRATCH_DEV $SCRATCH_MNT >> $seqres.full 2>&1 \
->      || _fail "!!! failed to mount"
+> diff --git a/tests/xfs/158 b/tests/xfs/158
+> index 89bf8c851659..02ab39ffda0b 100755
+> --- a/tests/xfs/158
+> +++ b/tests/xfs/158
+> @@ -22,12 +22,14 @@ _scratch_mkfs -m crc=1,inobtcount=1,finobt=0 &> $seqres.full && \
+>  	echo "Should not be able to format with inobtcount but not finobt."
 >  
->  _log "Create xfs fs in file on scratch"
-> -${MKFS_XFS_PROG} -f -dfile,name=$SCRATCH_MNT/test.xfs,size=40m \
-> +truncate -s 40m $SCRATCH_MNT/test.xfs
-> +loop_dev1=$(_create_loop_device $SCRATCH_MNT/test.xfs)
-> +${MKFS_XFS_PROG} -f $loop_dev1 \
->      >> $seqres.full 2>&1 \
->      || _fail "!!! failed to mkfs xfs"
+>  # Make sure we can't upgrade a filesystem to inobtcount without finobt.
+> -_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 >> $seqres.full
+> +try_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 || \
+> +	_notrun "invalid feature combination" >> $seqres.full
+>  _scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+>  _check_scratch_xfs_features INOBTCNT
 >  
-> @@ -67,7 +69,6 @@ mkdir $SCRATCH_MNT/test $SCRATCH_MNT/test2 >> $seqres.full 2>&1 \
->      || _fail "!!! failed to make mount points"
+>  # Format V5 filesystem without inode btree counter support and populate it.
+> -_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
+> +_scratch_mkfs -m crc=1,inobtcount=0 || \
+> +	_notrun "invalid feature combination" >> $seqres.full
+>  _scratch_mount
 >  
->  _log "Mount xfs via loop"
-> -loop_dev1=$(_create_loop_device $SCRATCH_MNT/test.xfs)
->  _mount $loop_dev1 $SCRATCH_MNT/test >> $seqres.full 2>&1 \
->      || _fail "!!! failed to loop mount xfs"
->  
+>  mkdir $SCRATCH_MNT/stress
 > -- 
 > 2.47.3
 > 
