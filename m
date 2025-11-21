@@ -1,37 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38EBE287506
-	for <linux-xfs@vger.kernel.org>; Fri, 21 Nov 2025 16:39:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03A731862;
+	Fri, 21 Nov 2025 16:43:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763743178; cv=none; b=FaHR/5j7k0VN1JcAUBXdpoPt02E24UcjLsfUCm1NCCMhTfE3GPjsJNEmW9aIJZW1teSIdESIR5nE0EWDSIMb+WaOMVSS39AcP8EH0sQ5T8IEJdzCpbp+0Wc5aJtYKmJfJ2fY5VNN21hR3o5JvKXTC1M5fHQwo1TqIc4H5ctD+u0=
+	t=1763743438; cv=none; b=WMOx6N1G2F5unezmn0IbKaZyWpJerKknkiE5F05mr2k21CB/nFmvL8XsBjtnLUI6flKp224nHOpXb4i0vqFaZ/661affbw00OzDwN33XkJyzxTj0eKB4dPlFcWrZEnuvMsG1DxSFSeVbbjkjDOZ+r6x/9Un6mGbRkT8AdSjOUYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763743178; c=relaxed/simple;
-	bh=pvKUtCLS3gLmoycOlqJGYyrHIDNMkKmPk347VIRzn1s=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=qY6IkOIAZBqSDDDANtd8URC9V21mefFjM/vEdwF7gG6GhOCl7tsXpPIYZdpa4AgGz3WLy2T4N5yNKRj5yUqR2v4sB/39H3Eq4CzcH4cLlnokbVcthXGfHD1pE3orsA1EtVPKMa5Uwe1VDsyYG5Oz6z9ddO+oNTYFnEZiXZ7svNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GZfKf8YD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763743438; c=relaxed/simple;
+	bh=O0NeCM1aqHsDdVcalf19UL/Q3n5vMpE7SNHyhehrMQs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Cbuvjd+F8dZz8fFGwNqgVi+kIsJKA5EPquD0QSWtFz+UMNbE2XCOXIhij2jHhn0RxnwPVfeDsTCCPwjiPXcDT4jc0ag9PM3xUIl2l++05sOsuy/ilmbPLi5xgDFPHA/jst98EI9VYj2F6rAxwUHqrX32j2JvF3m2PNeFP2nICLY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q0x0oeDI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GZfKf8YD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E799C4CEF1;
-	Fri, 21 Nov 2025 16:39:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q0x0oeDI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 831D5C116C6;
+	Fri, 21 Nov 2025 16:43:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763743177;
-	bh=pvKUtCLS3gLmoycOlqJGYyrHIDNMkKmPk347VIRzn1s=;
-	h=Date:From:To:Cc:Subject:From;
-	b=GZfKf8YD92PK6MTdTVnNHqmbcZCRvvM7Nu5ygFNQyy08Pk5M+IkK9L6IvP58gJI7N
-	 p1qZmsNRYsvxTpvj1wpaM/F9G9/+yVF7MWAo1gV88NoKE0Db+lgiCeCuynGMZMqczx
-	 0sbiJqr1i4Upypxn89w7BaybxDT7+2BKFUpQvPH3o/8khMiobeTUQNZen67yhV7W5/
-	 M8IeEhFTSx/TYsoPwZmKa9t1i2MNtO5gldjOCpLqpjfanzP2VET1UBf7WT+nZvPRUH
-	 EPQuU9FLH+8GC0xOa4D+eoWn1N5vy2eM4XNtCDcjXO4sDBgLu9/j9Px+7zcOYFefIa
-	 8Lp1R9U52WxmA==
-Date: Fri, 21 Nov 2025 08:39:37 -0800
+	s=k20201202; t=1763743437;
+	bh=O0NeCM1aqHsDdVcalf19UL/Q3n5vMpE7SNHyhehrMQs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Q0x0oeDI+HHsEBve0VHEhZfA0aNPbQWAev17BzBOfBGSNx3ww+dILKa5enpMIn11o
+	 5hCZuIe0y079ztEAGxFXWkBeQtwm527v0F1STew1+pogQVUJDZNODxYmVmcSToSGzK
+	 RPZKsY08tdIT4WM7W+ZVfl4xeYrOpXOPxchP6pUpZ75ikcOXSf7wkR31Va2PN6mUgi
+	 KG9vfzUiOlZ8SH9ByRL5vJLuV20THTWqQToE2PLqXfn0Xca4+tBfXnVDwNjVvZm6/5
+	 MqGJ4Le3o3MJx10g9iwpqG/NApawDj895WY3e7EQJCa2jBMD7qkqfqy9y2qTE0RLY2
+	 naoEs/Mslwysg==
+Date: Fri, 21 Nov 2025 08:43:57 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Andrey Albershteyn <aalbersh@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs_scrub: fix null pointer crash in scrub_render_ino_descr
-Message-ID: <20251121163937.GN196370@frogsfrogsfrogs>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs/049: create the nested XFS file systems on the
+ loop device
+Message-ID: <20251121164357.GN196366@frogsfrogsfrogs>
+References: <20251121071013.93927-1-hch@lst.de>
+ <20251121071013.93927-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -40,49 +44,48 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20251121071013.93927-3-hch@lst.de>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Nov 21, 2025 at 08:10:06AM +0100, Christoph Hellwig wrote:
+> Without this I see failures on 4k sector size RT devices, as mkfs.xfs
+> can't pick up the logical block size on files.  Note that the test
+> already does this for the nested ext2 image as well.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Starting in Debian 13's libc6, passing a NULL format string to vsnprintf
-causes the program to segfault.  Prior to this, the null format string
-would be ignored.  Because @format is optional, let's explicitly steer
-around the vsnprintf if there is no format string.  Also tidy whitespace
-in the comment.
+LGTM,
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
-Found by generic/45[34] on Debian 13.
+--D
 
-Cc: <linux-xfs@vger.kernel.org> # v6.10.0
-Fixes: 9a8b09762f9a52 ("xfs_scrub: use parent pointers when possible to report file operations")
-Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
----
- scrub/common.c |   11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/scrub/common.c b/scrub/common.c
-index a50c810a7bd5a1..49f13466d389c1 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -404,7 +404,7 @@ within_range(
- /*
-  * Render an inode number into a buffer in a format suitable for use in
-  * log messages. The buffer will be filled with:
-- * 	"inode <inode number> (<ag number>/<ag inode number>)"
-+ *	"inode <inode number> (<ag number>/<ag inode number>)"
-  * If the @format argument is non-NULL, it will be rendered into the buffer
-  * after the inode representation and a single space.
-  */
-@@ -506,8 +506,11 @@ scrub_render_ino_descr(
- 	pathlen = ret;
- 
- report_format:
--	va_start(args, format);
--	pathlen += vsnprintf(buf + pathlen, buflen - pathlen, format, args);
--	va_end(args);
-+	if (format) {
-+		va_start(args, format);
-+		pathlen += vsnprintf(buf + pathlen, buflen - pathlen, format,
-+				args);
-+		va_end(args);
-+	}
- 	return pathlen;
- }
+> ---
+>  tests/xfs/049 | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/tests/xfs/049 b/tests/xfs/049
+> index 07feb58c9ad6..a3f478fa9351 100755
+> --- a/tests/xfs/049
+> +++ b/tests/xfs/049
+> @@ -58,7 +58,9 @@ mount -t ext2 $SCRATCH_DEV $SCRATCH_MNT >> $seqres.full 2>&1 \
+>      || _fail "!!! failed to mount"
+>  
+>  _log "Create xfs fs in file on scratch"
+> -${MKFS_XFS_PROG} -f -dfile,name=$SCRATCH_MNT/test.xfs,size=40m \
+> +truncate -s 40m $SCRATCH_MNT/test.xfs
+> +loop_dev1=$(_create_loop_device $SCRATCH_MNT/test.xfs)
+> +${MKFS_XFS_PROG} -f $loop_dev1 \
+>      >> $seqres.full 2>&1 \
+>      || _fail "!!! failed to mkfs xfs"
+>  
+> @@ -67,7 +69,6 @@ mkdir $SCRATCH_MNT/test $SCRATCH_MNT/test2 >> $seqres.full 2>&1 \
+>      || _fail "!!! failed to make mount points"
+>  
+>  _log "Mount xfs via loop"
+> -loop_dev1=$(_create_loop_device $SCRATCH_MNT/test.xfs)
+>  _mount $loop_dev1 $SCRATCH_MNT/test >> $seqres.full 2>&1 \
+>      || _fail "!!! failed to loop mount xfs"
+>  
+> -- 
+> 2.47.3
+> 
+> 
