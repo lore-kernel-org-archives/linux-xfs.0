@@ -1,86 +1,58 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 785722F1FD1;
-	Fri, 21 Nov 2025 07:10:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3FC533555F;
+	Fri, 21 Nov 2025 07:29:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763709032; cv=none; b=sX4TGvZK/erlqNDM/xaHXtMjiMHdI2bP9GH2Z2dQQSqphrFMYh5lpM2CTXQyJ1BFkf8uFxUfWLGzdIEkfoVtn5ysasXSqOUVJPKJ6q+OxtrH/o77cFDOhG9HKNay4kJXRceY7uJXGyn5QZb97LgI2h0IquQIWKcpsqXoS5HCXIU=
+	t=1763710192; cv=none; b=r55yIuJeoo7hlM3uPRLVfID2CghGDIhY/QeYYZgMCO6ei94f1ZC36MJVQ+gj2sF89g5yKTt81Kg6x20nZcCvkKp1anriWqlzeV+dGaY5jkehIdRMEmL2zfxc14WugNKbHeCVKUWVe4zeox0TmFKrNMYxq9RPAORbBtWWcWHYMDI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763709032; c=relaxed/simple;
-	bh=9mlWVr9MZWkFKQpy3Hx0V1OLd48azl/B2+CdQPIllfY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pmu5Xt13uB1pfuiKzI91vQ0bGymTKZbqPeWknnWFzUJ4KEPf4nQc4NVOiwTBTNQBUsqC6963bVtKM7m71Z9/7PqfFRE5Qp1LBVYkUpxbEu6RyNkjycX6xM3GUn51s7YVcKSpQl9c5NeOxYRBOsDaB4kV6+ulm19pJNJrMjxiMC4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=d4Ua8UOi; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="d4Ua8UOi"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=mHt4j+BoecuBjCV3FqandbZnSNBLPTBJOZOf2lOKZns=; b=d4Ua8UOiGet+r1bobZECH+BU2h
-	F7JsXEx2GzogUoFapFofBZPsymSmxAVBGOXCJwRuGUjSWFYF+5K0k24uiGkfrqY1lWoHosIZpbB2q
-	kelrf0XUW4XuPtOQubdjlz27CN1QpfE4zWhN9n/kyNIIoSPbuLddA3f/GTb3ontu/28mIxxL0swu7
-	aha+LV1bHeKHtgr83W7/4Z9itf90Gxq+yrrnfo/Au9cfIGaep1f3TnzZ3A8kNtl7iTFp3QnuV8VDV
-	P0LgFl8jRb9CVsY6qvHLwagn2vOIXe3SLgVnYZrj9y8sXn0ZGg+MUMLMWlRlsg7jm2QernDuggZlc
-	IKH7+StA==;
-Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vMLHq-00000007xD4-2ss3;
-	Fri, 21 Nov 2025 07:10:31 +0000
+	s=arc-20240116; t=1763710192; c=relaxed/simple;
+	bh=jDKfdKpI9O3qO0P6eKaq325979TViIXpxU2jkBoWVRY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tJXIUrpnuxiRxrfoJLqBiy5ebmwIQARpLakFRWyw4G++d6ck2jrX+xB7IF4NL3fqOg3u12MpLIhjCUvYY0pT9wP99yPqjT3BsFvbo49yia8uDz4XrmZHZn/PBR6w+VbhECLEXCOL3mbLWBSdW05qC07n1+FL3Q0AcRSfDpqiywY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id F189F67373; Fri, 21 Nov 2025 08:29:45 +0100 (CET)
+Date: Fri, 21 Nov 2025 08:29:45 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Zorro Lang <zlang@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 3/3] xfs/158: _notrun when the file system can't be created
-Date: Fri, 21 Nov 2025 08:10:07 +0100
-Message-ID: <20251121071013.93927-4-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251121071013.93927-1-hch@lst.de>
-References: <20251121071013.93927-1-hch@lst.de>
+To: "Vishal Moola (Oracle)" <vishal.moola@gmail.com>
+Cc: Matthew Wilcox <willy@infradead.org>, Christoph Hellwig <hch@lst.de>,
+	linux-xfs@vger.kernel.org, Biju Das <biju.das.jz@bp.renesas.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"bpf@vger.kernel.org" <bpf@vger.kernel.org>,
+	"hch@infradead.org" <hch@infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-mm@kvack.org" <linux-mm@kvack.org>,
+	"urezki@gmail.com" <urezki@gmail.com>
+Subject: Re: [PATCH v3 0/4] make vmalloc gfp flags usage more apparent
+Message-ID: <20251121072945.GA30438@lst.de>
+References: <TY3PR01MB11346E8536B69E11A9A9DAB0886D6A@TY3PR01MB11346.jpnprd01.prod.outlook.com> <aRyn7Ibaqa5rlHHx@fedora> <aRzPqYfXc6mtR1U9@casper.infradead.org> <aR4SmclGax8584IJ@fedora>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aR4SmclGax8584IJ@fedora>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-I get an "inode btree counters not supported without finobt support"
-with some zoned setups with the latests xfsprogs.  Just _notrun the
-test if we can't create the original file system feature combination
-that we're trying to upgrade from.
+On Wed, Nov 19, 2025 at 10:55:21AM -0800, Vishal Moola (Oracle) wrote:
+> > Unexpected gfp: 0x1000000 (__GFP_NOLOCKDEP). Fixing up to gfp: 0x2dc0 (GFP_KERNEL|__GFP_ZERO|__GFP_NOWARN). Fix your code!
+> > 
+> > I suspect __GFP_NOLOCKDEP should also be permitted by vmalloc.
+> 
+> As far as I can tell, theres only 1 caller of this.
+> Christoph started using vmalloc for this xfs call in commit
+> e2874632a621 ("xfs: use vmalloc instead of vm_map_area for buffer backing memory").
+> 
+> Looks like xfs uses the flag to prevent false positives. Do
+> we want to continue this? If so, I'll send a patch adding the flag to
+> the whitelist.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- tests/xfs/158 | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/tests/xfs/158 b/tests/xfs/158
-index 89bf8c851659..02ab39ffda0b 100755
---- a/tests/xfs/158
-+++ b/tests/xfs/158
-@@ -22,12 +22,14 @@ _scratch_mkfs -m crc=1,inobtcount=1,finobt=0 &> $seqres.full && \
- 	echo "Should not be able to format with inobtcount but not finobt."
- 
- # Make sure we can't upgrade a filesystem to inobtcount without finobt.
--_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 >> $seqres.full
-+try_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 || \
-+	_notrun "invalid feature combination" >> $seqres.full
- _scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
- _check_scratch_xfs_features INOBTCNT
- 
- # Format V5 filesystem without inode btree counter support and populate it.
--_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
-+_scratch_mkfs -m crc=1,inobtcount=0 || \
-+	_notrun "invalid feature combination" >> $seqres.full
- _scratch_mount
- 
- mkdir $SCRATCH_MNT/stress
--- 
-2.47.3
-
+I'm not a fan of __GFP_NOLOCKDEP, but it is a valid hint for the
+allocator, so it should be supported.
