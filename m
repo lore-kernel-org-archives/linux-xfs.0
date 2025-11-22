@@ -1,212 +1,148 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f67.google.com (mail-ed1-f67.google.com [209.85.208.67])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B78DA36D50C
-	for <linux-xfs@vger.kernel.org>; Sat, 22 Nov 2025 08:36:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9C7527A12B
+	for <linux-xfs@vger.kernel.org>; Sat, 22 Nov 2025 09:42:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.67
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763800618; cv=none; b=TETXw3aWqgcBkWy8lmTIOa8N3zfjdur+T/8Y3sDgTphAUZVxkQoy/dHEBrLlbhYwomhpn3+qAXbOI6Hlsuzj230lCpFKptDgjnmhpiK4k4FrY83bZhPZH+4Ki5XiM7gcxJnUVoFqq14hYgoa29OUju/six+hpmPmx35dVfh4+WI=
+	t=1763804524; cv=none; b=C/zhZVEUNHadlW+xGr5FKGjndYLyXlJczV0yMHydcEnWwxpTZE+AY4YVU5QYYckUN1GJLJZyHsP5bU4SfacMd8kLLHb0bSq04iMZYwnmBpd/gqn6a8mvmBLrSzb/TJw4yc+vbNnjYwEY5/FAelcfDdE7eTziWcTPQK44wnyyB+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763800618; c=relaxed/simple;
-	bh=ztgXdhjxtjkovT48jBmQmJ1bQCaLWwKJ31UmH8BuFs4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TLLdNpO+6vlyW0EnX4knsWoeVhzbWDe1xIFCMFCDzYFbv/Wxdl7mMiA14O4OiIVPOHZs7zbbhy667uM+MnRb47XjcgN5+0kHGyrLmfdJmYuH80ap5VNK/sGr3AhAArgdkoYP2cny2nL3+1l6GoFwbjoulfzv2Rhym3OkywGxayQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cqAPyzbP; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=WdQD7aD8; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1763804524; c=relaxed/simple;
+	bh=3YQgvYMtZvcyTlvXkIp04oAH/AMO8dXo0NAiibjPXy8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=jw0yppYbX8YijQ5/Zk69a7kwj2RpTzmrB9ZwssTZO2ZIYBJjiP2eUVOde7gr4pGP/wZIQg74OiAJuaq5YAQrv+o7m21VrHSS9kEpT0r42NX86ZJdOPBlz34gbaFfe89IkqWtZZE1gwynZCPP1DYYq7eC+XUCAsKwpxfa36GFEHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z+Jm2mZD; arc=none smtp.client-ip=209.85.208.67
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cqAPyzbP";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="WdQD7aD8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1763800615;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=N2zqQPxfD8wBoqVPNB/Ddc7v1WO9JhWHYtXYtFICkgs=;
-	b=cqAPyzbP+EppVrWn45cRoCzhnbJNC9lkrlS7nJgWhleRk+NNss6aBXV9FwgGtrHh9AURP7
-	ellESCvwfw7WORAqm/882Es+QTmdEzXgmhOCzBbS1JUdDbzgc1XQinVCIfg1d1gg7+r9XC
-	SQJ5Bma+nfP/m4caCRKWv5NPErM8EdE=
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
- [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-577-YsatXL7JPTiarp_vZLHbiw-1; Sat, 22 Nov 2025 03:36:53 -0500
-X-MC-Unique: YsatXL7JPTiarp_vZLHbiw-1
-X-Mimecast-MFC-AGG-ID: YsatXL7JPTiarp_vZLHbiw_1763800613
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2958c80fcabso82314035ad.0
-        for <linux-xfs@vger.kernel.org>; Sat, 22 Nov 2025 00:36:53 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z+Jm2mZD"
+Received: by mail-ed1-f67.google.com with SMTP id 4fb4d7f45d1cf-6417313bddaso4265582a12.3
+        for <linux-xfs@vger.kernel.org>; Sat, 22 Nov 2025 01:42:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1763800612; x=1764405412; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=N2zqQPxfD8wBoqVPNB/Ddc7v1WO9JhWHYtXYtFICkgs=;
-        b=WdQD7aD8W++Pu6sTimx8FKNR78HkD4FB/HqeksLAeuv4LN10VR+MQYxy/1bO3CFkaB
-         v2Z1jge4jQ44cZDS0EF/YZH0RrJeAA9jbGNruk7qCBhxziE3LteRJCTVmQrOoDRS/xWs
-         xdsuIALmxxrxj8pjAsNKV6m+qteh+U2wn4l1YR3/6rTTrh1PAbGDmp5pgCm37QvTB5MB
-         obd0nAGtnY2LAqhLxVWgz/PrWIsPbXdCy3A70Fdlt4kz8EJmyafcXXdq4moMcjKWHTpZ
-         p6jb6n95nyPbAbqiwSmyOzYN23xY2TCmuMfLYqXb9X1v03GLw9GvGTDVFFaLy8B6EXF/
-         vbjQ==
+        d=gmail.com; s=20230601; t=1763804521; x=1764409321; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=VraqRiW+TcUOXtKCYeJfwojEREVPpKsk9aXSr0pbaZU=;
+        b=Z+Jm2mZDvvvMweu82eTJLkI2WaE3V5eDIu+EzrBMh7zREZBEhZ+LslziyBnEmXGEzl
+         Tf1qCzpBWx77EoqdZS05Em4OZ2lBdaALHgt2mSGkOvkEtRapfNrR5rC7ZWC5688Uzxff
+         mEACO/QZzucvpAx6YPzQt+3H2V/gnW7FZejJ/4Po5V4qEC/UZjFhMmScHj59pcvgD/vf
+         Cw0xqyMVN19kw4nlHleEoz7tfsSQmxfXzu+0YjS16XWzElmWTtJ7+BlUlluwMdMtBwX9
+         6seLjxQrdCmBF8y61zow3oJyma6OxgsKbAyyiP3K2GiLFCjoAxiF4+Utbj0OduNj6Pmi
+         Ckpg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763800612; x=1764405412;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=N2zqQPxfD8wBoqVPNB/Ddc7v1WO9JhWHYtXYtFICkgs=;
-        b=SiQox/hVJWlX26OECEaaDJuacJt8vlWyINQ2bYFX9wzCACkTTCdac9biVk4Go6w/jc
-         tggkM9ThWSjIiHSBrztTq4CIwkAOGCoTeFhe66uOB1ZVvyPb6pgePFpRoTP1U7qxIhso
-         SElkXgqceQphwP5USXdlN1LOaZsxhQvUHoDV8UzuQP7aVBmBjkqbhjIX7+t8b10FYu+1
-         tXiJQTAGv1OE0WSkqwKx6Cd0x+WWqF8qT2SmLCd1iBltm41o0ItF77TY1CMgEzD4nvDU
-         R4HkV72A+5C0MrcQ7RA6VIxI2S25IXXFp/V8cKFMoFTyEcKM/46PRtnGxDkvAwjU0Hfh
-         C7SQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWQfaATzJ+pXoRw2WPiNNyy6H1ihXSPpgorOd3r+J9CEYz7N5Dm1FLzJqyDeFcyLL0L1QSq2TNc7oE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwtBNFeG+nwpWeDdDBdSUiEOXz2PeUtdKEuTPT8V9dzLlp3AQrZ
-	shkAV6E/9sNfos2F/J22OhvFokohIenZwcHXNyB6q3vbVnu4qbEpv3oZrGZp6Pm8nb2diktsvR2
-	HGiwKQn0fCjX2KR399x1DvdVpej0hUa6lkQZMb+PDUsFLg6gy89DZVqRTizV5ww==
-X-Gm-Gg: ASbGncvHYWZSGY2YCnyk/c6v+i+8Y8vhZkohF4glZajoh0IgbqQMyZVhtshl0O2Ga7m
-	/0mFC5Ay1S76Cs05HX9EwXxio7mO2G7asLHyDk9GbcSEdHg0cI6SB0RfdDL+uDdq9TuVKDUdRcu
-	j74ZKtdyFVMjl8LYwF5Rpoc2wGObtQgoETwIb0MKm+toIV7qEhFM5ZKEExqeHejXjsHBnDf74PG
-	srV5GIUdc6lI0Hc8vik4BjwT6SJpXaowYJRukBnhIuw9LQVgIv5NNZpONnr7qeoX8lE4PkypFHk
-	WJMb9RYW+Q1qa7bqB+LKJpnUauCbc7YCzwvef5rE1ooQtWjl3WN/pF5nQW01WqQTnGgYV8dCK2n
-	91nRPmONC4CWM5BtNp+PS50q9Gx0JqOAJtAbN+cmpopJRAM2ZbA==
-X-Received: by 2002:a17:902:cf10:b0:295:4d50:aab6 with SMTP id d9443c01a7336-29b6bec46afmr71868955ad.18.1763800612475;
-        Sat, 22 Nov 2025 00:36:52 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHZKVywsAu0qzobqnzraeicR/A1ubiNv8l1v7u8EFYDdKAkfyP7Xd1nvEfkitfjqRENmetaDg==
-X-Received: by 2002:a17:902:cf10:b0:295:4d50:aab6 with SMTP id d9443c01a7336-29b6bec46afmr71868815ad.18.1763800612057;
-        Sat, 22 Nov 2025 00:36:52 -0800 (PST)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29b5b13e279sm77727945ad.41.2025.11.22.00.36.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 22 Nov 2025 00:36:51 -0800 (PST)
-Date: Sat, 22 Nov 2025 16:36:46 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: cem@kernel.org
-Cc: zlang@kernel.org, hch@lst.de, hans.holmberg@wdc.com,
-	johannes.thumshirn@wdc.com, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: Add test for mkfs with smaller zone capacity
-Message-ID: <20251122083646.ihtwb3k4eocnb7fe@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20251120160901.63810-1-cem@kernel.org>
- <20251120160901.63810-3-cem@kernel.org>
+        d=1e100.net; s=20230601; t=1763804521; x=1764409321;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=VraqRiW+TcUOXtKCYeJfwojEREVPpKsk9aXSr0pbaZU=;
+        b=vH9aIvBWxja9kDovD4aR6Y7YxVbg08Ue3dLNQqapFcB1MeooVmRPqkHupd5AilP3iY
+         nLRx7YZfB78cNeadhr3AuviHXyszRFhCn7s1AYNnrgXc3Qs9gfEWu27JVQk4JMq/BUB7
+         su7lyUwBJdlkhJomIgOf+vy+JzjPr6yT+o/GOWC+kbxMj4P712k6B+Bu9OfUcNw+S0zU
+         DjUKAc+36aht6XMMIRhJnFr/rjq1ReVWd4ebjmw2PYYN7bNzU7SRsHTDfZH3GbtcbLdr
+         TyJF+Kg4ffCDzvSWRUFws7P4phqZ7GLEzw/evx9SfamErT172dMlZ0bWCQ0PXGa8fQRc
+         EqRw==
+X-Forwarded-Encrypted: i=1; AJvYcCXA8f3Tjg/bnS7BWf7MW518dazBTJ8f5tnYXMRkc9CnPlQb3ZZbpK2KGBudw8ejpOJl7QuitAd26Zk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwfSXQh6iT6OHqhgYGfZk8CSsTfQegqnqrpb3jtuB/FuLj4NF4/
+	Hd2s1Hb7eZS4odJxbZrPxaUNksudZTm6CmdGj6k8+Agez6nejPA/R+THwOp2ffumYe5oCbqVlCr
+	VVKy8BveV/b6AcTpOWkjsFRt2aogBTS4=
+X-Gm-Gg: ASbGncuwarft8uvTTwWPwoUPyg+JRoAOo0AnX84twgwPmWvc28XufwqCn3xMt3wkVm4
+	BXzjJN3Oyh6TdT8VCEwiruueGJBwk4I2pvdbC4ChE6bKZEEmkwCWNpsW58fwP+/STg3AO+drl/B
+	WGvIRZc6sX8IVdiLAjEGKI2Wcecsjq8d334Ooiffd0gOZyhCGocCksOpbeJYFSYp6Ymr8yhsIQF
+	3t8imhUAG4NWRYiOpLNf4rKvqiANE/UJ5DuhoGZXTCO8E16ej87r8yCj7WSL4DKnj/MDFVVPR0F
+	OyFxCA==
+X-Google-Smtp-Source: AGHT+IGW0icuqa/61J8riraAee8yoDf5AfHeS5boydG7jyYd3FZvfFFJ/Sg7u2f8roxpHOp2NlYS4gcTu8x3Ryp3jD8=
+X-Received: by 2002:a05:6402:90c:b0:63b:f67b:3782 with SMTP id
+ 4fb4d7f45d1cf-64554692891mr4275862a12.27.1763804520865; Sat, 22 Nov 2025
+ 01:42:00 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251120160901.63810-3-cem@kernel.org>
+References: <20251114152147.66688-1-haoqinhuang7@gmail.com> <aRnLqK_N25LvkSZQ@dread.disaster.area>
+In-Reply-To: <aRnLqK_N25LvkSZQ@dread.disaster.area>
+From: haoqin huang <haoqinhuang7@gmail.com>
+Date: Sat, 22 Nov 2025 17:41:49 +0800
+X-Gm-Features: AWmQ_bkLPPxenl4Y3nm7JwJzyyc1de85ry9tWLoTAKtyncIDNWvbGL-1YFDN4dE
+Message-ID: <CAEjiKSkcLrkpzxUadKCyGEzHV503Q_htisU=rANk_zHoj9U04g@mail.gmail.com>
+Subject: Re: [PATCH] xfs: fix deadlock between busy flushing and t_busy
+To: Dave Chinner <david@fromorbit.com>
+Cc: chandan.babu@oracle.com, djwong@kernel.org, linux-xfs@vger.kernel.org, 
+	Haoqin Huang <haoqinhuang@tencent.com>, Rongwei Wang <zigiwang@tencent.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Nov 20, 2025 at 05:08:30PM +0100, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
-> 
-> Add a regression test for initializing zoned block devices with
-> sequential zones with a capacity smaller than the conventional
-> zones capacity.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  tests/xfs/333     | 37 +++++++++++++++++++++++++++++++++++++
->  tests/xfs/333.out |  2 ++
->  2 files changed, 39 insertions(+)
->  create mode 100755 tests/xfs/333
->  create mode 100644 tests/xfs/333.out
-> 
-> diff --git a/tests/xfs/333 b/tests/xfs/333
-> new file mode 100755
-> index 000000000000..f045b13c73ee
-> --- /dev/null
-> +++ b/tests/xfs/333
-> @@ -0,0 +1,37 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2025 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 333
-> +#
-> +# Test that mkfs can properly initialize zoned devices
-> +# with a sequential zone capacity smaller than the conventional zone.
-> +#
-> +. ./common/preamble
-> +. ./common/zoned
-> +
-> +_begin_fstest auto zone mkfs quick
-> +_cleanup()
-> +{
-> +	_destroy_zloop $zloop
+Hi Dave,
 
-        cd /
-        rm -r -f $tmp.*
+Thanks for your reviews, and sorry for response lately.
 
-> +}
-> +
-> +_require_scratch
+I=E2=80=99m very agree that deferred frees largely resolved the deadlock is=
+sue.
 
-_require_block_device $SCRATCH_DEV
+Maybe I should split two parts of this patch to show my idea:
+Part 1. fix fallback of xfs_refcount_split_extent()
+It seems better to  fix a logic bug in xfs_refcount_split_extent().
+When splitting an extent, we update the existing record before
+inserting the new one. If the insertion fails, we currently return
+without restoring the original record, leaving the btree in an
+inconsistent state.
 
-> +_require_zloop
+This part does not seem to be necessarily related to the
+aforementioned deadlock.
+Part 2. Robustify the rollback path to prevent deadlocks
+The change to xfs_extent_busy_flush() is just added as a secondary
+hardening measure for edge cases.
+I=E2=80=99m not sure, but theoretically, the alloc_flag to be zero, then
+entering a cycle with a high probability of deadlock.
 
-g/781 checks if current $FSTYP supports zoned filesystem, and _notrun if it's
-not supported:
+I can post v2 if you agree, and any comments are welcome.
 
-        _try_mkfs_dev $zloop >> $seqres.full 2>&1 ||\
-                _notrun "cannot mkfs zoned filesystem"
+Thanks.
 
-I'm wondering if we could have a common helper for that, then this case can be
-a generic test case too.
-
-For example:
-
-_require_zloop_filesystem()
-{
-        _require_zloop
-
-        local zloopdir="$TEST_DIR/zloop_test"
-        local zloop=$(_create_zloop $zloopdir 64 2)
-
-	_try_mkfs_dev $zloop >/dev/null 2>&1 || \
-		_notrun "cannot make $FSTYP on zloop"
-	_destroy_zloop $zloop
-}
-
-But this method takes too much time to run, does anyone have a better idea to help it
-to be finished in several seconds?
-
-
-> +
-> +_scratch_mkfs > /dev/null 2>&1
-> +_scratch_mount >> $seqres.full
-> +
-> +zloopdir="$SCRATCH_MNT/zloop"
-> +zone_size=64
-> +conv_zones=2
-> +zone_capacity=63
-
-Better to add a comment to explain what are these numbers for.
-
-> +
-> +zloop=$(_create_zloop $zloopdir $zone_size $conv_zones $zone_capacity)
-> +
-> +_try_mkfs_dev $zloop >> $seqres.full 2>&1 || \
-> +	_fail "Cannot mkfs zoned filesystem"
-> +
-> +echo Silence is golden
-
-Is this done? If such zloop device can be created, should we expect it works as usual?
-
-Thanks,
-Zorro
-
-> +# success, all done
-> +_exit 0
-> diff --git a/tests/xfs/333.out b/tests/xfs/333.out
-> new file mode 100644
-> index 000000000000..60a158987a22
-> --- /dev/null
-> +++ b/tests/xfs/333.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 333
-> +Silence is golden
-> -- 
-> 2.51.1
-> 
-
+On Sun, Nov 16, 2025 at 9:03=E2=80=AFPM Dave Chinner <david@fromorbit.com> =
+wrote:
+>
+> On Fri, Nov 14, 2025 at 11:21:47PM +0800, Haoqin Huang wrote:
+> > From: Haoqin Huang <haoqinhuang@tencent.com>
+> >
+> > In case of insufficient disk space, the newly released blocks can be
+> > allocated from free list. And in this scenario, file system will
+> > search ag->pagb_tree (busy tree), and trim busy node if hits.
+> > Immediately afterwards, xfs_extent_busy_flush() will be called to
+> > flush logbuf to clear busy tree.
+> >
+> > But a deadlock could be triggered by xfs_extent_busy_flush() if
+> > current tp->t_busy and flush AG meet:
+> >
+> > The current trans which t_busy is non-empty, and:
+> >   1. The block B1, B2 all belong to AG A, and have inserted into
+> >      current tp->t_busy;
+> >   2. and AG A's busy tree (pagb_tree) only has the blocks coincidentall=
+y.
+> >   2. xfs_extent_busy_flush() is flushing AG A.
+> >
+> > In a short word, The trans flushing AG A, and also waiting AG A
+> > to clear busy tree, but the only blocks of busy tree also in
+> > this trans's t_busy. A deadlock appeared.
+> >
+> > The detailed process of this deadlock:
+> >
+> > xfs_reflink_end_cow()
+> > xfs_trans_commit()
+> > xfs_defer_finish_noroll()
+> >   xfs_defer_finish_one()
+> >     xfs_refcount_update_finish_item()    <=3D=3D step1. cow alloc (tp1)
+> >       __xfs_refcount_cow_alloc()
+> >         xfs_refcountbt_free_block()
+> >           xfs_extent_busy_insert()       <-- step2. x1 x2 insert tp1->t=
+_busy
+>
+> We haven't done that for quite some time. See commit b742d7b4f0e0
+> ("xfs: use deferred frees for btree block freeing").
+>
+> -Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
