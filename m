@@ -1,73 +1,74 @@
-Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
+Received: from mail-qk1-f179.google.com (mail-qk1-f179.google.com [209.85.222.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AC482561A7
-	for <linux-xfs@vger.kernel.org>; Sat, 22 Nov 2025 06:43:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A07D62D061C
+	for <linux-xfs@vger.kernel.org>; Sat, 22 Nov 2025 07:02:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763793802; cv=none; b=X1Drb59A2a0p/kPxUMZrzKhftu+SP6kIpf6EFani5kRer27A8VK4AUs+ZJ4byvjesmztyhwnbufgB5UV42MyOMKz3DuE6MIXjuXsaeOqWAgJDO8I7Uyx9HO8v8yK6elo43N2OVL6O/f2h9RPoVGd670efuiWSjJSAKUSSE0JB2o=
+	t=1763794970; cv=none; b=HylpVuMlnqoYvqworqc9cfU11aimlqBh4jEw2bJ6LRsHf/CI+2+L0ujLDuupyIoSCmMS3nCRVn1tM8ilOa9aBiYg9Zt4KBREBjEwzq9DyrzrMcnzB2tr2+79e81rHnYAHmMsopSAysELgq7csSJEEJdDAbzn/ogWj7OLrDetbOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763793802; c=relaxed/simple;
-	bh=Y+DjqwAoCGZ7OJzLzIWqwIR/VPRlxdq59cBm2nqE3Jk=;
+	s=arc-20240116; t=1763794970; c=relaxed/simple;
+	bh=3qML6mAdP3XOHu6CRgEfvtbrG4LVKi3a96yUcu5LMO4=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=By5UMPjgJEqVFZgAqrjH0WPpU7NN4Cma0hwe1yj9ll/lp+wVNeGbN/wYaoSk053GKI+H3hQ1SxLKI9vf+wlSMiGdvC+YuZcyEvBFKNmAuJty0Y/a25Hf4prXuEch/w/tyV4yTPiv2l+dv+DBQSbSXOhie2LoFbY1qREilQoIr8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aS+x0QE2; arc=none smtp.client-ip=209.85.160.179
+	 To:Cc:Content-Type; b=pCLX62FbjC0yoV7M74PZ4xsKvWfACnoVfWtWCsrSMvwUqilKuN8PgvcsA1Zb1SwTceZYlKOMWKbWK/+fm8mj0SZ/k1e5y/K/4yhbOo/0RGXvXGEM/dzrKoO/KhrcFmSvqW5yxQyvO1wk2gVH+3TRc6Cp+OvOaAGFkSw19y1HPzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JAOMxhh9; arc=none smtp.client-ip=209.85.222.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aS+x0QE2"
-Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-4ee328b8e38so24835301cf.0
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Nov 2025 22:43:20 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JAOMxhh9"
+Received: by mail-qk1-f179.google.com with SMTP id af79cd13be357-8b29ff9d18cso273370785a.3
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Nov 2025 23:02:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1763793799; x=1764398599; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1763794967; x=1764399767; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=n7QJI36T3DDFp93Xllsfs+3f9Tem0cMaXaPpBr1xsGU=;
-        b=aS+x0QE2jGCbKUld/ea2AI0BIqXlmlTXMhG4gdtWd8IWXG5bDvUwncCmxUu6phD8U4
-         Y1/z7pFwufgATBuGktZRyMfKRyQb+aHsazdLbOHlYI+x0QTEI7l4iy9C/n5HoteafJ5n
-         wWwTuCy1zT1jVoLwQ+eoDvNsm6q145LG7NYGj8uaI/E8Sj3C5hpTtex6j7lKqRMALE0x
-         Xk0/LHAt2KUt2KtoIZ8E2Wls/Y6jXlE/eJWhHU58ek3lsb/cknkOF9rMLGQzkmnQQIsD
-         KxC/2jxdKSeslceXcDpZOd6QINCX3efHj3GecN7l1gAyWaWFi1vyLitn9nsbWAiADT6M
-         Brlw==
+        bh=WLckKOB/6XWKdTlMPCvOWJYhseDg7RVjB2FyFDWqsDI=;
+        b=JAOMxhh9kJLyZv1WOtnIB96WIL5gbExrB4vzocj1PttnoksXSzoylwX4IhmFHcnhNf
+         RtqQHEFItnsnUykv3q4F10GMDNn4KTgVtYDnviZJeMiTIzUpy6xynA+NVW5e7v4GrL6e
+         S0I5QHYsSe6q1JpNx6yOWLQIcrZUghawz+DuZiiRLolpnsqiwaZ5E82+lDth/Dtn83Xx
+         JdC0MtWe746J+twJjE7he+1jZusWcVSarZ5FDtDAkjF9p9UhdJq3q7iYsvMZW3ejHsYs
+         uZHgEquDp6RyXARv75BlcVkgzSJOlkQvpRhvvUfL6E2/3lauVrBZOBNtW9cv5Qq3GR33
+         AtDw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763793799; x=1764398599;
+        d=1e100.net; s=20230601; t=1763794967; x=1764399767;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=n7QJI36T3DDFp93Xllsfs+3f9Tem0cMaXaPpBr1xsGU=;
-        b=Mh4vmfiI9dXINeRlLx6NeHMBNrH7ORJ8fHsm+uyUXDTiYQ4UmO7j0NtplHvjT81JfU
-         dl7Z0vGUtpX9G59KixloyjLs+irw+X5TYz+oIN+3kYQqgeW2XVUAwkQgUZQrsAQIeRxd
-         7MyCLkgGIFXHKhcPOjO+nxqZT3rEi9AAZLM2dQtQW3d5WZC95NR5YXSr8yRDmfEOnTAa
-         NXz+zL0oGyrBe25onqPLAY+QZ65c9lbTa/Go5nFZIcQFYRxRpzP46KLhs9DzqhvoEsux
-         o8kUOgpHA7P7mqA1JpDGGnuLEqogX9tP+T2knAnFnpFXekd1IsmIpk5i0Y3R/DeZNatw
-         KMwA==
-X-Forwarded-Encrypted: i=1; AJvYcCVuglsB5kYxu0uekpyCXIJWLCB9PTPw5PKxaBdg2e6gad+tTcJy96wRSSWtvCjRNMQd00ivwKdW3K0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzpJti9BdQQ0B9vAs00rXx1rxgWS3RpYIHx5s8a6QHBePWjoYoT
-	SaPYHkoQsbJ9BH8BnXQcsxwS09YdUlJgFGBCoX/FlVDLzGtgPOsu2pXyzKslXqR21OmGk9pRFuQ
-	7mpKCR/IeFNQq8UQp/OkdeLZqjLmW24U=
-X-Gm-Gg: ASbGncuPxJcMxzJJMucC0E85PF3+2vDz1tI2wl0UzZybGxlPHqerxkRMF+8a62zK8jG
-	CszIh3T5nuH5eNhebhY5Zk1QASaJpNCIy+wFonAfWHXT9FP/t/5HaGyjW9nUQIIUqFHHDGgrAyT
-	Ftzlk27lnLHLlsLAANythW3KHsLWuGSN/nifG+ErSEPZ7ZsamCu1UejO7mkgP5bHlfAHdcCIqMd
-	Ketjj36AESUAYCGD40xuDeCwOaUqH1b17027gIJYCTzzDlfj+BiTMYwD5xgp2RO9r4ygtY=
-X-Google-Smtp-Source: AGHT+IFYY0hB1AT6+W29RBnT+t78nVJtbCkr0AJ7fjgv+YE4gLfc5ZYb5TuO0P1olfjrCgZ/JHFnyc+OtjdZpbL7HYc=
-X-Received: by 2002:a05:622a:653:b0:4ee:1301:ebaa with SMTP id
- d75a77b69052e-4ee5888fd9fmr61705651cf.54.1763793799235; Fri, 21 Nov 2025
- 22:43:19 -0800 (PST)
+        bh=WLckKOB/6XWKdTlMPCvOWJYhseDg7RVjB2FyFDWqsDI=;
+        b=bT8Gj/T9Qh27w4dGsWR0a2dbbvskEQDfp41CjuNXDVnloU8VC83uj4fWSFmG8EPAIk
+         Ct959MmzREwWL0LQmRRMdW4KDo6WbIQDCCrfx8HtkGubEO66HiZ0AAW8kP8HcgRHRITz
+         lJ94gRoyvhXrfhHTYRG8XG6M8TsZf8QImUGPDLM5gSVZEI/mfBMNMDjn2MuZ8CUzsTjg
+         MuhMIj3qQhj7lD6NKlnmf7CYXSQnZwNVzBA2zMdFcLx/9apqJmMoYhpJhJcQSbglLUbq
+         HF5RjHf4JfJPh0XBUGxI207GhlMfJpPmY/ZhdE/NP/r9us8pGrWjMgH7qgBtsMeWmPQ0
+         yIDQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVlILq9Vl+Ue0F4C3MSIok5Goci/L+03Fp6Fim+bLtEOUUeFHaFcrS5HtrvlJU4OarP4BMza/4kMCw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzHgvZj1kSEww9ElMWX1eccdXpurFYpHjnijDY/C5JhXIs9Z3NV
+	x53URKGCeE6ycwfRS9NGrTOQx+sVVR/iVUd6r6WMP6adJDKkoB7zuc1dC4Ta1HdwwxF12anGxsF
+	wtS4JWgdBc+f1ujjYd7+ANT65qFdWwGg=
+X-Gm-Gg: ASbGncu3UVTH7oA5wjqsLsNOMPTOdvs9+AKqmt4zLzOZpWKGEjkAUogbHPg7A9Pl3Ct
+	0Se7tdUd9tLKJuTfx3aE446M+pokK4Asmxq+duCTw9MQ7BRZO1VzwEjQGdv8pdL7rObTiNcOWZ3
+	dXKCh77SM3D70vZKNId5VTIdVErbDGEopA6T3k5OynBAinMYnt5zGW5kss20UBeGBXJrBEZxNsn
+	shGdAOeNfAg5DRF/ckoHyti69pkaZ7kJLkXznmrShgWCwAbfwQCA5535noTv0o0AHPXax0=
+X-Google-Smtp-Source: AGHT+IEjcPOv6aPW6JO4Bb1jDowgVciSWSsWd+FNjyx3VBhgbx3Pj6ddYbo0M3Mtuw+ANHFx2AKfX0TCp1WB72JEhOk=
+X-Received: by 2002:a05:620a:7106:b0:8b2:e5da:d316 with SMTP id
+ af79cd13be357-8b33d48b7d4mr603659585a.87.1763794967475; Fri, 21 Nov 2025
+ 23:02:47 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251121081748.1443507-1-zhangshida@kylinos.cn> <aSEvg8z9qxSwJmZn@fedora>
-In-Reply-To: <aSEvg8z9qxSwJmZn@fedora>
+References: <20251121081748.1443507-1-zhangshida@kylinos.cn>
+ <20251121081748.1443507-3-zhangshida@kylinos.cn> <CAHc6FU7eL6Xuoc5dYjm9pYLr=akDH6ETow_yNPR0JpLGcz8QWw@mail.gmail.com>
+In-Reply-To: <CAHc6FU7eL6Xuoc5dYjm9pYLr=akDH6ETow_yNPR0JpLGcz8QWw@mail.gmail.com>
 From: Stephen Zhang <starzhangzsd@gmail.com>
-Date: Sat, 22 Nov 2025 14:42:43 +0800
-X-Gm-Features: AWmQ_bntN_rMHyZMaZTesMCRvMp7VgMi9_ZfkRlzVtT_jBUQrddcI4xac8nvuc0
-Message-ID: <CANubcdULTQo5jF7hGSWFqXw6v5DhEg=316iFNipMbsyz64aneg@mail.gmail.com>
-Subject: Re: Fix potential data loss and corruption due to Incorrect BIO Chain Handling
-To: Ming Lei <ming.lei@redhat.com>
+Date: Sat, 22 Nov 2025 15:02:11 +0800
+X-Gm-Features: AWmQ_bnR6g2ivQ9YSC5w0bIwME61y28InS6FucoZ4PBrcXjaLHV0KwJ_bufirnM
+Message-ID: <CANubcdXx8Lp1JsqG3ctAE2V6jpuvJL93UH+7yHaAFtdMjHdijw@mail.gmail.com>
+Subject: Re: [PATCH 2/9] block: export bio_chain_and_submit
+To: Andreas Gruenbacher <agruenba@redhat.com>
 Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, 
 	nvdimm@lists.linux.dev, virtualization@lists.linux.dev, 
 	linux-nvme@lists.infradead.org, gfs2@lists.linux.dev, ntfs3@lists.linux.dev, 
@@ -75,120 +76,49 @@ Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Ming Lei <ming.lei@redhat.com> =E4=BA=8E2025=E5=B9=B411=E6=9C=8822=E6=97=A5=
-=E5=91=A8=E5=85=AD 11:35=E5=86=99=E9=81=93=EF=BC=9A
+Andreas Gruenbacher <agruenba@redhat.com> =E4=BA=8E2025=E5=B9=B411=E6=9C=88=
+22=E6=97=A5=E5=91=A8=E5=85=AD 01:12=E5=86=99=E9=81=93=EF=BC=9A
 >
-> On Fri, Nov 21, 2025 at 04:17:39PM +0800, zhangshida wrote:
+> On Fri, Nov 21, 2025 at 9:27=E2=80=AFAM zhangshida <starzhangzsd@gmail.co=
+m> wrote:
 > > From: Shida Zhang <zhangshida@kylinos.cn>
 > >
-> > Hello everyone,
+> > Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
+> > ---
+> >  block/bio.c | 1 +
+> >  1 file changed, 1 insertion(+)
 > >
-> > We have recently encountered a severe data loss issue on kernel version=
- 4.19,
-> > and we suspect the same underlying problem may exist in the latest kern=
-el versions.
+> > diff --git a/block/bio.c b/block/bio.c
+> > index 55c2c1a0020..a6912aa8d69 100644
+> > --- a/block/bio.c
+> > +++ b/block/bio.c
+> > @@ -363,6 +363,7 @@ struct bio *bio_chain_and_submit(struct bio *prev, =
+struct bio *new)
+> >         }
+> >         return new;
+> >  }
+> > +EXPORT_SYMBOL_GPL(bio_chain_and_submit);
 > >
-> > Environment:
-> > *   **Architecture:** arm64
-> > *   **Page Size:** 64KB
-> > *   **Filesystem:** XFS with a 4KB block size
-> >
-> > Scenario:
-> > The issue occurs while running a MySQL instance where one thread append=
-s data
-> > to a log file, and a separate thread concurrently reads that file to pe=
-rform
-> > CRC checks on its contents.
-> >
-> > Problem Description:
-> > Occasionally, the reading thread detects data corruption. Specifically,=
- it finds
-> > that stale data has been exposed in the middle of the file.
-> >
-> > We have captured four instances of this corruption in our production en=
-vironment.
-> > In each case, we observed a distinct pattern:
-> >     The corruption starts at an offset that aligns with the beginning o=
-f an XFS extent.
-> >     The corruption ends at an offset that is aligned to the system's `P=
-AGE_SIZE` (64KB in our case).
-> >
-> > Corruption Instances:
-> > 1.  Start:`0x73be000`, **End:** `0x73c0000` (Length: 8KB)
-> > 2.  Start:`0x10791a000`, **End:** `0x107920000` (Length: 24KB)
-> > 3.  Start:`0x14535a000`, **End:** `0x145b70000` (Length: 8280KB)
-> > 4.  Start:`0x370d000`, **End:** `0x3710000` (Length: 12KB)
-> >
-> > After analysis, we believe the root cause is in the handling of chained=
- bios, specifically
-> > related to out-of-order io completion.
-> >
-> > Consider a bio chain where `bi_remaining` is decremented as each bio in=
- the chain completes.
-> > For example,
-> > if a chain consists of three bios (bio1 -> bio2 -> bio3) with
-> > bi_remaining count:
-> > 1->2->2
+> >  struct bio *blk_next_bio(struct bio *bio, struct block_device *bdev,
+> >                 unsigned int nr_pages, blk_opf_t opf, gfp_t gfp)
+> > --
+> > 2.34.1
 >
-> Right.
->
-> > if the bio completes in the reverse order, there will be a problem.
-> > if bio 3 completes first, it will become:
-> > 1->2->1
->
-> Yes.
->
-> > then bio 2 completes:
-> > 1->1->0
->
-> No, it is supposed to be 1->1->1.
->
-> When bio 1 completes, it will become 0->0->0
->
-> bio3's `__bi_remaining` won't drop to zero until bio2's reaches
-> zero, and bio2 won't be done until bio1 is ended.
->
-> Please look at bio_endio():
->
-> void bio_endio(struct bio *bio)
-> {
-> again:
->         if (!bio_remaining_done(bio))
->                 return;
->         ...
->         if (bio->bi_end_io =3D=3D bio_chain_endio) {
->                 bio =3D __bio_chain_endio(bio);
->         goto again;
->         }
->         ...
-> }
+> Can this and the following patches please go in a separate patch
+> queue? It's got nothing to do with the bug.
 >
 
-Exactly, bio_endio handle the process perfectly, but it seems to forget
-to check if the very first  `__bi_remaining` drops to zero and proceeds to
-the next bio:
------
-static struct bio *__bio_chain_endio(struct bio *bio)
-{
-        struct bio *parent =3D bio->bi_private;
-
-        if (bio->bi_status && !parent->bi_status)
-                parent->bi_status =3D bio->bi_status;
-        bio_put(bio);
-        return parent;
-}
-
-static void bio_chain_endio(struct bio *bio)
-{
-        bio_endio(__bio_chain_endio(bio));
-}
-----
-
+Should we necessarily separate it that way?
+Currently, I am including all cleanups with the fix because it provides a r=
+eason
+to CC all related communities. That way, developers who are monitoring them
+can help identify similar problems if someone asksfor help in the
+future, provided
+that is the correct analysis and fix.
 
 Thanks,
 Shida
 
->
 > Thanks,
-> Ming
+> Andreas
 >
