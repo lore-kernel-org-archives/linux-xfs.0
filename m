@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF6A81E1A05
-	for <linux-xfs@vger.kernel.org>; Sat, 22 Nov 2025 10:09:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68A721E1A05
+	for <linux-xfs@vger.kernel.org>; Sat, 22 Nov 2025 10:09:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763806150; cv=none; b=OzArS02GyulSCmaAQaYA/Q95yhSNDzcM3uzt11TZR4keUMsyFvuc/7oV5XHuTL9KfUEaO9VfRKDkp51ZEDXCE8uxgyM2u/gOkTvoEDrWJ+OQ/7noHu8wi1+EeJHiSQlaJ/DKcnt2ik02AKFN/svHKgFEo34Ri7sC2NkQN9Y7sTI=
+	t=1763806151; cv=none; b=kzn08UpRADUpTSV77wSUpypFzAn7L5FIqTfSlnlPuH2x/hjzwHnmbuc0tCbQ1YtuVgeuwQ2xCJ3g7XPPQBEM5Z+V22Gm4yW4AhOkczzaLWRv0H1a8Vm5WAddmWQiCexOuBnlTq/3bX4AvPy4VcprILFZVfohvG5C66izJD+l7G8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763806150; c=relaxed/simple;
-	bh=xYWWTZ9lkTZ3egf7ThkFNDEMirFJVYaUyYK+fttKVd4=;
+	s=arc-20240116; t=1763806151; c=relaxed/simple;
+	bh=grLQ59/dAmfKJ+VKWlIiOkCuS0OMBOs4gzlKEHo4p8U=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=QmdCAFd+iy7IgHqn6b5WyweFJVR7+t5XkZrDzCHwgL9tlewfWSIjLghIPG11K4a7LdTTiX+5Utm8M+8ygkAogXmadj8UUtJcXxl9pujLoehddn9MN8lSak3Sn2Gtqfp1rBTr8rYK0Cf8aE9IRQj8jWjrCX5r1xRy/eoo34taTIc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UhnUelWe; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=vDdM0g1dWdp++aBT/PfW4Pl54qNBRBHiumV6GXfLQHjphA9wtRvCSPRZO1u0Fy/DzN2ZjM/K5wSqCBlOhgmuVpOks5HZrEaDv23jaU3A17x8hCEGvsDHM2NdBKnb/8pOy6tD1dikcHRkB77+PzDs6dX1fDavr7MqINdTseUqJFo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JDfuNgMu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UhnUelWe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E133FC4CEF5;
-	Sat, 22 Nov 2025 10:09:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JDfuNgMu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32F73C16AAE;
+	Sat, 22 Nov 2025 10:09:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763806149;
-	bh=xYWWTZ9lkTZ3egf7ThkFNDEMirFJVYaUyYK+fttKVd4=;
+	s=k20201202; t=1763806150;
+	bh=grLQ59/dAmfKJ+VKWlIiOkCuS0OMBOs4gzlKEHo4p8U=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=UhnUelWeFfQtwk8/rwEUoCS91MTzPOzUU0ojA4qHhe0FGurhS8DFuFJta8RQUyd3C
-	 e7vm9P9n1iS9CFIJDsJ2hoMG/1wALbO1tzrPHuSi1gbKR8VBzSkyBe+z4YHEzZmIvQ
-	 8PDLLzgaHVWWBJryfJlsa00yzvv66wGzF9eE+tY9IvCcA4gmx5fsUDigTJR1RiFpL5
-	 RUD/lOdp75Vt+9R0eDLJJxFG5lwHbVIVrll0idXAQUzB40sZrzUhvoPxkBmFVXJR4O
-	 7iV2QlpcWpUOn9J1sAJILVkhJLvgHqRRoCa+az62d5ErnQnxzguwTA3id1+fNI4KEq
-	 Tbi612FYwri/w==
+	b=JDfuNgMuPfoeuLOOfp9W4VZL4mXkLMiYCHX/x8dMng6oIOBEHoyREhw2ODV2nrR1O
+	 8tTi9fZ6JB+nKm8gRu+IiHN2y+KrqWhkW5c+c2w66SdOtSB7GONB3MEpEfreqoFFqY
+	 4BejZs3pKkH2AvPG+NxF9mY4EEHAOl3WTgH7UJVxRcUq4la8/JWTEnKRoHc/qKzW9U
+	 7egB4/MOL+yU42ep2vCEFbxYU19POac++d1lpK+EbbKxdkRUK74YwR1woFDJs/b9D9
+	 u4B/7LRlFu+18VJ6qj74uXT+B6eT+hjys8BR5oAav69gIUU6YhLdEkPEfRdARoDQGt
+	 xXA6kOBl2XPTQ==
 From: Carlos Maiolino <cem@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-In-Reply-To: <20251112163518.GY196370@frogsfrogsfrogs>
-References: <20251112163518.GY196370@frogsfrogsfrogs>
-Subject: Re: [PATCH] xfs: fix out of bounds memory read error in symlink
- repair
-Message-Id: <176380614861.104488.3812428808059888654.b4-ty@kernel.org>
-Date: Sat, 22 Nov 2025 11:09:08 +0100
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
+In-Reply-To: <20251118064942.2365324-1-hch@lst.de>
+References: <20251118064942.2365324-1-hch@lst.de>
+Subject: Re: [PATCH] xfs: use zi more in xfs_zone_gc_mount
+Message-Id: <176380614992.104488.5199521488783182557.b4-ty@kernel.org>
+Date: Sat, 22 Nov 2025 11:09:09 +0100
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -45,31 +44,16 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Wed, 12 Nov 2025 08:35:18 -0800, Darrick J. Wong wrote:
-> xfs/286 produced this report on my test fleet:
+On Tue, 18 Nov 2025 07:49:42 +0100, Christoph Hellwig wrote:
+> Use the local variable instead of the extra pointer dereference when
+> starting the GC thread.
 > 
->  ==================================================================
->  BUG: KFENCE: out-of-bounds read in memcpy_orig+0x54/0x110
 > 
->  Out-of-bounds read at 0xffff88843fe9e038 (184B right of kfence-#184):
->   memcpy_orig+0x54/0x110
->   xrep_symlink_salvage_inline+0xb3/0xf0 [xfs]
->   xrep_symlink_salvage+0x100/0x110 [xfs]
->   xrep_symlink+0x2e/0x80 [xfs]
->   xrep_attempt+0x61/0x1f0 [xfs]
->   xfs_scrub_metadata+0x34f/0x5c0 [xfs]
->   xfs_ioc_scrubv_metadata+0x387/0x560 [xfs]
->   xfs_file_ioctl+0xe23/0x10e0 [xfs]
->   __x64_sys_ioctl+0x76/0xc0
->   do_syscall_64+0x4e/0x1e0
->   entry_SYSCALL_64_after_hwframe+0x4b/0x53
-> 
-> [...]
 
 Applied to for-next, thanks!
 
-[1/1] xfs: fix out of bounds memory read error in symlink repair
-      commit: 678e1cc2f482e0985a0613ab4a5bf89c497e5acc
+[1/1] xfs: use zi more in xfs_zone_gc_mount
+      commit: 1cfe3795c152c7415a9f49fc1e7f623c855d14ab
 
 Best regards,
 -- 
