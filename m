@@ -1,193 +1,159 @@
-Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
+Received: from mail-il1-f205.google.com (mail-il1-f205.google.com [209.85.166.205])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9E4F19E7D1
-	for <linux-xfs@vger.kernel.org>; Sun, 23 Nov 2025 03:14:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B9CE186E2E
+	for <linux-xfs@vger.kernel.org>; Sun, 23 Nov 2025 05:08:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.205
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763867692; cv=none; b=Nhr0wVr7PBn0RctVjdGUBRyXwOqzQNVGtj8vz2Bky7xOhi6RD9ghUvpTRYmR2CCwooQ/V21Qg23+wZmG6kXJ6q8Y1P4icRKjjq8GHk6L9z3LPTXPgVVC4PloAQ2BoaL6g5afn+RSFJqG1RT36tMwrXaUCBSL4Ia/aGhocDGd6g8=
+	t=1763874507; cv=none; b=SaJdZ9GelrG6rdIkyiKYiU/ZBTMLIWgAMLG9zKsopNTOknqah05p7ifkN1IZIE5fpsn9L0hO1UhvT62NE3shbL64dAvB3ETIP/fJeSJPwswM05B/WBeaxy8ZZlCWCgIpPNLRpHxjBDKv9O+hPsykBcaRs3E07bOxnTlv/IUsw+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763867692; c=relaxed/simple;
-	bh=nRs19Xsq1ucV508Y+KpD0MmfKZJfnRugxP+r8Pey/Ow=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=pCPoeK+UaTZPa8UK+mwV+7V3tfj5SSyfTBUa60CuF8DxlJ0oNSYzSUZa+L4PQB+4G4yLEbNm5mXMgrbfWRcqBFTfOv2jlnj/jMO6RFcVzvG/GmnQy0qzxCgttZ94V1+t3NTw1j7bZpddRlvWzIsFW6Way1dJFY2p1/akagYYxmk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Kx9RzuA6; arc=none smtp.client-ip=209.85.160.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Kx9RzuA6"
-Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-4ed7a7ddc27so26588571cf.2
-        for <linux-xfs@vger.kernel.org>; Sat, 22 Nov 2025 19:14:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1763867688; x=1764472488; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=sSUmOlF3E259ASbJ7NKM/1Z38SFWeY0yp8l6jgM+Ktg=;
-        b=Kx9RzuA6o7L5/regvp7GCHsXfXPn7NCcqo3aCBfPl4hiu7fwebLSYvsKKUY0KVQ+Ie
-         ICT83rwOpf9TiDzPvgQ1GfYd8DusVNTqbwZV0JzVcMGs5HhK695wRZ70sm6flScHvlUf
-         UgMlWhuZgWhMBY7jpYWFjd6yD8RdoSY8F4A1HGTC2s5msh57a5g9dSWMFxo0k6jcWr95
-         hv7A0qDPp/C3mXlb/sql77oWRBnQERTwG1bAsDL8leZW7jWFhBjiqCBF5lRshOiV4mpS
-         Es9nKtAQ6+uTDUyBSccyKYpywg44qPu0ahwgWWpJsaebiWg6LTeuCoW1dBUJHNxB3/Yw
-         AwOw==
+	s=arc-20240116; t=1763874507; c=relaxed/simple;
+	bh=FYJt1nWqJCTYR1rM61GKAjbR+gvt7MddeA9Hg/637Ks=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=Ja/kn2ZrklKANFeurWqQJJBxQoQBfl7t8XzJMkkTU1bP6l/XYoAMuY+ed2Ud4vyNPBMatIsKtsle74ca3iVaYFj5w1XBmwYmH4rvEWVSS1+nmrLELvkRZcjU/+oV1ZfJb4BWYzICV9ItrnQeItqffMA73B9NknwwCwx42pNcPdo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.205
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f205.google.com with SMTP id e9e14a558f8ab-43300f41682so24698485ab.1
+        for <linux-xfs@vger.kernel.org>; Sat, 22 Nov 2025 21:08:25 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763867688; x=1764472488;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=sSUmOlF3E259ASbJ7NKM/1Z38SFWeY0yp8l6jgM+Ktg=;
-        b=td6ydc9906eTJc90Uo1GdKekw/8BTR5U6zze03BRs/bfOXhpJdzhOdUZJbJqGD2HJH
-         LaD06iR9tCyF3kwwIEJDuIL86fL5PjFWQidQEQu1gS4FD1rJVZUvRzcw0X3KWXerz8Nf
-         XYUo+PBHxeKH73Dcu4Z6+RTHAyJQIa5UfYR2EJ9IhJTAYYxILiZl90RrnDXD6D9Ov7jG
-         4vl39tc9yfZMcJuYNDyK1wk2kjeYClDrMGWdGemr+g+I5huhXwmM8GCgFWHXHPRHXIFz
-         fEdGAa96rEcmK1GyYPa5Evp/yIALD+gsYQXTrLOSZ+akfDOEGSWEW99zKgZnSPAsU+1W
-         /Nkw==
-X-Forwarded-Encrypted: i=1; AJvYcCXHQm4vmNlqpDzw891ce92ocT/hBdUi4m2ox2mOFNkwzCvzB8aNwkAcBzGwaBdHHXjJvN9Obv/zGyo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzpwlVNFhhJMx76wVKB7UZ7gPfcBY77AjYdIlfsUz62XyjNPy/W
-	Os4qMqUQxpixjFu7Wy98lwh8P3WO6OBTaqs97KDJjZw8iL4vAqmikS4V8QSyINrBZRuyGaE2JRY
-	unk0b+HHnUSGV+5l2E1x0zV+15HV9JU0=
-X-Gm-Gg: ASbGncszACSKRFUq2tLeiFM3pmnGSR2aV6XHrVOej/9kt3tEE4X18789nK/VYKPmXb0
-	U17K0VwsgyN2h6EqpCWeofnmOXBH636Xm6kijEFP2LmzeTJslZzVZ0ZF7o3nkeonynARZcf6U02
-	1otaLX1K1HCIbJ5r0sZ2R7dQzIyopGXUW5MsLpnz1y5iSLYBmys1xQ5l1LmXwBjSitDRlsvKWoS
-	3JAI3ykmFK66BAm4tAVYRtdQVx/xWcB1J7yFeEbKZ1F/vuvEO16yX6Q/PfyMk6urso6U6U=
-X-Google-Smtp-Source: AGHT+IGdga/kzhdwCVG7yVfSoR3Y4Mpj0tXp1Phothz1pnN4zZDpqFPu9X4DmFfSbiDItMnyiKDLP9Ui4prcpSBpeyE=
-X-Received: by 2002:a05:622a:409:b0:4ec:ef62:8c81 with SMTP id
- d75a77b69052e-4ee588cb739mr81789031cf.47.1763867688428; Sat, 22 Nov 2025
- 19:14:48 -0800 (PST)
+        d=1e100.net; s=20230601; t=1763874504; x=1764479304;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=8M8/v8kt3MueOrgDP5NZ8h89wbdbx9qG5AdHKio0yhI=;
+        b=aRibiekbe5alyIzBi/+VBoTHD96+c7V0O1npjspzblmRbdJr6Yy75SZuft+k1tsAJe
+         xegJMBjnhzyJbd7kEHOPH+EfzAmnxzUvVdrXLrO44P+VuoiCskhiqXFXjusGUs5qRoX4
+         gYQZ9DTriVPCPgyIPHt9yCugSELIVBx8u1aQlOx/pl3UcYVI7pA8/u1k1EyF52I/vdkC
+         bHD9AJHK7LO0t1Yxfl8zTEqUo8Z6KAY2BBUVAGLhnfPl18nYf3kkhKc8MYjcyQBvhJNS
+         4FI6A7k/rl+hnpQ4r14pcSPz382v74cY2tHQZNnEc4Q4KPEXVWnoQnrMFloNNSW02vY0
+         JZOg==
+X-Forwarded-Encrypted: i=1; AJvYcCVB/E/kwsgZwr0CWdx70UdckGrEd399Lum0ZCBSOJOccM6HGAigTnvHFIqu/6dJ6v3Usw+id2jo0+M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyGOOeFpxf0/auqlTJuALcZ1tv1ZOLYpMCnYMD6JKExanzjfveT
+	nP22L17jJcw8KZLJAlBZX7HaX8jXuk6I2ent6iuMo7iXMDhPlW/69eG6Dx5XILD9qlKBgTgT7Cn
+	V84plUOX3TJDqYuT8+YV0m6FqGZhvzqSAfel0xktn32QSj5jFcQY96xUDRj4=
+X-Google-Smtp-Source: AGHT+IH8oWPABdPzePVFeSgsWDrvEAfYEeo/z8DRhR0cP9rl8bpwtUFJZjcNQFnmNIJORe9kCor0jZTZ4TPFYqdBmBokUqDdfqui
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251121081748.1443507-1-zhangshida@kylinos.cn>
- <aSEvg8z9qxSwJmZn@fedora> <CANubcdULTQo5jF7hGSWFqXw6v5DhEg=316iFNipMbsyz64aneg@mail.gmail.com>
- <aSGmBAP0BA_2D3Po@fedora> <CAHc6FU7+riVQBX7L2uk64A355rF+DfQ6xhP425ruQ76d_SDPGA@mail.gmail.com>
-In-Reply-To: <CAHc6FU7+riVQBX7L2uk64A355rF+DfQ6xhP425ruQ76d_SDPGA@mail.gmail.com>
-From: Stephen Zhang <starzhangzsd@gmail.com>
-Date: Sun, 23 Nov 2025 11:14:12 +0800
-X-Gm-Features: AWmQ_bkhV3WFHcWH6ezrZh5TyYLHctF2XYDfyBPe3dT3HiPXGugPAFouComClV0
-Message-ID: <CANubcdXOZvW9HjG4NA0DUWjKDbG4SspFnEih_RyobpFPXn2jWQ@mail.gmail.com>
-Subject: Re: Fix potential data loss and corruption due to Incorrect BIO Chain Handling
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Ming Lei <ming.lei@redhat.com>, linux-kernel@vger.kernel.org, 
-	linux-block@vger.kernel.org, nvdimm@lists.linux.dev, 
-	virtualization@lists.linux.dev, linux-nvme@lists.infradead.org, 
-	gfs2@lists.linux.dev, ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org, 
-	zhangshida@kylinos.cn, linux-bcache@vger.kernel.org
+X-Received: by 2002:a92:cd8b:0:b0:435:a1df:a771 with SMTP id
+ e9e14a558f8ab-435b98fa771mr56191415ab.39.1763874504646; Sat, 22 Nov 2025
+ 21:08:24 -0800 (PST)
+Date: Sat, 22 Nov 2025 21:08:24 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <692296c8.a70a0220.d98e3.0060.GAE@google.com>
+Subject: [syzbot] [xfs?] WARNING: kmalloc bug in xfs_buf_alloc
+From: syzbot <syzbot+3735a85c5c610415e2b6@syzkaller.appspotmail.com>
+To: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-Andreas Gruenbacher <agruenba@redhat.com> =E4=BA=8E2025=E5=B9=B411=E6=9C=88=
-22=E6=97=A5=E5=91=A8=E5=85=AD 22:57=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Sat, Nov 22, 2025 at 1:07=E2=80=AFPM Ming Lei <ming.lei@redhat.com> wr=
-ote:
-> > > static void bio_chain_endio(struct bio *bio)
-> > > {
-> > >         bio_endio(__bio_chain_endio(bio));
-> > > }
-> >
-> > bio_chain_endio() never gets called really, which can be thought as `fl=
-ag`,
->
-> That's probably where this stops being relevant for the problem
-> reported by Stephen Zhang.
->
-> > and it should have been defined as `WARN_ON_ONCE(1);` for not confusing=
- people.
->
-> But shouldn't bio_chain_endio() still be fixed to do the right thing
-> if called directly, or alternatively, just BUG()? Warning and still
-> doing the wrong thing seems a bit bizarre.
->
-> I also see direct bi_end_io calls in erofs_fileio_ki_complete(),
-> erofs_fscache_bio_endio(), and erofs_fscache_submit_bio(), so those
-> are at least confusing.
->
-> Thanks,
-> Andreas
->
+Hello,
 
-Thank you, Ming and Andreas, for the detailed explanation. I will
-remember to add the `WARN()`/`BUG()` macros in `bio_chain_endio()`.
+syzbot found the following issue on:
 
-Following that discussion, I have identified a similar and suspicious
-call in the
-bcache driver.
+HEAD commit:    fe4d0dea039f Add linux-next specific files for 20251119
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=15917692580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=f20a6db7594dcad7
+dashboard link: https://syzkaller.appspot.com/bug?extid=3735a85c5c610415e2b6
+compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1588ba12580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=16b00514580000
 
-Location:`drivers/md/bcache/request.c`
-```c
-static void detached_dev_do_request(struct bcache_device *d, struct bio *bi=
-o,
-                                    struct block_device *orig_bdev,
-unsigned long start_time)
-{
-    struct detached_dev_io_private *ddip;
-    struct cached_dev *dc =3D container_of(d, struct cached_dev, disk);
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/ce4f26d91a01/disk-fe4d0dea.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/6c9b53acf521/vmlinux-fe4d0dea.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/64d37d01cd64/bzImage-fe4d0dea.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/28a73d2f6731/mount_0.gz
+  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=12b00514580000)
 
-    /*
-     * no need to call closure_get(&dc->disk.cl),
-     * because upper layer had already opened bcache device,
-     * which would call closure_get(&dc->disk.cl)
-     */
-    ddip =3D kzalloc(sizeof(struct detached_dev_io_private), GFP_NOIO);
-    if (!ddip) {
-        bio->bi_status =3D BLK_STS_RESOURCE;
-        bio->bi_end_io(bio); // <-- POTENTIAL ISSUE
-        return;
-    }
-    // ...
-}
-```
-Scenario Description:
-1.  A chained bio is created in the block layer.
-2.  This bio is intercepted by the bcache layer to be routed to the appropr=
-iate
-backing disk.
-3.  The code path determines that the backing device is in a detached state=
-,
-leading to a call to `detached_dev_do_request()` to handle the I/O.
-4.  The memory allocation for the `ddip` structure fails.
-5.  In the error path, the function directly invokes `bio->bi_end_io(bio)`.
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+3735a85c5c610415e2b6@syzkaller.appspotmail.com
 
-The Problem:
-For a bio that is part of a chain, the `bi_end_io` function is likely set t=
-o
-`bio_chain_endio`. Directly calling it in this context would corrupt the
-`bi_remaining` reference count, exactly as described in our previous
-discussion.
+loop0: detected capacity change from 0 to 32768
+XFS (loop0): Mounting V5 Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
+XFS (loop0): Ending clean mount
+------------[ cut here ]------------
+Unexpected gfp: 0x1000000 (__GFP_NOLOCKDEP). Fixing up to gfp: 0x2dc0 (GFP_KERNEL|__GFP_ZERO|__GFP_NOWARN). Fix your code!
+WARNING: mm/vmalloc.c:3940 at vmalloc_fix_flags+0x9c/0xe0 mm/vmalloc.c:3939, CPU#0: syz.0.17/6023
+Modules linked in:
+CPU: 0 UID: 0 PID: 6023 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/02/2025
+RIP: 0010:vmalloc_fix_flags+0x9c/0xe0 mm/vmalloc.c:3939
+Code: 81 e6 1f 52 ae ff 89 74 24 30 81 e3 e0 ad 51 00 89 5c 24 20 90 48 c7 c7 60 db 76 8b 4c 89 fa 89 d9 4d 89 f0 e8 05 8d 6c ff 90 <0f> 0b 90 90 8b 44 24 20 48 c7 04 24 0e 36 e0 45 4b c7 04 2c 00 00
+RSP: 0018:ffffc90002f0eb00 EFLAGS: 00010246
+RAX: 1961bedde0732e00 RBX: 0000000000002dc0 RCX: ffff888031575b80
+RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000002
+RBP: ffffc90002f0eb98 R08: 0000000000000003 R09: 0000000000000004
+R10: dffffc0000000000 R11: fffffbfff1bba708 R12: 1ffff920005e1d60
+R13: dffffc0000000000 R14: ffffc90002f0eb20 R15: ffffc90002f0eb30
+FS:  000055556e61c500(0000) GS:ffff888125ebc000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000200000010000 CR3: 000000007f42c000 CR4: 00000000003526f0
+Call Trace:
+ <TASK>
+ __vmalloc_noprof+0xf2/0x120 mm/vmalloc.c:4126
+ xfs_buf_alloc_backing_mem fs/xfs/xfs_buf.c:239 [inline]
+ xfs_buf_alloc+0xe7b/0x1d50 fs/xfs/xfs_buf.c:312
+ xfs_buf_find_insert+0xab/0x1470 fs/xfs/xfs_buf.c:502
+ xfs_buf_get_map+0x1288/0x1880 fs/xfs/xfs_buf.c:606
+ xfs_buf_get fs/xfs/xfs_buf.h:247 [inline]
+ xfs_attr_rmtval_set_value+0x3ac/0x6d0 fs/xfs/libxfs/xfs_attr_remote.c:538
+ xfs_attr_rmtval_alloc fs/xfs/libxfs/xfs_attr.c:645 [inline]
+ xfs_attr_set_iter+0x332/0x4ba0 fs/xfs/libxfs/xfs_attr.c:866
+ xfs_attr_finish_item+0xed/0x320 fs/xfs/xfs_attr_item.c:506
+ xfs_defer_finish_one+0x5a8/0xd00 fs/xfs/libxfs/xfs_defer.c:595
+ xfs_defer_finish_noroll+0x8d8/0x12a0 fs/xfs/libxfs/xfs_defer.c:707
+ xfs_trans_commit+0x10b/0x1c0 fs/xfs/xfs_trans.c:921
+ xfs_attr_set+0xdc6/0x1210 fs/xfs/libxfs/xfs_attr.c:1150
+ xfs_xattr_set+0x14d/0x250 fs/xfs/xfs_xattr.c:186
+ __vfs_setxattr+0x43c/0x480 fs/xattr.c:200
+ __vfs_setxattr_noperm+0x12d/0x660 fs/xattr.c:234
+ vfs_setxattr+0x16b/0x2f0 fs/xattr.c:321
+ do_setxattr fs/xattr.c:636 [inline]
+ filename_setxattr+0x274/0x600 fs/xattr.c:665
+ path_setxattrat+0x364/0x3a0 fs/xattr.c:713
+ __do_sys_lsetxattr fs/xattr.c:754 [inline]
+ __se_sys_lsetxattr fs/xattr.c:750 [inline]
+ __x64_sys_lsetxattr+0xbf/0xe0 fs/xattr.c:750
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0xfa/0xfa0 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f865218f749
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ffd621091f8 EFLAGS: 00000246 ORIG_RAX: 00000000000000bd
+RAX: ffffffffffffffda RBX: 00007f86523e5fa0 RCX: 00007f865218f749
+RDX: 0000200000000480 RSI: 00002000000000c0 RDI: 0000200000000100
+RBP: 00007f8652213f91 R08: 0000000000000000 R09: 0000000000000000
+R10: 000000000000fe37 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007f86523e5fa0 R14: 00007f86523e5fa0 R15: 0000000000000005
+ </TASK>
 
-Is it  a valid theoretical scenario?
 
-And there is another call:
-```
-static void detached_dev_end_io(struct bio *bio)
-{
-        struct detached_dev_io_private *ddip;
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-        ddip =3D bio->bi_private;
-        bio->bi_end_io =3D ddip->bi_end_io;
-        bio->bi_private =3D ddip->bi_private;
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
-        /* Count on the bcache device */
-        bio_end_io_acct_remapped(bio, ddip->start_time, ddip->orig_bdev);
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
 
-        if (bio->bi_status) {
-                struct cached_dev *dc =3D container_of(ddip->d,
-                                                     struct cached_dev, dis=
-k);
-                /* should count I/O error for backing device here */
-                bch_count_backing_io_errors(dc, bio);
-        }
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
 
-        kfree(ddip);
-        bio->bi_end_io(bio);
-}
-```
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
 
-Would you mind me adding the bcache to the talk?
-[Adding the bcache list to the CC]
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
 
-Thanks,
-Shida
+If you want to undo deduplication, reply with:
+#syz undup
