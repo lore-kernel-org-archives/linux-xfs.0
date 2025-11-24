@@ -1,111 +1,164 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f77.google.com (mail-io1-f77.google.com [209.85.166.77])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1724812F5A5
-	for <linux-xfs@vger.kernel.org>; Sun, 23 Nov 2025 13:49:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8797EB661
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 00:01:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.77
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763905776; cv=none; b=bVv/yGCA9SFd3qbqr/c07i0NEv2mlStSC+xtykKEyvYVk7EmO+Mf2a1btM1sVl1izdwKM2wLWsgjaN7MKW/EoS0uFKaoDI+U0dFHc9jg4Bo70g+ptvVhvPq1+kX9SsyyCb++AkVl4s50z7N46liub3SGELIsMexo4NrA5zvKF4o=
+	t=1763942493; cv=none; b=EbgeZk9DpLKtRVVpYWZ4E/8vrBHpKQpTPaKxcbje0kL3AfmohLI312XUl/COrqWJsfdk22lvAR83YiyjBvvelrcXtbKUSV87Xu5SCJ94elLLHxpLaWeCz2mpHSCh7BCPRI/9MlvAms6QgY6tkQXzgvPtjwpHbBESKHwxDJWZz5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763905776; c=relaxed/simple;
-	bh=lWbENcEh389vbMCqSvNUZZKi4TBeYFD6rNt9N2yVjFA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mQFCad8iKaIjCYuZxYepe9sCO4EKEoNfDkmM8xBguWpMEDXUlUUjZirP8Njxmy0HRbHHeZF8wxHxSNxpMgNMozJpOyI7hKV+xZN32rOIGu5kQWy4Ya8qTUed3jtaU4eyvk5WwEMy0a69vLcBvsjRR3VN56cQIiPU5mlpV09FhuM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=g+o+63Ca; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="g+o+63Ca"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1763905771;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4hRt8RZtumHYeZ62c0KfBKB9aID9kM568jUutNHXhRA=;
-	b=g+o+63CanVDf2aBYD890+iC73OffoWngMg8CL8jIad1YaJJF9tpqbxpAj7+CKbh1yASRx9
-	d/rpd13Y0GHnfqSJuVvq9TOz7YvTuHXeC6NSt7jBpobaiTrIb3F+OOieuU9139Usf+JJJh
-	JtLDMkDex9dXgmm0vFKa9mrn1JpaZ7E=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-96-JoNijKGXNZWpb1v6IBGpVw-1; Sun,
- 23 Nov 2025 08:49:18 -0500
-X-MC-Unique: JoNijKGXNZWpb1v6IBGpVw-1
-X-Mimecast-MFC-AGG-ID: JoNijKGXNZWpb1v6IBGpVw_1763905754
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9C2AF180045C;
-	Sun, 23 Nov 2025 13:49:13 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.5])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E12D91800451;
-	Sun, 23 Nov 2025 13:49:02 +0000 (UTC)
-Date: Sun, 23 Nov 2025 21:48:56 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Stephen Zhang <starzhangzsd@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org, nvdimm@lists.linux.dev,
-	virtualization@lists.linux.dev, linux-nvme@lists.infradead.org,
-	gfs2@lists.linux.dev, ntfs3@lists.linux.dev,
-	linux-xfs@vger.kernel.org, zhangshida@kylinos.cn,
-	Coly Li <colyli@fnnas.com>, linux-bcache@vger.kernel.org
-Subject: Re: Fix potential data loss and corruption due to Incorrect BIO
- Chain Handling
-Message-ID: <aSMQyCJrqbIromUd@fedora>
-References: <20251121081748.1443507-1-zhangshida@kylinos.cn>
- <aSEvg8z9qxSwJmZn@fedora>
- <CANubcdULTQo5jF7hGSWFqXw6v5DhEg=316iFNipMbsyz64aneg@mail.gmail.com>
- <aSGmBAP0BA_2D3Po@fedora>
- <CAHc6FU7+riVQBX7L2uk64A355rF+DfQ6xhP425ruQ76d_SDPGA@mail.gmail.com>
+	s=arc-20240116; t=1763942493; c=relaxed/simple;
+	bh=hkmlAZN14RWTJJKJOjA72+yOxxBYpyV18otFeTNH4W4=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=DR2WRysjG8V3ATBWR/PBERByW17IjzPY+6ee6EJp69UVpFQg2WdDvrkxK2RHjCvQJ7lj0GmSeXWIcnyFHXRDnomKlxy0jjCgI02UzQPIYF2KS9XhWEakjOYGT8+DCrjj05oSsN+x6BsBMh8/1tmJi2TRaYSxityJ/gHGj7PFCp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.77
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f77.google.com with SMTP id ca18e2360f4ac-94880a46eaeso276423039f.1
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Nov 2025 16:01:31 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1763942491; x=1764547291;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=/5jTt5tWoNPtzD6/wOudojqqEJEkXgAW9wqUd4ayLG0=;
+        b=iKofFW35ofQfei59duhKaNRw8RAy3whni9cANT8DW0v2+OVYdL5X8eeQ+jPhB9CzbV
+         6e0aMkAtgyDY5V0Zqd8wq2Mj+/d2JTklDWNxYrfSSggEi6rVQ22/fBT9zuO97j8aIqmY
+         Mgpq2p6r6FPLncM73G9AtOoCkVVWh/y1XcdIzWO00CDJEHq35WaiUz9ztFsdJ5HHV3b4
+         o77VzB01oZoXurf+Wew2LD9f9wikF0urDGvDyIM+EzG/iRIxdYIPUQmtSTO3mbe7rnxD
+         ltqFTlE4/b3uXUWPud7TfxaIKUfopeVOFZ5A68ugQ5VWOaeKiEZJ9u+8q76ipbshWrH1
+         bvjQ==
+X-Forwarded-Encrypted: i=1; AJvYcCURObsZn2qjGrRj4PtXBSbWDVDIi2EFOchsdTkVCOFLpUCsM2ObnRyXt4XqxIzyJmGEWPsQIZVCWac=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwJ17tcnXE6QLQ0kR3R+2Z4IDkIf97MDNTQg7oE3pVyJ2iIHyH6
+	RyZBHMEmY2Vd5KHNOzoFANw/1h+9Udy/Zhrgu4wCYkj8WS6ZpLvY9zSL94JlMbZXdZJE0A+LyEY
+	uCJcvtGHmnuZ3zUCtWq60G+G//kKkOVUufhy8OwB8auDRbPmYNKGYqbqSd1w=
+X-Google-Smtp-Source: AGHT+IHvjl/QyuFxDRTYWf4jPVTWtpTBnU+dwLC1u0ta2o/LYfdGncT7IpPF0C3C0iZpn/LSJD6l6GpSzavgzOMCbigc+P3m9nOY
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAHc6FU7+riVQBX7L2uk64A355rF+DfQ6xhP425ruQ76d_SDPGA@mail.gmail.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+X-Received: by 2002:a05:6e02:3809:b0:434:a847:68e1 with SMTP id
+ e9e14a558f8ab-435b9845c1cmr81030565ab.9.1763942490771; Sun, 23 Nov 2025
+ 16:01:30 -0800 (PST)
+Date: Sun, 23 Nov 2025 16:01:30 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6923a05a.a70a0220.2ea503.0075.GAE@google.com>
+Subject: [syzbot] [iomap?] general protection fault in iomap_dio_bio_end_io
+From: syzbot <syzbot+a2b9a4ed0d61b1efb3f5@syzkaller.appspotmail.com>
+To: brauner@kernel.org, djwong@kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Sat, Nov 22, 2025 at 03:56:58PM +0100, Andreas Gruenbacher wrote:
-> On Sat, Nov 22, 2025 at 1:07 PM Ming Lei <ming.lei@redhat.com> wrote:
-> > > static void bio_chain_endio(struct bio *bio)
-> > > {
-> > >         bio_endio(__bio_chain_endio(bio));
-> > > }
-> >
-> > bio_chain_endio() never gets called really, which can be thought as `flag`,
-> 
-> That's probably where this stops being relevant for the problem
-> reported by Stephen Zhang.
-> 
-> > and it should have been defined as `WARN_ON_ONCE(1);` for not confusing people.
-> 
-> But shouldn't bio_chain_endio() still be fixed to do the right thing
-> if called directly, or alternatively, just BUG()? Warning and still
-> doing the wrong thing seems a bit bizarre.
+Hello,
 
-IMO calling ->bi_end_io() directly shouldn't be encouraged.
+syzbot found the following issue on:
 
-The only in-tree direct call user could be bcache, so is this reported
-issue triggered on bcache?
+HEAD commit:    fe4d0dea039f Add linux-next specific files for 20251119
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=16bd7692580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=f20a6db7594dcad7
+dashboard link: https://syzkaller.appspot.com/bug?extid=a2b9a4ed0d61b1efb3f5
+compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12db68b4580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=107c0514580000
 
-If bcache can't call bio_endio(), I think it is fine to fix
-bio_chain_endio().
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/ce4f26d91a01/disk-fe4d0dea.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/6c9b53acf521/vmlinux-fe4d0dea.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/64d37d01cd64/bzImage-fe4d0dea.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/004457158842/mount_1.gz
+  fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=133a1a12580000)
 
-> 
-> I also see direct bi_end_io calls in erofs_fileio_ki_complete(),
-> erofs_fscache_bio_endio(), and erofs_fscache_submit_bio(), so those
-> are at least confusing.
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+a2b9a4ed0d61b1efb3f5@syzkaller.appspotmail.com
 
-All looks FS bio(non-chained), so bio_chain_endio() shouldn't be involved
-in erofs code base.
+Oops: general protection fault, probably for non-canonical address 0xdffffc0000000038: 0000 [#1] SMP KASAN PTI
+KASAN: null-ptr-deref in range [0x00000000000001c0-0x00000000000001c7]
+CPU: 1 UID: 0 PID: 23 Comm: ksoftirqd/1 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/25/2025
+RIP: 0010:__queue_work+0xa4/0xf90 kernel/workqueue.c:2250
+Code: 10 31 ff 89 ee e8 ac 24 37 00 85 ed 0f 85 9d 0c 00 00 e8 5f 20 37 00 4d 8d b5 c0 01 00 00 4c 89 f0 48 c1 e8 03 48 89 44 24 30 <0f> b6 04 18 84 c0 0f 85 c4 0c 00 00 4c 89 34 24 41 8b 2e 89 ee 81
+RSP: 0018:ffffc900001d7868 EFLAGS: 00010002
+RAX: 0000000000000038 RBX: dffffc0000000000 RCX: ffff88801d2d5b80
+RDX: 0000000000000100 RSI: 0000000000000000 RDI: 0000000000000000
+RBP: 0000000000000000 R08: ffff8880777ed647 R09: 1ffff1100eefdac8
+R10: dffffc0000000000 R11: ffffed100eefdac9 R12: 0000000000000008
+R13: 0000000000000000 R14: 00000000000001c0 R15: 0000000000000200
+FS:  0000000000000000(0000) GS:ffff888125fbc000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000000 CR3: 0000000073fc0000 CR4: 00000000003526f0
+Call Trace:
+ <TASK>
+ queue_work_on+0x181/0x270 kernel/workqueue.c:2386
+ iomap_dio_bio_end_io+0xf4/0x1c0 fs/iomap/direct-io.c:222
+ blk_update_request+0x57e/0xe60 block/blk-mq.c:1006
+ blk_mq_end_request+0x3e/0x70 block/blk-mq.c:1168
+ blk_complete_reqs block/blk-mq.c:1243 [inline]
+ blk_done_softirq+0x10a/0x160 block/blk-mq.c:1248
+ handle_softirqs+0x27d/0x880 kernel/softirq.c:626
+ run_ksoftirqd+0x9b/0x100 kernel/softirq.c:1067
+ smpboot_thread_fn+0x542/0xa60 kernel/smpboot.c:160
+ kthread+0x711/0x8a0 kernel/kthread.c:463
+ ret_from_fork+0x599/0xb30 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:246
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:__queue_work+0xa4/0xf90 kernel/workqueue.c:2250
+Code: 10 31 ff 89 ee e8 ac 24 37 00 85 ed 0f 85 9d 0c 00 00 e8 5f 20 37 00 4d 8d b5 c0 01 00 00 4c 89 f0 48 c1 e8 03 48 89 44 24 30 <0f> b6 04 18 84 c0 0f 85 c4 0c 00 00 4c 89 34 24 41 8b 2e 89 ee 81
+RSP: 0018:ffffc900001d7868 EFLAGS: 00010002
+RAX: 0000000000000038 RBX: dffffc0000000000 RCX: ffff88801d2d5b80
+RDX: 0000000000000100 RSI: 0000000000000000 RDI: 0000000000000000
+RBP: 0000000000000000 R08: ffff8880777ed647 R09: 1ffff1100eefdac8
+R10: dffffc0000000000 R11: ffffed100eefdac9 R12: 0000000000000008
+R13: 0000000000000000 R14: 00000000000001c0 R15: 0000000000000200
+FS:  0000000000000000(0000) GS:ffff888125fbc000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000000 CR3: 0000000073fc0000 CR4: 00000000003526f0
+----------------
+Code disassembly (best guess), 1 bytes skipped:
+   0:	31 ff                	xor    %edi,%edi
+   2:	89 ee                	mov    %ebp,%esi
+   4:	e8 ac 24 37 00       	call   0x3724b5
+   9:	85 ed                	test   %ebp,%ebp
+   b:	0f 85 9d 0c 00 00    	jne    0xcae
+  11:	e8 5f 20 37 00       	call   0x372075
+  16:	4d 8d b5 c0 01 00 00 	lea    0x1c0(%r13),%r14
+  1d:	4c 89 f0             	mov    %r14,%rax
+  20:	48 c1 e8 03          	shr    $0x3,%rax
+  24:	48 89 44 24 30       	mov    %rax,0x30(%rsp)
+* 29:	0f b6 04 18          	movzbl (%rax,%rbx,1),%eax <-- trapping instruction
+  2d:	84 c0                	test   %al,%al
+  2f:	0f 85 c4 0c 00 00    	jne    0xcf9
+  35:	4c 89 34 24          	mov    %r14,(%rsp)
+  39:	41 8b 2e             	mov    (%r14),%ebp
+  3c:	89 ee                	mov    %ebp,%esi
+  3e:	81                   	.byte 0x81
 
 
-Thanks,
-Ming
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
