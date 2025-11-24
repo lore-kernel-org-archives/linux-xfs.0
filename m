@@ -1,100 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2537127990A;
-	Mon, 24 Nov 2025 15:27:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D548315783;
+	Mon, 24 Nov 2025 16:04:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763998044; cv=none; b=KADqpUu6mVvWi7W6nRZ64hhizijMl4ztakVD//mfEwjNisJgG+kHExSxyFTAUxJFEREadiiMkp1ovN+XiC+pTdAWcotXj0hgtooTlEoVd2Nh7UzOPIE3rQu+RrhFqFH3m53LXxN2bWDzlgOkcZ0bSbyxrYXHnF0ebxnM+8dIVFk=
+	t=1764000298; cv=none; b=dUg411cCvFfoPalEKcJg3SgBzkwdp9aaVWCjsygI/4il9a5EvyYncmMWxvRXoZxsPNuv1DB6A+5UQ9oxewUuLBvAKTa4QsG344VvSgbbk8GBZUKc07YMwY9LVwSON9pnNy9uzUtu2OqrlJTncrPEtkeQ8+yG9agOe8biAiCsH7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763998044; c=relaxed/simple;
-	bh=KBZLCgDQczk1qNfXgYUwHRe9gqN214in7GQPzckM670=;
+	s=arc-20240116; t=1764000298; c=relaxed/simple;
+	bh=5Oizxdcv2uWs5bYpc6drHEZNwgpR6Ou5Isxn6pRxBvA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ed9YoXQVg2Oe3WTlrtfM9m2OVRcfLUh/dg5C7ElE1bYoeMuQ/q2YjyqO2E5M6vCMIKgVn6Qu+fK9sUUI3Ax7v0bpv3PjLlymtA3YqErgMeKSg6XmyZMNCnun7+omElUldYOgJw3fHCtxkRv+gNIAqy6rXWXbbBwt+0KZRh7caNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fvnjU6Ed; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=uzIjjzpV670l2/QLXuNzhN//2cZsPn+12ghAbBnnEUyobKbsFAU1wEriXT36LG2EBqAiBQTkkEy2EiaRykETiCyHaIZi4KIj8VFdW2T3CAz6Rfp6vZGXpPzju7Ju/2wPmS1RC3RQrNQrpFLJfHU27wjfyKDoP/nvCRyZAlS5Ot8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qHwvtgcT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fvnjU6Ed"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C111C4CEF1;
-	Mon, 24 Nov 2025 15:27:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qHwvtgcT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02B39C116C6;
+	Mon, 24 Nov 2025 16:04:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763998043;
-	bh=KBZLCgDQczk1qNfXgYUwHRe9gqN214in7GQPzckM670=;
+	s=k20201202; t=1764000297;
+	bh=5Oizxdcv2uWs5bYpc6drHEZNwgpR6Ou5Isxn6pRxBvA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fvnjU6EdLVX81N6UnSyZbNSaS4GDe2hs5MIkvFxl5JoNAmbpA6VrOo7j8yPqG4H1I
-	 Q/yNke1cyTuh3z3QHCdtpttTw54EkgWB/zjevYCBj+Z97zdBm+c/jWdA02NoW4qqPa
-	 LmB8ani4P1IYqAeWRSN5AReEtIw29MVzr3hdGHlKSFZWdjRzsyupPMGChpoKp7Tls/
-	 lKgrhd08sEMiCB6WjtOdZ4JBCkCEN+uGhaQLYDCI0V1u+fFjZfCIJ1GU7MJcDyxMV8
-	 eW55flIQho1ogzPX06MDKuyIIda23w57BrfokdTtVFlg2fN0T8v9GBEkfDOygXoxrT
-	 Ofw9eAhSlrIlQ==
-Date: Mon, 24 Nov 2025 16:27:19 +0100
+	b=qHwvtgcTVNm0FMjjiimrjXIHg+T5ec3o5McEyWB/aHg6UDEW5iJhlv9VnN4DbU1Lm
+	 5KZGliFcf08VTb/raQAyv8SQQCvbFuMCIcrk4ILBGlBhsM4swfUABaDpKw443hhwdl
+	 V+mXPz7/n6O8UJRSmkxlR1Wo16dd9S9+aeCDNzrJpJPcllT33kk4rgK+/g3FVF8FuE
+	 asAIKCpFeb0HVehXIGkvDX5R6NUV94KcooD5fyiI7DTInHdGAmk6MqbxTLV3o65dr2
+	 /DcfPR9SDapF1JBtPlZ3J47WQ8mYtOmFTLwz/qygFQaLcxSgpW9s7kDuXuLZO3KxXR
+	 5cZYQyXTDf9Pw==
+Date: Mon, 24 Nov 2025 17:04:53 +0100
 From: Carlos Maiolino <cem@kernel.org>
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc: "zlang@kernel.org" <zlang@kernel.org>, hch <hch@lst.de>, 
-	Hans Holmberg <Hans.Holmberg@wdc.com>, "fstests@vger.kernel.org" <fstests@vger.kernel.org>, 
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: zlang@kernel.org, hch@lst.de, hans.holmberg@wdc.com, 
+	johannes.thumshirn@wdc.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 2/2] xfs: Add test for mkfs with smaller zone capacity
-Message-ID: <ba3tbnjq2dernii2n6leyc6z76lcezsjemomtm54mrbm2xcnz5@kx3qp3qgrtqe>
+Message-ID: <rzrip62rmjpbsbl3bjqw2cwyx4dbpsduf4xfyirt6de3c4lgix@k5xkqctglsdh>
 References: <20251120160901.63810-1-cem@kernel.org>
  <20251120160901.63810-3-cem@kernel.org>
- <EffPQB_WQabsgl7V1GQULuAp9QQGB7KoH0wN5tHOvQUWRriHZorc1NPnsGnKEV1obcisN1kjuXM0KzubUhxk5Q==@protonmail.internalid>
- <9f6b4f20-9d71-49a5-a313-f860b3e8a4e3@wdc.com>
+ <1Er6m8v66cLRPPkVkwXoCR8wXEU5y1Khjii-1riIP34bdvPREzfHMCdLNsNhqFxfguCVPo0UuX53-Itbm7RbuQ==@protonmail.internalid>
+ <20251122083646.ihtwb3k4eocnb7fe@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9f6b4f20-9d71-49a5-a313-f860b3e8a4e3@wdc.com>
+In-Reply-To: <20251122083646.ihtwb3k4eocnb7fe@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 
-On Fri, Nov 21, 2025 at 06:51:31AM +0000, Johannes Thumshirn wrote:
-> On 11/20/25 5:09 PM, cem@kernel.org wrote:
+On Sat, Nov 22, 2025 at 04:36:46PM +0800, Zorro Lang wrote:
+> On Thu, Nov 20, 2025 at 05:08:30PM +0100, cem@kernel.org wrote:
 > > From: Carlos Maiolino <cem@kernel.org>
 > >
 > > Add a regression test for initializing zoned block devices with
 > > sequential zones with a capacity smaller than the conventional
 > > zones capacity.
-> 
-> 
-> Hi Carlos,
-> 
-> Two quick questions:
-> 
-> 1) Is there a specific reason this is a xfs only test? I think checking
-> this on btrfs and f2fs would make sense as well, like with generic/781.
-
-I wrote this mostly as a regression test for xfs's mkfs, but yeah, I don't
-think there is any reason for this to be xfs-specific.
-
-> 
-> 2)  I would also mount the FS and perform some IO on it.
-
-I'm not sure about this. Do you have any purpose in mind? This is
-specifically to test mkfs is able to properly format the filesystem, not
-to try the kernel module per-se.
-One could argue that something 'could' go wrong in the mkfs that might
-be found out only via some IO, but that would require much more than
-just 'some IO'.
-
-I do think a mount/unmount might add some value to the test, but I fail
-to see why issuing a random amount of I/O would prove the correctness of
-mkfs properly dealing with small capacities.
-
-Cheers.
-Carlos
-
-> 
-> 
-> 
+> >
 > > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 > > ---
-> >   tests/xfs/333     | 37 +++++++++++++++++++++++++++++++++++++
-> >   tests/xfs/333.out |  2 ++
-> >   2 files changed, 39 insertions(+)
-> >   create mode 100755 tests/xfs/333
-> >   create mode 100644 tests/xfs/333.out
+> >  tests/xfs/333     | 37 +++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/333.out |  2 ++
+> >  2 files changed, 39 insertions(+)
+> >  create mode 100755 tests/xfs/333
+> >  create mode 100644 tests/xfs/333.out
 > >
 > > diff --git a/tests/xfs/333 b/tests/xfs/333
 > > new file mode 100755
@@ -118,10 +85,48 @@ Carlos
 > > +_cleanup()
 > > +{
 > > +	_destroy_zloop $zloop
+> 
+>         cd /
+>         rm -r -f $tmp.*
+> 
 > > +}
 > > +
 > > +_require_scratch
+> 
+> _require_block_device $SCRATCH_DEV
+
+I'll add to the V2.
+
+> 
 > > +_require_zloop
+> 
+> g/781 checks if current $FSTYP supports zoned filesystem, and _notrun if it's
+> not supported:
+> 
+>         _try_mkfs_dev $zloop >> $seqres.full 2>&1 ||\
+>                 _notrun "cannot mkfs zoned filesystem"
+> 
+> I'm wondering if we could have a common helper for that, then this case can be
+> a generic test case too.
+> 
+> For example:
+> 
+> _require_zloop_filesystem()
+> {
+>         _require_zloop
+> 
+>         local zloopdir="$TEST_DIR/zloop_test"
+>         local zloop=$(_create_zloop $zloopdir 64 2)
+> 
+> 	_try_mkfs_dev $zloop >/dev/null 2>&1 || \
+> 		_notrun "cannot make $FSTYP on zloop"
+> 	_destroy_zloop $zloop
+> }
+> 
+> But this method takes too much time to run, does anyone have a better idea to help it
+> to be finished in several seconds?
+> 
+> 
 > > +
 > > +_scratch_mkfs > /dev/null 2>&1
 > > +_scratch_mount >> $seqres.full
@@ -130,6 +135,21 @@ Carlos
 > > +zone_size=64
 > > +conv_zones=2
 > > +zone_capacity=63
+> 
+> Better to add a comment to explain what are these numbers for.
+
+Hmm, why? The variable names are very self-descriptive. I could add a
+comment, but it's just redundant IMHO, ex:
+
+zone_size=64		# Set zloop zone size to 64MiB
+
+I added the variables instead of passing the numbers directly to
+_create_zloop to avoid needing to go back and forth to _create_zloop
+definition and make the meaning clear.
+I'm fine adding the comments, I just don't see the point.
+
+
+> 
 > > +
 > > +zloop=$(_create_zloop $zloopdir $zone_size $conv_zones $zone_capacity)
 > > +
@@ -137,15 +157,11 @@ Carlos
 > > +	_fail "Cannot mkfs zoned filesystem"
 > > +
 > > +echo Silence is golden
-> > +# success, all done
-> > +_exit 0
-> > diff --git a/tests/xfs/333.out b/tests/xfs/333.out
-> > new file mode 100644
-> > index 000000000000..60a158987a22
-> > --- /dev/null
-> > +++ b/tests/xfs/333.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 333
-> > +Silence is golden
 > 
-> 
+> Is this done? If such zloop device can be created, should we expect it works as usual?
+
+Yes, the whole point is to ensure mkfs can initialize the filesystem on
+top of the zoned block device.
+
+Cheers,
+Carlos
