@@ -1,118 +1,68 @@
-Received: from out203-205-221-242.mail.qq.com (out203-205-221-242.mail.qq.com [203.205.221.242])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D06272631;
-	Mon, 24 Nov 2025 08:53:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.242
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EDCE2F5A16;
+	Mon, 24 Nov 2025 09:18:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763974391; cv=none; b=CbP2rgF9xRLGbLdfXDUgQSpUQTi47TKdiNxt8KX3gYdH8qcsizUd82i43BEIi8zU6ClG6k9aBLpPdT9bopcFvPIlNiplsDzuNRaw1Mq9uwd5FrSiTy9mXOYWiAQyD1+3Gl/arTBE+FJnkHLYldPEcKq7qVXRvvLoAj3tss4dxd4=
+	t=1763975892; cv=none; b=W5W/t4dlpzh6sSsCpJB+6nL8TLrNRpFXO9b1UplI0ax2cKIwoOl5wLyRBgxWMv8NOJisFubvfL4AgNXyod9hHuWp8x+W04fLPZs9h6UZ7901arm/nTIZcof6xjiW1Y70gnQKqWPSQKi3T1CuA4sGGUWZXLFp7U4g64d/9UtnxWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763974391; c=relaxed/simple;
-	bh=HOsbgCUtbNgi/B/bSlBhRujbyRv3eMz1XGxmTUW7yIo=;
-	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
-	 MIME-Version; b=Oa3TV6hpo40rxxAcAZDn4EKuyQGGzECIUVlE+HlJ1FL4YiDgDl1gnvaxj47x2x0jfwsPevzHb5vSMnzYh6tTfoDPKjj4/TGnvoHrpS1TVDzTbxMoIKfIMR4Gzn+lLL11EOh9ZkSCsb+eVKL5AoaZnpu9AM9RUuY4BOR5/c2D/k0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=kz0fFuDb; arc=none smtp.client-ip=203.205.221.242
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1763975892; c=relaxed/simple;
+	bh=VMT3O+H4aucYaML2+XobPbAF+e72DtPp1C+cHKrd6Rw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JsV/mAhYVJl9Q0fCIqpfGWfZuh117ouQqqECoSH5qIIdouXmtp+cgT+5nMKvpA/BijE3/wgqaeIBkwB1EPBVWvuEAwY6UnCrz24GxyVisQN+vafPhYGGazQVOyiSDrhqAhymbx6VvJwQy+YqAm2NqRE44BRn4XsVRjsKDNQQ0OQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=BMJlNHuz; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="kz0fFuDb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1763974387; bh=ZRgrDQUjLFkTslkgJ3mUpuQXWhVhwkC4qd2OoOvGUZ0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=kz0fFuDbWULH95qTIqhXqD6EQBimkFqMdL1aVVUZ9Dz2Eq9fPc37MhHq0jg6OP95q
-	 liD0Ne/aXFHucISr3X7+VK2d6beYE9x7bKehX7mYaPum/zHvzPYxKUDK8W/qiyT8TD
-	 +uqtH7W8gZArI6bE9L1JJbjJUfriuBvrYLjrFcRc=
-Received: from lxu-ped-host.. ([111.201.7.117])
-	by newxmesmtplogicsvrszc50-0.qq.com (NewEsmtp) with SMTP
-	id D439EEB3; Mon, 24 Nov 2025 16:53:03 +0800
-X-QQ-mid: xmsmtpt1763974383t047juipu
-Message-ID: <tencent_734A1B432559BAF7BBA333429E581B034B08@qq.com>
-X-QQ-XMAILINFO: NR0zW9LgXakqGqwRbOz21eTm+0oq9riIo+7iPRwuNIvdbNxRADmeFyRMi7cMKe
-	 YfvwevKPouYxv814rjCJCk9hK53Sm8P0kdFcOkc2Tkp0fTpLRuWaYgd5Y8yahm1xbYQTUZGGsuhv
-	 75acW9yJbp1rzjAWJAJlwbWs5zrGj4j4jhNjA9NAPW8/i0aEyuTiHrq49OJUXBRqPfgyzD6dRniq
-	 cZxHGYI3WZxCKUWxdQWL4bFr/jFbqYiMIsDkp/fLhSu9XO2JgsfVI9dryYPqDMoJONLvD0ZIRjwT
-	 gD+jQodVogHW75nVQQN2v4WApn1gh1sgs5Xn1eJNIbcf3FiT8/CGbnqr3N6RroGwQvYjtVMHDcNI
-	 Xh07YCShd6hIAzCkGR1uknK+q8ZN/AHZkiApskfoRhuJ23TFIHCTGEYdesTmneVlvHl8l56Dnmuy
-	 pC1i8l6NW6u2JoKv5PJBHgwL5RUoT9rTR3sNPkbLgNlPgYtbXsRSxcNfx9uRtTYzOcs6n+aGhdQj
-	 sI0R4fgXQLyHepdeKGPWSBDlys3BPBr12ZUjjyoO76MR3lv9k0vcm9WSmuZ+qyTrg68nojafQEM4
-	 yPNd2AmRFoOgGWmO+oPQ/vXwGFnw+HULcnSHy3w+0NIdgsCL6kIB0ZrwWqtc1z6YTYaPd9bi07xF
-	 BHU+cRSecJ/s9C7G3WwwlddzEMlsb90nC3XBXAfyN93iP3R+0uPG1EY2EJxYIzPK5LvgQRq+tDNU
-	 MINhFKObP4uu5GNTLA9/4sLrCBKohsaG+ww6KCs32u9g6LA5HO/PVuxU4QAGneV2dWj324+LRf/P
-	 xopFwUMKjm2fJAJsHZrKjEMipwAIrZy2b8kHd5SUu+pCmRLvQ7gbxM67iVNZhmYbxRxAmYbfnRSr
-	 sj+/CspejWusDPnTXO04VovdCvYv7VvSGCmk/BP6gzkxcVRDwswzxuE/XzyqMVfP0JjbJdMYuf6R
-	 crwAWyeq56XRNFhN1+TLeFeLKDjIl22FOEEgHbCmm8oXwIALKjlQ==
-X-QQ-XMRINFO: NS+P29fieYNw95Bth2bWPxk=
-From: Edward Adam Davis <eadavis@qq.com>
-To: syzbot+a2b9a4ed0d61b1efb3f5@syzkaller.appspotmail.com
-Cc: brauner@kernel.org,
-	djwong@kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-xfs@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com
-Subject: [PATCH Next] iomap: Add sanity check for dio done workqueue
-Date: Mon, 24 Nov 2025 16:53:04 +0800
-X-OQ-MSGID: <20251124085303.4085309-2-eadavis@qq.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <6923a05a.a70a0220.2ea503.0075.GAE@google.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BMJlNHuz"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=W2F/adHZGDVImEoRBSp+dIUFq+ETbkxrVwhRAz6tSTA=; b=BMJlNHuzF6Tjl009ADmBcnXcAc
+	Xm+bdrdMdhelo2G8jjypp6V0/Sxt2QTl9uTi1TKzw0pgrfRwCqbs01691MX+tcXuACLXCToOYKix4
+	BX/g87rIAunTPhU17ZqaRz6Kb06b+f8JJEWK+WMlOHCCfLd6d79/OOYK82Ekg1Esm25ob8vOtxKjH
+	mNNz/NEl/MzTRsh/SkdeiZzPqGYKSTyZPpHh685oAcOHbjoLM91h24pbqAGmG53Y3B6oUmQGaMIra
+	sWbZIuhX7zCKxQsXhS2gNYrh9kyskkKM9u0v3iucFfohEu78Ev0JW0MLZbGFZ1uBGiw1fDlaFpsK9
+	3DyUuLrA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vNSi1-0000000BKUh-2UEG;
+	Mon, 24 Nov 2025 09:18:09 +0000
+Date: Mon, 24 Nov 2025 01:18:09 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Edward Adam Davis <eadavis@qq.com>
+Cc: syzbot+a2b9a4ed0d61b1efb3f5@syzkaller.appspotmail.com,
+	brauner@kernel.org, djwong@kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Subject: Re: [PATCH Next] iomap: Add sanity check for dio done workqueue
+Message-ID: <aSQi0e8SmY5OVLcS@infradead.org>
 References: <6923a05a.a70a0220.2ea503.0075.GAE@google.com>
+ <tencent_734A1B432559BAF7BBA333429E581B034B08@qq.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <tencent_734A1B432559BAF7BBA333429E581B034B08@qq.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The s_dio_done_wq was not allocated memory, leading to the null-ptr-deref
-reported by syzbot in [1].
+On Mon, Nov 24, 2025 at 04:53:04PM +0800, Edward Adam Davis wrote:
+> The s_dio_done_wq was not allocated memory, leading to the null-ptr-deref
+> reported by syzbot in [1].
+> 
+> As shown in [1], we are currently in a soft interrupt context, and we cannot
+> use sb_init_dio_done_wq() to allocate memory for wq because it requires a
+> mutex lock.
+> 
+> Added a check to the workqueue; if it is empty, it switches to using a
+> synchronous method to end the dio.
 
-As shown in [1], we are currently in a soft interrupt context, and we cannot
-use sb_init_dio_done_wq() to allocate memory for wq because it requires a
-mutex lock.
-
-Added a check to the workqueue; if it is empty, it switches to using a
-synchronous method to end the dio.
-
-[1]
-KASAN: null-ptr-deref in range [0x00000000000001c0-0x00000000000001c7]
-CPU: 1 UID: 0 PID: 23 Comm: ksoftirqd/1 Not tainted syzkaller #0 PREEMPT(full)
-Call Trace:
- iomap_dio_bio_end_io+0xf4/0x1c0 fs/iomap/direct-io.c:222
- blk_update_request+0x57e/0xe60 block/blk-mq.c:1006
- blk_mq_end_request+0x3e/0x70 block/blk-mq.c:1168
- blk_complete_reqs block/blk-mq.c:1243 [inline]
- blk_done_softirq+0x10a/0x160 block/blk-mq.c:1248
- handle_softirqs+0x27d/0x880 kernel/softirq.c:626
- run_ksoftirqd+0x9b/0x100 kernel/softirq.c:1067
- smpboot_thread_fn+0x542/0xa60 kernel/smpboot.c:160
-
-Reported-by: syzbot+a2b9a4ed0d61b1efb3f5@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=a2b9a4ed0d61b1efb3f5
-Signed-off-by: Edward Adam Davis <eadavis@qq.com>
----
- fs/iomap/direct-io.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index d4e2e328d893..6b0ef7e0f05b 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -202,10 +202,14 @@ static void iomap_dio_done(struct iomap_dio *dio)
- 		 * filesystem metadata changes or guarantee data integrity.
- 		 */
- 		INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
-+		if (!inode->i_sb->s_dio_done_wq)
-+			goto done;
-+
- 		queue_work(inode->i_sb->s_dio_done_wq, &dio->aio.work);
- 		return;
- 	}
- 
-+done:
- 	WRITE_ONCE(iocb->private, NULL);
- 	iomap_dio_complete_work(&dio->aio.work);
- }
--- 
-2.43.0
+Err no.  That sanity check doesn't do anything useful.  Whatever caused
+it to be not allocated and allow I/O needs to be fixed.  And I suspect
+it's my fault and I already have an idea how to fix, so don't rush it.
 
