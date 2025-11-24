@@ -1,168 +1,122 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8069730597E
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 13:31:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 182B230B514
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 13:54:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763991075; cv=none; b=Zb+QtiNHH2CV8TztvZlhcVleldJh2vGDy1axGR1/CVTA+enWgfcIVJJfemxrIFrHRFTKtkbYFado2/THf4/BYuOaH7WY+sbWzLEglUC6iacjYXiyEgnt5jX73S4mZYvWIUj5ORJn9G3JRzPfDh9UddEFDVlmYtnHMIyu2yUNcuo=
+	t=1763992487; cv=none; b=mUYr47kWckCbqUD59bFGzlAFKEpVSSgmiDStSWjQZcNToQHiO17geLSvE0Ju4j4eqffUzCBjxt42dwCAU40OdNTbi/5aHYpAwtt4c2WCeSZdoPwvjOTfAy+MJyxby/k+IE73NPlsfYBiuiJRfj4ZvlhCvb5+8RiO4lJIgNnTqEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763991075; c=relaxed/simple;
-	bh=1C1bavEQ9llDaXRgP4dA+WAkGX18i1kqB1BR8DvPEnI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RNvlHpNmDQI/m5k7itGnumsr7L+5zj+/ExEBmRi1mGAQUW6J/UUEGqf/tOmc8Hs913GHKNOaE3U7AXNC4xvHhvEmrA3wCpPW1f/DYjD6X+SonI4xn/k4flsoybcO3gD2dj1firJe0BP6k1xu0gZaamgYjHwnkNAJYg3FP8kLPQc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=vRufgBFl; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=stlPtU5z; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=vRufgBFl; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=stlPtU5z; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1763992487; c=relaxed/simple;
+	bh=KX0caMZ9l8hEBOHcBD8FMjLvT5w8lx5xfuR//qBqjDY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LJ2VhFQlGoJMtx0298KvTnBU0hlmBcSw08ViIcDx24KYlXLUZDdNqNYKgzaft4GfOju/+L4TZkjNZAu+hKMkMq6tF/d8VXK8cndo0vWYQASQtgH5J+5TjVMkACvU+tiyv089HwDOeSqVPyMNxeOofDv1fnUR2DHv/0nIlKqxTpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=K8bmmdER; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="vRufgBFl";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="stlPtU5z";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="vRufgBFl";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="stlPtU5z"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 698F822389;
-	Mon, 24 Nov 2025 13:31:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1763991071; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mf2fLCJ+jeW81FuVPLBs9rqu8dErI3KF//hwSxw3Imc=;
-	b=vRufgBFlaBhxgVGfhXTPC9H1e0YBN8wrCoZ9A7r8z1KFJq3nEkneIVhIKeTw5zDfxirmQc
-	Ugxys06Yko6/NKvP2ZC5pnyLfUGQTaNhBTZBuiwHH+0cxoh0BnYCenbgbg6EdZPIf+/NKK
-	Uo1pLM86/odX1QvwaKCE/DcUARsz+9E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1763991071;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mf2fLCJ+jeW81FuVPLBs9rqu8dErI3KF//hwSxw3Imc=;
-	b=stlPtU5zigKUXL5Qb6dtWRjcSQQfKulrzaSKJC0dlGKt98uFqgP0iiOk5olJTkYT/kXTSO
-	L+p/jaqSmw1K0FCg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=vRufgBFl;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=stlPtU5z
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1763991071; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mf2fLCJ+jeW81FuVPLBs9rqu8dErI3KF//hwSxw3Imc=;
-	b=vRufgBFlaBhxgVGfhXTPC9H1e0YBN8wrCoZ9A7r8z1KFJq3nEkneIVhIKeTw5zDfxirmQc
-	Ugxys06Yko6/NKvP2ZC5pnyLfUGQTaNhBTZBuiwHH+0cxoh0BnYCenbgbg6EdZPIf+/NKK
-	Uo1pLM86/odX1QvwaKCE/DcUARsz+9E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1763991071;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mf2fLCJ+jeW81FuVPLBs9rqu8dErI3KF//hwSxw3Imc=;
-	b=stlPtU5zigKUXL5Qb6dtWRjcSQQfKulrzaSKJC0dlGKt98uFqgP0iiOk5olJTkYT/kXTSO
-	L+p/jaqSmw1K0FCg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 597873EA63;
-	Mon, 24 Nov 2025 13:31:11 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id fFZ5FR9eJGnvWAAAD6G6ig
-	(envelope-from <jack@suse.cz>); Mon, 24 Nov 2025 13:31:11 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id C5EE0A0A04; Mon, 24 Nov 2025 14:31:02 +0100 (CET)
-Date: Mon, 24 Nov 2025 14:31:02 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>, 
-	Al Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>, Jan Kara <jack@suse.cz>, 
-	Mike Marshall <hubcap@omnibond.com>, Martin Brandenburg <martin@omnibond.com>, 
-	Carlos Maiolino <cem@kernel.org>, Stefan Roesch <shr@fb.com>, Jeff Layton <jlayton@kernel.org>, 
-	linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, gfs2@lists.linux.dev, 
-	io-uring@vger.kernel.org, devel@lists.orangefs.org, linux-unionfs@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: Re: [PATCH 10/14] fs: factor out a sync_lazytime helper
-Message-ID: <vkobnnw3ij2n47bhhooawbw546dgwzii32nfqcx4bduoga5d7r@vdo5ryq4mffz>
-References: <20251114062642.1524837-1-hch@lst.de>
- <20251114062642.1524837-11-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="K8bmmdER"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=OfM0AoRIhJzRB9cR7DbkC3b42bO10uUEWudrTmSnWrY=; b=K8bmmdERgMwO0MTqOJwuU3hr+c
+	3NixO4I0ee3LuAgYp4DaY2/oUH/Vinz6fkUq4F/ZvtxInqMn9FG8/b5whOEMLmiJO3+R1yOtAgNH7
+	feeM8iET6a2sXPxPi3sdYbw65FM3cV12JSQ/GGP/bC9/ZW4GWYWibZzme4CW93yuKCeH4jfIP/Re9
+	EAbiCh3tQB3Kz0lN0+mwc+2Lq2SFXNUVjjGt9pvawB7taImqG03wLS5cYfWD6B5SRXSsIVlXqQYNT
+	9TvLN2BLPDnAZJ2nyVU1YZRg8Mmo49pgifkLHWzZHek2mwlQhTTqiNBGc0Aj5DSVDbsU00nUnPjvJ
+	Dy1eTjrw==;
+Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vNX1f-0000000Bn23-2bh5;
+	Mon, 24 Nov 2025 13:54:43 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: cem@kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	"Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH, resend] xfs: move some code out of xfs_iget_recycle
+Date: Mon, 24 Nov 2025 14:54:14 +0100
+Message-ID: <20251124135439.899060-1-hch@lst.de>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251114062642.1524837-11-hch@lst.de>
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 698F822389
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[19];
-	MIME_TRACE(0.00)[0:+];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[lst.de:email,suse.com:email,suse.cz:dkim,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Score: -4.01
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri 14-11-25 07:26:13, Christoph Hellwig wrote:
-> Centralize how we synchronize a lazytime update into the actual on-disk
-> timestamp into a single helper.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Having a function drop locks, reacquire them and release them again
+seems to confuse the clang lock analysis even more than it confuses
+humans.  Keep the humans and machines sanity by moving a chunk of
+code into the caller to simplify the lock tracking.
 
-...
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
 
->  	/*
-> -	 * If the inode has dirty timestamps and we need to write them, call
-> -	 * mark_inode_dirty_sync() to notify the filesystem about it and to
-> -	 * change I_DIRTY_TIME into I_DIRTY_SYNC.
-> +	 * For data integrity writeback, or when the dirty interval expired,
-> +	 * ask the file system to propagata lazy timestamp updates into real
-> +	 * dirty state.
->  	 */
-> -	if ((inode->i_state & I_DIRTY_TIME) &&
-> -	    (wbc->sync_mode == WB_SYNC_ALL ||
-> -	     time_after(jiffies, inode->dirtied_time_when +
-> -			dirtytime_expire_interval * HZ))) {
-> -		trace_writeback_lazytime(inode);
-> -		mark_inode_dirty_sync(inode);
-> -	}
-> +	if (wbc->sync_mode == WB_SYNC_ALL ||
-> +	    time_after(jiffies, inode->dirtied_time_when +
-> +			dirtytime_expire_interval * HZ))
-> +		sync_lazytime(inode);
+Standalone resend to get onto the radar.
 
-The checking of inode->dirtied_time_when for inode potentially without
-I_DIRTY_TIME set (and thus with unclear value of dirtied_time_when) is kind
-of odd. It is harmless but IMO still not a good practice. Can't we keep
-this condition as is and just call sync_lazytime()?
+ fs/xfs/xfs_icache.c | 31 +++++++++++++------------------
+ 1 file changed, 13 insertions(+), 18 deletions(-)
 
-								Honza
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index e44040206851..546efa6cec72 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -358,7 +358,7 @@ xfs_reinit_inode(
+ static int
+ xfs_iget_recycle(
+ 	struct xfs_perag	*pag,
+-	struct xfs_inode	*ip) __releases(&ip->i_flags_lock)
++	struct xfs_inode	*ip)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct inode		*inode = VFS_I(ip);
+@@ -366,20 +366,6 @@ xfs_iget_recycle(
+ 
+ 	trace_xfs_iget_recycle(ip);
+ 
+-	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
+-		return -EAGAIN;
+-
+-	/*
+-	 * We need to make it look like the inode is being reclaimed to prevent
+-	 * the actual reclaim workers from stomping over us while we recycle
+-	 * the inode.  We can't clear the radix tree tag yet as it requires
+-	 * pag_ici_lock to be held exclusive.
+-	 */
+-	ip->i_flags |= XFS_IRECLAIM;
+-
+-	spin_unlock(&ip->i_flags_lock);
+-	rcu_read_unlock();
+-
+ 	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
+ 	error = xfs_reinit_inode(mp, inode);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+@@ -576,10 +562,19 @@ xfs_iget_cache_hit(
+ 
+ 	/* The inode fits the selection criteria; process it. */
+ 	if (ip->i_flags & XFS_IRECLAIMABLE) {
+-		/* Drops i_flags_lock and RCU read lock. */
+-		error = xfs_iget_recycle(pag, ip);
+-		if (error == -EAGAIN)
++		/*
++		 * We need to make it look like the inode is being reclaimed to
++		 * prevent the actual reclaim workers from stomping over us
++		 * while we recycle the inode.  We can't clear the radix tree
++		 * tag yet as it requires pag_ici_lock to be held exclusive.
++		 */
++		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
+ 			goto out_skip;
++		ip->i_flags |= XFS_IRECLAIM;
++		spin_unlock(&ip->i_flags_lock);
++		rcu_read_unlock();
++
++		error = xfs_iget_recycle(pag, ip);
+ 		if (error)
+ 			return error;
+ 	} else {
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.47.3
+
