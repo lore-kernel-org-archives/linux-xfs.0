@@ -1,109 +1,169 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4710265609
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 21:45:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1608E272E42
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 23:48:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764020706; cv=none; b=Pgq9LsN88c7Dq7GhZNMK9E7XniEcdpowPHGSx6csBQcytILeb27oVsIzlGTQQD3IpAUVYkniTxK+SELYOJwYzlvCqdNyh/9XhnRisUkV0wm9Hixuq86+4TQMMOpazE3lJ4CuHWTAVfBKNso3cgi5GZUc8DMJ6z4kWjb5Dzg80VQ=
+	t=1764028104; cv=none; b=OzgfLf+IlF4qwuDqZM9SUsgKaaCTiJgvx1IPF2WIZLTM03dbu8awL7htDvkF7mRX7U2KgrbMakIt76ARKP4so2XxZSUCp3lWUeWv0AaZkiKHksRRXVaLO35S6qLyTqZ1xxlLCmnNNLWNOkh/4IciCilKmkFUvkbBFMz30t0zwb4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764020706; c=relaxed/simple;
-	bh=OaNWkI/dcdAcPXpsXS3qagJygp7RcWHNYazgBaL9VHc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F0FabmXJQhse3W6bMpiStrfGbacxqL2nZ6/vv6BHL+fX2xjNOWPEDXyj2J332OOgN9HZcYDuBKQwDNvaLFIPOPOiOT8PAEN8eONso7rGvebG3SPT3zj9zPeXWTZHp3z9xoNH1/dgNMOolrFTIdWfyBPN1UWWn+1z3W6utPRS72s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=NjQGvZlI; arc=none smtp.client-ip=209.85.210.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	s=arc-20240116; t=1764028104; c=relaxed/simple;
+	bh=0HZiUPVVqiDv8ZEl67pEJba49nGpbGLpzJLHrHVWkJs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=qXRMQHLs4WcfbIoXfprqFz01WcT9CQc+CBInUd3MUXey5v5IRk8pn2AQ/bguCI9A4fQM8niaQ/Wl10tdM8eVKzHhS3hD5exSMQ59Dky4kqEk9SP15ojP2yDyqxwHSSgo3x9G5ZUV1KQ4x/0d4KvKsWDWe+p45KF97SAbZwD0klo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bPL86y/i; arc=none smtp.client-ip=209.85.210.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="NjQGvZlI"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-7aab061e7cbso5628457b3a.1
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 13:45:04 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bPL86y/i"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-7b852bb31d9so5645399b3a.0
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 15:48:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1764020704; x=1764625504; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=NNsv43i2OQvz5OLalVIeDlNVznNw7I+brpQstgAAtI0=;
-        b=NjQGvZlI/efA2Krjxf2G2UfgRDA+QKb98VRbff+ryCOfIP9pkbox5xA+m09/IdA2FM
-         2BMGaxETaqIY2PTy5YFIO0vu6G+GxcCkG9fwDvG1rkIJrJ3oEol8uR16xk6JdQEIP6qt
-         B3w63peg6f/WP96A33NHcqraHoJp2Z2nG1xVKzgFyq05tECv5A1EVrDeP+/KM8Gfovgh
-         mVsUD5TaqzvsHABGmnaQjl4AfGvRN4SpoSVC6YHMyRwKi9523NCYXeCybWvSaJjDmVfe
-         0QT6wU6Huj022QTRGDJu9DG1qCC8WVt/o+wanlyeOrU/Vop/FOXdVKWRYaqC6r2+5kcX
-         qwUg==
+        d=gmail.com; s=20230601; t=1764028101; x=1764632901; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=L8zwVcuAssRnEQZ8e7ewIMIsPfvOXMAA4RWGmHyZ+Rs=;
+        b=bPL86y/iBZjOidhBAl6VEV+QifNIHQrW4C3Ep/nwnKCbwUYO59IpTBFsDTtTEXt8yx
+         FJpoB8nln2MJ0VffyNsLuxsbAfCrlFlqVQdFMMBONxF0RNtxGWy73OnTLTVzfvdxyT/l
+         1a5MQ5SILc0M6AkSTMRTtkdDAAw9Lhar88tFes+HRhPfsfPrH0YQpWIRbMdqpN8JxpT5
+         pn89jOdNkpwNkPjwlZ7wuYN9CfRt97F+rlWz4bReRFYlh2UbtSsd3m2VD8CYzxEdUPwJ
+         1hrdyU71mzSM4j22YMWsrdkPTHruHM0KynglrtZuDsfqrhVEhrIXc/umLfuVoTM6pkLZ
+         4c1w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764020704; x=1764625504;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=NNsv43i2OQvz5OLalVIeDlNVznNw7I+brpQstgAAtI0=;
-        b=SApaGeZxZZWlMBBtpH3ehp59AdL27zTtPIt/vhISJWyAHKzFbsJ21NZzHO1OIGjh4G
-         Laeuxq1nS0Avjeqc23x5feqIUYKHq+q+mYmpGdPNCjYbpmLbmUcRJbmz9x2rgMzpilKd
-         Y66ZUZIxXcQO55cHMMJOEBoaPae6+rMCh+pekPWkWnuQCYqos94VpdRRQfYcEVLfwDo/
-         2dNNRYhDqsXSo0xJdfWcWwHrQdEW3zPzMavCkRY/cZFC6RYW7RO/UBV9j2uaLPtqSL30
-         VKMi70W015Bc+Kx3Jzg9vUjRWw1tM//56XpYtoWJarf9mMpwiuu8T+O2Ig7/00PGWvJd
-         MFtg==
-X-Forwarded-Encrypted: i=1; AJvYcCUgGY3M17+zY6qqMcG6Pt0wzayqshsc4mVbqT8wUpnKfGC9TKetHsDBlYxeWwEpcuIXFsnxC5SbVRE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwJM7Il8YreStI4rwdtHehrjwrmJ5rCbdU0qxhYDb4fQ5ioS2C8
-	VlvEWoXCLm7OkZAWXxjTVGp73s4goojrnb0pV3YmHXvuhVGFLyekydtCASSHFLz2E1w=
-X-Gm-Gg: ASbGncvkYI3n+y9f3Msla7o3sstaA6l9UlWBDJ0ypAK9o4xsoD7O1gXFHuReTUJXpOn
-	cd12dpjDaUC5QMystItlrj9gcuZl5hkKnbTjzrhPO9LhAoqMfuHvFwFu4rjb78hRDxj4DGTe13p
-	n5yuZ45/LW+CafvnPej4JdabGXsM7/o5Y667vi7EWJd1mT5ZBKGEso99Ip9NC7Rg8RHsu/lAP32
-	fICjUGX03QqB6qn0V78LuyB3L9EYtXA2ZnBiEb/+xKm8NKWAEamIvc99KmOP7W9/cDD3IZtOf0y
-	DY2ms460IjnZ4wSNPPAWXiTVCJFir/pCREcCkFYaE9N8AMyBRYrEZP12c6FGy4X3VFaSznSaDMw
-	TPr+5Bh1GMqny3HoxySUqae9UqM0Xaofj5iFsWgm/OuaE/UgmJRSjRk1N4BP3+GTj5AI3cCCYTE
-	kdTfv03NZlWYgzz3R4c1h/5uD1wCPcu9kj6bY0rEmqRUBtxpeQe/+lnFWuYeq9T6DBnzhx2p3o
-X-Google-Smtp-Source: AGHT+IFQ0iEszH1nQ1G+8yhmc9CMltmxx8poRoBcqEr7VQXYIww2OLcCM1ETLiHMegh4RpRMW7/QIw==
-X-Received: by 2002:a05:6a20:729f:b0:361:2d0c:fd81 with SMTP id adf61e73a8af0-3614eda84f6mr15126034637.28.1764020703700;
-        Mon, 24 Nov 2025 13:45:03 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-58-136.pa.nsw.optusnet.com.au. [49.181.58.136])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-bd75b61c29dsm14087028a12.0.2025.11.24.13.45.03
+        d=1e100.net; s=20230601; t=1764028101; x=1764632901;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=L8zwVcuAssRnEQZ8e7ewIMIsPfvOXMAA4RWGmHyZ+Rs=;
+        b=vvhGfRHNhD4LOk4YukzW85BJbJCm1YieE5bXUHhICTaQT0ydV7/DNK9uaz/m6y3ZXD
+         hPKcJGXwJwjgoNKEYvyrPVitr5r75sTudv4X3LZVEryyLgd3Qz1QbC/33q8V36xRa1BZ
+         WWrklfpQNmvouMdAIqdoOf0eMtOFvlf12DHmrVuLLu3JTUz8HoprNYn6Fk+lbIIdQJK5
+         A6XqkumsqHA14b4k4EnNt9z2es2XmWupFhFBC8udM1X0aXa19da/Xd7i5aWXZ9N3w68M
+         0IVD09OGY692E7ZDK5O7GyLILVPog9jWnFB/J6ZZsO64avK3yrUy3qt8atn7FJ/COZ94
+         Oiqw==
+X-Forwarded-Encrypted: i=1; AJvYcCUGkJkcrRXn3p72PvgwFZb77c4De4KnNdKLuI4Lx3+KiwP9qo/+rJki/Xdu0ezuMQPrHBpq3O4AsiA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxrJpz3faMlfbasledBvC1cG442S6x3tuJM0Uk3GNCPboFCiNAA
+	fROqwyJZ7Z+8NN5QfM7gBFoF2hIsTZReuR+U40ZIDaQ/nY5zRaGtzClX
+X-Gm-Gg: ASbGncsJ02G10sY5o283eTG/oYcsOkJme3iO9fExJqadfCgHioVOUlXSkNYTVR+zukf
+	iiKdPb9CMcHDPMDZohSGVtFXkST0PUxMUdMWzfjmnTgvcA2cE0kVu7tz/f04h8UuIIqFJeKas+L
+	IGt6/UHidUZGtoDCmy9prSadYiDe5MZ7y3leTyEWl8AoeYmN80LOAjhMw3Nos6vhTHJG9uoLVTi
+	62SxFDTKq26yivVJpFITWlLXzrlBHLkJduje93kFBpcCcf+NPmKCsU/7D4TrernGXS6+doSHb3D
+	3wsmrexRQeF7gdJvUdpxTW5UFRYvBbz8Mn0wkxuipDo8mRBgBMzONeXgMkq9+8aA0NojybXGpXv
+	48MXSUQO13KeKXSynqSm2Q/e7Wg9W5nRRF90SDbtyAANUvWdszv1NXz+vw3JKnoPRjEljxtRyd4
+	oiXyRqOBGoQnrLASnRN1so29gZbxX4Bl85b2WSROG8wrku8U8=
+X-Google-Smtp-Source: AGHT+IEWVgvs7HfQh1Jftv0/sg1EMetPp1p1pbe1p7lp0IBRgw/xws/S7S4QHSHoK5/x2kKFyy9WJQ==
+X-Received: by 2002:a05:7022:1093:b0:11a:2ec0:dd02 with SMTP id a92af1059eb24-11c9d85fed4mr7996088c88.33.1764028101157;
+        Mon, 24 Nov 2025 15:48:21 -0800 (PST)
+Received: from localhost (ip70-175-132-216.oc.oc.cox.net. [70.175.132.216])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11c93db556csm74670928c88.1.2025.11.24.15.48.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Nov 2025 13:45:03 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.98.2)
-	(envelope-from <david@fromorbit.com>)
-	id 1vNeMm-0000000FGss-0B2V;
-	Tue, 25 Nov 2025 08:45:00 +1100
-Date: Tue, 25 Nov 2025 08:45:00 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: brauner@kernel.org, djwong@kernel.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	syzbot+a2b9a4ed0d61b1efb3f5@syzkaller.appspotmail.com
-Subject: Re: [PATCH] iomap: allocate s_dio_done_wq for async reads as well
-Message-ID: <aSTR3GHyAZKdRCqo@dread.disaster.area>
-References: <20251124140013.902853-1-hch@lst.de>
+        Mon, 24 Nov 2025 15:48:20 -0800 (PST)
+From: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
+To: axboe@kernel.dk,
+	agk@redhat.com,
+	snitzer@kernel.org,
+	mpatocka@redhat.com,
+	song@kernel.org,
+	yukuai@fnnas.com,
+	hch@lst.de,
+	sagi@grimberg.me,
+	kch@nvidia.com,
+	jaegeuk@kernel.org,
+	chao@kernel.org,
+	cem@kernel.org
+Cc: linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	linux-xfs@vger.kernel.org,
+	bpf@vger.kernel.org,
+	Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
+Subject: [PATCH V3 0/6] block: ignore __blkdev_issue_discard() ret value
+Date: Mon, 24 Nov 2025 15:48:00 -0800
+Message-Id: <20251124234806.75216-1-ckulkarnilinux@gmail.com>
+X-Mailer: git-send-email 2.40.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251124140013.902853-1-hch@lst.de>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Nov 24, 2025 at 03:00:13PM +0100, Christoph Hellwig wrote:
-> Since commit 222f2c7c6d14 ("iomap: always run error completions in user
-> context"), read error completions are deferred to s_dio_done_wq.  This
-> means the workqueue also needs to be allocated for async reads.
+Hi,
 
-The change LGTM, so:
+__blkdev_issue_discard() only returns value 0, that makes post call
+error checking code dead. This patch series revmoes this dead code at
+all the call sites and adjust the callers.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Please note that it doesn't change the return type of the function from
+int to void in this series, it will be done once this series gets merged
+smoothly.
 
-But I can't help but wonder about putting this in the fast path....
+For f2fs and xfs I've ran following test which includes discard
+they produce same PASS and FAIL output with and without this patch
+series.
 
-i.e. on the first io_uring/AIO DIO read or write, we will need
-allocate this work queue. I think that's getting quite common in
-applications and utilities these days, so filesystems are
-increasingly likely to need this wq.
+  for-next (lblk-fnext)    discard-ret (lblk-discard)
+  ---------------------    --------------------------
+  FAIL f2fs/008            FAIL f2fs/008
+  FAIL f2fs/014            FAIL f2fs/014
+  FAIL f2fs/015            FAIL f2fs/015
+  PASS f2fs/017            PASS f2fs/017
+  PASS xfs/016             PASS xfs/016
+  PASS xfs/288             PASS xfs/288
+  PASS xfs/432             PASS xfs/432
+  PASS xfs/449             PASS xfs/449
+  PASS xfs/513             PASS xfs/513
+  PASS generic/033         PASS generic/033
+  PASS generic/038         PASS generic/038
+  PASS generic/098         PASS generic/098
+  PASS generic/224         PASS generic/224
+  PASS generic/251         PASS generic/251
+  PASS generic/260         PASS generic/260
+  PASS generic/288         PASS generic/288
+  PASS generic/351         PASS generic/351
+  PASS generic/455         PASS generic/455
+  PASS generic/457         PASS generic/457
+  PASS generic/470         PASS generic/470
+  PASS generic/482         PASS generic/482
+  PASS generic/500         PASS generic/500
+  PASS generic/537         PASS generic/537
+  PASS generic/608         PASS generic/608
+  PASS generic/619         PASS generic/619
+  PASS generic/746         PASS generic/746
+  PASS generic/757         PASS generic/757
+ 
+For NVMeOF taret I've testing blktest with nvme_trtype=nvme_loop
+and all the testcases are passing.
 
-Maybe we should make this wq init unconditional and move it to fs
-superblock initialisation?  That would remove this "only needed once
-for init" check that is made on every call through the the IO fast
-path....
+ -ck
 
--Dave.
+Changes from V2:-
+
+1. Add Reviewed-by: tags.
+2. Split patch 2 into two separate patches dm and md.
+3. Condense __blkdev_issue_discard() parameters for in nvmet patch.
+4. Condense __blkdev_issue_discard() parameters for in f2fs patch.
+
+Chaitanya Kulkarni (6):
+  block: ignore discard return value
+  md: ignore discard return value
+  dm: ignore discard return value
+  nvmet: ignore discard return value
+  f2fs: ignore discard return value
+  xfs: ignore discard return value
+
+ block/blk-lib.c                   |  6 +++---
+ drivers/md/dm-thin.c              | 12 +++++-------
+ drivers/md/md.c                   |  4 ++--
+ drivers/nvme/target/io-cmd-bdev.c | 28 +++++++---------------------
+ fs/f2fs/segment.c                 | 10 +++-------
+ fs/xfs/xfs_discard.c              | 27 +++++----------------------
+ fs/xfs/xfs_discard.h              |  2 +-
+ 7 files changed, 26 insertions(+), 63 deletions(-)
 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.40.0
+
