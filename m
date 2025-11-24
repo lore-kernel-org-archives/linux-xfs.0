@@ -1,64 +1,64 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E89C29AB11
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 02:57:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0A7F29B8E8
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 02:57:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763953071; cv=none; b=elrjiwaBfBZBkJRUnRrGcK52xzvF5nemRx3gBJNueLuDunwBhxjCg2V2IZ6qFS54FsgPFq8nRws+chS7LKBYEgUf6xRAxS+Mkdpk25TOLA0GYmZOi4+zn+dakxlo+j0rgB3kntd2RSdXq0rJ4Vld6YHruHpUUHbp78cvtG9E9wo=
+	t=1763953072; cv=none; b=OFEa/fUZmDIlydTQNgGFXTnnp2ohP7nIO89Dj6CbXwZF1kkx3nlJ95MYGXM9o3qFMkPcFkDZWSvEwQnW0zQOdWV80haoNRsqz2915bBuNpjKEMaTztD+3AUveAKOjffFLgZELXEHnFGEeWz6ci0RMtqeJ5o5GkDo0J1Nyj5DW4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763953071; c=relaxed/simple;
-	bh=CHhIhTF7NAlbIHo/7TRGjQSC5FGBam+nH0hmtRIrdo4=;
+	s=arc-20240116; t=1763953072; c=relaxed/simple;
+	bh=1rxomFQWvF3IATN9kucOuHHGa2FB/YCgzDqnGWQM12I=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=jiGjHe8tpk/1959rPyJITALFddiPJPkhXickwmyXgmvMww2Tlpe5TvIgchAl7HtRvaVobWeVe6IM1BecQWsHGUR5RSplrXiLvFZikGy4OqIyw3QiGRoBMJUaYzBAf+jGy1WbbuxFTvlzjSI8GXBCx0X0uptQXNCoUgGCS0+4WuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jDz/DONC; arc=none smtp.client-ip=209.85.214.178
+	 MIME-Version; b=eBdfwADcVzRLNaNMMdsaVwPrAoqOuO4FiKx6dHCkguCo/++aU2RVSzu0ZSeLHS0CY0OPG4gTWrPH4wn/PdxTzGfWeK91suq7MHt14hUE5I5j4eapFko30Skq75UlHjdOpMPQVYcOwhgsXKZNKSrjMHx5rTmigH6cwnG7PPPeWVg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=azIjdVI3; arc=none smtp.client-ip=209.85.215.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jDz/DONC"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2955623e6faso44397665ad.1
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Nov 2025 18:57:47 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="azIjdVI3"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-b99bfb451e5so2494338a12.2
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Nov 2025 18:57:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1763953067; x=1764557867; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1763953069; x=1764557869; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=sNwYZl+W2fvcXiK6f1dLRuPmVDUoM4hiP4tOVDl+CUs=;
-        b=jDz/DONCcktAyNl+leNQ33o3sbS/lb4kKl56q4xXHXX/kr0HC7xVs16t0EH9RbWuaS
-         0KwWYTJNfWKNSmWU5nt9F2egBjeEU8JYE1re9nCLIvyPnGYtHItQjjPCaUK6mZCk2THJ
-         sQ+n3HQTej8WS68aHQrgQmnDJD8x1hPgbE3HX0CNjwhm3B3Cew6qNPGEKO70nx2kbUO4
-         HNzmjNzsQNbncqfwsvqK3aQn2m/e/h8JsEbLnt2fI3sKPIeEYiRQMCoktHtqYMW013hm
-         rVHp+8UVBJWmNjjEH9B1cI+gVTXO9yznDitJhkS7Py0+rjcP7etm14yoN/BI1lN1U7YS
-         sbew==
+        bh=7A/o1KMdHnERZPkaP005IU3nW52A8GrE+BEL9651kiM=;
+        b=azIjdVI34KdCDfW4btCpFmAICXA7gD8DN3FA10SiAzUACJZ146vWSjuI6oEtkye28F
+         zJIhsxt3btUYjxbiupNX8VLujqiH7qQ2s9iaxtoHfHD/6jlG+sirrXUWQp5LF7PFoNSR
+         sIipqOcsR9kEA9S+/+D2kRyJNdccpwTsNS1UIqzy0d43FO7DQ5t8DzqkICEBy8S/obNF
+         5SO3ILAiFwWwKmiBuG5py/BU0pKzvRIlDoOclvB0EEnA4YPIlUU+TfO9j755NT5OzLAA
+         ofABhdoKpj3fzVuWJtdCkZkLZYFw0fy25FF3M2Gj6hcbHEdCp28wEVQ95thYDK9TSo9H
+         Mp7A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763953067; x=1764557867;
+        d=1e100.net; s=20230601; t=1763953069; x=1764557869;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=sNwYZl+W2fvcXiK6f1dLRuPmVDUoM4hiP4tOVDl+CUs=;
-        b=vbeaTHL+PnmJtq/XRrOR2X01MK8i3JLSNBGPDTdNOKj8oS7GJf12FB7PFHIIoItxXr
-         AGfrKERk2BmIUbMApjGi/oGA04Bv+j4y0jcQp0XBjUK86t0nalp6gAMv8oK28v4mQdd1
-         X1VU+96s+ISFMtqmi5sO72dhmNjX5RqEFxOOZtH/SGgdWlIQ4cqHP7K/IT/UwO2AqSOp
-         xb+jE26lNBT4A6Jc9agtMdlioZqKPS+gqb1YgWd3bGAuG7JoFFw/SeGHqu9XOu6/8x45
-         hfewXDd9LsXUX2SE+WRvCxhFRpB5ppFTD54AkpB7teNIaZp0OrSSwl4CYAys5fTEmGDM
-         hxiA==
-X-Forwarded-Encrypted: i=1; AJvYcCWNd79zciT7Azct0CJtxrQa8AAmnuV/MQcD8AhhFnZjII1+1IsqNBpvUqzV7eMlWkCgRLlt4+U3SWE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxeHE0NHbVJcnjLpssGRYukXsMKexbHyjhJkL0jwGthHtDl3BMG
-	KrLh52VDwENwIfpDshomS9ScDHuCtQgdtK0qQKksHOrpxw6HaxxI5imQ
-X-Gm-Gg: ASbGncsSzqGPcVLCa7cfW75+qzTask0GcHR29TzviydbMQkx61AL1P6vlyavC4MUwPZ
-	0WwAGCP0p5/VzG5s8QD6eBwXVhB3QaiY+EvelcJwpmVuVPaImTHtJh2nQhQ2AQBEUNW9FNwLYFD
-	UYxMXJr9pE/2GREyQGusOPf/4CFHewbHTO8Ml0ymumAthRx6Z6csyaLHFYyg7UoS9Hz7V/9ZoSY
-	j2vh5ljjeKtjEdjgPQ20RKRV81etL3/Pxc7exsDxmjpRd/MDKontXwdmWv2fEgui26tFnTVrjmR
-	tYol/sfafy47+C15WZYWK3PIQTwfR7tqAQ1DhOhVknlv3A0Ql/uykTeav7hT5Krko68TduCyZ7I
-	j7i9Tpiei9Ilb5T1X3pvvtiPDYQWu1XI3nchdwdRiMjggyXgqTTIerNI9h3tSYkj+CekxK63cQA
-	U3Use/cecx91tFJRRkiKkf/rgaCauDDobms5oNkNJ0dHpYGoo=
-X-Google-Smtp-Source: AGHT+IEZXRFduMWog8lY/WEBRyb3MZQs6kfaoxzTi2A/dpYZvd44wI5EVbBBu8fatXwqYTbLGqTaxw==
-X-Received: by 2002:a05:7022:6285:b0:11b:923d:774c with SMTP id a92af1059eb24-11c9d613979mr6980540c88.4.1763953067290;
-        Sun, 23 Nov 2025 18:57:47 -0800 (PST)
+        bh=7A/o1KMdHnERZPkaP005IU3nW52A8GrE+BEL9651kiM=;
+        b=wqwsKuavTIiI9hkP1XiiqpgvunHJYmNjFHZwvGeajhI31N7wrvxWsQ3eOxmZI0VQ7M
+         lVk7BsTpgNTPypfjAL1ccGTmxJhK1emIJfuHzoypDHAAgsn+oBdoRGTK3dF94ezJs6S+
+         EWQcBQfoEdiMN6EpCwubUSvkchErgWkL2VO8Adl9+97qIIj+Af4zCcXCRzNyQx4wmUwV
+         Oz3qBw6Tst4KZUAN2LrdccWdIVIecmQKnA2k6ejgosBdEXpDCyHeyTb9XvrsvawTcZg2
+         jE+GmwxpofP0V2Mf1EIOev0sBK5wBUXJQukrr6mZmpwBCsvid1/geEUtT5leUSLvM6Vv
+         qkKw==
+X-Forwarded-Encrypted: i=1; AJvYcCVym6xvSCER+iQq3KdZIoLdoOHV96KLtBsUj/N4WJCYw2fgn5Ba7tE9Ic4m0u2duwVJbRDnsUG9meE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxeiCdziur+L4gl2slZHp3DirjCGWk5orwE5KYTPJYsSxWBv6Nq
+	kXOkxW+NsSQ1lDQzjJZmmdwgWRdmejNPucwk07V9mfa4PM2GtKKoKFRY
+X-Gm-Gg: ASbGncsxyfzZt6PXZUM3fyvFVN3ov2Mlacp4csaXKaR4dH40GES/fV9iTnMJYFNpxdw
+	3GCs7yCuPhcZ8EcQ9iHHEQFAuDzvonT4Jedvoal82iYCOQejdUZbD8WogjzSG/Z2uy2GUilzSwK
+	RZX5xaeEIcWch46r3Z5IK2BtODy6ciI6ppVfRdjxmiXoVZ7/LOWnPLLc4zl7SJ/qha2SdOKWH1f
+	QQa2gmNPI0j8QkOnbqVyI+2cbiXPeo+uaG6izxMgzckYCrusZmwOZA+WASyVbRXgCRzNizMviCd
+	9WMgv2kgnZVlM0sMve8te+8gx1Brtj8FvlqKnFjXl/DCXyEG4cGfJ8SqsK+habxY7KoyhKkA2dW
+	p5G4kCd9bdhcfVA9lr+AB1fdBiNm0unbl1dk4H+fZ0yDRtZamRGNf9HHXsPQtBrL1+r6e8OocSS
+	NFhxNrn13qZiuWqfzTIxiSFrn9AdC4eTdGUXUfVB4SFu5dmSs=
+X-Google-Smtp-Source: AGHT+IEmMLANDAnmsBNCneTvCZSlRusetXy+m9HCywmHN66AM/499qf8PoyOZ4xW94y10CRf7NdkQA==
+X-Received: by 2002:a05:7300:538c:b0:2a4:7cb9:b7da with SMTP id 5a478bee46e88-2a71927d85amr6563682eec.25.1763953068821;
+        Sun, 23 Nov 2025 18:57:48 -0800 (PST)
 Received: from localhost (ip70-175-132-216.oc.oc.cox.net. [70.175.132.216])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11c93de82c1sm45441687c88.3.2025.11.23.18.57.46
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2a6fc3d0bb6sm67532109eec.2.2025.11.23.18.57.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 Nov 2025 18:57:47 -0800 (PST)
+        Sun, 23 Nov 2025 18:57:48 -0800 (PST)
 From: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
 To: axboe@kernel.dk,
 	agk@redhat.com,
@@ -81,9 +81,9 @@ Cc: linux-block@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	bpf@vger.kernel.org,
 	Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
-Subject: [PATCH V2 3/5] nvmet: ignore discard return value
-Date: Sun, 23 Nov 2025 18:57:35 -0800
-Message-Id: <20251124025737.203571-4-ckulkarnilinux@gmail.com>
+Subject: [PATCH V2 4/5] f2fs: ignore discard return value
+Date: Sun, 23 Nov 2025 18:57:36 -0800
+Message-Id: <20251124025737.203571-5-ckulkarnilinux@gmail.com>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20251124025737.203571-1-ckulkarnilinux@gmail.com>
 References: <20251124025737.203571-1-ckulkarnilinux@gmail.com>
@@ -95,71 +95,53 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-__blkdev_issue_discard() always returns 0, making the error checking
-in nvmet_bdev_discard_range() dead code.
+__blkdev_issue_discard() always returns 0, making the error assignment
+in __submit_discard_cmd() dead code.
 
-Kill the function nvmet_bdev_discard_range() and call
-__blkdev_issue_discard() directly from nvmet_bdev_execute_discard(),
-since no error handling is needed anymore for __blkdev_issue_discard()
-call.
+Initialize err to 0 and remove the error assignment from the
+__blkdev_issue_discard() call tp err. Move fault injection code into
+already present if branch where err is set to -EIO.
+
+This preserves the fault injection behavior while removing dead error
+handling.
 
 Signed-off-by: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
 ---
- drivers/nvme/target/io-cmd-bdev.c | 29 ++++++++---------------------
- 1 file changed, 8 insertions(+), 21 deletions(-)
+ fs/f2fs/segment.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/nvme/target/io-cmd-bdev.c b/drivers/nvme/target/io-cmd-bdev.c
-index 8d246b8ca604..97d868d6e01a 100644
---- a/drivers/nvme/target/io-cmd-bdev.c
-+++ b/drivers/nvme/target/io-cmd-bdev.c
-@@ -362,29 +362,14 @@ u16 nvmet_bdev_flush(struct nvmet_req *req)
- 	return 0;
- }
+diff --git a/fs/f2fs/segment.c b/fs/f2fs/segment.c
+index b45eace879d7..3dbcfb9067e9 100644
+--- a/fs/f2fs/segment.c
++++ b/fs/f2fs/segment.c
+@@ -1343,15 +1343,9 @@ static int __submit_discard_cmd(struct f2fs_sb_info *sbi,
  
--static u16 nvmet_bdev_discard_range(struct nvmet_req *req,
--		struct nvme_dsm_range *range, struct bio **bio)
--{
--	struct nvmet_ns *ns = req->ns;
--	int ret;
--
--	ret = __blkdev_issue_discard(ns->bdev,
--			nvmet_lba_to_sect(ns, range->slba),
--			le32_to_cpu(range->nlb) << (ns->blksize_shift - 9),
--			GFP_KERNEL, bio);
--	if (ret && ret != -EOPNOTSUPP) {
--		req->error_slba = le64_to_cpu(range->slba);
--		return errno_to_nvme_status(req, ret);
--	}
--	return NVME_SC_SUCCESS;
--}
--
- static void nvmet_bdev_execute_discard(struct nvmet_req *req)
- {
-+	struct nvmet_ns *ns = req->ns;
- 	struct nvme_dsm_range range;
- 	struct bio *bio = NULL;
-+	sector_t nr_sects;
- 	int i;
--	u16 status;
-+	u16 status = NVME_SC_SUCCESS;
+ 		dc->di.len += len;
  
- 	for (i = 0; i <= le32_to_cpu(req->cmd->dsm.nr); i++) {
- 		status = nvmet_copy_from_sgl(req, i * sizeof(range), &range,
-@@ -392,9 +377,11 @@ static void nvmet_bdev_execute_discard(struct nvmet_req *req)
- 		if (status)
++		err = 0;
+ 		if (time_to_inject(sbi, FAULT_DISCARD)) {
+ 			err = -EIO;
+-		} else {
+-			err = __blkdev_issue_discard(bdev,
+-					SECTOR_FROM_BLOCK(start),
+-					SECTOR_FROM_BLOCK(len),
+-					GFP_NOFS, &bio);
+-		}
+-		if (err) {
+ 			spin_lock_irqsave(&dc->lock, flags);
+ 			if (dc->state == D_PARTIAL)
+ 				dc->state = D_SUBMIT;
+@@ -1360,6 +1354,10 @@ static int __submit_discard_cmd(struct f2fs_sb_info *sbi,
  			break;
+ 		}
  
--		status = nvmet_bdev_discard_range(req, &range, &bio);
--		if (status)
--			break;
-+		nr_sects = le32_to_cpu(range.nlb) << (ns->blksize_shift - 9);
-+		__blkdev_issue_discard(ns->bdev,
-+				nvmet_lba_to_sect(ns, range.slba),
-+				nr_sects,
-+				GFP_KERNEL, &bio);
- 	}
++		__blkdev_issue_discard(bdev,
++				SECTOR_FROM_BLOCK(start),
++				SECTOR_FROM_BLOCK(len),
++				GFP_NOFS, &bio);
+ 		f2fs_bug_on(sbi, !bio);
  
- 	if (bio) {
+ 		/*
 -- 
 2.40.0
 
