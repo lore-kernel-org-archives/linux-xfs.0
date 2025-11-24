@@ -1,219 +1,160 @@
-Received: from mail-dl1-f41.google.com (mail-dl1-f41.google.com [74.125.82.41])
+Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB4C829E11B
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 02:57:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6F1D29B8E0
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 04:13:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763953073; cv=none; b=S7s/6DBo8fmk2akqz3Q5G0H6Y2YqfuuwHoaqs7+UYZ7WXeDQoWoH1X4SB/vABDMdjDTr4KVIDlQ+ff0o9eGvhb0ul9yInJOP/1nD3y+8HIp5/0TpkTl6wKac/mqxhzXV1vxfjjSiv8wkkJx9Oix3KE22rFVv7wT5jy4Lm2ZEe70=
+	t=1763957629; cv=none; b=rxBcP8m9AE9mjA21f12nFArudbexrSkvaF4dGYVhVrxQRfIZYVOuplrSXzaJxJ1rj7uGXUyL0NHK01BXoycuRQ3vUoMekcviIvYTSqLjIWYHiHmK6VGiU8/AospM8vka5yzK0Os04eJs48H4ygmuWGcEfBoNvWwwzU24JxGokWU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763953073; c=relaxed/simple;
-	bh=rrj2tkBOa+tDueLpfke1EhQT6rpNTZ2snUg0Jqjwd8E=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=fVCxdpoEOwW3QiKOJjyvefb2Hds9zUFa0fAzg5tRyZrPpkN+JTNTfqpM6vloGhDYssdDux2yZ0vvSMHWW7pGBgcIT0fXdBfyo+nKWZtaIMTOPCMSXXQk60f8gaOU7AjwDB86NjSiBVbDJZlGrlC/+gGmzTuoDpj9wSDPBP9OhwU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PQ/bF+sK; arc=none smtp.client-ip=74.125.82.41
+	s=arc-20240116; t=1763957629; c=relaxed/simple;
+	bh=VYWRTyPESzipLnnH2aT0v2nC3FhxRP7mduSr1gopNDc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JfylS2rVHZAbT5FAxZGe0pepsyq+E5xQVURcUX497jYNlw8YbXVrUNugw3sxb5FdVaoRRBYwQZ+OL8+IRYWU1tn/aGLgF6NmVlPz9nOo0uDOIog3LXjNUuc1TLR4GVcKfFiy3Pc/eNWyKy+iUZDzuhHHVbocykBDENVGzr3UHvI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DlNP19uR; arc=none smtp.client-ip=209.85.215.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PQ/bF+sK"
-Received: by mail-dl1-f41.google.com with SMTP id a92af1059eb24-11b6bc976d6so4809647c88.0
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Nov 2025 18:57:51 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DlNP19uR"
+Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-bc274b8ab7dso2721469a12.3
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Nov 2025 20:13:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1763953070; x=1764557870; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1763957626; x=1764562426; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=7wt4l3Vmobq4GuuMyFPJBgrWPvgmrjYhaZwLaOIoKCQ=;
-        b=PQ/bF+sKOVTPV+FBrh9+gMAXMBO5MVWSsP6S+IvgmpQZH4MtrfojXoB5YGJMNqTZOA
-         ycf8CywrZXBuN3mZFs2XvYzEr2eJ0nEZNjXEzQQ4XV4/tK6WCOGmjlsVbKLEuQKFmooA
-         vOLEXK1/ZMFdHs248T851l92fV6XEXeCtVvCe/wwZPgz+vn3Dk94CEvbOPEuDUns36gY
-         MiBqbfsPIO0uWzi+ZM6Xoj50jvnT9CV3lxEqM9wZyXJAaiTi9kcwELgAeYYLCs5rqGpG
-         CZO3v/SE9T0Mt/VLObVGTt0Jy3Yb9E4rfqx+Ny6sxYWUrVtNgFrZMJ9UASllSB/iuqDE
-         PvYA==
+        bh=fydAkFwcipoOB3D3Iv4aQcolWkZH2MTYyoIRcnTBtLE=;
+        b=DlNP19uRzhHRrc+4MZUn+UVA3T+vx83N4PFbzUVf49HnM3RzifsvDvvGNC/oPj34ni
+         3EawH4UwlvraH0+bhbyftj4RC/A+m7fimv0tE0uU2mDSJZWEVWFvHz6xzWiMz2h5oGvU
+         hrSZbzMG0EwQS1pE6FRNkrOP9qqYW7W4oeMji56YhBjWcB7urRwn+/SvjMP2OrnAEC00
+         SgM92iNtdmfDI/X3z9q2VuBkx87gnT/3RiBbzJTXKD1IM1zvAdtmsgw56lVyz8cz42La
+         buzOxTlIv/tIik61EPIcVcIwwvMG/LYMKfsz0BKCJkasw3Ou51Ppnf1vQZpIrB7t+XE9
+         57xA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763953070; x=1764557870;
+        d=1e100.net; s=20230601; t=1763957626; x=1764562426;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=7wt4l3Vmobq4GuuMyFPJBgrWPvgmrjYhaZwLaOIoKCQ=;
-        b=dAwIY4VailiStvQ/oawFQlDOp8XS6P7x1S91DQJBcUrEkZNsgeK+OTcvnXLwfXsi0e
-         3fTXJszr3te2w5c5f/QY0X7P55k1ijwJxdr49F4A9vUDys6FQW1UvpaZ23Oa/QfxOL/q
-         fxo4Hz/nlf38i5nFKeAt4yFx21XWaDm/JQQR1oDJeNTEHrrIGjYRMPq0S05lsLYmAAU5
-         9nfhF3ryn4IWWWSKc2FqUaxSkCSec6N4PSR5H/zLRw5jZN5K0Yo1xvxd8e3fVm2wzZpp
-         jHd31hw/Bh2patVJGyEdfezLq7fNNzsFgxghYKqIQocwdwTSCpop37/5VViHxMNH6H/x
-         tJng==
-X-Forwarded-Encrypted: i=1; AJvYcCV4iYuqeIuCBwkmFNJQQVp+P2S6bc84wYJZwpR+zif3Wc/f1PMqdXX9sgJqYNO5gMAJ5KHQoR7D2fw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx8S572aBsW3qUkAvfJCoNDv+MXqzAf1XNL8onY03PsCFicGxZd
-	K71ft/dx6J19Nw9qhaItx5djJ7QVtWr/3g4y0AiTWkdJ8T+rYF/re1W6
-X-Gm-Gg: ASbGncvKbSJmMoZe/PWftDKoiWI2UxhzbgcMdz7Tp8U3n7lbjtdGI49rv9kXL9LafuE
-	acmA6QtaBF16xN2FN4892GFp2Tk9jSs7Sj5lBI93ptqvK9ij01oy3snsgDUGBHJDUqY2KHDwyqI
-	nEkJ/orCH1hxZqbMCqsCYMtcdA0pK6/NJLpTV0ABkSb48PHxH2RGOf5RsCqIj/+Cn8vgyGIXiPb
-	PlW2IaXE1WnHmvYvvCwkYqbiZ8/AYmDyD1AVruP03j2kgDlVioMeRxx7LALjFi2NIlbaVl9rbJd
-	Gy3a1sZ3tIJLZJvIe8wxQSU3t1KBL7PqMuh/J8cF19gSZtaLh5OwghnTo3lt5ZZg7c4N0t9/bmi
-	HJLn4aRdIxljDHEVA4S2ZRQ4nwCkcVrNeZ0Hp+PB57ozlE44UfU/HUozdju/UUoDMwWQlXjV/Bh
-	7BDUAHP9ZlPCEAmFFxEb1OflFb3wPagv7eF2JjjGie3DVLe2u4wmzl6NwCcA==
-X-Google-Smtp-Source: AGHT+IFpsDs+kXmQXVU6E1/nGle2v7URUru8XFd/49TW2BQ+0epIeeb7LYLuuNciA5YRvlLXxX79hA==
-X-Received: by 2002:a05:7022:3d0e:b0:11b:3eb7:f9d7 with SMTP id a92af1059eb24-11c94b601c2mr7020409c88.14.1763953070114;
-        Sun, 23 Nov 2025 18:57:50 -0800 (PST)
-Received: from localhost (ip70-175-132-216.oc.oc.cox.net. [70.175.132.216])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11c93e6da4dsm58917652c88.9.2025.11.23.18.57.49
+        bh=fydAkFwcipoOB3D3Iv4aQcolWkZH2MTYyoIRcnTBtLE=;
+        b=dnuDXHwXJ9f2JQZB61bXPaJ6gYY8gUNYrf/Uh3GM+QPbvGpcT5HGv/Kz9EEM74xgV2
+         qZn/y9UNN4sSQgA/f2CxNDBmEg8pFRwaEa7XQrg0LequZOe4MbKQOHpRlilltXVZ3518
+         TgLE2Q/74fLPwMBZnDBIdn0S9E9O8Ru+AQMjJIe/nbMvCQm4/YsntXpwtw+9ZcB6C2qs
+         d/JYkvkMwhLUFMYrMw2evavG/uAPLIdPJKvSifD6fCqeITzHMRNl7iP6s23OUpVNhiLD
+         6IV0SBWxKc6KfOPt4frKDlzAoe+NbibGdfQ/zdrPzOzQn6fb9NXQaOk62Cgxc8OMi7q6
+         ELeg==
+X-Forwarded-Encrypted: i=1; AJvYcCUY2o9Tl368duBtzEsX+7UFyfzIcI1EVjK4RurQxF/ypsE1HZYHDnK/AB2qw84TcQ5ZM4HjUtBgvEg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyphtgXNWI6VUWHRQDDb9AKwj8Wmd27WwCF+kIq3YVPT+H5oRHV
+	UBr4e55ezx40ASpSdzCQrj/alcA3wY9YhFFVN2ox3hoU1GMDh6OSlgER
+X-Gm-Gg: ASbGnctZGZ7qZzxCDVfXtSSgKJ/xgQOCml4wjiQyjver5qv9gZGwcPZY67PuVOrBTGb
+	setbl3Y2XCTVrkw6J2rnaGZ8xyfxOzUxUdaYekwRsxxcT+rFuZrhCC0AxCH9P1v4iYJn3bjRWtV
+	Su3rgeIQRn5vlC2M0ezWY355v2PTf25dxYY57Bsqj3uwpfA8w0WgIdC9SCQPZ2h0ULkBXFKILd6
+	WUDmRvQ1XKmO5gkMO7uPx4grGocdl1RUhQXDb1EiXK80Zer6OiJPCYer9RLearqM9GOwlJqngHB
+	QMCc1VdbQPfLSeQPh8x5JoP1f/K9ZxzaO65oVyigYwFHQX1DTR9zxZdCzkI6qD3zdPqzcvK3Vdt
+	RJUWaEsafJsIgHMSGHKnoXh+M7VGTNJw4uGzgQ12dtN//T3RELQcf2OFCPGmby2CtBl1fVmvOXh
+	bH4RC4B0SpUljgIjaEc/k2Xkk=
+X-Google-Smtp-Source: AGHT+IGyjZHuuatYpJJf1BJhDgajNLFkIE3labwAwI4KXT7E9n19rHNmo8uUE3EzBIi2ZBl3kfhOPw==
+X-Received: by 2002:a05:7300:aa8c:b0:2a4:3594:72ee with SMTP id 5a478bee46e88-2a7192a95admr7309628eec.29.1763957625912;
+        Sun, 23 Nov 2025 20:13:45 -0800 (PST)
+Received: from VM-16-24-fedora.. ([43.153.32.141])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2a6fc5b122dsm48042287eec.5.2025.11.23.20.13.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 Nov 2025 18:57:49 -0800 (PST)
-From: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
-To: axboe@kernel.dk,
-	agk@redhat.com,
-	snitzer@kernel.org,
-	mpatocka@redhat.com,
-	song@kernel.org,
-	yukuai@fnnas.com,
-	hch@lst.de,
-	sagi@grimberg.me,
-	kch@nvidia.com,
-	jaegeuk@kernel.org,
-	chao@kernel.org,
-	cem@kernel.org
-Cc: linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org,
-	linux-nvme@lists.infradead.org,
-	linux-f2fs-devel@lists.sourceforge.net,
+        Sun, 23 Nov 2025 20:13:45 -0800 (PST)
+From: Jinliang Zheng <alexjlzheng@gmail.com>
+X-Google-Original-From: Jinliang Zheng <alexjlzheng@tencent.com>
+To: haoqinhuang7@gmail.com
+Cc: chandan.babu@oracle.com,
+	david@fromorbit.com,
+	djwong@kernel.org,
+	haoqinhuang@tencent.com,
 	linux-xfs@vger.kernel.org,
-	bpf@vger.kernel.org,
-	Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
-Subject: [PATCH V2 5/5] xfs: ignore discard return value
-Date: Sun, 23 Nov 2025 18:57:37 -0800
-Message-Id: <20251124025737.203571-6-ckulkarnilinux@gmail.com>
-X-Mailer: git-send-email 2.40.0
-In-Reply-To: <20251124025737.203571-1-ckulkarnilinux@gmail.com>
-References: <20251124025737.203571-1-ckulkarnilinux@gmail.com>
+	zigiwang@tencent.com
+Subject: Re: [PATCH] xfs: fix deadlock between busy flushing and t_busy
+Date: Mon, 24 Nov 2025 12:13:39 +0800
+Message-ID: <20251124041344.1563186-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.49.0
+In-Reply-To: <CAEjiKSkcLrkpzxUadKCyGEzHV503Q_htisU=rANk_zHoj9U04g@mail.gmail.com>
+References: <CAEjiKSkcLrkpzxUadKCyGEzHV503Q_htisU=rANk_zHoj9U04g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-__blkdev_issue_discard() always returns 0, making all error checking
-in XFS discard functions dead code.
+On Sat, 22 Nov 2025 17:41:49 +0800, haoqinhuang7@gmail.com wrote:
+> Hi Dave,
+> 
+> Thanks for your reviews, and sorry for response lately.
+> 
+> I’m very agree that deferred frees largely resolved the deadlock issue.
+> 
+> Maybe I should split two parts of this patch to show my idea:
+> Part 1. fix fallback of xfs_refcount_split_extent()
+> It seems better to  fix a logic bug in xfs_refcount_split_extent().
+> When splitting an extent, we update the existing record before
+> inserting the new one. If the insertion fails, we currently return
+> without restoring the original record, leaving the btree in an
+> inconsistent state.
 
-Change xfs_discard_extents() return type to void, remove error variable,
-error checking, and error logging for the __blkdev_issue_discard() call
-in same function.
+Is the error handling part in xfs_trans_commit() sufficient to handle
+the situation you described? (I haven't carefully verified it.)
 
-Update xfs_trim_perag_extents() and xfs_trim_rtgroup_extents() to
-ignore the xfs_discard_extents() return value and error checking
-code.
+Jinliang Zheng. :)
 
-Update xfs_discard_rtdev_extents() to ignore __blkdev_issue_discard()
-return value and error checking code.
-
-Signed-off-by: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
----
- fs/xfs/xfs_discard.c | 27 +++++----------------------
- fs/xfs/xfs_discard.h |  2 +-
- 2 files changed, 6 insertions(+), 23 deletions(-)
-
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 6917de832191..b6ffe4807a11 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -108,7 +108,7 @@ xfs_discard_endio(
-  * list. We plug and chain the bios so that we only need a single completion
-  * call to clear all the busy extents once the discards are complete.
-  */
--int
-+void
- xfs_discard_extents(
- 	struct xfs_mount	*mp,
- 	struct xfs_busy_extents	*extents)
-@@ -116,7 +116,6 @@ xfs_discard_extents(
- 	struct xfs_extent_busy	*busyp;
- 	struct bio		*bio = NULL;
- 	struct blk_plug		plug;
--	int			error = 0;
- 
- 	blk_start_plug(&plug);
- 	list_for_each_entry(busyp, &extents->extent_list, list) {
-@@ -126,18 +125,10 @@ xfs_discard_extents(
- 
- 		trace_xfs_discard_extent(xg, busyp->bno, busyp->length);
- 
--		error = __blkdev_issue_discard(btp->bt_bdev,
-+		__blkdev_issue_discard(btp->bt_bdev,
- 				xfs_gbno_to_daddr(xg, busyp->bno),
- 				XFS_FSB_TO_BB(mp, busyp->length),
- 				GFP_KERNEL, &bio);
--		if (error && error != -EOPNOTSUPP) {
--			xfs_info(mp,
--	 "discard failed for extent [0x%llx,%u], error %d",
--				 (unsigned long long)busyp->bno,
--				 busyp->length,
--				 error);
--			break;
--		}
- 	}
- 
- 	if (bio) {
-@@ -148,8 +139,6 @@ xfs_discard_extents(
- 		xfs_discard_endio_work(&extents->endio_work);
- 	}
- 	blk_finish_plug(&plug);
--
--	return error;
- }
- 
- /*
-@@ -385,9 +374,7 @@ xfs_trim_perag_extents(
- 		 * list  after this function call, as it may have been freed by
- 		 * the time control returns to us.
- 		 */
--		error = xfs_discard_extents(pag_mount(pag), extents);
--		if (error)
--			break;
-+		xfs_discard_extents(pag_mount(pag), extents);
- 
- 		if (xfs_trim_should_stop())
- 			break;
-@@ -496,12 +483,10 @@ xfs_discard_rtdev_extents(
- 
- 		trace_xfs_discard_rtextent(mp, busyp->bno, busyp->length);
- 
--		error = __blkdev_issue_discard(bdev,
-+		__blkdev_issue_discard(bdev,
- 				xfs_rtb_to_daddr(mp, busyp->bno),
- 				XFS_FSB_TO_BB(mp, busyp->length),
- 				GFP_NOFS, &bio);
--		if (error)
--			break;
- 	}
- 	xfs_discard_free_rtdev_extents(tr);
- 
-@@ -741,9 +726,7 @@ xfs_trim_rtgroup_extents(
- 		 * list  after this function call, as it may have been freed by
- 		 * the time control returns to us.
- 		 */
--		error = xfs_discard_extents(rtg_mount(rtg), tr.extents);
--		if (error)
--			break;
-+		xfs_discard_extents(rtg_mount(rtg), tr.extents);
- 
- 		low = tr.restart_rtx;
- 	} while (!xfs_trim_should_stop() && low <= high);
-diff --git a/fs/xfs/xfs_discard.h b/fs/xfs/xfs_discard.h
-index 2b1a85223a56..8c5cc4af6a07 100644
---- a/fs/xfs/xfs_discard.h
-+++ b/fs/xfs/xfs_discard.h
-@@ -6,7 +6,7 @@ struct fstrim_range;
- struct xfs_mount;
- struct xfs_busy_extents;
- 
--int xfs_discard_extents(struct xfs_mount *mp, struct xfs_busy_extents *busy);
-+void xfs_discard_extents(struct xfs_mount *mp, struct xfs_busy_extents *busy);
- int xfs_ioc_trim(struct xfs_mount *mp, struct fstrim_range __user *fstrim);
- 
- #endif /* XFS_DISCARD_H */
--- 
-2.40.0
-
+> 
+> This part does not seem to be necessarily related to the
+> aforementioned deadlock.
+> Part 2. Robustify the rollback path to prevent deadlocks
+> The change to xfs_extent_busy_flush() is just added as a secondary
+> hardening measure for edge cases.
+> I’m not sure, but theoretically, the alloc_flag to be zero, then
+> entering a cycle with a high probability of deadlock.
+> 
+> I can post v2 if you agree, and any comments are welcome.
+> 
+> Thanks.
+> 
+> On Sun, Nov 16, 2025 at 9:03 PM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Fri, Nov 14, 2025 at 11:21:47PM +0800, Haoqin Huang wrote:
+> > > From: Haoqin Huang <haoqinhuang@tencent.com>
+> > >
+> > > In case of insufficient disk space, the newly released blocks can be
+> > > allocated from free list. And in this scenario, file system will
+> > > search ag->pagb_tree (busy tree), and trim busy node if hits.
+> > > Immediately afterwards, xfs_extent_busy_flush() will be called to
+> > > flush logbuf to clear busy tree.
+> > >
+> > > But a deadlock could be triggered by xfs_extent_busy_flush() if
+> > > current tp->t_busy and flush AG meet:
+> > >
+> > > The current trans which t_busy is non-empty, and:
+> > >   1. The block B1, B2 all belong to AG A, and have inserted into
+> > >      current tp->t_busy;
+> > >   2. and AG A's busy tree (pagb_tree) only has the blocks coincidentally.
+> > >   2. xfs_extent_busy_flush() is flushing AG A.
+> > >
+> > > In a short word, The trans flushing AG A, and also waiting AG A
+> > > to clear busy tree, but the only blocks of busy tree also in
+> > > this trans's t_busy. A deadlock appeared.
+> > >
+> > > The detailed process of this deadlock:
+> > >
+> > > xfs_reflink_end_cow()
+> > > xfs_trans_commit()
+> > > xfs_defer_finish_noroll()
+> > >   xfs_defer_finish_one()
+> > >     xfs_refcount_update_finish_item()    <== step1. cow alloc (tp1)
+> > >       __xfs_refcount_cow_alloc()
+> > >         xfs_refcountbt_free_block()
+> > >           xfs_extent_busy_insert()       <-- step2. x1 x2 insert tp1->t_busy
+> >
+> > We haven't done that for quite some time. See commit b742d7b4f0e0
+> > ("xfs: use deferred frees for btree block freeing").
+> >
+> > -Dave.
+> > --
+> > Dave Chinner
+> > david@fromorbit.com
