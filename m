@@ -1,64 +1,64 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7C09335079
-	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 23:48:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A466335576
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 23:48:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764028111; cv=none; b=uJNeWooeLLsxjrDMO46YuSG0MV+HVFmrqQLM1j7EkU4tvROQ/62XvazR95dfA7hww31jZs+F7msOk881F5w9Op+RUyakwckjF3RAKKWK4DxfoAlCbBQ8I9HvtafIiiegOgeJ0YiQERjk2UhvXvBZd578uBP8rMRZNVfTZG/lL48=
+	t=1764028112; cv=none; b=SSu9iKgurr+I5Y27KyJB5/X/7BiINzP/aKdZxP75Yq3vM5759Qs6OBTrTBjs37mHuhfCOsakq2XceTQB9M/FfadE0yfgOs5yqNaJBCZUX6ZgqILc4aTVnglvTNFDIPF9mrjI4fLFUgqdy2passEXhM9fEJ3c6c2eDB2LbmeQTCQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764028111; c=relaxed/simple;
-	bh=Am7Xg6QJV818HftQaQoJheIX+hzBGkDxL1hHod2VREY=;
+	s=arc-20240116; t=1764028112; c=relaxed/simple;
+	bh=kQ2j8AcbSkYMUbwaE2qHb1RGU9aI9t4eoz6R/zOVZnw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=eH65WDOhWDUGJIzJSyq1t3NPY6mfPD8oYdZyhgYdSZpDq0SPAQT3rlqKXnFHP4srKPcedMshCL6KmjPyKMuITtJhu/lsRU5ua8in0a0CELo4oyYjYf9XRArwMZorAwrYj/6sZ32dvOsRAq3vLmMnBiNarb6AB9PQY4d+wDnfJJE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=j1p+HPxt; arc=none smtp.client-ip=209.85.214.181
+	 MIME-Version; b=ZyjCfl8ytb9bH94LXxvx0GJrgd8UOG7FV3N4DV4vQfp9c8r0ID/Gbwsg5liDBBuDVxXDKclRqeJbIRb0VGtrnrMX4GxGgD4bcbYdgrIltW9J4oAadmcHSPgSOTUEOGpAAqdSh1NQZ9MKNzR6df5JBqO67BXi/95S3YI8WshNNPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aszSVSLB; arc=none smtp.client-ip=209.85.210.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j1p+HPxt"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-297ef378069so44422455ad.3
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 15:48:28 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aszSVSLB"
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-7bb3092e4d7so5221935b3a.0
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 15:48:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1764028108; x=1764632908; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1764028109; x=1764632909; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=14mujLSQeTKxSJUy/um1pAgQzTbPorW1qBu/kH6klR8=;
-        b=j1p+HPxtmEJXq1utE07WkQkG5flpsDtFoeQM2jUrBDC6qKWM1nLMeIlhSLC9+NpIYi
-         n4/q62g+t8PqkUImUcZdYWQ9E+IqnqzXK8BOc4daG66olSGcgd8vESZhU183lgbFGWLw
-         bJzyz8FQm1wBtTjkNmWGsBwkrAjSUYPQOuyRvgnuslbcOXS8E7wf8QMGnFn9hXpPg2Uf
-         B7kaMI0ZMw6Nc8ClKDSeJUBWafnApBQlQ8Lb1HDdWYiWqtk5yUaH3XIBnavJX/JbYKOZ
-         yIoeSjOpsBKfdDTkwXA5EHzUnajxEViGSyFL297Yd+gPgWO5Zs6qAg3Wa4VWJ2hkvR42
-         32SQ==
+        bh=XG0OrcuNbwg29Sl2OBnaF07hgRH6+GSGFVprGloS+Vs=;
+        b=aszSVSLBvcbO5a8Tv8KwbkQP6f0AduPLlmIOLXqR87+0BAYiqebOPMPr5/uRBFW6lP
+         21qTp9xWlNJEr/DX8+knWX2GNh2zAt3mAqhtggrqXUDCu5+1NIXjsID1GXZFZY8G0VOu
+         4qE+dAhesPF2BZl/F6yg9EmKAnYH8Rh42PM+xc/PjpsVgp7CTR9zx3f4/u1SY+ZVvCAd
+         WxiKxZsVHsqMtB4qJcASjeGpo8BBQJgT9bh/5Y/pANbEchkdG9f52hqf9bZnqaGACP95
+         gzdW0d7MLu8YqieJxgPYLsyxwdf7r31/cfcZTugys2y8+aNfd95pEr+ocQyXfJGMP2GV
+         B0Zg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764028108; x=1764632908;
+        d=1e100.net; s=20230601; t=1764028109; x=1764632909;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=14mujLSQeTKxSJUy/um1pAgQzTbPorW1qBu/kH6klR8=;
-        b=rs1NKSbPXJ2fEZo1tjcSs+Ylh14BK/71pdEKqRO+G+0YnvAUmu9SfyQ58Jj75RqHOr
-         rIjaZKrvOSjDpNbocNUW1FJxfPVj3Rmv6U1x6dPNLvcGH6YXHucRt2hezC1HB544r8Vt
-         pVykw3luxaTpvSYyt1GoQg2plcoiI/x8vMsrYnkZ3suLBZNUomkgEtjj/MJbWlSonxdw
-         vYeF5hwkXlY/15oytGiWSuicmwYxWfo2vlrY9U9eHOP0BeMqB2dds9PCdqvRSoPnkqWU
-         ea8S4X6REhrIK81XkdXbyCZMGo8Q5eoE142Wbwe+5jivEz87+vB6eGfFv4GRcs/+30SW
-         tFVA==
-X-Forwarded-Encrypted: i=1; AJvYcCVb5o199rVDqye6fjBpYq/N7L+GRvSJsKVOUTEW2R3MCJY3VXpxXSy2S/K1zQwTdPiytfXWU53z37w=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzdWpgNAehq3/vhhRgqsQk2Wgr2kjgOIHYc75LCRorCGs8rqdli
-	zS1NqWFyo9LViOgOMFuhErz9gacA4AK8LV2/rF5i/ux8MUFdyJqesYjZ
-X-Gm-Gg: ASbGncsVQ84BAo6ETTIIVqKA1+vXBVjCd/u3e+8e2Hcen2wV0B0ti1VJU0d/FUPbxeR
-	vYxB6RRS2bGCLfo2rP5+w/IQFGJqW80STqslevrlpZEdJ4JrL/M5200KMmAfe610BYKFGsVLe3L
-	YD0fBjnYk4cJ2Fp4EVojpTGtQPqj9pjJquki85NQIvggtbdVeGBSLJpKEk9S1BxN+LYYnLsP8hD
-	qFSSyzu/PSJ4/l77eMNVprAulT85TVI5qOnXsOgLzZ2MARW8OD3WcAEtPxrLCI5gVIWg7KuWzyQ
-	fCHLmwn7xHq7PGTFjzswIXWltQNdKaLKlWBOpUpuQ9yhonPfC0U5j3UtCCAxtT41zoPAxnwpo7e
-	ZaFmBfmHBd0iEcEsEQGLQqZ6dRZC7j30Tc7LGF4LkCxYfGNDhUrY9+5MU45FTQh/AUrc1CoQkBu
-	9CJRrC+M9PUmZnGeZc8lQcD65kHuoCD4ukU4NKT8I00uQ5v3I=
-X-Google-Smtp-Source: AGHT+IFryzmc/XiOW9LSO9isjtYB1LRYx6LJmKSX/rJnv82E/9f71NMvnHJMZsWalBLPhm0XU6n7Vg==
-X-Received: by 2002:a05:7022:ec88:b0:119:e55a:9bf5 with SMTP id a92af1059eb24-11cb3ef2594mr558577c88.17.1764028108043;
-        Mon, 24 Nov 2025 15:48:28 -0800 (PST)
+        bh=XG0OrcuNbwg29Sl2OBnaF07hgRH6+GSGFVprGloS+Vs=;
+        b=hhIsdS2Kfv5zChT1UYV71Ns/STrsRjtFWklQ5eyZgW+uIcmuvJ6qkoX0sPWkjP8i/O
+         RJTQHkxiqZPCDcFdKIsIQJqpATj/WYw/Fdyj1nHQ8mXS3zzxrNjmbSz5+WQMpLEsALJn
+         Q+dVb89GbNTjTgdTAyOnXKcuwmRscH6Yl+BUVq5K0fzIprX44yYBSqFe7FVkF2LG4rrt
+         LLOtbVjTnwVal1Ao1rzA74F5tzqFeE3kWpHNzUDrnJFmF2xx3gni4of1diWZpUJyn+pX
+         IKN/83qPApKsF3NrvSxqUxezyDZPqT6/YDU9GiOWE+NXmAwJrRtDR2QesRcmmCe5jVpD
+         VxKw==
+X-Forwarded-Encrypted: i=1; AJvYcCW4EwWjxGVlKLH7+9MmlsiHyJ3I8jyBE3TgoO2dr4dsXfIbKGwtRb3bVGRpZ+t/xEcegJnIcn7HjtA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwNQERWZRV7gCAtru55Asynb09NBvNHiC/WmMqcTzWYpuxwMm5x
+	+SNO3pVVjVTWcydDeytpAkcOYIITDz9w5bb6sxCZ+iEzfTnDQuW58Sgj
+X-Gm-Gg: ASbGnctPARIqxb5UPED0arxN7Hh+rX9RDi2gKowiRc6iYGfneCr5KCfKMQmxUG8REVQ
+	q5gPPAZK46/is7AyjO8/89Sgqn+9rA19NxQeVBZPIJ1O2mxqwfr0MC5vvuwpJEMp+NIS1FiIOLc
+	FDapwnLBF1qnWJLOgdkbQ03yfDyslFsApv3Fnu5TmDxVAksGYy/zayvhsx8MqvvPKtGmihrzcd0
+	VNP/AunHtXZfeQFq8hmmR3NGNJwAIsR671IqloHb6ycYX2qwjlRh/WRiMgA3pPjC+1XISwbRmMx
+	2NJ/fIoQ5TDRhfLJgopEh/dlUlZ0ZKdCB8JJCL3+KZxLUJna7W4l9ldP9af/3+Kvkpj8cJiPngT
+	2/ADQs6+2k7+/HbPZicqtGfLJcJTwY89idlQLHLqVpcfIUUp4jNaEMHsuX15LSRcww3Dv1rLaM1
+	0vDt620jbO/kKWKeNRF3L3eR/tNj6NkaDrtIDVrObbEl0AhC4=
+X-Google-Smtp-Source: AGHT+IGsJc67nHzRSaGN7J/UxQrgH96kyTpeGXuRk0eYF4SOZV90nUCcoNrz1/tW/LtO3V9QCDnQOg==
+X-Received: by 2002:a05:7022:e994:b0:11b:ade6:45bd with SMTP id a92af1059eb24-11c9d708d4amr8669000c88.8.1764028109428;
+        Mon, 24 Nov 2025 15:48:29 -0800 (PST)
 Received: from localhost (ip70-175-132-216.oc.oc.cox.net. [70.175.132.216])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11c93de6d5csm50934844c88.4.2025.11.24.15.48.27
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11c93db4a23sm76988653c88.2.2025.11.24.15.48.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Nov 2025 15:48:27 -0800 (PST)
+        Mon, 24 Nov 2025 15:48:29 -0800 (PST)
 From: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
 To: axboe@kernel.dk,
 	agk@redhat.com,
@@ -81,11 +81,10 @@ Cc: linux-block@vger.kernel.org,
 	linux-xfs@vger.kernel.org,
 	bpf@vger.kernel.org,
 	Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH V3 5/6] f2fs: ignore discard return value
-Date: Mon, 24 Nov 2025 15:48:05 -0800
-Message-Id: <20251124234806.75216-6-ckulkarnilinux@gmail.com>
+Subject: [PATCH V3 6/6] xfs: ignore discard return value
+Date: Mon, 24 Nov 2025 15:48:06 -0800
+Message-Id: <20251124234806.75216-7-ckulkarnilinux@gmail.com>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20251124234806.75216-1-ckulkarnilinux@gmail.com>
 References: <20251124234806.75216-1-ckulkarnilinux@gmail.com>
@@ -97,54 +96,127 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-__blkdev_issue_discard() always returns 0, making the error assignment
-in __submit_discard_cmd() dead code.
+__blkdev_issue_discard() always returns 0, making all error checking
+in XFS discard functions dead code.
 
-Initialize err to 0 and remove the error assignment from the
-__blkdev_issue_discard() call to err. Move fault injection code into
-already present if branch where err is set to -EIO.
+Change xfs_discard_extents() return type to void, remove error variable,
+error checking, and error logging for the __blkdev_issue_discard() call
+in same function.
 
-This preserves the fault injection behavior while removing dead error
-handling.
+Update xfs_trim_perag_extents() and xfs_trim_rtgroup_extents() to
+ignore the xfs_discard_extents() return value and error checking
+code.
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Update xfs_discard_rtdev_extents() to ignore __blkdev_issue_discard()
+return value and error checking code.
+
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
 ---
- fs/f2fs/segment.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_discard.c | 27 +++++----------------------
+ fs/xfs/xfs_discard.h |  2 +-
+ 2 files changed, 6 insertions(+), 23 deletions(-)
 
-diff --git a/fs/f2fs/segment.c b/fs/f2fs/segment.c
-index b45eace879d7..22b736ec9c51 100644
---- a/fs/f2fs/segment.c
-+++ b/fs/f2fs/segment.c
-@@ -1343,15 +1343,9 @@ static int __submit_discard_cmd(struct f2fs_sb_info *sbi,
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index 6917de832191..b6ffe4807a11 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -108,7 +108,7 @@ xfs_discard_endio(
+  * list. We plug and chain the bios so that we only need a single completion
+  * call to clear all the busy extents once the discards are complete.
+  */
+-int
++void
+ xfs_discard_extents(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_busy_extents	*extents)
+@@ -116,7 +116,6 @@ xfs_discard_extents(
+ 	struct xfs_extent_busy	*busyp;
+ 	struct bio		*bio = NULL;
+ 	struct blk_plug		plug;
+-	int			error = 0;
  
- 		dc->di.len += len;
+ 	blk_start_plug(&plug);
+ 	list_for_each_entry(busyp, &extents->extent_list, list) {
+@@ -126,18 +125,10 @@ xfs_discard_extents(
  
-+		err = 0;
- 		if (time_to_inject(sbi, FAULT_DISCARD)) {
- 			err = -EIO;
--		} else {
--			err = __blkdev_issue_discard(bdev,
--					SECTOR_FROM_BLOCK(start),
--					SECTOR_FROM_BLOCK(len),
--					GFP_NOFS, &bio);
+ 		trace_xfs_discard_extent(xg, busyp->bno, busyp->length);
+ 
+-		error = __blkdev_issue_discard(btp->bt_bdev,
++		__blkdev_issue_discard(btp->bt_bdev,
+ 				xfs_gbno_to_daddr(xg, busyp->bno),
+ 				XFS_FSB_TO_BB(mp, busyp->length),
+ 				GFP_KERNEL, &bio);
+-		if (error && error != -EOPNOTSUPP) {
+-			xfs_info(mp,
+-	 "discard failed for extent [0x%llx,%u], error %d",
+-				 (unsigned long long)busyp->bno,
+-				 busyp->length,
+-				 error);
+-			break;
 -		}
--		if (err) {
- 			spin_lock_irqsave(&dc->lock, flags);
- 			if (dc->state == D_PARTIAL)
- 				dc->state = D_SUBMIT;
-@@ -1360,6 +1354,8 @@ static int __submit_discard_cmd(struct f2fs_sb_info *sbi,
+ 	}
+ 
+ 	if (bio) {
+@@ -148,8 +139,6 @@ xfs_discard_extents(
+ 		xfs_discard_endio_work(&extents->endio_work);
+ 	}
+ 	blk_finish_plug(&plug);
+-
+-	return error;
+ }
+ 
+ /*
+@@ -385,9 +374,7 @@ xfs_trim_perag_extents(
+ 		 * list  after this function call, as it may have been freed by
+ 		 * the time control returns to us.
+ 		 */
+-		error = xfs_discard_extents(pag_mount(pag), extents);
+-		if (error)
+-			break;
++		xfs_discard_extents(pag_mount(pag), extents);
+ 
+ 		if (xfs_trim_should_stop())
  			break;
- 		}
+@@ -496,12 +483,10 @@ xfs_discard_rtdev_extents(
  
-+		__blkdev_issue_discard(bdev, SECTOR_FROM_BLOCK(start),
-+				SECTOR_FROM_BLOCK(len), GFP_NOFS, &bio);
- 		f2fs_bug_on(sbi, !bio);
+ 		trace_xfs_discard_rtextent(mp, busyp->bno, busyp->length);
  
- 		/*
+-		error = __blkdev_issue_discard(bdev,
++		__blkdev_issue_discard(bdev,
+ 				xfs_rtb_to_daddr(mp, busyp->bno),
+ 				XFS_FSB_TO_BB(mp, busyp->length),
+ 				GFP_NOFS, &bio);
+-		if (error)
+-			break;
+ 	}
+ 	xfs_discard_free_rtdev_extents(tr);
+ 
+@@ -741,9 +726,7 @@ xfs_trim_rtgroup_extents(
+ 		 * list  after this function call, as it may have been freed by
+ 		 * the time control returns to us.
+ 		 */
+-		error = xfs_discard_extents(rtg_mount(rtg), tr.extents);
+-		if (error)
+-			break;
++		xfs_discard_extents(rtg_mount(rtg), tr.extents);
+ 
+ 		low = tr.restart_rtx;
+ 	} while (!xfs_trim_should_stop() && low <= high);
+diff --git a/fs/xfs/xfs_discard.h b/fs/xfs/xfs_discard.h
+index 2b1a85223a56..8c5cc4af6a07 100644
+--- a/fs/xfs/xfs_discard.h
++++ b/fs/xfs/xfs_discard.h
+@@ -6,7 +6,7 @@ struct fstrim_range;
+ struct xfs_mount;
+ struct xfs_busy_extents;
+ 
+-int xfs_discard_extents(struct xfs_mount *mp, struct xfs_busy_extents *busy);
++void xfs_discard_extents(struct xfs_mount *mp, struct xfs_busy_extents *busy);
+ int xfs_ioc_trim(struct xfs_mount *mp, struct fstrim_range __user *fstrim);
+ 
+ #endif /* XFS_DISCARD_H */
 -- 
 2.40.0
 
