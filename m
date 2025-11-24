@@ -1,179 +1,384 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BEA62BE035;
-	Mon, 24 Nov 2025 18:52:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90F162D6E5A
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 19:18:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764010327; cv=none; b=hoKzowTrquEOoWZnPkMzKcqn1cebMTbINJ9zJmurKWqCjVodatXt/IEM58HQ2KKKGr8GewZZ6bB26lRcsmOZohcGZfP6zjHfy4Q8wzpWefGlQu8E4zIunEvXLNukg0jxuOapleKmQHOpNpGB+Jxzm/i2bFyOfN6uxZku6ycPRJQ=
+	t=1764011914; cv=none; b=pEzXp8XUs+5egNG2M+hqzqdGAs7uCfCiY86/z0ex/XXOaZimLE6woVyIZolkrrH/nV2uYYvSCtlH8oBxjI42d7RhOLnzYPxEkzs2mRxMf5/GC5WYbF/EqZa8ISOPYahIgESkS/pyTAzz1MrOIQFTWilSYjdCPSbTxIqogCVD6tQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764010327; c=relaxed/simple;
-	bh=tyvhxyqDLgZlRxDUys0BlVrPjkRUoqDzcc9MtEED+MQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U2EVCXnW94YK/XTPul96VAedT38gDGLBxf7CH2wBXQX8+tJWrFdeG3wVe/DhH8pUu1niQ2kI50kEibA9u9d77B1ZrCsdIbd4Pgc1coyflF7Gk92XyzRZWv/oSTXbkHNZnWXKJ/aG9TLG27UMiv6meMNPp+w9UqdKgDvZIMSSG9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IatQnPZo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1764011914; c=relaxed/simple;
+	bh=XeFv5A1qv3Hjluc9DCtaZ5JVCCwyI6TjpAz+0TvgmW4=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=itP+dbQBkjHYDGN+cVphY/QOhHf6IGiaDwFsufIX4vhlpHJsWSAzBpYQcB/o0w1vivNl/ScM1R1xUPpReyw6MKEvJ1Meoadh3Q9HswGrjbr77/c+7Ajvzsnn/4+rkx1CULUhW4mScNyni/X8nSB3jFstlf3IovXIsGARckzPyPg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=MApBI3CU; arc=none smtp.client-ip=18.9.28.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IatQnPZo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92A54C4CEF1;
-	Mon, 24 Nov 2025 18:52:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764010324;
-	bh=tyvhxyqDLgZlRxDUys0BlVrPjkRUoqDzcc9MtEED+MQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IatQnPZorzv04TdayMmKyYQmSAUmEx0GR8Se0LU0+BomvRK8ykgE+CCXoHyEB9gEe
-	 6VfLwfg++9jmJfx623Xa8QgI3ipqFLcOmckpw0DuUvhxP2RYNvBbPDukGzKCf0ltzu
-	 GkpSRULM+2ZG2YeQW0G89hTxE/z2bzmYPF5eNfZjc9llcJdF3w5B30wDJOPqs4f7uO
-	 /W7BNdEt+ZESt6qYTZ0LTIlMIE4PVgcJC+99t2vp+LEMVwATTIFPi+sThdx7SllavB
-	 1u9pu8nLJ9RLi/q4PxG83NkOIsQ03fCU9u0UkVo93frrzWee/bOctZCizRBcLiOllV
-	 l7N+ydSonOgrA==
-Date: Mon, 24 Nov 2025 10:52:03 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Raphael Pinsonneault-Thibeault <rpthibeault@gmail.com>
-Cc: cem@kernel.org, chandanbabu@kernel.org, bfoster@redhat.com,
-	david@fromorbit.com, hch@infradead.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linux.dev,
-	syzbot+9f6d080dece587cfdd4c@syzkaller.appspotmail.com
-Subject: Re: [PATCH v5] xfs: validate log record version against superblock
- log version
-Message-ID: <20251124185203.GA6076@frogsfrogsfrogs>
-References: <aR67xfAFjuVdbgqq@infradead.org>
- <20251124174658.59275-3-rpthibeault@gmail.com>
+	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="MApBI3CU"
+Received: from macsyma.thunk.org (c-73-9-28-129.hsd1.il.comcast.net [73.9.28.129])
+	(authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 5AOJIBOL022178
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 24 Nov 2025 14:18:13 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+	t=1764011894; bh=FWuU+z9tqteR7ANOJ2Is90urzhAEwYLjoEGBOm7xxrw=;
+	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+	b=MApBI3CUCJ7yOsNwFQf/FaeOmO6y0wpdKU6JLaMIz+fXNW29HVbs4B2+42tDYAbs/
+	 d7M9sSYf8ZqW3FhQsTXpJgtLBPZDu9wnIpw0pPllaiNXIb7JqOdO1jElHEPN1bVNvc
+	 5pKaVdZrnQfJVzXWqT2K3AY9UXTDCzgFKi6JMbssI3TrB+f5RKpk9DE8ueJcpggPE0
+	 2Guz1ZuhT47MfBGa07+hMfITa9ARWxfL7RoVB9tVIIvOfl7X1J/144DuGE8D1xYEH3
+	 pxufjfti2O1KnePwOXW6YkDX4NELrvYCiDpk27KPpbFyDzF1H2oV0SPH9D5Hqk8RdG
+	 GbJpJX4RLxSXQ==
+Received: by macsyma.thunk.org (Postfix, from userid 15806)
+	id 31EF34C85C03; Mon, 24 Nov 2025 13:18:11 -0600 (CST)
+Date: Mon, 24 Nov 2025 13:18:11 -0600
+From: "Theodore Tso" <tytso@mit.edu>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: linux-mm@kvack.org, Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-xfs@vger.kernel.org
+Subject: [REGRESSION] generic/127 failure caused by "mm: Use folio_next_pos()"
+Message-ID: <20251124191811.GA26781@mac.lan>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="NWlW6uYnq158lPXA"
+Content-Disposition: inline
+
+
+--NWlW6uYnq158lPXA
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251124174658.59275-3-rpthibeault@gmail.com>
 
-On Mon, Nov 24, 2025 at 12:47:00PM -0500, Raphael Pinsonneault-Thibeault wrote:
-> Syzbot creates a fuzzed record where xfs_has_logv2() but the
-> xlog_rec_header h_version != XLOG_VERSION_2. This causes a
-> KASAN: slab-out-of-bounds read in xlog_do_recovery_pass() ->
-> xlog_recover_process() -> xlog_cksum().
-> 
-> Fix by adding a check to xlog_valid_rec_header() to abort journal
-> recovery if the xlog_rec_header h_version does not match the super
-> block log version.
-> 
-> A file system with a version 2 log will only ever set
-> XLOG_VERSION_2 in its headers (and v1 will only ever set V_1), so if
-> there is any mismatch, either the journal or the superblock has been
-> corrupted and therefore we abort processing with a -EFSCORRUPTED error
-> immediately.
-> 
-> Also, refactor the structure of the validity checks for better
-> readability. At the default error level (LOW), XFS_IS_CORRUPT() emits
-> the condition that failed, the file and line number it is
-> located at, then dumps the stack. This gives us everything we need
-> to know about the failure if we do a single validity check per
-> XFS_IS_CORRUPT().
-> 
-> Reported-by: syzbot+9f6d080dece587cfdd4c@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=9f6d080dece587cfdd4c
-> Tested-by: syzbot+9f6d080dece587cfdd4c@syzkaller.appspotmail.com
-> Fixes: 45cf976008dd ("xfs: fix log recovery buffer allocation for the legacy h_size fixup")
-> Signed-off-by: Raphael Pinsonneault-Thibeault <rpthibeault@gmail.com>
-> ---
-> Changelog
-> v1 -> v2: 
-> - reject the mount for h_size > XLOG_HEADER_CYCLE_SIZE && !XLOG_VERSION_2
-> v2 -> v3: 
-> - abort journal recovery if the xlog_rec_header h_version does not 
-> match the super block log version
-> v3 -> v4: 
-> - refactor for readability
-> v4 -> v5:
-> - stop pretending h_version is a bitmap, remove check using
-> XLOG_VERSION_OKBITS
+While testing the ext4 large blocksize patches I merged in
+linux-next/fs-next to pick up the mm changes needed to prevent the
+warnings when allocating larger blocks with GFP_NOFAIL, and I found
+some unrelated regressions with three tests, including generic/127
+(the other two regressions seem unrelated to this commit; I'll bisect
+them separately).
 
-Hrmm maybe we ought to reserve XLOG_VERSION==0x3 so that whenever we do
-log v3 we don't accidentally write logs with bits that won't be
-validated quite right on old kernels?
+Further testing found that regression occurred somewhere between
+fs-current and fs-next, and I also found that it was failing not just
+for ext4, but also for ext4.  A git bisect run localized the failure
+to this commit:
 
-Though I suppose logv3 would have a separate superblock bit an old
-kernel just plain wouldn't mount a logv3 filesystem, let alone look at
-its log.
+commit 60a70e61430b2d568bc5e96f629c5855ee159ace
+Author: Matthew Wilcox (Oracle) <willy@infradead.org>
+Date:   Fri Oct 24 18:08:18 2025 +0100
 
->  fs/xfs/xfs_log_recover.c | 27 ++++++++++++++++-----------
->  1 file changed, 16 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index e6ed9e09c027..2ed94be010d0 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2950,18 +2950,23 @@ xlog_valid_rec_header(
->  	xfs_daddr_t		blkno,
->  	int			bufsize)
->  {
-> +	struct xfs_mount	*mp = log->l_mp;
-> +	u32			h_version = be32_to_cpu(rhead->h_version);
->  	int			hlen;
->  
-> -	if (XFS_IS_CORRUPT(log->l_mp,
-> +	if (XFS_IS_CORRUPT(mp,
->  			   rhead->h_magicno != cpu_to_be32(XLOG_HEADER_MAGIC_NUM)))
->  		return -EFSCORRUPTED;
-> -	if (XFS_IS_CORRUPT(log->l_mp,
-> -			   (!rhead->h_version ||
-> -			   (be32_to_cpu(rhead->h_version) &
-> -			    (~XLOG_VERSION_OKBITS))))) {
-> -		xfs_warn(log->l_mp, "%s: unrecognised log version (%d).",
-> -			__func__, be32_to_cpu(rhead->h_version));
-> -		return -EFSCORRUPTED;
-> +
-> +	/*
-> +	 * The log version must match the superblock
-> +	 */
-> +	if (xfs_has_logv2(mp)) {
-> +		if (XFS_IS_CORRUPT(mp, h_version != XLOG_VERSION_2))
+    mm: Use folio_next_pos()
+    
+    This is one instruction more efficient than open-coding folio_pos() +
+    folio_size().  It's the equivalent of (x + y) << z rather than
+    x << z + y << z.
+    
+    Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+    Link: https://patch.msgid.link/20251024170822.1427218-11-willy@infradead.org
 
-Being pedantic here, but the kernel cpu_to_be32 wrappers are magic in
-that they compile to byteswapped constants so you can avoid the runtime
-overhead of byteswapping rhead->h_version by doing:
+I then checked out linux-next (aka linux-next/master) and verified
+that the problem was reproducible there, using
 
-	if (XFS_IS_CORRUPT(mp,
-	    rhead->h_version != cpu_to_be32(XLOG_VERSION_2)))
-		return -EFSCORRUPTED;
+kvm-xfstests -c ext4/4k generic/127 --fail-loop-count 0 --kernel-build
 
-But seeing as this is log validation for recovery, I think the
-performance implications are vanishingly small.
+And then when I reverted commit 60a70e61430b, the test passed.  I also
+checked and found that this commit was also causing generic/127 to
+fail for xfs:
 
-I suppose if we /really/ want to be pedantic then the change of bitmask
-test to direct comparison ought to be a separate patch in case someone
-some day ends up bisecting a log recovery problem to this patch.
+kvm-xfstests -c xfs/4k generic/127 --fail-loop-count 0 --kernel-build
 
-Either way,
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+And, with the commit reverted the problem went away.
 
---D
+The test logs for ext4 and xfs are attached.  Willy, could you take a
+look?  Many thanks!!
+
+							- Ted
 
 
-> +			return -EFSCORRUPTED;
-> +	} else {
-> +		if (XFS_IS_CORRUPT(mp, h_version != XLOG_VERSION_1))
-> +			return -EFSCORRUPTED;
->  	}
->  
->  	/*
-> @@ -2969,12 +2974,12 @@ xlog_valid_rec_header(
->  	 * and h_len must not be greater than LR buffer size.
->  	 */
->  	hlen = be32_to_cpu(rhead->h_len);
-> -	if (XFS_IS_CORRUPT(log->l_mp, hlen <= 0 || hlen > bufsize))
-> +	if (XFS_IS_CORRUPT(mp, hlen <= 0 || hlen > bufsize))
->  		return -EFSCORRUPTED;
->  
-> -	if (XFS_IS_CORRUPT(log->l_mp,
-> -			   blkno > log->l_logBBsize || blkno > INT_MAX))
-> +	if (XFS_IS_CORRUPT(mp, blkno > log->l_logBBsize || blkno > INT_MAX))
->  		return -EFSCORRUPTED;
-> +
->  	return 0;
->  }
->  
-> -- 
-> 2.43.0
-> 
+--NWlW6uYnq158lPXA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=ext4-generic-127.log
+Content-Transfer-Encoding: quoted-printable
+
+=1Bc=1B[?7l=1B[2J=1B[0mSeaBIOS (version 1.17.0-debian-1.17.0-1)=0D
+Booting from ROM..=1Bc=1B[?7l=1B[2J=1B[!p=1B]104=07=1B[?7h[=1B[0;1;31mFAILE=
+D=1B[0m] Failed to start =1B[0;1;39mnbd-server.service=1B[0m - Network Bloc=
+k Device server.=0D=0D
+CMDLINE: "-c ext4/4k generic/127 --fail-loop-count 0"=0D
+KERNEL: kernel	6.18.0-rc6-next-20251124-xfstests #20 SMP PREEMPT_DYNAMIC Mo=
+n Nov 24 14:04:48 EST 2025 x86_64=0D
+FSTESTVER: blktests	4badb27 (Fri, 31 Oct 2025 19:53:27 +0900)=0D
+FSTESTVER: fio		fio-3.41 (Fri, 5 Sep 2025 14:21:17 -0600)=0D
+FSTESTVER: fsverity	v1.7 (Tue, 4 Nov 2025 17:28:17 -0800)=0D
+FSTESTVER: ima-evm-utils	v1.5 (Mon, 6 Mar 2023 07:40:07 -0500)=0D
+FSTESTVER: libaio  	libaio-0.3.108-82-gb8eadc9 (Thu, 2 Jun 2022 13:33:11 +0=
+200)=0D
+FSTESTVER: ltp		20250930 (Tue, 30 Sep 2025 13:53:45 +0200)=0D
+FSTESTVER: quota		v4.05-77-g22ff3d9 (Tue, 2 Sep 2025 08:12:02 -0400)=0D
+FSTESTVER: util-linux	v2.41.2 (Mon, 22 Sep 2025 12:56:34 +0200)=0D
+FSTESTVER: xfsprogs	v6.17.0 (Mon, 20 Oct 2025 16:49:00 +0200)=0D
+FSTESTVER: xfstests	v2025.11.04-12-g64e3dbda7 (Thu, 13 Nov 2025 19:58:03 -0=
+500)=0D
+FSTESTVER: xfstests-bld	gce-xfstests-202504292206-33-g3844cb58 (Thu, 13 Nov=
+ 2025 21:05:49 -0500)=0D
+FSTESTVER: zz_build-distro	trixie=0D
+FSTESTCFG: "ext4/4k"=0D
+FSTESTSET: "generic/127"=0D
+FSTESTEXC: ""=0D
+FSTESTOPT: "fail_loop_count 0 aex"=0D
+MNTOPTS: ""=0D
+CPUS: "2"=0D
+MEM: "1969.56"=0D
+               total        used        free      shared  buff/cache   avai=
+lable=0D
+Mem:            1969         208        1749           0         143       =
+ 1760=0D
+Swap:              0           0           0=0D
+BEGIN TEST 4k (1 test): Ext4 4k block Mon Nov 24 14:05:27 EST 2025=0D
+DEVICE: /dev/vdb=0D
+EXT_MKFS_OPTIONS: -b 4096=0D
+EXT_MOUNT_OPTIONS: -o block_validity=0D
+FSTYP         -- ext4=0D
+PLATFORM      -- Linux/x86_64 kvm-xfstests 6.18.0-rc6-next-20251124-xfstest=
+s #20 SMP PREEMPT_DYNAMIC Mon Nov 24 14:04:48 EST 2025=0D
+MKFS_OPTIONS  -- -F -q -b 4096 /dev/vdc=0D
+MOUNT_OPTIONS -- -o acl,user_xattr -o block_validity /dev/vdc /vdc=0D
+=0D
+generic/127  31s ...  [14:05:28][    3.901891] run fstests generic/127 at 2=
+025-11-24 14:05:28=0D
+[    4.092040] EXT4-fs warning (device vdb): ext4_convert_unwritten_extents=
+_endio:3774: Inode (42) finished: extent logical block 25, len 15; IO logic=
+al block 25, len 8=0D
+[    4.101284] EXT4-fs warning (device vdb): ext4_convert_unwritten_extents=
+_endio:3774: Inode (47) finished: extent logical block 25, len 15; IO logic=
+al block 25, len 8=0D
+[    4.125984] EXT4-fs warning (device vdb): ext4_convert_unwritten_extents=
+_endio:3774: Inode (47) finished: extent logical block 35, len 9; IO logica=
+l block 39, len 1=0D
+[    4.129140] EXT4-fs warning (device vdb): ext4_convert_unwritten_extents=
+_endio:3774: Inode (47) finished: extent logical block 35, len 4; IO logica=
+l block 36, len 3=0D
+[    4.181406] EXT4-fs warning (device vdb): ext4_convert_unwritten_extents=
+_endio:3774: Inode (42) finished: extent logical block 3, len 14; IO logica=
+l block 8, len 9=0D
+[    4.194278] EXT4-fs warning (device vdb): ext4_convert_unwritten_extents=
+_endio:3774: Inode (42) finished: extent logical block 31, len 11; IO logic=
+al block 31, len 10=0D
+[    4.198459] EXT4-fs warning (device vdb): ext4_convert_unwritten_extents=
+_endio:3774: Inode (47) finished: extent logical block 3, len 14; IO logica=
+l block 8, len 9=0D
+[    4.207676] EXT4-fs warning (device vdb): ext4_convert_unwritten_extents=
+_endio:3774: Inode (50) finished: extent logical block 25, len 15; IO logic=
+al block 25, len 8=0D
+[    4.217111] EXT4-fs warning (device vdb): ext4_convert_unwritten_extents=
+_endio:3774: Inode (47) finished: extent logical block 31, len 11; IO logic=
+al block 31, len 10=0D
+[    4.221635] EXT4-fs warning (device vdb): ext4_convert_unwritten_extents=
+_endio:3774: Inode (41) finished: extent logical block 25, len 15; IO logic=
+al block 25, len 8=0D
+ [14:05:39]- output mismatch (see /results/ext4/results-4k/generic/127.out.=
+bad)=0D
+    --- tests/generic/127.out	2025-11-13 21:05:49.000000000 -0500=0D
+    +++ /results/ext4/results-4k/generic/127.out.bad	2025-11-24 14:05:39.22=
+5714867 -0500=0D
+    @@ -1,7 +1,34117 @@=0D
+     QA output created by 127=0D
+    +/root/xfstests/ltp/fsx -q -l 262144 -o 65536 -S 191110531 -N 100000 -R=
+ -W fsx_std_nommap=0D
+    +READ BAD DATA: offset =3D 0x11303, size =3D 0xf7b0, fname =3D /vdb/fsx=
+_std_nommap=0D
+    +OFFSET      GOOD    BAD     RANGE=0D
+    +0x14000     0x0000  0xfc9f  0x0=0D
+    +operation# (mod 256) for the bad data may be 252=0D
+    +0x14001     0x0000  0x9ffc  0x1=0D
+    ...=0D
+    (Run 'diff -u /root/xfstests/tests/generic/127.out /results/ext4/result=
+s-4k/generic/127.out.bad'  to see the entire diff)=0D
+Ran: generic/127=0D
+Failures: generic/127=0D
+Failed 1 of 1 tests=0D
+Xunit report: /results/ext4/results-4k/result.xml=0D
+=0D
+               total        used        free      shared  buff/cache   avai=
+lable=0D
+Mem:            1969         206        1822           0          28       =
+ 1762=0D
+Swap:              0           0           0=0D
+END TEST: Ext4 4k block Mon Nov 24 14:05:39 EST 2025=0D
+
+--NWlW6uYnq158lPXA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=xfs-generic-127.log
+Content-Transfer-Encoding: quoted-printable
+
+=1Bc=1B[?7l=1B[2J=1B[0mSeaBIOS (version 1.17.0-debian-1.17.0-1)=0D
+Booting from ROM..=1Bc=1B[?7l=1B[2J=1B[!p=1B]104=07=1B[?7h[=1B[0;1;31mFAILE=
+D=1B[0m] Failed to start =1B[0;1;39mnbd-server.service=1B[0m - Network Bloc=
+k Device server.=0D=0D
+CMDLINE: "-c xfs/4k generic/127 --fail-loop-count 0"=0D
+KERNEL: kernel	6.18.0-rc6-next-20251124-xfstests #20 SMP PREEMPT_DYNAMIC Mo=
+n Nov 24 14:04:48 EST 2025 x86_64=0D
+FSTESTVER: blktests	4badb27 (Fri, 31 Oct 2025 19:53:27 +0900)=0D
+FSTESTVER: fio		fio-3.41 (Fri, 5 Sep 2025 14:21:17 -0600)=0D
+FSTESTVER: fsverity	v1.7 (Tue, 4 Nov 2025 17:28:17 -0800)=0D
+FSTESTVER: ima-evm-utils	v1.5 (Mon, 6 Mar 2023 07:40:07 -0500)=0D
+FSTESTVER: libaio  	libaio-0.3.108-82-gb8eadc9 (Thu, 2 Jun 2022 13:33:11 +0=
+200)=0D
+FSTESTVER: ltp		20250930 (Tue, 30 Sep 2025 13:53:45 +0200)=0D
+FSTESTVER: quota		v4.05-77-g22ff3d9 (Tue, 2 Sep 2025 08:12:02 -0400)=0D
+FSTESTVER: util-linux	v2.41.2 (Mon, 22 Sep 2025 12:56:34 +0200)=0D
+FSTESTVER: xfsprogs	v6.17.0 (Mon, 20 Oct 2025 16:49:00 +0200)=0D
+FSTESTVER: xfstests	v2025.11.04-12-g64e3dbda7 (Thu, 13 Nov 2025 19:58:03 -0=
+500)=0D
+FSTESTVER: xfstests-bld	gce-xfstests-202504292206-33-g3844cb58 (Thu, 13 Nov=
+ 2025 21:05:49 -0500)=0D
+FSTESTVER: zz_build-distro	trixie=0D
+FSTESTCFG: "xfs/4k"=0D
+FSTESTSET: "generic/127"=0D
+FSTESTEXC: ""=0D
+FSTESTOPT: "fail_loop_count 0 aex"=0D
+MNTOPTS: ""=0D
+CPUS: "2"=0D
+MEM: "1969.56"=0D
+               total        used        free      shared  buff/cache   avai=
+lable=0D
+Mem:            1969         212        1745           0         143       =
+ 1756=0D
+Swap:              0           0           0=0D
+meta-data=3D/dev/vdd               isize=3D512    agcount=3D4, agsize=3D327=
+680 blks=0D
+         =3D                       sectsz=3D512   attr=3D2, projid32bit=3D1=
+=0D
+         =3D                       crc=3D1        finobt=3D1, sparse=3D1, r=
+mapbt=3D1=0D
+         =3D                       reflink=3D1    bigtime=3D1 inobtcount=3D=
+1 nrext64=3D1=0D
+         =3D                       exchange=3D0   metadir=3D0=0D
+data     =3D                       bsize=3D4096   blocks=3D1310720, imaxpct=
+=3D25=0D
+         =3D                       sunit=3D0      swidth=3D0 blks=0D
+naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=3D1, =
+parent=3D0=0D
+log      =3Dinternal log           bsize=3D4096   blocks=3D16384, version=
+=3D2=0D
+         =3D                       sectsz=3D512   sunit=3D0 blks, lazy-coun=
+t=3D1=0D
+realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0=
+=0D
+         =3D                       rgcount=3D0    rgsize=3D0 extents=0D
+         =3D                       zoned=3D0      start=3D0 reserved=3D0=0D
+Discarding blocks...Done.=0D
+BEGIN TEST 4k (1 test): XFS 4k block Mon Nov 24 14:06:31 EST 2025=0D
+DEVICE: /dev/vdd=0D
+XFS_MKFS_OPTIONS: -bsize=3D4096=0D
+XFS_MOUNT_OPTIONS: =0D
+FSTYP         -- xfs (debug)=0D
+PLATFORM      -- Linux/x86_64 kvm-xfstests 6.18.0-rc6-next-20251124-xfstest=
+s #20 SMP PREEMPT_DYNAMIC Mon Nov 24 14:04:48 EST 2025=0D
+MKFS_OPTIONS  -- -f -bsize=3D4096 /dev/vdc=0D
+MOUNT_OPTIONS -- /dev/vdc /vdc=0D
+=0D
+generic/127  31s ...  [14:06:33][    6.886269] run fstests generic/127 at 2=
+025-11-24 14:06:33=0D
+[    7.333668] vdd: writeback error on inode 137, offset 208896, sector 262=
+2528=0D
+[    7.338078] XFS (vdd): Corruption of in-memory data (0x8) detected at xf=
+s_trans_mod_sb+0x2b6/0x370 (fs/xfs/xfs_trans.c:353).  Shutting down filesys=
+tem.=0D
+[    7.341384] XFS (vdd): Please unmount the filesystem and rectify the pro=
+blem(s)=0D
+[    7.342570] XFS: Assertion failed: tp->t_blk_res >=3D tp->t_blk_res_used=
+, file: fs/xfs/xfs_trans.c, line: 120=0D
+[    7.344123] ------------[ cut here ]------------=0D
+[    7.344851] WARNING: fs/xfs/xfs_message.c:104 at assfail+0x33/0x3a, CPU#=
+1: kworker/1:0/23=0D
+[    7.346172] CPU: 1 UID: 0 PID: 23 Comm: kworker/1:0 Not tainted 6.18.0-r=
+c6-next-20251124-xfstests #20 PREEMPT(none) =0D
+[    7.347861] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.1=
+7.0-debian-1.17.0-1 04/01/2014=0D
+[    7.349936] Workqueue: xfs-conv/vdd xfs_end_io=0D
+[    7.350759] RIP: 0010:assfail+0x33/0x3a=0D
+[    7.351341] Code: 49 89 d0 41 89 c9 48 c7 c2 d8 18 a8 82 48 89 f1 48 89 =
+fe 48 c7 c7 e4 0c b0 82 e8 b8 fd ff ff 80 3d 59 6d ba 01 00 74 02 0f 0b <0f=
+> 0b e9 41 da ed ff 48 8d 45 10 48 89 e2 48 89 de 4c 89 34 24 48=0D
+[    7.354327] RSP: 0018:ffa00000000cbc00 EFLAGS: 00010246=0D
+[    7.355161] RAX: 0000000000000000 RBX: ff11000011dafbc8 RCX: 000000007ff=
+fffff=0D
+[    7.356328] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffff82b=
+00ce4=0D
+[    7.357522] RBP: ff11000011dafd98 R08: 0000000000000000 R09: 00000000000=
+0000a=0D
+[    7.358681] R10: 000000000000000a R11: 0fffffffffffffff R12: 00000005000=
+2f3f8=0D
+[    7.359835] R13: 0000000000039a46 R14: ff11000011dafe68 R15: ff11000011d=
+afe68=0D
+[    7.361031] FS:  0000000000000000(0000) GS:ff110000fa430000(0000) knlGS:=
+0000000000000000=0D
+[    7.362325] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033=0D
+[    7.363273] CR2: 00007fbb37aaa350 CR3: 0000000002c2e003 CR4: 00000000007=
+71ef0=0D
+[    7.364422] PKRU: 55555554=0D
+[    7.364872] Call Trace:=0D
+[    7.365309]  <TASK>=0D
+[    7.365671]  xfs_trans_dup+0x16e/0x1c0=0D
+[    7.366287]  xfs_trans_roll+0x2e/0xd0=0D
+[    7.366906]  xfs_defer_trans_roll+0x53/0x130=0D
+[    7.367608]  ? srso_alias_return_thunk+0x5/0xfbef5=0D
+[    7.368393]  xfs_defer_finish_noroll+0x2cd/0x500=0D
+[    7.369419]  xfs_trans_commit+0x4c/0x70=0D
+[    7.370486]  ? xfs_iomap_write_unwritten+0x180/0x320=0D
+[    7.371227]  xfs_iomap_write_unwritten+0xce/0x320=0D
+[    7.371932]  xfs_end_ioend+0x207/0x2b0=0D
+[    7.372517]  xfs_end_io+0xb5/0x100=0D
+[    7.373046]  process_one_work+0x18c/0x360=0D
+[    7.373697]  worker_thread+0x268/0x3b0=0D
+[    7.374265]  ? __pfx_worker_thread+0x10/0x10=0D
+[    7.374910]  kthread+0x10a/0x230=0D
+[    7.375422]  ? __pfx_kthread+0x10/0x10=0D
+[    7.375989]  ? __pfx_kthread+0x10/0x10=0D
+[    7.376577]  ret_from_fork+0x95/0x110=0D
+[    7.377142]  ? __pfx_kthread+0x10/0x10=0D
+[    7.377709]  ret_from_fork_asm+0x1a/0x30=0D
+[    7.378303]  </TASK>=0D
+[    7.378663] ---[ end trace 0000000000000000 ]---=0D
+[    7.379365] vdd: writeback error on inode 132, offset 184320, sector 888=
+=0D
+_check_xfs_filesystem: filesystem on /dev/vdd has dirty log=0D
+(see /results/xfs/results-4k/generic/127.full for details)=0D
+_check_xfs_filesystem: filesystem on /dev/vdd is inconsistent (r)=0D
+(see /results/xfs/results-4k/generic/127.full for details)=0D
+Trying to repair broken TEST_DEV file system=0D
+_check_dmesg: something found in dmesg (see /results/xfs/results-4k/generic=
+/127.dmesg)=0D
+ [14:06:34]- output mismatch (see /results/xfs/results-4k/generic/127.out.b=
+ad)=0D
+    --- tests/generic/127.out	2025-11-13 21:05:49.000000000 -0500=0D
+    +++ /results/xfs/results-4k/generic/127.out.bad	2025-11-24 14:06:34.037=
+856472 -0500=0D
+    @@ -1,7 +1,25950 @@=0D
+     QA output created by 127=0D
+    -All 100000 operations completed A-OK!=0D
+    -All 100000 operations completed A-OK!=0D
+    -All 100000 operations completed A-OK!=0D
+    -All 100000 operations completed A-OK!=0D
+    -All 100000 operations completed A-OK!=0D
+    -All 100000 operations completed A-OK!=0D
+    ...=0D
+    (Run 'diff -u /root/xfstests/tests/generic/127.out /results/xfs/results=
+-4k/generic/127.out.bad'  to see the entire diff)=0D
+Ran: generic/127=0D
+Failures: generic/127=0D
+Failed 1 of 1 tests=0D
+Xunit report: /results/xfs/results-4k/result.xml=0D
+=0D
+               total        used        free      shared  buff/cache   avai=
+lable=0D
+Mem:            1969         309        1719           0          30       =
+ 1660=0D
+Swap:              0           0           0=0D
+END TEST: XFS 4k block Mon Nov 24 14:06:34 EST 2025=0D
+
+--NWlW6uYnq158lPXA--
