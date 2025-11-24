@@ -1,75 +1,152 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-1-30.ptr.blmpb.com (sg-1-30.ptr.blmpb.com [118.26.132.30])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 523C9256D;
-	Mon, 24 Nov 2025 06:22:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56F8422127A
+	for <linux-xfs@vger.kernel.org>; Mon, 24 Nov 2025 06:26:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.30
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763965366; cv=none; b=JghcO8rNclcvUWRionGltQSG3HtdABmfQWC33zwZr4RXKzwUH7oI5YjeZvNAFaKU3jyrE6bJWg2u4sPBb+8lSgNTYuKfn1OIyzFq+XzHiXvDdrZ3mRmP3HQlAvXMXEeHDiFd0gN9XoDq130SHqYN0yHNxPvjIzgdYBqLo2OPh4c=
+	t=1763965582; cv=none; b=SuCfPUMlquorb9zgAZgYqYLQlM/MJqwNhPc0pW5ffCYnng4utyyjoILOg8zgrYsswai4EcANKCG7xEpIDwEObdPpR/QR033AM9NXK1Dm6oENbWZ/Nh9WpcYnaIrls7ceOw6p7gq7+IlsZrVDzKJsITJltwpUH/NotWeJJejalUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763965366; c=relaxed/simple;
-	bh=nx3VukjuuMOBSyaDA6zUnfhDxdBh573OnuZhnglTync=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PJiX7bPuFhNENBY7+czpzWSp46MMmaOpMJP/pqBLeaMv5vcOq0Nk2moo/xJR+lAA1Oc6G96efujyUZ1qIP4jYCSu98fT4rT6ELKn5mkOmfF+Osu2ZF03biQ10SzjEUGw2MKZKsvrk0d7F6t3XAWFllWOSw+D0unkt1oP+127VZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qH8qp2/x; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1763965582; c=relaxed/simple;
+	bh=SkPUzCbU4UnrkhLYBJ4h/u7HrneVKqozjrS7SNDhhFk=;
+	h=Date:Content-Type:In-Reply-To:Subject:Mime-Version:References:To:
+	 Cc:From:Message-Id; b=cVYnEbx+PrTNRB0Sh1fstPGkf4bqEIrOrFstcc1v3EE0HTst29am7zXvUdAOKdj1NzT9yPijOhxICgmvZTRCsNlPs84fx3jUbINwmTX2uupozQXRSBVaDkh5l6JR6ur1oRe7gwgVoQJt9QxV121Ebd1vqoCuecpHIYA9f+CwO/o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=NMaVJ26f; arc=none smtp.client-ip=118.26.132.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qH8qp2/x"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="NMaVJ26f"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=dp3mlPd1tGPSHjwalGRl3+OXBzlUltt5c2g4rrDWar4=; b=qH8qp2/x9cZUMrdILRqeU862Zl
-	rY+YcfF4XPEPXN/zjHR+j1pwqvCwhGipGukmvP7MEANpCrlePLgfvo+05kOyRgrrA3iEWaXcdkfwy
-	n5MFvlXTOYs8cCMXaPqm2NJrQn6ejYfHPXF6Fk+6S1lNaAbGp001jBuqd3Yx8ixJeykV21c62OgO9
-	IxdMSY6IQXNeDIUGXAoKu3y67wRgr7iijuqp1G/8PN73v/lq0LzcuS/sL2NNnuTiZz+ePoC33OgqI
-	5JyrqgQXsohfKx04w9wzb+dCx2vOLMZs814+VxsjteBNXfNEM5E8FFaII+89JtbsMIzbCxoUqIaPn
-	6AjZf4SA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vNPyE-0000000B90n-31B1;
-	Mon, 24 Nov 2025 06:22:42 +0000
-Date: Sun, 23 Nov 2025 22:22:42 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Stephen Zhang <starzhangzsd@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org, nvdimm@lists.linux.dev,
-	virtualization@lists.linux.dev, linux-nvme@lists.infradead.org,
-	gfs2@lists.linux.dev, ntfs3@lists.linux.dev,
-	linux-xfs@vger.kernel.org, zhangshida@kylinos.cn
-Subject: Re: Fix potential data loss and corruption due to Incorrect BIO
- Chain Handling
-Message-ID: <aSP5svsQfFe8x8Fb@infradead.org>
-References: <20251121081748.1443507-1-zhangshida@kylinos.cn>
- <aSBA4xc9WgxkVIUh@infradead.org>
- <CANubcdVjXbKc88G6gzHAoJCwwxxHUYTzexqH+GaWAhEVrwr6Dg@mail.gmail.com>
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1763965451;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=1v8DjKDZXbkovGdNkFJdKNL/RGUBInSERiXq+wqH6GE=;
+ b=NMaVJ26f6wCqj655OfZfLoFV8HUO5KA8eptMOPpNT59Q0VF84NED7z1T9jKNzaCerL0OU0
+ Nt/skt4isLqE30nJINFcU89+VLzIkhsy1BzaJsFBA0qqUYfBYajIQk4uURYvp+hQkIQTXr
+ wSXtzcxprblu4RivsUKndN7uQ7Hn3jwdNGx799dULSVIrM8/uTiR8NUwabxO5bWgt9WU8L
+ 5ccydH+OW7RoA9qXDY2udcI1niox7gGrCs0jN5CUMUYikBhxik8r4PkILp8Q6aIrP7Wt9C
+ LDAIOg8YNaiOXZ9ZuFngyDKzRBhLWoyBSvEb8AQmiXL+rT2BvUX85HSJIZM/Jw==
+Date: Mon, 24 Nov 2025 14:24:05 +0800
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20251124025737.203571-3-ckulkarnilinux@gmail.com>
+Subject: Re: [PATCH V2 2/5] dm: ignore discard return value
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CANubcdVjXbKc88G6gzHAoJCwwxxHUYTzexqH+GaWAhEVrwr6Dg@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Mime-Version: 1.0
+References: <20251124025737.203571-1-ckulkarnilinux@gmail.com> <20251124025737.203571-3-ckulkarnilinux@gmail.com>
+User-Agent: Mozilla Thunderbird
+Received: from [192.168.1.104] ([39.182.0.153]) by smtp.feishu.cn with ESMTPS; Mon, 24 Nov 2025 14:24:08 +0800
+Reply-To: yukuai@fnnas.com
+To: "Chaitanya Kulkarni" <ckulkarnilinux@gmail.com>, <axboe@kernel.dk>, 
+	<agk@redhat.com>, <snitzer@kernel.org>, <mpatocka@redhat.com>, 
+	<song@kernel.org>, <hch@lst.de>, <sagi@grimberg.me>, <kch@nvidia.com>, 
+	<jaegeuk@kernel.org>, <chao@kernel.org>, <cem@kernel.org>, 
+	"Yu Kuai" <yukuai@fnnas.com>
+Cc: <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<dm-devel@lists.linux.dev>, <linux-raid@vger.kernel.org>, 
+	<linux-nvme@lists.infradead.org>, 
+	<linux-f2fs-devel@lists.sourceforge.net>, <linux-xfs@vger.kernel.org>, 
+	<bpf@vger.kernel.org>
+From: "Yu Kuai" <yukuai@fnnas.com>
+Message-Id: <d86b820a-46c9-43b6-9fe2-dbd991b76520@fnnas.com>
+Content-Language: en-US
+X-Lms-Return-Path: <lba+26923fa09+05a557+vger.kernel.org+yukuai@fnnas.com>
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, Nov 22, 2025 at 02:38:59PM +0800, Stephen Zhang wrote:
-> ======code analysis======
-> In kernel version 4.19, XFS handles extent I/O using the ioend structure,
+Hi,
 
-Linux 4.19 is more than four years old, and both the block I/O code
-and the XFS/iomap code changed a lot since then.
+=E5=9C=A8 2025/11/24 10:57, Chaitanya Kulkarni =E5=86=99=E9=81=93:
+> __blkdev_issue_discard() always returns 0, making all error checking
+> at call sites dead code.
+>
+> For dm-thin change issue_discard() return type to void, in
+> passdown_double_checking_shared_status() remove the r assignment from
+> return value of the issue_discard(), for end_discard() hardcod value
+> of r to 0 that matches only value returned from
+> __blkdev_issue_discard().
+>
+> md part is simplified to only check !discard_bio by ignoring the
+> __blkdev_issue_discard() value.
+>
+> Signed-off-by: Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
+> ---
+>   drivers/md/dm-thin.c | 12 +++++-------
+>   drivers/md/md.c      |  4 ++--
+>   2 files changed, 7 insertions(+), 9 deletions(-)
 
-> changes the logic. Since there are still many code paths that use
-> bio_chain, I am including these cleanups with the fix. This provides a reason
-> to CC all related communities. That way, developers who are monitoring
-> this can help identify similar problems if someone asks for help in the future,
-> if that is the right analysis and fix.
+mdraid and dm are different drivers, please split them.
 
-As many pointed out something in the analysis doesn't end up.  How do
-you even managed to call bio_chain_endio as almost no one should be
-calling it.  Are you using bcache?  Are the others callers in the
-obsolete kernel you are using?  Are they calling it without calling
-bio_endio first (which the bcache case does, and which is buggy).
+>
+> diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
+> index c84149ba4e38..77c76f75c85f 100644
+> --- a/drivers/md/dm-thin.c
+> +++ b/drivers/md/dm-thin.c
+> @@ -395,13 +395,13 @@ static void begin_discard(struct discard_op *op, st=
+ruct thin_c *tc, struct bio *
+>   	op->bio =3D NULL;
+>   }
+>  =20
+> -static int issue_discard(struct discard_op *op, dm_block_t data_b, dm_bl=
+ock_t data_e)
+> +static void issue_discard(struct discard_op *op, dm_block_t data_b, dm_b=
+lock_t data_e)
+>   {
+>   	struct thin_c *tc =3D op->tc;
+>   	sector_t s =3D block_to_sectors(tc->pool, data_b);
+>   	sector_t len =3D block_to_sectors(tc->pool, data_e - data_b);
+>  =20
+> -	return __blkdev_issue_discard(tc->pool_dev->bdev, s, len, GFP_NOIO, &op=
+->bio);
+> +	__blkdev_issue_discard(tc->pool_dev->bdev, s, len, GFP_NOIO, &op->bio);
+>   }
+>  =20
+>   static void end_discard(struct discard_op *op, int r)
+> @@ -1113,9 +1113,7 @@ static void passdown_double_checking_shared_status(=
+struct dm_thin_new_mapping *m
+>   				break;
+>   		}
+>  =20
+> -		r =3D issue_discard(&op, b, e);
+> -		if (r)
+> -			goto out;
+> +		issue_discard(&op, b, e);
+>  =20
+>   		b =3D e;
+>   	}
+> @@ -1188,8 +1186,8 @@ static void process_prepared_discard_passdown_pt1(s=
+truct dm_thin_new_mapping *m)
+>   		struct discard_op op;
+>  =20
+>   		begin_discard(&op, tc, discard_parent);
+> -		r =3D issue_discard(&op, m->data_block, data_end);
+> -		end_discard(&op, r);
+> +		issue_discard(&op, m->data_block, data_end);
+> +		end_discard(&op, 0);
+>   	}
+>   }
+>  =20
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 7b5c5967568f..aeb62df39828 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -9132,8 +9132,8 @@ void md_submit_discard_bio(struct mddev *mddev, str=
+uct md_rdev *rdev,
+>   {
+>   	struct bio *discard_bio =3D NULL;
+>  =20
+> -	if (__blkdev_issue_discard(rdev->bdev, start, size, GFP_NOIO,
+> -			&discard_bio) || !discard_bio)
+> +	__blkdev_issue_discard(rdev->bdev, start, size, GFP_NOIO, &discard_bio)=
+;
+> +	if (!discard_bio)
+>   		return;
+>  =20
+>   	bio_chain(discard_bio, bio);
 
+--=20
+Thanks
+Kuai
