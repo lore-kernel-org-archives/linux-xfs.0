@@ -1,71 +1,76 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF0172D838E;
-	Tue, 25 Nov 2025 07:11:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A916B2D8390;
+	Tue, 25 Nov 2025 08:24:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764054716; cv=none; b=bdsEJVDXnLB/eGB++yQ6SPC19TJRfRgKMbFDTduFKYdkh3dCM35up0uJRLEKdRyNArtA2YjmDHhTskzIOlyzFfwPDPeYAhIzvL39Cu3UyVt/Kq0jboc9zaq1DpFl9ApIOw4MVK4crdqVwjNN3ZgXgqYSkD+cYqIMamPI0i45mr4=
+	t=1764059049; cv=none; b=kGA6qlxxbfiMzDwjz40S3Mr9rLAqz0PGU+sKBBJ5pR4ei/Lg5oygaVCCKwowwuB2le2SReOsc+KABeeZdL/zSjstL8awEYc2hlgnIPQak5JkWcipHRUyBdfZjy4HQEK8EpS33HVAI1Y+RXr0O19P3oL1szKCCp4svbBg0Rddy9s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764054716; c=relaxed/simple;
-	bh=xflNeMqf7k1tQ8p2f9Vf/KT0VAo9WTDVCCFoPk6I900=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=ZL7uILjyrulsuty3d2j5/i0iskabaGEehkM2SNzF6DPgznKzU5Go470rtSjasXEOml+AWafqEv3mD4KeuJAZ2R9RLmBYf8Q94kciAL2YL8COUkDjRZfVF/W/+7fBSAfH4pvdVSFcAAkmhinSJJXFckAoo4nHXliDNMeVEGR7k64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vRW5r56j; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1764059049; c=relaxed/simple;
+	bh=fyCzOdyDgRE3MLw8Olg81SNfYvuO47J9DGOOqw9zWYI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=EKW8CLGQE6XVAhJvIzom7VehRDzBMVD1pK7C2+abJ7OqYUN6nw8jgR1UGzCjGzNtkxtcRett5VVVtZUH6OJq9hYvnd7kemLRhGcFkdrPJPHEXeqyiDuTN6HYjULrrJy/mMEgbeKigfD4HVhh9KH33/+GKInYWTygVWycZBpwrQo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rQL0pQmN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vRW5r56j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40CDCC4CEF1;
-	Tue, 25 Nov 2025 07:11:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rQL0pQmN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3055C4CEF1;
+	Tue, 25 Nov 2025 08:24:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764054715;
-	bh=xflNeMqf7k1tQ8p2f9Vf/KT0VAo9WTDVCCFoPk6I900=;
-	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
-	b=vRW5r56jcgqXMxVPd0wuo6Asj/WFwwlD1sbbJn+TM5uvyv+LFWmulSpnq8gsEcoDB
-	 9xM6Mo7+lurS8TbEynkUIWlNAssF1pYUcO0AklxAJ+AAiZl5seSlhrDuq68Kq/O2cn
-	 cHh+bXZftIVMPHCe7c9IY57WuTMskj05VfhK5sKqpFNxgsSia9lA6h97quJQs3MzpF
-	 T7eu7PHpjPa3mU7joudmxeoqPhsF+fvS6NPNj3DVzheWD1k8VSZpn7yTtlVBZCuOvs
-	 aF8wrighi/0KfXj8IFm/XZmSEbiYeHktZXuy5rGJEVPsAvPHwmWoCB41m7uEAJI68x
-	 uy5QFKvIGSBwQ==
-Message-ID: <8e98a473-7991-43ae-a758-8ad324bb9393@kernel.org>
-Date: Tue, 25 Nov 2025 15:11:57 +0800
+	s=k20201202; t=1764059046;
+	bh=fyCzOdyDgRE3MLw8Olg81SNfYvuO47J9DGOOqw9zWYI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=rQL0pQmNVRQRFxxzPGSDEEX+OxskzMpapiAs2nAFc8ddpNQP+0YsM3NQxj/gq5x0i
+	 7DUvBgJGavsmw9rtLdR6QnqX9/h3d6fovy8Yh3b38gTS56dzH30ZRaviwjApJYbrXC
+	 AQGx0zqUM/P5NXJvrDtXEY+zDT4nu/QkRz5yovcisjftgoBKnloGDGdaRDGTunFwxk
+	 Z+RvVFWFAvG3XQfwRXF7IBxbfOw2X6ugcP/PhTMxmJkG/yj/V6UDX8gb7SvQ5Yc2wm
+	 BqR2Tl/SOuoshDKSr69wERaFBqQUer0s3hOiQtsn2iRpRdJDWCoygJ33AGbmkz03o0
+	 qysyWW/cxxw1Q==
+From: Christian Brauner <brauner@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
+	djwong@kernel.org,
+	linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	syzbot+a2b9a4ed0d61b1efb3f5@syzkaller.appspotmail.com
+Subject: Re: [PATCH] iomap: allocate s_dio_done_wq for async reads as well
+Date: Tue, 25 Nov 2025 09:23:58 +0100
+Message-ID: <20251125-hochebene-genau-029f96b5c188@brauner>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20251124140013.902853-1-hch@lst.de>
+References: <20251124140013.902853-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: chao@kernel.org, Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
- axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
- song@kernel.org, yukuai@fnnas.com, sagi@grimberg.me, kch@nvidia.com,
- cem@kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-f2fs-devel@lists.sourceforge.net,
- linux-xfs@vger.kernel.org, bpf@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: Re: [PATCH V3 5/6] f2fs: ignore discard return value
-To: Christoph Hellwig <hch@lst.de>, jaegeuk@kernel.org
-References: <20251124234806.75216-1-ckulkarnilinux@gmail.com>
- <20251124234806.75216-6-ckulkarnilinux@gmail.com>
- <9c8a6b5f-74c8-4e9f-ae46-24e1df5fe4e0@kernel.org>
- <20251125063358.GA14801@lst.de>
-Content-Language: en-US
-From: Chao Yu <chao@kernel.org>
-In-Reply-To: <20251125063358.GA14801@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1069; i=brauner@kernel.org; h=from:subject:message-id; bh=fyCzOdyDgRE3MLw8Olg81SNfYvuO47J9DGOOqw9zWYI=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWSqpi9IbZmmtNV+i62U3mWnS2JnzEqzHyx7afrRa7VGj t6T1anrO0pZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACZy35rhD0dUbbkhv+cc5j1L JDKuS9n/fq1re95u4awSji35DK29ixgZZiko1Z7mVTt+dH+mTfWnp9W+Yq91+FYufje7JsBYVa2 AGwA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On 11/25/2025 2:33 PM, Christoph Hellwig wrote:
-> On Tue, Nov 25, 2025 at 09:10:00AM +0800, Chao Yu wrote:
->> Reviewed-by: Chao Yu <chao@kernel.org>
+On Mon, 24 Nov 2025 15:00:13 +0100, Christoph Hellwig wrote:
+> Since commit 222f2c7c6d14 ("iomap: always run error completions in user
+> context"), read error completions are deferred to s_dio_done_wq.  This
+> means the workqueue also needs to be allocated for async reads.
 > 
-> Sending these all as a series might be confusing - it would be good
-> if the individual patches get picked through the subsystem trees
-> so that the function signature can be cleaned up after -rc1.
 > 
-> Can we get this queued up in the f2fs tree?
 
-Yes, I think it's clean to queue this patch into f2fs tree.
+Applied to the vfs-6.19.iomap branch of the vfs/vfs.git tree.
+Patches in the vfs-6.19.iomap branch should appear in linux-next soon.
 
-Thanks,
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
+
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs-6.19.iomap
+
+[1/1] iomap: allocate s_dio_done_wq for async reads as well
+      https://git.kernel.org/vfs/vfs/c/d2560991c66f
