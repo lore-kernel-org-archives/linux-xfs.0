@@ -1,109 +1,145 @@
-Received: from mail-io1-f42.google.com (mail-io1-f42.google.com [209.85.166.42])
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71186334C1F
-	for <linux-xfs@vger.kernel.org>; Tue, 25 Nov 2025 19:20:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34F3C32B9A6
+	for <linux-xfs@vger.kernel.org>; Tue, 25 Nov 2025 19:49:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764098411; cv=none; b=sMAk25JsdUoF54s1r/QTs10u4tkO68v1Z0aAA8Qze3fUpHs5XK4O0IGkZWmtjtNA50iF3kPCHOUgMjmbJc/0grL1sOtLU3I9SEgBNnSjHeD7CUOAKB6LsxybbtyNrhobiy8F2vvc5J/G7Wib1J/6yb1x/qJS5nmd9VSk/qg5/rc=
+	t=1764100187; cv=none; b=a67jyYQHU5MPJXNLBDi5gsqrreqDjWt2h1ZGClxcojERokQsaKj8iohjAAOsr2jpMpu7EVOCAkYLf5mxMwevLall+iaNVVSJ3AhQmQYfsBpZuaQ9/HO4vhqIM6/0mYlFcGgDNfsKDL7SYNm/wSV2d+/LrlizsNo429agTwxn+wc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764098411; c=relaxed/simple;
-	bh=weoF253YS0RDYDNFjzSDJ5tIChF4WqxAAq+yZqEKh9c=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=aGJvwCo7e1H5AE7xGIXHTjYUj4t0fdSWNwhmgdFM07HF0Ntqy44Hh1lPZZkJHKcPp70eIRfHIBM2zXTqc7eVSb+pH1P+sAxS2eSzATJHEpsoHroNGOnjWkLxIQTuS/XQeP7XmGE5mdZFRnOyxtd4GVwM31EzoqZqhbekxs7PdYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=Ou4yP+cP; arc=none smtp.client-ip=209.85.166.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1764100187; c=relaxed/simple;
+	bh=VMV9DcrzAHeJgG2FY3oCcj8JppK32PJcLKj8T8aN718=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=uDi9M/aUFiXIS/eDUI4QJ6jlZDCxD8mLv0G6BxZ9n48fUNQMihYlhnKwcs4wREUL3UQ+vmSvB0FGN6jmUcIxCQ83mfnCJZaDoYRJ4zqDjdUO4/Fq4Lf1KffrFipfhxfCgXo7W1bEcyUBeVADAydfxiRxIo9OSyDoL99Yk8TBZ2I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mW9KVjFx; arc=none smtp.client-ip=209.85.221.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="Ou4yP+cP"
-Received: by mail-io1-f42.google.com with SMTP id ca18e2360f4ac-948614ceac0so226579739f.0
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Nov 2025 11:20:07 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mW9KVjFx"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-42b3669ca3dso2370204f8f.0
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Nov 2025 11:49:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1764098406; x=1764703206; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Wynpj+E5fG2Oh1abG+WZEscR5HBvHm5298AKLCuUClg=;
-        b=Ou4yP+cPskomYMeVdRXei3aGe4CA8qWru7OsQP6BwdThf2GaArI8DOmVuUTM/9jgv8
-         7yfb3c/0JmSqRsVHmB9X6Phme2s4crzBqQXAGysf6khbNn9GegUtUQKxVlcAy26vQYp6
-         kl4sPUIwsjVQr7ahV4j/Ysgjpa1LobItHW3YSAHaxTCkylGkOFUf13dApdSBcuce3quJ
-         ddfICYEQhhFNAtAxjqjafE/HQviesUSIZ0VFAkfuiWwoW2sMZmGf6ATN89T2oU4YONDk
-         y6k1rY57h3ydl5s0+qPDswY0JwxaJs8RBzn4/NiEMU3SkXxLKVYxTQp/dmil0NkNCP06
-         IxPg==
+        d=gmail.com; s=20230601; t=1764100183; x=1764704983; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=IHyC+1/WIQK/el22PWobBCCQXoISZK/BEV0TaUXhpAY=;
+        b=mW9KVjFxjzQbig2+UfytugDt/eqI8klhRf5OdNXSzJtdLLtgrEyBQLs+YOpJLVecVo
+         nO3hVQagdnEO0xXwYru7syMvhZOANMs9FEPu8DrS4vm8gf1zfKM9H3vrCQ1Gs3iV2e4z
+         UrR1gmj3+k63YiLQND5boI+k47dmhPj+K2MEM4WbbNBfRoOBDlLssU+dqV1NlYR9DmLy
+         4lj0PAg9fLTxWr2mhu00fwJAKnNJF5O0lpCngKBrHBysjhk7mZUSmOAB8M3d+/kAhCk6
+         SvG94ZAnat/dl9PR0KwPYIX2+zbDzoeCxuyN2FPwNNDFZArhh6hXgWFaQyZPfpFfKUQw
+         TRSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764098406; x=1764703206;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Wynpj+E5fG2Oh1abG+WZEscR5HBvHm5298AKLCuUClg=;
-        b=s3fQA7vRSSdkPT2I8gPX9tg+P/sTLZB1Vs+HL9sUszmLdGWQj3bvQrNeD23XxU7KQs
-         isfdrhTEhnwTL3I0iZbuXyxoxP2mbJcTRORwQxOpprmGmvQQFRypak4QKBIjaKeMoLKB
-         O6SU6JOoM9fLe+udpd7rZm1PQYeLMKOz2gr+pzWrJoObxQS079MRHpEaM6ehXw68W2mj
-         0XRyEHMIq0TqTx63zepjO80tPx2D4K6QL/01sLj8rYNufp1Pb6UtRey+tDkVU5/mJzcR
-         z3BjBHEE7nVfcm9rbFRh9NvFwrNqj+Q59ZJZL5vMj9WAJUQfSxRXpDr3kkM9dudbDWvd
-         Mr4g==
-X-Forwarded-Encrypted: i=1; AJvYcCUGCef6G2t3MmA2YyN2EVcxuMT95d21c4fz8+m6EkTETmjMMBx2JSf/n2eb1Pc7zwC+SYR7hKeZBH8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyOFG0RjQHFQJcgYIxomxMWe6pIVLZ9VoV8OsSxiRaBSvfn3FbN
-	VqToihcNf+bFevMsQt5gQQIowE2N5LknT5D+qMH9+5+y61JQSoFbYrjVxwPcl5xCeSc=
-X-Gm-Gg: ASbGncs03LSAg81KOw8ZqCJmfwwS4Xb6U8NkJRMBlyqqSHifP1Hecv6XRxXb89c4XUX
-	bbbwgefwcQN/cjDyWj13O/nbpbTwXnna10tTFNMZY7NWggwcvUWFRzOC3H2z92wKpIC21aQXX+E
-	oVIWUFpncGU6+XjfjoSUDeGw1oC9frURsucNAtRoM1zg+N7q0M2wp0iLaIUOdYMQ1wud8nDBINZ
-	aN24vSRkwNdw0ZItP6VbCTlOJm8QizNCjzWLl0moV3YNGcB6S+ti/gHdpfTP2ieSc/w14wZpRJw
-	N0ljmliJ9bNMAN8OlOgyuZepZud2AHrIQCD62/XkildOr3hbT9q8PRDDL9wqdRNbSU8G9MIXq4t
-	XYLZFmNYZ8GqV6Yv+av34c2JAwDjDcuKNBVYCcLf9kezieNQEJuMfva8lWljpnki6Ko78A1hWTk
-	Iy8g==
-X-Google-Smtp-Source: AGHT+IEoSNUPWsr6TkiMj1VyTgtSM+H2mYKN8PQqct0sy21hTM0OQb7u5ZARk6n0QLi/CE7kBBB/xg==
-X-Received: by 2002:a05:6602:690d:b0:948:a32b:b6c4 with SMTP id ca18e2360f4ac-949473eb047mr1023076839f.3.1764098406436;
-        Tue, 25 Nov 2025 11:20:06 -0800 (PST)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-949385c2405sm668551239f.6.2025.11.25.11.20.04
+        d=1e100.net; s=20230601; t=1764100183; x=1764704983;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=IHyC+1/WIQK/el22PWobBCCQXoISZK/BEV0TaUXhpAY=;
+        b=tj5S4QfIN+d1GIB1zs5AZhga1+ZTo3XV6ss9Vw9vauCVZ+TZbHZbOHNKE63LbiKUhs
+         ymvZSiTfA3g4EVdV0JZZO2a7mR19ZvsDZyCCALLgWuHCcyhy0maSRNgbS5arGa7bzste
+         0RekNjwF4awCYD8PU9WCTzAsfMHtnzYoJrfp9bR9u+QOC2lpATMjYC74Uu/Edx4Q7dMP
+         j5j/A0b8DxsXHtnUY09wGxZDjzd6vCn5SbIRFgHTy2q0YTwakX5tFvmSCXA/kKQYWATS
+         VwX3lxbvswIPY9FgRh7alOnKwGW8DFoyWGZReN+QpdZxtHVLzQu4HB1kB9BCT8efqQp6
+         rEpQ==
+X-Gm-Message-State: AOJu0Yywmqtrq1S3umyQBDyzujIG+CyUN2ClSIrJgcF/Xphg49seSERp
+	fX5b3qY5MrD+18Ypn36rtF/+KrF1lrpw7hUcCxyyyhUEmBPQA1XOEJng
+X-Gm-Gg: ASbGnctfp6JSWYeQiIacRpkdHzn3yC6SJmp6XDdHXLmwC/als7iCDcKTBVFjVGQoT02
+	dzWjj9HEVEuGlFQpr65VcwR3vgipMdpg5VCVtq7AIzqgZwhKHoMiCb6ruP/juwlsbSEus0sVYu9
+	aBwNp3eIzYdNSztpDycaVqn6jMcr0pTd/nlMeu4B3O8joRSQPdQxqgmhidd1VHBzXNwK4Mwky3K
+	QAakLrItPOZb3NmG1FraGlwJ5Q6fgzEftEJDsuwcWs8SgaFVqiW9HCPr4u6ohZEKySRBzvsoZdk
+	95ZEOfo4xHCuMv1uYzD/KbqHuk01E/eWePog1NEkvHDF+Mfa87OwFRCeZV6uV2/V/QFiUm9rafK
+	pAlxB+X0uUtDHSBwTtg1vIzZ864n/X5jzxh0HNWHgZc1n+QjiUgQeF9yA2J6pX84Qd28IQA6s5F
+	331mY4BndB9CBfGp5/qOykpeyYl+apQR2l1NzswiE3BIdkBw==
+X-Google-Smtp-Source: AGHT+IGIMvfKyaIUsXHMatvMux1T8em1l2Y3fYtajLlwfQiPAHORz/9MhcEmxcALk6l2Zb+nHL5m+g==
+X-Received: by 2002:a05:6000:240b:b0:42b:3b8a:3090 with SMTP id ffacd0b85a97d-42cc1cbd456mr17583933f8f.23.1764100183293;
+        Tue, 25 Nov 2025 11:49:43 -0800 (PST)
+Received: from localhost (dhcp-91-156.inf.ed.ac.uk. [129.215.91.156])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42cb7fb919bsm35949025f8f.34.2025.11.25.11.49.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Nov 2025 11:20:05 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, 
- song@kernel.org, yukuai@fnnas.com, hch@lst.de, sagi@grimberg.me, 
- kch@nvidia.com, jaegeuk@kernel.org, chao@kernel.org, cem@kernel.org, 
- Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
- dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, 
- linux-nvme@lists.infradead.org, linux-f2fs-devel@lists.sourceforge.net, 
- linux-xfs@vger.kernel.org, bpf@vger.kernel.org
-In-Reply-To: <20251124234806.75216-1-ckulkarnilinux@gmail.com>
-References: <20251124234806.75216-1-ckulkarnilinux@gmail.com>
-Subject: Re: (subset) [PATCH V3 0/6] block: ignore __blkdev_issue_discard()
- ret value
-Message-Id: <176409840493.40095.8097031483064544929.b4-ty@kernel.dk>
-Date: Tue, 25 Nov 2025 12:20:04 -0700
+        Tue, 25 Nov 2025 11:49:42 -0800 (PST)
+Date: Tue, 25 Nov 2025 19:49:42 +0000
+From: Karim Manaouil <kmanaouil.dev@gmail.com>
+To: Carlos Maiolino <cem@kernel.org>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Karim Manaouil <kmanaouil.dev@gmail.com>
+Subject: Too many xfs-conv kworker threads
+Message-ID: <20251125194942.iphwjfx2a4bw6i7g@wrangler>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+Hi folks,
 
-On Mon, 24 Nov 2025 15:48:00 -0800, Chaitanya Kulkarni wrote:
-> __blkdev_issue_discard() only returns value 0, that makes post call
-> error checking code dead. This patch series revmoes this dead code at
-> all the call sites and adjust the callers.
-> 
-> Please note that it doesn't change the return type of the function from
-> int to void in this series, it will be done once this series gets merged
-> smoothly.
-> 
-> [...]
+I have four NVMe SSDs on RAID0 with XFS and upstream Linux kernel 6.15
+with commit id e5f0a698b34ed76002dc5cff3804a61c80233a7a. The setup can
+achieve 25GB/s and more than 2M IOPS. The CPU is a dual socket 24-cores
+AMD EPYC 9224.
 
-Applied, thanks!
+I am running thpchallenge-fio from mmtests (its purpose is described
+here [1]). It's a fio job that inefficiently writes a large number of 64K
+files. On a system with 128GiB of RAM, it could create up to 100K files.
+A typical fio config looks like this:
 
-[1/6] block: ignore discard return value
-      (no commit info)
+[global]
+direct=0
+ioengine=sync
+blocksize=4096
+invalidate=0
+fallocate=none
+create_on_open=1
 
-Best regards,
+[writer]
+nrfiles=785988
+filesize=65536
+readwrite=write
+numjobs=4
+filename_format=$jobnum/workfile.$filenum
+
+I noticed that, at some point, top reports around 42650 sleeping tasks,
+example:
+
+Tasks: 42651 total,   1 running, 42650 sleeping,   0 stopped,   0 zombie
+
+This is a test machine from a fresh boot running vanilla Debian.
+
+After checking, it turned out, it was a massive list of xfs-conv
+kworkers. Something like this (truncated):
+
+  58214 ?        I      0:00 [kworker/47:203-xfs-conv/md127]
+  58215 ?        I      0:00 [kworker/47:204-xfs-conv/md127]
+  58216 ?        I      0:00 [kworker/47:205-xfs-conv/md127]
+  58217 ?        I      0:00 [kworker/47:206-xfs-conv/md127]
+  58219 ?        I      0:00 [kworker/12:539-xfs-conv/md127]
+  58220 ?        I      0:00 [kworker/12:540-xfs-conv/md127]
+  58221 ?        I      0:00 [kworker/12:541-xfs-conv/md127]
+  58222 ?        I      0:00 [kworker/12:542-xfs-conv/md127]
+  58223 ?        I      0:00 [kworker/12:543-xfs-conv/md127]
+  58224 ?        I      0:00 [kworker/12:544-xfs-conv/md127]
+  58225 ?        I      0:00 [kworker/12:545-xfs-conv/md127]
+  58227 ?        I      0:00 [kworker/38:155-xfs-conv/md127]
+  58228 ?        I      0:00 [kworker/38:156-xfs-conv/md127]
+  58230 ?        I      0:00 [kworker/38:158-xfs-conv/md127]
+  58233 ?        I      0:00 [kworker/38:161-xfs-conv/md127]
+  58235 ?        I      0:00 [kworker/8:537-xfs-conv/md127]
+  58237 ?        I      0:00 [kworker/8:539-xfs-conv/md127]
+  58238 ?        I      0:00 [kworker/8:540-xfs-conv/md127]
+  58239 ?        I      0:00 [kworker/8:541-xfs-conv/md127]
+  58240 ?        I      0:00 [kworker/8:542-xfs-conv/md127]
+  58241 ?        I      0:00 [kworker/8:543-xfs-conv/md127]
+
+It seems like the kernel is creating too many kworkers on each CPU.
+
+I am not sure if this has any effect on performance, but potentially,
+there is some scheduling overhead?!
+
+Is this a healthy amount of kworkers? Is this even needed? Even if we
+are trying to write to ~80k small files by four parallel threads?
+
+[1] https://lwn.net/Articles/770235/
 -- 
-Jens Axboe
-
-
-
+~karim
