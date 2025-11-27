@@ -1,56 +1,43 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0401D2765EA;
-	Thu, 27 Nov 2025 14:46:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52A7B27E074;
+	Thu, 27 Nov 2025 15:09:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764254822; cv=none; b=htY5sJ780LHxz20NqJ6UDKwPSWvX7AyG6Peg3NxkNRGDyScu5Y1b8RGF4Lq5xxhGnQt/EgSuMyy/FHElKBPmeLCZEIb9GiXf6LoHybJeBrG3pdqeHMd0z29GSVHe3YgLX7fEXAnl9RnVsT6ub/oAsV6X5cWGDWKAPjB/bowkGyg=
+	t=1764256177; cv=none; b=AVQUtqFKR/CFXIad6kB2xH2IDJC+1gBkb4dyH/wUbCQnnwkgxMZOZmkv/gNyXK/sRLIoyJLuwN2QSm0LyyBE3brxJKWriA2fLjj6QGlVx62xZEcnP08vVuMRJ+s0goEM94SNWncYQEYiF4kqbcWl8CxF12hoHVL71qormtcrUfk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764254822; c=relaxed/simple;
-	bh=ivuoXExaB3gsliilPqzQI7ROdKlgJlBqam2Q0DpFMbY=;
+	s=arc-20240116; t=1764256177; c=relaxed/simple;
+	bh=g5AWCMlXDlcP7MTfdPRnsS2Zca959sEYu/2s2Rlf4xs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mQ1RYDKDxtl7rQe9SGVVXu+wuueUuoMrRh4KyrxsV4WO/KwUOuHbtw3/9qg6Uzh7NOeH9f46OimlCHpf1T02dUl0H1CwDv6yLiSeE7hzwB8dMaM4Rlzm3OpOwCF87Og/4QaxTKtiaB4m5uxgK2O9r2L1T/K/KZItQRebqewiUfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=KLtq1zLl; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=PhQNvY/qytpcu16Bx+6TJwqsFZhOJ1EbOuLwc4D2U4vT7tik7ZI4R9dewL8wOff+/8Qx1O51ib6tnPzCe0CMnnpZrTC+RU7y6dAaPDwB0FCvzgHP/3ys12dc6SNbDbHXn+XkZAEf3wtzilJj8RFn6NdFlba+4p07WnAegDyrQOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SS8kzNke; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KLtq1zLl"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=JB6Vn8jaGZJZFbHXqiLHtPjpjF68p2nfQjOHbcKK9KQ=; b=KLtq1zLlifxDD6EFn/Q+RiTUa1
-	PG8KgYjyvrgOSvwGtUKvHikYUCvoxtUpFM9PoPWH/yVVCuyMLtlzQOvEdltPVZy0AFPaeGJPwVYOD
-	QJzdV/aD5BGaEQg8qYXEXpl+nPufbM5cju7eJ590cYPfJqBMxgi0+dC0IGPUB7AXp3sFUkwscs1ZF
-	WxxiipMGyQ5NZbmSGUwmWbYW2Uk1OcR7cyUDmdUoAhiAlzKnj/NoVYLGgjZU/6y8IZjWnWOy3bm0E
-	3hgWbv2yVSQxs3Z5m7d2sqE3KrlGrAHnO8gRzZxvjBVmHpbmzSKURd6tLnwkfxa/SqrpkajnAF3Sd
-	5v7sZoyw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vOdGl-0000000Gnt0-2Jdy;
-	Thu, 27 Nov 2025 14:46:51 +0000
-Date: Thu, 27 Nov 2025 06:46:51 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Gao Xiang <hsiangkao@linux.alibaba.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Stephen Zhang <starzhangzsd@gmail.com>,
-	Ming Lei <ming.lei@redhat.com>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-	nvdimm@lists.linux.dev, virtualization@lists.linux.dev,
-	linux-nvme@lists.infradead.org, gfs2@lists.linux.dev,
-	ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org,
-	zhangshida@kylinos.cn
-Subject: Re: Fix potential data loss and corruption due to Incorrect BIO
- Chain Handling
-Message-ID: <aShkWxt9Yfa7YiSe@infradead.org>
-References: <20251121081748.1443507-1-zhangshida@kylinos.cn>
- <aSBA4xc9WgxkVIUh@infradead.org>
- <CANubcdVjXbKc88G6gzHAoJCwwxxHUYTzexqH+GaWAhEVrwr6Dg@mail.gmail.com>
- <aSP5svsQfFe8x8Fb@infradead.org>
- <CANubcdVgeov2fhcgDLwOmqW1BNDmD392havRRQ7Jz5P26+8HrQ@mail.gmail.com>
- <aSf6T6z6f2YqQRPH@infradead.org>
- <3a29b0d8-f13d-4566-8643-18580a859af7@linux.alibaba.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SS8kzNke"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55759C4CEF8;
+	Thu, 27 Nov 2025 15:09:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764256176;
+	bh=g5AWCMlXDlcP7MTfdPRnsS2Zca959sEYu/2s2Rlf4xs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=SS8kzNkeqTAgtlDAphnQxYtF8324wYIhp9sTbr6iana3+8Prb+0x+p4powHE07AJp
+	 QhDFQMOqlLwhsFewFfLwkMkus2tJvF9TwetcJkr8KVWK4V+n1tu6/kzRQ0Oaq4gtDf
+	 6cOsAbeOvt3eRhzclhsMdxjp9fuxNmXy8habZjlMV0L10y8jgg0Zbke+ehwa2cMbCm
+	 krq+bQDl1fmAYlRijwrIOSh6bka5RSg0+qZ+qBz6NYpg9db4aE2fNEUTtfzkkba5rf
+	 OIVxicH87RC5gNQYO6FS0sHWykB4cxeTLZOSXga+dlp502dpMgETv2+/+nncFwI+gV
+	 cAVv/K6wCebzQ==
+Date: Thu, 27 Nov 2025 16:09:32 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, hch@lst.de, 
+	linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/22] docs: remove obsolete links in the xfs online
+ repair documentation
+Message-ID: <wvyokb34zh4ycahfeyyfelxjaefbwwge6og4vpumpnvedcnul6@2zp36drhiujw>
+References: <176230365543.1647136.3601811429298452884.stgit@frogsfrogsfrogs>
+ <176230365709.1647136.9384258714241175193.stgit@frogsfrogsfrogs>
+ <usg3AiloVtoUi4MfDUFv4ISZlhgL9NQorACfzwYsF4F01o3wWKNHOZ1NC2wUoPWZjx9xkr6c71IEMHbh0M-_Fw==@protonmail.internalid>
+ <aSaheJ-eYvqi3-Um@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -59,16 +46,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3a29b0d8-f13d-4566-8643-18580a859af7@linux.alibaba.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <aSaheJ-eYvqi3-Um@infradead.org>
 
-On Thu, Nov 27, 2025 at 03:40:20PM +0800, Gao Xiang wrote:
-> For erofs, let me fix this directly to use bio_endio() instead
-> and go through the erofs (although it doesn't matter in practice
-> since no chain i/os for erofs and bio interfaces are unique and
-> friendly to operate bvecs for both block or non-block I/Os
-> compared to awkward bvec interfaces) and I will Cc you, Ming
-> and Stephen then.
+On Tue, Nov 25, 2025 at 10:43:04PM -0800, Christoph Hellwig wrote:
+> On Tue, Nov 04, 2025 at 04:48:40PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> >
+> > Online repair is now merged in upstream, no need to point to patchset
+> > links anymore.
+> >
+> > Signed-off-by: "Darrick J. Wong" <djwong@kernel.org>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Can we get this queued up for 6.19?  Sending it standalone might be
+> best, although given that Carlos is on Cc maybe he can directly
+> pick it up?
+> 
 
-Thanks.  I'll ping Coly for bcache.
-
+Done, will send an update soon.
