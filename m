@@ -1,41 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5919626CE32
-	for <linux-xfs@vger.kernel.org>; Fri, 28 Nov 2025 06:32:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A543E25A2A5
+	for <linux-xfs@vger.kernel.org>; Fri, 28 Nov 2025 06:32:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764311554; cv=none; b=DXi4FtRwWHGF+pueG7CoEX9NU04D6uLEaELSbca8jYSJ4XtWxNjBGxWvQcnsvMRbZNf4vDegGhD9XUyldtWD/4/ODppfv8LA/Q05V0F7T2saMhCN/SC5yxYiYrrZFUK9Oz28RbseTjamowRw3xaXBViFR9NOXDjT11bFEtRaixk=
+	t=1764311562; cv=none; b=nHhqRnw/rsO5TepgrPbGBVtnvT6m+EqDJUKN/3XCgplE7o4BhGaMqBl4WxgPJP3stVmHvL0oZNTR7Xv1CEqqBDgRtfDn79nguI9SWNdqXk8AxOD62jqIR1R4mmm3q4rddz041UKzK4izQCMFj5QHZzQK8UYg6LITU3JdHFXZo7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764311554; c=relaxed/simple;
-	bh=SOdNvnaf0rbk1wa8Z3YoAEKtkfuxMzrX6RKmWOkMLXk=;
+	s=arc-20240116; t=1764311562; c=relaxed/simple;
+	bh=5JMx4uVr/3R0FmPLnOVWKStY9PM3WXzxiFIBi+kIRnM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rdj2jQL3dJHjiMZ8wGryBlYExTbr+jrF4Pq8lVjj8ptrl0DQpGDSr+akxLAhwvbhCExiU4IKxdAF1G2hOJI+MoU81ue1XiCevVkvO/gbxLAzZL1n3HcvKyMiiWZZMRq1UpZCyic415qZUU4OLVKHvEb9emVi2zinghPwLE/vEa0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=X7Q5+Y0w; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=twELxwiXZ4t36RW+V1N3R9BqHdNrN2box1PH5d+jQoxySlGIVQyv0+UfIiaeXRGILjNOP7kieZ9TqYmCSG8QozEDrczocwj4ysDxxcNW8lZbFh67FwAEU8RjiDm4pXasyxD9lMZvx9rStksJTu8LwwcIE2MhD3Im5jEqGtpCR/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=49cY0aAs; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="X7Q5+Y0w"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="49cY0aAs"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=AE7bRLgbx2JKKqFHXqUnGj4gdUaT2oeQr/6pu7Zv0so=; b=X7Q5+Y0wDgmEPAzU78e4D8m3Pd
-	fhhVh3/RdsBlNDFEjrbkh3KXJqhvWr36hxSSfhaiTBs03v8SmuBu3YXp6bLNsHvwrRmJrfSr9D9Z9
-	QLHqpGlD7z6lMAXg5FnHb93ytIy3zQ7BCMfd0gBd2Ei13hNlsZ1rqmz2jg5fcaIm/8vCKkkbWjLNY
-	otkAAJFrXMrtnA1XN+1+LWeUEr+EsnETJtjN2ecyLvgB+aZhxyjYRX6KL3owe1MQRAadioMhYR4gZ
-	GG877974DVHCIpZBc1KM2K4rrQHq7gGAtd6lN0mdkdyV4nTfJ9yRHjCtni8akoHNHN061IVsaHwzI
-	up9AeyoA==;
+	bh=nPIuKAel0iVKaz9iFudFF3A/Q5RfVqouPV7wzaqCcr0=; b=49cY0aAsj+76Jni8YjCFjJtcwT
+	YBeKeTKbkWt2zwqZ/+MnYL9jAERFlkysB4mOicKcgOx8/kj1WfG8cRECpN9bSBKbBuWxgDKM+6L+o
+	kty2nO82rDwtHuJ6z1rt8PE5SGtPoWAJbrhor2+AY2uP63kQqu7VZWQyjTQlcJZZTJhXzfyFg3wHw
+	o154+bf6gtaglGiHt3Yc1owG/G6n5aluaR5Okp0Ixaxrq9qcidTBamoEK7DeI+uJ7aRwRFycaCQ3/
+	TX2SKaoZWbNp2XBlbb5ehyq1fsjOdrgPB8zwGfpPy1rfp+mY7P9qyy7V+0mxFQz4QcykRRWGUyN/8
+	mLlDIVTA==;
 Received: from [185.58.53.186] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vOs1w-000000002hx-2qUa;
-	Fri, 28 Nov 2025 06:32:33 +0000
+	id 1vOs24-000000002jS-3Do4;
+	Fri, 28 Nov 2025 06:32:41 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 20/25] logprint: cleanup xlog_print_rec_xhead
-Date: Fri, 28 Nov 2025 07:29:57 +0100
-Message-ID: <20251128063007.1495036-21-hch@lst.de>
+Subject: [PATCH 21/25] logprint: re-indent print_xlog_bad_*
+Date: Fri, 28 Nov 2025 07:29:58 +0100
+Message-ID: <20251128063007.1495036-22-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251128063007.1495036-1-hch@lst.de>
 References: <20251128063007.1495036-1-hch@lst.de>
@@ -48,55 +48,84 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Re-indent and drop typedefs.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- logprint/log_misc.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+ logprint/log_misc.c | 31 +++++++++++++++++++------------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
 
 diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index 1ac45a926c40..0570cc951f04 100644
+index 0570cc951f04..ba48c7a3190c 100644
 --- a/logprint/log_misc.c
 +++ b/logprint/log_misc.c
-@@ -1248,22 +1248,24 @@ xlog_print_rec_head(
+@@ -1268,40 +1268,47 @@ xlog_print_rec_xhead(
  }
  
  static void
--xlog_print_rec_xhead(xlog_rec_ext_header_t *head, int coverage)
-+xlog_print_rec_xhead(
-+	struct xlog_rec_ext_header	*head,
-+	int				coverage)
+-print_xlog_bad_zeroed(xfs_daddr_t blkno)
++print_xlog_bad_zeroed(
++	xfs_daddr_t		blkno)
  {
--    int i;
-+	int				i;
- 
--    print_xlog_xhdr_line();
--    printf(_("extended-header: cycle: %d\n"), be32_to_cpu(head->xh_cycle));
-+	print_xlog_xhdr_line();
-+	printf(_("extended-header: cycle: %d\n"),
-+		be32_to_cpu(head->xh_cycle));
- 
--    if (print_overwrite) {
--	printf(_("cycle num overwrites: "));
--	for (i = 0; i < coverage; i++)
--	    printf("%d - 0x%x  ",
--		    i,
--		    be32_to_cpu(head->xh_cycle_data[i]));
--	printf("\n");
--    }
--}	/* xlog_print_rec_xhead */
-+	if (print_overwrite) {
-+		printf(_("cycle num overwrites: "));
-+		for (i = 0; i < coverage; i++)
-+			printf("%d - 0x%x  ",
-+				i, be32_to_cpu(head->xh_cycle_data[i]));
-+		printf("\n");
-+	}
+ 	print_stars();
+ 	printf(_("* ERROR: found data after zeroed blocks block=%-21lld  *\n"),
+ 		(long long)blkno);
+ 	print_stars();
+ 	if (print_exit)
+-	    xlog_exit("Bad log - data after zeroed blocks");
+-}	/* print_xlog_bad_zeroed */
++		xlog_exit("Bad log - data after zeroed blocks");
 +}
  
  static void
- print_xlog_bad_zeroed(xfs_daddr_t blkno)
+-print_xlog_bad_header(xfs_daddr_t blkno, char *buf)
++print_xlog_bad_header(
++	xfs_daddr_t		blkno,
++	char			*buf)
+ {
+ 	print_stars();
+ 	printf(_("* ERROR: header cycle=%-11d block=%-21lld        *\n"),
+ 		xlog_get_cycle(buf), (long long)blkno);
+ 	print_stars();
+ 	if (print_exit)
+-	    xlog_exit("Bad log record header");
+-}	/* print_xlog_bad_header */
++		xlog_exit("Bad log record header");
++}
+ 
+ static void
+-print_xlog_bad_data(xfs_daddr_t blkno)
++print_xlog_bad_data(
++	xfs_daddr_t		blkno)
+ {
+ 	print_stars();
+ 	printf(_("* ERROR: data block=%-21lld                             *\n"),
+ 		(long long)blkno);
+ 	print_stars();
+ 	if (print_exit)
+-	    xlog_exit("Bad data in log");
+-}	/* print_xlog_bad_data */
++		xlog_exit("Bad data in log");
++}
+ 
+ static void
+-print_xlog_bad_reqd_hdrs(xfs_daddr_t blkno, int num_reqd, int num_hdrs)
++print_xlog_bad_reqd_hdrs(
++	xfs_daddr_t		blkno,
++	int			num_reqd,
++	int			num_hdrs)
+ {
+ 	print_stars();
+ 	printf(_("* ERROR: for header block=%lld\n"
+@@ -1310,8 +1317,8 @@ print_xlog_bad_reqd_hdrs(xfs_daddr_t blkno, int num_reqd, int num_hdrs)
+ 		(long long)blkno, num_reqd, num_hdrs);
+ 	print_stars();
+ 	if (print_exit)
+-	    xlog_exit(_("Not enough headers for data length."));
+-}	/* print_xlog_bad_reqd_hdrs */
++		xlog_exit(_("Not enough headers for data length."));
++}
+ 
+ static void
+ xlog_reallocate_xhdrs(int num_hdrs, xlog_rec_ext_header_t **ret_xhdrs)
 -- 
 2.47.3
 
