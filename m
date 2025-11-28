@@ -1,131 +1,269 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D18424DCF6
-	for <linux-xfs@vger.kernel.org>; Fri, 28 Nov 2025 06:37:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 545172C3247
+	for <linux-xfs@vger.kernel.org>; Fri, 28 Nov 2025 07:53:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764311874; cv=none; b=M6OJ5omQ6pqazcnQL4qXwb2RzNzYwiK5k0aCEt3ddOhOS3Sce8WBDFjZ6Vf3PfEos3/uKt+lmRjfZQyS/wWHx10sydczaRBlwqLEbbPcvkLS83IGaV+83weDZxY1Y/e7t/OyQkqfNUK8niymhROjhEfzpWoy8yp6zpEMaFPYjCE=
+	t=1764316403; cv=none; b=toMCu+20ilvn/jgjvjz13a5wqtVutCpEQXDmfLZF/J4lBFAiUr7vQBc+Qlz4aG7ZkIq8hkiQjndrJF+r7F3P9dvc00pEkDUtyi72gFwtxsKI+PqUfqGgXQbNaI5XJ3GRy+rEFwX67p5U4c+/mjkfpLcGTxfN/U9w8gpGE1/qJRM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764311874; c=relaxed/simple;
-	bh=ksN0dOCLI2Oe5/jEBJEZqXS53jGN0ne/KdSJ4N5EITY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Pb3h3LsWw1Sf59LpMzOQd1zA3ukGJgUknLV8aN0E6OIYFf+L8meHgjKeDAy52xlITVzG5UmjXXsFj/1daSd6Ht3pGJbiqj5510zUqTnoD9ojAri5+XsCbS5EAd8ZRUZZQZeRGPdc7YlV8yH64KoCD2FlwB7Lwcgmr7S61/sYMlM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=E902fCIc; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1764316403; c=relaxed/simple;
+	bh=nfoDKLIl8QqKPjp8zqSme7vAob5XT4Q4uxi71J3siXQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cYOjGR51H8jRHi0ZQDDu68OpTaOLT7XY0AkBZOlzZCuLxz7/APXFb+d/UpYAhC23xqJSIuYm8Fn6s0jGvs2PUQDUL5VoijjFJCrY8ScPgNZw6G5g8NHACx/WfbVxCXSpEEk1TWhmkkdgaFI64HbGYnRSZw6V+4MZx2UBYftokTo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EEGgECAY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="E902fCIc"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=YOVQTIlMsyrIVmCcuvPV4L68giTbhq9TSIrT1KTE1ns=; b=E902fCIc8dKYomz0w/Z547Cj3r
-	JOz/OkuvLRFhdnWdSN6IL40Yf/OYFbBX9WwXPe3OKoPlVQOKep1WljeIjYSwMRHyBVY+BikU0qz+X
-	4U8OUZqlZHQMtO0+cQW/+71QU6crGK+d2QjxfSZqy8ytASUfCa70ZbpJnlj0kfpUBQxqFoFP5c4S+
-	PuYjSe1u0GDujDspAqPTIKxrQDHPs/V7BRaJw9SFDqR9U1c7dJtPEB2x8nOETgFO8C7wI+HKDCfCF
-	EjZK8sxMbtAEfiZ9MxGoCay6rITXUG2Hq/oA/qXrpXxCSJxTgQ/EjLTzThmT1BDgTcVWRnbSAc7Ot
-	tG5PdRBA==;
-Received: from [185.58.53.186] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vOs76-000000003GA-2Awk;
-	Fri, 28 Nov 2025 06:37:52 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Andrey Albershteyn <aalbersh@kernel.org>
-Cc: "Darrick J . Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 4/4] repair: enhance process_dinode_metafile
-Date: Fri, 28 Nov 2025 07:37:02 +0100
-Message-ID: <20251128063719.1495736-5-hch@lst.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251128063719.1495736-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EEGgECAY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B313EC4CEF1;
+	Fri, 28 Nov 2025 07:53:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764316401;
+	bh=nfoDKLIl8QqKPjp8zqSme7vAob5XT4Q4uxi71J3siXQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=EEGgECAYvBXo2HxrD5VAKzjW6jxClcXeuzQTiF4STwyV8lumR0/0ha52VIId0OkxY
+	 vTydI3R37IhGBqoKTSJ/v0v/nxhbN0MENbvEqlqv/TMzJwzKBuiScTUjC9wXrXHWkw
+	 wmoXzPAjt5HVH/dDDZrxFPclW18pBihByALIz5cgx3qz83u+NF14/2sFx3YSef4+xo
+	 VJrQKYbRRaMVKEBBESrqmlPWo1edp+SPo1WkRtuIEdFUtrJKAHXYocit54jroBBNUx
+	 TsEuFdqj0lXo6ELdyTUiZud4DINisbu+K1UWuZ4GyphpOCxYT1uAkhDr5Rdgx8vvKT
+	 NMeoy1NgehX/w==
+Date: Fri, 28 Nov 2025 08:53:16 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrey Albershteyn <aalbersh@kernel.org>, 
+	"Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] repair: add a enum for the XR_INO_* values
+Message-ID: <gsry5zrjmrda6m6yj7o2wifqgf5gg4hpbcaej7ehon3aqdbswt@lewg6qgjizhx>
 References: <20251128063719.1495736-1-hch@lst.de>
+ <z-56E7SJXYuGLyhwMv_kupA6P2PsSlno3ZFbm0ZBF9Txb-n4NCMjzm45G45l18LisGhRfSQjDFf3YyOKUNVgPw==@protonmail.internalid>
+ <20251128063719.1495736-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251128063719.1495736-2-hch@lst.de>
 
-Explicitly list the destiny of each metafile inode type, and warn about
-unexpected types instead of just silently zapping them.
+On Fri, Nov 28, 2025 at 07:36:59AM +0100, Christoph Hellwig wrote:
+> Move the XR_INO_ definitions into dinode.c as they aren't used anywhere
+> else, and turn them into an enum to improve type safety.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  repair/dinode.c | 52 +++++++++++++++++++++++++++++++++++--------------
+>  repair/incore.h | 19 ------------------
+>  2 files changed, 37 insertions(+), 34 deletions(-)
+> 
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 8ca0aa0238c7..b824dfc0a59f 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -23,6 +23,26 @@
+>  #include "bmap_repair.h"
+>  #include "rt.h"
+> 
+> +/* inode types */
+> +enum xr_ino_type {
+> +	XR_INO_UNKNOWN,		/* unknown */
+> +	XR_INO_DIR,		/* directory */
+> +	XR_INO_RTDATA,		/* realtime file */
+> +	XR_INO_RTBITMAP,	/* realtime bitmap inode */
+> +	XR_INO_RTSUM,		/* realtime summary inode */
+> +	XR_INO_DATA,		/* regular file */
+> +	XR_INO_SYMLINK,		/* symlink */
+> +	XR_INO_CHRDEV,		/* character device */
+> +	XR_INO_BLKDEV,		/* block device */
+> +	XR_INO_SOCK,		/* socket */
+> +	XR_INO_FIFO,		/* fifo */
+> +	XR_INO_UQUOTA,		/* user quota inode */
+> +	XR_INO_GQUOTA,		/* group quota inode */
+> +	XR_INO_PQUOTA,		/* project quota inode */
+> +	XR_INO_RTRMAP,		/* realtime rmap */
+> +	XR_INO_RTREFC,		/* realtime refcount */
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- repair/dinode.c | 36 +++++++++++++++++++++++-------------
- 1 file changed, 23 insertions(+), 13 deletions(-)
+I think those comments are redundant as the enums are mostly
+self-descriptive, but independent of that the patch looks good.
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index f77c8e86c6f1..695ce0410395 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2963,7 +2963,8 @@ process_dinode_metafile(
- 	xfs_agnumber_t		agno,
- 	xfs_agino_t		agino,
- 	xfs_ino_t		lino,
--	enum xr_ino_type	type)
-+	enum xr_ino_type	type,
-+	bool			*zap_metadata)
- {
- 	struct ino_tree_node	*irec = find_inode_rec(mp, agno, agino);
- 	int			off = get_inode_offset(mp, lino, irec);
-@@ -2971,16 +2972,6 @@ process_dinode_metafile(
- 	set_inode_is_meta(irec, off);
- 
- 	switch (type) {
--	case XR_INO_RTBITMAP:
--	case XR_INO_RTSUM:
--		/*
--		 * RT bitmap and summary files are always recreated when
--		 * rtgroups are enabled.  For older filesystems, they exist at
--		 * fixed locations and cannot be zapped.
--		 */
--		if (xfs_has_rtgroups(mp))
--			return true;
--		return false;
- 	case XR_INO_UQUOTA:
- 	case XR_INO_GQUOTA:
- 	case XR_INO_PQUOTA:
-@@ -2989,7 +2980,25 @@ process_dinode_metafile(
- 		 * preserve quota inodes and their contents for later.
- 		 */
- 		return false;
-+	case XR_INO_DIR:
-+	case XR_INO_RTBITMAP:
-+	case XR_INO_RTSUM:
-+	case XR_INO_RTRMAP:
-+	case XR_INO_RTREFC:
-+		/*
-+		 * These are always recreated.  Note that for pre-metadir file
-+		 * systems, the RT bitmap and summary inodes need to be
-+		 * preserved, but we'll never end up here for them.
-+		 */
-+		*zap_metadata = true;
-+		return false;
- 	default:
-+		do_warn(_("unexpected %s inode %" PRIu64 " with metadata flag"),
-+				xr_ino_type_name[type], lino);
-+		if (!no_modify)
-+			do_warn(_(" will zap\n"));
-+		else
-+			do_warn(_(" would zap\n"));
- 		return true;
- 	}
- }
-@@ -3610,8 +3619,9 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
- 	if (dino->di_version >= 3 &&
- 	    (dino->di_flags2 & cpu_to_be64(XFS_DIFLAG2_METADATA))) {
- 		is_meta = true;
--		if (process_dinode_metafile(mp, agno, ino, lino, type))
--			zap_metadata = true;
-+		if (process_dinode_metafile(mp, agno, ino, lino, type,
-+				&zap_metadata))
-+			goto bad_out;
- 	}
- 
- 	/*
--- 
-2.47.3
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
+> +};
+> +
+>  /*
+>   * gettext lookups for translations of strings use mutexes internally to
+>   * the library. Hence when we come through here doing parallel scans in
+> @@ -482,7 +502,7 @@ out_unlock:
+>  static inline bool
+>  is_reflink_type(
+>  	struct xfs_mount	*mp,
+> -	int			type)
+> +	enum xr_ino_type	type)
+>  {
+>  	if (type == XR_INO_DATA && xfs_has_reflink(mp))
+>  		return true;
+> @@ -503,7 +523,7 @@ process_bmbt_reclist_int(
+>  	xfs_mount_t		*mp,
+>  	xfs_bmbt_rec_t		*rp,
+>  	xfs_extnum_t		*numrecs,
+> -	int			type,
+> +	enum xr_ino_type	type,
+>  	xfs_ino_t		ino,
+>  	xfs_rfsblock_t		*tot,
+>  	blkmap_t		**blkmapp,
+> @@ -952,7 +972,7 @@ process_rtrmap(
+>  	xfs_agnumber_t		agno,
+>  	xfs_agino_t		ino,
+>  	struct xfs_dinode	*dip,
+> -	int			type,
+> +	enum xr_ino_type	type,
+>  	int			*dirty,
+>  	xfs_rfsblock_t		*tot,
+>  	uint64_t		*nex,
+> @@ -1123,7 +1143,7 @@ process_rtrefc(
+>  	xfs_agnumber_t			agno,
+>  	xfs_agino_t			ino,
+>  	struct xfs_dinode		*dip,
+> -	int				type,
+> +	enum xr_ino_type		type,
+>  	int				*dirty,
+>  	xfs_rfsblock_t			*tot,
+>  	uint64_t			*nex,
+> @@ -1279,7 +1299,7 @@ process_btinode(
+>  	xfs_agnumber_t		agno,
+>  	xfs_agino_t		ino,
+>  	struct xfs_dinode	*dip,
+> -	int			type,
+> +	enum xr_ino_type	type,
+>  	int			*dirty,
+>  	xfs_rfsblock_t		*tot,
+>  	xfs_extnum_t		*nex,
+> @@ -1455,7 +1475,7 @@ process_exinode(
+>  	xfs_agnumber_t		agno,
+>  	xfs_agino_t		ino,
+>  	struct xfs_dinode	*dip,
+> -	int			type,
+> +	enum xr_ino_type	type,
+>  	int			*dirty,
+>  	xfs_rfsblock_t		*tot,
+>  	xfs_extnum_t		*nex,
+> @@ -1648,7 +1668,7 @@ process_quota_inode(
+>  	struct xfs_mount	*mp,
+>  	xfs_ino_t		lino,
+>  	struct xfs_dinode	*dino,
+> -	uint			ino_type,
+> +	enum xr_ino_type	ino_type,
+>  	struct blkmap		*blkmap)
+>  {
+>  	xfs_fsblock_t		fsbno;
+> @@ -1935,7 +1955,7 @@ process_misc_ino_types(
+>  	xfs_mount_t		*mp,
+>  	struct xfs_dinode	*dino,
+>  	xfs_ino_t		lino,
+> -	int			type)
+> +	enum xr_ino_type	type)
+>  {
+>  	/*
+>  	 * must also have a zero size
+> @@ -1982,7 +2002,10 @@ _("size of quota inode %" PRIu64 " != 0 (%" PRId64 " bytes)\n"), lino,
+>  }
+> 
+>  static int
+> -process_misc_ino_types_blocks(xfs_rfsblock_t totblocks, xfs_ino_t lino, int type)
+> +process_misc_ino_types_blocks(
+> +	xfs_rfsblock_t		totblocks,
+> +	xfs_ino_t		lino,
+> +	enum xr_ino_type	type)
+>  {
+>  	/*
+>  	 * you can not enforce all misc types have zero data fork blocks
+> @@ -2092,7 +2115,7 @@ process_check_rt_inode(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_dinode	*dinoc,
+>  	xfs_ino_t		lino,
+> -	int			*type,
+> +	enum xr_ino_type	*type,
+>  	int			*dirty,
+>  	int			expected_type,
+>  	const char		*tag)
+> @@ -2130,7 +2153,7 @@ process_check_metadata_inodes(
+>  	xfs_mount_t		*mp,
+>  	struct xfs_dinode	*dinoc,
+>  	xfs_ino_t		lino,
+> -	int			*type,
+> +	enum xr_ino_type	*type,
+>  	int			*dirty)
+>  {
+>  	if (lino == mp->m_sb.sb_rootino) {
+> @@ -2205,7 +2228,7 @@ process_check_inode_sizes(
+>  	xfs_mount_t		*mp,
+>  	struct xfs_dinode	*dino,
+>  	xfs_ino_t		lino,
+> -	int			type)
+> +	enum xr_ino_type	type)
+>  {
+>  	xfs_fsize_t		size = be64_to_cpu(dino->di_size);
+> 
+> @@ -2466,7 +2489,7 @@ process_inode_data_fork(
+>  	xfs_agnumber_t		agno,
+>  	xfs_agino_t		ino,
+>  	struct xfs_dinode	**dinop,
+> -	int			type,
+> +	enum xr_ino_type	type,
+>  	int			*dirty,
+>  	xfs_rfsblock_t		*totblocks,
+>  	xfs_extnum_t		*nextents,
+> @@ -3029,10 +3052,10 @@ process_dinode_int(
+>  	xfs_ino_t		*parent,	/* out -- parent if ino is a dir */
+>  	struct xfs_buf		**ino_bpp)
+>  {
+> +	enum xr_ino_type	type = XR_INO_UNKNOWN;
+>  	xfs_rfsblock_t		totblocks = 0;
+>  	xfs_rfsblock_t		atotblocks = 0;
+>  	int			di_mode;
+> -	int			type;
+>  	int			retval = 0;
+>  	xfs_extnum_t		nextents;
+>  	xfs_extnum_t		anextents;
+> @@ -3048,7 +3071,6 @@ process_dinode_int(
+> 
+>  	*dirty = *isa_dir = 0;
+>  	*used = is_used;
+> -	type = XR_INO_UNKNOWN;
+> 
+>  	lino = XFS_AGINO_TO_INO(mp, agno, ino);
+>  	di_mode = be16_to_cpu(dino->di_mode);
+> diff --git a/repair/incore.h b/repair/incore.h
+> index 57019148f588..293988c9769d 100644
+> --- a/repair/incore.h
+> +++ b/repair/incore.h
+> @@ -225,25 +225,6 @@ int		count_bcnt_extents(xfs_agnumber_t);
+>   * inode definitions
+>   */
+> 
+> -/* inode types */
+> -
+> -#define XR_INO_UNKNOWN	0		/* unknown */
+> -#define XR_INO_DIR	1		/* directory */
+> -#define XR_INO_RTDATA	2		/* realtime file */
+> -#define XR_INO_RTBITMAP	3		/* realtime bitmap inode */
+> -#define XR_INO_RTSUM	4		/* realtime summary inode */
+> -#define XR_INO_DATA	5		/* regular file */
+> -#define XR_INO_SYMLINK	6		/* symlink */
+> -#define XR_INO_CHRDEV	7		/* character device */
+> -#define XR_INO_BLKDEV	8		/* block device */
+> -#define XR_INO_SOCK	9		/* socket */
+> -#define XR_INO_FIFO	10		/* fifo */
+> -#define XR_INO_UQUOTA	12		/* user quota inode */
+> -#define XR_INO_GQUOTA	13		/* group quota inode */
+> -#define XR_INO_PQUOTA	14		/* project quota inode */
+> -#define XR_INO_RTRMAP	15		/* realtime rmap */
+> -#define XR_INO_RTREFC	16		/* realtime refcount */
+> -
+>  /* inode allocation tree */
+> 
+>  /*
+> --
+> 2.47.3
+> 
+> 
