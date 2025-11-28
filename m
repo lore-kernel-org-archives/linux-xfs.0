@@ -1,41 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDBCD274B48
-	for <linux-xfs@vger.kernel.org>; Fri, 28 Nov 2025 06:30:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5B9625A2A5
+	for <linux-xfs@vger.kernel.org>; Fri, 28 Nov 2025 06:30:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764311448; cv=none; b=d243pot/3emWKGgoNY4sO6UnLwtip1Y6dDOwuQiiZTxa2ku0adYcXkU1Gjbrq4o4gJNKh+yOT1vlGM7DNNtRnCeYHEN/dD+9J9pM4WgGvhXMdhj23M+FohFwdcWo9Iu01iLTSv38iMMuxzoXhVf/VJgRt5qxigoTC/jRs9bCPnc=
+	t=1764311456; cv=none; b=MWJ574eNe1l2sQoKXk8hdK3e3i2Np24Ztq2VJAo0oPpnw8ewz7OqpMmjsV1ReLePbYOILK4pY5sSPU8il9Qv/OnVJU6+L/AbRbpEc8uxLeVXDSJvKxYeGezLrej1+9WnMA7kolc1MpZnZ6Dv0a2W+mlwOyukQ79nLLFgJt9obtI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764311448; c=relaxed/simple;
-	bh=yTmWfltcaNIEBHG01+7hLuPYRsYN9eLtu/Qrq/SZrmc=;
+	s=arc-20240116; t=1764311456; c=relaxed/simple;
+	bh=nBDROIb3/IpcWnkQcsjiP0M3u7PNjRXzNQZJEjIayUs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tuGRyneP+r0V5o7a7fP3QSPqRj7n9jjc+Uk/Z2U2GUQJaTgIMa9m6ZHCzoBfG7d3kBWraSK0tGftt2uS9lImDPOxFtBxQvqdRbP07F63mX/DA/CGKImV8/cndoUe7ev4aptX1EDnKKIZWI86FJNZlGw17KZkZDuysJQAhC6xRdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ResoP/O3; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=DD3Tz4TQaA3By7ruArSWTHnLFZ/UofF3s4PqQ1IxbSCz460IY9+KsjqoHAjVcVKa6On+BZwwnYp0KljvAjJntzbWFcS2eGCTIiHzuhFtsSJMrI3UPGH2XdUAdLFSVq6k+LSxYNL+6Vfsv905askaezAdF0als8+0bN5/iwBON54=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PRVxKR8/; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ResoP/O3"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PRVxKR8/"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=VpDoLZW60qCfdj7X3KcTokNEfT0v3FVAWFA/R42ZCck=; b=ResoP/O3CEJIpvrL07j5S3phGl
-	0eOEAiHefXScMlp1ZmffdWEUXeJuy5PNLEyF+vyUxVwqpDQP1JQHFh7zoeUUJs/RXDpZcMOP7SXBz
-	ZZV5ZEqgyciPonB+nywbnwhofuBtQBR5bdDnF/LFRG3wnoXFugmyxqLVKtglklAHZmb6CCfHkVSub
-	7YuIDeH1hObfjWPkYP4QdoF5ju7im/lJww1r9o7UsVZ+QBIHzltvzG3rfbClOEMaLmBkjeqt21Zt1
-	4M2ynd9B2VbNdAfJybu5F8PUyeaWnG/sFvKTnzItlqMon7D3sfV9YcP3eT0bCE17dbDdv3EMFNW4V
-	5a+itfcA==;
+	bh=T1MSRIai94jwf5a1DvFa13RkGDWeOQoUpi+ZFpq3z+0=; b=PRVxKR8/zM2Nm4WBjhSRQbC6YW
+	YmqXSr6X1khvH/tvRSDvHfxNn9PH6exqeWlXbb9jn5N/wBDIZpVuLlroaMLDvwVzcTlw3Fz1/Ixr1
+	w4loZVQWvs4W5ZsbNO1wiPEzFjWPPOqkIHLls8FwSgm31lNpnPQOwvkKXdUHSJeNuOL4+yh+qh2ht
+	3r4I5L865AXmnZn14ehFZP7oxmBgmwJMo61ZUHnuQbamAHvjO/36SAJ3i6JJvBKBqZW8uEiMGp0Ig
+	NobmpekZdYd/fAAQsAana+J7QH5J9bvrtev80WRetX66KwVo1i3oXITUVNNtjfdvf9mQptzm58unH
+	c8V1BEXg==;
 Received: from [185.58.53.186] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vOs0D-000000002Zx-469x;
-	Fri, 28 Nov 2025 06:30:46 +0000
+	id 1vOs0M-000000002ad-0HDI;
+	Fri, 28 Nov 2025 06:30:54 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 05/25] logprint: cleanup struct xlog_split_item handling
-Date: Fri, 28 Nov 2025 07:29:42 +0100
-Message-ID: <20251128063007.1495036-6-hch@lst.de>
+Subject: [PATCH 06/25] logprint: cleanup xlog_print_trans_header
+Date: Fri, 28 Nov 2025 07:29:43 +0100
+Message-ID: <20251128063007.1495036-7-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251128063007.1495036-1-hch@lst.de>
 References: <20251128063007.1495036-1-hch@lst.de>
@@ -48,136 +48,78 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Drop the typedef and re-indent the helpers for it.
+Re-indent and drop typedef use.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- logprint/log_misc.c | 94 +++++++++++++++++++++++----------------------
- 1 file changed, 48 insertions(+), 46 deletions(-)
+ logprint/log_misc.c | 49 ++++++++++++++++++++++-----------------------
+ 1 file changed, 24 insertions(+), 25 deletions(-)
 
 diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index 5d44c2b1eb67..a4fba0333a60 100644
+index a4fba0333a60..48611c746bea 100644
 --- a/logprint/log_misc.c
 +++ b/logprint/log_misc.c
-@@ -17,14 +17,14 @@
- 
- static int logBBsize;
- 
--typedef struct xlog_split_item {
-+struct xlog_split_item {
- 	struct xlog_split_item	*si_next;
- 	struct xlog_split_item	*si_prev;
- 	xlog_tid_t		si_xtid;
- 	int			si_skip;
--} xlog_split_item_t;
-+};
- 
--static xlog_split_item_t *split_list = NULL;
-+static struct xlog_split_item *split_list;
- 
- void
- print_xlog_op_line(void)
-@@ -139,55 +139,57 @@ xlog_print_op_header(
+@@ -192,36 +192,35 @@ xlog_print_find_tid(
  }
  
- static void
--xlog_print_add_to_trans(xlog_tid_t	tid,
--			int		skip)
-+xlog_print_add_to_trans(
-+	xlog_tid_t		tid,
-+	int			skip)
+ static int
+-xlog_print_trans_header(char **ptr, int len)
++xlog_print_trans_header(
++	char			**ptr,
++	int			len)
  {
--    xlog_split_item_t *item;
+-    xfs_trans_header_t  *h;
+-    char		*cptr = *ptr;
+-    uint32_t          magic;
+-    char                *magic_c = (char *)&magic;
 -
--    item	  = (xlog_split_item_t *)calloc(1, sizeof(xlog_split_item_t));
--    item->si_xtid  = tid;
--    item->si_skip = skip;
--    item->si_next = split_list;
--    item->si_prev = NULL;
--    if (split_list)
--	split_list->si_prev = item;
--    split_list	  = item;
--}	/* xlog_print_add_to_trans */
+-    *ptr += len;
 -
-+	struct xlog_split_item	*item;
-+
-+	item = calloc(1, sizeof(*item));
-+	item->si_xtid = tid;
-+	item->si_skip = skip;
-+	item->si_next = split_list;
-+	if (split_list)
-+		split_list->si_prev = item;
-+	split_list = item;
+-    magic = *(uint32_t *)cptr; /* XXX be32_to_cpu soon */
++	struct xfs_trans_header	*h;
++	char			*cptr = *ptr;
++	uint32_t		magic;
++	char			*magic_c = (char *)&magic;
+ 
+-    if (len >= 4) {
++	*ptr += len;
++	magic = *(uint32_t *)cptr; /* XXX be32_to_cpu soon */
++	if (len >= 4) {
+ #if __BYTE_ORDER == __LITTLE_ENDIAN
+-	printf("%c%c%c%c:",
+-		magic_c[3], magic_c[2], magic_c[1], magic_c[0]);
++		printf("%c%c%c%c:",
++			magic_c[3], magic_c[2], magic_c[1], magic_c[0]);
+ #else
+-	printf("%c%c%c%c:",
+-		magic_c[0], magic_c[1], magic_c[2], magic_c[3]);
++		printf("%c%c%c%c:",
++			magic_c[0], magic_c[1], magic_c[2], magic_c[3]);
+ #endif
+-    }
+-    if (len != sizeof(xfs_trans_header_t)) {
+-	printf(_("   Not enough data to decode further\n"));
+-	return 1;
+-    }
+-    h = (xfs_trans_header_t *)cptr;
+-    printf(_("     tid: %x  num_items: %d\n"),
+-	   h->th_tid, h->th_num_items);
+-    return 0;
+-}	/* xlog_print_trans_header */
+-
++	}
++	if (len != sizeof(struct xfs_trans_header)) {
++		printf(_("   Not enough data to decode further\n"));
++		return 1;
++	}
++	h = (struct xfs_trans_header *)cptr;
++	printf(_("     tid: %x  num_items: %d\n"),
++		h->th_tid, h->th_num_items);
++	return 0;
 +}
  
  static int
--xlog_print_find_tid(xlog_tid_t tid, uint was_cont)
-+xlog_print_find_tid(
-+	xlog_tid_t		tid,
-+	uint			was_cont)
- {
--    xlog_split_item_t *listp = split_list;
-+	struct xlog_split_item	*listp = split_list;
- 
--    if (!split_list) {
--	if (was_cont != 0)	/* Not first time we have used this tid */
--	    return 1;
--	else
--	    return 0;
--    }
--    while (listp) {
--	if (listp->si_xtid == tid)
--	    break;
--	listp = listp->si_next;
--    }
--    if (!listp)  {
--	return 0;
--    }
--    if (--listp->si_skip == 0) {
--	if (listp == split_list) {		/* delete at head */
--	    split_list = listp->si_next;
--	    if (split_list)
--		split_list->si_prev = NULL;
--	} else {
--	    if (listp->si_next)
--		listp->si_next->si_prev = listp->si_prev;
--	    listp->si_prev->si_next = listp->si_next;
-+	if (!split_list) {
-+		if (was_cont)	/* Not first time we have used this tid */
-+			return 1;
-+		return 0;
- 	}
--	free(listp);
--    }
--    return 1;
--}	/* xlog_print_find_tid */
-+
-+	while (listp) {
-+		if (listp->si_xtid == tid)
-+			break;
-+		listp = listp->si_next;
-+	}
-+	if (!listp)
-+		return 0;
-+
-+	if (--listp->si_skip == 0) {
-+		if (listp == split_list) {		/* delete at head */
-+			split_list = listp->si_next;
-+			if (split_list)
-+				split_list->si_prev = NULL;
-+		} else {
-+			if (listp->si_next)
-+				listp->si_next->si_prev = listp->si_prev;
-+			listp->si_prev->si_next = listp->si_next;
-+		}
-+		free(listp);
-+	}
-+
-+	return 1;
-+}
- 
- static int
- xlog_print_trans_header(char **ptr, int len)
+ xlog_print_trans_buffer(char **ptr, int len, int *i, int num_ops)
 -- 
 2.47.3
 
