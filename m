@@ -1,41 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F6B7244667
-	for <linux-xfs@vger.kernel.org>; Fri, 28 Nov 2025 06:31:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE142244667
+	for <linux-xfs@vger.kernel.org>; Fri, 28 Nov 2025 06:31:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764311512; cv=none; b=A6BDu6PdL1iL5jzlOleD6rWvLK2p6JMEa9qsDLw0W8xso+Rt/bFvOFsT9uKGPwoq+np+ss1ZdSC5KQxF/jQk6taSSDynUw+9hC4aWZzyJog/Ey6FKHKwH6MsdNQP5aPb4UY8pH2+NNK+ORP4FJbGoBPF1asz6XOuz2VBTEXfyfE=
+	t=1764311521; cv=none; b=A8/S5umJvMofFQ8FLv6X40uNW5e6bbyi7mHZi1ViuT8HD4plOEtCvlzOhA0rLUAvUep6m92E1ZauGJReKGPblr61zmy91a7IDC4xpDmFgbuHn4qysjk+gTlFpWQZwHEC9mpJeP0bJWpetZRG+4An9Lg97Pov72NlAVgzQ+a5Ebg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764311512; c=relaxed/simple;
-	bh=gKNHYYgUshYOj8uTZosTcRn79X1pZZ4FnftyH3TUwi8=;
+	s=arc-20240116; t=1764311521; c=relaxed/simple;
+	bh=kVyzN8T/d47WliEjuWb9rtYdbhO0r6ZC6PDWCoyebyA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oDCvyombDbuvLMlpZBJ9dTboLQ3Nsr7ozaps8xijyVu0CgUCGhA1MEVPGPSBWBgwDsfEQnZ5Z5Q6NvPRLb9I8tjH33BKtoKttFqnXIHrZb064wPENVqQVkIsjvfyyRxjcXxZhb2DMVaWtjqWRsLxxWzoVXGa6N9ddZFakX7h5BM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=28JNilos; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=Ep/V2rJFY0PnWvl3z4N6bwKsW/+LN3q2o8M4PnO8f6ZQ/LZWRUlY6Cln5z6/Vu0raT4JHmB5ChKk2MNlEUWhKcF7OESDeVROwTLEH+D7ok3qSdeKbsCfwzrULhN21lZaBW3UbwYl57dLiZ06UO0C+77V9YCf1NrrpTW8bzIR4WQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=W0oQjb/R; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="28JNilos"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="W0oQjb/R"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=m1MPiEmTJonG2dI33pAPNLz4wGeu6mJYxAx3V5C36ws=; b=28JNilosK9p6mg2uRBkjtLKetF
-	Lx6DYwlzF6cwTqqNY73GRvkCDMGfXnW39tzeFtN624yq1mMlJYA+NeS2Ig2mjH0oxUgwDwiHTyuP6
-	MfdmDDSO/89VceFhSW0/tNWm1ue90U37zYfUyD8/OKUJcfMSHzWDGslh45aB7VFJNKIXdVuVhcW9X
-	Dumhu7LvzQfobxIUmAiq4DSlHr38bHxLebG+X7rCF253eL/xatdHS/AbtlGZeLWaFSl9KElfYwJW1
-	RAjarP6yH4LxqtOUQ2Cgb3UkTHfPJ3zZuDrlNiTzfxNCBFXPmwTpVoAmB+1/tlCEoBwG1URMxJt/f
-	BcIcArAg==;
+	bh=UwcxiYY+ewwkyr2MKy7k+ULOH7NOOLt1HBG7R/zIgJY=; b=W0oQjb/RzgEUuqRCojIjFtLhVc
+	ttzgcWxaIFqGEwRyZwVfHAkYAe85m0zgS/JTqhKPQPaYAdUA4wOQF1cyy8JK7w1FKUwb8iulpbEze
+	NPWXgSXGO469UdqibRTO/Sg88/NU2AnfIwj3VNg7UMJlG5Aj35U+RCbqa7JDrRlGVBzar6Rnn1guP
+	4/OSSb8NukEwsgTHr5CTHNlC76Q/dcM6lPpulYpDfASZI0SV5RQMFl2AKcpoQnAOsJl603pUVdaZh
+	ecW7FtDexBZ6I2RcG9CXKCwGHGPdaVjHu1LT8Qzn/rsQq5Mei5onhJ1y03/g9crHf/YejbayshUjY
+	ODZFMFpQ==;
 Received: from [185.58.53.186] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vOs1G-000000002ey-3lrC;
-	Fri, 28 Nov 2025 06:31:51 +0000
+	id 1vOs1P-000000002g1-0O6v;
+	Fri, 28 Nov 2025 06:31:59 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 13/25] logprint: cleanup xlog_print_trans_dquot
-Date: Fri, 28 Nov 2025 07:29:50 +0100
-Message-ID: <20251128063007.1495036-14-hch@lst.de>
+Subject: [PATCH 14/25] logprint: re-indent print_lseek / print_lsn
+Date: Fri, 28 Nov 2025 07:29:51 +0100
+Message-ID: <20251128063007.1495036-15-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251128063007.1495036-1-hch@lst.de>
 References: <20251128063007.1495036-1-hch@lst.de>
@@ -48,134 +48,55 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Re-indent, drop typedefs and invert a conditional to allow for an early
-return.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- logprint/log_misc.c | 103 ++++++++++++++++++++++++--------------------
- 1 file changed, 56 insertions(+), 47 deletions(-)
+ logprint/log_misc.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
 
 diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index 8cdbb7d5fe42..73dd7ab46938 100644
+index 73dd7ab46938..c4486e5f6a14 100644
 --- a/logprint/log_misc.c
 +++ b/logprint/log_misc.c
-@@ -763,59 +763,68 @@ xlog_print_trans_inode(
+@@ -872,10 +872,14 @@ xlog_extract_dinode_ts(
  }
  
- static int
--xlog_print_trans_dquot(char **ptr, int len, int *i, int num_ops)
-+xlog_print_trans_dquot(
-+	char			**ptr,
-+	int			len,
-+	int			*i,
-+	int			num_ops)
+ void
+-xlog_print_lseek(struct xlog *log, int fd, xfs_daddr_t blkno, int whence)
++xlog_print_lseek(
++	struct xlog		*log,
++	int			fd,
++	xfs_daddr_t		 blkno,
++	int			whence)
  {
--    xfs_dq_logformat_t		*f;
--    xfs_dq_logformat_t		lbuf = {0};
--    struct xfs_disk_dquot	ddq;
--    xlog_op_header_t		*head = NULL;
--    int				num, skip;
-+	struct xfs_dq_logformat	*f;
-+	struct xfs_dq_logformat lbuf = {0};
-+	struct xfs_disk_dquot	ddq;
-+	struct xlog_op_header	*head = NULL;
-+	int			num, skip;
+ #define BBTOOFF64(bbs)	(((xfs_off_t)(bbs)) << BBSHIFT)
+-	xfs_off_t offset;
++	xfs_off_t		offset;
  
--    /*
--     * print dquot header region
--     *
--     * memmove to ensure 8-byte alignment for the long longs in
--     * xfs_dq_logformat_t structure
--     */
--    memmove(&lbuf, *ptr, min(sizeof(xfs_dq_logformat_t), len));
--    f = &lbuf;
--    (*i)++;					/* bump index */
--    *ptr += len;
-+	/*
-+	 * Print dquot header region.
-+	 *
-+	 * memmove to ensure 8-byte alignment for the long longs in
-+	 * the xfs_dq_logformat structure.
-+	 */
-+	memmove(&lbuf, *ptr, min(sizeof(struct xfs_dq_logformat), len));
-+	f = &lbuf;
-+	(*i)++;					/* bump index */
-+		*ptr += len;
- 
--    if (len == sizeof(xfs_dq_logformat_t)) {
--	printf(_("#regs: %d   id: 0x%x"), f->qlf_size, f->qlf_id);
--	printf(_("  blkno: %lld  len: %d  boff: %d\n"),
--		(long long)f->qlf_blkno, f->qlf_len, f->qlf_boffset);
--    } else {
--	ASSERT(len >= 4);	/* must have at least 4 bytes if != 0 */
--	printf(_("DQUOT: #regs: %d   Not printing rest of data\n"),
--		f->qlf_size);
--	return f->qlf_size;
--    }
--    num = f->qlf_size-1;
-+	if (len != sizeof(struct xfs_dq_logformat)) {
-+		ASSERT(len >= 4);	/* must have at least 4 bytes if != 0 */
-+		printf(_("DQUOT: #regs: %d   Not printing rest of data\n"),
-+			f->qlf_size);
-+		return f->qlf_size;
-+	}
- 
--    /* Check if all regions in this log item were in the given LR ptr */
--    if (*i+num > num_ops-1) {
--	skip = num - (num_ops-1-*i);
--	num = num_ops-1-*i;
--    } else {
--	skip = 0;
--    }
-+	printf(_("#regs: %d   id: 0x%x"),
-+		f->qlf_size,
-+		f->qlf_id);
-+	printf(_("  blkno: %lld  len: %d  boff: %d\n"),
-+		(long long)f->qlf_blkno,
-+		f->qlf_len,
-+		f->qlf_boffset);
- 
--    while (num-- > 0) {
--	head = (xlog_op_header_t *)*ptr;
--	xlog_print_op_header(head, *i, ptr);
--	ASSERT(be32_to_cpu(head->oh_len) == sizeof(struct xfs_disk_dquot));
--	memmove(&ddq, *ptr, sizeof(struct xfs_disk_dquot));
--	printf(_("DQUOT: magic 0x%hx flags 0%ho\n"),
--	       be16_to_cpu(ddq.d_magic), ddq.d_type);
--	*ptr += be32_to_cpu(head->oh_len);
--    }
--    if (head && head->oh_flags & XLOG_CONTINUE_TRANS)
--	skip++;
--    return skip;
--}	/* xlog_print_trans_dquot */
-+	/* Check if all regions in this log item were in the given LR ptr */
-+	num = f->qlf_size - 1;
-+	if (*i + num > num_ops - 1) {
-+		skip = num - (num_ops - 1 - *i);
-+		num = num_ops - 1 - *i;
-+	} else {
-+		skip = 0;
-+	}
- 
-+	while (num-- > 0) {
-+		head = (struct xlog_op_header *)*ptr;
-+		xlog_print_op_header(head, *i, ptr);
-+		ASSERT(be32_to_cpu(head->oh_len) ==
-+			sizeof(struct xfs_disk_dquot));
-+		memmove(&ddq, *ptr, sizeof(struct xfs_disk_dquot));
-+		printf(_("DQUOT: magic 0x%hx flags 0%ho\n"),
-+			be16_to_cpu(ddq.d_magic),
-+			ddq.d_type);
-+		*ptr += be32_to_cpu(head->oh_len);
-+	}
-+	if (head && (head->oh_flags & XLOG_CONTINUE_TRANS))
-+		skip++;
-+	return skip;
+ 	if (whence == SEEK_SET)
+ 		offset = BBTOOFF64(blkno+log->l_logBBstart);
+@@ -886,15 +890,16 @@ xlog_print_lseek(struct xlog *log, int fd, xfs_daddr_t blkno, int whence)
+ 			progname, (long long)offset, strerror(errno));
+ 		exit(1);
+ 	}
+-}	/* xlog_print_lseek */
+-
 +}
  
- STATIC int
- xlog_print_trans_icreate(
+ static void
+-print_lsn(char		*string,
+-	  __be64	*lsn)
++print_lsn(
++	char			*string,
++	  __be64		*lsn)
+ {
+-    printf("%s: %u,%u", string,
+-	    CYCLE_LSN(be64_to_cpu(*lsn)), BLOCK_LSN(be64_to_cpu(*lsn)));
++	printf("%s: %u,%u", string,
++		CYCLE_LSN(be64_to_cpu(*lsn)),
++		BLOCK_LSN(be64_to_cpu(*lsn)));
+ }
+ 
+ 
 -- 
 2.47.3
 
