@@ -1,41 +1,41 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8F5C24BD1A
-	for <linux-xfs@vger.kernel.org>; Fri, 28 Nov 2025 06:32:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 203F4244667
+	for <linux-xfs@vger.kernel.org>; Fri, 28 Nov 2025 06:32:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764311524; cv=none; b=IviQSFPBfVxXrPO8My2281j3iYCvJTWveEqjsV4FX3117XQCIXlGmFZ4xugngL+iSCDJ4m2FnbIEmKg5iVQL05ThAF4kTrw+vGKorYhZXAfRvXEXlrds/05Jbynw5tCPwAeENC1MP4LyoyxEqiGXeDf5SjPWKZPQRMRZB6hbva8=
+	t=1764311527; cv=none; b=sSvtPNrWhEfLsU0lrQvxFwziX33ojZ1faxR2GYmg0wLmg5Z4RbHE9eCuU1auhTptkuNczqjaz7f/zq47W6Vf1xjQN77mwHq/uIkQV6qD5pcK9pIkm7oRKxrxdHIVn+b5IX3hEa3K94YTQEm4spg+lvA6XVL+8AEU16xzdMfIQrk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764311524; c=relaxed/simple;
-	bh=A0AeC/1tFRF1USYEfkPD6K7S16UGQofzdExyhCqoju0=;
+	s=arc-20240116; t=1764311527; c=relaxed/simple;
+	bh=uhgSN/UZ5EksYmwhnS7HNTOs6res/PVM+w3J2RKjT9I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Q5d0kgxRRya1mvk7IWuZjxA/3YOyBLlEWUGsbV/S315bT6t//FlLXgOyNptADsdH9f6aPwjmFe+RxcvdrqRIGkB7WLUhBjvfb0p7DU0d5ZnWN1XYOd1xzYO3oG90WUkngKsTIvUsLa4UJ3zoB2hyTRJZ3K5m/mEMz+iVye1nAX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=oRruHWrI; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=EfmI78QbQnx23wCcIQc1UoP0Yeb8P+0BriuF2ecxJf5D9RmBT2mvj1K5xwjS2nh+dMDozG/xf3BzMeYSkea1hCyabbQV0DsYazKWt0ZIi/D1IuRSdFN6fg2mWOhYXuUhanoIZy+L35hXvKRGEWfj0nVh3+LDE1lG9jpF18l08To=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=lW3pSB5H; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oRruHWrI"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lW3pSB5H"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=hth0vlwne3gJg5+d+7IkI0x9usrVmz4ABXw3GopXlzM=; b=oRruHWrIym4LpCwFzcMXFK4CKQ
-	r1rhbepbzzD8BlHXlVhi3Kgy6lZIwhYDQWki/O7OIoUUz9h19snjVOy2xVqoiluXUqAI+kyjH6KeN
-	w8SEedEN2cSexJhNRRpLLu/nFfUhcMF+WFfVgdgwfiRdfAE+wV8DoxXZayV52oItGAm5VfDQBKCNz
-	XutcGGCN83R2+I3BE8x6PBMIoAU0HkO9RdWyyg3AFiT3lW3M4TK6MzT46WOCl5XGxW2COQOvbRxuO
-	KpyxTU8mG3AIWw014kGiJdmhGnOlOKDByQkN8JH1SSbb5Kad0am4qc9BZOipD3KaOU8zAx5Acvhcv
-	2dMbFqKg==;
+	bh=qIE+5aUsMZxhzXdrD3XZuLgZdpz/ktha+kNdcJQaW+o=; b=lW3pSB5HC+B/UUDmI6EEKDd35V
+	3/tvixSZ4QhscfM5O6Ef65T3rtRyxZ7upAA5/nkhr08i98RaC/f+r5CvmH4Ar2wbOBQCeflOa6HNl
+	h6CVo+XnKzQg+HcRK1xBB3/qOty9rIYS/S8WJzHMcvVDAKnsnx/JzPI365Mc6JTY2ptouXb094s6z
+	boS0wAALdnk7FtD7fWCO50Et3diAYhoNTM8ghEjqYIvMoGGz5Myg2Ovuk/G/4oWN0BmADAea0+DP/
+	UxfqP8ynkMP7Q0hb+rqqa6Ipl6GKfc5a+K1CR1CrY6ChdQ9hcPCC6qdrgY+L/RKlpm6djG9CKOcPT
+	hJg7Ujqg==;
 Received: from [185.58.53.186] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vOs1S-000000002gE-0gQD;
-	Fri, 28 Nov 2025 06:32:02 +0000
+	id 1vOs1V-000000002gO-0zBU;
+	Fri, 28 Nov 2025 06:32:05 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrey Albershteyn <aalbersh@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 15/25] logprint: factor out a xlog_print_process_region helper
-Date: Fri, 28 Nov 2025 07:29:52 +0100
-Message-ID: <20251128063007.1495036-16-hch@lst.de>
+Subject: [PATCH 16/25] logprint: factor out a xlog_print_op helper
+Date: Fri, 28 Nov 2025 07:29:53 +0100
+Message-ID: <20251128063007.1495036-17-hch@lst.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251128063007.1495036-1-hch@lst.de>
 References: <20251128063007.1495036-1-hch@lst.de>
@@ -48,223 +48,170 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Start splitting up xlog_print_record by moving the switch on the item
-types inside the inner loop into a self-contained helper.
+Split the inner printing loop from xlog_print_record into a separate
+helper.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- logprint/log_misc.c | 187 +++++++++++++++++---------------------------
- 1 file changed, 70 insertions(+), 117 deletions(-)
+ logprint/log_misc.c | 134 ++++++++++++++++++++++++--------------------
+ 1 file changed, 74 insertions(+), 60 deletions(-)
 
 diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index c4486e5f6a14..f10dc57a1edb 100644
+index f10dc57a1edb..873ec6673768 100644
 --- a/logprint/log_misc.c
 +++ b/logprint/log_misc.c
-@@ -902,6 +902,69 @@ print_lsn(
- 		BLOCK_LSN(be64_to_cpu(*lsn)));
+@@ -966,6 +966,72 @@ xlog_print_region(
+ 	}
  }
  
-+static int
-+xlog_print_region(
++static bool
++xlog_print_op(
 +	struct xlog		*log,
 +	char			**ptr,
-+	struct xlog_op_header	*ophdr,
 +	int			*i,
 +	int			num_ops,
-+	bool			continued)
++	bool			bad_hdr_warn,
++	bool			*lost_context)
 +{
-+	uint32_t		len = be32_to_cpu(ophdr->oh_len);
++	struct xlog_op_header	*ophdr = (struct xlog_op_header *)*ptr;
++	bool			continued;
++	int			skip, n;
 +
-+	if (*(uint *)*ptr == XFS_TRANS_HEADER_MAGIC)
-+		return xlog_print_trans_header(ptr, len);
++	print_xlog_op_line();
++	xlog_print_op_header(ophdr, *i, ptr);
 +
-+	switch (*(unsigned short *)*ptr) {
-+	case XFS_LI_BUF:
-+		return xlog_print_trans_buffer(ptr, len, i, num_ops);
-+	case XFS_LI_ICREATE:
-+		return xlog_print_trans_icreate(ptr, len, i, num_ops);
-+	case XFS_LI_INODE:
-+		return xlog_print_trans_inode(log, ptr, len, i, num_ops,
-+				continued);
-+	case XFS_LI_DQUOT:
-+		return xlog_print_trans_dquot(ptr, len, i, num_ops);
-+	case XFS_LI_EFI_RT:
-+	case XFS_LI_EFI:
-+		return xlog_print_trans_efi(ptr, len, continued);
-+	case XFS_LI_EFD_RT:
-+	case XFS_LI_EFD:
-+		return xlog_print_trans_efd(ptr, len);
-+	case XFS_LI_ATTRI:
-+		return xlog_print_trans_attri(ptr, len, i);
-+	case XFS_LI_ATTRD:
-+		return xlog_print_trans_attrd(ptr, len);
-+	case XFS_LI_RUI_RT:
-+	case XFS_LI_RUI:
-+		return xlog_print_trans_rui(ptr, len, continued);
-+	case XFS_LI_RUD_RT:
-+	case XFS_LI_RUD:
-+		return xlog_print_trans_rud(ptr, len);
-+	case XFS_LI_CUI_RT:
-+	case XFS_LI_CUI:
-+		return xlog_print_trans_cui(ptr, len, continued);
-+	case XFS_LI_CUD_RT:
-+	case XFS_LI_CUD:
-+		return xlog_print_trans_cud(ptr, len);
-+	case XFS_LI_BUI:
-+		return xlog_print_trans_bui(ptr, len, continued);
-+	case XFS_LI_BUD:
-+		return xlog_print_trans_bud(ptr, len);
-+	case XFS_LI_XMI:
-+		return xlog_print_trans_xmi(ptr, len, continued);
-+	case XFS_LI_XMD:
-+		return xlog_print_trans_xmd(ptr, len);
-+	case XFS_LI_QUOTAOFF:
-+		return xlog_print_trans_qoff(ptr, len);
-+	case XLOG_UNMOUNT_TYPE:
-+		printf(_("Unmount filesystem\n"));
-+		return 0;
-+	default:
-+		return -1;
++	continued = (ophdr->oh_flags & XLOG_WAS_CONT_TRANS) ||
++		    (ophdr->oh_flags & XLOG_CONTINUE_TRANS);
++	if (continued && be32_to_cpu(ophdr->oh_len) == 0)
++		return true;
++
++	if (print_no_data) {
++		for (n = 0; n < be32_to_cpu(ophdr->oh_len); n++) {
++			printf("0x%02x ", (unsigned int)**ptr);
++			if (n % 16 == 15)
++				printf("\n");
++			ptr++;
++		}
++		printf("\n");
++		return true;
 +	}
++
++	/* print transaction data */
++	if (xlog_print_find_tid(be32_to_cpu(ophdr->oh_tid),
++			ophdr->oh_flags & XLOG_WAS_CONT_TRANS)) {
++		printf(_("Left over region from split log item\n"));
++		/* Skip this leftover bit */
++		(*ptr) += be32_to_cpu(ophdr->oh_len);
++		/* We've lost context; don't complain if next one looks bad too */
++		*lost_context = true;
++		return true;
++	}
++
++	if (!ophdr->oh_len)
++		return true;
++
++	skip = xlog_print_region(log, ptr, ophdr, i, num_ops, continued);
++	if (skip == -1) {
++		if (bad_hdr_warn && !*lost_context) {
++			fprintf(stderr,
++	_("%s: unknown log operation type (%x)\n"),
++				progname, *(unsigned short *)*ptr);
++			if (print_exit)
++				return false;
++		} else {
++			printf(
++	_("Left over region from split log item\n"));
++		}
++		(*ptr) += be32_to_cpu(ophdr->oh_len);
++		*lost_context = false;
++	} else if (skip) {
++		xlog_print_add_to_trans(be32_to_cpu(ophdr->oh_tid), skip);
++	}
++	return true;
 +}
- 
++
  static int
  xlog_print_record(
-@@ -1046,118 +1109,9 @@ xlog_print_record(
- 	}
+ 	struct xlog		*log,
+@@ -979,8 +1045,9 @@ xlog_print_record(
+ 	int			bad_hdr_warn)
+ {
+     char		*buf, *ptr;
+-    int			read_len, skip, lost_context = 0;
+-    int			ret, n, i, j, k;
++    int			read_len;
++    bool		lost_context = false;
++    int			ret, i, j, k;
  
- 	if (be32_to_cpu(op_head->oh_len) != 0) {
--	    if (*(uint *)ptr == XFS_TRANS_HEADER_MAGIC) {
--		skip = xlog_print_trans_header(&ptr,
--					be32_to_cpu(op_head->oh_len));
--	    } else {
--		switch (*(unsigned short *)ptr) {
--		    case XFS_LI_BUF: {
--			skip = xlog_print_trans_buffer(&ptr,
--					be32_to_cpu(op_head->oh_len),
--					&i, num_ops);
--			break;
--		    }
--		    case XFS_LI_ICREATE: {
--			skip = xlog_print_trans_icreate(&ptr,
--					be32_to_cpu(op_head->oh_len),
--					&i, num_ops);
--			break;
--		    }
--		    case XFS_LI_INODE: {
--			skip = xlog_print_trans_inode(log, &ptr,
--					be32_to_cpu(op_head->oh_len),
--					&i, num_ops, continued);
--			break;
--		    }
--		    case XFS_LI_DQUOT: {
--			skip = xlog_print_trans_dquot(&ptr,
--					be32_to_cpu(op_head->oh_len),
--					&i, num_ops);
--			break;
--		    }
--		    case XFS_LI_EFI_RT:
--		    case XFS_LI_EFI: {
--			skip = xlog_print_trans_efi(&ptr,
--					be32_to_cpu(op_head->oh_len),
--					continued);
--			break;
--		    }
--		    case XFS_LI_EFD_RT:
--		    case XFS_LI_EFD: {
--			skip = xlog_print_trans_efd(&ptr,
--					be32_to_cpu(op_head->oh_len));
--			break;
--		    }
--		    case XFS_LI_ATTRI: {
--			skip = xlog_print_trans_attri(&ptr,
--					be32_to_cpu(op_head->oh_len),
--					&i);
--			break;
--		    }
--		    case XFS_LI_ATTRD: {
--			skip = xlog_print_trans_attrd(&ptr,
--					be32_to_cpu(op_head->oh_len));
--			break;
--		    }
--		    case XFS_LI_RUI_RT:
--		    case XFS_LI_RUI: {
--			skip = xlog_print_trans_rui(&ptr,
--					be32_to_cpu(op_head->oh_len),
--					continued);
--			break;
--		    }
--		    case XFS_LI_RUD_RT:
--		    case XFS_LI_RUD: {
--			skip = xlog_print_trans_rud(&ptr,
--					be32_to_cpu(op_head->oh_len));
--			break;
--		    }
--		    case XFS_LI_CUI_RT:
--		    case XFS_LI_CUI: {
--			skip = xlog_print_trans_cui(&ptr,
--					be32_to_cpu(op_head->oh_len),
--					continued);
--			break;
--		    }
--		    case XFS_LI_CUD_RT:
--		    case XFS_LI_CUD: {
--			skip = xlog_print_trans_cud(&ptr,
--					be32_to_cpu(op_head->oh_len));
--			break;
--		    }
--		    case XFS_LI_BUI: {
--			skip = xlog_print_trans_bui(&ptr,
--					be32_to_cpu(op_head->oh_len),
--					continued);
--			break;
--		    }
--		    case XFS_LI_BUD: {
--			skip = xlog_print_trans_bud(&ptr,
--					be32_to_cpu(op_head->oh_len));
--			break;
--		    }
--		    case XFS_LI_XMI: {
--			skip = xlog_print_trans_xmi(&ptr,
--					be32_to_cpu(op_head->oh_len),
--					continued);
--			break;
--		    }
--		    case XFS_LI_XMD: {
--			skip = xlog_print_trans_xmd(&ptr,
--					be32_to_cpu(op_head->oh_len));
--			break;
--		    }
--		    case XFS_LI_QUOTAOFF: {
--			skip = xlog_print_trans_qoff(&ptr,
--					be32_to_cpu(op_head->oh_len));
--			break;
--		    }
--		    case XLOG_UNMOUNT_TYPE: {
--			printf(_("Unmount filesystem\n"));
+     if (print_no_print)
+ 	    return NO_ERROR;
+@@ -1073,64 +1140,11 @@ xlog_print_record(
+     }
+ 
+     ptr = buf;
+-    for (i=0; i<num_ops; i++) {
+-	int continued;
+-
+-	xlog_op_header_t *op_head = (xlog_op_header_t *)ptr;
+-
+-	print_xlog_op_line();
+-	xlog_print_op_header(op_head, i, &ptr);
+-	continued = ((op_head->oh_flags & XLOG_WAS_CONT_TRANS) ||
+-		     (op_head->oh_flags & XLOG_CONTINUE_TRANS));
+-
+-	if (continued && be32_to_cpu(op_head->oh_len) == 0)
+-		continue;
+-
+-	if (print_no_data) {
+-	    for (n = 0; n < be32_to_cpu(op_head->oh_len); n++) {
+-		printf("0x%02x ", (unsigned int)*ptr);
+-		if (n % 16 == 15)
+-			printf("\n");
+-		ptr++;
+-	    }
+-	    printf("\n");
+-	    continue;
+-	}
+-
+-	/* print transaction data */
+-	if (xlog_print_find_tid(be32_to_cpu(op_head->oh_tid),
+-				op_head->oh_flags & XLOG_WAS_CONT_TRANS)) {
+-	    printf(_("Left over region from split log item\n"));
+-	    /* Skip this leftover bit */
+-	    ptr += be32_to_cpu(op_head->oh_len);
+-	    /* We've lost context; don't complain if next one looks bad too */
+-	    lost_context = 1;
+-	    continue;
+-	}
+-
+-	if (be32_to_cpu(op_head->oh_len) != 0) {
+-		skip = xlog_print_region(log, &ptr, op_head, &i, num_ops,
+-				continued);
+-		if (skip == -1) {
+-			if (bad_hdr_warn && !lost_context) {
+-				fprintf(stderr,
+-			_("%s: unknown log operation type (%x)\n"),
+-					progname, *(unsigned short *)ptr);
+-				if (print_exit) {
+-					free(buf);
+-					return BAD_HEADER;
+-				}
+-			} else {
+-				printf(
+-			_("Left over region from split log item\n"));
+-			}
 -			skip = 0;
--			break;
--		    }
--		    default: {
-+		skip = xlog_print_region(log, &ptr, op_head, &i, num_ops,
-+				continued);
-+		if (skip == -1) {
- 			if (bad_hdr_warn && !lost_context) {
- 				fprintf(stderr,
- 			_("%s: unknown log operation type (%x)\n"),
-@@ -1173,11 +1127,10 @@ xlog_print_record(
- 			skip = 0;
- 			ptr += be32_to_cpu(op_head->oh_len);
- 			lost_context = 0;
--		    }
--		} /* switch */
--	    } /* else */
--	    if (skip != 0)
--		xlog_print_add_to_trans(be32_to_cpu(op_head->oh_tid), skip);
-+		}
-+
-+		if (skip)
-+			xlog_print_add_to_trans(be32_to_cpu(op_head->oh_tid), skip);
+-			ptr += be32_to_cpu(op_head->oh_len);
+-			lost_context = 0;
+-		}
+-
+-		if (skip)
+-			xlog_print_add_to_trans(be32_to_cpu(op_head->oh_tid), skip);
++    for (i = 0; i < num_ops; i++) {
++	if (!xlog_print_op(log, &ptr, &i, num_ops, bad_hdr_warn,
++			&lost_context)) {
++		free(buf);
++		return BAD_HEADER;
  	}
      }
      printf("\n");
