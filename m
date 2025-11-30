@@ -1,119 +1,145 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-188.mta1.migadu.com (out-188.mta1.migadu.com [95.215.58.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F29EB289824
-	for <linux-xfs@vger.kernel.org>; Sat, 29 Nov 2025 09:02:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 816923BBF2
+	for <linux-xfs@vger.kernel.org>; Sun, 30 Nov 2025 00:01:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764406940; cv=none; b=Uhu9RKnz8pdsRgkBDfSpZIJODpjXvlTNR72UwMuNtTTv0UT53nONKn0W6IDUaH4gwuBvLHBWoebbEVcH7j8N7RPutsuh5FVnZeRnh9ZZR5vv8pvTGWVXcETw9qwC2Z+Xti9uCSbSZyS5eKnHc0K8bxX3H2B42IVaoc+ot+X6Jss=
+	t=1764460896; cv=none; b=JOEhkMo9Hx1sMwgro4l6gC+dle3Bn4m7+SsKlXvQmoFzP6SnTjzewC3EOs69PH9XQQ1IenyAyNy3kSJ8V6A1Ms/u8F5deKrzSb5Ls2U/PcBStuQOzU7qBv8mB9uGVfltmx7IiGFX5aJ1Yji0pjcFjlHLynZKZq9zA2fqL8geXlc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764406940; c=relaxed/simple;
-	bh=MIUxfeIlXsLJb7D1x07khmxiQaV6FMQZLzsNI6cDMOY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EIX7S9zsVhKzizBpEptHkyyZM45oL9XHk0W4GvFY0nXthJyt92DuFU18iWKcriZckMvIbdnsuJ3yHZERSjw3eIuWO4Ex0dwrXlWsFZzN1gSyxqCojZ88BQop1TkH8UNafdLfneoCnWBjAFS3+RUNQGh55FJXOwKzLrLvyVASSSM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LWAD7FOh; arc=none smtp.client-ip=209.85.210.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1764460896; c=relaxed/simple;
+	bh=LSJ70a7sqpVfPbtWx1NwHyhEjI0E0jggLRDHw6XUKNY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AmlODYUYqYTWAVwfDQ1GHMLHaCf4tRWXoYRPwWPfGlvDVUl4Vc4bE8xXAUQhw2EmCr9lnd9v95RPqxX65GvOg868jiLbYoSlhyFcHfpNljrSJk/bgFqQVQSo5I2lsWwuwuoyTZ0ppiJEpzcI4pBHkZhPeHKI3NWXYB6Ub5TIbCU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=packett.cool; spf=pass smtp.mailfrom=packett.cool; dkim=pass (2048-bit key) header.d=packett.cool header.i=@packett.cool header.b=cTTUT3M1; arc=none smtp.client-ip=95.215.58.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=packett.cool
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=packett.cool
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LWAD7FOh"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-7aab7623f42so2804951b3a.2
-        for <linux-xfs@vger.kernel.org>; Sat, 29 Nov 2025 01:02:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1764406937; x=1765011737; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rZsPDOjyUTRUehf6LhbOb026Dy93eapwVzPzgOc2prg=;
-        b=LWAD7FOhwxa9hK+N/TjbMpaozNTbYaOFlFfBFIkFx3IRXMvFPQxK0dBvqeuprMX8hQ
-         WtWIKhyhJdL7tgKbRz4kjA9XtQ0xCyuZ7Us8cRZuTSRdyYizUVED7L6DNAzm15FBB5+X
-         G5asqaq3DDVlM/G0dBAPwI0DSmb1ll6qtEwsg2iCDXZi+WJJDMh8w+iMQwrmlH1fUp0M
-         ZU8ghg2rx/1HT1LpWHFAMP66d0PvkRhjwjyR9UzTcYnZTtVjAi+zUY+A8WK5JSkbXJwd
-         i6e5F7qsIkGgfsqQ4oj8zEgP7PtrSoMRVbyWUr+snjj7SZqW95SR+gLU9WacDEe61W7m
-         +8+Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764406937; x=1765011737;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=rZsPDOjyUTRUehf6LhbOb026Dy93eapwVzPzgOc2prg=;
-        b=OeI10aeJ9hMGuFeH9cd+dyPS0HwMxN02JeFfaZLjJerD++SibX/63P4HxhQC6nVAtu
-         pYXQIeSN7RJ0B97OWCZ61N3SMsIQPrXd6csuPO9fKzkGDH+ADQvdVM70X+m/4B0Y5QKF
-         2EjAKWj9KGKasosyk1xJePCYI9yAMfB931a45YYqt/Lkz6VIKIxzWtN+Ft+LEiwMkA0T
-         SgQhLCnNyR7oe8rzYEOo7OTEZ82uNhExtvDyGgY/wuah42u8A13JCWnLzsiFcMFMokKw
-         rcimrXyaUMS0EbXNEJZ5hZrJU1VGa+Z/OW5RRGeWeNGaoaFCTGMRKsQMGZcWrzwXinWn
-         AsJA==
-X-Forwarded-Encrypted: i=1; AJvYcCU4Ql5wbNQJMP1ce0yKwu8BiuC4EgNs569C2lofEOil5AqVT8MaY44hfiJP8yYD4W4Daguyw1vdbTo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx9IKLiHLJzzfE0KUB3CEM0cZ97+PlD20JKNIpWI1DfRIuHehAL
-	5gRNZRFlrzwVvR2wHSikY1QLAUlI39CFrKhXNH95RvFkD7a1qiHqoKAj
-X-Gm-Gg: ASbGnct6piXV4kjyrcPh1LmJG1Gdg0jN78KcXjqDRZZHDaC0QepfKkWX3Z6VjNCKZJW
-	Jk7Y5jFfwk/aaHtXjWfnaPFgbXV6a+55I7QFXYTIWlMPm7KVqHJc5emTOgqrC92+F1DmATSWR7i
-	WPtn+7L/xhcpu/3dmFHkgJjQArXlvhh+aY1T6p/m+PwiU8b6qu3m0CBJiza8VFlOEo3wntRWIpc
-	bV16f2WkmhhQiBrOowRQGUxqCElF85W1ncMNZa2enYl3/ji0+H7/Insvut9Zs4ta/6iF/zGgUJH
-	IGSqs+RE7QlFvrBMtgXs7iDeHBLXoWSgIgEqMPi7qBsOK9zXw3aT2O4J2dsDa96A5Ow/k7VCtwB
-	aL6O9ZC37AkQmhnBuyu4xFuDONNZlDkYo53kpaHT0+2SLFOFev2BK9uH8yNwjO2TJLNsOgZeXDW
-	CPu8tRb9nqsI9GqpzU7vvSlStpI0Ob20jZ15/n
-X-Google-Smtp-Source: AGHT+IHpE1uuYkahAmmHKZA5JS6JfSHwBl8orO/VCsXf8iMEXJ8J7PutjW87+hKd6ib1GUoYGhEBPQ==
-X-Received: by 2002:a05:7022:41:b0:11b:b1ce:277a with SMTP id a92af1059eb24-11c9d8482b1mr17984181c88.28.1764406937164;
-        Sat, 29 Nov 2025 01:02:17 -0800 (PST)
-Received: from localhost.localdomain ([104.128.72.44])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11dcae73bedsm28114394c88.0.2025.11.29.01.02.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 29 Nov 2025 01:02:16 -0800 (PST)
-From: zhangshida <starzhangzsd@gmail.com>
-X-Google-Original-From: zhangshida <zhangshida@kylinos.cn>
-To: Johannes.Thumshirn@wdc.com,
-	hch@infradead.org,
-	agruenba@redhat.com,
-	ming.lei@redhat.com,
-	hsiangkao@linux.alibaba.com,
-	csander@purestorage.com
-Cc: linux-block@vger.kernel.org,
-	linux-bcache@vger.kernel.org,
-	nvdimm@lists.linux.dev,
-	virtualization@lists.linux.dev,
-	ntfs3@lists.linux.dev,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	zhangshida@kylinos.cn,
-	starzhangzsd@gmail.com
-Subject: [PATCH v3 9/9] nvdimm: Replace the repetitive bio chaining code patterns
-Date: Sat, 29 Nov 2025 17:01:22 +0800
-Message-Id: <20251129090122.2457896-10-zhangshida@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20251129090122.2457896-1-zhangshida@kylinos.cn>
-References: <20251129090122.2457896-1-zhangshida@kylinos.cn>
+	dkim=pass (2048-bit key) header.d=packett.cool header.i=@packett.cool header.b="cTTUT3M1"
+Message-ID: <6713ea38-b583-4c86-b74a-bea55652851d@packett.cool>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=packett.cool;
+	s=key1; t=1764460882;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=srEr3LoKq1Czaq8I5z3/A4FoFBjqxOV0LMrfiR1/IRI=;
+	b=cTTUT3M1OgZOXf9KsjND5eMtqvOa5Da+1AeeP4jR0sw0vC4IDg5Xa7CSv88SWqP6ld8c4U
+	feLTIFGjsHi46wUcXcnZnBNFYyUA+k4gt6/btlcqIgvR4xvfo97KEbgbLW8O6jDXdJrKlx
+	N47LnE5fWNIgP4vLf6QeSzk7h8hxo+Mf0b3ed+iyBgZDt5MyHgOMDd1kv+b3MkRIf/97oF
+	Xk4+Fm9asGPOO/UHvFRyAPJkp7+BxqbSkXxGSQ7XQCxe3dquat/XoNWuSDCvFSrDBacD6P
+	XPihqavrhekC6KevGwsdpq2omOGhg4neyyNLaEyfIuqzGpoqSCNpP7XeImwedA==
+Date: Sat, 29 Nov 2025 21:01:05 -0300
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Subject: Re: [PATCH v6 06/15] VFS: introduce start_creating_noperm() and
+ start_removing_noperm()
+To: NeilBrown <neil@brown.name>, Alexander Viro <viro@zeniv.linux.org.uk>,
+ Christian Brauner <brauner@kernel.org>, Amir Goldstein <amir73il@gmail.com>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+ Jeff Layton <jlayton@kernel.org>, Chris Mason <clm@fb.com>,
+ David Sterba <dsterba@suse.com>, David Howells <dhowells@redhat.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>,
+ Tyler Hicks <code@tyhicks.com>, Miklos Szeredi <miklos@szeredi.hu>,
+ Chuck Lever <chuck.lever@oracle.com>, Olga Kornievskaia
+ <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>,
+ Namjae Jeon <linkinjeon@kernel.org>, Steve French <smfrench@gmail.com>,
+ Sergey Senozhatsky <senozhatsky@chromium.org>,
+ Carlos Maiolino <cem@kernel.org>, John Johansen
+ <john.johansen@canonical.com>, Paul Moore <paul@paul-moore.com>,
+ James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>,
+ Stephen Smalley <stephen.smalley.work@gmail.com>,
+ Ondrej Mosnacek <omosnace@redhat.com>, Mateusz Guzik <mjguzik@gmail.com>,
+ Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+ Stefan Berger <stefanb@linux.ibm.com>, "Darrick J. Wong"
+ <djwong@kernel.org>, linux-kernel@vger.kernel.org, netfs@lists.linux.dev,
+ ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+ linux-unionfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-security-module@vger.kernel.org,
+ selinux@vger.kernel.org
+References: <20251113002050.676694-1-neilb@ownmail.net>
+ <20251113002050.676694-7-neilb@ownmail.net>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Val Packett <val@packett.cool>
+In-Reply-To: <20251113002050.676694-7-neilb@ownmail.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-From: Shida Zhang <zhangshida@kylinos.cn>
+Hi,
 
-Replace duplicate bio chaining logic with the common
-bio_chain_and_submit helper function.
+On 11/12/25 9:18 PM, NeilBrown wrote:
+> From: NeilBrown <neil@brown.name>
+>
+> xfs, fuse, ipc/mqueue need variants of start_creating or start_removing
+> which do not check permissions.
+> This patch adds _noperm versions of these functions.
+> [..]
+> diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
+> index 316922d5dd13..a0d5b302bcc2 100644
+> --- a/fs/fuse/dir.c
+> +++ b/fs/fuse/dir.c
+> @@ -1397,27 +1397,25 @@ int fuse_reverse_inval_entry(struct fuse_conn *fc, u64 parent_nodeid,
+>   	if (!parent)
+>   		return -ENOENT;
+>   
+> -	inode_lock_nested(parent, I_MUTEX_PARENT);
+>   	if (!S_ISDIR(parent->i_mode))
+> -		goto unlock;
+> +		goto put_parent;
+>   
+>   	err = -ENOENT;
+>   	dir = d_find_alias(parent);
+>   	if (!dir)
+> -		goto unlock;
+> +		goto put_parent;
+>   
+> -	name->hash = full_name_hash(dir, name->name, name->len);
+> -	entry = d_lookup(dir, name);
+> +	entry = start_removing_noperm(dir, name);
+>   	dput(dir);
+> -	if (!entry)
+> -		goto unlock;
+> +	if (IS_ERR(entry))
+> +		goto put_parent;
 
-Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
----
- drivers/nvdimm/nd_virtio.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+This broke xdg-document-portal (and potentially other FUSE filesystems) 
+by introducing a massive deadlock.
 
-diff --git a/drivers/nvdimm/nd_virtio.c b/drivers/nvdimm/nd_virtio.c
-index c3f07be4aa2..e6ec7ceee9b 100644
---- a/drivers/nvdimm/nd_virtio.c
-+++ b/drivers/nvdimm/nd_virtio.c
-@@ -122,8 +122,7 @@ int async_pmem_flush(struct nd_region *nd_region, struct bio *bio)
- 			return -ENOMEM;
- 		bio_clone_blkg_association(child, bio);
- 		child->bi_iter.bi_sector = -1;
--		bio_chain(child, bio);
--		submit_bio(child);
-+		bio_chain_and_submit(child, bio);
- 		return 0;
- 	}
- 	if (virtio_pmem_flush(nd_region))
--- 
-2.34.1
+❯ doas cat /proc/40751/stack # main thread
+[<0>] __fuse_simple_request+0x37c/0x5c0 [fuse]
+[<0>] fuse_lookup_name+0x12c/0x2a0 [fuse]
+[<0>] fuse_lookup+0x9c/0x1e8 [fuse]
+[<0>] lookup_one_qstr_excl+0xd4/0x160
+[<0>] start_removing_noperm+0x5c/0x90
+[<0>] fuse_reverse_inval_entry+0x64/0x1e0 [fuse]
+[<0>] fuse_dev_do_write+0x13a8/0x16a8 [fuse]
+[<0>] fuse_dev_write+0x64/0xa8 [fuse]
+[<0>] do_iter_readv_writev+0x170/0x1d0
+[<0>] vfs_writev+0x100/0x2d0
+[<0>] do_writev+0x88/0x130
+
+d_lookup which was previously used here —from what I could understand by 
+reading it— is cache-only and does not call into the FS's lookup at all.
+
+This new start_removing_noperm calls start_dirop which calls 
+lookup_one_qstr_excl which according to its own comment is the "one and 
+only case when ->lookup() gets called on non in-lookup dentries". Well, 
+->lookup() is the request back to the userspace FUSE server.. but the 
+FUSE server is waiting for the write() to the FUSE device that invokes 
+this operation to return! We cannot reenter the FUSE server 
+from fuse_reverse_inval_entry.
+
+x-d-p issue link: https://github.com/flatpak/xdg-desktop-portal/issues/1871
+
+Reverting the fuse/dir.c changes has fixed that for me.
+
+Thanks,
+~val
 
