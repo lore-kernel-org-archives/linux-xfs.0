@@ -1,89 +1,89 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25B55226861
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Dec 2025 18:32:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F106E21B9FD
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Dec 2025 18:45:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764613976; cv=none; b=cXQIIXKLedlOyoE/vKLdBySttF6gwwFp+p8dajg+DzoKGg6AApKg89wk4XNt/QIqbviuyjwYew0d+LvXG7IL7tw+Mn1oQvK2fQWJmbYAUNEVxnGwS6Llx5XMx3pdwZWHKErrU+azRt3Fbi3F5Or6LasokogPSHVaHIgDRXbOjow=
+	t=1764614721; cv=none; b=UuwIUeCGCsc63gyDV/zmCtBKFvDx6d3Cbh1seZzOMQ+W7i+Ae5672GEX+13p5eQ7Tk7CaHEoyHbJlQg0QZr+9WJu6499jhAn4xeIhUtaqRg/AxrmEeqyRSQwCcK44MXtl+Mb/PBM6BAcq2OBUDUuBv7yZXSJU2VrmZ0LjPGp/T0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764613976; c=relaxed/simple;
-	bh=L09SF8JZrHjWxwx3UZpQIBcPM/O6hX3FpDPB8Jb1c2w=;
+	s=arc-20240116; t=1764614721; c=relaxed/simple;
+	bh=mOJsemcKR9DZo0/dxGQEnbnIpXSn+voDX3RuK5YYCVc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=unLp/hpx+Gm5epsgDy0mILX9OSe+GKQcHDaNqo7tmSF1K6uV8PL/h5a03oJ8yoE2+m2+Lk4QpLENH3R4MdiuRBGXAaQSKRgR3i2x/RKlWI1YKcpYSb0vTd6rJWK7MDJ0cCr6ig3E23ciTvsT/X3fpPam5Y+L7kmGHuzy7U9cR8c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DBabkEHi; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=lI7NB3vb; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=AFz+ZWk1EwGwBATyBCPLfDYQruGgpfQRSEcgt3LoL8rFcvoG/0u1OcJDOlyYVvUYTB/f8Dzvx8EcIO+XDkQo2NodGSqTy3KVvPkVp+UIDey61BZQTnG8Pzz9LUTDsJkDfWLjB6veVJO0394qYlIn9NvG8uhSZrkjlekpVlKmReQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fTNtRedZ; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=RVFj5fA9; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DBabkEHi";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="lI7NB3vb"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fTNtRedZ";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="RVFj5fA9"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1764613974;
+	s=mimecast20190719; t=1764614718;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=XVOucITvrte89ussoTAEBzLnbBwH7xo+vpQWRKo3zz4=;
-	b=DBabkEHif7su+bGtJjOBuosOCWBDXv9L5wnk8qUDELKTjfbB/BeIb7Q2fxeZp9euyJ0zoG
-	YM0Q7vC/XYthADld4HTqumab29whuzvb/vbRxTmJdeb4iHt1qQtAPCoDUIpasSG0M8RqiA
-	9SLETeg5fU/CTJF7HOLmKO9WVd0XsTc=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=dJcGkhdjlOLfp+TGJg3vPcrN2tLN38VFrM2yKoP4G7s=;
+	b=fTNtRedZfewysQkj93GgLIRZrw0FLPB9qrrG+sX9vSLi3r7czBDomFW05ihnCsj8xmIuso
+	htMjLuKCKNt62luGcpmP+pNTN1Npom2DH/tlADskeVY3faSg46WKzPUaxibTO6BQHC79pH
+	nEA/smzFHpVsSUmjSm1g/xd/At1KeLM=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-266-wddYVBwcMVeqL-C7_AikiQ-1; Mon, 01 Dec 2025 13:32:52 -0500
-X-MC-Unique: wddYVBwcMVeqL-C7_AikiQ-1
-X-Mimecast-MFC-AGG-ID: wddYVBwcMVeqL-C7_AikiQ_1764613971
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-477771366cbso28052535e9.0
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Dec 2025 10:32:51 -0800 (PST)
+ us-mta-295-VcMNd240N9SZXuuV36By5g-1; Mon, 01 Dec 2025 13:45:17 -0500
+X-MC-Unique: VcMNd240N9SZXuuV36By5g-1
+X-Mimecast-MFC-AGG-ID: VcMNd240N9SZXuuV36By5g_1764614715
+Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-42b3b5ed793so3848835f8f.2
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Dec 2025 10:45:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1764613970; x=1765218770; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1764614715; x=1765219515; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=XVOucITvrte89ussoTAEBzLnbBwH7xo+vpQWRKo3zz4=;
-        b=lI7NB3vbWg70QmAxKRpAxkXuCpVCzBTqqxdwHycnQmA4pGpfPZKvUX3ybGPekrxyB/
-         mwGE2ypFC+jRR87+vu/lVPJVH/f38rzv/x9Zms5tVDPH9ScemPURPyD8EmjXaG1H75XI
-         2JI3lFGDB8li/i48WIJfmOJKZzJe6zw3TQN1eDWKAMxJHraGf8s2AWFxozN/w5wOORc+
-         q6j+4iPQNFZ5pR4CIe5Uwr4u5J3ZX6HpSBmecSuDwo28mHkTChz5+fwkzoNoYk7FUOAx
-         FWbuZmDKRp3q8IWs2OgsKH4+mihvWyNC6XQdDllbqsvCq32efQtEhDpEHaBptYqSbxGc
-         Q/Pg==
+        bh=dJcGkhdjlOLfp+TGJg3vPcrN2tLN38VFrM2yKoP4G7s=;
+        b=RVFj5fA9hns/0PGUHvnVtTE/x+mzuSgkO/GvNQFHIdfF3Ioz/dqwqKzSNM3QwDm40a
+         wxOQUEEBvbyd7cUhd3diOIPwSWqnKZ7R+yL5pQ8Ghr7kymzPg7+qY3MMOqbTsxtbSNiH
+         pPul4VrD6HGyTRXOeCy5Ap/icGFvDgHNJlgWZlrgHL5MPlQ4k89H4Kw26hBmTJklDFSm
+         crjtcbeN6nc6A5BGi6bZvbdOPlbMltCtdMone6q4UPI4NiHCLe9ksZdWTzoM6HFdZKLw
+         3p92800lpT1g/3TzipaE7XUczq3foP2tny+qvKf7D2D13Mz1VSBB/205DoZy7iFcwJw5
+         t0tQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764613970; x=1765218770;
+        d=1e100.net; s=20230601; t=1764614715; x=1765219515;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=XVOucITvrte89ussoTAEBzLnbBwH7xo+vpQWRKo3zz4=;
-        b=iyM1tQqjHYoDWB8j1vyePiTyg8Wrp0g1vTqH2onMnBf4b7ZF1kjCrlOhOiH3H2ftcN
-         VeiZdhoHHJVOl1vvEMhlCmdNOgtirWeE0wjHxVGRvTcpAnTNS5LoeB+9u9yG8HCOl/LG
-         9ixrnFSME16YIOaz83L8xLB4N1MG58s+kERksTWsjWghee5UxtTvUql6/fI139dymiw2
-         HkoVSrLCSnsn2l4Ogvb0NfMNREtBaz4Ay9LRsyJOPeo344fEzOK54M9PNDt0+oCUqcgS
-         zGjGV1uGYnXehFDjTAGDO4u9rcRe7bYLaoYeME1gZwbWdj/jnMkth08vQEmIfK26ciWx
-         Z5OA==
-X-Forwarded-Encrypted: i=1; AJvYcCXRld3BhMTSzxgUCK1hpD4WpwgkUGReiM28t+aVd9/9GL3rRnCJrptBSyrzVC8c4AFvrTbHJ9iuaYg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyrbgtRVeo3MTHrzMXsA1W1o07WJ8DG0QnAuBsCNkHi/IlqboUa
-	/DUCh8pJVhMtm5iytBCS881HJutJ3nLzx6bHzjaFrejdR125Z/9RMmVijW/KanBQuFTsJV8AurM
-	wwofqD98/8QraYWtomhfR0KAIqGi4OuYi/DME9ni9eb1Ua9g6nKkbGXwzA0f/
-X-Gm-Gg: ASbGncum3bTSCF4FEN/TR8MBHp4Nwnq1mRXQwzxYoE5gfXWeO77/tL6d9Z8sCM16ydC
-	fX9Vy55VEH2gtNKZVfgiQsKmkXqVv460SuZ+mZRabNk5FbNMNhH4mzyCliEDql0X+aq8Y5HA4e8
-	9rVW1KUUqpXrJtlRorLI864g0pnEcQTels7scE4cbLXRn/BKm4bIPRYH5U4Zv/SBaCaOx5KJFam
-	g0n75YeBoSuclGAZ+PTkuz9MoukEn/Ci/orIZqnSY8nMAPN3tMJdTzgegiDvvRVRzYj5pIMyfdz
-	I4lOt4LGKJ5l3bIVsfjm/61Vgb3yPpcaP+YtWFE1Wfp3xKlaNBelQuQN0eHlChFbNhK8MsIEVFs
+        bh=dJcGkhdjlOLfp+TGJg3vPcrN2tLN38VFrM2yKoP4G7s=;
+        b=T2QKHASmp27pyqhEza8ZkyWHreaA71mvpUitGF0EjAJbgpL7MCXWHRAEil74ZDVvqd
+         USJrkJtiSbMvxNIxLdG7WANGFcF4Cm4SoKVVs6Y3d0IZ2uzeYaFhSlsXldbLRwhIgeBc
+         9N6H3GqVZB2qW82a7F2hrmXxqzcZqMZXau3QJNHq35BUVmBzoP5MKaF4oz0L6NFh0nbG
+         aO49FHSNsoDIj8EUe6mg3iH0BGufvCAGzeZF1Uw74/lRCV9SeaW39uRCqKDBxLudvIKE
+         IQh8oXMY0F9BW8twlaTyEuvkEvcMAvKpOGbCJfnwytKq/AtEDQjOjsMCCtXYEqzK81x1
+         3mLw==
+X-Forwarded-Encrypted: i=1; AJvYcCXP+N2kowGnJpxHwY7+90iBmBXX419+Vz/yVBG/1v9KaX69gHMUvNDmxEYQ1dkT2HW3KgAnyRyCNI4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzl3n0ytR62b2A83D5hmSv2RTgskC9hdAhJIkH5f2NIDtCB8QE+
+	FXE6V3GmHwOHuNvtT93ll5uoeaN3T/sO92OFNBonQCJlMbkf+zbf1EiU5oQFxoenaRC+8ynpXu1
+	nPfEPosDzthAnv5DUNllAmK2fg1uQ+w7wE1R7NjbZW0Gp357OfM9OYXfouBz+
+X-Gm-Gg: ASbGncvmOW3SQodxuK0Z+kMxk5cklwUXQt2QjWe5YtVhIUWKZ0eRLENbXktY1VmnpJz
+	WA+9WFk4DWaBvRslND6UMVcmLRqW8wu6/WLV+OxIKxgz+mL3t/MVrvBCPHL0/n4MbBHAhPSUuPE
+	fDGTBFyJdyOLXNmJMRZ4iEJPRsZcjW277aYRPQdM54DJiLMQ9INhd6680Guo2qf2xBYDO3j7sXG
+	ZLLMTwLqADEJC7Tmxu8HDIAXgtgENi6fc9BWwNr4Yx+3TpzznlSfTcm3kNxKQzJkNcAeOIENoXi
+	9VY9L3l1hy6lbugAtskt/J217CT+LDKjcyNH8Zrz1+DX1jzUUEguYnavXCg3CWnSMQqBsAqHbl8
 	=
-X-Received: by 2002:a05:600c:4f88:b0:477:af07:dd17 with SMTP id 5b1f17b1804b1-477c01c3721mr461901375e9.24.1764613970267;
-        Mon, 01 Dec 2025 10:32:50 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IH8z3rPllm5PqOOXE/tujMiBe+R91mYXSQslmtTYdUSPkQMBGoqZVxwBqj24rrfnZEKaz2UNA==
-X-Received: by 2002:a05:600c:4f88:b0:477:af07:dd17 with SMTP id 5b1f17b1804b1-477c01c3721mr461901155e9.24.1764613969824;
-        Mon, 01 Dec 2025 10:32:49 -0800 (PST)
+X-Received: by 2002:a05:6000:2411:b0:42b:3a84:1ee1 with SMTP id ffacd0b85a97d-42cc1cbd1f6mr38967593f8f.18.1764614715403;
+        Mon, 01 Dec 2025 10:45:15 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEst0dSxM51WQQWwFluK2SRdLdewqD2Y5l9AU9XMfs47GPxw9KPOLXKRlqZnx5AF/I6zSOYUA==
+X-Received: by 2002:a05:6000:2411:b0:42b:3a84:1ee1 with SMTP id ffacd0b85a97d-42cc1cbd1f6mr38967569f8f.18.1764614714770;
+        Mon, 01 Dec 2025 10:45:14 -0800 (PST)
 Received: from thinky ([217.30.74.39])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42e1ca8bae9sm26774766f8f.33.2025.12.01.10.32.49
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42e1c5c3022sm28083645f8f.4.2025.12.01.10.45.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Dec 2025 10:32:49 -0800 (PST)
-Date: Mon, 1 Dec 2025 19:32:18 +0100
+        Mon, 01 Dec 2025 10:45:14 -0800 (PST)
+Date: Mon, 1 Dec 2025 19:44:43 +0100
 From: Andrey Albershteyn <aalbersh@redhat.com>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/25] logprint: move xfs_inode_item_format_convert up
-Message-ID: <xn4vun7i6b4af5erbnao3bbskoogicgf22tc27fqprpio7b47c@6y3eewehvcyx>
+Subject: Re: [PATCH 16/25] logprint: factor out a xlog_print_op helper
+Message-ID: <bun4fdudr2eeipklvoammomgiy7ntqfl5l7lyfbre6hp4roh26@jzppybk22s4p>
 References: <20251128063007.1495036-1-hch@lst.de>
- <20251128063007.1495036-12-hch@lst.de>
+ <20251128063007.1495036-17-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -92,128 +92,181 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251128063007.1495036-12-hch@lst.de>
+In-Reply-To: <20251128063007.1495036-17-hch@lst.de>
 
-On 2025-11-28 07:29:48, Christoph Hellwig wrote:
-> Toward the caller.  And reindent it while we're at it.
+On 2025-11-28 07:29:53, Christoph Hellwig wrote:
+> Split the inner printing loop from xlog_print_record into a separate
+> helper.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  logprint/log_misc.c | 80 +++++++++++++++++++++++----------------------
->  1 file changed, 41 insertions(+), 39 deletions(-)
+>  logprint/log_misc.c | 134 ++++++++++++++++++++++++--------------------
+>  1 file changed, 74 insertions(+), 60 deletions(-)
 > 
 > diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-> index a3aa4a323193..274d25e94bbd 100644
+> index f10dc57a1edb..873ec6673768 100644
 > --- a/logprint/log_misc.c
 > +++ b/logprint/log_misc.c
-> @@ -527,6 +527,39 @@ xlog_print_trans_qoff(
->  	return 0;
+> @@ -966,6 +966,72 @@ xlog_print_region(
+>  	}
 >  }
 >  
-> +/*
-> + * if necessary, convert an xfs_inode_log_format struct from the old 32bit version
-> + * (which can have different field alignments) to the native 64 bit version
-> + */
-> +struct xfs_inode_log_format *
-> +xfs_inode_item_format_convert(
-> +	char			*src_buf,
-> +	uint			len,
-> +	struct xfs_inode_log_format *in_f)
-
-one more tab here will also align with in_f32 declaration
-
+> +static bool
+> +xlog_print_op(
+> +	struct xlog		*log,
+> +	char			**ptr,
+> +	int			*i,
+> +	int			num_ops,
+> +	bool			bad_hdr_warn,
+> +	bool			*lost_context)
 > +{
-> +	struct xfs_inode_log_format_32	*in_f32;
+> +	struct xlog_op_header	*ophdr = (struct xlog_op_header *)*ptr;
+> +	bool			continued;
+> +	int			skip, n;
 > +
-> +	/* if we have native format then just return buf without copying data */
-> +	if (len == sizeof(struct xfs_inode_log_format))
-> +		return (struct xfs_inode_log_format *)src_buf;
+> +	print_xlog_op_line();
+> +	xlog_print_op_header(ophdr, *i, ptr);
 > +
-> +	in_f32 = (struct xfs_inode_log_format_32 *)src_buf;
-> +	in_f->ilf_type = in_f32->ilf_type;
-> +	in_f->ilf_size = in_f32->ilf_size;
-> +	in_f->ilf_fields = in_f32->ilf_fields;
-> +	in_f->ilf_asize = in_f32->ilf_asize;
-> +	in_f->ilf_dsize = in_f32->ilf_dsize;
-> +	in_f->ilf_ino = in_f32->ilf_ino;
-> +	/* copy biggest field of ilf_u */
-> +	memcpy(&in_f->ilf_u.__pad, &in_f32->ilf_u.__pad,
-> +					sizeof(in_f->ilf_u.__pad));
-> +	in_f->ilf_blkno = in_f32->ilf_blkno;
-> +	in_f->ilf_len = in_f32->ilf_len;
-> +	in_f->ilf_boffset = in_f32->ilf_boffset;
+> +	continued = (ophdr->oh_flags & XLOG_WAS_CONT_TRANS) ||
+> +		    (ophdr->oh_flags & XLOG_CONTINUE_TRANS);
+> +	if (continued && be32_to_cpu(ophdr->oh_len) == 0)
+> +		return true;
 > +
-> +	return in_f;
+> +	if (print_no_data) {
+> +		for (n = 0; n < be32_to_cpu(ophdr->oh_len); n++) {
+> +			printf("0x%02x ", (unsigned int)**ptr);
+> +			if (n % 16 == 15)
+> +				printf("\n");
+> +			ptr++;
+> +		}
+> +		printf("\n");
+> +		return true;
+> +	}
+> +
+> +	/* print transaction data */
+> +	if (xlog_print_find_tid(be32_to_cpu(ophdr->oh_tid),
+> +			ophdr->oh_flags & XLOG_WAS_CONT_TRANS)) {
+> +		printf(_("Left over region from split log item\n"));
+> +		/* Skip this leftover bit */
+> +		(*ptr) += be32_to_cpu(ophdr->oh_len);
+> +		/* We've lost context; don't complain if next one looks bad too */
+> +		*lost_context = true;
+> +		return true;
+> +	}
+> +
+> +	if (!ophdr->oh_len)
+> +		return true;
+> +
+> +	skip = xlog_print_region(log, ptr, ophdr, i, num_ops, continued);
+> +	if (skip == -1) {
+> +		if (bad_hdr_warn && !*lost_context) {
+> +			fprintf(stderr,
+> +	_("%s: unknown log operation type (%x)\n"),
+> +				progname, *(unsigned short *)*ptr);
+> +			if (print_exit)
+> +				return false;
+> +		} else {
+> +			printf(
+> +	_("Left over region from split log item\n"));
+> +		}
+> +		(*ptr) += be32_to_cpu(ophdr->oh_len);
+> +		*lost_context = false;
+> +	} else if (skip) {
+> +		xlog_print_add_to_trans(be32_to_cpu(ophdr->oh_tid), skip);
+> +	}
+> +	return true;
 > +}
 > +
->  static void
->  xlog_print_trans_inode_core(
->  	struct xfs_log_dinode	*ip)
-> @@ -588,14 +621,14 @@ xlog_print_trans_inode(
->  	int			num_ops,
->  	int			continued)
+>  static int
+>  xlog_print_record(
+>  	struct xlog		*log,
+> @@ -979,8 +1045,9 @@ xlog_print_record(
+>  	int			bad_hdr_warn)
 >  {
-> -    struct xfs_log_dinode	dino;
-> -    struct xlog_op_header	*op_head;
-> -    struct xfs_inode_log_format	dst_lbuf;
-> -    struct xfs_inode_log_format	src_lbuf;
-> -    struct xfs_inode_log_format *f;
-> -    int				mode;
-> -    int				size;
-> -    int				skip_count;
-> +	struct xfs_log_dinode	dino;
-> +	struct xlog_op_header	*op_head;
-> +	struct xfs_inode_log_format dst_lbuf;
-> +	struct xfs_inode_log_format src_lbuf;
-> +	struct xfs_inode_log_format *f;
+>      char		*buf, *ptr;
+> -    int			read_len, skip, lost_context = 0;
+> -    int			ret, n, i, j, k;
+> +    int			read_len;
+> +    bool		lost_context = false;
 
-Maybe make it one column with arguments then? (seems like one more
-tab will align everything)
+missing tab
 
-> +	int				mode;
-> +	int				size;
-> +	int				skip_count;
+> +    int			ret, i, j, k;
 >  
->      /*
->       * print inode type header region
-> @@ -1582,34 +1615,3 @@ end:
->      printf(_("%s: logical end of log\n"), progname);
->      print_xlog_record_line();
->  }
+>      if (print_no_print)
+>  	    return NO_ERROR;
+> @@ -1073,64 +1140,11 @@ xlog_print_record(
+>      }
+>  
+>      ptr = buf;
+> -    for (i=0; i<num_ops; i++) {
+> -	int continued;
 > -
-> -/*
-> - * if necessary, convert an xfs_inode_log_format struct from the old 32bit version
-> - * (which can have different field alignments) to the native 64 bit version
-> - */
-> -struct xfs_inode_log_format *
-> -xfs_inode_item_format_convert(char *src_buf, uint len, struct xfs_inode_log_format *in_f)
-> -{
-> -	struct xfs_inode_log_format_32	*in_f32;
+> -	xlog_op_header_t *op_head = (xlog_op_header_t *)ptr;
 > -
-> -	/* if we have native format then just return buf without copying data */
-> -	if (len == sizeof(struct xfs_inode_log_format)) {
-> -		return (struct xfs_inode_log_format *)src_buf;
+> -	print_xlog_op_line();
+> -	xlog_print_op_header(op_head, i, &ptr);
+> -	continued = ((op_head->oh_flags & XLOG_WAS_CONT_TRANS) ||
+> -		     (op_head->oh_flags & XLOG_CONTINUE_TRANS));
+> -
+> -	if (continued && be32_to_cpu(op_head->oh_len) == 0)
+> -		continue;
+> -
+> -	if (print_no_data) {
+> -	    for (n = 0; n < be32_to_cpu(op_head->oh_len); n++) {
+> -		printf("0x%02x ", (unsigned int)*ptr);
+> -		if (n % 16 == 15)
+> -			printf("\n");
+> -		ptr++;
+> -	    }
+> -	    printf("\n");
+> -	    continue;
 > -	}
 > -
-> -	in_f32 = (struct xfs_inode_log_format_32 *)src_buf;
-> -	in_f->ilf_type = in_f32->ilf_type;
-> -	in_f->ilf_size = in_f32->ilf_size;
-> -	in_f->ilf_fields = in_f32->ilf_fields;
-> -	in_f->ilf_asize = in_f32->ilf_asize;
-> -	in_f->ilf_dsize = in_f32->ilf_dsize;
-> -	in_f->ilf_ino = in_f32->ilf_ino;
-> -	/* copy biggest field of ilf_u */
-> -	memcpy(&in_f->ilf_u.__pad, &in_f32->ilf_u.__pad,
-> -					sizeof(in_f->ilf_u.__pad));
-> -	in_f->ilf_blkno = in_f32->ilf_blkno;
-> -	in_f->ilf_len = in_f32->ilf_len;
-> -	in_f->ilf_boffset = in_f32->ilf_boffset;
+> -	/* print transaction data */
+> -	if (xlog_print_find_tid(be32_to_cpu(op_head->oh_tid),
+> -				op_head->oh_flags & XLOG_WAS_CONT_TRANS)) {
+> -	    printf(_("Left over region from split log item\n"));
+> -	    /* Skip this leftover bit */
+> -	    ptr += be32_to_cpu(op_head->oh_len);
+> -	    /* We've lost context; don't complain if next one looks bad too */
+> -	    lost_context = 1;
+> -	    continue;
+> -	}
 > -
-> -	return in_f;
-> -}
+> -	if (be32_to_cpu(op_head->oh_len) != 0) {
+> -		skip = xlog_print_region(log, &ptr, op_head, &i, num_ops,
+> -				continued);
+> -		if (skip == -1) {
+> -			if (bad_hdr_warn && !lost_context) {
+> -				fprintf(stderr,
+> -			_("%s: unknown log operation type (%x)\n"),
+> -					progname, *(unsigned short *)ptr);
+> -				if (print_exit) {
+> -					free(buf);
+> -					return BAD_HEADER;
+> -				}
+> -			} else {
+> -				printf(
+> -			_("Left over region from split log item\n"));
+> -			}
+> -			skip = 0;
+> -			ptr += be32_to_cpu(op_head->oh_len);
+> -			lost_context = 0;
+> -		}
+> -
+> -		if (skip)
+> -			xlog_print_add_to_trans(be32_to_cpu(op_head->oh_tid), skip);
+> +    for (i = 0; i < num_ops; i++) {
+> +	if (!xlog_print_op(log, &ptr, &i, num_ops, bad_hdr_warn,
+> +			&lost_context)) {
+> +		free(buf);
+> +		return BAD_HEADER;
+>  	}
+>      }
+>      printf("\n");
 > -- 
 > 2.47.3
-> 
 > 
 
 -- 
