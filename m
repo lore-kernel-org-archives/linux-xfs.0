@@ -1,147 +1,146 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5078A303A08
-	for <linux-xfs@vger.kernel.org>; Mon,  1 Dec 2025 10:31:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD90D2EA498
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Dec 2025 11:50:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764585093; cv=none; b=sbpvZNxMzmUjrI1dXUa6G0SFseBLlcMtro+JSQVBioPE2bxN7f3pZ1pWhxGUBleQilbn8xE1oZqQWXCiWE62O4pfickMKossCxYY/7cp/Hy9wr95hVUBxlwm4MP8hNYRmfvN0mVhpivhJYe1lapCwcF1ei57ij2z25ETnIisBDQ=
+	t=1764589800; cv=none; b=S4Re8qp/yBqW0cRr8tuq6FNvyQv3l6RrtDxHhrHxbrIj077X7G76tiyWqikQEDGbVlXIsYXckUzJnq1nci6Na8hMnOJZUI6xr3wxP6jLSqVjDxPKelNwA5LF6CgYe6RZhBpl5HyDIp/h5ekjeDIC13eCdP3Jx7N3LMstEnmByFQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764585093; c=relaxed/simple;
-	bh=oAKELPmBA2BqrK0o9QFtBWPRSKg+tCcCo1sXueOdRDE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ib3Lryb7G5sMwPUbEEhypfyNTWmcoCokg4da2n2NPzvw6kioS2OQNga9Lo8ogiG4nYMkFTcXk1PRZhTw0ZcDbmYBswzVXicuwxlPU+yiuY3i5x+2fugz/OOLoWL7KJB99fPiRH+82PUl5h0cqizyeRTMLzed8+uEyPm5HrLRGH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DKwBQ+kx; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=fMxYKy3c; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1764589800; c=relaxed/simple;
+	bh=2yElMjbej8QtTmYAIgw+gOpTHLGeBrUOygcKAPGU0VY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=fnF3DoPowEnP590iiwW9+CmqXbOyoW6OtLpDXshn6uZ93c+OicGhpzazX91GGyvllmP358wt0XnIm56BJFUQOcN1LJ0rkrP+i33xsAtjLPVpI7JGjxKAx+Po+voqVdUnBeocxrsPctm1Q2+Ob3t/3kOlJDGwVrkECWYHRPUr91A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oSe7SSmV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DKwBQ+kx";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="fMxYKy3c"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1764585090;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XepCzKXSZv6JjslqxB2za4xngOadSy78tcQeBtMRexk=;
-	b=DKwBQ+kxeZbiHRbCMiLmH1/AsEZKyLuCzzWwfc+PkGVIunWLEIWTCTNOTzn3vp+PM2Zf5o
-	Fly9NEuBqYiJ/Be4lPNam2lPcT4dQWx6K5eY+sBsBagCCtxYmwAFqTEHehyFY3U1v+YsEo
-	tH18tzg0CNwbuq9Rx42aZInd1xWlqa0=
-Received: from mail-yw1-f198.google.com (mail-yw1-f198.google.com
- [209.85.128.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-277-Ig4nA6vBMMGFlHuDXXMHWA-1; Mon, 01 Dec 2025 05:31:29 -0500
-X-MC-Unique: Ig4nA6vBMMGFlHuDXXMHWA-1
-X-Mimecast-MFC-AGG-ID: Ig4nA6vBMMGFlHuDXXMHWA_1764585088
-Received: by mail-yw1-f198.google.com with SMTP id 00721157ae682-7866c632fd6so52465037b3.1
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Dec 2025 02:31:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1764585088; x=1765189888; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=XepCzKXSZv6JjslqxB2za4xngOadSy78tcQeBtMRexk=;
-        b=fMxYKy3cJ4tark0sL7K9JtbCqEZ7KVjErUVli+G0PvJvDU606y5THy+ZZmWTznga9J
-         CAeaT/xHvrJjzjYrEdRjOU25DKMJH/a/LW+JTEDL8Aahv/E7trigGSfB5NBwMtdny5Ul
-         wDJ6ypjmjxGwX6ARTCg36NFxz4kSir+yWtLkGBWqSS9ahQS988VYsrgEuSScWeEHvSGJ
-         GyaLbTv7DnoOBzLxPHlgoUGJ+7Nj9Xko4uhAoUV6Uoq5z6r+kkjYserZ7v/SY9UTONsa
-         fbrBvjAK7FtKcoamaocUBJ2ZMOyb/J78cYWbjMFQQO6XuXD9r7hrY9Td9m9QjhARqyUs
-         vPrg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764585088; x=1765189888;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=XepCzKXSZv6JjslqxB2za4xngOadSy78tcQeBtMRexk=;
-        b=d9XDXh2yZOxIEia2zKbbM/J9vBDzK2y67SI7dvx/TeVas2upHLpktIPHnwoHN9REJg
-         Wh9hfPLtYdkJd51QNHopSpn+FbYKgAia+dLr1zsKDTRZIZvbraFOoTsFStzt7UBlJAUm
-         3guD1dOBFk7bvzUBYGZg5SyxKr3rM/wNh/IzB5VFClYcVwlB+CeWHf4coEUJuNnkn4lm
-         zgDjLwhlCJuCPEcAXu4MyYzfymm3vU1GzC6naKCM2YCIyxDYIzWJG4jmqXu+29b4hir+
-         M8LWOeFMoUmE8+oAwlS0yEfLKhVTN+Ctd4/5rn/RdkjEUt2Bi6cZrzWVGXoAYWQwNY/4
-         NWZA==
-X-Forwarded-Encrypted: i=1; AJvYcCUdsHHgi2pUsXUUxNVBxJCoOvBVcOU3eGiKAcllv7E5zk8RzF/NbwFim1r749Ur+c5C3wsfkh0+EJc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyxgIy2HWw2OVYPJ4vJ4Vx7TViMxY8GbU6/R7UkBU+SHItDWjPE
-	QYhrER1ljZREhBsUCiekpPhTS//Y+I/Zm98F1uCoPLO00/5Iy3+AwQCxak1OrtZJA/U4S6/62Dq
-	CeyibJZZEQ+EGykdeBgK9RWz+qIpvU7muTYednwZZOZ7hEy7hC6ZnqJy6NDZZMPu1pmaTZw5fDj
-	XBdR7irwwCPV27Zdc1Sh6bBAx4qAy4jWAalH1S5KO/uFzN3Io=
-X-Gm-Gg: ASbGncs9Z+aJVYfcZgJON6uBxMCNMxhRxUmkql1ENT/Qra1Yv+BG999wpvHjLEStxzn
-	uOGrfSc1pKC4aLRUfCyHfmzv+jw5xmEyxuhEfCqpqZjONpLiAPtBlNs6Ph2Ho5hepI/UEyrb5bR
-	IynsX2V+XPQEaxpNrksv8qbgQImdUbOQ57gEC0e6xHgefbEucJdieFsEA1xlkXz0oC
-X-Received: by 2002:a05:690c:6f8e:b0:77f:a301:4634 with SMTP id 00721157ae682-78ab6f19dbemr204012267b3.45.1764585088403;
-        Mon, 01 Dec 2025 02:31:28 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHv5zzmMokroNvK6hxRqePUK2sUy1kyOakdwZXoQ77gSpCZtxQfALMHCo45aGmJsVIK/6txSFE4cjS1pCWEh08=
-X-Received: by 2002:a05:690c:6f8e:b0:77f:a301:4634 with SMTP id
- 00721157ae682-78ab6f19dbemr204012007b3.45.1764585088053; Mon, 01 Dec 2025
- 02:31:28 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oSe7SSmV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECA67C4CEF1;
+	Mon,  1 Dec 2025 11:49:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764589800;
+	bh=2yElMjbej8QtTmYAIgw+gOpTHLGeBrUOygcKAPGU0VY=;
+	h=Date:From:To:Cc:Subject:From;
+	b=oSe7SSmVvJH3VGXzr+ukEB6cSuXWFG6UYiP0bzKh8rTkGqVob4z7kD9DEXHeR4bLW
+	 YqRyMitvNHS7ntrhAlCymGU8p24eDPniHqx68j2jz2fBpVkRGYaG/vXczIJbya5gBr
+	 9pw9eqOtGCJRXmZzJcZ9at+BsDV/MuC7qMCJJR9dEjZL85ZnE41m2pwfhMkFqAJLnM
+	 RWnJSHBvf+c0ehpu/vM8sNL+AIm5YPFG/PEI418gBa1MwKAME7A/YiLkUZ+sK/rB3j
+	 hn0GmrVOlGyItWirqH+WtHbwGMtftYScxBsFmLvFo9FdEeNmUT/8GYo9pqMapvZITH
+	 rh42jds07J6/w==
+Date: Mon, 1 Dec 2025 12:49:56 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: torvalds@linux-foundation.org
+Cc: linux-xfs@vger.kernel.org
+Subject: [GIT PULL] XFS: New code for v6.19
+Message-ID: <2lje5mt266gixlqrnqfnkrmcxwjdnu72emnz2gywn2hs5r4z7r@zuyoxysv2uxq>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251128083219.2332407-1-zhangshida@kylinos.cn>
- <20251128083219.2332407-7-zhangshida@kylinos.cn> <CANubcdUtncH7OxYg0+4ax0v9OmbuV337AM5DQHOpsBVa-A1cbA@mail.gmail.com>
-In-Reply-To: <CANubcdUtncH7OxYg0+4ax0v9OmbuV337AM5DQHOpsBVa-A1cbA@mail.gmail.com>
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Mon, 1 Dec 2025 11:31:17 +0100
-X-Gm-Features: AWmQ_bnf2BodBLtXxgPiuMZc2dFAC9eikQedB20yLRtD3dfyefefH-ZDvfFzYn8
-Message-ID: <CAHc6FU5DAhrRKyYjuZ+qF84rCsUDiPo3iPoZ67NvN-pbunJH4A@mail.gmail.com>
-Subject: Re: [PATCH v2 06/12] gfs2: Replace the repetitive bio chaining code patterns
-To: Stephen Zhang <starzhangzsd@gmail.com>
-Cc: Johannes.Thumshirn@wdc.com, hch@infradead.org, gruenba@redhat.com, 
-	ming.lei@redhat.com, Gao Xiang <hsiangkao@linux.alibaba.com>, 
-	linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, 
-	nvdimm@lists.linux.dev, virtualization@lists.linux.dev, 
-	linux-nvme@lists.infradead.org, gfs2@lists.linux.dev, ntfs3@lists.linux.dev, 
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	zhangshida@kylinos.cn
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On Sat, Nov 29, 2025 at 3:48=E2=80=AFAM Stephen Zhang <starzhangzsd@gmail.c=
-om> wrote:
-> zhangshida <starzhangzsd@gmail.com> =E4=BA=8E2025=E5=B9=B411=E6=9C=8828=
-=E6=97=A5=E5=91=A8=E4=BA=94 16:33=E5=86=99=E9=81=93=EF=BC=9A
-> >
-> > From: Shida Zhang <zhangshida@kylinos.cn>
-> >
-> > Replace duplicate bio chaining logic with the common
-> > bio_chain_and_submit helper function.
-> >
-> > Signed-off-by: Shida Zhang <zhangshida@kylinos.cn>
-> > ---
-> >  fs/gfs2/lops.c | 3 +--
-> >  1 file changed, 1 insertion(+), 2 deletions(-)
-> >
-> > diff --git a/fs/gfs2/lops.c b/fs/gfs2/lops.c
-> > index 9c8c305a75c..0073fd7c454 100644
-> > --- a/fs/gfs2/lops.c
-> > +++ b/fs/gfs2/lops.c
-> > @@ -487,8 +487,7 @@ static struct bio *gfs2_chain_bio(struct bio *prev,=
- unsigned int nr_iovecs)
-> >         new =3D bio_alloc(prev->bi_bdev, nr_iovecs, prev->bi_opf, GFP_N=
-OIO);
-> >         bio_clone_blkg_association(new, prev);
-> >         new->bi_iter.bi_sector =3D bio_end_sector(prev);
-> > -       bio_chain(new, prev);
-> > -       submit_bio(prev);
-> > +       bio_chain_and_submit(prev, new);
->
-> This one should also be dropped because the 'prev' and 'new' are in
-> the wrong order.
+Hello Linus,
 
-Ouch. Thanks for pointing this out.
+Could you please pull patches included in the tag below?
 
-> Thanks,
-> Shida
->
-> >         return new;
-> >  }
-> >
-> > --
-> > 2.34.1
-> >
->
+For 6.19, there are no major changes in xfs. This pull-request contains
+mostly some code cleanups, a few bug fixes and documentatino update.
+Highlights are:
+	- Quota locking cleanup
+	- Getting rid of old xlog_in_core_2_t type
 
-Andreas
 
+An attempt merge against your current TOT has been successful.
+
+Thanks,
+Carlos
+
+"The following changes since commit d8a823c6f04ef03e3bd7249d2e796da903e7238d:
+
+  xfs: free xfs_busy_extents structure when no RT extents are queued (2025-11-06 08:59:19 +0100)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-merge-6.19
+
+for you to fetch changes up to 69ceb8a2d6665625d816fcf8ccd01965cddb233e:
+
+  docs: remove obsolete links in the xfs online repair documentation (2025-11-27 16:09:14 +0100)
+
+----------------------------------------------------------------
+xfs: new code for v6.19
+
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+
+----------------------------------------------------------------
+Christoph Hellwig (31):
+      xfs: add a xfs_groups_to_rfsbs helper
+      xfs: don't leak a locked dquot when xfs_dquot_attach_buf fails
+      xfs: make qi_dquots a 64-bit value
+      xfs: don't treat all radix_tree_insert errors as -EEXIST
+      xfs: remove xfs_dqunlock and friends
+      xfs: use a lockref for the xfs_dquot reference count
+      xfs: remove xfs_qm_dqput and optimize dropping dquot references
+      xfs: consolidate q_qlock locking in xfs_qm_dqget and xfs_qm_dqget_inode
+      xfs: xfs_qm_dqattach_one is never called with a non-NULL *IO_idqpp
+      xfs: fold xfs_qm_dqattach_one into xfs_qm_dqget_inode
+      xfs: return the dquot unlocked from xfs_qm_dqget
+      xfs: remove q_qlock locking in xfs_qm_scall_setqlim
+      xfs: push q_qlock acquisition from xchk_dquot_iter to the callers.
+      xfs: move q_qlock locking into xchk_quota_item
+      xfs: move q_qlock locking into xqcheck_compare_dquot
+      xfs: move quota locking into xqcheck_commit_dquot
+      xfs: move quota locking into xrep_quota_item
+      xfs: move xfs_dquot_tree calls into xfs_qm_dqget_cache_{lookup,insert}
+      xfs: reduce ilock roundtrips in xfs_qm_vop_dqalloc
+      xfs: add a XLOG_CYCLE_DATA_SIZE constant
+      xfs: add a on-disk log header cycle array accessor
+      xfs: don't use xlog_in_core_2_t in struct xlog_in_core
+      xfs: cleanup xlog_alloc_log a bit
+      xfs: remove a very outdated comment from xlog_alloc_log
+      xfs: remove xlog_in_core_2_t
+      xfs: remove the xlog_rec_header_t typedef
+      xfs: remove l_iclog_heads
+      xfs: remove the xlog_in_core_t typedef
+      xfs: remove the unused bv field in struct xfs_gc_bio
+      xfs: use zi more in xfs_zone_gc_mount
+      xfs: move some code out of xfs_iget_recycle
+
+Darrick J. Wong (1):
+      docs: remove obsolete links in the xfs online repair documentation
+
+Hans Holmberg (1):
+      xfs: remove xarray mark for reclaimable zones
+
+ .../filesystems/xfs/xfs-online-fsck-design.rst     | 236 +--------------------
+ fs/xfs/libxfs/xfs_group.h                          |   9 +
+ fs/xfs/libxfs/xfs_log_format.h                     |  38 ++--
+ fs/xfs/libxfs/xfs_ondisk.h                         |   6 +-
+ fs/xfs/libxfs/xfs_quota_defs.h                     |   4 +-
+ fs/xfs/libxfs/xfs_rtgroup.h                        |  14 +-
+ fs/xfs/scrub/quota.c                               |   8 +-
+ fs/xfs/scrub/quota_repair.c                        |  18 +-
+ fs/xfs/scrub/quotacheck.c                          |  11 +-
+ fs/xfs/scrub/quotacheck_repair.c                   |  21 +-
+ fs/xfs/xfs_dquot.c                                 | 143 ++++++-------
+ fs/xfs/xfs_dquot.h                                 |  22 +-
+ fs/xfs/xfs_dquot_item.c                            |   6 +-
+ fs/xfs/xfs_icache.c                                |  31 ++-
+ fs/xfs/xfs_log.c                                   | 206 +++++++-----------
+ fs/xfs/xfs_log_cil.c                               |   6 +-
+ fs/xfs/xfs_log_priv.h                              |  33 ++-
+ fs/xfs/xfs_log_recover.c                           |  45 ++--
+ fs/xfs/xfs_qm.c                                    | 154 ++++----------
+ fs/xfs/xfs_qm.h                                    |   2 +-
+ fs/xfs/xfs_qm_bhv.c                                |   4 +-
+ fs/xfs/xfs_qm_syscalls.c                           |  10 +-
+ fs/xfs/xfs_quotaops.c                              |   2 +-
+ fs/xfs/xfs_trace.h                                 |   8 +-
+ fs/xfs/xfs_trans_dquot.c                           |  18 +-
+ fs/xfs/xfs_zone_alloc.c                            |  26 ++-
+ fs/xfs/xfs_zone_gc.c                               |  14 +-
+ fs/xfs/xfs_zone_priv.h                             |   1 +
+ fs/xfs/xfs_zone_space_resv.c                       |  10 +-
+ 29 files changed, 363 insertions(+), 743 deletions(-)"
