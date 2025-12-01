@@ -1,75 +1,92 @@
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E83733468A;
-	Mon,  1 Dec 2025 17:08:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B24131813F
+	for <linux-xfs@vger.kernel.org>; Mon,  1 Dec 2025 18:00:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764608892; cv=none; b=SS83MYQ3XFL0X6sQHYxcuCmb1/FSKkLWrud0Kz2LOtjuP8s2QtxBm8x0EB1iH90ASugqFdoA6dQMf2QnsJqeTMRs/22ygTiEyV6I9a+gmDx/Y/b56W1FFTeUeuB06mkeu/7xJp+ADHl1yvlskToXWpWdcTNrN4QZFytKCMBMP7A=
+	t=1764612032; cv=none; b=JjtRmyMoYXPKZ8zz1s5LeNZUtLpafQpoj5jbTrpH0hPYGWbpo6pVJHn++WgkgylVxC32Wh6Z24UsksOJ45m53gfPqBLZlt9R7L685p+n78u0SqcNzrD1unDhKOOZza1qY6jEoQ7e6QC7GMyhu92MnIt3ZcpZGfrHDUr3whSKJpk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764608892; c=relaxed/simple;
-	bh=c1hVLffTbOic9SRKj/Vx/1bE1OkZBkKNJY7xX1j8I3g=;
+	s=arc-20240116; t=1764612032; c=relaxed/simple;
+	bh=oS0xVsxpGDFHtACUzeVmsste6ayGHLvpEVwQrrTMru0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=POLJ7GqLU0xad/kS7ZBYwoaCtaRRMzoPMX64BPxA+oAmnqZ0ArJd8KF/WiRHAGdh9WmWzYzbuXcdGIytRXkS9IJNwvBLhU6wWpsSRAx4WJ31CJtLPlEpMFunyNQBoUAloCFrGF8eRgJ+Te5OBoK/MbwofYifLKwOk5rc+QCldP0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=m6tHBhvO; arc=none smtp.client-ip=62.89.141.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
+	 Content-Type:Content-Disposition:In-Reply-To; b=UdTT+vXe28/Vt8uD6ZO5DhWTud6o4TojSZMHzUxfdENQRwpx0Aj1jwV8LINjveFoItzgmkWV50hiFZgTmSQ/oQlu+H5eIu+59E3fb4PDo+Gs5l00HrYiBmzz3K3QkOi7MB+28SjWdmonGZCmpVaCAci5lTmQAWb8A0cvI2hkDpE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=X/4IJQOP; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=cs7yYEKe; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="m6tHBhvO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=chyrhP448TKCA7mjR+pn/4FRynfEGDb/eEOSGrjCi48=; b=m6tHBhvODjORIENDeypTobyuUz
-	dAfJPXFwkttmrEIudNiC+eJ++pHJAehlDyTlgb+ujjJWYhGYSpXw0zgCrIZdzySovjHT9cA2lZ7cz
-	jzkoihgeSwKZL/QyryX0gMwRMsHu9fIKtRAIcuexFdlw2rHqKpYf1jthXT46t235cSaPO8XhxuaTe
-	UAahQWu4SoOIcWhhn/JZl9xBFfE56iKVrlHQOW3w03FPhCGJmpbu8/gQLozFObDI4/H9EJOOIPMa2
-	/2Q76hpj/QtV0dHTpaDtoXdZQnJPZ4t9wMlA/K+oYAUz07/WLzmLSKsNCsBoZqTGtGNhzD+M8DpUC
-	vLmNTgIw==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.99 #2 (Red Hat Linux))
-	id 1vQ7Nl-000000041Kz-21Ah;
-	Mon, 01 Dec 2025 17:08:13 +0000
-Date: Mon, 1 Dec 2025 17:08:13 +0000
-From: Al Viro <viro@zeniv.linux.org.uk>
-To: Miklos Szeredi <miklos@szeredi.hu>
-Cc: Amir Goldstein <amir73il@gmail.com>, NeilBrown <neil@brown.name>,
-	Christian Brauner <brauner@kernel.org>,
-	Val Packett <val@packett.cool>, Jan Kara <jack@suse.cz>,
-	linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@kernel.org>,
-	Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
-	David Howells <dhowells@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>, Tyler Hicks <code@tyhicks.com>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Olga Kornievskaia <okorniev@redhat.com>,
-	Dai Ngo <Dai.Ngo@oracle.com>, Namjae Jeon <linkinjeon@kernel.org>,
-	Steve French <smfrench@gmail.com>,
-	Sergey Senozhatsky <senozhatsky@chromium.org>,
-	Carlos Maiolino <cem@kernel.org>,
-	John Johansen <john.johansen@canonical.com>,
-	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
-	"Serge E. Hallyn" <serge@hallyn.com>,
-	Stephen Smalley <stephen.smalley.work@gmail.com>,
-	Ondrej Mosnacek <omosnace@redhat.com>,
-	Mateusz Guzik <mjguzik@gmail.com>,
-	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
-	Stefan Berger <stefanb@linux.ibm.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-kernel@vger.kernel.org,
-	netfs@lists.linux.dev, ecryptfs@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org,
-	linux-cifs@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-security-module@vger.kernel.org, selinux@vger.kernel.org
-Subject: Re: [PATCH] fuse: fix conversion of fuse_reverse_inval_entry() to
- start_removing()
-Message-ID: <20251201170813.GH3538@ZenIV>
-References: <20251113002050.676694-1-neilb@ownmail.net>
- <20251113002050.676694-7-neilb@ownmail.net>
- <6713ea38-b583-4c86-b74a-bea55652851d@packett.cool>
- <176454037897.634289.3566631742434963788@noble.neil.brown.name>
- <CAOQ4uxjihcBxJzckbJis8hGcWO61QKhiqeGH+hDkTUkDhu23Ww@mail.gmail.com>
- <20251201083324.GA3538@ZenIV>
- <CAJfpegs+o01jgY76WsGnk9j41LS5V0JQSk--d6xsJJp4VjTh8Q@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="X/4IJQOP";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="cs7yYEKe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1764612029;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RSeRcYTKm0XJxZxPIKmEp5JgZXZRLHyitAoyvtucrgY=;
+	b=X/4IJQOPDzP2qvqig79gXNx6QoKG/DvnqA1kxrZ/a/b+5kJJ4HjUXdhJSWAiqoVBnIxq/7
+	2yoK1RUGLiAHOJ6TxvvYeS/UpU+Md2KZocDUUWc3A27sXvOFiI2K/nxclKGsayqw3T5dG0
+	+6zkVx1dObw+p1PXuyMMkHAcJDNEEhE=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-583-O2EsWrmPNh2YIuIBM9yi6Q-1; Mon, 01 Dec 2025 13:00:27 -0500
+X-MC-Unique: O2EsWrmPNh2YIuIBM9yi6Q-1
+X-Mimecast-MFC-AGG-ID: O2EsWrmPNh2YIuIBM9yi6Q_1764612026
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4775f51ce36so35594915e9.1
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Dec 2025 10:00:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1764612026; x=1765216826; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=RSeRcYTKm0XJxZxPIKmEp5JgZXZRLHyitAoyvtucrgY=;
+        b=cs7yYEKehTdzU7MPb1xNPH2vQxyXa0k/xFmkQmilZg8DOV06Zw/YXdDNwdJnk3UuOR
+         l/nj2X1ZKj5OqZm2rNfHkeRhD7Jf1W8mr5SxmViJSB0DqP0poXONy+7OFvZ7vNXPvP4U
+         ANjxF8mrM4xyCF+vcyWet43XV8V7r/9GlQeC8CAxquXxbh0k0m3D2Bbw7cHe3ZkzOn68
+         boRwGnY5XhNvP9wIPxVv2v1+xeb0PsKZy08nczG+EaWMbMBekM8KWBiZ54o08QlbOCc/
+         lGKYtG1zdpUAj9/lIqTh10l7Fjlc1uhZYjh/23PmiEIIzkCFppZ7Yg8O1SfpiBkfHrj+
+         xmAA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1764612026; x=1765216826;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=RSeRcYTKm0XJxZxPIKmEp5JgZXZRLHyitAoyvtucrgY=;
+        b=lcjRBSAJFyNU5DHv/qxe+FDLQncn4fkYgNhhuy03E8n/NgD0eXkCO3AH7/f0FwWm98
+         Dn88+efUI45/cwE0dMvxUM2bjfiRCaUbxhSvf+quA2ZOXqLpU89GyWALPq//xymAZ3FN
+         kSliVrDt/VyeRfYUN0cynb6dFG+ys+itgfqa1Ma3FonpjV83Or2z8etiR0iCJ9Cmm/Zw
+         4kBkS90ODC4pZ1RkIOOP6AY1o+KGaOlzsURUhY209Jgor/qpR1Rrpkc8MQ7+IoBMbqPF
+         7a5Qn2L7nKmV49yytTOoroqbDWoGpB9jLxDhE4EXQE9MiTBncgrWqwhdJSzmA5+p5i8H
+         DCjQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVIyMITVuEWyklr+QArQmSuBHi2+w/77BzILqoMPVvZEGU/KOfUzetQf4pniBj+bzS6iV/eLL8ajoU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx2HPvP5swmMJwyRU12r7CR1G78dx/3R2pLaqF+Bvl611hHVyYu
+	pS2N0TQQVUSw2DUS7i8VPrvGIdK6buuHCjzfoYxK5Rgm+37otbG5XavtSrpCZ6T/1n8QLPTUPqp
+	D1lQ3ZmRsuk84H18aHxLG7HTUlRyxsWPMjaw3T358jMhgLBOOOBhhE2LvOJQC
+X-Gm-Gg: ASbGncunm7y/KazxFKTkrurPYCdEIp4vXqKbYmMBJ8L7FWScjea1Jo78Lj8jVQk/Ull
+	s2AqZVJoemY7/MZh3/XJVQbyPwCg/3Gg0/sjHz59x5piEHzGbJ2anFh28fh6jfNrDGXd66SG2qV
+	k8kk6qCZ7FyXZnUNNw04Hxh0+QxRLVVYM95nTNkU4mwg3iJuJl/U93vpplTf9dseRarWv4RBJ0W
+	TET3a6b3zx5Z+sbnWWyn3YZEaV+KWpn1o9HSu82Y+omaUyGuQsJrCEET7JfyX+GvtEhRNZDyH+u
+	P1rZfucViwFIbhziVSyhs6YYYi8kcvB++PMtu+g073fwoKmlU6i+PGdlY8Gl5Fatr8YBmOjf5hE
+	=
+X-Received: by 2002:a05:600c:1c20:b0:477:9d54:58d7 with SMTP id 5b1f17b1804b1-477c1131d60mr421563885e9.29.1764612026252;
+        Mon, 01 Dec 2025 10:00:26 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGmG6Pm6RDn+BDaktwQRj9S7Pu5EKSixnesF7purvqL8+UdNz5CArjG1RwQB7xSc9qpTfcZbg==
+X-Received: by 2002:a05:600c:1c20:b0:477:9d54:58d7 with SMTP id 5b1f17b1804b1-477c1131d60mr421563205e9.29.1764612025604;
+        Mon, 01 Dec 2025 10:00:25 -0800 (PST)
+Received: from thinky ([217.30.74.39])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4791164ceecsm254141865e9.14.2025.12.01.10.00.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 01 Dec 2025 10:00:25 -0800 (PST)
+Date: Mon, 1 Dec 2025 18:59:53 +0100
+From: Andrey Albershteyn <aalbersh@redhat.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org, 
+	Neal Gompa <neal@gompa.dev>
+Subject: Re: [PATCHSET V2 2/2] xfsprogs: autonomous self healing of
+ filesystems in Rust
+Message-ID: <qssqvaog4s3y3d7rgncahookkxiswzqiu5kx5jveulj32apgar@zy7nvw6haymm>
+References: <20251022235646.GO3356773@frogsfrogsfrogs>
+ <176117748158.1029045.18328755324893036160.stgit@frogsfrogsfrogs>
+ <20251104224806.GN196370@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -78,52 +95,160 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJfpegs+o01jgY76WsGnk9j41LS5V0JQSk--d6xsJJp4VjTh8Q@mail.gmail.com>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <20251104224806.GN196370@frogsfrogsfrogs>
 
-On Mon, Dec 01, 2025 at 03:03:08PM +0100, Miklos Szeredi wrote:
-> On Mon, 1 Dec 2025 at 09:33, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> >
-> > On Mon, Dec 01, 2025 at 09:22:54AM +0100, Amir Goldstein wrote:
-> >
-> > > I don't think there is a point in optimizing parallel dir operations
-> > > with FUSE server cache invalidation, but maybe I am missing
-> > > something.
-> >
-> > The interesting part is the expected semantics of operation;
-> > d_invalidate() side definitely doesn't need any of that cruft,
-> > but I would really like to understand what that function
-> > is supposed to do.
-> >
-> > Miklos, could you post a brain dump on that?
+On 2025-11-04 14:48:06, Darrick J. Wong wrote:
+> On Wed, Oct 22, 2025 at 05:00:20PM -0700, Darrick J. Wong wrote:
+> > Hi all,
+> > 
+> > The initial implementation of the self healing daemon is written in
+> > Python.  This was useful for rapid prototyping, but a more performant
+> > and typechecked codebase is valuable.  Write a second implementation in
+> > Rust to reduce event processing overhead and library dependence.  This
+> > could have been done in C, but I decided to use an environment with
+> > somewhat fewer footguns.
 > 
-> This function is supposed to invalidate a dentry due to remote changes
-> (FUSE_NOTIFY_INVAL_ENTRY).  Originally it was supplied a parent ID and
-> a name and called d_invalidate() on the looked up dentry.
+> Having discarded the json output format last week, I decided to rewrite
+> the Python version of xfs_healer in C partly out of curiosity and partly
+> because I didn't see much advantage to having a Python script to call
+> ioctls and interpret C structs.  After removing the json support from
+> the Rust version, the release binary sizes are:
 > 
-> Then it grew a variant (FUSE_NOTIFY_DELETE) that was also supplied a
-> child ID, which was matched against the looked up inode.  This was
-> commit 451d0f599934 ("FUSE: Notifying the kernel of deletion."),
-> Apparently this worked around the fact that at that time
-> d_invalidate() returned -EBUSY if the target was still in use and
-> didn't unhash the dentry in that case.
+> -rwxr-xr-x root/root   1051096 2025-11-04 14:25 ./usr/libexec/xfsprogs/xfs_healer
+> -rwxr-xr-x root/root     43904 2025-11-04 14:25 ./usr/libexec/xfsprogs/xfs_healer.orig
 > 
-> That was later changed by commit bafc9b754f75 ("vfs: More precise
-> tests in d_invalidate") to unconditionally unhash the target, which
-> effectively made FUSE_NOTIFY_INVAL_ENTRY and FUSE_NOTIFY_DELETE
-> equivalent and the code in question unnecessary.
-> 
-> For the future, we could also introduce FUSE_NOTIFY_MOVE, that would
-> differentiate between a delete and a move, while
-> FUSE_NOTIFY_INVAL_ENTRY would continue to be the common (deleted or
-> moved) notification.
+> This is a nearly 24x size increase to have Rust.  I'm a n00b Rustacean
 
-Then as far as VFS is concerned, it's an equivalent of "we'd done
-a dcache lookup and revalidate told us to bugger off", which does
-*not* need locking the parent - the same sequence can very well
-happen without touching any inode locks.
+cargo build --release? (optimized + no debug info)
 
-IOW, from the point of view of locking protocol changes that's not
-a removal at all.
+> and a veteran C stuckee, but between that and the difficulties of
+> integrating two languages and two build systems together, I don't think
+> it's worth the trouble to keep the Rust code.  I've made a final push
+> with the Rust code to my dev repo for the sake of posterity:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-monitoring-rust_2025-11-04
+> 
+> But I'm deleting this from my tree after I send this email.
 
-Or do you need them serialized for fuse-internal purposes?
+:'(
+
+> 
+> That said, I quite enjoyed using this an excuse to familiarize myself
+> with how to write bad Rust code.  Using traits and the newtype pattern
+> for geometric units (e.g. xfs_fsblock_t) was very helpful in keeping
+> unit conversions understandable; and having to think about object access
+> and lifetimes helped me produce a stable prototype very quickly.  It
+> also helps that rustc errors are far more helpful than gcc.
+> 
+> The only thing I didn't particularly like is the forced coordination for
+> shared resources that already coordinate threads -- you can't easily
+> have multiple readers sharing an open fd, even if that magic fd only
+> emits struct sized objects and takes i_rwsem exclusively to prevent
+> corruption problems.
+> 
+> Dealing with cargo for a distro package build was nightmarish --
+> hermetically sealed build systems (you want this) can't access crates.io
+> which means that I as the author had to be careful only to use crate
+> packages that are in EPEL or Debian stable, and to tell cargo only to
+> look on the local filesystem.  So I guess I now have experience in that,
+> should anyone want to know how to do that.
+> 
+> (Also, how do you do i18n in Rust programs?  gettext???)
+> 
+> --D
+> 
+> > If you're going to start using this code, I strongly recommend pulling
+> > from my git trees, which are linked below.
+> > 
+> > This has been running on the djcloud for months with no problems.  Enjoy!
+> > Comments and questions are, as always, welcome.
+> > 
+> > --D
+> > 
+> > xfsprogs git tree:
+> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-monitoring-rust
+> > ---
+> > Commits in this patchset:
+> >  * xfs_healer: start building a Rust version
+> >  * xfs_healer: enable gettext for localization
+> >  * xfs_healer: bindgen xfs_fs.h
+> >  * xfs_healer: define Rust objects for health events and kernel interface
+> >  * xfs_healer: read binary health events from the kernel
+> >  * xfs_healer: read json health events from the kernel
+> >  * xfs_healer: create a weak file handle so we don't pin the mount
+> >  * xfs_healer: fix broken filesystem metadata
+> >  * xfs_healer: check for fs features needed for effective repairs
+> >  * xfs_healer: use getparents to look up file names
+> >  * xfs_healer: make the rust program check if kernel support available
+> >  * xfs_healer: use the autofsck fsproperty to select mode
+> >  * xfs_healer: use rc on the mountpoint instead of lifetime annotations
+> >  * xfs_healer: use thread pools
+> >  * xfs_healer: run full scrub after lost corruption events or targeted repair failure
+> >  * xfs_healer: use getmntent in Rust to find moved filesystems
+> >  * xfs_healer: validate that repair fds point to the monitored fs in Rust
+> >  * debian/control: listify the build dependencies
+> >  * debian/control: pull in build dependencies for xfs_healer
+> > ---
+> >  healer/bindgen_xfs_fs.h          |    6 +
+> >  configure.ac                     |   84 ++++++++
+> >  debian/control                   |   30 +++
+> >  debian/rules                     |    3 
+> >  healer/.cargo/config.toml.system |    6 +
+> >  healer/Cargo.toml.in             |   37 +++
+> >  healer/Makefile                  |  143 +++++++++++++
+> >  healer/rbindgen                  |   57 +++++
+> >  healer/src/fsgeom.rs             |   41 ++++
+> >  healer/src/fsprops.rs            |  101 +++++++++
+> >  healer/src/getmntent.rs          |  117 +++++++++++
+> >  healer/src/getparents.rs         |  210 ++++++++++++++++++++
+> >  healer/src/healthmon/cstruct.rs  |  354 +++++++++++++++++++++++++++++++++
+> >  healer/src/healthmon/event.rs    |  122 +++++++++++
+> >  healer/src/healthmon/fs.rs       |  163 +++++++++++++++
+> >  healer/src/healthmon/groups.rs   |  160 +++++++++++++++
+> >  healer/src/healthmon/inodes.rs   |  142 +++++++++++++
+> >  healer/src/healthmon/json.rs     |  409 ++++++++++++++++++++++++++++++++++++++
+> >  healer/src/healthmon/mod.rs      |   47 ++++
+> >  healer/src/healthmon/samefs.rs   |   33 +++
+> >  healer/src/lib.rs                |   17 ++
+> >  healer/src/main.rs               |  390 ++++++++++++++++++++++++++++++++++++
+> >  healer/src/repair.rs             |  390 ++++++++++++++++++++++++++++++++++++
+> >  healer/src/util.rs               |   81 ++++++++
+> >  healer/src/weakhandle.rs         |  209 +++++++++++++++++++
+> >  healer/src/xfs_types.rs          |  292 +++++++++++++++++++++++++++
+> >  healer/src/xfsprogs.rs.in        |   33 +++
+> >  include/builddefs.in             |   13 +
+> >  include/buildrules               |    1 
+> >  m4/Makefile                      |    1 
+> >  m4/package_rust.m4               |  163 +++++++++++++++
+> >  31 files changed, 3851 insertions(+), 4 deletions(-)
+> >  create mode 100644 healer/bindgen_xfs_fs.h
+> >  create mode 100644 healer/.cargo/config.toml.system
+> >  create mode 100644 healer/Cargo.toml.in
+> >  create mode 100755 healer/rbindgen
+> >  create mode 100644 healer/src/fsgeom.rs
+> >  create mode 100644 healer/src/fsprops.rs
+> >  create mode 100644 healer/src/getmntent.rs
+> >  create mode 100644 healer/src/getparents.rs
+> >  create mode 100644 healer/src/healthmon/cstruct.rs
+> >  create mode 100644 healer/src/healthmon/event.rs
+> >  create mode 100644 healer/src/healthmon/fs.rs
+> >  create mode 100644 healer/src/healthmon/groups.rs
+> >  create mode 100644 healer/src/healthmon/inodes.rs
+> >  create mode 100644 healer/src/healthmon/json.rs
+> >  create mode 100644 healer/src/healthmon/mod.rs
+> >  create mode 100644 healer/src/healthmon/samefs.rs
+> >  create mode 100644 healer/src/lib.rs
+> >  create mode 100644 healer/src/main.rs
+> >  create mode 100644 healer/src/repair.rs
+> >  create mode 100644 healer/src/util.rs
+> >  create mode 100644 healer/src/weakhandle.rs
+> >  create mode 100644 healer/src/xfs_types.rs
+> >  create mode 100644 healer/src/xfsprogs.rs.in
+> >  create mode 100644 m4/package_rust.m4
+> > 
+> > 
+> 
+
+-- 
+- Andrey
+
