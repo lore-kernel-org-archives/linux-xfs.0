@@ -1,44 +1,93 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85CEC2750FB;
-	Tue,  2 Dec 2025 07:40:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E93222257E
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Dec 2025 08:40:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764661208; cv=none; b=Cbgd0IKWQ2+RXlwUplacfFC51M4/xLzyAFoARH2MUD4W5tjLBc28Zt8fpPGu/xwhjqXAGr7FbrOWb3G864W4eUcq0oo0HSgZLfqqoB1ZT/tfU1EN5p0Es4XZM7c9MXeHczzHw2Mrq19wAhhn3NCg1EV96aTieMAAEa3Nb0wxMTI=
+	t=1764664861; cv=none; b=Lxotgp0coPKoRIcCVOAwjrqfd5272Qc13vCv/l9oMBB/tUlwcwuYa5qIchL5tbmJwff/1XJaGVaJGer1pCdl0M7McISg8vvMEg6A9soFUk4ykUiWBfScHsAFVZSbK9emPiCSxLcOY5mRQBCGKy9XXnl1Xuj6vVptIsw63rIE25M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764661208; c=relaxed/simple;
-	bh=vNRWNeFN++o6MWfQsivgBx6V+hNRj8rCQjvYsNNquqY=;
+	s=arc-20240116; t=1764664861; c=relaxed/simple;
+	bh=urOl0/ilTRIE2ngNhcdXcQShDJ+rl7s9PhYPUw2FR64=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MXRpt0p4xFCK1J7+W/S25bYZNJL3/QTK627XYmWPd0MVRwrNtaN9gWQvtjAXkjXodfjsv3213YPG5evUDUECN5iWhY79+2w7lF8RAkXYcAKz0agc1/bv5VFPpzdCX3y4nA9rNwjqokYYus/+9Dtr3m7p1iMvaLFTGcSkWtSsV2U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LYbWXEhn; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=NiggjJF+O14wilLKhclPC4etHL8GM/HBJmwAqbNgthkptRgcAjb2HLyDotSB49GJR++9GSmbJY9xJQQB17g2eBGn+UhDDbPvJfYIM4QSV6qJoX/SX478qkYa08rXPVNcOPVY3vfjm/6rJdY6++eMr5GeY5XN0GOBL32ulbgFVug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Jecu5cZB; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=PbWNk3oC; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LYbWXEhn"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=V/qCHtHtrcVzrUL3MV29ZsNwC53A73HLWorl5hvGFHk=; b=LYbWXEhnXor92gNgj6EIm8mMmV
-	VRg3zIAoWNtiCQ9qTv69GczeSgNwD9TaeJTelcjHFvfBCu8vtWwlFY2ZIyH/CRLhYUV0kxUBtHL4y
-	F7j8rGp4T4+8nzpUx//7K/D2Pe3oK+mXfHrwx+DgP1GuJbqVsrPXUxPukQY29gVOd/w26S3DiA+SW
-	BUx5A0x/wATPzeEAC/aqaNntfZJ+82cKX2yhX06LN7w+0CRIa+PG9HhyskPyBRxoBXB8ZR649RbNW
-	sXEsofNlOdUO3oWVk+uq0jC+p+0gNyGYOixdSsCVRlHoL6Jxob16ng5EapS4ii8EsHmC1Z5Pm9+J6
-	PPhkPHmQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vQKzT-00000004xtA-3XYA;
-	Tue, 02 Dec 2025 07:40:03 +0000
-Date: Mon, 1 Dec 2025 23:40:03 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: syzbot <syzbot+789028412a4af61a2b61@syzkaller.appspotmail.com>
-Cc: cem@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-	mmpgouride@gmail.com, syzkaller-bugs@googlegroups.com,
-	Brian Foster <bfoster@redhat.com>
-Subject: Re: [syzbot] [xfs?] possible deadlock in xfs_icwalk_ag (3)
-Message-ID: <aS6X08yD5yK8d8EG@infradead.org>
-References: <689a0c9f.050a0220.51d73.009e.GAE@google.com>
- <692e499e.a70a0220.d98e3.0191.GAE@google.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Jecu5cZB";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="PbWNk3oC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1764664858;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ml3X7hjq+7HD8M4YETYZOG/CzOIrOxOEiDCQgxxaIVw=;
+	b=Jecu5cZBk+1Sdfyc71oHK1KKTHFfNjXBDM1yPi0g2p5UpriVzXV5rDK/3GnYX/QQ/GveCu
+	Sxiu1hK2C4a/ZQ2SBCSRnoJFAj78u4pR/kS92dOAtXef8hBBXjIam/XxxnSQFa+Qt8snzz
+	xnc0AqcyZ1/06p2JxrYg5tB6/ztYCl0=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-401-_RG4ctKJMYuBky6KoQqCug-1; Tue, 02 Dec 2025 03:40:57 -0500
+X-MC-Unique: _RG4ctKJMYuBky6KoQqCug-1
+X-Mimecast-MFC-AGG-ID: _RG4ctKJMYuBky6KoQqCug_1764664856
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-340c07119bfso8661435a91.2
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Dec 2025 00:40:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1764664856; x=1765269656; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Ml3X7hjq+7HD8M4YETYZOG/CzOIrOxOEiDCQgxxaIVw=;
+        b=PbWNk3oCEQLGgDlb7mxclaypl8kEzs+EwzJDXjUwCIZ7nDTCGI2TrZ5knElNyoT7UQ
+         n9Rp1ypBoR/ArgqW3lcXN42OoWh7Tg3cpndES1hNg6iHxpKTJKgBI3+1iFHhkRVSgqxn
+         /iG0CFc5R4gOdmm/yzc/mJgKDbBf4LLUObY9Jg/6WrPc2hq5Hm4mqUkuDS0FZ3IrDLxd
+         Kc8msTxVwZCWTZYOSYk59/GHvSv4h0yS7/u2ydqIvkAc1CJS8G5F7cc88PCx/G/MdtOB
+         WC3jKjpDUVZ+AlbNhu7+DHW5/Sv2QFfNwYt9cSN7dy/U20PSajZqIMbcQ02DO2a6THJh
+         9awA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1764664856; x=1765269656;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Ml3X7hjq+7HD8M4YETYZOG/CzOIrOxOEiDCQgxxaIVw=;
+        b=EtJJom6+bSyQgQGVlQkU6rs9KOSvzbinWVEEQi8rThMSiMZmJojYAOJeIyUfz6gbhN
+         Qw89N0NwigAn6g8GQVi7Ux95vYS4PNv0Ert8pOpSkQmDAc6PEv5Tx/ncNeyN7Mpy9Sny
+         8WWAUvQQcBLWCZb1IwzCIKZ0Uy74ztxYhR2ll/xWozGTMVMUL+8CzevGWmEXvk7yWlcr
+         sqPsjqRglOamovPAqarxpR943938DjG2dhHBRvXOOqcnnCqCuGSq0yydOYQXuLhosoY+
+         Erkh/rlOprncaBu4Va+1PFOk398RWhsaMn4PcGhB1CzKSXCyyu/I1t6khmrGYX0iSdSY
+         ZM3g==
+X-Forwarded-Encrypted: i=1; AJvYcCWlbR8VM90wYD4TQD67QalWyWw1C4Ev3IBMCgs8OsWH4oJ6exxJ0RDpELwrWrCcM41UC4yTsnBNiJY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YypKGOKD5148CxSmHxpox5y33rE2+eGv5iDOd0/eIiCMa5f8fo0
+	0CSbDLxxo8j6u6Dr0EH2IR9nfdjtioMhUnFcfsaflzKzIC6OIuy71ALaIwKI+m1rmrIrAguJOtH
+	gC40XQBq/gL4Hoe9qBZaD4TRNsr/n1QWCj76VHU46NRa2he3p2XS8DyTKwWiC6Q==
+X-Gm-Gg: ASbGnctykdwbhJxEHlMjBO58A4/+IPHYFSs0rLcYx5wXxYt9mFj0/g6PAJBH/s1s25W
+	9cjjCwbioHyKmwqfxzdRXyBP3Qk+UfF40TrV8Ay8Xvjd1FF5f2e++QG2Fkbwh7x9AxqIbje/W/X
+	AWoUsgF7O835nVZi/8u6AW9UetTgvUGZ0rwdASyJ5kZ5UTp0OL4qbuRTM1N5TDGxPnb+U9ywJSa
+	hYsR8ry7X0HD9Kcjap3P2nwyVxLaSrWPtiLrnhD67eB2k6DxWxEKZ4BN8FkFWuQ5T70CHk8KLCi
+	kLh92qmJRj+fS5PPwkuWSpx7S/wY2rcawumX4GGGKEfEtPkF2dPqMZa2KHD5nsees+7sQQUYHo0
+	lbtNzrX7/V4MMutf05TWaPTlLuyHpefsc7okBj6R1Gil2tTP6dw==
+X-Received: by 2002:a17:90b:5544:b0:340:2a59:45c6 with SMTP id 98e67ed59e1d1-34733e4ce8amr36382388a91.4.1764664855872;
+        Tue, 02 Dec 2025 00:40:55 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFsMo6NAYa764YoUSeOHsCNiq1tcsunmvQ9GSaPEJEpghKcA3ExolBwlnvc5cAVk92k4mJzng==
+X-Received: by 2002:a17:90b:5544:b0:340:2a59:45c6 with SMTP id 98e67ed59e1d1-34733e4ce8amr36382374a91.4.1764664855368;
+        Tue, 02 Dec 2025 00:40:55 -0800 (PST)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-be4fc5a0957sm14732683a12.16.2025.12.02.00.40.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Dec 2025 00:40:54 -0800 (PST)
+Date: Tue, 2 Dec 2025 16:40:50 +0800
+From: Zorro Lang <zlang@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zorro Lang <zlang@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs/158: _notrun when the file system can't be
+ created
+Message-ID: <20251202084050.3iovo3maspy2xo7k@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20251121071013.93927-1-hch@lst.de>
+ <20251121071013.93927-4-hch@lst.de>
+ <20251202044900.rdahcmhpf2t3gulx@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20251202073609.GA18426@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,157 +96,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <692e499e.a70a0220.d98e3.0191.GAE@google.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20251202073609.GA18426@lst.de>
 
-This look like the batch zeroing code.  I think we have a patch pending
-to remove the allocation, but I lost track a bit where we are with that.
+On Tue, Dec 02, 2025 at 08:36:09AM +0100, Christoph Hellwig wrote:
+> On Tue, Dec 02, 2025 at 12:49:00PM +0800, Zorro Lang wrote:
+> > >  # Make sure we can't upgrade a filesystem to inobtcount without finobt.
+> > > -_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 >> $seqres.full
+> > > +try_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 || \
+> > 
+> > Hmm... is "try_scratch_mkfs" a function in your personal repo ?
+> 
+> This was supposed to be _try_scratch_mkfs.  But I guess that typo
+> is a good way to make the test never fail :)
 
-On Mon, Dec 01, 2025 at 06:06:22PM -0800, syzbot wrote:
-> syzbot has found a reproducer for the following issue on:
+Hah, but there's not _try_scratch_mkfs in mainline fstests currently, there's
+_try_scratch_mkfs_xfs .
+
 > 
-> HEAD commit:    1d18101a644e Merge tag 'kernel-6.19-rc1.cred' of git://git..
-> git tree:       upstream
-> console output: https://syzkaller.appspot.com/x/log.txt?x=119238c2580000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=a1db0fea040c2a9f
-> dashboard link: https://syzkaller.appspot.com/bug?extid=789028412a4af61a2b61
-> compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1407a512580000
-> 
-> Downloadable assets:
-> disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-1d18101a.raw.xz
-> vmlinux: https://storage.googleapis.com/syzbot-assets/98f78b52cccd/vmlinux-1d18101a.xz
-> kernel image: https://storage.googleapis.com/syzbot-assets/7a8898061bfb/bzImage-1d18101a.xz
-> mounted in repro: https://storage.googleapis.com/syzbot-assets/9f625d767816/mount_0.gz
->   fsck result: failed (log: https://syzkaller.appspot.com/x/fsck.log?x=1406a192580000)
-> 
-> IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> Reported-by: syzbot+789028412a4af61a2b61@syzkaller.appspotmail.com
-> 
-> ======================================================
-> WARNING: possible circular locking dependency detected
-> syzkaller #0 Not tainted
-> ------------------------------------------------------
-> kswapd0/73 is trying to acquire lock:
-> ffff88804146c118 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_reclaim_inode fs/xfs/xfs_icache.c:1040 [inline]
-> ffff88804146c118 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1732 [inline]
-> ffff88804146c118 (&xfs_nondir_ilock_class){++++}-{4:4}, at: xfs_icwalk_ag+0x12c5/0x1ab0 fs/xfs/xfs_icache.c:1814
-> 
-> but task is already holding lock:
-> ffffffff8e047ae0 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:7015 [inline]
-> ffffffff8e047ae0 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0x951/0x2800 mm/vmscan.c:7389
-> 
-> which lock already depends on the new lock.
-> 
-> 
-> the existing dependency chain (in reverse order) is:
-> 
-> -> #1 (fs_reclaim){+.+.}-{0:0}:
->        lock_acquire+0x120/0x360 kernel/locking/lockdep.c:5868
->        __fs_reclaim_acquire mm/page_alloc.c:4264 [inline]
->        fs_reclaim_acquire+0x72/0x100 mm/page_alloc.c:4278
->        might_alloc include/linux/sched/mm.h:318 [inline]
->        slab_pre_alloc_hook mm/slub.c:4929 [inline]
->        slab_alloc_node mm/slub.c:5264 [inline]
->        __kmalloc_cache_noprof+0x40/0x6f0 mm/slub.c:5766
->        kmalloc_noprof include/linux/slab.h:957 [inline]
->        iomap_fill_dirty_folios+0xf4/0x260 fs/iomap/buffered-io.c:1557
->        xfs_buffered_write_iomap_begin+0xa23/0x1a70 fs/xfs/xfs_iomap.c:1857
->        iomap_iter+0x5f2/0xf10 fs/iomap/iter.c:110
->        iomap_zero_range+0x1cc/0xa50 fs/iomap/buffered-io.c:1590
->        xfs_zero_range+0x9a/0x100 fs/xfs/xfs_iomap.c:2289
->        xfs_reflink_remap_prep+0x398/0x720 fs/xfs/xfs_reflink.c:1699
->        xfs_file_remap_range+0x235/0x780 fs/xfs/xfs_file.c:1518
->        vfs_copy_file_range+0xd81/0x1370 fs/read_write.c:1598
->        __do_sys_copy_file_range fs/read_write.c:1681 [inline]
->        __se_sys_copy_file_range+0x2fb/0x470 fs/read_write.c:1648
->        do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
->        do_syscall_64+0xfa/0xfa0 arch/x86/entry/syscall_64.c:94
->        entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> 
-> -> #0 (&xfs_nondir_ilock_class){++++}-{4:4}:
->        check_prev_add kernel/locking/lockdep.c:3165 [inline]
->        check_prevs_add kernel/locking/lockdep.c:3284 [inline]
->        validate_chain+0xb9b/0x2140 kernel/locking/lockdep.c:3908
->        __lock_acquire+0xab9/0xd20 kernel/locking/lockdep.c:5237
->        lock_acquire+0x120/0x360 kernel/locking/lockdep.c:5868
->        down_write_nested+0x9d/0x200 kernel/locking/rwsem.c:1706
->        xfs_reclaim_inode fs/xfs/xfs_icache.c:1040 [inline]
->        xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1732 [inline]
->        xfs_icwalk_ag+0x12c5/0x1ab0 fs/xfs/xfs_icache.c:1814
->        xfs_icwalk fs/xfs/xfs_icache.c:1862 [inline]
->        xfs_reclaim_inodes_nr+0x1e3/0x260 fs/xfs/xfs_icache.c:1106
->        super_cache_scan+0x41b/0x4b0 fs/super.c:228
->        do_shrink_slab+0x6ef/0x1110 mm/shrinker.c:437
->        shrink_slab+0xd74/0x10d0 mm/shrinker.c:664
->        shrink_one+0x28a/0x7c0 mm/vmscan.c:4955
->        shrink_many mm/vmscan.c:5016 [inline]
->        lru_gen_shrink_node mm/vmscan.c:5094 [inline]
->        shrink_node+0x315d/0x3780 mm/vmscan.c:6081
->        kswapd_shrink_node mm/vmscan.c:6941 [inline]
->        balance_pgdat mm/vmscan.c:7124 [inline]
->        kswapd+0x147c/0x2800 mm/vmscan.c:7389
->        kthread+0x711/0x8a0 kernel/kthread.c:463
->        ret_from_fork+0x4bc/0x870 arch/x86/kernel/process.c:158
->        ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
-> 
-> other info that might help us debug this:
-> 
->  Possible unsafe locking scenario:
-> 
->        CPU0                    CPU1
->        ----                    ----
->   lock(fs_reclaim);
->                                lock(&xfs_nondir_ilock_class);
->                                lock(fs_reclaim);
->   lock(&xfs_nondir_ilock_class);
-> 
->  *** DEADLOCK ***
-> 
-> 2 locks held by kswapd0/73:
->  #0: ffffffff8e047ae0 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat mm/vmscan.c:7015 [inline]
->  #0: ffffffff8e047ae0 (fs_reclaim){+.+.}-{0:0}, at: kswapd+0x951/0x2800 mm/vmscan.c:7389
->  #1: ffff8880119bc0e0 (&type->s_umount_key#54){++++}-{4:4}, at: super_trylock_shared fs/super.c:563 [inline]
->  #1: ffff8880119bc0e0 (&type->s_umount_key#54){++++}-{4:4}, at: super_cache_scan+0x91/0x4b0 fs/super.c:197
-> 
-> stack backtrace:
-> CPU: 0 UID: 0 PID: 73 Comm: kswapd0 Not tainted syzkaller #0 PREEMPT(full) 
-> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
-> Call Trace:
->  <TASK>
->  dump_stack_lvl+0x189/0x250 lib/dump_stack.c:120
->  print_circular_bug+0x2ee/0x310 kernel/locking/lockdep.c:2043
->  check_noncircular+0x134/0x160 kernel/locking/lockdep.c:2175
->  check_prev_add kernel/locking/lockdep.c:3165 [inline]
->  check_prevs_add kernel/locking/lockdep.c:3284 [inline]
->  validate_chain+0xb9b/0x2140 kernel/locking/lockdep.c:3908
->  __lock_acquire+0xab9/0xd20 kernel/locking/lockdep.c:5237
->  lock_acquire+0x120/0x360 kernel/locking/lockdep.c:5868
->  down_write_nested+0x9d/0x200 kernel/locking/rwsem.c:1706
->  xfs_reclaim_inode fs/xfs/xfs_icache.c:1040 [inline]
->  xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1732 [inline]
->  xfs_icwalk_ag+0x12c5/0x1ab0 fs/xfs/xfs_icache.c:1814
->  xfs_icwalk fs/xfs/xfs_icache.c:1862 [inline]
->  xfs_reclaim_inodes_nr+0x1e3/0x260 fs/xfs/xfs_icache.c:1106
->  super_cache_scan+0x41b/0x4b0 fs/super.c:228
->  do_shrink_slab+0x6ef/0x1110 mm/shrinker.c:437
->  shrink_slab+0xd74/0x10d0 mm/shrinker.c:664
->  shrink_one+0x28a/0x7c0 mm/vmscan.c:4955
->  shrink_many mm/vmscan.c:5016 [inline]
->  lru_gen_shrink_node mm/vmscan.c:5094 [inline]
->  shrink_node+0x315d/0x3780 mm/vmscan.c:6081
->  kswapd_shrink_node mm/vmscan.c:6941 [inline]
->  balance_pgdat mm/vmscan.c:7124 [inline]
->  kswapd+0x147c/0x2800 mm/vmscan.c:7389
->  kthread+0x711/0x8a0 kernel/kthread.c:463
->  ret_from_fork+0x4bc/0x870 arch/x86/kernel/process.c:158
->  ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
->  </TASK>
-> 
-> 
-> ---
-> If you want syzbot to run the reproducer, reply with:
-> #syz test: git://repo/address.git branch-or-commit-hash
-> If you attach or paste a git patch, syzbot will apply it before testing.
-> 
----end quoted text---
+
