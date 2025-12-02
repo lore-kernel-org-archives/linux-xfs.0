@@ -1,31 +1,42 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C21A3019B4;
-	Tue,  2 Dec 2025 07:36:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 875C74594A
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Dec 2025 07:37:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764660974; cv=none; b=kmWYRJ8RXJTsI8kvDFOdPmTzNy04w9o3RZ2TKnWUx4wHTYzEpLWeyNi+CeRlDj0BWc6TvqZo1tUlfLCOPedvzwtykfUEsKriDsLTQL8b+aOhR5HYwZpDWoDecAp2i2iJAH39iJiNKKem+UxxlS7z9IumWQ7QViq9FLqlJxJ7gA0=
+	t=1764661056; cv=none; b=ilAuZKzwoBWZAH2ZfiSp1Jhu9BOryo0EIOcq+6/yGL/LZquAeF093d9KmV/c5hcXBSPBo7dh+bj2V9USRdmXkMdVIFE5wNASJaujvenMmve0isls39ooik99hk78kgj9kSsIHPIpNGN/vh1fH9AbX9Kk7aap1bwhsDZksjcy5uc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764660974; c=relaxed/simple;
-	bh=yXvBtYRnIw6LmpCsHUquc9KhT62vgmWQoeC8wwqa/es=;
+	s=arc-20240116; t=1764661056; c=relaxed/simple;
+	bh=2Pgj21kGGIGKFH4TygD7cQLgGCJ2sUMQpOi15zXMm+0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PMKiZ4daLKuzXw8N24rn+M/FOP0RHwmx8y7gCzIAr3jdcif/nRvA5dB2nWn4sDMEycuSs1+regHttb07TBLJOPzAtYFVwAAbLVX6xeH63QcnNXfA+JTyZK+IBB175Qp6i7R1L8suDR/DPgSIG4uEi2B7rNvnbEsTzWZUIvSgIYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 31A1768AA6; Tue,  2 Dec 2025 08:36:09 +0100 (CET)
-Date: Tue, 2 Dec 2025 08:36:09 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Zorro Lang <zlang@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs/158: _notrun when the file system can't be
- created
-Message-ID: <20251202073609.GA18426@lst.de>
-References: <20251121071013.93927-1-hch@lst.de> <20251121071013.93927-4-hch@lst.de> <20251202044900.rdahcmhpf2t3gulx@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=teBKok3TxbyvNTvm8ck89FmIec2l8eIYd9io8AuwH5o3ZTKwMlLL61WMU50Z8coxK2boA4b+kmwpA1WA629nWrgMo89m1jAI7vAPL0t1lMswoAf6JZxxN4S/bLAs8XIqpSe3KEVyaGZQjVK569NS0Pm2s2GpCF80RfX8SauOgsk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=BKdFH3sd; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BKdFH3sd"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=XVPjD1mgyzr/1JfpMat8dyaNxCYp058B/ZHKlXv36CQ=; b=BKdFH3sdGz7c8BHPQq9JCcF4NX
+	6W4pKxgR7tr+6uqWr4yYrYSKp3bE16kV8NborKf2/3MN8P/2KgAFJ2BMS38K0rP1jSi4p9zaiHN3P
+	F56jzGk+BxZ1XR7ZX1CHQAMIs2j9Tts7pXAznq3V0LoCzczfosz8CiKTfiE605yW2C8Q+jikKjCGH
+	/8vDgh20PeZTgHkGWO7PJv9WCeTZSEvQtyF7FfZxlOPvfsQDCdsy3P8Je+aSoY3juQetGYNM2NJO1
+	+xP7KXLyuLcykYupkUw20z5P9lwaRCkHPhgoB/fJt8fFsOF020X8Q6Sm3IlfhZAjtdt5LtvSmgojk
+	FYHiRT/Q==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vQKx3-00000004xmg-3hS5;
+	Tue, 02 Dec 2025 07:37:33 +0000
+Date: Mon, 1 Dec 2025 23:37:33 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: aalbersh@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] libxfs: fix build warnings
+Message-ID: <aS6XPWlc3vBM0hPr@infradead.org>
+References: <176463876086.839737.15231619279496161084.stgit@frogsfrogsfrogs>
+ <176463876118.839737.7691382070128152874.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,16 +45,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251202044900.rdahcmhpf2t3gulx@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <176463876118.839737.7691382070128152874.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Dec 02, 2025 at 12:49:00PM +0800, Zorro Lang wrote:
-> >  # Make sure we can't upgrade a filesystem to inobtcount without finobt.
-> > -_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 >> $seqres.full
-> > +try_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 || \
+On Mon, Dec 01, 2025 at 05:27:29PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Hmm... is "try_scratch_mkfs" a function in your personal repo ?
+> gcc 14.2 with all the warnings turn on complains about missing
+> prototypes for these two functions:
 
-This was supposed to be _try_scratch_mkfs.  But I guess that typo
-is a good way to make the test never fail :)
+I would have expected a lot more warnings from that in xfsprogs..
+
+But the change itself looks good:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
