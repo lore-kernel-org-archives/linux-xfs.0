@@ -1,116 +1,121 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E93222257E
-	for <linux-xfs@vger.kernel.org>; Tue,  2 Dec 2025 08:40:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EE6136D510
+	for <linux-xfs@vger.kernel.org>; Tue,  2 Dec 2025 08:46:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764664861; cv=none; b=Lxotgp0coPKoRIcCVOAwjrqfd5272Qc13vCv/l9oMBB/tUlwcwuYa5qIchL5tbmJwff/1XJaGVaJGer1pCdl0M7McISg8vvMEg6A9soFUk4ykUiWBfScHsAFVZSbK9emPiCSxLcOY5mRQBCGKy9XXnl1Xuj6vVptIsw63rIE25M=
+	t=1764665216; cv=none; b=M10g5mg04oNrqEsZgtE4iK9kTPp2SgJmqoVpkXp4MAaeQwgdRbzw+N7v43oh2b9h5FmVjPaDbp7P0WGDIm1GE+YObS1h8ioaJhVwZ+FK4e0J6XdgV/nbE3+9SHnSEizQSVpBpBJVmjal7xWySHpqwx57PZnWcI5LbFb3s9sFf8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764664861; c=relaxed/simple;
-	bh=urOl0/ilTRIE2ngNhcdXcQShDJ+rl7s9PhYPUw2FR64=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NiggjJF+O14wilLKhclPC4etHL8GM/HBJmwAqbNgthkptRgcAjb2HLyDotSB49GJR++9GSmbJY9xJQQB17g2eBGn+UhDDbPvJfYIM4QSV6qJoX/SX478qkYa08rXPVNcOPVY3vfjm/6rJdY6++eMr5GeY5XN0GOBL32ulbgFVug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Jecu5cZB; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=PbWNk3oC; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1764665216; c=relaxed/simple;
+	bh=qcpxFQirLzafdSnNIq92XhuOn+HzWCu4AcZ2SW0UjqI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=t4BtovtT16OSWETXotPi2ZIS7lixpGiMSlwqLsp45WyqcvfhSweKr0cXqz/Cw49yQshYAhueM5Sx6N9flD6dD+ko2corIGOYQTfwtqL2WY5sBA95x8LXUY82BF81FL13uTKJaSWyp8AKD4J+jGSR8lpj0vlGHPZQ8WnFL/MQx4M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu; spf=pass smtp.mailfrom=szeredi.hu; dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b=bbbrFs6+; arc=none smtp.client-ip=209.85.160.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=szeredi.hu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=szeredi.hu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Jecu5cZB";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="PbWNk3oC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1764664858;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Ml3X7hjq+7HD8M4YETYZOG/CzOIrOxOEiDCQgxxaIVw=;
-	b=Jecu5cZBk+1Sdfyc71oHK1KKTHFfNjXBDM1yPi0g2p5UpriVzXV5rDK/3GnYX/QQ/GveCu
-	Sxiu1hK2C4a/ZQ2SBCSRnoJFAj78u4pR/kS92dOAtXef8hBBXjIam/XxxnSQFa+Qt8snzz
-	xnc0AqcyZ1/06p2JxrYg5tB6/ztYCl0=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-401-_RG4ctKJMYuBky6KoQqCug-1; Tue, 02 Dec 2025 03:40:57 -0500
-X-MC-Unique: _RG4ctKJMYuBky6KoQqCug-1
-X-Mimecast-MFC-AGG-ID: _RG4ctKJMYuBky6KoQqCug_1764664856
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-340c07119bfso8661435a91.2
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Dec 2025 00:40:56 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=szeredi.hu header.i=@szeredi.hu header.b="bbbrFs6+"
+Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-4ee0ce50b95so53517151cf.0
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Dec 2025 00:46:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1764664856; x=1765269656; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ml3X7hjq+7HD8M4YETYZOG/CzOIrOxOEiDCQgxxaIVw=;
-        b=PbWNk3oCEQLGgDlb7mxclaypl8kEzs+EwzJDXjUwCIZ7nDTCGI2TrZ5knElNyoT7UQ
-         n9Rp1ypBoR/ArgqW3lcXN42OoWh7Tg3cpndES1hNg6iHxpKTJKgBI3+1iFHhkRVSgqxn
-         /iG0CFc5R4gOdmm/yzc/mJgKDbBf4LLUObY9Jg/6WrPc2hq5Hm4mqUkuDS0FZ3IrDLxd
-         Kc8msTxVwZCWTZYOSYk59/GHvSv4h0yS7/u2ydqIvkAc1CJS8G5F7cc88PCx/G/MdtOB
-         WC3jKjpDUVZ+AlbNhu7+DHW5/Sv2QFfNwYt9cSN7dy/U20PSajZqIMbcQ02DO2a6THJh
-         9awA==
+        d=szeredi.hu; s=google; t=1764665213; x=1765270013; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=dxvySic7ZCI3Kve7CCt8lN1Lme0d3OPvrFfTikR164w=;
+        b=bbbrFs6+5vw0v4zASrPuLyid+iafPWKvHeYf/XOZ4RlTfrAcYHZVAdk6e+pk3VUvT5
+         48D6eTBCgo/3krpFsqeWdnF8GCD9YaUPsH9bnVDmtOnvHdlmeiRQ7K1+nPucKysf1DKV
+         mmqSSKGrjMO7aaGrUT4vdZIAqeiNk+895+LjE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764664856; x=1765269656;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Ml3X7hjq+7HD8M4YETYZOG/CzOIrOxOEiDCQgxxaIVw=;
-        b=EtJJom6+bSyQgQGVlQkU6rs9KOSvzbinWVEEQi8rThMSiMZmJojYAOJeIyUfz6gbhN
-         Qw89N0NwigAn6g8GQVi7Ux95vYS4PNv0Ert8pOpSkQmDAc6PEv5Tx/ncNeyN7Mpy9Sny
-         8WWAUvQQcBLWCZb1IwzCIKZ0Uy74ztxYhR2ll/xWozGTMVMUL+8CzevGWmEXvk7yWlcr
-         sqPsjqRglOamovPAqarxpR943938DjG2dhHBRvXOOqcnnCqCuGSq0yydOYQXuLhosoY+
-         Erkh/rlOprncaBu4Va+1PFOk398RWhsaMn4PcGhB1CzKSXCyyu/I1t6khmrGYX0iSdSY
-         ZM3g==
-X-Forwarded-Encrypted: i=1; AJvYcCWlbR8VM90wYD4TQD67QalWyWw1C4Ev3IBMCgs8OsWH4oJ6exxJ0RDpELwrWrCcM41UC4yTsnBNiJY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YypKGOKD5148CxSmHxpox5y33rE2+eGv5iDOd0/eIiCMa5f8fo0
-	0CSbDLxxo8j6u6Dr0EH2IR9nfdjtioMhUnFcfsaflzKzIC6OIuy71ALaIwKI+m1rmrIrAguJOtH
-	gC40XQBq/gL4Hoe9qBZaD4TRNsr/n1QWCj76VHU46NRa2he3p2XS8DyTKwWiC6Q==
-X-Gm-Gg: ASbGnctykdwbhJxEHlMjBO58A4/+IPHYFSs0rLcYx5wXxYt9mFj0/g6PAJBH/s1s25W
-	9cjjCwbioHyKmwqfxzdRXyBP3Qk+UfF40TrV8Ay8Xvjd1FF5f2e++QG2Fkbwh7x9AxqIbje/W/X
-	AWoUsgF7O835nVZi/8u6AW9UetTgvUGZ0rwdASyJ5kZ5UTp0OL4qbuRTM1N5TDGxPnb+U9ywJSa
-	hYsR8ry7X0HD9Kcjap3P2nwyVxLaSrWPtiLrnhD67eB2k6DxWxEKZ4BN8FkFWuQ5T70CHk8KLCi
-	kLh92qmJRj+fS5PPwkuWSpx7S/wY2rcawumX4GGGKEfEtPkF2dPqMZa2KHD5nsees+7sQQUYHo0
-	lbtNzrX7/V4MMutf05TWaPTlLuyHpefsc7okBj6R1Gil2tTP6dw==
-X-Received: by 2002:a17:90b:5544:b0:340:2a59:45c6 with SMTP id 98e67ed59e1d1-34733e4ce8amr36382388a91.4.1764664855872;
-        Tue, 02 Dec 2025 00:40:55 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFsMo6NAYa764YoUSeOHsCNiq1tcsunmvQ9GSaPEJEpghKcA3ExolBwlnvc5cAVk92k4mJzng==
-X-Received: by 2002:a17:90b:5544:b0:340:2a59:45c6 with SMTP id 98e67ed59e1d1-34733e4ce8amr36382374a91.4.1764664855368;
-        Tue, 02 Dec 2025 00:40:55 -0800 (PST)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([209.132.188.88])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-be4fc5a0957sm14732683a12.16.2025.12.02.00.40.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Dec 2025 00:40:54 -0800 (PST)
-Date: Tue, 2 Dec 2025 16:40:50 +0800
-From: Zorro Lang <zlang@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Zorro Lang <zlang@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
-	fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs/158: _notrun when the file system can't be
- created
-Message-ID: <20251202084050.3iovo3maspy2xo7k@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20251121071013.93927-1-hch@lst.de>
- <20251121071013.93927-4-hch@lst.de>
- <20251202044900.rdahcmhpf2t3gulx@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20251202073609.GA18426@lst.de>
+        d=1e100.net; s=20230601; t=1764665213; x=1765270013;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dxvySic7ZCI3Kve7CCt8lN1Lme0d3OPvrFfTikR164w=;
+        b=Jgk5kxMIq0xPMnn1YfakPCnLZrmf0EQfdSCwNLD7XbWWBIlKJzoUpcwpHLwQYND8LE
+         2ECupCGDaFJ5dL59ChUh6GOM7djRT1kFjCf6ps9qBf3FZQg/5PlKCeOEHYyFcHzxP3BJ
+         eVlij5fEeBCgMXblS7Hq7v9z2zboimZgW6O6no1mGjHYdhVZwnT5LXVN8svmZYfLuWKh
+         CjQT51zR7VfirSZlqG8vDOJT0U85eb7ZGjRhLfkecf0mncVxhMSNBxIgFSXZweAKZtU/
+         7xPP1TfkbtxAPBCmD5Q+/qlAjXAZEV/hP9osJr4nIEALS9ni/32d2ZqccOByE/069v5z
+         nkYQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUHJOr6Kpms6dLhhVJBpZzmVDw1RXxwF1DwvZ/YIjJHiweG0NJMH9TPtT6gNEHRvlZB19DJKQwcxYw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyfeEXNA9/X4bu2loQpcqzFQHpY1Gwhlc6m68Wfa6NvCzGWaSJA
+	hDDe1/0/RvNObrxizdx7DJ6LA9MQwmrBrHHskcIEtf7tZLKKk0dSAGBXtZ0U363ZGlJ6sPpAM7H
+	VH4O6AQ1P1Os6AYj+G35Yljd1TzJ1tudl4+Iu88qElA==
+X-Gm-Gg: ASbGncuM+YwezkweQwaQmBAzxhT7KGYOgwQTvfW7tLNKlQ4b6II5k+8JXlh7mmqubMt
+	42dLMHIrt9UEQg/y3kkF/VGZzXWDZjiXXoSxZDYVrkRpARUblpBxVy23v5QvagRxnLHVUND/exb
+	NjBmiTiVdCjX4J8T2l/pKffhxH19SRUPdZ1Jz+jNQX+170oaAKSsLU4CUEj9v8K4WGfnrfrr7Y3
+	jOs3SKsa3ul7/+8jfgXCppI5AF5x17XNQYX1CWzaN207cDFLJKx/zUt594WXnnl0ZMAgw==
+X-Google-Smtp-Source: AGHT+IEmdgKRfEJt7lhW9JewHKYA/V5LXGRt+5HoCO1i6voev0VJmL65LKUm+BLjfUqBCpppRBhIODxs9MlwVlA6duw=
+X-Received: by 2002:ac8:7dc2:0:b0:4ee:1f69:fdeb with SMTP id
+ d75a77b69052e-4f0088dcc91mr26981181cf.11.1764665212783; Tue, 02 Dec 2025
+ 00:46:52 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251202073609.GA18426@lst.de>
+References: <20251113002050.676694-1-neilb@ownmail.net> <20251113002050.676694-7-neilb@ownmail.net>
+ <6713ea38-b583-4c86-b74a-bea55652851d@packett.cool> <176454037897.634289.3566631742434963788@noble.neil.brown.name>
+ <CAOQ4uxjihcBxJzckbJis8hGcWO61QKhiqeGH+hDkTUkDhu23Ww@mail.gmail.com>
+ <20251201083324.GA3538@ZenIV> <CAJfpegs+o01jgY76WsGnk9j41LS5V0JQSk--d6xsJJp4VjTh8Q@mail.gmail.com>
+ <20251201170813.GH3538@ZenIV>
+In-Reply-To: <20251201170813.GH3538@ZenIV>
+From: Miklos Szeredi <miklos@szeredi.hu>
+Date: Tue, 2 Dec 2025 09:46:41 +0100
+X-Gm-Features: AWmQ_blWv82I_AJ0z54S1o3oAiX82VQ2RDfse7yanE0u3ZklpA9ZzlQdeqtb1vo
+Message-ID: <CAJfpegtJDJL7T0-Uj664xOm4N2e6fyJp_XwFecHX_9e9ipUyEw@mail.gmail.com>
+Subject: Re: [PATCH] fuse: fix conversion of fuse_reverse_inval_entry() to start_removing()
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: Amir Goldstein <amir73il@gmail.com>, NeilBrown <neil@brown.name>, 
+	Christian Brauner <brauner@kernel.org>, Val Packett <val@packett.cool>, Jan Kara <jack@suse.cz>, 
+	linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@kernel.org>, 
+	Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, David Howells <dhowells@redhat.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Tyler Hicks <code@tyhicks.com>, Chuck Lever <chuck.lever@oracle.com>, 
+	Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
+	Namjae Jeon <linkinjeon@kernel.org>, Steve French <smfrench@gmail.com>, 
+	Sergey Senozhatsky <senozhatsky@chromium.org>, Carlos Maiolino <cem@kernel.org>, 
+	John Johansen <john.johansen@canonical.com>, Paul Moore <paul@paul-moore.com>, 
+	James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, 
+	Stephen Smalley <stephen.smalley.work@gmail.com>, Ondrej Mosnacek <omosnace@redhat.com>, 
+	Mateusz Guzik <mjguzik@gmail.com>, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, 
+	Stefan Berger <stefanb@linux.ibm.com>, "Darrick J. Wong" <djwong@kernel.org>, linux-kernel@vger.kernel.org, 
+	netfs@lists.linux.dev, ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org, 
+	linux-unionfs@vger.kernel.org, linux-cifs@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, linux-security-module@vger.kernel.org, 
+	selinux@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Dec 02, 2025 at 08:36:09AM +0100, Christoph Hellwig wrote:
-> On Tue, Dec 02, 2025 at 12:49:00PM +0800, Zorro Lang wrote:
-> > >  # Make sure we can't upgrade a filesystem to inobtcount without finobt.
-> > > -_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 >> $seqres.full
-> > > +try_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 || \
-> > 
-> > Hmm... is "try_scratch_mkfs" a function in your personal repo ?
-> 
-> This was supposed to be _try_scratch_mkfs.  But I guess that typo
-> is a good way to make the test never fail :)
+On Mon, 1 Dec 2025 at 18:08, Al Viro <viro@zeniv.linux.org.uk> wrote:
 
-Hah, but there's not _try_scratch_mkfs in mainline fstests currently, there's
-_try_scratch_mkfs_xfs .
+> Then as far as VFS is concerned, it's an equivalent of "we'd done
+> a dcache lookup and revalidate told us to bugger off", which does
+> *not* need locking the parent - the same sequence can very well
+> happen without touching any inode locks.
 
-> 
+Okay.
 
+> IOW, from the point of view of locking protocol changes that's not
+> a removal at all.
+>
+> Or do you need them serialized for fuse-internal purposes?
+
+Not as far as I can see. As to any fuse filesystem being reliant on
+this behavior, I think that's unlikely, though it's sort of documented
+in the libfuse APIs as:
+
+ * To avoid a deadlock this function must not be called in the
+ * execution path of a related filesystem operation or within any code
+ * that could hold a lock that could be needed to execute such an
+ * operation. As of kernel 4.18, a "related operation" is a lookup(),
+ * symlink(), mknod(), mkdir(), unlink(), rename(), link() or create()
+ * request for the parent, and a setattr(), unlink(), rmdir(),
+ * rename(), setxattr(), removexattr(), readdir() or readdirplus()
+ * request for the inode itself.
+
+Why the locking was added in the first place?  Oversight, probably.
+
+Thanks,
+Miklos
