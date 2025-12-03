@@ -1,66 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2E5B2E1EE0
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Dec 2025 10:32:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E5B518024
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Dec 2025 12:47:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764757967; cv=none; b=riCUuYcWL9bbmLORb7YLATGHFLCwVCu4DoTbX894reSO/xF5d5/okAXrdsuJmeG0X7MjT3DT7a5/a+gDHYAKOJ6raEZYtdqJf+FzgRZb+NXjqgm/1yUVDqd9bc+FSNyztRHyPvXEzz1CrxOFAsblrTins8/ZRDX+InzKNcBegH4=
+	t=1764766033; cv=none; b=rNDj1PAh3CkjVcVYaTyNf4uVNzIWb7zcJa2fJTObqSXSv+T4TGiGl1ZUfQyuwCoTDY1DkTHRZcCrjOYx6NhLL7b9NwQ9dKyReTRqX7y+z0wiig6CpBxoJypOr3DckDRB/QRgtZs4qoeIoIAfSa6XGcEoFYKAz8tSKAhYq8G5rwc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764757967; c=relaxed/simple;
-	bh=CVEugRT8suaMk45pvY4LqCq9zQ28g5I+S+6C8OT4LAs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VU52vLaOpO83ueUszRcm/9HX3vzGeABnF5uzPvt3Erp6amZWHFMDRIu2k44tyUzcCtTdjuQrFarq7QfrFNHz4ZvoQ18DLdk+ZD85eXpYBaoh/nGNfVVeemSzPAKTWOHz5ez2v1l5gJRLVbhfBvG7/7MbfUKlycvPcyco1nzKvhI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cn3GWikc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1764766033; c=relaxed/simple;
+	bh=PybDchmV0+NBWWqgRCqcZMbN6n9jgrzv3bjO/ULJSH8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DSKLoifG5khbikplgopsF3FUPRqRV3bubIGRxbx1u3YOPjrJwyS8Q3tjiWQt54jvuGUR+qDk+44HgFO9RK91XAZIAICejbwoNj1eIBqg9wydm6Mylk54EZQ++vioLy0pwb9qDdakJuWKbJM2WJeP3zxhyTNua47bghwHpDYMyi4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UDGicDv5; arc=none smtp.client-ip=209.85.216.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cn3GWikc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27125C4CEFB;
-	Wed,  3 Dec 2025 10:32:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764757966;
-	bh=CVEugRT8suaMk45pvY4LqCq9zQ28g5I+S+6C8OT4LAs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Cn3GWikczIE+uKa51i8e/PwJ4qInYLqr1v5xXUjHV+kmyKPUkDjmZgbgqAGIa1+44
-	 7wRFsjEX9QIMqFZjsJ4I8gWQ9jNXQuAKgmjSur3K1Shx9Am+LDeQzank35Zuj09Rz5
-	 QHqdW+7U18MacLqaoHAm4b4y47PU3+tWsmLdVLSx2fJA4r6siGV/5SlvvU7CyYg/IE
-	 wOzkUCqlh9VxySjDvsuWStRrtSiA6dGqczcP+CJ82sjfHjY9dA/fG1VZBVbh0PhN+u
-	 j9w6fRE+999lqHZP4XtfuqiTfYrlRz0pYTbq8LPt35mWah/DzsWrNwCztjevop6y11
-	 zTZhBMOtQ3dsw==
-Date: Wed, 3 Dec 2025 11:32:41 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>, djwong@kernel.org, 
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs : Fix potential null pointer dereference in
- xfs_exchmaps_dir_to_sf()
-Message-ID: <gl3onv4myfz34h5y7ym7uc7kmrdeyq3b4k74g26a3jt72jk3xt@uu3dpjq7pjoc>
-References: <20251125142205.432890-1-chelsyratnawat2001@gmail.com>
- <FjCaOpp6EVRiefsKd7nYq1QLDJ3wzNkrAnbgjluZp3R72GAlb7sNfwEsUN3mH6uifkGw4ROOtk1RUFk38nigGw==@protonmail.internalid>
- <aS_W1IHbi3-vlLOm@infradead.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UDGicDv5"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-3437c093ef5so7050791a91.0
+        for <linux-xfs@vger.kernel.org>; Wed, 03 Dec 2025 04:47:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1764766031; x=1765370831; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=IjyvAGesvd3CUb5WuTwerR++ku5hNwb/4W2m6qlyq74=;
+        b=UDGicDv5N2Od2nn1GnPAfxkdqshin9ajDnDcGbQlhYgiWkZswznyL5mtXW7A6xoF9q
+         zI0Y+Cv20gz60BZ4pMu7K1gw4407Qhtgq1qRfAnEQbtSOXxf+4Vny8T/TD/GjuvidFXq
+         IBJJwTls2zTbyMhfMZ4GqxmEsVWWyBDVRlVxW8McX216m9xux4JcyOoq35c2N4QS9muz
+         lflzCSK7UwgL9q/1Ftgfnmn46+IgQN0Y4YyDfOASdwT8Tuqe766OOdtrUB3xHzQMpQDj
+         KmZJQLzvggzKco8lnBEFnnn0Sl/LNQ+3JxAIwpgCEy6Kg5Vn5AE6xNtJWnkOclAIC6W2
+         Nt4A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1764766031; x=1765370831;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=IjyvAGesvd3CUb5WuTwerR++ku5hNwb/4W2m6qlyq74=;
+        b=JpnF+qJWL+sdAiremaQsl4qAwEIf7QChgUHAwq8DWsUZym9MeGuUfiAkRr46MB+KGN
+         g4EGEW8wV4yvVYPWNvBb/wsxlzzQcvPY/gJHhTVVb3YiQlD8mjfyilmL/Eb+G/o9yL81
+         xexVVtE31f66dwFXhkZLbLZskv0eIgSpWotFu7CKu2bJT0DtxhwMwrnNZKpxPnNNqOGY
+         SEhrMFDArBrM13al1EaDXEoTKL2b1zIQGRSN33j4KXQNzs5n+pVZO2jWZR/Chnq58lIf
+         pUkGcMsr8K04a3KM8iHIV43GCX4htsGyWdycPQWR9zwKtpGq9GPCPWYB9X4J46KgRamO
+         JuNQ==
+X-Gm-Message-State: AOJu0YzluazXJwuu0PJPzolqDx/GvdHnVjHaPJKb6ddaAKKN6dC1zlAE
+	kHApq0MDOMRO1Y4ioMV8Gx24T9/FqT4kqMlBtqeduyVkNPCYHHSd1BbJZU8PRQ==
+X-Gm-Gg: ASbGncs9wQ+lD8bfnAEP4fwPIZjGgSLRjGP1f5Z4hYJ9QjHYtMLrCa3avMTZAB9CQXV
+	Ox+AHfoNEUh4o16pCtEtpGo3tms0mhhW4XiBAUqSLXJQeQ+elPVG8T0gLMjVs3S89pEew5gSGKv
+	1jNvLYs9HCiz16gwKLnreYTcTqa5V0W7TBPwByKU8OGpzwKsuNA3KI5tm6Z/mW5oCAU8ZaQGFS+
+	5IAhS+Dg201X5EQCQ2ULe8ow/DN3+wZFCMZ0E6EiJpMZAJsU67Qva4NgBb6QXKwA/azh5rEBe54
+	UQ5M8HNRa4k6Q1Oi0tTjlK19ZdkcJp4YWwNs1NxS1/h5SJjwnKH4sh7ePXb6jbMeTxlyp0Gw9PI
+	vU5ta7zhmZ3TGyIkBlqgdd/lFzGx+cG4+9tfdSKImceJQ3AKc4ar3XHXb/YyuznkcUHnafSGIaR
+	vS4tsFExtXIcfgstGuHciL8bxfsTQHBMd8XGNBsN7+o/jcD821Kqp9ZTW8iiLq5vcp
+X-Google-Smtp-Source: AGHT+IGRSE3rQXfLiHrnRfrmjdZkJ9yHP4seAOjL9h9C4e0/Q6InxtYKnvlf8wFXDyK9aVTdKslaLQ==
+X-Received: by 2002:a17:90b:3852:b0:335:2747:a9b3 with SMTP id 98e67ed59e1d1-349126bd337mr2239422a91.32.1764766030852;
+        Wed, 03 Dec 2025 04:47:10 -0800 (PST)
+Received: from li-5d80d4cc-2782-11b2-a85c-bed59fe4c9e5.ibm.com ([49.207.204.153])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-be50a51b919sm17794441a12.36.2025.12.03.04.47.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 03 Dec 2025 04:47:10 -0800 (PST)
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: ritesh.list@gmail.com,
+	ojaswin@linux.ibm.com,
+	djwong@kernel.org,
+	hch@infradead.org,
+	nirjhar.roy.lists@gmail.com
+Subject: [PATCH v1] xfs: Fix xfs_grow_last_rtg()
+Date: Wed,  3 Dec 2025 18:15:45 +0530
+Message-ID: <1e5fa7c83bd733871c04dd53b1060345599dcef9.1764765730.git.nirjhar.roy.lists@gmail.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aS_W1IHbi3-vlLOm@infradead.org>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Dec 02, 2025 at 10:21:08PM -0800, Christoph Hellwig wrote:
-> On Tue, Nov 25, 2025 at 06:22:05AM -0800, Chelsy Ratnawat wrote:
-> > xfs_dir3_block_read() can return a NULL buffer with no error, but
-> > xfs_exchmaps_dir_to_sf() dereferences bp without checking it.
-> > Fix this by adding a check for NULL and returning -EFSCORRUPTED if bp is
-> > missing, since block-format directories must have a valid data block.
-> 
-> xfs_dir3_block_read is a thin wrapper around xfs_da_read_buf, which
-> like all the buffer functions should not return a NULL buffer unless
-> either an error occured, or the caller asked for read-ahead semantics,
-> which xfs_dir3_block_read never does.  It seems like it currently
-> could when an invalid mapping is passed in (see the invalid_mapping
-> case in xfs_dabuf_map).  I think we'd be much better off trying to
-> fix these inconsistencies than doctoring around them in the callers.
-> 
+The last rtg should be able to grow when the size of the
+last is less than (and not equal to) sb_rgextents.
+xfs_growfs with realtime groups fails without this
+patch. The reason is that, xfs_growfs_rtg() tries
+to grow the last rt group even when the last rt group
+is at its maximal size i.e, sb_rgextents. It fails with
+the following messages:
 
-+1
+XFS (loop0): Internal error block >= mp->m_rsumblocks at line 253 of file fs/xfs/libxfs/xfs_rtbitmap.c.  Caller xfs_rtsummary_read_buf+0x20/0x80
+XFS (loop0): Corruption detected. Unmount and run xfs_repair
+XFS (loop0): Internal error xfs_trans_cancel at line 976 of file fs/xfs/xfs_trans.c.  Caller xfs_growfs_rt_bmblock+0x402/0x450
+XFS (loop0): Corruption of in-memory data (0x8) detected at xfs_trans_cancel+0x10a/0x1f0 (fs/xfs/xfs_trans.c:977).  Shutting down filesystem.
+XFS (loop0): Please unmount the filesystem and rectify the problem(s)
+
+Signed-off-by: Nirjhar Roy (IBM) <nirjhar.roy.lists@gmail.com>
+---
+ fs/xfs/xfs_rtalloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 6907e871fa15..2666923a9b40 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1324,7 +1324,7 @@ xfs_grow_last_rtg(
+ 		return true;
+ 	if (mp->m_sb.sb_rgcount == 0)
+ 		return false;
+-	return xfs_rtgroup_extents(mp, mp->m_sb.sb_rgcount - 1) <=
++	return xfs_rtgroup_extents(mp, mp->m_sb.sb_rgcount - 1) <
+ 			mp->m_sb.sb_rgextents;
+ }
+ 
+-- 
+2.43.5
+
