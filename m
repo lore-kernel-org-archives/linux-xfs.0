@@ -1,77 +1,125 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-1-103.ptr.blmpb.com (sg-1-103.ptr.blmpb.com [118.26.132.103])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 885A9136351
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Dec 2025 06:31:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 103032D4807
+	for <linux-xfs@vger.kernel.org>; Wed,  3 Dec 2025 08:31:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.103
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764743486; cv=none; b=cN9JwAHo9STalhjQtlH7mZdVAnyy2mrXlUVoXN+VjDhqheGiTu0ocaLLfRSMyr5VfELzpVd4kamX+se+IeNJDGrZabFsp5BJ7wFhGqw1f0LxCsejIjiWJr1Vs/NhViSE+8V/vTbBOMvILn3w/e44wAKTA+fseEtzvnOTZPHNSEQ=
+	t=1764750681; cv=none; b=WdmQ6JD2EbShyWNWhRt2MvW62dB9Z8xe05g1I9JZZlMTxSq26CfQ1sa2GxwiK79f4CavXmxKQYGStgOaSeW+YNAM2I1ZvGYAiVoUOwGdcvX52ko7VEEsni+nVTTmIiPzaq1L/RO6c+k5t21R83jwB9MTgZSKAPaH4wtiL69Me14=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764743486; c=relaxed/simple;
-	bh=6qpH4pN+X/nozQgrFEUiRSAM2JRrdturru6xYwZgNl4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Gw+JMekiTvEMRNo0ODKzlhJ07vW3CxRaZ+7mFB4H05rvk3WfdE1Zq1T0Ai6NBZzXKiVWZZA+dVaYmiZ/vQcvJ2qLChpz6ScxX+cCRGuLoUcna00SnEDeRnDgpCgRbBuHRw2NfPMecpoDwzBl2Ja7LUGSf5ThLUR0BGX8ZCRSvRg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=qInjLbGe; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1764750681; c=relaxed/simple;
+	bh=w3udpsM+2T3nQ5UURtINjXldf3VB9au4wNTCoRu+8JM=;
+	h=In-Reply-To:To:Subject:From:References:Content-Type:Date:
+	 Message-Id:Mime-Version; b=dRuLIGXQysNbSXPp+NpmOG2jCCuera9nOSzxs+WBi+ryNHz/qn11Uw2KdDx/hAve/p3iSeQOMpzxmS5slztRzVU7qayFVBgyU1lRE9q6kKMQccjcadMffn9lOX18ys/Rd9CUg/JwoG7f7P6LphvhHCxcxLUJ0uhUP1sHAJT79FE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=bV6r9i6i; arc=none smtp.client-ip=118.26.132.103
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qInjLbGe"
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="bV6r9i6i"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=9MBfFYsHuMrnuzRQjJTGICwra3mloX0fAtre0MPW5Us=; b=qInjLbGehnqboWwaAl+qLeVQ1E
-	135pW9iNX/xXIAuf0XmHaMhPeVeRJPrnXVvYhZcWbn4bAjas518QC8wNebKe0Cie/J5S3OHDWqnek
-	d8i05kLramfro1XghR1harn/yEc47i09C8tZOziJI1dEYQlFOjVTPsUPk90fUz5k5v0coD6dLtNz6
-	2GZxP4uYlnqF1G8xCTG2gh3mPHZDouR2LJSz4ffPh3DfgSlEa7Jq+eLkXKFr0ra39+6WVqyo3/K9w
-	GUuKWk9pLXWZtf/r9RU5XzyZWodnGMZHBS+4KD04EWYW/qcBm70UR56bUFpgom7XcyQGVtD9bTaeH
-	EAO9I4gA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vQgOY-00000006Bri-08ZI;
-	Wed, 03 Dec 2025 06:31:22 +0000
-Date: Tue, 2 Dec 2025 22:31:22 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, aalbersh@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] mkfs: enable new features by default
-Message-ID: <aS_ZOpzcp04ovBwk@infradead.org>
-References: <176463876373.839908.10273510618759502417.stgit@frogsfrogsfrogs>
- <176463876397.839908.4080899024281714980.stgit@frogsfrogsfrogs>
- <aS6Xhh4iZHwJHA3m@infradead.org>
- <20251203005345.GD89492@frogsfrogsfrogs>
+ s=2212171451; d=bytedance.com; t=1764750666; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=w3udpsM+2T3nQ5UURtINjXldf3VB9au4wNTCoRu+8JM=;
+ b=bV6r9i6iGq3nGG/Z5pAu0TZzedyNUOPvimryp7xYUcU1nv4gwnuzP6bdh4OKcAD5WcM1y3
+ iY321ci9VxbK/juDRzQBAzLBCIJk3FQCAxM8vTVExmbS1ZDJhNMGoMGT30rEUSr4zPQ1Xq
+ X1dYFSAD+bUwNz66FsUbiSZslr0EaDg7ysAgyMg84H1cvkLcAY/uEC1Nr7MK9d3UI/Iaxb
+ CAQf/nVaUciKkxwr9heH+U5Kh3wpTfywKJ2BgEMWUjp0IWH+ujWloTSpWEcH/8rFEP27EE
+ 0GbInBk5mzUYg/5NtY1dY+jpCkD5oMd16O1ExEXHxkCokacw/Dvwetc4lY2SDg==
+In-Reply-To: <20251114092149.40116-1-changfengnan@bytedance.com>
+To: <axboe@kernel.dk>, <viro@zeniv.linux.org.uk>, <brauner@kernel.org>, 
+	<jack@suse.cz>, <asml.silence@gmail.com>, <willy@infradead.org>, 
+	<djwong@kernel.org>, <hch@infradead.org>, <ritesh.list@gmail.com>, 
+	<linux-fsdevel@vger.kernel.org>, <io-uring@vger.kernel.org>, 
+	<linux-xfs@vger.kernel.org>, <linux-ext4@vger.kernel.org>, 
+	<linux-block@vger.kernel.org>, <ming.lei@redhat.com>, 
+	<linux-nvme@lists.infradead.org>
+Subject: Re: [PATCH v3 0/2] block: enable per-cpu bio cache by default
+From: "changfengnan" <changfengnan@bytedance.com>
+References: <20251114092149.40116-1-changfengnan@bytedance.com>
+X-Lms-Return-Path: <lba+1692ff548+b0c904+vger.kernel.org+changfengnan@bytedance.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 03 Dec 2025 16:31:02 +0800
+Message-Id: <d9210bcdf73fbe1ac8b6ec132865609a3ed68688.198e8c10.5c50.4606.8f05.84122efb6429@bytedance.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251203005345.GD89492@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Mime-Version: 1.0
 
-On Tue, Dec 02, 2025 at 04:53:45PM -0800, Darrick J. Wong wrote:
-> On Mon, Dec 01, 2025 at 11:38:46PM -0800, Christoph Hellwig wrote:
-> > On Mon, Dec 01, 2025 at 05:28:16PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Since the LTS is coming up, enable parent pointers and exchange-range by
-> > > default for all users.  Also fix up an out of date comment.
-> > 
-> > Do you have any numbers that show the overhead or non-overhead of
-> > enabling rmap?  It will increase the amount of metadata written quite
-> > a bit.
-> 
-> I'm assuming you're interested in the overhead of *parent pointers* and
-> not rmap since we turned on rmap by default back in 2023?
+Ping
 
-Yes, sorry.
+> From: "Fengnan Chang"<changfengnan@bytedance.com>
+> Date:=C2=A0 Fri, Nov 14, 2025, 17:22
+> Subject:=C2=A0 [PATCH v3 0/2] block: enable per-cpu bio cache by default
+> To: <axboe@kernel.dk>, <viro@zeniv.linux.org.uk>, <brauner@kernel.org>, <=
+jack@suse.cz>, <asml.silence@gmail.com>, <willy@infradead.org>, <djwong@ker=
+nel.org>, <hch@infradead.org>, <ritesh.list@gmail.com>, <linux-fsdevel@vger=
+.kernel.org>, <io-uring@vger.kernel.org>, <linux-xfs@vger.kernel.org>, <lin=
+ux-ext4@vger.kernel.org>, <linux-block@vger.kernel.org>, <ming.lei@redhat.c=
+om>, <linux-nvme@lists.infradead.org>
+> Cc: "Fengnan Chang"<changfengnan@bytedance.com>
+> For now, per-cpu bio cache was only used in the io_uring + raw block
 
-> I see more or less the same timings for the nine subsequent runs for
-> each parent= setting.  I think it's safe to say the overhead ranges
-> between negligible and 10% on a cold new filesystem.
+> device, filesystem also can use this to improve performance.
 
-Should we document this cleary?  Because this means at least some
-workloads are going to see a performance decrease.
+> After discussion in [1], we think it's better to enable per-cpu bio cache
 
+> by default.
+
+>=C2=A0
+> v3:
+
+> fix some build warnings.
+
+>=C2=A0
+> v2:
+
+> enable per-cpu bio cache for passthru IO by default.
+
+>=C2=A0
+> v1:
+
+> https://lore.kernel.org/linux-fsdevel/CAPFOzZs5mJ9Ts+TYkhioO8aAYfzevcgw7O=
+3hjexFNb_tM+kEZA@mail.gmail.com/
+
+>=C2=A0
+> [1] https://lore.kernel.org/linux-fsdevel/c4bc7c33-b1e1-47d1-9d22-b189c86=
+c6c7d@gmail.com/
+
+>=C2=A0
+>=C2=A0
+> Fengnan Chang (2):
+
+> =C2=A0 block: use bio_alloc_bioset for passthru IO by default
+
+> =C2=A0 block: enable per-cpu bio cache by default
+
+>=C2=A0
+> =C2=A0block/bio.c =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 | 26 +=
++++++-----
+
+> =C2=A0block/blk-map.c =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 | 90 +++++++++++=
++++++-----------------------
+
+> =C2=A0block/fops.c =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0| =C2=
+=A04 --
+
+> =C2=A0drivers/nvme/host/ioctl.c | =C2=A02 +-
+
+> =C2=A0include/linux/fs.h =C2=A0 =C2=A0 =C2=A0 =C2=A0| =C2=A03 --
+
+> =C2=A0io_uring/rw.c =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 | =C2=A01 -
+
+> =C2=A06 files changed, 49 insertions(+), 77 deletions(-)
+
+>=C2=A0
+>=C2=A0
+> base-commit: 4a0c9b3391999818e2c5b93719699b255be1f682
+
+> --=C2=A0
+
+> 2.39.5 (Apple Git-154)
+>=C2=A0
