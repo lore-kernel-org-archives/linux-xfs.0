@@ -1,121 +1,63 @@
-Received: from mail-qv1-f44.google.com (mail-qv1-f44.google.com [209.85.219.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A2DE2FBDEC
-	for <linux-xfs@vger.kernel.org>; Wed,  3 Dec 2025 23:07:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57CA6313532
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Dec 2025 04:51:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764803248; cv=none; b=fJ1Wvq2Ou7AlWcJA4fdlLYsBfhfKwU6jbZKZiHXqS2g9P4tG7XgJWaYvUttOKug4hYShzad9ERvbYt7LLY/RgqvqcxT8YjHGCOeT8hZr4bYqP69j9tD1dJ7WubGeou5vS8k570iaFyKfqUM/qzrvLxO9BDLRnr0WIVzU1CDhMEo=
+	t=1764823893; cv=none; b=jOZibXTnvJCjx4wb/Fiy/eTd0W36AI/7UcvF+apg35KD1WzWTtMGUuXnnKI6d9IhcCK9+d3phQuNv6f7km8xJnIJQr/9jHy6a+hTlUOr439dDOIxikmELhNKZJCU5iPvxBmNhG/CNBsGfO2iR3RwniWcK2GaGRBBjv740l6/P10=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764803248; c=relaxed/simple;
-	bh=ARjBU24hBcskgb7NtDM1BJQCy1LB2oT4dOF6omBJasE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=cTeXxI2YSVh5pO14HHlRCWezka4P/1jzv6yPLyjZMWYAbGw1pMqAHxHpc4pa3QPiq2TQd8dOpyZSdMIS4m/nk4MHGzI5Q9oCVb6CQ7jurcdAHsyiHqczx1kZdwgvlWuSwmPJrmFHkn/1A3mg8zm0MVyXyQKycoPe0ReKL2hBMEQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OY4K88Uz; arc=none smtp.client-ip=209.85.219.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1764823893; c=relaxed/simple;
+	bh=jYLruNr13gy9rijHLUU5rw5LHrCTvYbjFq3/8g9w3g4=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=Ooc5eQcVPT/FHD6uVJN19H9E5hN4JknURSSptYiuQwBMOL6if2jOKOP/Wqm0h54jyYL/P5od9cB43xAH6KDj/+FV47Cu17dPVWgnR0feVgCYBUTOwU0ZGcle1F0pLZUpYiyOcrfUFf0pFKrVIEMZFVTFwaZnF4ORF3727a+axhc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mtPWT9xO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OY4K88Uz"
-Received: by mail-qv1-f44.google.com with SMTP id 6a1803df08f44-88054872394so3415516d6.1
-        for <linux-xfs@vger.kernel.org>; Wed, 03 Dec 2025 15:07:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1764803244; x=1765408044; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ARjBU24hBcskgb7NtDM1BJQCy1LB2oT4dOF6omBJasE=;
-        b=OY4K88UzxcvkONG26+JORFBUO2QDasetSxjwW5bSA0nRRXZ92JS7pMr2Q8g7aK9o3+
-         MD51NDs34S6ZwVGm9X7VVRcTeRcFlQw1utEkK7ib3kCI2L5YclEtuIE0VsjbFysXXxwG
-         LXhbeR2/iSxRjg7hgD7iTaCi6S/JgO6O4tETbrTcXL/DVxDgR1ZxfgqxVpcYaKtmh0VH
-         ChgpRRHdlKeIyNeyraFTeVuF2QS87oOAIh0yhQHEmdXhZhnxuhRk2Kq5iv1bEiqUk3RZ
-         o7jGyGzHZYnQ0huRw9/C1NR7JuLEXdfIi4W8s3rYn7c+HoJfgVhYv5PooXsc/rhVVRwq
-         +KOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764803244; x=1765408044;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=ARjBU24hBcskgb7NtDM1BJQCy1LB2oT4dOF6omBJasE=;
-        b=QtGmXgbKOt7G4LHotzTgJHMZPbnJ2oDFZGfMiCOlwhPKuG+cx39hCeibYJlmDBGjtZ
-         u3hLl0lMoM3wHRa/h4maxp7RYmZrjsvMOQTVa529Hu1A/aQqE4qx/+efms/0TeHhyMJH
-         ovVAFostoYjFm7xrQFtOzn+IAs0GvpWQJokx05TzNcvGsmJJk3Qk/edSqHo1DXMxQaEx
-         zxCVufcJEgdmxMrxnoJfxPuBx7T5xu9f9yJY+yQ8oxIOdbICIJU0qmStJHUrijdoAa56
-         dgxi2Z2b0XArio76IFRUKfN7EXn4yZHdbkYl6hR1hCz2Vb/ERN9a3K2lezHI/GAMCW3k
-         fYdA==
-X-Forwarded-Encrypted: i=1; AJvYcCUVIJsrjDYkJuT/OLmPM9SC/FgKaXz0b6u4TdCOrUkKv02WNCFyOJq//IB1MQrKO5Wb2zc/1LOvn2o=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx/F9+2G8yeu3d93TQgSmsw2pZTcRuyUzCMvgYEq0dMZvMOUsbd
-	WGXUMZUpU6qerUwJty5KOTOczIJkkR+3VSYmhONXbtwiXEp9pF0ndhjgZkq4tuC9KMDTlRDj0IX
-	qgE6pgY323P2FCEH+sKsz5bkLs6gQLGc=
-X-Gm-Gg: ASbGncsl8WKrrHdkd8vLraMYMDqXVEAuzuCV1ALEASy2v2OqSGO88dagB4GE2TMEcDK
-	ztn6I1Sbm/OJcdPV25awzaMADvegkkClw8Ow2tZl08hn9puEoOEJ7ljpWxEHBjRid5rcRYW0H+N
-	qcgGZuK2ahrrxw7J82oKLO4QfvgdD7o2v2SLiCRq8aKpX1aju90cEb7AcD2BmtOfZgsBfQ4c+a0
-	TZegyglxzQbI8oO9aduBVKo9AM1zdJ/rvrDs8/MtZtfEyXGhh2nnroQGwESf2xGDxA5KPg=
-X-Google-Smtp-Source: AGHT+IHeXlWltuajJrx5d5zaBmOs+3Uu+5HXat5Ce2MX4X5ZPI8oXVau0JJuFiDWUeYCCz9yKCjgfAUsfswBi07X5PE=
-X-Received: by 2002:a05:622a:3cc:b0:4ee:1b0e:861a with SMTP id
- d75a77b69052e-4f017592726mr59846181cf.13.1764803243439; Wed, 03 Dec 2025
- 15:07:23 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mtPWT9xO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 376A2C113D0;
+	Thu,  4 Dec 2025 04:51:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764823893;
+	bh=jYLruNr13gy9rijHLUU5rw5LHrCTvYbjFq3/8g9w3g4=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=mtPWT9xOdMYqbnThOzUlm0J2XYwQozmzgJWkyVDfWmhs8FMGZgi9yL/oFKumKF/J4
+	 rEDIebCjrjv1+wr3p6is3AkeK01t7aZar8YrdJuDDqydoj6hhSLCCuJYQv6Hw9Ajd9
+	 zf40AG5fsZg3qYWMweMvzgCj1Dy80puU78wQwRobnnBzBCB1HOun6PnkUYpplgYdby
+	 ogtJL0fAS72YBEniKmWjDWQWGdsdmLv/JNgfxrhmSjRewmS7C8eL4FbEAePhb5LGoP
+	 hnU4OlIMgO/Xb+G5Ba/RL3vHa9kB2eyUxDraiOpbmCHj9nNVMxWn+O+ltc3qWYpd+k
+	 GXhVT5NLa/ftQ==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id F2AE93AA9A8A;
+	Thu,  4 Dec 2025 04:48:32 +0000 (UTC)
+Subject: Re: [GIT PULL] XFS: New code for v6.19
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <2lje5mt266gixlqrnqfnkrmcxwjdnu72emnz2gywn2hs5r4z7r@zuyoxysv2uxq>
+References: <2lje5mt266gixlqrnqfnkrmcxwjdnu72emnz2gywn2hs5r4z7r@zuyoxysv2uxq>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <2lje5mt266gixlqrnqfnkrmcxwjdnu72emnz2gywn2hs5r4z7r@zuyoxysv2uxq>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-merge-6.19
+X-PR-Tracked-Commit-Id: 69ceb8a2d6665625d816fcf8ccd01965cddb233e
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 3ed1c68307c4ce53256e15b8a8830b12bdba1ff5
+Message-Id: <176482371148.238370.2843593174720531114.pr-tracker-bot@kernel.org>
+Date: Thu, 04 Dec 2025 04:48:31 +0000
+To: Carlos Maiolino <cem@kernel.org>
+Cc: torvalds@linux-foundation.org, linux-xfs@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20251203202839.819850-1-sashal@kernel.org>
-In-Reply-To: <20251203202839.819850-1-sashal@kernel.org>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Wed, 3 Dec 2025 15:07:12 -0800
-X-Gm-Features: AWmQ_bmqhNk5StWxxmTMDLwKPZbVHBIiLQfZnv8DcnlEQfJufs1LWeozSv_ldNk
-Message-ID: <CAJnrk1aSf+bTiRE40BSM72y8p_0CZjeJ4AHF78QbxxPicmPMXw@mail.gmail.com>
-Subject: Re: [PATCH AUTOSEL 6.18-6.6] iomap: adjust read range correctly for
- non-block-aligned positions
-To: Sasha Levin <sashal@kernel.org>
-Cc: patches@lists.linux.dev, stable@vger.kernel.org, 
-	syzbot@syzkaller.appspotmail.com, Brian Foster <bfoster@redhat.com>, 
-	Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>, linux-xfs@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Dec 3, 2025 at 12:28=E2=80=AFPM Sasha Levin <sashal@kernel.org> wro=
-te:
->
-> From: Joanne Koong <joannelkoong@gmail.com>
->
-> [ Upstream commit 7aa6bc3e8766990824f66ca76c19596ce10daf3e ]
->
-> iomap_adjust_read_range() assumes that the position and length passed in
-> are block-aligned. This is not always the case however, as shown in the
-> syzbot generated case for erofs. This causes too many bytes to be
-> skipped for uptodate blocks, which results in returning the incorrect
-> position and length to read in. If all the blocks are uptodate, this
-> underflows length and returns a position beyond the folio.
->
-> Fix the calculation to also take into account the block offset when
-> calculating how many bytes can be skipped for uptodate blocks.
->
-> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> Tested-by: syzbot@syzkaller.appspotmail.com
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Christian Brauner <brauner@kernel.org>
-> Signed-off-by: Sasha Levin <sashal@kernel.org>
-> ---
->
-> LLM Generated explanations, may be completely bogus:
->
-> Now I have all the information needed for a comprehensive analysis. Let
-> me compile my findings.
->
-> ---
+The pull request you sent on Mon, 1 Dec 2025 12:49:56 +0100:
 
-I don't think any filesystems had repercussions from this. afaik only
-inlined mappings are non-block-aligned and the underflow of length and
-the overflow of position when added together offset each other when
-determining how much to advance the iter for the next iteration. But I
-have no objection to this being backported to stable. I think if this
-gets backported, then we should also backport this one as well
-(https://lore.kernel.org/linux-fsdevel/20251111193658.3495942-3-joannelkoon=
-g@gmail.com/).
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-merge-6.19
 
-Thanks,
-Joanne
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/3ed1c68307c4ce53256e15b8a8830b12bdba1ff5
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
