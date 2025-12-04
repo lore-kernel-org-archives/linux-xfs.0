@@ -1,43 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2FE52F1FDC
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Dec 2025 17:18:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF8CA1DD9AC
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Dec 2025 17:21:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764868692; cv=none; b=oUlAkwV7eotCkyGd62l5Yq3kSp4MJ7OfXyTKpoIL7/heFoUxjjMM+hWNZLKDYqfhAKasmt27HAbuTmhcBLlknIPKOH0qMZs5UPnVfqI3OvoWVhRIs/O3LHjG+tLnNLSpUtJHJr/r3QCxIU34l4XXZvJ6vsrKO0yzWuC7U7ZRDXQ=
+	t=1764868918; cv=none; b=V+NZfHT/EzGDvIkPbBLs6u+vkxJquIt8u7bTWavtl88LsR0MPVCv+DYZXbW5Pjk2LUfrdiNUaLq4473n6lWvkPwC3Kg5X+VIqSx4/BGDI757PtircKCx4Cl7G3LXD/n4zco8PSQDrsxOSqMbqZeRv7w+tZCdfH73UVmO63S0SVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764868692; c=relaxed/simple;
-	bh=n5KN+b7jZJZRbJ9zDu07tL3s77uDEcq5o7cfuri58zo=;
+	s=arc-20240116; t=1764868918; c=relaxed/simple;
+	bh=TjiVKYpt3D6KeQB+RPpB4oez2TsbPB7zzzrC7tSuC40=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gcnfVMWWB1lgDmXxwinYlbkbd6DvIgYIgZMS5MyNLikDvU83IZcxTxDfR9v0biuo59HdrqyAFIrbHEd5o+fnKss6rxN/ddTeVXnZbB9teyMYcyctD7kvkrdfrZiH2I8AcVGOhU9ayCg2e2COmeSoUWL6D6nB+ln5UdgupL+X0rM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jguwzmsP; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=BYOtD6nMc500GLhcCRYbr3IM6tI2XEBANRyES1LhOCmFDpr7o9z4YU6438RSiG1QtWHvWqcrcg7Xt68+0sqmaackhRRSlxdAzAfsTEiMqELdvIxRvOrCJ4scocGXv/x4SYhq1LOwsqthXA0gqIIwWlJQ+R3Og0ACOBu/GsX/wzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c2SjoPlF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jguwzmsP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A90DC4CEFB;
-	Thu,  4 Dec 2025 17:18:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c2SjoPlF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9376CC4CEFB;
+	Thu,  4 Dec 2025 17:21:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764868692;
-	bh=n5KN+b7jZJZRbJ9zDu07tL3s77uDEcq5o7cfuri58zo=;
+	s=k20201202; t=1764868918;
+	bh=TjiVKYpt3D6KeQB+RPpB4oez2TsbPB7zzzrC7tSuC40=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jguwzmsPyWsvemEG00E1WNFo252YfQV+UtT5B4mU87ho+vS5oCgPbdZQQcrWahqA8
-	 4nGNgFoIyxALBX2ii9hlbHHbrNiuhuE1FY8XIJI5lvw/0QsP5KXwY1n9pdaF2qVKNT
-	 z6ozjPQcT697DVuxszjVEokxb0l6cycW0N+m14Ryi8bmm6igj66P78HLCp8dzTGaXh
-	 UORQRAgW7cFzVtjwL2uPvTk1Cuam583jKmbOCdlsblHrgZ+wXOfzU2JLoQskriLSt7
-	 8ySe5NiCHZPPw9nGCSq37HA4BHV5UObKc3Ij7UGuIIdraaSdiqhK3SsGiL0PR0KiAO
-	 tzcSzqbJrLk0Q==
-Date: Thu, 4 Dec 2025 09:18:11 -0800
+	b=c2SjoPlFZbvXJ+IwgxWUIbSVqQH8jHRBPCFfkmDTDxxqrJT9WXMeGmvcE7IGcS6HY
+	 sWJD8uioVQm9OiP/MnxuOrLCglOtKqp5BF5yyu90H4jca5UbK7GPmnQt7EJilNzVOs
+	 QKneoV3BHfYyatgSj2QTJaWjYhd8e48iGKh60m+O9uxpfHuONJ+4axaDvVGApELs0X
+	 a/JOS+o2pEvPH+HP/kg/JzyS5yELuiqiUdnkZIANVsOklzC97gEMScyE3v3DAmWSSD
+	 UEIKAKIF+oKpTGHPdoFYmHyIWRfjESMF7CHVYO8WVEkTArWutK3Lfq2qwMUAUSgq6g
+	 mtFsjfRFktShg==
+Date: Thu, 4 Dec 2025 09:21:58 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Andrey Albershteyn <aalbersh@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] repair: add canonical names for the XR_INO_ constants
-Message-ID: <20251204171811.GE89492@frogsfrogsfrogs>
-References: <20251128063719.1495736-1-hch@lst.de>
- <20251128063719.1495736-3-hch@lst.de>
- <20251201224716.GC89472@frogsfrogsfrogs>
- <20251202073307.GE18046@lst.de>
- <20251202175919.GH89472@frogsfrogsfrogs>
- <20251203060942.GA16509@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>, Carlos Maiolino <cem@kernel.org>,
+	linux-xfs@vger.kernel.org
+Subject: Re: [PATCH, RFC] rename xfs.h
+Message-ID: <20251204172158.GJ89472@frogsfrogsfrogs>
+References: <20251202133723.1928059-1-hch@lst.de>
+ <aTFOsmgaPOhtaDeL@dread.disaster.area>
+ <20251204092340.GA19866@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,46 +44,18 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251203060942.GA16509@lst.de>
+In-Reply-To: <20251204092340.GA19866@lst.de>
 
-On Wed, Dec 03, 2025 at 07:09:42AM +0100, Christoph Hellwig wrote:
-> On Tue, Dec 02, 2025 at 09:59:19AM -0800, Darrick J. Wong wrote:
-> > > Seems like the standard gettext thing to do is to mark the array
-> > > initializers as N_(), which we do in quite a few places.  Not sure
-> > > where the actual translation actually gets applied with that, though.
-> > 
-> > That N_() thing is #defined out of existence for compilation in
-> > platform_defs.h:
-> > 
-> > # define N_(x)			 x
-> > 
-> > and include/buildrules passes "--keyword=N_" to xgettext so that it'll
-> > find all the N_("string") strings and put them in the message catalog.
-> > I think you still have to use regular _() (aka gettext()) when you pass
-> > them to printf.
-> > 
-> > IOWs, you'd still have to define the strings array like this:
-> > 
-> > static const char *xr_ino_type_name[] = {
-> > 	[XR_INO_UNKNOWN]	= N_("unknown"),
-> > ...
-> > };
+On Thu, Dec 04, 2025 at 10:23:41AM +0100, Christoph Hellwig wrote:
+> On Thu, Dec 04, 2025 at 08:04:50PM +1100, Dave Chinner wrote:
+> > fs/xfs/xfs.h is just a thin shim around fs/xfs/xfs_linux.h. Rather
+> > than rename it, why not get rid of it and include xfs_linux.h
+> > directly instead?  I don't think userspace has a xfs_linux.h header
+> > file anywhere...
 > 
-> Yes, that was the intent.
-> 
-> > to capture "unknown" in the .po file, but I think the printf argument
-> > still has to call gettext() to look up the localized version.
-> 
-> And that's what I'd expect.  But there are no direct gettext calls
-> anywhere in xfsprogs, despite quite a bit of N_() usage.  What am I
-> missing?
+> Fine with me if that name is ok for shared code.
 
-#define _(x)		gettext(x)
-
-in platform_defs.h.
-
-(and no, I don't get anything meaningful out of "N_()" for magic
-tagging and "_()" to mean lookup, but according to Debian codesearch
-it's a common practice in things like binutils and git and vim)
+Why not merge the xfs_linux.h stuff into xfs_priv.h?  It's not like xfs
+supports any other operating systems now.
 
 --D
