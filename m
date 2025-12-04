@@ -1,54 +1,113 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0558A17BB21
-	for <linux-xfs@vger.kernel.org>; Thu,  4 Dec 2025 09:37:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 698F330AABE
+	for <linux-xfs@vger.kernel.org>; Thu,  4 Dec 2025 09:47:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764841077; cv=none; b=lQ2q8UDxw/r32r2ysjXJ3Rde9yR+4p8VioQqs3I8dbF8Iy4b/0IOd22XAe3Q3/Cyrg03inju/dsXxPd1Mbu1aeYTzBeenznVMCi6yesL3f4PF2p4rqHOtajglx2aGjCG49s6gBxIEoYVxq0+GxkhR5dEyfBCWqTvncQLe2N7AxM=
+	t=1764841666; cv=none; b=al7jPn+tOGcwpWs3pEGAH2uuzSQAPS9A27n/Ik0f2TLQP7Wc3ARWVgsg1lQk8c0BQgI0fUM07ka7zpAgc05ebrKWTEOZ352lqNny9W4IoZFiXmlNXiXTyDayVdtVNe3XwWIQILl8fWNwF35IOPoHVFymDagEh6ICN/mR/hwya+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764841077; c=relaxed/simple;
-	bh=CoEdtncSNxex4aw+TgtLwNJVVD+aVpRH3HAKCNsOBwY=;
-	h=Date:From:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=McxezKMFFzXU68nUDtwd7ToTftrnXE1+/DnhjgezUXvxzc0VPy6Tfg2cVGYLZd/OuvClrCd3+4T6veNYXTVrLw/+1eW2D0GMKyK3m9IJ5l73d/qPwSp0gfD8W/1QTwLb2qICsY0CEiCJrCd0yAG07XTh9bwkxcIeWYObkIEkzHY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4kzBm9JJ; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1764841666; c=relaxed/simple;
+	bh=taDeiDW/72M220qK9OMYywRnj3wq52jhDjlnqF5wot0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=bz6ihOgV8A8DAhxxpc2KWnNyetNey2BM1DvHfQQHZ3dbCFvFIJVwDityRF+lR45LkuwQhHr3OnLpppJxHzkDO6/ExvPkyDYPo+Awy3uw0uqNqFoYfmDBSE1Axt/N3LRWZOIUjlhU2K1sK9W+3z7IydzCcJCTduiLA3VbhGU8oUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GC9sZGfl; arc=none smtp.client-ip=209.85.215.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4kzBm9JJ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:From:Date:Sender:Reply-To:To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=CoEdtncSNxex4aw+TgtLwNJVVD+aVpRH3HAKCNsOBwY=; b=4kzBm9JJQBLRASCN3pS3SAgF6H
-	rhQHr2k2NLyhWoDq19a1/LPSe+JK+661C4+DI9lxGZHE1XmZX2xhj0NEuPxf2uQ2XiojT2ORDKO/5
-	RdfM6TR2wXRm5RUeGMEr3UMQ+5gywOoJzxjooNuCsXZCeUxpw9SwhVbqW9CYuZv6CFsqrDKljZSOL
-	lA7/jB0js8VbeSwZnMb6y+U9SGxQ4njVxBTDH6rP9s14UkEoIAwxxW6KSgd2ZFyO7zNTI09WRxldR
-	1N0oDzAsNo37vWzKq+SD+o2GgxaUD4yZK4qn1nHBvmrKZnUN7+bb4AEEhNETLT1hPBCEjLD1s85Jc
-	/zs0Txig==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vR5md-00000007mHw-1Ews;
-	Thu, 04 Dec 2025 09:37:55 +0000
-Date: Thu, 4 Dec 2025 01:37:55 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Cc: Nathan Scott <nathans@debian.org>,
-	XFS Development Team <linux-xfs@vger.kernel.org>, bage@debian.org
-Subject: Re: xfsprogs_6.17.0-1_source.changes ACCEPTED into unstable
-Message-ID: <aTFWc3Zr9Ffp4NOM@infradead.org>
-References: <E1vQpZg-008QhA-3A@fasolo.debian.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GC9sZGfl"
+Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-bbf2c3eccc9so865941a12.0
+        for <linux-xfs@vger.kernel.org>; Thu, 04 Dec 2025 01:47:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1764841664; x=1765446464; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=lni2lotCj6H+AmjNSFQSoTPmehSO8h0OlOHdI4siafA=;
+        b=GC9sZGfl00MXhKeOSZhztcJ5UXEMHYmXSdqkwzPgTaN6lvwSznnV3lDkwTabkiWWQb
+         NXTBN8xqAMv3sGPbThvJZQkTSUJ1B//kykiiCgBZTpfjORQz9xrR/HfW3H43iK2q+FnM
+         m6UanCA4zEZ6/Hlo7Cl/ndM5iW0FA5AuxqOBT/ojJYdQEFFm2GZm9MAddkkG7mAIBsbI
+         UXecoEfEtQeWxcZ9J6iavwSRe2SVKi1tbQ4j1se2pQNhJfS3SfYZeN7QRtq8dKcv4M3g
+         m2lUJYzlFvuP0xQLXmLMhckjIZmMaynUhtelZBvM31BotB/1eQ+ezIfJRzjH4QeoxR0g
+         WPTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1764841664; x=1765446464;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=lni2lotCj6H+AmjNSFQSoTPmehSO8h0OlOHdI4siafA=;
+        b=XZH+OU/Wj8Nj1pm2u7Q4rDY2k7HJRltd0fEPeu3vDIswoUs2tqyVGv+fWK1FFKISpK
+         yemN6lYPZeeVAz5X86FWhWIOsWLUrrxIzH8xG72gFvYyOdp/Qbp+XVMhMtVM2CY9PWod
+         wkdyDdkfddsc68cDSA0wGTui64FdB3owqD+T7g3AIPD7bPK32mcR18S+laFU/busqYEN
+         GP8jGJyR7jTEpAEugsPdRkxZ/rao80cd3bAB5ltHuz0N3VsELw8lV54R0SO/EZ/BZpcX
+         BSHFQ3ejy/hmDWsDmmsvRmIORBX31BufDDxmG+Eqkqd4Wog+pLDpQftH/A7mcOSrcD2n
+         /M+g==
+X-Gm-Message-State: AOJu0YxKSs8wO8kHcj4S+APh/ZtyQDGeyjt0SIxLuK8QWcaePDbJ4CiU
+	7VDL7mQP6HFt/2y6WTC+T0UnCbybofxywz3NHGddeFhM9uGJE/73ZClm
+X-Gm-Gg: ASbGncsg5jBty4MM5iV1eqXrjD/m52PgfuHsAbfkH4OjDfJhJL98CeaydwH1ITJYQJ3
+	kKuRKLa3hOZbKu50s+xUvsXMHXfJ5n6zM8xDUR1yRXFQE992I3F1B+sMPMO6RcUQqzRID51vO4q
+	8RZfx8gwa2tSAP0GP2AUYak7rhBuZFPgLwzHGmvmq2TqW/E16hzV1kSccJetbgqtb//Ys81kRnC
+	UzG82K927nPi+L8Cg1H3+lwk3r2P87S7h3BBvxJrt4iIbO8Yf0Y/kVphgnkTLKpAsJ3EcNRRcQH
+	QPcfjI1H7v9dsNeGaUDn3Ib0df5Mc7KKg8zU+M7O5rQi9VMhX7LO0Yt5LFRz7Ron/8UKar/JtrN
+	k37itTplgF5UhK5pNaLy34B6xcITQg07AqVJ2ggmsGU9NGEEwl12s6bToZbd6C9vHSB/WCA1iJo
+	DT9gHGF1B+vtPNqe7dHKgpow==
+X-Google-Smtp-Source: AGHT+IE9SeIzvNmExcdm61AyXbn0uVh81iIMx0uxAy4DyyaP+xY4CdD610P0GtcDBk0yH5EmUV6Cug==
+X-Received: by 2002:a17:903:1104:b0:295:55fc:67a0 with SMTP id d9443c01a7336-29d9ec32352mr32461275ad.2.1764841664484;
+        Thu, 04 Dec 2025 01:47:44 -0800 (PST)
+Received: from [192.168.0.120] ([49.207.204.153])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29dae49c8b6sm14822935ad.13.2025.12.04.01.47.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 04 Dec 2025 01:47:44 -0800 (PST)
+Message-ID: <7f554000-97da-480c-8ada-a23e32b43f4f@gmail.com>
+Date: Thu, 4 Dec 2025 15:17:40 +0530
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <E1vQpZg-008QhA-3A@fasolo.debian.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1] xfs: Fix xfs_grow_last_rtg()
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, ritesh.list@gmail.com, ojaswin@linux.ibm.com,
+ djwong@kernel.org
+References: <1e5fa7c83bd733871c04dd53b1060345599dcef9.1764765730.git.nirjhar.roy.lists@gmail.com>
+ <aTFWJrOYXEeFX1kY@infradead.org>
+Content-Language: en-US
+From: "Nirjhar Roy (IBM)" <nirjhar.roy.lists@gmail.com>
+In-Reply-To: <aTFWJrOYXEeFX1kY@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Be aware that xfsprogs 6.17 has a nasty bug rendering xfs_quota
-unsuable at least for some (project quota) use cases:
 
-https://lore.kernel.org/linux-xfs/905377ba-b2cb-4ca7-bf41-3d3382b48e1d@maven.pl/
+On 12/4/25 15:06, Christoph Hellwig wrote:
+> On Wed, Dec 03, 2025 at 06:15:45PM +0530, Nirjhar Roy (IBM) wrote:
+>> The last rtg should be able to grow when the size of the
+>> last is less than (and not equal to) sb_rgextents.
+>> xfs_growfs with realtime groups fails without this
+>> patch. The reason is that, xfs_growfs_rtg() tries
+>> to grow the last rt group even when the last rt group
+>> is at its maximal size i.e, sb_rgextents. It fails with
+>> the following messages:
+> Please use up all 73 characters of the commit log to improve
+> readability.
+Okay.
+>
+> The change looks good:
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Thank you.
+>
+> Can you submit a test case for this to xfstests?
+
+Yes, I can do that.
+
+--NR
+
+>
+-- 
+Nirjhar Roy
+Linux Kernel Developer
+IBM, Bangalore
 
